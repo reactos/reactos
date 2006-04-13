@@ -189,12 +189,13 @@ extern HINSTANCE hInstance;
 /* string substitutions */
 
 struct inf_file;
-extern const WCHAR *DIRID_get_string( HINF hinf, int dirid );
+extern const WCHAR *DIRID_get_string( int dirid );
+extern const WCHAR *PARSER_get_inf_filename( HINF hinf );
 extern unsigned int PARSER_string_substA( struct inf_file *file, const WCHAR *text,
                                           char *buffer, unsigned int size );
 extern unsigned int PARSER_string_substW( struct inf_file *file, const WCHAR *text,
                                           WCHAR *buffer, unsigned int size );
-extern const WCHAR *PARSER_get_src_root( HINF hinf );
+extern WCHAR *PARSER_get_src_root( HINF hinf );
 extern WCHAR *PARSER_get_dest_dir( INFCONTEXT *context );
 
 /* support for Ascii queue callback functions */

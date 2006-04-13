@@ -151,7 +151,7 @@ static const WCHAR *get_csidl_dir( DWORD csidl )
 }
 
 /* retrieve the string corresponding to a dirid, or NULL if none */
-const WCHAR *DIRID_get_string( HINF hinf, int dirid )
+const WCHAR *DIRID_get_string( int dirid )
 {
     int i;
 
@@ -161,7 +161,7 @@ const WCHAR *DIRID_get_string( HINF hinf, int dirid )
     {
         for (i = 0; i < nb_user_dirids; i++)
             if (user_dirids[i].id == dirid) return user_dirids[i].str;
-        ERR("user id %d not found\n", dirid );
+        WARN("user id %d not found\n", dirid );
         return NULL;
     }
     else if (dirid >= MIN_CSIDL_DIRID)
@@ -174,7 +174,6 @@ const WCHAR *DIRID_get_string( HINF hinf, int dirid )
     else
     {
         if (dirid > MAX_SYSTEM_DIRID) return get_unknown_dirid();
-        if (dirid == DIRID_SRCPATH) return PARSER_get_src_root( hinf );
         if (!system_dirids[dirid]) system_dirids[dirid] = create_system_dirid( dirid );
         return system_dirids[dirid];
     }

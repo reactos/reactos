@@ -1,4 +1,4 @@
-<module name="setupapi" type="win32dll" baseaddress="${BASEADDRESS_SETUPAPI}" installbase="system32" installname="setupapi.dll" allowwarnings="true">
+<module name="setupapi" type="win32dll" baseaddress="${BASEADDRESS_SETUPAPI}" installbase="system32" installname="setupapi.dll">
 	<importlibrary definition="setupapi.spec.def" />
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
@@ -29,6 +29,7 @@
 	<file>install.c</file>
 	<file>misc.c</file>
 	<file>parser.c</file>
+	<file>query.c</file>
 	<file>queue.c</file>
 	<file>setupcab.c</file>
 	<file>stringtable.c</file>

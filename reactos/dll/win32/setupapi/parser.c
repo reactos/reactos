@@ -68,7 +68,7 @@ struct inf_file
     unsigned int     alloc_fields;
     struct field    *fields;
     int              strings_section; /* index of [Strings] section or -1 if none */
-    WCHAR           *src_root;        /* source root directory */
+    WCHAR           *filename;        /* filename of the INF */
 };
 
 /* parser definitions */
@@ -156,6 +156,15 @@ static void *grow_array( void *array, unsigned int *count, size_t elem )
     else
         HeapFree( GetProcessHeap(), 0, array );
     return new_array;
+}
+
+
+/* get the directory of the inf file (as counted string, not null-terminated) */
+static const WCHAR *get_inf_dir( struct inf_file *file, unsigned int *len )
+{
+    const WCHAR *p = strrchrW( file->filename, '\\' );
+    *len = p ? (p + 1 - file->filename) : 0;
+    return file->filename;
 }
 
 
@@ -279,10 +288,12 @@ static struct field *add_field( struct inf_file *file, const WCHAR *text )
 
 
 /* retrieve the string substitution for a directory id */
-static const WCHAR *get_dirid_subst( int dirid, unsigned int *len )
+static const WCHAR *get_dirid_subst( struct inf_file *file, int dirid, unsigned int *len )
 {
-    extern const WCHAR *DIRID_get_string( HINF hinf, int dirid );
-    const WCHAR *ret = DIRID_get_string( 0, dirid );
+    const WCHAR *ret;
+
+    if (dirid == DIRID_SRCPATH) return get_inf_dir( file, len );
+    ret = DIRID_get_string( dirid );
     if (ret) *len = strlenW(ret);
     return ret;
 }
@@ -326,7 +337,7 @@ static const WCHAR *get_string_subst( struct inf_file *file, const WCHAR *str, u
         memcpy( dirid_str, str, *len * sizeof(WCHAR) );
         dirid_str[*len] = 0;
         dirid = strtolW( dirid_str, &end, 10 );
-        if (!*end) ret = get_dirid_subst( dirid, len );
+        if (!*end) ret = get_dirid_subst( file, dirid, len );
         HeapFree( GetProcessHeap(), 0, dirid_str );
         return ret;
     }
@@ -979,14 +990,33 @@ static struct inf_file *parse_file( HANDLE handle, UINT *error_line )
 
 
 /***********************************************************************
+ *            PARSER_get_inf_filename
+ *
+ * Retrieve the filename of an inf file.
+ */
+const WCHAR *PARSER_get_inf_filename( HINF hinf )
+{
+    struct inf_file *file = hinf;
+    return file->filename;
+}
+
+
+/***********************************************************************
  *            PARSER_get_src_root
  *
  * Retrieve the source directory of an inf file.
  */
-const WCHAR *PARSER_get_src_root( HINF hinf )
+WCHAR *PARSER_get_src_root( HINF hinf )
 {
-    struct inf_file *file = hinf;
-    return file->src_root;
+    unsigned int len;
+    const WCHAR *dir = get_inf_dir( hinf, &len );
+    WCHAR *ret = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
+    if (ret)
+    {
+        memcpy( ret, dir, len * sizeof(WCHAR) );
+        ret[len] = 0;
+    }
+    return ret;
 }
 
 
@@ -1001,15 +1031,15 @@ WCHAR *PARSER_get_dest_dir( INFCONTEXT *context )
     const WCHAR *dir;
     WCHAR *ptr, *ret;
     INT dirid;
-    DWORD len1, len2;
+    unsigned int len1;
+    DWORD len2;
 
     if (!SetupGetIntField( context, 1, &dirid )) return NULL;
-    if (!(dir = DIRID_get_string( context->Inf, dirid ))) return NULL;
-    len1 = strlenW(dir) + 1;
+    if (!(dir = get_dirid_subst( context->Inf, dirid, &len1 ))) return NULL;
     if (!SetupGetStringFieldW( context, 2, NULL, 0, &len2 )) len2 = 0;
-    if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len1+len2) * sizeof(WCHAR) ))) return NULL;
-    strcpyW( ret, dir );
-    ptr = ret + strlenW(ret);
+    if (!(ret = HeapAlloc( GetProcessHeap(), 0, (len1+len2+1) * sizeof(WCHAR) ))) return NULL;
+    memcpy( ret, dir, len1 * sizeof(WCHAR) );
+    ptr = ret + len1;
     if (len2 && ptr > ret && ptr[-1] != '\\') *ptr++ = '\\';
     if (!SetupGetStringFieldW( context, 2, ptr, len2, NULL )) *ptr = 0;
     return ret;
@@ -1164,8 +1194,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
         return (HINF)INVALID_HANDLE_VALUE;
     }
     TRACE( "%s -> %p\n", debugstr_w(path), file );
-    file->src_root = path;
-    if ((p = strrchrW( path, '\\' ))) p[1] = 0;  /* remove file name */
+    file->filename = path;
 
     if (class)
     {
@@ -1274,7 +1303,7 @@ void WINAPI SetupCloseInfFile( HINF hinf )
     unsigned int i;
 
     for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
-    HeapFree( GetProcessHeap(), 0, file->src_root );
+    HeapFree( GetProcessHeap(), 0, file->filename );
     HeapFree( GetProcessHeap(), 0, file->sections );
     HeapFree( GetProcessHeap(), 0, file->fields );
     HeapFree( GetProcessHeap(), 0, file->strings );
@@ -1925,65 +1954,6 @@ BOOL WINAPI SetupGetMultiSzFieldW( PINFCONTEXT context, DWORD index, PWSTR buffe
     }
     *buffer = 0;  /* add final null */
     return TRUE;
-}
-
-/***********************************************************************
- *		SetupGetInfInformationW    (SETUPAPI.@)
- */
-BOOL WINAPI
-SetupGetInfInformationW(
-    IN LPCVOID InfSpec,
-    IN DWORD SearchControl,
-    IN PSP_INF_INFORMATION ReturnBuffer,
-    IN DWORD ReturnBufferSize,
-    IN PDWORD RequiredSize)
-{
-    HINF hInf;
-    DWORD requiredSize;
-    BOOL Ret = FALSE;
-    
-    TRACE("%p %lx %p %ld %p\n", InfSpec, SearchControl, ReturnBuffer,
-        ReturnBufferSize, RequiredSize);
-
-    if (SearchControl != INFINFO_INF_SPEC_IS_HINF
-        && SearchControl != INFINFO_INF_NAME_IS_ABSOLUTE
-        && SearchControl != INFINFO_DEFAULT_SEARCH
-        && SearchControl != INFINFO_REVERSE_DEFAULT_SEARCH
-        && SearchControl != INFINFO_INF_PATH_LIST_SEARCH)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    if (SearchControl == INFINFO_INF_SPEC_IS_HINF)
-        hInf = (HINF)InfSpec;
-    else
-    {
-        /* open .inf file and put its handle to hInf */
-        FIXME("SearchControl 0x%lx not implemented\n", SearchControl);
-        SetLastError(ERROR_GEN_FAILURE);
-        return FALSE;
-    }
-
-    /* FIXME: add size of [Version] section */
-    requiredSize = sizeof(SP_INF_INFORMATION);
-
-    if (requiredSize <= ReturnBufferSize)
-    {
-        ReturnBuffer->InfStyle = INF_STYLE_WIN4; /* FIXME */
-        ReturnBuffer->InfCount = 1; /* FIXME */
-        /* FIXME: memcpy(ReturnBuffer->VersionData, ...); */
-        Ret = TRUE;
-    }
-    else
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-
-    if (RequiredSize)
-        *RequiredSize = requiredSize;
-
-    if (SearchControl != INFINFO_INF_SPEC_IS_HINF)
-        SetupCloseInfFile(hInf);
-    return Ret;
 }
 
 /***********************************************************************

@@ -282,12 +282,9 @@ static void get_src_file_info( HINF hinf, struct file_op *op )
     /* find the SourceDisksFiles entry */
     if (!SetupFindFirstLineW( hinf, SourceDisksFiles, op->src_file, &file_ctx ))
     {
-        const WCHAR *dir;
-
         if ((op->style & (SP_COPY_SOURCE_ABSOLUTE|SP_COPY_SOURCEPATH_ABSOLUTE))) return;
         /* no specific info, use .inf file source directory */
-        if (!op->src_root && (dir = DIRID_get_string( hinf, DIRID_SRCPATH )))
-            op->src_root = strdupW( dir );
+        if (!op->src_root) op->src_root = PARSER_get_src_root( hinf );
         return;
     }
     if (!SetupGetIntField( &file_ctx, 1, &diskid )) return;
@@ -337,7 +334,7 @@ static void get_src_file_info( HINF hinf, struct file_op *op )
             if (!SetupGetStringFieldW( &disk_ctx, 4, ptr, len2, NULL )) *ptr = 0;
         }
     }
-    if (!op->src_root) op->src_root = strdupW( PARSER_get_src_root(hinf) );
+    if (!op->src_root) op->src_root = PARSER_get_src_root(hinf);
 }
 
 

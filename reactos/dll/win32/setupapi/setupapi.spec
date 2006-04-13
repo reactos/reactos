@@ -462,8 +462,8 @@
 @ stub SetupQueryDrivesInDiskSpaceListW
 @ stub SetupQueryFileLogA
 @ stub SetupQueryFileLogW
-@ stub SetupQueryInfFileInformationA
-@ stub SetupQueryInfFileInformationW
+@ stdcall SetupQueryInfFileInformationA(ptr long str long ptr)
+@ stdcall SetupQueryInfFileInformationW(ptr long wstr long ptr)
 @ stub SetupQueryInfOriginalFileInformationA
 @ stub SetupQueryInfOriginalFileInformationW
 @ stub SetupQueryInfVersionInformationA
