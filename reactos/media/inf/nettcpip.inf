@@ -13,7 +13,7 @@ DriverVer  = 04/12/2006,1.00
 
 ;----------------------------- TCP/IP DRIVER ----------------------------
 
-[MS_TCPIP.PrimaryInstall.NT]
+[MS_TCPIP.PrimaryInstall]
 AddReg = TCPIP_AddReg.NT
 
 [TCPIP_AddReg.NT]
