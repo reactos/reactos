@@ -82,20 +82,28 @@ typedef struct
     DDHAL_CREATESURFACEDATA      mDdCreateSurface;
     DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
 
+    /* Primarey surface we must reach it from every where */
+    DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
+    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
+    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
+    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
+    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
+    DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
+
+    DDSURFACEDESC mddsdPrimary;
+
 } IDirectDrawImpl; 
 
 /******** Surface Object ********/
 typedef struct 
 {    
-    DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
-    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
-    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
-    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
 
-    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
-    DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
-
-    DDSURFACEDESC mddsdPrimary;
+    DDRAWI_DDRAWSURFACE_GBL mSurfGlobal;
+    DDRAWI_DDRAWSURFACE_MORE mSurfMore;
+    DDRAWI_DDRAWSURFACE_LCL mSurfLocal;
+    DDRAWI_DDRAWSURFACE_LCL *mpSurfLocals[1];
+    DDRAWI_DDRAWCLIPPER_LCL mSurfClipperLocal;
+    DDRAWI_DDRAWCLIPPER_GBL mSurfClipperGlobal;
 
     DDRAWI_DDRAWSURFACE_GBL mOverlayGlobal;
     DDRAWI_DDRAWSURFACE_LCL mOverlayLocal[6];
@@ -111,7 +119,7 @@ typedef struct
 	IDirectDrawSurface7Vtbl* lpVtbl;
 	IDirectDrawSurface3Vtbl* lpVtbl_v3;
    
-    IDirectDrawImpl* owner;
+    IDirectDrawImpl* Owner;
 
 	DDRAWI_DDRAWSURFACE_GBL Global; 
 	DDRAWI_DDRAWSURFACE_MORE More; 
@@ -233,9 +241,9 @@ DWORD CALLBACK HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA  lpCreateSurface);
 		firstcall = FALSE; \
 	}
 
-#define DX_WINDBG_trace()  
+//#define DX_WINDBG_trace()  
 
-/*
+
 #define DX_WINDBG_trace() \
 	static BOOL firstcallx = TRUE; \
 	if (firstcallx) \
@@ -245,7 +253,7 @@ DWORD CALLBACK HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA  lpCreateSurface);
 		OutputDebugStringA(buffer); \
 		firstcallx = TRUE; \
 	}
-*/
+
 
 #define DX_WINDBG_trace_res(width,height,bpp) \
 	static BOOL firstcallxx = TRUE; \

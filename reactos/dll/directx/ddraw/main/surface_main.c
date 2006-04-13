@@ -32,14 +32,14 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
 
     DX_WINDBG_trace();
     	
-    return InterlockedIncrement((PLONG)&This->owner->mDDrawGlobal.dsList->dwIntRefCnt);
+    return InterlockedIncrement((PLONG)&This->Owner->mDDrawGlobal.dsList->dwIntRefCnt);
 }
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
 {
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
         
-    ULONG ref = InterlockedDecrement((PLONG)&This->owner->mDDrawGlobal.dsList->dwIntRefCnt);
+    ULONG ref = InterlockedDecrement((PLONG)&This->Owner->mDDrawGlobal.dsList->dwIntRefCnt);
     
     if (ref == 0)
 		HeapFree(GetProcessHeap(), 0, This);
@@ -66,7 +66,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 	 IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 	
 
-	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_BLT) 
+	if (This->Owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_BLT) 
 	{
 		return Hal_DDrawSurface_Blt( iface,  rdst, src,  rsrc,  dwFlags,  lpbltfx);
 	}
@@ -87,7 +87,7 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
         return DDERR_INVALIDPARAMS; 
     }
 
-	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_LOCK) 
+	if (This->Owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_LOCK) 
 	{
 		return Hal_DDrawSurface_Lock( iface, prect, pDDSD,  flags,  event);
 	}
@@ -101,7 +101,7 @@ HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRec
 
 	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_LOCK) 
+	if (This->Owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_LOCK) 
 	{
 		return Hal_DDrawSurface_Unlock( iface,  pRect);
 	}
@@ -125,7 +125,7 @@ Main_DDrawSurface_AddAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
    That = (IDirectDrawSurfaceImpl*)pAttach;
    
    //FIXME Have I put This and That in right order ?? DdAttachSurface(from, to) 
-   return DdAttachSurface( That->Surf->mpPrimaryLocals[0],This->Surf->mpPrimaryLocals[0]);
+   return DdAttachSurface( That->Owner->mpPrimaryLocals[0],This->Owner->mpPrimaryLocals[0]);
 }
 
 /* MSDN: "not currently implemented." */
@@ -213,7 +213,7 @@ Main_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface,
     
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_FLIP) 
+	if (This->Owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_FLIP) 
 	{
 		return Hal_DDrawSurface_Flip(iface, override,  dwFlags);
 	}
@@ -246,7 +246,7 @@ Main_DDrawSurface_GetBltStatus(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags)
     
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_FLIP) 
+	if (This->Owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_FLIP) 
 	{
 		return Hal_DDrawSurface_GetBltStatus( iface,  dwFlags);
 	}
@@ -274,7 +274,7 @@ Main_DDrawSurface_GetCaps(LPDIRECTDRAWSURFACE7 iface, LPDDSCAPS2 pCaps)
     This = (IDirectDrawSurfaceImpl*)iface;        
      
     RtlZeroMemory(pCaps,sizeof(DDSCAPS2));
-    pCaps->dwCaps = This->Surf->mddsdPrimary.ddsCaps.dwCaps;
+    pCaps->dwCaps = This->Owner->mddsdPrimary.ddsCaps.dwCaps;
     
     return DD_OK;
 }
@@ -321,14 +321,14 @@ Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
       for now we aussme the surface exits and create the hDC for it
     */
      
-    if ((HDC)This->Surf->mPrimaryLocal.hDC == NULL)
+    if ((HDC)This->Owner->mPrimaryLocal.hDC == NULL)
     {
-         This->Surf->mPrimaryLocal.hDC = (ULONG_PTR)GetDC((HWND)This->owner->mDDrawGlobal.lpExclusiveOwner->hWnd);
-        *phDC = (HDC)This->Surf->mPrimaryLocal.hDC;
+         This->Owner->mPrimaryLocal.hDC = (ULONG_PTR)GetDC((HWND)This->Owner->mDDrawGlobal.lpExclusiveOwner->hWnd);
+        *phDC = (HDC)This->Owner->mPrimaryLocal.hDC;
     }
     else
     {
-       *phDC =  (HDC)This->Surf->mpPrimaryLocals[0]->hDC;
+       *phDC =  (HDC)This->Owner->mpPrimaryLocals[0]->hDC;
     }
 
     return DD_OK;
@@ -420,7 +420,7 @@ Main_DDrawSurface_GetSurfaceDesc(LPDIRECTDRAWSURFACE7 iface,
     }
     
     RtlZeroMemory(pDDSD,dwSize);
-    memcpy(pDDSD, &This->Surf->mddsdPrimary, sizeof(DDSURFACEDESC));
+    memcpy(pDDSD, &This->Owner->mddsdPrimary, sizeof(DDSURFACEDESC));
     pDDSD->dwSize = dwSize;
    
     return DD_OK;
@@ -480,12 +480,12 @@ Main_DDrawSurface_ReleaseDC(LPDIRECTDRAWSURFACE7 iface, HDC hDC)
    
     /* FIXME check if surface exits or not */
 
-    if ((HDC)This->Surf->mPrimaryLocal.hDC == NULL)
+    if ((HDC)This->Owner->mPrimaryLocal.hDC == NULL)
     {
         return DDERR_GENERIC;         
     }
 
-    ReleaseDC((HWND)This->owner->mDDrawGlobal.lpExclusiveOwner->hWnd,hDC);
+    ReleaseDC((HWND)This->Owner->mDDrawGlobal.lpExclusiveOwner->hWnd,hDC);
 
     return DD_OK;
 }
@@ -507,7 +507,7 @@ Main_DDrawSurface_SetColorKey (LPDIRECTDRAWSURFACE7 iface,
 
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_SETCOLORKEY) 
+	if (This->Owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_SETCOLORKEY) 
 	{
 		return Hal_DDrawSurface_SetColorKey (iface, dwFlags, pCKey);
 	}
@@ -575,7 +575,7 @@ Main_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface,
 
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
-	if (This->owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY) 
+	if (This->Owner->mCallbacks.HALDDSurface.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY) 
 	{
 		return Hal_DDrawSurface_UpdateOverlayDisplay ( iface,  dwFlags);
 	}

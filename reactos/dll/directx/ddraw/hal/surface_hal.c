@@ -30,14 +30,14 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
             return DD_FALSE;
         }
 
-        if (!(This->owner->mDDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
+        if (!(This->Owner->mDDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
         {
               return DDERR_NODRIVERSUPPORT;
         }
 
-        mDdBlt.lpDDDestSurface = This->Surf->mpPrimaryLocals[0];
+        mDdBlt.lpDDDestSurface = This->Owner->mpPrimaryLocals[0];
 
-        if (!DdResetVisrgn(This->Surf->mpPrimaryLocals[0], NULL)) 
+        if (!DdResetVisrgn(This->Owner->mpPrimaryLocals[0], NULL)) 
         {      
               return DDERR_NOGDI;
         }
@@ -62,12 +62,12 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
            
         if (src != NULL)
         {
-              mDdBlt.lpDDSrcSurface = That->Surf->mpPrimaryLocals[0];
+              mDdBlt.lpDDSrcSurface = That->Surf->mpSurfLocals[0];
         }
 
-        mDdBlt.lpDD = &This->owner->mDDrawGlobal;
-        mDdBlt.Blt = This->owner->mCallbacks.HALDDSurface.Blt; 
-        mDdBlt.lpDDDestSurface = This->Surf->mpPrimaryLocals[0];
+        mDdBlt.lpDD = &This->Owner->mDDrawGlobal;
+        mDdBlt.Blt = This->Owner->mCallbacks.HALDDSurface.Blt; 
+        mDdBlt.lpDDDestSurface = This->Owner->mpPrimaryLocals[0];
 
         mDdBlt.dwFlags = dwFlags;
              
@@ -107,13 +107,13 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
    }
 
    Lock.ddRVal = DDERR_NOTPALETTIZED;
-   Lock.Lock = This->owner->mCallbacks.HALDDSurface.Lock;
+   Lock.Lock = This->Owner->mCallbacks.HALDDSurface.Lock;
    Lock.dwFlags = flags;
-   Lock.lpDDSurface = &This->Surf->mPrimaryLocal;
-   Lock.lpDD = &This->owner->mDDrawGlobal;   
+   Lock.lpDDSurface = &This->Owner->mPrimaryLocal;
+   Lock.lpDD = &This->Owner->mDDrawGlobal;   
    Lock.lpSurfData = NULL;
      
-   if (!DdResetVisrgn(&This->Surf->mPrimaryLocal, NULL)) 
+   if (!DdResetVisrgn(&This->Owner->mPrimaryLocal, NULL)) 
    {
       OutputDebugStringA("Here DdResetVisrgn lock");
       return DDERR_UNSUPPORTED;
@@ -138,13 +138,13 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
         {
             RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
             // FIXME the interanl mddsdPrimary shall be DDSURFACEDESC2
-            memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
+            memcpy(pDDSD,&This->Owner->mddsdPrimary,sizeof(DDSURFACEDESC));
             pDDSD->dwSize = sizeof(DDSURFACEDESC2);
         }
         if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
         {
             RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC));
-            memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
+            memcpy(pDDSD,&This->Owner->mddsdPrimary,sizeof(DDSURFACEDESC));
             pDDSD->dwSize = sizeof(DDSURFACEDESC);
         }
 
@@ -159,9 +159,9 @@ HRESULT Hal_DDrawSurface_Unlock(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
       
    DDHAL_UNLOCKDATA unLock;   
    unLock.ddRVal = DDERR_NOTPALETTIZED;
-   unLock.lpDD = &This->owner->mDDrawGlobal;   
-   unLock.lpDDSurface =  &This->Surf->mPrimaryLocal;
-   unLock.Unlock = This->owner->mCallbacks.HALDDSurface.Unlock;
+   unLock.lpDD = &This->Owner->mDDrawGlobal;   
+   unLock.lpDDSurface =  &This->Owner->mPrimaryLocal;
+   unLock.Unlock = This->Owner->mCallbacks.HALDDSurface.Unlock;
 
 
 
