@@ -440,7 +440,9 @@ Main_DDrawSurface_IsLost(LPDIRECTDRAWSURFACE7 iface)
 {
     DX_WINDBG_trace();
 
-    DX_STUB;
+    //DX_STUB;
+    DX_STUB_str("not implement return not lost\n");
+    return DD_OK;    
 }
 
 HRESULT WINAPI
