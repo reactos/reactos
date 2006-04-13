@@ -53,7 +53,7 @@ struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
 
     
     /* SPINT_ACTIVE : the interface is active/enabled
-     * SPINT_DEFAULT: the interface is the default interface for the device class FIXME???
+     * SPINT_DEFAULT: the interface is the default interface for the device class
      * SPINT_REMOVED: the interface is removed
      */
     DWORD Flags;

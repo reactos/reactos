@@ -14,6 +14,7 @@
 	<define name="_SETUPAPI_" />
 	<define name="_SETUPAPI_VER">0x501</define>
 	<library>pnp_client</library>
+	<library>uuid</library>
 	<library>wine</library>
 	<library>ntdll</library>
 	<library>kernel32</library>

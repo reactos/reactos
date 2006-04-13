@@ -1116,7 +1116,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
     WCHAR *path, *p;
     UINT len;
 
-    TRACE("%S %S %lx %p\n", name, class, style, error);
+    TRACE("%s %s %lx %p\n", debugstr_w(name), debugstr_w(class), style, error);
 
     if (strchrW( name, '\\' ) || strchrW( name, '/' ))
     {
@@ -2007,7 +2007,7 @@ SetupGetInfFileListW(
     DWORD requiredSize = 0;
     BOOL ret = FALSE;
 
-    TRACE("%S %lx %p %ld %p\n", DirectoryPath, InfStyle,
+    TRACE("%s %lx %p %ld %p\n", debugstr_w(DirectoryPath), InfStyle,
         ReturnBuffer, ReturnBufferSize, RequiredSize);
 
     if (InfStyle & ~(INF_STYLE_OLDNT | INF_STYLE_WIN4))
@@ -2085,7 +2085,7 @@ SetupGetInfFileListW(
                 /* InfStyle was not correct. Skip this file */
                 continue;
             }
-            TRACE("Invalid .inf file %S\n", pFileSpecification);
+            TRACE("Invalid .inf file %s\n", debugstr_w(pFileSpecification));
             continue;
         }
 
@@ -2208,7 +2208,7 @@ SetupDiGetINFClassW(
     HINF hInf = INVALID_HANDLE_VALUE;
     BOOL ret = FALSE;
 
-    TRACE("%S %p %p %ld %p\n", InfName, ClassGuid,
+    TRACE("%s %p %p %ld %p\n", debugstr_w(InfName), ClassGuid,
         ClassName, ClassNameSize, RequiredSize);
 
     /* Open .inf file */
