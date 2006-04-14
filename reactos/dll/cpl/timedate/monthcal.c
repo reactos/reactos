@@ -53,10 +53,10 @@ typedef struct _MONTHCALWND
     HBRUSH hbSelection;
 
     DWORD UIState;
-    BOOL Changed : 1;
-    BOOL DayTimerSet : 1;
-    BOOL Enabled : 1;
-    BOOL HasFocus : 1;
+    UINT Changed : 1;
+    UINT DayTimerSet : 1;
+    UINT Enabled : 1;
+    UINT HasFocus : 1;
 } MONTHCALWND, *PMONTHCALWND;
 
 static LRESULT

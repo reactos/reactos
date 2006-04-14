@@ -300,7 +300,7 @@ typedef struct _MAIN_WND_INFO
     PVOID ActiveEditor;
 
     /* status flags */
-    BOOL InMenuLoop : 1;
+    UINT InMenuLoop : 1;
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
 BOOL InitMainWindowImpl(VOID);
