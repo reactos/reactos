@@ -440,6 +440,13 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
                        Window->CallProc);
    }
 
+   if (Window->CallProc2 != NULL)
+   {
+       DbgPrint("!!!!! Destroy call proc 0x%p\n", ObmObjectToHandle(Window->CallProc2));
+       DestroyCallProc(Window->ti->Desktop,
+                       Window->CallProc2);
+   }
+
    /* dereference the class */
    IntDereferenceClass(Window->Class,
                        Window->ti->Desktop,
@@ -1572,17 +1579,10 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Window->IsSystem = Class->System;
    if (Class->System)
    {
-       Window->Unicode = bUnicodeWindow;
-       if (bUnicodeWindow)
-       {
-           Window->WndProc = Class->WndProc;
-           Window->WndProcExtra = Class->WndProcExtra;
-       }
-       else
-       {
-           Window->WndProc = Class->WndProcExtra;
-           Window->WndProcExtra = Class->WndProc;
-       }
+       /* NOTE: Always create a unicode window for system classes! */
+       Window->Unicode = TRUE;
+       Window->WndProc = Class->WndProc;
+       Window->WndProcExtra = Class->WndProcExtra;
    }
    else
    {
@@ -3422,7 +3422,93 @@ CLEANUP:
    END_CLEANUP;
 }
 
+static WNDPROC
+IntSetWindowProc(PWINDOW_OBJECT Window,
+                 WNDPROC NewWndProc,
+                 BOOL Ansi)
+{
+    WNDPROC Ret;
 
+    /* attempt to get the previous window proc */
+    if (Window->IsSystem)
+    {
+        Ret = (Ansi ? Window->WndProcExtra : Window->WndProc);
+    }
+    else
+    {
+        if (!Ansi == Window->Unicode)
+        {
+            Ret = Window->WndProc;
+        }
+        else
+        {
+            /* allocate or update an existing call procedure handle to return
+               the old window proc */
+            if (Window->CallProc2 != NULL)
+            {
+                Window->CallProc2->WndProc = Window->WndProc;
+                Window->CallProc2->Unicode = Window->Unicode;
+            }
+            else
+            {
+                Window->CallProc2 = CreateCallProc(Window->ti->Desktop,
+                                                   Window->WndProc,
+                                                   Window->Unicode,
+                                                   Window->ti->kpi);
+                if (Window->CallProc2 == NULL)
+                {
+                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+                    return NULL;
+                }
+            }
+
+            Ret = (WNDPROC)ObmObjectToHandle(Window->CallProc2);
+            DbgPrint("!!!!!!!! Returning handle 0x%p\n", Ret);
+        }
+    }
+
+    if (Window->Class->System)
+    {
+        BOOL SysWnd = Window->IsSystem;
+
+        /* check if the new procedure matches with the one in the
+           window class. If so, we need to restore both procedures! */
+        Window->IsSystem = (NewWndProc == Window->Class->WndProc ||
+                            NewWndProc == Window->Class->WndProcExtra);
+
+        if (Window->IsSystem != SysWnd)
+        {
+            if (!Window->IsSystem && Window->CallProc != NULL)
+            {
+                /* destroy the callproc, we don't need it anymore */
+                DestroyCallProc(Window->ti->Desktop,
+                                Window->CallProc);
+                Window->CallProc = NULL;
+            }
+        }
+
+        if (Window->IsSystem)
+        {
+            Window->WndProc = Window->Class->WndProc;
+            Window->WndProcExtra = Window->Class->WndProcExtra;
+            Window->Unicode = !Ansi;
+            return Ret;
+        }
+    }
+
+    ASSERT(!Window->IsSystem);
+
+    /* update the window procedure */
+    Window->WndProc = NewWndProc;
+    if (Window->CallProc != NULL)
+    {
+        Window->CallProc->WndProc = NewWndProc;
+        Window->CallProc->Unicode = !Ansi;
+    }
+    Window->Unicode = !Ansi;
+
+    return Ret;
+}
 
 
 LONG FASTCALL
@@ -3490,24 +3576,9 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
          case GWL_WNDPROC:
          {
             /* FIXME: should check if window belongs to current process */
-            if (Window->IsSystem)
-            {
-               /* the user changes the window procedure, the window is no longer
-                  directly derived from the system class, because it no longer
-                  uses independent window procedures for ansi and unicode */
-               Window->IsSystem = FALSE;
-               Window->CallProc = NULL;
-            }
-
-            /* update the window procedure */
-            OldValue = (LONG)Window->WndProc;
-            Window->WndProc = (WNDPROC)NewValue;
-            if (Window->CallProc != NULL)
-            {
-                Window->CallProc->WndProc = (WNDPROC)NewValue;
-                Window->CallProc->Unicode = !Ansi;
-            }
-            Window->Unicode = !Ansi;
+            OldValue = (LONG)IntSetWindowProc(Window,
+                                              (WNDPROC)NewValue,
+                                              Ansi);
             break;
          }
 

@@ -89,7 +89,7 @@ CreateCallProc(IN PDESKTOP Desktop,
     {
         NewCallProc->pi = pi;
         NewCallProc->WndProc = WndProc;
-        NewCallProc->Unicode = Unicode;
+        NewCallProc->Unicode = Unicode != FALSE;
     }
 
     return NewCallProc;
@@ -109,13 +109,11 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
                              otCallProc);
     if (CallProc == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
     if (CallProc->pi != GetW32ProcessInfo())
     {
-        SetLastWin32Error(ERROR_ACCESS_DENIED);
         return FALSE;
     }
 
@@ -323,16 +321,81 @@ IntSetClassAtom(IN OUT PWINDOWCLASS Class,
 }
 
 static WNDPROC
+IntGetClassWndProc(IN PWINDOWCLASS Class,
+                   IN PW32PROCESSINFO pi,
+                   IN BOOL Ansi)
+{
+    /* FIXME - assert for exclusive lock! */
+
+    if (Class->System)
+    {
+        return (Ansi ? Class->WndProcExtra : Class->WndProc);
+    }
+    else
+    {
+        if (!Ansi == Class->Unicode)
+        {
+            return Class->WndProc;
+        }
+        else
+        {
+            if (Class->CallProc != NULL)
+            {
+                return (WNDPROC)ObmObjectToHandle(Class->CallProc);
+            }
+            else
+            {
+                PCALLPROC NewCallProc, CallProc;
+
+                if (pi == NULL)
+                    return NULL;
+
+                /* NOTE: use the interlocked functions, as this operation may be done even
+                         when only the shared lock is held! */
+                NewCallProc = CreateCallProc(Class->Desktop,
+                                             Class->WndProc,
+                                             Class->Unicode,
+                                             pi);
+                if (NewCallProc == NULL)
+                {
+                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+                    return NULL;
+                }
+
+                CallProc = InterlockedCompareExchangePointer(&Class->CallProc,
+                                                             NewCallProc,
+                                                             NULL);
+                if (CallProc != NULL)
+                {
+                    DestroyCallProc(Class->Desktop,
+                                    NewCallProc);
+                }
+
+                return (WNDPROC)ObmObjectToHandle((CallProc == NULL ? NewCallProc : CallProc));
+            }
+        }
+    }
+}
+
+static WNDPROC
 IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
                    IN WNDPROC WndProc,
                    IN BOOL Ansi)
 {
-    WNDPROC Ret = Class->WndProc;
+    WNDPROC Ret;
 
     if (Class->System)
     {
         DPRINT1("Attempted to change window procedure of system window class 0x%p!\n", Class->Atom);
         SetLastWin32Error(ERROR_ACCESS_DENIED);
+        return NULL;
+    }
+
+    Ret = IntGetClassWndProc(Class,
+                             GetW32ProcessInfo(),
+                             Ansi);
+    if (Ret == NULL)
+    {
         return NULL;
     }
 
@@ -731,61 +794,6 @@ IntFindClass(IN RTL_ATOM Atom,
     }
 
     return Class;
-}
-
-static WNDPROC
-IntGetClassWndProc(IN PWINDOWCLASS Class,
-                   IN PW32PROCESSINFO pi,
-                   IN BOOL Ansi)
-{
-    if (Class->System)
-    {
-        return (Ansi ? Class->WndProcExtra : Class->WndProc);
-    }
-    else
-    {
-        if (!Ansi == Class->Unicode)
-        {
-            return Class->WndProc;
-        }
-        else
-        {
-            if (Class->CallProc != NULL)
-            {
-                return (WNDPROC)ObmObjectToHandle(Class->CallProc);
-            }
-            else
-            {
-                PCALLPROC NewCallProc, CallProc;
-
-                if (pi == NULL)
-                    return NULL;
-
-                /* NOTE: use the interlocked functions, as this operation may be done even
-                         when only the shared lock is held! */
-                NewCallProc = CreateCallProc(Class->Desktop,
-                                             Class->WndProc,
-                                             Class->Unicode,
-                                             pi);
-                if (NewCallProc == NULL)
-                {
-                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                    return NULL;
-                }
-
-                CallProc = InterlockedCompareExchangePointer(&Class->CallProc,
-                                                             NewCallProc,
-                                                             NULL);
-                if (CallProc != NULL)
-                {
-                    DestroyCallProc(Class->Desktop,
-                                    NewCallProc);
-                }
-
-                return (WNDPROC)ObmObjectToHandle((CallProc == NULL ? NewCallProc : CallProc));
-            }
-        }
-    }
 }
 
 RTL_ATOM
@@ -1760,22 +1768,9 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
 {
     lpwcx->style = Class->Style;
 
-    if (Class->System)
-    {
-        lpwcx->lpfnWndProc = (!Ansi ? Class->WndProc : Class->WndProcExtra);
-    }
-    else
-    {
-        if (!Ansi == Class->Unicode)
-        {
-            lpwcx->lpfnWndProc = Class->WndProc;
-        }
-        else
-        {
-            /* FIXME - return callproc handle or function pointer? */
-            lpwcx->lpfnWndProc = Class->CallProc->WndProc;
-        }
-    }
+    lpwcx->lpfnWndProc = IntGetClassWndProc(Class,
+                                            GetW32ProcessInfo(),
+                                            Ansi);
 
     lpwcx->cbClsExtra = Class->ClsExtra;
     lpwcx->cbWndExtra = Class->WndExtra;
@@ -1917,7 +1912,14 @@ NtUserGetClassLong(IN HWND hWnd,
     PWINDOW_OBJECT Window;
     ULONG_PTR Ret = 0;
 
-    UserEnterShared();
+    if (Offset != GCLP_WNDPROC)
+    {
+        UserEnterShared();
+    }
+    else
+    {
+        UserEnterExclusive();
+    }
 
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
@@ -2090,7 +2092,9 @@ NtUserGetClassInfo(
     PW32PROCESSINFO pi;
     BOOL Ret = FALSE;
 
-    UserEnterShared();
+    /* NOTE: need exclusive lock because getting the wndproc might require the
+             creation of a call procedure handle */
+    UserEnterExclusive();
 
     pi = GetW32ProcessInfo();
     if (pi == NULL)

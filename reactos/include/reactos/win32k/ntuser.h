@@ -14,7 +14,7 @@ typedef struct _CALLPROC
 {
     struct _W32PROCESSINFO *pi;
     WNDPROC WndProc;
-    BOOL Unicode : 1;
+    UINT Unicode : 1;
 } CALLPROC, *PCALLPROC;
 
 typedef struct _WINDOWCLASS
@@ -46,10 +46,10 @@ typedef struct _WINDOWCLASS
 
     ULONG_PTR ClassExtraDataOffset;
 
-    BOOL Destroying : 1;
-    BOOL Unicode : 1;
-    BOOL System : 1;
-    BOOL Global : 1;
+    UINT Destroying : 1;
+    UINT Unicode : 1;
+    UINT System : 1;
+    UINT Global : 1;
 } WINDOWCLASS, *PWINDOWCLASS;
 
 typedef struct _W32PROCESSINFO

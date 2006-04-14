@@ -1014,8 +1014,9 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 {
   WNDPROC_INFO wpInfo;
 
+  /* FIXME - can the first parameter be NULL? */
   if (lpPrevWndFunc == NULL)
-    lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWLP_WNDPROC, FALSE);
+    lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWLP_WNDPROC, TRUE);
 
   if (!NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
                                       &wpInfo))
@@ -1041,6 +1042,10 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 		LPARAM lParam)
 {
   WNDPROC_INFO wpInfo;
+
+  /* FIXME - can the first parameter be NULL? */
+  if (lpPrevWndFunc == NULL)
+    lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWLP_WNDPROC, FALSE);
 
   if (!NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
                                       &wpInfo))
