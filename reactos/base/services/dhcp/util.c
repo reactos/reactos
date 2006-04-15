@@ -123,6 +123,24 @@ int read_client_conf(void) {
        config->send_options[DHO_DHCP_CLIENT_IDENTIFIER].len =
              ifi->hw_address.hlen;
 
+       /* Setup the requested option list */
+       config->requested_options
+           [config->requested_option_count++] = DHO_SUBNET_MASK;
+       config->requested_options
+           [config->requested_option_count++] = DHO_BROADCAST_ADDRESS;
+       config->requested_options
+           [config->requested_option_count++] = DHO_TIME_OFFSET;
+       config->requested_options
+           [config->requested_option_count++] = DHO_ROUTERS;
+       config->requested_options
+           [config->requested_option_count++] = DHO_DOMAIN_NAME;
+       config->requested_options
+           [config->requested_option_count++] = DHO_DOMAIN_NAME_SERVERS;
+       config->requested_options
+           [config->requested_option_count++] = DHO_HOST_NAME;
+       config->requested_options
+           [config->requested_option_count++] = DHO_NTP_SERVERS;
+
        warn("util.c read_client_conf poorly implemented!");
     return 0;
 }
