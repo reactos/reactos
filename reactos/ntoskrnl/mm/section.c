@@ -353,7 +353,9 @@ MmFreeDataSectionSegments(PSECTION_OBJECT_POINTERS SectionObjectPointer)
                      KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
                      Status = Iosb.Status;
                   }
-                  MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);            
+
+                  if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+                     MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
                }
                MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
             }
