@@ -93,7 +93,8 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop);
 HDESK FASTCALL
 IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
 
-BOOL IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject);
+BOOL IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
+                         IN BOOL FreeOnFailure);
 
 NTSTATUS FASTCALL
 IntValidateDesktopHandle(

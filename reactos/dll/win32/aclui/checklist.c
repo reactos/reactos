@@ -85,10 +85,10 @@ typedef struct _CHECKLISTWND
     HTHEME ThemeHandle;
 #endif
 
-    BOOL HasFocus : 1;
-    BOOL FocusedPushed : 1;
-    BOOL QuickSearchEnabled : 1;
-    BOOL ShowingCaret : 1;
+    UINT HasFocus : 1;
+    UINT FocusedPushed : 1;
+    UINT QuickSearchEnabled : 1;
+    UINT ShowingCaret : 1;
 } CHECKLISTWND, *PCHECKLISTWND;
 
 static VOID EscapeQuickSearch(IN PCHECKLISTWND infoPtr);

@@ -33,6 +33,7 @@ typedef struct _WINDOWCLASS
         WNDPROC WndProcExtra;
         PCALLPROC CallProc;
     };
+    PCALLPROC CallProc2;
     INT ClsExtra;
     INT WndExtra;
     HINSTANCE hInstance;
@@ -50,6 +51,8 @@ typedef struct _WINDOWCLASS
     UINT Unicode : 1;
     UINT System : 1;
     UINT Global : 1;
+    UINT GlobalCallProc : 1;
+    UINT GlobalCallProc2 : 1;
 } WINDOWCLASS, *PWINDOWCLASS;
 
 typedef struct _W32PROCESSINFO

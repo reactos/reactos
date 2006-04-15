@@ -1757,7 +1757,8 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
 }
 
 BOOL
-IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject)
+IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
+                    IN BOOL FreeOnFailure)
 {
     PDESKTOP_OBJECT OldDesktop;
     PW32THREAD W32Thread;
@@ -1771,6 +1772,13 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject)
     {
         OldDesktop = W32Thread->Desktop;
 
+        if (!IsListEmpty(&W32Thread->WindowListHead))
+        {
+            DPRINT1("Attempted to change thread desktop although the thread has windows!\n");
+            SetLastWin32Error(ERROR_BUSY);
+            return FALSE;
+        }
+
         W32Thread->Desktop = DesktopObject;
 
         if (MapHeap && DesktopObject != NULL)
@@ -1781,6 +1789,20 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject)
                 SetLastNtError(Status);
                 return FALSE;
             }
+        }
+
+        if (OldDesktop != NULL &&
+            !IntCheckProcessDesktopClasses(OldDesktop->DesktopInfo,
+                                           FreeOnFailure))
+        {
+            DPRINT1("Failed to move process classes to shared heap!\n");
+
+            /* failed to move desktop classes to the shared heap,
+               unmap the view and return the error */
+            if (MapHeap && DesktopObject != NULL)
+                IntUnmapDesktopView(DesktopObject);
+
+            return FALSE;
         }
 
         if (DesktopObject != NULL)
@@ -1797,6 +1819,7 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject)
 
             ObDereferenceObject(OldDesktop);
 
+            /* update the thread info */
             if (W32Thread != NULL && W32Thread->ThreadInfo != NULL &&
                 W32Thread->ThreadInfo->Desktop != (DesktopObject != NULL ? DesktopObject->DesktopInfo : NULL))
             {
@@ -1849,7 +1872,8 @@ NtUserSetThreadDesktop(HDESK hDesktop)
 
    /* FIXME: Should check here to see if the thread has any windows. */
 
-   if (!IntSetThreadDesktop(DesktopObject))
+   if (!IntSetThreadDesktop(DesktopObject,
+                            FALSE))
    {
        RETURN(FALSE);
    }

@@ -442,7 +442,6 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    if (Window->CallProc2 != NULL)
    {
-       DbgPrint("!!!!! Destroy call proc 0x%p\n", ObmObjectToHandle(Window->CallProc2));
        DestroyCallProc(Window->ti->Desktop,
                        Window->CallProc2);
    }
@@ -1401,7 +1400,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                      BOOL bUnicodeWindow)
 {
    PWINSTATION_OBJECT WinSta;
-   PWINDOWCLASS Class = NULL;
+   PWINDOWCLASS *ClassLink, Class = NULL;
    RTL_ATOM ClassAtom;
    PWINDOW_OBJECT Window = NULL;
    PWINDOW_OBJECT ParentWindow = NULL, OwnerWindow;
@@ -1482,7 +1481,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                                hInstance,
                                ti->kpi,
                                &Class,
-                               NULL);
+                               &ClassLink);
 
    if (ClassAtom == (RTL_ATOM)0)
    {
@@ -1500,6 +1499,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
 
    Class = IntReferenceClass(Class,
+                             ClassLink,
                              ti->Desktop);
    if (Class == NULL)
    {
@@ -1541,6 +1541,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
     */
    Window->ti = ti;
    Window->Class = Class;
+   Class = NULL;
+
    Window->SystemMenu = (HMENU)0;
    Window->ContextHelpId = 0;
    Window->IDMenu = 0;
@@ -1548,7 +1550,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Window->hSelf = hWnd;
 
    if (!hMenu)
-       hMenu = Class->hMenu;
+       hMenu = Window->Class->hMenu;
 
    if (0 != (dwStyle & WS_CHILD))
    {
@@ -1576,18 +1578,18 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    
    Window->UserData = 0;
 
-   Window->IsSystem = Class->System;
-   if (Class->System)
+   Window->IsSystem = Window->Class->System;
+   if (Window->Class->System)
    {
        /* NOTE: Always create a unicode window for system classes! */
        Window->Unicode = TRUE;
-       Window->WndProc = Class->WndProc;
-       Window->WndProcExtra = Class->WndProcExtra;
+       Window->WndProc = Window->Class->WndProc;
+       Window->WndProcExtra = Window->Class->WndProcExtra;
    }
    else
    {
-       Window->Unicode = Class->Unicode;
-       Window->WndProc = Class->WndProc;
+       Window->Unicode = Window->Class->Unicode;
+       Window->WndProc = Window->Class->WndProc;
        Window->CallProc = NULL;
    }
 
@@ -1596,10 +1598,10 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Window->LastChild = NULL;
    Window->PrevSibling = NULL;
    Window->NextSibling = NULL;
-   Window->ExtraDataSize = Class->WndExtra;
+   Window->ExtraDataSize = Window->Class->WndExtra;
 
    /* extra window data */
-   if (Class->WndExtra)
+   if (Window->Class->WndExtra)
       Window->ExtraData = (PCHAR)(Window + 1);
 
    InitializeListHead(&Window->PropListHead);
@@ -3463,7 +3465,6 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
             }
 
             Ret = (WNDPROC)ObmObjectToHandle(Window->CallProc2);
-            DbgPrint("!!!!!!!! Returning handle 0x%p\n", Ret);
         }
     }
 

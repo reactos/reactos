@@ -32,7 +32,8 @@ void FASTCALL
 DestroyProcessClasses(PW32PROCESS Process );
 
 PWINDOWCLASS
-IntReferenceClass(IN PWINDOWCLASS BaseClass,
+IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
+                  IN OUT PWINDOWCLASS *ClassLink,
                   IN PDESKTOP Desktop);
 
 VOID
@@ -63,6 +64,10 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 IN PW32PROCESSINFO pi  OPTIONAL,
                 OUT PWINDOWCLASS *BaseClass  OPTIONAL,
                 OUT PWINDOWCLASS **Link  OPTIONAL);
+
+BOOL
+IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
+                              IN BOOL FreeOnFailure);
 
 #endif /* _WIN32K_CLASS_H */
 

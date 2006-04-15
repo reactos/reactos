@@ -25,9 +25,6 @@
  * PROGRAMER:        Thomas Weidenmueller <w3seek@reactos.com>
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
- *
- * NOTE: Should classes created on a desktop heap be moved to the shared
- *       heap when the desktop is destroyed, or should they be unregistered?
  */
 /* INCLUDES ******************************************************************/
 
@@ -89,7 +86,7 @@ CreateCallProc(IN PDESKTOP Desktop,
     {
         NewCallProc->pi = pi;
         NewCallProc->WndProc = WndProc;
-        NewCallProc->Unicode = Unicode != FALSE;
+        NewCallProc->Unicode = Unicode;
     }
 
     return NewCallProc;
@@ -154,22 +151,12 @@ static VOID
 IntDestroyClass(IN OUT PWINDOWCLASS Class)
 {
     /* there shouldn't be any clones anymore */
-
     ASSERT(Class->Windows == 0);
+    ASSERT(Class->Clone == NULL);
 
     if (Class->Desktop != NULL)
     {
         ASSERT(Class->Clone == NULL);
-    }
-    else if (Class->Clone != NULL)
-    {
-        /* there must not be more than one clone! This can be the case
-           when the base class is on the shared heap */
-        ASSERT(Class->Clone->Next == NULL);
-
-        /* free the clone */
-        IntDestroyClass(Class->Clone);
-        Class->Clone = NULL;
     }
 
     if (Class->Base == Class)
@@ -177,8 +164,14 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
         /* destruct resources shared with clones */
         if (!Class->System && Class->CallProc != NULL)
         {
-            DestroyCallProc(Class->Desktop,
+            DestroyCallProc(Class->GlobalCallProc ? NULL : Class->Desktop,
                             Class->CallProc);
+        }
+
+        if (Class->CallProc2 != NULL)
+        {
+            DestroyCallProc(Class->GlobalCallProc2 ? NULL : Class->Desktop,
+                            Class->CallProc2);
         }
 
         IntFreeClassMenuName(Class);
@@ -323,7 +316,8 @@ IntSetClassAtom(IN OUT PWINDOWCLASS Class,
 static WNDPROC
 IntGetClassWndProc(IN PWINDOWCLASS Class,
                    IN PW32PROCESSINFO pi,
-                   IN BOOL Ansi)
+                   IN BOOL Ansi,
+                   IN BOOL UseCallProc2)
 {
     /* FIXME - assert for exclusive lock! */
 
@@ -339,19 +333,27 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
         }
         else
         {
-            if (Class->CallProc != NULL)
+            PCALLPROC *CallProcPtr;
+            PWINDOWCLASS BaseClass;
+
+            /* make sure the call procedures are located on the desktop
+               of the base class! */
+            BaseClass = Class->Base;
+            Class = BaseClass;
+
+            CallProcPtr = (UseCallProc2 ? &Class->CallProc2 : &Class->CallProc);
+
+            if (*CallProcPtr != NULL)
             {
-                return (WNDPROC)ObmObjectToHandle(Class->CallProc);
+                return (WNDPROC)ObmObjectToHandle(*CallProcPtr);
             }
             else
             {
-                PCALLPROC NewCallProc, CallProc;
+                PCALLPROC NewCallProc;
 
                 if (pi == NULL)
                     return NULL;
 
-                /* NOTE: use the interlocked functions, as this operation may be done even
-                         when only the shared lock is held! */
                 NewCallProc = CreateCallProc(Class->Desktop,
                                              Class->WndProc,
                                              Class->Unicode,
@@ -362,16 +364,35 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
                     return NULL;
                 }
 
-                CallProc = InterlockedCompareExchangePointer(&Class->CallProc,
-                                                             NewCallProc,
-                                                             NULL);
-                if (CallProc != NULL)
+                *CallProcPtr = NewCallProc;
+
+                if (Class->Desktop == NULL)
                 {
-                    DestroyCallProc(Class->Desktop,
-                                    NewCallProc);
+                    if (UseCallProc2)
+                        Class->GlobalCallProc2 = TRUE;
+                    else
+                        Class->GlobalCallProc = TRUE;
                 }
 
-                return (WNDPROC)ObmObjectToHandle((CallProc == NULL ? NewCallProc : CallProc));
+                /* update the clones */
+                Class = Class->Clone;
+                while (Class != NULL)
+                {
+                    if (UseCallProc2)
+                    {
+                        Class->CallProc2 = NewCallProc;
+                        Class->GlobalCallProc2 = BaseClass->GlobalCallProc2;
+                    }
+                    else
+                    {
+                        Class->CallProc = NewCallProc;
+                        Class->GlobalCallProc = BaseClass->GlobalCallProc;
+                    }
+
+                    Class = Class->Next;
+                }
+
+                return (WNDPROC)ObmObjectToHandle(NewCallProc);
             }
         }
     }
@@ -391,17 +412,19 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
         return NULL;
     }
 
+    /* update the base class first */
+    Class = Class->Base;
+
     Ret = IntGetClassWndProc(Class,
                              GetW32ProcessInfo(),
-                             Ansi);
+                             Ansi,
+                             TRUE);
     if (Ret == NULL)
     {
         return NULL;
     }
 
-    /* update the base class first */
-    Class = Class->Base;
-
+    /* update the class info */
     Class->Unicode = !Ansi;
     Class->WndProc = WndProc;
     if (Class->CallProc != NULL)
@@ -424,7 +447,8 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
 }
 
 static PWINDOWCLASS
-IntGetClassForDesktop(IN PWINDOWCLASS BaseClass,
+IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
+                      IN OUT PWINDOWCLASS *ClassLink,
                       IN PDESKTOP Desktop)
 {
     SIZE_T ClassSize;
@@ -443,6 +467,9 @@ IntGetClassForDesktop(IN PWINDOWCLASS BaseClass,
 
     if (BaseClass->Desktop == NULL)
     {
+        ASSERT(BaseClass->Windows == 0);
+        ASSERT(BaseClass->Clone == NULL);
+
         /* Classes are also located in the shared heap when the class
            was created before the thread attached to a desktop. As soon
            as a window is created for such a class located on the shared
@@ -485,13 +512,43 @@ IntGetClassForDesktop(IN PWINDOWCLASS BaseClass,
                           ClassSize);
 
             /* update some pointers and link the class */
-            Class->Next = BaseClass->Clone;
-            Class->Clone = NULL;
-            Class->Base = BaseClass;
             Class->Desktop = Desktop;
             Class->Windows = 0;
-            (void)InterlockedExchangePointer(&BaseClass->Clone,
-                                             Class);
+
+            if (BaseClass->Desktop == NULL)
+            {
+                /* we don't really need the base class on the shared
+                   heap anymore, delete it so the only class left is
+                   the clone we just created, which now serves as the
+                   new base class */
+                ASSERT(BaseClass->Clone == NULL);
+                ASSERT(Class->Clone == NULL);
+                Class->Base = Class;
+                Class->Next = BaseClass->Next;
+
+                if (!BaseClass->System && BaseClass->CallProc != NULL)
+                    Class->GlobalCallProc = TRUE;
+                if (BaseClass->CallProc2 != NULL)
+                    Class->GlobalCallProc2 = TRUE;
+
+                /* replace the base class */
+                (void)InterlockedExchangePointer(ClassLink,
+                                                 Class);
+
+                /* destroy the obsolete copy on the shared heap */
+                BaseClass->Base = NULL;
+                BaseClass->Clone = NULL;
+                IntDestroyClass(BaseClass);
+            }
+            else
+            {
+                /* link in the clone */
+                Class->Clone = NULL;
+                Class->Base = BaseClass;
+                Class->Next = BaseClass->Clone;
+                (void)InterlockedExchangePointer(&BaseClass->Clone,
+                                                 Class);
+            }
         }
         else
         {
@@ -503,12 +560,16 @@ IntGetClassForDesktop(IN PWINDOWCLASS BaseClass,
 }
 
 PWINDOWCLASS
-IntReferenceClass(IN PWINDOWCLASS BaseClass,
+IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
+                  IN OUT PWINDOWCLASS *ClassLink,
                   IN PDESKTOP Desktop)
 {
     PWINDOWCLASS Class;
 
+    ASSERT(BaseClass->Base == BaseClass);
+
     Class = IntGetClassForDesktop(BaseClass,
+                                  ClassLink,
                                   Desktop);
     if (Class != NULL)
     {
@@ -516,6 +577,72 @@ IntReferenceClass(IN PWINDOWCLASS BaseClass,
     }
 
     return Class;
+}
+
+static VOID
+IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
+                      IN OUT PWINDOWCLASS *BaseClassLink,
+                      IN OUT PWINDOWCLASS *CloneLink)
+{
+    PWINDOWCLASS Clone, BaseClass;
+    PCALLPROC CallProc;
+
+    ASSERT(Class->Base != Class);
+    ASSERT(Class->Base->Clone != NULL);
+    ASSERT(Class->Desktop != NULL);
+    ASSERT(Class->Windows != 0);
+    ASSERT(Class->Base->Desktop != NULL);
+    ASSERT(Class->Base->Windows == 0);
+
+    /* unlink the clone */
+    *CloneLink = Class->Next;
+    Class->Clone = Class->Base->Clone;
+
+    BaseClass = Class->Base;
+
+    if (!BaseClass->System && BaseClass->CallProc != NULL &&
+        !BaseClass->GlobalCallProc)
+    {
+        /* we need to move the allocated call procedure */
+        CallProc = BaseClass->CallProc;
+        Class->CallProc = CloneCallProc(Class->Desktop,
+                                        CallProc);
+        DestroyCallProc(BaseClass->Desktop,
+                        CallProc);
+    }
+
+    if (BaseClass->CallProc2 != NULL &&
+        !BaseClass->GlobalCallProc2)
+    {
+        /* we need to move the allocated call procedure */
+        CallProc = BaseClass->CallProc2;
+        Class->CallProc2 = CloneCallProc(Class->Desktop,
+                                         CallProc);
+        DestroyCallProc(BaseClass->Desktop,
+                        CallProc);
+    }
+
+    /* update the class information to make it a base class */
+    Class->Base = Class;
+    Class->Next = (*BaseClassLink)->Next;
+
+    /* update all clones */
+    Clone = Class->Clone;
+    while (Clone != NULL)
+    {
+        ASSERT(Clone->Clone == NULL);
+        Clone->Base = Class;
+
+        if (!Class->System)
+            Clone->CallProc = Class->CallProc;
+        Clone->CallProc2 = Class->CallProc2;
+
+        Clone = Clone->Next;
+    }
+
+    /* link in the new base class */
+    (void)InterlockedExchangePointer(BaseClassLink,
+                                     Class);
 }
 
 VOID
@@ -535,12 +662,10 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
 
             /* check if there are clones of the class on other desktops,
                link the first clone in if possible. If there are no clones
-               then leave the class on the desktop heap... */
+               then leave the class on the desktop heap. It will get moved
+               to the shared heap when the thread detaches. */
             if (BaseClass->Clone != NULL)
             {
-                PWINDOWCLASS NewBase = BaseClass->Clone;
-
-                /* locate the base class and unlink it */
                 if (BaseClass->System)
                     PrevLink = &pi->SystemClassList;
                 else if (BaseClass->Global)
@@ -548,35 +673,18 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
                 else
                     PrevLink = &pi->LocalClassList;
 
-                CurrentClass = *PrevLink;
-                while (CurrentClass != BaseClass)
+                while (*PrevLink != BaseClass)
                 {
-                    ASSERT(CurrentClass != NULL);
-
-                    PrevLink = &CurrentClass->Next;
-                    CurrentClass = CurrentClass->Next;
+                    ASSERT(BaseClass != NULL);
+                    PrevLink = &BaseClass->Next;
                 }
 
-                ASSERT(CurrentClass == BaseClass);
+                ASSERT(*PrevLink == BaseClass);
 
-                NewBase->Clone = NewBase->Next;
-                NewBase->Next = BaseClass->Next;
-                NewBase->Base = NewBase;
-
-                /* update all clones */
-                CurrentClass = NewBase->Clone;
-                while (CurrentClass != NULL)
-                {
-                    ASSERT(CurrentClass->Clone == NULL);
-
-                    CurrentClass->Base = NewBase;
-
-                    CurrentClass = CurrentClass->Next;
-                }
-
-                /* link in the new base class */
-                (void)InterlockedExchangePointer(PrevLink,
-                                                 NewBase);
+                /* make the first clone become the new base class */
+                IntMakeCloneBaseClass(BaseClass->Clone,
+                                      PrevLink,
+                                      &BaseClass->Clone);
 
                 /* destroy the class, there's still another clone of the class
                    that now serves as a base class. Make sure we don't destruct
@@ -611,6 +719,180 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
             IntDestroyClass(Class);
         }
     }
+}
+
+static BOOL
+IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
+                         IN OUT PWINDOWCLASS **ClassLinkPtr)
+{
+    PWINDOWCLASS NewClass;
+    PCALLPROC CallProc;
+    SIZE_T ClassSize;
+
+    ASSERT(Class->Base == Class);
+    ASSERT(Class->Desktop != NULL);
+    ASSERT(Class->Windows == 0);
+    ASSERT(Class->Clone == NULL);
+
+    ClassSize = (SIZE_T)Class->ClassExtraDataOffset +
+                (SIZE_T)Class->ClsExtra;
+
+    /* allocate the new base class on the shared heap */
+    NewClass = UserHeapAlloc(ClassSize);
+    if (NewClass != NULL)
+    {
+        RtlCopyMemory(NewClass,
+                      Class,
+                      ClassSize);
+
+        NewClass->Desktop = NULL;
+        NewClass->Base = NewClass;
+
+        if (!NewClass->System && NewClass->CallProc != NULL &&
+            !NewClass->GlobalCallProc)
+        {
+            /* we need to move the allocated call procedure to the shared heap */
+            CallProc = NewClass->CallProc;
+            NewClass->CallProc = CloneCallProc(NULL,
+                                               CallProc);
+            DestroyCallProc(Class->Desktop,
+                            CallProc);
+
+            NewClass->GlobalCallProc = TRUE;
+        }
+
+        if (NewClass->CallProc2 != NULL &&
+            !NewClass->GlobalCallProc2)
+        {
+            /* we need to move the allocated call procedure to the shared heap */
+            CallProc = NewClass->CallProc2;
+            NewClass->CallProc2 = CloneCallProc(NULL,
+                                                CallProc);
+            DestroyCallProc(Class->Desktop,
+                            CallProc);
+
+            NewClass->GlobalCallProc2 = TRUE;
+        }
+
+        /* replace the class in the list */
+        (void)InterlockedExchangePointer(*ClassLinkPtr,
+                                         NewClass);
+        *ClassLinkPtr = &NewClass->Next;
+
+        /* free the obsolete class on the desktop heap */
+        Class->Base = NULL;
+        IntDestroyClass(Class);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static VOID
+IntCheckDesktopClasses(IN PDESKTOP Desktop,
+                       IN OUT PWINDOWCLASS *ClassList,
+                       IN BOOL FreeOnFailure,
+                       OUT BOOL *Ret)
+{
+    PWINDOWCLASS Class, NextClass, *Link;
+
+    /* NOTE: We only need to check base classes! When classes are no longer needed
+             on a desktop, the clones will be freed automatically as soon as possible.
+             However, we need to move base classes to the shared heap, as soon as
+             the last desktop heap where a class is allocated on is about to be destroyed.
+             If we didn't move the class to the shared heap, the class would become
+             inaccessible! */
+
+    ASSERT(Desktop != NULL);
+
+    Link = ClassList;
+    Class = *Link;
+    while (Class != NULL)
+    {
+        NextClass = Class->Next;
+
+        ASSERT(Class->Base == Class);
+
+        if (Class->Desktop == Desktop &&
+            Class->Windows == 0)
+        {
+            /* there shouldn't be any clones around anymore! */
+            ASSERT(Class->Clone == NULL);
+
+            /* FIXME - If process is terminating, don't move the class but rather destroy it! */
+            /* FIXME - We could move the class to another desktop heap if there's still desktops
+                       mapped into the process... */
+
+            /* move the class to the shared heap */
+            if (IntMoveClassToSharedHeap(Class,
+                                         &Link))
+            {
+                ASSERT(*Link == NextClass);
+            }
+            else
+            {
+                ASSERT(NextClass == Class->Next);
+
+                if (FreeOnFailure)
+                {
+                    /* unlink the base class */
+                    (void)InterlockedExchangePointer(Link,
+                                                     Class->Next);
+
+                    /* we can free the old base class now */
+                    Class->Base = NULL;
+                    IntDestroyClass(Class);
+                }
+                else
+                {
+                    Link = &Class->Next;
+                    *Ret = FALSE;
+                }
+            }
+        }
+        else
+            Link = &Class->Next;
+
+        Class = NextClass;
+    }
+}
+
+BOOL
+IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
+                              IN BOOL FreeOnFailure)
+{
+    PW32PROCESSINFO pi;
+    BOOL Ret = TRUE;
+
+    pi = GetW32ProcessInfo();
+    if (pi == NULL)
+        return TRUE;
+
+    /* check all local classes */
+    IntCheckDesktopClasses(Desktop,
+                           &pi->LocalClassList,
+                           FreeOnFailure,
+                           &Ret);
+
+    /* check all global classes */
+    IntCheckDesktopClasses(Desktop,
+                           &pi->GlobalClassList,
+                           FreeOnFailure,
+                           &Ret);
+
+    /* check all system classes */
+    IntCheckDesktopClasses(Desktop,
+                           &pi->SystemClassList,
+                           FreeOnFailure,
+                           &Ret);
+
+    if (!Ret)
+    {
+        DPRINT1("Failed to move process classes from desktop 0x%p to the shared heap!\n", Desktop);
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    }
+
+    return Ret;
 }
 
 static PWINDOWCLASS
@@ -908,24 +1190,14 @@ FoundClass:
 static PWINDOWCLASS
 IntClassResizeInternal(IN OUT PWINDOWCLASS Class,
                        IN INT ClsExtraNew,
-                       IN PWINDOWCLASS *List)
+                       IN PWINDOWCLASS *PrevLink)
 {
-    PWINDOWCLASS *PrevLink, CurrentClass, NewClass;
+    PWINDOWCLASS NewClass;
     SIZE_T NewSize;
 
+    /* NOTE: Do *not* access Class->Base here, it may be invalid at this point! */
+
     /* temporarily unlink the class, as resizing it may change it's location */
-    PrevLink = List;
-    CurrentClass = *PrevLink;
-    while (CurrentClass != Class)
-    {
-        ASSERT(CurrentClass != NULL);
-
-        PrevLink = &CurrentClass->Next;
-        CurrentClass = CurrentClass->Next;
-    }
-
-    ASSERT(CurrentClass == Class);
-
     (void)InterlockedExchangePointer(PrevLink,
                                      Class->Next);
 
@@ -986,7 +1258,7 @@ IntClassResize(IN OUT PWINDOWCLASS Class,
                IN PW32PROCESSINFO pi,
                IN INT ClsExtraNew)
 {
-    PWINDOWCLASS *List, *CloneList, NewClass, Clone, FailedResize = NULL;
+    PWINDOWCLASS *Link, NewClass, Clone, FailedResize = NULL;
     BOOL FailOnResize;
 
     if (pi == NULL)
@@ -1003,18 +1275,18 @@ IntClassResize(IN OUT PWINDOWCLASS Class,
     }
 
     if (Class->System)
-        List = &pi->SystemClassList;
+        Link = &pi->SystemClassList;
     else if (Class->Global)
-        List = &pi->GlobalClassList;
+        Link = &pi->GlobalClassList;
     else
-        List = &pi->LocalClassList;
+        Link = &pi->LocalClassList;
 
     FailOnResize = Class->ClsExtra < ClsExtraNew;
 
     /* resize the base class */
     NewClass = IntClassResizeInternal(Class,
                                       ClsExtraNew,
-                                      List);
+                                      Link);
     if (NewClass == NULL)
     {
         if (FailOnResize)
@@ -1027,13 +1299,13 @@ IntClassResize(IN OUT PWINDOWCLASS Class,
         Class = NewClass;
 
     /* resize the clones */
-    CloneList = &Class->Clone;
+    Link = &Class->Clone;
     Clone = Class->Clone;
     while (Clone != NULL)
     {
         NewClass = IntClassResizeInternal(Clone,
                                           ClsExtraNew,
-                                          CloneList);
+                                          Link);
 
         if (NewClass == NULL)
         {
@@ -1050,6 +1322,7 @@ IntClassResize(IN OUT PWINDOWCLASS Class,
         /* save the pointer to the base class in case it changed */
         Clone->Base = Class;
 
+        Link = &Clone->Next;
         Clone = Clone->Next;
     }
 
@@ -1059,15 +1332,22 @@ IntClassResize(IN OUT PWINDOWCLASS Class,
            other clones and to the base class */
         DPRINT1("Failed to resize the cloned class 0x%p\n", FailedResize);
 
+        if (Class->System)
+            Link = &pi->SystemClassList;
+        else if (Class->Global)
+            Link = &pi->GlobalClassList;
+        else
+            Link = &pi->LocalClassList;
+
         /* roll back the changes made to the base class */
         NewClass = IntClassResizeInternal(Class,
                                           Class->ClsExtra,
-                                          List);
+                                          Link);
         if (NewClass != NULL)
             Class = NewClass;
 
         /* roll back all changes made to the class clones */
-        CloneList = &Class->Clone;
+        Link = &Class->Clone;
         Clone = Class->Clone;
         while (Clone != FailedResize)
         {
@@ -1075,14 +1355,14 @@ IntClassResize(IN OUT PWINDOWCLASS Class,
 
             NewClass = IntClassResizeInternal(Clone,
                                               Class->ClsExtra,
-                                              CloneList);
+                                              Link);
             if (NewClass != NULL)
                 Clone = NewClass;
 
             /* save the pointer to the base class in case it changed */
             Clone->Base = Class;
 
-            CloneList = &Clone->Next;
+            Link = &Clone->Next;
             Clone = Clone->Next;
         }
 
@@ -1097,6 +1377,9 @@ IntClassResize(IN OUT PWINDOWCLASS Class,
         while (Clone != NULL)
         {
             Clone->ClsExtra = ClsExtraNew;
+
+            ASSERT(Clone->Base == Class);
+
             Clone = Clone->Next;
         }
 
@@ -1165,8 +1448,6 @@ ClassAlreadyExists:
             }
         }
     }
-
-    ASSERT(ti->Desktop != NULL);
 
     Class = IntCreateClass(lpwcx,
                            ClassName,
@@ -1447,7 +1728,8 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
         case GCLP_WNDPROC:
             Ret = (ULONG_PTR)IntGetClassWndProc(Class,
                                                 GetW32ProcessInfo(),
-                                                Ansi);
+                                                Ansi,
+                                                FALSE);
             break;
 
         case GCW_ATOM:
@@ -1770,7 +2052,8 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
 
     lpwcx->lpfnWndProc = IntGetClassWndProc(Class,
                                             GetW32ProcessInfo(),
-                                            Ansi);
+                                            Ansi,
+                                            FALSE);
 
     lpwcx->cbClsExtra = Class->ClsExtra;
     lpwcx->cbWndExtra = Class->WndExtra;

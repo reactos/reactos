@@ -203,6 +203,9 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
       DPRINT("Creating W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
+      InitializeListHead(&Win32Thread->WindowListHead);
+      InitializeListHead(&Win32Thread->W32CallbackListHead);
+
       /*
        * inherit the thread desktop and process window station (if not yet inherited) from the process startup
        * info structure. See documentation of CreateProcess()
@@ -244,7 +247,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
           NtClose(hDesk);
           if(NT_SUCCESS(Status))
           {
-            if (!IntSetThreadDesktop(DesktopObject))
+            if (!IntSetThreadDesktop(DesktopObject,
+                                     FALSE))
             {
               DPRINT1("Unable to set thread desktop\n");
             }
@@ -260,8 +264,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Thread->MessagePumpHookValue = 0;
-      InitializeListHead(&Win32Thread->WindowListHead);
-      InitializeListHead(&Win32Thread->W32CallbackListHead);
     }
   else
     {
@@ -278,14 +280,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       MsqDestroyMessageQueue(Win32Thread->MessageQueue);
       IntCleanupThreadCallbacks(Win32Thread);
 
-      IntSetThreadDesktop(NULL);
-
-      if (Win32Thread->ThreadInfo != NULL)
-      {
-          UserHeapFree(Win32Thread->ThreadInfo);
-          Win32Thread->ThreadInfo = NULL;
-      }
-
       /* cleanup user object references stack */
       e = PopEntryList(&Win32Thread->ReferencesList);
       while (e)
@@ -296,6 +290,16 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
          
          e = PopEntryList(&Win32Thread->ReferencesList);
       }
+
+      IntSetThreadDesktop(NULL,
+                          TRUE);
+
+      if (Win32Thread->ThreadInfo != NULL)
+      {
+          UserHeapFree(Win32Thread->ThreadInfo);
+          Win32Thread->ThreadInfo = NULL;
+      }
+
       PsSetThreadWin32Thread(Thread, NULL);
     }
 
