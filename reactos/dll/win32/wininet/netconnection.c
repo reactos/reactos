@@ -674,7 +674,7 @@ BOOL NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value)
     if (result == -1)
     {
         WARN("setsockopt failed (%s)\n", strerror(errno));
-        INTERNET_SetLastError(sock_get_error(errno));
+        //INTERNET_SetLastError(sock_get_error(errno));
         return FALSE;
     }
 
