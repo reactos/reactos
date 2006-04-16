@@ -28,11 +28,17 @@ ExEnterCriticalRegionAndAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 
     /* Enter the Critical Region */
     KeEnterCriticalRegion();
+    /*
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
            (Thread == NULL) ||
            (Thread->CombinedApcDisable != 0) ||
            (Thread->Teb == NULL) ||
            (Thread->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
+    */
+    ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
+           (Thread == NULL) ||
+           (Thread->CombinedApcDisable != 0));
+           
     ASSERT((Thread == NULL) || (FastMutex->Owner != Thread));
 
     /* Decrease the count */
@@ -53,12 +59,18 @@ VOID
 FASTCALL
 ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(PFAST_MUTEX FastMutex)
 {
+    /*
     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
            (KeGetCurrentThread() == NULL) ||
            (KeGetCurrentThread()->CombinedApcDisable != 0) ||
            (KeGetCurrentThread()->Teb == NULL) ||
            (KeGetCurrentThread()->Teb >= (PTEB)MM_SYSTEM_RANGE_START));
-    ASSERT(FastMutex->Owner == KeGetCurrentThread());
+   
+    */
+     ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
+           (Thread == NULL) ||
+           (Thread->CombinedApcDisable != 0));
+     ASSERT(FastMutex->Owner == KeGetCurrentThread());        
   
     /* Erase the owner */
     FastMutex->Owner = NULL;
