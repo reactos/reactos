@@ -260,6 +260,7 @@ HIMC WINAPI ImmAssociateContext(HWND hWnd, HIMC hIMC)
 BOOL WINAPI ImmAssociateContextEx(HWND hWnd, HIMC hIMC, DWORD dwFlags)
 {
     FIXME("(%p, %p, %ld): stub\n", hWnd, hIMC, dwFlags);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
 
@@ -577,12 +578,10 @@ LONG WINAPI ImmGetCompositionStringW(
   HIMC hIMC, DWORD dwIndex,
   LPVOID lpBuf, DWORD dwBufLen)
 {
-  LONG rc = 0;
-  InputContextData *data = (InputContextData*)hIMC;
+    LONG rc = 0;
+    InputContextData *data = (InputContextData*)hIMC;
 
-  TRACE("(%p, 0x%lx, %p, %ld)\n",
-    hIMC, dwIndex, lpBuf, dwBufLen
-  );
+    TRACE("(%p, 0x%lx, %p, %ld)\n", hIMC, dwIndex, lpBuf, dwBufLen);
 
     if (!data)
        return FALSE;
@@ -671,7 +670,7 @@ BOOL WINAPI ImmGetCompositionWindow(HIMC hIMC, LPCOMPOSITIONFORM lpCompForm)
  */
 HIMC WINAPI ImmGetContext(HWND hWnd)
 {
-    FIXME("(%p): stub\n", hWnd);
+    TRACE("%p\n", hWnd);
 
     if (!root_context)
         return NULL;
@@ -935,7 +934,6 @@ UINT WINAPI ImmGetVirtualKey(HWND hWnd)
 {
   OSVERSIONINFOA version;
   FIXME("(%p): stub\n", hWnd);
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   GetVersionExA( &version );
   switch(version.dwPlatformId)
   {
@@ -1047,7 +1045,8 @@ BOOL WINAPI ImmNotifyIME(
   HIMC hIMC, DWORD dwAction, DWORD dwIndex, DWORD dwValue)
 {
     BOOL rc = FALSE;
-  FIXME("(%p, %ld, %ld, %ld): stub\n",
+
+    TRACE("(%p, %ld, %ld, %ld)\n",
         hIMC, dwAction, dwIndex, dwValue);
 
     if (!root_context)
@@ -1377,7 +1376,7 @@ BOOL WINAPI ImmSetCompositionWindow(
         ShowWindow(hwndDefault,SW_HIDE);
     }
 
-    FIXME("STUB\n");
+    /* FIXME: this is a partial stub */
 
     if (reshow)
         ShowWindow(hwndDefault,SW_SHOWNOACTIVATE);
@@ -1405,7 +1404,8 @@ BOOL WINAPI ImmSetConversionStatus(
 BOOL WINAPI ImmSetOpenStatus(HIMC hIMC, BOOL fOpen)
 {
     InputContextData *data = (InputContextData*)hIMC;
-    FIXME("Semi-Stub\n");
+
+    TRACE("%p %d\n", hIMC, fOpen);
 
     if (hIMC == (HIMC)FROM_IME)
     {
