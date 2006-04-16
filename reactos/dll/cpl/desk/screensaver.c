@@ -68,7 +68,28 @@ ScreenSaverPageProc(HWND hwndDlg,
                 case IDC_SCREENS_TESTSC: // Screensaver Preview
                 {
                     if(command == BN_CLICKED)
-                        MessageBox(NULL, TEXT("That button doesn't do anything yet"), TEXT("Whoops"), MB_OK);
+                    {
+                        /*
+                           /p:<hwnd>  Run in preview 
+                           /s         Run normal
+                           /c:<hwnd>  Run configuration, hwnd is handle of calling window
+                           /a         Run change password
+                        */
+
+                        WCHAR szCmdline[2048];                                                
+                        STARTUPINFO si;
+                        PROCESS_INFORMATION pi;                        
+                        swprintf(szCmdline, L"%s /p",g_ScreenSaverItems[ImageListSelection].szFilename);
+
+                        ZeroMemory( &si, sizeof(si) );
+                        si.cb = sizeof(si);
+                        ZeroMemory( &pi, sizeof(pi) );                         
+                       if(CreateProcess( NULL,  szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+                       {                          
+                          CloseHandle( pi.hProcess );
+                          CloseHandle( pi.hThread );                       
+                       }                       
+                    }
                         
                 } break;
                 case IDC_SCREENS_DELETE: // Delete Screensaver
@@ -82,7 +103,29 @@ ScreenSaverPageProc(HWND hwndDlg,
                 case IDC_SCREENS_SETTINGS: // Screensaver Settings
                 {
                     if(command == BN_CLICKED)
-                        MessageBox(NULL, TEXT("That button doesn't do anything yet"), TEXT("Whoops"), MB_OK);
+                    {   
+                        /*
+                           /p:<hwnd>  Run in preview 
+                           /s         Run normal
+                           /c:<hwnd>  Run configuration, hwnd is handle of calling window
+                           /a         Run change password
+
+                        */
+
+                        WCHAR szCmdline[2048];                                                
+                        STARTUPINFO si;
+                        PROCESS_INFORMATION pi;                        
+                        swprintf(szCmdline, L"%s /c",g_ScreenSaverItems[ImageListSelection].szFilename);
+
+                        ZeroMemory( &si, sizeof(si) );
+                        si.cb = sizeof(si);
+                        ZeroMemory( &pi, sizeof(pi) );                         
+                       if(CreateProcess( NULL,  szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+                       {                          
+                          CloseHandle( pi.hProcess );
+                          CloseHandle( pi.hThread );                       
+                       }                       
+                    }                       
                 } break;
                 case IDC_SCREENS_USEPASSCHK: // Screensaver Is Secure
                 {
