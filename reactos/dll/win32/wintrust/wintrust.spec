@@ -82,10 +82,10 @@
 @ stub WTHelperGetKnownUsages
 @ stub WTHelperGetProvCertFromChain
 @ stub WTHelperGetProvPrivateDataFromChain
-@ stub WTHelperGetProvSignerFromChain
+@ stdcall WTHelperGetProvSignerFromChain(ptr long long long)
 @ stub WTHelperIsInRootStore
 @ stub WTHelperOpenKnownStores
-@ stub WTHelperProvDataFromStateData
+@ stdcall WTHelperProvDataFromStateData(ptr)
 @ stub WVTAsn1CatMemberInfoDecode
 @ stub WVTAsn1CatMemberInfoEncode
 @ stub WVTAsn1CatNameValueDecode
@@ -109,7 +109,7 @@
 @ stub WVTAsn1SpcStatementTypeDecode
 @ stub WVTAsn1SpcStatementTypeEncode
 @ stdcall WinVerifyTrust(long ptr ptr)
-@ stub WinVerifyTrustEx
+@ stdcall WinVerifyTrustEx(long ptr ptr)
 @ stdcall WintrustAddActionID(ptr long ptr)
 @ stub WintrustAddDefaultForUsage
 @ stub WintrustCertificateTrust

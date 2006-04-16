@@ -75,7 +75,7 @@ reactos/dll/win32/urlmon          # Synced to Wine-0_9_10
 reactos/dll/win32/uxtheme         # Synced to Wine-0_9_5
 reactos/dll/win32/version         # Out of sync
 reactos/dll/win32/wininet         # Synced to Wine-0_9_5
-reactos/dll/win32/wintrust        # Synced to Wine-0_9_5
+reactos/dll/win32/wintrust        # Synced to Wine-0_9_10
 reactos/dll/win32/winmm           # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap   # Forked at Wine-20050628
 reactos/dll/win32/winmm/wavemap   # Forked at Wine-20050628

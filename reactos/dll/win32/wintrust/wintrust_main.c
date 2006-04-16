@@ -94,6 +94,37 @@ LONG WINAPI WinVerifyTrust( HWND hwnd, GUID *ActionID,  WINTRUST_DATA* ActionDat
 }
 
 /***********************************************************************
+ *		WinVerifyTrustEx (WINTRUST.@)
+ */
+HRESULT WINAPI WinVerifyTrustEx( HWND hwnd, GUID *ActionID,
+ WINTRUST_DATA* ActionData )
+{
+    FIXME("%p %s %p\n", hwnd, debugstr_guid(ActionID), ActionData);
+    return S_OK;
+}
+
+/***********************************************************************
+ *		WTHelperGetProvSignerFromChain (WINTRUST.@)
+ */
+CRYPT_PROVIDER_SGNR * WINAPI WTHelperGetProvSignerFromChain(
+ CRYPT_PROVIDER_DATA *pProvData, DWORD idxSigner, BOOL fCounterSigner,
+ DWORD idxCounterSigner)
+{
+    FIXME("%p %ld %d %ld\n", pProvData, idxSigner, fCounterSigner,
+     idxCounterSigner);
+    return NULL;
+}
+
+/***********************************************************************
+ *		WTHelperProvDataFromStateData (WINTRUST.@)
+ */
+CRYPT_PROVIDER_DATA * WINAPI WTHelperProvDataFromStateData(HANDLE hStateData)
+{
+    FIXME("%p\n", hStateData);
+    return NULL;
+}
+
+/***********************************************************************
  *		WintrustAddActionID (WINTRUST.@)
  */
 BOOL WINAPI WintrustAddActionID( GUID* pgActionID, DWORD fdwFlags,
