@@ -68,8 +68,8 @@ ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(PFAST_MUTEX FastMutex)
    
     */
      ASSERT((KeGetCurrentIrql() == APC_LEVEL) ||
-           (Thread == NULL) ||
-           (Thread->CombinedApcDisable != 0));
+           (KeGetCurrentThread() == NULL) ||
+           (KeGetCurrentThread()->CombinedApcDisable != 0));
      ASSERT(FastMutex->Owner == KeGetCurrentThread());        
   
     /* Erase the owner */
