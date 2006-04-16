@@ -89,7 +89,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 #ifndef _NO_REBAR
 		CCS_NOPARENTALIGN|CCS_NORESIZE|
 #endif
-		WS_CHILD|WS_VISIBLE, IDW_TOOLBAR, 2, g_hInstance, IDB_TOOLBAR,
+		WS_CHILD|WS_VISIBLE|TBSTYLE_FLAT, IDW_TOOLBAR, 2, g_hInstance, IDB_TOOLBAR,
 		toolbarBtns, sizeof(toolbarBtns)/sizeof(TBBUTTON),
 		16, 15, 16, 15, sizeof(TBBUTTON));
 
