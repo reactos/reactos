@@ -107,7 +107,6 @@ ClassDeviceControl(
 
 	switch (IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode)
 	{
-#if 0
 		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
 		case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
 		case IOCTL_KEYBOARD_QUERY_INDICATORS:
@@ -146,10 +145,10 @@ ClassDeviceControl(
 			}
 			break;
 		}
-#endif
 		default:
 			DPRINT1("IRP_MJ_DEVICE_CONTROL / unknown I/O control code 0x%lx\n",
 				IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode);
+			ASSERT(FALSE);
 			break;
 	}
 
@@ -536,8 +535,8 @@ ClassAddDevice(
 	IN PDEVICE_OBJECT Pdo)
 {
 	PCLASS_DRIVER_EXTENSION DriverExtension;
-	PDEVICE_OBJECT Fdo;
-	PPORT_DEVICE_EXTENSION DeviceExtension;
+	PDEVICE_OBJECT Fdo = NULL;
+	PPORT_DEVICE_EXTENSION DeviceExtension = NULL;
 	NTSTATUS Status;
 
 	DPRINT("ClassAddDevice called. Pdo = 0x%p\n", Pdo);
@@ -561,7 +560,7 @@ ClassAddDevice(
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
-		return Status;
+		goto cleanup;
 	}
 
 	DeviceExtension = (PPORT_DEVICE_EXTENSION)Fdo->DeviceExtension;
@@ -573,8 +572,7 @@ ClassAddDevice(
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
-		IoDeleteDevice(Fdo);
-		return Status;
+		goto cleanup;
 	}
 	if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
 		Fdo->Flags |= DO_POWER_PAGABLE;
@@ -582,16 +580,25 @@ ClassAddDevice(
 		Fdo->Flags |= DO_BUFFERED_IO;
 
 	if (DriverExtension->ConnectMultiplePorts)
-		Status = ConnectPortDriver(Fdo, DriverExtension->MainClassDeviceObject);
+		DeviceExtension->ClassDO = DriverExtension->MainClassDeviceObject;
 	else
-		Status = ConnectPortDriver(Fdo, Fdo);
+	{
+		/* We need a new class device object for this Fdo */
+		Status = CreateClassDeviceObject(
+			DriverObject,
+			&DeviceExtension->ClassDO);
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT("CreateClassDeviceObject() failed with status 0x%08lx\n", Status);
+			goto cleanup;
+		}
+	}
+	Status = ConnectPortDriver(Fdo, DeviceExtension->ClassDO);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-		IoDetachDevice(DeviceExtension->LowerDevice);
 		ObDereferenceObject(Fdo);
-		IoDeleteDevice(Fdo);
-		return Status;
+		goto cleanup;
 	}
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -601,13 +608,35 @@ ClassAddDevice(
 		&GUID_DEVINTERFACE_KEYBOARD,
 		NULL,
 		&DeviceExtension->InterfaceName);
-	if (!NT_SUCCESS(Status))
+	if (Status == STATUS_INVALID_PARAMETER_1)
+	{
+		/* The Pdo was a strange one ; maybe it is a legacy device.
+		 * Ignore the error. */
+		return STATUS_SUCCESS;
+	}
+	else if (!NT_SUCCESS(Status))
 	{
 		DPRINT("IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
-		return Status;
+		goto cleanup;
 	}
 
 	return STATUS_SUCCESS;
+
+cleanup:
+	if (DeviceExtension)
+	{
+		if (DeviceExtension->LowerDevice)
+			IoDetachDevice(DeviceExtension->LowerDevice);
+		if (DriverExtension->ConnectMultiplePorts && DeviceExtension->ClassDO)
+		{
+			PCLASS_DEVICE_EXTENSION ClassDeviceExtension;
+			ClassDeviceExtension = (PCLASS_DEVICE_EXTENSION)DeviceExtension->ClassDO->DeviceExtension;
+			ExFreePool(ClassDeviceExtension->PortData);
+		}
+	}
+	if (Fdo)
+		IoDeleteDevice(Fdo);
+	return Status;
 }
 
 static VOID NTAPI
@@ -748,34 +777,13 @@ SearchForLegacyDrivers(
 			DPRINT("IoGetDeviceObjectPointer(%wZ) failed with status 0x%08lx\n", Status);
 			continue;
 		}
+		DPRINT("Legacy driver found: %wZ\n", &PortDeviceObject->DriverObject->DriverName);
 
-		/* Connect the port device object */
-		if (DriverExtension->ConnectMultiplePorts)
+		Status = ClassAddDevice(DriverObject, PortDeviceObject);
+		if (!NT_SUCCESS(Status))
 		{
-			Status = ConnectPortDriver(PortDeviceObject, DriverExtension->MainClassDeviceObject);
-			if (!NT_SUCCESS(Status))
-			{
-				/* FIXME: Log the error */
-				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-			}
-		}
-		else
-		{
-			PDEVICE_OBJECT ClassDO;
-			Status = CreateClassDeviceObject(DriverObject, &ClassDO);
-			if (!NT_SUCCESS(Status))
-			{
-				/* FIXME: Log the error */
-				DPRINT("CreatePointerClassDeviceObject() failed with status 0x%08lx\n", Status);
-				continue;
-			}
-			Status = ConnectPortDriver(PortDeviceObject, ClassDO);
-			if (!NT_SUCCESS(Status))
-			{
-				/* FIXME: Log the error */
-				DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-				IoDeleteDevice(ClassDO);
-			}
+			/* FIXME: Log the error */
+			DPRINT("ClassAddDevice() failed with status 0x%08lx\n", Status);
 		}
 	}
 	if (Status == STATUS_NO_MORE_ENTRIES)
