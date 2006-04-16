@@ -340,6 +340,7 @@ typedef struct {
   cab_ULONG          sizeFileCFFILE2;
   cab_ULONG          sizeFileCFFOLDER;
   BOOL               fNewPrevious;
+  cab_ULONG          estimatedCabinetSize;
 } FCI_Int, *PFCI_Int;
 
 typedef struct {
@@ -613,6 +614,10 @@ static const cab_UWORD Zipmask[17] = {                                          
  0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff                    \
 }
 
+/* EXTRACTdest flags */
+#define EXTRACT_FILLFILELIST  0x00000001
+#define EXTRACT_EXTRACTFILES  0x00000002
+
 struct ExtractFileList {
         LPSTR  filename;
         struct ExtractFileList *next;
@@ -625,14 +630,13 @@ typedef struct {
         long  unknown1[3];      /* 0x004 */
         struct ExtractFileList *filelist; /* 0x010 */
         long  filecount;        /* 0x014 */
-        long  unknown2;         /* 0x018 */
+        DWORD flags;            /* 0x018 */
         char  directory[0x104]; /* 0x01c */
         char  lastfile[0x20c];  /* 0x120 */
 } EXTRACTdest;
 
 
-/* from cabextract.c */
-BOOL process_cabinet(LPCSTR cabname, LPCSTR dir, BOOL fix, BOOL lower, EXTRACTdest *dest);
+/* from fdi.c */
 void QTMupdatemodel(struct QTMmodel *model, int sym);
 int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits, cab_UBYTE *length, cab_UWORD *table);
 cab_ULONG checksum(cab_UBYTE *data, cab_UWORD bytes, cab_ULONG csum);

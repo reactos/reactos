@@ -37,6 +37,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
 
+/* the following defintions are copied from msvcrt/fcntl.h */
+
+#define _O_RDONLY      0
+#define _O_WRONLY      1
+#define _O_RDWR        2
+#define _O_ACCMODE     (_O_RDONLY|_O_WRONLY|_O_RDWR)
+
+
 /***********************************************************************
  * DllGetVersion (CABINET.2)
  *
@@ -66,70 +74,259 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
   return S_OK;
 }
 
+/* FDI callback functions */
+
+static void *mem_alloc(ULONG cb)
+{
+    return HeapAlloc(GetProcessHeap(), 0, cb);
+}
+
+static void mem_free(void *memory)
+{
+    HeapFree(GetProcessHeap(), 0, memory);
+}
+
+static INT_PTR fdi_open(char *pszFile, int oflag, int pmode)
+{
+    HANDLE handle;
+    DWORD dwAccess = 0;
+    DWORD dwShareMode = 0;
+    DWORD dwCreateDisposition = OPEN_EXISTING;
+
+    switch (oflag & _O_ACCMODE)
+    {
+        case _O_RDONLY:
+            dwAccess = GENERIC_READ;
+            dwShareMode = FILE_SHARE_READ | FILE_SHARE_DELETE;
+            break;
+        case _O_WRONLY:
+            dwAccess = GENERIC_WRITE;
+            dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+            break;
+        case _O_RDWR:
+            dwAccess = GENERIC_READ | GENERIC_WRITE;
+            dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+            break;
+    }
+
+    if (GetFileAttributesA(pszFile) != INVALID_FILE_ATTRIBUTES)
+        dwCreateDisposition = OPEN_EXISTING;
+    else
+        dwCreateDisposition = CREATE_NEW;
+
+    handle = CreateFileA(pszFile, dwAccess, dwShareMode, NULL,
+                         dwCreateDisposition, 0, NULL);
+
+    return (INT_PTR) handle;
+}
+
+static UINT fdi_read(INT_PTR hf, void *pv, UINT cb)
+{
+    HANDLE handle = (HANDLE) hf;
+    DWORD dwRead;
+    
+    if (ReadFile(handle, pv, cb, &dwRead, NULL))
+        return dwRead;
+
+    return 0;
+}
+
+static UINT fdi_write(INT_PTR hf, void *pv, UINT cb)
+{
+    HANDLE handle = (HANDLE) hf;
+    DWORD dwWritten;
+
+    if (WriteFile(handle, pv, cb, &dwWritten, NULL))
+        return dwWritten;
+
+    return 0;
+}
+
+static int fdi_close(INT_PTR hf)
+{
+    HANDLE handle = (HANDLE) hf;
+    return CloseHandle(handle) ? 0 : -1;
+}
+
+static long fdi_seek(INT_PTR hf, long dist, int seektype)
+{
+    HANDLE handle = (HANDLE) hf;
+    return SetFilePointer(handle, dist, NULL, seektype);
+}
+
+static void fill_file_node(struct ExtractFileList *pNode, LPSTR szFilename)
+{
+    pNode->next = NULL;
+    pNode->unknown = TRUE;
+
+    pNode->filename = HeapAlloc(GetProcessHeap(), 0, strlen(szFilename) + 1);
+    lstrcpyA(pNode->filename, szFilename);
+}
+
+static BOOL file_in_list(struct ExtractFileList *pNode, LPSTR szFilename)
+{
+    while (pNode)
+    {
+        if (!lstrcmpiA(pNode->filename, szFilename))
+            return TRUE;
+
+        pNode = pNode->next;
+    }
+
+    return FALSE;
+}
+
+static INT_PTR fdi_notify_extract(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
+{
+    switch (fdint)
+    {
+        case fdintCOPY_FILE:
+        {
+            struct ExtractFileList **fileList;
+            EXTRACTdest *pDestination = pfdin->pv;
+            LPSTR szFullPath, szDirectory;
+            HANDLE hFile = 0;
+            DWORD dwSize;
+
+            dwSize = lstrlenA(pDestination->directory) +
+                    lstrlenA("\\") + lstrlenA(pfdin->psz1) + 1;
+            szFullPath = HeapAlloc(GetProcessHeap(), 0, dwSize);
+
+            lstrcpyA(szFullPath, pDestination->directory);
+            lstrcatA(szFullPath, "\\");
+            lstrcatA(szFullPath, pfdin->psz1);
+
+            /* pull out the destination directory string from the full path */
+            dwSize = strrchr(szFullPath, '\\') - szFullPath + 1;
+            szDirectory = HeapAlloc(GetProcessHeap(), 0, dwSize);
+            lstrcpynA(szDirectory, szFullPath, dwSize);
+
+            if (pDestination->flags & EXTRACT_FILLFILELIST)
+            {
+                fileList = &pDestination->filelist;
+
+                while (*fileList)
+                    fileList = &((*fileList)->next);
+
+                *fileList = HeapAlloc(GetProcessHeap(), 0,
+                                      sizeof(struct ExtractFileList));
+
+                fill_file_node(*fileList, pfdin->psz1);
+                lstrcpyA(pDestination->lastfile, szFullPath);
+                pDestination->filecount++;
+            }
+
+            if (pDestination->flags & EXTRACT_EXTRACTFILES)
+            {
+                /* skip this file it it's not in the file list */
+                if (!file_in_list(pDestination->filelist, pfdin->psz1))
+                    return 0;
+
+                /* create the destination directory if it doesn't exist */
+                if (GetFileAttributesA(szDirectory) == INVALID_FILE_ATTRIBUTES)
+                    CreateDirectoryA(szDirectory, NULL);
+
+                hFile = CreateFileA(szFullPath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                                    CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+
+                if (hFile == INVALID_HANDLE_VALUE)
+                    hFile = 0;
+            }
+
+            HeapFree(GetProcessHeap(), 0, szFullPath);
+            HeapFree(GetProcessHeap(), 0, szDirectory);
+
+            return (INT_PTR) hFile;
+        }
+
+        case fdintCLOSE_FILE_INFO:
+        {
+            FILETIME ft;
+            FILETIME ftLocal;
+            HANDLE handle = (HANDLE) pfdin->hf;
+
+            if (!DosDateTimeToFileTime(pfdin->date, pfdin->time, &ft))
+                return FALSE;
+
+            if (!LocalFileTimeToFileTime(&ft, &ftLocal))
+                return FALSE;
+
+            if (!SetFileTime(handle, &ftLocal, 0, &ftLocal))
+                return FALSE;
+
+            CloseHandle(handle);
+            return TRUE;
+        }
+
+        default:
+            return 0;
+    }
+}
+
 /***********************************************************************
  * Extract (CABINET.3)
  *
- * Apparently an undocumented function, presumably to extract a CAB file
- * to somewhere...
+ * Extracts the contents of the cabinet file to the specified
+ * destination.
  *
  * PARAMS
- *   dest         pointer to a buffer of 0x32c bytes containing
- *           [I]  - number with value 1 at index 0x18
- *                - the dest path starting at index 0x1c
- *           [O]  - a linked list with the filename existing inside the
- *                  CAB file at idx 0x10
- *                - the number of files inside the CAB file at index 0x14
- *                - the name of the last file with dest path at idx 0x120
- *   what    [I]  char* describing what to uncompress, I guess.
+ *   dest      [I/O] Controls the operation of Extract.  See NOTES.
+ *   szCabName [I] Filename of the cabinet to extract.
  *
  * RETURNS
- *     Success: S_OK
- *     Failure: E_OUTOFMEMORY (?)
+ *     Success: S_OK.
+ *     Failure: E_FAIL.
+ *
+ * NOTES
+ *   The following members of the dest struct control the operation
+ *   of Extract:
+ *       filelist  [I] A linked list of filenames.  Extract only extracts
+ *                     files from the cabinet that are in this list.
+ *       filecount [O] Contains the number of files in filelist on
+ *                     completion.
+ *       flags     [I] See Operation.
+ *       directory [I] The destination directory.
+ *       lastfile  [O] The last file extracted.
+ *
+ *   Operation
+ *     If flags contains EXTRACT_FILLFILELIST, then filelist will be
+ *     filled with all the files in the cabinet.  If flags contains
+ *     EXTRACT_EXTRACTFILES, then only the files in the filelist will
+ *     be extracted from the cabinet.  EXTRACT_FILLFILELIST can be called
+ *     by itself, but EXTRACT_EXTRACTFILES must have a valid filelist
+ *     in order to succeed.  If flags contains both EXTRACT_FILLFILELIST
+ *     and EXTRACT_EXTRACTFILES, then all the files in the cabinet
+ *     will be extracted.
  */
-HRESULT WINAPI Extract(EXTRACTdest *dest, LPCSTR what)
+HRESULT WINAPI Extract(EXTRACTdest *dest, LPCSTR szCabName)
 {
-#define DUMPC(idx)      idx >= sizeof(EXTRACTdest) ? ' ' : \
-                        ((unsigned char*) dest)[idx] >= 0x20 ? \
-                        ((unsigned char*) dest)[idx] : '.'
+    HRESULT res = S_OK;
+    HFDI hfdi;
+    ERF erf;
 
-#define DUMPH(idx)      idx >= sizeof(EXTRACTdest) ? 0x55 : ((unsigned char*) dest)[idx]
+    TRACE("(%p, %s)\n", dest, szCabName);
 
-  LPSTR dir;
-  unsigned int i;
+    hfdi = FDICreate(mem_alloc,
+                     mem_free,
+                     fdi_open,
+                     fdi_read,
+                     fdi_write,
+                     fdi_close,
+                     fdi_seek,
+                     cpuUNKNOWN,
+                     &erf);
 
-  TRACE("(dest == %0lx, what == %s)\n", (long) dest, debugstr_a(what));
+    if (!hfdi)
+        return E_FAIL;
 
-  if (!dest) {
-    /* win2k will crash here */
-    FIXME("called without valid parameter dest!\n");
-    return E_OUTOFMEMORY;
-  }
-  for (i=0; i < sizeof(EXTRACTdest); i+=8)
-    TRACE( "dest[%04x]:%02x %02x %02x %02x %02x %02x %02x %02x %c%c%c%c%c%c%c%c\n",
-           i,
-           DUMPH(i+0), DUMPH(i+1), DUMPH(i+2), DUMPH(i+3),
-           DUMPH(i+4), DUMPH(i+5), DUMPH(i+6), DUMPH(i+7),
-           DUMPC(i+0), DUMPC(i+1), DUMPC(i+2), DUMPC(i+3),
-           DUMPC(i+4), DUMPC(i+5), DUMPC(i+6), DUMPC(i+7));
+    if (GetFileAttributesA(dest->directory) == INVALID_FILE_ATTRIBUTES)
+        return S_OK;
 
-  dir = LocalAlloc(LPTR, strlen(dest->directory)+1); 
-  if (!dir) return E_OUTOFMEMORY;
-  lstrcpyA(dir, dest->directory);
-  dest->filecount=0;
-  dest->filelist = NULL;
+    if (!FDICopy(hfdi, (LPSTR)szCabName, "", 0,
+         fdi_notify_extract, NULL, dest))
+        res = E_FAIL;
 
-  TRACE("extracting to dir: %s\n", debugstr_a(dir));
+    FDIDestroy(hfdi);
 
-  /* FIXME: what to do on failure? */
-  if (!process_cabinet(what, dir, FALSE, FALSE, dest)) {
-    LocalFree(dir);
-    return E_OUTOFMEMORY;
-  }
-
-  LocalFree(dir);
-
-  TRACE("filecount %08lx,lastfile %s\n",
-         dest->filecount, debugstr_a(dest->lastfile));
-
-  return S_OK;
+    return res;
 }

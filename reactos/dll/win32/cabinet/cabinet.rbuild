@@ -14,7 +14,6 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>iphlpapi</library>
-	<file>cabextract.c</file>
 	<file>cabinet_main.c</file>
 	<file>fci.c</file>
 	<file>fdi.c</file>
