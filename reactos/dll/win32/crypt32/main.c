@@ -39,10 +39,11 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, PVOID pvReserved)
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
-            CRYPT_InitFunctionSets();
+            DisableThreadLibraryCalls(hInstance);
+            crypt_oid_init(hInstance);
             break;
         case DLL_PROCESS_DETACH:
-            CRYPT_FreeFunctionSets();
+            crypt_oid_free();
             if (hDefProv) CryptReleaseContext(hDefProv, 0);
             break;
     }
@@ -217,96 +218,6 @@ BOOL WINAPI CryptSIPLoad
     return FALSE;
 }
 
-struct OIDToAlgID
-{
-    LPCSTR oid;
-    DWORD algID;
-};
-
-static const struct OIDToAlgID oidToAlgID[] = {
- { szOID_RSA_RSA, CALG_RSA_KEYX },
- { szOID_RSA_MD2RSA, CALG_MD2 },
- { szOID_RSA_MD4RSA, CALG_MD4 },
- { szOID_RSA_MD5RSA, CALG_MD5 },
- { szOID_RSA_SHA1RSA, CALG_SHA },
- { szOID_RSA_DH, CALG_DH_SF },
- { szOID_RSA_SMIMEalgESDH, CALG_DH_EPHEM },
- { szOID_RSA_SMIMEalgCMS3DESwrap, CALG_3DES },
- { szOID_RSA_SMIMEalgCMSRC2wrap, CALG_RC2 },
- { szOID_RSA_MD2, CALG_MD2 },
- { szOID_RSA_MD4, CALG_MD4 },
- { szOID_RSA_MD5, CALG_MD5 },
- { szOID_RSA_RC2CBC, CALG_RC2 },
- { szOID_RSA_RC4, CALG_RC4 },
- { szOID_RSA_DES_EDE3_CBC, CALG_3DES },
- { szOID_ANSI_X942_DH, CALG_DH_SF },
- { szOID_X957_DSA, CALG_DSS_SIGN },
- { szOID_X957_SHA1DSA, CALG_SHA },
- { szOID_OIWSEC_md4RSA, CALG_MD4 },
- { szOID_OIWSEC_md5RSA, CALG_MD5 },
- { szOID_OIWSEC_md4RSA2, CALG_MD4 },
- { szOID_OIWSEC_desCBC, CALG_DES },
- { szOID_OIWSEC_dsa, CALG_DSS_SIGN },
- { szOID_OIWSEC_shaDSA, CALG_SHA },
- { szOID_OIWSEC_shaRSA, CALG_SHA },
- { szOID_OIWSEC_sha, CALG_SHA },
- { szOID_OIWSEC_rsaXchg, CALG_RSA_KEYX },
- { szOID_OIWSEC_sha1, CALG_SHA },
- { szOID_OIWSEC_dsaSHA1, CALG_SHA },
- { szOID_OIWSEC_sha1RSASign, CALG_SHA },
- { szOID_OIWDIR_md2RSA, CALG_MD2 },
- { szOID_INFOSEC_mosaicUpdatedSig, CALG_SHA },
- { szOID_INFOSEC_mosaicKMandUpdSig, CALG_DSS_SIGN },
-};
-
-LPCSTR WINAPI CertAlgIdToOID(DWORD dwAlgId)
-{
-    switch (dwAlgId)
-    {
-    case CALG_RSA_KEYX:
-        return szOID_RSA_RSA;
-    case CALG_DH_EPHEM:
-        return szOID_RSA_SMIMEalgESDH;
-    case CALG_MD2:
-        return szOID_RSA_MD2;
-    case CALG_MD4:
-        return szOID_RSA_MD4;
-    case CALG_MD5:
-        return szOID_RSA_MD5;
-    case CALG_RC2:
-        return szOID_RSA_RC2CBC;
-    case CALG_RC4:
-        return szOID_RSA_RC4;
-    case CALG_3DES:
-        return szOID_RSA_DES_EDE3_CBC;
-    case CALG_DH_SF:
-        return szOID_ANSI_X942_DH;
-    case CALG_DSS_SIGN:
-        return szOID_X957_DSA;
-    case CALG_DES:
-        return szOID_OIWSEC_desCBC;
-    case CALG_SHA:
-        return szOID_OIWSEC_sha1;
-    default:
-        return NULL;
-    }
-}
-
-DWORD WINAPI CertOIDToAlgId(LPCSTR pszObjId)
-{
-    int i;
-
-    if (pszObjId)
-    {
-        for (i = 0; i < sizeof(oidToAlgID) / sizeof(oidToAlgID[0]); i++)
-        {
-            if (!strcmp(pszObjId, oidToAlgID[i].oid))
-                return oidToAlgID[i].algID;
-        }
-    }
-    return 0;
-}
-
 LPVOID WINAPI CryptMemAlloc(ULONG cbSize)
 {
     return HeapAlloc(GetProcessHeap(), 0, cbSize);
@@ -350,4 +261,45 @@ BOOL WINAPI I_CryptFreeTls(DWORD dwTlsIndex, DWORD unknown)
 {
     TRACE("(%ld, %ld)\n", dwTlsIndex, unknown);
     return TlsFree(dwTlsIndex);
+}
+
+BOOL WINAPI I_CryptGetOssGlobal(DWORD x)
+{
+    FIXME("%08lx\n", x);
+    return FALSE;
+}
+
+BOOL WINAPI I_CryptInstallOssGlobal(DWORD x, DWORD y, DWORD z)
+{
+    FIXME("%08lx %08lx %08lx\n", x, y, z);
+    return FALSE;
+}
+
+BOOL WINAPI I_CryptInstallAsn1Module(void *x, DWORD y, DWORD z)
+{
+    FIXME("%p %08lx %08lx\n", x, y, z);
+    return TRUE;
+}
+
+BOOL WINAPI CryptQueryObject(DWORD dwObjectType, const void* pvObject,
+    DWORD dwExpectedContentTypeFlags, DWORD dwExpectedFormatTypeFlags,
+    DWORD dwFlags, DWORD* pdwMsgAndCertEncodingType, DWORD* pdwContentType,
+    DWORD* pdwFormatType, HCERTSTORE* phCertStore, HCRYPTMSG* phMsg,
+    const void** ppvContext)
+{
+    FIXME( "%08lx %p %08lx %08lx %08lx %p %p %p %p %p %p", dwObjectType,
+           pvObject, dwExpectedContentTypeFlags, dwExpectedFormatTypeFlags,
+           dwFlags, pdwMsgAndCertEncodingType, pdwContentType, pdwFormatType,
+           phCertStore, phMsg, ppvContext);
+    return FALSE;
+}
+
+BOOL WINAPI CryptVerifyMessageSignature(/*PCRYPT_VERIFY_MESSAGE_PARA*/ void* pVerifyPara,
+          DWORD dwSignerIndex, const BYTE* pbSignedBlob, DWORD cbSignedBlob,
+          BYTE* pbDecoded, DWORD* pcbDecoded, PCCERT_CONTEXT* ppSignerCert)
+{
+    FIXME("stub: %p, %ld, %p, %ld, %p, %p, %p\n",
+        pVerifyPara, dwSignerIndex, pbSignedBlob, cbSignedBlob,
+        pbDecoded, pcbDecoded, ppSignerCert);
+    return FALSE;
 }

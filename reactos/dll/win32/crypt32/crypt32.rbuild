@@ -12,7 +12,11 @@
 	<file>encode.c</file>
 	<file>cert.c</file>
 	<file>oid.c</file>
+	<file>proplist.c</file>
 	<file>protectdata.c</file>
+	<file>serialize.c</file>
+	<file>store.c</file>
+	<file>str.c</file>
 	<file>crypt32.rc</file>
 	<file>crypt32.spec</file>
 </module>

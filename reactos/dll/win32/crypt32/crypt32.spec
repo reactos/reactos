@@ -6,7 +6,7 @@
 @ stdcall CertAddEncodedCertificateToStore(long long ptr long long ptr)
 @ stub CertAddEncodedCertificateToSystemStoreA
 @ stub CertAddEncodedCertificateToSystemStoreW
-@ stub CertAddEnhancedKeyUsageIdentifier
+@ stdcall CertAddEnhancedKeyUsageIdentifier(ptr str)
 @ stdcall CertAddSerializedElementToStore(ptr ptr long long long long ptr ptr)
 @ stdcall CertAddStoreToCollection(ptr ptr long long)
 @ stdcall CertAlgIdToOID(long)
@@ -26,7 +26,7 @@
 @ stub CertDuplicateCRLContext
 @ stub CertDuplicateCTLContext
 @ stdcall CertDuplicateCertificateContext(ptr)
-@ stub CertDuplicateStore
+@ stdcall CertDuplicateStore(ptr)
 @ stub CertEnumCRLContextProperties
 @ stdcall CertEnumCRLsInStore(ptr ptr)
 @ stub CertEnumCTLContextProperties
@@ -49,23 +49,24 @@
 @ stdcall CertGetCTLContextProperty(ptr long ptr ptr)
 @ stub CertGetCertificateChain
 @ stdcall CertGetCertificateContextProperty(ptr long ptr ptr)
-@ stub CertGetEnhancedKeyUsage
+@ stdcall CertGetEnhancedKeyUsage(ptr long ptr ptr)
 @ stub CertGetIntendedKeyUsage
 @ stub CertGetIssuerCertificateFromStore
-@ stub CertGetNameStringA
-@ stub CertGetNameStringW
+@ stdcall CertGetNameStringA(ptr long long ptr ptr long)
+@ stdcall CertGetNameStringW(ptr long long ptr ptr long)
 @ stub CertGetPublicKeyLength
 @ stub CertGetSubjectCertificateFromStore
+@ stdcall CertGetValidUsages(long ptr ptr ptr ptr)
 @ stub CertIsRDNAttrsInCertificateName
-@ stub CertNameToStrA
-@ stub CertNameToStrW
+@ stdcall CertNameToStrA(long ptr long ptr long)
+@ stdcall CertNameToStrW(long ptr long ptr long)
 @ stdcall CertOIDToAlgId(str)
 @ stdcall CertOpenStore(str long long long ptr)
 @ stdcall CertOpenSystemStoreA(long str)
 @ stdcall CertOpenSystemStoreW(long wstr)
-@ stub CertRDNValueToStrA
-@ stub CertRDNValueToStrW
-@ stub CertRemoveEnhancedKeyUsageIdentifier
+@ stdcall CertRDNValueToStrA(long ptr ptr long)
+@ stdcall CertRDNValueToStrW(long ptr ptr long)
+@ stdcall CertRemoveEnhancedKeyUsageIdentifier(ptr str)
 @ stdcall CertRemoveStoreFromCollection(long long)
 @ stdcall CertSaveStore(long long long long ptr long)
 @ stdcall CertSerializeCRLStoreElement(ptr long ptr ptr)
@@ -74,7 +75,7 @@
 @ stdcall CertSetCRLContextProperty(ptr long long ptr)
 @ stdcall CertSetCTLContextProperty(ptr long long ptr)
 @ stdcall CertSetCertificateContextProperty(ptr long long ptr)
-@ stub CertSetEnhancedKeyUsage
+@ stdcall CertSetEnhancedKeyUsage(ptr ptr)
 @ stub CertStrToNameA
 @ stub CertStrToNameW
 @ stub CertVerifyCertificateChainPolicy
@@ -98,12 +99,12 @@
 @ stdcall CryptEncodeObjectEx(long str ptr long ptr ptr ptr)
 @ stub CryptEncryptMessage
 @ stub CryptEnumOIDFunction
-@ stub CryptEnumOIDInfo
+@ stdcall CryptEnumOIDInfo(long long ptr ptr)
 @ stub CryptEnumProvidersU
 @ stub CryptExportPKCS8
 @ stdcall CryptExportPublicKeyInfo(long long long ptr ptr)
 @ stdcall CryptExportPublicKeyInfoEx(long long long str long ptr ptr ptr)
-@ stub CryptFindOIDInfo
+@ stdcall CryptFindOIDInfo(long ptr long)
 @ stub CryptFormatObject
 @ stdcall CryptFreeOIDFunctionAddress(long long)
 @ stub CryptGetAsyncParam
@@ -140,6 +141,7 @@
 @ stub CryptMsgUpdate
 @ stub CryptMsgVerifyCountersignatureEncoded
 @ stdcall CryptProtectData(ptr wstr ptr ptr ptr long ptr)
+@ stdcall CryptQueryObject(long ptr long long long ptr ptr ptr ptr ptr ptr)
 @ stdcall CryptRegisterDefaultOIDFunction(long str long wstr)
 @ stdcall CryptRegisterOIDFunction(long str str wstr str)
 @ stub CryptRegisterOIDInfo
@@ -178,10 +180,11 @@
 @ stdcall I_CryptFreeTls(long long)
 @ stub I_CryptGetDefaultCryptProv
 @ stub I_CryptGetDefaultCryptProvForEncrypt
-@ stub I_CryptGetOssGlobal
+@ stdcall I_CryptGetOssGlobal(long)
 @ stdcall I_CryptGetTls(long)
 @ stub I_CryptInsertLruEntry
-@ stub I_CryptInstallOssGlobal
+@ stdcall I_CryptInstallAsn1Module(long long long)
+@ stdcall I_CryptInstallOssGlobal(long long long)
 @ stub I_CryptReleaseLruEntry
 @ stdcall I_CryptSetTls(long ptr)
 @ stub I_CryptUninstallOssGlobal

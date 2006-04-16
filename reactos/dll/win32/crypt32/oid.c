@@ -1,6 +1,6 @@
 /*
  * Copyright 2002 Mike McCormack for CodeWeavers
- * Copyright 2005 Juan Lang
+ * Copyright 2005-2006 Juan Lang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,17 +18,38 @@
  */
 #include <stdio.h>
 #include <stdarg.h>
+#define NONAMELESSUNION
 #include "windef.h"
 #include "winbase.h"
 #include "wincrypt.h"
 #include "winreg.h"
+#include "winuser.h"
 #include "wine/debug.h"
 #include "wine/list.h"
 #include "crypt32_private.h"
+#include "cryptres.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
 static const WCHAR DllW[] = { 'D','l','l',0 };
+
+static void init_function_sets(void);
+static void init_oid_info(HINSTANCE hinst);
+static void free_function_sets(void);
+static void free_oid_info(void);
+
+void crypt_oid_init(HINSTANCE hinst)
+{
+    init_function_sets();
+    init_oid_info(hinst);
+}
+
+void crypt_oid_free(void)
+{
+    free_function_sets();
+    free_oid_info();
+}
+
 CRITICAL_SECTION funcSetCS;
 struct list funcSets;
 
@@ -47,13 +68,13 @@ struct OIDFunction
     struct list next;
 };
 
-void CRYPT_InitFunctionSets(void)
+static void init_function_sets(void)
 {
     InitializeCriticalSection(&funcSetCS);
     list_init(&funcSets);
 }
 
-void CRYPT_FreeFunctionSets(void)
+static void free_function_sets(void)
 {
     struct OIDFunctionSet *setCursor, *setNext;
 
@@ -64,7 +85,6 @@ void CRYPT_FreeFunctionSets(void)
 
         list_remove(&setCursor->next);
         CryptMemFree(setCursor->name);
-        CryptMemFree(setCursor);
         LIST_FOR_EACH_ENTRY_SAFE(functionCursor, funcNext,
          &setCursor->functions, struct OIDFunction, next)
         {
@@ -72,6 +92,7 @@ void CRYPT_FreeFunctionSets(void)
             CryptMemFree(functionCursor);
         }
         DeleteCriticalSection(&setCursor->cs);
+        CryptMemFree(setCursor);
     }
     DeleteCriticalSection(&funcSetCS);
 }
@@ -555,4 +576,556 @@ BOOL WINAPI CryptSetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
         RegCloseKey(hKey);
     }
     return rc ? FALSE : TRUE;
+}
+
+CRITICAL_SECTION oidInfoCS;
+struct list oidInfo;
+
+static const WCHAR tripledes[] = { '3','d','e','s',0 };
+static const WCHAR cms3deswrap[] = { 'C','M','S','3','D','E','S','w','r','a',
+ 'p',0 };
+static const WCHAR cmsrc2wrap[] = { 'C','M','S','R','C','2','w','r','a','p',0 };
+static const WCHAR des[] = { 'd','e','s',0 };
+static const WCHAR md2[] = { 'm','d','2',0 };
+static const WCHAR md4[] = { 'm','d','4',0 };
+static const WCHAR md5[] = { 'm','d','5',0 };
+static const WCHAR rc2[] = { 'r','c','2',0 };
+static const WCHAR rc4[] = { 'r','c','4',0 };
+static const WCHAR sha[] = { 's','h','a',0 };
+static const WCHAR sha1[] = { 's','h','a','1',0 };
+static const WCHAR RSA[] = { 'R','S','A',0 };
+static const WCHAR RSA_KEYX[] = { 'R','S','A','_','K','E','Y','X',0 };
+static const WCHAR RSA_SIGN[] = { 'R','S','A','_','S','I','G','N',0 };
+static const WCHAR DSA[] = { 'D','S','A',0 };
+static const WCHAR DSA_SIGN[] = { 'D','S','A','_','S','I','G','N',0 };
+static const WCHAR DH[] = { 'D','H',0 };
+static const WCHAR DSS[] = { 'D','S','S',0 };
+static const WCHAR mosaicKMandUpdSig[] =
+ { 'm','o','s','a','i','c','K','M','a','n','d','U','p','d','S','i','g',0 };
+static const WCHAR ESDH[] = { 'E','S','D','H',0 };
+static const WCHAR NO_SIGN[] = { 'N','O','S','I','G','N',0 };
+static const WCHAR dsaSHA1[] = { 'd','s','a','S','H','A','1',0 };
+static const WCHAR md2RSA[] = { 'm','d','2','R','S','A',0 };
+static const WCHAR md4RSA[] = { 'm','d','4','R','S','A',0 };
+static const WCHAR md5RSA[] = { 'm','d','5','R','S','A',0 };
+static const WCHAR shaDSA[] = { 's','h','a','D','S','A',0 };
+static const WCHAR sha1DSA[] = { 's','h','a','1','D','S','A',0 };
+static const WCHAR shaRSA[] = { 's','h','a','R','S','A',0 };
+static const WCHAR sha1RSA[] = { 's','h','a','1','R','S','A',0 };
+static const WCHAR mosaicUpdatedSig[] =
+ { 'm','o','s','a','i','c','U','p','d','a','t','e','d','S','i','g',0 };
+static const WCHAR CN[] = { 'C','N',0 };
+static const WCHAR L[] = { 'L',0 };
+static const WCHAR O[] = { 'O',0 };
+static const WCHAR OU[] = { 'O','U',0 };
+static const WCHAR E[] = { 'E',0 };
+static const WCHAR C[] = { 'C',0 };
+static const WCHAR S[] = { 'S',0 };
+static const WCHAR ST[] = { 'S','T',0 };
+static const WCHAR STREET[] = { 'S','T','R','E','E','T',0 };
+static const WCHAR T[] = { 'T',0 };
+static const WCHAR Title[] = { 'T','i','t','l','e',0 };
+static const WCHAR G[] = { 'G',0 };
+static const WCHAR GivenName[] = { 'G','i','v','e','n','N','a','m','e',0 };
+static const WCHAR I[] = { 'I',0 };
+static const WCHAR Initials[] = { 'I','n','i','t','i','a','l','s',0 };
+static const WCHAR SN[] = { 'S','N',0 };
+static const WCHAR DC[] = { 'D','C',0 };
+static const WCHAR Description[] =
+ { 'D','e','s','c','r','i','p','t','i','o','n',0 };
+static const WCHAR PostalCode[] = { 'P','o','s','t','a','l','C','o','d','e',0 };
+static const WCHAR POBox[] = { 'P','O','B','o','x',0 };
+static const WCHAR Phone[] = { 'P','h','o','n','e',0 };
+static const WCHAR X21Address[] = { 'X','2','1','A','d','d','r','e','s','s',0 };
+static const WCHAR dnQualifier[] =
+ { 'd','n','Q','u','a','l','i','f','i','e','r',0 };
+static const WCHAR Email[] = { 'E','m','a','i','l',0 };
+static const WCHAR GN[] = { 'G','N',0 };
+
+static const DWORD noNullFlag = CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG;
+static const DWORD mosaicFlags = CRYPT_OID_INHIBIT_SIGNATURE_FORMAT_FLAG |
+ CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG;
+static const CRYPT_DATA_BLOB noNullBlob = { sizeof(noNullFlag),
+ (LPBYTE)&noNullFlag };
+static const CRYPT_DATA_BLOB mosaicFlagsBlob = { sizeof(mosaicFlags),
+ (LPBYTE)&mosaicFlags };
+
+static const DWORD rsaSign = CALG_RSA_SIGN;
+static const DWORD dssSign[2] = { CALG_DSS_SIGN,
+ CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG };
+static const DWORD mosaicSign[2] = { CALG_DSS_SIGN,
+ CRYPT_OID_INHIBIT_SIGNATURE_FORMAT_FLAG |
+ CRYPT_OID_NO_NULL_ALGORITHM_PARA_FLAG };
+static const CRYPT_DATA_BLOB rsaSignBlob = { sizeof(rsaSign),
+ (LPBYTE)&rsaSign };
+static const CRYPT_DATA_BLOB dssSignBlob = { sizeof(dssSign),
+ (LPBYTE)dssSign };
+static const CRYPT_DATA_BLOB mosaicSignBlob = { sizeof(mosaicSign),
+ (LPBYTE)mosaicSign };
+
+static const DWORD ia5String[] = { CERT_RDN_IA5_STRING, 0 };
+static const DWORD numericString[] = { CERT_RDN_NUMERIC_STRING, 0 };
+static const DWORD printableString[] = { CERT_RDN_PRINTABLE_STRING, 0 };
+static const DWORD domainCompTypes[] = { CERT_RDN_IA5_STRING,
+ CERT_RDN_UTF8_STRING, 0 };
+static const CRYPT_DATA_BLOB ia5StringBlob = { sizeof(ia5String),
+ (LPBYTE)ia5String };
+static const CRYPT_DATA_BLOB numericStringBlob = { sizeof(numericString),
+ (LPBYTE)numericString };
+static const CRYPT_DATA_BLOB printableStringBlob = { sizeof(printableString),
+ (LPBYTE)printableString };
+static const CRYPT_DATA_BLOB domainCompTypesBlob = { sizeof(domainCompTypes),
+ (LPBYTE)domainCompTypes };
+
+struct OIDInfoConstructor {
+    DWORD   dwGroupId;
+    LPCSTR  pszOID;
+    UINT    Algid;
+    LPCWSTR pwszName;
+    const CRYPT_DATA_BLOB *blob;
+} oidInfoConstructors[] = {
+ { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     sha1, NULL },
+ { 1, szOID_OIWSEC_sha1,               CALG_SHA1,     sha, NULL },
+ { 1, szOID_OIWSEC_sha,                CALG_SHA,      sha, NULL },
+ { 1, szOID_RSA_MD5,                   CALG_MD5,      md5, NULL },
+ { 1, szOID_RSA_MD4,                   CALG_MD4,      md4, NULL },
+ { 1, szOID_RSA_MD2,                   CALG_MD2,      md2, NULL },
+
+ { 2, szOID_OIWSEC_desCBC,             CALG_DES,      des, NULL },
+ { 2, szOID_RSA_DES_EDE3_CBC,          CALG_3DES,     tripledes, NULL },
+ { 2, szOID_RSA_RC2CBC,                CALG_RC2,      rc2, NULL },
+ { 2, szOID_RSA_RC4,                   CALG_RC4,      rc4, NULL },
+ { 2, szOID_RSA_SMIMEalgCMS3DESwrap,   CALG_3DES,     cms3deswrap, NULL },
+ { 2, szOID_RSA_SMIMEalgCMSRC2wrap,    CALG_RC2,      cmsrc2wrap, NULL },
+
+ { 3, szOID_RSA_RSA,                   CALG_RSA_KEYX, RSA, NULL },
+ { 3, szOID_X957_DSA,                  CALG_DSS_SIGN, DSA, &noNullBlob },
+ { 3, szOID_ANSI_X942_DH,              CALG_DH_SF,    DH, &noNullBlob },
+ { 3, szOID_RSA_RSA,                   CALG_RSA_KEYX, RSA_KEYX, NULL },
+ { 3, szOID_RSA_RSA,                   CALG_RSA_SIGN, RSA, NULL },
+ { 3, szOID_RSA_RSA,                   CALG_RSA_SIGN, RSA_SIGN, NULL },
+ { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, DSA, &noNullBlob },
+ { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, DSS, &noNullBlob },
+ { 3, szOID_OIWSEC_dsa,                CALG_DSS_SIGN, DSA_SIGN, &noNullBlob },
+ { 3, szOID_RSA_DH,                    CALG_DH_SF,    DH, &noNullBlob },
+ { 3, szOID_OIWSEC_rsaXchg,            CALG_RSA_KEYX, RSA_KEYX, NULL },
+ { 3, szOID_INFOSEC_mosaicKMandUpdSig, CALG_DSS_SIGN, mosaicKMandUpdSig,
+   &mosaicFlagsBlob },
+ { 3, szOID_RSA_SMIMEalgESDH,          CALG_DH_EPHEM, ESDH, &noNullBlob },
+ { 3, szOID_PKIX_NO_SIGNATURE,         CALG_NO_SIGN,  NO_SIGN, NULL },
+
+ { 4, szOID_RSA_SHA1RSA,               CALG_SHA1,     sha1RSA, &rsaSignBlob },
+ { 4, szOID_RSA_MD5RSA,                CALG_MD5,      md5RSA, &rsaSignBlob },
+ { 4, szOID_X957_SHA1DSA,              CALG_SHA1,     sha1DSA, &dssSignBlob },
+ { 4, szOID_OIWSEC_sha1RSASign,        CALG_SHA1,     sha1RSA, &rsaSignBlob },
+ { 4, szOID_OIWSEC_sha1RSASign,        CALG_SHA1,     shaRSA, &rsaSignBlob },
+ { 4, szOID_OIWSEC_shaRSA,             CALG_SHA1,     shaRSA, &rsaSignBlob },
+ { 4, szOID_OIWSEC_md5RSA,             CALG_MD5,      md5RSA, &rsaSignBlob },
+ { 4, szOID_RSA_MD2RSA,                CALG_MD2,      md2RSA, &rsaSignBlob },
+ { 4, szOID_RSA_MD4RSA,                CALG_MD4,      md4RSA, &rsaSignBlob },
+ { 4, szOID_OIWSEC_md4RSA,             CALG_MD4,      md4RSA, &rsaSignBlob },
+ { 4, szOID_OIWSEC_md4RSA2,            CALG_MD4,      md4RSA, &rsaSignBlob },
+ { 4, szOID_OIWDIR_md2RSA,             CALG_MD2,      md2RSA, &rsaSignBlob },
+ { 4, szOID_OIWSEC_shaDSA,             CALG_SHA1,     sha1DSA, &dssSignBlob },
+ { 4, szOID_OIWSEC_shaDSA,             CALG_SHA1,     shaDSA, &dssSignBlob },
+ { 4, szOID_OIWSEC_dsaSHA1,            CALG_SHA1,     dsaSHA1, &dssSignBlob },
+ { 4, szOID_INFOSEC_mosaicUpdatedSig,  CALG_SHA1,     mosaicUpdatedSig,
+   &mosaicSignBlob },
+
+ { 5, szOID_COMMON_NAME,              0, CN, NULL },
+ { 5, szOID_LOCALITY_NAME,            0, L, NULL },
+ { 5, szOID_ORGANIZATION_NAME,        0, O, NULL },
+ { 5, szOID_ORGANIZATIONAL_UNIT_NAME, 0, OU, NULL },
+ { 5, szOID_RSA_emailAddr,            0, E, &ia5StringBlob },
+ { 5, szOID_RSA_emailAddr,            0, Email, &ia5StringBlob },
+ { 5, szOID_COUNTRY_NAME,             0, C, &printableStringBlob },
+ { 5, szOID_STATE_OR_PROVINCE_NAME,   0, S, NULL },
+ { 5, szOID_STATE_OR_PROVINCE_NAME,   0, ST, NULL },
+ { 5, szOID_STREET_ADDRESS,           0, STREET, NULL },
+ { 5, szOID_TITLE,                    0, T, NULL },
+ { 5, szOID_TITLE,                    0, Title, NULL },
+ { 5, szOID_GIVEN_NAME,               0, G, NULL },
+ { 5, szOID_GIVEN_NAME,               0, GN, NULL },
+ { 5, szOID_GIVEN_NAME,               0, GivenName, NULL },
+ { 5, szOID_INITIALS,                 0, I, NULL },
+ { 5, szOID_INITIALS,                 0, Initials, NULL },
+ { 5, szOID_SUR_NAME,                 0, SN, NULL },
+ { 5, szOID_DOMAIN_COMPONENT,         0, DC, &domainCompTypesBlob },
+ { 5, szOID_DESCRIPTION,              0, Description, NULL },
+ { 5, szOID_POSTAL_CODE,              0, PostalCode, NULL },
+ { 5, szOID_POST_OFFICE_BOX,          0, POBox, NULL },
+ { 5, szOID_TELEPHONE_NUMBER,         0, Phone, &printableStringBlob },
+ { 5, szOID_X21_ADDRESS,              0, X21Address, &numericStringBlob },
+ { 5, szOID_DN_QUALIFIER,             0, dnQualifier, NULL },
+
+ { 6, szOID_AUTHORITY_KEY_IDENTIFIER2, 0, (LPCWSTR)IDS_AUTHORITY_KEY_ID, NULL },
+ { 6, szOID_AUTHORITY_KEY_IDENTIFIER, 0, (LPCWSTR)IDS_AUTHORITY_KEY_ID, NULL },
+ { 6, szOID_KEY_ATTRIBUTES, 0, (LPCWSTR)IDS_KEY_ATTRIBUTES, NULL },
+ { 6, szOID_KEY_USAGE_RESTRICTION, 0, (LPCWSTR)IDS_KEY_USAGE_RESTRICTION, NULL },
+ { 6, szOID_SUBJECT_ALT_NAME2, 0, (LPCWSTR)IDS_SUBJECT_ALT_NAME, NULL },
+ { 6, szOID_SUBJECT_ALT_NAME, 0, (LPCWSTR)IDS_SUBJECT_ALT_NAME, NULL },
+ { 6, szOID_ISSUER_ALT_NAME2, 0, (LPCWSTR)IDS_ISSUER_ALT_NAME, NULL },
+ { 6, szOID_ISSUER_ALT_NAME2, 0, (LPCWSTR)IDS_ISSUER_ALT_NAME, NULL },
+ { 6, szOID_BASIC_CONSTRAINTS2, 0, (LPCWSTR)IDS_BASIC_CONSTRAINTS, NULL },
+ { 6, szOID_BASIC_CONSTRAINTS, 0, (LPCWSTR)IDS_BASIC_CONSTRAINTS, NULL },
+ { 6, szOID_KEY_USAGE, 0, (LPCWSTR)IDS_KEY_USAGE, NULL },
+ { 6, szOID_CERT_POLICIES, 0, (LPCWSTR)IDS_CERT_POLICIES, NULL },
+ { 6, szOID_SUBJECT_KEY_IDENTIFIER, 0, (LPCWSTR)IDS_SUBJECT_KEY_IDENTIFIER, NULL },
+ { 6, szOID_CRL_REASON_CODE, 0, (LPCWSTR)IDS_CRL_REASON_CODE, NULL },
+ { 6, szOID_CRL_DIST_POINTS, 0, (LPCWSTR)IDS_CRL_DIST_POINTS, NULL },
+ { 6, szOID_ENHANCED_KEY_USAGE, 0, (LPCWSTR)IDS_ENHANCED_KEY_USAGE, NULL },
+ { 6, szOID_AUTHORITY_INFO_ACCESS, 0, (LPCWSTR)IDS_AUTHORITY_INFO_ACCESS, NULL },
+ { 6, szOID_CERT_EXTENSIONS, 0, (LPCWSTR)IDS_CERT_EXTENSIONS, NULL },
+ { 6, szOID_RSA_certExtensions, 0, (LPCWSTR)IDS_CERT_EXTENSIONS, NULL },
+ { 6, szOID_NEXT_UPDATE_LOCATION, 0, (LPCWSTR)IDS_NEXT_UPDATE_LOCATION, NULL },
+ { 6, szOID_YESNO_TRUST_ATTR, 0, (LPCWSTR)IDS_YES_OR_NO_TRUST, NULL },
+ { 6, szOID_RSA_emailAddr, 0, (LPCWSTR)IDS_EMAIL_ADDRESS, NULL },
+ { 6, szOID_RSA_unstructName, 0, (LPCWSTR)IDS_UNSTRUCTURED_NAME, NULL },
+ { 6, szOID_RSA_contentType, 0, (LPCWSTR)IDS_CONTENT_TYPE, NULL },
+ { 6, szOID_RSA_messageDigest, 0, (LPCWSTR)IDS_MESSAGE_DIGEST, NULL },
+ { 6, szOID_RSA_signingTime, 0, (LPCWSTR)IDS_SIGNING_TIME, NULL },
+ { 6, szOID_RSA_counterSign, 0, (LPCWSTR)IDS_COUNTER_SIGN, NULL },
+ { 6, szOID_RSA_challengePwd, 0, (LPCWSTR)IDS_CHALLENGE_PASSWORD, NULL },
+ { 6, szOID_RSA_unstructAddr, 0, (LPCWSTR)IDS_UNSTRUCTURED_ADDRESS, NULL },
+ { 6, szOID_RSA_SMIMECapabilities, 0, (LPCWSTR)IDS_SMIME_CAPABILITIES, NULL },
+ { 6, szOID_RSA_preferSignedData, 0, (LPCWSTR)IDS_PREFER_SIGNED_DATA, NULL },
+ { 6, szOID_PKIX_POLICY_QUALIFIER_CPS, 0, (LPCWSTR)IDS_CPS, NULL },
+ { 6, szOID_PKIX_POLICY_QUALIFIER_USERNOTICE, 0, (LPCWSTR)IDS_USER_NOTICE, NULL },
+ { 6, szOID_PKIX_OCSP, 0, (LPCWSTR)IDS_OCSP, NULL },
+ { 6, szOID_PKIX_CA_ISSUERS, 0, (LPCWSTR)IDS_CA_ISSUER, NULL },
+ { 6, szOID_ENROLL_CERTTYPE_EXTENSION, 0, (LPCWSTR)IDS_CERT_TEMPLATE_NAME, NULL },
+ { 6, szOID_ENROLL_CERTTYPE_EXTENSION, 0, (LPCWSTR)IDS_CERT_TYPE, NULL },
+ { 6, szOID_CERT_MANIFOLD, 0, (LPCWSTR)IDS_CERT_MANIFOLD, NULL },
+ { 6, szOID_NETSCAPE_CERT_TYPE, 0, (LPCWSTR)IDS_NETSCAPE_CERT_TYPE, NULL },
+ { 6, szOID_NETSCAPE_BASE_URL, 0, (LPCWSTR)IDS_NETSCAPE_BASE_URL, NULL },
+ { 6, szOID_NETSCAPE_REVOCATION_URL, 0, (LPCWSTR)IDS_NETSCAPE_REVOCATION_URL, NULL },
+ { 6, szOID_NETSCAPE_CA_REVOCATION_URL, 0, (LPCWSTR)IDS_NETSCAPE_CA_REVOCATION_URL, NULL },
+ { 6, szOID_NETSCAPE_CERT_RENEWAL_URL, 0, (LPCWSTR)IDS_NETSCAPE_CERT_RENEWAL_URL, NULL },
+ { 6, szOID_NETSCAPE_CA_POLICY_URL, 0, (LPCWSTR)IDS_NETSCAPE_CA_POLICY_URL, NULL },
+ { 6, szOID_NETSCAPE_SSL_SERVER_NAME, 0, (LPCWSTR)IDS_NETSCAPE_SSL_SERVER_NAME, NULL },
+ { 6, szOID_NETSCAPE_COMMENT, 0, (LPCWSTR)IDS_NETSCAPE_COMMENT, NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.10", 0, (LPCWSTR)IDS_SPC_SP_AGENCY_INFO, NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.27", 0, (LPCWSTR)IDS_SPC_FINANCIAL_CRITERIA, NULL },
+ { 6, "1.3.6.1.4.1.311.2.1.26", 0, (LPCWSTR)IDS_SPC_MINIMAL_CRITERIA, NULL },
+ { 6, szOID_COUNTRY_NAME, 0, (LPCWSTR)IDS_COUNTRY, NULL },
+ { 6, szOID_ORGANIZATION_NAME, 0, (LPCWSTR)IDS_ORGANIZATION, NULL },
+ { 6, szOID_ORGANIZATIONAL_UNIT_NAME, 0, (LPCWSTR)IDS_ORGANIZATIONAL_UNIT, NULL },
+ { 6, szOID_COMMON_NAME, 0, (LPCWSTR)IDS_COMMON_NAME, NULL },
+ { 6, szOID_LOCALITY_NAME, 0, (LPCWSTR)IDS_LOCALITY, NULL },
+ { 6, szOID_STATE_OR_PROVINCE_NAME, 0, (LPCWSTR)IDS_STATE_OR_PROVINCE, NULL },
+ { 6, szOID_TITLE, 0, (LPCWSTR)IDS_TITLE, NULL },
+ { 6, szOID_GIVEN_NAME, 0, (LPCWSTR)IDS_GIVEN_NAME, NULL },
+ { 6, szOID_INITIALS, 0, (LPCWSTR)IDS_INITIALS, NULL },
+ { 6, szOID_SUR_NAME, 0, (LPCWSTR)IDS_SUR_NAME, NULL },
+ { 6, szOID_DOMAIN_COMPONENT, 0, (LPCWSTR)IDS_DOMAIN_COMPONENT, NULL },
+ { 6, szOID_STREET_ADDRESS, 0, (LPCWSTR)IDS_STREET_ADDRESS, NULL },
+ { 6, szOID_DEVICE_SERIAL_NUMBER, 0, (LPCWSTR)IDS_SERIAL_NUMBER, NULL },
+ { 6, szOID_CERTSRV_CA_VERSION, 0, (LPCWSTR)IDS_CA_VERSION, NULL },
+ { 6, szOID_CERTSRV_CROSSCA_VERSION, 0, (LPCWSTR)IDS_CROSS_CA_VERSION, NULL },
+ { 6, szOID_SERIALIZED, 0, (LPCWSTR)IDS_SERIALIZED_SIG_SERIAL_NUMBER, NULL },
+ { 6, szOID_NT_PRINCIPAL_NAME, 0, (LPCWSTR)IDS_PRINCIPAL_NAME, NULL },
+ { 6, szOID_PRODUCT_UPDATE, 0, (LPCWSTR)IDS_WINDOWS_PRODUCT_UPDATE, NULL },
+ { 6, szOID_ENROLLMENT_NAME_VALUE_PAIR, 0, (LPCWSTR)IDS_ENROLLMENT_NAME_VALUE_PAIR, NULL },
+ { 6, szOID_OS_VERSION, 0, (LPCWSTR)IDS_OS_VERSION, NULL },
+ { 6, szOID_ENROLLMENT_CSP_PROVIDER, 0, (LPCWSTR)IDS_ENROLLMENT_CSP, NULL },
+ { 6, szOID_CRL_NUMBER, 0, (LPCWSTR)IDS_CRL_NUMBER, NULL },
+ { 6, szOID_DELTA_CRL_INDICATOR, 0, (LPCWSTR)IDS_DELTA_CRL_INDICATOR, NULL },
+ { 6, szOID_ISSUING_DIST_POINT, 0, (LPCWSTR)IDS_ISSUING_DIST_POINT, NULL },
+ { 6, szOID_FRESHEST_CRL, 0, (LPCWSTR)IDS_FRESHEST_CRL, NULL },
+ { 6, szOID_NAME_CONSTRAINTS, 0, (LPCWSTR)IDS_NAME_CONSTRAINTS, NULL },
+ { 6, szOID_POLICY_MAPPINGS, 0, (LPCWSTR)IDS_POLICY_MAPPINGS, NULL },
+ { 6, szOID_LEGACY_POLICY_MAPPINGS, 0, (LPCWSTR)IDS_POLICY_MAPPINGS, NULL },
+ { 6, szOID_POLICY_CONSTRAINTS, 0, (LPCWSTR)IDS_POLICY_CONSTRAINTS, NULL },
+ { 6, szOID_CROSS_CERT_DIST_POINTS, 0, (LPCWSTR)IDS_CROSS_CERT_DIST_POINTS, NULL },
+ { 6, szOID_APPLICATION_CERT_POLICIES, 0, (LPCWSTR)IDS_APPLICATION_POLICIES, NULL },
+ { 6, szOID_APPLICATION_POLICY_MAPPINGS, 0, (LPCWSTR)IDS_APPLICATION_POLICY_MAPPINGS, NULL },
+ { 6, szOID_APPLICATION_POLICY_CONSTRAINTS, 0, (LPCWSTR)IDS_APPLICATION_POLICY_CONSTRAINTS, NULL },
+ { 6, szOID_CT_PKI_DATA, 0, (LPCWSTR)IDS_CMC_DATA, NULL },
+ { 6, szOID_CT_PKI_RESPONSE, 0, (LPCWSTR)IDS_CMC_RESPONSE, NULL },
+ { 6, szOID_CMC, 0, (LPCWSTR)IDS_UNSIGNED_CMC_REQUEST, NULL },
+ { 6, szOID_CMC_STATUS_INFO, 0, (LPCWSTR)IDS_CMC_STATUS_INFO, NULL },
+ { 6, szOID_CMC_ADD_EXTENSIONS, 0, (LPCWSTR)IDS_CMC_EXTENSIONS, NULL },
+ { 6, szOID_CTL, 0, (LPCWSTR)IDS_CMC_ATTRIBUTES, NULL },
+ { 6, szOID_RSA_data, 0, (LPCWSTR)IDS_PKCS_7_DATA, NULL },
+ { 6, szOID_RSA_signedData, 0, (LPCWSTR)IDS_PKCS_7_SIGNED, NULL },
+ { 6, szOID_RSA_envelopedData, 0, (LPCWSTR)IDS_PKCS_7_ENVELOPED, NULL },
+ { 6, szOID_RSA_signEnvData, 0, (LPCWSTR)IDS_PKCS_7_SIGNED_ENVELOPED, NULL },
+ { 6, szOID_RSA_digestedData, 0, (LPCWSTR)IDS_PKCS_7_DIGESTED, NULL },
+ { 6, szOID_RSA_encryptedData, 0, (LPCWSTR)IDS_PKCS_7_ENCRYPTED, NULL },
+ { 6, szOID_CERTSRV_PREVIOUS_CERT_HASH, 0, (LPCWSTR)IDS_PREVIOUS_CA_CERT_HASH, NULL },
+ { 6, szOID_CRL_VIRTUAL_BASE, 0, (LPCWSTR)IDS_CRL_VIRTUAL_BASE, NULL },
+ { 6, szOID_CRL_NEXT_PUBLISH, 0, (LPCWSTR)IDS_CRL_NEXT_PUBLISH, NULL },
+ { 6, szOID_KP_CA_EXCHANGE, 0, (LPCWSTR)IDS_CA_EXCHANGE, NULL },
+ { 6, szOID_KP_KEY_RECOVERY_AGENT, 0, (LPCWSTR)IDS_KEY_RECOVERY_AGENT, NULL },
+ { 6, szOID_CERTIFICATE_TEMPLATE, 0, (LPCWSTR)IDS_CERTIFICATE_TEMPLATE, NULL },
+ { 6, szOID_ENTERPRISE_OID_ROOT, 0, (LPCWSTR)IDS_ENTERPRISE_ROOT_OID, NULL },
+ { 6, szOID_RDN_DUMMY_SIGNER, 0, (LPCWSTR)IDS_RDN_DUMMY_SIGNER, NULL },
+ { 6, szOID_ARCHIVED_KEY_ATTR, 0, (LPCWSTR)IDS_ARCHIVED_KEY_ATTR, NULL },
+ { 6, szOID_CRL_SELF_CDP, 0, (LPCWSTR)IDS_CRL_SELF_CDP, NULL },
+ { 6, szOID_REQUIRE_CERT_CHAIN_POLICY, 0, (LPCWSTR)IDS_REQUIRE_CERT_CHAIN_POLICY, NULL },
+ { 6, szOID_CMC_TRANSACTION_ID, 0, (LPCWSTR)IDS_TRANSACTION_ID, NULL },
+ { 6, szOID_CMC_SENDER_NONCE, 0, (LPCWSTR)IDS_SENDER_NONCE, NULL },
+ { 6, szOID_CMC_RECIPIENT_NONCE, 0, (LPCWSTR)IDS_RECIPIENT_NONCE, NULL },
+ { 6, szOID_CMC_REG_INFO, 0, (LPCWSTR)IDS_REG_INFO, NULL },
+ { 6, szOID_CMC_GET_CERT, 0, (LPCWSTR)IDS_GET_CERTIFICATE, NULL },
+ { 6, szOID_CMC_GET_CRL, 0, (LPCWSTR)IDS_GET_CRL, NULL },
+ { 6, szOID_CMC_REVOKE_REQUEST, 0, (LPCWSTR)IDS_REVOKE_REQUEST, NULL },
+ { 6, szOID_CMC_QUERY_PENDING, 0, (LPCWSTR)IDS_QUERY_PENDING, NULL },
+ { 6, szOID_SORTED_CTL, 0, (LPCWSTR)IDS_SORTED_CTL, NULL },
+ { 6, szOID_ARCHIVED_KEY_CERT_HASH, 0, (LPCWSTR)IDS_ARCHIVED_KEY_CERT_HASH, NULL },
+ { 6, szOID_PRIVATEKEY_USAGE_PERIOD, 0, (LPCWSTR)IDS_PRIVATE_KEY_USAGE_PERIOD, NULL },
+ { 6, szOID_REQUEST_CLIENT_INFO, 0, (LPCWSTR)IDS_CLIENT_INFORMATION, NULL },
+
+ { 7, szOID_PKIX_KP_SERVER_AUTH, 0, (LPCWSTR)IDS_SERVER_AUTHENTICATION, NULL },
+ { 7, szOID_PKIX_KP_CLIENT_AUTH, 0, (LPCWSTR)IDS_CLIENT_AUTHENTICATION, NULL },
+ { 7, szOID_PKIX_KP_CODE_SIGNING, 0, (LPCWSTR)IDS_CODE_SIGNING, NULL },
+ { 7, szOID_PKIX_KP_EMAIL_PROTECTION, 0, (LPCWSTR)IDS_SECURE_EMAIL, NULL },
+ { 7, szOID_PKIX_KP_TIMESTAMP_SIGNING, 0, (LPCWSTR)IDS_TIME_STAMPING, NULL },
+ { 7, szOID_KP_CTL_USAGE_SIGNING, 0, (LPCWSTR)IDS_MICROSOFT_TRUST_LIST_SIGNING, NULL },
+ { 7, szOID_KP_TIME_STAMP_SIGNING, 0, (LPCWSTR)IDS_MICROSOFT_TIME_STAMPING, NULL },
+ { 7, szOID_PKIX_KP_IPSEC_END_SYSTEM, 0, (LPCWSTR)IDS_IPSEC_END_SYSTEM, NULL },
+ { 7, szOID_PKIX_KP_IPSEC_TUNNEL, 0, (LPCWSTR)IDS_IPSEC_TUNNEL, NULL },
+ { 7, szOID_PKIX_KP_IPSEC_USER, 0, (LPCWSTR)IDS_IPSEC_USER, NULL },
+ { 7, szOID_KP_EFS, 0, (LPCWSTR)IDS_EFS, NULL },
+ { 7, szOID_WHQL_CRYPTO, 0, (LPCWSTR)IDS_WHQL_CRYPTO, NULL },
+ { 7, szOID_NT5_CRYPTO, 0, (LPCWSTR)IDS_NT5_CRYPTO, NULL },
+ { 7, szOID_OEM_WHQL_CRYPTO, 0, (LPCWSTR)IDS_OEM_WHQL_CRYPTO, NULL },
+ { 7, szOID_EMBEDDED_NT_CRYPTO, 0, (LPCWSTR)IDS_EMBEDDED_NT_CRYPTO, NULL },
+ { 7, szOID_LICENSES, 0, (LPCWSTR)IDS_KEY_PACK_LICENSES, NULL },
+ { 7, szOID_LICENSE_SERVER, 0, (LPCWSTR)IDS_LICENSE_SERVER, NULL },
+ { 7, szOID_KP_SMARTCARD_LOGON, 0, (LPCWSTR)IDS_SMART_CARD_LOGON, NULL },
+ { 7, szOID_DRM, 0, (LPCWSTR)IDS_DIGITAL_RIGHTS, NULL },
+ { 7, szOID_KP_QUALIFIED_SUBORDINATION, 0, (LPCWSTR)IDS_QUALIFIED_SUBORDINATION, NULL },
+ { 7, szOID_KP_KEY_RECOVERY, 0, (LPCWSTR)IDS_KEY_RECOVERY, NULL },
+ { 7, szOID_KP_DOCUMENT_SIGNING, 0, (LPCWSTR)IDS_DOCUMENT_SIGNING, NULL },
+ { 7, szOID_IPSEC_KP_IKE_INTERMEDIATE, 0, (LPCWSTR)IDS_IPSEC_IKE_INTERMEDIATE, NULL },
+ { 7, szOID_EFS_RECOVERY, 0, (LPCWSTR)IDS_FILE_RECOVERY, NULL },
+ { 7, szOID_ROOT_LIST_SIGNER, 0, (LPCWSTR)IDS_ROOT_LIST_SIGNER, NULL },
+ { 7, szOID_ANY_APPLICATION_POLICY, 0, (LPCWSTR)IDS_ANY_APPLICATION_POLICIES, NULL },
+ { 7, szOID_DS_EMAIL_REPLICATION, 0, (LPCWSTR)IDS_DS_EMAIL_REPLICATION, NULL },
+ { 7, szOID_ENROLLMENT_AGENT, 0, (LPCWSTR)IDS_ENROLLMENT_AGENT, NULL },
+ { 7, szOID_KP_KEY_RECOVERY_AGENT, 0, (LPCWSTR)IDS_KEY_RECOVERY_AGENT, NULL },
+ { 7, szOID_KP_CA_EXCHANGE, 0, (LPCWSTR)IDS_CA_EXCHANGE, NULL },
+ { 7, szOID_KP_LIFETIME_SIGNING, 0, (LPCWSTR)IDS_LIFETIME_SIGNING, NULL },
+
+ { 8, szOID_ANY_CERT_POLICY, 0, (LPCWSTR)IDS_ANY_CERT_POLICY, NULL },
+};
+
+struct OIDInfo {
+    CRYPT_OID_INFO info;
+    struct list entry;
+};
+
+static void init_oid_info(HINSTANCE hinst)
+{
+    DWORD i;
+
+    InitializeCriticalSection(&oidInfoCS);
+    list_init(&oidInfo);
+    for (i = 0; i < sizeof(oidInfoConstructors) /
+     sizeof(oidInfoConstructors[0]); i++)
+    {
+        if (HIWORD(oidInfoConstructors[i].pwszName))
+        {
+            struct OIDInfo *info;
+
+            /* The name is a static string, so just use the same pointer */
+            info = CryptMemAlloc(sizeof(struct OIDInfo));
+            if (info)
+            {
+                memset(info, 0, sizeof(*info));
+                info->info.cbSize = sizeof(CRYPT_OID_INFO);
+                info->info.pszOID = oidInfoConstructors[i].pszOID;
+                info->info.pwszName = oidInfoConstructors[i].pwszName;
+                info->info.dwGroupId = oidInfoConstructors[i].dwGroupId;
+                info->info.u.Algid = oidInfoConstructors[i].Algid;
+                if (oidInfoConstructors[i].blob)
+                {
+                    info->info.ExtraInfo.cbData =
+                     oidInfoConstructors[i].blob->cbData;
+                    info->info.ExtraInfo.pbData =
+                     oidInfoConstructors[i].blob->pbData;
+                }
+                list_add_tail(&oidInfo, &info->entry);
+            }
+        }
+        else
+        {
+            int len = LoadStringW(hinst, (UINT)oidInfoConstructors[i].pwszName,
+             NULL, 0);
+
+            if (len)
+            {
+                struct OIDInfo *info = CryptMemAlloc(sizeof(struct OIDInfo) +
+                 (len + 1) * sizeof(WCHAR));
+
+                if (info)
+                {
+                    memset(info, 0, sizeof(*info));
+                    info->info.cbSize = sizeof(CRYPT_OID_INFO);
+                    info->info.pszOID = oidInfoConstructors[i].pszOID;
+                    info->info.pwszName =
+                     (LPWSTR)((LPBYTE)info + sizeof(struct OIDInfo));
+                    info->info.dwGroupId = oidInfoConstructors[i].dwGroupId;
+                    info->info.u.Algid = oidInfoConstructors[i].Algid;
+                    LoadStringW(hinst, (UINT)oidInfoConstructors[i].pwszName,
+                     (LPWSTR)info->info.pwszName, len + 1);
+                    if (oidInfoConstructors[i].blob)
+                    {
+                        info->info.ExtraInfo.cbData =
+                         oidInfoConstructors[i].blob->cbData;
+                        info->info.ExtraInfo.pbData =
+                         oidInfoConstructors[i].blob->pbData;
+                    }
+                    list_add_tail(&oidInfo, &info->entry);
+                }
+            }
+        }
+    }
+}
+
+static void free_oid_info(void)
+{
+    struct OIDInfo *info, *next;
+
+    LIST_FOR_EACH_ENTRY_SAFE(info, next, &oidInfo, struct OIDInfo, entry)
+    {
+        list_remove(&info->entry);
+        CryptMemFree(info);
+    }
+    DeleteCriticalSection(&oidInfoCS);
+}
+
+BOOL WINAPI CryptEnumOIDInfo(DWORD dwGroupId, DWORD dwFlags, void *pvArg,
+ PFN_CRYPT_ENUM_OID_INFO pfnEnumOIDInfo)
+{
+    BOOL ret = TRUE;
+    struct OIDInfo *info;
+
+    TRACE("(%ld, %08lx, %p, %p)\n", dwGroupId, dwFlags, pvArg,
+     pfnEnumOIDInfo);
+
+    EnterCriticalSection(&oidInfoCS);
+    LIST_FOR_EACH_ENTRY(info, &oidInfo, struct OIDInfo, entry)
+    {
+        if (!dwGroupId || dwGroupId == info->info.dwGroupId)
+        {
+            ret = pfnEnumOIDInfo(&info->info, pvArg);
+            if (!ret)
+                break;
+        }
+    }
+    LeaveCriticalSection(&oidInfoCS);
+    return ret;
+}
+
+PCCRYPT_OID_INFO WINAPI CryptFindOIDInfo(DWORD dwKeyType, void *pvKey,
+ DWORD dwGroupId)
+{
+    PCCRYPT_OID_INFO ret = NULL;
+
+    TRACE("(%ld, %p, %ld)\n", dwKeyType, pvKey, dwGroupId);
+
+    switch(dwKeyType)
+    {
+    case CRYPT_OID_INFO_ALGID_KEY:
+    {
+        struct OIDInfo *info;
+
+        EnterCriticalSection(&oidInfoCS);
+        LIST_FOR_EACH_ENTRY(info, &oidInfo, struct OIDInfo, entry)
+        {
+            if (info->info.u.Algid == *(DWORD *)pvKey &&
+             (!dwGroupId || info->info.dwGroupId == dwGroupId))
+            {
+                ret = &info->info;
+                break;
+            }
+        }
+        LeaveCriticalSection(&oidInfoCS);
+        break;
+    }
+    case CRYPT_OID_INFO_NAME_KEY:
+    {
+        struct OIDInfo *info;
+
+        EnterCriticalSection(&oidInfoCS);
+        LIST_FOR_EACH_ENTRY(info, &oidInfo, struct OIDInfo, entry)
+        {
+            if (!lstrcmpW(info->info.pwszName, (LPWSTR)pvKey) &&
+             (!dwGroupId || info->info.dwGroupId == dwGroupId))
+            {
+                ret = &info->info;
+                break;
+            }
+        }
+        LeaveCriticalSection(&oidInfoCS);
+        break;
+    }
+    case CRYPT_OID_INFO_OID_KEY:
+    {
+        struct OIDInfo *info;
+        LPSTR oid = (LPSTR)pvKey;
+
+        EnterCriticalSection(&oidInfoCS);
+        LIST_FOR_EACH_ENTRY(info, &oidInfo, struct OIDInfo, entry)
+        {
+            if (!lstrcmpA(info->info.pszOID, oid) &&
+             (!dwGroupId || info->info.dwGroupId == dwGroupId))
+            {
+                ret = &info->info;
+                break;
+            }
+        }
+        LeaveCriticalSection(&oidInfoCS);
+        break;
+    }
+    case CRYPT_OID_INFO_SIGN_KEY:
+    {
+        struct OIDInfo *info;
+
+        EnterCriticalSection(&oidInfoCS);
+        LIST_FOR_EACH_ENTRY(info, &oidInfo, struct OIDInfo, entry)
+        {
+            if (info->info.u.Algid == *(DWORD *)pvKey &&
+             info->info.ExtraInfo.cbData >= sizeof(DWORD) &&
+             *(DWORD *)info->info.ExtraInfo.pbData ==
+             *(DWORD *)((LPBYTE)pvKey + sizeof(DWORD)) &&
+             (!dwGroupId || info->info.dwGroupId == dwGroupId))
+            {
+                ret = &info->info;
+                break;
+            }
+        }
+        LeaveCriticalSection(&oidInfoCS);
+        break;
+    }
+    }
+    return ret;
+}
+
+LPCSTR WINAPI CertAlgIdToOID(DWORD dwAlgId)
+{
+    LPCSTR ret;
+    PCCRYPT_OID_INFO info = CryptFindOIDInfo(CRYPT_OID_INFO_ALGID_KEY,
+     &dwAlgId, 0);
+
+    if (info)
+        ret = info->pszOID;
+    else
+        ret = NULL;
+    return ret;
+}
+
+DWORD WINAPI CertOIDToAlgId(LPCSTR pszObjId)
+{
+    DWORD ret;
+    PCCRYPT_OID_INFO info = CryptFindOIDInfo(CRYPT_OID_INFO_OID_KEY,
+     (void *)pszObjId, 0);
+
+    if (info)
+        ret = info->u.Algid;
+    else
+        ret = 0;
+    return ret;
 }
