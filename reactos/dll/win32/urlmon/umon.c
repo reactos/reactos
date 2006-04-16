@@ -259,7 +259,7 @@ static void Binding_FinishedDownload(Binding *This, HRESULT hr)
 		        0, NULL);
 	if (!pwchError)
 	{
-	    static WCHAR achFormat[] = { '%', '0', '8', 'x', 0 };
+	    static const WCHAR achFormat[] = { '%', '0', '8', 'x', 0 };
 
 	    pwchError =(WCHAR *) LocalAlloc(LMEM_FIXED, sizeof(WCHAR) * 9);
 	    wsprintfW(pwchError, achFormat, hr);
@@ -1065,29 +1065,19 @@ static HRESULT URLMonikerImpl_Construct(URLMonikerImpl* This, LPCOLESTR lpszLeft
     DWORD sizeStr = INTERNET_MAX_URL_LENGTH;
 
     TRACE("(%p,%s,%s)\n",This,debugstr_w(lpszLeftURLName),debugstr_w(lpszURLName));
-    memset(This, 0, sizeof(*This));
 
-    /* Initialize the virtual function table. */
     This->lpvtbl = &VT_URLMonikerImpl;
     This->ref = 0;
 
-    if(lpszLeftURLName) {
-        hres = UrlCombineW(lpszLeftURLName, lpszURLName, NULL, &sizeStr, 0);
-        if(FAILED(hres)) {
-            return hres;
-        }
-        sizeStr++;
-    }
-    else
-        sizeStr = lstrlenW(lpszURLName)+1;
+    sizeStr = lstrlenW(lpszURLName)+1;
+    if(lpszLeftURLName)
+        sizeStr += strlenW(lpszLeftURLName)+32;
 
-    This->URLName=HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*(sizeStr));
-
-    if (This->URLName==NULL)
-        return E_OUTOFMEMORY;
+    This->URLName = HeapAlloc(GetProcessHeap(), 0, sizeStr*sizeof(WCHAR));
 
     if(lpszLeftURLName) {
-        hres = UrlCombineW(lpszLeftURLName, lpszURLName, This->URLName, &sizeStr, 0);
+        hres = CoInternetCombineUrl(lpszLeftURLName, lpszURLName, 0, This->URLName, sizeStr,
+                                    &sizeStr, 0);
         if(FAILED(hres)) {
             HeapFree(GetProcessHeap(), 0, This->URLName);
             return hres;

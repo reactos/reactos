@@ -166,7 +166,9 @@ static HRESULT parse_security_domain(LPCWSTR url, DWORD flags, LPWSTR result,
     return E_FAIL;
 }
 
-
+/**************************************************************************
+ *          CoInternetParseUrl    (URLMON.@)
+ */
 HRESULT WINAPI CoInternetParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD dwFlags,
         LPWSTR pszResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved)
 {
@@ -189,4 +191,37 @@ HRESULT WINAPI CoInternetParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD
     }
 
     return E_NOTIMPL;
+}
+
+/**************************************************************************
+ *          CoInternetCombineUrl    (URLMON.@)
+ */
+HRESULT WINAPI CoInternetCombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
+        DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult,
+        DWORD dwReserved)
+{
+    IInternetProtocolInfo *protocol_info;
+    DWORD size = cchResult;
+    HRESULT hres;
+    
+    TRACE("(%s,%s,0x%08lx,%p,%ld,%p,%ld)\n", debugstr_w(pwzBaseUrl),
+          debugstr_w(pwzRelativeUrl), dwCombineFlags, pwzResult, cchResult, pcchResult,
+          dwReserved);
+
+    protocol_info = get_protocol_info(pwzBaseUrl);
+
+    if(protocol_info) {
+        hres = IInternetProtocolInfo_CombineUrl(protocol_info, pwzBaseUrl, pwzRelativeUrl,
+                dwCombineFlags, pwzResult, cchResult, pcchResult, dwReserved);
+        if(SUCCEEDED(hres))
+            return hres;
+    }
+
+
+    hres = UrlCombineW(pwzBaseUrl, pwzRelativeUrl, pwzResult, &size, dwCombineFlags);
+
+    if(pcchResult)
+        *pcchResult = size;
+
+    return hres;
 }

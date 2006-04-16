@@ -252,26 +252,21 @@ static HRESULT WINAPI IStream_fnWrite (IStream * iface,
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI IStream_fnSeek (       IStream * iface,
+static HRESULT WINAPI IStream_fnSeek (IStream * iface,
                                    LARGE_INTEGER dlibMove,
                                    DWORD dwOrigin,
                                    ULARGE_INTEGER* plibNewPosition)
 {
-    DWORD pos, newposlo;
-    LONG newposhi;
-
+    LARGE_INTEGER newpos;
     IUMCacheStream *This = (IUMCacheStream *)iface;
 
     TRACE("(%p)\n",This);
 
-    pos = dlibMove.QuadPart; /* FIXME: truncates */
-    newposhi = 0;
-    newposlo = SetFilePointer( This->handle, pos, &newposhi, dwOrigin );
-    if( newposlo == INVALID_SET_FILE_POINTER && GetLastError())
+    if (!SetFilePointerEx( This->handle, dlibMove, &newpos, dwOrigin ))
        return E_FAIL;
 
     if (plibNewPosition)
-        plibNewPosition->QuadPart = newposlo | ( (LONGLONG)newposhi<<32);
+        plibNewPosition->QuadPart = newpos.QuadPart;
 
     return S_OK;
 }
@@ -279,11 +274,13 @@ static HRESULT WINAPI IStream_fnSeek (       IStream * iface,
 static HRESULT WINAPI IStream_fnSetSize (IStream * iface,
                                          ULARGE_INTEGER libNewSize)
 {
+    LARGE_INTEGER newpos;
     IUMCacheStream *This = (IUMCacheStream *)iface;
 
     TRACE("(%p)\n",This);
 
-    if( ! SetFilePointer( This->handle, libNewSize.QuadPart, NULL, FILE_BEGIN ) )
+    newpos.QuadPart = libNewSize.QuadPart;
+    if( ! SetFilePointerEx( This->handle, newpos, NULL, FILE_BEGIN ) )
        return E_FAIL;
 
     if( ! SetEndOfFile( This->handle ) )
