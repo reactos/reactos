@@ -32,6 +32,9 @@
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
+#ifdef HAVE_ARPA_INET_H
+# include <arpa/inet.h>
+#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,6 +58,8 @@
 #include "internet.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
+
+#include "inet_ntop.c"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
@@ -985,6 +990,7 @@ HINTERNET WINAPI HTTP_HttpOpenRequestW(LPWININETHTTPSESSIONW lpwhs,
     static const WCHAR szUrlForm[] = {'h','t','t','p',':','/','/','%','s',0};
     DWORD len;
     LPHTTPHEADERW Host;
+    char szaddr[32];
 
     TRACE("-->\n");
 
@@ -1012,7 +1018,12 @@ HINTERNET WINAPI HTTP_HttpOpenRequestW(LPWININETHTTPSESSIONW lpwhs,
         goto lend;
     }
 
-    NETCON_init(&lpwhr->netConnection, dwFlags & INTERNET_FLAG_SECURE);
+    if (!NETCON_init(&lpwhr->netConnection, dwFlags & INTERNET_FLAG_SECURE))
+    {
+        InternetCloseHandle( handle );
+        handle = NULL;
+        goto lend;
+    }
 
     if (NULL != lpszObjectName && strlenW(lpszObjectName)) {
         HRESULT rc;
@@ -1140,10 +1151,11 @@ HINTERNET WINAPI HTTP_HttpOpenRequestW(LPWININETHTTPSESSIONW lpwhs,
         goto lend;
     }
 
+    inet_ntop(lpwhs->socketAddress.sin_family, &lpwhs->socketAddress.sin_addr,
+              szaddr, sizeof(szaddr));
     INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
                           INTERNET_STATUS_NAME_RESOLVED,
-                          &(lpwhs->socketAddress),
-                          sizeof(struct sockaddr_in));
+                          szaddr, strlen(szaddr)+1);
 
 lend:
     if( lpwhr )
@@ -1694,7 +1706,11 @@ BOOL WINAPI HttpQueryInfoA(HINTERNET hHttpRequest, DWORD dwInfoLevel,
  *           HttpSendRequestExA (WININET.@)
  *
  * Sends the specified request to the HTTP server and allows chunked
- * transfers
+ * transfers.
+ *
+ * RETURNS
+ *  Success: TRUE
+ *  Failure: FALSE, call GetLastError() for more information.
  */
 BOOL WINAPI HttpSendRequestExA(HINTERNET hRequest,
 			       LPINTERNET_BUFFERSA lpBuffersIn,
@@ -1748,6 +1764,10 @@ BOOL WINAPI HttpSendRequestExA(HINTERNET hRequest,
  *
  * Sends the specified request to the HTTP server and allows chunked
  * transfers
+ *
+ * RETURNS
+ *  Success: TRUE
+ *  Failure: FALSE, call GetLastError() for more information.
  */
 BOOL WINAPI HttpSendRequestExW(HINTERNET hRequest,
                    LPINTERNET_BUFFERSW lpBuffersIn,
@@ -1783,15 +1803,27 @@ BOOL WINAPI HttpSendRequestExW(HINTERNET hRequest,
         workRequest.asyncall = HTTPSENDREQUESTW;
         workRequest.hdr = WININET_AddRef( &lpwhr->hdr );
         req = &workRequest.u.HttpSendRequestW;
-        if (lpBuffersIn->lpcszHeader)
-            /* FIXME: this should use dwHeadersLength or may not be necessary at all */
-            req->lpszHeader = WININET_strdupW(lpBuffersIn->lpcszHeader);
+        if (lpBuffersIn)
+        {
+            if (lpBuffersIn->lpcszHeader)
+                /* FIXME: this should use dwHeadersLength or may not be necessary at all */
+                req->lpszHeader = WININET_strdupW(lpBuffersIn->lpcszHeader);
+            else
+                req->lpszHeader = NULL;
+            req->dwHeaderLength = lpBuffersIn->dwHeadersLength;
+            req->lpOptional = lpBuffersIn->lpvBuffer;
+            req->dwOptionalLength = lpBuffersIn->dwBufferLength;
+            req->dwContentLength = lpBuffersIn->dwBufferTotal;
+        }
         else
+        {
             req->lpszHeader = NULL;
-        req->dwHeaderLength = lpBuffersIn->dwHeadersLength;
-        req->lpOptional = lpBuffersIn->lpvBuffer;
-        req->dwOptionalLength = lpBuffersIn->dwBufferLength;
-        req->dwContentLength = lpBuffersIn->dwBufferTotal;
+            req->dwHeaderLength = 0;
+            req->lpOptional = NULL;
+            req->dwOptionalLength = 0;
+            req->dwContentLength = 0;
+        }
+
         req->bEndRequest = FALSE;
 
         INTERNET_AsyncCall(&workRequest);
@@ -1932,6 +1964,7 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl, LPCWST
     LPWININETHTTPSESSIONW lpwhs = (LPWININETHTTPSESSIONW) lpwhr->hdr.lpwhparent;
     LPWININETAPPINFOW hIC = (LPWININETAPPINFOW) lpwhs->hdr.lpwhparent;
     WCHAR path[2048];
+    char szaddr[32];
 
     if(lpszUrl[0]=='/')
     {
@@ -1949,6 +1982,55 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl, LPCWST
         WCHAR protocol[32], hostName[MAXHOSTNAME], userName[1024];
         static const WCHAR szHttp[] = {'h','t','t','p',0};
         static const WCHAR szHttps[] = {'h','t','t','p','s',0};
+        DWORD url_length = 0;
+        LPWSTR orig_url;
+        LPWSTR combined_url;
+
+        urlComponents.dwStructSize = sizeof(URL_COMPONENTSW);
+        urlComponents.lpszScheme = (lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE) ? (LPWSTR)szHttps : (LPWSTR)szHttp;
+        urlComponents.dwSchemeLength = 0;
+        urlComponents.lpszHostName = lpwhs->lpszHostName;
+        urlComponents.dwHostNameLength = 0;
+        urlComponents.nPort = lpwhs->nHostPort;
+        urlComponents.lpszUserName = lpwhs->lpszUserName;
+        urlComponents.dwUserNameLength = 0;
+        urlComponents.lpszPassword = NULL;
+        urlComponents.dwPasswordLength = 0;
+        urlComponents.lpszUrlPath = lpwhr->lpszPath;
+        urlComponents.dwUrlPathLength = 0;
+        urlComponents.lpszExtraInfo = NULL;
+        urlComponents.dwExtraInfoLength = 0;
+
+        if (!InternetCreateUrlW(&urlComponents, 0, NULL, &url_length) &&
+            (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
+            return FALSE;
+
+        url_length++; /* for nul terminating character */
+        orig_url = HeapAlloc(GetProcessHeap(), 0, url_length * sizeof(WCHAR));
+
+        if (!InternetCreateUrlW(&urlComponents, 0, orig_url, &url_length))
+        {
+            HeapFree(GetProcessHeap(), 0, orig_url);
+            return FALSE;
+        }
+
+        url_length = 0;
+        if (!InternetCombineUrlW(orig_url, lpszUrl, NULL, &url_length, ICU_ENCODE_SPACES_ONLY) &&
+            (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
+        {
+            HeapFree(GetProcessHeap(), 0, orig_url);
+            return FALSE;
+        }
+        combined_url = HeapAlloc(GetProcessHeap(), 0, url_length * sizeof(WCHAR));
+
+        if (!InternetCombineUrlW(orig_url, lpszUrl, combined_url, &url_length, ICU_ENCODE_SPACES_ONLY))
+        {
+            HeapFree(GetProcessHeap(), 0, orig_url);
+            HeapFree(GetProcessHeap(), 0, combined_url);
+            return FALSE;
+        }
+        HeapFree(GetProcessHeap(), 0, orig_url);
+
         userName[0] = 0;
         hostName[0] = 0;
         protocol[0] = 0;
@@ -1966,8 +2048,12 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl, LPCWST
         urlComponents.dwUrlPathLength = 2048;
         urlComponents.lpszExtraInfo = NULL;
         urlComponents.dwExtraInfoLength = 0;
-        if(!InternetCrackUrlW(lpszUrl, strlenW(lpszUrl), 0, &urlComponents))
+        if(!InternetCrackUrlW(combined_url, strlenW(combined_url), 0, &urlComponents))
+        {
+            HeapFree(GetProcessHeap(), 0, combined_url);
             return FALSE;
+        }
+        HeapFree(GetProcessHeap(), 0, combined_url);
 
         if (!strncmpW(szHttp, urlComponents.lpszScheme, strlenW(szHttp)) &&
             (lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE))
@@ -2029,7 +2115,9 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl, LPCWST
 
         
         HeapFree(GetProcessHeap(), 0, lpwhs->lpszUserName);
-        lpwhs->lpszUserName = WININET_strdupW(userName);
+        lpwhs->lpszUserName = NULL;
+        if (userName[0])
+            lpwhs->lpszUserName = WININET_strdupW(userName);
         lpwhs->nServerPort = urlComponents.nPort;
 
         INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
@@ -2044,13 +2132,16 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl, LPCWST
             return FALSE;
         }
 
+        inet_ntop(lpwhs->socketAddress.sin_family, &lpwhs->socketAddress.sin_addr,
+              szaddr, sizeof(szaddr));
         INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
                               INTERNET_STATUS_NAME_RESOLVED,
-                              &(lpwhs->socketAddress),
-                              sizeof(struct sockaddr_in));
+                              szaddr, strlen(szaddr)+1);
 
         NETCON_close(&lpwhr->netConnection);
-        NETCON_init(&lpwhr->netConnection,lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE);
+
+        if (!NETCON_init(&lpwhr->netConnection,lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE))
+            return FALSE;
     }
 
     HeapFree(GetProcessHeap(), 0, lpwhr->lpszPath);
@@ -2358,12 +2449,12 @@ HINTERNET HTTP_Connect(LPWININETAPPINFOW hIC, LPCWSTR lpszServerName,
         if(hIC->lpszProxyBypass)
             FIXME("Proxy bypass is ignored.\n");
     }
-    if (NULL != lpszServerName)
+    if (lpszServerName && lpszServerName[0])
     {
         lpwhs->lpszServerName = WININET_strdupW(lpszServerName);
         lpwhs->lpszHostName = WININET_strdupW(lpszServerName);
     }
-    if (NULL != lpszUserName)
+    if (lpszUserName && lpszUserName[0])
         lpwhs->lpszUserName = WININET_strdupW(lpszUserName);
     lpwhs->nServerPort = nServerPort;
     lpwhs->nHostPort = nServerPort;
@@ -2407,6 +2498,7 @@ static BOOL HTTP_OpenConnection(LPWININETHTTPREQW lpwhr)
     BOOL bSuccess = FALSE;
     LPWININETHTTPSESSIONW lpwhs;
     LPWININETAPPINFOW hIC = NULL;
+    char szaddr[32];
 
     TRACE("-->\n");
 
@@ -2420,10 +2512,12 @@ static BOOL HTTP_OpenConnection(LPWININETHTTPREQW lpwhr)
     lpwhs = (LPWININETHTTPSESSIONW)lpwhr->hdr.lpwhparent;
 
     hIC = (LPWININETAPPINFOW) lpwhs->hdr.lpwhparent;
+    inet_ntop(lpwhs->socketAddress.sin_family, &lpwhs->socketAddress.sin_addr,
+              szaddr, sizeof(szaddr));
     INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
                           INTERNET_STATUS_CONNECTING_TO_SERVER,
-                          &(lpwhs->socketAddress),
-                          sizeof(struct sockaddr_in));
+                          szaddr,
+                          strlen(szaddr)+1);
 
     if (!NETCON_create(&lpwhr->netConnection, lpwhs->socketAddress.sin_family,
                          SOCK_STREAM, 0))
@@ -2456,8 +2550,7 @@ static BOOL HTTP_OpenConnection(LPWININETHTTPREQW lpwhr)
 
     INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
                           INTERNET_STATUS_CONNECTED_TO_SERVER,
-                          &(lpwhs->socketAddress),
-                          sizeof(struct sockaddr_in));
+                          szaddr, strlen(szaddr)+1);
 
     bSuccess = TRUE;
 

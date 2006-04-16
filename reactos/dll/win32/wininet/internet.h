@@ -468,7 +468,7 @@ VOID INTERNET_SendCallback(LPWININETHANDLEHEADER hdr, DWORD dwContext,
 LPHTTPHEADERW HTTP_GetHeader(LPWININETHTTPREQW lpwhr, LPCWSTR header);
 
 BOOL NETCON_connected(WININET_NETCONNECTION *connection);
-void NETCON_init(WININET_NETCONNECTION *connnection, BOOL useSSL);
+BOOL NETCON_init(WININET_NETCONNECTION *connnection, BOOL useSSL);
 BOOL NETCON_create(WININET_NETCONNECTION *connection, int domain,
 	      int type, int protocol);
 BOOL NETCON_close(WININET_NETCONNECTION *connection);
@@ -480,6 +480,8 @@ BOOL NETCON_send(WININET_NETCONNECTION *connection, const void *msg, size_t len,
 BOOL NETCON_recv(WININET_NETCONNECTION *connection, void *buf, size_t len, int flags,
 		int *recvd /* out */);
 BOOL NETCON_getNextLine(WININET_NETCONNECTION *connection, LPSTR lpszBuffer, LPDWORD dwBuffer);
+LPCVOID NETCON_GetCert(WININET_NETCONNECTION *connection);
+BOOL NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value);
 
 extern void URLCacheContainers_CreateDefaults(void);
 extern void URLCacheContainers_DeleteAll(void);

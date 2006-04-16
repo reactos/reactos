@@ -232,7 +232,14 @@ VOID INTERNET_SendCallback(LPWININETHANDLEHEADER hdr, DWORD dwContext,
     }
 
     lpvNewInfo = lpvStatusInfo;
-    if(!(hdr->dwInternalFlags & INET_CALLBACKW)) {
+    if(hdr->dwInternalFlags & INET_CALLBACKW) {
+        switch(dwInternetStatus) {
+        case INTERNET_STATUS_NAME_RESOLVED:
+        case INTERNET_STATUS_CONNECTING_TO_SERVER:
+        case INTERNET_STATUS_CONNECTED_TO_SERVER:
+            lpvNewInfo = WININET_strdup_AtoW(lpvStatusInfo);
+        }
+    }else {
         switch(dwInternetStatus)
         {
         case INTERNET_STATUS_RESOLVING_NAME:

@@ -301,6 +301,14 @@ BOOL WINAPI InternetGetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
             }
         }
     }
+
+    if (!domain_count)
+    {
+        TRACE("no cookies found for %s\n", debugstr_w(hostName));
+        SetLastError(ERROR_NO_MORE_ITEMS);
+        return FALSE;
+    }
+
     if (lpCookieData == NULL)
     {
 	cnt += 1; /* NULL */
@@ -308,9 +316,6 @@ BOOL WINAPI InternetGetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
 	TRACE("returning\n");
 	return TRUE;
     }
-
-    if (!domain_count)
-        return FALSE;
 
     *lpdwSize = (cnt + 1)*sizeof(WCHAR);
 
@@ -498,4 +503,153 @@ BOOL WINAPI InternetSetCookieA(LPCSTR lpszUrl, LPCSTR lpszCookieName,
     HeapFree( GetProcessHeap(), 0, szUrl );
 
     return r;
+}
+
+/***********************************************************************
+ *           InternetSetCookieExA (WININET.@)
+ *
+ * See InternetSetCookieExW.
+ */
+DWORD WINAPI InternetSetCookieExA( LPCSTR lpszURL, LPCSTR lpszCookieName, LPCSTR lpszCookieData,
+                                   DWORD dwFlags, DWORD_PTR dwReserved)
+{
+    FIXME("(%s, %s, %s, 0x%08lx, 0x%08lx) stub\n",
+          debugstr_a(lpszURL), debugstr_a(lpszCookieName), debugstr_a(lpszCookieData),
+          dwFlags, dwReserved);
+    return TRUE;
+}
+
+/***********************************************************************
+ *           InternetSetCookieExW (WININET.@)
+ *
+ * Sets a cookie for the specified URL.
+ *
+ * RETURNS
+ *    TRUE  on success
+ *    FALSE on failure
+ *
+ */
+DWORD WINAPI InternetSetCookieExW( LPCWSTR lpszURL, LPCWSTR lpszCookieName, LPCWSTR lpszCookieData,
+                                   DWORD dwFlags, DWORD_PTR dwReserved)
+{
+    FIXME("(%s, %s, %s, 0x%08lx, 0x%08lx) stub\n",
+          debugstr_w(lpszURL), debugstr_w(lpszCookieName), debugstr_w(lpszCookieData),
+          dwFlags, dwReserved);
+    return TRUE;
+}
+
+/***********************************************************************
+ *           InternetGetCookieExA (WININET.@)
+ *
+ * See InternetGetCookieExW.
+ */
+BOOL WINAPI InternetGetCookieExA( LPCSTR pchURL, LPCSTR pchCookieName, LPSTR pchCookieData,
+                                  LPDWORD pcchCookieData, DWORD dwFlags, LPVOID lpReserved)
+{
+    FIXME("(%s, %s, %s, %p, 0x%08lx, %p) stub\n",
+          debugstr_a(pchURL), debugstr_a(pchCookieName), debugstr_a(pchCookieData),
+          pcchCookieData, dwFlags, lpReserved);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           InternetGetCookieExW (WININET.@)
+ *
+ * Retrieve cookie for the specified URL.
+ *
+ * RETURNS
+ *    TRUE  on success
+ *    FALSE on failure
+ *
+ */
+BOOL WINAPI InternetGetCookieExW( LPCWSTR pchURL, LPCWSTR pchCookieName, LPWSTR pchCookieData,
+                                  LPDWORD pcchCookieData, DWORD dwFlags, LPVOID lpReserved)
+{
+    FIXME("(%s, %s, %s, %p, 0x%08lx, %p) stub\n",
+          debugstr_w(pchURL), debugstr_w(pchCookieName), debugstr_w(pchCookieData),
+          pcchCookieData, dwFlags, lpReserved);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           InternetClearAllPerSiteCookieDecisions (WININET.@)
+ *
+ * Clears all per-site decisions about cookies.
+ *
+ * RETURNS
+ *    TRUE  on success
+ *    FALSE on failure
+ *
+ */
+BOOL WINAPI InternetClearAllPerSiteCookieDecisions( VOID )
+{
+    FIXME("stub\n");
+    return TRUE;
+}
+
+/***********************************************************************
+ *           InternetEnumPerSiteCookieDecisionA (WININET.@)
+ *
+ * See InternetEnumPerSiteCookieDecisionW.
+ */
+BOOL WINAPI InternetEnumPerSiteCookieDecisionA( LPSTR pszSiteName, unsigned long *pcSiteNameSize,
+                                                unsigned long *pdwDecision, unsigned long dwIndex )
+{
+    FIXME("(%s, %p, %p, 0x%08lx) stub\n",
+          debugstr_a(pszSiteName), pcSiteNameSize, pdwDecision, dwIndex);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           InternetEnumPerSiteCookieDecisionW (WININET.@)
+ *
+ * Enumerates all per-site decisions about cookies.
+ *
+ * RETURNS
+ *    TRUE  on success
+ *    FALSE on failure
+ *
+ */
+BOOL WINAPI InternetEnumPerSiteCookieDecisionW( LPWSTR pszSiteName, unsigned long *pcSiteNameSize,
+                                                unsigned long *pdwDecision, unsigned long dwIndex )
+{
+    FIXME("(%s, %p, %p, 0x%08lx) stub\n",
+          debugstr_w(pszSiteName), pcSiteNameSize, pdwDecision, dwIndex);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           InternetGetPerSiteCookieDecisionA (WININET.@)
+ */
+BOOL WINAPI InternetGetPerSiteCookieDecisionA( LPCSTR pwchHostName, unsigned long *pResult )
+{
+    FIXME("(%s, %p) stub\n", debugstr_a(pwchHostName), pResult);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           InternetGetPerSiteCookieDecisionW (WININET.@)
+ */
+BOOL WINAPI InternetGetPerSiteCookieDecisionW( LPCWSTR pwchHostName, unsigned long *pResult )
+{
+    FIXME("(%s, %p) stub\n", debugstr_w(pwchHostName), pResult);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           InternetSetPerSiteCookieDecisionA (WININET.@)
+ */
+BOOL WINAPI InternetSetPerSiteCookieDecisionA( LPCSTR pchHostName, DWORD dwDecision )
+{
+    FIXME("(%s, 0x%08lx) stub\n", debugstr_a(pchHostName), dwDecision);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           InternetSetPerSiteCookieDecisionW (WININET.@)
+ */
+BOOL WINAPI InternetSetPerSiteCookieDecisionW( LPCWSTR pchHostName, DWORD dwDecision )
+{
+    FIXME("(%s, 0x%08lx) stub\n", debugstr_w(pchHostName), dwDecision);
+    return FALSE;
 }

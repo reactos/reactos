@@ -1,0 +1,46 @@
+/*
+ * Turkish Resources
+ *
+ * Copyright 2006 Fatih Aþýcý
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Að Parolasýný Girin"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Lütfen kullanýcý adýnýzý ve parolanýzý girin:", -1, 40, 6, 150, 15
+ LTEXT "Proxy", -1, 40, 26, 50, 10
+ LTEXT "Realm", -1, 40, 46, 50, 10
+ LTEXT "Kullanýcý", -1, 40, 66, 50, 10
+ LTEXT "Parola", -1, 40, 86, 50, 10
+ LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
+ LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "Bu parolayý &sakla (güvensiz)", IDC_SAVEPASSWORD,
+           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Tamam", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Ýptal", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_LANCONNECTION "LAN Baðlantýsý"
+}

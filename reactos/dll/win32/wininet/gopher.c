@@ -66,7 +66,7 @@ BOOL WINAPI GopherCreateLocatorA(
 /***********************************************************************
  *           GopherCreateLocatorW (WININET.@)
  * 
- * Unicode version of GopherCreateLocatorA
+ * See GopherCreateLocatorA.
  */
 BOOL WINAPI GopherCreateLocatorW(
  LPCWSTR       lpszHost,
@@ -118,7 +118,7 @@ HINTERNET WINAPI GopherFindFirstFileA(
 /***********************************************************************
  *           GopherFindFirstFileW (WININET.@)
  *
- * Unicode version of GopherFindFirstFileA
+ * See GopherFindFirstFileA.
  */
 HINTERNET WINAPI GopherFindFirstFileW(
  HINTERNET hConnect,
@@ -162,7 +162,7 @@ BOOL WINAPI GopherGetAttributeA(
 /***********************************************************************
  *           GopherGetAttributeW (WININET.@)
  *
- * Unicode version of GopherGetAttributeA
+ * See GopherGetAttributeA.
  */
 BOOL WINAPI GopherGetAttributeW(
  HINTERNET hConnect,
@@ -202,7 +202,7 @@ BOOL WINAPI GopherGetLocatorTypeA(LPCSTR lpszLocator, LPDWORD lpdwGopherType)
 /***********************************************************************
  *           GopherGetLocatorTypeW (WININET.@)
  *
- * Unicode version of GopherGetLocatorTypeA
+ * See GopherGetLocatorTypeA.
  */
 BOOL WINAPI GopherGetLocatorTypeW(LPCWSTR lpszLocator, LPDWORD lpdwGopherType)
 {
@@ -241,7 +241,7 @@ HINTERNET WINAPI GopherOpenFileA(
 /***********************************************************************
  *           GopherOpenFileW (WININET.@)
  *
- * Unicode version of GopherOpenFileA
+ * See GopherOpenFileA.
  */
 HINTERNET WINAPI GopherOpenFileW(
  HINTERNET hConnect,

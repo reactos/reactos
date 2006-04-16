@@ -52,6 +52,7 @@
 
 #include "wine/debug.h"
 #include "internet.h"
+#include "wincrypt.h"
 
 #define RESPONSE_TIMEOUT        30            /* FROM internet.c */
 
@@ -100,6 +101,7 @@ MAKE_FUNCPTR(SSL_get_peer_certificate);
 MAKE_FUNCPTR(SSL_CTX_get_timeout);
 MAKE_FUNCPTR(SSL_CTX_set_timeout);
 MAKE_FUNCPTR(SSL_CTX_set_default_verify_paths);
+MAKE_FUNCPTR(i2d_X509);
 
 /* OpenSSL's libcrypto functions that we use */
 MAKE_FUNCPTR(BIO_new_fp);
@@ -109,7 +111,7 @@ MAKE_FUNCPTR(ERR_error_string);
 
 #endif
 
-void NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
+BOOL NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
 {
     connection->useSSL = FALSE;
     connection->socketFD = -1;
@@ -117,23 +119,23 @@ void NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
     {
 #if defined HAVE_OPENSSL_SSL_H && defined HAVE_OPENSSL_ERR_H
         TRACE("using SSL connection\n");
-	if (OpenSSL_ssl_handle) /* already initilzed everything */
-            return;
+	if (OpenSSL_ssl_handle) /* already initialized everything */
+            return TRUE;
 	OpenSSL_ssl_handle = wine_dlopen(SONAME_LIBSSL, RTLD_NOW, NULL, 0);
 	if (!OpenSSL_ssl_handle)
 	{
 	    ERR("trying to use a SSL connection, but couldn't load %s. Expect trouble.\n",
 		SONAME_LIBSSL);
-            connection->useSSL = FALSE;
-            return;
+            INTERNET_SetLastError(ERROR_INTERNET_SECURITY_CHANNEL_ERROR);
+            return FALSE;
 	}
 	OpenSSL_crypto_handle = wine_dlopen(SONAME_LIBCRYPTO, RTLD_NOW, NULL, 0);
 	if (!OpenSSL_crypto_handle)
 	{
 	    ERR("trying to use a SSL connection, but couldn't load %s. Expect trouble.\n",
 		SONAME_LIBCRYPTO);
-            connection->useSSL = FALSE;
-            return;
+            INTERNET_SetLastError(ERROR_INTERNET_SECURITY_CHANNEL_ERROR);
+            return FALSE;
 	}
 
         /* mmm nice ugly macroness */
@@ -142,8 +144,8 @@ void NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
     if (!p##x) \
     { \
         ERR("failed to load symbol %s\n", #x); \
-        connection->useSSL = FALSE; \
-        return; \
+        INTERNET_SetLastError(ERROR_INTERNET_SECURITY_CHANNEL_ERROR); \
+        return FALSE; \
     }
 
 	DYNSSL(SSL_library_init);
@@ -162,6 +164,7 @@ void NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
 	DYNSSL(SSL_CTX_get_timeout);
 	DYNSSL(SSL_CTX_set_timeout);
 	DYNSSL(SSL_CTX_set_default_verify_paths);
+	DYNSSL(i2d_X509);
 #undef DYNSSL
 
 #define DYNCRYPTO(x) \
@@ -169,8 +172,8 @@ void NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
     if (!p##x) \
     { \
         ERR("failed to load symbol %s\n", #x); \
-        connection->useSSL = FALSE; \
-        return; \
+        INTERNET_SetLastError(ERROR_INTERNET_SECURITY_CHANNEL_ERROR); \
+        return FALSE; \
     }
 	DYNCRYPTO(BIO_new_fp);
 	DYNCRYPTO(ERR_get_error);
@@ -186,9 +189,11 @@ void NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
         connection->peek_msg_mem = NULL;
 #else
 	FIXME("can't use SSL, not compiled in.\n");
-        connection->useSSL = FALSE;
+        INTERNET_SetLastError(ERROR_INTERNET_SECURITY_CHANNEL_ERROR);
+        return FALSE;
 #endif
     }
+    return TRUE;
 }
 
 BOOL NETCON_connected(WININET_NETCONNECTION *connection)
@@ -286,6 +291,7 @@ BOOL NETCON_secure_connect(WININET_NETCONNECTION *connection, LPCWSTR hostname)
     {
         ERR("SSL_CTX_set_default_verify_paths failed: %s\n",
             pERR_error_string(pERR_get_error(), 0));
+        INTERNET_SetLastError(ERROR_OUTOFMEMORY);
         return FALSE;
     }
     connection->ssl_s = pSSL_new(ctx);
@@ -293,6 +299,7 @@ BOOL NETCON_secure_connect(WININET_NETCONNECTION *connection, LPCWSTR hostname)
     {
         ERR("SSL_new failed: %s\n",
             pERR_error_string(pERR_get_error(), 0));
+        INTERNET_SetLastError(ERROR_OUTOFMEMORY);
         goto fail;
     }
 
@@ -300,6 +307,7 @@ BOOL NETCON_secure_connect(WININET_NETCONNECTION *connection, LPCWSTR hostname)
     {
         ERR("SSL_set_fd failed: %s\n",
             pERR_error_string(pERR_get_error(), 0));
+        INTERNET_SetLastError(ERROR_INTERNET_SECURITY_CHANNEL_ERROR);
         goto fail;
     }
 
@@ -330,7 +338,7 @@ BOOL NETCON_secure_connect(WININET_NETCONNECTION *connection, LPCWSTR hostname)
     hostname_unix = HeapAlloc(GetProcessHeap(), 0, len);
     if (!hostname_unix)
     {
-        INTERNET_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        INTERNET_SetLastError(ERROR_OUTOFMEMORY);
         goto fail;
     }
     WideCharToMultiByte(CP_THREAD_ACP, 0, hostname, -1, hostname_unix, len, NULL, NULL);
@@ -595,4 +603,80 @@ BOOL NETCON_getNextLine(WININET_NETCONNECTION *connection, LPSTR lpszBuffer, LPD
 	return FALSE;
 #endif
     }
+}
+
+
+LPCVOID NETCON_GetCert(WININET_NETCONNECTION *connection)
+{
+
+#if defined HAVE_OPENSSL_SSL_H && defined HAVE_OPENSSL_ERR_H
+    X509* cert;
+    unsigned char* buffer,*p;
+    INT len;
+    BOOL malloced = FALSE;
+    LPCVOID r = NULL;
+
+    if (!connection->useSSL)
+        return NULL;
+
+    cert = pSSL_get_peer_certificate(connection->ssl_s);
+    p = NULL;
+    len = pi2d_X509(cert,&p);
+    /*
+     * SSL 0.9.7 and above malloc the buffer if it is null. 
+     * however earlier version do not and so we would need to alloc the buffer.
+     *
+     * see the i2d_X509 man page for more details.
+     */
+    if (!p)
+    {
+        buffer = HeapAlloc(GetProcessHeap(),0,len);
+        p = buffer;
+        len = pi2d_X509(cert,&p);
+    }
+    else
+    {
+        buffer = p;
+        malloced = TRUE;
+    }
+
+    r = CertCreateCertificateContext(X509_ASN_ENCODING,buffer,len);
+
+    if (malloced)
+        free(buffer);
+    else
+        HeapFree(GetProcessHeap(),0,buffer);
+
+    return r;
+#else
+    return NULL;
+#endif
+}
+
+BOOL NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value)
+{
+    int result;
+    struct timeval tv;
+
+    /* FIXME: we should probably store the timeout in the connection to set
+     * when we do connect */
+    if (!NETCON_connected(connection))
+        return TRUE;
+
+    /* value is in milliseconds, convert to struct timeval */
+    tv.tv_sec = value / 1000;
+    tv.tv_usec = (value % 1000) * 1000;
+
+    result = setsockopt(connection->socketFD, SOL_SOCKET,
+                        send ? SO_SNDTIMEO : SO_RCVTIMEO, &tv,
+                        sizeof(tv));
+
+    if (result == -1)
+    {
+        WARN("setsockopt failed (%s)\n", strerror(errno));
+        INTERNET_SetLastError(sock_get_error(errno));
+        return FALSE;
+    }
+
+    return TRUE;
 }
