@@ -29,6 +29,10 @@
 #define MAKE_MAPI_E(e) (MAKE_MAPI_SCODE(1,FACILITY_ITF,(e)))
 #define MAKE_MAPI_S(e) (MAKE_MAPI_SCODE(0,FACILITY_ITF,(e)))
 
+#ifndef SUCCESS_SUCCESS
+#define SUCCESS_SUCCESS     0L
+#endif
+
 /* Errors */
 #define MAPI_E_ACCOUNT_DISABLED            ((SCODE)0x80040124)
 #define MAPI_E_AMBIGUOUS_RECIP             ((SCODE)0x80040700)

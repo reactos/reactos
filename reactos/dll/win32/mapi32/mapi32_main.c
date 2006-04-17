@@ -25,6 +25,7 @@
 #include "winerror.h"
 #include "objbase.h"
 #include "mapix.h"
+#include "mapi.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
@@ -67,28 +68,39 @@ HRESULT WINAPI DllCanUnloadNow(void)
     return MAPI_ObjectCount == 0 ? S_OK : S_FALSE;
 }
 
-HRESULT WINAPI MAPIInitialize ( LPVOID lpMapiInit )
+HRESULT WINAPI MAPIInitialize(LPVOID init)
 {
-    ERR("Stub\n");
-    return MAPI_E_NOT_INITIALIZED;
+    FIXME("(%p) Stub\n", init);
+    return SUCCESS_SUCCESS;
 }
 
-ULONG WINAPI MAPILogon(ULONG ulUIParam, LPSTR lpszProfileName, LPSTR
-lpszPassword, FLAGS flFlags, ULONG ulReserver, LPLHANDLE lplhSession)
+ULONG WINAPI MAPILogon(ULONG uiparam, LPSTR profile, LPSTR password,
+    FLAGS flags, ULONG reserved, LPLHANDLE session)
 {
-    ERR("Stub\n");
-    return MAPI_E_LOGON_FAILED;
+    FIXME("(0x%08lx %s %p 0x%08lx 0x%08lx %p) Stub\n", uiparam,
+          debugstr_a(profile), password, flags, reserved, session);
+
+    if (session) *session = 1;
+    return SUCCESS_SUCCESS;
 }
 
-HRESULT WINAPI MAPILogonEx(ULONG_PTR ulUIParam, LPWSTR lpszProfileName,
-                           LPWSTR lpszPassword, ULONG flFlags,
-                           LPMAPISESSION *lppSession)
+ULONG WINAPI MAPILogoff(LHANDLE session, ULONG uiparam, FLAGS flags,
+    ULONG reserved )
 {
-    ERR("Stub\n");
-    return MAPI_E_LOGON_FAILED;
+    FIXME("(0x%08lx 0x%08lx 0x%08lx 0x%08lx) Stub\n", session,
+          uiparam, flags, reserved);
+    return SUCCESS_SUCCESS;
+}
+
+HRESULT WINAPI MAPILogonEx(ULONG_PTR uiparam, LPWSTR profile,
+    LPWSTR password, ULONG flags, LPMAPISESSION *session)
+{
+    FIXME("(0x%08lx %s %p 0x%08lx %p) Stub\n", uiparam,
+          debugstr_w(profile), password, flags, session);
+    return SUCCESS_SUCCESS;
 }
 
 VOID WINAPI MAPIUninitialize(void)
 {
-    ERR("Stub\n");
+    FIXME("Stub\n");
 }

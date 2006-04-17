@@ -147,8 +147,8 @@
 207 stdcall CbOfEncoded@4(ptr) CbOfEncoded
 208 stub MAPISendDocuments
 209 stdcall MAPILogon(long ptr ptr long long ptr)
-210 stub MAPILogoff
-211 stub MAPISendMail
+210 stdcall MAPILogoff(long long long long)
+211 stdcall MAPISendMail(long long ptr long long)
 212 stub MAPISaveMail
 213 stub MAPIReadMail
 214 stub MAPIFindNext

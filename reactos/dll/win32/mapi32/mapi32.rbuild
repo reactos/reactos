@@ -14,6 +14,7 @@
 	<file>mapi32_main.c</file>
 	<file>imalloc.c</file>
 	<file>prop.c</file>
+	<file>sendmail.c</file>
 	<file>util.c</file>
 	<file>mapi32.spec</file>
 </module>
