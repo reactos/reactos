@@ -9,8 +9,13 @@ HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 
+; ini (configuration) files
+HKCR,".ini","",0x00000000,"inifile"
+HKCR,"inifile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
+
 ; Show icons for inf (installation) files
 HKCR,".inf","",0x00000000,"inffile"
+HKCR,"inffile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
 HKCR,"inffile\DefaultIcon","",0x00000000,"%SystemRoot%\System32\shell32.dll,-151"
 HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\System32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 %1"
 
