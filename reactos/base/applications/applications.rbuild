@@ -43,6 +43,9 @@
 <directory name="sc">
 	<xi:include href="sc/sc.rbuild" />
 </directory>
+<directory name="screensavers">
+	<xi:include href="screensavers/screensavers.rbuild" />
+</directory>
 <directory name="servman">
 	<xi:include href="servman/servman.rbuild" />
 </directory>
