@@ -66,6 +66,7 @@ NdisWriteConfiguration(
     ULONG ParameterType = ParameterValue->ParameterType;
     ULONG DataSize;
     PVOID Data;
+    WCHAR Buff[25]; 
 
     if(ParameterType != NdisParameterInteger &&
         ParameterType != NdisParameterHexInteger &&
@@ -80,15 +81,28 @@ NdisWriteConfiguration(
 
     /* reset parameter type to standard reg types */
     switch(ParameterType)
-    {
-        /* TODO: figure out what do do with these; are they different? */
+    {        
         case NdisParameterHexInteger:
-        case NdisParameterInteger:
-            ParameterType = REG_SZ;
-            Data = &ParameterValue->ParameterData.IntegerData;
-            DataSize = sizeof(ULONG);
-            break;
-
+        case NdisParameterInteger:     
+             {                     
+                 UNICODE_STRING Str;
+                 
+                 Str.Buffer = (PWSTR) &Buff;
+                 Str.MaximumLength = (USHORT)sizeof(Buff);
+                 Str.Length = 0;
+                 
+                 ParameterType = REG_SZ;
+                 if (!NT_SUCCESS(RtlIntegerToUnicodeString(
+                      ParameterValue->ParameterData.IntegerData,
+                      (ParameterType == NdisParameterInteger) ? 10 : 16, &Str))) 
+                 {
+                      *Status = NDIS_STATUS_FAILURE;
+                      return;
+                 }                              
+                 Data = Str.Buffer;
+                 DataSize = Str.Length;                    
+             }
+             break;                       
         case NdisParameterString:
         case NdisParameterMultiString:
             ParameterType = REG_SZ;
