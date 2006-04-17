@@ -15,7 +15,7 @@ HKCR,"inffile\DefaultIcon","",0x00000000,"%SystemRoot%\System32\shell32.dll,-151
 HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\System32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 %1"
 
 ; Folders
-HKCR,"Folder\Defaulticon","",0x00000000,"%SystemRoot%\System32\shell32.dll,-4"
+;HKCR,"Folder\Defaulticon","",0x00000000,"%SystemRoot%\System32\shell32.dll,-4"
 HKCR,"Folder\shell\open\command","",0x00000000,"explorer.exe ""%1"""
 HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
 HKCR,"Folder\shell\rootexplore","",0x00000000,"Explore from here"
