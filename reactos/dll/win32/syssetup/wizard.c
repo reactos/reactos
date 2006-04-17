@@ -419,7 +419,10 @@ OwnerPageDlgProc(HWND hwndDlg,
                              _T("Setup cannot continue until you enter your name."),
                              _T("ReactOS Setup"),
                              MB_ICONERROR | MB_OK);
+
+                  SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+                  
                   return TRUE;
                 }
 
