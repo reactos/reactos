@@ -16,8 +16,8 @@
 #include "matrix.h"
 #include "resource.h"
 
-#pragma comment(lib, "libctiny.lib")
-#pragma comment(linker, "/OPT:NOWIN98")
+//#pragma comment(lib, "libctiny.lib")
+//#pragma comment(linker, "/OPT:NOWIN98")
 
 //
 //	Added: Multimonitor support!!

@@ -11,7 +11,7 @@
 #include "matrix.h"
 
 // needed for slider-controls
-#pragma comment(lib, "comctl32.lib")
+//#pragma comment(lib, "comctl32.lib")
 
 //
 //	Called once for every font - add to list
@@ -308,3 +308,4 @@ int Configure(HWND hwndParent)
 	
 	return 0;
 }
+
