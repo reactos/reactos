@@ -284,9 +284,9 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       }
       else
       {
-	/* FIXME */
-	DPRINT1("DIB_24BPP_Bitblt: Unhandled BltInfo->XlateSourceToDest for 16 -> 16 copy\n");
-        return FALSE;
+	   /* FIXME */
+  	   //DPRINT1("DIB_24BPP_Bitblt: Unhandled BltInfo->XlateSourceToDest for 16 -> 16 copy\n");
+        return DIB_16BPP_BitBltSrcCopy(BltInfo);
       }
       break;
 
