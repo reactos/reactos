@@ -93,6 +93,11 @@ void LoadSettings()
 			}
 		}
 	}
+	else
+	{
+		/* built-in coded message for first run */
+		lstrcpyn(g_szMessages[0], "ReactOS", MAXMSG_LENGTH);
+	}
 
 	RegCloseKey(hkey);
 	free(hugechar);
