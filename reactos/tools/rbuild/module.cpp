@@ -743,6 +743,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Win32CUI;
 	if ( attribute.value == "win32gui" )
 		return Win32GUI;
+    if ( attribute.value == "win32scr" )
+		return Win32SCR;    
 	if ( attribute.value == "bootloader" )
 		return BootLoader;
 	if ( attribute.value == "bootsector" )
@@ -782,6 +784,9 @@ Module::GetDefaultModuleExtension () const
 		case Win32CUI:
 		case Win32GUI:
 			return ".exe";
+        case Win32SCR:
+			return ".scr";
+
 		case KernelModeDLL:
 		case NativeDLL:
 		case Win32DLL:
@@ -830,6 +835,7 @@ Module::GetDefaultModuleEntrypoint () const
 				return "_wmainCRTStartup";
 			else
 				return "_mainCRTStartup";
+        case Win32SCR:
 		case Win32GUI:
 			if ( isUnicode )
 				return "_wWinMainCRTStartup";
@@ -868,6 +874,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case Win32CUI:
 		case Test:
 			return "0x00400000";
+        case Win32SCR:
 		case Win32GUI:
 			return "0x00400000";
 		case KernelModeDLL:
@@ -910,6 +917,7 @@ Module::IsDLL () const
 		case NativeCUI:
 		case Win32CUI:
 		case Test:
+        case Win32SCR:
 		case Win32GUI:
 		case BuildTool:
 		case StaticLibrary:
@@ -941,6 +949,7 @@ Module::GenerateInOutputTree () const
 		case NativeCUI:
 		case Win32CUI:
 		case Test:
+        case Win32SCR:
 		case Win32GUI:
 		case BuildTool:
 		case BootLoader:
@@ -1392,6 +1401,7 @@ AutoRegister::IsSupportedModuleType ( ModuleType type )
 		case NativeCUI:
 		case Win32CUI:
 		case Win32GUI:
+        case Win32SCR:
 		case KernelModeDriver:
 		case BootSector:
 		case BootLoader:

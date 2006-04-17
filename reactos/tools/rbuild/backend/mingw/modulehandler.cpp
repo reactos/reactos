@@ -209,6 +209,7 @@ MingwModuleHandler::InstanciateHandler (
 		case Win32CUI:
 			handler = new MingwWin32CUIModuleHandler ( module );
 			break;
+        case Win32SCR:
 		case Win32GUI:
 			handler = new MingwWin32GUIModuleHandler ( module );
 			break;

@@ -59,7 +59,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	string module_type = GetExtension(module.GetTargetName());
 	bool lib = (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
-	bool exe = (module_type == ".exe");
+	bool exe = (module_type == ".exe") || (module_type == ".scr");
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
 	bool console = exe && (module.type == Win32CUI);

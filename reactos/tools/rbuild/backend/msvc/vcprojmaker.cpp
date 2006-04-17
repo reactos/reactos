@@ -54,7 +54,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	string module_type = GetExtension(module.GetTargetName());
 	bool lib = (module.type == ObjectLibrary) || (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
-	bool exe = (module_type == ".exe");
+	bool exe = (module_type == ".exe") ||  (module_type == ".scr");
 	bool sys = (module_type == ".sys");
 
 	string path_basedir = module.GetPathToBaseDir ();
@@ -428,7 +428,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
 				}
-				else if ( module.type == Win32CUI || module.type == Win32GUI )
+				else if ( module.type == Win32CUI || module.type == Win32GUI || module.type == Win32SCR)
 				{
 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
 				}

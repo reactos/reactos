@@ -263,7 +263,8 @@ enum ModuleType
 	RpcServer = 16,
 	RpcClient = 17,
 	Alias = 18,
-	BootProgram = 19
+	BootProgram = 19,
+    Win32SCR = 20
 };
 
 enum HostType
