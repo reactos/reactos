@@ -54,7 +54,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	string module_type = GetExtension(module.GetTargetName());
 	bool lib = (module.type == ObjectLibrary) || (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
-	bool exe = (module_type == ".exe") ||  (module_type == ".scr");
+	bool exe = (module_type == ".exe") || (module_type == ".scr");
 	bool sys = (module_type == ".sys");
 
 	string path_basedir = module.GetPathToBaseDir ();

@@ -47,7 +47,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case NativeCUI:
 		case Win32DLL:
 		case Win32CUI:
-        case Win32SCR:
+		case Win32SCR:
 		case Win32GUI:
 		case KernelModeDriver:
 		case BootSector:
