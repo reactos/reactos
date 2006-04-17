@@ -52,9 +52,7 @@ typedef LPFINDINFOW LPLVFINDINFOW;
 
 #define TBN_WRAPHOTITEM         (TBN_FIRST-24) /* this is undocumented and the name is a guess */
 
-#define RBBS_USECHEVRON         0x00000200
 #define RBHT_CHEVRON            0x0008
-#define RBN_CHEVRONPUSHED       (RBN_FIRST-10)
 #define RB_PUSHCHEVRON          (WM_USER+43)
 
 #define HDM_SETBITMAPMARGIN     (HDM_FIRST+20)
