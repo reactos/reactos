@@ -1642,10 +1642,18 @@ extern "C" {
 #define RBBS_HIDDEN 8
 #define RBBS_NOVERT 16
 #define RBBS_FIXEDBMP 32
+#if (_WIN32_IE >= 0x0400)
+#define RBBS_VARIABLEHEIGHT 0x40
+#define RBBS_GRIPPERALWAYS 0x80
+#define RBBS_NOGRIPPER 0x100 
+#if (_WIN32_IE >= 0x0500)
+#define RBBS_USECHEVRON 0x200
 #if (_WIN32_IE >= 0x0501)
 #define RBBS_HIDETITLE 0x400
 #define RBBS_TOPALIGN 0x800
 #endif /* _WIN32_IE >= 0x0501 */
+#endif /* _WIN32_IE >= 0x0500 */
+#endif /* _WIN32_IE >= 0x0400 */
 #define RBBIM_STYLE 1
 #define RBBIM_COLORS 2
 #define RBBIM_TEXT 4
@@ -1763,6 +1771,9 @@ extern "C" {
 #define RBN_DELETINGBAND (RBN_FIRST-6)
 #define RBN_DELETEDBAND (RBN_FIRST-7)
 #define RBN_CHILDSIZE (RBN_FIRST-8)
+#if (_WIN32_IE >= 0x0500)
+#define RBN_CHEVRONPUSHED (RBN_FIRST - 10)
+#endif /* _WIN32_IE >= 0x0500 */
 #define RBNM_ID 1
 #define RBNM_STYLE 2
 #define RBNM_LPARAM 4
@@ -1782,6 +1793,11 @@ extern "C" {
 #else
 #define RB_GETBANDINFO (WM_USER+5)
 #endif /* _WIN32_IE >= 0x0400 */
+
+#if (_WIN32_IE >= 0x0500)
+#define SB_SIMPLEID  0xFF
+#endif /* _WIN32_IE >= 0x0500 */
+
 #if (_WIN32_WINNT >= 0x0501)
 #define RB_GETBANDMARGINS (WM_USER+40)
 #define RB_SETWINDOWTHEME CCM_SETWINDOWTHEME
