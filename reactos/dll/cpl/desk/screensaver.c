@@ -24,8 +24,8 @@ typedef struct {
 int ImageListSelection       = 0;
 ScreenSaverItem g_ScreenSaverItems[MAX_SCREENSAVERS];
 
-HWND g_hScreenBackgroundPage          = NULL;
-HWND g_hScreengroundList          = NULL;
+HWND g_hScreenBackgroundPage = NULL;
+HWND g_hScreengroundList = NULL;
 HWND ControlScreenSaverIsSecure = NULL;
 
 void ListViewItemAreChanged(int itemIndex)
@@ -51,6 +51,7 @@ ScreenSaverPageProc(HWND hwndDlg,
         case WM_INITDIALOG:
         {
             g_hScreengroundList = GetDlgItem(g_hScreenBackgroundPage, IDC_SCREENS_CHOICES);
+            SendMessage(GetDlgItem(g_hScreenBackgroundPage, IDC_SCREENS_TIME), UDM_SETRANGE, 0, MAKELONG ((short) 240, (short) 0));
             AddListViewItems2();
             CheckRegScreenSaverIsSecure();
         } break;
