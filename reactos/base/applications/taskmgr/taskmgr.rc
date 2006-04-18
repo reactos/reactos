@@ -202,11 +202,12 @@ IDB_TRAYICON            BITMAP  DISCARDABLE res/trayicon.bmp
 } */
 
 #include "Cz.rc"
-#include "En.rc"
 #include "De.rc"
 #include "Dk.rc"
+#include "En.rc"
 #include "Es.rc"
 #include "Fr.rc"
-#include "Ja.rc"
-#include "Sv.rc"
 #include "Hu.rc"
+#include "Ja.rc"
+#include "Nl.rc"
+#include "Sv.rc"

@@ -21,8 +21,9 @@
 #include <windows.h>
 #include "resource.h"
 
-#include "En.rc"
 #include "De.rc"
+#include "En.rc"
+#include "Nl.rc"
 
 IDI_WINEMINE ICON MOVEABLE "rc/winemine.ico"
 

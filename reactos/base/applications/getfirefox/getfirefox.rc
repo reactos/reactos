@@ -26,4 +26,6 @@
 #include "En.rc"
 #include "Fr.rc"
 #include "Hu.rc"
+#include "Nl.rc"
 #include "Ru.rc"
+

@@ -14,10 +14,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDI_MAINAPP ICON DISCARDABLE resources/sndvol32.ico
 
-#include "En.rc"
-#include "Fr.rc"
 #include "Cz.rc"
 #include "De.rc"
-#include "Ja.rc"
-#include "Sv.rc"
+#include "En.rc"
+#include "Fr.rc"
 #include "Hu.rc"
+#include "Ja.rc"
+#include "Nl.rc"
+#include "Sv.rc"
+
+

@@ -9,4 +9,5 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 #include "En.rc"
+#include "Nl.rc"
 
