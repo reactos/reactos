@@ -1150,7 +1150,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
         if (uFlags & DC_GRADIENT)
         {
           static GRADIENT_RECT gcap = {0, 1};
-          TRIVERTEX vert[2];
+          TRIVERTEX vert[3];
           COLORREF Colors[2];
           LONG xx;
 
@@ -1160,64 +1160,69 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
           else
             ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
 
-          if (Style & WS_SYSMENU)
-          {
-            r.right -= 3 + ButtonWidth;
-            if (! (uFlags & DC_SMALLCAP))
-            {
-              if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
-                r.right -= 2 + 2 * ButtonWidth;
-              else
-                r.right -= 2;
-              r.right -= 2;
-            }
-          }
+          //if (Style & WS_SYSMENU)
+          //{
+          //  r.right -= 3 + ButtonWidth;
+          //  if (! (uFlags & DC_SMALLCAP))
+          //  {
+          //    if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
+          //      r.right -= 2 + 2 * ButtonWidth;
+          //    else
+          //      r.right -= 2;
+          //    r.right -= 2;
+          //  }
+          //}
 
           Colors[0] = GetSysColor((uFlags & DC_ACTIVE) ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION);
           Colors[1] = GetSysColor((uFlags & DC_ACTIVE) ? COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION);
 
+          vert[0].x = r.left;
+          vert[0].y = 0;
+          vert[0].Red = GetRValue(Colors[1]) << 8;
+          vert[0].Green = GetGValue(Colors[1]) << 8;
+          vert[0].Blue = GetBValue(Colors[1]) << 8;
+          vert[0].Alpha = 0;
+
+          vert[1].x = r.right;
+          vert[1].y = (lprc->bottom - lprc->top) / 2;
+          vert[1].Red = GetRValue(Colors[0]) << 8;
+          vert[1].Green = GetGValue(Colors[0]) << 8;
+          vert[1].Blue = GetBValue(Colors[0]) << 8;
+          vert[1].Alpha = 0;
+
+          vert[2].x = r.right;
+          vert[2].y = lprc->bottom - lprc->top;
+          vert[2].Red = GetRValue(Colors[1]) << 8;
+          vert[2].Green = GetGValue(Colors[1]) << 8;
+          vert[2].Blue = GetBValue(Colors[1]) << 8;
+          vert[2].Alpha = 0;
+
+          GdiGradientFill(MemDC, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_V);
+          vert[1].x = r.left;
+		  GdiGradientFill(MemDC, &vert[1], 2, &gcap, 1, GRADIENT_FILL_RECT_V);
+
           if ((uFlags & DC_ICON) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
           {
-            OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
-            if (!OldBrush) goto cleanup;
-            xx = GetSystemMetrics(SM_CXSIZE) + Padding;
-            /* draw icon background */
-            PatBlt(MemDC, 0, 0, xx, lprc->bottom - lprc->top, PATCOPY);
-            /* For some reason the icon isn't centered correctly... */
             r.top --;
+			SetBkMode( MemDC, TRANSPARENT );
+			xx = GetSystemMetrics(SM_CXSIZE) + Padding;
             if (UserDrawSysMenuButton(hWnd, MemDC, &r, FALSE))
               r.left += xx;
             r.top ++;
           }
-
-          vert[0].x = r.left;
-          vert[0].y = 0;
-          vert[0].Red = GetRValue(Colors[0]) << 8;
-          vert[0].Green = GetGValue(Colors[0]) << 8;
-          vert[0].Blue = GetBValue(Colors[0]) << 8;
-          vert[0].Alpha = 0;
-
-          vert[1].x = r.right;
-          vert[1].y = lprc->bottom - lprc->top;
-          vert[1].Red = GetRValue(Colors[1]) << 8;
-          vert[1].Green = GetGValue(Colors[1]) << 8;
-          vert[1].Blue = GetBValue(Colors[1]) << 8;
-          vert[1].Alpha = 0;
-
-          GdiGradientFill(MemDC, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
 
           if(OldBrush)
           {
             SelectObject(MemDC, OldBrush);
             OldBrush = NULL;
           }
-          xx = lprc->right - lprc->left - r.right;
-          if(xx > 0)
-          {
-            OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION));
-            if (!OldBrush) goto cleanup;
-            PatBlt(MemDC, r.right, 0, xx, lprc->bottom - lprc->top, PATCOPY);
-          }
+          //xx = lprc->right - lprc->left - r.right;
+          //if(xx > 0)
+          //{
+          //  OldBrush = SelectObject(MemDC, GetSysColorBrush(uFlags & DC_ACTIVE ? COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION));
+          //  if (!OldBrush) goto cleanup;
+          //  PatBlt(MemDC, r.right, 0, xx, lprc->bottom - lprc->top, PATCOPY);
+          //}
         }
         else
         {
