@@ -41,9 +41,9 @@ TBBUTTON TextButtons[] = {
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
 
-    {TBICON_TXTLEFT,  ID_TXTLEFT,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* left justified */
-    {TBICON_TXTCENTER,ID_TXTCENTER,TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* centered */
-    {TBICON_TXTRIGHT, ID_TXTRIGHT, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },   /* right justified */
+    {TBICON_TXTLEFT,  ID_TXTLEFT,  TBSTATE_ENABLED | TBSTATE_CHECKED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0 },   /* left justified */
+    {TBICON_TXTCENTER,ID_TXTCENTER,TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0 },   /* centered */
+    {TBICON_TXTRIGHT, ID_TXTRIGHT, TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0 },   /* right justified */
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                              /* separator */
 };
@@ -53,27 +53,40 @@ TBBUTTON TextButtons[] = {
 /* menu hints */
 static const MENU_HINT MainMenuHintTable[] = {
     /* File Menu */
-    {ID_CLOSE, IDS_HINT_SYS_CLOSE},
-    {ID_EXIT, IDS_HINT_EXIT},
+    {ID_BLANK,     IDS_HINT_BLANK},
+    {ID_NEW,       IDS_HINT_NEW},
+    {ID_OPEN,      IDS_HINT_OPEN},
+    {ID_CLOSE,     IDS_HINT_CLOSE},
+    {ID_CLOSEALL,  IDS_HINT_CLOSEALL},
+    {ID_SAVE,      IDS_HINT_SAVE},
+    {ID_SAVEAS,    IDS_HINT_SAVEAS},
+    {ID_PRINTPRE,  IDS_HINT_PRINTPRE},
+    {ID_PRINT,     IDS_HINT_PRINT},
+    {ID_PROP,      IDS_HINT_PROP},
+    {ID_EXIT,      IDS_HINT_EXIT},
+
+    /* view menu */
+    {ID_TOOLS,     IDS_HINT_TOOLS},
+    {ID_COLOR,     IDS_HINT_COLORS},
+    {ID_HISTORY,   IDS_HINT_HISTORY},
+    {ID_STATUSBAR, IDS_HINT_STATUS},
 
     /* Window Menu */
-    {ID_WINDOW_NEXT, IDS_HINT_SYS_NEXT}
+    {ID_WINDOW_NEXT,      IDS_HINT_NEXT},
+    {ID_WINDOW_CASCADE,   IDS_HINT_CASCADE},
+    {ID_WINDOW_TILE_HORZ, IDS_HINT_TILE_HORZ},
+    {ID_WINDOW_TILE_VERT, IDS_HINT_TILE_VERT},
+    {ID_WINDOW_ARRANGE,   IDS_HINT_ARRANGE}
 };
 
 static const MENU_HINT SystemMenuHintTable[] = {
-    {SC_RESTORE, IDS_HINT_SYS_RESTORE},
-    {SC_MOVE, IDS_HINT_SYS_MOVE},
-    {SC_SIZE, IDS_HINT_SYS_SIZE},
-    {SC_MINIMIZE, IDS_HINT_SYS_MINIMIZE},
-    {SC_MAXIMIZE, IDS_HINT_SYS_MAXIMIZE},
-    {SC_CLOSE, IDS_HINT_SYS_CLOSE},
-    {SC_NEXTWINDOW, IDS_HINT_SYS_NEXT},
-};
-
-static FLT_WND FloatingWindow[NUM_FLT_WND] = {
-    {NULL, NULL, 0, 0, 53,  300}, /* tools */
-    {NULL, NULL, 0, 0, 200, 200}, /* colors */
-    {NULL, NULL, 0, 0, 150, 150}  /* history */
+    {SC_RESTORE,    IDS_HINT_SYS_RESTORE},
+    {SC_MOVE,       IDS_HINT_SYS_MOVE},
+    {SC_SIZE,       IDS_HINT_SYS_SIZE},
+    {SC_MINIMIZE,   IDS_HINT_SYS_MINIMIZE},
+    {SC_MAXIMIZE,   IDS_HINT_SYS_MAXIMIZE},
+    {SC_CLOSE,      IDS_HINT_CLOSE},
+    {SC_NEXTWINDOW, IDS_HINT_NEXT},
 };
 
 
@@ -205,10 +218,11 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
     {
         case ID_TOOLBAR_TEXT:
         {
-            HWND hWndCombo;
+            HWND hFontType;
+            HWND hFontSize;
 
             /* drop combo box into container window */
-            hWndCombo = CreateWindowEx(0,
+            hFontType = CreateWindowEx(0,
                                        WC_COMBOBOX,
                                        NULL,
                                        WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
@@ -217,18 +231,44 @@ MainWndCreateToolbarClient(struct _TOOLBAR_DOCKS *TbDocks,
                                        NULL,
                                        hInstance,
                                        NULL);
-            if (hWndCombo != NULL)
+            //MakeFlatCombo(hFontType);
+            if (hFontType != NULL)
             {
-                SetParent(hWndCombo,
+                SetParent(hFontType,
                           hWndClient);
 
                 if (!ToolbarInsertSpaceForControl(hWndClient,
-                                                  hWndCombo,
+                                                  hFontType,
                                                   0,
                                                   ID_TXTFONTNAME,
                                                   TRUE))
                 {
-                    DestroyWindow(hWndCombo);
+                    DestroyWindow(hFontType);
+                }
+            }
+
+            /* drop combo box into container window */
+            hFontSize = CreateWindowEx(0,
+                                       WC_COMBOBOX,
+                                       NULL,
+                                       WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
+                                       0, 0, 40, 25,
+                                       hParent,
+                                       NULL,
+                                       hInstance,
+                                       NULL);
+            if (hFontSize != NULL)
+            {
+                SetParent(hFontSize,
+                          hWndClient);
+
+                if (!ToolbarInsertSpaceForControl(hWndClient,
+                                                  hFontSize,
+                                                  0,
+                                                  ID_TXTFONTSIZE,
+                                                  TRUE))
+                {
+                    DestroyWindow(hFontSize);
                 }
             }
             break;
@@ -407,31 +447,38 @@ MainWndToolbarChevronPushed(struct _TOOLBAR_DOCKS *TbDocks,
 }
 
 static VOID
-MainWndMoveFloatingWindows(HWND hwnd, PRECT wndOldPos)
+MainWndMoveFloatingWindows(PMAIN_WND_INFO Info,
+                           PRECT wndOldPos)
 {
     RECT wndNewPos, TbRect;
     INT i, xMoved, yMoved;
+    PFLT_WND WndArr[NUM_FLT_WND];
 
-    if (GetWindowRect(hwnd,
+    if (GetWindowRect(Info->hSelf,
                       &wndNewPos))
     {
 
         xMoved = wndNewPos.left - wndOldPos->left;
         yMoved = wndNewPos.top - wndOldPos->top;
 
+        /* store the pointers in an array */
+        WndArr[0] = Info->fltTools;
+        WndArr[1] = Info->fltColors;
+        WndArr[2] = Info->fltHistory;
+
         for (i = 0; i < NUM_FLT_WND; i++)
         {
-            GetWindowRect(FloatingWindow[i].hSelf,
+            GetWindowRect(WndArr[i]->hSelf,
                           &TbRect);
 
-            FloatingWindow[i].x = TbRect.left + xMoved;
-            FloatingWindow[i].y = TbRect.top + yMoved;
+            WndArr[i]->x = TbRect.left + xMoved;
+            WndArr[i]->y = TbRect.top + yMoved;
 
-            MoveWindow(FloatingWindow[i].hSelf,
-                       FloatingWindow[i].x,
-                       FloatingWindow[i].y,
-                       FloatingWindow[i].Width,
-                       FloatingWindow[i].Height,
+            MoveWindow(WndArr[i]->hSelf,
+                       WndArr[i]->x,
+                       WndArr[i]->y,
+                       WndArr[i]->Width,
+                       WndArr[i]->Height,
                        TRUE);
         }
 
@@ -443,36 +490,36 @@ MainWndMoveFloatingWindows(HWND hwnd, PRECT wndOldPos)
 
 
 static VOID
-MainWndResetFloatingWindows(HWND hwnd)
+MainWndResetFloatingWindows(PMAIN_WND_INFO Info)
 {
     RECT rect;
 
-    if (GetWindowRect(hwnd,
+    if (GetWindowRect(Info->hMdiClient,
                       &rect))
     {
 
         /* tools datum */
-        MoveWindow(FloatingWindow[0].hSelf,
+        MoveWindow(Info->fltTools->hSelf,
                    rect.left + 5,
                    rect.top + 5,
-                   FloatingWindow[0].Width,
-                   FloatingWindow[0].Height,
+                   Info->fltTools->Width,
+                   Info->fltTools->Height,
                    TRUE);
 
         /* colors datum */
-        MoveWindow(FloatingWindow[1].hSelf,
+        MoveWindow(Info->fltColors->hSelf,
                    rect.left + 5,
-                   rect.bottom - FloatingWindow[1].Height - 5,
-                   FloatingWindow[1].Width,
-                   FloatingWindow[1].Height,
+                   rect.bottom - Info->fltColors->Height - 5,
+                   Info->fltColors->Width,
+                   Info->fltColors->Height,
                    TRUE);
 
         /* history datum */
-        MoveWindow(FloatingWindow[2].hSelf,
-                   rect.right - FloatingWindow[2].Width - 5,
+        MoveWindow(Info->fltHistory->hSelf,
+                   rect.right - Info->fltHistory->Width - 5,
                    rect.top + 5,
-                   FloatingWindow[2].Width,
-                   FloatingWindow[2].Height,
+                   Info->fltHistory->Width,
+                   Info->fltHistory->Height,
                    TRUE);
     }
 }
@@ -482,7 +529,26 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
 {
     RECT rect;
     UINT Res;
-    INT i = TOOLS;
+    PFLT_WND WndArr[NUM_FLT_WND]; /* temp array for looping */
+    INT i;
+
+    Info->fltTools = HeapAlloc(ProcessHeap,
+                               HEAP_ZERO_MEMORY,
+                               sizeof(FLT_WND));
+    Info->fltColors = HeapAlloc(ProcessHeap,
+                                HEAP_ZERO_MEMORY,
+                                sizeof(FLT_WND));
+    Info->fltHistory = HeapAlloc(ProcessHeap,
+                                 HEAP_ZERO_MEMORY,
+                                 sizeof(FLT_WND));
+
+    /* set window dimensions */
+    Info->fltTools->Width    = 53;
+    Info->fltTools->Height   = 300;
+    Info->fltColors->Width   = 200;
+    Info->fltColors->Height  = 200;
+    Info->fltHistory->Width  = 150;
+    Info->fltHistory->Height = 150;
 
     if (! GetWindowRect(Info->hMdiClient,
                         &rect))
@@ -490,61 +556,74 @@ MainWndCreateFloatWindows(PMAIN_WND_INFO Info)
         return;
     }
 
-    /* tools datum */
-    FloatingWindow[TOOLS].x = rect.left + 5;
-    FloatingWindow[TOOLS].y = rect.top + 5;
+    /* Set window datums */
+    Info->fltTools->x = rect.left + 5;
+    Info->fltTools->y = rect.top + 5;
 
-    /* colors datum */
-    FloatingWindow[COLORS].x = rect.left + 5;
-    FloatingWindow[COLORS].y = rect.bottom - FloatingWindow[1].Height - 5;
+    Info->fltColors->x = rect.left + 5;
+    Info->fltColors->y = rect.bottom - Info->fltColors->Height - 5;
 
-    /* history datum */
-    FloatingWindow[HISTORY].x = rect.right - FloatingWindow[2].Width - 5;
-    FloatingWindow[HISTORY].y = rect.top + 5;
+    Info->fltHistory->x = rect.right - Info->fltHistory->Width - 5;
+    Info->fltHistory->y = rect.top + 5;
 
-    for (Res = IDS_FLT_TOOLS; Res < IDS_FLT_TOOLS + NUM_FLT_WND; Res++, i++)
+    /* save pointers into array incrementing within the loop*/
+    WndArr[0] = Info->fltTools;
+    WndArr[1] = Info->fltColors;
+    WndArr[2] = Info->fltHistory;
+
+    for (i = 0, Res = IDS_FLT_TOOLS; Res < IDS_FLT_TOOLS + NUM_FLT_WND; Res++, i++)
     {
-        if (! AllocAndLoadString(&FloatingWindow[i].lpName,
+        if (! AllocAndLoadString(&WndArr[i]->lpName,
                                  hInstance,
                                  Res))
         {
-            FloatingWindow[i].lpName = NULL;
+            WndArr[i]->lpName = NULL;
         }
 
-        FloatingWindow[i].hSelf = CreateWindowEx(WS_EX_TOOLWINDOW,
-                                                 TEXT("ImageSoftFloatWndClass"),
-                                                 FloatingWindow[i].lpName,
-                                                 WS_POPUPWINDOW | WS_DLGFRAME | WS_VISIBLE,
-                                                 FloatingWindow[i].x,
-                                                 FloatingWindow[i].y,
-                                                 FloatingWindow[i].Width,
-                                                 FloatingWindow[i].Height,
-                                                 Info->hSelf,
-                                                 NULL,
-                                                 hInstance,
-                                                 NULL);
+        WndArr[i]->hSelf = CreateWindowEx(WS_EX_TOOLWINDOW,
+                                          TEXT("ImageSoftFloatWndClass"),
+                                          WndArr[i]->lpName,
+                                          WS_POPUPWINDOW | WS_DLGFRAME | WS_VISIBLE,
+                                          WndArr[i]->x,
+                                          WndArr[i]->y,
+                                          WndArr[i]->Width,
+                                          WndArr[i]->Height,
+                                          Info->hSelf,
+                                          NULL,
+                                          hInstance,
+                                          WndArr[i]);
+
     }
 
-
-
-
-    if (FloatingWindow[TOOLS].hSelf != NULL)
+    if (Info->fltTools->hSelf != NULL)
     {
-        FloatToolbarCreateToolsGui(&FloatingWindow[TOOLS]);
+        FloatToolbarCreateToolsGui(Info);
     }
 
-    if (FloatingWindow[COLORS].hSelf != NULL)
+    if (Info->fltColors->hSelf != NULL)
     {
-        FloatToolbarCreateColorsGui(&FloatingWindow[COLORS]);
+        FloatToolbarCreateColorsGui(Info);
     }
 
-    if (FloatingWindow[HISTORY].hSelf != NULL)
+    if (Info->fltHistory->hSelf != NULL)
     {
-        FloatToolbarCreateHistoryGui(&FloatingWindow[HISTORY]);
+        FloatToolbarCreateHistoryGui(Info);
     }
 
 }
 
+static VOID
+MainWndDestroyFloatWindows(PMAIN_WND_INFO Info)
+{
+    if (Info->fltTools != NULL)
+        HeapFree(ProcessHeap, 0, Info->fltTools);
+
+    if (Info->fltColors != NULL)
+        HeapFree(ProcessHeap, 0, Info->fltTools);
+
+    if (Info->fltHistory != NULL)
+        HeapFree(ProcessHeap, 0, Info->fltTools);
+}
 
 
 
@@ -753,9 +832,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
                 CreateImageEditWindow(Info,
                                       &OpenInfo);
             }
-
-            break;
         }
+        break;
 
         case ID_BOLD:
             MessageBox(NULL, _T("Bingo"), NULL, 0);
@@ -781,6 +859,60 @@ MainWndCommand(PMAIN_WND_INFO Info,
                 MainWndResetFloatingWindows(Info->hMdiClient); */
             }
 
+        }
+        break;
+
+        case ID_TOOLS:
+        {
+            HMENU hMenu = GetMenu(Info->hSelf);
+
+            if (hMenu != NULL)
+            {
+                UINT uCheck;
+
+                ShowHideWindow(Info->fltTools);
+
+                uCheck = Info->fltTools->bShow ? MF_CHECKED : MF_UNCHECKED;
+                CheckMenuItem(hMenu,
+                              ID_TOOLS,
+                              uCheck);
+            }
+        }
+        break;
+
+        case ID_COLOR:
+        {
+            HMENU hMenu = GetMenu(Info->hSelf);
+
+            if (hMenu != NULL)
+            {
+                UINT uCheck;
+
+                ShowHideWindow(Info->fltColors);
+
+                uCheck = Info->fltColors->bShow ? MF_CHECKED : MF_UNCHECKED;
+                CheckMenuItem(hMenu,
+                              ID_COLOR,
+                              uCheck);
+            }
+        }
+        break;
+
+        case ID_HISTORY:
+        {
+            HMENU hMenu = GetMenu(Info->hSelf);
+
+            if (hMenu != NULL)
+            {
+                UINT uCheck;
+
+                ShowHideWindow(Info->fltHistory);
+
+                uCheck = Info->fltHistory->bShow ? MF_CHECKED : MF_UNCHECKED;
+                CheckMenuItem(hMenu,
+                              ID_HISTORY,
+                              uCheck);
+            }
         }
         break;
 
@@ -841,6 +973,8 @@ static VOID
 DestroyMainWnd(PMAIN_WND_INFO Info)
 {
     /* FIXME - cleanup allocated resources */
+
+    MainWndDestroyFloatWindows(Info);
 }
 
 
@@ -918,7 +1052,7 @@ MainWndProc(HWND hwnd,
 
                 /* reposition the floating toolbars */
                 if ((wParam == SIZE_MAXIMIZED) || (wParam == SIZE_RESTORED))
-                    MainWndResetFloatingWindows(Info->hMdiClient);
+                    MainWndResetFloatingWindows(Info);
 
             break;
         }
@@ -944,7 +1078,7 @@ MainWndProc(HWND hwnd,
         {
             /* if the main window is moved, move the toolbars too */
             if (bLBMouseDown)
-                MainWndMoveFloatingWindows(hwnd, &wndOldPos);
+                MainWndMoveFloatingWindows(Info, &wndOldPos);
         }
         break;
 
@@ -997,13 +1131,13 @@ MainWndProc(HWND hwnd,
                                      LOWORD(wParam),
                                      MainMenuHintTable,
                                      sizeof(MainMenuHintTable) / sizeof(MainMenuHintTable[0]),
-                                     IDS_READY))
+                                     IDS_HINT_BLANK))
                 {
                     MainWndMenuHint(Info,
                                     LOWORD(wParam),
                                     SystemMenuHintTable,
                                     sizeof(SystemMenuHintTable) / sizeof(SystemMenuHintTable[0]),
-                                    IDS_READY);
+                                    IDS_HINT_BLANK);
                 }
             }
             break;

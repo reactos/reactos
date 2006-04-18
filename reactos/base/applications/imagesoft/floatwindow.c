@@ -5,46 +5,52 @@ static const TCHAR szFloatWndClass[] = TEXT("ImageSoftFloatWndClass");
 #define ID_TIMER 1
 
 TBBUTTON ToolsButtons[] = {
-/*   iBitmap,            idCommand,      fsState,         fsStyle,     bReserved[2], dwData, iString */
-    {TBICON_RECTSEL,     ID_RECTSEL,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* rectangle select */
-    {TBICON_MOVESEL,     ID_MOVESEL,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* move selected pixels */
-    {TBICON_LASOO,       ID_LASOO,       TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* lasso select */
-    {TBICON_MOVE,        ID_MOVE,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* move selection */
-    {TBICON_ECLIPSESEL,  ID_ECLIPSESEL,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* elipse select */
-    {TBICON_ZOOM,        ID_ZOOM,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* zoom */
-    {TBICON_MAGICWAND,   ID_MAGICWAND,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* magic wand */
-    {TBICON_TEXT,        ID_TEXT,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* text */
-    {TBICON_PAINTBRUSH,  ID_PAINTBRUSH,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* paintbrush */
-    {TBICON_ERASER,      ID_ERASER,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* eraser */
-    {TBICON_PENCIL,      ID_PENCIL,      TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* pencil */
-    {TBICON_COLORPICKER, ID_COLORPICKER, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* color picker */
-    {TBICON_CLONESTAMP,  ID_CLONESTAMP,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* clone stamp */
-    {TBICON_RECOLORING,  ID_RECOLORING,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* recolor */
-    {TBICON_PAINTBUCKET, ID_PAINTBUCKET, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* paint bucket */
-    {TBICON_LINE,        ID_LINE,        TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* line */
-    {TBICON_RECTANGLE,   ID_RECTANGLE,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* rectangle */
-    {TBICON_ROUNDRECT,   ID_ROUNDRECT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* round rectangle */
-    {TBICON_ECLIPSE,     ID_ECLIPSE,     TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* elipse */
-    {TBICON_FREEFORM,    ID_FREEFORM,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},    /* free form */
+/*   iBitmap,            idCommand,      fsState,         fsStyle,                                     bReserved[2], dwData, iString */
+    {TBICON_RECTSEL,     ID_RECTSEL,     TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* rectangle select */
+    {TBICON_MOVESEL,     ID_MOVESEL,     TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* move selected pixels */
+    {TBICON_LASOO,       ID_LASOO,       TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* lasso select */
+    {TBICON_MOVE,        ID_MOVE,        TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* move selection */
+    {TBICON_ECLIPSESEL,  ID_ECLIPSESEL,  TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* elipse select */
+    {TBICON_ZOOM,        ID_ZOOM,        TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* zoom */
+    {TBICON_MAGICWAND,   ID_MAGICWAND,   TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* magic wand */
+    {TBICON_TEXT,        ID_TEXT,        TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* text */
+    {TBICON_PAINTBRUSH,  ID_PAINTBRUSH,  TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* paintbrush */
+    {TBICON_ERASER,      ID_ERASER,      TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* eraser */
+    {TBICON_PENCIL,      ID_PENCIL,      TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* pencil */
+    {TBICON_COLORPICKER, ID_COLORPICKER, TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* color picker */
+    {TBICON_CLONESTAMP,  ID_CLONESTAMP,  TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* clone stamp */
+    {TBICON_RECOLORING,  ID_RECOLORING,  TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* recolor */
+    {TBICON_PAINTBUCKET, ID_PAINTBUCKET, TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* paint bucket */
+    {TBICON_LINE,        ID_LINE,        TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* line */
+    {TBICON_RECTANGLE,   ID_RECTANGLE,   TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* rectangle */
+    {TBICON_ROUNDRECT,   ID_ROUNDRECT,   TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* round rectangle */
+    {TBICON_ECLIPSE,     ID_ECLIPSE,     TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* elipse */
+    {TBICON_FREEFORM,    ID_FREEFORM,    TBSTATE_ENABLED, BTNS_BUTTON | TBSTYLE_GROUP | TBSTYLE_CHECK, {0}, 0, 0},    /* free form */
 
     {10, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
 };
 
+TBBUTTON HistoryButtons[] = {
+    {TBICON_BACKSM,     ID_BACK,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* back */
+    {TBICON_UNDOSM,     ID_UNDO,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* undo */
+    {TBICON_REDOSM,     ID_REDO,    TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* redo */
+    {TBICON_FORWARDSM,  ID_FORWARD, TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* forward */
+    {TBICON_DELETESM,   ID_DELETE,  TBSTATE_ENABLED, BTNS_BUTTON,  {0}, 0, 0 },   /* delete */
+};
+
 
 BOOL
-ShowHideWindow(HWND hwnd)
+ShowHideWindow(PFLT_WND FltInfo)
 {
-    static BOOL Hidden = FALSE;
+    ShowWindow(FltInfo->hSelf, FltInfo->bShow ? SW_HIDE : SW_SHOW);
+    FltInfo->bShow = ~FltInfo->bShow;
 
-    ShowWindow(hwnd, Hidden ? SW_SHOW : SW_HIDE);
-    Hidden = ~Hidden;
-
-    return Hidden;
+    return FltInfo->bShow;
 }
 
 
 VOID
-FloatToolbarCreateToolsGui(PFLT_WND FltTools)
+FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info)
 {
     HWND hTb;
     HIMAGELIST hImageList;
@@ -57,7 +63,7 @@ FloatToolbarCreateToolsGui(PFLT_WND FltTools)
                          NULL,
                          WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_WRAPABLE | CCS_NODIVIDER,
                          0, 0, 32, 200,
-                         FltTools->hSelf,
+                         Info->fltTools->hSelf,
                          NULL,
                          hInstance,
                          NULL);
@@ -77,7 +83,7 @@ FloatToolbarCreateToolsGui(PFLT_WND FltTools)
                 0,
                 (LPARAM)MAKELONG(16, 16));
 
-    hImageList = InitImageList(20,
+    hImageList = InitImageList(NumButtons,
                                IDB_TOOLSRECTSEL);
 
     ImageList_Destroy((HIMAGELIST)SendMessage(hTb,
@@ -98,18 +104,216 @@ FloatToolbarCreateToolsGui(PFLT_WND FltTools)
 
 
 VOID
-FloatToolbarCreateColorsGui(PFLT_WND FltColors)
+FloatWindowPaintColorPicker(HWND hColorPicker)
 {
+    HDC hdc;
+    RECT rect;
 
-    return;
+    InvalidateRect(hColorPicker,
+                   NULL,
+                   TRUE);
+    UpdateWindow(hColorPicker);
+
+    hdc = GetDC(hColorPicker);
+
+    GetClientRect(hColorPicker,
+                  &rect);
+
+    Ellipse(hdc,
+            rect.left,
+            rect.top,
+            rect.right,
+            rect.bottom);
+
+    ReleaseDC(hColorPicker,
+              hdc);
+
+}
+
+VOID
+FloatWindowPaintHueSlider(HWND hHueSlider)
+{
+    HDC hdc;
+    RECT rect;
+
+    InvalidateRect(hHueSlider,
+                   NULL,
+                   TRUE);
+    UpdateWindow(hHueSlider);
+
+    hdc = GetDC(hHueSlider);
+
+    GetClientRect(hHueSlider,
+                  &rect);
+
+    Rectangle(hdc,
+              rect.left,
+              rect.top,
+              rect.right,
+              rect.bottom);
+
+    ReleaseDC(hHueSlider,
+              hdc);
+
 }
 
 
 VOID
-FloatToolbarCreateHistoryGui(PFLT_WND FltHistory)
+FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info)
 {
+    HWND hColorPicker;
+    HWND hHueSlider;
+    HWND hMouseButton;
+    HWND hMore;
+    RECT rect;
+    HBITMAP hMoreBitmap;
 
-    return;
+    GetClientRect(Info->fltColors->hSelf,
+                  &rect);
+
+    hColorPicker = CreateWindowEx(0,
+                                  WC_STATIC,
+                                  NULL,
+                                  WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
+                                  2,
+                                  2,
+                                  rect.right * 0.65,
+                                  rect.bottom - 2,
+                                  Info->fltColors->hSelf,
+                                  NULL,
+                                  hInstance,
+                                  NULL);
+
+    hHueSlider = CreateWindowEx(0,
+                                WC_STATIC,
+                                NULL,
+                                WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
+                                145,
+                                35,
+                                25,
+                                135,
+                                Info->fltColors->hSelf,
+                                NULL,
+                                hInstance,
+                                NULL);
+
+    hMouseButton = CreateWindowEx(0,
+                                  WC_COMBOBOX,
+                                  NULL,
+                                  WS_CHILD | WS_VISIBLE | CBS_DROPDOWN,
+                                  118, 5, 75, 25,
+                                  Info->fltColors->hSelf,
+                                  NULL,
+                                  hInstance,
+                                  NULL);
+    //MakeFlatCombo(hMouseButton);
+
+    /* temp, just testing */
+    if (hMouseButton != NULL)
+    {
+        SendMessage(hMouseButton, CB_ADDSTRING, 0, (LPARAM)_T("Primary"));
+        SendMessage(hMouseButton, CB_ADDSTRING, 0, (LPARAM)_T("Secondary"));
+        SendMessage(hMouseButton, CB_SETCURSEL, 0, 0);
+
+    }
+
+    hMore = CreateWindowEx(WS_EX_STATICEDGE,
+                           WC_BUTTON,
+                           NULL,
+                           WS_CHILD | WS_VISIBLE | BS_BITMAP,
+                           rect.right - 15,
+                           rect.bottom - 15,
+                           15, 15,
+                           Info->fltColors->hSelf,
+                           NULL,
+                           hInstance,
+                           NULL);
+
+    hMoreBitmap = (HBITMAP)LoadImage(hInstance,
+                                     MAKEINTRESOURCE(IDB_COLORSMORE),
+                                     IMAGE_BITMAP,
+                                     12,
+                                     11,
+                                     LR_LOADTRANSPARENT | LR_LOADMAP3DCOLORS);
+    if (hMoreBitmap != NULL)
+    {
+        SendMessage(hMore,
+                    BM_SETIMAGE,
+                    IMAGE_BITMAP,
+                    (LPARAM)hMoreBitmap);
+    }
+
+
+    /* temp functions for playing about with possible layouts */
+    FloatWindowPaintHueSlider(hHueSlider);
+    FloatWindowPaintColorPicker(hColorPicker);
+
+    if (hColorPicker != NULL)
+    {
+        HDC hDc = GetDC(hColorPicker);
+        TextOut(hDc, 8, 75, _T("Possible layout?"), 16);
+        ReleaseDC(hColorPicker, hDc);
+    }
+
+}
+
+
+VOID
+FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
+{
+    HWND hList;
+    HWND hButtons;
+    HIMAGELIST hImageList;
+    INT NumButtons;
+
+    hList = CreateWindowEx(0,
+                           WC_LISTBOX,
+                           NULL,
+                           WS_CHILD | WS_VISIBLE | LBS_EXTENDEDSEL,
+                           0, 0, 143, 100,
+                           Info->fltHistory->hSelf,
+                           NULL,
+                           hInstance,
+                           NULL);
+
+    NumButtons = sizeof(HistoryButtons) / sizeof(HistoryButtons[0]);
+    hButtons = CreateWindowEx(0,
+                              TOOLBARCLASSNAME,
+                              NULL,
+                              WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | CCS_BOTTOM | CCS_NODIVIDER,
+                              0, 0, 0, 0,
+                              Info->fltHistory->hSelf,
+                              NULL,
+                              hInstance,
+                              NULL);
+
+    SendMessage(hButtons,
+                TB_BUTTONSTRUCTSIZE,
+                sizeof(ToolsButtons[0]),
+                0);
+
+    SendMessage(hButtons,
+                TB_SETBITMAPSIZE,
+                0,
+                (LPARAM)MAKELONG(10, 10));
+
+    hImageList = InitImageList(NumButtons,
+                               IDB_HISTBACK);
+
+    ImageList_Destroy((HIMAGELIST)SendMessage(hButtons,
+                                              TB_SETIMAGELIST,
+                                              0,
+                                              (LPARAM)hImageList));
+
+    SendMessage(hButtons,
+                TB_SETBUTTONSIZE,
+                0,
+                MAKELONG(18, 16));
+
+    SendMessage(hButtons,
+                TB_ADDBUTTONS,
+                NumButtons,
+                (LPARAM)HistoryButtons);
 }
 
 LRESULT CALLBACK
@@ -118,11 +322,26 @@ FloatToolbarWndProc(HWND hwnd,
                     WPARAM wParam,
                     LPARAM lParam)
 {
+    PFLT_WND FltInfo;
+
+    /* Get the window context */
+    FltInfo = (PFLT_WND)GetWindowLongPtr(hwnd,
+                                         GWLP_USERDATA);
+    if (FltInfo == NULL && Message != WM_CREATE)
+    {
+        goto HandleDefaultMessage;
+    }
+
     switch(Message)
     {
-        static BOOL bOpaque = FALSE;
-
         case WM_CREATE:
+
+            FltInfo = (PFLT_WND)(((LPCREATESTRUCT)lParam)->lpCreateParams);
+
+            /*FIXME: read this from registry */
+            FltInfo->bShow = TRUE;
+
+            FltInfo->bOpaque = FALSE;
 
             SetWindowLong(hwnd,
                           GWL_EXSTYLE,
@@ -141,7 +360,7 @@ FloatToolbarWndProc(HWND hwnd,
         {
             POINT pt;
 
-            if (bOpaque != TRUE)
+            if (FltInfo->bOpaque != TRUE)
             {
                 KillTimer(hwnd,
                           ID_TIMER);
@@ -161,7 +380,7 @@ FloatToolbarWndProc(HWND hwnd,
                         KillTimer(hwnd,
                                   ID_TIMER);
 
-                        bOpaque = FALSE;
+                        FltInfo->bOpaque = FALSE;
 
                         SetWindowLong(hwnd,
                                       GWL_EXSTYLE,
@@ -182,7 +401,7 @@ FloatToolbarWndProc(HWND hwnd,
 
         case WM_NCMOUSEMOVE:
         case WM_MOUSEMOVE:
-            if (bOpaque == FALSE)
+            if (FltInfo->bOpaque == FALSE)
             {
                 SetWindowLong(hwnd,
                           GWL_EXSTYLE,
@@ -194,7 +413,8 @@ FloatToolbarWndProc(HWND hwnd,
                              NULL,
                              RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
 
-                bOpaque = TRUE;
+                FltInfo->bOpaque = TRUE;
+                MessageBox(NULL, _T("in"), _T("Hit test"), MB_OK | MB_ICONEXCLAMATION);
                 SetTimer(hwnd,
                          ID_TIMER,
                          200,
@@ -202,9 +422,13 @@ FloatToolbarWndProc(HWND hwnd,
             }
         break;
 
+        case WM_CLOSE:
+            ShowHideWindow(FltInfo);
+        break;
+
         case WM_COMMAND:
             if (LOWORD(wParam) == IDCANCEL)
-                ShowHideWindow(hwnd);
+                ShowHideWindow(FltInfo);
 
             switch(LOWORD(wParam))
             {
@@ -245,12 +469,16 @@ FloatToolbarWndProc(HWND hwnd,
                                  Message,
                                  TRUE,
                                  lParam);
+        break;
 
-        case WM_CLOSE:
-            ShowHideWindow(hwnd);
+        case WM_DESTROY:
+            SetWindowLongPtr(hwnd,
+                             GWLP_USERDATA,
+                             0);
         break;
 
         default:
+HandleDefaultMessage:
             return DefWindowProc(hwnd,
                                  Message,
                                  wParam,

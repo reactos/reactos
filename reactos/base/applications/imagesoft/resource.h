@@ -37,7 +37,14 @@
 #define ID_EXIT                 2016
 #define ID_EDITCOLOURS          2017
 #define ID_TOOLS                2018
-#define ID_STATUSBAR            2019
+#define ID_COLOR                2019
+#define ID_HISTORY              2020
+#define ID_STATUSBAR            2021
+#define ID_BLANK                2022
+
+#define ID_BACK                 2025
+#define ID_FORWARD              2026
+#define ID_DELETE               2027
 
 /* text */
 #define ID_BOLD                 2030
@@ -47,6 +54,7 @@
 #define ID_TXTCENTER            2034
 #define ID_TXTRIGHT             2035
 #define ID_TXTFONTNAME          2036
+#define ID_TXTFONTSIZE          2037
 
 /* tools */
 #define ID_CLONESTAMP           2050
@@ -81,7 +89,28 @@
 #define ID_WINDOW_ARRANGE       3006
 
 /* menu hints */
-#define IDS_HINT_EXIT           20001
+#define IDS_HINT_BLANK          20000
+#define IDS_HINT_NEW            20001
+#define IDS_HINT_OPEN           20002
+#define IDS_HINT_CLOSE          21006
+#define IDS_HINT_CLOSEALL       21007
+#define IDS_HINT_SAVE           20003
+#define IDS_HINT_SAVEAS         20004
+#define IDS_HINT_PRINT          20005
+#define IDS_HINT_PRINTPRE       20006
+#define IDS_HINT_PROP           20007
+#define IDS_HINT_EXIT           20008
+
+#define IDS_HINT_TOOLS          20020
+#define IDS_HINT_COLORS         20021
+#define IDS_HINT_HISTORY        20022
+#define IDS_HINT_STATUS         20023
+
+#define IDS_HINT_CASCADE        21009
+#define IDS_HINT_TILE_HORZ      21010
+#define IDS_HINT_TILE_VERT      21011
+#define IDS_HINT_ARRANGE        21012
+#define IDS_HINT_NEXT           21013
 
 /* system menu hints */
 #define IDS_HINT_SYS_RESTORE    21001
@@ -90,7 +119,6 @@
 #define IDS_HINT_SYS_MINIMIZE   21004
 #define IDS_HINT_SYS_MAXIMIZE   21005
 #define IDS_HINT_SYS_CLOSE      21006
-#define IDS_HINT_SYS_NEXT       21007
 
 
 /* Toolbar button bitmaps.
@@ -136,7 +164,18 @@
 #define IDB_TOOLSECLIPSE        10048
 #define IDB_TOOLSFREEFORM       10049
 
-/* toolbar buttons */
+#define IDB_HISTBACK            10060
+#define IDB_HISTUNDO            10061
+#define IDB_HISTREDO            10062
+#define IDB_HISTFORWARD         10063
+#define IDB_HISTDELETE          10064
+
+#define IDB_COLORSMORE          10080
+#define IDB_COLORSLESS          10081
+
+/* TOOLBAR BITMAPS */
+
+/* standard */
 #define TBICON_NEW              0
 #define TBICON_OPEN             1
 #define TBICON_SAVE             2
@@ -147,14 +186,14 @@
 #define TBICON_PASTE            7
 #define TBICON_UNDO             8
 #define TBICON_REDO             9
-
+/* text */
 #define TBICON_BOLD             0
 #define TBICON_ITALIC           1
 #define TBICON_ULINE            2
 #define TBICON_TXTLEFT          3
 #define TBICON_TXTCENTER        4
 #define TBICON_TXTRIGHT         5
-
+/* tools */
 #define TBICON_RECTSEL          0
 #define TBICON_MOVESEL          1
 #define TBICON_LASOO            2
@@ -175,6 +214,13 @@
 #define TBICON_ROUNDRECT        17
 #define TBICON_ECLIPSE          18
 #define TBICON_FREEFORM         19
+/* history */
+#define TBICON_BACKSM           0
+#define TBICON_UNDOSM           1
+#define TBICON_REDOSM           2
+#define TBICON_FORWARDSM        3
+#define TBICON_DELETESM         4
+
 
 /* tooltips */
 #define IDS_TOOLTIP_NEW         6000

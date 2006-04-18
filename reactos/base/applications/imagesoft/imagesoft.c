@@ -62,6 +62,7 @@ WinMain(HINSTANCE hThisInstance,
                         {
                             if (bRet != (BOOL)-1)
                             {
+                                //if (Msg.message == WM_SIZE) MessageBox(NULL, _T("Got it"), NULL, 0);
                                 if (!MainWndTranslateMDISysAccel(hMainWnd,
                                                                  &Msg))
                                 {

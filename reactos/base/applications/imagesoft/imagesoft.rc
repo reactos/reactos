@@ -31,6 +31,7 @@ IDB_MAINPRINTICON BITMAP DISCARDABLE "res/icons/std/MainPrintIcon.bmp"
 IDB_MAINPRINTPREICON BITMAP DISCARDABLE "res/icons/std/MainPrintPreIcon.bmp"
 IDB_MAINSAVEICON BITMAP DISCARDABLE "res/icons/std/MainSaveIcon.bmp"
 
+
 /* text toolbar icons */
 IDB_TEXTBOLD BITMAP DISCARDABLE "res/icons/text/TextBoldIcon.bmp"
 IDB_TEXTITALIC BITMAP DISCARDABLE "res/icons/text/TextItalicIcon.bmp"
@@ -61,6 +62,16 @@ IDB_TOOLSROUNDRECT BITMAP DISCARDABLE "res/icons/tools/ToolsRoundedRectangle.bmp
 IDB_TOOLSTEXT BITMAP DISCARDABLE "res/icons/tools/ToolsText.bmp"
 IDB_TOOLSZOOM BITMAP DISCARDABLE "res/icons/tools/ToolsZoom.bmp"
 
+/* history window icons */
+IDB_HISTBACK BITMAP DISCARDABLE "res/icons/hist/HistBack.bmp"
+IDB_HISTUNDO BITMAP DISCARDABLE "res/icons/hist/HistUndo.bmp"
+IDB_HISTREDO BITMAP DISCARDABLE "res/icons/hist/HistRedo.bmp"
+IDB_HISTFORWARD BITMAP DISCARDABLE "res/icons/hist/HistForward.bmp"
+IDB_HISTDELETE  BITMAP DISCARDABLE "res/icons/hist/HistDelete.bmp"
+
+/* colors window icons */
+IDB_COLORSMORE BITMAP DISCARDABLE "res/icons/color/ColorMore.bmp"
+IDB_COLORSLESS BITMAP DISCARDABLE "res/icons/color/ColorLess.bmp"
 
 /* cursors */
 IDC_PAINTBRUSHCURSOR CURSOR DISCARDABLE "res/cursors/PaintBrushToolCursor.cur"

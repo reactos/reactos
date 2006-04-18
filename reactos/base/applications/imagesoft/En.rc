@@ -33,8 +33,8 @@ BEGIN
   POPUP "&View"
   BEGIN
     MENUITEM "&Tools",           ID_TOOLS, CHECKED
-    MENUITEM "&Color",           -1, CHECKED
-    MENUITEM "&History",         -1, CHECKED
+    MENUITEM "&Colors",          ID_COLOR, CHECKED
+    MENUITEM "&History",         ID_HISTORY, CHECKED
     MENUITEM "&Status Bar",      ID_STATUSBAR, CHECKED
   END
   POPUP "&Image"
@@ -163,17 +163,36 @@ BEGIN
   IDS_TOOLTIP_REDO      "Redo"
 END
 
+
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_NEW          " Creates a new document."
+  IDS_HINT_OPEN         " Opens an existing document."
+  IDS_HINT_CLOSE        " Closes this window."
+  IDS_HINT_CLOSEALL     " Closes all windows."
+  IDS_HINT_SAVE         " Saves the active document."
+  IDS_HINT_SAVEAS       " Saves the active document with a new name."
+  IDS_HINT_PRINTPRE     " Previews the printed document."
+  IDS_HINT_PRINT        " Prints the active document."
+  IDS_HINT_PROP         " Shows the properties of the active image."
   IDS_HINT_EXIT         " Exits this application."
+
+  IDS_HINT_TOOLS        " Shows or hides the tools floating window."
+  IDS_HINT_COLORS       " Shows or hides the colors floating window."
+  IDS_HINT_HISTORY      " Shows or hides the history floating window."
+  IDS_HINT_STATUS       " Shows or hides the status bar."
+
+  IDS_HINT_CASCADE      " Arrange windows so they overlap."
+  IDS_HINT_TILE_HORZ    " Arrange windows as non-overlapping tiles."
+  IDS_HINT_TILE_VERT    " Arrange windows as non-overlapping tiles."
+  IDS_HINT_ARRANGE      " Arrange icons at the bottom of the window."
+  IDS_HINT_NEXT         " Activates the next window."
 
   IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
   IDS_HINT_SYS_MOVE     " Moves this window."
   IDS_HINT_SYS_SIZE     " Resizes this window."
   IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
   IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
-  IDS_HINT_SYS_NEXT     " Activates the next window."
 END
-

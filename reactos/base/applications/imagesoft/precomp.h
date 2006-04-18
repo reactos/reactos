@@ -49,6 +49,7 @@
 /* generic definitions and forward declarations */
 struct _MAIN_WND_INFO;
 struct _EDIT_WND_INFO;
+struct _FLT_WND;
 
 typedef enum _MDI_EDITOR_TYPE {
     metUnknown = 0,
@@ -288,8 +289,11 @@ typedef struct _MAIN_WND_INFO
     HWND hSelf;
     HWND hMdiClient;
     HWND hStatus;
-    HWND hFloatTools;
     int nCmdShow;
+
+    struct _FLT_WND *fltTools;
+    struct _FLT_WND *fltColors;
+    struct _FLT_WND *fltHistory;
 
     TOOLBAR_DOCKS ToolDocks;
 
@@ -300,7 +304,7 @@ typedef struct _MAIN_WND_INFO
     PVOID ActiveEditor;
 
     /* status flags */
-    UINT InMenuLoop : 1;
+    BOOL InMenuLoop : 1;
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
 BOOL InitMainWindowImpl(VOID);
@@ -376,14 +380,17 @@ typedef struct _FLT_WND
     INT y;
     INT Width;
     INT Height;
+    BOOL bShow : 1;
     BOOL bOpaque;
 } FLT_WND, *PFLT_WND;
 
-VOID FloatToolbarCreateToolsGui(PFLT_WND FltTools);
-VOID FloatToolbarCreateColorsGui(PFLT_WND FltColors);
-VOID FloatToolbarCreateHistoryGui(PFLT_WND FltHistory);
+VOID FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info);
+VOID FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info);
+VOID FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info);
 BOOL InitFloatWndClass(VOID);
 VOID UninitFloatWndImpl(VOID);
-BOOL ShowHideWindow(HWND hwnd);
+BOOL ShowHideWindow(PFLT_WND FltInfo);
+
+VOID MakeFlatCombo(HWND hwndCombo);
 
 #endif /* __IMAGESOFT_PRECOMP_H */
