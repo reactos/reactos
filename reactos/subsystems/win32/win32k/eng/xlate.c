@@ -493,9 +493,10 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 
    if (XlateObj->flXlate & XO_TRIVIAL)
       return Color;
+    
+   if ((XlateObj->flXlate & XO_TABLE))   
+      return XlateObj->pulXlate[Color & 0xff];
 
-   if (XlateObj->flXlate & XO_TABLE)
-      return XlateObj->pulXlate[Color];
 
    if (XlateObj->flXlate & XO_TO_MONO)
       return Color == XlateObj->pulXlate[0];
