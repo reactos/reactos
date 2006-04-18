@@ -114,7 +114,7 @@ ForwardIrpAndWait(
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 
-	DPRINT("Serenum: Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
+	DPRINT("Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
 
 	Status = IoCallDriver(LowerDevice, Irp);
@@ -141,7 +141,7 @@ ForwardIrpToLowerDeviceAndForget(
 
 	LowerDevice = DeviceExtension->LowerDevice;
 	ASSERT(LowerDevice);
-	DPRINT("Serenum: calling lower device 0x%p [%wZ]\n",
+	DPRINT("Calling lower device 0x%p [%wZ]\n",
 		LowerDevice, &LowerDevice->DriverObject->DriverName);
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);
@@ -160,7 +160,7 @@ ForwardIrpToAttachedFdoAndForget(
 
 	Fdo = DeviceExtension->AttachedFdo;
 	ASSERT(Fdo);
-	DPRINT("Serenum: calling attached Fdo 0x%p [%wZ]\n",
+	DPRINT("Calling attached Fdo 0x%p [%wZ]\n",
 		Fdo, &Fdo->DriverObject->DriverName);
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(Fdo, Irp);
