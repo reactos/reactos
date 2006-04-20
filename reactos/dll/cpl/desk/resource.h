@@ -25,12 +25,14 @@
 
 /* Background Page */
 #define IDC_BACKGROUND_LIST             1000
-#define IDC_BACKGROUND_PREVIEW          1001
-#define IDC_BROWSE_BUTTON               1002
-#define IDC_COLOR_BUTTON                1003
-#define IDC_PLACEMENT_COMBO             1004
-#define IDS_BACKGROUND_COMDLG_FILTER    1005
-#define IDS_SUPPORTED_EXT               1006
+#define IDC_MONITOR                     1001
+#define IDC_BACKGROUND_PREVIEW          1002
+#define IDC_BROWSE_BUTTON               1003
+#define IDC_COLOR_BUTTON                1004
+#define IDC_PLACEMENT_COMBO             1005
+#define IDS_BACKGROUND_COMDLG_FILTER    1006
+#define IDS_SUPPORTED_EXT               1007
+
 
 /* Screensaver Page */
 #define IDC_SCREENS_CHOICES             1010

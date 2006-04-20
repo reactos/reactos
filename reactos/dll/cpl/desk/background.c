@@ -43,6 +43,9 @@ HWND g_hColorButton             = NULL;
 
 HIMAGELIST g_hShellImageList    = NULL;
 
+HBITMAP hBitmap = NULL;
+int cxSource, cySource;
+
 /* Add the images in the C:\ReactOS directory and the current wallpaper if any */
 void AddListViewItems()
 {
@@ -226,6 +229,7 @@ void InitBackgroundDialog()
     DWORD bufferSize = sizeof(szBuffer);
     DWORD varType = REG_SZ;
     LONG result;
+    BITMAP bitmap;
     
 	g_hBackgroundList       = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_LIST);
     g_hBackgroundPreview    = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_PREVIEW);
@@ -280,6 +284,15 @@ void InitBackgroundDialog()
     }
 
     RegCloseKey(regKey);
+
+    hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
+    if (hBitmap != NULL)
+    {
+        GetObject(hBitmap, sizeof(BITMAP), &bitmap);
+
+        cxSource = bitmap.bmWidth;
+        cySource = bitmap.bmHeight;
+    }
 }
 
 void OnColorButton()
@@ -569,6 +582,23 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                 }
             } break;
 
+        case WM_PAINT:
+            {
+                PAINTSTRUCT ps;
+                HDC hdc, hdcMem;
+       
+                hdc = BeginPaint(hwndDlg, &ps);
+ 
+                hdcMem = CreateCompatibleDC(hdc);
+                SelectObject(hdcMem, hBitmap);
+
+                BitBlt(hdc, 98, 0, cxSource, cySource, hdcMem, 0, 0, SRCCOPY);
+
+                DeleteDC(hdcMem);
+                EndPaint(hwndDlg, &ps);
+
+            } break;
+
         case WM_DRAWITEM:
             {
                 LPDRAWITEMSTRUCT drawItem;
@@ -615,6 +645,8 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
             {
                 if(g_pWallpaperBitmap != NULL)
                     DibFreeImage(g_pWallpaperBitmap);
+
+                DeleteObject(hBitmap);
 
             } break;
     }
