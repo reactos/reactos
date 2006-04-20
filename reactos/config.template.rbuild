@@ -53,4 +53,11 @@
 -->
 <property name="DBG" value="1" />
 
+
+<!--
+  Whether to compile for debugging with GDB. If you don't use GDB, don't
+  enable this.
+-->
+<property name="GDB" value="0" />
+
 </rbuild>
