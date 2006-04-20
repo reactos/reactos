@@ -6,19 +6,19 @@
 void CtxOpen( PCTXTYPE *pphContext,
 	 long Value)
 {
-	printf("CtxOpen()\n");
+	printf("CtxOpen(): Value=%d\n",Value);
 	*pphContext = (PCTXTYPE)midl_user_allocate( sizeof(CTXTYPE) );
 	**pphContext = Value;
 }
 
 void CtxHello( PCTXTYPE phContext )
 {
-	printf("Hello, World! Context value: %d\n", *phContext);
+	printf("CtxHello(): Hello, World! Context value: %d\n", *phContext);
 }
 
 void CtxClose(PCTXTYPE *pphContext )
 {
-	printf("CtxClose()\n");
+	printf("CtxClose(): %d\n", **pphContext);
 	midl_user_free(*pphContext);
 	*pphContext = NULL;
 }
@@ -62,7 +62,8 @@ void main()
 void __RPC_USER PCTXTYPE_rundown(
     PCTXTYPE hContext)
 {
-    printf("Context rundown \n");
+	PCTXTYPE pCtx = (PCTXTYPE)hContext;
+    printf("Context rundown: Value=%d \n", *pCtx);
     midl_user_free(hContext);
 }
 

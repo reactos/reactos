@@ -337,26 +337,42 @@ void m_CtxClose(
     
 }
 
+int interactive = 0;
+void interact()
+{
+	if(interactive)
+	{
+		printf("\nPress any key to continue...");
+		getch();
+		printf("\n\n");
+	}
+}
+
 void main(int argc, char **argv)
 {
 	RPC_STATUS status;
 	unsigned long ulCode;
 	PCTXTYPE hContext;
 	char *pszStringBinding = NULL;
-	int test_num = 0;
 	RPC_BINDING_HANDLE Handle =	0;
 	char buffer[255];
 	
+	int test_num = 0;
+	int test_value = 31337;
+	
 	if(argc<2)
 	{
-		printf("USAGE: client.exe <test_number>\n"
+		printf("USAGE: client.exe <test_number> [test_value] [interactive]\n"
 			"Available tests:\n"
 			"0. General test\n"
-			"1. NULL pointer test\n");
+			"1. NULL pointer test\n"
+			"2. Context rundown routine");
 		return;
 	}
 	
 	test_num = atoi(argv[1]);
+	if(argc>2) test_value = atoi(argv[2]);
+	if(argc>3) interactive = 1;
 
 	status = RpcStringBindingCompose(NULL, 
 		"ncacn_np", 
@@ -384,9 +400,10 @@ void main(int argc, char **argv)
 	switch(test_num)
 	{
 	case 0:
-		m_CtxOpen(&hContext, 31337);
+		m_CtxOpen(&hContext, test_value);
 		RpcBindingFree(&hBinding);
 		m_CtxHello(hContext);
+		interact();
 		m_CtxClose(&hContext);
 		break;
 	case 1:
@@ -402,7 +419,7 @@ void main(int argc, char **argv)
 		}
 		RpcEndExcept	
 		
-		m_CtxOpen2(&hContext, 31337);
+		m_CtxOpen2(&hContext, test_value);
 		
 		/////////////////////////////////////////////////////////////////////////////////////////
 		RpcTryExcept
@@ -415,9 +432,12 @@ void main(int argc, char **argv)
 			 printf("NDRCContextMarshall(NULL) reported exception = %d\n", RpcExceptionCode());
 		}
 		RpcEndExcept	
-	
-		
 		/////////////////////////////////////////////////////////////////////////////////////////
+		break;
+	case 2:
+		CtxOpen(&hContext, test_value);
+		interact();
+		ExitProcess(0);
 		break;
 	default:
 		printf("Unknown test %d\n", test_num);
