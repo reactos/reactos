@@ -36,4 +36,25 @@ typedef struct _CContextHandle
 	ContextHandleNdr Ndr;
 } CContextHandle;
 
+/*
+   Keep this structure compatible with public rpcndr.h 
+   declaration, otherwise NDRSContextValue macro won't work.
+   typedef struct {
+	  void *pad[2];
+	  void *userContext;
+   } *NDR_SCONTEXT;
+*/
+
+typedef struct _SContextHandle
+{
+  PVOID Prev;
+  PVOID Next;
+  PVOID Value;
+  NDR_RUNDOWN Rundown;
+  RpcConnection *Conn;
+  ContextHandleNdr Ndr;
+} SContextHandle;
+
+void RPCRT4_DoContextRundownIfNeeded(RpcConnection *Conn);
+
 #endif //__WINE_NDR_CONTEXTH_H
