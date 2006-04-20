@@ -437,6 +437,7 @@ AccpOpenNamedObject(LPWSTR pObjectName,
                     BOOL Write)
 {
     LPWSTR lpPath;
+    NTSTATUS Status;
     ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
     DWORD Ret = ERROR_SUCCESS;
 
@@ -496,6 +497,45 @@ AccpOpenNamedObject(LPWSTR pObjectName,
     /* open a handle to the path depending on the object type */
     switch (ObjectType)
     {
+        case SE_FILE_OBJECT:
+        {
+            IO_STATUS_BLOCK IoStatusBlock;
+            OBJECT_ATTRIBUTES ObjectAttributes;
+            UNICODE_STRING FileName;
+
+            if (!RtlDosPathNameToNtPathName_U(pObjectName,
+                                              &FileName,
+                                              NULL,
+                                              NULL))
+            {
+                Ret = ERROR_INVALID_NAME;
+                goto Cleanup;
+            }
+
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &FileName,
+                                       OBJ_CASE_INSENSITIVE,
+                                       NULL,
+                                       NULL);
+
+            Status = NtOpenFile(Handle,
+                                DesiredAccess,
+                                &ObjectAttributes,
+                                &IoStatusBlock,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                FILE_SYNCHRONOUS_IO_NONALERT);
+
+            RtlFreeHeap(RtlGetProcessHeap(),
+                        0,
+                        FileName.Buffer);
+
+            if (!NT_SUCCESS(Status))
+            {
+                Ret = RtlNtStatusToDosError(Status);
+            }
+            break;
+        }
+
         case SE_REGISTRY_KEY:
         {
             static const struct
@@ -679,6 +719,9 @@ AccpCloseObjectHandle(SE_OBJECT_TYPE ObjectType,
             break;
 
         case SE_FILE_OBJECT:
+            NtClose(Handle);
+            break;
+
         case SE_KERNEL_OBJECT:
         case SE_WINDOW_OBJECT:
             CloseHandle(Handle);
