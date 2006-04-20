@@ -43,8 +43,8 @@ HWND g_hColorButton             = NULL;
 
 HIMAGELIST g_hShellImageList    = NULL;
 
-HBITMAP hBitmap = NULL;
-int cxSource, cySource;
+static HBITMAP hBitmap = NULL;
+static int cxSource, cySource;
 
 /* Add the images in the C:\ReactOS directory and the current wallpaper if any */
 void AddListViewItems()
