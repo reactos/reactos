@@ -29,7 +29,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <user32.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -1487,7 +1487,7 @@ static BOOL PAINTING_DrawStateJam(HDC hdc, UINT opcode,
             return DrawTextA(hdc, (LPSTR)lp, (INT)wp, rc, dtflags);
 
     case DST_ICON:
-        return DrawIcon(hdc, rc->left, rc->top, (HICON)lp);
+        return DrawIconEx(hdc, rc->left, rc->top, (HICON)lp, cx, cy, 0, NULL, DI_NORMAL);
 
     case DST_BITMAP:
         memdc = CreateCompatibleDC(hdc);
