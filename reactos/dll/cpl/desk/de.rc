@@ -1,55 +1,51 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 188
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desktop"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,78,10,
-                    90,65,WS_EX_STATICEDGE
-    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,7,99,173,71
-    LTEXT           "Hintergrundbild:",
-                    IDC_STATIC,8,87,180,8
-    PUSHBUTTON      "&Durchsuchen...",IDC_BROWSE_BUTTON,186,135,56,14
-    PUSHBUTTON      "&Farbe...",IDC_COLOR_BUTTON,186,155,56,14
-    LTEXT           "Ausrichtung:",IDC_STATIC,186,98,43,8
-    COMBOBOX        IDC_PLACEMENT_COMBO,186,108,50,90,CBS_DROPDOWNLIST |
-                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 80, 10, 83, 57, WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER 
+                    | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
+    LTEXT           "Wählen SIe ein Bild aus welches Sie als Desktop Hintergrund verwenden wollen:", IDC_STATIC, 8, 103, 180, 9
+    PUSHBUTTON      "&Durchsuchen...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
+    PUSHBUTTON      "&Farbe...", IDC_COLOR_BUTTON, 188, 177, 50, 15
+    LTEXT           "&Ausrichtung:", IDC_STATIC, 188, 138, 36, 9
+    COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Bildschirmschoner"
+CAPTION "Bildschrimschoner"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "&Bildschrimschoner",IDC_SCREENS_DUMMY, 5, 7, 238, 136
     
-    LTEXT           "Liste der Bildschrimschoner:",IDC_STATIC,13, 24, 100, 9
+    LTEXT           "Liste der Bildschrimschoner:",IDC_STATIC,13, 24, 71, 9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
                     WS_BORDER | WS_TABSTOP,13, 34, 171, 69
-    PUSHBUTTON      "&Löschen",IDC_SCREENS_DELETE, 190,47,45,10
-    PUSHBUTTON      "&Hinzufügen",IDC_SCREENS_ADD_BUTTON, 190,34,45,10
+    PUSHBUTTON      "&Löschen",IDC_SCREENS_DELETE, 190,47,39,10
+    PUSHBUTTON      "&Hinzufügen",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
 
-    PUSHBUTTON      "&Einstellungen...",IDC_SCREENS_SETTINGS,140, 124, 55, 12,WS_GROUP
-    PUSHBUTTON      "&Vorschau",IDC_SCREENS_TESTSC,200, 124, 37, 12
+    PUSHBUTTON      "&Einstellungen...",IDC_SCREENS_SETTINGS,140, 124, 48, 12,WS_GROUP
+    PUSHBUTTON      "&Vorschau",IDC_SCREENS_TESTSC,192, 124, 43, 12
 
     CONTROL         "&Passwortschutz bei Reaktivierung.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 122, 18
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 119, 18
 
-    LTEXT           "&Warte:",IDC_STATIC,13, 110, 20, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY,38, 109, 31, 12,ES_RIGHT | WS_GROUP
-    CONTROL         "",IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT |
+    LTEXT           "&Warte:",IDC_STATIC,13, 110, 17, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 109, 31, 12,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP,52, 109, 12, 12
-    LTEXT           "Minuten, bis der Bildschirmschoner angezeigt wird.",IDC_STATIC,75, 111, 165, 9
+    LTEXT           "Minuten, bis der Bildschirmschoner angezeigt wird.",IDC_STATIC,70, 111, 147, 9
 
     GROUPBOX        "&Energiesparfunktion des Bildschirms",IDC_SCREENS_DUMMY2,5, 146, 238, 35
     LTEXT           "Um die Energiesparfunktion des Bildschrims einzustellen, klicken Sie auf Energiesparfunktion.",
                     IDC_STATIC,16, 159, 155, 19
-    PUSHBUTTON      "Energ&iesparfunk.",IDC_SCREENS_POWER_BUTTON,175, 162, 60, 12
+    PUSHBUTTON      "Energ&iesparfunk.",IDC_SCREENS_POWER_BUTTON,180, 162, 57, 12
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188
@@ -70,8 +66,8 @@ BEGIN
     LTEXT           "<kein>",IDC_SETTINGS_DEVICE,9,109,224,8
     GROUPBOX        "Bi&ldschirmauflösung",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
-                    32,130,60,17
-    LTEXT           "Niedrig",1815,9,130,25,8,NOT WS_GROUP
+                    30,130,58,17
+    LTEXT           "Niedrig",1815,9,130,15,8,NOT WS_GROUP
     LTEXT           "Hoch",1816,93,130,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Farbqualität",1817,125,120,115,43
@@ -82,11 +78,11 @@ BEGIN
     PUSHBUTTON      "&Erweitert",IDC_SETTINGS_ADVANCED,306,165,56,14
 END
 
-STRINGTABLE
+STRINGTABLE 
 BEGIN
     IDS_CPLNAME "Anzeige"
     IDS_CPLDESCRIPTION "Passt die Darstellung des Hintergrundbildes und des Bildschirmschoners an."
-
+    
     IDS_NONE "(Keine)"
     IDS_CENTER "Zentriert"
     IDS_STRETCH "Gestreckt"
