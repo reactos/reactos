@@ -76,7 +76,7 @@ static int PrintRoutes()
         ((Error = GetIpForwardTable(IpForwardTable, &Size, TRUE)) == NO_ERROR))
     {
         _stprintf(DefGate,
-#if UNICODE
+#ifdef UNICODE
                   _T("%hs"),
 #else
                   _T("%s"),
@@ -88,7 +88,7 @@ static int PrintRoutes()
         while (pAdapterInfo)
         {
             _tprintf(_T("0x%lu ........................... "
-#if UNICODE
+#ifdef UNICODE
                         "%hs\n"),
 #else
                         "%s\n"),
@@ -109,21 +109,21 @@ static int PrintRoutes()
         for( i = 0; i < IpForwardTable->dwNumEntries; i++ )
         {
             _stprintf( Destination,
-#if UNICODE
+#ifdef UNICODE
                        _T("%hs"),
 #else
                        _T("%s"),
 #endif
                        inet_ntoa( IN_ADDR_OF(IpForwardTable->table[i].dwForwardDest) ) );
             _stprintf( Netmask,
-#if UNICODE
+#ifdef UNICODE
                        _T("%hs"),
 #else
                        _T("%s"),
 #endif
                        inet_ntoa( IN_ADDR_OF(IpForwardTable->table[i].dwForwardMask) ) );
             _stprintf( Gateway,
-#if UNICODE
+#ifdef UNICODE
                        _T("%hs"),
 #else
                        _T("%s"),
@@ -157,13 +157,13 @@ Error:
 static int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd,
               int argc, TCHAR **argv ) {
     int i;
-#if UNICODE
+#ifdef UNICODE
     char addr[16];
 #endif
 
     if( argc > 1 )
     {
-#if UNICODE
+#ifdef UNICODE
         sprintf( addr, "%ls", argv[0] );
         RowToAdd->dwForwardDest = inet_addr( addr );
 #else
@@ -177,9 +177,9 @@ static int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd,
         if( !_tcscmp( argv[i], _T("mask") ) )
         {
             i++; if( i >= argc ) return FALSE;
-#if UNICODE
+#ifdef UNICODE
             sprintf( addr, "%ls", argv[i] );
-            RowToAdd->dwForwardDest = inet_addr( addr );
+            RowToAdd->dwForwardMask = inet_addr( addr );
 #else
             RowToAdd->dwForwardMask = inet_addr( argv[i] );
 #endif
@@ -193,7 +193,7 @@ static int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd,
         }
         else
         {
-#if UNICODE
+#ifdef UNICODE
             sprintf( addr, "%ls", argv[i] );
             RowToAdd->dwForwardNextHop = inet_addr( addr );
 #else
