@@ -135,10 +135,10 @@ void RPCRT4_DoContextRundownIfNeeded(RpcConnection *Conn)
  */
 RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
 {
-	if(!CContext)
-		RpcRaiseException(ERROR_INVALID_HANDLE);
+  if(!CContext)
+    RpcRaiseException(ERROR_INVALID_HANDLE);
 
-	return (RPC_BINDING_HANDLE)((CContextHandle*)CContext)->Binding;
+  return (RPC_BINDING_HANDLE)((CContextHandle*)CContext)->Binding;
 }
 
 /***********************************************************************
@@ -146,8 +146,8 @@ RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
  */
 void WINAPI NDRCContextMarshall(NDR_CCONTEXT CContext, void *pBuff )
 {
-	CContextHandle *ctx = (CContextHandle*)CContext;
-	memcpy(pBuff, &ctx->Ndr, sizeof(ContextHandleNdr));
+  CContextHandle *ctx = (CContextHandle*)CContext;
+  memcpy(pBuff, &ctx->Ndr, sizeof(ContextHandleNdr));
 }
 
 /***********************************************************************
@@ -157,12 +157,12 @@ void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                      NDR_CCONTEXT ContextHandle,
                                      int fCheck)
 {
-	if(!ContextHandle) 
-		RpcRaiseException(ERROR_INVALID_HANDLE);
+  if(!ContextHandle) 
+    RpcRaiseException(ERROR_INVALID_HANDLE);
 
-	NDRCContextMarshall(ContextHandle, pStubMsg->Buffer);
-	
-	pStubMsg->Buffer += sizeof(ContextHandleNdr);
+  NDRCContextMarshall(ContextHandle, pStubMsg->Buffer);
+
+  pStubMsg->Buffer += sizeof(ContextHandleNdr);
 
 }
 
@@ -174,30 +174,30 @@ void WINAPI NDRCContextUnmarshall(NDR_CCONTEXT *pCContext,
                                   void *pBuff, 
                                   unsigned long DataRepresentation )
 {
-	CContextHandle *ctx = (CContextHandle*)*pCContext;
-	ContextHandleNdr *ndr = (ContextHandleNdr*)pBuff;
-	RPC_STATUS status;
+  CContextHandle *ctx = (CContextHandle*)*pCContext;
+  ContextHandleNdr *ndr = (ContextHandleNdr*)pBuff;
+  RPC_STATUS status;
 
-	if(UuidIsNil(&ndr->uuid, &status)) 
-	{
-		if(ctx)
-		{
-			RPCRT4_DestroyBinding(ctx->Binding);
-			HeapFree(GetProcessHeap(), 0, ctx);
-		}
-		*pCContext = NULL;
-	}
-	else 
-	{
-		ctx = HeapAlloc(GetProcessHeap(), 0, sizeof(CContextHandle));
-		if(!ctx) RpcRaiseException(ERROR_OUTOFMEMORY);
+  if(UuidIsNil(&ndr->uuid, &status)) 
+  {
+    if(ctx)
+    {
+      RPCRT4_DestroyBinding(ctx->Binding);
+      HeapFree(GetProcessHeap(), 0, ctx);
+    }
+    *pCContext = NULL;
+  }
+  else
+  {
+    ctx = HeapAlloc(GetProcessHeap(), 0, sizeof(CContextHandle));
+    if(!ctx) RpcRaiseException(ERROR_OUTOFMEMORY);
 
-		status = RpcBindingCopy(hBinding, (RPC_BINDING_HANDLE*) &ctx->Binding);
-		if(status != RPC_S_OK) RpcRaiseException(status);
-		
-		memcpy(&ctx->Ndr, ndr, sizeof(ContextHandleNdr));
-		*pCContext = (NDR_CCONTEXT)ctx;
-	}
+    status = RpcBindingCopy(hBinding, (RPC_BINDING_HANDLE*) &ctx->Binding);
+    if(status != RPC_S_OK) RpcRaiseException(status);
+
+    memcpy(&ctx->Ndr, ndr, sizeof(ContextHandleNdr));
+    *pCContext = (NDR_CCONTEXT)ctx;
+  }
 }
 
 /***********************************************************************
@@ -207,16 +207,16 @@ void WINAPI NdrClientContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                        NDR_CCONTEXT * pContextHandle,
                                        RPC_BINDING_HANDLE BindHandle)
 {
-  
-	if(!pContextHandle || !BindHandle) 
-		RpcRaiseException(ERROR_INVALID_HANDLE);
-  
-	NDRCContextUnmarshall(pContextHandle,
-		(CContextHandle*)BindHandle,
-		pStubMsg->Buffer, 
-		pStubMsg->RpcMsg->DataRepresentation);
-	
-	pStubMsg->Buffer += sizeof(ContextHandleNdr);
+
+  if(!pContextHandle || !BindHandle) 
+    RpcRaiseException(ERROR_INVALID_HANDLE);
+
+  NDRCContextUnmarshall(pContextHandle,
+  (CContextHandle*)BindHandle,
+  pStubMsg->Buffer, 
+  pStubMsg->RpcMsg->DataRepresentation);
+
+  pStubMsg->Buffer += sizeof(ContextHandleNdr);
 }
 
 /***********************************************************************
@@ -224,16 +224,16 @@ void WINAPI NdrClientContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
  */
 RPC_STATUS WINAPI RpcSmDestroyClientContext(void** ContextHandle)
 {
-	CContextHandle *ctx = (CContextHandle*)ContextHandle;
+  CContextHandle *ctx = (CContextHandle*)ContextHandle;
 
-	if(!ctx)
-		return RPC_X_SS_CONTEXT_MISMATCH;
+  if(!ctx)
+    return RPC_X_SS_CONTEXT_MISMATCH;
 
-	RPCRT4_DestroyBinding(ctx->Binding);
-	HeapFree(GetProcessHeap(), 0, ctx);
-	*ContextHandle = NULL;
+  RPCRT4_DestroyBinding(ctx->Binding);
+  HeapFree(GetProcessHeap(), 0, ctx);
+  *ContextHandle = NULL;
 
-	return RPC_S_OK;
+  return RPC_S_OK;
 }
 
 /***********************************************************************
@@ -241,12 +241,12 @@ RPC_STATUS WINAPI RpcSmDestroyClientContext(void** ContextHandle)
  */
 void WINAPI RpcSsDestroyClientContext(void** ContextHandle)
 {
-	RPC_STATUS status;
+  RPC_STATUS status;
 
-	status = RpcSmDestroyClientContext(ContextHandle);
+  status = RpcSmDestroyClientContext(ContextHandle);
 
-	if(status != RPC_S_OK) 
-		RpcRaiseException(status);
+  if(status != RPC_S_OK) 
+    RpcRaiseException(status);
 }
 
 /***********************************************************************
@@ -256,7 +256,7 @@ void WINAPI NdrContextHandleSize(PMIDL_STUB_MESSAGE pStubMsg,
                                  unsigned char* pMemory,
                                  PFORMAT_STRING pFormat)
 {
-    FIXME("(%p, %p, %p): stub\n", pStubMsg, pMemory, pFormat);
+  FIXME("(%p, %p, %p): stub\n", pStubMsg, pMemory, pFormat);
 }
 
 /***********************************************************************
@@ -265,8 +265,8 @@ void WINAPI NdrContextHandleSize(PMIDL_STUB_MESSAGE pStubMsg,
 NDR_SCONTEXT WINAPI NdrContextHandleInitialize(PMIDL_STUB_MESSAGE pStubMsg,
                                                PFORMAT_STRING pFormat)
 {
-    FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
-    return NULL;
+  FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
+  return NULL;
 }
 
 /***********************************************************************
@@ -281,7 +281,7 @@ void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
   
   if(!ContextHandle) 
     RpcRaiseException(ERROR_INVALID_HANDLE);
-    
+
   Hdl = (SContextHandle*)ContextHandle;
   Binding = (RpcBinding*)pStubMsg->RpcMsg->Handle;
   Hdl->Rundown = RundownRoutine;
@@ -296,7 +296,7 @@ void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 NDR_SCONTEXT WINAPI NdrServerContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg)
 {
   SContextHandle *Hdl;
-  
+
   Hdl = RPCRT4_SrvUnmarshallCtxHdl((ContextHandleNdr*)pStubMsg->Buffer);
   return (NDR_SCONTEXT)Hdl;
 }
@@ -309,7 +309,7 @@ void WINAPI NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                         NDR_RUNDOWN RundownRoutine,
                                         PFORMAT_STRING pFormat)
 {
-    FIXME("(%p, %p, %p, %p): stub\n", pStubMsg, ContextHandle, RundownRoutine, pFormat);
+  FIXME("(%p, %p, %p, %p): stub\n", pStubMsg, ContextHandle, RundownRoutine, pFormat);
 }
 
 /***********************************************************************
@@ -318,8 +318,8 @@ void WINAPI NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
 NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
                                                   PFORMAT_STRING pFormat)
 {
-    FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
-    return NULL;
+  FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
+  return NULL;
 }
 
 /***********************************************************************
@@ -345,7 +345,7 @@ void WINAPI NDRSContextMarshall(IN NDR_SCONTEXT CContext,
 NDR_SCONTEXT WINAPI NDRSContextUnmarshall(IN void *pBuff,
                                           IN unsigned long DataRepresentation)
 {
-	return (NDR_SCONTEXT) RPCRT4_SrvUnmarshallCtxHdl((ContextHandleNdr*)pBuff);
+  return (NDR_SCONTEXT) RPCRT4_SrvUnmarshallCtxHdl((ContextHandleNdr*)pBuff);
 }
 
 /***********************************************************************
@@ -356,7 +356,7 @@ void WINAPI NDRSContextMarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
                                   OUT void *pBuff,
                                   IN NDR_RUNDOWN userRunDownIn)
 {
-	FIXME("stub\n");
+  FIXME("stub\n");
 }
 
 /***********************************************************************
@@ -366,6 +366,6 @@ NDR_SCONTEXT WINAPI NDRSContextUnmarshallEx(IN RPC_BINDING_HANDLE BindingHandle,
                                             IN void *pBuff,
                                             IN unsigned long DataRepresentation)
 {
-	FIXME("stub\n");
-	return NULL;
+  FIXME("stub\n");
+  return NULL;
 }
