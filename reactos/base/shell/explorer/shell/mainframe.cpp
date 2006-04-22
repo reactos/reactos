@@ -37,6 +37,7 @@ extern HWND create_webchildwindow(const WebChildWndInfo& info);
 
 #include "../dialogs/settings.h"	// for MdiSdiDlg
 
+//#define _NO_REBAR
 
 HWND MainFrameBase::Create(const ExplorerCmd& cmd)
 {
@@ -787,12 +788,13 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 		extraBtns.iBitmap = 8;
 		SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 	}
-
+#ifndef _ROS_ // don't insert reg button for ROS. Regedit should be used.
 	 // insert Registry button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Reg.\0"));
 	extraBtns.idCommand = ID_DRIVE_REGISTRY;
 	extraBtns.iBitmap = 9;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
+#endif
 
 #ifdef _DEBUG
 	 // insert FAT direct file system access button
