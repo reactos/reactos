@@ -122,7 +122,10 @@ GetPossibleSettings(IN LPTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTIN
 			Current->dmBitsPerPel = devmode.dmBitsPerPel;
 			while (Next != NULL && (
 			       Next->dmPelsHeight < Current->dmPelsHeight ||
-			       (Next->dmPelsHeight == Current->dmPelsHeight && Next->dmBitsPerPel < Current->dmBitsPerPel)))
+			       (Next->dmPelsHeight == Current->dmPelsHeight && Next->dmBitsPerPel < Current->dmBitsPerPel) ||
+			       (Next->dmPelsHeight == Current->dmPelsHeight && 
+			        Next->dmBitsPerPel == Current->dmBitsPerPel &&
+			        Next->dmPelsWidth < Current->dmPelsWidth)))
 			{
 				Previous = Next;
 				Next = Next->Flink;
