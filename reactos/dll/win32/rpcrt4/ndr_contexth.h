@@ -26,22 +26,22 @@
 
 typedef struct _ContextHandleNdr
 {
-	UINT attributes;
-	UUID uuid;
+  UINT attributes;
+  UUID uuid;
 } ContextHandleNdr;
 
 typedef struct _CContextHandle
 {
-	RpcBinding *Binding;
-	ContextHandleNdr Ndr;
+  RpcBinding *Binding;
+  ContextHandleNdr Ndr;
 } CContextHandle;
 
 /*
    Keep this structure compatible with public rpcndr.h 
    declaration, otherwise NDRSContextValue macro won't work.
    typedef struct {
-	  void *pad[2];
-	  void *userContext;
+      void *pad[2];
+      void *userContext;
    } *NDR_SCONTEXT;
 */
 

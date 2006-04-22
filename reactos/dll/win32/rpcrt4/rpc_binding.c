@@ -599,34 +599,34 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
   RPC_BINDING_HANDLE SourceBinding,
   RPC_BINDING_HANDLE* DestinationBinding)
 {
-	TRACE("RpcBindingCopy called\n");	
-	RpcBinding *DestBinding = 0, *SrcBinding = (RpcBinding*)SourceBinding;
+  TRACE("RpcBindingCopy(%p, %p) called:\n", SourceBinding, DestinationBinding);
+  RpcBinding *DestBinding = 0, *SrcBinding = (RpcBinding*)SourceBinding;
 
-	if(SrcBinding->server)
-	{
-		*DestinationBinding = NULL;
-		return RPC_S_WRONG_KIND_OF_BINDING;
-	}
+  if(SrcBinding->server)
+  {
+    *DestinationBinding = NULL;
+    return RPC_S_WRONG_KIND_OF_BINDING;
+  }
   
-	DestBinding = (RpcBinding*)
-		HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RpcBinding));
+  DestBinding = (RpcBinding*)
+    HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RpcBinding));
 
-	if(!DestBinding)
-	{
-		*DestinationBinding = NULL;
-		return ERROR_NOT_ENOUGH_MEMORY;
-	}
+  if(!DestBinding)
+  {
+    *DestinationBinding = NULL;
+    return ERROR_NOT_ENOUGH_MEMORY;
+  }
   
-	memcpy(DestBinding, SrcBinding, sizeof(RpcBinding));
-	DestBinding->refs = 1;
-	DestBinding->Next = NULL; // FIXME: ?
-	DestBinding->server = FALSE;
-	DestBinding->Protseq = RPCRT4_strndupA(SrcBinding->Protseq, -1);
-	DestBinding->NetworkAddr = RPCRT4_strndupA(SrcBinding->NetworkAddr, -1);
-	DestBinding->Endpoint = RPCRT4_strndupA(SrcBinding->Endpoint, -1);
-  
-	*DestinationBinding = DestBinding;
-	return RPC_S_OK;
+  memcpy(DestBinding, SrcBinding, sizeof(RpcBinding));
+  DestBinding->refs = 1;
+  DestBinding->Next = NULL; // FIXME: ?
+  DestBinding->server = FALSE;
+  DestBinding->Protseq = RPCRT4_strndupA(SrcBinding->Protseq, -1);
+  DestBinding->NetworkAddr = RPCRT4_strndupA(SrcBinding->NetworkAddr, -1);
+  DestBinding->Endpoint = RPCRT4_strndupA(SrcBinding->Endpoint, -1);
+
+  *DestinationBinding = DestBinding;
+  return RPC_S_OK;
 }
 
 /***********************************************************************
