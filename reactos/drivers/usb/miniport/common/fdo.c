@@ -455,7 +455,7 @@ UsbMpInternalDeviceControlFdo(
 					&DevExt->KeyboardIndicators,
 					sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
 
-				Irp->IoStatus.Status = STATUS_SUCCESS;
+				Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 				break;
 		case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
 			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_TYPEMATIC\n");
@@ -527,7 +527,7 @@ UsbMpInternalDeviceControlFdo(
 					&IndicatorTranslation,
 					sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION));*/
 
-				Irp->IoStatus.Status = STATUS_SUCCESS;
+				Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 				break;
 		case IOCTL_INTERNAL_I8042_HOOK_KEYBOARD:
 			/* Nothing to do here */

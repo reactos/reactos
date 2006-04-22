@@ -322,9 +322,7 @@ IrpStub(
 	{
 		DPRINT1("USBMP: FDO stub for major function 0x%lx\n",
 			IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-#ifndef NDEBUG
-		DbgBreakPoint();
-#endif
+		ASSERT(FALSE);
 		return ForwardIrpAndForget(DeviceObject, Irp);
 	}
 	else
@@ -334,9 +332,7 @@ IrpStub(
 		 */
 		DPRINT1("USBMP: PDO stub for major function 0x%lx\n",
 			IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-#ifndef NDEBUG
-		DbgBreakPoint();
-#endif
+		ASSERT(FALSE);
 	}
 
 	Status = Irp->IoStatus.Status;
