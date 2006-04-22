@@ -284,7 +284,6 @@ CreateClassDeviceObject(
 	OUT PDEVICE_OBJECT *ClassDO OPTIONAL)
 {
 	PCLASS_DRIVER_EXTENSION DriverExtension;
-	UNICODE_STRING SymbolicLinkName = RTL_CONSTANT_STRING(L"\\??\\Keyboard");
 	ULONG DeviceId = 0;
 	ULONG PrefixLength;
 	UNICODE_STRING DeviceNameU;
@@ -373,10 +372,6 @@ cleanup:
 		REG_SZ,
 		DriverExtension->RegistryPath.Buffer,
 		DriverExtension->RegistryPath.MaximumLength);
-
-	/* HACK: 1st stage setup needs a keyboard to open it in user-mode
-	 * Create a link to user space... */
-	IoCreateSymbolicLink(&SymbolicLinkName, &DeviceNameU);
 
 	ExFreePool(DeviceNameU.Buffer);
 
@@ -597,7 +592,6 @@ ClassAddDevice(
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-		ObDereferenceObject(Fdo);
 		goto cleanup;
 	}
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;

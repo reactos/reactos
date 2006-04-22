@@ -569,7 +569,6 @@ ClassAddDevice(
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("ConnectPortDriver() failed with status 0x%08lx\n", Status);
-		ObDereferenceObject(Fdo);
 		goto cleanup;
 	}
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;

@@ -52,17 +52,16 @@ ConGetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInf
 NTSTATUS
 ConAllocConsole(VOID)
 {
+  UNICODE_STRING ScreenName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
+  UNICODE_STRING KeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
-  UNICODE_STRING Name;
   NTSTATUS Status;
   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
   /* Open the screen */
-  RtlInitUnicodeString(&Name,
-		       L"\\??\\BlueScreen");
   InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
+			     &ScreenName,
 			     0,
 			     NULL,
 			     NULL);
@@ -76,10 +75,8 @@ ConAllocConsole(VOID)
     return(Status);
 
   /* Open the keyboard */
-  RtlInitUnicodeString(&Name,
-		       L"\\??\\Keyboard");
   InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
+			     &KeyboardName,
 			     0,
 			     NULL,
 			     NULL);
