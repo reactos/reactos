@@ -3,16 +3,13 @@
 #include <ntddser.h>
 #include <ntddmou.h>
 
-#if defined(__GNUC__)
-  #include <stdio.h>
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER)
+  /* Missing prototype */
   NTSTATUS NTAPI
   IoAttachDeviceToDeviceStackSafe(
     IN PDEVICE_OBJECT SourceDevice,
     IN PDEVICE_OBJECT TargetDevice,
     OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-#else
-  #error Unknown compiler!
 #endif
 
 typedef enum
@@ -57,10 +54,7 @@ typedef enum
 
 typedef struct _SERMOUSE_DRIVER_EXTENSION
 {
-	ULONG MouseDataQueueSize;
 	ULONG NumberOfButtons;
-	UNICODE_STRING PointerDeviceBaseName;
-	ULONG SampleRate;
 } SERMOUSE_DRIVER_EXTENSION, *PSERMOUSE_DRIVER_EXTENSION;
 
 typedef struct _SERMOUSE_DEVICE_EXTENSION
@@ -76,7 +70,7 @@ typedef struct _SERMOUSE_DEVICE_EXTENSION
 	ULONG ActiveQueue;
 	ULONG InputDataCount[2];
 	CONNECT_DATA ConnectData;
-	MOUSE_INPUT_DATA* MouseInputData[2];
+	MOUSE_INPUT_DATA MouseInputData[2];
 	UCHAR PacketBuffer[PACKET_BUFFER_SIZE];
 	ULONG PacketBufferPosition;
 	ULONG PreviousButtons;

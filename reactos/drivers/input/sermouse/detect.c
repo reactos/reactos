@@ -1,12 +1,11 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Serial mouse driver
- * FILE:            drivers/input/sermouse/detect.c
- * PURPOSE:         Detect serial mouse type
- *
- * PROGRAMMERS:     Jason Filby (jasonfilby@yahoo.com)
- *                  Filip Navara (xnavara@volny.cz)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS Serial mouse driver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/input/sermouse/detect.c
+ * PURPOSE:     Detect serial mouse type
+ * PROGRAMMERS: Copyright Jason Filby (jasonfilby@yahoo.com)
+                Copyright Filip Navara (xnavara@volny.cz)
+                Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -17,7 +16,7 @@
 /* Most of this file is ripped from reactos/drivers/bus/serenum/detect.c */
 
 static NTSTATUS
-SermouseDeviceIoControl(
+DeviceIoControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN ULONG CtlCode,
 	IN PVOID InputBuffer OPTIONAL,
@@ -65,7 +64,7 @@ SermouseDeviceIoControl(
 }
 
 static NTSTATUS
-SermouseSendIrp(
+SendIrp(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN ULONG MajorFunction)
 {
@@ -140,7 +139,8 @@ ReadBytes(
 }
 
 static NTSTATUS
-SermouseWait(ULONG milliseconds)
+Wait(
+	IN ULONG milliseconds)
 {
 	KTIMER Timer;
 	LARGE_INTEGER DueTime;
@@ -165,16 +165,18 @@ SermouseDetectLegacyDevice(
 	SERMOUSE_MOUSE_TYPE MouseType = mtNone;
 	NTSTATUS Status;
 
+	DPRINT("SermouseDetectLegacyDevice(LowerDevice %p)\n", LowerDevice);
+
 	RtlZeroMemory(Buffer, sizeof(Buffer));
 
 	/* Open port */
-	Status = SermouseSendIrp(LowerDevice, IRP_MJ_CREATE);
+	Status = SendIrp(LowerDevice, IRP_MJ_CREATE);
 	if (!NT_SUCCESS(Status)) return mtNone;
 
 	/* Reset UART */
 	CHECKPOINT;
 	Mcr = 0; /* MCR: DTR/RTS/OUT2 off */
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
 		&Mcr, sizeof(Mcr), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
@@ -182,57 +184,47 @@ SermouseDetectLegacyDevice(
 	CHECKPOINT;
 	/* DLAB off */
 	Fcr = 0;
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
 		&Fcr, sizeof(Fcr), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	/* Set serial port speed */
 	BaudRate = 1200;
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
 		&BaudRate, sizeof(BaudRate), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	/* Set LCR */
 	LCR.WordLength = 7;
 	LCR.Parity = NO_PARITY;
 	LCR.StopBits = STOP_BITS_2;
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_LINE_CONTROL,
 		&LCR, sizeof(LCR), NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-
-	/* Disable DTR/RTS */
-	CHECKPOINT;
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_DTR,
-		NULL, 0, NULL, NULL);
-	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_CLR_RTS,
-		NULL, 0, NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Flush receive buffer */
 	CHECKPOINT;
 	Command = SERIAL_PURGE_RXCLEAR;
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
 		&Command, sizeof(Command), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	/* Wait 100 ms */
-	SermouseWait(100);
+	Wait(100);
 
 	/* Enable DTR/RTS */
 	CHECKPOINT;
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
 		NULL, 0, NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	SermouseWait(200);
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_RTS,
 		NULL, 0, NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Set timeout to 500 microseconds */
 	CHECKPOINT;
-	Timeouts.ReadIntervalTimeout = 0;
+	Timeouts.ReadIntervalTimeout = 100;
 	Timeouts.ReadTotalTimeoutMultiplier = 0;
 	Timeouts.ReadTotalTimeoutConstant = 500;
 	Timeouts.WriteTotalTimeoutMultiplier = Timeouts.WriteTotalTimeoutConstant = 0;
-	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
+	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_TIMEOUTS,
 		&Timeouts, sizeof(Timeouts), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
@@ -276,7 +268,7 @@ SermouseDetectLegacyDevice(
 
 ByeBye:
 	/* Close port */
-	SermouseSendIrp(LowerDevice, IRP_MJ_CLOSE);
-	SermouseSendIrp(LowerDevice, IRP_MJ_CLEANUP);
+	SendIrp(LowerDevice, IRP_MJ_CLOSE);
+	SendIrp(LowerDevice, IRP_MJ_CLEANUP);
 	return MouseType;
 }

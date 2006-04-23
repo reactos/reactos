@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Serial mouse driver
- * FILE:            drivers/input/sermouse/misc.c
- * PURPOSE:         Misceallenous operations
- *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS Serial mouse driver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/input/sermouse/fdo.c
+ * PURPOSE:     Misceallenous operations
+ * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG

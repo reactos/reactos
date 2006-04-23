@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Serial mouse driver
- * FILE:            drivers/input/sermouse/sermouse.c
- * PURPOSE:         Serial mouse driver entry point
- *
-  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS Serial mouse driver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/input/sermouse/fdo.c
+ * PURPOSE:     Serial mouse driver entry point
+ * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -36,13 +35,10 @@ ReadRegistryEntries(
 	IN PSERMOUSE_DRIVER_EXTENSION DriverExtension)
 {
 	UNICODE_STRING ParametersRegistryKey;
-	RTL_QUERY_REGISTRY_TABLE Parameters[5];
+	RTL_QUERY_REGISTRY_TABLE Parameters[2];
 	NTSTATUS Status;
 
-	ULONG DefaultMouseDataQueueSize = 0x64;
-	ULONG DefaultNumberOfButtons = 0;
-	UNICODE_STRING DefaultPointerDeviceBaseName = RTL_CONSTANT_STRING(L"PointerPort");
-	ULONG DefaultSampleRate = 1200;
+	ULONG DefaultNumberOfButtons = 2;
 
 	ParametersRegistryKey.Length = 0;
 	ParametersRegistryKey.MaximumLength = RegistryPath->Length + sizeof(L"\\Parameters") + sizeof(UNICODE_NULL);
@@ -59,32 +55,11 @@ ReadRegistryEntries(
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
 	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
-	Parameters[0].Name = L"MouseDataQueueSize";
-	Parameters[0].EntryContext = &DriverExtension->MouseDataQueueSize;
+	Parameters[0].Name = L"NumberOfButtons";
+	Parameters[0].EntryContext = &DriverExtension->NumberOfButtons;
 	Parameters[0].DefaultType = REG_DWORD;
-	Parameters[0].DefaultData = &DefaultMouseDataQueueSize;
+	Parameters[0].DefaultData = &DefaultNumberOfButtons;
 	Parameters[0].DefaultLength = sizeof(ULONG);
-
-	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
-	Parameters[1].Name = L"NumberOfButtons";
-	Parameters[1].EntryContext = &DriverExtension->NumberOfButtons;
-	Parameters[1].DefaultType = REG_DWORD;
-	Parameters[1].DefaultData = &DefaultNumberOfButtons;
-	Parameters[1].DefaultLength = sizeof(ULONG);
-
-	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
-	Parameters[2].Name = L"PointerDeviceBaseName";
-	Parameters[2].EntryContext = &DriverExtension->PointerDeviceBaseName;
-	Parameters[2].DefaultType = REG_SZ;
-	Parameters[2].DefaultData = &DefaultPointerDeviceBaseName;
-	Parameters[2].DefaultLength = 0;
-
-	Parameters[3].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
-	Parameters[3].Name = L"SampleRate";
-	Parameters[3].EntryContext = &DriverExtension->SampleRate;
-	Parameters[3].DefaultType = REG_DWORD;
-	Parameters[3].DefaultData = &DefaultSampleRate;
-	Parameters[3].DefaultLength = sizeof(ULONG);
 
 	Status = RtlQueryRegistryValues(
 		RTL_REGISTRY_ABSOLUTE,
@@ -96,21 +71,12 @@ ReadRegistryEntries(
 	if (NT_SUCCESS(Status))
 	{
 		/* Check values */
-		if (DriverExtension->MouseDataQueueSize == 0)
-		{
-			DriverExtension->MouseDataQueueSize = DefaultMouseDataQueueSize;
-		}
 	}
 	else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
 	{
 		/* Registry path doesn't exist. Set defaults */
-		DriverExtension->MouseDataQueueSize = DefaultMouseDataQueueSize;
 		DriverExtension->NumberOfButtons = DefaultNumberOfButtons;
-		Status = RtlDuplicateUnicodeString(
-			RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-			&DefaultPointerDeviceBaseName,
-			&DriverExtension->PointerDeviceBaseName);
-		DriverExtension->SampleRate = DefaultSampleRate;
+		Status = STATUS_SUCCESS;
 	}
 
 	return Status;

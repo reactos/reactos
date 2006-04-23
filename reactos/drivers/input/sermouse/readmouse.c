@@ -1,12 +1,11 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Serial mouse driver
- * FILE:            drivers/input/sermouse/readmouse.c
- * PURPOSE:         Read mouse moves and send them to mouclass
- *
- * PROGRAMMERS:     Jason Filby (jasonfilby@yahoo.com)
- *                  Filip Navara (xnavara@volny.cz)
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS Serial mouse driver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/input/sermouse/fdo.c
+ * PURPOSE:     Read mouse moves and send them to mouclass
+ * PROGRAMMERS: Copyright Jason Filby (jasonfilby@yahoo.com)
+                Copyright Filip Navara (xnavara@volny.cz)
+                Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -106,7 +105,7 @@ SermouseDeviceWorker(
 		&Fcr, sizeof(Fcr), NULL, NULL);
 	if (!NT_SUCCESS(Status)) PsTerminateSystemThread(Status);
 	/* Set serial port speed */
-	BaudRate = DeviceExtension->DriverExtension->SampleRate;
+	BaudRate = DeviceExtension->AttributesInformation.SampleRate * 8;
 	Status = SermouseDeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_BAUD_RATE,
 		&BaudRate, sizeof(BaudRate), NULL, NULL);
 	if (!NT_SUCCESS(Status)) PsTerminateSystemThread(Status);
@@ -187,10 +186,10 @@ SermouseDeviceWorker(
 				Queue = DeviceExtension->ActiveQueue % 2;
 
 				/* Prevent buffer overflow */
-				if (DeviceExtension->InputDataCount[Queue] == DeviceExtension->DriverExtension->MouseDataQueueSize)
+				if (DeviceExtension->InputDataCount[Queue] == 1)
 					continue;
 
-				Input = &DeviceExtension->MouseInputData[Queue][DeviceExtension->InputDataCount[Queue]];
+				Input = &DeviceExtension->MouseInputData[Queue];
 
 				if (DeviceExtension->PacketBufferPosition == 3)
 				{
@@ -261,8 +260,8 @@ SermouseDeviceWorker(
 				InterlockedIncrement((PLONG)&DeviceExtension->ActiveQueue);
 				(*(PSERVICE_CALLBACK_ROUTINE)DeviceExtension->ConnectData.ClassService)(
 					DeviceExtension->ConnectData.ClassDeviceObject,
-					DeviceExtension->MouseInputData[Queue],
-					DeviceExtension->MouseInputData[Queue] + 1,
+					&DeviceExtension->MouseInputData[Queue],
+					&DeviceExtension->MouseInputData[Queue] + 1,
 					&DeviceExtension->InputDataCount[Queue]);
 				KeLowerIrql(OldIrql);
 				DeviceExtension->InputDataCount[Queue] = 0;

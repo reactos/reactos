@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Serial mouse driver
- * FILE:            drivers/input/sermouse/internaldevctl.c
- * PURPOSE:         IRP_MJ_INTERNAL_DEVICE_CONTROL operations
- *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS Serial mouse driver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/input/sermouse/fdo.c
+ * PURPOSE:     IRP_MJ_INTERNAL_DEVICE_CONTROL operations
+ * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -31,16 +30,7 @@ SermouseInternalDeviceControl(
 			DPRINT("IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_MOUSE_CONNECT\n");
 			DeviceExtension->ConnectData =
 				*((PCONNECT_DATA)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
-
-			/* Start read loop */
-			Status = PsCreateSystemThread(
-				&DeviceExtension->WorkerThreadHandle,
-				(ACCESS_MASK)0L,
-				NULL,
-				NULL,
-				NULL,
-				SermouseDeviceWorker,
-				DeviceObject);
+			Status = STATUS_SUCCESS;
 			break;
 		}
 		case IOCTL_INTERNAL_MOUSE_DISCONNECT:
@@ -61,7 +51,9 @@ SermouseInternalDeviceControl(
 					DeviceExtension->AttributesInformation;
 				Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
 				Status = STATUS_SUCCESS;
-			} else {
+			}
+			else
+			{
 				Status = STATUS_BUFFER_TOO_SMALL;
 			}
 			break;
@@ -70,6 +62,7 @@ SermouseInternalDeviceControl(
 		{
 			DPRINT1("IRP_MJ_INTERNAL_DEVICE_CONTROL / unknown ioctl code 0x%lx\n",
 				Stack->Parameters.DeviceIoControl.IoControlCode);
+			ASSERT(FALSE);
 			Status = STATUS_INVALID_DEVICE_REQUEST;
 			break;
 		}

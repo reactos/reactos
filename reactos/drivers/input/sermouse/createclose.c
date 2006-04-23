@@ -1,21 +1,15 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Serial mouse driver
- * FILE:            drivers/input/sermouse/fdo.c
- * PURPOSE:         IRP_MJ_CREATE and IRP_MJ_CLOSE operations
- *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROJECT:     ReactOS Serial mouse driver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/input/sermouse/createclose.c
+ * PURPOSE:     IRP_MJ_CREATE and IRP_MJ_CLOSE operations
+ * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
 #include <debug.h>
 
 #include "sermouse.h"
-
-NTSTATUS NTAPI
-SermouseStartDevice(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp); /* FIXME: remove the declaration */
 
 NTSTATUS NTAPI
 SermouseCreate(
