@@ -5470,6 +5470,109 @@ cleanup:
     return ret;
 }
 
+static BOOL
+GetHardwareAndCompatibleIDsLists(
+    IN HDEVINFO DeviceInfoSet,
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData,
+    OUT LPWSTR *pHardwareIDs OPTIONAL,
+    OUT LPDWORD pHardwareIDsRequiredSize OPTIONAL,
+    OUT LPWSTR *pCompatibleIDs OPTIONAL,
+    OUT LPDWORD pCompatibleIDsRequiredSize OPTIONAL)
+{
+    LPWSTR HardwareIDs = NULL;
+    LPWSTR CompatibleIDs = NULL;
+    DWORD RequiredSize;
+    BOOL Result;
+
+    /* Get hardware IDs list */
+    Result = FALSE;
+    RequiredSize = 512; /* Initial buffer size */
+    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        MyFree(HardwareIDs);
+        HardwareIDs = MyMalloc(RequiredSize);
+        if (!HardwareIDs)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto done;
+        }
+        Result = SetupDiGetDeviceRegistryPropertyW(
+            DeviceInfoSet,
+            DeviceInfoData,
+            SPDRP_HARDWAREID,
+            NULL,
+            (PBYTE)HardwareIDs,
+            RequiredSize,
+            &RequiredSize);
+    }
+    if (!Result)
+    {
+        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            /* No hardware ID for this device */
+            MyFree(HardwareIDs);
+            HardwareIDs = NULL;
+            RequiredSize = 0;
+        }
+        else
+            goto done;
+    }
+    if (pHardwareIDs)
+        *pHardwareIDs = HardwareIDs;
+    if (pHardwareIDsRequiredSize)
+        *pHardwareIDsRequiredSize = RequiredSize;
+
+    /* Get compatible IDs list */
+    Result = FALSE;
+    RequiredSize = 512; /* Initial buffer size */
+    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        MyFree(CompatibleIDs);
+        CompatibleIDs = MyMalloc(RequiredSize);
+        if (!CompatibleIDs)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto done;
+        }
+        Result = SetupDiGetDeviceRegistryPropertyW(
+            DeviceInfoSet,
+            DeviceInfoData,
+            SPDRP_COMPATIBLEIDS,
+            NULL,
+            (PBYTE)CompatibleIDs,
+            RequiredSize,
+            &RequiredSize);
+    }
+    if (!Result)
+    {
+        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            /* No compatible ID for this device */
+            MyFree(CompatibleIDs);
+            CompatibleIDs = NULL;
+            RequiredSize = 0;
+        }
+        else
+            goto done;
+    }
+    if (pCompatibleIDs)
+        *pCompatibleIDs = CompatibleIDs;
+    if (pCompatibleIDsRequiredSize)
+        *pCompatibleIDsRequiredSize = RequiredSize;
+
+    Result = TRUE;
+
+done:
+    if (!Result)
+    {
+        MyFree(HardwareIDs);
+        MyFree(CompatibleIDs);
+    }
+    return Result;
+}
+
 /***********************************************************************
  *		SetupDiBuildDriverInfoList (SETUPAPI.@)
  */
@@ -5528,62 +5631,21 @@ SetupDiBuildDriverInfoList(
 
         if (DriverType == SPDIT_COMPATDRIVER)
         {
-            /* Get hardware IDs list */
-            Result = FALSE;
-            RequiredSize = 512; /* Initial buffer size */
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-            {
-                HeapFree(GetProcessHeap(), 0, HardwareIDs);
-                HardwareIDs = HeapAlloc(GetProcessHeap(), 0, RequiredSize);
-                if (!HardwareIDs)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto done;
-                }
-                Result = SetupDiGetDeviceRegistryPropertyW(
-                    DeviceInfoSet,
-                    DeviceInfoData,
-                    SPDRP_HARDWAREID,
-                    NULL,
-                    (PBYTE)HardwareIDs,
-                    RequiredSize,
-                    &RequiredSize);
-            }
+            /* Get hardware and compatible IDs lists */
+            Result = GetHardwareAndCompatibleIDsLists(
+                DeviceInfoSet,
+                DeviceInfoData,
+                &HardwareIDs,
+                NULL,
+                &CompatibleIDs,
+                NULL);
             if (!Result)
                 goto done;
-
-            /* Get compatible IDs list */
-            Result = FALSE;
-            RequiredSize = 512; /* Initial buffer size */
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            if (!HardwareIDs && !CompatibleIDs)
             {
-                HeapFree(GetProcessHeap(), 0, CompatibleIDs);
-                CompatibleIDs = HeapAlloc(GetProcessHeap(), 0, RequiredSize);
-                if (!CompatibleIDs)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto done;
-                }
-                Result = SetupDiGetDeviceRegistryPropertyW(
-                    DeviceInfoSet,
-                    DeviceInfoData,
-                    SPDRP_COMPATIBLEIDS,
-                    NULL,
-                    (PBYTE)CompatibleIDs,
-                    RequiredSize,
-                    &RequiredSize);
-                if (!Result && GetLastError() == ERROR_FILE_NOT_FOUND)
-                {
-                    /* No compatible ID for this device */
-                    HeapFree(GetProcessHeap(), 0, CompatibleIDs);
-                    CompatibleIDs = NULL;
-                    Result = TRUE;
-                }
-            }
-            if (!Result)
+                SetLastError(ERROR_FILE_NOT_FOUND);
                 goto done;
+            }
         }
 
         if (InstallParams.Flags & DI_ENUMSINGLEINF)
@@ -5906,8 +5968,8 @@ done:
 
     HeapFree(GetProcessHeap(), 0, ProviderName);
     HeapFree(GetProcessHeap(), 0, ManufacturerName);
-    HeapFree(GetProcessHeap(), 0, HardwareIDs);
-    HeapFree(GetProcessHeap(), 0, CompatibleIDs);
+    MyFree(HardwareIDs);
+    MyFree(CompatibleIDs);
     HeapFree(GetProcessHeap(), 0, FullInfFileName);
     HeapFree(GetProcessHeap(), 0, ExcludeFromSelect);
     if (currentInfFileDetails)
@@ -6862,16 +6924,88 @@ SetupDiGetDriverInfoDetailW(
     else
     {
         struct DriverInfoElement *driverInfoElement;
+        LPWSTR HardwareIDs = NULL;
+        LPWSTR CompatibleIDs = NULL;
+        LPWSTR pBuffer = NULL;
+        LPCWSTR DeviceID = NULL;
+        ULONG HardwareIDsSize, CompatibleIDsSize;
+        ULONG sizeNeeded, sizeLeft, size;
+        BOOL Result;
+
         driverInfoElement = (struct DriverInfoElement *)DriverInfoData->Reserved;
+
+        /* Get hardware and compatible IDs lists */
+        Result = GetHardwareAndCompatibleIDsLists(
+            DeviceInfoSet,
+            DeviceInfoData,
+            &HardwareIDs, &HardwareIDsSize,
+            &CompatibleIDs, &CompatibleIDsSize);
+        if (!Result)
+            goto done;
+
+        sizeNeeded = FIELD_OFFSET(SP_DRVINFO_DETAIL_DATA_W, HardwareID)
+            + HardwareIDsSize + CompatibleIDsSize;
+        if (RequiredSize)
+            *RequiredSize = sizeNeeded;
+
+        if (!DriverInfoDetailData)
+        {
+            ret = TRUE;
+            goto done;
+        }
 
         memcpy(
             DriverInfoDetailData,
             &driverInfoElement->Details,
             driverInfoElement->Details.cbSize);
-        /* FIXME: copy HardwareIDs/CompatibleIDs if buffer is big enough
-         * Don't forget to set CompatIDsOffset and CompatIDsLength fields.
-         */
-        ret = TRUE;
+        DriverInfoDetailData->CompatIDsOffset = 0;
+        DriverInfoDetailData->CompatIDsLength = 0;
+
+        sizeLeft = (DriverInfoDetailDataSize - FIELD_OFFSET(SP_DRVINFO_DETAIL_DATA_W, HardwareID)) / sizeof(WCHAR);
+        pBuffer = DriverInfoDetailData->HardwareID;
+        /* Add as many as possible HardwareIDs in the list */
+        DeviceID = HardwareIDs;
+        while (DeviceID && *DeviceID && (size = wcslen(DeviceID)) + 1 < sizeLeft)
+        {
+            TRACE("Adding %S to list\n", DeviceID);
+            wcscpy(pBuffer, DeviceID);
+            DeviceID += size + 1;
+            pBuffer += size + 1;
+            sizeLeft -= size + 1;
+            DriverInfoDetailData->CompatIDsOffset += size + 1;
+        }
+        if (sizeLeft > 0)
+        {
+            *pBuffer = UNICODE_NULL;
+            sizeLeft--;
+            DriverInfoDetailData->CompatIDsOffset++;
+        }
+        /* Add as many as possible CompatibleIDs in the list */
+        DeviceID = CompatibleIDs;
+        while (DeviceID && *DeviceID && (size = wcslen(DeviceID)) + 1 < sizeLeft)
+        {
+            TRACE("Adding %S to list\n", DeviceID);
+            wcscpy(pBuffer, DeviceID);
+            DeviceID += size + 1;
+            pBuffer += size + 1;
+            sizeLeft -= size + 1;
+            DriverInfoDetailData->CompatIDsLength += size + 1;
+        }
+        if (sizeLeft > 0)
+        {
+            *pBuffer = UNICODE_NULL;
+            sizeLeft--;
+            DriverInfoDetailData->CompatIDsLength++;
+        }
+
+        if (sizeNeeded > DriverInfoDetailDataSize)
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        else
+            ret = TRUE;
+
+done:
+        MyFree(HardwareIDs);
+        MyFree(CompatibleIDs);
     }
 
     TRACE("Returning %d\n", ret);

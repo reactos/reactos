@@ -41,6 +41,10 @@
 #include "rpc_private.h"
 #include "resource.h"
 
+#ifdef __REACTOS__
+#undef __WINESRC__
+#endif
+
 #define SETUP_DEV_INFO_SET_MAGIC 0xd00ff057
 #define SETUP_CLASS_IMAGE_LIST_MAGIC 0xd00ff058
 
