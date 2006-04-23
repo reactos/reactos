@@ -765,14 +765,14 @@ MmspReleasePages(ULONG PageCount, PPFN_TYPE Pfns)
 }
 
 NTSTATUS
-MmspRequestPages(ULONG PageCount, PPFN_TYPE Pfns)
+MmspRequestPages(ULONG PageCount, PPFN_TYPE Pfns, ULONG Consumer)
 {
    ULONG i;
    NTSTATUS Status;
 
    for (i = 0; i < PageCount; i++)
    {
-      Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Pfns[i]);
+      Status = MmRequestPageMemoryConsumer(Consumer, TRUE, &Pfns[i]);
       if (!NT_SUCCESS(Status))
       {
          MmspReleasePages(i, Pfns);
@@ -893,16 +893,17 @@ MmspRawReadPages(PFILE_OBJECT FileObject,
 
 NTSTATUS
 MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
-                            ULONG SegOffset,
-                            ULONG PageCount,
-                            PPFN_TYPE Pages)
+			    ULONG SegOffset,
+			    ULONG PageCount,
+			    PPFN_TYPE Pages,
+				ULONG Consumer)
 {
    NTSTATUS Status;
    ULONG SectorSize;
    LARGE_INTEGER FileOffset;
    ULONG Length;
 
-   Status = MmspRequestPages(PageCount, Pages);
+   Status = MmspRequestPages(PageCount, Pages, Consumer);
    if (!NT_SUCCESS(Status))
    {
       return Status;
@@ -1268,7 +1269,8 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
    {
       MmUnlockSectionSegment(Segment);
       MmUnlockAddressSpace(AddressSpace);
-      Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Pfn[0]);
+      Status = MmRequestPageMemoryConsumer(MemoryArea->Type == MEMORY_AREA_CACHE_SEGMENT
+		                                   ? MC_CACHE : MC_USER, FALSE, &Pfn[0]);
       if (!NT_SUCCESS(Status))
       {
          KEBUGCHECK(0);
@@ -1360,7 +1362,8 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
       }
       else
       {
-         Status = MmspReadSectionSegmentPages(&MemoryArea->Data.SectionData, SegmentOffset, PageCount, Pfn);
+		  Status = MmspReadSectionSegmentPages(&MemoryArea->Data.SectionData, SegmentOffset, PageCount, Pfn, 
+			                                   MemoryArea->Type == MEMORY_AREA_CACHE_SEGMENT ? MC_CACHE : MC_USER);
          if (!NT_SUCCESS(Status))
          {
             DPRINT1("mspReadSectionSegmentPages failed (Status %x)\n", Status);
@@ -1767,7 +1770,8 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
       MmUnlockSectionSegment(Segment);
       MmUnlockAddressSpace(AddressSpace);
 
-      Status = MmspReadSectionSegmentPages(SectionData, Offset, PageCount, Pfn);
+      Status = MmspReadSectionSegmentPages(SectionData, Offset, PageCount, Pfn, 
+		                                   MemoryArea->Type == MEMORY_AREA_CACHE_SEGMENT ? MC_CACHE : MC_USER); 
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("MiReadPage failed (Status %x)\n", Status);
@@ -2038,7 +2042,7 @@ MmspNotPresentFaultPageFileSectionView(PMADDRESS_SPACE AddressSpace,
       MmUnlockSectionSegment(Segment);
       MmUnlockAddressSpace(AddressSpace);
 
-      Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Pfn);
+      Status = MmRequestPageMemoryConsumer(MemoryArea->Type == MEMORY_AREA_CACHE_SEGMENT ? MC_CACHE : MC_USER, TRUE, &Pfn);
       if (!NT_SUCCESS(Status))
       {
          DPRINT("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
