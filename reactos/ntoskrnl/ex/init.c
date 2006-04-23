@@ -423,6 +423,7 @@ NTSTATUS
 ExpLoadInitialProcess(PHANDLE ProcessHandle,
                       PHANDLE ThreadHandle)
 {
+    UNICODE_STRING CurrentDirectory;
     UNICODE_STRING ImagePath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\smss.exe");
     HANDLE SystemProcessHandle;
     NTSTATUS Status;
@@ -440,11 +441,14 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
         return Status;
     }
 
+    RtlInitUnicodeString(&CurrentDirectory,
+                         SharedUserData->NtSystemRoot);
+
     /* Create the Parameters */
     Status = RtlCreateProcessParameters(&Params,
                                         &ImagePath,
                                         NULL,
-                                        NULL,
+                                        &CurrentDirectory,
                                         NULL,
                                         NULL,
                                         NULL,
