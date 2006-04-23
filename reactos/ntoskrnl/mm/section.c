@@ -254,13 +254,13 @@ MmFreeImageSectionSegments(PSECTION_OBJECT_POINTERS SectionObjectPointer)
 VOID
 MmLockSectionSegment(PMM_SECTION_SEGMENT Segment)
 {
-   ExAcquireFastMutex(&Segment->Lock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Segment->Lock);
 }
 
 VOID
 MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment)
 {
-   ExReleaseFastMutex(&Segment->Lock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Segment->Lock);
 }
 
 VOID
@@ -3157,9 +3157,9 @@ MmpDeleteSection(PVOID ObjectBody)
             MmUnlockSectionSegment(&SectionSegments[i]);
          }
       }
-      ExAcquireFastMutex(&ImageSectionObjectLock);
+      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
       Section->ImageSection->RefCount--;
-      ExReleaseFastMutex(&ImageSectionObjectLock);
+      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ImageSectionObjectLock);
    }
    else
    {
@@ -3532,14 +3532,14 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    
    ASSERT(FileObject->SectionObjectPointer);
 
-   ExAcquireFastMutex(&DataSectionObjectLock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
    Segment = FileObject->SectionObjectPointer->DataSectionObject;
    if (Segment != NULL)
    {
       CHECKPOINT;
       Segment->ReferenceCount++;
    }
-   ExReleaseFastMutex(&DataSectionObjectLock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
 
    if (Segment == NULL)
    {
@@ -3589,8 +3589,8 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
       /*
        * Set the lock before assigning the segment to the file object
        */
-      ExAcquireFastMutex(&DataSectionObjectLock);
-      ExAcquireFastMutex(&Segment->Lock);
+      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
+      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Segment->Lock);
 
       tmpSegment = InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->DataSectionObject,
                                                      Segment, NULL);
@@ -3626,16 +3626,16 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
       Status = MmspWaitForFileLock(FileObject);
       if (Status != STATUS_SUCCESS)
       {
-         ExAcquireFastMutex(&DataSectionObjectLock);
+         ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
          Segment->ReferenceCount--;
-         ExReleaseFastMutex(&DataSectionObjectLock);
+         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return(Status);
       }
 
       Section->Segment = Segment;
-      ExAcquireFastMutex(&DataSectionObjectLock);
+      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
       MmLockSectionSegment(Segment);
 
       if (MaximumSize.u.LowPart > Segment->RawLength &&
@@ -3649,7 +3649,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    MmUnlockSectionSegment(Segment);
    Section->FileObject = FileObject;
    Section->MaximumSize = MaximumSize;
-   ExReleaseFastMutex(&DataSectionObjectLock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
 //   CcRosReferenceCache(FileObject);
    KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
@@ -4385,13 +4385,13 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
 
    ASSERT (FileObject->SectionObjectPointer);
 
-   ExAcquireFastMutex(&ImageSectionObjectLock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
    ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
    if (ImageSectionObject != NULL)
    {
       ImageSectionObject->RefCount++;
    }
-   ExReleaseFastMutex(&ImageSectionObjectLock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ImageSectionObjectLock);
 
    if (ImageSectionObject == NULL)
    {
@@ -4450,7 +4450,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          return(Status);
       }
    
-      ExAcquireFastMutex(&ImageSectionObjectLock);
+      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
       tmpImageSectionObject = InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->ImageSectionObject,
                                                                 ImageSectionObject, NULL);
       if (tmpImageSectionObject != NULL)
@@ -4466,7 +4466,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          ObReferenceObject(FileObject);
 
       }
-      ExReleaseFastMutex(&ImageSectionObjectLock);
+      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ImageSectionObjectLock);
 
       if (NULL != tmpImageSectionObject)
       {
@@ -4498,9 +4498,9 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       {
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
-         ExAcquireFastMutex(&ImageSectionObjectLock);
+         ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
          ImageSectionObject->RefCount--;
-         ExReleaseFastMutex(&ImageSectionObjectLock);
+         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ImageSectionObjectLock);
          return(Status);
       }
 
@@ -5862,7 +5862,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
    {
       case MmFlushForDelete:
          Result = TRUE;
-         ExAcquireFastMutex(&ImageSectionObjectLock);
+         ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
          if (ImageSectionObject)
          {
             if(ImageSectionObject->RefCount == 0)
@@ -5875,9 +5875,9 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                Result = FALSE;
             }
          }
-         ExReleaseFastMutex(&ImageSectionObjectLock);
+         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ImageSectionObjectLock);
 #if 1
-         ExAcquireFastMutex(&DataSectionObjectLock);
+         ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
          if (Segment)
          {
             DPRINT("%d %wZ\n", Segment->ReferenceCount, &Segment->FileObject->FileName);
@@ -5890,7 +5890,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 //               Result = FALSE;
             }
          }
-         ExReleaseFastMutex(&DataSectionObjectLock);
+         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
 #endif
          if (Result)
          {
@@ -5903,7 +5903,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
          break;
       case MmFlushForWrite:
          Result = TRUE;
-         ExAcquireFastMutex(&ImageSectionObjectLock);
+         ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
          if (ImageSectionObject)
          {
             if (ImageSectionObject->RefCount == 0)
@@ -5915,9 +5915,9 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                Result = FALSE;
             }
          }
-         ExReleaseFastMutex(&ImageSectionObjectLock);
+         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ImageSectionObjectLock);
 #if 0
-         ExAcquireFastMutex(&DataSectionObjectLock);
+         ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
          if (Segment)
          {
             CHECKPOINT;
@@ -5930,7 +5930,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                Result = FALSE;
             }
          }
-         ExReleaseFastMutex(&DataSectionObjectLock);
+         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
 #endif
          break;
    }
@@ -6234,7 +6234,7 @@ MmRosTrimImageSectionObjects(ULONG Target, ULONG Priority, PULONG NrFreed)
    DPRINT("MmRosTrimImageSectionObjects\n");
 
 
-   ExAcquireFastMutex(&ImageSectionObjectLock);
+   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
    if (ImageSectionObjectCount > 0)
    {
       if (ImageSectionObjectNext == NULL)
@@ -6294,7 +6294,7 @@ MmRosTrimImageSectionObjects(ULONG Target, ULONG Priority, PULONG NrFreed)
       while (*NrFreed < Target && current != ImageSectionObjectNext);
       ImageSectionObjectNext = current;
    }
-   ExReleaseFastMutex(&ImageSectionObjectLock);
+   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ImageSectionObjectLock);
 
    DPRINT("MmRosTrimImageSectionObjects done\n");
 
@@ -6454,7 +6454,7 @@ MmspWorkerThread(PVOID Pointer)
 
       DPRINT("MmspWorkerThread\n");
 
-      ExAcquireFastMutex(&DataSectionObjectLock);
+      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
       
       entry = DataSectionObjectListHead.Flink;
       while (entry != &DataSectionObjectListHead)
@@ -6519,7 +6519,7 @@ MmspWorkerThread(PVOID Pointer)
          
          MmUnlockSectionSegment(current);
       }
-      ExReleaseFastMutex(&DataSectionObjectLock);
+      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
    }
 }
 
