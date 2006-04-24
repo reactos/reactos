@@ -357,7 +357,7 @@ MmFreeDataSectionSegments(PSECTION_OBJECT_POINTERS SectionObjectPointer)
                   if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
                      MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
                }
-               MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
+               MmReleasePageMemoryConsumer(MC_CACHE, PFN_FROM_SSE(Entry));
             }
          }
          Offset += PAGE_SIZE;
@@ -5496,7 +5496,7 @@ MmChangeSectionSize(PSECTION_OBJECT Section,
                {
                   MmSetPageEntrySectionSegment(Segment, Offset, 0);
                   DPRINT("%x %x\n", Offset, Pfn);
-                  MmReleasePageMemoryConsumer(MC_USER, Pfn);
+                  MmReleasePageMemoryConsumer(MC_CACHE, Pfn);
                }
             }
          }
