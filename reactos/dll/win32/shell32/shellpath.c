@@ -1820,7 +1820,8 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
      CSIDL_INTERNET_CACHE,
      CSIDL_COOKIES,
      CSIDL_HISTORY,
-     CSIDL_MYPICTURES
+     CSIDL_MYPICTURES,
+     CSIDL_ADMINTOOLS
     };
     WCHAR userShellFolderPath[MAX_PATH], shellFolderPath[MAX_PATH];
     LPCWSTR pUserShellFolderPath, pShellFolderPath;
