@@ -55,7 +55,11 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 		    NULL,
 		    INSERT_LAST,
 		    L"TimeOut",
-		    DBG ? L"10" : L"0");
+#ifndef DBG
+		    L"0");
+#else
+		    L"10");
+#endif
 
   /* Create "Display" section */
   IniSection = IniCacheAppendSection(IniCache,
