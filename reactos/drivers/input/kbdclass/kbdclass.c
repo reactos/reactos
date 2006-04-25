@@ -35,6 +35,9 @@ ClassCreate(
 		return ForwardIrpAndForget(DeviceObject, Irp);
 
 	/* FIXME: open all associated Port devices */
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
 
@@ -49,6 +52,9 @@ ClassClose(
 		return ForwardIrpAndForget(DeviceObject, Irp);
 
 	/* FIXME: close all associated Port devices */
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
 
@@ -63,6 +69,9 @@ ClassCleanup(
 		return ForwardIrpAndForget(DeviceObject, Irp);
 
 	/* FIXME: cleanup all associated Port devices */
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_SUCCESS;
 }
 
@@ -361,7 +370,8 @@ cleanup:
 	DeviceExtension->ReadIsPending = FALSE;
 	DeviceExtension->InputCount = 0;
 	DeviceExtension->PortData = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(KEYBOARD_INPUT_DATA));
-	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
+	Fdo->Flags |= DO_POWER_PAGABLE;
+	Fdo->Flags |= DO_BUFFERED_IO; /* FIXME: Why is it needed for 1st stage setup? */
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	/* Add entry entry to HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\[DeviceBaseName] */
@@ -379,6 +389,53 @@ cleanup:
 		*ClassDO = Fdo;
 
 	return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+FillOneEntry(
+	IN PDEVICE_OBJECT ClassDeviceObject,
+	IN PIRP Irp,
+	IN PKEYBOARD_INPUT_DATA DataStart)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+
+	if (ClassDeviceObject->Flags & DO_BUFFERED_IO)
+	{
+		RtlCopyMemory(
+			Irp->AssociatedIrp.SystemBuffer,
+			DataStart,
+			sizeof(KEYBOARD_INPUT_DATA));
+	}
+	else if (ClassDeviceObject->Flags & DO_DIRECT_IO)
+	{
+		PVOID DestAddress = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+		if (DestAddress)
+		{
+			RtlCopyMemory(
+				DestAddress,
+				DataStart,
+				sizeof(KEYBOARD_INPUT_DATA));
+		}
+		else
+			Status = STATUS_UNSUCCESSFUL;
+	}
+	else
+	{
+		_SEH_TRY
+		{
+			RtlCopyMemory(
+				Irp->UserBuffer,
+				DataStart,
+				sizeof(KEYBOARD_INPUT_DATA));
+		}
+		_SEH_HANDLE
+		{
+			Status = _SEH_GetExceptionCode();
+		}
+		_SEH_END;
+	}
+
+	return Status;
 }
 
 static BOOLEAN
@@ -406,28 +463,32 @@ ClassCallback(
 	 */
 	if (ClassDeviceExtension->ReadIsPending == TRUE && InputCount)
 	{
+		NTSTATUS Status;
+
 		Irp = ClassDeviceObject->CurrentIrp;
 		ClassDeviceObject->CurrentIrp = NULL;
 		Stack = IoGetCurrentIrpStackLocation(Irp);
 
 		/* A read request is waiting for input, so go straight to it */
-		/* FIXME: use SEH */
-		RtlCopyMemory(
-			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->AssociatedIrp.SystemBuffer,
-			DataStart,
-			sizeof(KEYBOARD_INPUT_DATA));
+		Status = FillOneEntry(
+			ClassDeviceObject,
+			Irp,
+			DataStart);
 
-		/* Go to next packet and complete this request with STATUS_SUCCESS */
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		Irp->IoStatus.Information = sizeof(KEYBOARD_INPUT_DATA);
-		Stack->Parameters.Read.Length = sizeof(KEYBOARD_INPUT_DATA);
+		if (NT_SUCCESS(Status))
+		{
+			/* Go to next packet and complete this request with STATUS_SUCCESS */
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			Irp->IoStatus.Information = sizeof(KEYBOARD_INPUT_DATA);
+			Stack->Parameters.Read.Length = sizeof(KEYBOARD_INPUT_DATA);
 
-		ClassDeviceExtension->ReadIsPending = FALSE;
+			ClassDeviceExtension->ReadIsPending = FALSE;
 
-		/* Skip the packet we just sent away */
-		DataStart++;
-		(*ConsumedCount)++;
-		InputCount--;
+			/* Skip the packet we just sent away */
+			DataStart++;
+			(*ConsumedCount)++;
+			InputCount--;
+		}
 	}
 
 	/* If we have data from the port driver and a higher service to send the data to */
@@ -439,9 +500,11 @@ ClassCallback(
 			ReadSize = InputCount;
 
 		/*
-		 * FIXME: If we exceed the buffer, data gets thrown away.. better
-		 * solution?
-		*/
+		 * If we exceed the buffer, data gets thrown away...
+		 * Try at least to display a dialog
+		 */
+		if (Irp != NULL)
+			IoRaiseHardError(Irp, NULL, ClassDeviceObject);
 
 		/*
 		 * Move the input data from the port data queue to our class data
@@ -549,7 +612,7 @@ ClassAddDevice(
 		sizeof(PORT_DEVICE_EXTENSION),
 		NULL,
 		Pdo->DeviceType,
-		FILE_DEVICE_SECURE_OPEN,
+		Pdo->Characteristics & FILE_DEVICE_SECURE_OPEN ? FILE_DEVICE_SECURE_OPEN : 0,
 		TRUE,
 		&Fdo);
 	if (!NT_SUCCESS(Status))
@@ -573,6 +636,8 @@ ClassAddDevice(
 		Fdo->Flags |= DO_POWER_PAGABLE;
 	if (DeviceExtension->LowerDevice->Flags & DO_BUFFERED_IO)
 		Fdo->Flags |= DO_BUFFERED_IO;
+	if (DeviceExtension->LowerDevice->Flags & DO_DIRECT_IO)
+		Fdo->Flags |= DO_DIRECT_IO;
 
 	if (DriverExtension->ConnectMultiplePorts)
 		DeviceExtension->ClassDO = DriverExtension->MainClassDeviceObject;
@@ -646,35 +711,35 @@ ClassStartIo(
 	if (DeviceExtension->InputCount > 0)
 	{
 		KIRQL oldIrql;
+		NTSTATUS Status;
 
 		KeAcquireSpinLock(&DeviceExtension->SpinLock, &oldIrql);
 
-		DPRINT("Mdl: %p, UserBuffer: %p, InputCount: %lu\n",
-			Irp->MdlAddress,
-			Irp->UserBuffer,
-			DeviceExtension->InputCount);
+		Status = FillOneEntry(
+			DeviceObject,
+			Irp,
+			DeviceExtension->PortData - DeviceExtension->InputCount);
 
-		/* FIXME: use SEH */
-		RtlCopyMemory(
-			Irp->AssociatedIrp.SystemBuffer,
-			DeviceExtension->PortData - DeviceExtension->InputCount,
-			sizeof(KEYBOARD_INPUT_DATA));
-
-		if (DeviceExtension->InputCount > 1)
+		if (NT_SUCCESS(Status))
 		{
-			RtlMoveMemory(
-				DeviceExtension->PortData - DeviceExtension->InputCount,
-				DeviceExtension->PortData - DeviceExtension->InputCount + 1,
-				(DeviceExtension->InputCount - 1) * sizeof(KEYBOARD_INPUT_DATA));
-		}
-		DeviceExtension->PortData--;
-		DeviceExtension->InputCount--;
-		DeviceExtension->ReadIsPending = FALSE;
+			if (DeviceExtension->InputCount > 1)
+			{
+				RtlMoveMemory(
+					DeviceExtension->PortData - DeviceExtension->InputCount,
+					DeviceExtension->PortData - DeviceExtension->InputCount + 1,
+					(DeviceExtension->InputCount - 1) * sizeof(KEYBOARD_INPUT_DATA));
+			}
 
-		/* Go to next packet and complete this request with STATUS_SUCCESS */
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		Irp->IoStatus.Information = sizeof(KEYBOARD_INPUT_DATA);
-		Stack->Parameters.Read.Length = sizeof(KEYBOARD_INPUT_DATA);
+			DeviceExtension->PortData--;
+			DeviceExtension->InputCount--;
+			DeviceExtension->ReadIsPending = FALSE;
+
+			Irp->IoStatus.Information = sizeof(KEYBOARD_INPUT_DATA);
+			Stack->Parameters.Read.Length = sizeof(KEYBOARD_INPUT_DATA);
+		}
+
+		/* Go to next packet and complete this request */
+		Irp->IoStatus.Status = Status;
 		IoCompleteRequest(Irp, IO_KEYBOARD_INCREMENT);
 
 		IoStartNextPacket(DeviceObject, FALSE);

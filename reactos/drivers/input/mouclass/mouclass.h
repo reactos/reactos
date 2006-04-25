@@ -1,6 +1,7 @@
 #include <ntifs.h>
 #include <kbdmou.h>
 #include <ntddmou.h>
+#include <pseh/pseh.h>
 #include <stdio.h>
 
 #define MAX_PATH 260
