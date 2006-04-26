@@ -28,6 +28,8 @@
 #define NDEBUG
 #include <debug.h>
 
+static const WCHAR szSystemDirectory[] = L"\\System32";
+
 /**********************************************************************
  * SmCreateUserProcess/5
  *
@@ -55,6 +57,7 @@ SmCreateUserProcess (LPWSTR ImagePath,
 {
 	UNICODE_STRING			ImagePathString = {0};
 	UNICODE_STRING			CommandLineString = {0};
+        UNICODE_STRING			SystemDirectory = {0};
 	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters = NULL;
 	RTL_USER_PROCESS_INFORMATION		ProcessInfo = {0};
 	PRTL_USER_PROCESS_INFORMATION		pProcessInfo = & ProcessInfo;
@@ -70,16 +73,55 @@ SmCreateUserProcess (LPWSTR ImagePath,
 	RtlInitUnicodeString (& ImagePathString, ImagePath);
 	RtlInitUnicodeString (& CommandLineString, CommandLine);
 
-	RtlCreateProcessParameters(& ProcessParameters,
-				   & ImagePathString,
-				   NULL,
-				   NULL,
-				   & CommandLineString,
-				   SmSystemEnvironment,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL);
+	SystemDirectory.MaximumLength = (wcslen(SharedUserData->NtSystemRoot) * sizeof(WCHAR)) + sizeof(szSystemDirectory);
+	SystemDirectory.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+						 0,
+						 SystemDirectory.MaximumLength);
+	if (SystemDirectory.Buffer == NULL)
+	{
+		Status = STATUS_NO_MEMORY;
+		DPRINT1("SM: %s: Allocating system directory string failed (Status=0x%08lx)\n",
+			__FUNCTION__, Status);
+		return Status;
+	}
+
+	Status = RtlAppendUnicodeToString(& SystemDirectory,
+					  SharedUserData->NtSystemRoot);
+	if (!NT_SUCCESS(Status))
+	{
+		goto FailProcParams;
+	}
+
+	Status = RtlAppendUnicodeToString(& SystemDirectory,
+					  szSystemDirectory);
+	if (!NT_SUCCESS(Status))
+	{
+		goto FailProcParams;
+	}
+
+
+	Status = RtlCreateProcessParameters(& ProcessParameters,
+					    & ImagePathString,
+					    NULL,
+					    & SystemDirectory,
+					    & CommandLineString,
+					    SmSystemEnvironment,
+					    NULL,
+					    NULL,
+					    NULL,
+					    NULL);
+
+	RtlFreeHeap(RtlGetProcessHeap(),
+		    0,
+		    SystemDirectory.Buffer);
+
+	if (!NT_SUCCESS(Status))
+	{
+FailProcParams:
+		DPRINT1("SM: %s: Creating process parameters failed (Status=0x%08lx)\n",
+			__FUNCTION__, Status);
+		return Status;
+	}
 
 	Status = RtlCreateUserProcess (& ImagePathString,
 				       OBJ_CASE_INSENSITIVE,
