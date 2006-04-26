@@ -707,8 +707,14 @@ bool StartMenu::Navigate(int step)
 	for(;;) {
 		idx += step;
 
-		if (idx<0 || idx>(int)_buttons.size())
+		if ((int)_buttons.size() <= 1 && (idx<0 || idx>(int)_buttons.size()))
 			break;
+
+		if (idx<0)
+			idx += _buttons.size();
+
+		if (idx>(int)_buttons.size())
+			idx -= _buttons.size()+1;
 
 		if (SelectButtonIndex(idx, false))
 			return true;
