@@ -92,7 +92,6 @@ SmpKnownDllsQueryRoutine(PWSTR ValueName,
     {
       DPRINT1("Failed to check the image checksum\n");
 
-      NtClose(SectionHandle);
       NtClose(FileHandle);
 
       return STATUS_SUCCESS;
