@@ -309,9 +309,9 @@ public:
     /* Default destructor */
     virtual ~CCabinet();
     /* Determines if a character is a separator */
-    bool CCabinet::IsSeparator(char Char);
+    bool IsSeparator(char Char);
     /* Replaces \ or / with the one used be the host environment */
-    char* CCabinet::ConvertPath(char* Path, bool Allocate);
+    char* ConvertPath(char* Path, bool Allocate);
     /* Returns a pointer to the filename part of a fully qualified filename */
     char* GetFileName(char* Path);
     /* Removes a filename from a fully qualified filename */
