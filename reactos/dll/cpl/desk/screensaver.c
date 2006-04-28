@@ -27,6 +27,7 @@ ScreenSaverItem g_ScreenSaverItems[MAX_SCREENSAVERS];
 HWND g_hScreenBackgroundPage = NULL;
 HWND g_hScreengroundList = NULL;
 HWND ControlScreenSaverIsSecure = NULL;
+HMENU g_hPopupMenu = NULL;
 
 void ListViewItemAreChanged(int itemIndex)
 {
@@ -38,6 +39,57 @@ void ListViewItemAreChanged(int itemIndex)
     PropSheet_Changed(GetParent(g_hScreenBackgroundPage), g_hScreenBackgroundPage);
 }
 
+void
+ScreensaverConfig ()
+{
+    /*
+       /p:<hwnd>  Run in preview 
+       /s         Run normal
+       /c:<hwnd>  Run configuration, hwnd is handle of calling window
+       /a         Run change password
+
+    */
+
+    WCHAR szCmdline[2048];                                                
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;                        
+    swprintf(szCmdline, L"%s /c",g_ScreenSaverItems[ImageListSelection].szFilename);
+
+    ZeroMemory( &si, sizeof(si) );
+    si.cb = sizeof(si);
+    ZeroMemory( &pi, sizeof(pi) );                         
+   if(CreateProcess( NULL,  szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+   {                          
+      CloseHandle( pi.hProcess );
+      CloseHandle( pi.hThread );                       
+   }                       
+}
+
+void
+ScreensaverPreview ()
+{
+    /*
+       /p:<hwnd>  Run in preview 
+       /s         Run normal
+       /c:<hwnd>  Run configuration, hwnd is handle of calling window
+       /a         Run change password
+    */
+
+    WCHAR szCmdline[2048];                                                
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;                        
+    swprintf(szCmdline, L"%s /p",g_ScreenSaverItems[ImageListSelection].szFilename);
+
+    ZeroMemory( &si, sizeof(si) );
+    si.cb = sizeof(si);
+    ZeroMemory( &pi, sizeof(pi) );                         
+   if(CreateProcess( NULL,  szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+   {                          
+      CloseHandle( pi.hProcess );
+      CloseHandle( pi.hThread );                       
+   }                       
+ }
+
 INT_PTR
 CALLBACK
 ScreenSaverPageProc(HWND hwndDlg,
@@ -48,13 +100,23 @@ ScreenSaverPageProc(HWND hwndDlg,
     g_hScreenBackgroundPage = hwndDlg;
     
     switch(uMsg) {
+        case WM_DESTROY:
+        {
+            DestroyMenu(g_hPopupMenu);
+            break;
+        }
         case WM_INITDIALOG:
         {
             g_hScreengroundList = GetDlgItem(g_hScreenBackgroundPage, IDC_SCREENS_CHOICES);
             SendMessage(GetDlgItem(g_hScreenBackgroundPage, IDC_SCREENS_TIME), UDM_SETRANGE, 0, MAKELONG ((short) 240, (short) 0));
             AddListViewItems2();
+
+            g_hPopupMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDR_POPUP_MENU));
+            g_hPopupMenu = GetSubMenu(g_hPopupMenu, 0);
+
             CheckRegScreenSaverIsSecure();
         } break;
+
         case WM_COMMAND:
         {
             DWORD controlId = LOWORD(wParam);
@@ -69,65 +131,40 @@ ScreenSaverPageProc(HWND hwndDlg,
                 case IDC_SCREENS_TESTSC: // Screensaver Preview
                 {
                     if(command == BN_CLICKED)
-                    {
-                        /*
-                           /p:<hwnd>  Run in preview 
-                           /s         Run normal
-                           /c:<hwnd>  Run configuration, hwnd is handle of calling window
-                           /a         Run change password
-                        */
-
-                        WCHAR szCmdline[2048];                                                
-                        STARTUPINFO si;
-                        PROCESS_INFORMATION pi;                        
-                        swprintf(szCmdline, L"%s /p",g_ScreenSaverItems[ImageListSelection].szFilename);
-
-                        ZeroMemory( &si, sizeof(si) );
-                        si.cb = sizeof(si);
-                        ZeroMemory( &pi, sizeof(pi) );                         
-                       if(CreateProcess( NULL,  szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
-                       {                          
-                          CloseHandle( pi.hProcess );
-                          CloseHandle( pi.hThread );                       
-                       }                       
-                    }
-                        
-                } break;
-    /*            case IDC_SCREENS_DELETE: // Delete Screensaver
+                        ScreensaverPreview();   
+                    break;
+                } 
+                case ID_MENU_PREVIEW:
                 {
+                    ScreensaverPreview();
+                    break;
+                }
+                case ID_MENU_CONFIG:
+                {
+                    ScreensaverConfig();
+                    break;
+                }
+                case ID_MENU_DELETE: // Delete Screensaver
+                {
+                    LPSHFILEOPSTRUCT fos;
+
                     if(command == BN_CLICKED) {
-                        if (ImageListSelection == 0) // Can NOT delete None sry:-)
+                        if (ImageListSelection == 0) // Can NOT delete anything :-)
                            return FALSE;
-                        DeleteFileW(g_ScreenSaverItems[ImageListSelection].szFilename);
+
+                        fos->hwnd = hwndDlg;
+                        fos->wFunc = FO_DELETE;
+                        fos->fFlags = 0;
+                        fos->pFrom = g_ScreenSaverItems[ImageListSelection].szFilename;
+                        SHFileOperationW(fos);
                     }
-                } break; */
+                } break; 
                 case IDC_SCREENS_SETTINGS: // Screensaver Settings
                 {
                     if(command == BN_CLICKED)
-                    {   
-                        /*
-                           /p:<hwnd>  Run in preview 
-                           /s         Run normal
-                           /c:<hwnd>  Run configuration, hwnd is handle of calling window
-                           /a         Run change password
-
-                        */
-
-                        WCHAR szCmdline[2048];                                                
-                        STARTUPINFO si;
-                        PROCESS_INFORMATION pi;                        
-                        swprintf(szCmdline, L"%s /c",g_ScreenSaverItems[ImageListSelection].szFilename);
-
-                        ZeroMemory( &si, sizeof(si) );
-                        si.cb = sizeof(si);
-                        ZeroMemory( &pi, sizeof(pi) );                         
-                       if(CreateProcess( NULL,  szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
-                       {                          
-                          CloseHandle( pi.hProcess );
-                          CloseHandle( pi.hThread );                       
-                       }                       
-                    }                       
-                } break;
+                        ScreensaverConfig();
+                    break;
+                }
                 case IDC_SCREENS_USEPASSCHK: // Screensaver Is Secure
                 {
                     if(command == BN_CLICKED)
@@ -143,12 +180,21 @@ ScreenSaverPageProc(HWND hwndDlg,
         case WM_NOTIFY:
         {
            LPNMHDR lpnm = (LPNMHDR)lParam;
-                
+           LPNMITEMACTIVATE nmia = (LPNMITEMACTIVATE) lParam;
+           RECT rc;
+
            switch(lpnm->code) {   
              case PSN_APPLY:
              {
                 return TRUE;
              } break;
+             case NM_RCLICK:
+             {
+                GetWindowRect(g_hScreengroundList, &rc);
+                TrackPopupMenuEx(g_hPopupMenu, TPM_RIGHTBUTTON,
+                                 rc.left + nmia->ptAction.x, rc.top + nmia->ptAction.y, hwndDlg, NULL);
+                break;
+             }
              case LVN_ITEMCHANGED:
              {
                 LPNMLISTVIEW nm = (LPNMLISTVIEW)lParam;

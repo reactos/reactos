@@ -62,6 +62,13 @@
 #define IDC_SETTINGS_RESOLUTION_TEXT 204
 #define IDC_SETTINGS_ADVANCED        205
 
+#define IDR_POPUP_MENU				2010
+#define ID_MENU_CONFIG				2011
+#define ID_MENU_PREVIEW				2012
+#define ID_MENU_ADD					2013
+#define ID_MENU_DELETE				2014
+
+
 /* Settings Page */
 
 #define IDS_PIXEL				2301
