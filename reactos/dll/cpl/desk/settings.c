@@ -582,7 +582,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                 hdcMem = CreateCompatibleDC(hdc);
                 SelectObject(hdcMem, hBitmap);
 
-                BitBlt(hdc, 98, 0, cxSource, cySource, hdcMem, 0, 0, SRCCOPY);
+                TransparentBlt(hdc, 98, 0, cxSource, cySource, hdcMem, 0, 0, cxSource, cySource, 0xFF80FF);
 
                 DeleteDC(hdcMem);
                 EndPaint(hwndDlg, &ps);
