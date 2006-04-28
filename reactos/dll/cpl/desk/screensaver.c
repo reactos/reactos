@@ -93,14 +93,14 @@ ScreenSaverPageProc(HWND hwndDlg,
                     }
                         
                 } break;
-                case IDC_SCREENS_DELETE: // Delete Screensaver
+    /*            case IDC_SCREENS_DELETE: // Delete Screensaver
                 {
                     if(command == BN_CLICKED) {
                         if (ImageListSelection == 0) // Can NOT delete None sry:-)
                            return FALSE;
                         DeleteFileW(g_ScreenSaverItems[ImageListSelection].szFilename);
                     }
-                } break;
+                } break; */
                 case IDC_SCREENS_SETTINGS: // Screensaver Settings
                 {
                     if(command == BN_CLICKED)

@@ -8,10 +8,10 @@ BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 80, 10, 83, 57, WS_EX_STATICEDGE
     CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER 
                     | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
-    LTEXT           "Wählen SIe ein Bild aus welches Sie als Desktop Hintergrund verwenden wollen:", IDC_STATIC, 8, 103, 180, 9
-    PUSHBUTTON      "&Durchsuchen...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
-    PUSHBUTTON      "&Farbe...", IDC_COLOR_BUTTON, 188, 177, 50, 15
-    LTEXT           "&Ausrichtung:", IDC_STATIC, 188, 138, 36, 9
+    LTEXT           "Hintergrundbild:", IDC_STATIC, 8, 103, 180, 9
+    PUSHBUTTON      "&Durchsuchen...", IDC_BROWSE_BUTTON, 188, 114, 55, 15
+    PUSHBUTTON      "&Farbe...", IDC_COLOR_BUTTON, 188, 177, 55, 15
+    LTEXT           "&Ausrichtung:", IDC_STATIC, 188, 140, 50, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -22,30 +22,28 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "&Bildschrimschoner",IDC_SCREENS_DUMMY, 5, 7, 238, 136
     
-    LTEXT           "Liste der Bildschrimschoner:",IDC_STATIC,13, 24, 71, 9
+    LTEXT           "Installierte Bildschrimschoner:",IDC_STATIC,13, 24, 150, 9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,13, 34, 171, 69
-    PUSHBUTTON      "&Löschen",IDC_SCREENS_DELETE, 190,47,39,10
-    PUSHBUTTON      "&Hinzufügen",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
+                    WS_BORDER | WS_TABSTOP,13, 34, 170, 69
 
-    PUSHBUTTON      "&Einstellungen...",IDC_SCREENS_SETTINGS,140, 124, 48, 12,WS_GROUP
-    PUSHBUTTON      "&Vorschau",IDC_SCREENS_TESTSC,192, 124, 43, 12
+    PUSHBUTTON      "&Einstellungen",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
+    PUSHBUTTON      "&Vorschau",IDC_SCREENS_TESTSC,188, 52, 50, 15
 
     CONTROL         "&Passwortschutz bei Reaktivierung.",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 119, 18
 
-    LTEXT           "&Warte:",IDC_STATIC,13, 110, 17, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 109, 31, 12,ES_RIGHT | WS_GROUP
+    LTEXT           "&Warte",IDC_STATIC,13, 110, 20, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,35, 109, 31, 12,ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP,52, 109, 12, 12
     LTEXT           "Minuten, bis der Bildschirmschoner angezeigt wird.",IDC_STATIC,70, 111, 147, 9
 
-    GROUPBOX        "&Energiesparfunktion des Bildschirms",IDC_SCREENS_DUMMY2,5, 146, 238, 35
-    LTEXT           "Um die Energiesparfunktion des Bildschrims einzustellen, klicken Sie auf Energiesparfunktion.",
-                    IDC_STATIC,16, 159, 155, 19
-    PUSHBUTTON      "Energ&iesparfunk.",IDC_SCREENS_POWER_BUTTON,180, 162, 57, 12
+    GROUPBOX        "&Energiesparfunktion des Bildschirms",IDC_SCREENS_DUMMY2,5, 146, 238, 50
+    LTEXT           "Hier können Sie Energiesparfunktionen Ihres Computers konfigurieren.",
+                    IDC_STATIC,16, 159, 145, 35
+    PUSHBUTTON      "Energ&ieeinstellungen",IDC_SCREENS_POWER_BUTTON,165, 162, 73, 15
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188
