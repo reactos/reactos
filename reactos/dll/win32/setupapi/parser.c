@@ -1968,12 +1968,11 @@ SetupGetInfFileListW(
     OUT PDWORD RequiredSize OPTIONAL)
 {
     HANDLE hSearch;
-    LPWSTR pFileSpecification, pFileName;
+    LPWSTR pFileSpecification = NULL;
+    LPWSTR pFileName; /* Pointer into pFileSpecification buffer */
     LPWSTR pBuffer = ReturnBuffer;
     WIN32_FIND_DATAW wfdFileInfo;
-    PVOID Buffer = NULL;
     size_t len;
-    DWORD requiredSizeInfo;
     DWORD requiredSize = 0;
     BOOL ret = FALSE;
 
@@ -1984,65 +1983,49 @@ SetupGetInfFileListW(
     {
         TRACE("Unknown flags: 0x%08lx\n", InfStyle & ~(INF_STYLE_OLDNT  | INF_STYLE_WIN4));
         SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        goto cleanup;
     }
 
+    /* Allocate memory for file filter */
+    len = DirectoryPath ? strlenW(DirectoryPath) : MAX_PATH;
+    pFileSpecification = HeapAlloc(
+            GetProcessHeap(), 0,
+            (len + 1 + strlenW(InfFileSpecification) + 1) * sizeof(WCHAR));
+    if (!pFileSpecification)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
     if (DirectoryPath)
     {
-        len = wcslen(DirectoryPath);
-        pFileSpecification = HeapAlloc(
-            GetProcessHeap(), 0,
-            (len + MAX_PATH + 2) * sizeof(WCHAR));
-        if (!pFileSpecification)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
-        }
-        wcscpy(pFileSpecification, DirectoryPath);
-        if (DirectoryPath[len] == '\\')
-        {
-            pFileName = &pFileSpecification[len];
-        }
-        else
-        {
-            wcscat(pFileSpecification, BackSlash);
-            pFileName = &pFileSpecification[len + 1];
-        }
+        strcpyW(pFileSpecification, DirectoryPath);
+        if (pFileSpecification[strlenW(pFileSpecification)] != '\\')
+            strcatW(pFileSpecification, BackSlash);
     }
     else
     {
-        WCHAR windir[MAX_PATH];
-        if (GetSystemWindowsDirectoryW(windir, MAX_PATH) == 0)
-            return FALSE;
-        len = wcslen(windir);
-        pFileSpecification = HeapAlloc(
-            GetProcessHeap(), 0,
-            (len + MAX_PATH + 6) * sizeof(WCHAR));
-        if (!pFileSpecification)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
-        }
-        wcscpy(pFileSpecification, windir);
-        if (windir[len] != '\\')
-            wcscat(pFileSpecification, BackSlash);
-        wcscat(pFileSpecification, InfDirectory);
-        pFileName = &pFileSpecification[wcslen(pFileSpecification)];
+        if (GetSystemWindowsDirectoryW(pFileSpecification, MAX_PATH) == 0)
+            goto cleanup;
+        if (pFileSpecification[strlenW(pFileSpecification)] != '\\')
+            strcatW(pFileSpecification, BackSlash);
+        strcatW(pFileSpecification, InfDirectory);
     }
-    wcscpy(pFileName, InfFileSpecification);
+    pFileName = &pFileSpecification[strlenW(pFileSpecification)];
+
+    /* Search for the first file */
+    strcpyW(pFileName, InfFileSpecification);
     hSearch = FindFirstFileW(pFileSpecification, &wfdFileInfo);
     if (hSearch == INVALID_HANDLE_VALUE)
     {
         HeapFree(GetProcessHeap(), 0, pFileSpecification);
-        return FALSE;
+        goto cleanup;
     }
 
-    ret = TRUE;
     do
     {
         HINF hInf;
 
-        wcscpy(pFileName, wfdFileInfo.cFileName);
+        strcpyW(pFileName, wfdFileInfo.cFileName);
         hInf = SetupOpenInfFileW(
             pFileSpecification,
             NULL, /* Inf class */
@@ -2059,61 +2042,30 @@ SetupGetInfFileListW(
             continue;
         }
 
-        ret = SetupGetInfInformationW(
-            hInf,
-            INFINFO_INF_SPEC_IS_HINF,
-            NULL, 0,
-            &requiredSizeInfo);
-        if (!ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-            break;
-
-        if (!ret)
-        {
-            Buffer = HeapAlloc(GetProcessHeap(), 0, requiredSizeInfo);
-            if (!Buffer)
-            {
-                SetupCloseInfFile(hInf);
-                ret = FALSE;
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                break;
-            }
-    
-            ret = SetupGetInfInformationW(
-                hInf,
-                INFINFO_INF_SPEC_IS_HINF,
-                Buffer, requiredSizeInfo,
-                &requiredSizeInfo);
-            if (!ret)
-                break;
-        }
-
-        len = wcslen(wfdFileInfo.cFileName) + 1;
+        len = strlenW(wfdFileInfo.cFileName) + 1;
         requiredSize += (DWORD)(len * sizeof(WCHAR));
         if (requiredSize <= ReturnBufferSize)
         {
-            wcscpy(pBuffer, wfdFileInfo.cFileName);
+            strcpyW(pBuffer, wfdFileInfo.cFileName);
             pBuffer = &pBuffer[len];
         }
-        HeapFree(GetProcessHeap(), 0, Buffer);
         SetupCloseInfFile(hInf);
-        ret = TRUE;
     } while (FindNextFileW(hSearch, &wfdFileInfo));
     FindClose(hSearch);
 
-    if (ret)
+    ret = TRUE;
+    requiredSize += sizeof(WCHAR); /* Final NULL char */
+    if (requiredSize <= ReturnBufferSize)
+        *pBuffer = '\0';
+    else
     {
-        requiredSize += sizeof(WCHAR); /* Final NULL char */
-        if (requiredSize <= ReturnBufferSize)
-            *pBuffer = '\0';
-        else
-        {
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            ret = FALSE;
-        }
-        if (RequiredSize)
-            *RequiredSize = requiredSize;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        ret = FALSE;
     }
+    if (RequiredSize)
+        *RequiredSize = requiredSize;
 
+cleanup:
     HeapFree(GetProcessHeap(), 0, pFileSpecification);
     return ret;
 }
