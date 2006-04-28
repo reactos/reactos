@@ -146,7 +146,7 @@ ScreenSaverPageProc(HWND hwndDlg,
                 }
                 case ID_MENU_DELETE: // Delete Screensaver
                 {
-                    LPSHFILEOPSTRUCT fos;
+                    LPSHFILEOPSTRUCT fos = NULL;
 
                     if(command == BN_CLICKED) {
                         if (ImageListSelection == 0) // Can NOT delete anything :-)
