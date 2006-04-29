@@ -91,6 +91,7 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
    KeUnlockMutex(&DeviceExtension->MailslotListLock);
 
    FileObject->FsContext = Fcb;
+   FileObject->Flags |= FO_MAILSLOT;
 
    Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;
@@ -219,6 +220,7 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
    KeUnlockMutex(&DeviceExtension->MailslotListLock);
 
    FileObject->FsContext = Fcb;
+   FileObject->Flags |= FO_MAILSLOT;
 
    Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;
