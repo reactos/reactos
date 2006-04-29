@@ -248,6 +248,9 @@ drivers\network\wshtcpip\wshtcpip.dll               1
 drivers\network\dd\ne2000\ne2000.sys                2
 drivers\network\dd\pcnet\pcnet.sys                  2
 
+drivers\storage\pciide\pciide.sys                   2
+drivers\storage\pciidex\pciidex.sys                 2
+
 drivers\usb\miniport\usbohci\usbohci.sys            2
 drivers\usb\miniport\usbuhci\usbuhci.sys            2
 drivers\usb\usbhub\usbhub.sys                       2
