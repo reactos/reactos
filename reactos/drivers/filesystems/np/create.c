@@ -295,6 +295,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   KeUnlockMutex(&Pipe->FcbListLock);
 
   FileObject->FsContext = ClientFcb;
+  FileObject->Flags |= FO_NAMED_PIPE;
 
   Irp->IoStatus.Status = STATUS_SUCCESS;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -539,6 +540,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    KeUnlockMutex(&Pipe->FcbListLock);
 
    FileObject->FsContext = Fcb;
+   FileObject->Flags |= FO_NAMED_PIPE;
 
    Irp->IoStatus.Status = STATUS_SUCCESS;
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
