@@ -318,6 +318,14 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
   Fcb = FileObject->FsContext;
   Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
 
+  if (Fcb->OtherSide == NULL && Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+  {
+     DPRINT("Pipe is NOT yet connected!\n");
+     Status = STATUS_PIPE_LISTENING;
+     Irp->IoStatus.Information = 0;
+     goto done;
+  }
+
   if (Fcb->Data == NULL)
   {
      DPRINT1("Pipe is NOT readable!\n");
@@ -529,7 +537,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
      }
      Irp->IoStatus.Information = Information;
      Irp->IoStatus.Status = Status;
-     
+
      ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
 
      if (IoIsOperationSynchronous(Irp))
