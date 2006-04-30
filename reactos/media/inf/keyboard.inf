@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = Keyboard
 ClassGUID  = {4D36E96B-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/08/2005,1.01.0.0
+DriverVer  = 04/30/2005,1.02
 
 [ClassInstall32.NT]
 AddReg = KeyboardClass.NT.AddReg
@@ -17,8 +17,9 @@ AddReg = KeyboardClass.NT.AddReg
 [KeyboardClass.NT.AddReg]
 HKR, , ,               0, %KeyboardClassName%
 HKR, , Icon,           0, "-2"
-;HKR, , Installer32,    0, "syssetup.dll,KeyboardClassInstaller"
+HKR, , Installer32,    0, "syssetup.dll,KeyboardClassInstaller"
 HKR, , NoInstallClass, 0, 1
+HKR, , UpperFilters,   0x00010000, "kbdclass"
 
 [Manufacturer]
 %StdMfg% = StdMfg
@@ -36,9 +37,7 @@ AddReg = PS2_AddReg
 i8042prt.sys
 
 [PS2_Inst.NT.Services]
-;DO NOT INSTALL i8042prt driver, as long as it is not PnP-compatible
-;AddService = i8042prt, 0x00000002, i8042prt_Service_Inst
-AddService = , 0x00000002
+AddService = i8042prt, 0x00000002, i8042prt_Service_Inst
 AddService = kbdclass, , kbdclass_Service_Inst
 
 [i8042prt_Service_Inst]
@@ -51,7 +50,7 @@ LoadOrderGroup = Keyboard Port
 ;---------------------------- KBDCLASS DRIVER ---------------------------
 
 [kbdclass_CopyFiles.NT]
-mouclass.sys
+kbdclass.sys
 
 [kbdclass_Service_Inst]
 ServiceType   = 1

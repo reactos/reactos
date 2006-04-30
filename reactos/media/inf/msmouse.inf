@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = Mouse
 ClassGUID  = {4D36E96F-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/08/2005,1.01.0.0
+DriverVer  = 04/30/2005,1.02
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -20,8 +20,9 @@ AddReg = MouseClass.NT.AddReg
 [MouseClass.NT.AddReg]
 HKR, , ,               0, %MouseClassName%
 HKR, , Icon,           0, "-2"
-;HKR, , Installer32,    0, "syssetup.dll,MouseClassInstaller"
+HKR, , Installer32,    0, "syssetup.dll,MouseClassInstaller"
 HKR, , NoInstallClass, 0, 1
+HKR, , UpperFilters,   0x00010000, "mouclass"
 
 [Manufacturer]
 %StdMfg% = StdMfg
@@ -36,7 +37,7 @@ HKR, , NoInstallClass, 0, 1
 %*PNP0F13.DeviceDesc% = PS2_Inst,*PNP0F13
 
 [IbmMfg]
-*IBM3780.DeviceDesc = PS2_Inst,*IBM3780
+%*IBM3780.DeviceDesc% = PS2_Inst,*IBM3780
 
 [LogMfg]
 %*PNP0F08.DeviceDesc% = Serial_Inst,*PNP0F08,SERENUM\PNP0F08
@@ -87,9 +88,7 @@ AddReg = PS2_AddReg
 i8042prt.sys
 
 [PS2_Inst.Services]
-;DO NOT INSTALL i8042prt driver, as long as it is not PnP-compatible
-;AddService = i8042prt, 0x00000002, i8042prt_Service_Inst
-AddService = , 0x00000002
+AddService = i8042prt, 0x00000002, i8042prt_Service_Inst
 AddService = mouclass, , mouclass_Service_Inst
 
 [i8042prt_Service_Inst]
