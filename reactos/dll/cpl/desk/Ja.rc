@@ -26,30 +26,28 @@ FONT 9, "MS UI Gothic"
 BEGIN
     GROUPBOX        "スクリーン セーバー(&S)",IDC_SCREENS_DUMMY, 5, 7, 238, 176
     
-    LTEXT           "スクリーン セーバーの一覧:",IDC_STATIC,13, 24, 71, 9
+    LTEXT           "スクリーン セーバーの一覧:",IDC_STATIC,13, 24, 150, 9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,13, 34, 171, 109
-    PUSHBUTTON      "削除(&D)",IDC_SCREENS_DELETE, 189,47,39,10
-    PUSHBUTTON      "追加(&A)",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
+                    WS_BORDER | WS_TABSTOP,13, 34, 170, 69
 
-    PUSHBUTTON      "設定(&T)...",IDC_SCREENS_SETTINGS,140, 164, 48, 12,WS_GROUP
-    PUSHBUTTON      "プレビュー(&V)",IDC_SCREENS_TESTSC,192, 164, 43, 12
+    PUSHBUTTON      "設定(&T)...",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
+    PUSHBUTTON      "プレビュー(&V)",IDC_SCREENS_TESTSC,188, 52, 50, 15
 
     CONTROL         "復旧時、パスワードで保護する(&P)",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 161, 119, 18
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 119, 18
 
-    LTEXT           "待機(&W):",IDC_STATIC,13, 150, 17, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 149, 31, 12,ES_RIGHT | WS_GROUP
+    LTEXT           "待機(&W):",IDC_STATIC,13, 110, 20, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 109, 31, 12,ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP,52, 149, 12, 12
+                    WS_BORDER | WS_GROUP,52, 109, 12, 12
     LTEXT           "分経過したらスクリーン セーバーを表\示する。",IDC_STATIC,70, 151, 147, 9
 
-    GROUPBOX        "モニターの省電力機能\(&E)",IDC_SCREENS_DUMMY2,5, 186, 238, 35
+    GROUPBOX        "モニターの省電力機能\(&E)",IDC_SCREENS_DUMMY2,5, 146, 238, 50
     LTEXT           "モニタの電源設定を調整するには、[電源設定] をクリックしてください。",
-                    IDC_STATIC,16, 199, 155, 19
-    PUSHBUTTON      "電源設定(&O)",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12
+                    IDC_STATIC,16, 159, 145, 35
+    PUSHBUTTON      "電源設定(&O)",IDC_SCREENS_POWER_BUTTON,165, 162, 73, 15
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -80,6 +78,18 @@ BEGIN
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,188,103,9
     PUSHBUTTON      "詳細設定(&V)...",IDC_SETTINGS_ADVANCED,306,205,56,14
+END
+
+IDR_POPUP_MENU MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Configure",     ID_MENU_CONFIG
+	MENUITEM "&Preview",       ID_MENU_PREVIEW
+	MENUITEM SEPARATOR
+	MENUITEM "&Add",           ID_MENU_ADD
+	MENUITEM "&Delete\tDel",   ID_MENU_DELETE
+  END
 END
 
 STRINGTABLE 

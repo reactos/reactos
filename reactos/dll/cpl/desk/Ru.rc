@@ -26,30 +26,28 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "&Заставка",IDC_SCREENS_DUMMY, 5, 7, 238, 137
     
-    LTEXT           "Список заставок:",IDC_STATIC,13, 24, 71, 9
+    LTEXT           "Список заставок:",IDC_STATIC,13, 24, 150, 9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,13, 34, 171, 69
-    PUSHBUTTON      "&Удалить",IDC_SCREENS_DELETE, 190, 52, 39, 15
-    PUSHBUTTON      "&Добавить",IDC_SCREENS_ADD_BUTTON, 190, 34, 39, 15
+                    WS_BORDER | WS_TABSTOP,13, 34, 170, 69
 
-    PUSHBUTTON      "&Настройка...",IDC_SCREENS_SETTINGS,140, 124, 48, 15, WS_GROUP
-    PUSHBUTTON      "Про&смотр",IDC_SCREENS_TESTSC,192, 124, 43, 15
+    PUSHBUTTON      "&Настройка...",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
+    PUSHBUTTON      "Про&смотр",IDC_SCREENS_TESTSC,188, 52, 50, 15
 
     CONTROL         "&Защита паролем.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 16, 121, 119, 18
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 13, 121, 119, 18
 
-    LTEXT           "&Интервал:",IDC_STATIC, 13, 110, 32, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 48, 109, 31, 12,ES_RIGHT | WS_GROUP
+    LTEXT           "&Интервал:",IDC_STATIC, 13, 110, 20, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 33, 109, 31, 12,ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP, 77, 109, 12, 12
-    LTEXT           "минут до отображения заставки.",IDC_STATIC, 80, 111, 147, 9
+                    WS_BORDER | WS_GROUP, 52, 109, 12, 12
+    LTEXT           "минут до отображения заставки.",IDC_STATIC, 70, 111, 147, 9
 
-    GROUPBOX        "&Энергосберегающие функции монитора",IDC_SCREENS_DUMMY2, 5, 144, 238, 42
+    GROUPBOX        "&Энергосберегающие функции монитора",IDC_SCREENS_DUMMY2, 5, 146, 238, 50
     LTEXT           "Для изменения параметров питания монитора нажмите кнопку Параметры Питания.",
-                    IDC_STATIC, 16, 156, 155, 24
-    PUSHBUTTON      "Параметры &Питания",IDC_SCREENS_POWER_BUTTON, 160, 162, 77, 15
+                    IDC_STATIC, 16, 159, 145, 35
+    PUSHBUTTON      "Параметры &Питания",IDC_SCREENS_POWER_BUTTON, 165, 162, 73, 15
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188
@@ -80,6 +78,18 @@ BEGIN
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,148,103,9
     PUSHBUTTON      "До&полнительно...",IDC_SETTINGS_ADVANCED,306,165,56,14
+END
+
+IDR_POPUP_MENU MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Configure",     ID_MENU_CONFIG
+	MENUITEM "&Preview",       ID_MENU_PREVIEW
+	MENUITEM SEPARATOR
+	MENUITEM "&Add",           ID_MENU_ADD
+	MENUITEM "&Delete\tDel",   ID_MENU_DELETE
+  END
 END
 
 STRINGTABLE 

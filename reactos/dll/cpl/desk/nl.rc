@@ -26,20 +26,18 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "&Schermbeveiliging",IDC_SCREENS_DUMMY, 5, 7, 238, 136
     
-    LTEXT           "Lijst van de schermbeveiligingen:",IDC_STATIC,13, 24, 71, 9
+    LTEXT           "Lijst van de schermbeveiligingen:",IDC_STATIC,13, 24, 150, 9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,13, 34, 171, 69
-    PUSHBUTTON      "&Wissen",IDC_SCREENS_DELETE, 190,47,39,10
-    PUSHBUTTON      "&Toevoegen",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
+                    WS_BORDER | WS_TABSTOP,13, 34, 170, 69
 
-    PUSHBUTTON      "&Instellingen...",IDC_SCREENS_SETTINGS,140, 124, 48, 12,WS_GROUP
-    PUSHBUTTON      "V&oorbeeld",IDC_SCREENS_TESTSC,192, 124, 43, 12
+    PUSHBUTTON      "&Instellingen...",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
+    PUSHBUTTON      "V&oorbeeld",IDC_SCREENS_TESTSC,188, 52, 50, 15
 
     CONTROL         "&Beveiligd met wachtwoord.",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 119, 18
 
-    LTEXT           "W&acht:",IDC_STATIC,13, 110, 17, 9
+    LTEXT           "W&acht:",IDC_STATIC,13, 110, 20, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 109, 31, 12,ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
@@ -48,8 +46,8 @@ BEGIN
 
     GROUPBOX        "&Energiebesparende functies van de monitor",IDC_SCREENS_DUMMY2,5, 146, 238, 35
     LTEXT           "Klik op Instellingen om de energiebesparende mogelijkheden van de monitor in te stellen.",
-                    IDC_STATIC,16, 159, 155, 19
-    PUSHBUTTON      "Inst&ellingen",IDC_SCREENS_POWER_BUTTON,180, 162, 57, 12
+                    IDC_STATIC,16, 159, 145, 19
+    PUSHBUTTON      "Inst&ellingen",IDC_SCREENS_POWER_BUTTON,165, 162, 73, 15
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188
@@ -80,6 +78,18 @@ BEGIN
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,148,103,9
     PUSHBUTTON      "&Geavanceerd...",IDC_SETTINGS_ADVANCED,306,165,56,14
+END
+
+IDR_POPUP_MENU MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Configure",     ID_MENU_CONFIG
+	MENUITEM "&Preview",       ID_MENU_PREVIEW
+	MENUITEM SEPARATOR
+	MENUITEM "&Add",           ID_MENU_ADD
+	MENUITEM "&Delete\tDel",   ID_MENU_DELETE
+  END
 END
 
 STRINGTABLE 

@@ -29,30 +29,28 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "&Skärmsläckare",IDC_SCREENS_DUMMY, 5, 7, 238, 136
     
-    LTEXT           "Skärmsläckare:",IDC_STATIC,13, 24, 71, 9
+    LTEXT           "Skärmsläckare:",IDC_STATIC,13, 24, 150, 9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,13, 34, 171, 69
-    PUSHBUTTON      "&Ta bort",IDC_SCREENS_DELETE, 190,47,39,10
-    PUSHBUTTON      "&Lägg till",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
+                    WS_BORDER | WS_TABSTOP,13, 34, 170, 69
 
-    PUSHBUTTON      "&Inställningar",IDC_SCREENS_SETTINGS,138, 124, 48, 12,WS_GROUP
-    PUSHBUTTON      "&Förhandsvisa",IDC_SCREENS_TESTSC,190, 124, 48, 12
+    PUSHBUTTON      "&Inställningar",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
+    PUSHBUTTON      "&Förhandsvisa",IDC_SCREENS_TESTSC,188, 52, 50, 15
 
     CONTROL         "&Kräv lösenord för att återvända.",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 119, 18
 
-    LTEXT           "&Vänta:",IDC_STATIC,13, 110, 17, 9
+    LTEXT           "&Vänta:",IDC_STATIC,13, 110, 20, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 109, 31, 12,ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP,52, 109, 12, 12
     LTEXT           "minuter innan skärmsläckaren visas.",IDC_STATIC,70, 111, 147, 9
 
-    GROUPBOX        "&Energisparfunktioner för din bildskärm",IDC_SCREENS_DUMMY2,5, 146, 238, 35
+    GROUPBOX        "&Energisparfunktioner för din bildskärm",IDC_SCREENS_DUMMY2,5, 146, 238, 50
     LTEXT           "För att ändra energisparfunktionerna för din bildskärm,\nklicka på Inställningar.",
-                    IDC_STATIC,16, 159, 155, 19
-    PUSHBUTTON      "Ins&tällningar",IDC_SCREENS_POWER_BUTTON,180, 162, 57, 12
+                    IDC_STATIC,16, 159, 145, 35
+    PUSHBUTTON      "Ins&tällningar",IDC_SCREENS_POWER_BUTTON,165, 162, 73, 15
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188
@@ -83,6 +81,18 @@ BEGIN
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,138,103,9
     PUSHBUTTON      "&Avancerat...",IDC_SETTINGS_ADVANCED,306,165,56,14
+END
+
+IDR_POPUP_MENU MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Configure",     ID_MENU_CONFIG
+	MENUITEM "&Preview",       ID_MENU_PREVIEW
+	MENUITEM SEPARATOR
+	MENUITEM "&Add",           ID_MENU_ADD
+	MENUITEM "&Delete\tDel",   ID_MENU_DELETE
+  END
 END
 
 STRINGTABLE 
