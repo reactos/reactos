@@ -115,28 +115,83 @@ _dump_context(PCONTEXT pc)
    DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
 }
 
+static LONG
+BasepCheckForReadOnlyResource(IN PVOID Ptr)
+{
+    PVOID Data;
+    ULONG Size, OldProtect;
+    MEMORY_BASIC_INFORMATION mbi;
+    NTSTATUS Status;
+    LONG Ret = EXCEPTION_CONTINUE_SEARCH;
+
+    /* Check if it was an attempt to write to a read-only image section! */
+    Status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                  Ptr,
+                                  MemoryBasicInformation,
+                                  &mbi,
+                                  sizeof(mbi),
+                                  NULL);
+    if (NT_SUCCESS(Status) &&
+        mbi.Protect == PAGE_READONLY && mbi.Type == MEM_IMAGE)
+    {
+        /* Attempt to treat it as a resource section. We need to
+           use SEH here because we don't know if it's actually a
+           resource mapping */
+
+        _SEH_TRY
+        {
+            Data = RtlImageDirectoryEntryToData(mbi.AllocationBase,
+                                                TRUE,
+                                                IMAGE_DIRECTORY_ENTRY_RESOURCE,
+                                                &Size);
+
+            if (Data != NULL &&
+                (ULONG_PTR)Ptr >= (ULONG_PTR)Data &&
+                (ULONG_PTR)Ptr < (ULONG_PTR)Data + Size)
+            {
+                /* The user tried to write into the resources. Make the page
+                   writable... */
+                Size = 1;
+                Status = NtProtectVirtualMemory(NtCurrentProcess(),
+                                                &Ptr,
+                                                &Size,
+                                                PAGE_READWRITE,
+                                                &OldProtect);
+                if (NT_SUCCESS(Status))
+                {
+                    Ret = EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+        }
+        _SEH_HANDLE
+        {
+        }
+        _SEH_END;
+    }
+
+    return Ret;
+}
+
 /*
  * @unimplemented
  */
 LONG STDCALL
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
-#if 0
-   DWORD RetValue;
-#endif
+   LONG RetValue;
    HANDLE DebugPort = NULL;
    NTSTATUS ErrCode;
 
-#if 0
    if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
        ExceptionInfo->ExceptionRecord->ExceptionInformation[0])
    {
-      RetValue = _BasepCheckForReadOnlyResource(
-         ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+      /* Change the protection on some write attempts, some InstallShield setups
+         have this bug */
+      RetValue = BasepCheckForReadOnlyResource(
+         (PVOID)ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
       if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
          return EXCEPTION_CONTINUE_EXECUTION;
    }
-#endif
 
    /* Is there a debugger running ? */
    ErrCode = NtQueryInformationProcess(NtCurrentProcess(), ProcessDebugPort,
