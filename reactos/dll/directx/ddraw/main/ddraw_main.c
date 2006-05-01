@@ -789,13 +789,18 @@ HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps
     IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
 	
     if (pDriverCaps != NULL) 
-    {           
+    {        
+      
+      
+      
 	  Main_DirectDraw_GetAvailableVidMem(iface, 
 		                                 &ddscaps,
 		                                 &This->mDDrawGlobal.ddCaps.dwVidMemTotal, 
 		                                 &This->mDDrawGlobal.ddCaps.dwVidMemFree);	 
-	
+	  
 	  RtlCopyMemory(pDriverCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
+	  pDriverCaps->dwSize=sizeof(DDCAPS);
+	  
       status = DD_OK;
     }
 

@@ -18,6 +18,8 @@
 	<file>main.c</file>
 	<file>regsvr.c</file>
 
+      <file>clipper.c</file>
+
 	<directory name="hal">
 		<file>ddraw_hal.c</file>
 		<file>surface_hal.c</file>
@@ -25,8 +27,7 @@
 
 	<directory name="main">
 		<file>ddraw_main.c</file>
-		<file>surface_main.c</file>
-		<file>clipper_main.c</file>
+		<file>surface_main.c</file>		
 		<file>color_main.c</file>
 		<file>gamma_main.c</file>
 		<file>palette_main.c</file>

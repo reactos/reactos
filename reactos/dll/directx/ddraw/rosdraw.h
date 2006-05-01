@@ -159,6 +159,54 @@ typedef struct
 
 } IDirectDrawPaletteImpl;
 
+/******** Gamma Object ********/
+
+typedef struct 
+{
+	IDirectDrawGammaControlVtbl* lpVtbl;
+    LONG ref;
+    IDirectDrawImpl* Owner;
+    IDirectDrawSurfaceImpl* Surf;
+
+
+} IDirectDrawGammaImpl;
+
+/******** Color Object ********/
+
+typedef struct 
+{
+	IDirectDrawColorControlVtbl* lpVtbl;
+    LONG ref;
+    IDirectDrawImpl* Owner;
+    IDirectDrawSurfaceImpl* Surf;
+
+
+} IDirectDrawColorImpl;
+
+/******** Kernel Object ********/
+
+typedef struct 
+{
+	IDirectDrawKernelVtbl* lpVtbl;
+    LONG ref;
+    IDirectDrawImpl* Owner;
+    IDirectDrawSurfaceImpl* Surf;
+
+} IDirectDrawKernelImpl;
+
+/******** SurfaceKernel Object ********/
+
+typedef struct 
+{
+	IDirectDrawSurfaceKernelVtbl* lpVtbl;
+    LONG ref;
+    IDirectDrawImpl* Owner;
+    IDirectDrawSurfaceImpl* Surf;
+    IDirectDrawKernelImpl * Kernl;
+
+} IDirectDrawSurfaceKernelImpl;
+
+
 /*********** VTables ************/
 
 extern IDirectDraw7Vtbl				DirectDraw7_Vtable;
@@ -173,6 +221,8 @@ extern IDirectDrawPaletteVtbl		DirectDrawPalette_Vtable;
 extern IDirectDrawClipperVtbl		DirectDrawClipper_Vtable;
 extern IDirectDrawColorControlVtbl	DirectDrawColorControl_Vtable;
 extern IDirectDrawGammaControlVtbl	DirectDrawGammaControl_Vtable;
+extern IDirectDrawKernelVtbl        DirectDrawKernel_Vtable;
+extern IDirectDrawSurfaceKernelVtbl DirectDrawSurfaceKernel_Vtable;
 
 /********* Prototypes **********/
 
@@ -211,8 +261,16 @@ HRESULT Hel_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAWSURFACE7 o
 HRESULT Hel_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags);
 
 /* HEL CALLBACK */
-DWORD CALLBACK HelDdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd);
-DWORD CALLBACK HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA  lpCreateSurface);
+DWORD CALLBACK  HelDdDestroyDriver(LPDDHAL_DESTROYDRIVERDATA lpDestroyDriver);
+DWORD CALLBACK  HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA lpCreateSurface);
+DWORD CALLBACK  HelDdSetColorKey(LPDDHAL_SETCOLORKEYDATA lpSetColorKey);
+DWORD CALLBACK  HelDdSetMode(LPDDHAL_SETMODEDATA SetMode);
+DWORD CALLBACK  HelDdWaitForVerticalBlank(LPDDHAL_WAITFORVERTICALBLANKDATA lpWaitForVerticalBlank);
+DWORD CALLBACK  HelDdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA lpCanCreateSurface);
+DWORD CALLBACK  HelDdCreatePalette(LPDDHAL_CREATEPALETTEDATA lpCreatePalette);
+DWORD CALLBACK  HelDdGetScanLine(LPDDHAL_GETSCANLINEDATA lpGetScanLine);
+DWORD CALLBACK  HelDdSetExclusiveMode(LPDDHAL_SETEXCLUSIVEMODEDATA lpSetExclusiveMode);
+DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISurface);
 
 
 /* Setting for HEL should be move to ros special reg key ? */
@@ -232,6 +290,18 @@ DWORD CALLBACK HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA  lpCreateSurface);
 		firstcall = FALSE; \
 	} \
 	return DDERR_UNSUPPORTED; 
+	
+#define DX_STUB_DD_OK \
+	static BOOL firstcall = TRUE; \
+	if (firstcall) \
+	{ \
+		char buffer[1024]; \
+		sprintf ( buffer, "Function %s is not implemented yet (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
+		OutputDebugStringA(buffer); \
+		firstcall = FALSE; \
+	} \
+	return DD_OK; 	
+	
 
 #define DX_STUB_str(x) \
 	static BOOL firstcall = TRUE; \
