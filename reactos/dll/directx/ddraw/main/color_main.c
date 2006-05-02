@@ -11,41 +11,78 @@
 #include "rosdraw.h"
 
 ULONG WINAPI
-Main_DirectDrawColorControl_AddRef(LPDIRECTDRAWCOLORCONTROL iface)
+DirectDrawColorControl_AddRef( LPDIRECTDRAWCOLORCONTROL iface)
 {   
-   	return 1;
+   DX_WINDBG_trace();
+      
+   IDirectDrawColorImpl * This = (IDirectDrawColorImpl*)iface;
+   
+   ULONG ref=0;
+    
+   if (iface!=NULL)
+   {
+       ref = InterlockedIncrement( (PLONG) &This->ref);       
+   }    
+   return ref; 
 }
 
 ULONG WINAPI
-Main_DirectDrawColorControl_Release(LPDIRECTDRAWCOLORCONTROL iface)
+DirectDrawColorControl_Release( LPDIRECTDRAWCOLORCONTROL iface)
 {
-    return 0;
+    DX_WINDBG_trace();
+
+    IDirectDrawColorImpl* This = (IDirectDrawColorImpl*)iface;
+	ULONG ref=0;
+
+	if (iface!=NULL)
+	{	  	
+		ref = InterlockedDecrement( (PLONG) &This->ref);
+            
+		if (ref == 0)
+		{		
+		    /* Add here if we need releae some memory pointer before 
+             * exists
+             */   
+		      			
+            if (This!=NULL)
+            {              
+			    HeapFree(GetProcessHeap(), 0, This);
+            }
+		}
+    }
+    return ref;
 }
 
 HRESULT WINAPI
-Main_DirectDrawColorControl_QueryInterface(LPDIRECTDRAWCOLORCONTROL iface, 
-										   REFIID riid, LPVOID* ppvObj) 
+DirectDrawColorControl_QueryInterface( LPDIRECTDRAWCOLORCONTROL iface, 
+									   REFIID riid, 
+                                       LPVOID* ppvObj) 
 {
-	return E_NOINTERFACE;
+   DX_WINDBG_trace();
+   DX_STUB;  
 }
 
 HRESULT WINAPI
-Main_DirectDrawColorControl_GetColorControls(LPDIRECTDRAWCOLORCONTROL iface, LPDDCOLORCONTROL lpColorControl)
+DirectDrawColorControl_GetColorControls( LPDIRECTDRAWCOLORCONTROL iface, 
+                                         LPDDCOLORCONTROL lpColorControl)
 {
-   	DX_STUB;
+   DX_WINDBG_trace();
+   DX_STUB;  
 }
 
 HRESULT WINAPI
-Main_DirectDrawColorControl_SetColorControls(LPDIRECTDRAWCOLORCONTROL iface, LPDDCOLORCONTROL lpColorControl)
+DirectDrawColorControl_SetColorControls( LPDIRECTDRAWCOLORCONTROL iface,
+                                         LPDDCOLORCONTROL lpColorControl)
 {
-   	DX_STUB;
+   DX_WINDBG_trace();
+   DX_STUB;  
 }
 
 IDirectDrawColorControlVtbl DirectDrawColorControl_Vtable =
 {
-    Main_DirectDrawColorControl_QueryInterface,
-    Main_DirectDrawColorControl_AddRef,
-    Main_DirectDrawColorControl_Release,
-    Main_DirectDrawColorControl_GetColorControls,
-    Main_DirectDrawColorControl_SetColorControls
+    DirectDrawColorControl_QueryInterface,
+    DirectDrawColorControl_AddRef,
+    DirectDrawColorControl_Release,
+    DirectDrawColorControl_GetColorControls,
+    DirectDrawColorControl_SetColorControls
 };
