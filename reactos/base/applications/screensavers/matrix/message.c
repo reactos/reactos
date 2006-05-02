@@ -35,7 +35,7 @@ WORD crc_msgrand(WORD reg)
 //
 //	Set a new message based on font and text
 //
-void SetMatrixMessage(MATRIX_MESSAGE *msg, HFONT hFont, char *text)
+void SetMatrixMessage(MATRIX_MESSAGE *msg, HFONT hFont, TCHAR *text)
 {
 	HDC		hdc;
 	RECT	rect;
@@ -198,7 +198,7 @@ void DoMatrixMessage(HDC hdc, MATRIX *matrix)
 //
 //	Set current font used for messages
 //
-void SetMessageFont(HWND hwnd, char *szFontName, int nPointSize, BOOL fBold)
+void SetMessageFont(HWND hwnd, TCHAR *szFontName, int nPointSize, BOOL fBold)
 {
 	int		lfHeight;
 	HDC		hdc;

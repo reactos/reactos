@@ -22,7 +22,7 @@ typedef struct
 
 } MATRIX_MESSAGE;
 
-void			SetMessageFont(HWND hwnd, char *szFontName, int nPointSize, BOOL fBold);
+void			SetMessageFont(HWND hwnd, TCHAR *szFontName, int nPointSize, BOOL fBold);
 MATRIX_MESSAGE *InitMatrixMessage(HWND hwnd, int width, int height);
 
 #ifdef __cplusplus

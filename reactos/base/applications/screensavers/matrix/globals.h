@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define APPNAME	"MATRIX ScreenSaver 2.0"
+#define APPNAME	_T("MATRIX ScreenSaver 2.0")
 
 #define DENSITY			24
 #define DENSITY_MAX		50
@@ -32,9 +32,9 @@ extern "C" {
 #define FONT_MIN	8
 #define FONT_MAX	30
 
-extern char		g_szMessages[MAX_MESSAGES][MAXMSG_LENGTH];
+extern TCHAR	g_szMessages[MAX_MESSAGES][MAXMSG_LENGTH];
 extern int		g_nFontSize;
-extern char		g_szFontName[];
+extern TCHAR	g_szFontName[];
 extern BOOL		g_fFontBold;
 extern int		g_nNumMessages;
 extern int		g_nCurrentMessage;

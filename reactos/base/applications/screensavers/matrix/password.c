@@ -4,9 +4,10 @@
 //	Password support for Win9x
 //
 #include <windows.h>
+#include <tchar.h>
 
 typedef BOOL (WINAPI *VERIFYSCREENSAVEPWD)(HWND hwnd);
-typedef VOID (WINAPI *PWDCHANGEPASSWORD)(LPCSTR lpcRegkeyname, HWND hwnd,UINT uiReserved1,UINT uiReserved2);
+typedef VOID (WINAPI *PWDCHANGEPASSWORD)(LPCTSTR lpcRegkeyname, HWND hwnd,UINT uiReserved1,UINT uiReserved2);
 
 BOOL VerifyPassword(HWND hwnd)
 { 
@@ -22,7 +23,7 @@ BOOL VerifyPassword(HWND hwnd)
 	if(GetVersion() < 0x80000000)
 		return TRUE;
 
-	hpwdcpl = LoadLibrary("PASSWORD.CPL");
+	hpwdcpl = LoadLibrary(_T("PASSWORD.CPL"));
 
 	if(hpwdcpl == NULL) 
 	{
@@ -47,7 +48,7 @@ BOOL VerifyPassword(HWND hwnd)
 BOOL ChangePassword(HWND hwnd)
 { 
 	// This only ever gets called under '95, when started with the /a option.
-	HINSTANCE hmpr = LoadLibrary("MPR.DLL");
+	HINSTANCE hmpr = LoadLibrary(_T("MPR.DLL"));
 	PWDCHANGEPASSWORD PwdChangePassword;
 
 	if(hmpr == NULL) 
@@ -61,7 +62,7 @@ BOOL ChangePassword(HWND hwnd)
 		return FALSE;
 	}
 
-	PwdChangePassword("SCRSAVE", hwnd, 0, 0); 
+	PwdChangePassword(_T("SCRSAVE"), hwnd, 0, 0); 
 	FreeLibrary(hmpr);
 
 	return TRUE;

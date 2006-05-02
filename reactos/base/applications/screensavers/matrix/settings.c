@@ -4,14 +4,15 @@
 //	Load/Save settings from registry
 //
 #include <windows.h>
+#include <tchar.h>
 #include "globals.h"
 #include "message.h"
 #include "matrix.h"
 
-char	g_szMessages[MAX_MESSAGES][MAXMSG_LENGTH];
+TCHAR	g_szMessages[MAX_MESSAGES][MAXMSG_LENGTH];
 int		g_nNumMessages		 = 0;
 int		g_nMessageSpeed		 = 5;
-char	g_szFontName[512]	 = "Arial";
+TCHAR	g_szFontName[512]	 = _T("Arial");
 
 int		g_nMatrixSpeed		 = 150;
 int		g_nDensity			 = 32;
@@ -27,61 +28,61 @@ void LoadSettings()
 	HKEY hkey;
 	LONG value;
 	ULONG len;
-	char *hugechar = malloc(4096);
-	char *hptr = hugechar;
+	TCHAR *hugechar = malloc(4096);
+	TCHAR *hptr = hugechar;
 
 	if(hugechar == 0)
 		return;
 
-	hugechar[0] = '\0';
+	hugechar[0] = _T('\0');
 
-	RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Catch22\\Matrix Screen Saver", 0,
-		"", 0, KEY_READ, NULL, &hkey, NULL);
+	RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Catch22\\Matrix Screen Saver"), 0,
+		_T(""), 0, KEY_READ, NULL, &hkey, NULL);
 
 	len = sizeof value;
-	if(ERROR_SUCCESS == RegQueryValueEx(hkey, "MessageSpeed", 0, 0, (BYTE *)&value, &len))
+	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("MessageSpeed"), 0, 0, (BYTE *)&value, &len))
 	{
 		if(value >= MSGSPEED_MIN && value <= MSGSPEED_MAX)
 			g_nMessageSpeed = value;
 	}
 
-	if(ERROR_SUCCESS == RegQueryValueEx(hkey, "MatrixSpeed",  0, 0, (BYTE *)&value, &len))
+	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("MatrixSpeed"),  0, 0, (BYTE *)&value, &len))
 	{
 		if(value >= SPEED_MIN && value <= SPEED_MAX)
 			g_nMatrixSpeed  = value;
 	}
 	
-	if(ERROR_SUCCESS == RegQueryValueEx(hkey, "Density",      0, 0, (BYTE *)&value, &len))
+	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("Density"),      0, 0, (BYTE *)&value, &len))
 	{
 		if(value >= DENSITY_MIN && value <= DENSITY_MAX)
 			g_nDensity      = value;
 	}
 
-	if(ERROR_SUCCESS == RegQueryValueEx(hkey, "FontSize",      0, 0, (BYTE *)&value, &len))
+	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("FontSize"),      0, 0, (BYTE *)&value, &len))
 	{
 		if(value >= FONT_MIN && value <= FONT_MAX)
 			g_nFontSize	 = value;
 	}
 
-	if(ERROR_SUCCESS == RegQueryValueEx(hkey, "FontBold",      0, 0, (BYTE *)&value, &len))
+	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("FontBold"),      0, 0, (BYTE *)&value, &len))
 		g_fFontBold = (value == 0 ? FALSE : TRUE);
 
-	if(ERROR_SUCCESS == RegQueryValueEx(hkey, "Randomize",      0, 0, (BYTE *)&value, &len))
+	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("Randomize"),      0, 0, (BYTE *)&value, &len))
 		g_fRandomizeMessages = (value == 0 ? FALSE : TRUE);
 
 	len = 4096;
-	if(ERROR_SUCCESS == RegQueryValueEx(hkey, "FontName",  0, 0, (BYTE *)hugechar, &len))
+	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("FontName"),  0, 0, (BYTE *)hugechar, &len))
 	{
 		if(len > 0)
 			lstrcpy(g_szFontName, hugechar);
 		else
-			lstrcpy(g_szFontName, "Arial");
+			lstrcpy(g_szFontName, _T("Arial"));
 
 	}
 
 	len = 4096;
 
-	if(ERROR_SUCCESS == RegQueryValueEx(hkey, "Messages",      0, 0 , (BYTE *)hugechar, &len))
+	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("Messages"),      0, 0 , (BYTE *)hugechar, &len))
 	{
 		while(len > 0 && *hptr && isascii(*hptr))
 		{
@@ -96,7 +97,7 @@ void LoadSettings()
 	else
 	{
 		/* built-in coded message for first run */
-		lstrcpyn(g_szMessages[0], "ReactOS", MAXMSG_LENGTH);
+		lstrcpyn(g_szMessages[0], _T("ReactOS"), MAXMSG_LENGTH);
 	}
 
 	RegCloseKey(hkey);
@@ -106,8 +107,8 @@ void LoadSettings()
 void SaveSettings()
 {
 	HKEY hkey;
-	char *hugechar = malloc(4096);
-	char *msgptr = hugechar;
+	TCHAR *hugechar = malloc(4096);
+	TCHAR *msgptr = hugechar;
 	int totallen = 0;
 	int i,len;
 	LONG value;
@@ -115,31 +116,31 @@ void SaveSettings()
 	if(hugechar == 0)
 		return;
 
-	hugechar[0] = '\0';
+	hugechar[0] = _T('\0');
 	msgptr = hugechar;
 
-	RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Catch22\\Matrix Screen Saver", 0,
-		"", 0, KEY_WRITE, NULL, &hkey, NULL);
+	RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Catch22\\Matrix Screen Saver"), 0,
+		_T(""), 0, KEY_WRITE, NULL, &hkey, NULL);
 
 	value = g_nMessageSpeed;
-	RegSetValueEx(hkey, "MessageSpeed", 0, REG_DWORD, (BYTE *)&value, sizeof value);
+	RegSetValueEx(hkey, _T("MessageSpeed"), 0, REG_DWORD, (BYTE *)&value, sizeof value);
 
 	value = g_nMatrixSpeed;
-	RegSetValueEx(hkey, "MatrixSpeed", 0, REG_DWORD, (BYTE *)&value, sizeof value);
+	RegSetValueEx(hkey, _T("MatrixSpeed"), 0, REG_DWORD, (BYTE *)&value, sizeof value);
 
 	value = g_nDensity;
-	RegSetValueEx(hkey, "Density", 0, REG_DWORD, (BYTE *)&value, sizeof value);
+	RegSetValueEx(hkey, _T("Density"), 0, REG_DWORD, (BYTE *)&value, sizeof value);
 
 	value = g_nFontSize;
-	RegSetValueEx(hkey, "FontSize", 0, REG_DWORD, (BYTE *)&value, sizeof value);
+	RegSetValueEx(hkey, _T("FontSize"), 0, REG_DWORD, (BYTE *)&value, sizeof value);
 
 	value = g_fRandomizeMessages;
-	RegSetValueEx(hkey, "Randomize", 0, REG_DWORD, (BYTE *)&value, sizeof value);
+	RegSetValueEx(hkey, _T("Randomize"), 0, REG_DWORD, (BYTE *)&value, sizeof value);
 
 	value = g_fFontBold;
-	RegSetValueEx(hkey, "FontBold", 0, REG_DWORD, (BYTE *)&value, sizeof value);
+	RegSetValueEx(hkey, _T("FontBold"), 0, REG_DWORD, (BYTE *)&value, sizeof value);
 
-	RegSetValueEx(hkey, "FontName", 0, REG_SZ, (BYTE *)g_szFontName, lstrlen(g_szFontName));
+	RegSetValueEx(hkey, _T("FontName"), 0, REG_SZ, (BYTE *)g_szFontName, lstrlen(g_szFontName));
 
 	for(i = 0; i < g_nNumMessages; i++)
 	{
@@ -153,10 +154,10 @@ void SaveSettings()
 		}
 	}
 
-	*msgptr = '\0';
+	*msgptr = _T('\0');
 	totallen++;
 
-	RegSetValueEx(hkey, "Messages", 0, REG_MULTI_SZ, (BYTE *)hugechar, totallen);
+	RegSetValueEx(hkey, _T("Messages"), 0, REG_MULTI_SZ, (BYTE *)hugechar, totallen);
 	RegCloseKey(hkey);
 
 	free(hugechar);

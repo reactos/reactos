@@ -11,6 +11,7 @@
 //
 #include <windows.h>
 #include <windowsx.h>
+#include <tchar.h>
 #include "globals.h"
 #include "message.h"
 #include "matrix.h"
@@ -58,7 +59,7 @@ BOOL ScreenSaver(HWND hwndParent)
 	SystemParametersInfo(SPI_SETSCREENSAVERRUNNING, TRUE, &nPreviousState, 0);
 	
 	// Dynamically locate API call from USER32 - not present in all versions
-	hUser32					= GetModuleHandle("USER32.DLL");
+	hUser32					= GetModuleHandle(_T("USER32.DLL"));
 	pfnEnumDisplayMonitors	= (PVOID)GetProcAddress(hUser32, "EnumDisplayMonitors");
 
 	// If we're running Win2k+ then the API is available...so call it!
@@ -99,7 +100,7 @@ BOOL ScreenSaver(HWND hwndParent)
 //  -p <hwnd>		(preview)
 //  -c <hwnd>		(configure)
 //
-BOOL ParseCommandLine(PSTR szCmdLine, int *chOption, HWND *hwndParent)
+BOOL ParseCommandLine(LPSTR szCmdLine, int *chOption, HWND *hwndParent)
 {
 	int ch = *szCmdLine++;
 
@@ -150,10 +151,10 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLine, int iCmdS
 	
 	switch(chOption)
 	{
-	case 's':	return ScreenSaver(NULL);			// screen save
-	case 'p':	return ScreenSaver(hwndParent);		// preview in small window
-	case 'a':	return ChangePassword(hwndParent);	// ask for password
-	case 'c':	return Configure(hwndParent);		// configuration dialog
+	case _T('s'):	return ScreenSaver(NULL);			// screen save
+	case _T('p'):	return ScreenSaver(hwndParent);		// preview in small window
+	case _T('a'):	return ChangePassword(hwndParent);	// ask for password
+	case _T('c'):	return Configure(hwndParent);		// configuration dialog
 	default:	return Configure(hwndParent);		// configuration dialog
 	}
 

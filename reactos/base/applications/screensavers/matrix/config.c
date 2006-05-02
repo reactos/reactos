@@ -5,6 +5,7 @@
 //
 #include <windows.h>
 #include <commctrl.h>
+#include <tchar.h>
 #include "resource.h"
 #include "globals.h"
 #include "message.h"
@@ -32,7 +33,7 @@ void AddFonts(HWND hwndCombo)
 
 	lf.lfCharSet		= ANSI_CHARSET;
 	lf.lfPitchAndFamily = 0;
-	lf.lfFaceName[0]    = '\0';
+	lf.lfFaceName[0]    = _T('\0');
 
 	hdc = GetDC(0);
 	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontProc, (LONG)hwndCombo, 0);
@@ -54,7 +55,7 @@ void UpdatePreview(HWND hwnd)
 //
 BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static char buf[256];
+	static TCHAR buf[256];
 	HWND	hwndCombo, hwndCtrl;
 	int		index, items, val;
 	RECT	rect;

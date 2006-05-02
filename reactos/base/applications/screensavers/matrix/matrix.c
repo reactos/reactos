@@ -5,6 +5,7 @@
 //
 #include <windows.h>
 #include <windowsx.h>
+#include <tchar.h>
 #include "globals.h"
 #include "message.h"
 #include "matrix.h"
