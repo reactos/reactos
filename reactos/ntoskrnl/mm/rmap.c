@@ -300,6 +300,18 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       Status = MmPageOutVirtualMemory(AddressSpace, MemoryArea,
                                       Address, PageOp);
    }
+   else if (Type == MEMORY_AREA_CACHE_SEGMENT) 
+   {
+       /* 
+        * We do not need to write the page to the pagefile if is a
+        * cache segment: It will be reloaded from the original file
+        */ 
+        MmDeleteVirtualMapping(AddressSpace->Process, (PVOID)Address, FALSE, NULL, NULL);
+        MmUnlockAddressSpace(AddressSpace);
+        while(MmUnsharePage(Page));
+        MmDeleteAllRmaps(Page, NULL, NULL);
+        MmReleasePageMemoryConsumer(MC_CACHE, Page);
+   }
    else
    {
       KEBUGCHECK(0);
