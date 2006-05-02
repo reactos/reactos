@@ -133,6 +133,9 @@ CcMapData (IN PFILE_OBJECT FileObject,
         Bcb->CacheView[Index]->SectionData.Section = Bcb->Section;
         Bcb->CacheView[Index]->SectionData.Segment = Bcb->Section->Segment;
 
+        RemoveEntryList (&Bcb->CacheView[Index]->ListEntry);
+        InsertHeadList (&CcInUseCacheViewListHead, &Bcb->CacheView[Index]->ListEntry);
+
         Status = MmMapViewInSystemCache (Bcb->CacheView[Index]);
 
         if (!NT_SUCCESS (Status))
