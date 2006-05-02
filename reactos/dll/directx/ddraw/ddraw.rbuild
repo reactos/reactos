@@ -19,6 +19,11 @@
 	<file>regsvr.c</file>
 
       <file>clipper.c</file>
+	<file>color.c</file>
+	<file>gamma.c</file>
+	<file>palette.c</file>
+	<file>videoport.c</file>
+	<file>kernel.c</file>
 
 	<directory name="hal">
 		<file>ddraw_hal.c</file>
@@ -27,12 +32,7 @@
 
 	<directory name="main">
 		<file>ddraw_main.c</file>
-		<file>surface_main.c</file>		
-		<file>color_main.c</file>
-		<file>gamma_main.c</file>
-		<file>palette_main.c</file>
-		<file>videoport_main.c</file>
-		<file>kernel_main.c</file>
+		<file>surface_main.c</file>				
 	</directory>
 
 	<directory name="soft">
