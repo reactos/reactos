@@ -936,12 +936,12 @@ MmSharePage(PFN_TYPE Pfn)
 
    if (MmPageArray[Pfn].Flags.Type != MM_PHYSICAL_PAGE_USED)
      {
-	DbgPrint("Sharing free page\n");
+	DPRINT1("Sharing free page %lx\n", Pfn);
 	KEBUGCHECK(0);
      }
    if (MmPageArray[Pfn].ShareCount == 0xffffffff)
      {
-       DbgPrint("Maximum share count reached\n");
+       DPRINT1("Maximum share count reached\n");
        KEBUGCHECK(0);
      }
    MmPageArray[Pfn].ShareCount++;
