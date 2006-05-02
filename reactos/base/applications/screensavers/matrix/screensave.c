@@ -151,10 +151,10 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLine, int iCmdS
 	
 	switch(chOption)
 	{
-	case _T('s'):	return ScreenSaver(NULL);			// screen save
-	case _T('p'):	return ScreenSaver(hwndParent);		// preview in small window
-	case _T('a'):	return ChangePassword(hwndParent);	// ask for password
-	case _T('c'):	return Configure(hwndParent);		// configuration dialog
+	case 's':	return ScreenSaver(NULL);			// screen save
+	case 'p':	return ScreenSaver(hwndParent);		// preview in small window
+	case 'a':	return ChangePassword(hwndParent);	// ask for password
+	case 'c':	return Configure(hwndParent);		// configuration dialog
 	default:	return Configure(hwndParent);		// configuration dialog
 	}
 
