@@ -1270,7 +1270,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
       MmUnlockSectionSegment(Segment);
       MmUnlockAddressSpace(AddressSpace);
       Status = MmRequestPageMemoryConsumer(MemoryArea->Type == MEMORY_AREA_CACHE_SEGMENT
-		                                   ? MC_CACHE : MC_USER, FALSE, &Pfn[0]);
+		                                   ? MC_CACHE : MC_USER, TRUE, &Pfn[0]);
       if (!NT_SUCCESS(Status))
       {
          KEBUGCHECK(0);
