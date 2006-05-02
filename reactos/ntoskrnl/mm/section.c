@@ -63,6 +63,7 @@ typedef struct
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
    ULONG Offset;
+   ULONG Consumer;
    BOOLEAN WasDirty;
    BOOLEAN Private;
 }
@@ -754,13 +755,13 @@ MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
 }
 
 VOID
-MmspReleasePages(ULONG PageCount, PPFN_TYPE Pfns)
+MmspReleasePages(ULONG PageCount, PPFN_TYPE Pfns, ULONG Consumer)
 {
    ULONG i;
 
    for (i = 0; i < PageCount; i++)
    {
-      MmReleasePageMemoryConsumer(MC_USER, Pfns[i]);
+      MmReleasePageMemoryConsumer(Consumer, Pfns[i]);
    }
 }
 
@@ -775,7 +776,7 @@ MmspRequestPages(ULONG PageCount, PPFN_TYPE Pfns, ULONG Consumer)
       Status = MmRequestPageMemoryConsumer(Consumer, TRUE, &Pfns[i]);
       if (!NT_SUCCESS(Status))
       {
-         MmspReleasePages(i, Pfns);
+         MmspReleasePages(i, Pfns, Consumer);
          return Status;
       }
    }
@@ -959,7 +960,7 @@ MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
    }
    if (!NT_SUCCESS(Status))
    {
-      MmspReleasePages(PageCount, Pages);
+      MmspReleasePages(PageCount, Pages, Consumer);
    }
    return Status;
 }
@@ -2479,7 +2480,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    
    if (PageOutContext->Private)
    {
-      MmReleasePageMemoryConsumer(MC_USER, Page);
+      MmReleasePageMemoryConsumer(PageOutContext->Consumer, Page);
    }
 
    DPRINT("PhysicalAddress %x, Address %x\n", Page << PAGE_SHIFT, Address);
@@ -2508,6 +2509,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
     */
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
+
+   Context.Consumer = MemoryArea->Type == MEMORY_AREA_CACHE_SEGMENT ? MC_CACHE : MC_USER;
 
    Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
                     + MemoryArea->Data.SectionData.ViewOffset;
