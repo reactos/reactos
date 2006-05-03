@@ -496,7 +496,7 @@ void RefreshCursorList(HWND hwndDlg)
     INT index = 0;
 
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_LISTVIEW_CURSOR);
-    ListView_DeleteAllItems(hDlgCtrl);
+    (void)ListView_DeleteAllItems(hDlgCtrl);
 
     ZeroMemory(&column, sizeof(LV_COLUMN));
     column.mask      = LVCF_SUBITEM | LVCF_WIDTH;
@@ -516,60 +516,60 @@ void RefreshCursorList(HWND hwndDlg)
     listItem.iItem      = index++;
     listItem.lParam     = 0;
 
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_HELP, szCursorName, MAX_PATH);
     listItem.iItem      = index++;	
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_APPSTARTING, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_WAIT, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_CROSSHAIR, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_IBEAM, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_NWPEN, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_NO, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_SIZENS, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
 
     LoadString(hApplet, IDS_SIZENWSE, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_SIZENESW, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_SIZEALL, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_UPARROW, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 
     LoadString(hApplet, IDS_HAND, szCursorName, MAX_PATH);
     listItem.iItem      = index++;
-    ListView_InsertItem(hDlgCtrl, &listItem);
+    (void)ListView_InsertItem(hDlgCtrl, &listItem);
 }
 
 BOOL DeleteUserCursorScheme(TCHAR * szScheme)
@@ -686,7 +686,7 @@ PointerProc(IN HWND hwndDlg,
             if (lppsn->hdr.code == PSN_APPLY)
             {
 #if (WINVER >= 0x0500)
-                SystemParametersInfo(SPI_SETDROPSHADOW, 0, g_DropShadow, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETDROPSHADOW, 0, (PVOID)g_DropShadow, SPIF_SENDCHANGE);
 #endif
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
@@ -1030,14 +1030,14 @@ OptionProc(IN HWND hwndDlg,
                 /* calc pos and set mouse sensitivity */
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_MOUSE_SENSITIVITY);
                 lResult = SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0) + 1;
-                SystemParametersInfo(SPI_SETMOUSESPEED, 0, g_MouseSensitivity, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETMOUSESPEED, 0, (PVOID)g_MouseSensitivity, SPIF_SENDCHANGE);
 	
 
                 /* hide pointer while typing */
-                SystemParametersInfo(SPI_SETMOUSEVANISH, 0, g_HidePointer, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETMOUSEVANISH, 0, (PVOID)g_HidePointer, SPIF_SENDCHANGE);
 
                 /* show pointer with Ctrl-Key */
-                SystemParametersInfo(SPI_SETMOUSESONAR, 0, g_ShowPointer, SPIF_SENDCHANGE);
+                SystemParametersInfo(SPI_SETMOUSESONAR, 0, (PVOID)g_ShowPointer, SPIF_SENDCHANGE);
 #endif				
 				
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
