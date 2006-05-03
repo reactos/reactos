@@ -1001,6 +1001,13 @@ IntCallWindowProcA(BOOL IsAnsiProc,
     }
 }
 
+static BOOL __inline
+IsCallProcHandle(IN WNDPROC lpWndProc)
+{
+    /* FIXME - check for 64 bit architectures... */
+    return ((ULONG_PTR)lpWndProc & 0xFFFF0000) == 0xFFFF0000;
+}
+
 
 /*
  * @implemented
@@ -1018,7 +1025,8 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
   if (lpPrevWndFunc == NULL)
     lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWLP_WNDPROC, TRUE);
 
-  if (!NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
+  if (!IsCallProcHandle(lpPrevWndFunc) ||
+      !NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
                                       &wpInfo))
     {
       return IntCallWindowProcA(TRUE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
@@ -1047,7 +1055,8 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
   if (lpPrevWndFunc == NULL)
     lpPrevWndFunc = (WNDPROC)NtUserGetWindowLong(hWnd, GWLP_WNDPROC, FALSE);
 
-  if (!NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
+  if (!IsCallProcHandle(lpPrevWndFunc) ||
+      !NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
                                       &wpInfo))
     {
       return IntCallWindowProcW(FALSE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);

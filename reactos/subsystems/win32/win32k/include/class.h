@@ -4,6 +4,9 @@
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
 
+WNDPROC
+GetCallProcHandle(IN PCALLPROC CallProc);
+
 VOID
 DestroyCallProc(IN PDESKTOP Desktop,
                 IN OUT PCALLPROC CallProc);
@@ -17,12 +20,6 @@ CreateCallProc(IN PDESKTOP Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
                IN PW32PROCESSINFO pi);
-
-NTSTATUS FASTCALL
-InitClassImpl(VOID);
-
-NTSTATUS FASTCALL
-CleanupClassImpl(VOID);
 
 BOOL
 UserGetCallProcInfo(IN HANDLE hCallProc,

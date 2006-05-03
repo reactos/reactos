@@ -33,106 +33,7 @@
 #define NDEBUG
 #include <debug.h>
 
-/* CALLPROC ******************************************************************/
-
-VOID
-DestroyCallProc(IN PDESKTOP Desktop,
-                IN OUT PCALLPROC CallProc)
-{
-    /* FIXME - use new object manager! */
-    HANDLE Handle = ObmObjectToHandle(CallProc);
-
-    ObmDeleteObject(Handle,
-                    otCallProc);
-}
-
-PCALLPROC
-CloneCallProc(IN PDESKTOP Desktop,
-              IN PCALLPROC CallProc)
-{
-    PCALLPROC NewCallProc;
-    HANDLE Handle;
-
-    /* FIXME - use new object manager! */
-    NewCallProc = (PCALLPROC)ObmCreateObject(gHandleTable,
-                                             &Handle,
-                                             otCallProc,
-                                             sizeof(CALLPROC));
-    if (NewCallProc != NULL)
-    {
-        NewCallProc->pi = CallProc->pi;
-        NewCallProc->WndProc = CallProc->WndProc;
-        NewCallProc->Unicode = CallProc->Unicode;
-    }
-
-    return NewCallProc;
-}
-
-PCALLPROC
-CreateCallProc(IN PDESKTOP Desktop,
-               IN WNDPROC WndProc,
-               IN BOOL Unicode,
-               IN PW32PROCESSINFO pi)
-{
-    PCALLPROC NewCallProc;
-    HANDLE Handle;
-
-    /* FIXME - use new object manager! */
-    NewCallProc = (PCALLPROC)ObmCreateObject(gHandleTable,
-                                             &Handle,
-                                             otCallProc,
-                                             sizeof(CALLPROC));
-    if (NewCallProc != NULL)
-    {
-        NewCallProc->pi = pi;
-        NewCallProc->WndProc = WndProc;
-        NewCallProc->Unicode = Unicode;
-    }
-
-    return NewCallProc;
-}
-
-BOOL
-UserGetCallProcInfo(IN HANDLE hCallProc,
-                    OUT PWNDPROC_INFO wpInfo)
-{
-    PCALLPROC CallProc;
-
-    /* NOTE: Accessing the WNDPROC_INFO structure may raise an exception! */
-
-    /* FIXME - use new object manager! */
-    CallProc = UserGetObject(gHandleTable,
-                             hCallProc,
-                             otCallProc);
-    if (CallProc == NULL)
-    {
-        return FALSE;
-    }
-
-    if (CallProc->pi != GetW32ProcessInfo())
-    {
-        return FALSE;
-    }
-
-    wpInfo->WindowProc = CallProc->WndProc;
-    wpInfo->IsUnicode = CallProc->Unicode;
-
-    return TRUE;
-}
-
 /* WINDOWCLASS ***************************************************************/
-
-NTSTATUS FASTCALL
-InitClassImpl(VOID)
-{
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS FASTCALL
-CleanupClassImpl(VOID)
-{
-   return(STATUS_SUCCESS);
-}
 
 static VOID
 IntFreeClassMenuName(IN OUT PWINDOWCLASS Class)
@@ -345,7 +246,7 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
 
             if (*CallProcPtr != NULL)
             {
-                return (WNDPROC)ObmObjectToHandle(*CallProcPtr);
+                return GetCallProcHandle(*CallProcPtr);
             }
             else
             {
@@ -392,7 +293,7 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
                     Class = Class->Next;
                 }
 
-                return (WNDPROC)ObmObjectToHandle(NewCallProc);
+                return GetCallProcHandle(NewCallProc);
             }
         }
     }
@@ -2508,35 +2409,6 @@ NtUserGetWOWClass(DWORD Unknown0,
                   DWORD Unknown1)
 {
    return(0);
-}
-
-
-BOOL NTAPI
-NtUserDereferenceWndProcHandle(IN HANDLE wpHandle,
-                               OUT PWNDPROC_INFO wpInfo)
-{
-    BOOL Ret = FALSE;
-
-    UserEnterShared();
-
-    _SEH_TRY
-    {
-        ProbeForWrite(wpInfo,
-                      sizeof(WNDPROC_INFO),
-                      sizeof(ULONG));
-
-        Ret = UserGetCallProcInfo(wpHandle,
-                                  wpInfo);
-    }
-    _SEH_HANDLE
-    {
-        SetLastWin32Error(_SEH_GetExceptionCode());
-    }
-    _SEH_END;
-
-    UserLeave();
-
-    return Ret;
 }
 
 /* EOF */

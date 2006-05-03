@@ -425,13 +425,6 @@ DriverEntry (
     return STATUS_UNSUCCESSFUL;
   }
 
-  Status = InitClassImpl();
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("Failed to initialize window class implementation!\n");
-    return STATUS_UNSUCCESSFUL;
-  }
-
   Status = InitDesktopImpl();
   if (!NT_SUCCESS(Status))
   {

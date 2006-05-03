@@ -84,6 +84,7 @@
 		<compilationunit name="ntuser.c">
 			<file>accelerator.c</file>
 			<file>callback.c</file>
+			<file>callproc.c</file>
 			<file>caret.c</file>
 			<file>class.c</file>
 			<file>clipboard.c</file>

@@ -509,7 +509,7 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
         {
             if (Window->CallProc != NULL)
             {
-                return (WNDPROC)ObmObjectToHandle(Window->CallProc);
+                return GetCallProcHandle(Window->CallProc);
             }
             else
             {
@@ -536,7 +536,7 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
                                     NewCallProc);
                 }
 
-                return (WNDPROC)ObmObjectToHandle((CallProc == NULL ? NewCallProc : CallProc));
+                return GetCallProcHandle((CallProc == NULL ? NewCallProc : CallProc));
             }
         }
     }
@@ -3464,7 +3464,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                 }
             }
 
-            Ret = (WNDPROC)ObmObjectToHandle(Window->CallProc2);
+            Ret = GetCallProcHandle(Window->CallProc2);
         }
     }
 
