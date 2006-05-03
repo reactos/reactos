@@ -45,9 +45,11 @@ typedef struct
   HWND    hMainWnd;
   HWND    hFindReplaceDlg;
   HWND    hEdit;
+  HWND    hStatusBar;
   HFONT   hFont; /* Font used by the edit control */
   LOGFONT lfFont;
   BOOL    bWrapLongLines;
+  BOOL    bShowStatusBar;
   WCHAR   szFindText[MAX_PATH];
   WCHAR   szReplaceText[MAX_PATH];
   WCHAR   szFileName[MAX_PATH];
@@ -59,6 +61,8 @@ typedef struct
   WCHAR   szMarginRight[MAX_PATH];
   WCHAR   szHeader[MAX_PATH];
   WCHAR   szFooter[MAX_PATH];
+  WCHAR   szStatusBarLine[MAX_PATH];
+  WCHAR   szStatusBarCol[MAX_PATH];
   int     iEncoding;
   int     iEoln;
 

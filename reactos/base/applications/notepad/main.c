@@ -75,6 +75,8 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_WRAP:             DIALOG_EditWrap(); break;
     case CMD_FONT:             DIALOG_SelectFont(); break;
 
+    case CMD_STATUSBAR:        DIALOG_ViewStatusBar(); break;
+
     case CMD_HELP_CONTENTS:    DIALOG_HelpContents(); break;
     case CMD_HELP_SEARCH:      DIALOG_HelpSearch(); break;
     case CMD_HELP_ON_HELP:     DIALOG_HelpHelp(); break;
@@ -82,7 +84,7 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
                                          MAKEINTRESOURCE(IDD_ABOUTBOX),
                                          Globals.hMainWnd,
                                          AboutDialogProc);
-                               break; 
+                               break;
     case CMD_ABOUT_WINE:       DIALOG_HelpAboutWine(); break;
 
     default:
@@ -267,7 +269,11 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, int index)
 
     CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
         MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
-
+    if ( !Globals.bWrapLongLines )
+    {
+        CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_STATUSBAR,
+            MF_BYCOMMAND | (Globals.bShowStatusBar ? MF_CHECKED : MF_UNCHECKED));
+    }
     EnableMenuItem(menu, CMD_UNDO,
         SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
     EnableMenuItem(menu, CMD_PASTE,
@@ -277,9 +283,10 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, int index)
     EnableMenuItem(menu, CMD_CUT, enable);
     EnableMenuItem(menu, CMD_COPY, enable);
     EnableMenuItem(menu, CMD_DELETE, enable);
-    
+
     EnableMenuItem(menu, CMD_SELECT_ALL,
         GetWindowTextLength(Globals.hEdit) ? MF_ENABLED : MF_GRAYED);
+    DrawMenuBar(Globals.hMainWnd);
 }
 
 /***********************************************************************
@@ -308,6 +315,8 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
     }
 
     case WM_COMMAND:
+        if (HIWORD(wParam) == EN_CHANGE || HIWORD(wParam) == EN_HSCROLL || HIWORD(wParam) == EN_VSCROLL)
+            DIALOG_StatusBarUpdateCaretPos();
         NOTEPAD_MenuCommand(LOWORD(wParam));
         break;
 
@@ -350,11 +359,10 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         DoOpenFile(szFileName);
         break;
     }
-    
+    case WM_CHAR:
     case WM_INITMENUPOPUP:
         NOTEPAD_InitMenuPopup((HMENU)wParam, lParam);
         break;
-
     default:
         if (msg == aFINDMSGSTRING)
         {
@@ -515,7 +523,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
     class.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     class.lpszMenuName  = MAKEINTRESOURCE(MAIN_MENU);
     class.lpszClassName = className;
-    class.hIconSm       = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_NPICON), 
+    class.hIconSm       = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_NPICON),
                             IMAGE_ICON, 16, 16, 0);
 
     if (!RegisterClassEx(&class)) return FALSE;

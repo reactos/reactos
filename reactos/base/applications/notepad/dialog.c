@@ -236,7 +236,7 @@ void DoOpenFile(LPCWSTR szFileName)
     SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
     SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
     SetFocus(Globals.hEdit);
-    
+
     /*  If the file starts with .LOG, add a time/date at the end and set cursor after
      *  See http://support.microsoft.com/?kbid=260563
      */
@@ -366,7 +366,7 @@ static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wPar
 
                 hCombo = GetDlgItem(hDlg, ID_EOLN);
 				if (hCombo)
-	                Globals.iEoln = SendMessage(hCombo, CB_GETCURSEL, 0, 0);					
+	                Globals.iEoln = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
             }
             break;
     }
@@ -620,7 +620,7 @@ VOID DIALOG_EditWrap(VOID)
 {
     static const WCHAR editW[] = { 'e','d','i','t',0 };
     DWORD dwStyle;
-    RECT rc;
+    RECT rc, rcstatus;
     DWORD size;
     LPWSTR pTemp;
 
@@ -637,6 +637,19 @@ VOID DIALOG_EditWrap(VOID)
     DestroyWindow(Globals.hEdit);
     GetClientRect(Globals.hMainWnd, &rc);
     dwStyle = Globals.bWrapLongLines ? EDIT_STYLE_WRAP : EDIT_STYLE;
+    EnableMenuItem(GetMenu(Globals.hMainWnd), CMD_STATUSBAR,
+        MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_DISABLED | MF_GRAYED : MF_ENABLED));
+    if ( Globals.hStatusBar )
+    {
+       if ( Globals.bWrapLongLines )
+          ShowWindow(Globals.hStatusBar, SW_HIDE);
+       else if ( Globals.bShowStatusBar )
+       {
+          GetClientRect(Globals.hStatusBar, &rcstatus);
+          rc.bottom -= (rcstatus.bottom - rcstatus.top);
+          ShowWindow(Globals.hStatusBar, SW_SHOW);
+       }
+    }
     Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, editW, NULL, dwStyle,
                          0, 0, rc.right, rc.bottom, Globals.hMainWnd,
                          NULL, Globals.hInstance, NULL);
@@ -645,6 +658,7 @@ VOID DIALOG_EditWrap(VOID)
     SetWindowTextW(Globals.hEdit, pTemp);
     SetFocus(Globals.hEdit);
     HeapFree(GetProcessHeap(), 0, pTemp);
+    DrawMenuBar(Globals.hMainWnd);
 }
 
 VOID DIALOG_SelectFont(VOID)
@@ -778,6 +792,50 @@ VOID DIALOG_GoTo(VOID)
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
 	}
 	HeapFree(GetProcessHeap(), 0, pszText);
+}
+
+VOID DIALOG_StatusBarUpdateCaretPos(VOID)
+{
+    int line;
+    int col;
+    int ccol;
+    POINT point;
+    TCHAR buff[MAX_PATH];
+
+    GetCaretPos(&point);
+    line = SendMessage(Globals.hEdit, EM_LINEFROMCHAR, (WPARAM)-1, (LPARAM)0);
+    ccol = SendMessage(Globals.hEdit, EM_CHARFROMPOS, (WPARAM)0, (LPARAM)MAKELPARAM(point.x, point.y));
+    ccol = LOWORD(ccol);
+    col = ccol - SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, (LPARAM)0);
+
+    _stprintf(buff, TEXT("%S %d, %S %d"), Globals.szStatusBarLine, line+1, Globals.szStatusBarCol, col+1);
+    SendMessage(Globals.hStatusBar, SB_SETTEXT, (WPARAM) SB_SIMPLEID, (LPARAM)buff);
+}
+
+VOID DIALOG_ViewStatusBar(VOID)
+{
+   RECT rc;
+   RECT rcstatus;
+
+   Globals.bShowStatusBar = !Globals.bShowStatusBar;
+   if ( !Globals.hStatusBar )
+   {
+       Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE, TEXT("test"), Globals.hMainWnd, CMD_STATUSBAR_WND_ID );
+       LoadString(Globals.hInstance, STRING_LINE, Globals.szStatusBarLine, MAX_PATH-1);
+       LoadString(Globals.hInstance, STRING_COLUMN, Globals.szStatusBarCol, MAX_PATH-1);
+       SendMessage(Globals.hStatusBar, SB_SIMPLE, (WPARAM)TRUE, (LPARAM)0);
+   }
+    CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_STATUSBAR,
+        MF_BYCOMMAND | (Globals.bShowStatusBar ? MF_CHECKED : MF_UNCHECKED));
+    DrawMenuBar(Globals.hMainWnd);
+    GetClientRect(Globals.hMainWnd, &rc);
+    GetClientRect(Globals.hStatusBar, &rcstatus);
+    if ( Globals.bShowStatusBar )
+        rc.bottom -= (rcstatus.bottom - rcstatus.top);
+
+    MoveWindow(Globals.hEdit, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+    ShowWindow(Globals.hStatusBar, Globals.bShowStatusBar);
+    DIALOG_StatusBarUpdateCaretPos();
 }
 
 VOID DIALOG_HelpContents(VOID)

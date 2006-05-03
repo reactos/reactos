@@ -57,7 +57,8 @@
 #define CMD_WRAP                0x119
 #define CMD_FONT                0x140
 
-#define CMD_STATUSBAR		0x150
+#define CMD_STATUSBAR		    0x150
+#define CMD_STATUSBAR_WND_ID    0x151
 
 #define CMD_HELP_CONTENTS       0x130
 #define CMD_HELP_SEARCH         0x131
@@ -100,3 +101,5 @@
 #define STRING_CR 0x184
 
 #define STRING_LICENSE 0x185
+#define STRING_LINE 0x186
+#define STRING_COLUMN 0x187

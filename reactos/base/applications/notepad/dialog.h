@@ -43,6 +43,9 @@ VOID DIALOG_GoTo(VOID);
 
 VOID DIALOG_SelectFont(VOID);
 
+VOID DIALOG_ViewStatusBar(VOID);
+VOID DIALOG_StatusBarUpdateCaretPos(VOID);
+
 VOID DIALOG_HelpContents(VOID);
 VOID DIALOG_HelpSearch(VOID);
 VOID DIALOG_HelpHelp(VOID);
