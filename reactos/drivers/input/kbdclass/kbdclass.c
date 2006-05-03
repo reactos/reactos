@@ -495,16 +495,15 @@ ClassCallback(
 	if (InputCount != 0)
 	{
 		if (ClassDeviceExtension->InputCount + InputCount > ClassDeviceExtension->DriverExtension->DataQueueSize)
+		{
+			/*
+			 * We're exceeding the buffer, and data will be thrown away...
+			 * FIXME: What could we do, as we are at DISPATCH_LEVEL?
+			 */
 			ReadSize = ClassDeviceExtension->DriverExtension->DataQueueSize - ClassDeviceExtension->InputCount;
+		}
 		else
 			ReadSize = InputCount;
-
-		/*
-		 * If we exceed the buffer, data gets thrown away...
-		 * Try at least to display a dialog
-		 */
-		if (Irp != NULL)
-			IoRaiseHardError(Irp, NULL, ClassDeviceObject);
 
 		/*
 		 * Move the input data from the port data queue to our class data
