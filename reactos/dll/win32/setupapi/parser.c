@@ -2,7 +2,7 @@
  * INF file parsing
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
- *           2005 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1968,8 +1968,8 @@ SetupGetInfFileListW(
     OUT PDWORD RequiredSize OPTIONAL)
 {
     HANDLE hSearch;
-    LPWSTR pFileSpecification = NULL;
-    LPWSTR pFileName; /* Pointer into pFileSpecification buffer */
+    LPWSTR pFullFileName = NULL;
+    LPWSTR pFileName; /* Pointer into pFullFileName buffer */
     LPWSTR pBuffer = ReturnBuffer;
     WIN32_FIND_DATAW wfdFileInfo;
     size_t len;
@@ -1985,38 +1985,55 @@ SetupGetInfFileListW(
         SetLastError(ERROR_INVALID_PARAMETER);
         goto cleanup;
     }
+    else if (ReturnBufferSize == 0 && ReturnBuffer != NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
+    else if (ReturnBufferSize > 0 && ReturnBuffer == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
 
     /* Allocate memory for file filter */
-    len = DirectoryPath ? strlenW(DirectoryPath) : MAX_PATH;
-    pFileSpecification = MyMalloc(
-            (len + 1 + strlenW(InfFileSpecification) + 1) * sizeof(WCHAR));
-    if (!pFileSpecification)
+    if (DirectoryPath != NULL)
+        /* "DirectoryPath\*.inf" form */
+        len = strlenW(DirectoryPath) + 1 + strlenW(InfFileSpecification) + 1;
+    else
+        /* "%WINDIR%\Inf\*.inf" form */
+        len = MAX_PATH + 1 + strlenW(InfDirectory) + strlenW(InfFileSpecification) + 1;
+    pFullFileName = MyMalloc(len * sizeof(WCHAR));
+    if (pFullFileName == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
     }
+
+    /* Fill file filter buffer */
     if (DirectoryPath)
     {
-        strcpyW(pFileSpecification, DirectoryPath);
-        if (pFileSpecification[strlenW(pFileSpecification)] != '\\')
-            strcatW(pFileSpecification, BackSlash);
+        strcpyW(pFullFileName, DirectoryPath);
+        if (pFullFileName[strlenW(pFullFileName) - 1] != '\\')
+            strcatW(pFullFileName, BackSlash);
     }
     else
     {
-        if (GetSystemWindowsDirectoryW(pFileSpecification, MAX_PATH) == 0)
+        len = GetSystemWindowsDirectoryW(pFullFileName, MAX_PATH);
+        if (len == 0 || len > MAX_PATH)
             goto cleanup;
-        if (pFileSpecification[strlenW(pFileSpecification)] != '\\')
-            strcatW(pFileSpecification, BackSlash);
-        strcatW(pFileSpecification, InfDirectory);
+        if (pFullFileName[strlenW(pFullFileName) - 1] != '\\')
+            strcatW(pFullFileName, BackSlash);
+        strcatW(pFullFileName, InfDirectory);
     }
-    pFileName = &pFileSpecification[strlenW(pFileSpecification)];
+    pFileName = &pFullFileName[strlenW(pFullFileName)];
 
     /* Search for the first file */
     strcpyW(pFileName, InfFileSpecification);
-    hSearch = FindFirstFileW(pFileSpecification, &wfdFileInfo);
+    hSearch = FindFirstFileW(pFullFileName, &wfdFileInfo);
     if (hSearch == INVALID_HANDLE_VALUE)
     {
-        TRACE("No file returned by %s\n", debugstr_w(pFileSpecification));
+        TRACE("No file returned by %s\n", debugstr_w(pFullFileName));
         goto cleanup;
     }
 
@@ -2026,7 +2043,7 @@ SetupGetInfFileListW(
 
         strcpyW(pFileName, wfdFileInfo.cFileName);
         hInf = SetupOpenInfFileW(
-            pFileSpecification,
+            pFullFileName,
             NULL, /* Inf class */
             InfStyle,
             NULL /* Error line */);
@@ -2037,7 +2054,7 @@ SetupGetInfFileListW(
                 /* InfStyle was not correct. Skip this file */
                 continue;
             }
-            TRACE("Invalid .inf file %s\n", debugstr_w(pFileSpecification));
+            TRACE("Invalid .inf file %s\n", debugstr_w(pFullFileName));
             continue;
         }
 
@@ -2067,7 +2084,7 @@ SetupGetInfFileListW(
         *RequiredSize = requiredSize;
 
 cleanup:
-    MyFree(pFileSpecification);
+    MyFree(pFullFileName);
     return ret;
 }
 
