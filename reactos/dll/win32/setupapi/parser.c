@@ -1988,8 +1988,7 @@ SetupGetInfFileListW(
 
     /* Allocate memory for file filter */
     len = DirectoryPath ? strlenW(DirectoryPath) : MAX_PATH;
-    pFileSpecification = HeapAlloc(
-            GetProcessHeap(), 0,
+    pFileSpecification = MyMalloc(
             (len + 1 + strlenW(InfFileSpecification) + 1) * sizeof(WCHAR));
     if (!pFileSpecification)
     {
@@ -2017,7 +2016,7 @@ SetupGetInfFileListW(
     hSearch = FindFirstFileW(pFileSpecification, &wfdFileInfo);
     if (hSearch == INVALID_HANDLE_VALUE)
     {
-        HeapFree(GetProcessHeap(), 0, pFileSpecification);
+        TRACE("No file returned by %s\n", debugstr_w(pFileSpecification));
         goto cleanup;
     }
 
@@ -2053,10 +2052,12 @@ SetupGetInfFileListW(
     } while (FindNextFileW(hSearch, &wfdFileInfo));
     FindClose(hSearch);
 
-    ret = TRUE;
     requiredSize += sizeof(WCHAR); /* Final NULL char */
     if (requiredSize <= ReturnBufferSize)
+    {
         *pBuffer = '\0';
+        ret = TRUE;
+    }
     else
     {
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -2066,7 +2067,7 @@ SetupGetInfFileListW(
         *RequiredSize = requiredSize;
 
 cleanup:
-    HeapFree(GetProcessHeap(), 0, pFileSpecification);
+    MyFree(pFileSpecification);
     return ret;
 }
 
