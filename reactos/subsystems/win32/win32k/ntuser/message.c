@@ -379,11 +379,15 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
             MsgInfo.HandledByKernel = FALSE;
             Result = 0;
 
-            MsgInfo.Ansi = !Window->Unicode;
             if (Window->IsSystem)
-                MsgInfo.Proc = (Window->Unicode ? Window->WndProc : Window->WndProcExtra);
+            {
+                MsgInfo.Proc = (!MsgInfo.Ansi ? Window->WndProc : Window->WndProcExtra);
+            }
             else
+            {
+                MsgInfo.Ansi = !Window->Unicode;
                 MsgInfo.Proc = Window->WndProc;
+            }
          }
       }
    }
@@ -1565,11 +1569,15 @@ co_IntDoSendMessage(HWND hWnd,
          Info.Ansi = ! Window->Unicode;
       }
 
-      Info.Ansi = !Window->Unicode;
       if (Window->IsSystem)
-          Info.Proc = (Window->Unicode ? Window->WndProc : Window->WndProcExtra);
+      {
+          Info.Proc = (!Info.Ansi ? Window->WndProc : Window->WndProcExtra);
+      }
       else
+      {
+          Info.Ansi = !Window->Unicode;
           Info.Proc = Window->WndProc;
+      }
    }
    else
    {

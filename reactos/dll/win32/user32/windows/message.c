@@ -414,9 +414,44 @@ MsgiAnsiToUnicodeMessage(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_ADDFILE:
     case EM_REPLACESEL:
       {
-        UNICODE_STRING UnicodeString;
-        RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
-        UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
+        goto ConvertLParamString;
+      }
+
+    case LB_ADDSTRING:
+    case LB_ADDSTRING_LOWER:
+    case LB_ADDSTRING_UPPER:
+    case LB_INSERTSTRING:
+    case LB_INSERTSTRING_UPPER:
+    case LB_INSERTSTRING_LOWER:
+    case LB_FINDSTRING:
+    case LB_FINDSTRINGEXACT:
+    case LB_SELECTSTRING:
+      {
+        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
+            (dwStyle & LBS_HASSTRINGS))
+          {
+            goto ConvertLParamString;
+          }
+        break;
+      }
+
+    case CB_ADDSTRING:
+    case CB_INSERTSTRING:
+    case CB_FINDSTRING:
+    case CB_FINDSTRINGEXACT:
+    case CB_SELECTSTRING:
+      {
+        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
+            (dwStyle & CBS_HASSTRINGS))
+          {
+            UNICODE_STRING UnicodeString;
+
+ConvertLParamString:
+            RtlCreateUnicodeStringFromAsciiz(&UnicodeString, (LPSTR)AnsiMsg->lParam);
+            UnicodeMsg->lParam = (LPARAM)UnicodeString.Buffer;
+          }
         break;
       }
 
@@ -501,11 +536,47 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case LB_ADDFILE:
     case EM_REPLACESEL:
       {
-        UNICODE_STRING UnicodeString;
-        RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
-        RtlFreeUnicodeString(&UnicodeString);
+        goto FreeLParamString;
+      }
+
+    case LB_ADDSTRING:
+    case LB_ADDSTRING_LOWER:
+    case LB_ADDSTRING_UPPER:
+    case LB_INSERTSTRING:
+    case LB_INSERTSTRING_UPPER:
+    case LB_INSERTSTRING_LOWER:
+    case LB_FINDSTRING:
+    case LB_FINDSTRINGEXACT:
+    case LB_SELECTSTRING:
+      {
+        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
+            (dwStyle & LBS_HASSTRINGS))
+          {
+            goto FreeLParamString;
+          }
         break;
       }
+
+    case CB_ADDSTRING:
+    case CB_INSERTSTRING:
+    case CB_FINDSTRING:
+    case CB_FINDSTRINGEXACT:
+    case CB_SELECTSTRING:
+      {
+        DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+        if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
+            (dwStyle & CBS_HASSTRINGS))
+          {
+            UNICODE_STRING UnicodeString;
+
+FreeLParamString:
+            RtlInitUnicodeString(&UnicodeString, (PCWSTR)UnicodeMsg->lParam);
+            RtlFreeUnicodeString(&UnicodeString);
+          }
+        break;
+      }
+
 
     case WM_NCCREATE:
     case WM_CREATE:
@@ -640,20 +711,58 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           break;
         }
       case WM_SETTEXT:
+      case CB_DIR:
+      case LB_DIR:
+      case LB_ADDFILE:
         {
-          ANSI_STRING AnsiString;
-          UNICODE_STRING UnicodeString;
-          RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
-          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
-                                                        &UnicodeString,
-                                                        TRUE)))
-            {
-              return FALSE;
-            }
-          AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
-          break;
+          goto ConvertLParamString;
 	}
-    }
+
+      case LB_ADDSTRING:
+      case LB_ADDSTRING_LOWER:
+      case LB_ADDSTRING_UPPER:
+      case LB_INSERTSTRING:
+      case LB_INSERTSTRING_UPPER:
+      case LB_INSERTSTRING_LOWER:
+      case LB_FINDSTRING:
+      case LB_FINDSTRINGEXACT:
+      case LB_SELECTSTRING:
+        {
+          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
+              (dwStyle & LBS_HASSTRINGS))
+            {
+              goto ConvertLParamString;
+            }
+          break;
+        }
+
+      case CB_ADDSTRING:
+      case CB_INSERTSTRING:
+      case CB_FINDSTRING:
+      case CB_FINDSTRINGEXACT:
+      case CB_SELECTSTRING:
+        {
+          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
+               (dwStyle & CBS_HASSTRINGS))
+            {
+              ANSI_STRING AnsiString;
+              UNICODE_STRING UnicodeString;
+
+ConvertLParamString:
+              RtlInitUnicodeString(&UnicodeString, (PWSTR) UnicodeMsg->lParam);
+              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiString,
+                                                            &UnicodeString,
+                                                            TRUE)))
+                {
+                  return FALSE;
+                }
+              AnsiMsg->lParam = (LPARAM) AnsiString.Buffer;
+            }
+          break;
+        }
+      }
 
   return TRUE;
 }
@@ -671,10 +780,7 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
         }
       case WM_SETTEXT:
         {
-          ANSI_STRING AString;
-          RtlInitAnsiString(&AString, (PSTR) AnsiMsg->lParam);
-          RtlFreeAnsiString(&AString);
-          break;
+          goto FreeLParamString;
         }
       case WM_CREATE:
       case WM_NCCREATE:
@@ -693,6 +799,45 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           RtlFreeHeap(GetProcessHeap(), 0, Cs);
           break;
         }
+
+      case LB_ADDSTRING:
+      case LB_ADDSTRING_LOWER:
+      case LB_ADDSTRING_UPPER:
+      case LB_INSERTSTRING:
+      case LB_INSERTSTRING_UPPER:
+      case LB_INSERTSTRING_LOWER:
+      case LB_FINDSTRING:
+      case LB_FINDSTRINGEXACT:
+      case LB_SELECTSTRING:
+        {
+          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          if (!(dwStyle & (LBS_OWNERDRAWFIXED | LBS_OWNERDRAWVARIABLE)) &&
+              (dwStyle & LBS_HASSTRINGS))
+            {
+              goto FreeLParamString;
+            }
+          break;
+        }
+
+      case CB_ADDSTRING:
+      case CB_INSERTSTRING:
+      case CB_FINDSTRING:
+      case CB_FINDSTRINGEXACT:
+      case CB_SELECTSTRING:
+        {
+          DWORD dwStyle = GetWindowLongW(AnsiMsg->hwnd, GWL_STYLE);
+          if (!(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE)) &&
+               (dwStyle & CBS_HASSTRINGS))
+            {
+              ANSI_STRING AString;
+
+FreeLParamString:
+              RtlInitAnsiString(&AString, (PSTR) AnsiMsg->lParam);
+              RtlFreeAnsiString(&AString);
+            }
+          break;
+        }
+
     }
 
   return TRUE;
