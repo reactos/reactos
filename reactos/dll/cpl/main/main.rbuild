@@ -11,6 +11,8 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>devmgr</library>
+	<library>comdlg32</library>
+	<library>gdi32</library>
 	<file>keyboard.c</file>
 	<file>main.c</file>
 	<file>mouse.c</file>

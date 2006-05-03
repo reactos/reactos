@@ -105,12 +105,20 @@ DllMain(HINSTANCE hinstDLL,
 	DWORD dwReason,
 	LPVOID lpReserved)
 {
+  INITCOMMONCONTROLSEX InitControls;
   switch(dwReason)
   {
     case DLL_PROCESS_ATTACH:
     case DLL_THREAD_ATTACH:
-      hApplet = hinstDLL;
-      break;
+
+  
+
+    InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    InitControls.dwICC = ICC_LISTVIEW_CLASSES | ICC_UPDOWN_CLASS | ICC_BAR_CLASSES;
+    InitCommonControlsEx(&InitControls);
+
+    hApplet = hinstDLL;
+    break;
   }
 
   return TRUE;
