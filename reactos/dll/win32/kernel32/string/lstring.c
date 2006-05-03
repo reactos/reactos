@@ -11,6 +11,15 @@
 #include <k32.h>
 
 
+static _SEH_FILTER(lstr_page_fault)
+{
+    if (_SEH_GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
+        return _SEH_EXECUTE_HANDLER;
+    else
+        return _SEH_CONTINUE_SEARCH;
+}
+
+
 /*
  * @implemented
  */
@@ -75,36 +84,29 @@ lstrcpynA(
 	  int iMaxLength
 	  )
 {
-  /* Can't use strncpy, because strncpy will fill unused bytes in
-     lpString1 with NUL bytes while lstrcpynA doesn't. Also lstrcpynA
-     guarantees NUL termination while strncpy doesn't */
+    LPSTR d = lpString1;
+    LPCSTR s = lpString2;
+    UINT count = iMaxLength;
+    LPSTR Ret = NULL;
 
-  if (lpString1 == NULL)
-  {
-    return NULL;
-  }
-
-  if (1 < iMaxLength)
+    _SEH_TRY
     {
-      char *d = lpString1;
-      const char *s = lpString2;
-
-      do
+        while ((count > 1) && *s)
         {
-          if ('\0' == *s)
-            break;
-          *d++ = *s++;
+            count--;
+            *d++ = *s++;
         }
-      while(1 != --iMaxLength);
-      *d = '\0';
-    }
-  else if (1 == iMaxLength)
-    {
-      /* Only space for the terminator */
-      *lpString1 = '\0';
-    }
+        if (count) *d = 0;
 
-  return lpString1;
+        Ret = lpString1;
+    }
+    _SEH_EXCEPT(lstr_page_fault)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+    }
+    _SEH_END;
+
+    return Ret;
 }
 
 
@@ -118,12 +120,20 @@ lstrcpyA(
 	 LPCSTR lpString2
 	 )
 {
-  if (lpString1 == NULL)
-  {
-    return NULL;
-  }
+    LPSTR Ret = NULL;
 
-  return strcpy(lpString1,lpString2);
+    _SEH_TRY
+    {
+        memmove(lpString1, lpString2, strlen(lpString2) + 1);
+        Ret = lpString1;
+    }
+    _SEH_EXCEPT(lstr_page_fault)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    _SEH_END;
+
+    return Ret;
 }
 
 
@@ -137,12 +147,20 @@ lstrcatA(
 	 LPCSTR lpString2
 	 )
 {
-  if (lpString1 == NULL)
-  {
-    return NULL;
-  }
+    LPSTR Ret = NULL;
 
-  return strcat(lpString1,lpString2);
+    _SEH_TRY
+    {
+        Ret = strcat(lpString1, lpString2);
+    }
+    _SEH_EXCEPT(lstr_page_fault)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    _SEH_END;
+
+    return Ret;
+
 }
 
 
@@ -155,7 +173,19 @@ lstrlenA(
 	 LPCSTR lpString
 	 )
 {
-  return strlen(lpString);
+    INT Ret = 0;
+
+    _SEH_TRY
+    {
+        Ret = strlen(lpString);
+    }
+    _SEH_EXCEPT(lstr_page_fault)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    _SEH_END;
+
+    return Ret;
 }
 
 
@@ -222,36 +252,29 @@ lstrcpynW(
     int iMaxLength
     )
 {
-  /* Can't use wcsncpy, because wcsncpy will fill unused bytes in
-     lpString1 with NUL bytes while lstrcpynW doesn't Also lstrcpynW
-     guarantees NUL termination while wcsncpy doesn't */
+    LPWSTR d = lpString1;
+    LPCWSTR s = lpString2;
+    UINT count = iMaxLength;
+    LPWSTR Ret = NULL;
 
-  if (lpString1 == NULL)
-  {
-    return NULL;
-  }
-
-  if (1 < iMaxLength)
+    _SEH_TRY
     {
-      WCHAR *d = lpString1;
-      const WCHAR *s = lpString2;
-
-      do
+        while ((count > 1) && *s)
         {
-          if (L'\0' == *s)
-            break;
-          *d++ = *s++;
+            count--;
+            *d++ = *s++;
         }
-      while(1 != --iMaxLength);
-      *d = L'\0';
-    }
-  else if (1 == iMaxLength)
-    {
-      /* Only space for the terminator */
-      *lpString1 = L'\0';
-    }
+        if (count) *d = 0;
 
-  return lpString1;
+        Ret = lpString1;
+    }
+    _SEH_EXCEPT(lstr_page_fault)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+    }
+    _SEH_END;
+
+    return Ret;
 }
 
 
@@ -265,12 +288,19 @@ lstrcpyW(
     LPCWSTR lpString2
     )
 {
-  if (lpString1 == NULL)
-  {
-    return NULL;
-  }
+    LPWSTR Ret = NULL;
 
-  return wcscpy(lpString1,lpString2);
+    _SEH_TRY
+    {
+        Ret = strcpyW(lpString1, lpString2);
+    }
+    _SEH_EXCEPT(lstr_page_fault)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    _SEH_END;
+
+    return Ret;
 }
 
 
@@ -284,12 +314,19 @@ lstrcatW(
     LPCWSTR lpString2
     )
 {
-  if (lpString1 == NULL)
-  {
-    return NULL;
-  }
+    LPWSTR Ret = NULL;
 
-  return wcscat(lpString1,lpString2);
+    _SEH_TRY
+    {
+        Ret = wcscat(lpString1, lpString2);
+    }
+    _SEH_EXCEPT(lstr_page_fault)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    _SEH_END;
+
+    return Ret;
 }
 
 
@@ -302,5 +339,17 @@ lstrlenW(
     LPCWSTR lpString
     )
 {
-  return wcslen(lpString);
+    INT Ret = 0;
+
+    _SEH_TRY
+    {
+        Ret = wcslen(lpString);
+    }
+    _SEH_EXCEPT(lstr_page_fault)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+    _SEH_END;
+
+    return Ret;
 }
