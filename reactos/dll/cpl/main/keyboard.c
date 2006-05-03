@@ -58,13 +58,14 @@ KeybHardwareProc(IN HWND hwndDlg,
 	         IN WPARAM wParam,
 	         IN LPARAM lParam)
 {
+    GUID Guids[1];
+    Guids[0] = GUID_DEVCLASS_KEYBOARD;
+
     switch(uMsg)
     {
         case WM_INITDIALOG:
         {
-            GUID Guids[] = {
-                GUID_DEVCLASS_KEYBOARD
-            };
+
 
             /* create the hardware page */
             DeviceCreateHardwarePageEx(hwndDlg,
