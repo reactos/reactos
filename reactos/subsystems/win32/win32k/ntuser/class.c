@@ -1432,6 +1432,8 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
     /* unlink the class */
     *Link = Class->Next;
 
+    IntDeregisterClassAtom(Class->Atom);
+
     /* finally free the resources */
     IntDestroyClass(Class);
     return TRUE;

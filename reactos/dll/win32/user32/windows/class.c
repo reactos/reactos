@@ -553,18 +553,22 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
    }
 
-   if (lpwcx->lpszMenuName != NULL)
+   if (WndClass.lpszMenuName != NULL)
    {
-      if (HIWORD(lpwcx->lpszMenuName))
+      if (!IS_INTRESOURCE(WndClass.lpszMenuName))
       {
-         RtlCreateUnicodeStringFromAsciiz(&MenuName, WndClass.lpszMenuName);
+         if (WndClass.lpszMenuName[0])
+         {
+             RtlCreateUnicodeStringFromAsciiz(&MenuName, WndClass.lpszMenuName);
+         }
       }
       else
       {
          MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
       }
 
-      hMenu = LoadMenuA(WndClass.hInstance, lpwcx->lpszMenuName);
+      if (MenuName.Buffer != NULL)
+         hMenu = LoadMenuA(WndClass.hInstance, WndClass.lpszMenuName);
    }
  
    if (IS_ATOM(WndClass.lpszClassName))
@@ -585,7 +589,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
                                 REGISTERCLASS_ANSI,
                                 hMenu);
 
-   if (!IS_ATOM(WndClass.lpszMenuName))
+   if (!IS_INTRESOURCE(WndClass.lpszMenuName))
       RtlFreeUnicodeString(&MenuName);
    if (!IS_ATOM(WndClass.lpszClassName))
       RtlFreeUnicodeString(&ClassName);
@@ -637,17 +641,22 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
       WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
    }
 
-   if (lpwcx->lpszMenuName != NULL)
+   if (WndClass.lpszMenuName != NULL)
    {
-      if (HIWORD(lpwcx->lpszMenuName))
+      if (!IS_INTRESOURCE(WndClass.lpszMenuName))
       {
-         RtlInitUnicodeString(&MenuName, WndClass.lpszMenuName);
+         if (WndClass.lpszMenuName[0])
+         {
+            RtlInitUnicodeString(&MenuName, WndClass.lpszMenuName);
+         }
       }
       else
       {
          MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
       }
-      hMenu = LoadMenuW(WndClass.hInstance, lpwcx->lpszMenuName);
+
+      if (MenuName.Buffer != NULL)
+         hMenu = LoadMenuW(WndClass.hInstance, WndClass.lpszMenuName);
    }
 
    if (IS_ATOM(WndClass.lpszClassName))

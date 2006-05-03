@@ -1491,7 +1491,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       }
       else
       {
-         DPRINT1("Class %wZ not found\n", ClassName);
+         DPRINT1("Class \"%wZ\" not found\n", ClassName);
       }
 
       SetLastWin32Error(ERROR_CANNOT_FIND_WND_CLASS);
@@ -2073,7 +2073,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
          RETURN( NULL);
       }
    }
-   else if (! IS_INTRESOURCE(ClassName.Buffer))
+   else if (! IS_ATOM(ClassName.Buffer))
    {
        SetLastWin32Error(ERROR_INVALID_PARAMETER);
        return NULL;
