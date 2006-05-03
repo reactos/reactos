@@ -228,7 +228,7 @@ ButtonProc(IN HWND hwndDlg,
                     EnableWindow(hDlgCtrl, FALSE);
                 }
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED);
-                SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 11));
+                SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 14));
                 pos = ((float)g_DoubleClickSpeed / MAX_DOUBLE_CLICK_SPEED);
                 pos /= (1.0f/11.0f);
                 SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(INT)rintf(pos));
@@ -290,7 +290,13 @@ ButtonProc(IN HWND hwndDlg,
             lppsn = (LPPSHNOTIFY) lParam; 
             if (lppsn->hdr.code == PSN_APPLY)
             {
+                /* apply swap mouse button */
                 SystemParametersInfo(SPI_SETMOUSEBUTTONSWAP, g_SwapMouseButtons, NULL, SPIF_SENDCHANGE);
+
+                /* apply double click speed */
+                hDlgCtrl = GetDlgItem(hwndDlg, IDC_SLIDER_DOUBLE_CLICK_SPEED);
+                lResult = SendMessage(hDlgCtrl, TBM_GETPOS, 0, 0);
+                g_DoubleClickSpeed = (INT)lResult * 50 + 200;
                 SystemParametersInfo(SPI_SETDOUBLECLICKTIME, g_DoubleClickSpeed, NULL, SPIF_SENDCHANGE);
 
 #if (WINVER >= 0x0500)
