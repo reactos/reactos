@@ -7,7 +7,7 @@
 #include <commdlg.h>
 #include <commctrl.h>
 #include <tchar.h>
-#include <Richedit.h>
+#include <richedit.h>
 
 #include "main.h"
 #include "dialog.h"
