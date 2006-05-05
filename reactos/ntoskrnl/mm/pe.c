@@ -103,12 +103,8 @@ static __inline BOOLEAN Intsafe_CanOffsetPointer(IN CONST VOID * Pointer, IN SIZ
 static __inline BOOLEAN IsPowerOf2(IN ULONG Number)
 {
     if(Number == 0)
-	return FALSE;
-
-    while((Number % 2) == 0)
-	Number /= 2;
-
-    return Number == 1;
+		return FALSE;
+    return (Number & (Number - 1)) == 0;
 }
 
 static __inline ULONG ModPow2(IN ULONG Address, IN ULONG Alignment)
