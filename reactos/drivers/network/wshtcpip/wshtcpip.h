@@ -13,8 +13,6 @@
 
 #define EXPORT STDCALL
 
-#define OBJ_NAME_PATH_SEPARATOR ((WCHAR)L'\\')
-
 #define DD_TCP_DEVICE_NAME      L"\\Device\\Tcp"
 #define DD_UDP_DEVICE_NAME      L"\\Device\\Udp"
 #define DD_RAW_IP_DEVICE_NAME   L"\\Device\\RawIp"

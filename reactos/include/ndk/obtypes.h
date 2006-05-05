@@ -57,6 +57,11 @@ Author:
 #define DIRECTORY_CREATE_SUBDIRECTORY           0x0008
 #define DIRECTORY_ALL_ACCESS                    (STANDARD_RIGHTS_REQUIRED | 0xF)
 
+//
+// Slash separator used in the OB Namespace (and Registry)
+//
+#define OBJ_NAME_PATH_SEPARATOR                 L'\\'
+
 #else
 
 //

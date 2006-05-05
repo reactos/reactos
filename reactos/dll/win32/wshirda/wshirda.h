@@ -16,9 +16,6 @@
 
 #define EXPORT STDCALL
 
-#define OBJ_NAME_PATH_SEPARATOR ((WCHAR)L'\\')
-
-
 #endif /* __WSHIRDA_H */
 
 /* EOF */
