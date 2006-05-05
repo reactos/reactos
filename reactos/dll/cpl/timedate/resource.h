@@ -10,6 +10,8 @@
 #define IDC_MONTHCALENDAR       103
 #define IDC_TIMEZONE            106
 #define IDC_TIMEPICKER          107
+#define IDC_YEAR				108
+#define IDC_YEARTEXT			109
 
 #define IDD_TIMEZONEPAGE        110
 #define IDC_TIMEZONELIST        111

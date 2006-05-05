@@ -5,6 +5,7 @@
  * PURPOSE:     ReactOS Timedate Control Panel
  * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
+ *              Copyright 2006 Christoph v. Wittich <Christoph@ActiveVB.de>
  *
  */
 
@@ -293,11 +294,21 @@ DateTimePageProc(HWND hwndDlg,
          WPARAM wParam,
          LPARAM lParam)
 {
+  SYSTEMTIME st;
+  GetLocalTime(&st);
+
   switch (uMsg)
   {
     case WM_INITDIALOG:
         FillMonthsComboBox(GetDlgItem(hwndDlg,
                                       IDC_MONTHCB));
+
+        SetTimer(hwndDlg, ID_TIMER, 1000, NULL);
+
+        /* set range and current year */
+        SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETRANGE, 0, MAKELONG ((short) 9999, (short) 1900));
+        SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETPOS, 0, MAKELONG( (short) st.wYear, 0));
+
         InitClockWindowClass();
         CreateWindowExW(0,
                        L"ClockWndClass",
@@ -310,6 +321,11 @@ DateTimePageProc(HWND hwndDlg,
                        NULL);
     break;
 
+    case WM_TIMER:
+    {
+        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPICKER), DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM) &st); 
+        break;
+    }
     case WM_COMMAND:
     {
         switch (LOWORD(wParam))
@@ -336,6 +352,25 @@ DateTimePageProc(HWND hwndDlg,
 
           switch (lpnm->idFrom)
           {
+              case IDC_YEAR:
+                  switch (lpnm->code)
+				  {
+				      case UDN_DELTAPOS:
+                      {
+                         short wYear;
+						 LPNMUPDOWN updown = (LPNMUPDOWN) lpnm; 
+						 wYear = SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_GETPOS, 0, 0);
+                          /* Enable the 'Apply' button */
+                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                         ChangeMonthCalDate(GetDlgItem(hwndDlg,
+                                       IDC_MONTHCALENDAR),
+                                       -1,
+                                       -1,
+                                       wYear + updown->iDelta);
+                          break;
+                      }
+				  }
+                  break;
               case IDC_TIMEPICKER:
                   switch (lpnm->code)
                   {
@@ -386,6 +421,11 @@ DateTimePageProc(HWND hwndDlg,
                     0);
         break;
     }
+	case WM_DESTROY:
+    {
+        KillTimer(hwndDlg, ID_TIMER);
+        break;
+	}
   }
 
   return FALSE;
