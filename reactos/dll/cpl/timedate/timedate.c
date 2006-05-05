@@ -345,7 +345,12 @@ DateTimePageProc(HWND hwndDlg,
         }
         break;
     }
-
+	case WM_CTLCOLORSTATIC:
+        {
+            if ((HWND) lParam == GetDlgItem(hwndDlg, IDC_YEARTEXT))
+				return (int) GetSysColorBrush(COLOR_WINDOW);
+            break;
+        }
     case WM_NOTIFY:
       {
           LPNMHDR lpnm = (LPNMHDR)lParam;
