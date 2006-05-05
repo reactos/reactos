@@ -211,7 +211,11 @@ UsbMpPnpFdo(
 	{
 		case IRP_MN_START_DEVICE: /* 0x00 */
 		{
-			Status = ForwardIrpAndWait(DeviceObject, Irp);
+			if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->NextDeviceObject != NULL)
+				/* HACK due to the lack of lower device for legacy USB keyboard and mouse */
+				Status = ForwardIrpAndWait(DeviceObject, Irp);
+			else
+				Status = STATUS_SUCCESS;
 			if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
 				Status = UsbMpFdoStartDevice(DeviceObject, Irp);
 			break;
@@ -227,7 +231,11 @@ UsbMpPnpFdo(
 		case IRP_MN_STOP_DEVICE: /* 0x04 */
 		case IRP_MN_SURPRISE_REMOVAL: /* 0x17 */
 		{
-			Status = ForwardIrpAndWait(DeviceObject, Irp);
+			if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->NextDeviceObject != NULL)
+				/* HACK due to the lack of lower device for legacy USB keyboard and mouse */
+				Status = ForwardIrpAndWait(DeviceObject, Irp);
+			else
+				Status = STATUS_SUCCESS;
 			if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
 				Status = STATUS_SUCCESS;
 			IoDeleteDevice(DeviceObject); // just delete device for now

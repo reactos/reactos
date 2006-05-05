@@ -118,6 +118,7 @@ AddDevice_Keyboard(
 	IN PDEVICE_OBJECT Pdo)
 {
 	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardPortUSB");
+	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_OBJECT Fdo;
 	NTSTATUS Status;
 
@@ -129,7 +130,7 @@ AddDevice_Keyboard(
 	}
 
 	Status = IoCreateDevice(DriverObject,
-		8, // debug
+		sizeof(USBMP_DEVICE_EXTENSION),
 		&DeviceName,
 		FILE_DEVICE_KEYBOARD,
 		FILE_DEVICE_SECURE_OPEN,
@@ -141,6 +142,9 @@ AddDevice_Keyboard(
 		DPRINT1("USBMP: IoCreateDevice() for usb keyboard driver failed with status 0x%08lx\n", Status);
 		return Status;
 	}
+	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)Fdo->DeviceExtension;
+	RtlZeroMemory(DeviceExtension, sizeof(USBMP_DEVICE_EXTENSION));
+	DeviceExtension->IsFDO = TRUE;
 	KeyboardFdo = Fdo;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 	DPRINT("USBMP: Created keyboard Fdo: %p\n", Fdo);
@@ -154,6 +158,7 @@ AddDevice_Mouse(
 	IN PDEVICE_OBJECT Pdo)
 {
 	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerPortUSB");
+	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_OBJECT Fdo;
 	NTSTATUS Status;
 
@@ -165,7 +170,7 @@ AddDevice_Mouse(
 	}
 
 	Status = IoCreateDevice(DriverObject,
-		8, // debug
+		sizeof(USBMP_DEVICE_EXTENSION),
 		&DeviceName,
 		FILE_DEVICE_MOUSE,
 		FILE_DEVICE_SECURE_OPEN,
@@ -177,6 +182,9 @@ AddDevice_Mouse(
 		DPRINT1("USBMP: IoCreateDevice() for usb mouse driver failed with status 0x%08lx\n", Status);
 		return Status;
 	}
+	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)Fdo->DeviceExtension;
+	RtlZeroMemory(DeviceExtension, sizeof(USBMP_DEVICE_EXTENSION));
+	DeviceExtension->IsFDO = TRUE;
 	MouseFdo = Fdo;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 	DPRINT("USBMP: Created mouse Fdo: %p\n", Fdo);
