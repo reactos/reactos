@@ -292,7 +292,7 @@ lstrcpyW(
 
     _SEH_TRY
     {
-        Ret = strcpyW(lpString1, lpString2);
+        Ret = wcscpy(lpString1, lpString2);
     }
     _SEH_EXCEPT(lstr_page_fault)
     {
