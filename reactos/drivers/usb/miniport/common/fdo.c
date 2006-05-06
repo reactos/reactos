@@ -1,11 +1,10 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS USB miniport driver (Cromwell type)
- * FILE:            drivers/usb/miniport/common/fdo.c
- * PURPOSE:         IRP_MJ_PNP/IRP_MJ_DEVICE_CONTROL operations for FDOs
- *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org),
- *                  James Tabor (jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net)
+ * PROJECT:     ReactOS USB miniport driver (Cromwell type)
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/usb/miniport/common/fdo.c
+ * PURPOSE:     Operations on FDOs
+ * PROGRAMMERS: Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *              Copyright James Tabor (jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net)
  */
 
 #define NDEBUG
@@ -48,7 +47,67 @@ UsbMpGetUserBuffers(
 	}
 }
 
-NTSTATUS STDCALL
+NTSTATUS
+UsbMpFdoCreate(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	PIO_STACK_LOCATION Stack;
+	PUSBMP_DEVICE_EXTENSION DeviceExtension;
+	NTSTATUS Status;
+
+	DPRINT("IRP_MJ_CREATE\n");
+	Stack = IoGetCurrentIrpStackLocation(Irp);
+	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	if (Stack->Parameters.Create.Options & FILE_DIRECTORY_FILE)
+	{
+		CHECKPOINT;
+		Status = STATUS_NOT_A_DIRECTORY;
+		goto ByeBye;
+	}
+
+	InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
+	Status = STATUS_SUCCESS;
+
+ByeBye:
+	Irp->IoStatus.Status = Status;
+	Irp->IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	return Status;
+}
+
+NTSTATUS
+UsbMpFdoClose(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	PUSBMP_DEVICE_EXTENSION pDeviceExtension;
+
+	DPRINT("IRP_MJ_CLOSE\n");
+	pDeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	InterlockedDecrement((PLONG)&pDeviceExtension->DeviceOpened);
+
+	Irp->IoStatus.Information = 0;
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS
+UsbMpFdoCleanup(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	DPRINT("IRP_MJ_CLEANUP\n");
+
+	Irp->IoStatus.Information = 0;
+	Irp->IoStatus.Status = STATUS_SUCCESS;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	return STATUS_SUCCESS;
+}
+
+static NTSTATUS
 UsbMpFdoStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP	Irp)
@@ -136,9 +195,9 @@ UsbMpFdoStartDevice(
 			}
 		}
 	}
-	
+
 	/* Print assigned resources */
-	DPRINT("USBMP: Interrupt Vector 0x%lx, %S base 0x%lx, Length 0x%lx\n",
+	DPRINT("Interrupt Vector 0x%lx, %S base 0x%lx, Length 0x%lx\n",
 		DeviceExtension->InterruptVector,
 		((struct hc_driver *)pci_ids->driver_data)->flags & HCD_MEMORY ? L"Memory" : L"I/O",
 		DeviceExtension->BaseAddress,
@@ -155,11 +214,11 @@ UsbMpFdoStartDevice(
 
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: IoGetDeviceProperty DevicePropertyBusNumber failed\n");
+		DPRINT1("IoGetDeviceProperty DevicePropertyBusNumber failed\n");
 		DeviceExtension->SystemIoBusNumber = 0;
 	}
 
-	DPRINT("USBMP: Busnumber %d\n", DeviceExtension->SystemIoBusNumber);
+	DPRINT("Busnumber %d\n", DeviceExtension->SystemIoBusNumber);
 
 	/* Init wrapper with this object */
 	return InitLinuxWrapper(DeviceObject);
@@ -173,9 +232,9 @@ UsbMpFdoQueryBusRelations(
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_RELATIONS DeviceRelations;
 	NTSTATUS Status = STATUS_SUCCESS;
-	
+
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	
+
 	/* Handling this IRP is easy, as we only
 	 * have one child: the root hub
 	 */
@@ -184,18 +243,18 @@ UsbMpFdoQueryBusRelations(
 		sizeof(DEVICE_RELATIONS));
 	if (!DeviceRelations)
 		return STATUS_INSUFFICIENT_RESOURCES;
-	
+
 	/* Fill returned structure */
 	DeviceRelations->Count = 1;
 	ObReferenceObject(DeviceExtension->RootHubPdo);
 	DeviceRelations->Objects[0] = DeviceExtension->RootHubPdo;
-	
+
 	*pDeviceRelations = DeviceRelations;
 	return Status;
 }
 
-NTSTATUS STDCALL
-UsbMpPnpFdo(
+NTSTATUS
+UsbMpFdoPnp(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
@@ -203,7 +262,7 @@ UsbMpPnpFdo(
 	NTSTATUS Status;
 	ULONG MinorFunction;
 	ULONG_PTR Information = 0;
-	
+
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
 	MinorFunction = IrpSp->MinorFunction;
 
@@ -255,18 +314,18 @@ UsbMpPnpFdo(
 				case BusRelations:
 				{
 					PDEVICE_RELATIONS DeviceRelations = NULL;
-					DPRINT("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+					DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 					Status = UsbMpFdoQueryBusRelations(DeviceObject, &DeviceRelations);
 					Information = (ULONG_PTR)DeviceRelations;
 					break;
 				}
 				case RemovalRelations:
 				{
-					DPRINT1("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
+					DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
 					return ForwardIrpAndForget(DeviceObject, Irp);
 				}
 				default:
-					DPRINT1("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+					DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						IrpSp->Parameters.QueryDeviceRelations.Type);
 					return ForwardIrpAndForget(DeviceObject, Irp);
 			}
@@ -275,7 +334,7 @@ UsbMpPnpFdo(
 
 		default:
 		{
-			DPRINT1("USBMP: IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
+			DPRINT1("IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}
@@ -286,7 +345,7 @@ UsbMpPnpFdo(
 }
 
 NTSTATUS
-UsbMpDeviceControlFdo(
+UsbMpFdoDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
@@ -298,7 +357,7 @@ UsbMpDeviceControlFdo(
 	PVOID BufferIn, BufferOut;
 	NTSTATUS Status;
 
-	DPRINT("USBMP: UsbDeviceControlFdo() called\n");
+	DPRINT("UsbDeviceControlFdo() called\n");
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	LengthIn = Stack->Parameters.DeviceIoControl.InputBufferLength;
@@ -311,7 +370,7 @@ UsbMpDeviceControlFdo(
 	{
 		case IOCTL_GET_HCD_DRIVERKEY_NAME:
 		{
-			DPRINT("USBMP: IOCTL_GET_HCD_DRIVERKEY_NAME\n");
+			DPRINT("IOCTL_GET_HCD_DRIVERKEY_NAME\n");
 			if (LengthOut < sizeof(USB_HCD_DRIVERKEY_NAME))
 				Status = STATUS_BUFFER_TOO_SMALL;
 			else if (BufferOut == NULL)
@@ -338,7 +397,7 @@ UsbMpDeviceControlFdo(
 		}
 		case IOCTL_USB_GET_ROOT_HUB_NAME:
 		{
-			DPRINT("USBMP: IOCTL_USB_GET_ROOT_HUB_NAME\n");
+			DPRINT("IOCTL_USB_GET_ROOT_HUB_NAME\n");
 			if (LengthOut < sizeof(USB_ROOT_HUB_NAME))
 				Status = STATUS_BUFFER_TOO_SMALL;
 			else if (BufferOut == NULL)
@@ -360,7 +419,7 @@ UsbMpDeviceControlFdo(
 						RootHubInterfaceName->Buffer,
 						RootHubInterfaceName->Length);
 					StringDescriptor->RootHubName[RootHubInterfaceName->Length / sizeof(WCHAR)] = UNICODE_NULL;
-					DPRINT("USBMP: IOCTL_USB_GET_ROOT_HUB_NAME returns '%S'\n", StringDescriptor->RootHubName);
+					DPRINT("IOCTL_USB_GET_ROOT_HUB_NAME returns '%S'\n", StringDescriptor->RootHubName);
 					Information = StringDescriptor->ActualLength;
 				}
 				else
@@ -373,7 +432,7 @@ UsbMpDeviceControlFdo(
 		default:
 		{
 			/* Pass Irp to lower driver */
-			DPRINT1("USBMP: Unknown IOCTL code 0x%lx\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+			DPRINT1("Unknown IOCTL code 0x%lx\n", Stack->Parameters.DeviceIoControl.IoControlCode);
 			IoSkipCurrentIrpStackLocation(Irp);
 			return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 		}
@@ -382,220 +441,5 @@ UsbMpDeviceControlFdo(
 	Irp->IoStatus.Information = Information;
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	return Status;
-}
-
-NTSTATUS
-UsbMpInternalDeviceControlFdo(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp)
-{
-	NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
-
-	DPRINT("USBMP: UsbMpDeviceInternalControlFdo(DO %p, code 0x%lx) called\n",
-		DeviceObject,
-		IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode);
-
-	if (DeviceObject == KeyboardFdo)
-	{
-		// it's keyboard's IOCTL
-		PIO_STACK_LOCATION Stk;
-
-		Irp->IoStatus.Information = 0;
-		Stk = IoGetCurrentIrpStackLocation(Irp);
-
-		switch (Stk->Parameters.DeviceIoControl.IoControlCode)
-		{
-			case IOCTL_INTERNAL_KEYBOARD_CONNECT:
-				DPRINT("USBMP: IOCTL_INTERNAL_KEYBOARD_CONNECT\n");
-				if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
-					DPRINT1("USBMP: Keyboard IOCTL_INTERNAL_KEYBOARD_CONNECT "
-							"invalid buffer size\n");
-					Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-					goto intcontfailure;
-				}
-
-				RtlCopyMemory(&KbdClassInformation,
-					Stk->Parameters.DeviceIoControl.Type3InputBuffer,
-					sizeof(CONNECT_DATA));
-	
-				Irp->IoStatus.Status = STATUS_SUCCESS;
-				break;
-
-		case IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER:
-			DPRINT("USBMP: IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER\n");
-			if (Stk->Parameters.DeviceIoControl.InputBufferLength <	1) {
-				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-				goto intcontfailure;
-			}
-/*			if (!DevExt->KeyboardInterruptObject) {
-				Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
-				goto intcontfailure;
-			}*/
-
-			Irp->IoStatus.Status = STATUS_SUCCESS;
-			break;
-		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
-			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
-			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
-				sizeof(KEYBOARD_ATTRIBUTES)) {
-					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_QUERY_ATTRIBUTES "
-						"invalid buffer size\n");
-					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-					goto intcontfailure;
-				}
-				/*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-					&DevExt->KeyboardAttributes,
-					sizeof(KEYBOARD_ATTRIBUTES));*/
-
-				Irp->IoStatus.Status = STATUS_SUCCESS;
-				break;
-		case IOCTL_KEYBOARD_QUERY_INDICATORS:
-			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_INDICATORS\n");
-			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
-				sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
-					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_QUERY_INDICATORS "
-						"invalid buffer size\n");
-					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-					goto intcontfailure;
-				}
-				/*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-					&DevExt->KeyboardIndicators,
-					sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
-
-				Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-				break;
-		case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
-			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_TYPEMATIC\n");
-			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
-				sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
-					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_QUERY_TYPEMATIC	"
-						"invalid buffer size\n");
-					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-					goto intcontfailure;
-				}
-				/*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-					&DevExt->KeyboardTypematic,
-					sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
-
-				Irp->IoStatus.Status = STATUS_SUCCESS;
-				break;
-		case IOCTL_KEYBOARD_SET_INDICATORS:
-			DPRINT("USBMP: IOCTL_KEYBOARD_SET_INDICATORS\n");
-			if (Stk->Parameters.DeviceIoControl.InputBufferLength <
-				sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
-					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_SET_INDICTATORS	"
-						"invalid buffer size\n");
-					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-					goto intcontfailure;
-				}
-
-				/*RtlCopyMemory(&DevExt->KeyboardIndicators,
-					Irp->AssociatedIrp.SystemBuffer,
-					sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
-
-				//DPRINT("%x\n", DevExt->KeyboardIndicators.LedFlags);
-
-				Irp->IoStatus.Status = STATUS_SUCCESS;
-				break;
-		case IOCTL_KEYBOARD_SET_TYPEMATIC:
-			DPRINT("USBMP: IOCTL_KEYBOARD_SET_TYPEMATIC\n");
-			if (Stk->Parameters.DeviceIoControl.InputBufferLength <
-				sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
-					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_SET_TYPEMATIC "
-						"invalid buffer size\n");
-					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-					goto intcontfailure;
-				}
-
-				/*RtlCopyMemory(&DevExt->KeyboardTypematic,
-					Irp->AssociatedIrp.SystemBuffer,
-					sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
-
-				Irp->IoStatus.Status = STATUS_SUCCESS;
-				break;
-		case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
-			/* We should check the UnitID, but it's	kind of	pointless as
-			* all keyboards are supposed to have the same one
-			*/
-#if 0
-			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION\n");
-			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
-				sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION)) {
-					DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:	"
-						"invalid buffer size (expected)\n");
-					/* It's to query the buffer size */
-					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-					goto intcontfailure;
-				}
-				Irp->IoStatus.Information =
-					sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION);
-#endif
-				/*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-					&IndicatorTranslation,
-					sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION));*/
-
-				Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-				break;
-		case IOCTL_INTERNAL_I8042_HOOK_KEYBOARD:
-			/* Nothing to do here */
-			Irp->IoStatus.Status = STATUS_SUCCESS;
-			break;
-		default:
-			Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
-			break;
-		}
-
-	intcontfailure:
-			Status = Irp->IoStatus.Status;
-	}
-	else if (DeviceObject == MouseFdo)
-	{
-		// it's mouse's IOCTL
-		PIO_STACK_LOCATION Stk;
-
-		Irp->IoStatus.Information = 0;
-		Stk = IoGetCurrentIrpStackLocation(Irp);
-
-		switch (Stk->Parameters.DeviceIoControl.IoControlCode)
-		{
-			case IOCTL_INTERNAL_MOUSE_CONNECT:
-				DPRINT("USBMP: IOCTL_INTERNAL_MOUSE_CONNECT\n");
-				if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
-					DPRINT1("USBMP: IOCTL_INTERNAL_MOUSE_CONNECT "
-							"invalid buffer size\n");
-					Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-					goto intcontfailure2;
-				}
-
-				RtlCopyMemory(&MouseClassInformation,
-					Stk->Parameters.DeviceIoControl.Type3InputBuffer,
-					sizeof(CONNECT_DATA));
-	
-				Irp->IoStatus.Status = STATUS_SUCCESS;
-				break;
-
-		default:
-			Irp->IoStatus.Status = STATUS_SUCCESS;//STATUS_INVALID_DEVICE_REQUEST;
-			break;
-		}
-	intcontfailure2:
-		Status = Irp->IoStatus.Status;
-	}
-	else
-	{
-		DPRINT("USBMP: We got IOCTL for UsbCore\n");
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		return STATUS_SUCCESS;
-	}
-
-
-	if (Status == STATUS_INVALID_DEVICE_REQUEST) {
-		DPRINT1("USBMP: Invalid internal device request!\n");
-	}
-
-	if (Status != STATUS_PENDING)
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
 	return Status;
 }

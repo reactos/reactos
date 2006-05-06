@@ -1,11 +1,11 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS USB miniport driver (Cromwell type)
- * FILE:            drivers/usb/miniport/common/main.c
- * PURPOSE:         Driver entry
- *
- * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.com)
- *                  Hervé Poussineau (hpoussin@reactos.org),
+ * PROJECT:     ReactOS USB miniport driver (Cromwell type)
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/usb/miniport/common/main.c
+ * PURPOSE:     Driver entry
+ * PROGRAMMERS: Copyright Aleksey Bragin (aleksey@reactos.org)
+ *              Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *              Copyright James Tabor (jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net)
  *
  * Some parts of code are inspired (or even just copied) from
  * ReactOS Videoport driver (drivers/video/videoprt)
@@ -33,7 +33,7 @@ CreateRootHubPdo(
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
 
-	DPRINT("USBMP: CreateRootHubPdo()\n");
+	DPRINT("CreateRootHubPdo()\n");
 
 	Status = IoCreateDevice(
 		DriverObject,
@@ -45,7 +45,7 @@ CreateRootHubPdo(
 		&Pdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("USBMP: IoCreateDevice() call failed with status 0x%08x\n", Status);
+		DPRINT("IoCreateDevice() call failed with status 0x%08x\n", Status);
 		return Status;
 	}
 
@@ -125,7 +125,7 @@ AddDevice_Keyboard(
 	Status = AddRegistryEntry(L"KeyboardPort", &DeviceName, L"REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\usbport");
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: AddRegistryEntry() for usb keyboard driver failed with status 0x%08lx\n", Status);
+		DPRINT1("AddRegistryEntry() for usb keyboard driver failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 
@@ -139,15 +139,15 @@ AddDevice_Keyboard(
 
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: IoCreateDevice() for usb keyboard driver failed with status 0x%08lx\n", Status);
+		DPRINT1("IoCreateDevice() for usb keyboard driver failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(USBMP_DEVICE_EXTENSION));
-	DeviceExtension->IsFDO = TRUE;
+	DeviceExtension->IsFDO = FALSE;
 	KeyboardFdo = Fdo;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	DPRINT("USBMP: Created keyboard Fdo: %p\n", Fdo);
+	DPRINT("Created keyboard Fdo: %p\n", Fdo);
 
 	return STATUS_SUCCESS;
 }
@@ -165,7 +165,7 @@ AddDevice_Mouse(
 	Status = AddRegistryEntry(L"PointerPort", &DeviceName, L"REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\usbport");
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: AddRegistryEntry() for usb mouse driver failed with status 0x%08lx\n", Status);
+		DPRINT1("AddRegistryEntry() for usb mouse driver failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 
@@ -179,20 +179,20 @@ AddDevice_Mouse(
 
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: IoCreateDevice() for usb mouse driver failed with status 0x%08lx\n", Status);
+		DPRINT1("IoCreateDevice() for usb mouse driver failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(USBMP_DEVICE_EXTENSION));
-	DeviceExtension->IsFDO = TRUE;
+	DeviceExtension->IsFDO = FALSE;
 	MouseFdo = Fdo;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	DPRINT("USBMP: Created mouse Fdo: %p\n", Fdo);
+	DPRINT("Created mouse Fdo: %p\n", Fdo);
 
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AddDevice(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT pdo)
@@ -220,7 +220,7 @@ AddDevice(
 
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT1("USBMP: Allocating DriverObjectExtension failed.\n");
+			DPRINT1("Allocating DriverObjectExtension failed.\n");
 			goto cleanup;
 		}
 	}
@@ -259,7 +259,7 @@ AddDevice(
 
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: IoCreateDevice call failed with status 0x%08lx\n", Status);
+		DPRINT1("IoCreateDevice call failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -271,7 +271,7 @@ AddDevice(
 	Status = CreateRootHubPdo(DriverObject, fdo, &DeviceExtension->RootHubPdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: CreateRootHubPdo() failed with status 0x%08lx\n", Status);
+		DPRINT1("CreateRootHubPdo() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -283,7 +283,7 @@ AddDevice(
 		&DeviceExtension->HcdInterfaceName);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
+		DPRINT1("IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -305,7 +305,7 @@ AddDevice(
 	Status = IoCreateSymbolicLink(&LinkDeviceName, &DeviceName);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("USBMP: IoCreateSymbolicLink() call failed with status 0x%08x\n", Status);
+		DPRINT1("IoCreateSymbolicLink() call failed with status 0x%08x\n", Status);
 		goto cleanup;
 	}
 
@@ -319,7 +319,7 @@ cleanup:
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IrpStub(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -328,7 +328,7 @@ IrpStub(
 
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
 	{
-		DPRINT1("USBMP: FDO stub for major function 0x%lx\n",
+		DPRINT1("FDO stub for major function 0x%lx\n",
 			IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 		ASSERT(FALSE);
 		return ForwardIrpAndForget(DeviceObject, Irp);
@@ -338,7 +338,7 @@ IrpStub(
 		/* We can't forward request to the lower driver, because
 		 * we are a Pdo, so we don't have lower driver...
 		 */
-		DPRINT1("USBMP: PDO stub for major function 0x%lx\n",
+		DPRINT1("PDO stub for major function 0x%lx\n",
 			IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 		ASSERT(FALSE);
 	}
@@ -348,74 +348,74 @@ IrpStub(
 	return Status;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
-		return UsbMpCreate(DeviceObject, Irp);
+		return UsbMpFdoCreate(DeviceObject, Irp);
 	else
-		return IrpStub(DeviceObject, Irp);
+		return UsbMpPdoCreate(DeviceObject, Irp);
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
-		return UsbMpClose(DeviceObject, Irp);
+		return UsbMpFdoClose(DeviceObject, Irp);
 	else
-		return IrpStub(DeviceObject, Irp);
+		return UsbMpPdoClose(DeviceObject, Irp);
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
-		return UsbMpCleanup(DeviceObject, Irp);
+		return UsbMpFdoCleanup(DeviceObject, Irp);
 	else
-		return IrpStub(DeviceObject, Irp);
+		return UsbMpPdoCleanup(DeviceObject, Irp);
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
-		return UsbMpDeviceControlFdo(DeviceObject, Irp);
+		return UsbMpFdoDeviceControl(DeviceObject, Irp);
 	else
-		return UsbMpDeviceControlPdo(DeviceObject, Irp);
+		return UsbMpPdoDeviceControl(DeviceObject, Irp);
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
-		return UsbMpInternalDeviceControlFdo(DeviceObject, Irp);
-	else
 		return IrpStub(DeviceObject, Irp);
+	else
+		return UsbMpPdoInternalDeviceControl(DeviceObject, Irp);
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
-		return UsbMpPnpFdo(DeviceObject, Irp);
+		return UsbMpFdoPnp(DeviceObject, Irp);
 	else
-		return UsbMpPnpPdo(DeviceObject, Irp);
+		return UsbMpPdoPnp(DeviceObject, Irp);
 }
 
-static NTSTATUS STDCALL 
+static NTSTATUS NTAPI 
 DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 {
-	DPRINT1("USBMP: IRP_MJ_POWER unimplemented\n");
+	DPRINT1("IRP_MJ_POWER unimplemented\n");
 	Irp->IoStatus.Information = 0;
-	Irp->IoStatus.Status = STATUS_SUCCESS;
+	Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	return STATUS_SUCCESS;
+	return STATUS_NOT_SUPPORTED;
 }
 
 /*
  * Standard DriverEntry method.
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 {
 	USBPORT_INTERFACE UsbPortInterface;

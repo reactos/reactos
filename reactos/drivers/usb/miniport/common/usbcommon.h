@@ -20,37 +20,29 @@ extern CONNECT_DATA MouseClassInformation;
 extern PDEVICE_OBJECT KeyboardFdo;
 extern PDEVICE_OBJECT MouseFdo;
 
-/* cleanup.c */
-NTSTATUS STDCALL
-UsbMpCleanup(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
-
-/* close.c */
-NTSTATUS STDCALL
-UsbMpClose(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
-
-/* create.c */
-NTSTATUS STDCALL
-UsbMpCreate(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp);
-
 /* fdo.c */
-NTSTATUS STDCALL
-UsbMpPnpFdo(
+NTSTATUS
+UsbMpFdoCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 NTSTATUS
-UsbMpDeviceControlFdo(
+UsbMpFdoClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 NTSTATUS
-UsbMpInternalDeviceControlFdo(
+UsbMpFdoCleanup(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+NTSTATUS
+UsbMpFdoPnp(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+NTSTATUS
+UsbMpFdoDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
@@ -60,7 +52,7 @@ ForwardIrpAndWait(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
@@ -77,18 +69,41 @@ UsbMpInitMultiSzString(
 	... /* list of PCSZ */);
 
 /* pdo.c */
-NTSTATUS STDCALL
-UsbMpPnpPdo(
+NTSTATUS
+UsbMpPdoCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 NTSTATUS
-UsbMpDeviceControlPdo(
+UsbMpPdoClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-/* Needed by this object library */
-VOID STDCALL 
+NTSTATUS
+UsbMpPdoCleanup(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+NTSTATUS
+UsbMpPdoPnp(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+NTSTATUS
+UsbMpPdoDeviceControl(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+NTSTATUS
+UsbMpPdoInternalDeviceControl(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+/*
+ * Needed by this object library, but not
+ * present in any file of this library
+ */
+VOID NTAPI 
 DriverUnload(PDRIVER_OBJECT DriverObject);
 
 NTSTATUS

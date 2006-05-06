@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS USB miniport driver (Cromwell type)
- * FILE:            drivers/usb/miniport/common/misc.c
- * PURPOSE:         Misceallenous operations
- *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org),
+ * PROJECT:     ReactOS USB miniport driver (Cromwell type)
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/usb/miniport/common/misc.c
+ * PURPOSE:     Misceallenous operations
+ * PROGRAMMERS: Copyright 2005 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -13,7 +12,7 @@
 #include "usbcommon.h"
 #include <stdarg.h>
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ForwardIrpAndWaitCompletion(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,
@@ -38,7 +37,7 @@ ForwardIrpAndWait(
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 
-	DPRINT("USBMP: Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
+	DPRINT("Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
 
 	Status = IoCallDriver(LowerDevice, Irp);
@@ -52,7 +51,7 @@ ForwardIrpAndWait(
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
