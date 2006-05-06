@@ -23,7 +23,7 @@ MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 {
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
-   PMSFS_MAILSLOT Mailslot;
+   PMSFS_FCB Fcb;
    PMSFS_CCB Ccb;
    NTSTATUS Status;
 
@@ -32,9 +32,9 @@ MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
    Ccb = FileObject->FsContext2;
-   Mailslot = Ccb->Mailslot;
+   Fcb = Ccb->Fcb;
 
-   DPRINT1("Mailslot name: %wZ\n", &Mailslot->Name);
+   DPRINT1("Mailslot name: %wZ\n", &Fcb->Name);
 
    switch (IoStack->Parameters.FileSystemControl.FsControlCode)
      {

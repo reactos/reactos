@@ -24,9 +24,9 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PMSFS_DEVICE_EXTENSION DeviceExtension;
-   PMSFS_MAILSLOT Mailslot;
+   PMSFS_FCB Fcb;
    PMSFS_CCB Ccb;
-   PMSFS_MAILSLOT current = NULL;
+   PMSFS_FCB current = NULL;
    PLIST_ENTRY current_entry;
    KIRQL oldIrql;
 
@@ -49,13 +49,13 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_NO_MEMORY);
      }
 
-   KeLockMutex(&DeviceExtension->MailslotListLock);
-   current_entry = DeviceExtension->MailslotListHead.Flink;
-   while (current_entry != &DeviceExtension->MailslotListHead)
+   KeLockMutex(&DeviceExtension->FcbListLock);
+   current_entry = DeviceExtension->FcbListHead.Flink;
+   while (current_entry != &DeviceExtension->FcbListHead)
      {
 	current = CONTAINING_RECORD(current_entry,
-				    MSFS_MAILSLOT,
-				    MailslotListEntry);
+				    MSFS_FCB,
+				    FcbListEntry);
 
 	if (!RtlCompareUnicodeString(&FileObject->FileName, &current->Name, TRUE))
 	  {
@@ -65,10 +65,10 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
 	current_entry = current_entry->Flink;
      }
 
-   if (current_entry == &DeviceExtension->MailslotListHead)
+   if (current_entry == &DeviceExtension->FcbListHead)
      {
 	ExFreePool(Ccb);
-	KeUnlockMutex(&DeviceExtension->MailslotListLock);
+	KeUnlockMutex(&DeviceExtension->FcbListLock);
 
 	Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
 	Irp->IoStatus.Information = 0;
@@ -78,18 +78,20 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_UNSUCCESSFUL);
      }
 
-   Mailslot = current;
+   Fcb = current;
+   DPRINT1("Fcb: %p\n", Fcb);
 
-   KeAcquireSpinLock(&Mailslot->CcbListLock, &oldIrql);
-   InsertTailList(&Mailslot->CcbListHead, &Ccb->CcbListEntry);
-   KeReleaseSpinLock(&Mailslot->CcbListLock, oldIrql);
+   KeAcquireSpinLock(&Fcb->CcbListLock, &oldIrql);
+   InsertTailList(&Fcb->CcbListHead, &Ccb->CcbListEntry);
+   KeReleaseSpinLock(&Fcb->CcbListLock, oldIrql);
 
-   Mailslot->ReferenceCount++;
+   Fcb->ReferenceCount++;
 
-   Ccb->Mailslot = Mailslot;
+   Ccb->Fcb = Fcb;
 
-   KeUnlockMutex(&DeviceExtension->MailslotListLock);
+   KeUnlockMutex(&DeviceExtension->FcbListLock);
 
+   FileObject->FsContext = Fcb;
    FileObject->FsContext2 = Ccb;
    FileObject->Flags |= FO_MAILSLOT;
 
@@ -109,11 +111,11 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
    PEXTENDED_IO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PMSFS_DEVICE_EXTENSION DeviceExtension;
-   PMSFS_MAILSLOT Mailslot;
+   PMSFS_FCB Fcb;
    PMSFS_CCB Ccb;
    KIRQL oldIrql;
    PLIST_ENTRY current_entry;
-   PMSFS_MAILSLOT current;
+   PMSFS_FCB current;
    PMAILSLOT_CREATE_PARAMETERS Buffer;
 
    DPRINT("MsfsCreateMailslot(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
@@ -125,8 +127,8 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 
    DPRINT("Mailslot name: %wZ\n", &FileObject->FileName);
 
-   Mailslot = ExAllocatePool(NonPagedPool, sizeof(MSFS_MAILSLOT));
-   if (Mailslot == NULL)
+   Fcb = ExAllocatePool(NonPagedPool, sizeof(MSFS_FCB));
+   if (Fcb == NULL)
      {
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
@@ -136,12 +138,12 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_NO_MEMORY);
      }
 
-   Mailslot->Name.Length = FileObject->FileName.Length;
-   Mailslot->Name.MaximumLength = Mailslot->Name.Length + sizeof(UNICODE_NULL);
-   Mailslot->Name.Buffer = ExAllocatePool(NonPagedPool, Mailslot->Name.MaximumLength);
-   if (Mailslot->Name.Buffer == NULL)
+   Fcb->Name.Length = FileObject->FileName.Length;
+   Fcb->Name.MaximumLength = Fcb->Name.Length + sizeof(UNICODE_NULL);
+   Fcb->Name.Buffer = ExAllocatePool(NonPagedPool, Fcb->Name.MaximumLength);
+   if (Fcb->Name.Buffer == NULL)
      {
-	ExFreePool(Mailslot);
+	ExFreePool(Fcb);
 
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
@@ -151,12 +153,13 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_NO_MEMORY);
      }
 
-   RtlCopyUnicodeString(&Mailslot->Name, &FileObject->FileName);
+   RtlCopyUnicodeString(&Fcb->Name, &FileObject->FileName);
 
    Ccb = ExAllocatePool(NonPagedPool, sizeof(MSFS_CCB));
    if (Ccb == NULL)
      {
-	ExFreePool(Mailslot);
+	ExFreePool(Fcb->Name.Buffer);
+	ExFreePool(Fcb);
 
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
@@ -166,29 +169,29 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_NO_MEMORY);
      }
 
-   Mailslot->ReferenceCount = 0;
-   InitializeListHead(&Mailslot->CcbListHead);
-   KeInitializeSpinLock(&Mailslot->CcbListLock);
+   Fcb->ReferenceCount = 0;
+   InitializeListHead(&Fcb->CcbListHead);
+   KeInitializeSpinLock(&Fcb->CcbListLock);
 
-   Mailslot->MaxMessageSize = Buffer->MaximumMessageSize;
-   Mailslot->MessageCount = 0;
-   Mailslot->TimeOut = Buffer->ReadTimeout;
-   KeInitializeEvent(&Mailslot->MessageEvent,
+   Fcb->MaxMessageSize = Buffer->MaximumMessageSize;
+   Fcb->MessageCount = 0;
+   Fcb->TimeOut = Buffer->ReadTimeout;
+   KeInitializeEvent(&Fcb->MessageEvent,
 		     NotificationEvent,
 		     FALSE);
 
-   InitializeListHead(&Mailslot->MessageListHead);
-   KeInitializeSpinLock(&Mailslot->MessageListLock);
+   InitializeListHead(&Fcb->MessageListHead);
+   KeInitializeSpinLock(&Fcb->MessageListLock);
 
-   KeLockMutex(&DeviceExtension->MailslotListLock);
-   current_entry = DeviceExtension->MailslotListHead.Flink;
-   while (current_entry != &DeviceExtension->MailslotListHead)
+   KeLockMutex(&DeviceExtension->FcbListLock);
+   current_entry = DeviceExtension->FcbListHead.Flink;
+   while (current_entry != &DeviceExtension->FcbListHead)
      {
 	current = CONTAINING_RECORD(current_entry,
-				    MSFS_MAILSLOT,
-				    MailslotListEntry);
+				    MSFS_FCB,
+				    FcbListEntry);
 
-	if (!RtlCompareUnicodeString(&Mailslot->Name, &current->Name, TRUE))
+	if (!RtlCompareUnicodeString(&Fcb->Name, &current->Name, TRUE))
 	  {
 	     break;
 	  }
@@ -196,29 +199,30 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 	current_entry = current_entry->Flink;
      }
 
-   if (current_entry != &DeviceExtension->MailslotListHead)
+   if (current_entry != &DeviceExtension->FcbListHead)
      {
-	RtlFreeUnicodeString(&Mailslot->Name);
-	ExFreePool(Mailslot);
+	ExFreePool(Fcb->Name.Buffer);
+	ExFreePool(Fcb);
 
-	Mailslot = current;
+	Fcb = current;
      }
    else
      {
-	InsertTailList(&DeviceExtension->MailslotListHead,
-		       &Mailslot->MailslotListEntry);
+	InsertTailList(&DeviceExtension->FcbListHead,
+		       &Fcb->FcbListEntry);
      }
 
-   KeAcquireSpinLock(&Mailslot->CcbListLock, &oldIrql);
-   InsertTailList(&Mailslot->CcbListHead, &Ccb->CcbListEntry);
-   KeReleaseSpinLock(&Mailslot->CcbListLock, oldIrql);
+   KeAcquireSpinLock(&Fcb->CcbListLock, &oldIrql);
+   InsertTailList(&Fcb->CcbListHead, &Ccb->CcbListEntry);
+   KeReleaseSpinLock(&Fcb->CcbListLock, oldIrql);
 
-   Mailslot->ReferenceCount++;
-   Mailslot->ServerCcb = Ccb;
-   Ccb->Mailslot = Mailslot;
+   Fcb->ReferenceCount++;
+   Fcb->ServerCcb = Ccb;
+   Ccb->Fcb = Fcb;
 
-   KeUnlockMutex(&DeviceExtension->MailslotListLock);
+   KeUnlockMutex(&DeviceExtension->FcbListLock);
 
+   FileObject->FsContext = Fcb;
    FileObject->FsContext2 = Ccb;
    FileObject->Flags |= FO_MAILSLOT;
 
@@ -238,7 +242,7 @@ MsfsClose(PDEVICE_OBJECT DeviceObject,
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PMSFS_DEVICE_EXTENSION DeviceExtension;
-   PMSFS_MAILSLOT Mailslot;
+   PMSFS_FCB Fcb;
    PMSFS_CCB Ccb;
    PMSFS_MESSAGE Message;
    KIRQL oldIrql;
@@ -249,11 +253,11 @@ MsfsClose(PDEVICE_OBJECT DeviceObject,
    DeviceExtension = DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
 
-   KeLockMutex(&DeviceExtension->MailslotListLock);
+   KeLockMutex(&DeviceExtension->FcbListLock);
 
-   if (DeviceExtension->MailslotListHead.Flink == &DeviceExtension->MailslotListHead)
+   if (DeviceExtension->FcbListHead.Flink == &DeviceExtension->FcbListHead)
      {
-	KeUnlockMutex(&DeviceExtension->MailslotListLock);
+	KeUnlockMutex(&DeviceExtension->FcbListLock);
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -263,46 +267,46 @@ MsfsClose(PDEVICE_OBJECT DeviceObject,
 	return(STATUS_SUCCESS);
      }
 
+   Fcb = FileObject->FsContext;
    Ccb = FileObject->FsContext2;
-   Mailslot = Ccb->Mailslot;
 
-   DPRINT("Mailslot name: %wZ\n", &Mailslot->Name);
+   DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
 
-   Mailslot->ReferenceCount--;
-   if (Mailslot->ServerCcb == Ccb)
+   Fcb->ReferenceCount--;
+   if (Fcb->ServerCcb == Ccb)
      {
 	/* delete all messages from message-list */
-	KeAcquireSpinLock(&Mailslot->MessageListLock, &oldIrql);
+	KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
 
-	while (Mailslot->MessageListHead.Flink != &Mailslot->MessageListHead)
+	while (Fcb->MessageListHead.Flink != &Fcb->MessageListHead)
 	  {
-	     Message = CONTAINING_RECORD(Mailslot->MessageListHead.Flink,
+	     Message = CONTAINING_RECORD(Fcb->MessageListHead.Flink,
 					 MSFS_MESSAGE,
 					 MessageListEntry);
-	     RemoveEntryList(Mailslot->MessageListHead.Flink);
+	     RemoveEntryList(Fcb->MessageListHead.Flink);
 	     ExFreePool(Message);
 	  }
-	Mailslot->MessageCount = 0;
+	Fcb->MessageCount = 0;
 
-	KeReleaseSpinLock(&Mailslot->MessageListLock, oldIrql);
-	Mailslot->ServerCcb = NULL;
+	KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
+	Fcb->ServerCcb = NULL;
      }
 
-   KeAcquireSpinLock(&Mailslot->CcbListLock, &oldIrql);
+   KeAcquireSpinLock(&Fcb->CcbListLock, &oldIrql);
    RemoveEntryList(&Ccb->CcbListEntry);
-   KeReleaseSpinLock(&Mailslot->CcbListLock, oldIrql);
+   KeReleaseSpinLock(&Fcb->CcbListLock, oldIrql);
    ExFreePool(Ccb);
    FileObject->FsContext2 = NULL;
 
-   if (Mailslot->ReferenceCount == 0)
+   if (Fcb->ReferenceCount == 0)
      {
 	DPRINT1("ReferenceCount == 0: Deleting mailslot data\n");
-	RtlFreeUnicodeString(&Mailslot->Name);
-	RemoveEntryList(&Mailslot->MailslotListEntry);
-	ExFreePool(Mailslot);
+	RemoveEntryList(&Fcb->FcbListEntry);
+	ExFreePool(Fcb->Name.Buffer);
+	ExFreePool(Fcb);
      }
 
-   KeUnlockMutex(&DeviceExtension->MailslotListLock);
+   KeUnlockMutex(&DeviceExtension->FcbListLock);
 
    Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;

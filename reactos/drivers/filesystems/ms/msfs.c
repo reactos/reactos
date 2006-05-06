@@ -71,8 +71,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
    /* initialize device extension */
    DeviceExtension = DeviceObject->DeviceExtension;
-   InitializeListHead(&DeviceExtension->MailslotListHead);
-   KeInitializeMutex(&DeviceExtension->MailslotListLock,
+   InitializeListHead(&DeviceExtension->FcbListHead);
+   KeInitializeMutex(&DeviceExtension->FcbListLock,
 		     0);
 
    return(STATUS_SUCCESS);

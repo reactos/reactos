@@ -22,14 +22,14 @@
 
 typedef struct _MSFS_DEVICE_EXTENSION
 {
-   LIST_ENTRY MailslotListHead;
-   KMUTEX MailslotListLock;
+   LIST_ENTRY FcbListHead;
+   KMUTEX FcbListLock;
 } MSFS_DEVICE_EXTENSION, *PMSFS_DEVICE_EXTENSION;
 
-typedef struct _MSFS_MAILSLOT
+typedef struct _MSFS_FCB
 {
    UNICODE_STRING Name;
-   LIST_ENTRY MailslotListEntry;
+   LIST_ENTRY FcbListEntry;
    KSPIN_LOCK CcbListLock;
    LIST_ENTRY CcbListHead;
    struct _MSFS_CCB *ServerCcb;
@@ -40,12 +40,12 @@ typedef struct _MSFS_MAILSLOT
    ULONG MessageCount;
    KSPIN_LOCK MessageListLock;
    LIST_ENTRY MessageListHead;
-} MSFS_MAILSLOT, *PMSFS_MAILSLOT;
+} MSFS_FCB, *PMSFS_FCB;
 
 typedef struct _MSFS_CCB
 {
    LIST_ENTRY CcbListEntry;
-   PMSFS_MAILSLOT Mailslot;
+   PMSFS_FCB Fcb;
 } MSFS_CCB, *PMSFS_CCB;
 
 typedef struct _MSFS_MESSAGE

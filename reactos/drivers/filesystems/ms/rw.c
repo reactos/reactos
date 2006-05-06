@@ -23,7 +23,7 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
 {
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
-   PMSFS_MAILSLOT Mailslot;
+   PMSFS_FCB Fcb;
    PMSFS_CCB Ccb;
    PMSFS_MESSAGE Message;
    KIRQL oldIrql;
@@ -36,13 +36,13 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
 
    IoStack = IoGetCurrentIrpStackLocation (Irp);
    FileObject = IoStack->FileObject;
+   Fcb = (PMSFS_FCB)FileObject->FsContext;
    Ccb = (PMSFS_CCB)FileObject->FsContext2;
-   Mailslot = Ccb->Mailslot;
 
-   DPRINT("MailslotName: %wZ\n", &Mailslot->Name);
+   DPRINT("MailslotName: %wZ\n", &Fcb->Name);
 
    /* reading is not permitted on client side */
-   if (Ccb->Mailslot->ServerCcb != Ccb)
+   if (Fcb->ServerCcb != Ccb)
      {
 	Irp->IoStatus.Status = STATUS_ACCESS_DENIED;
 	Irp->IoStatus.Information = 0;
@@ -58,29 +58,29 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
    else
      Buffer = Irp->UserBuffer;
 
-   Status = KeWaitForSingleObject(&Mailslot->MessageEvent,
+   Status = KeWaitForSingleObject(&Fcb->MessageEvent,
 				  UserRequest,
 				  KernelMode,
 				  FALSE,
 				  NULL); /* FIXME: handle timeout */
-   if ((NT_SUCCESS(Status)) && (Mailslot->MessageCount > 0))
+   if ((NT_SUCCESS(Status)) && (Fcb->MessageCount > 0))
      {
 	/* copy current message into buffer */
-	Message = CONTAINING_RECORD(Mailslot->MessageListHead.Flink,
+	Message = CONTAINING_RECORD(Fcb->MessageListHead.Flink,
 				    MSFS_MESSAGE,
 				    MessageListEntry);
 	memcpy(Buffer, &Message->Buffer, min(Message->Size,Length));
 	LengthRead = Message->Size;
 
-	KeAcquireSpinLock(&Mailslot->MessageListLock, &oldIrql);
-	RemoveHeadList(&Mailslot->MessageListHead);
-	KeReleaseSpinLock(&Mailslot->MessageListLock, oldIrql);
+	KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
+	RemoveHeadList(&Fcb->MessageListHead);
+	KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
 	ExFreePool(Message);
-	Mailslot->MessageCount--;
-	if (Mailslot->MessageCount == 0)
+	Fcb->MessageCount--;
+	if (Fcb->MessageCount == 0)
 	  {
-	     KeClearEvent(&Mailslot->MessageEvent);
+	     KeClearEvent(&Fcb->MessageEvent);
 	  }
      }
 
@@ -99,7 +99,7 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
 {
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
-   PMSFS_MAILSLOT Mailslot;
+   PMSFS_FCB Fcb;
    PMSFS_CCB Ccb;
    PMSFS_MESSAGE Message;
    KIRQL oldIrql;
@@ -110,13 +110,13 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
 
    IoStack = IoGetCurrentIrpStackLocation (Irp);
    FileObject = IoStack->FileObject;
+   Fcb = (PMSFS_FCB)FileObject->FsContext;
    Ccb = (PMSFS_CCB)FileObject->FsContext2;
-   Mailslot = Ccb->Mailslot;
 
-   DPRINT("MailslotName: %wZ\n", &Mailslot->Name);
+   DPRINT("MailslotName: %wZ\n", &Fcb->Name);
 
    /* writing is not permitted on server side */
-   if (Ccb->Mailslot->ServerCcb == Ccb)
+   if (Fcb->ServerCcb == Ccb)
      {
 	Irp->IoStatus.Status = STATUS_ACCESS_DENIED;
 	Irp->IoStatus.Information = 0;
@@ -150,14 +150,14 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
    Message->Size = Length;
    memcpy(&Message->Buffer, Buffer, Length);
 
-   KeAcquireSpinLock(&Mailslot->MessageListLock, &oldIrql);
-   InsertTailList(&Mailslot->MessageListHead, &Message->MessageListEntry);
-   KeReleaseSpinLock(&Mailslot->MessageListLock, oldIrql);
+   KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
+   InsertTailList(&Fcb->MessageListHead, &Message->MessageListEntry);
+   KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
-   Mailslot->MessageCount++;
-   if (Mailslot->MessageCount == 1)
+   Fcb->MessageCount++;
+   if (Fcb->MessageCount == 1)
      {
-	KeSetEvent(&Mailslot->MessageEvent,
+	KeSetEvent(&Fcb->MessageEvent,
 		   0,
 		   FALSE);
      }
