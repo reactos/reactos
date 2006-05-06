@@ -34,6 +34,8 @@
 //			add missing icons
 //			Options- pointer precision
 
+#define WINVER 0x0501
+
 #include <windows.h>
 #include <winuser.h>
 #include <devguid.h>
@@ -132,7 +134,6 @@ BOOL InitializeMouse()
     /* wheel scroll lines */
     SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &g_WheelScrollLines, 0);
 
-#if (WINVER >= 0x0500)
     //FIXME
     //pointer precision
     // SPI_GETMOUSE?
@@ -153,8 +154,6 @@ BOOL InitializeMouse()
 
     /* show pointer with Ctrl-Key */
     SystemParametersInfo(SPI_GETMOUSESONAR, 0, &g_ShowPointer, 0);
-#endif
-
     return TRUE;
 }
 
@@ -677,7 +676,6 @@ PointerProc(IN HWND hwndDlg,
         {
             EnumerateCursorSchemes(hwndDlg);
             RefreshCursorList(hwndDlg);
-#if (WINVER >= 0x0500)
             /* drop shadow */
             SystemParametersInfo(SPI_GETDROPSHADOW, 0, &g_DropShadow, 0);
             if (g_DropShadow)
@@ -685,7 +683,6 @@ PointerProc(IN HWND hwndDlg,
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_DROP_SHADOW);
                 SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
             }
-#endif
             if ((INT)wParam == IDC_LISTVIEW_CURSOR)
                 return TRUE;
             else
@@ -1033,7 +1030,6 @@ OptionProc(IN HWND hwndDlg,
 
                 SystemParametersInfo(SPI_SETMOUSETRAILS, lResult, 0, SPIF_SENDCHANGE);
 
-#if (WINVER >= 0x0500)
                 //FIXME
                 //pointer precision
                 //SPI_SETMOUSE?
@@ -1049,8 +1045,6 @@ OptionProc(IN HWND hwndDlg,
 
                 /* show pointer with Ctrl-Key */
                 SystemParametersInfo(SPI_SETMOUSESONAR, 0, (PVOID)g_ShowPointer, SPIF_SENDCHANGE);
-#endif				
-				
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
