@@ -66,6 +66,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 	return(Status);
      }
 
+   /* initialize the device object */
+   DeviceObject->Flags = DO_DIRECT_IO;
+
    /* initialize device extension */
    DeviceExtension = DeviceObject->DeviceExtension;
    InitializeListHead(&DeviceExtension->MailslotListHead);
