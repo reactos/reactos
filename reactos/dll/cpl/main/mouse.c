@@ -311,21 +311,26 @@ ButtonProc(IN HWND hwndDlg,
         }
         case WM_DRAWITEM:
         {
-                LPDRAWITEMSTRUCT drawItem;
-                drawItem = (LPDRAWITEMSTRUCT)lParam;
-                if(drawItem->CtlID == IDC_IMAGE_SWAP_MOUSE)
-                {
-                    //FIXME
-                    //show mouse with left/right button highlighted
-                    // depending on val g_SwapMouseButtons
-                    return TRUE;
-                }
-                else if (drawItem->CtlID == IDC_IMAGE_DOUBLE_CLICK_SPEED)
-                {
-                    //FIXME
-                    //measure click speed && draw item
-                }
-                break;
+            LPDRAWITEMSTRUCT drawItem;
+            drawItem = (LPDRAWITEMSTRUCT)lParam;
+            if(drawItem->CtlID == IDC_IMAGE_SWAP_MOUSE)
+            {
+                //FIXME
+                //show mouse with left/right button highlighted
+                // depending on val g_SwapMouseButtons
+                return TRUE;
+            }
+            else if (drawItem->CtlID == IDC_IMAGE_DOUBLE_CLICK_SPEED)
+            {
+                //FIXME
+                //measure click speed && draw item
+            }
+            break;
+        }
+        case WM_HSCROLL:
+        {
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            break;
         }
     }
     return FALSE;
@@ -1049,9 +1054,13 @@ OptionProc(IN HWND hwndDlg,
                 SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 return TRUE;
             }
-
+            break;
         }
-
+        case WM_HSCROLL:
+        {
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            break;
+        }
     }
     return FALSE;
 }
