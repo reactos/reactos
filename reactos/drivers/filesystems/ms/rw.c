@@ -24,7 +24,7 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PMSFS_MAILSLOT Mailslot;
-   PMSFS_FCB Fcb;
+   PMSFS_CCB Ccb;
    PMSFS_MESSAGE Message;
    KIRQL oldIrql;
    ULONG Length;
@@ -36,13 +36,13 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
 
    IoStack = IoGetCurrentIrpStackLocation (Irp);
    FileObject = IoStack->FileObject;
-   Fcb = (PMSFS_FCB)FileObject->FsContext;
-   Mailslot = Fcb->Mailslot;
+   Ccb = (PMSFS_CCB)FileObject->FsContext2;
+   Mailslot = Ccb->Mailslot;
 
    DPRINT("MailslotName: %wZ\n", &Mailslot->Name);
 
    /* reading is not permitted on client side */
-   if (Fcb->Mailslot->ServerFcb != Fcb)
+   if (Ccb->Mailslot->ServerCcb != Ccb)
      {
 	Irp->IoStatus.Status = STATUS_ACCESS_DENIED;
 	Irp->IoStatus.Information = 0;
@@ -100,7 +100,7 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
    PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PMSFS_MAILSLOT Mailslot;
-   PMSFS_FCB Fcb;
+   PMSFS_CCB Ccb;
    PMSFS_MESSAGE Message;
    KIRQL oldIrql;
    ULONG Length;
@@ -110,13 +110,13 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
 
    IoStack = IoGetCurrentIrpStackLocation (Irp);
    FileObject = IoStack->FileObject;
-   Fcb = (PMSFS_FCB)FileObject->FsContext;
-   Mailslot = Fcb->Mailslot;
+   Ccb = (PMSFS_CCB)FileObject->FsContext2;
+   Mailslot = Ccb->Mailslot;
 
    DPRINT("MailslotName: %wZ\n", &Mailslot->Name);
 
    /* writing is not permitted on server side */
-   if (Fcb->Mailslot->ServerFcb == Fcb)
+   if (Ccb->Mailslot->ServerCcb == Ccb)
      {
 	Irp->IoStatus.Status = STATUS_ACCESS_DENIED;
 	Irp->IoStatus.Information = 0;

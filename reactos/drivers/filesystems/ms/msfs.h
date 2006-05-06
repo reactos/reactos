@@ -4,7 +4,7 @@
 #include <ntifs.h>
 #include <ndk/ntndk.h>
 
-/* 
+/*
  * FIXME: GCC doesn't have a working option for defaulting to a calling
  * convention. It will always default to cdecl. The MS DDK was designed
  * for compilers which support this option, and thus some of their headers
@@ -30,9 +30,9 @@ typedef struct _MSFS_MAILSLOT
 {
    UNICODE_STRING Name;
    LIST_ENTRY MailslotListEntry;
-   KSPIN_LOCK FcbListLock;
-   LIST_ENTRY FcbListHead;
-   struct _MSFS_FCB *ServerFcb;
+   KSPIN_LOCK CcbListLock;
+   LIST_ENTRY CcbListHead;
+   struct _MSFS_CCB *ServerCcb;
    ULONG ReferenceCount;
    LARGE_INTEGER TimeOut;
    KEVENT MessageEvent;
@@ -42,11 +42,11 @@ typedef struct _MSFS_MAILSLOT
    LIST_ENTRY MessageListHead;
 } MSFS_MAILSLOT, *PMSFS_MAILSLOT;
 
-typedef struct _MSFS_FCB
+typedef struct _MSFS_CCB
 {
-   LIST_ENTRY FcbListEntry;
+   LIST_ENTRY CcbListEntry;
    PMSFS_MAILSLOT Mailslot;
-} MSFS_FCB, *PMSFS_FCB;
+} MSFS_CCB, *PMSFS_CCB;
 
 typedef struct _MSFS_MESSAGE
 {
