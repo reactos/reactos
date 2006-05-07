@@ -953,10 +953,10 @@ static struct inf_file *parse_file( HANDLE handle, UINT *error_line )
     else
     {
         WCHAR *new_buff = (WCHAR *)buffer;
-        /* Some UNICODE files may start with the UNICODE marker */
+        /* UCS-16 files should start with the Unicode BOM; we should skip it */
         if (*new_buff == 0xfeff)
             new_buff++;
-        err = parse_buffer( file, new_buff, (WCHAR *)((char *)new_buff + size), error_line );
+        err = parse_buffer( file, new_buff, (WCHAR *)((char *)buffer + size), error_line );
     }
 
     if (!err)  /* now check signature */
