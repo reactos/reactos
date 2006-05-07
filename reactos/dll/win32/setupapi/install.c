@@ -1167,7 +1167,7 @@ static BOOL InstallOneService(
     LPQUERY_SERVICE_CONFIG ServiceConfig = NULL;
     BOOL ret = FALSE;
 
-    HKEY hGroupOrderListKey = INVALID_HANDLE_VALUE;
+    HKEY hGroupOrderListKey = NULL;
     LPWSTR ServiceBinary = NULL;
     LPWSTR LoadOrderGroup = NULL;
     LPWSTR DisplayName = NULL;
@@ -1359,7 +1359,7 @@ cleanup:
         CloseServiceHandle(hSCManager);
     if (hService != NULL)
         CloseServiceHandle(hService);
-    if (hGroupOrderListKey != INVALID_HANDLE_VALUE)
+    if (hGroupOrderListKey != NULL)
         RegCloseKey(hGroupOrderListKey);
     MyFree(ServiceConfig);
     MyFree(ServiceBinary);

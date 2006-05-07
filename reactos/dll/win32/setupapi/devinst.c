@@ -788,11 +788,15 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
 cleanup:
   if (ret == INVALID_HANDLE_VALUE)
   {
-    if (list && list->HKLM != 0 && list->HKLM != HKEY_LOCAL_MACHINE)
-      RegCloseKey(list->HKLM);
+    if (list)
+    {
+      if (list->HKLM != NULL && list->HKLM != HKEY_LOCAL_MACHINE)
+        RegCloseKey(list->HKLM);
+    }
     HeapFree(GetProcessHeap(), 0, list);
   }
-  HeapFree(GetProcessHeap(), 0, UNCServerName);
+  if (UNCServerName)
+    HeapFree(GetProcessHeap(), 0, UNCServerName);
   return ret;
 }
 
@@ -1660,8 +1664,8 @@ static LONG SETUP_CreateInterfaceList(
     struct DeviceInfoElement *deviceInfo;
 
     hInterfaceKey = INVALID_HANDLE_VALUE;
-    hDeviceInstanceKey = INVALID_HANDLE_VALUE;
-    hReferenceKey = INVALID_HANDLE_VALUE;
+    hDeviceInstanceKey = NULL;
+    hReferenceKey = NULL;
 
     /* Open registry key related to this interface */
     hInterfaceKey = SetupDiOpenClassRegKeyExW(InterfaceGuid, KEY_ENUMERATE_SUB_KEYS, DIOCR_INTERFACE, MachineName, NULL);
@@ -1684,7 +1688,7 @@ static LONG SETUP_CreateInterfaceList(
         i++;
 
         /* Open sub key */
-        if (hDeviceInstanceKey != INVALID_HANDLE_VALUE)
+        if (hDeviceInstanceKey != NULL)
             RegCloseKey(hDeviceInstanceKey);
         rc = RegOpenKeyExW(hInterfaceKey, KeyBuffer, 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &hDeviceInstanceKey);
         if (rc != ERROR_SUCCESS)
@@ -1774,7 +1778,7 @@ static LONG SETUP_CreateInterfaceList(
                 continue;
 
             /* Open sub key */
-            if (hReferenceKey != INVALID_HANDLE_VALUE)
+            if (hReferenceKey != NULL)
                 RegCloseKey(hReferenceKey);
             rc = RegOpenKeyExW(hDeviceInstanceKey, KeyBuffer, 0, KEY_QUERY_VALUE, &hReferenceKey);
             if (rc != ERROR_SUCCESS)
@@ -1811,7 +1815,6 @@ static LONG SETUP_CreateInterfaceList(
             }
             rc = RegQueryValueExW(hReferenceKey, SymbolicLink, NULL, NULL, (LPBYTE)pSymbolicLink, &dwLength);
             pSymbolicLink[dwLength / sizeof(WCHAR)] = '\0';
-            RegCloseKey(hReferenceKey);
             if (rc != ERROR_SUCCESS)
                 goto cleanup;
             if (!CreateDeviceInterface(deviceInfo, pSymbolicLink, InterfaceGuid, &interfaceInfo))
@@ -1850,9 +1853,9 @@ static LONG SETUP_CreateInterfaceList(
     rc = ERROR_SUCCESS;
 
 cleanup:
-    if (hReferenceKey != INVALID_HANDLE_VALUE)
+    if (hReferenceKey != NULL)
         RegCloseKey(hReferenceKey);
-    if (hDeviceInstanceKey != INVALID_HANDLE_VALUE)
+    if (hDeviceInstanceKey != NULL)
         RegCloseKey(hDeviceInstanceKey);
     if (hInterfaceKey != INVALID_HANDLE_VALUE)
         RegCloseKey(hInterfaceKey);
@@ -4619,8 +4622,8 @@ OpenHardwareProfileKey(
         IN DWORD HwProfile,
         IN DWORD samDesired)
 {
-    HKEY hHWProfilesKey = INVALID_HANDLE_VALUE;
-    HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
+    HKEY hHWProfilesKey = NULL;
+    HKEY hHWProfileKey = NULL;
     HKEY ret = INVALID_HANDLE_VALUE;
     LONG rc;
 
@@ -4663,9 +4666,9 @@ OpenHardwareProfileKey(
     ret = hHWProfileKey;
 
 cleanup:
-    if (hHWProfilesKey != INVALID_HANDLE_VALUE)
+    if (hHWProfilesKey != NULL)
         RegCloseKey(hHWProfilesKey);
-    if (hHWProfileKey != INVALID_HANDLE_VALUE && hHWProfileKey != ret)
+    if (hHWProfileKey != NULL && hHWProfileKey != ret)
         RegCloseKey(hHWProfileKey);
     return ret;
 }
@@ -4712,10 +4715,10 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
         DWORD Index; /* Index used in the DriverKey name */
         DWORD rc;
         HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
-        HKEY hEnumKey = INVALID_HANDLE_VALUE;
-        HKEY hClassKey = INVALID_HANDLE_VALUE;
+        HKEY hEnumKey = NULL;
+        HKEY hClassKey = NULL;
         HKEY hDeviceKey = INVALID_HANDLE_VALUE;
-        HKEY hKey = INVALID_HANDLE_VALUE;
+        HKEY hKey = NULL;
         HKEY RootKey;
 
         if (Scope == DICS_FLAG_GLOBAL)
@@ -4856,13 +4859,13 @@ cleanup:
         HeapFree(GetProcessHeap(), 0, DriverKey);
         if (hHWProfileKey != INVALID_HANDLE_VALUE)
             RegCloseKey(hHWProfileKey);
-        if (hEnumKey != INVALID_HANDLE_VALUE)
+        if (hEnumKey != NULL)
             RegCloseKey(hEnumKey);
-        if (hClassKey != INVALID_HANDLE_VALUE)
+        if (hClassKey != NULL)
             RegCloseKey(hClassKey);
         if (hDeviceKey != INVALID_HANDLE_VALUE)
             RegCloseKey(hDeviceKey);
-        if (hKey != INVALID_HANDLE_VALUE && hKey != ret)
+        if (hKey != NULL && hKey != ret)
             RegCloseKey(hKey);
     }
 
@@ -4907,8 +4910,8 @@ HKEY WINAPI SetupDiOpenDevRegKey(
         DWORD dwRegType;
         DWORD rc;
         HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
-        HKEY hEnumKey = INVALID_HANDLE_VALUE;
-        HKEY hKey = INVALID_HANDLE_VALUE;
+        HKEY hEnumKey = NULL;
+        HKEY hKey = NULL;
         HKEY RootKey;
 
         if (Scope == DICS_FLAG_GLOBAL)
@@ -4939,7 +4942,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
             KeyType == DIREG_DEV ? samDesired : KEY_QUERY_VALUE,
             &hKey);
         RegCloseKey(hEnumKey);
-        hEnumKey = INVALID_HANDLE_VALUE;
+        hEnumKey = NULL;
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
@@ -4976,7 +4979,7 @@ HKEY WINAPI SetupDiOpenDevRegKey(
             goto cleanup;
         }
         RegCloseKey(hKey);
-        hKey = INVALID_HANDLE_VALUE;
+        hKey = NULL;
         /* Need to open the driver key */
         rc = RegOpenKeyExW(
             RootKey,
@@ -5005,9 +5008,9 @@ HKEY WINAPI SetupDiOpenDevRegKey(
 cleanup:
         if (hHWProfileKey != INVALID_HANDLE_VALUE)
             RegCloseKey(hHWProfileKey);
-        if (hEnumKey != INVALID_HANDLE_VALUE)
+        if (hEnumKey != NULL)
             RegCloseKey(hEnumKey);
-        if (hKey != INVALID_HANDLE_VALUE && hKey != ret)
+        if (hKey != NULL && hKey != ret)
             RegCloseKey(hKey);
     }
 
@@ -7010,7 +7013,7 @@ static DWORD
 GetCurrentHwProfile(
     IN HDEVINFO DeviceInfoSet)
 {
-    HKEY hKey = INVALID_HANDLE_VALUE;
+    HKEY hKey = NULL;
     DWORD dwRegType, dwLength;
     DWORD hwProfile;
     LONG rc;
@@ -7049,7 +7052,7 @@ GetCurrentHwProfile(
     ret = hwProfile;
 
 cleanup:
-    if (hKey != INVALID_HANDLE_VALUE)
+    if (hKey != NULL)
         RegCloseKey(hKey);
 
     return hwProfile;
@@ -7638,7 +7641,6 @@ SetupDiInstallDevice(
     LPWSTR lpGuidString = NULL, lpFullGuidString = NULL;
     BOOL RebootRequired = FALSE;
     HKEY hKey = INVALID_HANDLE_VALUE;
-    HKEY hClassKey = INVALID_HANDLE_VALUE;
     BOOL NeedtoCopyFile;
     LARGE_INTEGER fullVersion;
     LONG rc;
@@ -7894,8 +7896,6 @@ SetupDiInstallDevice(
 
 cleanup:
     /* End of installation */
-    if (hClassKey != INVALID_HANDLE_VALUE)
-        RegCloseKey(hClassKey);
     if (hKey != INVALID_HANDLE_VALUE)
         RegCloseKey(hKey);
     if (lpGuidString)
