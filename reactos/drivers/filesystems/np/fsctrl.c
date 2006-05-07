@@ -25,14 +25,14 @@ NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
   Waiter = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
 
   DPRINT1("NpfsListeningCancelRoutine() called for <%wZ>\n",
-         &Waiter->Fcb->Pipe->PipeName);
+         &Waiter->Ccb->Pipe->PipeName);
 
   IoReleaseCancelSpinLock(Irp->CancelIrql);
 
 
-  KeLockMutex(&Waiter->Fcb->Pipe->FcbListLock);
+  KeLockMutex(&Waiter->Ccb->Pipe->CcbListLock);
   RemoveEntryList(&Waiter->Entry);
-  KeUnlockMutex(&Waiter->Fcb->Pipe->FcbListLock);
+  KeUnlockMutex(&Waiter->Ccb->Pipe->CcbListLock);
 
   Irp->IoStatus.Status = STATUS_CANCELLED;
   Irp->IoStatus.Information = 0;
@@ -42,26 +42,26 @@ NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 
 static NTSTATUS
 NpfsAddListeningServerInstance(PIRP Irp,
-			       PNPFS_FCB Fcb)
+			       PNPFS_CCB Ccb)
 {
   PNPFS_WAITER_ENTRY Entry;
   KIRQL oldIrql;
 
   Entry = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
 
-  Entry->Fcb = Fcb;
+  Entry->Ccb = Ccb;
 
-  KeLockMutex(&Fcb->Pipe->FcbListLock);
+  KeLockMutex(&Ccb->Pipe->CcbListLock);
 
   IoMarkIrpPending(Irp);
-  InsertTailList(&Fcb->Pipe->WaiterListHead, &Entry->Entry);
+  InsertTailList(&Ccb->Pipe->WaiterListHead, &Entry->Entry);
 
   IoAcquireCancelSpinLock(&oldIrql);
   if (!Irp->Cancel)
     {
       (void)IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
       IoReleaseCancelSpinLock(oldIrql);
-      KeUnlockMutex(&Fcb->Pipe->FcbListLock);
+      KeUnlockMutex(&Ccb->Pipe->CcbListLock);
       return STATUS_PENDING;
     }
   IoReleaseCancelSpinLock(oldIrql);
@@ -71,7 +71,7 @@ NpfsAddListeningServerInstance(PIRP Irp,
   Irp->IoStatus.Status = STATUS_CANCELLED;
   Irp->IoStatus.Information = 0;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
-  KeUnlockMutex(&Fcb->Pipe->FcbListLock);
+  KeUnlockMutex(&Ccb->Pipe->CcbListLock);
 
   return STATUS_CANCELLED;
 }
@@ -79,67 +79,67 @@ NpfsAddListeningServerInstance(PIRP Irp,
 
 static NTSTATUS
 NpfsConnectPipe(PIRP Irp,
-                PNPFS_FCB Fcb)
+                PNPFS_CCB Ccb)
 {
   PNPFS_PIPE Pipe;
   PLIST_ENTRY current_entry;
-  PNPFS_FCB ClientFcb;
+  PNPFS_CCB ClientCcb;
   NTSTATUS Status;
 
   DPRINT("NpfsConnectPipe()\n");
 
-  if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+  if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
     {
-      KeResetEvent(&Fcb->ConnectEvent);
+      KeResetEvent(&Ccb->ConnectEvent);
       return STATUS_PIPE_CONNECTED;
     }
 
-  if (Fcb->PipeState == FILE_PIPE_CLOSING_STATE)
+  if (Ccb->PipeState == FILE_PIPE_CLOSING_STATE)
     return STATUS_PIPE_CLOSING;
 
   DPRINT("Waiting for connection...\n");
 
-  Pipe = Fcb->Pipe;
+  Pipe = Ccb->Pipe;
 
   /* search for a listening client fcb */
-  KeLockMutex(&Pipe->FcbListLock);
+  KeLockMutex(&Pipe->CcbListLock);
 
-  current_entry = Pipe->ClientFcbListHead.Flink;
-  while (current_entry != &Pipe->ClientFcbListHead)
+  current_entry = Pipe->ClientCcbListHead.Flink;
+  while (current_entry != &Pipe->ClientCcbListHead)
     {
-      ClientFcb = CONTAINING_RECORD(current_entry,
-				    NPFS_FCB,
-				    FcbListEntry);
+      ClientCcb = CONTAINING_RECORD(current_entry,
+				    NPFS_CCB,
+				    CcbListEntry);
 
-      if (ClientFcb->PipeState == 0)
+      if (ClientCcb->PipeState == 0)
 	{
-	  /* found a passive (waiting) client fcb */
-	  DPRINT("Passive (waiting) client fcb found -- wake the client\n");
-	  KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
+	  /* found a passive (waiting) client CCB */
+	  DPRINT("Passive (waiting) client CCB found -- wake the client\n");
+	  KeSetEvent(&ClientCcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
 	  break;
 	}
 
 #if 0
-      if (ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+      if (ClientCcb->PipeState == FILE_PIPE_LISTENING_STATE)
 	{
-	  /* found a listening client fcb */
-	  DPRINT("Listening client fcb found -- connecting\n");
+	  /* found a listening client CCB */
+	  DPRINT("Listening client CCB found -- connecting\n");
 
-	  /* connect client and server fcb's */
-	  Fcb->OtherSide = ClientFcb;
-	  ClientFcb->OtherSide = Fcb;
+	  /* connect client and server CCBs */
+	  Ccb->OtherSide = ClientCcb;
+	  ClientCcb->OtherSide = Ccb;
 
 	  /* set connected state */
-	  Fcb->PipeState = FILE_PIPE_CONNECTED_STATE;
-	  ClientFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
+	  Ccb->PipeState = FILE_PIPE_CONNECTED_STATE;
+	  ClientCcb->PipeState = FILE_PIPE_CONNECTED_STATE;
 
-	  KeUnlockMutex(&Pipe->FcbListLock);
+	  KeUnlockMutex(&Pipe->CcbListLock);
 
 	  /* FIXME: create and initialize data queues */
 
 	  /* signal client's connect event */
-	  DPRINT("Setting the ConnectEvent for %x\n", ClientFcb);
-	  KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
+	  DPRINT("Setting the ConnectEvent for %x\n", ClientCcb);
+	  KeSetEvent(&ClientCcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
 
 	  return STATUS_PIPE_CONNECTED;
 	}
@@ -151,11 +151,11 @@ NpfsConnectPipe(PIRP Irp,
   /* no listening client fcb found */
   DPRINT("No listening client fcb found -- waiting for client\n");
 
-  Fcb->PipeState = FILE_PIPE_LISTENING_STATE;
+  Ccb->PipeState = FILE_PIPE_LISTENING_STATE;
 
-  Status = NpfsAddListeningServerInstance(Irp, Fcb);
+  Status = NpfsAddListeningServerInstance(Irp, Ccb);
 
-  KeUnlockMutex(&Pipe->FcbListLock);
+  KeUnlockMutex(&Pipe->CcbListLock);
 
   DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
 
@@ -164,39 +164,39 @@ NpfsConnectPipe(PIRP Irp,
 
 
 static NTSTATUS
-NpfsDisconnectPipe(PNPFS_FCB Fcb)
+NpfsDisconnectPipe(PNPFS_CCB Ccb)
 {
    NTSTATUS Status;
-   PNPFS_FCB OtherSide;
+   PNPFS_CCB OtherSide;
    PNPFS_PIPE Pipe;
    BOOLEAN Server;
 
    DPRINT("NpfsDisconnectPipe()\n");
 
-   Pipe = Fcb->Pipe;
-   KeLockMutex(&Pipe->FcbListLock);
+   Pipe = Ccb->Pipe;
+   KeLockMutex(&Pipe->CcbListLock);
 
-   if (Fcb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
+   if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
    {
       DPRINT("Pipe is already disconnected\n");
       Status = STATUS_SUCCESS;
    }
-   else if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
+   else if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
    {
-      Server = (Fcb->PipeEnd == FILE_PIPE_SERVER_END);
-      OtherSide = Fcb->OtherSide;
-      Fcb->OtherSide = NULL;
-      Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+      Server = (Ccb->PipeEnd == FILE_PIPE_SERVER_END);
+      OtherSide = Ccb->OtherSide;
+      Ccb->OtherSide = NULL;
+      Ccb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
       /* Lock the server first */
       if (Server)
       {
-         ExAcquireFastMutex(&Fcb->DataListLock);
+         ExAcquireFastMutex(&Ccb->DataListLock);
 	 ExAcquireFastMutex(&OtherSide->DataListLock);
       }
       else
       {
 	 ExAcquireFastMutex(&OtherSide->DataListLock);
-         ExAcquireFastMutex(&Fcb->DataListLock);
+         ExAcquireFastMutex(&Ccb->DataListLock);
       }
       OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
       OtherSide->OtherSide = NULL;
@@ -209,27 +209,27 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
       if (Server)
       {
 	 ExReleaseFastMutex(&OtherSide->DataListLock);
-         ExReleaseFastMutex(&Fcb->DataListLock);
+         ExReleaseFastMutex(&Ccb->DataListLock);
       }
       else
       {
-         ExReleaseFastMutex(&Fcb->DataListLock);
+         ExReleaseFastMutex(&Ccb->DataListLock);
 	 ExReleaseFastMutex(&OtherSide->DataListLock);
       }
       Status = STATUS_SUCCESS;
    }
-   else if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+   else if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
    {
       PLIST_ENTRY Entry;
       PNPFS_WAITER_ENTRY WaitEntry = NULL;
       BOOLEAN Complete = FALSE;
       PIRP Irp = NULL;
 
-      Entry = Fcb->Pipe->WaiterListHead.Flink;
-      while (Entry != &Fcb->Pipe->WaiterListHead)
+      Entry = Ccb->Pipe->WaiterListHead.Flink;
+      while (Entry != &Ccb->Pipe->WaiterListHead)
       {
          WaitEntry = CONTAINING_RECORD(Entry, NPFS_WAITER_ENTRY, Entry);
-	 if (WaitEntry->Fcb == Fcb)
+	 if (WaitEntry->Ccb == Ccb)
 	 {
             RemoveEntryList(Entry);
 	    Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DriverContext);
@@ -248,10 +248,10 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	 }
       }
-      Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+      Ccb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
       Status = STATUS_SUCCESS;
    }
-   else if (Fcb->PipeState == FILE_PIPE_CLOSING_STATE)
+   else if (Ccb->PipeState == FILE_PIPE_CLOSING_STATE)
    {
       Status = STATUS_PIPE_CLOSING;
    }
@@ -259,44 +259,44 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
    {
       Status = STATUS_UNSUCCESSFUL;
    }
-   KeUnlockMutex(&Pipe->FcbListLock);
+   KeUnlockMutex(&Pipe->CcbListLock);
    return Status;
 }
 
 
 static NTSTATUS
 NpfsWaitPipe(PIRP Irp,
-	     PNPFS_FCB Fcb)
+	     PNPFS_CCB Ccb)
 {
   PNPFS_PIPE Pipe;
   PLIST_ENTRY current_entry;
-  PNPFS_FCB ServerFcb;
+  PNPFS_CCB ServerCcb;
   PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
   NTSTATUS Status;
 
   DPRINT("NpfsWaitPipe\n");
 
   WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-  Pipe = Fcb->Pipe;
+  Pipe = Ccb->Pipe;
 
-  if (Fcb->PipeState != 0)
+  if (Ccb->PipeState != 0)
     {
       DPRINT("Pipe is not in passive (waiting) state!\n");
       return STATUS_UNSUCCESSFUL;
     }
 
   /* search for listening server */
-  current_entry = Pipe->ServerFcbListHead.Flink;
-  while (current_entry != &Pipe->ServerFcbListHead)
+  current_entry = Pipe->ServerCcbListHead.Flink;
+  while (current_entry != &Pipe->ServerCcbListHead)
     {
-      ServerFcb = CONTAINING_RECORD(current_entry,
-				    NPFS_FCB,
-				    FcbListEntry);
+      ServerCcb = CONTAINING_RECORD(current_entry,
+				    NPFS_CCB,
+				    CcbListEntry);
 
-      if (ServerFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+      if (ServerCcb->PipeState == FILE_PIPE_LISTENING_STATE)
 	{
-	  /* found a listening server fcb */
-	  DPRINT("Listening server fcb found -- connecting\n");
+	  /* found a listening server CCB */
+	  DPRINT("Listening server CCB found -- connecting\n");
 
 	  return STATUS_SUCCESS;
 	}
@@ -305,7 +305,7 @@ NpfsWaitPipe(PIRP Irp,
     }
 
   /* no listening server fcb found -- wait for one */
-  Status = KeWaitForSingleObject(&Fcb->ConnectEvent,
+  Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
 				 UserRequest,
 				 KernelMode,
 				 FALSE,
@@ -341,25 +341,41 @@ NpfsPeekPipe(PIRP Irp,
   ULONG OutputBufferLength;
   PNPFS_PIPE Pipe;
   PFILE_PIPE_PEEK_BUFFER Reply;
-  PNPFS_FCB Fcb;
+  PNPFS_CCB Ccb;
   NTSTATUS Status;
 
-  DPRINT("NpfsPeekPipe\n");
+  DPRINT1("NpfsPeekPipe\n");
 
   OutputBufferLength = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+  DPRINT1("OutputBufferLength: %lu\n", OutputBufferLength);
 
   /* Validate parameters */
   if (OutputBufferLength < sizeof(FILE_PIPE_PEEK_BUFFER))
     {
-      DPRINT("Buffer too small\n");
+      DPRINT1("Buffer too small\n");
       return STATUS_INVALID_PARAMETER;
     }
 
-  Fcb = IoStack->FileObject->FsContext;
+  Ccb = IoStack->FileObject->FsContext2;
   Reply = (PFILE_PIPE_PEEK_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-  Pipe = Fcb->Pipe;
+  Pipe = Ccb->Pipe;
 
+
+  Reply->NamedPipeState = Ccb->PipeState;
+
+  Reply->ReadDataAvailable = Ccb->ReadDataAvailable;
+  DPRINT("ReadDataAvailable: %lu\n", Ccb->ReadDataAvailable);
+
+  Reply->NumberOfMessages = 0; /* FIXME */
+  Reply->MessageLength = 0; /* FIXME */
+  Reply->Data[0] = 0; /* FIXME */
+
+//  Irp->IoStatus.Information = sizeof(FILE_PIPE_PEEK_BUFFER);
+
+//  Status = STATUS_SUCCESS;
   Status = STATUS_NOT_IMPLEMENTED;
+
+  DPRINT1("NpfsPeekPipe done\n");
 
   return Status;
 }
@@ -374,7 +390,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
   PNPFS_DEVICE_EXTENSION DeviceExt;
   PNPFS_PIPE Pipe;
-  PNPFS_FCB Fcb;
+  PNPFS_CCB Ccb;
 
   DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -383,9 +399,9 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   DPRINT("IoStack: %p\n", IoStack);
   FileObject = IoStack->FileObject;
   DPRINT("FileObject: %p\n", FileObject);
-  Fcb = FileObject->FsContext;
-  DPRINT("Fcb: %p\n", Fcb);
-  Pipe = Fcb->Pipe;
+  Ccb = FileObject->FsContext2;
+  DPRINT("CCB: %p\n", Ccb);
+  Pipe = Ccb->Pipe;
   DPRINT("Pipe: %p\n", Pipe);
   DPRINT("PipeName: %wZ\n", &Pipe->PipeName);
 
@@ -400,12 +416,12 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
       case FSCTL_PIPE_DISCONNECT:
 	DPRINT("Disconnecting pipe %wZ\n", &Pipe->PipeName);
-	Status = NpfsDisconnectPipe(Fcb);
+	Status = NpfsDisconnectPipe(Ccb);
 	break;
 
       case FSCTL_PIPE_LISTEN:
 	DPRINT("Connecting pipe %wZ\n", &Pipe->PipeName);
-	Status = NpfsConnectPipe(Irp, Fcb);
+	Status = NpfsConnectPipe(Irp, Ccb);
 	break;
 
       case FSCTL_PIPE_PEEK:
@@ -427,7 +443,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
       case FSCTL_PIPE_WAIT:
 	DPRINT("Waiting for pipe %wZ\n", &Pipe->PipeName);
-	Status = NpfsWaitPipe(Irp, Fcb);
+	Status = NpfsWaitPipe(Irp, Ccb);
 	break;
 
       case FSCTL_PIPE_IMPERSONATE:

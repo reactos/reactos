@@ -19,9 +19,9 @@ typedef struct _NPFS_PIPE
 {
   UNICODE_STRING PipeName;
   LIST_ENTRY PipeListEntry;
-  KMUTEX FcbListLock;
-  LIST_ENTRY ServerFcbListHead;
-  LIST_ENTRY ClientFcbListHead;
+  KMUTEX CcbListLock;
+  LIST_ENTRY ServerCcbListHead;
+  LIST_ENTRY ClientCcbListHead;
   LIST_ENTRY WaiterListHead;
   LIST_ENTRY EmptyBufferListHead;
   ULONG PipeType;
@@ -36,10 +36,10 @@ typedef struct _NPFS_PIPE
   LARGE_INTEGER TimeOut;
 } NPFS_PIPE, *PNPFS_PIPE;
 
-typedef struct _NPFS_FCB
+typedef struct _NPFS_CCB
 {
-  LIST_ENTRY FcbListEntry;
-  struct _NPFS_FCB* OtherSide;
+  LIST_ENTRY CcbListEntry;
+  struct _NPFS_CCB* OtherSide;
   struct ETHREAD *Thread;
   PNPFS_PIPE Pipe;
   KEVENT ConnectEvent;
@@ -58,7 +58,7 @@ typedef struct _NPFS_FCB
   ULONG MaxDataLength;
 
   FAST_MUTEX DataListLock;	/* Data queue lock */
-} NPFS_FCB, *PNPFS_FCB;
+} NPFS_CCB, *PNPFS_CCB;
 
 typedef struct _NPFS_CONTEXT
 {
@@ -80,7 +80,7 @@ typedef struct _NPFS_THREAD_CONTEXT
 typedef struct _NPFS_WAITER_ENTRY
 {
   LIST_ENTRY Entry;
-  PNPFS_FCB Fcb;
+  PNPFS_CCB Ccb;
 } NPFS_WAITER_ENTRY, *PNPFS_WAITER_ENTRY;
 
 
