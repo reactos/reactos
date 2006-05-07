@@ -23,8 +23,9 @@
 
 /* controls */
 #define IDC_INSTALL 101
-#define IDC_SOFTWARELIST       102
-#define IDC_ADDREMOVE   103
+#define IDC_SOFTWARELIST		102
+#define IDC_ADDREMOVE			103
+#define IDC_SHOWUPDATES			104
 
 #endif /* __CPL_RESOURCE_H */
 

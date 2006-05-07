@@ -105,65 +105,113 @@ CallUninstall(HWND hwndDlg)
 }
 
 
-/* Property page dialog callback */
-static INT_PTR CALLBACK
-InstallPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+static void FillSoftwareList(HWND hwndDlg)
 {
   TCHAR pszName[MAX_PATH];
   TCHAR pszDisplayName[MAX_PATH];
+  TCHAR pszParentKeyName[MAX_PATH];
   FILETIME FileTime;
   HKEY hKey;
   HKEY hSubKey;
   DWORD dwType;
   DWORD dwSize;
+  DWORD dwValue = 0;
+  BOOL bIsUpdate = FALSE;
+  BOOL bIsSystemComponent = FALSE;
+  BOOL bShowUpdates = FALSE;
   int i;
   ULONG index;
 
+  bShowUpdates = (SendMessage(GetDlgItem(hwndDlg, IDC_SHOWUPDATES), BM_GETCHECK, 0, 0) == BST_CHECKED);
+
+  if (RegOpenKey(HKEY_LOCAL_MACHINE,
+                 _TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
+                 &hKey) != ERROR_SUCCESS)
+  {
+    MessageBox(hwndDlg,
+               _TEXT("Unable to open Uninstall Key"),
+               _TEXT("Error"),
+               MB_ICONSTOP);
+    return;
+  }
+
+  i = 0;
+  dwSize = MAX_PATH;
+  while (RegEnumKeyEx (hKey, i, pszName, &dwSize, NULL, NULL, NULL, &FileTime) == ERROR_SUCCESS)
+  {
+    if (RegOpenKey(hKey,pszName,&hSubKey)==ERROR_SUCCESS)
+    {
+      dwType = REG_DWORD;
+      dwSize = sizeof(DWORD);
+      if (RegQueryValueEx(hSubKey,
+                          _TEXT("SystemComponent"),
+                          NULL,
+                          &dwType,
+                          (LPBYTE)&dwValue,
+                          &dwSize) == ERROR_SUCCESS)
+      {
+        bIsSystemComponent = (dwValue == 0x1);
+      }
+      else {
+        bIsSystemComponent = FALSE;
+      }
+      dwType = REG_SZ;
+      dwSize = MAX_PATH;
+      bIsUpdate = (RegQueryValueEx(hSubKey,
+                          _TEXT("ParentKeyName"),
+                          NULL,
+                          &dwType,
+                          (LPBYTE)pszParentKeyName,
+                          &dwSize) == ERROR_SUCCESS);
+      dwSize = MAX_PATH;
+      if (RegQueryValueEx(hSubKey,
+                          _TEXT("DisplayName"),
+                          NULL,
+                          &dwType,
+                          (LPBYTE)pszDisplayName,
+                          &dwSize) == ERROR_SUCCESS)
+      {
+        if ((!bIsUpdate) && (!bIsSystemComponent))
+        {
+          index = SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_ADDSTRING,0,(LPARAM)pszDisplayName);
+          SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_SETITEMDATA,index,(LPARAM)hSubKey);
+        }
+        else if (bIsUpdate && bShowUpdates)
+        {
+          index = SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_ADDSTRING,0,(LPARAM)pszDisplayName);
+          SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_SETITEMDATA,index,(LPARAM)hSubKey);
+        }
+      }
+    }
+
+    dwSize = MAX_PATH;
+    i++;
+  }
+
+  RegCloseKey(hKey);
+}
+
+/* Property page dialog callback */
+static INT_PTR CALLBACK
+InstallPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
   switch (uMsg)
   {
     case WM_INITDIALOG:
       EnableWindow(GetDlgItem(hwndDlg,IDC_INSTALL), FALSE);
-      if (RegOpenKey(HKEY_LOCAL_MACHINE,
-                     _TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
-                     &hKey) != ERROR_SUCCESS)
-      {
-        MessageBox(hwndDlg,
-                   _TEXT("Unable to open Uninstall Key"),
-                   _TEXT("Error"),
-                   MB_ICONSTOP);
-        return FALSE;
-      }
-
-      i = 0;
-      dwSize = MAX_PATH;
-      while (RegEnumKeyEx (hKey, i, pszName, &dwSize, NULL, NULL, NULL, &FileTime) == ERROR_SUCCESS)
-      {
-        if (RegOpenKey(hKey,pszName,&hSubKey)==ERROR_SUCCESS)
-        {
-          dwType = REG_SZ;
-          dwSize = MAX_PATH;
-          if (RegQueryValueEx(hSubKey,
-                              _TEXT("DisplayName"),
-                              NULL,
-                              &dwType,
-                              (LPBYTE)pszDisplayName,
-                              &dwSize) == ERROR_SUCCESS)
-          {
-            index = SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_ADDSTRING,0,(LPARAM)pszDisplayName);
-            SendDlgItemMessage(hwndDlg,IDC_SOFTWARELIST,LB_SETITEMDATA,index,(LPARAM)hSubKey);
-          }
-        }
-
-        dwSize = MAX_PATH;
-        i++;
-      }
-
-      RegCloseKey(hKey);
+      FillSoftwareList(hwndDlg);
       break;
 
     case WM_COMMAND:
       switch (LOWORD(wParam))
       {
+        case IDC_SHOWUPDATES:
+          if (HIWORD(wParam) == BN_CLICKED)
+          {
+            SendDlgItemMessage(hwndDlg, IDC_SOFTWARELIST, LB_RESETCONTENT, 0, 0);
+            FillSoftwareList(hwndDlg);
+          }
+          break;
         case IDC_SOFTWARELIST:
           if (HIWORD(wParam) == LBN_DBLCLK)
           {
