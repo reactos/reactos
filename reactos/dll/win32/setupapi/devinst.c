@@ -197,18 +197,19 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
         PVOID Reserved)
 {
     WCHAR szKeyName[MAX_GUID_STRING_LEN + 1];
-    HKEY hClassesKey;
-    HKEY hClassKey;
+    HKEY hClassesKey = INVALID_HANDLE_VALUE;
+    HKEY hClassKey = NULL;
     DWORD dwLength;
     DWORD dwIndex;
     LONG lError;
     DWORD dwGuidListIndex = 0;
+    BOOL ret = FALSE;
 
     TRACE("0x%lx %p %lu %p %s %p\n", Flags, ClassGuidList,
         ClassGuidListSize, RequiredSize, debugstr_w(MachineName), Reserved);
 
     if (RequiredSize != NULL)
-	*RequiredSize = 0;
+        *RequiredSize = 0;
 
     hClassesKey = SetupDiOpenClassRegKeyExW(NULL,
                                             KEY_ENUMERATE_SUB_KEYS,
@@ -216,108 +217,102 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
                                             MachineName,
                                             Reserved);
     if (hClassesKey == INVALID_HANDLE_VALUE)
-    {
-	return FALSE;
-    }
+        goto cleanup;
 
     for (dwIndex = 0; ; dwIndex++)
     {
-	dwLength = MAX_GUID_STRING_LEN + 1;
-	lError = RegEnumKeyExW(hClassesKey,
-			       dwIndex,
-			       szKeyName,
-			       &dwLength,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL);
-	TRACE("RegEnumKeyExW() returns %ld\n", lError);
-	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
-	{
-	    TRACE("Key name: %s\n", debugstr_w(szKeyName));
+        dwLength = MAX_GUID_STRING_LEN + 1;
+        lError = RegEnumKeyExW(hClassesKey,
+                               dwIndex,
+                               szKeyName,
+                               &dwLength,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+        TRACE("RegEnumKeyExW() returns %ld\n", lError);
+        if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
+        {
+            TRACE("Key name: %s\n", debugstr_w(szKeyName));
 
-	    if (RegOpenKeyExW(hClassesKey,
-			      szKeyName,
-			      0,
-			      KEY_QUERY_VALUE,
-			      &hClassKey))
-	    {
-		RegCloseKey(hClassesKey);
-		return FALSE;
-	    }
+            if (hClassKey != NULL)
+                RegCloseKey(hClassKey);
+            if (RegOpenKeyExW(hClassesKey,
+                              szKeyName,
+                              0,
+                              KEY_QUERY_VALUE,
+                              &hClassKey) != ERROR_SUCCESS)
+            {
+                goto cleanup;
+            }
 
-	    if (!RegQueryValueExW(hClassKey,
-				  REGSTR_VAL_NOUSECLASS,
-				  NULL,
-				  NULL,
-				  NULL,
-				  NULL))
-	    {
-		TRACE("'NoUseClass' value found!\n");
-		RegCloseKey(hClassKey);
-		continue;
-	    }
+            if (RegQueryValueExW(hClassKey,
+                                 REGSTR_VAL_NOUSECLASS,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 NULL) == ERROR_SUCCESS)
+            {
+                TRACE("'NoUseClass' value found!\n");
+                continue;
+            }
 
-	    if ((Flags & DIBCI_NOINSTALLCLASS) &&
-		(!RegQueryValueExW(hClassKey,
-				   REGSTR_VAL_NOINSTALLCLASS,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL)))
-	    {
-		TRACE("'NoInstallClass' value found!\n");
-		RegCloseKey(hClassKey);
-		continue;
-	    }
+            if ((Flags & DIBCI_NOINSTALLCLASS) &&
+                (!RegQueryValueExW(hClassKey,
+                                   REGSTR_VAL_NOINSTALLCLASS,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   NULL)))
+            {
+                TRACE("'NoInstallClass' value found!\n");
+                continue;
+            }
 
-	    if ((Flags & DIBCI_NODISPLAYCLASS) &&
-		(!RegQueryValueExW(hClassKey,
-				   REGSTR_VAL_NODISPLAYCLASS,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL)))
-	    {
-		TRACE("'NoDisplayClass' value found!\n");
-		RegCloseKey(hClassKey);
-		continue;
-	    }
+            if ((Flags & DIBCI_NODISPLAYCLASS) &&
+                (!RegQueryValueExW(hClassKey,
+                                   REGSTR_VAL_NODISPLAYCLASS,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   NULL)))
+            {
+                TRACE("'NoDisplayClass' value found!\n");
+                continue;
+            }
 
-	    RegCloseKey(hClassKey);
+            TRACE("Guid: %s\n", debugstr_w(szKeyName));
+            if (dwGuidListIndex < ClassGuidListSize)
+            {
+                if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
+                    szKeyName[37] = 0;
+                TRACE("Guid: %s\n", debugstr_w(&szKeyName[1]));
 
-	    TRACE("Guid: %s\n", debugstr_w(szKeyName));
-	    if (dwGuidListIndex < ClassGuidListSize)
-	    {
-		if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
-		{
-		    szKeyName[37] = 0;
-		}
-		TRACE("Guid: %s\n", debugstr_w(&szKeyName[1]));
+                UuidFromStringW(&szKeyName[1],
+                    &ClassGuidList[dwGuidListIndex]);
+            }
 
-		UuidFromStringW(&szKeyName[1],
-				&ClassGuidList[dwGuidListIndex]);
-	    }
+            dwGuidListIndex++;
+        }
 
-	    dwGuidListIndex++;
-	}
-
-	if (lError != ERROR_SUCCESS)
-	    break;
+        if (lError != ERROR_SUCCESS)
+        break;
     }
-
-    RegCloseKey(hClassesKey);
 
     if (RequiredSize != NULL)
-	*RequiredSize = dwGuidListIndex;
+        *RequiredSize = dwGuidListIndex;
 
     if (ClassGuidListSize < dwGuidListIndex)
-    {
-	SetLastError(ERROR_INSUFFICIENT_BUFFER);
-	return FALSE;
-    }
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    else
+        ret = TRUE;
 
-    return TRUE;
+cleanup:
+    if (hClassesKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hClassesKey);
+    if (hClassKey != NULL)
+        RegCloseKey(hClassKey);
+    return ret;
 }
 
 /***********************************************************************
@@ -404,18 +399,19 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 {
     WCHAR szKeyName[MAX_GUID_STRING_LEN + 1];
     WCHAR szClassName[256];
-    HKEY hClassesKey;
-    HKEY hClassKey;
+    HKEY hClassesKey = INVALID_HANDLE_VALUE;
+    HKEY hClassKey = NULL;
     DWORD dwLength;
     DWORD dwIndex;
     LONG lError;
     DWORD dwGuidListIndex = 0;
+    BOOL ret = FALSE;
 
     TRACE("%s %p %lu %p %s %p\n", debugstr_w(ClassName), ClassGuidList,
         ClassGuidListSize, RequiredSize, debugstr_w(MachineName), Reserved);
 
     if (RequiredSize != NULL)
-	*RequiredSize = 0;
+        *RequiredSize = 0;
 
     hClassesKey = SetupDiOpenClassRegKeyExW(NULL,
                                             KEY_ENUMERATE_SUB_KEYS,
@@ -423,86 +419,83 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
                                             MachineName,
                                             Reserved);
     if (hClassesKey == INVALID_HANDLE_VALUE)
-    {
-	return FALSE;
-    }
+        goto cleanup;
 
     for (dwIndex = 0; ; dwIndex++)
     {
-	dwLength = MAX_GUID_STRING_LEN + 1;
-	lError = RegEnumKeyExW(hClassesKey,
-			       dwIndex,
-			       szKeyName,
-			       &dwLength,
-			       NULL,
-			       NULL,
-			       NULL,
-			       NULL);
-	TRACE("RegEnumKeyExW() returns %ld\n", lError);
-	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
-	{
-	    TRACE("Key name: %s\n", debugstr_w(szKeyName));
+        dwLength = MAX_GUID_STRING_LEN + 1;
+        lError = RegEnumKeyExW(hClassesKey,
+                               dwIndex,
+                               szKeyName,
+                               &dwLength,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+        TRACE("RegEnumKeyExW() returns %ld\n", lError);
+        if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
+        {
+            TRACE("Key name: %s\n", debugstr_w(szKeyName));
 
-	    if (RegOpenKeyExW(hClassesKey,
-			      szKeyName,
-			      0,
-			      KEY_QUERY_VALUE,
-			      &hClassKey))
-	    {
-		RegCloseKey(hClassesKey);
-		return FALSE;
-	    }
+            if (hClassKey != NULL)
+                RegCloseKey(hClassKey);
+            if (RegOpenKeyExW(hClassesKey,
+                              szKeyName,
+                              0,
+                              KEY_QUERY_VALUE,
+                              &hClassKey) != ERROR_SUCCESS)
+            {
+                goto cleanup;
+            }
 
-	    dwLength = 256 * sizeof(WCHAR);
-	    if (!RegQueryValueExW(hClassKey,
-				  Class,
-				  NULL,
-				  NULL,
-				  (LPBYTE)szClassName,
-				  &dwLength))
-	    {
-		TRACE("Class name: %s\n", debugstr_w(szClassName));
+            dwLength = 256 * sizeof(WCHAR);
+            if (RegQueryValueExW(hClassKey,
+                                 Class,
+                                 NULL,
+                                 NULL,
+                                 (LPBYTE)szClassName,
+                                 &dwLength) == ERROR_SUCCESS)
+            {
+                TRACE("Class name: %s\n", debugstr_w(szClassName));
 
-		if (strcmpiW(szClassName, ClassName) == 0)
-		{
-		    TRACE("Found matching class name\n");
+                if (strcmpiW(szClassName, ClassName) == 0)
+                {
+                    TRACE("Found matching class name\n");
 
-		    TRACE("Guid: %s\n", debugstr_w(szKeyName));
-		    if (dwGuidListIndex < ClassGuidListSize)
-		    {
-			if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
-			{
-			    szKeyName[37] = 0;
-			}
-			TRACE("Guid: %s\n", debugstr_w(&szKeyName[1]));
+                    TRACE("Guid: %s\n", debugstr_w(szKeyName));
+                    if (dwGuidListIndex < ClassGuidListSize)
+                    {
+                        if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
+                            szKeyName[37] = 0;
+                        TRACE("Guid: %s\n", debugstr_w(&szKeyName[1]));
 
-			UuidFromStringW(&szKeyName[1],
-					&ClassGuidList[dwGuidListIndex]);
-		    }
+                        UuidFromStringW(&szKeyName[1],
+                            &ClassGuidList[dwGuidListIndex]);
+                    }
 
-		    dwGuidListIndex++;
-		}
-	    }
+                    dwGuidListIndex++;
+                }
+            }
+        }
 
-	    RegCloseKey(hClassKey);
-	}
-
-	if (lError != ERROR_SUCCESS)
-	    break;
+        if (lError != ERROR_SUCCESS)
+            break;
     }
-
-    RegCloseKey(hClassesKey);
 
     if (RequiredSize != NULL)
-	*RequiredSize = dwGuidListIndex;
+        *RequiredSize = dwGuidListIndex;
 
     if (ClassGuidListSize < dwGuidListIndex)
-    {
-	SetLastError(ERROR_INSUFFICIENT_BUFFER);
-	return FALSE;
-    }
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    else
+        ret = TRUE;
 
-    return TRUE;
+cleanup:
+    if (hClassesKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hClassesKey);
+    if (hClassKey != NULL)
+        RegCloseKey(hClassKey);
+    return ret;
 }
 
 /***********************************************************************
@@ -551,7 +544,7 @@ BOOL WINAPI SetupDiClassNameFromGuidExA(
     if (MachineName)
         MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
     ret = SetupDiClassNameFromGuidExW(ClassGuid, ClassNameW, MAX_CLASS_NAME_LEN,
-     NULL, MachineNameW, Reserved);
+        NULL, MachineNameW, Reserved);
     if (ret)
     {
         int len = WideCharToMultiByte(CP_ACP, 0, ClassNameW, -1, ClassName,
@@ -578,6 +571,7 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
     HKEY hKey;
     DWORD dwLength;
     LONG rc;
+    BOOL ret = FALSE;
 
     TRACE("%s %p %lu %p %s %p\n", debugstr_guid(ClassGuid), ClassName,
         ClassNameSize, RequiredSize, debugstr_w(MachineName), Reserved);
@@ -588,46 +582,45 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
                                      MachineName,
                                      Reserved);
     if (hKey == INVALID_HANDLE_VALUE)
-    {
-	return FALSE;
-    }
+        goto cleanup;
 
     if (RequiredSize != NULL)
     {
-	dwLength = 0;
-	rc = RegQueryValueExW(hKey,
-			     Class,
-			     NULL,
-			     NULL,
-			     NULL,
-			     &dwLength);
-	if (rc != ERROR_SUCCESS)
-	{
-	    SetLastError(rc);
-	    RegCloseKey(hKey);
-	    return FALSE;
-	}
+        dwLength = 0;
+        rc = RegQueryValueExW(hKey,
+                              Class,
+                              NULL,
+                              NULL,
+                              NULL,
+                              &dwLength);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
 
-	*RequiredSize = dwLength / sizeof(WCHAR);
+        *RequiredSize = dwLength / sizeof(WCHAR);
     }
 
     dwLength = ClassNameSize * sizeof(WCHAR);
     rc = RegQueryValueExW(hKey,
-			 Class,
-			 NULL,
-			 NULL,
-			 (LPBYTE)ClassName,
-			 &dwLength);
+                          Class,
+                          NULL,
+                          NULL,
+                          (LPBYTE)ClassName,
+                          &dwLength);
     if (rc != ERROR_SUCCESS)
     {
-	SetLastError(rc);
-	RegCloseKey(hKey);
-	return FALSE;
+        SetLastError(rc);
+        goto cleanup;
     }
 
-    RegCloseKey(hKey);
+    ret = TRUE;
 
-    return TRUE;
+cleanup:
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
+    return ret;
 }
 
 /***********************************************************************
@@ -1233,8 +1226,9 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
         PCWSTR MachineName,
         PVOID Reserved)
 {
-    HKEY hKey;
+    HKEY hKey = INVALID_HANDLE_VALUE;
     DWORD dwLength;
+    BOOL ret = FALSE;
 
     TRACE("%s %p %lu %p %s %p\n", debugstr_guid(ClassGuid), ClassDescription,
         ClassDescriptionSize, RequiredSize, debugstr_w(MachineName), Reserved);
@@ -1246,42 +1240,44 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
                                      Reserved);
     if (hKey == INVALID_HANDLE_VALUE)
     {
-	WARN("SetupDiOpenClassRegKeyExW() failed (Error %lu)\n", GetLastError());
-	return FALSE;
+        WARN("SetupDiOpenClassRegKeyExW() failed (Error %lu)\n", GetLastError());
+        goto cleanup;
     }
 
     if (RequiredSize != NULL)
     {
-	dwLength = 0;
-	if (RegQueryValueExW(hKey,
-			     NULL,
-			     NULL,
-			     NULL,
-			     NULL,
-			     &dwLength))
-	{
-	    RegCloseKey(hKey);
-	    return FALSE;
-	}
+        dwLength = 0;
+        if (RegQueryValueExW(hKey,
+                             NULL,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &dwLength) != ERROR_SUCCESS)
+        {
+            goto cleanup;
+        }
 
-	*RequiredSize = dwLength / sizeof(WCHAR);
+        *RequiredSize = dwLength / sizeof(WCHAR);
     }
 
     dwLength = ClassDescriptionSize * sizeof(WCHAR);
     if (RegQueryValueExW(hKey,
-			 NULL,
-			 NULL,
-			 NULL,
-			 (LPBYTE)ClassDescription,
-			 &dwLength))
+                         NULL,
+                         NULL,
+                         NULL,
+                         (LPBYTE)ClassDescription,
+                         &dwLength) != ERROR_SUCCESS)
     {
-	RegCloseKey(hKey);
-	return FALSE;
+        goto cleanup;
     }
 
-    RegCloseKey(hKey);
+    ret = TRUE;
 
-    return TRUE;
+cleanup:
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
+
+    return ret;
 }
 
 /***********************************************************************
@@ -1432,7 +1428,7 @@ static LONG SETUP_CreateDevListFromEnumerator(
        LPCWSTR Enumerator,
        HKEY hEnumeratorKey) /* handle to Enumerator registry key */
 {
-    HKEY hDeviceIdKey, hInstanceIdKey;
+    HKEY hDeviceIdKey = NULL, hInstanceIdKey;
     WCHAR KeyBuffer[MAX_PATH];
     WCHAR InstancePath[MAX_PATH];
     LPWSTR pEndOfInstancePath; /* Pointer into InstancePath buffer */
@@ -1449,13 +1445,15 @@ static LONG SETUP_CreateDevListFromEnumerator(
         if (rc == ERROR_NO_MORE_ITEMS)
             break;
         if (rc != ERROR_SUCCESS)
-            return rc;
+            goto cleanup;
         i++;
 
         /* Open device id sub key */
+        if (hDeviceIdKey != NULL)
+            RegCloseKey(hDeviceIdKey);
         rc = RegOpenKeyExW(hEnumeratorKey, KeyBuffer, 0, KEY_ENUMERATE_SUB_KEYS, &hDeviceIdKey);
         if (rc != ERROR_SUCCESS)
-            return rc;
+            goto cleanup;
         strcpyW(InstancePath, Enumerator);
         strcatW(InstancePath, L"\\");
         strcatW(InstancePath, KeyBuffer);
@@ -1473,19 +1471,13 @@ static LONG SETUP_CreateDevListFromEnumerator(
             if (rc == ERROR_NO_MORE_ITEMS)
                 break;
             if (rc != ERROR_SUCCESS)
-            {
-                RegCloseKey(hDeviceIdKey);
-                return rc;
-            }
+                goto cleanup;
             j++;
 
             /* Open instance id sub key */
             rc = RegOpenKeyExW(hDeviceIdKey, KeyBuffer, 0, KEY_QUERY_VALUE, &hInstanceIdKey);
             if (rc != ERROR_SUCCESS)
-            {
-                RegCloseKey(hDeviceIdKey);
-                return rc;
-            }
+                goto cleanup;
             *pEndOfInstancePath = '\0';
             strcatW(InstancePath, KeyBuffer);
 
@@ -1503,13 +1495,12 @@ static LONG SETUP_CreateDevListFromEnumerator(
             }
             else if (rc != ERROR_SUCCESS)
             {
-                RegCloseKey(hDeviceIdKey);
-                return rc;
+                goto cleanup;
             }
             else if (dwRegType != REG_SZ)
             {
-                RegCloseKey(hDeviceIdKey);
-                return ERROR_GEN_FAILURE;
+                rc = ERROR_GEN_FAILURE;
+                goto cleanup;
             }
             else
             {
@@ -1528,16 +1519,20 @@ static LONG SETUP_CreateDevListFromEnumerator(
             /* Add the entry to the list */
             if (!CreateDeviceInfoElement(list, InstancePath, &KeyGuid, &deviceInfo))
             {
-                RegCloseKey(hDeviceIdKey);
-                return GetLastError();
+                rc = GetLastError();
+                goto cleanup;
             }
             TRACE("Adding '%s' to device info set %p\n", debugstr_w(InstancePath), list);
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
         }
-        RegCloseKey(hDeviceIdKey);
     }
 
-    return ERROR_SUCCESS;
+    rc = ERROR_SUCCESS;
+
+cleanup:
+    if (hDeviceIdKey != NULL)
+        RegCloseKey(hDeviceIdKey);
+    return rc;
 }
 
 static LONG SETUP_CreateDevList(
@@ -1546,7 +1541,9 @@ static LONG SETUP_CreateDevList(
        LPGUID class OPTIONAL,
        PCWSTR Enumerator OPTIONAL)
 {
-    HKEY HKLM, hEnumKey, hEnumeratorKey;
+    HKEY HKLM = HKEY_LOCAL_MACHINE;
+    HKEY hEnumKey = NULL;
+    HKEY hEnumeratorKey = NULL;
     WCHAR KeyBuffer[MAX_PATH];
     DWORD i;
     DWORD dwLength;
@@ -1555,24 +1552,22 @@ static LONG SETUP_CreateDevList(
     if (class && IsEqualIID(class, &GUID_NULL))
         class = NULL;
 
-    /* Open Enum key */
+    /* Open Enum key (if applicable) */
     if (MachineName != NULL)
     {
         rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &HKLM);
         if (rc != ERROR_SUCCESS)
-            return rc;
+            goto cleanup;
     }
-    else
-        HKLM = HKEY_LOCAL_MACHINE;
 
-    rc = RegOpenKeyExW(HKLM,
+    rc = RegOpenKeyExW(
+        HKLM,
         REGSTR_PATH_SYSTEMENUM,
         0,
         KEY_ENUMERATE_SUB_KEYS,
         &hEnumKey);
-    if (MachineName != NULL) RegCloseKey(HKLM);
     if (rc != ERROR_SUCCESS)
-        return rc;
+        goto cleanup;
 
     /* If enumerator is provided, call directly SETUP_CreateDevListFromEnumerator.
      * Else, enumerate all enumerators and call SETUP_CreateDevListFromEnumerator
@@ -1586,12 +1581,9 @@ static LONG SETUP_CreateDevList(
             0,
             KEY_ENUMERATE_SUB_KEYS,
             &hEnumeratorKey);
-        RegCloseKey(hEnumKey);
         if (rc != ERROR_SUCCESS)
-            return rc;
+            goto cleanup;
         rc = SETUP_CreateDevListFromEnumerator(list, class, Enumerator, hEnumeratorKey);
-        RegCloseKey(hEnumeratorKey);
-        return rc;
     }
     else
     {
@@ -1603,33 +1595,33 @@ static LONG SETUP_CreateDevList(
             rc = RegEnumKeyExW(hEnumKey, i, KeyBuffer, &dwLength, NULL, NULL, NULL, NULL);
             if (rc == ERROR_NO_MORE_ITEMS)
                 break;
-            if (rc != ERROR_SUCCESS)
-            {
-                RegCloseKey(hEnumKey);
-                return rc;
-            }
+            else if (rc != ERROR_SUCCESS)
+                goto cleanup;
             i++;
 
             /* Open sub key */
+            if (hEnumeratorKey != NULL)
+                RegCloseKey(hEnumeratorKey);
             rc = RegOpenKeyExW(hEnumKey, KeyBuffer, 0, KEY_ENUMERATE_SUB_KEYS, &hEnumeratorKey);
             if (rc != ERROR_SUCCESS)
-            {
-                RegCloseKey(hEnumKey);
-                return rc;
-            }
+                goto cleanup;
 
             /* Call SETUP_CreateDevListFromEnumerator */
             rc = SETUP_CreateDevListFromEnumerator(list, class, KeyBuffer, hEnumeratorKey);
-            RegCloseKey(hEnumeratorKey);
             if (rc != ERROR_SUCCESS)
-            {
-                RegCloseKey(hEnumKey);
-                return rc;
-            }
+                goto cleanup;
         }
-        RegCloseKey(hEnumKey);
-        return ERROR_SUCCESS;
+        rc = ERROR_SUCCESS;
     }
+
+cleanup:
+    if (HKLM != HKEY_LOCAL_MACHINE)
+        RegCloseKey(HKLM);
+    if (hEnumKey != NULL)
+        RegCloseKey(hEnumKey);
+    if (hEnumeratorKey != NULL)
+        RegCloseKey(hEnumeratorKey);
+    return rc;
 }
 
 static BOOL DestroyDeviceInterface(struct DeviceInterface* deviceInterface)
@@ -1870,21 +1862,22 @@ cleanup:
  *		SetupDiGetClassDevsExW (SETUPAPI.@)
  */
 HDEVINFO WINAPI SetupDiGetClassDevsExW(
-       CONST GUID *class,
-       LPCWSTR enumstr,
-       HWND parent,
+       CONST GUID *class OPTIONAL,
+       LPCWSTR enumstr OPTIONAL,
+       HWND parent OPTIONAL,
        DWORD flags,
-       HDEVINFO deviceset,
-       LPCWSTR machine,
+       HDEVINFO deviceset OPTIONAL,
+       LPCWSTR machine OPTIONAL,
        PVOID reserved)
 {
     HDEVINFO hDeviceInfo = INVALID_HANDLE_VALUE;
     struct DeviceInfoSet *list;
     LPGUID pClassGuid;
     LONG rc;
+    HDEVINFO ret = INVALID_HANDLE_VALUE;
 
     TRACE("%s %s %p 0x%08lx %p %s %p\n", debugstr_guid(class), debugstr_w(enumstr),
-     parent, flags, deviceset, debugstr_w(machine), reserved);
+        parent, flags, deviceset, debugstr_w(machine), reserved);
 
     /* Create the deviceset if not set */
     if (deviceset)
@@ -1893,7 +1886,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
         if (list->magic != SETUP_DEV_INFO_SET_MAGIC)
         {
             SetLastError(ERROR_INVALID_HANDLE);
-            return INVALID_HANDLE_VALUE;
+            goto cleanup;
         }
         hDeviceInfo = deviceset;
     }
@@ -1903,7 +1896,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
              flags & DIGCF_DEVICEINTERFACE ? NULL : class,
              NULL, machine, NULL);
          if (hDeviceInfo == INVALID_HANDLE_VALUE)
-             return INVALID_HANDLE_VALUE;
+             goto cleanup;
          list = (struct DeviceInfoSet *)hDeviceInfo;
     }
 
@@ -1921,31 +1914,25 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
-            if (!deviceset)
-                SetupDiDestroyDeviceInfoList(hDeviceInfo);
-            return INVALID_HANDLE_VALUE;
+            goto cleanup;
         }
-        return hDeviceInfo;
+        ret = hDeviceInfo;
     }
     else if (flags & DIGCF_DEVICEINTERFACE)
     {
         if (class == NULL)
         {
             SetLastError(ERROR_INVALID_PARAMETER);
-            if (!deviceset)
-                SetupDiDestroyDeviceInfoList(hDeviceInfo);
-            return INVALID_HANDLE_VALUE;
+            goto cleanup;
         }
 
         rc = SETUP_CreateInterfaceList(list, machine, (LPGUID)class, enumstr, flags & DIGCF_PRESENT);
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
-            if (!deviceset)
-                SetupDiDestroyDeviceInfoList(hDeviceInfo);
-            return INVALID_HANDLE_VALUE;
+            goto cleanup;
         }
-        return hDeviceInfo;
+        ret = hDeviceInfo;
     }
     else
     {
@@ -1953,12 +1940,15 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
-            if (!deviceset)
-                SetupDiDestroyDeviceInfoList(hDeviceInfo);
-            return INVALID_HANDLE_VALUE;
+            goto cleanup;
         }
-        return hDeviceInfo;
+        ret = hDeviceInfo;
     }
+
+cleanup:
+    if (!deviceset && hDeviceInfo != INVALID_HANDLE_VALUE && hDeviceInfo != ret)
+        SetupDiDestroyDeviceInfoList(hDeviceInfo);
+    return ret;
 }
 
 /***********************************************************************
@@ -3061,63 +3051,68 @@ static HKEY CreateClassKey(HINF hInf)
     WCHAR FullBuffer[MAX_PATH];
     WCHAR Buffer[MAX_PATH];
     DWORD RequiredSize;
-    HKEY hClassKey;
+    HKEY hClassKey = NULL;
+    HKEY ret = INVALID_HANDLE_VALUE;
 
+    FullBuffer[0] = '\0';
     Buffer[0] = '\\';
     if (!SetupGetLineTextW(NULL,
-			   hInf,
-			   Version,
-			   ClassGUID,
-			   &Buffer[1],
-			   MAX_PATH - 1,
-			   &RequiredSize))
+                           hInf,
+                           Version,
+                           ClassGUID,
+                           &Buffer[1],
+                           MAX_PATH - 1,
+                           &RequiredSize))
     {
-        return INVALID_HANDLE_VALUE;
+        goto cleanup;
     }
 
     lstrcpyW(FullBuffer, REGSTR_PATH_CLASS_NT);
     lstrcatW(FullBuffer, Buffer);
 
-
     if (!SetupGetLineTextW(NULL,
-			       hInf,
-			       Version,
-			       Class,
-			       Buffer,
-			       MAX_PATH,
-			       &RequiredSize))
+                           hInf,
+                           Version,
+                           Class,
+                           Buffer,
+                           MAX_PATH,
+                           &RequiredSize))
     {
         RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
-        return INVALID_HANDLE_VALUE;
+        goto cleanup;
     }
 
     if (ERROR_SUCCESS != RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-			    FullBuffer,
-			    0,
-			    NULL,
-			    REG_OPTION_NON_VOLATILE,
-			    KEY_SET_VALUE,
-			    NULL,
-			    &hClassKey,
-             NULL))
+                                         FullBuffer,
+                                         0,
+                                         NULL,
+                                         REG_OPTION_NON_VOLATILE,
+                                         KEY_SET_VALUE,
+                                         NULL,
+                                         &hClassKey,
+                                         NULL))
     {
-        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
-        return INVALID_HANDLE_VALUE;
+        goto cleanup;
     }
 
     if (ERROR_SUCCESS != RegSetValueExW(hClassKey,
-		       Class,
-		       0,
-		       REG_SZ,
-		       (LPBYTE)Buffer,
-             RequiredSize * sizeof(WCHAR)))
+                                        Class,
+                                        0,
+                                        REG_SZ,
+                                        (LPBYTE)Buffer,
+                                        RequiredSize * sizeof(WCHAR)))
     {
-        RegCloseKey(hClassKey);
-        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
-        return INVALID_HANDLE_VALUE;
+        goto cleanup;
     }
 
-    return hClassKey;
+    ret = hClassKey;
+
+cleanup:
+    if (hClassKey != NULL && hClassKey != ret)
+        RegCloseKey(hClassKey);
+    if (ret == INVALID_HANDLE_VALUE && FullBuffer[0] != '\0')
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
+    return ret;
 }
 
 
@@ -3421,7 +3416,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
 
 cleanup:
     if (hClassKey != NULL && hClassKey != ret)
-        RegCloseKey(hClassesKey);
+        RegCloseKey(hClassKey);
     if (hClassesKey != NULL && hClassesKey != ret)
         RegCloseKey(hClassesKey);
     if (lpGuidString)
@@ -4823,7 +4818,7 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
                 if (Disposition == REG_CREATED_NEW_KEY)
                     break;
                 RegCloseKey(hKey);
-                hKey = INVALID_HANDLE_VALUE;
+                hKey = NULL;
                 Index++;
             }
             if (Index > 9999)
@@ -6117,7 +6112,7 @@ SetupDiOpenDeviceInfoW(
     OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     struct DeviceInfoSet *list;
-    HKEY hEnumKey, hKey;
+    HKEY hEnumKey, hKey = NULL;
     DWORD rc;
     BOOL ret = FALSE;
 
@@ -6175,7 +6170,7 @@ SetupDiOpenDeviceInfoW(
             if (rc != ERROR_SUCCESS)
             {
                 SetLastError(rc);
-                return FALSE;
+                goto cleanup;
             }
             rc = RegOpenKeyExW(
                 hEnumKey,
@@ -6189,20 +6184,16 @@ SetupDiOpenDeviceInfoW(
                 if (rc == ERROR_FILE_NOT_FOUND)
                     rc = ERROR_NO_SUCH_DEVINST;
                 SetLastError(rc);
-                return FALSE;
+                goto cleanup;
             }
 
             /* FIXME: try to get ClassGUID from registry, instead of
              * sending GUID_NULL to CreateDeviceInfoElement
              */
             if (!CreateDeviceInfoElement(list, DeviceInstanceId, &GUID_NULL, &deviceInfo))
-            {
-                RegCloseKey(hKey);
-                return FALSE;
-            }
+                goto cleanup;
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
-            RegCloseKey(hKey);
             ret = TRUE;
         }
 
@@ -6214,6 +6205,9 @@ SetupDiOpenDeviceInfoW(
         }
     }
 
+cleanup:
+    if (hKey != NULL)
+        RegCloseKey(hKey);
     return ret;
 }
 
