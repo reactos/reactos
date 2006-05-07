@@ -64,7 +64,9 @@ DWORD CALLBACK  HelDdSetExclusiveMode(LPDDHAL_SETEXCLUSIVEMODEDATA lpSetExclusiv
 {
 	 DX_WINDBG_trace();
 	 DX_STUB_str("Not implement yet, return DD_OK for not bsod\n");
-	 return DD_OK;
+	 lpSetExclusiveMode->ddRVal = DD_OK;
+	 
+	 return DDHAL_DRIVER_HANDLED;
 }
 
 DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISurface)

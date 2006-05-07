@@ -198,33 +198,6 @@ Hal_DirectDraw_Release (LPDIRECTDRAW7 iface)
 }
 
 
-
-HRESULT 
-Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface)
-{
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-    DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
-
-    if (!(This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)) 
-    {
-        return DDERR_NODRIVERSUPPORT;
-    }
-
-    SetExclusiveMode.lpDD = &This->mDDrawGlobal;
-    SetExclusiveMode.ddRVal = DDERR_NOTPALETTIZED;
-    SetExclusiveMode.dwEnterExcl = This->cooperative_level;
-
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.SetExclusiveMode(&SetExclusiveMode) != DDHAL_DRIVER_HANDLED)
-    {
-       return DDERR_NODRIVERSUPPORT;
-    }
-
-    return SetExclusiveMode.ddRVal;
-}
-
-
-
 HRESULT 
 Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
                    LPDWORD total, LPDWORD free)                                               

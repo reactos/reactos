@@ -11,26 +11,7 @@
 #include "rosdraw.h"
 
 
-/*
-HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
-{
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	This->HELMemoryAvilable = HEL_GRAPHIC_MEMORY_MAX;
-
-    This->mCallbacks.HELDD.dwFlags = DDHAL_CB32_CANCREATESURFACE;
-    This->mCallbacks.HELDD.CanCreateSurface = HelDdCanCreateSurface;
-
-    This->mCallbacks.HELDD.dwFlags = DDHAL_CB32_CREATESURFACE; 
-    This->mCallbacks.HELDD.CreateSurface = HelDdCreateSurface;
-
-	return DD_OK;
-} */
-
-HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface)
-{
-   	return DD_OK;
-}
 
 VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 iface) 
 {
