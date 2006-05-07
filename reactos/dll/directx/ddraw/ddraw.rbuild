@@ -17,6 +17,7 @@
 	<file>ddraw.rc</file>
 	<file>main.c</file>
 	<file>regsvr.c</file>
+      <file>helinterface.c</file>
 
       <file>clipper.c</file>
 	<file>color.c</file>

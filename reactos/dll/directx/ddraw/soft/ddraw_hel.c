@@ -11,7 +11,7 @@
 #include "rosdraw.h"
 
 
-
+/*
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 {
 	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
@@ -25,7 +25,7 @@ HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     This->mCallbacks.HELDD.CreateSurface = HelDdCreateSurface;
 
 	return DD_OK;
-}
+} */
 
 HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface)
 {
