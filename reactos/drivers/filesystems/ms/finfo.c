@@ -2,9 +2,9 @@
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       services/fs/ms/finfo.c
+ * FILE:       drivers/filesystems/ms/finfo.c
  * PURPOSE:    Mailslot filesystem
- * PROGRAMMER: Eric Kohl <ekohl@rz-online.de>
+ * PROGRAMMER: Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -19,176 +19,175 @@
 
 static NTSTATUS
 MsfsQueryMailslotInformation(PMSFS_FCB Fcb,
-			     PFILE_MAILSLOT_QUERY_INFORMATION Buffer,
-			     PULONG BufferLength)
+                             PFILE_MAILSLOT_QUERY_INFORMATION Buffer,
+                             PULONG BufferLength)
 {
-   KIRQL oldIrql;
+    KIRQL oldIrql;
 
-   if (*BufferLength < sizeof(FILE_MAILSLOT_QUERY_INFORMATION))
-     return(STATUS_BUFFER_OVERFLOW);
+    if (*BufferLength < sizeof(FILE_MAILSLOT_QUERY_INFORMATION))
+        return STATUS_BUFFER_OVERFLOW;
 
-   Buffer->MaximumMessageSize = Fcb->MaxMessageSize;
-   Buffer->ReadTimeout = Fcb->TimeOut;
+    Buffer->MaximumMessageSize = Fcb->MaxMessageSize;
+    Buffer->ReadTimeout = Fcb->TimeOut;
 
-   KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
-   Buffer->MessagesAvailable = Fcb->MessageCount;
-   if (Fcb->MessageCount == 0)
-     {
-	Buffer->NextMessageSize = MAILSLOT_NO_MESSAGE;
-     }
-   else
-     {
-	/* FIXME: read size of first message (head) */
-	Buffer->NextMessageSize = 0;
-     }
-   KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
+    KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
+    Buffer->MessagesAvailable = Fcb->MessageCount;
+    if (Fcb->MessageCount == 0)
+    {
+        Buffer->NextMessageSize = MAILSLOT_NO_MESSAGE;
+    }
+    else
+    {
+        /* FIXME: read size of first message (head) */
+        Buffer->NextMessageSize = 0;
+    }
+    KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
-   *BufferLength -= sizeof(FILE_MAILSLOT_QUERY_INFORMATION);
+    *BufferLength -= sizeof(FILE_MAILSLOT_QUERY_INFORMATION);
 
-   return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
 static NTSTATUS
 MsfsSetMailslotInformation(PMSFS_FCB Fcb,
-			   PFILE_MAILSLOT_SET_INFORMATION Buffer,
-			   PULONG BufferLength)
+                           PFILE_MAILSLOT_SET_INFORMATION Buffer,
+                           PULONG BufferLength)
 {
-   if (*BufferLength < sizeof(FILE_MAILSLOT_SET_INFORMATION))
-     return(STATUS_BUFFER_OVERFLOW);
+    if (*BufferLength < sizeof(FILE_MAILSLOT_SET_INFORMATION))
+        return STATUS_BUFFER_OVERFLOW;
 
-   Fcb->TimeOut = *Buffer->ReadTimeout;
+    Fcb->TimeOut = *Buffer->ReadTimeout;
 
-   return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
 NTSTATUS DEFAULTAPI
 MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
-		     PIRP Irp)
+                     PIRP Irp)
 {
-   PIO_STACK_LOCATION IoStack;
-   FILE_INFORMATION_CLASS FileInformationClass;
-   PFILE_OBJECT FileObject;
-   PMSFS_DEVICE_EXTENSION DeviceExtension;
-   PMSFS_FCB Fcb;
-   PMSFS_CCB Ccb;
-   PVOID SystemBuffer;
-   ULONG BufferLength;
-   NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+    FILE_INFORMATION_CLASS FileInformationClass;
+    PFILE_OBJECT FileObject;
+    PMSFS_DEVICE_EXTENSION DeviceExtension;
+    PMSFS_FCB Fcb;
+    PMSFS_CCB Ccb;
+    PVOID SystemBuffer;
+    ULONG BufferLength;
+    NTSTATUS Status;
 
-   DPRINT("MsfsQueryInformation(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+    DPRINT("MsfsQueryInformation(DeviceObject %p Irp %p)\n",
+           DeviceObject, Irp);
 
-   IoStack = IoGetCurrentIrpStackLocation (Irp);
-   FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
-   DeviceExtension = DeviceObject->DeviceExtension;
-   FileObject = IoStack->FileObject;
-   Fcb = (PMSFS_FCB)FileObject->FsContext;
-   Ccb = (PMSFS_CCB)FileObject->FsContext2;
+    IoStack = IoGetCurrentIrpStackLocation (Irp);
+    FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
+    DeviceExtension = DeviceObject->DeviceExtension;
+    FileObject = IoStack->FileObject;
+    Fcb = (PMSFS_FCB)FileObject->FsContext;
+    Ccb = (PMSFS_CCB)FileObject->FsContext2;
 
-   DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
+    DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
 
-   /* querying information is not permitted on client side */
-   if (Fcb->ServerCcb != Ccb)
-     {
-	Status = STATUS_ACCESS_DENIED;
+    /* querying information is not permitted on client side */
+    if (Fcb->ServerCcb != Ccb)
+    {
+        Status = STATUS_ACCESS_DENIED;
 
-	Irp->IoStatus.Status = Status;
-	Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
 
-	IoCompleteRequest(Irp,
-			  IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-	return(Status);
-     }
+        return Status;
+    }
 
-   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
-   BufferLength = IoStack->Parameters.QueryFile.Length;
+    SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+    BufferLength = IoStack->Parameters.QueryFile.Length;
 
-   switch (FileInformationClass)
-     {
-     case FileMailslotQueryInformation:
-	Status = MsfsQueryMailslotInformation(Fcb,
-					      SystemBuffer,
-					      &BufferLength);
-	break;
-     default:
-	Status = STATUS_NOT_IMPLEMENTED;
-     }
+    switch (FileInformationClass)
+    {
+    case FileMailslotQueryInformation:
+        Status = MsfsQueryMailslotInformation(Fcb,
+                                              SystemBuffer,
+                                              &BufferLength);
+        break;
 
-   Irp->IoStatus.Status = Status;
-   if (NT_SUCCESS(Status))
-     Irp->IoStatus.Information =
-       IoStack->Parameters.QueryFile.Length - BufferLength;
-   else
-     Irp->IoStatus.Information = 0;
-   IoCompleteRequest(Irp,
-		     IO_NO_INCREMENT);
+    default:
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
 
-   return(Status);
+    Irp->IoStatus.Status = Status;
+    if (NT_SUCCESS(Status))
+        Irp->IoStatus.Information =
+             IoStack->Parameters.QueryFile.Length - BufferLength;
+    else
+        Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
 }
 
 
 NTSTATUS DEFAULTAPI
 MsfsSetInformation(PDEVICE_OBJECT DeviceObject,
-		   PIRP Irp)
+                   PIRP Irp)
 {
-   PIO_STACK_LOCATION IoStack;
-   FILE_INFORMATION_CLASS FileInformationClass;
-   PFILE_OBJECT FileObject;
-   PMSFS_FCB Fcb;
-   PMSFS_CCB Ccb;
-   PVOID SystemBuffer;
-   ULONG BufferLength;
-   NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+    FILE_INFORMATION_CLASS FileInformationClass;
+    PFILE_OBJECT FileObject;
+    PMSFS_FCB Fcb;
+    PMSFS_CCB Ccb;
+    PVOID SystemBuffer;
+    ULONG BufferLength;
+    NTSTATUS Status;
 
-   DPRINT("MsfsSetInformation(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
+    DPRINT("MsfsSetInformation(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
-   IoStack = IoGetCurrentIrpStackLocation (Irp);
-   FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
-   FileObject = IoStack->FileObject;
-   Fcb = (PMSFS_FCB)FileObject->FsContext;
-   Ccb = (PMSFS_CCB)FileObject->FsContext2;
+    IoStack = IoGetCurrentIrpStackLocation (Irp);
+    FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
+    FileObject = IoStack->FileObject;
+    Fcb = (PMSFS_FCB)FileObject->FsContext;
+    Ccb = (PMSFS_CCB)FileObject->FsContext2;
 
-   DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
+    DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
 
-   /* setting information is not permitted on client side */
-   if (Fcb->ServerCcb != Ccb)
-     {
-	Status = STATUS_ACCESS_DENIED;
+    /* setting information is not permitted on client side */
+    if (Fcb->ServerCcb != Ccb)
+    {
+        Status = STATUS_ACCESS_DENIED;
 
-	Irp->IoStatus.Status = Status;
-	Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
 
-	IoCompleteRequest(Irp,
-			  IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-	return(Status);
-     }
+        return Status;
+    }
 
-   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
-   BufferLength = IoStack->Parameters.QueryFile.Length;
+    SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+    BufferLength = IoStack->Parameters.QueryFile.Length;
 
-   DPRINT("FileInformationClass %d\n", FileInformationClass);
-   DPRINT("SystemBuffer %x\n", SystemBuffer);
+    DPRINT("FileInformationClass %d\n", FileInformationClass);
+    DPRINT("SystemBuffer %x\n", SystemBuffer);
 
-   switch (FileInformationClass)
-     {
-     case FileMailslotSetInformation:
-	Status = MsfsSetMailslotInformation(Fcb,
-					    SystemBuffer,
-					    &BufferLength);
-	break;
+    switch (FileInformationClass)
+    {
+    case FileMailslotSetInformation:
+        Status = MsfsSetMailslotInformation(Fcb,
+                                            SystemBuffer,
+                                            &BufferLength);
+        break;
+
      default:
-	Status = STATUS_NOT_IMPLEMENTED;
-     }
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
 
-   Irp->IoStatus.Status = Status;
-   Irp->IoStatus.Information = 0;
-   IoCompleteRequest(Irp,
-		     IO_NO_INCREMENT);
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-   return(Status);
+    return Status;
 }
 
 /* EOF */

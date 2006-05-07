@@ -1,5 +1,13 @@
-#ifndef __SERVICES_FS_MS_MSFS_H
-#define __SERVICES_FS_MS_MSFS_H
+/*
+ * COPYRIGHT:  See COPYING in the top level directory
+ * PROJECT:    ReactOS kernel
+ * FILE:       services/fs/ms/msfs.h
+ * PURPOSE:    Mailslot filesystem
+ * PROGRAMMER: Eric Kohl
+ */
+
+#ifndef __DRIVERS_FS_MS_MSFS_H
+#define __DRIVERS_FS_MS_MSFS_H
 
 #include <ntifs.h>
 #include <ndk/ntndk.h>
@@ -22,37 +30,40 @@
 
 typedef struct _MSFS_DEVICE_EXTENSION
 {
-   LIST_ENTRY FcbListHead;
-   KMUTEX FcbListLock;
+    LIST_ENTRY FcbListHead;
+    KMUTEX FcbListLock;
 } MSFS_DEVICE_EXTENSION, *PMSFS_DEVICE_EXTENSION;
+
 
 typedef struct _MSFS_FCB
 {
-   UNICODE_STRING Name;
-   LIST_ENTRY FcbListEntry;
-   KSPIN_LOCK CcbListLock;
-   LIST_ENTRY CcbListHead;
-   struct _MSFS_CCB *ServerCcb;
-   ULONG ReferenceCount;
-   LARGE_INTEGER TimeOut;
-   KEVENT MessageEvent;
-   ULONG MaxMessageSize;
-   ULONG MessageCount;
-   KSPIN_LOCK MessageListLock;
-   LIST_ENTRY MessageListHead;
+    UNICODE_STRING Name;
+    LIST_ENTRY FcbListEntry;
+    KSPIN_LOCK CcbListLock;
+    LIST_ENTRY CcbListHead;
+    struct _MSFS_CCB *ServerCcb;
+    ULONG ReferenceCount;
+    LARGE_INTEGER TimeOut;
+    KEVENT MessageEvent;
+    ULONG MaxMessageSize;
+    ULONG MessageCount;
+    KSPIN_LOCK MessageListLock;
+    LIST_ENTRY MessageListHead;
 } MSFS_FCB, *PMSFS_FCB;
+
 
 typedef struct _MSFS_CCB
 {
-   LIST_ENTRY CcbListEntry;
-   PMSFS_FCB Fcb;
+    LIST_ENTRY CcbListEntry;
+    PMSFS_FCB Fcb;
 } MSFS_CCB, *PMSFS_CCB;
+
 
 typedef struct _MSFS_MESSAGE
 {
-   LIST_ENTRY MessageListEntry;
-   ULONG Size;
-   UCHAR Buffer[1];
+    LIST_ENTRY MessageListEntry;
+    ULONG Size;
+    UCHAR Buffer[1];
 } MSFS_MESSAGE, *PMSFS_MESSAGE;
 
 
@@ -78,6 +89,6 @@ NTSTATUS DEFAULTAPI MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
-	    PUNICODE_STRING RegistryPath);
+            PUNICODE_STRING RegistryPath);
 
-#endif /* __SERVICES_FS_NP_NPFS_H */
+#endif /* __DRIVERS_FS_MS_MSFS_H */
