@@ -192,12 +192,6 @@ CreateDirectoryExW (
         }
 
         InitializeObjectAttributes(&ObjectAttributes,
-                                   &NtPathU,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
-
-        InitializeObjectAttributes(&ObjectAttributes,
                                    &NtTemplatePathU,
                                    OBJ_CASE_INSENSITIVE,
                                    NULL,
@@ -256,7 +250,13 @@ OpenTemplateDir:
             Status = STATUS_OBJECT_NAME_INVALID;
             goto Cleanup;
         }
-        
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &NtPathU,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
+
         /*
          * Query the basic file attributes from the template directory
          */
@@ -358,6 +358,7 @@ OpenTemplateDir:
         /*
          * Create the new directory
          */
+
         Status = NtCreateFile (&DirectoryHandle,
                                DesiredAccess,
                                &ObjectAttributes,
@@ -443,7 +444,7 @@ OpenTemplateDir:
 
             /* FIXME - enumerate and copy the file streams */
         }
-        
+
         /*
          * We successfully created the directory and copied all information
          * from the template directory
@@ -460,7 +461,7 @@ CleanupNoNtPath:
         {
                 NtClose(TemplateHandle);
         }
-        
+
         RtlFreeHeap (RtlGetProcessHeap (),
                      0,
                      NtTemplatePathU.Buffer);
