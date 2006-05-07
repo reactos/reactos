@@ -826,7 +826,7 @@ BOOL WINAPI SetupDiEnumDeviceInfo(
                 SetLastError(ERROR_NO_MORE_ITEMS);
             else
             {
-                struct DeviceInfoElement *DevInfo = (struct DeviceInfoElement *)ItemList;
+                struct DeviceInfoElement *DevInfo = CONTAINING_RECORD(ItemList, struct DeviceInfoElement, ListEntry);
                 memcpy(&DeviceInfoData->ClassGuid,
                     &DevInfo->ClassGuid,
                     sizeof(GUID));
@@ -1661,6 +1661,7 @@ static LONG SETUP_CreateInterfaceList(
 
     hInterfaceKey = INVALID_HANDLE_VALUE;
     hDeviceInstanceKey = INVALID_HANDLE_VALUE;
+    hReferenceKey = INVALID_HANDLE_VALUE;
 
     /* Open registry key related to this interface */
     hInterfaceKey = SetupDiOpenClassRegKeyExW(InterfaceGuid, KEY_ENUMERATE_SUB_KEYS, DIOCR_INTERFACE, MachineName, NULL);
@@ -2290,7 +2291,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
             while (ItemList != &list->ListHead && !Found)
             {
                 PLIST_ENTRY InterfaceListEntry;
-                struct DeviceInfoElement *DevInfo = (struct DeviceInfoElement *)ItemList;
+                struct DeviceInfoElement *DevInfo = CONTAINING_RECORD(ItemList, struct DeviceInfoElement, ListEntry);
                 if (DeviceInfoData && (struct DeviceInfoElement *)DeviceInfoData->Reserved != DevInfo)
                 {
                     /* We are not searching for this element */
@@ -2300,7 +2301,7 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
                 InterfaceListEntry = DevInfo->InterfaceListHead.Flink;
                 while (InterfaceListEntry != &DevInfo->InterfaceListHead && !Found)
                 {
-                    struct DeviceInterface *DevItf = (struct DeviceInterface *)InterfaceListEntry;
+                    struct DeviceInterface *DevItf = CONTAINING_RECORD(InterfaceListEntry, struct DeviceInterface, ListEntry);
                     if (!IsEqualIID(&DevItf->InterfaceClassGuid, InterfaceClassGuid))
                     {
                         InterfaceListEntry = InterfaceListEntry->Flink;
@@ -2394,7 +2395,7 @@ static BOOL DestroyDeviceInfoSet(struct DeviceInfoSet* list)
     while (!IsListEmpty(&list->ListHead))
     {
         ListEntry = RemoveHeadList(&list->ListHead);
-        deviceInfo = (struct DeviceInfoElement *)ListEntry;
+        deviceInfo = CONTAINING_RECORD(ListEntry, struct DeviceInfoElement, ListEntry);
         if (!DestroyDeviceInfoElement(deviceInfo))
             return FALSE;
     }
@@ -3330,12 +3331,13 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         PCWSTR MachineName OPTIONAL,
         PVOID Reserved)
 {
-    LPWSTR lpGuidString;
-    LPWSTR lpFullGuidString;
+    LPWSTR lpGuidString = NULL;
+    LPWSTR lpFullGuidString = NULL;
     DWORD dwLength;
     HKEY HKLM;
-    HKEY hClassesKey;
-    HKEY hClassKey;
+    HKEY hClassesKey = NULL;
+    HKEY hClassKey = NULL;
+    HKEY ret = INVALID_HANDLE_VALUE;
     DWORD rc;
     LPCWSTR lpKeyName;
 
@@ -3343,18 +3345,14 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         Flags, debugstr_w(MachineName), Reserved);
 
     if (Flags == DIOCR_INSTALLER)
-    {
         lpKeyName = REGSTR_PATH_CLASS_NT;
-    }
     else if (Flags == DIOCR_INTERFACE)
-    {
         lpKeyName = REGSTR_PATH_DEVICE_CLASSES;
-    }
     else
     {
         ERR("Invalid Flags parameter!\n");
         SetLastError(ERROR_INVALID_FLAGS);
-        return INVALID_HANDLE_VALUE;
+        goto cleanup;
     }
 
     if (MachineName != NULL)
@@ -3363,32 +3361,35 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
-            return INVALID_HANDLE_VALUE;
+            goto cleanup;
         }
     }
     else
         HKLM = HKEY_LOCAL_MACHINE;
 
     rc = RegOpenKeyExW(HKLM,
-		      lpKeyName,
-		      0,
-		      ClassGuid ? 0 : samDesired,
-		      &hClassesKey);
+                      lpKeyName,
+                      0,
+                      ClassGuid ? 0 : samDesired,
+                      &hClassesKey);
     if (MachineName != NULL) RegCloseKey(HKLM);
     if (rc != ERROR_SUCCESS)
     {
-	SetLastError(rc);
-	return INVALID_HANDLE_VALUE;
+        SetLastError(rc);
+        goto cleanup;
     }
 
     if (ClassGuid == NULL)
-        return hClassesKey;
+    {
+        /* Stop here. We don't need to open a subkey */
+        ret = hClassesKey;
+        goto cleanup;
+    }
 
     if (UuidToStringW((UUID*)ClassGuid, &lpGuidString) != RPC_S_OK)
     {
-	SetLastError(ERROR_GEN_FAILURE);
-	RegCloseKey(hClassesKey);
-	return INVALID_HANDLE_VALUE;
+        SetLastError(ERROR_GEN_FAILURE);
+        goto cleanup;
     }
 
     dwLength = lstrlenW(lpGuidString);
@@ -3396,32 +3397,36 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     if (!lpFullGuidString)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        RpcStringFreeW(&lpGuidString);
-        return INVALID_HANDLE_VALUE;
+        goto cleanup;
     }
     lpFullGuidString[0] = '{';
     memcpy(&lpFullGuidString[1], lpGuidString, dwLength * sizeof(WCHAR));
     lpFullGuidString[dwLength + 1] = '}';
     lpFullGuidString[dwLength + 2] = '\0';
-    RpcStringFreeW(&lpGuidString);
 
     rc = RegOpenKeyExW(hClassesKey,
-		      lpFullGuidString,
-		      0,
-		      samDesired,
-		      &hClassKey);
+                       lpFullGuidString,
+                       0,
+                       samDesired,
+                       &hClassKey);
     if (rc != ERROR_SUCCESS)
     {
-	SetLastError(rc);
-	HeapFree(GetProcessHeap(), 0, lpFullGuidString);
-	RegCloseKey(hClassesKey);
-	return INVALID_HANDLE_VALUE;
+        SetLastError(rc);
+        goto cleanup;
     }
+    ret = hClassKey;
 
-    HeapFree(GetProcessHeap(), 0, lpFullGuidString);
-    RegCloseKey(hClassesKey);
+cleanup:
+    if (hClassKey != NULL && hClassKey != ret)
+        RegCloseKey(hClassesKey);
+    if (hClassesKey != NULL && hClassesKey != ret)
+        RegCloseKey(hClassesKey);
+    if (lpGuidString)
+        RpcStringFreeW(&lpGuidString);
+    if (lpFullGuidString)
+        HeapFree(GetProcessHeap(), 0, lpFullGuidString);
 
-    return hClassKey;
+    return ret;
 }
 
 /***********************************************************************
@@ -3942,7 +3947,8 @@ BOOL WINAPI SetupDiCallClassInstaller(
             ListEntry = ClassCoInstallersListHead.Flink;
             while (rc == NO_ERROR && ListEntry != &ClassCoInstallersListHead)
             {
-                struct CoInstallerElement *coinstaller = (struct CoInstallerElement *)ListEntry;
+                struct CoInstallerElement *coinstaller;
+                coinstaller = CONTAINING_RECORD(ListEntry, struct CoInstallerElement, ListEntry);
                 rc = (*coinstaller->Function)(InstallFunction, DeviceInfoSet, DeviceInfoData, &Context);
                 coinstaller->PrivateData = Context.PrivateData;
                 if (rc == ERROR_DI_POSTPROCESSING_REQUIRED)
@@ -3957,7 +3963,8 @@ BOOL WINAPI SetupDiCallClassInstaller(
             ListEntry = DeviceCoInstallersListHead.Flink;
             while (rc == NO_ERROR && ListEntry != &DeviceCoInstallersListHead)
             {
-                struct CoInstallerElement *coinstaller = (struct CoInstallerElement *)ListEntry;
+                struct CoInstallerElement *coinstaller;
+                coinstaller = CONTAINING_RECORD(ListEntry, struct CoInstallerElement, ListEntry);
                 rc = (*coinstaller->Function)(InstallFunction, DeviceInfoSet, DeviceInfoData, &Context);
                 coinstaller->PrivateData = Context.PrivateData;
                 if (rc == ERROR_DI_POSTPROCESSING_REQUIRED)
@@ -3996,7 +4003,8 @@ BOOL WINAPI SetupDiCallClassInstaller(
             ListEntry = ClassCoInstallersListHead.Flink;
             while (ListEntry != &ClassCoInstallersListHead)
             {
-                struct CoInstallerElement *coinstaller = (struct CoInstallerElement *)ListEntry;
+                struct CoInstallerElement *coinstaller;
+                coinstaller = CONTAINING_RECORD(ListEntry, struct CoInstallerElement, ListEntry);
                 if (coinstaller->DoPostProcessing)
                 {
                     Context.InstallResult = rc;
@@ -4011,7 +4019,8 @@ BOOL WINAPI SetupDiCallClassInstaller(
             ListEntry = DeviceCoInstallersListHead.Flink;
             while (ListEntry != &DeviceCoInstallersListHead)
             {
-                struct CoInstallerElement *coinstaller = (struct CoInstallerElement *)ListEntry;
+                struct CoInstallerElement *coinstaller;
+                coinstaller = CONTAINING_RECORD(ListEntry, struct CoInstallerElement, ListEntry);
                 if (coinstaller->DoPostProcessing)
                 {
                     Context.InstallResult = rc;
@@ -6023,7 +6032,7 @@ SetupDiDestroyDriverInfoList(
             while (!IsListEmpty(&list->DriverListHead))
             {
                  ListEntry = RemoveHeadList(&list->DriverListHead);
-                 driverInfo = (struct DriverInfoElement *)ListEntry;
+                 driverInfo = CONTAINING_RECORD(ListEntry, struct DriverInfoElement, ListEntry);
                  DestroyDriverInfoElement(driverInfo);
             }
             InstallParams.Reserved = 0;
@@ -6043,7 +6052,7 @@ SetupDiDestroyDriverInfoList(
             while (!IsListEmpty(&deviceInfo->DriverListHead))
             {
                  ListEntry = RemoveHeadList(&deviceInfo->DriverListHead);
-                 driverInfo = (struct DriverInfoElement *)ListEntry;
+                 driverInfo = CONTAINING_RECORD(ListEntry, struct DriverInfoElement, ListEntry);
                  if ((PVOID)InstallParamsSet.Reserved == driverInfo)
                  {
                      InstallParamsSet.Reserved = 0;
@@ -6321,7 +6330,7 @@ SetupDiEnumDriverInfoW(
             SetLastError(ERROR_NO_MORE_ITEMS);
         else
         {
-            struct DriverInfoElement *DrvInfo = (struct DriverInfoElement *)ItemList;
+            struct DriverInfoElement *DrvInfo = CONTAINING_RECORD(ItemList, struct DriverInfoElement, ListEntry);
 
             memcpy(
                 &DriverInfoData->DriverType,
@@ -6653,11 +6662,11 @@ SetupDiSetSelectedDriverW(
                 SetLastError(ERROR_INVALID_PARAMETER);
             else
             {
-                *pDriverInfo = (struct DriverInfoElement *)ItemList;
+                *pDriverInfo = CONTAINING_RECORD(ItemList, struct DriverInfoElement, ListEntry);
                 DriverInfoData->Reserved = (ULONG_PTR)ItemList;
                 ret = TRUE;
                 TRACE("Choosing driver whose rank is 0x%lx\n",
-                    ((struct DriverInfoElement *)ItemList)->DriverRank);
+                    (*pDriverInfo)->DriverRank);
                 if (DeviceInfoData)
                     memcpy(&DeviceInfoData->ClassGuid, &(*pDriverInfo)->ClassGuid, sizeof(GUID));
             }
