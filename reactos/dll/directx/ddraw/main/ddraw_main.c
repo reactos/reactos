@@ -290,7 +290,6 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
     DX_WINDBG_trace();
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
 
     // check the parameters
     if ((This->cooperative_level == cooplevel) && ((HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd  == hwnd))
@@ -314,27 +313,13 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
 	//mDDrawGlobal.lpExclusiveOwner->dwLocalFlags
 
     This->cooperative_level = cooplevel;
-   
-    SetExclusiveMode.lpDD = &This->mDDrawGlobal;
-    SetExclusiveMode.ddRVal = DDERR_NODRIVERSUPPORT;
-    SetExclusiveMode.dwEnterExcl = This->cooperative_level;
-    
-    if (!(This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)) 
+
+    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE) 
     {
-        SetExclusiveMode.SetExclusiveMode = This->mDDrawGlobal.lpDDCBtmp->HELDD.SetExclusiveMode; 
-    }
-    else
-    {
-        SetExclusiveMode.SetExclusiveMode = This->mDDrawGlobal.lpDDCBtmp->HALDD.SetExclusiveMode; 
-    }
-    
-    if (SetExclusiveMode.SetExclusiveMode(&SetExclusiveMode) != DDHAL_DRIVER_HANDLED)
-    {
-       return DDERR_NODRIVERSUPPORT;
+        return Hal_DirectDraw_SetCooperativeLevel (iface);        
     }
 
-    return SetExclusiveMode.ddRVal;
-    
+    return Hel_DirectDraw_SetCooperativeLevel(iface);
 
 }
 

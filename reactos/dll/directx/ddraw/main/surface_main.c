@@ -496,9 +496,9 @@ HRESULT WINAPI
 Main_DDrawSurface_SetClipper (LPDIRECTDRAWSURFACE7 iface,
 				  LPDIRECTDRAWCLIPPER pDDClipper)
 {
-      /* FIXME not implment */
-   DX_WINDBG_trace();
-   DX_STUB_DD_OK;
+    DX_WINDBG_trace();
+
+    DX_STUB;
 }
 
 HRESULT WINAPI
