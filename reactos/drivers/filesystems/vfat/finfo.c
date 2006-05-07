@@ -445,6 +445,28 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
 
 
 static NTSTATUS
+VfatGetEaInformation(PFILE_OBJECT FileObject,
+		     PVFATFCB Fcb,
+		     PDEVICE_OBJECT DeviceObject,
+		     PFILE_EA_INFORMATION Info,
+		     PULONG BufferLength)
+{
+    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+
+    /* FIXME - use SEH to access the buffer! */
+    Info->EaSize = 0;
+    *BufferLength -= sizeof(*Info);
+    if (DeviceExt->FatInfo.FatType == FAT12 ||
+        DeviceExt->FatInfo.FatType == FAT16)
+    {
+        /* FIXME */
+        DPRINT1("VFAT: FileEaInformation not implemented!\n");
+    }
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
 VfatGetAllInformation(PFILE_OBJECT FileObject,
 		      PVFATFCB Fcb,
 		      PDEVICE_OBJECT DeviceObject,
@@ -585,8 +607,16 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       }
       else
       {
-        Fcb->entry.Fat.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
-        Fcb->entry.Fat.FirstClusterHigh = (unsigned short)((FirstCluster & 0xFFFF0000) >> 16);
+        if (DeviceExt->FatInfo.FatType == FAT32)
+        {
+          Fcb->entry.Fat.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
+          Fcb->entry.Fat.FirstClusterHigh = FirstCluster >> 16;
+        }
+        else
+        {
+            ASSERT((FirstCluster >> 16) == 0);
+            Fcb->entry.Fat.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
+        }
       }
     }
     else
@@ -670,8 +700,15 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       }
       else
       {
-        Fcb->entry.Fat.FirstCluster = 0;
-        Fcb->entry.Fat.FirstClusterHigh = 0;
+        if (DeviceExt->FatInfo.FatType == FAT32)
+        {
+          Fcb->entry.Fat.FirstCluster = 0;
+          Fcb->entry.Fat.FirstClusterHigh = 0;
+        }
+        else
+        {
+            Fcb->entry.Fat.FirstCluster = 0;
+        }
       }
 
       NCluster = Cluster = FirstCluster;
@@ -778,6 +815,14 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 				 IrpContext->DeviceObject,
 				 SystemBuffer,
 				 &BufferLength);
+      break;
+
+    case FileEaInformation:
+      RC = VfatGetEaInformation(IrpContext->FileObject,
+				FCB,
+				IrpContext->DeviceObject,
+				SystemBuffer,
+				&BufferLength);
       break;
 
     case FileAlternateNameInformation:

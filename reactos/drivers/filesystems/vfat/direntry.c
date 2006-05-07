@@ -21,8 +21,8 @@ vfatDirEntryGetFirstCluster (PDEVICE_EXTENSION  pDeviceExt,
 
   if (pDeviceExt->FatInfo.FatType == FAT32)
   {
-    cluster = pFatDirEntry->Fat.FirstCluster +
-      pFatDirEntry->Fat.FirstClusterHigh * 65536;
+    cluster = pFatDirEntry->Fat.FirstCluster |
+              (pFatDirEntry->Fat.FirstClusterHigh << 16);
   }
   else if (pDeviceExt->Flags & VCB_IS_FATX)
   {

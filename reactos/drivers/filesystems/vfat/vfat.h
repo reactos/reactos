@@ -97,11 +97,50 @@ struct _FATDirEntry
   unsigned char  lCase;
   unsigned char  CreationTimeMs;
   unsigned short CreationTime,CreationDate,AccessDate;
-  unsigned short FirstClusterHigh;                      // higher
+  union
+  {
+    unsigned short FirstClusterHigh; // FAT32
+    unsigned short ExtendedAttributes; // FAT12/FAT16
+  };
   unsigned short UpdateTime;                            //time create/update
   unsigned short UpdateDate;                            //date create/update
   unsigned short FirstCluster;
   unsigned long  FileSize;
+};
+
+#define FAT_EAFILE  "EA DATA. SF"
+
+typedef struct _EAFileHeader FAT_EA_FILE_HEADER, *PFAT_EA_FILE_HEADER;
+
+struct _EAFileHeader
+{
+  unsigned short Signature; // ED
+  unsigned short Unknown[15];
+  unsigned short EASetTable[240];
+};
+
+typedef struct _EASetHeader FAT_EA_SET_HEADER, *PFAT_EA_SET_HEADER;
+
+struct _EASetHeader
+{
+  unsigned short Signature; // EA
+  unsigned short Offset; // relative offset, same value as in the EASetTable
+  unsigned short Unknown1[2];
+  char TargetFileName[12];
+  unsigned short Unknown2[3];
+  unsigned int EALength;
+  // EA Header
+};
+
+typedef struct _EAHeader FAT_EA_HEADER, *PFAT_EA_HEADER;
+
+struct _EAHeader
+{
+  unsigned char Unknown;
+  unsigned char EANameLength;
+  unsigned short EAValueLength;
+  // Name Data
+  // Value Data
 };
 
 typedef struct _FATDirEntry FAT_DIR_ENTRY, *PFAT_DIR_ENTRY;
