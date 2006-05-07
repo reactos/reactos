@@ -48,7 +48,7 @@ GetDesktopPath (BOOL bCommonPath,
   Error = RegOpenKeyExW (HKEY_CURRENT_USER,
 		         L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
 		         0,
-		         KEY_ALL_ACCESS,
+		         KEY_QUERY_VALUE,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -106,7 +106,7 @@ GetProgramsPath (BOOL bCommonPath,
   Error = RegOpenKeyExW (HKEY_CURRENT_USER,
 		         L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
 		         0,
-		         KEY_ALL_ACCESS,
+		         KEY_QUERY_VALUE,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {

@@ -127,7 +127,7 @@ InitializeProfiles (VOID)
   Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
 		         0,
-		         KEY_ALL_ACCESS,
+		         KEY_SET_VALUE,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -256,7 +256,7 @@ InitializeProfiles (VOID)
   Error = RegOpenKeyExW(HKEY_USERS,
 		        L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
 		        0,
-		        KEY_ALL_ACCESS,
+		        KEY_SET_VALUE,
 		        &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -328,7 +328,7 @@ InitializeProfiles (VOID)
   Error = RegOpenKeyExW(HKEY_USERS,
 		        L".Default\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
 		        0,
-		        KEY_ALL_ACCESS,
+		        KEY_SET_VALUE,
 		        &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -388,7 +388,7 @@ InitializeProfiles (VOID)
   Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
 		        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
 		        0,
-		        KEY_ALL_ACCESS,
+		        KEY_SET_VALUE,
 		        &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -472,7 +472,7 @@ InitializeProfiles (VOID)
   Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
 		        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
 		        0,
-		        KEY_ALL_ACCESS,
+		        KEY_SET_VALUE,
 		        &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -525,7 +525,7 @@ InitializeProfiles (VOID)
   Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
 		        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders",
 		        0,
-		        KEY_ALL_ACCESS,
+		        KEY_SET_VALUE,
 		        &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -589,7 +589,6 @@ InitializeProfiles (VOID)
 				  MAX_PATH))
     {
       DPRINT1("Error: %lu\n", GetLastError());
-      RegCloseKey (hKey);
       return FALSE;
     }
 
@@ -597,7 +596,7 @@ InitializeProfiles (VOID)
   Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
 		         0,
-		         KEY_ALL_ACCESS,
+		         KEY_SET_VALUE,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -657,7 +656,7 @@ UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
   Error = RegOpenKeyExW(hUserKey,
 		        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
 		        0,
-		        KEY_ALL_ACCESS,
+		        KEY_SET_VALUE,
 		        &hFoldersKey);
   if (Error != ERROR_SUCCESS)
     {

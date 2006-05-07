@@ -121,7 +121,7 @@ CreateUserProfileW (PSID Sid,
   Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
 		         0,
-		         KEY_ALL_ACCESS,
+		         KEY_QUERY_VALUE,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -181,7 +181,6 @@ CreateUserProfileW (PSID Sid,
     {
       DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
       LocalFree ((HLOCAL)SidString);
-      RegCloseKey (hKey);
       return FALSE;
     }
 
@@ -362,7 +361,7 @@ GetAllUsersProfileDirectoryW (LPWSTR lpProfileDir,
   Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
 		         0,
-		         KEY_READ,
+		         KEY_QUERY_VALUE,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -482,7 +481,7 @@ GetDefaultUserProfileDirectoryW (LPWSTR lpProfileDir,
   Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
 		         0,
-		         KEY_READ,
+		         KEY_QUERY_VALUE,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -602,7 +601,7 @@ GetProfilesDirectoryW (LPWSTR lpProfilesDir,
   Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
 		         0,
-		         KEY_READ,
+		         KEY_QUERY_VALUE,
 		        &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -725,7 +724,7 @@ GetUserProfileDirectoryW (HANDLE hToken,
   Error = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		         szKeyName,
 		         0,
-		         KEY_ALL_ACCESS,
+		         KEY_QUERY_VALUE,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -798,7 +797,7 @@ CheckForLoadedProfile (HANDLE hToken)
   if (RegOpenKeyExW (HKEY_USERS,
 		     SidString.Buffer,
 		     0,
-		     KEY_ALL_ACCESS,
+		     MAXIMUM_ALLOWED,
 		     &hKey))
     {
       DPRINT ("Profile not loaded\n");
@@ -896,7 +895,7 @@ LoadUserProfileW (HANDLE hToken,
   Error = RegOpenKeyExW (HKEY_USERS,
 		         SidString.Buffer,
 		         0,
-		         KEY_ALL_ACCESS,
+		         MAXIMUM_ALLOWED,
 		         (PHKEY)&lpProfileInfo->hProfile);
   if (Error != ERROR_SUCCESS)
     {

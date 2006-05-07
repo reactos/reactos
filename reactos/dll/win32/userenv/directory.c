@@ -124,7 +124,7 @@ CopyDirectory (LPCWSTR lpDestinationPath,
 	  if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	    {
 	      DPRINT ("Create directory: %S\n", szFullDstName);
-	      if (!CreateDirectoryW (szFullDstName, NULL))
+	      if (!CreateDirectoryExW (szFullSrcName, szFullDstName, NULL))
 		{
 		  if (GetLastError () != ERROR_ALREADY_EXISTS)
 		    {
@@ -153,13 +153,6 @@ CopyDirectory (LPCWSTR lpDestinationPath,
 		  FindClose (hFind);
 		  return FALSE;
 		}
-	    }
-
-	  /* Copy file attributes */
-	  if (FindFileData.dwFileAttributes & ~FILE_ATTRIBUTE_DIRECTORY)
-	    {
-	      SetFileAttributesW (szFullDstName,
-				  FindFileData.dwFileAttributes);
 	    }
 	}
 

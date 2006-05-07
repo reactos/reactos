@@ -181,7 +181,7 @@ GetCurrentUserKey (HANDLE hToken)
   Error = RegOpenKeyExW (HKEY_USERS,
 		         SidString.Buffer,
 		         0,
-		         KEY_ALL_ACCESS,
+		         MAXIMUM_ALLOWED,
 		         &hKey);
   if (Error != ERROR_SUCCESS)
     {
@@ -217,7 +217,7 @@ SetUserEnvironment (LPVOID *lpEnvironment,
   Error = RegOpenKeyExW (hKey,
 		         lpSubKeyName,
 		         0,
-		         KEY_ALL_ACCESS,
+		         KEY_QUERY_VALUE,
 		         &hEnvKey);
   if (Error != ERROR_SUCCESS)
     {
