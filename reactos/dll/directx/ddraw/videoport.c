@@ -1,4 +1,4 @@
-/* $Id: videoport_main.c 21434 2006-04-01 19:12:56Z greatlrd $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
