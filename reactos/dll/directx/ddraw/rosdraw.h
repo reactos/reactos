@@ -303,7 +303,7 @@ DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISu
 	return DD_OK; 	
 	
 
-#define DX_STUB_str(x) \		
+#define DX_STUB_str(x) \
 		{ \
         char buffer[1024]; \
 		sprintf ( buffer, "Function %s %s (%s:%d)\n", __FUNCTION__,x,__FILE__,__LINE__ ); \
