@@ -2134,7 +2134,7 @@ BOOL WINAPI SetupDiGetClassImageListExW(
             list->MachineName = NULL;
         }
 
-        ClassImageListData->Reserved = (DWORD)list; /* FIXME: 64 bit portability issue */
+        ClassImageListData->Reserved = (ULONG_PTR)list;
         ret = TRUE;
 
 cleanup:
