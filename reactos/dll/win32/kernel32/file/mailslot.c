@@ -88,7 +88,17 @@ CreateMailslotW(LPCWSTR lpName,
 			      NULL,
 			      SecurityDescriptor);
 
-   DefaultTimeOut.QuadPart = lReadTimeout * 10000;
+   if (lReadTimeout == MAILSLOT_WAIT_FOREVER)
+   {
+      /* Set the max */
+      DefaultTimeOut.LowPart = 0;
+      DefaultTimeOut.HighPart = 0x80000000;
+   }
+   else
+   {
+      /* Convert to NT format */
+      DefaultTimeOut.QuadPart = UInt32x32To64(-10000, lReadTimeout);
+   }
 
    Status = NtCreateMailslotFile(&MailslotHandle,
 				 GENERIC_READ | SYNCHRONIZE | WRITE_DAC,
@@ -154,7 +164,11 @@ GetMailslotInfo(HANDLE hMailslot,
      }
    if (lpReadTimeout != NULL)
      {
-	*lpReadTimeout = (DWORD)(Buffer.ReadTimeout.QuadPart / -10000);
+	if (Buffer.ReadTimeout.LowPart == 0 &&
+	    Buffer.ReadTimeout.HighPart == 0x80000000)
+	    *lpReadTimeout = MAILSLOT_WAIT_FOREVER;
+	else
+	    *lpReadTimeout = (DWORD)(Buffer.ReadTimeout.QuadPart / -10000);
      }
 
    return(TRUE);
@@ -173,7 +187,17 @@ SetMailslotInfo(HANDLE hMailslot,
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
 
-   Timeout.QuadPart = lReadTimeout * -10000;
+   if (lReadTimeout == MAILSLOT_WAIT_FOREVER)
+   {
+      /* Set the max */
+      Timeout.LowPart = 0;
+      Timeout.HighPart = 0x80000000;
+   }
+   else
+   {
+      /* Convert to NT format */
+      Timeout.QuadPart = UInt32x32To64(-10000, lReadTimeout);
+   }
    Buffer.ReadTimeout = &Timeout;
 
    Status = NtSetInformationFile(hMailslot,
