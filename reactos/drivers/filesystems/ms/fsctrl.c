@@ -31,8 +31,8 @@ MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
    IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
+   Fcb = FileObject->FsContext;
    Ccb = FileObject->FsContext2;
-   Fcb = Ccb->Fcb;
 
    DPRINT1("Mailslot name: %wZ\n", &Fcb->Name);
 

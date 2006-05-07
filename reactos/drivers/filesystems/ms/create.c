@@ -79,7 +79,6 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
      }
 
    Fcb = current;
-   DPRINT1("Fcb: %p\n", Fcb);
 
    KeAcquireSpinLock(&Fcb->CcbListLock, &oldIrql);
    InsertTailList(&Fcb->CcbListHead, &Ccb->CcbListEntry);

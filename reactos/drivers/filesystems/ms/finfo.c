@@ -18,17 +18,14 @@
 /* FUNCTIONS *****************************************************************/
 
 static NTSTATUS
-MsfsQueryMailslotInformation(PMSFS_CCB Ccb,
+MsfsQueryMailslotInformation(PMSFS_FCB Fcb,
 			     PFILE_MAILSLOT_QUERY_INFORMATION Buffer,
 			     PULONG BufferLength)
 {
-   PMSFS_FCB Fcb;
    KIRQL oldIrql;
 
    if (*BufferLength < sizeof(FILE_MAILSLOT_QUERY_INFORMATION))
      return(STATUS_BUFFER_OVERFLOW);
-
-   Fcb = Ccb->Fcb;
 
    Buffer->MaximumMessageSize = Fcb->MaxMessageSize;
    Buffer->ReadTimeout = Fcb->TimeOut;
@@ -53,14 +50,14 @@ MsfsQueryMailslotInformation(PMSFS_CCB Ccb,
 
 
 static NTSTATUS
-MsfsSetMailslotInformation(PMSFS_CCB Ccb,
+MsfsSetMailslotInformation(PMSFS_FCB Fcb,
 			   PFILE_MAILSLOT_SET_INFORMATION Buffer,
 			   PULONG BufferLength)
 {
    if (*BufferLength < sizeof(FILE_MAILSLOT_SET_INFORMATION))
      return(STATUS_BUFFER_OVERFLOW);
 
-   Ccb->Fcb->TimeOut = *Buffer->ReadTimeout;
+   Fcb->TimeOut = *Buffer->ReadTimeout;
 
    return(STATUS_SUCCESS);
 }
@@ -86,13 +83,13 @@ MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
    FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
    DeviceExtension = DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
+   Fcb = (PMSFS_FCB)FileObject->FsContext;
    Ccb = (PMSFS_CCB)FileObject->FsContext2;
-   Fcb = Ccb->Fcb;
 
    DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
 
    /* querying information is not permitted on client side */
-   if (Ccb->Fcb->ServerCcb != Ccb)
+   if (Fcb->ServerCcb != Ccb)
      {
 	Status = STATUS_ACCESS_DENIED;
 
@@ -111,7 +108,7 @@ MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
    switch (FileInformationClass)
      {
      case FileMailslotQueryInformation:
-	Status = MsfsQueryMailslotInformation(Ccb,
+	Status = MsfsQueryMailslotInformation(Fcb,
 					      SystemBuffer,
 					      &BufferLength);
 	break;
@@ -150,13 +147,13 @@ MsfsSetInformation(PDEVICE_OBJECT DeviceObject,
    IoStack = IoGetCurrentIrpStackLocation (Irp);
    FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
    FileObject = IoStack->FileObject;
+   Fcb = (PMSFS_FCB)FileObject->FsContext;
    Ccb = (PMSFS_CCB)FileObject->FsContext2;
-   Fcb = Ccb->Fcb;
 
    DPRINT("Mailslot name: %wZ\n", &Fcb->Name);
 
    /* setting information is not permitted on client side */
-   if (Ccb->Fcb->ServerCcb != Ccb)
+   if (Fcb->ServerCcb != Ccb)
      {
 	Status = STATUS_ACCESS_DENIED;
 
@@ -178,7 +175,7 @@ MsfsSetInformation(PDEVICE_OBJECT DeviceObject,
    switch (FileInformationClass)
      {
      case FileMailslotSetInformation:
-	Status = MsfsSetMailslotInformation(Ccb,
+	Status = MsfsSetMailslotInformation(Fcb,
 					    SystemBuffer,
 					    &BufferLength);
 	break;
