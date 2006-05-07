@@ -676,12 +676,24 @@ GetErrorCodeFromCrCode(const IN CONFIGRET cr)
 {
   switch (cr)
   {
-    case CR_INVALID_MACHINENAME: return ERROR_INVALID_COMPUTERNAME;
-    case CR_OUT_OF_MEMORY: return ERROR_NOT_ENOUGH_MEMORY;
-    case CR_SUCCESS: return ERROR_SUCCESS;
-    default:
-      /* FIXME */
-      return ERROR_GEN_FAILURE;
+    case CR_ACCESS_DENIED:        return ERROR_ACCESS_DENIED;
+    case CR_BUFFER_SMALL:         return ERROR_INSUFFICIENT_BUFFER;
+    case CR_CALL_NOT_IMPLEMENTED: return ERROR_CALL_NOT_IMPLEMENTED;
+    case CR_FAILURE:              return ERROR_GEN_FAILURE;
+    case CR_INVALID_DATA:         return ERROR_INVALID_USER_BUFFER;
+    case CR_INVALID_DEVICE_ID:    return ERROR_INVALID_PARAMETER;
+    case CR_INVALID_MACHINENAME:  return ERROR_INVALID_COMPUTERNAME;
+    case CR_INVALID_DEVNODE:      return ERROR_INVALID_PARAMETER;
+    case CR_INVALID_FLAG:         return ERROR_INVALID_FLAGS;
+    case CR_INVALID_POINTER:      return ERROR_INVALID_PARAMETER;
+    case CR_INVALID_PROPERTY:     return ERROR_INVALID_PARAMETER;
+    case CR_NO_SUCH_DEVNODE:      return ERROR_FILE_NOT_FOUND;
+    case CR_NO_SUCH_REGISTRY_KEY: return ERROR_FILE_NOT_FOUND;
+    case CR_NO_SUCH_VALUE:        return ERROR_FILE_NOT_FOUND;
+    case CR_OUT_OF_MEMORY:        return ERROR_NOT_ENOUGH_MEMORY;
+    case CR_REGISTRY_ERROR:       return ERROR_GEN_FAILURE;
+    case CR_SUCCESS:              return ERROR_SUCCESS;
+    default:                      return ERROR_GEN_FAILURE;
   }
 
   /* Does not happen */
@@ -1403,7 +1415,7 @@ CreateDeviceInterface(
     }
     deviceInterface->DeviceInfo = deviceInfo;
     strcpyW(deviceInterface->SymbolicLink, SymbolicLink);
-    deviceInterface->Flags = 0; /* FIXME */
+    deviceInterface->Flags = 0; /* Flags will be updated later */
     memcpy(&deviceInterface->InterfaceClassGuid, pInterfaceGuid, sizeof(GUID));
 
     *pDeviceInterface = deviceInterface;
@@ -1616,11 +1628,19 @@ static LONG SETUP_CreateDevList(
     }
 }
 
+static BOOL DestroyDeviceInterface(struct DeviceInterface* deviceInterface)
+{
+    HeapFree(GetProcessHeap(), 0, deviceInterface);
+    return TRUE;
+}
+
 static LONG SETUP_CreateInterfaceList(
        struct DeviceInfoSet *list,
        PCWSTR MachineName,
        LPGUID InterfaceGuid,
-       PCWSTR DeviceInstanceW /* OPTIONAL */)
+       PCWSTR DeviceInstanceW /* OPTIONAL */,
+       BOOL OnlyPresentInterfaces
+       )
 {
     HKEY hInterfaceKey;      /* HKLM\SYSTEM\CurrentControlSet\Control\DeviceClasses\{GUID} */
     HKEY hDeviceInstanceKey; /* HKLM\SYSTEM\CurrentControlSet\Control\DeviceClasses\{GUID}\##?#{InstancePath} */
@@ -1630,7 +1650,8 @@ static LONG SETUP_CreateInterfaceList(
     HKEY hKey;               /* HKLM\SYSTEM\CurrentControlSet\Enum\{Instance\Path} */
     LONG rc;
     WCHAR KeyBuffer[max(MAX_PATH, MAX_GUID_STRING_LEN) + 1];
-    PWSTR InstancePath;
+    PWSTR pSymbolicLink = NULL;
+    PWSTR InstancePath = NULL;
     DWORD i, j;
     DWORD dwLength, dwInstancePathLength;
     DWORD dwRegType;
@@ -1638,10 +1659,16 @@ static LONG SETUP_CreateInterfaceList(
     GUID ClassGuid;
     struct DeviceInfoElement *deviceInfo;
 
+    hInterfaceKey = INVALID_HANDLE_VALUE;
+    hDeviceInstanceKey = INVALID_HANDLE_VALUE;
+
     /* Open registry key related to this interface */
     hInterfaceKey = SetupDiOpenClassRegKeyExW(InterfaceGuid, KEY_ENUMERATE_SUB_KEYS, DIOCR_INTERFACE, MachineName, NULL);
     if (hInterfaceKey == INVALID_HANDLE_VALUE)
-        return GetLastError();
+    {
+        rc = GetLastError();
+        goto cleanup;
+    }
 
     /* Enumerate sub keys of hInterfaceKey */
     i = 0;
@@ -1652,49 +1679,36 @@ static LONG SETUP_CreateInterfaceList(
         if (rc == ERROR_NO_MORE_ITEMS)
             break;
         if (rc != ERROR_SUCCESS)
-        {
-            RegCloseKey(hInterfaceKey);
-            return rc;
-        }
+            goto cleanup;
         i++;
 
         /* Open sub key */
+        if (hDeviceInstanceKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hDeviceInstanceKey);
         rc = RegOpenKeyExW(hInterfaceKey, KeyBuffer, 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &hDeviceInstanceKey);
         if (rc != ERROR_SUCCESS)
-        {
-            RegCloseKey(hInterfaceKey);
-            return rc;
-        }
+            goto cleanup;
 
         /* Read DeviceInstance */
         rc = RegQueryValueExW(hDeviceInstanceKey, DeviceInstance, NULL, &dwRegType, NULL, &dwInstancePathLength);
-        if (rc != ERROR_SUCCESS )
-        {
-            RegCloseKey(hDeviceInstanceKey);
-            RegCloseKey(hInterfaceKey);
-            return rc;
-        }
+        if (rc != ERROR_SUCCESS)
+            goto cleanup;
         if (dwRegType != REG_SZ)
         {
-            RegCloseKey(hDeviceInstanceKey);
-            RegCloseKey(hInterfaceKey);
-            return ERROR_GEN_FAILURE;
+            rc = ERROR_GEN_FAILURE;
+            goto cleanup;
         }
+        if (InstancePath != NULL)
+            HeapFree(GetProcessHeap(), 0, InstancePath);
         InstancePath = HeapAlloc(GetProcessHeap(), 0, dwInstancePathLength + sizeof(WCHAR));
         if (!InstancePath)
         {
-            RegCloseKey(hDeviceInstanceKey);
-            RegCloseKey(hInterfaceKey);
-            return ERROR_NOT_ENOUGH_MEMORY;
+            rc = ERROR_NOT_ENOUGH_MEMORY;
+            goto cleanup;
         }
         rc = RegQueryValueExW(hDeviceInstanceKey, DeviceInstance, NULL, NULL, (LPBYTE)InstancePath, &dwInstancePathLength);
         if (rc != ERROR_SUCCESS)
-        {
-            HeapFree(GetProcessHeap(), 0, InstancePath);
-            RegCloseKey(hDeviceInstanceKey);
-            RegCloseKey(hInterfaceKey);
-            return rc;
-        }
+            goto cleanup;
         InstancePath[dwInstancePathLength / sizeof(WCHAR)] = '\0';
         TRACE("DeviceInstance %s\n", debugstr_w(InstancePath));
 
@@ -1702,11 +1716,7 @@ static LONG SETUP_CreateInterfaceList(
         {
             /* Check if device enumerator is not the right one */
             if (strcmpW(DeviceInstanceW, InstancePath) != 0)
-            {
-                HeapFree(GetProcessHeap(), 0, InstancePath);
-                RegCloseKey(hDeviceInstanceKey);
                 continue;
-            }
         }
 
         /* Find class GUID associated to the device instance */
@@ -1717,12 +1727,7 @@ static LONG SETUP_CreateInterfaceList(
             0,
             &hEnumKey);
         if (rc != ERROR_SUCCESS)
-        {
-            HeapFree(GetProcessHeap(), 0, InstancePath);
-            RegCloseKey(hDeviceInstanceKey);
-            RegCloseKey(hInterfaceKey);
-            return rc;
-        }
+            goto cleanup;
         rc = RegOpenKeyExW(
             hEnumKey,
             InstancePath,
@@ -1731,46 +1736,29 @@ static LONG SETUP_CreateInterfaceList(
             &hKey);
         RegCloseKey(hEnumKey);
         if (rc != ERROR_SUCCESS)
-        {
-            HeapFree(GetProcessHeap(), 0, InstancePath);
-            RegCloseKey(hDeviceInstanceKey);
-            RegCloseKey(hInterfaceKey);
-            return rc;
-        }
+            goto cleanup;
         dwLength = sizeof(KeyBuffer) - sizeof(WCHAR);
         rc = RegQueryValueExW(hKey, ClassGUID, NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
         RegCloseKey(hKey);
         if (rc != ERROR_SUCCESS)
-        {
-            HeapFree(GetProcessHeap(), 0, InstancePath);
-            RegCloseKey(hDeviceInstanceKey);
-            RegCloseKey(hInterfaceKey);
-            return rc;
-        }
+            goto cleanup;
         KeyBuffer[dwLength / sizeof(WCHAR)] = '\0';
         KeyBuffer[37] = '\0'; /* Replace the } by a NULL character */
         if (UuidFromStringW(&KeyBuffer[1], &ClassGuid) != RPC_S_OK)
         {
-            HeapFree(GetProcessHeap(), 0, InstancePath);
-            RegCloseKey(hDeviceInstanceKey);
-            RegCloseKey(hInterfaceKey);
-            return ERROR_GEN_FAILURE;
+            rc = ERROR_GEN_FAILURE;
+            goto cleanup;
         }
         TRACE("ClassGUID %s\n", debugstr_guid(&ClassGuid));
 
         /* If current device doesn't match the list GUID (if any), skip this entry */
         if (!IsEqualIID(&list->ClassGuid, &GUID_NULL) && !IsEqualIID(&list->ClassGuid, &ClassGuid))
-        {
-            HeapFree(GetProcessHeap(), 0, InstancePath);
-            RegCloseKey(hDeviceInstanceKey);
             continue;
-        }
 
         /* Enumerate subkeys of hDeviceInstanceKey (ie "#ReferenceString" in IoRegisterDeviceInterface). Skip entries that don't start with '#' */
         j = 0;
         while (TRUE)
         {
-            LPWSTR pSymbolicLink;
             struct DeviceInterface *interfaceInfo;
 
             dwLength = sizeof(KeyBuffer) / sizeof(KeyBuffer[0]);
@@ -1778,88 +1766,73 @@ static LONG SETUP_CreateInterfaceList(
             if (rc == ERROR_NO_MORE_ITEMS)
                 break;
             if (rc != ERROR_SUCCESS)
-            {
-                HeapFree(GetProcessHeap(), 0, InstancePath);
-                RegCloseKey(hDeviceInstanceKey);
-                RegCloseKey(hInterfaceKey);
-                return rc;
-            }
+                goto cleanup;
             j++;
             if (KeyBuffer[0] != '#')
                 /* This entry doesn't represent an interesting entry */
                 continue;
 
             /* Open sub key */
+            if (hReferenceKey != INVALID_HANDLE_VALUE)
+                RegCloseKey(hReferenceKey);
             rc = RegOpenKeyExW(hDeviceInstanceKey, KeyBuffer, 0, KEY_QUERY_VALUE, &hReferenceKey);
             if (rc != ERROR_SUCCESS)
-            {
-                RegCloseKey(hDeviceInstanceKey);
-                RegCloseKey(hInterfaceKey);
-                return rc;
-            }
+                goto cleanup;
 
             /* Read SymbolicLink value */
             rc = RegQueryValueExW(hReferenceKey, SymbolicLink, NULL, &dwRegType, NULL, &dwLength);
             if (rc != ERROR_SUCCESS )
-            {
-                RegCloseKey(hReferenceKey);
-                RegCloseKey(hDeviceInstanceKey);
-                RegCloseKey(hInterfaceKey);
-                return rc;
-            }
+                goto cleanup;
             if (dwRegType != REG_SZ)
             {
-                RegCloseKey(hReferenceKey);
-                RegCloseKey(hDeviceInstanceKey);
-                RegCloseKey(hInterfaceKey);
-                return ERROR_GEN_FAILURE;
+                rc = ERROR_GEN_FAILURE;
+                goto cleanup;
             }
 
             /* We have found a device */
             /* Step 1. Create a device info element */
             if (!CreateDeviceInfoElement(list, InstancePath, &ClassGuid, &deviceInfo))
             {
-                RegCloseKey(hReferenceKey);
-                RegCloseKey(hDeviceInstanceKey);
-                RegCloseKey(hInterfaceKey);
-                return GetLastError();
+                rc = GetLastError();
+                goto cleanup;
             }
             TRACE("Adding device %s to list\n", debugstr_w(InstancePath));
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
             /* Step 2. Create an interface list for this element */
+            if (pSymbolicLink != NULL)
+                HeapFree(GetProcessHeap(), 0, pSymbolicLink);
             pSymbolicLink = HeapAlloc(GetProcessHeap(), 0, (dwLength + 1) * sizeof(WCHAR));
             if (!pSymbolicLink)
             {
-                RegCloseKey(hReferenceKey);
-                RegCloseKey(hDeviceInstanceKey);
-                RegCloseKey(hInterfaceKey);
-                return ERROR_NOT_ENOUGH_MEMORY;
+                rc = ERROR_NOT_ENOUGH_MEMORY;
+                goto cleanup;
             }
             rc = RegQueryValueExW(hReferenceKey, SymbolicLink, NULL, NULL, (LPBYTE)pSymbolicLink, &dwLength);
             pSymbolicLink[dwLength / sizeof(WCHAR)] = '\0';
             RegCloseKey(hReferenceKey);
             if (rc != ERROR_SUCCESS)
-            {
-                HeapFree(GetProcessHeap(), 0, pSymbolicLink);
-                RegCloseKey(hDeviceInstanceKey);
-                RegCloseKey(hInterfaceKey);
-                return rc;
-            }
+                goto cleanup;
             if (!CreateDeviceInterface(deviceInfo, pSymbolicLink, InterfaceGuid, &interfaceInfo))
             {
-                HeapFree(GetProcessHeap(), 0, pSymbolicLink);
-                RegCloseKey(hDeviceInstanceKey);
-                RegCloseKey(hInterfaceKey);
-                return GetLastError();
+                rc = GetLastError();
+                goto cleanup;
             }
 
             /* Step 3. Update flags */
             if (KeyBuffer[1] == '\0')
                 interfaceInfo->Flags |= SPINT_DEFAULT;
             rc = RegOpenKeyExW(hReferenceKey, Control, 0, KEY_QUERY_VALUE, &hControlKey);
-            if (!rc)
-                interfaceInfo->Flags |= SPINT_REMOVED;
+            if (rc != ERROR_SUCCESS)
+            {
+                if (OnlyPresentInterfaces)
+                {
+                    DestroyDeviceInterface(interfaceInfo);
+                    continue;
+                }
+                else
+                    interfaceInfo->Flags |= SPINT_REMOVED;
+            }
             else
             {
                 dwLength = sizeof(DWORD);
@@ -1870,13 +1843,23 @@ static LONG SETUP_CreateInterfaceList(
             }
 
             TRACE("Adding interface %s to list\n", debugstr_w(pSymbolicLink));
-            HeapFree(GetProcessHeap(), 0, pSymbolicLink);
             InsertTailList(&deviceInfo->InterfaceListHead, &interfaceInfo->ListEntry);
         }
-        RegCloseKey(hDeviceInstanceKey);
     }
-    RegCloseKey(hInterfaceKey);
-    return ERROR_SUCCESS;
+    rc = ERROR_SUCCESS;
+
+cleanup:
+    if (hReferenceKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hReferenceKey);
+    if (hDeviceInstanceKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hDeviceInstanceKey);
+    if (hInterfaceKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hInterfaceKey);
+    if (InstancePath != NULL)
+        HeapFree(GetProcessHeap(), 0, InstancePath);
+    if (pSymbolicLink != NULL)
+        HeapFree(GetProcessHeap(), 0, pSymbolicLink);
+    return rc;
 }
 
 /***********************************************************************
@@ -1925,8 +1908,6 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
     else
         pClassGuid = &list->ClassGuid;
 
-    if (flags & DIGCF_PRESENT)
-        FIXME(": flag DIGCF_PRESENT ignored\n");
     if (flags & DIGCF_PROFILE)
         FIXME(": flag DIGCF_PROFILE ignored\n");
 
@@ -1952,7 +1933,7 @@ HDEVINFO WINAPI SetupDiGetClassDevsExW(
             return INVALID_HANDLE_VALUE;
         }
 
-        rc = SETUP_CreateInterfaceList(list, machine, (LPGUID)class, enumstr);
+        rc = SETUP_CreateInterfaceList(list, machine, (LPGUID)class, enumstr, flags & DIGCF_PRESENT);
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
@@ -2384,18 +2365,21 @@ static BOOL DestroyDeviceInfoElement(struct DeviceInfoElement* deviceInfo)
 {
     PLIST_ENTRY ListEntry;
     struct DriverInfoElement *driverInfo;
+    struct DeviceInterface *deviceInterface;
 
     while (!IsListEmpty(&deviceInfo->DriverListHead))
     {
         ListEntry = RemoveHeadList(&deviceInfo->DriverListHead);
-        driverInfo = (struct DriverInfoElement *)ListEntry;
+        driverInfo = CONTAINING_RECORD(ListEntry, struct DriverInfoElement, ListEntry);
         if (!DestroyDriverInfoElement(driverInfo))
             return FALSE;
     }
     while (!IsListEmpty(&deviceInfo->InterfaceListHead))
     {
         ListEntry = RemoveHeadList(&deviceInfo->InterfaceListHead);
-        HeapFree(GetProcessHeap(), 0, ListEntry);
+        deviceInterface = CONTAINING_RECORD(ListEntry, struct DeviceInterface, ListEntry);
+        if (!DestroyDeviceInterface(deviceInterface))
+            return FALSE;
     }
     DestroyClassInstallParams(&deviceInfo->ClassInstallParams);
     HeapFree(GetProcessHeap(), 0, deviceInfo);
