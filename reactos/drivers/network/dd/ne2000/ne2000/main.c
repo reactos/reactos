@@ -23,7 +23,7 @@ DriverEntry(
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-ULONG DebugTraceLevel = MIN_TRACE;
+ULONG DebugTraceLevel = 0;
 
 #endif /* DBG */
 
@@ -258,10 +258,10 @@ static NDIS_STATUS STDCALL MiniportInitialize(
 
      /* find the nic */
     if (!NICCheck(Adapter)) {
-        NDIS_DbgPrint(MID_TRACE, ("No adapter found at (0x%X).\n", Adapter->IOBase));
+        NDIS_DbgPrint(MID_TRACE, ("No adapter found at (0x%X).\n", Adapter->IoBaseAddress));
         return NDIS_STATUS_ADAPTER_NOT_FOUND;
     } else
-        NDIS_DbgPrint(MID_TRACE, ("Adapter found at (0x%X).\n", Adapter->IOBase));
+        NDIS_DbgPrint(MID_TRACE, ("Adapter found at (0x%X).\n", Adapter->IoBaseAddress));
 
 
     NdisMSetAttributes(
