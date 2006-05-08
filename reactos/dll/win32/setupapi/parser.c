@@ -1998,11 +1998,12 @@ SetupGetInfFileListW(
 
     /* Allocate memory for file filter */
     if (DirectoryPath != NULL)
-        /* "DirectoryPath\*.inf" form */
-        len = strlenW(DirectoryPath) + 1 + strlenW(InfFileSpecification) + 1;
+        /* "DirectoryPath\" form */
+        len = strlenW(DirectoryPath) + 1 + 1;
     else
-        /* "%WINDIR%\Inf\*.inf" form */
-        len = MAX_PATH + 1 + strlenW(InfDirectory) + strlenW(InfFileSpecification) + 1;
+        /* "%WINDIR%\Inf\" form */
+        len = MAX_PATH + 1 + strlenW(InfDirectory) + 1;
+    len += MAX_PATH; /* To contain file name or "*.inf" string */
     pFullFileName = MyMalloc(len * sizeof(WCHAR));
     if (pFullFileName == NULL)
     {
@@ -2014,7 +2015,7 @@ SetupGetInfFileListW(
     if (DirectoryPath)
     {
         strcpyW(pFullFileName, DirectoryPath);
-        if (pFullFileName[strlenW(pFullFileName) - 1] != '\\')
+        if (*pFullFileName && pFullFileName[strlenW(pFullFileName) - 1] != '\\')
             strcatW(pFullFileName, BackSlash);
     }
     else
