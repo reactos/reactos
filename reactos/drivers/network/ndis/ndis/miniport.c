@@ -507,28 +507,26 @@ MiniLocateDevice(
 
   KeAcquireSpinLock(&AdapterListLock, &OldIrql);
     {
-      do
+      CurrentEntry = AdapterListHead.Flink;
+	
+      while (CurrentEntry != &AdapterListHead)
         {
-          CurrentEntry = AdapterListHead.Flink;
+	  Adapter = CONTAINING_RECORD(CurrentEntry, LOGICAL_ADAPTER, ListEntry);
 
-          while (CurrentEntry != &AdapterListHead)
-            {
-              Adapter = CONTAINING_RECORD(CurrentEntry, LOGICAL_ADAPTER, ListEntry);
+	  ASSERT(Adapter);
 
-              ASSERT(Adapter);
-
-              NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", AdapterName));
-              NDIS_DbgPrint(DEBUG_MINIPORT, ("DeviceName = %wZ\n", &Adapter->NdisMiniportBlock.MiniportName));
-
-              if (RtlCompareUnicodeString(AdapterName, &Adapter->NdisMiniportBlock.MiniportName, TRUE) == 0)
-                {
-                  break;
-                }
-
-              Adapter = NULL;
-              CurrentEntry = CurrentEntry->Flink;
-            }
-        } while (0);
+	  NDIS_DbgPrint(DEBUG_MINIPORT, ("Examining adapter 0x%lx\n", Adapter));
+	  NDIS_DbgPrint(DEBUG_MINIPORT, ("AdapterName = %wZ\n", AdapterName));
+	  NDIS_DbgPrint(DEBUG_MINIPORT, ("DeviceName = %wZ\n", &Adapter->NdisMiniportBlock.MiniportName));
+	    
+	  if (RtlCompareUnicodeString(AdapterName, &Adapter->NdisMiniportBlock.MiniportName, TRUE) == 0)
+	    {
+	      break;
+	    }
+	    
+	  Adapter = NULL;
+	  CurrentEntry = CurrentEntry->Flink;
+        }
     }
   KeReleaseSpinLock(&AdapterListLock, OldIrql);
 
@@ -1295,6 +1293,13 @@ NdisIPnPStartDevice(
    * Prepare wrapper context used by HW and configuration routines.
    */
 
+  NDIS_DbgPrint(DEBUG_MINIPORT, ("Start Device %wZ\n", &Adapter->NdisMiniportBlock.MiniportName));
+
+  NDIS_DbgPrint(MAX_TRACE, ("Inserting adapter 0x%x into adapter list\n", Adapter));
+
+  /* Put adapter in global adapter list */
+  ExInterlockedInsertTailList(&AdapterListHead, &Adapter->ListEntry, &AdapterListLock);
+
   Status = IoOpenDeviceRegistryKey(
     Adapter->NdisMiniportBlock.PhysicalDeviceObject, PLUGPLAY_REGKEY_DRIVER,
     KEY_ALL_ACCESS, &WrapperContext.RegistryHandle);
@@ -1475,9 +1480,6 @@ NdisIPnPStartDevice(
 
   /* Put adapter in adapter list for this miniport */
   ExInterlockedInsertTailList(&Adapter->NdisMiniportBlock.DriverHandle->DeviceList, &Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
-
-  /* Put adapter in global adapter list */
-  ExInterlockedInsertTailList(&AdapterListHead, &Adapter->ListEntry, &AdapterListLock);
 
   return STATUS_SUCCESS;
 }
