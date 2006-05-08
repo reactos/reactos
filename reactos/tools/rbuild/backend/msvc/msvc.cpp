@@ -344,7 +344,6 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 		out.push_back ( cfgs[i] + "\\" + module.name + ".lib" );
 		out.push_back ( cfgs[i] + "\\" + module.name + ".exp" );
 		out.push_back ( cfgs[i] + "\\" + module.name + ".ilk" );
-		out.push_back ( cfgs[i] + "\\" + "(InputName).obj" ); //MSVC2003 build bug 
 	}
 }
 

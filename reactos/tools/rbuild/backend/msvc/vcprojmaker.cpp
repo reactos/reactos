@@ -517,13 +517,13 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					if (source_file.find(".idl") != string::npos)
 					{
 						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
-						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\(InputName).obj\"/>\r\n" );
+						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n" );
 					}
 					else if ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's'))
 					{
 						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
-						fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; %s /D__ASM__ | as -o &quot;$(OutDir)\\(InputName).obj&quot;\"\r\n",include_string.c_str() );
-						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\(InputName).obj\"/>\r\n" );
+						fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; %s /D__ASM__ | as -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n",include_string.c_str() );
+						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n" );
 					}
 					fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
 				}
