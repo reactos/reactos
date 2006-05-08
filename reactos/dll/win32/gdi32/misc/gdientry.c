@@ -144,6 +144,7 @@ BOOL
 STDCALL 
 DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
 {
+  BOOL status;                                               
   /* if pDirectDrawGlobal->hDD == NULL and pDirectDrawGlobalInternal->hDD == NULL
      return false */
 
@@ -155,8 +156,14 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
      }
     return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobalInternal->hDD); 
   }
-
-  return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
+  
+  status = NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
+  if (status == TRUE) && (pDirectDrawGlobalInternal->hDD != NULL)
+  {
+     pDirectDrawGlobalInternal->hDD = NULL;        
+  }
+     
+  return status; 	
 }
 
 /*
