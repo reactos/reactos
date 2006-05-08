@@ -1505,7 +1505,12 @@ NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
         (PIP_SET_ADDRESS)Irp->AssociatedIrp.SystemBuffer;
     IF_LIST_ITER(IF);
 
+    TI_DbgPrint(MID_TRACE,("Setting IP Address for adapter %d\n", 
+			   IpAddrChange->NteIndex));
+
     ForEachInterface(IF) {
+	TI_DbgPrint(MID_TRACE,("Looking at adapter %d\n", IF->Index));
+
         if( IF->Unicast.Address.IPv4Address == IpAddrChange->Address ) {
             Status = STATUS_DUPLICATE_OBJECTID;
             break;

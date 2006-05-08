@@ -1331,6 +1331,7 @@ NdisIPnPStartDevice(
         ExAllocatePool(PagedPool, ResourceListSize);
       if (Adapter->NdisMiniportBlock.AllocatedResources == NULL)
         {
+	  ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
           return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -1340,6 +1341,7 @@ NdisIPnPStartDevice(
         {
           ExFreePool(Adapter->NdisMiniportBlock.AllocatedResources);
           Adapter->NdisMiniportBlock.AllocatedResources = NULL;
+	  ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
           return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -1420,6 +1422,7 @@ NdisIPnPStartDevice(
       SelectedMediumIndex >= MEDIA_ARRAY_SIZE)
     {
       NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
+      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
       return (NTSTATUS)NdisStatus;
     }
 
@@ -1461,6 +1464,7 @@ NdisIPnPStartDevice(
         NDIS_DbgPrint(MIN_TRACE, ("error: unsupported media\n"));
         ASSERT(FALSE);
 /* FIXME - KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql); */
+	ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -1472,6 +1476,7 @@ NdisIPnPStartDevice(
           ExFreePool(Adapter->LookaheadBuffer);
           Adapter->LookaheadBuffer = NULL;
         }
+      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
       return (NTSTATUS)NdisStatus;
     }
 

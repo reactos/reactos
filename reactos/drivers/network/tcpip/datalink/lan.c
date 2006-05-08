@@ -906,7 +906,7 @@ VOID GetName( PUNICODE_STRING RegistryKey,
     AppendUnicodeString( OutName, &PartialRegistryKey, FALSE );
 }
 
-VOID BindAdapter(
+BOOLEAN BindAdapter(
     PLAN_ADAPTER Adapter,
     PNDIS_STRING RegistryPath)
 /*
@@ -937,7 +937,7 @@ VOID BindAdapter(
                           sizeof(ULONG));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(DEBUG_DATALINK, ("Could not set lookahead buffer size (0x%X).\n", NdisStatus));
-        return;
+        return FALSE;
     }
 
     /* Bind the adapter to IP layer */
@@ -953,7 +953,7 @@ VOID BindAdapter(
 
     if (!IF) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return;
+        return FALSE;
     }
 
     /*
@@ -973,6 +973,9 @@ VOID BindAdapter(
 	Status = FindDeviceDescForAdapter( &IF->Name, &IF->Description );
         TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
                     &IF->Description));
+    } else {
+	IPDestroyInterface( IF );
+	return FALSE;
     }
 
     DefaultMask.Type = IP_ADDRESS_V4;
@@ -1010,11 +1013,12 @@ VOID BindAdapter(
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
         TI_DbgPrint(DEBUG_DATALINK, ("Could not set packet filter (0x%X).\n", NdisStatus));
         IPDestroyInterface(IF);
-        return;
+        return FALSE;
     }
 
     Adapter->Context = IF;
     Adapter->State = LAN_STATE_STARTED;
+    return TRUE;
 }
 
 
@@ -1097,6 +1101,7 @@ NDIS_STATUS LANRegisterAdapter(
     if (NdisStatus == NDIS_STATUS_PENDING)
         KeWaitForSingleObject(&IF->Event, UserRequest, KernelMode, FALSE, NULL);
     else if (NdisStatus != NDIS_STATUS_SUCCESS) {
+	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ\n", AdapterName));
 	exFreePool(IF);
         return NdisStatus;
     }
@@ -1133,6 +1138,7 @@ NDIS_STATUS LANRegisterAdapter(
                           &IF->MTU,
                           sizeof(UINT));
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
+	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ (NDISCall)\n", AdapterName));
         exFreePool(IF);
         return NdisStatus;
     }
@@ -1193,7 +1199,11 @@ NDIS_STATUS LANRegisterAdapter(
                                 &AdapterListLock);
 
     /* Bind adapter to IP layer */
-    BindAdapter(IF, RegistryPath);
+    if( !BindAdapter(IF, RegistryPath) ) {
+	TI_DbgPrint(DEBUG_DATALINK,("denying adapter %wZ (BindAdapter)\n", AdapterName));
+	exFreePool(IF);
+	return NDIS_STATUS_NOT_ACCEPTED;
+    }
 
     TI_DbgPrint(DEBUG_DATALINK, ("Leaving.\n"));
 

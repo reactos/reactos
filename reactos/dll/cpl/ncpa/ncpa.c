@@ -322,22 +322,24 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				if(_tcscmp(tpszTCPIPClsID,tpszClsIDText)==0)
 				{
-					IP_ADAPTER_INFO Adapters[64];
+				        IP_ADAPTER_INFO *Adapters = LocalAlloc( LMEM_FIXED, sizeof(IP_ADAPTER_INFO) * 64 );
 					IP_ADAPTER_INFO *pAdapter;
 					TCHAR *tpszCfgInstanceID;
-					DWORD dwSize = sizeof(Adapters);
-					memset(&Adapters,0x00,sizeof(Adapters));
+					DWORD dwSize = sizeof(*Adapters) * 64;
+					memset(Adapters,0x00,dwSize);
 					if(GetAdaptersInfo(Adapters,&dwSize)!=ERROR_SUCCESS)
-						break;;
+						break;
 					pAdapter = Adapters;
 					tpszCfgInstanceID = (TCHAR*)pPage->lParam;
 					while(pAdapter)
 					{
-						TCHAR tpszAdatperName[MAX_PATH];
-						swprintf(tpszAdatperName,L"%S",pAdapter->AdapterName);
-						DPRINT("IPHLPAPI returned: %S\n", tpszAdatperName);
-						if(_tcscmp(tpszAdatperName,tpszCfgInstanceID)==0)
+					        TCHAR tpszAdatperName[MAX_PATH];
+					        swprintf(tpszAdatperName,L"%S",pAdapter->AdapterName);
+					        DPRINT("IPHLPAPI returned: %S\n", tpszAdatperName);
+					        if(_tcscmp(tpszAdatperName,tpszCfgInstanceID)==0)
 						{
+						        memcpy(Adapters,pAdapter,sizeof(*pAdapter));
+							pAdapter = Adapters;
 							DisplayTCPIPProperties(hwndDlg,pAdapter);
 							break;
 						} else

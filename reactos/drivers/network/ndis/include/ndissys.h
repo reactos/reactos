@@ -500,6 +500,13 @@ typedef struct _NDIS40_MINIPORT_CHARACTERISTICS {
 #define MAX(value1, value2) \
     ((value1 > value2)? value1 : value2)
 
+#define ExInterlockedRemoveEntryList(_List,_Lock) \
+ { KIRQL OldIrql; \
+   KeAcquireSpinLock(_Lock, &OldIrql); \
+   RemoveEntryList(_List); \
+   KeReleaseSpinLock(_Lock, OldIrql); \
+ }
+
 #endif /* __NDISSYS_H */
 
 /* EOF */

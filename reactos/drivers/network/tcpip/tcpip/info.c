@@ -60,17 +60,23 @@ VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface ) {
     KIRQL OldIrql;
     UINT i;
 
+    TI_DbgPrint(DEBUG_INFO,("Removing TDI entry 0x%x\n", Interface));
+
     TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
 
     /* Remove entities that have this interface as context
      * In the future, this might include AT_ENTITY types, too
      */
     for( i = 0; i < EntityCount; i++ ) {
+	TI_DbgPrint(DEBUG_INFO,("--> examining TDI entry 0x%x\n", EntityList[i].context));
 	if( EntityList[i].context == Interface ) {
-	    if( i != EntityCount-1 )
+	    if( i != EntityCount-1 ) {
 		memcpy( &EntityList[i],
 			&EntityList[--EntityCount],
 			sizeof(EntityList[i]) );
+	    } else {
+		EntityCount--;
+	    }
 	}
     }
 
