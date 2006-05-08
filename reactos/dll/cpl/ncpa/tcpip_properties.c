@@ -1,29 +1,10 @@
 /*
- *  ReactOS
- *  Copyright (C) 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS Network Control Panel
- * FILE:            lib/cpl/system/tcpip_properties.c
- * PURPOSE:         ReactOS Network Control Panel
- * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
- * UPDATE HISTORY:
- *      08-15-2004  Created
+ * PROJECT:     ReactOS Network Control Panel
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/cpl/system/tcpip_properties.c
+ * PURPOSE:     ReactOS Network Control Panel
+ * COPYRIGHT:   Copyright 2004 Gero Kuehn (reactos.filter@gkware.com)
+ *              Copyright 2006 Ge van Geldorp <gvg@reactos.org>
  */
 
 #include <stdlib.h>
@@ -49,263 +30,368 @@
 
 #endif
 
-
 #include "resource.h"
 #include "ncpa.h"
 
-extern void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPARAM lParam);
+#define NDEBUG
+#include <debug.h>
 
-void EnableDHCP( HWND hwndDlg, BOOL Enabled ) {
-    CheckDlgButton(hwndDlg,IDC_USEDHCP,Enabled ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwndDlg,IDC_NODHCP,Enabled ? BST_UNCHECKED : BST_CHECKED);
+typedef struct _TCPIP_PROPERTIES_DATA {
+    DWORD AdapterIndex;
+    char *AdapterName;
+    BOOL DhcpEnabled;
+    DWORD IpAddress;
+    DWORD SubnetMask;
+    DWORD Gateway;
+    DWORD Dns1;
+    DWORD Dns2;
+    BOOL OldDhcpEnabled;
+    DWORD OldIpAddress;
+    DWORD OldSubnetMask;
+    DWORD OldGateway;
+    DWORD OldDns1;
+    DWORD OldDns2;
+} TCPIP_PROPERTIES_DATA, *PTCPIP_PROPERTIES_DATA;
+
+void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
+DWORD APIENTRY DhcpNotifyConfigChange(LPWSTR ServerName, LPWSTR AdapterName,
+                                      BOOL NewIpAddress, DWORD IpIndex,
+                                      DWORD IpAddress, DWORD SubnetMask,
+                                      int DhcpAction);
+
+
+static void
+ManualDNS(HWND Dlg, BOOL Enabled) {
+    CheckDlgButton(Dlg, IDC_FIXEDDNS,
+                   Enabled ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(Dlg, IDC_AUTODNS,
+                   Enabled ? BST_UNCHECKED : BST_CHECKED);
+    EnableWindow(GetDlgItem(Dlg, IDC_DNS1), Enabled);
+    EnableWindow(GetDlgItem(Dlg, IDC_DNS2), Enabled);
+    if (! Enabled) {
+        SendDlgItemMessage(Dlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
+        SendDlgItemMessage(Dlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
+    }
 }
 
-void ManualDNS( HWND hwndDlg, BOOL Enabled ) {
-    CheckDlgButton(hwndDlg,IDC_FIXEDDNS,Enabled ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(hwndDlg,IDC_AUTODNS,Enabled ? BST_UNCHECKED : BST_CHECKED);
-    EnableWindow(GetDlgItem(hwndDlg,IDC_DNS1),Enabled);
-    EnableWindow(GetDlgItem(hwndDlg,IDC_DNS2),Enabled);
+static void
+EnableDHCP(HWND Dlg, BOOL Enabled) {
+    CheckDlgButton(Dlg, IDC_USEDHCP, Enabled ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(Dlg, IDC_NODHCP, Enabled ? BST_UNCHECKED : BST_CHECKED);
+    EnableWindow(GetDlgItem(Dlg, IDC_IPADDR), ! Enabled);
+    EnableWindow(GetDlgItem(Dlg, IDC_SUBNETMASK), ! Enabled);
+    EnableWindow(GetDlgItem(Dlg, IDC_DEFGATEWAY), ! Enabled);
+    EnableWindow(GetDlgItem(Dlg, IDC_AUTODNS), Enabled);
+    if (Enabled) {
+        SendDlgItemMessage(Dlg, IDC_IPADDR, IPM_CLEARADDRESS, 0, 0);
+        SendDlgItemMessage(Dlg, IDC_SUBNETMASK, IPM_CLEARADDRESS, 0, 0);
+        SendDlgItemMessage(Dlg, IDC_DEFGATEWAY, IPM_CLEARADDRESS, 0, 0);
+    } else {
+        ManualDNS(Dlg, TRUE);
+    }
 }
 
-BOOL GetAddressFromField( HWND hwndDlg, UINT CtlId, 
-                          DWORD *dwIPAddr,
-                          const char **AddressString ) {
-    LRESULT lResult;
-    struct in_addr inIPAddr;
+static void
+ShowError(HWND Parent, UINT MsgId)
+{
+    WCHAR Error[32], Msg[64];
 
-    *AddressString = NULL;
+    if (0 == LoadStringW((HINSTANCE) GetWindowLongPtrW(Parent, GWLP_HINSTANCE),
+                         IDS_ERROR, Error, sizeof(Error) / sizeof(Error[0]))) {
+        wcscpy(Error, L"Error");
+    }
+    if (0 == LoadStringW((HINSTANCE) GetWindowLongPtrW(Parent, GWLP_HINSTANCE),
+                         MsgId, Msg, sizeof(Msg) / sizeof(Msg[0]))) {
+        wcscpy(Msg, L"Unknown error");
+    }
+    MessageBoxW(Parent, Msg, Error, MB_OK | MB_ICONSTOP);
+}
 
-    lResult = SendMessage(GetDlgItem(hwndDlg, IDC_IPADDR), IPM_GETADDRESS, 0, 
-                          (ULONG_PTR)dwIPAddr);
-    if( lResult != 4 ) return FALSE;
-    
-    *dwIPAddr = htonl(*dwIPAddr);
-    inIPAddr.s_addr = *dwIPAddr;
-    *AddressString = inet_ntoa(inIPAddr);
-    if( !*AddressString ) return FALSE;
+static BOOL
+ValidateAndStore(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData)
+{
+    DWORD IpAddress;
+
+    DlgData->DhcpEnabled = (BST_CHECKED ==
+                            IsDlgButtonChecked(Dlg, IDC_USEDHCP));
+    if (! DlgData->DhcpEnabled) {
+        if (4 != SendMessageW(GetDlgItem(Dlg, IDC_IPADDR), IPM_GETADDRESS,
+                              0, (LPARAM) &IpAddress)) {
+            ShowError(Dlg, IDS_ENTER_VALID_IPADDRESS);
+            SetFocus(GetDlgItem(Dlg, IDC_IPADDR));
+            return FALSE;
+        }
+        DlgData->IpAddress = htonl(IpAddress);
+        if (4 != SendMessageW(GetDlgItem(Dlg, IDC_SUBNETMASK), IPM_GETADDRESS,
+                              0, (LPARAM) &IpAddress)) {
+            ShowError(Dlg, IDS_ENTER_VALID_SUBNET);
+            SetFocus(GetDlgItem(Dlg, IDC_SUBNETMASK));
+            return FALSE;
+        }
+        DlgData->SubnetMask = htonl(IpAddress);
+        if (4 != SendMessageW(GetDlgItem(Dlg, IDC_DEFGATEWAY), IPM_GETADDRESS,
+                              0, (LPARAM) &IpAddress)) {
+            DlgData->Gateway = INADDR_NONE;
+        } else {
+            DlgData->Gateway = htonl(IpAddress);
+        }
+        ASSERT(BST_CHECKED == IsDlgButtonChecked(Dlg, IDC_FIXEDDNS));
+    } else {
+        DlgData->IpAddress = INADDR_NONE;
+        DlgData->SubnetMask = INADDR_NONE;
+        DlgData->Gateway = INADDR_NONE;
+    }
+
+    if (BST_CHECKED == IsDlgButtonChecked(Dlg, IDC_FIXEDDNS)) {
+        if (4 != SendMessageW(GetDlgItem(Dlg, IDC_DNS1), IPM_GETADDRESS,
+                              0, (LPARAM) &IpAddress)) {
+            DlgData->Dns1 = INADDR_NONE;
+        } else {
+            DlgData->Dns1 = htonl(IpAddress);
+        }
+        if (4 != SendMessageW(GetDlgItem(Dlg, IDC_DNS2), IPM_GETADDRESS,
+                              0, (LPARAM) &IpAddress)) {
+            DlgData->Dns2 = INADDR_NONE;
+        } else {
+            DlgData->Dns2 = htonl(IpAddress);
+        }
+    } else {
+        DlgData->Dns1 = INADDR_NONE;
+        DlgData->Dns2 = INADDR_NONE;
+    }
 
     return TRUE;
 }
 
-
-
-BOOL InternTCPIPSettings( HWND hwndDlg ) {
-    PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);
-    IP_ADAPTER_INFO *pInfo = NULL;
-    TCHAR pszRegKey[MAX_PATH];
-    HKEY hKey = NULL;
-    DWORD IpAddress, NetMask, Gateway, Disposition;
-    const char *AddressString;
-    BOOL RetVal = FALSE;
-    BOOL DhcpEnabled = FALSE;
-    MIB_IPFORWARDROW RowToAdd = { 0 };
-
-    DbgPrint("TCPIP_PROPERTIES: InternTCPIPSettings\n");
-
-    if(pPage)
-        pInfo = (IP_ADAPTER_INFO *)pPage->lParam;
+static BOOL
+InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
+    BOOL Changed;
+    BOOL IpChanged;
+    int DhcpAction;
+    LPWSTR AdapterName;
     
-    DbgPrint("TCPIP_PROPERTIES: pPage: 0x%x pInfo: 0x%x\n", pPage, pInfo);
-
-    if( !pPage || !pInfo ) goto cleanup;
-
-    DbgPrint("TCPIP_PROPERTIES: AdapterName: %s\n", pInfo->AdapterName);
-
-    _stprintf(pszRegKey,_T("SYSTEM\\CurrentControlSet\\Services\\TCPIP\\Parameters\\Interfaces\\%S"),pInfo->AdapterName);
-    if(RegCreateKeyEx
-       (HKEY_LOCAL_MACHINE,pszRegKey,0,NULL,
-	REG_OPTION_NON_VOLATILE,KEY_ALL_ACCESS,NULL,&hKey,&Disposition)!=ERROR_SUCCESS) {
-	DbgPrint("TCPIP_PROPERTIES: Could not open HKLM\\%S\n", pszRegKey);
-	goto cleanup;
+    if (! ValidateAndStore(Dlg, DlgData)) {
+        /* Should never happen, we should have validated at PSN_KILLACTIVE */
+        ASSERT(FALSE);
+        return FALSE;
     }
 
-    if( !GetAddressFromField
-        ( hwndDlg, IDC_IPADDR, &IpAddress, &AddressString ) ||
-        RegSetValueEx
-        ( hKey, _T("IPAddress"), 0, REG_SZ, AddressString, 
-          strlen(AddressString) ) != ERROR_SUCCESS )
-        goto cleanup;
-
-    DbgPrint("TCPIP_PROPERTIES: IpAddress: %x\n", IpAddress);
-
-    if( !GetAddressFromField
-        ( hwndDlg, IDC_SUBNETMASK, &NetMask, &AddressString ) ||
-        RegSetValueEx
-        ( hKey, _T("SubnetMask"), 0, REG_SZ, AddressString, 
-          strlen(AddressString) ) != ERROR_SUCCESS )
-        goto cleanup;
-
-    DbgPrint("TCPIP_PROPERTIES: NetMask: %x\n", NetMask);
-
-    if( !GetAddressFromField
-        ( hwndDlg, IDC_DEFGATEWAY, &Gateway, &AddressString ) ||
-        RegSetValueEx
-        ( hKey, _T("DefaultGateway"), 0, REG_SZ, AddressString, 
-          strlen(AddressString) ) != ERROR_SUCCESS )
-        goto cleanup;
-
-    if( DhcpEnabled ) {
-	DbgPrint("TCPIP_PROPERTIES: Lease address\n");
-        DhcpLeaseIpAddress( pInfo->Index );
+    Changed = FALSE;
+    if (DlgData->DhcpEnabled) {
+        Changed = ! DlgData->OldDhcpEnabled;
+        IpChanged = FALSE;
+        DhcpAction = 1;
     } else {
-	/* If not on DHCP then add a default gateway, assuming one was specified */
-	DbgPrint("TCPIP_PROPERTIES: Adding gateway entry\n");
-        DhcpReleaseIpAddressLease( pInfo->Index );
-        DhcpStaticRefreshParams( pInfo->Index, IpAddress, NetMask );
-
-        RowToAdd.dwForwardMask = 0;
-        RowToAdd.dwForwardMetric1 = 1;
-        RowToAdd.dwForwardNextHop = Gateway;
-
-        CreateIpForwardEntry( &RowToAdd );
+        Changed = DlgData->OldDhcpEnabled ||
+                  DlgData->IpAddress != DlgData->OldIpAddress ||
+                  DlgData->SubnetMask != DlgData->OldSubnetMask;
+        IpChanged = DlgData->OldDhcpEnabled ||
+                    DlgData->IpAddress != DlgData->OldIpAddress;
+        DhcpAction = 2;
     }
 
-    DbgPrint("TCPIP_PROPERTIES: Done changing settings\n");
+    if (Changed) {
+        AdapterName = HeapAlloc(GetProcessHeap(), 0,
+                                (strlen(DlgData->AdapterName) + 1) *
+                                sizeof(WCHAR));
+        if (NULL == AdapterName) {
+            ShowError(Dlg, IDS_OUT_OF_MEMORY);
+            return FALSE;
+        }
+        MultiByteToWideChar(CP_THREAD_ACP, 0, DlgData->AdapterName, -1,
+                            AdapterName, strlen(DlgData->AdapterName) + 1);
+        if (0 == DhcpNotifyConfigChange(NULL, AdapterName, IpChanged,
+                                        DlgData->AdapterIndex,
+                                        DlgData->IpAddress,
+                                        DlgData->SubnetMask, DhcpAction)) {
+            HeapFree(GetProcessHeap(), 0, AdapterName);
+            ShowError(Dlg, IDS_CANNOT_SAVE_CHANGES);
+            return FALSE;
+        }
+        HeapFree(GetProcessHeap(), 0, AdapterName);
+    }
 
-cleanup:
-    if( hKey ) RegCloseKey( hKey );
-
-    return RetVal;
+    /* FIXME Save default gateway and DNS entries */
+    return TRUE;
 }
 
-INT_PTR CALLBACK
-TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK
+TCPIPPropertyPageProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);
-    IP_ADAPTER_INFO *pInfo = NULL;
-    int StaticDNS = 0;
-    char *NextDNSServer;
+    LPPROPSHEETPAGEW Page;
+    PTCPIP_PROPERTIES_DATA DlgData;
+    LPNMHDR Nmhdr;
 
-    if(pPage)
-        pInfo = (IP_ADAPTER_INFO *)pPage->lParam;
-
-    switch(uMsg)
-    {
+    DlgData = (PTCPIP_PROPERTIES_DATA) GetWindowLongPtrW(Dlg, GWL_USERDATA);
+    switch(uMsg) {
     case WM_INITDIALOG:	
-    {
-        pPage = (PROPSHEETPAGE *)lParam;
-        pInfo = (IP_ADAPTER_INFO *)pPage->lParam;
-        EnableWindow(GetDlgItem(hwndDlg,IDC_ADVANCED),FALSE);
-	SetWindowLongPtr(hwndDlg,GWL_USERDATA, (LPARAM)pPage);
+        Page = (LPPROPSHEETPAGEW) lParam;
+        DlgData = (PTCPIP_PROPERTIES_DATA) Page->lParam;
+        SetWindowLongPtrW(Dlg, GWL_USERDATA, Page->lParam);
 
-        EnableDHCP( hwndDlg, pInfo->DhcpEnabled );
+        EnableWindow(GetDlgItem(Dlg, IDC_ADVANCED), FALSE);
 
+        EnableDHCP(Dlg, DlgData->OldDhcpEnabled);
+
+        if (! DlgData->OldDhcpEnabled)
         {
-            DWORD dwIPAddr;
-            IP_ADDR_STRING *pString;
-            pString = &pInfo->IpAddressList;
-            while(pString->Next)
-                pString = pString->Next;
-            dwIPAddr = ntohl(inet_addr(pString->IpAddress.String));
-            SendDlgItemMessage(hwndDlg,IDC_IPADDR,IPM_SETADDRESS,0,dwIPAddr);
-            dwIPAddr = ntohl(inet_addr(pString->IpMask.String));
-            SendDlgItemMessage(hwndDlg,IDC_SUBNETMASK,IPM_SETADDRESS,0,dwIPAddr);
-
-            pString = &pInfo->GatewayList;
-            while(pString->Next)
-                pString = pString->Next;
-            dwIPAddr = ntohl(inet_addr(pString->IpAddress.String));
-            SendDlgItemMessage(hwndDlg,IDC_DEFGATEWAY,IPM_SETADDRESS,0,dwIPAddr);
-
-        }
-        {
-            TCHAR pszRegKey[MAX_PATH];
-            HKEY hKey;
-            _stprintf(pszRegKey,_T("SYSTEM\\CurrentControlSet\\Services\\TCPIP\\Parameters\\Interfaces\\%S"),pInfo->AdapterName);
-            if(RegOpenKey(HKEY_LOCAL_MACHINE,pszRegKey,&hKey)==ERROR_SUCCESS)
-            {
-                char pszDNS[MAX_PATH];
-                DWORD dwSize = sizeof(pszDNS);
-                DWORD dwType = REG_SZ;
-                DWORD dwIPAddr;
-                RegQueryValueExA(hKey,"NameServer",NULL,&dwType,(BYTE*)pszDNS,&dwSize);
-                RegCloseKey(hKey);
-
-                NextDNSServer = pszDNS;
-
-                while( NextDNSServer && StaticDNS < 2 ) {
-                    dwIPAddr = ntohl(inet_addr(NextDNSServer));
-                    if( dwIPAddr != INADDR_NONE ) {
-                        SendDlgItemMessage(hwndDlg,IDC_DNS1 + StaticDNS,IPM_SETADDRESS,0,dwIPAddr);
-                        StaticDNS++;
-                    }
-                    NextDNSServer = strchr( pszDNS, ',' );
-                    if( NextDNSServer )
-                        NextDNSServer++;
-                }
-
-                ManualDNS( hwndDlg, StaticDNS );
+            if (INADDR_NONE != DlgData->OldIpAddress) {
+                SendDlgItemMessage(Dlg, IDC_IPADDR, IPM_SETADDRESS, 0,
+                                   ntohl(DlgData->OldIpAddress));
+            }
+            if (INADDR_NONE != DlgData->OldSubnetMask) {
+                SendDlgItemMessage(Dlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0,
+                                   ntohl(DlgData->OldSubnetMask));
+            }
+            if (INADDR_NONE != DlgData->OldGateway) {
+                SendDlgItemMessage(Dlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0,
+                                   ntohl(DlgData->OldGateway));
             }
         }
-    }
-    break;
-    case WM_DESTROY:
+
+        if (INADDR_NONE != DlgData->OldDns1) {
+            SendDlgItemMessage(Dlg, IDC_DNS1, IPM_SETADDRESS, 0,
+                               ntohl(DlgData->OldDns1));
+            if (INADDR_NONE != DlgData->OldDns2) {
+                SendDlgItemMessage(Dlg, IDC_DNS2, IPM_SETADDRESS, 0,
+                                   ntohl(DlgData->OldDns2));
+            }
+        }
+        ManualDNS(Dlg, INADDR_NONE != DlgData->OldDns1);
+        break;
+
     case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
+        switch(LOWORD(wParam)) {
         case IDC_FIXEDDNS:
-            ManualDNS( hwndDlg, TRUE );
-            break;
+            ManualDNS(Dlg, TRUE);
+            return TRUE;
 
         case IDC_AUTODNS:
-            ManualDNS( hwndDlg, FALSE );
-            break;
+            ManualDNS(Dlg, FALSE);
+            return TRUE;
 
         case IDC_USEDHCP:
-            EnableDHCP( hwndDlg, TRUE );
-            break;
+            EnableDHCP(Dlg, TRUE);
+            return TRUE;
 
         case IDC_NODHCP:
-            EnableDHCP( hwndDlg, FALSE );
-            break;
+            EnableDHCP(Dlg, FALSE);
+            return TRUE;
+        }
+        break;
 
-        case 0:
+    case WM_NOTIFY:
+        Nmhdr = (LPNMHDR) lParam;
+
+        switch(Nmhdr->code) {
+        case PSN_KILLACTIVE:
+            /* Do validation here, must set FALSE to continue */
+            SetWindowLongPtrW(Dlg, DWL_MSGRESULT,
+                              (LONG_PTR) ! ValidateAndStore(Dlg, DlgData));
+            return TRUE;
+
+        case PSN_APPLY:
             /* Set the IP Address and DNS Information so we won't
              * be doing all this for nothing */
-            InternTCPIPSettings( hwndDlg );
-	    LocalFree((void *)pPage->lParam);
-	    LocalFree(pPage);
-            break;
+            SetWindowLongPtrW(Dlg, DWL_MSGRESULT,
+                              InternTCPIPSettings(Dlg, DlgData) ?
+                              PSNRET_NOERROR : PSNRET_INVALID);
+            return TRUE;
         }
         break;
     }
+
     return FALSE;
 }
 
-void DisplayTCPIPProperties(HWND hParent,IP_ADAPTER_INFO *pInfo)
+static BOOL
+LoadDataFromInfo(PTCPIP_PROPERTIES_DATA DlgData, IP_ADAPTER_INFO *Info)
 {
-	PROPSHEETPAGE *psp = LocalAlloc( LMEM_FIXED, sizeof(PROPSHEETPAGE) );
-	PROPSHEETHEADER psh;
-	INITCOMMONCONTROLSEX cce;
+    IP_ADDR_STRING *pString;
+    WCHAR RegKey[MAX_PATH];
+    HKEY hKey;
+    char Dns[MAX_PATH];
+    DWORD Size;
+    DWORD Type;
+    char *NextDnsServer;
 
-	DbgPrint("TCPIP_PROPERTIES: psp = %x\n", psp);
+    DlgData->AdapterName = Info->AdapterName;
+    DlgData->AdapterIndex = Info->Index;
 
-	cce.dwSize = sizeof(INITCOMMONCONTROLSEX);
-	cce.dwICC = ICC_INTERNET_CLASSES;
-	InitCommonControlsEx(&cce);
+    DlgData->OldDhcpEnabled = Info->DhcpEnabled;
 
-	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-	psh.dwSize = sizeof(PROPSHEETHEADER);
-	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW;
-	psh.hwndParent = hParent;
-	psh.hInstance = hApplet;
-	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
-	psh.pszCaption = NULL;//Caption;
-	psh.nPages = 1;
-	psh.nStartPage = 0;
-	psh.ppsp = psp;
-	psh.pfnCallback = NULL;
+    pString = &Info->IpAddressList;
+    while (NULL != pString->Next) {
+        pString = pString->Next;
+    }
+    DlgData->OldIpAddress = inet_addr(pString->IpAddress.String);
+    DlgData->OldSubnetMask = inet_addr(pString->IpMask.String);
+    pString = &Info->GatewayList;
+    while (NULL != pString->Next) {
+        pString = pString->Next;
+    }
+    DlgData->OldGateway = inet_addr(pString->IpAddress.String);
 
-	DbgPrint("TCPIP_PROPERTIES: About to InitPropSheetPage (pInfo: %x)\n", pInfo);
+    DlgData->OldDns1 = INADDR_NONE;
+    DlgData->OldDns2 = INADDR_NONE;
+    swprintf(RegKey,
+             L"SYSTEM\\CurrentControlSet\\Services\\TCPIP\\Parameters\\Interfaces\\%S",
+             Info->AdapterName);
+    if (ERROR_SUCCESS == RegOpenKeyW(HKEY_LOCAL_MACHINE, RegKey, &hKey)) {
+        Size = sizeof(Dns);
+        RegQueryValueExA(hKey, "NameServer", NULL, &Type, (BYTE *)Dns,
+                         &Size);
+        RegCloseKey(hKey);
 
-	InitPropSheetPage(psp, IDD_TCPIPPROPERTIES, TCPIPPropertyPageProc, (LPARAM)pInfo);
+        if ('\0' != Dns[0]) {
+            DlgData->OldDns1 = inet_addr(Dns);
+            NextDnsServer = strchr(Dns, ',');
+            if (NULL != NextDnsServer && '\0' != *NextDnsServer) {
+                DlgData->OldDns2 = inet_addr(NextDnsServer);
+            }
+        }
+    }
 
-	DbgPrint("TCPIP_PROPERTIES: About to realize property sheet\n", psp);
+    return TRUE;
+}
 
-	if (PropertySheet(&psh) == -1)
-	{
-		MessageBox(hParent,_T("Unable to create property sheet"),_T("Error"),MB_ICONSTOP);
-	}
+void
+DisplayTCPIPProperties(HWND hParent, IP_ADAPTER_INFO *pInfo)
+{
+    PROPSHEETPAGEW psp[1];
+    PROPSHEETHEADERW psh;
+    INITCOMMONCONTROLSEX cce;
+    TCPIP_PROPERTIES_DATA DlgData;
 
-	return;
+    if (! LoadDataFromInfo(&DlgData, pInfo))
+    {
+        ShowError(hParent, IDS_CANNOT_LOAD_CONFIG);
+        return;
+    }
+
+    cce.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    cce.dwICC = ICC_INTERNET_CLASSES;
+    InitCommonControlsEx(&cce);
+
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW;
+    psh.hwndParent = hParent;
+    psh.hInstance = hApplet;
+    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
+    psh.pszCaption = NULL;//Caption;
+    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nStartPage = 0;
+    psh.ppsp = psp;
+    psh.pfnCallback = NULL;
+
+    InitPropSheetPage(&psp[0], IDD_TCPIPPROPERTIES, TCPIPPropertyPageProc);
+    psp[0].lParam = (LPARAM) &DlgData;
+
+    if (PropertySheetW(&psh) == -1)
+    {
+        ShowError(hParent, IDS_CANNOT_CREATE_PROPSHEET);
+    }
+
+    return;
 }
