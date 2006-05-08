@@ -804,6 +804,7 @@ static const WCHAR ProfilesDirectoryW[] = {'P','r','o','f','i','l','e','s','D','
 static const WCHAR AllUsersProfileValueW[] = {'A','l','l','U','s','e','r','s','P','r','o','f','i','l','e','\0'};
 static const WCHAR szSHFolders[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r','\\','S','h','e','l','l',' ','F','o','l','d','e','r','s','\0'};
 static const WCHAR szSHUserFolders[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r','\\','U','s','e','r',' ','S','h','e','l','l',' ','F','o','l','d','e','r','s','\0'};
+static const WCHAR szSHSetupFolders[] = {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\0'};
 /* This defaults to L"Documents and Settings" on Windows 2000/XP, but we're
  * acting more Windows 9x-like for now.
  */
@@ -1768,6 +1769,8 @@ static HRESULT _SHRegisterFolders(HKEY hRootKey, HANDLE hToken,
                  path);
             else if (CSIDL_Data[folders[i]].type == CSIDL_Type_AllUsers)
                 _SHGetAllUsersProfilePath(SHGFP_TYPE_DEFAULT, folders[i], path);
+            else if (CSIDL_Data[folders[i]].type == CSIDL_Type_CurrVer)
+                _SHGetDefaultValue(folders[i], path);
             else
                 hr = E_FAIL;
             if (*path)
@@ -1878,6 +1881,21 @@ static HRESULT _SHRegisterCommonShellFolders(void)
     return hr;
 }
 
+static HRESULT _SHRegisterSetupShellFolders(void)
+{
+    static const UINT folders[] = {
+     CSIDL_PROGRAM_FILES_COMMON,
+     CSIDL_PROGRAM_FILES,
+    };
+    HRESULT hr;
+
+    TRACE("\n");
+    hr = _SHRegisterFolders(HKEY_LOCAL_MACHINE, NULL, szSHSetupFolders,
+     szSHSetupFolders, folders, sizeof(folders) / sizeof(folders[0]));
+    TRACE("returning 0x%08lx\n", hr);
+    return hr;
+}
+
 /* Register the default values in the registry, as some apps seem to depend
  * on their presence.  The set registered was taken from Windows XP.
  */
@@ -1889,6 +1907,8 @@ HRESULT SHELL_RegisterShellFolders(void)
         hr = _SHRegisterUserShellFolders(FALSE);
     if (SUCCEEDED(hr))
         hr = _SHRegisterCommonShellFolders();
+    if (SUCCEEDED(hr))
+        hr = _SHRegisterSetupShellFolders();
     return hr;
 }
 
