@@ -158,9 +158,9 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
   }
   
   status = NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
-  if (status == TRUE) && (pDirectDrawGlobalInternal->hDD != NULL)
+  if (status == TRUE) && (pDirectDrawGlobalInternal->hDD != 0)
   {
-     pDirectDrawGlobalInternal->hDD = NULL;        
+     pDirectDrawGlobalInternal->hDD = 0;        
   }
      
   return status; 	
