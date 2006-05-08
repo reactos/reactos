@@ -345,12 +345,12 @@ DateTimePageProc(HWND hwndDlg,
         }
         break;
     }
-	case WM_CTLCOLORSTATIC:
-        {
-            if ((HWND) lParam == GetDlgItem(hwndDlg, IDC_YEARTEXT))
-				return (int) GetSysColorBrush(COLOR_WINDOW);
-            break;
-        }
+    case WM_CTLCOLORSTATIC:
+    {
+        if ((HWND) lParam == GetDlgItem(hwndDlg, IDC_YEARTEXT))
+            return (int) GetSysColorBrush(COLOR_WINDOW);
+        break;
+    }
     case WM_NOTIFY:
       {
           LPNMHDR lpnm = (LPNMHDR)lParam;
@@ -359,12 +359,12 @@ DateTimePageProc(HWND hwndDlg,
           {
               case IDC_YEAR:
                   switch (lpnm->code)
-				  {
+                  {
 				      case UDN_DELTAPOS:
                       {
                          short wYear;
-						 LPNMUPDOWN updown = (LPNMUPDOWN) lpnm; 
-						 wYear = SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_GETPOS, 0, 0);
+                         LPNMUPDOWN updown = (LPNMUPDOWN) lpnm; 
+                         wYear = SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_GETPOS, 0, 0);
                           /* Enable the 'Apply' button */
                          PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                          ChangeMonthCalDate(GetDlgItem(hwndDlg,
@@ -374,7 +374,7 @@ DateTimePageProc(HWND hwndDlg,
                                        wYear + updown->iDelta);
                           break;
                       }
-				  }
+                  }
                   break;
               case IDC_TIMEPICKER:
                   switch (lpnm->code)
@@ -426,11 +426,11 @@ DateTimePageProc(HWND hwndDlg,
                     0);
         break;
     }
-	case WM_DESTROY:
+    case WM_DESTROY:
     {
         KillTimer(hwndDlg, ID_TIMER);
         break;
-	}
+    }
   }
 
   return FALSE;
