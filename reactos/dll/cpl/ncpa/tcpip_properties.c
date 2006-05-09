@@ -67,7 +67,7 @@ ManualDNS(HWND Dlg, BOOL Enabled) {
     CheckDlgButton(Dlg, IDC_AUTODNS,
                    Enabled ? BST_UNCHECKED : BST_CHECKED);
     EnableWindow(GetDlgItem(Dlg, IDC_DNS1), Enabled);
-    EnableWindow(GetDlgItem(Dlg, IDC_DNS2), Enabled);
+    EnableWindow(GetDlgItem(Dlg, IDC_DNS2), FALSE/*Enabled*/);
     if (! Enabled) {
         SendDlgItemMessage(Dlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
         SendDlgItemMessage(Dlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
@@ -105,6 +105,27 @@ ShowError(HWND Parent, UINT MsgId)
         wcscpy(Msg, L"Unknown error");
     }
     MessageBoxW(Parent, Msg, Error, MB_OK | MB_ICONSTOP);
+}
+
+static
+BOOL GetAddressFromField( HWND hwndDlg, UINT CtlId, 
+                          DWORD *dwIPAddr,
+                          const char **AddressString ) {
+    LRESULT lResult;
+    struct in_addr inIPAddr;
+
+    *AddressString = NULL;
+
+    lResult = SendMessage(GetDlgItem(hwndDlg, CtlId), IPM_GETADDRESS, 0, 
+                          (ULONG_PTR)dwIPAddr);
+    if( lResult != 4 ) return FALSE;
+    
+    *dwIPAddr = htonl(*dwIPAddr);
+    inIPAddr.s_addr = *dwIPAddr;
+    *AddressString = inet_ntoa(inIPAddr);
+    if( !*AddressString ) return FALSE;
+
+    return TRUE;
 }
 
 static BOOL
@@ -165,17 +186,79 @@ ValidateAndStore(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData)
 
 static BOOL
 InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
-    BOOL Changed;
+    /*BOOL Changed;
     BOOL IpChanged;
     int DhcpAction;
-    LPWSTR AdapterName;
-    
+    LPWSTR AdapterName;*/
+    BOOL SetIpAddressByDhcp;
+    BOOL SetDnsByDhcp;
+    TCHAR pszRegKey[MAX_PATH];
+    const char *AddressString;
+    DWORD Address = 0;
+    LONG rc;
+    HKEY hKey = NULL;
+    BOOL ret = FALSE;
+
     if (! ValidateAndStore(Dlg, DlgData)) {
         /* Should never happen, we should have validated at PSN_KILLACTIVE */
         ASSERT(FALSE);
         return FALSE;
     }
 
+    SetIpAddressByDhcp = IsDlgButtonChecked(Dlg, IDC_USEDHCP);
+    SetDnsByDhcp = IsDlgButtonChecked(Dlg, IDC_AUTODNS);
+
+    /* Save parameters in HKLM\SYSTEM\CurrentControlSet\Services\{GUID}\Parameters\Tcpip */
+    _stprintf(pszRegKey,_T("SYSTEM\\CurrentControlSet\\Services\\%S\\Parameters\\Tcpip"), DlgData->AdapterName);
+    rc = RegOpenKey(HKEY_LOCAL_MACHINE, pszRegKey, &hKey);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+    if (SetIpAddressByDhcp)
+        AddressString = "0.0.0.0";
+    else if (!GetAddressFromField(Dlg, IDC_IPADDR, &Address, &AddressString))
+        goto cleanup;
+    rc = RegSetValueExA(hKey, "IPAddress", 0, REG_SZ, AddressString, strlen(AddressString) + 1);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+    if (!SetIpAddressByDhcp && !GetAddressFromField(Dlg, IDC_SUBNETMASK, &Address, &AddressString))
+        goto cleanup;
+    rc = RegSetValueExA(hKey, "SubnetMask", 0, REG_SZ, AddressString, strlen(AddressString) + 1);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+    if (!SetIpAddressByDhcp && !GetAddressFromField(Dlg, IDC_DEFGATEWAY, &Address, &AddressString))
+        goto cleanup;
+    rc = RegSetValueExA(hKey, "DefaultGateway", 0, REG_SZ, AddressString, strlen(AddressString) + 1);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+    RegCloseKey(hKey);
+
+    /* Save parameters in HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters */
+    rc = RegOpenKey(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"), &hKey);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+    if (DlgData->Dns1 == INADDR_NONE)
+    {
+        rc = RegDeleteValue(hKey, _T("NameServer"));
+        if (rc != ERROR_SUCCESS && rc != ERROR_FILE_NOT_FOUND)
+            goto cleanup;
+    }
+    else
+    {
+        if (!GetAddressFromField(Dlg, IDC_DNS1, &Address, &AddressString))
+            goto cleanup;
+        rc = RegSetValueExA(hKey, "NameServer", 0, REG_SZ, AddressString, strlen(AddressString) + 1);
+        if (rc != ERROR_SUCCESS)
+            goto cleanup;
+    }
+
+    MessageBox(NULL, TEXT("You need to reboot before the new parameters take effect."), TEXT("Reboot required"), MB_OK | MB_ICONWARNING);
+    ret = TRUE;
+
+cleanup:
+    if (hKey != NULL)
+        RegCloseKey(hKey);
+    return ret;
+#if 0
     Changed = FALSE;
     if (DlgData->DhcpEnabled) {
         Changed = ! DlgData->OldDhcpEnabled;
@@ -213,6 +296,7 @@ InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
 
     /* FIXME Save default gateway and DNS entries */
     return TRUE;
+#endif
 }
 
 static INT_PTR CALLBACK
