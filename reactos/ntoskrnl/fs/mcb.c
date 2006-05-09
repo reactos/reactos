@@ -262,7 +262,7 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
   ULONG NumberOfRuns;
   ExAcquireFastMutex (Mcb->FastMutex);
-  NumberOfRuns=Mcb->PairCount;
+  NumberOfRuns = Mcb->BaseMcb.PairCount;
   ExReleaseFastMutex (Mcb->FastMutex);
   return(NumberOfRuns);
 }
