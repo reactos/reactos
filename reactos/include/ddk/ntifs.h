@@ -1230,10 +1230,12 @@ typedef struct _BASE_MCB
 } BASE_MCB;
 typedef BASE_MCB *PBASE_MCB;
 
-typedef struct _LARGE_MCB
-{
+typedef struct _LARGE_MCB {
     PFAST_MUTEX FastMutex;
-    BASE_MCB BaseMcb;
+    ULONG MaximumPairCount;
+    ULONG PairCount;
+    POOL_TYPE PoolType;
+    PVOID Mapping;
 } LARGE_MCB;
 typedef LARGE_MCB *PLARGE_MCB;
 
