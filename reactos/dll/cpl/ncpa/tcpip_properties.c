@@ -217,17 +217,17 @@ InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
         AddressString = "0.0.0.0";
     else if (!GetAddressFromField(Dlg, IDC_IPADDR, &Address, &AddressString))
         goto cleanup;
-    rc = RegSetValueExA(hKey, "IPAddress", 0, REG_SZ, AddressString, strlen(AddressString) + 1);
+    rc = RegSetValueExA(hKey, "IPAddress", 0, REG_SZ, (const BYTE*)AddressString, strlen(AddressString) + 1);
     if (rc != ERROR_SUCCESS)
         goto cleanup;
     if (!SetIpAddressByDhcp && !GetAddressFromField(Dlg, IDC_SUBNETMASK, &Address, &AddressString))
         goto cleanup;
-    rc = RegSetValueExA(hKey, "SubnetMask", 0, REG_SZ, AddressString, strlen(AddressString) + 1);
+    rc = RegSetValueExA(hKey, "SubnetMask", 0, REG_SZ, (const BYTE*)AddressString, strlen(AddressString) + 1);
     if (rc != ERROR_SUCCESS)
         goto cleanup;
     if (!SetIpAddressByDhcp && !GetAddressFromField(Dlg, IDC_DEFGATEWAY, &Address, &AddressString))
         goto cleanup;
-    rc = RegSetValueExA(hKey, "DefaultGateway", 0, REG_SZ, AddressString, strlen(AddressString) + 1);
+    rc = RegSetValueExA(hKey, "DefaultGateway", 0, REG_SZ, (const BYTE*)AddressString, strlen(AddressString) + 1);
     if (rc != ERROR_SUCCESS)
         goto cleanup;
     RegCloseKey(hKey);
@@ -246,7 +246,7 @@ InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
     {
         if (!GetAddressFromField(Dlg, IDC_DNS1, &Address, &AddressString))
             goto cleanup;
-        rc = RegSetValueExA(hKey, "NameServer", 0, REG_SZ, AddressString, strlen(AddressString) + 1);
+        rc = RegSetValueExA(hKey, "NameServer", 0, REG_SZ, (const BYTE*)AddressString, strlen(AddressString) + 1);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
     }
