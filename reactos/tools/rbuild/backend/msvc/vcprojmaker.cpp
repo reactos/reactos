@@ -152,18 +152,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<Library*>& libs = data.libraries;
 		for ( i = 0; i < libs.size(); i++ )
 		{
-#if 0
-			// this code is deactivated untill the tree builds fine with msvc
-			// --- is appended to each library path which is later
-			// replaced by the configuration
-			// i.e. ../output-i386/lib/rtl/vcXX/---/rtl.lib becomes
-			//      ../output-i386/lib/rtl/vcXX/Debug/rtl.lib 
-			// etc
 			string libpath = outdir + "\\" + libs[i]->importedModule->GetBasePath() + "\\" + _get_vc_dir() + "\\---\\" + libs[i]->name + ".lib";
 			libraries.push_back ( libpath );
-#else
-		libraries.push_back ( libs[i]->name + ".lib" );
-#endif
 		}
 		const vector<Define*>& defs = data.defines;
 		for ( i = 0; i < defs.size(); i++ )
@@ -381,17 +371,24 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			{
 				if ( i > 0 )
 					fprintf ( OUT, " " );
-#if 0 
-				// this code is deactivated untill 
-				// msvc can build the whole tree
 				string libpath = libraries[i].c_str();
-				libpath.replace (libpath.find("---"), //See HACK
+				libpath = libpath.erase (0, libpath.find_last_of ("\\") + 1 );
+				fprintf ( OUT, "%s", libpath.c_str() );
+			}
+			fprintf ( OUT, "\"\r\n" );
+
+			fprintf ( OUT, "\t\t\t\tAdditionalLibraryDirectories=\"" );
+			for (i = 0; i < libraries.size (); i++)
+			{
+				if ( i > 0 )
+					fprintf ( OUT, ";" );
+ 
+				string libpath = libraries[i].c_str();
+				libpath.replace (libpath.find("---"),
 					             3,
 								 cfg);
+				libpath = libpath.substr (0, libpath.find_last_of ("\\") );
 				fprintf ( OUT, "%s", libpath.c_str() );
-#else
-				fprintf ( OUT, "%s", libraries[i].c_str() );
-#endif
 			}
 			fprintf ( OUT, "\"\r\n" );
 
@@ -649,20 +646,41 @@ MSVCBackend::_generate_sln_project (
 	std::string vcproj_guid,
 	const std::vector<Dependency*>& dependencies )
 {
-	vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
+	//vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
 
-	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
+	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"{%s}\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
+
+	vector<const IfableData*> ifs_list;
+	ifs_list.push_back ( &module.project.non_if_data );
+	ifs_list.push_back ( &module.non_if_data );
+
 
 	//FIXME: only omit ProjectDependencies in VS 2005 when there are no dependencies
 	//NOTE: VS 2002 do not use ProjectSection; it uses GlobalSection instead
-	if ((configuration.VSProjectVersion == "7.10") || (dependencies.size() > 0)) {
-		fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
-		for ( size_t i = 0; i < dependencies.size(); i++ )
+	if (configuration.VSProjectVersion != "7.00") {
+
+		bool has_dependencies = false;
+
+
+
+
+		while ( ifs_list.size() )
 		{
-			Dependency& dependency = *dependencies[i];
-			fprintf ( OUT, "\t\t%s = %s\r\n", dependency.module.guid.c_str(), dependency.module.guid.c_str() );
+			const IfableData& data = *ifs_list.back();
+			ifs_list.pop_back();
+			const vector<Library*>& libs = data.libraries;
+			for ( unsigned i = 0; i < libs.size(); i++ )
+			{
+				if ( !has_dependencies ) {
+					fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
+					has_dependencies = true;
+				}
+
+				fprintf ( OUT, "\t\t{%s} = {%s}\r\n", libs[i]->importedModule->guid.c_str(), libs[i]->importedModule->guid.c_str());
+			}
 		}
-		fprintf ( OUT, "\tEndProjectSection\r\n" );
+		if ( has_dependencies )
+			fprintf ( OUT, "\tEndProjectSection\r\n" );
 	}
 
 	fprintf ( OUT, "EndProject\r\n" );
