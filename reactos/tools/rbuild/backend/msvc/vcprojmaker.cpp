@@ -131,11 +131,17 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		for ( i = 0; i < incs.size(); i++ )
 		{
 			// explicitly omit win32api directories
-			if ( !strncmp(incs[i]->directory.c_str(), "w32api", 6 ) )
+			if ( !strncmp(incs[i]->directory.c_str(), "include\\ddk", 11 ) )
+ 				continue;
+ 
+			if ( !strncmp(incs[i]->directory.c_str(), "include\\crt", 11 ) )
+				continue;
+
+			if ( !strncmp(incs[i]->directory.c_str(), "include\\GL", 10 ) )
 				continue;
 
 			// explicitly omit include/wine directories
-			if ( !strncmp(incs[i]->directory.c_str(), "include\\wine", 12 ) )
+			if ( !strncmp(incs[i]->directory.c_str(), "include\\reactos\\wine", 20 ) )
 				continue;
 
 			string path = Path::RelativeFromDirectory (
