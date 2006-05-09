@@ -3431,6 +3431,19 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
 {
     WNDPROC Ret;
 
+    /* resolve any callproc handle if possible */
+    if (IsCallProcHandle(NewWndProc))
+    {
+        WNDPROC_INFO wpInfo;
+
+        if (UserGetCallProcInfo((HANDLE)NewWndProc,
+                                &wpInfo))
+        {
+            NewWndProc = wpInfo.WindowProc;
+            /* FIXME - what if wpInfo.IsUnicode doesn't match Ansi? */
+        }
+    }
+
     /* attempt to get the previous window proc */
     if (Window->IsSystem)
     {

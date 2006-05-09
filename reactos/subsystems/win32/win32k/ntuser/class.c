@@ -55,11 +55,6 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
     ASSERT(Class->Windows == 0);
     ASSERT(Class->Clone == NULL);
 
-    if (Class->Desktop != NULL)
-    {
-        ASSERT(Class->Clone == NULL);
-    }
-
     if (Class->Base == Class)
     {
         /* destruct resources shared with clones */
@@ -315,6 +310,19 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
 
     /* update the base class first */
     Class = Class->Base;
+
+    /* resolve any callproc handle if possible */
+    if (IsCallProcHandle(WndProc))
+    {
+        WNDPROC_INFO wpInfo;
+
+        if (UserGetCallProcInfo((HANDLE)WndProc,
+                                &wpInfo))
+        {
+            WndProc = wpInfo.WindowProc;
+            /* FIXME - what if wpInfo.IsUnicode doesn't match Ansi? */
+        }
+    }
 
     Ret = IntGetClassWndProc(Class,
                              GetW32ProcessInfo(),
@@ -648,6 +656,15 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
 
         NewClass->Desktop = NULL;
         NewClass->Base = NewClass;
+
+        if (Class->MenuName == (PWSTR)(Class + 1))
+        {
+            ULONG_PTR AnsiDelta = (ULONG_PTR)Class->AnsiMenuName - (ULONG_PTR)Class->MenuName;
+
+            /* fixup the self-relative MenuName pointers */
+            NewClass->MenuName = (PWSTR)(NewClass + 1);
+            NewClass->AnsiMenuName = (PSTR)((ULONG_PTR)NewClass->MenuName + AnsiDelta);
+        }
 
         if (!NewClass->System && NewClass->CallProc != NULL &&
             !NewClass->GlobalCallProc)
@@ -1086,206 +1103,6 @@ FoundClass:
     }
 
     return Atom;
-}
-
-static PWINDOWCLASS
-IntClassResizeInternal(IN OUT PWINDOWCLASS Class,
-                       IN INT ClsExtraNew,
-                       IN PWINDOWCLASS *PrevLink)
-{
-    PWINDOWCLASS NewClass;
-    SIZE_T NewSize;
-
-    /* NOTE: Do *not* access Class->Base here, it may be invalid at this point! */
-
-    /* temporarily unlink the class, as resizing it may change it's location */
-    (void)InterlockedExchangePointer(PrevLink,
-                                     Class->Next);
-
-    NewSize = (SIZE_T)ClsExtraNew + Class->ClassExtraDataOffset;
-    if (Class->Desktop != NULL)
-    {
-        NewClass = DesktopHeapReAlloc(Class->Desktop,
-                                      Class,
-                                      NewSize);
-    }
-    else
-    {
-        NewClass = UserHeapReAlloc(Class,
-                                   NewSize);
-    }
-
-    if (NewClass == NULL)
-    {
-        /* link in the class again */
-        (void)InterlockedExchangePointer(PrevLink,
-                                         Class);
-
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        return NULL;
-    }
-
-    if (Class != NewClass)
-    {
-        /* adjust the menu name pointers, if neccessary */
-        if (NewClass->MenuName != NULL && !IS_INTRESOURCE(NewClass->MenuName) &&
-            NewClass->MenuName == (PWSTR)(NewClass + 1))
-        {
-            ULONG_PTR PtrDelta = (ULONG_PTR)NewClass - (ULONG_PTR)Class;
-
-            NewClass->MenuName = (PWSTR)((ULONG_PTR)NewClass->MenuName + PtrDelta);
-            NewClass->AnsiMenuName = (PSTR)((ULONG_PTR)NewClass->MenuName + PtrDelta);
-        }
-
-        Class = NewClass;
-    }
-
-    if (Class->ClsExtra < ClsExtraNew)
-    {
-        /* zero the memory allocated */
-        RtlZeroMemory((PVOID)((ULONG_PTR)Class + Class->ClassExtraDataOffset + Class->ClsExtra),
-                      ClsExtraNew - Class->ClsExtra);
-    }
-
-    /* link in the class again */
-    (void)InterlockedExchangePointer(PrevLink,
-                                     Class);
-
-    return Class;
-}
-
-static BOOL
-IntClassResize(IN OUT PWINDOWCLASS Class,
-               IN PW32PROCESSINFO pi,
-               IN INT ClsExtraNew)
-{
-    PWINDOWCLASS *Link, NewClass, Clone, FailedResize = NULL;
-    BOOL FailOnResize;
-
-    if (pi == NULL)
-        return FALSE;
-
-    /* first modify the base class, then the clones */
-    Class = Class->Base;
-
-    if (ClsExtraNew < 0 ||
-        (ULONG_PTR)ClsExtraNew + Class->ClassExtraDataOffset < Class->ClassExtraDataOffset)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    if (Class->System)
-        Link = &pi->SystemClassList;
-    else if (Class->Global)
-        Link = &pi->GlobalClassList;
-    else
-        Link = &pi->LocalClassList;
-
-    FailOnResize = Class->ClsExtra < ClsExtraNew;
-
-    /* resize the base class */
-    NewClass = IntClassResizeInternal(Class,
-                                      ClsExtraNew,
-                                      Link);
-    if (NewClass == NULL)
-    {
-        if (FailOnResize)
-        {
-            DPRINT1("Failed to resize the base class\n");
-            return FALSE;
-        }
-    }
-    else
-        Class = NewClass;
-
-    /* resize the clones */
-    Link = &Class->Clone;
-    Clone = Class->Clone;
-    while (Clone != NULL)
-    {
-        NewClass = IntClassResizeInternal(Clone,
-                                          ClsExtraNew,
-                                          Link);
-
-        if (NewClass == NULL)
-        {
-            if (FailOnResize)
-            {
-                /* roll back all changes */
-                FailedResize = Clone;
-                break;
-            }
-        }
-        else
-            Clone = NewClass;
-
-        /* save the pointer to the base class in case it changed */
-        Clone->Base = Class;
-
-        Link = &Clone->Next;
-        Clone = Clone->Next;
-    }
-
-    if (FailedResize != NULL)
-    {
-        /* failed to resize one clone, roll back the changes to all
-           other clones and to the base class */
-        DPRINT1("Failed to resize the cloned class 0x%p\n", FailedResize);
-
-        if (Class->System)
-            Link = &pi->SystemClassList;
-        else if (Class->Global)
-            Link = &pi->GlobalClassList;
-        else
-            Link = &pi->LocalClassList;
-
-        /* roll back the changes made to the base class */
-        NewClass = IntClassResizeInternal(Class,
-                                          Class->ClsExtra,
-                                          Link);
-        if (NewClass != NULL)
-            Class = NewClass;
-
-        /* roll back all changes made to the class clones */
-        Link = &Class->Clone;
-        Clone = Class->Clone;
-        while (Clone != FailedResize)
-        {
-            ASSERT(Clone != NULL);
-
-            NewClass = IntClassResizeInternal(Clone,
-                                              Class->ClsExtra,
-                                              Link);
-            if (NewClass != NULL)
-                Clone = NewClass;
-
-            /* save the pointer to the base class in case it changed */
-            Clone->Base = Class;
-
-            Link = &Clone->Next;
-            Clone = Clone->Next;
-        }
-
-        return FALSE;
-    }
-    else
-    {
-        /* all classes were successfully resized,
-           save the new extra data size */
-        Class->ClsExtra = ClsExtraNew;
-        Clone = Class->Clone;
-        while (Clone != NULL)
-        {
-            Clone->ClsExtra = ClsExtraNew;
-
-            ASSERT(Clone->Base == Class);
-
-            Clone = Clone->Next;
-        }
-
-        return TRUE;
-    }
 }
 
 RTL_ATOM
@@ -1807,16 +1624,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
             break;
 
         case GCL_CBCLSEXTRA:
-            Ret = (ULONG_PTR)Class->ClsExtra;
-            if (Class->ClsExtra != (INT)NewLong)
-            {
-                if (!IntClassResize(Class,
-                                    GetW32ProcessInfo(),
-                                    (INT)NewLong))
-                {
-                    Ret = 0;
-                }
-            }
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
             break;
 
         case GCLP_HBRBACKGROUND:

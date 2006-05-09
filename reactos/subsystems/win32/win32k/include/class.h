@@ -4,6 +4,13 @@
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
 
+static BOOL __inline
+IsCallProcHandle(IN WNDPROC lpWndProc)
+{
+    /* FIXME - check for 64 bit architectures... */
+    return ((ULONG_PTR)lpWndProc & 0xFFFF0000) == 0xFFFF0000;
+}
+
 WNDPROC
 GetCallProcHandle(IN PCALLPROC CallProc);
 
