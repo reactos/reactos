@@ -106,7 +106,7 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 			IN POOL_TYPE PoolType)
 {
   UNIMPLEMENTED;
-  Mcb->BaseMcb.PoolType = PoolType;
+  Mcb->PoolType = PoolType;
 }
 
 /*
@@ -262,7 +262,7 @@ FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
   ULONG NumberOfRuns;
   ExAcquireFastMutex (Mcb->FastMutex);
-  NumberOfRuns = Mcb->BaseMcb.PairCount;
+  NumberOfRuns = Mcb->PairCount;
   ExReleaseFastMutex (Mcb->FastMutex);
   return(NumberOfRuns);
 }
