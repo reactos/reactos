@@ -607,7 +607,7 @@ InternalTrusteeAToW(IN PTRUSTEE_A pTrusteeA,
     PSTR lpStr;
     DWORD ErrorCode = ERROR_SUCCESS;
 
-    ASSERT(sizeof(TRUSTEE_W) == sizeof(TRUSTEE_A));
+    //ASSERT(sizeof(TRUSTEE_W) == sizeof(TRUSTEE_A));
 
     TrusteeForm = GetTrusteeForm(pTrusteeA);
     switch (TrusteeForm)
