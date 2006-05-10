@@ -489,18 +489,6 @@ IntPrepareDriver()
    BOOL GotDriver;
    BOOL DoDefault;
    ULONG DisplayNumber;
-   LARGE_INTEGER TimeOut;
-   
-   /* We need delay the tree  */   
-   TimeOut.QuadPart = -10000000;
-   KeDelayExecutionThread(KernelMode, FALSE, &TimeOut);
-   
-   if (PrimarySurface.PreparedDriver)
-   {
-       DPRINT1("time out!\n");
-       KEBUGCHECK(0);
-   }
-   
 
    for (DisplayNumber = 0; ; DisplayNumber++)
    {
