@@ -31,7 +31,7 @@ typedef struct _ACEFLAG
    DWORD value;
 } ACEFLAG, *LPACEFLAG;
 
-static SID const sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
+static const SID sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
 
 /*
  * ACE access rights
@@ -55,7 +55,7 @@ static const WCHAR SDDL_OBJECT_ACCESS_DENIED[]  = {'O','D',0};
 static const WCHAR SDDL_AUDIT[]                 = {'A','U',0};
 static const WCHAR SDDL_ALARM[]                 = {'A','L',0};
 static const WCHAR SDDL_OBJECT_AUDIT[]          = {'O','U',0};
-static const WCHAR SDDL_OBJECT_ALARMp[]         = {'O','L',0};
+static const WCHAR SDDL_OBJECT_ALARM[]          = {'O','L',0};
 
 /*
  * ACE flags
@@ -104,18 +104,16 @@ static DWORD ComputeStringSidSize(LPCWSTR StringSid)
 /******************************************************************************
  * ParseAceStringType
  */
-ACEFLAG AceType[] =
+static const ACEFLAG AceType[] =
 {
     { SDDL_ACCESS_ALLOWED, ACCESS_ALLOWED_ACE_TYPE },
     { SDDL_ALARM,          SYSTEM_ALARM_ACE_TYPE },
     { SDDL_AUDIT,          SYSTEM_AUDIT_ACE_TYPE },
     { SDDL_ACCESS_DENIED,  ACCESS_DENIED_ACE_TYPE },
-    /*
     { SDDL_OBJECT_ACCESS_ALLOWED, ACCESS_ALLOWED_OBJECT_ACE_TYPE },
     { SDDL_OBJECT_ACCESS_DENIED,  ACCESS_DENIED_OBJECT_ACE_TYPE },
     { SDDL_OBJECT_ALARM,          SYSTEM_ALARM_OBJECT_ACE_TYPE },
     { SDDL_OBJECT_AUDIT,          SYSTEM_AUDIT_OBJECT_ACE_TYPE },
-    */
     { NULL, 0 },
 };
 
@@ -123,7 +121,7 @@ static BYTE ParseAceStringType(LPCWSTR* StringAcl)
 {
     UINT len = 0;
     LPCWSTR szAcl = *StringAcl;
-    LPACEFLAG lpaf = AceType;
+    const ACEFLAG *lpaf = AceType;
 
     while (lpaf->wstr &&
         (len = strlenW(lpaf->wstr)) &&
@@ -141,7 +139,7 @@ static BYTE ParseAceStringType(LPCWSTR* StringAcl)
 /******************************************************************************
  * ParseAceStringFlags
  */
-ACEFLAG AceFlags[] =
+static const ACEFLAG AceFlags[] =
 {
     { SDDL_CONTAINER_INHERIT, CONTAINER_INHERIT_ACE },
     { SDDL_AUDIT_FAILURE,     FAILED_ACCESS_ACE_FLAG },
@@ -161,7 +159,7 @@ static BYTE ParseAceStringFlags(LPCWSTR* StringAcl)
 
     while (*szAcl != ';')
     {
-        LPACEFLAG lpaf = AceFlags;
+        const ACEFLAG *lpaf = AceFlags;
 
         while (lpaf->wstr &&
                (len = strlenW(lpaf->wstr)) &&
@@ -183,7 +181,7 @@ static BYTE ParseAceStringFlags(LPCWSTR* StringAcl)
 /******************************************************************************
  * ParseAceStringRights
  */
-ACEFLAG AceRights[] =
+static const ACEFLAG AceRights[] =
 {
     { SDDL_GENERIC_ALL,     GENERIC_ALL },
     { SDDL_GENERIC_READ,    GENERIC_READ },
@@ -221,7 +219,7 @@ static DWORD ParseAceStringRights(LPCWSTR* StringAcl)
     {
         while (*szAcl != ';')
         {
-            LPACEFLAG lpaf = AceRights;
+            const ACEFLAG *lpaf = AceRights;
 
             while (lpaf->wstr &&
                (len = strlenW(lpaf->wstr)) &&
