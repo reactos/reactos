@@ -38,8 +38,9 @@
 #include "lzexpand.h"
 
 #include "wine/unicode.h"
+#include "wine/winbase16.h"
+#include "wine/winuser16.h"
 #include "winver.h"
-#include "winnls.h"
 
 #include "wine/debug.h"
 
@@ -73,8 +74,9 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( const IMAGE_RESOURCE_DI
     {
         pos = (min + max) / 2;
         if (entry[pos].Id == id)
-            return (IMAGE_RESOURCE_DIRECTORY *)((char *)root + entry[pos].OffsetToDirectory);
+            return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].OffsetToDirectory);
         if (entry[pos].Id > id) max = pos - 1;
+        else min = pos + 1;
     }
     return NULL;
 }
@@ -92,7 +94,7 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_default( const IMAGE_RESOURCE_
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry;
 
     entry = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(dir + 1);
-    return (IMAGE_RESOURCE_DIRECTORY *)((char *)root + entry->OffsetToDirectory);
+    return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry->OffsetToDirectory);
 }
 
 
@@ -130,11 +132,11 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( const IMAGE_RESOURCE_
         while (min <= max)
         {
             pos = (min + max) / 2;
-            str = (IMAGE_RESOURCE_DIR_STRING_U *)((char *)root + entry[pos].NameOffset);
+            str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const char *)root + entry[pos].NameOffset);
             res = strncmpiW( nameW, str->NameString, str->Length );
             if (!res && namelen == str->Length)
             {
-                ret = (IMAGE_RESOURCE_DIRECTORY *)((char *)root + entry[pos].OffsetToDirectory);
+                ret = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].OffsetToDirectory);
                 break;
             }
             if (res < 0) max = pos - 1;
@@ -175,6 +177,7 @@ static int read_xx_header( HFILE lzfd )
     WARN("Can't handle %s files.\n", magic );
     return 0;
 }
+
 #ifndef __REACTOS__
 /***********************************************************************
  *           load_ne_resource         [internal]
@@ -206,7 +209,7 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     if ( !resTab ) return FALSE;
 
     LZSeek( lzfd, nehd.ne_rsrctab + nehdoffset, SEEK_SET );
-    if ( resTabSize != LZRead( lzfd, resTab, resTabSize ) )
+    if ( resTabSize != LZRead( lzfd, (char*)resTab, resTabSize ) )
     {
         HeapFree( GetProcessHeap(), 0, resTab );
         return FALSE;
@@ -223,7 +226,7 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
             if (!(typeInfo->type_id & 0x8000))
             {
                 BYTE *p = resTab + typeInfo->type_id;
-                if ((*p == len) && !strncasecmp( p+1, typeid, len )) goto found_type;
+                if ((*p == len) && !strncasecmp( (char*)p+1, typeid, len )) goto found_type;
             }
             typeInfo = (NE_TYPEINFO *)((char *)(typeInfo + 1) +
                                        typeInfo->count * sizeof(NE_NAMEINFO));
@@ -253,7 +256,7 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
         {
             BYTE *p = resTab + nameInfo->id;
             if (nameInfo->id & 0x8000) continue;
-            if ((*p == len) && !strncasecmp( p+1, resid, len )) goto found_name;
+            if ((*p == len) && !strncasecmp( (char*)p+1, resid, len )) goto found_name;
         }
     }
     else  /* numeric resource id */
@@ -274,7 +277,8 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     HeapFree( GetProcessHeap(), 0, resTab );
     return TRUE;
 }
-#endif /* __REACTOS__ */
+#endif /* ! __REACTOS__ */
+
 /***********************************************************************
  *           load_pe_resource         [internal]
  */
@@ -346,12 +350,12 @@ static BOOL find_pe_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     }
 
     LZSeek( lzfd, sections[i].PointerToRawData, SEEK_SET );
-    if ( resSectionSize != LZRead( lzfd, resSection, resSectionSize ) ) goto done;
+    if ( resSectionSize != LZRead( lzfd, (char*)resSection, resSectionSize ) ) goto done;
 
     /* Find resource */
     resDir = resSection + (resDataDir->VirtualAddress - sections[i].VirtualAddress);
 
-    resPtr = (PIMAGE_RESOURCE_DIRECTORY)resDir;
+    resPtr = (const IMAGE_RESOURCE_DIRECTORY*)resDir;
     resPtr = find_entry_by_name( resPtr, typeid, resDir );
     if ( !resPtr )
     {
@@ -372,7 +376,7 @@ static BOOL find_pe_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     }
 
     /* Find resource data section */
-    resData = (PIMAGE_RESOURCE_DATA_ENTRY)resPtr;
+    resData = (const IMAGE_RESOURCE_DATA_ENTRY*)resPtr;
     for ( i = 0; i < nSections; i++ )
         if (    resData->OffsetToData >= sections[i].VirtualAddress
              && resData->OffsetToData <  sections[i].VirtualAddress +
@@ -419,12 +423,12 @@ DWORD WINAPI GetFileResourceSize16( LPCSTR lpszFileName, LPCSTR lpszResType,
     switch ( read_xx_header( lzfd ) )
     {
     case IMAGE_OS2_SIGNATURE:
-		#ifdef __REACTOS__
-		ERR("OS2 Images not supported under ReactOS at this time.");
-		#else
-		retv = find_ne_resource( lzfd, lpszResType, lpszResId,
+#ifdef __REACTOS__
+        ERR("OS2 Images not supported under ReactOS at this time.");
+#else
+        retv = find_ne_resource( lzfd, lpszResType, lpszResId,
                                  &reslen, lpdwFileOffset );
-		#endif
+#endif
         break;
 
     case IMAGE_NT_SIGNATURE:
@@ -450,8 +454,8 @@ DWORD WINAPI GetFileResource16( LPCSTR lpszFileName, LPCSTR lpszResType,
     OFSTRUCT ofs;
     DWORD reslen = dwResLen;
 
-    TRACE("(%s,type=0x%lx,id=0x%lx,off=%ld,len=%ld,data=%p)\n",
-		debugstr_a(lpszFileName), (LONG)lpszResType, (LONG)lpszResId,
+    TRACE("(%s,type=%p,id=%p,off=%ld,len=%ld,data=%p)\n",
+		debugstr_a(lpszFileName), lpszResType, lpszResId,
                 dwFileOffset, dwResLen, lpvData );
 
     lzfd = LZOpenFileA( (LPSTR)lpszFileName, &ofs, OF_READ );
@@ -462,13 +466,13 @@ DWORD WINAPI GetFileResource16( LPCSTR lpszFileName, LPCSTR lpszResType,
         switch ( read_xx_header( lzfd ) )
         {
         case IMAGE_OS2_SIGNATURE:
-					#ifdef __REACTOS__
-		ERR("OS2 Images not supported under ReactOS at this time.");
-		#else
+#ifdef __REACTOS__
+            ERR("OS2 Images not supported under ReactOS at this time.");
+#else
             retv = find_ne_resource( lzfd, lpszResType, lpszResId,
                                      &reslen, &dwFileOffset );
-		#endif
-			break;
+#endif
+            break;
 
         case IMAGE_NT_SIGNATURE:
             retv = find_pe_resource( lzfd, lpszResType, lpszResId,
@@ -489,4 +493,3 @@ DWORD WINAPI GetFileResource16( LPCSTR lpszFileName, LPCSTR lpszResType,
 
     return reslen;
 }
-

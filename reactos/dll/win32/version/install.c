@@ -21,8 +21,6 @@
  * TODO
  *   o Check the installation functions.
  */
-#include "config.h"
-#include "wine/port.h"
 
 #include <stdlib.h>
 #include <stdarg.h>
@@ -40,13 +38,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ver);
 
-/* Couple of Hacks */
-extern inline DWORD WINAPI GetLastError(void)
-{
-    DWORD ret;
-    __asm__ __volatile__( ".byte 0x64\n\tmovl 0x60,%0" : "=r" (ret) );
-    return ret;
-}
 
 /******************************************************************************
  *   testFileExistenceA
@@ -191,8 +182,11 @@ DWORD WINAPI VerFindFileA(
         }
     }
 
-    if (lpszFilename && !testFileExistenceA(curDir, lpszFilename, TRUE))
-        retval |= VFF_FILEINUSE;
+    /* Check to see if the file exists and is inuse by another application */
+    if (lpszFilename && testFileExistenceA(curDir, lpszFilename, FALSE)) {
+        if (lpszFilename && !testFileExistenceA(curDir, lpszFilename, TRUE))
+           retval |= VFF_FILEINUSE;
+    }
 
     curDirSizeReq = strlen(curDir) + 1;
     destDirSizeReq = strlen(destDir) + 1;
@@ -425,7 +419,7 @@ DWORD WINAPI VerInstallFileA(
 	}
 	ret = LZCopy(hfsrc,hfdst);
 	_lclose(hfdst);
-	if (((long) ret) < 0) {
+	if (((LONG)ret) < 0) {
 	    /* translate LZ errors into VIF_xxx */
 	    switch (ret) {
 	    case LZERROR_BADINHANDLE:
@@ -479,8 +473,8 @@ DWORD WINAPI VerInstallFileA(
 		if (VerQueryValueA(buf1,"\\VarFileInfo\\Translation",(LPVOID*)&tbuf1,&len1) &&
 		    VerQueryValueA(buf2,"\\VarFileInfo\\Translation",(LPVOID*)&tbuf2,&len2)
 		) {
-		    /* irgendwas mit tbuf1 und tbuf2 machen
-		     * generiert DIFFLANG|MISMATCH
+                    /* Do something with tbuf1 and tbuf2
+		     * generates DIFFLANG|MISMATCH
 		     */
 		}
 		HeapFree(GetProcessHeap(), 0, buf2);
@@ -499,7 +493,7 @@ DWORD WINAPI VerInstallFileA(
 	    xret|=VIF_TEMPFILE;
 	}
     } else {
-    	if (-1!=GetFileAttributesA(destfn))
+    	if (INVALID_FILE_ATTRIBUTES!=GetFileAttributesA(destfn))
 	    if (!DeleteFileA(destfn)) {
 		xret|=_error2vif(GetLastError())|VIF_CANNOTDELETE;
 		DeleteFileA(tmpfn);
