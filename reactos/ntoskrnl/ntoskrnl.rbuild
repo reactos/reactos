@@ -45,7 +45,6 @@
 				<file>vdm.c</file>
 			</directory>
 		</if>
-		<compilationunit name="ke.c">
 			<file>apc.c</file>
 			<file>bug.c</file>
 			<file>clock.c</file>
@@ -68,26 +67,21 @@
 			<file>timer.c</file>
 			<file>usercall.c</file>
 			<file>wait.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="cc">
-		<compilationunit name="cc.c">
 			<file>cacheman.c</file>
 			<file>copy.c</file>
 			<file>fs.c</file>
 			<file>mdl.c</file>
 			<file>pin.c</file>
 			<file>view.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="cm">
-		<compilationunit name="cm.c">
 			<file>import.c</file>
 			<file>ntfunc.c</file>
 			<file>regfile.c</file>
 			<file>registry.c</file>
 			<file>regobj.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="kdbg">
 		<if property="ARCH" value="i386">
@@ -125,7 +119,6 @@
 				<file>fastinterlck_asm.S</file>
 			</directory>
 		</if>
-		<compilationunit name="ex.c">
 			<file>atom.c</file>
 			<file>callback.c</file>
 			<file>dbgctrl.c</file>
@@ -150,11 +143,9 @@
 			<file>win32k.c</file>
 			<file>work.c</file>
 			<file>zone.c</file>
-		</compilationunit>
 		<file>zw.S</file>
 	</directory>
 	<directory name="fs">
-		<compilationunit name="fs.c">
 			<file>context.c</file>
 			<file>fastio.c</file>
 			<file>filelock.c</file>
@@ -166,13 +157,11 @@
 			<file>tunnel.c</file>
 			<file>unc.c</file>
 			<file>util.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="inbv">
 		<file>inbv.c</file>
 	</directory>
 	<directory name="io">
-		<compilationunit name="io.c">
 			<file>adapter.c</file>
 			<file>arcname.c</file>
 			<file>bootlog.c</file>
@@ -205,11 +194,9 @@
 			<file>timer.c</file>
 			<file>vpb.c</file>
 			<file>wmi.c</file>
-		</compilationunit>
 		<file>file.c</file>
 	</directory>
 	<directory name="kd">
-		<compilationunit name="kd.c">
 			<directory name="wrappers">
 				<file>bochs.c</file>
 				<file>gdbstub.c</file>
@@ -217,16 +204,12 @@
 			<file>kdinit.c</file>
 			<file>kdio.c</file>
 			<file>kdmain.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="ldr">
-		<compilationunit name="ldr.c">
 			<file>loader.c</file>
 			<file>rtl.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="lpc">
-		<compilationunit name="lpc.c">
 			<file>close.c</file>
 			<file>complete.c</file>
 			<file>connect.c</file>
@@ -238,7 +221,6 @@
 			<file>receive.c</file>
 			<file>reply.c</file>
 			<file>send.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="mm">
 		<if property="ARCH" value="i386">
@@ -248,7 +230,6 @@
 				<file>pfault.c</file>
 			</directory>
 		</if>
-		<compilationunit name="mm.c">
 			<file>anonmem.c</file>
 			<file>aspace.c</file>
 			<file>balance.c</file>
@@ -280,12 +261,10 @@
 			<file>verifier.c</file>
 			<file>virtual.c</file>
 			<file>wset.c</file>
-		</compilationunit>
 		<file>elf32.c</file>
 		<file>elf64.c</file>
 	</directory>
 	<directory name="ob">
-		<compilationunit name="ob.c">
 			<file>dirobj.c</file>
 			<file>handle.c</file>
 			<file>namespc.c</file>
@@ -295,13 +274,11 @@
 			<file>security.c</file>
 			<file>symlink.c</file>
 			<file>wait.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="po">
 		<file>power.c</file>
 	</directory>
 	<directory name="ps">
-		<compilationunit name="ps.c">
 			<file>debug.c</file>
 			<file>idle.c</file>
 			<file>job.c</file>
@@ -316,7 +293,6 @@
 			<file>suspend.c</file>
 			<file>thread.c</file>
 			<file>win32.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="rtl">
 		<if property="ARCH" value="i386">
@@ -325,16 +301,13 @@
 				<file>seh.s</file>
 			</directory>
 		</if>
-		<compilationunit name="rtl.c">
 			<file>libsupp.c</file>
 			<file>misc.c</file>
 			<file>nls.c</file>
 			<file>regio.c</file>
 			<file>strtok.c</file>
-		</compilationunit>
 	</directory>
 	<directory name="se">
-		<compilationunit name="se.c">
 			<file>access.c</file>
 			<file>acl.c</file>
 			<file>audit.c</file>
@@ -345,7 +318,6 @@
 			<file>semgr.c</file>
 			<file>sid.c</file>
 			<file>token.c</file>
-		</compilationunit>
 	</directory>
 	<file>ntoskrnl.rc</file>
 	<linkerflag>-nostartfiles</linkerflag>

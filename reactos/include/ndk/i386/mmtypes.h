@@ -29,4 +29,121 @@ Author:
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
 
+//
+// Page Table Entry Definitions
+//
+typedef struct _HARDWARE_PTE_X86
+{
+    ULONG Valid:1;
+    ULONG Write:1;
+    ULONG Owner:1;
+    ULONG WriteThrough:1;
+    ULONG CacheDisable:1;
+    ULONG Accessed:1;
+    ULONG Dirty:1;
+    ULONG LargePage:1;
+    ULONG Global:1;
+    ULONG CopyOnWrite:1;
+    ULONG Prototype: 1;
+    ULONG reserved: 1;
+    ULONG PageFrameNumber:20;
+} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
+
+typedef struct _MMPTE_SOFTWARE
+{
+    ULONG Valid:1;
+    ULONG PageFileLow:4;
+    ULONG Protection:5;
+    ULONG Prototype:1;
+    ULONG Transition:1;
+    ULONG PageFileHigh:20;
+} MMPTE_SOFTWARE;
+
+typedef struct _MMPTE_TRANSITION
+{
+    ULONG Valid:1;
+    ULONG Write:1;
+    ULONG Owner:1;
+    ULONG WriteThrough:1;
+    ULONG CacheDisable:1;
+    ULONG Protection:5;
+    ULONG Prototype:1;
+    ULONG Transition:1;
+    ULONG PageFrameNumber:20;
+} MMPTE_TRANSITION;
+
+typedef struct _MMPTE_PROTOTYPE
+{
+    ULONG Valid:1;
+    ULONG ProtoAddressLow:7;
+    ULONG ReadOnly:1;
+    ULONG WhichPool:1;
+    ULONG Prototype:1;
+    ULONG ProtoAddressHigh:21;
+} MMPTE_PROTOTYPE;
+
+typedef struct _MMPTE_SUBSECTION
+{
+    ULONG Valid:1;
+    ULONG SubsectionAddressLow:4;
+    ULONG Protection:5;
+    ULONG Prototype:1;
+    ULONG SubsectionAddressHigh:20;
+    ULONG WhichPool:1;
+} MMPTE_SUBSECTION;
+
+typedef struct _MMPTE_LIST
+{
+    ULONG Valid:1;
+    ULONG OneEntry:1;
+    ULONG filler10:10;
+    ULONG NextEntry:20;
+} MMPTE_LIST;
+
+#ifndef CONFIG_SMP
+
+typedef struct _MMPTE_HARDWARE
+{
+    ULONG Valid:1;
+    ULONG Write:1;
+    ULONG Owner:1;
+    ULONG WriteThrough:1;
+    ULONG CacheDisable:1;
+    ULONG Accessed:1;
+    ULONG Dirty:1;
+    ULONG LargePage:1;
+    ULONG Global:1;
+    ULONG CopyOnWrite:1;
+    ULONG Prototype:1;
+    ULONG reserved:1;
+    ULONG PageFrameNumber:20;
+} MMPTE_HARDWARE, *PMMPTE_HARDWARE;
+
+#else
+
+typedef struct _MMPTE_HARDWARE
+{
+    ULONG Valid:1;
+    ULONG Writable:1;
+    ULONG Owner:1;
+    ULONG WriteThrough:1;
+    ULONG CacheDisable:1;
+    ULONG Accessed:1;
+    ULONG Dirty:1;
+    ULONG LargePage:1;
+    ULONG Global:1;
+    ULONG CopyOnWrite:1;
+    ULONG Prototype:1;
+    ULONG Write:1;
+    ULONG PageFrameNumber:20;
+} MMPTE_HARDWARE, *PMMPTE_HARDWARE;
+
+#endif
+
+//
+// Use the right PTE structure
+//
+#define HARDWARE_PTE        HARDWARE_PTE_X86
+#define PHARDWARE_PTE       PHARDWARE_PTE_X86
+
 #endif

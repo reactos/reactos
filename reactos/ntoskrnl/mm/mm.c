@@ -30,7 +30,7 @@ MM_STATS MmStats;
 
 NTSTATUS 
 NTAPI
-MmReleaseMmInfo(PEPROCESS Process)
+MmReleaseMmInfo(PROS_EPROCESS Process)
 {
    PVOID Address;
    PMEMORY_AREA MemoryArea;
@@ -47,7 +47,7 @@ MmReleaseMmInfo(PEPROCESS Process)
          case MEMORY_AREA_SECTION_VIEW:
              Address = (PVOID)MemoryArea->StartingAddress;
              MmUnlockAddressSpace(&Process->AddressSpace);
-             MmUnmapViewOfSection(Process, Address);
+             MmUnmapViewOfSection((PEPROCESS)Process, Address);
              MmLockAddressSpace(&Process->AddressSpace);
              break;
 
@@ -114,7 +114,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    }
    else
    {
-      AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+      AddressSpace = &((PROS_EPROCESS)PsGetCurrentProcess())->AddressSpace;
    }
 
    MmLockAddressSpace(AddressSpace);
@@ -171,7 +171,7 @@ MmAccessFault(KPROCESSOR_MODE Mode,
    }
    else
    {
-      AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+      AddressSpace = &((PROS_EPROCESS)PsGetCurrentProcess())->AddressSpace;
    }
 
    if (!FromMdl)
@@ -304,7 +304,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    }
    else
    {
-      AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+      AddressSpace = &((PROS_EPROCESS)PsGetCurrentProcess())->AddressSpace;
    }
 
    if (!FromMdl)
@@ -357,7 +357,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
          case MEMORY_AREA_SHARED_DATA:
 	    Pfn = MmSharedDataPagePhysicalAddress.QuadPart >> PAGE_SHIFT;
             Status =
-               MmCreateVirtualMapping(PsGetCurrentProcess(),
+               MmCreateVirtualMapping((PROS_EPROCESS)PsGetCurrentProcess(),
                                       (PVOID)PAGE_ROUND_DOWN(Address),
                                       PAGE_READONLY,
                                       &Pfn,

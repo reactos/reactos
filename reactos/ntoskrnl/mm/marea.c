@@ -747,7 +747,7 @@ MmFreeMemoryArea(
    PMEMORY_AREA *ParentReplace;
    ULONG_PTR Address;
    PVOID EndAddress;
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   PROS_EPROCESS CurrentProcess = (PROS_EPROCESS)PsGetCurrentProcess();
 
    if (AddressSpace->Process != NULL &&
        AddressSpace->Process != CurrentProcess)
@@ -1025,7 +1025,7 @@ MmCreateMemoryArea(PMADDRESS_SPACE AddressSpace,
 
 
 VOID STDCALL
-MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
+MmReleaseMemoryAreaIfDecommitted(PROS_EPROCESS Process,
                                  PMADDRESS_SPACE AddressSpace,
                                  PVOID BaseAddress)
 {

@@ -24,11 +24,12 @@ extern VOID Ki386RetToV86Mode(PKV86M_REGISTERS InRegs,
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL
-Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs)
+Ke386CallBios(ULONG Int, PCONTEXT regs)
 {
   PUCHAR Ip;
   KV86M_REGISTERS ORegs;
   NTSTATUS Status;
+  PKV86M_REGISTERS Regs = (PKV86M_REGISTERS)regs;
 
   /*
    * Set up a trampoline for executing the BIOS interrupt

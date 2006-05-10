@@ -13,17 +13,18 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
+#include <win32k/callout.h>
 
 /* GLOBALS ******************************************************************/
 
-static PW32_PROCESS_CALLBACK PspWin32ProcessCallback = NULL;
-static PW32_THREAD_CALLBACK PspWin32ThreadCallback = NULL;
+static PKWIN32_PROCESS_CALLOUT PspWin32ProcessCallback = NULL;
+static PKWIN32_THREAD_CALLOUT PspWin32ThreadCallback = NULL;
 
 extern OB_OPEN_METHOD ExpWindowStationObjectOpen;
-extern OB_PARSE_METHOD ExpWindowStationObjectParse;
+extern OB_ROS_PARSE_METHOD ExpWindowStationObjectParse;
 extern OB_DELETE_METHOD ExpWindowStationObjectDelete;
-extern OB_FIND_METHOD ExpWindowStationObjectFind;
-extern OB_CREATE_METHOD ExpDesktopObjectCreate;
+extern OB_ROS_FIND_METHOD ExpWindowStationObjectFind;
+extern OB_ROS_CREATE_METHOD ExpDesktopObjectCreate;
 extern OB_DELETE_METHOD ExpDesktopObjectDelete;
 
 #ifndef ALEX_CB_REWRITE
@@ -55,11 +56,12 @@ KeSwitchKernelStack(
  */
 VOID 
 STDCALL
-PsEstablishWin32Callouts(PW32_CALLOUT_DATA CalloutData)
+PsEstablishWin32Callouts(PWIN32_CALLOUTS_FPNS calloutData)
 {
+    PW32_CALLOUT_DATA CalloutData = (PW32_CALLOUT_DATA)calloutData;
     PspWin32ProcessCallback = CalloutData->W32ProcessCallout;
     PspWin32ThreadCallback = CalloutData->W32ThreadCallout;
-    ExpWindowStationObjectOpen = CalloutData->WinStaCreate;
+    ExpWindowStationObjectOpen = CalloutData->WinStaOpen;
     ExpWindowStationObjectParse = CalloutData->WinStaParse;
     ExpWindowStationObjectDelete = CalloutData->WinStaDelete;
     ExpWindowStationObjectFind = CalloutData->WinStaFind;
@@ -142,7 +144,7 @@ PsConvertToGuiThread(VOID)
     ASSERT(Thread->Tcb.Win32Thread == 0);
 
     /* Tell Win32k about our thread */
-    Status = PspWin32ThreadCallback(Thread, TRUE);
+    Status = PspWin32ThreadCallback(Thread, PsW32ThreadCalloutInitialize);
     if (!NT_SUCCESS(Status))
     {
         /* Revert our table */
@@ -179,7 +181,7 @@ PsTerminateWin32Thread (PETHREAD Thread)
   {
     if (PspWin32ThreadCallback != NULL)
     {
-      PspWin32ThreadCallback (Thread, FALSE);
+      PspWin32ThreadCallback (Thread, PsW32ThreadCalloutExit);
     }
 
     /* don't delete the W32THREAD structure at this point, wait until the

@@ -26,7 +26,7 @@ ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG NtGlobalFlag = 0;
 CHAR  KeNumberProcessors;
 KAFFINITY KeActiveProcessors = 1;
-LOADER_PARAMETER_BLOCK KeLoaderBlock;
+ROS_LOADER_PARAMETER_BLOCK KeLoaderBlock;
 ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0; /* RISC Architectures only */
@@ -66,7 +66,7 @@ PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 extern unsigned int _image_base__;
 ULONG_PTR KERNEL_BASE = (ULONG_PTR)&_image_base__;
 
-VOID INIT_FUNCTION _main(ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock);
+VOID INIT_FUNCTION _main(ULONG MultiBootMagic, PROS_LOADER_PARAMETER_BLOCK _LoaderBlock);
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, _main)
@@ -146,7 +146,7 @@ KiSystemStartup(BOOLEAN BootProcessor)
 VOID
 INIT_FUNCTION
 _main(ULONG MultiBootMagic,
-      PLOADER_PARAMETER_BLOCK _LoaderBlock)
+      PROS_LOADER_PARAMETER_BLOCK _LoaderBlock)
 {
     ULONG i;
     ULONG size;
@@ -282,7 +282,7 @@ _main(ULONG MultiBootMagic,
     }
 
     /* Initialize the Debugger */
-    KdInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    KdInitSystem (0, &KeLoaderBlock);
 
     /* Initialize HAL */
     HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);

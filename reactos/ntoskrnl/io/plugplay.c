@@ -539,8 +539,8 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     _SEH_TRY
     {
 	Relation = RelatedDeviceData->Relation;
-	MaximumLength = RelatedDeviceData->RelatedDeviceInstance.MaximumLength;
-	ProbeForWrite(RelatedDeviceData->RelatedDeviceInstance.Buffer,
+	MaximumLength = RelatedDeviceData->RelatedDeviceInstanceLength;
+	ProbeForWrite(RelatedDeviceData->RelatedDeviceInstance,
 	              MaximumLength,
 		      sizeof(WCHAR));
     }
@@ -622,10 +622,10 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
     /* Copy related device instance name */
     _SEH_TRY
     {
-        RtlCopyMemory(RelatedDeviceData->RelatedDeviceInstance.Buffer,
+        RtlCopyMemory(RelatedDeviceData->RelatedDeviceInstance,
                       RelatedDeviceNode->InstancePath.Buffer,
                       RelatedDeviceNode->InstancePath.Length);
-        RelatedDeviceData->RelatedDeviceInstance.Length = RelatedDeviceNode->InstancePath.Length;
+        RelatedDeviceData->RelatedDeviceInstanceLength = RelatedDeviceNode->InstancePath.Length;
     }
     _SEH_HANDLE
     {

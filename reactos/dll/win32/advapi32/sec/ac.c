@@ -614,6 +614,8 @@ InternalTrusteeAToW(IN PTRUSTEE_A pTrusteeA,
     {
         case TRUSTEE_IS_NAME:
         {
+            /* directly copy the array, this works as the size of the EXPLICIT_ACCESS_A
+               structure matches the size of the EXPLICIT_ACCESS_W version */
             lpStr = GetTrusteeName(pTrusteeA);
             if (lpStr != NULL)
                 BufferSize = strlen(lpStr) + 1;

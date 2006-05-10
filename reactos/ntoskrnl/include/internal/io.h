@@ -477,6 +477,7 @@ NTSTATUS
 STDCALL
 IopQueryNameFile(
     PVOID ObjectBody,
+    IN BOOLEAN HasName,
     POBJECT_NAME_INFORMATION ObjectNameInfo,
     ULONG Length,
     PULONG ReturnLength
@@ -485,8 +486,11 @@ IopQueryNameFile(
 VOID
 STDCALL
 IopCloseFile(
-    PVOID ObjectBody,
-    ULONG HandleCount
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID Object,
+    IN ACCESS_MASK GrantedAccess,
+    IN ULONG ProcessHandleCount,
+    IN ULONG SystemHandleCount
 );
 
 /* plugplay.c */
@@ -557,7 +561,7 @@ HalExamineMBR(
 VOID 
 FASTCALL
 xHalIoAssignDriveLetters(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
     IN PSTRING NtDeviceName,
     OUT PUCHAR NtSystemPath,
     OUT PSTRING NtSystemPathString

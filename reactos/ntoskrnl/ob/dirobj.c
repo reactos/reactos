@@ -223,7 +223,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
                                            BufferLength);
     if(TemporaryBuffer != NULL)
     {
-      POBJECT_HEADER EntryHeader;
+      PROS_OBJECT_HEADER EntryHeader;
       PLIST_ENTRY ListEntry;
       KIRQL OldLevel;
       ULONG RequiredSize = sizeof(OBJECT_DIRECTORY_INFORMATION);
@@ -244,7 +244,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
           PUNICODE_STRING Name, Type;
           ULONG EntrySize;
 
-          EntryHeader = CONTAINING_RECORD(ListEntry, OBJECT_HEADER, Entry);
+          EntryHeader = CONTAINING_RECORD(ListEntry, ROS_OBJECT_HEADER, Entry);
 
           /* calculate the size of the required buffer space for this entry */
           Name = (HEADER_TO_OBJECT_NAME(EntryHeader)->Name.Length != 0 ? &HEADER_TO_OBJECT_NAME(EntryHeader)->Name : NULL);

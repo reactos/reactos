@@ -18,10 +18,17 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 
 #include <wincon.h>
 #include <blue/ntddblue.h>
-#include <ndk/halfuncs.h>
 
 #define NDEBUG
 #include <debug.h>
+
+// ROS Internal. Please deprecate.
+NTHALAPI
+BOOLEAN
+NTAPI
+HalQueryDisplayOwnership(
+    VOID
+);
 
 /* DEFINITIONS ***************************************************************/
 

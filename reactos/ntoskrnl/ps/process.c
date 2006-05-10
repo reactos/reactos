@@ -31,7 +31,7 @@ LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 
 NTSTATUS
 NTAPI
-PsLockProcess(PEPROCESS Process, BOOLEAN Timeout)
+PsLockProcess(PROS_EPROCESS Process, BOOLEAN Timeout)
 {
   ULONG Attempts = 0;
   PKTHREAD PrevLockOwner;
@@ -90,7 +90,7 @@ PsLockProcess(PEPROCESS Process, BOOLEAN Timeout)
 
 VOID
 NTAPI
-PsUnlockProcess(PEPROCESS Process)
+PsUnlockProcess(PROS_EPROCESS Process)
 {
   PAGED_CODE();
 
@@ -288,7 +288,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
-                            sizeof(EPROCESS),
+                            sizeof(ROS_EPROCESS),
                             0,
                             0,
                             (PVOID*)&Process);
@@ -301,7 +301,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Clean up the Object */
     DPRINT("Cleaning Process Object\n");
-    RtlZeroMemory(Process, sizeof(EPROCESS));
+    RtlZeroMemory(Process, sizeof(ROS_EPROCESS));
 
     /* Inherit stuff from the Parent since we now have the object created */
     if (pParentProcess)
@@ -325,7 +325,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Setup the Lock Event */
     DPRINT("Initialzing Process Lock\n");
-    KeInitializeEvent(&Process->LockEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&((PROS_EPROCESS)Process)->LockEvent, SynchronizationEvent, FALSE);
 
     /* Setup the Thread List Head */
     DPRINT("Initialzing Process ThreadListHead\n");
@@ -338,8 +338,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Set Process's Directory Base */
     DPRINT("Initialzing Process Directory Base\n");
-    MmCopyMmInfo(pParentProcess ? pParentProcess : PsInitialSystemProcess,
-                 Process,
+    MmCopyMmInfo((PROS_EPROCESS)(pParentProcess ? pParentProcess : PsInitialSystemProcess),
+                 (PROS_EPROCESS)Process,
                  &DirectoryTableBase);
 
     /* Now initialize the Kernel Process */
@@ -360,7 +360,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Create the Process' Address Space */
     DPRINT("Initialzing Process Address Space\n");
-    Status = MmCreateProcessAddressSpace(Process, SectionObject);
+    Status = MmCreateProcessAddressSpace((PROS_EPROCESS)Process, (PROS_SECTION_OBJECT)SectionObject);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create Address Space\n");
@@ -393,7 +393,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (pParentProcess)
     {
         DPRINT("Creating PEB\n");
-        Status = MmCreatePeb(Process);
+        Status = MmCreatePeb((PROS_EPROCESS)Process);
         if (!NT_SUCCESS(Status))
         {
             DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);

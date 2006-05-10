@@ -968,7 +968,9 @@ typedef enum
 #define SECTION_QUERY 1
 #define SECTION_MAP_EXECUTE 8
 #define SECTION_ALL_ACCESS 0xf001f
+#ifndef __NTDDK_H
 #define MESSAGE_RESOURCE_UNICODE 1
+#endif
 #define RTL_CRITSECT_TYPE 0
 #define RTL_RESOURCE_TYPE 1
 /* Also in winddk.h */
@@ -2500,7 +2502,6 @@ typedef struct _MEMORY_BASIC_INFORMATION {
 	DWORD Protect;
 	DWORD Type;
 } MEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
-#endif
 typedef struct _MESSAGE_RESOURCE_ENTRY {
 	WORD Length;
 	WORD Flags;
@@ -2515,6 +2516,7 @@ typedef struct _MESSAGE_RESOURCE_DATA {
 	DWORD NumberOfBlocks;
 	MESSAGE_RESOURCE_BLOCK Blocks[1];
 } MESSAGE_RESOURCE_DATA,*PMESSAGE_RESOURCE_DATA;
+#endif
 typedef struct _LIST_ENTRY {
 	struct _LIST_ENTRY *Flink;
 	struct _LIST_ENTRY *Blink;

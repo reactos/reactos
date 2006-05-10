@@ -4,7 +4,6 @@
 #include <reactos/helper.h>
 
 #ifdef __GNUC__
-#include <ndk/ntndk.h>
 #include <ccros.h>
 
 #define USE_ROS_CC_AND_FS

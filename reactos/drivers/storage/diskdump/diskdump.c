@@ -33,9 +33,8 @@
 #include <ntddscsi.h>
 #include <include/class2.h>
 #include <diskdump/diskdump.h>
-
-#include <ndk/extypes.h>
 #include <ndk/rtlfuncs.h>
+
 #include "../scsiport/scsiport_int.h"
 
 #define NDEBUG

@@ -42,7 +42,7 @@ typedef struct _ENUM_DEVICE_DRIVERS_CONTEXT
 } ENUM_DEVICE_DRIVERS_CONTEXT, *PENUM_DEVICE_DRIVERS_CONTEXT;
 
 NTSTATUS STDCALL
-EnumDeviceDriversCallback(IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
+EnumDeviceDriversCallback(IN PRTL_PROCESS_MODULE_INFORMATION CurrentModule,
                           IN OUT PVOID CallbackContext)
 {
   PENUM_DEVICE_DRIVERS_CONTEXT Context = (PENUM_DEVICE_DRIVERS_CONTEXT)CallbackContext;
@@ -54,7 +54,7 @@ EnumDeviceDriversCallback(IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
   }
 
   /* return current module */
-  *Context->lpImageBase = CurrentModule->Base;
+  *Context->lpImageBase = CurrentModule->ImageBase;
 
   /* go to next array slot */
   Context->lpImageBase++;
@@ -141,22 +141,22 @@ typedef struct _GET_DEVICE_DRIVER_NAME_CONTEXT
 } GET_DEVICE_DRIVER_NAME_CONTEXT, *PGET_DEVICE_DRIVER_NAME_CONTEXT;
 
 NTSTATUS STDCALL
-GetDeviceDriverNameCallback(IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
+GetDeviceDriverNameCallback(IN PRTL_PROCESS_MODULE_INFORMATION CurrentModule,
                             IN OUT PVOID CallbackContext)
 {
   PGET_DEVICE_DRIVER_NAME_CONTEXT Context = (PGET_DEVICE_DRIVER_NAME_CONTEXT)CallbackContext;
 
   /* module found */
-  if(Context->ImageBase == CurrentModule->Base)
+  if(Context->ImageBase == CurrentModule->ImageBase)
   {
     PCHAR pcModuleName;
     ULONG l;
 
     /* get the full name or just the filename part */
     if(Context->bFullName)
-      pcModuleName = &CurrentModule->ImageName[0];
+      pcModuleName = &CurrentModule->FullPathName[0];
     else
-      pcModuleName = &CurrentModule->ImageName[CurrentModule->PathLength];
+      pcModuleName = &CurrentModule->FullPathName[CurrentModule->OffsetToFileName];
 
     /* get the length of the name */
     l = strlen(pcModuleName);

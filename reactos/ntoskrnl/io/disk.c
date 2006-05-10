@@ -65,7 +65,26 @@ HAL_DISPATCH HalDispatchTable =
 
 HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
 {
-    HAL_PRIVATE_DISPATCH_VERSION
+    HAL_PRIVATE_DISPATCH_VERSION,
+    (pHalHandlerForBus) NULL,
+    (pHalHandlerForConfigSpace) NULL,
+    (pHalLocateHiberRanges) NULL,
+    (pHalRegisterBusHandler) NULL,
+    (pHalSetWakeEnable) NULL,
+    (pHalSetWakeAlarm) NULL,
+    (pHalTranslateBusAddress) NULL,
+    (pHalAssignSlotResources) NULL,
+    (pHalHaltSystem) NULL,
+    (pHalFindBusAddressTranslation) NULL,
+    (pHalResetDisplay) NULL,
+    (pHalAllocateMapRegisters) NULL,
+    (pKdSetupPciDeviceForDebugging) NULL,
+    (pKdReleasePciDeviceForDebugging) NULL,
+    (pKdGetAcpiTablePhase0) NULL,
+    (pKdCheckPowerButton) NULL,
+    (pHalVectorToIDTEntry) NULL,
+    (pKdMapPhysicalMemory64) NULL,
+    (pKdUnmapVirtualAddress) NULL
 };
 
 const WCHAR DiskMountString[] = L"\\DosDevices\\%C:";
@@ -597,7 +616,7 @@ xHalpGetDiskNumberFromRDisk(ULONG RDisk, PULONG DiskNumber)
 
 
 VOID FASTCALL
-xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+xHalIoAssignDriveLetters(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
 			 IN PSTRING NtDeviceName,
 			 OUT PUCHAR NtSystemPath,
 			 OUT PSTRING NtSystemPathString)

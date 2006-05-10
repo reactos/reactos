@@ -50,7 +50,7 @@ PsaEnumerateProcessModules(IN HANDLE ProcessHandle,
  
       while(Current != ListHead)
       {
-        PLDR_DATA_TABLE_ENTRY LoaderModule = CONTAINING_RECORD(Current, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+        PLDR_DATA_TABLE_ENTRY LoaderModule = CONTAINING_RECORD(Current, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
    
         /* return the current module to the callback */
         Status = Callback(ProcessHandle, LoaderModule, CallbackContext);
@@ -60,7 +60,7 @@ PsaEnumerateProcessModules(IN HANDLE ProcessHandle,
           goto Failure;
         }
     
-        Current = LoaderModule->InLoadOrderModuleList.Flink;
+        Current = LoaderModule->InLoadOrderLinks.Flink;
       }
 #if 0
     }
@@ -117,7 +117,7 @@ PsaEnumerateProcessModules(IN HANDLE ProcessHandle,
     {
       /* read the current module */
       Status = NtReadVirtualMemory(ProcessHandle,
-                                   CONTAINING_RECORD(Current, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList),
+                                   CONTAINING_RECORD(Current, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks),
                                    &LoaderModule,
                                    sizeof(LoaderModule),
                                    NULL);
@@ -137,7 +137,7 @@ PsaEnumerateProcessModules(IN HANDLE ProcessHandle,
       }
     
       /* address of the next module in the list */
-      Current = LoaderModule.InLoadOrderModuleList.Flink;
+      Current = LoaderModule.InLoadOrderLinks.Flink;
     }
   }
 

@@ -397,6 +397,7 @@ IopSecurityFile(PVOID ObjectBody,
 NTSTATUS
 STDCALL
 IopQueryNameFile(PVOID ObjectBody,
+                 IN BOOLEAN HasName,
                  POBJECT_NAME_INFORMATION ObjectNameInfo,
                  ULONG Length,
                  PULONG ReturnLength)
@@ -456,8 +457,11 @@ IopQueryNameFile(PVOID ObjectBody,
 
 VOID
 STDCALL
-IopCloseFile(PVOID ObjectBody,
-             ULONG HandleCount)
+IopCloseFile(IN PEPROCESS Process OPTIONAL,
+             IN PVOID ObjectBody,
+             IN ACCESS_MASK GrantedAccess,
+             IN ULONG HandleCount,
+             IN ULONG SystemHandleCount)
 {
     PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
     KEVENT Event;

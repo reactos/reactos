@@ -86,7 +86,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	       OUT PULONG ResultLength  OPTIONAL)
 {
   OBJECT_HANDLE_INFORMATION HandleInfo;
-  POBJECT_HEADER ObjectHeader;
+  PROS_OBJECT_HEADER ObjectHeader;
   ULONG InfoLength;
   PVOID Object;
   NTSTATUS Status;
@@ -220,7 +220,7 @@ NtQueryObject (IN HANDLE ObjectHandle,
 VOID FASTCALL
 ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent)
 {
-  POBJECT_HEADER ObjectHeader;
+  PROS_OBJECT_HEADER ObjectHeader;
 
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
   ASSERT (ObjectHeader->PointerCount > 0);
@@ -234,7 +234,7 @@ ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent)
      if (ObjectHeader->HandleCount == 0 && HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory)
      {
         /* Remove the object from the namespace */
-        ObpRemoveEntryDirectory(ObjectHeader);
+        ObpRemoveEntryDirectory((PROS_OBJECT_HEADER)ObjectHeader);
      }
   }
 }

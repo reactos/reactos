@@ -28,7 +28,11 @@
  * REVISIONS
  */
 VOID STDCALL
-LpcpClosePort (PVOID	ObjectBody, ULONG	HandleCount)
+LpcpClosePort (IN PEPROCESS Process OPTIONAL,
+               IN PVOID ObjectBody,
+               IN ACCESS_MASK GrantedAccess,
+               IN ULONG HandleCount,
+               IN ULONG SystemHandleCount)
 {
   PEPORT Port = (PEPORT)ObjectBody;
   PORT_MESSAGE Message;

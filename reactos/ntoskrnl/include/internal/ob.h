@@ -31,8 +31,31 @@ typedef struct _SYMLINK_OBJECT
     LARGE_INTEGER CreateTime;
 } SYMLINK_OBJECT, *PSYMLINK_OBJECT;
 
+typedef struct _ROS_OBJECT_HEADER
+{
+    LIST_ENTRY Entry;
+    LONG PointerCount;
+    union
+    {
+        LONG HandleCount;
+        PVOID NextToFree;
+    };
+    POBJECT_TYPE Type;
+    UCHAR NameInfoOffset;
+    UCHAR HandleInfoOffset;
+    UCHAR QuotaInfoOffset;
+    UCHAR Flags;
+    union
+    {
+        POBJECT_CREATE_INFORMATION ObjectCreateInfo;
+        PVOID QuotaBlockCharged;
+    };
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    QUAD Body;
+} ROS_OBJECT_HEADER, *PROS_OBJECT_HEADER;
+
 #define BODY_TO_HEADER(objbdy)                                                 \
-  CONTAINING_RECORD((objbdy), OBJECT_HEADER, Body)
+  CONTAINING_RECORD((objbdy), ROS_OBJECT_HEADER, Body)
   
 #define HEADER_TO_OBJECT_NAME(objhdr) ((POBJECT_HEADER_NAME_INFO)              \
   (!(objhdr)->NameInfoOffset ? NULL: ((PCHAR)(objhdr) - (objhdr)->NameInfoOffset)))
@@ -43,7 +66,7 @@ typedef struct _SYMLINK_OBJECT
 #define HEADER_TO_CREATOR_INFO(objhdr) ((POBJECT_HEADER_CREATOR_INFO)          \
   (!((objhdr)->Flags & OB_FLAG_CREATOR_INFO) ? NULL: ((PCHAR)(objhdr) - sizeof(OBJECT_HEADER_CREATOR_INFO))))
 
-#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER))
+#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(ROS_OBJECT_HEADER))
 
 #define KERNEL_HANDLE_FLAG (1 << ((sizeof(HANDLE) * 8) - 1))
 #define ObIsKernelHandle(Handle, ProcessorMode)                                \
@@ -58,17 +81,41 @@ extern PDIRECTORY_OBJECT NameSpaceRoot;
 extern POBJECT_TYPE ObSymbolicLinkType;
 extern PHANDLE_TABLE ObpKernelHandleTable;
 
+typedef NTSTATUS
+(NTAPI *OB_ROS_CREATE_METHOD)(
+    PVOID ObjectBody,
+    PVOID Parent,
+    PWSTR RemainingPath,
+    struct _OBJECT_ATTRIBUTES* ObjectAttributes
+);
+
+typedef PVOID
+(NTAPI *OB_ROS_FIND_METHOD)(
+    PVOID  WinStaObject,
+    PWSTR  Name,
+    ULONG  Attributes
+);
+
+typedef NTSTATUS
+(NTAPI *OB_ROS_PARSE_METHOD)(
+    PVOID Object,
+    PVOID *NextObject,
+    PUNICODE_STRING FullPath,
+    PWSTR *Path,
+    ULONG Attributes
+);
+
 VOID
 NTAPI
 ObpAddEntryDirectory(
     PDIRECTORY_OBJECT Parent,
-    POBJECT_HEADER Header,
+    PROS_OBJECT_HEADER Header,
     PWSTR Name
 );
 
 VOID
 NTAPI
-ObpRemoveEntryDirectory(POBJECT_HEADER Header);
+ObpRemoveEntryDirectory(PROS_OBJECT_HEADER Header);
 
 VOID
 NTAPI

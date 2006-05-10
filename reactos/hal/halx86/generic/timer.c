@@ -125,9 +125,9 @@ VOID
 STDCALL
 KeStallExecutionProcessor(ULONG Microseconds)
 {
-   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetPcr();
 
-   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
+   if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
    {
       LARGE_INTEGER EndCount, CurrentCount;
       Ki386RdTSC(EndCount);
@@ -201,14 +201,14 @@ VOID HalpCalibrateStallExecution(VOID)
     }
 
   UdelayCalibrated = TRUE;
-  Pcr = (PKIPCR)KeGetCurrentKPCR();
+  Pcr = (PKIPCR)KeGetPcr();
 
   /* Initialise timer interrupt with MILLISEC ms interval        */
   WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_BOTH | TMR_MD2);  /* binary, mode 2, LSB/MSB, ch 0 */
   WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH & 0xff); /* LSB */
   WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH >> 8); /* MSB */
 
-  if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
+  if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
   {
       
      WaitFor8254Wraparound();
@@ -325,9 +325,9 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
 
-  Pcr = (PKIPCR)KeGetCurrentKPCR();
+  Pcr = (PKIPCR)KeGetPcr();
 
-  if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
+  if (Pcr->PrcbData.FeatureBits & KF_RDTSC)
   {
      Ki386RestoreFlags(Flags);
      if (NULL != PerformanceFreq)

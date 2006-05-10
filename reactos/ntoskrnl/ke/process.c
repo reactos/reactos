@@ -22,8 +22,6 @@ KeServiceDescriptorTable[SSDT_MAX_ENTRIES] =
 {
     { MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
     { NULL,     NULL,   0,   NULL   },
-    { NULL,     NULL,   0,   NULL   },
-    { NULL,     NULL,   0,   NULL   }
 };
 
 KSERVICE_TABLE_DESCRIPTOR
@@ -31,8 +29,6 @@ KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES] =
 {
     { MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
     { NULL,     NULL,   0,   NULL   },
-    { NULL,     NULL,   0,   NULL   },
-    { NULL,     NULL,   0,   NULL   }
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -60,8 +56,8 @@ UpdatePageDirs(IN PKTHREAD Thread,
      * To prevent this, make sure the page directory of the process we're
      * attaching to is up-to-date.
      */
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, KERNEL_STACK_SIZE);
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
+    MmUpdatePageDir((PROS_EPROCESS)Process, (PVOID)Thread->StackLimit, KERNEL_STACK_SIZE);
+    MmUpdatePageDir((PROS_EPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 }
 
 VOID

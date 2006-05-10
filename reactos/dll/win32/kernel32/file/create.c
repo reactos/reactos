@@ -14,6 +14,10 @@
 
 /* INCLUDES *****************************************************************/
 
+/* File contains Vista Semantics */
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+
 #include <k32.h>
 
 #define NDEBUG
@@ -399,14 +403,14 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
 
     switch(RtlDetermineDosPathNameType_U(lpTargetFileName))
     {
-    case INVALID_PATH:
-    case ABSOLUTE_PATH:
-    case RELATIVE_PATH:
+    case RtlPathTypeUnknown:
+    case RtlPathTypeRooted:
+    case RtlPathTypeRelative:
         bRelativePath = TRUE;
         RtlInitUnicodeString(&TargetFileName, lpTargetFileName);
         break;
 
-    case RELATIVE_DRIVE_PATH:
+    case RtlPathTypeDriveRelative:
         {
             LPWSTR FilePart;
             SIZE_T cchTargetFullFileName;
@@ -438,10 +442,10 @@ CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
 
         // fallthrough
 
-    case UNC_PATH:
-    case ABSOLUTE_DRIVE_PATH:
-    case DEVICE_PATH:
-    case UNC_DOT_PATH:
+    case RtlPathTypeUncAbsolute:
+    case RtlPathTypeDriveAbsolute:
+    case RtlPathTypeLocalDevice:
+    case RtlPathTypeRootLocalDevice:
     default:
         if(!RtlDosPathNameToNtPathName_U(lpTargetFileName, &TargetFileName, NULL, NULL))
         {

@@ -39,7 +39,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
       DPRINT1 ("CurrentIrql %x\n", irql);
       KEBUGCHECK (0);
     }
-  if (Flags & X86_EFLAGS_IF)
+  if (Flags & EFLAGS_INTERRUPT_MASK)
     {
       Ki386EnableInterrupts();
     }
@@ -62,7 +62,7 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
   Ki386WriteFsByte(FIELD_OFFSET(KPCR, Irql), NewIrql);
-  if (Flags & X86_EFLAGS_IF)
+  if (Flags & EFLAGS_INTERRUPT_MASK)
     {
       Ki386EnableInterrupts();
     }
@@ -90,7 +90,7 @@ HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
           Ki386WriteFsByte(FIELD_OFFSET(KIPCR, HalReserved[HAL_DPC_REQUEST]), 0);
           Ki386EnableInterrupts();
           KiDispatchInterrupt();
-          if (!(Flags & X86_EFLAGS_IF))
+          if (!(Flags & EFLAGS_INTERRUPT_MASK))
             {
               Ki386DisableInterrupts();
             }
@@ -106,7 +106,7 @@ HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
     {
       Ki386EnableInterrupts();
       KiDeliverApc(KernelMode, NULL, NULL);
-      if (!(Flags & X86_EFLAGS_IF))
+      if (!(Flags & EFLAGS_INTERRUPT_MASK))
         {
           Ki386DisableInterrupts();
         }
@@ -207,7 +207,7 @@ KfRaiseIrql (KIRQL	NewIrql)
       APICWrite (APIC_TPR, IRQL2TPR(NewIrql) & APIC_TPR_PRI);
     }
   KeSetCurrentIrql (NewIrql);
-  if (Flags & X86_EFLAGS_IF)
+  if (Flags & EFLAGS_INTERRUPT_MASK)
     {
       Ki386EnableInterrupts();
     }
@@ -305,7 +305,7 @@ HalBeginSystemInterrupt (ULONG Vector,
   }
 
   Ki386SaveFlags(Flags);
-  if (Flags & X86_EFLAGS_IF)
+  if (Flags & EFLAGS_INTERRUPT_MASK)
   {
      DPRINT1("HalBeginSystemInterrupt was called with interrupt's enabled\n");
      KEBUGCHECK(0);
@@ -327,7 +327,7 @@ HalEndSystemInterrupt (KIRQL Irql,
   ULONG Flags;
   Ki386SaveFlags(Flags);
 
-  if (Flags & X86_EFLAGS_IF)
+  if (Flags & EFLAGS_INTERRUPT_MASK)
   {
      DPRINT1("HalEndSystemInterrupt was called with interrupt's enabled\n");
      KEBUGCHECK(0);

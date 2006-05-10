@@ -22,7 +22,7 @@ ULONG_PTR KernelBase;
 
 /***************************************************************************/
 VOID
-HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpInitPhase0(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 
 {
    static BOOLEAN MPSInitialized = FALSE;

@@ -19,6 +19,13 @@
 #pragma alloc_text(INIT, InbvEnableBootDriver)
 #endif
 
+/* ROS Internal. Please deprecate */
+NTHALAPI
+VOID
+NTAPI
+HalReleaseDisplayOwnership(
+    VOID
+);
 
 /* GLOBALS *******************************************************************/
 

@@ -2185,7 +2185,7 @@ RtlDuplicateUnicodeString(
  */
 NTSTATUS NTAPI
 RtlValidateUnicodeString(IN ULONG Flags,
-                         IN PUNICODE_STRING UnicodeString)
+                         IN PCUNICODE_STRING UnicodeString)
 {
   /* currently no flags are supported! */
   ASSERT(Flags == 0);

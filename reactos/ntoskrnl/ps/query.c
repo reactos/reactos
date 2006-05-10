@@ -428,11 +428,11 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessImageFileName:
       {
           ULONG ImagePathLen = 0;
-          PSECTION_OBJECT Section;
+          PROS_SECTION_OBJECT Section;
           PUNICODE_STRING DstPath = (PUNICODE_STRING)ProcessInformation;
           PWSTR SrcBuffer = NULL, DstBuffer = (PWSTR)(DstPath + 1);
 
-          Section = (PSECTION_OBJECT)Process->SectionObject;
+          Section = (PROS_SECTION_OBJECT)Process->SectionObject;
 
           if (Section != NULL && Section->FileObject != NULL)
           {
@@ -653,7 +653,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
           {
             /* lock the process to be thread-safe! */
 
-            Status = PsLockProcess(Process, FALSE);
+            Status = PsLockProcess((PROS_EPROCESS)Process, FALSE);
             if(NT_SUCCESS(Status))
             {
               /*
@@ -671,7 +671,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 ObDereferenceObject(ExceptionPort);
                 Status = STATUS_PORT_ALREADY_SET;
               }
-              PsUnlockProcess(Process);
+              PsUnlockProcess((PROS_EPROCESS)Process);
             }
             else
             {
@@ -758,7 +758,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
           /* FIXME - update the session id for the process token */
 
-          Status = PsLockProcess(Process, FALSE);
+          Status = PsLockProcess((PROS_EPROCESS)Process, FALSE);
           if(NT_SUCCESS(Status))
           {
             Process->Session = SessionInfo.SessionId;
@@ -785,7 +785,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
               KeDetachProcess();
             }
 
-            PsUnlockProcess(Process);
+            PsUnlockProcess((PROS_EPROCESS)Process);
           }
         }
         break;

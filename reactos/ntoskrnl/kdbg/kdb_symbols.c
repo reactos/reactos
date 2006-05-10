@@ -73,7 +73,7 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
   while (current_entry != &Peb->Ldr->InLoadOrderModuleList &&
          current_entry != NULL)
     {
-      current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+      current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
       Length = min(current->BaseDllName.Length / sizeof(WCHAR), 255);
       if ((Address != NULL && (Address >= (PVOID)current->DllBase &&
                                Address < (PVOID)((char *)current->DllBase + current->SizeOfImage))) ||
@@ -115,7 +115,7 @@ KdbpSymFindModule(IN PVOID Address  OPTIONAL,
 
   while (current_entry != &ModuleListHead)
     {
-      current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+      current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
       Length = min(current->BaseDllName.Length / sizeof(WCHAR), 255);
       if ((Address != NULL && (Address >= (PVOID)current->DllBase &&
@@ -537,7 +537,7 @@ KdbSymFreeProcessSymbols(IN PEPROCESS Process)
   while (CurrentEntry != &Peb->Ldr->InLoadOrderModuleList &&
 	 CurrentEntry != NULL)
     {
-      Current = CONTAINING_RECORD(CurrentEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+      Current = CONTAINING_RECORD(CurrentEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
       KdbpSymUnloadModuleSymbols(Current->PatchInformation);
 

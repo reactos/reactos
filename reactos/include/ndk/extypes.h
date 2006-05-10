@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -196,9 +196,9 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemUnloadGdiDriverInformation,
     SystemTimeAdjustmentInformation,
     SystemSummaryMemoryInformation,
-    SystemNextEventIdInformation,
-    SystemEventIdsInformation,
-    SystemCrashDumpInformation,
+    SystemMirrorMemoryInformation,
+    SystemPerformanceTraceInformation,
+    SystemObsolete0,
     SystemExceptionInformation,
     SystemCrashDumpStateInformation,
     SystemKernelDebuggerInformation,
@@ -220,7 +220,51 @@ typedef enum _SYSTEM_INFORMATION_CLASS
     SystemVerifierInformation,
     SystemAddVerifier,
     SystemSessionProcessesInformation,
-    SystemInformationClassMax
+    SystemLoadGdiDriverInSystemSpaceInformation,
+    SystemNumaProcessorMap,
+    SystemPrefetcherInformation,
+    SystemExtendedProcessInformation,
+    SystemRecommendedSharedDataAlignment,
+    SystemComPlusPackage,
+    SystemNumaAvailableMemory,
+    SystemProcessorPowerInformation,
+    SystemEmulationBasicInformation,
+    SystemEmulationProcessorInformation,
+    SystemExtendedHanfleInformation,
+    SystemLostDelayedWriteInformation,
+    SystemBigPoolInformation,
+    SystemSessionPoolTagInformation,
+    SystemSessionMappedViewInformation,
+    SystemHotpatchInformation,
+    SystemObjectSecurityMode,
+    SystemWatchDogTimerHandler,
+    SystemWatchDogTimerInformation,
+    SystemLogicalProcessorInformation,
+    SystemWo64SharedInformationObosolete,
+    SystemRegisterFirmwareTableInformationHandler,
+    SystemFirmwareTableInformation,
+    SystemModuleInformationEx,
+    SystemVerifierTriageInformation,
+    SystemSuperfetchInformation,
+    SystemMemoryListInformation,
+    SystemFileCacheInformationEx,
+    SystemThreadPriorityClientIdInformation,
+    SystemProcessorIdleCycleTimeInformation,
+    SystemVerifierCancellationInformation,
+    SystemProcessorPowerInformationEx,
+    SystemRefTraceInformation,
+    SystemSpecialPoolInformation,
+    SystemProcessIdInformation,
+    SystemErrorPortInformation,
+    SystemBootEnvironmentInformation,
+    SystemHypervisorInformation,
+    SystemVerifierInformationEx,
+    SystemTimeZoneInformation,
+    SystemImageFileExecutionOptionsInformation,
+    SystemCoverageInformation,
+    SystemPrefetchPathInformation,
+    SystemVerifierFaultsInformation,
+    MaxSystemInfoClass,
 } SYSTEM_INFORMATION_CLASS;
 
 //
@@ -228,7 +272,8 @@ typedef enum _SYSTEM_INFORMATION_CLASS
 //
 typedef enum _MUTANT_INFORMATION_CLASS
 {
-    MutantBasicInformation
+    MutantBasicInformation,
+    MutantOwnerInformation
 } MUTANT_INFORMATION_CLASS;
 
 //
@@ -264,7 +309,28 @@ typedef enum _EVENT_INFORMATION_CLASS
     EventBasicInformation
 } EVENT_INFORMATION_CLASS;
 
-#ifndef NTOS_MODE_USER
+#ifdef NTOS_MODE_USER
+
+//
+// Firmware Table Actions for SystemFirmwareTableInformation
+//
+typedef enum _SYSTEM_FIRMWARE_TABLE_ACTION
+{
+    SystemFirmwareTable_Enumerate = 0,
+    SystemFirmwareTable_Get = 1,
+} SYSTEM_FIRMWARE_TABLE_ACTION, *PSYSTEM_FIRMWARE_TABLE_ACTION;
+
+//
+// Firmware Handler Callback
+//
+struct _SYSTEM_FIRMWARE_TABLE_INFORMATION;
+typedef
+NTSTATUS
+(__cdecl *PFNFTH)(
+    IN struct _SYSTEM_FIRMWARE_TABLE_INFORMATION *FirmwareTableInformation
+);
+
+#else
 
 //
 // Executive Work Queue Structures
@@ -305,12 +371,10 @@ typedef struct _EX_FAST_REF
 //
 typedef struct _EX_RUNDOWN_REF_CACHE_AWARE
 {
-    union
-    {
-        ULONG_PTR Count;
-        PVOID Ptr;
-    };
+    PEX_RUNDOWN_REF RunRefs;
     PVOID PoolToFree;
+    ULONG RunRefSize;
+    ULONG Number;
 } EX_RUNDOWN_REF_CACHE_AWARE, *PEX_RUNDOWN_REF_CACHE_AWARE;
 
 //
@@ -319,7 +383,7 @@ typedef struct _EX_RUNDOWN_REF_CACHE_AWARE
 typedef struct _EX_RUNDOWN_WAIT_BLOCK
 {
     ULONG_PTR Count;
-    KEVENT RundownEvent;
+    KEVENT WakeEvent;
 } EX_RUNDOWN_WAIT_BLOCK, *PEX_RUNDOWN_WAIT_BLOCK;
 
 //
@@ -382,18 +446,18 @@ typedef struct _CALLBACK_OBJECT
 } CALLBACK_OBJECT , *PCALLBACK_OBJECT;
 
 //
-// Profile OBject
+// Profile Object
 //
 typedef struct _EPROFILE
 {
     PEPROCESS Process;
-    PVOID ImageBase;
-    SIZE_T ImageSize;
+    PVOID RangeBase;
+    SIZE_T RangeSize;
     PVOID Buffer;
     ULONG BufferSize;
     ULONG BucketSize;
-    PKPROFILE KeProfile;
-    PVOID LockedBuffer;
+    PKPROFILE ProfileObject;
+    PVOID LockedBufferAddress;
     PMDL Mdl;
     ULONG Segment;
     KPROFILE_SOURCE ProfileSource;
@@ -465,6 +529,11 @@ typedef struct _MUTANT_BASIC_INFORMATION
     BOOLEAN OwnedByCaller;
     BOOLEAN AbandonedState;
 } MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
+
+typedef struct _MUTANT_OWNER_INFORMATION
+{
+    CLIENT_ID ClientId;
+} MUTANT_OWNER_INFORMATION, *PMUTANT_OWNER_INFORMATION;
 
 //
 // Information Structures for NtQueryAtom
@@ -662,7 +731,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     HANDLE InheritedFromUniqueProcessId;
     ULONG HandleCount;
     ULONG SessionId;
-    ULONG PageDirectoryFrame;
+    ULONG UniqueProcessKey;
 
     //
     // This part corresponds to VM_COUNTERS_EX.
@@ -679,7 +748,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     ULONG QuotaNonPagedPoolUsage;
     ULONG PagefileUsage;
     ULONG PeakPagefileUsage;
-    ULONG PrivateUsage;
+    ULONG PrivatePageCount;
 
     //
     // This part corresponds to IO_COUNTERS
@@ -691,7 +760,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     LARGE_INTEGER WriteTransferCount;
     LARGE_INTEGER OtherTransferCount;
 
-    SYSTEM_THREAD_INFORMATION TH[1];
+    //SYSTEM_THREAD_INFORMATION TH[1];
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
 
 // Class 6
@@ -737,57 +806,11 @@ typedef struct _SYSTEM_CALL_TIME_INFORMATION
     LARGE_INTEGER TimeOfCalls[1];
 } SYSTEM_CALL_TIME_INFORMATION, *PSYSTEM_CALL_TIME_INFORMATION;
 
-// Class 11
-typedef struct _SYSTEM_MODULE_INFORMATION_ENTRY
-{
-    ULONG  Unknown1;
-    ULONG  Unknown2;
-    PVOID  Base;
-    ULONG  Size;
-    ULONG  Flags;
-    USHORT  Index;
-    USHORT  NameLength;
-    USHORT  LoadCount;
-    USHORT  PathLength;
-    CHAR  ImageName[256];
-} SYSTEM_MODULE_INFORMATION_ENTRY, *PSYSTEM_MODULE_INFORMATION_ENTRY;
-typedef struct _SYSTEM_MODULE_INFORMATION
-{
-    ULONG Count;
-    SYSTEM_MODULE_INFORMATION_ENTRY Module[1];
-} SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
+// Class 11 - See RTL_PROCESS_MODULES
 
-// Class 12
-typedef struct _SYSTEM_RESOURCE_LOCK_ENTRY
-{
-    ULONG  ResourceAddress;
-    ULONG  Always1;
-    ULONG  Unknown;
-    ULONG  ActiveCount;
-    ULONG  ContentionCount;
-    ULONG  Unused[2];
-    ULONG  NumberOfSharedWaiters;
-    ULONG  NumberOfExclusiveWaiters;
-} SYSTEM_RESOURCE_LOCK_ENTRY, *PSYSTEM_RESOURCE_LOCK_ENTRY;
+// Class 12 - See RTL_PROCESS_LOCKS
 
-typedef struct _SYSTEM_RESOURCE_LOCK_INFO
-{
-    ULONG Count;
-    SYSTEM_RESOURCE_LOCK_ENTRY Lock[1];
-} SYSTEM_RESOURCE_LOCK_INFO, *PSYSTEM_RESOURCE_LOCK_INFO;
-
-// FIXME: Class 13
-typedef struct _SYSTEM_BACKTRACE_INFORMATION_ENTRY
-{
-    ULONG Dummy;
-} SYSTEM_BACKTRACE_INFORMATION_ENTRY, *PSYSTEM_BACKTRACE_INFORMATION_ENTRY;
-
-typedef struct _SYSTEM_BACKTRACE_INFORMATION
-{
-    ULONG Unknown[4];
-    ULONG Count;
-    SYSTEM_BACKTRACE_INFORMATION_ENTRY Trace[1];
-} SYSTEM_BACKTRACE_INFORMATION, *PSYSTEM_BACKTRACE_INFORMATION;
+// Class 13 - See RTL_PROCESS_BACKTRACES
 
 // Class 14 - 15
 typedef struct _SYSTEM_POOL_ENTRY
@@ -914,14 +937,10 @@ typedef struct _SYSTEM_VDM_INSTEMUL_INFO
     ULONG BopCount;
 } SYSTEM_VDM_INSTEMUL_INFO, *PSYSTEM_VDM_INSTEMUL_INFO;
 
-// FIXME: Class 20
-typedef struct _SYSTEM_VDM_BOP_INFO
-{
-    PVOID Dummy;
-} SYSTEM_VDM_BOP_INFO, *PSYSTEM_VDM_BOP_INFO;
+// Class 20 - ULONG VDMBOPINFO
 
 // Class 21
-typedef struct _SYSTEM_CACHE_INFORMATION
+typedef struct _SYSTEM_FILECACHE_INFORMATION
 {
     ULONG CurrentSize;
     ULONG PeakSize;
@@ -930,8 +949,9 @@ typedef struct _SYSTEM_CACHE_INFORMATION
     ULONG MaximumWorkingSet;
     ULONG CurrentSizeIncludingTransitionInPages;
     ULONG PeakSizeIncludingTransitionInPages;
-    ULONG Unused[2];
-} SYSTEM_CACHE_INFORMATION, *PSYSTEM_CACHE_INFORMATION;
+    ULONG TransitionRePurposeCount;
+    ULONG Flags;
+} SYSTEM_FILECACHE_INFORMATION, *PSYSTEM_FILECACHE_INFORMATION;
 
 // Class 22
 typedef struct _SYSTEM_POOLTAG
@@ -984,6 +1004,7 @@ typedef struct _SYSTEM_MEMORY_INFO
     USHORT ModifiedCount;
     USHORT PageTableCount;
 } SYSTEM_MEMORY_INFO, *PSYSTEM_MEMORY_INFO;
+
 typedef struct _SYSTEM_MEMORY_INFORMATION
 {
     ULONG InfoSize;
@@ -999,6 +1020,7 @@ typedef struct _SYSTEM_GDI_DRIVER_INFORMATION
     PVOID SectionPointer;
     PVOID EntryPoint;
     PIMAGE_EXPORT_DIRECTORY ExportSectionPointer;
+    ULONG ImageLength;
 } SYSTEM_GDI_DRIVER_INFORMATION, *PSYSTEM_GDI_DRIVER_INFORMATION;
 
 // Class 27
@@ -1020,13 +1042,18 @@ typedef struct _SYSTEM_SET_TIME_ADJUST_INFORMATION
 
 // Class 29 - Same as 25
 
-// FIXME: Class 30 - 31
+// FIXME: Class 30
 
-// Class 32
-typedef struct _SYSTEM_CRASH_DUMP_INFORMATION
+// Class 31
+typedef struct _SYSTEM_REF_TRACE_INFORMATION
 {
-    HANDLE CrashDumpSection;
-} SYSTEM_CRASH_DUMP_INFORMATION, *PSYSTEM_CRASH_DUMP_INFORMATION;
+   UCHAR TraceEnable;
+   UCHAR TracePermanent;
+   UNICODE_STRING TraceProcessName;
+   UNICODE_STRING TracePoolTags;
+} SYSTEM_REF_TRACE_INFORMATION, *PSYSTEM_REF_TRACE_INFORMATION;
+
+// Class 32 - OBSOLETE
 
 // Class 33
 typedef struct _SYSTEM_EXCEPTION_INFORMATION
@@ -1151,16 +1178,135 @@ typedef struct _SYSTEM_LOOKASIDE_INFORMATION
 // Class 50
 // Not a structure. Only a ULONG_PTR for the SystemRangeStart
 
-// FIXME: Class 51 (Based on MM_DRIVER_VERIFIER_DATA)
+// Class 51
+typedef struct _SYSTEM_VERIFIER_INFORMATION
+{
+   ULONG NextEntryOffset;
+   ULONG Level;
+   UNICODE_STRING DriverName;
+   ULONG RaiseIrqls;
+   ULONG AcquireSpinLocks;
+   ULONG SynchronizeExecutions;
+   ULONG AllocationsAttempted;
+   ULONG AllocationsSucceeded;
+   ULONG AllocationsSucceededSpecialPool;
+   ULONG AllocationsWithNoTag;
+   ULONG TrimRequests;
+   ULONG Trims;
+   ULONG AllocationsFailed;
+   ULONG AllocationsFailedDeliberately;
+   ULONG Loads;
+   ULONG Unloads;
+   ULONG UnTrackedPool;
+   ULONG CurrentPagedPoolAllocations;
+   ULONG CurrentNonPagedPoolAllocations;
+   ULONG PeakPagedPoolAllocations;
+   ULONG PeakNonPagedPoolAllocations;
+   ULONG PagedPoolUsageInBytes;
+   ULONG NonPagedPoolUsageInBytes;
+   ULONG PeakPagedPoolUsageInBytes;
+   ULONG PeakNonPagedPoolUsageInBytes;
+} SYSTEM_VERIFIER_INFORMATION, *PSYSTEM_VERIFIER_INFORMATION;
 
 // FIXME: Class 52
 
 // Class 53 
-typedef struct _SYSTEM_SESSION_PROCESSES_INFORMATION
+typedef struct _SYSTEM_SESSION_PROCESS_INFORMATION
 {
     ULONG SessionId;
-    ULONG BufferSize;
+    ULONG SizeOfBuf;
     PVOID Buffer; // Same format as in SystemProcessInformation
-} SYSTEM_SESSION_PROCESSES_INFORMATION, *PSYSTEM_SESSION_PROCESSES_INFORMATION;
+} SYSTEM_SESSION_PROCESS_INFORMATION, *PSYSTEM_SESSION_PROCESS_INFORMATION;
 
+// FIXME: Class 54-97
+
+//
+// Hotpatch flags
+//
+#define RTL_HOTPATCH_SUPPORTED_FLAG         0x01
+#define RTL_HOTPATCH_SWAP_OBJECT_NAMES      0x08 << 24
+#define RTL_HOTPATCH_SYNC_RENAME_FILES      0x10 << 24
+#define RTL_HOTPATCH_PATCH_USER_MODE        0x20 << 24
+#define RTL_HOTPATCH_REMAP_SYSTEM_DLL       0x40 << 24
+#define RTL_HOTPATCH_PATCH_KERNEL_MODE      0x80 << 24
+
+
+// Class 69
+typedef struct _SYSTEM_HOTPATCH_CODE_INFORMATION
+{
+    ULONG Flags;
+    ULONG InfoSize;
+    union
+    {
+        struct
+        {
+            ULONG Foo;
+        } CodeInfo;
+        struct
+        {
+            USHORT NameOffset;
+            USHORT NameLength;
+        } KernelInfo;
+        struct
+        {
+            USHORT NameOffset;
+            USHORT NameLength;
+            USHORT TargetNameOffset;
+            USHORT TargetNameLength;
+            UCHAR PatchingFinished;
+        } UserModeInfo;
+        struct
+        {
+            USHORT NameOffset;
+            USHORT NameLength;
+            USHORT TargetNameOffset;
+            USHORT TargetNameLength;
+            UCHAR PatchingFinished;
+            NTSTATUS ReturnCode;
+            HANDLE TargetProcess;
+        } InjectionInfo;
+        struct
+        {
+            HANDLE FileHandle1;
+            PIO_STATUS_BLOCK IoStatusBlock1;
+            PVOID RenameInformation1;
+            PVOID RenameInformationLength1;
+            HANDLE FileHandle2;
+            PIO_STATUS_BLOCK IoStatusBlock2;
+            PVOID RenameInformation2;
+            PVOID RenameInformationLength2;
+        } RenameInfo;
+        struct
+        {
+            HANDLE ParentDirectory;
+            HANDLE ObjectHandle1;
+            HANDLE ObjectHandle2;
+        } AtomicSwap;
+    };
+} SYSTEM_HOTPATCH_CODE_INFORMATION, *PSYSTEM_HOTPATCH_CODE_INFORMATION;
+
+//
+// Class 75
+//
+#ifdef NTOS_MODE_USER
+typedef struct _SYSTEM_FIRMWARE_TABLE_HANDLER
+{
+    ULONG ProviderSignature;
+    BOOLEAN Register;
+    PFNFTH FirmwareTableHandler;
+    PVOID DriverObject;
+} SYSTEM_FIRMWARE_TABLE_HANDLER, *PSYSTEM_FIRMWARE_TABLE_HANDLER;
+
+//
+// Class 76
+//
+typedef struct _SYSTEM_FIRMWARE_TABLE_INFORMATION
+{
+    ULONG ProviderSignature;
+    SYSTEM_FIRMWARE_TABLE_ACTION Action;
+    ULONG TableID;
+    ULONG TableBufferLength;
+    UCHAR TableBuffer[1];
+} SYSTEM_FIRMWARE_TABLE_INFORMATION, *PSYSTEM_FIRMWARE_TABLE_INFORMATION;
+#endif
 #endif

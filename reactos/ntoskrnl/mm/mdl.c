@@ -241,7 +241,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
    /* Unmap all the pages. */
    for (i = 0; i < PageCount; i++)
    {
-      MmDeleteVirtualMapping(Mdl->Process,
+      MmDeleteVirtualMapping((PROS_EPROCESS)Mdl->Process,
                              (char*)BaseAddress + (i * PAGE_SIZE),
                              FALSE,
                              NULL,
@@ -273,14 +273,14 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
       ASSERT(Mdl->Process == PsGetCurrentProcess());
 
-      Marea = MmLocateMemoryAreaByAddress( &Mdl->Process->AddressSpace, BaseAddress );
+      Marea = MmLocateMemoryAreaByAddress( &((PROS_EPROCESS)Mdl->Process)->AddressSpace, BaseAddress );
       if (Marea == NULL)
       {
          DPRINT1( "Couldn't open memory area when unmapping user-space pages!\n" );
          KEBUGCHECK(0);
       }
 
-      MmFreeMemoryArea( &Mdl->Process->AddressSpace, Marea, NULL, NULL );
+      MmFreeMemoryArea( &((PROS_EPROCESS)Mdl->Process)->AddressSpace, Marea, NULL, NULL );
 
       Mdl->Process = NULL;
    }
@@ -411,7 +411,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       /* FIXME: why isn't AccessMode used? */
       Mode = UserMode;
       Mdl->Process = CurrentProcess;
-      AddressSpace = &CurrentProcess->AddressSpace;
+      AddressSpace = &((PROS_EPROCESS)CurrentProcess)->AddressSpace;
    }
 
 
@@ -771,7 +771,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
    KIRQL oldIrql;
    ULONG PageCount;
    ULONG StartingOffset;
-   PEPROCESS CurrentProcess;
+   PROS_EPROCESS CurrentProcess;
    NTSTATUS Status;
    ULONG Protect;
 
@@ -803,7 +803,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       BoundaryAddressMultiple.QuadPart = 0;
       Base = BaseAddress;
 
-      CurrentProcess = PsGetCurrentProcess();
+      CurrentProcess = (PROS_EPROCESS)PsGetCurrentProcess();
 
       MmLockAddressSpace(&CurrentProcess->AddressSpace);
       Status = MmCreateMemoryArea(&CurrentProcess->AddressSpace,
@@ -828,7 +828,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
          ASSERT(0);
       }
 
-      Mdl->Process = CurrentProcess;
+      Mdl->Process = (PEPROCESS)CurrentProcess;
    }
    else /* if (AccessMode == KernelMode) */
    {

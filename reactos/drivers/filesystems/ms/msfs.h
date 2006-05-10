@@ -10,7 +10,7 @@
 #define __DRIVERS_FS_MS_MSFS_H
 
 #include <ntifs.h>
-#include <ndk/ntndk.h>
+#include <iotypes.h>
 
 /*
  * FIXME: GCC doesn't have a working option for defaulting to a calling

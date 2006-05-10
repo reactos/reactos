@@ -12,7 +12,7 @@ The NDK is Copyright © 2005 Alex Ionescu.
 
 The author, Alex Ionescu, may be reached through the following means:
 
-Email: 	alex.ionescu@reactos.com
+Email: 	alexi@tinykrnl.org
 Mail:	2246, Duvernay. H3J 2Y3. Montreal, QC. CANADA.	
 Phone: 	(514)581-7156
 
@@ -68,6 +68,7 @@ and sources. The following public sources of information were lawfully used:
 
 - GNU NTIFS.H, Revision 43
 - W32API, Version 2.5
+- Microsoft Windows Driver Kit
 - Microsoft Driver Development Kit 2003 SP1
 - Microsoft Driver Development Kit 2000
 - Microsoft Driver Development Kit NT 4
@@ -140,24 +141,24 @@ you would like to be credited for it.
     *  User Mode Application requiring Native Types: 
 
        #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
-       #include <windows.h>      /* Declare Windows Headers like you normally would */
-       #include <ntndk.h>        /* Declare the NDK Headers */
+       #include "windows.h"      /* Declare Windows Headers like you normally would */
+       #include "ntndk.h"        /* Declare the NDK Headers */
 
     * Native Mode Application: 
 
-       #include <windows.h>      /* Declare Windows Headers for basic types. NEEDED UNTIL NDK 1.5 */
-       #include <ntndk.h>        /* Declare the NDK Headers */
+       #include "windows.h"      /* Declare Windows Headers for basic types. NEEDED UNTIL NDK 1.5 */
+       #include "ntndk.h"        /* Declare the NDK Headers */
 
     * Kernel Mode Driver: 
 
-       #include <ntddk.h>       /* Declare DDK Headers like you normally would */
-       #include <ntndk.h>       /* Declare the NDK Headers */
+       #include "ntddk.h"       /* Declare DDK Headers like you normally would */
+       #include "ntndk.h"       /* Declare the NDK Headers */
 
     * You may also include only the files you need (example for User-Mode application):
 
        #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
-       #include <windows.h>      /* Declare Windows Headers like you normally would */
-       #include <rtlfuncs.h>     /* Declare the Rtl* Functions */
+       #include "windows.h"      /* Declare Windows Headers like you normally would */
+       #include "rtlfuncs.h"     /* Declare the Rtl* Functions */
 
 3.3 CAVEATS
 
@@ -167,5 +168,5 @@ you would like to be credited for it.
       ones. As such, you 'cannot include winternl.h in any project that uses the NDK. Note however, that the NDK fully
       replaces it and retains compatibility with any project that used it.
     * Native programs: Native programs must include "windows.h" until the next release of the NDK (1.5). The upcoming
-      version will automatically detect the lack of missing types and include them. Note however that you will still need
-      to have the PSDK installed.
+      version will automatically detect the lack of missing types and include them. Note however that you will still
+      need to have the PSDK installed.

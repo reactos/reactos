@@ -154,7 +154,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
                 IdleProcessorMask |= Affinity;
             }
 
-            MmUpdatePageDir(PsGetCurrentProcess(),((PETHREAD)CurrentThread)->ThreadsProcess, sizeof(EPROCESS));
+            MmUpdatePageDir((PROS_EPROCESS)PsGetCurrentProcess(),((PETHREAD)CurrentThread)->ThreadsProcess, sizeof(ROS_EPROCESS));
 
             /* Special note for Filip: This will release the Dispatcher DB Lock ;-) -- Alex */
             DPRINT("You are : %x, swapping to: %x\n", OldThread, CurrentThread);
@@ -864,8 +864,8 @@ KeInitializeThread(PKPROCESS Process,
      * while handling page faults. At this point it isn't possible to call the
      * page fault handler for the missing pde's.
      */
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, KERNEL_STACK_SIZE);
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
+    MmUpdatePageDir((PROS_EPROCESS)Process, (PVOID)Thread->StackLimit, KERNEL_STACK_SIZE);
+    MmUpdatePageDir((PROS_EPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 
     /* Initalize the Thread Context */
     DPRINT("Initializing the Context for the thread: %x\n", Thread);

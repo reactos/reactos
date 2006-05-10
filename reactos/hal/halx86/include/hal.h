@@ -14,11 +14,10 @@
 /* IFS/DDK/NDK Headers */
 #include <ntifs.h>
 #include <ntddk.h>
-#include <ndk/ntndk.h>
-
-/* Internal Kernel Headers */
-#include <internal/mm.h>
-#include <internal/ke.h>
+#include <arc/arc.h>
+#include <iotypes.h>
+#include <kefuncs.h>
+#include <rosldr.h>
 
 #define KPCR_BASE 0xFF000000 // HACK!
 

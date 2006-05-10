@@ -203,7 +203,7 @@ ProtectToPTE(ULONG flProtect)
 
 NTSTATUS
 NTAPI
-Mmi386ReleaseMmInfo(PEPROCESS Process)
+Mmi386ReleaseMmInfo(PROS_EPROCESS Process)
 {
    PUSHORT LdtDescriptor;
    ULONG LdtBase;
@@ -329,8 +329,8 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 
 NTSTATUS
 STDCALL
-MmCopyMmInfo(PEPROCESS Src,
-             PEPROCESS Dest,
+MmCopyMmInfo(PROS_EPROCESS Src,
+             PROS_EPROCESS Dest,
              PPHYSICAL_ADDRESS DirectoryTableBase)
 {
    NTSTATUS Status;
@@ -408,9 +408,9 @@ MmCopyMmInfo(PEPROCESS Src,
 
 VOID
 NTAPI
-MmDeletePageTable(PEPROCESS Process, PVOID Address)
+MmDeletePageTable(PROS_EPROCESS Process, PVOID Address)
 {
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   PROS_EPROCESS CurrentProcess = (PROS_EPROCESS)PsGetCurrentProcess();
 
    if (Process != NULL && Process != CurrentProcess)
    {
@@ -441,9 +441,9 @@ MmDeletePageTable(PEPROCESS Process, PVOID Address)
 
 VOID
 NTAPI
-MmFreePageTable(PEPROCESS Process, PVOID Address)
+MmFreePageTable(PROS_EPROCESS Process, PVOID Address)
 {
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   PROS_EPROCESS CurrentProcess = (PROS_EPROCESS)PsGetCurrentProcess();
    ULONG i;
    PFN_TYPE Pfn;
 
@@ -504,7 +504,7 @@ MmFreePageTable(PEPROCESS Process, PVOID Address)
 }
 
 static PULONGLONG
-MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
+MmGetPageTableForProcessForPAE(PROS_EPROCESS Process, PVOID Address, BOOLEAN Create)
 {
    NTSTATUS Status;
    PFN_TYPE Pfn;
@@ -520,7 +520,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
    {
       KEBUGCHECK(0);
    }
-   if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
+   if (Address < MmSystemRangeStart && Process && Process != (PROS_EPROCESS)PsGetCurrentProcess())
    {
       PageDirTable = MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
       if (PageDirTable == NULL)
@@ -618,7 +618,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 }
 
 static PULONG
-MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
+MmGetPageTableForProcess(PROS_EPROCESS Process, PVOID Address, BOOLEAN Create)
 {
    ULONG PdeOffset = ADDR_TO_PDE_OFFSET(Address);
    NTSTATUS Status;
@@ -626,7 +626,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
    ULONG Entry;
    PULONG Pt, PageDir;
 
-   if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
+   if (Address < MmSystemRangeStart && Process && Process != (PROS_EPROCESS)PsGetCurrentProcess())
    {
       PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
       if (PageDir == NULL)
@@ -736,7 +736,7 @@ BOOLEAN MmUnmapPageTable(PULONG Pt)
    return FALSE;
 }
 
-static ULONGLONG MmGetPageEntryForProcessForPAE(PEPROCESS Process, PVOID Address)
+static ULONGLONG MmGetPageEntryForProcessForPAE(PROS_EPROCESS Process, PVOID Address)
 {
    ULONGLONG Pte;
    PULONGLONG Pt;
@@ -751,7 +751,7 @@ static ULONGLONG MmGetPageEntryForProcessForPAE(PEPROCESS Process, PVOID Address
    return 0;
 }
 
-static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
+static ULONG MmGetPageEntryForProcess(PROS_EPROCESS Process, PVOID Address)
 {
    ULONG Pte;
    PULONG Pt;
@@ -768,7 +768,7 @@ static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
 
 PFN_TYPE
 NTAPI
-MmGetPfnForProcess(PEPROCESS Process,
+MmGetPfnForProcess(PROS_EPROCESS Process,
                    PVOID Address)
 {
 
@@ -796,7 +796,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
+MmDisableVirtualMapping(PROS_EPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
@@ -916,7 +916,7 @@ MmRawDeleteVirtualMapping(PVOID Address)
 
 VOID
 NTAPI
-MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
+MmDeleteVirtualMapping(PROS_EPROCESS Process, PVOID Address, BOOLEAN FreePage,
                        BOOLEAN* WasDirty, PPFN_TYPE Page)
 /*
  * FUNCTION: Delete a virtual mapping
@@ -1060,7 +1060,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
 
 VOID
 NTAPI
-MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
+MmDeletePageFileMapping(PROS_EPROCESS Process, PVOID Address,
                         SWAPENTRY* SwapEntry)
 /*
  * FUNCTION: Delete a virtual mapping
@@ -1199,7 +1199,7 @@ Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
 
 BOOLEAN
 NTAPI
-MmIsDirtyPage(PEPROCESS Process, PVOID Address)
+MmIsDirtyPage(PROS_EPROCESS Process, PVOID Address)
 {
    if (Ke386Pae)
    {
@@ -1213,7 +1213,7 @@ MmIsDirtyPage(PEPROCESS Process, PVOID Address)
 
 BOOLEAN
 NTAPI
-MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
+MmIsAccessedAndResetAccessPage(PROS_EPROCESS Process, PVOID Address)
 {
    if (Address < MmSystemRangeStart && Process == NULL)
    {
@@ -1280,7 +1280,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
 
 VOID
 NTAPI
-MmSetCleanPage(PEPROCESS Process, PVOID Address)
+MmSetCleanPage(PROS_EPROCESS Process, PVOID Address)
 {
    if (Address < MmSystemRangeStart && Process == NULL)
    {
@@ -1345,7 +1345,7 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
 
 VOID
 NTAPI
-MmSetDirtyPage(PEPROCESS Process, PVOID Address)
+MmSetDirtyPage(PROS_EPROCESS Process, PVOID Address)
 {
    if (Address < MmSystemRangeStart && Process == NULL)
    {
@@ -1406,7 +1406,7 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 
 VOID
 NTAPI
-MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
+MmEnableVirtualMapping(PROS_EPROCESS Process, PVOID Address)
 {
    if (Ke386Pae)
    {
@@ -1462,7 +1462,7 @@ MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 
 BOOLEAN
 NTAPI
-MmIsPagePresent(PEPROCESS Process, PVOID Address)
+MmIsPagePresent(PROS_EPROCESS Process, PVOID Address)
 {
    if (Ke386Pae)
    {
@@ -1476,7 +1476,7 @@ MmIsPagePresent(PEPROCESS Process, PVOID Address)
 
 BOOLEAN
 NTAPI
-MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
+MmIsPageSwapEntry(PROS_EPROCESS Process, PVOID Address)
 {
    if (Ke386Pae)
    {
@@ -1622,7 +1622,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
 
 NTSTATUS
 NTAPI
-MmCreatePageFileMapping(PEPROCESS Process,
+MmCreatePageFileMapping(PROS_EPROCESS Process,
                         PVOID Address,
                         SWAPENTRY SwapEntry)
 {
@@ -1710,7 +1710,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
 
 NTSTATUS
 NTAPI
-MmCreateVirtualMappingUnsafe(PEPROCESS Process,
+MmCreateVirtualMappingUnsafe(PROS_EPROCESS Process,
                              PVOID Address,
                              ULONG flProtect,
                              PPFN_TYPE Pages,
@@ -1916,7 +1916,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 
 NTSTATUS
 NTAPI
-MmCreateVirtualMapping(PEPROCESS Process,
+MmCreateVirtualMapping(PROS_EPROCESS Process,
                        PVOID Address,
                        ULONG flProtect,
                        PPFN_TYPE Pages,
@@ -1942,7 +1942,7 @@ MmCreateVirtualMapping(PEPROCESS Process,
 
 ULONG
 NTAPI
-MmGetPageProtect(PEPROCESS Process, PVOID Address)
+MmGetPageProtect(PROS_EPROCESS Process, PVOID Address)
 {
    ULONG Entry;
    ULONG Protect;
@@ -1988,7 +1988,7 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
 
 VOID
 NTAPI
-MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
+MmSetPageProtect(PROS_EPROCESS Process, PVOID Address, ULONG flProtect)
 {
    ULONG Attributes = 0;
    BOOLEAN NoExecute = FALSE;
@@ -2273,7 +2273,7 @@ MmDeleteHyperspaceMapping(PVOID Address)
 
 VOID
 NTAPI
-MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
+MmUpdatePageDir(PROS_EPROCESS Process, PVOID Address, ULONG Size)
 {
    ULONG StartOffset, EndOffset, Offset;
 
@@ -2307,7 +2307,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 	    EndOffset = 511;
 	 }
 
-         if (Process != NULL && Process != PsGetCurrentProcess())
+         if (Process != NULL && Process != (PROS_EPROCESS)PsGetCurrentProcess())
          {
             PageDirTable = MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
             Pde = (PULONGLONG)MmCreateHyperspaceMapping(PTE_TO_PFN(PageDirTable[i]));
@@ -2334,7 +2334,7 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
       StartOffset = ADDR_TO_PDE_OFFSET(Address);
       EndOffset = ADDR_TO_PDE_OFFSET((PVOID)((ULONG_PTR)Address + Size));
 
-      if (Process != NULL && Process != PsGetCurrentProcess())
+      if (Process != NULL && Process != (PROS_EPROCESS)PsGetCurrentProcess())
       {
          Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
       }

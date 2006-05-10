@@ -35,7 +35,7 @@ double                            OldKernelTime = 0;
 LARGE_INTEGER                    liOldSystemTime = {{0,0}};
 SYSTEM_PERFORMANCE_INFORMATION    SystemPerfInfo;
 SYSTEM_BASIC_INFORMATION        SystemBasicInfo;
-SYSTEM_CACHE_INFORMATION        SystemCacheInfo;
+SYSTEM_FILECACHE_INFORMATION        SystemCacheInfo;
 SYSTEM_HANDLE_INFORMATION        SystemHandleInfo;
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SystemProcessorTimeInfo = NULL;
 PSID                             SystemUserSid = NULL;
@@ -95,7 +95,7 @@ void PerfDataRefresh(void)
     HANDLE                            hProcessToken;
     SYSTEM_PERFORMANCE_INFORMATION    SysPerfInfo;
     SYSTEM_TIMEOFDAY_INFORMATION      SysTimeInfo;
-    SYSTEM_CACHE_INFORMATION        SysCacheInfo;
+    SYSTEM_FILECACHE_INFORMATION        SysCacheInfo;
     LPBYTE                            SysHandleInfoData;
     PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION SysProcessorTimeInfo;
     double                            CurrentKernelTime;
@@ -170,7 +170,7 @@ void PerfDataRefresh(void)
     /*
      * Save system cache info
      */
-    memcpy(&SystemCacheInfo, &SysCacheInfo, sizeof(SYSTEM_CACHE_INFORMATION));
+    memcpy(&SystemCacheInfo, &SysCacheInfo, sizeof(SYSTEM_FILECACHE_INFORMATION));
 
     /*
      * Save system processor time info

@@ -71,9 +71,9 @@ KeFindConfigurationNextEntry(IN PCONFIGURATION_COMPONENT_DATA Child,
         else
         {
             /* Try to get a match */
-            if (Child->Component.Class == Class &&
-                Child->Component.Type == Type &&
-                (Child->Component.Key & Mask) == Key)
+            if (Child->ComponentEntry.Class == Class &&
+                Child->ComponentEntry.Type == Type &&
+                (Child->ComponentEntry.Key & Mask) == Key)
             {
                 /* Match found */
                 return Child;
@@ -93,9 +93,9 @@ KeFindConfigurationNextEntry(IN PCONFIGURATION_COMPONENT_DATA Child,
             else
             {
                 /* Try to get a match */
-                if (Sibling->Component.Class == Class &&
-                    Sibling->Component.Type == Type &&
-                    (Sibling->Component.Key & Mask) == Key)
+                if (Sibling->ComponentEntry.Class == Class &&
+                    Sibling->ComponentEntry.Type == Type &&
+                    (Sibling->ComponentEntry.Key & Mask) == Key)
                 {
                     /* Match found */
                     return Sibling;

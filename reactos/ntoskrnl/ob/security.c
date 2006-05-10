@@ -66,7 +66,7 @@ ObGetObjectSecurity(IN PVOID Object,
 		    OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
 		    OUT PBOOLEAN MemoryAllocated)
 {
-  POBJECT_HEADER Header;
+  PROS_OBJECT_HEADER Header;
   ULONG Length;
   NTSTATUS Status;
 
@@ -161,7 +161,7 @@ NtQuerySecurityObject(IN HANDLE Handle,
 {
     KPROCESSOR_MODE PreviousMode;
     PVOID Object;
-    POBJECT_HEADER Header;
+    PROS_OBJECT_HEADER Header;
     ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -240,7 +240,7 @@ NtSetSecurityObject(IN HANDLE Handle,
 {
     KPROCESSOR_MODE PreviousMode;
     PVOID Object;
-    POBJECT_HEADER Header;
+    PROS_OBJECT_HEADER Header;
     SECURITY_DESCRIPTOR_RELATIVE *CapturedSecurityDescriptor;
     ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
     NTSTATUS Status;

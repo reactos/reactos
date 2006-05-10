@@ -230,7 +230,7 @@ ExfReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
     if (InterlockedExchangeAddSizeT(&WaitBlock->Count, -1))
     {
         /* We're down to 0 now, so signal the event */
-        KeSetEvent(&WaitBlock->RundownEvent, IO_NO_INCREMENT, FALSE);
+        KeSetEvent(&WaitBlock->WakeEvent, IO_NO_INCREMENT, FALSE);
     }
 }
 
@@ -290,7 +290,7 @@ ExfReleaseRundownProtectionEx(IN PEX_RUNDOWN_REF RunRef,
         (LONG)Count)
     {
         /* We're down to 0 now, so signal the event */
-        KeSetEvent(&WaitBlock->RundownEvent, IO_NO_INCREMENT, FALSE);
+        KeSetEvent(&WaitBlock->WakeEvent, IO_NO_INCREMENT, FALSE);
     }
 }
 
@@ -339,12 +339,12 @@ ExfWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
         if (Count || !Event)
         {
             /* Initialize the event */
-            KeInitializeEvent(&WaitBlock.RundownEvent,
+            KeInitializeEvent(&WaitBlock.WakeEvent,
                               NotificationEvent,
                               FALSE);
 
             /* Set the pointer */
-            Event = &WaitBlock.RundownEvent;
+            Event = &WaitBlock.WakeEvent;
         }
 
         /* Set the count */

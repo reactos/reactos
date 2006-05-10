@@ -118,7 +118,7 @@ KiRosPrintAddress(PVOID address)
      while (current_entry != &ModuleListHead)
        {
           current =
-            CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+            CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
           if (address >= (PVOID)current->DllBase &&
               address < (PVOID)((ULONG_PTR)current->DllBase + current->SizeOfImage))

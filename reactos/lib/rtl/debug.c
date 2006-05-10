@@ -272,7 +272,7 @@ ULONG
 NTAPI
 DbgPrompt(PCH OutputString,
           PCH InputString,
-          USHORT InputSize)
+          ULONG InputSize)
 {
     ANSI_STRING Output;
     ANSI_STRING Input;

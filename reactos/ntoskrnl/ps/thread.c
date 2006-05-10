@@ -220,7 +220,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
         /* Create Teb */
         DPRINT("Initialliazing Thread PEB\n");
-        TebBase = MmCreateTeb(Process, &Thread->Cid, InitialTeb);
+        TebBase = MmCreateTeb((PROS_EPROCESS)Process, &Thread->Cid, InitialTeb);
 
         /* Set the Start Addresses */
         DPRINT("Initialliazing Thread Start Addresses :%x, %x\n", ThreadContext->Eip, ThreadContext->Eax);

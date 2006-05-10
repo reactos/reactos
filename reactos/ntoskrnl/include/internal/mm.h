@@ -5,6 +5,8 @@
 
 /* TYPES *********************************************************************/
 
+struct _ROS_EPROCESS;
+
 extern ULONG MiFreeSwapPages;
 extern ULONG MiUsedSwapPages;
 extern ULONG MmPagedPoolSize;
@@ -192,7 +194,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
     PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
-typedef struct _SECTION_OBJECT
+typedef struct _ROS_SECTION_OBJECT
 {
     CSHORT Type;
     CSHORT Size;
@@ -205,7 +207,7 @@ typedef struct _SECTION_OBJECT
         PMM_IMAGE_SECTION_OBJECT ImageSection;
         PMM_SECTION_SEGMENT Segment;
     };
-} SECTION_OBJECT, *PSECTION_OBJECT;
+} ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
 typedef struct _MEMORY_AREA
 {
@@ -224,7 +226,7 @@ typedef struct _MEMORY_AREA
     {
         struct
         {
-            SECTION_OBJECT* Section;
+            ROS_SECTION_OBJECT* Section;
             ULONG ViewOffset;
             PMM_SECTION_SEGMENT Segment;
             BOOLEAN WriteCopyView;
@@ -237,17 +239,15 @@ typedef struct _MEMORY_AREA
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
-#ifndef _MMTYPES_H
 typedef struct _MADDRESS_SPACE
 {
     PMEMORY_AREA MemoryAreaRoot;
     FAST_MUTEX Lock;
     PVOID LowestAddress;
-    struct _EPROCESS* Process;
+    struct _ROS_EPROCESS* Process;
     PUSHORT PageTableRefCountTable;
     ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
-#endif
 
 typedef struct
 {
@@ -362,7 +362,7 @@ MmGetKernelAddressSpace(VOID);
 NTSTATUS
 NTAPI
 MmInitializeAddressSpace(
-    struct _EPROCESS* Process,
+    struct _ROS_EPROCESS* Process,
     PMADDRESS_SPACE AddressSpace);
 
 NTSTATUS
@@ -445,7 +445,7 @@ MmFindGap(
 VOID
 STDCALL
 MmReleaseMemoryAreaIfDecommitted(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PMADDRESS_SPACE AddressSpace,
     PVOID BaseAddress
 );
@@ -621,18 +621,18 @@ MmShowOutOfSpaceMessagePagingFile(VOID);
 NTSTATUS
 STDCALL
 MmCreateProcessAddressSpace(
-    IN struct _EPROCESS* Process,
-    IN PSECTION_OBJECT Section OPTIONAL
+    IN struct _ROS_EPROCESS* Process,
+    IN PROS_SECTION_OBJECT Section OPTIONAL
 );
 
 NTSTATUS
 STDCALL
-MmCreatePeb(PEPROCESS Process);
+MmCreatePeb(struct _ROS_EPROCESS *Process);
 
 struct _TEB*
 STDCALL
 MmCreateTeb(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PCLIENT_ID ClientId,
     PINITIAL_TEB InitialTeb
 );
@@ -640,7 +640,7 @@ MmCreateTeb(
 VOID
 STDCALL
 MmDeleteTeb(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     struct _TEB* Teb
 );
 
@@ -706,7 +706,7 @@ MmQueryAnonMem(
 VOID
 NTAPI
 MmFreeVirtualMemory(
-    struct _EPROCESS* Process,
+    struct _ROS_EPROCESS* Process,
     PMEMORY_AREA MemoryArea
 );
 
@@ -860,7 +860,7 @@ VOID
 NTAPI
 MmInsertRmap(
     PFN_TYPE Page,
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
@@ -869,14 +869,14 @@ NTAPI
 MmDeleteAllRmaps(
     PFN_TYPE Page,
     PVOID Context,
-    VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process, PVOID Address)
+    VOID (*DeleteMapping)(PVOID Context, struct _ROS_EPROCESS *Process, PVOID Address)
 );
 
 VOID
 NTAPI
 MmDeleteRmap(
     PFN_TYPE Page,
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
@@ -994,7 +994,7 @@ MmCommitPagedPoolAddress(
 NTSTATUS
 NTAPI
 MmCreateVirtualMapping(
-    struct _EPROCESS* Process,
+    struct _ROS_EPROCESS* Process,
     PVOID Address,
     ULONG flProtect,
     PPFN_TYPE Pages,
@@ -1004,7 +1004,7 @@ MmCreateVirtualMapping(
 NTSTATUS
 NTAPI
 MmCreateVirtualMappingUnsafe(
-    struct _EPROCESS* Process,
+    struct _ROS_EPROCESS* Process,
     PVOID Address,
     ULONG flProtect,
     PPFN_TYPE Pages,
@@ -1014,13 +1014,13 @@ MmCreateVirtualMappingUnsafe(
 ULONG
 NTAPI
 MmGetPageProtect(
-    struct _EPROCESS* Process,
+    struct _ROS_EPROCESS* Process,
     PVOID Address);
 
 VOID
 NTAPI
 MmSetPageProtect(
-    struct _EPROCESS* Process,
+    struct _ROS_EPROCESS* Process,
     PVOID Address,
     ULONG flProtect
 );
@@ -1028,7 +1028,7 @@ MmSetPageProtect(
 BOOLEAN
 NTAPI
 MmIsPagePresent(
-    struct _EPROCESS* Process,
+    struct _ROS_EPROCESS* Process,
     PVOID Address
 );
 
@@ -1039,7 +1039,7 @@ MmInitGlobalKernelPageDirectory(VOID);
 VOID
 NTAPI
 MmDisableVirtualMapping(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address,
     BOOLEAN* WasDirty,
     PPFN_TYPE Page
@@ -1048,7 +1048,7 @@ MmDisableVirtualMapping(
 VOID
 NTAPI
 MmEnableVirtualMapping(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
@@ -1059,7 +1059,7 @@ MmRawDeleteVirtualMapping(PVOID Address);
 VOID
 NTAPI
 MmDeletePageFileMapping(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address,
     SWAPENTRY* SwapEntry
 );
@@ -1067,7 +1067,7 @@ MmDeletePageFileMapping(
 NTSTATUS
 NTAPI
 MmCreatePageFileMapping(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address,
     SWAPENTRY SwapEntry
 );
@@ -1075,7 +1075,7 @@ MmCreatePageFileMapping(
 BOOLEAN
 NTAPI
 MmIsPageSwapEntry(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
@@ -1089,7 +1089,7 @@ MmTransferOwnershipPage(
 VOID
 NTAPI
 MmSetDirtyPage(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
@@ -1125,7 +1125,7 @@ MmReferencePageUnsafe(PFN_TYPE Page);
 BOOLEAN
 NTAPI
 MmIsAccessedAndResetAccessPage(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
@@ -1160,7 +1160,7 @@ MmGetSavedSwapEntryPage(PFN_TYPE Page);
 VOID
 NTAPI
 MmSetCleanPage(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
@@ -1171,37 +1171,37 @@ MmCreatePageTable(PVOID PAddress);
 VOID
 NTAPI
 MmDeletePageTable(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
 PFN_TYPE
 NTAPI
 MmGetPfnForProcess(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
 NTSTATUS
 STDCALL
 MmCopyMmInfo(
-    PEPROCESS Src,
-    PEPROCESS Dest,
+    struct _ROS_EPROCESS *Src,
+    struct _ROS_EPROCESS *Dest,
     PPHYSICAL_ADDRESS DirectoryTableBase
 );
 
 NTSTATUS
 NTAPI
-MmReleaseMmInfo(PEPROCESS Process);
+MmReleaseMmInfo(struct _ROS_EPROCESS *Process);
 
 NTSTATUS
 NTAPI
-Mmi386ReleaseMmInfo(PEPROCESS Process);
+Mmi386ReleaseMmInfo(struct _ROS_EPROCESS *Process);
 
 VOID
 NTAPI
 MmDeleteVirtualMapping(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address,
     BOOLEAN FreePage,
     BOOLEAN* WasDirty,
@@ -1211,7 +1211,7 @@ MmDeleteVirtualMapping(
 BOOLEAN
 NTAPI
 MmIsDirtyPage(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address
 );
 
@@ -1226,7 +1226,7 @@ MmMarkPageUnmapped(PFN_TYPE Page);
 VOID
 NTAPI
 MmUpdatePageDir(
-    PEPROCESS Process,
+    struct _ROS_EPROCESS *Process,
     PVOID Address,
     ULONG Size
 );
@@ -1297,21 +1297,6 @@ MmQuerySectionView(
     PVOID Address,
     PMEMORY_BASIC_INFORMATION Info,
     PULONG ResultLength
-);
-
-NTSTATUS
-NTAPI
-MmMapViewOfSection(
-    IN PVOID SectionObject,
-    IN PEPROCESS Process,
-    IN OUT PVOID *BaseAddress,
-    IN ULONG ZeroBits,
-    IN ULONG CommitSize,
-    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-    IN OUT PULONG ViewSize,
-    IN SECTION_INHERIT InheritDisposition,
-    IN ULONG AllocationType,
-    IN ULONG Protect
 );
 
 NTSTATUS

@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -24,7 +24,6 @@ Author:
 //
 #include <umtypes.h>
 #ifndef NTOS_MODE_USER
-#include <arc/arc.h>
 #include <haltypes.h>
 #include <potypes.h>
 #include <ifssupp.h>
@@ -38,17 +37,43 @@ Author:
 //
 // Maximum System Descriptor Table Entries
 //
-#define SSDT_MAX_ENTRIES                4
-
-//
-// Maximum number of times a thread can be suspended
-//
-#define MAXIMUM_SUSPEND_COUNT           0x7F
+#define SSDT_MAX_ENTRIES                2
 
 //
 // Dispatcher Priority increments
 //
 #define THREAD_ALERT_INCREMENT          2
+
+//
+// User Shared Data in Kernel-Mode
+//
+#define KI_USER_SHARED_DATA             0xffdf0000
+
+//
+// Physical memory offset of KUSER_SHARED_DATA
+//
+#define KI_USER_SHARED_DATA_PHYSICAL    0x41000
+
+//
+// Kernel Feature Bits
+//
+#define KF_RDTSC                        0x00000002
+
+//
+// KPCR Access for non-IA64 builds
+//
+#define K0IPCR                          ((ULONG_PTR)(KIP0PCRADDRESS))
+#define PCR                             ((volatile KPCR * const)K0IPCR)
+#define KeGetPcr()                      PCR
+
+//
+// Number of dispatch codes supported by KINTERRUPT
+//
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#define KINTERRUPT_DISPATCH_CODES       135
+#else
+#define KINTERRUPT_DISPATCH_CODES       106
+#endif
 
 #ifdef NTOS_MODE_USER
 
@@ -215,6 +240,9 @@ typedef enum _KTHREAD_STATE
     Waiting,
     Transition,
     DeferredReady,
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    GateWait,
+#endif
 } KTHREAD_STATE, *PKTHREAD_STATE;
 
 //
@@ -225,7 +253,31 @@ typedef enum _KPROCESS_STATE
     ProcessInMemory,
     ProcessOutOfMemory,
     ProcessInTransition,
+    ProcessInSwap,
+    ProcessOutSwap,
 } KPROCESS_STATE, *PKPROCESS_STATE;
+
+//
+// NtVdmControl Classes
+//
+typedef enum _VDMSERVICECLASS
+{
+   VdmStartExecution = 0,
+   VdmQueueInterrupt = 1,
+   VdmDelayInterrupt = 2,
+   VdmInitialize = 3,
+   VdmFeatures = 4,
+   VdmSetInt21Handler = 5,
+   VdmQueryDir = 6,
+   VdmPrinterDirectIoOpen = 7,
+   VdmPrinterDirectIoClose = 8,
+   VdmPrinterInitialize = 9,
+   VdmSetLdtEntries = 10,
+   VdmSetProcessLdtInfo = 11,
+   VdmAdlibEmulation = 12,
+   VdmPMCliControl = 13,
+   VdmQueryVdmProcess = 14,
+} VDMSERVICECLASS;
 
 #ifdef NTOS_MODE_USER
 
@@ -289,6 +341,9 @@ typedef struct _KUSER_SHARED_DATA
     LARGE_INTEGER SystemExpirationDate;
     ULONG SuiteMask;
     BOOLEAN KdDebuggerEnabled;
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+    UCHAR NXSupportPolicy;
+#endif
     volatile ULONG ActiveConsoleId;
     volatile ULONG DismountCount;
     ULONG ComPlusPackage;
@@ -306,12 +361,83 @@ typedef struct _KUSER_SHARED_DATA
         volatile ULONG64 TickCountQuad;
     };
     ULONG Cookie;
+#if (NTDDI_VERSION >= NTDDI_WS03)
     LONGLONG ConsoleSessionForegroundProcessId;
     ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
-    ULONG UserModeGlobalLogging;
+#endif
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    USHORT UserModeGlobalLogger[8];
+    ULONG HeapTracingPid[2];
+    ULONG CritSecTracingPid[2];
+    union
+    {
+        ULONG SharedDataFlags;
+        struct
+        {
+            ULONG DbgErrorPortPresent:1;
+            ULONG DbgElevationEnabled:1;
+            ULONG DbgVirtEnabled:1;
+            ULONG DbgInstallerDetectEnabled:1;
+            ULONG SpareBits:28;
+        };
+    };
+    ULONG ImageFileExecutionOptions;
+    KAFFINITY ActiveProcessorAffinity;
+#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
+//
+// VDM Structures
+//
+#include "pshpack1.h"
+typedef struct _VdmVirtualIca
+{
+    LONG ica_count[8];
+    LONG ica_int_line;
+    LONG ica_cpu_int;
+    USHORT ica_base;
+    USHORT ica_hipiri;
+    USHORT ica_mode;
+    UCHAR ica_master;
+    UCHAR ica_irr;
+    UCHAR ica_isr;
+    UCHAR ica_imr;
+    UCHAR ica_ssr;
+} VDMVIRTUALICA, *PVDMVIRTUALICA;
+#include "poppack.h"
+
+typedef struct _VdmIcaUserData
+{
+    PVOID pIcaLock;
+    PVDMVIRTUALICA pIcaMaster;
+    PVDMVIRTUALICA pIcaSlave;
+    PULONG pDelayIrq;
+    PULONG pUndelayIrq;
+    PULONG pDelayIret;
+    PULONG pIretHooked;
+    PULONG pAddrIretBopTable;
+    PHANDLE phWowIdleEvent;
+    PLARGE_INTEGER pIcaTimeout;
+    PHANDLE phMainThreadSuspended;
+} VDMICAUSERDATA, *PVDMICAUSERDATA;
+
+typedef struct _VDM_INITIALIZE_DATA
+{
+    PVOID TrapcHandler;
+    PVDMICAUSERDATA IcaUserData;
+} VDM_INITIALIZE_DATA, *PVDM_INITIALIZE_DATA;
+
 #else
+
+//
+// System Thread Start Routine
+//
+typedef
+VOID
+(NTAPI *PKSYSTEM_ROUTINE)(
+    PKSTART_ROUTINE StartRoutine,
+    PVOID StartContext
+);
 
 //
 // APC Environment Types
@@ -322,6 +448,17 @@ typedef enum _KAPC_ENVIRONMENT
     AttachedApcEnvironment,
     CurrentApcEnvironment
 } KAPC_ENVIRONMENT;
+
+//
+// CPU Cache Types
+//
+typedef enum _PROCESSOR_CACHE_TYPE
+{
+    CacheUnified,
+    CacheInstruction,
+    CacheData,
+    CacheTrace,
+} PROCESSOR_CACHE_TYPE;
 
 //
 // PRCB DPC Data
@@ -344,6 +481,18 @@ typedef struct _PP_LOOKASIDE_LIST
 } PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 //
+// CPU Cache Descriptor
+//
+typedef struct _CACHE_DESCRIPTOR
+{
+    UCHAR Level;
+    UCHAR Associativity;
+    USHORT LineSize;
+    ULONG Size;
+    PROCESSOR_CACHE_TYPE Type;
+} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
+
+//
 // Architectural Types
 //
 #include <arch/ketypes.h>
@@ -351,11 +500,12 @@ typedef struct _PP_LOOKASIDE_LIST
 //
 // Kernel Memory Node
 //
+#include <pshpack1.h>
 typedef struct _KNODE
 {
     SLIST_HEADER DeadStackList;
     SLIST_HEADER PfnDereferenceSListHead;
-    ULONG ProcessorMask;
+    KAFFINITY ProcessorMask;
     ULONG Color;
     UCHAR Seed;
     UCHAR NodeNumber;
@@ -364,6 +514,7 @@ typedef struct _KNODE
     ULONG FreeCount[2];
     struct _SINGLE_LIST_ENTRY *PfnDeferredList;
 } KNODE, *PKNODE;
+#include <poppack.h>
 
 //
 // Kernel Profile Object
@@ -393,6 +544,10 @@ typedef struct _KINTERRUPT
     CSHORT Size;
     LIST_ENTRY InterruptListEntry;
     PKSERVICE_ROUTINE ServiceRoutine;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PKSERVICE_ROUTINE MessageServiceRoutine;
+    ULONG MessageIndex;
+#endif
     PVOID ServiceContext;
     KSPIN_LOCK SpinLock;
     ULONG TickCount;
@@ -406,9 +561,15 @@ typedef struct _KINTERRUPT
     CHAR Number;
     UCHAR ShareVector;
     KINTERRUPT_MODE Mode;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    KINTERRUPT_POLARITY Polarity;
+#endif
     ULONG ServiceCount;
     ULONG DispatchCount;
-    ULONG DispatchCode[106];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONGLONG Rsvd1;
+#endif
+    ULONG DispatchCode[KINTERRUPT_DISPATCH_CODES];
 } KINTERRUPT, *PKINTERRUPT;
 
 //
@@ -475,179 +636,236 @@ typedef enum _KOBJECTS
 #include <pshpack1.h>
 typedef struct _KTHREAD
 {
-    DISPATCHER_HEADER DispatcherHeader;                 /* 00 */
-    LIST_ENTRY MutantListHead;                          /* 10 */
-    PVOID InitialStack;                                 /* 18 */
-    ULONG_PTR StackLimit;                               /* 1C */
-    PVOID KernelStack;                                  /* 20 */
-    KSPIN_LOCK ThreadLock;                              /* 24 */
-    union                                               /* 28 */
-    {                                                   /* 28 */
-        KAPC_STATE ApcState;                            /* 34 */
-        struct                                          /* 28 */
-        {                                               /* 28 */
-            UCHAR ApcStateFill[23];                     /* 34 */
-            UCHAR ApcQueueable;                         /* 3F */
-        };                                              /* 3F */
-    };                                                  /* 3F */
-    UCHAR NextProcessor;                                /* 40 */
-    UCHAR DeferredProcessor;                            /* 41 */
-    UCHAR AdjustReason;                                 /* 42 */
-    UCHAR AdjustIncrement;                              /* 43 */
-    KSPIN_LOCK ApcQueueLock;                            /* 44 */
-    ULONG ContextSwitches;                              /* 48 */
-    UCHAR State;                                        /* 4C */
-    UCHAR NpxState;                                     /* 4D */
-    UCHAR WaitIrql;                                     /* 4E */
-    UCHAR WaitMode;                                     /* 4F */
-    LONG WaitStatus;                                    /* 50 */
-    union                                               /* 54 */
-    {                                                   /* 54 */
-        PKWAIT_BLOCK WaitBlockList;                     /* 54 */
-        PKGATE GateObject;                              /* 54 */
-    };                                                  /* 54 */
-    UCHAR Alertable;                                    /* 58 */
-    UCHAR WaitNext;                                     /* 59 */
-    UCHAR WaitReason;                                   /* 5A */
-    UCHAR Priority;                                     /* 5B */
-    UCHAR EnableStackSwap;                              /* 5C */
-    UCHAR SwapBusy;                                     /* 5D */
-    UCHAR Alerted[2];                                   /* 5E */
-    union                                               /* 60 */
-    {                                                   /* 60 */
-        LIST_ENTRY WaitListEntry;                       /* 60 */
-        SINGLE_LIST_ENTRY SwapListEntry;                /* 60 */
-    };                                                  /* 68 */
-    PKQUEUE Queue;                                      /* 68 */
-    ULONG WaitTime;                                     /* 6C */
-    union                                               /* 70 */
-    {                                                   /* 70 */
-        struct                                          /* 70 */
-        {                                               /* 70 */
-            USHORT KernelApcDisable;                    /* 70 */
-            USHORT SpecialApcDisable;                   /* 72 */
-        };                                              /* 70 */
-        ULONG CombinedApcDisable;                       /* 70 */
-    };                                                  /* 74 */
-    struct _TEB *Teb;                                   /* 74 */
-    union                                               /* 78 */
-    {                                                   /* 78 */
-        KTIMER Timer;                                   /* 78 */
-        UCHAR TimerFill[40];                            /* 78 */
-    };                                                  /* 78 */
-    union                                               /* A0 */
-    {                                                   /* A0 */
-        struct                                          /* A0 */
-        {                                               /* A0 */
-            LONG AutoAlignment:1;                       /* A0 */
-            LONG DisableBoost:1;                        /* A0 */
-            LONG ReservedFlags:30;                      /* A0 */
-        };                                              /* A0 */
-        LONG ThreadFlags;                               /* A0 */
-    };                                                  /* A0 */
-    PVOID Padding;                                      /* A4 */
-    union                                               /* A8 */
-    {                                                   /* A8 */
-        KWAIT_BLOCK WaitBlock[4];                       /* A8 */
-        union                                           /* A8 */
-        {                                               /* A8 */
-            struct                                      /* A8 */
-            {                                           /* A8 */
-                UCHAR WaitBlockFill0[23];               /* A8 */
-                UCHAR SystemAffinityActive;             /* BF */
-            };                                          /* A8 */
-            struct                                      /* A8 */
-            {                                           /* A8 */
-                UCHAR WaitBlockFill1[47];               /* A8 */
-                UCHAR PreviousMode;                     /* D7 */
-            };                                          /* A8 */
-            struct                                      /* A8 */
-            {                                           /* A8 */
-                UCHAR WaitBlockFill2[71];               /* A8 */
-                UCHAR ResourceIndex;                    /* EF */
-            };                                          /* A8 */
-            struct                                      /* A8 */
-            {                                           /* A8 */
-                UCHAR WaitBlockFill3[95];               /* A8 */
-                UCHAR LargeStack;                       /* 107 */
-            };                                          /* A8 */
-        };                                              /* A8 */
-    };                                                  /* A8 */
-    LIST_ENTRY QueueListEntry;                          /* 108 */
-    PKTRAP_FRAME TrapFrame;                             /* 110 */
-    PVOID CallbackStack;                                /* 114 */
-    PVOID ServiceTable;                                 /* 118 */
-    UCHAR ApcStateIndex;                                /* 11C */
-    UCHAR IdealProcessor;                               /* 11D */
-    UCHAR Preempted;                                    /* 11E */
-    UCHAR ProcessReadyQueue;                            /* 11F */
-    UCHAR KernelStackResident;                          /* 120 */
-    CHAR BasePriority;                                  /* 121 */
-    CHAR PriorityDecrement;                             /* 122 */
-    CHAR Saturation;                                    /* 123 */
-    KAFFINITY UserAffinity;                             /* 124 */
-    struct _KPROCESS *Process;                          /* 128 */
-    KAFFINITY Affinity;                                 /* 12C */
-    PKAPC_STATE ApcStatePointer[2];                     /* 130 */
-    union                                               /* 138 */
-    {                                                   /* 138 */
-        KAPC_STATE SavedApcState;                       /* 138 */
-        union                                           /* 138 */
-        {                                               /* 138 */
-            UCHAR SavedApcStateFill[23];                /* 138 */
-            CHAR FreezeCount;                           /* 14F */
-        };                                              /* 138 */
-    };                                                  /* 138 */
-    CHAR SuspendCount;                                  /* 150 */
-    UCHAR UserIdealProcessor;                           /* 151 */
-    UCHAR CalloutActive;                                /* 152 */
-    UCHAR Iopl;                                         /* 153 */
-    PVOID Win32Thread;                                  /* 154 */
-    PVOID StackBase;                                    /* 158 */
-    union                                               /* 15C */
-    {                                                   /* 15C */
-        KAPC SuspendApc;                                /* 15C */
-        union                                           /* 15C */
-        {                                               /* 15C */
-            UCHAR SuspendApcFill0[1];                   /* 15C */
-            CHAR Quantum;                               /* 15D */
-        };                                              /* 15C */
-        union                                           /* 15C */
-        {                                               /* 15C */
-            UCHAR SuspendApcFill1[3];                   /* 15C */
-            UCHAR QuantumReset;                         /* 15F */
-        };                                              /* 15C */
-        union                                           /* 15C */
-        {                                               /* 15C */
-            UCHAR SuspendApcFill2[4];                   /* 15C */
-            ULONG KernelTime;                           /* 160 */
-        };                                              /* 15C */
-        union                                           /* 15C */
-        {                                               /* 15C */
-            UCHAR SuspendApcFill3[36];                  /* 15C */
-            PVOID TlsArray;                             /* 180 */
-        };                                              /* 15C */
-        union                                           /* 15C */
-        {                                               /* 15C */
-            UCHAR SuspendApcFill4[40];                  /* 15C */
-            PVOID LegoData;                             /* 184 */
-        };                                              /* 15C */
-        union                                           /* 15C */
-        {                                               /* 15C */
-            UCHAR SuspendApcFill5[47];                  /* 15C */
-            UCHAR PowerState;                           /* 18B */
-        };                                              /* 15C */
-    };                                                  /* 15C */
-    ULONG UserTime;                                     /* 18C */
-    union                                               /* 190 */
-    {                                                   /* 190 */
-        KSEMAPHORE SuspendSemaphore;                    /* 190 */
-        UCHAR SuspendSemaphorefill[20];                 /* 190 */
-    };                                                  /* 190 */
-    ULONG SListFaultCount;                              /* 1A4 */
-    LIST_ENTRY ThreadListEntry;                         /* 1A8 */
-    PVOID SListFaultAddress;                            /* 1B0 */
-} KTHREAD;                                              /* sizeof: 1B4 */
+    DISPATCHER_HEADER DispatcherHeader;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONGLONG CycleTime;
+    ULONG HighCycleTime;
+#else
+    LIST_ENTRY MutantListHead;
+#endif
+    PVOID InitialStack;
+    ULONG_PTR StackLimit;
+    PVOID KernelStack;
+    KSPIN_LOCK ThreadLock;
+    union
+    {
+        KAPC_STATE ApcState;
+        struct
+        {
+            UCHAR ApcStateFill[23];
+            UCHAR ApcQueueable;
+        };
+    };
+    UCHAR NextProcessor;
+    UCHAR DeferredProcessor;
+    UCHAR AdjustReason;
+    UCHAR AdjustIncrement;
+    KSPIN_LOCK ApcQueueLock;
+    ULONG ContextSwitches;
+    UCHAR State;
+    UCHAR NpxState;
+    UCHAR WaitIrql;
+    UCHAR WaitMode;
+    LONG WaitStatus;
+    union
+    {
+        PKWAIT_BLOCK WaitBlockList;
+        PKGATE GateObject;
+    };
+    UCHAR Alertable;
+    UCHAR WaitNext;
+    UCHAR WaitReason;
+    UCHAR Priority;
+    UCHAR EnableStackSwap;
+    UCHAR SwapBusy;
+    UCHAR Alerted[2];
+    union
+    {
+        LIST_ENTRY WaitListEntry;
+        SINGLE_LIST_ENTRY SwapListEntry;
+    };
+    PKQUEUE Queue;
+    ULONG WaitTime;
+    union
+    {
+        struct
+        {
+            USHORT KernelApcDisable;
+            USHORT SpecialApcDisable;
+        };
+        ULONG CombinedApcDisable;
+    };
+    struct _TEB *Teb;
+    union
+    {
+        KTIMER Timer;
+        UCHAR TimerFill[40];
+    };
+    union
+    {
+        struct
+        {
+            LONG AutoAlignment:1;
+            LONG DisableBoost:1;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+            LONG EtwStackTrace1ApcInserted:1;
+            LONG EtwStackTrace2ApcInserted:1;
+            LONG CycleChargePending:1;
+            LONG ReservedFlags:27;
+#else
+            LONG ReservedFlags:30;
+#endif
+        };
+        LONG ThreadFlags;
+    };
+    PVOID Padding;
+    union
+    {
+        KWAIT_BLOCK WaitBlock[4];
+        union
+        {
+            struct
+            {
+                UCHAR WaitBlockFill0[23];
+                UCHAR SystemAffinityActive;
+            };
+            struct
+            {
+                UCHAR WaitBlockFill1[47];
+                UCHAR PreviousMode;
+            };
+            struct
+            {
+                UCHAR WaitBlockFill2[71];
+                UCHAR ResourceIndex;
+            };
+            struct
+            {
+                UCHAR WaitBlockFill3[95];
+                UCHAR LargeStack;
+            };
+        };
+    };
+    LIST_ENTRY QueueListEntry;
+    PKTRAP_FRAME TrapFrame;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PVOID FirstArgument;
+#endif
+    PVOID CallbackStack;
+    PVOID ServiceTable;
+    UCHAR ApcStateIndex;
+    UCHAR IdealProcessor;
+    UCHAR Preempted;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    UCHAR CalloutActive;
+#else
+    UCHAR ProcessReadyQueue;
+#endif
+    UCHAR KernelStackResident;
+    CHAR BasePriority;
+    CHAR PriorityDecrement;
+    CHAR Saturation;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG SystemCallNumber;
+    union
+    {
+        struct
+        {
+            ULONG Reserved0:1;
+            ULONG ReadyTransition:1;
+            ULONG ProcessReadyQueue:1;
+            ULONG Reserved2:1;
+            ULONG Reserved3:28;
+        };
+        LONG MiscFlags;
+    };
+#endif
+    KAFFINITY UserAffinity;
+    struct _KPROCESS *Process;
+    KAFFINITY Affinity;
+    PKAPC_STATE ApcStatePointer[2];
+    union
+    {
+        KAPC_STATE SavedApcState;
+        union
+        {
+            UCHAR SavedApcStateFill[23];
+            CHAR FreezeCount;
+        };
+    };
+    CHAR SuspendCount;
+    UCHAR UserIdealProcessor;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    union
+    {
+        struct
+        {
+            UCHAR ReservedBits0:1;
+            UCHAR SegmentsPresent:1;
+            UCHAR Reservedbits1:1;
+        };
+        UCHAR NestedStateFlags;
+    };
+#else
+    UCHAR CalloutActive;
+#endif
+    UCHAR Iopl;
+    PVOID Win32Thread;
+    PVOID StackBase;
+    union
+    {
+        KAPC SuspendApc;
+        struct
+        {
+            UCHAR SuspendApcFill0[1];
+            CHAR Quantum;
+        };
+        struct
+        {
+            UCHAR SuspendApcFill1[3];
+            UCHAR QuantumReset;
+        };
+        struct
+        {
+            UCHAR SuspendApcFill2[4];
+            ULONG KernelTime;
+        };
+        struct
+        {
+            UCHAR SuspendApcFill3[36];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+            PKPRCB WaitPrcb;
+#else
+            PVOID TlsArray;
+#endif
+        };
+        struct
+        {
+            UCHAR SuspendApcFill4[40];
+            PVOID LegoData;
+        };
+        struct
+        {
+            UCHAR SuspendApcFill5[47];
+            UCHAR PowerState;
+        };
+    };
+    ULONG UserTime;
+    union
+    {
+        KSEMAPHORE SuspendSemaphore;
+        UCHAR SuspendSemaphorefill[20];
+    };
+    ULONG SListFaultCount;
+    LIST_ENTRY ThreadListEntry;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LIST_ENTRY MutantListHead;
+#endif
+    PVOID SListFaultAddress;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PVOID MdlForLockedteb;
+#endif
+} KTHREAD;
 #include <poppack.h>
 
 //
@@ -655,46 +873,55 @@ typedef struct _KTHREAD
 //
 typedef struct _KPROCESS
 {
-    DISPATCHER_HEADER     Header;                    /* 000 */
-    LIST_ENTRY            ProfileListHead;           /* 010 */
-    PHYSICAL_ADDRESS      DirectoryTableBase;        /* 018 */
+    DISPATCHER_HEADER Header;
+    LIST_ENTRY ProfileListHead;
+    PHYSICAL_ADDRESS DirectoryTableBase;
 #if defined(_M_IX86)
-    KGDTENTRY             LdtDescriptor;             /* 020 */
-    KIDTENTRY             Int21Descriptor;           /* 028 */
-    USHORT                IopmOffset;                /* 030 */
-    UCHAR                 Iopl;                      /* 032 */
-    UCHAR                 Unused;                    /* 033 */
+    KGDTENTRY LdtDescriptor;
+    KIDTENTRY Int21Descriptor;
+    USHORT IopmOffset;
+    UCHAR Iopl;
+    UCHAR Unused;
 #endif
-    ULONG                 ActiveProcessors;          /* 034 */
-    ULONG                 KernelTime;                /* 038 */
-    ULONG                 UserTime;                  /* 03C */
-    LIST_ENTRY            ReadyListHead;             /* 040 */
-    LIST_ENTRY            SwapListEntry;             /* 048 */
-    PVOID                 VdmTrapcHandler;           /* 04C */
-    LIST_ENTRY            ThreadListHead;            /* 050 */
-    KSPIN_LOCK            ProcessLock;               /* 058 */
-    KAFFINITY             Affinity;                  /* 05C */
+    ULONG ActiveProcessors;
+    ULONG KernelTime;
+    ULONG UserTime;
+    LIST_ENTRY ReadyListHead;
+    SINGLE_LIST_ENTRY SwapListEntry;
+    PVOID VdmTrapcHandler;
+    LIST_ENTRY ThreadListHead;
+    KSPIN_LOCK ProcessLock;
+    KAFFINITY Affinity;
     union
     {
         struct
         {
-            ULONG         AutoAlignment:1;           /* 060.0 */
-            ULONG         DisableBoost:1;            /* 060.1 */
-            ULONG         DisableQuantum:1;          /* 060.2 */
-            ULONG         ReservedFlags:29;          /* 060.3 */
+            ULONG AutoAlignment:1;
+            ULONG DisableBoost:1;
+            ULONG DisableQuantum:1;
+            ULONG ReservedFlags:29;
         };
-        ULONG             ProcessFlags;              /* 060 */
+        ULONG ProcessFlags;
     };
-    CHAR                  BasePriority;              /* 064 */
-    CHAR                  QuantumReset;              /* 065 */
-    UCHAR                 State;                     /* 066 */
-    UCHAR                 ThreadSeed;                /* 067 */
-    UCHAR                 PowerState;                /* 068 */
-    UCHAR                 IdealNode;                 /* 069 */
-    UCHAR                 Visited;                   /* 06A */
-    KEXECUTE_OPTIONS      Flags;                     /* 06B */
-    ULONG                 StackCount;                /* 06C */
-    LIST_ENTRY            ProcessListEntry;          /* 070 */
+    CHAR BasePriority;
+    CHAR QuantumReset;
+    UCHAR State;
+    UCHAR ThreadSeed;
+    UCHAR PowerState;
+    UCHAR IdealNode;
+    UCHAR Visited;
+    union
+    {
+        KEXECUTE_OPTIONS Flags;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+        UCHAR ExecuteOptions;
+#endif
+    };
+    ULONG StackCount;
+    LIST_ENTRY ProcessListEntry;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONGLONG CycleTime;
+#endif
 } KPROCESS, *PKPROCESS;
 
 //
@@ -714,10 +941,10 @@ typedef struct _KSERVICE_TABLE_DESCRIPTOR
 //
 // Exported Loader Parameter Block
 //
-#ifdef _REACTOS_
-extern LOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
+#ifndef _REACTOS_
+extern struct _LOADER_PARAMETER_BLOCK NTSYSAPI *KeLoaderBlock;
 #else
-extern PLOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
+extern struct _ROS_LOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
 #endif
 
 //

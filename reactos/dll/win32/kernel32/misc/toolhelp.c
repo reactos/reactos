@@ -92,8 +92,8 @@ typedef struct _TH32SNAPSHOT
 /* INTERNAL FUNCTIONS *********************************************************/
 
 static VOID
-TH32FreeAllocatedResources(PRTL_DEBUG_BUFFER HeapDebug,
-                           PRTL_DEBUG_BUFFER ModuleDebug,
+TH32FreeAllocatedResources(PRTL_DEBUG_INFORMATION HeapDebug,
+                           PRTL_DEBUG_INFORMATION ModuleDebug,
                            PVOID ProcThrdInfo,
                            SIZE_T ProcThrdInfoSize)
 {
@@ -118,8 +118,8 @@ TH32FreeAllocatedResources(PRTL_DEBUG_BUFFER HeapDebug,
 static NTSTATUS
 TH32CreateSnapshot(DWORD dwFlags,
                    DWORD th32ProcessID,
-                   PRTL_DEBUG_BUFFER *HeapDebug,
-                   PRTL_DEBUG_BUFFER *ModuleDebug,
+                   PRTL_DEBUG_INFORMATION *HeapDebug,
+                   PRTL_DEBUG_INFORMATION *ModuleDebug,
                    PVOID *ProcThrdInfo,
                    SIZE_T *ProcThrdInfoSize)
 {
@@ -221,8 +221,8 @@ TH32CreateSnapshot(DWORD dwFlags,
 static NTSTATUS
 TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
                                     DWORD th32ProcessID,
-                                    PRTL_DEBUG_BUFFER HeapDebug,
-                                    PRTL_DEBUG_BUFFER ModuleDebug,
+                                    PRTL_DEBUG_INFORMATION HeapDebug,
+                                    PRTL_DEBUG_INFORMATION ModuleDebug,
                                     PVOID ProcThrdInfo,
                                     HANDLE *SectionHandle)
 {
@@ -248,8 +248,8 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
    */
   if(dwFlags & TH32CS_SNAPHEAPLIST)
   {
-    hi = (PRTL_PROCESS_HEAPS)HeapDebug->HeapInformation;
-    nHeaps = hi->HeapCount;
+    hi = (PRTL_PROCESS_HEAPS)HeapDebug->Heaps;
+    nHeaps = hi->NumberOfHeaps;
     RequiredSnapshotSize += nHeaps * sizeof(HEAPLIST32);
   }
 
@@ -258,8 +258,8 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
    */
   if(dwFlags & TH32CS_SNAPMODULE)
   {
-    mi = (PRTL_PROCESS_MODULES)ModuleDebug->ModuleInformation;
-    nModules = mi->ModuleCount;
+    mi = (PRTL_PROCESS_MODULES)ModuleDebug->Modules;
+    nModules = mi->NumberOfModules;
     RequiredSnapshotSize += nModules * sizeof(MODULEENTRY32W);
   }
 
@@ -350,13 +350,13 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
     {
       HeapListEntry->dwSize = sizeof(HEAPLIST32);
       HeapListEntry->th32ProcessID = th32ProcessID;
-      HeapListEntry->th32HeapID = (ULONG_PTR)hi->HeapEntry[i].Base;
-      HeapListEntry->dwFlags = hi->HeapEntry[i].Flags;
+      HeapListEntry->th32HeapID = (ULONG_PTR)hi->Heaps[i].BaseAddress;
+      HeapListEntry->dwFlags = hi->Heaps[i].Flags;
 
       HeapListEntry++;
     }
 
-    DataOffset += hi->HeapCount * sizeof(HEAPLIST32);
+    DataOffset += hi->NumberOfHeaps * sizeof(HEAPLIST32);
   }
 
   /* initialize the module list */
@@ -370,22 +370,22 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       ModuleListEntry->dwSize = sizeof(MODULEENTRY32W);
       ModuleListEntry->th32ModuleID = 1; /* no longer used, always set to one! */
       ModuleListEntry->th32ProcessID = th32ProcessID;
-      ModuleListEntry->GlblcntUsage = mi->ModuleEntry[i].LoadCount;
-      ModuleListEntry->ProccntUsage = mi->ModuleEntry[i].LoadCount;
-      ModuleListEntry->modBaseAddr = (BYTE*)mi->ModuleEntry[i].Base;
-      ModuleListEntry->modBaseSize = mi->ModuleEntry[i].Size;
-      ModuleListEntry->hModule = (HMODULE)mi->ModuleEntry[i].Base;
+      ModuleListEntry->GlblcntUsage = mi->Modules[i].LoadCount;
+      ModuleListEntry->ProccntUsage = mi->Modules[i].LoadCount;
+      ModuleListEntry->modBaseAddr = (BYTE*)mi->Modules[i].ImageBase;
+      ModuleListEntry->modBaseSize = mi->Modules[i].ImageSize;
+      ModuleListEntry->hModule = (HMODULE)mi->Modules[i].ImageBase;
 
       MultiByteToWideChar(CP_ACP,
                           0,
-                          &mi->ModuleEntry[i].ImageName[mi->ModuleEntry[i].ModuleNameOffset],
+                          &mi->Modules[i].FullPathName[mi->Modules[i].OffsetToFileName],
                           -1,
                           ModuleListEntry->szModule,
                           sizeof(ModuleListEntry->szModule) / sizeof(ModuleListEntry->szModule[0]));
 
       MultiByteToWideChar(CP_ACP,
                           0,
-                          mi->ModuleEntry[i].ImageName,
+                          mi->Modules[i].FullPathName,
                           -1,
                           ModuleListEntry->szExePath,
                           sizeof(ModuleListEntry->szExePath) / sizeof(ModuleListEntry->szExePath[0]));
@@ -393,7 +393,7 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       ModuleListEntry++;
     }
 
-    DataOffset += mi->ModuleCount * sizeof(MODULEENTRY32W);
+    DataOffset += mi->NumberOfModules * sizeof(MODULEENTRY32W);
   }
 
   /* initialize the process list */
@@ -1113,7 +1113,7 @@ HANDLE
 STDCALL
 CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
 {
-  PRTL_DEBUG_BUFFER HeapDebug, ModuleDebug;
+  PRTL_DEBUG_INFORMATION HeapDebug, ModuleDebug;
   PVOID ProcThrdInfo;
   SIZE_T ProcThrdInfoSize;
   NTSTATUS Status;

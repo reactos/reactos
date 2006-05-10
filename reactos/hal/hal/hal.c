@@ -14,6 +14,8 @@
 #include <ntddk.h>
 #include <ndk/halfuncs.h>
 #include <ndk/kdfuncs.h>
+#include <rosldr.h>
+#include <internal/kd.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -333,7 +335,7 @@ BOOLEAN
 NTAPI
 HalInitSystem(
   ULONG BootPhase,
-  PLOADER_PARAMETER_BLOCK LoaderBlock)
+  PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
   UNIMPLEMENTED;
 
@@ -344,7 +346,7 @@ HalInitSystem(
 VOID
 NTAPI
 HalInitializeProcessor(ULONG ProcessorNumber,
-                       PLOADER_PARAMETER_BLOCK LoaderBlock)
+                       PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
   UNIMPLEMENTED;
 }
@@ -558,7 +560,7 @@ HalTranslateBusAddress(
 VOID
 NTAPI
 IoAssignDriveLetters(
-  PLOADER_PARAMETER_BLOCK LoaderBlock,
+  PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
   PSTRING NtDeviceName,
   PUCHAR NtSystemPath,
   PSTRING NtSystemPathString)

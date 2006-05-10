@@ -28,6 +28,14 @@
 #define NDEBUG
 #include <debug.h>
 
+/* ROS Internal. Please deprecate */
+NTHALAPI
+BOOLEAN
+NTAPI
+HalQueryDisplayOwnership(
+    VOID
+);
+
 #ifndef OBJ_COLORSPACE
 #define OBJ_COLORSPACE	(14)
 #endif

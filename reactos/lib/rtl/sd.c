@@ -800,9 +800,6 @@ RtlSelfRelativeToAbsoluteSD2(IN OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
         return STATUS_BAD_DESCRIPTOR_FORMAT;
     }
 
-    ASSERT(FIELD_OFFSET(SECURITY_DESCRIPTOR, Owner) ==
-           FIELD_OFFSET(SECURITY_DESCRIPTOR_RELATIVE, Owner));
-
 #ifdef _WIN64
 
     RtlpQuerySecurityDescriptor((PISECURITY_DESCRIPTOR)pRelSD,
@@ -914,8 +911,6 @@ RtlSelfRelativeToAbsoluteSD2(IN OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
                                         &pGroup,
                                         &pSacl,
                                         &pDacl);
-
-    ASSERT(sizeof(SECURITY_DESCRIPTOR) == sizeof(SECURITY_DESCRIPTOR_RELATIVE));
 
     /* clear the self-relative flag and simply convert the offsets to pointers */
     pAbsSD->Control &= ~SE_SELF_RELATIVE;

@@ -265,7 +265,7 @@ PsaWalkFirstThread(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess)
   static SIZE_T nOffsetOfThreads = 0;
 
   /* get the offset of the Threads field */
-  nOffsetOfThreads = FIELD_OFFSET(SYSTEM_PROCESS_INFORMATION, TH);
+  nOffsetOfThreads = sizeof(SYSTEM_PROCESS_INFORMATION);
 
   return (PSYSTEM_THREAD_INFORMATION)((ULONG_PTR)CurrentProcess + nOffsetOfThreads);
 }
@@ -274,8 +274,8 @@ PSYSTEM_THREAD_INFORMATION FASTCALL
 PsaWalkNextThread(IN PSYSTEM_THREAD_INFORMATION CurrentThread)
 {
   return (PSYSTEM_THREAD_INFORMATION)((ULONG_PTR)CurrentThread +
-                           (FIELD_OFFSET(SYSTEM_PROCESS_INFORMATION, TH[1]) -
-                            FIELD_OFFSET(SYSTEM_PROCESS_INFORMATION, TH[0])));
+                           ((sizeof(SYSTEM_PROCESS_INFORMATION) + sizeof(SYSTEM_THREAD_INFORMATION)) -
+                            sizeof(SYSTEM_PROCESS_INFORMATION)));
 }
 
 /* EOF */

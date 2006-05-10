@@ -571,7 +571,7 @@ HalRestorePalette(VOID)
 /* PRIVATE FUNCTIONS ********************************************************/
 
 VOID FASTCALL
-HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalInitializeDisplay (PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 /*
  * FUNCTION: Initalize the display
  * ARGUMENTS:

@@ -16,18 +16,18 @@
 /*
  * @unimplemented
  */
-PRTL_DEBUG_BUFFER NTAPI
+PRTL_DEBUG_INFORMATION NTAPI
 RtlCreateQueryDebugBuffer(IN ULONG Size,
                           IN BOOLEAN EventPair)
 {
    NTSTATUS Status;
-   PRTL_DEBUG_BUFFER Buf = NULL;
-   SIZE_T SectionSize = 100 * PAGE_SIZE;
+   PRTL_DEBUG_INFORMATION Buf = NULL;
+   SIZE_T ViewSize = 100 * PAGE_SIZE;
 
    Status = NtAllocateVirtualMemory( NtCurrentProcess(),
                                     (PVOID*)&Buf,
                                      0,
-                                     &SectionSize,
+                                     &ViewSize,
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
@@ -35,10 +35,10 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
         return NULL;
      }
 
-   Buf->SectionBase = Buf;
-   Buf->SectionSize = SectionSize;
+   Buf->ViewBaseClient = Buf;
+   Buf->ViewSize = ViewSize;
 
-   DPRINT("RtlCQDB: BA: %p BS: 0x%lx\n", Buf->SectionBase, Buf->SectionSize);
+   DPRINT("RtlCQDB: BA: %p BS: 0x%lx\n", Buf->ViewBaseClient, Buf->ViewSize);
 
    return Buf;
 }
@@ -47,7 +47,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_BUFFER Buf)
+RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_INFORMATION Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -55,7 +55,7 @@ RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_BUFFER Buf)
      {
      Status = NtFreeVirtualMemory( NtCurrentProcess(),
                                   (PVOID)&Buf,
-                                  &Buf->SectionSize,
+                                  &Buf->ViewSize,
                                    MEM_RELEASE);
      }
    if (!NT_SUCCESS(Status))
@@ -71,7 +71,7 @@ RtlDestroyQueryDebugBuffer(IN PRTL_DEBUG_BUFFER Buf)
  */
 NTSTATUS NTAPI
 RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
-                              IN PRTL_PROCESS_MODULES ModuleInformation OPTIONAL,
+                              IN PRTL_PROCESS_MODULES Modules OPTIONAL,
                               IN ULONG Size OPTIONAL,
                               OUT PULONG ReturnedSize)
 {
@@ -103,14 +103,14 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
        return Status;
     }
 
-  if (ModuleInformation == NULL || Size == 0)
+  if (Modules == NULL || Size == 0)
     {
       Status = STATUS_INFO_LENGTH_MISMATCH;
     }
   else
     {
-      ModuleInformation->ModuleCount = 0;
-      ModulePtr = &ModuleInformation->ModuleEntry[0];
+      Modules->NumberOfModules = 0;
+      ModulePtr = &Modules->Modules[0];
       Status = STATUS_SUCCESS;
     }
 
@@ -154,7 +154,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 
    /* read the current module */
    Status = NtReadVirtualMemory ( ProcessHandle,
-            CONTAINING_RECORD(pleCurEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList),
+            CONTAINING_RECORD(pleCurEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks),
                                  &lmModule,
                                  sizeof(LDR_DATA_TABLE_ENTRY),
                                  NULL );
@@ -183,36 +183,37 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
         {
           Status = STATUS_INFO_LENGTH_MISMATCH;
         }
-      else if (ModuleInformation != NULL)
+      else if (Modules != NULL)
         {
-          ModulePtr->Reserved[0] = ModulePtr->Reserved[1] = 0;      // FIXME: ??
-          ModulePtr->Base        = lmModule.DllBase;
-          ModulePtr->Size        = lmModule.SizeOfImage;
+          ModulePtr->Section = 0;
+          ModulePtr->MappedBase = NULL;      // FIXME: ??
+          ModulePtr->ImageBase        = lmModule.DllBase;
+          ModulePtr->ImageSize        = lmModule.SizeOfImage;
           ModulePtr->Flags       = lmModule.Flags;
-          ModulePtr->Index       = 0;      // FIXME:  ??
-          ModulePtr->Unknown     = 0;      // FIXME: ??
+          ModulePtr->LoadOrderIndex       = 0;      // FIXME:  ??
+          ModulePtr->InitOrderIndex     = 0;      // FIXME: ??
           ModulePtr->LoadCount   = lmModule.LoadCount;
 
           AnsiString.Length        = 0;
           AnsiString.MaximumLength = 256;
-          AnsiString.Buffer        = ModulePtr->ImageName;
+          AnsiString.Buffer        = ModulePtr->FullPathName;
           RtlUnicodeStringToAnsiString(&AnsiString,
                                        &Unicode,
                                        FALSE);
 
-          p = strrchr(ModulePtr->ImageName, '\\');
+          p = strrchr(ModulePtr->FullPathName, '\\');
           if (p != NULL)
-            ModulePtr->ModuleNameOffset = p - ModulePtr->ImageName + 1;
+            ModulePtr->OffsetToFileName = p - ModulePtr->FullPathName + 1;
           else
-            ModulePtr->ModuleNameOffset = 0;
+            ModulePtr->OffsetToFileName = 0;
 
           ModulePtr++;
-          ModuleInformation->ModuleCount++;
+          Modules->NumberOfModules++;
         }
       UsedSize += sizeof(RTL_PROCESS_MODULE_INFORMATION);
 
       /* address of the next module in the list */
-      pleCurEntry = lmModule.InLoadOrderModuleList.Flink;
+      pleCurEntry = lmModule.InLoadOrderLinks.Flink;
   }
 
   if (ReturnedSize != 0)
@@ -230,13 +231,13 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 NTSTATUS NTAPI
 RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                                 IN ULONG DebugInfoMask,
-                                IN OUT PRTL_DEBUG_BUFFER Buf)
+                                IN OUT PRTL_DEBUG_INFORMATION Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Pid = (ULONG) NtCurrentTeb()->Cid.UniqueProcess;
 
-   Buf->InfoClassMask = DebugInfoMask;
-   Buf->SizeOfInfo = sizeof(RTL_DEBUG_BUFFER);
+   Buf->Flags = DebugInfoMask;
+   Buf->OffsetFree = sizeof(RTL_DEBUG_INFORMATION);
 
    DPRINT("QueryProcessDebugInformation Start\n");
 
@@ -258,7 +259,7 @@ if (Pid == ProcessId)
     ULONG ReturnSize = 0;
     ULONG MSize;
 
-    Mp = (PRTL_PROCESS_MODULES)(Buf + Buf->SizeOfInfo);
+    Mp = (PRTL_PROCESS_MODULES)(Buf + Buf->OffsetFree);
 
     /* I like this better than the do & while loop. */
     Status = LdrQueryProcessModuleInformation( NULL,
@@ -272,9 +273,9 @@ if (Pid == ProcessId)
          return Status;
      }
 
-    MSize = Mp->ModuleCount * (sizeof(RTL_PROCESS_MODULES) + 8);
-    Buf->ModuleInformation = Mp;
-    Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
+    MSize = Mp->NumberOfModules * (sizeof(RTL_PROCESS_MODULES) + 8);
+    Buf->Modules = Mp;
+    Buf->OffsetFree = Buf->OffsetFree + MSize;
      }
 
    if (DebugInfoMask & RTL_DEBUG_QUERY_HEAPS)
@@ -282,7 +283,7 @@ if (Pid == ProcessId)
    PRTL_PROCESS_HEAPS Hp;
    ULONG HSize;
 
-   Hp = (PRTL_PROCESS_HEAPS)(Buf + Buf->SizeOfInfo);
+   Hp = (PRTL_PROCESS_HEAPS)(Buf + Buf->OffsetFree);
    HSize = sizeof(RTL_PROCESS_HEAPS);
         if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_TAGS)
           {
@@ -290,8 +291,8 @@ if (Pid == ProcessId)
         if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_BLOCKS)
           {
           }
-   Buf->HeapInformation = Hp;
-   Buf->SizeOfInfo = Buf->SizeOfInfo + HSize;
+   Buf->Heaps = Hp;
+   Buf->OffsetFree = Buf->OffsetFree + HSize;
 
      }
 
@@ -300,14 +301,14 @@ if (Pid == ProcessId)
    PRTL_PROCESS_LOCKS Lp;
    ULONG LSize;
 
-   Lp = (PRTL_PROCESS_LOCKS)(Buf + Buf->SizeOfInfo);
+   Lp = (PRTL_PROCESS_LOCKS)(Buf + Buf->OffsetFree);
    LSize = sizeof(RTL_PROCESS_LOCKS);
-   Buf->LockInformation = Lp;
-   Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
+   Buf->Locks = Lp;
+   Buf->OffsetFree = Buf->OffsetFree + LSize;
     }
 
    DPRINT("QueryProcessDebugInformation end \n");
-   DPRINT("QueryDebugInfo : 0x%lx\n", Buf->SizeOfInfo);
+   DPRINT("QueryDebugInfo : 0x%lx\n", Buf->OffsetFree);
 }
 else
 {
@@ -315,7 +316,7 @@ else
   CLIENT_ID ClientId;
   OBJECT_ATTRIBUTES ObjectAttributes;
 
-       Buf->Unknown[0] = (ULONG)NtCurrentProcess();
+       Buf->TargetProcessHandle = NtCurrentProcess();
 
        ClientId.UniqueThread = 0;
        ClientId.UniqueProcess = (HANDLE)ProcessId;
@@ -340,7 +341,7 @@ else
     ULONG ReturnSize = 0;
     ULONG MSize;
 
-    Mp = (PRTL_PROCESS_MODULES)(Buf + Buf->SizeOfInfo);
+    Mp = (PRTL_PROCESS_MODULES)(Buf + Buf->OffsetFree);
 
     Status = RtlpQueryRemoteProcessModules( hProcess,
                                             NULL,
@@ -356,9 +357,9 @@ else
          return Status;
      }
 
-    MSize = Mp->ModuleCount * (sizeof(RTL_PROCESS_MODULES) + 8);
-    Buf->ModuleInformation = Mp;
-    Buf->SizeOfInfo = Buf->SizeOfInfo + MSize;
+    MSize = Mp->NumberOfModules * (sizeof(RTL_PROCESS_MODULES) + 8);
+    Buf->Modules = Mp;
+    Buf->OffsetFree = Buf->OffsetFree + MSize;
      }
 
    if (DebugInfoMask & RTL_DEBUG_QUERY_HEAPS)
@@ -366,7 +367,7 @@ else
    PRTL_PROCESS_HEAPS Hp;
    ULONG HSize;
 
-   Hp = (PRTL_PROCESS_HEAPS)(Buf + Buf->SizeOfInfo);
+   Hp = (PRTL_PROCESS_HEAPS)(Buf + Buf->OffsetFree);
    HSize = sizeof(RTL_PROCESS_HEAPS);
         if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_TAGS)
           {
@@ -374,8 +375,8 @@ else
         if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_BLOCKS)
           {
           }
-   Buf->HeapInformation = Hp;
-   Buf->SizeOfInfo = Buf->SizeOfInfo + HSize;
+   Buf->Heaps = Hp;
+   Buf->OffsetFree = Buf->OffsetFree + HSize;
 
      }
 
@@ -384,14 +385,14 @@ else
    PRTL_PROCESS_LOCKS Lp;
    ULONG LSize;
 
-   Lp = (PRTL_PROCESS_LOCKS)(Buf + Buf->SizeOfInfo);
+   Lp = (PRTL_PROCESS_LOCKS)(Buf + Buf->OffsetFree);
    LSize = sizeof(RTL_PROCESS_LOCKS);
-   Buf->LockInformation = Lp;
-   Buf->SizeOfInfo = Buf->SizeOfInfo + LSize;
+   Buf->Locks = Lp;
+   Buf->OffsetFree = Buf->OffsetFree + LSize;
     }
 
    DPRINT("QueryProcessDebugInformation end \n");
-   DPRINT("QueryDebugInfo : 0x%lx\n", Buf->SizeOfInfo);
+   DPRINT("QueryDebugInfo : 0x%lx\n", Buf->OffsetFree);
 }
    return Status;
 

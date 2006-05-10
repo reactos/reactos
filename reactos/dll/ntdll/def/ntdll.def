@@ -525,8 +525,8 @@ RtlIpv4StringToAddressExA@16
 RtlIpv4StringToAddressExW@16
 RtlIpv4StringToAddressW@16
 RtlIpv6AddressToStringA@8
-RtlIpv6AddressToStringExA@16
-RtlIpv6AddressToStringExW@16
+RtlIpv6AddressToStringExA@20
+RtlIpv6AddressToStringExW@20
 RtlIpv6AddressToStringW@8
 RtlIpv6StringToAddressA@12
 RtlIpv6StringToAddressExA@16

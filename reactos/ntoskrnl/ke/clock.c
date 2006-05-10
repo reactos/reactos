@@ -42,7 +42,7 @@ static BOOLEAN KiClockSetupComplete = FALSE;
 /*
  * Number of timer interrupts since initialisation
  */
-volatile ULONGLONG KeTickCount = 0;
+volatile KSYSTEM_TIME KeTickCount = {0};
 volatile ULONG KiRawTicks = 0;
 
 extern LIST_ENTRY KiTimerListHead;
@@ -165,7 +165,7 @@ KeQueryTickCount(PLARGE_INTEGER TickCount)
  *         TickCount (OUT) = Points to storage for the number of ticks
  */
 {
-    TickCount->QuadPart = KeTickCount;
+    TickCount->QuadPart = *(PULONGLONG)&KeTickCount;
 }
 
 /*
@@ -352,7 +352,7 @@ KeUpdateSystemTime(
    /*
     * Increment the number of timers ticks
     */
-   KeTickCount++;
+   (*(PULONGLONG)&KeTickCount)++;
    SharedUserData->TickCountLowDeprecated++;
 
    Time.u.LowPart = SharedUserData->InterruptTime.LowPart;

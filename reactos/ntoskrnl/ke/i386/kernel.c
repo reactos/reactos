@@ -139,7 +139,7 @@ Ki386GetCpuId(VOID)
    if (MaxCpuidLevel >= 0x80000006)
    {
       Ki386Cpuid(0x80000006, &Dummy, &Dummy, &Ecx, &Dummy);
-      Pcr->L2CacheSize = Ecx >> 16;
+      Pcr->SecondLevelCacheSize = Ecx >> 16;
    }
 }
 
@@ -494,9 +494,9 @@ KeInit2(VOID)
 
       DPRINT("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
    }
-   if (Pcr->L2CacheSize)
+   if (Pcr->SecondLevelCacheSize)
    {
-      DPRINT("Ke386L2CacheSize: %dkB\n", Pcr->L2CacheSize);
+      DPRINT("Ke386L2CacheSize: %dkB\n", Pcr->SecondLevelCacheSize);
    }
 }
 
@@ -532,7 +532,7 @@ Ki386SetProcessorFeatures(VOID)
    SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
        (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
-       (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC) ? TRUE : FALSE;
+       (Pcr->PrcbData.FeatureBits & KF_RDTSC) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386Pae;
    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
        (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? TRUE : FALSE;

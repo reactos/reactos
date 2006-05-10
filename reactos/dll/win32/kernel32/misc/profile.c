@@ -756,7 +756,7 @@ static BOOL PROFILE_Open( LPCWSTR filename )
 
     GetWindowsDirectoryW( windirW, MAX_PATH );
 
-    if ((RtlDetermineDosPathNameType_U(filename) == RELATIVE_PATH) &&
+    if ((RtlDetermineDosPathNameType_U(filename) == RtlPathTypeRelative) &&
         !wcschr(filename, '\\') && !wcschr(filename, '/'))
     {
         static const WCHAR wszSeparator[] = {'\\', 0};

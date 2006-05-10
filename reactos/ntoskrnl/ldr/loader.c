@@ -131,7 +131,7 @@ LdrInitModuleManagement ( VOID )
     DPRINT("ModuleObject:%08x  entrypoint at %x\n", &NtoskrnlModuleObject, NtoskrnlModuleObject.EntryPoint);
     NtoskrnlModuleObject.SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
 
-    InsertTailList(&ModuleListHead, &NtoskrnlModuleObject.InLoadOrderModuleList);
+    InsertTailList(&ModuleListHead, &NtoskrnlModuleObject.InLoadOrderLinks);
 
     /* Initialize ModuleObject for HAL */
     RtlZeroMemory(&HalModuleObject, sizeof(LDR_DATA_TABLE_ENTRY));
@@ -145,7 +145,7 @@ LdrInitModuleManagement ( VOID )
     DPRINT("ModuleObject:%08x  entrypoint at %x\n", &HalModuleObject, HalModuleObject.EntryPoint);
     HalModuleObject.SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
 
-    InsertTailList(&ModuleListHead, &HalModuleObject.InLoadOrderModuleList);
+    InsertTailList(&ModuleListHead, &HalModuleObject.InLoadOrderLinks);
 }
 
 NTSTATUS
@@ -343,7 +343,7 @@ LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
 
     /* Remove the module from the module list */
     KeAcquireSpinLock(&ModuleListLock,&Irql);
-    RemoveEntryList(&ModuleObject->InLoadOrderModuleList);
+    RemoveEntryList(&ModuleObject->InLoadOrderLinks);
     KeReleaseSpinLock(&ModuleListLock, Irql);
 
     /* Hook for KDB on unloading a driver. */
@@ -390,7 +390,7 @@ LdrpQueryModuleInformation (
     PLIST_ENTRY current_entry;
     PLDR_DATA_TABLE_ENTRY current;
     ULONG ModuleCount = 0;
-    PSYSTEM_MODULE_INFORMATION Smi;
+    PRTL_PROCESS_MODULES Smi;
     ANSI_STRING AnsiName;
     PCHAR p;
     KIRQL Irql;
@@ -405,13 +405,13 @@ LdrpQueryModuleInformation (
     while (current_entry != (&ModuleListHead))
     {
         ModuleCount++;
-        current = CONTAINING_RECORD(current_entry,LDR_DATA_TABLE_ENTRY,InLoadOrderModuleList);
+        current = CONTAINING_RECORD(current_entry,LDR_DATA_TABLE_ENTRY,InLoadOrderLinks);
         tmpBufferSize += current->FullDllName.Length + sizeof(WCHAR) + sizeof(UNICODE_STRING);
         current_entry = current_entry->Flink;
     }
 
-    *ReqSize = sizeof(SYSTEM_MODULE_INFORMATION)+
-        (ModuleCount - 1) * sizeof(SYSTEM_MODULE_INFORMATION_ENTRY);
+    *ReqSize = sizeof(RTL_PROCESS_MODULES)+
+        (ModuleCount - 1) * sizeof(RTL_PROCESS_MODULE_INFORMATION);
 
     if (Size < *ReqSize)
     {
@@ -431,23 +431,23 @@ LdrpQueryModuleInformation (
     /* fill the buffer */
     memset(Buffer, '=', Size);
 
-    Smi = (PSYSTEM_MODULE_INFORMATION)Buffer;
-    Smi->Count = ModuleCount;
+    Smi = (PRTL_PROCESS_MODULES)Buffer;
+    Smi->NumberOfModules = ModuleCount;
 
     ModuleCount = 0;
     current_entry = ModuleListHead.Flink;
     while (current_entry != (&ModuleListHead))
     {
-        current = CONTAINING_RECORD(current_entry,LDR_DATA_TABLE_ENTRY,InLoadOrderModuleList);
+        current = CONTAINING_RECORD(current_entry,LDR_DATA_TABLE_ENTRY,InLoadOrderLinks);
 
-        Smi->Module[ModuleCount].Unknown1 = 0;                /* Always 0 */
-        Smi->Module[ModuleCount].Unknown2 = 0;                /* Always 0 */
-        Smi->Module[ModuleCount].Base = current->DllBase;
-        Smi->Module[ModuleCount].Size = current->SizeOfImage;
-        Smi->Module[ModuleCount].Flags = 0;                /* Flags ??? (GN) */
-        Smi->Module[ModuleCount].Index = (USHORT)ModuleCount;
-        Smi->Module[ModuleCount].NameLength = 0;
-        Smi->Module[ModuleCount].LoadCount = 0; /* FIXME */
+        Smi->Modules[ModuleCount].Section = 0;                /* Always 0 */
+        Smi->Modules[ModuleCount].MappedBase = 0;                /* Always 0 */
+        Smi->Modules[ModuleCount].ImageBase = current->DllBase;
+        Smi->Modules[ModuleCount].ImageSize = current->SizeOfImage;
+        Smi->Modules[ModuleCount].Flags = 0;                /* Flags ??? (GN) */
+        Smi->Modules[ModuleCount].LoadOrderIndex = (USHORT)ModuleCount;
+        Smi->Modules[ModuleCount].InitOrderIndex = 0;
+        Smi->Modules[ModuleCount].LoadCount = 0; /* FIXME */
         UnicodeName[ModuleCount].Buffer = tmpNameBuffer;
         UnicodeName[ModuleCount].MaximumLength = current->FullDllName.Length + sizeof(WCHAR);
         tmpNameBuffer += UnicodeName[ModuleCount].MaximumLength / sizeof(WCHAR);
@@ -459,24 +459,24 @@ LdrpQueryModuleInformation (
 
     KeReleaseSpinLock(&ModuleListLock, Irql);
 
-    for (ModuleCount = 0; ModuleCount < Smi->Count; ModuleCount++)
+    for (ModuleCount = 0; ModuleCount < Smi->NumberOfModules; ModuleCount++)
     {
         AnsiName.Length = 0;
         AnsiName.MaximumLength = 255;
-        AnsiName.Buffer = Smi->Module[ModuleCount].ImageName;
+        AnsiName.Buffer = Smi->Modules[ModuleCount].FullPathName;
         RtlUnicodeStringToAnsiString(&AnsiName, &UnicodeName[ModuleCount], FALSE);
         AnsiName.Buffer[AnsiName.Length] = 0;
-        Smi->Module[ModuleCount].NameLength = AnsiName.Length;
+        Smi->Modules[ModuleCount].InitOrderIndex = AnsiName.Length;
 
         p = strrchr(AnsiName.Buffer, '\\');
         if (p == NULL)
         {
-            Smi->Module[ModuleCount].PathLength = 0;
+            Smi->Modules[ModuleCount].OffsetToFileName = 0;
         }
         else
         {
             p++;
-            Smi->Module[ModuleCount].PathLength = p - AnsiName.Buffer;
+            Smi->Modules[ModuleCount].OffsetToFileName = p - AnsiName.Buffer;
         }
     }
 
@@ -596,7 +596,7 @@ LdrGetModuleObject ( PUNICODE_STRING ModuleName )
     Entry = ModuleListHead.Flink;
     while (Entry != &ModuleListHead)
     {
-        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
         DPRINT("Comparing %wZ and %wZ\n",
             &Module->BaseDllName,
@@ -897,7 +897,7 @@ LdrPEProcessModule(
     /* Insert module */
     KeAcquireSpinLock(&ModuleListLock, &Irql);
     InsertTailList(&ModuleListHead,
-        &CreatedModuleObject->InLoadOrderModuleList);
+        &CreatedModuleObject->InLoadOrderLinks);
     KeReleaseSpinLock(&ModuleListLock, Irql);
 
     *ModuleObject = CreatedModuleObject;

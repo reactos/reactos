@@ -22,7 +22,7 @@
  */
 
 #include "videoprt.h"
-#include "internal/ke.h"
+#include "internal/i386/v86m.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -178,7 +178,7 @@ IntInt10CallBios(
    Regs.Ds = BiosArguments->SegDs;
    DPRINT("- Input register SegEs: %x\n", BiosArguments->SegEs);
    Regs.Es = BiosArguments->SegEs;
-   Status = Ke386CallBios(0x10, &Regs);
+   Status = Ke386CallBios(0x10, (PCONTEXT)&Regs);
    BiosArguments->Eax = Regs.Eax;
    BiosArguments->Ebx = Regs.Ebx;
    BiosArguments->Ecx = Regs.Ecx;
@@ -234,7 +234,7 @@ VideoPortInt10(
    Regs.Edi = BiosArguments->Edi;
    DPRINT("- Input register Ebp: %x\n", BiosArguments->Ebp);
    Regs.Ebp = BiosArguments->Ebp;
-   Status = Ke386CallBios(0x10, &Regs);
+   Status = Ke386CallBios(0x10, (PCONTEXT)&Regs);
    BiosArguments->Eax = Regs.Eax;
    BiosArguments->Ebx = Regs.Ebx;
    BiosArguments->Ecx = Regs.Ecx;

@@ -15,8 +15,6 @@
 #include <internal/debug.h>
 
 /* ke/main.c */
-extern LOADER_PARAMETER_BLOCK KeLoaderBlock;
-extern ULONG KeTickCount;
 extern BOOLEAN SetupMode;
 extern BOOLEAN NoGuiBoot;
 

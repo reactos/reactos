@@ -41,6 +41,14 @@
 
 #define DPFLTR_IHVVIDEO_ID 0 /* FIXME */
 
+/* ROS Internal. Please deprecate */
+NTHALAPI
+VOID
+NTAPI
+HalReleaseDisplayOwnership(
+    VOID
+);
+
 typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {
    LIST_ENTRY List;

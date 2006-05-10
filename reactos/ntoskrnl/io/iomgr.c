@@ -424,7 +424,7 @@ IoInit3(VOID)
     KdbInit();
 
     /* I/O is now setup for disk access, so phase 3 */
-    KdInitSystem(3, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    KdInitSystem(3, (PROS_LOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Load services for devices found by PnP manager */
     IopInitializePnpServices(IopRootDeviceNode, FALSE);

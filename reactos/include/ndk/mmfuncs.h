@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -31,6 +31,21 @@ Author:
 //
 NTSTATUS
 NTAPI
+MmMapViewOfSection(
+    IN PVOID SectionObject,
+    IN PEPROCESS Process,
+    IN OUT PVOID *BaseAddress,
+    IN ULONG ZeroBits,
+    IN ULONG CommitSize,
+    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+    IN OUT PULONG ViewSize,
+    IN SECTION_INHERIT InheritDisposition,
+    IN ULONG AllocationType,
+    IN ULONG Protect
+);
+
+NTSTATUS
+NTAPI
 MmUnmapViewOfSection(
     struct _EPROCESS* Process,
     PVOID BaseAddress
@@ -41,6 +56,14 @@ MmUnmapViewOfSection(
 //
 // Native calls
 //
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAreMappedFilesTheSame(
+    IN PVOID File1MappedAsAnImage,
+    IN PVOID File2MappedAsFile
+);
+
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -211,6 +234,14 @@ NtWriteVirtualMemory(
     IN PVOID Buffer,
     IN ULONG NumberOfBytesToWrite,
     OUT PULONG NumberOfBytesWritten
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwAreMappedFilesTheSame(
+    IN PVOID File1MappedAsAnImage,
+    IN PVOID File2MappedAsFile
 );
 
 NTSYSAPI

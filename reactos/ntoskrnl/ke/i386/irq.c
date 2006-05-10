@@ -19,6 +19,7 @@
 
 #include <ntoskrnl.h>
 #include <../hal/halx86/include/halirq.h>
+#include <../hal/halx86/include/mps.h>
 
 #define NDEBUG
 #include <internal/debug.h>

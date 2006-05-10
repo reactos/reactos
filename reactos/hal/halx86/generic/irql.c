@@ -67,7 +67,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
  * RETURNS: The current irq level
  */
 {
-  return(KeGetCurrentKPCR()->Irql);
+  return(KeGetPcr()->Irql);
 }
 
 VOID HalpInitPICs(VOID)
@@ -136,7 +136,7 @@ HalpExecuteIrqs(KIRQL NewIrql)
     {
       if (HalpPendingInterruptCount[i] > 0)
 	{
-	   KeGetCurrentKPCR()->Irql = (KIRQL)IRQ_TO_DIRQL(i);
+	   KeGetPcr()->Irql = (KIRQL)IRQ_TO_DIRQL(i);
 
            while (HalpPendingInterruptCount[i] > 0)
 	     {
@@ -146,8 +146,8 @@ HalpExecuteIrqs(KIRQL NewIrql)
 	       HalpPendingInterruptCount[i]--;
 	       KiInterruptDispatch2(i + IRQ_BASE, NewIrql);
 	     }
-	   KeGetCurrentKPCR()->Irql--;
-	   HalpEndSystemInterrupt(KeGetCurrentKPCR()->Irql);
+	   KeGetPcr()->Irql--;
+	   HalpEndSystemInterrupt(KeGetPcr()->Irql);
 	}
     }
 
@@ -158,22 +158,22 @@ HalpLowerIrql(KIRQL NewIrql)
 {
   if (NewIrql >= PROFILE_LEVEL)
     {
-      KeGetCurrentKPCR()->Irql = NewIrql;
+      KeGetPcr()->Irql = NewIrql;
       return;
     }
   HalpExecuteIrqs(NewIrql);
   if (NewIrql >= DISPATCH_LEVEL)
     {
-      KeGetCurrentKPCR()->Irql = NewIrql;
+      KeGetPcr()->Irql = NewIrql;
       return;
     }
-  KeGetCurrentKPCR()->Irql = DISPATCH_LEVEL;
-  if (((PKIPCR)KeGetCurrentKPCR())->HalReserved[HAL_DPC_REQUEST])
+  KeGetPcr()->Irql = DISPATCH_LEVEL;
+  if (((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST])
     {
-      ((PKIPCR)KeGetCurrentKPCR())->HalReserved[HAL_DPC_REQUEST] = FALSE;
+      ((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST] = FALSE;
       KiDispatchInterrupt();
     }
-  KeGetCurrentKPCR()->Irql = APC_LEVEL;
+  KeGetPcr()->Irql = APC_LEVEL;
   if (NewIrql == APC_LEVEL)
     {
       return;
@@ -183,7 +183,7 @@ HalpLowerIrql(KIRQL NewIrql)
     {
       KiDeliverApc(KernelMode, NULL, NULL);
     }
-  KeGetCurrentKPCR()->Irql = PASSIVE_LEVEL;
+  KeGetPcr()->Irql = PASSIVE_LEVEL;
 }
 
 /**********************************************************************
@@ -207,10 +207,10 @@ KfLowerIrql (KIRQL	NewIrql)
 {
   DPRINT("KfLowerIrql(NewIrql %d)\n", NewIrql);
   
-  if (NewIrql > KeGetCurrentKPCR()->Irql)
+  if (NewIrql > KeGetPcr()->Irql)
     {
       DbgPrint ("(%s:%d) NewIrql %x CurrentIrql %x\n",
-		__FILE__, __LINE__, NewIrql, KeGetCurrentKPCR()->Irql);
+		__FILE__, __LINE__, NewIrql, KeGetPcr()->Irql);
       KEBUGCHECK(0);
       for(;;);
     }
@@ -266,16 +266,16 @@ KfRaiseIrql (KIRQL	NewIrql)
   
   DPRINT("KfRaiseIrql(NewIrql %d)\n", NewIrql);
   
-  if (NewIrql < KeGetCurrentKPCR()->Irql)
+  if (NewIrql < KeGetPcr()->Irql)
     {
       DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
-		__FILE__,__LINE__,KeGetCurrentKPCR()->Irql,NewIrql);
+		__FILE__,__LINE__,KeGetPcr()->Irql,NewIrql);
       KEBUGCHECK (0);
       for(;;);
     }
   
-  OldIrql = KeGetCurrentKPCR()->Irql;
-  KeGetCurrentKPCR()->Irql = NewIrql;
+  OldIrql = KeGetPcr()->Irql;
+  KeGetPcr()->Irql = NewIrql;
   return OldIrql;
 }
 
@@ -380,13 +380,13 @@ HalBeginSystemInterrupt (ULONG Vector,
      WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
   }
   
-  if (KeGetCurrentKPCR()->Irql >= Irql)
+  if (KeGetPcr()->Irql >= Irql)
     {
       HalpPendingInterruptCount[irq]++;
       return(FALSE);
     }
-  *OldIrql = KeGetCurrentKPCR()->Irql;
-  KeGetCurrentKPCR()->Irql = Irql;
+  *OldIrql = KeGetPcr()->Irql;
+  KeGetPcr()->Irql = Irql;
 
   return(TRUE);
 }
@@ -461,11 +461,11 @@ HalRequestSoftwareInterrupt(
   switch (Request)
   {
     case APC_LEVEL:
-      ((PKIPCR)KeGetCurrentKPCR())->HalReserved[HAL_APC_REQUEST] = TRUE;
+      ((PKIPCR)KeGetPcr())->HalReserved[HAL_APC_REQUEST] = TRUE;
       break;
 
     case DISPATCH_LEVEL:
-      ((PKIPCR)KeGetCurrentKPCR())->HalReserved[HAL_DPC_REQUEST] = TRUE;
+      ((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST] = TRUE;
       break;
       
     default:

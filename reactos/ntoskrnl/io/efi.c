@@ -39,8 +39,8 @@ NtDeleteBootEntry(
 NTSTATUS
 STDCALL
 NtEnumerateBootEntries(
-	IN ULONG Unknown1,
-	IN ULONG Unknown2
+    IN PVOID Buffer,
+    IN PULONG BufferLength
 	)
 {
 	UNIMPLEMENTED;
@@ -50,8 +50,8 @@ NtEnumerateBootEntries(
 NTSTATUS
 STDCALL
 NtQueryBootEntryOrder(
-	IN ULONG Unknown1,
-	IN ULONG Unknown2
+    IN PULONG Ids,
+    IN PULONG Count
 	)
 {
 	UNIMPLEMENTED;
@@ -61,8 +61,8 @@ NtQueryBootEntryOrder(
 NTSTATUS
 STDCALL
 NtQueryBootOptions(
-	IN ULONG Unknown1,
-	IN ULONG Unknown2
+    IN PBOOT_OPTIONS BootOptions,
+    IN PULONG BootOptionsLength
 	)
 {
 	UNIMPLEMENTED;
@@ -72,8 +72,8 @@ NtQueryBootOptions(
 NTSTATUS
 STDCALL
 NtSetBootEntryOrder(
-	IN ULONG Unknown1,
-	IN ULONG Unknown2
+    IN PULONG Ids,
+    IN PULONG Count
 	)
 {
 	UNIMPLEMENTED;
@@ -83,8 +83,8 @@ NtSetBootEntryOrder(
 NTSTATUS
 STDCALL
 NtSetBootOptions(
-	ULONG Unknown1,
-	ULONG Unknown2
+    IN PBOOT_OPTIONS BootOptions,
+    IN ULONG FieldsToChange
 	)
 {
 	UNIMPLEMENTED;
@@ -94,9 +94,10 @@ NtSetBootOptions(
 NTSTATUS
 STDCALL
 NtTranslateFilePath(
-	ULONG Unknown1,
-	ULONG Unknown2,
-	ULONG Unknown3
+    PFILE_PATH InputFilePath,
+    ULONG OutputType,
+    PFILE_PATH OutputFilePath,
+    ULONG OutputFilePathLength
 	)
 {
 	UNIMPLEMENTED;

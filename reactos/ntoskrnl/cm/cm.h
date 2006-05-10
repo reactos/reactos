@@ -459,6 +459,7 @@ CmiObjectSecurity(PVOID ObjectBody,
 
 NTSTATUS STDCALL
 CmiObjectQueryName (PVOID ObjectBody,
+                    IN BOOLEAN HasObjectName,
 		    POBJECT_NAME_INFORMATION ObjectNameInfo,
 		    ULONG Length,
 		    PULONG ReturnLength);

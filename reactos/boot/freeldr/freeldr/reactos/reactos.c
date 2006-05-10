@@ -24,7 +24,7 @@
 #define NDEBUG
 #include <debug.h>
 
-LOADER_PARAMETER_BLOCK LoaderBlock;
+ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
 char					reactos_kernel_cmdline[255];	// Command line passed to kernel
 LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
 char					reactos_module_strings[64][256];	// Array to hold module names

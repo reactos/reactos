@@ -26,7 +26,10 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <ntddk.h>
-#include <ndk/ntndk.h>
+#include <arc/arc.h>
+#include <ketypes.h>
+#include <mmtypes.h>
+#include <rosldr.h>
 #include <arch.h>
 #include <rtl.h>
 #include <disk.h>

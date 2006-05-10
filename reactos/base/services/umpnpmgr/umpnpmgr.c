@@ -298,9 +298,8 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
 
     PlugPlayData.Relation = Relationship;
 
-    PlugPlayData.RelatedDeviceInstance.Length = 0;
-    PlugPlayData.RelatedDeviceInstance.MaximumLength = Length;
-    PlugPlayData.RelatedDeviceInstance.Buffer = RelatedDeviceId;
+    PlugPlayData.RelatedDeviceInstanceLength = Length;
+    PlugPlayData.RelatedDeviceInstance = RelatedDeviceId;
 
     Status = NtPlugPlayControl(PlugPlayControlGetRelatedDevice,
                                (PVOID)&PlugPlayData,

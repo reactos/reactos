@@ -91,7 +91,7 @@ KeAcquireQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
  */
 KIRQL
 FASTCALL
-KeAcquireQueuedSpinLockRaiseToSynch(IN PKLOCK_QUEUE_HANDLE LockHandle)
+KeAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 {
     /* Simply raise to dispatch */
     return KfRaiseIrql(DISPATCH_LEVEL);

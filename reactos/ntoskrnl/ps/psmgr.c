@@ -154,7 +154,7 @@ PsInitProcessManagment(VOID)
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Process");
    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
+   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(ROS_EPROCESS);
    ObjectTypeInitializer.GenericMapping = PiProcessMapping;
    ObjectTypeInitializer.PoolType = NonPagedPool;
    ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
@@ -181,7 +181,7 @@ PsInitProcessManagment(VOID)
 			   NULL,
 			   KernelMode,
 			   NULL,
-			   sizeof(EPROCESS),
+			   sizeof(ROS_EPROCESS),
 			   0,
 			   0,
 			   (PVOID*)&PsIdleProcess);
@@ -192,7 +192,7 @@ PsInitProcessManagment(VOID)
         return;
      }
 
-   RtlZeroMemory(PsIdleProcess, sizeof(EPROCESS));
+   RtlZeroMemory(PsIdleProcess, sizeof(ROS_EPROCESS));
 
    PsIdleProcess->Pcb.Affinity = 0xFFFFFFFF;
    PsIdleProcess->Pcb.IopmOffset = 0xffff;
@@ -203,7 +203,7 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsIdleProcess->ActiveProcessLinks);
    KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.Header,
 				ProcessObject,
-				sizeof(EPROCESS) / sizeof(LONG),
+				sizeof(ROS_EPROCESS) / sizeof(LONG),
 				FALSE);
    PsIdleProcess->Pcb.DirectoryTableBase.QuadPart = (ULONG_PTR)MmGetPageDirectory();
    strcpy(PsIdleProcess->ImageFileName, "Idle");
@@ -217,7 +217,7 @@ PsInitProcessManagment(VOID)
 			   NULL,
 			   KernelMode,
 			   NULL,
-			   sizeof(EPROCESS),
+			   sizeof(ROS_EPROCESS),
 			   0,
 			   0,
 			   (PVOID*)&PsInitialSystemProcess);
@@ -229,7 +229,7 @@ PsInitProcessManagment(VOID)
      }
 
    /* System threads may run on any processor. */
-   RtlZeroMemory(PsInitialSystemProcess, sizeof(EPROCESS));
+   RtlZeroMemory(PsInitialSystemProcess, sizeof(ROS_EPROCESS));
 #ifdef CONFIG_SMP   
    /* FIXME:
     *   Only the boot cpu is initialized. Threads of the 
@@ -245,15 +245,15 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);
    KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.Header,
 				ProcessObject,
-				sizeof(EPROCESS) / sizeof(LONG),
+				sizeof(ROS_EPROCESS) / sizeof(LONG),
 				FALSE);
    KProcess = &PsInitialSystemProcess->Pcb;
    PspInheritQuota(PsInitialSystemProcess, NULL);
 
-   MmInitializeAddressSpace(PsInitialSystemProcess,
-			    &PsInitialSystemProcess->AddressSpace);
+   MmInitializeAddressSpace((PROS_EPROCESS)PsInitialSystemProcess,
+			    &((PROS_EPROCESS)PsInitialSystemProcess)->AddressSpace);
 
-   KeInitializeEvent(&PsInitialSystemProcess->LockEvent, SynchronizationEvent, FALSE);
+   KeInitializeEvent(&((PROS_EPROCESS)PsInitialSystemProcess)->LockEvent, SynchronizationEvent, FALSE);
 
 #if defined(__GNUC__)
    KProcess->DirectoryTableBase =

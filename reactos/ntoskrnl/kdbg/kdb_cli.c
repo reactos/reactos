@@ -1453,7 +1453,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
              Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
              Pcr->Number, Pcr->L2CacheAssociativity,
-             Pcr->VdmAlert, Pcr->L2CacheSize, Pcr->InterruptMode);
+             Pcr->VdmAlert, Pcr->SecondLevelCacheSize, Pcr->InterruptMode);
 
    return TRUE;
 }

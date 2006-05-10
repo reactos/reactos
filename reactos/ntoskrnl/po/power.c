@@ -298,7 +298,7 @@ PopSetSystemPowerState(
 VOID
 INIT_FUNCTION
 NTAPI
-PoInit(PLOADER_PARAMETER_BLOCK LoaderBlock,
+PoInit(PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
        BOOLEAN ForceAcpiDisable)
 {
   if (ForceAcpiDisable)

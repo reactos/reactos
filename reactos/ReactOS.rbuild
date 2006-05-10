@@ -24,14 +24,12 @@
     <define name="KDBG" value="1" />
     <property name="DBG_OR_KDBG" value="true" />
   </if>
-  
-  <if property="GDB" value="0">
-    <compilerflag>-Os</compilerflag>
-    <compilerflag>-Wno-strict-aliasing</compilerflag>
-    <compilerflag>-ftracer</compilerflag>
-    <compilerflag>-momit-leaf-frame-pointer</compilerflag>
-    <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-  </if>
+  <compilerflag>-O3</compilerflag>
+  <compilerflag>-fno-optimize-sibling-calls</compilerflag>
+  <compilerflag>-Wno-strict-aliasing</compilerflag>
+  <compilerflag>-ftracer</compilerflag>
+  <compilerflag>-momit-leaf-frame-pointer</compilerflag>
+  <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
   <compilerflag>-Wpointer-arith</compilerflag>
 
   <include>.</include>

@@ -17,7 +17,7 @@
 
 NTSTATUS
 STDCALL
-NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
+NtSystemDebugControl(SYSDBG_COMMAND ControlCode,
                      PVOID InputBuffer,
                      ULONG InputBufferLength,
                      PVOID OutputBuffer,
@@ -26,15 +26,15 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
 {
     switch (ControlCode)
     {
-        case DebugGetTraceInformation:
-        case DebugSetInternalBreakpoint:
-        case DebugSetSpecialCall:
-        case DebugClearSpecialCalls:
-        case DebugQuerySpecialCalls:
-        case DebugDbgBreakPoint:
+        case SysDbgQueryTraceInformation:
+        case SysDbgSetTracepoint:
+        case SysDbgSetSpecialCall:
+        case SysDbgClearSpecialCalls:
+        case SysDbgQuerySpecialCalls:
+        case SysDbgBreakPoint:
             break;
 
-        case DebugDbgLoadSymbols:
+        case SysDbgQueryVersion:
             KDB_LOADUSERMODULE_HOOK((PLDR_DATA_TABLE_ENTRY) InputBuffer);
             break;
 

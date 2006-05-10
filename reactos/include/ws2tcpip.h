@@ -144,12 +144,6 @@ struct ip_msfilter {
    (sizeof(struct ip_msfilter) - sizeof(struct in_addr) \
    + (numsrc) * sizeof(struct in_addr))
 
-struct in_pktinfo {
-	IN_ADDR ipi_addr;
-	UINT    ipi_ifindex;
-};
-typedef struct in_pktinfo IN_PKTINFO;
-
 
 /* ipv6 */
 /* These require XP or .NET Server or use of add-on IPv6 stacks on NT 4

@@ -33,17 +33,17 @@ DriverEntry(
 
 BOOLEAN STDCALL
 HalInitSystem (ULONG BootPhase,
-               PLOADER_PARAMETER_BLOCK LoaderBlock)
+               PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
   if (BootPhase == 0)
     {
       RtlZeroMemory(&HalpHooks, sizeof(HALP_HOOKS));
-      HalpInitPhase0(LoaderBlock);      
+      HalpInitPhase0((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);      
     }
   else if (BootPhase == 1)
     {
       /* Initialize display and make the screen black */
-      HalInitializeDisplay (LoaderBlock);
+      HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
       HalpInitBusHandlers();
       HalpInitDma();
 

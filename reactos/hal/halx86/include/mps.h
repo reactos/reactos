@@ -9,6 +9,25 @@
 
 #define IRQL2TPR(irql)	    ((irql) >= IPI_LEVEL ? IPI_VECTOR : ((irql) >= PROFILE_LEVEL ? LOCAL_TIMER_VECTOR : ((irql) > DISPATCH_LEVEL ? IRQL2VECTOR(irql) : 0)))
 
+typedef struct _KIRQ_TRAPFRAME
+{
+   ULONG Magic;
+   ULONG Gs;
+   ULONG Fs;
+   ULONG Es;
+   ULONG Ds;
+   ULONG Eax;
+   ULONG Ecx;
+   ULONG Edx;
+   ULONG Ebx;
+   ULONG Esp;
+   ULONG Ebp;
+   ULONG Esi;
+   ULONG Edi;
+   ULONG Eip;
+   ULONG Cs;
+   ULONG Eflags;
+} KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
 
 #if 0
 /* This values are defined in halirql.h */

@@ -439,13 +439,9 @@ KiQuantumEnd(VOID)
     Process = CurrentThread->ApcState.Process;
 
     /* Set DPC Event if requested */
-    if (Prcb->DpcSetEventRequest) {
-        /*
-         * FIXME:
-         *   Prcb->DpcEvent is not initialized.
-         */
-        KEBUGCHECK(0);
-        KeSetEvent(Prcb->DpcEvent, 0, 0);
+    if (Prcb->DpcSetEventRequest)
+    {
+        KeSetEvent(&Prcb->DpcEvent, 0, 0);
     }
 
     /* Check if Quantum expired */

@@ -214,7 +214,8 @@ struct  protoent {
 #define IMPLINK_IP	155
 #define IMPLINK_LOWEXPER	156
 #define IMPLINK_HIGHEXPER       158
-struct in_addr {
+#ifndef s_addr
+typedef struct in_addr {
 	union {
 		struct { u_char s_b1,s_b2,s_b3,s_b4; } S_un_b;
 		struct { u_short s_w1,s_w2; } S_un_w;
@@ -226,7 +227,8 @@ struct in_addr {
 #define s_imp   S_un.S_un_w.s_w2
 #define s_impno S_un.S_un_b.s_b4
 #define s_lh    S_un.S_un_b.s_b3
-};
+} IN_ADDR, *PIN_ADDR;
+#endif
 #define IN_CLASSA(i)	((long)(i)&0x80000000)
 #define IN_CLASSA_NET	0xff000000
 #define IN_CLASSA_NSHIFT	24
@@ -589,8 +591,6 @@ typedef struct sockaddr_in *LPSOCKADDR_IN;
 typedef struct linger LINGER;
 typedef struct linger *PLINGER;
 typedef struct linger *LPLINGER;
-typedef struct in_addr IN_ADDR;
-typedef struct in_addr *PIN_ADDR;
 typedef struct in_addr *LPIN_ADDR;
 typedef struct fd_set FD_SET;
 typedef struct fd_set *PFD_SET;

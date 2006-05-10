@@ -27,8 +27,15 @@ Author:
 #define UserMode                                0x1
 
 //
+// CPU Types
+//
+#define CPU_INTEL                               0x1
+#define CPU_AMD                                 0x2
+
+//
 // Selector Names
 //
+#ifdef __ASM__
 #define RPL_MASK                                0x0003
 #define MODE_MASK                               0x0001
 #define KGDT_R0_CODE                            (0x8)
@@ -41,6 +48,7 @@ Author:
 #define KGDT_LDT                                (0x48)
 #define KGDT_DF_TSS                             (0x50)
 #define KGDT_NMI_TSS                            (0x58)
+#endif
 
 //
 // KV86M_REGISTERS Offsets
@@ -126,7 +134,7 @@ Author:
 #define KPCR_CURRENT_THREAD                     0x124
 #define KPCR_PROCESSOR_NUMBER                   0x130
 #define KPCR_PRCB_SET_MEMBER                    0x134
-#define KPCR_NPX_THREAD                         0x2F4
+#define KPCR_NPX_THREAD                         0x640
 #define KPCR_DR6                                0x428
 #define KPCR_DR7                                0x42C
 #define KPCR_SYSTEM_CALLS                       0x6B8
@@ -302,6 +310,7 @@ Author:
 //
 // EFLAGS
 //
+#ifdef __ASM__
 #define EFLAGS_TF                               0x100
 #define EFLAGS_INTERRUPT_MASK                   0x200
 #define EFLAGS_NESTED_TASK                      0x4000
@@ -311,7 +320,6 @@ Author:
 #define EFLAGS_VIP                              0x100000
 #define EFLAG_SIGN                              0x8000
 #define EFLAG_ZERO                              0x4000
-#ifndef EFLAG_SELECT
 #define EFLAG_SELECT                            (EFLAG_SIGN + EFLAG_ZERO)
 #endif
 
@@ -333,6 +341,7 @@ Author:
 //
 // CR4
 //
+#ifdef __ASM__
 #define CR4_VME                                 0x1
 #define CR4_PVI                                 0x2
 #define CR4_TSD                                 0x4
@@ -343,6 +352,7 @@ Author:
 #define CR4_PGE                                 0x80
 #define CR4_FXSR                                0x200
 #define CR4_XMMEXCPT                            0x400
+#endif
 
 //
 // Usermode callout frame definitions
@@ -379,6 +389,19 @@ Author:
 #define SERVICE_DESCRIPTOR_NUMBER               0x000C
 #define SERVICE_DESCRIPTOR_LENGTH               0x0010
 
+//
+// Machine types
+//
+#ifdef __ASM__
+#define MACHINE_TYPE_ISA                        0x0000
+#define MACHINE_TYPE_EISA                       0x0001
+#define MACHINE_TYPE_MCA                        0x0002
+
+//
+// Kernel Feature Bits
+//
+#define KF_RDTSC                                0x00000002
+#endif
 //
 // Generic Definitions
 //

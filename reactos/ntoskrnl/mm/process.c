@@ -25,7 +25,7 @@ extern ULONG NtGlobalFlag;
 
 PVOID
 STDCALL
-MiCreatePebOrTeb(PEPROCESS Process,
+MiCreatePebOrTeb(PROS_EPROCESS Process,
                  PVOID BaseAddress)
 {
     NTSTATUS Status;
@@ -107,7 +107,7 @@ MmDeleteKernelStack(PVOID Stack,
 
 VOID
 STDCALL
-MmDeleteTeb(PEPROCESS Process,
+MmDeleteTeb(PROS_EPROCESS Process,
             PTEB Teb)
 {
     PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
@@ -220,7 +220,7 @@ MmGrowKernelStack(PVOID StackPointer)
 
 NTSTATUS
 STDCALL
-MmCreatePeb(PEPROCESS Process)
+MmCreatePeb(PROS_EPROCESS Process)
 {
     PPEB Peb = NULL;
     LARGE_INTEGER SectionOffset;
@@ -241,7 +241,7 @@ MmCreatePeb(PEPROCESS Process)
     /* Map NLS Tables */
     DPRINT("Mapping NLS\n");
     Status = MmMapViewOfSection(NlsSectionObject,
-                                Process,
+                                (PEPROCESS)Process,
                                 &TableBase,
                                 0,
                                 0,
@@ -357,7 +357,7 @@ MmCreatePeb(PEPROCESS Process)
 
 PTEB
 STDCALL
-MmCreateTeb(PEPROCESS Process,
+MmCreateTeb(PROS_EPROCESS Process,
             PCLIENT_ID ClientId,
             PINITIAL_TEB InitialTeb)
 {
@@ -366,7 +366,7 @@ MmCreateTeb(PEPROCESS Process,
 
     /* Attach to the process */
     DPRINT("MmCreateTeb\n");
-    if (Process != PsGetCurrentProcess())
+    if (Process != (PROS_EPROCESS)PsGetCurrentProcess())
     {
         /* Attach to Target */
         KeAttachProcess(&Process->Pcb);
@@ -407,8 +407,8 @@ MmCreateTeb(PEPROCESS Process,
 
 NTSTATUS
 STDCALL
-MmCreateProcessAddressSpace(IN PEPROCESS Process,
-                            IN PSECTION_OBJECT Section OPTIONAL)
+MmCreateProcessAddressSpace(IN PROS_EPROCESS Process,
+                            IN PROS_SECTION_OBJECT Section OPTIONAL)
 {
     NTSTATUS Status;
     PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
@@ -491,7 +491,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         DPRINT("Mapping process image. Section: %p, Process: %p, ImageBase: %p\n",
                  Section, Process, &ImageBase);
         Status = MmMapViewOfSection(Section,
-                                    Process,
+                                    (PEPROCESS)Process,
                                     (PVOID*)&ImageBase,
                                     0,
                                     0,

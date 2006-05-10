@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -34,13 +34,57 @@ Author:
 #define I386_TRAP_GATE          0xF
 
 //
+// Selector Names
+//
+#define RPL_MASK                0x0003
+#define MODE_MASK               0x0001
+#define KGDT_R0_CODE            (0x8)
+#define KGDT_R0_DATA            (0x10)
+#define KGDT_R3_CODE            (0x18)
+#define KGDT_R3_DATA            (0x20)
+#define KGDT_TSS                (0x28)
+#define KGDT_R0_PCR             (0x30)
+#define KGDT_R3_TEB             (0x38)
+#define KGDT_LDT                (0x48)
+#define KGDT_DF_TSS             (0x50)
+#define KGDT_NMI_TSS            (0x58)
+
+//
+// CR4
+//
+#define CR4_VME                 0x1
+#define CR4_PVI                 0x2
+#define CR4_TSD                 0x4
+#define CR4_DE                  0x8
+#define CR4_PSE                 0x10
+#define CR4_PAE                 0x20
+#define CR4_MCE                 0x40
+#define CR4_PGE                 0x80
+#define CR4_FXSR                0x200
+#define CR4_XMMEXCPT            0x400
+
+//
+// EFlags
+//
+#define EFLAGS_TF               0x100
+#define EFLAGS_INTERRUPT_MASK   0x200
+#define EFLAGS_NESTED_TASK      0x4000
+#define EFLAGS_V86_MASK         0x20000
+#define EFLAGS_ALIGN_CHECK      0x40000
+#define EFLAGS_VIF              0x80000
+#define EFLAGS_VIP              0x100000
+#define EFLAG_SIGN              0x8000
+#define EFLAG_ZERO              0x4000
+
+#ifndef NTOS_MODE_USER
+//
 // IPI Types
 //
 #define IPI_APC                 1
 #define IPI_DPC                 2
-#define IPI_FREEZE              3
-#define IPI_PACKET_READY        4
-#define IPI_SYNCH_REQUEST       10
+#define IPI_FREEZE              4
+#define IPI_PACKET_READY        8
+#define IPI_SYNCH_REQUEST       16
 
 //
 // FN/FX (FPU) Save Area Structures
@@ -146,16 +190,16 @@ typedef struct _LDT_ENTRY
         } Bytes;
         struct
         {
-            ULONG BaseMid : 8;
-            ULONG Type : 5;
-            ULONG Dpl : 2;
-            ULONG Pres : 1;
-            ULONG LimitHi : 4;
-            ULONG Sys : 1;
-            ULONG Reserved_0 : 1;
-            ULONG Default_Big : 1;
-            ULONG Granularity : 1;
-            ULONG BaseHi : 8;
+            ULONG BaseMid:8;
+            ULONG Type:5;
+            ULONG Dpl:2;
+            ULONG Pres:1;
+            ULONG LimitHi:4;
+            ULONG Sys:1;
+            ULONG Reserved_0:1;
+            ULONG Default_Big:1;
+            ULONG Granularity:1;
+            ULONG BaseHi:8;
         } Bits;
     } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
@@ -178,16 +222,16 @@ typedef struct _KGDTENTRY
         } Bytes;
         struct
         {
-            ULONG BaseMid       : 8;
-            ULONG Type          : 5;
-            ULONG Dpl           : 2;
-            ULONG Pres          : 1;
-            ULONG LimitHi       : 4;
-            ULONG Sys           : 1;
-            ULONG Reserved_0    : 1;
-            ULONG Default_Big   : 1;
-            ULONG Granularity   : 1;
-            ULONG BaseHi        : 8;
+            ULONG BaseMid:8;
+            ULONG Type:5;
+            ULONG Dpl:2;
+            ULONG Pres:1;
+            ULONG LimitHi:4;
+            ULONG Sys:1;
+            ULONG Reserved_0:1;
+            ULONG Default_Big:1;
+            ULONG Granularity:1;
+            ULONG BaseHi:8;
         } Bits;
     } HighWord;
 } KGDTENTRY, *PKGDTENTRY;
@@ -221,26 +265,6 @@ typedef struct _KIDTENTRY
     USHORT Access;
     USHORT ExtendedOffset;
 } KIDTENTRY, *PKIDTENTRY;
-
-//
-// Page Table Entry Definition
-//
-typedef struct _HARDWARE_PTE_X86
-{
-    ULONG Valid             : 1;
-    ULONG Write             : 1;
-    ULONG Owner             : 1;
-    ULONG WriteThrough      : 1;
-    ULONG CacheDisable      : 1;
-    ULONG Accessed          : 1;
-    ULONG Dirty             : 1;
-    ULONG LargePage         : 1;
-    ULONG Global            : 1;
-    ULONG CopyOnWrite       : 1;
-    ULONG Prototype         : 1;
-    ULONG reserved          : 1;
-    ULONG PageFrameNumber   : 20;
-} HARDWARE_PTE_X86, *PHARDWARE_PTE_X86;
 
 typedef struct _DESCRIPTOR
 {
@@ -277,9 +301,9 @@ typedef struct _KSPECIAL_REGISTERS
 #pragma pack(push,4)
 typedef struct _KPROCESSOR_STATE
 {
-    PCONTEXT ContextFrame;
+    CONTEXT ContextFrame;
     KSPECIAL_REGISTERS SpecialRegisters;
-} KPROCESSOR_STATE;
+} KPROCESSOR_STATE, *PKPROCESSOR_STATE;
 
 //
 // Processor Region Control Block
@@ -301,8 +325,13 @@ typedef struct _KPRCB
     KPROCESSOR_STATE ProcessorState;
     ULONG KernelReserved[16];
     ULONG HalReserved[16];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG CFlushSize;
+    UCHAR PrcbPad0[88];
+#else
     UCHAR PrcbPad0[92];
-    PVOID LockQueue[33]; // Used for Queued Spinlocks
+#endif
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
     struct _KTHREAD *NpxThread;
     ULONG InterruptCount;
     ULONG KernelTime;
@@ -314,18 +343,41 @@ typedef struct _KPRCB
     ULONG PageColor;
     UCHAR SkipTick;
     UCHAR DebuggerSavedIRQL;
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    UCHAR NodeColor;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    UCHAR PollSlot;
+#else
+    UCHAR Spare1;
+#endif
+    ULONG NodeShiftedColor;
+#else
     UCHAR Spare1[6];
+#endif
     struct _KNODE *ParentNode;
     ULONG MultiThreadProcessorSet;
     struct _KPRCB *MultiThreadSetMaster;
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    ULONG SecondaryColorMask;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG DpcTimeLimit;
+#else
+    LONG Sleeping;
+#endif
+#else
     ULONG ThreadStartCount[2];
+#endif
     ULONG CcFastReadNoWait;
     ULONG CcFastReadWait;
     ULONG CcFastReadNotPossible;
     ULONG CcCopyReadNoWait;
     ULONG CcCopyReadWait;
     ULONG CcCopyReadNoWaitMiss;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONG KeAlignmentFixupCount;
+#endif
+    ULONG SpareCounter0;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONG KeContextSwitches;
     ULONG KeDcacheFlushCount;
     ULONG KeExceptionDispatchCount;
@@ -334,13 +386,47 @@ typedef struct _KPRCB
     ULONG KeIcacheFlushCount;
     ULONG KeSecondLevelTbFills;
     ULONG KeSystemCalls;
+#endif
     ULONG IoReadOperationCount;
     ULONG IoWriteOperationCount;
     ULONG IoOtherOperationCount;
     LARGE_INTEGER IoReadTransferCount;
     LARGE_INTEGER IoWriteTransferCount;
     LARGE_INTEGER IoOtherTransferCount;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG CcFastMdlReadNoWait;
+    ULONG CcFastMdlReadWait;
+    ULONG CcFastMdlReadNotPossible;
+    ULONG CcMapDataNoWait;
+    ULONG CcMapDataWait;
+    ULONG CcPinMappedDataCount;
+    ULONG CcPinReadNoWait;
+    ULONG CcPinReadWait;
+    ULONG CcMdlReadNoWait;
+    ULONG CcMdlReadWait;
+    ULONG CcLazyWriteHotSpots;
+    ULONG CcLazyWriteIos;
+    ULONG CcLazyWritePages;
+    ULONG CcDataFlushes;
+    ULONG CcDataPages;
+    ULONG CcLostDelayedWrites;
+    ULONG CcFastReadResourceMiss;
+    ULONG CcCopyReadWaitMiss;
+    ULONG CcFastMdlReadResourceMiss;
+    ULONG CcMapDataNoWaitMiss;
+    ULONG CcMapDataWaitMiss;
+    ULONG CcPinReadNoWaitMiss;
+    ULONG CcPinReadWaitMiss;
+    ULONG CcMdlReadNoWaitMiss;
+    ULONG CcMdlReadWaitMiss;
+    ULONG CcReadAheadIos;
+    ULONG KeAlignmentFixupCount;
+    ULONG KeExceptionDispatchCount;
+    ULONG KeSystemCalls;
+    ULONG PrcbPad1[3];
+#else
     ULONG SpareCounter1[8];
+#endif
     PP_LOOKASIDE_LIST PPLookasideList[16];
     PP_LOOKASIDE_LIST PPNPagedLookasideList[32];
     PP_LOOKASIDE_LIST PPPagedLookasideList[32];
@@ -350,7 +436,7 @@ typedef struct _KPRCB
     UCHAR PrcbPad2[52];
     PVOID CurrentPacket[3];
     ULONG TargetSet;
-    ULONG_PTR WorkerRoutine;
+    PKIPI_WORKER WorkerRoutine;
     ULONG IpiFrozen;
     UCHAR PrcbPad3[40];
     ULONG RequestSummary;
@@ -370,22 +456,49 @@ typedef struct _KPRCB
     ULONG TimerHand;
     ULONG TimerRequest;
     PVOID DpcThread;
-    struct _KEVENT *DpcEvent;
+    KEVENT DpcEvent;
     UCHAR ThreadDpcEnable;
     BOOLEAN QuantumEnd;
     UCHAR PrcbPad50;
     UCHAR IdleSchedule;
-    ULONG DpcSetEventRequest;
+    LONG DpcSetEventRequest;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LONG Sleeping;
+    ULONG PeriodicCount;
+    ULONG PeriodicBias;
+    UCHAR PrcbPad5[6];
+#else
     UCHAR PrcbPad5[18];
+#endif
     LONG TickOffset;
-    struct _KDPC* CallDpc;
+    KDPC CallDpc;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LONG ClockKeepAlive;
+    UCHAR ClockCheckSlot;
+    UCHAR ClockPollCycle;
+    UCHAR PrcbPad6[2];
+    LONG DpcWatchdogPeriod;
+    LONG DpcWatchDogCount;
+    LONG ThreadWatchdogPeriod;
+    LONG ThreadWatchDogCount;
+    ULONG PrcbPad70[2];
+#else
     ULONG PrcbPad7[8];
+#endif
     LIST_ENTRY WaitListHead;
     ULONG ReadySummary;
-    ULONG SelectNextLast;
+    ULONG QueueIndex;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    SINGLE_LIST_ENTRY DeferredReadyListHead;
+    ULONGLONG StartCycles;
+    ULONGLONG CycleTime;
+    ULONGLONG PrcbPad71[3];
+    LIST_ENTRY DispatcherReadyListHead[32];
+#else
     LIST_ENTRY DispatcherReadyListHead[32];
     SINGLE_LIST_ENTRY DeferredReadyListHead;
     ULONG PrcbPad72[11];
+#endif
     PVOID ChainedInterruptList;
     LONG LookasideIrpFloat;
     LONG MmPageFaultCount;
@@ -401,7 +514,15 @@ typedef struct _KPRCB
     LONG MmDirtyWriteIoCount;
     LONG MmMappedPagesWriteCount;
     LONG MmMappedWriteIoCount;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG CachedCommit;
+    ULONG CachedResidentAvailable;
+    PVOID HyperPte;
+    UCHAR CpuVendor;
+    UCHAR PrcbPad9[3];
+#else
     ULONG SpareFields0[1];
+#endif
     CHAR VendorString[13];
     UCHAR InitialApicId;
     UCHAR LogicalProcessorsPerPhysicalProcessor;
@@ -412,6 +533,23 @@ typedef struct _KPRCB
     LARGE_INTEGER SpareField1;
     FX_SAVE_AREA NpxSaveArea;
     PROCESSOR_POWER_STATE PowerState;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    KDPC DpcWatchdogDoc;
+    KTIMER DpcWatchdogTimer;
+    PVOID WheaInfo;
+    PVOID EtwSupport;
+    SLIST_HEADER InterruptObjectPool;
+    LARGE_INTEGER HyperCallPagePhysical;
+    LARGE_INTEGER HyperCallPageVirtual;
+    PVOID RateControl;
+    CACHE_DESCRIPTOR Cache[5];
+    ULONG CacheCount;
+    ULONG CacheProcessorMask[5];
+    UCHAR LogicalProcessorsPerCore;
+    UCHAR PrcbPad8[3];
+    ULONG PackageProcessorSet;
+    ULONG CoreProcessorSet;
+#endif
 } KPRCB, *PKPRCB;
 
 //
@@ -433,35 +571,36 @@ typedef struct _KIPCR
             PVOID Used_Self;
         };
     };
-    struct _KPCR *Self;          /* 1C */
-    struct _KPRCB *Prcb;         /* 20 */
-    KIRQL Irql;                  /* 24 */
-    ULONG IRR;                   /* 28 */
-    ULONG IrrActive;             /* 2C */
-    ULONG IDR;                   /* 30 */
-    PVOID KdVersionBlock;        /* 34 */
-    PKIDTENTRY IDT;              /* 38 */
+    struct _KPCR *Self;
+    struct _KPRCB *Prcb;
+    KIRQL Irql;
+    ULONG IRR;
+    ULONG IrrActive;
+    ULONG IDR;
+    PVOID KdVersionBlock;
+    PKIDTENTRY IDT;
 #ifdef _REACTOS_
-    PUSHORT GDT;                 /* 3C */
+    PUSHORT GDT;
 #else
-    PKGDTENTRY GDT;              /* 3C */
+    PKGDTENTRY GDT;
 #endif
-    struct _KTSS *TSS;           /* 40 */
-    USHORT MajorVersion;         /* 44 */
-    USHORT MinorVersion;         /* 46 */
-    KAFFINITY SetMember;         /* 48 */
-    ULONG StallScaleFactor;      /* 4C */
-    UCHAR SparedUnused;          /* 50 */
-    UCHAR Number;                /* 51 */
-    UCHAR Reserved;              /* 52 */
-    UCHAR L2CacheAssociativity;  /* 53 */
-    ULONG VdmAlert;              /* 54 */
-    ULONG KernelReserved[14];    /* 58 */
-    ULONG L2CacheSize;           /* 90 */
-    ULONG HalReserved[16];       /* 94 */
-    ULONG InterruptMode;         /* D4 */
-    UCHAR KernelReserved2[0x48]; /* D8 */
-    KPRCB PrcbData;              /* 120 */
+    struct _KTSS *TSS;
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    KAFFINITY SetMember;
+    ULONG StallScaleFactor;
+    UCHAR SparedUnused;
+    UCHAR Number;
+    UCHAR Reserved;
+    UCHAR L2CacheAssociativity;
+    ULONG VdmAlert;
+    ULONG KernelReserved[14];
+    ULONG SecondLevelCacheSize;
+    ULONG HalReserved[16];
+    ULONG InterruptMode;
+    UCHAR Spare1;
+    ULONG KernelReserved2[17];
+    KPRCB PrcbData;
 } KIPCR, *PKIPCR;
 #pragma pack(pop)
 
@@ -511,5 +650,5 @@ typedef struct _KTSS
 // i386 CPUs don't have exception frames
 //
 typedef struct _KEXCEPTION_FRAME KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
-
+#endif
 #endif

@@ -657,7 +657,7 @@ RtlCreateSystemVolumeInformationFolder(
 
         /* free allocated memory */
         ASSERT(SecurityDescriptor != NULL);
-        ASSERT(SecurityDescriptor->Dacl != NULL)
+        ASSERT(SecurityDescriptor->Dacl != NULL);
 
         RtlpFreeMemory(SecurityDescriptor->Dacl,
                        TAG('S', 'e', 'A', 'c'));

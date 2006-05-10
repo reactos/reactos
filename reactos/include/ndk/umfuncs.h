@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -213,7 +213,7 @@ NTSTATUS
 NTAPI
 LdrLoadDll(
     IN PWSTR SearchPath OPTIONAL,
-    IN ULONG LoadFlags,
+    IN PULONG LoadFlags OPTIONAL,
     IN PUNICODE_STRING Name,
     OUT PVOID *BaseAddress OPTIONAL
 );
@@ -228,10 +228,10 @@ RtlPcToFileHeader(
 PIMAGE_BASE_RELOCATION
 NTAPI
 LdrProcessRelocationBlock(
-    IN PVOID Address,
-    IN USHORT Count,
+    IN ULONG_PTR Address,
+    IN ULONG Count,
     IN PUSHORT TypeOffset,
-    IN ULONG_PTR Delta
+    IN LONG_PTR Delta
 );
 
 NTSTATUS

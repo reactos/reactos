@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -200,19 +200,240 @@ typedef struct _SECTION_IMAGE_INFORMATION
 #ifndef NTOS_MODE_USER
 
 //
-// FIXME: REACTOS SPECIFIC HACK IN EPROCESS
+// PTE Structures
 //
-#ifdef _REACTOS_
-typedef struct _MADDRESS_SPACE
+typedef struct _MMPTE
 {
-    struct _MEMORY_AREA *MemoryAreaRoot;
-    FAST_MUTEX Lock;
-    PVOID LowestAddress;
-    struct _EPROCESS* Process;
-    PUSHORT PageTableRefCountTable;
-    ULONG PageTableRefCountTableSize;
-} MADDRESS_SPACE, *PMADDRESS_SPACE;
-#endif
+    union
+    {
+        ULONG Long;
+        HARDWARE_PTE Flush;
+        MMPTE_HARDWARE Hard;
+        MMPTE_PROTOTYPE Proto;
+        MMPTE_SOFTWARE Soft;
+        MMPTE_TRANSITION Trans;
+        MMPTE_SUBSECTION Subsect;
+        MMPTE_LIST List;
+    };
+} MMPTE, *PMMPTE;
+
+//
+// Section Information structure
+//
+typedef struct _MI_EXTRA_IMAGE_INFORMATION
+{
+    ULONG SizeOfHeaders;
+} MI_EXTRA_IMAGE_INFORMATION, *PMI_EXTRA_IMAGE_INFORMATION;
+
+typedef struct _MI_SECTION_IMAGE_INFORMATION
+{
+    SECTION_IMAGE_INFORMATION ExportedImageInformation;
+    MI_EXTRA_IMAGE_INFORMATION InternalImageInformation;
+} MI_SECTION_IMAGE_INFORMATION, *PMI_SECTION_IMAGE_INFORMATION;
+
+//
+// Section Extension Information
+//
+typedef struct _MMEXTEND_INFO
+{
+    ULONGLONG CommittedSize;
+    ULONG ReferenceCount;
+} MMEXTEND_INFO, *PMMEXTEND_INFO;
+
+//
+// Segment and Segment Flags
+//
+typedef struct _SEGMENT_FLAGS
+{
+    ULONG TotalNumberOfPtes4132:10;
+    ULONG ExtraSharedWowSubsections:1;
+    ULONG LargePages:1;
+    ULONG Spare:20;
+} SEGMENT_FLAGS, *PSEGMENT_FLAGS;
+
+typedef struct _SEGMENT
+{
+    struct _CONTROL_AREA *ControlArea;
+    ULONG TotalNumberOfPtes;
+    ULONG NonExtendedPtes;
+    ULONG Spare0;
+    ULONGLONG SizeOfSegment;
+    MMPTE SegmentPteTemplate;
+    ULONG NumberOfCommittedPages;
+    PMMEXTEND_INFO ExtendInfo;
+    SEGMENT_FLAGS SegmentFlags;
+    PVOID BaseAddress;
+    union
+    {
+        ULONG ImageCommitment;
+        PEPROCESS CreatingProcess;
+    } u1;
+    union
+    {
+        PMI_SECTION_IMAGE_INFORMATION ImageInformation;
+        PVOID FirstMappedVa;
+    } u2;
+    PMMPTE PrototypePte;
+    MMPTE ThePtes[1];
+} SEGMENT, *PSEGMENT;
+
+//
+// Event Counter Structure
+//
+typedef struct _EVENT_COUNTER
+{
+    ULONG RefCount;
+    KEVENT Event;
+    LIST_ENTRY ListEntry;
+} EVENT_COUNTER, *PEVENT_COUNTER;
+
+//
+// Flags
+//
+typedef struct _MMSECTION_FLAGS
+{
+    ULONG BeingDeleted:1;
+    ULONG BeingCreated:1;
+    ULONG BeingPurged:1;
+    ULONG NoModifiedWriting:1;
+    ULONG FailAllIo:1;
+    ULONG Image:1;
+    ULONG Based:1;
+    ULONG File:1;
+    ULONG Networked:1;
+    ULONG NoCache:1;
+    ULONG PhysicalMemory:1;
+    ULONG CopyOnWrite:1;
+    ULONG Reserve:1;
+    ULONG Commit:1;
+    ULONG FloppyMedia:1;
+    ULONG WasPurged:1;
+    ULONG UserReference:1;
+    ULONG GlobalMemory:1;
+    ULONG DeleteOnClose:1;
+    ULONG FilePointerNull:1;
+    ULONG DebugSymbolsLoaded:1;
+    ULONG SetMappedFileIoComplete:1;
+    ULONG CollidedFlush:1;
+    ULONG NoChange:1;
+    ULONG filler0:1;
+    ULONG ImageMappedInSystemSpace:1;
+    ULONG UserWritable:1;
+    ULONG Accessed:1;
+    ULONG GlobalOnlyPerSession:1;
+    ULONG Rom:1;
+    ULONG WriteCombined:1;
+    ULONG filler:1;
+} MMSECTION_FLAGS, *PMMSECTION_FLAGS;
+
+typedef struct _MMSUBSECTION_FLAGS
+{
+    ULONG ReadOnly:1;
+    ULONG ReadWrite:1;
+    ULONG SubsectionStatic:1;
+    ULONG GlobalMemory:1;
+    ULONG Protection:5;
+    ULONG Spare:1;
+    ULONG StartingSector4132:10;
+    ULONG SectorEndOffset:12;
+} MMSUBSECTION_FLAGS, *PMMSUBSECTION_FLAGS;
+
+//
+// Control Area Structures
+//
+typedef struct _CONTROL_AREA
+{
+    PSEGMENT Segment;
+    LIST_ENTRY DereferenceList;
+    ULONG NumberOfSectionReferences;
+    ULONG NumberOfPfnReferences;
+    ULONG NumberOfMappedViews;
+    ULONG NumberOfSystemCacheViews;
+    ULONG NumberOfUserReferences;
+    union
+    {
+        ULONG LongFlags;
+        MMSECTION_FLAGS Flags;
+    } u;
+    PFILE_OBJECT FilePointer;
+    PEVENT_COUNTER WaitingForDeletion;
+    USHORT ModifiedWriteCount;
+    USHORT FlushInProgressCount;
+    ULONG WritableUserReferences;
+    ULONG QuadwordPad;
+} CONTROL_AREA, *PCONTROL_AREA;
+
+typedef struct _LARGE_CONTROL_AREA
+{
+    PSEGMENT Segment;
+    LIST_ENTRY DereferenceList;
+    ULONG NumberOfSectionReferences;
+    ULONG NumberOfPfnReferences;
+    ULONG NumberOfMappedViews;
+    ULONG NumberOfSystemCacheViews;
+    ULONG NumberOfUserReferences;
+    union
+    {
+        ULONG LongFlags;
+        MMSECTION_FLAGS Flags;
+    } u;
+    PFILE_OBJECT FilePointer;
+    PEVENT_COUNTER WaitingForDeletion;
+    USHORT ModifiedWriteCount;
+    USHORT FlushInProgressCount;
+    ULONG WritableUserReferences;
+    ULONG QuadwordPad;
+    ULONG StartingFrame;
+    LIST_ENTRY UserGlobalList;
+    ULONG SessionId;
+} LARGE_CONTROL_AREA, *PLARGE_CONTROL_AREA;
+
+//
+// Subsection
+//
+typedef struct _SUBSECTION
+{
+    PCONTROL_AREA ControlArea;
+    union
+    {
+        ULONG LongFlags;
+        MMSUBSECTION_FLAGS SubsectionFlags;
+    } u;
+    ULONG StartingSector;
+    PMMPTE SubsectionBase;
+    ULONG UnusedPtes;
+    ULONG PtesInSubsection;
+    struct _SUBSECTION *NextSubSection;
+} SUBSECTION, *PSUBSECTION;
+
+//
+// Segment Object
+//
+typedef struct _SEGMENT_OBJECT
+{
+    PVOID BaseAddress;
+    ULONG TotalNumberOfPtes;
+    LARGE_INTEGER SizeOfSegment;
+    ULONG NonExtendedPtes;
+    ULONG ImageCommitment;
+    PCONTROL_AREA ControlArea;
+    PSUBSECTION Subsection;
+    PLARGE_CONTROL_AREA LargeControlArea;
+    PMMSECTION_FLAGS MmSectionFlags;
+    PMMSUBSECTION_FLAGS MmSubSectionFlags;
+} SEGMENT_OBJECT, *PSEGMENT_OBJECT;
+
+//
+// Section Object
+//
+typedef struct _SECTION_OBJECT
+{
+    PVOID StartingVa;
+    PVOID EndingVa;
+    PVOID LeftChild;
+    PVOID RightChild;
+    PSEGMENT_OBJECT Segment;
+} SECTION_OBJECT, *PSECTION_OBJECT;
 
 //
 // Generic Address Range Structure

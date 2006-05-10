@@ -196,14 +196,14 @@ LoadLibraryExW (
     {
         /* Call the API Properly */
         Status = LdrLoadDll(SearchPath,
-                            (ULONG)&DllCharacteristics, // Silence compiler
+                            &DllCharacteristics,
                             &DllName,
                             (PVOID*)&hInst);
     }
     else
     {
         /* Call the ROS API. NOTE: Don't fix this, I have a patch to merge later. */
-        Status = LdrLoadDll(SearchPath, dwFlags, &DllName, (PVOID*)&hInst);
+        Status = LdrLoadDll(SearchPath, &dwFlags, &DllName, (PVOID*)&hInst);
     }
 	RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
 	if ( !NT_SUCCESS(Status))
@@ -305,7 +305,7 @@ GetModuleFileNameA (
 
 	while (Entry != ModuleListHead)
 	{
-		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 		if (Module->DllBase == (PVOID)hModule)
 		{
 			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
@@ -372,7 +372,7 @@ GetModuleFileNameW (
 	Entry = ModuleListHead->Flink;
 	while (Entry != ModuleListHead)
 	{
-		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
 		if (Module->DllBase == (PVOID)hModule)
 		{

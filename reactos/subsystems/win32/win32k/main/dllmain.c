@@ -23,6 +23,7 @@
 
 #include <w32k.h>
 #include <include/napi.h>
+#include <win32k/callout.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -164,7 +165,7 @@ CLEANUP:
 NTSTATUS 
 STDCALL
 Win32kThreadCallback(struct _ETHREAD *Thread,
-                     BOOLEAN Create)
+                     PSW32THREADCALLOUTTYPE Type)
 {
     struct _EPROCESS *Process;
     PW32THREAD Win32Thread;
@@ -193,7 +194,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         PsSetThreadWin32Thread(Thread, Win32Thread);
         /* FIXME - unlock the process */
     }
-  if (Create)
+  if (Type == PsW32ThreadCalloutInitialize)
     {
       HWINSTA hWinSta = NULL;
       HDESK hDesk = NULL;
@@ -342,7 +343,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
 
       RtlZeroMemory(Thread->Tcb.Win32Thread, sizeof(W32THREAD));
 
-      Win32kThreadCallback(Thread, TRUE);
+      Win32kThreadCallback(Thread, PsW32ThreadCalloutInitialize);
     }
 
   return(STATUS_SUCCESS);
@@ -380,7 +381,7 @@ DriverEntry (
     /*
      * Register Object Manager Callbacks
      */
-    CalloutData.WinStaCreate = IntWinStaObjectOpen;
+    CalloutData.WinStaOpen = IntWinStaObjectOpen;
     CalloutData.WinStaParse = IntWinStaObjectParse;
     CalloutData.WinStaDelete = IntWinStaObjectDelete;
     CalloutData.WinStaFind = IntWinStaObjectFind;
@@ -392,7 +393,7 @@ DriverEntry (
     /*
      * Register our per-process and per-thread structures.
      */
-    PsEstablishWin32Callouts(&CalloutData);
+    PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);
 
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,
                                     &GlobalUserHeapBase,

@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -30,14 +30,6 @@ Author:
 //
 // The DDK steals these away from you.
 //
-VOID
-_enable(
-    VOID
-);
-VOID
-_disable(
-    VOID
-);
 #ifdef _MSC_VER
 #pragma intrinsic(_enable)
 #pragma intrinsic(_disable)
@@ -47,31 +39,10 @@ _disable(
 // Display Functions
 //
 NTHALAPI
-BOOLEAN
-NTAPI
-HalQueryDisplayOwnership(
-    VOID
-);
-
-NTHALAPI
 VOID
 NTAPI
 HalDisplayString(
     IN PCHAR String
-);
-
-NTHALAPI
-BOOLEAN
-NTAPI
-HalQueryDisplayOwnership(
-    VOID
-);
-
-NTHALAPI
-VOID
-NTAPI
-HalReleaseDisplayOwnership(
-    VOID
 );
 
 //
@@ -84,12 +55,13 @@ HalAllProcessorsStarted(
     VOID
 );
 
+#ifdef _ARC_
 NTHALAPI
 VOID
 NTAPI
 HalInitializeProcessor(
     ULONG ProcessorNumber,
-    PLOADER_PARAMETER_BLOCK LoaderBlock
+    struct _LOADER_PARAMETER_BLOCK *LoaderBlock
 );
 
 NTHALAPI
@@ -97,8 +69,9 @@ BOOLEAN
 NTAPI
 HalInitSystem(
     ULONG BootPhase,
-    PLOADER_PARAMETER_BLOCK LoaderBlock
+    struct _LOADER_PARAMETER_BLOCK *LoaderBlock
 );
+#endif
 
 NTHALAPI
 VOID
@@ -179,7 +152,7 @@ NTHALAPI
 VOID
 NTAPI
 HalRequestIpi(
-    ULONG Unknown
+    KAFFINITY TargetSet
 );
 
 NTHALAPI
@@ -192,6 +165,7 @@ HalHandleNMI(
 //
 // I/O Functions
 //
+#ifdef _ARC_
 NTHALAPI
 VOID
 NTAPI
@@ -201,6 +175,7 @@ IoAssignDriveLetters(
     PUCHAR NtSystemPath,
     PSTRING NtSystemPathString
 );
+#endif
 
 //
 // Environment Functions
@@ -211,6 +186,16 @@ NTAPI
 HalSetEnvironmentVariable(
     IN PCH Name,
     IN PCH Value
+);
+
+//
+// Time Functions
+//
+NTHALAPI
+VOID
+NTAPI
+HalQueryRealTimeClock(
+    IN PTIME_FIELDS RtcTime
 );
 
 #endif

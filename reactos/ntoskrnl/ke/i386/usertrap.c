@@ -61,7 +61,7 @@ print_user_address(PVOID address)
 	  current_entry != NULL)
      {
 	current =
-	  CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+	  CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
 	if (address >= (PVOID)current->DllBase &&
 	    address < (PVOID)((char*)current->DllBase + current->SizeOfImage))

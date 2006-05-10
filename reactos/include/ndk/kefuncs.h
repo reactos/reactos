@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -111,6 +111,20 @@ KiReleaseSpinLock(
     PKSPIN_LOCK SpinLock
 );
 
+KIRQL
+FASTCALL
+KeAcquireQueuedSpinLockRaiseToSynch(
+    IN KSPIN_LOCK_QUEUE_NUMBER LockNumber
+);
+
+KIRQL
+FASTCALL
+KeAcquireInStackQueuedSpinLockRaiseToSynch(
+    IN PKSPIN_LOCK SpinLock,
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+);
+
+
 //
 // Interrupt Functions
 //
@@ -172,9 +186,17 @@ KeIsExecutingDpc(
     VOID
 );
 
+BOOLEAN
+NTAPI
+KiIpiServiceRoutine(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PVOID ExceptionFrame
+);
+
 //
-// ARC Configuration Functions
+// ARC Configuration Functions. Only enabled if you have ARC Support
 //
+#ifdef _ARC_
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationNextEntry(
@@ -193,6 +215,7 @@ KeFindConfigurationEntry(
     IN CONFIGURATION_TYPE Type,
     IN PULONG ComponentKey OPTIONAL
 );
+#endif
 
 //
 // Low-level Hardware/CPU Control Functions
@@ -200,8 +223,22 @@ KeFindConfigurationEntry(
 VOID
 NTAPI
 KeFlushEntireTb(
-    IN BOOLEAN Unknown,
-    IN BOOLEAN CurrentCpuOnly
+    IN BOOLEAN Invalid,
+    IN BOOLEAN AllProcessors
+);
+
+VOID
+NTAPI
+KeUpdateSystemTime(
+    PKTRAP_FRAME TrapFrame,
+    KIRQL Irql
+);
+
+VOID
+NTAPI
+KeUpdateRunTime(
+    PKTRAP_FRAME TrapFrame,
+    KIRQL Irql
 );
 
 VOID
@@ -228,6 +265,13 @@ NTAPI
 KeSetTimeIncrement(
     IN ULONG MaxIncrement,
     IN ULONG MinIncrement
+);
+
+NTSTATUS
+NTAPI
+Ke386CallBios(
+    IN ULONG BiosCommand,
+    IN OUT PCONTEXT BiosArguments
 );
 
 //
@@ -449,8 +493,8 @@ NtW32Call(
     IN ULONG RoutineIndex,
     IN PVOID Argument,
     IN ULONG ArgumentLength,
-    OUT PVOID* Result,
-    OUT PULONG ResultLength
+    OUT PVOID* Result OPTIONAL,
+    OUT PULONG ResultLength OPTIONAL
 );
 
 NTSYSCALLAPI

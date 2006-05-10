@@ -28,9 +28,10 @@
 /* INCLUDE ***********************************************************************/
 
 #include <hal.h>
+#include <halfuncs.h> /* Not in PCH because only used for MP HAL */
+#include <rtlfuncs.h> /* Not in PCH because only used for MP HAL */
 #define NDEBUG
 #include <debug.h>
-#include <internal/ntoskrnl.h>
 
 /* GLOBALS ***********************************************************************/
 
@@ -809,7 +810,7 @@ MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    CPU = ThisCPU();
    if ((Count[CPU] % 100) == 0)
    {
-     DbgPrint("(%s:%d) MpsTimerHandler on CPU%d, irql = %d, epi = %x, KPCR = %x\n", __FILE__, __LINE__, CPU, oldIrql,Trapframe->Eip, KeGetCurrentKPCR());
+     DbgPrint("(%s:%d) MpsTimerHandler on CPU%d, irql = %d, epi = %x, KPCR = %x\n", __FILE__, __LINE__, CPU, oldIrql,Trapframe->Eip, KeGetPcr());
    }
    Count[CPU]++;
 #endif
@@ -862,7 +863,7 @@ APICCalibrateTimer(ULONG CPU)
 
    APICSetupLVTT(1000000000);
 
-   TSCPresent = ((PKIPCR)KeGetCurrentKPCR())->PrcbData.FeatureBits & X86_FEATURE_TSC ? TRUE : FALSE;
+   TSCPresent = ((PKIPCR)KeGetPcr())->PrcbData.FeatureBits & KF_RDTSC ? TRUE : FALSE;
 
    /*
     * The timer chip counts down to zero. Let's wait
@@ -891,7 +892,7 @@ APICCalibrateTimer(ULONG CPU)
       DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	     CPUMap[CPU].CoreSpeed/1000000,
 	     CPUMap[CPU].CoreSpeed%1000000);
-      ((PKIPCR)KeGetCurrentKPCR())->PrcbData.MHz = CPUMap[CPU].CoreSpeed/1000000;
+      ((PKIPCR)KeGetPcr())->PrcbData.MHz = CPUMap[CPU].CoreSpeed/1000000;
    }
 
    CPUMap[CPU].BusSpeed = (HZ * (long)(tt1 - tt2) * APIC_DIVISOR);
@@ -919,7 +920,7 @@ SetInterruptGate(ULONG index, ULONG address)
   Access.SystemSegmentFlag = 0;
   Access.SegmentType = I386_INTERRUPT_GATE;
   
-  idt = (KIDTENTRY*)((ULONG)KeGetCurrentKPCR()->IDT + index * sizeof(KIDTENTRY));
+  idt = (KIDTENTRY*)((ULONG)KeGetPcr()->IDT + index * sizeof(KIDTENTRY));
   idt->Offset = address & 0xffff;
   idt->Selector = KGDT_R0_CODE;
   idt->Access = Access.Value;
@@ -1037,11 +1038,11 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
    /* Write the location of the AP stack */
    Common->Stack = (ULONG)Stack;
    /* Write the page directory page */
-   Ke386GetPageTableDirectory(Common->PageDirectory);
+   Common->PageDirectory = __readcr3();
    /* Write the kernel entry point */
    Common->NtProcessStartup = (ULONG_PTR)RtlImageNtHeader((PVOID)KernelBase)->OptionalHeader.AddressOfEntryPoint + KernelBase;
    /* Write the state of the mae mode */
-   Common->PaeModeEnabled = Ke386GetCr4() & X86_CR4_PAE ? 1 : 0;
+   Common->PaeModeEnabled = __readcr4() & CR4_PAE ? 1 : 0;
 
    DPRINT1("%x %x %x %x\n", Common->Stack, Common->PageDirectory, Common->NtProcessStartup, Common->PaeModeEnabled);
 

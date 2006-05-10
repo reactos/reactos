@@ -49,8 +49,7 @@ ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath);
 // Loader Functions And Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
- 
-extern LOADER_PARAMETER_BLOCK LoaderBlock; /* Multiboot info structure passed to kernel */
+extern ROS_LOADER_PARAMETER_BLOCK LoaderBlock; /* Multiboot info structure passed to kernel */
 extern char					reactos_kernel_cmdline[255];	// Command line passed to kernel
 extern LOADER_MODULE		reactos_modules[64];		// Array to hold boot module info loaded for the kernel
 extern char					reactos_module_strings[64][256];	// Array to hold module names
@@ -65,6 +64,6 @@ ULONG_PTR STDCALL FrLdrCreateModule(LPCSTR ModuleName);
 ULONG_PTR STDCALL FrLdrLoadModule(FILE *ModuleImage, LPCSTR ModuleName, PULONG ModuleSize);
 BOOL STDCALL FrLdrCloseModule(ULONG_PTR ModuleBase, ULONG dwModuleSize);
 VOID STDCALL FrLdrStartup(ULONG Magic);
-typedef VOID (FASTCALL *ASMCODE)(ULONG Magic, PLOADER_PARAMETER_BLOCK LoaderBlock);
+typedef VOID (FASTCALL *ASMCODE)(ULONG Magic, PROS_LOADER_PARAMETER_BLOCK LoaderBlock);
 
 #endif // defined __REACTOS_H

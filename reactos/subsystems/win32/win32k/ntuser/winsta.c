@@ -97,10 +97,10 @@ CleanupWindowStationImpl(VOID)
 NTSTATUS
 STDCALL
 IntWinStaObjectOpen(OB_OPEN_REASON Reason,
-                    PVOID ObjectBody,
                     PEPROCESS Process,
-                    ULONG HandleCount,
-                    ACCESS_MASK GrantedAccess)
+                    PVOID ObjectBody,
+                    ACCESS_MASK GrantedAccess,
+                    ULONG HandleCount)
 {
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)ObjectBody;
    NTSTATUS Status;

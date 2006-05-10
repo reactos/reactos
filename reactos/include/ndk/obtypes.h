@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -47,6 +47,11 @@ Author:
     (p)->SecurityDescriptor = (s);              \
     (p)->SecurityQualityOfService = NULL;       \
 }
+
+//
+// Number of custom-defined bits that can be attached to a handle
+//
+#define OBJ_HANDLE_TAGBITS                      0x3
 
 //
 // Directory Object Access Rights
@@ -132,7 +137,6 @@ typedef struct _OB_DUMP_CONTROL
 } OB_DUMP_CONTROL, *POB_DUMP_CONTROL;
 
 #ifndef NTOS_MODE_USER
-#ifndef _REACTOS_
 
 //
 // Object Type Callbacks
@@ -205,87 +209,6 @@ typedef NTSTATUS
 (NTAPI *OB_OKAYTOCLOSE_METHOD)(
     VOID
 );
-
-#else
-
-//
-// FIXME: ReactOS ONLY Object Callbacks
-//
-typedef NTSTATUS
-(NTAPI *OB_OPEN_METHOD)(
-    OB_OPEN_REASON Reason,
-    PVOID ObjectBody,
-    PEPROCESS Process,
-    ULONG HandleCount,
-    ACCESS_MASK GrantedAccess
-);
-
-typedef NTSTATUS
-(NTAPI *OB_PARSE_METHOD)(
-    PVOID Object,
-    PVOID *NextObject,
-    PUNICODE_STRING FullPath,
-    PWSTR *Path,
-    ULONG Attributes
-);
-
-typedef VOID
-(NTAPI *OB_DELETE_METHOD)(
-    PVOID DeletedObject
-);
-
-typedef VOID
-(NTAPI *OB_CLOSE_METHOD)(
-    PVOID ClosedObject,
-    ULONG HandleCount
-);
-
-typedef VOID
-(NTAPI *OB_DUMP_METHOD)(
-    VOID
-);
-
-typedef NTSTATUS
-(NTAPI *OB_OKAYTOCLOSE_METHOD)(
-    VOID
-);
-
-typedef NTSTATUS
-(NTAPI *OB_QUERYNAME_METHOD)(
-    PVOID ObjectBody,
-    POBJECT_NAME_INFORMATION ObjectNameInfo,
-    ULONG Length,
-    PULONG ReturnLength
-);
-
-typedef PVOID
-(NTAPI *OB_FIND_METHOD)(
-    PVOID  WinStaObject,
-    PWSTR  Name,
-    ULONG  Attributes
-);
-
-typedef NTSTATUS
-(NTAPI *OB_SECURITY_METHOD)(
-    PVOID Object,
-    SECURITY_OPERATION_CODE OperationType,
-    SECURITY_INFORMATION SecurityInformation,
-    PSECURITY_DESCRIPTOR NewSecurityDescriptor,
-    PULONG ReturnLength,
-    PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
-    POOL_TYPE PoolType,
-    PGENERIC_MAPPING GenericMapping
-);
-
-typedef NTSTATUS
-(NTAPI *OB_CREATE_METHOD)(
-    PVOID ObjectBody,
-    PVOID Parent,
-    PWSTR RemainingPath,
-    struct _OBJECT_ATTRIBUTES* ObjectAttributes
-);
-
-#endif
 
 #else
 
@@ -434,9 +357,6 @@ typedef struct _OBJECT_HEADER_CREATOR_INFO
 //
 typedef struct _OBJECT_HEADER
 {
-#ifdef _REACTOS_
-    LIST_ENTRY Entry; // FIXME: REACTOS ONLY
-#endif
     LONG PointerCount;
     union
     {

@@ -883,7 +883,7 @@ GetAppName:
             PathType = RtlDetermineDosPathNameType_U(lpApplicationName);
                     
             /* If it's not relative, try to get the error */
-            if (PathType != RELATIVE_PATH)
+            if (PathType != RtlPathTypeRelative)
             {
                 /* This should fail, and give us a detailed LastError */
                 hFile = CreateFileW(lpApplicationName,

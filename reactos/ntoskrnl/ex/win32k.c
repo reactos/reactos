@@ -36,10 +36,10 @@ static GENERIC_MAPPING ExpDesktopMapping =
 };
 
 OB_OPEN_METHOD ExpWindowStationObjectOpen = NULL;
-OB_PARSE_METHOD ExpWindowStationObjectParse = NULL;
+OB_ROS_PARSE_METHOD ExpWindowStationObjectParse = NULL;
 OB_DELETE_METHOD ExpWindowStationObjectDelete = NULL;
-OB_FIND_METHOD ExpWindowStationObjectFind = NULL;
-OB_CREATE_METHOD ExpDesktopObjectCreate = NULL;
+OB_ROS_FIND_METHOD ExpWindowStationObjectFind = NULL;
+OB_ROS_CREATE_METHOD ExpDesktopObjectCreate = NULL;
 OB_DELETE_METHOD ExpDesktopObjectDelete = NULL;
 
 /* FUNCTIONS ****************************************************************/
@@ -133,9 +133,9 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.GenericMapping = ExpWindowStationMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.OpenProcedure = ExpWinStaObjectOpen;
+    ObjectTypeInitializer.OpenProcedure = (OB_OPEN_METHOD)ExpWinStaObjectOpen;
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
-    ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;
+    ObjectTypeInitializer.ParseProcedure = (OB_PARSE_METHOD)ExpWinStaObjectParse;
     ObpCreateTypeObject(&ObjectTypeInitializer,
                         &Name,
                         &ExWindowStationObjectType);

@@ -152,7 +152,7 @@ ObInitSymbolicLinkImplementation (VOID)
   ObjectTypeInitializer.PoolType = NonPagedPool;
   ObjectTypeInitializer.ValidAccessMask = SYMBOLIC_LINK_ALL_ACCESS;
   ObjectTypeInitializer.UseDefaultObject = TRUE;
-  ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
+  ObjectTypeInitializer.ParseProcedure = (OB_PARSE_METHOD)ObpParseSymbolicLink;
   ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObSymbolicLinkType);
 }

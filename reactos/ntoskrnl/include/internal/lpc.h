@@ -93,8 +93,11 @@ LpcSendTerminationPort(
 VOID 
 STDCALL
 LpcpClosePort(
-    PVOID ObjectBody,
-    ULONG HandleCount
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID Object,
+    IN ACCESS_MASK GrantedAccess,
+    IN ULONG ProcessHandleCount,
+    IN ULONG SystemHandleCount
 );
 
 VOID

@@ -52,7 +52,7 @@ ExpDesktopCreate(PVOID ObjectBody,
 static VOID
 ObpDecrementHandleCount(PVOID ObjectBody)
 {
-  POBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  PROS_OBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
   LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
   DPRINT("Header: %x\n", ObjectHeader);
   DPRINT("NewHandleCount: %x\n", NewHandleCount);
@@ -63,7 +63,7 @@ ObpDecrementHandleCount(PVOID ObjectBody)
   {
     /* the handle count should be decremented but we pass the previous value
        to the callback */
-    ObjectHeader->Type->TypeInfo.CloseProcedure(ObjectBody, NewHandleCount + 1);
+    ObjectHeader->Type->TypeInfo.CloseProcedure(NULL, ObjectBody, 0, NewHandleCount + 1, NewHandleCount + 1);
   }
 
   if(NewHandleCount == 0)
@@ -75,7 +75,7 @@ ObpDecrementHandleCount(PVOID ObjectBody)
       /* delete the object from the namespace when the last handle got closed.
          Only do this if it's actually been inserted into the namespace and
          if it's not a permanent object. */
-      ObpRemoveEntryDirectory(ObjectHeader);
+      ObpRemoveEntryDirectory((PROS_OBJECT_HEADER)ObjectHeader);
     }
 
     /* remove the keep-alive reference */
@@ -216,7 +216,7 @@ ObpDeleteHandle(HANDLE Handle)
 {
    PHANDLE_TABLE_ENTRY HandleEntry;
    PVOID Body;
-   POBJECT_HEADER ObjectHeader;
+   PROS_OBJECT_HEADER ObjectHeader;
    PHANDLE_TABLE ObjectTable;
 
    PAGED_CODE();
@@ -274,7 +274,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
   HANDLE_TABLE_ENTRY NewHandleEntry;
   BOOLEAN AttachedToProcess = FALSE;
   PVOID ObjectBody;
-  POBJECT_HEADER ObjectHeader;
+  PROS_OBJECT_HEADER ObjectHeader;
   ULONG NewHandleCount;
   HANDLE NewTargetHandle;
   PEPROCESS CurrentProcess;
@@ -613,7 +613,7 @@ SweepHandleCallback(PHANDLE_TABLE HandleTable,
                     ULONG GrantedAccess,
                     PVOID Context)
 {
-  POBJECT_HEADER ObjectHeader;
+  PROS_OBJECT_HEADER ObjectHeader;
   PVOID ObjectBody;
 
   PAGED_CODE();
@@ -629,7 +629,7 @@ DuplicateHandleCallback(PHANDLE_TABLE HandleTable,
                         PHANDLE_TABLE_ENTRY HandleTableEntry,
                         PVOID Context)
 {
-  POBJECT_HEADER ObjectHeader;
+  PROS_OBJECT_HEADER ObjectHeader;
   BOOLEAN Ret = FALSE;
 
   PAGED_CODE();
@@ -709,7 +709,7 @@ ObpCreateHandle(PVOID ObjectBody,
 {
    HANDLE_TABLE_ENTRY NewEntry;
    PEPROCESS Process, CurrentProcess;
-   POBJECT_HEADER ObjectHeader;
+   PROS_OBJECT_HEADER ObjectHeader;
    HANDLE Handle;
    KAPC_STATE ApcState;
    BOOLEAN AttachedToProcess = FALSE;
@@ -877,7 +877,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
 			  POBJECT_HANDLE_INFORMATION HandleInformation)
 {
    PHANDLE_TABLE_ENTRY HandleEntry;
-   POBJECT_HEADER ObjectHeader;
+   PROS_OBJECT_HEADER ObjectHeader;
    PVOID ObjectBody;
    ACCESS_MASK GrantedAccess;
    ULONG Attributes;
@@ -1141,10 +1141,10 @@ ObInsertObject(IN PVOID Object,
                OUT PHANDLE Handle)
 {
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
-    POBJECT_HEADER Header;
+    PROS_OBJECT_HEADER Header;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     PVOID FoundObject = NULL;
-    POBJECT_HEADER FoundHeader = NULL;
+    PROS_OBJECT_HEADER FoundHeader = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING RemainingPath;
     BOOLEAN ObjectAttached = FALSE; 
@@ -1203,7 +1203,7 @@ ObInsertObject(IN PVOID Object,
         PWSTR BufferPos = RemainingPath.Buffer;
         ULONG Delta = 0;
         
-        ObpAddEntryDirectory(FoundObject, Header, NULL);
+        ObpAddEntryDirectory(FoundObject, (PROS_OBJECT_HEADER)Header, NULL);
         ObjectAttached = TRUE;
         
         ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
@@ -1251,8 +1251,8 @@ ObInsertObject(IN PVOID Object,
         {
             DPRINT("Calling %x\n", Header->Type->TypeInfo.OpenProcedure);
             Status = Header->Type->TypeInfo.OpenProcedure(ObCreateHandle,
-                                                                &Header->Body,
                                                                 NULL,
+                                                                &Header->Body,
                                                                 0,
                                                                 0);
         }
@@ -1262,7 +1262,7 @@ ObInsertObject(IN PVOID Object,
             DPRINT("Create Failed\n");
             if (ObjectAttached == TRUE)
             {
-                ObpRemoveEntryDirectory(Header);
+                ObpRemoveEntryDirectory((PROS_OBJECT_HEADER)Header);
             }
             if (FoundObject)
             {

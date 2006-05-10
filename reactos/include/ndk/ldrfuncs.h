@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -58,6 +58,11 @@ LdrFindResourceDirectory_U(
     OUT PIMAGE_RESOURCE_DIRECTORY *ResourceDirectory
 );
 
+BOOLEAN
+LdrUnloadAlternateResourceModule(
+    IN PVOID BaseAddress
+);
+
 //
 // Misc. Functions
 //
@@ -68,6 +73,30 @@ LdrGetProcedureAddress(
     IN PANSI_STRING Name,
     IN ULONG Ordinal,
     OUT PVOID *ProcedureAddress
+);
+
+ULONG
+NTAPI
+LdrRelocateImage(
+    IN PVOID NewBase,
+    IN PUCHAR LoaderName,
+    IN ULONG Success,
+    IN ULONG Conflict,
+    IN ULONG Invalid
+);
+
+NTSTATUS
+LdrLockLoaderLock(
+    IN ULONG Flags,
+    OUT PULONG Disposition OPTIONAL,
+    OUT PULONG Cookie OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+LdrUnlockLoaderLock(
+    IN ULONG Flags,
+    IN ULONG Cookie OPTIONAL
 );
 
 #endif

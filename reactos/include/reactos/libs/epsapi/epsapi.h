@@ -32,7 +32,7 @@ typedef NTSTATUS (NTAPI *PPROC_ENUM_ROUTINE)(IN PSYSTEM_PROCESS_INFORMATION Curr
 typedef NTSTATUS (NTAPI *PTHREAD_ENUM_ROUTINE)(IN PSYSTEM_THREAD_INFORMATION CurrentThread,
                                                IN OUT PVOID CallbackContext);
 
-typedef NTSTATUS (NTAPI *PSYSMOD_ENUM_ROUTINE)(IN PSYSTEM_MODULE_INFORMATION_ENTRY CurrentModule,
+typedef NTSTATUS (NTAPI *PSYSMOD_ENUM_ROUTINE)(IN PRTL_PROCESS_MODULE_INFORMATION CurrentModule,
                                                IN OUT PVOID CallbackContext);
 
 typedef NTSTATUS (NTAPI *PPROCMOD_ENUM_ROUTINE)(IN HANDLE ProcessHandle,
@@ -100,18 +100,18 @@ PsaEnumerateSystemModules(IN PSYSMOD_ENUM_ROUTINE Callback,
 
 /* capturing & walking */
 NTSTATUS NTAPI
-PsaCaptureSystemModules(OUT PSYSTEM_MODULE_INFORMATION * SystemModules);
+PsaCaptureSystemModules(OUT PRTL_PROCESS_MODULES * SystemModules);
 
 NTSTATUS NTAPI
-PsaWalkSystemModules(IN PSYSTEM_MODULE_INFORMATION SystemModules,
+PsaWalkSystemModules(IN PRTL_PROCESS_MODULES SystemModules,
                      IN PSYSMOD_ENUM_ROUTINE Callback,
                      IN OUT PVOID CallbackContext);
 
-PSYSTEM_MODULE_INFORMATION_ENTRY FASTCALL
-PsaWalkFirstSystemModule(IN PSYSTEM_MODULE_INFORMATION SystemModules);
+PRTL_PROCESS_MODULE_INFORMATION FASTCALL
+PsaWalkFirstSystemModule(IN PRTL_PROCESS_MODULES SystemModules);
 
-PSYSTEM_MODULE_INFORMATION_ENTRY FASTCALL
-PsaWalkNextSystemModule(IN PSYSTEM_MODULE_INFORMATION CurrentSystemModule);
+PRTL_PROCESS_MODULE_INFORMATION FASTCALL
+PsaWalkNextSystemModule(IN PRTL_PROCESS_MODULES CurrentSystemModule);
 
 /* Process modules */
 NTSTATUS NTAPI

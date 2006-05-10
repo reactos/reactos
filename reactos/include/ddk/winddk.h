@@ -200,8 +200,12 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )  
 #define ZwCurrentProcess() NtCurrentProcess()         
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
-#define ZwCurrentThread() NtCurrentThread()      
+#define ZwCurrentThread() NtCurrentThread()     
+#ifdef _REACTOS_ 
+#define KIP0PCRADDRESS                      0xff000000
+#else
 #define KIP0PCRADDRESS                      0xffdff000
+#endif
 
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440
@@ -230,6 +234,8 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define LOW_REALTIME_PRIORITY             16
 #define HIGH_PRIORITY                     31
 #define MAXIMUM_PRIORITY                  32
+
+#define MAXIMUM_SUSPEND_COUNT             MAXCHAR
 
 #define FILE_SUPERSEDED                   0x00000000
 #define FILE_OPENED                       0x00000001
@@ -406,6 +412,8 @@ typedef struct _KSYSTEM_TIME
     LONG High1Time;
     LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
+
+extern volatile KSYSTEM_TIME KeTickCount;
 
 typedef struct _KUSER_SHARED_DATA 
 {
@@ -1024,6 +1032,8 @@ typedef struct _KDEVICE_QUEUE_ENTRY {
 
 #define LOCK_QUEUE_WAIT                   1
 #define LOCK_QUEUE_OWNER                  2
+#define LOCK_QUEUE_TIMER_LOCK_SHIFT       4
+#define LOCK_QUEUE_TIMER_TABLE_LOCKS (1 << (8 - LOCK_QUEUE_TIMER_LOCK_SHIFT))
 
 typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
   LockQueueDispatcherLock,
@@ -1041,7 +1051,10 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
   LockQueueNtfsStructLock,
   LockQueueAfdWorkQueueLock,
   LockQueueBcbLock,
-  LockQueueMaximumLock
+  LockQueueMmNonPagedPoolLock,
+  LockQueueUnusedSpare16,
+  LockQueueTimerTableLock,
+  LockQueueMaximumLock = LockQueueTimerTableLock + LOCK_QUEUE_TIMER_TABLE_LOCKS
 } KSPIN_LOCK_QUEUE_NUMBER, *PKSPIN_LOCK_QUEUE_NUMBER;
 
 typedef struct _KSPIN_LOCK_QUEUE {

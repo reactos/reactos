@@ -261,6 +261,7 @@ ExecuteRuntimeAsserts(VOID)
     ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
     ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
     ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
+    DPRINT1("NPXThread offset: %lx\n", FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread));
     ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
     ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
     ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
@@ -610,13 +611,13 @@ ExpInitializeExecutive(VOID)
     ExpInitializeCallbacks();
 
     /* Call KD Providers at Phase 1 */
-    KdInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    KdInitSystem(1, (PROS_LOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
     IoInit();
 
     /* TBD */
-    PoInit((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock, ForceAcpiDisable);
+    PoInit((PROS_LOADER_PARAMETER_BLOCK)&KeLoaderBlock, ForceAcpiDisable);
 
     /* Initialize the Registry (Hives are NOT yet loaded!) */
     CmInitializeRegistry();
@@ -640,7 +641,7 @@ ExpInitializeExecutive(VOID)
     if (NoGuiBoot) ExpDisplayNotice();
 
     /* Call KD Providers at Phase 2 */
-    KdInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    KdInitSystem(2, (PROS_LOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Import and create NLS Data and Sections */
     RtlpInitNls();

@@ -17,6 +17,7 @@
 #include <ntddk.h>
 #include <ntddmou.h>
 #include <ntndk.h>
+//#include <rtltypes.h>
 
 /* Win32 Headers */
 /* FIXME: Defines in winbase.h that we need... */
@@ -55,9 +56,6 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <win32k/ntgdityp.h>
 #include <win32k/ntgdibad.h>
 #include <ntgdi.h>
-
-/* For access to SECTION_OBJECT. FIXME: Once compatible with NT, use NDK! */
-#include <internal/mm.h>
 
 /* Internal Win32K Header */
 #include "include/win32k.h"

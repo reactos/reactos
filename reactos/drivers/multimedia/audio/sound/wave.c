@@ -13,7 +13,6 @@
 /* FUNCTIONS **************************************************************/
 
 #include <ntddk.h>
-#include <halfuncs.h>
 #include <string.h>
 #include <devices.h>
 

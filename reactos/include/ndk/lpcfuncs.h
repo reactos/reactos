@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -27,6 +27,7 @@ Author:
 //
 // Native calls
 //
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAcceptConnectPort(
@@ -38,6 +39,7 @@ NtAcceptConnectPort(
     PREMOTE_PORT_VIEW ClientView OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCompleteConnectPort(
@@ -58,6 +60,7 @@ NtConnectPort(
     PULONG ConnectionInformationLength OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreatePort(
@@ -68,6 +71,7 @@ NtCreatePort(
     ULONG MaxPoolUsage
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateWaitablePort(
@@ -78,6 +82,7 @@ NtCreateWaitablePort(
     ULONG NPMessageQueueSize OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtImpersonateClientOfPort(
@@ -85,6 +90,7 @@ NtImpersonateClientOfPort(
     PPORT_MESSAGE ClientMessage
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtListenPort(
@@ -92,6 +98,7 @@ NtListenPort(
     PPORT_MESSAGE ConnectionRequest
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationPort(
@@ -102,6 +109,7 @@ NtQueryInformationPort(
     PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReadRequestData(
@@ -113,6 +121,7 @@ NtReadRequestData(
     PULONG ReturnLength
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplyPort(
@@ -120,6 +129,7 @@ NtReplyPort(
     IN PPORT_MESSAGE LpcReply
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplyWaitReceivePort(
@@ -129,6 +139,7 @@ NtReplyWaitReceivePort(
     OUT PPORT_MESSAGE ReceiveMessage
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplyWaitReceivePortEx(
@@ -139,6 +150,7 @@ NtReplyWaitReceivePortEx(
     IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplyWaitReplyPort(
@@ -146,6 +158,7 @@ NtReplyWaitReplyPort(
     OUT PPORT_MESSAGE ReplyMessage
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestPort(
@@ -177,6 +190,7 @@ NtSecureConnectPort(
     PULONG ConnectionInformationLength OPTIONAL
 );
 
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWriteRequestData(
@@ -188,6 +202,7 @@ NtWriteRequestData(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAcceptConnectPort(
@@ -199,13 +214,14 @@ ZwAcceptConnectPort(
     PREMOTE_PORT_VIEW ClientView OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCompleteConnectPort(
     HANDLE PortHandle
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwConnectPort(
@@ -219,6 +235,7 @@ ZwConnectPort(
     PULONG ConnectionInformationLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreatePort(
@@ -229,6 +246,7 @@ ZwCreatePort(
     ULONG MaxPoolUsage
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateWaitablePort(
@@ -239,6 +257,7 @@ ZwCreateWaitablePort(
     ULONG NPMessageQueueSize OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwImpersonateClientOfPort(
@@ -246,6 +265,7 @@ ZwImpersonateClientOfPort(
     PPORT_MESSAGE ClientMessage
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwListenPort(
@@ -253,6 +273,7 @@ ZwListenPort(
     PPORT_MESSAGE ConnectionRequest
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationPort(
@@ -263,6 +284,7 @@ ZwQueryInformationPort(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadRequestData(
@@ -274,6 +296,7 @@ ZwReadRequestData(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyPort(
@@ -281,6 +304,7 @@ ZwReplyPort(
     IN PPORT_MESSAGE LpcReply
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReceivePort(
@@ -290,6 +314,7 @@ ZwReplyWaitReceivePort(
     OUT PPORT_MESSAGE ReceiveMessage
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReceivePortEx(
@@ -300,6 +325,7 @@ ZwReplyWaitReceivePortEx(
     IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReplyPort(
@@ -307,6 +333,7 @@ ZwReplyWaitReplyPort(
     OUT PPORT_MESSAGE ReplyMessage
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRequestPort(
@@ -314,7 +341,7 @@ ZwRequestPort(
     IN PPORT_MESSAGE LpcMessage
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRequestWaitReplyPort(
@@ -323,7 +350,7 @@ ZwRequestWaitReplyPort(
     IN PPORT_MESSAGE LpcRequest
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSecureConnectPort(
@@ -338,6 +365,7 @@ ZwSecureConnectPort(
     PULONG ConnectionInformationLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteRequestData(

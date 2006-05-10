@@ -19,6 +19,14 @@
 #pragma alloc_text(INIT, KiInitializeBugCheck)
 #endif
 
+/* ROS Internal. Please deprecate */
+NTHALAPI
+VOID
+NTAPI
+HalReleaseDisplayOwnership(
+    VOID
+);
+
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY BugcheckCallbackListHead = {NULL,NULL};
@@ -315,7 +323,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
         Address = (PVOID)Tf->Eip;
 
         /* Try to get information on the module */
-        LIST_FOR_EACH(CurrentModule, &ModuleListHead, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList)
+        LIST_FOR_EACH(CurrentModule, &ModuleListHead, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks)
         {
             /* Check if this is the right one */
             if ((Address != NULL && (Address >= (PVOID)CurrentModule->DllBase &&

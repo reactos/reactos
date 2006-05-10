@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -54,7 +54,7 @@ InbvEnableBootDriver(
 VOID
 NTAPI
 InbvInstallDisplayStringFilter(
-    IN PVOID Unknown
+    IN PVOID DisplayFilter
 );
 
 BOOLEAN

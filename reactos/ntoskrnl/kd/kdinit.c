@@ -44,7 +44,7 @@ PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
 PCHAR
 STDCALL
 KdpGetWrapperDebugMode(PCHAR Currentp2,
-                       PLOADER_PARAMETER_BLOCK LoaderBlock)
+                       PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PCHAR p2 = Currentp2;
 
@@ -160,7 +160,7 @@ KdpCallInitRoutine(ULONG BootPhase)
 VOID
 INIT_FUNCTION
 KdInitSystem(ULONG BootPhase,
-             PLOADER_PARAMETER_BLOCK LoaderBlock)
+             PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Value;
     ULONG i;

@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -140,8 +140,8 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateBootEntries(
-    IN ULONG Unknown1,
-    IN ULONG Unknown2
+    IN PVOID Buffer,
+    IN PULONG BufferLength
 );
 
 NTSYSCALLAPI
@@ -244,16 +244,16 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryBootEntryOrder(
-    IN ULONG Unknown1,
-    IN ULONG Unknown2
+    IN PULONG Ids,
+    IN PULONG Count
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryBootOptions(
-    IN ULONG Unknown1,
-    IN ULONG Unknown2
+    IN PBOOT_OPTIONS BootOptions,
+    IN PULONG BootOptionsLength
 );
 
 NTSYSCALLAPI
@@ -389,16 +389,16 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetBootEntryOrder(
-    IN ULONG Unknown1,
-    IN ULONG Unknown2
+    IN PULONG Ids,
+    IN PULONG Count
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetBootOptions(
-    ULONG Unknown1,
-    ULONG Unknown2
+    IN PBOOT_OPTIONS BootOptions,
+    IN ULONG FieldsToChange
 );
 
 NTSYSCALLAPI
@@ -458,9 +458,10 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTranslateFilePath(
-    ULONG Unknown1,
-    ULONG Unknown2,
-    ULONG Unknown3
+    PFILE_PATH InputFilePath,
+    ULONG OutputType,
+    PFILE_PATH OutputFilePath,
+    ULONG OutputFilePathLength
 );
 
 NTSYSCALLAPI
@@ -619,14 +620,6 @@ ZwDeviceIoControlFile(
     IN ULONG OutputBufferSize
 );
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwEnumerateBootEntries(
-    IN ULONG Unknown1,
-    IN ULONG Unknown2
-);
-
 #ifdef NTOS_MODE_USER
 NTSYSAPI
 NTSTATUS
@@ -725,22 +718,6 @@ NTAPI
 ZwQueryAttributesFile(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     OUT PFILE_BASIC_INFORMATION FileInformation
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryBootEntryOrder(
-    IN ULONG Unknown1,
-    IN ULONG Unknown2
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryBootOptions(
-    IN ULONG Unknown1,
-    IN ULONG Unknown2
 );
 
 NTSYSAPI
@@ -874,22 +851,6 @@ ZwRemoveIoCompletion(
     IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetBootEntryOrder(
-    IN ULONG Unknown1,
-    IN ULONG Unknown2
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetBootOptions(
-    ULONG Unknown1,
-    ULONG Unknown2
-);
-
 #ifdef NTOS_MODE_USER
 NTSYSAPI
 NTSTATUS
@@ -943,15 +904,6 @@ ZwSetVolumeInformationFile(
     IN PVOID FsInformation,
     IN ULONG Length,
     IN FS_INFORMATION_CLASS FsInformationClass
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwTranslateFilePath(
-    ULONG Unknown1,
-    ULONG Unknown2,
-    ULONG Unknown3
 );
 
 NTSYSAPI

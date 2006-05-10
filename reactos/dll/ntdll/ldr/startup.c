@@ -415,7 +415,7 @@ LdrpInit(PCONTEXT Context,
        NtModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
        InsertTailList(&Peb->Ldr->InLoadOrderModuleList,
-                      &NtModule->InLoadOrderModuleList);
+                      &NtModule->InLoadOrderLinks);
        InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
                       &NtModule->InInitializationOrderModuleList);
 
@@ -463,7 +463,7 @@ LdrpInit(PCONTEXT Context,
        ExeModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
        InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,
-                      &ExeModule->InLoadOrderModuleList);
+                      &ExeModule->InLoadOrderLinks);
 
        LdrpInitLoader();
 

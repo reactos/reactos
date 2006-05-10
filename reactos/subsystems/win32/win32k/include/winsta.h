@@ -54,11 +54,11 @@ CleanupWindowStationImpl(VOID);
 
 NTSTATUS
 STDCALL
-IntWinStaObjectOpen(OB_OPEN_REASON Reason,
-                    PVOID ObjectBody,
-                    PEPROCESS Process,
-                    ULONG HandleCount,
-                    ACCESS_MASK GrantedAccess);
+IntWinStaObjectOpen(IN OB_OPEN_REASON Reason,
+                    IN PEPROCESS Process OPTIONAL,
+                    IN PVOID ObjectBody,
+                    IN ACCESS_MASK GrantedAccess,
+                    IN ULONG HandleCount);
 
 VOID STDCALL
 IntWinStaObjectDelete(PVOID DeletedObject);

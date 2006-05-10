@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -47,6 +47,7 @@ Author:
 //
 // DebugService Control Types
 //
+#define BREAKPOINT_BREAK                    0
 #define BREAKPOINT_PRINT                    1
 #define BREAKPOINT_PROMPT                   2
 #define BREAKPOINT_LOAD_SYMBOLS             3
@@ -55,25 +56,109 @@ Author:
 //
 // Debug Control Codes for NtSystemDebugcontrol
 //
-typedef enum _DEBUG_CONTROL_CODE
+typedef enum _SYSDBG_COMMAND
 {
-    DebugGetTraceInformation = 1,
-    DebugSetInternalBreakpoint,
-    DebugSetSpecialCall,
-    DebugClearSpecialCalls,
-    DebugQuerySpecialCalls,
-    DebugDbgBreakPoint,
-    DebugDbgLoadSymbols
-} DEBUG_CONTROL_CODE;
+    SysDbgQueryModuleInformation = 0,
+    SysDbgQueryTraceInformation = 1,
+    SysDbgSetTracepoint = 2,
+    SysDbgSetSpecialCall = 3,
+    SysDbgClearSpecialCalls = 4,
+    SysDbgQuerySpecialCalls = 5,
+    SysDbgBreakPoint = 6,
+    SysDbgQueryVersion = 7,
+    SysDbgReadVirtual = 8,
+    SysDbgWriteVirtual = 9,
+    SysDbgReadPhysical = 10,
+    SysDbgWritePhysical = 11,
+    SysDbgReadControlSpace = 12,
+    SysDbgWriteControlSpace = 13,
+    SysDbgReadIoSpace = 14,
+    SysDbgWriteIoSpace = 15,
+    SysDbgReadMsr = 16,
+    SysDbgWriteMsr = 17,
+    SysDbgReadBusData = 18,
+    SysDbgWriteBusData = 19,
+    SysDbgCheckLowMemory = 20,
+    SysDbgEnableKernelDebugger = 21,
+    SysDbgDisableKernelDebugger = 22,
+    SysDbgGetAutoKdEnable = 23,
+    SysDbgSetAutoKdEnable = 24,
+    SysDbgGetPrintBufferSize = 25,
+    SysDbgSetPrintBufferSize = 26,
+    SysDbgGetKdUmExceptionEnable = 27,
+    SysDbgSetKdUmExceptionEnable = 28,
+    SysDbgGetTriageDump = 29,
+    SysDbgGetKdBlockEnable = 30,
+    SysDbgSetKdBlockEnable = 31,
+    SysDbgRegisterForUmBreakInfo = 32,
+    SysDbgGetUmBreakPid = 33,
+    SysDbgClearUmBreakPid = 34,
+    SysDbgGetUmAttachPid = 35,
+    SysDbgClearUmAttachPid = 36,
+} SYSDBG_COMMAND;
 
 //
-// Kernel Debugger Port Definition
+// System Debugger Types
 //
-typedef struct _KD_PORT_INFORMATION
+typedef struct _SYSDBG_PHYSICAL
 {
-    ULONG ComPort;
-    ULONG BaudRate;
-    ULONG BaseAddress;
-} KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
+    PHYSICAL_ADDRESS Address;
+    PVOID Buffer;
+    ULONG Request;
+} SYSDBG_PHYSICAL, *PSYSDBG_PHYSICAL;
+
+typedef struct _SYSDBG_VIRTUAL
+{
+    PVOID Address;
+    PVOID Buffer;
+    ULONG Request;
+} SYSDBG_VIRTUAL, *PSYSDBG_VIRTUAL;
+
+typedef struct _SYSDBG_CONTROL_SPACE
+{
+    ULONGLONG Address;
+    PVOID Buffer;
+    ULONG Request;
+    ULONG Processor;
+} SYSDBG_CONTROL_SPACE, *PSYSDBG_CONTROL_SPACE;
+
+typedef struct _SYSDBG_IO_SPACE
+{
+    ULONGLONG Address;
+    PVOID Buffer;
+    ULONG Request;
+    INTERFACE_TYPE InterfaceType;
+    ULONG BusNumber;
+    ULONG AddressSpace;
+} SYSDBG_IO_SPACE, *PSYSDBG_IO_SPACE;
+
+typedef struct _SYSDBG_BUS_DATA
+{
+    ULONG Address;
+    PVOID Buffer;
+    ULONG Request;
+    BUS_DATA_TYPE BusDataType;
+    ULONG BusNumber;
+    ULONG SlotNumber;
+} SYSDBG_BUS_DATA, *PSYSDBG_BUS_DATA;
+
+typedef struct _SYSDBG_MSR
+{
+    ULONG Address;
+    ULONGLONG Data;
+} SYSDBG_MSR, *PSYSDBG_MSR;
+
+typedef struct _SYSDBG_TRIAGE_DUMP
+{
+    ULONG Flags;
+    ULONG BugCheckCode;
+    ULONG_PTR BugCheckParam1;
+    ULONG_PTR BugCheckParam2;
+    ULONG_PTR BugCheckParam3;
+    ULONG_PTR BugCheckParam4;
+    ULONG ProcessHandles;
+    ULONG ThreadHandles;
+    PHANDLE Handles;
+} SYSDBG_TRIAGE_DUMP, *PSYSDBG_TRIAGE_DUMP;
 
 #endif // _KDTYPES_H

@@ -1,4 +1,4 @@
-/*++ NDK Version: 0095
+/*++ NDK Version: 0098
 
 Copyright (c) Alex Ionescu.  All rights reserved.
 
@@ -12,7 +12,7 @@ Abstract:
 
 Author:
 
-    Alex Ionescu (alex.ionescu@reactos.com)   06-Oct-2004
+    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
 
 --*/
 
@@ -208,6 +208,15 @@ NtOpenEvent(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtOpenKeyedEvent(
+    OUT PHANDLE EventHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtOpenEventPair(
     OUT PHANDLE EventPairHandle,
     IN ACCESS_MASK DesiredAccess,
@@ -369,6 +378,16 @@ NtReleaseMutant(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtReleaseKeyedEvent(
+    IN HANDLE EventHandle,
+    IN PVOID Key,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER Timeout OPTIONAL
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtReleaseSemaphore(
     IN HANDLE SemaphoreHandle,
     IN LONG ReleaseCount,
@@ -411,6 +430,13 @@ NTAPI
 NtSetEvent(
     IN HANDLE EventHandle,
     OUT PLONG PreviousState  OPTIONAL
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetEventBoostPriority(
+    IN HANDLE EventHandle
 );
 
 NTSYSCALLAPI
@@ -488,6 +514,16 @@ NtShutdownSystem(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtWaitForKeyedEvent(
+    IN HANDLE EventHandle,
+    IN PVOID Key,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER Timeout OPTIONAL
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtWaitHighEventPair(
     IN HANDLE EventPairHandle
 );
@@ -535,7 +571,6 @@ ZwClearEvent(
     IN HANDLE EventHandle
 );
 
-NTSYSAPI
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -823,6 +858,7 @@ ZwSetDefaultHardErrorPort(
     IN HANDLE PortHandle
 );
 
+NTSYSAPI
 NTSYSAPI
 NTSTATUS
 NTAPI

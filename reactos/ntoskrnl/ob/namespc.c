@@ -50,7 +50,7 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                   PUNICODE_STRING ObjectName,
                   POBJECT_TYPE ObjectType,
                   ULONG ObjectSize,
-                  POBJECT_HEADER *ObjectHeader);
+                  PROS_OBJECT_HEADER *ObjectHeader);
 
 /* FUNCTIONS **************************************************************/
 
@@ -247,7 +247,7 @@ ObQueryDeviceMapInformation(PEPROCESS Process,
 VOID
 NTAPI
 ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
-		     POBJECT_HEADER Header,
+		     PROS_OBJECT_HEADER Header,
 		     PWSTR Name)
 /*
  * FUNCTION: Add an entry to a namespace directory
@@ -270,7 +270,7 @@ ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 
 VOID
 NTAPI
-ObpRemoveEntryDirectory(POBJECT_HEADER Header)
+ObpRemoveEntryDirectory(PROS_OBJECT_HEADER Header)
 /*
  * FUNCTION: Remove an entry from a namespace directory
  * ARGUMENTS:
@@ -293,10 +293,10 @@ ObpRemoveEntryDirectory(POBJECT_HEADER Header)
 NTSTATUS
 STDCALL
 ObpCreateDirectory(OB_OPEN_REASON Reason,
-                   PVOID ObjectBody,
                    PEPROCESS Process,
-                   ULONG HandleCount,
-                   ACCESS_MASK GrantedAccess)
+                   PVOID ObjectBody,
+                   ACCESS_MASK GrantedAccess,
+                   ULONG HandleCount)
 {
     PDIRECTORY_OBJECT Directory = ObjectBody;
     
@@ -315,7 +315,7 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
 		      ULONG Attributes)
 {
    PLIST_ENTRY current = DirectoryObject->head.Flink;
-   POBJECT_HEADER current_obj;
+   PROS_OBJECT_HEADER current_obj;
 
    DPRINT("ObFindEntryDirectory(dir %x, name %S)\n",DirectoryObject, Name);
 
@@ -333,7 +333,7 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
      }
    while (current!=(&(DirectoryObject->head)))
      {
-	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
+	current_obj = CONTAINING_RECORD(current,ROS_OBJECT_HEADER,Entry);
 	DPRINT("  Scanning: %S for: %S\n",HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name);
 	if (Attributes & OBJ_CASE_INSENSITIVE)
 	  {
@@ -458,7 +458,7 @@ ObInit(VOID)
     ObjectTypeInitializer.ValidAccessMask = DIRECTORY_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
     ObjectTypeInitializer.OpenProcedure = ObpCreateDirectory;
-    ObjectTypeInitializer.ParseProcedure = ObpParseDirectory;
+    ObjectTypeInitializer.ParseProcedure = (OB_PARSE_METHOD)ObpParseDirectory;
     ObjectTypeInitializer.MaintainTypeList = FALSE;
     ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DIRECTORY_OBJECT);
@@ -526,8 +526,8 @@ ObInit(VOID)
     
     /* Insert the two objects we already created but couldn't add */
     /* NOTE: Uses TypeList & Creator Info in OB 2.0 */
-    ObpAddEntryDirectory(ObpTypeDirectoryObject, BODY_TO_HEADER(ObTypeObjectType), NULL);
-    ObpAddEntryDirectory(ObpTypeDirectoryObject, BODY_TO_HEADER(ObDirectoryType), NULL);
+    ObpAddEntryDirectory(ObpTypeDirectoryObject, (PROS_OBJECT_HEADER)BODY_TO_HEADER(ObTypeObjectType), NULL);
+    ObpAddEntryDirectory(ObpTypeDirectoryObject, (PROS_OBJECT_HEADER)BODY_TO_HEADER(ObDirectoryType), NULL);
 
     /* Create 'symbolic link' object type */
     ObInitSymbolicLinkImplementation();
@@ -543,7 +543,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
                     PUNICODE_STRING TypeName,
                     POBJECT_TYPE *ObjectType)
 {
-    POBJECT_HEADER Header;
+    PROS_OBJECT_HEADER Header;
     POBJECT_TYPE LocalObjectType;
     ULONG HeaderSize;
     NTSTATUS Status;
@@ -555,7 +555,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
                                TypeName,
                                ObTypeObjectType, 
                                OBJECT_ALLOC_SIZE(sizeof(OBJECT_TYPE)),
-                               &Header);
+                               (PROS_OBJECT_HEADER*)&Header);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ObpAllocateObject failed!\n");
@@ -601,7 +601,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     }
 
     /* Calculate how much space our header'll take up */
-    HeaderSize = sizeof(OBJECT_HEADER) + sizeof(OBJECT_HEADER_NAME_INFO) +
+    HeaderSize = sizeof(ROS_OBJECT_HEADER) + sizeof(OBJECT_HEADER_NAME_INFO) +
                  (ObjectTypeInitializer->MaintainHandleCount ? 
                  sizeof(OBJECT_HEADER_HANDLE_INFO) : 0);
 

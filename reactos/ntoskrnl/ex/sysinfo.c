@@ -581,11 +581,12 @@ QSI_DEF(SystemProcessInformation)
 		do
 		{
 			PSYSTEM_PROCESS_INFORMATION SpiCur;
-			int curSize, i = 0;
+			int curSize;
 			ANSI_STRING	imgName;
 			int inLen=32; // image name len in bytes
 			PLIST_ENTRY current_entry;
 			PETHREAD current;
+            PSYSTEM_THREAD_INFORMATION ThreadInfo;
 
 			SpiCur = (PSYSTEM_PROCESS_INFORMATION)pCur;
 
@@ -645,7 +646,8 @@ QSI_DEF(SystemProcessInformation)
 			SpiCur->QuotaNonPagedPoolUsage = pr->QuotaUsage[1];
 			SpiCur->PagefileUsage = pr->QuotaUsage[3];
 			SpiCur->PeakPagefileUsage = pr->QuotaPeak[3];
-			SpiCur->PrivateUsage = pr->CommitCharge;
+			SpiCur->PrivatePageCount = pr->CommitCharge;
+            ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCur + 1);
 
 		        current_entry = pr->ThreadListHead.Flink;
         		while (current_entry != &pr->ThreadListHead)
@@ -653,18 +655,19 @@ QSI_DEF(SystemProcessInformation)
 				current = CONTAINING_RECORD(current_entry, ETHREAD,
 				                            ThreadListEntry);
 
-				SpiCur->TH[i].KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
-				SpiCur->TH[i].UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
+                
+				ThreadInfo->KernelTime.QuadPart = current->Tcb.KernelTime * 100000LL;
+				ThreadInfo->UserTime.QuadPart = current->Tcb.UserTime * 100000LL;
 //				SpiCur->TH[i].CreateTime = current->CreateTime;
-				SpiCur->TH[i].WaitTime = current->Tcb.WaitTime;
-				SpiCur->TH[i].StartAddress = (PVOID) current->StartAddress;
-				SpiCur->TH[i].ClientId = current->Cid;
-				SpiCur->TH[i].Priority = current->Tcb.Priority;
-				SpiCur->TH[i].BasePriority = current->Tcb.BasePriority;
-				SpiCur->TH[i].ContextSwitches = current->Tcb.ContextSwitches;
-				SpiCur->TH[i].ThreadState = current->Tcb.State;
-				SpiCur->TH[i].WaitReason = current->Tcb.WaitReason;
-				i++;
+				ThreadInfo->WaitTime = current->Tcb.WaitTime;
+				ThreadInfo->StartAddress = (PVOID) current->StartAddress;
+				ThreadInfo->ClientId = current->Cid;
+				ThreadInfo->Priority = current->Tcb.Priority;
+				ThreadInfo->BasePriority = current->Tcb.BasePriority;
+				ThreadInfo->ContextSwitches = current->Tcb.ContextSwitches;
+				ThreadInfo->ThreadState = current->Tcb.State;
+				ThreadInfo->WaitReason = current->Tcb.WaitReason;
+				ThreadInfo++;
 				current_entry = current_entry->Flink;
 			}
 
@@ -986,15 +989,15 @@ QSI_DEF(SystemVdmBopInformation)
 /* Class 21 - File Cache Information */
 QSI_DEF(SystemFileCacheInformation)
 {
-	SYSTEM_CACHE_INFORMATION *Sci = (SYSTEM_CACHE_INFORMATION *) Buffer;
+	SYSTEM_FILECACHE_INFORMATION *Sci = (SYSTEM_FILECACHE_INFORMATION *) Buffer;
 
-	if (Size < sizeof (SYSTEM_CACHE_INFORMATION))
+	if (Size < sizeof (SYSTEM_FILECACHE_INFORMATION))
 	{
-		* ReqSize = sizeof (SYSTEM_CACHE_INFORMATION);
+		* ReqSize = sizeof (SYSTEM_FILECACHE_INFORMATION);
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 
-	RtlZeroMemory(Sci, sizeof(SYSTEM_CACHE_INFORMATION));
+	RtlZeroMemory(Sci, sizeof(SYSTEM_FILECACHE_INFORMATION));
 
 	/* Return the Byte size not the page size. */
 	Sci->CurrentSize =
@@ -1011,7 +1014,7 @@ QSI_DEF(SystemFileCacheInformation)
 
 SSI_DEF(SystemFileCacheInformation)
 {
-	if (Size < sizeof (SYSTEM_CACHE_INFORMATION))
+	if (Size < sizeof (SYSTEM_FILECACHE_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
@@ -1545,7 +1548,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
       /*
        * Check the request is valid.
        */
-      if (SystemInformationClass >= SystemInformationClassMax)
+      if (SystemInformationClass >= MaxSystemInfoClass)
         {
           return (STATUS_INVALID_INFO_CLASS);
         }
@@ -1621,7 +1624,7 @@ NtSetSystemInformation (
 	 * Check the request is valid.
 	 */
 	if (	(SystemInformationClass >= SystemBasicInformation)
-		&& (SystemInformationClass < SystemInformationClassMax)
+		&& (SystemInformationClass < MaxSystemInfoClass)
 		)
 	{
 		if (NULL != CallQS [SystemInformationClass].Set)
