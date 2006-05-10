@@ -430,7 +430,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   {
 	      /* Wait for ReadEvent to become signaled */
 
-	      DPRINT1("Waiting for readable data (%wZ)\n", &Ccb->Pipe->PipeName);
+	      DPRINT("Waiting for readable data (%wZ)\n", &Ccb->Pipe->PipeName);
 	      Status = KeWaitForSingleObject(&Ccb->ReadEvent,
 				             UserRequest,
 				             KernelMode,
