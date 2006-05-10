@@ -292,14 +292,17 @@ RtlAcquireResourceExclusive@8
 RtlAcquireResourceShared@8
 RtlAddAccessAllowedAce@16
 RtlAddAccessAllowedAceEx@20
+RtlAddAccessAllowedObjectAce@28
 RtlAddAccessDeniedAce@16
 RtlAddAccessDeniedAceEx@20
+RtlAddAccessDeniedObjectAce@28
 RtlAddAce@20
 ;RtlAddActionToRXact
 RtlAddAtomToAtomTable@12
 ;RtlAddAttributeActionToRXact
 RtlAddAuditAccessAce@24
 RtlAddAuditAccessAceEx@28
+RtlAddAuditAccessObjectAce@36
 ;RtlAddCompoundAce
 RtlAddRange@36
 RtlAddVectoredExceptionHandler@8

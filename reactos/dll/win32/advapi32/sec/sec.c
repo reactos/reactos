@@ -490,9 +490,9 @@ STDCALL
 BuildSecurityDescriptorW(IN PTRUSTEE_W pOwner  OPTIONAL,
                          IN PTRUSTEE_W pGroup  OPTIONAL,
                          IN ULONG cCountOfAccessEntries,
-                         IN PEXPLICIT_ACCESS pListOfAccessEntries  OPTIONAL,
+                         IN PEXPLICIT_ACCESS_W pListOfAccessEntries  OPTIONAL,
                          IN ULONG cCountOfAuditEntries,
-                         IN PEXPLICIT_ACCESS pListOfAuditEntries  OPTIONAL,
+                         IN PEXPLICIT_ACCESS_W pListOfAuditEntries  OPTIONAL,
                          IN PSECURITY_DESCRIPTOR pOldSD  OPTIONAL,
                          OUT PULONG pSizeNewSD,
                          OUT PSECURITY_DESCRIPTOR* pNewSD)
@@ -510,9 +510,9 @@ STDCALL
 BuildSecurityDescriptorA(IN PTRUSTEE_A pOwner  OPTIONAL,
                          IN PTRUSTEE_A pGroup  OPTIONAL,
                          IN ULONG cCountOfAccessEntries,
-                         IN PEXPLICIT_ACCESS pListOfAccessEntries  OPTIONAL,
+                         IN PEXPLICIT_ACCESS_A pListOfAccessEntries  OPTIONAL,
                          IN ULONG cCountOfAuditEntries,
-                         IN PEXPLICIT_ACCESS pListOfAuditEntries  OPTIONAL,
+                         IN PEXPLICIT_ACCESS_A pListOfAuditEntries  OPTIONAL,
                          IN PSECURITY_DESCRIPTOR pOldSD  OPTIONAL,
                          OUT PULONG pSizeNewSD,
                          OUT PSECURITY_DESCRIPTOR* pNewSD)

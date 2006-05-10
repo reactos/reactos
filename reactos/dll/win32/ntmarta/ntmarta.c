@@ -157,6 +157,136 @@ AccpGetAceAccessMask(IN PACE_HEADER AceHeader)
     return *((PACCESS_MASK)(AceHeader + 1));
 }
 
+static BOOL
+AccpIsObjectAce(IN PACE_HEADER AceHeader)
+{
+    BOOL Ret;
+
+    switch (AceHeader->AceType)
+    {
+        case ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE:
+        case ACCESS_ALLOWED_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_OBJECT_ACE_TYPE:
+        case SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE:
+        case SYSTEM_AUDIT_OBJECT_ACE_TYPE:
+            Ret = TRUE;
+            break;
+
+        default:
+            Ret = FALSE;
+            break;
+    }
+
+    return Ret;
+}
+
+static GUID*
+AccpGetObjectAceObjectType(IN PACE_HEADER AceHeader)
+{
+    GUID *ObjectType = NULL;
+
+    switch (AceHeader->AceType)
+    {
+        case ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE:
+        {
+            PACCESS_ALLOWED_CALLBACK_OBJECT_ACE Ace = (PACCESS_ALLOWED_CALLBACK_OBJECT_ACE)AceHeader;
+            if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                ObjectType = &Ace->ObjectType;
+            break;
+        }
+        case ACCESS_ALLOWED_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_OBJECT_ACE_TYPE:
+        {
+            PACCESS_ALLOWED_OBJECT_ACE Ace = (PACCESS_ALLOWED_OBJECT_ACE)AceHeader;
+            if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                ObjectType = &Ace->ObjectType;
+            break;
+        }
+
+        case SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE:
+        {
+            PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE Ace = (PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE)AceHeader;
+            if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                ObjectType = &Ace->ObjectType;
+            break;
+        }
+        case SYSTEM_AUDIT_OBJECT_ACE_TYPE:
+        {
+            PSYSTEM_AUDIT_OBJECT_ACE Ace = (PSYSTEM_AUDIT_OBJECT_ACE)AceHeader;
+            if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                ObjectType = &Ace->ObjectType;
+            break;
+        }
+    }
+
+    return ObjectType;
+}
+
+static GUID*
+AccpGetObjectAceInheritedObjectType(IN PACE_HEADER AceHeader)
+{
+    GUID *ObjectType = NULL;
+
+    switch (AceHeader->AceType)
+    {
+        case ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE:
+        {
+            PACCESS_ALLOWED_CALLBACK_OBJECT_ACE Ace = (PACCESS_ALLOWED_CALLBACK_OBJECT_ACE)AceHeader;
+            if (Ace->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+            {
+                if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                    ObjectType = &Ace->InheritedObjectType;
+                else
+                    ObjectType = &Ace->ObjectType;
+            }
+            break;
+        }
+        case ACCESS_ALLOWED_OBJECT_ACE_TYPE:
+        case ACCESS_DENIED_OBJECT_ACE_TYPE:
+        {
+            PACCESS_ALLOWED_OBJECT_ACE Ace = (PACCESS_ALLOWED_OBJECT_ACE)AceHeader;
+            if (Ace->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+            {
+                if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                    ObjectType = &Ace->InheritedObjectType;
+                else
+                    ObjectType = &Ace->ObjectType;
+            }
+            break;
+        }
+
+        case SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE:
+        {
+            PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE Ace = (PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE)AceHeader;
+            if (Ace->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+            {
+                if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                    ObjectType = &Ace->InheritedObjectType;
+                else
+                    ObjectType = &Ace->ObjectType;
+            }
+            break;
+        }
+        case SYSTEM_AUDIT_OBJECT_ACE_TYPE:
+        {
+            PSYSTEM_AUDIT_OBJECT_ACE Ace = (PSYSTEM_AUDIT_OBJECT_ACE)AceHeader;
+            if (Ace->Flags & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+            {
+                if (Ace->Flags & ACE_OBJECT_TYPE_PRESENT)
+                    ObjectType = &Ace->InheritedObjectType;
+                else
+                    ObjectType = &Ace->ObjectType;
+            }
+            break;
+        }
+    }
+
+    return ObjectType;
+}
+
 
 /**********************************************************************
  * AccRewriteGetHandleRights				EXPORTED
@@ -925,6 +1055,8 @@ AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
 {
     PACE_HEADER AceHeader;
     PSID Sid, SidTarget;
+    ULONG ObjectAceCount = 0;
+    POBJECTS_AND_SID ObjSid;
     SIZE_T Size;
     PEXPLICIT_ACCESS_W peaw;
     DWORD LastErr, SidLen;
@@ -947,9 +1079,14 @@ AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
             {
                 Sid = AccpGetAceSid(AceHeader);
                 Size += GetLengthSid(Sid);
-                /* FIXME - take size of opaque data in account? */
+
+                if (AccpIsObjectAce(AceHeader))
+                    ObjectAceCount++;
+
                 AceIndex++;
             }
+
+            Size += ObjectAceCount * sizeof(OBJECTS_AND_SID);
 
             ASSERT(pacl->AceCount == AceIndex);
 
@@ -959,7 +1096,8 @@ AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
             if (peaw != NULL)
             {
                 AceIndex = 0;
-                SidTarget = (PSID)(peaw + pacl->AceCount);
+                ObjSid = (POBJECTS_AND_SID)(peaw + pacl->AceCount);
+                SidTarget = (PSID)(ObjSid + ObjectAceCount);
 
                 /* initialize the array */
                 while (GetAce(pacl,
@@ -977,8 +1115,20 @@ AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
                                 SidTarget,
                                 Sid))
                     {
-                        BuildTrusteeWithSid(&peaw[AceIndex].Trustee,
-                                            SidTarget);
+                        if (AccpIsObjectAce(AceHeader))
+                        {
+                            BuildTrusteeWithObjectsAndSid(&peaw[AceIndex].Trustee,
+                                                          ObjSid++,
+                                                          AccpGetObjectAceObjectType(AceHeader),
+                                                          AccpGetObjectAceInheritedObjectType(AceHeader),
+                                                          SidTarget);
+                        }
+                        else
+                        {
+                            BuildTrusteeWithSid(&peaw[AceIndex].Trustee,
+                                                SidTarget);
+                        }
+
                         SidTarget = (PSID)((ULONG_PTR)SidTarget + SidLen);
                     }
                     else

@@ -458,6 +458,19 @@ RtlAddAccessAllowedAceEx(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlAddAccessAllowedObjectAce(
+    IN OUT PACL pAcl,
+    IN ULONG dwAceRevision,
+    IN ULONG AceFlags,
+    IN ULONG AccessMask,
+    IN GUID *ObjectTypeGuid  OPTIONAL,
+    IN GUID *InheritedObjectTypeGuid  OPTIONAL,
+    IN PSID pSid
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlAddAccessDeniedAce(
     PACL Acl,
     ULONG Revision,
@@ -479,14 +492,14 @@ RtlAddAccessDeniedAceEx(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlAddAuditAccessAceEx(
-    IN OUT PACL Acl,
-    IN ULONG Revision,
-    IN ULONG Flags,
-    IN ACCESS_MASK AccessMask,
-    IN PSID Sid,
-    IN BOOLEAN Success,
-    IN BOOLEAN Failure
+RtlAddAccessDeniedObjectAce(
+    IN OUT PACL pAcl,
+    IN ULONG dwAceRevision,
+    IN ULONG AceFlags,
+    IN ULONG AccessMask,
+    IN GUID *ObjectTypeGuid  OPTIONAL,
+    IN GUID *InheritedObjectTypeGuid  OPTIONAL,
+    IN PSID pSid
 );
 
 NTSYSAPI
@@ -510,6 +523,34 @@ RtlAddAuditAccessAce(
     PSID Sid,
     BOOLEAN Success,
     BOOLEAN Failure
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddAuditAccessAceEx(
+    IN OUT PACL Acl,
+    IN ULONG Revision,
+    IN ULONG Flags,
+    IN ACCESS_MASK AccessMask,
+    IN PSID Sid,
+    IN BOOLEAN Success,
+    IN BOOLEAN Failure
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddAuditAccessObjectAce(
+    IN OUT PACL Acl,
+    IN ULONG Revision,
+    IN ULONG Flags,
+    IN ACCESS_MASK AccessMask,
+    IN GUID *ObjectTypeGuid  OPTIONAL,
+    IN GUID *InheritedObjectTypeGuid  OPTIONAL,
+    IN PSID Sid,
+    IN BOOLEAN Success,
+    IN BOOLEAN Failure
 );
 
 NTSYSAPI

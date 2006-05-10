@@ -166,7 +166,7 @@ AddAccessAllowedAceEx(PACL pAcl,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -179,8 +179,22 @@ AddAccessAllowedObjectAce(
 	GUID*	InheritedObjectTypeGuid,
 	PSID	pSid)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  NTSTATUS Status;
+
+  Status = RtlAddAccessAllowedObjectAce(pAcl,
+                                        dwAceRevision,
+                                        AceFlags,
+                                        AccessMask,
+                                        ObjectTypeGuid,
+                                        InheritedObjectTypeGuid,
+                                        pSid);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 
@@ -240,7 +254,7 @@ AddAccessDeniedAceEx(PACL pAcl,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -253,8 +267,22 @@ AddAccessDeniedObjectAce(
 	GUID*   InheritedObjectTypeGuid,
 	PSID	pSid)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  NTSTATUS Status;
+
+  Status = RtlAddAccessDeniedObjectAce(pAcl,
+                                       dwAceRevision,
+                                       AceFlags,
+                                       AccessMask,
+                                       ObjectTypeGuid,
+                                       InheritedObjectTypeGuid,
+                                       pSid);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 
@@ -352,7 +380,7 @@ AddAuditAccessAceEx(PACL pAcl,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -367,8 +395,24 @@ AddAuditAccessObjectAce(
 	BOOL	bAuditSuccess,
 	BOOL	bAuditFailure)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  NTSTATUS Status;
+
+  Status = RtlAddAuditAccessObjectAce(pAcl,
+                                      dwAceRevision,
+                                      AceFlags,
+                                      AccessMask,
+                                      ObjectTypeGuid,
+                                      InheritedObjectTypeGuid,
+                                      pSid,
+                                      bAuditSuccess,
+                                      bAuditFailure);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 
@@ -554,6 +598,385 @@ SetEntriesInAclW(
 }
 
 
+static DWORD
+InternalTrusteeAToW(IN PTRUSTEE_A pTrusteeA,
+                    OUT PTRUSTEE_W *pTrusteeW)
+{
+    TRUSTEE_FORM TrusteeForm;
+    INT BufferSize = 0;
+    PSTR lpStr;
+    DWORD ErrorCode = ERROR_SUCCESS;
+
+    ASSERT(sizeof(TRUSTEE_W) == sizeof(TRUSTEE_A));
+
+    TrusteeForm = GetTrusteeForm(pTrusteeA);
+    switch (TrusteeForm)
+    {
+        case TRUSTEE_IS_NAME:
+        {
+            lpStr = GetTrusteeName(pTrusteeA);
+            if (lpStr != NULL)
+                BufferSize = strlen(lpStr) + 1;
+
+            *pTrusteeW = RtlAllocateHeap(RtlGetProcessHeap(),
+                                         0,
+                                         sizeof(TRUSTEE_W) + (BufferSize * sizeof(WCHAR)));
+            if (*pTrusteeW != NULL)
+            {
+                RtlCopyMemory(*pTrusteeW,
+                              pTrusteeA,
+                              FIELD_OFFSET(TRUSTEE_A,
+                                           ptstrName));
+
+                if (lpStr != NULL)
+                {
+                    (*pTrusteeW)->ptstrName = (PWSTR)((*pTrusteeW) + 1);
+
+                    /* convert the trustee's name */
+                    if (MultiByteToWideChar(CP_ACP,
+                                            0,
+                                            lpStr,
+                                            -1,
+                                            (*pTrusteeW)->ptstrName,
+                                            BufferSize) == 0)
+                    {
+                        goto ConvertErr;
+                    }
+                }
+                else
+                {
+                    RtlFreeHeap(RtlGetProcessHeap(),
+                                0,
+                                *pTrusteeW);
+                    goto NothingToConvert;
+                }
+            }
+            else
+                ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            break;
+        }
+
+        case TRUSTEE_IS_OBJECTS_AND_NAME:
+        {
+            POBJECTS_AND_NAME_A oanA = (POBJECTS_AND_NAME_A)GetTrusteeNameA(pTrusteeA);
+            POBJECTS_AND_NAME_W oan;
+            PWSTR StrBuf;
+
+            /* calculate the size needed */
+            if ((oanA->ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT) &&
+                oanA->InheritedObjectTypeName != NULL)
+            {
+                BufferSize = strlen(oanA->InheritedObjectTypeName) + 1;
+            }
+            if (oanA->ptstrName != NULL)
+            {
+                BufferSize += strlen(oanA->ptstrName) + 1;
+            }
+
+            *pTrusteeW = RtlAllocateHeap(RtlGetProcessHeap(),
+                                         0,
+                                         sizeof(TRUSTEE_W) + sizeof(OBJECTS_AND_NAME_W) +
+                                             (BufferSize * sizeof(WCHAR)));
+
+            if (*pTrusteeW != NULL)
+            {
+                oan = (POBJECTS_AND_NAME_W)((*pTrusteeW) + 1);
+                StrBuf = (PWSTR)(oan + 1);
+
+                /* copy over the parts of the TRUSTEE structure that don't need
+                   to be touched */
+                RtlCopyMemory(*pTrusteeW,
+                              pTrusteeA,
+                              FIELD_OFFSET(TRUSTEE_A,
+                                           ptstrName));
+
+                (*pTrusteeW)->ptstrName = (LPWSTR)oan;
+
+                /* convert the OBJECTS_AND_NAME_A structure */
+                oan->ObjectsPresent = oanA->ObjectsPresent;
+                oan->ObjectType = oanA->ObjectType;
+
+                if ((oanA->ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT) &&
+                    oanA->InheritedObjectTypeName != NULL)
+                {
+                    /* convert inherited object type name */
+                    BufferSize = strlen(oanA->InheritedObjectTypeName) + 1;
+
+                    if (MultiByteToWideChar(CP_ACP,
+                                            0,
+                                            oanA->InheritedObjectTypeName,
+                                            -1,
+                                            StrBuf,
+                                            BufferSize) == 0)
+                    {
+                        goto ConvertErr;
+                    }
+                    oan->InheritedObjectTypeName = StrBuf;
+
+                    StrBuf += BufferSize;
+                }
+                else
+                    oan->InheritedObjectTypeName = NULL;
+
+                if (oanA->ptstrName != NULL)
+                {
+                    /* convert the trustee name */
+                    BufferSize = strlen(oanA->ptstrName) + 1;
+
+                    if (MultiByteToWideChar(CP_ACP,
+                                            0,
+                                            oanA->ptstrName,
+                                            -1,
+                                            StrBuf,
+                                            BufferSize) == 0)
+                    {
+ConvertErr:
+                        ErrorCode = GetLastError();
+
+                        /* cleanup */
+                        RtlFreeHeap(RtlGetProcessHeap(),
+                                    0,
+                                    *pTrusteeW);
+
+                        return ErrorCode;
+                    }
+                    oan->ptstrName = StrBuf;
+                }
+                else
+                    oan->ptstrName = NULL;
+            }
+            else
+                ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            break;
+        }
+
+        default:
+        {
+NothingToConvert:
+            /* no need to convert anything to unicode */
+            *pTrusteeW = (PTRUSTEE_W)pTrusteeA;
+            break;
+        }
+    }
+
+    return ErrorCode;
+}
+
+
+static __inline VOID
+InternalFreeConvertedTrustee(IN PTRUSTEE_W pTrusteeW,
+                             IN PTRUSTEE_A pTrusteeA)
+{
+    if ((PVOID)pTrusteeW != (PVOID)pTrusteeA)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    pTrusteeW);
+    }
+}
+
+
+static DWORD
+InternalExplicitAccessAToW(IN ULONG cCountOfExplicitEntries,
+                           IN PEXPLICIT_ACCESS_A pListOfExplicitEntriesA,
+                           OUT PEXPLICIT_ACCESS_W *pListOfExplicitEntriesW)
+{
+    TRUSTEE_FORM TrusteeForm;
+    SIZE_T Size;
+    ULONG i;
+    ULONG ObjectsAndNameCount = 0;
+    PEXPLICIT_ACCESS_W peaw = NULL;
+    DWORD ErrorCode = ERROR_SUCCESS;
+    LPSTR lpStr;
+
+    /* NOTE: This code assumes that the size of the TRUSTEE_A and TRUSTEE_W structure matches! */
+    ASSERT(sizeof(TRUSTEE_A) == sizeof(TRUSTEE_W));
+
+    if (cCountOfExplicitEntries != 0)
+    {
+        /* calculate the size needed */
+        Size = cCountOfExplicitEntries * sizeof(EXPLICIT_ACCESS_W);
+        for (i = 0; i != cCountOfExplicitEntries; i++)
+        {
+            TrusteeForm = GetTrusteeForm(&pListOfExplicitEntriesA[i].Trustee);
+
+            switch (TrusteeForm)
+            {
+                case TRUSTEE_IS_NAME:
+                {
+                    lpStr = GetTrusteeNameA(&pListOfExplicitEntriesA[i].Trustee);
+                    if (lpStr != NULL)
+                        Size += (strlen(lpStr) + 1) * sizeof(WCHAR);
+                    break;
+                }
+
+                case TRUSTEE_IS_OBJECTS_AND_NAME:
+                {
+                    POBJECTS_AND_NAME_A oan = (POBJECTS_AND_NAME_A)GetTrusteeNameA(&pListOfExplicitEntriesA[i].Trustee);
+
+                    if ((oan->ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT) &&
+                        oan->InheritedObjectTypeName != NULL)
+                    {
+                        Size += (strlen(oan->InheritedObjectTypeName) + 1) * sizeof(WCHAR);
+                    }
+
+                    if (oan->ptstrName != NULL)
+                        Size += (strlen(oan->ptstrName) + 1) * sizeof(WCHAR);
+
+                    ObjectsAndNameCount++;
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }
+
+        /* allocate the array */
+        peaw = RtlAllocateHeap(RtlGetProcessHeap(),
+                               0,
+                               Size);
+        if (peaw != NULL)
+        {
+            INT BufferSize;
+            POBJECTS_AND_NAME_W oan = (POBJECTS_AND_NAME_W)(peaw + cCountOfExplicitEntries);
+            LPWSTR StrBuf = (LPWSTR)(oan + ObjectsAndNameCount);
+
+            /* convert the array to unicode */
+            for (i = 0; i != cCountOfExplicitEntries; i++)
+            {
+                peaw[i].grfAccessPermissions = pListOfExplicitEntriesA[i].grfAccessPermissions;
+                peaw[i].grfAccessMode = pListOfExplicitEntriesA[i].grfAccessMode;
+                peaw[i].grfInheritance = pListOfExplicitEntriesA[i].grfInheritance;
+
+                /* convert or copy the TRUSTEE structure */
+                TrusteeForm = GetTrusteeForm(&pListOfExplicitEntriesA[i].Trustee);
+                switch (TrusteeForm)
+                {
+                    case TRUSTEE_IS_NAME:
+                    {
+                        lpStr = GetTrusteeNameA(&pListOfExplicitEntriesA[i].Trustee);
+                        if (lpStr != NULL)
+                        {
+                            /* convert the trustee name */
+                            BufferSize = strlen(lpStr) + 1;
+
+                            if (MultiByteToWideChar(CP_ACP,
+                                                    0,
+                                                    lpStr,
+                                                    -1,
+                                                    StrBuf,
+                                                    BufferSize) == 0)
+                            {
+                                goto ConvertErr;
+                            }
+                            peaw[i].Trustee.ptstrName = StrBuf;
+
+                            StrBuf += BufferSize;
+                        }
+                        else
+                            goto RawTrusteeCopy;
+
+                        break;
+                    }
+
+                    case TRUSTEE_IS_OBJECTS_AND_NAME:
+                    {
+                        POBJECTS_AND_NAME_A oanA = (POBJECTS_AND_NAME_A)GetTrusteeNameA(&pListOfExplicitEntriesA[i].Trustee);
+
+                        /* copy over the parts of the TRUSTEE structure that don't need
+                           to be touched */
+                        RtlCopyMemory(&peaw[i].Trustee,
+                                      &pListOfExplicitEntriesA[i].Trustee,
+                                      FIELD_OFFSET(TRUSTEE_A,
+                                                   ptstrName));
+
+                        peaw[i].Trustee.ptstrName = (LPWSTR)oan;
+
+                        /* convert the OBJECTS_AND_NAME_A structure */
+                        oan->ObjectsPresent = oanA->ObjectsPresent;
+                        oan->ObjectType = oanA->ObjectType;
+
+                        if ((oanA->ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT) &&
+                            oanA->InheritedObjectTypeName != NULL)
+                        {
+                            /* convert inherited object type name */
+                            BufferSize = strlen(oanA->InheritedObjectTypeName) + 1;
+
+                            if (MultiByteToWideChar(CP_ACP,
+                                                    0,
+                                                    oanA->InheritedObjectTypeName,
+                                                    -1,
+                                                    StrBuf,
+                                                    BufferSize) == 0)
+                            {
+                                goto ConvertErr;
+                            }
+                            oan->InheritedObjectTypeName = StrBuf;
+
+                            StrBuf += BufferSize;
+                        }
+                        else
+                            oan->InheritedObjectTypeName = NULL;
+
+                        if (oanA->ptstrName != NULL)
+                        {
+                            /* convert the trustee name */
+                            BufferSize = strlen(oanA->ptstrName) + 1;
+
+                            if (MultiByteToWideChar(CP_ACP,
+                                                    0,
+                                                    oanA->ptstrName,
+                                                    -1,
+                                                    StrBuf,
+                                                    BufferSize) == 0)
+                            {
+ConvertErr:
+                                ErrorCode = GetLastError();
+
+                                /* cleanup */
+                                RtlFreeHeap(RtlGetProcessHeap(),
+                                            0,
+                                            peaw);
+
+                                return ErrorCode;
+                            }
+                            oan->ptstrName = StrBuf;
+
+                            StrBuf += BufferSize;
+                        }
+                        else
+                            oan->ptstrName = NULL;
+
+                        /* move on to the next OBJECTS_AND_NAME_A structure */
+                        oan++;
+                        break;
+                    }
+
+                    default:
+                    {
+RawTrusteeCopy:
+                        /* just copy over the TRUSTEE structure, they don't contain any
+                           ansi/unicode specific data */
+                        RtlCopyMemory(&peaw[i].Trustee,
+                                      &pListOfExplicitEntriesA[i].Trustee,
+                                      sizeof(TRUSTEE_A));
+                        break;
+                    }
+                }
+            }
+
+            ASSERT(ErrorCode == ERROR_SUCCESS);
+            *pListOfExplicitEntriesW = peaw;
+        }
+        else
+            ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    return ErrorCode;
+}
+
+
 /*
  * @implemented
  */
@@ -565,102 +988,24 @@ SetEntriesInAclA(
 	PACL			OldAcl,
 	PACL*			NewAcl)
 {
-    PEXPLICIT_ACCESS_W ListOfExplicitEntriesW;
-    ULONG i;
+    PEXPLICIT_ACCESS_W ListOfExplicitEntriesW = NULL;
     DWORD ErrorCode;
 
-    if (cCountOfExplicitEntries != 0)
+    ErrorCode = InternalExplicitAccessAToW(cCountOfExplicitEntries,
+                                           pListOfExplicitEntries,
+                                           &ListOfExplicitEntriesW);
+
+    if (ErrorCode == ERROR_SUCCESS)
     {
-        ListOfExplicitEntriesW = HeapAlloc(GetProcessHeap(),
-                                           0,
-                                           cCountOfExplicitEntries * sizeof(EXPLICIT_ACCESS_W));
-        if (ListOfExplicitEntriesW != NULL)
-        {
-            /* directly copy the array, this works as the size of the EXPLICIT_ACCESS_A
-               structure matches the size of the EXPLICIT_ACCESS_W version */
-            ASSERT(sizeof(EXPLICIT_ACCESS_A) == sizeof(EXPLICIT_ACCESS_W));
-
-            RtlCopyMemory(ListOfExplicitEntriesW,
-                          pListOfExplicitEntries,
-                          cCountOfExplicitEntries * sizeof(EXPLICIT_ACCESS_W));
-
-            /* convert the trustee names if required */
-            for (i = 0; i != cCountOfExplicitEntries; i++)
-            {
-                if (pListOfExplicitEntries[i].Trustee.TrusteeForm == TRUSTEE_IS_NAME)
-                {
-                    UINT BufCount = strlen(pListOfExplicitEntries[i].Trustee.ptstrName) + 1;
-                    ListOfExplicitEntriesW[i].Trustee.ptstrName =
-                        (LPWSTR)HeapAlloc(GetProcessHeap(),
-                                          0,
-                                          BufCount * sizeof(WCHAR));
-
-                    if (ListOfExplicitEntriesW[i].Trustee.ptstrName == NULL ||
-                        MultiByteToWideChar(CP_ACP,
-                                            0,
-                                            pListOfExplicitEntries[i].Trustee.ptstrName,
-                                            -1,
-                                            ListOfExplicitEntriesW[i].Trustee.ptstrName,
-                                            BufCount) == 0)
-                    {
-                        /* failed to allocate enough momory for the strings or failed to
-                           convert the ansi string to unicode, then fail and free all
-                           allocated memory */
-
-                        ErrorCode = GetLastError();
-
-                        do
-                        {
-                            if (ListOfExplicitEntriesW[i].Trustee.TrusteeForm == TRUSTEE_IS_NAME &&
-                                ListOfExplicitEntriesW[i].Trustee.ptstrName != NULL)
-                            {
-                                HeapFree(GetProcessHeap(),
-                                         0,
-                                         ListOfExplicitEntriesW[i].Trustee.ptstrName);
-                            }
-                        } while (i-- != 0);
-
-                        /* free the allocated array */
-                        HeapFree(GetProcessHeap(),
-                                 0,
-                                 ListOfExplicitEntriesW);
-
-                        return ErrorCode;
-                    }
-                }
-            }
-        }
-        else
-        {
-            return GetLastError();
-        }
-    }
-    else
-        ListOfExplicitEntriesW = NULL;
-
-    ErrorCode = SetEntriesInAclW(cCountOfExplicitEntries,
-                                 ListOfExplicitEntriesW,
-                                 OldAcl,
-                                 NewAcl);
-
-    /* free the strings */
-    if (ListOfExplicitEntriesW != NULL)
-    {
-        /* free the converted strings */
-        for (i = 0; i != cCountOfExplicitEntries; i++)
-        {
-            if (ListOfExplicitEntriesW[i].Trustee.TrusteeForm == TRUSTEE_IS_NAME)
-            {
-                HeapFree(GetProcessHeap(),
-                         0,
-                         ListOfExplicitEntriesW[i].Trustee.ptstrName);
-            }
-        }
+        ErrorCode = SetEntriesInAclW(cCountOfExplicitEntries,
+                                     ListOfExplicitEntriesW,
+                                     OldAcl,
+                                     NewAcl);
 
         /* free the allocated array */
-        HeapFree(GetProcessHeap(),
-                 0,
-                 ListOfExplicitEntriesW);
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    ListOfExplicitEntriesW);
     }
 
     return ErrorCode;
@@ -708,7 +1053,7 @@ GetEffectiveRightsFromAclW(IN PACL pacl,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
@@ -716,8 +1061,24 @@ GetEffectiveRightsFromAclA(IN PACL pacl,
                            IN PTRUSTEE_A pTrustee,
                            OUT PACCESS_MASK pAccessRights)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    PTRUSTEE_W pTrusteeW = NULL;
+    DWORD ErrorCode;
+
+    ErrorCode = InternalTrusteeAToW(pTrustee,
+                                    &pTrusteeW);
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        ErrorCode = GetEffectiveRightsFromAclW(pacl,
+                                               pTrusteeW,
+                                               pAccessRights);
+
+        InternalFreeConvertedTrustee(pTrusteeW,
+                                     pTrustee);
+    }
+    else
+        ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+
+    return ErrorCode;
 }
 
 
@@ -737,7 +1098,7 @@ GetAuditedPermissionsFromAclW(IN PACL pacl,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
@@ -746,8 +1107,25 @@ GetAuditedPermissionsFromAclA(IN PACL pacl,
                               OUT PACCESS_MASK pSuccessfulAuditedRights,
                               OUT PACCESS_MASK pFailedAuditRights)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    PTRUSTEE_W pTrusteeW = NULL;
+    DWORD ErrorCode;
+
+    ErrorCode = InternalTrusteeAToW(pTrustee,
+                                    &pTrusteeW);
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        ErrorCode = GetAuditedPermissionsFromAclW(pacl,
+                                                  pTrusteeW,
+                                                  pSuccessfulAuditedRights,
+                                                  pFailedAuditRights);
+
+        InternalFreeConvertedTrustee(pTrusteeW,
+                                     pTrustee);
+    }
+    else
+        ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+
+    return ErrorCode;
 }
 
 /* EOF */

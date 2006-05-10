@@ -103,13 +103,39 @@ RtlpAddKnownAce (PACL Acl,
                  ULONG Revision,
                  ULONG Flags,
                  ACCESS_MASK AccessMask,
+                 GUID *ObjectTypeGuid  OPTIONAL,
+                 GUID *InheritedObjectTypeGuid  OPTIONAL,
                  PSID Sid,
                  ULONG Type)
 {
    PACE Ace;
-   ULONG InvalidFlags;
+   PSID SidStart;
+   ULONG AceSize, InvalidFlags;
+   ULONG AceObjectFlags = 0;
 
    PAGED_CODE_RTL();
+
+#if DBG
+   /* check if RtlpAddKnownAce was called incorrectly */
+   if (ObjectTypeGuid != NULL || InheritedObjectTypeGuid != NULL)
+   {
+      ASSERT(Type == ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE ||
+             Type == ACCESS_ALLOWED_OBJECT_ACE_TYPE ||
+             Type == ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE ||
+             Type == ACCESS_DENIED_OBJECT_ACE_TYPE ||
+             Type == SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE ||
+             Type == SYSTEM_AUDIT_OBJECT_ACE_TYPE);
+   }
+   else
+   {
+      ASSERT(Type != ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE &&
+             Type != ACCESS_ALLOWED_OBJECT_ACE_TYPE &&
+             Type != ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE &&
+             Type != ACCESS_DENIED_OBJECT_ACE_TYPE &&
+             Type != SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE &&
+             Type != SYSTEM_AUDIT_OBJECT_ACE_TYPE);
+   }
+#endif
 
    if (!RtlValidSid(Sid))
    {
@@ -126,11 +152,17 @@ RtlpAddKnownAce (PACL Acl,
    }
 
    /* Validate the flags */
-   if (Type == SYSTEM_AUDIT_ACE_TYPE)
+   if (Type == SYSTEM_AUDIT_ACE_TYPE ||
+       Type == SYSTEM_AUDIT_OBJECT_ACE_TYPE ||
+       Type == SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE)
+   {
       InvalidFlags = Flags & ~(VALID_INHERIT_FLAGS |
                                SUCCESSFUL_ACCESS_ACE_FLAG | FAILED_ACCESS_ACE_FLAG);
+   }
    else
+   {
       InvalidFlags = Flags & ~VALID_INHERIT_FLAGS;
+   }
 
    if (InvalidFlags != 0)
    {
@@ -145,16 +177,69 @@ RtlpAddKnownAce (PACL Acl,
    {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
    }
-   if ((ULONG_PTR)Ace + RtlLengthSid(Sid) + sizeof(ACE) >
+
+   /* Calculate the size of the ACE */
+   AceSize = RtlLengthSid(Sid) + sizeof(ACE);
+   if (ObjectTypeGuid != NULL)
+   {
+      AceObjectFlags |= ACE_OBJECT_TYPE_PRESENT;
+      AceSize += sizeof(GUID);
+   }
+   if (InheritedObjectTypeGuid != NULL)
+   {
+      AceObjectFlags |= ACE_INHERITED_OBJECT_TYPE_PRESENT;
+      AceSize += sizeof(GUID);
+   }
+
+   if (AceObjectFlags != 0)
+   {
+      /* Don't forget the ACE object flags
+         (corresponds to the Flags field in the *_OBJECT_ACE structures) */
+      AceSize += sizeof(ULONG);
+   }
+
+   if ((ULONG_PTR)Ace + AceSize >
        (ULONG_PTR)Acl + Acl->AclSize)
    {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
    }
+
+   /* initialize the header and common fields */
    Ace->Header.AceFlags = Flags;
    Ace->Header.AceType = Type;
-   Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
+   Ace->Header.AceSize = (WORD)AceSize;
    Ace->AccessMask = AccessMask;
-   RtlCopySid(RtlLengthSid(Sid), (PSID)(Ace + 1), Sid);
+
+   if (AceObjectFlags != 0)
+   {
+      /* Write the ACE flags to the ACE
+         (corresponds to the Flags field in the *_OBJECT_ACE structures) */
+      *(PULONG)(Ace + 1) = AceObjectFlags;
+      SidStart = (PSID)((ULONG_PTR)(Ace + 1) + sizeof(ULONG));
+   }
+   else
+      SidStart = (PSID)(Ace + 1);
+
+   /* copy the GUIDs */
+   if (ObjectTypeGuid != NULL)
+   {
+       RtlCopyMemory(SidStart,
+                     ObjectTypeGuid,
+                     sizeof(GUID));
+       SidStart = (PSID)((ULONG_PTR)SidStart + sizeof(GUID));
+   }
+   if (InheritedObjectTypeGuid != NULL)
+   {
+       RtlCopyMemory(SidStart,
+                     InheritedObjectTypeGuid,
+                     sizeof(GUID));
+       SidStart = (PSID)((ULONG_PTR)SidStart + sizeof(GUID));
+   }
+
+   /* copy the SID */
+   RtlCopySid(RtlLengthSid(Sid),
+              SidStart,
+              Sid);
    Acl->AceCount++;
    Acl->AclRevision = Revision;
    return(STATUS_SUCCESS);
@@ -176,6 +261,8 @@ RtlAddAccessAllowedAce (IN OUT PACL Acl,
                            Revision,
                            0,
                            AccessMask,
+                           NULL,
+                           NULL,
                            Sid,
                            ACCESS_ALLOWED_ACE_TYPE);
 }
@@ -197,8 +284,43 @@ RtlAddAccessAllowedAceEx (IN OUT PACL Acl,
                            Revision,
                            Flags,
                            AccessMask,
+                           NULL,
+                           NULL,
                            Sid,
                            ACCESS_ALLOWED_ACE_TYPE);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS NTAPI
+RtlAddAccessAllowedObjectAce (IN OUT PACL Acl,
+                              IN ULONG Revision,
+                              IN ULONG Flags,
+                              IN ACCESS_MASK AccessMask,
+                              IN GUID *ObjectTypeGuid  OPTIONAL,
+                              IN GUID *InheritedObjectTypeGuid  OPTIONAL,
+                              IN PSID Sid)
+{
+   ULONG Type;
+
+   PAGED_CODE_RTL();
+
+   /* make sure we call RtlpAddKnownAce correctly */
+   if (ObjectTypeGuid != NULL || InheritedObjectTypeGuid != NULL)
+      Type = ACCESS_ALLOWED_OBJECT_ACE_TYPE;
+   else
+      Type = ACCESS_ALLOWED_ACE_TYPE;
+
+   return RtlpAddKnownAce (Acl,
+                           Revision,
+                           Flags,
+                           AccessMask,
+                           ObjectTypeGuid,
+                           InheritedObjectTypeGuid,
+                           Sid,
+                           Type);
 }
 
 
@@ -217,6 +339,8 @@ RtlAddAccessDeniedAce (PACL Acl,
                            Revision,
                            0,
                            AccessMask,
+                           NULL,
+                           NULL,
                            Sid,
                            ACCESS_DENIED_ACE_TYPE);
 }
@@ -238,8 +362,43 @@ RtlAddAccessDeniedAceEx (IN OUT PACL Acl,
                            Revision,
                            Flags,
                            AccessMask,
+                           NULL,
+                           NULL,
                            Sid,
                            ACCESS_DENIED_ACE_TYPE);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS NTAPI
+RtlAddAccessDeniedObjectAce (IN OUT PACL Acl,
+                             IN ULONG Revision,
+                             IN ULONG Flags,
+                             IN ACCESS_MASK AccessMask,
+                             IN GUID *ObjectTypeGuid  OPTIONAL,
+                             IN GUID *InheritedObjectTypeGuid  OPTIONAL,
+                             IN PSID Sid)
+{
+   ULONG Type;
+
+   PAGED_CODE_RTL();
+
+   /* make sure we call RtlpAddKnownAce correctly */
+   if (ObjectTypeGuid != NULL || InheritedObjectTypeGuid != NULL)
+      Type = ACCESS_DENIED_OBJECT_ACE_TYPE;
+   else
+      Type = ACCESS_DENIED_ACE_TYPE;
+
+   return RtlpAddKnownAce (Acl,
+                           Revision,
+                           Flags,
+                           AccessMask,
+                           ObjectTypeGuid,
+                           InheritedObjectTypeGuid,
+                           Sid,
+                           Type);
 }
 
 
@@ -363,6 +522,8 @@ RtlAddAuditAccessAce(PACL Acl,
                            Revision,
                            Flags,
                            AccessMask,
+                           NULL,
+                           NULL,
                            Sid,
                            SYSTEM_AUDIT_ACE_TYPE);
 }
@@ -394,8 +555,53 @@ RtlAddAuditAccessAceEx(PACL Acl,
                            Revision,
                            Flags,
                            AccessMask,
+                           NULL,
+                           NULL,
                            Sid,
                            SYSTEM_AUDIT_ACE_TYPE);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS NTAPI
+RtlAddAuditAccessObjectAce(PACL Acl,
+                           ULONG Revision,
+                           ULONG Flags,
+                           ACCESS_MASK AccessMask,
+                           IN GUID *ObjectTypeGuid  OPTIONAL,
+                           IN GUID *InheritedObjectTypeGuid  OPTIONAL,
+                           PSID Sid,
+                           BOOLEAN Success,
+                           BOOLEAN Failure)
+{
+   ULONG Type;
+
+   if (Success)
+   {
+      Flags |= SUCCESSFUL_ACCESS_ACE_FLAG;
+   }
+
+   if (Failure)
+   {
+      Flags |= FAILED_ACCESS_ACE_FLAG;
+   }
+
+   /* make sure we call RtlpAddKnownAce correctly */
+   if (ObjectTypeGuid != NULL || InheritedObjectTypeGuid != NULL)
+      Type = SYSTEM_AUDIT_OBJECT_ACE_TYPE;
+   else
+      Type = SYSTEM_AUDIT_ACE_TYPE;
+
+   return RtlpAddKnownAce (Acl,
+                           Revision,
+                           Flags,
+                           AccessMask,
+                           ObjectTypeGuid,
+                           InheritedObjectTypeGuid,
+                           Sid,
+                           Type);
 }
 
 
