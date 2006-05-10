@@ -792,7 +792,7 @@ InternalExplicitAccessAToW(IN ULONG cCountOfExplicitEntries,
     LPSTR lpStr;
 
     /* NOTE: This code assumes that the size of the TRUSTEE_A and TRUSTEE_W structure matches! */
-    ASSERT(sizeof(TRUSTEE_A) == sizeof(TRUSTEE_W));
+    //ASSERT(sizeof(TRUSTEE_A) == sizeof(TRUSTEE_W));
 
     if (cCountOfExplicitEntries != 0)
     {
