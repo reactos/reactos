@@ -1302,12 +1302,15 @@ void WINAPI SetupCloseInfFile( HINF hinf )
     struct inf_file *file = hinf;
     unsigned int i;
 
-    for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
-    HeapFree( GetProcessHeap(), 0, file->filename );
-    HeapFree( GetProcessHeap(), 0, file->sections );
-    HeapFree( GetProcessHeap(), 0, file->fields );
-    HeapFree( GetProcessHeap(), 0, file->strings );
-    HeapFree( GetProcessHeap(), 0, file );
+    if (file != NULL)
+    {
+        for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
+        HeapFree( GetProcessHeap(), 0, file->filename );
+        HeapFree( GetProcessHeap(), 0, file->sections );
+        HeapFree( GetProcessHeap(), 0, file->fields );
+        HeapFree( GetProcessHeap(), 0, file->strings );
+        HeapFree( GetProcessHeap(), 0, file );
+    }
 }
 
 
@@ -1338,6 +1341,9 @@ LONG WINAPI SetupGetLineCountW( HINF hinf, PCWSTR section )
     struct inf_file *file = hinf;
     int section_index;
     LONG ret = -1;
+
+    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
+        return ERROR_INVALID_PARAMETER;
 
     for (file = hinf; file; file = file->next)
     {
@@ -1377,6 +1383,12 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
 {
     struct inf_file *file = hinf;
     int section_index;
+
+    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
@@ -1437,6 +1449,12 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
 {
     struct inf_file *file;
     int section_index;
+
+    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
