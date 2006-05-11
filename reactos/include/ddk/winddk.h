@@ -10460,11 +10460,29 @@ extern BOOLEAN KdDebuggerEnabled;
 
 #endif
 
+#ifdef __GNUC__
+
 /* Available as intrinsics on MSVC */
-static __inline void _disable(void) {__asm__("cli\n\t");}
-static __inline void _enable(void)  {__asm__("sti\n\t");}
-static __inline __int64 __readcr3(void) {__asm__("mov %cr3, %eax\n\t");}
-static __inline __int64 __readcr4(void) {__asm__("mov %cr4, %eax\n\t");}
+static __inline void _disable(void) {__asm__ __volatile__("cli\n");}
+static __inline void _enable(void)  {__asm__ __volatile__("sti\n");}
+
+static __inline ULONG64 __readcr3(void)
+{
+    ULONG_PTR Ret;
+    __asm__ __volatile__("movl %%cr3, %0;\n"
+        :"=r"(Ret));
+    return (ULONG64)Ret;
+}
+
+static __inline ULONG64 __readcr4(void)
+{
+    ULONG_PTR Ret;
+    __asm__ __volatile__("movl %%cr4, %0; \n"
+        :"=r"(Ret));
+    return (ULONG64)Ret;
+}
+
+#endif
 
 #ifdef __cplusplus
 }
