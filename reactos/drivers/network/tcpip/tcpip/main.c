@@ -14,7 +14,7 @@
 #ifndef NDEBUG
 DWORD DebugTraceLevel = DEBUG_ULTRA & ~(DEBUG_LOCK | DEBUG_PBUFFER);
 #else
-DWORD DebugTraceLevel = DEBUG_DATALINK;
+DWORD DebugTraceLevel = 0;
 #endif /* NDEBUG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
