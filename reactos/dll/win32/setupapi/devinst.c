@@ -1719,8 +1719,7 @@ SETUP_CreateInterfaceList(
             rc = ERROR_GEN_FAILURE;
             goto cleanup;
         }
-        if (InstancePath != NULL)
-            HeapFree(GetProcessHeap(), 0, InstancePath);
+        HeapFree(GetProcessHeap(), 0, InstancePath);
         InstancePath = HeapAlloc(GetProcessHeap(), 0, dwInstancePathLength + sizeof(WCHAR));
         if (!InstancePath)
         {
@@ -1821,8 +1820,7 @@ SETUP_CreateInterfaceList(
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
             /* Step 2. Create an interface list for this element */
-            if (pSymbolicLink != NULL)
-                HeapFree(GetProcessHeap(), 0, pSymbolicLink);
+            HeapFree(GetProcessHeap(), 0, pSymbolicLink);
             pSymbolicLink = HeapAlloc(GetProcessHeap(), 0, (dwLength + 1) * sizeof(WCHAR));
             if (!pSymbolicLink)
             {
@@ -1875,10 +1873,8 @@ cleanup:
         RegCloseKey(hDeviceInstanceKey);
     if (hInterfaceKey != INVALID_HANDLE_VALUE)
         RegCloseKey(hInterfaceKey);
-    if (InstancePath != NULL)
-        HeapFree(GetProcessHeap(), 0, InstancePath);
-    if (pSymbolicLink != NULL)
-        HeapFree(GetProcessHeap(), 0, pSymbolicLink);
+    HeapFree(GetProcessHeap(), 0, InstancePath);
+    HeapFree(GetProcessHeap(), 0, pSymbolicLink);
     return rc;
 }
 
@@ -3480,8 +3476,7 @@ cleanup:
         RegCloseKey(hClassesKey);
     if (lpGuidString)
         RpcStringFreeW(&lpGuidString);
-    if (lpFullGuidString)
-        HeapFree(GetProcessHeap(), 0, lpFullGuidString);
+    HeapFree(GetProcessHeap(), 0, lpFullGuidString);
 
     return ret;
 }
@@ -4098,12 +4093,12 @@ SetupDiCallClassInstaller(
             while (!IsListEmpty(&ClassCoInstallersListHead))
             {
                 ListEntry = RemoveHeadList(&ClassCoInstallersListHead);
-                HeapFree(GetProcessHeap(), 0, ListEntry);
+                HeapFree(GetProcessHeap(), 0, CONTAINING_RECORD(ListEntry, struct CoInstallerElement, ListEntry));
             }
             while (!IsListEmpty(&DeviceCoInstallersListHead))
             {
                 ListEntry = RemoveHeadList(&DeviceCoInstallersListHead);
-                HeapFree(GetProcessHeap(), 0, ListEntry);
+                HeapFree(GetProcessHeap(), 0, CONTAINING_RECORD(ListEntry, struct CoInstallerElement, ListEntry));
             }
 
             ret = (rc == NO_ERROR);

@@ -825,11 +825,11 @@ static BOOL needs_callback( HINF hinf, PCWSTR field, void *arg )
     switch (info->type)
     {
         case 0:
-            return SetupInstallFromInfSectionW(info->owner, hinf, field, info->flags,
+            return SetupInstallFromInfSectionW(info->owner, *(HINF*)hinf, field, info->flags,
                info->key_root, info->src_root, info->copy_flags, info->callback,
                info->context, info->devinfo, info->devinfo_data);
         case 1:
-            return SetupInstallServicesFromInfSectionExW(hinf, field, info->flags,
+            return SetupInstallServicesFromInfSectionExW(*(HINF*)hinf, field, info->flags,
                 info->devinfo, info->devinfo_data, info->reserved1, info->reserved2);
         default:
             ERR("Unknown info type %ld\n", info->type);
