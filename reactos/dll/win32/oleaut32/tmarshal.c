@@ -283,7 +283,7 @@ _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
 	ERR("Could not get typelib fn?\n");
 	return E_FAIL;
     }
-    MultiByteToWideChar(CP_ACP, 0, tlfn, -1, tlfnW, -1);
+    MultiByteToWideChar(CP_ACP, 0, tlfn, -1, tlfnW, sizeof(tlfnW) / sizeof(tlfnW[0]));
     hres = LoadTypeLib(tlfnW,&tl);
     if (hres) {
 	ERR("Failed to load typelib for %s, but it should be there.\n",debugstr_guid(riid));
