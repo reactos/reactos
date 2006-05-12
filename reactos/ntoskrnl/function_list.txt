@@ -1,51 +1,53 @@
+(Nagar refers to Rajeev's book)
+
 ntoskrnl/cc/fs.c
 
-CcGetDirtyPages
-CcGetFileObjectFromBcb
-CcGetLsnForFileObject
-CcInitializeCacheMap
-CcIsThereDirtyData
-CcPurgeCacheSection
-CcSetFileSizes
-CcSetLogHandleForFile
-CcUninitializeCacheMap
+CcGetDirtyPages => STUB
+CcGetFileObjectFromBcb => Nagar (not even sure i wrote it).
+CcGetLsnForFileObject => STUB
+CcInitializeCacheMap => Did not code. (calls CcRos)
+CcIsThereDirtyData => STUB
+CcPurgeCacheSection => STUB
+CcSetFileSizes => Did not code.
+CcSetLogHandleForFile => STUB
+CcUninitializeCacheMap => Stub/Calls Ccros
 
 ntoskrnl/cc/view.c
 
-CcTryToAcquireBrokenMutex
+CcTryToAcquireBrokenMutex => Did not code (copy-pasted implementation of old mutext impl, renamed).
 
 ntoskrnl/cc/copy.c
 
-CcDeferWrite
-CcFastCopyRead
-CcFastCopyWrite
-CcWaitForCurrentLazyWriterActivity
+CcDeferWrite => STUB
+CcFastCopyRead => STUB
+CcFastCopyWrite => STUB
+CcWaitForCurrentLazyWriterActivity => STUB
 
 ntoskrnl/cc/pin.c
 
-CcPinMappedData
-CcPinRead
-CcSetDirtyPinnedData
+CcPinMappedData => STUB
+CcPinRead => Did not code.
+CcSetDirtyPinnedData => Did not code.
 
 ntoskrnl/cc/mdl.c
 
-CcMdlRead
-CcMdlReadCompleteDev
-CcMdlReadComplete
-CcMdlWriteComplete
-CcMdlWriteCompleteDev
-CcMdlWriteAbort
-CcPrepareMdlWrite
+CcMdlRead => STUB
+CcMdlReadCompleteDev => Nagar/Trivial implementation.
+CcMdlReadComplete => Nagar/Trivial implementation.
+CcMdlWriteComplete => Same as read complete, just renamed to *write*
+CcMdlWriteCompleteDev => STUB
+CcMdlWriteAbort => STUB
+CcPrepareMdlWrite => STUB
 
 ntoskrnl/cc/cacheman.c
 
-CcGetFlushedValidData
-CcRemapBcb
-CcScheduleReadAhead
-CcSetAdditionalCacheAttributes
-CcSetBcbOwnerPointer
-CcSetDirtyPageThreshold
-CcSetReadAheadGranularity
+CcGetFlushedValidData => STUB
+CcRemapBcb => STUB
+CcScheduleReadAhead => STUB
+CcSetAdditionalCacheAttributes => STUB
+CcSetBcbOwnerPointer => STUB
+CcSetDirtyPageThreshold => STUB
+CcSetReadAheadGranularity => STUB
 
 ntoskrnl/cm/ntfunc.c
 
