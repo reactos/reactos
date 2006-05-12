@@ -27,6 +27,7 @@
  */
 #include <windows.h>
 #include <stdlib.h>
+#include <lm.h>
 #include "resource.h"
 #include "sysdm.h"
 
@@ -50,7 +51,12 @@ ComputerPageProc(
       {
           SendDlgItemMessage(hwndDlg,IDC_COMPUTERNAME,WM_SETTEXT,0,(LPARAM)ComputerName);
       }
-      /* FIXME: get the workgroup */
+      LPWKSTA_INFO_101 wki;
+      if (NetWkstaGetInfo(NULL,101,(LPBYTE*)&wki) == NERR_Success)
+      {
+        SendDlgItemMessage(hwndDlg,IDC_WORKGROUPDOMAIN_NAME,WM_SETTEXT,0,(LPARAM)wki->wki101_langroup);
+        NetApiBufferFree(&wki);
+      }
       break;
     }
   }
