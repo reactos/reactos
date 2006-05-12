@@ -14,6 +14,7 @@
 
 #include <hal.h>
 #include <ntdddisk.h>
+#include <rosldr.h>
 
 extern UCHAR XboxFont8x16[256 * 16];
 
