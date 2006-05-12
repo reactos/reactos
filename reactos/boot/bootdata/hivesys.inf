@@ -36,6 +36,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\DeviceClasses",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB","CurrentConfig",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0000","FriendlyName",0x00000000,"New Hardware Profile"
+; The following line is only here to prevent the "New hardware wizard" to display a window for "Unknown device".
+; This device comes from Root plug and play bus (ntoskrnl/io/pnproot.c) and this one should never appear
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\LEGACY_UNKNOWN\0000","ConfigFlags",0x00010001,0x00000040
 
 ; Keyboard Layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000406","Layout File",0x00000000,"kbdda.dll"
@@ -352,6 +355,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x000006
 ; Service groups
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Boot Bus Extender", \
+ "System Bus Extender", \
  "SCSI Port", \
  "SCSI Miniport", \
  "Primary Disk", \
@@ -379,6 +383,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
 ; Group order, the first DWORD is the count of entries, 
 ; the following dwords are the tag entries for the load order.
 HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","Boot Bus Extender", 0x00000001, \
+  0x02, 0x00, 0x00, 0x00, \
   0x01, 0x00, 0x00, 0x00, \
   0x02, 0x00, 0x00, 0x00
 HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","SCSI Miniport", 0x00000001, \
@@ -468,6 +473,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Group",0x00000000,"Boot Bus Exten
 HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","ImagePath",0x00020000,"system32\drivers\acpi.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Tag",0x00010001,0x00000001
 
 ; Beep device driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ErrorControl",0x00010001,0x00000000
@@ -555,13 +561,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 
-; IDE driver (deprecated)
-;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","ErrorControl",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","Group",0x00000000,"Primary Disk"
-;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","ImagePath",0x00020000,"system32\drivers\ide.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","Start",0x00010001,0x00000004
-;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","Type",0x00010001,0x00000001
-
 ; i8042 port driver
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Group",0x00000000,"Keyboard Port"
@@ -642,6 +641,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Group",0x00000000,"Boot Bus Extend
 HKLM,"SYSTEM\CurrentControlSet\Services\PCI","ImagePath",0x00020000,"system32\drivers\pci.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Tag",0x00010001,0x00000002
 
 ; ACPI bus
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","HardwareID",0x00010000,"*PNP0C08"
