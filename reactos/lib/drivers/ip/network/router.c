@@ -219,7 +219,7 @@ PFIB_ENTRY RouterAddRoute(
         return NULL;
     }
 
-   INIT_TAG(Router, TAG('R','O','U','T'));
+    INIT_TAG(Router, TAG('R','O','U','T'));
 
     RtlCopyMemory( &FIBE->NetworkAddress, NetworkAddress,
 		   sizeof(FIBE->NetworkAddress) );
@@ -414,8 +414,33 @@ PFIB_ENTRY RouterCreateRoute(
  *     for providing this reference
  */
 {
-    PNEIGHBOR_CACHE_ENTRY NCE;
+    KIRQL OldIrql;
     PFIB_ENTRY FIBE;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+    PFIB_ENTRY Current;
+    PNEIGHBOR_CACHE_ENTRY NCE;
+
+    TcpipAcquireSpinLock(&FIBLock, &OldIrql);
+
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+	Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+
+        NCE   = Current->Router;
+
+	if( AddrIsEqual(NetworkAddress, &Current->NetworkAddress) &&
+	    AddrIsEqual(Netmask, &Current->Netmask) ) {
+	    TI_DbgPrint(DEBUG_ROUTER,("Attempting to add duplicate route to %s\n", A2S(NetworkAddress)));
+	    TcpipReleaseSpinLock(&FIBLock, OldIrql);
+	    return NULL;
+	}
+
+	CurrentEntry = NextEntry;
+    }
+
+    TcpipReleaseSpinLock(&FIBLock, OldIrql);
 
     /* The NCE references RouterAddress. The NCE is referenced for us */
     NCE = NBFindOrCreateNeighbor(Interface, RouterAddress);
