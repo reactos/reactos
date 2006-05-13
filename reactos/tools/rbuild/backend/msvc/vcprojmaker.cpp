@@ -646,41 +646,20 @@ MSVCBackend::_generate_sln_project (
 	std::string vcproj_guid,
 	const std::vector<Dependency*>& dependencies )
 {
-	//vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
+	vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
 
-	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"{%s}\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
-
-	vector<const IfableData*> ifs_list;
-	ifs_list.push_back ( &module.project.non_if_data );
-	ifs_list.push_back ( &module.non_if_data );
-
+	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
 
 	//FIXME: only omit ProjectDependencies in VS 2005 when there are no dependencies
 	//NOTE: VS 2002 do not use ProjectSection; it uses GlobalSection instead
-	if (configuration.VSProjectVersion != "7.00") {
-
-		bool has_dependencies = false;
-
-
-
-
-		while ( ifs_list.size() )
+	if ((configuration.VSProjectVersion == "7.10") || (dependencies.size() > 0)) {
+		fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
+		for ( size_t i = 0; i < dependencies.size(); i++ )
 		{
-			const IfableData& data = *ifs_list.back();
-			ifs_list.pop_back();
-			const vector<Library*>& libs = data.libraries;
-			for ( unsigned i = 0; i < libs.size(); i++ )
-			{
-				if ( !has_dependencies ) {
-					fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
-					has_dependencies = true;
-				}
-
-				fprintf ( OUT, "\t\t{%s} = {%s}\r\n", libs[i]->importedModule->guid.c_str(), libs[i]->importedModule->guid.c_str());
-			}
+			Dependency& dependency = *dependencies[i];
+			fprintf ( OUT, "\t\t%s = %s\r\n", dependency.module.guid.c_str(), dependency.module.guid.c_str() );
 		}
-		if ( has_dependencies )
-			fprintf ( OUT, "\tEndProjectSection\r\n" );
+		fprintf ( OUT, "\tEndProjectSection\r\n" );
 	}
 
 	fprintf ( OUT, "EndProject\r\n" );
