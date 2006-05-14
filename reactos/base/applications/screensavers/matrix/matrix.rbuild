@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
 <module name="matrix" type="win32scr" installbase="system32" installname="matrix2.scr" allowwarnings="true">
-      <include base="matrix">.</include>
+	<include base="matrix">.</include>
 	
 	<linkerflag>-lstdc++</linkerflag>
 	<define name="__USE_W32API" />
@@ -15,12 +15,10 @@
 	<library>user32</library> 
 	<library>gdi32</library> 
 	<library>winspool</library> 
-      <library>comctl32</library> 
+	<library>comctl32</library> 
 	<library>comdlg32</library> 
-      <library>advapi32</library>
+	<library>advapi32</library>
 	<library>shell32</library> 
-	<library>ole32</library> 
-	<library>oleaut32</library> 
 	<library>uuid</library> 
 	
 	<file>config.c</file>
