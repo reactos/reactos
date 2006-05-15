@@ -51,6 +51,10 @@ GetRootHubPointer(
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	
+	/* Initialize the status block before sending the IRP */
+	IoStatus.Status = STATUS_NOT_SUPPORTED;
+	IoStatus.Information = 0;
+	
 	Status = IoCallDriver(Pdo, Irp);
 	
 	if (Status == STATUS_PENDING)
