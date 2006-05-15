@@ -24,7 +24,6 @@ HKR, , Icon,           0, "-27"
 [Manufacturer]
 %GenericMfg% = GenericMfg
 %IntelMfg% = IntelMfg
-%NVIDIAMfg% = NVIDIAMfg
 
 [GenericMfg]
 %*PNP0000.DeviceDesc% = NO_DRV,*PNP0000
@@ -59,21 +58,6 @@ HKR, , Icon,           0, "-27"
 %PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7180
 %PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7190
 %PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7192
-
-[NVIDIAMfg]
-;PCI System Management
-%PCI\VEN_10de&DEV_01b4.DeviceDesc% = NO_DRV,PCI\VEN_10de&DEV_0064
-%PCI\VEN_10de&DEV_01b4.DeviceDesc% = NO_DRV,PCI\VEN_10de&DEV_0084
-%PCI\VEN_10de&DEV_01b4.DeviceDesc% = NO_DRV,PCI\VEN_10de&DEV_00D4
-%PCI\VEN_10de&DEV_01b4.DeviceDesc% = NO_DRV,PCI\VEN_10de&DEV_00E4
-%PCI\VEN_10de&DEV_01b4.DeviceDesc% = NO_DRV,PCI\VEN_10de&DEV_01b4
-
-;Memory Controller
-%PCI\VEN_10DE&DEV_01ExU.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_01EB&REV_C1
-%PCI\VEN_10DE&DEV_01Ex.DeviceDesc% = NO_DRV, PCI\VEN_10DE&DEV_01EC
-%PCI\VEN_10DE&DEV_01Ex.DeviceDesc% = NO_DRV, PCI\VEN_10DE&DEV_01ED
-%PCI\VEN_10DE&DEV_01Ex.DeviceDesc% = NO_DRV, PCI\VEN_10DE&DEV_01EE
-%PCI\VEN_10DE&DEV_01Ex.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_01EF
 
 ;---------------------------- NO DRIVER REQ -----------------------------
 
@@ -157,8 +141,3 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI-Bridge"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI-Bridge"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI-Bridge"
-
-NVIDIAMfg = "NVIDIA"
-PCI\VEN_10DE&DEV_01ExU.DeviceDesc = "NVIDIA nForce2 Ultra 400 Memory Controller"
-PCI\VEN_10DE&DEV_01Ex.DeviceDesc = "NVIDIA nForce2 Memory Controller"
-PCI\VEN_10de&DEV_01b4.DeviceDesc = "NVIDIA nForce PCI System Management"
