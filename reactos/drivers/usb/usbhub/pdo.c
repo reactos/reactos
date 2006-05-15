@@ -29,6 +29,28 @@ UsbhubDeviceControlPdo(
 	
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
+		case IOCTL_INTERNAL_USB_GET_ROOT_USB_DEVICE:
+		{
+			PHUB_DEVICE_EXTENSION DeviceExtension;
+			
+			DPRINT("Usbhub: IOCTL_INTERNAL_USB_GET_ROOT_USB_DEVICE\n");
+			if (Irp->AssociatedIrp.SystemBuffer == NULL
+				|| Stack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(PVOID))
+			{
+				Status = STATUS_INVALID_PARAMETER;
+			}
+			else
+			{
+				PVOID* pHubPointer;
+				DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+				
+				pHubPointer = (PVOID*)Irp->AssociatedIrp.SystemBuffer;
+				*pHubPointer = DeviceExtension->dev;
+				Information = sizeof(PVOID);
+				Status = STATUS_SUCCESS;
+			}
+			break;
+		}
 		default:
 		{
 			DPRINT1("Usbhub: Unknown IOCTL code 0x%lx\n", Stack->Parameters.DeviceIoControl.IoControlCode);
@@ -52,7 +74,6 @@ UsbhubPdoStartDevice(
 	NTSTATUS Status;
 	
 	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	DbgBreakPoint();
 	
 	/* Register and activate device interface */
 	Status = IoRegisterDeviceInterface(
