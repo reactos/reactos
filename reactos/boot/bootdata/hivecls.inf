@@ -5,21 +5,81 @@ Signature="$ReactOS$
 HKLM,"SOFTWARE\Classes",,0x00000010
 
 ; Folders
-;HKCR,"Folder\Defaulticon","",0x00000000,"%SystemRoot%\System32\shell32.dll,-4"
+HKCR,"Folder","",0x00000000,"Folder"
+;HKCR,"Folder\Defaulticon","",0x00000000,"%SystemRoot%\system32\shell32.dll,-4"
 HKCR,"Folder\shell\open\command","",0x00000000,"explorer.exe ""%1"""
 HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
 HKCR,"Folder\shell\rootexplore","",0x00000000,"Explore from here"
 HKCR,"Folder\shell\rootexplore\command","",0x00000000,"explorer.exe /e,/root,""%1"""
 
+; Virtual Device Drivers
+HKCR,".386","",0x00000000,"vxdfile"
+HKCR,".vxd","",0x00000000,"vxdfile"
+HKCR,"vxdfile","",0x00000000,"Virtual Device Driver"
+
+; Animated Cursors
+HKCR,".ani","",0x00000000,"anifile"
+HKCR,"anifile","",0x00000000,"Animated Cursor"
+HKCR,"anifile\DefaultIcon","",0x00000000,"%1"
+
+; DOS Batch-Files
+HKCR,".bat","",0x00000000,"batfile"
+HKCR,"batfile","",0x00000000,"DOS Batch File"
+HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
+HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
+
+HKCR,".cmd","",0x00000000,"cmdfile"
+HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
+HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
+HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
+
+; Get DOS Applications a Icon 
+HKCR,".com","",0x00000000,"comfile"
+HKCR,"comfile","",0x00000000,"DOS Application"
+HKCR,"comfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-3"
+
 ; Control Panel extensions
 HKCR,".cpl","",0x00000000,"cplfile"
+HKCR,"cplfile","",0x00000000,"Control Panel Extension"
+HKCR,"cplfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 HKCR,"cplfile\shell\cplopen","",0x00000000,"Open with Control Panel"
 HKCR,"cplfile\shell\cplopen\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe shell32.dll,Control_RunDLL %1,%*"
 
-; Show icons for executables in shell views
+; Cursors
+HKCR,".cur","",0x00000000,"curfile"
+HKCR,"curfile","",0x00000000,"Cursor"
+HKCR,"curfile\DefaultIcon","",0x00000000,"%1"
+
+; Dynamic Link Libraries
+HKCR,".dll","",0x00000000,"dllfile"
+HKCR,"dllfile","",0x00000000,"Dynamic Link Library"
+HKCR,"dllfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
+
+; Device Drivers
+HKCR,".drv","",0x00000000,"drvfile"
+HKCR,"drvfile","",0x00000000,"Device Driver"
+
+; Applicatons
 HKCR,".exe","",0x00000000,"exefile"
+HKCR,"exefile","",0x00000000,"ReactOS Applicaton"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
+
+; Fonts
+HKCR,".fon","",0x00000000,"fonfile"
+HKCR,"fonfile","",0x00000000,"Font File"
+HKCR,"fonfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-155"
+
+HKCR,".ttf","",0x00000000,"ttffile"
+HKCR,"ttffile","",0x00000000,"TrueType Font File"
+HKCR,"ttffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
+
+; Help Files
+HKCR,".hlp","",0x00000000,"hlpfile"
+HKCR,"hlpfile","",0x00000000,"Help File"
+HKCR,"hlpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-24"
 
 ; set MIME type for .html and .htm because Tiny webserver needs it
 HKCR,".htm","",0x00000000,"html"
@@ -28,15 +88,24 @@ HKCR,".htm","Content Type",0x00000000,"text/html"
 HKCR,".html","",0x00000000,"html"
 HKCR,".html","Content Type",0x00000000,"text/html"
 
-; ini (configuration) files
+; Icons
+HKCR,".ico","",0x00000000,"icofile"
+HKCR,"icofile","",0x00000000,"Icon"
+HKCR,"icofile\DefaultIcon","",0x00000000,"%1"
+
+; Configuration Files
 HKCR,".ini","",0x00000000,"inifile"
+HKCR,"inifile","",0x00000000,"Configuration Settings"
+HKCR,"inifile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inifile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
 
-; Show icons for inf (installation) files
+; Setup Information Files
 HKCR,".inf","",0x00000000,"inffile"
+HKCR,"inffile","",0x00000000,"Setup Information"
+HKCR,"inffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inffile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
-HKCR,"inffile\DefaultIcon","",0x00000000,"%SystemRoot%\System32\shell32.dll,-151"
-HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\System32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 %1"
+HKCR,"inffile\shell\Install","",0x00000000,"Install"
+HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 %1"
 
 ; Show icons for shortcuts in shell views (lnkfile is handled specially in shell32)
 ; Don't display extension for shortcuts
@@ -47,12 +116,41 @@ HKCR,"lnkfile\CLSID","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,"lnkfile\shellex\IconHandler","",0x00000000,"{00021401-0000-0000-C000-000000000046}"
 HKCR,lnkfile\shellex\ContextMenuHandlers\{00021401-0000-0000-C000-000000000046},,,
 
+; Text Documents
+HKCR,".log","",0x00000000,"txtfile"
+HKCR,".txt","",0x00000000,"txtfile"
+HKCR,"txtfile","",0x00000000,"Text Document"
+HKCR,".txt","Content Type",0x00000000,"text/plain"
+HKCR,"txtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
+HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+
 ; MSI files
 HKCR,".msi","",0x00000000,"MSI.Package"
 HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
-HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\System32\msiexec /i %1"
-HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\System32\msiexec /f %1"
-HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\System32\msiexec /x %1"
+HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\system32\msiexec /i %1"
+HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msiexec /f %1"
+HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec /x %1"
+
+HKCR,".pif","",0x00000000,"piffile"
+
+; Registration Entries
+HKCR,".reg","",0x00000000,"regfile"
+HKCR,"regfile","",0x00000000,"Registration Entries"
+HKCR,"regfile\DefaultIcon","",0x00020000,"%SystemRoot%\regedit.exe,1"
+HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"regfile\shell\open","",0x00000000,"Merge"
+HKCR,"regfile\shell\open\command","",0x00000000,"regedit.exe ""%1"""
+
+; Screen Savers
+HKCR,".scr","",0x00000000,"scrfile"
+HKCR,"scrfile","",0x00000000,"Screen Saver"
+HKCR,"scrfile\Defaulticon","",0x00000000,"%1"
+HKCR,"scrfile\shell\config","",0x00000000,"Configure"
+HKCR,"scrfile\shell\config\command","",0x00000000,"""%1"""
+HKCR,"scrfile\shell\install","",0x00000000,"Install"
+HKCR,"scrfile\shell\install\command","",0x00000000,"rundll32.exe desk.cpl,InstallScreenSaver %l"
+HKCR,"scrfile\shell\open","",0x00000000,"Test"
+HKCR,"scrfile\shell\open\command","",0x00000000,"""%1"" /S"
 
 ; shell command files (e.g. "Show Desktop" in quicklaunch bar)
 HKCR,".scf","",0x00000000,"SHCmdFile"
@@ -62,10 +160,10 @@ HKCR,"SHCmdFile\shell\open\command","",0x00000000,"explorer.exe ""%1"""
 HKCR,"SHCmdFile\CLSID","",0x00000000,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
 HKCR,"SHCmdFile\shellex\IconHandler","",0x00000000,"{57651662-CE3E-11D0-8D77-00C04FC99D61}"
 
-; install notepad as handler for .txt files
-HKCR,".txt","",0x00000000,"txtfile"
-HKCR,".txt","Content Type",0x00000000,"text/plain"
-HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\System32\notepad.exe %1"
+System-Files
+HKCR,".sys","",0x00000000,"sysfile"
+HKCR,"sysfile","",0x00000000,"System File"
+HKCR,"sysfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; URL shortcuts (e.g. used in favorites folder of IExplorer)
 HKCR,".url","",0x00000000,"InternetShortcut"
@@ -73,6 +171,11 @@ HKCR,"InternetShortcut","NeverShowExt",0x00000000,""
 HKCR,"InternetShortcut","IsShortcut",0x00000000,"yes"
 HKCR,"InternetShortcut\shell\open\command","",0x00000000,"rundll32.exe shdocvw.dll,OpenURL %l"
 HKCR,"InternetShortcut\DefaultIcon","",0x00020000,"%SystemRoot%\system32\url.dll,0"
+
+; Wave Sounds
+HKCR,".wav","",0x00000000,"SoundRec"
+HKCR,"SoundRec","",0x00000000,"Wave Sound"
+HKCR,"SoundRec\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
 
 HKCR,"CLSID",,0x00000012
 
@@ -105,15 +208,15 @@ HKCR,"CLSID\{4657278A-411B-11d2-839A-00C04FD918D0}","",0x00000000,"Shell Drag an
 HKCR,"CLSID\{4657278A-411B-11d2-839A-00C04FD918D0}\InProcServer32","",0x00020000,"%SystemRoot%\system32\shell32.dll"
 HKCR,"CLSID\{4657278A-411B-11d2-839A-00C04FD918D0}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 
-; Recycle bin is not implemented (yet???)
+; Recycle bin is not implemented 
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","",0x00000000,"Recycle Bin"
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","LocalizedString",0x00020000,"@%SystemRoot%\system32\shell32.dll,-8964"
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","InfoTip",0x00020000,"@%SystemRoot%\system32\shell32.dll,-22915"
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","IntroText",0x00020000,"@%SystemRoot%\system32\shell32.dll,-31748"
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","SortOrderIndex",0x00010001,0x00000060
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","",0x00020000,"%SystemRoot%\System32\shell32.dll,31"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","Empty",0x00020000,"%SystemRoot%\System32\shell32.dll,31"
-;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","Full",0x00020000,"%SystemRoot%\System32\shell32.dll,32"
+;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,31"
+;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","Empty",0x00020000,"%SystemRoot%\system32\shell32.dll,31"
+;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon","Full",0x00020000,"%SystemRoot%\system32\shell32.dll,32"
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\InProcServer32","",0x00020000,"%SystemRoot%\system32\shell32.dll"
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\ShellFolder","Attributes",0x00010001,0x20000140
