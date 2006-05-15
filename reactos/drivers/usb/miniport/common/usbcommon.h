@@ -90,7 +90,7 @@ UsbMpPdoPnp(
 	IN PIRP Irp);
 
 NTSTATUS
-UsbMpPdoDeviceControl(
+UsbMpInternalPdoDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 

@@ -4,7 +4,7 @@
  * FILE:            drivers/usb/cromwell/hub/pdo.c
  * PURPOSE:         IRP_MJ_PNP operations for PDOs
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -14,7 +14,7 @@
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
 NTSTATUS
-UsbhubDeviceControlPdo(
+UsbhubInternalDeviceControlPdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
@@ -22,18 +22,18 @@ UsbhubDeviceControlPdo(
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 	
-	DPRINT("Usbhub: UsbhubDeviceControlPdo() called\n");
+	DPRINT("Usbhub: UsbhubInternalDeviceControlPdo() called\n");
 	
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	Status = Irp->IoStatus.Status;
 	
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
-		case IOCTL_INTERNAL_USB_GET_ROOT_USB_DEVICE:
+		case IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO:
 		{
 			PHUB_DEVICE_EXTENSION DeviceExtension;
 			
-			DPRINT("Usbhub: IOCTL_INTERNAL_USB_GET_ROOT_USB_DEVICE\n");
+			DPRINT("Usbhub: IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
 			if (Irp->AssociatedIrp.SystemBuffer == NULL
 				|| Stack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(PVOID))
 			{

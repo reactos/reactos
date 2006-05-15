@@ -381,7 +381,7 @@ DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
 		return UsbMpFdoDeviceControl(DeviceObject, Irp);
 	else
-		return UsbMpPdoDeviceControl(DeviceObject, Irp);
+		return IrpStub(DeviceObject, Irp);
 }
 
 static NTSTATUS NTAPI

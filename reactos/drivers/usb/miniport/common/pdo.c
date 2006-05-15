@@ -60,7 +60,7 @@ UsbMpPdoCleanup(
 }
 
 NTSTATUS
-UsbMpPdoDeviceControl(
+UsbMpPdoInternalDeviceControlCore(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
@@ -68,18 +68,18 @@ UsbMpPdoDeviceControl(
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 
-	DPRINT("UsbMpDeviceControlPdo() called\n");
+	DPRINT("UsbMpPdoInternalDeviceControl() called\n");
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	Status = Irp->IoStatus.Status;
 
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
-		case IOCTL_INTERNAL_USB_GET_ROOT_USB_DEVICE:
+		case IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO:
 		{
 			PUSBMP_DEVICE_EXTENSION DeviceExtension;
 
-			DPRINT("IOCTL_INTERNAL_USB_GET_ROOT_USB_DEVICE\n");
+			DPRINT("IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
 			if (Irp->AssociatedIrp.SystemBuffer == NULL
 				|| Stack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(PVOID))
 			{
@@ -609,9 +609,7 @@ UsbMpPdoInternalDeviceControl(
 	}
 	else
 	{
-		DPRINT("We got IOCTL for UsbCore\n");
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		return STATUS_SUCCESS;
+		return UsbMpPdoInternalDeviceControlCore(DeviceObject, Irp);
 	}
 
 

@@ -198,7 +198,7 @@ int my_driver_register(struct device_driver *driver)
 
 	if (drvs_num<MAX_DRVS)
 	{
-		printk("driver_register %i: %p %p",drvs_num,driver,driver->probe);  
+		printk("driver_register %i: %p %p\n",drvs_num,driver,driver->probe);  
 
 		m_drivers[drvs_num++]=driver;
 		return 0;
