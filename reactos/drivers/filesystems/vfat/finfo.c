@@ -4,7 +4,6 @@
  * FILE:             drivers/fs/vfat/finfo.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
- *                   Hartmut Birr
  *                   Herve Poussineau (reactos@poussine.freesurf.fr)
  *
  */
@@ -96,34 +95,6 @@ VfatGetStandardInformation(PVFATFCB FCB,
   StandardInfo->DeletePending = FCB->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
 
   *BufferLength -= sizeof(FILE_STANDARD_INFORMATION);
-  return(STATUS_SUCCESS);
-}
-
-static NTSTATUS
-VfatGetAttributeTagInformation(PVFATFCB FCB,
-			       PFILE_ATTRIBUTE_TAG_INFORMATION AttributeTagInfo,
-			       PULONG BufferLength)
-{
-  if (*BufferLength < sizeof(FILE_ATTRIBUTE_TAG_INFORMATION))
-    return STATUS_BUFFER_OVERFLOW;
-
-  /* PRECONDITION */
-  ASSERT(AttributeTagInfo != NULL);
-  ASSERT(FCB != NULL);
-
-  AttributeTagInfo->FileAttributes = *FCB->Attributes & 0x3f;
-  /* Synthesize FILE_ATTRIBUTE_NORMAL */
-  if (0 == (AttributeTagInfo->FileAttributes & (FILE_ATTRIBUTE_DIRECTORY |
-                                                FILE_ATTRIBUTE_ARCHIVE |
-                                                FILE_ATTRIBUTE_SYSTEM |
-                                                FILE_ATTRIBUTE_HIDDEN |
-                                                FILE_ATTRIBUTE_READONLY)))
-  {
-    AttributeTagInfo->FileAttributes |= FILE_ATTRIBUTE_NORMAL;
-  }
-  AttributeTagInfo->ReparseTag = 0;
-
-  *BufferLength -= sizeof(FILE_ATTRIBUTE_TAG_INFORMATION);
   return(STATUS_SUCCESS);
 }
 
@@ -474,6 +445,28 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
 
 
 static NTSTATUS
+VfatGetEaInformation(PFILE_OBJECT FileObject,
+		     PVFATFCB Fcb,
+		     PDEVICE_OBJECT DeviceObject,
+		     PFILE_EA_INFORMATION Info,
+		     PULONG BufferLength)
+{
+    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+
+    /* FIXME - use SEH to access the buffer! */
+    Info->EaSize = 0;
+    *BufferLength -= sizeof(*Info);
+    if (DeviceExt->FatInfo.FatType == FAT12 ||
+        DeviceExt->FatInfo.FatType == FAT16)
+    {
+        /* FIXME */
+        DPRINT1("VFAT: FileEaInformation not implemented!\n");
+    }
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
 VfatGetAllInformation(PFILE_OBJECT FileObject,
 		      PVFATFCB Fcb,
 		      PDEVICE_OBJECT DeviceObject,
@@ -614,8 +607,16 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       }
       else
       {
-        Fcb->entry.Fat.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
-        Fcb->entry.Fat.FirstClusterHigh = (unsigned short)((FirstCluster & 0xFFFF0000) >> 16);
+        if (DeviceExt->FatInfo.FatType == FAT32)
+        {
+          Fcb->entry.Fat.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
+          Fcb->entry.Fat.FirstClusterHigh = FirstCluster >> 16;
+        }
+        else
+        {
+            ASSERT((FirstCluster >> 16) == 0);
+            Fcb->entry.Fat.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
+        }
       }
     }
     else
@@ -699,8 +700,15 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       }
       else
       {
-        Fcb->entry.Fat.FirstCluster = 0;
-        Fcb->entry.Fat.FirstClusterHigh = 0;
+        if (DeviceExt->FatInfo.FatType == FAT32)
+        {
+          Fcb->entry.Fat.FirstCluster = 0;
+          Fcb->entry.Fat.FirstClusterHigh = 0;
+        }
+        else
+        {
+            Fcb->entry.Fat.FirstCluster = 0;
+        }
       }
 
       NCluster = Cluster = FirstCluster;
@@ -809,10 +817,12 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 				 &BufferLength);
       break;
 
-    case FileAttributeTagInformation:
-      RC = VfatGetAttributeTagInformation(FCB,
-	                                  SystemBuffer,
-					  &BufferLength);
+    case FileEaInformation:
+      RC = VfatGetEaInformation(IrpContext->FileObject,
+				FCB,
+				IrpContext->DeviceObject,
+				SystemBuffer,
+				&BufferLength);
       break;
 
     case FileAlternateNameInformation:
@@ -901,7 +911,6 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 				   SystemBuffer);
       break;
     case FileRenameInformation:
-    case FileAttributeTagInformation:
       RC = STATUS_NOT_IMPLEMENTED;
       break;
     default:
