@@ -18,13 +18,18 @@ IDI_HORIZONTAL ICON "resources/HORIZ.ICO"
 IDI_VERTICAL ICON "resources/VERTIC.ICO"
 IDI_NETSTAT ICON "resources/NETCONN.ICO"
 
-#include "en.rc"
 #include "cz.rc"
 #include "de.rc"
 #include "dk.rc"
-#include "nl.rc"
-#include "sv.rc"
+#include "en.rc"
 #include "es.rc"
-#include "Ja.rc"
+#include "fr.rc"
 #include "hu.rc"
+#include "Ja.rc"
+#include "nl.rc"
 #include "ru.rc"
+#include "sv.rc"
+
+
+
+
