@@ -37,7 +37,7 @@ static ULONG Delta;
 
 #define MAKE_COLOR(Red, Green, Blue) (0xff000000 | (((Red) & 0xff) << 16) | (((Green) & 0xff) << 8) | ((Blue) & 0xff))
 
-BOOL I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, ULONG *Return);
+BOOLEAN I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, ULONG *Return);
 
 static VOID
 XboxVideoOutputChar(UCHAR Char, unsigned X, unsigned Y, ULONG FgColor, ULONG BgColor)
@@ -84,7 +84,7 @@ XboxVideoAttrToColors(UCHAR Attr, ULONG *FgColor, ULONG *BgColor)
 }
 
 static VOID
-XboxVideoClearScreenColor(ULONG Color, BOOL FullScreen)
+XboxVideoClearScreenColor(ULONG Color, BOOLEAN FullScreen)
 {
   ULONG Line, Col;
   PULONG p;
@@ -161,7 +161,7 @@ XboxVideoInit(VOID)
 }
 
 VIDEODISPLAYMODE
-XboxVideoSetDisplayMode(char *DisplayMode, BOOL Init)
+XboxVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init)
 {
   /* We only have one mode, semi-text */
   return VideoTextMode;
@@ -188,7 +188,7 @@ XboxVideoSetTextCursorPosition(ULONG X, ULONG Y)
 }
 
 VOID
-XboxVideoHideShowTextCursor(BOOL Show)
+XboxVideoHideShowTextCursor(BOOLEAN Show)
 {
   /* We don't have a cursor yet */
 }
@@ -209,7 +209,7 @@ XboxVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
     }
 }
 
-BOOL
+BOOLEAN
 XboxVideoIsPaletteFixed(VOID)
 {
   return FALSE;

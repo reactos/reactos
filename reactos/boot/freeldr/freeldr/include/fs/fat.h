@@ -152,24 +152,24 @@ typedef struct
 
 
 
-BOOL	FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSectorCount);
+BOOLEAN	FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSectorCount);
 ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
-PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOL RootDirectory);
-BOOL	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-BOOL	FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer);
+PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
+BOOLEAN	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
+BOOLEAN	FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer);
 void	FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry);
-BOOL	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
+BOOLEAN	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
 FILE*	FatOpenFile(PCSTR FileName);
 ULONG	FatCountClustersInChain(ULONG StartCluster);
 ULONG*	FatGetClusterChainArray(ULONG StartCluster);
-BOOL	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);
-BOOL	FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
-BOOL	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
-BOOL	FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+BOOLEAN	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);
+BOOLEAN	FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
+BOOLEAN	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
+BOOLEAN	FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		FatGetFileSize(FILE *FileHandle);
 VOID	FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
 ULONG		FatGetFilePointer(FILE *FileHandle);
-BOOL	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
 
 #define	ATTR_NORMAL		0x00

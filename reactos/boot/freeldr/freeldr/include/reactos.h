@@ -40,7 +40,7 @@ VOID ReactOSRunSetupLoader(VOID);
 // ARC Path Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* BootPartition);
+BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* BootPartition);
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, ULONG Disk, ULONG Partition);
 ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath);
 
@@ -59,11 +59,11 @@ extern memory_map_t			reactos_memory_map[32];		// Memory map
 VOID FASTCALL FrLdrSetupPae(ULONG Magic);
 VOID FASTCALL FrLdrSetupPageDirectory(VOID);
 VOID FASTCALL FrLdrGetPaeMode(VOID);
-BOOL STDCALL FrLdrMapKernel(FILE *KernelImage);
-ULONG_PTR STDCALL FrLdrCreateModule(LPCSTR ModuleName);
-ULONG_PTR STDCALL FrLdrLoadModule(FILE *ModuleImage, LPCSTR ModuleName, PULONG ModuleSize);
-BOOL STDCALL FrLdrCloseModule(ULONG_PTR ModuleBase, ULONG dwModuleSize);
-VOID STDCALL FrLdrStartup(ULONG Magic);
+BOOLEAN NTAPI FrLdrMapKernel(FILE *KernelImage);
+ULONG_PTR NTAPI FrLdrCreateModule(LPCSTR ModuleName);
+ULONG_PTR NTAPI FrLdrLoadModule(FILE *ModuleImage, LPCSTR ModuleName, PULONG ModuleSize);
+BOOLEAN NTAPI FrLdrCloseModule(ULONG_PTR ModuleBase, ULONG dwModuleSize);
+VOID NTAPI FrLdrStartup(ULONG Magic);
 typedef VOID (FASTCALL *ASMCODE)(ULONG Magic, PROS_LOADER_PARAMETER_BLOCK LoaderBlock);
 
 #endif // defined __REACTOS_H

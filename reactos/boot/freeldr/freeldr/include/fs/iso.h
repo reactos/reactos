@@ -100,14 +100,14 @@ typedef struct
 	ULONG		FileStart;		// File start sector
 	ULONG		FileSize;		// File size
 	ULONG		FilePointer;		// File pointer
-	BOOL	Directory;
+	BOOLEAN	Directory;
 	ULONG		DriveNumber;
 } ISO_FILE_INFO, * PISO_FILE_INFO;
 
 
-BOOL	IsoOpenVolume(ULONG DriveNumber);
+BOOLEAN	IsoOpenVolume(ULONG DriveNumber);
 FILE*	IsoOpenFile(PCSTR FileName);
-BOOL	IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+BOOLEAN	IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		IsoGetFileSize(FILE *FileHandle);
 VOID	IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
 ULONG		IsoGetFilePointer(FILE *FileHandle);

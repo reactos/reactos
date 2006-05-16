@@ -67,7 +67,7 @@ VOID
 RegInitializeRegistry(VOID);
 
 LONG
-RegInitCurrentControlSet(BOOL LastKnownGood);
+RegInitCurrentControlSet(BOOLEAN LastKnownGood);
 
 
 LONG
@@ -125,11 +125,11 @@ ULONG
 RegGetValueCount (FRLDRHKEY Key);
 
 
-BOOL
+BOOLEAN
 RegImportBinaryHive (PCHAR ChunkBase,
 		     ULONG ChunkSize);
 
-BOOL
+BOOLEAN
 RegExportBinaryHive (PCWSTR KeyName,
 		     PCHAR ChunkBase,
 		     ULONG* ChunkSize);

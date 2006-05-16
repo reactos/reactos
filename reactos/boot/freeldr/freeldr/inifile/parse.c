@@ -27,7 +27,7 @@ ULONG					IniFileSectionCount = 0;
 ULONG					IniFileSettingCount = 0;
 
 
-BOOL IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
+BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 {
 	ULONG					CurrentOffset;
 	ULONG					CurrentLineNumber;
@@ -249,7 +249,7 @@ ULONG IniGetNextLine(PCHAR IniFileData, ULONG IniFileSize, PCHAR Buffer, ULONG B
 	return CurrentOffset;
 }
 
-BOOL IniIsLineEmpty(PCHAR LineOfText, ULONG TextLength)
+BOOLEAN IniIsLineEmpty(PCHAR LineOfText, ULONG TextLength)
 {
 	ULONG		Idx;
 
@@ -272,7 +272,7 @@ BOOL IniIsLineEmpty(PCHAR LineOfText, ULONG TextLength)
 	return TRUE;
 }
 
-BOOL IniIsCommentLine(PCHAR LineOfText, ULONG TextLength)
+BOOLEAN IniIsCommentLine(PCHAR LineOfText, ULONG TextLength)
 {
 	ULONG		Idx;
 
@@ -298,7 +298,7 @@ BOOL IniIsCommentLine(PCHAR LineOfText, ULONG TextLength)
 	return FALSE;
 }
 
-BOOL IniIsSectionName(PCHAR LineOfText, ULONG TextLength)
+BOOLEAN IniIsSectionName(PCHAR LineOfText, ULONG TextLength)
 {
 	ULONG		Idx;
 
@@ -405,7 +405,7 @@ VOID IniExtractSectionName(PCHAR SectionName, PCHAR SectionNameLine, ULONG LineL
 	SectionName[DestIdx] = '\0';
 }
 
-BOOL IniIsSetting(PCHAR LineOfText, ULONG TextLength)
+BOOLEAN IniIsSetting(PCHAR LineOfText, ULONG TextLength)
 {
 	ULONG		Idx;
 

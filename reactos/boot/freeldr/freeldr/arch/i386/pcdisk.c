@@ -38,7 +38,7 @@ typedef struct
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-static BOOL PcDiskResetController(ULONG DriveNumber)
+static BOOLEAN PcDiskResetController(ULONG DriveNumber)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -61,7 +61,7 @@ static BOOL PcDiskResetController(ULONG DriveNumber)
 	return INT386_SUCCESS(RegsOut);
 }
 
-static BOOL PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+static BOOLEAN PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 	REGS						RegsIn;
 	REGS						RegsOut;
@@ -125,7 +125,7 @@ static BOOL PcDiskReadLogicalSectorsLBA(ULONG DriveNumber, ULONGLONG SectorNumbe
 	return FALSE;
 }
 
-static BOOL PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+static BOOLEAN PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 	ULONG			PhysicalSector;
 	ULONG			PhysicalHead;
@@ -261,10 +261,10 @@ static BOOL PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNumbe
 	return TRUE;
 }
 
-static BOOL PcDiskInt13ExtensionsSupported(ULONG DriveNumber)
+static BOOLEAN PcDiskInt13ExtensionsSupported(ULONG DriveNumber)
 {
 	static ULONG	LastDriveNumber = 0xffffffff;
-	static BOOL	LastSupported;
+	static BOOLEAN	LastSupported;
 	REGS	RegsIn;
 	REGS	RegsOut;
 
@@ -350,7 +350,7 @@ static BOOL PcDiskInt13ExtensionsSupported(ULONG DriveNumber)
 	return TRUE;
 }
 
-BOOL PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+BOOLEAN PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 
 	DbgPrint((DPRINT_DISK, "PcDiskReadLogicalSectors() DriveNumber: 0x%x SectorNumber: %I64d SectorCount: %d Buffer: 0x%x\n", DriveNumber, SectorNumber, SectorCount, Buffer));
@@ -379,14 +379,14 @@ BOOL PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG S
 	return TRUE;
 }
 
-BOOL
+BOOLEAN
 PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
   /* Just use the standard routine */
   return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
-BOOL
+BOOLEAN
 PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY Geometry)
 {
   REGS RegsIn;

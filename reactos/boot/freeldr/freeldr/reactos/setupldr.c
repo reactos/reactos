@@ -45,7 +45,7 @@ FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
     return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 LoadKernel(PCSTR szSourcePath, PCSTR szFileName)
 {
   CHAR szFullName[256];
@@ -110,7 +110,7 @@ LoadKernel(PCSTR szSourcePath, PCSTR szFileName)
   return(TRUE);
 }
 
-static BOOL
+static BOOLEAN
 LoadKernelSymbols(PCSTR szSourcePath, PCSTR szFileName)
 {
   static ROSSYM_CALLBACKS FreeldrCallbacks =
@@ -165,7 +165,7 @@ LoadKernelSymbols(PCSTR szSourcePath, PCSTR szFileName)
   return FALSE;
 }
 
-static BOOL
+static BOOLEAN
 LoadDriver(PCSTR szSourcePath, PCSTR szFileName)
 {
   CHAR szFullName[256];
@@ -230,7 +230,7 @@ LoadDriver(PCSTR szSourcePath, PCSTR szFileName)
 }
 
 
-static BOOL
+static BOOLEAN
 LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
 {
   CHAR szFullName[256];

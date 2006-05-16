@@ -31,7 +31,7 @@
 VOID	GuiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	GuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
 VOID	GuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
-VOID	GuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
+VOID	GuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);	// Draws a box around the area specified
 VOID	GuiDrawText(ULONG X, ULONG Y, PUCHAR Text, UCHAR Attr);	// Draws text at coordinates specified
 VOID	GuiDrawStatusText(PCSTR StatusText);					// Draws text at the very bottom line on the screen
 VOID	GuiUpdateDateTime(VOID);								// Updates the date and time
@@ -49,7 +49,7 @@ UCHAR	GuiTextToFillStyle(PCSTR FillStyleText);				// Converts the text fill into
 // Menu Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	GuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem);
+BOOLEAN	GuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem);
 
 
 

@@ -37,18 +37,18 @@ typedef enum tagVIDEODISPLAYMODE
 typedef struct tagMACHVTBL
 {
   VOID (*ConsPutChar)(int Ch);
-  BOOL (*ConsKbHit)(VOID);
+  BOOLEAN (*ConsKbHit)(VOID);
   int (*ConsGetCh)(VOID);
 
   VOID (*VideoClearScreen)(UCHAR Attr);
-  VIDEODISPLAYMODE (*VideoSetDisplayMode)(char *DisplayMode, BOOL Init);
+  VIDEODISPLAYMODE (*VideoSetDisplayMode)(char *DisplayMode, BOOLEAN Init);
   VOID (*VideoGetDisplaySize)(PULONG Width, PULONG Height, PULONG Depth);
   ULONG (*VideoGetBufferSize)(VOID);
   VOID (*VideoSetTextCursorPosition)(ULONG X, ULONG Y);
-  VOID (*VideoHideShowTextCursor)(BOOL Show);
+  VOID (*VideoHideShowTextCursor)(BOOLEAN Show);
   VOID (*VideoPutChar)(int Ch, UCHAR Attr, unsigned X, unsigned Y);
   VOID (*VideoCopyOffScreenBufferToVRAM)(PVOID Buffer);
-  BOOL (*VideoIsPaletteFixed)(VOID);
+  BOOLEAN (*VideoIsPaletteFixed)(VOID);
   VOID (*VideoSetPaletteColor)(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
   VOID (*VideoGetPaletteColor)(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
   VOID (*VideoSync)(VOID);
@@ -56,15 +56,15 @@ typedef struct tagMACHVTBL
 
   ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
-  BOOL (*DiskGetBootVolume)(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
-  BOOL (*DiskGetSystemVolume)(char *SystemPath, char *RemainingPath, PULONG Device, PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
-  BOOL (*DiskGetBootPath)(char *BootPath, unsigned Size);
+  BOOLEAN (*DiskGetBootVolume)(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
+  BOOLEAN (*DiskGetSystemVolume)(char *SystemPath, char *RemainingPath, PULONG Device, PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
+  BOOLEAN (*DiskGetBootPath)(char *BootPath, unsigned Size);
   VOID (*DiskGetBootDevice)(PULONG BootDevice);
-  BOOL (*DiskBootingFromFloppy)(VOID);
-  BOOL (*DiskNormalizeSystemPath)(char *SystemPath, unsigned Size);
-  BOOL (*DiskReadLogicalSectors)(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-  BOOL (*DiskGetPartitionEntry)(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-  BOOL (*DiskGetDriveGeometry)(ULONG DriveNumber, PGEOMETRY DriveGeometry);
+  BOOLEAN (*DiskBootingFromFloppy)(VOID);
+  BOOLEAN (*DiskNormalizeSystemPath)(char *SystemPath, unsigned Size);
+  BOOLEAN (*DiskReadLogicalSectors)(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+  BOOLEAN (*DiskGetPartitionEntry)(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+  BOOLEAN (*DiskGetDriveGeometry)(ULONG DriveNumber, PGEOMETRY DriveGeometry);
   ULONG (*DiskGetCacheableBlockCount)(ULONG DriveNumber);
 
   VOID (*RTCGetCurrentDateTime)(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
@@ -77,24 +77,24 @@ VOID MachInit(const char *CmdLine);
 extern MACHVTBL MachVtbl;
 
 VOID MachConsPutChar(int Ch);
-BOOL MachConsKbHit();
+BOOLEAN MachConsKbHit();
 int MachConsGetCh();
 VOID MachVideoClearScreen(UCHAR Attr);
-VIDEODISPLAYMODE MachVideoSetDisplayMode(char *DisplayMode, BOOL Init);
+VIDEODISPLAYMODE MachVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
 VOID MachVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG MachVideoGetBufferSize(VOID);
 VOID MachVideoSetTextCursorPosition(ULONG X, ULONG Y);
-VOID MachVideoHideShowTextCursor(BOOL Show);
+VOID MachVideoHideShowTextCursor(BOOLEAN Show);
 VOID MachVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);
 VOID MachVideoCopyOffScreenBufferToVRAM(PVOID Buffer);
-BOOL MachVideoIsPaletteFixed(VOID);
+BOOLEAN MachVideoIsPaletteFixed(VOID);
 VOID MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue);
 VOID MachVideoSync(VOID);
 VOID MachVideoPrepareForReactOS(VOID);
 ULONG MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
-BOOL MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
-BOOL
+BOOLEAN MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
+BOOLEAN
 MachDiskGetSystemVolume(char *SystemPath,
                         char *RemainingPath,
                         PULONG Device,
@@ -102,13 +102,13 @@ MachDiskGetSystemVolume(char *SystemPath,
                         PULONGLONG StartSector,
                         PULONGLONG SectorCount,
                         int *FsType);
-BOOL MachDiskGetBootPath(char *BootPath, unsigned Size);
+BOOLEAN MachDiskGetBootPath(char *BootPath, unsigned Size);
 VOID MachDiskGetBootDevice(PULONG BootDevice);
-BOOL MachDiskBootingFromFloppy();
-BOOL MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size);
-BOOL MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOL MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
+BOOLEAN MachDiskBootingFromFloppy();
+BOOLEAN MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size);
+BOOLEAN MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOLEAN MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG MachDiskGetCacheableBlockCount(ULONG DriveNumber);
 VOID MachRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
 VOID MachHwDetect(VOID);

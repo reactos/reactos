@@ -327,7 +327,7 @@ CmiCreateDefaultRootKeyCell (PKEY_CELL RootKeyCell, PCWSTR KeyName)
   ULONG NameSize;
   ULONG CellSize;
   ULONG i;
-  BOOL Packable = TRUE;
+  BOOLEAN Packable = TRUE;
 
   assert (RootKeyCell);
 
@@ -463,7 +463,7 @@ CmiCreateHive (PCWSTR KeyName)
 
 
 static VOID
-CmiCleanupHive(PREGISTRY_HIVE Hive, BOOL Release)
+CmiCleanupHive(PREGISTRY_HIVE Hive, BOOLEAN Release)
 {
   MmFreeMemory (Hive->FreeListOffset);
   MmFreeMemory (Hive->FreeList);
@@ -494,7 +494,7 @@ CmiGetBin (PREGISTRY_HIVE Hive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiMergeFree(PREGISTRY_HIVE RegistryHive,
 	     PCELL_HEADER FreeBlock,
 	     BLOCK_OFFSET FreeOffset)
@@ -584,11 +584,11 @@ CmiMergeFree(PREGISTRY_HIVE RegistryHive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiAddFree(PREGISTRY_HIVE RegistryHive,
 	   PCELL_HEADER FreeBlock,
 	   BLOCK_OFFSET FreeOffset,
-	   BOOL MergeFreeBlocks)
+	   BOOLEAN MergeFreeBlocks)
 {
   PCELL_HEADER *tmpList;
   BLOCK_OFFSET *tmpListOffset;
@@ -691,7 +691,7 @@ CmiAddFree(PREGISTRY_HIVE RegistryHive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiAddBin(PREGISTRY_HIVE RegistryHive,
 	  ULONG BlockCount,
 	  PVOID *NewBlock,
@@ -751,7 +751,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
 		 LONG CellSize,
 		 PVOID *Block,
@@ -848,14 +848,14 @@ CmiGetCell (PREGISTRY_HIVE Hive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiAllocateHashTableCell (PREGISTRY_HIVE Hive,
 			  PBLOCK_OFFSET HBOffset,
 			  ULONG SubKeyCount)
 {
   PHASH_TABLE_CELL HashCell;
   ULONG NewHashSize;
-  BOOL Status;
+  BOOLEAN Status;
 
   NewHashSize = sizeof(HASH_TABLE_CELL) +
 		(SubKeyCount * sizeof(HASH_RECORD));
@@ -875,7 +875,7 @@ CmiAllocateHashTableCell (PREGISTRY_HIVE Hive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiAddKeyToParentHashTable (PREGISTRY_HIVE Hive,
 			    BLOCK_OFFSET ParentKeyOffset,
 			    PKEY_CELL NewKeyCell,
@@ -916,14 +916,14 @@ CmiAddKeyToParentHashTable (PREGISTRY_HIVE Hive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiAllocateValueListCell (PREGISTRY_HIVE Hive,
 			  PBLOCK_OFFSET ValueListOffset,
 			  ULONG ValueCount)
 {
   PVALUE_LIST_CELL ValueListCell;
   ULONG ValueListSize;
-  BOOL Status;
+  BOOLEAN Status;
 
   ValueListSize = sizeof(VALUE_LIST_CELL) +
 		  (ValueCount * sizeof(BLOCK_OFFSET));
@@ -941,7 +941,7 @@ CmiAllocateValueListCell (PREGISTRY_HIVE Hive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiAllocateValueCell(PREGISTRY_HIVE Hive,
 		     PVALUE_CELL *ValueCell,
 		     BLOCK_OFFSET *ValueCellOffset,
@@ -949,7 +949,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE Hive,
 {
   PVALUE_CELL NewValueCell;
   ULONG NameSize;
-  BOOL Status;
+  BOOLEAN Status;
   BOOLEAN Packable = TRUE;
   ULONG i;
 
@@ -1003,7 +1003,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE Hive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiAddValueToKeyValueList(PREGISTRY_HIVE Hive,
 			  BLOCK_OFFSET KeyCellOffset,
 			  BLOCK_OFFSET ValueCellOffset)
@@ -1031,7 +1031,7 @@ CmiAddValueToKeyValueList(PREGISTRY_HIVE Hive,
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 CmiExportValue (PREGISTRY_HIVE Hive,
 		BLOCK_OFFSET KeyCellOffset,
 		FRLDRHKEY Key,
@@ -1106,7 +1106,7 @@ CmiExportValue (PREGISTRY_HIVE Hive,
 }
 
 
-static BOOL
+static BOOLEAN
 CmiExportSubKey (PREGISTRY_HIVE Hive,
 		 BLOCK_OFFSET ParentKeyOffset,
 		 FRLDRHKEY ParentKey,
@@ -1270,7 +1270,7 @@ CmiCalcHiveChecksum (PREGISTRY_HIVE Hive)
 }
 
 
-static BOOL
+static BOOLEAN
 CmiExportHive (PREGISTRY_HIVE Hive,
 	       PCWSTR KeyName)
 {
@@ -1365,7 +1365,7 @@ CmiExportHive (PREGISTRY_HIVE Hive,
 }
 
 
-static BOOL
+static BOOLEAN
 RegImportValue (PHBIN RootBin,
 		PVALUE_CELL ValueCell,
 		FRLDRHKEY Key)
@@ -1451,7 +1451,7 @@ RegImportValue (PHBIN RootBin,
 }
 
 
-static BOOL
+static BOOLEAN
 RegImportSubKey(PHBIN RootBin,
 		PKEY_CELL KeyCell,
 		FRLDRHKEY ParentKey)
@@ -1550,7 +1550,7 @@ RegImportSubKey(PHBIN RootBin,
 }
 
 
-BOOL
+BOOLEAN
 RegImportBinaryHive(PCHAR ChunkBase,
 		    ULONG ChunkSize)
 {
@@ -1627,7 +1627,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
 }
 
 
-BOOL
+BOOLEAN
 RegExportBinaryHive(PCWSTR KeyName,
 		    PCHAR ChunkBase,
 		    ULONG* ChunkSize)

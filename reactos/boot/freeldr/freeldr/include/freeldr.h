@@ -82,7 +82,7 @@
 
 #define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
 
-extern BOOL UserInterfaceUp;	/* Tells us if the user interface is displayed */
+extern BOOLEAN UserInterfaceUp;	/* Tells us if the user interface is displayed */
 
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);

@@ -66,7 +66,7 @@ PcConsPutChar(int Ch)
   Int386(0x10, &Regs, &Regs);
 }
 
-BOOL
+BOOLEAN
 PcConsKbHit(VOID)
 {
   REGS Regs;
@@ -91,7 +91,7 @@ int
 PcConsGetCh(void)
 {
   REGS Regs;
-  static BOOL ExtendedKey = FALSE;
+  static BOOLEAN ExtendedKey = FALSE;
   static char ExtendedScanCode = 0;
 
   /* If the last time we were called an

@@ -25,7 +25,7 @@
 
 BOOLEAN AcpiPresent = FALSE;
 
-static BOOL
+static BOOLEAN
 FindAcpiBios(VOID)
 {
   PUCHAR Ptr;

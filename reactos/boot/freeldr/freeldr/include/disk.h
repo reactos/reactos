@@ -106,10 +106,10 @@ typedef struct _MASTER_BOOT_RECORD
 ///////////////////////////////////////////////////////////////////////////////////////
 #ifdef __i386__
 
-BOOL	DiskResetController(ULONG DriveNumber);
-BOOL	DiskInt13ExtensionsSupported(ULONG DriveNumber);
+BOOLEAN	DiskResetController(ULONG DriveNumber);
+BOOLEAN	DiskInt13ExtensionsSupported(ULONG DriveNumber);
 //VOID	DiskStopFloppyMotor(VOID);
-BOOL	DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT BufferSize);
+BOOLEAN	DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT BufferSize);
 
 #endif // defined __i386__
 
@@ -118,11 +118,11 @@ BOOL	DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
 // FreeLoader Disk Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID	DiskReportError (BOOL bError);
+VOID	DiskReportError (BOOLEAN bError);
 VOID	DiskError(PCSTR ErrorString, ULONG ErrorCode);
 PCSTR	DiskGetErrorCodeString(ULONG ErrorCode);
-BOOL	DiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
-BOOL	DiskIsDriveRemovable(ULONG DriveNumber);
+BOOLEAN	DiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer); // Implemented in i386disk.c
+BOOLEAN	DiskIsDriveRemovable(ULONG DriveNumber);
 VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -130,10 +130,10 @@ VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
 // Fixed Disk Partition Management Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *ActivePartition);
-BOOL	DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL	DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL	DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
+BOOLEAN	DiskGetActivePartitionEntry(ULONG DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry, ULONG *ActivePartition);
+BOOLEAN	DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN	DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN	DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
 
 #endif  // defined __DISK_H

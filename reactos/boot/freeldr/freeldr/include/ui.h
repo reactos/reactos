@@ -43,12 +43,12 @@ extern	UCHAR	UiEditBoxBgColor;								// Edit box text background color
 
 extern	CHAR	UiTitleBoxTitleText[260];						// Title box's title text
 
-extern	BOOL	UserInterfaceUp;								// Tells us if the user interface is displayed
+extern	BOOLEAN	UserInterfaceUp;								// Tells us if the user interface is displayed
 
-extern	BOOL	UiUseSpecialEffects;							// Tells us if we should use fade effects
-extern BOOL UiCenterMenu;
-extern BOOL UiMenuBox;
-extern BOOL UiMinimal;
+extern	BOOLEAN	UiUseSpecialEffects;							// Tells us if we should use fade effects
+extern BOOLEAN UiCenterMenu;
+extern BOOLEAN UiMenuBox;
+extern BOOLEAN UiMinimal;
 extern CHAR UiTimeText[];
 
 extern	const CHAR	UiMonthNames[12][15];
@@ -58,13 +58,13 @@ extern	const CHAR	UiMonthNames[12][15];
 // User Interface Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
-BOOL	SetupUiInitialize(VOID);						// Initialize User-Interface
+BOOLEAN	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
+BOOLEAN	SetupUiInitialize(VOID);						// Initialize User-Interface
 VOID	UiUnInitialize(PCSTR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
 VOID	UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
-VOID	UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
+VOID	UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);	// Draws a box around the area specified
 VOID	UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);	// Draws text at coordinates specified
 VOID	UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
 VOID	UiDrawStatusText(PCSTR StatusText);					// Draws text at the very bottom line on the screen
@@ -76,7 +76,7 @@ VOID	UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);		
 VOID	UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	UiShowMessageBoxesInSection(PCSTR SectionName);		// Displays all the message boxes in a given section
 VOID	UiEscapeString(PCHAR String);							// Processes a string and changes all occurances of "\n" to '\n'
-BOOL	UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
+BOOLEAN	UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
 
 UCHAR	UiTextToColor(PCSTR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	UiTextToFillStyle(PCSTR FillStyleText);				// Converts the text fill into it's equivalent fill value
@@ -91,9 +91,9 @@ VOID	UiFadeOut(VOID);										// Fades the screen out
 // Menu Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-typedef BOOL	(*UiMenuKeyPressFilterCallback)(ULONG KeyPress);
+typedef BOOLEAN	(*UiMenuKeyPressFilterCallback)(ULONG KeyPress);
 
-BOOL	UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN	UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
 

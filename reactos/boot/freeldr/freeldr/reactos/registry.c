@@ -93,7 +93,7 @@ RegInitializeRegistry (VOID)
 
 
 LONG
-RegInitCurrentControlSet(BOOL LastKnownGood)
+RegInitCurrentControlSet(BOOLEAN LastKnownGood)
 {
   WCHAR ControlSetKeyName[80];
   FRLDRHKEY SelectKey;

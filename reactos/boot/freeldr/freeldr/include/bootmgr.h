@@ -23,7 +23,7 @@
 
 ULONG		GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG OperatingSystemCount);
 LONG		GetTimeOut(VOID);
-BOOL	MainBootMenuKeyPressFilter(ULONG KeyPress);
+BOOLEAN	MainBootMenuKeyPressFilter(ULONG KeyPress);
 
 
 #endif // #defined __BOOTMGR_H

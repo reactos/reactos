@@ -129,11 +129,11 @@ VOID	BootOldLinuxKernel(ULONG KernelSize);		// Implemented in linux.S
 
 VOID	LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description);
 
-BOOL	LinuxParseIniSection(PCSTR OperatingSystemName);
-BOOL	LinuxReadBootSector(PFILE LinuxKernelFile);
-BOOL	LinuxReadSetupSector(PFILE LinuxKernelFile);
-BOOL	LinuxReadKernel(PFILE LinuxKernelFile);
-BOOL	LinuxCheckKernelVersion(VOID);
-BOOL	LinuxReadInitrd(PFILE LinuxInitrdFile);
+BOOLEAN	LinuxParseIniSection(PCSTR OperatingSystemName);
+BOOLEAN	LinuxReadBootSector(PFILE LinuxKernelFile);
+BOOLEAN	LinuxReadSetupSector(PFILE LinuxKernelFile);
+BOOLEAN	LinuxReadKernel(PFILE LinuxKernelFile);
+BOOLEAN	LinuxCheckKernelVersion(VOID);
+BOOLEAN	LinuxReadInitrd(PFILE LinuxInitrdFile);
 
 #endif // defined __LINUX_H

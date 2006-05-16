@@ -80,7 +80,7 @@ static PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *
 }
 
 /* FIXME: Add support for attribute lists! */
-static BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, ULONG Type, const WCHAR *Name)
+static BOOLEAN NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, ULONG Type, const WCHAR *Name)
 {
     PNTFS_ATTR_RECORD AttrRecord;
     PNTFS_ATTR_RECORD AttrRecordEnd;
@@ -141,7 +141,7 @@ static BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRe
 }
 
 /* FIXME: Optimize for multisector reads. */
-static BOOL NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
+static BOOLEAN NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
 {
     USHORT ReadLength;
 
@@ -307,7 +307,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
     return AlreadyRead;
 }
 
-static BOOL NtfsFixupRecord(PNTFS_RECORD Record)
+static BOOLEAN NtfsFixupRecord(PNTFS_RECORD Record)
 {
     USHORT *USA;
     USHORT USANumber;
@@ -331,7 +331,7 @@ static BOOL NtfsFixupRecord(PNTFS_RECORD Record)
     return TRUE;
 }
 
-static BOOL NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
+static BOOLEAN NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
 {
     ULONGLONG BytesRead;
 
@@ -362,7 +362,7 @@ VOID NtfsPrintFile(PNTFS_INDEX_ENTRY IndexEntry)
 }
 #endif
 
-static BOOL NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
+static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
 {
     PWCHAR EntryFileName;
     UCHAR EntryFileNameLength;
@@ -395,7 +395,7 @@ static BOOL NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     return TRUE;
 }
 
-static BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
+static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
 {
     PNTFS_MFT_RECORD MftRecord;
     ULONG Magic;
@@ -556,7 +556,7 @@ static BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex
     return FALSE;
 }
 
-static BOOL NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
+static BOOLEAN NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
 {
     ULONG NumberOfPathParts;
     CHAR PathPart[261];
@@ -599,7 +599,7 @@ static BOOL NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATT
     return TRUE;
 }
 
-BOOL NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
+BOOLEAN NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
 {
     NtfsBootSector = (PNTFS_BOOTSECTOR)DISKREADBUFFER;
 
@@ -696,7 +696,7 @@ FILE* NtfsOpenFile(PCSTR FileName)
     return (FILE*)FileHandle;
 }
 
-BOOL NtfsReadFile(FILE *File, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+BOOLEAN NtfsReadFile(FILE *File, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
     PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
     ULONGLONG BytesRead64;

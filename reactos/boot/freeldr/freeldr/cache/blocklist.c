@@ -145,7 +145,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNu
 	return CacheBlock;
 }
 
-BOOL CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
+BOOLEAN CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
 {
 	PCACHE_BLOCK	CacheBlockToFree;
 

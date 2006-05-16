@@ -19,7 +19,7 @@
 
 #include <freeldr.h>
 
-BOOL InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer)
+BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer)
 {
 	ULONG		Idx;
 	ULONG		CurrentOperatingSystemIndex;
@@ -110,7 +110,7 @@ ULONG CountOperatingSystems(ULONG SectionId)
 	return OperatingSystemCount;
 }
 
-BOOL AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount)
+BOOLEAN AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount)
 {
 	ULONG		Idx;
 	PCHAR	*OperatingSystemSectionNames = NULL;
@@ -195,7 +195,7 @@ AllocateListMemoryFailed:
 	return FALSE;
 }
 
-BOOL RemoveQuotes(PCHAR QuotedString)
+BOOLEAN RemoveQuotes(PCHAR QuotedString)
 {
 	CHAR	TempString[200];
 

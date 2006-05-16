@@ -150,7 +150,7 @@ extern PAGE_DIRECTORY_X64 kpcr_pagetable_pae;
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 FrLdrStartup(ULONG Magic)
 {
     /* Disable Interrupts */
@@ -543,8 +543,8 @@ FrLdrSetupPageDirectory(VOID)
  *     None.
  *
  *--*/
-BOOL
-STDCALL
+BOOLEAN
+NTAPI
 FrLdrMapKernel(FILE *KernelImage)
 {
     PIMAGE_DOS_HEADER ImageHeader;
@@ -701,7 +701,7 @@ FrLdrMapKernel(FILE *KernelImage)
 }
 
 ULONG_PTR
-STDCALL
+NTAPI
 FrLdrLoadModule(FILE *ModuleImage,
                 LPCSTR ModuleName,
                 PULONG ModuleSize)
@@ -753,7 +753,7 @@ FrLdrLoadModule(FILE *ModuleImage,
 }
 
 ULONG_PTR
-STDCALL
+NTAPI
 FrLdrCreateModule(LPCSTR ModuleName)
 {
     PLOADER_MODULE ModuleData;
@@ -778,8 +778,8 @@ FrLdrCreateModule(LPCSTR ModuleName)
     return(ModuleData->ModStart);
 }
 
-BOOL
-STDCALL
+BOOLEAN
+NTAPI
 FrLdrCloseModule(ULONG_PTR ModuleBase,
                  ULONG ModuleSize)
 {

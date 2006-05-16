@@ -13,14 +13,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
-BOOL
-WINAPI
+BOOLEAN
+NTAPI
 TuiDisplayMenu(PCSTR MenuItemList[],
                ULONG MenuItemCount,
                ULONG DefaultMenuItem,
                LONG MenuTimeOut,
                ULONG* SelectedMenuItem,
-               BOOL CanEscape,
+               BOOLEAN CanEscape,
                UiMenuKeyPressFilterCallback KeyPressFilter)
 {
     TUI_MENU_INFO MenuInformation;
@@ -135,7 +135,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
 }
 
 VOID
-WINAPI
+NTAPI
 TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 {
     ULONG i;
@@ -195,7 +195,7 @@ TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 }
 
 VOID
-WINAPI
+NTAPI
 TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 {
     ULONG i;
@@ -262,7 +262,7 @@ TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 }
 
 VOID
-WINAPI
+NTAPI
 TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 {
     CHAR MenuLineText[80];
@@ -360,7 +360,7 @@ TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 }
 
 VOID
-WINAPI
+NTAPI
 TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo,
                 ULONG MenuItemNumber)
 {
@@ -440,7 +440,7 @@ TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo,
 }
 
 ULONG
-WINAPI
+NTAPI
 TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo,
                             UiMenuKeyPressFilterCallback KeyPressFilter)
 {

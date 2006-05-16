@@ -45,21 +45,21 @@ UCHAR	UiEditBoxBgColor			= COLOR_BLACK;			// Edit box text background color
 
 CHAR	UiTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
 
-BOOL	UserInterfaceUp				= FALSE;				// Tells us if the user interface is displayed
+BOOLEAN	UserInterfaceUp				= FALSE;				// Tells us if the user interface is displayed
 
 VIDEODISPLAYMODE	UiDisplayMode		= VideoTextMode;		// Tells us if we are in text or graphics mode
 
-BOOL	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
-BOOL	UiDrawTime					= TRUE;					// Tells us if we should draw the time
-BOOL	UiMinimal					= FALSE;				// Tells us if we should use a minimal console-like UI
-BOOL	UiCenterMenu				= TRUE;					// Tells us if we should use a centered or left-aligned menu
-BOOL	UiMenuBox					= TRUE;					// Tells us if we shuld draw a box around the menu
+BOOLEAN	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
+BOOLEAN	UiDrawTime					= TRUE;					// Tells us if we should draw the time
+BOOLEAN	UiMinimal					= FALSE;				// Tells us if we should use a minimal console-like UI
+BOOLEAN	UiCenterMenu				= TRUE;					// Tells us if we should use a centered or left-aligned menu
+BOOLEAN	UiMenuBox					= TRUE;					// Tells us if we shuld draw a box around the menu
 CHAR	UiTimeText[260] = "[Time Remaining: ] ";
 
 const CHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
 
-BOOL UiInitialize(BOOLEAN ShowGui)
+BOOLEAN UiInitialize(BOOLEAN ShowGui)
 {
 	ULONG	SectionId;
 	CHAR	DisplayModeText[260];
@@ -248,7 +248,7 @@ BOOL UiInitialize(BOOLEAN ShowGui)
 	return TRUE;
 }
 
-BOOL SetupUiInitialize(VOID)
+BOOLEAN SetupUiInitialize(VOID)
 {
 
 	CHAR	DisplayModeText[260];
@@ -340,7 +340,7 @@ VOID UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 	}
 }
 
-VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
+VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -652,7 +652,7 @@ VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
 	}
 }
 
-BOOL UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOLEAN UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{
@@ -692,7 +692,7 @@ VOID UiFadeOut(VOID)
 	}
 }
 
-BOOL UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
+BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	if (VideoTextMode == UiDisplayMode)
 	{

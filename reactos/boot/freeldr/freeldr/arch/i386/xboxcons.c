@@ -56,7 +56,7 @@ XboxConsPutChar(int c)
     }
 }
 
-BOOL
+BOOLEAN
 XboxConsKbHit(VOID)
 {
   /* No keyboard support yet */

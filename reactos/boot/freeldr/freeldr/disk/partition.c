@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL DiskGetActivePartitionEntry(ULONG DriveNumber,
+BOOLEAN DiskGetActivePartitionEntry(ULONG DriveNumber,
                                  PPARTITION_TABLE_ENTRY PartitionTableEntry,
                                  ULONG *ActivePartition)
 {
@@ -78,7 +78,7 @@ BOOL DiskGetActivePartitionEntry(ULONG DriveNumber,
 	return TRUE;
 }
 
-BOOL DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOLEAN DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
 	MASTER_BOOT_RECORD		MasterBootRecord;
 	PARTITION_TABLE_ENTRY	ExtendedPartitionTableEntry;
@@ -156,7 +156,7 @@ BOOL DiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_
 
 }
 
-BOOL DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
 	ULONG		Index;
 
@@ -177,7 +177,7 @@ BOOL DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION
 	return FALSE;
 }
 
-BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
 	ULONG		Index;
 
@@ -196,7 +196,7 @@ BOOL DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PP
 	return FALSE;
 }
 
-BOOL DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
+BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
 	char		ErrMsg[64];
 #ifdef DEBUG

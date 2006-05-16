@@ -22,7 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL	DriveMapInstalled = FALSE;	// Tells us if we have already installed our drive map int 13h handler code
+BOOLEAN	DriveMapInstalled = FALSE;	// Tells us if we have already installed our drive map int 13h handler code
 ULONG		OldInt13HandlerAddress = 0;	// Address of BIOS int 13h handler
 ULONG		DriveMapHandlerAddress = 0;	// Linear address of our drive map handler
 ULONG		DriveMapHandlerSegOff = 0;	// Segment:offset style address of our drive map handler
@@ -114,7 +114,7 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 	}
 }
 
-BOOL DriveMapIsValidDriveString(PCSTR DriveString)
+BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
 {
 	ULONG		Index;
 

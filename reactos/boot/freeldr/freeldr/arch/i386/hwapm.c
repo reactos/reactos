@@ -23,7 +23,7 @@
 #define NDEBUG
 #include <debug.h>
 
-static BOOL
+static BOOLEAN
 FindApmBios(VOID)
 {
   REGS  RegsIn;

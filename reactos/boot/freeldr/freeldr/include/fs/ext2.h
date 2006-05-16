@@ -666,32 +666,32 @@ typedef struct
 
 
 
-BOOL	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector);
+BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector);
 FILE*	Ext2OpenFile(PCSTR FileName);
-BOOL	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
-BOOL	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
-BOOL	Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
+BOOLEAN	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
+BOOLEAN	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
+BOOLEAN	Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
 ULONGLONG		Ext2GetFileSize(FILE *FileHandle);
 VOID	Ext2SetFilePointer(FILE *FileHandle, ULONGLONG NewFilePointer);
 ULONGLONG		Ext2GetFilePointer(FILE *FileHandle);
-BOOL	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
+BOOLEAN	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
 
-BOOL	Ext2ReadSuperBlock(VOID);
-BOOL	Ext2ReadGroupDescriptors(VOID);
-BOOL	Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer);
-BOOL	Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer);
-BOOL	Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
+BOOLEAN	Ext2ReadSuperBlock(VOID);
+BOOLEAN	Ext2ReadGroupDescriptors(VOID);
+BOOLEAN	Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer);
+BOOLEAN	Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer);
+BOOLEAN	Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
 ULONG		Ext2GetGroupDescBlockNumber(ULONG Group);
 ULONG		Ext2GetGroupDescOffsetInBlock(ULONG Group);
 ULONG		Ext2GetInodeGroupNumber(ULONG Inode);
 ULONG		Ext2GetInodeBlockNumber(ULONG Inode);
 ULONG		Ext2GetInodeOffsetInBlock(ULONG Inode);
-BOOL	Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer);
-BOOL	Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer);
+BOOLEAN	Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer);
+BOOLEAN	Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer);
 ULONG*	Ext2ReadBlockPointerList(PEXT2_INODE Inode);
 ULONGLONG		Ext2GetInodeFileSize(PEXT2_INODE Inode);
-BOOL	Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock);
-BOOL	Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock);
-BOOL	Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock);
+BOOLEAN	Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock);
+BOOLEAN	Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock);
+BOOLEAN	Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock);
 
 #endif // #defined __EXT2_H

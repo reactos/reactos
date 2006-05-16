@@ -214,7 +214,7 @@ LONG GetTimeOut(VOID)
 	return TimeOut;
 }
 
-BOOL MainBootMenuKeyPressFilter(ULONG KeyPress)
+BOOLEAN MainBootMenuKeyPressFilter(ULONG KeyPress)
 {
 	if (KeyPress == KEY_F8)
 	{

@@ -28,13 +28,13 @@
 // Textual User Interface Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	TuiInitialize(VOID);									// Initialize User-Interface
+BOOLEAN	TuiInitialize(VOID);									// Initialize User-Interface
 VOID	TuiUnInitialize(VOID);									// Un-initialize User-Interface
 
 VOID	TuiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	TuiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
 VOID	TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom);	// Draws a shadow on the bottom and right sides of the area specified
-VOID	TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr);	// Draws a box around the area specified
+VOID	TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr);	// Draws a box around the area specified
 VOID	TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr);	// Draws text at coordinates specified
 VOID	TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr);	// Draws centered text at the coordinates specified and clips the edges
 VOID	TuiDrawStatusText(PCSTR StatusText);					// Draws text at the very bottom line on the screen
@@ -45,7 +45,7 @@ VOID	TuiMessageBox(PCSTR MessageText);						// Displays a message box on the scr
 VOID	TuiMessageBoxCritical(PCSTR MessageText);				// Displays a message box on the screen with an ok button using no system resources
 VOID	TuiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	TuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
-BOOL	TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
+BOOLEAN	TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
 
 UCHAR	TuiTextToColor(PCSTR ColorText);						// Converts the text color into it's equivalent color value
 UCHAR	TuiTextToFillStyle(PCSTR FillStyleText);				// Converts the text fill into it's equivalent fill value
@@ -73,12 +73,12 @@ typedef struct
 
 } TUI_MENU_INFO, *PTUI_MENU_INFO;
 
-VOID	WINAPI TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo);
-VOID	WINAPI TuiDrawMenu(PTUI_MENU_INFO MenuInfo);
-VOID	WINAPI TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo);
-VOID	WINAPI TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
-ULONG	WINAPI TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
-BOOL	WINAPI TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOL CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+VOID	NTAPI TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo);
+VOID	NTAPI TuiDrawMenu(PTUI_MENU_INFO MenuInfo);
+VOID	NTAPI TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo);
+VOID	NTAPI TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
+ULONG	NTAPI TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN	NTAPI TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
 /*

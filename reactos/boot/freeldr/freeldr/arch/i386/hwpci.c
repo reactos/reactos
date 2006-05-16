@@ -105,7 +105,7 @@ GetPciIrqRoutingTable(VOID)
 }
 
 
-static BOOL
+static BOOLEAN
 FindPciBios(PCM_PCI_BUS_DATA BusData)
 {
   REGS  RegsIn;

@@ -33,15 +33,15 @@
 #define PFILE			FILE *
 
 VOID	FileSystemError(PCSTR ErrorString);
-BOOL	FsOpenBootVolume();
-BOOL	FsOpenSystemVolume(PCHAR SystemPath, PCHAR RemainingPath, PULONG BootDevice);
+BOOLEAN	FsOpenBootVolume();
+BOOLEAN	FsOpenSystemVolume(PCHAR SystemPath, PCHAR RemainingPath, PULONG BootDevice);
 PFILE	FsOpenFile(PCSTR FileName);
 VOID	FsCloseFile(PFILE FileHandle);
-BOOL	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+BOOLEAN	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		FsGetFileSize(PFILE FileHandle);
 VOID	FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
 ULONG		FsGetFilePointer(PFILE FileHandle);
-BOOL	FsIsEndOfFile(PFILE FileHandle);
+BOOLEAN	FsIsEndOfFile(PFILE FileHandle);
 ULONG		FsGetNumPathParts(PCSTR Path);
 VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 

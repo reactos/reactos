@@ -31,7 +31,7 @@ VOID GuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
 }
 
-VOID GuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
+VOID GuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr)
 {
 }
 

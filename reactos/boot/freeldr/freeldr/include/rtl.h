@@ -49,7 +49,7 @@ PLIST_ITEM	RtlListRemoveHead(PLIST_ITEM ListHead);								// Removes the entry a
 PLIST_ITEM	RtlListRemoveTail(PLIST_ITEM ListHead);								// Removes the entry at the tail of the list
 PLIST_ITEM	RtlListGetHead(PLIST_ITEM ListHead);								// Returns the entry at the head of the list
 PLIST_ITEM	RtlListGetTail(PLIST_ITEM ListHead);								// Returns the entry at the tail of the list
-BOOL		RtlListIsEmpty(PLIST_ITEM ListHead);								// Indicates whether a doubly linked list is empty
+BOOLEAN		RtlListIsEmpty(PLIST_ITEM ListHead);								// Indicates whether a doubly linked list is empty
 ULONG		RtlListCountEntries(PLIST_ITEM ListHead);							// Counts the entries in a doubly linked list
 PLIST_ITEM	RtlListGetPrevious(PLIST_ITEM ListEntry);							// Returns the previous item in the list
 PLIST_ITEM	RtlListGetNext(PLIST_ITEM ListEntry);								// Returns the next item in the list

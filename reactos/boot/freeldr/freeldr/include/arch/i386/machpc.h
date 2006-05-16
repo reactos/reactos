@@ -29,18 +29,18 @@
 VOID PcMachInit(const char *CmdLine);
 
 VOID PcConsPutChar(int Ch);
-BOOL PcConsKbHit();
+BOOLEAN PcConsKbHit();
 int PcConsGetCh();
 
 VOID PcVideoClearScreen(UCHAR Attr);
-VIDEODISPLAYMODE PcVideoSetDisplayMode(char *DisplayMode, BOOL Init);
+VIDEODISPLAYMODE PcVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
 VOID PcVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
 ULONG PcVideoGetBufferSize(VOID);
 VOID PcVideoSetTextCursorPosition(ULONG X, ULONG Y);
-VOID PcVideoHideShowTextCursor(BOOL Show);
+VOID PcVideoHideShowTextCursor(BOOLEAN Show);
 VOID PcVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);
 VOID PcVideoCopyOffScreenBufferToVRAM(PVOID Buffer);
-BOOL PcVideoIsPaletteFixed(VOID);
+BOOLEAN PcVideoIsPaletteFixed(VOID);
 VOID PcVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID PcVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue);
 VOID PcVideoSync(VOID);
@@ -48,9 +48,9 @@ VOID PcVideoPrepareForReactOS(VOID);
 
 ULONG PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
-BOOL PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOL PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
-BOOL PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
+BOOLEAN PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOLEAN PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOLEAN PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG PcDiskGetCacheableBlockCount(ULONG DriveNumber);
 
 VOID PcRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);

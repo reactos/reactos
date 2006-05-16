@@ -20,8 +20,8 @@
 #include <freeldr.h>
 
 PVOID	TextVideoBuffer = NULL;
-extern BOOL UiDrawTime;
-extern BOOL UiMinimal;
+extern BOOLEAN UiDrawTime;
+extern BOOLEAN UiMinimal;
 
 /*
  * printf() - prints formatted text to stdout
@@ -82,7 +82,7 @@ int printf(const char *format, ... )
 	return 0;
 }
 
-BOOL TuiInitialize(VOID)
+BOOLEAN TuiInitialize(VOID)
 {
 	MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_BLACK));
 	MachVideoHideShowTextCursor(FALSE);
@@ -300,7 +300,7 @@ VOID TuiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
  * DrawBox()
  * This function assumes coordinates are zero-based
  */
-VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOL Fill, BOOL Shadow, UCHAR Attr)
+VOID TuiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr)
 {
 	UCHAR	ULCorner, URCorner, LLCorner, LRCorner;
 
@@ -473,7 +473,7 @@ VOID TuiUpdateDateTime(VOID)
 	CHAR	DateString[40];
 	CHAR	TimeString[40];
 	CHAR	TempString[20];
-	BOOL	PMHour = FALSE;
+	BOOLEAN	PMHour = FALSE;
 
     /* Don't draw the time if this has been disabled */
     if (!UiDrawTime) return;
@@ -882,7 +882,7 @@ VOID TuiFadeOut(VOID)
 
 }
 
-BOOL TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
+BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	int		width = 8;
 	unsigned int	height = 1;
@@ -897,7 +897,7 @@ BOOL TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 	int		EditBoxCursorX;
 	unsigned int	EditBoxTextCount;
 	int		EditBoxTextDisplayIndex;
-	BOOL	ReturnCode;
+	BOOLEAN	ReturnCode;
 	PVOID	ScreenBuffer;
 
 	// Save the screen contents

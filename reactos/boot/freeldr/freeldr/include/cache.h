@@ -35,7 +35,7 @@ typedef struct
 	LIST_ITEM	ListEntry;					// Doubly linked list synchronization member
 
 	ULONG			BlockNumber;				// Track index for CHS, 64k block index for LBA
-	BOOL		LockedInCache;				// Indicates that this block is locked in cache memory
+	BOOLEAN		LockedInCache;				// Indicates that this block is locked in cache memory
 	ULONG			AccessCount;				// Access count for this block
 
 	PVOID		BlockData;					// Pointer to block data
@@ -66,7 +66,7 @@ typedef struct
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 extern	CACHE_DRIVE		CacheManagerDrive;
-extern	BOOL			CacheManagerInitialized;
+extern	BOOLEAN			CacheManagerInitialized;
 extern	ULONG				CacheBlockCount;
 extern	ULONG				CacheSizeLimit;
 extern	ULONG				CacheSizeCurrent;
@@ -79,16 +79,16 @@ extern	ULONG				CacheSizeCurrent;
 PCACHE_BLOCK	CacheInternalGetBlockPointer(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);				// Returns a pointer to a CACHE_BLOCK structure given a block number
 PCACHE_BLOCK	CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);					// Searches the block list for a particular block
 PCACHE_BLOCK	CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNumber);				// Adds a block to the cache's block list
-BOOL			CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive);									// Removes a block from the cache's block list & frees the memory
+BOOLEAN			CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive);									// Removes a block from the cache's block list & frees the memory
 VOID			CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive);							// Checks the cache size limits to see if we can add a new block, if not calls CacheInternalFreeBlock()
 VOID			CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive);								// Dumps the list of cached blocks to the debug output port
 VOID			CacheInternalOptimizeBlockList(PCACHE_DRIVE CacheDrive, PCACHE_BLOCK CacheBlock);	// Moves the specified block to the head of the list
 
 
-BOOL	CacheInitializeDrive(ULONG DriveNumber);
+BOOLEAN	CacheInitializeDrive(ULONG DriveNumber);
 VOID	CacheInvalidateCacheData(VOID);
-BOOL	CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount, PVOID Buffer);
-BOOL	CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount);
-BOOL	CacheReleaseMemory(ULONG MinimumAmountToRelease);
+BOOLEAN	CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount, PVOID Buffer);
+BOOLEAN	CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULONG SectorCount);
+BOOLEAN	CacheReleaseMemory(ULONG MinimumAmountToRelease);
 
 #endif // defined __CACHE_H

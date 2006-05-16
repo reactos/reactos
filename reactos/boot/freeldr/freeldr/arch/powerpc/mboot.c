@@ -89,7 +89,7 @@ ULONG_PTR KernelEntry;
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 FrLdrStartup(ULONG Magic)
 {   
 #if 0   
@@ -377,8 +377,8 @@ FrLdrSetupPageDirectory(VOID)
  *     None.
  *
  *--*/
-BOOL
-STDCALL
+BOOLEAN
+NTAPI
 FrLdrMapKernel(FILE *KernelImage)
 {
 #if 0
@@ -540,7 +540,7 @@ FrLdrMapKernel(FILE *KernelImage)
 }
 
 ULONG_PTR
-STDCALL
+NTAPI
 FrLdrLoadModule(FILE *ModuleImage, 
                 LPCSTR ModuleName, 
                 PULONG ModuleSize)
@@ -596,7 +596,7 @@ FrLdrLoadModule(FILE *ModuleImage,
 }
 
 ULONG_PTR
-STDCALL
+NTAPI
 FrLdrCreateModule(LPCSTR ModuleName)
 {
 #if 0
@@ -625,8 +625,8 @@ FrLdrCreateModule(LPCSTR ModuleName)
 #endif
 }
 
-BOOL
-STDCALL
+BOOLEAN
+NTAPI
 FrLdrCloseModule(ULONG_PTR ModuleBase, 
                  ULONG ModuleSize)
 {

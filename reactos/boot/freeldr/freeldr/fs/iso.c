@@ -30,7 +30,7 @@ static ULONG		IsoRootLength;		// Length of the root directory
 ULONG			IsoDriveNumber = 0;
 
 
-BOOL IsoOpenVolume(ULONG DriveNumber)
+BOOLEAN IsoOpenVolume(ULONG DriveNumber)
 {
 	PPVD Pvd = (PPVD)DISKREADBUFFER;
 
@@ -57,7 +57,7 @@ BOOL IsoOpenVolume(ULONG DriveNumber)
 }
 
 
-static BOOL IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	PDIR_RECORD	Record;
 	ULONG		Offset;
@@ -172,7 +172,7 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
  * with info describing the file, etc. returns true
  * if the file exists or false otherwise
  */
-static BOOL IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
 	UINT		i;
 	ULONG			NumberOfPathParts;
@@ -285,7 +285,7 @@ FILE* IsoOpenFile(PCSTR FileName)
  * Reads BytesToRead from open file and
  * returns the number of bytes read in BytesRead
  */
-BOOL IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+BOOLEAN IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
 	PISO_FILE_INFO	IsoFileInfo = (PISO_FILE_INFO)FileHandle;
 	ULONG		SectorNumber;

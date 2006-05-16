@@ -111,7 +111,7 @@ static ULONG ScreenWidth = 80;	                       /* Screen Width in charact
 static ULONG ScreenHeight = 25;                          /* Screen Height in characters */
 static ULONG BytesPerScanLine = 160;                     /* Number of bytes per scanline (delta) */
 static VIDEODISPLAYMODE DisplayMode = VideoTextMode;   /* Current display mode */
-static BOOL VesaVideoMode = FALSE;                     /* Are we using a VESA mode? */
+static BOOLEAN VesaVideoMode = FALSE;                     /* Are we using a VESA mode? */
 static SVGA_MODE_INFORMATION VesaVideoModeInformation; /* Only valid when in VESA mode */
 static ULONG CurrentMemoryBank = 0;                      /* Currently selected VESA bank */
 
@@ -437,7 +437,7 @@ PcVideoSetDisplayEnd(VOID)
   WRITE_PORT_UCHAR((PUCHAR)CRTC+1, 0xDF);
 }
 
-static BOOL
+static BOOLEAN
 PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInformation)
 {
   REGS Regs;
@@ -509,7 +509,7 @@ PcVideoVesaGetSVGAModeInformation(USHORT Mode, PSVGA_MODE_INFORMATION ModeInform
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetBiosVesaMode(USHORT Mode)
 {
   REGS Regs;
@@ -581,7 +581,7 @@ PcVideoSetBiosVesaMode(USHORT Mode)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetMode80x25(VOID)
 {
   PcVideoSetBiosMode(0x03);
@@ -591,7 +591,7 @@ PcVideoSetMode80x25(VOID)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetMode80x50_80x43(VOID)
 {
   if (VIDEOCARD_VGA == PcVideoDetectVideoCard())
@@ -622,7 +622,7 @@ PcVideoSetMode80x50_80x43(VOID)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetMode80x28(VOID)
 {
   /* FIXME: Is this VGA-only? */
@@ -635,7 +635,7 @@ PcVideoSetMode80x28(VOID)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetMode80x30(VOID)
 {
   /* FIXME: Is this VGA-only? */
@@ -647,7 +647,7 @@ PcVideoSetMode80x30(VOID)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetMode80x34(VOID)
 {
   /* FIXME: Is this VGA-only? */
@@ -662,7 +662,7 @@ PcVideoSetMode80x34(VOID)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetMode80x43(VOID)
 {
   /* FIXME: Is this VGA-only? */
@@ -678,7 +678,7 @@ PcVideoSetMode80x43(VOID)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetMode80x60(VOID)
 {
   /* FIXME: Is this VGA-only? */
@@ -695,7 +695,7 @@ PcVideoSetMode80x60(VOID)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 PcVideoSetMode(ULONG NewMode)
 {
   CurrentMemoryBank = 0;
@@ -804,7 +804,7 @@ PcVideoSetMode(ULONG NewMode)
 }
 
 static VOID
-PcVideoSetBlinkBit(BOOL Enable)
+PcVideoSetBlinkBit(BOOLEAN Enable)
 {
   REGS Regs;
 
@@ -867,7 +867,7 @@ PcVideoSetMemoryBank(USHORT BankNumber)
 }
 
 VIDEODISPLAYMODE
-PcVideoSetDisplayMode(char *DisplayModeName, BOOL Init)
+PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
 {
   ULONG VideoMode = VIDEOMODE_NORMAL_TEXT;
 
@@ -981,7 +981,7 @@ PcVideoSetTextCursorPosition(ULONG X, ULONG Y)
 }
 
 VOID
-PcVideoHideShowTextCursor(BOOL Show)
+PcVideoHideShowTextCursor(BOOLEAN Show)
 {
   if (Show)
     {
@@ -1058,7 +1058,7 @@ PcVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
   *BufPtr = ((USHORT) Attr << 8) | (Ch & 0xff);
 }
 
-BOOL
+BOOLEAN
 PcVideoIsPaletteFixed(VOID)
 {
   return FALSE;

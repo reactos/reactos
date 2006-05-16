@@ -33,8 +33,8 @@ memory_map_t			reactos_memory_map[32];		// Memory map
 
 static CHAR szLoadingMsg[] = "Loading ReactOS...";
 
-static BOOL
-STDCALL
+static BOOLEAN
+NTAPI
 FrLdrLoadKernel(PCHAR szFileName,
                 INT nPos)
 {
@@ -109,7 +109,7 @@ FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
     return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 LoadKernelSymbols(PCHAR szKernelName, int nPos)
 {
   static ROSSYM_CALLBACKS FreeldrCallbacks =
@@ -143,7 +143,7 @@ LoadKernelSymbols(PCHAR szKernelName, int nPos)
   return TRUE;
 }
 
-static BOOL
+static BOOLEAN
 FrLdrLoadNlsFile(PCSTR szFileName,
                  PCSTR szModuleName)
 {
@@ -182,7 +182,7 @@ FrLdrLoadNlsFile(PCSTR szFileName,
     return(TRUE);
 }
 
-static BOOL
+static BOOLEAN
 FrLdrLoadNlsFiles(PCHAR szSystemRoot,
                   PCHAR szErrorOut)
 {
@@ -294,7 +294,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     return(TRUE);
 }
 
-static BOOL
+static BOOLEAN
 FrLdrLoadDriver(PCHAR szFileName,
                 INT nPos)
 {

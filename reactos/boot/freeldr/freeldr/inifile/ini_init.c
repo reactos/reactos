@@ -19,12 +19,12 @@
 
 #include <freeldr.h>
 
-BOOL IniFileInitialize(VOID)
+BOOLEAN IniFileInitialize(VOID)
 {
 	PFILE	Freeldr_Ini;	// File handle for freeldr.ini
 	PCHAR	FreeLoaderIniFileData;
 	ULONG		FreeLoaderIniFileSize;
-	BOOL	Success;
+	BOOLEAN	Success;
 
 	// Open freeldr.ini
 	Freeldr_Ini = IniOpenIniFile();

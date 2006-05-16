@@ -41,13 +41,13 @@ VOID FileSystemError(PCSTR ErrorString)
 
 /*
  *
- * BOOL FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount, int Type);
+ * BOOLEAN FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount, int Type);
  *
  * This function is called to open a disk volume for file access.
  * It must be called before any of the file functions will work.
  *
  */
-static BOOL FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount, int Type)
+static BOOLEAN FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount, int Type)
 {
 	CHAR ErrorText[80];
 
@@ -73,12 +73,12 @@ static BOOL FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG Sec
 }
 /*
  *
- * BOOL FsOpenBootVolume()
+ * BOOLEAN FsOpenBootVolume()
  *
  * This function is called to open the boot disk volume for file access.
  * It must be called before any of the file functions will work.
  */
-BOOL FsOpenBootVolume()
+BOOLEAN FsOpenBootVolume()
 {
 	ULONG DriveNumber;
 	ULONGLONG StartSector;
@@ -94,7 +94,7 @@ BOOL FsOpenBootVolume()
 	return FsOpenVolume(DriveNumber, StartSector, SectorCount, Type);
 }
 
-BOOL FsOpenSystemVolume(char *SystemPath, char *RemainingPath, PULONG Device)
+BOOLEAN FsOpenSystemVolume(char *SystemPath, char *RemainingPath, PULONG Device)
 {
 	ULONG DriveNumber;
 	ULONGLONG StartSector;
@@ -177,10 +177,10 @@ VOID FsCloseFile(PFILE FileHandle)
  * ReadFile()
  * returns number of bytes read or EOF
  */
-BOOL FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
 	ULONGLONG		BytesReadBig;
-	BOOL	Success;
+	BOOLEAN	Success;
 
 	//
 	// Set the number of bytes read equal to zero
@@ -310,7 +310,7 @@ ULONG FsGetFilePointer(PFILE FileHandle)
 	return 0;
 }
 
-BOOL FsIsEndOfFile(PFILE FileHandle)
+BOOLEAN FsIsEndOfFile(PFILE FileHandle)
 {
 	if (FsGetFilePointer(FileHandle) >= FsGetFileSize(FileHandle))
 	{

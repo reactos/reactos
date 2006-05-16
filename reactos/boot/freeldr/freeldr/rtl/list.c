@@ -82,7 +82,7 @@ PLIST_ITEM RtlListGetTail(PLIST_ITEM ListHead)
 	return ListHead;
 }
 
-BOOL RtlListIsEmpty(PLIST_ITEM ListHead)
+BOOLEAN RtlListIsEmpty(PLIST_ITEM ListHead)
 {
 	if (ListHead == NULL)
 	{

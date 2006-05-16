@@ -1625,7 +1625,7 @@ enum reg_class
    standard Unix calling sequences.  If the option is not selected,
    the caller must always pop the args.
 
-   The attribute stdcall is equivalent to RTD on a per module basis.  */
+   The attribute NTAPI is equivalent to RTD on a per module basis.  */
 
 #define RETURN_POPS_ARGS(FUNDECL, FUNTYPE, SIZE) \
   ix86_return_pops_args ((FUNDECL), (FUNTYPE), (SIZE))

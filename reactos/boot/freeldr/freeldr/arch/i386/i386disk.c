@@ -28,7 +28,7 @@
 
 #ifdef __i386__
 
-BOOL DiskResetController(ULONG DriveNumber)
+BOOLEAN DiskResetController(ULONG DriveNumber)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -51,7 +51,7 @@ BOOL DiskResetController(ULONG DriveNumber)
 	return INT386_SUCCESS(RegsOut);
 }
 
-BOOL DiskInt13ExtensionsSupported(ULONG DriveNumber)
+BOOLEAN DiskInt13ExtensionsSupported(ULONG DriveNumber)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -129,7 +129,7 @@ VOID DiskStopFloppyMotor(VOID)
 	WRITE_PORT_UCHAR((PUCHAR)0x3F2, 0);
 }
 
-BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT BufferSize)
+BOOLEAN DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT BufferSize)
 {
 	REGS	RegsIn;
 	REGS	RegsOut;
@@ -200,7 +200,7 @@ BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
 	return TRUE;
 }
 
-BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
+BOOLEAN i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
 {
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	UCHAR			VolumeType;
@@ -318,7 +318,7 @@ i386DiskGetBootDevice(PULONG BootDevice)
   ((char *)BootDevice)[1] = (char)i386BootPartition;
 }
 
-BOOL
+BOOLEAN
 i386DiskBootingFromFloppy(VOID)
 {
   return i386BootDrive < 0x80;
@@ -338,7 +338,7 @@ i386DiskBootingFromFloppy(VOID)
     ((P) == PARTITION_EXTENDED         || \
      (P) == PARTITION_XINT13_EXTENDED)
 
-BOOL i386DiskGetSystemVolume(char *SystemPath,
+BOOLEAN i386DiskGetSystemVolume(char *SystemPath,
                              char *RemainingPath,
                              PULONG Device,
                              PULONG DriveNumber,
@@ -445,7 +445,7 @@ BOOL i386DiskGetSystemVolume(char *SystemPath,
 	return FALSE;
 }
 
-BOOL
+BOOLEAN
 i386DiskGetBootPath(char *BootPath, unsigned Size)
 {
 	static char Path[] = "multi(0)disk(0)";
@@ -463,7 +463,7 @@ i386DiskGetBootPath(char *BootPath, unsigned Size)
 	return TRUE;
 }
 
-BOOL
+BOOLEAN
 i386DiskNormalizeSystemPath(char *SystemPath, unsigned Size)
 {
 	CHAR BootPath[256];
