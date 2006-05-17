@@ -23,9 +23,7 @@
 NTHALAPI
 VOID
 NTAPI
-HalReleaseDisplayOwnership(
-    VOID
-);
+HalReleaseDisplayOwnership(VOID);
 
 /* GLOBALS *******************************************************************/
 
@@ -41,31 +39,31 @@ NTSTATUS
 STATIC
 InbvCheckBootVid(VOID)
 {
-  IO_STATUS_BLOCK Iosb;
+    IO_STATUS_BLOCK Iosb;
 
-  if (BootVidDevice == NULL)
+    if (BootVidDevice == NULL)
     {
-      NTSTATUS Status;
-      OBJECT_ATTRIBUTES ObjectAttributes;
-      UNICODE_STRING BootVidName = RTL_CONSTANT_STRING(L"\\Device\\BootVid");
+        NTSTATUS Status;
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        UNICODE_STRING BootVidName = RTL_CONSTANT_STRING(L"\\Device\\BootVid");
 
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &BootVidName,
-				 0,
-				 NULL,
-				 NULL);
-      Status = ZwOpenFile(&BootVidDevice,
-			  FILE_ALL_ACCESS,
-			  &ObjectAttributes,
-			  &Iosb,
-			  0,
-			  0);
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+        InitializeObjectAttributes(&ObjectAttributes,
+            &BootVidName,
+            0,
+            NULL,
+            NULL);
+        Status = ZwOpenFile(&BootVidDevice,
+            FILE_ALL_ACCESS,
+            &ObjectAttributes,
+            &Iosb,
+            0,
+            0);
+        if (!NT_SUCCESS(Status))
+        {
+            return(Status);
+        }
     }
-  return(STATUS_SUCCESS);
+    return(STATUS_SUCCESS);
 }
 
 
@@ -79,7 +77,7 @@ BOOLEAN
 STDCALL
 InbvCheckDisplayOwnership(VOID)
 {
-  return FALSE;
+    return FALSE;
 }
 
 BOOLEAN
@@ -90,82 +88,84 @@ InbvDisplayString(IN PCHAR String)
      * vidDisplayString(String);
      * so instead, we'll fall-back to HAL
      */
-     HalDisplayString(String);
-     
-     /* Call Headless (We don't support headless for now) 
-     HeadlessDispatch(DISPLAY_STRING);
-     */
-     
-     /* Return success */
-     return TRUE;
+    HalDisplayString(String);
+
+    /* Call Headless (We don't support headless for now) 
+    HeadlessDispatch(DISPLAY_STRING);
+    */
+
+    /* Return success */
+    return TRUE;
 }
 
 BOOLEAN
 STDCALL
-InbvResetDisplayParameters(ULONG SizeX, ULONG SizeY)
+InbvResetDisplayParameters(ULONG SizeX,
+                           ULONG SizeY)
 {
-  return(InbvResetDisplay());
+    return(InbvResetDisplay());
 }
 
 
 VOID
-STDCALL INIT_FUNCTION
+STDCALL
+INIT_FUNCTION
 InbvEnableBootDriver(IN BOOLEAN Enable)
 {
-  NTSTATUS Status;
-  IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK Iosb;
 
-  Status = InbvCheckBootVid();
-  if (!NT_SUCCESS(Status))
+    Status = InbvCheckBootVid();
+    if (!NT_SUCCESS(Status))
     {
-      return;
+        return;
     }
 
-  if (Enable)
+    if (Enable)
     {
-      /* Notify the hal we will acquire the display. */
-      HalAcquireDisplayOwnership(InbvResetDisplayParameters);
+        /* Notify the hal we will acquire the display. */
+        HalAcquireDisplayOwnership(InbvResetDisplayParameters);
 
-      Status = ZwDeviceIoControlFile(BootVidDevice,
-				     NULL,
-				     NULL,
-				     NULL,
-				     &Iosb,
-				     IOCTL_BOOTVID_INITIALIZE,
-				     NULL,
-				     0,
-				     &BootVidFunctionTable,
-				     sizeof(BootVidFunctionTable));
-      if (!NT_SUCCESS(Status))
-	{
-	  KEBUGCHECK(0);
-	}
-      BootVidDriverInstalled = TRUE;
-      CHECKPOINT;
+        Status = ZwDeviceIoControlFile(BootVidDevice,
+            NULL,
+            NULL,
+            NULL,
+            &Iosb,
+            IOCTL_BOOTVID_INITIALIZE,
+            NULL,
+            0,
+            &BootVidFunctionTable,
+            sizeof(BootVidFunctionTable));
+        if (!NT_SUCCESS(Status))
+        {
+            KEBUGCHECK(0);
+        }
+        BootVidDriverInstalled = TRUE;
+        CHECKPOINT;
     }
-  else
+    else
     {
-      Status = ZwDeviceIoControlFile(BootVidDevice,
-				     NULL,
-				     NULL,
-				     NULL,
-				     &Iosb,
-				     IOCTL_BOOTVID_CLEANUP,
-				     NULL,
-				     0,
-				     NULL,
-				     0);
-      if (!NT_SUCCESS(Status))
-	{
-	  KEBUGCHECK(0);
-	}
-      BootVidDriverInstalled = FALSE;
-      /* Notify the hal we have released the display. */
-      HalReleaseDisplayOwnership();
+        Status = ZwDeviceIoControlFile(BootVidDevice,
+            NULL,
+            NULL,
+            NULL,
+            &Iosb,
+            IOCTL_BOOTVID_CLEANUP,
+            NULL,
+            0,
+            NULL,
+            0);
+        if (!NT_SUCCESS(Status))
+        {
+            KEBUGCHECK(0);
+        }
+        BootVidDriverInstalled = FALSE;
+        /* Notify the hal we have released the display. */
+        HalReleaseDisplayOwnership();
     }
 
-  ZwClose(BootVidDevice);
-  BootVidDevice = NULL;
+    ZwClose(BootVidDevice);
+    BootVidDevice = NULL;
 }
 
 
@@ -173,7 +173,7 @@ BOOLEAN
 STDCALL
 InbvEnableDisplayString(IN BOOLEAN Enable)
 {
-  return FALSE;
+    return FALSE;
 }
 
 
@@ -188,7 +188,7 @@ BOOLEAN
 STDCALL
 InbvIsBootDriverInstalled(VOID)
 {
-  return(BootVidDriverInstalled);
+    return(BootVidDriverInstalled);
 }
 
 
@@ -203,20 +203,20 @@ BOOLEAN
 STDCALL
 InbvResetDisplay(VOID)
 {
-  if (!BootVidDriverInstalled)
+    if (!BootVidDriverInstalled)
     {
-      return(FALSE);
+        return(FALSE);
     }
-  return(BootVidFunctionTable.ResetDisplay());
+    return(BootVidFunctionTable.ResetDisplay());
 }
 
 
 VOID
 STDCALL
 InbvSetScrollRegion(IN ULONG Left,
-  IN ULONG Top,
-  IN ULONG Width,
-  IN ULONG Height)
+                    IN ULONG Top,
+                    IN ULONG Width,
+                    IN ULONG Height)
 {
 }
 
@@ -231,10 +231,10 @@ InbvSetTextColor(IN ULONG Color)
 VOID
 STDCALL
 InbvSolidColorFill(IN ULONG Left,
-  IN ULONG Top,
-  IN ULONG Width,
-  IN ULONG Height,
-  IN ULONG Color)
+                   IN ULONG Top,
+                   IN ULONG Width,
+                   IN ULONG Height,
+                   IN ULONG Color)
 {
 }
 
@@ -242,11 +242,11 @@ NTSTATUS
 STDCALL
 NtDisplayString(IN PUNICODE_STRING DisplayString)
 {
-  OEM_STRING OemString;
+    OEM_STRING OemString;
 
-  RtlUnicodeStringToOemString(&OemString, DisplayString, TRUE);
-  HalDisplayString(OemString.Buffer);
-  RtlFreeOemString(&OemString);
+    RtlUnicodeStringToOemString(&OemString, DisplayString, TRUE);
+    HalDisplayString(OemString.Buffer);
+    RtlFreeOemString(&OemString);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
