@@ -171,6 +171,19 @@ PFILE FsOpenFile(PCSTR FileName)
 
 VOID FsCloseFile(PFILE FileHandle)
 {
+	switch (FsType)
+	{
+	case FS_FAT:
+	case FS_ISO9660:
+	case FS_EXT2:
+		break;
+	case FS_NTFS:
+		NtfsCloseFile(FileHandle);
+		break;
+	default:
+		FileSystemError("Error: Unknown filesystem.");
+		break;
+	}
 }
 
 /*
