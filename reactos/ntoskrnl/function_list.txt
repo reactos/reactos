@@ -51,24 +51,26 @@ CcSetReadAheadGranularity => STUB
 
 ntoskrnl/cm/ntfunc.c
 
-NtNotifyChangeKey
-NtSaveKeyEx
+NtNotifyChangeKey => STUB
+NtSaveKeyEx => STUB
 
 ntoskrnl/dbgk/dbgkutil.c
 
-DbgkCreateThread
+DbgkCreateThread => Not my code
 
 ntoskrnl/dbgk/debug.c
 
-NtCreateDebugObject
-NtWaitForDebugEvent
-NtDebugContinue
-NtDebugActiveProcess
-NtRemoveProcessDebug
-NtSetInformationDebugObject
+NtCreateDebugObject => Clean/trivial implementation based on the object's structure. I merely create it
+                       and then initailize all its memembrs.
+NtWaitForDebugEvent => STUB
+NtDebugContinue => STUB
+NtDebugActiveProcess => STUB
+NtRemoveProcessDebug => STUB
+NtSetInformationDebugObject => STUB
 
 ntoskrnl/ex/lookas.c
 
+File is clean. I merely rewrote existing versions based on a GPLed IBM driver I found on google, OSR documentation and some DDK sample code. The implementation is trivial and only calls caller-defined functions which are the ones doing the work.
 ExpInitLookasideLists
 ExiAllocateFromPagedLookasideList
 ExiFreeToPagedLookasideList
@@ -99,6 +101,7 @@ ExQueueWorkItem
 
 ntoskrnl/ex/init.c
 
+File is clean. Most of these are ReactOS-internal and specific to our booting cycle, which is entirely incompatible with Windows and broken beyond explenation.
 ExpDisplayNotice
 ExpLoadInitialProcess
 ExInit2
@@ -121,11 +124,13 @@ NtReleaseMutant
 
 ntoskrnl/ex/win32k.c
 
+I only changed the functions to call Win32K instead of having the code in ntoskrnl. It was a cut/paste job.
 ExpWinStaObjectOpen
 ExpWin32kInit
 
 ntoskrnl/ex/dbgctrl.c
 
+Modified the function slightly for compatibility with some keys, still has nothing to do with Windows'
 NtSystemDebugControl
 
 ntoskrnl/ex/rundown.c
@@ -166,12 +171,12 @@ NtReleaseSemaphore
 
 ntoskrnl/ex/sysinfo.c
 
-ExEnumHandleTable
-ExGetCurrentProcessorCpuUsage
-ExVerifySuite
-QSI_DEF
-QSI_DEF
-SSI_DEF
+ExEnumHandleTable => STUB
+ExGetCurrentProcessorCpuUsage => Written by Thomas. My version was broken.
+ExVerifySuite => Trivial implementation
+QSI_DEF => Not my code
+QSI_DEF => Not my code
+SSI_DEF => Not my code
 
 ntoskrnl/ex/resource.c
 
@@ -207,6 +212,7 @@ ExReleaseResourceAndLeaveCriticalRegion
 
 ntoskrnl/ex/time.c
 
+As far as I know, all I did were simple formatting/logic changes. I have never reversed windows time functions and know nothing abou them.
 ExpInitTimeZoneInfo
 ExpSetTimeZoneInformation
 NtSetSystemTime
@@ -223,6 +229,7 @@ NtQueryIntervalProfile
 
 ntoskrnl/ex/pushlock.c
 
+Parts of my pushlock implementation may be considered dirty, although most of the code was developed cleanly with some help from Thomas (who also had his own implementation half-way done/in mind), as well as with documentation from Dave Probert in Windows Internals II. Thomas should go over these and fix anything up.
 ExpInitializePushLocks
 ExfWakePushLock
 ExpOptimizePushLockList
@@ -238,6 +245,7 @@ ExfUnblockPushLock
 
 ntoskrnl/ex/error.c
 
+I just re-orgznied the *harderror functions. The SEH filter is a trivial/well-known return of a single value, and __purecall is a stub.
 ExpRaiseHardError
 ExSystemExceptionFilter
 ExRaiseHardError
@@ -259,6 +267,7 @@ NtSetTimer
 
 ntoskrnl/ex/fmutex.c
 
+Fixed to work as documented in DDK, also based on patch by Filip Navara. This isn't reversed, because Windows uses an entirely different bit-based algorithm.
 ExEnterCriticalRegionAndAcquireFastMutexUnsafe
 ExReleaseFastMutexUnsafeAndLeaveCriticalRegion
 ExAcquireFastMutex
@@ -269,23 +278,25 @@ ExTryToAcquireFastMutex
 
 ntoskrnl/ex/zone.c
 
+I merely cleaned up David's code, using clean development. I'm not even sure if the Zone functions are still in Windows.
 ExExtendZone
 ExInterlockedExtendZone
 ExInitializeZone
 
 ntoskrnl/ex/uuid.c
 
-ExUuidCreate
+ExUuidCreate => STUB
 
 ntoskrnl/fs/util.c
 
-RtlpInitializeResources
-FsRtlIsTotalDeviceFailure
-FsRtlAllocateResource
-FsRtlBalanceReads
+RtlpInitializeResources => Trivial implementation which only allocates the resource buffer.
+FsRtlIsTotalDeviceFailure => Based off existing code, clean.
+FsRtlAllocateResource => trivial 1-line implementation.
+FsRtlBalanceReads => Trivial implementation which only sends an IOCTL to the device and waits for the result.
 
 ntoskrnl/fs/filelock.c
 
+Trivial implementations based on OSR article. There merely call a callback and acquire or free a resource.
 FsRtlAcquireFileExclusive
 FsRtlReleaseFile
 
@@ -319,6 +330,7 @@ FsRtlIsHpfsDbcsLegal
 
 ntoskrnl/fs/mcb.c
 
+All are either stubs, or me changing the non-large functions to call the large ones. I know nothing about MCBs.
 FsRtlGetNextMcbEntry
 FsRtlLookupLastLargeMcbEntryAndIndex
 FsRtlLookupPerStreamContextInternal
@@ -330,12 +342,14 @@ FsRtlResetLargeMcb
 
 ntoskrnl/fs/notify.c
 
+All are stubs.
 FsRtlNotifyFilterChangeDirectory
 FsRtlNotifyFilterReportChange
 FsRtlRegisterFileSystemFilterCallbacks
 
 ntoskrnl/fs/context.c
 
+All are stubs.
 FsRtlInsertPerStreamContext
 FsRtlRemovePerStreamContext
 FsRtlInsertPerFileObjectContext
@@ -344,11 +358,13 @@ FsRtlTeardownPerStreamContexts
 
 ntoskrnl/inbv/inbv.c
 
+Only changed function logic. No code added.
 InbvDisplayString
 NtDisplayString
 
 ntoskrnl/kd/kdinit.c
 
+Not Windows functions, fully clean and self-developed.
 KdpGetWrapperDebugMode
 KdpGetDebugMode
 KdpCallInitRoutine
@@ -356,6 +372,7 @@ KdInitSystem
 
 ntoskrnl/kd/kdio.c
 
+Not Windows functions, fully clean and self-developed.
 KdpPrintToLogInternal
 KdpPrintToLog
 KdpInitDebugLog
@@ -368,6 +385,7 @@ KdpPrintString
 
 ntoskrnl/kd/kdmain.c
 
+Not Windows functions, fully clean and self-developed (except some 1-liner stubs)
 KdpServiceDispatcher
 KdpEnterDebuggerException
 KdDisableDebugger
@@ -380,11 +398,13 @@ NtSetDebugFilterState
 
 ntoskrnl/kd/wrappers/bochs.c
 
+Not Windows functions, fully clean and self-developed.
 KdpBochsDebugPrint
 KdpBochsInit
 
 ntoskrnl/kd/wrappers/gdbstub.c
 
+Not Windows functions, fully clean and self-developed.
 GdbPutChar
 GdbGetChar
 GspGetPacket
@@ -407,10 +427,12 @@ KdpGdbStubInit
 
 ntoskrnl/kdbg/kdb.c
 
+Not Windows functions, fully clean and self-developed.
 KdbpGetCommandLineSettings
 
 ntoskrnl/kdbg/kdb_symbols.c
 
+Not Windows functions, fully clean and self-developed.
 KdbSymLoadDriverSymbols
 KdbSymUnloadDriverSymbols
 
@@ -981,6 +1003,7 @@ PspDumpThreads
 
 ntoskrnl/rtl/libsupp.c
 
+All these are ReactOS-Only for /lib compatibility.
 RtlpCheckForActiveDebugger
 RtlpSetInDbgPrint
 RtlAcquirePebLock
@@ -996,15 +1019,20 @@ DebugPrint
 
 ntoskrnl/se/semgr.c
 
+I only moved some Ob code into the default method, and cleaned up initailization of the exports.
 SepInitExports
 SeDefaultObjectMethod
 SeAssignSecurityEx
 
 ntoskrnl/se/access.c
 
+Implemented based on a clean patch.
 SeCreateAccessState
 SeDeleteAccessState
 SeSetAccessStateGenericMapping
+
+As far as I know, all these are stubs or maybe me fixing a bug. I know
+absolutely nothign about Se, nor have ever reversed it in my life.
 
 ntoskrnl/se/sd.c
 
