@@ -2,7 +2,7 @@
 #define __CPL_RESOURCE_H
 
 
-#define IDI_CPLICON	1
+#define IDI_CPLICON	4379
 
 #define IDD_HARDWARE	100
 

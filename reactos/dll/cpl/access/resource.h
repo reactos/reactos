@@ -10,7 +10,7 @@
 #define ICONSIZE        16
 
 /* ids */
-#define IDI_CPLACCESS		100
+#define IDI_CPLACCESS		110
 
 #define IDD_PROPPAGEKEYBOARD	100
 #define IDD_PROPPAGESOUND	101

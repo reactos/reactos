@@ -14,7 +14,8 @@
 #define ICONSIZE            16
 
 /* ids */
-#define IDC_DESK_ICON                   1
+#define IDC_DESK_ICON                   40
+#define IDC_DESK_ICON2                  100 // Needed for theme compatability with Windows.
 
 #define IDC_STATIC                      -1
 

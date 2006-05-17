@@ -11,6 +11,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include <reactos/version.rc>
 
 IDC_DESK_ICON ICON "resources/applet.ico"
+IDC_DESK_ICON2 ICON "resources/applet.ico"
 IDC_MONITOR BITMAP "resources/monitor.bmp"
 
 #include "en.rc"

@@ -2,7 +2,7 @@
 #define __CPL_RESOURCE_H
 
 
-#define IDC_CPLICON		1
+#define IDC_CPLICON		200
 #define IDC_FLAGS		2
 #define IDC_ICON1		3
 

@@ -2,8 +2,8 @@
 #define __CPL_RESOURCE_H
 
 
-#define IDC_CPLICON_1	1
-#define IDC_CPLICON_2	2
+#define IDC_CPLICON_1	100
+#define IDC_CPLICON_2	200
 
 #define IDD_PAGE_BUTTON				101
 #define IDD_PAGE_POINTER			102
