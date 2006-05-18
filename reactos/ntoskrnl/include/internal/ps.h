@@ -200,9 +200,6 @@ typedef struct _ROS_EPROCESS
     UCHAR PriorityClass;
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
-    KEVENT LockEvent;
-    ULONG LockCount;
-    struct _KTHREAD *LockOwner;
     MADDRESS_SPACE AddressSpace;
 } ROS_EPROCESS, *PROS_EPROCESS;
 #include <poppack.h>

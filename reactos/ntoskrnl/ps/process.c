@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#define LockEvent Spare0[0]
+#define LockCount Spare0[1]
+#define LockOwner Spare0[2]
+
 /* GLOBALS ******************************************************************/
 
 PEPROCESS PsInitialSystemProcess = NULL;
@@ -52,7 +56,7 @@ PsLockProcess(PROS_EPROCESS Process, BOOLEAN Timeout)
       /* we got the lock or already locked it */
       if(InterlockedIncrementUL(&Process->LockCount) == 1)
       {
-        KeClearEvent(&Process->LockEvent);
+        KeClearEvent(Process->LockEvent);
       }
 
       return STATUS_SUCCESS;
@@ -61,7 +65,7 @@ PsLockProcess(PROS_EPROCESS Process, BOOLEAN Timeout)
     {
       if(++Attempts > 2)
       {
-        Status = KeWaitForSingleObject(&Process->LockEvent,
+        Status = KeWaitForSingleObject(Process->LockEvent,
                                        Executive,
                                        KernelMode,
                                        FALSE,
@@ -99,7 +103,7 @@ PsUnlockProcess(PROS_EPROCESS Process)
   if(InterlockedDecrementUL(&Process->LockCount) == 0)
   {
     (void)InterlockedExchangePointer(&Process->LockOwner, NULL);
-    KeSetEvent(&Process->LockEvent, IO_NO_INCREMENT, FALSE);
+    KeSetEvent(Process->LockEvent, IO_NO_INCREMENT, FALSE);
   }
 
   KeLeaveCriticalRegion();
@@ -325,7 +329,10 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Setup the Lock Event */
     DPRINT("Initialzing Process Lock\n");
-    KeInitializeEvent(&((PROS_EPROCESS)Process)->LockEvent, SynchronizationEvent, FALSE);
+    ((PROS_EPROCESS)Process)->LockEvent = ExAllocatePoolWithTag(PagedPool,
+                                                                sizeof(KEVENT),
+                                                                TAG('P', 's', 'L', 'k'));
+    KeInitializeEvent(((PROS_EPROCESS)Process)->LockEvent, SynchronizationEvent, FALSE);
 
     /* Setup the Thread List Head */
     DPRINT("Initialzing Process ThreadListHead\n");

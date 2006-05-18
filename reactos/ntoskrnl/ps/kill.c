@@ -14,6 +14,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#define LockEvent Spare0[0]
+#define LockCount Spare0[1]
+#define LockOwner Spare0[2]
+
+
 /* GLOBALS *******************************************************************/
 
 PETHREAD PspReaperList = NULL;
@@ -158,6 +163,9 @@ PspDeleteProcess(PVOID ObjectBody)
     {
         ExDestroyHandle(PspCidTable, Process->UniqueProcessId);
     }
+
+    /* Delete the process lock */
+    ExFreePool(((PROS_EPROCESS)Process)->LockEvent);
 
     /* KDB hook */
     KDB_DELETEPROCESS_HOOK(Process);

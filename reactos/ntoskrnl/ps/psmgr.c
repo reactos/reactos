@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#define LockEvent Spare0[0]
+#define LockCount Spare0[1]
+#define LockOwner Spare0[2]
+
 extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 
@@ -253,7 +257,9 @@ PsInitProcessManagment(VOID)
    MmInitializeAddressSpace((PROS_EPROCESS)PsInitialSystemProcess,
 			    &((PROS_EPROCESS)PsInitialSystemProcess)->AddressSpace);
 
-   KeInitializeEvent(&((PROS_EPROCESS)PsInitialSystemProcess)->LockEvent, SynchronizationEvent, FALSE);
+   ((PROS_EPROCESS)PsInitialSystemProcess)->LockEvent = 
+       ExAllocatePoolWithTag(PagedPool, sizeof(KEVENT), TAG('P', 's', 'L', 'k'));
+   KeInitializeEvent(((PROS_EPROCESS)PsInitialSystemProcess)->LockEvent, SynchronizationEvent, FALSE);
 
 #if defined(__GNUC__)
    KProcess->DirectoryTableBase =
