@@ -165,7 +165,7 @@ PspDeleteProcess(PVOID ObjectBody)
     }
 
     /* Delete the process lock */
-    ExFreePool(((PROS_EPROCESS)Process)->LockEvent);
+    ExFreePool(Process->LockEvent);
 
     /* KDB hook */
     KDB_DELETEPROCESS_HOOK(Process);
@@ -174,7 +174,7 @@ PspDeleteProcess(PVOID ObjectBody)
     SeDeassignPrimaryToken(Process);
 
     /* Release Memory Information */
-    MmReleaseMmInfo((PROS_EPROCESS)Process);
+    MmReleaseMmInfo(Process);
 
     /* Delete the W32PROCESS structure if there's one associated */
     if(Process->Win32Process != NULL) ExFreePool(Process->Win32Process);
@@ -248,7 +248,7 @@ PspExitThread(NTSTATUS ExitStatus)
     KeLowerIrql(PASSIVE_LEVEL);
 
     /* Lock the Process before we modify its thread entries */
-    PsLockProcess((PROS_EPROCESS)CurrentProcess, FALSE);
+    PsLockProcess(CurrentProcess, FALSE);
 
     /* wake up the thread so we don't deadlock on PsLockProcess */
     KeForceResumeThread(&CurrentThread->Tcb);
@@ -316,7 +316,7 @@ PspExitThread(NTSTATUS ExitStatus)
         }
         
         DPRINT("Decommit teb at %p\n", Teb);
-        MmDeleteTeb((PROS_EPROCESS)CurrentProcess, Teb);
+        MmDeleteTeb(CurrentProcess, Teb);
         CurrentThread->Tcb.Teb = NULL;
     }
 
@@ -324,7 +324,7 @@ PspExitThread(NTSTATUS ExitStatus)
     if (Last) PspExitProcess(CurrentProcess);
 
     /* Unlock the Process */
-    PsUnlockProcess((PROS_EPROCESS)CurrentProcess);
+    PsUnlockProcess(CurrentProcess);
 
     /* Cancel I/O for the thread. */
     IoCancelThreadIo(CurrentThread);
@@ -571,11 +571,11 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
 
     CurrentThread = PsGetCurrentThread();
 
-    PsLockProcess((PROS_EPROCESS)Process, FALSE);
+    PsLockProcess(Process, FALSE);
 
     if(Process->ExitTime.QuadPart != 0)
     {
-      PsUnlockProcess((PROS_EPROCESS)Process);
+      PsUnlockProcess(Process);
       ObDereferenceObject(Process);
       return STATUS_PROCESS_IS_TERMINATING;
     }
@@ -600,7 +600,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
                unlocking the process, fail */
             CurrentThread->Terminated = TRUE;
 
-            PsUnlockProcess((PROS_EPROCESS)Process);
+            PsUnlockProcess(Process);
 
             /* we can safely dereference the process because the current thread
                holds a reference to it until it gets reaped */
@@ -618,7 +618,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     }
 
     /* unlock and dereference the process so the threads can kill themselves */
-    PsUnlockProcess((PROS_EPROCESS)Process);
+    PsUnlockProcess(Process);
     ObDereferenceObject(Process);
 
     return(STATUS_SUCCESS);
@@ -676,7 +676,7 @@ NtTerminateThread(IN HANDLE ThreadHandle,
     if (Thread != PsGetCurrentThread())  {
 
         /* we need to lock the process to make sure it's not already terminating */
-        PsLockProcess((PROS_EPROCESS)Thread->ThreadsProcess, FALSE);
+        PsLockProcess(Thread->ThreadsProcess, FALSE);
 
         /* This isn't our thread, terminate it if not already done */
         if (!Thread->Terminated) {
@@ -687,7 +687,7 @@ NtTerminateThread(IN HANDLE ThreadHandle,
              PspTerminateThreadByPointer(Thread, ExitStatus);
         }
 
-        PsUnlockProcess((PROS_EPROCESS)Thread->ThreadsProcess);
+        PsUnlockProcess(Thread->ThreadsProcess);
 
         /* Dereference the Thread and return */
         ObDereferenceObject(Thread);

@@ -80,7 +80,7 @@ PMADDRESS_SPACE
 NTAPI
 MmGetCurrentAddressSpace(VOID)
 {
-   return((PMADDRESS_SPACE)&((PROS_EPROCESS)PsGetCurrentProcess())->VadRoot);
+   return((PMADDRESS_SPACE)&(PsGetCurrentProcess())->VadRoot);
 }
 
 PMADDRESS_SPACE
@@ -92,7 +92,7 @@ MmGetKernelAddressSpace(VOID)
 
 NTSTATUS
 NTAPI
-MmInitializeAddressSpace(PROS_EPROCESS Process,
+MmInitializeAddressSpace(PEPROCESS Process,
                          PMADDRESS_SPACE AddressSpace)
 {
    AddressSpace->MemoryAreaRoot = NULL;

@@ -62,7 +62,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    PMADDRESS_SPACE AddressSpace;
    ULONG Type;
    PVOID Address;
-   PROS_EPROCESS Process;
+   PEPROCESS Process;
    PMM_PAGEOP PageOp;
    ULONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -78,7 +78,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       ExReleaseFastMutex(&RmapListLock);
       return(STATUS_UNSUCCESSFUL);
    }
-   Process = (PROS_EPROCESS)entry->Process;
+   Process = entry->Process;
    Address = entry->Address;
    if ((((ULONG_PTR)Address) & 0xFFF) != 0)
    {
@@ -196,7 +196,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    PMADDRESS_SPACE AddressSpace;
    ULONG Type;
    PVOID Address;
-   PROS_EPROCESS Process;
+   PEPROCESS Process;
    PMM_PAGEOP PageOp;
    ULONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -208,7 +208,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       ExReleaseFastMutex(&RmapListLock);
       return(STATUS_UNSUCCESSFUL);
    }
-   Process = (PROS_EPROCESS)entry->Process;
+   Process = entry->Process;
    Address = entry->Address;
    if ((((ULONG_PTR)Address) & 0xFFF) != 0)
    {
@@ -326,7 +326,7 @@ MmSetCleanAllRmaps(PFN_TYPE Page)
    }
    while (current_entry != NULL)
    {
-      MmSetCleanPage((PROS_EPROCESS)current_entry->Process, current_entry->Address);
+      MmSetCleanPage(current_entry->Process, current_entry->Address);
       current_entry = current_entry->Next;
    }
    ExReleaseFastMutex(&RmapListLock);
@@ -347,7 +347,7 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
    }
    while (current_entry != NULL)
    {
-      MmSetDirtyPage((PROS_EPROCESS)current_entry->Process, current_entry->Address);
+      MmSetDirtyPage(current_entry->Process, current_entry->Address);
       current_entry = current_entry->Next;
    }
    ExReleaseFastMutex(&RmapListLock);
@@ -368,7 +368,7 @@ MmIsDirtyPageRmap(PFN_TYPE Page)
    }
    while (current_entry != NULL)
    {
-      if (MmIsDirtyPage((PROS_EPROCESS)current_entry->Process, current_entry->Address))
+      if (MmIsDirtyPage(current_entry->Process, current_entry->Address))
       {
          ExReleaseFastMutex(&RmapListLock);
          return(TRUE);
@@ -381,7 +381,7 @@ MmIsDirtyPageRmap(PFN_TYPE Page)
 
 VOID
 NTAPI
-MmInsertRmap(PFN_TYPE Page, PROS_EPROCESS Process,
+MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry;
@@ -433,7 +433,7 @@ MmInsertRmap(PFN_TYPE Page, PROS_EPROCESS Process,
    ExReleaseFastMutex(&RmapListLock);
    if (Process == NULL)
    {
-      Process = (PROS_EPROCESS)PsInitialSystemProcess;
+      Process = PsInitialSystemProcess;
    }
    if (Process)
    {
@@ -448,7 +448,7 @@ MmInsertRmap(PFN_TYPE Page, PROS_EPROCESS Process,
 VOID
 NTAPI
 MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
-                 VOID (*DeleteMapping)(PVOID Context, PROS_EPROCESS Process,
+                 VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process,
                                        PVOID Address))
 {
    PMM_RMAP_ENTRY current_entry;
@@ -470,7 +470,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
       current_entry = current_entry->Next;
       if (DeleteMapping)
       {
-         DeleteMapping(Context, (PROS_EPROCESS)previous_entry->Process,
+         DeleteMapping(Context, previous_entry->Process,
                        previous_entry->Address);
       }
       Process = previous_entry->Process;
@@ -488,7 +488,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
 
 VOID
 NTAPI
-MmDeleteRmap(PFN_TYPE Page, PROS_EPROCESS Process,
+MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;
@@ -513,7 +513,7 @@ MmDeleteRmap(PFN_TYPE Page, PROS_EPROCESS Process,
          ExFreeToNPagedLookasideList(&RmapLookasideList, current_entry);
 	 if (Process == NULL)
 	 {
-	    Process = (PROS_EPROCESS)PsInitialSystemProcess;
+	    Process = PsInitialSystemProcess;
 	 }
 	 if (Process)
 	 {

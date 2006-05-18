@@ -25,7 +25,7 @@ extern ULONG NtGlobalFlag;
 
 PVOID
 STDCALL
-MiCreatePebOrTeb(PROS_EPROCESS Process,
+MiCreatePebOrTeb(PEPROCESS Process,
                  PVOID BaseAddress)
 {
     NTSTATUS Status;
@@ -107,7 +107,7 @@ MmDeleteKernelStack(PVOID Stack,
 
 VOID
 STDCALL
-MmDeleteTeb(PROS_EPROCESS Process,
+MmDeleteTeb(PEPROCESS Process,
             PTEB Teb)
 {
     PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
@@ -220,7 +220,7 @@ MmGrowKernelStack(PVOID StackPointer)
 
 NTSTATUS
 STDCALL
-MmCreatePeb(PROS_EPROCESS Process)
+MmCreatePeb(PEPROCESS Process)
 {
     PPEB Peb = NULL;
     LARGE_INTEGER SectionOffset;
@@ -370,7 +370,7 @@ MmCreatePeb(PROS_EPROCESS Process)
 
 PTEB
 STDCALL
-MmCreateTeb(PROS_EPROCESS Process,
+MmCreateTeb(PEPROCESS Process,
             PCLIENT_ID ClientId,
             PINITIAL_TEB InitialTeb)
 {
@@ -379,7 +379,7 @@ MmCreateTeb(PROS_EPROCESS Process,
 
     /* Attach to the process */
     DPRINT("MmCreateTeb\n");
-    if (Process != (PROS_EPROCESS)PsGetCurrentProcess())
+    if (Process != PsGetCurrentProcess())
     {
         /* Attach to Target */
         KeAttachProcess(&Process->Pcb);
@@ -420,7 +420,7 @@ MmCreateTeb(PROS_EPROCESS Process,
 
 NTSTATUS
 STDCALL
-MmCreateProcessAddressSpace(IN PROS_EPROCESS Process,
+MmCreateProcessAddressSpace(IN PEPROCESS Process,
                             IN PROS_SECTION_OBJECT Section OPTIONAL)
 {
     NTSTATUS Status;

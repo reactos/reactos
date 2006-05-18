@@ -1329,7 +1329,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
 }
 
 VOID
-MmPageOutDeleteMapping(PVOID Context, PROS_EPROCESS Process, PVOID Address)
+MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 {
    MM_SECTION_PAGEOUT_CONTEXT* PageOutContext;
    BOOLEAN WasDirty;
@@ -3595,7 +3595,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    LARGE_INTEGER SafeSectionOffset;
    SIZE_T SafeViewSize;
    PROS_SECTION_OBJECT Section;
-   PROS_EPROCESS Process;
+   PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
    PMADDRESS_SPACE AddressSpace;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -3911,7 +3911,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
 
    ASSERT(Process);
 
-   AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)Process)->VadRoot;
+   AddressSpace = (PMADDRESS_SPACE)&(Process)->VadRoot;
    
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
@@ -4432,7 +4432,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
 
    Section = (PROS_SECTION_OBJECT)SectionObject;
-   AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)Process)->VadRoot;
+   AddressSpace = (PMADDRESS_SPACE)&(Process)->VadRoot;
 
    AllocationType |= (Section->AllocationAttributes & SEC_NO_CHANGE);
 

@@ -241,7 +241,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
    /* Unmap all the pages. */
    for (i = 0; i < PageCount; i++)
    {
-      MmDeleteVirtualMapping((PROS_EPROCESS)Mdl->Process,
+      MmDeleteVirtualMapping(Mdl->Process,
                              (char*)BaseAddress + (i * PAGE_SIZE),
                              FALSE,
                              NULL,
@@ -273,14 +273,14 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
       ASSERT(Mdl->Process == PsGetCurrentProcess());
 
-      Marea = MmLocateMemoryAreaByAddress( (PMADDRESS_SPACE)&((PROS_EPROCESS)Mdl->Process)->VadRoot, BaseAddress );
+      Marea = MmLocateMemoryAreaByAddress( (PMADDRESS_SPACE)&(Mdl->Process)->VadRoot, BaseAddress );
       if (Marea == NULL)
       {
          DPRINT1( "Couldn't open memory area when unmapping user-space pages!\n" );
          KEBUGCHECK(0);
       }
 
-      MmFreeMemoryArea( (PMADDRESS_SPACE)&((PROS_EPROCESS)Mdl->Process)->VadRoot, Marea, NULL, NULL );
+      MmFreeMemoryArea( (PMADDRESS_SPACE)&(Mdl->Process)->VadRoot, Marea, NULL, NULL );
 
       Mdl->Process = NULL;
    }
@@ -411,7 +411,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       /* FIXME: why isn't AccessMode used? */
       Mode = UserMode;
       Mdl->Process = CurrentProcess;
-      AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)CurrentProcess)->VadRoot;
+      AddressSpace = (PMADDRESS_SPACE)&(CurrentProcess)->VadRoot;
    }
 
 
@@ -771,7 +771,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
    KIRQL oldIrql;
    ULONG PageCount;
    ULONG StartingOffset;
-   PROS_EPROCESS CurrentProcess;
+   PEPROCESS CurrentProcess;
    NTSTATUS Status;
    ULONG Protect;
 
@@ -803,7 +803,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       BoundaryAddressMultiple.QuadPart = 0;
       Base = BaseAddress;
 
-      CurrentProcess = (PROS_EPROCESS)PsGetCurrentProcess();
+      CurrentProcess = PsGetCurrentProcess();
 
       MmLockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
       Status = MmCreateMemoryArea((PMADDRESS_SPACE)&CurrentProcess->VadRoot,

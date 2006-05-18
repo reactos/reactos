@@ -1074,7 +1074,7 @@ typedef struct _EPROCESS
     EX_PUSH_LOCK AddressCreationLock;
     PETHREAD RotateInProgress;
 #else
-    KGUARDED_MUTEX AddressCreationLock;
+    FAST_MUTEX AddressCreationLock; // FIXME: FAST_MUTEX for XP, KGUARDED_MUTEX for 2K3
     KSPIN_LOCK HyperSpaceLock;
 #endif
     PETHREAD ForkInProgress;

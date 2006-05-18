@@ -544,7 +544,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
  * RETURNS: Status
  */
 {
-   PROS_EPROCESS Process;
+   PEPROCESS Process;
    MEMORY_AREA* MemoryArea;
    ULONG_PTR MemoryAreaLength;
    ULONG Type;
@@ -784,7 +784,7 @@ MmFreeVirtualMemoryPage(PVOID Context,
          MmFreeSwapPage(SavedSwapEntry);
          MmSetSavedSwapEntryPage(Page, 0);
       }
-      MmDeleteRmap(Page, (PROS_EPROCESS)Process, Address);
+      MmDeleteRmap(Page, Process, Address);
       MmReleasePageMemoryConsumer(MC_USER, Page);
    }
    else if (SwapEntry != 0)
@@ -795,7 +795,7 @@ MmFreeVirtualMemoryPage(PVOID Context,
 
 VOID
 NTAPI
-MmFreeVirtualMemory(PROS_EPROCESS Process,
+MmFreeVirtualMemory(PEPROCESS Process,
                     PMEMORY_AREA MemoryArea)
 {
    PLIST_ENTRY current_entry;
@@ -889,7 +889,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 {
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
-   PROS_EPROCESS Process;
+   PEPROCESS Process;
    PMADDRESS_SPACE AddressSpace;
    PVOID BaseAddress;
    ULONG RegionSize;

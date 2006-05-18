@@ -653,7 +653,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
           {
             /* lock the process to be thread-safe! */
 
-            Status = PsLockProcess((PROS_EPROCESS)Process, FALSE);
+            Status = PsLockProcess(Process, FALSE);
             if(NT_SUCCESS(Status))
             {
               /*
@@ -671,7 +671,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                 ObDereferenceObject(ExceptionPort);
                 Status = STATUS_PORT_ALREADY_SET;
               }
-              PsUnlockProcess((PROS_EPROCESS)Process);
+              PsUnlockProcess(Process);
             }
             else
             {
@@ -758,7 +758,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
           /* FIXME - update the session id for the process token */
 
-          Status = PsLockProcess((PROS_EPROCESS)Process, FALSE);
+          Status = PsLockProcess(Process, FALSE);
           if(NT_SUCCESS(Status))
           {
             Process->Session = SessionInfo.SessionId;
@@ -785,7 +785,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
               KeDetachProcess();
             }
 
-            PsUnlockProcess((PROS_EPROCESS)Process);
+            PsUnlockProcess(Process);
           }
         }
         break;
