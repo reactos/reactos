@@ -243,7 +243,7 @@ Mmi386ReleaseMmInfo(PROS_EPROCESS Process)
                   DPRINT1("ProcessId %d, Pde for %08x - %08x is not freed, RefCount %d\n",
 		          Process->UniqueProcessId,
 	                  (i * 512 + j) * 512 * PAGE_SIZE, (i * 512 + j + 1) * 512 * PAGE_SIZE - 1,
-		          Process->AddressSpace.PageTableRefCountTable[i*512 + j]);
+		          ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable[i*512 + j]);
                   Pde = MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(PageDir[j]));
 	          for (k = 0; k < 512; k++)
 	          {
@@ -288,7 +288,7 @@ Mmi386ReleaseMmInfo(PROS_EPROCESS Process)
          {
             DPRINT1("Pde for %08x - %08x is not freed, RefCount %d\n",
 	            i * 4 * 1024 * 1024, (i + 1) * 4 * 1024 * 1024 - 1,
-		    Process->AddressSpace.PageTableRefCountTable[i]);
+		    ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable[i]);
 	    Pde = MmCreateHyperspaceMapping(PTE_TO_PFN(PageDir[i]));
 	    for (j = 0; j < 1024; j++)
 	    {
@@ -1041,13 +1041,13 @@ MmDeleteVirtualMapping(PROS_EPROCESS Process, PVOID Address, BOOLEAN FreePage,
     * Decrement the reference count for this page table.
     */
    if (Process != NULL && WasValid &&
-       Process->AddressSpace.PageTableRefCountTable != NULL &&
+       ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
        Address < MmSystemRangeStart)
    {
       PUSHORT Ptrc;
       ULONG Idx;
 
-      Ptrc = Process->AddressSpace.PageTableRefCountTable;
+      Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
       Idx = Ke386Pae ? PAE_ADDR_TO_PAGE_TABLE(Address) : ADDR_TO_PAGE_TABLE(Address);
 
       Ptrc[Idx]--;
@@ -1090,12 +1090,12 @@ MmDeletePageFileMapping(PROS_EPROCESS Process, PVOID Address,
        * Decrement the reference count for this page table.
        */
       if (Process != NULL && Pte &&
-          Process->AddressSpace.PageTableRefCountTable != NULL &&
+          ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
           Address < MmSystemRangeStart)
       {
          PUSHORT Ptrc;
 
-         Ptrc = Process->AddressSpace.PageTableRefCountTable;
+         Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
 
          Ptrc[PAE_ADDR_TO_PAGE_TABLE(Address)]--;
          if (Ptrc[PAE_ADDR_TO_PAGE_TABLE(Address)] == 0)
@@ -1134,12 +1134,12 @@ MmDeletePageFileMapping(PROS_EPROCESS Process, PVOID Address,
        * Decrement the reference count for this page table.
        */
       if (Process != NULL && Pte &&
-          Process->AddressSpace.PageTableRefCountTable != NULL &&
+          ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
           Address < MmSystemRangeStart)
       {
          PUSHORT Ptrc;
 
-         Ptrc = Process->AddressSpace.PageTableRefCountTable;
+         Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
 
          Ptrc[ADDR_TO_PAGE_TABLE(Address)]--;
          if (Ptrc[ADDR_TO_PAGE_TABLE(Address)] == 0)
@@ -1694,13 +1694,13 @@ MmCreatePageFileMapping(PROS_EPROCESS Process,
       }
    }
    if (Process != NULL &&
-       Process->AddressSpace.PageTableRefCountTable != NULL &&
+       ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
        Address < MmSystemRangeStart)
    {
      PUSHORT Ptrc;
      ULONG Idx;
 
-     Ptrc = Process->AddressSpace.PageTableRefCountTable;
+     Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
      Idx = Ke386Pae ? PAE_ADDR_TO_PAGE_TABLE(Address) : ADDR_TO_PAGE_TABLE(Address);
      Ptrc[Idx]++;
    }
@@ -1823,12 +1823,12 @@ MmCreateVirtualMappingUnsafe(PROS_EPROCESS Process,
             MmMarkPageUnmapped(PAE_PTE_TO_PFN((Pte)));
          }
          if (Address < MmSystemRangeStart &&
-	     Process->AddressSpace.PageTableRefCountTable != NULL &&
+	     ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
              Attributes & PA_PRESENT)
          {
             PUSHORT Ptrc;
 
-            Ptrc = Process->AddressSpace.PageTableRefCountTable;
+            Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
 
             Ptrc[PAE_ADDR_TO_PAGE_TABLE(Addr)]++;
          }
@@ -1888,12 +1888,12 @@ MmCreateVirtualMappingUnsafe(PROS_EPROCESS Process,
          }
 	 (void)InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
          if (Address < MmSystemRangeStart &&
-	     Process->AddressSpace.PageTableRefCountTable != NULL &&
+	     ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable != NULL &&
              Attributes & PA_PRESENT)
          {
             PUSHORT Ptrc;
 
-            Ptrc = Process->AddressSpace.PageTableRefCountTable;
+            Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
 
             Ptrc[ADDR_TO_PAGE_TABLE(Addr)]++;
          }

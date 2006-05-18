@@ -38,17 +38,17 @@ MmReleaseMmInfo(PROS_EPROCESS Process)
    DPRINT("MmReleaseMmInfo(Process %x (%s))\n", Process,
           Process->ImageFileName);
 
-   MmLockAddressSpace(&Process->AddressSpace);
+   MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
 
-   while ((MemoryArea = Process->AddressSpace.MemoryAreaRoot) != NULL)
+   while ((MemoryArea = ((PMADDRESS_SPACE)&Process->VadRoot)->MemoryAreaRoot) != NULL)
    {
       switch (MemoryArea->Type)
       {
          case MEMORY_AREA_SECTION_VIEW:
              Address = (PVOID)MemoryArea->StartingAddress;
-             MmUnlockAddressSpace(&Process->AddressSpace);
+             MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
              MmUnmapViewOfSection((PEPROCESS)Process, Address);
-             MmLockAddressSpace(&Process->AddressSpace);
+             MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
              break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
@@ -58,7 +58,7 @@ MmReleaseMmInfo(PROS_EPROCESS Process)
 
          case MEMORY_AREA_SHARED_DATA:
          case MEMORY_AREA_NO_ACCESS:
-             MmFreeMemoryArea(&Process->AddressSpace,
+             MmFreeMemoryArea((PMADDRESS_SPACE)&Process->VadRoot,
                               MemoryArea,
                               NULL,
                               NULL);
@@ -75,8 +75,8 @@ MmReleaseMmInfo(PROS_EPROCESS Process)
 
    Mmi386ReleaseMmInfo(Process);
 
-   MmUnlockAddressSpace(&Process->AddressSpace);
-   MmDestroyAddressSpace(&Process->AddressSpace);
+   MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+   MmDestroyAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
 
    DPRINT("Finished MmReleaseMmInfo()\n");
    return(STATUS_SUCCESS);
@@ -114,7 +114,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    }
    else
    {
-      AddressSpace = &((PROS_EPROCESS)PsGetCurrentProcess())->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)PsGetCurrentProcess())->VadRoot;
    }
 
    MmLockAddressSpace(AddressSpace);
@@ -171,7 +171,7 @@ MmAccessFault(KPROCESSOR_MODE Mode,
    }
    else
    {
-      AddressSpace = &((PROS_EPROCESS)PsGetCurrentProcess())->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)PsGetCurrentProcess())->VadRoot;
    }
 
    if (!FromMdl)
@@ -304,7 +304,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    }
    else
    {
-      AddressSpace = &((PROS_EPROCESS)PsGetCurrentProcess())->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)PsGetCurrentProcess())->VadRoot;
    }
 
    if (!FromMdl)

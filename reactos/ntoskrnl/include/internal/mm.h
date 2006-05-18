@@ -219,7 +219,6 @@ typedef struct _MEMORY_AREA
     ULONG Type;
     ULONG Protect;
     ULONG Flags;
-    ULONG LockCount;
     BOOLEAN DeleteInProgress;
     ULONG PageOpCount;
     union
@@ -242,7 +241,6 @@ typedef struct _MEMORY_AREA
 typedef struct _MADDRESS_SPACE
 {
     PMEMORY_AREA MemoryAreaRoot;
-    FAST_MUTEX Lock;
     PVOID LowestAddress;
     struct _ROS_EPROCESS* Process;
     PUSHORT PageTableRefCountTable;

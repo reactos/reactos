@@ -1011,7 +1011,7 @@ MmCreateMemoryArea(PMADDRESS_SPACE AddressSpace,
    MemoryArea->EndingAddress = (PVOID)((ULONG_PTR)*BaseAddress + tmpLength);
    MemoryArea->Protect = Protect;
    MemoryArea->Flags = AllocationFlags;
-   MemoryArea->LockCount = 0;
+   //MemoryArea->LockCount = 0;
    MemoryArea->PageOpCount = 0;
    MemoryArea->DeleteInProgress = FALSE;
 

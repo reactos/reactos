@@ -29,7 +29,7 @@ MiCreatePebOrTeb(PROS_EPROCESS Process,
                  PVOID BaseAddress)
 {
     NTSTATUS Status;
-    PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
+    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PVOID AllocatedBase = BaseAddress;
@@ -110,7 +110,7 @@ STDCALL
 MmDeleteTeb(PROS_EPROCESS Process,
             PTEB Teb)
 {
-    PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
+    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
     PMEMORY_AREA MemoryArea;
 
     /* Lock the Address Space */
@@ -424,7 +424,7 @@ MmCreateProcessAddressSpace(IN PROS_EPROCESS Process,
                             IN PROS_SECTION_OBJECT Section OPTIONAL)
 {
     NTSTATUS Status;
-    PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
+    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
     PVOID BaseAddress;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;

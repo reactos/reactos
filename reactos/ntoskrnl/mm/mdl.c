@@ -273,14 +273,14 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 
       ASSERT(Mdl->Process == PsGetCurrentProcess());
 
-      Marea = MmLocateMemoryAreaByAddress( &((PROS_EPROCESS)Mdl->Process)->AddressSpace, BaseAddress );
+      Marea = MmLocateMemoryAreaByAddress( (PMADDRESS_SPACE)&((PROS_EPROCESS)Mdl->Process)->VadRoot, BaseAddress );
       if (Marea == NULL)
       {
          DPRINT1( "Couldn't open memory area when unmapping user-space pages!\n" );
          KEBUGCHECK(0);
       }
 
-      MmFreeMemoryArea( &((PROS_EPROCESS)Mdl->Process)->AddressSpace, Marea, NULL, NULL );
+      MmFreeMemoryArea( (PMADDRESS_SPACE)&((PROS_EPROCESS)Mdl->Process)->VadRoot, Marea, NULL, NULL );
 
       Mdl->Process = NULL;
    }
@@ -411,7 +411,7 @@ VOID STDCALL MmProbeAndLockPages (PMDL Mdl,
       /* FIXME: why isn't AccessMode used? */
       Mode = UserMode;
       Mdl->Process = CurrentProcess;
-      AddressSpace = &((PROS_EPROCESS)CurrentProcess)->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)CurrentProcess)->VadRoot;
    }
 
 
@@ -805,8 +805,8 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
 
       CurrentProcess = (PROS_EPROCESS)PsGetCurrentProcess();
 
-      MmLockAddressSpace(&CurrentProcess->AddressSpace);
-      Status = MmCreateMemoryArea(&CurrentProcess->AddressSpace,
+      MmLockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
+      Status = MmCreateMemoryArea((PMADDRESS_SPACE)&CurrentProcess->VadRoot,
                                   MEMORY_AREA_MDL_MAPPING,
                                   &Base,
                                   PageCount * PAGE_SIZE,
@@ -815,7 +815,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
                                   (Base != NULL),
                                   0,
                                   BoundaryAddressMultiple);
-      MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
+      MmUnlockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
       if (!NT_SUCCESS(Status))
       {
          if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)

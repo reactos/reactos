@@ -255,7 +255,7 @@ PsInitProcessManagment(VOID)
    PspInheritQuota(PsInitialSystemProcess, NULL);
 
    MmInitializeAddressSpace((PROS_EPROCESS)PsInitialSystemProcess,
-			    &((PROS_EPROCESS)PsInitialSystemProcess)->AddressSpace);
+			    (PMADDRESS_SPACE)&((PROS_EPROCESS)PsInitialSystemProcess)->VadRoot);
 
    ((PROS_EPROCESS)PsInitialSystemProcess)->LockEvent = 
        ExAllocatePoolWithTag(PagedPool, sizeof(KEVENT), TAG('P', 's', 'L', 'k'));

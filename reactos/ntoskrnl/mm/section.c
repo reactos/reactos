@@ -1338,7 +1338,7 @@ MmPageOutDeleteMapping(PVOID Context, PROS_EPROCESS Process, PVOID Address)
    PageOutContext = (MM_SECTION_PAGEOUT_CONTEXT*)Context;
    if (Process)
    {
-      MmLockAddressSpace(&Process->AddressSpace);
+      MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
    }
 
    MmDeleteVirtualMapping(Process,
@@ -1362,7 +1362,7 @@ MmPageOutDeleteMapping(PVOID Context, PROS_EPROCESS Process, PVOID Address)
    }
    if (Process)
    {
-      MmUnlockAddressSpace(&Process->AddressSpace);
+      MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
    }
    
    if (PageOutContext->Private)
@@ -3676,7 +3676,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
       return(Status);
    }
 
-   AddressSpace = &Process->AddressSpace;
+   AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
 
    Status = ObReferenceObjectByHandle(SectionHandle,
                                       SECTION_MAP_READ,
@@ -3911,7 +3911,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
 
    ASSERT(Process);
 
-   AddressSpace = &((PROS_EPROCESS)Process)->AddressSpace;
+   AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)Process)->VadRoot;
    
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
@@ -4432,7 +4432,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
 
    Section = (PROS_SECTION_OBJECT)SectionObject;
-   AddressSpace = &((PROS_EPROCESS)Process)->AddressSpace;
+   AddressSpace = (PMADDRESS_SPACE)&((PROS_EPROCESS)Process)->VadRoot;
 
    AllocationType |= (Section->AllocationAttributes & SEC_NO_CHANGE);
 

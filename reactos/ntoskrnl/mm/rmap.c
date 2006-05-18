@@ -92,7 +92,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
    }
    else
    {
@@ -223,7 +223,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
    }
    else
    {

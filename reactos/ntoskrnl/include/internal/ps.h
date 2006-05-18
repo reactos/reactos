@@ -45,7 +45,7 @@ typedef struct _ROS_EPROCESS
     EX_PUSH_LOCK AddressCreationLock;
     PETHREAD RotateInProgress;
 #else
-    KGUARDED_MUTEX AddressCreationLock;
+    FAST_MUTEX AddressCreationLock; // FIXME: FAST_MUTEX for XP, KGUARDED_MUTEX for 2K3
     KSPIN_LOCK HyperSpaceLock;
 #endif
     PETHREAD ForkInProgress;
@@ -200,7 +200,6 @@ typedef struct _ROS_EPROCESS
     UCHAR PriorityClass;
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
-    MADDRESS_SPACE AddressSpace;
 } ROS_EPROCESS, *PROS_EPROCESS;
 #include <poppack.h>
 

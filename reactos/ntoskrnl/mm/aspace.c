@@ -20,7 +20,8 @@
 
 /* GLOBALS ******************************************************************/
 
-STATIC MADDRESS_SPACE KernelAddressSpace;
+static MADDRESS_SPACE KernelAddressSpace;
+FAST_MUTEX KernelAddressSpaceLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -35,7 +36,15 @@ MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
    {
       return;
    }
-   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&AddressSpace->Lock);
+
+   if (AddressSpace->Process)
+   {
+       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&AddressSpace->Process->AddressCreationLock);
+   }
+   else
+   {
+       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&KernelAddressSpaceLock);
+   }
 }
 
 VOID
@@ -49,7 +58,14 @@ MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
    {
       return;
    }
-   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&AddressSpace->Lock);
+   if (AddressSpace->Process)
+   {
+        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&AddressSpace->Process->AddressCreationLock);
+   }
+   else
+   {
+        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&KernelAddressSpaceLock);
+   }
 }
 
 VOID
@@ -64,7 +80,7 @@ PMADDRESS_SPACE
 NTAPI
 MmGetCurrentAddressSpace(VOID)
 {
-   return(&((PROS_EPROCESS)PsGetCurrentProcess())->AddressSpace);
+   return((PMADDRESS_SPACE)&((PROS_EPROCESS)PsGetCurrentProcess())->VadRoot);
 }
 
 PMADDRESS_SPACE
@@ -80,7 +96,14 @@ MmInitializeAddressSpace(PROS_EPROCESS Process,
                          PMADDRESS_SPACE AddressSpace)
 {
    AddressSpace->MemoryAreaRoot = NULL;
-   ExInitializeFastMutex(&AddressSpace->Lock);
+   if (Process)
+   {
+       ExInitializeFastMutex(&Process->AddressCreationLock);
+   }
+   else
+   {
+        ExInitializeFastMutex(&KernelAddressSpaceLock);
+   }
    if (Process != NULL)
    {
       AddressSpace->LowestAddress = MM_LOWEST_USER_ADDRESS;

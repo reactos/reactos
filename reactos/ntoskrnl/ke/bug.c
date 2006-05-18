@@ -27,6 +27,8 @@ HalReleaseDisplayOwnership(
     VOID
 );
 
+extern FAST_MUTEX KernelAddressSpaceLock;
+
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY BugcheckCallbackListHead = {NULL,NULL};
@@ -341,7 +343,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
     /* Unload the Kernel Adress Space if we own it */
-    if (MmGetKernelAddressSpace()->Lock.Owner == KeGetCurrentThread())
+    if (KernelAddressSpaceLock.Owner == KeGetCurrentThread())
         MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
     /* FIXMEs: Use inbv to clear, fill and write to screen. */
