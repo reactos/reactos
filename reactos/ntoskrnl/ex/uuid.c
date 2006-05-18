@@ -5,7 +5,8 @@
  * FILE:            ntoskrnl/ex/uuid.c
  * PURPOSE:         UUID generator
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Eric Kohl
+                    Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/
@@ -47,16 +48,16 @@ static ULONG UuidCount;
 
 VOID
 INIT_FUNCTION
-STDCALL
+NTAPI
 ExpInitUuids(VOID)
 {
-  ExInitializeFastMutex(&UuidMutex);
+    ExInitializeFastMutex(&UuidMutex);
 
-  KeQuerySystemTime((PLARGE_INTEGER)&UuidLastTime);
-  UuidLastTime.QuadPart += TICKS_15_OCT_1582_TO_1601;
+    KeQuerySystemTime((PLARGE_INTEGER)&UuidLastTime);
+    UuidLastTime.QuadPart += TICKS_15_OCT_1582_TO_1601;
 
-  UuidCount = TICKS_PER_CLOCK_TICK;
-  RtlZeroMemory(UuidSeed, SEED_BUFFER_SIZE);
+    UuidCount = TICKS_PER_CLOCK_TICK;
+    RtlZeroMemory(UuidSeed, SEED_BUFFER_SIZE);
 }
 
 
@@ -65,52 +66,51 @@ ExpInitUuids(VOID)
 static NTSTATUS
 ExpLoadUuidSequence(PULONG Sequence)
 {
-  UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
-  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING Name;
-  HANDLE KeyHandle;
-  ULONG ValueLength;
-  NTSTATUS Status;
+    UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    HANDLE KeyHandle;
+    ULONG ValueLength;
+    NTSTATUS Status;
 
-  RtlInitUnicodeString(&Name,
-		       L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status = ZwOpenKey(&KeyHandle,
-		     KEY_QUERY_VALUE,
-		     &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT("ZwOpenKey() failed (Status %lx)\n", Status);
-    return Status;
-  }
+    RtlInitUnicodeString(&Name,
+        L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&KeyHandle,
+                       KEY_QUERY_VALUE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenKey() failed (Status %lx)\n", Status);
+        return Status;
+    }
 
-  RtlInitUnicodeString(&Name,
-		       L"UuidSequenceNumber");
+    RtlInitUnicodeString(&Name, L"UuidSequenceNumber");
 
-  ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
-  Status = ZwQueryValueKey(KeyHandle,
-			   &Name,
-			   KeyValuePartialInformation,
-			   ValueBuffer,
-			   VALUE_BUFFER_SIZE,
-			   &ValueLength);
-  ZwClose(KeyHandle);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT("ZwQueryValueKey() failed (Status %lx)\n", Status);
-    return Status;
-  }
+    ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
+    Status = ZwQueryValueKey(KeyHandle,
+                             &Name,
+                             KeyValuePartialInformation,
+                             ValueBuffer,
+                             VALUE_BUFFER_SIZE,
+                             &ValueLength);
+    ZwClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwQueryValueKey() failed (Status %lx)\n", Status);
+        return Status;
+    }
 
-  *Sequence = *((PULONG)ValueInfo->Data);
+    *Sequence = *((PULONG)ValueInfo->Data);
 
-  DPRINT("Loaded sequence %lx\n", *Sequence);
+    DPRINT("Loaded sequence %lx\n", *Sequence);
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 #undef VALUE_BUFFER_SIZE
 
@@ -118,192 +118,191 @@ ExpLoadUuidSequence(PULONG Sequence)
 static NTSTATUS
 ExpSaveUuidSequence(PULONG Sequence)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING Name;
-  HANDLE KeyHandle;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
 
-  RtlInitUnicodeString(&Name,
-		       L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status = ZwOpenKey(&KeyHandle,
-		     KEY_SET_VALUE,
-		     &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT("ZwOpenKey() failed (Status %lx)\n", Status);
+    RtlInitUnicodeString(&Name,
+        L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&KeyHandle,
+                       KEY_SET_VALUE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenKey() failed (Status %lx)\n", Status);
+        return Status;
+    }
+
+    RtlInitUnicodeString(&Name, L"UuidSequenceNumber");
+    Status = ZwSetValueKey(KeyHandle,
+                           &Name,
+                           0,
+                           REG_DWORD,
+                           Sequence,
+                           sizeof(ULONG));
+    ZwClose(KeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwSetValueKey() failed (Status %lx)\n", Status);
+    }
+
     return Status;
-  }
-
-  RtlInitUnicodeString(&Name,
-		       L"UuidSequenceNumber");
-  Status = ZwSetValueKey(KeyHandle,
-			 &Name,
-			 0,
-			 REG_DWORD,
-			 Sequence,
-			 sizeof(ULONG));
-  ZwClose(KeyHandle);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT("ZwSetValueKey() failed (Status %lx)\n", Status);
-  }
-
-  return Status;
 }
 
 
 static VOID
 ExpGetRandomUuidSequence(PULONG Sequence)
 {
-  LARGE_INTEGER Counter;
-  LARGE_INTEGER Frequency;
-  ULONG Value;
+    LARGE_INTEGER Counter;
+    LARGE_INTEGER Frequency;
+    ULONG Value;
 
-  Counter = KeQueryPerformanceCounter(&Frequency);
-  Value = Counter.u.LowPart ^ Counter.u.HighPart;
+    Counter = KeQueryPerformanceCounter(&Frequency);
+    Value = Counter.u.LowPart ^ Counter.u.HighPart;
 
-  *Sequence = *Sequence ^ Value;
+    *Sequence = *Sequence ^ Value;
 
-  DPRINT("Sequence %lx\n", *Sequence);
+    DPRINT("Sequence %lx\n", *Sequence);
 }
 
 
 static NTSTATUS
 ExpCreateUuids(PULARGE_INTEGER Time,
-	       PULONG Range,
-	       PULONG Sequence)
+               PULONG Range,
+               PULONG Sequence)
 {
-  /*
-   * Generate time element of the UUID. Account for going faster
-   * than our clock as well as the clock going backwards.
-   */
-  while (1)
-  {
-    KeQuerySystemTime((PLARGE_INTEGER)Time);
-    Time->QuadPart += TICKS_15_OCT_1582_TO_1601;
-
-    if (Time->QuadPart > UuidLastTime.QuadPart)
+    /*
+    * Generate time element of the UUID. Account for going faster
+    * than our clock as well as the clock going backwards.
+    */
+    while (1)
     {
-      UuidCount = 0;
-      break;
+        KeQuerySystemTime((PLARGE_INTEGER)Time);
+        Time->QuadPart += TICKS_15_OCT_1582_TO_1601;
+
+        if (Time->QuadPart > UuidLastTime.QuadPart)
+        {
+            UuidCount = 0;
+            break;
+        }
+
+        if (Time->QuadPart < UuidLastTime.QuadPart)
+        {
+            (*Sequence)++;
+            UuidSequenceChanged = TRUE;
+            UuidCount = 0;
+            break;
+        }
+
+        if (UuidCount < TICKS_PER_CLOCK_TICK)
+        {
+            UuidCount++;
+            break;
+        }
     }
 
-    if (Time->QuadPart < UuidLastTime.QuadPart)
-    {
-      (*Sequence)++;
-      UuidSequenceChanged = TRUE;
-      UuidCount = 0;
-      break;
-    }
+    UuidLastTime.QuadPart = Time->QuadPart;
+    Time->QuadPart += UuidCount;
 
-    if (UuidCount < TICKS_PER_CLOCK_TICK)
-    {
-      UuidCount++;
-      break;
-    }
-  }
+    *Range = 10000; /* What does this mean? Ticks per millisecond?*/
 
-  UuidLastTime.QuadPart = Time->QuadPart;
-  Time->QuadPart += UuidCount;
-
-  *Range = 10000; /* What does this mean? Ticks per millisecond?*/
-
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /*
  * @unimplemented
  */
 NTSTATUS
-STDCALL
-ExUuidCreate(
-    OUT UUID *Uuid
-    )
+NTAPI
+ExUuidCreate(OUT UUID *Uuid)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtAllocateUuids(OUT PULARGE_INTEGER Time,
-		OUT PULONG Range,
-		OUT PULONG Sequence,
-		OUT PUCHAR Seed)
+                OUT PULONG Range,
+                OUT PULONG Sequence,
+                OUT PUCHAR Seed)
 {
-  ULARGE_INTEGER IntTime;
-  ULONG IntRange;
-  NTSTATUS Status;
+    ULARGE_INTEGER IntTime;
+    ULONG IntRange;
+    NTSTATUS Status;
 
-  PAGED_CODE();
+    PAGED_CODE();
 
-  ExAcquireFastMutex(&UuidMutex);
+    ExAcquireFastMutex(&UuidMutex);
 
-  if (!UuidSequenceInitialized)
-  {
-    Status = ExpLoadUuidSequence(&UuidSequence);
-    if (NT_SUCCESS(Status))
+    if (!UuidSequenceInitialized)
     {
-      UuidSequence++;
+        Status = ExpLoadUuidSequence(&UuidSequence);
+        if (NT_SUCCESS(Status))
+        {
+            UuidSequence++;
+        }
+        else
+        {
+            ExpGetRandomUuidSequence(&UuidSequence);
+        }
+
+        UuidSequenceInitialized = TRUE;
+        UuidSequenceChanged = TRUE;
     }
-    else
+
+    Status = ExpCreateUuids(&IntTime,
+                            &IntRange,
+                            &UuidSequence);
+    if (!NT_SUCCESS(Status))
     {
-      ExpGetRandomUuidSequence(&UuidSequence);
+        ExReleaseFastMutex(&UuidMutex);
+        return Status;
     }
 
-    UuidSequenceInitialized = TRUE;
-    UuidSequenceChanged = TRUE;
-  }
+    if (UuidSequenceChanged)
+    {
+        Status = ExpSaveUuidSequence(&UuidSequence);
+        if (NT_SUCCESS(Status))
+            UuidSequenceChanged = FALSE;
+    }
 
-  Status = ExpCreateUuids(&IntTime,
-                          &IntRange,
-                          &UuidSequence);
-  if (!NT_SUCCESS(Status))
-  {
     ExReleaseFastMutex(&UuidMutex);
-    return Status;
-  }
 
-  if (UuidSequenceChanged)
-  {
-    Status = ExpSaveUuidSequence(&UuidSequence);
-    if (NT_SUCCESS(Status))
-      UuidSequenceChanged = FALSE;
-  }
+    Time->QuadPart = IntTime.QuadPart;
+    *Range = IntRange;
+    *Sequence = UuidSequence;
 
-  ExReleaseFastMutex(&UuidMutex);
+    RtlCopyMemory(Seed,
+                  UuidSeed,
+                  SEED_BUFFER_SIZE);
 
-  Time->QuadPart = IntTime.QuadPart;
-  *Range = IntRange;
-  *Sequence = UuidSequence;
-
-  RtlCopyMemory(Seed,
-                UuidSeed,
-                SEED_BUFFER_SIZE);
-
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 NtSetUuidSeed(IN PUCHAR Seed)
 {
-  PAGED_CODE();
+    PAGED_CODE();
 
-  RtlCopyMemory(UuidSeed,
-                Seed,
-                SEED_BUFFER_SIZE);
-  return STATUS_SUCCESS;
+    RtlCopyMemory(UuidSeed,
+                  Seed,
+                  SEED_BUFFER_SIZE);
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
