@@ -16,41 +16,41 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 DbgkCreateThread(PVOID StartAddress)
 {
 #if 0
-  LPC_DBG_MESSAGE Message;
-  LPC_DBG_MESSAGE Reply;
-  NTSTATUS Status;
+    LPC_DBG_MESSAGE Message;
+    LPC_DBG_MESSAGE Reply;
+    NTSTATUS Status;
 
-  if (PsGetCurrentThread()->ThreadsProcess->DebugPort == NULL)
+    if (PsGetCurrentThread()->ThreadsProcess->DebugPort == NULL)
     {
-      return;
+        return;
     }
 
-  Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
-  Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) -
-    sizeof(LPC_MESSAGE);
-  Message.Type = DBG_EVENT_CREATE_THREAD;
-  Message.Status = STATUS_SUCCESS;
-  Message.Data.CreateThread.Reserved = 0;
-  Message.Data.CreateThread.StartAddress = StartAddress;
+    Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
+    Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) -
+        sizeof(LPC_MESSAGE);
+    Message.Type = DBG_EVENT_CREATE_THREAD;
+    Message.Status = STATUS_SUCCESS;
+    Message.Data.CreateThread.Reserved = 0;
+    Message.Data.CreateThread.StartAddress = StartAddress;
 
-  /* FIXME: Freeze all threads in process */
+    /* FIXME: Freeze all threads in process */
 
-  /* Send the message to the process's debug port and wait for a reply */
-  Status =
-    LpcSendDebugMessagePort(PsGetCurrentThread()->ThreadsProcess->DebugPort,
-			    &Message,
-			    &Reply);
-  if (!NT_SUCCESS(Status))
+    /* Send the message to the process's debug port and wait for a reply */
+    Status =
+       LpcSendDebugMessagePort(PsGetCurrentThread()->ThreadsProcess->DebugPort,
+                               &Message,
+                               &Reply);
+    if (!NT_SUCCESS(Status))
     {
-      return;
+        return;
     }
 
-  /* FIXME: Examine reply */
-  return;
+    /* FIXME: Examine reply */
+    return;
 #endif
 }
 

@@ -17,7 +17,7 @@ POBJECT_TYPE DbgkDebugObjectType;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 NtCreateDebugObject(OUT PHANDLE DebugHandle,
                     IN ACCESS_MASK DesiredAccess,
                     IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -103,7 +103,7 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtWaitForDebugEvent(IN HANDLE DebugObject, // Debug object handle must grant DEBUG_OBJECT_WAIT_STATE_CHANGE access.
                     IN BOOLEAN Alertable,
                     IN PLARGE_INTEGER Timeout OPTIONAL,
@@ -116,7 +116,7 @@ NtWaitForDebugEvent(IN HANDLE DebugObject, // Debug object handle must grant DEB
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtDebugContinue(IN HANDLE DebugObject,    // Debug object handle must grant DEBUG_OBJECT_WAIT_STATE_CHANGE access.
                 IN PCLIENT_ID AppClientId,
                 IN NTSTATUS ContinueStatus)
@@ -128,7 +128,7 @@ NtDebugContinue(IN HANDLE DebugObject,    // Debug object handle must grant DEBU
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtDebugActiveProcess(IN HANDLE Process,     // Process handle must grant PROCESS_SUSPEND_RESUME access.
                      IN HANDLE DebugObject)  // Debug object handle must grant DEBUG_OBJECT_ADD_REMOVE_PROCESS access.
 {
@@ -139,7 +139,7 @@ NtDebugActiveProcess(IN HANDLE Process,     // Process handle must grant PROCESS
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtRemoveProcessDebug(IN HANDLE Process,     // Process handle must grant PROCESS_SUSPEND_RESUME access.
                      IN HANDLE DebugObject)  // Debug object handle must grant DEBUG_OBJECT_ADD_REMOVE_PROCESS access.
 {
@@ -150,7 +150,7 @@ NtRemoveProcessDebug(IN HANDLE Process,     // Process handle must grant PROCESS
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtSetInformationDebugObject(IN HANDLE DebugObject, // Debug object handle need not grant any particular access right.
                             IN DEBUGOBJECTINFOCLASS DebugObjectInformationClass,
                             IN PVOID DebugInformation,
