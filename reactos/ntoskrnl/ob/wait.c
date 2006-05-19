@@ -132,7 +132,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         }
 
         /* Check for synchronize access */
-        GrantedAccess = HandleEntry->u2.GrantedAccess;
+        GrantedAccess = HandleEntry->GrantedAccess;
         if ((PreviousMode != KernelMode) && (!(GrantedAccess & SYNCHRONIZE)))
         {
             /* Unlock the entry and fail */

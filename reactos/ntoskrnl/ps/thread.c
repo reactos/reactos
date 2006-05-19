@@ -182,8 +182,8 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
     /* Create Cid Handle */
     DPRINT("Creating Thread Handle (CID)\n");
-    CidEntry.u1.Object = Thread;
-    CidEntry.u2.GrantedAccess = 0;
+    CidEntry.Object = Thread;
+    CidEntry.GrantedAccess = 0;
     Thread->Cid.UniqueThread = ExCreateHandle(PspCidTable, &CidEntry);
     if (!Thread->Cid.UniqueThread) {
 
@@ -378,7 +378,7 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
                                          ThreadId)))
     {
         /* Get the Process */
-        FoundThread = CidEntry->u1.Object;
+        FoundThread = CidEntry->Object;
 
         /* Make sure it's really a process */
         if (FoundThread->Tcb.DispatcherHeader.Type == ThreadObject)

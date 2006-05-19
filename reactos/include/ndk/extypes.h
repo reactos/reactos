@@ -467,6 +467,24 @@ typedef struct _EPROFILE
 //
 // Handle Table Structures
 //
+typedef struct _HANDLE_TRACE_DB_ENTRY
+{
+    CLIENT_ID ClientId;
+    HANDLE Handle;
+    ULONG Type;
+    PVOID StackTrace[16];
+} HANDLE_TRACE_DB_ENTRY, *PHANDLE_TRACE_DB_ENTRY;
+
+typedef struct _HANDLE_TRACE_DEBUG_INFO
+{
+    LONG RefCount;
+    ULONG TableSize;
+    ULONG BitMaskFlags;
+    FAST_MUTEX CloseCompatcionLock;
+    ULONG CurrentStackIndex;
+    HANDLE_TRACE_DB_ENTRY TraceDb[1];
+} HANDLE_TRACE_DEBUG_INFO, *PHANDLE_TRACE_DEBUG_INFO;
+
 typedef struct _HANDLE_TABLE_ENTRY_INFO
 {
     ULONG AuditMask;
@@ -480,27 +498,60 @@ typedef struct _HANDLE_TABLE_ENTRY
         ULONG_PTR ObAttributes;
         PHANDLE_TABLE_ENTRY_INFO InfoTable;
         ULONG_PTR Value;
-    } u1;
+    };
     union
     {
         ULONG GrantedAccess;
-        USHORT GrantedAccessIndex;
+        struct
+        {
+            USHORT GrantedAccessIndex;
+            USHORT CreatorBackTraceIndex;
+        };
         LONG NextFreeTableEntry;
-    } u2;
+    };
 } HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
 
 typedef struct _HANDLE_TABLE
 {
-    ULONG Flags;
-    LONG HandleCount;
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+    ULONG TableCode;
+#else
     PHANDLE_TABLE_ENTRY **Table;
+#endif
     PEPROCESS QuotaProcess;
-    HANDLE UniqueProcessId;
-    LONG FirstFreeTableEntry;
-    LONG NextIndexNeedingPool;
-    ERESOURCE HandleTableLock;
+    PVOID UniqueProcessId;
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+    EX_PUSH_LOCK HandleLock;
+    LIST_ENTRY HandleTableList;
+    EX_PUSH_LOCK HandleContentionEvent;
+#else
+    ERESOURCE HandleLock;
     LIST_ENTRY HandleTableList;
     KEVENT HandleContentionEvent;
+#endif
+    PHANDLE_TRACE_DEBUG_INFO DebugInfo;
+    LONG ExtraInfoPages;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    union
+    {
+        ULONG Flags;
+        UCHAR StrictFIFO:1;
+    };
+    LONG FirstFreeHandle;
+    PHANDLE_TABLE_ENTRY LastFreeHandleEntry;
+    LONG HandleCount;
+    ULONG NextHandleNeedingPool;
+#else
+    ULONG FirstFree;
+    ULONG LastFree;
+    ULONG NextHandleNeedingPool;
+    LONG HandleCount;
+    union
+    {
+        ULONG Flags;
+        UCHAR StrictFIFO:1;
+    };
+#endif
 } HANDLE_TABLE, *PHANDLE_TABLE;
 
 #endif

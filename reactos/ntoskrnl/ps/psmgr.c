@@ -306,8 +306,8 @@ PspPostInitSystemProcess(VOID)
   ObCreateHandleTable(NULL, FALSE, PsInitialSystemProcess);
   ObpKernelHandleTable = PsInitialSystemProcess->ObjectTable;
 
-  CidEntry.u1.Object = PsInitialSystemProcess;
-  CidEntry.u2.GrantedAccess = 0;
+  CidEntry.Object = PsInitialSystemProcess;
+  CidEntry.GrantedAccess = 0;
   PsInitialSystemProcess->UniqueProcessId = ExCreateHandle(PspCidTable, &CidEntry);
 
   if(!PsInitialSystemProcess->UniqueProcessId)

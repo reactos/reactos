@@ -123,8 +123,8 @@ ObpQueryHandleAttributes(HANDLE Handle,
                                           Handle);
   if (HandleTableEntry != NULL)
   {
-    HandleInfo->Inherit = (HandleTableEntry->u1.ObAttributes & EX_HANDLE_ENTRY_INHERITABLE) != 0;
-    HandleInfo->ProtectFromClose = (HandleTableEntry->u1.ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE) != 0;
+    HandleInfo->Inherit = (HandleTableEntry->ObAttributes & EX_HANDLE_ENTRY_INHERITABLE) != 0;
+    HandleInfo->ProtectFromClose = (HandleTableEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE) != 0;
 
     ExUnlockHandleTableEntry(Process->ObjectTable,
                              HandleTableEntry);
@@ -183,14 +183,14 @@ ObpSetHandleAttributes(HANDLE Handle,
   if (HandleTableEntry != NULL)
   {
     if (HandleInfo->Inherit)
-      HandleTableEntry->u1.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
+      HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
     else
-      HandleTableEntry->u1.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
+      HandleTableEntry->ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
 
     if (HandleInfo->ProtectFromClose)
-      HandleTableEntry->u1.ObAttributes |= EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
+      HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
     else
-      HandleTableEntry->u1.ObAttributes &= ~EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
+      HandleTableEntry->ObAttributes &= ~EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
 
     /* FIXME: Do we need to set anything in the object header??? */
 
@@ -231,7 +231,7 @@ ObpDeleteHandle(HANDLE Handle)
                                       Handle);
    if(HandleEntry != NULL)
    {
-     if(HandleEntry->u1.ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE)
+     if(HandleEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE)
      {
        ExUnlockHandleTableEntry(ObjectTable,
                                 HandleEntry);
@@ -316,17 +316,17 @@ ObDuplicateObject(PEPROCESS SourceProcess,
   ObjectHeader = EX_HTE_TO_HDR(SourceHandleEntry);
   ObjectBody = &ObjectHeader->Body;
 
-  NewHandleEntry.u1.Object = SourceHandleEntry->u1.Object;
+  NewHandleEntry.Object = SourceHandleEntry->Object;
   if(HandleAttributes & OBJ_INHERIT)
-    NewHandleEntry.u1.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
+    NewHandleEntry.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
   else
-    NewHandleEntry.u1.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
-  NewHandleEntry.u2.GrantedAccess = ((Options & DUPLICATE_SAME_ACCESS) ?
-                                     SourceHandleEntry->u2.GrantedAccess :
+    NewHandleEntry.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
+  NewHandleEntry.GrantedAccess = ((Options & DUPLICATE_SAME_ACCESS) ?
+                                     SourceHandleEntry->GrantedAccess :
                                      DesiredAccess);
   if (Options & DUPLICATE_SAME_ACCESS)
   {
-    NewHandleEntry.u2.GrantedAccess = SourceHandleEntry->u2.GrantedAccess;
+    NewHandleEntry.GrantedAccess = SourceHandleEntry->GrantedAccess;
   }
   else
   {
@@ -335,7 +335,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
       RtlMapGenericMask(&DesiredAccess,
                         &ObjectHeader->Type->TypeInfo.GenericMapping);
     }
-    NewHandleEntry.u2.GrantedAccess = DesiredAccess;
+    NewHandleEntry.GrantedAccess = DesiredAccess;
   }
 
   /* reference the object so it doesn't get deleted after releasing the lock
@@ -634,7 +634,7 @@ DuplicateHandleCallback(PHANDLE_TABLE HandleTable,
 
   PAGED_CODE();
 
-  Ret = (HandleTableEntry->u1.ObAttributes & EX_HANDLE_ENTRY_INHERITABLE) != 0;
+  Ret = (HandleTableEntry->ObAttributes & EX_HANDLE_ENTRY_INHERITABLE) != 0;
   if(Ret)
   {
     ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
@@ -739,12 +739,12 @@ ObpCreateHandle(PVOID ObjectBody,
 		         &ObjectHeader->Type->TypeInfo.GenericMapping);
      }
 
-   NewEntry.u1.Object = ObjectHeader;
+   NewEntry.Object = ObjectHeader;
    if(HandleAttributes & OBJ_INHERIT)
-     NewEntry.u1.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
+     NewEntry.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
    else
-     NewEntry.u1.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
-   NewEntry.u2.GrantedAccess = GrantedAccess;
+     NewEntry.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
+   NewEntry.GrantedAccess = GrantedAccess;
 
    if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&
        ExGetPreviousMode == KernelMode)
@@ -834,7 +834,7 @@ ObQueryObjectAuditingByHandle(IN HANDLE Handle,
                                      Handle);
   if(HandleEntry != NULL)
   {
-    *GenerateOnClose = (HandleEntry->u1.ObAttributes & EX_HANDLE_ENTRY_AUDITONCLOSE) != 0;
+    *GenerateOnClose = (HandleEntry->ObAttributes & EX_HANDLE_ENTRY_AUDITONCLOSE) != 0;
 
     ExUnlockHandleTableEntry(Process->ObjectTable,
                              HandleEntry);
@@ -1013,7 +1013,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
                           &BODY_TO_HEADER(ObjectBody)->Type->TypeInfo.GenericMapping);
      }
 
-   GrantedAccess = HandleEntry->u2.GrantedAccess;
+   GrantedAccess = HandleEntry->GrantedAccess;
 
    /* Unless running as KernelMode, deny access if caller desires more access
       rights than the handle can grant */
@@ -1036,7 +1036,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
 
    ObReferenceObject(ObjectBody);
 
-   Attributes = HandleEntry->u1.ObAttributes & (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
+   Attributes = HandleEntry->ObAttributes & (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
                                                 EX_HANDLE_ENTRY_INHERITABLE |
                                                 EX_HANDLE_ENTRY_AUDITONCLOSE);
 

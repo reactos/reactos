@@ -383,8 +383,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Create a handle for the Process */
     DPRINT("Initialzing Process CID Handle\n");
-    CidEntry.u1.Object = Process;
-    CidEntry.u2.GrantedAccess = 0;
+    CidEntry.Object = Process;
+    CidEntry.GrantedAccess = 0;
     Process->UniqueProcessId = ExCreateHandle(PspCidTable, &CidEntry);
     DPRINT("Created CID: %d\n", Process->UniqueProcessId);
     if(!Process->UniqueProcessId)
@@ -499,7 +499,7 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
                                          ProcessId)))
     {
         /* Get the Process */
-        FoundProcess = CidEntry->u1.Object;
+        FoundProcess = CidEntry->Object;
 
         /* Make sure it's really a process */
         if (FoundProcess->Pcb.Header.Type == ProcessObject)
@@ -541,7 +541,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
                                           Cid->UniqueThread)))
     {
         /* Get the Process */
-        FoundThread = CidEntry->u1.Object;
+        FoundThread = CidEntry->Object;
 
         /* Make sure it's really a thread and this process' */
         if ((FoundThread->Tcb.DispatcherHeader.Type == ThreadObject) &&
