@@ -191,7 +191,7 @@ KdbpOverwriteInstruction(
    KAPC_STATE ApcState;
 
    /* Get the protection for the address. */
-   Protect = MmGetPageProtect((PROS_EPROCESS)Process, (PVOID)PAGE_ROUND_DOWN(Address));
+   Protect = MmGetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address));
 
    /* Return if that page isn't present. */
    if (Protect & PAGE_NOACCESS)
@@ -208,7 +208,7 @@ KdbpOverwriteInstruction(
    /* Make the page writeable if it is read only. */
    if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
    {
-      MmSetPageProtect((PROS_EPROCESS)Process, (PVOID)PAGE_ROUND_DOWN(Address),
+      MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address),
 	               (Protect & ~(PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ)) | PAGE_READWRITE);
    }
 
@@ -220,7 +220,7 @@ KdbpOverwriteInstruction(
       {
          if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
          {
-            MmSetPageProtect((PROS_EPROCESS)Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
+            MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
          }
          /* Detach from process */
          if (CurrentProcess != Process)
@@ -237,7 +237,7 @@ KdbpOverwriteInstruction(
    /* Restore the page protection. */
    if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
    {
-      MmSetPageProtect((PROS_EPROCESS)Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
+      MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
    }
 
    /* Detach from process */
