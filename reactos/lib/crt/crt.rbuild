@@ -119,6 +119,7 @@
 		<file>jn_yn.c</file>
 		<file>ldexp.c</file>
 		<file>log10.c</file>
+            <file>modf.c</file>
 		<file>s_modf.c</file>
 		<file>pow.c</file>
 		<file>sinh.c</file>
