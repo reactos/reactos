@@ -33,6 +33,10 @@ double linkme_log2(double __x)
     return 0;
 }
 
+double linkme_fmod(double __x, double __y)
+{
+    return fmod(__x, __y);
+}
 
 double linkme_sqrt(double __x)
 {
