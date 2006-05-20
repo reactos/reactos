@@ -5,15 +5,16 @@
  * FILE:            ntoskrnl/fs/unc.c
  * PURPOSE:         No purpose listed.
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Emanuele Aliberti
+ *                  Eric Kohl
  */
 
 #include <ntoskrnl.h>
 
 
 /**********************************************************************
- * NAME							EXPORTED
- *	FsRtlDeregisterUncProvider@4
+ * NAME                             EXPORTED
+ *  FsRtlDeregisterUncProvider@4
  *
  * DESCRIPTION
  *
@@ -23,15 +24,16 @@
  *
  * @unimplemented
  */
-VOID STDCALL
+VOID
+NTAPI
 FsRtlDeregisterUncProvider(IN HANDLE Handle)
 {
 }
 
 
 /**********************************************************************
- * NAME							EXPORTED
- *	FsRtlRegisterUncProvider@12
+ * NAME                             EXPORTED
+ *  FsRtlRegisterUncProvider@12
  *
  * DESCRIPTION
  *
@@ -41,12 +43,13 @@ FsRtlDeregisterUncProvider(IN HANDLE Handle)
  *
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 FsRtlRegisterUncProvider(IN OUT PHANDLE Handle,
-			 IN PUNICODE_STRING RedirectorDeviceName,
-			 IN BOOLEAN MailslotsSupported)
+                         IN PUNICODE_STRING RedirectorDeviceName,
+                         IN BOOLEAN MailslotsSupported)
 {
-  return(STATUS_NOT_IMPLEMENTED);
+    return(STATUS_NOT_IMPLEMENTED);
 }
 
 

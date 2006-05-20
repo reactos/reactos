@@ -27,7 +27,7 @@
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 FsRtlAllocatePool (
 	IN	POOL_TYPE	PoolType,
 	IN	ULONG		NumberOfBytes
@@ -64,7 +64,7 @@ FsRtlAllocatePool (
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 FsRtlAllocatePoolWithQuota (
 	IN	POOL_TYPE	PoolType,
 	IN	ULONG		NumberOfBytes
@@ -98,7 +98,7 @@ FsRtlAllocatePoolWithQuota (
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 FsRtlAllocatePoolWithQuotaTag (
 	IN	POOL_TYPE	PoolType,
 	IN	ULONG		NumberOfBytes,
@@ -133,7 +133,7 @@ FsRtlAllocatePoolWithQuotaTag (
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 FsRtlAllocatePoolWithTag (
 	IN	POOL_TYPE	PoolType,
 	IN	ULONG		NumberOfBytes,

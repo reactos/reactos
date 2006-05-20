@@ -22,7 +22,7 @@
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 FsRtlInsertPerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
                             IN PFSRTL_PER_STREAM_CONTEXT Ptr)
 {
@@ -34,7 +34,7 @@ FsRtlInsertPerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
  * @unimplemented
  */
 PFSRTL_PER_STREAM_CONTEXT
-STDCALL
+NTAPI
 FsRtlRemovePerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
                             IN PVOID OwnerId OPTIONAL,
                             IN PVOID InstanceId OPTIONAL)
@@ -47,7 +47,7 @@ FsRtlRemovePerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 FsRtlInsertPerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
                                 IN PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/ Ptr)
 {
@@ -59,7 +59,7 @@ FsRtlInsertPerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectConte
  * @unimplemented
  */
 PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
-STDCALL
+NTAPI
 FsRtlRemovePerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
                                 IN PVOID OwnerId OPTIONAL,
                                 IN PVOID InstanceId OPTIONAL)
@@ -72,7 +72,7 @@ FsRtlRemovePerFileObjectContext(IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectConte
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 FsRtlTeardownPerStreamContexts(IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader)
 {
     UNIMPLEMENTED;

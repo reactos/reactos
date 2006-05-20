@@ -5,7 +5,8 @@
  * FILE:            ntoskrnl/fs/oplock.c
  * PURPOSE:         No purpose listed.
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Emanuele Aliberti
+ *                  Eric Kohl
  */
 
 #include <ntoskrnl.h>
@@ -23,7 +24,8 @@
  *
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 FsRtlCheckOplock(IN POPLOCK Oplock,
 		 IN PIRP Irp,
 		 IN PVOID Context,
@@ -46,7 +48,8 @@ FsRtlCheckOplock(IN POPLOCK Oplock,
  *
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN
+NTAPI
 FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
 {
   return(FALSE);
@@ -68,7 +71,8 @@ FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
  *
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
 {
 }
@@ -86,7 +90,8 @@ FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
  *
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 FsRtlOplockFsctrl(IN POPLOCK Oplock,
 		  IN PIRP Irp,
 		  IN ULONG OpenCount)
@@ -107,7 +112,8 @@ FsRtlOplockFsctrl(IN POPLOCK Oplock,
  *
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN
+NTAPI
 FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
 {
   return(FALSE);
@@ -126,7 +132,8 @@ FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
  *
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 FsRtlUninitializeOplock(IN POPLOCK Oplock)
 {
 }

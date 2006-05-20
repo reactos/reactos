@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/tests/tests/VirtualMemory.c
  * PURPOSE:         No purpose listed.
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 #include <ntoskrnl.h>

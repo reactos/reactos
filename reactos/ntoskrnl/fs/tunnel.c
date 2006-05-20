@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/fs/tunnel.c
  * PURPOSE:         No purpose listed.
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Emanuele Aliberti
  */
 
 #include <ntoskrnl.h>
