@@ -213,13 +213,15 @@ HGLOBAL STDCALL
 GlobalFree(HGLOBAL hMem)
 {
     PGLOBAL_HANDLE phandle;
+    HGLOBAL hreturned;
 
     DPRINT("GlobalFree( 0x%lX )\n", (ULONG)hMem);
 
+    hreturned = 0;
     if (ISPOINTER(hMem)) /* POINTER */
     {
-        RtlFreeHeap(GetProcessHeap(), 0, (PVOID)hMem);
-        hMem = 0;
+        if(!RtlFreeHeap(GetProcessHeap(), 0, (PVOID)hMem))
+            hMem = 0;
     }
     else /* HANDLE */
     {
@@ -229,7 +231,8 @@ GlobalFree(HGLOBAL hMem)
 
         if(MAGIC_GLOBAL_USED == phandle->Magic)
         {
-
+            /* WIN98 does not make this test. That is you can free a */
+            /* block you have not unlocked. Go figure!!              */
             if(phandle->LockCount!=0)
             {
                 DPRINT1("Warning! GlobalFree(0x%X) Freeing a handle to a locked object.\n", hMem);
@@ -237,15 +240,17 @@ GlobalFree(HGLOBAL hMem)
             }
 
             if(phandle->Pointer)
-                RtlFreeHeap(GetProcessHeap(), 0, (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE));
+                if (!RtlFreeHeap(GetProcessHeap(), 0, (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE)))
+                    hreturned = hMem;
 
-            RtlFreeHeap(GetProcessHeap(), 0, phandle);
+            if (!RtlFreeHeap(GetProcessHeap(), 0, phandle))
+                hreturned = hMem;
         }
         HeapUnlock(GetProcessHeap());
 
         hMem = 0;
     }
-    return hMem;
+    return hreturned;
 }
 
 

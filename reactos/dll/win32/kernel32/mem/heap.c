@@ -40,9 +40,15 @@
  */
 HANDLE STDCALL HeapCreate(DWORD flags, DWORD dwInitialSize, DWORD dwMaximumSize)
 {
-
+   HANDLE hRet;
    DPRINT("HeapCreate( 0x%lX, 0x%lX, 0x%lX )\n", flags, dwInitialSize, dwMaximumSize);
-   return(RtlCreateHeap(flags, NULL, dwMaximumSize, dwInitialSize, NULL, NULL));
+   
+   hRet = RtlCreateHeap(flags, NULL, dwMaximumSize, dwInitialSize, NULL, NULL);
+   
+   if (!hRet)
+      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+
+   return hRet;
 }
 
 /*********************************************************************
