@@ -4,7 +4,11 @@
  * PROJECT  : ReactOS user mode libraries
  * MODULE   : kernel32.dll
  * FILE     : reactos/lib/kernel32/misc/res.c
- * AUTHOR   : ???
+ * AUTHOR   : Boudewijn Dekker (Ariadne)
+ *            Eric Kohl
+ *            Ge van Geldorp
+ *            Gunnar Dalsnes
+ *            David Welch
  */
 
 #include <k32.h>
@@ -12,6 +16,9 @@
 #define NDEBUG
 #include "../include/debug.h"
 
+#define STUB \
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
+  DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
 
 /*
  * @implemented
@@ -227,7 +234,7 @@ BeginUpdateResourceW (
 	BOOL	bDeleteExistingResources
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
@@ -242,7 +249,7 @@ BeginUpdateResourceA (
 	BOOL	bDeleteExistingResources
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
@@ -257,7 +264,7 @@ EndUpdateResourceW (
 	BOOL	fDiscard
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
@@ -292,7 +299,7 @@ EnumResourceLanguagesW (
 	LONG			lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
@@ -307,7 +314,7 @@ EnumResourceLanguagesA (
 	LONG			lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
@@ -490,7 +497,7 @@ EnumResourceTypesW (
 	LONG			lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
@@ -506,7 +513,7 @@ EnumResourceTypesA (
 	LONG			lParam
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
@@ -525,7 +532,7 @@ UpdateResourceA (
 	DWORD	cbData
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
@@ -544,7 +551,7 @@ UpdateResourceW (
 	DWORD	cbData
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	STUB;
 	return FALSE;
 }
 
