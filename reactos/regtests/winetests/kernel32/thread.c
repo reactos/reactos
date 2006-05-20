@@ -83,7 +83,7 @@ typedef struct {
 } t1Struct;
 
 /* WinME supports OpenThread but doesn't know about access restrictions so
-   we require them to be either completly ignored or always obeyed.
+   we require them to be either completely ignored or always obeyed.
 */
 INT obeying_ars = 0; /* -1 == no, 0 == dunno yet, 1 == yes */
 #define obey_ar(x) \
@@ -96,7 +96,7 @@ INT obeying_ars = 0; /* -1 == no, 0 == dunno yet, 1 == yes */
       ? ok(!(x), "access restrictions obeyed\n") \
       : ok( (x), "access restrictions not obeyed\n"))
 
-/* Basic test that simulatneous threads can access shared memory,
+/* Basic test that simultaneous threads can access shared memory,
    that the thread local storage routines work correctly, and that
    threads actually run concurrently
 */
@@ -119,7 +119,11 @@ static DWORD WINAPI threadFunc1(LPVOID p)
    for(i=0;i<NUM_THREADS;i++) {
      while(tstruct->threadmem[i]==0) ;
    }
-/* Check that noone cahnged our tls memory */
+
+   /* lstrlenA contains an exception handler so this makes sure exceptions work in threads */
+   ok( lstrlenA( (char *)0xdeadbeef ) == 0, "lstrlenA: unexpected success\n" );
+
+/* Check that noone changed our tls memory */
    ok((int)TlsGetValue(tlsIndex)-1==tstruct->threadnum,
       "TlsGetValue failed\n");
    return NUM_THREADS+tstruct->threadnum;
@@ -178,6 +182,11 @@ static VOID test_CreateThread_basic(void)
    t1Struct tstruct[NUM_THREADS];
    int error;
    DWORD i,j;
+   DWORD GLE, ret;
+
+   /* lstrlenA contains an exception handler so this makes sure exceptions work in the main thread */
+   ok( lstrlenA( (char *)0xdeadbeef ) == 0, "lstrlenA: unexpected success\n" );
+
 /* Retrieve current Thread ID for later comparisons */
   curthreadId=GetCurrentThreadId();
 /* Allocate some local storage */
@@ -228,6 +237,23 @@ static VOID test_CreateThread_basic(void)
     ok(CloseHandle(thread[i])!=0,"CloseHandle failed\n");
   }
   ok(TlsFree(tlsIndex)!=0,"TlsFree failed\n");
+
+  /* Test how passing NULL as a pointer to threadid works */
+  SetLastError(0xFACEaBAD);
+  thread[0] = CreateThread(NULL,0,threadFunc2,NULL,0,NULL);
+  GLE = GetLastError();
+  if (thread[0]) { /* NT */
+    ok(GLE==0xFACEaBAD, "CreateThread set last error to %ld, expected 4207848365\n", GLE);
+    ret = WaitForSingleObject(thread[0],100);
+    ok(ret==WAIT_OBJECT_0, "threadFunc2 did not exit during 100 ms\n");
+    ret = GetExitCodeThread(thread[0],&exitCode);
+    ok(ret!=0, "GetExitCodeThread returned %ld (expected nonzero)\n", ret);
+    ok(exitCode==99, "threadFunc2 exited with code: %ld (expected 99)\n", exitCode);
+    ok(CloseHandle(thread[0])!=0,"Error closing thread handle\n");
+  }
+  else { /* 9x */
+    ok(GLE==ERROR_INVALID_PARAMETER, "CreateThread set last error to %ld, expected 87\n", GLE);
+  }
 }
 
 /* Check that using the CREATE_SUSPENDED flag works */
@@ -323,7 +349,7 @@ static VOID test_TerminateThread(void)
   thread = CreateThread(NULL,0,threadFunc4,
                         (LPVOID)event, 0,&threadId);
   ok(thread!=NULL,"Create Thread failed\n");
-/* Terminate thread has a race condition in Wine.  If the thread is terminated
+/* TerminateThread has a race condition in Wine.  If the thread is terminated
    before it starts, it leaves a process behind.  Therefore, we wait for the
    thread to signal that it has started.  There is no easy way to force the
    race to occur, so we don't try to find it.
@@ -425,10 +451,10 @@ static VOID test_thread_priority(void)
       "SetThreadPriority Failed\n");
    ok(GetThreadPriority(curthread)==THREAD_PRIORITY_TIME_CRITICAL,
       "GetThreadPriority Failed\n");
-   //ok(SetThreadPriority(curthread,THREAD_PRIORITY_IDLE)!=0,
-       //"SetThreadPriority Failed\n");
-   //ok(GetThreadPriority(curthread)==THREAD_PRIORITY_IDLE,
-       //"GetThreadPriority Failed\n");
+   ok(SetThreadPriority(curthread,THREAD_PRIORITY_IDLE)!=0,
+       "SetThreadPriority Failed\n");
+   ok(GetThreadPriority(curthread)==THREAD_PRIORITY_IDLE,
+       "GetThreadPriority Failed\n");
    ok(SetThreadPriority(curthread,0)!=0,"SetThreadPriority Failed\n");
 
 /* Check thread priority boost */
@@ -567,14 +593,99 @@ static VOID test_thread_processor(void)
    }
 }
 
+static VOID test_GetThreadExitCode(void)
+{
+    DWORD exitCode, threadid;
+    DWORD GLE, ret;
+    HANDLE thread;
+
+    ret = GetExitCodeThread((HANDLE)0x2bad2bad,&exitCode);
+    ok(ret==0, "GetExitCodeThread returned non zero value: %ld\n", ret);
+    GLE = GetLastError();
+    ok(GLE==ERROR_INVALID_HANDLE, "GetLastError returned %ld (expected 6)\n", GLE);
+
+    thread = CreateThread(NULL,0,threadFunc2,NULL,0,&threadid);
+    ret = WaitForSingleObject(thread,100);
+    ok(ret==WAIT_OBJECT_0, "threadFunc2 did not exit during 100 ms\n");
+    ret = GetExitCodeThread(thread,&exitCode);
+    ok(ret==exitCode || ret==1, 
+       "GetExitCodeThread returned %ld (expected 1 or %ld)\n", ret, exitCode);
+    ok(exitCode==99, "threadFunc2 exited with code %ld (expected 99)\n", exitCode);
+    ok(CloseHandle(thread)!=0,"Error closing thread handle\n");
+}
+
+#ifdef __i386__
+
+static int test_value = 0;
+static HANDLE event;
+
+static void WINAPI set_test_val( int val )
+{
+    test_value += val;
+}
+
+static DWORD WINAPI threadFunc6(LPVOID p)
+{
+    SetEvent( event );
+    Sleep( 1000 );
+    test_value *= (int)p;
+    return 0;
+}
+
+static void test_SetThreadContext(void)
+{
+    CONTEXT ctx;
+    int *stack;
+    HANDLE thread;
+    DWORD threadid;
+    DWORD prevcount;
+
+    SetLastError(0xdeadbeef);
+    event = CreateEvent( NULL, TRUE, FALSE, NULL );
+    thread = CreateThread( NULL, 0, threadFunc6, (void *)2, 0, &threadid );
+    ok( thread != NULL, "CreateThread failed : (%ld)\n", GetLastError() );
+    if (!thread)
+    {
+        trace("Thread creation failed, skipping rest of test\n");
+        return;
+    }
+    WaitForSingleObject( event, INFINITE );
+    SuspendThread( thread );
+    CloseHandle( event );
+
+    ctx.ContextFlags = CONTEXT_FULL;
+    SetLastError(0xdeadbeef);
+    ok( GetThreadContext( thread, &ctx ), "GetThreadContext failed : (%ld)\n", GetLastError() );
+
+    /* simulate a call to set_test_val(10) */
+    stack = (int *)ctx.Esp;
+    stack[-1] = 10;
+    stack[-2] = ctx.Eip;
+    ctx.Esp -= 2 * sizeof(int *);
+    ctx.Eip = (DWORD)set_test_val;
+    SetLastError(0xdeadbeef);
+    ok( SetThreadContext( thread, &ctx ), "SetThreadContext failed : (%ld)\n", GetLastError() );
+
+    SetLastError(0xdeadbeef);
+    prevcount = ResumeThread( thread );
+    ok ( prevcount == 1, "Previous suspend count (%ld) instead of 1, last error : (%ld)\n",
+                         prevcount, GetLastError() );
+
+    WaitForSingleObject( thread, INFINITE );
+    ok( test_value == 20, "test_value %d instead of 20\n", test_value );
+}
+
+#endif  /* __i386__ */
+
+
 START_TEST(thread)
 {
    HINSTANCE lib;
 /* Neither Cygwin nor mingW export OpenThread, so do a dynamic check
    so that the compile passes
 */
-   lib=LoadLibraryA("kernel32");
-   ok(lib!=NULL,"Couldn't load kernel32.dll\n");
+   lib=GetModuleHandleA("kernel32.dll");
+   ok(lib!=NULL,"Couldn't get a handle for kernel32.dll\n");
    pGetThreadPriorityBoost=(GetThreadPriorityBoost_t)GetProcAddress(lib,"GetThreadPriorityBoost");
    pOpenThread=(OpenThread_t)GetProcAddress(lib,"OpenThread");
    pSetThreadIdealProcessor=(SetThreadIdealProcessor_t)GetProcAddress(lib,"SetThreadIdealProcessor");
@@ -587,4 +698,8 @@ START_TEST(thread)
    test_thread_priority();
    test_GetThreadTimes();
    test_thread_processor();
+   test_GetThreadExitCode();
+#ifdef __i386__
+   test_SetThreadContext();
+#endif
 }

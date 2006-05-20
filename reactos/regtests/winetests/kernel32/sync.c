@@ -109,9 +109,7 @@ static void test_signalandwait(void)
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL);
     r = pSignalObjectAndWait(file, file, 0, FALSE);
     ok( r == WAIT_FAILED, "should fail\n");
-    todo_wine {
     ok( ERROR_INVALID_HANDLE == GetLastError(), "should return invalid handle error\n");
-    }
     CloseHandle(file);
 }
 

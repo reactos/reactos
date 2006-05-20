@@ -918,8 +918,8 @@ static void test_offset_in_overlapped_structure(void)
     ok(done == sizeof(buf), "expected number of bytes written %lu\n", done);
 
     memset(&ov, 0, sizeof(ov));
-    ov.Offset = PATTERN_OFFSET;
-    ov.OffsetHigh = 0;
+    S(U(ov)).Offset = PATTERN_OFFSET;
+    S(U(ov)).OffsetHigh = 0;
     rc=WriteFile(hFile, pattern, sizeof(pattern), &done, &ov);
     /* Win 9x does not support the overlapped I/O on files */
     if (rc || GetLastError()!=ERROR_INVALID_PARAMETER) {
@@ -929,8 +929,8 @@ static void test_offset_in_overlapped_structure(void)
         ok(SetFilePointer(hFile, 0, NULL, FILE_CURRENT) == (PATTERN_OFFSET + sizeof(pattern)),
            "expected file offset %d\n", PATTERN_OFFSET + sizeof(pattern));
 
-        ov.Offset = sizeof(buf) * 2;
-        ov.OffsetHigh = 0;
+        S(U(ov)).Offset = sizeof(buf) * 2;
+        S(U(ov)).OffsetHigh = 0;
         ret = WriteFile(hFile, pattern, sizeof(pattern), &done, &ov);
         ok( ret, "WriteFile error %ld\n", GetLastError());
         ok(done == sizeof(pattern), "expected number of bytes written %lu\n", done);
@@ -948,8 +948,8 @@ static void test_offset_in_overlapped_structure(void)
 
     memset(buf, 0, sizeof(buf));
     memset(&ov, 0, sizeof(ov));
-    ov.Offset = PATTERN_OFFSET;
-    ov.OffsetHigh = 0;
+    S(U(ov)).Offset = PATTERN_OFFSET;
+    S(U(ov)).OffsetHigh = 0;
     rc=ReadFile(hFile, buf, sizeof(pattern), &done, &ov);
     /* Win 9x does not support the overlapped I/O on files */
     if (rc || GetLastError()!=ERROR_INVALID_PARAMETER) {
@@ -1007,8 +1007,8 @@ static void test_LockFile(void)
     ok( !UnlockFile( handle, 10, 0, 20, 0 ), "UnlockFile 10,20 again succeeded\n" );
     ok( UnlockFile( handle, 5, 0, 5, 0 ), "UnlockFile 5,5 failed\n" );
 
-    overlapped.Offset = 100;
-    overlapped.OffsetHigh = 0;
+    S(U(overlapped)).Offset = 100;
+    S(U(overlapped)).OffsetHigh = 0;
     overlapped.hEvent = 0;
 
     lockfileex_capable = dll_capable("kernel32", "LockFileEx");
@@ -1024,7 +1024,7 @@ static void test_LockFile(void)
     }
 
     /* overlapping shared locks are OK */
-    overlapped.Offset = 150;
+    S(U(overlapped)).Offset = 150;
     limited_UnLockFile || ok( LockFileEx( handle, 0, 0, 100, 0, &overlapped ), "LockFileEx 150,100 failed\n" );
 
     /* but exclusive is not */
@@ -1037,7 +1037,7 @@ static void test_LockFile(void)
         {
             if (!UnlockFileEx( handle, 0, 100, 0, &overlapped ))
             { /* UnLockFile is capable. */
-                overlapped.Offset = 100;
+                S(U(overlapped)).Offset = 100;
                 ok( !UnlockFileEx( handle, 0, 100, 0, &overlapped ),
                     "UnlockFileEx 150,100 again succeeded\n" );
 	    }
@@ -1081,15 +1081,23 @@ static inline int is_sharing_compatible( DWORD access1, DWORD sharing1, DWORD ac
     if (!access1 || !access2) return 1;
     if ((access1 & GENERIC_READ) && !(sharing2 & FILE_SHARE_READ)) return 0;
     if ((access1 & GENERIC_WRITE) && !(sharing2 & FILE_SHARE_WRITE)) return 0;
+    if ((access1 & DELETE) && !(sharing2 & FILE_SHARE_DELETE)) return 0;
     if ((access2 & GENERIC_READ) && !(sharing1 & FILE_SHARE_READ)) return 0;
     if ((access2 & GENERIC_WRITE) && !(sharing1 & FILE_SHARE_WRITE)) return 0;
+    if ((access2 & DELETE) && !(sharing1 & FILE_SHARE_DELETE)) return 0;
     return 1;
 }
 
 static void test_file_sharing(void)
 {
-    static const DWORD access_modes[4] = { 0, GENERIC_READ, GENERIC_WRITE, GENERIC_READ|GENERIC_WRITE };
-    static const DWORD sharing_modes[4] = { 0, FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE };
+    static const DWORD access_modes[] =
+        { 0, GENERIC_READ, GENERIC_WRITE, GENERIC_READ|GENERIC_WRITE,
+          DELETE, GENERIC_READ|DELETE, GENERIC_WRITE|DELETE, GENERIC_READ|GENERIC_WRITE|DELETE };
+    static const DWORD sharing_modes[] =
+        { 0, FILE_SHARE_READ,
+          FILE_SHARE_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE,
+          FILE_SHARE_DELETE, FILE_SHARE_READ|FILE_SHARE_DELETE,
+          FILE_SHARE_WRITE|FILE_SHARE_DELETE, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE };
     int a1, s1, a2, s2;
     int ret;
     HANDLE h, h2;
@@ -1103,9 +1111,9 @@ static void test_file_sharing(void)
     }
     CloseHandle( h );
 
-    for (a1 = 0; a1 < 4; a1++)
+    for (a1 = 0; a1 < sizeof(access_modes)/sizeof(access_modes[0]); a1++)
     {
-        for (s1 = 0; s1 < 4; s1++)
+        for (s1 = 0; s1 < sizeof(sharing_modes)/sizeof(sharing_modes[0]); s1++)
         {
             h = CreateFileA( filename, access_modes[a1], sharing_modes[s1],
                              NULL, OPEN_EXISTING, 0, 0 );
@@ -1114,9 +1122,9 @@ static void test_file_sharing(void)
                 ok(0,"couldn't create file \"%s\" (err=%ld)\n",filename,GetLastError());
                 return;
             }
-            for (a2 = 0; a2 < 4; a2++)
+            for (a2 = 0; a2 < sizeof(access_modes)/sizeof(access_modes[0]); a2++)
             {
-                for (s2 = 0; s2 < 4; s2++)
+                for (s2 = 0; s2 < sizeof(sharing_modes)/sizeof(sharing_modes[0]); s2++)
                 {
                     SetLastError(0xdeadbeef);
                     h2 = CreateFileA( filename, access_modes[a2], sharing_modes[s2],
@@ -1305,8 +1313,8 @@ static void test_async_file_errors(void)
     HANDLE hFile;
     LPVOID lpBuffer = HeapAlloc(GetProcessHeap(), 0, 4096);
     OVERLAPPED ovl;
-    ovl.Offset = 0;
-    ovl.OffsetHigh = 0;
+    S(U(ovl)).Offset = 0;
+    S(U(ovl)).OffsetHigh = 0;
     ovl.hEvent = hSem;
     completion_count = 0;
     szFile[0] = '\0';
@@ -1323,7 +1331,7 @@ static void test_async_file_errors(void)
         /*printf("Offset = %ld, result = %s\n", ovl.Offset, res ? "TRUE" : "FALSE");*/
         if (!res)
             break;
-        ovl.Offset += 4096;
+        S(U(ovl)).Offset += 4096;
         /* i/o completion routine only called if ReadFileEx returned success.
          * we only care about violations of this rule so undo what should have
          * been done */
@@ -1369,6 +1377,10 @@ static void test_read_write(void)
 	bytes == 10, /* Win9x */
 	"bytes = %ld\n", bytes);
 
+    /* make sure the file contains data */
+    WriteFile(hFile, "this is the test data", 21, &bytes, NULL);
+    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+
     SetLastError(12345678);
     bytes = 12345678;
     ret = ReadFile(hFile, NULL, 0, &bytes, NULL);
@@ -1388,6 +1400,87 @@ static void test_read_write(void)
     ok( ret, "CloseHandle: error %ld\n", GetLastError());
     ret = DeleteFileA(filename);
     ok( ret, "DeleteFileA: error %ld\n", GetLastError());
+}
+
+static void test_OpenFile_exists(void)
+{
+    HFILE hFile;
+    OFSTRUCT ofs;
+    
+    static const char *file = "\\winver.exe";
+    char buff[MAX_PATH];
+    UINT length;
+    
+    length = GetSystemDirectoryA(buff, MAX_PATH);
+
+    if ((length + lstrlen(file) < MAX_PATH))
+    {
+	lstrcat(buff, file);
+
+	hFile = OpenFile(buff, &ofs, OF_EXIST);
+	ok( hFile == TRUE, "%s not found : %ld\n", buff, GetLastError());
+    }
+
+    hFile = OpenFile(".\\foo-bar-foo.baz", &ofs, OF_EXIST);
+    ok( hFile == HFILE_ERROR, "hFile != HFILE_ERROR : %ld\n", GetLastError());
+}
+
+static void test_overlapped(void)
+{
+    OVERLAPPED ov;
+    DWORD r, result;
+
+    /* GetOverlappedResult crashes if the 2nd or 3rd param are NULL */
+
+    memset( &ov, 0,  sizeof ov );
+    result = 1;
+    r = GetOverlappedResult(0, &ov, &result, 0);
+    ok( r == TRUE, "should return false\n");
+    ok( result == 0, "result wrong\n");
+
+    result = 0;
+    ov.Internal = 0;
+    ov.InternalHigh = 0xabcd;
+    r = GetOverlappedResult(0, &ov, &result, 0);
+    ok( r == TRUE, "should return false\n");
+    ok( result == 0xabcd, "result wrong\n");
+
+    SetLastError( 0xb00 );
+    result = 0;
+    ov.Internal = STATUS_INVALID_HANDLE;
+    ov.InternalHigh = 0xabcd;
+    r = GetOverlappedResult(0, &ov, &result, 0);
+    ok (GetLastError() == ERROR_INVALID_HANDLE, "error wrong\n");
+    ok( r == FALSE, "should return false\n");
+    ok( result == 0xabcd, "result wrong\n");
+
+    result = 0;
+    ov.Internal = STATUS_PENDING;
+    ov.InternalHigh = 0xabcd;
+    r = GetOverlappedResult(0, &ov, &result, 0);
+    todo_wine {
+    ok (GetLastError() == ERROR_IO_INCOMPLETE, "error wrong\n");
+    }
+    ok( r == FALSE, "should return false\n");
+    ok( result == 0, "result wrong\n");
+
+    ov.hEvent = CreateEvent( NULL, 1, 1, NULL );
+    ov.Internal = STATUS_PENDING;
+    ov.InternalHigh = 0xabcd;
+    r = GetOverlappedResult(0, &ov, &result, 0);
+    ok (GetLastError() == ERROR_IO_INCOMPLETE, "error wrong\n");
+    ok( r == FALSE, "should return false\n");
+
+    ResetEvent( ov.hEvent );
+
+    ov.Internal = STATUS_PENDING;
+    ov.InternalHigh = 0;
+    r = GetOverlappedResult(0, &ov, &result, 0);
+    ok (GetLastError() == ERROR_IO_INCOMPLETE, "error wrong\n");
+    ok( r == FALSE, "should return false\n");
+
+    r = CloseHandle( ov.hEvent );
+    ok( r == TRUE, "close handle failed\n");
 }
 
 START_TEST(file)
@@ -1418,4 +1511,6 @@ START_TEST(file)
     test_GetFileType();
     test_async_file_errors();
     test_read_write();
+    test_OpenFile_exists();
+    test_overlapped();
 }

@@ -25,6 +25,19 @@
 #include "winbase.h"
 #include "winnls.h"
 
+static void test_null_source(void)
+{
+    int len;
+    DWORD GLE;
+
+    SetLastError(0);
+    len = WideCharToMultiByte(CP_ACP, 0, NULL, 0, NULL, 0, NULL, NULL);
+    GLE = GetLastError();
+    ok(!len && GLE == ERROR_INVALID_PARAMETER,
+        "WideCharToMultiByte returned %d with GLE=%ld (expected 0 with ERROR_INVALID_PARAMETER)\n", 
+        len, GLE);
+}
+
 /* lstrcmpW is not supported on Win9x! */
 static int mylstrcmpW(const WCHAR* str1, const WCHAR* str2)
 {
@@ -71,6 +84,7 @@ static void test_overlapped_buffers(void)
 
 START_TEST(codepage)
 {
+    test_null_source();
     test_negative_source_length();
     test_overlapped_buffers();
 }

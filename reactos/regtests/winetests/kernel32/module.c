@@ -103,18 +103,28 @@ static void testGetModuleFileName_Wrong(void)
 
 static void testLoadLibraryA(void)
 {
-    HMODULE hModule;
+    HMODULE hModule, hModule1;
     FARPROC fp;
 
     SetLastError(0xdeadbeef);
-    hModule = LoadLibraryA("ntdll.dll");
-    ok( hModule != NULL, "ntdll.dll should be loadable\n");
+    hModule = LoadLibraryA("kernel32.dll");
+    ok( hModule != NULL, "kernel32.dll should be loadable\n");
     ok( GetLastError() == 0xdeadbeef, "GetLastError should be 0xdeadbeef but is %08lx\n", GetLastError());
 
-    fp = GetProcAddress(hModule, "NtCreateFile"); 
-    ok( fp != NULL, "Call should be there\n");
+    fp = GetProcAddress(hModule, "CreateFileA");
+    ok( fp != NULL, "CreateFileA should be there\n");
     ok( GetLastError() == 0xdeadbeef, "GetLastError should be 0xdeadbeef but is %08lx\n", GetLastError());
 
+    SetLastError(0xdeadbeef);
+    hModule1 = LoadLibraryA("kernel32   ");
+    /* Only winNT does this */
+    if (GetLastError() != ERROR_DLL_NOT_FOUND)
+    {
+        ok( hModule1 != NULL, "\"kernel32   \" should be loadable\n");
+        ok( GetLastError() == 0xdeadbeef, "GetLastError should be 0xdeadbeef but is %08lx\n", GetLastError());
+        ok( hModule == hModule1, "Loaded wrong module\n");
+        FreeLibrary(hModule1);
+    }
     FreeLibrary(hModule);
 }
 

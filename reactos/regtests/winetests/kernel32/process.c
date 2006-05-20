@@ -415,7 +415,7 @@ static int strCmp(const char* s1, const char* s2, BOOL sensitive)
         ok(strCmp(result, expect, 0) == 0, "%s:%s expected '%s', got '%s'\n", sect, key, expect, result); \
     } while (0)
 
-/* using !expect insures that the test will fail if the sect/key isn't present
+/* using !expect ensures that the test will fail if the sect/key isn't present
  * in result file
  */
 #define okChildInt(sect, key, expect) \
@@ -693,9 +693,10 @@ static void test_Startup(void)
 
 static void test_CommandLine(void)
 {
-    char                buffer[MAX_PATH];
+    char                buffer[MAX_PATH], fullpath[MAX_PATH], *lpFilePart, *p;
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup;
+    DWORD               len;
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
@@ -740,6 +741,49 @@ static void test_CommandLine(void)
     okChildString("Arguments", "CommandLineA", buffer);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
+
+    /* Test for Bug1330 to show that XP doesn't change '/' to '\\' in argv[0]*/
+    get_file_name(resfile);
+    sprintf(buffer, "./%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", selfname, resfile);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
+    /* wait for child to terminate */
+    ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    /* child process has changed result file, so let profile functions know about it */
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+    sprintf(buffer, "./%s", selfname);
+    okChildString("Arguments", "argvA0", buffer);
+    release_memory();
+    assert(DeleteFileA(resfile) != 0);
+
+    get_file_name(resfile);
+    sprintf(buffer, ".\\%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", selfname, resfile);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
+    /* wait for child to terminate */
+    ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    /* child process has changed result file, so let profile functions know about it */
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+    sprintf(buffer, ".\\%s", selfname);
+    okChildString("Arguments", "argvA0", buffer);
+    release_memory();
+    assert(DeleteFileA(resfile) != 0);
+    
+    get_file_name(resfile);
+    len = GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
+    assert ( lpFilePart != 0);
+    *(lpFilePart -1 ) = 0;
+    p = strrchr(fullpath, '\\');
+    assert (p);
+    sprintf(buffer, "..%s/%s tests/process.c %s \"a\\\"b\\\\\" c\\\" d", p, selfname, resfile);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info), "CreateProcess\n");
+    /* wait for child to terminate */
+    ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    /* child process has changed result file, so let profile functions know about it */
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+    sprintf(buffer, "..%s/%s", p, selfname);
+    okChildString("Arguments", "argvA0", buffer);
+    release_memory();
+    assert(DeleteFileA(resfile) != 0);
+    
 }
 
 static void test_Directory(void)

@@ -1795,7 +1795,8 @@ static void test_FoldStringW(void)
 
       ok(dst[0] == ch || strchrW(outOfSequenceDigits, ch) ||
          /* Wine (correctly) maps all Unicode 4.0+ digits */
-         isdigitW(ch) || (ch >= 0x24F5 && ch <= 0x24FD) || ch == 0x24FF,
+         isdigitW(ch) || (ch >= 0x24F5 && ch <= 0x24FD) || ch == 0x24FF ||
+         (ch >= 0x1369 && ch <= 0x1371),
          "MAP_FOLDDIGITS: ch %d 0x%04x Expected unchanged got %d\n", ch, ch, dst[0]);
     }
 

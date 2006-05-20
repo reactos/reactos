@@ -25,6 +25,12 @@
 #include "winbase.h"
 #include "wine/test.h"
 
+static SIZE_T resize_9x(SIZE_T size)
+{
+    DWORD dwSizeAligned = (size + 3) & ~3;
+    return max(dwSizeAligned, 12); /* at least 12 bytes */
+}
+
 START_TEST(heap)
 {
     void *mem;
@@ -43,7 +49,8 @@ START_TEST(heap)
         SIZE_T heap_size;
         mem = HeapAlloc(GetProcessHeap(), 0, size);
         heap_size = HeapSize(GetProcessHeap(), 0, mem);
-        ok(size == heap_size, "HeapSize returned %lu instead of %lu\n", heap_size, size);
+        ok(heap_size == size || heap_size == resize_9x(size), 
+            "HeapSize returned %lu instead of %lu or %lu\n", heap_size, size, resize_9x(size));
         HeapFree(GetProcessHeap(), 0, mem);
     }
 
@@ -56,11 +63,8 @@ START_TEST(heap)
     size = GlobalSize(gbl);
     ok(size >= 10 && size <= 16, "Memory not resized to size 10, instead size=%ld\n", size);
 
-    todo_wine
-    { 
-        gbl = GlobalReAlloc(gbl, 0, GMEM_MOVEABLE);
-        ok(gbl != NULL, "GlobalReAlloc should not fail on size 0\n");
-    }
+    gbl = GlobalReAlloc(gbl, 0, GMEM_MOVEABLE);
+    ok(gbl != NULL, "GlobalReAlloc should not fail on size 0\n");
 
     size = GlobalSize(gbl);
     ok(size == 0, "Memory not resized to size 0, instead size=%ld\n", size);
@@ -80,11 +84,8 @@ START_TEST(heap)
     size = LocalSize(gbl);
     ok(size >= 10 && size <= 16, "Memory not resized to size 10, instead size=%ld\n", size);
 
-    todo_wine
-    {
-        gbl = LocalReAlloc(gbl, 0, LMEM_MOVEABLE);
-        ok(gbl != NULL, "LocalReAlloc should not fail on size 0\n");
-    }
+    gbl = LocalReAlloc(gbl, 0, LMEM_MOVEABLE);
+    ok(gbl != NULL, "LocalReAlloc should not fail on size 0\n");
 
     size = LocalSize(gbl);
     ok(size == 0, "Memory not resized to size 0, instead size=%ld\n", size);
@@ -95,4 +96,12 @@ START_TEST(heap)
     gbl = LocalReAlloc(0, 10, LMEM_MOVEABLE);
     ok(gbl == NULL, "local realloc allocated memory\n");
 
+    /* trying to lock empty memory should give an error */
+    gbl = GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT,0);
+    ok(gbl != NULL, "returned NULL\n");
+    SetLastError(0xdeadbeef);
+    mem = GlobalLock(gbl);
+    ok( GetLastError() == ERROR_DISCARDED, "should return an error\n");
+    ok( mem == NULL, "should return NULL\n");
+    GlobalFree(gbl);
 }

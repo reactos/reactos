@@ -25,6 +25,8 @@
 #include "winbase.h"
 #include "winerror.h"
 
+static DWORD (WINAPI *pGetDiskFreeSpaceExA)(LPCSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
+
 static void test_GetDriveTypeA(void)
 {
     char drive[] = "?:\\";
@@ -114,10 +116,29 @@ static void test_GetDiskFreeSpaceA(void)
                    "GetDiskFreeSpaceA(%s): ret=%d GetLastError=%ld\n",
                    drive, ret, GetLastError());
             else
+            {
                 ok(ret ||
                    (!ret && (GetLastError() == ERROR_NOT_READY || GetLastError() == ERROR_INVALID_DRIVE)),
                    "GetDiskFreeSpaceA(%s): ret=%d GetLastError=%ld\n",
                    drive, ret, GetLastError());
+                if( GetVersion() & 0x80000000)
+                    /* win3.0 thru winME */
+                    ok( total_clusters <= 65535,
+                            "total clusters is %ld > 65535\n", total_clusters);
+                else if (pGetDiskFreeSpaceExA) {
+                    /* NT, 2k, XP : GetDiskFreeSpace shoud be accurate */
+                    ULARGE_INTEGER totEx, tot, d;
+
+                    tot.QuadPart = sectors_per_cluster;
+                    tot.QuadPart = (tot.QuadPart * bytes_per_sector) * total_clusters;
+                    ret = pGetDiskFreeSpaceExA( drive, &d, &totEx, NULL);
+                    ok( ret || (!ret && ERROR_NOT_READY == GetLastError()),
+                        "GetDiskFreeSpaceExA( %s ) failed. GetLastError=%ld\n", drive, GetLastError());
+                    ok( bytes_per_sector == 0 || /* empty cd rom drive */
+                        totEx.QuadPart <= tot.QuadPart,
+                        "GetDiskFreeSpaceA should report at least as much bytes on disk %s as GetDiskFreeSpaceExA\n", drive);
+                }
+            }
         }
         logical_drives >>= 1;
     }
@@ -177,6 +198,9 @@ static void test_GetDiskFreeSpaceW(void)
 
 START_TEST(drive)
 {
+    HANDLE hkernel32 = GetModuleHandleA("kernel32");
+    pGetDiskFreeSpaceExA = (void *) GetProcAddress(hkernel32, "GetDiskFreeSpaceExA");
+
     test_GetDriveTypeA();
     test_GetDriveTypeW();
 

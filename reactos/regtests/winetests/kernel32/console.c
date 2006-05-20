@@ -537,10 +537,14 @@ static void testCtrlHandler(void)
 #endif
     ok(WaitForSingleObject(mch_event, 3000) == WAIT_OBJECT_0, "event sending didn't work\n");
     CloseHandle(mch_event);
+
+    /* Turning off ctrl-c handling doesn't work on win9x such way ... */
     ok(SetConsoleCtrlHandler(NULL, TRUE), "Couldn't turn off ctrl-c handling\n");
     mch_event = CreateEventA(NULL, TRUE, FALSE, NULL);
     mch_count = 0;
-    ok(GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0), "Couldn't send ctrl-c event\n");
+    if(!(GetVersion() & 0x80000000))
+        /* ... and next line leads to an unhandled exception on 9x.  Avoid it on 9x. */
+        ok(GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0), "Couldn't send ctrl-c event\n");
     ok(WaitForSingleObject(mch_event, 3000) == WAIT_TIMEOUT && mch_count == 0, "Event shouldn't have been sent\n");
     CloseHandle(mch_event);
     ok(SetConsoleCtrlHandler(mch, FALSE), "Couldn't remove handler\n");
@@ -563,7 +567,7 @@ START_TEST(console)
 
     /* first, we detach and open a fresh console to play with */
     FreeConsole();
-    AllocConsole();
+    ok(AllocConsole(), "Couldn't alloc console\n");
     hConIn = CreateFileA("CONIN$", GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
     hConOut = CreateFileA("CONOUT$", GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
 
@@ -581,7 +585,6 @@ START_TEST(console)
     /* will test line scrolling at the bottom of the screen */
     /* testBottomScroll(); */
     /* will test all the scrolling operations */
-    /* this one is disabled for now, Wine's result are way too bad */
     testScroll(hConOut, sbi.dwSize);
     /* will test sb creation / modification... */
     /* testScreenBuffer() */

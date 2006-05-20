@@ -67,6 +67,43 @@ extern void winetest_trace( const char *msg, ... );
                             winetest_end_todo(platform))
 #define todo_wine      todo("wine")
 
+#ifdef NONAMELESSUNION
+# define U(x)  (x).u
+# define U1(x) (x).u1
+# define U2(x) (x).u2
+# define U3(x) (x).u3
+# define U4(x) (x).u4
+# define U5(x) (x).u5
+# define U6(x) (x).u6
+# define U7(x) (x).u7
+# define U8(x) (x).u8
+#else
+# define U(x)  (x)
+# define U1(x) (x)
+# define U2(x) (x)
+# define U3(x) (x)
+# define U4(x) (x)
+# define U5(x) (x)
+# define U6(x) (x)
+# define U7(x) (x)
+# define U8(x) (x)
+#endif
+
+#ifdef NONAMELESSSTRUCT
+# define S(x)  (x).s
+# define S1(x) (x).s1
+# define S2(x) (x).s2
+# define S3(x) (x).s3
+# define S4(x) (x).s4
+# define S5(x) (x).s5
+#else
+# define S(x)  (x)
+# define S1(x) (x)
+# define S2(x) (x)
+# define S3(x) (x)
+# define S4(x) (x)
+# define S5(x) (x)
+#endif
 
 /************************************************************************/
 /* Below is the implementation of the various functions, to be included
