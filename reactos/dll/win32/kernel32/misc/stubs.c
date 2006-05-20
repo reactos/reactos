@@ -362,32 +362,6 @@ VirtualBufferExceptionHandler (
  */
 BOOL
 STDCALL
-ActivateActCtx(
-    HANDLE hActCtx,
-    ULONG_PTR *lpCookie
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-AddRefActCtx(
-    HANDLE hActCtx
-    )
-{
-    STUB;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 AllocateUserPhysicalPages(
     HANDLE hProcess,
     PULONG_PTR NumberOfPages,
@@ -429,56 +403,12 @@ CancelDeviceWakeupRequest(
 /*
  * @unimplemented
  */
-HANDLE
-STDCALL
-CreateActCtxW(
-    PCACTCTXW pActCtx
-    )
-{
-    STUB;
-    return INVALID_HANDLE_VALUE;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 CreateJobSet (
     ULONG NumJob,
     PJOB_SET_ARRAY UserJobSet,
     ULONG Flags)
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-DeactivateActCtx(
-    DWORD dwFlags,
-    ULONG_PTR ulCookie
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-FindActCtxSectionGuid(
-    DWORD dwFlags,
-    const GUID *lpExtensionGuid,
-    ULONG ulSectionId,
-    const GUID *lpGuidToFind,
-    PACTCTX_SECTION_KEYED_DATA ReturnedData
-    )
 {
     STUB;
     return 0;
@@ -520,18 +450,6 @@ FreeUserPhysicalPages(
     PULONG_PTR NumberOfPages,
     PULONG_PTR PageArray
     )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetCurrentActCtx(
-    HANDLE *lphActCtx)
 {
     STUB;
     return 0;
@@ -707,25 +625,6 @@ MapUserPhysicalPagesScatter(
  */
 BOOL
 STDCALL
-QueryActCtxW(
-    DWORD dwFlags,
-    HANDLE hActCtx,
-    PVOID pvSubInstance,
-    ULONG ulInfoClass,
-    PVOID pvBuffer,
-    SIZE_T cbBuffer OPTIONAL,
-    SIZE_T *pcbWrittenOrRequired OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 QueueUserWorkItem(
     LPTHREAD_START_ROUTINE Function,
     PVOID Context,
@@ -789,18 +688,6 @@ RegisterWaitForSingleObjectEx(
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-ReleaseActCtx(
-    HANDLE hActCtx
-    )
-{
-    STUB;
 }
 
 /*
@@ -959,19 +846,6 @@ WriteFileGather(
  */
 BOOL
 STDCALL
-ZombifyActCtx(
-    HANDLE hActCtx
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 DeleteVolumeMountPointW(
     LPCWSTR lpszVolumeMountPoint
     )
@@ -993,23 +867,6 @@ DnsHostnameToComputerNameW (
 {
     STUB;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-FindActCtxSectionStringW(
-    DWORD dwFlags,
-    const GUID *lpExtensionGuid,
-    ULONG ulSectionId,
-    LPCWSTR lpStringToFind,
-    PACTCTX_SECTION_KEYED_DATA ReturnedData
-    )
-{
-    STUB;
-    return FALSE;
 }
 
 /*

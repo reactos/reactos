@@ -3,6 +3,19 @@
 #define NDEBUG
 #include "../include/debug.h"
 
+#define ACTCTX_FLAGS_ALL (\
+ ACTCTX_FLAG_PROCESSOR_ARCHITECTURE_VALID |\
+ ACTCTX_FLAG_LANGID_VALID |\
+ ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID |\
+ ACTCTX_FLAG_RESOURCE_NAME_VALID |\
+ ACTCTX_FLAG_SET_PROCESS_DEFAULT |\
+ ACTCTX_FLAG_APPLICATION_NAME_VALID |\
+ ACTCTX_FLAG_SOURCE_IS_ASSEMBLYREF |\
+ ACTCTX_FLAG_HMODULE_VALID )
+
+#define ACTCTX_FAKE_HANDLE ((HANDLE) 0xf00baa)
+#define ACTCTX_FAKE_COOKIE ((ULONG_PTR) 0xf00bad)
+
 /*
  * @implemented
  */
@@ -93,4 +106,163 @@ CreateActCtxA(
     RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) pActCtxW.lpApplicationName);
 
     return hRetVal;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+ActivateActCtx(
+    HANDLE hActCtx,
+    ULONG_PTR *ulCookie
+    )
+{
+    DPRINT("ActivateActCtx(%p %p)\n", hActCtx, ulCookie );
+    if (ulCookie)
+        *ulCookie = ACTCTX_FAKE_COOKIE;
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+AddRefActCtx(
+    HANDLE hActCtx
+    )
+{
+    DPRINT("AddRefActCtx(%p)\n", hActCtx);
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+STDCALL
+CreateActCtxW(
+    PCACTCTXW pActCtx
+    )
+{
+    DPRINT("CreateActCtxW(%p %08lx)\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
+
+    if (!pActCtx)
+        return INVALID_HANDLE_VALUE;
+    if (pActCtx->cbSize != sizeof *pActCtx)
+        return INVALID_HANDLE_VALUE;
+    if (pActCtx->dwFlags & ~ACTCTX_FLAGS_ALL)
+        return INVALID_HANDLE_VALUE;
+    return ACTCTX_FAKE_HANDLE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+DeactivateActCtx(
+    DWORD dwFlags,
+    ULONG_PTR ulCookie
+    )
+{
+    DPRINT("DeactivateActCtx(%08lx %08lx)\n", dwFlags, ulCookie);
+    if (ulCookie != ACTCTX_FAKE_COOKIE)
+        return FALSE;
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+FindActCtxSectionGuid(
+    DWORD dwFlags,
+    const GUID *lpExtensionGuid,
+    ULONG ulSectionId,
+    const GUID *lpGuidToFind,
+    PACTCTX_SECTION_KEYED_DATA ReturnedData
+    )
+{
+    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+FindActCtxSectionStringW(
+    DWORD dwFlags,
+    const GUID *lpExtensionGuid,
+    ULONG ulSectionId,
+    LPCWSTR lpStringToFind,
+    PACTCTX_SECTION_KEYED_DATA ReturnedData
+    )
+{
+    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+GetCurrentActCtx(
+    HANDLE *phActCtx)
+{
+    DPRINT("GetCurrentActCtx(%p)\n", phActCtx);
+    *phActCtx = ACTCTX_FAKE_HANDLE;
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+QueryActCtxW(
+    DWORD dwFlags,
+    HANDLE hActCtx,
+    PVOID pvSubInstance,
+    ULONG ulInfoClass,
+    PVOID pvBuffer,
+    SIZE_T cbBuffer OPTIONAL,
+    SIZE_T *pcbWrittenOrRequired OPTIONAL
+    )
+{
+    DPRINT("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
+    /* this makes Adobe Photoshop 7.0 happy */
+    SetLastError( ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ReleaseActCtx(
+    HANDLE hActCtx
+    )
+{
+    DPRINT("ReleaseActCtx(%p)\n", hActCtx);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+ZombifyActCtx(
+    HANDLE hActCtx
+    )
+{
+    DPRINT("ZombifyActCtx(%p)\n", hActCtx);
+    if (hActCtx != ACTCTX_FAKE_HANDLE)
+        return FALSE;
+    return TRUE;
 }
