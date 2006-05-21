@@ -2444,7 +2444,7 @@ NtUserFindWindowEx(HWND hwndParent,
                             ClassName.Length,
                             sizeof(WCHAR));
            }
-           else if (ClassName.Buffer != NULL || !IS_ATOM(ClassName.Buffer))
+           else if (ClassName.Buffer != NULL && !IS_ATOM(ClassName.Buffer))
            {
                SetLastWin32Error(ERROR_INVALID_PARAMETER);
                _SEH_LEAVE;
