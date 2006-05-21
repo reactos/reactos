@@ -22,17 +22,17 @@ NpfsSetPipeInformation(PDEVICE_OBJECT DeviceObject,
                        PFILE_PIPE_INFORMATION Info,
                        PULONG BufferLength)
 {
-    PNPFS_PIPE Pipe;
+    PNPFS_FCB Fcb;
     PFILE_PIPE_INFORMATION Request;
     DPRINT("NpfsSetPipeInformation()\n");
 
     /* Get the Pipe and data */
-    Pipe = Ccb->Pipe;
+    Fcb = Ccb->Fcb;
     Request = (PFILE_PIPE_INFORMATION)Info;
 
     /* Set Pipe Data */
-    Pipe->ReadMode = Request->ReadMode;
-    Pipe->CompletionMode =  Request->CompletionMode;
+    Fcb->ReadMode = Request->ReadMode;
+    Fcb->CompletionMode =  Request->CompletionMode;
 
     /* Return Success */
     return STATUS_SUCCESS;
@@ -45,17 +45,17 @@ NpfsSetPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
                              PFILE_PIPE_INFORMATION Info,
                              PULONG BufferLength)
 {
-    PNPFS_PIPE Pipe;
+    PNPFS_FCB Fcb;
     PFILE_PIPE_REMOTE_INFORMATION Request;
     DPRINT("NpfsSetPipeRemoteInformation()\n");
 
     /* Get the Pipe and data */
-    Pipe = Ccb->Pipe;
+    Fcb = Ccb->Fcb;
     Request = (PFILE_PIPE_REMOTE_INFORMATION)Info;
 
     /* Set the Settings */
-    Pipe->TimeOut = Request->CollectDataTime;
-    Pipe->InboundQuota = Request->MaximumCollectionCount;
+    Fcb->TimeOut = Request->CollectDataTime;
+    Fcb->InboundQuota = Request->MaximumCollectionCount;
 
     /* Return Success */
     return STATUS_SUCCESS;
@@ -68,18 +68,18 @@ NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
                          PFILE_PIPE_INFORMATION Info,
                          PULONG BufferLength)
 {
-    PNPFS_PIPE Pipe;
+    PNPFS_FCB Fcb;
     DPRINT("NpfsQueryPipeInformation()\n");
 
     /* Get the Pipe */
-    Pipe = Ccb->Pipe;
+    Fcb = Ccb->Fcb;
 
     /* Clear Info */
     RtlZeroMemory(Info, sizeof(FILE_PIPE_INFORMATION));
 
     /* Return Info */
-    Info->CompletionMode = Pipe->CompletionMode;
-    Info->ReadMode = Pipe->ReadMode;
+    Info->CompletionMode = Fcb->CompletionMode;
+    Info->ReadMode = Fcb->ReadMode;
 
     /* Return success */
     *BufferLength -= sizeof(FILE_PIPE_INFORMATION);
@@ -93,18 +93,18 @@ NpfsQueryPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
                                PFILE_PIPE_REMOTE_INFORMATION Info,
                                PULONG BufferLength)
 {
-    PNPFS_PIPE Pipe;
+    PNPFS_FCB Fcb;
     DPRINT("NpfsQueryPipeRemoteInformation()\n");
 
     /* Get the Pipe */
-    Pipe = Ccb->Pipe;
+    Fcb = Ccb->Fcb;
 
     /* Clear Info */
     RtlZeroMemory(Info, sizeof(FILE_PIPE_REMOTE_INFORMATION));
 
     /* Return Info */
-    Info->MaximumCollectionCount = Pipe->InboundQuota;
-    Info->CollectDataTime = Pipe->TimeOut;
+    Info->MaximumCollectionCount = Fcb->InboundQuota;
+    Info->CollectDataTime = Fcb->TimeOut;
 
     /* Return success */
     *BufferLength -= sizeof(FILE_PIPE_REMOTE_INFORMATION);
@@ -118,21 +118,21 @@ NpfsQueryLocalPipeInformation(PDEVICE_OBJECT DeviceObject,
 			      PFILE_PIPE_LOCAL_INFORMATION Info,
 			      PULONG BufferLength)
 {
-  PNPFS_PIPE Pipe;
+  PNPFS_FCB Fcb;
 
   DPRINT("NpfsQueryLocalPipeInformation()\n");
 
-  Pipe = Ccb->Pipe;
+  Fcb = Ccb->Fcb;
 
   RtlZeroMemory(Info,
 		sizeof(FILE_PIPE_LOCAL_INFORMATION));
 
-  Info->NamedPipeType = Pipe->PipeType;
-  Info->NamedPipeConfiguration = Pipe->PipeConfiguration;
-  Info->MaximumInstances = Pipe->MaximumInstances;
-  Info->CurrentInstances = Pipe->CurrentInstances;
-  Info->InboundQuota = Pipe->InboundQuota;
-  Info->OutboundQuota = Pipe->OutboundQuota;
+  Info->NamedPipeType = Fcb->PipeType;
+  Info->NamedPipeConfiguration = Fcb->PipeConfiguration;
+  Info->MaximumInstances = Fcb->MaximumInstances;
+  Info->CurrentInstances = Fcb->CurrentInstances;
+  Info->InboundQuota = Fcb->InboundQuota;
+  Info->OutboundQuota = Fcb->OutboundQuota;
   Info->NamedPipeState = Ccb->PipeState;
   Info->NamedPipeEnd = Ccb->PipeEnd;
 
@@ -160,8 +160,8 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
   FILE_INFORMATION_CLASS FileInformationClass;
   PFILE_OBJECT FileObject;
   PNPFS_DEVICE_EXTENSION DeviceExtension;
+  PNPFS_FCB Fcb;
   PNPFS_CCB Ccb;
-  PNPFS_PIPE Pipe;
   PVOID SystemBuffer;
   ULONG BufferLength;
   NTSTATUS Status;
@@ -173,12 +173,12 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
   DeviceExtension = DeviceObject->DeviceExtension;
   FileObject = IoStack->FileObject;
   Ccb = (PNPFS_CCB)FileObject->FsContext2;
-  Pipe = Ccb->Pipe;
+  Fcb = Ccb->Fcb;
 
   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
   BufferLength = IoStack->Parameters.QueryFile.Length;
 
-  DPRINT("Pipe name: %wZ\n", &Pipe->PipeName);
+  DPRINT("Pipe name: %wZ\n", &Fcb->PipeName);
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %p\n", SystemBuffer);
   DPRINT("BufferLength %lu\n", BufferLength);
@@ -229,8 +229,8 @@ NpfsSetInformation(PDEVICE_OBJECT DeviceObject,
   PIO_STACK_LOCATION IoStack;
   FILE_INFORMATION_CLASS FileInformationClass;
   PFILE_OBJECT FileObject;
+  PNPFS_FCB Fcb;
   PNPFS_CCB Ccb;
-  PNPFS_PIPE Pipe;
   PVOID SystemBuffer;
   ULONG BufferLength;
   NTSTATUS Status;
@@ -241,12 +241,12 @@ NpfsSetInformation(PDEVICE_OBJECT DeviceObject,
   FileInformationClass = IoStack->Parameters.QueryFile.FileInformationClass;
   FileObject = IoStack->FileObject;
   Ccb = (PNPFS_CCB)FileObject->FsContext2;
-  Pipe = Ccb->Pipe;
+  Fcb = Ccb->Fcb;
 
   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
   BufferLength = IoStack->Parameters.QueryFile.Length;
 
-  DPRINT("Pipe name: %wZ\n", &Pipe->PipeName);
+  DPRINT("Pipe name: %wZ\n", &Fcb->PipeName);
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %p\n", SystemBuffer);
   DPRINT("BufferLength %lu\n", BufferLength);

@@ -414,7 +414,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	      KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
 	   }
 	   if (Information > 0 &&
-	       (Ccb->Pipe->ReadMode != FILE_PIPE_BYTE_STREAM_MODE ||
+	       (Ccb->Fcb->ReadMode != FILE_PIPE_BYTE_STREAM_MODE ||
 	        Ccb->PipeState != FILE_PIPE_CONNECTED_STATE))
 	   {
 	      break;
@@ -430,13 +430,13 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   {
 	      /* Wait for ReadEvent to become signaled */
 
-	      DPRINT("Waiting for readable data (%wZ)\n", &Ccb->Pipe->PipeName);
+	      DPRINT("Waiting for readable data (%wZ)\n", &Ccb->Fcb->PipeName);
 	      Status = KeWaitForSingleObject(&Ccb->ReadEvent,
 				             UserRequest,
 				             KernelMode,
 				             FALSE,
 				             NULL);
-	      DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Pipe->PipeName, Status);
+	      DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Fcb->PipeName, Status);
 	      ExAcquireFastMutex(&Ccb->DataListLock);
 	   }
 	   else
@@ -455,7 +455,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   }
         }
         ASSERT(IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL);
-        if (Ccb->Pipe->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
+        if (Ccb->Fcb->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
         {
 	   DPRINT("Byte stream mode\n");
 	   /* Byte stream mode */
@@ -603,9 +603,9 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 {
   PIO_STACK_LOCATION IoStack;
   PFILE_OBJECT FileObject;
+  PNPFS_FCB Fcb = NULL;
   PNPFS_CCB Ccb = NULL;
   PNPFS_CCB ReaderCcb;
-  PNPFS_PIPE Pipe = NULL;
   PUCHAR Buffer;
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG Length;
@@ -623,7 +623,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
   Ccb = FileObject->FsContext2;
   ReaderCcb = Ccb->OtherSide;
-  Pipe = Ccb->Pipe;
+  Fcb = Ccb->Fcb;
 
   Length = IoStack->Parameters.Write.Length;
   Offset = IoStack->Parameters.Write.ByteOffset.u.LowPart;
@@ -680,13 +680,13 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	    }
 	  ExReleaseFastMutex(&ReaderCcb->DataListLock);
 
-	  DPRINT("Waiting for buffer space (%S)\n", Pipe->PipeName.Buffer);
+	  DPRINT("Waiting for buffer space (%S)\n", Fcb->PipeName.Buffer);
 	  Status = KeWaitForSingleObject(&Ccb->WriteEvent,
 	                                 UserRequest,
 				         KernelMode,
 				         FALSE,
 				         NULL);
-	  DPRINT("Finished waiting (%S)! Status: %x\n", Pipe->PipeName.Buffer, Status);
+	  DPRINT("Finished waiting (%S)! Status: %x\n", Fcb->PipeName.Buffer, Status);
 
 	  ExAcquireFastMutex(&ReaderCcb->DataListLock);
 	  /*
@@ -702,7 +702,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	    }
 	}
 
-      if (Pipe->WriteMode == FILE_PIPE_BYTE_STREAM_MODE)
+      if (Fcb->WriteMode == FILE_PIPE_BYTE_STREAM_MODE)
 	{
 	  DPRINT("Byte stream mode\n");
 	  while (Length > 0 && ReaderCcb->WriteQuotaAvailable > 0)

@@ -15,8 +15,9 @@ typedef struct _NPFS_DEVICE_EXTENSION
   ULONG MaxQuota;
 } NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
 
-typedef struct _NPFS_PIPE
+typedef struct _NPFS_FCB
 {
+  FSRTL_COMMON_FCB_HEADER RFCB;
   UNICODE_STRING PipeName;
   LIST_ENTRY PipeListEntry;
   KMUTEX CcbListLock;
@@ -34,14 +35,14 @@ typedef struct _NPFS_PIPE
   ULONG InboundQuota;
   ULONG OutboundQuota;
   LARGE_INTEGER TimeOut;
-} NPFS_PIPE, *PNPFS_PIPE;
+} NPFS_FCB, *PNPFS_FCB;
 
 typedef struct _NPFS_CCB
 {
   LIST_ENTRY CcbListEntry;
   struct _NPFS_CCB* OtherSide;
   struct ETHREAD *Thread;
-  PNPFS_PIPE Pipe;
+  PNPFS_FCB Fcb;
   KEVENT ConnectEvent;
   KEVENT ReadEvent;
   KEVENT WriteEvent;
