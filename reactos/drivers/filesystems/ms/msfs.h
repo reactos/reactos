@@ -37,6 +37,7 @@ typedef struct _MSFS_DEVICE_EXTENSION
 
 typedef struct _MSFS_FCB
 {
+    FSRTL_COMMON_FCB_HEADER RFCB;
     UNICODE_STRING Name;
     LIST_ENTRY FcbListEntry;
     KSPIN_LOCK CcbListLock;
