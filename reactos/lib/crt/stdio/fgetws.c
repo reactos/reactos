@@ -32,23 +32,19 @@
 
 wchar_t* fgetws(wchar_t* s, int n, FILE* f)
 {
-  wchar_t c = 0;
-  wchar_t* cs;
+
+  int c=0;
+  wchar_t *cs;
 
   cs = s;
-  //while (--n > 0 && (c = getwc(f)) != WEOF) {
-  while (n > 0) {
-    c = getwc(f);
-    if (c == WEOF)
-      break;
-    n--;
+  while (--n>0 && (c = getwc(f)) != WEOF)
+  {
     *cs++ = c;
     if (c == L'\n')
       break;
   }
-  if (c == WEOF && cs == s) {
+  if (c == WEOF && cs == s)
     return NULL;
-  }
   *cs++ = L'\0';
   return s;
 }
