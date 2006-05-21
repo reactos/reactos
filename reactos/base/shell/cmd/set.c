@@ -119,6 +119,14 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 	if (p)
 	{
 		/* set or remove environment variable */
+		if (p == param)
+		{
+			/* handle set =val case */
+			LoadString(CMD_ModuleHandle, STRING_SYNTAX_COMMAND_INCORRECT, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf (szMsg, param);
+			return 0;
+		}
+
 		*p = _T('\0');
 		p++;
 		if (*p == _T('\0'))
