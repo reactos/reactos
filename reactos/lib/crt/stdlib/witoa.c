@@ -7,8 +7,9 @@
  * UPDATE HISTORY:
  *              1995: Created
  *              1998: Added ltoa Boudewijn Dekker
+ *              2006 : replace all api in this file to wine cvs 2006-05-21
  */
-/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
+/*  */
 #include <precomp.h>
 
 /*
@@ -58,34 +59,23 @@ char* _i64toa(__int64 value, char* string, int radix)
  */
 char* _ui64toa(unsigned __int64 value, char* string, int radix)
 {
-  char tmp[65];
-  char *tp = tmp;
-  long i;
-  unsigned long v = value;
-  char *sp;
+    char buffer[65];
+    char *pos;
+    int digit;
 
-  if (radix > 36 || radix <= 1)
-  {
-    __set_errno(EDOM);
-    return 0;
-  }
+    pos = &buffer[64];
+    *pos = '\0';
 
-  while (v || tp == tmp)
-  {
-    i = v % radix;
-    v = v / radix;
-    if (i < 10)
-      *tp++ = i+'0';
-    else
-      *tp++ = i + 'a' - 10;
-  }
+    do {
+	digit = value % radix;
+	value = value / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (value != 0L);
 
-  if (string == 0)
-    string = (char *)malloc((tp-tmp)+1);
-  sp = string;
-
-  while (tp > tmp)
-    *sp++ = *--tp;
-  *sp = 0;
-  return string;
+    memcpy(string, pos, &buffer[64] - pos + 1);
+    return string;
 }

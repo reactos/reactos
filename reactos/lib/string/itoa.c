@@ -47,37 +47,30 @@ _i64toa(__int64 value, char *string, int radix)
 
 /*
  * @implemented
+ * copy _i64toa from wine cvs 2006 month 05 day 21
  */
 char *
 _ui64toa(unsigned __int64 value, char *string, int radix)
 {
-  char tmp[65];
-  char *tp = tmp;
-  __int64 i;
-  unsigned __int64 v;
-  char *sp;
+    char buffer[65];
+    char *pos;
+    int digit;
 
-  if (radix > 36 || radix <= 1)
-  {
-    return 0;
-  }
+    pos = &buffer[64];
+    *pos = '\0';
 
-  v = (unsigned __int64)value;
-  while (v || tp == tmp)
-  {
-    i = v % radix;
-    v = v / radix;
-    if (i < 10)
-      *tp++ = i+'0';
-    else
-      *tp++ = i + 'a' - 10;
-  }
+    do {
+	digit = value % radix;
+	value = value / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (value != 0L);
 
-  sp = string;
-  while (tp > tmp)
-    *sp++ = *--tp;
-  *sp = 0;
-  return string;
+    memcpy(string, pos, &buffer[64] - pos + 1);
+    return string;
 }
 
 
