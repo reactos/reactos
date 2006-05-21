@@ -104,37 +104,32 @@ char* _ltoa(long value, char* string, int radix)
 
 /*
  * @implemented
+ * copy it from wine 0.9.0 with small modifcations do check for NULL
  */
-char* _ultoa(unsigned long value, char* string, int radix)
+char* ultoa(unsigned long value, char* string, int radix)
 {
-  char tmp[33];
-  char* tp = tmp;
-  long i;
-  unsigned long v = value;
-  char* sp;
+    char buffer[33];
+    char *pos;
+    int digit;
+    
+    pos = &buffer[32];
+    *pos = '\0';
 
-  if (radix > 36 || radix <= 1)
-  {
-    __set_errno(EDOM);
-    return 0;
-  }
+    if (string == NULL)
+    {
+      return NULL;         
+    }
+    
+    do {
+	digit = value % radix;
+	value = value / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (value != 0L);
 
-  while (v || tp == tmp)
-  {
-    i = v % radix;
-    v = v / radix;
-    if (i < 10)
-      *tp++ = i+'0';
-    else
-      *tp++ = i + 'a' - 10;
-  }
-
-  if (string == 0)
-    string = (char*)malloc((tp-tmp)+1);
-  sp = string;
-
-  while (tp > tmp)
-    *sp++ = *--tp;
-  *sp = 0;
-  return string;
+    memcpy(string, pos, &buffer[32] - pos + 1);
+    return string;
 }
