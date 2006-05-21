@@ -55,10 +55,10 @@ VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(PGDI_HANDLE_TABLE HandleTable, PGDIO
 #ifdef GDI_DEBUG
 
 /* a couple macros for debugging GDIOBJ locking */
-#define GDIOBJ_AllocObj(ty) GDIOBJ_AllocObjDbg(GdiHandleTable,__FILE__,__LINE__,ty)
-#define GDIOBJ_FreeObj(obj,ty) GDIOBJ_FreeObjDbg(GdiHandleTable,__FILE__,__LINE__,obj,ty)
-#define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(GdiHandleTable,__FILE__,__LINE__,obj,ty)
-#define GDIOBJ_ShareLockObj(obj,ty) GDIOBJ_ShareLockObjDbg(GdiHandleTable,__FILE__,__LINE__,obj,ty)
+#define GDIOBJ_AllocObj(ht,ty) GDIOBJ_AllocObjDbg(ht,__FILE__,__LINE__,ty)
+#define GDIOBJ_FreeObj(ht,obj,ty) GDIOBJ_FreeObjDbg(ht,__FILE__,__LINE__,obj,ty)
+#define GDIOBJ_LockObj(ht,obj,ty) GDIOBJ_LockObjDbg(ht,__FILE__,__LINE__,obj,ty)
+#define GDIOBJ_ShareLockObj(ht,obj,ty) GDIOBJ_ShareLockObjDbg(ht,__FILE__,__LINE__,obj,ty)
 
 HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObjDbg(PGDI_HANDLE_TABLE HandleTable, const char* file, int line, ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
