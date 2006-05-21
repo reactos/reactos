@@ -2433,60 +2433,63 @@ NtUserFindWindowEx(HWND hwndParent,
    DPRINT("Enter NtUserFindWindowEx\n");
    UserEnterShared();
 
-   _SEH_TRY
+   if (ucClassName != NULL || ucWindowName != NULL)
    {
+       _SEH_TRY
+       {
+           if (ucClassName != NULL)
+           {
+               ClassName = ProbeForReadUnicodeString(ucClassName);
+               if (ClassName.Length != 0)
+               {
+                   ProbeForRead(ClassName.Buffer,
+                                ClassName.Length,
+                                sizeof(WCHAR));
+               }
+               else if (!IS_ATOM(ClassName.Buffer))
+               {
+                   SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                   _SEH_LEAVE;
+               }
+
+               if (!IntGetAtomFromStringOrAtom(&ClassName,
+                                               &ClassAtom))
+               {
+                   _SEH_LEAVE;
+               }
+           }
+
+           if (ucWindowName != NULL)
+           {
+               WindowName = ProbeForReadUnicodeString(ucWindowName);
+               if (WindowName.Length != 0)
+               {
+                   ProbeForRead(WindowName.Buffer,
+                                WindowName.Length,
+                                sizeof(WCHAR));
+               }
+           }
+       }
+       _SEH_HANDLE
+       {
+           SetLastNtError(_SEH_GetExceptionCode());
+           RETURN(NULL);
+       }
+       _SEH_END;
+
        if (ucClassName != NULL)
        {
-           ClassName = ProbeForReadUnicodeString(ucClassName);
-           if (ClassName.Length != 0)
-           {
-               ProbeForRead(ClassName.Buffer,
-                            ClassName.Length,
-                            sizeof(WCHAR));
-           }
-           else if (ClassName.Buffer != NULL && !IS_ATOM(ClassName.Buffer))
+           if (ClassName.Length == 0 && ClassName.Buffer != NULL &&
+               !IS_ATOM(ClassName.Buffer))
            {
                SetLastWin32Error(ERROR_INVALID_PARAMETER);
-               _SEH_LEAVE;
+               RETURN(NULL);
            }
-
-           if (!IntGetAtomFromStringOrAtom(&ClassName,
-                                           &ClassAtom))
+           else if (ClassAtom == (RTL_ATOM)0)
            {
-               _SEH_LEAVE;
+               /* LastError code was set by IntGetAtomFromStringOrAtom */
+               RETURN(NULL);
            }
-       }
-
-       if (ucWindowName != NULL)
-       {
-           WindowName = ProbeForReadUnicodeString(ucWindowName);
-           if (WindowName.Length != 0)
-           {
-               ProbeForRead(WindowName.Buffer,
-                            WindowName.Length,
-                            sizeof(WCHAR));
-           }
-       }
-   }
-   _SEH_HANDLE
-   {
-       SetLastNtError(_SEH_GetExceptionCode());
-       RETURN(NULL);
-   }
-   _SEH_END;
-
-   if (ucClassName != NULL)
-   {
-       if (ClassName.Length == 0 && ClassName.Buffer != NULL &&
-           !IS_ATOM(ClassName.Buffer))
-       {
-           SetLastWin32Error(ERROR_INVALID_PARAMETER);
-           RETURN(NULL);
-       }
-       else if (ClassAtom == (RTL_ATOM)0)
-       {
-           /* LastError code was set by IntGetAtomFromStringOrAtom */
-           RETURN(NULL);
        }
    }
 
