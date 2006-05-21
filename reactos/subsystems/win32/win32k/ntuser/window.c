@@ -2444,13 +2444,16 @@ NtUserFindWindowEx(HWND hwndParent,
                             ClassName.Length,
                             sizeof(WCHAR));
            }
-           else if (IS_ATOM(ClassName.Buffer))
+           else if (ClassName.Buffer != NULL && !IS_ATOM(ClassName.Buffer))
            {
-               if (!IntGetAtomFromStringOrAtom(&ClassName,
-                                               &ClassAtom))
-               {
-                   _SEH_LEAVE;
-               }
+               SetLastWin32Error(ERROR_INVALID_PARAMETER);
+               _SEH_LEAVE;
+           }
+
+           if (!IntGetAtomFromStringOrAtom(&ClassName,
+                                           &ClassAtom))
+           {
+               _SEH_LEAVE;
            }
        }
 
@@ -2472,9 +2475,10 @@ NtUserFindWindowEx(HWND hwndParent,
    }
    _SEH_END;
 
-   if (ucClassName != NULL && ClassName.Length == 0)
+   if (ucClassName != NULL)
    {
-       if (!IS_ATOM(ClassName.Buffer))
+       if (ClassName.Length == 0 && ClassName.Buffer != NULL &&
+           !IS_ATOM(ClassName.Buffer))
        {
            SetLastWin32Error(ERROR_INVALID_PARAMETER);
            RETURN(NULL);
