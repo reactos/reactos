@@ -43,6 +43,10 @@ VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double
 INT FASTCALL
 IntGdiGetArcDirection(DC *dc);
 
+VOID FASTCALL
+IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
+
+
 BOOL
 STDCALL
 NtGdiAbortPath(HDC  hDC)

@@ -225,5 +225,11 @@ IntChangeDisplaySettings(
   IN DWORD dwflags,
   IN PVOID lParam  OPTIONAL);
 
+HBITMAP
+FASTCALL
+IntCreateCompatibleBitmap(PDC Dc,
+                          INT Width,
+                          INT Height);
+
 #endif /* _WIN32K_INTGDI_H */
 
