@@ -73,6 +73,7 @@ TabbedTextOutA(
  * Note: this doesn't work too well for text-alignment modes other
  *       than TA_LEFT|TA_TOP. But we want bug-for-bug compatibility :-)
  */
+/* WINE synced 22-May-2006 */
 static LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
                                 INT count, INT cTabStops, const INT *lpTabPos, INT nTabOrg,
                                 BOOL fDisplayText )
@@ -181,7 +182,7 @@ TabbedTextOutW(
   return TEXT_TabbedTextOut(hDC, X, Y, lpString, nCount, nTabPositions, lpnTabStopPositions, nTabOrigin, TRUE);
 }
 
-
+/* WINE synced 22-May-2006 */
 /*
  * @implemented
  */
@@ -978,13 +979,14 @@ static const WCHAR *TEXT_NextLineW( HDC hdc, const WCHAR *str, int *count,
  *                   (logical coordinates)
  *   str        [in] The text of the line segment
  *   offset     [in] The offset of the underscored character within str
+ *   rect       [in] Clipping rectangle (if not NULL)
  */
-
-static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int offset)
+/* WINE synced 22-May-2006 */
+static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int offset, const RECT *rect)
 {
     int prefix_x;
     int prefix_end;
-    SIZE size = {0, 0};
+    SIZE size;
     HPEN hpen;
     HPEN oldPen;
 
@@ -994,6 +996,17 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
     prefix_end = x + size.cx - 1;
     /* The above method may eventually be slightly wrong due to kerning etc. */
 
+    /* Check for clipping */
+    if (rect)
+    {
+        if (prefix_x > rect->right || prefix_end < rect->left ||
+            y < rect->top || y > rect->bottom)
+            return; /* Completely outside */
+        /* Partially outside */
+        if (prefix_x   < rect->left ) prefix_x   = rect->left;
+        if (prefix_end > rect->right) prefix_end = rect->right;
+    }
+    
     hpen = CreatePen (PS_SOLID, 1, GetTextColor (hdc));
     oldPen = SelectObject (hdc, hpen);
     MoveToEx (hdc, prefix_x, y, NULL);
@@ -1012,7 +1025,8 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
  * 3 more than a null-terminated string).  If this is not so then increase
  * the allowance in DrawTextExA.
  */
-#define MAX_STATIC_BUFFER 1024
+#define MAX_BUFFER 1024
+/* WINE synced 22-May-2006 */
 /*
  * @implemented
  */
@@ -1024,7 +1038,7 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     const WCHAR *strPtr;
     WCHAR *retstr, *p_retstr;
     size_t size_retstr;
-    WCHAR line[MAX_STATIC_BUFFER];
+    WCHAR line[MAX_BUFFER];
     int len, lh, count=i_count;
     TEXTMETRICW tm;
     int lmargin = 0, rmargin = 0;
@@ -1037,16 +1051,27 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     ellipsis_data ellip;
 
 #if 0
-    TRACE("%s, %d , [(%d,%d),(%d,%d)]\n", debugstr_wn (str, count), count,
-	  rect->left, rect->top, rect->right, rect->bottom);
+    TRACE("%s, %d, [%s] %08x\n", debugstr_wn (str, count), count,
+        wine_dbgstr_rect(rect), flags);
 
    if (dtp) TRACE("Params: iTabLength=%d, iLeftMargin=%d, iRightMargin=%d\n",
           dtp->iTabLength, dtp->iLeftMargin, dtp->iRightMargin);
 #endif
 
-    if (!str) return 0;
-    if (count == -1) count = wcslen(str);
-    if (count == 0) return 0;
+    if (!str || count == 0) return 0;
+    if (count == -1)
+    {
+        count = strlenW(str);
+        if (count == 0)
+        {
+            if( flags & DT_CALCRECT)
+            {
+                rect->right = rect->left;
+                rect->bottom = rect->top;
+            }
+            return 0;
+        }
+    }
     strPtr = str;
 
     if (flags & DT_SINGLELINE)
@@ -1054,9 +1079,9 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
 
     GetTextMetricsW(hdc, &tm);
     if (flags & DT_EXTERNALLEADING)
-	lh = tm.tmHeight + tm.tmExternalLeading;
+        lh = tm.tmHeight + tm.tmExternalLeading;
     else
-	lh = tm.tmHeight;
+        lh = tm.tmHeight;
 
     if (dtp)
     {
@@ -1070,7 +1095,7 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     if (flags & DT_EXPANDTABS)
     {
         int tabstop = ((flags & DT_TABSTOP) && dtp) ? dtp->iTabLength : 8;
-	tabwidth = tm.tmAveCharWidth * tabstop;
+        tabwidth = tm.tmAveCharWidth * tabstop;
     }
 
     if (flags & DT_CALCRECT) flags |= DT_NOCLIP;
@@ -1091,23 +1116,23 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
 
     do
     {
-	len = MAX_STATIC_BUFFER;
+        len = sizeof(line)/sizeof(line[0]);
         last_line = !(flags & DT_NOCLIP) && y + ((flags & DT_EDITCONTROL) ? 2*lh-1 : lh) > rect->bottom;
-	strPtr = TEXT_NextLineW(hdc, strPtr, &count, line, &len, width, flags, &size, last_line, &p_retstr, tabwidth, &prefix_offset, &ellip);
+        strPtr = TEXT_NextLineW(hdc, strPtr, &count, line, &len, width, flags, &size, last_line, &p_retstr, tabwidth, &prefix_offset, &ellip);
 
-	if (flags & DT_CENTER) x = (rect->left + rect->right -
-				    size.cx) / 2;
-	else if (flags & DT_RIGHT) x = rect->right - size.cx;
+    if (flags & DT_CENTER)
+        x = (rect->left + rect->right - size.cx) / 2;
+    else if (flags & DT_RIGHT) x = rect->right - size.cx;
 
-	if (flags & DT_SINGLELINE)
-	{
-	    if (flags & DT_VCENTER) y = rect->top +
-	    	(rect->bottom - rect->top) / 2 - size.cy / 2;
-	    else if (flags & DT_BOTTOM) y = rect->bottom - size.cy;
-        }
+    if (flags & DT_SINGLELINE)
+    {
+        if (flags & DT_VCENTER) y = rect->top +
+            (rect->bottom - rect->top) / 2 - size.cy / 2;
+        else if (flags & DT_BOTTOM) y = rect->bottom - size.cy;
+    }
 
-	if (!(flags & DT_CALCRECT))
-	{
+    if (!(flags & DT_CALCRECT))
+    {
             const WCHAR *str = line;
             int xseg = x;
             while (len)
@@ -1131,7 +1156,7 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                                  rect, str, len_seg, NULL ))  return 0;
                 if (prefix_offset != -1 && prefix_offset < len_seg)
                 {
-                    TEXT_DrawUnderscore (hdc, xseg, y + tm.tmAscent + 1, str, prefix_offset);
+                    TEXT_DrawUnderscore (hdc, xseg, y + tm.tmAscent + 1, str, prefix_offset, (flags & DT_NOCLIP) ? NULL : rect);
                 }
                 len -= len_seg;
                 str += len_seg;
@@ -1157,11 +1182,11 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                     }
                 }
             }
-	}
-	else if (size.cx > max_width)
-	    max_width = size.cx;
+    }
+    else if (size.cx > max_width)
+        max_width = size.cx;
 
-	y += lh;
+    y += lh;
         if (dtp)
             dtp->uiLengthDrawn += len;
     }
@@ -1169,8 +1194,8 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
 
     if (flags & DT_CALCRECT)
     {
-	rect->right = rect->left + max_width;
-	rect->bottom = y;
+        rect->right = rect->left + max_width;
+        rect->bottom = y;
         if (dtp)
             rect->right += lmargin + rmargin;
     }
@@ -1191,6 +1216,7 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
  *
  * @implemented
  */
+/* WINE synced 22-May-2006 */
 int STDCALL
 DrawTextExA( HDC hdc, LPSTR str, INT count,
              LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
@@ -1203,9 +1229,16 @@ DrawTextExA( HDC hdc, LPSTR str, INT count,
    DWORD wmax;
    DWORD amax;
 
-   if (!str) return 0;
-   if (count == -1) count = strlen(str);
    if (!count) return 0;
+   if( !str || ((count == -1) && !(count = strlen(str))))
+   {
+        if( flags & DT_CALCRECT)
+        {
+            rect->right = rect->left;
+            rect->bottom = rect->top;
+        }
+        return 0;
+   }
    wcount = MultiByteToWideChar( CP_ACP, 0, str, count, NULL, 0 );
    wmax = wcount;
    amax = count;
