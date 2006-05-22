@@ -79,16 +79,13 @@ static LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
 {
     INT defWidth;
     SIZE extent;
-    int i, tabPos = x;
+    int i, j;
     int start = x;
-
-    extent.cx = 0;
-    extent.cy = 0;
 
     if (!lpTabPos)
         cTabStops=0;
 
-    if (cTabStops == 1 && *lpTabPos >= /* sic */ 0)
+    if (cTabStops == 1)
     {
         defWidth = *lpTabPos;
         cTabStops = 0;
@@ -96,50 +93,75 @@ static LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
     else
     {
         TEXTMETRICA tm;
-        if (GetTextMetricsA( hdc, &tm ))
-            defWidth = 8 * tm.tmAveCharWidth;
-        else
-            defWidth = 0;
-        if (cTabStops == 1)
-            cTabStops = 0; /* on negative *lpTabPos */
+        GetTextMetricsA( hdc, &tm );
+        defWidth = 8 * tm.tmAveCharWidth;
     }
 
     while (count > 0)
     {
+        RECT r;
+        INT x0;
+        x0 = x;
+        r.left = x0;
+        /* chop the string into substrings of 0 or more <tabs> 
+         * possibly followed by 1 or more normal characters */
         for (i = 0; i < count; i++)
-            if (lpstr[i] == '\t') break;
-        GetTextExtentPointW( hdc, lpstr, i, &extent );
-        while ((cTabStops > 0) &&
-               (nTabOrg + *lpTabPos <= x + extent.cx))
-        {
-            lpTabPos++;
-            cTabStops--;
-        }
-        if (i == count)
-            tabPos = x + extent.cx;
-        else if (cTabStops > 0)
-            tabPos = nTabOrg + *lpTabPos;
-        else if (defWidth <= 0)
-            tabPos = x + extent.cx;
-        else
-            tabPos = nTabOrg + ((x + extent.cx - nTabOrg) / defWidth + 1) * defWidth;
+            if (lpstr[i] != '\t') break;
+        for (j = i; j < count; j++)
+            if (lpstr[j] == '\t') break;
+        /* get the extent of the normal character part */
+        GetTextExtentPointW( hdc, lpstr + i, j - i , &extent );
+        /* and if there is a <tab>, calculate its position */
+        if( i) {
+            /* get x coordinate for the drawing of this string */
+            for (; cTabStops > i; lpTabPos++, cTabStops--)
+            {
+                if( nTabOrg + abs( *lpTabPos) > x) {
+                    if( lpTabPos[ i - 1] >= 0) {
+                        /* a left aligned tab */
+                        x = nTabOrg + lpTabPos[ i-1] + extent.cx;
+                        break;
+                    }
+                    else
+                    {
+                        /* if tab pos is negative then text is right-aligned
+                         * to tab stop meaning that the string extends to the
+                         * left, so we must subtract the width of the string */
+                        if (nTabOrg - lpTabPos[ i - 1] - extent.cx > x)
+                        {
+                            x = nTabOrg - lpTabPos[ i - 1];
+                            x0 = x - extent.cx;
+                            break;
+                        }
+                    }
+                }
+            }
+            /* if we have run out of tab stops and we have a valid default tab
+             * stop width then round x up to that width */
+            if ((cTabStops <= i) && (defWidth > 0)) {
+                x0 = nTabOrg + ((x - nTabOrg) / defWidth + i) * defWidth;
+                x = x0 + extent.cx;
+            } else if ((cTabStops <= i) && (defWidth < 0)) {
+                x = nTabOrg + ((x - nTabOrg + extent.cx) / -defWidth + i)
+                    * -defWidth;
+                x0 = x - extent.cx;
+            }
+        } else
+            x += extent.cx;
+        
         if (fDisplayText)
         {
-            RECT r;
-            r.left   = x;
             r.top    = y;
-            r.right  = tabPos;
+            r.right  = x;
             r.bottom = y + extent.cy;
-            ExtTextOutW( hdc, x, y, GetBkMode(hdc) == OPAQUE ? ETO_OPAQUE : 0,
-                         &r, lpstr, i, NULL );
+            ExtTextOutW( hdc, x0, y, GetBkMode(hdc) == OPAQUE ? ETO_OPAQUE : 0,
+                         &r, lpstr + i, j - i, NULL );
         }
-        x = tabPos;
-        count -= i+1;
-        lpstr += i+1;
+        count -= j;
+        lpstr += j;
     }
-    return MAKELONG(tabPos - start, extent.cy);
+    return MAKELONG(x - start, extent.cy);
 }
-
 
 /*
  * @implemented
