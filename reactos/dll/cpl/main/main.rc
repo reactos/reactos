@@ -15,6 +15,7 @@ IDC_CPLICON_2 ICON "resources/keyboard.ico"
 
 #include "En.rc"
 #include "De.rc"
+#include "Fr.rc"
 #include "Nl.rc"
 #include "Ja.rc"
 #include "Hu.rc"
