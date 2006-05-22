@@ -161,7 +161,7 @@ TabbedTextOutW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
@@ -172,8 +172,19 @@ GetTabbedTextExtentA(
   int nTabPositions,
   CONST LPINT lpnTabStopPositions)
 {
-  UNIMPLEMENTED;
-  return 0;
+    LONG ret;
+    DWORD len = MultiByteToWideChar(CP_ACP, 0, lpString, nCount, NULL, 0);
+    LPWSTR strW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+
+    if (!strW)
+        return 0;
+    MultiByteToWideChar(CP_ACP, 0, lpString, nCount, strW, len);
+
+    ret = GetTabbedTextExtentW(hDC, strW, len, nTabPositions,
+        lpnTabStopPositions);
+
+    HeapFree(GetProcessHeap(), 0, strW);
+    return ret;
 }
 
 
