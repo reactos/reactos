@@ -687,8 +687,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 									
                   sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
                   color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
+                  color = XLATEOBJ_iXlate(ColorTranslation, color);
                               
-				  *DestBits = XLATEOBJ_iXlate(ColorTranslation, color);				  				  
+				  *DestBits = color;				  				  
 				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
@@ -713,8 +714,8 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 									
                   sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
                   color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
-                              
-				  *DestBits = XLATEOBJ_iXlate(ColorTranslation, color);				  				  
+                  color = XLATEOBJ_iXlate(ColorTranslation, color);            
+				  *DestBits = color;				  				  
 				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
@@ -740,8 +741,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 									
                   sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
                   color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
+                  color = XLATEOBJ_iXlate(ColorTranslation, color);
                               
-				  *DestBits = XLATEOBJ_iXlate(ColorTranslation, color);				  				  
+				  *DestBits = color;				  				  
 				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
@@ -766,8 +768,9 @@ BOOLEAN DIB_16BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 									
                   sx = ((DesX * SrcSizeX) / DesSizeX) + SourceRect->left;  		
                   color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
+                  color = XLATEOBJ_iXlate(ColorTranslation, color);
                               
-				  *DestBits = XLATEOBJ_iXlate(ColorTranslation, color);				  				  
+				  *DestBits = color;				  				  
 				   DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
             }
             DestBits = (PULONG)((ULONG_PTR)DestBits + DifflDelta);
