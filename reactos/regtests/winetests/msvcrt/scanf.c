@@ -27,6 +27,7 @@ static void test_sscanf( void )
     char buffer[100], buffer1[100];
     char format[20];
     int result, ret;
+    char c;
     float res1= -82.6267f, res2= 27.76f, res11, res12;
     static const char pname[]=" St. Petersburg, Florida\n";
     int hour=21,min=59,sec=20;
@@ -90,11 +91,40 @@ static void test_sscanf( void )
     /* Check %i according to bug 1878 */
     strcpy(buffer,"123");
     ret = sscanf(buffer, "%i", &result);
-    ok( ret == 1 , "Wrong number of arguments read\n");
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
     ok(result == 123, "Wrong number read\n");
     ret = sscanf(buffer, "%d", &result);
-    ok( ret == 1 , "Wrong number of arguments read\n");
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
     ok(result == 123, "Wrong number read\n");
+
+    /* Check %c */
+    strcpy(buffer,"a");
+    c = 0x55;
+    ret = sscanf(buffer, "%c", &c);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(c == 'a', "Field incorrect: '%c'\n", c);
+
+    strcpy(buffer," a");
+    c = 0x55;
+    ret = sscanf(buffer, "%c", &c);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(c == ' ', "Field incorrect: '%c'\n", c);
+
+    strcpy(buffer,"18:59");
+    c = 0x55;
+    ret = sscanf(buffer, "%d:%d%c", &hour, &min, &c);
+    ok(ret == 2, "Wrong number of arguments read: %d\n", ret);
+    ok(hour == 18, "Field 1 incorrect: %d\n", hour);
+    ok(min == 59, "Field 2 incorrect: %d\n", min);
+    ok(c == 0x55, "Field 3 incorrect: 0x%02x\n", c);
+
+    /* Check %n (also whitespace in format strings and %s) */
+    buffer[0]=0; buffer1[0]=0;
+    ret = sscanf("abc   def", "%s %n%s", buffer, &number_so_far, buffer1);
+    ok(strcmp(buffer, "abc")==0, "First %%s read incorrectly: %s\n", buffer);
+    ok(strcmp(buffer1,"def")==0, "Second %%s read incorrectly: %s\n", buffer1);
+    ok(number_so_far==6, "%%n yielded wrong result: %d\n", number_so_far);
+    ok(ret == 2, "%%n shouldn't count as a conversion: %d\n", ret);
 }
 
 START_TEST(scanf)

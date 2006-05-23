@@ -31,7 +31,7 @@
 #define MINSPERHOUR        60
 #define HOURSPERDAY        24
 
-static void test_gmtime()
+static void test_gmtime(void)
 {
     time_t gmt = (time_t)NULL;
     struct tm* gmt_tm = gmtime(&gmt);
@@ -48,7 +48,7 @@ static void test_gmtime()
        gmt_tm->tm_hour, gmt_tm->tm_min, gmt_tm->tm_sec, gmt_tm->tm_isdst); 
   
 }
-static void test_mktime()
+static void test_mktime(void)
 {
     TIME_ZONE_INFORMATION tzinfo;
     DWORD res =  GetTimeZoneInformation(&tzinfo);
@@ -146,7 +146,7 @@ static void test_mktime()
     ok(((DWORD)nulltime == SECSPERDAY),"mktime returned 0x%08lx\n",(DWORD)nulltime);
     putenv(TZ_env);
 }
-static void test_localtime()
+static void test_localtime(void)
 {
     TIME_ZONE_INFORMATION tzinfo;
     DWORD res =  GetTimeZoneInformation(&tzinfo);
@@ -179,11 +179,64 @@ static void test_localtime()
        lt->tm_min, lt->tm_sec, lt->tm_isdst); 
     putenv(TZ_env);
 }
+static void test_strdate(void)
+{
+    char date[16], * result;
+    int month, day, year, count, len;
 
+    result = _strdate(date);
+    ok(result == date, "Wrong return value\n");
+    len = strlen(date);
+    ok(len == 8, "Wrong length: returned %d, should be 8\n", len);
+    count = sscanf(date, "%02d/%02d/%02d", &month, &day, &year);
+    ok(count == 3, "Wrong format: count = %d, should be 3\n", count);
+}
+static void test_strtime(void)
+{
+    char time[16], * result;
+    int hour, minute, second, count, len;
+
+    result = _strtime(time);
+    ok(result == time, "Wrong return value\n");
+    len = strlen(time);
+    ok(len == 8, "Wrong length: returned %d, should be 8\n", len);
+    count = sscanf(time, "%02d:%02d:%02d", &hour, &minute, &second);
+    ok(count == 3, "Wrong format: count = %d, should be 3\n", count);
+}
+static void test_wstrdate(void)
+{
+    wchar_t date[16], * result;
+    int month, day, year, count, len;
+    wchar_t format[] = { '%','0','2','d','/','%','0','2','d','/','%','0','2','d',0 };
+
+    result = _wstrdate(date);
+    ok(result == date, "Wrong return value\n");
+    len = wcslen(date);
+    ok(len == 8, "Wrong length: returned %d, should be 8\n", len);
+    count = swscanf(date, format, &month, &day, &year);
+    ok(count == 3, "Wrong format: count = %d, should be 3\n", count);
+}
+static void test_wstrtime(void)
+{
+    wchar_t time[16], * result;
+    int hour, minute, second, count, len;
+    wchar_t format[] = { '%','0','2','d',':','%','0','2','d',':','%','0','2','d',0 };
+
+    result = _wstrtime(time);
+    ok(result == time, "Wrong return value\n");
+    len = wcslen(time);
+    ok(len == 8, "Wrong length: returned %d, should be 8\n", len);
+    count = swscanf(time, format, &hour, &minute, &second);
+    ok(count == 3, "Wrong format: count = %d, should be 3\n", count);
+}
 
 START_TEST(time)
 {
     test_gmtime();
     test_mktime();
     test_localtime();
+    test_strdate();
+    test_strtime();
+    test_wstrdate();
+    test_wstrtime();
 }

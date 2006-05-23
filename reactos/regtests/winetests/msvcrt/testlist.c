@@ -8,6 +8,7 @@
 #include "winbase.h"
 
 extern void func_cpp(void);
+extern void func_dir(void);
 extern void func_environ(void);
 extern void func_file(void);
 extern void func_heap(void);
@@ -25,6 +26,7 @@ struct test
 static const struct test winetest_testlist[] =
 {
     { "cpp", func_cpp },
+    { "dir", func_dir },
     { "environ", func_environ },
     { "file", func_file },
     { "heap", func_heap },
