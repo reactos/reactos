@@ -1,11 +1,10 @@
 /*
- * COPYRIGHT:          See COPYING in the top level directory
- * PROJECT:            ReactOS kernel
- * FILE:               ntoskrnl/ob/wait.c
- * PURPOSE:            Handles Waiting on Objects
- *
- * PROGRAMMERS:        Alex Ionescu (alex@relsoft.net)
- *                     David Welch (welch@mcmail.com)
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/ob/wait.c
+ * PURPOSE:         Handles Waiting on Objects
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -18,13 +17,39 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*++
+* @name NtWaitForMultipleObjects
+* @implemented NT4
+*
+*     The NtWaitForMultipleObjects routine <FILLMEIN>
+*
+* @param ObjectCount
+*        <FILLMEIN>
+*
+* @param HandleArray
+*        <FILLMEIN>
+*
+* @param WaitType
+*        <FILLMEIN>
+*
+* @param Alertable
+*        <FILLMEIN>
+*
+* @param TimeOut
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
-STDCALL
+NTAPI
 NtWaitForMultipleObjects(IN ULONG ObjectCount,
                          IN PHANDLE HandleArray,
                          IN WAIT_TYPE WaitType,
                          IN BOOLEAN Alertable,
-                         IN PLARGE_INTEGER TimeOut  OPTIONAL)
+                         IN PLARGE_INTEGER TimeOut OPTIONAL)
 {
     PKWAIT_BLOCK WaitBlockArray = NULL;
     HANDLE Handles[MAXIMUM_WAIT_OBJECTS];
@@ -41,8 +66,9 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     PVOID DefaultObject;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("NtWaitForMultipleObjects(ObjectCount %lu HandleArray[] %x, Alertable %d, "
-            "TimeOut %x)\n", ObjectCount, HandleArray, Alertable, TimeOut);
+    DPRINT("NtWaitForMultipleObjects(ObjectCount %lu HandleArray[] %x,"
+           " Alertable %d, TimeOut %x)\n",
+           ObjectCount, HandleArray, Alertable, TimeOut);
 
     /* Enter a critical region since we'll play with handles */
     LockInUse = TRUE;
@@ -81,8 +107,8 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
             }
         }
 
-       /* 
-        * Make a copy so we don't have to guard with SEH later and keep 
+       /*
+        * Make a copy so we don't have to guard with SEH later and keep
         * track of what objects we referenced if dereferencing pointers
         * suddenly fails
         */
@@ -231,7 +257,7 @@ Quickie:
     {
         ReferencedObjects--;
         if (Objects[ReferencedObjects])
-        {   
+        {
             ObDereferenceObject(Objects[ReferencedObjects]);
         }
     }
@@ -247,11 +273,28 @@ Quickie:
     return Status;
 }
 
-/*
- * @implemented
- */
+/*++
+* @name NtWaitForSingleObject
+* @implemented NT4
+*
+*     The NtWaitForSingleObject routine <FILLMEIN>
+*
+* @param ObjectHandle
+*        <FILLMEIN>
+*
+* @param Alertable
+*        <FILLMEIN>
+*
+* @param TimeOut
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
-STDCALL
+NTAPI
 NtWaitForSingleObject(IN HANDLE ObjectHandle,
                       IN BOOLEAN Alertable,
                       IN PLARGE_INTEGER TimeOut  OPTIONAL)
@@ -325,12 +368,35 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
     return Status;
 }
 
+/*++
+* @name NtSignalAndWaitForSingleObject
+* @implemented NT4
+*
+*     The NtSignalAndWaitForSingleObject routine <FILLMEIN>
+*
+* @param ObjectHandleToSignal
+*        <FILLMEIN>
+*
+* @param WaitableObjectHandle
+*        <FILLMEIN>
+*
+* @param Alertable
+*        <FILLMEIN>
+*
+* @param TimeOut
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
-STDCALL
+NTAPI
 NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
                                IN HANDLE WaitableObjectHandle,
                                IN BOOLEAN Alertable,
-                               IN PLARGE_INTEGER TimeOut  OPTIONAL)
+                               IN PLARGE_INTEGER TimeOut OPTIONAL)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     POBJECT_TYPE Type;

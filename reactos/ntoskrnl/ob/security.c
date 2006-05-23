@@ -1,12 +1,10 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ob/security.c
- * PURPOSE:         Security manager
- *
- * PROGRAMERS:      No programmer listed.
- */
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/ob/security.c
+* PURPOSE:         SRM Interface of the Object Manager
+* PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+*/
 
 /* INCLUDES *****************************************************************/
 
@@ -16,166 +14,232 @@
 
 /* FUNCTIONS ***************************************************************/
 
-/*
- * @implemented
- */
-NTSTATUS STDCALL
+/*++
+* @name ObAssignSecurity
+* @implemented NT4
+*
+*     The ObAssignSecurity routine <FILLMEIN>
+*
+* @param AccessState
+*        <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @param Object
+*        <FILLMEIN>
+*
+* @param Type
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
 ObAssignSecurity(IN PACCESS_STATE AccessState,
-		 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-		 IN PVOID Object,
-		 IN POBJECT_TYPE Type)
+                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                 IN PVOID Object,
+                 IN POBJECT_TYPE Type)
 {
-  PSECURITY_DESCRIPTOR NewDescriptor;
-  NTSTATUS Status;
+    PSECURITY_DESCRIPTOR NewDescriptor;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-  PAGED_CODE();
+    /* Build the new security descriptor */
+    Status = SeAssignSecurity(SecurityDescriptor,
+                              AccessState->SecurityDescriptor,
+                              &NewDescriptor,
+                              (Type == ObDirectoryType),
+                              &AccessState->SubjectSecurityContext,
+                              &Type->TypeInfo.GenericMapping,
+                              PagedPool);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  /* Build the new security descriptor */
-  Status = SeAssignSecurity(SecurityDescriptor,
-			    AccessState->SecurityDescriptor,
-			    &NewDescriptor,
-			    (Type == ObDirectoryType),
-			    &AccessState->SubjectSecurityContext,
-			    &Type->TypeInfo.GenericMapping,
-			    PagedPool);
-  if (!NT_SUCCESS(Status))
+    /* Call the security method */
+    Status = Type->TypeInfo.SecurityProcedure(Object,
+                                              AssignSecurityDescriptor,
+                                              0,
+                                              NewDescriptor,
+                                              NULL,
+                                              NULL,
+                                              NonPagedPool,
+                                              NULL);
+
+    /* Release the new security descriptor */
+    SeDeassignSecurity(&NewDescriptor);
+
     return Status;
-
-      /* Call the security method */
-      Status = Type->TypeInfo.SecurityProcedure(Object,
-			      AssignSecurityDescriptor,
-			      0,
-			      NewDescriptor,
-			      NULL,
-                  NULL,
-                  NonPagedPool,
-                  NULL);
-
-  /* Release the new security descriptor */
-  SeDeassignSecurity(&NewDescriptor);
-
-  return Status;
 }
 
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
+/*++
+* @name ObGetObjectSecurity
+* @implemented NT4
+*
+*     The ObGetObjectSecurity routine <FILLMEIN>
+*
+* @param Object
+*        <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @param MemoryAllocated
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
 ObGetObjectSecurity(IN PVOID Object,
-		    OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
-		    OUT PBOOLEAN MemoryAllocated)
+                    OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
+                    OUT PBOOLEAN MemoryAllocated)
 {
-  PROS_OBJECT_HEADER Header;
-  ULONG Length;
-  NTSTATUS Status;
+    PROS_OBJECT_HEADER Header;
+    ULONG Length;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-  PAGED_CODE();
+    Header = BODY_TO_HEADER(Object);
+    if (Header->Type == NULL) return STATUS_UNSUCCESSFUL;
 
-  Header = BODY_TO_HEADER(Object);
-  if (Header->Type == NULL)
-    return STATUS_UNSUCCESSFUL;
-
-  if (Header->Type->TypeInfo.SecurityProcedure == NULL)
+    if (Header->Type->TypeInfo.SecurityProcedure == NULL)
     {
-      ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
-      *SecurityDescriptor = Header->SecurityDescriptor;
-      *MemoryAllocated = FALSE;
-      return STATUS_SUCCESS;
+        ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
+        *SecurityDescriptor = Header->SecurityDescriptor;
+        *MemoryAllocated = FALSE;
+        return STATUS_SUCCESS;
     }
 
-  /* Get the security descriptor size */
-  Length = 0;
-  Status = Header->Type->TypeInfo.SecurityProcedure(Object,
-					QuerySecurityDescriptor,
-					OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
-					DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,
-					NULL,
-					&Length,
-                    NULL,
-                    NonPagedPool,
-                    NULL);
-  if (Status != STATUS_BUFFER_TOO_SMALL)
-    return Status;
+    /* Get the security descriptor size */
+    Length = 0;
+    Status = Header->Type->TypeInfo.SecurityProcedure(Object,
+                                                      QuerySecurityDescriptor,
+                                                      OWNER_SECURITY_INFORMATION |
+                                                      GROUP_SECURITY_INFORMATION |
+                                                      DACL_SECURITY_INFORMATION |
+                                                      SACL_SECURITY_INFORMATION,
+                                                      NULL,
+                                                      &Length,
+                                                      NULL,
+                                                      NonPagedPool,
+                                                      NULL);
+    if (Status != STATUS_BUFFER_TOO_SMALL) return Status;
 
-  /* Allocate security descriptor */
-  *SecurityDescriptor = ExAllocatePool(NonPagedPool,
-				       Length);
-  if (*SecurityDescriptor == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+    /* Allocate security descriptor */
+    *SecurityDescriptor = ExAllocatePool(NonPagedPool, Length);
+    if (*SecurityDescriptor == NULL) return STATUS_INSUFFICIENT_RESOURCES;
 
-  /* Query security descriptor */
-  Status = Header->Type->TypeInfo.SecurityProcedure(Object,
-					QuerySecurityDescriptor,
-					OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION |
-					DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION,
-					*SecurityDescriptor,
-					&Length,
-                    NULL,
-                    NonPagedPool,
-                    NULL);
-  if (!NT_SUCCESS(Status))
+    /* Query security descriptor */
+    Status = Header->Type->TypeInfo.SecurityProcedure(Object,
+                                                      QuerySecurityDescriptor,
+                                                      OWNER_SECURITY_INFORMATION |
+                                                      GROUP_SECURITY_INFORMATION |
+                                                      DACL_SECURITY_INFORMATION |
+                                                      SACL_SECURITY_INFORMATION,
+                                                      *SecurityDescriptor,
+                                                      &Length,
+                                                      NULL,
+                                                      NonPagedPool,
+                                                      NULL);
+    if (!NT_SUCCESS(Status))
     {
-      ExFreePool(*SecurityDescriptor);
-      return Status;
+        ExFreePool(*SecurityDescriptor);
+        return Status;
     }
 
-  *MemoryAllocated = TRUE;
+    *MemoryAllocated = TRUE;
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-/*
- * @implemented
- */
-VOID STDCALL
+/*++
+* @name ObReleaseObjectSecurity
+* @implemented NT4
+*
+*     The ObReleaseObjectSecurity routine <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @param MemoryAllocated
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+VOID
+NTAPI
 ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-			IN BOOLEAN MemoryAllocated)
+                        IN BOOLEAN MemoryAllocated)
 {
-  PAGED_CODE();
+    PAGED_CODE();
 
-  if (SecurityDescriptor == NULL)
-    return;
+    if (SecurityDescriptor == NULL) return;
 
-  if (MemoryAllocated)
+    if (MemoryAllocated)
     {
-      ExFreePool(SecurityDescriptor);
+        ExFreePool(SecurityDescriptor);
     }
-  else
+    else
     {
-      ObpDereferenceCachedSecurityDescriptor(SecurityDescriptor);
+        ObpDereferenceCachedSecurityDescriptor(SecurityDescriptor);
     }
 }
 
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
+/*++
+* @name NtQuerySecurityObject
+* @implemented NT4
+*
+*     The NtQuerySecurityObject routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>
+*
+* @param SecurityInformation
+*        <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @param Length
+*        <FILLMEIN>
+*
+* @param ResultLength
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
 NtQuerySecurityObject(IN HANDLE Handle,
-		      IN SECURITY_INFORMATION SecurityInformation,
-		      OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-		      IN ULONG Length,
-		      OUT PULONG ResultLength)
+                      IN SECURITY_INFORMATION SecurityInformation,
+                      OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+                      IN ULONG Length,
+                      OUT PULONG ResultLength)
 {
-    KPROCESSOR_MODE PreviousMode;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PVOID Object;
     PROS_OBJECT_HEADER Header;
     ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
     NTSTATUS Status = STATUS_SUCCESS;
-
     PAGED_CODE();
-
-    PreviousMode = ExGetPreviousMode();
 
     if (PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
-            ProbeForWrite(SecurityDescriptor,
-                          Length,
-                          sizeof(ULONG));
+            ProbeForWrite(SecurityDescriptor, Length, sizeof(ULONG));
             ProbeForWriteUlong(ResultLength);
         }
         _SEH_HANDLE
@@ -203,14 +267,15 @@ NtQuerySecurityObject(IN HANDLE Handle,
         Header = BODY_TO_HEADER(Object);
         ASSERT(Header->Type != NULL);
 
-        Status = Header->Type->TypeInfo.SecurityProcedure(Object,
-                                                          QuerySecurityDescriptor,
-                                                          SecurityInformation,
-                                                          SecurityDescriptor,
-                                                          &Length,
-                                                          &Header->SecurityDescriptor,
-                                                          Header->Type->TypeInfo.PoolType,
-                                                          &Header->Type->TypeInfo.GenericMapping);
+        Status = Header->Type->TypeInfo.SecurityProcedure(
+            Object,
+            QuerySecurityDescriptor,
+            SecurityInformation,
+            SecurityDescriptor,
+            &Length,
+            &Header->SecurityDescriptor,
+            Header->Type->TypeInfo.PoolType,
+            &Header->Type->TypeInfo.GenericMapping);
 
         ObDereferenceObject(Object);
 
@@ -229,46 +294,60 @@ NtQuerySecurityObject(IN HANDLE Handle,
     return Status;
 }
 
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
+/*++
+* @name NtSetSecurityObject
+* @implemented NT4
+*
+*     The NtSetSecurityObject routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>
+*
+* @param SecurityInformation
+*        <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
 NtSetSecurityObject(IN HANDLE Handle,
-		    IN SECURITY_INFORMATION SecurityInformation,
-		    IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+                    IN SECURITY_INFORMATION SecurityInformation,
+                    IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-    KPROCESSOR_MODE PreviousMode;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PVOID Object;
     PROS_OBJECT_HEADER Header;
     SECURITY_DESCRIPTOR_RELATIVE *CapturedSecurityDescriptor;
     ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
     NTSTATUS Status;
-
     PAGED_CODE();
 
     /* make sure the caller doesn't pass a NULL security descriptor! */
-    if (SecurityDescriptor == NULL)
-    {
-        return STATUS_ACCESS_DENIED;
-    }
-
-    PreviousMode = ExGetPreviousMode();
+    if (SecurityDescriptor == NULL) return STATUS_ACCESS_DENIED;
 
     /* capture and make a copy of the security descriptor */
     Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
                                          PreviousMode,
                                          PagedPool,
                                          TRUE,
-                                         (PSECURITY_DESCRIPTOR*)&CapturedSecurityDescriptor);
+                                         (PSECURITY_DESCRIPTOR*)
+                                         &CapturedSecurityDescriptor);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Capturing the security descriptor failed! Status: 0x%lx\n", Status);
         return Status;
     }
 
-    /* make sure the security descriptor passed by the caller
-       is valid for the operation we're about to perform */
+    /*
+     * make sure the security descriptor passed by the caller
+     * is valid for the operation we're about to perform
+     */
     if (((SecurityInformation & OWNER_SECURITY_INFORMATION) &&
          (CapturedSecurityDescriptor->Owner == 0)) ||
         ((SecurityInformation & GROUP_SECURITY_INFORMATION) &&
@@ -294,14 +373,15 @@ NtSetSecurityObject(IN HANDLE Handle,
             Header = BODY_TO_HEADER(Object);
             ASSERT(Header->Type != NULL);
 
-            Status = Header->Type->TypeInfo.SecurityProcedure(Object,
-                                                              SetSecurityDescriptor,
-                                                              SecurityInformation,
-                                                              (PSECURITY_DESCRIPTOR)SecurityDescriptor,
-                                                              NULL,
-                                                              &Header->SecurityDescriptor,
-                                                              Header->Type->TypeInfo.PoolType,
-                                                              &Header->Type->TypeInfo.GenericMapping);
+            Status = Header->Type->TypeInfo.SecurityProcedure(
+                Object,
+                SetSecurityDescriptor,
+                SecurityInformation,
+                (PSECURITY_DESCRIPTOR)SecurityDescriptor,
+                NULL,
+                &Header->SecurityDescriptor,
+                Header->Type->TypeInfo.PoolType,
+                &Header->Type->TypeInfo.GenericMapping);
 
             ObDereferenceObject(Object);
         }
@@ -315,18 +395,36 @@ NtSetSecurityObject(IN HANDLE Handle,
     return Status;
 }
 
-
-/*
- * @unimplemented
- */
-NTSTATUS STDCALL
+/*++
+* @name ObLogSecurityDescriptor
+* @unimplemented NT5.2
+*
+*     The ObLogSecurityDescriptor routine <FILLMEIN>
+*
+* @param InputSecurityDescriptor
+*        <FILLMEIN>
+*
+* @param OutputSecurityDescriptor
+*        <FILLMEIN>
+*
+* @param RefBias
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
 ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
                         OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
                         IN ULONG RefBias)
 {
     /* HACK: Return the same descriptor back */
     PISECURITY_DESCRIPTOR SdCopy;
-    DPRINT1("ObLogSecurityDescriptor is not implemented!\n", InputSecurityDescriptor);
+    DPRINT1("ObLogSecurityDescriptor is not implemented!\n",
+            InputSecurityDescriptor);
 
     SdCopy = ExAllocatePool(PagedPool, sizeof(*SdCopy));
     RtlMoveMemory(SdCopy, InputSecurityDescriptor, sizeof(*SdCopy));
@@ -334,11 +432,25 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
     return STATUS_SUCCESS;
 }
 
-
-/*
- * @unimplemented
- */
-VOID STDCALL
+/*++
+* @name ObDereferenceSecurityDescriptor
+* @unimplemented NT5.2
+*
+*     The ObDereferenceSecurityDescriptor routine <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @param Count
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+VOID
+NTAPI
 ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN ULONG Count)
 {

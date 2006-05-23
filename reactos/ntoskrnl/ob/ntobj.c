@@ -1,12 +1,10 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ob/ntobj.c
- * PURPOSE:         User mode interface to object manager
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
- */
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/ob/ntobj.c
+* PURPOSE:         Bunch of random functions that got stuck here without purpose. FIXME.
+* PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+*/
 
 /* INCLUDES *****************************************************************/
 
@@ -14,329 +12,327 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
 
-/* FUNCTIONS ************************************************************/
-
-/**********************************************************************
- * NAME							EXPORTED
- *	NtSetInformationObject
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- */
-NTSTATUS STDCALL
-NtSetInformationObject (IN HANDLE ObjectHandle,
-			IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-			IN PVOID ObjectInformation,
-			IN ULONG Length)
+/*++
+* @name ObpSetPermanentObject
+*
+*     The ObpSetPermanentObject routine <FILLMEIN>
+*
+* @param ObjectBody
+*        <FILLMEIN>
+*
+* @param Permanent
+*        <FILLMEIN>
+*
+* @return None.
+*
+* @remarks None.
+*
+*--*/
+VOID
+FASTCALL
+ObpSetPermanentObject(IN PVOID ObjectBody,
+                      IN BOOLEAN Permanent)
 {
-  PVOID Object;
-  NTSTATUS Status;
+    PROS_OBJECT_HEADER ObjectHeader;
 
-  PAGED_CODE();
-
-  if (ObjectInformationClass != ObjectHandleInformation)
-    return STATUS_INVALID_INFO_CLASS;
-
-  if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
-    return STATUS_INFO_LENGTH_MISMATCH;
-
-  Status = ObReferenceObjectByHandle (ObjectHandle,
-				      0,
-				      NULL,
-				      (KPROCESSOR_MODE)KeGetPreviousMode (),
-				      &Object,
-				      NULL);
-  if (!NT_SUCCESS (Status))
+    ObjectHeader = BODY_TO_HEADER(ObjectBody);
+    ASSERT (ObjectHeader->PointerCount > 0);
+    if (Permanent)
     {
-      return Status;
+        ObjectHeader->Flags |= OB_FLAG_PERMANENT;
     }
-
-  Status = ObpSetHandleAttributes (ObjectHandle,
-				   (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation);
-
-  ObDereferenceObject (Object);
-
-  return Status;
+    else
+    {
+        ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
+        if (ObjectHeader->HandleCount == 0 &&
+            HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory)
+        {
+            /* Remove the object from the namespace */
+            ObpRemoveEntryDirectory((PROS_OBJECT_HEADER)ObjectHeader);
+        }
+    }
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
 
-/**********************************************************************
- * NAME							EXPORTED
- *	NtQueryObject
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- */
-NTSTATUS STDCALL
-NtQueryObject (IN HANDLE ObjectHandle,
-	       IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-	       OUT PVOID ObjectInformation,
-	       IN ULONG Length,
-	       OUT PULONG ResultLength  OPTIONAL)
-{
-  OBJECT_HANDLE_INFORMATION HandleInfo;
-  PROS_OBJECT_HEADER ObjectHeader;
-  ULONG InfoLength;
-  PVOID Object;
-  NTSTATUS Status;
-
-  PAGED_CODE();
-
-  Status = ObReferenceObjectByHandle (ObjectHandle,
-				      0,
-				      NULL,
-				      (KPROCESSOR_MODE)KeGetPreviousMode(),
-				      &Object,
-				      &HandleInfo);
-  if (!NT_SUCCESS (Status))
-    {
-      return Status;
-    }
-
-  ObjectHeader = BODY_TO_HEADER(Object);
-
-  switch (ObjectInformationClass)
-    {
-      case ObjectBasicInformation:
-	InfoLength = sizeof(OBJECT_BASIC_INFORMATION);
-	if (Length != sizeof(OBJECT_BASIC_INFORMATION))
-	  {
-	    Status = STATUS_INFO_LENGTH_MISMATCH;
-	  }
-	else
-	  {
-	    POBJECT_BASIC_INFORMATION BasicInfo;
-
-	    BasicInfo = (POBJECT_BASIC_INFORMATION)ObjectInformation;
-	    BasicInfo->Attributes = HandleInfo.HandleAttributes;
-	    BasicInfo->GrantedAccess = HandleInfo.GrantedAccess;
-	    BasicInfo->HandleCount = ObjectHeader->HandleCount;
-	    BasicInfo->PointerCount = ObjectHeader->PointerCount;
-	    BasicInfo->PagedPoolUsage = 0; /* FIXME*/
-	    BasicInfo->NonPagedPoolUsage = 0; /* FIXME*/
-	    BasicInfo->NameInformationLength = 0; /* FIXME*/
-	    BasicInfo->TypeInformationLength = 0; /* FIXME*/
-	    BasicInfo->SecurityDescriptorLength = 0; /* FIXME*/
-	    if (ObjectHeader->Type == ObSymbolicLinkType)
-	      {
-		BasicInfo->CreateTime.QuadPart =
-		  ((PSYMLINK_OBJECT)Object)->CreateTime.QuadPart;
-	      }
-	    else
-	      {
-		BasicInfo->CreateTime.QuadPart = (ULONGLONG)0;
-	      }
-	    Status = STATUS_SUCCESS;
-	  }
-	break;
-
-      case ObjectNameInformation:
-	Status = ObQueryNameString (Object,
-				    (POBJECT_NAME_INFORMATION)ObjectInformation,
-				    Length,
-				    &InfoLength);
-	break;
-
-      case ObjectTypeInformation:
-#if 0
-//	InfoLength =
-	if (Length != sizeof(OBJECT_TYPE_INFORMATION))
-	  {
-	    Status = STATUS_INVALID_BUFFER_SIZE;
-	  }
-	else
-	  {
-	    POBJECT_TYPE_INFORMATION TypeInfo;
-
-	    TypeInfo = (POBJECT_TYPE_INFORMATION)ObjectInformation;
-	// FIXME: Is this supposed to only be the header's Name field?
-	// Can somebody check/verify this?
-	RtlCopyUnicodeString(&typeinfo->Name,&ObjectHeader->Name);
-
-	if (Status != STATUS_SUCCESS)
-	  {
-	    break;
-	  }
-
-	RtlCopyUnicodeString(&typeinfo->Type,&ObjectHeader->Type->TypeName);
-	//This should be info from the object header, not the object type, right?
-	typeinfo->TotalHandles = ObjectHeader-> HandleCount;
-	typeinfo->ReferenceCount = ObjectHeader -> PointerCount;
-	  }
-#endif
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
-      case ObjectAllTypesInformation:
-	Status = STATUS_NOT_IMPLEMENTED;
-	break;
-
-      case ObjectHandleInformation:
-	InfoLength = sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION);
-	if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
-	  {
-	    Status = STATUS_INFO_LENGTH_MISMATCH;
-	  }
-	else
-	  {
-	    Status = ObpQueryHandleAttributes (ObjectHandle,
-					       (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation);
-	  }
-	break;
-
-      default:
-	Status = STATUS_INVALID_INFO_CLASS;
-	break;
-    }
-
-  ObDereferenceObject (Object);
-
-  if (ResultLength != NULL)
-    *ResultLength = InfoLength;
-
-  return Status;
-}
-
-
-/**********************************************************************
- * NAME							PRIVATE
- *	ObpSetPermanentObject/2
- *
- * DESCRIPTION
- *	Fast general purpose routine to set an object's permanent
- *	attribute, given a  pointer to the object's body.
- */
-VOID FASTCALL
-ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent)
-{
-  PROS_OBJECT_HEADER ObjectHeader;
-
-  ObjectHeader = BODY_TO_HEADER(ObjectBody);
-  ASSERT (ObjectHeader->PointerCount > 0);
-  if (Permanent)
-  {
-     ObjectHeader->Flags |= OB_FLAG_PERMANENT;
-  }
-  else
-  {
-     ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
-     if (ObjectHeader->HandleCount == 0 && HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory)
-     {
-        /* Remove the object from the namespace */
-        ObpRemoveEntryDirectory((PROS_OBJECT_HEADER)ObjectHeader);
-     }
-  }
-}
-
-/**********************************************************************
- * NAME							EXPORTED
- *	ObMakeTemporaryObject/1
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- *
- * @implemented
- */
-VOID STDCALL
+/*++
+* @name ObMakeTemporaryObject
+* @implemented NT4
+*
+*     The ObMakeTemporaryObject routine <FILLMEIN>
+*
+* @param ObjectBody
+*        <FILLMEIN>
+*
+* @return None.
+*
+* @remarks None.
+*
+*--*/
+VOID
+NTAPI
 ObMakeTemporaryObject(IN PVOID ObjectBody)
 {
-  ObpSetPermanentObject (ObjectBody, FALSE);
+    ObpSetPermanentObject (ObjectBody, FALSE);
 }
 
+/*++
+* @name NtSetInformationObject
+* @implemented NT4
+*
+*     The NtSetInformationObject routine <FILLMEIN>
+*
+* @param ObjectHandle
+*        <FILLMEIN>
+*
+* @param ObjectInformationClass
+*        <FILLMEIN>
+*
+* @param ObjectInformation
+*        <FILLMEIN>
+*
+* @param Length
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+NtSetInformationObject(IN HANDLE ObjectHandle,
+                       IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
+                       IN PVOID ObjectInformation,
+                       IN ULONG Length)
+{
+    PVOID Object;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-/**********************************************************************
- * NAME							EXPORTED
- *	NtMakeTemporaryObject
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- */
-NTSTATUS STDCALL
+    if (ObjectInformationClass != ObjectHandleInformation)
+        return STATUS_INVALID_INFO_CLASS;
+
+    if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
+        return STATUS_INFO_LENGTH_MISMATCH;
+
+    Status = ObReferenceObjectByHandle(ObjectHandle,
+                                       0,
+                                       NULL,
+                                       KeGetPreviousMode(),
+                                       &Object,
+                                       NULL);
+    if (!NT_SUCCESS (Status)) return Status;
+
+    Status = ObpSetHandleAttributes(ObjectHandle,
+                                    (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)
+                                    ObjectInformation);
+
+    ObDereferenceObject (Object);
+    return Status;
+}
+
+/*++
+* @name NtQueryObject
+* @implemented NT4
+*
+*     The NtQueryObject routine <FILLMEIN>
+*
+* @param ObjectHandle
+*        <FILLMEIN>
+*
+* @param ObjectInformationClass
+*        <FILLMEIN>
+*
+* @param ObjectInformation
+*        <FILLMEIN>
+*
+* @param Length
+*        <FILLMEIN>
+*
+* @param ResultLength
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+NtQueryObject(IN HANDLE ObjectHandle,
+              IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
+              OUT PVOID ObjectInformation,
+              IN ULONG Length,
+              OUT PULONG ResultLength OPTIONAL)
+{
+    OBJECT_HANDLE_INFORMATION HandleInfo;
+    PROS_OBJECT_HEADER ObjectHeader;
+    ULONG InfoLength;
+    PVOID Object;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    Status = ObReferenceObjectByHandle(ObjectHandle,
+                                       0,
+                                       NULL,
+                                       KeGetPreviousMode(),
+                                       &Object,
+                                       &HandleInfo);
+    if (!NT_SUCCESS (Status)) return Status;
+
+    ObjectHeader = BODY_TO_HEADER(Object);
+
+    switch (ObjectInformationClass)
+    {
+    case ObjectBasicInformation:
+        InfoLength = sizeof(OBJECT_BASIC_INFORMATION);
+        if (Length != sizeof(OBJECT_BASIC_INFORMATION))
+        {
+            Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+            POBJECT_BASIC_INFORMATION BasicInfo;
+
+            BasicInfo = (POBJECT_BASIC_INFORMATION)ObjectInformation;
+            BasicInfo->Attributes = HandleInfo.HandleAttributes;
+            BasicInfo->GrantedAccess = HandleInfo.GrantedAccess;
+            BasicInfo->HandleCount = ObjectHeader->HandleCount;
+            BasicInfo->PointerCount = ObjectHeader->PointerCount;
+            BasicInfo->PagedPoolUsage = 0; /* FIXME*/
+            BasicInfo->NonPagedPoolUsage = 0; /* FIXME*/
+            BasicInfo->NameInformationLength = 0; /* FIXME*/
+            BasicInfo->TypeInformationLength = 0; /* FIXME*/
+            BasicInfo->SecurityDescriptorLength = 0; /* FIXME*/
+            if (ObjectHeader->Type == ObSymbolicLinkType)
+            {
+                BasicInfo->CreateTime.QuadPart =
+                    ((PSYMLINK_OBJECT)Object)->CreateTime.QuadPart;
+            }
+            else
+            {
+                BasicInfo->CreateTime.QuadPart = (ULONGLONG)0;
+            }
+            Status = STATUS_SUCCESS;
+        }
+        break;
+
+    case ObjectNameInformation:
+        Status = ObQueryNameString(Object,
+                                   (POBJECT_NAME_INFORMATION)ObjectInformation,
+                                   Length,
+                                   &InfoLength);
+        break;
+
+    case ObjectTypeInformation:
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
+
+    case ObjectAllTypesInformation:
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
+
+    case ObjectHandleInformation:
+        InfoLength = sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION);
+        if (Length != sizeof (OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
+        {
+            Status = STATUS_INFO_LENGTH_MISMATCH;
+        }
+        else
+        {
+            Status = ObpQueryHandleAttributes(
+                ObjectHandle,
+                (POBJECT_HANDLE_ATTRIBUTE_INFORMATION)ObjectInformation);
+        }
+        break;
+
+    default:
+        Status = STATUS_INVALID_INFO_CLASS;
+        break;
+    }
+
+    ObDereferenceObject (Object);
+
+    if (ResultLength != NULL) *ResultLength = InfoLength;
+
+    return Status;
+}
+
+/*++
+* @name NtMakeTemporaryObject
+* @implemented NT4
+*
+*     The NtMakeTemporaryObject routine <FILLMEIN>
+*
+* @param ObjectHandle
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
 NtMakeTemporaryObject(IN HANDLE ObjectHandle)
 {
-  PVOID ObjectBody;
-  NTSTATUS Status;
+    PVOID ObjectBody;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-  PAGED_CODE();
+    Status = ObReferenceObjectByHandle(ObjectHandle,
+                                       0,
+                                       NULL,
+                                       KeGetPreviousMode(),
+                                       &ObjectBody,
+                                       NULL);
+    if (Status != STATUS_SUCCESS) return Status;
 
-  Status = ObReferenceObjectByHandle(ObjectHandle,
-				     0,
-				     NULL,
-				     (KPROCESSOR_MODE)KeGetPreviousMode(),
-				     &ObjectBody,
-				     NULL);
-  if (Status != STATUS_SUCCESS)
-    {
-      return Status;
-    }
+    ObpSetPermanentObject (ObjectBody, FALSE);
 
-  ObpSetPermanentObject (ObjectBody, FALSE);
+    ObDereferenceObject(ObjectBody);
 
-  ObDereferenceObject(ObjectBody);
-
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	NtMakePermanentObject/1
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- *
- * @implemented
- */
-NTSTATUS STDCALL
+/*++
+* @name NtMakePermanentObject
+* @implemented NT4
+*
+*     The NtMakePermanentObject routine <FILLMEIN>
+*
+* @param ObjectHandle
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
 NtMakePermanentObject(IN HANDLE ObjectHandle)
 {
-  PVOID ObjectBody;
-  NTSTATUS Status;
+    PVOID ObjectBody;
+    NTSTATUS Status;
+    PAGED_CODE();
 
-  PAGED_CODE();
+    Status = ObReferenceObjectByHandle(ObjectHandle,
+                                       0,
+                                       NULL,
+                                       KeGetPreviousMode(),
+                                       &ObjectBody,
+                                       NULL);
+    if (Status != STATUS_SUCCESS) return Status;
 
-  Status = ObReferenceObjectByHandle(ObjectHandle,
-				     0,
-				     NULL,
-				     (KPROCESSOR_MODE)KeGetPreviousMode(),
-				     &ObjectBody,
-				     NULL);
-  if (Status != STATUS_SUCCESS)
-    {
-      return Status;
-    }
+    ObpSetPermanentObject (ObjectBody, TRUE);
 
-  ObpSetPermanentObject (ObjectBody, TRUE);
+    ObDereferenceObject(ObjectBody);
 
-  ObDereferenceObject(ObjectBody);
-
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
