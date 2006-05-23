@@ -18,8 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define _WIN32_WINNT 0x0501
-
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -27,8 +25,6 @@
 #define WIN32_NO_STATUS
 
 #include "wine/test.h"
-
-#include "windows.h"
 
 #include "windef.h"
 #include "winbase.h"

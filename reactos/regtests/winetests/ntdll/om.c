@@ -90,7 +90,7 @@ void test_case_sensitive (void)
 
     attr.Attributes = 0;
     status = pNtCreateMutant(&Mutant, GENERIC_ALL, &attr, FALSE);
-    todo_wine ok(status == STATUS_OBJECT_PATH_NOT_FOUND,
+    ok(status == STATUS_OBJECT_PATH_NOT_FOUND,
         "NtCreateMutant should have failed with STATUS_OBJECT_PATH_NOT_FOUND got(%08lx)\n", status);
 
     pNtClose(Event);
@@ -126,7 +126,7 @@ void test_namespace_pipe(void)
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     status = pNtCreateNamedPipeFile(&pipe, GENERIC_READ|GENERIC_WRITE, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE,
                                     FILE_CREATE, FILE_PIPE_FULL_DUPLEX, FALSE, FALSE, FALSE, 1, 256, 256, &timeout);
-    todo_wine ok(status == STATUS_INSTANCE_NOT_AVAILABLE,
+    ok(status == STATUS_INSTANCE_NOT_AVAILABLE,
         "NtCreateNamedPipeFile should have failed with STATUS_INSTANCE_NOT_AVAILABLE got(%08lx)\n", status);
 
     attr.Attributes = OBJ_CASE_INSENSITIVE;
@@ -137,7 +137,7 @@ void test_namespace_pipe(void)
     pRtlInitUnicodeString(&str, buffer3);
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_OPEN);
-    todo_wine ok(status == STATUS_OBJECT_PATH_NOT_FOUND || status == STATUS_PIPE_NOT_AVAILABLE,
+    ok(status == STATUS_OBJECT_PATH_NOT_FOUND || status == STATUS_PIPE_NOT_AVAILABLE,
         "pNtOpenFile should have failed with STATUS_OBJECT_PATH_NOT_FOUND got(%08lx)\n", status);
 
     pRtlInitUnicodeString(&str, buffer4);
@@ -185,21 +185,19 @@ static void test_name_collisions(void)
 
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\");
-    h = 0;
-    todo_wine{ DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_NAME_COLLISION) }
-    ok(h == 0, "Failed create returned valid handle! (%p)\n", h);
+    DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_NAME_COLLISION)
     InitializeObjectAttributes(&attr, &str, OBJ_OPENIF, 0, NULL);
 
-    todo_wine{ DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_NAME_EXISTS) }
+    DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_NAME_EXISTS)
     pNtClose(h);
     status = pNtCreateMutant(&h, GENERIC_ALL, &attr, FALSE);
-    todo_wine ok(status == STATUS_OBJECT_TYPE_MISMATCH,
+    ok(status == STATUS_OBJECT_TYPE_MISMATCH,
         "NtCreateMutant should have failed with STATUS_OBJECT_TYPE_MISMATCH got(%08lx)\n", status);
     pRtlFreeUnicodeString(&str);
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\??\\PIPE\\om.c-mutant");
     status = pNtCreateMutant(&h, GENERIC_ALL, &attr, FALSE);
-    todo_wine ok(status == STATUS_OBJECT_TYPE_MISMATCH,
+    ok(status == STATUS_OBJECT_TYPE_MISMATCH || status == STATUS_OBJECT_PATH_NOT_FOUND,
         "NtCreateMutant should have failed with STATUS_OBJECT_TYPE_MISMATCH got(%08lx)\n", status);
     pRtlFreeUnicodeString(&str);
 
@@ -289,22 +287,22 @@ void test_directory(void)
 
     /* No name and/or no attributes */
     status = pNtCreateDirectoryObject(NULL, DIRECTORY_QUERY, &attr);
-    todo_wine ok(status == STATUS_ACCESS_VIOLATION,
+    ok(status == STATUS_ACCESS_VIOLATION,
         "NtCreateDirectoryObject should have failed with STATUS_ACCESS_VIOLATION got(%08lx)\n", status);
     status = pNtOpenDirectoryObject(NULL, DIRECTORY_QUERY, &attr);
-    todo_wine ok(status == STATUS_ACCESS_VIOLATION,
+    ok(status == STATUS_ACCESS_VIOLATION,
         "NtOpenDirectoryObject should have failed with STATUS_ACCESS_VIOLATION got(%08lx)\n", status);
 
     status = pNtCreateDirectoryObject(&h, DIRECTORY_QUERY, NULL);
     ok(status == STATUS_SUCCESS, "Failed to create Directory without attributes(%08lx)\n", status);
     pNtClose(h);
     status = pNtOpenDirectoryObject(&h, DIRECTORY_QUERY, NULL);
-    todo_wine ok(status == STATUS_INVALID_PARAMETER,
+    ok(status == STATUS_INVALID_PARAMETER,
         "NtOpenDirectoryObject should have failed with STATUS_INVALID_PARAMETER got(%08lx)\n", status);
 
     InitializeObjectAttributes(&attr, NULL, 0, 0, NULL);
     DIR_TEST_CREATE_SUCCESS(&dir)
-    todo_wine{ DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD) }
+    DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
 
     /* Bad name */
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
@@ -312,15 +310,15 @@ void test_directory(void)
     pRtlCreateUnicodeStringFromAsciiz(&str, "");
     DIR_TEST_CREATE_SUCCESS(&h)
     pNtClose(h);
-    todo_wine{ DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD) }
+    DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
     pRtlFreeUnicodeString(&str);
     pNtClose(dir);
 
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "BaseNamedObjects", STATUS_OBJECT_PATH_SYNTAX_BAD) }
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\", STATUS_OBJECT_NAME_INVALID) }
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\\\BaseNamedObjects", STATUS_OBJECT_NAME_INVALID) }
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\\\om.c-test", STATUS_OBJECT_NAME_INVALID) }
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\om.c-test\\", STATUS_OBJECT_PATH_NOT_FOUND) }
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "BaseNamedObjects", STATUS_OBJECT_PATH_SYNTAX_BAD)
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\", STATUS_OBJECT_NAME_INVALID)
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\\\BaseNamedObjects", STATUS_OBJECT_NAME_INVALID)
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\\\om.c-test", STATUS_OBJECT_NAME_INVALID)
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\om.c-test\\", STATUS_OBJECT_PATH_NOT_FOUND)
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\om.c-test");
     DIR_TEST_CREATE_SUCCESS(&h)
@@ -336,11 +334,11 @@ void test_directory(void)
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\BaseNamedObjects\\Local");
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     status = pNtOpenSymbolicLinkObject(&dir, SYMBOLIC_LINK_QUERY, &attr);\
-    todo_wine ok(status == STATUS_SUCCESS, "Failed to open SymbolicLink(%08lx)\n", status);
+    ok(status == STATUS_SUCCESS, "Failed to open SymbolicLink(%08lx)\n", status);
     pRtlFreeUnicodeString(&str);
     InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
     pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
-    todo_wine{ DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_TYPE_MISMATCH) }
+    DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_TYPE_MISMATCH)
     pRtlFreeUnicodeString(&str);
     pNtClose(h);
     pNtClose(dir);
@@ -351,14 +349,14 @@ void test_directory(void)
     pRtlFreeUnicodeString(&str);
 
     InitializeObjectAttributes(&attr, NULL, 0, dir, NULL);
-    todo_wine{ DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_NAME_INVALID) }
+    DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_NAME_INVALID)
 
     InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
     DIR_TEST_CREATE_OPEN_SUCCESS(&h, "")
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\", STATUS_OBJECT_PATH_SYNTAX_BAD) }
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\om.c-test", STATUS_OBJECT_PATH_SYNTAX_BAD) }
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\om.c-test\\", STATUS_OBJECT_PATH_SYNTAX_BAD) }
-    todo_wine{ DIR_TEST_CREATE_OPEN_FAILURE(&h, "om.c-test\\", STATUS_OBJECT_PATH_NOT_FOUND) }
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\", STATUS_OBJECT_PATH_SYNTAX_BAD)
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\om.c-test", STATUS_OBJECT_PATH_SYNTAX_BAD)
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "\\om.c-test\\", STATUS_OBJECT_PATH_SYNTAX_BAD)
+    DIR_TEST_CREATE_OPEN_FAILURE(&h, "om.c-test\\", STATUS_OBJECT_PATH_NOT_FOUND)
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "om.c-test");
     DIR_TEST_CREATE_SUCCESS(&dir1)
@@ -374,7 +372,7 @@ void test_directory(void)
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
     DIR_TEST_OPEN_SUCCESS(&dir)
     InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
-    todo_wine{ DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD) }
+    DIR_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
     pRtlFreeUnicodeString(&str);
     pNtClose(dir);
 
@@ -422,18 +420,18 @@ void test_directory(void)
     /* Test inavalid paths */
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\om.c-mutant");
     status = pNtCreateMutant(&h, GENERIC_ALL, &attr, FALSE);
-    todo_wine ok(status == STATUS_OBJECT_PATH_SYNTAX_BAD,
+    ok(status == STATUS_OBJECT_PATH_SYNTAX_BAD,
         "NtCreateMutant should have failed with STATUS_OBJECT_PATH_SYNTAX_BAD got(%08lx)\n", status);
     pRtlFreeUnicodeString(&str);
     pRtlCreateUnicodeStringFromAsciiz(&str, "\\om.c-mutant\\");
     status = pNtCreateMutant(&h, GENERIC_ALL, &attr, FALSE);
-    todo_wine ok(status == STATUS_OBJECT_PATH_SYNTAX_BAD,
+    ok(status == STATUS_OBJECT_PATH_SYNTAX_BAD,
         "NtCreateMutant should have failed with STATUS_OBJECT_PATH_SYNTAX_BAD got(%08lx)\n", status);
     pRtlFreeUnicodeString(&str);
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "om.c\\-mutant");
     status = pNtCreateMutant(&h, GENERIC_ALL, &attr, FALSE);
-    todo_wine ok(status == STATUS_OBJECT_PATH_NOT_FOUND,
+    ok(status == STATUS_OBJECT_PATH_NOT_FOUND,
         "NtCreateMutant should have failed with STATUS_OBJECT_PATH_NOT_FOUND got(%08lx)\n", status);
     pRtlFreeUnicodeString(&str);
 
@@ -476,18 +474,18 @@ void test_symboliclink(void)
     IO_STATUS_BLOCK iosb;
 
     /* No name and/or no attributes */
-    todo_wine{ SYMLNK_TEST_CREATE_OPEN_FAILURE(NULL, "", "", STATUS_ACCESS_VIOLATION) }
+    SYMLNK_TEST_CREATE_OPEN_FAILURE(NULL, "", "", STATUS_ACCESS_VIOLATION)
 
     status = pNtCreateSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, NULL, NULL);
-    todo_wine ok(status == STATUS_ACCESS_VIOLATION,
+    ok(status == STATUS_ACCESS_VIOLATION,
         "NtCreateSymbolicLinkObject should have failed with STATUS_ACCESS_VIOLATION got(%08lx)\n", status);
     status = pNtOpenSymbolicLinkObject(&h, SYMBOLIC_LINK_QUERY, NULL);
-    todo_wine ok(status == STATUS_INVALID_PARAMETER,
+    ok(status == STATUS_INVALID_PARAMETER,
         "NtOpenSymbolicLinkObject should have failed with STATUS_INVALID_PARAMETER got(%08lx)\n", status);
 
     InitializeObjectAttributes(&attr, NULL, 0, 0, NULL);
-    todo_wine{ SYMLNK_TEST_CREATE_FAILURE(&link, STATUS_INVALID_PARAMETER) }
-    todo_wine{ SYMLNK_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD) }
+    SYMLNK_TEST_CREATE_FAILURE(&link, STATUS_INVALID_PARAMETER)
+    SYMLNK_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
 
     /* Bad name */
     pRtlCreateUnicodeStringFromAsciiz(&target, "anywhere");
@@ -495,7 +493,7 @@ void test_symboliclink(void)
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "");
     SYMLNK_TEST_CREATE_SUCCESS(&link)
-    todo_wine{ SYMLNK_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD) }
+    SYMLNK_TEST_OPEN_FAILURE(&h, STATUS_OBJECT_PATH_SYNTAX_BAD)
     pNtClose(link);
     pRtlFreeUnicodeString(&str);
 
@@ -504,11 +502,11 @@ void test_symboliclink(void)
     pRtlFreeUnicodeString(&str);
     pRtlFreeUnicodeString(&target);
 
-    todo_wine{ SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "BaseNamedObjects", "->Somewhere", STATUS_OBJECT_PATH_SYNTAX_BAD) }
-    todo_wine{ SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\", "->Somewhere", STATUS_OBJECT_NAME_INVALID) }
-    todo_wine{ SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\\\BaseNamedObjects", "->Somewhere", STATUS_OBJECT_NAME_INVALID) }
-    todo_wine{ SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\\\om.c-test", "->Somewhere", STATUS_OBJECT_NAME_INVALID) }
-    todo_wine{ SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\om.c-test\\", "->Somewhere", STATUS_OBJECT_NAME_INVALID) }
+    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "BaseNamedObjects", "->Somewhere", STATUS_OBJECT_PATH_SYNTAX_BAD)
+    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
+    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\\\BaseNamedObjects", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
+    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\\\om.c-test", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
+    SYMLNK_TEST_CREATE_OPEN_FAILURE(&h, "\\BaseNamedObjects\\om.c-test\\", "->Somewhere", STATUS_OBJECT_NAME_INVALID)
 
 
     /* Compaund test */

@@ -199,8 +199,8 @@ static void test_RtlInitUnicodeStringEx(void)
     uni.Buffer = (void *) 0xdeadbeef;
     result = pRtlInitUnicodeStringEx(&uni, teststring);
     ok(result == STATUS_SUCCESS,
-       "pRtlInitUnicodeStringEx(&uni, 0) returns %lx, expected %lx\n",
-       result, (DWORD) STATUS_SUCCESS);
+       "pRtlInitUnicodeStringEx(&uni, 0) returns %lx, expected 0\n",
+       result);
     ok(uni.Length == 32,
        "pRtlInitUnicodeStringEx(&uni, 0) sets Length to %u, expected %u\n",
        uni.Length, 32);
@@ -231,7 +231,7 @@ static void test_RtlInitUnicodeStringEx(void)
     result = pRtlInitUnicodeStringEx(&uni, teststring2);
     ok(result == STATUS_NAME_TOO_LONG,
        "pRtlInitUnicodeStringEx(&uni, 0) returns %lx, expected %lx\n",
-       result, (DWORD) STATUS_NAME_TOO_LONG);
+       result, STATUS_NAME_TOO_LONG);
     ok(uni.Length == 12345,
        "pRtlInitUnicodeStringEx(&uni, 0) sets Length to %u, expected %u\n",
        uni.Length, 12345);
@@ -263,8 +263,8 @@ static void test_RtlInitUnicodeStringEx(void)
     uni.Buffer = (void *) 0xdeadbeef;
     result = pRtlInitUnicodeStringEx(&uni, 0);
     ok(result == STATUS_SUCCESS,
-       "pRtlInitUnicodeStringEx(&uni, 0) returns %lx, expected %lx\n",
-       result, (DWORD) STATUS_SUCCESS);
+       "pRtlInitUnicodeStringEx(&uni, 0) returns %lx, expected 0\n",
+       result);
     ok(uni.Length == 0,
        "pRtlInitUnicodeStringEx(&uni, 0) sets Length to %u, expected %u\n",
        uni.Length, 0);
@@ -1651,22 +1651,22 @@ static void test_RtlIntegerToChar(void)
     result = pRtlIntegerToChar(int2str[0].value, 20, int2str[0].MaximumLength, NULL);
     ok(result == STATUS_INVALID_PARAMETER,
        "(test a): RtlIntegerToChar(%lu, %d, %d, NULL) has result %lx, expected: %lx\n",
-       int2str[0].value, 20, int2str[0].MaximumLength, result, (DWORD) STATUS_INVALID_PARAMETER);
+       int2str[0].value, 20, int2str[0].MaximumLength, result, STATUS_INVALID_PARAMETER);
 
     result = pRtlIntegerToChar(int2str[0].value, 20, 0, NULL);
     ok(result == STATUS_INVALID_PARAMETER,
        "(test b): RtlIntegerToChar(%lu, %d, %d, NULL) has result %lx, expected: %lx\n",
-       int2str[0].value, 20, 0, result, (DWORD) STATUS_INVALID_PARAMETER);
+       int2str[0].value, 20, 0, result, STATUS_INVALID_PARAMETER);
 
     result = pRtlIntegerToChar(int2str[0].value, int2str[0].base, 0, NULL);
     ok(result == STATUS_BUFFER_OVERFLOW,
        "(test c): RtlIntegerToChar(%lu, %d, %d, NULL) has result %lx, expected: %lx\n",
-       int2str[0].value, int2str[0].base, 0, result, (DWORD) STATUS_BUFFER_OVERFLOW);
+       int2str[0].value, int2str[0].base, 0, result, STATUS_BUFFER_OVERFLOW);
 
     result = pRtlIntegerToChar(int2str[0].value, int2str[0].base, int2str[0].MaximumLength, NULL);
     ok(result == STATUS_ACCESS_VIOLATION,
        "(test d): RtlIntegerToChar(%lu, %d, %d, NULL) has result %lx, expected: %lx\n",
-       int2str[0].value, int2str[0].base, int2str[0].MaximumLength, result, (DWORD) STATUS_ACCESS_VIOLATION);
+       int2str[0].value, int2str[0].base, int2str[0].MaximumLength, result, STATUS_ACCESS_VIOLATION);
 }
 
 static const WCHAR szGuid[] = { '{','0','1','0','2','0','3','0','4','-',

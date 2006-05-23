@@ -266,12 +266,12 @@ static void test_RtlGetFullPathName_U(void)
         pRtlMultiByteToUnicodeN(pathbufW , sizeof(pathbufW), NULL, test->path, strlen(test->path)+1 );
         ret = pRtlGetFullPathName_U( pathbufW,MAX_PATH, rbufferW, &file_part);
         ok( ret == len, "Wrong result %ld/%d for \"%s\"\n", ret, len, test->path );
-        ok(pRtlUnicodeToMultiByteN(rbufferA,MAX_PATH,&reslen,rbufferW,MAX_PATH) == STATUS_SUCCESS,
+        ok(pRtlUnicodeToMultiByteN(rbufferA,MAX_PATH,&reslen,rbufferW,(lstrlenW(rbufferW) + 1) * sizeof(WCHAR)) == STATUS_SUCCESS,
            "RtlUnicodeToMultiByteN failed\n");
         ok(lstrcmpiA(rbufferA,test->rname) == 0, "Got \"%s\" expected \"%s\"\n",rbufferA,test->rname);
         if (file_part)
         {
-            ok(pRtlUnicodeToMultiByteN(rfileA,MAX_PATH,&reslen,file_part,MAX_PATH) == STATUS_SUCCESS,
+            ok(pRtlUnicodeToMultiByteN(rfileA,MAX_PATH,&reslen,file_part,(lstrlenW(file_part) + 1) * sizeof(WCHAR)) == STATUS_SUCCESS,
                "RtlUnicodeToMultiByteN failed\n");
             ok(test->rfile && !lstrcmpiA(rfileA,test->rfile), "Got \"%s\" expected \"%s\"\n",rfileA,test->rfile);
         }

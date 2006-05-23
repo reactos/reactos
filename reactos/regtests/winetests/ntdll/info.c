@@ -216,7 +216,7 @@ static void test_query_process(void)
     DWORD status;
     DWORD last_pid;
     ULONG ReturnLength;
-    int i = 0, j = 0, k = 0;
+    int i = 0, k = 0;
     int is_nt = 0;
     SYSTEM_BASIC_INFORMATION sbi;
 
@@ -297,6 +297,7 @@ static void test_query_process(void)
         
         if (!is_nt)
         {
+            DWORD j;
             for ( j = 0; j < spi->dwThreadCount; j++) 
             {
                 k++;
@@ -362,8 +363,7 @@ static void test_query_module(void)
 {
     DWORD status;
     ULONG ReturnLength;
-    DWORD ModuleCount;
-    int i;
+    ULONG ModuleCount, i;
 
     ULONG SystemInformationLength = sizeof(SYSTEM_MODULE_INFORMATION);
     SYSTEM_MODULE_INFORMATION* smi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength); 
@@ -389,7 +389,7 @@ static void test_query_module(void)
     /* Loop through all the modules/drivers, Wine doesn't get here (yet) */
     for (i = 0; i < ModuleCount ; i++)
     {
-        ok( i == sm->Id, "Id (%d) should have matched %d\n", sm->Id, i);
+        ok( i == sm->Id, "Id (%d) should have matched %lu\n", sm->Id, i);
         sm++;
     }
 
