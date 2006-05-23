@@ -599,7 +599,7 @@ QSI_DEF(SystemProcessInformation)
 			}
 
 			// size of the structure for every process
-			curSize = sizeof(SYSTEM_PROCESS_INFORMATION)-sizeof(SYSTEM_THREAD_INFORMATION)+sizeof(SYSTEM_THREAD_INFORMATION)*nThreads;
+			curSize = sizeof(SYSTEM_PROCESS_INFORMATION)+sizeof(SYSTEM_THREAD_INFORMATION)*nThreads;
 			ovlSize += curSize+inLen;
 
 			if (ovlSize > Size)
