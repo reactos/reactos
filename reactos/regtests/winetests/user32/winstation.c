@@ -42,29 +42,12 @@ static void print_object( HANDLE obj )
         trace( "obj %p type '%s'\n", obj, buffer );
 }
 
-static void register_class(void)
-{
-    WNDCLASSA cls;
-
-    cls.style = CS_DBLCLKS;
-    cls.lpfnWndProc = DefWindowProcA;
-    cls.cbClsExtra = 0;
-    cls.cbWndExtra = 0;
-    cls.hInstance = GetModuleHandleA(0);
-    cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, (LPSTR)IDC_ARROW);
-    cls.hbrBackground = GetStockObject(WHITE_BRUSH);
-    cls.lpszMenuName = NULL;
-    cls.lpszClassName = "WinStationClass";
-    RegisterClassA(&cls);
-}
-
 static HDESK initial_desktop;
 
 static DWORD CALLBACK thread( LPVOID arg )
 {
     HDESK d1, d2;
-    HWND hwnd = CreateWindowExA(0,"WinStationClass","test",WS_POPUP,0,0,100,100,GetDesktopWindow(),0,0,0);
+    HWND hwnd = CreateWindowExA(0,"BUTTON","test",WS_POPUP,0,0,100,100,GetDesktopWindow(),0,0,0);
     ok( hwnd != 0, "CreateWindow failed\n" );
     d1 = GetThreadDesktop(GetCurrentThreadId());
     trace( "thread %p desktop: %p\n", arg, d1 );
@@ -106,8 +89,6 @@ static void test_handles(void)
     HDESK d1, d2, d3;
     HANDLE hthread;
     DWORD id, flags;
-    ATOM atom;
-    char buffer[20];
 
     /* win stations */
 
@@ -162,28 +143,6 @@ static void test_handles(void)
 
     w3 = OpenWindowStation("foobar", TRUE, WINSTA_ALL_ACCESS );
     ok( !w3, "open foobar station succeeded\n" );
-
-    w2 = CreateWindowStation("foobar1", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w2 != 0, "create foobar station failed\n" );
-    w3 = CreateWindowStation("foobar2", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w3 != 0, "create foobar station failed\n" );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
-    ok( GetHandleInformation( w3, &flags ), "GetHandleInformation failed\n" );
-
-    SetProcessWindowStation( w2 );
-    register_class();
-    atom = GlobalAddAtomA("foo");
-    ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
-    ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
-
-    ok( !CloseWindowStation( w2 ), "CloseWindowStation succeeded\n" );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
-
-    SetProcessWindowStation( w3 );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
-    ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
-    ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
-    ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
 
     /* desktops */
     d1 = GetThreadDesktop(GetCurrentThreadId());

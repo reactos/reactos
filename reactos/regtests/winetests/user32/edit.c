@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <windows.h>
+#include <windowsx.h>
 #include <commctrl.h>
 
 #include "wine/test.h"
@@ -277,9 +278,7 @@ static void ET2_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 static LRESULT CALLBACK ET2_WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (iMsg) {
-    case WM_COMMAND:
-        ET2_OnCommand(hwnd, LOWORD(wParam), (HWND)lParam, HIWORD(wParam));
-        break;
+        HANDLE_MSG(hwnd, WM_COMMAND, ET2_OnCommand);
     }
     return DefWindowProc(hwnd, iMsg, wParam, lParam);
 }
@@ -760,106 +759,8 @@ static void test_margins(void)
     ok(new_rect.right == old_rect.right, "The right border of the rectangle has changed\n");
     ok(new_rect.top == old_rect.top, "The top border of the rectangle has changed\n");
     ok(new_rect.bottom == old_rect.bottom, "The bottom border of the rectangle has changed\n");
-
-    DestroyWindow (hwEdit);
-}
-
-static INT CALLBACK find_font_proc(const LOGFONT *elf, const TEXTMETRIC *ntm, DWORD type, LPARAM lParam)
-{
-    return 0;
-}
-
-static void test_margins_font_change(void)
-{
-    HWND hwEdit;
-    DWORD margins, font_margins;
-    LOGFONT lf;
-    HFONT hfont, hfont2;
-    HDC hdc = GetDC(0);
-
-    if(EnumFontFamiliesA(hdc, "Arial", find_font_proc, 0))
-    {
-        trace("Arial not found - skipping font change margin tests\n");
-        ReleaseDC(0, hdc);
-        return;
-    }
-    ReleaseDC(0, hdc);
-
-    hwEdit = create_child_editcontrol(0, 0);
-
-    SetWindowPos(hwEdit, NULL, 10, 10, 1000, 100, SWP_NOZORDER | SWP_NOACTIVATE);
-
-    memset(&lf, 0, sizeof(lf));
-    strcpy(lf.lfFaceName, "Arial");
-    lf.lfHeight = 16;
-    lf.lfCharSet = DEFAULT_CHARSET;
-    hfont = CreateFontIndirectA(&lf);
-    lf.lfHeight = 30;
-    hfont2 = CreateFontIndirectA(&lf);
-
-    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
-    font_margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(font_margins) != 0, "got %d\n", LOWORD(font_margins));
-    ok(HIWORD(font_margins) != 0, "got %d\n", HIWORD(font_margins));
-
-    /* With 'small' edit controls, test that the margin doesn't get set */
-    SetWindowPos(hwEdit, NULL, 10, 10, 16, 100, SWP_NOZORDER | SWP_NOACTIVATE);
-    SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0,0));
-    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 0, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 0, "got %d\n", HIWORD(margins));
- 
-    SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,0));
-    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 0, "got %d\n", HIWORD(margins));  
-
-    SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,1));
-    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins));  
-
-    SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO,EC_USEFONTINFO));
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins)); 
-    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont2, 0);
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == 1, "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == 1, "got %d\n", HIWORD(margins)); 
- 
-    /* Above a certain size threshold then the margin is updated */
-    SetWindowPos(hwEdit, NULL, 10, 10, 1000, 100, SWP_NOZORDER | SWP_NOACTIVATE);
-    SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,0));
-    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == LOWORD(font_margins), "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
-
-    SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(1,1));
-    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont, 0);
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == LOWORD(font_margins), "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
-
-    SendMessageA(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(EC_USEFONTINFO,EC_USEFONTINFO));
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) == LOWORD(font_margins), "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) == HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
-    SendMessageA(hwEdit, WM_SETFONT, (WPARAM)hfont2, 0);
-    margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
-    ok(LOWORD(margins) != LOWORD(font_margins), "got %d\n", LOWORD(margins));
-    ok(HIWORD(margins) != HIWORD(font_margins), "got %d\n", HIWORD(margins)); 
-
-    SendMessageA(hwEdit, WM_SETFONT, 0, 0);
     
-    DeleteObject(hfont2);
-    DeleteObject(hfont);
-    destroy_child_editcontrol(hwEdit);
-
+    DestroyWindow (hwEdit);
 }
 
 #define edit_pos_ok(exp, got, txt) \
@@ -1066,8 +967,7 @@ START_TEST(edit)
     test_edit_control_4();
     test_edit_control_5();
     test_margins();
-    test_margins_font_change();
     test_text_position();
-
+    
     UnregisterWindowClasses();
 }

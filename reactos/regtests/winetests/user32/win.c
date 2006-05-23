@@ -2316,7 +2316,6 @@ static void test_keyboard_input(HWND hwnd)
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
-    flush_events();
 
     ok(GetActiveWindow() == hwnd, "wrong active window %p\n", GetActiveWindow());
 
