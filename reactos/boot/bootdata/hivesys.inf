@@ -760,4 +760,26 @@ HKLM,"SYSTEM\Setup","OsLoaderPath",0x00000000,"\"
 HKLM,"SYSTEM\Setup","SetupType",0x00010001,0x00000001
 HKLM,"SYSTEM\Setup","SystemPartition",0x00000000,"\Device\Harddisk0\Partition1"
 HKLM,"SYSTEM\Setup","SystemSetupInProgress",0x00010001,0x00000001
+
+; Devices which should be installed by plug-and-play, but
+; which are currently not detected on non-ACPI systems
+
+; Serial port COM1
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0501\1","HardwareID",0x00010000,"*PNP0501"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0501\1","DeviceDesc",0x00000000,"Communication port"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0501\1\LogConf","BasicConfigVector",0x000A0001, \
+58,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00, \
+01,00,00,00,01,00,01,00,02,00,00,00, \
+00,01,01,00,11,00,00,00,08,00,00,00,00,00,00,00,f8,03,00,00,00,00,00,00,ff,03,00,00,00,00,00,00, \
+00,02,01,00,11,00,00,00,04,00,00,00,04,00,00,00
+ 
+; Serial port COM2
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0501\2","HardwareID",0x00010000,"*PNP0501"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0501\2","DeviceDesc",0x00000000,"Communication port"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0501\2\LogConf","BasicConfigVector",0x000A0001, \
+58,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00, \
+01,00,00,00,01,00,01,00,02,00,00,00, \
+00,01,01,00,11,00,00,00,08,00,00,00,00,00,00,00,f8,02,00,00,00,00,00,00,ff,02,00,00,00,00,00,00, \
+00,02,01,00,11,00,00,00,03,00,00,00,03,00,00,00
+
 ; EOF
