@@ -1522,6 +1522,9 @@ NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
             IF->Unicast.Address.IPv4Address = IpAddrChange->Address;
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
+	    IF->Broadcast.Address.IPv4Address =
+		IF->Unicast.Address.IPv4Address |
+		~IF->Netmask.Address.IPv4Address;
 
             TI_DbgPrint(MID_TRACE,("New Unicast Address: %x\n",
                                    IF->Unicast.Address.IPv4Address));
