@@ -263,11 +263,11 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetDlgItemText(hwndDlg,IDC_NETCARDNAME,tpszDisplayName);
 			EnableWindow(GetDlgItem(hwndDlg,IDC_CONFIGURE),FALSE);
 
-
 			SetWindowLongPtr(hwndDlg,GWL_USERDATA,(DWORD_PTR)lParam);
 			//SetDlgItemTextA(hwndDlg,IDC_NETCARDNAME,Info[pPage->lParam].Description);
 			EnumRegKeys(NICPropertyProtocolCallback,hwndDlg,HKEY_LOCAL_MACHINE,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E975-E325-11CE-BFC1-08002BE10318}"));
 
+			SendDlgItemMessage(hwndDlg, IDC_COMPONENTSLIST, LB_SETCURSEL, 0, 0);
 		}
 		break;
 	case WM_COMMAND:
@@ -302,14 +302,16 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// drop though
 		case IDC_PROPERTIES:
 			{
-				TCHAR *tpszSubKey;
+				TCHAR *tpszSubKey = NULL;
 				TCHAR tpszNDIKey[MAX_PATH];
 				TCHAR tpszClsIDText[MAX_PATH];
 				TCHAR *tpszTCPIPClsID = _T("{A907657F-6FDF-11D0-8EFB-00C04FD912B2}");
 				HKEY hNDIKey;
 				DWORD dwType,dwSize;
 				HWND hListBox = GetDlgItem(hwndDlg,IDC_COMPONENTSLIST);
-				tpszSubKey = (TCHAR*)SendMessage(hListBox,LB_GETITEMDATA,SendMessage(hListBox,LB_GETCURSEL,0,0),0);
+				int iListBoxIndex = SendMessage(hListBox,LB_GETCURSEL,0,0);
+				if(iListBoxIndex != LB_ERR) 
+					tpszSubKey = (TCHAR*)SendMessage(hListBox,LB_GETITEMDATA,iListBoxIndex,0);
 				if(!tpszSubKey)
 					break;
 				_stprintf(tpszNDIKey,_T("%s\\Ndi"),tpszSubKey);
@@ -598,9 +600,8 @@ NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EnableWindow(GetDlgItem(hwndDlg,IDC_ADD),FALSE);
 			EnableWindow(GetDlgItem(hwndDlg,IDC_REMOVE),FALSE);
 
-			SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_SETCURSEL,0,0);
-		
 			EnumAdapters(hwndDlg);
+			SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_SETCURSEL,0,0);
 		}
 		break;
 
