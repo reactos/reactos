@@ -24,6 +24,13 @@ Author:
 //
 #include <umtypes.h>
 
+//
+// If the IFS wasn't included, define this here
+//
+#ifndef EX_PUSH_LOCK
+#define EX_PUSH_LOCK    ULONG_PTR
+#endif
+
 #ifdef NTOS_MODE_USER
 
 //
