@@ -12,6 +12,226 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#ifdef OBP_PROFILE
+
+LARGE_INTEGER ObpProfileTime;
+BOOLEAN ObpProfileComplete;
+
+#define ObpStartProfile()                           \
+    LARGE_INTEGER StartTime;                        \
+    LARGE_INTEGER EndTime;                          \
+    StartTime = KeQueryPerformanceCounter(NULL);
+
+#define ObpEndProfile()                             \
+    EndTime = KeQueryPerformanceCounter(NULL);      \
+    ObpProfileTime.QuadPart += (EndTime.QuadPart -  \
+                                StartTime.QuadPart);
+
+#define ObpCompleteProfile()                        \
+    if (!wcscmp(Name, L"NlsSectionCP1252") &&       \
+        !ObpProfileComplete)                        \
+    {                                               \
+        DPRINT1("******************************\n");\
+        DPRINT1("Obp Profiling1 Complete: %I64d\n", \
+                ObpProfileTime.QuadPart);           \
+        DPRINT1("******************************\n");\
+        ObpProfileComplete = TRUE;                  \
+    }
+
+#else
+
+#define ObpStartProfile()
+#define ObpEndProfile()
+#define ObpCompleteProfile()
+
+#endif
+
+/* PRIVATE FUNCTIONS ******************************************************/
+
+VOID
+NTAPI
+ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
+                     PROS_OBJECT_HEADER Header,
+                     PWSTR Name)
+{
+    KIRQL oldlvl;
+
+    ObpStartProfile();
+    ASSERT(HEADER_TO_OBJECT_NAME(Header));
+    HEADER_TO_OBJECT_NAME(Header)->Directory = Parent;
+
+    KeAcquireSpinLock(&Parent->Lock, &oldlvl);
+    InsertTailList(&Parent->head, &Header->Entry);
+    KeReleaseSpinLock(&Parent->Lock, oldlvl);
+    ObpEndProfile();
+}
+
+VOID
+NTAPI
+ObpRemoveEntryDirectory(PROS_OBJECT_HEADER Header)
+{
+    KIRQL oldlvl;
+
+    ObpStartProfile();
+    DPRINT("ObpRemoveEntryDirectory(Header %x)\n",Header);
+
+    KeAcquireSpinLock(&(HEADER_TO_OBJECT_NAME(Header)->Directory->Lock),&oldlvl);
+    if (Header->Entry.Flink && Header->Entry.Blink)
+    {
+        RemoveEntryList(&(Header->Entry));
+        Header->Entry.Flink = Header->Entry.Blink = NULL;
+    }
+    KeReleaseSpinLock(&(HEADER_TO_OBJECT_NAME(Header)->Directory->Lock),oldlvl);
+    ObpEndProfile();
+}
+
+NTSTATUS
+NTAPI
+ObpCreateDirectory(OB_OPEN_REASON Reason,
+                   PEPROCESS Process,
+                   PVOID ObjectBody,
+                   ACCESS_MASK GrantedAccess,
+                   ULONG HandleCount)
+{
+    PDIRECTORY_OBJECT Directory = ObjectBody;
+
+    ObpStartProfile();
+    if (Reason == ObCreateHandle)
+    {
+        InitializeListHead(&Directory->head);
+        KeInitializeSpinLock(&Directory->Lock);
+    }
+    ObpEndProfile();
+
+    return STATUS_SUCCESS;
+}
+
+PVOID
+NTAPI
+ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
+                      PWSTR Name,
+                      ULONG Attributes)
+{
+    PLIST_ENTRY current = DirectoryObject->head.Flink;
+    PROS_OBJECT_HEADER current_obj;
+
+    ObpStartProfile();
+    DPRINT("ObFindEntryDirectory(dir %x, name %S)\n",DirectoryObject, Name);
+    ObpCompleteProfile();
+
+    if (Name[0]==0)
+    {
+        ObpEndProfile();
+        return(DirectoryObject);
+    }
+    if (Name[0]=='.' && Name[1]==0)
+    {
+        ObpEndProfile();
+        return(DirectoryObject);
+    }
+    if (Name[0]=='.' && Name[1]=='.' && Name[2]==0)
+    {
+        ObpEndProfile();
+        return(HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(DirectoryObject))->Directory);
+    }
+    while (current!=(&(DirectoryObject->head)))
+    {
+        current_obj = CONTAINING_RECORD(current,ROS_OBJECT_HEADER,Entry);
+        DPRINT("  Scanning: %S for: %S\n",HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name);
+        if (Attributes & OBJ_CASE_INSENSITIVE)
+        {
+            if (_wcsicmp(HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name)==0)
+            {
+                DPRINT("Found it %x\n",&current_obj->Body);
+                ObpEndProfile();
+                return(&current_obj->Body);
+            }
+        }
+        else
+        {
+            if ( wcscmp(HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name)==0)
+            {
+                DPRINT("Found it %x\n",&current_obj->Body);
+                ObpEndProfile();
+                return(&current_obj->Body);
+            }
+        }
+        current = current->Flink;
+    }
+    DPRINT("    Not Found: %s() = NULL\n",__FUNCTION__);
+    ObpEndProfile();
+    return(NULL);
+}
+
+NTSTATUS
+NTAPI
+ObpParseDirectory(PVOID Object,
+                  PVOID * NextObject,
+                  PUNICODE_STRING FullPath,
+                  PWSTR * Path,
+                  ULONG Attributes)
+{
+    PWSTR Start;
+    PWSTR End;
+    PVOID FoundObject;
+    KIRQL oldlvl;
+
+    ObpStartProfile();
+    DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %S)\n",
+        Object,Path,*Path);
+
+    *NextObject = NULL;
+
+    if ((*Path) == NULL)
+    {
+        ObpEndProfile();
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    Start = *Path;
+    if (*Start == L'\\')
+        Start++;
+
+    End = wcschr(Start, L'\\');
+    if (End != NULL)
+    {
+        *End = 0;
+    }
+
+    KeAcquireSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), &oldlvl);
+    FoundObject = ObpFindEntryDirectory(Object, Start, Attributes);
+    if (FoundObject == NULL)
+    {
+        KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
+        if (End != NULL)
+        {
+            *End = L'\\';
+        }
+        ObpEndProfile();
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    ObReferenceObjectByPointer(FoundObject,
+        STANDARD_RIGHTS_REQUIRED,
+        NULL,
+        UserMode);
+    KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
+    if (End != NULL)
+    {
+        *End = L'\\';
+        *Path = End;
+    }
+    else
+    {
+        *Path = NULL;
+    }
+
+    *NextObject = FoundObject;
+
+    ObpEndProfile();
+    return STATUS_SUCCESS;
+}
+
 /* FUNCTIONS **************************************************************/
 
 /*++
@@ -143,8 +363,6 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     PDIRECTORY_OBJECT Directory;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG SkipEntries = 0;
-    ULONG NextEntry = 0;
-    ULONG CopyBytes = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
@@ -191,201 +409,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
                                        NULL);
     if(NT_SUCCESS(Status))
     {
-        PVOID TemporaryBuffer = ExAllocatePool(NonPagedPool, BufferLength);
-        if(TemporaryBuffer != NULL)
-        {
-            PROS_OBJECT_HEADER EntryHeader;
-            PLIST_ENTRY ListEntry;
-            KIRQL OldLevel;
-            ULONG RequiredSize = sizeof(OBJECT_DIRECTORY_INFORMATION);
-            ULONG nDirectories = 0;
-            POBJECT_DIRECTORY_INFORMATION DirInfo = 
-                (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
-
-            Status = STATUS_NO_MORE_ENTRIES;
-
-            KeAcquireSpinLock(&Directory->Lock, &OldLevel);
-
-            for(ListEntry = Directory->head.Flink;
-                ListEntry != &Directory->head;
-                ListEntry = ListEntry->Flink)
-            {
-                NextEntry++;
-                if(SkipEntries == 0)
-                {
-                    PUNICODE_STRING Name, Type;
-                    ULONG EntrySize;
-
-                    EntryHeader = CONTAINING_RECORD(ListEntry,
-                                                    ROS_OBJECT_HEADER,
-                                                    Entry);
-
-                    /* calculate the size of the required buffer space for this entry */
-                    Name = (HEADER_TO_OBJECT_NAME(EntryHeader)->Name.Length != 0 ?
-                            &HEADER_TO_OBJECT_NAME(EntryHeader)->Name : NULL);
-                    Type = &EntryHeader->Type->Name;
-                    EntrySize = sizeof(OBJECT_DIRECTORY_INFORMATION) +
-                                ((Name != NULL) ?
-                                ((ULONG)Name->Length + sizeof(WCHAR)) : 0) +
-                                (ULONG)EntryHeader->Type->Name.Length +
-                                sizeof(WCHAR);
-
-                    if(RequiredSize + EntrySize <= BufferLength)
-                    {
-                        /* the buffer is large enough to receive this entry. It would've
-                        been much easier if the strings were directly appended to the
-                        OBJECT_DIRECTORY_INFORMATION structured written into the buffer */
-                        if(Name != NULL)
-                            DirInfo->ObjectName = *Name;
-                        else
-                        {
-                            DirInfo->ObjectName.Length = 
-                                DirInfo->ObjectName.MaximumLength = 0;
-                            DirInfo->ObjectName.Buffer = NULL;
-                        }
-                        DirInfo->ObjectTypeName = *Type;
-
-                        nDirectories++;
-                        RequiredSize += EntrySize;
-
-                        Status = STATUS_SUCCESS;
-
-                        if(ReturnSingleEntry)
-                        {
-                            /* we're only supposed to query one entry, so bail and copy the
-                            strings to the buffer */
-                            break;
-                        }
-                        DirInfo++;
-                    }
-                    else
-                    {
-                        if(ReturnSingleEntry)
-                        {
-                            /* the buffer is too small, so return the number of bytes that
-                            would've been required for this query */
-                            RequiredSize += EntrySize;
-                            Status = STATUS_BUFFER_TOO_SMALL;
-                        }
-
-                        /* we couldn't query this entry, so leave the index that will be stored
-                        in Context to this entry so the caller can query it the next time
-                        he queries (hopefully with a buffer that is large enough then...) */
-                        NextEntry--;
-
-                        /* just copy the entries that fit into the buffer */
-                        break;
-                    }
-                }
-                else
-                {
-                    /* skip the entry */
-                    SkipEntries--;
-                }
-            }
-
-            if(!ReturnSingleEntry && ListEntry != &Directory->head)
-            {
-                /* there are more entries to enumerate but the buffer is already full.
-                only tell this to the user if he queries multiple entries */
-                Status = STATUS_MORE_ENTRIES;
-            }
-
-            if(NT_SUCCESS(Status) && nDirectories > 0)
-            {
-                PWSTR strbuf = 
-                    (PWSTR)((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer +
-                            nDirectories + 1);
-                PWSTR deststrbuf =
-                    (PWSTR)((POBJECT_DIRECTORY_INFORMATION)Buffer +
-                            nDirectories + 1);
-
-                memset((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer +
-                       nDirectories,
-                       0,
-                       sizeof(OBJECT_DIRECTORY_INFORMATION));
-
-                CopyBytes = (nDirectories + 1) *
-                            sizeof(OBJECT_DIRECTORY_INFORMATION);
-
-                /* copy the names from the objects and append them to the list of the
-                objects. copy to the temporary buffer only because the directory
-                lock can't be released and the buffer might be pagable memory! */
-                for(DirInfo = (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
-                    nDirectories > 0;
-                    nDirectories--, DirInfo++)
-                {
-                    ULONG NameLength;
-
-                    if(DirInfo->ObjectName.Length > 0)
-                    {
-                        RtlCopyMemory(strbuf,
-                                      DirInfo->ObjectName.Buffer,
-                                      DirInfo->ObjectName.Length);
-
-                        /* change the buffer pointer to the buffer */
-                        DirInfo->ObjectName.Buffer = deststrbuf;
-                        NameLength = DirInfo->ObjectName.Length /
-                                     sizeof(WCHAR);
-
-                        /* NULL-terminate the string */
-                        strbuf[NameLength] = L'\0';
-                        strbuf += NameLength + 1;
-                        deststrbuf += NameLength + 1;
-
-                        CopyBytes += (NameLength + 1) * sizeof(WCHAR);
-                    }
-
-                    RtlCopyMemory(strbuf,
-                                  DirInfo->ObjectTypeName.Buffer,
-                                  DirInfo->ObjectTypeName.Length);
-
-                    /* change the buffer pointer to the buffer */
-                    DirInfo->ObjectTypeName.Buffer = deststrbuf;
-                    NameLength = DirInfo->ObjectTypeName.Length /
-                                 sizeof(WCHAR);
-
-                    /* NULL-terminate the string */
-                    strbuf[NameLength] = L'\0';
-                    strbuf += NameLength + 1;
-                    deststrbuf += NameLength + 1;
-
-                    CopyBytes += (NameLength + 1) * sizeof(WCHAR);
-                }
-            }
-
-            KeReleaseSpinLock(&Directory->Lock, OldLevel);
-            ObDereferenceObject(Directory);
-
-            if(NT_SUCCESS(Status) || ReturnSingleEntry)
-            {
-                _SEH_TRY
-                {
-                    if(CopyBytes != 0)
-                    {
-                        RtlCopyMemory(Buffer, TemporaryBuffer, CopyBytes);
-                    }
-
-                    *Context = NextEntry;
-
-                    if(ReturnLength != NULL)
-                    {
-                        *ReturnLength = RequiredSize;
-                    }
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-            }
-
-            ExFreePool(TemporaryBuffer);
-        }
-        else
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-        }
+        Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 
     return Status;

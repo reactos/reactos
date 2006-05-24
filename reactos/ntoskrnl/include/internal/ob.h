@@ -105,6 +105,16 @@ ObpAddEntryDirectory(
     PWSTR Name
 );
 
+NTSTATUS
+NTAPI
+ObpCreateDirectory(
+    OB_OPEN_REASON Reason,
+    PEPROCESS Process,
+    PVOID ObjectBody,
+    ACCESS_MASK GrantedAccess,
+    ULONG HandleCount
+);
+
 VOID
 NTAPI
 ObpRemoveEntryDirectory(PROS_OBJECT_HEADER Header);
@@ -120,6 +130,16 @@ ObpCreateHandle(
     ACCESS_MASK GrantedAccess,
     ULONG HandleAttributes,
     PHANDLE Handle
+);
+
+NTSTATUS
+NTAPI
+ObpParseDirectory(
+    PVOID Object,
+    PVOID * NextObject,
+    PUNICODE_STRING FullPath,
+    PWSTR * Path,
+    ULONG Attributes
 );
 
 VOID
