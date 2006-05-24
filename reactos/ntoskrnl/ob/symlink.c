@@ -236,8 +236,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
         _SEH_TRY
         {
             /* Probe the target */
-            ProbeForRead(LinkTarget, sizeof(UNICODE_STRING), sizeof(WCHAR));
-            CapturedLinkTarget = *LinkTarget;
+            CapturedLinkTarget = ProbeForReadUnicodeString(LinkTarget);
             ProbeForRead(CapturedLinkTarget.Buffer,
                          CapturedLinkTarget.MaximumLength,
                          sizeof(WCHAR));
@@ -329,7 +328,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
                 /* Return the handle to caller */
                 *LinkHandle = hLink;
             }
-            _SEH_HANDLE
+            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
             {
                 /* Get exception code */
                 Status = _SEH_GetExceptionCode();
@@ -410,7 +409,7 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
             /* Return the handle to caller */
             *LinkHandle = hLink;
         }
-        _SEH_HANDLE
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
             /* Get exception code */
             Status = _SEH_GetExceptionCode();
@@ -448,7 +447,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                           OUT PUNICODE_STRING LinkTarget,
                           OUT PULONG ResultLength OPTIONAL)
 {
-    UNICODE_STRING SafeLinkTarget;
+    UNICODE_STRING SafeLinkTarget = {0};
     POBJECT_SYMBOLIC_LINK SymlinkObject;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
@@ -460,15 +459,13 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
         _SEH_TRY
         {
             /* Probe the unicode string for read and write */
-            ProbeForRead(LinkTarget, sizeof(UNICODE_STRING), sizeof(WCHAR));
-            ProbeForWriteUshort(&LinkTarget->Length);
-            ProbeForWriteUshort(&LinkTarget->MaximumLength);
+            ProbeForWriteUnicodeString(LinkTarget);
 
             /* Probe the unicode string's buffer for write */
             SafeLinkTarget = *LinkTarget;
             ProbeForWrite(SafeLinkTarget.Buffer,
                           SafeLinkTarget.MaximumLength,
-                          sizeof(CHAR));
+                          sizeof(WCHAR));
 
             /* Probe the return length */
             if(ResultLength) ProbeForWriteUlong(ResultLength);
@@ -517,7 +514,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
             if (LengthUsed <= SafeLinkTarget.MaximumLength)
             {
                 /* Copy the buffer */
-                RtlMoveMemory(SafeLinkTarget.Buffer,
+                RtlCopyMemory(SafeLinkTarget.Buffer,
                               SymlinkObject->LinkTarget.Buffer,
                               LengthUsed);
 
@@ -537,7 +534,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
                 *ResultLength = SymlinkObject->LinkTarget.MaximumLength;
             }
         }
-        _SEH_HANDLE
+        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
             /* Get the error code */
             Status = _SEH_GetExceptionCode();
