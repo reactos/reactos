@@ -1,27 +1,51 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * COPYRIGHT:        Winehq 
+ * PROJECT:          wine
  * FILE:             msvcrt/conio/cprintf.c
  * PURPOSE:          C Runtime
- * PROGRAMMER:       Eric Kohl (Imported from DJGPP)
+ * PROGRAMMER:       Magnus Olsen (Imported from wine cvs 2006-05-23) 
  */
 
 #include <precomp.h>
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 _cprintf(const char *fmt, ...)
 {
-  int     cnt;
-  char    buf[ 2048 ];		/* this is buggy, because buffer might be too small. */
+  char buf[2048], *mem = buf;
+  int written, resize = sizeof(buf), retval;
+  va_list valist;
+    
+  while ((written = vsnprintf( mem, resize, fmt, valist )) == -1 ||
+          written > resize)
+  {
+    resize = (written == -1 ? resize * 2 : written + 1);
+    if (mem != buf)
+       free (mem);
+    if (!(mem = (char *)malloc(resize)))
+      return  EOF;
+    va_start( valist, fmt );
+  }
+  va_end(valist);
+  retval = _cputs( mem );
+  if (mem != buf)
+      free (mem);      
+  return retval;
+
+
+/*
   va_list ap;
 
-  va_start(ap, fmt);
-  cnt = vsprintf(buf, fmt, ap);
+  va_start(ap, fmt);  
+  while (vsprintf(buf, fmt, ap)==-1)
+  {
+    if (cnt < 0)
+    
   va_end(ap);
 
   _cputs(buf);
   return cnt;
+  */
 }
