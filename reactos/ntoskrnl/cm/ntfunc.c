@@ -199,6 +199,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   KPROCESSOR_MODE PreviousMode;
   UNICODE_STRING CapturedClass = {0};
   HANDLE hKey;
+  OBP_LOOKUP_CONTEXT Context;
 
   PAGED_CODE();
 
@@ -262,7 +263,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                         &ObjectName,
                         (PVOID*)&Object,
                         &RemainingPath,
-                        CmiKeyType);
+                        CmiKeyType,
+                        &Context);
   if (!NT_SUCCESS(Status))
     {
       PostCreateKeyInfo.Object = NULL;
@@ -1262,6 +1264,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
   REG_PRE_OPEN_KEY_INFORMATION PreOpenKeyInfo;
   REG_POST_OPEN_KEY_INFORMATION PostOpenKeyInfo;
+  OBP_LOOKUP_CONTEXT Context;
 
   PAGED_CODE();
 
@@ -1329,7 +1332,8 @@ NtOpenKey(OUT PHANDLE KeyHandle,
                         &ObjectName,
 	                (PVOID*)&Object,
                         &RemainingPath,
-                        CmiKeyType);
+                        CmiKeyType,
+                        &Context);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject() returned 0x%08lx\n", Status);

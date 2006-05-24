@@ -26,8 +26,8 @@ extern ULONG NtGlobalFlag;
 POBJECT_TYPE ObDirectoryType = NULL;
 POBJECT_TYPE ObTypeObjectType = NULL;
 
-PDIRECTORY_OBJECT NameSpaceRoot = NULL;
-PDIRECTORY_OBJECT ObpTypeDirectoryObject = NULL;
+POBJECT_DIRECTORY NameSpaceRoot = NULL;
+POBJECT_DIRECTORY ObpTypeDirectoryObject = NULL;
  /* FIXME: Move this somewhere else once devicemap support is in */
 PDEVICE_MAP ObSystemDeviceMap = NULL;
 KEVENT ObpDefaultObject;
@@ -72,6 +72,7 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
    UNICODE_STRING ObjectName;
    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
    NTSTATUS Status;
+   OBP_LOOKUP_CONTEXT Context;
 
    PAGED_CODE();
 
@@ -95,7 +96,8 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
                          &ObjectName,
 			 &Object,
 			 &RemainingPath,
-			 ObjectType);
+			 ObjectType,
+             &Context);
 
    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
 
@@ -160,6 +162,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
    UNICODE_STRING ObjectName;
    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
    NTSTATUS Status;
+   OBP_LOOKUP_CONTEXT Context;
 
    PAGED_CODE();
 
@@ -182,7 +185,8 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                          &ObjectName,
 			 &Object,
 			 &RemainingPath,
-			 ObjectType);
+			 ObjectType,
+             &Context);
    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
    if (!NT_SUCCESS(Status))
      {
@@ -252,6 +256,7 @@ ObInit(VOID)
     UNICODE_STRING Name;
     SECURITY_DESCRIPTOR SecurityDescriptor;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    OBP_LOOKUP_CONTEXT Context;
 
     /* Initialize the security descriptor cache */
     ObpInitSdCache();
@@ -279,11 +284,10 @@ ObInit(VOID)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.ValidAccessMask = DIRECTORY_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
-    ObjectTypeInitializer.OpenProcedure = ObpCreateDirectory;
     ObjectTypeInitializer.ParseProcedure = (OB_PARSE_METHOD)ObpParseDirectory;
     ObjectTypeInitializer.MaintainTypeList = FALSE;
     ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DIRECTORY_OBJECT);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObDirectoryType);
 
     /* Create security descriptor */
@@ -312,7 +316,7 @@ ObInit(VOID)
                    &ObjectAttributes,
                    KernelMode,
                    NULL,
-                   sizeof(DIRECTORY_OBJECT),
+                   sizeof(OBJECT_DIRECTORY),
                    0,
                    0,
                    (PVOID*)&NameSpaceRoot);
@@ -335,7 +339,7 @@ ObInit(VOID)
                    &ObjectAttributes,
                    KernelMode,
                    NULL,
-                   sizeof(DIRECTORY_OBJECT),
+                   sizeof(OBJECT_DIRECTORY),
                    0,
                    0,
                    (PVOID*)&ObpTypeDirectoryObject);
@@ -348,8 +352,24 @@ ObInit(VOID)
     
     /* Insert the two objects we already created but couldn't add */
     /* NOTE: Uses TypeList & Creator Info in OB 2.0 */
-    ObpAddEntryDirectory(ObpTypeDirectoryObject, (PROS_OBJECT_HEADER)BODY_TO_HEADER(ObTypeObjectType), NULL);
-    ObpAddEntryDirectory(ObpTypeDirectoryObject, (PROS_OBJECT_HEADER)BODY_TO_HEADER(ObDirectoryType), NULL);
+    Context.Directory = ObpTypeDirectoryObject;
+    Context.DirectoryLocked = TRUE;
+    if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
+                                 &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ObTypeObjectType))->Name,
+                                 OBJ_CASE_INSENSITIVE,
+                                 FALSE,
+                                 &Context))
+    {
+        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, (POBJECT_HEADER)BODY_TO_HEADER(ObTypeObjectType));
+    }
+    if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
+                                 &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ObDirectoryType))->Name,
+                                 OBJ_CASE_INSENSITIVE,
+                                 FALSE,
+                                 &Context))
+    {
+        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, (POBJECT_HEADER)BODY_TO_HEADER(ObDirectoryType));
+    }
 
     /* Create 'symbolic link' object type */
     ObInitSymbolicLinkImplementation();
@@ -471,7 +491,15 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     /* Insert it into the Object Directory */
     if (ObpTypeDirectoryObject)
     {
-        ObpAddEntryDirectory(ObpTypeDirectoryObject, Header, TypeName->Buffer);
+        OBP_LOOKUP_CONTEXT Context;
+        Context.Directory = ObpTypeDirectoryObject;
+        Context.DirectoryLocked = TRUE;
+        ObpLookupEntryDirectory(ObpTypeDirectoryObject,
+                                TypeName,
+                                OBJ_CASE_INSENSITIVE,
+                                FALSE,
+                                &Context);
+        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, (POBJECT_HEADER)Header);
         ObReferenceObject(ObpTypeDirectoryObject);
     }
 

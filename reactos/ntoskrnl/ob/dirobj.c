@@ -8,10 +8,12 @@
 
 /* INCLUDES ***************************************************************/
 
+#define NTDDI_VERSION NTDDI_WS03
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
+#define OBP_PROFILE
 #ifdef OBP_PROFILE
 
 LARGE_INTEGER ObpProfileTime;
@@ -48,119 +50,228 @@ BOOLEAN ObpProfileComplete;
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
-VOID
+BOOLEAN
 NTAPI
-ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
-                     PROS_OBJECT_HEADER Header,
-                     PWSTR Name)
+ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
+                        IN POBP_LOOKUP_CONTEXT Context,
+                        IN POBJECT_HEADER ObjectHeader)
 {
-    KIRQL oldlvl;
+    POBJECT_DIRECTORY_ENTRY *AllocatedEntry;
+    POBJECT_DIRECTORY_ENTRY NewEntry;
+    POBJECT_HEADER_NAME_INFO HeaderNameInfo;
 
-    ObpStartProfile();
-    ASSERT(HEADER_TO_OBJECT_NAME(Header));
-    HEADER_TO_OBJECT_NAME(Header)->Directory = Parent;
+    /* Make sure we have a name */
+    ASSERT(ObjectHeader->NameInfoOffset != 0);
 
-    KeAcquireSpinLock(&Parent->Lock, &oldlvl);
-    InsertTailList(&Parent->head, &Header->Entry);
-    KeReleaseSpinLock(&Parent->Lock, oldlvl);
-    ObpEndProfile();
-}
-
-VOID
-NTAPI
-ObpRemoveEntryDirectory(PROS_OBJECT_HEADER Header)
-{
-    KIRQL oldlvl;
-
-    ObpStartProfile();
-    DPRINT("ObpRemoveEntryDirectory(Header %x)\n",Header);
-
-    KeAcquireSpinLock(&(HEADER_TO_OBJECT_NAME(Header)->Directory->Lock),&oldlvl);
-    if (Header->Entry.Flink && Header->Entry.Blink)
+    /* Validate the context */
+    if ((Context->Object) || !(Context->DirectoryLocked) || !Parent)
     {
-        RemoveEntryList(&(Header->Entry));
-        Header->Entry.Flink = Header->Entry.Blink = NULL;
+        DbgPrint("OB: ObpInsertEntryDirectory - invalid context %p %ld\n",
+                 Context, Context->DirectoryLocked);
+        DbgBreakPoint();
+        return FALSE;
     }
-    KeReleaseSpinLock(&(HEADER_TO_OBJECT_NAME(Header)->Directory->Lock),oldlvl);
-    ObpEndProfile();
-}
 
-NTSTATUS
-NTAPI
-ObpCreateDirectory(OB_OPEN_REASON Reason,
-                   PEPROCESS Process,
-                   PVOID ObjectBody,
-                   ACCESS_MASK GrantedAccess,
-                   ULONG HandleCount)
-{
-    PDIRECTORY_OBJECT Directory = ObjectBody;
+    /* Allocate a new Directory Entry */
+    NewEntry = ExAllocatePoolWithTag(PagedPool,
+                                     sizeof(OBJECT_DIRECTORY_ENTRY),
+                                     TAG('O', 'b', 'D', 'i'));
+    if (!NewEntry) return FALSE;
 
-    ObpStartProfile();
-    if (Reason == ObCreateHandle)
-    {
-        InitializeListHead(&Directory->head);
-        KeInitializeSpinLock(&Directory->Lock);
-    }
-    ObpEndProfile();
+    /* Save the hash */
+    NewEntry->HashValue = Context->HashValue;
 
-    return STATUS_SUCCESS;
+    /* Get the Object Name Information */
+    HeaderNameInfo = HEADER_TO_OBJECT_NAME(ObjectHeader);
+
+    /* Get the Allocated entry */
+    AllocatedEntry = &Parent->HashBuckets[Context->HashIndex];
+    DPRINT("ADD: Allocated Entry: %p. NewEntry: %p\n", AllocatedEntry, NewEntry);
+    DPRINT("ADD: Name: %wZ, Hash: %lx\n", &HeaderNameInfo->Name, Context->HashIndex);
+    DPRINT("ADD: Parent: %p. Name: %wZ\n",
+            Parent,
+            HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(Parent)) ?
+            &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(Parent))->Name : NULL);
+
+    /* Set it */
+    NewEntry->ChainLink = *AllocatedEntry;
+    *AllocatedEntry = NewEntry;
+
+    /* Associate the Object */
+    NewEntry->Object = &ObjectHeader->Body;
+
+    /* Associate the Directory */
+    HeaderNameInfo->Directory = Parent;
+    return TRUE;
 }
 
 PVOID
 NTAPI
-ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
-                      PWSTR Name,
-                      ULONG Attributes)
+ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
+                        IN PUNICODE_STRING Name,
+                        IN ULONG Attributes,
+                        IN UCHAR SearchShadow,
+                        IN POBP_LOOKUP_CONTEXT Context)
 {
-    PLIST_ENTRY current = DirectoryObject->head.Flink;
-    PROS_OBJECT_HEADER current_obj;
+    BOOLEAN CaseInsensitive = FALSE;
+    POBJECT_HEADER_NAME_INFO HeaderNameInfo;
+    ULONG HashValue;
+    ULONG HashIndex;
+    LONG TotalChars;
+    WCHAR CurrentChar;
+    POBJECT_DIRECTORY_ENTRY *AllocatedEntry;
+    POBJECT_DIRECTORY_ENTRY *LookupBucket;
+    POBJECT_DIRECTORY_ENTRY CurrentEntry;
+    PVOID FoundObject = NULL;
+    PWSTR Buffer;
+    PAGED_CODE();
 
-    ObpStartProfile();
-    DPRINT("ObFindEntryDirectory(dir %x, name %S)\n",DirectoryObject, Name);
-    ObpCompleteProfile();
+    /* Always disable this until we have LUID Device Maps */
+    SearchShadow = FALSE;
 
-    if (Name[0]==0)
+    /* Fail the following cases */
+    TotalChars = Name->Length / sizeof(WCHAR);
+    if (!(Directory) || !(Name) || !(Name->Buffer) || !(TotalChars))
     {
-        ObpEndProfile();
-        return(DirectoryObject);
+        goto Quickie;
     }
-    if (Name[0]=='.' && Name[1]==0)
+
+    /* Set up case-sensitivity */
+    if (Attributes & OBJ_CASE_INSENSITIVE) CaseInsensitive = TRUE;
+
+    /* Create the Hash */
+    Buffer = Name->Buffer;
+    for (HashValue = 0; TotalChars; TotalChars--)
     {
-        ObpEndProfile();
-        return(DirectoryObject);
+        /* Go to the next Character */
+        CurrentChar = *Buffer++;
+
+        /* Prepare the Hash */
+        HashValue += (HashValue << 1) + (HashValue >> 1);
+
+        /* Create the rest based on the name */
+        if (CurrentChar < 'a') HashValue += CurrentChar;
+        else if (CurrentChar > 'z') HashValue += RtlUpcaseUnicodeChar(CurrentChar);
+        else HashValue += (CurrentChar - ('a'-'A'));
     }
-    if (Name[0]=='.' && Name[1]=='.' && Name[2]==0)
+
+    /* Merge it with our number of hash buckets */
+    HashIndex = HashValue % 37;
+    DPRINT("LOOKUP: ObjectName: %wZ\n", Name);
+    DPRINT("LOOKUP: Generated Hash: 0x%x. Generated Id: 0x%x\n", HashValue, HashIndex);
+
+    /* Save the result */
+    Context->HashValue = HashValue;
+    Context->HashIndex = HashIndex;
+
+    /* Get the root entry and set it as our lookup bucket */
+    AllocatedEntry = &Directory->HashBuckets[HashIndex];
+    LookupBucket = AllocatedEntry;
+    DPRINT("LOOKUP: Allocated Entry: %p. LookupBucket: %p\n", AllocatedEntry, LookupBucket);
+
+    /* Check if the directory is already locked */
+    if (!Context->DirectoryLocked)
     {
-        ObpEndProfile();
-        return(HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(DirectoryObject))->Directory);
+        /* Lock it */
+        KeEnterCriticalRegion();
+        ExAcquireResourceSharedLite(&Directory->Lock, TRUE);
+        Context->LockStateSignature = 0xDDDD1234;
     }
-    while (current!=(&(DirectoryObject->head)))
+
+    /* Start looping */
+    while ((CurrentEntry = *AllocatedEntry))
     {
-        current_obj = CONTAINING_RECORD(current,ROS_OBJECT_HEADER,Entry);
-        DPRINT("  Scanning: %S for: %S\n",HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name);
-        if (Attributes & OBJ_CASE_INSENSITIVE)
+        /* Do the hashes match? */
+        DPRINT("CurrentEntry: %p. CurrentHash: %lx\n", CurrentEntry, CurrentEntry->HashValue);
+        if (CurrentEntry->HashValue == HashValue)
         {
-            if (_wcsicmp(HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name)==0)
+            /* Make sure that it has a name */
+            ASSERT(BODY_TO_HEADER(CurrentEntry->Object)->NameInfoOffset != 0);
+
+            /* Get the name information */
+            HeaderNameInfo = HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(CurrentEntry->Object));
+
+            /* Do the names match? */
+            DPRINT("NameCheck: %wZ, %wZ\n", Name, &HeaderNameInfo->Name);
+            if ((Name->Length == HeaderNameInfo->Name.Length) &&
+                (RtlEqualUnicodeString(Name, &HeaderNameInfo->Name, CaseInsensitive)))
             {
-                DPRINT("Found it %x\n",&current_obj->Body);
-                ObpEndProfile();
-                return(&current_obj->Body);
+                DPRINT("Found Name Match\n");
+                break;
             }
         }
-        else
-        {
-            if ( wcscmp(HEADER_TO_OBJECT_NAME(current_obj)->Name.Buffer, Name)==0)
-            {
-                DPRINT("Found it %x\n",&current_obj->Body);
-                ObpEndProfile();
-                return(&current_obj->Body);
-            }
-        }
-        current = current->Flink;
+
+        /* Move to the next entry */
+        AllocatedEntry = &CurrentEntry->ChainLink;
     }
-    DPRINT("    Not Found: %s() = NULL\n",__FUNCTION__);
-    ObpEndProfile();
-    return(NULL);
+
+    /* Check if we still have an entry */
+    if (CurrentEntry)
+    {
+        /* Set this entry as the first, to speed up incoming insertion */
+        if (AllocatedEntry != LookupBucket)
+        {
+            /* Set the Current Entry */
+            *AllocatedEntry = CurrentEntry->ChainLink;
+
+            /* Link to the old Hash Entry */
+            CurrentEntry->ChainLink = *LookupBucket;
+
+            /* Set the new Hash Entry */
+            *LookupBucket = CurrentEntry;
+        }
+
+        /* Save the found object */
+        FoundObject = CurrentEntry->Object;
+        if (!FoundObject) goto Quickie;
+
+        /* Add a reference to the object */
+        ObReferenceObject(FoundObject);
+    }
+
+    /* Check if the directory was unlocked (which means we locked it) */
+    if (!Context->DirectoryLocked)
+    {
+        /* Lock it */
+        ExReleaseResourceLite(&Directory->Lock);
+        KeLeaveCriticalRegion();
+        Context->LockStateSignature = 0xEEEE1234;
+    }
+
+Quickie:
+    /* Return the object we found */
+    DPRINT("Object Found: %p Context: %p\n", FoundObject, Context);
+    Context->Object = FoundObject;
+    return FoundObject;
+}
+
+BOOLEAN
+NTAPI
+ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context)
+{
+    POBJECT_DIRECTORY Directory;
+    POBJECT_DIRECTORY_ENTRY *AllocatedEntry;
+    POBJECT_DIRECTORY_ENTRY CurrentEntry;
+
+    /* Get the Directory */
+    Directory = Context->Directory;
+    if (!Directory) return FALSE;
+
+    /* Get the Entry */
+    AllocatedEntry = &Directory->HashBuckets[Context->HashIndex];
+    CurrentEntry = *AllocatedEntry;
+    DPRINT("DEL: Parent: %p, Hash: %lx, AllocatedEntry: %p, CurrentEntry: %p\n",
+            Directory, Context->HashIndex, AllocatedEntry, CurrentEntry);
+
+    /* Unlink the Entry */
+    *AllocatedEntry = CurrentEntry->ChainLink;
+    CurrentEntry->ChainLink = NULL;
+
+    /* Free it */
+    ExFreePool(CurrentEntry);
+
+    /* Return */
+    return TRUE;
 }
 
 NTSTATUS
@@ -169,22 +280,19 @@ ObpParseDirectory(PVOID Object,
                   PVOID * NextObject,
                   PUNICODE_STRING FullPath,
                   PWSTR * Path,
-                  ULONG Attributes)
+                  ULONG Attributes,
+                  POBP_LOOKUP_CONTEXT Context)
 {
     PWSTR Start;
     PWSTR End;
     PVOID FoundObject;
-    KIRQL oldlvl;
-
-    ObpStartProfile();
-    DPRINT("ObpParseDirectory(Object %x, Path %x, *Path %S)\n",
-        Object,Path,*Path);
+    //KIRQL oldlvl;
+    UNICODE_STRING StartUs;
 
     *NextObject = NULL;
 
     if ((*Path) == NULL)
     {
-        ObpEndProfile();
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -198,16 +306,18 @@ ObpParseDirectory(PVOID Object,
         *End = 0;
     }
 
-    KeAcquireSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), &oldlvl);
-    FoundObject = ObpFindEntryDirectory(Object, Start, Attributes);
+    //KeAcquireSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), &oldlvl);
+    RtlInitUnicodeString(&StartUs, Start);
+    Context->DirectoryLocked = TRUE;
+    Context->Directory = Object;
+    FoundObject = ObpLookupEntryDirectory(Object, &StartUs, Attributes, FALSE, Context);
     if (FoundObject == NULL)
     {
-        KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
+        //KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
         if (End != NULL)
         {
             *End = L'\\';
         }
-        ObpEndProfile();
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -215,7 +325,7 @@ ObpParseDirectory(PVOID Object,
         STANDARD_RIGHTS_REQUIRED,
         NULL,
         UserMode);
-    KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
+    //KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
     if (End != NULL)
     {
         *End = L'\\';
@@ -228,7 +338,6 @@ ObpParseDirectory(PVOID Object,
 
     *NextObject = FoundObject;
 
-    ObpEndProfile();
     return STATUS_SUCCESS;
 }
 
@@ -360,7 +469,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
                        IN OUT PULONG Context,
                        OUT PULONG ReturnLength OPTIONAL)
 {
-    PDIRECTORY_OBJECT Directory;
+    POBJECT_DIRECTORY Directory;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG SkipEntries = 0;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -441,7 +550,7 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
                         IN ACCESS_MASK DesiredAccess,
                         IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-    PDIRECTORY_OBJECT Directory;
+    POBJECT_DIRECTORY Directory;
     HANDLE hDirectory;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
@@ -475,7 +584,7 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
-                            sizeof(DIRECTORY_OBJECT),
+                            sizeof(OBJECT_DIRECTORY),
                             0,
                             0,
                             (PVOID*)&Directory);
@@ -488,12 +597,6 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
                                 0,
                                 NULL,
                                 &hDirectory);
-        if (!NT_SUCCESS(Status))
-        {
-            ObMakeTemporaryObject(Directory);
-        }
-        ObDereferenceObject(Directory);
-
         if(NT_SUCCESS(Status))
         {
             _SEH_TRY
@@ -506,6 +609,8 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
             }
             _SEH_END;
         }
+
+        ObDereferenceObject(Directory);
     }
 
     return Status;

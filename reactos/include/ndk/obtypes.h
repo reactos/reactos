@@ -319,11 +319,43 @@ typedef struct _OBJECT_TYPE
 } OBJECT_TYPE;
 
 //
+// Object Directory Structures
+//
+typedef struct _OBJECT_DIRECTORY_ENTRY
+{
+    struct _OBJECT_DIRECTORY_ENTRY *ChainLink;
+    PVOID Object;
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    ULONG HashValue;
+#endif
+} OBJECT_DIRECTORY_ENTRY, *POBJECT_DIRECTORY_ENTRY;
+
+typedef struct _OBJECT_DIRECTORY
+{
+    struct _OBJECT_DIRECTORY_ENTRY *HashBuckets[NUMBER_HASH_BUCKETS];
+#if (NTDDI_VERSION < NTDDI_WINXP)
+    ERESOURCE Lock;
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
+    ERESOURCE Lock; // FIXME: HACKHACK, SHOULD BE EX_PUSH_LOCK
+#endif
+#if (NTDDI_VERSION < NTDDI_WINXP)
+    BOOLEAN CurrentEntryValid;
+#else
+    struct _DEVICE_MAP *DeviceMap;
+#endif
+    ULONG SessionId;
+#if (NTDDI_VERSION == NTDDI_WINXP)
+    USHORT Reserved;
+    USHORT SymbolicLinkUsageCount;
+#endif
+} OBJECT_DIRECTORY, *POBJECT_DIRECTORY;
+
+//
 // Object Header Addon Information
 //
 typedef struct _OBJECT_HEADER_NAME_INFO
 {
-    struct _DIRECTORY_OBJECT *Directory;
+    POBJECT_DIRECTORY Directory;
     UNICODE_STRING Name;
     ULONG QueryReferences;
     ULONG Reserved2;
@@ -385,47 +417,15 @@ typedef struct _OBJECT_HEADER
 } OBJECT_HEADER, *POBJECT_HEADER;
 
 //
-// Object Directory Structures
-//
-typedef struct _OBJECT_DIRECTORY_ENTRY
-{
-    struct _OBJECT_DIRECTORY_ENTRY *ChainLink;
-    PVOID Object;
-#if (NTDDI_VERSION >= NTDDI_WS03)
-    ULONG HashValue;
-#endif
-} OBJECT_DIRECTORY_ENTRY, *POBJECT_DIRECTORY_ENTRY;
-
-typedef struct _OBJECT_DIRECTORY
-{
-    struct _OBJECT_DIRECTORY_ENTRY *HashBuckets[NUMBER_HASH_BUCKETS];
-#if (NTDDI_VERSION < NTDDI_WINXP)
-    PERESOURCE Lock;
-#elif (NTDDI_VERSION >= NTDDI_WINXP)
-    EX_PUSH_LOCK Lock;
-#endif
-#if (NTDDI_VERSION < NTDDI_WINXP)
-    BOOLEAN CurrentEntryValid;
-#else
-    struct _DEVICE_MAP *DeviceMap;
-#endif
-    ULONG SessionId;
-#if (NTDDI_VERSION == NTDDI_WINXP)
-    USHORT Reserved;
-    USHORT SymbolicLinkUsageCount;
-#endif
-} OBJECT_DIRECTORY, *POBJECT_DIRECTORY;
-
-//
 // Device Map
 //
 typedef struct _DEVICE_MAP
 {
-    POBJECT_DIRECTORY   DosDevicesDirectory;
-    POBJECT_DIRECTORY   GlobalDosDevicesDirectory;
-    ULONG               ReferenceCount;
-    ULONG               DriveMap;
-    UCHAR               DriveType[32];
+    POBJECT_DIRECTORY DosDevicesDirectory;
+    POBJECT_DIRECTORY GlobalDosDevicesDirectory;
+    ULONG ReferenceCount;
+    ULONG DriveMap;
+    UCHAR DriveType[32];
 } DEVICE_MAP, *PDEVICE_MAP;
 
 //

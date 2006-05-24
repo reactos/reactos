@@ -86,14 +86,16 @@ ExpWinStaObjectParse(PVOID Object,
                      PVOID *NextObject,
                      PUNICODE_STRING FullPath,
                      PWSTR *Path,
-                     ULONG Attributes)
+                     ULONG Attributes,
+                     POBP_LOOKUP_CONTEXT Context)
 {
     /* Call the Registered Callback */
     return ExpWindowStationObjectParse(Object,
                                        NextObject,
                                        FullPath,
                                        Path,
-                                       Attributes);
+                                       Attributes,
+                                       Context);
 }
 
 NTSTATUS

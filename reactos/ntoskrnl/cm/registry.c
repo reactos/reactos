@@ -704,6 +704,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   PWSTR SubName;
   UNICODE_STRING ObjectName;
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+  OBP_LOOKUP_CONTEXT Context;
 
   DPRINT("CmiConnectHive(%p, %p) called.\n",
 	 KeyObjectAttributes, RegistryHive);
@@ -725,7 +726,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                         &ObjectName,
 			            (PVOID*)&ParentKey,
                         &RemainingPath,
-                        CmiKeyType);
+                        CmiKeyType,
+                        &Context);
      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
   if (!NT_SUCCESS(Status))

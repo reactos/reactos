@@ -54,6 +54,7 @@ ObpDecrementHandleCount(PVOID ObjectBody)
 {
   PROS_OBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
   LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
+  OBP_LOOKUP_CONTEXT Context;
   DPRINT("Header: %x\n", ObjectHeader);
   DPRINT("NewHandleCount: %x\n", NewHandleCount);
   DPRINT("HEADER_TO_OBJECT_NAME: %x\n", HEADER_TO_OBJECT_NAME(ObjectHeader));
@@ -75,7 +76,18 @@ ObpDecrementHandleCount(PVOID ObjectBody)
       /* delete the object from the namespace when the last handle got closed.
          Only do this if it's actually been inserted into the namespace and
          if it's not a permanent object. */
-      ObpRemoveEntryDirectory((PROS_OBJECT_HEADER)ObjectHeader);
+
+        /* Make sure it's still inserted */
+        Context.Directory = HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory;
+        Context.DirectoryLocked = TRUE;
+        if (ObpLookupEntryDirectory(HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory,
+                                    &HEADER_TO_OBJECT_NAME(ObjectHeader)->Name,
+                                    0,
+                                    FALSE,
+                                    &Context))
+        {
+            ObpDeleteEntryDirectory(&Context);
+        }
     }
 
     /* remove the keep-alive reference */
@@ -1150,6 +1162,7 @@ ObInsertObject(IN PVOID Object,
     BOOLEAN ObjectAttached = FALSE; 
     PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
+    OBP_LOOKUP_CONTEXT Context;
 
     PAGED_CODE();
     
@@ -1167,7 +1180,8 @@ ObInsertObject(IN PVOID Object,
                               &ObjectNameInfo->Name,
                               &FoundObject,
                               &RemainingPath,
-                              NULL);
+                              NULL,
+                              &Context);
         DPRINT("FoundObject: %x, Path: %wZ\n", FoundObject, &RemainingPath);
         if (!NT_SUCCESS(Status))
         {
@@ -1202,10 +1216,7 @@ ObInsertObject(IN PVOID Object,
         PVOID NewName;
         PWSTR BufferPos = RemainingPath.Buffer;
         ULONG Delta = 0;
-        
-        ObpAddEntryDirectory(FoundObject, (PROS_OBJECT_HEADER)Header, NULL);
-        ObjectAttached = TRUE;
-        
+
         ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
         
         if (BufferPos[0] == L'\\')
@@ -1219,7 +1230,8 @@ ObInsertObject(IN PVOID Object,
         ObjectNameInfo->Name.Buffer = NewName;
         ObjectNameInfo->Name.Length = RemainingPath.Length - Delta;
         ObjectNameInfo->Name.MaximumLength = RemainingPath.MaximumLength - Delta;
-        DPRINT("Name: %S\n", ObjectNameInfo->Name.Buffer);
+        ObpInsertEntryDirectory(FoundObject, &Context, (POBJECT_HEADER)Header);
+        ObjectAttached = TRUE;
     }
 
     if ((Header->Type == IoFileObjectType) ||
@@ -1262,7 +1274,7 @@ ObInsertObject(IN PVOID Object,
             DPRINT("Create Failed\n");
             if (ObjectAttached == TRUE)
             {
-                ObpRemoveEntryDirectory((PROS_OBJECT_HEADER)Header);
+                ObpDeleteEntryDirectory(&Context);
             }
             if (FoundObject)
             {

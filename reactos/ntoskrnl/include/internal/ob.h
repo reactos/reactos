@@ -11,21 +11,8 @@
 
 struct _EPROCESS;
 
-typedef struct _DIRECTORY_OBJECT
-{
-    CSHORT Type;
-    CSHORT Size;
-
-   /*
-    * PURPOSE: Head of the list of our subdirectories
-    */
-    LIST_ENTRY head;
-    KSPIN_LOCK Lock;
-} DIRECTORY_OBJECT, *PDIRECTORY_OBJECT;
-
 typedef struct _ROS_OBJECT_HEADER
 {
-    LIST_ENTRY Entry;
     LONG PointerCount;
     union
     {
@@ -45,6 +32,16 @@ typedef struct _ROS_OBJECT_HEADER
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     QUAD Body;
 } ROS_OBJECT_HEADER, *PROS_OBJECT_HEADER;
+
+typedef struct _OBP_LOOKUP_CONTEXT
+{
+    POBJECT_DIRECTORY Directory;
+    PVOID Object;
+    ULONG HashValue;
+    USHORT HashIndex;
+    BOOLEAN DirectoryLocked;
+    ULONG LockStateSignature;
+} OBP_LOOKUP_CONTEXT, *POBP_LOOKUP_CONTEXT;
 
 #define BODY_TO_HEADER(objbdy)                                                 \
   CONTAINING_RECORD((objbdy), ROS_OBJECT_HEADER, Body)
@@ -69,7 +66,7 @@ typedef struct _ROS_OBJECT_HEADER
 #define ObMarkHandleAsKernelHandle(Handle)                                     \
   (HANDLE)((ULONG_PTR)(Handle) | KERNEL_HANDLE_FLAG)
 
-extern PDIRECTORY_OBJECT NameSpaceRoot;
+extern POBJECT_DIRECTORY NameSpaceRoot;
 extern POBJECT_TYPE ObSymbolicLinkType;
 extern PHANDLE_TABLE ObpKernelHandleTable;
 
@@ -94,30 +91,27 @@ typedef NTSTATUS
     PVOID *NextObject,
     PUNICODE_STRING FullPath,
     PWSTR *Path,
-    ULONG Attributes
+    ULONG Attributes,
+    POBP_LOOKUP_CONTEXT Context
 );
 
-VOID
+BOOLEAN
 NTAPI
-ObpAddEntryDirectory(
-    PDIRECTORY_OBJECT Parent,
-    PROS_OBJECT_HEADER Header,
-    PWSTR Name
-);
+ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context);
 
-NTSTATUS
+BOOLEAN
 NTAPI
-ObpCreateDirectory(
-    OB_OPEN_REASON Reason,
-    PEPROCESS Process,
-    PVOID ObjectBody,
-    ACCESS_MASK GrantedAccess,
-    ULONG HandleCount
-);
+ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
+                        IN POBP_LOOKUP_CONTEXT Context,
+                        IN POBJECT_HEADER ObjectHeader);
 
-VOID
+PVOID
 NTAPI
-ObpRemoveEntryDirectory(PROS_OBJECT_HEADER Header);
+ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
+                        IN PUNICODE_STRING Name,
+                        IN ULONG Attributes,
+                        IN UCHAR SearchShadow,
+                        IN POBP_LOOKUP_CONTEXT Context);
 
 VOID
 NTAPI
@@ -139,7 +133,8 @@ ObpParseDirectory(
     PVOID * NextObject,
     PUNICODE_STRING FullPath,
     PWSTR * Path,
-    ULONG Attributes
+    ULONG Attributes,
+    POBP_LOOKUP_CONTEXT Context
 );
 
 VOID
@@ -157,7 +152,8 @@ ObFindObject(
     PUNICODE_STRING ObjectName,
     PVOID* ReturnedObject,
     PUNICODE_STRING RemainingPath,
-    POBJECT_TYPE ObjectType
+    POBJECT_TYPE ObjectType,
+    POBP_LOOKUP_CONTEXT Context
 );
 
 NTSTATUS

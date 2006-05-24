@@ -293,7 +293,8 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
             PUNICODE_STRING ObjectName,
 	     PVOID* ReturnedObject,
 	     PUNICODE_STRING RemainingPath,
-	     POBJECT_TYPE ObjectType)
+	     POBJECT_TYPE ObjectType,
+         POBP_LOOKUP_CONTEXT Context)
 {
   PVOID NextObject;
   PVOID CurrentObject;
@@ -388,7 +389,8 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 						  &NextObject,
 						  &PathString,
 						  &current,
-						  Attributes);
+						  Attributes,
+                          Context);
 	if (Status == STATUS_REPARSE)
 	  {
 	     /* reparse the object path */
@@ -442,7 +444,7 @@ ObQueryNameString(IN  PVOID Object,
 {
     POBJECT_HEADER_NAME_INFO LocalInfo;
     PROS_OBJECT_HEADER ObjectHeader;
-    PDIRECTORY_OBJECT ParentDirectory;
+    POBJECT_DIRECTORY ParentDirectory;
     ULONG NameSize;
     PWCH ObjectName;
     NTSTATUS Status;

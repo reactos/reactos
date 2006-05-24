@@ -36,6 +36,7 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
                       IN BOOLEAN Permanent)
 {
     PROS_OBJECT_HEADER ObjectHeader;
+    OBP_LOOKUP_CONTEXT Context;
 
     ObjectHeader = BODY_TO_HEADER(ObjectBody);
     ASSERT (ObjectHeader->PointerCount > 0);
@@ -49,8 +50,17 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
         if (ObjectHeader->HandleCount == 0 &&
             HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory)
         {
-            /* Remove the object from the namespace */
-            ObpRemoveEntryDirectory((PROS_OBJECT_HEADER)ObjectHeader);
+            /* Make sure it's still inserted */
+            Context.Directory = HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory;
+            Context.DirectoryLocked = TRUE;
+            if (ObpLookupEntryDirectory(HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory,
+                                        &HEADER_TO_OBJECT_NAME(ObjectHeader)->Name,
+                                        0,
+                                        FALSE,
+                                        &Context))
+            {
+                ObpDeleteEntryDirectory(&Context);
+            }
         }
     }
 }

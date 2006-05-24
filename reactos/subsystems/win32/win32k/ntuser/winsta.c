@@ -190,7 +190,8 @@ IntWinStaObjectParse(PVOID Object,
                      PVOID *NextObject,
                      PUNICODE_STRING FullPath,
                      PWSTR *Path,
-                     ULONG Attributes)
+                     ULONG Attributes,
+                     PVOID Context)
 {
    PVOID FoundObject;
    NTSTATUS Status;
