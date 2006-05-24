@@ -1,7 +1,7 @@
 /*
  * Notepad (Ukrainian resources)
  *
- * Copyright 2005 Artem Reznikov
+ * Copyright 2005, 2006 Artem Reznikov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
 {
- POPUP "&File" {
+ POPUP "&Файл" {
   MENUITEM "&Створити",           CMD_NEW
   MENUITEM "&Відкрити...\tCtrl+O",     CMD_OPEN
   MENUITEM "&З&берегти\tCtrl+S",     CMD_SAVE
@@ -121,14 +121,14 @@ PUSHBUTTON      "Скасувати", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Notepad"
+CAPTION "Про Блокнот ReactOS"
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
+    CONTROL         "Блокнот ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\nЗначок запозичено з Notepad2 - http://www.flos-freeware.ch/notepad2.html",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
-    CONTROL         " ",
+    CONTROL         "Значок запозичено з Notepad2 - http://www.flos-freeware.ch/notepad2.html",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Закрити",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
