@@ -210,7 +210,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
             if (ObjectHeader->Type == ObSymbolicLinkType)
             {
                 BasicInfo->CreateTime.QuadPart =
-                    ((PSYMLINK_OBJECT)Object)->CreateTime.QuadPart;
+                    ((POBJECT_SYMBOLIC_LINK)Object)->CreationTime.QuadPart;
             }
             else
             {

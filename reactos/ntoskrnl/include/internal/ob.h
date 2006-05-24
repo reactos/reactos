@@ -23,14 +23,6 @@ typedef struct _DIRECTORY_OBJECT
     KSPIN_LOCK Lock;
 } DIRECTORY_OBJECT, *PDIRECTORY_OBJECT;
 
-typedef struct _SYMLINK_OBJECT
-{
-    CSHORT Type;
-    CSHORT Size;
-    UNICODE_STRING TargetName;
-    LARGE_INTEGER CreateTime;
-} SYMLINK_OBJECT, *PSYMLINK_OBJECT;
-
 typedef struct _ROS_OBJECT_HEADER
 {
     LIST_ENTRY Entry;

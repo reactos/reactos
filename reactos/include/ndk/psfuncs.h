@@ -298,7 +298,6 @@ NtSetInformationProcess(
 );
 
 NTSYSCALLAPI
-NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationThread(

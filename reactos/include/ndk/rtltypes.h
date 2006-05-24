@@ -171,6 +171,42 @@ Author:
 #define NLS_MB_CODE_PAGE_TAG                                NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG                            NlsMbOemCodePageTag
 #define NLS_OEM_LEAD_BYTE_INFO                              NlsOemLeadByteInfo
+
+//
+// C++ CONST casting
+//
+#if defined(__cplusplus)
+#define RTL_CONST_CAST(type)                    const_cast<type>
+#else
+#define RTL_CONST_CAST(type)                    (type)
+#endif
+
+//
+// Constant String Macro
+//
+#define RTL_CONSTANT_STRING(__SOURCE_STRING__)                  \
+{                                                               \
+    sizeof(__SOURCE_STRING__) - sizeof((__SOURCE_STRING__)[0]), \
+    sizeof(__SOURCE_STRING__),                                  \
+    (__SOURCE_STRING__)                                         \
+}
+
+//
+// Constant Object Attributes Macro
+//
+#define RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)                    \
+{                                                               \
+    sizeof(OBJECT_ATTRIBUTES),                                  \
+    NULL,                                                       \
+    RTL_CONST_CAST(PUNICODE_STRING)(n),                         \
+    a,                                                          \
+    NULL,                                                       \
+    NULL                                                        \
+}
+
+#define RTL_INIT_OBJECT_ATTRIBUTES(n, a)                        \
+    RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)
+
 #else
 //
 // Message Resource Flag

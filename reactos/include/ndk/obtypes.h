@@ -384,15 +384,29 @@ typedef struct _OBJECT_DIRECTORY_ENTRY
 {
     struct _OBJECT_DIRECTORY_ENTRY *ChainLink;
     PVOID Object;
+#if (NTDDI_VERSION >= NTDDI_WS03)
     ULONG HashValue;
+#endif
 } OBJECT_DIRECTORY_ENTRY, *POBJECT_DIRECTORY_ENTRY;
 
 typedef struct _OBJECT_DIRECTORY
 {
     struct _OBJECT_DIRECTORY_ENTRY *HashBuckets[NUMBER_HASH_BUCKETS];
-    struct _EX_PUSH_LOCK *Lock;
+#if (NTDDI_VERSION < NTDDI_WINXP)
+    PERESOURCE Lock;
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
+    EX_PUSH_LOCK Lock;
+#endif
+#if (NTDDI_VERSION < NTDDI_WINXP)
+    BOOLEAN CurrentEntryValid;
+#else
     struct _DEVICE_MAP *DeviceMap;
+#endif
     ULONG SessionId;
+#if (NTDDI_VERSION == NTDDI_WINXP)
+    USHORT Reserved;
+    USHORT SymbolicLinkUsageCount;
+#endif
 } OBJECT_DIRECTORY, *POBJECT_DIRECTORY;
 
 //
@@ -406,6 +420,18 @@ typedef struct _DEVICE_MAP
     ULONG               DriveMap;
     UCHAR               DriveType[32];
 } DEVICE_MAP, *PDEVICE_MAP;
+
+//
+// Symbolic Link Object
+//
+typedef struct _OBJECT_SYMBOLIC_LINK
+{
+    LARGE_INTEGER CreationTime;
+    UNICODE_STRING LinkTarget;
+    UNICODE_STRING LinkTargetRemaining;
+    PVOID LinkTargetObject;
+    ULONG DosDeviceDriveIndex;
+} OBJECT_SYMBOLIC_LINK, *POBJECT_SYMBOLIC_LINK;
 
 //
 // Kernel Exports

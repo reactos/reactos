@@ -859,7 +859,6 @@ ZwSetDefaultHardErrorPort(
 );
 
 NTSYSAPI
-NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetEvent(
