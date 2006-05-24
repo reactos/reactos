@@ -265,11 +265,12 @@
 		<file>elf64.c</file>
 	</directory>
 	<directory name="ob">
-			<file>dirobj.c</file>
-			<file>handle.c</file>
-			<file>namespc.c</file>
-			<file>ntobj.c</file>
-			<file>object.c</file>
+			<file>obdir.c</file>
+			<file>obinit.c</file>
+			<file>obhandle.c</file>
+			<file>obname.c</file>
+			<file>oblife.c</file>
+			<file>obref.c</file>
 			<file>sdcache.c</file>
 			<file>security.c</file>
 			<file>symlink.c</file>

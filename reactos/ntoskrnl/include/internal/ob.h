@@ -9,7 +9,10 @@
 #ifndef __INCLUDE_INTERNAL_OBJMGR_H
 #define __INCLUDE_INTERNAL_OBJMGR_H
 
-struct _EPROCESS;
+#define GENERIC_ACCESS (GENERIC_READ |      \
+                        GENERIC_WRITE |     \
+                        GENERIC_EXECUTE |   \
+                        GENERIC_ALL)
 
 #define BODY_TO_HEADER(objbdy)                                                 \
   CONTAINING_RECORD((objbdy), OBJECT_HEADER, Body)
@@ -34,8 +37,12 @@ struct _EPROCESS;
 #define ObMarkHandleAsKernelHandle(Handle)                                     \
   (HANDLE)((ULONG_PTR)(Handle) | KERNEL_HANDLE_FLAG)
 
-extern POBJECT_DIRECTORY NameSpaceRoot;
+extern KEVENT ObpDefaultObject;
+extern POBJECT_TYPE ObpTypeObjectType;
 extern POBJECT_TYPE ObSymbolicLinkType;
+extern POBJECT_TYPE ObTypeObjectType;
+extern POBJECT_DIRECTORY NameSpaceRoot;
+extern POBJECT_DIRECTORY ObpTypeDirectoryObject;
 extern PHANDLE_TABLE ObpKernelHandleTable;
 
 typedef NTSTATUS
@@ -183,6 +190,12 @@ ObpSetPermanentObject(
 VOID
 STDCALL
 ObKillProcess(PEPROCESS Process);
+
+NTSTATUS
+ObpDeleteObjectDpcLevel(
+    IN POBJECT_HEADER ObjectHeader,
+    IN LONG OldPointerCount
+);
 
 /* Security descriptor cache functions */
 
