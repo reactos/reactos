@@ -18,45 +18,29 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define OBP_PROFILE
-#ifdef OBP_PROFILE
-
-LARGE_INTEGER ObpProfileTime;
-BOOLEAN ObpProfileComplete;
-
-#define ObpStartProfile()                           \
-    LARGE_INTEGER StartTime;                        \
-    LARGE_INTEGER EndTime;                          \
-    StartTime = KeQueryPerformanceCounter(NULL);
-
-#define ObpEndProfile()                             \
-    EndTime = KeQueryPerformanceCounter(NULL);      \
-    ObpProfileTime.QuadPart += (EndTime.QuadPart -  \
-                                StartTime.QuadPart);
-
-#define ObpCompleteProfile()                        \
-    if (!wcscmp(Name, L"NlsSectionCP1252") &&       \
-        !ObpProfileComplete)                        \
-    {                                               \
-        DPRINT1("******************************\n");\
-        DPRINT1("Obp Profiling1 Complete: %I64d\n", \
-                ObpProfileTime.QuadPart);           \
-        DPRINT1("******************************\n");\
-        ObpProfileComplete = TRUE;                  \
-    }
-
-#else
-
-#define ObpStartProfile()
-#define ObpEndProfile()
-#define ObpCompleteProfile()
-
-#endif
-
 POBJECT_TYPE ObDirectoryType = NULL;
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
+/*++
+* @name ObpInsertEntryDirectory
+*
+*     The ObpInsertEntryDirectory routine <FILLMEIN>.
+*
+* @param Parent
+*        <FILLMEIN>.
+*
+* @param Context
+*        <FILLMEIN>.
+*
+* @param ObjectHeader
+*        <FILLMEIN>.
+*
+* @return TRUE if the object was inserted, FALSE otherwise.
+*
+* @remarks None.
+*
+*--*/
 BOOLEAN
 NTAPI
 ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
@@ -70,19 +54,10 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
     /* Make sure we have a name */
     ASSERT(ObjectHeader->NameInfoOffset != 0);
 
-    /* Validate the context */
-    if ((Context->Object) || !(Context->DirectoryLocked) || !Parent)
-    {
-        DbgPrint("OB: ObpInsertEntryDirectory - invalid context %p %ld\n",
-                 Context, Context->DirectoryLocked);
-        DbgBreakPoint();
-        return FALSE;
-    }
-
     /* Allocate a new Directory Entry */
     NewEntry = ExAllocatePoolWithTag(PagedPool,
                                      sizeof(OBJECT_DIRECTORY_ENTRY),
-                                     TAG('O', 'b', 'D', 'i'));
+                                     OB_DIR_TAG);
     if (!NewEntry) return FALSE;
 
     /* Save the hash */
@@ -93,12 +68,6 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
 
     /* Get the Allocated entry */
     AllocatedEntry = &Parent->HashBuckets[Context->HashIndex];
-    DPRINT("ADD: Allocated Entry: %p. NewEntry: %p\n", AllocatedEntry, NewEntry);
-    DPRINT("ADD: Name: %wZ, Hash: %lx\n", &HeaderNameInfo->Name, Context->HashIndex);
-    DPRINT("ADD: Parent: %p. Name: %wZ\n",
-            Parent,
-            HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(Parent)) ?
-            &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(Parent))->Name : NULL);
 
     /* Set it */
     NewEntry->ChainLink = *AllocatedEntry;
@@ -112,6 +81,31 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
     return TRUE;
 }
 
+/*++
+* @name ObpLookupEntryDirectory
+*
+*     The ObpLookupEntryDirectory routine <FILLMEIN>.
+*
+* @param Directory
+*        <FILLMEIN>.
+*
+* @param Name
+*        <FILLMEIN>.
+*
+* @param Attributes
+*        <FILLMEIN>.
+*
+* @param SearchShadow
+*        <FILLMEIN>.
+*
+* @param Context
+*        <FILLMEIN>.
+*
+* @return Pointer to the object which was found, or NULL otherwise.
+*
+* @remarks None.
+*
+*--*/
 PVOID
 NTAPI
 ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
@@ -133,21 +127,23 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     PWSTR Buffer;
     PAGED_CODE();
 
-    /* Always disable this until we have LUID Device Maps */
+    /* Always disable this until we have DOS Device Maps */
     SearchShadow = FALSE;
 
-    /* Fail the following cases */
+    /* Fail if we don't have a directory or name */
+    if (!(Directory) || !(Name)) goto Quickie;
+
+    /* Get name information */
     TotalChars = Name->Length / sizeof(WCHAR);
-    if (!(Directory) || !(Name) || !(Name->Buffer) || !(TotalChars))
-    {
-        goto Quickie;
-    }
+    Buffer = Name->Buffer;
+
+    /* Fail if the name is empty */
+    if (!(Buffer) || !(TotalChars)) goto Quickie;
 
     /* Set up case-sensitivity */
     if (Attributes & OBJ_CASE_INSENSITIVE) CaseInsensitive = TRUE;
 
     /* Create the Hash */
-    Buffer = Name->Buffer;
     for (HashValue = 0; TotalChars; TotalChars--)
     {
         /* Go to the next Character */
@@ -164,8 +160,6 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
 
     /* Merge it with our number of hash buckets */
     HashIndex = HashValue % 37;
-    DPRINT("LOOKUP: ObjectName: %wZ\n", Name);
-    DPRINT("LOOKUP: Generated Hash: 0x%x. Generated Id: 0x%x\n", HashValue, HashIndex);
 
     /* Save the result */
     Context->HashValue = HashValue;
@@ -174,7 +168,6 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
     /* Get the root entry and set it as our lookup bucket */
     AllocatedEntry = &Directory->HashBuckets[HashIndex];
     LookupBucket = AllocatedEntry;
-    DPRINT("LOOKUP: Allocated Entry: %p. LookupBucket: %p\n", AllocatedEntry, LookupBucket);
 
     /* Check if the directory is already locked */
     if (!Context->DirectoryLocked)
@@ -182,14 +175,12 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Lock it */
         KeEnterCriticalRegion();
         ExAcquireResourceSharedLite(&Directory->Lock, TRUE);
-        Context->LockStateSignature = 0xDDDD1234;
     }
 
     /* Start looping */
     while ((CurrentEntry = *AllocatedEntry))
     {
         /* Do the hashes match? */
-        DPRINT("CurrentEntry: %p. CurrentHash: %lx\n", CurrentEntry, CurrentEntry->HashValue);
         if (CurrentEntry->HashValue == HashValue)
         {
             /* Make sure that it has a name */
@@ -199,11 +190,9 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
             HeaderNameInfo = HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(CurrentEntry->Object));
 
             /* Do the names match? */
-            DPRINT("NameCheck: %wZ, %wZ\n", Name, &HeaderNameInfo->Name);
             if ((Name->Length == HeaderNameInfo->Name.Length) &&
                 (RtlEqualUnicodeString(Name, &HeaderNameInfo->Name, CaseInsensitive)))
             {
-                DPRINT("Found Name Match\n");
                 break;
             }
         }
@@ -242,16 +231,27 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Lock it */
         ExReleaseResourceLite(&Directory->Lock);
         KeLeaveCriticalRegion();
-        Context->LockStateSignature = 0xEEEE1234;
     }
 
 Quickie:
     /* Return the object we found */
-    DPRINT("Object Found: %p Context: %p\n", FoundObject, Context);
     Context->Object = FoundObject;
     return FoundObject;
 }
 
+/*++
+* @name ObpDeleteEntryDirectory
+*
+*     The ObpDeleteEntryDirectory routine <FILLMEIN>.
+*
+* @param Context
+*        <FILLMEIN>.
+*
+* @return TRUE if the object was deleted, FALSE otherwise.
+*
+* @remarks None.
+*
+*--*/
 BOOLEAN
 NTAPI
 ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context)
@@ -267,8 +267,6 @@ ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context)
     /* Get the Entry */
     AllocatedEntry = &Directory->HashBuckets[Context->HashIndex];
     CurrentEntry = *AllocatedEntry;
-    DPRINT("DEL: Parent: %p, Hash: %lx, AllocatedEntry: %p, CurrentEntry: %p\n",
-            Directory, Context->HashIndex, AllocatedEntry, CurrentEntry);
 
     /* Unlink the Entry */
     *AllocatedEntry = CurrentEntry->ChainLink;
@@ -281,80 +279,13 @@ ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context)
     return TRUE;
 }
 
-NTSTATUS
-NTAPI
-ObpParseDirectory(PVOID Object,
-                  PVOID * NextObject,
-                  PUNICODE_STRING FullPath,
-                  PWSTR * Path,
-                  ULONG Attributes,
-                  POBP_LOOKUP_CONTEXT Context)
-{
-    PWSTR Start;
-    PWSTR End;
-    PVOID FoundObject;
-    //KIRQL oldlvl;
-    UNICODE_STRING StartUs;
-
-    *NextObject = NULL;
-
-    if ((*Path) == NULL)
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Start = *Path;
-    if (*Start == L'\\')
-        Start++;
-
-    End = wcschr(Start, L'\\');
-    if (End != NULL)
-    {
-        *End = 0;
-    }
-
-    //KeAcquireSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), &oldlvl);
-    RtlInitUnicodeString(&StartUs, Start);
-    Context->DirectoryLocked = TRUE;
-    Context->Directory = Object;
-    FoundObject = ObpLookupEntryDirectory(Object, &StartUs, Attributes, FALSE, Context);
-    if (FoundObject == NULL)
-    {
-        //KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
-        if (End != NULL)
-        {
-            *End = L'\\';
-        }
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    ObReferenceObjectByPointer(FoundObject,
-        STANDARD_RIGHTS_REQUIRED,
-        NULL,
-        UserMode);
-    //KeReleaseSpinLock(&(((PDIRECTORY_OBJECT)Object)->Lock), oldlvl);
-    if (End != NULL)
-    {
-        *End = L'\\';
-        *Path = End;
-    }
-    else
-    {
-        *Path = NULL;
-    }
-
-    *NextObject = FoundObject;
-
-    return STATUS_SUCCESS;
-}
-
 /* FUNCTIONS **************************************************************/
 
 /*++
 * @name NtOpenDirectoryObject
 * @implemented NT4
 *
-*     The NtOpenDirectoryObject opens a namespace directory object.
+*     The NtOpenDirectoryObject routine opens a namespace directory object.
 *
 * @param DirectoryHandle
 *        Variable which receives the directory handle.
@@ -381,25 +312,26 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
+    /* Check if we need to do any probing */
     if(PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
+            /* Probe the return handle */
             ProbeForWriteHandle(DirectoryHandle);
         }
         _SEH_HANDLE
         {
+            /* Get the error code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status))
-        {
-            DPRINT1("NtOpenDirectoryObject failed, Status: 0x%x\n", Status);
-            return Status;
-        }
+        /* If we failed, return the error */
+        if(!NT_SUCCESS(Status)) return Status;
     }
 
+    /* Open the directory object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ObDirectoryType,
                                 NULL,
@@ -411,15 +343,18 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
     {
         _SEH_TRY
         {
+            /* Write back the handle to the caller */
             *DirectoryHandle = hDirectory;
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
     }
 
+    /* Return the status to the caller */
     return Status;
 }
 
@@ -427,7 +362,7 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
 * @name NtQueryDirectoryObject
 * @implemented NT4
 *
-*     The NtQueryDirectoryObject Reads information from a directory in
+*     The NtQueryDirectoryObject routine reads information from a directory in
 *     the system namespace.
 *
 * @param DirectoryHandle
@@ -482,41 +417,38 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
+    /* Check if we need to do any probing */
     if(PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
-            /* a test showed that the Buffer pointer just has to be 16 bit aligned,
-            propably due to the fact that most information that needs to be copied
-            is unicode strings */
+            /* Probe the buffer (assuming it will hold Unicode characters) */
             ProbeForWrite(Buffer, BufferLength, sizeof(WCHAR));
+
+            /* Probe the context and copy it unless scan-restart was requested */
             ProbeForWriteUlong(Context);
-            if(!RestartScan)
-            {
-                SkipEntries = *Context;
-            }
-            if(ReturnLength != NULL)
-            {
-                ProbeForWriteUlong(ReturnLength);
-            }
+            if (!RestartScan) SkipEntries = *Context;
+
+            /* Probe the return length if the caller specified one */
+            if(ReturnLength) ProbeForWriteUlong(ReturnLength);
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status))
-        {
-            DPRINT1("NtQueryDirectoryObject failed, Status: 0x%x\n", Status);
-            return Status;
-        }
+        /* Return the exception to caller if we failed */
+        if(!NT_SUCCESS(Status)) return Status;
     }
-    else if(!RestartScan)
+    else if (!RestartScan)
     {
+        /* This is kernel mode, save the context without probing, if needed */
         SkipEntries = *Context;
     }
 
+    /* Get a reference to directory */
     Status = ObReferenceObjectByHandle(DirectoryHandle,
                                        DIRECTORY_QUERY,
                                        ObDirectoryType,
@@ -525,9 +457,11 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
                                        NULL);
     if(NT_SUCCESS(Status))
     {
+        /* FIXME: TODO. UNIMPLEMENTED */
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* Return status to caller */
     return Status;
 }
 
@@ -535,7 +469,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
 * @name NtCreateDirectoryObject
 * @implemented NT4
 *
-*     The NtOpenDirectoryObject creates or opens a directory object.
+*     The NtOpenDirectoryObject routine creates or opens a directory object.
 *
 * @param DirectoryHandle
 *        Variable which receives the directory handle.
@@ -567,25 +501,26 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
             "DesiredAccess %x, ObjectAttributes %x\n",
             DirectoryHandle, DesiredAccess, ObjectAttributes);
 
+    /* Check if we need to do any probing */
     if(PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
+            /* Probe the return handle */
             ProbeForWriteHandle(DirectoryHandle);
         }
         _SEH_HANDLE
         {
+            /* Get the error code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status))
-        {
-            DPRINT1("NtCreateDirectoryObject failed, Status: 0x%x\n", Status);
-            return Status;
-        }
+        /* If we failed, return the error */
+        if(!NT_SUCCESS(Status)) return Status;
     }
 
+    /* Create the object */
     Status = ObCreateObject(PreviousMode,
                             ObDirectoryType,
                             ObjectAttributes,
@@ -595,9 +530,9 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
                             0,
                             0,
                             (PVOID*)&Directory);
-
     if(NT_SUCCESS(Status))
     {
+        /* Insert it into the handle table */
         Status = ObInsertObject((PVOID)Directory,
                                 NULL,
                                 DesiredAccess,
@@ -608,18 +543,22 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
         {
             _SEH_TRY
             {
+                /* Return the handle back to the caller */
                 *DirectoryHandle = hDirectory;
             }
             _SEH_HANDLE
             {
+                /* Get the exception code */
                 Status = _SEH_GetExceptionCode();
             }
             _SEH_END;
         }
 
+        /* ReactOS HACK: ObInsertObject double-references */
         ObDereferenceObject(Directory);
     }
 
+    /* Return status to caller */
     return Status;
 }
 

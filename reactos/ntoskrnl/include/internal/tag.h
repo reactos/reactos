@@ -118,8 +118,9 @@
 #define TAG_SYMLINK_TTARGET     TAG('S', 'Y', 'T', 'T')
 #define TAG_SYMLINK_TARGET      TAG('S', 'Y', 'M', 'T')
 
-/* Object Name Tag */
-#define OB_NAME_TAG TAG('O','b','N','m')
+/* Object Manager Tags */
+#define OB_NAME_TAG             TAG('O', 'b', 'N', 'm')
+#define OB_DIR_TAG              TAG('O', 'b', 'D', 'i')
 
 /* formerly located in ps/cid.c */
 #define TAG_CIDOBJECT TAG('C', 'I', 'D', 'O')

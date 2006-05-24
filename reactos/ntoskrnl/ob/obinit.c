@@ -77,7 +77,6 @@ ObInit(VOID)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.ValidAccessMask = DIRECTORY_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
-    ObjectTypeInitializer.ParseProcedure = (OB_PARSE_METHOD)ObpParseDirectory;
     ObjectTypeInitializer.MaintainTypeList = FALSE;
     ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);

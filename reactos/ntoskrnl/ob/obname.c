@@ -107,11 +107,62 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
     while (TRUE)
     {
-        DPRINT("current %S\n",current);
         CurrentHeader = BODY_TO_HEADER(CurrentObject);
 
-        DPRINT("Current ObjectType %wZ\n",
-            &CurrentHeader->Type->Name);
+        /* Loop as long as we're dealing with a directory */
+        while (CurrentHeader->Type == ObDirectoryType)
+        {
+            PWSTR Start, End;
+            PVOID FoundObject;
+            UNICODE_STRING StartUs;
+            NextObject = NULL;
+
+            if (!current) goto Next;
+
+            Start = current;
+            if (*Start == L'\\') Start++;
+
+            End = wcschr(Start, L'\\');
+            if (End != NULL) *End = 0;
+
+            RtlInitUnicodeString(&StartUs, Start);
+            Context->DirectoryLocked = TRUE;
+            Context->Directory = CurrentObject;
+            FoundObject = ObpLookupEntryDirectory(CurrentObject, &StartUs, Attributes, FALSE, Context);
+            if (FoundObject == NULL)
+            {
+                if (End != NULL)
+                {
+                    *End = L'\\';
+                }
+                 goto Next;
+            }
+
+            ObReferenceObjectByPointer(FoundObject,
+                STANDARD_RIGHTS_REQUIRED,
+                NULL,
+                UserMode);
+            if (End != NULL)
+            {
+                *End = L'\\';
+                current = End;
+            }
+            else
+            {
+                current = NULL;
+            }
+
+            NextObject = FoundObject;
+
+Next:
+            if (NextObject == NULL)
+            {
+                break;
+            }
+            ObDereferenceObject(CurrentObject);
+            CurrentObject = NextObject;
+            CurrentHeader = BODY_TO_HEADER(CurrentObject);
+        }
 
         if (CurrentHeader->Type->TypeInfo.ParseProcedure == NULL)
         {
@@ -135,6 +186,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                 NULL,
                 ObjectCreateInfo->ProbeMode);
         }
+
 
         if (NextObject == NULL)
         {
