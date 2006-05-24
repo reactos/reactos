@@ -33,19 +33,4 @@ _cprintf(const char *fmt, ...)
   if (mem != buf)
       free (mem);      
   return retval;
-
-
-/*
-  va_list ap;
-
-  va_start(ap, fmt);  
-  while (vsprintf(buf, fmt, ap)==-1)
-  {
-    if (cnt < 0)
-    
-  va_end(ap);
-
-  _cputs(buf);
-  return cnt;
-  */
 }
