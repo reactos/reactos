@@ -313,7 +313,7 @@ InbvDisplayBitmap(ULONG Width, ULONG Height, PCHAR ImageData)
                   }
                }
             }
-            if ((x>=0) && (x<640) && (479-y>=0) && (479-y<480) && (c>=0) && (c<256)) 
+
             InbvPutPixels(x, 479 - y, c);
             x += 8 * 4;
          }
