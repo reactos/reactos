@@ -758,17 +758,41 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hDc, const BITMAPINFOHEADER *Header,
 {
   PDC Dc;
   HBITMAP Bmp;
-
-  Dc = DC_LockDc(hDc);
-  if (NULL == Dc)
+  
+ 
+  if (NULL == hDc)
+  {            
+       hDc =  IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
+       if (hDc == NULL)
+       {         
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return NULL;
+       }
+      Dc = DC_LockDc(hDc);
+      if (Dc == NULL)
+      {  
+          NtGdiDeleteObjectApp(hDc);          
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return NULL;
+      }
+      
+      Bmp = IntCreateDIBitmap(Dc, Header, Init, Bits, Data, ColorUse);                      
+      DC_UnlockDc(Dc);
+      NtGdiDeleteObjectApp(hDc);  
+    }
+    else
     {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return NULL;
+       Dc = DC_LockDc(hDc);
+       if (Dc == NULL)
+       {                    
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return NULL;
+       }
+       Bmp = IntCreateDIBitmap(Dc, Header, Init, Bits, Data, ColorUse);
+       DC_UnlockDc(Dc);
     }
 
-  Bmp = IntCreateDIBitmap(Dc, Header, Init, Bits, Data, ColorUse);
-
-  DC_UnlockDc(Dc);
+  
 
   return Bmp;
 }
