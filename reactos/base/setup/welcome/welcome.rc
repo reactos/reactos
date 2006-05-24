@@ -58,5 +58,6 @@ END
 #include "Ja.rc"
 #include "Sv.rc"
 #include "Ru.rc"
+#include "Uk.rc"
 
 /* EOF */
