@@ -240,7 +240,10 @@ NtQuerySecurityObject(IN HANDLE Handle,
         _SEH_TRY
         {
             ProbeForWrite(SecurityDescriptor, Length, sizeof(ULONG));
+            if (ResultLength != NULL)
+            {
             ProbeForWriteUlong(ResultLength);
+        }
         }
         _SEH_HANDLE
         {
@@ -280,15 +283,18 @@ NtQuerySecurityObject(IN HANDLE Handle,
         ObDereferenceObject(Object);
 
         /* return the required length */
+        if (ResultLength != NULL)
+        {
         _SEH_TRY
         {
             *ResultLength = Length;
         }
-        _SEH_HANDLE
+            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
+    }
     }
 
     return Status;

@@ -284,83 +284,115 @@ NtQueryInformationAtom(RTL_ATOM Atom,
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
     PATOM_BASIC_INFORMATION BasicInformation = AtomInformation;
     PATOM_TABLE_INFORMATION TableInformation = AtomInformation;
-    NTSTATUS Status;
-    ULONG Flags, UsageCount, NameLength;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG Flags, UsageCount, NameLength, RequiredLength = 0;
+    KPROCESSOR_MODE PreviousMode;
+
+    PAGED_CODE();
 
     /* Check for valid table */
     if (AtomTable == NULL) return STATUS_ACCESS_DENIED;
 
-    /* FIXME: SEH! */
+    PreviousMode = ExGetPreviousMode();
 
-    /* Choose class */
-    switch (AtomInformationClass)
+    _SEH_TRY
     {
-        /* Caller requested info about an atom */
-        case AtomBasicInformation:
+        /* Probe the parameters */
+        if (PreviousMode != KernelMode)
+        {
+            ProbeForWrite(AtomInformation,
+                          AtomInformationLength,
+                          sizeof(ULONG));
 
-            /* Size check */
-            *ReturnLength = FIELD_OFFSET(ATOM_BASIC_INFORMATION, Name);
-            if (*ReturnLength > AtomInformationLength)
+            if (ReturnLength != NULL)
             {
-                /* Fail */
-                DPRINT1("Buffer too small\n");
-                return STATUS_INFO_LENGTH_MISMATCH;
+                ProbeForWriteUlong(ReturnLength);
             }
+        }
 
-            /* Prepare query */
-            UsageCount = 0;
-            NameLength = AtomInformationLength - *ReturnLength;
-            BasicInformation->Name[0] = UNICODE_NULL;
+        /* Choose class */
+        switch (AtomInformationClass)
+        {
+            /* Caller requested info about an atom */
+            case AtomBasicInformation:
 
-            /* Query the data */
-            Status = RtlQueryAtomInAtomTable(AtomTable,
-                                             Atom,
-                                             &UsageCount,
-                                             &Flags,
-                                             BasicInformation->Name,
-                                             &NameLength);
-            if (NT_SUCCESS(Status))
-            {
-                /* Return data */
-                BasicInformation->UsageCount = (USHORT)UsageCount;
-                BasicInformation->Flags = (USHORT)Flags;
-                BasicInformation->NameLength = (USHORT)NameLength;
-                *ReturnLength += NameLength + sizeof(WCHAR);
-            }
-            break;
+                /* Size check */
+                RequiredLength = FIELD_OFFSET(ATOM_BASIC_INFORMATION, Name);
+                if (RequiredLength > AtomInformationLength)
+                {
+                    /* Fail */
+                    DPRINT1("Buffer too small\n");
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                    _SEH_LEAVE;
+                }
 
-        /* Caller requested info about an Atom Table */
-        case AtomTableInformation:
+                /* Prepare query */
+                UsageCount = 0;
+                NameLength = AtomInformationLength - RequiredLength;
+                BasicInformation->Name[0] = UNICODE_NULL;
 
-            /* Size check */
-            *ReturnLength = FIELD_OFFSET(ATOM_TABLE_INFORMATION, Atoms);
-            if (*ReturnLength > AtomInformationLength)
-            {
-                /* Fail */
-                DPRINT1("Buffer too small\n");
-                return STATUS_INFO_LENGTH_MISMATCH;
-            }
+                /* Query the data */
+                Status = RtlQueryAtomInAtomTable(AtomTable,
+                                                 Atom,
+                                                 &UsageCount,
+                                                 &Flags,
+                                                 BasicInformation->Name,
+                                                 &NameLength);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Return data */
+                    BasicInformation->UsageCount = (USHORT)UsageCount;
+                    BasicInformation->Flags = (USHORT)Flags;
+                    BasicInformation->NameLength = (USHORT)NameLength;
+                    RequiredLength += NameLength + sizeof(WCHAR);
+                }
+                break;
 
-            /* Query the data */
-            Status = RtlQueryAtomListInAtomTable(AtomTable,
-                                                 (AtomInformationLength - *ReturnLength) /
-                                                 sizeof(RTL_ATOM),
-                                                 &TableInformation->NumberOfAtoms,
-                                                 TableInformation->Atoms);
-            if (NT_SUCCESS(Status))
-            {
-                /* Update the return length */
-                *ReturnLength += TableInformation->NumberOfAtoms *
-                                 sizeof(RTL_ATOM);
-            }
-            break;
+            /* Caller requested info about an Atom Table */
+            case AtomTableInformation:
 
-        /* Caller was on crack */
-        default:
+                /* Size check */
+                RequiredLength = FIELD_OFFSET(ATOM_TABLE_INFORMATION, Atoms);
+                if (RequiredLength > AtomInformationLength)
+                {
+                    /* Fail */
+                    DPRINT1("Buffer too small\n");
+                    Status = STATUS_INFO_LENGTH_MISMATCH;
+                    _SEH_LEAVE;
+                }
 
-            /* Unrecognized class */
-            Status = STATUS_INVALID_INFO_CLASS;
+                /* Query the data */
+                Status = RtlQueryAtomListInAtomTable(AtomTable,
+                                                     (AtomInformationLength - RequiredLength) /
+                                                     sizeof(RTL_ATOM),
+                                                     &TableInformation->NumberOfAtoms,
+                                                     TableInformation->Atoms);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Update the return length */
+                    RequiredLength += TableInformation->NumberOfAtoms * sizeof(RTL_ATOM);
+                }
+                break;
+
+            /* Caller was on crack */
+            default:
+
+                /* Unrecognized class */
+                Status = STATUS_INVALID_INFO_CLASS;
+                break;
+        }
+
+        /* Return the required size */
+        if (ReturnLength != NULL)
+        {
+            *ReturnLength = RequiredLength;
+        }
     }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
     /* Return to caller */
     return Status;
