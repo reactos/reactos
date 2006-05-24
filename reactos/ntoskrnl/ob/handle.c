@@ -52,7 +52,7 @@ ExpDesktopCreate(PVOID ObjectBody,
 static VOID
 ObpDecrementHandleCount(PVOID ObjectBody)
 {
-  PROS_OBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
+  POBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
   LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
   OBP_LOOKUP_CONTEXT Context;
   DPRINT("Header: %x\n", ObjectHeader);
@@ -228,7 +228,7 @@ ObpDeleteHandle(HANDLE Handle)
 {
    PHANDLE_TABLE_ENTRY HandleEntry;
    PVOID Body;
-   PROS_OBJECT_HEADER ObjectHeader;
+   POBJECT_HEADER ObjectHeader;
    PHANDLE_TABLE ObjectTable;
 
    PAGED_CODE();
@@ -286,7 +286,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
   HANDLE_TABLE_ENTRY NewHandleEntry;
   BOOLEAN AttachedToProcess = FALSE;
   PVOID ObjectBody;
-  PROS_OBJECT_HEADER ObjectHeader;
+  POBJECT_HEADER ObjectHeader;
   ULONG NewHandleCount;
   HANDLE NewTargetHandle;
   PEPROCESS CurrentProcess;
@@ -625,7 +625,7 @@ SweepHandleCallback(PHANDLE_TABLE HandleTable,
                     ULONG GrantedAccess,
                     PVOID Context)
 {
-  PROS_OBJECT_HEADER ObjectHeader;
+  POBJECT_HEADER ObjectHeader;
   PVOID ObjectBody;
 
   PAGED_CODE();
@@ -641,7 +641,7 @@ DuplicateHandleCallback(PHANDLE_TABLE HandleTable,
                         PHANDLE_TABLE_ENTRY HandleTableEntry,
                         PVOID Context)
 {
-  PROS_OBJECT_HEADER ObjectHeader;
+  POBJECT_HEADER ObjectHeader;
   BOOLEAN Ret = FALSE;
 
   PAGED_CODE();
@@ -721,7 +721,7 @@ ObpCreateHandle(PVOID ObjectBody,
 {
    HANDLE_TABLE_ENTRY NewEntry;
    PEPROCESS Process, CurrentProcess;
-   PROS_OBJECT_HEADER ObjectHeader;
+   POBJECT_HEADER ObjectHeader;
    HANDLE Handle;
    KAPC_STATE ApcState;
    BOOLEAN AttachedToProcess = FALSE;
@@ -889,7 +889,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
 			  POBJECT_HANDLE_INFORMATION HandleInformation)
 {
    PHANDLE_TABLE_ENTRY HandleEntry;
-   PROS_OBJECT_HEADER ObjectHeader;
+   POBJECT_HEADER ObjectHeader;
    PVOID ObjectBody;
    ACCESS_MASK GrantedAccess;
    ULONG Attributes;
@@ -1153,10 +1153,10 @@ ObInsertObject(IN PVOID Object,
                OUT PHANDLE Handle)
 {
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
-    PROS_OBJECT_HEADER Header;
+    POBJECT_HEADER Header;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     PVOID FoundObject = NULL;
-    PROS_OBJECT_HEADER FoundHeader = NULL;
+    POBJECT_HEADER FoundHeader = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING RemainingPath;
     BOOLEAN ObjectAttached = FALSE; 
@@ -1230,7 +1230,7 @@ ObInsertObject(IN PVOID Object,
         ObjectNameInfo->Name.Buffer = NewName;
         ObjectNameInfo->Name.Length = RemainingPath.Length - Delta;
         ObjectNameInfo->Name.MaximumLength = RemainingPath.MaximumLength - Delta;
-        ObpInsertEntryDirectory(FoundObject, &Context, (POBJECT_HEADER)Header);
+        ObpInsertEntryDirectory(FoundObject, &Context, Header);
         ObjectAttached = TRUE;
     }
 

@@ -417,6 +417,19 @@ typedef struct _OBJECT_HEADER
 } OBJECT_HEADER, *POBJECT_HEADER;
 
 //
+// Object Lookup Context
+//
+typedef struct _OBP_LOOKUP_CONTEXT
+{
+    POBJECT_DIRECTORY Directory;
+    PVOID Object;
+    ULONG HashValue;
+    USHORT HashIndex;
+    BOOLEAN DirectoryLocked;
+    ULONG LockStateSignature;
+} OBP_LOOKUP_CONTEXT, *POBP_LOOKUP_CONTEXT;
+
+//
 // Device Map
 //
 typedef struct _DEVICE_MAP

@@ -212,7 +212,7 @@ SeDefaultObjectMethod(PVOID Object,
   PISECURITY_DESCRIPTOR ObjectSd;
   PISECURITY_DESCRIPTOR NewSd;
   PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
-  PROS_OBJECT_HEADER Header = BODY_TO_HEADER(Object);
+  POBJECT_HEADER Header = BODY_TO_HEADER(Object);
   PSID Owner = 0;
   PSID Group = 0;
   PACL Dacl = 0;

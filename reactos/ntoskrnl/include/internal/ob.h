@@ -11,40 +11,8 @@
 
 struct _EPROCESS;
 
-typedef struct _ROS_OBJECT_HEADER
-{
-    LONG PointerCount;
-    union
-    {
-        LONG HandleCount;
-        PVOID NextToFree;
-    };
-    POBJECT_TYPE Type;
-    UCHAR NameInfoOffset;
-    UCHAR HandleInfoOffset;
-    UCHAR QuotaInfoOffset;
-    UCHAR Flags;
-    union
-    {
-        POBJECT_CREATE_INFORMATION ObjectCreateInfo;
-        PVOID QuotaBlockCharged;
-    };
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
-    QUAD Body;
-} ROS_OBJECT_HEADER, *PROS_OBJECT_HEADER;
-
-typedef struct _OBP_LOOKUP_CONTEXT
-{
-    POBJECT_DIRECTORY Directory;
-    PVOID Object;
-    ULONG HashValue;
-    USHORT HashIndex;
-    BOOLEAN DirectoryLocked;
-    ULONG LockStateSignature;
-} OBP_LOOKUP_CONTEXT, *POBP_LOOKUP_CONTEXT;
-
 #define BODY_TO_HEADER(objbdy)                                                 \
-  CONTAINING_RECORD((objbdy), ROS_OBJECT_HEADER, Body)
+  CONTAINING_RECORD((objbdy), OBJECT_HEADER, Body)
   
 #define HEADER_TO_OBJECT_NAME(objhdr) ((POBJECT_HEADER_NAME_INFO)              \
   (!(objhdr)->NameInfoOffset ? NULL: ((PCHAR)(objhdr) - (objhdr)->NameInfoOffset)))
@@ -55,7 +23,7 @@ typedef struct _OBP_LOOKUP_CONTEXT
 #define HEADER_TO_CREATOR_INFO(objhdr) ((POBJECT_HEADER_CREATOR_INFO)          \
   (!((objhdr)->Flags & OB_FLAG_CREATOR_INFO) ? NULL: ((PCHAR)(objhdr) - sizeof(OBJECT_HEADER_CREATOR_INFO))))
 
-#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(ROS_OBJECT_HEADER))
+#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER))
 
 #define KERNEL_HANDLE_FLAG (1 << ((sizeof(HANDLE) * 8) - 1))
 #define ObIsKernelHandle(Handle, ProcessorMode)                                \

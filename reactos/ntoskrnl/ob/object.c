@@ -22,7 +22,7 @@
 typedef struct _RETENTION_CHECK_PARAMS
 {
   WORK_QUEUE_ITEM WorkItem;
-  PROS_OBJECT_HEADER ObjectHeader;
+  POBJECT_HEADER ObjectHeader;
 } RETENTION_CHECK_PARAMS, *PRETENTION_CHECK_PARAMS;
 
 /* FUNCTIONS ************************************************************/
@@ -299,7 +299,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
   PVOID NextObject;
   PVOID CurrentObject;
   PVOID RootObject;
-  PROS_OBJECT_HEADER CurrentHeader;
+  POBJECT_HEADER CurrentHeader;
   NTSTATUS Status;
   PWSTR current;
   UNICODE_STRING PathString;
@@ -443,7 +443,7 @@ ObQueryNameString(IN  PVOID Object,
                   OUT PULONG ReturnLength)
 {
     POBJECT_HEADER_NAME_INFO LocalInfo;
-    PROS_OBJECT_HEADER ObjectHeader;
+    POBJECT_HEADER ObjectHeader;
     POBJECT_DIRECTORY ParentDirectory;
     ULONG NameSize;
     PWCH ObjectName;
@@ -621,9 +621,9 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                   PUNICODE_STRING ObjectName,
                   POBJECT_TYPE ObjectType,
                   ULONG ObjectSize,
-                  PROS_OBJECT_HEADER *ObjectHeader)
+                  POBJECT_HEADER *ObjectHeader)
 {
-    PROS_OBJECT_HEADER Header;
+    POBJECT_HEADER Header;
     BOOLEAN HasHandleInfo = FALSE;
     BOOLEAN HasNameInfo = FALSE;
     BOOLEAN HasCreatorInfo = FALSE;
@@ -687,7 +687,7 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         HandleInfo = (POBJECT_HEADER_HANDLE_INFO)Header;
         DPRINT("Info: %x\n", HandleInfo);
         HandleInfo->SingleEntry.HandleCount = 0;
-        Header = (PROS_OBJECT_HEADER)(HandleInfo + 1);
+        Header = (POBJECT_HEADER)(HandleInfo + 1);
     }
        
     /* Initialize the Object Name Info */
@@ -697,7 +697,7 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         DPRINT("Info: %x %wZ\n", NameInfo, ObjectName);
         NameInfo->Name = *ObjectName;
         NameInfo->Directory = NULL;
-        Header = (PROS_OBJECT_HEADER)(NameInfo + 1);
+        Header = (POBJECT_HEADER)(NameInfo + 1);
     }
     
     /* Initialize Creator Info */
@@ -709,7 +709,7 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
          * CreatorInfo->CreatorUniqueProcess = PsGetCurrentProcessId();
          */
         InitializeListHead(&CreatorInfo->TypeList);
-        Header = (PROS_OBJECT_HEADER)(CreatorInfo + 1);
+        Header = (POBJECT_HEADER)(CreatorInfo + 1);
     }
     
     /* Initialize the object header */
@@ -780,7 +780,7 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     NTSTATUS Status;
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
     UNICODE_STRING ObjectName;
-    PROS_OBJECT_HEADER Header;
+    POBJECT_HEADER Header;
     
     DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n", 
             Type, ObjectAttributes, Object);
@@ -848,7 +848,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
 			   IN POBJECT_TYPE ObjectType,
 			   IN KPROCESSOR_MODE AccessMode)
 {
-   PROS_OBJECT_HEADER Header;
+   POBJECT_HEADER Header;
 
    /* NOTE: should be possible to reference an object above APC_LEVEL! */
 
@@ -941,7 +941,7 @@ ObOpenObjectByPointer(IN PVOID Object,
 
 
 static NTSTATUS
-ObpDeleteObject(PROS_OBJECT_HEADER Header)
+ObpDeleteObject(POBJECT_HEADER Header)
 {
   PVOID HeaderLocation = Header;
   POBJECT_HEADER_HANDLE_INFO HandleInfo;
@@ -1018,7 +1018,7 @@ ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
 
 
 STATIC NTSTATUS
-ObpDeleteObjectDpcLevel(IN PROS_OBJECT_HEADER ObjectHeader,
+ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
 			IN LONG OldPointerCount)
 {
 #if 0
@@ -1097,7 +1097,7 @@ ObpDeleteObjectDpcLevel(IN PROS_OBJECT_HEADER ObjectHeader,
 VOID FASTCALL
 ObfReferenceObject(IN PVOID Object)
 {
-  PROS_OBJECT_HEADER Header;
+  POBJECT_HEADER Header;
 
   ASSERT(Object);
 
@@ -1130,7 +1130,7 @@ ObfReferenceObject(IN PVOID Object)
 VOID FASTCALL
 ObfDereferenceObject(IN PVOID Object)
 {
-  PROS_OBJECT_HEADER Header;
+  POBJECT_HEADER Header;
   LONG NewPointerCount;
   BOOL Permanent;
 
@@ -1225,7 +1225,7 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
 ULONG STDCALL
 ObGetObjectPointerCount(PVOID Object)
 {
-  PROS_OBJECT_HEADER Header;
+  POBJECT_HEADER Header;
 
   PAGED_CODE();
 
@@ -1253,7 +1253,7 @@ ULONG
 NTAPI
 ObGetObjectHandleCount(PVOID Object)
 {
-  PROS_OBJECT_HEADER Header;
+  POBJECT_HEADER Header;
 
   PAGED_CODE();
 

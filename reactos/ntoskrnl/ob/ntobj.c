@@ -35,7 +35,7 @@ FASTCALL
 ObpSetPermanentObject(IN PVOID ObjectBody,
                       IN BOOLEAN Permanent)
 {
-    PROS_OBJECT_HEADER ObjectHeader;
+    POBJECT_HEADER ObjectHeader;
     OBP_LOOKUP_CONTEXT Context;
 
     ObjectHeader = BODY_TO_HEADER(ObjectBody);
@@ -179,7 +179,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
               OUT PULONG ResultLength OPTIONAL)
 {
     OBJECT_HANDLE_INFORMATION HandleInfo;
-    PROS_OBJECT_HEADER ObjectHeader;
+    POBJECT_HEADER ObjectHeader;
     ULONG InfoLength;
     PVOID Object;
     NTSTATUS Status;

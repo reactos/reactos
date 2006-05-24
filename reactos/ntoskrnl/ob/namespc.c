@@ -50,7 +50,7 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                   PUNICODE_STRING ObjectName,
                   POBJECT_TYPE ObjectType,
                   ULONG ObjectSize,
-                  PROS_OBJECT_HEADER *ObjectHeader);
+                  POBJECT_HEADER *ObjectHeader);
 
 /* FUNCTIONS **************************************************************/
 
@@ -360,7 +360,7 @@ ObInit(VOID)
                                  FALSE,
                                  &Context))
     {
-        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, (POBJECT_HEADER)BODY_TO_HEADER(ObTypeObjectType));
+        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, BODY_TO_HEADER(ObTypeObjectType));
     }
     if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
                                  &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ObDirectoryType))->Name,
@@ -368,7 +368,7 @@ ObInit(VOID)
                                  FALSE,
                                  &Context))
     {
-        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, (POBJECT_HEADER)BODY_TO_HEADER(ObDirectoryType));
+        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, BODY_TO_HEADER(ObDirectoryType));
     }
 
     /* Create 'symbolic link' object type */
@@ -385,7 +385,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
                     PUNICODE_STRING TypeName,
                     POBJECT_TYPE *ObjectType)
 {
-    PROS_OBJECT_HEADER Header;
+    POBJECT_HEADER Header;
     POBJECT_TYPE LocalObjectType;
     ULONG HeaderSize;
     NTSTATUS Status;
@@ -397,7 +397,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
                                TypeName,
                                ObTypeObjectType, 
                                OBJECT_ALLOC_SIZE(sizeof(OBJECT_TYPE)),
-                               (PROS_OBJECT_HEADER*)&Header);
+                               (POBJECT_HEADER*)&Header);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ObpAllocateObject failed!\n");
@@ -443,7 +443,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     }
 
     /* Calculate how much space our header'll take up */
-    HeaderSize = sizeof(ROS_OBJECT_HEADER) + sizeof(OBJECT_HEADER_NAME_INFO) +
+    HeaderSize = sizeof(OBJECT_HEADER) + sizeof(OBJECT_HEADER_NAME_INFO) +
                  (ObjectTypeInitializer->MaintainHandleCount ? 
                  sizeof(OBJECT_HEADER_HANDLE_INFO) : 0);
 
@@ -499,7 +499,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
                                 OBJ_CASE_INSENSITIVE,
                                 FALSE,
                                 &Context);
-        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, (POBJECT_HEADER)Header);
+        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, Header);
         ObReferenceObject(ObpTypeDirectoryObject);
     }
 

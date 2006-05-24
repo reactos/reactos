@@ -60,7 +60,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     LARGE_INTEGER SafeTimeOut;
     BOOLEAN LockInUse;
     PHANDLE_TABLE_ENTRY HandleEntry;
-    PROS_OBJECT_HEADER ObjectHeader;
+    POBJECT_HEADER ObjectHeader;
     PHANDLE_TABLE HandleTable;
     ACCESS_MASK GrantedAccess;
     PVOID DefaultObject;
