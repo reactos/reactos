@@ -28,4 +28,5 @@
 #include "Hu.rc"
 #include "Nl.rc"
 #include "Ru.rc"
+#include "Sv.rc"
 
