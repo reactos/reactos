@@ -4,6 +4,11 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/curdir.c
  * PURPOSE:         Current directory functions
+ * PROGRAMMER:      Eric Kohl
+ *                  Filip Navara
+ *                  Steven Edwards
+ *                  Thomas Weidenmueller
+ *                  Gunnar Andre' Dalsnes
  * UPDATE HISTORY:
  *                  Created 30/09/98
  */

@@ -4,6 +4,8 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/sync/critical.c
  * PURPOSE:         Critical sections
+ * PROGRAMMER:      Filip Navara
+ *                  Eric Kohl
  * UPDATE HISTORY:
  *                  Created 30/09/98
  */

@@ -4,7 +4,8 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/debug/debugger.c
  * PURPOSE:         Win32 Debugger API
- * PROGRAMMER:      ???
+ * PROGRAMMER:      Thomas Weidenmueller
+ *                  KJK::Hyperion
  */
 
 /* INCLUDES ******************************************************************/
