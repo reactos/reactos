@@ -50,8 +50,8 @@ CreateGreenFdo(
 	Status = ObOpenObjectByName(
 		&ObjectAttributes,
 		IoDeviceObjectType,
-		NULL,
 		KernelMode,
+		NULL,
 		DesiredAccess,
 		NULL,
 		&LocalHandle);
