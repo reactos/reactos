@@ -60,16 +60,6 @@ typedef PVOID
     ULONG  Attributes
 );
 
-typedef NTSTATUS
-(NTAPI *OB_ROS_PARSE_METHOD)(
-    PVOID Object,
-    PVOID *NextObject,
-    PUNICODE_STRING FullPath,
-    PWSTR *Path,
-    ULONG Attributes,
-    POBP_LOOKUP_CONTEXT Context
-);
-
 BOOLEAN
 NTAPI
 ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context);

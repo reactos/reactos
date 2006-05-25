@@ -439,10 +439,15 @@ CmUnRegisterCallback(IN LARGE_INTEGER    Cookie);
 
 NTSTATUS STDCALL
 CmiObjectParse(IN PVOID ParsedObject,
-	       OUT PVOID *NextObject,
-	       IN PUNICODE_STRING FullPath,
-	       IN OUT PWSTR *Path,
-	       IN ULONG Attribute);
+               IN PVOID ObjectType,
+               IN OUT PACCESS_STATE AccessState,
+               IN KPROCESSOR_MODE AccessMode,
+               IN ULONG Attributes,
+               IN OUT PUNICODE_STRING FullPath,
+               IN OUT PUNICODE_STRING RemainingName,
+               IN OUT PVOID Context OPTIONAL,
+               IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+               OUT PVOID *NextObject);
 
 VOID STDCALL
 CmiObjectDelete(PVOID  DeletedObject);

@@ -37,6 +37,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     PWSTR current;
     UNICODE_STRING PathString;
     ULONG Attributes;
+    UNICODE_STRING CurrentUs;
 
     PAGED_CODE();
 
@@ -169,12 +170,19 @@ Next:
             DPRINT("Current object can't parse\n");
             break;
         }
-        Status = ((OB_ROS_PARSE_METHOD)CurrentHeader->Type->TypeInfo.ParseProcedure)(CurrentObject,
-            &NextObject,
-            &PathString,
-            &current,
+
+        RtlInitUnicodeString(&CurrentUs, current);
+        Status = CurrentHeader->Type->TypeInfo.ParseProcedure(CurrentObject,
+            CurrentHeader->Type,
+            NULL,
+            ExGetPreviousMode(),
             Attributes,
-            Context);
+            &PathString,
+            &CurrentUs,
+            NULL,
+            NULL,
+            &NextObject);
+        current = CurrentUs.Buffer;
         if (Status == STATUS_REPARSE)
         {
             /* reparse the object path */

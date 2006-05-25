@@ -36,7 +36,7 @@ static GENERIC_MAPPING ExpDesktopMapping =
 };
 
 OB_OPEN_METHOD ExpWindowStationObjectOpen = NULL;
-OB_ROS_PARSE_METHOD ExpWindowStationObjectParse = NULL;
+OB_PARSE_METHOD ExpWindowStationObjectParse = NULL;
 OB_DELETE_METHOD ExpWindowStationObjectDelete = NULL;
 OB_ROS_FIND_METHOD ExpWindowStationObjectFind = NULL;
 OB_ROS_CREATE_METHOD ExpDesktopObjectCreate = NULL;
@@ -82,20 +82,28 @@ ExpWinStaObjectFind(PVOID WinStaObject,
 
 NTSTATUS
 STDCALL
-ExpWinStaObjectParse(PVOID Object,
-                     PVOID *NextObject,
-                     PUNICODE_STRING FullPath,
-                     PWSTR *Path,
-                     ULONG Attributes,
-                     POBP_LOOKUP_CONTEXT Context)
+ExpWinStaObjectParse(IN PVOID ParseObject,
+                     IN PVOID ObjectType,
+                     IN OUT PACCESS_STATE AccessState,
+                     IN KPROCESSOR_MODE AccessMode,
+                     IN ULONG Attributes,
+                     IN OUT PUNICODE_STRING CompleteName,
+                     IN OUT PUNICODE_STRING RemainingName,
+                     IN OUT PVOID Context OPTIONAL,
+                     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+                     OUT PVOID *Object)
 {
     /* Call the Registered Callback */
-    return ExpWindowStationObjectParse(Object,
-                                       NextObject,
-                                       FullPath,
-                                       Path,
+    return ExpWindowStationObjectParse(ParseObject,
+                                       ObjectType,
+                                       AccessState,
+                                       AccessMode,
                                        Attributes,
-                                       Context);
+                                       CompleteName,
+                                       RemainingName,
+                                       Context,
+                                       SecurityQos,
+                                       Object);
 }
 
 NTSTATUS

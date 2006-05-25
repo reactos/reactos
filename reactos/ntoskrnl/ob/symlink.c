@@ -86,16 +86,22 @@ ObpDeleteSymbolicLink(PVOID ObjectBody)
 *--*/
 NTSTATUS
 NTAPI
-ObpParseSymbolicLink(PVOID Object,
-                     PVOID * NextObject,
-                     PUNICODE_STRING FullPath,
-                     PWSTR * RemainingPath,
-                     ULONG Attributes)
+ObpParseSymbolicLink(IN PVOID ParsedObject,
+                     IN PVOID ObjectType,
+                     IN OUT PACCESS_STATE AccessState,
+                     IN KPROCESSOR_MODE AccessMode,
+                     IN ULONG Attributes,
+                     IN OUT PUNICODE_STRING FullPath,
+                     IN OUT PUNICODE_STRING RemainingName,
+                     IN OUT PVOID Context OPTIONAL,
+                     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+                     OUT PVOID *NextObject)
 {
-    POBJECT_SYMBOLIC_LINK SymlinkObject = (POBJECT_SYMBOLIC_LINK)Object;
+    POBJECT_SYMBOLIC_LINK SymlinkObject = (POBJECT_SYMBOLIC_LINK)ParsedObject;
     PUNICODE_STRING TargetPath;
     PWSTR NewTargetPath;
     ULONG LengthUsed, MaximumLength, RemainLength;
+    PWSTR *RemainingPath = &RemainingName->Buffer;
 
     /*
     * Stop parsing if the entire path has been parsed and
@@ -186,7 +192,7 @@ ObInitSymbolicLinkImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = SYMBOLIC_LINK_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObjectTypeInitializer.ParseProcedure = (OB_PARSE_METHOD)ObpParseSymbolicLink;
+    ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
     ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObSymbolicLinkType);
 }

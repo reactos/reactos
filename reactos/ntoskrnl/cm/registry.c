@@ -369,7 +369,7 @@ CmInitializeRegistry(VOID)
   ObjectTypeInitializer.ValidAccessMask = KEY_ALL_ACCESS;
   ObjectTypeInitializer.UseDefaultObject = TRUE;
   ObjectTypeInitializer.DeleteProcedure = CmiObjectDelete;
-  ObjectTypeInitializer.ParseProcedure = (PVOID)CmiObjectParse;
+  ObjectTypeInitializer.ParseProcedure = CmiObjectParse;
   ObjectTypeInitializer.SecurityProcedure = CmiObjectSecurity;
   ObjectTypeInitializer.QueryNameProcedure = CmiObjectQueryName;
 

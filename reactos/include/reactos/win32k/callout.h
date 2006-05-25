@@ -10,7 +10,7 @@ typedef struct _W32_CALLOUT_DATA
     OB_OPEN_METHOD DesktopOpen;
     OB_DELETE_METHOD DesktopDelete;
     OB_DELETE_METHOD WinStaDelete;
-    OB_ROS_PARSE_METHOD WinStaParse;
+    OB_PARSE_METHOD WinStaParse;
     OB_OPEN_METHOD WinStaOpen;
     OB_ROS_FIND_METHOD WinStaFind;
     OB_ROS_CREATE_METHOD DesktopCreate;

@@ -21,7 +21,7 @@ static PKWIN32_PROCESS_CALLOUT PspWin32ProcessCallback = NULL;
 static PKWIN32_THREAD_CALLOUT PspWin32ThreadCallback = NULL;
 
 extern OB_OPEN_METHOD ExpWindowStationObjectOpen;
-extern OB_ROS_PARSE_METHOD ExpWindowStationObjectParse;
+extern OB_PARSE_METHOD ExpWindowStationObjectParse;
 extern OB_DELETE_METHOD ExpWindowStationObjectDelete;
 extern OB_ROS_FIND_METHOD ExpWindowStationObjectFind;
 extern OB_ROS_CREATE_METHOD ExpDesktopObjectCreate;

@@ -382,7 +382,7 @@ DriverEntry (
      * Register Object Manager Callbacks
      */
     CalloutData.WinStaOpen = IntWinStaObjectOpen;
-    CalloutData.WinStaParse = (OB_ROS_PARSE_METHOD)IntWinStaObjectParse;
+    CalloutData.WinStaParse = IntWinStaObjectParse;
     CalloutData.WinStaDelete = IntWinStaObjectDelete;
     CalloutData.WinStaFind = IntWinStaObjectFind;
     CalloutData.DesktopCreate = IntDesktopObjectCreate;

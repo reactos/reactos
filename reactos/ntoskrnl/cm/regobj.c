@@ -24,12 +24,18 @@ CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
 
 /* FUNCTONS *****************************************************************/
 
+
 NTSTATUS STDCALL
-CmiObjectParse(PVOID ParsedObject,
-	       PVOID *NextObject,
-	       PUNICODE_STRING FullPath,
-	       PWSTR *Path,
-	       ULONG Attributes)
+CmiObjectParse(IN PVOID ParsedObject,
+               IN PVOID ObjectType,
+               IN OUT PACCESS_STATE AccessState,
+               IN KPROCESSOR_MODE AccessMode,
+               IN ULONG Attributes,
+               IN OUT PUNICODE_STRING FullPath,
+               IN OUT PUNICODE_STRING RemainingName,
+               IN OUT PVOID Context OPTIONAL,
+               IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+               OUT PVOID *NextObject)
 {
   BLOCK_OFFSET BlockOffset;
   PKEY_OBJECT FoundObject;
@@ -42,6 +48,7 @@ CmiObjectParse(PVOID ParsedObject,
   UNICODE_STRING LinkPath;
   UNICODE_STRING TargetPath;
   UNICODE_STRING KeyName;
+  PWSTR *Path = &RemainingName->Buffer;
 
   ParsedKey = ParsedObject;
 

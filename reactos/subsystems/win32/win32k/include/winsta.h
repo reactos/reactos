@@ -70,12 +70,16 @@ IntWinStaObjectFind(PVOID Object,
 
 NTSTATUS
 STDCALL
-IntWinStaObjectParse(PVOID Object,
-                     PVOID *NextObject,
-                     PUNICODE_STRING FullPath,
-                     PWSTR *Path,
-                     ULONG Attributes,
-                     PVOID Context);
+IntWinStaObjectParse(IN PVOID ParseObject,
+                     IN PVOID ObjectType,
+                     IN OUT PACCESS_STATE AccessState,
+                     IN KPROCESSOR_MODE AccessMode,
+                     IN ULONG Attributes,
+                     IN OUT PUNICODE_STRING CompleteName,
+                     IN OUT PUNICODE_STRING RemainingName,
+                     IN OUT PVOID Context OPTIONAL,
+                     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+                     OUT PVOID *Object);
 
 NTSTATUS FASTCALL
 IntValidateWindowStationHandle(
