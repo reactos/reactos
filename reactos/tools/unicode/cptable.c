@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdlib.h>
@@ -156,7 +156,7 @@ static const union cptable * const cptables[60] =
 
 static int cmp_codepage( const void *codepage, const void *entry )
 {
-    return *(unsigned int *)codepage - (*(const union cptable *const *)entry)->info.codepage;
+    return *(const unsigned int *)codepage - (*(const union cptable *const *)entry)->info.codepage;
 }
 
 

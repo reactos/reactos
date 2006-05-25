@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_UNICODE_H
@@ -95,18 +95,18 @@ extern int snprintfW( WCHAR *str, size_t len, const WCHAR *format, ... );
 extern int vsprintfW( WCHAR *str, const WCHAR *format, va_list valist );
 extern int vsnprintfW( WCHAR *str, size_t len, const WCHAR *format, va_list valist );
 
-static inline int is_dbcs_leadbyte( const union cptable *table, unsigned char ch )
+extern inline int wine_is_dbcs_leadbyte( const union cptable *table, unsigned char ch )
 {
     return (table->info.char_size == 2) && (table->dbcs.cp2uni_leadbytes[ch]);
 }
 
-static inline WCHAR tolowerW( WCHAR ch )
+extern inline WCHAR tolowerW( WCHAR ch )
 {
     extern WINE_UNICODE_API const WCHAR wine_casemap_lower[];
     return ch + wine_casemap_lower[wine_casemap_lower[ch >> 8] + (ch & 0xff)];
 }
 
-static inline WCHAR toupperW( WCHAR ch )
+extern inline WCHAR toupperW( WCHAR ch )
 {
     extern WINE_UNICODE_API const WCHAR wine_casemap_upper[];
     return ch + wine_casemap_upper[wine_casemap_upper[ch >> 8] + (ch & 0xff)];
@@ -114,177 +114,172 @@ static inline WCHAR toupperW( WCHAR ch )
 
 /* the character type contains the C1_* flags in the low 12 bits */
 /* and the C2_* type in the high 4 bits */
-static inline unsigned short get_char_typeW( WCHAR ch )
+extern inline unsigned short get_char_typeW( WCHAR ch )
 {
     extern WINE_UNICODE_API const unsigned short wine_wctype_table[];
     return wine_wctype_table[wine_wctype_table[ch >> 8] + (ch & 0xff)];
 }
 
-inline static int iscntrlW( WCHAR wc )
+extern inline int iscntrlW( WCHAR wc )
 {
     return get_char_typeW(wc) & C1_CNTRL;
 }
 
-inline static int ispunctW( WCHAR wc )
+extern inline int ispunctW( WCHAR wc )
 {
     return get_char_typeW(wc) & C1_PUNCT;
 }
 
-inline static int isspaceW( WCHAR wc )
+extern inline int isspaceW( WCHAR wc )
 {
     return get_char_typeW(wc) & C1_SPACE;
 }
 
-inline static int isdigitW( WCHAR wc )
+extern inline int isdigitW( WCHAR wc )
 {
     return get_char_typeW(wc) & C1_DIGIT;
 }
 
-inline static int isxdigitW( WCHAR wc )
+extern inline int isxdigitW( WCHAR wc )
 {
     return get_char_typeW(wc) & C1_XDIGIT;
 }
 
-inline static int islowerW( WCHAR wc )
+extern inline int islowerW( WCHAR wc )
 {
     return get_char_typeW(wc) & C1_LOWER;
 }
 
-inline static int isupperW( WCHAR wc )
+extern inline int isupperW( WCHAR wc )
 {
     return get_char_typeW(wc) & C1_UPPER;
 }
 
-inline static int isalnumW( WCHAR wc )
+extern inline int isalnumW( WCHAR wc )
 {
     return get_char_typeW(wc) & (C1_ALPHA|C1_DIGIT|C1_LOWER|C1_UPPER);
 }
 
-inline static int isalphaW( WCHAR wc )
+extern inline int isalphaW( WCHAR wc )
 {
     return get_char_typeW(wc) & (C1_ALPHA|C1_LOWER|C1_UPPER);
 }
 
-inline static int isgraphW( WCHAR wc )
+extern inline int isgraphW( WCHAR wc )
 {
     return get_char_typeW(wc) & (C1_ALPHA|C1_PUNCT|C1_DIGIT|C1_LOWER|C1_UPPER);
 }
 
-inline static int isprintW( WCHAR wc )
+extern inline int isprintW( WCHAR wc )
 {
     return get_char_typeW(wc) & (C1_ALPHA|C1_BLANK|C1_PUNCT|C1_DIGIT|C1_LOWER|C1_UPPER);
 }
 
 /* some useful string manipulation routines */
 
-static inline unsigned int strlenW( const WCHAR *str )
+extern inline unsigned int strlenW( const WCHAR *str )
 {
     const WCHAR *s = str;
     while (*s) s++;
     return s - str;
 }
 
-static inline WCHAR *strcpyW( WCHAR *dst, const WCHAR *src )
+extern inline WCHAR *strcpyW( WCHAR *dst, const WCHAR *src )
 {
     WCHAR *p = dst;
     while ((*p++ = *src++));
     return dst;
 }
 
-static inline int strcmpW( const WCHAR *str1, const WCHAR *str2 )
+/* strncpy doesn't do what you think, don't use it */
+#define strncpyW(d,s,n) error do_not_use_strncpyW_use_lstrcpynW_or_memcpy_instead
+
+extern inline int strcmpW( const WCHAR *str1, const WCHAR *str2 )
 {
     while (*str1 && (*str1 == *str2)) { str1++; str2++; }
     return *str1 - *str2;
 }
 
-static inline int strncmpW( const WCHAR *str1, const WCHAR *str2, int n )
+extern inline int strncmpW( const WCHAR *str1, const WCHAR *str2, int n )
 {
     if (n <= 0) return 0;
     while ((--n > 0) && *str1 && (*str1 == *str2)) { str1++; str2++; }
     return *str1 - *str2;
 }
 
-static inline WCHAR *strncpyW( WCHAR *str1, const WCHAR *str2, int n )
-{
-    WCHAR *ret = str1;
-    while (n-- > 0) if (!(*str1++ = *str2++)) break;
-    while (n-- > 0) *str1++ = 0;
-    return ret;
-}
-
-static inline WCHAR *strcatW( WCHAR *dst, const WCHAR *src )
+extern inline WCHAR *strcatW( WCHAR *dst, const WCHAR *src )
 {
     strcpyW( dst + strlenW(dst), src );
     return dst;
 }
 
-static inline WCHAR *strchrW( const WCHAR *str, WCHAR ch )
+extern inline WCHAR *strchrW( const WCHAR *str, WCHAR ch )
 {
-    for ( ; *str; str++) if (*str == ch) return (WCHAR *)str;
+    do { if (*str == ch) return (WCHAR *)str; } while (*str++);
     return NULL;
 }
 
-static inline WCHAR *strrchrW( const WCHAR *str, WCHAR ch )
+extern inline WCHAR *strrchrW( const WCHAR *str, WCHAR ch )
 {
     WCHAR *ret = NULL;
-    for ( ; *str; str++) if (*str == ch) ret = (WCHAR *)str;
+    do { if (*str == ch) ret = (WCHAR *)str; } while (*str++);
     return ret;
 }
 
-static inline WCHAR *strpbrkW( const WCHAR *str, const WCHAR *accept )
+extern inline WCHAR *strpbrkW( const WCHAR *str, const WCHAR *accept )
 {
     for ( ; *str; str++) if (strchrW( accept, *str )) return (WCHAR *)str;
     return NULL;
 }
 
-static inline size_t strspnW( const WCHAR *str, const WCHAR *accept )
+extern inline size_t strspnW( const WCHAR *str, const WCHAR *accept )
 {
     const WCHAR *ptr;
     for (ptr = str; *ptr; ptr++) if (!strchrW( accept, *ptr )) break;
     return ptr - str;
 }
 
-static inline size_t strcspnW( const WCHAR *str, const WCHAR *reject )
+extern inline size_t strcspnW( const WCHAR *str, const WCHAR *reject )
 {
     const WCHAR *ptr;
     for (ptr = str; *ptr; ptr++) if (strchrW( reject, *ptr )) break;
     return ptr - str;
 }
 
-static inline WCHAR *strlwrW( WCHAR *str )
+extern inline WCHAR *strlwrW( WCHAR *str )
 {
     WCHAR *ret = str;
     while ((*str = tolowerW(*str))) str++;
     return ret;
 }
 
-static inline WCHAR *struprW( WCHAR *str )
+extern inline WCHAR *struprW( WCHAR *str )
 {
     WCHAR *ret = str;
     while ((*str = toupperW(*str))) str++;
     return ret;
 }
 
-static inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
+extern inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
     const WCHAR *end;
     for (end = ptr + n; ptr < end; ptr++) if (*ptr == ch) return (WCHAR *)ptr;
     return NULL;
 }
 
-static inline WCHAR *memrchrW( const WCHAR *ptr, WCHAR ch, size_t n )
+extern inline WCHAR *memrchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
     const WCHAR *end, *ret = NULL;
     for (end = ptr + n; ptr < end; ptr++) if (*ptr == ch) ret = ptr;
     return (WCHAR *)ret;
 }
 
-static inline long int atolW( const WCHAR *str )
+extern inline long int atolW( const WCHAR *str )
 {
     return strtolW( str, (WCHAR **)0, 10 );
 }
 
-static inline int atoiW( const WCHAR *str )
+extern inline int atoiW( const WCHAR *str )
 {
     return (int)atolW( str );
 }
