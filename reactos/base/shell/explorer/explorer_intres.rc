@@ -119,6 +119,7 @@ BEGIN
     "#include ""explorer-jp.rc""\r\n"
     "#include ""explorer-hu.rc""\r\n"
     "#include ""explorer-uk.rc""\r\n"
+    "#include ""explorer-it.rc""\r\n"
     "\r\n"
     "#ifndef __WINDRES__\r\n"
     "#include ""explorer-cn.rc""\r\n"
@@ -214,6 +215,7 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.ma
 #include "explorer-jp.rc"
 #include "explorer-hu.rc"
 #include "explorer-uk.rc"
+#include "explorer-it.rc"
 
 #ifndef __WINDRES__
 #include "explorer-cn.rc"
