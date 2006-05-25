@@ -1,8 +1,17 @@
 /* $Id$
  *
- * reactos/lib/kernel32/misc/sysinfo.c
- *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            dll/win32/kernel32/misc/sysinfo.c
+ * PURPOSE:         SystemInfo functions
+ * PROGRAMMER:      Emanuele Aliberti
+ *                  Christoph von Wittich
+ *                  Thomas Weidenmueller
+ *                  Gunnar Andre Dalsnes
+ * UPDATE HISTORY:
+ *     2000-04-26 created
  */
+
 #include <k32.h>
 
 #define NDEBUG

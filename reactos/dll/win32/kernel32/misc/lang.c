@@ -1,9 +1,18 @@
-/*
- * PROJECT:     ReactOS user mode libraries
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        reactos/lib/kernel32/misc/lang.c
- * PURPOSE:
- * PROGRAMMERS: ???
+/* $Id$
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            dll/win32/kernel32/file/lang.c
+ * PURPOSE:         National Laguage Support related funcs
+ * PROGRAMMER:      Thomas Weidenmueller
+ *                  Gunnar Andre Dalsnes
+ *                  Aleksey Bragin
+ *                  Eric Kohl
+ *                  Alex Ionescu
+ *                  Richard Campbell
+ *                  James Tabor
+ * UPDATE HISTORY:
+ *                  Created 21/09/2003
  */
 
 #include <k32.h>
@@ -792,6 +801,7 @@ __inline static UINT get_lcid_codepage( LCID lcid )
 /*
  * @implemented
  */
+/* Synced to Wine-20102004 */
 int
 STDCALL
 CompareStringA (

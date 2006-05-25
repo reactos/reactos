@@ -1,6 +1,15 @@
 /* $Id$
  *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            dll/win32/kernel32/misc/muldiv.c
+ * PURPOSE:         
+ * PROGRAMMER:      Casper S. Hornstrup
+ *                  Gunnar Andre Dalsnes
+ * UPDATE HISTORY:
+ *                  Created 06/12/2002
  */
+
 #include <k32.h>
 
 

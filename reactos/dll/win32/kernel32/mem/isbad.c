@@ -1,10 +1,16 @@
 /* $Id$
  *
- * lib/kernel32/mem/isbad.c
- *
- * ReactOS Operating System
- *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            dll/win32/kernel32/mem/isbad.c
+ * PURPOSE:         
+ * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ *                  Ge van Geldorp
+ *                  Filip Navara
+ * UPDATE HISTORY:
+ *                  Created 03/10/99
  */
+
 #include <k32.h>
 
 #define NDEBUG

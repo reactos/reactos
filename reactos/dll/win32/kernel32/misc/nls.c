@@ -1,24 +1,15 @@
-/*
- * ReactOS Kernel
- * Copyright (C) 2004 ReactOS Team
+/* $Id$
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/**
- * @brief National Language Support.
- * @author Filip Navara
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            dll/win32/kernel32/misc/nls.c
+ * PURPOSE:         National Language Support
+ * PROGRAMMER:      Filip Navara
+ *                  Hartmut Birr
+ *                  Gunnar Andre Dalsnes
+ *                  Thomas Weidenmueller
+ * UPDATE HISTORY:
+ *                  Created 24/08/2004
  */
 
 /* INCLUDES *******************************************************************/

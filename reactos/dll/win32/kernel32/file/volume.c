@@ -82,6 +82,7 @@ InternalOpenDirW(LPCWSTR DirName,
 /*
  * @implemented
  */
+/* Synced to Wine-? */
 DWORD STDCALL
 GetLogicalDriveStringsA(DWORD nBufferLength,
 			LPSTR lpBuffer)
@@ -119,6 +120,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
 /*
  * @implemented
  */
+/* Synced to Wine-? */
 DWORD STDCALL
 GetLogicalDriveStringsW(DWORD nBufferLength,
 			LPWSTR lpBuffer)
@@ -154,6 +156,7 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
 /*
  * @implemented
  */
+/* Synced to Wine-? */
 DWORD STDCALL
 GetLogicalDrives(VOID)
 {
