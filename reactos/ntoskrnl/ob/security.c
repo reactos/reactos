@@ -105,7 +105,7 @@ ObGetObjectSecurity(IN PVOID Object,
     NTSTATUS Status;
     PAGED_CODE();
 
-    Header = BODY_TO_HEADER(Object);
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
     if (Header->Type == NULL) return STATUS_UNSUCCESSFUL;
 
     if (Header->Type->TypeInfo.SecurityProcedure == NULL)
@@ -267,7 +267,7 @@ NtQuerySecurityObject(IN HANDLE Handle,
 
     if (NT_SUCCESS(Status))
     {
-        Header = BODY_TO_HEADER(Object);
+        Header = OBJECT_TO_OBJECT_HEADER(Object);
         ASSERT(Header->Type != NULL);
 
         Status = Header->Type->TypeInfo.SecurityProcedure(
@@ -376,7 +376,7 @@ NtSetSecurityObject(IN HANDLE Handle,
 
         if (NT_SUCCESS(Status))
         {
-            Header = BODY_TO_HEADER(Object);
+            Header = OBJECT_TO_OBJECT_HEADER(Object);
             ASSERT(Header->Type != NULL);
 
             Status = Header->Type->TypeInfo.SecurityProcedure(

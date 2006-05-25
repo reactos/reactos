@@ -110,7 +110,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
     while (TRUE)
     {
-        CurrentHeader = BODY_TO_HEADER(CurrentObject);
+        CurrentHeader = OBJECT_TO_OBJECT_HEADER(CurrentObject);
 
         /* Loop as long as we're dealing with a directory */
         while (CurrentHeader->Type == ObDirectoryType)
@@ -164,7 +164,7 @@ Next:
             }
             ObDereferenceObject(CurrentObject);
             CurrentObject = NextObject;
-            CurrentHeader = BODY_TO_HEADER(CurrentObject);
+            CurrentHeader = OBJECT_TO_OBJECT_HEADER(CurrentObject);
         }
 
         if (CurrentHeader->Type->TypeInfo.ParseProcedure == NULL)
@@ -236,8 +236,8 @@ ObQueryNameString(IN  PVOID Object,
     DPRINT("ObQueryNameString: %x, %x\n", Object, ObjectNameInfo);
 
     /* Get the Kernel Meta-Structures */
-    ObjectHeader = BODY_TO_HEADER(Object);
-    LocalInfo = HEADER_TO_OBJECT_NAME(ObjectHeader);
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    LocalInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
     /* Check if a Query Name Procedure is available */
     if (ObjectHeader->Type->TypeInfo.QueryNameProcedure) 
@@ -299,7 +299,7 @@ ObQueryNameString(IN  PVOID Object,
         while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory)) 
         {
             /* Get the Name Information */
-            LocalInfo = HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ParentDirectory));
+            LocalInfo = OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ParentDirectory));
 
             /* Add the size of the Directory Name */
             if (LocalInfo && LocalInfo->Directory) 
@@ -336,7 +336,7 @@ ObQueryNameString(IN  PVOID Object,
      * it's easier to start off from the Name we have and walk up the
      * parent directories. We use the same logic as Name Length calculation.
      */
-    LocalInfo = HEADER_TO_OBJECT_NAME(ObjectHeader);
+    LocalInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
     ObjectName = (PWCH)((ULONG_PTR)ObjectNameInfo + *ReturnLength);
     *--ObjectName = UNICODE_NULL;
 
@@ -362,7 +362,7 @@ ObQueryNameString(IN  PVOID Object,
         while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory)) 
         {
             /* Get the name information */
-            LocalInfo = HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ParentDirectory));
+            LocalInfo = OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ParentDirectory));
 
             /* Add the "\" */
             *(--ObjectName) = OBJ_NAME_PATH_SEPARATOR;

@@ -335,7 +335,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
     if (NT_SUCCESS(Status))
     {
         /* Get the Waitable Object */
-        WaitableObject = BODY_TO_HEADER(Object)->Type->DefaultObject;
+        WaitableObject = OBJECT_TO_OBJECT_HEADER(Object)->Type->DefaultObject;
 
         /* Is it an offset for internal objects? */
         if (IsPointerOffset(WaitableObject))
@@ -452,7 +452,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     }
 
     /* Get the real waitable object */
-    WaitableObject = BODY_TO_HEADER(WaitObj)->Type->DefaultObject;
+    WaitableObject = OBJECT_TO_OBJECT_HEADER(WaitObj)->Type->DefaultObject;
 
     /* Handle internal offset */
     if (IsPointerOffset(WaitableObject))
@@ -463,7 +463,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     }
     
     /* Check Signal Object Type */
-    Type = BODY_TO_HEADER(WaitObj)->Type;
+    Type = OBJECT_TO_OBJECT_HEADER(WaitObj)->Type;
     if (Type == ExEventObjectType)
     {
         /* Set the Event */

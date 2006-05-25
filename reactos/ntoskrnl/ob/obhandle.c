@@ -45,7 +45,7 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
     POBJECT_HEADER ObjectHeader;
     OBP_LOOKUP_CONTEXT Context;
 
-    ObjectHeader = BODY_TO_HEADER(ObjectBody);
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
     ASSERT (ObjectHeader->PointerCount > 0);
     if (Permanent)
     {
@@ -55,13 +55,13 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
     {
         ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
         if (ObjectHeader->HandleCount == 0 &&
-            HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory)
+            OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory)
         {
             /* Make sure it's still inserted */
-            Context.Directory = HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory;
+            Context.Directory = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory;
             Context.DirectoryLocked = TRUE;
-            if (ObpLookupEntryDirectory(HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory,
-                                        &HEADER_TO_OBJECT_NAME(ObjectHeader)->Name,
+            if (ObpLookupEntryDirectory(OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory,
+                                        &OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Name,
                                         0,
                                         FALSE,
                                         &Context))
@@ -111,12 +111,12 @@ ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
 static VOID
 ObpDecrementHandleCount(PVOID ObjectBody)
 {
-    POBJECT_HEADER ObjectHeader = BODY_TO_HEADER(ObjectBody);
+    POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
     LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
     OBP_LOOKUP_CONTEXT Context;
     DPRINT("Header: %x\n", ObjectHeader);
     DPRINT("NewHandleCount: %x\n", NewHandleCount);
-    DPRINT("HEADER_TO_OBJECT_NAME: %x\n", HEADER_TO_OBJECT_NAME(ObjectHeader));
+    DPRINT("OBJECT_HEADER_TO_NAME_INFO: %x\n", OBJECT_HEADER_TO_NAME_INFO(ObjectHeader));
 
     if ((ObjectHeader->Type != NULL) &&
         (ObjectHeader->Type->TypeInfo.CloseProcedure != NULL))
@@ -128,8 +128,8 @@ ObpDecrementHandleCount(PVOID ObjectBody)
 
     if(NewHandleCount == 0)
     {
-        if(HEADER_TO_OBJECT_NAME(ObjectHeader) && 
-            HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory != NULL &&
+        if(OBJECT_HEADER_TO_NAME_INFO(ObjectHeader) && 
+            OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory != NULL &&
             !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
         {
             /* delete the object from the namespace when the last handle got closed.
@@ -137,10 +137,10 @@ ObpDecrementHandleCount(PVOID ObjectBody)
             if it's not a permanent object. */
 
             /* Make sure it's still inserted */
-            Context.Directory = HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory;
+            Context.Directory = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory;
             Context.DirectoryLocked = TRUE;
-            if (ObpLookupEntryDirectory(HEADER_TO_OBJECT_NAME(ObjectHeader)->Directory,
-                &HEADER_TO_OBJECT_NAME(ObjectHeader)->Name,
+            if (ObpLookupEntryDirectory(OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory,
+                &OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Name,
                 0,
                 FALSE,
                 &Context))
@@ -599,7 +599,7 @@ ObpCreateHandle(PVOID ObjectBody,
 
     CurrentProcess = PsGetCurrentProcess();
 
-    ObjectHeader = BODY_TO_HEADER(ObjectBody);
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
 
     /* check that this is a valid kernel pointer */
     ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
@@ -739,7 +739,7 @@ ObGetObjectHandleCount(PVOID Object)
     PAGED_CODE();
 
     ASSERT(Object);
-    Header = BODY_TO_HEADER(Object);
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
 
     return Header->HandleCount;
 }
@@ -935,9 +935,9 @@ ObInsertObject(IN PVOID Object,
     PAGED_CODE();
 
     /* Get the Header and Create Info */
-    Header = BODY_TO_HEADER(Object);
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectCreateInfo = Header->ObjectCreateInfo;
-    ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
+    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
 
     /* First try to find the Object */
     if (ObjectNameInfo && ObjectNameInfo->Name.Buffer)
@@ -961,7 +961,7 @@ ObInsertObject(IN PVOID Object,
         if (FoundObject)
         {
             DPRINT("Getting header: %x\n", FoundObject);
-            FoundHeader = BODY_TO_HEADER(FoundObject);
+            FoundHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
         }
 
         if (FoundHeader && RemainingPath.Buffer == NULL)
@@ -986,7 +986,7 @@ ObInsertObject(IN PVOID Object,
         PWSTR BufferPos = RemainingPath.Buffer;
         ULONG Delta = 0;
 
-        ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
+        ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
 
         if (BufferPos[0] == L'\\')
         {

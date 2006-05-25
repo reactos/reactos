@@ -147,20 +147,20 @@ ObInit(VOID)
     Context.Directory = ObpTypeDirectoryObject;
     Context.DirectoryLocked = TRUE;
     if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
-                                 &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ObTypeObjectType))->Name,
+                                 &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ObTypeObjectType))->Name,
                                  OBJ_CASE_INSENSITIVE,
                                  FALSE,
                                  &Context))
     {
-        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, BODY_TO_HEADER(ObTypeObjectType));
+        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, OBJECT_TO_OBJECT_HEADER(ObTypeObjectType));
     }
     if (!ObpLookupEntryDirectory(ObpTypeDirectoryObject,
-                                 &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ObDirectoryType))->Name,
+                                 &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ObDirectoryType))->Name,
                                  OBJ_CASE_INSENSITIVE,
                                  FALSE,
                                  &Context))
     {
-        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, BODY_TO_HEADER(ObDirectoryType));
+        ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, OBJECT_TO_OBJECT_HEADER(ObDirectoryType));
     }
 
     /* Create 'symbolic link' object type */

@@ -64,7 +64,7 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
     NewEntry->HashValue = Context->HashValue;
 
     /* Get the Object Name Information */
-    HeaderNameInfo = HEADER_TO_OBJECT_NAME(ObjectHeader);
+    HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
     /* Get the Allocated entry */
     AllocatedEntry = &Parent->HashBuckets[Context->HashIndex];
@@ -184,10 +184,10 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         if (CurrentEntry->HashValue == HashValue)
         {
             /* Make sure that it has a name */
-            ASSERT(BODY_TO_HEADER(CurrentEntry->Object)->NameInfoOffset != 0);
+            ASSERT(OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object)->NameInfoOffset != 0);
 
             /* Get the name information */
-            HeaderNameInfo = HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(CurrentEntry->Object));
+            HeaderNameInfo = OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(CurrentEntry->Object));
 
             /* Do the names match? */
             if ((Name->Length == HeaderNameInfo->Name.Length) &&

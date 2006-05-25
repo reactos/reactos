@@ -56,11 +56,11 @@ ObpDeleteObject(POBJECT_HEADER Header)
         ObpRemoveSecurityDescriptor(Header->SecurityDescriptor);
     }
 
-    if (HEADER_TO_OBJECT_NAME(Header))
+    if (OBJECT_HEADER_TO_NAME_INFO(Header))
     {
-        if(HEADER_TO_OBJECT_NAME(Header)->Name.Buffer)
+        if(OBJECT_HEADER_TO_NAME_INFO(Header)->Name.Buffer)
         {
-            ExFreePool(HEADER_TO_OBJECT_NAME(Header)->Name.Buffer);
+            ExFreePool(OBJECT_HEADER_TO_NAME_INFO(Header)->Name.Buffer);
         }
     }
     if (Header->ObjectCreateInfo)
@@ -70,15 +70,15 @@ ObpDeleteObject(POBJECT_HEADER Header)
     }
 
     /* To find the header, walk backwards from how we allocated */
-    if ((CreatorInfo = HEADER_TO_CREATOR_INFO(Header)))
+    if ((CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header)))
     {
         HeaderLocation = CreatorInfo;
     }   
-    if ((NameInfo = HEADER_TO_OBJECT_NAME(Header)))
+    if ((NameInfo = OBJECT_HEADER_TO_NAME_INFO(Header)))
     {
         HeaderLocation = NameInfo;
     }
-    if ((HandleInfo = HEADER_TO_HANDLE_INFO(Header)))
+    if ((HandleInfo = OBJECT_HEADER_TO_HANDLE_INFO(Header)))
     {
         HeaderLocation = HandleInfo;
     }
@@ -557,7 +557,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     Status = ObpAllocateObject(NULL, 
                                TypeName,
                                ObTypeObjectType, 
-                               OBJECT_ALLOC_SIZE(sizeof(OBJECT_TYPE)),
+                               sizeof(OBJECT_TYPE) + sizeof(OBJECT_HEADER),
                                (POBJECT_HEADER*)&Header);
     if (!NT_SUCCESS(Status))
     {
@@ -686,10 +686,10 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
     UNICODE_STRING ObjectName;
     POBJECT_HEADER Header;
-    
+
     DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n", 
             Type, ObjectAttributes, Object);
-            
+
     /* Allocate a Buffer for the Object Create Info */
     DPRINT("Allocating Create Buffer\n");
     ObjectCreateInfo = ExAllocatePoolWithTag(NonPagedPool, 
@@ -703,17 +703,16 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
                                         Type,
                                         ObjectCreateInfo,
                                         &ObjectName);
-                                        
+
     if (NT_SUCCESS(Status))
     {
         /* Allocate the Object */
         DPRINT("Allocating: %wZ\n", &ObjectName);
         Status = ObpAllocateObject(ObjectCreateInfo,
                                    &ObjectName,
-                                   Type, 
-                                   OBJECT_ALLOC_SIZE(ObjectSize), 
+                                   Type,
+                                   ObjectSize + sizeof(OBJECT_HEADER),
                                    &Header);
-                                   
         if (NT_SUCCESS(Status))
         {
             /* Return the Object */
@@ -723,13 +722,13 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
             /* Return to caller, leave the Capture Info Alive for ObInsert */
             return Status;
         }
-        
+
         /* Release the Capture Info, we don't need it */
         DPRINT1("Allocation failed\n");
         ObpReleaseCapturedAttributes(ObjectCreateInfo);
         if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
     }
-     
+
     /* We failed, so release the Buffer */
     DPRINT1("Capture failed\n");
     ExFreePool(ObjectCreateInfo);
@@ -785,7 +784,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
                                        &HandleInfo);
     if (!NT_SUCCESS (Status)) return Status;
 
-    ObjectHeader = BODY_TO_HEADER(Object);
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
     switch (ObjectInformationClass)
     {

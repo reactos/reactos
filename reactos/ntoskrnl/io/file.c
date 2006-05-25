@@ -63,14 +63,14 @@ IopCreateFile(PVOID ObjectBody,
       return(STATUS_SUCCESS);
     }
 
-  ParentObjectType = BODY_TO_HEADER(Parent)->Type;
+  ParentObjectType = OBJECT_TO_OBJECT_HEADER(Parent)->Type;
 
   if (ParentObjectType != IoDeviceObjectType &&
       ParentObjectType != IoFileObjectType)
     {
       DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
-             &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(Parent))->Name,
-             BODY_TO_HEADER(Parent)->Type->Name.Buffer,
+             &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(Parent))->Name,
+             OBJECT_TO_OBJECT_HEADER(Parent)->Type->Name.Buffer,
              RemainingPath);
       return(STATUS_UNSUCCESSFUL);
     }
@@ -954,7 +954,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       {
          return Status;
       }
-      if (BODY_TO_HEADER(DeviceObject)->Type != IoDeviceObjectType)
+      if (OBJECT_TO_OBJECT_HEADER(DeviceObject)->Type != IoDeviceObjectType)
       {
          ObDereferenceObject (DeviceObject);
          return STATUS_OBJECT_NAME_COLLISION;
@@ -1022,7 +1022,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       }
    }
    RtlMapGenericMask(&DesiredAccess,
-                     &BODY_TO_HEADER(FileObject)->Type->TypeInfo.GenericMapping);
+                     &OBJECT_TO_OBJECT_HEADER(FileObject)->Type->TypeInfo.GenericMapping);
 
    Status = ObInsertObject ((PVOID)FileObject,
                             NULL,

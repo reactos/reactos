@@ -14,20 +14,6 @@
                         GENERIC_EXECUTE |   \
                         GENERIC_ALL)
 
-#define BODY_TO_HEADER(objbdy)                                                 \
-  CONTAINING_RECORD((objbdy), OBJECT_HEADER, Body)
-  
-#define HEADER_TO_OBJECT_NAME(objhdr) ((POBJECT_HEADER_NAME_INFO)              \
-  (!(objhdr)->NameInfoOffset ? NULL: ((PCHAR)(objhdr) - (objhdr)->NameInfoOffset)))
-  
-#define HEADER_TO_HANDLE_INFO(objhdr) ((POBJECT_HEADER_HANDLE_INFO)            \
-  (!(objhdr)->HandleInfoOffset ? NULL: ((PCHAR)(objhdr) - (objhdr)->HandleInfoOffset)))
-  
-#define HEADER_TO_CREATOR_INFO(objhdr) ((POBJECT_HEADER_CREATOR_INFO)          \
-  (!((objhdr)->Flags & OB_FLAG_CREATOR_INFO) ? NULL: ((PCHAR)(objhdr) - sizeof(OBJECT_HEADER_CREATOR_INFO))))
-
-#define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER))
-
 #define KERNEL_HANDLE_FLAG (1 << ((sizeof(HANDLE) * 8) - 1))
 #define ObIsKernelHandle(Handle, ProcessorMode)                                \
   (((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) &&                               \
@@ -44,14 +30,6 @@ extern POBJECT_TYPE ObTypeObjectType;
 extern POBJECT_DIRECTORY NameSpaceRoot;
 extern POBJECT_DIRECTORY ObpTypeDirectoryObject;
 extern PHANDLE_TABLE ObpKernelHandleTable;
-
-typedef NTSTATUS
-(NTAPI *OB_ROS_CREATE_METHOD)(
-    PVOID ObjectBody,
-    PVOID Parent,
-    PWSTR RemainingPath,
-    struct _OBJECT_ATTRIBUTES* ObjectAttributes
-);
 
 BOOLEAN
 NTAPI

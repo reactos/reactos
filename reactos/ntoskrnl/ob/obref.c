@@ -77,7 +77,7 @@ ObGetObjectPointerCount(PVOID Object)
     PAGED_CODE();
 
     ASSERT(Object);
-    Header = BODY_TO_HEADER(Object);
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
 
     return Header->PointerCount;
 }
@@ -89,7 +89,7 @@ ObfReferenceObject(IN PVOID Object)
 
     ASSERT(Object);
 
-    Header = BODY_TO_HEADER(Object);
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
 
     /* No one should be referencing an object once we are deleting it. */
     if (InterlockedIncrement(&Header->PointerCount) == 1 && !(Header->Flags & OB_FLAG_PERMANENT))
@@ -110,7 +110,7 @@ ObfDereferenceObject(IN PVOID Object)
     ASSERT(Object);
 
     /* Extract the object header. */
-    Header = BODY_TO_HEADER(Object);
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
     Permanent = Header->Flags & OB_FLAG_PERMANENT;
 
     /*
@@ -142,16 +142,16 @@ ObReferenceObjectByPointer(IN PVOID Object,
     DPRINT("ObReferenceObjectByPointer(Object %x, ObjectType %x)\n",
         Object,ObjectType);
 
-    Header = BODY_TO_HEADER(Object);
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
 
     if (ObjectType != NULL && Header->Type != ObjectType)
     {
         DPRINT("Failed %p (type was %x %wZ) should be %x %wZ\n",
             Header,
             Header->Type,
-            &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(Header->Type))->Name,
+            &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(Header->Type))->Name,
             ObjectType,
-            &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(ObjectType))->Name);
+            &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ObjectType))->Name);
         return(STATUS_UNSUCCESSFUL);
     }
     if (Header->Type == PsProcessType)
@@ -409,7 +409,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
     if (DesiredAccess & GENERIC_ACCESS)
     {
         RtlMapGenericMask(&DesiredAccess,
-            &BODY_TO_HEADER(ObjectBody)->Type->TypeInfo.GenericMapping);
+            &OBJECT_TO_OBJECT_HEADER(ObjectBody)->Type->TypeInfo.GenericMapping);
     }
 
     GrantedAccess = HandleEntry->GrantedAccess;
