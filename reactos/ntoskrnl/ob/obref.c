@@ -188,7 +188,8 @@ ObReferenceObjectByPointer(IN PVOID Object,
     return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
                         ULONG Attributes,
                         PACCESS_STATE PassedAccessState,
@@ -204,50 +205,66 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     NTSTATUS Status;
     OBP_LOOKUP_CONTEXT Context;
-
-    PAGED_CODE();
+    AUX_DATA AuxData;
+    ACCESS_STATE AccessState;
 
     /* Capture the name */
-    DPRINT("Capturing Name\n");
     Status = ObpCaptureObjectName(&ObjectName, ObjectPath, AccessMode);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if we didn't get an access state */
+    if (!PassedAccessState)
     {
-        DPRINT("ObpCaptureObjectName() failed (Status %lx)\n", Status);
-        return Status;
+        /* Use our built-in access state */
+        PassedAccessState = &AccessState;
+        Status = SeCreateAccessState(&AccessState,
+                                     &AuxData,
+                                     DesiredAccess,
+                                     &ObjectType->TypeInfo.GenericMapping);
+        if (!NT_SUCCESS(Status)) goto Quickie;
     }
 
-    /* 
-    * Create a fake ObjectCreateInfo structure. Note that my upcoming
-    * ObFindObject refactoring will remove the need for this hack.
-    */
+    /*
+     * Create a fake ObjectCreateInfo structure. Note that my upcoming
+     * ObFindObject refactoring will remove the need for this hack.
+     */
     ObjectCreateInfo.RootDirectory = NULL;
     ObjectCreateInfo.Attributes = Attributes;
-
     Status = ObFindObject(&ObjectCreateInfo,
-        &ObjectName,
-        &Object,
-        &RemainingPath,
-        ObjectType,
-        &Context);
+                          &ObjectName,
+                          &Object,
+                          &RemainingPath,
+                          ObjectType,
+                          &Context,
+                          PassedAccessState,
+                          ParseContext);
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
-    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
-
-    if (!NT_SUCCESS(Status))
-    {
-        return(Status);
-    }
-    DPRINT("RemainingPath.Buffer '%S' Object %p\n", RemainingPath.Buffer, Object);
-
+    /* ROS Hack */
     if (RemainingPath.Buffer != NULL || Object == NULL)
     {
-        DPRINT("Object %p\n", Object);
         *ObjectPtr = NULL;
         RtlFreeUnicodeString (&RemainingPath);
-        return(STATUS_OBJECT_NAME_NOT_FOUND);
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Quickie;
     }
+
+    /* Return the object */
     *ObjectPtr = Object;
-    RtlFreeUnicodeString (&RemainingPath);
-    return(STATUS_SUCCESS);
+
+    /* ROS Hack: Free the remaining path */
+    RtlFreeUnicodeString(&RemainingPath);
+
+    /* Free the access state */
+    if (PassedAccessState == &AccessState)
+    {
+        SeDeleteAccessState(PassedAccessState);
+    }
+
+Quickie:
+    /* Free the captured name if we had one, and return status */
+    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+    return Status;
 }
 
 NTSTATUS STDCALL

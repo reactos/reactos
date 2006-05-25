@@ -727,7 +727,9 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 			            (PVOID*)&ParentKey,
                         &RemainingPath,
                         CmiKeyType,
-                        &Context);
+                        &Context,
+                        NULL,
+                        NULL);
      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
   if (!NT_SUCCESS(Status))

@@ -27,7 +27,9 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
              PVOID* ReturnedObject,
              PUNICODE_STRING RemainingPath,
              POBJECT_TYPE ObjectType,
-             POBP_LOOKUP_CONTEXT Context)
+             POBP_LOOKUP_CONTEXT Context,
+             IN PACCESS_STATE AccessState,
+             IN PVOID ParseContext)
 {
     PVOID NextObject;
     PVOID CurrentObject;

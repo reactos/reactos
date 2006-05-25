@@ -752,7 +752,8 @@ ObGetObjectHandleCount(PVOID Object)
     return Header->HandleCount;
 }
 
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                    IN POBJECT_TYPE ObjectType,
                    IN OUT PVOID ParseContext,
@@ -767,43 +768,54 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     NTSTATUS Status;
     OBP_LOOKUP_CONTEXT Context;
-
+    AUX_DATA AuxData;
+    PGENERIC_MAPPING GenericMapping = NULL;
+    ACCESS_STATE AccessState;
     PAGED_CODE();
 
-    DPRINT("ObOpenObjectByName(...)\n");
-
     /* Capture all the info */
-    DPRINT("Capturing Create Info\n");
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
-        AccessMode,
-        ObjectType,
-        &ObjectCreateInfo,
-        &ObjectName);
-    if (!NT_SUCCESS(Status))
+                                        AccessMode,
+                                        ObjectType,
+                                        &ObjectCreateInfo,
+                                        &ObjectName);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if we didn't get an access state */
+    if (!PassedAccessState)
     {
-        DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-        return Status;
+        /* Try to get the generic mapping if we can */
+        if (ObjectType) GenericMapping = &ObjectType->TypeInfo.GenericMapping;
+
+        /* Use our built-in access state */
+        PassedAccessState = &AccessState;
+        Status = SeCreateAccessState(&AccessState,
+                                     &AuxData,
+                                     DesiredAccess,
+                                     GenericMapping);
+        if (!NT_SUCCESS(Status)) goto Quickie;
     }
 
+    /* Get the security descriptor */
+    if (ObjectCreateInfo.SecurityDescriptor)
+    {
+        /* Save it in the access state */
+        PassedAccessState->SecurityDescriptor =
+            ObjectCreateInfo.SecurityDescriptor;
+    }
+
+    /* Now do the lookup */
     Status = ObFindObject(&ObjectCreateInfo,
-        &ObjectName,
-        &Object,
-        &RemainingPath,
-        ObjectType,
-        &Context);
-    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("ObFindObject() failed (Status %lx)\n", Status);
-        goto Cleanup;
-    }
+                          &ObjectName,
+                          &Object,
+                          &RemainingPath,
+                          ObjectType,
+                          &Context, // Temporary Hack
+                          PassedAccessState,
+                          ParseContext);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
 
-    DPRINT("OBject: %p, Remaining Path: %wZ\n", Object, &RemainingPath);
-    if (Object == NULL)
-    {
-        Status = STATUS_UNSUCCESSFUL;
-        goto Cleanup;
-    }
+    /* ROS Hack */
     if (RemainingPath.Buffer != NULL)
     {
         if (wcschr(RemainingPath.Buffer + 1, L'\\') == NULL)
@@ -813,26 +825,37 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
         goto Cleanup;
     }
 
+    /* Create the actual handle now */
     Status = ObpCreateHandle(Object,
-        DesiredAccess,
-        ObjectCreateInfo.Attributes,
-        Handle);
+                             DesiredAccess,
+                             ObjectCreateInfo.Attributes,
+                             Handle);
 
 Cleanup:
-    if (Object != NULL)
-    {
-        ObDereferenceObject(Object);
-    }
-    RtlFreeUnicodeString(&RemainingPath);
-    ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+    /* Dereference the object */
+    if (Object) ObDereferenceObject(Object);
 
+    /* ROS Hacl: Free the remaining path */
+    RtlFreeUnicodeString(&RemainingPath);
+
+    /* Delete the access state */
+    if (PassedAccessState == &AccessState)
+    {
+        SeDeleteAccessState(PassedAccessState);
+    }
+
+    /* Release the object attributes and return status */
+Quickie:
+    ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
     return Status;
 }
 
 /*
 * @implemented
 */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 ObOpenObjectByPointer(IN PVOID Object,
                       IN ULONG HandleAttributes,
                       IN PACCESS_STATE PassedAccessState,
@@ -842,28 +865,24 @@ ObOpenObjectByPointer(IN PVOID Object,
                       OUT PHANDLE Handle)
 {
     NTSTATUS Status;
-
     PAGED_CODE();
 
-    DPRINT("ObOpenObjectByPointer()\n");
-
+    /* Reference the object */
     Status = ObReferenceObjectByPointer(Object,
-        0,
-        ObjectType,
-        AccessMode);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+                                        0,
+                                        ObjectType,
+                                        AccessMode);
+    if (!NT_SUCCESS(Status)) return Status;
 
+    /* Create the handle */
     Status = ObpCreateHandle(Object,
-        DesiredAccess,
-        HandleAttributes,
-        Handle);
+                             DesiredAccess,
+                             HandleAttributes,
+                             Handle);
 
+    /* ROS Hack: Dereference the object and return */
     ObDereferenceObject(Object);
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS STDCALL
@@ -921,11 +940,9 @@ ObInsertObject(IN PVOID Object,
     PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     OBP_LOOKUP_CONTEXT Context;
-
     PAGED_CODE();
 
     /* Get the Header and Create Info */
-    DPRINT("ObInsertObject: %x\n", Object);
     Header = BODY_TO_HEADER(Object);
     ObjectCreateInfo = Header->ObjectCreateInfo;
     ObjectNameInfo = HEADER_TO_OBJECT_NAME(Header);
@@ -939,7 +956,9 @@ ObInsertObject(IN PVOID Object,
             &FoundObject,
             &RemainingPath,
             NULL,
-            &Context);
+            &Context,
+            NULL,
+            NULL);
         DPRINT("FoundObject: %x, Path: %wZ\n", FoundObject, &RemainingPath);
         if (!NT_SUCCESS(Status))
         {

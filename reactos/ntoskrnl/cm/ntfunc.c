@@ -264,7 +264,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                         (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType,
-                        &Context);
+                        &Context,
+                        NULL,
+                        NULL);
   if (!NT_SUCCESS(Status))
     {
       PostCreateKeyInfo.Object = NULL;
@@ -1333,7 +1335,9 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	                (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType,
-                        &Context);
+                        &Context,
+                        NULL,
+                        NULL);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject() returned 0x%08lx\n", Status);

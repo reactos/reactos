@@ -118,7 +118,9 @@ ObFindObject(
     PVOID* ReturnedObject,
     PUNICODE_STRING RemainingPath,
     POBJECT_TYPE ObjectType,
-    POBP_LOOKUP_CONTEXT Context
+    POBP_LOOKUP_CONTEXT Context,
+    IN PACCESS_STATE AccessState,
+    IN PVOID ParseContext
 );
 
 NTSTATUS
