@@ -23,7 +23,6 @@
 
 #include <w32k.h>
 #include <include/napi.h>
-#include <win32k/callout.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -360,7 +359,7 @@ DriverEntry (
 {
   NTSTATUS Status;
   BOOLEAN Result;
-  W32_CALLOUT_DATA CalloutData;
+  WIN32_CALLOUTS_FPNS CalloutData;
   PVOID GlobalUserHeapBase = NULL;
 
   /*
@@ -381,13 +380,12 @@ DriverEntry (
     /*
      * Register Object Manager Callbacks
      */
-    CalloutData.WinStaOpen = IntWinStaObjectOpen;
-    CalloutData.WinStaParse = IntWinStaObjectParse;
-    CalloutData.WinStaDelete = IntWinStaObjectDelete;
-    CalloutData.DesktopParse = IntDesktopObjectParse;
-    CalloutData.DesktopDelete = IntDesktopObjectDelete;
-    CalloutData.W32ProcessCallout = Win32kProcessCallback;
-    CalloutData.W32ThreadCallout = Win32kThreadCallback;
+    CalloutData.WindowStationOpenProcedure = IntWinStaObjectOpen;
+    CalloutData.WindowStationParseProcedure = IntWinStaObjectParse;
+    CalloutData.WindowStationDeleteProcedure = IntWinStaObjectDelete;
+    CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;
+    CalloutData.ProcessCallout = Win32kProcessCallback;
+    CalloutData.ThreadCallout = Win32kThreadCallback;
     
     /*
      * Register our per-process and per-thread structures.

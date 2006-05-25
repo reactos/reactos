@@ -93,7 +93,6 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     PUNICODE_STRING DesktopName;
 
     /* Set the list pointers and loop the window station */
-    DPRINT1("Creating desktop(%wZ)\n", RemainingName);
     ListHead = &WinStaObject->DesktopListHead;
     NextEntry = ListHead->Flink;
     while (NextEntry != ListHead)
@@ -174,9 +173,9 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 }
 
 VOID STDCALL
-IntDesktopObjectDelete(PVOID DeletedObject)
+IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
-   PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)DeletedObject;
+   PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)Parameters->Object;
 
    DPRINT("Deleting desktop (0x%X)\n", Desktop);
 

@@ -54,32 +54,14 @@ CleanupWindowStationImpl(VOID);
 
 NTSTATUS
 STDCALL
-IntWinStaObjectOpen(IN OB_OPEN_REASON Reason,
-                    IN PEPROCESS Process OPTIONAL,
-                    IN PVOID ObjectBody,
-                    IN ACCESS_MASK GrantedAccess,
-                    IN ULONG HandleCount);
+IntWinStaObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters);
 
 VOID STDCALL
-IntWinStaObjectDelete(PVOID DeletedObject);
-
-PVOID STDCALL
-IntWinStaObjectFind(PVOID Object,
-                    PWSTR Name,
-                    ULONG Attributes);
+IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS
 STDCALL
-IntWinStaObjectParse(IN PVOID ParseObject,
-                     IN PVOID ObjectType,
-                     IN OUT PACCESS_STATE AccessState,
-                     IN KPROCESSOR_MODE AccessMode,
-                     IN ULONG Attributes,
-                     IN OUT PUNICODE_STRING CompleteName,
-                     IN OUT PUNICODE_STRING RemainingName,
-                     IN OUT PVOID Context OPTIONAL,
-                     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-                     OUT PVOID *Object);
+IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS FASTCALL
 IntValidateWindowStationHandle(

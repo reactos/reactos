@@ -61,7 +61,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                       OUT PVOID *Object);
 
 VOID STDCALL
-IntDesktopObjectDelete(PVOID DeletedObject);
+IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 VOID FASTCALL
 IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect);

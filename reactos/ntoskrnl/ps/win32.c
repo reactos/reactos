@@ -13,18 +13,15 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-#include <win32k/callout.h>
 
 /* GLOBALS ******************************************************************/
 
 static PKWIN32_PROCESS_CALLOUT PspWin32ProcessCallback = NULL;
 static PKWIN32_THREAD_CALLOUT PspWin32ThreadCallback = NULL;
-
-extern OB_OPEN_METHOD ExpWindowStationObjectOpen;
-extern OB_PARSE_METHOD ExpWindowStationObjectParse;
-extern OB_DELETE_METHOD ExpWindowStationObjectDelete;
-extern OB_PARSE_METHOD ExpDesktopObjectParse;
-extern OB_DELETE_METHOD ExpDesktopObjectDelete;
+extern PKWIN32_OPENMETHOD_CALLOUT ExpWindowStationObjectOpen;
+extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
+extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
+extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
 
 #ifndef ALEX_CB_REWRITE
 typedef struct _NTW32CALL_SAVED_STATE
@@ -55,16 +52,14 @@ KeSwitchKernelStack(
  */
 VOID 
 STDCALL
-PsEstablishWin32Callouts(PWIN32_CALLOUTS_FPNS calloutData)
+PsEstablishWin32Callouts(PWIN32_CALLOUTS_FPNS CalloutData)
 {
-    PW32_CALLOUT_DATA CalloutData = (PW32_CALLOUT_DATA)calloutData;
-    PspWin32ProcessCallback = CalloutData->W32ProcessCallout;
-    PspWin32ThreadCallback = CalloutData->W32ThreadCallout;
-    ExpWindowStationObjectOpen = CalloutData->WinStaOpen;
-    ExpWindowStationObjectParse = CalloutData->WinStaParse;
-    ExpWindowStationObjectDelete = CalloutData->WinStaDelete;
-    ExpDesktopObjectParse = CalloutData->DesktopParse;
-    ExpDesktopObjectDelete = CalloutData->DesktopDelete;
+    PspWin32ProcessCallback = CalloutData->ProcessCallout;
+    PspWin32ThreadCallback = CalloutData->ThreadCallout;
+    ExpWindowStationObjectOpen = CalloutData->WindowStationOpenProcedure;
+    ExpWindowStationObjectParse = CalloutData->WindowStationParseProcedure;
+    ExpWindowStationObjectDelete = CalloutData->WindowStationDeleteProcedure;
+    ExpDesktopObjectDelete = CalloutData->DesktopDeleteProcedure;
 }
 
 NTSTATUS

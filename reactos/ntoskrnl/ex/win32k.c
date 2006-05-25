@@ -19,7 +19,7 @@
 POBJECT_TYPE ExWindowStationObjectType = NULL;
 POBJECT_TYPE ExDesktopObjectType = NULL;
 
-static GENERIC_MAPPING ExpWindowStationMapping = 
+GENERIC_MAPPING ExpWindowStationMapping = 
 {
     STANDARD_RIGHTS_READ,
     STANDARD_RIGHTS_WRITE,
@@ -27,7 +27,7 @@ static GENERIC_MAPPING ExpWindowStationMapping =
     STANDARD_RIGHTS_REQUIRED
 };
 
-static GENERIC_MAPPING ExpDesktopMapping =
+GENERIC_MAPPING ExpDesktopMapping =
 {
     STANDARD_RIGHTS_READ,
     STANDARD_RIGHTS_WRITE,
@@ -35,11 +35,10 @@ static GENERIC_MAPPING ExpDesktopMapping =
     STANDARD_RIGHTS_REQUIRED
 };
 
-OB_OPEN_METHOD ExpWindowStationObjectOpen = NULL;
-OB_PARSE_METHOD ExpWindowStationObjectParse = NULL;
-OB_DELETE_METHOD ExpWindowStationObjectDelete = NULL;
-OB_PARSE_METHOD ExpDesktopObjectParse = NULL;
-OB_DELETE_METHOD ExpDesktopObjectDelete = NULL;
+PKWIN32_OPENMETHOD_CALLOUT ExpWindowStationObjectOpen = NULL;
+PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse = NULL;
+PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete = NULL;
+PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -51,20 +50,30 @@ ExpWinStaObjectOpen(OB_OPEN_REASON Reason,
                     ACCESS_MASK GrantedAccess,
                     ULONG HandleCount)
 {
+    WIN32_OPENMETHOD_PARAMETERS Parameters;
+
+    /* Fill out the callback structure */
+    Parameters.OpenReason = Reason;
+    Parameters.Process = Process;
+    Parameters.Object = ObjectBody;
+    Parameters.GrantedAccess = GrantedAccess;
+    Parameters.HandleCount = HandleCount;
+
     /* Call the Registered Callback */
-    return ExpWindowStationObjectOpen(Reason,
-                                      Process,
-                                      ObjectBody,
-                                      GrantedAccess,
-                                      HandleCount);
+    return ExpWindowStationObjectOpen(&Parameters);
 }
 
 VOID
 STDCALL
 ExpWinStaObjectDelete(PVOID DeletedObject)
 {
+    WIN32_DELETEMETHOD_PARAMETERS Parameters;
+
+    /* Fill out the callback structure */
+    Parameters.Object = DeletedObject;
+
     /* Call the Registered Callback */
-    ExpWindowStationObjectDelete(DeletedObject);
+    ExpWindowStationObjectDelete(&Parameters);
 }
 
 NTSTATUS
@@ -80,24 +89,34 @@ ExpWinStaObjectParse(IN PVOID ParseObject,
                      IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
                      OUT PVOID *Object)
 {
+    WIN32_PARSEMETHOD_PARAMETERS Parameters;
+
+    /* Fill out the callback structure */
+    Parameters.ParseObject = ParseObject;
+    Parameters.ObjectType = ObjectType;
+    Parameters.AccessState = AccessState;
+    Parameters.AccessMode = AccessMode;
+    Parameters.Attributes = Attributes;
+    Parameters.CompleteName = CompleteName;
+    Parameters.RemainingName = RemainingName;
+    Parameters.Context = Context;
+    Parameters.SecurityQos = SecurityQos;
+    Parameters.Object = Object;
+
     /* Call the Registered Callback */
-    return ExpWindowStationObjectParse(ParseObject,
-                                       ObjectType,
-                                       AccessState,
-                                       AccessMode,
-                                       Attributes,
-                                       CompleteName,
-                                       RemainingName,
-                                       Context,
-                                       SecurityQos,
-                                       Object);
+    return ExpWindowStationObjectParse(&Parameters);
 }
 VOID
 STDCALL
 ExpDesktopDelete(PVOID DeletedObject)
 {
+    WIN32_DELETEMETHOD_PARAMETERS Parameters;
+
+    /* Fill out the callback structure */
+    Parameters.Object = DeletedObject;
+
     /* Call the Registered Callback */
-    ExpDesktopObjectDelete(DeletedObject);
+    ExpDesktopObjectDelete(&Parameters);
 }
 
 VOID

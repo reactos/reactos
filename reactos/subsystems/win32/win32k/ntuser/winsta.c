@@ -96,15 +96,11 @@ CleanupWindowStationImpl(VOID)
 
 NTSTATUS
 STDCALL
-IntWinStaObjectOpen(OB_OPEN_REASON Reason,
-                    PEPROCESS Process,
-                    PVOID ObjectBody,
-                    ACCESS_MASK GrantedAccess,
-                    ULONG HandleCount)
+IntWinStaObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters)
 {
-   PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)ObjectBody;
-   NTSTATUS Status;
-
+    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
+    OB_OPEN_REASON Reason = Parameters->OpenReason;
+    NTSTATUS Status;
 
    if (Reason == ObCreateHandle)
    {
@@ -125,9 +121,9 @@ IntWinStaObjectOpen(OB_OPEN_REASON Reason,
 }
 
 VOID STDCALL
-IntWinStaObjectDelete(PVOID DeletedObject)
+IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
-   PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)DeletedObject;
+   PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
 
    DPRINT("Deleting window station (0x%X)\n", WinSta);
 
@@ -138,27 +134,18 @@ IntWinStaObjectDelete(PVOID DeletedObject)
 
 NTSTATUS
 STDCALL
-IntWinStaObjectParse(IN PVOID Object,
-                     IN PVOID ObjectType,
-                     IN OUT PACCESS_STATE AccessState,
-                     IN KPROCESSOR_MODE AccessMode,
-                     IN ULONG Attributes,
-                     IN OUT PUNICODE_STRING FullPath,
-                     IN OUT PUNICODE_STRING RemainingName,
-                     IN OUT PVOID Context OPTIONAL,
-                     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-                     OUT PVOID *NextObject)
+IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters)
 {
-    DPRINT("Object (0x%X)  Path (0x%X)  *Path (%wZ)\n", Object, RemainingName, RemainingName);
+    PUNICODE_STRING RemainingName = Parameters->RemainingName;
 
     /* Assume we don't find anything */
-    *NextObject = NULL;
+    *Parameters->Object = NULL;
 
     /* Check for an empty name */
     if (!RemainingName->Length)
     {
         /* Make sure this is a window station, can't parse a desktop now */
-        if (ObjectType != ExWindowStationObjectType)
+        if (Parameters->ObjectType != ExWindowStationObjectType)
         {
             /* Fail */
             return STATUS_OBJECT_TYPE_MISMATCH;
@@ -191,19 +178,19 @@ IntWinStaObjectParse(IN PVOID Object,
      * FIXME: ROS Sends the wrong Object Type. The parsed object's type
      * should be sent, not the parsed parent's.
      */
-    if (ObjectType == ExWindowStationObjectType)
+    if (Parameters->ObjectType == ExWindowStationObjectType)
     {
         /* Then call the desktop parse routine */
-        return IntDesktopObjectParse(Object,
-                                     ObjectType,
-                                     AccessState,
-                                     AccessMode,
-                                     Attributes,
-                                     FullPath,
+        return IntDesktopObjectParse(Parameters->ParseObject,
+                                     Parameters->ObjectType,
+                                     Parameters->AccessState,
+                                     Parameters->AccessMode,
+                                     Parameters->Attributes,
+                                     Parameters->CompleteName,
                                      RemainingName,
-                                     Context,
-                                     SecurityQos,
-                                     NextObject);
+                                     Parameters->Context,
+                                     Parameters->SecurityQos,
+                                     Parameters->Object);
     }
 
     /* Should hopefully never get here */
