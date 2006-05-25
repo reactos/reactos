@@ -24,7 +24,6 @@
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>wine</library>
-      <library>rtl</library>
 	<pch>precomp.h</pch>
 	<file>dllmain.c</file>
 	<file>msvcrt.rc</file>
