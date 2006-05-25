@@ -199,7 +199,6 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   KPROCESSOR_MODE PreviousMode;
   UNICODE_STRING CapturedClass = {0};
   HANDLE hKey;
-  OBP_LOOKUP_CONTEXT Context;
 
   PAGED_CODE();
 
@@ -259,12 +258,11 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       goto Cleanup;
     }
     
-  Status = ObFindObject(&ObjectCreateInfo,
+  Status = CmFindObject(&ObjectCreateInfo,
                         &ObjectName,
                         (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType,
-                        &Context,
                         NULL,
                         NULL);
   if (!NT_SUCCESS(Status))
@@ -1266,7 +1264,6 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
   REG_PRE_OPEN_KEY_INFORMATION PreOpenKeyInfo;
   REG_POST_OPEN_KEY_INFORMATION PostOpenKeyInfo;
-  OBP_LOOKUP_CONTEXT Context;
 
   PAGED_CODE();
 
@@ -1330,12 +1327,11 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 
   RemainingPath.Buffer = NULL;
 
-  Status = ObFindObject(&ObjectCreateInfo,
+  Status = CmFindObject(&ObjectCreateInfo,
                         &ObjectName,
 	                (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType,
-                        &Context,
                         NULL,
                         NULL);
   if (!NT_SUCCESS(Status))

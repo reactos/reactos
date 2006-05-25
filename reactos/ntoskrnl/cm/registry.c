@@ -704,7 +704,6 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   PWSTR SubName;
   UNICODE_STRING ObjectName;
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
-  OBP_LOOKUP_CONTEXT Context;
 
   DPRINT("CmiConnectHive(%p, %p) called.\n",
 	 KeyObjectAttributes, RegistryHive);
@@ -722,12 +721,11 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	return Status;
      }
 
-  Status = ObFindObject(&ObjectCreateInfo,
+  Status = CmFindObject(&ObjectCreateInfo,
                         &ObjectName,
 			            (PVOID*)&ParentKey,
                         &RemainingPath,
                         CmiKeyType,
-                        &Context,
                         NULL,
                         NULL);
      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
@@ -857,8 +855,8 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
   Status = ObOpenObjectByName (KeyObjectAttributes,
 			       CmiKeyType,
-			       NULL,
 			       KernelMode,
+			       NULL,
 			       STANDARD_RIGHTS_REQUIRED,
 			       NULL,
 			       &KeyHandle);

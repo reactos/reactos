@@ -931,8 +931,8 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    /* First try to open an existing named object */
    Status = ObOpenObjectByName(ObjectAttributes,
                                NULL,
-                               NULL,
                                AccessMode,
+                               NULL,
                                DesiredAccess,
                                NULL,
                                &LocalHandle);

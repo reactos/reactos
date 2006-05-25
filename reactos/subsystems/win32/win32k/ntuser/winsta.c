@@ -444,8 +444,8 @@ NtUserCreateWindowStation(
    Status = ObOpenObjectByName(
                &ObjectAttributes,
                ExWindowStationObjectType,
-               NULL,
                KernelMode,
+               NULL,
                dwDesiredAccess,
                NULL,
                (PVOID*)&WindowStation);
@@ -603,8 +603,8 @@ NtUserOpenWindowStation(
    Status = ObOpenObjectByName(
                &ObjectAttributes,
                ExWindowStationObjectType,
-               NULL,
                UserMode,
+               NULL,
                dwDesiredAccess,
                NULL,
                (PVOID*)&WindowStation);

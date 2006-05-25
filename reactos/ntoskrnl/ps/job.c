@@ -413,8 +413,8 @@ NtOpenJobObject (
     {
         Status = ObOpenObjectByName(ObjectAttributes,
             PsJobType,
-            NULL,
             PreviousMode,
+            NULL,
             DesiredAccess,
             NULL,
             &hJob);

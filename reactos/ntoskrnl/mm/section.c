@@ -3463,8 +3463,8 @@ NtOpenSection(PHANDLE   SectionHandle,
 
    Status = ObOpenObjectByName(ObjectAttributes,
                                MmSectionObjectType,
-                               NULL,
                                PreviousMode,
+                               NULL,
                                DesiredAccess,
                                NULL,
                                &hSection);

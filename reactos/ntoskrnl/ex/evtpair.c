@@ -164,8 +164,8 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
     /* Open the Object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ExEventPairObjectType,
-                                NULL,
                                 PreviousMode,
+                                NULL,
                                 DesiredAccess,
                                 NULL,
                                 &hEventPair);

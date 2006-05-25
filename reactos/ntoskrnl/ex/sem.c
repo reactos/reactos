@@ -188,8 +188,8 @@ NtOpenSemaphore(OUT PHANDLE SemaphoreHandle,
     /* Open the Object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ExSemaphoreObjectType,
-                                NULL,
                                 PreviousMode,
+                                NULL,
                                 DesiredAccess,
                                 NULL,
                                 &hSemaphore);

@@ -334,8 +334,8 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
     /* Open the directory object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ObDirectoryType,
-                                NULL,
                                 PreviousMode,
+                                NULL,
                                 DesiredAccess,
                                 NULL,
                                 &hDirectory);

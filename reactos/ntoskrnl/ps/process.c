@@ -1004,8 +1004,8 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         DPRINT("Opening by name\n");
         Status = ObOpenObjectByName(ObjectAttributes,
                                     PsProcessType,
-                                    NULL,
                                     PreviousMode,
+                                    NULL,
                                     DesiredAccess,
                                     NULL,
                                     &hProcess);

@@ -322,8 +322,8 @@ NtOpenIoCompletion(OUT PHANDLE IoCompletionHandle,
     /* Open the Object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 IoCompletionType,
-                                NULL,
                                 PreviousMode,
+                                NULL,
                                 DesiredAccess,
                                 NULL,
                                 &hIoCompletionHandle);

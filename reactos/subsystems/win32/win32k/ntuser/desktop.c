@@ -345,8 +345,8 @@ IntParseDesktopPath(PEPROCESS Process,
 
       Status = ObOpenObjectByName(&ObjectAttributes,
                                   ExWindowStationObjectType,
-                                  NULL,
                                   KernelMode,
+                                  NULL,
                                   0,
                                   NULL,
                                   (HANDLE*)hWinSta);
@@ -379,8 +379,8 @@ IntParseDesktopPath(PEPROCESS Process,
 
       Status = ObOpenObjectByName(&ObjectAttributes,
                                   ExDesktopObjectType,
-                                  NULL,
                                   KernelMode,
+                                  NULL,
                                   0,
                                   NULL,
                                   (HANDLE*)hDesktop);
@@ -926,10 +926,10 @@ NtUserCreateDesktop(
    Status = ObOpenObjectByName(
                &ObjectAttributes,
                ExDesktopObjectType,
-               (PVOID)&DummyContext,
                KernelMode,
-               dwDesiredAccess,
                NULL,
+               dwDesiredAccess,
+               (PVOID)&DummyContext,
                (HANDLE*)&Desktop);
    if (!NT_SUCCESS(Status)) RETURN(NULL);
    if (Status == STATUS_OBJECT_NAME_EXISTS)
@@ -1129,8 +1129,8 @@ NtUserOpenDesktop(
    Status = ObOpenObjectByName(
                &ObjectAttributes,
                ExDesktopObjectType,
-               NULL,
                KernelMode,
+               NULL,
                dwDesiredAccess,
                NULL,
                (HANDLE*)&Desktop);

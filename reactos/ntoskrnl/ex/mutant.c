@@ -194,8 +194,8 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
     /* Open the Object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ExMutantObjectType,
-                                NULL,
                                 PreviousMode,
+                                NULL,
                                 DesiredAccess,
                                 NULL,
                                 &hMutant);

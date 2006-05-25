@@ -212,8 +212,8 @@ NtOpenEvent(OUT PHANDLE EventHandle,
     /* Open the Object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ExEventObjectType,
-                                NULL,
                                 PreviousMode,
+                                NULL,
                                 DesiredAccess,
                                 NULL,
                                 &hEvent);

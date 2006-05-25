@@ -720,8 +720,8 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
         /* Open it */
         Status = ObOpenObjectByName(ObjectAttributes,
                                     PsThreadType,
-                                    NULL,
                                     PreviousMode,
+                                    NULL,
                                     DesiredAccess,
                                     NULL,
                                     &hThread);

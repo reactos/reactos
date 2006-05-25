@@ -748,10 +748,10 @@ NTSTATUS
 NTAPI
 ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                    IN POBJECT_TYPE ObjectType,
-                   IN OUT PVOID ParseContext,
                    IN KPROCESSOR_MODE AccessMode,
-                   IN ACCESS_MASK DesiredAccess,
                    IN PACCESS_STATE PassedAccessState,
+                   IN ACCESS_MASK DesiredAccess,
+                   IN OUT PVOID ParseContext,
                    OUT PHANDLE Handle)
 {
     UNICODE_STRING RemainingPath;

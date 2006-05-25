@@ -403,8 +403,8 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
     /* Open the object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ObSymbolicLinkType,
-                                NULL,
                                 PreviousMode,
+                                NULL,
                                 DesiredAccess,
                                 NULL,
                                 &hLink);

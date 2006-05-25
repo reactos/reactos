@@ -508,8 +508,8 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
     /* Open the Timer */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ExTimerType,
-                                NULL,
                                 PreviousMode,
+                                NULL,
                                 DesiredAccess,
                                 NULL,
                                 &hTimer);

@@ -9535,10 +9535,10 @@ DDKAPI
 ObOpenObjectByName(
   IN POBJECT_ATTRIBUTES  ObjectAttributes,
   IN POBJECT_TYPE  ObjectType,
-  IN OUT PVOID  ParseContext  OPTIONAL,
   IN KPROCESSOR_MODE  AccessMode,
-  IN ACCESS_MASK  DesiredAccess,
   IN PACCESS_STATE  PassedAccessState,
+  IN ACCESS_MASK  DesiredAccess,
+  IN OUT PVOID  ParseContext  OPTIONAL,
   OUT PHANDLE  Handle);
 
 NTOSAPI

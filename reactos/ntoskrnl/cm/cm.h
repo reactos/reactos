@@ -708,4 +708,15 @@ NTSTATUS
 CmiSaveTempHive (PREGISTRY_HIVE Hive,
 		 HANDLE FileHandle);
 
+NTSTATUS
+NTAPI
+CmFindObject(
+    POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+    PUNICODE_STRING ObjectName,
+    PVOID* ReturnedObject,
+    PUNICODE_STRING RemainingPath,
+    POBJECT_TYPE ObjectType,
+    IN PACCESS_STATE AccessState,
+    IN PVOID ParseContext
+);
 #endif /*__INCLUDE_CM_H*/

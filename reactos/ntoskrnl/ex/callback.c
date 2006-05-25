@@ -205,8 +205,8 @@ ExCreateCallback(
    {
       Status = ObOpenObjectByName(ObjectAttributes,
                                   ExCallbackObjectType,
-                                  NULL,
                                   KernelMode,
+                                  NULL,
                                   0,
                                   NULL,
                                   &Handle);
