@@ -10,7 +10,6 @@ typedef struct _DESKTOP_OBJECT
     CSHORT Size;
     LIST_ENTRY ListEntry;
 
-    UNICODE_STRING Name;
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *WindowStation;
     /* Pointer to the active queue. */
@@ -48,11 +47,18 @@ InitDesktopImpl(VOID);
 NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID);
                        
-NTSTATUS STDCALL
-IntDesktopObjectCreate(PVOID ObjectBody,
-		       PVOID Parent,
-		       PWSTR RemainingPath,
-		       struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+NTSTATUS
+STDCALL
+IntDesktopObjectParse(IN PVOID ParseObject,
+                      IN PVOID ObjectType,
+                      IN OUT PACCESS_STATE AccessState,
+                      IN KPROCESSOR_MODE AccessMode,
+                      IN ULONG Attributes,
+                      IN OUT PUNICODE_STRING CompleteName,
+                      IN OUT PUNICODE_STRING RemainingName,
+                      IN OUT PVOID Context OPTIONAL,
+                      IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+                      OUT PVOID *Object);
 
 VOID STDCALL
 IntDesktopObjectDelete(PVOID DeletedObject);
@@ -119,6 +125,12 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
+
+#define GET_DESKTOP_NAME(d)                                             \
+    OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d)) ?            \
+    &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d))->Name) :   \
+    NULL
+
 
 static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,

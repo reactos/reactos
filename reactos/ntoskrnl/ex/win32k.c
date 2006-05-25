@@ -38,8 +38,7 @@ static GENERIC_MAPPING ExpDesktopMapping =
 OB_OPEN_METHOD ExpWindowStationObjectOpen = NULL;
 OB_PARSE_METHOD ExpWindowStationObjectParse = NULL;
 OB_DELETE_METHOD ExpWindowStationObjectDelete = NULL;
-OB_ROS_FIND_METHOD ExpWindowStationObjectFind = NULL;
-OB_ROS_CREATE_METHOD ExpDesktopObjectCreate = NULL;
+OB_PARSE_METHOD ExpDesktopObjectParse = NULL;
 OB_DELETE_METHOD ExpDesktopObjectDelete = NULL;
 
 /* FUNCTIONS ****************************************************************/
@@ -47,17 +46,17 @@ OB_DELETE_METHOD ExpDesktopObjectDelete = NULL;
 NTSTATUS
 STDCALL
 ExpWinStaObjectOpen(OB_OPEN_REASON Reason,
-                    PVOID ObjectBody,
                     PEPROCESS Process,
-                    ULONG HandleCount,
-                    ACCESS_MASK GrantedAccess)
+                    PVOID ObjectBody,
+                    ACCESS_MASK GrantedAccess,
+                    ULONG HandleCount)
 {
     /* Call the Registered Callback */
     return ExpWindowStationObjectOpen(Reason,
-                                      ObjectBody,
                                       Process,
-                                      HandleCount,
-                                      GrantedAccess);
+                                      ObjectBody,
+                                      GrantedAccess,
+                                      HandleCount);
 }
 
 VOID
@@ -66,18 +65,6 @@ ExpWinStaObjectDelete(PVOID DeletedObject)
 {
     /* Call the Registered Callback */
     ExpWindowStationObjectDelete(DeletedObject);
-}
-
-PVOID
-STDCALL
-ExpWinStaObjectFind(PVOID WinStaObject,
-                    PWSTR Name,
-                    ULONG Attributes)
-{
-    /* Call the Registered Callback */
-    return ExpWindowStationObjectFind(WinStaObject,
-                                      Name,
-                                      Attributes);
 }
 
 NTSTATUS
@@ -105,21 +92,6 @@ ExpWinStaObjectParse(IN PVOID ParseObject,
                                        SecurityQos,
                                        Object);
 }
-
-NTSTATUS
-STDCALL
-ExpDesktopCreate(PVOID ObjectBody,
-                 PVOID Parent,
-                 PWSTR RemainingPath,
-                 POBJECT_ATTRIBUTES ObjectAttributes)
-{
-    /* Call the Registered Callback */
-    return ExpDesktopObjectCreate(ObjectBody,
-                                  Parent,
-                                  RemainingPath,
-                                  ObjectAttributes);
-}
-
 VOID
 STDCALL
 ExpDesktopDelete(PVOID DeletedObject)
@@ -143,9 +115,9 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.GenericMapping = ExpWindowStationMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.OpenProcedure = (OB_OPEN_METHOD)ExpWinStaObjectOpen;
+    ObjectTypeInitializer.OpenProcedure = ExpWinStaObjectOpen;
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
-    ObjectTypeInitializer.ParseProcedure = (OB_PARSE_METHOD)ExpWinStaObjectParse;
+    ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;
     ObpCreateTypeObject(&ObjectTypeInitializer,
                         &Name,
                         &ExWindowStationObjectType);

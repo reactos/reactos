@@ -19,14 +19,6 @@
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
-/* TEMPORARY HACK. DO NOT REMOVE -- Alex */
-NTSTATUS
-STDCALL
-ExpDesktopCreate(PVOID ObjectBody,
-                 PVOID Parent,
-                 PWSTR RemainingPath,
-                 POBJECT_CREATE_INFORMATION ObjectCreateInformation);
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 /*++
@@ -1012,7 +1004,6 @@ ObInsertObject(IN PVOID Object,
     }
 
     if ((Header->Type == IoFileObjectType) ||
-        (Header->Type == ExDesktopObjectType) ||
         (Header->Type->TypeInfo.OpenProcedure != NULL))
     {    
         DPRINT("About to call Open Routine\n");
@@ -1026,15 +1017,6 @@ ObInsertObject(IN PVOID Object,
                 ObjectCreateInfo);
             DPRINT("Called IopCreateFile: %x\n", Status);
 
-        }
-        else if (Header->Type == ExDesktopObjectType)
-        {
-            /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
-            DPRINT("Calling ExpDesktopCreate\n");
-            Status = ExpDesktopCreate(&Header->Body,
-                FoundObject,
-                RemainingPath.Buffer,            
-                ObjectCreateInfo);
         }
         else if (Header->Type->TypeInfo.OpenProcedure != NULL)
         {

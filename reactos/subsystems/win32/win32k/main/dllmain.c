@@ -384,8 +384,7 @@ DriverEntry (
     CalloutData.WinStaOpen = IntWinStaObjectOpen;
     CalloutData.WinStaParse = IntWinStaObjectParse;
     CalloutData.WinStaDelete = IntWinStaObjectDelete;
-    CalloutData.WinStaFind = IntWinStaObjectFind;
-    CalloutData.DesktopCreate = IntDesktopObjectCreate;
+    CalloutData.DesktopParse = IntDesktopObjectParse;
     CalloutData.DesktopDelete = IntDesktopObjectDelete;
     CalloutData.W32ProcessCallout = Win32kProcessCallback;
     CalloutData.W32ThreadCallout = Win32kThreadCallback;

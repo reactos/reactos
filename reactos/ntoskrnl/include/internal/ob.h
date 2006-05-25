@@ -53,13 +53,6 @@ typedef NTSTATUS
     struct _OBJECT_ATTRIBUTES* ObjectAttributes
 );
 
-typedef PVOID
-(NTAPI *OB_ROS_FIND_METHOD)(
-    PVOID  WinStaObject,
-    PWSTR  Name,
-    ULONG  Attributes
-);
-
 BOOLEAN
 NTAPI
 ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context);

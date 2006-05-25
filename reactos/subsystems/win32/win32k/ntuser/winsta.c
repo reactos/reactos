@@ -105,7 +105,6 @@ IntWinStaObjectOpen(OB_OPEN_REASON Reason,
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)ObjectBody;
    NTSTATUS Status;
 
-DPRINT1("IntWinStaObjectOpen\n");
 
    if (Reason == ObCreateHandle)
    {
@@ -115,10 +114,8 @@ DPRINT1("IntWinStaObjectOpen\n");
 
       InitializeListHead(&WinSta->DesktopListHead);
 
-DPRINT1("Create winsta atomtable\n");
       WinSta->AtomTable = NULL;
       Status = RtlCreateAtomTable(37, &WinSta->AtomTable);
-if (!NT_SUCCESS(Status)) DPRINT1("Error creating atom table\n");
       WinSta->SystemMenuTemplate = (HANDLE)0;
 
       DPRINT("Window station successfully created.\n");
@@ -139,51 +136,6 @@ IntWinStaObjectDelete(PVOID DeletedObject)
    RtlFreeUnicodeString(&WinSta->Name);
 }
 
-PVOID STDCALL
-IntWinStaObjectFind(PVOID Object,
-                    PWSTR Name,
-                    ULONG Attributes)
-{
-   PLIST_ENTRY Current;
-   PDESKTOP_OBJECT CurrentObject;
-   PWINSTATION_OBJECT WinStaObject = (PWINSTATION_OBJECT)Object;
-
-   DPRINT("WinStaObject (0x%X)  Name (%wS)\n", WinStaObject, Name);
-
-   if (Name[0] == 0)
-   {
-      return NULL;
-   }
-
-   Current = WinStaObject->DesktopListHead.Flink;
-   while (Current != &WinStaObject->DesktopListHead)
-   {
-      CurrentObject = CONTAINING_RECORD(Current, DESKTOP_OBJECT, ListEntry);
-      DPRINT("Scanning %wZ for %wS\n", &CurrentObject->Name, Name);
-      if (Attributes & OBJ_CASE_INSENSITIVE)
-      {
-         if (_wcsicmp(CurrentObject->Name.Buffer, Name) == 0)
-         {
-            DPRINT("Found desktop at (0x%X)\n", CurrentObject);
-            return CurrentObject;
-         }
-      }
-      else
-      {
-         if (wcscmp(CurrentObject->Name.Buffer, Name) == 0)
-         {
-            DPRINT("Found desktop at (0x%X)\n", CurrentObject);
-            return CurrentObject;
-         }
-      }
-      Current = Current->Flink;
-   }
-
-   DPRINT("Returning NULL\n");
-
-   return NULL;
-}
-
 NTSTATUS
 STDCALL
 IntWinStaObjectParse(IN PVOID Object,
@@ -197,44 +149,65 @@ IntWinStaObjectParse(IN PVOID Object,
                      IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
                      OUT PVOID *NextObject)
 {
-   PWSTR *Path = &RemainingName->Buffer;
-   PVOID FoundObject;
-   NTSTATUS Status;
-   PWSTR End;
+    DPRINT("Object (0x%X)  Path (0x%X)  *Path (%wZ)\n", Object, RemainingName, RemainingName);
 
-   DPRINT("Object (0x%X)  Path (0x%X)  *Path (%wS)\n", Object, Path, *Path);
+    /* Assume we don't find anything */
+    *NextObject = NULL;
 
-   *NextObject = NULL;
+    /* Check for an empty name */
+    if (!RemainingName->Length)
+    {
+        /* Make sure this is a window station, can't parse a desktop now */
+        if (ObjectType != ExWindowStationObjectType)
+        {
+            /* Fail */
+            return STATUS_OBJECT_TYPE_MISMATCH;
+        }
 
-   if ((Path == NULL) || ((*Path) == NULL))
-   {
-      return STATUS_SUCCESS;
-   }
+        /* Reference the window station and return */
+        //ObReferenceObject(Object);
+        //*NextObject = Object; => ROS Parse routines don't need to do this
+        return STATUS_SUCCESS;
+    }
 
-   End = wcschr((*Path) + 1, '\\');
-   if (End != NULL)
-   {
-      DPRINT("Name contains illegal characters\n");
-      return STATUS_UNSUCCESSFUL;
-   }
+    /* Check for leading slash */
+    if (RemainingName->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
+    {
+        /* Skip it */
+        RemainingName->Buffer++;
+        RemainingName->Length -= sizeof(WCHAR);
+        RemainingName->MaximumLength -= sizeof(WCHAR);
+    }
 
-   FoundObject = IntWinStaObjectFind(Object, (*Path) + 1, Attributes);
-   if (FoundObject == NULL)
-   {
-      DPRINT("Name was not found\n");
-      return STATUS_UNSUCCESSFUL;
-   }
+    /* Check if there is still a slash */
+    if (wcschr(RemainingName->Buffer, OBJ_NAME_PATH_SEPARATOR))
+    {
+        /* In this case, fail */
+        return STATUS_OBJECT_PATH_INVALID;
+    }
 
-   Status = ObReferenceObjectByPointer(
-               FoundObject,
-               STANDARD_RIGHTS_REQUIRED,
-               NULL,
-               UserMode);
+    /*
+     * Check if we are parsing a desktop.
+     * FIXME: ROS Sends the wrong Object Type. The parsed object's type
+     * should be sent, not the parsed parent's.
+     */
+    if (ObjectType == ExWindowStationObjectType)
+    {
+        /* Then call the desktop parse routine */
+        return IntDesktopObjectParse(Object,
+                                     ObjectType,
+                                     AccessState,
+                                     AccessMode,
+                                     Attributes,
+                                     FullPath,
+                                     RemainingName,
+                                     Context,
+                                     SecurityQos,
+                                     NextObject);
+    }
 
-   *NextObject = FoundObject;
-   *Path = NULL;
-
-   return Status;
+    /* Should hopefully never get here */
+    return STATUS_OBJECT_TYPE_MISMATCH;
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -824,14 +797,14 @@ NtUserGetObjectInformation(
       case UOI_NAME:
          if (WinStaObject != NULL)
          {
-            pvData = WinStaObject->Name.Buffer;
-            nDataSize = WinStaObject->Name.Length+2;
+            pvData = ((PUNICODE_STRING)GET_DESKTOP_NAME(WinStaObject))->Buffer;
+            nDataSize = ((PUNICODE_STRING)GET_DESKTOP_NAME(WinStaObject))->Length + 2;
             Status = STATUS_SUCCESS;
          }
          else if (DesktopObject != NULL)
          {
-            pvData = DesktopObject->Name.Buffer;
-            nDataSize = DesktopObject->Name.Length+2;
+            pvData = ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Buffer;
+            nDataSize = ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length + 2;
             Status = STATUS_SUCCESS;
          }
          else
@@ -1407,7 +1380,7 @@ BuildDesktopNameList(
          DesktopEntry = DesktopEntry->Flink)
    {
       DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP_OBJECT, ListEntry);
-      ReturnLength += DesktopObject->Name.Length + sizeof(WCHAR);
+      ReturnLength += ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length + sizeof(WCHAR);
       EntryCount++;
    }
    DPRINT("Required size: %d Entry count: %d\n", ReturnLength, EntryCount);
@@ -1450,14 +1423,14 @@ BuildDesktopNameList(
          DesktopEntry = DesktopEntry->Flink)
    {
       DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP_OBJECT, ListEntry);
-      Status = MmCopyToCaller(lpBuffer, DesktopObject->Name.Buffer, DesktopObject->Name.Length);
+      Status = MmCopyToCaller(lpBuffer, ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Buffer, ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length);
       if (! NT_SUCCESS(Status))
       {
          KeReleaseSpinLock(&WindowStation->Lock, OldLevel);
          ObDereferenceObject(WindowStation);
          return Status;
       }
-      lpBuffer = (PVOID) ((PCHAR) lpBuffer + DesktopObject->Name.Length);
+      lpBuffer = (PVOID) ((PCHAR) lpBuffer + ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length);
       Status = MmCopyToCaller(lpBuffer, &NullWchar, sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {

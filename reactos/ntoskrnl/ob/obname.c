@@ -176,13 +176,13 @@ Next:
         RtlInitUnicodeString(&CurrentUs, current);
         Status = CurrentHeader->Type->TypeInfo.ParseProcedure(CurrentObject,
             CurrentHeader->Type,
-            NULL,
-            ExGetPreviousMode(),
+            AccessState,
+            ExGetPreviousMode(), // fixme: should be a parameter, since caller decides.
             Attributes,
             &PathString,
             &CurrentUs,
-            NULL,
-            NULL,
+            ParseContext,
+            NULL, // fixme: where do we get this from? captured OBP?
             &NextObject);
         current = CurrentUs.Buffer;
         if (Status == STATUS_REPARSE)

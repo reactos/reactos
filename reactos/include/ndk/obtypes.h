@@ -87,6 +87,22 @@ Author:
 #define OB_FLAG_SECURITY                        0x20
 #define OB_FLAG_SINGLE_PROCESS                  0x40
 
+#define OBJECT_TO_OBJECT_HEADER(o)                          \
+    CONTAINING_RECORD((o), OBJECT_HEADER, Body)
+
+#define OBJECT_HEADER_TO_NAME_INFO(h)                       \
+    ((POBJECT_HEADER_NAME_INFO)(!(h)->NameInfoOffset ?      \
+        NULL: ((PCHAR)(h) - (h)->NameInfoOffset)))
+
+#define OBJECT_HEADER_TO_HANDLE_INFO(h)                     \
+    ((POBJECT_HEADER_HANDLE_INFO)(!(h)->HandleInfoOffset ?  \
+        NULL: ((PCHAR)(h) - (h)->HandleInfoOffset)))
+
+#define OBJECT_HEADER_TO_CREATOR_INFO(h)                    \
+    ((POBJECT_HEADER_CREATOR_INFO)(!((h)->Flags &           \
+        OB_FLAG_CREATOR_INFO) ? NULL: ((PCHAR)(h) -         \
+        sizeof(OBJECT_HEADER_CREATOR_INFO))))
+
 //
 // Reasons for Open Callback
 //
