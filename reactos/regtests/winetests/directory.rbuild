@@ -8,6 +8,9 @@
 <directory name="gdi32">
 	<xi:include href="gdi32/gdi32.rbuild" />
 </directory>
+<directory name="icmp">
+        <xi:include href="icmp/icmp.rbuild" />
+</directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.rbuild" />
 </directory>
