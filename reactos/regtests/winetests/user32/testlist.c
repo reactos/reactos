@@ -1,17 +1,10 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
-/* stdarg.h is needed for Winelib */
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "windef.h"
-#include "winbase.h"
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
-struct test
-{
-    const char *name;
-    void (*func)(void);
-};
+#define STANDALONE
+#include "wine/test.h"
 
 extern void func_class(void);
 extern void func_clipboard(void);
@@ -19,6 +12,7 @@ extern void func_dce(void);
 extern void func_dde(void);
 extern void func_dialog(void);
 extern void func_edit(void);
+extern void func_generated(void);
 extern void func_input(void);
 extern void func_listbox(void);
 extern void func_menu(void);
@@ -39,6 +33,7 @@ const struct test winetest_testlist[] =
     { "dde", func_dde },
     { "dialog", func_dialog },
     { "edit", func_edit },
+//    { "generated", func_generated },
     { "input", func_input },
     { "listbox", func_listbox },
     { "menu", func_menu },
@@ -52,6 +47,3 @@ const struct test winetest_testlist[] =
     { "wsprintf", func_wsprintf },
     { 0, 0 }
 };
-
-#define WINETEST_WANT_MAIN
-#include "wine/test.h"

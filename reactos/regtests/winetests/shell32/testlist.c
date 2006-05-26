@@ -1,12 +1,12 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
-/* stdarg.h is needed for Winelib */
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "windef.h"
-#include "winbase.h"
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
+#define STANDALONE
+#include "wine/test.h"
+
+extern void func_generated(void);
 extern void func_shelllink(void);
 extern void func_shellpath(void);
 extern void func_shlexec(void);
@@ -14,15 +14,9 @@ extern void func_shlfileop(void);
 extern void func_shlfolder(void);
 extern void func_string(void);
 
-struct test
-{
-    const char *name;
-    void (*func)(void);
-};
-
-
 const struct test winetest_testlist[] =
 {
+//    { "generated", func_generated },
     { "shelllink", func_shelllink },
     { "shellpath", func_shellpath },
     { "shlexec", func_shlexec },
@@ -31,6 +25,3 @@ const struct test winetest_testlist[] =
     { "string", func_string },
     { 0, 0 }
 };
-
-#define WINETEST_WANT_MAIN
-#include "wine/test.h"

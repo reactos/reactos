@@ -34,9 +34,7 @@
 #include <stdarg.h>
 
 #include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
+#include "windows.h"
 
 #define MAXHWNDS 1024
 static HWND hwnd [MAXHWNDS];

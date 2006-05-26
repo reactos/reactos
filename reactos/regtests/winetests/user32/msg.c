@@ -27,11 +27,7 @@
 #define WINVER 0x0500
 #define _WIN32_WINNT 0x0501 /* For WM_CHANGEUISTATE,QS_RAWINPUT */
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
+#include "windows.h"
 
 #include "wine/test.h"
 

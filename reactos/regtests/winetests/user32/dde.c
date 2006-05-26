@@ -21,11 +21,7 @@
 #include <assert.h>
 
 #include "wine/test.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "dde.h"
-#include "ddeml.h"
-#include "winerror.h"
+#include "windows.h"
 
 static const WCHAR TEST_DDE_SERVICE[] = {'T','e','s','t','D','D','E','S','e','r','v','i','c','e',0};
 

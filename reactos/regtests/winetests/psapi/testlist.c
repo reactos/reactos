@@ -1,25 +1,15 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
-/* stdarg.h is needed for Winelib */
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "windef.h"
-#include "winbase.h"
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
-extern void func_module(void);
+#define STANDALONE
+#include "wine/test.h"
 
-struct test
+extern void func_psapi_main(void);
+
+const struct test winetest_testlist[] =
 {
-    const char *name;
-    void (*func)(void);
-};
-
-static const struct test winetest_testlist[] =
-{
-    { "module", func_module },
+//    { "psapi_main", func_psapi_main },
     { 0, 0 }
 };
-
-#define WINETEST_WANT_MAIN
-#include "wine/test.h"

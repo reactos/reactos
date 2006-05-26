@@ -49,7 +49,7 @@
 #include <stdarg.h>
 #include <assert.h>
 
-#include "windef.h"
+#include "windows.h"
 
 #include "wine/test.h"
 
