@@ -12,8 +12,8 @@ extern void func_stringtable(void);
 
 const struct test winetest_testlist[] =
 {
-//    { "parser", func_parser },
-//    { "query", func_query },
+    { "parser", func_parser },
+    { "query", func_query },
     { "stringtable", func_stringtable },
     { 0, 0 }
 };

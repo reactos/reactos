@@ -15,11 +15,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 /* 
  * TODO:
- * Add case sensitivity test for StringTableAddString/StringTableLookupString
  * Add test for StringTableStringFromIdEx
  */
 
@@ -48,9 +47,12 @@ static VOID     (WINAPI *pStringTableTrim)(HSTRING_TABLE);
 
 HMODULE hdll;
 static WCHAR string[] = {'s','t','r','i','n','g',0};
+static WCHAR String[] = {'S','t','r','i','n','g',0};
+static WCHAR foo[] = {'f','o','o',0};
+DWORD hstring, hString, hfoo; /* Handles pointing to our strings */
 HANDLE table, table2;  /* Handles pointing to our tables */
 
-static void load_it_up()
+static void load_it_up(void)
 {
     hdll = LoadLibraryA("setupapi.dll");
     if (!hdll)
@@ -81,38 +83,78 @@ static void load_it_up()
         pStringTableStringFromId = (void*)GetProcAddress(hdll, "pSetupStringTableStringFromId");
 }
 
-static void test_StringTableInitialize()
+static void test_StringTableInitialize(void)
 {
     table=pStringTableInitialize();
     ok(table!=NULL,"Failed to Initialize String Table\n");
 }
 
-static void test_StringTableAddString()
+static void test_StringTableAddString(void)
 {
     DWORD retval;
 
-    retval=pStringTableAddString(table,string,0);
-    ok(retval!=-1,"Failed to add string to String Table\n");
+    /* case insensitive */
+    hstring=pStringTableAddString(table,string,0);
+    ok(hstring!=-1,"Failed to add string to String Table\n");
+    
+    retval=pStringTableAddString(table,String,0);
+    ok(retval!=-1,"Failed to add String to String Table\n");    
+    ok(hstring==retval,"string handle %lx != String handle %lx in String Table\n", hstring, retval);        
+    
+    hfoo=pStringTableAddString(table,foo,0);
+    ok(hfoo!=-1,"Failed to add foo to String Table\n");        
+    ok(hfoo!=hstring,"foo and string share the same ID %lx in String Table\n", hfoo);            
+    
+    /* case sensitive */    
+    hString=pStringTableAddString(table,String,ST_CASE_SENSITIVE_COMPARE);
+    ok(hstring!=hString,"String handle and string share same ID %lx in Table\n", hstring);        
 }
 
-static void test_StringTableDuplicate()
+static void test_StringTableDuplicate(void)
 {
     table2=pStringTableDuplicate(table);
     ok(table2!=NULL,"Failed to duplicate String Table\n");
 }
 
-static void test_StringTableLookUpString()
+static void test_StringTableLookUpString(void)
 {   
     DWORD retval, retval2;
     
+    /* case insensitive */
     retval=pStringTableLookUpString(table,string,0);
     ok(retval!=-1,"Failed find string in String Table 1\n");
+    ok(retval==hstring,
+        "Lookup for string (%lx) does not match previous handle (%lx) in String Table 1\n",
+        retval, hstring);    
 
-    retval2=pStringTableLookUpString(table2,string,0);
-    ok(retval2!=-1,"Failed find string in String Table 2\n");
+    retval=pStringTableLookUpString(table2,string,0);
+    ok(retval!=-1,"Failed find string in String Table 2\n");
+    
+    retval=pStringTableLookUpString(table,String,0);
+    ok(retval!=-1,"Failed find String in String Table 1\n");
+
+    retval=pStringTableLookUpString(table2,String,0);
+    ok(retval!=-1,"Failed find String in String Table 2\n");    
+    
+    retval=pStringTableLookUpString(table,foo,0);
+    ok(retval!=-1,"Failed find foo in String Table 1\n");    
+    ok(retval==hfoo,
+        "Lookup for foo (%lx) does not match previous handle (%lx) in String Table 1\n",
+        retval, hfoo);        
+    
+    retval=pStringTableLookUpString(table2,foo,0);
+    ok(retval!=-1,"Failed find foo in String Table 2\n");    
+    
+    /* case sensitive */
+    retval=pStringTableLookUpString(table,string,ST_CASE_SENSITIVE_COMPARE);
+    retval2=pStringTableLookUpString(table,String,ST_CASE_SENSITIVE_COMPARE);    
+    ok(retval!=retval2,"Lookup of string equals String in Table 1\n");
+    ok(retval2==hString,
+        "Lookup for String (%lx) does not match previous handle (%lx) in String Table 1\n",
+        retval, hString);        
 }
 
-static void test_StringTableStringFromId()
+static void test_StringTableStringFromId(void)
 {
     WCHAR *string2, *string3;
     int result;
@@ -122,16 +164,14 @@ static void test_StringTableStringFromId()
     ok(string2!=NULL,"Failed to look up string by ID from String Table\n");
     
     result=lstrcmpiW(string, string2);
-    ok(result==0,"String %p does not match requested StringID %p\n",string,string2);
+    ok(result==0,"StringID %p does not match requested StringID %p\n",string,string2);
 
-    todo_wine{
-        /* This should not pass on Wine but it does */
-        string3=pStringTableStringFromId(table,0);
-        ok(string3!=NULL,"Failed to look up string by ID from String Table\n");
+    /* This should never work */
+    string3=pStringTableStringFromId(table,0);
+    ok(string3!=NULL,"Failed to look up string by ID from String Table\n");
 
-        result=lstrcmpiW(string, string3);
-        ok(result!=0,"String %p does not match requested StringID %p\n",string,string2);
-    }
+    result=lstrcmpiW(string, string3);
+    ok(result!=0,"StringID %p matches requested StringID %p\n",string,string3);
 }
 
 START_TEST(stringtable)
