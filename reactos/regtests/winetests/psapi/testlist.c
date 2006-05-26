@@ -10,6 +10,6 @@ extern void func_psapi_main(void);
 
 const struct test winetest_testlist[] =
 {
-//    { "psapi_main", func_psapi_main },
+    { "psapi_main", func_psapi_main },
     { 0, 0 }
 };

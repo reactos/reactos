@@ -4,5 +4,5 @@
     <library>ntdll</library>
     <library>psapi</library>
     <file>testlist.c</file>
-    <file>module.c</file>
+    <file>psapi_main.c</file>
 </module>
