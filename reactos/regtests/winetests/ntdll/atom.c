@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  * We use function pointers here as there is no import library for NTDLL on
@@ -35,7 +35,6 @@
 #include "winreg.h"
 #include "winnls.h"
 #include "wine/test.h"
-#include "wine/unicode.h"
 #include "winternl.h"
 
 #ifndef __WINE_WINTERNL_H
@@ -112,14 +111,14 @@ static DWORD RtlAtomTestThread(LPVOID Table)
     ok(!res, "Failed with longenough buffer, retval: %lx\n", res);
     ok(RefCount == 1, "Refcount was not 1 but %lx\n", RefCount);
     ok(PinCount == 1, "Pincount was not 1 but %lx\n", PinCount);
-    ok(!strcmpW(Name, testAtom2), "We found wrong atom!!\n");
-    ok((strlenW(testAtom2) * sizeof(WCHAR)) == Len, "Returned wrong length %ld\n", Len);
+    ok(!lstrcmpW(Name, testAtom2), "We found wrong atom!!\n");
+    ok((lstrlenW(testAtom2) * sizeof(WCHAR)) == Len, "Returned wrong length %ld\n", Len);
 
     Len = 64;
     res = pRtlQueryAtomInAtomTable(AtomTable, Atom, NULL, NULL, Name, &Len);
     ok(!res, "RtlQueryAtomInAtomTable with optional args invalid failed, retval: %lx\n", res);
-    ok(!strcmpW(Name, testAtom2), "Found Wrong atom!\n");
-    ok((strlenW(testAtom2) * sizeof(WCHAR)) == Len, "Returned wrong length %ld\n", Len);
+    ok(!lstrcmpW(Name, testAtom2), "Found Wrong atom!\n");
+    ok((lstrlenW(testAtom2) * sizeof(WCHAR)) == Len, "Returned wrong length %ld\n", Len);
 
     res = pRtlPinAtomInAtomTable(AtomTable, Atom);
     ok(!res, "Unable to pin atom in atom table, retval: %lx\n", res);
@@ -184,8 +183,8 @@ static void test_NtAtom(void)
         ok(!res, "Unable to query atom in atom table, retval: %lx\n", res);
         ok(RefCount == 1, "RefCount is not 1 but %lx\n", RefCount);
         ok(PinCount == 1, "PinCount is not 1 but %lx\n", PinCount);
-        ok(!strcmpW(Name, testAtom2), "We found wrong atom\n");
-        ok((strlenW(testAtom2) * sizeof(WCHAR)) == Len, "Returned wrong length %ld\n", Len);
+        ok(!lstrcmpW(Name, testAtom2), "We found wrong atom\n");
+        ok((lstrlenW(testAtom2) * sizeof(WCHAR)) == Len, "Returned wrong length %ld\n", Len);
 
         res = pRtlEmptyAtomTable(AtomTable, FALSE);
         ok(!res, "Unable to empty atom table, retval %lx\n", res);
@@ -195,8 +194,8 @@ static void test_NtAtom(void)
         ok(!res, "It seems RtlEmptyAtomTable deleted our pinned atom eaven though we asked it not to, retval: %lx\n", res);
         ok(RefCount == 1, "RefCount is not 1 but %lx\n", RefCount);
         ok(PinCount == 1, "PinCount is not 1 but %lx\n", PinCount);
-        ok(!strcmpW(Name, testAtom2), "We found wrong atom\n");
-        ok((strlenW(testAtom2) * sizeof(WCHAR)) == Len, "Returned wrong length %ld\n", Len);
+        ok(!lstrcmpW(Name, testAtom2), "We found wrong atom\n");
+        ok((lstrlenW(testAtom2) * sizeof(WCHAR)) == Len, "Returned wrong length %ld\n", Len);
 
         Len = 8;
         Name[0] = Name[1] = Name[2] = Name[3] = Name[4] = 0x55AA;
@@ -267,7 +266,7 @@ static void test_NtAtom(void)
         Len = 0;
         res = pRtlQueryAtomInAtomTable(AtomTable, Atom1, NULL, NULL, Name, &Len);
         ok(res == STATUS_BUFFER_TOO_SMALL, "Got wrong retval, retval: %lx\n", res);
-        ok((strlenW(testAtom1) * sizeof(WCHAR)) == Len, "Got wrong length %lx\n", Len);
+        ok((lstrlenW(testAtom1) * sizeof(WCHAR)) == Len, "Got wrong length %lx\n", Len);
 
         res = pRtlPinAtomInAtomTable(AtomTable, Atom1);
         ok(!res, "Unable to pin atom in atom table, retval: %lx\n", res);
@@ -360,8 +359,8 @@ static void test_NtIntAtom(void)
         ok(!res, "Unable to query atom in atom table, retval: %lx\n", res);
         ok(PinCount == 1, "Expected pincount 1 but got %lx\n", PinCount);
         ok(RefCount == 1, "Expected refcount 1 but got %lx\n", RefCount);
-        ok(!strcmpW(testAtomOTT, Name), "Got wrong atom name\n");
-        ok((strlenW(testAtomOTT) * sizeof(WCHAR)) == Len, "Got wrong len %ld\n", Len);
+        ok(!lstrcmpW(testAtomOTT, Name), "Got wrong atom name\n");
+        ok((lstrlenW(testAtomOTT) * sizeof(WCHAR)) == Len, "Got wrong len %ld\n", Len);
 
         res = pRtlPinAtomInAtomTable(AtomTable, testAtom);
         ok(!res, "Unable to pin int atom, retval: %lx\n", res);

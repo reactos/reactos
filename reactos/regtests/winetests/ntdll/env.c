@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdio.h>
 
 #include "ntdll_test.h"
-#include "wine/unicode.h"
 
 static NTSTATUS (WINAPI *pRtlMultiByteToUnicodeN)( LPWSTR dst, DWORD dstlen, LPDWORD reslen,
                                                    LPCSTR src, DWORD srclen );
@@ -108,8 +107,8 @@ static void testQuery(void)
             pRtlMultiByteToUnicodeN( bn, sizeof(bn), NULL, test->val, strlen(test->val)+1 );
             ok( value.Length == strlen(test->val) * sizeof(WCHAR), "Wrong length %d/%d for %s\n",
                 value.Length, strlen(test->val) * sizeof(WCHAR), test->var );
-            ok((value.Length == strlen(test->val) * sizeof(WCHAR) && strncmpW(bv, bn, test->len) == 0) ||
-	       strcmpW(bv, bn) == 0, 
+            ok((value.Length == strlen(test->val) * sizeof(WCHAR) && memcmp(bv, bn, test->len*sizeof(WCHAR)) == 0) ||
+	       lstrcmpW(bv, bn) == 0, 
 	       "Wrong result for %s/%d\n", test->var, test->len);
             ok(bv[test->len] == '@', "Writing too far away in the buffer for %s/%d\n", test->var, test->len);
             break;
@@ -151,7 +150,7 @@ static void testSetHelper(LPWSTR* env, const char* var, const char* val, NTSTATU
         switch (nts)
         {
         case STATUS_SUCCESS:
-            ok(strcmpW(bval1, bval2) == 0, "Cannot get value written to environment\n");
+            ok(lstrcmpW(bval1, bval2) == 0, "Cannot get value written to environment\n");
             break;
         case STATUS_VARIABLE_NOT_FOUND:
             ok(val == NULL, "Couldn't find variable, but didn't delete it. val = %s\n", val);
@@ -257,7 +256,7 @@ static void testExpand(void)
         ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
            "Wrong  returned length for %s: %lu <> %u\n",
            test->src, ul, strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR));
-        ok(strcmpW(dst, rst) == 0, "Wrong result for %s: expecting %s\n",
+        ok(lstrcmpW(dst, rst) == 0, "Wrong result for %s: expecting %s\n",
            test->src, test->dst);
 
         us_dst.Length = 0;
@@ -269,7 +268,7 @@ static void testExpand(void)
         ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
            "Wrong  returned length for %s (with buffer too small): %lu <> %u\n",
            test->src, ul, strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR));
-        ok(strncmpW(dst, rst, 8) == 0, 
+        ok(memcmp(dst, rst, 8*sizeof(WCHAR)) == 0,
            "Wrong result for %s (with buffer too small): expecting %s\n",
            test->src, test->dst);
         ok(dst[8] == '-', "Writing too far in buffer (got %c/%d)\n", dst[8], dst[8]);

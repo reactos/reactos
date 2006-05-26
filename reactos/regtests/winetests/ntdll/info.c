@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
 
@@ -729,7 +729,15 @@ static void test_query_process_handlecount(void)
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08lx\n", status);
 
     process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, one_before_last_pid);
-    trace("Handlecount for process with ID : %ld\n", one_before_last_pid);
+    if (!process)
+    {
+        trace("Could not open process with ID : %ld, error : %08lx. Going to use current one.\n", one_before_last_pid, GetLastError());
+        process = GetCurrentProcess();
+        trace("ProcessHandleCount for current process\n");
+    }
+    else
+        trace("ProcessHandleCount for process with ID : %ld\n", one_before_last_pid);
+
     status = pNtQueryInformationProcess( process, ProcessHandleCount, &handlecount, sizeof(handlecount), &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08lx\n", status);
     ok( sizeof(handlecount) == ReturnLength, "Inconsistent length (%d) <-> (%ld)\n", sizeof(handlecount), ReturnLength);

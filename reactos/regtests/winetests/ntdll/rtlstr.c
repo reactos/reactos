@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  * We use function pointers here as there is no import library for NTDLL on
@@ -1672,6 +1672,9 @@ static void test_RtlIntegerToChar(void)
 static const WCHAR szGuid[] = { '{','0','1','0','2','0','3','0','4','-',
   '0','5','0','6','-'  ,'0','7','0','8','-','0','9','0','A','-',
   '0','B','0','C','0','D','0','E','0','F','0','A','}','\0' };
+static const WCHAR szGuid2[] = { '{','0','1','0','2','0','3','0','4','-',
+  '0','5','0','6','-'  ,'0','7','0','8','-','0','9','0','A','-',
+  '0','B','0','C','0','D','0','E','0','F','0','A',']','\0' };
 DEFINE_GUID(IID_Endianess, 0x01020304, 0x0506, 0x0708, 0x09, 0x0A, 0x0B,
             0x0C, 0x0D, 0x0E, 0x0F, 0x0A);
 
@@ -1687,6 +1690,12 @@ static void test_RtlGUIDFromString(void)
   ret = pRtlGUIDFromString(&str, &guid);
   ok(ret == 0, "expected ret=0, got 0x%0lx\n", ret);
   ok(memcmp(&guid, &IID_Endianess, sizeof(guid)) == 0, "Endianess broken\n");
+
+  str.Length = str.MaximumLength = (sizeof(szGuid2) - 1) / sizeof(WCHAR);
+  str.Buffer = (LPWSTR)szGuid2;
+
+  ret = pRtlGUIDFromString(&str, &guid);
+  ok(ret, "expected ret!=0\n");
 }
 
 static void test_RtlStringFromGUID(void)

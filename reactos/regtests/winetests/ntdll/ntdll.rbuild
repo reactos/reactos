@@ -3,12 +3,15 @@
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <file>atom.c</file>
+    <file>change.c</file>
     <file>env.c</file>
     <file>error.c</file>
+    <file>exception.c</file>
     <file>info.c</file>
     <file>large_int.c</file>
     <file>om.c</file>
     <file>path.c</file>
+    <file>port.c</file>
     <file>reg.c</file>
     <file>rtlbitmap.c</file>
     <file>rtl.c</file>
