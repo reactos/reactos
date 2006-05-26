@@ -182,8 +182,83 @@ PrepareFoldersToScan(
 	IN PDEVINSTDATA DevInstData,
 	IN HWND hwndDlg)
 {
-	FIXME("Include removable devices: %s\n", IsDlgButtonChecked(hwndDlg, IDC_CHECK_MEDIA) ? "yes" : "no");
-	FIXME("Include custom path      : %s\n", IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH) ? "yes" : "no");
+	TCHAR drive[] = {'?',':',0};
+	DWORD dwDrives = 0;
+	DWORD i;
+	UINT nType;
+	DWORD CustomTextLength = 0;
+	DWORD LengthNeeded = 0;
+	LPTSTR Buffer;
+
+	TRACE("Include removable devices: %s\n", IsDlgButtonChecked(hwndDlg, IDC_CHECK_MEDIA) ? "yes" : "no");
+	TRACE("Include custom path      : %s\n", IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH) ? "yes" : "no");
+
+	/* Calculate length needed to store the search paths */
+	if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MEDIA))
+	{
+		dwDrives = GetLogicalDrives();
+		for (drive[0] = 'A', i = 1; drive[0] <= 'Z'; drive[0]++, i <<= 1)
+		{
+			if (dwDrives & i)
+			{
+				nType = GetDriveType(drive);
+				if (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM)
+				{
+					LengthNeeded += 3;
+				}
+			}
+		}
+	}
+	if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH))
+	{
+		CustomTextLength = 1 + SendDlgItemMessage(
+			hwndDlg,
+			IDC_COMBO_PATH,
+			WM_GETTEXTLENGTH,
+			(WPARAM)0,
+			(LPARAM)0);
+		LengthNeeded += CustomTextLength;
+	}
+
+	/* Allocate space for search paths */
+	HeapFree(GetProcessHeap(), 0, DevInstData->CustomSearchPath);
+	DevInstData->CustomSearchPath = Buffer = HeapAlloc(
+		GetProcessHeap(),
+		0,
+		(LengthNeeded + 1) * sizeof(TCHAR));
+	if (!Buffer)
+	{
+		TRACE("HeapAlloc() failed\n");
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
+	}
+
+	/* Fill search paths */
+	if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MEDIA))
+	{
+		for (drive[0] = 'A', i = 1; drive[0] <= 'Z'; drive[0]++, i <<= 1)
+		{
+			if (dwDrives & i)
+			{
+				nType = GetDriveType(drive);
+				if (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM)
+				{
+					Buffer += 1 + _stprintf(Buffer, drive);
+				}
+			}
+		}
+	}
+	if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH))
+	{
+		Buffer += 1 + SendDlgItemMessage(
+			hwndDlg,
+			IDC_COMBO_PATH,
+			WM_GETTEXT,
+			(WPARAM)CustomTextLength,
+			(LPARAM)Buffer);
+	}
+	*Buffer = _T('\0');
+
 	return TRUE;
 }
 
@@ -191,62 +266,149 @@ static DWORD WINAPI
 FindDriverProc(
 	IN LPVOID lpParam)
 {
-	TCHAR drive[] = {'?',':',0};
-	size_t nType;
-	DWORD dwDrives;
 	PDEVINSTDATA DevInstData;
 	DWORD config_flags;
-	UINT i = 1;
+	BOOL result = FALSE;
 
 	DevInstData = (PDEVINSTDATA)lpParam;
-	DPRINT1("FindDriverProc(%p)\n", DevInstData->CustomSearchPath);
-	if (DevInstData->CustomSearchPath)
-	{
-		LPCTSTR Path;
-		for (Path = DevInstData->CustomSearchPath; *Path != '\0'; Path += _tcslen(Path) + 1)
-			DPRINT1("Path %S\n", Path);
-	}
 
-	dwDrives = GetLogicalDrives();
-	for (drive[0] = 'A'; drive[0] <= 'Z'; drive[0]++)
-	{
-		if (dwDrives & i)
-		{
-			nType = GetDriveType(drive);
-			if (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM)
-			{
-				/* search for valid inf file */
-				if (SearchDriverRecursive(DevInstData, drive))
-				{
-					InstallCurrentDriver(DevInstData);
-					PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 1, 0);
-					return 0;
-				}
-			}
-		}
-		i <<= 1;
-	}
-
-	/* update device configuration */
-	if (SetupDiGetDeviceRegistryProperty(
+	/* Yes, we can safely ignore the problem (if any) */
+	SetupDiDestroyDriverInfoList(
 		DevInstData->hDevInfo,
 		&DevInstData->devInfoData,
-		SPDRP_CONFIGFLAGS,
-		NULL,
-		(BYTE *)&config_flags,
-		sizeof(config_flags),
-		NULL))
+		SPDIT_COMPATDRIVER);
+
+	if (!DevInstData->CustomSearchPath)
 	{
-		config_flags |= CONFIGFLAG_FAILEDINSTALL;
-		SetupDiSetDeviceRegistryProperty(
+		/* Search in default location */
+		result = SearchDriver(DevInstData, NULL, NULL);
+	}
+	else
+	{
+		/* Search only in specified paths */
+		/* We need to check all specified directories to be
+		 * sure to find the best driver for the device.
+		 */
+		LPCTSTR Path;
+		for (Path = DevInstData->CustomSearchPath; *Path != '\0'; Path += _tcslen(Path) + 1)
+		{
+			TRACE("Search driver in %S\n", Path);
+			if (_tcslen(Path) == 2 && Path[1] == ':')
+			{
+				if (SearchDriverRecursive(DevInstData, Path))
+					result = TRUE;
+			}
+			else
+			{
+				if (SearchDriver(DevInstData, Path, NULL))
+					result = TRUE;
+			}
+		}
+	}
+
+	if (result)
+	{
+		PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 1, 0);
+	}
+	else
+	{
+		/* Update device configuration */
+		if (SetupDiGetDeviceRegistryProperty(
 			DevInstData->hDevInfo,
 			&DevInstData->devInfoData,
 			SPDRP_CONFIGFLAGS,
-			(BYTE *)&config_flags, sizeof(config_flags));
-	}
+			NULL,
+			(BYTE *)&config_flags,
+			sizeof(config_flags),
+			NULL))
+		{
+			config_flags |= CONFIGFLAG_FAILEDINSTALL;
+			SetupDiSetDeviceRegistryProperty(
+				DevInstData->hDevInfo,
+				&DevInstData->devInfoData,
+				SPDRP_CONFIGFLAGS,
+				(BYTE *)&config_flags, sizeof(config_flags));
+		}
 
-	PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 0, 0);
+		PostMessage(DevInstData->hDialog, WM_SEARCH_FINISHED, 0, 0);
+	}
 	return 0;
+}
+
+static VOID
+PopulateCustomPathCombo(
+	IN HWND hwndCombo)
+{
+	HKEY hKey = NULL;
+	DWORD dwRegType;
+	DWORD dwPathLength;
+	LPTSTR Buffer = NULL;
+	LPCTSTR Path;
+	LONG rc;
+
+	ComboBox_ResetContent(hwndCombo);
+
+	/* RegGetValue would have been better... */
+	rc = RegOpenKeyEx(
+		HKEY_LOCAL_MACHINE,
+		REGSTR_PATH_SETUP REGSTR_KEY_SETUP,
+		0,
+		KEY_QUERY_VALUE,
+		&hKey);
+	if (rc != ERROR_SUCCESS)
+	{
+		TRACE("RegOpenKeyEx() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	rc = RegQueryValueEx(
+		hKey,
+		_T("Installation Sources"),
+		NULL,
+		&dwRegType,
+		NULL,
+		&dwPathLength);
+	if (rc != ERROR_SUCCESS || dwRegType != REG_MULTI_SZ)
+	{
+		TRACE("RegQueryValueEx() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	/* Allocate enough space to add 2 NULL chars at the end of the string */
+	Buffer = HeapAlloc(GetProcessHeap(), 0, dwPathLength + 2 * sizeof(TCHAR));
+	if (!Buffer)
+	{
+		TRACE("HeapAlloc() failed\n");
+		goto cleanup;
+	}
+	rc = RegQueryValueEx(
+		hKey,
+		_T("Installation Sources"),
+		NULL,
+		NULL,
+		(LPBYTE)Buffer,
+		&dwPathLength);
+	if (rc != ERROR_SUCCESS)
+	{
+		TRACE("RegQueryValueEx() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	Buffer[dwPathLength] = Buffer[dwPathLength + 1] = '\0';
+
+	/* Populate combo box */
+	for (Path = Buffer; *Path; Path += _tcslen(Path))
+		ComboBox_AddString(hwndCombo, Path);
+	ComboBox_SetCurSel(hwndCombo, 0);
+
+cleanup:
+	if (hKey != NULL)
+		RegCloseKey(hKey);
+	HeapFree(GetProcessHeap(), 0, Buffer);
+}
+
+static VOID
+SaveCustomPath(
+	IN HWND hwndCombo)
+{
+	FIXME("Stub.");
 }
 
 static INT_PTR CALLBACK
@@ -382,6 +544,8 @@ CHSourceDlgProc(
 			dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
 			SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 
+			PopulateCustomPathCombo(GetDlgItem(hwndDlg, IDC_COMBO_PATH));
+
 			SendDlgItemMessage(
 				hwndDlg,
 				IDC_RADIO_SEARCHHERE,
@@ -393,8 +557,7 @@ CHSourceDlgProc(
 
 			/* Disable manual driver choice for now */
 			EnableWindow(GetDlgItem(hwndDlg, IDC_RADIO_CHOOSE), FALSE);
-			/* Disable custom path for now */
-			EnableWindow(GetDlgItem(hwndDlg, IDC_CHECK_PATH), FALSE);
+
 			break;
 		}
 
@@ -437,10 +600,13 @@ CHSourceDlgProc(
 					/* Handle a Next button click, if necessary */
 					if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_SEARCHHERE))
 					{
+						SaveCustomPath(GetDlgItem(hwndDlg, IDC_COMBO_PATH));
 						HeapFree(GetProcessHeap(), 0, DevInstData->CustomSearchPath);
 						DevInstData->CustomSearchPath = NULL;
 						if (PrepareFoldersToScan(DevInstData, hwndDlg))
 							PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_SEARCHDRV);
+						else
+							/* FIXME: unknown error */;
 					}
 					else
 						/* FIXME */;
@@ -509,7 +675,11 @@ SearchDrvDlgProc(
 			if (wParam == 0)
 				PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_NODRIVER);
 			else
+			{
+				/* FIXME: Shouldn't belong here... */
+				InstallCurrentDriver(DevInstData);
 				PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_FINISHPAGE);
+			}
 			break;
 		}
 

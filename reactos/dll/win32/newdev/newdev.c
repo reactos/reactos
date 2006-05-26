@@ -350,7 +350,6 @@ SearchDriverRecursive(
 	BOOL retval = FALSE;
 	HANDLE hFindFile = INVALID_HANDLE_VALUE;
 
-	TRACE("SearchDriverRecursive(%s)\n", Path);
 	_tcscpy(DirPath, Path);
 
 	if (DirPath[_tcsclen(DirPath) - 1] != '\\')
