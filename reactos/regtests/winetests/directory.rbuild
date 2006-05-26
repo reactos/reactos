@@ -14,6 +14,9 @@
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.rbuild" />
 </directory>
+<directory name="lz32">
+        <xi:include href="lz32/lz32.rbuild" />
+</directory>
 <directory name="msvcrt">
 	<xi:include href="msvcrt/msvcrt.rbuild" />
 </directory>
