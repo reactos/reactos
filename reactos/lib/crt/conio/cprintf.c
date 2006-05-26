@@ -18,7 +18,7 @@ _cprintf(const char *fmt, ...)
   int written, resize = sizeof(buf), retval;
   va_list valist;
     
-  while ((written = vsnprintf( mem, resize, fmt, valist )) == -1 ||
+  while ((written = _vsnprintf( mem, resize, fmt, valist )) == -1 ||
           written > resize)
   {
     resize = (written == -1 ? resize * 2 : written + 1);
