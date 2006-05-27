@@ -12,17 +12,23 @@
 
 /*
  * @implemented
+ *
+ * copy this swab from wine cvs 2006-05-24
  */
-void _swab (const char* caFrom, char* caTo, size_t sizeToCopy)
+void _swab (const char *  src,  char *  dst,  size_t  sizeToCopy 
+ )   
+ 
 {
-  if (sizeToCopy > 1)
+ if (sizeToCopy > 1)
   {
-    sizeToCopy = sizeToCopy >> 1;
+    sizeToCopy = (unsigned)sizeToCopy >> 1;
 
     while (sizeToCopy--) {
-      *caTo++ = caFrom[1];
-      *caTo++ = *caFrom++;
-      caFrom++;
+      char s0 = src[0];
+      char s1 = src[1];
+      *dst++ = s1;
+      *dst++ = s0;
+      src = src + 2;
     }
   }
 }
