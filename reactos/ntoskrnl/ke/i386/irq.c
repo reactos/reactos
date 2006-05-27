@@ -275,8 +275,8 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     * Notify the rest of the kernel of the raised irq level. For the
     * default HAL this will send an EOI to the PIC and alter the IRQL.
     */
-   if (!HalBeginSystemInterrupt (vector,
-                                 VECTOR2IRQL(vector),
+   if (!HalBeginSystemInterrupt (VECTOR2IRQL(vector),
+                                 vector,
                                  &old_level))
      {
        return;

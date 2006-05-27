@@ -159,8 +159,8 @@ HalAssignSlotResources(
 
 BOOLEAN 
 NTAPI 
-HalBeginSystemInterrupt (ULONG Vector,
-			 KIRQL Irql,
+HalBeginSystemInterrupt (KIRQL Irql,
+			 ULONG Vector,
 			 PKIRQL OldIrql)
 {
   UNIMPLEMENTED;

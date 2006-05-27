@@ -95,8 +95,8 @@ NTHALAPI
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
-    ULONG Vector,
     KIRQL Irql,
+    ULONG Vector,
     PKIRQL OldIrql
 );
 

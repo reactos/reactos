@@ -355,8 +355,8 @@ KeRaiseIrqlToSynchLevel (VOID)
 
 
 BOOLEAN STDCALL 
-HalBeginSystemInterrupt (ULONG Vector,
-			 KIRQL Irql,
+HalBeginSystemInterrupt (KIRQL Irql,
+			 ULONG Vector,
 			 PKIRQL OldIrql)
 {
   ULONG irq;

@@ -751,8 +751,8 @@ VOID MpsIpiHandler(VOID)
 {
    KIRQL oldIrql;
 
-   HalBeginSystemInterrupt(IPI_VECTOR, 
-                           IPI_LEVEL, 
+   HalBeginSystemInterrupt(IPI_LEVEL,
+                           IPI_VECTOR, 
 			   &oldIrql);
    Ki386EnableInterrupts();
 #if 0
