@@ -11,6 +11,7 @@
 
 #include <user32.h>
 
+extern BOOL ControlsInitialized;
 
 /*
  * @implemented
@@ -43,6 +44,12 @@ GetClassInfoExA(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
+    }
+
+    /* Register built-in controls if not already done */
+    if (! ControlsInitialized)
+    {
+        ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
     Ret = NtUserGetClassInfo(hinst,
@@ -85,6 +92,12 @@ GetClassInfoExW(
     {
         RtlInitUnicodeString(&ClassName,
                              lpszClass);
+    }
+
+    /* Register built-in controls if not already done */
+    if (! ControlsInitialized)
+    {
+        ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
     return NtUserGetClassInfo(hinst,
