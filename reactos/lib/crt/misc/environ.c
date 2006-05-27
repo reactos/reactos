@@ -245,11 +245,11 @@ int SetEnv(const wchar_t *option)
    memcpy(name, option, (epos - option) * sizeof(wchar_t));
    name[epos - option] = 0;
 
-   if (*name == 0) || (wcschr(option, L'=') !=NULL)
+   if ((*name == 0) || (wcschr(option, L'=') !=NULL))
    {
      /* fixme check see if name contain any space or so
         so we really locate first char in name and compare 
-        it with equal        
+        it with equal       
      */        
      free(name);
      return -1;
