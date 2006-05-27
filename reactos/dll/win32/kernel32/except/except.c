@@ -278,7 +278,7 @@ RaiseException (
 	DWORD		dwExceptionCode,
 	DWORD		dwExceptionFlags,
 	DWORD		nNumberOfArguments,
-	CONST DWORD	* lpArguments		OPTIONAL
+	CONST ULONG_PTR	* lpArguments		OPTIONAL
 	)
 {
 	EXCEPTION_RECORD ExceptionRecord;
