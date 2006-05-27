@@ -346,7 +346,7 @@ PopulateCustomPathCombo(
 	LPCTSTR Path;
 	LONG rc;
 
-	ComboBox_ResetContent(hwndCombo);
+	(void)ComboBox_ResetContent(hwndCombo);
 
 	/* RegGetValue would have been better... */
 	rc = RegOpenKeyEx(
@@ -395,8 +395,8 @@ PopulateCustomPathCombo(
 
 	/* Populate combo box */
 	for (Path = Buffer; *Path; Path += _tcslen(Path))
-		ComboBox_AddString(hwndCombo, Path);
-	ComboBox_SetCurSel(hwndCombo, 0);
+		(void)ComboBox_AddString(hwndCombo, Path);
+	(void)ComboBox_SetCurSel(hwndCombo, 0);
 
 cleanup:
 	if (hKey != NULL)
@@ -788,7 +788,7 @@ NoDriverDlgProc(
 
 				case PSN_WIZBACK:
 					/* Handle a Back button click, if necessary */
-					PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_WELCOMEPAGE);
+					PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_CHSOURCE);
 					return TRUE;
 
 				case PSN_WIZFINISH:
@@ -990,7 +990,7 @@ DisplayWizard(
 	psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
 	psh.hInstance = hDllInstance;
 	psh.hwndParent = hwndParent;
-	psh.nPages = 7;
+	psh.nPages = 6;
 	psh.nStartPage = startPage;
 	psh.phpage = ahpsp;
 	psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
