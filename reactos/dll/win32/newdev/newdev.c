@@ -309,7 +309,6 @@ SearchDriver(
 	return TRUE;
 }
 
-
 static BOOL
 IsDots(IN LPCTSTR str)
 {
@@ -373,7 +372,10 @@ SearchDriverRecursive(
 			_tcscpy(FullPath, DirPath);
 			_tcscat(FullPath, FileName);
 			if (SearchDriverRecursive(DevInstData, FullPath))
+			{
+				retval = TRUE;
 				break;
+			}
 		}
 		else
 		{
