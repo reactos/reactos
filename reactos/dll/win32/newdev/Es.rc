@@ -32,6 +32,18 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
 END
 
+IDD_INSTALLFAILED DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Device installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Installation failed",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "The device could not be installed because an unexpected error happened.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,134,55,164,11
+END
+
 IDD_CHSOURCE DIALOG DISCARDABLE  0, 0, 317, 143
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalación de Dispositivos"

@@ -27,7 +27,8 @@ typedef struct _DEVINSTDATA
 	LPTSTR CustomSearchPath; /* MULTI_SZ string */
 } DEVINSTDATA, *PDEVINSTDATA;
 
-#define WM_SEARCH_FINISHED (WM_USER + 10)
+#define WM_SEARCH_FINISHED  (WM_USER + 10)
+#define WM_INSTALL_FINISHED (WM_USER + 11)
 
 /* newdev.c */
 BOOL

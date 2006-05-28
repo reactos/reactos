@@ -24,6 +24,7 @@
 #define IDD_SEARCHDRV                   2
 #define IDD_INSTALLDRV                  3
 #define IDD_NODRIVER                    4
-#define IDD_FINISHPAGE                  5
+#define IDD_INSTALLFAILED               5
+#define IDD_FINISHPAGE                  6
 
 #endif /* RESOURCE_H */
