@@ -19,9 +19,9 @@
 ;
 LIBRARY CFGMGR32.DLL
 EXPORTS
-;CMP_Init_Detection
+CMP_Init_Detection@4=SETUPAPI.CMP_Init_Detection
 ;CMP_RegisterNotification
-;CMP_Report_LogOn
+CMP_Report_LogOn@4=SETUPAPI.CMP_Report_LogOn
 ;CMP_UnregisterNotification
 ;CMP_WaitNoPendingInstallEvents
 ;CMP_WaitServices
@@ -152,8 +152,8 @@ CM_Locate_DevNode_ExW@16=SETUPAPI.CM_Locate_DevNode_ExW
 ;CM_Merge_Range_List
 ;CM_Modify_Res_Des
 ;CM_Modify_Res_Des_Ex
-;CM_Move_DevNode
-;CM_Move_DevNode_Ex
+CM_Move_DevNode@12=SETUPAPI.CM_Move_DevNode
+CM_Move_DevNode_Ex@16=SETUPAPI.CM_Move_DevNode_Ex
 ;CM_Next_Range
 CM_Open_Class_KeyA@24=SETUPAPI.CM_Open_Class_KeyA
 CM_Open_Class_KeyW@24=SETUPAPI.CM_Open_Class_KeyW
@@ -167,8 +167,8 @@ CM_Open_Class_Key_ExW@28=SETUPAPI.CM_Open_Class_Key_ExW
 ;CM_Query_Arbitrator_Free_Size_Ex
 ;CM_Query_Remove_SubTree
 ;CM_Query_Remove_SubTree_Ex
-;CM_Reenumerate_DevNode
-;CM_Reenumerate_DevNode_Ex
+CM_Reenumerate_DevNode@8=SETUPAPI.CM_Reenumerate_DevNode
+CM_Reenumerate_DevNode_Ex@12=SETUAPI.CM_Reenumerate_DevNode_Ex
 ;CM_Register_Device_Driver
 ;CM_Register_Device_Driver_Ex
 ;CM_Register_Device_InterfaceA
@@ -199,11 +199,11 @@ CM_Set_DevNode_Registry_Property_ExW@24=SETUPAPI.CM_Set_DevNode_Registry_Propert
 ;CM_Set_HW_Prof_FlagsW
 ;CM_Set_HW_Prof_Flags_ExA
 ;CM_Set_HW_Prof_Flags_ExW
-;CM_Setup_DevNode
-;CM_Setup_DevNode_Ex
+CM_Setup_DevNode@8=SETUPAPI.CM_Setup_DevNode
+CM_Setup_DevNode_Ex@12=SETUPAPI.CM_Setup_DevNode_Ex
 ;CM_Test_Range_Available
-;CM_Uninstall_DevNode
-;CM_Uninstall_DevNode_Ex
+CM_Uninstall_DevNode@8=SETUPAPI.CM_Uninstall_DevNode
+CM_Uninstall_DevNode_Ex@12=SETUPAPI.CM_Uninstall_DevNode_Ex
 ;CM_Unregister_Device_InterfaceA
 ;CM_Unregister_Device_InterfaceW
 ;CM_Unregister_Device_Interface_ExA
