@@ -27,6 +27,42 @@
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
+typedef struct {
+    unsigned int mantissal:32;
+    unsigned int mantissah:20;
+    unsigned int exponent:11;
+    unsigned int sign:1;
+} double_t;
+
+static 
+__inline
+int 
+_isinf(double __x)
+{
+	union
+	{
+		double*   __x;
+		double_t*   x;
+	} x;
+
+	x.__x = &__x;
+	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));
+}
+
+static 
+__inline
+int 
+_isnan(double __x)
+{
+	union
+	{
+		double*   __x;
+		double_t*   x;
+	} x;
+    	x.__x = &__x;
+	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
+}
+
 
 static
 __inline
@@ -245,6 +281,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 	wchar_t * str, * end;
 	const char *s;
 	const wchar_t *sw;
+	const wchar_t *ss;
 	double _double;
 
 	int flags;		/* flags to number() */
@@ -446,9 +483,44 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 		case 'f':
 		case 'g':
 		case 'G':
-            _double = (double)va_arg(args, double);
-            str = number(str, end, (int)_double, base, field_width, precision, flags);
-            continue;
+          _double = (double)va_arg(args, double);
+          
+         if ( _isnan(_double) ) {
+            ss = L"Nan";
+            len = 3;
+            while ( len > 0 ) {
+               if (str <= end)
+					*str = *ss++;
+				++str;
+               len --;
+            }
+         } else if ( _isinf(_double) < 0 ) {
+            ss = L"-Inf";
+            len = 4;
+            while ( len > 0 ) {
+              	if (str <= end)
+					*str = *ss++;
+				++str;
+               len --;
+            }
+         } else if ( _isinf(_double) > 0 ) {
+            ss = L"+Inf";
+            len = 4;
+            while ( len > 0 ) {
+               if (str <= end)
+					*str = *ss++;
+				++str;
+               len --;
+            }
+         } else {
+            if ( precision == -1 )
+               precision = 6;
+               /* FIXME the float version of number */
+               	str = number(str, end, (int)_double, base, field_width, precision, flags);           
+         }
+            
+          continue;
+
 
 
 		/* integer number formats - set up the flags and "break" */

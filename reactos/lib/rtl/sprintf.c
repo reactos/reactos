@@ -27,6 +27,42 @@
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
+typedef struct {
+    unsigned int mantissal:32;
+    unsigned int mantissah:20;
+    unsigned int exponent:11;
+    unsigned int sign:1;
+} double_t;
+
+static 
+__inline
+int 
+_isinf(double __x)
+{
+	union
+	{
+		double*   __x;
+		double_t*   x;
+	} x;
+
+	x.__x = &__x;
+	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));
+}
+
+static 
+__inline
+int 
+_isnan(double __x)
+{
+	union
+	{
+		double*   __x;
+		double_t*   x;
+	} x;
+    	x.__x = &__x;
+	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
+}
+
 
 static
 __inline
@@ -450,9 +486,42 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 		case 'f':
 		case 'g':
 		case 'G':
-            _double = (double)va_arg(args, double);
-            str = number(str, end, (int)_double, base, field_width, precision, flags);
-            continue;
+          _double = (double)va_arg(args, double);          
+         if ( _isnan(_double) ) {
+            s = "Nan";
+            len = 3;
+            while ( len > 0 ) {
+               if (str <= end)
+					*str = *s++;
+				++str;
+               len --;
+            }
+         } else if ( _isinf(_double) < 0 ) {
+            s = "-Inf";
+            len = 4;
+            while ( len > 0 ) {
+              	if (str <= end)
+					*str = *s++;
+				++str;
+               len --;
+            }
+         } else if ( _isinf(_double) > 0 ) {
+            s = "+Inf";
+            len = 4;
+            while ( len > 0 ) {
+               if (str <= end)
+					*str = *s++;
+				++str;
+               len --;
+            }
+         } else {
+            if ( precision == -1 )
+               precision = 6;
+                /* FIXME the float version of number */
+               	str = number(str, end, (int)_double, base, field_width, precision, flags);           
+         }
+            
+          continue;
 
 
 		/* integer number formats - set up the flags and "break" */
