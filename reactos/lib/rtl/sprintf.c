@@ -506,7 +506,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	{
 		/* don't write out a null byte if the buf size is zero */
 		//*end = '\0';
-	   if (str-buf >=cnt ) 
+	   if (str-buf >cnt ) 
        {
 		 *end = '\0';
        }

@@ -504,7 +504,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 	{
 		/* don't write out a null byte if the buf size is zero */
 		//*end = '\0';
-	   if (str-buf >=cnt ) 
+	   if (str-buf >cnt ) 
        {
 		 *end = L'\0';
        }
