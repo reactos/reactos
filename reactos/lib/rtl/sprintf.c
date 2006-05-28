@@ -253,6 +253,8 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				   number of chars for from string */
 	int qualifier;		/* 'h', 'l', 'L', 'I' or 'w' for integer fields */
 
+    /* clear the string buffer with zero so we do not need NULL terment it at end */ 
+    
 	str = buf;
 	end = buf + cnt - 1;
 	if (end < buf - 1) {
@@ -501,8 +503,20 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	if (str <= end)
 		*str = '\0';
 	else if (cnt > 0)
+	{
 		/* don't write out a null byte if the buf size is zero */
-		*end = '\0';
+		//*end = '\0';
+	   if (str-buf >=cnt ) 
+       {
+		 *end = '\0';
+       }
+       else
+       {
+           end++;
+          *end = '\0';
+       }
+       
+    }
 	return str-buf;
 }
 
