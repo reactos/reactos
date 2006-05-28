@@ -105,6 +105,7 @@ typedef struct _GREEN_DRIVER_EXTENSION
 	ULONG SampleRate;
 
 	PDEVICE_OBJECT GreenMainDO;
+	PDEVICE_OBJECT LowerDevice;
 } GREEN_DRIVER_EXTENSION, *PGREEN_DRIVER_EXTENSION;
 
 /************************************ createclose.c */

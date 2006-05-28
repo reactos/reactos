@@ -38,9 +38,9 @@ ServiceType    = 1
 StartType      = 1
 ErrorControl   = 0
 ServiceBinary  = %12%\green.sys
-LoadOrderGroup = Video Init
+LoadOrderGroup = Extended base
 Description    = %GREEN.DriverDesc%
-Dependencies   = blue
+Dependencies   = blue, serial
 
 [Green_AddReg.NT]
 HKLM,"SYSTEM\CurrentControlSet\Services\green\Parameters","AttachedDevice",0x00000000,"\Device\Serial1"
