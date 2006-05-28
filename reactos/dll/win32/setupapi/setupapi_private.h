@@ -72,8 +72,16 @@ struct InfFileDetails
     HINF hInf;
     LONG References;
 
-    /* May contain no directory if the file is already in %SYSTEMROOT%\Inf */
-    WCHAR FullInfFileName[ANYSIZE_ARRAY];
+    /* Contains the directory name of the .inf file. This field may
+     * be NULL if the file is already in %SYSTEMROOT%\Inf.
+     * Points into szData at then end of the structure */
+    PCWSTR DirectoryName;
+    /* Contains the full file name of the .inf file. However, the directory
+     * part may be missing if the file is already in %SYSTEMROOT%\Inf.
+     * Points into szData at then end of the structure */
+    PCWSTR FullInfFileName;
+
+    WCHAR szData[ANYSIZE_ARRAY];
 };
 
 struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfoElement.DriverListHead */

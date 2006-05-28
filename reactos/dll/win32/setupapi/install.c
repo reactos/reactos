@@ -121,7 +121,7 @@ static BOOL copy_files_callback( HINF hinf, PCWSTR field, void *arg )
     struct files_callback_info *info = arg;
 
     if (field[0] == '@')  /* special case: copy single file */
-        SetupQueueDefaultCopyW( info->queue, info->layout, info->src_root, NULL, field, info->copy_flags );
+        SetupQueueDefaultCopyW( info->queue, info->layout, info->src_root, NULL, &field[1], info->copy_flags );
     else
         SetupQueueCopySectionW( info->queue, info->src_root, info->layout, hinf, field, info->copy_flags );
     return TRUE;

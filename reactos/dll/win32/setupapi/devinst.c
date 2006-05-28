@@ -3287,7 +3287,7 @@ SetupDiInstallClassExW(
                 SectionName,
                 SPINST_REGISTRY | SPINST_FILES | SPINST_BITREG | SPINST_INIFILES | SPINST_INI2REG,
                 hRootKey,
-                NULL, /* SourceRootPath */
+                NULL, /* FIXME: SourceRootPath */
                 !(Flags & DI_NOVCP) && (Flags & DI_FORCECOPY) ? SP_COPY_FORCE_IN_USE : 0, /* CopyFlags */
                 SetupDefaultQueueCallbackW,
                 callback_context,
@@ -5639,6 +5639,49 @@ done:
     return Result;
 }
 
+static struct InfFileDetails *
+CreateInfFileDetails(
+    IN LPCWSTR InfFileName)
+{
+    struct InfFileDetails *details;
+    PWCHAR last;
+    DWORD Needed;
+
+    last = strrchrW(InfFileName, '\\');
+    Needed = FIELD_OFFSET(struct InfFileDetails, szData)
+        + strlenW(InfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+    if (last != NULL)
+    Needed += (last - InfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+
+    details = HeapAlloc(GetProcessHeap(), 0, Needed);
+    if (!details)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    memset(details, 0, Needed);
+    if (last)
+    {
+        details->DirectoryName = details->szData;
+        details->FullInfFileName = &details->szData[last - InfFileName + 1];
+        strncpyW(details->DirectoryName, InfFileName, last - InfFileName);
+    }
+    else
+        details->FullInfFileName = details->szData;
+    strcpyW(details->FullInfFileName, InfFileName);
+    ReferenceInfFile(details);
+    details->hInf = SetupOpenInfFileW(InfFileName, NULL, INF_STYLE_WIN4, NULL);
+    if (details->hInf == INVALID_HANDLE_VALUE)
+    {
+        HeapFree(GetProcessHeap(), 0, details);
+        return NULL;
+    }
+    DPRINT1("FullInfFileName %S\n", details->FullInfFileName);
+    DPRINT1("DirectoryName %S\n", details->DirectoryName);
+    return details;
+}
+
 /***********************************************************************
  *		SetupDiBuildDriverInfoList (SETUPAPI.@)
  */
@@ -5803,23 +5846,9 @@ SetupDiBuildDriverInfoList(
                 strcpyW(pFullFilename, filename);
                 TRACE("Opening file %s\n", debugstr_w(FullInfFileName));
 
-                currentInfFileDetails = HeapAlloc(
-                    GetProcessHeap(),
-                    0,
-                    FIELD_OFFSET(struct InfFileDetails, FullInfFileName) + strlenW(FullInfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+                currentInfFileDetails = CreateInfFileDetails(FullInfFileName);
                 if (!currentInfFileDetails)
                     continue;
-                memset(currentInfFileDetails, 0, sizeof(struct InfFileDetails));
-                strcpyW(currentInfFileDetails->FullInfFileName, FullInfFileName);
-
-                currentInfFileDetails->hInf = SetupOpenInfFileW(FullInfFileName, NULL, INF_STYLE_WIN4, NULL);
-                ReferenceInfFile(currentInfFileDetails);
-                if (currentInfFileDetails->hInf == INVALID_HANDLE_VALUE)
-                {
-                    HeapFree(GetProcessHeap(), 0, currentInfFileDetails);
-                    currentInfFileDetails = NULL;
-                    continue;
-                }
 
                 if (!GetVersionInformationFromInfFile(
                     currentInfFileDetails->hInf,
@@ -5828,8 +5857,7 @@ SetupDiBuildDriverInfoList(
                     &DriverDate,
                     &DriverVersion))
                 {
-                    SetupCloseInfFile(currentInfFileDetails->hInf);
-                    HeapFree(GetProcessHeap(), 0, currentInfFileDetails->hInf);
+                    DereferenceInfFile(currentInfFileDetails);
                     currentInfFileDetails = NULL;
                     continue;
                 }
@@ -7378,7 +7406,7 @@ SetupDiInstallDriverFiles(
         }
         ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
             SelectedDriver->InfFileDetails->hInf, SectionName,
-            SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
+            SPINST_FILES, NULL, SelectedDriver->InfFileDetails->DirectoryName, SP_COPY_NEWER,
             InstallMsgHandler, InstallMsgHandlerContext,
             DeviceInfoSet, DeviceInfoData);
         if (!ret)
@@ -7388,7 +7416,7 @@ SetupDiInstallDriverFiles(
         lstrcatW(SectionName, DotCoInstallers);
         ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
             SelectedDriver->InfFileDetails->hInf, SectionName,
-            SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
+            SPINST_FILES, NULL, SelectedDriver->InfFileDetails->DirectoryName, SP_COPY_NEWER,
             InstallMsgHandler, InstallMsgHandlerContext,
             DeviceInfoSet, DeviceInfoData);
         if (!ret)
@@ -7485,7 +7513,7 @@ SetupDiRegisterCoDeviceInstallers(
         }
         Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
             SelectedDriver->InfFileDetails->hInf, SectionName,
-            DoAction, hKey, NULL, SP_COPY_NEWER,
+            DoAction, hKey, SelectedDriver->InfFileDetails->DirectoryName, SP_COPY_NEWER,
             SetupDefaultQueueCallback, Context,
             DeviceInfoSet, DeviceInfoData);
         if (!Result)
@@ -7792,7 +7820,7 @@ SetupDiInstallDevice(
     pSectionName = &SectionName[strlenW(SectionName)];
 
     /* Get information from [Version] section */
-    if (!SetupDiGetINFClassW(SelectedDriver->Details.InfFileName, &ClassGuid, ClassName, MAX_CLASS_NAME_LEN, &RequiredSize))
+    if (!SetupDiGetINFClassW(SelectedDriver->InfFileDetails->FullInfFileName, &ClassGuid, ClassName, MAX_CLASS_NAME_LEN, &RequiredSize))
         goto cleanup;
     /* Format ClassGuid to a string */
     if (UuidToStringW((UUID*)&ClassGuid, &lpGuidString) != RPC_S_OK)
@@ -7834,7 +7862,7 @@ SetupDiInstallDevice(
     *pSectionName = '\0';
     Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
         SelectedDriver->InfFileDetails->hInf, SectionName,
-        DoAction, hKey, NULL, SP_COPY_NEWER,
+        DoAction, hKey, SelectedDriver->InfFileDetails->DirectoryName, SP_COPY_NEWER,
         SetupDefaultQueueCallback, Context,
         DeviceInfoSet, DeviceInfoData);
     if (!Result)
