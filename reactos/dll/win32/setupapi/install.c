@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "setupapi_private.h"
@@ -453,6 +453,9 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
     HMODULE module;
     HRESULT res;
     SP_REGISTER_CONTROL_STATUSW status;
+#ifdef __WINESRC__
+    IMAGE_NT_HEADERS *nt;
+#endif
 
     status.cbSize = sizeof(status);
     status.FileName = path;
@@ -481,6 +484,47 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
         status.Win32Error = GetLastError();
         goto done;
     }
+
+#ifdef __WINESRC__
+    if ((nt = RtlImageNtHeader( module )) && !(nt->FileHeader.Characteristics & IMAGE_FILE_DLL))
+    {
+        /* file is an executable, not a dll */
+        STARTUPINFOW startup;
+        PROCESS_INFORMATION info;
+        WCHAR *cmd_line;
+        BOOL res;
+        static const WCHAR format[] = {'"','%','s','"',' ','%','s',0};
+        static const WCHAR default_args[] = {'/','R','e','g','S','e','r','v','e','r',0};
+
+        FreeLibrary( module );
+        module = NULL;
+        if (!args) args = default_args;
+        cmd_line = HeapAlloc( GetProcessHeap(), 0, (strlenW(path) + strlenW(args) + 4) * sizeof(WCHAR) );
+        sprintfW( cmd_line, format, path, args );
+        memset( &startup, 0, sizeof(startup) );
+        startup.cb = sizeof(startup);
+        TRACE( "executing %s\n", debugstr_w(cmd_line) );
+        res = CreateProcessW( NULL, cmd_line, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info );
+        HeapFree( GetProcessHeap(), 0, cmd_line );
+        if (!res)
+        {
+            status.FailureCode = SPREG_LOADLIBRARY;
+            status.Win32Error = GetLastError();
+            goto done;
+        }
+        CloseHandle( info.hThread );
+
+        if (WaitForSingleObject( info.hProcess, timeout*1000 ) == WAIT_TIMEOUT)
+        {
+            /* timed out, kill the process */
+            TerminateProcess( info.hProcess, 1 );
+            status.FailureCode = SPREG_TIMEOUT;
+            status.Win32Error = ERROR_TIMEOUT;
+        }
+        CloseHandle( info.hProcess );
+        goto done;
+    }
+#endif // __WINESRC__
 
     if (flags & FLG_REGSVR_DLLREGISTER)
     {
@@ -588,6 +632,50 @@ static BOOL register_dlls_callback( HINF hinf, PCWSTR field, void *arg )
     }
     return ret;
 }
+
+#ifdef __WINESRC__
+/***********************************************************************
+ *            fake_dlls_callback
+ *
+ * Called once for each WineFakeDlls entry in a given section.
+ */
+static BOOL fake_dlls_callback( HINF hinf, PCWSTR field, void *arg )
+{
+    INFCONTEXT context;
+    BOOL ret = TRUE;
+    BOOL ok = SetupFindFirstLineW( hinf, field, NULL, &context );
+
+    for (; ok; ok = SetupFindNextLine( &context, &context ))
+    {
+        WCHAR *path, *p;
+        WCHAR buffer[MAX_INF_STRING_LENGTH];
+
+        /* get directory */
+        if (!(path = PARSER_get_dest_dir( &context ))) continue;
+
+        /* get dll name */
+        if (!SetupGetStringFieldW( &context, 3, buffer, sizeof(buffer)/sizeof(WCHAR), NULL ))
+            goto done;
+        if (!(p = HeapReAlloc( GetProcessHeap(), 0, path,
+                               (strlenW(path) + strlenW(buffer) + 2) * sizeof(WCHAR) ))) goto done;
+        path = p;
+        p += strlenW(p);
+        if (p == path || p[-1] != '\\') *p++ = '\\';
+        strcpyW( p, buffer );
+
+        /* get source dll */
+        if (SetupGetStringFieldW( &context, 4, buffer, sizeof(buffer)/sizeof(WCHAR), NULL ))
+            p = buffer;  /* otherwise use target base name as default source */
+
+        create_fake_dll( path, p );  /* ignore errors */
+
+    done:
+        HeapFree( GetProcessHeap(), 0, path );
+        if (!ret) break;
+    }
+    return ret;
+}
+#endif // __WINESRC__
 
 /***********************************************************************
  *            update_ini_callback
@@ -920,6 +1008,11 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
 
         if (!iterate_section_fields( hinf, section, RegisterDlls, register_dlls_callback, &info ))
             return FALSE;
+
+#ifdef __WINESRC__
+        if (!iterate_section_fields( hinf, section, WineFakeDlls, fake_dlls_callback, NULL ))
+            return FALSE;
+#endif // __WINESRC__
     }
     if (flags & SPINST_UNREGSVR)
     {
