@@ -1,6 +1,10 @@
+#ifndef __NEWDEV_PRIVATE_H
+#define __NEWDEV_PRIVATE_H
+
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
+#include <newdev.h>
 #include <regstr.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
@@ -52,3 +56,5 @@ DisplayWizard(
 	IN PDEVINSTDATA DevInstData,
 	IN HWND hwndParent,
 	IN UINT startPage);
+
+#endif /* __NEWDEV_PRIVATE_H */
