@@ -180,6 +180,110 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 	return buf;
 }
 
+static wchar_t *
+numberf(wchar_t * buf, wchar_t * end, double num, int base, int size, int precision, int type)
+{
+	wchar_t c, sign, tmp[66];
+	const wchar_t *digits;
+	const wchar_t *small_digits = L"0123456789abcdefghijklmnopqrstuvwxyz";
+	const wchar_t *large_digits = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	int i;
+	long long x;
+
+    /* FIXME 
+       the float version of number is direcly copy of number 
+    */
+    
+    
+	digits = (type & LARGE) ? large_digits : small_digits;
+	if (type & LEFT)
+		type &= ~ZEROPAD;
+	if (base < 2 || base > 36)
+		return 0;
+	c = (type & ZEROPAD) ? L'0' : L' ';
+	sign = 0;
+	if (type & SIGN) {
+		if (num < 0) {
+			sign = L'-';
+			num = -num;
+			size--;
+		} else if (type & PLUS) {
+			sign = L'+';
+			size--;
+		} else if (type & SPACE) {
+			sign = ' ';
+			size--;
+		}
+	}
+	if (type & SPECIAL) {
+		if (base == 16)
+			size -= 2;
+		else if (base == 8)
+			size--;
+	}
+	i = 0;
+	if (num == 0)
+		tmp[i++] = L'0';
+	else while (num != 0)
+	{
+        x = num;
+		tmp[i++] = digits[do_div(&x,base)];
+		num = x;
+    }
+	if (i > precision)
+		precision = i;
+	size -= precision;
+	if (!(type&(ZEROPAD+LEFT))) {
+		while(size-->0) {
+			if (buf <= end)
+				*buf = L' ';
+			++buf;
+		}
+	}
+	if (sign) {
+		if (buf <= end)
+			*buf = sign;
+		++buf;
+	}
+	if (type & SPECIAL) {
+		if (base==8) {
+			if (buf <= end)
+				*buf = L'0';
+			++buf;
+		} else if (base==16) {
+			if (buf <= end)
+				*buf = L'0';
+			++buf;
+			if (buf <= end)
+				*buf = digits[33];
+			++buf;
+		}
+	}
+	if (!(type & LEFT)) {
+		while (size-- > 0) {
+			if (buf <= end)
+				*buf = c;
+			++buf;
+		}
+	}
+	while (i < precision--) {
+		if (buf <= end)
+			*buf = L'0';
+		++buf;
+	}
+	while (i-- > 0) {
+		if (buf <= end)
+			*buf = tmp[i];
+		++buf;
+	}
+	while (size-- > 0) {
+		if (buf <= end)
+			*buf = L' ';
+		++buf;
+	}
+	return buf;
+}
+
 static wchar_t*
 string(wchar_t* buf, wchar_t* end, const char* s, int len, int field_width, int precision, int flags)
 {
@@ -514,9 +618,8 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
             }
          } else {
             if ( precision == -1 )
-               precision = 6;
-               /* FIXME the float version of number */
-               	str = number(str, end, (int)_double, base, field_width, precision, flags);           
+               precision = 6;               
+               	str = numberf(str, end, _double, base, field_width, precision, flags);           
          }
             
           continue;
