@@ -15,6 +15,33 @@
 
 #define INITIAL_FAMILY_COUNT 64
 
+/***********************************************************************
+ *              TEXTMETRIC conversion functions.
+ */
+static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
+{
+    ptmA->tmHeight = ptmW->tmHeight;
+    ptmA->tmAscent = ptmW->tmAscent;
+    ptmA->tmDescent = ptmW->tmDescent;
+    ptmA->tmInternalLeading = ptmW->tmInternalLeading;
+    ptmA->tmExternalLeading = ptmW->tmExternalLeading;
+    ptmA->tmAveCharWidth = ptmW->tmAveCharWidth;
+    ptmA->tmMaxCharWidth = ptmW->tmMaxCharWidth;
+    ptmA->tmWeight = ptmW->tmWeight;
+    ptmA->tmOverhang = ptmW->tmOverhang;
+    ptmA->tmDigitizedAspectX = ptmW->tmDigitizedAspectX;
+    ptmA->tmDigitizedAspectY = ptmW->tmDigitizedAspectY;
+    ptmA->tmFirstChar = ptmW->tmFirstChar > 255 ? 255 : ptmW->tmFirstChar;
+    ptmA->tmLastChar = ptmW->tmLastChar > 255 ? 255 : ptmW->tmLastChar;
+    ptmA->tmDefaultChar = ptmW->tmDefaultChar > 255 ? 255 : ptmW->tmDefaultChar;
+    ptmA->tmBreakChar = ptmW->tmBreakChar > 255 ? 255 : ptmW->tmBreakChar;
+    ptmA->tmItalic = ptmW->tmItalic;
+    ptmA->tmUnderlined = ptmW->tmUnderlined;
+    ptmA->tmStruckOut = ptmW->tmStruckOut;
+    ptmA->tmPitchAndFamily = ptmW->tmPitchAndFamily;
+    ptmA->tmCharSet = ptmW->tmCharSet;
+}
+
 static BOOL FASTCALL
 MetricsCharConvert(WCHAR w, UCHAR *b)
   {
@@ -538,6 +565,160 @@ GetGlyphOutlineW(
   return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
 
+
+/*
+ * @implemented
+ */
+UINT
+APIENTRY
+GetOutlineTextMetricsA(
+	HDC			hdc,
+	UINT			cbData,
+	LPOUTLINETEXTMETRICA	lpOTM
+	)
+{
+    char buf[512], *ptr;
+    UINT ret, needed;
+    OUTLINETEXTMETRICW *lpOTMW = (OUTLINETEXTMETRICW *)buf;
+    OUTLINETEXTMETRICA *output = lpOTM;
+    INT left, len;
+
+    if((ret = GetOutlineTextMetricsW(hdc, 0, NULL)) == 0)
+        return 0;
+    if(ret > sizeof(buf))
+	lpOTMW = HeapAlloc(GetProcessHeap(), 0, ret);
+    GetOutlineTextMetricsW(hdc, ret, lpOTMW);
+
+    needed = sizeof(OUTLINETEXTMETRICA);
+    if(lpOTMW->otmpFamilyName)
+        needed += WideCharToMultiByte(CP_ACP, 0,
+	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFamilyName), -1,
+				      NULL, 0, NULL, NULL);
+    if(lpOTMW->otmpFaceName)
+        needed += WideCharToMultiByte(CP_ACP, 0,
+	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFaceName), -1,
+				      NULL, 0, NULL, NULL);
+    if(lpOTMW->otmpStyleName)
+        needed += WideCharToMultiByte(CP_ACP, 0,
+	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpStyleName), -1,
+				      NULL, 0, NULL, NULL);
+    if(lpOTMW->otmpFullName)
+        needed += WideCharToMultiByte(CP_ACP, 0,
+	   (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFullName), -1,
+				      NULL, 0, NULL, NULL);
+
+    if(!lpOTM) {
+        ret = needed;
+	goto end;
+    }
+
+    DPRINT("needed = %d\n", needed);
+    if(needed > cbData)
+        /* Since the supplied buffer isn't big enough, we'll alloc one
+           that is and memcpy the first cbData bytes into the lpOTM at
+           the end. */
+        output = HeapAlloc(GetProcessHeap(), 0, needed);
+
+    ret = output->otmSize = min(needed, cbData);
+    FONT_TextMetricWToA( &lpOTMW->otmTextMetrics, &output->otmTextMetrics );
+    output->otmFiller = 0;
+    output->otmPanoseNumber = lpOTMW->otmPanoseNumber;
+    output->otmfsSelection = lpOTMW->otmfsSelection;
+    output->otmfsType = lpOTMW->otmfsType;
+    output->otmsCharSlopeRise = lpOTMW->otmsCharSlopeRise;
+    output->otmsCharSlopeRun = lpOTMW->otmsCharSlopeRun;
+    output->otmItalicAngle = lpOTMW->otmItalicAngle;
+    output->otmEMSquare = lpOTMW->otmEMSquare;
+    output->otmAscent = lpOTMW->otmAscent;
+    output->otmDescent = lpOTMW->otmDescent;
+    output->otmLineGap = lpOTMW->otmLineGap;
+    output->otmsCapEmHeight = lpOTMW->otmsCapEmHeight;
+    output->otmsXHeight = lpOTMW->otmsXHeight;
+    output->otmrcFontBox = lpOTMW->otmrcFontBox;
+    output->otmMacAscent = lpOTMW->otmMacAscent;
+    output->otmMacDescent = lpOTMW->otmMacDescent;
+    output->otmMacLineGap = lpOTMW->otmMacLineGap;
+    output->otmusMinimumPPEM = lpOTMW->otmusMinimumPPEM;
+    output->otmptSubscriptSize = lpOTMW->otmptSubscriptSize;
+    output->otmptSubscriptOffset = lpOTMW->otmptSubscriptOffset;
+    output->otmptSuperscriptSize = lpOTMW->otmptSuperscriptSize;
+    output->otmptSuperscriptOffset = lpOTMW->otmptSuperscriptOffset;
+    output->otmsStrikeoutSize = lpOTMW->otmsStrikeoutSize;
+    output->otmsStrikeoutPosition = lpOTMW->otmsStrikeoutPosition;
+    output->otmsUnderscoreSize = lpOTMW->otmsUnderscoreSize;
+    output->otmsUnderscorePosition = lpOTMW->otmsUnderscorePosition;
+
+
+    ptr = (char*)(output + 1);
+    left = needed - sizeof(*output);
+
+    if(lpOTMW->otmpFamilyName) {
+        output->otmpFamilyName = (LPSTR)(ptr - (char*)output);
+	len = WideCharToMultiByte(CP_ACP, 0,
+	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFamilyName), -1,
+				  ptr, left, NULL, NULL);
+	left -= len;
+	ptr += len;
+    } else
+        output->otmpFamilyName = 0;
+
+    if(lpOTMW->otmpFaceName) {
+        output->otmpFaceName = (LPSTR)(ptr - (char*)output);
+	len = WideCharToMultiByte(CP_ACP, 0,
+	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFaceName), -1,
+				  ptr, left, NULL, NULL);
+	left -= len;
+	ptr += len;
+    } else
+        output->otmpFaceName = 0;
+
+    if(lpOTMW->otmpStyleName) {
+        output->otmpStyleName = (LPSTR)(ptr - (char*)output);
+	len = WideCharToMultiByte(CP_ACP, 0,
+	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpStyleName), -1,
+				  ptr, left, NULL, NULL);
+	left -= len;
+	ptr += len;
+    } else
+        output->otmpStyleName = 0;
+
+    if(lpOTMW->otmpFullName) {
+        output->otmpFullName = (LPSTR)(ptr - (char*)output);
+	len = WideCharToMultiByte(CP_ACP, 0,
+	     (WCHAR*)((char*)lpOTMW + (int)lpOTMW->otmpFullName), -1,
+				  ptr, left, NULL, NULL);
+	left -= len;
+    } else
+        output->otmpFullName = 0;
+
+    assert(left == 0);
+
+    if(output != lpOTM) {
+        memcpy(lpOTM, output, cbData);
+        HeapFree(GetProcessHeap(), 0, output);
+    }
+
+end:
+    if(lpOTMW != (OUTLINETEXTMETRICW *)buf)
+        HeapFree(GetProcessHeap(), 0, lpOTMW);
+
+    return ret;
+}
+
+
+/*
+ * @implemented
+ */
+UINT
+APIENTRY
+GetOutlineTextMetricsW(
+	HDC			hdc,
+	UINT			cbData,
+	LPOUTLINETEXTMETRICW	lpOTM
+	)
+{
+  return NtGdiGetOutlineTextMetrics(hdc, cbData, lpOTM);
+}
 
 
 /*

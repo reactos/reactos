@@ -2143,15 +2143,68 @@ NtGdiGetKerningPairs(HDC  hDC,
   return 0;
 }
 
+/*
+ From "Undocumented Windows 2000 Secrets" Appendix B, Table B-2, page
+ 472, this is NtGdiGetOutlineTextMetricsInternalW.
+ */
 UINT
 STDCALL
 NtGdiGetOutlineTextMetrics(HDC  hDC,
                                 UINT  Data,
                                 LPOUTLINETEXTMETRICW  otm)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PDC dc;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGDI;
+  HFONT hFont = 0;
+  ULONG Size;
+  OUTLINETEXTMETRICW *potm;
+  NTSTATUS Status;
+  
+  dc = DC_LockDc(hDC);
+  if (dc == NULL)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+  hFont = dc->w.hFont;
+  TextObj = TEXTOBJ_LockText(hFont);
+  DC_UnlockDc(dc);
+  if (TextObj == NULL)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+  FontGDI = ObjToGDI(TextObj->Font, FONT);
+  TEXTOBJ_UnlockText(TextObj);
+  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+  if (!otm) return Size;
+  if (Size > Data)
+    {
+      SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+      return 0;
+    }
+  potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+  if (NULL == potm)
+    {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return 0;
+    }
+  IntGetOutlineTextMetrics(FontGDI, Size, potm);
+  if (otm)
+    {
+      Status = MmCopyToCaller(otm, potm, Size);
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          ExFreePool(potm);
+          return 0;
+        }
+    }
+  ExFreePool(potm);
+  return Size;
 }
+
 
 BOOL
 APIENTRY
