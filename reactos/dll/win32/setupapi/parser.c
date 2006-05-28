@@ -2145,10 +2145,8 @@ SetupGetInfFileListA(
     }
 
 Cleanup:
-    if (DirectoryPathW != NULL)
-        MyFree(DirectoryPathW);
-    if (ReturnBufferW != NULL)
-        MyFree(ReturnBufferW);
+    MyFree(DirectoryPathW);
+    MyFree(ReturnBufferW);
 
     return ret;
 }
@@ -2222,10 +2220,27 @@ BOOL WINAPI SetupDiGetINFClassA(
     }
 
 Cleanup:
-    if (InfNameW != NULL)
-        MyFree(InfNameW);
-    if (ClassNameW != NULL)
-        MyFree(ClassNameW);
+    MyFree(InfNameW);
+    MyFree(ClassNameW);
 
     return ret;
+}
+
+BOOL EnumerateSectionsStartingWith(
+    IN HINF hInf,
+    IN LPCWSTR pStr,
+    IN FIND_CALLBACK Callback,
+    IN PVOID Context)
+{
+    struct inf_file *file = (struct inf_file *)hInf;
+    size_t len = strlenW(pStr);
+    unsigned int i;
+
+    for (i = 0; i < file->nb_sections; i++)
+        if (strncmpiW(pStr, file->sections[i]->name, len) == 0)
+        {
+            if (!Callback(file->sections[i]->name, Context))
+                return FALSE;
+        }
+    return TRUE;
 }

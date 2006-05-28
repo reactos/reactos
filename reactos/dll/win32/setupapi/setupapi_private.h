@@ -21,7 +21,9 @@
 #define __SETUPAPI_PRIVATE_H
 
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <share.h>
 #include <wchar.h>
 
@@ -230,5 +232,8 @@ extern OSVERSIONINFOW OsVersionInfo;
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
 
 BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value);
+
+typedef BOOL (*FIND_CALLBACK)(LPCWSTR SectionName, PVOID Context);
+BOOL EnumerateSectionsStartingWith(HINF hInf, LPCWSTR pStr, FIND_CALLBACK Callback, PVOID Context);
 
 #endif /* __SETUPAPI_PRIVATE_H */

@@ -86,6 +86,15 @@ struct CoInstallerElement
     PVOID PrivateData;
 };
 
+struct GetSectionCallbackInfo
+{
+    PSP_ALTPLATFORM_INFO PlatformInfo;
+    BYTE ProductType;
+    WORD SuiteMask;
+    WCHAR BestSection[LINE_LEN + 1];
+    DWORD BestScore1, BestScore2, BestScore3, BestScore4, BestScore5;
+};
+
 static BOOL
 PropertyChangeHandler(
     IN HDEVINFO DeviceInfoSet,
@@ -948,6 +957,291 @@ cleanup:
     return bResult;
 }
 
+/* Lower scores are best ones */
+static BOOL
+CheckSectionValid(
+    IN LPCWSTR SectionName,
+    IN PSP_ALTPLATFORM_INFO PlatformInfo,
+    IN BYTE ProductType,
+    IN WORD SuiteMask,
+    OUT PDWORD ScorePlatform,
+    OUT PDWORD ScoreMajorVersion,
+    OUT PDWORD ScoreMinorVersion,
+    OUT PDWORD ScoreProductType,
+    OUT PDWORD ScoreSuiteMask)
+{
+    LPWSTR Section = NULL;
+    LPCWSTR pExtensionPlatform, pExtensionArchitecture;
+    LPWSTR Fields[6];
+    DWORD i;
+    BOOL ret = FALSE;
+
+    TRACE("%s %p 0x%x 0x%x\n",
+        debugstr_w(SectionName), PlatformInfo, ProductType, SuiteMask);
+
+    static const WCHAR ExtensionPlatformNone[]  = {'.',0};
+    static const WCHAR ExtensionPlatformNT[]  = {'.','N','T',0};
+    static const WCHAR ExtensionPlatformWindows[]  = {'.','W','i','n',0};
+
+    static const WCHAR ExtensionArchitectureNone[]  = {0};
+    static const WCHAR ExtensionArchitecturealpha[]  = {'a','l','p','h','a',0};
+    static const WCHAR ExtensionArchitectureamd64[]  = {'a','m','d','6','4',0};
+    static const WCHAR ExtensionArchitectureia64[]  = {'i','a','6','4',0};
+    static const WCHAR ExtensionArchitecturemips[]  = {'m','i','p','s',0};
+    static const WCHAR ExtensionArchitectureppc[]  = {'p','p','c',0};
+    static const WCHAR ExtensionArchitecturex86[]  = {'x','8','6',0};
+
+    *ScorePlatform = *ScoreMajorVersion = *ScoreMinorVersion = *ScoreProductType = *ScoreSuiteMask = 0;
+
+    Section = DuplicateString(SectionName);
+    if (!Section)
+    {
+        TRACE("DuplicateString() failed\n");
+        goto cleanup;
+    }
+
+    /* Set various extensions values */
+    switch (PlatformInfo->Platform)
+    {
+        case VER_PLATFORM_WIN32_WINDOWS:
+            pExtensionPlatform = ExtensionPlatformWindows;
+            break;
+        case VER_PLATFORM_WIN32_NT:
+            pExtensionPlatform = ExtensionPlatformNT;
+            break;
+        default:
+            ERR("Unkown platform 0x%lx\n", PlatformInfo->Platform);
+            pExtensionPlatform = ExtensionPlatformNone;
+            break;
+    }
+    switch (PlatformInfo->ProcessorArchitecture)
+    {
+        case PROCESSOR_ARCHITECTURE_ALPHA:
+            pExtensionArchitecture = ExtensionArchitecturealpha;
+            break;
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            pExtensionArchitecture = ExtensionArchitectureamd64;
+            break;
+        case PROCESSOR_ARCHITECTURE_IA64:
+            pExtensionArchitecture = ExtensionArchitectureia64;
+            break;
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            pExtensionArchitecture = ExtensionArchitecturex86;
+            break;
+        case PROCESSOR_ARCHITECTURE_MIPS:
+            pExtensionArchitecture = ExtensionArchitecturemips;
+            break;
+        case PROCESSOR_ARCHITECTURE_PPC:
+            pExtensionArchitecture = ExtensionArchitectureppc;
+            break;
+        default:
+            ERR("Unknown processor architecture 0x%x\n", PlatformInfo->ProcessorArchitecture);
+        case PROCESSOR_ARCHITECTURE_UNKNOWN:
+            pExtensionArchitecture = ExtensionArchitectureNone;
+            break;
+    }
+
+    /*
+     * Field[0] Platform
+     * Field[1] Architecture
+     * Field[2] Major version
+     * Field[3] Minor version
+     * Field[4] Product type
+     * Field[5] Suite mask
+     * Remark: lastests fields may be NULL if the information is not provided
+     */
+    Fields[0] = strchrW(Section, '.');
+    if (Fields[0] == NULL)
+    {
+        TRACE("No extension found\n");
+        *ScorePlatform = *ScoreMajorVersion = *ScoreMinorVersion = *ScoreProductType = *ScoreSuiteMask = ULONG_MAX;
+        ret = TRUE;
+        goto cleanup;
+    }
+    Fields[1] = Fields[0] + 1;
+    Fields[2] = Fields[3] = Fields[4] = Fields[5] = NULL;
+    for (i = 2; Fields[i - 1] != NULL && i < 6; i++)
+    {
+        Fields[i] = wcschr(Fields[i - 1], '.');
+        if (Fields[i])
+        {
+            Fields[i]++;
+            *(Fields[i] - 1) = L'\0';
+        }
+    }
+    /* Take care of first 2 fields */
+    if (strncmpiW(Fields[0], ExtensionPlatformWindows, strlenW(ExtensionPlatformWindows)) == 0)
+    {
+        if (PlatformInfo->Platform != VER_PLATFORM_WIN32_WINDOWS)
+        {
+            TRACE("Mismatch on platform field\n");
+            goto cleanup;
+        }
+        Fields[1] += wcslen(ExtensionPlatformWindows) - 1;
+    }
+    else if (strncmpiW(Fields[0], ExtensionPlatformNT, strlenW(ExtensionPlatformNT)) == 0)
+    {
+        if (PlatformInfo->Platform != VER_PLATFORM_WIN32_NT)
+        {
+            TRACE("Mismatch on platform field\n");
+            goto cleanup;
+        }
+        Fields[1] += wcslen(ExtensionPlatformNT) - 1;
+    }
+    else
+    {
+        /* No platform specified */
+        *ScorePlatform |= 0x02;
+    }
+    if (strcmpiW(Fields[1], ExtensionArchitectureNone) == 0)
+    {
+        /* No architecture specified */
+        *ScorePlatform |= 0x01;
+    }
+    else if (strcmpiW(Fields[1], pExtensionArchitecture) != 0)
+    {
+        TRACE("Mismatch on architecture field ('%s' and '%s')\n",
+            debugstr_w(Fields[1]), debugstr_w(pExtensionArchitecture));
+        goto cleanup;
+    }
+
+    /* Check if informations are matching */
+    if (Fields[2] && *Fields[2])
+    {
+        DWORD MajorVersion, MinorVersion = 0;
+        MajorVersion = strtoulW(Fields[2], NULL, 0);
+        if ((MajorVersion == 0 || MajorVersion == ULONG_MAX) &&
+            (errno == ERANGE || errno == EINVAL))
+        {
+            TRACE("Wrong MajorVersion ('%s')\n", debugstr_w(Fields[2]));
+            goto cleanup;
+        }
+        if (Fields[3] && *Fields[3])
+        {
+            MinorVersion = strtoulW(Fields[3], NULL, 0);
+            if ((MinorVersion == 0 || MinorVersion == ULONG_MAX) &&
+                (errno == ERANGE || errno == EINVAL))
+            {
+                TRACE("Wrong MinorVersion ('%s')\n", debugstr_w(Fields[3]));
+                goto cleanup;
+            }
+        }
+        if (PlatformInfo->MajorVersion < MajorVersion ||
+            (PlatformInfo->MajorVersion == MajorVersion && PlatformInfo->MinorVersion < MinorVersion))
+        {
+            TRACE("Mismatch on version field (%lu.%lu and %lu.%lu)\n",
+                MajorVersion, MinorVersion, PlatformInfo->MajorVersion, PlatformInfo->MinorVersion);
+            goto cleanup;
+        }
+        *ScoreMajorVersion = MajorVersion - PlatformInfo->MajorVersion;
+        if (MajorVersion == PlatformInfo->MajorVersion)
+            *ScoreMinorVersion = MinorVersion - PlatformInfo->MinorVersion;
+        else
+            *ScoreMinorVersion = MinorVersion;
+    }
+    else if (Fields[3] && *Fields[3])
+    {
+        TRACE("Minor version found without major version\n");
+        goto cleanup;
+    }
+    else
+    {
+        *ScoreMajorVersion = PlatformInfo->MajorVersion;
+        *ScoreMinorVersion = PlatformInfo->MinorVersion;
+    }
+
+    if (Fields[4] && *Fields[4])
+    {
+        DWORD CurrentProductType;
+        CurrentProductType = strtoulW(Fields[4], NULL, 0);
+        if ((CurrentProductType == 0 || CurrentProductType == ULONG_MAX) &&
+            (errno == ERANGE || errno == EINVAL))
+        {
+            TRACE("Wrong Product type ('%s')\n", debugstr_w(Fields[4]));
+            goto cleanup;
+        }
+        if (CurrentProductType != ProductType)
+        {
+            TRACE("Mismatch on product type (0x%08lx and 0x%08x)\n",
+                CurrentProductType, ProductType);
+            goto cleanup;
+        }
+    }
+    else
+        *ScoreProductType = 1;
+
+    if (Fields[5] && *Fields[5])
+    {
+        DWORD CurrentSuiteMask;
+        CurrentSuiteMask = strtoulW(Fields[5], NULL, 0);
+        if ((CurrentSuiteMask == 0 || CurrentSuiteMask == ULONG_MAX) &&
+            (errno == ERANGE || errno == EINVAL))
+        {
+            TRACE("Wrong Suite mask ('%s')\n", debugstr_w(Fields[5]));
+            goto cleanup;
+        }
+        if ((CurrentSuiteMask & ~SuiteMask) != 0)
+        {
+            TRACE("Mismatch on suite mask (0x%08lx and 0x%08x)\n",
+                CurrentSuiteMask, SuiteMask);
+            goto cleanup;
+        }
+        *ScoreSuiteMask = SuiteMask & ~CurrentSuiteMask;
+    }
+    else
+        *ScoreSuiteMask = SuiteMask;
+
+    ret = TRUE;
+
+cleanup:
+    MyFree(Section);
+    return ret;
+}
+
+static BOOL
+GetSectionCallback(
+    IN LPCWSTR SectionName,
+    IN PVOID Context)
+{
+    struct GetSectionCallbackInfo *info = Context;
+    DWORD Score1, Score2, Score3, Score4, Score5;
+    BOOL ret;
+
+    ret = CheckSectionValid(
+        SectionName,
+        info->PlatformInfo,
+        info->ProductType,
+        info->SuiteMask,
+        &Score1, &Score2, &Score3, &Score4, &Score5);
+    if (!ret)
+    {
+        TRACE("Section %s not compatible\n", debugstr_w(SectionName));
+        return TRUE;
+    }
+    if (Score1 > info->BestScore1) goto done;
+    if (Score1 < info->BestScore1) goto bettersection;
+    if (Score2 > info->BestScore2) goto done;
+    if (Score2 < info->BestScore2) goto bettersection;
+    if (Score3 > info->BestScore3) goto done;
+    if (Score3 < info->BestScore3) goto bettersection;
+    if (Score4 > info->BestScore4) goto done;
+    if (Score4 < info->BestScore4) goto bettersection;
+    if (Score5 > info->BestScore5) goto done;
+    if (Score5 < info->BestScore5) goto bettersection;
+    goto done;
+
+bettersection:
+    strcpyW(info->BestSection, SectionName);
+    info->BestScore1 = Score1;
+    info->BestScore2 = Score2;
+    info->BestScore3 = Score3;
+    info->BestScore4 = Score4;
+    info->BestScore5 = Score5;
+
+done:
+    return TRUE;
+}
+
 /***********************************************************************
  *		SetupDiGetActualSectionToInstallExW (SETUPAPI.@)
  */
@@ -979,161 +1273,83 @@ SetupDiGetActualSectionToInstallExW(
     else
     {
         static SP_ALTPLATFORM_INFO CurrentPlatform = { 0, };
+        static BYTE CurrentProductType = 0;
+        static WORD CurrentSuiteMask = 0;
         PSP_ALTPLATFORM_INFO pPlatformInfo = &CurrentPlatform;
-        LPCWSTR pExtensionPlatform, pExtensionArchitecture;
-        WCHAR SectionName[LINE_LEN + 1];
-        LONG lLineCount = -1;
+        struct GetSectionCallbackInfo CallbackInfo;
         DWORD dwFullLength;
+        BYTE ProductType;
+        WORD SuiteMask;
 
         /* Fill platform info if needed */
         if (AlternatePlatformInfo)
+        {
             pPlatformInfo = AlternatePlatformInfo;
-        else if (CurrentPlatform.cbSize != sizeof(SP_ALTPLATFORM_INFO))
+            ProductType = 0;
+            SuiteMask = 0;
+        }
+        else
         {
-            /* That's the first time we go here. We need to fill in the structure */
-            OSVERSIONINFO VersionInfo;
-            SYSTEM_INFO SystemInfo;
-            VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-            ret = GetVersionEx(&VersionInfo);
-            if (!ret)
-                goto done;
-            GetSystemInfo(&SystemInfo);
-            CurrentPlatform.cbSize = sizeof(SP_ALTPLATFORM_INFO);
-            CurrentPlatform.Platform = VersionInfo.dwPlatformId;
-            CurrentPlatform.MajorVersion = VersionInfo.dwMajorVersion;
-            CurrentPlatform.MinorVersion = VersionInfo.dwMinorVersion;
-            CurrentPlatform.ProcessorArchitecture = SystemInfo.wProcessorArchitecture;
-            CurrentPlatform.Reserved = 0;
+            if (CurrentPlatform.cbSize != sizeof(SP_ALTPLATFORM_INFO))
+            {
+                /* That's the first time we go here. We need to fill in the structure */
+                OSVERSIONINFOEX VersionInfo;
+                SYSTEM_INFO SystemInfo;
+                VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+                ret = GetVersionEx((POSVERSIONINFO)&VersionInfo);
+                if (!ret)
+                    goto done;
+                GetSystemInfo(&SystemInfo);
+                CurrentPlatform.cbSize = sizeof(SP_ALTPLATFORM_INFO);
+                CurrentPlatform.Platform = VersionInfo.dwPlatformId;
+                CurrentPlatform.MajorVersion = VersionInfo.dwMajorVersion;
+                CurrentPlatform.MinorVersion = VersionInfo.dwMinorVersion;
+                CurrentPlatform.ProcessorArchitecture = SystemInfo.wProcessorArchitecture;
+                CurrentPlatform.Reserved = 0;
+                CurrentProductType = VersionInfo.wProductType;
+                CurrentSuiteMask = VersionInfo.wSuiteMask;
+            }
+            ProductType = CurrentProductType;
+            SuiteMask = CurrentSuiteMask;
         }
 
-static const WCHAR ExtensionPlatformNone[]  = {'.',0};
-static const WCHAR ExtensionPlatformNT[]  = {'.','N','T',0};
-static const WCHAR ExtensionPlatformWindows[]  = {'.','W','i','n',0};
-
-static const WCHAR ExtensionArchitectureNone[]  = {0};
-static const WCHAR ExtensionArchitecturealpha[]  = {'a','l','p','h','a',0};
-static const WCHAR ExtensionArchitectureamd64[]  = {'a','m','d','6','4',0};
-static const WCHAR ExtensionArchitectureia64[]  = {'i','a','6','4',0};
-static const WCHAR ExtensionArchitecturemips[]  = {'m','i','p','s',0};
-static const WCHAR ExtensionArchitectureppc[]  = {'p','p','c',0};
-static const WCHAR ExtensionArchitecturex86[]  = {'x','8','6',0};
-
-        /* Set various extensions values */
-        switch (pPlatformInfo->Platform)
+        CallbackInfo.PlatformInfo = pPlatformInfo;
+        CallbackInfo.ProductType = ProductType;
+        CallbackInfo.SuiteMask = SuiteMask;
+        CallbackInfo.BestScore1 = ULONG_MAX;
+        CallbackInfo.BestScore2 = ULONG_MAX;
+        CallbackInfo.BestScore3 = ULONG_MAX;
+        CallbackInfo.BestScore4 = ULONG_MAX;
+        CallbackInfo.BestScore5 = ULONG_MAX;
+        strcpyW(CallbackInfo.BestSection, InfSectionName);
+        if (!EnumerateSectionsStartingWith(
+            InfHandle,
+            InfSectionName,
+            GetSectionCallback,
+            &CallbackInfo))
         {
-            case VER_PLATFORM_WIN32_WINDOWS:
-                pExtensionPlatform = ExtensionPlatformWindows;
-                break;
-            case VER_PLATFORM_WIN32_NT:
-                pExtensionPlatform = ExtensionPlatformNT;
-                break;
-            default:
-                ERR("Unkown platform 0x%lx\n", pPlatformInfo->Platform);
-                pExtensionPlatform = ExtensionPlatformNone;
-                break;
-        }
-        switch (pPlatformInfo->ProcessorArchitecture)
-        {
-            case PROCESSOR_ARCHITECTURE_ALPHA:
-                pExtensionArchitecture = ExtensionArchitecturealpha;
-                break;
-            case PROCESSOR_ARCHITECTURE_AMD64:
-                pExtensionArchitecture = ExtensionArchitectureamd64;
-                break;
-            case PROCESSOR_ARCHITECTURE_IA64:
-                pExtensionArchitecture = ExtensionArchitectureia64;
-                break;
-            case PROCESSOR_ARCHITECTURE_INTEL:
-                pExtensionArchitecture = ExtensionArchitecturex86;
-                break;
-            case PROCESSOR_ARCHITECTURE_MIPS:
-                pExtensionArchitecture = ExtensionArchitecturemips;
-                break;
-            case PROCESSOR_ARCHITECTURE_PPC:
-                pExtensionArchitecture = ExtensionArchitectureppc;
-                break;
-            default:
-                ERR("Unknown processor architecture 0x%x\n", pPlatformInfo->ProcessorArchitecture);
-            case PROCESSOR_ARCHITECTURE_UNKNOWN:
-                pExtensionArchitecture = ExtensionArchitectureNone;
-                break;
+            SetLastError(ERROR_GEN_FAILURE);
+            goto done;
         }
 
-static const WCHAR FormatPlatformArchitectureMajorMinor[]  = {'%','s','%','s','%','s','.','%','l','u','.','%','l','u',0};
-static const WCHAR FormatPlatformMajorMinor[]  = {'%','s','%','s','.','%','l','u','.','%','l','u',0};
-static const WCHAR FormatPlatformArchitectureMajor[]  = {'%','s','%','s','%','s','.','%','l','u',0};
-static const WCHAR FormatPlatformMajor[]  = {'%','s','%','s','.','%','l','u',0};
-static const WCHAR FormatPlatformArchitecture[]  = {'%','s','%','s','%','s',0};
-static const WCHAR FormatPlatform[]  = {'%','s','%','s',0};
-static const WCHAR FormatNone[]  = {'%','s',0};
+        dwFullLength = lstrlenW(CallbackInfo.BestSection);
+        if (RequiredSize != NULL)
+            *RequiredSize = dwFullLength + 1;
 
-        SectionName[LINE_LEN] = UNICODE_NULL;
-
-        /* Test with platform.architecture.major.minor extension */
-        snprintfW(SectionName, LINE_LEN, FormatPlatformArchitectureMajorMinor, InfSectionName,
-            pExtensionPlatform, pExtensionArchitecture, pPlatformInfo->MajorVersion, pPlatformInfo->MinorVersion);
-        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
-        if (lLineCount != -1) goto sectionfound;
-
-        /* Test with platform.major.minor extension */
-        snprintfW(SectionName, LINE_LEN, FormatPlatformMajorMinor, InfSectionName,
-            pExtensionPlatform, pPlatformInfo->MajorVersion, pPlatformInfo->MinorVersion);
-        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
-        if (lLineCount != -1) goto sectionfound;
-
-        /* Test with platform.architecture.major extension */
-        snprintfW(SectionName, LINE_LEN, FormatPlatformArchitectureMajor, InfSectionName,
-            pExtensionPlatform, pExtensionArchitecture, pPlatformInfo->MajorVersion);
-        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
-        if (lLineCount != -1) goto sectionfound;
-
-        /* Test with platform.major extension */
-        snprintfW(SectionName, LINE_LEN, FormatPlatformMajor, InfSectionName,
-            pExtensionPlatform, pPlatformInfo->MajorVersion);
-        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
-        if (lLineCount != -1) goto sectionfound;
-
-        /* Test with platform.architecture extension */
-        snprintfW(SectionName, LINE_LEN, FormatPlatformArchitecture, InfSectionName,
-            pExtensionPlatform, pExtensionArchitecture);
-        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
-        if (lLineCount != -1) goto sectionfound;
-
-        /* Test with platform extension */
-        snprintfW(SectionName, LINE_LEN, FormatPlatform, InfSectionName,
-            pExtensionPlatform);
-        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
-        if (lLineCount != -1) goto sectionfound;
-
-        /* Test without extension */
-        snprintfW(SectionName, LINE_LEN, FormatNone, InfSectionName);
-        lLineCount = SetupGetLineCountW(InfHandle, SectionName);
-        if (lLineCount != -1) goto sectionfound;
-
-        /* No appropriate section found */
-        SetLastError(ERROR_INVALID_PARAMETER);
-        goto done;
-
-sectionfound:
-        dwFullLength = lstrlenW(SectionName);
-        if (InfSectionWithExt != NULL && InfSectionWithExtSize != 0)
+        if (InfSectionWithExtSize > 0)
         {
-            if (InfSectionWithExtSize < (dwFullLength + 1))
+            if (InfSectionWithExtSize < dwFullLength + 1)
             {
                 SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 goto done;
             }
-
-            lstrcpyW(InfSectionWithExt, SectionName);
-            if (Extension != NULL)
+            strcpyW(InfSectionWithExt, CallbackInfo.BestSection);
+            if (Extension)
             {
-                DWORD dwLength = lstrlenW(SectionName);
+                DWORD dwLength = lstrlenW(InfSectionName);
                 *Extension = (dwLength == dwFullLength) ? NULL : &InfSectionWithExt[dwLength];
             }
         }
-
-        if (RequiredSize != NULL)
-            *RequiredSize = dwFullLength + 1;
 
         ret = TRUE;
     }
@@ -5677,8 +5893,6 @@ CreateInfFileDetails(
         HeapFree(GetProcessHeap(), 0, details);
         return NULL;
     }
-    DPRINT1("FullInfFileName %S\n", details->FullInfFileName);
-    DPRINT1("DirectoryName %S\n", details->DirectoryName);
     return details;
 }
 
@@ -5981,7 +6195,7 @@ SetupDiBuildDriverInfoList(
                                 DriverAlreadyAdded = FALSE;
                                 for (DriverRank = 0, currentId = (LPCWSTR)HardwareIDs; !DriverAlreadyAdded && *currentId; currentId += strlenW(currentId) + 1, DriverRank++)
                                 {
-                                    if (wcsicmp(DeviceId, currentId) == 0)
+                                    if (strcmpiW(DeviceId, currentId) == 0)
                                     {
                                         AddDriverToList(
                                             pDriverListHead,
@@ -6002,7 +6216,7 @@ SetupDiBuildDriverInfoList(
                                 {
                                     for (DriverRank = 0, currentId = (LPCWSTR)CompatibleIDs; !DriverAlreadyAdded && *currentId; currentId += strlenW(currentId) + 1, DriverRank++)
                                     {
-                                        if (wcsicmp(DeviceId, currentId) == 0)
+                                        if (strcmpiW(DeviceId, currentId) == 0)
                                         {
                                             AddDriverToList(
                                                 pDriverListHead,
@@ -7060,7 +7274,7 @@ SetupDiGetDriverInfoDetailW(
         DeviceID = HardwareIDs;
         while (DeviceID && *DeviceID && (size = wcslen(DeviceID)) + 1 < sizeLeft)
         {
-            TRACE("Adding %S to list\n", DeviceID);
+            TRACE("Adding %s to list\n", debugstr_w(DeviceID));
             wcscpy(pBuffer, DeviceID);
             DeviceID += size + 1;
             pBuffer += size + 1;
@@ -7077,7 +7291,7 @@ SetupDiGetDriverInfoDetailW(
         DeviceID = CompatibleIDs;
         while (DeviceID && *DeviceID && (size = wcslen(DeviceID)) + 1 < sizeLeft)
         {
-            TRACE("Adding %S to list\n", DeviceID);
+            TRACE("Adding %s to list\n", debugstr_w(DeviceID));
             wcscpy(pBuffer, DeviceID);
             DeviceID += size + 1;
             pBuffer += size + 1;
