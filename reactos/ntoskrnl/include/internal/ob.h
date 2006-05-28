@@ -84,14 +84,17 @@ ObCreateHandleTable(
 NTSTATUS
 NTAPI
 ObFindObject(
-    POBJECT_CREATE_INFORMATION ObjectCreateInfo,
-    PUNICODE_STRING ObjectName,
-    PVOID* ReturnedObject,
-    PUNICODE_STRING RemainingPath,
-    POBJECT_TYPE ObjectType,
-    POBP_LOOKUP_CONTEXT Context,
+    IN HANDLE RootHandle,
+    IN PUNICODE_STRING ObjectName,
+    IN ULONG Attributes,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PVOID *ReturnedObject,
+    IN POBJECT_TYPE ObjectType,
+    IN POBP_LOOKUP_CONTEXT Context,
     IN PACCESS_STATE AccessState,
-    IN PVOID ParseContext
+    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+    IN PVOID ParseContext,
+    IN PVOID Insert
 );
 
 NTSTATUS

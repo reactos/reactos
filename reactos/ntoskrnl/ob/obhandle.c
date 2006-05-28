@@ -754,7 +754,6 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                    IN OUT PVOID ParseContext,
                    OUT PHANDLE Handle)
 {
-    UNICODE_STRING RemainingPath;
     PVOID Object = NULL;
     UNICODE_STRING ObjectName;
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
@@ -797,25 +796,18 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     }
 
     /* Now do the lookup */
-    Status = ObFindObject(&ObjectCreateInfo,
+    Status = ObFindObject(ObjectCreateInfo.RootDirectory,
                           &ObjectName,
+                          ObjectCreateInfo.Attributes,
+                          AccessMode,
                           &Object,
-                          &RemainingPath,
                           ObjectType,
-                          &Context, // Temporary Hack
+                          &Context,
                           PassedAccessState,
-                          ParseContext);
+                          ObjectCreateInfo.SecurityQos,
+                          ParseContext,
+                          NULL);
     if (!NT_SUCCESS(Status)) goto Cleanup;
-
-    /* ROS Hack */
-    if (RemainingPath.Buffer != NULL)
-    {
-        if (wcschr(RemainingPath.Buffer + 1, L'\\') == NULL)
-            Status = STATUS_OBJECT_NAME_NOT_FOUND;
-        else
-            Status =STATUS_OBJECT_PATH_NOT_FOUND;
-        goto Cleanup;
-    }
 
     /* Create the actual handle now */
     Status = ObpCreateHandle(Object,
@@ -826,9 +818,6 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 Cleanup:
     /* Dereference the object */
     if (Object) ObDereferenceObject(Object);
-
-    /* ROS Hacl: Free the remaining path */
-    RtlFreeUnicodeString(&RemainingPath);
 
     /* Delete the access state */
     if (PassedAccessState == &AccessState)
@@ -923,15 +912,13 @@ ObInsertObject(IN PVOID Object,
 {
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
     POBJECT_HEADER Header;
-    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     PVOID FoundObject = NULL;
     POBJECT_HEADER FoundHeader = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    UNICODE_STRING RemainingPath;
-    BOOLEAN ObjectAttached = FALSE; 
     PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     OBP_LOOKUP_CONTEXT Context;
+    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     PAGED_CODE();
 
     /* Get the Header and Create Info */
@@ -942,111 +929,69 @@ ObInsertObject(IN PVOID Object,
     /* First try to find the Object */
     if (ObjectNameInfo && ObjectNameInfo->Name.Buffer)
     {
-        DPRINT("Object has a name. Trying to find it: %wZ.\n", &ObjectNameInfo->Name);
-        Status = ObFindObject(ObjectCreateInfo,
+        Status = ObFindObject(ObjectCreateInfo->RootDirectory,
             &ObjectNameInfo->Name,
+            ObjectCreateInfo->Attributes,
+            KernelMode,
             &FoundObject,
-            &RemainingPath,
-            NULL,
+            Header->Type,
             &Context,
             NULL,
-            NULL);
-        DPRINT("FoundObject: %x, Path: %wZ\n", FoundObject, &RemainingPath);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("ObFindObject() failed! (Status 0x%x)\n", Status);
-            return Status;
-        }
+            ObjectCreateInfo->SecurityQos,
+            NULL,
+            Object);
+        if (!NT_SUCCESS(Status)) return Status;
 
         if (FoundObject)
         {
             DPRINT("Getting header: %x\n", FoundObject);
             FoundHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
         }
-
-        if (FoundHeader && RemainingPath.Buffer == NULL)
-        {
-            DPRINT("Object exists\n");
-            ObDereferenceObject(FoundObject);
-            return STATUS_OBJECT_NAME_COLLISION;
-        }
     }
     else
     {
-        DPRINT("No name, empty remaining path\n");
-        RtlInitUnicodeString(&RemainingPath, NULL);
-    }
-
-    if (FoundHeader && FoundHeader->Type == ObDirectoryType &&
-        RemainingPath.Buffer)
-    {
-        /* The name was changed so let's update it */
-        /* FIXME: TEMPORARY HACK This will go in ObFindObject in the next commit */
-        PVOID NewName;
-        PWSTR BufferPos = RemainingPath.Buffer;
-        ULONG Delta = 0;
-
-        ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
-
-        if (BufferPos[0] == L'\\')
+        /*
+         * OK, if we got here then that means we don't have a name,
+         * so RemainingPath.Buffer/RemainingPath would've been NULL
+         * under the old implemetantation, so just use NULL.
+         * If remaining path wouldn't have been NULL, then we would've
+         * called ObFindObject which already has this code.
+         * We basically kill 3-4 hacks and add 2 new ones.
+         */
+        if ((Header->Type == IoFileObjectType) ||
+            (Header->Type->TypeInfo.OpenProcedure != NULL))
         {
-            BufferPos++;
-            Delta = sizeof(WCHAR);
-        }
-        NewName = ExAllocatePool(NonPagedPool, RemainingPath.MaximumLength - Delta);
-        RtlMoveMemory(NewName, BufferPos, RemainingPath.MaximumLength - Delta);
-        if (ObjectNameInfo->Name.Buffer) ExFreePool(ObjectNameInfo->Name.Buffer);
-        ObjectNameInfo->Name.Buffer = NewName;
-        ObjectNameInfo->Name.Length = RemainingPath.Length - Delta;
-        ObjectNameInfo->Name.MaximumLength = RemainingPath.MaximumLength - Delta;
-        ObpInsertEntryDirectory(FoundObject, &Context, Header);
-        ObjectAttached = TRUE;
-    }
-
-    if ((Header->Type == IoFileObjectType) ||
-        (Header->Type->TypeInfo.OpenProcedure != NULL))
-    {    
-        DPRINT("About to call Open Routine\n");
-        if (Header->Type == IoFileObjectType)
-        {
-            /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
-            DPRINT("Calling IopCreateFile: %x\n", FoundObject);
-            Status = IopCreateFile(&Header->Body,
-                FoundObject,
-                RemainingPath.Buffer,            
-                ObjectCreateInfo);
-            DPRINT("Called IopCreateFile: %x\n", Status);
-
-        }
-        else if (Header->Type->TypeInfo.OpenProcedure != NULL)
-        {
-            DPRINT("Calling %x\n", Header->Type->TypeInfo.OpenProcedure);
-            Status = Header->Type->TypeInfo.OpenProcedure(ObCreateHandle,
-                NULL,
-                &Header->Body,
-                0,
-                0);
-        }
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("Create Failed\n");
-            if (ObjectAttached == TRUE)
+            DPRINT("About to call Open Routine\n");
+            if (Header->Type == IoFileObjectType)
             {
-                ObpDeleteEntryDirectory(&Context);
+                /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+                DPRINT("Calling IopCreateFile: %x\n", FoundObject);
+                Status = IopCreateFile(&Header->Body,
+                                       FoundObject,
+                                       NULL,
+                                       NULL);
+                DPRINT("Called IopCreateFile: %x\n", Status);
             }
-            if (FoundObject)
+            else if (Header->Type->TypeInfo.OpenProcedure)
             {
-                ObDereferenceObject(FoundObject);
+                DPRINT("Calling %x\n", Header->Type->TypeInfo.OpenProcedure);
+                Status = Header->Type->TypeInfo.OpenProcedure(ObCreateHandle,
+                                                              NULL,
+                                                              &Header->Body,
+                                                              0,
+                                                              0);
             }
-            RtlFreeUnicodeString(&RemainingPath);
-            return Status;
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Create Failed\n");
+                if (FoundObject) ObDereferenceObject(FoundObject);
+                return Status;
+            }
         }
     }
 
-    RtlFreeUnicodeString(&RemainingPath);
-
-    DPRINT("Security Assignment in progress\n");  
+    DPRINT("Security Assignment in progress\n");
     SeCaptureSubjectContext(&SubjectContext);
 
     /* Build the new security descriptor */

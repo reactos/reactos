@@ -22,24 +22,28 @@ POBJECT_DIRECTORY ObpTypeDirectoryObject = NULL;
 
 NTSTATUS
 NTAPI
-ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
-             PUNICODE_STRING ObjectName,
-             PVOID* ReturnedObject,
-             PUNICODE_STRING RemainingPath,
-             POBJECT_TYPE ObjectType,
-             POBP_LOOKUP_CONTEXT Context,
+ObFindObject(IN HANDLE RootHandle,
+             IN PUNICODE_STRING ObjectName,
+             IN ULONG Attributes,
+             IN KPROCESSOR_MODE PreviousMode,
+             IN PVOID *ReturnedObject,
+             IN POBJECT_TYPE ObjectType,
+             IN POBP_LOOKUP_CONTEXT Context,
              IN PACCESS_STATE AccessState,
-             IN PVOID ParseContext)
+             IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+             IN PVOID ParseContext,
+             IN PVOID Insert)
 {
     PVOID NextObject;
     PVOID CurrentObject;
     PVOID RootObject;
     POBJECT_HEADER CurrentHeader;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PWSTR current;
     UNICODE_STRING PathString;
-    ULONG Attributes;
     UNICODE_STRING CurrentUs;
+    UNICODE_STRING Path;
+    PUNICODE_STRING RemainingPath = &Path;
 
     PAGED_CODE();
 
@@ -48,20 +52,20 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
     RtlInitUnicodeString (RemainingPath, NULL);
 
-    if (ObjectCreateInfo->RootDirectory == NULL)
+    if (RootHandle == NULL)
     {
         ObReferenceObjectByPointer(NameSpaceRoot,
             DIRECTORY_TRAVERSE,
             NULL,
-            ObjectCreateInfo->ProbeMode);
+            PreviousMode);
         CurrentObject = NameSpaceRoot;
     }
     else
     {
-        Status = ObReferenceObjectByHandle(ObjectCreateInfo->RootDirectory,
+        Status = ObReferenceObjectByHandle(RootHandle,
             0,
             NULL,
-            ObjectCreateInfo->ProbeMode,
+            PreviousMode,
             &CurrentObject,
             NULL);
         if (!NT_SUCCESS(Status))
@@ -77,7 +81,7 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         return STATUS_SUCCESS;
     }
 
-    if (ObjectCreateInfo->RootDirectory == NULL &&
+    if (RootHandle == NULL &&
         ObjectName->Buffer[0] != L'\\')
     {
         ObDereferenceObject (CurrentObject);
@@ -104,7 +108,6 @@ ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     current = PathString.Buffer;
 
     RootObject = CurrentObject;
-    Attributes = ObjectCreateInfo->Attributes;
     if (ObjectType == ObSymbolicLinkType)
         Attributes |= OBJ_OPENLINK;
 
@@ -194,7 +197,7 @@ Next:
             ObReferenceObjectByPointer(NextObject,
                 DIRECTORY_TRAVERSE,
                 NULL,
-                ObjectCreateInfo->ProbeMode);
+                PreviousMode);
         }
 
 
@@ -214,7 +217,114 @@ Next:
     RtlFreeUnicodeString (&PathString);
     *ReturnedObject = CurrentObject;
 
-    return STATUS_SUCCESS;
+    /*
+     * Icky hack: put the code that was in ObInsertObject here so that
+     * we can get rid of the "RemainingPath" stuff, which shouldn't
+     * be exposed outside of here.
+     * Also makes the interface closer to NT parsing, and will make the
+     * eventual changes easier to deal with
+     */
+    if (Insert)
+    {
+        PVOID FoundObject = NULL;
+        POBJECT_HEADER Header = OBJECT_TO_OBJECT_HEADER(Insert);
+        POBJECT_HEADER FoundHeader = NULL;
+        BOOLEAN ObjectAttached = FALSE;
+        FoundObject = *ReturnedObject;
+        if (FoundObject)
+        {
+            FoundHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
+        }
+
+        if (FoundHeader && RemainingPath->Buffer == NULL)
+        {
+            DPRINT("Object exists\n");
+            ObDereferenceObject(FoundObject);
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+
+        if (FoundHeader && FoundHeader->Type == ObDirectoryType &&
+            RemainingPath->Buffer)
+        {
+            /* The name was changed so let's update it */
+            PVOID NewName;
+            PWSTR BufferPos = RemainingPath->Buffer;
+            ULONG Delta = 0;
+            POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+
+            ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
+
+            if (BufferPos[0] == L'\\')
+            {
+                BufferPos++;
+                Delta = sizeof(WCHAR);
+            }
+            NewName = ExAllocatePool(NonPagedPool, RemainingPath->MaximumLength - Delta);
+            RtlMoveMemory(NewName, BufferPos, RemainingPath->MaximumLength - Delta);
+            if (ObjectNameInfo->Name.Buffer) ExFreePool(ObjectNameInfo->Name.Buffer);
+            ObjectNameInfo->Name.Buffer = NewName;
+            ObjectNameInfo->Name.Length = RemainingPath->Length - Delta;
+            ObjectNameInfo->Name.MaximumLength = RemainingPath->MaximumLength - Delta;
+            ObpInsertEntryDirectory(FoundObject, Context, Header);
+            ObjectAttached = TRUE;
+        }
+
+        if ((Header->Type == IoFileObjectType) ||
+            (Header->Type->TypeInfo.OpenProcedure != NULL))
+        {    
+            DPRINT("About to call Open Routine\n");
+            if (Header->Type == IoFileObjectType)
+            {
+                /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+                DPRINT("Calling IopCreateFile: %x\n", FoundObject);
+                Status = IopCreateFile(&Header->Body,
+                    FoundObject,
+                    RemainingPath->Buffer,            
+                    NULL);
+                DPRINT("Called IopCreateFile: %x\n", Status);
+
+            }
+            else if (Header->Type->TypeInfo.OpenProcedure != NULL)
+            {
+                DPRINT("Calling %x\n", Header->Type->TypeInfo.OpenProcedure);
+                Status = Header->Type->TypeInfo.OpenProcedure(ObCreateHandle,
+                    NULL,
+                    &Header->Body,
+                    0,
+                    0);
+            }
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("Create Failed\n");
+                if (ObjectAttached == TRUE)
+                {
+                    ObpDeleteEntryDirectory(Context);
+                }
+                if (FoundObject)
+                {
+                    ObDereferenceObject(FoundObject);
+                }
+                RtlFreeUnicodeString(RemainingPath);
+                return Status;
+            }
+        }
+        RtlFreeUnicodeString(RemainingPath);
+    }
+    else
+    {
+        /* ROS Hack */
+        DPRINT("REmaining path: %wZ\n", RemainingPath);
+        if (RemainingPath->Buffer != NULL)
+        {
+            if (wcschr(RemainingPath->Buffer + 1, L'\\') == NULL)
+                Status = STATUS_OBJECT_NAME_NOT_FOUND;
+            else
+                Status =STATUS_OBJECT_PATH_NOT_FOUND;
+        }
+    }
+
+    return Status;
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/

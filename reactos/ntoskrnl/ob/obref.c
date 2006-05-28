@@ -200,9 +200,7 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
                         PVOID* ObjectPtr)
 {
     PVOID Object = NULL;
-    UNICODE_STRING RemainingPath;
     UNICODE_STRING ObjectName;
-    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     NTSTATUS Status;
     OBP_LOOKUP_CONTEXT Context;
     AUX_DATA AuxData;
@@ -224,36 +222,30 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
         if (!NT_SUCCESS(Status)) goto Quickie;
     }
 
-    /*
-     * Create a fake ObjectCreateInfo structure. Note that my upcoming
-     * ObFindObject refactoring will remove the need for this hack.
-     */
-    ObjectCreateInfo.RootDirectory = NULL;
-    ObjectCreateInfo.Attributes = Attributes;
-    Status = ObFindObject(&ObjectCreateInfo,
+    /* Find the object */
+    Status = ObFindObject(NULL,
                           &ObjectName,
+                          Attributes,
+                          AccessMode,
                           &Object,
-                          &RemainingPath,
                           ObjectType,
                           &Context,
                           PassedAccessState,
-                          ParseContext);
+                          NULL,
+                          ParseContext,
+                          NULL);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* ROS Hack */
-    if (RemainingPath.Buffer != NULL || Object == NULL)
+    if (Object == NULL)
     {
         *ObjectPtr = NULL;
-        RtlFreeUnicodeString (&RemainingPath);
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
         goto Quickie;
     }
 
     /* Return the object */
     *ObjectPtr = Object;
-
-    /* ROS Hack: Free the remaining path */
-    RtlFreeUnicodeString(&RemainingPath);
 
     /* Free the access state */
     if (PassedAccessState == &AccessState)
