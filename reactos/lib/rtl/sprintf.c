@@ -241,6 +241,8 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
 	int len;
 	unsigned long long num;
+	double _double;
+	
 	int base;
 	char *str, *end;
 	const char *s;
@@ -258,7 +260,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	str = buf;
 	end = buf + cnt - 1;
 	if (end < buf - 1) {
-		end = ((void *) -1);
+		end = ((char *) -1);
 		cnt = end - buf + 1;
 	}
 
@@ -441,6 +443,17 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				*ip = (str - buf);
 			}
 			continue;
+			
+		/* float number formats - set up the flags and "break" */
+        case 'e':
+		case 'E':
+		case 'f':
+		case 'g':
+		case 'G':
+            _double = (double)va_arg(args, double);
+            str = number(str, end, (int)_double, base, field_width, precision, flags);
+            continue;
+
 
 		/* integer number formats - set up the flags and "break" */
 		case 'o':
