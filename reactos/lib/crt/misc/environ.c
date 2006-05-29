@@ -222,7 +222,6 @@ int SetEnv(const wchar_t *option)
 
    if (option == NULL || (epos = wcschr(option, L'=')) == NULL)
       return -1;
-                  
    remove = (epos[1] == 0);
 
    /* Duplicate environment if needed. */
@@ -245,15 +244,6 @@ int SetEnv(const wchar_t *option)
    memcpy(name, option, (epos - option) * sizeof(wchar_t));
    name[epos - option] = 0;
 
-   if ((*name == 0) || (wcschr(option, L'=') !=NULL))
-   {
-     /* fixme check see if name contain any space or so
-        so we really locate first char in name and compare 
-        it with equal       
-     */        
-     free(name);
-     return -1;
-   }
    /* Find the option we're trying to modify. */
    for (index = 0, wenvptr = _wenviron; *wenvptr != NULL; wenvptr++, index++)
    {
