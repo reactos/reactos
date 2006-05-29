@@ -57,6 +57,9 @@ ObInit(VOID)
     /* Initialize the Default Event */
     KeInitializeEvent(&ObpDefaultObject, NotificationEvent, TRUE );
 
+    /* Setup the Object Reaper */
+    ExInitializeWorkItem(&ObpReaperWorkItem, ObpReapObject, NULL);
+
     /* Create the Type Type */
     DPRINT("Creating Type Type\n");
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

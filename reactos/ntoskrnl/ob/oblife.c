@@ -398,7 +398,6 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     return Status;
 }
 
-
 VOID
 STDCALL
 ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
@@ -414,12 +413,13 @@ ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 }
 
 NTSTATUS
-STDCALL
-ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
-                  PUNICODE_STRING ObjectName,
-                  POBJECT_TYPE ObjectType,
-                  ULONG ObjectSize,
-                  POBJECT_HEADER *ObjectHeader)
+NTAPI
+ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+                  IN PUNICODE_STRING ObjectName,
+                  IN POBJECT_TYPE ObjectType,
+                  IN ULONG ObjectSize,
+                  IN KPROCESSOR_MODE PreviousMode,
+                  IN POBJECT_HEADER *ObjectHeader)
 {
     POBJECT_HEADER Header;
     BOOLEAN HasHandleInfo = FALSE;
@@ -431,9 +431,9 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     POOL_TYPE PoolType;
     ULONG FinalSize = ObjectSize;
     ULONG Tag;
+    PAGED_CODE();
         
     /* If we don't have an Object Type yet, force NonPaged */
-    DPRINT("ObpAllocateObject\n");
     if (!ObjectType) 
     {
         PoolType = NonPagedPool;
@@ -445,7 +445,6 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         Tag = ObjectType->Key;
     }
     
-    DPRINT("Checking ObjectName: %x\n", ObjectName);
     /* Check if the Object has a name */
     if (ObjectName->Buffer) 
     {
@@ -456,7 +455,6 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     if (ObjectType)
     {
         /* Check if the Object maintains handle counts */
-        DPRINT("Checking ObjectType->TypeInfo: %x\n", &ObjectType->TypeInfo);
         if (ObjectType->TypeInfo.MaintainHandleCount)
         {
             FinalSize += sizeof(OBJECT_HEADER_HANDLE_INFO);
@@ -472,18 +470,13 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     }
 
     /* Allocate memory for the Object and Header */
-    DPRINT("Allocating: %x %x\n", FinalSize, Tag);
     Header = ExAllocatePoolWithTag(PoolType, FinalSize, Tag);
-    if (!Header) {
-        DPRINT1("Not enough memory!\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    if (!Header) return STATUS_INSUFFICIENT_RESOURCES;
            
     /* Initialize Handle Info */
     if (HasHandleInfo)
     {
         HandleInfo = (POBJECT_HEADER_HANDLE_INFO)Header;
-        DPRINT("Info: %x\n", HandleInfo);
         HandleInfo->SingleEntry.HandleCount = 0;
         Header = (POBJECT_HEADER)(HandleInfo + 1);
     }
@@ -492,7 +485,6 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     if (HasNameInfo) 
     {
         NameInfo = (POBJECT_HEADER_NAME_INFO)Header;
-        DPRINT("Info: %x %wZ\n", NameInfo, ObjectName);
         NameInfo->Name = *ObjectName;
         NameInfo->Directory = NULL;
         Header = (POBJECT_HEADER)(NameInfo + 1);
@@ -502,48 +494,56 @@ ObpAllocateObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     if (HasCreatorInfo)
     {
         CreatorInfo = (POBJECT_HEADER_CREATOR_INFO)Header;
-        DPRINT("Info: %x\n", CreatorInfo);
-        /* FIXME: Needs Alex's Init patch
-         * CreatorInfo->CreatorUniqueProcess = PsGetCurrentProcessId();
-         */
+        CreatorInfo->CreatorUniqueProcess = PsGetCurrentProcess() ?
+                                            PsGetCurrentProcessId() : 0;
         InitializeListHead(&CreatorInfo->TypeList);
         Header = (POBJECT_HEADER)(CreatorInfo + 1);
     }
     
     /* Initialize the object header */
     RtlZeroMemory(Header, ObjectSize);
-    DPRINT("Initalized header %p\n", Header);
-    Header->HandleCount = 0;
     Header->PointerCount = 1;
     Header->Type = ObjectType;
     Header->Flags = OB_FLAG_CREATE_INFO;
+    Header->ObjectCreateInfo = ObjectCreateInfo;
     
     /* Set the Offsets for the Info */
     if (HasHandleInfo)
     {
-        Header->HandleInfoOffset = HasNameInfo * sizeof(OBJECT_HEADER_NAME_INFO) + 
+        Header->HandleInfoOffset = HasNameInfo *
+                                   sizeof(OBJECT_HEADER_NAME_INFO) +
                                    sizeof(OBJECT_HEADER_HANDLE_INFO) +
-                                   HasCreatorInfo * sizeof(OBJECT_HEADER_CREATOR_INFO);
+                                   HasCreatorInfo *
+                                   sizeof(OBJECT_HEADER_CREATOR_INFO);
+
+        /* Set the flag so we know when freeing */
         Header->Flags |= OB_FLAG_SINGLE_PROCESS;
     }
     if (HasNameInfo)
     {
         Header->NameInfoOffset = sizeof(OBJECT_HEADER_NAME_INFO) + 
-                                 HasCreatorInfo * sizeof(OBJECT_HEADER_CREATOR_INFO);
+                                 HasCreatorInfo *
+                                 sizeof(OBJECT_HEADER_CREATOR_INFO);
     }
     if (HasCreatorInfo) Header->Flags |= OB_FLAG_CREATOR_INFO;
-    
-    if (ObjectCreateInfo && ObjectCreateInfo->Attributes & OBJ_PERMANENT)
+    if ((ObjectCreateInfo) && (ObjectCreateInfo->Attributes & OBJ_PERMANENT))
     {
+        /* Set the needed flag so we can check */
         Header->Flags |= OB_FLAG_PERMANENT;
     }
-    if (ObjectCreateInfo && ObjectCreateInfo->Attributes & OBJ_EXCLUSIVE)
+    if ((ObjectCreateInfo) && (ObjectCreateInfo->Attributes & OBJ_EXCLUSIVE))
     {
+        /* Set the needed flag so we can check */
         Header->Flags |= OB_FLAG_EXCLUSIVE;
     }
+    if (PreviousMode == KernelMode)
+    {
+        /* Set the kernel flag */
+        Header->Flags |= OB_FLAG_KERNEL_MODE;
+    }
     
-    /* Link stuff to Object Header */
-    Header->ObjectCreateInfo = ObjectCreateInfo;
+    /* Increase the number of objects of this type */
+    if (ObjectType) ObjectType->TotalNumberOfObjects++;
     
     /* Return Header */
     *ObjectHeader = Header;
@@ -560,41 +560,34 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     POBJECT_TYPE LocalObjectType;
     ULONG HeaderSize;
     NTSTATUS Status;
+    CHAR Tag[4];
+    OBP_LOOKUP_CONTEXT Context;
 
-    DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", TypeName);
-    
     /* Allocate the Object */
     Status = ObpAllocateObject(NULL, 
                                TypeName,
                                ObTypeObjectType, 
                                sizeof(OBJECT_TYPE) + sizeof(OBJECT_HEADER),
+                               KernelMode,
                                (POBJECT_HEADER*)&Header);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ObpAllocateObject failed!\n");
-        return Status;
-    }
-    
+    if (!NT_SUCCESS(Status)) return Status;
     LocalObjectType = (POBJECT_TYPE)&Header->Body;
-    DPRINT("Local ObjectType: %p Header: %p \n", LocalObjectType, Header);
     
     /* Check if this is the first Object Type */
     if (!ObTypeObjectType)
     {
         ObTypeObjectType = LocalObjectType;
         Header->Type = ObTypeObjectType;
+        LocalObjectType->TotalNumberOfObjects = 1;
         LocalObjectType->Key = TAG('O', 'b', 'j', 'T');
     }
     else
     {   
-        CHAR Tag[4];
+        /* Set Tag */
         Tag[0] = TypeName->Buffer[0];
         Tag[1] = TypeName->Buffer[1];
         Tag[2] = TypeName->Buffer[2];
         Tag[3] = TypeName->Buffer[3];
-        
-        /* Set Tag */
-        DPRINT("Convert: %s \n", Tag);
         LocalObjectType->Key = *(PULONG)Tag;
     }
     
@@ -662,7 +655,6 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     /* Insert it into the Object Directory */
     if (ObpTypeDirectoryObject)
     {
-        OBP_LOOKUP_CONTEXT Context;
         Context.Directory = ObpTypeDirectoryObject;
         Context.DirectoryLocked = TRUE;
         ObpLookupEntryDirectory(ObpTypeDirectoryObject,
@@ -701,46 +693,68 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
             Type, ObjectAttributes, Object);
 
     /* Allocate a Buffer for the Object Create Info */
-    DPRINT("Allocating Create Buffer\n");
     ObjectCreateInfo = ExAllocatePoolWithTag(NonPagedPool, 
                                              sizeof(*ObjectCreateInfo),
                                              TAG('O','b','C', 'I'));
+    if (!ObjectCreateInfo) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Capture all the info */
-    DPRINT("Capturing Create Info\n");
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                         ObjectAttributesAccessMode,
                                         Type,
                                         ObjectCreateInfo,
                                         &ObjectName);
-
     if (NT_SUCCESS(Status))
     {
-        /* Allocate the Object */
-        DPRINT("Allocating: %wZ\n", &ObjectName);
-        Status = ObpAllocateObject(ObjectCreateInfo,
-                                   &ObjectName,
-                                   Type,
-                                   ObjectSize + sizeof(OBJECT_HEADER),
-                                   &Header);
-        if (NT_SUCCESS(Status))
+        /* Validate attributes */
+        if (Type->TypeInfo.InvalidAttributes &
+            ObjectCreateInfo->Attributes)
         {
-            /* Return the Object */
-            DPRINT("Returning Object\n");
-            *Object = &Header->Body;
-            
-            /* Return to caller, leave the Capture Info Alive for ObInsert */
-            return Status;
+            /* Fail */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            /* Save the pool charges */
+            ObjectCreateInfo->PagedPoolCharge = PagedPoolCharge;
+            ObjectCreateInfo->NonPagedPoolCharge = NonPagedPoolCharge;
+
+            /* Allocate the Object */
+            Status = ObpAllocateObject(ObjectCreateInfo,
+                                       &ObjectName,
+                                       Type,
+                                       ObjectSize + sizeof(OBJECT_HEADER),
+                                       AccessMode,
+                                       &Header);
+            if (NT_SUCCESS(Status))
+            {
+                /* Return the Object */
+                *Object = &Header->Body;
+                
+                    /* Check if this is a permanent object */
+                    if (Header->Flags & OB_FLAG_PERMANENT)
+                    {
+                        /* Do the privilege check */
+                        if (!SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
+                                                    ObjectAttributesAccessMode))
+                        {
+                            /* Fail */
+                            ObpDeallocateObject(*Object);
+                            Status = STATUS_PRIVILEGE_NOT_HELD;
+                        }
+                    }
+
+                    /* Return status */
+                return Status;
+            }
         }
 
         /* Release the Capture Info, we don't need it */
-        DPRINT1("Allocation failed\n");
         ObpReleaseCapturedAttributes(ObjectCreateInfo);
         if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
     }
 
     /* We failed, so release the Buffer */
-    DPRINT1("Capture failed\n");
     ExFreePool(ObjectCreateInfo);
     return Status;
 }
