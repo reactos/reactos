@@ -61,7 +61,7 @@ DisplayClassInstaller(
 	if (!result)
 	{
 		rc = GetLastError();
-		DPRINT("SetupDiGetDeviceRegistryProperty() failed with error 0x%lx\n", rc);
+		DPRINT("SetupDiInstallDevice() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
 
