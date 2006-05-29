@@ -216,7 +216,7 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
     ACCESS_STATE AccessState;
 
     /* Capture the name */
-    Status = ObpCaptureObjectName(&ObjectName, ObjectPath, AccessMode);
+    Status = ObpCaptureObjectName(&ObjectName, ObjectPath, AccessMode, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if we didn't get an access state */
@@ -264,7 +264,7 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 
 Quickie:
     /* Free the captured name if we had one, and return status */
-    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+    if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
     return Status;
 }
 

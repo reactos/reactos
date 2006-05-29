@@ -767,7 +767,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     /* Capture all the info */
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                         AccessMode,
-                                        ObjectType,
+                                        TRUE,
                                         &ObjectCreateInfo,
                                         &ObjectName);
     if (!NT_SUCCESS(Status)) return Status;
@@ -828,7 +828,7 @@ Cleanup:
     /* Release the object attributes and return status */
 Quickie:
     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-    if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+    if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
     return Status;
 }
 
@@ -1054,8 +1054,7 @@ ObInsertObject(IN PVOID Object,
 
     /* We can delete the Create Info now */
     Header->ObjectCreateInfo = NULL;
-    ObpReleaseCapturedAttributes(ObjectCreateInfo);
-    ExFreePool(ObjectCreateInfo);
+    ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
 
     DPRINT("Status %x\n", Status);
     return Status;

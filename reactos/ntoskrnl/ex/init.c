@@ -514,6 +514,9 @@ ExpInitializeExecutive(VOID)
     /* Check if the structures match the ASM offset constants */
     ExecuteRuntimeAsserts();
 
+    /* Set 1 CPU for now, we'll increment this later */
+    KeNumberProcessors = 1;
+
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
     LdrInit1();
 
@@ -554,11 +557,11 @@ ExpInitializeExecutive(VOID)
     /* Load basic Security for other Managers */
     if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
-    /* Create the Basic Object Manager Types to allow new Object Types */
-    ObInit();
-
     /* Initialize Lookaside Lists */
     ExpInitLookasideLists();
+
+    /* Create the Basic Object Manager Types to allow new Object Types */
+    ObInit();
 
     /* Set up Region Maps, Sections and the Paging File */
     MmInit2();
@@ -566,9 +569,6 @@ ExpInitializeExecutive(VOID)
     /* Initialize Tokens now that the Object Manager is ready */
     if (!SeInit2()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
 
-    /* Set 1 CPU for now, we'll increment this later */
-    KeNumberProcessors = 1;
-    
     /* Initalize the Process Manager */
     PiInitProcessManager();
     

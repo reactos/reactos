@@ -43,6 +43,90 @@ PDEVICE_MAP ObSystemDeviceMap = NULL;
 
 VOID
 INIT_FUNCTION
+ObInit2(VOID)
+{
+    ULONG i;
+    PKPRCB Prcb;
+    PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
+
+    /* Initialize the OBJECT_CREATE_INFORMATION List */
+    ExInitializeNPagedLookasideList(&ObpCiLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(OBJECT_CREATE_INFORMATION),
+                                    TAG('O', 'b', 'C', 'I'),
+                                    32);
+
+    /* Set the captured UNICODE_STRING Object Name List */
+    ExInitializeNPagedLookasideList(&ObpNmLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    248,
+                                    TAG('O', 'b', 'N', 'M'),
+                                    16);
+
+    /* Now allocate the per-processor lists */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        /* Get the PRCB for this CPU */
+        Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
+
+        /* Set the OBJECT_CREATE_INFORMATION List */
+        Prcb->PPLookasideList[LookasideCreateInfoList].L = &ObpCiLookasideList.L;
+        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            TAG('O', 'b', 'C', 'I'));
+        if (CurrentList)
+        {
+            /* Initialize it */
+            ExInitializeNPagedLookasideList(CurrentList,
+                                            NULL,
+                                            NULL,
+                                            0,
+                                            sizeof(OBJECT_CREATE_INFORMATION),
+                                            TAG('O', 'b', 'C', 'I'),
+                                            32);
+        }
+        else
+        {
+            /* No list, use the static buffer */
+            CurrentList = &ObpCiLookasideList;
+        }
+
+        /* Link it */
+        Prcb->PPLookasideList[LookasideCreateInfoList].P = &CurrentList->L;
+
+        /* Set the captured UNICODE_STRING Object Name List */
+        Prcb->PPLookasideList[LookasideNameBufferList].L = &ObpNmLookasideList.L;
+        CurrentList = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(NPAGED_LOOKASIDE_LIST),
+                                            TAG('O', 'b', 'N', 'M'));
+        if (CurrentList)
+        {
+            /* Initialize it */
+            ExInitializeNPagedLookasideList(CurrentList,
+                                            NULL,
+                                            NULL,
+                                            0,
+                                            248,
+                                            TAG('O', 'b', 'N', 'M'),
+                                            16);
+        }
+        else
+        {
+            /* No list, use the static buffer */
+            CurrentList = &ObpNmLookasideList;
+        }
+
+        /* Link it */
+        Prcb->PPLookasideList[LookasideNameBufferList].P = &CurrentList->L;
+    }
+}
+
+VOID
+INIT_FUNCTION
 ObInit(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -60,6 +144,9 @@ ObInit(VOID)
     /* Setup the Object Reaper */
     ExInitializeWorkItem(&ObpReaperWorkItem, ObpReapObject, NULL);
 
+    /* Initialize lookaside lists */
+    ObInit2();
+
     /* Create the Type Type */
     DPRINT("Creating Type Type\n");
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
@@ -72,7 +159,7 @@ ObInit(VOID)
     ObjectTypeInitializer.GenericMapping = ObpTypeMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_TYPE);
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObTypeObjectType);
-  
+
     /* Create the Directory Type */
     DPRINT("Creating Directory Type\n");
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));

@@ -962,7 +962,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
 
       Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                           AccessMode,
-                                          NULL,
+                                          FALSE,
                                           &ObjectCreateInfo,
                                           &ObjectName);
       if (!NT_SUCCESS(Status))
@@ -977,7 +977,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
                                  0,
                                  NULL);
       ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+      if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
 
       
       /* FIXME: wt... */
@@ -2415,7 +2415,7 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
         {
             Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                                 AccessMode,
-                                                NULL,
+                                                FALSE,
                                                 &ObjectCreateInfo,
                                                 &ObjectName);
         }
@@ -2440,7 +2440,7 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (AccessMode != KernelMode)
     {
         ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-        ExFreePool(ObjectName.Buffer);
+        if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
     }
     if (!NT_SUCCESS (Status))
     {

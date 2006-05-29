@@ -712,7 +712,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
    DPRINT("Capturing Create Info\n");
    Status = ObpCaptureObjectAttributes(KeyObjectAttributes,
                                        KernelMode,
-                                       CmiKeyType,
+                                       FALSE,
                                        &ObjectCreateInfo,
                                        &ObjectName);
    if (!NT_SUCCESS(Status))
@@ -729,7 +729,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                         NULL,
                         NULL);
      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+   if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
   if (!NT_SUCCESS(Status))
     {
       return Status;

@@ -6168,6 +6168,17 @@ RtlUlonglongByteSwap(
     ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
 )
 
+FORCEINLINE
+VOID
+RtlInitEmptyUnicodeString(OUT PUNICODE_STRING UnicodeString,
+                          IN PWSTR Buffer,
+                          IN USHORT BufferSize)
+{
+    UnicodeString->Length = 0;
+    UnicodeString->MaximumLength = BufferSize;
+    UnicodeString->Buffer = Buffer;
+}
+
 NTOSAPI
 NTSTATUS
 DDKAPI

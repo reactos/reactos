@@ -241,7 +241,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   DPRINT("Capturing Create Info\n");
   Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                       PreviousMode,
-                                      CmiKeyType,
+                                      FALSE,
                                       &ObjectCreateInfo,
                                       &ObjectName);
   if (!NT_SUCCESS(Status))
@@ -471,7 +471,7 @@ Cleanup:
     ReleaseCapturedUnicodeString(&CapturedClass,
                                  PreviousMode);
   }
-  if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+  if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
   if (FreeRemainingPath) RtlFreeUnicodeString(&RemainingPath);
   if (Object != NULL) ObDereferenceObject(Object);
 
@@ -1305,7 +1305,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
    DPRINT("Capturing Create Info\n");
    Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                        PreviousMode,
-                                       CmiKeyType,
+                                       FALSE,
                                        &ObjectCreateInfo,
                                        &ObjectName);
    if (!NT_SUCCESS(Status))
@@ -1320,7 +1320,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     {
       ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+      if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
       return Status;
     }
 
@@ -1372,7 +1372,7 @@ openkey_cleanup:
   PostOpenKeyInfo.Object = NT_SUCCESS(Status) ? (PVOID)Object : NULL;
   PostOpenKeyInfo.Status = Status;
   CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
-  if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+  if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
 
   if (Object)
     {

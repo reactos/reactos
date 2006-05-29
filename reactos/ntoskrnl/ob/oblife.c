@@ -21,6 +21,9 @@ extern ULONG NtGlobalFlag;
 
 POBJECT_TYPE ObTypeObjectType = NULL;
 KEVENT ObpDefaultObject;
+
+NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
+
 WORK_QUEUE_ITEM ObpReaperWorkItem;
 volatile PVOID ObpReaperList;
 
@@ -64,7 +67,7 @@ ObpDeallocateObject(IN PVOID Object)
         if (Header->ObjectCreateInfo)
         {
             /* Free it */
-            ObpReleaseCapturedAttributes(Header->ObjectCreateInfo);
+            ObpFreeAndReleaseCapturedAttributes(Header->ObjectCreateInfo);
             Header->ObjectCreateInfo = NULL;
         }
     }
@@ -178,31 +181,30 @@ ObpReapObject(IN PVOID Parameter)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                      IN PUNICODE_STRING ObjectName,
-                     IN KPROCESSOR_MODE AccessMode)
+                     IN KPROCESSOR_MODE AccessMode,
+                     IN BOOLEAN AllocateFromLookaside)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG StringLength;
+    ULONG StringLength, MaximumLength;
     PWCHAR StringBuffer = NULL;
     UNICODE_STRING LocalName = {}; /* <= GCC 4.0 + Optimizer */
-    
+    PAGED_CODE();
+
     /* Initialize the Input String */
-    RtlInitUnicodeString(CapturedName, NULL);
+    RtlInitEmptyUnicodeString(CapturedName, NULL, 0);
 
     /* Protect everything */
     _SEH_TRY
     {
-        /* First Probe the String */
-        DPRINT("ObpCaptureObjectName: %wZ\n", ObjectName);
+        /* Check if we came from user mode */
         if (AccessMode != KernelMode)
         {
-            ProbeForRead(ObjectName,
-                         sizeof(UNICODE_STRING),
-                         sizeof(USHORT));
+            /* First Probe the String */
+            ProbeForReadUnicodeString(ObjectName);
             LocalName = *ObjectName;
-
             ProbeForRead(LocalName.Buffer,
                          LocalName.Length,
                          sizeof(WCHAR));
@@ -214,13 +216,12 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
         }
 
         /* Make sure there really is a string */
-        DPRINT("Probing OK\n");
         if ((StringLength = LocalName.Length))
         {
             /* Check that the size is a valid WCHAR multiple */
             if ((StringLength & (sizeof(WCHAR) - 1)) ||
                 /* Check that the NULL-termination below will work */
-                (StringLength == (MAXUSHORT - sizeof(WCHAR) + 1)))
+                (StringLength == (MAXUSHORT - sizeof(UNICODE_NULL) + 1)))
             {
                 /* PS: Please keep the checks above expanded for clarity */
                 DPRINT1("Invalid String Length\n");
@@ -228,19 +229,36 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
             }
             else
             {
-                /* Allocate a non-paged buffer for this string */
-                DPRINT("Capturing String\n");
+                /* Set the maximum length to the length plus the terminator */
+                MaximumLength = StringLength + sizeof(UNICODE_NULL);
+
+                /* Check if we should use the lookaside buffer */
+                //if (!(AllocateFromLookaside) || (MaximumLength > 248))
+                {
+                    /* Nope, allocate directly from pool */
+                    StringBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                         MaximumLength,
+                                                         OB_NAME_TAG);
+                }
+                //else
+                {
+                    /* Allocate from the lookaside */
+                //    MaximumLength = 248;
+                //    StringBuffer =
+                //        ObpAllocateCapturedAttributes(LookasideNameBufferList);
+                }
+
+                /* Setup the string */
                 CapturedName->Length = StringLength;
-                CapturedName->MaximumLength = StringLength + sizeof(WCHAR);
-                if ((StringBuffer = ExAllocatePoolWithTag(NonPagedPool, 
-                                                          StringLength + sizeof(WCHAR),
-                                                          OB_NAME_TAG)))
-                {                                    
+                CapturedName->MaximumLength = MaximumLength;
+                CapturedName->Buffer = StringBuffer;
+
+                /* Make sure we have a buffer */
+                if (StringBuffer)
+                {
                     /* Copy the string and null-terminate it */
                     RtlMoveMemory(StringBuffer, LocalName.Buffer, StringLength);
                     StringBuffer[StringLength / sizeof(WCHAR)] = UNICODE_NULL;
-                    CapturedName->Buffer = StringBuffer;
-                    DPRINT("String Captured: %wZ\n", CapturedName);
                 }
                 else
                 {
@@ -254,23 +272,19 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
     _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
         Status = _SEH_GetExceptionCode();
-
-        /* Remember to free the buffer in case of failure */
-        DPRINT1("Failed\n");
         if (StringBuffer) ExFreePool(StringBuffer);
     }
     _SEH_END;
-    
+
     /* Return */
-    DPRINT("Returning: %lx\n", Status);
     return Status;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                            IN KPROCESSOR_MODE AccessMode,
-                           IN POBJECT_TYPE ObjectType,
+                           IN BOOLEAN AllocateFromLookaside,
                            IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                            OUT PUNICODE_STRING ObjectName)
 {
@@ -278,90 +292,92 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PSECURITY_QUALITY_OF_SERVICE SecurityQos;
     PUNICODE_STRING LocalObjectName = NULL;
+    PAGED_CODE();
 
     /* Zero out the Capture Data */
-    DPRINT("ObpCaptureObjectAttributes\n");
     RtlZeroMemory(ObjectCreateInfo, sizeof(OBJECT_CREATE_INFORMATION));
-    
+
     /* SEH everything here for protection */
     _SEH_TRY
     {
-        /* Check if we got Oba */
+        /* Check if we got attributes */
         if (ObjectAttributes)
         {
+            /* Check if we're in user mode */
             if (AccessMode != KernelMode)
             {
-                DPRINT("Probing OBA\n");
+                /* Probe the attributes */
                 ProbeForRead(ObjectAttributes,
                              sizeof(OBJECT_ATTRIBUTES),
                              sizeof(ULONG));
             }
-        
+
             /* Validate the Size and Attributes */
-            DPRINT("Validating OBA\n");
             if ((ObjectAttributes->Length != sizeof(OBJECT_ATTRIBUTES)) ||
                 (ObjectAttributes->Attributes & ~OBJ_VALID_ATTRIBUTES))
             {
+                /* Invalid combination, fail */
                 Status = STATUS_INVALID_PARAMETER;
-                DPRINT1("Invalid Size: %lx or Attributes: %lx\n",
-                       ObjectAttributes->Length, ObjectAttributes->Attributes); 
                 _SEH_LEAVE;
             }
-        
+
             /* Set some Create Info */
-            DPRINT("Creating OBCI\n");
             ObjectCreateInfo->RootDirectory = ObjectAttributes->RootDirectory;
             ObjectCreateInfo->Attributes = ObjectAttributes->Attributes;
             LocalObjectName = ObjectAttributes->ObjectName;
             SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
             SecurityQos = ObjectAttributes->SecurityQualityOfService;
-        
-            /* Validate the SD */
+
+            /* Check if we have a security descriptor */
             if (SecurityDescriptor)
             {
-                DPRINT("Probing SD: %x\n", SecurityDescriptor);
+                /* Capture it */
                 Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
                                                      AccessMode,
                                                      NonPagedPool,
                                                      TRUE,
-                                                     &ObjectCreateInfo->SecurityDescriptor);
+                                                     &ObjectCreateInfo->
+                                                     SecurityDescriptor);
                 if(!NT_SUCCESS(Status))
                 {
-                    DPRINT1("Unable to capture the security descriptor!!!\n");
+                    /* Capture failed, quit */
                     ObjectCreateInfo->SecurityDescriptor = NULL;
                     _SEH_LEAVE;
                 }
-            
-                DPRINT("Probe done\n");
+
+                /* Save the probe mode and security descriptor size */
                 ObjectCreateInfo->SecurityDescriptorCharge = 2048; /* FIXME */
                 ObjectCreateInfo->ProbeMode = AccessMode;
             }
-        
-            /* Validate the QoS */
+
+            /* Check if we have QoS */
             if (SecurityQos)
             {
+                /* Check if we came from user mode */
                 if (AccessMode != KernelMode)
                 {
-                    DPRINT("Probing QoS\n");
+                    /* Validate the QoS */
                     ProbeForRead(SecurityQos,
                                  sizeof(SECURITY_QUALITY_OF_SERVICE),
                                  sizeof(ULONG));
                 }
-            
+
                 /* Save Info */
                 ObjectCreateInfo->SecurityQualityOfService = *SecurityQos;
-                ObjectCreateInfo->SecurityQos = &ObjectCreateInfo->SecurityQualityOfService;
+                ObjectCreateInfo->SecurityQos =
+                    &ObjectCreateInfo->SecurityQualityOfService;
             }
         }
         else
         {
+            /* We don't have a name */
             LocalObjectName = NULL;
         }
     }
     _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
     {
+        /* Get the exception */
         Status = _SEH_GetExceptionCode();
-        DPRINT1("Failed\n");
     }
     _SEH_END;
 
@@ -370,46 +386,29 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
         /* Now check if the Object Attributes had an Object Name */
         if (LocalObjectName)
         {
-            DPRINT("Name Buffer: %wZ\n", LocalObjectName);
             Status = ObpCaptureObjectName(ObjectName,
                                           LocalObjectName,
-                                          AccessMode);
+                                          AccessMode,
+                                          AllocateFromLookaside);
         }
         else
         {
             /* Clear the string */
-            RtlInitUnicodeString(ObjectName, NULL);
+            RtlInitEmptyUnicodeString(ObjectName, NULL, 0);
 
             /* He can't have specified a Root Directory */
             if (ObjectCreateInfo->RootDirectory)
             {
-                DPRINT1("Invalid name\n");
                 Status = STATUS_OBJECT_NAME_INVALID;
             }
         }
     }
-    else
-    {
-        DPRINT1("Failed to capture, cleaning up\n");
-        ObpReleaseCapturedAttributes(ObjectCreateInfo);
-    }
-    
-    DPRINT("Return to caller %x\n", Status);
-    return Status;
-}
 
-VOID
-STDCALL
-ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
-{
-    /* Release the SD, it's the only thing we allocated */
-    if (ObjectCreateInfo->SecurityDescriptor)
-    {
-        SeReleaseSecurityDescriptor(ObjectCreateInfo->SecurityDescriptor,
-                                    ObjectCreateInfo->ProbeMode,
-                                    TRUE);
-        ObjectCreateInfo->SecurityDescriptor = NULL;                                        
-    }
+    /* Cleanup if we failed */
+    if (!NT_SUCCESS(Status)) ObpReleaseCapturedAttributes(ObjectCreateInfo);
+
+    /* Return status to caller */
+    return Status;
 }
 
 NTSTATUS
@@ -688,20 +687,17 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
     UNICODE_STRING ObjectName;
     POBJECT_HEADER Header;
-
     DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n", 
             Type, ObjectAttributes, Object);
 
-    /* Allocate a Buffer for the Object Create Info */
-    ObjectCreateInfo = ExAllocatePoolWithTag(NonPagedPool, 
-                                             sizeof(*ObjectCreateInfo),
-                                             TAG('O','b','C', 'I'));
+    /* Allocate a capture buffer */
+    ObjectCreateInfo = ObpAllocateCapturedAttributes(LookasideCreateInfoList);
     if (!ObjectCreateInfo) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Capture all the info */
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                         ObjectAttributesAccessMode,
-                                        Type,
+                                        FALSE,
                                         ObjectCreateInfo,
                                         &ObjectName);
     if (NT_SUCCESS(Status))
@@ -730,32 +726,32 @@ ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
             {
                 /* Return the Object */
                 *Object = &Header->Body;
-                
-                    /* Check if this is a permanent object */
-                    if (Header->Flags & OB_FLAG_PERMANENT)
-                    {
-                        /* Do the privilege check */
-                        if (!SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
-                                                    ObjectAttributesAccessMode))
-                        {
-                            /* Fail */
-                            ObpDeallocateObject(*Object);
-                            Status = STATUS_PRIVILEGE_NOT_HELD;
-                        }
-                    }
 
-                    /* Return status */
+                /* Check if this is a permanent object */
+                if (Header->Flags & OB_FLAG_PERMANENT)
+                {
+                    /* Do the privilege check */
+                    if (!SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
+                                                ObjectAttributesAccessMode))
+                    {
+                        /* Fail */
+                        ObpDeallocateObject(*Object);
+                        Status = STATUS_PRIVILEGE_NOT_HELD;
+                    }
+                }
+
+                /* Return status */
                 return Status;
             }
         }
 
         /* Release the Capture Info, we don't need it */
         ObpReleaseCapturedAttributes(ObjectCreateInfo);
-        if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+        if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
     }
 
     /* We failed, so release the Buffer */
-    ExFreePool(ObjectCreateInfo);
+    ObpFreeCapturedAttributes(ObjectCreateInfo, LookasideCreateInfoList);
     return Status;
 }
 
