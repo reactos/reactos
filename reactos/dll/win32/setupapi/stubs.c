@@ -51,21 +51,6 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailA(HDEVINFO devinfo, PSP_DEVINFO_LIST_D
 }
 
 /***********************************************************************
- *      SetupCopyOEMInfW  (SETUPAPI.@)
- */
-BOOL WINAPI SetupCopyOEMInfW(PCWSTR sourceinffile, PCWSTR sourcemedialoc,
-                DWORD mediatype, DWORD copystyle, PWSTR destinfname,
-                DWORD destnamesize, PDWORD required,
-                PWSTR *destinfnamecomponent)
-{
-  FIXME("%s %s 0x%lx 0x%lx\n", debugstr_w(sourceinffile), debugstr_w(sourcemedialoc), mediatype, copystyle);
-  FIXME("stub: source %s location %s ...\n", debugstr_w(sourceinffile),
-        debugstr_w(sourcemedialoc));
-  //return FALSE;
-  return TRUE;
-}
-
-/***********************************************************************
  *		SetupInitializeFileLogW(SETUPAPI.@)
  */
 HANDLE WINAPI SetupInitializeFileLogW(LPCWSTR LogFileName, DWORD Flags)

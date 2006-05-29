@@ -23,6 +23,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
+/* Unicode constants */
+static const WCHAR BackSlash[] = {'\\',0};
+static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
+
 /* info passed to callback functions dealing with files */
 struct files_callback_info
 {
@@ -1657,6 +1661,160 @@ cleanup:
     MyFree(SourceInfFileNameW);
     MyFree(OEMSourceMediaLocationW);
     MyFree(DestinationInfFileNameW);
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupCopyOEMInfW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupCopyOEMInfW(
+        IN PCWSTR SourceInfFileName,
+        IN PCWSTR OEMSourceMediaLocation,
+        IN DWORD OEMSourceMediaType,
+        IN DWORD CopyStyle,
+        OUT PWSTR DestinationInfFileName OPTIONAL,
+        IN DWORD DestinationInfFileNameSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        OUT PWSTR* DestinationInfFileNameComponent OPTIONAL)
+{
+    BOOL ret = FALSE;
+
+    TRACE("%s %s 0x%lx 0x%lx %p 0%lu %p %p\n",
+        debugstr_w(SourceInfFileName), debugstr_w(OEMSourceMediaLocation), OEMSourceMediaType,
+        CopyStyle, DestinationInfFileName, DestinationInfFileNameSize,
+        RequiredSize, DestinationInfFileNameComponent);
+
+    if (!SourceInfFileName)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (OEMSourceMediaType != SPOST_NONE && OEMSourceMediaType != SPOST_PATH && OEMSourceMediaType != SPOST_URL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (CopyStyle & ~(SP_COPY_DELETESOURCE | SP_COPY_REPLACEONLY | SP_COPY_NOOVERWRITE | SP_COPY_OEMINF_CATALOG_ONLY))
+    {
+        TRACE("Unknown flags: 0x%08lx\n", CopyStyle & ~(SP_COPY_DELETESOURCE | SP_COPY_REPLACEONLY | SP_COPY_NOOVERWRITE | SP_COPY_OEMINF_CATALOG_ONLY));
+        SetLastError(ERROR_INVALID_FLAGS);
+    }
+    else if (!DestinationInfFileName && DestinationInfFileNameSize > 0)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (CopyStyle & SP_COPY_OEMINF_CATALOG_ONLY)
+    {
+        FIXME("CopyStyle 0x%lx not supported\n", SP_COPY_OEMINF_CATALOG_ONLY);
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+    else
+    {
+        HANDLE hSearch = INVALID_HANDLE_VALUE;
+        WIN32_FIND_DATAW FindFileData;
+        BOOL AlreadyExists;
+        DWORD NextFreeNumber = 0;
+        SIZE_T len;
+        LPWSTR pFullFileName = NULL;
+        LPWSTR pFileName; /* Pointer into pFullFileName buffer */
+
+        if (OEMSourceMediaType == SPOST_PATH || OEMSourceMediaType == SPOST_URL)
+            FIXME("OEMSourceMediaType 0x%lx ignored\n", OEMSourceMediaType);
+
+        /* Search if the specified .inf file already exists in %WINDIR%\Inf */
+        AlreadyExists = FALSE; /* FIXME */
+
+        if (!AlreadyExists && CopyStyle & SP_COPY_REPLACEONLY)
+        {
+            /* FIXME: set DestinationInfFileName, RequiredSize, DestinationInfFileNameComponent */
+            SetLastError(ERROR_FILE_NOT_FOUND);
+            goto cleanup;
+        }
+        else if (AlreadyExists && (CopyStyle & SP_COPY_NOOVERWRITE))
+        {
+            //SetLastError(ERROR_FILE_EXISTS);
+            /* FIXME: set return fields */
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+            FIXME("File already exists. Need to return its name!\n");
+            goto cleanup;
+        }
+
+        /* Search the number to give to OEM??.INF */
+        len = MAX_PATH + 1 + strlenW(InfDirectory) + 13;
+        pFullFileName = MyMalloc(len * sizeof(WCHAR));
+        if (!pFullFileName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        len = GetSystemWindowsDirectoryW(pFullFileName, MAX_PATH);
+        if (len == 0 || len > MAX_PATH)
+            goto cleanup;
+        if (pFullFileName[strlenW(pFullFileName) - 1] != '\\')
+            strcatW(pFullFileName, BackSlash);
+        strcatW(pFullFileName, InfDirectory);
+        pFileName = &pFullFileName[strlenW(pFullFileName)];
+        sprintfW(pFileName, L"oem*.inf", NextFreeNumber);
+        hSearch = FindFirstFileW(pFullFileName, &FindFileData);
+        if (hSearch == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() != ERROR_FILE_NOT_FOUND)
+                goto cleanup;
+        }
+        else
+        {
+            do
+            {
+                DWORD CurrentNumber;
+                if (swscanf(FindFileData.cFileName, L"oem%lu.inf", &CurrentNumber) == 1
+                    && CurrentNumber <= 99999)
+                {
+                    NextFreeNumber = CurrentNumber + 1;
+                }
+            } while (FindNextFile(hSearch, &FindFileData));
+        }
+
+        if (NextFreeNumber > 99999)
+        {
+            ERR("Too much custom .inf files\n");
+            SetLastError(ERROR_GEN_FAILURE);
+            goto cleanup;
+        }
+
+        /* Create the full path: %WINDIR%\Inf\OEM{XXXXX}.inf */
+        sprintfW(pFileName, L"oem%lu.inf", NextFreeNumber);
+        TRACE("Next available file is %s\n", debugstr_w(pFileName));
+
+        if (RequiredSize)
+            *RequiredSize = len;
+        if (DestinationInfFileName)
+        {
+            if (DestinationInfFileNameSize < len)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                goto cleanup;
+            }
+            strcpyW(DestinationInfFileName, pFullFileName);
+            if (DestinationInfFileNameComponent)
+                *DestinationInfFileNameComponent = &DestinationInfFileName[pFileName - pFullFileName];
+        }
+
+        if (!CopyFileW(SourceInfFileName, pFullFileName, TRUE))
+        {
+            TRACE("CopyFileW() failed with error 0x%lx\n", GetLastError());
+            goto cleanup;
+        }
+
+        if (CopyStyle & SP_COPY_DELETESOURCE)
+        {
+            if (!DeleteFileW(SourceInfFileName))
+            {
+                TRACE("DeleteFileW() failed with error 0x%lx\n", GetLastError());
+                goto cleanup;
+            }
+        }
+
+        ret = TRUE;
+
+cleanup:
+        if (hSearch != INVALID_HANDLE_VALUE)
+            FindClose(hSearch);
+        MyFree(pFullFileName);
+    }
 
     TRACE("Returning %d\n", ret);
     return ret;

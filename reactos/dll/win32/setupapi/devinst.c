@@ -5486,14 +5486,15 @@ AddDriverToList(
     driverInfo->Details.InfFileName[MAX_PATH - 1] = '\0';
 
     /* Fill InfDate field */
-    /* FIXME: hFile = CreateFile(driverInfo->Details.InfFileName,
+    hFile = CreateFile(
+        InfFile,
         GENERIC_READ, FILE_SHARE_READ,
         NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
         goto cleanup;
     Result = GetFileTime(hFile, NULL, NULL, &driverInfo->Details.InfDate);
     if (!Result)
-        goto cleanup;*/
+        goto cleanup;
 
     /* Fill SectionName field */
     Result = SetupGetStringFieldW(
@@ -5576,10 +5577,10 @@ AddDriverToList(
         struct DriverInfoElement *CurrentDriver;
         CurrentDriver = CONTAINING_RECORD(PreviousEntry, struct DriverInfoElement, ListEntry);
         if (CurrentDriver->DriverRank > Rank ||
-            (CurrentDriver->DriverRank == Rank && CurrentDriver->DriverDate.QuadPart > driverInfo->DriverDate.QuadPart))
+            (CurrentDriver->DriverRank == Rank && CurrentDriver->DriverDate.QuadPart < driverInfo->DriverDate.QuadPart))
         {
             /* Insert before the current item */
-            InsertHeadList(PreviousEntry, &driverInfo->ListEntry);
+            InsertHeadList(PreviousEntry->Blink, &driverInfo->ListEntry);
             break;
         }
         PreviousEntry = PreviousEntry->Flink;
@@ -5858,17 +5859,14 @@ done:
 
 static struct InfFileDetails *
 CreateInfFileDetails(
-    IN LPCWSTR InfFileName)
+    IN LPCWSTR FullInfFileName)
 {
     struct InfFileDetails *details;
     PWCHAR last;
     DWORD Needed;
 
-    last = strrchrW(InfFileName, '\\');
     Needed = FIELD_OFFSET(struct InfFileDetails, szData)
-        + strlenW(InfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
-    if (last != NULL)
-    Needed += (last - InfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+        + strlenW(FullInfFileName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
     details = HeapAlloc(GetProcessHeap(), 0, Needed);
     if (!details)
@@ -5878,17 +5876,18 @@ CreateInfFileDetails(
     }
 
     memset(details, 0, Needed);
+    strcpyW(details->szData, FullInfFileName);
+    last = strrchrW(details->szData, '\\');
     if (last)
     {
         details->DirectoryName = details->szData;
-        details->FullInfFileName = &details->szData[last - InfFileName + 1];
-        strncpyW(details->DirectoryName, InfFileName, last - InfFileName);
+        details->FileName = last + 1;
+        *last = '\0';
     }
     else
-        details->FullInfFileName = details->szData;
-    strcpyW(details->FullInfFileName, InfFileName);
+        details->FileName = details->szData;
     ReferenceInfFile(details);
-    details->hInf = SetupOpenInfFileW(InfFileName, NULL, INF_STYLE_WIN4, NULL);
+    details->hInf = SetupOpenInfFileW(FullInfFileName, NULL, INF_STYLE_WIN4, NULL);
     if (details->hInf == INVALID_HANDLE_VALUE)
     {
         HeapFree(GetProcessHeap(), 0, details);
@@ -6022,20 +6021,13 @@ SetupDiBuildDriverInfoList(
             LPCWSTR filename;
             LPWSTR pFullFilename;
 
-            if (InstallParams.Flags & DI_ENUMSINGLEINF)
-            {
-                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
-                if (!FullInfFileName)
-                    goto done;
-                pFullFilename = &FullInfFileName[0];
-            }
-            else if (*InstallParams.DriverPath)
+            if (!(InstallParams.Flags & DI_ENUMSINGLEINF) && *InstallParams.DriverPath)
             {
                 DWORD len;
                 len = GetFullPathNameW(InstallParams.DriverPath, 0, NULL, NULL);
                 if (len == 0)
                     goto done;
-                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, len + MAX_PATH);
+                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, (len + 1 + MAX_PATH) * sizeof(WCHAR));
                 if (!FullInfFileName)
                     goto done;
                 len = GetFullPathNameW(InstallParams.DriverPath, len, FullInfFileName, NULL);
@@ -6047,7 +6039,7 @@ SetupDiBuildDriverInfoList(
             }
             else
             {
-                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
                 if (!FullInfFileName)
                     goto done;
                 pFullFilename = &FullInfFileName[0];
@@ -8048,7 +8040,7 @@ SetupDiInstallDevice(
     pSectionName = &SectionName[strlenW(SectionName)];
 
     /* Get information from [Version] section */
-    if (!SetupDiGetINFClassW(SelectedDriver->InfFileDetails->FullInfFileName, &ClassGuid, ClassName, MAX_CLASS_NAME_LEN, &RequiredSize))
+    if (!SetupDiGetINFClassW(SelectedDriver->Details.InfFileName, &ClassGuid, ClassName, MAX_CLASS_NAME_LEN, &RequiredSize))
         goto cleanup;
     /* Format ClassGuid to a string */
     if (UuidToStringW((UUID*)&ClassGuid, &lpGuidString) != RPC_S_OK)
@@ -8064,6 +8056,35 @@ SetupDiInstallDevice(
     memcpy(&lpFullGuidString[1], lpGuidString, RequiredSize * sizeof(WCHAR));
     lpFullGuidString[RequiredSize + 1] = '}';
     lpFullGuidString[RequiredSize + 2] = '\0';
+
+    /* Copy .inf file to Inf\ directory (if needed) */
+    Result = InfIsFromOEMLocation(SelectedDriver->Details.InfFileName, &NeedtoCopyFile);
+    if (!Result)
+        goto cleanup;
+    if (NeedtoCopyFile)
+    {
+        WCHAR NewFileName[MAX_PATH];
+        struct InfFileDetails *newInfFileDetails;
+        Result = SetupCopyOEMInfW(
+            SelectedDriver->Details.InfFileName,
+            NULL,
+            SPOST_NONE,
+            SP_COPY_NOOVERWRITE,
+            NewFileName, MAX_PATH,
+            NULL,
+            NULL);
+        if (!Result)
+            goto cleanup;
+        /* Create a new struct InfFileDetails, and set it to
+         * SelectedDriver->InfFileDetails, to release use of
+         * current InfFile */
+        newInfFileDetails = CreateInfFileDetails(NewFileName);
+        if (!newInfFileDetails)
+            goto cleanup;
+        DereferenceInfFile(SelectedDriver->InfFileDetails);
+        SelectedDriver->InfFileDetails = newInfFileDetails;
+        strcpyW(SelectedDriver->Details.InfFileName, NewFileName);
+    }
 
     /* Open/Create driver key information */
 #if _WIN32_WINNT >= 0x502
@@ -8105,7 +8126,7 @@ SetupDiInstallDevice(
     TRACE("DriverDate      : '%u-%u-%u'\n", DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
     TRACE("DriverDesc      : '%s'\n", debugstr_w(SelectedDriver->Info.Description));
     TRACE("DriverVersion   : '%u.%u.%u.%u'\n", fullVersion.HighPart >> 16, fullVersion.HighPart & 0xffff, fullVersion.LowPart >> 16, fullVersion.LowPart & 0xffff);
-    TRACE("InfPath         : '%s'\n", debugstr_w(SelectedDriver->Details.InfFileName));
+    TRACE("InfPath         : '%s'\n", debugstr_w(SelectedDriver->InfFileDetails->FileName));
     TRACE("InfSection      : '%s'\n", debugstr_w(SelectedDriver->Details.SectionName));
     TRACE("InfSectionExt   : '%s'\n", debugstr_w(&SectionName[strlenW(SelectedDriver->Details.SectionName)]));
     TRACE("MatchingDeviceId: '%s'\n", debugstr_w(SelectedDriver->MatchingId));
@@ -8122,7 +8143,7 @@ SetupDiInstallDevice(
         rc = RegSetValueEx(hKey, REGSTR_DRIVER_VERSION, 0, REG_SZ, (const BYTE *)Buffer, (strlenW(Buffer) + 1) * sizeof(WCHAR));
     }
     if (rc == ERROR_SUCCESS)
-        rc = RegSetValueEx(hKey, REGSTR_VAL_INFPATH, 0, REG_SZ, (const BYTE *)SelectedDriver->Details.InfFileName, (strlenW(SelectedDriver->Details.InfFileName) + 1) * sizeof(WCHAR));
+        rc = RegSetValueEx(hKey, REGSTR_VAL_INFPATH, 0, REG_SZ, (const BYTE *)SelectedDriver->InfFileDetails->FileName, (strlenW(SelectedDriver->InfFileDetails->FileName) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, REGSTR_VAL_INFSECTION, 0, REG_SZ, (const BYTE *)SelectedDriver->Details.SectionName, (strlenW(SelectedDriver->Details.SectionName) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
@@ -8155,26 +8176,6 @@ SetupDiInstallDevice(
         goto cleanup;
     if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
         RebootRequired = TRUE;
-
-    /* Copy .inf file to Inf\ directory (if needed) */
-    Result = InfIsFromOEMLocation(SelectedDriver->InfFileDetails->FullInfFileName, &NeedtoCopyFile);
-    if (!Result)
-        goto cleanup;
-    if (NeedtoCopyFile)
-    {
-        Result = SetupCopyOEMInfW(
-            SelectedDriver->InfFileDetails->FullInfFileName,
-            NULL,
-            SPOST_NONE,
-            SP_COPY_NOOVERWRITE,
-            NULL, 0,
-            NULL,
-            NULL);
-        if (!Result)
-            goto cleanup;
-        /* FIXME: create a new struct InfFileDetails, and set it to SelectedDriver->InfFileDetails,
-         * to release use of current InfFile */
-    }
 
     /* Open device registry key */
     hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_SET_VALUE);

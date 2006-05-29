@@ -78,10 +78,9 @@ struct InfFileDetails
      * be NULL if the file is already in %SYSTEMROOT%\Inf.
      * Points into szData at then end of the structure */
     PCWSTR DirectoryName;
-    /* Contains the full file name of the .inf file. However, the directory
-     * part may be missing if the file is already in %SYSTEMROOT%\Inf.
+    /* Contains the .inf file name (without directory name).
      * Points into szData at then end of the structure */
-    PCWSTR FullInfFileName;
+    PCWSTR FileName;
 
     WCHAR szData[ANYSIZE_ARRAY];
 };
