@@ -104,28 +104,37 @@ FASTCALL
 ObfDereferenceObject(IN PVOID Object)
 {
     POBJECT_HEADER Header;
-    LONG NewPointerCount;
-    BOOL Permanent;
 
-    ASSERT(Object);
-
-    /* Extract the object header. */
+    /* Extract the object header */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
-    Permanent = Header->Flags & OB_FLAG_PERMANENT;
-
-    /*
-    Drop our reference and get the new count so we can tell if this was the
-    last reference.
-    */
-    NewPointerCount = InterlockedDecrement(&Header->PointerCount);
-    DPRINT("ObfDereferenceObject(0x%x)==%d\n", Object, NewPointerCount);
-    ASSERT(NewPointerCount >= 0);
 
     /* Check whether the object can now be deleted. */
-    if (NewPointerCount == 0 &&
-        !Permanent)
+    if (!(InterlockedDecrement(&Header->PointerCount)) &&
+        !(Header->Flags & OB_FLAG_PERMANENT))
     {
-        ObpDeleteObjectDpcLevel(Header, NewPointerCount);
+        /* Sanity check */
+        ASSERT(!Header->HandleCount);
+
+        /* Check if we're at PASSIVE */
+        if (KeGetCurrentIrql() == PASSIVE_LEVEL)
+        {
+            /* Remove the object */
+            ObpDeleteObject(Object);
+        }
+        else
+        {
+            /* Add us to the list */
+            do
+            {
+                Header->NextToFree = ObpReaperList;
+            } while (InterlockedCompareExchangePointer(&ObpReaperList,
+                                                       Header,
+                                                       Header->NextToFree) !=
+                     Header->NextToFree);
+
+            /* Queue the work item */
+            ExQueueWorkItem(&ObpReaperWorkItem, DelayedWorkQueue);
+        }
     }
 }
 

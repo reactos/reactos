@@ -416,7 +416,7 @@ typedef struct _OBJECT_HEADER
     union
     {
         LONG HandleCount;
-        PVOID NextToFree;
+        volatile PVOID NextToFree;
     };
     POBJECT_TYPE Type;
     UCHAR NameInfoOffset;

@@ -21,59 +21,33 @@ extern ULONG NtGlobalFlag;
 
 POBJECT_TYPE ObTypeObjectType = NULL;
 KEVENT ObpDefaultObject;
-
-typedef struct _RETENTION_CHECK_PARAMS
-{
-    WORK_QUEUE_ITEM WorkItem;
-    POBJECT_HEADER ObjectHeader;
-} RETENTION_CHECK_PARAMS, *PRETENTION_CHECK_PARAMS;
+WORK_QUEUE_ITEM ObpReaperWorkItem;
+volatile PVOID ObpReaperList;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-static NTSTATUS
-ObpDeleteObject(POBJECT_HEADER Header)
+VOID
+FASTCALL
+ObpDeallocateObject(IN PVOID Object)
 {
-    PVOID HeaderLocation = Header;
+    PVOID HeaderLocation;
+    POBJECT_HEADER Header;
+    POBJECT_TYPE ObjectType;
     POBJECT_HEADER_HANDLE_INFO HandleInfo;
     POBJECT_HEADER_NAME_INFO NameInfo;
     POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+    PAGED_CODE();
 
-    DPRINT("ObpDeleteObject(Header %p)\n", Header);
-    if (KeGetCurrentIrql() != PASSIVE_LEVEL)
-    {
-        DPRINT("ObpDeleteObject called at an unsupported IRQL.  Use ObpDeleteObjectDpcLevel instead.\n");
-        KEBUGCHECK(0);
-    }
-
-    if (Header->Type != NULL &&
-        Header->Type->TypeInfo.DeleteProcedure != NULL)
-    {
-        Header->Type->TypeInfo.DeleteProcedure(&Header->Body);
-    }
-
-    if (Header->SecurityDescriptor != NULL)
-    {
-        ObpRemoveSecurityDescriptor(Header->SecurityDescriptor);
-    }
-
-    if (OBJECT_HEADER_TO_NAME_INFO(Header))
-    {
-        if(OBJECT_HEADER_TO_NAME_INFO(Header)->Name.Buffer)
-        {
-            ExFreePool(OBJECT_HEADER_TO_NAME_INFO(Header)->Name.Buffer);
-        }
-    }
-    if (Header->ObjectCreateInfo)
-    {
-        ObpReleaseCapturedAttributes(Header->ObjectCreateInfo);
-        ExFreePool(Header->ObjectCreateInfo);
-    }
+    /* Get the header and assume this is what we'll free */
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = Header->Type;
+    HeaderLocation = Header;
 
     /* To find the header, walk backwards from how we allocated */
     if ((CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header)))
     {
         HeaderLocation = CreatorInfo;
-    }   
+    }
     if ((NameInfo = OBJECT_HEADER_TO_NAME_INFO(Header)))
     {
         HeaderLocation = NameInfo;
@@ -83,88 +57,124 @@ ObpDeleteObject(POBJECT_HEADER Header)
         HeaderLocation = HandleInfo;
     }
 
-    DPRINT("ObPerformRetentionChecks() = Freeing object\n");
-    ExFreePool(HeaderLocation);
-
-    return(STATUS_SUCCESS);
-}
-
-
-VOID STDCALL
-ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
-{
-    PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)Parameter;
-    /* ULONG Tag; */ /* See below */
-
-    ASSERT(Params);
-    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL); /* We need PAGED_CODE somewhere... */
-
-    /* Turn this on when we have ExFreePoolWithTag
-    Tag = Params->ObjectHeader->Type->Tag; */
-    ObpDeleteObject(Params->ObjectHeader);
-    ExFreePool(Params);
-    /* ExFreePoolWithTag(Params, Tag); */
-}
-
-
-NTSTATUS
-ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
-                        IN LONG OldPointerCount)
-{
-#if 0
-    if (ObjectHeader->PointerCount < 0)
+    /* Check if we have create info */
+    if (Header->Flags & OB_FLAG_CREATE_INFO)
     {
-        CPRINT("Object %p/%p has invalid reference count (%d)\n",
-            ObjectHeader, HEADER_TO_BODY(ObjectHeader),
-            ObjectHeader->PointerCount);
-        KEBUGCHECK(0);
-    }
-
-    if (ObjectHeader->HandleCount < 0)
-    {
-        CPRINT("Object %p/%p has invalid handle count (%d)\n",
-            ObjectHeader, HEADER_TO_BODY(ObjectHeader),
-            ObjectHeader->HandleCount);
-        KEBUGCHECK(0);
-    }
-#endif
-
-
-    switch (KeGetCurrentIrql ())
-    {
-    case PASSIVE_LEVEL:
-        return ObpDeleteObject (ObjectHeader);
-
-    case APC_LEVEL:
-    case DISPATCH_LEVEL:
+        /* Double-check that it exists */
+        if (Header->ObjectCreateInfo)
         {
-            PRETENTION_CHECK_PARAMS Params;
-
-            /*
-            We use must succeed pool here because if the allocation fails
-            then we leak memory.
-            */
-            Params = (PRETENTION_CHECK_PARAMS)
-                ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
-                sizeof(RETENTION_CHECK_PARAMS),
-                ObjectHeader->Type->Key);
-            Params->ObjectHeader = ObjectHeader;
-            ExInitializeWorkItem(&Params->WorkItem,
-                ObpDeleteObjectWorkRoutine,
-                (PVOID)Params);
-            ExQueueWorkItem(&Params->WorkItem,
-                CriticalWorkQueue);
+            /* Free it */
+            ObpReleaseCapturedAttributes(Header->ObjectCreateInfo);
+            Header->ObjectCreateInfo = NULL;
         }
-        return STATUS_PENDING;
-
-    default:
-        DPRINT("ObpDeleteObjectDpcLevel called at unsupported "
-            "IRQL %u!\n", KeGetCurrentIrql());
-        KEBUGCHECK(0);
-        return STATUS_UNSUCCESSFUL;
     }
 
-    return STATUS_SUCCESS;
+    /* Check if a handle database was active */
+    if ((HandleInfo) && (Header->Flags & OB_FLAG_SINGLE_PROCESS))
+    {
+        /* Free it */
+        ExFreePool(HandleInfo->HandleCountDatabase);
+        HandleInfo->HandleCountDatabase = NULL;
+    }
+
+    /* Check if we have a name */
+    if ((NameInfo) && (NameInfo->Name.Buffer))
+    {
+        /* Free it */
+        ExFreePool(NameInfo->Name.Buffer);
+        NameInfo->Name.Buffer = NULL;
+    }
+
+    /* Free the object using the same allocation tag */
+    ExFreePoolWithTag(HeaderLocation,
+                      ObjectType ? TAG('T', 'j', 'b', 'O') : ObjectType->Key);
+
+    /* Decrease the total */
+    ObjectType->TotalNumberOfObjects--;
+}
+
+VOID
+FASTCALL
+ObpDeleteObject(IN PVOID Object)
+{
+    POBJECT_HEADER Header;
+    POBJECT_TYPE ObjectType;
+    POBJECT_HEADER_NAME_INFO NameInfo;
+    POBJECT_HEADER_CREATOR_INFO CreatorInfo;
+    PAGED_CODE();
+
+    /* Get the header and type */
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = Header->Type;
+
+    /* Get creator and name information */
+    NameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
+    CreatorInfo = OBJECT_HEADER_TO_CREATOR_INFO(Header);
+
+    /* Check if the object is on a type list */
+    if ((CreatorInfo) && !(IsListEmpty(&CreatorInfo->TypeList)))
+    {
+        /* Remove the object from the type list */
+        RemoveEntryList(&CreatorInfo->TypeList);
+    }
+
+    /* Check if we have a name */
+    if ((NameInfo) && (NameInfo->Name.Buffer))
+    {
+        /* Free it */
+        ExFreePool(NameInfo->Name.Buffer);
+
+        /* Clean up the string so we don't try this again */
+        RtlInitUnicodeString(&NameInfo->Name, NULL);
+    }
+
+    /* Check if we have a security descriptor */
+    if (Header->SecurityDescriptor)
+    {
+        ObjectType->TypeInfo.SecurityProcedure(Object,
+                                               DeleteSecurityDescriptor,
+                                               0,
+                                               NULL,
+                                               NULL,
+                                               &Header->SecurityDescriptor,
+                                               0,
+                                               NULL);
+    }
+
+    /* Check if we have a delete procedure */
+    if (ObjectType->TypeInfo.DeleteProcedure)
+    {
+        /* Call it */
+        ObjectType->TypeInfo.DeleteProcedure(Object);
+    }
+
+    /* Now de-allocate all object members */
+    ObpDeallocateObject(Object);
+}
+
+VOID
+NTAPI
+ObpReapObject(IN PVOID Parameter)
+{
+    POBJECT_HEADER ReapObject;
+    PVOID NextObject;
+
+    /* Start reaping */
+    while((ReapObject = InterlockedExchangePointer(&ObpReaperList, NULL)))
+    {
+        /* Start deletion loop */
+        do
+        {
+            /* Get the next object */
+            NextObject = ReapObject->NextToFree;
+
+            /* Delete the object */
+            ObpDeleteObject(&ReapObject->Body);
+
+            /* Move to the next one */
+            ReapObject = NextObject;
+        } while(NextObject != NULL);
+    }
 }
 
 NTSTATUS

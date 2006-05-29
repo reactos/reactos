@@ -30,6 +30,8 @@ extern POBJECT_TYPE ObTypeObjectType;
 extern POBJECT_DIRECTORY NameSpaceRoot;
 extern POBJECT_DIRECTORY ObpTypeDirectoryObject;
 extern PHANDLE_TABLE ObpKernelHandleTable;
+extern WORK_QUEUE_ITEM ObpReaperWorkItem;
+extern volatile PVOID ObpReaperList;
 
 BOOLEAN
 NTAPI
@@ -157,10 +159,16 @@ VOID
 STDCALL
 ObKillProcess(PEPROCESS Process);
 
-NTSTATUS
-ObpDeleteObjectDpcLevel(
-    IN POBJECT_HEADER ObjectHeader,
-    IN LONG OldPointerCount
+VOID
+FASTCALL
+ObpDeleteObject(
+    IN PVOID Object
+);
+
+VOID
+NTAPI
+ObpReapObject(
+    IN PVOID Unused
 );
 
 /* Security descriptor cache functions */
