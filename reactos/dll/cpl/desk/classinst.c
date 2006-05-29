@@ -36,7 +36,7 @@ DisplayClassInstaller(
 	if (InstallFunction != DIF_INSTALLDEVICE)
 		return ERROR_DI_DO_DEFAULT;
 
-	/* Set DI_NEEDRESTART flag */
+	/* Set DI_DONOTCALLCONFIGMG flag */
 	InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
 	result = SetupDiGetDeviceInstallParams(DeviceInfoSet, DeviceInfoData, &InstallParams);
 	if (!result)
@@ -46,13 +46,22 @@ DisplayClassInstaller(
 		goto cleanup;
 	}
 
-	InstallParams.Flags |= DI_NEEDRESTART;
+	InstallParams.Flags |= DI_DONOTCALLCONFIGMG;
 
 	result = SetupDiSetDeviceInstallParams(DeviceInfoSet, DeviceInfoData, &InstallParams);
 	if (!result)
 	{
 		rc = GetLastError();
 		DPRINT("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+
+	/* Do normal install */
+	result = SetupDiInstallDevice(DeviceInfoSet, DeviceInfoData);
+	if (!result)
+	{
+		rc = GetLastError();
+		DPRINT("SetupDiGetDeviceRegistryProperty() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
 
@@ -96,15 +105,6 @@ DisplayClassInstaller(
 		goto cleanup;
 	}
 	_tcscat(SectionName, _T(".SoftwareSettings"));
-
-	/* Do normal install */
-	result = SetupDiInstallDevice(DeviceInfoSet, DeviceInfoData);
-	if (!result)
-	{
-		rc = GetLastError();
-		DPRINT("SetupDiGetDeviceRegistryProperty() failed with error 0x%lx\n", rc);
-		goto cleanup;
-	}
 
 	/* Open driver registry key and create Settings subkey */
 	hDriverKey = SetupDiOpenDevRegKey(
