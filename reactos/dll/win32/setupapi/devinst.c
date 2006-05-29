@@ -153,7 +153,7 @@ static const UPDATE_CLASS_PARAM_HANDLER UpdateClassInstallParamHandlers[] = {
 BOOL WINAPI
 SetupDiBuildClassInfoList(
     IN DWORD Flags,
-    OUT LPGUID ClassGuidList  OPTIONAL,
+    OUT LPGUID ClassGuidList OPTIONAL,
     IN DWORD ClassGuidListSize,
     OUT PDWORD RequiredSize)
 {
@@ -169,10 +169,10 @@ SetupDiBuildClassInfoList(
 BOOL WINAPI
 SetupDiBuildClassInfoListExA(
     IN DWORD Flags,
-    OUT LPGUID ClassGuidList  OPTIONAL,
+    OUT LPGUID ClassGuidList OPTIONAL,
     IN DWORD ClassGuidListSize,
     OUT PDWORD RequiredSize,
-    IN PCSTR MachineName  OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     LPWSTR MachineNameW = NULL;
@@ -202,10 +202,10 @@ SetupDiBuildClassInfoListExA(
 BOOL WINAPI
 SetupDiBuildClassInfoListExW(
     IN DWORD Flags,
-    OUT LPGUID ClassGuidList  OPTIONAL,
+    OUT LPGUID ClassGuidList OPTIONAL,
     IN DWORD ClassGuidListSize,
     OUT PDWORD RequiredSize,
-    IN PCWSTR MachineName  OPTIONAL,
+    IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     WCHAR szKeyName[MAX_GUID_STRING_LEN + 1];
@@ -365,7 +365,7 @@ SetupDiClassGuidsFromNameExA(
     OUT LPGUID ClassGuidList,
     IN DWORD ClassGuidListSize,
     OUT PDWORD RequiredSize,
-    IN PCSTR MachineName  OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     LPWSTR ClassNameW = NULL;
@@ -409,7 +409,7 @@ SetupDiClassGuidsFromNameExW(
     OUT LPGUID ClassGuidList,
     IN DWORD ClassGuidListSize,
     OUT PDWORD RequiredSize,
-    IN PCWSTR MachineName  OPTIONAL,
+    IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     WCHAR szKeyName[MAX_GUID_STRING_LEN + 1];
@@ -521,7 +521,7 @@ SetupDiClassNameFromGuidA(
     IN CONST GUID* ClassGuid,
     OUT PSTR ClassName,
     IN DWORD ClassNameSize,
-    OUT PDWORD RequiredSize  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL)
 {
   return SetupDiClassNameFromGuidExA(ClassGuid, ClassName,
                                      ClassNameSize, RequiredSize,
@@ -536,7 +536,7 @@ SetupDiClassNameFromGuidW(
     IN CONST GUID* ClassGuid,
     OUT PWSTR ClassName,
     IN DWORD ClassNameSize,
-    OUT PDWORD RequiredSize  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL)
 {
   return SetupDiClassNameFromGuidExW(ClassGuid, ClassName,
                                      ClassNameSize, RequiredSize,
@@ -551,8 +551,8 @@ SetupDiClassNameFromGuidExA(
     IN CONST GUID* ClassGuid,
     OUT PSTR ClassName,
     IN DWORD ClassNameSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    IN PCSTR MachineName  OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     WCHAR ClassNameW[MAX_CLASS_NAME_LEN];
@@ -583,8 +583,8 @@ SetupDiClassNameFromGuidExW(
     IN CONST GUID* ClassGuid,
     OUT PWSTR ClassName,
     IN DWORD ClassNameSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    IN PCWSTR MachineName  OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL,
+    IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     HKEY hKey;
@@ -647,8 +647,8 @@ cleanup:
  */
 HDEVINFO WINAPI
 SetupDiCreateDeviceInfoList(
-    IN CONST GUID *ClassGuid  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL)
+    IN CONST GUID *ClassGuid OPTIONAL,
+    IN HWND hwndParent OPTIONAL)
 {
   return SetupDiCreateDeviceInfoListExW(ClassGuid, hwndParent, NULL, NULL);
 }
@@ -658,9 +658,9 @@ SetupDiCreateDeviceInfoList(
  */
 HDEVINFO WINAPI
 SetupDiCreateDeviceInfoListExA(
-    IN CONST GUID *ClassGuid  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL,
-    IN PCSTR MachineName  OPTIONAL,
+    IN CONST GUID *ClassGuid OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     LPWSTR MachineNameW = NULL;
@@ -718,9 +718,9 @@ GetErrorCodeFromCrCode(const IN CONFIGRET cr)
  */
 HDEVINFO WINAPI
 SetupDiCreateDeviceInfoListExW(
-    IN CONST GUID *ClassGuid  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL,
-    IN PCWSTR MachineName  OPTIONAL,
+    IN CONST GUID *ClassGuid OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
+    IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
   struct DeviceInfoSet *list;
@@ -868,10 +868,10 @@ BOOL WINAPI
 SetupDiGetActualSectionToInstallA(
     IN HINF InfHandle,
     IN PCSTR InfSectionName,
-    OUT PSTR InfSectionWithExt  OPTIONAL,
+    OUT PSTR InfSectionWithExt OPTIONAL,
     IN DWORD InfSectionWithExtSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    OUT PSTR *Extension  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL,
+    OUT PSTR *Extension OPTIONAL)
 {
     return SetupDiGetActualSectionToInstallExA(InfHandle, InfSectionName,
         NULL, InfSectionWithExt, InfSectionWithExtSize, RequiredSize,
@@ -885,10 +885,10 @@ BOOL WINAPI
 SetupDiGetActualSectionToInstallW(
     IN HINF InfHandle,
     IN PCWSTR InfSectionName,
-    OUT PWSTR InfSectionWithExt  OPTIONAL,
+    OUT PWSTR InfSectionWithExt OPTIONAL,
     IN DWORD InfSectionWithExtSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    OUT PWSTR *Extension  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL,
+    OUT PWSTR *Extension OPTIONAL)
 {
     return SetupDiGetActualSectionToInstallExW(InfHandle, InfSectionName,
         NULL, InfSectionWithExt, InfSectionWithExtSize, RequiredSize,
@@ -902,11 +902,11 @@ BOOL WINAPI
 SetupDiGetActualSectionToInstallExA(
     IN HINF InfHandle,
     IN PCSTR InfSectionName,
-    IN PSP_ALTPLATFORM_INFO AlternatePlatformInfo  OPTIONAL,
-    OUT PSTR InfSectionWithExt  OPTIONAL,
+    IN PSP_ALTPLATFORM_INFO AlternatePlatformInfo OPTIONAL,
+    OUT PSTR InfSectionWithExt OPTIONAL,
     IN DWORD InfSectionWithExtSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    OUT PSTR* Extension  OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL,
+    OUT PSTR* Extension OPTIONAL,
     IN PVOID Reserved)
 {
     LPWSTR InfSectionNameW = NULL;
@@ -1249,11 +1249,11 @@ BOOL WINAPI
 SetupDiGetActualSectionToInstallExW(
     IN HINF InfHandle,
     IN PCWSTR InfSectionName,
-    IN PSP_ALTPLATFORM_INFO AlternatePlatformInfo  OPTIONAL,
-    OUT PWSTR InfSectionWithExt  OPTIONAL,
+    IN PSP_ALTPLATFORM_INFO AlternatePlatformInfo OPTIONAL,
+    OUT PWSTR InfSectionWithExt OPTIONAL,
     IN DWORD InfSectionWithExtSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    OUT PWSTR* Extension  OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL,
+    OUT PWSTR* Extension OPTIONAL,
     IN PVOID Reserved)
 {
     BOOL ret = FALSE;
@@ -1368,7 +1368,7 @@ SetupDiGetClassDescriptionA(
     IN CONST GUID *ClassGuid,
     OUT PSTR ClassDescription,
     IN DWORD ClassDescriptionSize,
-    OUT PDWORD RequiredSize  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL)
 {
   return SetupDiGetClassDescriptionExA(ClassGuid, ClassDescription,
                                        ClassDescriptionSize,
@@ -1383,7 +1383,7 @@ SetupDiGetClassDescriptionW(
     IN CONST GUID *ClassGuid,
     OUT PWSTR ClassDescription,
     IN DWORD ClassDescriptionSize,
-    OUT PDWORD RequiredSize  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL)
 {
   return SetupDiGetClassDescriptionExW(ClassGuid, ClassDescription,
                                        ClassDescriptionSize,
@@ -1398,8 +1398,8 @@ SetupDiGetClassDescriptionExA(
     IN CONST GUID *ClassGuid,
     OUT PSTR ClassDescription,
     IN DWORD ClassDescriptionSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    IN PCSTR MachineName  OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     PWCHAR ClassDescriptionW;
@@ -1456,8 +1456,8 @@ SetupDiGetClassDescriptionExW(
     IN CONST GUID *ClassGuid,
     OUT PWSTR ClassDescription,
     IN DWORD ClassDescriptionSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    IN PCWSTR MachineName  OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL,
+    IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     HKEY hKey = INVALID_HANDLE_VALUE;
@@ -1519,9 +1519,9 @@ cleanup:
  */
 HDEVINFO WINAPI
 SetupDiGetClassDevsA(
-    IN CONST GUID *ClassGuid  OPTIONAL,
-    IN PCSTR Enumerator  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL,
+    IN CONST GUID *ClassGuid OPTIONAL,
+    IN PCSTR Enumerator OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
     IN DWORD Flags)
 {
     return SetupDiGetClassDevsExA(ClassGuid, Enumerator, hwndParent,
@@ -1533,9 +1533,9 @@ SetupDiGetClassDevsA(
  */
 HDEVINFO WINAPI
 SetupDiGetClassDevsW(
-    IN CONST GUID *ClassGuid  OPTIONAL,
-    IN PCWSTR Enumerator  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL,
+    IN CONST GUID *ClassGuid OPTIONAL,
+    IN PCWSTR Enumerator OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
     IN DWORD Flags)
 {
     return SetupDiGetClassDevsExW(ClassGuid, Enumerator, hwndParent,
@@ -1547,12 +1547,12 @@ SetupDiGetClassDevsW(
  */
 HDEVINFO WINAPI
 SetupDiGetClassDevsExA(
-    IN CONST GUID *ClassGuid  OPTIONAL,
-    IN PCSTR Enumerator  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL,
+    IN CONST GUID *ClassGuid OPTIONAL,
+    IN PCSTR Enumerator OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
     IN DWORD Flags,
-    IN HDEVINFO DeviceInfoSet  OPTIONAL,
-    IN PCSTR MachineName  OPTIONAL,
+    IN HDEVINFO DeviceInfoSet OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     HDEVINFO ret;
@@ -2099,12 +2099,12 @@ cleanup:
  */
 HDEVINFO WINAPI
 SetupDiGetClassDevsExW(
-    IN CONST GUID *ClassGuid  OPTIONAL,
-    IN PCWSTR Enumerator  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL,
+    IN CONST GUID *ClassGuid OPTIONAL,
+    IN PCWSTR Enumerator OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
     IN DWORD Flags,
-    IN HDEVINFO DeviceInfoSet  OPTIONAL,
-    IN PCWSTR MachineName  OPTIONAL,
+    IN HDEVINFO DeviceInfoSet OPTIONAL,
+    IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     HDEVINFO hDeviceInfo = INVALID_HANDLE_VALUE;
@@ -2304,7 +2304,7 @@ SetupDiGetClassImageList(
 BOOL WINAPI
 SetupDiGetClassImageListExA(
     OUT PSP_CLASSIMAGELIST_DATA ClassImageListData,
-    IN PCSTR MachineName  OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     PWSTR MachineNameW = NULL;
@@ -2331,7 +2331,7 @@ SetupDiGetClassImageListExA(
 BOOL WINAPI
 SetupDiGetClassImageListExW(
     OUT PSP_CLASSIMAGELIST_DATA ClassImageListData,
-    IN PCWSTR MachineName  OPTIONAL,
+    IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     BOOL ret = FALSE;
@@ -2388,8 +2388,8 @@ cleanup:
 BOOL WINAPI
 SetupDiLoadClassIcon(
     IN CONST GUID *ClassGuid,
-    OUT HICON *LargeIcon  OPTIONAL,
-    OUT PINT MiniIconIndex  OPTIONAL)
+    OUT HICON *LargeIcon OPTIONAL,
+    OUT PINT MiniIconIndex OPTIONAL)
 {
     BOOL ret = FALSE;
 
@@ -2503,7 +2503,7 @@ cleanup:
 BOOL WINAPI
 SetupDiEnumDeviceInterfaces(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN CONST GUID *InterfaceClassGuid,
     IN DWORD MemberIndex,
     OUT PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
@@ -2680,10 +2680,10 @@ BOOL WINAPI
 SetupDiGetDeviceInterfaceDetailA(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,
-    OUT PSP_DEVICE_INTERFACE_DETAIL_DATA_A DeviceInterfaceDetailData  OPTIONAL,
+    OUT PSP_DEVICE_INTERFACE_DETAIL_DATA_A DeviceInterfaceDetailData OPTIONAL,
     IN DWORD DeviceInterfaceDetailDataSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL,
+    OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailDataW = NULL;
     DWORD sizeW = 0, sizeA;
@@ -2751,10 +2751,10 @@ BOOL WINAPI
 SetupDiGetDeviceInterfaceDetailW(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,
-    OUT PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData  OPTIONAL,
+    OUT PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData OPTIONAL,
     IN DWORD DeviceInterfaceDetailDataSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
-    OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL,
+    OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     BOOL ret = FALSE;
 
@@ -2819,10 +2819,10 @@ SetupDiGetDeviceRegistryPropertyA(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData,
     IN DWORD Property,
-    OUT PDWORD PropertyRegDataType  OPTIONAL,
-    OUT PBYTE PropertyBuffer  OPTIONAL,
+    OUT PDWORD PropertyRegDataType OPTIONAL,
+    OUT PBYTE PropertyBuffer OPTIONAL,
     IN DWORD PropertyBufferSize,
-    OUT PDWORD  RequiredSize  OPTIONAL)
+    OUT PDWORD  RequiredSize OPTIONAL)
 {
     BOOL bResult;
     BOOL bIsStringProperty;
@@ -2906,10 +2906,10 @@ SetupDiGetDeviceRegistryPropertyW(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData,
     IN DWORD Property,
-    OUT PDWORD PropertyRegDataType  OPTIONAL,
-    OUT PBYTE PropertyBuffer  OPTIONAL,
+    OUT PDWORD PropertyRegDataType OPTIONAL,
+    OUT PBYTE PropertyBuffer OPTIONAL,
     IN DWORD PropertyBufferSize,
-    OUT PDWORD  RequiredSize  OPTIONAL)
+    OUT PDWORD  RequiredSize OPTIONAL)
 {
     HKEY hEnumKey, hKey;
     DWORD rc;
@@ -3105,7 +3105,7 @@ SetupDiSetDeviceRegistryPropertyA(
     IN HDEVINFO DeviceInfoSet,
     IN OUT PSP_DEVINFO_DATA DeviceInfoData,
     IN DWORD Property,
-    IN CONST BYTE *PropertyBuffer  OPTIONAL,
+    IN CONST BYTE *PropertyBuffer OPTIONAL,
     IN DWORD PropertyBufferSize)
 {
     FIXME("%p %p 0x%lx %p 0x%lx\n", DeviceInfoSet, DeviceInfoData,
@@ -3122,7 +3122,7 @@ SetupDiSetDeviceRegistryPropertyW(
     IN HDEVINFO DeviceInfoSet,
     IN OUT PSP_DEVINFO_DATA DeviceInfoData,
     IN DWORD Property,
-    IN CONST BYTE *PropertyBuffer  OPTIONAL,
+    IN CONST BYTE *PropertyBuffer OPTIONAL,
     IN DWORD PropertyBufferSize)
 {
     struct DeviceInfoSet *list;
@@ -3254,10 +3254,10 @@ SetupDiSetDeviceRegistryPropertyW(
  */
 BOOL WINAPI
 SetupDiInstallClassA(
-    IN HWND hwndParent  OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
     IN PCSTR InfFileName,
     IN DWORD Flags,
-    IN HSPFILEQ FileQueue  OPTIONAL)
+    IN HSPFILEQ FileQueue OPTIONAL)
 {
     return SetupDiInstallClassExA(hwndParent, InfFileName, Flags, FileQueue, NULL, NULL, NULL);
 }
@@ -3268,10 +3268,10 @@ SetupDiInstallClassA(
  */
 BOOL WINAPI
 SetupDiInstallClassW(
-    IN HWND hwndParent  OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
     IN PCWSTR InfFileName,
     IN DWORD Flags,
-    IN HSPFILEQ FileQueue  OPTIONAL)
+    IN HSPFILEQ FileQueue OPTIONAL)
 {
     return SetupDiInstallClassExW(hwndParent, InfFileName, Flags, FileQueue, NULL, NULL, NULL);
 }
@@ -3282,11 +3282,11 @@ SetupDiInstallClassW(
  */
 BOOL WINAPI
 SetupDiInstallClassExA(
-    IN HWND hwndParent  OPTIONAL,
-    IN PCSTR InfFileName  OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
+    IN PCSTR InfFileName OPTIONAL,
     IN DWORD Flags,
-    IN HSPFILEQ FileQueue  OPTIONAL,
-    IN CONST GUID *InterfaceClassGuid  OPTIONAL,
+    IN HSPFILEQ FileQueue OPTIONAL,
+    IN CONST GUID *InterfaceClassGuid OPTIONAL,
     IN PVOID Reserved1,
     IN PVOID Reserved2)
 {
@@ -3388,11 +3388,11 @@ cleanup:
  */
 BOOL WINAPI
 SetupDiInstallClassExW(
-    IN HWND hwndParent  OPTIONAL,
-    IN PCWSTR InfFileName  OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
+    IN PCWSTR InfFileName OPTIONAL,
     IN DWORD Flags,
-    IN HSPFILEQ FileQueue  OPTIONAL,
-    IN CONST GUID *InterfaceClassGuid  OPTIONAL,
+    IN HSPFILEQ FileQueue OPTIONAL,
+    IN CONST GUID *InterfaceClassGuid OPTIONAL,
     IN PVOID Reserved1,
     IN PVOID Reserved2)
 {
@@ -3548,7 +3548,7 @@ cleanup:
  */
 HKEY WINAPI
 SetupDiOpenClassRegKey(
-    IN CONST GUID *ClassGuid  OPTIONAL,
+    IN CONST GUID *ClassGuid OPTIONAL,
     IN REGSAM samDesired)
 {
     return SetupDiOpenClassRegKeyExW(ClassGuid, samDesired,
@@ -3561,10 +3561,10 @@ SetupDiOpenClassRegKey(
  */
 HKEY WINAPI
 SetupDiOpenClassRegKeyExA(
-    IN CONST GUID *ClassGuid  OPTIONAL,
+    IN CONST GUID *ClassGuid OPTIONAL,
     IN REGSAM samDesired,
     IN DWORD Flags,
-    IN PCSTR MachineName  OPTIONAL,
+    IN PCSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     PWSTR MachineNameW = NULL;
@@ -3594,10 +3594,10 @@ SetupDiOpenClassRegKeyExA(
  */
 HKEY WINAPI
 SetupDiOpenClassRegKeyExW(
-    IN CONST GUID* ClassGuid  OPTIONAL,
+    IN CONST GUID* ClassGuid OPTIONAL,
     IN REGSAM samDesired,
     IN DWORD Flags,
-    IN PCWSTR MachineName  OPTIONAL,
+    IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
     LPWSTR lpGuidString = NULL;
@@ -3705,7 +3705,7 @@ SetupDiOpenDeviceInterfaceW(
     IN HDEVINFO DeviceInfoSet,
     IN PCWSTR DevicePath,
     IN DWORD OpenFlags,
-    OUT PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData  OPTIONAL)
+    OUT PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData OPTIONAL)
 {
     FIXME("%p %s %08lx %p\n",
         DeviceInfoSet, debugstr_w(DevicePath), OpenFlags, DeviceInterfaceData);
@@ -3720,7 +3720,7 @@ SetupDiOpenDeviceInterfaceA(
     IN HDEVINFO DeviceInfoSet,
     IN PCSTR DevicePath,
     IN DWORD OpenFlags,
-    OUT PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData  OPTIONAL)
+    OUT PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData OPTIONAL)
 {
     LPWSTR DevicePathW = NULL;
     BOOL bResult;
@@ -3745,8 +3745,8 @@ SetupDiOpenDeviceInterfaceA(
 BOOL WINAPI
 SetupDiSetClassInstallParamsA(
     IN HDEVINFO  DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
-    IN PSP_CLASSINSTALL_HEADER ClassInstallParams  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
     IN DWORD ClassInstallParamsSize)
 {
     FIXME("%p %p %x %lu\n",DeviceInfoSet, DeviceInfoData,
@@ -3760,8 +3760,8 @@ SetupDiSetClassInstallParamsA(
 BOOL WINAPI
 SetupDiSetClassInstallParamsW(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
-    IN PSP_CLASSINSTALL_HEADER ClassInstallParams  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN PSP_CLASSINSTALL_HEADER ClassInstallParams OPTIONAL,
     IN DWORD ClassInstallParamsSize)
 {
     struct DeviceInfoSet *list;
@@ -3976,7 +3976,7 @@ BOOL WINAPI
 SetupDiCallClassInstaller(
     IN DI_FUNCTION InstallFunction,
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL)
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     BOOL ret = FALSE;
 
@@ -4401,7 +4401,7 @@ SetupDiGetDeviceInfoListDetailW(
 BOOL WINAPI
 SetupDiGetDeviceInstallParamsA(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     OUT PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
 {
     SP_DEVINSTALL_PARAMS_W deviceInstallParamsW;
@@ -4444,7 +4444,7 @@ SetupDiGetDeviceInstallParamsA(
 BOOL WINAPI
 SetupDiGetDeviceInstallParamsW(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     OUT PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
 {
     struct DeviceInfoSet *list;
@@ -4538,7 +4538,7 @@ CheckDeviceInstallParameters(
 BOOL WINAPI
 SetupDiSetDeviceInstallParamsW(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
 {
     struct DeviceInfoSet *list;
@@ -4579,9 +4579,9 @@ BOOL WINAPI
 SetupDiGetDeviceInstanceIdA(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData,
-    OUT PSTR DeviceInstanceId  OPTIONAL,
+    OUT PSTR DeviceInstanceId OPTIONAL,
     IN DWORD DeviceInstanceIdSize,
-    OUT PDWORD RequiredSize  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL)
 {
     PWSTR DeviceInstanceIdW = NULL;
     BOOL ret = FALSE;
@@ -4626,9 +4626,9 @@ BOOL WINAPI
 SetupDiGetDeviceInstanceIdW(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData,
-    OUT PWSTR DeviceInstanceId  OPTIONAL,
+    OUT PWSTR DeviceInstanceId OPTIONAL,
     IN DWORD DeviceInstanceIdSize,
-    OUT PDWORD RequiredSize  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL)
 {
     BOOL ret = FALSE;
 
@@ -4675,10 +4675,10 @@ SetupDiGetDeviceInstanceIdW(
 BOOL WINAPI
 SetupDiGetClassDevPropertySheetsA(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN LPPROPSHEETHEADERA PropertySheetHeader,
     IN DWORD PropertySheetHeaderPageListSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL,
     IN DWORD PropertySheetType)
 {
     PROPSHEETHEADERW psh;
@@ -4736,10 +4736,10 @@ GetClassDevPropertySheetsCallback(
 BOOL WINAPI
 SetupDiGetClassDevPropertySheetsW(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN OUT LPPROPSHEETHEADERW PropertySheetHeader,
     IN DWORD PropertySheetHeaderPageListSize,
-    OUT PDWORD RequiredSize  OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL,
     IN DWORD PropertySheetType)
 {
     struct DeviceInfoSet *list;
@@ -4872,8 +4872,8 @@ SetupDiCreateDevRegKeyA(
     IN DWORD Scope,
     IN DWORD HwProfile,
     IN DWORD KeyType,
-    IN HINF InfHandle  OPTIONAL,
-    IN PCSTR InfSectionName  OPTIONAL)
+    IN HINF InfHandle OPTIONAL,
+    IN PCSTR InfSectionName OPTIONAL)
 {
     PCWSTR InfSectionNameW = NULL;
     HKEY ret = INVALID_HANDLE_VALUE;
@@ -4965,8 +4965,8 @@ SetupDiCreateDevRegKeyW(
     IN DWORD Scope,
     IN DWORD HwProfile,
     IN DWORD KeyType,
-    IN HINF InfHandle  OPTIONAL,
-    IN PCWSTR InfSectionName  OPTIONAL)
+    IN HINF InfHandle OPTIONAL,
+    IN PCWSTR InfSectionName OPTIONAL)
 {
     struct DeviceInfoSet *list;
     HKEY ret = INVALID_HANDLE_VALUE;
@@ -5310,10 +5310,10 @@ SetupDiCreateDeviceInfoA(
     IN HDEVINFO DeviceInfoSet,
     IN PCSTR DeviceName,
     IN CONST GUID *ClassGuid,
-    IN PCSTR DeviceDescription  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL,
+    IN PCSTR DeviceDescription OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
     IN DWORD CreationFlags,
-    OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL)
+    OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     LPWSTR DeviceNameW = NULL;
     LPWSTR DeviceDescriptionW = NULL;
@@ -5355,10 +5355,10 @@ SetupDiCreateDeviceInfoW(
     IN HDEVINFO DeviceInfoSet,
     IN PCWSTR DeviceName,
     IN CONST GUID *ClassGuid,
-    IN PCWSTR DeviceDescription  OPTIONAL,
-    IN HWND hwndParent  OPTIONAL,
+    IN PCWSTR DeviceDescription OPTIONAL,
+    IN HWND hwndParent OPTIONAL,
     IN DWORD CreationFlags,
-    OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL)
+    OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     struct DeviceInfoSet *list;
     BOOL ret = FALSE;
@@ -5902,7 +5902,7 @@ CreateInfFileDetails(
 BOOL WINAPI
 SetupDiBuildDriverInfoList(
     IN HDEVINFO DeviceInfoSet,
-    IN OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN DWORD DriverType)
 {
     struct DeviceInfoSet *list;
@@ -6310,7 +6310,7 @@ SetupDiDeleteDeviceInfo(
 BOOL WINAPI
 SetupDiDestroyDriverInfoList(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN DWORD DriverType)
 {
     struct DeviceInfoSet *list;
@@ -6397,7 +6397,7 @@ SetupDiOpenDeviceInfoA(
     IN PCSTR DeviceInstanceId,
     IN HWND hwndParent OPTIONAL,
     IN DWORD OpenFlags,
-    OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL)
+    OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     LPWSTR DeviceInstanceIdW = NULL;
     BOOL bResult;
@@ -6426,7 +6426,7 @@ SetupDiOpenDeviceInfoW(
     IN PCWSTR DeviceInstanceId,
     IN HWND hwndParent OPTIONAL,
     IN DWORD OpenFlags,
-    OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL)
+    OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     struct DeviceInfoSet *list;
     HKEY hEnumKey, hKey = NULL;
@@ -6535,7 +6535,7 @@ cleanup:
 BOOL WINAPI
 SetupDiEnumDriverInfoA(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN DWORD DriverType,
     IN DWORD MemberIndex,
     OUT PSP_DRVINFO_DATA_A DriverInfoData)
@@ -6599,7 +6599,7 @@ SetupDiEnumDriverInfoA(
 BOOL WINAPI
 SetupDiEnumDriverInfoW(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN DWORD DriverType,
     IN DWORD MemberIndex,
     OUT PSP_DRVINFO_DATA_W DriverInfoData)
@@ -6703,7 +6703,7 @@ SetupDiGetSelectedDevice(
 BOOL WINAPI
 SetupDiGetSelectedDriverA(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     OUT PSP_DRVINFO_DATA_A DriverInfoData)
 {
     SP_DRVINFO_DATA_V2_W driverInfoData2W;
@@ -6763,7 +6763,7 @@ SetupDiGetSelectedDriverA(
 BOOL WINAPI
 SetupDiGetSelectedDriverW(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     OUT PSP_DRVINFO_DATA_W DriverInfoData)
 {
     BOOL ret = FALSE;
@@ -6847,8 +6847,8 @@ SetupDiSetSelectedDevice(
 BOOL WINAPI
 SetupDiSetSelectedDriverA(
     IN HDEVINFO DeviceInfoSet,
-    IN OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
-    IN OUT PSP_DRVINFO_DATA_A DriverInfoData  OPTIONAL)
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN OUT PSP_DRVINFO_DATA_A DriverInfoData OPTIONAL)
 {
     SP_DRVINFO_DATA_V1_W DriverInfoDataW;
     PSP_DRVINFO_DATA_W pDriverInfoDataW = NULL;
@@ -6910,8 +6910,8 @@ SetupDiSetSelectedDriverA(
 BOOL WINAPI
 SetupDiSetSelectedDriverW(
     IN HDEVINFO DeviceInfoSet,
-    IN OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
-    IN OUT PSP_DRVINFO_DATA_W DriverInfoData  OPTIONAL)
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN OUT PSP_DRVINFO_DATA_W DriverInfoData OPTIONAL)
 {
     BOOL ret = FALSE;
 
@@ -6997,11 +6997,11 @@ SetupDiSetSelectedDriverW(
 BOOL WINAPI
 SetupDiGetDriverInfoDetailA(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN PSP_DRVINFO_DATA_A DriverInfoData,
-    IN OUT PSP_DRVINFO_DETAIL_DATA_A DriverInfoDetailData  OPTIONAL,
+    IN OUT PSP_DRVINFO_DETAIL_DATA_A DriverInfoDetailData OPTIONAL,
     IN DWORD DriverInfoDetailDataSize,
-    OUT PDWORD RequiredSize  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL)
 {
     SP_DRVINFO_DATA_V2_W DriverInfoDataW;
     PSP_DRVINFO_DETAIL_DATA_W DriverInfoDetailDataW = NULL;
@@ -7198,11 +7198,11 @@ Cleanup:
 BOOL WINAPI
 SetupDiGetDriverInfoDetailW(
     IN HDEVINFO DeviceInfoSet,
-    IN PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
     IN PSP_DRVINFO_DATA_W DriverInfoData,
-    IN OUT PSP_DRVINFO_DETAIL_DATA_W DriverInfoDetailData  OPTIONAL,
+    IN OUT PSP_DRVINFO_DETAIL_DATA_W DriverInfoDetailData OPTIONAL,
     IN DWORD DriverInfoDetailDataSize,
-    OUT PDWORD RequiredSize  OPTIONAL)
+    OUT PDWORD RequiredSize OPTIONAL)
 {
     BOOL ret = FALSE;
 
@@ -7522,7 +7522,7 @@ cleanup:
 BOOL WINAPI
 SetupDiSelectBestCompatDrv(
     IN HDEVINFO DeviceInfoSet,
-    IN OUT PSP_DEVINFO_DATA DeviceInfoData  OPTIONAL)
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
     SP_DRVINFO_DATA_W drvInfoData;
     BOOL ret;
@@ -8096,7 +8096,7 @@ SetupDiInstallDevice(
     TRACE("InfSectionExt   : '%s'\n", debugstr_w(&SectionName[strlenW(SelectedDriver->Details.SectionName)]));
     TRACE("MatchingDeviceId: '%s'\n", debugstr_w(SelectedDriver->MatchingId));
     TRACE("ProviderName    : '%s'\n", debugstr_w(SelectedDriver->Info.ProviderName));
-    swprintf(Buffer, L"%u-%u-%u", DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
+    sprintfW(Buffer, L"%u-%u-%u", DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
     rc = RegSetValueEx(hKey, REGSTR_DRIVER_DATE, 0, REG_SZ, (const BYTE *)Buffer, (strlenW(Buffer) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, REGSTR_DRIVER_DATE_DATA, 0, REG_BINARY, (const BYTE *)&SelectedDriver->Info.DriverDate, sizeof(FILETIME));
@@ -8104,7 +8104,7 @@ SetupDiInstallDevice(
         rc = RegSetValueEx(hKey, REGSTR_VAL_DRVDESC, 0, REG_SZ, (const BYTE *)SelectedDriver->Info.Description, (strlenW(SelectedDriver->Info.Description) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
     {
-        swprintf(Buffer, L"%u.%u.%u.%u", fullVersion.HighPart >> 16, fullVersion.HighPart & 0xffff, fullVersion.LowPart >> 16, fullVersion.LowPart & 0xffff);
+        sprintfW(Buffer, L"%u.%u.%u.%u", fullVersion.HighPart >> 16, fullVersion.HighPart & 0xffff, fullVersion.LowPart >> 16, fullVersion.LowPart & 0xffff);
         rc = RegSetValueEx(hKey, REGSTR_DRIVER_VERSION, 0, REG_SZ, (const BYTE *)Buffer, (strlenW(Buffer) + 1) * sizeof(WCHAR));
     }
     if (rc == ERROR_SUCCESS)
