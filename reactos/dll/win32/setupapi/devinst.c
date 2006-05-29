@@ -3805,7 +3805,7 @@ SetupDiSetClassInstallParamsW(
             }
             else if (UpdateClassInstallParamHandlers[ClassInstallParams->InstallFunction - DIF_SELECTDEVICE] == NULL)
             {
-                FIXME("InstallFunction %u is valid, but has no associated update handler\n", ClassInstallParams->InstallFunction);
+                ERR("InstallFunction %u is valid, but has no associated update handler\n", ClassInstallParams->InstallFunction);
                 SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
                 goto done;
             }
@@ -4070,7 +4070,7 @@ SetupDiCallClassInstaller(
                 break;
             case DIF_SELECTDEVICE:
                 CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
-                DefaultHandler = SetupDiSelectBestCompatDrv;
+                DefaultHandler = SetupDiSelectDevice;
                 break;
             case DIF_TROUBLESHOOTER:
                 CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
@@ -4491,6 +4491,7 @@ CheckDeviceInstallParameters(
         DI_RESOURCEPAGE_ADDED |               /* 0x00002000 */
         DI_PROPERTIES_CHANGE |                /* 0x00004000 */
         DI_ENUMSINGLEINF |                    /* 0x00010000 */
+        DI_DONOTCALLCONFIGMG |                /* 0x00020000 */
         DI_CLASSINSTALLPARAMS |               /* 0x00100000 */
         DI_NODI_DEFAULTACTION |               /* 0x00200000 */
         DI_QUIETINSTALL |                     /* 0x00800000 */
@@ -6146,7 +6147,7 @@ SetupDiBuildDriverInfoList(
                                 &ClassGuid,
                                 ContextDevice,
                                 currentInfFileDetails,
-                                filename,
+                                FullInfFileName,
                                 ProviderName,
                                 ManufacturerName,
                                 NULL,
@@ -6203,7 +6204,7 @@ SetupDiBuildDriverInfoList(
                                             &ClassGuid,
                                             ContextDevice,
                                             currentInfFileDetails,
-                                            filename,
+                                            FullInfFileName,
                                             ProviderName,
                                             ManufacturerName,
                                             currentId,
@@ -6224,7 +6225,7 @@ SetupDiBuildDriverInfoList(
                                                 &ClassGuid,
                                                 ContextDevice,
                                                 currentInfFileDetails,
-                                                filename,
+                                                FullInfFileName,
                                                 ProviderName,
                                                 ManufacturerName,
                                                 currentId,
@@ -7550,6 +7551,19 @@ SetupDiSelectBestCompatDrv(
 
     TRACE("Returning %d\n", ret);
     return ret;
+}
+
+/***********************************************************************
+ *		SetupDiSelectDevice (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiSelectDevice(
+    IN HDEVINFO DeviceInfoSet,
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+{
+	FIXME("%p %p\n", DeviceInfoSet, DeviceInfoData);
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
 }
 
 /***********************************************************************
