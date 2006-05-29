@@ -54,12 +54,12 @@ UpdateDriverForPlugAndPlayDevicesW(
 	/* FIXME: InstallFlags bRebootRequired ignored! */
 
 	/* Check flags */
-	/* FIXME: if (InstallFlags & ~(INSTALLFLAG_FORCE | INSTALLFLAG_READONLY | INSTALLFLAG_NONINTERACTIVE))
+	if (InstallFlags & ~(INSTALLFLAG_FORCE | INSTALLFLAG_READONLY | INSTALLFLAG_NONINTERACTIVE))
 	{
 		DPRINT("Unknown flags: 0x%08lx\n", InstallFlags & ~(INSTALLFLAG_FORCE | INSTALLFLAG_READONLY | INSTALLFLAG_NONINTERACTIVE));
 		SetLastError(ERROR_INVALID_FLAGS);
 		goto cleanup;
-	}*/
+	}
 
 	/* Enumerate all devices of the system */
 	DevInstData.hDevInfo = SetupDiGetClassDevsW(NULL, NULL, hwndParent, DIGCF_ALLCLASSES | DIGCF_PRESENT);
@@ -374,7 +374,7 @@ SearchDriverRecursive(
 			if (SearchDriverRecursive(DevInstData, FullPath))
 			{
 				retval = TRUE;
-				break;
+				/* We continue the search for a better driver */
 			}
 		}
 		else
@@ -392,14 +392,13 @@ SearchDriverRecursive(
 				if (SearchDriver(DevInstData, DirPath, NULL))
 				{
 					retval = TRUE;
-					goto cleanup;
+					/* We continue the search for a better driver */
 				}
 
 			}
 		}
 	}
 
-cleanup:
 	if (hFindFile != INVALID_HANDLE_VALUE)
 		FindClose(hFindFile);
 	return retval;
