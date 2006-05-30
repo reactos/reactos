@@ -56,6 +56,7 @@ base\applications\regedit\regedit.exe               4
 base\applications\regedit\clb\clb.dll               1
 ;base\applications\reporterror\reporterror.exe      1
 base\applications\sc\sc.exe                         1
+base\applications\screenshot\screenshot.exe         1
 base\applications\servman\servman.exe               1
 base\applications\shutdown\shutdown.exe             1
 ;base\applications\sm\sm.exe                        1
