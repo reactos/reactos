@@ -8,6 +8,7 @@
 #include <regstr.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
+#include <shlobj.h>
 #include <tchar.h>
 #include <wine/debug.h>
 

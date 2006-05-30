@@ -620,7 +620,7 @@ static void
 IncludePath(HWND Dlg, BOOL Enabled)
 {
 	EnableWindow(GetDlgItem(Dlg, IDC_COMBO_PATH), Enabled);
-	EnableWindow(GetDlgItem(Dlg, IDC_BROWSE), /*FIXME: Enabled*/ FALSE);
+	EnableWindow(GetDlgItem(Dlg, IDC_BROWSE), Enabled);
 }
 
 static void
@@ -697,9 +697,35 @@ CHSourceDlgProc(
 					return TRUE;
 
 				case IDC_BROWSE:
-					/* FIXME: set the IDC_COMBO_PATH text */
-					FIXME("Should display browse folder dialog\n");
-					return FALSE;
+				{
+					BROWSEINFO bi = { 0, };
+					LPITEMIDLIST pidl;
+
+					bi.hwndOwner = hwndDlg;
+					bi.ulFlags = BIF_RETURNONLYFSDIRS;
+					pidl = SHBrowseForFolder(&bi);
+					if (pidl)
+					{
+						TCHAR Directory[MAX_PATH];
+						IMalloc* malloc;
+
+						if (SHGetPathFromIDList(pidl, Directory))
+						{
+							/* Set the IDC_COMBO_PATH text */
+							ComboBox_SetText(GetDlgItem(hwndDlg, IDC_COMBO_PATH), Directory);
+						}
+
+						/* Free memory, if possible */
+						if (SUCCEEDED(SHGetMalloc(&malloc)))
+						{
+							FIXME("Memory leak!\n");
+							//malloc->Free(pidl);
+							//malloc->Release();
+						}
+						return TRUE;
+					}
+					break;
+				}
 			}
 			break;
 		}
