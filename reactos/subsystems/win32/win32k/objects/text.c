@@ -1973,8 +1973,118 @@ NtGdiGetCharABCWidths(HDC  hDC,
                            UINT  LastChar,
                            LPABC  abc)
 {
-  DPRINT1("NtGdiGetCharABCWidths Is unimplemented, keep going anyway\n");
-  return 1;
+   LPABC SafeBuffer;
+   PDC dc;
+   PTEXTOBJ TextObj;
+   PFONTGDI FontGDI;
+   FT_Face face;
+   FT_CharMap charmap, found = NULL;
+   UINT i, glyph_index, BufferSize;
+   HFONT hFont = 0;
+   NTSTATUS Status;
+
+   if (LastChar < FirstChar)
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   BufferSize = (LastChar - FirstChar + 1) * sizeof(ABC);
+   SafeBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
+   if (SafeBuffer == NULL)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return FALSE;
+   }
+
+   dc = DC_LockDc(hDC);
+   if (dc == NULL)
+   {
+      ExFreePool(SafeBuffer);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+   hFont = dc->w.hFont;
+   TextObj = TEXTOBJ_LockText(hFont);
+   DC_UnlockDc(dc);
+
+   if (TextObj == NULL)
+   {
+      ExFreePool(SafeBuffer);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
+
+   FontGDI = ObjToGDI(TextObj->Font, FONT);
+
+   face = FontGDI->face;
+   if (face->charmap == NULL)
+   {
+      for (i = 0; i < face->num_charmaps; i++)
+      {
+         charmap = face->charmaps[i];
+         if (charmap->encoding != 0)
+         {
+            found = charmap;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         DPRINT1("WARNING: Could not find desired charmap!\n");
+         ExFreePool(SafeBuffer);
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+
+      IntLockFreeType;
+      FT_Set_Charmap(face, found);
+      IntUnLockFreeType;
+   }
+
+   IntLockFreeType;
+   FT_Set_Pixel_Sizes(face,
+                      TextObj->logfont.lfWidth,
+                      /* FIXME should set character height if neg */
+                      (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight :
+                       TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
+
+   for (i = FirstChar; i <= LastChar; i++)
+   {
+      int adv, lsb, bbx, left, right;
+      
+      glyph_index = FT_Get_Char_Index(face, i);
+      FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+
+      left = (INT)face->glyph->metrics.horiBearingX  & -64;
+      right = (INT)((face->glyph->metrics.horiBearingX + face->glyph->metrics.width) + 63) & -64;
+      adv  = (face->glyph->advance.x + 32) >> 6;
+
+//      int test = (INT)(face->glyph->metrics.horiAdvance + 63) >> 6;
+//      DPRINT1("Advance Wine %d and Advance Ros %d\n",test, adv ); /* It's the same!*/
+
+      lsb = left >> 6;
+      bbx = (right - left) >> 6;
+/*
+      DPRINT1("lsb %d and bbx %d\n", lsb, bbx );
+ */
+      SafeBuffer[i - FirstChar].abcA = lsb;
+      SafeBuffer[i - FirstChar].abcB = bbx;
+      SafeBuffer[i - FirstChar].abcC = adv - lsb - bbx;
+   }
+   IntUnLockFreeType;
+   TEXTOBJ_UnlockText(TextObj);
+   Status = MmCopyToCaller(abc, SafeBuffer, BufferSize);
+   if (! NT_SUCCESS(Status))
+     {
+       SetLastNtError(Status);
+       ExFreePool(SafeBuffer);
+       return FALSE;
+     }
+   ExFreePool(SafeBuffer);
+   DPRINT("NtGdiGetCharABCWidths Worked!\n");
+   return TRUE;
 }
 
 BOOL
