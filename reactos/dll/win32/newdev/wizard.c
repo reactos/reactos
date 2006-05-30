@@ -18,7 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define YDEBUG
 #include "newdev_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(newdev);
@@ -385,6 +384,7 @@ PopulateCustomPathCombo(
 		TRACE("RegQueryValueEx() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
+
 	/* Allocate enough space to add 2 NULL chars at the end of the string */
 	Buffer = HeapAlloc(GetProcessHeap(), 0, dwPathLength + 2 * sizeof(TCHAR));
 	if (!Buffer)
@@ -407,9 +407,12 @@ PopulateCustomPathCombo(
 	Buffer[dwPathLength] = Buffer[dwPathLength + 1] = '\0';
 
 	/* Populate combo box */
-	for (Path = Buffer; *Path; Path += _tcslen(Path))
+	for (Path = Buffer; *Path; Path += _tcslen(Path) + 1)
+	{
 		(void)ComboBox_AddString(hwndCombo, Path);
-	(void)ComboBox_SetCurSel(hwndCombo, 0);
+		if (Path == Buffer)
+			(void)ComboBox_SetCurSel(hwndCombo, 0);
+	}
 
 cleanup:
 	if (hKey != NULL)
@@ -421,7 +424,110 @@ static VOID
 SaveCustomPath(
 	IN HWND hwndCombo)
 {
-	FIXME("Stub\n");
+	LPTSTR CustomPath = NULL;
+	DWORD CustomPathLength;
+	LPTSTR Buffer = NULL;
+	LPTSTR pBuffer; /* Pointer into Buffer */
+	int ItemsCount, Length;
+	DWORD i;
+	DWORD TotalLength = 0;
+	BOOL UseCustomPath = TRUE;
+	HKEY hKey = NULL;
+	LONG rc;
+
+	/* Get custom path */
+	Length = ComboBox_GetTextLength(hwndCombo) + 1;
+	CustomPath = HeapAlloc(GetProcessHeap(), 0, Length * sizeof(TCHAR));
+	if (!CustomPath)
+	{
+		TRACE("HeapAlloc() failed\n");
+		goto cleanup;
+	}
+	CustomPathLength = ComboBox_GetText(hwndCombo, CustomPath, Length) + 1;
+
+	/* Calculate length of the buffer */
+	ItemsCount = ComboBox_GetCount(hwndCombo);
+	if (ItemsCount == CB_ERR)
+	{
+		TRACE("ComboBox_GetCount() failed\n");
+		goto cleanup;
+	}
+	for (i = 0; i < ItemsCount; i++)
+	{
+		Length = ComboBox_GetLBTextLen(hwndCombo, i);
+		if (Length == CB_ERR)
+		{
+			TRACE("ComboBox_GetLBTextLen() failed\n");
+			goto cleanup;
+		}
+		TotalLength += Length + 1;
+	}
+	TotalLength++; /* Final NULL char */
+
+	/* Allocate buffer */
+	Buffer = HeapAlloc(GetProcessHeap(), 0, (CustomPathLength + TotalLength + 1) * sizeof(TCHAR));
+	if (!Buffer)
+	{
+		TRACE("HeapAlloc() failed\n");
+		goto cleanup;
+	}
+
+	/* Fill the buffer */
+	pBuffer = &Buffer[CustomPathLength];
+	for (i = 0; i < ItemsCount; i++)
+	{
+		Length = ComboBox_GetLBText(hwndCombo, i, pBuffer);
+		if (Length == CB_ERR)
+		{
+			TRACE("ComboBox_GetLBText() failed\n");
+			goto cleanup;
+		}
+		else if (UseCustomPath && _tcsicmp(CustomPath, pBuffer) == 0)
+			UseCustomPath = FALSE;
+		pBuffer += 1 + Length;
+	}
+	*pBuffer = '\0'; /* Add final NULL char */
+
+	if (!UseCustomPath)
+	{
+		/* Nothing to save to registry */
+		goto cleanup;
+	}
+
+	TotalLength += CustomPathLength;
+	_tcscpy(Buffer, CustomPath);
+
+	/* Save the buffer */
+	/* RegSetKeyValue would have been better... */
+	rc = RegOpenKeyEx(
+		HKEY_LOCAL_MACHINE,
+		REGSTR_PATH_SETUP REGSTR_KEY_SETUP,
+		0,
+		KEY_SET_VALUE,
+		&hKey);
+	if (rc != ERROR_SUCCESS)
+	{
+		TRACE("RegOpenKeyEx() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	rc = RegSetValueEx(
+		hKey,
+		_T("Installation Sources"),
+		0,
+		REG_MULTI_SZ,
+		(const BYTE*)Buffer,
+		TotalLength * sizeof(TCHAR));
+	if (rc != ERROR_SUCCESS)
+	{
+		TRACE("RegSetValueEx() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+
+cleanup:
+	if (hKey != NULL)
+		RegCloseKey(hKey);
+	HeapFree(GetProcessHeap(), 0, CustomPath);
+	HeapFree(GetProcessHeap(), 0, Buffer);
 }
 
 static INT_PTR CALLBACK
