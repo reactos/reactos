@@ -25,6 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /* Unicode constants */
 static const WCHAR AddInterface[]  = {'A','d','d','I','n','t','e','r','f','a','c','e',0};
+static const WCHAR BackSlash[] = {'\\',0};
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
@@ -34,6 +35,7 @@ static const WCHAR DotCoInstallers[]  = {'.','C','o','I','n','s','t','a','l','l'
 static const WCHAR DotHW[]  = {'.','H','W',0};
 static const WCHAR DotInterfaces[]  = {'.','I','n','t','e','r','f','a','c','e','s',0};
 static const WCHAR DotServices[]  = {'.','S','e','r','v','i','c','e','s',0};
+static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
 static const WCHAR InterfaceInstall32[]  = {'I','n','t','e','r','f','a','c','e','I','n','s','t','a','l','l','3','2',0};
 static const WCHAR Linked[]  = {'L','i','n','k','e','d',0};
 static const WCHAR SymbolicLink[]  = {'S','y','m','b','o','l','i','c','L','i','n','k',0};
@@ -1693,9 +1695,9 @@ SETUP_CreateDevListFromEnumerator(
         if (rc != ERROR_SUCCESS)
             goto cleanup;
         strcpyW(InstancePath, Enumerator);
-        strcatW(InstancePath, L"\\");
+        strcatW(InstancePath, BackSlash);
         strcatW(InstancePath, KeyBuffer);
-        strcatW(InstancePath, L"\\");
+        strcatW(InstancePath, BackSlash);
         pEndOfInstancePath = &InstancePath[strlenW(InstancePath)];
 
         /* Enumerate instance IDs (subkeys of hDeviceIdKey) */
@@ -6021,8 +6023,17 @@ SetupDiBuildDriverInfoList(
             LPCWSTR filename;
             LPWSTR pFullFilename;
 
-            if (!(InstallParams.Flags & DI_ENUMSINGLEINF) && *InstallParams.DriverPath)
+            if (InstallParams.Flags & DI_ENUMSINGLEINF)
             {
+                /* Only a filename */
+                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+                if (!FullInfFileName)
+                    goto done;
+                pFullFilename = &FullInfFileName[0];
+            }
+            else if (*InstallParams.DriverPath)
+            {
+                /* Directory name specified */
                 DWORD len;
                 len = GetFullPathNameW(InstallParams.DriverPath, 0, NULL, NULL);
                 if (len == 0)
@@ -6034,15 +6045,26 @@ SetupDiBuildDriverInfoList(
                 if (len == 0)
                     goto done;
                 if (*FullInfFileName && FullInfFileName[strlenW(FullInfFileName) - 1] != '\\')
-                    strcatW(FullInfFileName, L"\\");
+                    strcatW(FullInfFileName, BackSlash);
                 pFullFilename = &FullInfFileName[strlenW(FullInfFileName)];
             }
             else
             {
-                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+                /* Nothing specified ; need to get the %SYSTEMROOT%\ directory */
+                DWORD len;
+                len = GetSystemWindowsDirectoryW(NULL, 0);
+                if (len == 0)
+                    goto done;
+                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, (len + 1 + strlenW(InfDirectory) + MAX_PATH) * sizeof(WCHAR));
                 if (!FullInfFileName)
                     goto done;
-                pFullFilename = &FullInfFileName[0];
+                len = GetSystemWindowsDirectoryW(FullInfFileName, len);
+                if (len == 0)
+                    goto done;
+                if (*FullInfFileName && FullInfFileName[strlenW(FullInfFileName) - 1] != '\\')
+                    strcatW(FullInfFileName, BackSlash);
+                strcatW(FullInfFileName, InfDirectory);
+                pFullFilename = &FullInfFileName[strlenW(FullInfFileName)];
             }
 
             for (filename = (LPCWSTR)Buffer; *filename; filename += strlenW(filename) + 1)
@@ -7911,19 +7933,23 @@ InfIsFromOEMLocation(
     }
     else
     {
-        WCHAR Windir[MAX_PATH];
+        WCHAR Windir[MAX_PATH + 1 + strlenW(InfDirectory)];
         UINT ret;
 
-        ret = GetWindowsDirectory(Windir, MAX_PATH);
-        if (ret == 0 || ret >= MAX_PATH)
+        ret = GetSystemWindowsDirectoryW(Windir, MAX_PATH);
+        if (ret == 0 || ret > MAX_PATH)
         {
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
         }
+        if (*Windir && Windir[strlenW(Windir) - 1] != '\\')
+            strcatW(Windir, BackSlash);
+        strcatW(Windir, InfDirectory);
 
-        if (strncmpW(FullName, Windir, last - FullName) == 0)
+        DPRINT1("Comparing %S and %S\n", FullName, Windir);
+        if (strncmpiW(FullName, Windir, last - FullName) == 0)
         {
-            /* The path is %WINDIR%\Inf */
+            /* The path is %SYSTEMROOT%\Inf */
             *IsOEMLocation = FALSE;
         }
         else

@@ -74,8 +74,7 @@ struct InfFileDetails
     HINF hInf;
     LONG References;
 
-    /* Contains the directory name of the .inf file. This field may
-     * be NULL if the file is already in %SYSTEMROOT%\Inf.
+    /* Contains the directory name of the .inf file.
      * Points into szData at then end of the structure */
     PCWSTR DirectoryName;
     /* Contains the .inf file name (without directory name).

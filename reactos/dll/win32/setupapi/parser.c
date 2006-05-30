@@ -2019,7 +2019,7 @@ SetupGetInfFileListW(
         /* "DirectoryPath\" form */
         len = strlenW(DirectoryPath) + 1 + 1;
     else
-        /* "%WINDIR%\Inf\" form */
+        /* "%SYSTEMROOT%\Inf\" form */
         len = MAX_PATH + 1 + strlenW(InfDirectory) + 1;
     len += MAX_PATH; /* To contain file name or "*.inf" string */
     pFullFileName = MyMalloc(len * sizeof(WCHAR));
