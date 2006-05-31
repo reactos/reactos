@@ -958,6 +958,7 @@ NoDriverDlgProc(
 	IN LPARAM lParam)
 {
 	PDEVINSTDATA DevInstData;
+	HWND hwndControl;
 
 	/* Get pointer to the global setup data */
 	DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
@@ -966,7 +967,6 @@ NoDriverDlgProc(
 	{
 		case WM_INITDIALOG:
 		{
-			HWND hwndControl;
 			BOOL DisableableDevice = FALSE;
 
 			DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
@@ -1009,6 +1009,9 @@ NoDriverDlgProc(
 
 				case PSN_WIZBACK:
 					/* Handle a Back button click, if necessary */
+					hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
+					ShowWindow(hwndControl, SW_SHOW);
+					EnableWindow(hwndControl, TRUE);
 					PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_CHSOURCE);
 					return TRUE;
 
