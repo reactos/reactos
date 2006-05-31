@@ -516,33 +516,51 @@ FindWindowExA(HWND hwndParent,
 	      LPCSTR lpszClass,
 	      LPCSTR lpszWindow)
 {
-   UNICODE_STRING ucClassName;
-   UNICODE_STRING ucWindowName;
+   UNICODE_STRING ucClassName, *pucClassName = NULL;
+   UNICODE_STRING ucWindowName, *pucWindowName = NULL;
    HWND Result;
 
-   if (lpszClass == NULL)
-   {
-      ucClassName.Buffer = NULL;
-      ucClassName.Length = 0;
-   }
-   else if (IS_ATOM(lpszClass))
+   if (IS_ATOM(lpszClass))
    {
       ucClassName.Buffer = (LPWSTR)lpszClass;
       ucClassName.Length = 0;
+      pucClassName = &ucClassName;
    }
-   else
+   else if (lpszClass != NULL)
    {
-      RtlCreateUnicodeStringFromAsciiz(&ucClassName, (LPSTR)lpszClass);
+      if (!RtlCreateUnicodeStringFromAsciiz(&ucClassName,
+                                            (LPSTR)lpszClass))
+      {
+         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+         return NULL;
+      }
+      pucClassName = &ucClassName;
    }
 
-   RtlCreateUnicodeStringFromAsciiz(&ucWindowName, (LPSTR)lpszWindow);
+   if (lpszWindow != NULL)
+   {
+      if (!RtlCreateUnicodeStringFromAsciiz(&ucWindowName,
+                                            (LPSTR)lpszWindow))
+      {
+         if (!IS_ATOM(lpszClass) && lpszClass != NULL)
+            RtlFreeUnicodeString(&ucWindowName);
 
-   Result = NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName,
-      &ucWindowName);
+         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+         return NULL;
+      }
 
-   if (!IS_ATOM(lpszClass))
+      pucWindowName = &ucWindowName;
+   }
+
+   Result = NtUserFindWindowEx(hwndParent,
+                               hwndChildAfter,
+                               pucClassName,
+                               pucWindowName);
+
+   if (!IS_ATOM(lpszClass) && lpszClass != NULL)
       RtlFreeUnicodeString(&ucClassName);
-   RtlFreeUnicodeString(&ucWindowName);
+   if (lpszWindow != NULL)
+      RtlFreeUnicodeString(&ucWindowName);
 
    return Result;
 }
@@ -557,27 +575,33 @@ FindWindowExW(HWND hwndParent,
 	      LPCWSTR lpszClass,
 	      LPCWSTR lpszWindow)
 {
-   UNICODE_STRING ucClassName;
-   UNICODE_STRING ucWindowName;
+   UNICODE_STRING ucClassName, *pucClassName = NULL;
+   UNICODE_STRING ucWindowName, *pucWindowName = NULL;
 
-   if (lpszClass == NULL)
+   if (IS_ATOM(lpszClass))
    {
-      ucClassName.Buffer = NULL;
       ucClassName.Length = 0;
-   }
-   else if (IS_ATOM(lpszClass))
-   {
-      RtlInitUnicodeString(&ucClassName, NULL);
       ucClassName.Buffer = (LPWSTR)lpszClass;
+      pucClassName = &ucClassName;
    }
-   else
+   else if (lpszClass != NULL)
    {
-      RtlInitUnicodeString(&ucClassName, lpszClass);
+      RtlInitUnicodeString(&ucClassName,
+                           lpszClass);
+      pucClassName = &ucClassName;
    }
 
-   RtlInitUnicodeString(&ucWindowName, lpszWindow);
+   if (lpszWindow != NULL)
+   {
+      RtlInitUnicodeString(&ucWindowName,
+                           lpszWindow);
+      pucWindowName = &ucWindowName;
+   }
 
-   return NtUserFindWindowEx(hwndParent, hwndChildAfter, &ucClassName, &ucWindowName);
+   return NtUserFindWindowEx(hwndParent,
+                             hwndChildAfter,
+                             pucClassName,
+                             pucWindowName);
 }
 
 

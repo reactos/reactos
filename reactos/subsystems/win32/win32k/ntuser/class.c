@@ -835,12 +835,11 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
     }
 
     ClassSize = sizeof(WINDOWCLASS) + lpwcx->cbClsExtra;
-    ClassSize += ClassName->Length + sizeof(UNICODE_NULL);
-    ClassSize += MenuName->Length + sizeof(UNICODE_NULL);
-    if (ClassName->Length != 0)
-        ClassSize += RtlUnicodeStringToAnsiSize(ClassName);
     if (MenuName->Length != 0)
+    {
+        ClassSize += MenuName->Length + sizeof(UNICODE_NULL);
         ClassSize += RtlUnicodeStringToAnsiSize(MenuName);
+    }
 
     if (Desktop != NULL)
     {
@@ -996,14 +995,11 @@ IntFindClass(IN RTL_ATOM Atom,
     return Class;
 }
 
-RTL_ATOM
-IntGetClassAtom(IN PUNICODE_STRING ClassName,
-                IN HINSTANCE hInstance  OPTIONAL,
-                IN PW32PROCESSINFO pi  OPTIONAL,
-                OUT PWINDOWCLASS *BaseClass  OPTIONAL,
-                OUT PWINDOWCLASS **Link  OPTIONAL)
+BOOL
+IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
+                           OUT RTL_ATOM *Atom)
 {
-    RTL_ATOM Atom = (RTL_ATOM)0;
+    BOOL Ret = FALSE;
 
     if (ClassName->Length != 0)
     {
@@ -1038,8 +1034,12 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
         /* lookup the atom */
         Status = RtlLookupAtomInAtomTable(gAtomTable,
                                           AtomName,
-                                          &Atom);
-        if (!NT_SUCCESS(Status))
+                                          Atom);
+        if (NT_SUCCESS(Status))
+        {
+            Ret = TRUE;
+        }
+        else
         {
             if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
             {
@@ -1054,10 +1054,25 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
     else
     {
         ASSERT(IS_ATOM(ClassName->Buffer));
-        Atom = (RTL_ATOM)((ULONG_PTR)ClassName->Buffer);
+        *Atom = (RTL_ATOM)((ULONG_PTR)ClassName->Buffer);
+        Ret = TRUE;
     }
 
-    if (BaseClass != NULL && Atom != (RTL_ATOM)0)
+    return Ret;
+}
+
+RTL_ATOM
+IntGetClassAtom(IN PUNICODE_STRING ClassName,
+                IN HINSTANCE hInstance  OPTIONAL,
+                IN PW32PROCESSINFO pi  OPTIONAL,
+                OUT PWINDOWCLASS *BaseClass  OPTIONAL,
+                OUT PWINDOWCLASS **Link  OPTIONAL)
+{
+    RTL_ATOM Atom = (RTL_ATOM)0;
+
+    if (IntGetAtomFromStringOrAtom(ClassName,
+                                   &Atom) &&
+        BaseClass != NULL && Atom != (RTL_ATOM)0)
     {
         PWINDOWCLASS Class;
 
