@@ -170,6 +170,7 @@ typedef struct
 #define  DC_UnlockDc(pDC)  \
   GDIOBJ_UnlockObjByPtr (GdiHandleTable, pDC)
 
+NTSTATUS FASTCALL InitDcImpl(VOID);
 HDC  FASTCALL RetrieveDisplayHDC(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
