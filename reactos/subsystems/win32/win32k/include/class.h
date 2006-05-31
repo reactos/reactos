@@ -70,6 +70,10 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 OUT PWINDOWCLASS **Link  OPTIONAL);
 
 BOOL
+IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
+                           OUT RTL_ATOM *Atom);
+
+BOOL
 IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
                               IN BOOL FreeOnFailure);
 
