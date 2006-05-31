@@ -2344,7 +2344,7 @@ NtUserFillWindow(DWORD Unknown0,
 }
 
 
-static HWND FASTCALL
+HWND FASTCALL
 IntFindWindow(PWINDOW_OBJECT Parent,
               PWINDOW_OBJECT ChildAfter,
               RTL_ATOM ClassAtom,
@@ -2356,7 +2356,7 @@ IntFindWindow(PWINDOW_OBJECT Parent,
 
    ASSERT(Parent);
 
-   CheckWindowName = WindowName->Length != 0;
+   CheckWindowName = (WindowName && (WindowName->Length > 0));
 
    if((List = IntWinListChildren(Parent)))
    {
@@ -2425,73 +2425,14 @@ NtUserFindWindowEx(HWND hwndParent,
                    PUNICODE_STRING ucWindowName)
 {
    PWINDOW_OBJECT Parent, ChildAfter;
-   UNICODE_STRING ClassName = {0}, WindowName = {0};
+   UNICODE_STRING ClassName, WindowName;
+   NTSTATUS Status;
    HWND Desktop, Ret = NULL;
-   RTL_ATOM ClassAtom = (RTL_ATOM)0;
+   RTL_ATOM ClassAtom;
    DECLARE_RETURN(HWND);
 
    DPRINT("Enter NtUserFindWindowEx\n");
    UserEnterShared();
-
-   if (ucClassName != NULL || ucWindowName != NULL)
-   {
-       _SEH_TRY
-       {
-           if (ucClassName != NULL)
-           {
-               ClassName = ProbeForReadUnicodeString(ucClassName);
-               if (ClassName.Length != 0)
-               {
-                   ProbeForRead(ClassName.Buffer,
-                                ClassName.Length,
-                                sizeof(WCHAR));
-               }
-               else if (!IS_ATOM(ClassName.Buffer))
-               {
-                   SetLastWin32Error(ERROR_INVALID_PARAMETER);
-                   _SEH_LEAVE;
-               }
-
-               if (!IntGetAtomFromStringOrAtom(&ClassName,
-                                               &ClassAtom))
-               {
-                   _SEH_LEAVE;
-               }
-           }
-
-           if (ucWindowName != NULL)
-           {
-               WindowName = ProbeForReadUnicodeString(ucWindowName);
-               if (WindowName.Length != 0)
-               {
-                   ProbeForRead(WindowName.Buffer,
-                                WindowName.Length,
-                                sizeof(WCHAR));
-               }
-           }
-       }
-       _SEH_HANDLE
-       {
-           SetLastNtError(_SEH_GetExceptionCode());
-           RETURN(NULL);
-       }
-       _SEH_END;
-
-       if (ucClassName != NULL)
-       {
-           if (ClassName.Length == 0 && ClassName.Buffer != NULL &&
-               !IS_ATOM(ClassName.Buffer))
-           {
-               SetLastWin32Error(ERROR_INVALID_PARAMETER);
-               RETURN(NULL);
-           }
-           else if (ClassAtom == (RTL_ATOM)0)
-           {
-               /* LastError code was set by IntGetAtomFromStringOrAtom */
-               RETURN(NULL);
-           }
-       }
-   }
 
    Desktop = IntGetCurrentThreadDesktopWindow();
 
@@ -2515,91 +2456,158 @@ NtUserFindWindowEx(HWND hwndParent,
       RETURN( NULL);
    }
 
-   _SEH_TRY
+   /* copy the window name */
+   Status = IntSafeCopyUnicodeString(&WindowName, ucWindowName);
+   if(!NT_SUCCESS(Status))
    {
-       if(Parent->hSelf == Desktop)
-       {
-          HWND *List, *phWnd;
-          PWINDOW_OBJECT TopLevelWindow;
-          BOOLEAN CheckWindowName;
-          BOOLEAN WindowMatches;
-          BOOLEAN ClassMatches;
+      SetLastNtError(Status);
+      goto Cleanup3;
+   }
 
-          /* windows searches through all top-level windows if the parent is the desktop
-             window */
+   /* safely copy the class name */
+   Status = MmCopyFromCaller(&ClassName, ucClassName, sizeof(UNICODE_STRING));
+   if(!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      goto Cleanup2;
+   }
+   if(ClassName.Length > 0 && ClassName.Buffer)
+   {
+      WCHAR *buf;
+      /* safely copy the class name string (NULL terminated because class-lookup
+         depends on it... */
+      buf = ExAllocatePoolWithTag(PagedPool, ClassName.Length + sizeof(WCHAR), TAG_STRING);
+      if(!buf)
+      {
+         SetLastWin32Error(STATUS_INSUFFICIENT_RESOURCES);
+         goto Cleanup2;
+      }
+      Status = MmCopyFromCaller(buf, ClassName.Buffer, ClassName.Length);
+      if(!NT_SUCCESS(Status))
+      {
+         ExFreePool(buf);
+         SetLastNtError(Status);
+         goto Cleanup2;
+      }
+      ClassName.Buffer = buf;
+      /* make sure the string is null-terminated */
+      buf += ClassName.Length / sizeof(WCHAR);
+      *buf = L'\0';
+   }
 
-          if((List = IntWinListChildren(Parent)))
-          {
-             phWnd = List;
+   /* find the class object */
+   if(ClassName.Buffer)
+   {
+      PWINSTATION_OBJECT WinStaObject;
 
-             if(ChildAfter)
-             {
-                /* skip handles before and including ChildAfter */
-                while(*phWnd && (*(phWnd++) != ChildAfter->hSelf))
-                   ;
-             }
+      if (PsGetWin32Thread()->Desktop == NULL)
+      {
+         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         goto Cleanup;
+      }
 
-             CheckWindowName = WindowName.Length != 0;
+      WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
 
-             /* search children */
-             while(*phWnd)
-             {
-                if(!(TopLevelWindow = UserGetWindowObject(*(phWnd++))))
-                {
-                   continue;
-                }
+      Status = RtlLookupAtomInAtomTable(
+                  WinStaObject->AtomTable,
+                  ClassName.Buffer,
+                  &ClassAtom);
 
-                /* Do not send WM_GETTEXT messages in the kernel mode version!
-                   The user mode version however calls GetWindowText() which will
-                   send WM_GETTEXT messages to windows belonging to its processes */
-                WindowMatches = !CheckWindowName || !RtlCompareUnicodeString(
-                                   &WindowName, &TopLevelWindow->WindowName, TRUE);
-                ClassMatches = (ClassAtom == (RTL_ATOM)0) ||
-                               ClassAtom == TopLevelWindow->Class->Atom;
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT1("Failed to lookup class atom!\n");
+         SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+         goto Cleanup;
+      }
+   }
 
-                if (WindowMatches && ClassMatches)
-                {
-                   Ret = TopLevelWindow->hSelf;
-                   break;
-                }
+   if(Parent->hSelf == Desktop)
+   {
+      HWND *List, *phWnd;
+      PWINDOW_OBJECT TopLevelWindow;
+      BOOLEAN CheckWindowName;
+      BOOLEAN CheckClassName;
+      BOOLEAN WindowMatches;
+      BOOLEAN ClassMatches;
 
-                if (IntFindWindow(TopLevelWindow, NULL, ClassAtom, &WindowName))
-                {
-                   /* window returns the handle of the top-level window, in case it found
-                      the child window */
-                   Ret = TopLevelWindow->hSelf;
-                   break;
-                }
+      /* windows searches through all top-level windows if the parent is the desktop
+         window */
 
-             }
-             ExFreePool(List);
-          }
-       }
-       else
-          Ret = IntFindWindow(Parent, ChildAfter, ClassAtom, &WindowName);
+      if((List = IntWinListChildren(Parent)))
+      {
+         phWnd = List;
+
+         if(ChildAfter)
+         {
+            /* skip handles before and including ChildAfter */
+            while(*phWnd && (*(phWnd++) != ChildAfter->hSelf))
+               ;
+         }
+
+         CheckWindowName = WindowName.Length > 0;
+         CheckClassName = ClassName.Buffer != NULL;
+
+         /* search children */
+         while(*phWnd)
+         {
+            if(!(TopLevelWindow = UserGetWindowObject(*(phWnd++))))
+            {
+               continue;
+            }
+
+            /* Do not send WM_GETTEXT messages in the kernel mode version!
+               The user mode version however calls GetWindowText() which will
+               send WM_GETTEXT messages to windows belonging to its processes */
+            WindowMatches = !CheckWindowName || !RtlCompareUnicodeString(
+                               &WindowName, &TopLevelWindow->WindowName, TRUE);
+            ClassMatches = !CheckClassName ||
+                           ClassAtom == TopLevelWindow->Class->Atom;
+
+            if (WindowMatches && ClassMatches)
+            {
+               Ret = TopLevelWindow->hSelf;
+               break;
+            }
+
+            if (IntFindWindow(TopLevelWindow, NULL, ClassAtom, &WindowName))
+            {
+               /* window returns the handle of the top-level window, in case it found
+                  the child window */
+               Ret = TopLevelWindow->hSelf;
+               break;
+            }
+
+         }
+         ExFreePool(List);
+      }
+   }
+   else
+      Ret = IntFindWindow(Parent, ChildAfter, ClassAtom, &WindowName);
 
 #if 0
 
-       if(Ret == NULL && hwndParent == NULL && hwndChildAfter == NULL)
-       {
-          /* FIXME - if both hwndParent and hwndChildAfter are NULL, we also should
-                     search the message-only windows. Should this also be done if
-                     Parent is the desktop window??? */
-          PWINDOW_OBJECT MsgWindows;
-
-          if((MsgWindows = UserGetWindowObject(IntGetMessageWindow())))
-          {
-             Ret = IntFindWindow(MsgWindows, ChildAfter, ClassAtom, &WindowName);
-          }
-       }
-#endif
-   }
-   _SEH_HANDLE
+   if(Ret == NULL && hwndParent == NULL && hwndChildAfter == NULL)
    {
-       SetLastNtError(_SEH_GetExceptionCode());
-       Ret = NULL;
+      /* FIXME - if both hwndParent and hwndChildAfter are NULL, we also should
+                 search the message-only windows. Should this also be done if
+                 Parent is the desktop window??? */
+      PWINDOW_OBJECT MsgWindows;
+
+      if((MsgWindows = UserGetWindowObject(IntGetMessageWindow())))
+      {
+         Ret = IntFindWindow(MsgWindows, ChildAfter, ClassAtom, &WindowName);
+      }
    }
-   _SEH_END;
+#endif
+
+Cleanup:
+   if(ClassName.Length > 0 && ClassName.Buffer)
+      ExFreePool(ClassName.Buffer);
+
+Cleanup2:
+   RtlFreeUnicodeString(&WindowName);
+
+Cleanup3:
 
    RETURN( Ret);
 
