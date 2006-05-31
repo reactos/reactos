@@ -46,11 +46,17 @@
 <directory name="screensavers">
 	<xi:include href="screensavers/screensavers.rbuild" />
 </directory>
+<directory name="screenshot">
+	<xi:include href="screenshot/screenshot.rbuild" />
+</directory>
 <directory name="servman">
 	<xi:include href="servman/servman.rbuild" />
 </directory>
 <directory name="shutdown">
 	<xi:include href="shutdown/shutdown.rbuild" />
+</directory>
+<directory name="sndvol32">
+	<xi:include href="sndvol32/sndvol32.rbuild" />
 </directory>
 <directory name="taskmgr">
 	<xi:include href="taskmgr/taskmgr.rbuild" />
