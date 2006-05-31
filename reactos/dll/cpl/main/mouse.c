@@ -1109,6 +1109,7 @@ WheelProc(IN HWND hwndDlg,
         case WM_INITDIALOG:
         {
             ShowDialogWheelControls(hwndDlg);
+			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WHEEL_SCROLL_LINES), UDM_SETRANGE, 0, MAKELONG ((short) 100, (short) 0));
             if (g_WheelScrollLines != UINT_MAX)
             {
                 hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_WHEEL_SCROLL_LINES);

@@ -22,11 +22,11 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
 CAPTION "Click Lock"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Short", -1, 35,  50, 30, 10
-  LTEXT "Long", -1, 140, 50, 30, 10
+  LTEXT "Kurz", -1, 35,  50, 30, 10
+  LTEXT "Lang", -1, 140, 50, 30, 10
   CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
   PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
-  PUSHBUTTON "&Cancel", IDCANCEL, 175, 75, 50, 15
+  PUSHBUTTON "&Abbrechen", IDCANCEL, 175, 75, 50, 15
   LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked",-1,60,15,170,30
   ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
@@ -43,50 +43,50 @@ BEGIN
   GROUPBOX "Double-click speed", -1, 5, 75, 230, 70
   LTEXT "Double-click the folder to test your settings. If the folder does not open or close, try using a slower setting.", -1, 10, 85, 160, 30
   LTEXT "Spee&d:   Slow", -1, 10, 120, 90, 8
-  LTEXT "Fast", -1, 140, 120, 30, 8
+  LTEXT "Schnell", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
   CONTROL  "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_OWNERDRAW, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "ClickLock", -1, 5, 150, 230, 70
   CHECKBOX "&Turn on ClickLock", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-  PUSHBUTTON "&Settings...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
+  PUSHBUTTON "&Einstellungen...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
   LTEXT "Enables you to highlight or drag without holding down the mouse button. To set, briefly press the mouse button. To release, click the mouse button again", -1, 10, 180, 190, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Pointer"
+CAPTION "Zeiger"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Scheme", -1, 5, 5, 170, 45
+  GROUPBOX "Schema", -1, 5, 5, 170, 45
   COMBOBOX IDC_COMBO_CURSOR_SCHEME, 10, 15, 145, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
   CONTROL "", IDC_LISTVIEW_CURSOR ,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 5, 70, 230, 120
   PUSHBUTTON "Sa&ve As...", IDC_BUTTON_SAVEAS_SCHEME, 70, 30, 50, 15
-  PUSHBUTTON "&Delete", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
+  PUSHBUTTON "&Löschen", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
   CONTROL  "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_OWNERDRAW, 195, 15, 35, 35, WS_EX_STATICEDGE
-  LTEXT "&Customize", -1, 5, 60, 40, 10
+  LTEXT "&Anpassen", -1, 5, 60, 40, 10
   CHECKBOX "&Enable pointer shadow", IDC_CHECK_DROP_SHADOW, 5, 200, 100, 10
   PUSHBUTTON "Use De&fault", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 200, 50, 15
-  PUSHBUTTON "&Browse", IDC_BUTTON_BROWSE_CURSOR, 175, 200, 50, 15
+  PUSHBUTTON "&Durchsuchen", IDC_BUTTON_BROWSE_CURSOR, 175, 200, 50, 15
 END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 200, 75
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
+CAPTION "Schema speichern"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Save this cursor scheme as:", -1, 5, 5, 100, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
   PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 15
-  PUSHBUTTON "&Cancel", IDCANCEL, 115, 45, 50, 15
+  PUSHBUTTON "&Abbrechen", IDCANCEL, 115, 45, 50, 15
 END
 
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Pointer Options"
+CAPTION "Zeiger Optionen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Motion", -1, 5, 5, 230, 60
+  GROUPBOX "Bewegung", -1, 5, 5, 230, 60
   LTEXT "Sele&ct a pointer speed:", -1, 60, 15, 110, 10
   LTEXT "Slow", -1, 60, 30, 20, 10
   CONTROL "",IDC_SLIDER_MOUSE_SENSITIVITY, "msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
@@ -99,8 +99,8 @@ BEGIN
   LTEXT "A&utomatically move pointer to the default button in a dialog box", -1, 73, 75, 152, 20
   GROUPBOX "Visibility", -1, 5, 105, 230, 90
   CHECKBOX "&Display pointer trails", IDC_CHECK_POINTER_TRAIL, 60, 110, 80, 10
-  LTEXT "Short", -1, 60, 130, 30, 10
-  LTEXT "Long", -1, 160, 130, 30, 10
+  LTEXT "Kurz", -1, 60, 130, 30, 10
+  LTEXT "Lang", -1, 160, 130, 30, 10
   ICON -1, IDC_ICON_POINTER_TRAIL, 15, 115, 15, 15
   CONTROL "", IDC_SLIDER_POINTER_TRAIL ,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP, 80, 130, 70, 17
   CHECKBOX "&Hide pointer while typing", IDC_CHECK_HIDE_POINTER, 60, 150, 90, 10
@@ -111,7 +111,7 @@ END
 
 IDD_PAGE_WHEEL DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Wheel"
+CAPTION "Rad"
 FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Scrolling", -1, 5, 5, 230, 80
@@ -130,7 +130,7 @@ BEGIN
   IDS_CPLDESCRIPTION_1 "Mauseinstellungen ändern."
   IDS_CPLNAME_2 "Tastatur"
   IDS_CPLDESCRIPTION_2 "Tastatureinstellungen ändern."
-    IDS_ARROW "Normal Select"
+  IDS_ARROW "Normal Select"
   IDS_HELP "Help Select"
   IDS_APPSTARTING "Working in Background"
   IDS_WAIT "Busy"
@@ -145,5 +145,5 @@ BEGIN
   IDS_UPARROW "Alternative Select"
   IDS_HAND "Link Select"
   IDS_NONE "(None)"
-  IDS_SYSTEM_SCHEME "(system scheme)"
+  IDS_SYSTEM_SCHEME "(systemschema)"
 END
