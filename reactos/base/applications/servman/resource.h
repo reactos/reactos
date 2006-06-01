@@ -3,7 +3,8 @@
 /* about box info */
 #define IDD_ABOUTBOX        200
 #define IDC_LICENSE_EDIT    201
-#define IDS_LICENSE         202
+#define IDS_APPNAME         202
+#define IDS_LICENSE         203
 
 #define IDC_SERVLIST        1000
 #define IDC_TOOLBAR         1001
@@ -45,13 +46,14 @@
 #define IDS_TOOLTIP_PROP    6000
 #define IDS_TOOLTIP_REFRESH 6001
 #define IDS_TOOLTIP_EXPORT  6002
-#define IDS_TOOLTIP_START   6003
-#define IDS_TOOLTIP_STOP    6004
-#define IDS_TOOLTIP_PAUSE   6005
-#define IDS_TOOLTIP_RESTART 6006
-#define IDS_TOOLTIP_NEW     6007
-#define IDS_TOOLTIP_HELP    6008
-#define IDS_TOOLTIP_EXIT    6009
+#define IDS_TOOLTIP_CREATE  6003
+#define IDS_TOOLTIP_DELETE  6004
+#define IDS_TOOLTIP_START   6005
+#define IDS_TOOLTIP_STOP    6006
+#define IDS_TOOLTIP_PAUSE   6007
+#define IDS_TOOLTIP_RESTART 6008
+#define IDS_TOOLTIP_HELP    6009
+#define IDS_TOOLTIP_EXIT    6010
 
 #define IDS_SERVICES_STARTED 5000
 #define IDS_SERVICES_STOPPED 5001
@@ -68,12 +70,13 @@
 #define TBICON_REFRESH      1
 #define TBICON_EXPORT       2
 #define TBICON_CREATE       3
-#define TBICON_START        4
-#define TBICON_STOP         5
-#define TBICON_PAUSE        6
-#define TBICON_RESTART      7
-#define TBICON_HELP         8
-#define TBICON_EXIT         9
+#define TBICON_DELETE       4
+#define TBICON_START        5
+#define TBICON_STOP         6
+#define TBICON_PAUSE        7
+#define TBICON_RESTART      8
+#define TBICON_HELP         9
+#define TBICON_EXIT         10
 
 /* properties dialog */
 #define IDD_DLG_GENERAL     10001

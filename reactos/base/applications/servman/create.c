@@ -7,7 +7,7 @@
  *
  */
 
-#include "servman.h"
+#include "precomp.h"
 
 extern HINSTANCE hInstance;
 BOOL bHelpOpen = FALSE;
@@ -27,7 +27,7 @@ BOOL Create(LPTSTR ServiceName,
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if (hSCManager == NULL)
     {
-        GetError(0);
+        GetError();
         return FALSE;
     }
 
@@ -47,7 +47,7 @@ BOOL Create(LPTSTR ServiceName,
 
     if (hSc == NULL)
     {
-        GetError(0);
+        GetError();
         return FALSE;
     }
 

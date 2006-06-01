@@ -7,36 +7,19 @@
  *
  */
 
-#include "servman.h"
+#include "precomp.h"
 
 HWND hwndGenDlg;
-extern ENUM_SERVICE_STATUS_PROCESS *pServiceStatus;
-extern HINSTANCE hInstance;
-extern HWND hListView;
-extern HWND hMainWnd;
 
-
-typedef struct _PROP_DLG_INFO
-{
-    LPTSTR lpServiceName;
-    LPTSTR lpDisplayName;
-    LPTSTR lpDescription;
-    LPTSTR lpPathToExe;
-    TCHAR  szStartupType;
-    TCHAR  szServiceStatus[25];
-    LPTSTR lpStartParams;
-} PROP_DLG_INFO, *PPROP_DLG_INFO;
-
-
-
-VOID SetButtonStates()
+static VOID
+SetButtonStates(PMAIN_WND_INFO Info)
 {
     HWND hButton;
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     DWORD Flags, State;
 
     /* get pointer to selected service */
-    Service = GetSelectedService();
+    Service = GetSelectedService(Info);
 
     Flags = Service->ServiceStatusProcess.dwControlsAccepted;
     State = Service->ServiceStatusProcess.dwCurrentState;
@@ -70,7 +53,8 @@ VOID SetButtonStates()
  * Fills the 'startup type' combo box with possible
  * values and sets it to value of the selected item
  */
-VOID SetStartupType(LPTSTR lpServiceName)
+static VOID
+SetStartupType(LPTSTR lpServiceName)
 {
     HWND hList;
     HKEY hKey;
@@ -123,82 +107,120 @@ VOID SetStartupType(LPTSTR lpServiceName)
  * Populates the General Properties dialog with
  * the relevant service information
  */
-VOID GetDlgInfo()
+static VOID
+GetDlgInfo(PMAIN_WND_INFO Info)
 {
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-    PROP_DLG_INFO DlgInfo;
-    
 
     /* get pointer to selected service */
-    Service = GetSelectedService();
-
+    Service = GetSelectedService(Info);
 
     /* set the service name */
-    DlgInfo.lpServiceName = Service->lpServiceName;
-    SendDlgItemMessage(hwndGenDlg, IDC_SERV_NAME, WM_SETTEXT, 0, (
-        LPARAM)DlgInfo.lpServiceName);
-
+    Info->PropSheet->lpServiceName = Service->lpServiceName;
+    SendDlgItemMessage(hwndGenDlg,
+                       IDC_SERV_NAME,
+                       WM_SETTEXT,
+                       0,
+                       (LPARAM)Info->PropSheet->lpServiceName);
 
     /* set the display name */
-    DlgInfo.lpDisplayName = Service->lpDisplayName;
-    SendDlgItemMessage(hwndGenDlg, IDC_DISP_NAME, WM_SETTEXT, 0,
-        (LPARAM)DlgInfo.lpDisplayName);
-
+    Info->PropSheet->lpDisplayName = Service->lpDisplayName;
+    SendDlgItemMessage(hwndGenDlg,
+                       IDC_DISP_NAME,
+                       WM_SETTEXT,
+                       0,
+                       (LPARAM)Info->PropSheet->lpDisplayName);
 
     /* set the description */
-    if (GetDescription(Service->lpServiceName, &DlgInfo.lpDescription))
-        SendDlgItemMessage(hwndGenDlg, IDC_DESCRIPTION, WM_SETTEXT, 0,
-            (LPARAM)DlgInfo.lpDescription);
-
+    if (GetDescription(Service->lpServiceName, &Info->PropSheet->lpDescription))
+        SendDlgItemMessage(hwndGenDlg,
+                           IDC_DESCRIPTION,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)Info->PropSheet->lpDescription);
 
     /* set the executable path */
-    if (GetExecutablePath(&DlgInfo.lpPathToExe))
-        SendDlgItemMessage(hwndGenDlg, IDC_EXEPATH, WM_SETTEXT, 0, (LPARAM)DlgInfo.lpPathToExe);
-
+    if (GetExecutablePath(Info, &Info->PropSheet->lpPathToExe))
+        SendDlgItemMessage(hwndGenDlg,
+                           IDC_EXEPATH,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)Info->PropSheet->lpPathToExe);
 
     /* set startup type */
     SetStartupType(Service->lpServiceName);
 
-
     /* set service status */
     if (Service->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
     {
-        LoadString(hInstance, IDS_SERVICES_STARTED, DlgInfo.szServiceStatus,
-            sizeof(DlgInfo.szServiceStatus) / sizeof(TCHAR));
-        SendDlgItemMessageW(hwndGenDlg, IDC_SERV_STATUS, WM_SETTEXT, 0, (LPARAM)DlgInfo.szServiceStatus);
+        LoadString(hInstance,
+                   IDS_SERVICES_STARTED,
+                   Info->PropSheet->szServiceStatus,
+                   sizeof(Info->PropSheet->szServiceStatus) / sizeof(TCHAR));
+
+        SendDlgItemMessage(hwndGenDlg,
+                           IDC_SERV_STATUS,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)Info->PropSheet->szServiceStatus);
     }
     else
     {
-        LoadString(hInstance, IDS_SERVICES_STOPPED, DlgInfo.szServiceStatus,
-            sizeof(DlgInfo.szServiceStatus) / sizeof(TCHAR));
-        SendDlgItemMessageW(hwndGenDlg, IDC_SERV_STATUS, WM_SETTEXT, 0, (LPARAM)DlgInfo.szServiceStatus);
+        LoadString(hInstance,
+                   IDS_SERVICES_STOPPED,
+                   Info->PropSheet->szServiceStatus,
+                   sizeof(Info->PropSheet->szServiceStatus) / sizeof(TCHAR));
+
+        SendDlgItemMessage(hwndGenDlg,
+                           IDC_SERV_STATUS,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)Info->PropSheet->szServiceStatus);
     }
 
 }
 
 
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4100)
-#endif
-
 /*
  * General Property dialog callback.
  * Controls messages to the General dialog
  */
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 GeneralPageProc(HWND hwndDlg,
                 UINT uMsg,
 		        WPARAM wParam,
 		        LPARAM lParam)
 {
+    PMAIN_WND_INFO Info;
+
+    /* FIXME get rid of this */
     hwndGenDlg = hwndDlg;
+
+    /* Get the window context */
+    /* FIXME: does this get called in time for WM_INITDIALOG */
+    Info = (PMAIN_WND_INFO)GetWindowLongPtr(hwndDlg,
+                                            GWLP_USERDATA);
+
+    if (Info == NULL && uMsg != WM_INITDIALOG)
+    {
+        return FALSE;
+    }
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            GetDlgInfo();
-            SetButtonStates();
+        {
+            Info = (PMAIN_WND_INFO)(((LPPROPSHEETPAGE)lParam)->lParam);
+            if (Info != NULL)
+            {
+                SetWindowLongPtr(hwndDlg,
+                                 GWLP_USERDATA,
+                                 (LONG_PTR)Info);
+                GetDlgInfo(Info);
+                SetButtonStates(Info);
+            }
+        }
         break;
 
         case WM_COMMAND:
@@ -210,19 +232,19 @@ GeneralPageProc(HWND hwndDlg,
                 break;
 
                 case IDC_START:
-                    SendMessage(hMainWnd, WM_COMMAND, ID_START, 0);
+                    SendMessage(Info->hMainWnd, WM_COMMAND, ID_START, 0);
                 break;
 
                 case IDC_STOP:
-                    SendMessage(hMainWnd, WM_COMMAND, ID_STOP, 0);
+                    SendMessage(Info->hMainWnd, WM_COMMAND, ID_STOP, 0);
                 break;
 
                 case IDC_PAUSE:
-                    SendMessage(hMainWnd, WM_COMMAND, ID_PAUSE, 0);
+                    SendMessage(Info->hMainWnd, WM_COMMAND, ID_PAUSE, 0);
                 break;
 
                 case IDC_RESUME:
-                    SendMessage(hMainWnd, WM_COMMAND, ID_RESUME, 0);
+                    SendMessage(Info->hMainWnd, WM_COMMAND, ID_RESUME, 0);
                 break;
 
                 case IDC_START_PARAM:
@@ -263,18 +285,39 @@ GeneralPageProc(HWND hwndDlg,
  * Dependancies Property dialog callback.
  * Controls messages to the Dependancies dialog
  */
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 DependanciesPageProc(HWND hwndDlg,
                      UINT uMsg,
 		             WPARAM wParam,
 		             LPARAM lParam)
 {
+    PMAIN_WND_INFO Info;
+
+    /* FIXME get rid of this */
+    hwndGenDlg = hwndDlg;
+
+    /* Get the window context */
+    Info = (PMAIN_WND_INFO)GetWindowLongPtr(hwndDlg,
+                                            GWLP_USERDATA);
+
+    if (Info == NULL && uMsg != WM_INITDIALOG)
+    {
+        return FALSE;
+    }
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-
-            break;
+        {
+            Info = (PMAIN_WND_INFO)(((LPPROPSHEETPAGE)lParam)->lParam);
+            if (Info != NULL)
+            {
+                SetWindowLongPtr(hwndDlg,
+                                 GWLP_USERDATA,
+                                 (LONG_PTR)Info);
+            }
+        }
+        break;
 
         case WM_COMMAND:
             switch(LOWORD(wParam))
@@ -307,7 +350,8 @@ DependanciesPageProc(HWND hwndDlg,
 }
 
 
-INT CALLBACK AddEditButton(HWND hwnd, UINT message, LPARAM lParam)
+static INT CALLBACK
+AddEditButton(HWND hwnd, UINT message, LPARAM lParam)
 {
     HWND hEditButton;
 
@@ -339,7 +383,10 @@ INT CALLBACK AddEditButton(HWND hwnd, UINT message, LPARAM lParam)
 
 
 static VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+InitPropSheetPage(PROPSHEETPAGE *psp,
+                  PMAIN_WND_INFO Info,
+                  WORD idDlg,
+                  DLGPROC DlgProc)
 {
   ZeroMemory(psp, sizeof(PROPSHEETPAGE));
   psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -347,22 +394,23 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
   psp->hInstance = hInstance;
   psp->pszTemplate = MAKEINTRESOURCE(idDlg);
   psp->pfnDlgProc = DlgProc;
+  psp->lParam = (LPARAM)Info;
 }
 
 
 LONG APIENTRY
-OpenPropSheet(HWND hwnd)
+OpenPropSheet(PMAIN_WND_INFO Info)
 {
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[2];
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
 
-    Service = GetSelectedService();
+    Service = GetSelectedService(Info);
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_USECALLBACK;
-    psh.hwndParent = hwnd;
+    psh.hwndParent = Info->hMainWnd;
     psh.hInstance = hInstance;
     psh.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));
     psh.pszCaption = Service->lpDisplayName;
@@ -372,10 +420,10 @@ OpenPropSheet(HWND hwnd)
     psh.ppsp = psp;
 
 
-    InitPropSheetPage(&psp[0], IDD_DLG_GENERAL, GeneralPageProc);
-    //InitPropSheetPage(&psp[1], IDD_DLG_GENERAL, LogonPageProc);
-    //InitPropSheetPage(&psp[2], IDD_DLG_GENERAL, RecoveryPageProc);
-    InitPropSheetPage(&psp[1], IDD_DLG_DEPEND, DependanciesPageProc);
+    InitPropSheetPage(&psp[0], Info, IDD_DLG_GENERAL, GeneralPageProc);
+    //InitPropSheetPage(&psp[1], Info, IDD_DLG_GENERAL, LogonPageProc);
+    //InitPropSheetPage(&psp[2], Info, IDD_DLG_GENERAL, RecoveryPageProc);
+    InitPropSheetPage(&psp[1], Info, IDD_DLG_DEPEND, DependanciesPageProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }

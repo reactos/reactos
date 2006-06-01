@@ -7,40 +7,43 @@
  *
  */
 
-#include "servman.h"
+#include "precomp.h"
 
-extern HINSTANCE hInstance;
-extern HWND hListView;
-
-BOOL DoDeleteService(HWND hDlg)
+static BOOL
+DoDeleteService(PMAIN_WND_INFO Info,
+                HWND hDlg)
 {
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
 
     /* open handle to the SCM */
-    hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_ALL_ACCESS);
     if (hSCManager == NULL)
     {
-        GetError(0);
+        GetError();
         return FALSE;
     }
 
     /* copy pointer to selected service */
-    Service = GetSelectedService();
+    Service = GetSelectedService(Info);
 
     /* get a handle to the service requested for starting */
-    hSc = OpenService(hSCManager, Service->lpServiceName, DELETE);
+    hSc = OpenService(hSCManager,
+                      Service->lpServiceName,
+                      DELETE);
     if (hSc == NULL)
     {
-        GetError(0);
+        GetError();
         return FALSE;
     }
 
     /* start the service opened */
     if (! DeleteService(hSc))
     {
-        GetError(0);
+        GetError();
         return FALSE;
     }
 
@@ -56,8 +59,12 @@ BOOL DoDeleteService(HWND hDlg)
 #pragma warning(disable : 4100)
 #endif
 BOOL CALLBACK
-DeleteDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+DeleteDialogProc(HWND hDlg,
+                 UINT message,
+                 WPARAM wParam,
+                 LPARAM lParam)
 {
+    PMAIN_WND_INFO Info = NULL;
     ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     HICON hIcon = NULL;
     TCHAR Buf[1000];
@@ -66,42 +73,67 @@ DeleteDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_INITDIALOG:
+    {
+        Info = (PMAIN_WND_INFO)lParam;
 
-        hIcon = LoadImage(hInstance, MAKEINTRESOURCE(IDI_SM_ICON), IMAGE_ICON, 16, 16, 0);
-        SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+        hIcon = LoadImage(hInstance,
+                          MAKEINTRESOURCE(IDI_SM_ICON),
+                          IMAGE_ICON,
+                          16,
+                          16,
+                          0);
+
+        SendMessage(hDlg,
+                    WM_SETICON,
+                    ICON_SMALL,
+                    (LPARAM)hIcon);
 
         /* get pointer to selected service */
-        Service = GetSelectedService();
+        Service = GetSelectedService(Info);
 
-        SendDlgItemMessage(hDlg, IDC_DEL_NAME, WM_SETTEXT, 0, (LPARAM)Service->lpDisplayName);
+        SendDlgItemMessage(hDlg,
+                           IDC_DEL_NAME,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)Service->lpDisplayName);
 
 
         item.mask = LVIF_TEXT;
-        item.iItem = GetSelectedItem();
+        item.iItem = Info->SelectedItem;
         item.iSubItem = 1;
         item.pszText = Buf;
         item.cchTextMax = sizeof(Buf);
-        SendMessage(hListView, LVM_GETITEM, 0, (LPARAM)&item);
+        SendMessage(Info->hListView,
+                    LVM_GETITEM,
+                    0,
+                    (LPARAM)&item);
 
-        SendDlgItemMessage(hDlg, IDC_DEL_DESC, WM_SETTEXT, 0,
-                (LPARAM)Buf);
+        SendDlgItemMessage(hDlg,
+                           IDC_DEL_DESC,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)Buf);
 
         return TRUE;
+    }
 
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
             case IDOK:
-                if (DoDeleteService(hDlg))
-                    (void)ListView_DeleteItem(hListView, GetSelectedItem());
+                if (DoDeleteService(Info, hDlg))
+                    ListView_DeleteItem(Info->hListView,
+                                        Info->SelectedItem);
 
                 DestroyIcon(hIcon);
-                EndDialog(hDlg, LOWORD(wParam));
+                EndDialog(hDlg,
+                          LOWORD(wParam));
                 return TRUE;
 
             case IDCANCEL:
                 DestroyIcon(hIcon);
-                EndDialog(hDlg, LOWORD(wParam));
+                EndDialog(hDlg,
+                          LOWORD(wParam));
                 return TRUE;
         }
     }
