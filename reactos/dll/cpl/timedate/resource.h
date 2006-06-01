@@ -10,12 +10,14 @@
 #define IDC_MONTHCALENDAR       103
 #define IDC_TIMEZONE            106
 #define IDC_TIMEPICKER          107
-#define IDC_YEAR				108
-#define IDC_YEARTEXT			109
+#define IDC_YEAR		108
+#define IDC_YEARTEXT		109
 
 #define IDD_TIMEZONEPAGE        110
 #define IDC_TIMEZONELIST        111
 #define IDC_AUTODAYLIGHT        113
+#define IDC_WORLD_BACKGROUND    114
+#define IDC_WORLD               115
 
 #define IDD_INETTIMEPAGE        120
 #define IDC_SERVERLIST          121

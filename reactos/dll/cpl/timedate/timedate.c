@@ -50,6 +50,8 @@ BOOL bSynced = FALSE;
 PTIMEZONE_ENTRY TimeZoneListHead = NULL;
 PTIMEZONE_ENTRY TimeZoneListTail = NULL;
 
+static HBITMAP hBitmap = NULL;
+static int cxSource, cySource;
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] =
@@ -786,14 +788,41 @@ TimeZonePageProc(HWND hwndDlg,
          WPARAM wParam,
          LPARAM lParam)
 {
+  BITMAP bitmap;
+
   switch (uMsg)
   {
     case WM_INITDIALOG:
       CreateTimeZoneList();
       ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST));
       GetAutoDaylightInfo(GetDlgItem(hwndDlg, IDC_AUTODAYLIGHT));
+      hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_WORLD), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+      if (hBitmap != NULL)
+      {
+         GetObject(hBitmap, sizeof(BITMAP), &bitmap);
+
+         cxSource = bitmap.bmWidth;
+         cySource = bitmap.bmHeight;
+      }
       break;
 
+    case WM_DRAWITEM:
+    {
+        LPDRAWITEMSTRUCT lpDrawItem;
+        PAINTSTRUCT ps;
+        HDC hdc, hdcMem;
+        lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+        hdc = BeginPaint(hwndDlg, &ps);
+        hdcMem = CreateCompatibleDC(hdc);
+        SelectObject(hdcMem, hBitmap);
+        StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top, 
+                   lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
+                   lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top, 
+                   hdcMem, 0, 0, cxSource, cySource, SRCCOPY);
+        DeleteDC(hdcMem);
+        EndPaint(hwndDlg, &ps);
+        break;
+    } 
     case WM_COMMAND:
       if ((LOWORD(wParam) == IDC_TIMEZONELIST && HIWORD(wParam) == CBN_SELCHANGE) ||
           (LOWORD(wParam) == IDC_AUTODAYLIGHT && HIWORD(wParam) == BN_CLICKED))
@@ -805,6 +834,7 @@ TimeZonePageProc(HWND hwndDlg,
 
     case WM_DESTROY:
       DestroyTimeZoneList();
+      DeleteObject(hBitmap);
       break;
 
     case WM_NOTIFY:
