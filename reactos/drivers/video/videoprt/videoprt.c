@@ -130,6 +130,94 @@ IntVideoPortDeferredRoutine(
    ((PMINIPORT_DPC_ROUTINE)SystemArgument1)(HwDeviceExtension, SystemArgument2);
 }
 
+NTSTATUS
+IntCreateRegistryPath(
+   IN PCUNICODE_STRING DriverRegistryPath,
+   OUT PUNICODE_STRING DeviceRegistryPath)
+{
+   static WCHAR RegistryMachineSystem[] = L"\\REGISTRY\\MACHINE\\SYSTEM\\";
+   static WCHAR CurrentControlSet[] = L"CURRENTCONTROLSET\\";
+   static WCHAR ControlSet[] = L"CONTROLSET";
+   static WCHAR Insert1[] = L"Hardware Profiles\\Current\\System\\CurrentControlSet\\";
+   static WCHAR Insert2[] = L"\\Device0";
+   LPWSTR ProfilePath = NULL;
+   BOOLEAN Valid;
+   PWCHAR AfterControlSet;
+
+   Valid = (0 == _wcsnicmp(DriverRegistryPath->Buffer, RegistryMachineSystem,
+                          wcslen(RegistryMachineSystem)));
+   {
+      AfterControlSet = DriverRegistryPath->Buffer + wcslen(RegistryMachineSystem);
+      if (0 == _wcsnicmp(AfterControlSet, CurrentControlSet, wcslen(CurrentControlSet)))
+      {
+         AfterControlSet += wcslen(CurrentControlSet);
+      }
+      else if (0 == _wcsnicmp(AfterControlSet, ControlSet, wcslen(ControlSet)))
+      {
+         AfterControlSet += wcslen(ControlSet);
+         while (L'0' <= *AfterControlSet && L'9' <= *AfterControlSet)
+         {
+            AfterControlSet++;
+         }
+         Valid = (L'\\' == *AfterControlSet);
+         AfterControlSet++;
+      }
+      else
+      {
+         Valid = FALSE;
+      }
+   }
+
+   if (Valid)
+   {
+      ProfilePath = ExAllocatePoolWithTag(PagedPool,
+                                          (wcslen(DriverRegistryPath->Buffer) +
+                                           wcslen(Insert1) + wcslen(Insert2) + 1) * sizeof(WCHAR),
+                                          TAG_VIDEO_PORT);
+      if (NULL != ProfilePath)
+      {
+         wcsncpy(ProfilePath, DriverRegistryPath->Buffer, AfterControlSet - DriverRegistryPath->Buffer);
+         wcscpy(ProfilePath + (AfterControlSet - DriverRegistryPath->Buffer), Insert1);
+         wcscat(ProfilePath, AfterControlSet);
+         wcscat(ProfilePath, Insert2);
+
+         Valid = NT_SUCCESS(RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, ProfilePath));
+      }
+      else
+      {
+         Valid = FALSE;
+      }
+   }
+   else
+   {
+      DPRINT1("Unparsable registry path %wZ", DriverRegistryPath);
+   }
+
+   if (Valid)
+   {
+      RtlInitUnicodeString(DeviceRegistryPath, ProfilePath);
+   }
+   else
+   {
+      if (ProfilePath)
+         ExFreePoolWithTag(ProfilePath, TAG_VIDEO_PORT);
+
+      DeviceRegistryPath->Length =
+      DeviceRegistryPath->MaximumLength =
+         DriverRegistryPath->Length + (9 * sizeof(WCHAR));
+      DeviceRegistryPath->Length -= sizeof(WCHAR);
+      DeviceRegistryPath->Buffer = ExAllocatePoolWithTag(
+         NonPagedPool,
+         DeviceRegistryPath->MaximumLength,
+         TAG_VIDEO_PORT);
+      if (!DeviceRegistryPath->Buffer)
+         return STATUS_NO_MEMORY;
+      swprintf(DeviceRegistryPath->Buffer, L"%s\\Device0",
+         DriverRegistryPath->Buffer);
+   }
+   return STATUS_SUCCESS;
+}
+
 NTSTATUS NTAPI
 IntVideoPortCreateAdapterDeviceObject(
    IN PDRIVER_OBJECT DriverObject,
@@ -203,16 +291,20 @@ IntVideoPortCreateAdapterDeviceObject(
    DeviceExtension->FunctionalDeviceObject = *DeviceObject;
    DeviceExtension->DriverExtension = DriverExtension;
 
-   DeviceExtension->RegistryPath.Length =
-   DeviceExtension->RegistryPath.MaximumLength =
-      DriverExtension->RegistryPath.Length + (9 * sizeof(WCHAR));
-   DeviceExtension->RegistryPath.Length -= sizeof(WCHAR);
-   DeviceExtension->RegistryPath.Buffer = ExAllocatePoolWithTag(
-      NonPagedPool,
-      DeviceExtension->RegistryPath.MaximumLength,
-      TAG_VIDEO_PORT);
-   swprintf(DeviceExtension->RegistryPath.Buffer, L"%s\\Device0",
-      DriverExtension->RegistryPath.Buffer);
+   /*
+    * Get the registry path associated with this driver.
+    */
+
+   Status = IntCreateRegistryPath(
+      &DriverExtension->RegistryPath,
+      &DeviceExtension->RegistryPath);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IntCreateRegistryPath() call failed with status 0x%08x\n", Status);
+      IoDeleteDevice(*DeviceObject);
+      *DeviceObject = NULL;
+      return Status;
+   }
 
    if (PhysicalDeviceObject != NULL)
    {
