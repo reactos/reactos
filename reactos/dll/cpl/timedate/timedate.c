@@ -52,6 +52,7 @@ PTIMEZONE_ENTRY TimeZoneListTail = NULL;
 
 static HBITMAP hBitmap = NULL;
 static int cxSource, cySource;
+static WNDPROC pOldWndProc = NULL;
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] =
@@ -289,6 +290,25 @@ AutoUpdateMonthCal(HWND hwndDlg,
 }
 
 
+INT_PTR CALLBACK
+DTPProc(HWND hwnd,
+         UINT uMsg,
+         WPARAM wParam,
+         LPARAM lParam)
+{
+  switch (uMsg)
+  {
+    case WM_KEYDOWN:
+      /* stop the timer when the user is about to change the time */
+      if ((wParam != VK_LEFT) & (wParam != VK_RIGHT))
+        KillTimer(GetParent(hwnd), ID_TIMER);
+      return CallWindowProc(pOldWndProc, hwnd, uMsg, wParam, lParam);
+      break;
+    default:
+      return CallWindowProc(pOldWndProc, hwnd, uMsg, wParam, lParam);
+  }
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
 DateTimePageProc(HWND hwndDlg,
@@ -321,6 +341,8 @@ DateTimePageProc(HWND hwndDlg,
                        NULL,
                        hApplet,
                        NULL);
+
+		pOldWndProc = (WNDPROC) SetWindowLong(GetDlgItem(hwndDlg, IDC_TIMEPICKER), GWL_WNDPROC, (INT_PTR) DTPProc);
     break;
 
     case WM_TIMER:
