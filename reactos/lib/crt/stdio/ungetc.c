@@ -18,33 +18,20 @@ _TINT _ungettc(_TINT c, FILE *f)
 
   if (c == _TEOF)
     return _TEOF;
-
-  if (f->_ptr == NULL || f->_base == NULL)
-    return _TEOF;
-
+  
   if (f->_ptr == f->_base)
-    {
+  {
       if (f->_cnt == 0)
         f->_ptr+=sizeof(_TCHAR);
       else
         return _TEOF;
-    }
-
-  f->_cnt+=sizeof(_TCHAR);
-  f->_ptr-=sizeof(_TCHAR);
-
-#if 1
-  if (*((_TCHAR*)(f->_ptr)) != c)
-    {
-      f->_flag |= _IOUNGETC;
-      *((_TCHAR*)(f->_ptr)) = c;
-    }
-#else
-  /* This is the old unicode version. Dunno what version is most correct. -Gunnar */
-  f->_flag |= _IOUNGETC;
-  *((_TCHAR*)(f->_ptr)) = c;
-#endif
-
-  return c;
+   }
+            
+   fseek(f, -1, SEEK_CUR);
+    
+   if(*(_TCHAR*)f->_ptr != c)
+        *((_TCHAR*)(f->_ptr)) = c;
+           
+   return c;
 }
 
