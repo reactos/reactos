@@ -27,6 +27,42 @@
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
+typedef struct {
+    unsigned int mantissal:32;
+    unsigned int mantissah:20;
+    unsigned int exponent:11;
+    unsigned int sign:1;
+} double_t;
+
+static 
+__inline
+int 
+_isinf(double __x)
+{
+	union
+	{
+		double*   __x;
+		double_t*   x;
+	} x;
+
+	x.__x = &__x;
+	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));
+}
+
+static 
+__inline
+int 
+_isnan(double __x)
+{
+	union
+	{
+		double*   __x;
+		double_t*   x;
+	} x;
+    	x.__x = &__x;
+	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
+}
+
 
 static
 __inline
@@ -90,6 +126,109 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 		tmp[i++] = '0';
 	else while (num != 0)
 		tmp[i++] = digits[do_div(&num,base)];
+	if (i > precision)
+		precision = i;
+	size -= precision;
+	if (!(type&(ZEROPAD+LEFT))) {
+		while(size-->0) {
+			if (buf <= end)
+				*buf = ' ';
+			++buf;
+		}
+	}
+	if (sign) {
+		if (buf <= end)
+			*buf = sign;
+		++buf;
+	}
+	if (type & SPECIAL) {
+		if (base==8) {
+			if (buf <= end)
+				*buf = '0';
+			++buf;
+		} else if (base==16) {
+			if (buf <= end)
+				*buf = '0';
+			++buf;
+			if (buf <= end)
+				*buf = digits[33];
+			++buf;
+		}
+	}
+	if (!(type & LEFT)) {
+		while (size-- > 0) {
+			if (buf <= end)
+				*buf = c;
+			++buf;
+		}
+	}
+	while (i < precision--) {
+		if (buf <= end)
+			*buf = '0';
+		++buf;
+	}
+	while (i-- > 0) {
+		if (buf <= end)
+			*buf = tmp[i];
+		++buf;
+	}
+	while (size-- > 0) {
+		if (buf <= end)
+			*buf = ' ';
+		++buf;
+	}
+	return buf;
+}
+
+static char *
+numberf(char * buf, char * end, double num, int base, int size, int precision, int type)
+{
+	char c,sign,tmp[66];
+	const char *digits;
+	const char *small_digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+	const char *large_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	int i;
+	long long x;
+
+    /* FIXME 
+       the float version of number is direcly copy of number 
+    */
+    
+	digits = (type & LARGE) ? large_digits : small_digits;
+	if (type & LEFT)
+		type &= ~ZEROPAD;
+	if (base < 2 || base > 36)
+		return 0;
+	c = (type & ZEROPAD) ? '0' : ' ';
+	sign = 0;
+	if (type & SIGN) {
+		if (num < 0) {
+			sign = '-';
+			num = -num;
+			size--;
+		} else if (type & PLUS) {
+			sign = '+';
+			size--;
+		} else if (type & SPACE) {
+			sign = ' ';
+			size--;
+		}
+	}
+	if (type & SPECIAL) {
+		if (base == 16)
+			size -= 2;
+		else if (base == 8)
+			size--;
+	}
+	i = 0;
+	if (num == 0)
+		tmp[i++] = '0';
+	else while (num != 0)
+    {
+        x = num;
+		tmp[i++] = digits[do_div(&x,base)];
+		num=x;
+    }
 	if (i > precision)
 		precision = i;
 	size -= precision;
@@ -241,6 +380,8 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
 	int len;
 	unsigned long long num;
+	double _double;
+	
 	int base;
 	char *str, *end;
 	const char *s;
@@ -253,10 +394,12 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				   number of chars for from string */
 	int qualifier;		/* 'h', 'l', 'L', 'I' or 'w' for integer fields */
 
+    /* clear the string buffer with zero so we do not need NULL terment it at end */ 
+    
 	str = buf;
 	end = buf + cnt - 1;
 	if (end < buf - 1) {
-		end = ((void *) -1);
+		end = ((char *) -1);
 		cnt = end - buf + 1;
 	}
 
@@ -439,6 +582,49 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				*ip = (str - buf);
 			}
 			continue;
+			
+		/* float number formats - set up the flags and "break" */
+        case 'e':
+		case 'E':
+		case 'f':
+		case 'g':
+		case 'G':
+          _double = (double)va_arg(args, double);          
+         if ( _isnan(_double) ) {
+            s = "Nan";
+            len = 3;
+            while ( len > 0 ) {
+               if (str <= end)
+					*str = *s++;
+				++str;
+               len --;
+            }
+         } else if ( _isinf(_double) < 0 ) {
+            s = "-Inf";
+            len = 4;
+            while ( len > 0 ) {
+              	if (str <= end)
+					*str = *s++;
+				++str;
+               len --;
+            }
+         } else if ( _isinf(_double) > 0 ) {
+            s = "+Inf";
+            len = 4;
+            while ( len > 0 ) {
+               if (str <= end)
+					*str = *s++;
+				++str;
+               len --;
+            }
+         } else {
+            if ( precision == -1 )
+               precision = 6;                
+               	str = numberf(str, end, (int)_double, base, field_width, precision, flags);           
+         }
+            
+          continue;
+
 
 		/* integer number formats - set up the flags and "break" */
 		case 'o':
@@ -501,8 +687,20 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	if (str <= end)
 		*str = '\0';
 	else if (cnt > 0)
+	{
 		/* don't write out a null byte if the buf size is zero */
-		*end = '\0';
+		//*end = '\0';
+	   if (str-buf >cnt ) 
+       {
+		 *end = '\0';
+       }
+       else
+       {
+           end++;
+          *end = '\0';
+       }
+       
+    }
 	return str-buf;
 }
 
