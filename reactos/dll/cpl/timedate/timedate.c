@@ -809,18 +809,21 @@ TimeZonePageProc(HWND hwndDlg,
     case WM_DRAWITEM:
     {
         LPDRAWITEMSTRUCT lpDrawItem;
-        PAINTSTRUCT ps;
-        HDC hdc, hdcMem;
         lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
-        hdc = BeginPaint(hwndDlg, &ps);
-        hdcMem = CreateCompatibleDC(hdc);
-        SelectObject(hdcMem, hBitmap);
-        StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top, 
-                   lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
-                   lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top, 
-                   hdcMem, 0, 0, cxSource, cySource, SRCCOPY);
-        DeleteDC(hdcMem);
-        EndPaint(hwndDlg, &ps);
+        if(lpDrawItem->CtlID == IDC_WORLD_BACKGROUND)
+		{
+            PAINTSTRUCT ps;
+            HDC hdc, hdcMem;
+            hdc = BeginPaint(hwndDlg, &ps);
+            hdcMem = CreateCompatibleDC(hdc);
+            SelectObject(hdcMem, hBitmap);
+            StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top, 
+                       lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
+                       lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top, 
+                       hdcMem, 0, 0, cxSource, cySource, SRCCOPY);
+            DeleteDC(hdcMem);
+            EndPaint(hwndDlg, &ps);
+		}
         break;
     } 
     case WM_COMMAND:
