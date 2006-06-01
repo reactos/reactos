@@ -579,7 +579,7 @@ _wcstoui64=stub
 _wctime64=stub
 _wcsupr
 _wctime
-_wenviron=stub
+_wenviron
 _wexecl
 _wexecle
 _wexeclp
