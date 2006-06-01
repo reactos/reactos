@@ -140,7 +140,7 @@ __p__fileinfo=stub
 __p__fmode
 __p__iob
 __p__mbcasemap=stub
-__p__mbctype=stub
+__p__mbctype=_mbctype
 __p__osver
 __p__pctype
 __p__pgmptr
