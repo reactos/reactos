@@ -53,17 +53,3 @@ int _getch(void)
     return c;
 }
 
-#if 0
-/*
- * @unimplemented
- */
-int _getche(void)
-{
-    int c;
-
-    c = _getch();
-    _putch(c);
-
-    return c;
-}
-#endif

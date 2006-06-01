@@ -1,45 +1,48 @@
 #include <string.h>
+#include <windows.h>
 
 /*
  * @implemented
+ * from wine cvs 2006-05-21
  */
 wchar_t *
 _i64tow(__int64 value, wchar_t *string, int radix)
 {
-  wchar_t tmp[65];
-  wchar_t *tp = tmp;
-  __int64 i;
-  unsigned __int64 v;
-  __int64 sign;
-  wchar_t *sp;
+    ULONGLONG val;
+    int negative;
+    WCHAR buffer[65];
+    PWCHAR pos;
+    WCHAR digit;
 
-  if (radix > 36 || radix <= 1)
-  {
-    return 0;
-  }
+    if (value < 0 && radix == 10) {
+	negative = 1;
+        val = -value;
+    } else {
+	negative = 0;
+        val = value;
+    } /* if */
 
-  sign = (radix == 10 && value < 0);
-  if (sign)
-    v = -value;
-  else
-    v = (unsigned __int64)value;
-  while (v || tp == tmp)
-  {
-    i = v % radix;
-    v = v / radix;
-    if (i < 10)
-      *tp++ = i+L'0';
-    else
-      *tp++ = i + L'a' - 10;
-  }
+    pos = &buffer[64];
+    *pos = '\0';
 
-  sp = string;
-  if (sign)
-    *sp++ = L'-';
-  while (tp > tmp)
-    *sp++ = *--tp;
-  *sp = 0;
-  return string;
+    do {
+	digit = val % radix;
+	val = val / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (val != 0L);
+
+    if (negative) {
+	*--pos = '-';
+    } /* if */
+
+    if (string != NULL) {
+	memcpy(string, pos, (&buffer[64] - pos + 1) * sizeof(WCHAR));
+    } /* if */
+    return string;
 }
 
 
@@ -49,152 +52,112 @@ _i64tow(__int64 value, wchar_t *string, int radix)
 wchar_t *
 _ui64tow(unsigned __int64 value, wchar_t *string, int radix)
 {
-  wchar_t tmp[65];
-  wchar_t *tp = tmp;
-  __int64 i;
-  unsigned __int64 v;
-  wchar_t *sp;
+    WCHAR buffer[65];
+    PWCHAR pos;
+    WCHAR digit;
 
-  if (radix > 36 || radix <= 1)
-  {
-    return 0;
-  }
+    pos = &buffer[64];
+    *pos = '\0';
 
-  v = (unsigned __int64)value;
-  while (v || tp == tmp)
-  {
-    i = v % radix;
-    v = v / radix;
-    if (i < 10)
-      *tp++ = i+L'0';
-    else
-      *tp++ = i + L'a' - 10;
-  }
+    do {
+	digit = value % radix;
+	value = value / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (value != 0L);
 
-  sp = string;
-  while (tp > tmp)
-    *sp++ = *--tp;
-  *sp = 0;
-  return string;
+    if (string != NULL) {
+	memcpy(string, pos, (&buffer[64] - pos + 1) * sizeof(WCHAR));
+    } /* if */
+    return string;
 }
 
 
 /*
  * @implemented
+ * from wine cvs 2006-05-21
  */
 wchar_t *
 _itow(int value, wchar_t *string, int radix)
 {
-  wchar_t tmp[33];
-  wchar_t *tp = tmp;
-  int i;
-  unsigned v;
-  int sign;
-  wchar_t *sp;
-
-  if (radix > 36 || radix <= 1)
-  {
-    return 0;
-  }
-
-  sign = (radix == 10 && value < 0);
-  if (sign)
-    v = -value;
-  else
-    v = (unsigned)value;
-  while (v || tp == tmp)
-  {
-    i = v % radix;
-    v = v / radix;
-    if (i < 10)
-      *tp++ = i+L'0';
-    else
-      *tp++ = i + L'a' - 10;
-  }
-
-  sp = string;
-  if (sign)
-    *sp++ = L'-';
-  while (tp > tmp)
-    *sp++ = *--tp;
-  *sp = 0;
-  return string;
+  return _ltow(value, string, radix);
 }
 
 
 /*
  * @implemented
+ * from wine cvs 2006-05-21
  */
 wchar_t *
 _ltow(long value, wchar_t *string, int radix)
 {
-  wchar_t tmp[33];
-  wchar_t *tp = tmp;
-  long i;
-  unsigned long v;
-  int sign;
-  wchar_t *sp;
+    unsigned long val;
+    int negative;
+    WCHAR buffer[33];
+    PWCHAR pos;
+    WCHAR digit;
 
-  if (radix > 36 || radix <= 1)
-  {
-    return 0;
-  }
+    if (value < 0 && radix == 10) {
+	negative = 1;
+        val = -value;
+    } else {
+	negative = 0;
+        val = value;
+    } /* if */
 
-  sign = (radix == 10 && value < 0);
-  if (sign)
-    v = -value;
-  else
-    v = (unsigned long)value;
-  while (v || tp == tmp)
-  {
-    i = v % radix;
-    v = v / radix;
-    if (i < 10)
-      *tp++ = i+L'0';
-    else
-      *tp++ = i + L'a' - 10;
-  }
+    pos = &buffer[32];
+    *pos = '\0';
 
-  sp = string;
-  if (sign)
-    *sp++ = L'-';
-  while (tp > tmp)
-    *sp++ = *--tp;
-  *sp = 0;
-  return string;
+    do {
+	digit = val % radix;
+	val = val / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (val != 0L);
+
+    if (negative) {
+	*--pos = '-';
+    } /* if */
+
+    if (string != NULL) {
+	memcpy(string, pos, (&buffer[32] - pos + 1) * sizeof(WCHAR));
+    } /* if */
+    return string;
 }
 
 
 /*
  * @implemented
+ * from wine cvs 2006-05-21
  */
 wchar_t *
 _ultow(unsigned long value, wchar_t *string, int radix)
 {
-  wchar_t tmp[33];
-  wchar_t *tp = tmp;
-  long i;
-  unsigned long v = value;
-  wchar_t *sp;
+    WCHAR buffer[33];
+    PWCHAR pos;
+    WCHAR digit;
 
-  if (radix > 36 || radix <= 1)
-  {
-    return 0;
-  }
+    pos = &buffer[32];
+    *pos = '\0';
 
-  while (v || tp == tmp)
-  {
-    i = v % radix;
-    v = v / radix;
-    if (i < 10)
-      *tp++ = i+L'0';
-    else
-      *tp++ = i + L'a' - 10;
-  }
+    do {
+	digit = value % radix;
+	value = value / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (value != 0L);
 
-  sp = string;
-  while (tp > tmp)
-    *sp++ = *--tp;
-  *sp = 0;
-  return string;
+    if (string != NULL) {
+	memcpy(string, pos, (&buffer[32] - pos + 1) * sizeof(WCHAR));
+    } /* if */
+    return string;
 }

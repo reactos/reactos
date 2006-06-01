@@ -3,9 +3,10 @@
 
 /*
  * @implemented
+ * copy _i64toa from wine cvs 2006 month 05 day 21
  */
 int
 _wtoi(const wchar_t *str)
 {
-  return (int)wcstol(str, 0, 10);
+   return _wtol(str);
 }

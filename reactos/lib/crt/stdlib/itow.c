@@ -16,138 +16,81 @@
 
 /*
  * @implemented
+ * from wine cvs 2006-05-21
  */
 wchar_t* _itow(int value, wchar_t* string, int radix)
 {
-    wchar_t     tmp [33];
-    wchar_t     * tp = tmp;
-    int     i;
-    unsigned int    v;
-    int     sign;
-    wchar_t     * sp;
+   return _ltow(value, string, radix);
+}
 
-    if (radix > 36 || radix <= 1)
-    {
-        __set_errno(EDOM);
-        return 0;
-    }
+/*
+ * @implemented
+ * from wine cvs 2006-05-21
+ */
+wchar_t* _ltow(long value, wchar_t* string, int radix)
+{
+     unsigned long val;
+    int negative;
+    WCHAR buffer[33];
+    PWCHAR pos;
+    WCHAR digit;
 
-    sign = ((radix == 10) && (value < 0));
-    if (sign) {
-        v = -value;
+    if (value < 0 && radix == 10) {
+	negative = 1;
+        val = -value;
     } else {
-        v = (unsigned) value;
-    }
-    while (v || tp == tmp) {
-        i = v % radix;
-        v = v / radix;
-        if (i < 10) {
-            *tp++ = i+ (wchar_t) '0';
-        } else {
-            *tp++ = i + (wchar_t) 'a' - 10;
-        }
-    }
+	negative = 0;
+        val = value;
+    } /* if */
 
-    if (string == 0) {
-        string = (wchar_t*) malloc((tp-tmp) + (sign + 1) * sizeof(wchar_t));
-    }
-    sp = string;
+    pos = &buffer[32];
+    *pos = '\0';
 
-    if (sign) {
-        *sp++ = (wchar_t) '-';
-    }
-    while (tp > tmp) {
-        *sp++ = *--tp;
-    }
-    *sp = (wchar_t) 0;
+    do {
+	digit = val % radix;
+	val = val / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (val != 0L);
+
+    if (negative) {
+	*--pos = '-';
+    } /* if */
+
+    if (str != NULL) {
+	memcpy(string, pos, (&buffer[32] - pos + 1) * sizeof(WCHAR));
+    } /* if */
     return string;
 }
 
 /*
  * @implemented
- */
-wchar_t* _ltow(long value, wchar_t* string, int radix)
-{
-    wchar_t tmp [33];
-    wchar_t* tp = tmp;
-    long int i;
-    unsigned long int v;
-    int sign;
-    wchar_t* sp;
-
-    if (radix > 36 || radix <= 1) {
-        __set_errno(EDOM);
-        return 0;
-    }
-
-    sign = ((radix == 10) && (value < 0));
-    if (sign) {
-        v = -value;
-    } else {
-        v = (unsigned long) value;
-    }
-    while (v || tp == tmp) {
-        i = v % radix;
-        v = v / radix;
-        if (i < 10) {
-            *tp++ = i + (wchar_t) '0';
-        } else {
-            *tp++ = i + (wchar_t) 'a' - 10;
-        }
-    }
-
-    if (string == 0) {
-        string = (wchar_t*) malloc((tp - tmp) + (sign + 1) * sizeof(wchar_t));
-    }
-    sp = string;
-
-    if (sign) {
-        *sp++ = (wchar_t) '-';
-    }
-    while (tp > tmp) {
-        *sp++ = *--tp;
-    }
-    *sp = (wchar_t) 0;
-    return string;
-}
-
-/*
- * @unimplemented
+ * from wine cvs 2006-05-21
  */
 wchar_t* _ultow(unsigned long value, wchar_t* string, int radix)
 {
-    wchar_t tmp [33];
-    wchar_t* tp = tmp;
-    long int i;
-    unsigned long int v = value;
-    wchar_t* sp;
+    WCHAR buffer[33];
+    PWCHAR pos;
+    WCHAR digit;
 
-    if (radix > 36 || radix <= 1) {
-        __set_errno(EDOM);
-        return 0;
-    }
-    while (v || tp == tmp) {
-        i = v % radix;
-        v = v / radix;
-        if (i < 10) {
-            *tp++ = i + (wchar_t) '0';
-        } else {
-            *tp++ = i + (wchar_t) 'a' - 10;
-        }
-    }
+    pos = &buffer[32];
+    *pos = '\0';
 
-    if (string == 0) {
-#ifdef _MSVCRT_LIB_    // TODO: check on difference?
-        string = (wchar_t*)malloc(((tp-tmp)+1)*sizeof(wchar_t));
-#else // TODO: FIXME: review which is correct
-        string = (wchar_t*)malloc((tp - tmp) + sizeof(wchar_t));
-#endif /*_MSVCRT_LIB_*/
-    }
-    sp = string;
+    do {
+	digit = value % radix;
+	value = value / radix;
+	if (digit < 10) {
+	    *--pos = '0' + digit;
+	} else {
+	    *--pos = 'a' + digit - 10;
+	} /* if */
+    } while (value != 0L);
 
-    while (tp > tmp) {
-        *sp++ = *--tp;
-    }
-    *sp = (wchar_t) 0;
+    if (string != NULL) {
+	memcpy(string, pos, (&buffer[32] - pos + 1) * sizeof(WCHAR));
+    } /* if */
     return string;
 }
