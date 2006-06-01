@@ -7,6 +7,7 @@
 	<define name="_WIN32_WINNT">0x0501</define>
 	<file>newdev.c</file>
 	<file>stubs.c</file>
+	<file>wizard.c</file>
 	<file>newdev.rc</file>
 	<file>newdev.spec</file>
 	<library>wine</library>
