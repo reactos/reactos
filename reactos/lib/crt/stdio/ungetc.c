@@ -21,13 +21,11 @@ _TINT _ungettc(_TINT c, FILE *f)
   
   if (f->_ptr == f->_base)
   {
-      if (f->_cnt == 0)
-        f->_ptr+=sizeof(_TCHAR);
-      else
+      if (!f->_cnt == 0)        
         return _TEOF;
-   }
+  }
             
-   fseek(f, -1, SEEK_CUR);
+   fseek(f, -sizeof(_TCHAR), SEEK_CUR);
     
    if(*(_TCHAR*)f->_ptr != c)
         *((_TCHAR*)(f->_ptr)) = c;
