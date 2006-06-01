@@ -93,6 +93,7 @@ struct GetSectionCallbackInfo
     PSP_ALTPLATFORM_INFO PlatformInfo;
     BYTE ProductType;
     WORD SuiteMask;
+    DWORD PrefixLength;
     WCHAR BestSection[LINE_LEN + 1];
     DWORD BestScore1, BestScore2, BestScore3, BestScore4, BestScore5;
 };
@@ -1052,7 +1053,7 @@ CheckSectionValid(
      * Field[5] Suite mask
      * Remark: lastests fields may be NULL if the information is not provided
      */
-    Fields[0] = strchrW(Section, '.');
+    Fields[0] = Section;
     if (Fields[0] == NULL)
     {
         TRACE("No extension found\n");
@@ -1209,8 +1210,11 @@ GetSectionCallback(
     DWORD Score1, Score2, Score3, Score4, Score5;
     BOOL ret;
 
+    if (SectionName[info->PrefixLength] != '.')
+        return TRUE;
+
     ret = CheckSectionValid(
-        SectionName,
+        &SectionName[info->PrefixLength],
         info->PlatformInfo,
         info->ProductType,
         info->SuiteMask,
@@ -1318,6 +1322,7 @@ SetupDiGetActualSectionToInstallExW(
         CallbackInfo.PlatformInfo = pPlatformInfo;
         CallbackInfo.ProductType = ProductType;
         CallbackInfo.SuiteMask = SuiteMask;
+        CallbackInfo.PrefixLength = strlenW(InfSectionName);
         CallbackInfo.BestScore1 = ULONG_MAX;
         CallbackInfo.BestScore2 = ULONG_MAX;
         CallbackInfo.BestScore3 = ULONG_MAX;
@@ -7629,7 +7634,7 @@ SetupDiInstallDriverFiles(
         ret = SetupDiGetActualSectionToInstallW(
             SelectedDriver->InfFileDetails->hInf,
             SelectedDriver->Details.SectionName,
-            SectionName, MAX_PATH - strlenW(DotCoInstallers), &SectionNameLength, NULL);
+            SectionName, MAX_PATH, &SectionNameLength, NULL);
         if (!ret)
             goto done;
 
@@ -7946,7 +7951,6 @@ InfIsFromOEMLocation(
             strcatW(Windir, BackSlash);
         strcatW(Windir, InfDirectory);
 
-        DPRINT1("Comparing %S and %S\n", FullName, Windir);
         if (strncmpiW(FullName, Windir, last - FullName) == 0)
         {
             /* The path is %SYSTEMROOT%\Inf */
