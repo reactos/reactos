@@ -27,6 +27,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(newdev);
 /* Global variables */
 HINSTANCE hDllInstance;
 
+static BOOL
+SearchDriver(
+	IN PDEVINSTDATA DevInstData,
+	IN LPCTSTR Directory OPTIONAL,
+	IN LPCTSTR InfFile OPTIONAL);
+
 /*
 * @implemented
 */
@@ -241,7 +247,7 @@ UpdateDriverForPlugAndPlayDevicesA(
 }
 
 /* Directory and InfFile MUST NOT be specified simultaneously */
-BOOL
+static BOOL
 SearchDriver(
 	IN PDEVINSTDATA DevInstData,
 	IN LPCTSTR Directory OPTIONAL,
@@ -269,7 +275,10 @@ SearchDriver(
 		_tcsncpy(DevInstallParams.DriverPath, Directory, MAX_PATH);
 	}
 	else
+	{
+		DevInstallParams.Flags &= ~DI_ENUMSINGLEINF;
 		*DevInstallParams.DriverPath = _T('\0');
+	}
 
 	ret = SetupDiSetDeviceInstallParams(
 		DevInstData->hDevInfo,
@@ -334,7 +343,7 @@ GetFileExt(IN LPTSTR FileName)
 		return _T("");
 }
 
-BOOL
+static BOOL
 SearchDriverRecursive(
 	IN PDEVINSTDATA DevInstData,
 	IN LPCTSTR Path)
@@ -402,6 +411,118 @@ SearchDriverRecursive(
 	if (hFindFile != INVALID_HANDLE_VALUE)
 		FindClose(hFindFile);
 	return retval;
+}
+
+BOOL
+ScanFoldersForDriver(
+	IN PDEVINSTDATA DevInstData)
+{
+	BOOL result;
+
+	/* Search in default location */
+	result = SearchDriver(DevInstData, NULL, NULL);
+
+	if (DevInstData->CustomSearchPath)
+	{
+		/* Search only in specified paths */
+		/* We need to check all specified directories to be
+		 * sure to find the best driver for the device.
+		 */
+		LPCTSTR Path;
+		for (Path = DevInstData->CustomSearchPath; *Path != '\0'; Path += _tcslen(Path) + 1)
+		{
+			TRACE("Search driver in %S\n", Path);
+			if (_tcslen(Path) == 2 && Path[1] == ':')
+			{
+				if (SearchDriverRecursive(DevInstData, Path))
+					result = TRUE;
+			}
+			else
+			{
+				if (SearchDriver(DevInstData, Path, NULL))
+					result = TRUE;
+			}
+		}
+	}
+
+	return result;
+}
+
+BOOL
+PrepareFoldersToScan(
+	IN PDEVINSTDATA DevInstData,
+	IN BOOL IncludeRemovableDevices,
+	IN BOOL IncludeCustomPath,
+	IN HWND hwndCombo OPTIONAL)
+{
+	TCHAR drive[] = {'?',':',0};
+	DWORD dwDrives = 0;
+	DWORD i;
+	UINT nType;
+	DWORD CustomTextLength = 0;
+	DWORD LengthNeeded = 0;
+	LPTSTR Buffer;
+
+	TRACE("Include removable devices: %s\n", IncludeRemovableDevices ? "yes" : "no");
+	TRACE("Include custom path      : %s\n", IncludeCustomPath ? "yes" : "no");
+
+	/* Calculate length needed to store the search paths */
+	if (IncludeRemovableDevices)
+	{
+		dwDrives = GetLogicalDrives();
+		for (drive[0] = 'A', i = 1; drive[0] <= 'Z'; drive[0]++, i <<= 1)
+		{
+			if (dwDrives & i)
+			{
+				nType = GetDriveType(drive);
+				if (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM)
+				{
+					LengthNeeded += 3;
+				}
+			}
+		}
+	}
+	if (IncludeCustomPath)
+	{
+		CustomTextLength = 1 + ComboBox_GetTextLength(hwndCombo);
+		LengthNeeded += CustomTextLength;
+	}
+
+	/* Allocate space for search paths */
+	HeapFree(GetProcessHeap(), 0, DevInstData->CustomSearchPath);
+	DevInstData->CustomSearchPath = Buffer = HeapAlloc(
+		GetProcessHeap(),
+		0,
+		(LengthNeeded + 1) * sizeof(TCHAR));
+	if (!Buffer)
+	{
+		TRACE("HeapAlloc() failed\n");
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
+	}
+
+	/* Fill search paths */
+	if (IncludeRemovableDevices)
+	{
+		for (drive[0] = 'A', i = 1; drive[0] <= 'Z'; drive[0]++, i <<= 1)
+		{
+			if (dwDrives & i)
+			{
+				nType = GetDriveType(drive);
+				if (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM)
+				{
+					Buffer += 1 + _stprintf(Buffer, drive);
+				}
+			}
+		}
+	}
+	if (IncludeCustomPath)
+	{
+		Buffer += 1 + ComboBox_GetText(hwndCombo, Buffer, CustomTextLength);
+	}
+	*Buffer = _T('\0');
+
+	return TRUE;
 }
 
 BOOL
@@ -623,8 +744,13 @@ DevInstallW(
 
 	TRACE("Installing %S (%S)\n", DevInstData->buffer, InstanceId);
 
-	/* Search driver in default location */
-	if (SearchDriver(DevInstData, NULL, NULL))
+	/* Search driver in default location and removable devices */
+	if (!PrepareFoldersToScan(DevInstData, TRUE, FALSE, NULL))
+	{
+		TRACE("PrepareFoldersToScan() failed with error 0x%lx\n", GetLastError());
+		goto cleanup;
+	}
+	if (ScanFoldersForDriver(DevInstData))
 	{
 		/* Driver found ; install it */
 		retval = InstallCurrentDriver(DevInstData);

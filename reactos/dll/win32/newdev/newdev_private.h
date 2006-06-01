@@ -36,16 +36,17 @@ typedef struct _DEVINSTDATA
 #define WM_INSTALL_FINISHED (WM_USER + 11)
 
 /* newdev.c */
-BOOL
-SearchDriver(
-	IN PDEVINSTDATA DevInstData,
-	IN LPCTSTR Directory OPTIONAL,
-	IN LPCTSTR InfFile OPTIONAL);
 
 BOOL
-SearchDriverRecursive(
+ScanFoldersForDriver(
+	IN PDEVINSTDATA DevInstData);
+
+BOOL
+PrepareFoldersToScan(
 	IN PDEVINSTDATA DevInstData,
-	IN LPCTSTR Path);
+	IN BOOL IncludeRemovableDevices,
+	IN BOOL IncludeCustomPath,
+	IN HWND hwndCombo OPTIONAL);
 
 BOOL
 InstallCurrentDriver(
