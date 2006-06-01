@@ -277,8 +277,8 @@ CreateListView(PMAIN_WND_INFO Info)
         return FALSE;
     }
 
-    ListView_SetExtendedListViewStyle(Info->hListView,
-                                      LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);/*LVS_EX_GRIDLINES |*/
+    (void)ListView_SetExtendedListViewStyle(Info->hListView,
+                                            LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);/*LVS_EX_GRIDLINES |*/
 
     lvc.mask = LVCF_TEXT | LVCF_SUBITEM | LVCF_WIDTH  | LVCF_FMT;
     lvc.fmt  = LVCFMT_LEFT;
@@ -293,9 +293,9 @@ CreateListView(PMAIN_WND_INFO Info)
                szTemp,
                sizeof(szTemp) / sizeof(TCHAR));
     lvc.pszText  = szTemp;
-    ListView_InsertColumn(Info->hListView,
-                          0,
-                          &lvc);
+    (void)ListView_InsertColumn(Info->hListView,
+                                0,
+                                &lvc);
 
     /* description */
     lvc.iSubItem = 1;
@@ -305,9 +305,9 @@ CreateListView(PMAIN_WND_INFO Info)
                szTemp,
                sizeof(szTemp) / sizeof(TCHAR));
     lvc.pszText  = szTemp;
-    ListView_InsertColumn(Info->hListView,
-                          1,
-                          &lvc);
+    (void)ListView_InsertColumn(Info->hListView,
+                                1,
+                                &lvc);
 
     /* status */
     lvc.iSubItem = 2;
@@ -317,9 +317,9 @@ CreateListView(PMAIN_WND_INFO Info)
                szTemp,
                sizeof(szTemp) / sizeof(TCHAR));
     lvc.pszText  = szTemp;
-    ListView_InsertColumn(Info->hListView,
-                          2,
-                          &lvc);
+    (void)ListView_InsertColumn(Info->hListView,
+                                2,
+                                &lvc);
 
     /* startup type */
     lvc.iSubItem = 3;
@@ -329,9 +329,9 @@ CreateListView(PMAIN_WND_INFO Info)
                szTemp,
                sizeof(szTemp) / sizeof(TCHAR));
     lvc.pszText  = szTemp;
-    ListView_InsertColumn(Info->hListView,
-                          3,
-                          &lvc);
+    (void)ListView_InsertColumn(Info->hListView,
+                                3,
+                                &lvc);
 
     /* logon as */
     lvc.iSubItem = 4;
@@ -341,9 +341,9 @@ CreateListView(PMAIN_WND_INFO Info)
                szTemp,
                sizeof(szTemp) / sizeof(TCHAR));
     lvc.pszText  = szTemp;
-    ListView_InsertColumn(Info->hListView,
-                          4,
-                          &lvc);
+    (void)ListView_InsertColumn(Info->hListView,
+                                4,
+                                &lvc);
 
     return TRUE;
 }
@@ -660,9 +660,9 @@ MainWndProc(HWND hwnd,
 			    {
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
 
-                    ListView_SortItems(Info->hListView,
-                                       CompareFunc,
-                                       pnmv->iSubItem);
+                    (void)ListView_SortItems(Info->hListView,
+                                             CompareFunc,
+                                             pnmv->iSubItem);
                     bSortAscending = !bSortAscending;
 			    }
                 break;

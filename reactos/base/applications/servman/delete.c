@@ -122,8 +122,8 @@ DeleteDialogProc(HWND hDlg,
         {
             case IDOK:
                 if (DoDeleteService(Info, hDlg))
-                    ListView_DeleteItem(Info->hListView,
-                                        Info->SelectedItem);
+                    (void)ListView_DeleteItem(Info->hListView,
+                                              Info->SelectedItem);
 
                 DestroyIcon(hIcon);
                 EndDialog(hDlg,

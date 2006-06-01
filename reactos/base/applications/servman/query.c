@@ -251,12 +251,12 @@ InitListViewImage(PMAIN_WND_INFO Info)
                       hLgIconItem);
 
     /* assign the image to the list view */
-    ListView_SetImageList(Info->hListView,
-                          hSmall,
-                          LVSIL_SMALL);
-    ListView_SetImageList(Info->hListView,
-                          hLarge,
-                          LVSIL_NORMAL);
+    (void)ListView_SetImageList(Info->hListView,
+                                hSmall,
+                                LVSIL_SMALL);
+    (void)ListView_SetImageList(Info->hListView,
+                                hLarge,
+                                LVSIL_NORMAL);
 
 }
 
@@ -272,7 +272,7 @@ RefreshServiceList(PMAIN_WND_INFO Info)
     DWORD Index;
     LPCTSTR Path = _T("System\\CurrentControlSet\\Services\\%s");
 
-    ListView_DeleteAllItems(Info->hListView);
+    (void)ListView_DeleteAllItems(Info->hListView);
 
     InitListViewImage(Info);
 
