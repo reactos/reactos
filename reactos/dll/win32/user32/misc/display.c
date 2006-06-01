@@ -115,8 +115,6 @@ EnumDisplayDevicesW(
     lpDisplayDevice,
     dwFlags );
 
-  //RtlFreeUnicodeString ( &Device );
-
   return rc;
 }
 
@@ -504,9 +502,6 @@ ChangeDisplaySettingsExW(
     pDeviceName = NULL;
 
   rc = NtUserChangeDisplaySettings ( pDeviceName, lpDevMode, hwnd, dwflags, lParam );
-
-  if (lpszDeviceName != NULL)
-    RtlFreeUnicodeString ( pDeviceName );
 
   return rc;
 }
