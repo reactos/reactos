@@ -196,6 +196,7 @@ BEGIN
     IDS_CMT_NOTEPAD     "Launch Text Editor"
     IDS_CMT_REGEDIT     "Launch Registry Editor"
     IDS_CMT_WORDPAD     "Launch Document Editor"
+    IDS_CMT_SCREENSHOT  "Take screenshot"
 END
 
 STRINGTABLE
@@ -207,14 +208,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		"ReactOS Setup"
+    IDS_REACTOS_SETUP		    "ReactOS Setup"
     IDS_UNKNOWN_ERROR           "Unknown error"
-    IDS_REGISTERING_COMPONENTS	"Registering components..."
-    IDS_LOADLIBRARY_FAILED	"LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED	"GetProcAddr failed: "
+    IDS_REGISTERING_COMPONENTS  "Registering components..."
+    IDS_LOADLIBRARY_FAILED	    "LoadLibrary failed: "
+    IDS_GETPROCADDR_FAILED	    "GetProcAddr failed: "
     IDS_REGSVR_FAILED           "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED	"DllInstall failed: "
-    IDS_TIMEOUT			"Timeout during registration"
+    IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
+    IDS_TIMEOUT			        "Timeout during registration"
     IDS_REASON_UNKNOWN          ""
 END
 

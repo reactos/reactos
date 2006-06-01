@@ -373,8 +373,6 @@ InstallReactOS (HINSTANCE hInstance)
 {
   TCHAR sAccessories[256];
   TCHAR sGames[256];
-  TCHAR Sys[MAX_PATH];
-  TCHAR GamePath[MAX_PATH];
     
 
 # if 0
@@ -421,29 +419,23 @@ InstallReactOS (HINSTANCE hInstance)
   CreateShortcut(CSIDL_ADMINTOOLS, NULL, _T("Services.lnk"), _T("servman.exe"), IDS_CMT_SERVMAN);
 
   /* create and fill Accessories subfolder */
-  if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
+  if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) 
+  {
 	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Calculator.lnk"), _T("calc.exe"), IDS_CMT_CALC);
 	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("ReactOS Explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("WordPad.lnk"), _T("wordpad.exe"), IDS_CMT_WORDPAD);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("SnapShot.lnk"), _T("screenshot.exe"), IDS_CMT_SCREENSHOT);
   }
 
 
   /* create Games subfolder and fill if the exe is available */
-  if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, sGames, 256)) {
-	if(GetSystemDirectory(Sys, MAX_PATH)) {
-	  /* copy system dir */	
-	  _tcscpy(GamePath, Sys);
-	  /* concatonate full file path and check for existance */
-   	  if((_taccess(_tcscat(GamePath, _T("\\sol.exe")), 0 )) != -1)
-        CreateShortcut(CSIDL_PROGRAMS, sGames, _T("Solitaire.lnk"), _T("sol.exe"), IDS_CMT_SOLITAIRE);
-      
-	  _tcscpy(GamePath, Sys);
-      if((_taccess(_tcscat(GamePath, _T("\\winemine.exe")), 0 )) != -1)
-        CreateShortcut(CSIDL_PROGRAMS, sGames, _T("WineMine.lnk"), _T("winemine.exe"), IDS_CMT_WINEMINE);
-	}
+  if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, sGames, 256)) 
+  {
+    CreateShortcut(CSIDL_PROGRAMS, sGames, _T("Solitaire.lnk"), _T("sol.exe"), IDS_CMT_SOLITAIRE);
+    CreateShortcut(CSIDL_PROGRAMS, sGames, _T("WineMine.lnk"), _T("winemine.exe"), IDS_CMT_WINEMINE);
   }
 
   CoUninitialize();
