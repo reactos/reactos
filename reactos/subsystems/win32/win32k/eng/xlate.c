@@ -275,10 +275,15 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
     */
 
 end:
+  if (PaletteDest != NULL)
+     if (PaletteDest != PaletteSource)
+         if (DestPalGDI != NULL)
+              PALETTE_UnlockPalette(DestPalGDI);
+     
+      
    if (PaletteSource != NULL)
       PALETTE_UnlockPalette(SourcePalGDI);
-   if (PaletteDest != NULL && PaletteDest != PaletteSource)
-      PALETTE_UnlockPalette(DestPalGDI);
+  
    return XlateObj;
 }
 
