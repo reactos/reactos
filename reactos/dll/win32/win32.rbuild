@@ -40,6 +40,9 @@
 <directory name="crypt32">
 	<xi:include href="crypt32/crypt32.rbuild" />
 </directory>
+<directory name="cryptdll">
+	<xi:include href="cryptdll/cryptdll.rbuild" />
+</directory>
 <directory name="dbghelp">
 	<xi:include href="dbghelp/dbghelp.rbuild" />
 </directory>

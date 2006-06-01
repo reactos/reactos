@@ -84,6 +84,7 @@
   <property name="BASEADDRESS_WAVEMAP" value="0x76610000" />
   <property name="BASEADDRESS_MPR" value="0x76620000" />
   <property name="BASEADDRESS_SETUPAPI" value="0x76660000" />
+  <property name="BASEADDRESS_CRYPTDLL" value="0x76740000" />
   <property name="BASEADDRESS_SHFOLDER" value="0x76780000" />
   <property name="BASEADDRESS_NTMARTA" value="0x768A0000" />
   <property name="BASEADDRESS_GDIPLUS" value="0x76a00000" />
