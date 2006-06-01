@@ -332,8 +332,8 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
     {
         Context->SelectedLine = LineID;
         
-        ListView_DeleteAllItems(GetDlgItem(Context->hwndDlg,
-                                  IDC_CONTROLS));
+        (void)ListView_DeleteAllItems(GetDlgItem(Context->hwndDlg,
+                                      IDC_CONTROLS));
         
         Context->tmp = 0;
         SndMixerEnumConnections(Context->Mixer,
@@ -497,8 +497,8 @@ DlgPreferencesProc(HWND hwndDlg,
             /* initialize the list view control */
             hwndControls = GetDlgItem(hwndDlg,
                                       IDC_CONTROLS);
-            ListView_SetExtendedListViewStyle(hwndControls,
-                                              LVS_EX_CHECKBOXES);
+            (void)ListView_SetExtendedListViewStyle(hwndControls,
+                                                    LVS_EX_CHECKBOXES);
 
             GetClientRect(hwndControls,
                           &rcClient);
