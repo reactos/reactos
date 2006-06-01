@@ -305,14 +305,19 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     TCPDisposeInterfaceData( IF->TCPContext );
     IF->TCPContext = NULL;
 
+    TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
+    TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
+
     AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
+
     RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
 
     /* Remove permanent NCE, but first we have to find it */
     NCE = NBLocateNeighbor(&IF->Unicast);
     if (NCE)
 	NBRemoveNeighbor(NCE);
-
+    else
+	TI_DbgPrint(DEBUG_IP, ("Could not delete IF route (0x%X)\n", IF));
 }
 
 VOID IPUnregisterInterface(

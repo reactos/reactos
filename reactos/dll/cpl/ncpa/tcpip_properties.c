@@ -71,6 +71,7 @@ ManualDNS(HWND Dlg, BOOL Enabled) {
     if (! Enabled) {
         SendDlgItemMessage(Dlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
         SendDlgItemMessage(Dlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
+	
     }
 }
 
@@ -132,10 +133,13 @@ static BOOL
 ValidateAndStore(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData)
 {
     DWORD IpAddress;
+    MIB_IPFORWARDROW RowToAdd = { 0 }, RowToRem = { 0 };
 
     DlgData->DhcpEnabled = (BST_CHECKED ==
                             IsDlgButtonChecked(Dlg, IDC_USEDHCP));
     if (! DlgData->DhcpEnabled) {
+	DhcpReleaseIpAddressLease( DlgData->AdapterIndex );
+
         if (4 != SendMessageW(GetDlgItem(Dlg, IDC_IPADDR), IPM_GETADDRESS,
                               0, (LPARAM) &IpAddress)) {
             ShowError(Dlg, IDS_ENTER_VALID_IPADDRESS);
@@ -156,11 +160,26 @@ ValidateAndStore(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData)
         } else {
             DlgData->Gateway = htonl(IpAddress);
         }
+	DhcpStaticRefreshParams
+	    ( DlgData->AdapterIndex, DlgData->IpAddress, DlgData->SubnetMask );
+
+	RowToRem.dwForwardMask = 0;
+	RowToRem.dwForwardMetric1 = 1;
+	RowToRem.dwForwardNextHop = DlgData->OldGateway;
+
+	DeleteIpForwardEntry( &RowToRem );
+
+	RowToAdd.dwForwardMask = 0;
+	RowToAdd.dwForwardMetric1 = 1;
+	RowToAdd.dwForwardNextHop = DlgData->Gateway;
+
+	CreateIpForwardEntry( &RowToAdd );
         ASSERT(BST_CHECKED == IsDlgButtonChecked(Dlg, IDC_FIXEDDNS));
     } else {
         DlgData->IpAddress = INADDR_NONE;
         DlgData->SubnetMask = INADDR_NONE;
         DlgData->Gateway = INADDR_NONE;
+	DhcpLeaseIpAddress( DlgData->AdapterIndex );
     }
 
     if (BST_CHECKED == IsDlgButtonChecked(Dlg, IDC_FIXEDDNS)) {
@@ -251,7 +270,8 @@ InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
             goto cleanup;
     }
 
-    MessageBox(NULL, TEXT("You need to reboot before the new parameters take effect."), TEXT("Reboot required"), MB_OK | MB_ICONWARNING);
+    // arty ... Not needed anymore ... We update the address live now
+    //MessageBox(NULL, TEXT("You need to reboot before the new parameters take effect."), TEXT("Reboot required"), MB_OK | MB_ICONWARNING);
     ret = TRUE;
 
 cleanup:

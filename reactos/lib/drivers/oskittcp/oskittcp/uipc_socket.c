@@ -827,6 +827,19 @@ soshutdown(so, how)
 	register struct socket *so;
 	register int how;
 {
+    if (so == NULL)
+    {
+     	register struct protosw *pr = NULL;
+
+	how++;
+	if (how & FREAD)
+		sorflush(so);
+	if (how & FWRITE)
+		return ((*pr->pr_usrreq)(so, PRU_SHUTDOWN,
+		    (struct mbuf *)0, (struct mbuf *)0, (struct mbuf *)0));
+	return (0);
+    }
+    
 	register struct protosw *pr = so->so_proto;
 
 	how++;

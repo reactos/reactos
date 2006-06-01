@@ -1522,6 +1522,9 @@ NTSTATUS DispTdiSetIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
             IF->Unicast.Address.IPv4Address = IpAddrChange->Address;
             IF->Netmask.Type = IP_ADDRESS_V4;
             IF->Netmask.Address.IPv4Address = IpAddrChange->Netmask;
+	    IF->Broadcast.Address.IPv4Address =
+		IF->Unicast.Address.IPv4Address |
+		~IF->Netmask.Address.IPv4Address;
 
             TI_DbgPrint(MID_TRACE,("New Unicast Address: %x\n",
                                    IF->Unicast.Address.IPv4Address));
@@ -1548,6 +1551,7 @@ NTSTATUS DispTdiDeleteIPAddress( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 
     ForEachInterface(IF) {
         if( IF->Index == *NteIndex ) {
+            IPRemoveInterfaceRoute( IF );
             IF->Unicast.Type = IP_ADDRESS_V4;
             IF->Unicast.Address.IPv4Address = 0;
             IF->Netmask.Type = IP_ADDRESS_V4;
