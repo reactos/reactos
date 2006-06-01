@@ -16,12 +16,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "setupapi_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
+
+/* Unicode constants */
+static const WCHAR BackSlash[] = {'\\',0};
+static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
 
 /* info passed to callback functions dealing with files */
 struct files_callback_info
@@ -121,7 +125,7 @@ static BOOL copy_files_callback( HINF hinf, PCWSTR field, void *arg )
     struct files_callback_info *info = arg;
 
     if (field[0] == '@')  /* special case: copy single file */
-        SetupQueueDefaultCopyW( info->queue, info->layout, info->src_root, NULL, field, info->copy_flags );
+        SetupQueueDefaultCopyW( info->queue, info->layout, info->src_root, NULL, &field[1], info->copy_flags );
     else
         SetupQueueCopySectionW( info->queue, info->src_root, info->layout, hinf, field, info->copy_flags );
     return TRUE;
@@ -453,6 +457,9 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
     HMODULE module;
     HRESULT res;
     SP_REGISTER_CONTROL_STATUSW status;
+#ifdef __WINESRC__
+    IMAGE_NT_HEADERS *nt;
+#endif
 
     status.cbSize = sizeof(status);
     status.FileName = path;
@@ -481,6 +488,47 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
         status.Win32Error = GetLastError();
         goto done;
     }
+
+#ifdef __WINESRC__
+    if ((nt = RtlImageNtHeader( module )) && !(nt->FileHeader.Characteristics & IMAGE_FILE_DLL))
+    {
+        /* file is an executable, not a dll */
+        STARTUPINFOW startup;
+        PROCESS_INFORMATION info;
+        WCHAR *cmd_line;
+        BOOL res;
+        static const WCHAR format[] = {'"','%','s','"',' ','%','s',0};
+        static const WCHAR default_args[] = {'/','R','e','g','S','e','r','v','e','r',0};
+
+        FreeLibrary( module );
+        module = NULL;
+        if (!args) args = default_args;
+        cmd_line = HeapAlloc( GetProcessHeap(), 0, (strlenW(path) + strlenW(args) + 4) * sizeof(WCHAR) );
+        sprintfW( cmd_line, format, path, args );
+        memset( &startup, 0, sizeof(startup) );
+        startup.cb = sizeof(startup);
+        TRACE( "executing %s\n", debugstr_w(cmd_line) );
+        res = CreateProcessW( NULL, cmd_line, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info );
+        HeapFree( GetProcessHeap(), 0, cmd_line );
+        if (!res)
+        {
+            status.FailureCode = SPREG_LOADLIBRARY;
+            status.Win32Error = GetLastError();
+            goto done;
+        }
+        CloseHandle( info.hThread );
+
+        if (WaitForSingleObject( info.hProcess, timeout*1000 ) == WAIT_TIMEOUT)
+        {
+            /* timed out, kill the process */
+            TerminateProcess( info.hProcess, 1 );
+            status.FailureCode = SPREG_TIMEOUT;
+            status.Win32Error = ERROR_TIMEOUT;
+        }
+        CloseHandle( info.hProcess );
+        goto done;
+    }
+#endif // __WINESRC__
 
     if (flags & FLG_REGSVR_DLLREGISTER)
     {
@@ -588,6 +636,50 @@ static BOOL register_dlls_callback( HINF hinf, PCWSTR field, void *arg )
     }
     return ret;
 }
+
+#ifdef __WINESRC__
+/***********************************************************************
+ *            fake_dlls_callback
+ *
+ * Called once for each WineFakeDlls entry in a given section.
+ */
+static BOOL fake_dlls_callback( HINF hinf, PCWSTR field, void *arg )
+{
+    INFCONTEXT context;
+    BOOL ret = TRUE;
+    BOOL ok = SetupFindFirstLineW( hinf, field, NULL, &context );
+
+    for (; ok; ok = SetupFindNextLine( &context, &context ))
+    {
+        WCHAR *path, *p;
+        WCHAR buffer[MAX_INF_STRING_LENGTH];
+
+        /* get directory */
+        if (!(path = PARSER_get_dest_dir( &context ))) continue;
+
+        /* get dll name */
+        if (!SetupGetStringFieldW( &context, 3, buffer, sizeof(buffer)/sizeof(WCHAR), NULL ))
+            goto done;
+        if (!(p = HeapReAlloc( GetProcessHeap(), 0, path,
+                               (strlenW(path) + strlenW(buffer) + 2) * sizeof(WCHAR) ))) goto done;
+        path = p;
+        p += strlenW(p);
+        if (p == path || p[-1] != '\\') *p++ = '\\';
+        strcpyW( p, buffer );
+
+        /* get source dll */
+        if (SetupGetStringFieldW( &context, 4, buffer, sizeof(buffer)/sizeof(WCHAR), NULL ))
+            p = buffer;  /* otherwise use target base name as default source */
+
+        create_fake_dll( path, p );  /* ignore errors */
+
+    done:
+        HeapFree( GetProcessHeap(), 0, path );
+        if (!ret) break;
+    }
+    return ret;
+}
+#endif // __WINESRC__
 
 /***********************************************************************
  *            update_ini_callback
@@ -825,11 +917,11 @@ static BOOL needs_callback( HINF hinf, PCWSTR field, void *arg )
     switch (info->type)
     {
         case 0:
-            return SetupInstallFromInfSectionW(info->owner, hinf, field, info->flags,
+            return SetupInstallFromInfSectionW(info->owner, *(HINF*)hinf, field, info->flags,
                info->key_root, info->src_root, info->copy_flags, info->callback,
                info->context, info->devinfo, info->devinfo_data);
         case 1:
-            return SetupInstallServicesFromInfSectionExW(hinf, field, info->flags,
+            return SetupInstallServicesFromInfSectionExW(*(HINF*)hinf, field, info->flags,
                 info->devinfo, info->devinfo_data, info->reserved1, info->reserved2);
         default:
             ERR("Unknown info type %ld\n", info->type);
@@ -920,6 +1012,11 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
 
         if (!iterate_section_fields( hinf, section, RegisterDlls, register_dlls_callback, &info ))
             return FALSE;
+
+#ifdef __WINESRC__
+        if (!iterate_section_fields( hinf, section, WineFakeDlls, fake_dlls_callback, NULL ))
+            return FALSE;
+#endif // __WINESRC__
     }
     if (flags & SPINST_UNREGSVR)
     {
@@ -1564,6 +1661,160 @@ cleanup:
     MyFree(SourceInfFileNameW);
     MyFree(OEMSourceMediaLocationW);
     MyFree(DestinationInfFileNameW);
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupCopyOEMInfW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupCopyOEMInfW(
+        IN PCWSTR SourceInfFileName,
+        IN PCWSTR OEMSourceMediaLocation,
+        IN DWORD OEMSourceMediaType,
+        IN DWORD CopyStyle,
+        OUT PWSTR DestinationInfFileName OPTIONAL,
+        IN DWORD DestinationInfFileNameSize,
+        OUT PDWORD RequiredSize OPTIONAL,
+        OUT PWSTR* DestinationInfFileNameComponent OPTIONAL)
+{
+    BOOL ret = FALSE;
+
+    TRACE("%s %s 0x%lx 0x%lx %p 0%lu %p %p\n",
+        debugstr_w(SourceInfFileName), debugstr_w(OEMSourceMediaLocation), OEMSourceMediaType,
+        CopyStyle, DestinationInfFileName, DestinationInfFileNameSize,
+        RequiredSize, DestinationInfFileNameComponent);
+
+    if (!SourceInfFileName)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (OEMSourceMediaType != SPOST_NONE && OEMSourceMediaType != SPOST_PATH && OEMSourceMediaType != SPOST_URL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (CopyStyle & ~(SP_COPY_DELETESOURCE | SP_COPY_REPLACEONLY | SP_COPY_NOOVERWRITE | SP_COPY_OEMINF_CATALOG_ONLY))
+    {
+        TRACE("Unknown flags: 0x%08lx\n", CopyStyle & ~(SP_COPY_DELETESOURCE | SP_COPY_REPLACEONLY | SP_COPY_NOOVERWRITE | SP_COPY_OEMINF_CATALOG_ONLY));
+        SetLastError(ERROR_INVALID_FLAGS);
+    }
+    else if (!DestinationInfFileName && DestinationInfFileNameSize > 0)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (CopyStyle & SP_COPY_OEMINF_CATALOG_ONLY)
+    {
+        FIXME("CopyStyle 0x%lx not supported\n", SP_COPY_OEMINF_CATALOG_ONLY);
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+    else
+    {
+        HANDLE hSearch = INVALID_HANDLE_VALUE;
+        WIN32_FIND_DATAW FindFileData;
+        BOOL AlreadyExists;
+        DWORD NextFreeNumber = 0;
+        SIZE_T len;
+        LPWSTR pFullFileName = NULL;
+        LPWSTR pFileName; /* Pointer into pFullFileName buffer */
+
+        if (OEMSourceMediaType == SPOST_PATH || OEMSourceMediaType == SPOST_URL)
+            FIXME("OEMSourceMediaType 0x%lx ignored\n", OEMSourceMediaType);
+
+        /* Search if the specified .inf file already exists in %WINDIR%\Inf */
+        AlreadyExists = FALSE; /* FIXME */
+
+        if (!AlreadyExists && CopyStyle & SP_COPY_REPLACEONLY)
+        {
+            /* FIXME: set DestinationInfFileName, RequiredSize, DestinationInfFileNameComponent */
+            SetLastError(ERROR_FILE_NOT_FOUND);
+            goto cleanup;
+        }
+        else if (AlreadyExists && (CopyStyle & SP_COPY_NOOVERWRITE))
+        {
+            //SetLastError(ERROR_FILE_EXISTS);
+            /* FIXME: set return fields */
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+            FIXME("File already exists. Need to return its name!\n");
+            goto cleanup;
+        }
+
+        /* Search the number to give to OEM??.INF */
+        len = MAX_PATH + 1 + strlenW(InfDirectory) + 13;
+        pFullFileName = MyMalloc(len * sizeof(WCHAR));
+        if (!pFullFileName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        len = GetSystemWindowsDirectoryW(pFullFileName, MAX_PATH);
+        if (len == 0 || len > MAX_PATH)
+            goto cleanup;
+        if (pFullFileName[strlenW(pFullFileName) - 1] != '\\')
+            strcatW(pFullFileName, BackSlash);
+        strcatW(pFullFileName, InfDirectory);
+        pFileName = &pFullFileName[strlenW(pFullFileName)];
+        sprintfW(pFileName, L"oem*.inf", NextFreeNumber);
+        hSearch = FindFirstFileW(pFullFileName, &FindFileData);
+        if (hSearch == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() != ERROR_FILE_NOT_FOUND)
+                goto cleanup;
+        }
+        else
+        {
+            do
+            {
+                DWORD CurrentNumber;
+                if (swscanf(FindFileData.cFileName, L"oem%lu.inf", &CurrentNumber) == 1
+                    && CurrentNumber <= 99999)
+                {
+                    NextFreeNumber = CurrentNumber + 1;
+                }
+            } while (FindNextFile(hSearch, &FindFileData));
+        }
+
+        if (NextFreeNumber > 99999)
+        {
+            ERR("Too much custom .inf files\n");
+            SetLastError(ERROR_GEN_FAILURE);
+            goto cleanup;
+        }
+
+        /* Create the full path: %WINDIR%\Inf\OEM{XXXXX}.inf */
+        sprintfW(pFileName, L"oem%lu.inf", NextFreeNumber);
+        TRACE("Next available file is %s\n", debugstr_w(pFileName));
+
+        if (RequiredSize)
+            *RequiredSize = len;
+        if (DestinationInfFileName)
+        {
+            if (DestinationInfFileNameSize < len)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                goto cleanup;
+            }
+            strcpyW(DestinationInfFileName, pFullFileName);
+            if (DestinationInfFileNameComponent)
+                *DestinationInfFileNameComponent = &DestinationInfFileName[pFileName - pFullFileName];
+        }
+
+        if (!CopyFileW(SourceInfFileName, pFullFileName, TRUE))
+        {
+            TRACE("CopyFileW() failed with error 0x%lx\n", GetLastError());
+            goto cleanup;
+        }
+
+        if (CopyStyle & SP_COPY_DELETESOURCE)
+        {
+            if (!DeleteFileW(SourceInfFileName))
+            {
+                TRACE("DeleteFileW() failed with error 0x%lx\n", GetLastError());
+                goto cleanup;
+            }
+        }
+
+        ret = TRUE;
+
+cleanup:
+        if (hSearch != INVALID_HANDLE_VALUE)
+            FindClose(hSearch);
+        MyFree(pFullFileName);
+    }
 
     TRACE("Returning %d\n", ret);
     return ret;

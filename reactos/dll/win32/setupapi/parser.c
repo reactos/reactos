@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "setupapi_private.h"
@@ -1302,12 +1302,15 @@ void WINAPI SetupCloseInfFile( HINF hinf )
     struct inf_file *file = hinf;
     unsigned int i;
 
-    for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
-    HeapFree( GetProcessHeap(), 0, file->filename );
-    HeapFree( GetProcessHeap(), 0, file->sections );
-    HeapFree( GetProcessHeap(), 0, file->fields );
-    HeapFree( GetProcessHeap(), 0, file->strings );
-    HeapFree( GetProcessHeap(), 0, file );
+    if (file != NULL)
+    {
+        for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
+        HeapFree( GetProcessHeap(), 0, file->filename );
+        HeapFree( GetProcessHeap(), 0, file->sections );
+        HeapFree( GetProcessHeap(), 0, file->fields );
+        HeapFree( GetProcessHeap(), 0, file->strings );
+        HeapFree( GetProcessHeap(), 0, file );
+    }
 }
 
 
@@ -1338,6 +1341,9 @@ LONG WINAPI SetupGetLineCountW( HINF hinf, PCWSTR section )
     struct inf_file *file = hinf;
     int section_index;
     LONG ret = -1;
+
+    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
+        return ERROR_INVALID_PARAMETER;
 
     for (file = hinf; file; file = file->next)
     {
@@ -1377,6 +1383,12 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
 {
     struct inf_file *file = hinf;
     int section_index;
+
+    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
@@ -1437,6 +1449,12 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
 {
     struct inf_file *file;
     int section_index;
+
+    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
@@ -2001,7 +2019,7 @@ SetupGetInfFileListW(
         /* "DirectoryPath\" form */
         len = strlenW(DirectoryPath) + 1 + 1;
     else
-        /* "%WINDIR%\Inf\" form */
+        /* "%SYSTEMROOT%\Inf\" form */
         len = MAX_PATH + 1 + strlenW(InfDirectory) + 1;
     len += MAX_PATH; /* To contain file name or "*.inf" string */
     pFullFileName = MyMalloc(len * sizeof(WCHAR));
@@ -2127,10 +2145,8 @@ SetupGetInfFileListA(
     }
 
 Cleanup:
-    if (DirectoryPathW != NULL)
-        MyFree(DirectoryPathW);
-    if (ReturnBufferW != NULL)
-        MyFree(ReturnBufferW);
+    MyFree(DirectoryPathW);
+    MyFree(ReturnBufferW);
 
     return ret;
 }
@@ -2204,10 +2220,27 @@ BOOL WINAPI SetupDiGetINFClassA(
     }
 
 Cleanup:
-    if (InfNameW != NULL)
-        MyFree(InfNameW);
-    if (ClassNameW != NULL)
-        MyFree(ClassNameW);
+    MyFree(InfNameW);
+    MyFree(ClassNameW);
 
     return ret;
+}
+
+BOOL EnumerateSectionsStartingWith(
+    IN HINF hInf,
+    IN LPCWSTR pStr,
+    IN FIND_CALLBACK Callback,
+    IN PVOID Context)
+{
+    struct inf_file *file = (struct inf_file *)hInf;
+    size_t len = strlenW(pStr);
+    unsigned int i;
+
+    for (i = 0; i < file->nb_sections; i++)
+        if (strncmpiW(pStr, file->sections[i]->name, len) == 0)
+        {
+            if (!Callback(file->sections[i]->name, Context))
+                return FALSE;
+        }
+    return TRUE;
 }

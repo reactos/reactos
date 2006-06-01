@@ -14,14 +14,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __SETUPAPI_PRIVATE_H
 #define __SETUPAPI_PRIVATE_H
 
 #include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <share.h>
 #include <wchar.h>
 
@@ -72,8 +74,14 @@ struct InfFileDetails
     HINF hInf;
     LONG References;
 
-    /* May contain no directory if the file is already in %SYSTEMROOT%\Inf */
-    WCHAR FullInfFileName[ANYSIZE_ARRAY];
+    /* Contains the directory name of the .inf file.
+     * Points into szData at then end of the structure */
+    PCWSTR DirectoryName;
+    /* Contains the .inf file name (without directory name).
+     * Points into szData at then end of the structure */
+    PCWSTR FileName;
+
+    WCHAR szData[ANYSIZE_ARRAY];
 };
 
 struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfoElement.DriverListHead */
@@ -222,5 +230,8 @@ extern OSVERSIONINFOW OsVersionInfo;
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
 
 BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value);
+
+typedef BOOL (*FIND_CALLBACK)(LPCWSTR SectionName, PVOID Context);
+BOOL EnumerateSectionsStartingWith(HINF hInf, LPCWSTR pStr, FIND_CALLBACK Callback, PVOID Context);
 
 #endif /* __SETUPAPI_PRIVATE_H */
