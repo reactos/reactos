@@ -13,7 +13,6 @@ static const TCHAR szMainWndClass[] = TEXT("ServManWndClass");
 
 BOOL bSortAscending = TRUE;
 
-extern HWND hwndGenDlg;
 
 /* Toolbar buttons */
 TBBUTTON tbb [NUM_BUTTONS] =
@@ -43,19 +42,24 @@ TBBUTTON tbb [NUM_BUTTONS] =
 };
 
 
-VOID SetView(HWND hListView, DWORD View)
+static VOID
+SetListViewStyle(HWND hListView,
+                 DWORD View)
 {
     DWORD Style = GetWindowLong(hListView, GWL_STYLE);
 
     if ((Style & LVS_TYPEMASK) != View)
-        SetWindowLong(hListView, GWL_STYLE, (Style & ~LVS_TYPEMASK) | View);
+    {
+        SetWindowLong(hListView,
+                      GWL_STYLE,
+                      (Style & ~LVS_TYPEMASK) | View);
+    }
 }
 
 
 VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 {
     HMENU hMainMenu;
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     DWORD Flags, State;
 
     /* get handle to menu */
@@ -85,11 +89,8 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 
     if (Info->SelectedItem != NO_ITEM_SELECTED)
     {
-        /* get pointer to selected service */
-        Service = GetSelectedService(Info);
-
-        Flags = Service->ServiceStatusProcess.dwControlsAccepted;
-        State = Service->ServiceStatusProcess.dwCurrentState;
+        Flags = Info->CurrentService->ServiceStatusProcess.dwControlsAccepted;
+        State = Info->CurrentService->ServiceStatusProcess.dwCurrentState;
 
         if (State == SERVICE_STOPPED)
         {
@@ -135,7 +136,8 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 }
 
 
-INT CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+static INT CALLBACK
+CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
     ENUM_SERVICE_STATUS_PROCESS *Param1;
     ENUM_SERVICE_STATUS_PROCESS *Param2;
@@ -464,11 +466,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case ID_DELETE:
         {
-            ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-
-            Service = GetSelectedService(Info);
-
-            if (Service->ServiceStatusProcess.dwCurrentState != SERVICE_RUNNING)
+            if (Info->CurrentService->ServiceStatusProcess.dwCurrentState != SERVICE_RUNNING)
             {
                 DialogBoxParam(hInstance,
                                MAKEINTRESOURCE(IDD_DLG_DELETE),
@@ -547,23 +545,23 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case ID_VIEW_LARGE:
-            SetView(Info->hListView,
-                    LVS_ICON);
+            SetListViewStyle(Info->hListView,
+                             LVS_ICON);
         break;
 
         case ID_VIEW_SMALL:
-            SetView(Info->hListView,
-                    LVS_SMALLICON);
+            SetListViewStyle(Info->hListView,
+                             LVS_SMALLICON);
         break;
 
         case ID_VIEW_LIST:
-            SetView(Info->hListView,
-                    LVS_LIST);
+            SetListViewStyle(Info->hListView,
+                             LVS_LIST);
         break;
 
         case ID_VIEW_DETAILS:
-            SetView(Info->hListView,
-                    LVS_REPORT);
+            SetListViewStyle(Info->hListView,
+                             LVS_REPORT);
         break;
 
         case ID_VIEW_CUSTOMIZE:
@@ -606,6 +604,7 @@ MainWndProc(HWND hwnd,
 
             /* Initialize the main window context */
             Info->hMainWnd = hwnd;
+            Info->SelectedItem = NO_ITEM_SELECTED;
 
             SetWindowLongPtr(hwnd,
                              GWLP_USERDATA,
@@ -670,7 +669,6 @@ MainWndProc(HWND hwnd,
 			    case LVN_ITEMCHANGED:
 			    {
 			        LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
-			        ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
 			        HMENU hMainMenu;
 
                     /* get handle to menu */
@@ -680,9 +678,11 @@ MainWndProc(HWND hwnd,
                     if (GetMenuState(hMainMenu,
                                      ID_PROP,
                                      MF_BYCOMMAND) != MF_ENABLED)
+                    {
                         EnableMenuItem(hMainMenu,
                                        ID_PROP,
                                        MF_ENABLED);
+                    }
 
                     /* activate delete menu item, if not already */
                     if (GetMenuState(hMainMenu,
@@ -698,20 +698,20 @@ MainWndProc(HWND hwnd,
                     }
 
 
-                    /* globally set selected service */
+                    /* set selected service */
 			        Info->SelectedItem = pnmv->iItem;
+
+			        /* get pointer to selected service */
+                    Info->CurrentService = GetSelectedService(Info);
 
                     /* alter options for the service */
 			        SetMenuAndButtonStates(Info);
-
-			        /* get pointer to selected service */
-                    Service = GetSelectedService(Info);
 
 			        /* set current selected service in the status bar */
                     SendMessage(Info->hStatus,
                                 SB_SETTEXT,
                                 1,
-                                (LPARAM)Service->lpDisplayName);
+                                (LPARAM)Info->CurrentService->lpDisplayName);
 
                     /* show the properties button */
                     SendMessage(Info->hTool,

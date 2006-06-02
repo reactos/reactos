@@ -9,8 +9,6 @@
 
 #include "precomp.h"
 
-extern HWND hwndGenDlg;
-
 static BOOL
 DoStartService(PMAIN_WND_INFO Info)
 {
@@ -18,13 +16,10 @@ DoStartService(PMAIN_WND_INFO Info)
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
     SERVICE_STATUS_PROCESS ServiceStatus;
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL; /* FIXME: get rid of this */
     DWORD BytesNeeded = 0;
     INT ArgCount = 0;
     DWORD dwStartTickCount, dwOldCheckPoint;
 
-    /* copy pointer to selected service */
-    Service = GetSelectedService(Info);
 
     /* set the progress bar range and step */
     hProgBar = GetDlgItem(Info->hProgDlg,
@@ -51,7 +46,9 @@ DoStartService(PMAIN_WND_INFO Info)
     }
 
     /* get a handle to the service requested for starting */
-    hSc = OpenService(hSCManager, Service->lpServiceName, SERVICE_ALL_ACCESS);
+    hSc = OpenService(hSCManager,
+                      Info->CurrentService->lpServiceName,
+                      SERVICE_ALL_ACCESS);
     if (hSc == NULL)
     {
         GetError();
@@ -59,7 +56,9 @@ DoStartService(PMAIN_WND_INFO Info)
     }
 
     /* start the service opened */
-    if (! StartService(hSc, ArgCount, NULL))
+    if (! StartService(hSc,
+                       ArgCount,
+                       NULL))
     {
         GetError();
         return FALSE;
@@ -100,12 +99,11 @@ DoStartService(PMAIN_WND_INFO Info)
         Sleep(ServiceStatus.dwWaitHint / 8);
 
         /* check status again */
-        if (! QueryServiceStatusEx(
-                hSc,
-                SC_STATUS_PROCESS_INFO,
-                (LPBYTE)&ServiceStatus,
-                sizeof(SERVICE_STATUS_PROCESS),
-                &BytesNeeded))
+        if (! QueryServiceStatusEx(hSc,
+                                   SC_STATUS_PROCESS_INFO,
+                                   (LPBYTE)&ServiceStatus,
+                                   sizeof(SERVICE_STATUS_PROCESS),
+                                   &BytesNeeded))
         {
             GetError();
             return FALSE;
@@ -132,7 +130,10 @@ DoStartService(PMAIN_WND_INFO Info)
 
     if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
     {
-        SendMessage(hProgBar, PBM_DELTAPOS, PROGRESSRANGE, 0);
+        SendMessage(hProgBar,
+                    PBM_DELTAPOS,
+                    PROGRESSRANGE,
+                    0);
         Sleep(1000);
         return TRUE;
     }
@@ -148,7 +149,6 @@ BOOL
 DoStart(PMAIN_WND_INFO Info)
 {
     HWND hProgDlg;
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     TCHAR ProgDlgBuf[100];
 
     /* open the progress dialog */
@@ -173,15 +173,12 @@ DoStart(PMAIN_WND_INFO Info)
                            0,
                            (LPARAM)ProgDlgBuf);
 
-        /* get pointer to selected service */
-        Service = GetSelectedService(Info);
-
         /* write the service name to the progress dialog */
         SendDlgItemMessage(hProgDlg,
                            IDC_SERVCON_NAME,
                            WM_SETTEXT,
                            0,
-                           (LPARAM)Service->lpServiceName);
+                           (LPARAM)Info->CurrentService->lpServiceName);
     }
 
     /* start the service */
@@ -204,13 +201,14 @@ DoStart(PMAIN_WND_INFO Info)
                     (LPARAM) &item);
 
         /* change dialog status */
-        if (hwndGenDlg)
+        if (Info->PropSheet->hwndGenDlg)
         {
             LoadString(hInstance,
                       IDS_SERVICES_STARTED,
                       buf,
                       sizeof(buf) / sizeof(TCHAR));
-            SendDlgItemMessageW(hwndGenDlg,
+
+            SendDlgItemMessageW(Info->PropSheet->hwndGenDlg,
                                 IDC_SERV_STATUS,
                                 WM_SETTEXT,
                                 0,

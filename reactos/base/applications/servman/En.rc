@@ -64,7 +64,7 @@ CAPTION "About Service Manager"
 FONT 8,"Tahoma",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Service Manager v0.5\nCopyright (C) 2005-2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Service Manager v0.5.1\nCopyright (C) 2005-2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Close", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -209,7 +209,7 @@ BEGIN
   IDS_PROGRESS_INFO_START "ReactOS is attempting to start the following service"
   IDS_PROGRESS_INFO_STOP  "ReactOS is attempting to stop the following service"
   IDS_CREATE_SUCCESS "Service Created Succesfully"
-  IDS_CREATE_REQ "* = required fields"
+  IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
   IDS_DELETE_STOP "You must manually stop the service before deleting!"
 END
 

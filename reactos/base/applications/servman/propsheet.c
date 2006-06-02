@@ -9,42 +9,36 @@
 
 #include "precomp.h"
 
-HWND hwndGenDlg;
-
 static VOID
 SetButtonStates(PMAIN_WND_INFO Info)
 {
     HWND hButton;
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     DWORD Flags, State;
 
-    /* get pointer to selected service */
-    Service = GetSelectedService(Info);
-
-    Flags = Service->ServiceStatusProcess.dwControlsAccepted;
-    State = Service->ServiceStatusProcess.dwCurrentState;
+    Flags = Info->CurrentService->ServiceStatusProcess.dwControlsAccepted;
+    State = Info->CurrentService->ServiceStatusProcess.dwCurrentState;
 
     if (State == SERVICE_STOPPED)
     {
-        hButton = GetDlgItem(hwndGenDlg, IDC_START);
+        hButton = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_START);
         EnableWindow (hButton, TRUE);
     }
 
     if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
     {
-        hButton = GetDlgItem(hwndGenDlg, IDC_STOP);
+        hButton = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_STOP);
         EnableWindow (hButton, TRUE);
     }
 
     if ( (Flags & SERVICE_ACCEPT_PAUSE_CONTINUE) && (State == SERVICE_RUNNING) )
     {
-        hButton = GetDlgItem(hwndGenDlg, IDC_PAUSE);
+        hButton = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_PAUSE);
         EnableWindow (hButton, TRUE);
     }
 
     if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
     {
-        hButton = GetDlgItem(hwndGenDlg, IDC_PAUSE);
+        hButton = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_PAUSE);
         EnableWindow (hButton, TRUE);
     }
 }
@@ -54,7 +48,7 @@ SetButtonStates(PMAIN_WND_INFO Info)
  * values and sets it to value of the selected item
  */
 static VOID
-SetStartupType(LPTSTR lpServiceName)
+SetStartupType(PMAIN_WND_INFO Info)
 {
     HWND hList;
     HKEY hKey;
@@ -65,14 +59,18 @@ SetStartupType(LPTSTR lpServiceName)
     TCHAR KeyBuf[300];
 
     /* open the registry key for the service */
-    _sntprintf(KeyBuf, sizeof(KeyBuf) / sizeof(TCHAR), Path, lpServiceName);
+    _sntprintf(KeyBuf,
+               sizeof(KeyBuf) / sizeof(TCHAR),
+               Path,
+               Info->CurrentService->lpServiceName);
+
     RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                  KeyBuf,
                  0,
                  KEY_READ,
                  &hKey);
 
-    hList = GetDlgItem(hwndGenDlg, IDC_START_TYPE);
+    hList = GetDlgItem(Info->PropSheet->hwndGenDlg, IDC_START_TYPE);
 
     LoadString(hInstance, IDS_SERVICES_AUTO, buf, sizeof(buf) / sizeof(TCHAR));
     SendMessage(hList, CB_ADDSTRING, 0, (LPARAM)buf);
@@ -110,30 +108,25 @@ SetStartupType(LPTSTR lpServiceName)
 static VOID
 GetDlgInfo(PMAIN_WND_INFO Info)
 {
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-
-    /* get pointer to selected service */
-    Service = GetSelectedService(Info);
-
     /* set the service name */
-    Info->PropSheet->lpServiceName = Service->lpServiceName;
-    SendDlgItemMessage(hwndGenDlg,
+    Info->PropSheet->lpServiceName = Info->CurrentService->lpServiceName;
+    SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                        IDC_SERV_NAME,
                        WM_SETTEXT,
                        0,
                        (LPARAM)Info->PropSheet->lpServiceName);
 
     /* set the display name */
-    Info->PropSheet->lpDisplayName = Service->lpDisplayName;
-    SendDlgItemMessage(hwndGenDlg,
+    Info->PropSheet->lpDisplayName = Info->CurrentService->lpDisplayName;
+    SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                        IDC_DISP_NAME,
                        WM_SETTEXT,
                        0,
                        (LPARAM)Info->PropSheet->lpDisplayName);
 
     /* set the description */
-    if (GetDescription(Service->lpServiceName, &Info->PropSheet->lpDescription))
-        SendDlgItemMessage(hwndGenDlg,
+    if (GetDescription(Info->CurrentService->lpServiceName, &Info->PropSheet->lpDescription))
+        SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                            IDC_DESCRIPTION,
                            WM_SETTEXT,
                            0,
@@ -141,24 +134,24 @@ GetDlgInfo(PMAIN_WND_INFO Info)
 
     /* set the executable path */
     if (GetExecutablePath(Info, &Info->PropSheet->lpPathToExe))
-        SendDlgItemMessage(hwndGenDlg,
+        SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                            IDC_EXEPATH,
                            WM_SETTEXT,
                            0,
                            (LPARAM)Info->PropSheet->lpPathToExe);
 
     /* set startup type */
-    SetStartupType(Service->lpServiceName);
+    SetStartupType(Info);
 
     /* set service status */
-    if (Service->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+    if (Info->CurrentService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
     {
         LoadString(hInstance,
                    IDS_SERVICES_STARTED,
                    Info->PropSheet->szServiceStatus,
                    sizeof(Info->PropSheet->szServiceStatus) / sizeof(TCHAR));
 
-        SendDlgItemMessage(hwndGenDlg,
+        SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                            IDC_SERV_STATUS,
                            WM_SETTEXT,
                            0,
@@ -171,7 +164,7 @@ GetDlgInfo(PMAIN_WND_INFO Info)
                    Info->PropSheet->szServiceStatus,
                    sizeof(Info->PropSheet->szServiceStatus) / sizeof(TCHAR));
 
-        SendDlgItemMessage(hwndGenDlg,
+        SendDlgItemMessage(Info->PropSheet->hwndGenDlg,
                            IDC_SERV_STATUS,
                            WM_SETTEXT,
                            0,
@@ -194,11 +187,7 @@ GeneralPageProc(HWND hwndDlg,
 {
     PMAIN_WND_INFO Info;
 
-    /* FIXME get rid of this */
-    hwndGenDlg = hwndDlg;
-
     /* Get the window context */
-    /* FIXME: does this get called in time for WM_INITDIALOG */
     Info = (PMAIN_WND_INFO)GetWindowLongPtr(hwndDlg,
                                             GWLP_USERDATA);
 
@@ -214,6 +203,8 @@ GeneralPageProc(HWND hwndDlg,
             Info = (PMAIN_WND_INFO)(((LPPROPSHEETPAGE)lParam)->lParam);
             if (Info != NULL)
             {
+                Info->PropSheet->hwndGenDlg = hwndDlg;
+
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
                                  (LONG_PTR)Info);
@@ -293,9 +284,6 @@ DependanciesPageProc(HWND hwndDlg,
 {
     PMAIN_WND_INFO Info;
 
-    /* FIXME get rid of this */
-    hwndGenDlg = hwndDlg;
-
     /* Get the window context */
     Info = (PMAIN_WND_INFO)GetWindowLongPtr(hwndDlg,
                                             GWLP_USERDATA);
@@ -312,6 +300,8 @@ DependanciesPageProc(HWND hwndDlg,
             Info = (PMAIN_WND_INFO)(((LPPROPSHEETPAGE)lParam)->lParam);
             if (Info != NULL)
             {
+                Info->PropSheet->hwndDepDlg = hwndDlg;
+
                 SetWindowLongPtr(hwndDlg,
                                  GWLP_USERDATA,
                                  (LONG_PTR)Info);
@@ -403,9 +393,6 @@ OpenPropSheet(PMAIN_WND_INFO Info)
 {
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[2];
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
-
-    Service = GetSelectedService(Info);
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -413,7 +400,7 @@ OpenPropSheet(PMAIN_WND_INFO Info)
     psh.hwndParent = Info->hMainWnd;
     psh.hInstance = hInstance;
     psh.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SM_ICON));
-    psh.pszCaption = Service->lpDisplayName;
+    psh.pszCaption = Info->CurrentService->lpDisplayName;
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.pfnCallback = AddEditButton;

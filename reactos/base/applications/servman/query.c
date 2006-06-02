@@ -10,11 +10,9 @@
 #include "precomp.h"
 
 
-
 ENUM_SERVICE_STATUS_PROCESS*
 GetSelectedService(PMAIN_WND_INFO Info)
 {
-    ENUM_SERVICE_STATUS_PROCESS *pSelectedService = NULL;
     LVITEM lvItem;
 
     lvItem.mask = LVIF_PARAM;
@@ -24,10 +22,8 @@ GetSelectedService(PMAIN_WND_INFO Info)
                 0,
                 (LPARAM)&lvItem);
 
-    /* copy pointer to selected service */
-    pSelectedService = (ENUM_SERVICE_STATUS_PROCESS *)lvItem.lParam;
-
-    return pSelectedService;
+    /* return pointer to selected service */
+    return (ENUM_SERVICE_STATUS_PROCESS *)lvItem.lParam;
 }
 
 
@@ -100,7 +96,9 @@ BOOL GetDescription(LPTSTR lpServiceName, LPTSTR *retDescription)
 
     if (ret != ERROR_FILE_NOT_FOUND)
     {
-        Description = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwValueSize);
+        Description = HeapAlloc(ProcessHeap,
+                                HEAP_ZERO_MEMORY,
+                                dwValueSize);
         if (Description == NULL)
         {
             RegCloseKey(hKey);
@@ -114,7 +112,9 @@ BOOL GetDescription(LPTSTR lpServiceName, LPTSTR *retDescription)
                            (LPBYTE)Description,
                            &dwValueSize))
         {
-            HeapFree(GetProcessHeap(), 0, Description);
+            HeapFree(ProcessHeap,
+                     0,
+                     Description);
             RegCloseKey(hKey);
             return FALSE;
         }
@@ -135,11 +135,7 @@ GetExecutablePath(PMAIN_WND_INFO Info,
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hSc = NULL;
     LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     DWORD BytesNeeded = 0;
-
-    /* copy pointer to selected service */
-    Service = GetSelectedService(Info);
 
     /* open handle to the SCM */
     hSCManager = OpenSCManager(NULL,
@@ -153,7 +149,7 @@ GetExecutablePath(PMAIN_WND_INFO Info,
 
     /* get a handle to the service requested for starting */
     hSc = OpenService(hSCManager,
-                      Service->lpServiceName,
+                      Info->CurrentService->lpServiceName,
                       SERVICE_QUERY_CONFIG);
     if (hSc == NULL)
     {
@@ -170,7 +166,7 @@ GetExecutablePath(PMAIN_WND_INFO Info,
         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
             pServiceConfig = (LPQUERY_SERVICE_CONFIG)
-                             HeapAlloc(GetProcessHeap(),
+                             HeapAlloc(ProcessHeap,
                                        0,
                                        BytesNeeded);
             if (pServiceConfig == NULL)

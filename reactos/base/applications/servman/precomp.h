@@ -49,6 +49,7 @@ typedef struct _MAIN_WND_INFO
     /* Stores the current selected service */
     ENUM_SERVICE_STATUS_PROCESS *CurrentService;
 
+    /* selection number in the list view */
     INT SelectedItem;
 
     struct _PROP_DLG_INFO *PropSheet;

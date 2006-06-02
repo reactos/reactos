@@ -16,7 +16,6 @@ Control(PMAIN_WND_INFO Info,
     HWND hProgBar;
     SC_HANDLE hSCManager;
     SC_HANDLE hSc;
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     SERVICE_STATUS_PROCESS ServiceStatus;
     SERVICE_STATUS Status;
     LVITEM item;
@@ -30,9 +29,6 @@ Control(PMAIN_WND_INFO Info,
                 0,
                 (LPARAM)&item);
 
-    /* copy pointer to selected service */
-    Service = (ENUM_SERVICE_STATUS_PROCESS *)item.lParam;
-
     /* set the progress bar range and step */
     hProgBar = GetDlgItem(Info->hProgDlg,
                           IDC_SERVCON_PROGRESS);
@@ -40,6 +36,7 @@ Control(PMAIN_WND_INFO Info,
                 PBM_SETRANGE,
                 0,
                 MAKELPARAM(0, PROGRESSRANGE));
+
     SendMessage(hProgBar,
                 PBM_SETSTEP,
                 (WPARAM)1,
@@ -57,7 +54,7 @@ Control(PMAIN_WND_INFO Info,
 
     /* open handle to the service */
     hSc = OpenService(hSCManager,
-                      Service->lpServiceName,
+                      Info->CurrentService->lpServiceName,
                       SC_MANAGER_ALL_ACCESS);
     if (hSc == NULL)
     {

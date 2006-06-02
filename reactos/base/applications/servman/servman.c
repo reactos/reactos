@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/servman/servman.c
- * PURPOSE:     HQ
+ * PURPOSE:     Program HQ
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
@@ -31,7 +31,9 @@ WinMain(HINSTANCE hThisInstance,
     icex.dwICC = ICC_BAR_CLASSES | ICC_COOL_CLASSES;
     InitCommonControlsEx(&icex);
 
-    if (!AllocAndLoadString(&lpAppName, hInstance, IDS_APPNAME))
+    if (!AllocAndLoadString(&lpAppName,
+                            hInstance,
+                            IDS_APPNAME))
     {
         return 1;
     }

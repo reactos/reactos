@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/servman/start.c
+ * FILE:        base/system/servman/stop.c
  * PURPOSE:     Stops a service
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -9,12 +9,9 @@
 
 #include "precomp.h"
 
-extern HWND hwndGenDlg;
-
 BOOL DoStop(PMAIN_WND_INFO Info)
 {
     HWND hProgDlg;
-    ENUM_SERVICE_STATUS_PROCESS *Service = NULL;
     TCHAR ProgDlgBuf[100];
 
     /* open the progress dialog */
@@ -32,24 +29,22 @@ BOOL DoStop(PMAIN_WND_INFO Info)
                    IDS_PROGRESS_INFO_STOP,
                    ProgDlgBuf,
                    sizeof(ProgDlgBuf) / sizeof(TCHAR));
+
         SendDlgItemMessage(hProgDlg,
                            IDC_SERVCON_INFO,
                            WM_SETTEXT,
                            0,
                            (LPARAM)ProgDlgBuf);
 
-        /* get pointer to selected service */
-        Service = GetSelectedService(Info);
-
         /* write the service name to the progress dialog */
         SendDlgItemMessage(hProgDlg,
                            IDC_SERVCON_NAME,
                            WM_SETTEXT,
                            0,
-                           (LPARAM)Service->lpServiceName);
+                           (LPARAM)Info->CurrentService->lpServiceName);
     }
 
-    if( Control(Info, SERVICE_CONTROL_STOP) )
+    if ( Control(Info, SERVICE_CONTROL_STOP) )
     {
         LVITEM item;
         TCHAR buf[25];
@@ -63,13 +58,14 @@ BOOL DoStop(PMAIN_WND_INFO Info)
                     (LPARAM) &item);
 
         /* change dialog status */
-        if (hwndGenDlg)
+        if (Info->PropSheet->hwndGenDlg)
         {
             LoadString(hInstance,
                        IDS_SERVICES_STOPPED,
                        buf,
                        sizeof(buf) / sizeof(TCHAR));
-            SendDlgItemMessageW(hwndGenDlg,
+
+            SendDlgItemMessageW(Info->PropSheet->hwndGenDlg,
                                 IDC_SERV_STATUS, WM_SETTEXT,
                                 0,
                                 (LPARAM)buf);

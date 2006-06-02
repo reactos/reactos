@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/servman/misc.c
+ * PURPOSE:     miscallanous functions
+ * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
+ *
+ */
+
 #include "precomp.h"
 
 static INT
@@ -201,7 +210,7 @@ VOID GetError(VOID)
 
 VOID DisplayString(PTCHAR Msg)
 {
-    MessageBox(NULL, Msg, _T("Note!"), MB_OK);
+    MessageBox(NULL, Msg, _T("Note!"), MB_ICONEXCLAMATION|MB_OK);
 }
 
 
