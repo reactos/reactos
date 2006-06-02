@@ -176,91 +176,6 @@ StartDevice(
 	return Ret;
 }
 
-static BOOL
-PrepareFoldersToScan(
-	IN PDEVINSTDATA DevInstData,
-	IN HWND hwndDlg)
-{
-	TCHAR drive[] = {'?',':',0};
-	DWORD dwDrives = 0;
-	DWORD i;
-	UINT nType;
-	DWORD CustomTextLength = 0;
-	DWORD LengthNeeded = 0;
-	LPTSTR Buffer;
-
-	TRACE("Include removable devices: %s\n", IsDlgButtonChecked(hwndDlg, IDC_CHECK_MEDIA) ? "yes" : "no");
-	TRACE("Include custom path      : %s\n", IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH) ? "yes" : "no");
-
-	/* Calculate length needed to store the search paths */
-	if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MEDIA))
-	{
-		dwDrives = GetLogicalDrives();
-		for (drive[0] = 'A', i = 1; drive[0] <= 'Z'; drive[0]++, i <<= 1)
-		{
-			if (dwDrives & i)
-			{
-				nType = GetDriveType(drive);
-				if (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM)
-				{
-					LengthNeeded += 3;
-				}
-			}
-		}
-	}
-	if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH))
-	{
-		CustomTextLength = 1 + SendDlgItemMessage(
-			hwndDlg,
-			IDC_COMBO_PATH,
-			WM_GETTEXTLENGTH,
-			(WPARAM)0,
-			(LPARAM)0);
-		LengthNeeded += CustomTextLength;
-	}
-
-	/* Allocate space for search paths */
-	HeapFree(GetProcessHeap(), 0, DevInstData->CustomSearchPath);
-	DevInstData->CustomSearchPath = Buffer = HeapAlloc(
-		GetProcessHeap(),
-		0,
-		(LengthNeeded + 1) * sizeof(TCHAR));
-	if (!Buffer)
-	{
-		TRACE("HeapAlloc() failed\n");
-		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return FALSE;
-	}
-
-	/* Fill search paths */
-	if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MEDIA))
-	{
-		for (drive[0] = 'A', i = 1; drive[0] <= 'Z'; drive[0]++, i <<= 1)
-		{
-			if (dwDrives & i)
-			{
-				nType = GetDriveType(drive);
-				if (nType == DRIVE_REMOVABLE || nType == DRIVE_CDROM)
-				{
-					Buffer += 1 + _stprintf(Buffer, drive);
-				}
-			}
-		}
-	}
-	if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH))
-	{
-		Buffer += 1 + SendDlgItemMessage(
-			hwndDlg,
-			IDC_COMBO_PATH,
-			WM_GETTEXT,
-			(WPARAM)CustomTextLength,
-			(LPARAM)Buffer);
-	}
-	*Buffer = _T('\0');
-
-	return TRUE;
-}
-
 static DWORD WINAPI
 FindDriverProc(
 	IN LPVOID lpParam)
@@ -271,39 +186,7 @@ FindDriverProc(
 
 	DevInstData = (PDEVINSTDATA)lpParam;
 
-	/* Yes, we can safely ignore the problem (if any) */
-	SetupDiDestroyDriverInfoList(
-		DevInstData->hDevInfo,
-		&DevInstData->devInfoData,
-		SPDIT_COMPATDRIVER);
-
-	if (!DevInstData->CustomSearchPath)
-	{
-		/* Search in default location */
-		result = SearchDriver(DevInstData, NULL, NULL);
-	}
-	else
-	{
-		/* Search only in specified paths */
-		/* We need to check all specified directories to be
-		 * sure to find the best driver for the device.
-		 */
-		LPCTSTR Path;
-		for (Path = DevInstData->CustomSearchPath; *Path != '\0'; Path += _tcslen(Path) + 1)
-		{
-			TRACE("Search driver in %S\n", Path);
-			if (_tcslen(Path) == 2 && Path[1] == ':')
-			{
-				if (SearchDriverRecursive(DevInstData, Path))
-					result = TRUE;
-			}
-			else
-			{
-				if (SearchDriver(DevInstData, Path, NULL))
-					result = TRUE;
-			}
-		}
-	}
+	result = ScanFoldersForDriver(DevInstData);
 
 	if (result)
 	{
@@ -600,7 +483,12 @@ WelcomeDlgProc(
 				case PSN_WIZNEXT:
 					/* Handle a Next button click, if necessary */
 					if (SendDlgItemMessage(hwndDlg, IDC_RADIO_AUTO, BM_GETCHECK, (WPARAM)0, (LPARAM)0) == BST_CHECKED)
-						PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_SEARCHDRV);
+					{
+						if (PrepareFoldersToScan(DevInstData, TRUE, FALSE, NULL))
+							PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_SEARCHDRV);
+						else
+							PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_INSTALLFAILED);
+					}
 					return TRUE;
 
 				default:
@@ -748,10 +636,18 @@ CHSourceDlgProc(
 						SaveCustomPath(GetDlgItem(hwndDlg, IDC_COMBO_PATH));
 						HeapFree(GetProcessHeap(), 0, DevInstData->CustomSearchPath);
 						DevInstData->CustomSearchPath = NULL;
-						if (PrepareFoldersToScan(DevInstData, hwndDlg))
+						if (PrepareFoldersToScan(
+							DevInstData,
+							IsDlgButtonChecked(hwndDlg, IDC_CHECK_MEDIA),
+							IsDlgButtonChecked(hwndDlg, IDC_CHECK_PATH),
+							GetDlgItem(hwndDlg, IDC_COMBO_PATH)))
+						{
 							PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_SEARCHDRV);
+						}
 						else
+						{
 							PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_INSTALLFAILED);
+						}
 					}
 					else
 						/* FIXME */;
@@ -832,6 +728,11 @@ SearchDrvDlgProc(
 			{
 				case PSN_SETACTIVE:
 					PropSheet_SetWizButtons(GetParent(hwndDlg), !PSWIZB_NEXT | !PSWIZB_BACK);
+					/* Yes, we can safely ignore the problem (if any) */
+					SetupDiDestroyDriverInfoList(
+						DevInstData->hDevInfo,
+						&DevInstData->devInfoData,
+						SPDIT_COMPATDRIVER);
 					hThread = CreateThread(NULL, 0, FindDriverProc, DevInstData, 0, &dwThreadId);
 					break;
 
