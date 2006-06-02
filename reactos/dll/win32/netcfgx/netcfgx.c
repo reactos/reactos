@@ -184,10 +184,10 @@ NetClassInstaller(
 	LPWSTR ExportName = NULL;
 	LONG rc;
 	DWORD dwShowIcon, dwLength;
-	HKEY hKey = INVALID_HANDLE_VALUE;
-	HKEY hLinkageKey = INVALID_HANDLE_VALUE;
-	HKEY hNetworkKey = INVALID_HANDLE_VALUE;
-	HKEY hConnectionKey = INVALID_HANDLE_VALUE;
+	HKEY hKey = NULL;
+	HKEY hLinkageKey = NULL;
+	HKEY hNetworkKey = NULL;
+	HKEY hConnectionKey = NULL;
 	
 	if (InstallFunction != DIF_INSTALLDEVICE)
 		return ERROR_DI_DO_DEFAULT;
@@ -279,7 +279,7 @@ NetClassInstaller(
 		goto cleanup;
 	}
 	RegCloseKey(hKey);
-	hKey = INVALID_HANDLE_VALUE;
+	hKey = NULL;
 	rc = RegCreateKeyExW(hNetworkKey, L"Parameters\\Tcpip", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL);
 	if (rc != ERROR_SUCCESS)
 	{
@@ -287,7 +287,7 @@ NetClassInstaller(
 		goto cleanup;
 	}
 	RegCloseKey(hNetworkKey);
-	hNetworkKey = INVALID_HANDLE_VALUE;
+	hNetworkKey = NULL;
 	rc = RegSetValueExW(hKey, L"DefaultGateway", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
 	if (rc != ERROR_SUCCESS)
 	{
@@ -307,7 +307,7 @@ NetClassInstaller(
 		goto cleanup;
 	}
 	RegCloseKey(hKey);
-	hKey = INVALID_HANDLE_VALUE;
+	hKey = NULL;
 
 	/* Write 'Linkage' key in hardware key */
 #if _WIN32_WINNT >= 0x502
@@ -319,6 +319,7 @@ NetClassInstaller(
 		hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
 	if (hKey == INVALID_HANDLE_VALUE)
 	{
+		hKey = NULL;
 		rc = GetLastError();
 		DPRINT("SetupDiCreateDevRegKeyW() failed with error 0x%lx\n", rc);
 		goto cleanup;
@@ -354,7 +355,7 @@ NetClassInstaller(
 		goto cleanup;
 	}
 	RegCloseKey(hKey);
-	hKey = INVALID_HANDLE_VALUE;
+	hKey = NULL;
 
 	/* Write connection information in network subkey */
 	rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, NULL, REG_OPTION_NON_VOLATILE, 0, NULL, &hNetworkKey, NULL);
@@ -371,7 +372,7 @@ NetClassInstaller(
 	}
 	rc = RegCreateKeyExW(hKey, L"Connection", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hConnectionKey, NULL);
 	RegCloseKey(hKey);
-	hKey = INVALID_HANDLE_VALUE;
+	hKey = NULL;
 	if (rc != ERROR_SUCCESS)
 	{
 		DPRINT("RegCreateKeyExW() failed with error 0x%lx\n", rc);
@@ -446,13 +447,13 @@ cleanup:
 	HeapFree(GetProcessHeap(), 0, UuidString);
 	HeapFree(GetProcessHeap(), 0, DeviceName);
 	HeapFree(GetProcessHeap(), 0, ExportName);
-	if (hKey != INVALID_HANDLE_VALUE)
+	if (hKey != NULL)
 		RegCloseKey(hKey);
-	if (hLinkageKey != INVALID_HANDLE_VALUE)
+	if (hLinkageKey != NULL)
 		RegCloseKey(hLinkageKey);
-	if (hNetworkKey != INVALID_HANDLE_VALUE)
+	if (hNetworkKey != NULL)
 		RegCloseKey(hNetworkKey);
-	if (hConnectionKey != INVALID_HANDLE_VALUE)
+	if (hConnectionKey != NULL)
 		RegCloseKey(hConnectionKey);
 
 	if (rc == ERROR_SUCCESS)
