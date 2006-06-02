@@ -208,7 +208,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   {
       _SEH_TRY
       {
-          ProbeForWriteHandle(KeyHandle);
+          ProbeAndZeroHandle(KeyHandle);
           if (Disposition != NULL)
           {
               ProbeForWriteUlong(Disposition);
@@ -1281,7 +1281,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   {
     _SEH_TRY
     {
-      ProbeForWriteHandle(KeyHandle);
+      ProbeAndZeroHandle(KeyHandle);
     }
     _SEH_HANDLE
     {

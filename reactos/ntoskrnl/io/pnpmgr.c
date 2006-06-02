@@ -1317,7 +1317,7 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
    UNICODE_STRING KeyValue;
    UNICODE_STRING ValueName;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE hKey = INVALID_HANDLE_VALUE;
+   HANDLE hKey = NULL;
    ULONG crc32;
    NTSTATUS Status;
 
@@ -1395,7 +1395,7 @@ cleanup:
    }
    ExFreePool(ParentIdPrefixInformation);
    ExFreePool(KeyNameBuffer);
-   if (hKey != INVALID_HANDLE_VALUE)
+   if (hKey != NULL)
       ZwClose(hKey);
    return Status;
 }

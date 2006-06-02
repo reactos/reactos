@@ -1170,7 +1170,7 @@ cleanup:
 static BOOL
 SetupIsActive(VOID)
 {
-    HKEY hKey = INVALID_HANDLE_VALUE;
+    HKEY hKey = NULL;
     DWORD regType, active, size;
     LONG rc;
     BOOL ret = FALSE;
@@ -1189,7 +1189,7 @@ SetupIsActive(VOID)
     ret = (active != 0);
 
 cleanup:
-    if (hKey != INVALID_HANDLE_VALUE)
+    if (hKey != NULL)
         RegCloseKey(hKey);
 
     DPRINT("System setup in progress? %S\n", ret ? L"YES" : L"NO");

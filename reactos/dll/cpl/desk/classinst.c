@@ -24,11 +24,11 @@ DisplayClassInstaller(
 	TCHAR SectionName[MAX_PATH];
 	TCHAR ServiceName[MAX_SERVICE_NAME_LEN];
 	SP_DRVINFO_DETAIL_DATA DriverInfoDetailData;
-	HKEY hDriverKey = INVALID_HANDLE_VALUE;
-	HKEY hSettingsKey = INVALID_HANDLE_VALUE;
-	HKEY hServicesKey = INVALID_HANDLE_VALUE;
-	HKEY hServiceKey = INVALID_HANDLE_VALUE;
-	HKEY hDeviceSubKey = INVALID_HANDLE_VALUE;
+	HKEY hDriverKey = INVALID_HANDLE_VALUE; /* SetupDiOpenDevRegKey returns INVALID_HANDLE_VALUE in case of error! */
+	HKEY hSettingsKey = NULL;
+	HKEY hServicesKey = NULL;
+	HKEY hServiceKey = NULL;
+	HKEY hDeviceSubKey = NULL;
 	DWORD disposition;
 	BOOL result;
 	LONG rc;
@@ -214,14 +214,17 @@ cleanup:
 	if (hInf != INVALID_HANDLE_VALUE)
 		SetupCloseInfFile(hInf);
 	if (hDriverKey != INVALID_HANDLE_VALUE)
+	{
+		/* SetupDiOpenDevRegKey returns INVALID_HANDLE_VALUE in case of error! */
 		RegCloseKey(hDriverKey);
-	if (hSettingsKey != INVALID_HANDLE_VALUE)
+	}
+	if (hSettingsKey != NULL)
 		RegCloseKey(hSettingsKey);
-	if (hServicesKey != INVALID_HANDLE_VALUE)
+	if (hServicesKey != NULL)
 		RegCloseKey(hServicesKey);
-	if (hServiceKey != INVALID_HANDLE_VALUE)
+	if (hServiceKey != NULL)
 		RegCloseKey(hServiceKey);
-	if (hDeviceSubKey != INVALID_HANDLE_VALUE)
+	if (hDeviceSubKey != NULL)
 		RegCloseKey(hDeviceSubKey);
 
 	return rc;

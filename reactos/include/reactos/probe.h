@@ -74,6 +74,15 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #define ProbeForReadUlargeInteger(Ptr) ProbeForReadGenericType(Ptr, ULARGE_INTEGER, __emptyULargeInteger)
 #define ProbeForReadUnicodeString(Ptr) ProbeForReadGenericType(Ptr, UNICODE_STRING, __emptyUnicodeString)
 
+#define ProbeAndZeroHandle(Ptr) \
+    do {                                                                       \
+        if ((ULONG_PTR)(Ptr) + sizeof(HANDLE) - 1 < (ULONG_PTR)(Ptr) ||        \
+            (ULONG_PTR)(Ptr) + sizeof(HANDLE) - 1 >= (ULONG_PTR)MmUserProbeAddress) { \
+            RtlRaiseStatus (STATUS_ACCESS_VIOLATION);                          \
+        }                                                                      \
+        *(volatile HANDLE *)(Ptr) = NULL;                                      \
+    } while (0)
+
 /*
  * Inlined Probing Macros
  */
