@@ -23,10 +23,13 @@
 	<library>rpcrt4</library>
 	<library>version</library>
 	<file>cfgmgr.c</file>
+	<file>devclass.c</file>
 	<file>devinst.c</file>
 	<file>dirid.c</file>
 	<file>diskspace.c</file>
+	<file>driver.c</file>
 	<file>install.c</file>
+	<file>interface.c</file>
 	<file>misc.c</file>
 	<file>parser.c</file>
 	<file>query.c</file>
