@@ -471,12 +471,12 @@ ConvertLParamString:
             return FALSE;
           }
         xs->cs = *(CREATESTRUCTW *)AnsiMsg->lParam;
-        if (HIWORD(xs->cs.lpszName))
+        if (!IS_INTRESOURCE(xs->cs.lpszName))
           {
             RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)xs->cs.lpszName);
             xs->lpszName = xs->cs.lpszName = UnicodeBuffer.Buffer;
           }
-        if (HIWORD(xs->cs.lpszClass))
+        if (!IS_ATOM(xs->cs.lpszClass))
           {
             RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)xs->cs.lpszClass);
             xs->lpszClass = xs->cs.lpszClass = UnicodeBuffer.Buffer;
@@ -498,7 +498,7 @@ ConvertLParamString:
 
         *cs = *(MDICREATESTRUCTW *)AnsiMsg->lParam;
 
-        if (HIWORD(cs->szClass))
+        if (!IS_ATOM(cs->szClass))
           {
             RtlCreateUnicodeStringFromAsciiz(&UnicodeBuffer, (LPSTR)cs->szClass);
             cs->szClass = UnicodeBuffer.Buffer;
@@ -607,12 +607,9 @@ FreeLParamString:
       {
 	UNICODE_STRING UnicodeString;
         MDICREATESTRUCTW *cs = (MDICREATESTRUCTW *)UnicodeMsg->lParam;
-        if (HIWORD(cs->szTitle))
-          {
-            RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szTitle);
-            RtlFreeUnicodeString(&UnicodeString);
-          }
-        if (HIWORD(cs->szClass))
+        RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szTitle);
+        RtlFreeUnicodeString(&UnicodeString);
+        if (!IS_ATOM(cs->szClass))
           {
             RtlInitUnicodeString(&UnicodeString, (PCWSTR)cs->szClass);
             RtlFreeUnicodeString(&UnicodeString);
@@ -762,7 +759,51 @@ ConvertLParamString:
             }
           break;
         }
-      }
+
+      case WM_MDICREATE:
+        {
+          ANSI_STRING AnsiBuffer;
+          UNICODE_STRING UnicodeString;
+          MDICREATESTRUCTA *cs =
+              (MDICREATESTRUCTA *)HeapAlloc(GetProcessHeap(), 0, sizeof(*cs));
+
+          if (!cs)
+            {
+              return FALSE;
+            }
+
+          *cs = *(MDICREATESTRUCTA *)UnicodeMsg->lParam;
+
+          if (!IS_ATOM(cs->szClass))
+            {
+              RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szClass);
+              if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiBuffer,
+                                                            &UnicodeString,
+                                                            TRUE)))
+                {
+                  return FALSE;
+                }
+              cs->szClass = AnsiBuffer.Buffer;
+            }
+
+          RtlInitUnicodeString(&UnicodeString, (LPCWSTR)cs->szTitle);
+          if (! NT_SUCCESS(RtlUnicodeStringToAnsiString(&AnsiBuffer,
+                                                        &UnicodeString,
+                                                        TRUE)))
+            {
+              if (!IS_ATOM(cs->szClass))
+                {
+                  RtlInitAnsiString(&AnsiBuffer, cs->szClass);
+                  RtlFreeAnsiString(&AnsiBuffer);
+                }
+              return FALSE;
+            }
+          cs->szTitle = AnsiBuffer.Buffer;
+
+          AnsiMsg->lParam = (LPARAM)cs;
+          break;
+        }
+    }
 
   return TRUE;
 }
@@ -835,6 +876,21 @@ FreeLParamString:
               RtlInitAnsiString(&AString, (PSTR) AnsiMsg->lParam);
               RtlFreeAnsiString(&AString);
             }
+          break;
+        }
+
+      case WM_MDICREATE:
+        {
+          ANSI_STRING AnsiString;
+          MDICREATESTRUCTA *cs = (MDICREATESTRUCTA *)AnsiMsg->lParam;
+          RtlInitAnsiString(&AnsiString, (PCSTR)cs->szTitle);
+          RtlFreeAnsiString(&AnsiString);
+          if (!IS_ATOM(cs->szClass))
+            {
+              RtlInitAnsiString(&AnsiString, (PCSTR)cs->szClass);
+              RtlFreeAnsiString(&AnsiString);
+            }
+          HeapFree(GetProcessHeap(), 0, cs);
           break;
         }
 

@@ -294,10 +294,7 @@ static __inline BOOLEAN ElfFmtpIsPowerOf2(IN Elf_Addr Number)
  if(Number == 0)
   return FALSE;
 
- while((Number % 2) == 0)
-  Number /= 2;
-
- return Number == 1;
+ return (Number & (Number - 1)) == 0;
 }
 
 static __inline Elf_Addr ElfFmtpModPow2

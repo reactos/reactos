@@ -33,6 +33,17 @@
 #endif
 
 static GDIDEVICE PrimarySurface;
+static KEVENT VideoDriverNeedsPreparation;
+static KEVENT VideoDriverPrepared;
+
+
+NTSTATUS FASTCALL
+InitDcImpl(VOID)
+{
+  KeInitializeEvent(&VideoDriverNeedsPreparation, SynchronizationEvent, TRUE);
+  KeInitializeEvent(&VideoDriverPrepared, NotificationEvent, FALSE);
+  return STATUS_SUCCESS;
+}
 
 /* FIXME: DCs should probably be thread safe  */
 
@@ -481,6 +492,17 @@ IntPrepareDriver()
    BOOL GotDriver;
    BOOL DoDefault;
    ULONG DisplayNumber;
+   LARGE_INTEGER Zero;
+   BOOLEAN ret = FALSE;
+
+   Zero.QuadPart = 0;
+   if (STATUS_SUCCESS != KeWaitForSingleObject(&VideoDriverNeedsPreparation, Executive, KernelMode, TRUE, &Zero))
+   {
+      /* Concurrent access. Wait for VideoDriverPrepared event */
+      if (STATUS_SUCCESS == KeWaitForSingleObject(&VideoDriverPrepared, Executive, KernelMode, TRUE, NULL))
+         ret = PrimarySurface.PreparedDriver;
+      goto cleanup;
+   }
 
    for (DisplayNumber = 0; ; DisplayNumber++)
    {
@@ -494,7 +516,7 @@ IntPrepareDriver()
       if (PrimarySurface.VideoFileObject == NULL)
       {
          DPRINT1("FindMPDriver failed\n");
-         return FALSE;
+         goto cleanup;
       }
 
       /* Retrieve DDI driver names from registry */
@@ -568,7 +590,7 @@ IntPrepareDriver()
       {
          ObDereferenceObject(PrimarySurface.VideoFileObject);
          DPRINT1("BuildDDIFunctions failed\n");
-         return FALSE;
+         goto cleanup;
       }
 
       /* Allocate a phyical device handle from the driver */
@@ -651,10 +673,13 @@ IntPrepareDriver()
       PrimarySurface.PreparedDriver = TRUE;
       PrimarySurface.DisplayNumber = DisplayNumber;
 
-      return TRUE;
+      ret = TRUE;
+      goto cleanup;
    }
 
-   return FALSE;
+cleanup:
+   KeSetEvent(&VideoDriverPrepared, 1, FALSE);
+   return ret;
 }
 
 static BOOL FASTCALL

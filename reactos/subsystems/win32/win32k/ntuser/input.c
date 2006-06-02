@@ -176,6 +176,9 @@ MouseThreadMain(PVOID StartContext)
                        FILE_SYNCHRONOUS_IO_ALERT);
    } while (!NT_SUCCESS(Status));
 
+   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                       LOW_REALTIME_PRIORITY + 3);
+
    for(;;)
    {
       /*
@@ -454,6 +457,9 @@ KeyboardThreadMain(PVOID StartContext)
       DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
       return; //(Status);
    }
+
+   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                       LOW_REALTIME_PRIORITY + 3);
 
    IntKeyboardGetIndicatorTrans(KeyboardDeviceHandle,
                                 &IndicatorTrans);

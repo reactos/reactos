@@ -502,6 +502,13 @@ DriverEntry (
       return STATUS_UNSUCCESSFUL;
   }
 
+  Status = InitDcImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to initialize Device context implementation!\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
   /* Initialize FreeType library */
   if (! InitFontSupport())
     {
