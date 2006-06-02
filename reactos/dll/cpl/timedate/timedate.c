@@ -405,6 +405,7 @@ DateTimePageProc(HWND hwndDlg,
                   {
                       case DTN_DATETIMECHANGE:
                           /* Enable the 'Apply' button */
+                          KillTimer(hwndDlg, ID_TIMER);
                           PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                           break;
                   }
@@ -434,6 +435,7 @@ DateTimePageProc(HWND hwndDlg,
 
                       case PSN_APPLY:
                           SetLocalSystemTime(hwndDlg);
+                          SetTimer(hwndDlg, ID_TIMER, 1000, NULL);
                           return TRUE;
                   }
           }
