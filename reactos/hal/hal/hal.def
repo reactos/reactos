@@ -72,6 +72,7 @@ KdPortEnableInterrupts@0
 KeAcquireSpinLock@8
 @KeAcquireInStackQueuedSpinLock@8
 @KeAcquireSpinLockRaiseToSynch@4
+@KeAcquireQueuedSpinLock@4
 KeGetCurrentIrql@0
 KeFlushWriteBuffer@0
 KeLowerIrql@4
@@ -81,6 +82,7 @@ KeRaiseIrqlToDpcLevel@0
 KeRaiseIrqlToSynchLevel@0
 @KeReleaseInStackQueuedSpinLock@4
 KeReleaseSpinLock@8
+@KeReleaseQueuedSpinLock@8
 KeStallExecutionProcessor@4
 @KfAcquireSpinLock@4
 @KfLowerIrql@4
