@@ -11,10 +11,10 @@
 @ stub CMP_WaitServicesAvailable
 @ stub CM_Add_Empty_Log_Conf
 @ stub CM_Add_Empty_Log_Conf_Ex
-@ stub CM_Add_IDA
-@ stub CM_Add_IDW
-@ stub CM_Add_ID_ExA
-@ stub CM_Add_ID_ExW
+@ stdcall CM_Add_IDA(ptr str long)
+@ stdcall CM_Add_IDW(ptr wstr long)
+@ stdcall CM_Add_ID_ExA(ptr str long ptr)
+@ stdcall CM_Add_ID_ExW(ptr wstr long ptr)
 @ stub CM_Add_Range
 @ stub CM_Add_Res_Des
 @ stub CM_Add_Res_Des_Ex
