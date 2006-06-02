@@ -2772,6 +2772,11 @@ RegOpenKeyA (HKEY hKey,
 	     PHKEY phkResult)
 {
 	TRACE("RegOpenKeyA hKey 0x%x lpSubKey %s phkResult %p\n", hKey, lpSubKey, phkResult);
+	
+	if (!hKey && lpSubKey && phkResult)
+	{
+		return ERROR_INVALID_HANDLE;
+	}
 
 	if (!lpSubKey || !*lpSubKey)
 	{
@@ -2798,6 +2803,11 @@ RegOpenKeyW (HKEY hKey,
 	     PHKEY phkResult)
 {
 	TRACE("RegOpenKeyW hKey 0x%x lpSubKey %S phkResult %p\n", hKey, lpSubKey, phkResult);
+
+	if (!hKey && lpSubKey && phkResult)
+	{
+		return ERROR_INVALID_HANDLE;
+	}
 
 	if (!lpSubKey || !*lpSubKey)
 	{
