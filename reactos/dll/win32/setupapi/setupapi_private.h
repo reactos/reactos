@@ -227,9 +227,62 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification, UINT_PTR, U
 extern HINSTANCE hInstance;
 extern OSVERSIONINFOW OsVersionInfo;
 
+/* devinst.c */
+
+BOOL
+CreateDeviceInfoElement(
+    IN struct DeviceInfoSet *list,
+    IN LPCWSTR InstancePath,
+    IN LPCGUID pClassGuid,
+    OUT struct DeviceInfoElement **pDeviceInfo);
+
+/* driver.c */
+
+struct InfFileDetails *
+CreateInfFileDetails(
+    IN LPCWSTR FullInfFileName);
+
+VOID
+DereferenceInfFile(struct InfFileDetails* infFile);
+
+BOOL
+DestroyDriverInfoElement(struct DriverInfoElement* driverInfo);
+
+/* install.c */
+
+BOOL
+GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value);
+
+/* interface.c */
+
+BOOL
+DestroyDeviceInterface(
+    struct DeviceInterface* deviceInterface);
+
+LONG
+SETUP_CreateInterfaceList(
+    struct DeviceInfoSet *list,
+    PCWSTR MachineName,
+    CONST GUID *InterfaceGuid,
+    PCWSTR DeviceInstanceW /* OPTIONAL */,
+    BOOL OnlyPresentInterfaces);
+
+/* misc.c */
+
+DWORD
+GetFunctionPointer(
+    IN PWSTR InstallerName,
+    OUT HMODULE* ModulePointer,
+    OUT PVOID* FunctionPointer);
+
+DWORD
+FreeFunctionPointer(
+    IN HMODULE ModulePointer,
+    IN PVOID FunctionPointer);
+
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
 
-BOOL GetStringField( PINFCONTEXT context, DWORD index, PWSTR *value);
+/* parser.c */
 
 typedef BOOL (*FIND_CALLBACK)(LPCWSTR SectionName, PVOID Context);
 BOOL EnumerateSectionsStartingWith(HINF hInf, LPCWSTR pStr, FIND_CALLBACK Callback, PVOID Context);

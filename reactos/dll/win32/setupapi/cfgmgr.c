@@ -122,6 +122,61 @@ CONFIGRET WINAPI CMP_Report_LogOn(
 
 
 /***********************************************************************
+ * CM_Add_IDA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Add_IDA(
+    DEVINST dnDevInst, PSTR pszID, ULONG ulFlags)
+{
+    TRACE("%p %s %lx\n", dnDevInst, pszID, ulFlags);
+    return CM_Add_ID_ExA(dnDevInst, pszID, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Add_IDW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Add_IDW(
+    DEVINST dnDevInst, PWSTR pszID, ULONG ulFlags)
+{
+    TRACE("%p %s %lx\n", dnDevInst, debugstr_w(pszID), ulFlags);
+    return CM_Add_ID_ExW(dnDevInst, pszID, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Add_ID_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Add_ID_ExA(
+    DEVINST dnDevInst, PSTR pszID, ULONG ulFlags, HMACHINE hMachine)
+{
+    PWSTR pszIDW;
+    CONFIGRET ret;
+
+    TRACE("%p %s %lx %p\n", dnDevInst, pszID, ulFlags, hMachine);
+
+    if (CaptureAndConvertAnsiArg(pszID, &pszIDW))
+        return CR_INVALID_DATA;
+
+    ret = CM_Add_ID_ExW(dnDevInst, pszIDW, ulFlags, hMachine);
+
+    MyFree(pszIDW);
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Add_ID_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Add_ID_ExW(
+    DEVINST dnDevInst, PWSTR pszID, ULONG ulFlags, HMACHINE hMachine)
+{
+    FIXME("%p %s %lx %p\n", dnDevInst, debugstr_w(pszID), ulFlags, hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Connect_MachineA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Connect_MachineA(

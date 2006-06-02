@@ -22,6 +22,80 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
+DWORD
+GetFunctionPointer(
+    IN PWSTR InstallerName,
+    OUT HMODULE* ModulePointer,
+    OUT PVOID* FunctionPointer)
+{
+    HMODULE hModule = NULL;
+    LPSTR FunctionNameA = NULL;
+    PWCHAR Comma;
+    DWORD rc;
+
+    *ModulePointer = NULL;
+    *FunctionPointer = NULL;
+
+    Comma = strchrW(InstallerName, ',');
+    if (!Comma)
+    {
+        rc = ERROR_INVALID_PARAMETER;
+        goto cleanup;
+    }
+
+    /* Load library */
+    *Comma = '\0';
+    hModule = LoadLibraryW(InstallerName);
+    *Comma = ',';
+    if (!hModule)
+    {
+        rc = GetLastError();
+        goto cleanup;
+    }
+
+    /* Skip comma spaces */
+    while (*Comma == ',' || isspaceW(*Comma))
+        Comma++;
+
+    /* W->A conversion for function name */
+    FunctionNameA = UnicodeToMultiByte(Comma, CP_ACP);
+    if (!FunctionNameA)
+    {
+        rc = GetLastError();
+        goto cleanup;
+    }
+
+    /* Search function */
+    *FunctionPointer = GetProcAddress(hModule, FunctionNameA);
+    if (!*FunctionPointer)
+    {
+        rc = GetLastError();
+        goto cleanup;
+    }
+
+    *ModulePointer = hModule;
+    rc = ERROR_SUCCESS;
+
+cleanup:
+    if (rc != ERROR_SUCCESS && hModule)
+        FreeLibrary(hModule);
+    MyFree(FunctionNameA);
+    return rc;
+}
+
+DWORD
+FreeFunctionPointer(
+    IN HMODULE ModulePointer,
+    IN PVOID FunctionPointer)
+{
+    if (ModulePointer == NULL)
+        return ERROR_SUCCESS;
+    if (FreeLibrary(ModulePointer))
+       return ERROR_SUCCESS;
+    else
+       return GetLastError();
+}
+
 /**************************************************************************
  * MyFree [SETUPAPI.@]
  *
