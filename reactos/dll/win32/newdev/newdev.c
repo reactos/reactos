@@ -745,7 +745,7 @@ DevInstallW(
 	TRACE("Installing %S (%S)\n", DevInstData->buffer, InstanceId);
 
 	/* Search driver in default location and removable devices */
-	if (!PrepareFoldersToScan(DevInstData, TRUE, FALSE, NULL))
+	if (!PrepareFoldersToScan(DevInstData, FALSE, FALSE, NULL))
 	{
 		TRACE("PrepareFoldersToScan() failed with error 0x%lx\n", GetLastError());
 		goto cleanup;
