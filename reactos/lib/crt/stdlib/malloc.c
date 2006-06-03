@@ -36,6 +36,9 @@ extern HANDLE hHeap;
  */
 void* malloc(size_t _size)
 {
+   if ( _size == 0)
+       return NULL;
+         
    return HeapAlloc(hHeap, 0, ROUND_SIZE(_size));
 }
 
@@ -52,6 +55,9 @@ void free(void* _ptr)
  */
 void* calloc(size_t _nmemb, size_t _size)
 {
+   if ( _size == 0)
+       return NULL;
+          
    return HeapAlloc(hHeap, HEAP_ZERO_MEMORY, ROUND_SIZE(_nmemb*_size) );
 }
 
@@ -60,6 +66,9 @@ void* calloc(size_t _nmemb, size_t _size)
  */
 void* realloc(void* _ptr, size_t _size)
 {
+   if ( _size == 0)
+       return NULL;
+          
    if (!_ptr) return malloc(_size);
    if (_size) return HeapReAlloc(hHeap, 0, _ptr, ROUND_SIZE(_size));
    free(_ptr);
@@ -71,6 +80,9 @@ void* realloc(void* _ptr, size_t _size)
  */
 void* _expand(void* _ptr, size_t _size)
 {
+   if ( _size == 0)
+       return NULL;
+          
    return HeapReAlloc(hHeap, HEAP_REALLOC_IN_PLACE_ONLY, _ptr, ROUND_SIZE(_size));
 }
 
