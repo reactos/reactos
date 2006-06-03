@@ -741,10 +741,10 @@ ScmStartUserModeService(PSERVICE Service)
 }
 
 
-static NTSTATUS
-ScmStartService(PSERVICE Service,
-                PSERVICE_GROUP Group)
+NTSTATUS
+ScmStartService(PSERVICE Service)
 {
+    PSERVICE_GROUP Group = Service->lpGroup;
     NTSTATUS Status;
 
     DPRINT("ScmStartService() called\n");
@@ -849,8 +849,7 @@ ScmAutoStartServices(VOID)
                     (CurrentService->dwTag == CurrentGroup->TagArray[i]))
                 {
                     CurrentService->ServiceVisited = TRUE;
-                    ScmStartService(CurrentService,
-                                    CurrentGroup);
+                    ScmStartService(CurrentService);
                 }
 
                 ServiceEntry = ServiceEntry->Flink;
@@ -868,8 +867,7 @@ ScmAutoStartServices(VOID)
                 (CurrentService->ServiceVisited == FALSE))
             {
                 CurrentService->ServiceVisited = TRUE;
-                ScmStartService(CurrentService,
-                                CurrentGroup);
+                ScmStartService(CurrentService);
             }
 
             ServiceEntry = ServiceEntry->Flink;
@@ -889,8 +887,7 @@ ScmAutoStartServices(VOID)
             (CurrentService->ServiceVisited == FALSE))
         {
             CurrentService->ServiceVisited = TRUE;
-            ScmStartService(CurrentService,
-                            NULL);
+            ScmStartService(CurrentService);
         }
 
         ServiceEntry = ServiceEntry->Flink;
@@ -907,8 +904,7 @@ ScmAutoStartServices(VOID)
             (CurrentService->ServiceVisited == FALSE))
         {
             CurrentService->ServiceVisited = TRUE;
-            ScmStartService(CurrentService,
-                            NULL);
+            ScmStartService(CurrentService);
         }
 
         ServiceEntry = ServiceEntry->Flink;

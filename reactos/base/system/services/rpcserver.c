@@ -1605,7 +1605,7 @@ ScmrQueryServiceConfigW(handle_t BindingHandle,
     LPQUERY_SERVICE_CONFIGW lpConfig;
     LPWSTR lpStr;
 
-    DPRINT1("ScmrQueryServiceConfigW() called\n");
+    DPRINT("ScmrQueryServiceConfigW() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -1725,7 +1725,7 @@ Done:;
 
     /* FIXME: Unlock the service database */
 
-    DPRINT1("ScmrQueryServiceConfigW() done\n");
+    DPRINT("ScmrQueryServiceConfigW() done\n");
 
     return dwError;
 }
@@ -1755,6 +1755,7 @@ ScmrStartServiceW(handle_t BindingHandle,
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    NTSTATUS Status;
 
     DPRINT1("ScmrStartServiceW() called\n");
 
@@ -1788,7 +1789,10 @@ ScmrStartServiceW(handle_t BindingHandle,
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-    /* FIXME: Start the service */
+    /* Start the service */
+    Status = STATUS_SUCCESS; /* FIXME: ScmStartService(lpService); */
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
 
     return dwError;
 }

@@ -121,7 +121,7 @@ VOID ScmStartRpcServer(VOID);
 /* services.c */
 
 VOID PrintString(LPCSTR fmt, ...);
-
+NTSTATUS ScmStartService(PSERVICE Service);
 
 
 /* EOF */

@@ -63,6 +63,7 @@ ScmSetServiceGroup(PSERVICE lpService,
     wcscpy(lpGroup->szGroupName, lpGroupName);
     lpGroup->lpGroupName = lpGroup->szGroupName;
     lpGroup->dwRefCount = 1;
+    lpService->lpGroup = lpGroup;
 
     InsertTailList(&UnknownGroupListHead,
                    &lpGroup->GroupListEntry);
