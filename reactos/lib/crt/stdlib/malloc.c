@@ -60,7 +60,7 @@ void* calloc(size_t _nmemb, size_t _size)
    size_t nSize = _nmemb * _size;
    size_t cSize = ROUND_SIZE(nSize);
       
-   if ((_nmemb > ((size_t)-1 / _size)  || (cSize<nSize)) 
+   if ( (_nmemb > ((size_t)-1 / _size))  || (cSize<nSize)) 
       return NULL;
                
    return HeapAlloc(hHeap, HEAP_ZERO_MEMORY, cSize );
@@ -73,7 +73,7 @@ void* realloc(void* _ptr, size_t _size)
 {
    size_t nSize;
        
-   if (( _size == 0) && (_ptr !=NULL)
+   if (( _size == 0) && (_ptr !=NULL))
        return NULL;
    
    nSize = ROUND_SIZE(_size);
