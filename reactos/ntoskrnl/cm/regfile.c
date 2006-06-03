@@ -783,10 +783,24 @@ CmiCreateHiveFreeCellList(PREGISTRY_HIVE Hive)
 
 	      FreeOffset += FreeBlock->CellSize;
 	    }
-	  else
+      else if (FreeBlock->CellSize < 0)
 	    {
 	      FreeOffset -= FreeBlock->CellSize;
 	    }
+      else
+	  {
+#ifdef HIVE_CHECK
+         /* Check and eventually fix a hive */
+         Status = CmiCheckAndFixHive(Hive);
+         if (!NT_SUCCESS(Status))
+           {
+             DPRINT1("CmiCheckAndFixHive() failed (Status %lx)\n", Status);
+             return(Status);
+           }
+#else
+		 break;
+#endif
+	  }
 	}
 
       BlockIndex += Bin->BinSize / REG_BLOCK_SIZE;
@@ -1164,7 +1178,7 @@ CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive)
 
   /* Allocate hive block list */
   Hive->BlockList = ExAllocatePool (NonPagedPool,
-				    sizeof(PBLOCK_LIST_ENTRY));
+				    sizeof(BLOCK_LIST_ENTRY));
   if (Hive->BlockList == NULL)
     {
       DPRINT1 ("Failed to allocate hive block list\n");
