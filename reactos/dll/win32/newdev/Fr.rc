@@ -1,4 +1,4 @@
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL 
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
@@ -10,7 +10,7 @@ BEGIN
     LTEXT           "Cet assistant installe un nouveau pilote pour:",
                     IDC_STATIC,115,40,195,16
     LTEXT           "Cliquer sur Suivant pour continuer.",IDC_STATIC,115,169,195,17
-    LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,129,55,164,11
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,129,55,164,11
     CONTROL         "Installer le pilote automatiquement",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,115,112,178,13
     CONTROL         "Installer le pilote depuis un endroit spécifié",IDC_RADIO_MANUAL,
@@ -24,9 +24,9 @@ CAPTION "Installation de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "L'installation a échoué",IDC_FINISHTITLE,115,8,195,24
-    LTEXT           "Le périphérique n'a pu être installé car le pilote est introuvable.",
+    LTEXT           "Le périphérique n'a pu être installé car aucun pilote adapté n'a pu être trouvé.",
                     IDC_STATIC,115,40,195,19
-    LTEXT           "Clicquer sur Précédent si vous avez un disque pilote ou vous connaissez le chemin du pilote.",
+    LTEXT           "Cliquer sur Précédent si vous avez un disque pilote ou vous connaissez le chemin du pilote.",
                     IDC_STATIC,113,98,181,24
     CONTROL         "Ne plus afficher ce message",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,114,170,180,11
@@ -67,7 +67,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Matériel Inconnu",IDC_DEVICE,51,20,169,16
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,51,20,169,16
 END
 
 IDD_INSTALLDRV DIALOG DISCARDABLE  0, 0, 317, 143
@@ -75,13 +75,13 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Installation de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Matériel Inconnu",IDC_DEVICE,51,20,169,16
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,51,20,169,16
 END
 
 IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Device installation"
+CAPTION "Installation de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Installation terminée",IDC_FINISHTITLE,115,8,195,11
