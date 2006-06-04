@@ -218,6 +218,8 @@ EnumDisplaySettingsExA(
  
   rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &lpDevModeW,
                                    dwFlags );
+  if (!rc)
+    goto done;
 
 #define COPYS(f,len) WideCharToMultiByte( CP_THREAD_ACP, 0, lpDevModeW.f, len, (LPSTR)lpDevMode->f, len, NULL, NULL )
 #define COPYN(f) lpDevMode->f = lpDevModeW.f
