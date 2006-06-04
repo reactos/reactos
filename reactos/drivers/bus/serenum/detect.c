@@ -338,7 +338,7 @@ SerenumDetectPnpDevice(
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Purge = SERIAL_PURGE_RXABORT | SERIAL_PURGE_RXCLEAR;
 	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_PURGE,
-		&Purge, 0, NULL, NULL);
+		&Purge, sizeof(ULONG), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	Wait(200);
 
