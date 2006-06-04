@@ -24,6 +24,7 @@ char* _strdate(char* datestr)
     }
     t = time(NULL);
     d = localtime(&t);
-    sprintf(dt,"%d/%d/%d",d->tm_mday,d->tm_mon+1,d->tm_year);
+
+    sprintf(dt,"%.2d/%.2d/%.2d",d->tm_mday,d->tm_mon+1,d->tm_year );
     return dt;
 }
