@@ -10,9 +10,12 @@
 int _chsize(int _fd, long size)
 {
   DPRINT("_chsize(fd %d, size %d)\n", _fd, size);
+  long location = _lseek(_fd, 0, SEEK_CUR);
+  if (location == -1) return -1;
   if (_lseek(_fd, size, 0) == -1)
     return -1;
-  if (_write(_fd, 0, 0) < 0)
+  if (!SetEndOfFile((HANDLE)_get_osfhandle(_fd)))
     return -1;
+  _lseek(_fd, location, SEEK_SET);
   return 0;
 }
