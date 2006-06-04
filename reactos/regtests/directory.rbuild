@@ -1,4 +1,7 @@
 <group>
+<directory name="kmtloader">
+	<xi:include href="kmtloader/kmtloader.rbuild" />
+</directory>
 <directory name="regtests">
 	<xi:include href="regtests/regtests.rbuild" />
 </directory>

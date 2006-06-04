@@ -20,6 +20,9 @@
 <directory name="storage">
 	<xi:include href="storage/directory.rbuild" />
 </directory>
+<directory name="test">
+	<xi:include href="test/directory.rbuild" />
+</directory>
 <directory name="usb">
 	<xi:include href="usb/directory.rbuild" />
 </directory>
