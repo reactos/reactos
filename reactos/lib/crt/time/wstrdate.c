@@ -24,6 +24,6 @@ wchar_t* _wstrdate(wchar_t* datestr)
     }
     t = time(NULL);
     d = localtime(&t);
-    swprintf(dt,L"%.2d/%.2d/%.2d",d->tm_mday,d->tm_mon+1,d->tm_year);
+    swprintf(dt,L"%d/%d/%d",d->tm_mday,d->tm_mon+1,d->tm_year);
     return dt;
 }
