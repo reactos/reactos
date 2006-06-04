@@ -2862,7 +2862,7 @@ IntChangeDisplaySettings(
 
   if ((dwflags & CDS_FULLSCREEN) == CDS_FULLSCREEN)
   {
-   DEVMODE lpDevMode;
+   DEVMODEW lpDevMode;
    /* Full Screen */
    dwflags &= ~CDS_FULLSCREEN;
    DPRINT1("flag CDS_FULLSCREEN partially implemented");
@@ -2873,9 +2873,9 @@ IntChangeDisplaySettings(
    lpDevMode.dmPelsHeight =0;
    lpDevMode.dmDriverExtra =0;
 
-   lpDevMode.dmSize = sizeof(DEVMODE);
-   Status = IntEnumDisplaySettings(pDeviceName,  ENUM_CURRENT_SETTINGS, &lpDevMode, 0);
-   if (!NT_SUCCESS(Status)) return DISP_CHANGE_FAILED;
+   lpDevMode.dmSize = sizeof(DEVMODEW);
+   if (!IntEnumDisplaySettings(pDeviceName, ENUM_CURRENT_SETTINGS, &lpDevMode, 0))
+     return DISP_CHANGE_FAILED;
 
    DPRINT1("Req Mode     : %d x %d x %d\n", DevMode->dmPelsWidth,DevMode->dmPelsHeight,DevMode->dmBitsPerPel);
    DPRINT1("Current Mode : %d x %d x %d\n", lpDevMode.dmPelsWidth,lpDevMode.dmPelsHeight, lpDevMode.dmBitsPerPel);
