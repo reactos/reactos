@@ -67,25 +67,27 @@ EnumDisplayDevicesA(
     iDevNum,
     &DisplayDeviceW,
     dwFlags );
-
-  /* Copy result from DisplayDeviceW to lpDisplayDevice */
-  lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
-  WideCharToMultiByte(CP_ACP,0,
-     DisplayDeviceW.DeviceName,wcslen(DisplayDeviceW.DeviceName),
-     lpDisplayDevice->DeviceName,sizeof(lpDisplayDevice->DeviceName) / sizeof(lpDisplayDevice->DeviceName[0]),
-     NULL,NULL);
-  WideCharToMultiByte(CP_ACP,0,
-     DisplayDeviceW.DeviceString,wcslen(DisplayDeviceW.DeviceString),
-     lpDisplayDevice->DeviceString,sizeof(lpDisplayDevice->DeviceString) / sizeof(lpDisplayDevice->DeviceString[0]),
-     NULL,NULL);
-  WideCharToMultiByte(CP_ACP,0,
-     DisplayDeviceW.DeviceID,wcslen(DisplayDeviceW.DeviceID),
-     lpDisplayDevice->DeviceID,sizeof(lpDisplayDevice->DeviceID) / sizeof(lpDisplayDevice->DeviceID[0]),
-     NULL,NULL);
-  WideCharToMultiByte(CP_ACP,0,
-     DisplayDeviceW.DeviceKey,wcslen(DisplayDeviceW.DeviceKey),
-     lpDisplayDevice->DeviceKey,sizeof(lpDisplayDevice->DeviceKey) / sizeof(lpDisplayDevice->DeviceKey[0]),
-     NULL,NULL);
+  if (!rc)
+    {
+      /* Copy result from DisplayDeviceW to lpDisplayDevice */
+      lpDisplayDevice->StateFlags = DisplayDeviceW.StateFlags;
+      WideCharToMultiByte(CP_ACP,0,
+        DisplayDeviceW.DeviceName,wcslen(DisplayDeviceW.DeviceName),
+        lpDisplayDevice->DeviceName,sizeof(lpDisplayDevice->DeviceName) / sizeof(lpDisplayDevice->DeviceName[0]),
+        NULL,NULL);
+      WideCharToMultiByte(CP_ACP,0,
+        DisplayDeviceW.DeviceString,wcslen(DisplayDeviceW.DeviceString),
+        lpDisplayDevice->DeviceString,sizeof(lpDisplayDevice->DeviceString) / sizeof(lpDisplayDevice->DeviceString[0]),
+        NULL,NULL);
+      WideCharToMultiByte(CP_ACP,0,
+        DisplayDeviceW.DeviceID,wcslen(DisplayDeviceW.DeviceID),
+        lpDisplayDevice->DeviceID,sizeof(lpDisplayDevice->DeviceID) / sizeof(lpDisplayDevice->DeviceID[0]),
+        NULL,NULL);
+      WideCharToMultiByte(CP_ACP,0,
+        DisplayDeviceW.DeviceKey,wcslen(DisplayDeviceW.DeviceKey),
+        lpDisplayDevice->DeviceKey,sizeof(lpDisplayDevice->DeviceKey) / sizeof(lpDisplayDevice->DeviceKey[0]),
+        NULL,NULL);
+    }
 
   RtlFreeUnicodeString ( &Device );
 
