@@ -1039,6 +1039,29 @@ PNP_UninstallDevInst(handle_t BindingHandle,
 }
 
 
+/* Function 34 */
+CONFIGRET
+PNP_AddID(handle_t BindingHandle,
+          wchar_t *DeviceInstance, /* in, string, unique */
+          wchar_t *DeviceId,       /* in, string */
+          DWORD Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_AddID() called\n");
+    DPRINT1("  DeviceInstance: %S\n", DeviceInstance);
+    DPRINT1("  DeviceId: %S\n", DeviceId);
+    DPRINT1("  Flags: %lx\n", Flags);
+
+    /* FIXME */
+    ret = CR_CALL_NOT_IMPLEMENTED;
+
+    DPRINT1("PNP_AddID() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 /* Function 38 */
 CONFIGRET
 PNP_IsDockStationPresent(handle_t BindingHandle,

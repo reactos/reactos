@@ -1,7 +1,7 @@
 ;
 ;  ReactOS cfgmgr32.dll
 ;
-;  Copyright (C) 2005  Eric Kohl
+;  Copyright (C) 2005, 2006  Eric Kohl
 ;
 ;  This program is free software; you can redistribute it and/or modify
 ;  it under the terms of the GNU General Public License as published by
@@ -27,10 +27,10 @@ CMP_Report_LogOn@4=SETUPAPI.CMP_Report_LogOn
 ;CMP_WaitServices
 ;CM_Add_Empty_Log_Conf@16=SETUPAPI.CM_Add_Empty_Log_Conf
 ;CM_Add_Empty_Log_Conf_Ex@20=SETUPAPI.CM_Add_Empty_Log_Conf_Ex
-;CM_Add_IDA
-;CM_Add_IDW
-;CM_Add_ID_ExA
-;CM_Add_ID_ExW
+CM_Add_IDA@12=SETUPAPI.CM_Add_IDA
+CM_Add_IDW@12=SETUPAPI.CM_Add_IDW
+CM_Add_ID_ExA@16=SETUPAPI.CM_Add_ID_ExA
+CM_Add_ID_ExW@16=SETUPAPI.CM_Add_ID_ExW
 ;CM_Add_Range
 ;CM_Add_Res_Des
 ;CM_Add_Res_Des_Ex

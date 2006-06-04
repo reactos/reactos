@@ -171,8 +171,48 @@ CONFIGRET WINAPI CM_Add_ID_ExA(
 CONFIGRET WINAPI CM_Add_ID_ExW(
     DEVINST dnDevInst, PWSTR pszID, ULONG ulFlags, HMACHINE hMachine)
 {
-    FIXME("%p %s %lx %p\n", dnDevInst, debugstr_w(pszID), ulFlags, hMachine);
-    return CR_CALL_NOT_IMPLEMENTED;
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+
+    TRACE("%p %s %lx %p\n", dnDevInst, debugstr_w(pszID), ulFlags, hMachine);
+
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (pszID == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_ADD_ID_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_AddID(BindingHandle,
+                     lpDevInst,
+                     pszID,
+                     ulFlags);
 }
 
 
