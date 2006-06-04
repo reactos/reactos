@@ -287,7 +287,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_TITLE               "Reactos prùzkumník"
+    IDS_TITLE               "ReactOS prùzkumník"
     IDS_START               "Start"
     IDS_LOGOFF              "Odhlásit se..."
     IDS_SHUTDOWN            "Vypnout..."

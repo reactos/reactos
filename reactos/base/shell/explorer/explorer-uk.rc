@@ -326,7 +326,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_TITLE               "Провідник Reactos"
+    IDS_TITLE               "Провідник ReactOS"
     IDS_START               "Пуск"
     IDS_LOGOFF              "Вихід із системи..."
     IDS_SHUTDOWN            "Вимкнення..."

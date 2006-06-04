@@ -332,7 +332,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_TITLE               "Reactos Explorer"
+    IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Start"
     IDS_LOGOFF              "Abmelden..."
     IDS_SHUTDOWN            "Herunterfahren..."

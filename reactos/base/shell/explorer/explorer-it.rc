@@ -290,7 +290,7 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_TITLE               "Reactos Explorer"
+    IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Start"
     IDS_LOGOFF              "Disconnetti..."
     IDS_SHUTDOWN            "Chiudi sessione..."
