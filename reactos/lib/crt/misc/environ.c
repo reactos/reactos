@@ -220,11 +220,8 @@ int SetEnv(const wchar_t *option)
    char *mboption;
    int remove, index, count, size, result = 0, found = 0;
 
-   if (option == NULL || 
-       ((epos = wcschr(option, L'=')) == NULL) ||
-       (epos == option)) 
-     return -1;
-
+   if (option == NULL || (epos = wcschr(option, L'=')) == NULL)
+      return -1;
    remove = (epos[1] == 0);
 
    /* Duplicate environment if needed. */
