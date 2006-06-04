@@ -2090,10 +2090,10 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
          {
             IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
             IopDeviceNodeSetFlag(DeviceNode, DNF_START_FAILED);
+            /* FIXME: Log the error (possibly in IopInitializeDeviceNodeService) */
+            CPRINT("Initialization of service %S failed (Status %x)\n",
+              DeviceNode->ServiceName.Buffer, Status);
          }
-         /* FIXME: Log the error (possibly in IopInitializeDeviceNodeService) */
-         CPRINT("Initialization of service %S failed (Status %x)\n",
-           DeviceNode->ServiceName.Buffer, Status);
       }
    } else
    {
