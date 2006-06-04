@@ -647,12 +647,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 		case L'u':
 			break;
 
-		default:
-			if (*fmt != L'%') {
-				if (str <= end)
-					*str = L'%';
-				++str;
-			}
+		default:			
 			if (*fmt) {
 				if (str <= end)
 					*str = *fmt;

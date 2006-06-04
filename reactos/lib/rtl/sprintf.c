@@ -648,11 +648,6 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			break;
 
 		default:
-			if (*fmt != '%') {
-				if (str <= end)
-					*str = '%';
-				++str;
-			}
 			if (*fmt) {
 				if (str <= end)
 					*str = *fmt;
