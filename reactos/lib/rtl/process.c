@@ -76,7 +76,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     ULONG Size;
     PWCHAR Environment = 0;
     
-    DPRINT1("RtlpInitEnvironment (hProcess: %p, Peb: %p Params: %p)\n",
+    DPRINT("RtlpInitEnvironment (hProcess: %p, Peb: %p Params: %p)\n",
             ProcessHandle, Peb, ProcessParameters);
             
     /* Give the caller 1MB if he requested it */
@@ -106,7 +106,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
         /* Calculate the size of the block */
         EnviroSize = (ULONG)((ULONG_PTR)Environment -
                              (ULONG_PTR)ProcessParameters->Environment);
-        DPRINT1("EnvironmentSize %ld\n", EnviroSize);
+        DPRINT("EnvironmentSize %ld\n", EnviroSize);
 
         /* Allocate and Initialize new Environment Block */
         Size = EnviroSize;
@@ -133,8 +133,8 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
         ProcessParameters->Environment = BaseAddress;
     }
     
-    DPRINT1("EnvironmentPointer %p\n", BaseAddress);
-    DPRINT1("Ppb->MaximumLength 0x%lx\n", ProcessParameters->MaximumLength);
+    DPRINT("EnvironmentPointer %p\n", BaseAddress);
+    DPRINT("Ppb->MaximumLength 0x%lx\n", ProcessParameters->MaximumLength);
 
     /* Now allocate space for the Parameter Block */
     BaseAddress = NULL;
