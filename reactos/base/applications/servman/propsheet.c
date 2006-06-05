@@ -259,9 +259,6 @@ GeneralPageProc(HWND hwndDlg,
                         /* Enable the 'Apply' button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
-
-                    default:
-                    break;
                 }
             }
         break;
@@ -312,12 +309,7 @@ DependanciesPageProc(HWND hwndDlg,
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
-                case IDC_START:
-                    break;
 
-                case IDC_STOP:
-
-                    break;
             }
             break;
 
@@ -329,9 +321,10 @@ DependanciesPageProc(HWND hwndDlg,
                 LPNMHDR lpnm = (LPNMHDR)lParam;
 
                 switch (lpnm->code)
+                {
 
-                default:
-                    break;
+                }
+
             }
             break;
     }

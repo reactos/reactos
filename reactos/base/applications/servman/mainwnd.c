@@ -15,7 +15,7 @@ BOOL bSortAscending = TRUE;
 
 
 /* Toolbar buttons */
-TBBUTTON tbb [NUM_BUTTONS] =
+TBBUTTON Buttons [NUM_BUTTONS] =
 {   /* iBitmap, idCommand, fsState, fsStyle, bReserved[2], dwData, iString */
     {TBICON_PROP,    ID_PROP,    TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0},    /* properties */
     {TBICON_REFRESH, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},          /* refresh */
@@ -25,7 +25,7 @@ TBBUTTON tbb [NUM_BUTTONS] =
     {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
     {TBICON_CREATE,  ID_CREATE,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },         /* create */
-    {TBICON_DELETE,  ID_DELETE,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },         /* delete */
+    {TBICON_DELETE,  ID_DELETE,  TBSTATE_INDETERMINATE, BTNS_BUTTON, {0}, 0, 0 },   /* delete */
 
     {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},                                  /* separator */
 
@@ -40,6 +40,92 @@ TBBUTTON tbb [NUM_BUTTONS] =
     {TBICON_EXIT,    ID_EXIT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 },          /* exit */
 
 };
+
+
+/* menu hints */
+static const MENU_HINT MainMenuHintTable[] = {
+    /* File Menu */
+    {ID_EXPORT,    IDS_HINT_EXPORT},
+    {ID_EXIT,      IDS_HINT_EXIT},
+
+    /* Action Menu */
+    {ID_CONNECT,  IDS_HINT_CONNECT},
+    {ID_START,    IDS_HINT_START},
+    {ID_STOP,     IDS_HINT_STOP},
+    {ID_PAUSE,    IDS_HINT_PAUSE},
+    {ID_RESUME,   IDS_HINT_RESUME},
+    {ID_RESTART,  IDS_HINT_RESTART},
+    {ID_REFRESH,  IDS_HINT_REFRESH},
+    {ID_EDIT,     IDS_HINT_EDIT},
+    {ID_CREATE,   IDS_HINT_CREATE},
+    {ID_DELETE,   IDS_HINT_DELETE},
+    {ID_PROP,     IDS_HINT_PROP},
+
+    /* View menu */
+    {ID_VIEW_LARGE,   IDS_HINT_LARGE},
+    {ID_VIEW_SMALL,   IDS_HINT_SMALL},
+    {ID_VIEW_LIST,    IDS_HINT_LIST},
+    {ID_VIEW_DETAILS, IDS_HINT_DETAILS},
+    {ID_VIEW_CUST,    IDS_HINT_CUST},
+
+    /* Help Menu */
+    {ID_HELP,     IDS_HINT_HELP},
+    {ID_ABOUT,    IDS_HINT_ABOUT}
+};
+/* system menu hints */
+static const MENU_HINT SystemMenuHintTable[] = {
+    {SC_RESTORE,    IDS_HINT_SYS_RESTORE},
+    {SC_MOVE,       IDS_HINT_SYS_MOVE},
+    {SC_SIZE,       IDS_HINT_SYS_SIZE},
+    {SC_MINIMIZE,   IDS_HINT_SYS_MINIMIZE},
+    {SC_MAXIMIZE,   IDS_HINT_SYS_MAXIMIZE},
+    {SC_CLOSE,      IDS_HINT_SYS_CLOSE},
+};
+
+
+static BOOL
+MainWndMenuHint(PMAIN_WND_INFO Info,
+                WORD CmdId,
+                const MENU_HINT *HintArray,
+                DWORD HintsCount,
+                UINT DefHintId)
+{
+    BOOL Found = FALSE;
+    const MENU_HINT *LastHint;
+    UINT HintId = DefHintId;
+
+    LastHint = HintArray + HintsCount;
+    while (HintArray != LastHint)
+    {
+        if (HintArray->CmdId == CmdId)
+        {
+            HintId = HintArray->HintId;
+            Found = TRUE;
+            break;
+        }
+        HintArray++;
+    }
+
+    StatusBarLoadString(Info->hStatus,
+                        SB_SIMPLEID,
+                        hInstance,
+                        HintId);
+
+    return Found;
+}
+
+
+static VOID
+UpdateMainStatusBar(PMAIN_WND_INFO Info)
+{
+    if (Info->hStatus != NULL)
+    {
+        SendMessage(Info->hStatus,
+                    SB_SIMPLE,
+                    (WPARAM)Info->InMenuLoop,
+                    0);
+    }
+}
 
 
 static VOID
@@ -89,6 +175,12 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
 
     if (Info->SelectedItem != NO_ITEM_SELECTED)
     {
+        /* allow user to delete service */
+        SendMessage(Info->hTool, TB_SETSTATE, ID_DELETE,
+                   (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+        EnableMenuItem(hMainMenu, ID_DELETE, MF_ENABLED);
+        EnableMenuItem(Info->hShortcutMenu, ID_DELETE, MF_ENABLED);
+
         Flags = Info->CurrentService->ServiceStatusProcess.dwControlsAccepted;
         State = Info->CurrentService->ServiceStatusProcess.dwCurrentState;
 
@@ -126,10 +218,14 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
     }
     else
     {
+        /* disable tools which rely on a selected service */
         EnableMenuItem(hMainMenu, ID_PROP, MF_GRAYED);
         EnableMenuItem(hMainMenu, ID_DELETE, MF_GRAYED);
+        EnableMenuItem(Info->hShortcutMenu, ID_PROP, MF_GRAYED);
         EnableMenuItem(Info->hShortcutMenu, ID_DELETE, MF_GRAYED);
         SendMessage(Info->hTool, TB_SETSTATE, ID_PROP,
+                   (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+        SendMessage(Info->hTool, TB_SETSTATE, ID_DELETE,
                    (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
     }
 
@@ -156,101 +252,55 @@ CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 
-/*FIXME: needs rewriting / optimising */
-static VOID CALLBACK
-MainWndResize(PVOID Context,
-              WORD cx,
-              WORD cy)
-{
-    PMAIN_WND_INFO Info = (PMAIN_WND_INFO)Context;
-
-    RECT rcClient, rcTool, rcStatus;
-    int lvHeight, iToolHeight, iStatusHeight;
-
-    /* Size toolbar and get height */
-    Info->hTool = GetDlgItem(Info->hMainWnd, IDC_TOOLBAR);
-    SendMessage(Info->hTool, TB_AUTOSIZE, 0, 0);
-
-    GetWindowRect(Info->hTool, &rcTool);
-    iToolHeight = rcTool.bottom - rcTool.top;
-
-    /* Size status bar and get height */
-    Info->hStatus = GetDlgItem(Info->hMainWnd, IDC_STATUSBAR);
-    SendMessage(Info->hStatus, WM_SIZE, 0, 0);
-
-    GetWindowRect(Info->hStatus, &rcStatus);
-    iStatusHeight = rcStatus.bottom - rcStatus.top;
-
-    /* Calculate remaining height and size list view */
-    GetClientRect(Info->hMainWnd, &rcClient);
-
-    lvHeight = rcClient.bottom - iToolHeight - iStatusHeight;
-
-    Info->hListView = GetDlgItem(Info->hMainWnd, IDC_SERVLIST);
-    SetWindowPos(Info->hListView, NULL, 0, iToolHeight, rcClient.right, lvHeight, SWP_NOZORDER);
-}
-
-
-static VOID
+static BOOL
 CreateToolbar(PMAIN_WND_INFO Info)
 {
-    TBADDBITMAP tbab;
-    INT iImageOffset;
-    INT NumButtons;
+    INT NumButtons = sizeof(Buttons) / sizeof(Buttons[0]);
 
-    Info->hTool = CreateWindowEx(0, //WS_EX_TOOLWINDOW
+    Info->hTool = CreateWindowEx(0,
                                  TOOLBARCLASSNAME,
                                  NULL,
                                  WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | TBSTYLE_TOOLTIPS,
                                  0, 0, 0, 0,
                                  Info->hMainWnd,
-                                 (HMENU)IDC_TOOLBAR,
+                                 0,
                                  hInstance,
                                  NULL);
-    if(Info->hTool == NULL)
+    if(Info->hTool != NULL)
     {
-        MessageBox(Info->hMainWnd,
-                   _T("Could not create tool bar."),
-                   _T("Error"),
-                   MB_OK | MB_ICONERROR);
+        HIMAGELIST hImageList;
+
+        SendMessage(Info->hTool,
+                    TB_SETEXTENDEDSTYLE,
+                    0,
+                    TBSTYLE_EX_HIDECLIPPEDBUTTONS);
+
+        SendMessage(Info->hTool,
+                    TB_BUTTONSTRUCTSIZE,
+                    sizeof(Buttons[0]),
+                    0);
+
+        hImageList = InitImageList(IDB_PROP,
+                                   IDB_EXIT,
+                                   16,
+                                   16);
+        if (hImageList == NULL)
+            return FALSE;
+
+        ImageList_Destroy((HIMAGELIST)SendMessage(Info->hTool,
+                                                  TB_SETIMAGELIST,
+                                                  0,
+                                                  (LPARAM)hImageList));
+
+        SendMessage(Info->hTool,
+                    TB_ADDBUTTONS,
+                    NumButtons,
+                    (LPARAM)Buttons);
+
+        return TRUE;
     }
 
-    /* Send the TB_BUTTONSTRUCTSIZE message, which is required for backward compatibility */
-    SendMessage(Info->hTool,
-                TB_BUTTONSTRUCTSIZE,
-                sizeof(TBBUTTON),
-                0);
-
-    NumButtons = sizeof(tbb) / sizeof(tbb[0]);
-
-    /* Add custom images */
-    tbab.hInst = hInstance;
-    tbab.nID = IDB_BUTTONS;
-    iImageOffset = (INT)SendMessage(Info->hTool,
-                                    TB_ADDBITMAP,
-                                    NumButtons,
-                                    (LPARAM)&tbab);
-    tbb[0].iBitmap += iImageOffset; /* properties */
-    tbb[1].iBitmap += iImageOffset; /* refresh */
-    tbb[2].iBitmap += iImageOffset; /* export */
-    tbb[4].iBitmap += iImageOffset; /* create */
-    tbb[5].iBitmap += iImageOffset; /* delete */
-    tbb[7].iBitmap += iImageOffset; /* start */
-    tbb[8].iBitmap += iImageOffset; /* stop */
-    tbb[9].iBitmap += iImageOffset; /* pause */
-    tbb[10].iBitmap += iImageOffset; /* restart */
-    tbb[12].iBitmap += iImageOffset; /* help */
-    tbb[13].iBitmap += iImageOffset; /* exit */
-
-    /* Add buttons to toolbar */
-    SendMessage(Info->hTool,
-                TB_ADDBUTTONS,
-                NumButtons,
-                (LPARAM) &tbb);
-
-    /* Show toolbar */
-    ShowWindow(Info->hTool,
-               SW_SHOWNORMAL);
+    return FALSE;
 }
 
 
@@ -350,7 +400,7 @@ CreateListView(PMAIN_WND_INFO Info)
     return TRUE;
 }
 
-static VOID
+static BOOL
 CreateStatusBar(PMAIN_WND_INFO Info)
 {
     INT StatWidths[] = {110, -1}; /* widths of status bar */
@@ -365,30 +415,90 @@ CreateStatusBar(PMAIN_WND_INFO Info)
                                    hInstance,
                                    NULL);
     if(Info->hStatus == NULL)
-    {
-        MessageBox(Info->hMainWnd,
-                   _T("Could not create status bar."),
-                   _T("Error!"),
-                   MB_OK | MB_ICONERROR);
-        return;
-    }
+        return FALSE;
+
 
     SendMessage(Info->hStatus,
                 SB_SETPARTS,
                 sizeof(StatWidths) / sizeof(INT),
                 (LPARAM)StatWidths);
+
+    return TRUE;
+}
+
+static VOID
+ListViewSelectionChanged(PMAIN_WND_INFO Info,
+                         LPNMLISTVIEW pnmv)
+{
+
+    HMENU hMainMenu;
+
+    /* get handle to menu */
+    hMainMenu = GetMenu(Info->hMainWnd);
+
+    /* activate properties menu item, if not already */
+    if (GetMenuState(hMainMenu,
+                     ID_PROP,
+                     MF_BYCOMMAND) != MF_ENABLED)
+    {
+        EnableMenuItem(hMainMenu,
+                       ID_PROP,
+                       MF_ENABLED);
+    }
+
+    /* activate delete menu item, if not already */
+    if (GetMenuState(hMainMenu,
+                     ID_DELETE,
+                     MF_BYCOMMAND) != MF_ENABLED)
+    {
+        EnableMenuItem(hMainMenu,
+                       ID_DELETE,
+                       MF_ENABLED);
+        EnableMenuItem(Info->hShortcutMenu,
+                       ID_DELETE,
+                       MF_ENABLED);
+    }
+
+
+    /* set selected service */
+    Info->SelectedItem = pnmv->iItem;
+
+    /* get pointer to selected service */
+    Info->CurrentService = GetSelectedService(Info);
+
+    /* alter options for the service */
+    SetMenuAndButtonStates(Info);
+
+    /* set current selected service in the status bar */
+    SendMessage(Info->hStatus,
+                SB_SETTEXT,
+                1,
+                (LPARAM)Info->CurrentService->lpDisplayName);
+
+    /* show the properties button */
+    SendMessage(Info->hTool,
+                TB_SETSTATE,
+                ID_PROP,
+                (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+
+
 }
 
 
 static VOID
 InitMainWnd(PMAIN_WND_INFO Info)
 {
-    CreateToolbar(Info);
+    if (!CreateToolbar(Info))
+        DisplayString(_T("error creating toolbar"));
 
     if (!CreateListView(Info))
+    {
+        DisplayString(_T("error creating list view"));
         return;
+    }
 
-    CreateStatusBar(Info);
+    if (!CreateStatusBar(Info))
+        DisplayString(_T("error creating status bar"));
 
     /* Create Popup Menu */
     Info->hShortcutMenu = LoadMenu(hInstance,
@@ -564,7 +674,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
                              LVS_REPORT);
         break;
 
-        case ID_VIEW_CUSTOMIZE:
+        case ID_VIEW_CUST:
         break;
 
         case ID_ABOUT:
@@ -576,6 +686,37 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
     }
+}
+
+
+static VOID CALLBACK
+MainWndResize(PMAIN_WND_INFO Info,
+              WORD cx,
+              WORD cy)
+{
+    RECT rcClient, rcTool, rcStatus;
+    int lvHeight, iToolHeight, iStatusHeight;
+
+    /* Size toolbar and get height */
+    SendMessage(Info->hTool, TB_AUTOSIZE, 0, 0);
+    GetWindowRect(Info->hTool, &rcTool);
+    iToolHeight = rcTool.bottom - rcTool.top;
+
+    /* Size status bar and get height */
+    SendMessage(Info->hStatus, WM_SIZE, 0, 0);
+    GetWindowRect(Info->hStatus, &rcStatus);
+    iStatusHeight = rcStatus.bottom - rcStatus.top;
+
+    /* Calculate remaining height and size list view */
+    GetClientRect(Info->hMainWnd, &rcClient);
+    lvHeight = rcClient.bottom - iToolHeight - iStatusHeight;
+    SetWindowPos(Info->hListView,
+                 NULL,
+                 0,
+                 iToolHeight,
+                 rcClient.right,
+                 lvHeight,
+                 SWP_NOZORDER);
 }
 
 
@@ -669,55 +810,8 @@ MainWndProc(HWND hwnd,
 			    case LVN_ITEMCHANGED:
 			    {
 			        LPNMLISTVIEW pnmv = (LPNMLISTVIEW) lParam;
-			        HMENU hMainMenu;
 
-                    /* get handle to menu */
-                    hMainMenu = GetMenu(Info->hMainWnd);
-
-                    /* activate properties menu item, if not already */
-                    if (GetMenuState(hMainMenu,
-                                     ID_PROP,
-                                     MF_BYCOMMAND) != MF_ENABLED)
-                    {
-                        EnableMenuItem(hMainMenu,
-                                       ID_PROP,
-                                       MF_ENABLED);
-                    }
-
-                    /* activate delete menu item, if not already */
-                    if (GetMenuState(hMainMenu,
-                                     ID_DELETE,
-                                     MF_BYCOMMAND) != MF_ENABLED)
-                    {
-                        EnableMenuItem(hMainMenu,
-                                       ID_DELETE,
-                                       MF_ENABLED);
-                        EnableMenuItem(Info->hShortcutMenu,
-                                       ID_DELETE,
-                                       MF_ENABLED);
-                    }
-
-
-                    /* set selected service */
-			        Info->SelectedItem = pnmv->iItem;
-
-			        /* get pointer to selected service */
-                    Info->CurrentService = GetSelectedService(Info);
-
-                    /* alter options for the service */
-			        SetMenuAndButtonStates(Info);
-
-			        /* set current selected service in the status bar */
-                    SendMessage(Info->hStatus,
-                                SB_SETTEXT,
-                                1,
-                                (LPARAM)Info->CurrentService->lpDisplayName);
-
-                    /* show the properties button */
-                    SendMessage(Info->hTool,
-                                TB_SETSTATE,
-                                ID_PROP,
-                                (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+			        ListViewSelectionChanged(Info, pnmv);
 
 			    }
 			    break;
@@ -781,9 +875,6 @@ MainWndProc(HWND hwnd,
                     }
                 }
                 break;
-
-                default:
-                break;
             }
         }
         break;
@@ -818,6 +909,40 @@ MainWndProc(HWND hwnd,
                            LOWORD(wParam),
                            (HWND)lParam);
             goto HandleDefaultMessage;
+        }
+
+        case WM_MENUSELECT:
+        {
+            if (Info->hStatus != NULL)
+            {
+                if (!MainWndMenuHint(Info,
+                                     LOWORD(wParam),
+                                     MainMenuHintTable,
+                                     sizeof(MainMenuHintTable) / sizeof(MainMenuHintTable[0]),
+                                     IDS_HINT_BLANK))
+                {
+                    MainWndMenuHint(Info,
+                                    LOWORD(wParam),
+                                    SystemMenuHintTable,
+                                    sizeof(SystemMenuHintTable) / sizeof(SystemMenuHintTable[0]),
+                                    IDS_HINT_BLANK);
+                }
+            }
+        }
+        break;
+
+        case WM_ENTERMENULOOP:
+        {
+            Info->InMenuLoop = TRUE;
+            UpdateMainStatusBar(Info);
+            break;
+        }
+
+        case WM_EXITMENULOOP:
+        {
+            Info->InMenuLoop = FALSE;
+            UpdateMainStatusBar(Info);
+            break;
         }
 
 	    case WM_CLOSE:

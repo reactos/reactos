@@ -216,27 +216,26 @@ VOID DisplayString(PTCHAR Msg)
 
 
 HIMAGELIST
-InitImageList(UINT NumImages,
-              UINT StartResource,
+InitImageList(UINT StartResource,
+              UINT EndResource,
               UINT Width,
               UINT Height)
 {
     HBITMAP hBitmap;
     HIMAGELIST hImageList;
-    INT i, k, Ret;
-
+    INT i, Ret;
 
     /* Create the toolbar icon image list */
     hImageList = ImageList_Create(Width,
                                   Height,
                                   ILC_MASK | ILC_COLOR24,
-                                  NumImages,
+                                  EndResource - StartResource,
                                   0);
-    if (! hImageList)
+    if (hImageList == NULL)
         return NULL;
 
     /* Add all icons to the image list */
-    for (i = StartResource, k = 0; k < NumImages; i++, k++)
+    for (i = StartResource; i <= EndResource; i++)
     {
         hBitmap = LoadImage(hInstance,
                             MAKEINTRESOURCE(i),
@@ -244,14 +243,17 @@ InitImageList(UINT NumImages,
                             Width,
                             Height,
                             LR_LOADTRANSPARENT);
+        if (hBitmap == NULL)
+            return NULL;
 
         Ret = ImageList_AddMasked(hImageList,
                                   hBitmap,
-                                  RGB(255, 255, 254));
+                                  RGB(255, 0, 128));
+        if (Ret == -1)
+            return NULL;
 
         DeleteObject(hBitmap);
     }
 
     return hImageList;
-
 }

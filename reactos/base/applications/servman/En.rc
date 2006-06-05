@@ -8,7 +8,7 @@ BEGIN
   END
   POPUP "Action"
   BEGIN
-    MENUITEM "Connect to...", ID_NET_CON, GRAYED
+    MENUITEM "Connect to...", ID_CONNECT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Start",       ID_START, GRAYED
     MENUITEM "Stop",        ID_STOP, GRAYED
@@ -18,7 +18,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Refresh",     ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Edit...", ID_EDIT, GRAYED
+    MENUITEM "Edit...",     ID_EDIT, GRAYED
     MENUITEM "Create...",   ID_CREATE
     MENUITEM "Delete...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
@@ -31,13 +31,15 @@ BEGIN
     MENUITEM "List",        ID_VIEW_LIST
     MENUITEM "Details",     ID_VIEW_DETAILS
     MENUITEM SEPARATOR
-    MENUITEM "Customize...",ID_VIEW_CUSTOMIZE, GRAYED
+    MENUITEM "Customize...",ID_VIEW_CUST, GRAYED
   END
   POPUP "Help"
   BEGIN
-    MENUITEM "About...",    ID_ABOUT
+    MENUITEM "Help",        ID_HELP
+    MENUITEM "About",       ID_ABOUT
   END
 END
+
 IDR_POPUP MENU
 BEGIN
   POPUP "popup"
@@ -50,7 +52,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Refresh",     ID_REFRESH
     MENUITEM SEPARATOR
-    MENUITEM "Edit...", ID_EDIT, GRAYED
+    MENUITEM "Edit...",     ID_EDIT, GRAYED
     MENUITEM "Delete...",   ID_DELETE, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Properties...", ID_PROP, GRAYED
@@ -79,7 +81,7 @@ BEGIN
   EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
   EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
   EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
-  CONTROL "", IDC_START_TYPE, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 70, 107, 176, 40
+  COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
   PUSHBUTTON "Start", IDC_START, 6, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "Stop", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
   PUSHBUTTON "Pause", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
@@ -101,8 +103,8 @@ CAPTION "Dependencies"
 FONT 8,"Tahoma",0,0
 STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "",IDC_DEPEND_TREE1,"SysTreeView32",0x50010007,8,70,236,68,0x00000200
-  CONTROL "",IDC_DEPEND_TREE2,"SysTreeView32",0x50010007,8,151,234,67,0x00000200
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
   LTEXT "Some services depend on other services, system drivers and load order groups. If a system component is stopped or it is not running properly, dependant services can be affected.", IDC_STATIC,8, 7, 238, 26
   LTEXT "This service depends on the following components", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
@@ -113,19 +115,19 @@ CAPTION "Create a service"
 FONT 8,"Tahoma",0,0
 STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "",IDC_CREATE_SERVNAME,"Edit",0x50010000,72,12,150,11,0x00000200
-  CONTROL "",IDC_CREATE_DISPNAME,"Edit",0x50010000,72,31,150,11,0x00000200
-  CONTROL "",IDC_CREATE_PATH,"Edit",0x50010000,8,62,214,13,0x00000200
-  CONTROL "",IDC_CREATE_DESC,"Edit",0x50010000,10,97,210,48,0x00000200
-  CONTROL "",IDC_CREATE_OPTIONS,"Edit",0x50010000,10,162,210,13,0x00000200
-  CONTROL "*Service Name :",IDC_STATIC,"Static",0x50000202,12,12,54,9
-  CONTROL "*Display Name :",IDC_STATIC,"Static",0x50000202,12,33,54,9
-  CONTROL "*Path to executable :",IDC_STATIC,"Static",0x50000000,10,51,68,9
-  CONTROL "Description :",IDC_STATIC,"Static",0x50000000,12,86,44,9
-  CONTROL "OK",IDOK,"Button",0x50010000,126,192,44,13
-  CONTROL "Cancel",IDCANCEL,"Button",0x50010000,176,192,46,13
-  CONTROL "Additional options (click help for details)",IDC_STATIC,"Static",0x50000000,10,151,134,9
-  CONTROL "Help",ID_CREATE_HELP,"Button",0x50010000,6,192,44,13
+  EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
+  EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_PATH, 8, 62, 214, 13, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
+  LTEXT "*Service Name :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*Display Name :", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*Path to executable :", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "Description :", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "Cancel", IDCANCEL, 176, 192, 46, 13
+  LTEXT "Additional options (click help for details)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "Help", ID_CREATE_HELP, 6, 192, 44, 13
 END
 
 IDD_DLG_DELETE DIALOGEX 6,6,185,148
@@ -157,7 +159,7 @@ FONT 8,"MS Sans Serif",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 EXSTYLE WS_EX_TOOLWINDOW
 BEGIN
-  CONTROL "",IDC_SERVCON_PROGRESS,"msctls_progress32",0x50000000,8,46,238,13
+  CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
   LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
   LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
   PUSHBUTTON "&Close", IDOK, 100, 70, 54, 13
@@ -216,4 +218,63 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HELP_OPTIONS "CREATE OPTIONS:\r\nNOTE: The option name includes the equal sign.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (default = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (default = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (default = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (default = LocalSystem)\r\n password= <password>\r\n"
+END
+#define IDS_HINT_BLANK          20000
+#define IDS_HINT_EXPORT         20001
+#define IDS_HINT_EXIT           20002
+
+#define IDS_HINT_CONNECT        20011
+#define IDS_HINT_START          20012
+#define IDS_HINT_STOP           21013
+#define IDS_HINT_PAUSE          21014
+#define IDS_HINT_RESUME         20015
+#define IDS_HINT_RESTART        20016
+#define IDS_HINT_REFRESH        20017
+#define IDS_HINT_EDIT           20018
+#define IDS_HINT_CREATE         20019
+#define IDS_HINT_DELETE         20020
+#define IDS_HINT_PROP           20021
+
+#define IDS_HINT_LARGE          20030
+#define IDS_HINT_SMALL          20031
+#define IDS_HINT_LIST           20032
+#define IDS_HINT_DETAILS        20033
+#define IDS_HINT_CUST           20034
+
+#define IDS_HINT_HELP           20040
+#define IDS_HINT_ABOUT          20041
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXPORT       " Exports the current list to a file."
+  IDS_HINT_EXIT         " Exits the program."
+
+  IDS_HINT_CONNECT      " Manage a different computer."
+  IDS_HINT_START        " Start the selected service."
+  IDS_HINT_STOP         " Stop the selected service."
+  IDS_HINT_PAUSE        " Pause the selected service."
+  IDS_HINT_RESUME       " Resume the selected service."
+  IDS_HINT_RESTART      " Stop and start the selected service."
+  IDS_HINT_REFRESH      " Refresh the service list."
+  IDS_HINT_EDIT         " Edit the properties of the selected service."
+  IDS_HINT_CREATE       " Create a new service."
+  IDS_HINT_DELETE       " Delete the selected service."
+  IDS_HINT_PROP         " Open property sheet for the current selection."
+
+  IDS_HINT_LARGE        " Display items by using large icons."
+  IDS_HINT_SMALL        " Display items by using small icons."
+  IDS_HINT_LIST         " Display item in a list."
+  IDS_HINT_DETAILS      " Display information about each item in a window."
+  IDS_HINT_CUST         " Customizes the view."
+
+  IDS_HINT_HELP         " Display help window."
+  IDS_HINT_ABOUT        " About ReactOS Service Manager."
+
+  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
+  IDS_HINT_SYS_MOVE     " Moves this window."
+  IDS_HINT_SYS_SIZE     " Resizes this window."
+  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
+  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
+  IDS_HINT_SYS_CLOSE    " Closes this window."
 END

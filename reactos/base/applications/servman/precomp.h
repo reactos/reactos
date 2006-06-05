@@ -13,6 +13,10 @@
 #pragma warning(disable : 4100)
 #endif
 
+#ifndef SB_SIMPLEID
+#define SB_SIMPLEID 0xFF
+#endif
+
 #define NO_ITEM_SELECTED -1
 #define MAX_KEY_LENGTH 256
 #define NUM_BUTTONS 14
@@ -54,6 +58,9 @@ typedef struct _MAIN_WND_INFO
 
     struct _PROP_DLG_INFO *PropSheet;
 
+    /* status flags */
+    BOOL InMenuLoop : 1;
+
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
 
@@ -68,6 +75,12 @@ extern HINSTANCE hInstance;
 extern HANDLE ProcessHeap;
 
 /* mainwnd.c */
+typedef struct _MENU_HINT
+{
+    WORD CmdId;
+    UINT HintId;
+} MENU_HINT, *PMENU_HINT;
+
 BOOL InitMainWindowImpl(VOID);
 VOID UninitMainWindowImpl(VOID);
 HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);

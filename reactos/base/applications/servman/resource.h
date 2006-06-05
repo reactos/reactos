@@ -7,9 +7,8 @@
 #define IDS_LICENSE         203
 
 #define IDC_SERVLIST        1000
-#define IDC_TOOLBAR         1001
-#define IDC_STATUSBAR	    1002
-#define IDC_EDIT_BUTTON     1003
+#define IDC_STATUSBAR	    1001
+#define IDC_EDIT_BUTTON     1002
 
 #define ID_PROP             2000
 #define ID_REFRESH          2001
@@ -24,11 +23,11 @@
 #define ID_DELETE           2010
 #define ID_HELP             2011
 #define ID_EXIT             2012
-#define ID_NET_CON          2013
+#define ID_CONNECT          2013
 
 #define IDR_MAINMENU        102
 #define IDR_POPUP           103
-#define ID_VIEW_CUSTOMIZE   4021
+#define ID_VIEW_CUST        4021
 #define ID_VIEW_LARGE       4022
 #define ID_VIEW_SMALL       4023
 #define ID_VIEW_LIST        4024
@@ -65,6 +64,18 @@
 #define IDI_SM_ICON         50
 #define IDB_BUTTONS         51
 
+#define IDB_PROP            10000
+#define IDB_REFRESH         10001
+#define IDB_EXPORT          10002
+#define IDB_CREATE          10003
+#define IDB_DELETE          10004
+#define IDB_START           10005
+#define IDB_STOP            10006
+#define IDB_PAUSE           10007
+#define IDB_RESTART         10008
+#define IDB_HELP            10009
+#define IDB_EXIT            10010
+
 /* toolbar buttons */
 #define TBICON_PROP         0
 #define TBICON_REFRESH      1
@@ -77,6 +88,42 @@
 #define TBICON_RESTART      8
 #define TBICON_HELP         9
 #define TBICON_EXIT         10
+
+
+/* menu hints */
+#define IDS_HINT_BLANK          20000
+#define IDS_HINT_EXPORT         20001
+#define IDS_HINT_EXIT           20002
+
+#define IDS_HINT_CONNECT        20011
+#define IDS_HINT_START          20012
+#define IDS_HINT_STOP           21013
+#define IDS_HINT_PAUSE          21014
+#define IDS_HINT_RESUME         20015
+#define IDS_HINT_RESTART        20016
+#define IDS_HINT_REFRESH        20017
+#define IDS_HINT_EDIT           20018
+#define IDS_HINT_CREATE         20019
+#define IDS_HINT_DELETE         20020
+#define IDS_HINT_PROP           20021
+
+#define IDS_HINT_LARGE          20030
+#define IDS_HINT_SMALL          20031
+#define IDS_HINT_LIST           20032
+#define IDS_HINT_DETAILS        20033
+#define IDS_HINT_CUST           20034
+
+#define IDS_HINT_HELP           20040
+#define IDS_HINT_ABOUT          20041
+
+/* system menu hints */
+#define IDS_HINT_SYS_RESTORE    21001
+#define IDS_HINT_SYS_MOVE       21002
+#define IDS_HINT_SYS_SIZE       21003
+#define IDS_HINT_SYS_MINIMIZE   21004
+#define IDS_HINT_SYS_MAXIMIZE   21005
+#define IDS_HINT_SYS_CLOSE      21006
+
 
 /* properties dialog */
 #define IDD_DLG_GENERAL     10001
