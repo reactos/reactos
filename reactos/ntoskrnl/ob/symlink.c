@@ -194,7 +194,7 @@ ObInitSymbolicLinkImplementation(VOID)
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.ParseProcedure = ObpParseSymbolicLink;
     ObjectTypeInitializer.DeleteProcedure = ObpDeleteSymbolicLink;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObSymbolicLinkType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObSymbolicLinkType);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

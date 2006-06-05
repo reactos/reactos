@@ -216,7 +216,7 @@ IopInitIoCompletionImplementation(VOID)
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.GenericMapping = IopCompletionMapping;
     ObjectTypeInitializer.DeleteProcedure = IopDeleteIoCompletion;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoCompletionType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoCompletionType);
 }
 
 NTSTATUS

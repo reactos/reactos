@@ -329,7 +329,7 @@ Next:
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 ObQueryNameString(IN  PVOID Object,
                   OUT POBJECT_NAME_INFORMATION ObjectNameInfo,

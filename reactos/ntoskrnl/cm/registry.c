@@ -22,6 +22,7 @@
 #pragma alloc_text(INIT, CmInit2)
 #endif
 
+#define ObGetObjectPointerCount(x) OBJECT_TO_OBJECT_HEADER(x)->PointerCount
 
 /* GLOBALS ******************************************************************/
 
@@ -373,7 +374,7 @@ CmInitializeRegistry(VOID)
   ObjectTypeInitializer.SecurityProcedure = CmiObjectSecurity;
   ObjectTypeInitializer.QueryNameProcedure = CmiObjectQueryName;
 
-  ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &CmiKeyType);
+  ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &CmiKeyType);
 
   /* Initialize the hive list */
   InitializeListHead(&CmiHiveListHead);

@@ -122,7 +122,7 @@ PsInitThreadManagment(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = THREAD_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsThreadType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
 
    PsInitializeIdleOrFirstThread(PsInitialSystemProcess, &FirstThread, NULL, KernelMode, TRUE);
    FirstThread->Tcb.State = Running;
@@ -163,7 +163,7 @@ PsInitProcessManagment(VOID)
    ObjectTypeInitializer.PoolType = NonPagedPool;
    ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
    ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
-   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsProcessType);
+   ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
 
    InitializeListHead(&PsActiveProcessHead);
    ExInitializeFastMutex(&PspActiveProcessMutex);

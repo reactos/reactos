@@ -591,7 +591,7 @@ SepInitializeTokenImplementation(VOID)
     ObjectTypeInitializer.ValidAccessMask = TOKEN_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.DeleteProcedure = SepDeleteToken;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &SepTokenObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &SepTokenObjectType);
 }
 
 

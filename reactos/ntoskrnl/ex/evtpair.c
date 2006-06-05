@@ -49,7 +49,7 @@ ExpInitializeEventPairImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = EVENT_PAIR_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExEventPairObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventPairObjectType);
 }
 
 NTSTATUS

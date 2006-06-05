@@ -549,11 +549,98 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     return STATUS_SUCCESS;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
+
 NTSTATUS
 NTAPI
-ObpCreateTypeObject(IN POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
-                    IN PUNICODE_STRING TypeName,
-                    OUT POBJECT_TYPE *ObjectType)
+ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
+               IN POBJECT_TYPE Type,
+               IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+               IN KPROCESSOR_MODE AccessMode,
+               IN OUT PVOID ParseContext OPTIONAL,
+               IN ULONG ObjectSize,
+               IN ULONG PagedPoolCharge OPTIONAL,
+               IN ULONG NonPagedPoolCharge OPTIONAL,
+               OUT PVOID *Object)
+{
+    NTSTATUS Status;
+    POBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    UNICODE_STRING ObjectName;
+    POBJECT_HEADER Header;
+    DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n", 
+            Type, ObjectAttributes, Object);
+
+    /* Allocate a capture buffer */
+    ObjectCreateInfo = ObpAllocateCapturedAttributes(LookasideCreateInfoList);
+    if (!ObjectCreateInfo) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Capture all the info */
+    Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                        ObjectAttributesAccessMode,
+                                        FALSE,
+                                        ObjectCreateInfo,
+                                        &ObjectName);
+    if (NT_SUCCESS(Status))
+    {
+        /* Validate attributes */
+        if (Type->TypeInfo.InvalidAttributes &
+            ObjectCreateInfo->Attributes)
+        {
+            /* Fail */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            /* Save the pool charges */
+            ObjectCreateInfo->PagedPoolCharge = PagedPoolCharge;
+            ObjectCreateInfo->NonPagedPoolCharge = NonPagedPoolCharge;
+
+            /* Allocate the Object */
+            Status = ObpAllocateObject(ObjectCreateInfo,
+                                       &ObjectName,
+                                       Type,
+                                       ObjectSize + sizeof(OBJECT_HEADER),
+                                       AccessMode,
+                                       &Header);
+            if (NT_SUCCESS(Status))
+            {
+                /* Return the Object */
+                *Object = &Header->Body;
+
+                /* Check if this is a permanent object */
+                if (Header->Flags & OB_FLAG_PERMANENT)
+                {
+                    /* Do the privilege check */
+                    if (!SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
+                                                ObjectAttributesAccessMode))
+                    {
+                        /* Fail */
+                        ObpDeallocateObject(*Object);
+                        Status = STATUS_PRIVILEGE_NOT_HELD;
+                    }
+                }
+
+                /* Return status */
+                return Status;
+            }
+        }
+
+        /* Release the Capture Info, we don't need it */
+        ObpReleaseCapturedAttributes(ObjectCreateInfo);
+        if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    }
+
+    /* We failed, so release the Buffer */
+    ObpFreeCapturedAttributes(ObjectCreateInfo, LookasideCreateInfoList);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+ObCreateObjectType(IN PUNICODE_STRING TypeName,
+                   IN POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
+                   IN PVOID Reserved,
+                   OUT POBJECT_TYPE *ObjectType)
 {
     POBJECT_HEADER Header;
     POBJECT_TYPE LocalObjectType;
@@ -672,92 +759,6 @@ ObpCreateTypeObject(IN POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
 
     /* Return the object type and creations tatus */
     *ObjectType = LocalObjectType;
-    return Status;
-}
-
-/* PUBLIC FUNCTIONS **********************************************************/
-
-NTSTATUS
-NTAPI
-ObCreateObject(IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
-               IN POBJECT_TYPE Type,
-               IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-               IN KPROCESSOR_MODE AccessMode,
-               IN OUT PVOID ParseContext OPTIONAL,
-               IN ULONG ObjectSize,
-               IN ULONG PagedPoolCharge OPTIONAL,
-               IN ULONG NonPagedPoolCharge OPTIONAL,
-               OUT PVOID *Object)
-{
-    NTSTATUS Status;
-    POBJECT_CREATE_INFORMATION ObjectCreateInfo;
-    UNICODE_STRING ObjectName;
-    POBJECT_HEADER Header;
-    DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n", 
-            Type, ObjectAttributes, Object);
-
-    /* Allocate a capture buffer */
-    ObjectCreateInfo = ObpAllocateCapturedAttributes(LookasideCreateInfoList);
-    if (!ObjectCreateInfo) return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Capture all the info */
-    Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                        ObjectAttributesAccessMode,
-                                        FALSE,
-                                        ObjectCreateInfo,
-                                        &ObjectName);
-    if (NT_SUCCESS(Status))
-    {
-        /* Validate attributes */
-        if (Type->TypeInfo.InvalidAttributes &
-            ObjectCreateInfo->Attributes)
-        {
-            /* Fail */
-            Status = STATUS_INVALID_PARAMETER;
-        }
-        else
-        {
-            /* Save the pool charges */
-            ObjectCreateInfo->PagedPoolCharge = PagedPoolCharge;
-            ObjectCreateInfo->NonPagedPoolCharge = NonPagedPoolCharge;
-
-            /* Allocate the Object */
-            Status = ObpAllocateObject(ObjectCreateInfo,
-                                       &ObjectName,
-                                       Type,
-                                       ObjectSize + sizeof(OBJECT_HEADER),
-                                       AccessMode,
-                                       &Header);
-            if (NT_SUCCESS(Status))
-            {
-                /* Return the Object */
-                *Object = &Header->Body;
-
-                /* Check if this is a permanent object */
-                if (Header->Flags & OB_FLAG_PERMANENT)
-                {
-                    /* Do the privilege check */
-                    if (!SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
-                                                ObjectAttributesAccessMode))
-                    {
-                        /* Fail */
-                        ObpDeallocateObject(*Object);
-                        Status = STATUS_PRIVILEGE_NOT_HELD;
-                    }
-                }
-
-                /* Return status */
-                return Status;
-            }
-        }
-
-        /* Release the Capture Info, we don't need it */
-        ObpReleaseCapturedAttributes(ObjectCreateInfo);
-        if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
-    }
-
-    /* We failed, so release the Buffer */
-    ObpFreeCapturedAttributes(ObjectCreateInfo, LookasideCreateInfoList);
     return Status;
 }
 

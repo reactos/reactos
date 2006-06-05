@@ -81,7 +81,7 @@ PsInitJobManagment ( VOID )
     ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.DeleteProcedure = PiDeleteJob;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &PsJobType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
 
     InitializeListHead(&PsJobListHead);
     ExInitializeFastMutex(&PsJobListLock);

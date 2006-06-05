@@ -137,9 +137,10 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.OpenProcedure = ExpWinStaObjectOpen;
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
     ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;
-    ObpCreateTypeObject(&ObjectTypeInitializer,
-                        &Name,
-                        &ExWindowStationObjectType);
+    ObCreateObjectType(&Name,
+                       &ObjectTypeInitializer,
+                       NULL,
+                       &ExWindowStationObjectType);
 
     /* Create desktop object type */
     RtlInitUnicodeString(&Name, L"Desktop");
@@ -147,7 +148,10 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.OpenProcedure = NULL;
     ObjectTypeInitializer.DeleteProcedure = ExpDesktopDelete;
     ObjectTypeInitializer.ParseProcedure = NULL;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExDesktopObjectType);
+    ObCreateObjectType(&Name,
+                       &ObjectTypeInitializer,
+                       NULL,
+                       &ExDesktopObjectType);
 }
 
 /* EOF */

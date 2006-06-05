@@ -82,7 +82,7 @@ ExpInitializeProfileImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteProfile;
     ObjectTypeInitializer.ValidAccessMask = PROFILE_ALL_ACCESS;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExProfileObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExProfileObjectType);
 }
 
 NTSTATUS

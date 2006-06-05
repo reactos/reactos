@@ -69,17 +69,6 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
-ULONG
-NTAPI
-ObGetObjectPointerCount(PVOID Object)
-{
-    PAGED_CODE();
-    ASSERT(Object);
-
-    /* Get the header and return the pointer count */
-    return OBJECT_TO_OBJECT_HEADER(Object)->PointerCount;
-}
-
 VOID
 FASTCALL
 ObfReferenceObject(IN PVOID Object)

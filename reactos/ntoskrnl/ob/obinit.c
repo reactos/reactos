@@ -158,7 +158,7 @@ ObInit(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.GenericMapping = ObpTypeMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_TYPE);
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObTypeObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObTypeObjectType);
 
     /* Create the Directory Type */
     DPRINT("Creating Directory Type\n");
@@ -170,7 +170,7 @@ ObInit(VOID)
     ObjectTypeInitializer.MaintainTypeList = FALSE;
     ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ObDirectoryType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObDirectoryType);
 
     /* Create security descriptor */
     RtlCreateSecurityDescriptor(&SecurityDescriptor,

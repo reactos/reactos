@@ -55,7 +55,7 @@ ExpInitializeSemaphoreImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
     ObjectTypeInitializer.ValidAccessMask = SEMAPHORE_ALL_ACCESS;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExSemaphoreObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExSemaphoreObjectType);
 }
 
 /*

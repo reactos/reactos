@@ -2202,7 +2202,7 @@ MmInitSectionImplementation(VOID)
    ObjectTypeInitializer.GenericMapping = MmpSectionMapping;
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
    ObjectTypeInitializer.CloseProcedure = MmpCloseSection;
-   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &MmSectionObjectType);
+   ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &MmSectionObjectType);
 
    return(STATUS_SUCCESS);
 }

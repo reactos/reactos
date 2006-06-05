@@ -592,64 +592,6 @@ ObpCreateHandle(PVOID ObjectBody,
     return STATUS_UNSUCCESSFUL;
 }
 
-
-/*
-* @implemented
-*/
-NTSTATUS STDCALL
-ObQueryObjectAuditingByHandle(IN HANDLE Handle,
-                              OUT PBOOLEAN GenerateOnClose)
-{
-    PHANDLE_TABLE_ENTRY HandleEntry;
-    PEPROCESS Process, CurrentProcess;
-    KAPC_STATE ApcState;
-    BOOLEAN AttachedToProcess = FALSE;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    PAGED_CODE();
-
-    DPRINT("ObQueryObjectAuditingByHandle(Handle %p)\n", Handle);
-
-    CurrentProcess = PsGetCurrentProcess();
-
-    KeEnterCriticalRegion();
-
-    if(ObIsKernelHandle(Handle, ExGetPreviousMode()))
-    {
-        Process = PsInitialSystemProcess;
-        Handle = ObKernelHandleToHandle(Handle);
-
-        if (Process != CurrentProcess)
-        {
-            KeStackAttachProcess(&Process->Pcb,
-                &ApcState);
-            AttachedToProcess = TRUE;
-        }
-    }
-    else
-        Process = CurrentProcess;
-
-    HandleEntry = ExMapHandleToPointer(Process->ObjectTable,
-        Handle);
-    if(HandleEntry != NULL)
-    {
-        *GenerateOnClose = (HandleEntry->ObAttributes & EX_HANDLE_ENTRY_AUDITONCLOSE) != 0;
-
-        ExUnlockHandleTableEntry(Process->ObjectTable,
-            HandleEntry);
-    }
-    else
-        Status = STATUS_INVALID_HANDLE;
-
-    if (AttachedToProcess)
-    {
-        KeUnstackDetachProcess(&ApcState);
-    }
-
-    KeLeaveCriticalRegion();
-
-    return Status;
-}
 /* PUBLIC FUNCTIONS *********************************************************/
 
 ULONG

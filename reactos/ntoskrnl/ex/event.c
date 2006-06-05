@@ -53,7 +53,7 @@ ExpInitializeEventImplementation(VOID)
     ObjectTypeInitializer.GenericMapping = ExpEventMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExEventObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventObjectType);
 }
 
 /*

@@ -210,16 +210,16 @@ IoInit (VOID)
     ObjectTypeInitializer.ValidAccessMask = FILE_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.GenericMapping = IopFileMapping;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoDeviceObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDeviceObjectType);
 
     /* Do the Adapter Type */
     RtlInitUnicodeString(&Name, L"Adapter");
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoAdapterObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoAdapterObjectType);
 
     /* Do the Controller Type */
     RtlInitUnicodeString(&Name, L"Controller");
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CONTROLLER_OBJECT);
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoControllerObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoControllerObjectType);
 
     /* Initialize the File object type  */
     RtlInitUnicodeString(&Name, L"File");
@@ -230,7 +230,7 @@ IoInit (VOID)
     ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
     ObjectTypeInitializer.QueryNameProcedure = IopQueryNameFile;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
-    ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoFileObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoFileObjectType);
 
   /*
    * Create the '\Driver' object directory

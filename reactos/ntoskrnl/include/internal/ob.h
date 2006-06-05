@@ -114,14 +114,6 @@ ObpSetHandleAttributes(
     IN PVOID Context
 );
 
-NTSTATUS
-STDCALL
-ObpCreateTypeObject(
-    struct _OBJECT_TYPE_INITIALIZER *ObjectTypeInitializer,
-    PUNICODE_STRING TypeName,
-    POBJECT_TYPE *ObjectType
-);
-
 ULONG
 NTAPI
 ObGetObjectHandleCount(PVOID Object);

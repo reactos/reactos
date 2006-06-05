@@ -97,7 +97,7 @@ ExpInitializeCallbacks(VOID)
    ObjectTypeInitializer.GenericMapping = ExpCallbackMapping;
    ObjectTypeInitializer.PoolType = NonPagedPool;
 
-   Status = ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExCallbackObjectType);
+   Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExCallbackObjectType);
 
    /* Fail if it wasn't created successfully */
    if (!NT_SUCCESS(Status))

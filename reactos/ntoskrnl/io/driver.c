@@ -129,7 +129,7 @@ IopInitDriverImplementation(VOID)
    ObjectTypeInitializer.UseDefaultObject = TRUE;
    ObjectTypeInitializer.DeleteProcedure = IopDeleteDriver;
 
-   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &IoDriverObjectType);
+   ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDriverObjectType);
 
    InitializeListHead(&DriverReinitListHead);
    KeInitializeSpinLock(&DriverReinitListLock);

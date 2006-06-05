@@ -44,6 +44,15 @@ ObCreateObject(
     OUT PVOID *Object
 );
 
+NTSTATUS
+NTAPI
+ObCreateObjectType(
+    IN PUNICODE_STRING TypeName,
+    IN POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
+    IN PVOID Reserved,
+    OUT POBJECT_TYPE *ObjectType
+);
+
 NTKERNELAPI
 ULONG
 NTAPI

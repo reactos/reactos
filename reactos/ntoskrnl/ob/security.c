@@ -463,4 +463,69 @@ ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     DPRINT1("ObDereferenceSecurityDescriptor is not implemented!\n");
 }
 
+/*++
+* @name ObQueryObjectAuditingByHandle
+* @implemented NT5
+*
+*     The ObDereferenceSecurityDescriptor routine <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @param Count
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+ObQueryObjectAuditingByHandle(IN HANDLE Handle,
+                              OUT PBOOLEAN GenerateOnClose)
+{
+    PHANDLE_TABLE_ENTRY HandleEntry;
+    PVOID HandleTable;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
+
+    /* Check if we're dealing with a kernel handle */
+    if (ObIsKernelHandle(Handle, ExGetPreviousMode()))
+    {
+        /* Use the kernel table and convert the handle */
+        HandleTable = ObpKernelHandleTable;
+        Handle = ObKernelHandleToHandle(Handle);
+    }
+    else
+    {
+        /* Use the process's handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    /* Enter a critical region while we touch the handle table */
+    KeEnterCriticalRegion();
+
+    /* Map the handle */
+    HandleEntry = ExMapHandleToPointer(HandleTable, Handle);
+    if(HandleEntry)
+    {
+        /* Check if the flag is set */
+        *GenerateOnClose = (HandleEntry->ObAttributes &
+                            EX_HANDLE_ENTRY_AUDITONCLOSE) != 0;
+
+        /* Unlock the entry */
+        ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+    }
+    else
+    {
+        /* Otherwise, fail */
+        Status = STATUS_INVALID_HANDLE;
+    }
+
+    /* Leave the critical region and return the status */
+    KeLeaveCriticalRegion();
+    return Status;
+}
+
 /* EOF */
