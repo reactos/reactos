@@ -9,6 +9,12 @@
 #ifndef __INCLUDE_INTERNAL_OBJMGR_H
 #define __INCLUDE_INTERNAL_OBJMGR_H
 
+typedef struct _OBP_SET_HANDLE_ATTRIBUTES_CONTEXT
+{
+    KPROCESSOR_MODE PreviousMode;
+    OBJECT_HANDLE_ATTRIBUTE_INFORMATION Information;
+} OBP_SET_HANDLE_ATTRIBUTES_CONTEXT, *POBP_SET_HANDLE_ATTRIBUTES_CONTEXT;
+
 #define GENERIC_ACCESS (GENERIC_READ |      \
                         GENERIC_WRITE |     \
                         GENERIC_EXECUTE |   \
@@ -100,18 +106,12 @@ ObFindObject(
     IN PVOID Insert
 );
 
-NTSTATUS
-NTAPI
-ObpQueryHandleAttributes(
-    HANDLE Handle,
-    POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo
-);
-
-NTSTATUS
+BOOLEAN
 NTAPI
 ObpSetHandleAttributes(
-    HANDLE Handle,
-    POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo
+    IN PHANDLE_TABLE HandleTable,
+    IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
+    IN PVOID Context
 );
 
 NTSTATUS

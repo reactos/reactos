@@ -916,7 +916,7 @@ ExChangeHandle(IN PHANDLE_TABLE HandleTable,
   {
     Ret = ChangeHandleCallback(HandleTable,
                                HandleTableEntry,
-                               NULL);
+                               Context);
 
     ExUnlockHandleTableEntry(HandleTable,
                              HandleTableEntry);

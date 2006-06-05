@@ -154,129 +154,51 @@ ObpDecrementHandleCount(PVOID ObjectBody)
     }
 }
 
-NTSTATUS
+BOOLEAN
 NTAPI
-ObpQueryHandleAttributes(HANDLE Handle,
-                         POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo)
+ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
+                       IN OUT PHANDLE_TABLE_ENTRY HandleTableEntry,
+                       IN PVOID Context)
 {
-    PHANDLE_TABLE_ENTRY HandleTableEntry;
-    PEPROCESS Process, CurrentProcess;
-    KAPC_STATE ApcState;
-    BOOLEAN AttachedToProcess = FALSE;
-    NTSTATUS Status = STATUS_SUCCESS;
-
+    POBP_SET_HANDLE_ATTRIBUTES_CONTEXT SetHandleInfo =
+        (POBP_SET_HANDLE_ATTRIBUTES_CONTEXT)Context;
+    POBJECT_HEADER ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
     PAGED_CODE();
 
-    DPRINT("ObpQueryHandleAttributes(Handle %p)\n", Handle);
-    CurrentProcess = PsGetCurrentProcess();
-
-    KeEnterCriticalRegion();
-
-    if(ObIsKernelHandle(Handle, ExGetPreviousMode()))
+    /* Don't allow operations on kernel objects */
+    if ((ObjectHeader->Flags & OB_FLAG_KERNEL_MODE) &&
+        (SetHandleInfo->PreviousMode != KernelMode))
     {
-        Process = PsInitialSystemProcess;
-        Handle = ObKernelHandleToHandle(Handle);
+        /* Fail */
+        return FALSE;
+    }
 
-        if (Process != CurrentProcess)
-        {
-            KeStackAttachProcess(&Process->Pcb,
-                &ApcState);
-            AttachedToProcess = TRUE;
-        }
+    /* Check if making the handle inheritable */
+    if (SetHandleInfo->Information.Inherit)
+    {
+        /* Set the flag. FIXME: Need to check if this is allowed */
+        HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
     }
     else
     {
-        Process = CurrentProcess;
+        /* Otherwise this implies we're removing the flag */
+        HandleTableEntry->ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
     }
 
-    HandleTableEntry = ExMapHandleToPointer(Process->ObjectTable,
-        Handle);
-    if (HandleTableEntry != NULL)
+    /* Check if making the handle protected */
+    if (SetHandleInfo->Information.ProtectFromClose)
     {
-        HandleInfo->Inherit = (HandleTableEntry->ObAttributes & EX_HANDLE_ENTRY_INHERITABLE) != 0;
-        HandleInfo->ProtectFromClose = (HandleTableEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE) != 0;
-
-        ExUnlockHandleTableEntry(Process->ObjectTable,
-            HandleTableEntry);
-    }
-    else
-        Status = STATUS_INVALID_HANDLE;
-
-    if (AttachedToProcess)
-    {
-        KeUnstackDetachProcess(&ApcState);
-    }
-
-    KeLeaveCriticalRegion();
-
-    return Status;
-}
-
-NTSTATUS
-NTAPI
-ObpSetHandleAttributes(HANDLE Handle,
-                       POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo)
-{
-    PHANDLE_TABLE_ENTRY HandleTableEntry;
-    PEPROCESS Process, CurrentProcess;
-    KAPC_STATE ApcState;
-    BOOLEAN AttachedToProcess = FALSE;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    PAGED_CODE();
-
-    DPRINT("ObpSetHandleAttributes(Handle %p)\n", Handle);
-    CurrentProcess = PsGetCurrentProcess();
-
-    KeEnterCriticalRegion();
-
-    if(ObIsKernelHandle(Handle, ExGetPreviousMode()))
-    {
-        Process = PsInitialSystemProcess;
-        Handle = ObKernelHandleToHandle(Handle);
-
-        if (Process != CurrentProcess)
-        {
-            KeStackAttachProcess(&Process->Pcb,
-                &ApcState);
-            AttachedToProcess = TRUE;
-        }
+        /* Set the flag */
+        HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
     }
     else
     {
-        Process = CurrentProcess;
+        /* Otherwise, remove it */
+        HandleTableEntry->ObAttributes &= ~EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
     }
 
-    HandleTableEntry = ExMapHandleToPointer(Process->ObjectTable,
-        Handle);
-    if (HandleTableEntry != NULL)
-    {
-        if (HandleInfo->Inherit)
-            HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
-        else
-            HandleTableEntry->ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
-
-        if (HandleInfo->ProtectFromClose)
-            HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
-        else
-            HandleTableEntry->ObAttributes &= ~EX_HANDLE_ENTRY_PROTECTFROMCLOSE;
-
-        /* FIXME: Do we need to set anything in the object header??? */
-
-        ExUnlockHandleTableEntry(Process->ObjectTable,
-            HandleTableEntry);
-    }
-    else
-        Status = STATUS_INVALID_HANDLE;
-
-    if (AttachedToProcess)
-    {
-        KeUnstackDetachProcess(&ApcState);
-    }
-
-    KeLeaveCriticalRegion();
-
-    return Status;
+    /* Return success */
+    return TRUE;
 }
 
 static NTSTATUS
