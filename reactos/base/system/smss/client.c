@@ -194,6 +194,14 @@ SmBeginClientInitialization (IN  PSM_PORT_MESSAGE Request,
 			SmpClientDirectory.CandidateClient->ServerProcessId =
 				(ULONG) pbi.UniqueProcessId;
 		}
+        else
+        {
+            LARGE_INTEGER Fixme;
+            Fixme.QuadPart = -50000000;
+            DPRINT1("WARNING! UniqueProcess IS A THREAD HANDLE!!!\n");
+            NtDelayExecution(FALSE, &Fixme);
+            DPRINT1("FIXME!\n");
+        }
 	}
 	else
 	{

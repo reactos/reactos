@@ -129,6 +129,18 @@ ObfDereferenceObject(IN PVOID Object)
     }
 }
 
+#ifdef ObDereferenceObject
+#undef ObDereferenceObject
+#endif
+
+VOID
+NTAPI
+ObDereferenceObject(IN PVOID Object)
+{
+    /* Call the fastcall function */
+    ObfDereferenceObject(Object);
+}
+
 NTSTATUS
 NTAPI
 ObReferenceObjectByPointer(IN PVOID Object,
@@ -228,206 +240,165 @@ Quickie:
     return Status;
 }
 
-NTSTATUS STDCALL
-ObReferenceObjectByHandle(HANDLE Handle,
-                          ACCESS_MASK DesiredAccess,
-                          POBJECT_TYPE ObjectType,
-                          KPROCESSOR_MODE AccessMode,
-                          PVOID* Object,
-                          POBJECT_HANDLE_INFORMATION HandleInformation)
+NTSTATUS
+NTAPI
+ObReferenceObjectByHandle(IN HANDLE Handle,
+                          IN ACCESS_MASK DesiredAccess,
+                          IN POBJECT_TYPE ObjectType,
+                          IN KPROCESSOR_MODE AccessMode,
+                          OUT PVOID* Object,
+                          OUT POBJECT_HANDLE_INFORMATION HandleInformation OPTIONAL)
 {
     PHANDLE_TABLE_ENTRY HandleEntry;
     POBJECT_HEADER ObjectHeader;
-    PVOID ObjectBody;
     ACCESS_MASK GrantedAccess;
     ULONG Attributes;
-    PEPROCESS CurrentProcess, Process;
-    BOOLEAN AttachedToProcess = FALSE;
-    KAPC_STATE ApcState;
-
+    PEPROCESS CurrentProcess;
+    PVOID HandleTable;
+    PETHREAD CurrentThread;
+    NTSTATUS Status;
     PAGED_CODE();
 
-    DPRINT("ObReferenceObjectByHandle(Handle %p, DesiredAccess %x, "
-        "ObjectType %p, AccessMode %d, Object %p)\n",Handle,DesiredAccess,
-        ObjectType,AccessMode,Object);
+    /* Fail immediately if the handle is NULL */
+    if (!Handle) return STATUS_INVALID_HANDLE;
 
-    if (Handle == NULL)
+    /* Check if the caller wants the current process */
+    if ((Handle == NtCurrentProcess()) &&
+        ((ObjectType == PsProcessType) || !(ObjectType)))
     {
-        return STATUS_INVALID_HANDLE;
-    }
+        /* Get the current process */
+        CurrentProcess = PsGetCurrentProcess();
 
-    CurrentProcess = PsGetCurrentProcess();
-
-    /*
-    * Handle special handle names
-    */
-    if (Handle == NtCurrentProcess() &&
-        (ObjectType == PsProcessType || ObjectType == NULL))
-    {
+        /* Reference ourselves */
         ObReferenceObject(CurrentProcess);
 
-        if (HandleInformation != NULL)
+        /* Check if the caller wanted handle information */
+        if (HandleInformation)
         {
+            /* Return it */
             HandleInformation->HandleAttributes = 0;
             HandleInformation->GrantedAccess = PROCESS_ALL_ACCESS;
         }
 
+        /* Return the pointer */
         *Object = CurrentProcess;
-        DPRINT("Referencing current process %p\n", CurrentProcess);
         return STATUS_SUCCESS;
     }
     else if (Handle == NtCurrentProcess())
     {
-        CHECKPOINT;
-        return(STATUS_OBJECT_TYPE_MISMATCH);
+        /* The caller used this special handle value with a non-process type */
+        return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
-    if (Handle == NtCurrentThread() &&
-        (ObjectType == PsThreadType || ObjectType == NULL))
+    /* Check if the caller wants the current thread */
+    if ((Handle == NtCurrentThread()) &&
+        ((ObjectType == PsThreadType) || !(ObjectType)))
     {
-        PETHREAD CurrentThread = PsGetCurrentThread();
+        /* Get the current thread */
+        CurrentThread = PsGetCurrentThread();
 
+        /* Reference ourselves */
         ObReferenceObject(CurrentThread);
 
-        if (HandleInformation != NULL)
+        /* Check if the caller wanted handle information */
+        if (HandleInformation)
         {
+            /* Return it */
             HandleInformation->HandleAttributes = 0;
             HandleInformation->GrantedAccess = THREAD_ALL_ACCESS;
         }
 
+        /* Return the pointer */
         *Object = CurrentThread;
-        CHECKPOINT;
         return STATUS_SUCCESS;
     }
     else if (Handle == NtCurrentThread())
     {
-        CHECKPOINT;
-        return(STATUS_OBJECT_TYPE_MISMATCH);
+        /* The caller used this special handle value with a non-thread type */
+        return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
-    /* desire as much access rights as possible */
-    if (DesiredAccess & MAXIMUM_ALLOWED)
+    /* Check if this is a kernel handle */
+    if (ObIsKernelHandle(Handle, AccessMode))
     {
-        DesiredAccess &= ~MAXIMUM_ALLOWED;
-        DesiredAccess |= GENERIC_ALL;
-    }
-
-    if(ObIsKernelHandle(Handle, AccessMode))
-    {
-        Process = PsInitialSystemProcess;
+        /* Use the kernel handle table and get the actual handle value */
         Handle = ObKernelHandleToHandle(Handle);
+        HandleTable = ObpKernelHandleTable;
     }
     else
     {
-        Process = CurrentProcess;
+        /* Otherwise use this process's handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
     }
 
+    /* Enter a critical region while we touch the handle table */
     KeEnterCriticalRegion();
 
-    if (Process != CurrentProcess)
+    /* Get the handle entry */
+    HandleEntry = ExMapHandleToPointer(HandleTable, Handle);
+    if (HandleEntry)
     {
-        KeStackAttachProcess(&Process->Pcb,
-            &ApcState);
-        AttachedToProcess = TRUE;
-    }
-
-    HandleEntry = ExMapHandleToPointer(Process->ObjectTable,
-        Handle);
-    if (HandleEntry == NULL)
-    {
-        if (AttachedToProcess)
+        /* Get the object header and validate the type*/
+        ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
+        if (!(ObjectType) || (ObjectType == ObjectHeader->Type))
         {
-            KeUnstackDetachProcess(&ApcState);
+            /* Get the granted access and validate it */
+            GrantedAccess = HandleEntry->GrantedAccess;
+            if ((AccessMode == KernelMode) ||
+                !(~GrantedAccess & DesiredAccess))
+            {
+                /* Reference the object directly since we have its header */
+                InterlockedIncrement(&ObjectHeader->PointerCount);
+
+                /* Mask out the internal attributes */
+                Attributes = HandleEntry->ObAttributes &
+                             (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
+                              EX_HANDLE_ENTRY_INHERITABLE |
+                              EX_HANDLE_ENTRY_AUDITONCLOSE);
+
+                /* Check if the caller wants handle information */
+                if (HandleInformation)
+                {
+                    /* Fill out the information */
+                    HandleInformation->HandleAttributes = Attributes;
+                    HandleInformation->GrantedAccess = GrantedAccess;
+                }
+
+                /* Return the pointer */
+                *Object = &ObjectHeader->Body;
+
+                /* Unlock the handle */
+                ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+
+                /* Return success */
+                KeLeaveCriticalRegion();
+                return STATUS_SUCCESS;
+            }
+            else
+            {
+                /* Requested access failed */
+                Status = STATUS_ACCESS_DENIED;
+            }
         }
-        KeLeaveCriticalRegion();
-        DPRINT("ExMapHandleToPointer() failed for handle 0x%p\n", Handle);
-        return(STATUS_INVALID_HANDLE);
-    }
-
-    ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
-    ObjectBody = &ObjectHeader->Body;
-
-    DPRINT("locked1: ObjectHeader: 0x%p [HT:0x%p]\n", ObjectHeader, Process->ObjectTable);
-
-    if (ObjectType != NULL && ObjectType != ObjectHeader->Type)
-    {
-        DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%p)\n", &ObjectType->Name, ObjectHeader->Type ? &ObjectHeader->Type->Name : NULL, Handle);
-
-        ExUnlockHandleTableEntry(Process->ObjectTable,
-            HandleEntry);
-
-        if (AttachedToProcess)
+        else
         {
-            KeUnstackDetachProcess(&ApcState);
-        }
-
-        KeLeaveCriticalRegion();
-
-        return(STATUS_OBJECT_TYPE_MISMATCH);
-    }
-
-    /* map the generic access masks if the caller asks for generic access */
-    if (DesiredAccess & GENERIC_ACCESS)
-    {
-        RtlMapGenericMask(&DesiredAccess,
-            &OBJECT_TO_OBJECT_HEADER(ObjectBody)->Type->TypeInfo.GenericMapping);
-    }
-
-    GrantedAccess = HandleEntry->GrantedAccess;
-
-    /* Unless running as KernelMode, deny access if caller desires more access
-    rights than the handle can grant */
-    if(AccessMode != KernelMode && (~GrantedAccess & DesiredAccess))
-    {
-        ExUnlockHandleTableEntry(Process->ObjectTable,
-            HandleEntry);
-
-        if (AttachedToProcess)
-        {
-            KeUnstackDetachProcess(&ApcState);
+            /* Invalid object type */
+            Status = STATUS_OBJECT_TYPE_MISMATCH;
         }
 
-        KeLeaveCriticalRegion();
-
-        DPRINT1("GrantedAccess: 0x%x, ~GrantedAccess: 0x%x, DesiredAccess: 0x%x, denied: 0x%x\n", GrantedAccess, ~GrantedAccess, DesiredAccess, ~GrantedAccess & DesiredAccess);
-
-        return(STATUS_ACCESS_DENIED);
+        /* Unlock the entry */
+        ExUnlockHandleTableEntry(HandleTable, HandleEntry);
     }
-
-    ObReferenceObject(ObjectBody);
-
-    Attributes = HandleEntry->ObAttributes & (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
-        EX_HANDLE_ENTRY_INHERITABLE |
-        EX_HANDLE_ENTRY_AUDITONCLOSE);
-
-    ExUnlockHandleTableEntry(Process->ObjectTable,
-        HandleEntry);
-
-    if (AttachedToProcess)
+    else
     {
-        KeUnstackDetachProcess(&ApcState);
+        /* Invalid handle */
+        Status = STATUS_INVALID_HANDLE;
     }
 
+    /* Return failure status */
     KeLeaveCriticalRegion();
-
-    if (HandleInformation != NULL)
-    {
-        HandleInformation->HandleAttributes = Attributes;
-        HandleInformation->GrantedAccess = GrantedAccess;
-    }
-
-    *Object = ObjectBody;
-
-    return(STATUS_SUCCESS);
+    *Object = NULL;
+    return Status;
 }
 
-#ifdef ObDereferenceObject
-#undef ObDereferenceObject
-#endif
-
-VOID STDCALL
-ObDereferenceObject(IN PVOID Object)
-{
-    ObfDereferenceObject(Object);
-}
 /* EOF */
