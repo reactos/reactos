@@ -69,34 +69,25 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
-ULONG STDCALL
+ULONG
+NTAPI
 ObGetObjectPointerCount(PVOID Object)
 {
-    POBJECT_HEADER Header;
-
     PAGED_CODE();
-
     ASSERT(Object);
-    Header = OBJECT_TO_OBJECT_HEADER(Object);
 
-    return Header->PointerCount;
+    /* Get the header and return the pointer count */
+    return OBJECT_TO_OBJECT_HEADER(Object)->PointerCount;
 }
 
-VOID FASTCALL
+VOID
+FASTCALL
 ObfReferenceObject(IN PVOID Object)
 {
-    POBJECT_HEADER Header;
-
     ASSERT(Object);
 
-    Header = OBJECT_TO_OBJECT_HEADER(Object);
-
-    /* No one should be referencing an object once we are deleting it. */
-    if (InterlockedIncrement(&Header->PointerCount) == 1 && !(Header->Flags & OB_FLAG_PERMANENT))
-    {
-        KEBUGCHECK(0);
-    }
-
+    /* Get the header and increment the reference count */
+    InterlockedIncrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount);
 }
 
 VOID
@@ -138,7 +129,8 @@ ObfDereferenceObject(IN PVOID Object)
     }
 }
 
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 ObReferenceObjectByPointer(IN PVOID Object,
                            IN ACCESS_MASK DesiredAccess,
                            IN POBJECT_TYPE ObjectType,
@@ -146,55 +138,23 @@ ObReferenceObjectByPointer(IN PVOID Object,
 {
     POBJECT_HEADER Header;
 
-    /* NOTE: should be possible to reference an object above APC_LEVEL! */
-
-    DPRINT("ObReferenceObjectByPointer(Object %x, ObjectType %x)\n",
-        Object,ObjectType);
-
+    /* Get the header */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
 
-    if (ObjectType != NULL && Header->Type != ObjectType)
+    /*
+     * Validate object type if the call is for UserMode.
+     * NOTE: Unless it's a symbolic link (Caz Yokoyama [MSFT])
+     */
+    if ((Header->Type != ObjectType) && ((AccessMode != KernelMode) ||
+        (ObjectType == ObSymbolicLinkType)))
     {
-        DPRINT("Failed %p (type was %x %wZ) should be %x %wZ\n",
-            Header,
-            Header->Type,
-            &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(Header->Type))->Name,
-            ObjectType,
-            &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ObjectType))->Name);
-        return(STATUS_UNSUCCESSFUL);
-    }
-    if (Header->Type == PsProcessType)
-    {
-        DPRINT("Ref p 0x%x PointerCount %d type %x ",
-            Object, Header->PointerCount, PsProcessType);
-        DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
-    }
-    if (Header->Type == PsThreadType)
-    {
-        DPRINT("Deref t 0x%x with PointerCount %d type %x ",
-            Object, Header->PointerCount, PsThreadType);
-        DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
+        /* Invalid type */
+        return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
-    if (Header->PointerCount == 0 && !(Header->Flags & OB_FLAG_PERMANENT))
-    {
-        if (Header->Type == PsProcessType)
-        {
-            return STATUS_PROCESS_IS_TERMINATING;
-        }
-        if (Header->Type == PsThreadType)
-        {
-            return STATUS_THREAD_IS_TERMINATING;
-        }
-        return(STATUS_UNSUCCESSFUL);
-    }
-
-    if (1 == InterlockedIncrement(&Header->PointerCount) && !(Header->Flags & OB_FLAG_PERMANENT))
-    {
-        KEBUGCHECK(0);
-    }
-
-    return(STATUS_SUCCESS);
+    /* Oncrement the reference count and return success */
+    InterlockedIncrement(&Header->PointerCount);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
