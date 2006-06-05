@@ -44,6 +44,7 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
    InitData.HwResetHw = VBEResetHw;
    InitData.HwGetPowerState = VBEGetPowerState;
    InitData.HwSetPowerState = VBESetPowerState;
+   InitData.HwGetVideoChildDescriptor = VBEGetVideoChildDescriptor;
    InitData.HwDeviceExtensionSize = sizeof(VBE_DEVICE_EXTENSION);
 
    return VideoPortInitialize(Context1, Context2, &InitData, NULL);
@@ -377,7 +378,7 @@ VBEInitialize(PVOID HwDeviceExtension)
    VBESortModes(VBEDeviceExtension);
 
    /*
-    * Print the supported video modes when NDEBUG is not set.
+    * Print the supported video modes.
     */
 
    for (CurrentMode = 0;
@@ -389,6 +390,11 @@ VBEInitialize(PVOID HwDeviceExtension)
          VBEDeviceExtension->ModeInfo[CurrentMode].YResolution,
          VBEDeviceExtension->ModeInfo[CurrentMode].BitsPerPixel);
    }
+
+   /*
+    * Enumerate our children.
+    */
+   VideoPortEnumerateChildren(HwDeviceExtension, NULL);
 
    return TRUE;
 }

@@ -71,6 +71,20 @@
 #define VBE_AUDIO_INTERFACE_EXTENSIONS       0x4F12
 #define VBE_OEM_EXTENSIONS                   0x4F13
 #define VBE_DISPLAY_DATA_CHANNEL             0x4F14
+#define VBE_DDC                              0x4F15
+
+/*
+ * VBE DDC Sub-Functions
+ */
+
+#define VBE_DDC_READ_EDID                      0x01
+#define VBE_DDC_REPORT_CAPABILITIES            0x10
+#define VBE_DDC_BEGIN_SCL_SDA_CONTROL          0x11
+#define VBE_DDC_END_SCL_SDA_CONTROL            0x12
+#define VBE_DDC_WRITE_SCL_CLOCK_LINE           0x13
+#define VBE_DDC_WRITE_SDA_DATA_LINE            0x14
+#define VBE_DDC_READ_SCL_CLOCK_LINE            0x15
+#define VBE_DDC_READ_SDA_DATA_LINE             0x16
 
 /*
  * VBE Video Mode Information Definitions
@@ -175,6 +189,11 @@ typedef struct
    CHAR Reserved4[189];
 } VBE_MODEINFO, *PVBE_MODEINFO;
 
+typedef struct
+{
+   UCHAR Reserved[128];
+} VBE_EDID, *PVBE_EDID;
+
 #include <poppack.h>
 
 typedef struct
@@ -196,6 +215,18 @@ typedef struct
    USHORT CurrentMode;
 } VBE_DEVICE_EXTENSION, *PVBE_DEVICE_EXTENSION;
 
+/* edid.c */
+
+VP_STATUS NTAPI
+VBEGetVideoChildDescriptor(
+   IN PVOID HwDeviceExtension,
+   IN PVIDEO_CHILD_ENUM_INFO ChildEnumInfo,
+   OUT PVIDEO_CHILD_TYPE VideoChildType,
+   OUT PUCHAR pChildDescriptor,
+   OUT PULONG UId,
+   OUT PULONG pUnused);
+
+/* vbemp.c */
 VP_STATUS STDCALL
 VBEFindAdapter(
    IN PVOID HwDeviceExtension,
