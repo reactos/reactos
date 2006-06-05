@@ -644,20 +644,20 @@ MSVCBackend::_generate_sln_project (
 	std::string vcproj_file,
 	std::string sln_guid,
 	std::string vcproj_guid,
-	const std::vector<Dependency*>& dependencies )
+	const std::vector<Library*>& libraries )
 {
 	vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
 
-	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
+	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"{%s}\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
 
 	//FIXME: only omit ProjectDependencies in VS 2005 when there are no dependencies
 	//NOTE: VS 2002 do not use ProjectSection; it uses GlobalSection instead
-	if ((configuration.VSProjectVersion == "7.10") || (dependencies.size() > 0)) {
+	if ((configuration.VSProjectVersion == "7.10") || (libraries.size() > 0)) {
 		fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
-		for ( size_t i = 0; i < dependencies.size(); i++ )
+		for ( size_t i = 0; i < libraries.size(); i++ )
 		{
-			Dependency& dependency = *dependencies[i];
-			fprintf ( OUT, "\t\t%s = %s\r\n", dependency.module.guid.c_str(), dependency.module.guid.c_str() );
+			const Module& module = *libraries[i]->importedModule;
+			fprintf ( OUT, "\t\t{%s} = {%s}\r\n", module.guid.c_str(), module.guid.c_str() );
 		}
 		fprintf ( OUT, "\tEndProjectSection\r\n" );
 	}
@@ -726,7 +726,7 @@ MSVCBackend::_generate_sln ( FILE* OUT )
 		Module& module = *ProjectNode.modules[i];
 		
 		std::string vcproj_file = VcprojFileName ( module );
-		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, module.guid, module.dependencies );
+		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, module.guid, module.non_if_data.libraries );
 	}
 	_generate_sln_footer ( OUT );
 }

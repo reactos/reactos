@@ -108,7 +108,7 @@ class MSVCBackend : public Backend
 			std::string vcproj_file,
 			std::string sln_guid,
 			std::string vcproj_guid,
-			const std::vector<Dependency*>& dependencies );
+			const std::vector<Library*>& libraries );
 		void _generate_sln_configurations (
 			FILE* OUT,
 			std::string vcproj_guid );
