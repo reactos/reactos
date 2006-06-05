@@ -999,7 +999,12 @@ HANDLE STDCALL NtGdiDdCreateSurfaceObject(
 		hSurface = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DD_SURFACE);
 
 	pSurface = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
-        /* FIXME - Handle pSurface == NULL!!!! */
+	
+	if (!pSurface)
+	{
+		GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+		return NULL;
+	}
 
 	RtlMoveMemory(&pSurface->Local, puSurfaceLocal, sizeof(DD_SURFACE_LOCAL));
 	RtlMoveMemory(&pSurface->More, puSurfaceMore, sizeof(DD_SURFACE_MORE));
