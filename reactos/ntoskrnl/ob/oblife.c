@@ -431,7 +431,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     ULONG FinalSize = ObjectSize;
     ULONG Tag;
     PAGED_CODE();
-        
+
     /* If we don't have an Object Type yet, force NonPaged */
     if (!ObjectType) 
     {
@@ -443,14 +443,14 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         PoolType = ObjectType->TypeInfo.PoolType;
         Tag = ObjectType->Key;
     }
-    
+
     /* Check if the Object has a name */
     if (ObjectName->Buffer) 
     {
         FinalSize += sizeof(OBJECT_HEADER_NAME_INFO);
         HasNameInfo = TRUE;
     }
-    
+
     if (ObjectType)
     {
         /* Check if the Object maintains handle counts */
@@ -471,7 +471,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     /* Allocate memory for the Object and Header */
     Header = ExAllocatePoolWithTag(PoolType, FinalSize, Tag);
     if (!Header) return STATUS_INSUFFICIENT_RESOURCES;
-           
+
     /* Initialize Handle Info */
     if (HasHandleInfo)
     {
@@ -479,7 +479,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         HandleInfo->SingleEntry.HandleCount = 0;
         Header = (POBJECT_HEADER)(HandleInfo + 1);
     }
-       
+
     /* Initialize the Object Name Info */
     if (HasNameInfo) 
     {
@@ -488,7 +488,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         NameInfo->Directory = NULL;
         Header = (POBJECT_HEADER)(NameInfo + 1);
     }
-    
+
     /* Initialize Creator Info */
     if (HasCreatorInfo)
     {
@@ -498,14 +498,14 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         InitializeListHead(&CreatorInfo->TypeList);
         Header = (POBJECT_HEADER)(CreatorInfo + 1);
     }
-    
+
     /* Initialize the object header */
     RtlZeroMemory(Header, ObjectSize);
     Header->PointerCount = 1;
     Header->Type = ObjectType;
     Header->Flags = OB_FLAG_CREATE_INFO;
     Header->ObjectCreateInfo = ObjectCreateInfo;
-    
+
     /* Set the Offsets for the Info */
     if (HasHandleInfo)
     {
@@ -540,10 +540,10 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
         /* Set the kernel flag */
         Header->Flags |= OB_FLAG_KERNEL_MODE;
     }
-    
+
     /* Increase the number of objects of this type */
     if (ObjectType) ObjectType->TotalNumberOfObjects++;
-    
+
     /* Return Header */
     *ObjectHeader = Header;
     return STATUS_SUCCESS;
@@ -551,9 +551,9 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
 NTSTATUS
 NTAPI
-ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
-                    PUNICODE_STRING TypeName,
-                    POBJECT_TYPE *ObjectType)
+ObpCreateTypeObject(IN POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
+                    IN PUNICODE_STRING TypeName,
+                    OUT POBJECT_TYPE *ObjectType)
 {
     POBJECT_HEADER Header;
     POBJECT_TYPE LocalObjectType;
@@ -563,15 +563,15 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     OBP_LOOKUP_CONTEXT Context;
 
     /* Allocate the Object */
-    Status = ObpAllocateObject(NULL, 
+    Status = ObpAllocateObject(NULL,
                                TypeName,
-                               ObTypeObjectType, 
+                               ObTypeObjectType,
                                sizeof(OBJECT_TYPE) + sizeof(OBJECT_HEADER),
                                KernelMode,
                                (POBJECT_HEADER*)&Header);
     if (!NT_SUCCESS(Status)) return Status;
     LocalObjectType = (POBJECT_TYPE)&Header->Body;
-    
+
     /* Check if this is the first Object Type */
     if (!ObTypeObjectType)
     {
@@ -581,7 +581,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
         LocalObjectType->Key = TAG('O', 'b', 'j', 'T');
     }
     else
-    {   
+    {
         /* Set Tag */
         Tag[0] = TypeName->Buffer[0];
         Tag[1] = TypeName->Buffer[1];
@@ -589,7 +589,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
         Tag[3] = TypeName->Buffer[3];
         LocalObjectType->Key = *(PULONG)Tag;
     }
-    
+
     /* Set it up */
     LocalObjectType->TypeInfo = *ObjectTypeInitializer;
     LocalObjectType->Name = *TypeName;
@@ -610,16 +610,18 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
                  (ObjectTypeInitializer->MaintainHandleCount ? 
                  sizeof(OBJECT_HEADER_HANDLE_INFO) : 0);
 
-    /* Update the Pool Charges */
+    /* Check the pool type */
     if (ObjectTypeInitializer->PoolType == NonPagedPool)
     {
+        /* Update the NonPaged Pool charge */
         LocalObjectType->TypeInfo.DefaultNonPagedPoolCharge += HeaderSize;
     }
     else
     {
+        /* Update the Paged Pool charge */
         LocalObjectType->TypeInfo.DefaultPagedPoolCharge += HeaderSize;
     }
-    
+
     /* All objects types need a security procedure */
     if (!ObjectTypeInitializer->SecurityProcedure)
     {
@@ -635,10 +637,12 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
         /* Use the "Default Object", a simple event */
         LocalObjectType->DefaultObject = &ObpDefaultObject;
     }
-    /* Special system objects get an optimized hack so they can be waited on */
-    else if (TypeName->Length == 8 && !wcscmp(TypeName->Buffer, L"File"))
+    /* The File Object gets an optimized hack so it can be waited on */
+    else if ((TypeName->Length == 8) && !(wcscmp(TypeName->Buffer, L"File")))
     {
-        LocalObjectType->DefaultObject = (PVOID)FIELD_OFFSET(FILE_OBJECT, Event);
+        /* Wait on the File Object's event directly */
+        LocalObjectType->DefaultObject = (PVOID)FIELD_OFFSET(FILE_OBJECT,
+                                                             Event);
     }
     /* FIXME: When LPC stops sucking, add a hack for Waitable Ports */
     else
@@ -651,9 +655,10 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
     ExInitializeResourceLite(&LocalObjectType->Mutex);
     InitializeListHead(&LocalObjectType->TypeList);
 
-    /* Insert it into the Object Directory */
+    /* Check if we're actually creating the directory object itself */
     if (ObpTypeDirectoryObject)
     {
+        /* Insert it into the Object Directory */
         Context.Directory = ObpTypeDirectoryObject;
         Context.DirectoryLocked = TRUE;
         ObpLookupEntryDirectory(ObpTypeDirectoryObject,
@@ -665,6 +670,7 @@ ObpCreateTypeObject(POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
         ObReferenceObject(ObpTypeDirectoryObject);
     }
 
+    /* Return the object type and creations tatus */
     *ObjectType = LocalObjectType;
     return Status;
 }

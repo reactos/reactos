@@ -180,12 +180,12 @@ Next:
         Status = CurrentHeader->Type->TypeInfo.ParseProcedure(CurrentObject,
             CurrentHeader->Type,
             AccessState,
-            ExGetPreviousMode(), // fixme: should be a parameter, since caller decides.
+            PreviousMode,
             Attributes,
             &PathString,
             &CurrentUs,
             ParseContext,
-            NULL, // fixme: where do we get this from? captured OBP?
+            SecurityQos,
             &NextObject);
         current = CurrentUs.Buffer;
         if (Status == STATUS_REPARSE)
@@ -341,89 +341,74 @@ ObQueryNameString(IN  PVOID Object,
     POBJECT_DIRECTORY ParentDirectory;
     ULONG NameSize;
     PWCH ObjectName;
-    NTSTATUS Status;
-
-    DPRINT("ObQueryNameString: %x, %x\n", Object, ObjectNameInfo);
 
     /* Get the Kernel Meta-Structures */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     LocalInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
 
     /* Check if a Query Name Procedure is available */
-    if (ObjectHeader->Type->TypeInfo.QueryNameProcedure) 
-    {  
+    if (ObjectHeader->Type->TypeInfo.QueryNameProcedure)
+    {
         /* Call the procedure */
-        DPRINT("Calling Object's Procedure\n");
-        Status = ObjectHeader->Type->TypeInfo.QueryNameProcedure(Object,
-                                                                 TRUE, //fixme
-                                                                 ObjectNameInfo,
-                                                                 Length,
-                                                                 ReturnLength);
-
-        /* Return the status */
-        return Status;
+        return ObjectHeader->Type->TypeInfo.QueryNameProcedure(Object,
+                                                               TRUE, //fixme
+                                                               ObjectNameInfo,
+                                                               Length,
+                                                               ReturnLength);
     }
 
     /* Check if the object doesn't even have a name */
-    if (!LocalInfo || !LocalInfo->Name.Buffer) 
+    if (!LocalInfo || !LocalInfo->Name.Buffer)
     {
         /* We're returning the name structure */
-        DPRINT("Nameless Object\n");
         *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
 
         /* Check if we were given enough space */
-        if (*ReturnLength > Length) 
-        {
-            DPRINT1("Not enough buffer space\n");
-            return STATUS_INFO_LENGTH_MISMATCH;
-        }
+        if (*ReturnLength > Length) return STATUS_INFO_LENGTH_MISMATCH;
 
         /* Return an empty buffer */
-        ObjectNameInfo->Name.Length = 0;
-        ObjectNameInfo->Name.MaximumLength = 0;
-        ObjectNameInfo->Name.Buffer = NULL;
-
+        RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
         return STATUS_SUCCESS;
     }
 
-    /* 
+    /*
      * Find the size needed for the name. We won't do
      * this during the Name Creation loop because we want
      * to let the caller know that the buffer isn't big
      * enough right at the beginning, not work our way through
      * and find out at the end
      */
-    if (Object == NameSpaceRoot) 
+    if (Object == NameSpaceRoot)
     {
         /* Size of the '\' string */
-        DPRINT("Object is Root\n");
         NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR);
-    } 
-    else 
+    }
+    else
     {
         /* Get the Object Directory and add name of Object */
         ParentDirectory = LocalInfo->Directory;
         NameSize = sizeof(OBJ_NAME_PATH_SEPARATOR) + LocalInfo->Name.Length;
 
         /* Loop inside the directory to get the top-most one (meaning root) */
-        while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory)) 
+        while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory))
         {
             /* Get the Name Information */
-            LocalInfo = OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ParentDirectory));
+            LocalInfo = OBJECT_HEADER_TO_NAME_INFO(
+                            OBJECT_TO_OBJECT_HEADER(ParentDirectory));
 
             /* Add the size of the Directory Name */
-            if (LocalInfo && LocalInfo->Directory) 
+            if (LocalInfo && LocalInfo->Directory)
             {
                 /* Size of the '\' string + Directory Name */
-                NameSize += sizeof(OBJ_NAME_PATH_SEPARATOR) + LocalInfo->Name.Length;
+                NameSize += sizeof(OBJ_NAME_PATH_SEPARATOR) +
+                            LocalInfo->Name.Length;
 
                 /* Move to next parent Directory */
                 ParentDirectory = LocalInfo->Directory;
-            } 
-            else 
+            }
+            else
             {
                 /* Directory with no name. We append "...\" */
-                DPRINT("Nameless Directory\n");
                 NameSize += sizeof(L"...") + sizeof(OBJ_NAME_PATH_SEPARATOR);
                 break;
             }
@@ -431,17 +416,14 @@ ObQueryNameString(IN  PVOID Object,
     }
 
     /* Finally, add the name of the structure and the null char */
-    *ReturnLength = NameSize + sizeof(OBJECT_NAME_INFORMATION) + sizeof(UNICODE_NULL);
-    DPRINT("Final Length: %x\n", *ReturnLength);
+    *ReturnLength = NameSize +
+                    sizeof(OBJECT_NAME_INFORMATION) +
+                    sizeof(UNICODE_NULL);
 
     /* Check if we were given enough space */
-    if (*ReturnLength > Length) 
-    {
-        DPRINT1("Not enough buffer space\n");
-        return STATUS_INFO_LENGTH_MISMATCH;
-    }
+    if (*ReturnLength > Length) return STATUS_INFO_LENGTH_MISMATCH;
 
-    /* 
+    /*
      * Now we will actually create the name. We work backwards because
      * it's easier to start off from the Name we have and walk up the
      * parent directories. We use the same logic as Name Length calculation.
@@ -450,44 +432,51 @@ ObQueryNameString(IN  PVOID Object,
     ObjectName = (PWCH)((ULONG_PTR)ObjectNameInfo + *ReturnLength);
     *--ObjectName = UNICODE_NULL;
 
-    if (Object == NameSpaceRoot) 
+    /* Check if the object is actually the Root directory */
+    if (Object == NameSpaceRoot)
     {
         /* This is already the Root Directory, return "\\" */
-        DPRINT("Returning Root Dir\n");
         *--ObjectName = OBJ_NAME_PATH_SEPARATOR;
         ObjectNameInfo->Name.Length = (USHORT)NameSize;
-        ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize + sizeof(UNICODE_NULL));
+        ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize +
+                                                      sizeof(UNICODE_NULL));
         ObjectNameInfo->Name.Buffer = ObjectName;
-
         return STATUS_SUCCESS;
-    } 
-    else 
+    }
+    else
     {
         /* Start by adding the Object's Name */
-        ObjectName = (PWCH)((ULONG_PTR)ObjectName - LocalInfo->Name.Length);
-        RtlMoveMemory(ObjectName, LocalInfo->Name.Buffer, LocalInfo->Name.Length);
+        ObjectName = (PWCH)((ULONG_PTR)ObjectName -
+                            LocalInfo->Name.Length);
+        RtlMoveMemory(ObjectName,
+                      LocalInfo->Name.Buffer,
+                      LocalInfo->Name.Length);
 
         /* Now parse the Parent directories until we reach the top */
         ParentDirectory = LocalInfo->Directory;
-        while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory)) 
+        while ((ParentDirectory != NameSpaceRoot) && (ParentDirectory))
         {
             /* Get the name information */
-            LocalInfo = OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(ParentDirectory));
+            LocalInfo = OBJECT_HEADER_TO_NAME_INFO(
+                            OBJECT_TO_OBJECT_HEADER(ParentDirectory));
 
             /* Add the "\" */
             *(--ObjectName) = OBJ_NAME_PATH_SEPARATOR;
 
             /* Add the Parent Directory's Name */
-            if (LocalInfo && LocalInfo->Name.Buffer) 
+            if (LocalInfo && LocalInfo->Name.Buffer)
             {
                 /* Add the name */
-                ObjectName = (PWCH)((ULONG_PTR)ObjectName - LocalInfo->Name.Length);
-                RtlMoveMemory(ObjectName, LocalInfo->Name.Buffer, LocalInfo->Name.Length);
+                ObjectName = (PWCH)((ULONG_PTR)ObjectName -
+                                    LocalInfo->Name.Length);
+                RtlMoveMemory(ObjectName,
+                              LocalInfo->Name.Buffer,
+                              LocalInfo->Name.Length);
 
                 /* Move to next parent */
                 ParentDirectory = LocalInfo->Directory;
-            } 
-            else 
+            }
+            else
             {
                 /* Directory without a name, we add "..." */
                 DPRINT("Nameless Directory\n");
@@ -499,13 +488,13 @@ ObQueryNameString(IN  PVOID Object,
 
         /* Add Root Directory Name */
         *(--ObjectName) = OBJ_NAME_PATH_SEPARATOR;
-        DPRINT("Current Buffer: %S\n", ObjectName);
         ObjectNameInfo->Name.Length = (USHORT)NameSize;
-        ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize + sizeof(UNICODE_NULL));
+        ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize +
+                                                      sizeof(UNICODE_NULL));
         ObjectNameInfo->Name.Buffer = ObjectName;
-        DPRINT("Complete: %wZ\n", ObjectNameInfo);
     }
 
+    /* Return success */
     return STATUS_SUCCESS;
 }
 
