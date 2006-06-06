@@ -155,6 +155,7 @@ NtOpenThread@16
 NtOpenThreadToken@16
 NtOpenTimer@12
 NtPlugPlayControl@12
+NtPowerInformation@20
 NtPrivilegeCheck@12
 NtPrivilegedServiceAuditAlarm@20
 NtPrivilegeObjectAuditAlarm@24
