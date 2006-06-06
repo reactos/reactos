@@ -19,8 +19,64 @@
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
+/* UGLY FUNCTIONS ************************************************************/
+
+ULONG
+NTAPI
+ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable)
+{
+    return HandleTable->HandleCount;
+}
+
+VOID
+ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
+                               PEPROCESS Process,
+                               int Count)
+{
+    ULONG P;
+    //      KIRQL oldIrql;
+
+    //      pshi->HandleValue;
+
+    /*
+    This will never work with ROS! M$, I guess uses 0 -> 65535.
+    Ros uses 0 -> 4294967295!
+    */
+
+    P = (ULONG) Process->UniqueProcessId;
+    pshi->UniqueProcessId = (USHORT) P;
+
+    //      KeAcquireSpinLock( &Process->HandleTable.ListLock, &oldIrql );
+
+    //      pshi->GrantedAccess;
+    //      pshi->Object;
+    //      pshi->TypeIndex;
+    //      pshi->HandleAttributes;
+
+    //      KeReleaseSpinLock( &Process->HandleTable.ListLock, oldIrql );
+
+    return;
+}
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
+/*++
+* @name ObpDeleteNameCheck
+*
+*     The ObpDeleteNameCheck routine checks if a named object should be
+*     removed from the object directory namespace.
+*
+* @param Object
+*        Pointer to the object to check for possible removal.
+*
+* @return None.
+*
+* @remarks An object is removed if the following 4 criteria are met:
+*          1) The object has 0 handles open
+*          2) The object is in the directory namespace and has a name
+*          3) The object is not permanent
+*
+*--*/
 VOID
 NTAPI
 ObpDeleteNameCheck(IN PVOID Object)
@@ -88,17 +144,19 @@ ObpDeleteNameCheck(IN PVOID Object)
 /*++
 * @name ObpSetPermanentObject
 *
-*     The ObpSetPermanentObject routine <FILLMEIN>
+*     The ObpSetPermanentObject routine makes an sets or clears the permanent
+*     flag of an object, thus making it either permanent or temporary.
 *
 * @param ObjectBody
-*        <FILLMEIN>
+*        Pointer to the object to make permanent or temporary.
 *
 * @param Permanent
-*        <FILLMEIN>
+*        Flag specifying which operation to perform.
 *
 * @return None.
 *
-* @remarks None.
+* @remarks If the object is being made temporary, then it will be checked
+*          as a candidate for immediate removal from the namespace.
 *
 *--*/
 VOID
@@ -125,63 +183,133 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
     }
 }
 
-ULONG
-NTAPI
-ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable)
-{
-    return HandleTable->HandleCount;
-}
-
+/*++
+* @name ObpDecrementHandleCount
+*
+*     The ObpDecrementHandleCount routine <FILLMEIN>
+*
+* @param ObjectBody
+*        <FILLMEIN>.
+*
+* @param Process
+*        <FILLMEIN>.
+*
+* @param GrantedAccess
+*        <FILLMEIN>.
+*
+* @return None.
+*
+* @remarks None.
+*
+*--*/
 VOID
-ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
-                               PEPROCESS Process,
-                               int Count)
+NTAPI
+ObpDecrementHandleCount(IN PVOID ObjectBody,
+                        IN PEPROCESS Process,
+                        IN ACCESS_MASK GrantedAccess)
 {
-    ULONG P;
-    //      KIRQL oldIrql;
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    LONG SystemHandleCount, ProcessHandleCount;
 
-    //      pshi->HandleValue;
+    /* Get the object type and header */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
+    ObjectType = ObjectHeader->Type;
 
-    /*
-    This will never work with ROS! M$, I guess uses 0 -> 65535.
-    Ros uses 0 -> 4294967295!
-    */
+    /* FIXME: The process handle count should be in the Handle DB. Investigate */
+    SystemHandleCount = ObjectHeader->HandleCount;
+    ProcessHandleCount = 0;
 
-    P = (ULONG) Process->UniqueProcessId;
-    pshi->UniqueProcessId = (USHORT) P;
+    /* Decrement the handle count */
+    InterlockedDecrement(&ObjectHeader->HandleCount);
 
-    //      KeAcquireSpinLock( &Process->HandleTable.ListLock, &oldIrql );
-
-    //      pshi->GrantedAccess;
-    //      pshi->Object;
-    //      pshi->TypeIndex;
-    //      pshi->HandleAttributes;
-
-    //      KeReleaseSpinLock( &Process->HandleTable.ListLock, oldIrql );
-
-    return;
-}
-static VOID
-ObpDecrementHandleCount(PVOID ObjectBody)
-{
-    POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
-    LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
-    DPRINT("Header: %x\n", ObjectHeader);
-    DPRINT("NewHandleCount: %x\n", NewHandleCount);
-    DPRINT("OBJECT_HEADER_TO_NAME_INFO: %x\n", OBJECT_HEADER_TO_NAME_INFO(ObjectHeader));
-
-    if ((ObjectHeader->Type != NULL) &&
-        (ObjectHeader->Type->TypeInfo.CloseProcedure != NULL))
+    /* Check if we have a close procedure */
+    if (ObjectType->TypeInfo.CloseProcedure)
     {
-        /* the handle count should be decremented but we pass the previous value
-        to the callback */
-        ObjectHeader->Type->TypeInfo.CloseProcedure(NULL, ObjectBody, 0, NewHandleCount + 1, NewHandleCount + 1);
+        /* Call it */
+        ObjectType->TypeInfo.CloseProcedure(Process,
+                                            ObjectBody,
+                                            GrantedAccess,
+                                            ProcessHandleCount,
+                                            SystemHandleCount);
     }
 
     /* Check if we should delete the object */
     ObpDeleteNameCheck(ObjectBody);
+
+    /* Decrease the total number of handles for this type */
+    ObjectType->TotalNumberOfHandles--;
 }
 
+static NTSTATUS
+ObpDeleteHandle(HANDLE Handle)
+{
+    PHANDLE_TABLE_ENTRY HandleEntry;
+    PVOID Body;
+    POBJECT_HEADER ObjectHeader;
+    PHANDLE_TABLE ObjectTable;
+    ACCESS_MASK GrantedAccess;
+
+    PAGED_CODE();
+
+    DPRINT("ObpDeleteHandle(Handle %p)\n",Handle);
+
+    ObjectTable = PsGetCurrentProcess()->ObjectTable;
+
+    KeEnterCriticalRegion();
+
+    HandleEntry = ExMapHandleToPointer(ObjectTable,
+        Handle);
+    if(HandleEntry != NULL)
+    {
+        if(HandleEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE)
+        {
+            ExUnlockHandleTableEntry(ObjectTable,
+                HandleEntry);
+
+            KeLeaveCriticalRegion();
+
+            return STATUS_HANDLE_NOT_CLOSABLE;
+        }
+
+        ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
+        Body = &ObjectHeader->Body;
+        GrantedAccess = HandleEntry->GrantedAccess;
+
+        /* destroy and unlock the handle entry */
+        ExDestroyHandleByEntry(ObjectTable,
+            HandleEntry,
+            Handle);
+
+        ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
+
+        KeLeaveCriticalRegion();
+
+        return STATUS_SUCCESS;
+    }
+    KeLeaveCriticalRegion();
+    return STATUS_INVALID_HANDLE;
+}
+
+/*++
+* @name ObpSetHandleAttributes
+*
+*     The ObpSetHandleAttributes routine <FILLMEIN>
+*
+* @param HandleTable
+*        <FILLMEIN>.
+*
+* @param HandleTableEntry
+*        <FILLMEIN>.
+*
+* @param Context
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 BOOLEAN
 NTAPI
 ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
@@ -227,54 +355,6 @@ ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
 
     /* Return success */
     return TRUE;
-}
-
-static NTSTATUS
-ObpDeleteHandle(HANDLE Handle)
-{
-    PHANDLE_TABLE_ENTRY HandleEntry;
-    PVOID Body;
-    POBJECT_HEADER ObjectHeader;
-    PHANDLE_TABLE ObjectTable;
-
-    PAGED_CODE();
-
-    DPRINT("ObpDeleteHandle(Handle %p)\n",Handle);
-
-    ObjectTable = PsGetCurrentProcess()->ObjectTable;
-
-    KeEnterCriticalRegion();
-
-    HandleEntry = ExMapHandleToPointer(ObjectTable,
-        Handle);
-    if(HandleEntry != NULL)
-    {
-        if(HandleEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE)
-        {
-            ExUnlockHandleTableEntry(ObjectTable,
-                HandleEntry);
-
-            KeLeaveCriticalRegion();
-
-            return STATUS_HANDLE_NOT_CLOSABLE;
-        }
-
-        ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
-        Body = &ObjectHeader->Body;
-
-        /* destroy and unlock the handle entry */
-        ExDestroyHandleByEntry(ObjectTable,
-            HandleEntry,
-            Handle);
-
-        ObpDecrementHandleCount(Body);
-
-        KeLeaveCriticalRegion();
-
-        return STATUS_SUCCESS;
-    }
-    KeLeaveCriticalRegion();
-    return STATUS_INVALID_HANDLE;
 }
 
 NTSTATUS
@@ -448,7 +528,7 @@ SweepHandleCallback(PHANDLE_TABLE HandleTable,
     ObjectHeader = EX_OBJ_TO_HDR(Object);
     ObjectBody = &ObjectHeader->Body;
 
-    ObpDecrementHandleCount(ObjectBody);
+    ObpDecrementHandleCount(ObjectBody, PsGetCurrentProcess(), GrantedAccess);
 }
 
 static BOOLEAN STDCALL
