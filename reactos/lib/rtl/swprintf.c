@@ -286,6 +286,10 @@ static wchar_t*
 string(wchar_t* buf, wchar_t* end, const char* s, int len, int field_width, int precision, int flags)
 {
 	int i;
+    wchar_t c;
+    
+    c = (flags & ZEROPAD) ? L'0' : L' ';
+
 	if (s == NULL)
 	{
 		s = "<NULL>";
@@ -309,7 +313,7 @@ string(wchar_t* buf, wchar_t* end, const char* s, int len, int field_width, int 
 		while (len < field_width--)
 		{
 			if (buf <= end)
-				*buf = L' ';
+				*buf = c;
 			++buf;
 		}
 	for (i = 0; i < len; ++i)
@@ -331,6 +335,10 @@ static wchar_t*
 stringw(wchar_t* buf, wchar_t* end, const wchar_t* sw, int len, int field_width, int precision, int flags)
 {
 	int i;
+	wchar_t c;
+    
+    c = (flags & ZEROPAD) ? L'0' : L' ';
+    
 	if (sw == NULL)
 	{
 		sw = L"<NULL>";
@@ -354,7 +362,7 @@ stringw(wchar_t* buf, wchar_t* end, const wchar_t* sw, int len, int field_width,
 		while (len < field_width--)
 		{
 			if (buf <= end)
-				*buf = L' ';
+				*buf = c;
 			buf++;
 		}
 	for (i = 0; i < len; ++i)
