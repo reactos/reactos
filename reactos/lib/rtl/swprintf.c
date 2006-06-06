@@ -457,7 +457,10 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 		} else if (*fmt == L'I' && *(fmt+1) == L'6' && *(fmt+2) == L'4') {
 			qualifier = *fmt;
 			fmt += 3;
-		}
+		} else if (*fmt == L'I' && *(fmt+1) == L'3' && *(fmt+2) == L'2') {
+			qualifier = L'l'; 
+			fmt += 3;
+		} 
 
 		/* default base */
 		base = 10;

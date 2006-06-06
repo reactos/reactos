@@ -459,7 +459,10 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 		} else if (*fmt == 'I' && *(fmt+1) == '6' && *(fmt+2) == '4') {
 			qualifier = *fmt;
 			fmt += 3;
-		}
+		} else if (*fmt == 'I' && *(fmt+1) == '3' && *(fmt+2) == '2') {
+			qualifier = 'l'; 
+			fmt += 3;
+		} 
 
 		/* default base */
 		base = 10;
