@@ -114,9 +114,11 @@ ObpSetHandleAttributes(
     IN PVOID Context
 );
 
-ULONG
+VOID
 NTAPI
-ObGetObjectHandleCount(PVOID Object);
+ObpDeleteNameCheck(
+    IN PVOID Object
+);
 
 NTSTATUS
 NTAPI

@@ -21,6 +21,70 @@ PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+ObpDeleteNameCheck(IN PVOID Object)
+{
+    POBJECT_HEADER ObjectHeader;
+    OBP_LOOKUP_CONTEXT Context;
+    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+    POBJECT_TYPE ObjectType;
+
+    /* Get object structures */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    ObjectType = ObjectHeader->Type;
+
+    /*
+     * Check if the handle count is 0, if the object is named,
+     * and if the object isn't a permanent object.
+     */
+    if (!(ObjectHeader->HandleCount) &&
+         (ObjectNameInfo) &&
+         (ObjectNameInfo->Name.Length) &&
+         !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
+    {
+        /* Make sure it's still inserted */
+        Context.Directory = ObjectNameInfo->Directory;
+        Context.DirectoryLocked = TRUE;
+        Object = ObpLookupEntryDirectory(ObjectNameInfo->Directory,
+                                         &ObjectNameInfo->Name,
+                                         0,
+                                         FALSE,
+                                         &Context);
+        if (Object)
+        {
+            /* First delete it from the directory */
+            ObpDeleteEntryDirectory(&Context);
+
+            /* Now check if we have a security callback */
+            if (ObjectType->TypeInfo.SecurityRequired)
+            {
+                /* Call it */
+                ObjectType->TypeInfo.SecurityProcedure(Object,
+                                                       DeleteSecurityDescriptor,
+                                                       0,
+                                                       NULL,
+                                                       NULL,
+                                                       &ObjectHeader->
+                                                       SecurityDescriptor,
+                                                       ObjectType->
+                                                       TypeInfo.PoolType,
+                                                       NULL);
+            }
+
+            /* Free the name */
+            ExFreePool(ObjectNameInfo->Name.Buffer);
+            RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
+
+            /* Clear the current directory and de-reference it */
+            ObDereferenceObject(ObjectNameInfo->Directory);
+            ObDereferenceObject(Object);
+            ObjectNameInfo->Directory = NULL;
+        }
+    }
+}
+
 /*++
 * @name ObpSetPermanentObject
 *
@@ -43,32 +107,21 @@ ObpSetPermanentObject(IN PVOID ObjectBody,
                       IN BOOLEAN Permanent)
 {
     POBJECT_HEADER ObjectHeader;
-    OBP_LOOKUP_CONTEXT Context;
 
+    /* Get the header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
-    ASSERT (ObjectHeader->PointerCount > 0);
     if (Permanent)
     {
+        /* Set it to permanent */
         ObjectHeader->Flags |= OB_FLAG_PERMANENT;
     }
     else
     {
+        /* Remove the flag */
         ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
-        if (ObjectHeader->HandleCount == 0 &&
-            OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory)
-        {
-            /* Make sure it's still inserted */
-            Context.Directory = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory;
-            Context.DirectoryLocked = TRUE;
-            if (ObpLookupEntryDirectory(OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory,
-                                        &OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Name,
-                                        0,
-                                        FALSE,
-                                        &Context))
-            {
-                ObpDeleteEntryDirectory(&Context);
-            }
-        }
+
+        /* Check if we should delete the object now */
+        ObpDeleteNameCheck(ObjectBody);
     }
 }
 
@@ -113,7 +166,6 @@ ObpDecrementHandleCount(PVOID ObjectBody)
 {
     POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
     LONG NewHandleCount = InterlockedDecrement(&ObjectHeader->HandleCount);
-    OBP_LOOKUP_CONTEXT Context;
     DPRINT("Header: %x\n", ObjectHeader);
     DPRINT("NewHandleCount: %x\n", NewHandleCount);
     DPRINT("OBJECT_HEADER_TO_NAME_INFO: %x\n", OBJECT_HEADER_TO_NAME_INFO(ObjectHeader));
@@ -126,32 +178,8 @@ ObpDecrementHandleCount(PVOID ObjectBody)
         ObjectHeader->Type->TypeInfo.CloseProcedure(NULL, ObjectBody, 0, NewHandleCount + 1, NewHandleCount + 1);
     }
 
-    if(NewHandleCount == 0)
-    {
-        if(OBJECT_HEADER_TO_NAME_INFO(ObjectHeader) && 
-            OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory != NULL &&
-            !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
-        {
-            /* delete the object from the namespace when the last handle got closed.
-            Only do this if it's actually been inserted into the namespace and
-            if it's not a permanent object. */
-
-            /* Make sure it's still inserted */
-            Context.Directory = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory;
-            Context.DirectoryLocked = TRUE;
-            if (ObpLookupEntryDirectory(OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Directory,
-                &OBJECT_HEADER_TO_NAME_INFO(ObjectHeader)->Name,
-                0,
-                FALSE,
-                &Context))
-            {
-                ObpDeleteEntryDirectory(&Context);
-            }
-        }
-
-        /* remove the keep-alive reference */
-        ObDereferenceObject(ObjectBody);
-    }
+    /* Check if we should delete the object */
+    ObpDeleteNameCheck(ObjectBody);
 }
 
 BOOLEAN
@@ -593,20 +621,6 @@ ObpCreateHandle(PVOID ObjectBody,
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/
-
-ULONG
-NTAPI
-ObGetObjectHandleCount(PVOID Object)
-{
-    POBJECT_HEADER Header;
-
-    PAGED_CODE();
-
-    ASSERT(Object);
-    Header = OBJECT_TO_OBJECT_HEADER(Object);
-
-    return Header->HandleCount;
-}
 
 NTSTATUS
 NTAPI
@@ -1162,18 +1176,18 @@ NtMakeTemporaryObject(IN HANDLE ObjectHandle)
     NTSTATUS Status;
     PAGED_CODE();
 
+    /* Reference the object for DELETE access */
     Status = ObReferenceObjectByHandle(ObjectHandle,
-                                       0,
+                                       DELETE,
                                        NULL,
                                        KeGetPreviousMode(),
                                        &ObjectBody,
                                        NULL);
     if (Status != STATUS_SUCCESS) return Status;
 
-    ObpSetPermanentObject (ObjectBody, FALSE);
-
+    /* Set it as temporary and dereference it */
+    ObpSetPermanentObject(ObjectBody, FALSE);
     ObDereferenceObject(ObjectBody);
-
     return STATUS_SUCCESS;
 }
 
@@ -1197,20 +1211,26 @@ NtMakePermanentObject(IN HANDLE ObjectHandle)
 {
     PVOID ObjectBody;
     NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
 
+    /* Make sure that the caller has SeCreatePermanentPrivilege */
+    Status = SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
+                                    PreviousMode);
+    if (!NT_SUCCESS(Status)) return STATUS_PRIVILEGE_NOT_HELD;
+
+    /* Reference the object */
     Status = ObReferenceObjectByHandle(ObjectHandle,
                                        0,
                                        NULL,
-                                       KeGetPreviousMode(),
+                                       PreviousMode,
                                        &ObjectBody,
                                        NULL);
     if (Status != STATUS_SUCCESS) return Status;
 
-    ObpSetPermanentObject (ObjectBody, TRUE);
-
+    /* Set it as permanent and dereference it */
+    ObpSetPermanentObject(ObjectBody, TRUE);
     ObDereferenceObject(ObjectBody);
-
     return STATUS_SUCCESS;
 }
 /* EOF */

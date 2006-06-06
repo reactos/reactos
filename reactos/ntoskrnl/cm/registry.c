@@ -23,6 +23,7 @@
 #endif
 
 #define ObGetObjectPointerCount(x) OBJECT_TO_OBJECT_HEADER(x)->PointerCount
+#define ObGetObjectHandleCount(x) OBJECT_TO_OBJECT_HEADER(x)->HandleCount
 
 /* GLOBALS ******************************************************************/
 
