@@ -115,12 +115,11 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 			size--;
 		}
 	}
+	
 	if (type & SPECIAL) {
 		if (base == 16)
 			size -= 2;
-		else if (base == 8)
-			size--;
-	}
+	} 
 	i = 0;
 	if ((num == 0) && (precision !=0))
 		tmp[i++] = L'0';
@@ -141,12 +140,9 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 			*buf = sign;
 		++buf;
 	}
+	
 	if (type & SPECIAL) {
-		if (base==8) {
-			if (buf <= end)
-				*buf = L'0';
-			++buf;
-		} else if (base==16) {
+	    if (base==16) {
 			if (buf <= end)
 				*buf = L'0';
 			++buf;
@@ -177,6 +173,8 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 			*buf = L' ';
 		++buf;
 	}
+	
+
 	return buf;
 }
 

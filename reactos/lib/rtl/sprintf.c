@@ -115,12 +115,12 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 			size--;
 		}
 	}
+	
 	if (type & SPECIAL) {
 		if (base == 16)
 			size -= 2;
-		else if (base == 8)
-			size--;
-	}
+	
+	} 
 	i = 0;
 	if ((num == 0) && (precision !=0))
 		tmp[i++] = '0';
@@ -141,12 +141,9 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 			*buf = sign;
 		++buf;
 	}
+	
 	if (type & SPECIAL) {
-		if (base==8) {
-			if (buf <= end)
-				*buf = '0';
-			++buf;
-		} else if (base==16) {
+		 if (base==16) {
 			if (buf <= end)
 				*buf = '0';
 			++buf;
@@ -155,6 +152,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 			++buf;
 		}
 	}
+	
 	if (!(type & LEFT)) {
 		while (size-- > 0) {
 			if (buf <= end)
@@ -177,6 +175,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 			*buf = ' ';
 		++buf;
 	}
+	
 	return buf;
 }
 
