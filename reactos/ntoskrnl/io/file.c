@@ -946,7 +946,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       Status = ObReferenceObjectByHandle(LocalHandle,
                                          DesiredAccess,
                                          NULL,
-                                         AccessMode,
+                                         KernelMode,
                                          (PVOID*)&DeviceObject,
                                          NULL);
       ZwClose(LocalHandle);
