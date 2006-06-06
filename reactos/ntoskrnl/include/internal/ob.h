@@ -42,25 +42,33 @@ extern NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
 
 BOOLEAN
 NTAPI
-ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context);
+ObpDeleteEntryDirectory(
+    IN POBP_LOOKUP_CONTEXT Context
+);
 
 BOOLEAN
 NTAPI
-ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
-                        IN POBP_LOOKUP_CONTEXT Context,
-                        IN POBJECT_HEADER ObjectHeader);
+ObpInsertEntryDirectory(
+    IN POBJECT_DIRECTORY Parent,
+    IN POBP_LOOKUP_CONTEXT Context,
+    IN POBJECT_HEADER ObjectHeader
+);
 
 PVOID
 NTAPI
-ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
-                        IN PUNICODE_STRING Name,
-                        IN ULONG Attributes,
-                        IN UCHAR SearchShadow,
-                        IN POBP_LOOKUP_CONTEXT Context);
+ObpLookupEntryDirectory(
+    IN POBJECT_DIRECTORY Directory,
+    IN PUNICODE_STRING Name,
+    IN ULONG Attributes,
+    IN UCHAR SearchShadow,
+    IN POBP_LOOKUP_CONTEXT Context
+);
 
 VOID
 NTAPI
-ObInitSymbolicLinkImplementation(VOID);
+ObInitSymbolicLinkImplementation(
+    VOID
+);
 
 NTSTATUS
 NTAPI
@@ -73,21 +81,15 @@ ObpCreateHandle(
 
 NTSTATUS
 NTAPI
-ObpParseDirectory(
-    PVOID Object,
-    PVOID * NextObject,
-    PUNICODE_STRING FullPath,
-    PWSTR * Path,
-    ULONG Attributes,
-    POBP_LOOKUP_CONTEXT Context
+ObpCreateHandleTable(
+    IN PEPROCESS Parent,
+    IN PEPROCESS Process
 );
 
 VOID
 NTAPI
-ObCreateHandleTable(
-    struct _EPROCESS* Parent,
-    BOOLEAN Inherit,
-    struct _EPROCESS* Process
+ObKillProcess(
+    IN PEPROCESS Process
 );
 
 NTSTATUS
@@ -137,10 +139,10 @@ NTAPI
 ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable);
 
 VOID
-STDCALL
+NTAPI
 ObQueryDeviceMapInformation(
-    PEPROCESS Process,
-    PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo
+    IN PEPROCESS Process,
+    OUT PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo
 );
 
 VOID
@@ -149,10 +151,6 @@ ObpSetPermanentObject(
     IN PVOID ObjectBody,
     IN BOOLEAN Permanent
 );
-
-VOID
-STDCALL
-ObKillProcess(PEPROCESS Process);
 
 VOID
 FASTCALL

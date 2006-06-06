@@ -340,7 +340,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Create or Clone the Handle Table */
     DPRINT("Initialzing Process Handle Table\n");
-    ObCreateHandleTable(pParentProcess, InheritObjectTable,  Process);
+    ObpCreateHandleTable(pParentProcess, Process);
     DPRINT("Handle Table: %x\n", Process->ObjectTable);
 
     /* Set Process's Directory Base */

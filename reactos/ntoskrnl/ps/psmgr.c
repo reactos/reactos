@@ -303,7 +303,7 @@ PspPostInitSystemProcess(VOID)
      process a PID */
   PsInitClientIDManagment();
 
-  ObCreateHandleTable(NULL, FALSE, PsInitialSystemProcess);
+  ObpCreateHandleTable(NULL, PsInitialSystemProcess);
   ObpKernelHandleTable = PsInitialSystemProcess->ObjectTable;
 
   CidEntry.Object = PsInitialSystemProcess;
