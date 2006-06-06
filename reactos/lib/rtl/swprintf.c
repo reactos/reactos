@@ -565,6 +565,9 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			continue;
 
 		case L'p':
+             if ((flags & LARGE) == 0)
+                flags |= LARGE; 
+                 
 			if (field_width == -1) {
 				field_width = 2*sizeof(void *);
 				flags |= ZEROPAD;

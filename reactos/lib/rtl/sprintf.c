@@ -566,6 +566,9 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			continue;
 
 		case 'p':
+            if ((flags & LARGE) == 0)
+                flags |= LARGE; 
+                 
 			if (field_width == -1) {
 				field_width = 2 * sizeof(void *);
 				flags |= ZEROPAD;
