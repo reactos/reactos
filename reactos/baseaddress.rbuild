@@ -62,6 +62,7 @@
   <property name="BASEADDRESS_ICMP" value="0x741F0000" />
   <property name="BASEADDRESS_USERENV" value="0x74850000" />
   <property name="BASEADDRESS_SYSSETUP" value="0x74a30000" />
+  <property name="BASEADDRESS_POWRPROF" value="0x74ad0000" />
   <property name="BASEADDRESS_OLEDLG" value="0x74d00000" />
   <property name="BASEADDRESS_SAMSRV" value="0x74f30000" />
   <property name="BASEADDRESS_SAMLIB" value="0x750C0000" />

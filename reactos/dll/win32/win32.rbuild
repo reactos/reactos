@@ -160,6 +160,9 @@
 <directory name="opengl32">
 	<xi:include href="opengl32/opengl32.rbuild" />
 </directory>
+<directory name="powrprof">
+	<xi:include href="powrprof/powrprof.rbuild" />
+</directory>
 <directory name="psapi">
 	<xi:include href="psapi/psapi.rbuild" />
 </directory>
