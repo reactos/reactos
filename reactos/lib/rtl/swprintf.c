@@ -475,26 +475,20 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 
 		switch (*fmt) {
 		case L'c':
-			if (!(flags & LEFT))
-				while (--field_width > 0) {
-					if (str <= end)
-						*str = L' ';
-					++str;
-				}
-			if (qualifier == 'h') {
-				if (str <= end)
-					*str = (wchar_t) va_arg(args, int);
-				++str;
+              if (qualifier == 'h' || qualifier == 'w') {    
+	              wchar_t sw1[2];
+				/* print unicode string */
+                sw1[0] = (wchar_t) va_arg(args, int);
+                sw1[1] = 0;
+				str = stringw(str, end, (wchar_t *)&sw1, -1, field_width, precision, flags);
 			} else {
-				if (str <= end)
-					*str = (wchar_t) va_arg(args, int);
-				++str;
+                char s1[2];
+				/* print ascii string */
+                s1[0] = ( unsigned char) va_arg(args, int);
+                s1[1] = 0;
+				str = string(str, end, (char *)&s1, -1,  field_width, precision, flags);
 			}
-			while (--field_width > 0) {
-				if (str <= end)
-					*str = L' ';
-				++str;
-			}
+		
 			continue;
 
 		case L'C':

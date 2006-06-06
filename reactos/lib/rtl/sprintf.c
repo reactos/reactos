@@ -477,27 +477,20 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 
 		switch (*fmt) {
 		case 'c': /* finished */
-			if (!(flags & LEFT))
-				while (--field_width > 0) {
-					if (str <= end)
-						*str = ' ';
-					++str;
-				}
-			if (qualifier == 'l' || qualifier == 'w') {
-				if (str <= end)
-					*str = (unsigned char)(wchar_t) va_arg(args, int);
-				++str;
+             if (qualifier == 'l' || qualifier == 'w') {    
+	              wchar_t sw1[2];
+				/* print unicode string */
+                sw1[0] = (wchar_t) va_arg(args, int);
+                sw1[1] = 0;
+				str = stringw(str, end, (wchar_t *)&sw1, -1, field_width, precision, flags);
 			} else {
-				if (str <= end)
-					*str = (unsigned char) va_arg(args, int);
-				++str;
+                char s1[2];
+				/* print ascii string */
+                s1[0] = ( unsigned char) va_arg(args, int);
+                s1[1] = 0;
+				str = string(str, end, (char *)&s1, -1,  field_width, precision, flags);
 			}
-			while (--field_width > 0) {
-				if (str <= end)
-					*str = ' ';
-				++str;
-			}
-			continue;
+            continue;
 
 		case 'C': /* finished */
 			if (!(flags & LEFT))
