@@ -16,7 +16,10 @@ extern "C" {
 #define NEWSCHEME (UINT)-1
 
 #ifndef RC_INVOKED
-#include <ntdef.h>  /* for NTSTATUS */
+#ifndef NTSTATUS
+typedef LONG NTSTATUS, *PNTSTATUS;
+#endif
+
 typedef struct _GLOBAL_MACHINE_POWER_POLICY{
    ULONG Revision;
    SYSTEM_POWER_STATE LidOpenWakeAc;
