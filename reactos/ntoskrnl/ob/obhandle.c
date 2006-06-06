@@ -241,54 +241,86 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     ObjectType->TotalNumberOfHandles--;
 }
 
-static NTSTATUS
+/*++
+* @name ObpDeleteHandle
+*
+*     The ObpDeleteHandle routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
 ObpDeleteHandle(HANDLE Handle)
 {
     PHANDLE_TABLE_ENTRY HandleEntry;
     PVOID Body;
+    POBJECT_TYPE ObjectType;
     POBJECT_HEADER ObjectHeader;
     PHANDLE_TABLE ObjectTable;
     ACCESS_MASK GrantedAccess;
-
+    NTSTATUS Status = STATUS_INVALID_HANDLE;
     PAGED_CODE();
 
-    DPRINT("ObpDeleteHandle(Handle %p)\n",Handle);
-
+    /*
+     * Get the object table of the current process/
+     * NOTE: We might actually be attached to the system process
+     */
     ObjectTable = PsGetCurrentProcess()->ObjectTable;
 
+    /* Enter a critical region while touching the handle locks */
     KeEnterCriticalRegion();
 
-    HandleEntry = ExMapHandleToPointer(ObjectTable,
-        Handle);
-    if(HandleEntry != NULL)
+    /* Get the entry for this handle */
+    HandleEntry = ExMapHandleToPointer(ObjectTable, Handle);
+    if(HandleEntry)
     {
-        if(HandleEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE)
-        {
-            ExUnlockHandleTableEntry(ObjectTable,
-                HandleEntry);
-
-            KeLeaveCriticalRegion();
-
-            return STATUS_HANDLE_NOT_CLOSABLE;
-        }
-
+        /* Get the object data */
         ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
+        ObjectType = ObjectHeader->Type;
         Body = &ObjectHeader->Body;
         GrantedAccess = HandleEntry->GrantedAccess;
 
-        /* destroy and unlock the handle entry */
-        ExDestroyHandleByEntry(ObjectTable,
-            HandleEntry,
-            Handle);
+        /* Check if the object has an Okay To Close procedure */
+        if (ObjectType->TypeInfo.OkayToCloseProcedure)
+        {
+            /* Call it and check if it's not letting us close it */
+            if (!ObjectType->TypeInfo.OkayToCloseProcedure(PsGetCurrentProcess(),
+                                                           Body,
+                                                           Handle))
+            {
+                /* Fail */
+                ExUnlockHandleTableEntry(ObjectTable, HandleEntry);
+                KeLeaveCriticalRegion();
+                return STATUS_HANDLE_NOT_CLOSABLE;
+            }
+        }
 
+        /* The callback allowed us to close it, but does the handle itself? */
+        if(HandleEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE)
+        {
+            /* Fail */
+            ExUnlockHandleTableEntry(ObjectTable, HandleEntry);
+            KeLeaveCriticalRegion();
+            return STATUS_HANDLE_NOT_CLOSABLE;
+        }
+
+        /* Destroy and unlock the handle entry */
+        ExDestroyHandleByEntry(ObjectTable, HandleEntry, Handle);
+
+        /* Now decrement the handle count */
         ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
-
-        KeLeaveCriticalRegion();
-
-        return STATUS_SUCCESS;
+        Status = STATUS_SUCCESS;
     }
+
+    /* Leave the critical region and return the status */
     KeLeaveCriticalRegion();
-    return STATUS_INVALID_HANDLE;
+    return Status;
 }
 
 /*++

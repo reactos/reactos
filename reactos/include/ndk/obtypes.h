@@ -230,7 +230,9 @@ typedef NTSTATUS
 
 typedef NTSTATUS
 (NTAPI *OB_OKAYTOCLOSE_METHOD)(
-    VOID
+    IN PEPROCESS Process OPTIONAL,
+    IN PVOID Object,
+    IN HANDLE Handle
 );
 
 #else
