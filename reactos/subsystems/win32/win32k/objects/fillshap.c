@@ -94,7 +94,7 @@ IntGdiPolygon(PDC    dc,
 	if (FillBrushObj && !(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
           IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-	  ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->w.ROPmode), UnsafePoints, Count, DestRect );
+          ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->w.ROPmode), UnsafePoints, Count, DestRect );  
 	}
 	BRUSHOBJ_UnlockBrush(FillBrushObj);
 
@@ -104,35 +104,29 @@ IntGdiPolygon(PDC    dc,
 	if (PenBrushObj && !(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
 	  IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-	  for ( CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint )
-	  {
-	    POINT To, From; //, Next;
 
-	    /* Let CurrentPoint be i
-	     * if i+1 > Count, Draw a line from Points[i] to Points[0]
-	     * Draw a line from Points[i] to Points[i+1]
-	     */
-	    From = UnsafePoints[CurrentPoint];
-	    if (Count <= CurrentPoint + 1)
-	      To = UnsafePoints[0];
-	    else
-	      To = UnsafePoints[CurrentPoint + 1];
+        while(Count-- >1)
+          {
 
-	    //DPRINT("Polygon Making line from (%d,%d) to (%d,%d)\n", From.x, From.y, To.x, To.y );
-	    ret = IntEngLineTo(&BitmapObj->SurfObj,
+// DPRINT1("Polygon Making line from (%d,%d) to (%d,%d)\n",
+//                                 UnsafePoints[0].x, UnsafePoints[0].y,
+//                                 UnsafePoints[1].x, UnsafePoints[1].y );
+                                 
+  	    ret = IntEngLineTo(&BitmapObj->SurfObj,
 			       dc->CombinedClip,
 			       &PenBrushInst.BrushObject,
-			       From.x,
-			       From.y,
-			       To.x,
-			       To.y,
+			       UnsafePoints[0].x,          /* From */
+			       UnsafePoints[0].y,
+			       UnsafePoints[1].x,          /* To */
+			       UnsafePoints[1].y,
 			       &DestRect,
 			       ROP2_TO_MIX(dc->w.ROPmode)); /* MIX */
+             if(!ret) break;
+             UnsafePoints++;
 	  }
 	}
 	PENOBJ_UnlockPen(PenBrushObj);
       }
-
       BITMAPOBJ_UnlockBitmap(BitmapObj);
 
   return ret;
@@ -144,25 +138,12 @@ IntGdiPolyPolygon(DC      *dc,
                   LPINT   PolyCounts,
                   int     Count)
 {
-  int i;
-  LPPOINT pt;
-  LPINT pc;
-  BOOL ret = FALSE; // default to failure
-
-  pt = Points;
-  pc = PolyCounts;
-
-  for (i=0;i<Count;i++)
+  while(--Count >=0)
   {
-    ret = IntGdiPolygon ( dc, pt, *pc );
-    if (ret == FALSE)
-    {
-      return ret;
-    }
-    pt+=*pc++;
+    if(!IntGdiPolygon ( dc, Points, *PolyCounts )) return FALSE;
+    Points+=*PolyCounts++;
   }
-
-  return ret;
+  return TRUE;
 }
 
 /******************************************************************************/
