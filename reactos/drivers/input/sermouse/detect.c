@@ -20,9 +20,9 @@ DeviceIoControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN ULONG CtlCode,
 	IN PVOID InputBuffer OPTIONAL,
-	IN ULONG InputBufferSize,
+	IN ULONG_PTR InputBufferSize,
 	IN OUT PVOID OutputBuffer OPTIONAL,
-	IN OUT PULONG OutputBufferSize)
+	IN OUT PULONG_PTR OutputBufferSize)
 {
 	KEVENT Event;
 	PIRP Irp;
@@ -106,7 +106,7 @@ ReadBytes(
 	IN PDEVICE_OBJECT LowerDevice,
 	OUT PUCHAR Buffer,
 	IN ULONG BufferSize,
-	OUT PULONG FilledBytes)
+	OUT PULONG_PTR FilledBytes)
 {
 	PIRP Irp;
 	IO_STATUS_BLOCK ioStatus;
@@ -160,7 +160,7 @@ SermouseDetectLegacyDevice(
 	ULONG Command;
 	SERIAL_TIMEOUTS Timeouts;
 	SERIAL_LINE_CONTROL LCR;
-	ULONG i, Count = 0;
+	ULONG_PTR i, Count = 0;
 	UCHAR Buffer[16];
 	SERMOUSE_MOUSE_TYPE MouseType = mtNone;
 	NTSTATUS Status;

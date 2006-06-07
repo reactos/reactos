@@ -54,7 +54,7 @@ typedef enum
 
 typedef struct _SERMOUSE_DRIVER_EXTENSION
 {
-	ULONG NumberOfButtons;
+	USHORT NumberOfButtons;
 } SERMOUSE_DRIVER_EXTENSION, *PSERMOUSE_DRIVER_EXTENSION;
 
 typedef struct _SERMOUSE_DEVICE_EXTENSION

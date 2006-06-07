@@ -139,7 +139,7 @@ SermousePnp(
 {
 	ULONG MinorFunction;
 	PIO_STACK_LOCATION Stack;
-	ULONG Information = 0;
+	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
