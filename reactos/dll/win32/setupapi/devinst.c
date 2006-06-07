@@ -409,9 +409,6 @@ CheckSectionValid(
     DWORD i;
     BOOL ret = FALSE;
 
-    TRACE("%s %p 0x%x 0x%x\n",
-        debugstr_w(SectionName), PlatformInfo, ProductType, SuiteMask);
-
     static const WCHAR ExtensionPlatformNone[]  = {'.',0};
     static const WCHAR ExtensionPlatformNT[]  = {'.','N','T',0};
     static const WCHAR ExtensionPlatformWindows[]  = {'.','W','i','n',0};
@@ -423,6 +420,9 @@ CheckSectionValid(
     static const WCHAR ExtensionArchitecturemips[]  = {'m','i','p','s',0};
     static const WCHAR ExtensionArchitectureppc[]  = {'p','p','c',0};
     static const WCHAR ExtensionArchitecturex86[]  = {'x','8','6',0};
+
+    TRACE("%s %p 0x%x 0x%x\n",
+        debugstr_w(SectionName), PlatformInfo, ProductType, SuiteMask);
 
     *ScorePlatform = *ScoreMajorVersion = *ScoreMinorVersion = *ScoreProductType = *ScoreSuiteMask = 0;
 
@@ -3198,12 +3198,20 @@ InfIsFromOEMLocation(
     }
     else
     {
-        WCHAR Windir[MAX_PATH + 1 + strlenW(InfDirectory)];
+        LPWSTR Windir;
         UINT ret;
+
+        Windir = MyMalloc((MAX_PATH + 1 + strlenW(InfDirectory)) * sizeof(WCHAR));
+        if (!Windir)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
 
         ret = GetSystemWindowsDirectoryW(Windir, MAX_PATH);
         if (ret == 0 || ret > MAX_PATH)
         {
+            MyFree(Windir);
             SetLastError(ERROR_GEN_FAILURE);
             return FALSE;
         }
@@ -3221,6 +3229,7 @@ InfIsFromOEMLocation(
             /* The file is in another place */
             *IsOEMLocation = TRUE;
         }
+        MyFree(Windir);
     }
     return TRUE;
 }
