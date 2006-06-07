@@ -26,7 +26,7 @@
 #define LEFT	16		/* left justified */
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
-
+#define REMOVEHEX	256		/* use 256 as remve 0x frim BASE 16  */
 typedef struct {
     unsigned int mantissal:32;
     unsigned int mantissah:20;
@@ -116,7 +116,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 		}
 	}
 	
-	if (type & SPECIAL) {
+	if ((type & SPECIAL) && ((type & REMOVEHEX) == 0)) {
 		if (base == 16)
 			size -= 2;
 	
@@ -142,7 +142,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 		++buf;
 	}
 	
-	if (type & SPECIAL) {
+	if ((type & SPECIAL) && ((type & REMOVEHEX) == 0)) {
 		 if (base==16) {
 			if (buf <= end)
 				*buf = '0';
@@ -213,7 +213,7 @@ numberf(char * buf, char * end, double num, int base, int size, int precision, i
 			size--;
 		}
 	}
-	if (type & SPECIAL) {
+	if (type & SPECIAL)  {
 		if (base == 16)
 			size -= 2;
 		else if (base == 8)
@@ -470,7 +470,10 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 		} else if (*fmt == 'I' && *(fmt+1) == '3' && *(fmt+2) == '2') {
 			qualifier = 'l'; 
 			fmt += 3;
-		} 
+		} else if (*fmt == 'F' && *(fmt+1) == 'p') {
+			fmt += 1;
+            flags |= REMOVEHEX;
+        }
 
 		/* default base */
 		base = 10;

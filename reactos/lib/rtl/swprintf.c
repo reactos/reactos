@@ -26,7 +26,7 @@
 #define LEFT	16		/* left justified */
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
-
+#define REMOVEHEX	256		/* use 256 as remve 0x frim BASE 16  */
 typedef struct {
     unsigned int mantissal:32;
     unsigned int mantissah:20;
@@ -116,7 +116,7 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 		}
 	}
 	
-	if (type & SPECIAL) {
+	if ((type & SPECIAL) && ((type & REMOVEHEX) == 0)) {
 		if (base == 16)
 			size -= 2;
 	} 
@@ -141,7 +141,7 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 		++buf;
 	}
 	
-	if (type & SPECIAL) {
+	if ((type & SPECIAL) && ((type & REMOVEHEX) == 0)) {
 	    if (base==16) {
 			if (buf <= end)
 				*buf = L'0';
@@ -468,7 +468,10 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 		} else if (*fmt == L'I' && *(fmt+1) == L'3' && *(fmt+2) == L'2') {
 			qualifier = L'l'; 
 			fmt += 3;
-		} 
+		} else if (*fmt == L'F' && *(fmt+1) == L'p') {
+			fmt += 1;
+            flags |= REMOVEHEX;
+        }
 
 		/* default base */
 		base = 10;
@@ -566,8 +569,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 
 		case L'p':
              if ((flags & LARGE) == 0)
-                flags |= LARGE; 
-                 
+                flags |= LARGE;  
 			if (field_width == -1) {
 				field_width = 2*sizeof(void *);
 				flags |= ZEROPAD;
