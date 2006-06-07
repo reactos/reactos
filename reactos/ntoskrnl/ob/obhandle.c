@@ -353,6 +353,108 @@ ObpDeleteHandle(HANDLE Handle)
 
 NTSTATUS
 NTAPI
+ObpIncrementHandleCount(IN PVOID Object,
+                        IN PACCESS_STATE AccessState,
+                        IN KPROCESSOR_MODE AccessMode,
+                        IN ULONG HandleAttributes,
+                        IN PEPROCESS Process,
+                        IN OB_OPEN_REASON OpenReason)
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    ULONG ProcessHandleCount;
+
+    /* Get the object header and type */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = ObjectHeader->Type;
+    OBTRACE("OBTRACE - %s - Incrementing count for: %p. Reason: %lx. HC LC %lx %lx\n",
+            __FUNCTION__,
+            Object,
+            OpenReason,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
+
+    /* Check if we're opening an existing handle */
+    if (OpenReason == ObOpenHandle)
+    {
+        /*
+         * FIXME: Do validation as described in Chapter 8
+         * of Windows Internals 4th.
+         */
+#if 0
+        if (!ObCheckObjectAccess(Object,
+                                 AccessState,
+                                 TRUE,
+                                 AccessMode,
+                                 &Status))
+        {
+            return Status;
+        }
+#endif
+    }
+    else if (OpenReason == ObCreateHandle)
+    {
+        /* Convert MAXIMUM_ALLOWED to GENERIC_ALL */
+        if (AccessState->RemainingDesiredAccess & MAXIMUM_ALLOWED)
+        {
+            /* Mask out MAXIMUM_ALLOWED and stick GENERIC_ALL instead */
+            AccessState->RemainingDesiredAccess &= ~MAXIMUM_ALLOWED;
+            AccessState->RemainingDesiredAccess |= GENERIC_ALL;
+        }
+
+        /* Check if we have to map the GENERIC mask */
+        if (AccessState->RemainingDesiredAccess & GENERIC_ACCESS)
+        {
+            /* Map it to the correct access masks */
+            RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
+                              &ObjectType->TypeInfo.GenericMapping);
+        }
+    }
+
+    /* Increase the handle count */
+    if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
+    {
+        /*
+         * FIXME: Is really needed? Perhaps we should instead take
+         * advantage of the AddtionalReferences parameter to add the
+         * bias when required. This might be the source of the mysterious
+         * ReactOS bug where ObInsertObject *requires* an immediate dereference
+         * even in a success case.
+         * Will have to think more about this when doing the Increment/Create
+         * split later.
+         */
+        ObReferenceObject(Object);
+    }
+
+    /* FIXME: Use the Handle Database */
+    ProcessHandleCount = 0;
+
+    /* Check if we have an open procedure */
+    if (ObjectType->TypeInfo.OpenProcedure)
+    {
+#if 0
+        /* Call it */
+        ObjectType->TypeInfo.OpenProcedure(OpenReason,
+                                           Process,
+                                           Object,
+                                           AccessState->PreviouslyGrantedAccess,
+                                           ProcessHandleCount);
+#endif
+    }
+
+    /* Increase total number of handles */
+    ObjectType->TotalNumberOfHandles++;
+    OBTRACE("OBTRACE - %s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
+            __FUNCTION__,
+            Object,
+            OpenReason,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Security" if == 1.
                                               // since this function *has* to call ObpIncrementHandleCount,
                                               // which needs to somehow know the OpenReason, and since
@@ -369,12 +471,14 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Se
                 OUT PHANDLE ReturnedHandle)
 {
     HANDLE_TABLE_ENTRY NewEntry;
-    PVOID HandleTable;
     POBJECT_HEADER ObjectHeader;
-    POBJECT_TYPE ObjectType;
     HANDLE Handle;
     KAPC_STATE ApcState;
     BOOLEAN AttachedToProcess = FALSE;
+    POBJECT_TYPE ObjectType;
+    PVOID HandleTable;
+    NTSTATUS Status;
+    PAGED_CODE();
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -414,53 +518,22 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Se
         HandleTable = PsGetCurrentProcess()->ObjectTable;
     }
 
-    /* Convert MAXIMUM_ALLOWED to GENERIC_ALL */
-    if (AccessState->RemainingDesiredAccess & MAXIMUM_ALLOWED)
-    {
-        /* Mask out MAXIMUM_ALLOWED and stick GENERIC_ALL instead */
-        AccessState->RemainingDesiredAccess &= ~MAXIMUM_ALLOWED;
-        AccessState->RemainingDesiredAccess |= GENERIC_ALL;
-    }
-
-    /* Check if we have to map the GENERIC mask */
-    if (AccessState->RemainingDesiredAccess & GENERIC_ACCESS)
-    {
-        /* Map it to the correct access masks */
-        RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
-                          &ObjectType->TypeInfo.GenericMapping);
-    }
-
-    /* Increase the handle count */
-    if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
+    /* Increment the handle count */
+    Status = ObpIncrementHandleCount(Object,
+                                     AccessState,
+                                     AccessMode,
+                                     HandleAttributes,
+                                     PsGetCurrentProcess(),
+                                     OpenReason);
+    if (!NT_SUCCESS(Status))
     {
         /*
-         * FIXME: Is really needed? Perhaps we should instead take
-         * advantage of the AddtionalReferences parameter to add the
-         * bias when required. This might be the source of the mysterious
-         * ReactOS bug where ObInsertObject *requires* an immediate dereference
-         * even in a success case.
-         * Whill have to think more about this when doing the Increment/Create
-         * split later.
+         * We failed (meaning security failure, according to NT Internals)
+         * detach and return
          */
-        ObReferenceObject(Object);
+        if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+        return Status;
     }
-
-    /* Check if we have an open procedure */
-#if 0
-    if (ObjectType->TypeInfo.OpenProcedure)
-    {
-        /* Call it */
-        ObjectType->TypeInfo.OpenProcedure(OpenReason,
-                                           PsGetCurrentProcess(),
-                                           Object,
-                                           AccessState->
-                                           PreviouslyGrantedAccess,
-                                           0);
-    }
-#endif
-
-    /* Increase total number of handles */
-    ObjectType->TotalNumberOfHandles++;
 
     /* Save the object header (assert its validity too) */
     ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
@@ -472,7 +545,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Se
                               EX_HANDLE_ENTRY_INHERITABLE |
                               EX_HANDLE_ENTRY_AUDITONCLOSE);
 
-     /* Save the access mask */
+    /* Save the access mask */
     NewEntry.GrantedAccess = AccessState->RemainingDesiredAccess |
                              AccessState->PreviouslyGrantedAccess;
 
@@ -486,11 +559,11 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Se
             NewEntry.Object, NewEntry.ObAttributes & 3, NewEntry.GrantedAccess);
     Handle = ExCreateHandle(HandleTable, &NewEntry);
 
-    /* Detach it needed */
+     /* Detach if needed */
     if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
 
-    /* Check if we got a handle */
-    if(Handle)
+    /* Make sure we got a handle */
+    if (Handle)
     {
         /* Handle extra references */
         while (AdditionalReferences--)
@@ -509,18 +582,15 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Se
         /* Return handle and object */
         *ReturnedHandle = Handle;
         if (ReturnedObject) *ReturnedObject = Object;
-
-        /* Return success */
-        OBTRACE("OBTRACE - %s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
+        OBTRACE("OBTRACE - %s - Returning Handle: %lx HC LC %lx %lx\n",
                 __FUNCTION__,
-                Object,
-                OpenReason,
+                Handle,
                 ObjectHeader->HandleCount,
                 ObjectHeader->PointerCount);
         return STATUS_SUCCESS;
     }
 
-    /* Decrement the handle count and fail */
+    /* Decrement the handle count and detach */
     ObpDecrementHandleCount(&ObjectHeader->Body,
                             PsGetCurrentProcess(),
                             NewEntry.GrantedAccess);
@@ -617,6 +687,7 @@ ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
     POBJECT_HEADER ObjectHeader;
     BOOLEAN Ret = FALSE;
     ACCESS_STATE AccessState;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Make sure that the handle is inheritable */
@@ -629,9 +700,23 @@ ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
         /* Setup the access state */
         AccessState.PreviouslyGrantedAccess = HandleTableEntry->GrantedAccess;
 
-        /* Get the object header and increment the handle and pointer counts */
-        InterlockedIncrement(&ObjectHeader->HandleCount);
-        InterlockedIncrement(&ObjectHeader->PointerCount);
+        /* Call the shared routine for incrementing handles */
+        Status = ObpIncrementHandleCount(&ObjectHeader->Body,
+                                         &AccessState,
+                                         KernelMode,
+                                         HandleTableEntry->ObAttributes,
+                                         PsGetCurrentProcess(),
+                                         ObInheritHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Return failure */
+            Ret = FALSE;
+        }
+        else
+        {
+            /* Otherwise increment the pointer count */
+            InterlockedIncrement(&ObjectHeader->PointerCount);
+        }
     }
 
     /* Return duplication result */
@@ -1364,15 +1449,13 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
                                          DesiredAccess,
                                          &ObjectType->TypeInfo.GenericMapping);
 
-            Status = ObpCreateHandle(ObDuplicateHandle,
-                ObjectBody,
-                ObjectType,
-                PassedAccessState,
-                0,
-                HandleAttributes,
-                PreviousMode,
-                NULL,
-                &hTarget);
+            /* Add a new handle */
+            Status = ObpIncrementHandleCount(ObjectBody,
+                                             PassedAccessState,
+                                             PreviousMode,
+                                             HandleAttributes,
+                                             PsGetCurrentProcess(),
+                                             ObDuplicateHandle);
 
             if (AttachedToProcess)
             {
