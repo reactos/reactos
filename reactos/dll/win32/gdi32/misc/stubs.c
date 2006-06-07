@@ -251,9 +251,7 @@ GetTextCharacterExtra(
 	HDC	hDc
 	)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return NtGdiGetSetTextCharExtra( hDc, 0, FALSE);
 }
 
 
@@ -390,13 +388,11 @@ SetSystemPaletteUse(
 int
 STDCALL
 SetTextCharacterExtra(
-	HDC	a0,
-	int	a1
+	HDC	hDC,
+	int	CharExtra
 	)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return NtGdiGetSetTextCharExtra( hDC, CharExtra, TRUE);
 }
 
 

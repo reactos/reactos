@@ -150,6 +150,7 @@ NtGdiGetRasterizerCaps			2
 NtGdiGetRelAbs				1
 NtGdiGetRegionData			3
 NtGdiGetRgnBox				2
+NtGdiGetSetTextCharExtra		3
 NtGdiGetStockObject			1
 NtGdiGetStretchBltMode			1
 NtGdiGetSystemPaletteEntries		4

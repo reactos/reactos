@@ -3267,4 +3267,26 @@ FontGetObject(PTEXTOBJ Font, INT Count, PVOID Buffer)
   return sizeof(LOGFONTW);
 }
 
+
+/* Remove this HAX! after the below function is done in GDI32.DLL! */
+INT
+STDCALL
+NtGdiGetSetTextCharExtra( HDC hDC, INT CharExtra, BOOL Set)
+{
+  /* Ulta-Ugly Hax! */
+  INT Ret = 0x80000000;
+  DPRINT("TextCharacterExtra %d", CharExtra);
+  PDC dc = DC_LockDc ( hDC );
+  if (!dc)
+    {
+       SetLastWin32Error(ERROR_INVALID_HANDLE);
+    }
+  else
+    {  
+       Ret = dc->w.charExtra;
+       if( Set ) dc->w.charExtra = CharExtra;
+    }
+  return (Ret);
+}
+
 /* EOF */
