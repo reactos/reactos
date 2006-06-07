@@ -48,7 +48,7 @@ BEGIN
     PUSHBUTTON      "Update Now", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "Synchronazation can only occur when your computer is connected to the internet.", -1, 12, 114, 225, 25
+    LTEXT           "Synchronization can only occur when your computer is connected to the internet.", -1, 12, 114, 225, 25
 END
 
 
