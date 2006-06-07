@@ -19,6 +19,12 @@
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
+#ifdef _OBDEBUG_
+#define OBTRACE DPRINT1
+#else
+#define OBTRACE DPRINT
+#endif
+
 /* UGLY FUNCTIONS ************************************************************/
 
 ULONG
@@ -215,6 +221,11 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     /* Get the object type and header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
     ObjectType = ObjectHeader->Type;
+    OBTRACE("OBTRACE - %s - Decrementing count for: %p. HC LC %lx %lx\n",
+            __FUNCTION__,
+            ObjectBody,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
 
     /* FIXME: The process handle count should be in the Handle DB. Investigate */
     SystemHandleCount = ObjectHeader->HandleCount;
@@ -239,6 +250,11 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
 
     /* Decrease the total number of handles for this type */
     ObjectType->TotalNumberOfHandles--;
+    OBTRACE("OBTRACE - %s - Decremented count for: %p. HC LC %lx %lx\n",
+            __FUNCTION__,
+            ObjectBody,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
 }
 
 /*++
@@ -285,6 +301,12 @@ ObpDeleteHandle(HANDLE Handle)
         ObjectType = ObjectHeader->Type;
         Body = &ObjectHeader->Body;
         GrantedAccess = HandleEntry->GrantedAccess;
+        OBTRACE("OBTRACE - %s - Deleting handle: %lx for %p. HC LC %lx %lx\n",
+                __FUNCTION__,
+                Handle,
+                Body,
+                ObjectHeader->HandleCount,
+                ObjectHeader->PointerCount);
 
         /* Check if the object has an Okay To Close procedure */
         if (ObjectType->TypeInfo.OkayToCloseProcedure)
@@ -316,6 +338,12 @@ ObpDeleteHandle(HANDLE Handle)
         /* Now decrement the handle count */
         ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
         Status = STATUS_SUCCESS;
+        OBTRACE("OBTRACE - %s - Deleted handle: %lx for %p. HC LC %lx %lx\n",
+                __FUNCTION__,
+                Handle,
+                Body,
+                ObjectHeader->HandleCount,
+                ObjectHeader->PointerCount);
     }
 
     /* Leave the critical region and return the status */
@@ -326,7 +354,7 @@ ObpDeleteHandle(HANDLE Handle)
 NTSTATUS
 NTAPI
 ObpCreateHandle(PVOID ObjectBody,
-                ACCESS_MASK GrantedAccess,
+                PACCESS_STATE AccessState,
                 ULONG HandleAttributes,
                 PHANDLE HandleReturn)
                 /*
@@ -343,6 +371,7 @@ ObpCreateHandle(PVOID ObjectBody,
     HANDLE Handle;
     KAPC_STATE ApcState;
     BOOLEAN AttachedToProcess = FALSE;
+    ACCESS_MASK GrantedAccess;
 
     PAGED_CODE();
 
@@ -357,6 +386,8 @@ ObpCreateHandle(PVOID ObjectBody,
     /* check that this is a valid kernel pointer */
     ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
 
+    GrantedAccess = AccessState->RemainingDesiredAccess |
+                    AccessState->PreviouslyGrantedAccess;
     if (GrantedAccess & MAXIMUM_ALLOWED)
     {
         GrantedAccess &= ~MAXIMUM_ALLOWED;
@@ -512,12 +543,16 @@ ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
 {
     POBJECT_HEADER ObjectHeader;
     BOOLEAN Ret = FALSE;
+    ACCESS_STATE AccessState;
     PAGED_CODE();
 
     /* Make sure that the handle is inheritable */
     Ret = (HandleTableEntry->ObAttributes & EX_HANDLE_ENTRY_INHERITABLE) != 0;
     if(Ret)
     {
+        /* Setup the access state */
+        AccessState.PreviouslyGrantedAccess = HandleTableEntry->GrantedAccess;
+
         /* Get the object header and increment the handle and pointer counts */
         ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
         InterlockedIncrement(&ObjectHeader->HandleCount);
@@ -807,7 +842,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
     /* Create the actual handle now */
     Status = ObpCreateHandle(Object,
-                             DesiredAccess,
+                             PassedAccessState,
                              ObjectCreateInfo.Attributes,
                              Handle);
 
@@ -825,6 +860,10 @@ Cleanup:
 Quickie:
     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
     if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    OBTRACE("OBTRACE: %s returning Object with PC S: %lx %lx\n",
+            __FUNCTION__,
+            OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
+            Status);
     return Status;
 }
 
@@ -842,6 +881,8 @@ ObOpenObjectByPointer(IN PVOID Object,
                       OUT PHANDLE Handle)
 {
     NTSTATUS Status;
+    ACCESS_STATE AccessState;
+    AUX_DATA AuxData;
     PAGED_CODE();
 
     /* Reference the object */
@@ -851,14 +892,42 @@ ObOpenObjectByPointer(IN PVOID Object,
                                         AccessMode);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Check if we didn't get an access state */
+    if (!PassedAccessState)
+    {
+        /* Use our built-in access state */
+        PassedAccessState = &AccessState;
+        Status = SeCreateAccessState(&AccessState,
+                                     &AuxData,
+                                     DesiredAccess,
+                                     &ObjectType->TypeInfo.GenericMapping);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            ObDereferenceObject(Object);
+            return Status;
+        }
+    }
+
     /* Create the handle */
     Status = ObpCreateHandle(Object,
-                             DesiredAccess,
+                             PassedAccessState,
                              HandleAttributes,
                              Handle);
 
+    /* Delete the access state */
+    if (PassedAccessState == &AccessState)
+    {
+        SeDeleteAccessState(PassedAccessState);
+    }
+
     /* ROS Hack: Dereference the object and return */
     ObDereferenceObject(Object);
+
+    OBTRACE("OBTRACE: %s returning Object with PC S: %lx %lx\n",
+            __FUNCTION__,
+            OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
+            Status);
     return Status;
 }
 
@@ -915,6 +984,8 @@ ObInsertObject(IN PVOID Object,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     OBP_LOOKUP_CONTEXT Context;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+    ACCESS_STATE AccessState;
+    AUX_DATA AuxData;
     PAGED_CODE();
 
     /* Get the Header and Create Info */
@@ -1030,6 +1101,23 @@ ObInsertObject(IN PVOID Object,
     DPRINT("Security Complete\n");
     SeReleaseSubjectContext(&SubjectContext);
 
+    /* Check if we didn't get an access state */
+    if (!PassedAccessState)
+    {
+        /* Use our built-in access state */
+        PassedAccessState = &AccessState;
+        Status = SeCreateAccessState(&AccessState,
+                                     &AuxData,
+                                     DesiredAccess,
+                                     &Header->Type->TypeInfo.GenericMapping);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            ObDereferenceObject(Object);
+            return Status;
+        }
+    }
+
     /* Create the Handle */
     /* HACKHACK: Because of ROS's incorrect startup, this can be called
     * without a valid Process until I finalize the startup patch,
@@ -1041,7 +1129,7 @@ ObInsertObject(IN PVOID Object,
     if (Handle != NULL)
     {
         Status = ObpCreateHandle(&Header->Body,
-            DesiredAccess,
+            PassedAccessState,
             ObjectCreateInfo->Attributes,
             Handle);
         DPRINT("handle Created: %d. refcount. handlecount %d %d\n",
@@ -1076,6 +1164,9 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
     KPROCESSOR_MODE PreviousMode;
     KAPC_STATE ApcState;
     NTSTATUS Status = STATUS_SUCCESS;
+    ACCESS_STATE AccessState;
+    AUX_DATA AuxData;
+    PACCESS_STATE PassedAccessState = NULL;
 
     PAGED_CODE();
 
@@ -1162,8 +1253,15 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
                 AttachedToProcess = TRUE;
             }
 
+            /* Use our built-in access state */
+            PassedAccessState = &AccessState;
+            Status = SeCreateAccessState(&AccessState,
+                                         &AuxData,
+                                         DesiredAccess,
+                                         &ObjectType->TypeInfo.GenericMapping);
+
             Status = ObpCreateHandle(ObjectBody,
-                DesiredAccess,
+                PassedAccessState,
                 HandleAttributes,
                 &hTarget);
 
