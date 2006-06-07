@@ -353,17 +353,20 @@ ObpDeleteHandle(HANDLE Handle)
 
 NTSTATUS
 NTAPI
-ObpCreateHandle(PVOID ObjectBody,
-                PACCESS_STATE AccessState,
-                ULONG HandleAttributes,
-                PHANDLE HandleReturn)
-                /*
-                * FUNCTION: Add a handle referencing an object
-                * ARGUMENTS:
-                *         obj = Object body that the handle should refer to
-                * RETURNS: The created handle
-                * NOTE: The handle is valid only in the context of the current process
-                */
+ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Security" if == 1.
+                                              // since this function *has* to call ObpIncrementHandleCount,
+                                              // which needs to somehow know the OpenReason, and since
+                                              // ObOpenHandle == 1, I'm guessing this is actually the
+                                              // OpenReason. Also makes sense since this function is shared
+                                              // by Duplication, Creation and Opening.
+                IN PVOID ObjectBody,
+                IN POBJECT_TYPE Type OPTIONAL,
+                IN PACCESS_STATE AccessState,
+                IN ULONG AdditionalReferences,
+                IN ULONG HandleAttributes,
+                IN KPROCESSOR_MODE AccessMode,
+                OUT PVOID *ReturnedObject,
+                OUT PHANDLE ReturnedHandle)
 {
     HANDLE_TABLE_ENTRY NewEntry;
     PEPROCESS Process, CurrentProcess;
@@ -446,7 +449,7 @@ ObpCreateHandle(PVOID ObjectBody,
             ObReferenceObject(ObjectBody);
         }
 
-        *HandleReturn = Handle;
+        *ReturnedHandle = Handle;
 
         return STATUS_SUCCESS;
     }
@@ -550,11 +553,13 @@ ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
     Ret = (HandleTableEntry->ObAttributes & EX_HANDLE_ENTRY_INHERITABLE) != 0;
     if(Ret)
     {
+        /* Get the object header */
+        ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
+
         /* Setup the access state */
         AccessState.PreviouslyGrantedAccess = HandleTableEntry->GrantedAccess;
 
         /* Get the object header and increment the handle and pointer counts */
-        ObjectHeader = EX_HTE_TO_HDR(HandleTableEntry);
         InterlockedIncrement(&ObjectHeader->HandleCount);
         InterlockedIncrement(&ObjectHeader->PointerCount);
     }
@@ -790,9 +795,11 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     NTSTATUS Status;
     OBP_LOOKUP_CONTEXT Context;
+    POBJECT_HEADER ObjectHeader;
     AUX_DATA AuxData;
     PGENERIC_MAPPING GenericMapping = NULL;
     ACCESS_STATE AccessState;
+    OB_OPEN_REASON OpenReason;
     PAGED_CODE();
 
     /* Capture all the info */
@@ -840,10 +847,28 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                           NULL);
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
+    /* Check if this object has create information */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    if (ObjectHeader->Flags & OB_FLAG_CREATE_INFO)
+    {
+        /* Then we are creating a new handle */
+        OpenReason = ObCreateHandle;
+    }
+    else
+    {
+        /* Otherwise, we are merely opening it */
+        OpenReason = ObOpenHandle;
+    }
+
     /* Create the actual handle now */
-    Status = ObpCreateHandle(Object,
+    Status = ObpCreateHandle(OpenReason,
+                             Object,
+                             ObjectType,
                              PassedAccessState,
+                             0,
                              ObjectCreateInfo.Attributes,
+                             AccessMode,
+                             NULL,
                              Handle);
 
 Cleanup:
@@ -910,9 +935,14 @@ ObOpenObjectByPointer(IN PVOID Object,
     }
 
     /* Create the handle */
-    Status = ObpCreateHandle(Object,
+    Status = ObpCreateHandle(ObOpenHandle,
+                             Object,
+                             ObjectType,
                              PassedAccessState,
+                             0,
                              HandleAttributes,
+                             AccessMode,
+                             NULL,
                              Handle);
 
     /* Delete the access state */
@@ -924,6 +954,7 @@ ObOpenObjectByPointer(IN PVOID Object,
     /* ROS Hack: Dereference the object and return */
     ObDereferenceObject(Object);
 
+    /* Return */
     OBTRACE("OBTRACE: %s returning Object with PC S: %lx %lx\n",
             __FUNCTION__,
             OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
@@ -1128,12 +1159,15 @@ ObInsertObject(IN PVOID Object,
     DPRINT("Creating handle\n");
     if (Handle != NULL)
     {
-        Status = ObpCreateHandle(&Header->Body,
-            PassedAccessState,
-            ObjectCreateInfo->Attributes,
-            Handle);
-        DPRINT("handle Created: %d. refcount. handlecount %d %d\n",
-            *Handle, Header->PointerCount, Header->HandleCount);
+        Status = ObpCreateHandle(ObCreateHandle,
+                                 &Header->Body,
+                                 NULL,
+                                 PassedAccessState,
+                                 AdditionalReferences + 1,
+                                 ObjectCreateInfo->Attributes,
+                                 ExGetPreviousMode(),
+                                 NULL,
+                                 Handle);
     }
 
     /* We can delete the Create Info now */
@@ -1260,9 +1294,14 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
                                          DesiredAccess,
                                          &ObjectType->TypeInfo.GenericMapping);
 
-            Status = ObpCreateHandle(ObjectBody,
+            Status = ObpCreateHandle(ObDuplicateHandle,
+                ObjectBody,
+                ObjectType,
                 PassedAccessState,
+                0,
                 HandleAttributes,
+                PreviousMode,
+                NULL,
                 &hTarget);
 
             if (AttachedToProcess)
