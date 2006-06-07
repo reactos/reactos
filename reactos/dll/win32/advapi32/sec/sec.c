@@ -527,17 +527,34 @@ BuildSecurityDescriptorA(IN PTRUSTEE_A pOwner  OPTIONAL,
  */
 BOOL WINAPI DecryptFileW(LPCWSTR lpFileName, DWORD dwReserved)
 {
-    DPRINT1("%s() not implemented!\n", __FUNCTION__);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DPRINT1("%s(%S) not implemented!\n", __FUNCTION__, lpFileName);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI DecryptFileA(LPCSTR lpFileName, DWORD dwReserved)
 {
-    DPRINT1("%s() not implemented!\n", __FUNCTION__);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    UNICODE_STRING FileName;
+    NTSTATUS Status;
+    BOOL ret = FALSE;
+
+    FileName.Buffer = NULL;
+
+    Status = RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        goto cleanup;
+    }
+    ret = DecryptFileW(FileName.Buffer, dwReserved);
+
+cleanup:
+    if (FileName.Buffer != NULL)
+        RtlFreeUnicodeString(&FileName);
+    return ret;
 }
 
 /*
@@ -546,7 +563,8 @@ BOOL WINAPI DecryptFileA(LPCSTR lpFileName, DWORD dwReserved)
 BOOL WINAPI EncryptFileW(LPCWSTR lpFileName)
 {
     DPRINT1("%s() not implemented!\n", __FUNCTION__);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /*
@@ -555,7 +573,8 @@ BOOL WINAPI EncryptFileW(LPCWSTR lpFileName)
 BOOL WINAPI EncryptFileA(LPCSTR lpFileName)
 {
     DPRINT1("%s() not implemented!\n", __FUNCTION__);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(
@@ -566,7 +585,8 @@ BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(
     PULONG pulong)
 {
     DPRINT1("%s() not implemented!\n", __FUNCTION__);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorA(
@@ -577,7 +597,8 @@ BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorA(
     PULONG pulong)
 {
     DPRINT1("%s() not implemented!\n", __FUNCTION__);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
 
 /* EOF */

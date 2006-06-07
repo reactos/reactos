@@ -1374,7 +1374,7 @@ OpenServiceW(SC_HANDLE hSCManager,
                                (unsigned int*)&hService);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrOpenServiceW() failed (Error %lu)\n", dwError);
+        DPRINT("ScmrOpenServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1923,27 +1923,6 @@ StartServiceA(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCSTR *lpServiceArgVectors)
 {
-#if 0
-    DWORD dwError;
-
-    DPRINT("StartServiceA()\n");
-
-    HandleBind();
-
-    /* Call to services.exe using RPC */
-    dwError = ScmrStartServiceA(BindingHandle,
-                                hService,
-                                dwNumServiceArgs,
-                                lpServiceArgVectors);
-    if (dwError != ERROR_SUCCESS)
-    {
-        DPRINT1("ScmrStartServiceA() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
-    }
-
-    return TRUE;
-#endif
     LPSTR lpBuffer;
     LPSTR lpStr;
     DWORD dwError;
@@ -2000,27 +1979,6 @@ StartServiceW(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCWSTR *lpServiceArgVectors)
 {
-#if 0
-    DWORD dwError;
-
-    DPRINT("StartServiceW()\n");
-
-    HandleBind();
-
-    /* Call to services.exe using RPC */
-    dwError = ScmrStartServiceW(BindingHandle,
-                                hService,
-                                dwNumServiceArgs,
-                                lpServiceArgVectors);
-    if (dwError != ERROR_SUCCESS)
-    {
-        DPRINT1("ScmrStartServiceW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
-    }
-
-    return TRUE;
-#endif
     LPWSTR lpBuffer;
     LPWSTR lpStr;
     DWORD dwError;
