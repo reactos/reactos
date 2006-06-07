@@ -11,7 +11,7 @@
 #define INITGUID
 #include "serenum.h"
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 SerenumPnp(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -22,13 +22,13 @@ SerenumPnp(
 		return SerenumPdoPnp(DeviceObject, Irp);
 }
 
-static VOID STDCALL
+static VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
 	// nothing to do here yet
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 IrpStub(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -90,7 +90,7 @@ IrpStub(
 /*
  * Standard DriverEntry method.
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PUNICODE_STRING RegPath)
