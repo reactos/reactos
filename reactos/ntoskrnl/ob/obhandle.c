@@ -359,7 +359,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Se
                                               // ObOpenHandle == 1, I'm guessing this is actually the
                                               // OpenReason. Also makes sense since this function is shared
                                               // by Duplication, Creation and Opening.
-                IN PVOID ObjectBody,
+                IN PVOID Object,
                 IN POBJECT_TYPE Type OPTIONAL,
                 IN PACCESS_STATE AccessState,
                 IN ULONG AdditionalReferences,
@@ -369,92 +369,162 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Se
                 OUT PHANDLE ReturnedHandle)
 {
     HANDLE_TABLE_ENTRY NewEntry;
-    PEPROCESS Process, CurrentProcess;
+    PVOID HandleTable;
     POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
     HANDLE Handle;
     KAPC_STATE ApcState;
     BOOLEAN AttachedToProcess = FALSE;
-    ACCESS_MASK GrantedAccess;
 
-    PAGED_CODE();
+    /* Get the object header and type */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = ObjectHeader->Type;
+    OBTRACE("OBTRACE - %s - Creating handle for: %p. Reason: %lx. HC LC %lx %lx\n",
+            __FUNCTION__,
+            Object,
+            OpenReason,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
 
-    DPRINT("ObpCreateHandle(obj %p)\n",ObjectBody);
-
-    ASSERT(ObjectBody);
-
-    CurrentProcess = PsGetCurrentProcess();
-
-    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
-
-    /* check that this is a valid kernel pointer */
-    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
-
-    GrantedAccess = AccessState->RemainingDesiredAccess |
-                    AccessState->PreviouslyGrantedAccess;
-    if (GrantedAccess & MAXIMUM_ALLOWED)
+    /* Check if the types match */
+    if ((Type) && (ObjectType != Type))
     {
-        GrantedAccess &= ~MAXIMUM_ALLOWED;
-        GrantedAccess |= GENERIC_ALL;
+        /* They don't; fail */
+        DPRINT1("Type mismatch: %wZ, %wZ\n", &ObjectType->Name, &Type->Name);
+        return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
-    if (GrantedAccess & GENERIC_ACCESS)
+    /* Check if this is a kernel handle */
+    if ((HandleAttributes & OBJ_KERNEL_HANDLE) && (AccessMode == KernelMode))
     {
-        RtlMapGenericMask(&GrantedAccess,
-            &ObjectHeader->Type->TypeInfo.GenericMapping);
-    }
+        /* Set the handle table */
+        HandleTable = ObpKernelHandleTable;
 
-    NewEntry.Object = ObjectHeader;
-    if(HandleAttributes & OBJ_INHERIT)
-        NewEntry.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
-    else
-        NewEntry.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
-    NewEntry.GrantedAccess = GrantedAccess;
-
-    if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&
-        ExGetPreviousMode == KernelMode)
-    {
-        Process = PsInitialSystemProcess;
-        if (Process != CurrentProcess)
+        /* Check if we're not in the system process */
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
         {
-            KeStackAttachProcess(&Process->Pcb,
-                &ApcState);
+            /* Attach to the system process */
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
             AttachedToProcess = TRUE;
         }
     }
     else
     {
-        Process = CurrentProcess;
-        /* mask out the OBJ_KERNEL_HANDLE attribute */
-        HandleAttributes &= ~OBJ_KERNEL_HANDLE;
+        /* Get the current handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
     }
 
-    Handle = ExCreateHandle(Process->ObjectTable,
-        &NewEntry);
-
-    if (AttachedToProcess)
+    /* Convert MAXIMUM_ALLOWED to GENERIC_ALL */
+    if (AccessState->RemainingDesiredAccess & MAXIMUM_ALLOWED)
     {
-        KeUnstackDetachProcess(&ApcState);
+        /* Mask out MAXIMUM_ALLOWED and stick GENERIC_ALL instead */
+        AccessState->RemainingDesiredAccess &= ~MAXIMUM_ALLOWED;
+        AccessState->RemainingDesiredAccess |= GENERIC_ALL;
     }
 
-    if(Handle != NULL)
+    /* Check if we have to map the GENERIC mask */
+    if (AccessState->RemainingDesiredAccess & GENERIC_ACCESS)
     {
+        /* Map it to the correct access masks */
+        RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
+                          &ObjectType->TypeInfo.GenericMapping);
+    }
+
+    /* Increase the handle count */
+    if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
+    {
+        /*
+         * FIXME: Is really needed? Perhaps we should instead take
+         * advantage of the AddtionalReferences parameter to add the
+         * bias when required. This might be the source of the mysterious
+         * ReactOS bug where ObInsertObject *requires* an immediate dereference
+         * even in a success case.
+         * Whill have to think more about this when doing the Increment/Create
+         * split later.
+         */
+        ObReferenceObject(Object);
+    }
+
+    /* Check if we have an open procedure */
+#if 0
+    if (ObjectType->TypeInfo.OpenProcedure)
+    {
+        /* Call it */
+        ObjectType->TypeInfo.OpenProcedure(OpenReason,
+                                           PsGetCurrentProcess(),
+                                           Object,
+                                           AccessState->
+                                           PreviouslyGrantedAccess,
+                                           0);
+    }
+#endif
+
+    /* Increase total number of handles */
+    ObjectType->TotalNumberOfHandles++;
+
+    /* Save the object header (assert its validity too) */
+    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
+    NewEntry.Object = ObjectHeader;
+
+    /* Mask out the internal attributes */
+    NewEntry.ObAttributes |= HandleAttributes &
+                             (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
+                              EX_HANDLE_ENTRY_INHERITABLE |
+                              EX_HANDLE_ENTRY_AUDITONCLOSE);
+
+     /* Save the access mask */
+    NewEntry.GrantedAccess = AccessState->RemainingDesiredAccess |
+                             AccessState->PreviouslyGrantedAccess;
+
+    /*
+     * Create the actual handle. We'll need to do this *after* calling
+     * ObpIncrementHandleCount to make sure that Object Security is valid
+     * (specified in Gl00my documentation on Ob)
+     */
+    OBTRACE("OBTRACE - %s - Handle Properties: [%p-%lx-%lx]\n",
+            __FUNCTION__,
+            NewEntry.Object, NewEntry.ObAttributes & 3, NewEntry.GrantedAccess);
+    Handle = ExCreateHandle(HandleTable, &NewEntry);
+
+    /* Detach it needed */
+    if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+
+    /* Check if we got a handle */
+    if(Handle)
+    {
+        /* Handle extra references */
+        while (AdditionalReferences--)
+        {
+            /* Increment the count */
+            InterlockedIncrement(&ObjectHeader->PointerCount);
+        }
+
+        /* Check if this was a kernel handle */
         if (HandleAttributes & OBJ_KERNEL_HANDLE)
         {
-            /* mark the handle value */
+            /* Set the kernel handle bit */
             Handle = ObMarkHandleAsKernelHandle(Handle);
         }
 
-        if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
-        {
-            ObReferenceObject(ObjectBody);
-        }
-
+        /* Return handle and object */
         *ReturnedHandle = Handle;
+        if (ReturnedObject) *ReturnedObject = Object;
 
+        /* Return success */
+        OBTRACE("OBTRACE - %s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
+                __FUNCTION__,
+                Object,
+                OpenReason,
+                ObjectHeader->HandleCount,
+                ObjectHeader->PointerCount);
         return STATUS_SUCCESS;
     }
 
-    return STATUS_UNSUCCESSFUL;
+    /* Decrement the handle count and fail */
+    ObpDecrementHandleCount(&ObjectHeader->Body,
+                            PsGetCurrentProcess(),
+                            NewEntry.GrantedAccess);
+    return STATUS_INSUFFICIENT_RESOURCES;
 }
 
 /*++
