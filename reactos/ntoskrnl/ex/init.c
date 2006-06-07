@@ -426,21 +426,9 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
 {
     UNICODE_STRING CurrentDirectory;
     UNICODE_STRING ImagePath = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\smss.exe");
-    HANDLE SystemProcessHandle;
     NTSTATUS Status;
     PRTL_USER_PROCESS_PARAMETERS Params=NULL;
     RTL_USER_PROCESS_INFORMATION Info;
-
-    /* Create a handle to the process */
-    Status = ObpCreateHandle(PsInitialSystemProcess,
-                             PROCESS_CREATE_PROCESS | PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION,
-                             OBJ_KERNEL_HANDLE,
-                             &SystemProcessHandle);
-    if(!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to create a handle for the system process!\n");
-        return Status;
-    }
 
     RtlInitUnicodeString(&CurrentDirectory,
                          SharedUserData->NtSystemRoot);
@@ -459,7 +447,6 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
     if(!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create ppb!\n");
-        ZwClose(SystemProcessHandle);
         return Status;
     }
 
@@ -469,14 +456,13 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
                                   Params,
                                   NULL,
                                   NULL,
-                                  SystemProcessHandle,
+                                  NULL,
                                   FALSE,
                                   NULL,
                                   NULL,
                                   &Info);
     
     /* Close the handle and free the params */
-    ZwClose(SystemProcessHandle);
     RtlDestroyProcessParameters(Params);
 
     if (!NT_SUCCESS(Status))

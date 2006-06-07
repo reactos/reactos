@@ -97,10 +97,13 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
 				 &Token);
    if(NT_SUCCESS(Status))
    {
-     Status = ObpCreateHandle(Token,
-			      DesiredAccess,
-			      HandleAttributes,
-			      &hToken);
+       Status = ObOpenObjectByPointer(Token,
+                                      0,
+                                      NULL,
+                                      DesiredAccess,
+                                      SepTokenObjectType,
+                                      PreviousMode,
+                                      &hToken);
      ObDereferenceObject(Token);
 
      if(NT_SUCCESS(Status))

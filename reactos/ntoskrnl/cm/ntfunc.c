@@ -30,6 +30,106 @@ FAST_MUTEX CmiCallbackLock;
 
 /* FUNCTIONS ****************************************************************/
 
+NTSTATUS
+NTAPI
+CmpCreateHandle(PVOID ObjectBody,
+                ACCESS_MASK GrantedAccess,
+                ULONG HandleAttributes,
+                PHANDLE HandleReturn)
+                /*
+                * FUNCTION: Add a handle referencing an object
+                * ARGUMENTS:
+                *         obj = Object body that the handle should refer to
+                * RETURNS: The created handle
+                * NOTE: The handle is valid only in the context of the current process
+                */
+{
+    HANDLE_TABLE_ENTRY NewEntry;
+    PEPROCESS Process, CurrentProcess;
+    POBJECT_HEADER ObjectHeader;
+    HANDLE Handle;
+    KAPC_STATE ApcState;
+    BOOLEAN AttachedToProcess = FALSE;
+
+    PAGED_CODE();
+
+    DPRINT("CmpCreateHandle(obj %p)\n",ObjectBody);
+
+    ASSERT(ObjectBody);
+
+    CurrentProcess = PsGetCurrentProcess();
+
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
+
+    /* check that this is a valid kernel pointer */
+    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
+
+    if (GrantedAccess & MAXIMUM_ALLOWED)
+    {
+        GrantedAccess &= ~MAXIMUM_ALLOWED;
+        GrantedAccess |= GENERIC_ALL;
+    }
+
+    if (GrantedAccess & GENERIC_ACCESS)
+    {
+        RtlMapGenericMask(&GrantedAccess,
+            &ObjectHeader->Type->TypeInfo.GenericMapping);
+    }
+
+    NewEntry.Object = ObjectHeader;
+    if(HandleAttributes & OBJ_INHERIT)
+        NewEntry.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
+    else
+        NewEntry.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
+    NewEntry.GrantedAccess = GrantedAccess;
+
+    if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&
+        ExGetPreviousMode == KernelMode)
+    {
+        Process = PsInitialSystemProcess;
+        if (Process != CurrentProcess)
+        {
+            KeStackAttachProcess(&Process->Pcb,
+                &ApcState);
+            AttachedToProcess = TRUE;
+        }
+    }
+    else
+    {
+        Process = CurrentProcess;
+        /* mask out the OBJ_KERNEL_HANDLE attribute */
+        HandleAttributes &= ~OBJ_KERNEL_HANDLE;
+    }
+
+    Handle = ExCreateHandle(Process->ObjectTable,
+        &NewEntry);
+
+    if (AttachedToProcess)
+    {
+        KeUnstackDetachProcess(&ApcState);
+    }
+
+    if(Handle != NULL)
+    {
+        if (HandleAttributes & OBJ_KERNEL_HANDLE)
+        {
+            /* mark the handle value */
+            Handle = ObMarkHandleAsKernelHandle(Handle);
+        }
+
+        if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
+        {
+            ObReferenceObject(ObjectBody);
+        }
+
+        *HandleReturn = Handle;
+
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_UNSUCCESSFUL;
+}
+
 /*
  * @implemented
  */
@@ -291,13 +391,13 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	  goto Cleanup;
 	}
 
-      Status = ObpCreateHandle(Object,
+      Status = CmpCreateHandle(Object,
 			       DesiredAccess,
 			       ObjectCreateInfo.Attributes,
 			       &hKey);
 
       if (!NT_SUCCESS(Status))
-        DPRINT1("ObpCreateHandle failed Status 0x%x\n", Status);
+        DPRINT1("CmpCreateHandle failed Status 0x%x\n", Status);
 
       PostCreateKeyInfo.Object = NULL;
       PostCreateKeyInfo.Status = Status;
@@ -1361,7 +1461,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
       goto openkey_cleanup;
     }
 
-  Status = ObpCreateHandle(Object,
+  Status = CmpCreateHandle(Object,
 			   DesiredAccess,
 			   ObjectCreateInfo.Attributes,
 			   &hKey);

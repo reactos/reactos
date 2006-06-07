@@ -72,15 +72,6 @@ ObInitSymbolicLinkImplementation(
 
 NTSTATUS
 NTAPI
-ObpCreateHandle(
-    PVOID ObjectBody,
-    ACCESS_MASK GrantedAccess,
-    ULONG HandleAttributes,
-    PHANDLE Handle
-);
-
-NTSTATUS
-NTAPI
 ObpCreateHandleTable(
     IN PEPROCESS Parent,
     IN PEPROCESS Process
