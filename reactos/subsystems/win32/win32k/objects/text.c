@@ -3280,12 +3280,11 @@ NtGdiGetSetTextCharExtra( HDC hDC, INT CharExtra, BOOL Set)
   if (!dc)
     {
        SetLastWin32Error(ERROR_INVALID_HANDLE);
+       return Ret;
     }
-  else
-    {  
-       Ret = dc->w.charExtra;
-       if( Set ) dc->w.charExtra = CharExtra;
-    }
+  Ret = dc->w.charExtra;
+  if( Set ) dc->w.charExtra = CharExtra;
+  DC_UnlockDc(dc);
   return (Ret);
 }
 
