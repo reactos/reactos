@@ -351,6 +351,34 @@ ObpDeleteHandle(HANDLE Handle)
     return Status;
 }
 
+/*++
+* @name ObpIncrementHandleCount
+*
+*     The ObpIncrementHandleCount routine <FILLMEIN>
+*
+* @param Object
+*        <FILLMEIN>.
+*
+* @param AccessState
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @param HandleAttributes
+*        <FILLMEIN>.
+*
+* @param Process
+*        <FILLMEIN>.
+*
+* @param OpenReason
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
 NTAPI
 ObpIncrementHandleCount(IN PVOID Object,
@@ -453,14 +481,51 @@ ObpIncrementHandleCount(IN PVOID Object,
     return STATUS_SUCCESS;
 }
 
+/*++
+* @name ObpCreateHandle
+*
+*     The ObpCreateHandle routine <FILLMEIN>
+*
+* @param OpenReason
+*        <FILLMEIN>.
+*
+* @param Object
+*        <FILLMEIN>.
+*
+* @param Type
+*        <FILLMEIN>.
+*
+* @param AccessState
+*        <FILLMEIN>.
+*
+* @param AdditionalReferences
+*        <FILLMEIN>.
+*
+* @param HandleAttributes
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @param ReturnedObject
+*        <FILLMEIN>.
+*
+* @param ReturnedHandle
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks Gloomy says OpenReason is "enables Security" if == 1.
+*          since this function *has* to call ObpIncrementHandleCount,
+*          which needs to somehow know the OpenReason, and since
+*          ObOpenHandle == 1, I'm guessing this is actually the
+*          OpenReason. Also makes sense since this function is shared
+*          by Duplication, Creation and Opening..
+*
+*--*/
 NTSTATUS
 NTAPI
-ObpCreateHandle(IN OB_OPEN_REASON OpenReason, // Gloomy says this is "enables Security" if == 1.
-                                              // since this function *has* to call ObpIncrementHandleCount,
-                                              // which needs to somehow know the OpenReason, and since
-                                              // ObOpenHandle == 1, I'm guessing this is actually the
-                                              // OpenReason. Also makes sense since this function is shared
-                                              // by Duplication, Creation and Opening.
+ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
                 IN PVOID Object,
                 IN POBJECT_TYPE Type OPTIONAL,
                 IN PACCESS_STATE AccessState,
@@ -663,6 +728,28 @@ ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
     return TRUE;
 }
 
+/*++
+* @name ObpCloseHandleCallback
+*
+*     The ObpCloseHandleCallback routine <FILLMEIN>
+*
+* @param HandleTable
+*        <FILLMEIN>.
+*
+* @param Object
+*        <FILLMEIN>.
+*
+* @param GrantedAccess
+*        <FILLMEIN>.
+*
+* @param Context
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 VOID
 NTAPI
 ObpCloseHandleCallback(IN PHANDLE_TABLE HandleTable,
@@ -678,6 +765,25 @@ ObpCloseHandleCallback(IN PHANDLE_TABLE HandleTable,
                             GrantedAccess);
 }
 
+/*++
+* @name ObpDuplicateHandleCallback
+*
+*     The ObpDuplicateHandleCallback routine <FILLMEIN>
+*
+* @param HandleTable
+*        <FILLMEIN>.
+*
+* @param HandleTableEntry
+*        <FILLMEIN>.
+*
+* @param Context
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 BOOLEAN
 NTAPI
 ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
@@ -723,6 +829,22 @@ ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
     return Ret;
 }
 
+/*++
+* @name ObpCreateHandleTable
+*
+*     The ObpCreateHandleTable routine <FILLMEIN>
+*
+* @param Parent
+*        <FILLMEIN>.
+*
+* @param Process
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
 NTAPI
 ObpCreateHandleTable(IN PEPROCESS Parent,
@@ -754,6 +876,19 @@ ObpCreateHandleTable(IN PEPROCESS Parent,
     return STATUS_SUCCESS;
 }
 
+/*++
+* @name ObKillProcess
+*
+*     The ObKillProcess routine <FILLMEIN>
+*
+* @param Process
+*        <FILLMEIN>.
+*
+* @return None.
+*
+* @remarks None.
+*
+*--*/
 VOID
 NTAPI
 ObKillProcess(IN PEPROCESS Process)
@@ -935,6 +1070,38 @@ ObDuplicateObject(PEPROCESS SourceProcess,
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
+/*++
+* @name ObOpenObjectByName
+* @implemented NT4
+*
+*     The ObOpenObjectByName routine <FILLMEIN>
+*
+* @param ObjectAttributes
+*        <FILLMEIN>.
+*
+* @param ObjectType
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @param PassedAccessState
+*        <FILLMEIN>.
+*
+* @param DesiredAccess
+*        <FILLMEIN>.
+*
+* @param ParseContext
+*        <FILLMEIN>.
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
 NTAPI
 ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -1047,9 +1214,38 @@ Quickie:
     return Status;
 }
 
-/*
-* @implemented
-*/
+/*++
+* @name ObOpenObjectByPointer
+* @implemented NT4
+*
+*     The ObOpenObjectByPointer routine <FILLMEIN>
+*
+* @param Object
+*        <FILLMEIN>.
+*
+* @param HandleAttributes
+*        <FILLMEIN>.
+*
+* @param PassedAccessState
+*        <FILLMEIN>.
+*
+* @param DesiredAccess
+*        <FILLMEIN>.
+*
+* @param ObjectType
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
 NTAPI
 ObOpenObjectByPointer(IN PVOID Object,
@@ -1149,16 +1345,42 @@ ObMakeTemporaryObject(IN PVOID ObjectBody)
     ObpSetPermanentObject (ObjectBody, FALSE);
 }
 
-/*
-* @implemented
-*/
+/*++
+* @name ObInsertObject
+* @implemented NT4
+*
+*     The ObInsertObject routine <FILLMEIN>
+*
+* @param Object
+*        <FILLMEIN>.
+*
+* @param PassedAccessState
+*        <FILLMEIN>.
+*
+* @param DesiredAccess
+*        <FILLMEIN>.
+*
+* @param AdditionalReferences
+*        <FILLMEIN>.
+*
+* @param ReferencedObject
+*        <FILLMEIN>.
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
 NTAPI
 ObInsertObject(IN PVOID Object,
                IN PACCESS_STATE PassedAccessState OPTIONAL,
                IN ACCESS_MASK DesiredAccess,
                IN ULONG AdditionalReferences,
-               OUT PVOID* ReferencedObject OPTIONAL,
+               OUT PVOID *ReferencedObject OPTIONAL,
                OUT PHANDLE Handle)
 {
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
