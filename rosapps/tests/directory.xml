@@ -187,6 +187,10 @@
 	<xi:include href="p_dup_handle/p_dup_handle.xml" />
 </directory>
 
+<directory name="readconsole">
+	<xi:include href="readconsole/readconsole.rbuild" />
+</directory>
+
 <!-- fixme: regdump -->
 
 <directory name="regqueryvalue">
