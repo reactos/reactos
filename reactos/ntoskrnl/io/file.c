@@ -26,6 +26,86 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
+NTSTATUS
+NTAPI
+IopParseDevice(IN PVOID ParseObject,
+               IN POBJECT_TYPE ObjectType,
+               IN OUT PACCESS_STATE AccessState,
+               IN KPROCESSOR_MODE AccessMode,
+               IN ULONG Attributes,
+               IN OUT PUNICODE_STRING CompleteName,
+               IN OUT PUNICODE_STRING RemainingName,
+               IN OUT PVOID Context OPTIONAL,
+               IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+               OUT PVOID *Object)
+{
+    DPRINT("IopParseDevice:\n"
+            "DeviceObject : %p, Type : %p, TypeName : %wZ\n"
+            "FileObject : %p, Type : %p, TypeName : %wZ\n"
+            "CompleteName : %wZ, RemainingName : %wZ\n",
+            ParseObject,
+            ObjectType,
+            &ObjectType->Name,
+            Context,
+            Context ? OBJECT_TO_OBJECT_HEADER(Context)->Type : NULL,
+            Context ? &OBJECT_TO_OBJECT_HEADER(Context)->Type->Name: NULL,
+            CompleteName,
+            RemainingName);
+
+    /*
+     * Just clear the object and return success, and ObFindObject will behave
+     * just as if we had no parse procedure, so we can debug in peace.
+     */
+    *Object = NULL;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+IopParseFile(IN PVOID ParseObject,
+             IN POBJECT_TYPE ObjectType,
+             IN OUT PACCESS_STATE AccessState,
+             IN KPROCESSOR_MODE AccessMode,
+             IN ULONG Attributes,
+             IN OUT PUNICODE_STRING CompleteName,
+             IN OUT PUNICODE_STRING RemainingName,
+             IN OUT PVOID Context OPTIONAL,
+             IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+             OUT PVOID *Object)
+{
+    PVOID DeviceObject;
+
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(ParseObject);
+    Context = ParseObject;
+
+    DPRINT("IopParseFile:\n"
+            "DeviceObject : %p, Type : %p, TypeName : %wZ\n"
+            "FileObject : %p, Type : %p, TypeName : %wZ\n"
+            "CompleteName : %wZ, RemainingName : %wZ\n",
+            DeviceObject,
+            OBJECT_TO_OBJECT_HEADER(DeviceObject)->Type,
+            &OBJECT_TO_OBJECT_HEADER(DeviceObject)->Type->Name,
+            ParseObject,
+            ObjectType,
+            &ObjectType->Name,
+            CompleteName,
+            RemainingName);
+
+    /* Call the main routine */
+    return IopParseDevice(DeviceObject,
+                          ObjectType,
+                          AccessState,
+                          AccessMode,
+                          Attributes,
+                          CompleteName,
+                          RemainingName,
+                          Context,
+                          SecurityQos,
+                          Object);
+
+}
+
 /*
  * NAME       INTERNAL
  *  IopCreateFile

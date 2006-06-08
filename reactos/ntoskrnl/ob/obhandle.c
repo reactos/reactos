@@ -27,6 +27,50 @@ PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
+                        IN POBJECT_TYPE ObjectType)
+{
+    POBJECT_HEADER_QUOTA_INFO ObjectQuota;
+    ULONG PagedPoolCharge, NonPagedPoolCharge;
+    PEPROCESS Process;
+
+    /* Get quota information */
+    ObjectQuota = OBJECT_HEADER_TO_QUOTA_INFO(ObjectHeader);
+
+    /* Check if this is a new object */
+    if (ObjectHeader->Flags & OB_FLAG_CREATE_INFO)
+    {
+        /* Remove the flag */
+        ObjectHeader->Flags &= ~ OB_FLAG_CREATE_INFO;
+        if (ObjectQuota)
+        {
+            /* We have a quota, get the charges */
+            PagedPoolCharge = ObjectQuota->PagedPoolCharge;
+            NonPagedPoolCharge = ObjectQuota->NonPagedPoolCharge;
+        }
+        else
+        {
+            /* Get it from the object type */
+            PagedPoolCharge = ObjectType->TypeInfo.DefaultPagedPoolCharge;
+            NonPagedPoolCharge = ObjectType->TypeInfo.DefaultNonPagedPoolCharge;
+        }
+
+        /*
+         * Charge the quota
+         * FIXME: This is a *COMPLETE* guess and probably defintely not the way to do this.
+         */
+        Process = PsGetCurrentProcess();
+        Process->QuotaBlock->QuotaEntry[PagedPool].Usage += PagedPoolCharge;
+        Process->QuotaBlock->QuotaEntry[NonPagedPool].Usage += NonPagedPoolCharge;
+        ObjectHeader->QuotaBlockCharged = Process->QuotaBlock;
+    }
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
 /*++
 * @name ObpDecrementHandleCount
 *
@@ -247,6 +291,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
     ULONG ProcessHandleCount;
+    NTSTATUS Status;
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -257,6 +302,10 @@ ObpIncrementHandleCount(IN PVOID Object,
             OpenReason,
             ObjectHeader->HandleCount,
             ObjectHeader->PointerCount);
+
+    /* Charge quota and remove the creator info flag */
+    Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if we're opening an existing handle */
     if (OpenReason == ObOpenHandle)
@@ -1151,6 +1200,14 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     {
         /* Then we are creating a new handle */
         OpenReason = ObCreateHandle;
+
+        /* Check if we still have create info */
+        if (ObjectHeader->ObjectCreateInfo)
+        {
+            /* Free it */
+            //ObpFreeAndReleaseCapturedAttributes(&ObjectCreateInfo);
+            //ObjectHeader->ObjectCreateInfo = NULL;
+        }
     }
     else
     {

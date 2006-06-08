@@ -98,6 +98,10 @@ Author:
     ((POBJECT_HEADER_HANDLE_INFO)(!(h)->HandleInfoOffset ?  \
         NULL: ((PCHAR)(h) - (h)->HandleInfoOffset)))
 
+#define OBJECT_HEADER_TO_QUOTA_INFO(h)                      \
+    ((POBJECT_HEADER_QUOTA_INFO)(!(h)->QuotaInfoOffset ?    \
+        NULL: ((PCHAR)(h) - (h)->QuotaInfoOffset)))
+
 #define OBJECT_HEADER_TO_CREATOR_INFO(h)                    \
     ((POBJECT_HEADER_CREATOR_INFO)(!((h)->Flags &           \
         OB_FLAG_CREATOR_INFO) ? NULL: ((PCHAR)(h) -         \
@@ -408,6 +412,14 @@ typedef struct _OBJECT_HEADER_CREATOR_INFO
     USHORT CreatorBackTraceIndex;
     USHORT Reserved;
 } OBJECT_HEADER_CREATOR_INFO, *POBJECT_HEADER_CREATOR_INFO;
+
+typedef struct _OBJECT_HEADER_QUOTA_INFO
+{
+    ULONG PagedPoolCharge;
+    ULONG NonPagedPoolCharge;
+    ULONG SecurityDescriptorCharge;
+    PEPROCESS ExclusiveProcess;
+} OBJECT_HEADER_QUOTA_INFO, *POBJECT_HEADER_QUOTA_INFO;
 
 //
 // Object Header
