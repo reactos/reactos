@@ -310,7 +310,6 @@ Next:
         PVOID FoundObject = NULL;
         POBJECT_HEADER Header = OBJECT_TO_OBJECT_HEADER(Insert);
         POBJECT_HEADER FoundHeader = NULL;
-        BOOLEAN ObjectAttached = FALSE;
         FoundObject = *ReturnedObject;
         if (FoundObject)
         {
@@ -322,6 +321,29 @@ Next:
             DPRINT("Object exists\n");
             ObDereferenceObject(FoundObject);
             return STATUS_OBJECT_NAME_COLLISION;
+        }
+
+        /*
+         * MiniHack
+         * If we still have a remaining path on a directory object, but we are
+         * a file object, then fail, because this means the file doesn't exist
+         */
+        if ((RemainingPath->Buffer) &&
+            (FoundHeader && FoundHeader->Type == ObDirectoryType) &&
+            (Header->Type == IoFileObjectType))
+        {
+            /* Hack */
+            RtlFreeUnicodeString(RemainingPath);
+            *ReturnedObject = NULL;
+            return STATUS_OBJECT_PATH_NOT_FOUND;
+        }
+        else if (Header->Type == IoFileObjectType)
+        {
+            /* Otherwise, call the hacked parse routine which will go away soon */
+            Status = IopCreateFile(&Header->Body,
+                                   FoundObject,
+                                   RemainingPath->Buffer,
+                                   NULL);
         }
 
         if (FoundHeader && FoundHeader->Type == ObDirectoryType &&
@@ -347,34 +369,8 @@ Next:
             ObjectNameInfo->Name.Length = RemainingPath->Length - Delta;
             ObjectNameInfo->Name.MaximumLength = RemainingPath->MaximumLength - Delta;
             ObpInsertEntryDirectory(FoundObject, Context, Header);
-            ObjectAttached = TRUE;
         }
 
-        if (Header->Type == IoFileObjectType)
-        {
-            /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
-            DPRINT("Calling IopCreateFile: %p %p %wZ\n", &Header->Body, FoundObject, RemainingPath);
-            Status = IopCreateFile(&Header->Body,
-                FoundObject,
-                RemainingPath->Buffer,            
-                NULL);
-            DPRINT("Called IopCreateFile: %x\n", Status);
-        }
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("Create Failed\n");
-            if (ObjectAttached == TRUE)
-            {
-                ObpDeleteEntryDirectory(Context);
-            }
-            if (FoundObject)
-            {
-                ObDereferenceObject(FoundObject);
-            }
-            RtlFreeUnicodeString(RemainingPath);
-            return Status;
-        }
         RtlFreeUnicodeString(RemainingPath);
         *ReturnedObject = Insert;
     }
