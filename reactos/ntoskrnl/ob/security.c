@@ -4,6 +4,7 @@
 * FILE:            ntoskrnl/ob/security.c
 * PURPOSE:         SRM Interface of the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+*                  Eric Kohl
 */
 
 /* INCLUDES *****************************************************************/
@@ -65,12 +66,15 @@ ObAssignSecurity(IN PACCESS_STATE AccessState,
                                               NewDescriptor,
                                               NULL,
                                               NULL,
-                                              NonPagedPool,
-                                              NULL);
+                                              PagedPool,
+                                              &Type->TypeInfo.GenericMapping);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Release the new security descriptor */
+        SeDeassignSecurity(&NewDescriptor);
+    }
 
-    /* Release the new security descriptor */
-    SeDeassignSecurity(&NewDescriptor);
-
+    /* Return to caller */
     return Status;
 }
 
@@ -101,61 +105,70 @@ ObGetObjectSecurity(IN PVOID Object,
                     OUT PBOOLEAN MemoryAllocated)
 {
     POBJECT_HEADER Header;
+    POBJECT_TYPE Type;
     ULONG Length;
     NTSTATUS Status;
     PAGED_CODE();
 
+    /* Get the object header and type */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
-    if (Header->Type == NULL) return STATUS_UNSUCCESSFUL;
+    Type = Header->Type;
 
-    if (Header->Type->TypeInfo.SecurityProcedure == NULL)
+    /* Check if the object uses default security */
+    if (Type->TypeInfo.SecurityProcedure == SeDefaultObjectMethod)
     {
+        /* Reference the descriptor and return it */
         ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
         *SecurityDescriptor = Header->SecurityDescriptor;
+
+        /* Tell the caller that we didn't have to allocate anything */
         *MemoryAllocated = FALSE;
         return STATUS_SUCCESS;
     }
 
     /* Get the security descriptor size */
     Length = 0;
-    Status = Header->Type->TypeInfo.SecurityProcedure(Object,
-                                                      QuerySecurityDescriptor,
-                                                      OWNER_SECURITY_INFORMATION |
-                                                      GROUP_SECURITY_INFORMATION |
-                                                      DACL_SECURITY_INFORMATION |
-                                                      SACL_SECURITY_INFORMATION,
-                                                      NULL,
-                                                      &Length,
-                                                      NULL,
-                                                      NonPagedPool,
-                                                      NULL);
+    Status = Type->TypeInfo.SecurityProcedure(Object,
+                                              QuerySecurityDescriptor,
+                                              OWNER_SECURITY_INFORMATION |
+                                              GROUP_SECURITY_INFORMATION |
+                                              DACL_SECURITY_INFORMATION |
+                                              SACL_SECURITY_INFORMATION,
+                                              NULL,
+                                              &Length,
+                                              &Header->SecurityDescriptor,
+                                              PagedPool,
+                                              &Type->TypeInfo.GenericMapping);
     if (Status != STATUS_BUFFER_TOO_SMALL) return Status;
 
     /* Allocate security descriptor */
-    *SecurityDescriptor = ExAllocatePool(NonPagedPool, Length);
-    if (*SecurityDescriptor == NULL) return STATUS_INSUFFICIENT_RESOURCES;
+    *SecurityDescriptor = ExAllocatePoolWithTag(PagedPool,
+                                                Length,
+                                                TAG('O', 'b', 'S', 'q'));
+    if (!(*SecurityDescriptor)) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Query security descriptor */
-    Status = Header->Type->TypeInfo.SecurityProcedure(Object,
-                                                      QuerySecurityDescriptor,
-                                                      OWNER_SECURITY_INFORMATION |
-                                                      GROUP_SECURITY_INFORMATION |
-                                                      DACL_SECURITY_INFORMATION |
-                                                      SACL_SECURITY_INFORMATION,
-                                                      *SecurityDescriptor,
-                                                      &Length,
-                                                      NULL,
-                                                      NonPagedPool,
-                                                      NULL);
+    *MemoryAllocated = TRUE;
+    Status = Type->TypeInfo.SecurityProcedure(Object,
+                                              QuerySecurityDescriptor,
+                                              OWNER_SECURITY_INFORMATION |
+                                              GROUP_SECURITY_INFORMATION |
+                                              DACL_SECURITY_INFORMATION |
+                                              SACL_SECURITY_INFORMATION,
+                                              *SecurityDescriptor,
+                                              &Length,
+                                              &Header->SecurityDescriptor,
+                                              PagedPool,
+                                              &Type->TypeInfo.GenericMapping);
     if (!NT_SUCCESS(Status))
     {
+        /* Free the descriptor and tell the caller we failed */
         ExFreePool(*SecurityDescriptor);
-        return Status;
+        *MemoryAllocated = FALSE;
     }
 
-    *MemoryAllocated = TRUE;
-
-    return STATUS_SUCCESS;
+    /* Return status */
+    return Status;
 }
 
 /*++
@@ -182,14 +195,18 @@ ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 {
     PAGED_CODE();
 
-    if (SecurityDescriptor == NULL) return;
+    /* Nothing to do in this case */
+    if (!SecurityDescriptor) return;
 
+    /* Check if we had allocated it from memory */
     if (MemoryAllocated)
     {
+        /* Free it */
         ExFreePool(SecurityDescriptor);
     }
     else
     {
+        /* Otherwise this means we used an internal descriptor */
         ObpDereferenceCachedSecurityDescriptor(SecurityDescriptor);
     }
 }
