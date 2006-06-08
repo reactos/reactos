@@ -25,169 +25,7 @@ PHANDLE_TABLE ObpKernelHandleTable = NULL;
 #define OBTRACE DPRINT
 #endif
 
-/* UGLY FUNCTIONS ************************************************************/
-
-ULONG
-NTAPI
-ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable)
-{
-    return HandleTable->HandleCount;
-}
-
-VOID
-ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
-                               PEPROCESS Process,
-                               int Count)
-{
-    ULONG P;
-    //      KIRQL oldIrql;
-
-    //      pshi->HandleValue;
-
-    /*
-    This will never work with ROS! M$, I guess uses 0 -> 65535.
-    Ros uses 0 -> 4294967295!
-    */
-
-    P = (ULONG) Process->UniqueProcessId;
-    pshi->UniqueProcessId = (USHORT) P;
-
-    //      KeAcquireSpinLock( &Process->HandleTable.ListLock, &oldIrql );
-
-    //      pshi->GrantedAccess;
-    //      pshi->Object;
-    //      pshi->TypeIndex;
-    //      pshi->HandleAttributes;
-
-    //      KeReleaseSpinLock( &Process->HandleTable.ListLock, oldIrql );
-
-    return;
-}
-
 /* PRIVATE FUNCTIONS *********************************************************/
-
-/*++
-* @name ObpDeleteNameCheck
-*
-*     The ObpDeleteNameCheck routine checks if a named object should be
-*     removed from the object directory namespace.
-*
-* @param Object
-*        Pointer to the object to check for possible removal.
-*
-* @return None.
-*
-* @remarks An object is removed if the following 4 criteria are met:
-*          1) The object has 0 handles open
-*          2) The object is in the directory namespace and has a name
-*          3) The object is not permanent
-*
-*--*/
-VOID
-NTAPI
-ObpDeleteNameCheck(IN PVOID Object)
-{
-    POBJECT_HEADER ObjectHeader;
-    OBP_LOOKUP_CONTEXT Context;
-    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
-    POBJECT_TYPE ObjectType;
-
-    /* Get object structures */
-    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
-    ObjectType = ObjectHeader->Type;
-
-    /*
-     * Check if the handle count is 0, if the object is named,
-     * and if the object isn't a permanent object.
-     */
-    if (!(ObjectHeader->HandleCount) &&
-         (ObjectNameInfo) &&
-         (ObjectNameInfo->Name.Length) &&
-         !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
-    {
-        /* Make sure it's still inserted */
-        Context.Directory = ObjectNameInfo->Directory;
-        Context.DirectoryLocked = TRUE;
-        Object = ObpLookupEntryDirectory(ObjectNameInfo->Directory,
-                                         &ObjectNameInfo->Name,
-                                         0,
-                                         FALSE,
-                                         &Context);
-        if (Object)
-        {
-            /* First delete it from the directory */
-            ObpDeleteEntryDirectory(&Context);
-
-            /* Now check if we have a security callback */
-            if (ObjectType->TypeInfo.SecurityRequired)
-            {
-                /* Call it */
-                ObjectType->TypeInfo.SecurityProcedure(Object,
-                                                       DeleteSecurityDescriptor,
-                                                       0,
-                                                       NULL,
-                                                       NULL,
-                                                       &ObjectHeader->
-                                                       SecurityDescriptor,
-                                                       ObjectType->
-                                                       TypeInfo.PoolType,
-                                                       NULL);
-            }
-
-            /* Free the name */
-            ExFreePool(ObjectNameInfo->Name.Buffer);
-            RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
-
-            /* Clear the current directory and de-reference it */
-            ObDereferenceObject(ObjectNameInfo->Directory);
-            ObDereferenceObject(Object);
-            ObjectNameInfo->Directory = NULL;
-        }
-    }
-}
-
-/*++
-* @name ObpSetPermanentObject
-*
-*     The ObpSetPermanentObject routine makes an sets or clears the permanent
-*     flag of an object, thus making it either permanent or temporary.
-*
-* @param ObjectBody
-*        Pointer to the object to make permanent or temporary.
-*
-* @param Permanent
-*        Flag specifying which operation to perform.
-*
-* @return None.
-*
-* @remarks If the object is being made temporary, then it will be checked
-*          as a candidate for immediate removal from the namespace.
-*
-*--*/
-VOID
-FASTCALL
-ObpSetPermanentObject(IN PVOID ObjectBody,
-                      IN BOOLEAN Permanent)
-{
-    POBJECT_HEADER ObjectHeader;
-
-    /* Get the header */
-    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
-    if (Permanent)
-    {
-        /* Set it to permanent */
-        ObjectHeader->Flags |= OB_FLAG_PERMANENT;
-    }
-    else
-    {
-        /* Remove the flag */
-        ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
-
-        /* Check if we should delete the object now */
-        ObpDeleteNameCheck(ObjectBody);
-    }
-}
 
 /*++
 * @name ObpDecrementHandleCount
@@ -680,6 +518,22 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 
+/*++
+* @name ObpCloseHandle
+*
+*     The ObpCloseHandle routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
 NTAPI
 ObpCloseHandle(IN HANDLE Handle,
@@ -1449,27 +1303,6 @@ ObFindHandleForObject(IN PEPROCESS Process,
 }
 
 /*++
-* @name ObMakeTemporaryObject
-* @implemented NT4
-*
-*     The ObMakeTemporaryObject routine <FILLMEIN>
-*
-* @param ObjectBody
-*        <FILLMEIN>
-*
-* @return None.
-*
-* @remarks None.
-*
-*--*/
-VOID
-NTAPI
-ObMakeTemporaryObject(IN PVOID ObjectBody)
-{
-    ObpSetPermanentObject (ObjectBody, FALSE);
-}
-
-/*++
 * @name ObInsertObject
 * @implemented NT4
 *
@@ -1753,6 +1586,23 @@ ObInsertObject(IN PVOID Object,
     return Status;
 }
 
+/*++
+* @name ObCloseHandle
+* @implemented NT5.1
+*
+*     The ObCloseHandle routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
 NTAPI
 ObCloseHandle(IN HANDLE Handle,
@@ -1764,6 +1614,20 @@ ObCloseHandle(IN HANDLE Handle,
     return ObpCloseHandle(Handle, AccessMode);
 }
 
+/*++
+* @name NtClose
+* @implemented NT4
+*
+*     The NtClose routine <FILLMEIN>
+*
+* @param Handle
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
 NTSTATUS
 NTAPI
 NtClose(IN HANDLE Handle)
@@ -1954,83 +1818,4 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
     return Status;
 }
 
-/*++
-* @name NtMakeTemporaryObject
-* @implemented NT4
-*
-*     The NtMakeTemporaryObject routine <FILLMEIN>
-*
-* @param ObjectHandle
-*        <FILLMEIN>
-*
-* @return STATUS_SUCCESS or appropriate error value.
-*
-* @remarks None.
-*
-*--*/
-NTSTATUS
-NTAPI
-NtMakeTemporaryObject(IN HANDLE ObjectHandle)
-{
-    PVOID ObjectBody;
-    NTSTATUS Status;
-    PAGED_CODE();
-
-    /* Reference the object for DELETE access */
-    Status = ObReferenceObjectByHandle(ObjectHandle,
-                                       DELETE,
-                                       NULL,
-                                       KeGetPreviousMode(),
-                                       &ObjectBody,
-                                       NULL);
-    if (Status != STATUS_SUCCESS) return Status;
-
-    /* Set it as temporary and dereference it */
-    ObpSetPermanentObject(ObjectBody, FALSE);
-    ObDereferenceObject(ObjectBody);
-    return STATUS_SUCCESS;
-}
-
-/*++
-* @name NtMakePermanentObject
-* @implemented NT4
-*
-*     The NtMakePermanentObject routine <FILLMEIN>
-*
-* @param ObjectHandle
-*        <FILLMEIN>
-*
-* @return STATUS_SUCCESS or appropriate error value.
-*
-* @remarks None.
-*
-*--*/
-NTSTATUS
-NTAPI
-NtMakePermanentObject(IN HANDLE ObjectHandle)
-{
-    PVOID ObjectBody;
-    NTSTATUS Status;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PAGED_CODE();
-
-    /* Make sure that the caller has SeCreatePermanentPrivilege */
-    Status = SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
-                                    PreviousMode);
-    if (!NT_SUCCESS(Status)) return STATUS_PRIVILEGE_NOT_HELD;
-
-    /* Reference the object */
-    Status = ObReferenceObjectByHandle(ObjectHandle,
-                                       0,
-                                       NULL,
-                                       PreviousMode,
-                                       &ObjectBody,
-                                       NULL);
-    if (Status != STATUS_SUCCESS) return Status;
-
-    /* Set it as permanent and dereference it */
-    ObpSetPermanentObject(ObjectBody, TRUE);
-    ObDereferenceObject(ObjectBody);
-    return STATUS_SUCCESS;
-}
 /* EOF */

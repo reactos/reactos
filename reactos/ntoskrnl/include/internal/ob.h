@@ -34,6 +34,8 @@ typedef struct _OBP_CLOSE_HANDLE_CONTEXT
   (HANDLE)((ULONG_PTR)(Handle) & ~KERNEL_HANDLE_FLAG)
 #define ObMarkHandleAsKernelHandle(Handle)                                     \
   (HANDLE)((ULONG_PTR)(Handle) | KERNEL_HANDLE_FLAG)
+#define ObpGetHandleCountByHandleTable(HandleTable)                             \
+    ((PHANDLE_TABLE)HandleTable)->HandleCount
 
 extern KEVENT ObpDefaultObject;
 extern POBJECT_TYPE ObpTypeObjectType;
@@ -130,10 +132,6 @@ ObDuplicateObject(
     ULONG HandleAttributes,
     ULONG Options
 );
-
-ULONG
-NTAPI
-ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable);
 
 VOID
 NTAPI

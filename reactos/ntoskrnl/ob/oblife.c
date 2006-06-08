@@ -180,6 +180,48 @@ ObpReapObject(IN PVOID Parameter)
     }
 }
 
+/*++
+* @name ObpSetPermanentObject
+*
+*     The ObpSetPermanentObject routine makes an sets or clears the permanent
+*     flag of an object, thus making it either permanent or temporary.
+*
+* @param ObjectBody
+*        Pointer to the object to make permanent or temporary.
+*
+* @param Permanent
+*        Flag specifying which operation to perform.
+*
+* @return None.
+*
+* @remarks If the object is being made temporary, then it will be checked
+*          as a candidate for immediate removal from the namespace.
+*
+*--*/
+VOID
+FASTCALL
+ObpSetPermanentObject(IN PVOID ObjectBody,
+                      IN BOOLEAN Permanent)
+{
+    POBJECT_HEADER ObjectHeader;
+
+    /* Get the header */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
+    if (Permanent)
+    {
+        /* Set it to permanent */
+        ObjectHeader->Flags |= OB_FLAG_PERMANENT;
+    }
+    else
+    {
+        /* Remove the flag */
+        ObjectHeader->Flags &= ~OB_FLAG_PERMANENT;
+
+        /* Check if we should delete the object now */
+        ObpDeleteNameCheck(ObjectBody);
+    }
+}
+
 NTSTATUS
 NTAPI
 ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
@@ -760,6 +802,108 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Return the object type and creations tatus */
     *ObjectType = LocalObjectType;
     return Status;
+}
+
+/*++
+* @name ObMakeTemporaryObject
+* @implemented NT4
+*
+*     The ObMakeTemporaryObject routine <FILLMEIN>
+*
+* @param ObjectBody
+*        <FILLMEIN>
+*
+* @return None.
+*
+* @remarks None.
+*
+*--*/
+VOID
+NTAPI
+ObMakeTemporaryObject(IN PVOID ObjectBody)
+{
+    /* Call the internal API */
+    ObpSetPermanentObject (ObjectBody, FALSE);
+}
+
+/*++
+* @name NtMakeTemporaryObject
+* @implemented NT4
+*
+*     The NtMakeTemporaryObject routine <FILLMEIN>
+*
+* @param ObjectHandle
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+NtMakeTemporaryObject(IN HANDLE ObjectHandle)
+{
+    PVOID ObjectBody;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Reference the object for DELETE access */
+    Status = ObReferenceObjectByHandle(ObjectHandle,
+                                       DELETE,
+                                       NULL,
+                                       KeGetPreviousMode(),
+                                       &ObjectBody,
+                                       NULL);
+    if (Status != STATUS_SUCCESS) return Status;
+
+    /* Set it as temporary and dereference it */
+    ObpSetPermanentObject(ObjectBody, FALSE);
+    ObDereferenceObject(ObjectBody);
+    return STATUS_SUCCESS;
+}
+
+/*++
+* @name NtMakePermanentObject
+* @implemented NT4
+*
+*     The NtMakePermanentObject routine <FILLMEIN>
+*
+* @param ObjectHandle
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+NtMakePermanentObject(IN HANDLE ObjectHandle)
+{
+    PVOID ObjectBody;
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PAGED_CODE();
+
+    /* Make sure that the caller has SeCreatePermanentPrivilege */
+    Status = SeSinglePrivilegeCheck(SeCreatePermanentPrivilege,
+                                    PreviousMode);
+    if (!NT_SUCCESS(Status)) return STATUS_PRIVILEGE_NOT_HELD;
+
+    /* Reference the object */
+    Status = ObReferenceObjectByHandle(ObjectHandle,
+                                       0,
+                                       NULL,
+                                       PreviousMode,
+                                       &ObjectBody,
+                                       NULL);
+    if (Status != STATUS_SUCCESS) return Status;
+
+    /* Set it as permanent and dereference it */
+    ObpSetPermanentObject(ObjectBody, TRUE);
+    ObDereferenceObject(ObjectBody);
+    return STATUS_SUCCESS;
 }
 
 /*++

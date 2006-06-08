@@ -20,6 +20,87 @@ POBJECT_DIRECTORY ObpTypeDirectoryObject = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+/*++
+* @name ObpDeleteNameCheck
+*
+*     The ObpDeleteNameCheck routine checks if a named object should be
+*     removed from the object directory namespace.
+*
+* @param Object
+*        Pointer to the object to check for possible removal.
+*
+* @return None.
+*
+* @remarks An object is removed if the following 4 criteria are met:
+*          1) The object has 0 handles open
+*          2) The object is in the directory namespace and has a name
+*          3) The object is not permanent
+*
+*--*/
+VOID
+NTAPI
+ObpDeleteNameCheck(IN PVOID Object)
+{
+    POBJECT_HEADER ObjectHeader;
+    OBP_LOOKUP_CONTEXT Context;
+    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+    POBJECT_TYPE ObjectType;
+
+    /* Get object structures */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+    ObjectType = ObjectHeader->Type;
+
+    /*
+     * Check if the handle count is 0, if the object is named,
+     * and if the object isn't a permanent object.
+     */
+    if (!(ObjectHeader->HandleCount) &&
+         (ObjectNameInfo) &&
+         (ObjectNameInfo->Name.Length) &&
+         !(ObjectHeader->Flags & OB_FLAG_PERMANENT))
+    {
+        /* Make sure it's still inserted */
+        Context.Directory = ObjectNameInfo->Directory;
+        Context.DirectoryLocked = TRUE;
+        Object = ObpLookupEntryDirectory(ObjectNameInfo->Directory,
+                                         &ObjectNameInfo->Name,
+                                         0,
+                                         FALSE,
+                                         &Context);
+        if (Object)
+        {
+            /* First delete it from the directory */
+            ObpDeleteEntryDirectory(&Context);
+
+            /* Now check if we have a security callback */
+            if (ObjectType->TypeInfo.SecurityRequired)
+            {
+                /* Call it */
+                ObjectType->TypeInfo.SecurityProcedure(Object,
+                                                       DeleteSecurityDescriptor,
+                                                       0,
+                                                       NULL,
+                                                       NULL,
+                                                       &ObjectHeader->
+                                                       SecurityDescriptor,
+                                                       ObjectType->
+                                                       TypeInfo.PoolType,
+                                                       NULL);
+            }
+
+            /* Free the name */
+            ExFreePool(ObjectNameInfo->Name.Buffer);
+            RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
+
+            /* Clear the current directory and de-reference it */
+            ObDereferenceObject(ObjectNameInfo->Directory);
+            ObDereferenceObject(Object);
+            ObjectNameInfo->Directory = NULL;
+        }
+    }
+}
+
 NTSTATUS
 NTAPI
 ObFindObject(IN HANDLE RootHandle,
