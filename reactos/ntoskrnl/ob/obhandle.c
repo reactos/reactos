@@ -258,11 +258,23 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
 }
 
 /*++
-* @name ObpDeleteHandle
+* @name ObpCloseHandleTableEntry
 *
-*     The ObpDeleteHandle routine <FILLMEIN>
+*     The ObpCloseHandleTableEntry routine <FILLMEIN>
+*
+* @param HandleTable
+*        <FILLMEIN>.
+*
+* @param HandleEntry
+*        <FILLMEIN>.
 *
 * @param Handle
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @param IgnoreHandleProtection
 *        <FILLMEIN>.
 *
 * @return <FILLMEIN>.
@@ -272,83 +284,89 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
 *--*/
 NTSTATUS
 NTAPI
-ObpDeleteHandle(HANDLE Handle)
+ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
+                         IN PHANDLE_TABLE_ENTRY HandleEntry,
+                         IN HANDLE Handle,
+                         IN KPROCESSOR_MODE AccessMode,
+                         IN BOOLEAN IgnoreHandleProtection)
 {
-    PHANDLE_TABLE_ENTRY HandleEntry;
     PVOID Body;
     POBJECT_TYPE ObjectType;
     POBJECT_HEADER ObjectHeader;
-    PHANDLE_TABLE ObjectTable;
     ACCESS_MASK GrantedAccess;
-    NTSTATUS Status = STATUS_INVALID_HANDLE;
     PAGED_CODE();
 
-    /*
-     * Get the object table of the current process/
-     * NOTE: We might actually be attached to the system process
-     */
-    ObjectTable = PsGetCurrentProcess()->ObjectTable;
+    /* Get the object data */
+    ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
+    ObjectType = ObjectHeader->Type;
+    Body = &ObjectHeader->Body;
+    GrantedAccess = HandleEntry->GrantedAccess;
+    OBTRACE("OBTRACE - %s - Closing handle: %lx for %p. HC LC %lx %lx\n",
+            __FUNCTION__,
+            Handle,
+            Body,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
 
-    /* Enter a critical region while touching the handle locks */
-    KeEnterCriticalRegion();
-
-    /* Get the entry for this handle */
-    HandleEntry = ExMapHandleToPointer(ObjectTable, Handle);
-    if(HandleEntry)
+    /* Check if the object has an Okay To Close procedure */
+    if (ObjectType->TypeInfo.OkayToCloseProcedure)
     {
-        /* Get the object data */
-        ObjectHeader = EX_HTE_TO_HDR(HandleEntry);
-        ObjectType = ObjectHeader->Type;
-        Body = &ObjectHeader->Body;
-        GrantedAccess = HandleEntry->GrantedAccess;
-        OBTRACE("OBTRACE - %s - Deleting handle: %lx for %p. HC LC %lx %lx\n",
-                __FUNCTION__,
-                Handle,
-                Body,
-                ObjectHeader->HandleCount,
-                ObjectHeader->PointerCount);
-
-        /* Check if the object has an Okay To Close procedure */
-        if (ObjectType->TypeInfo.OkayToCloseProcedure)
+        /* Call it and check if it's not letting us close it */
+        if (!ObjectType->TypeInfo.OkayToCloseProcedure(PsGetCurrentProcess(),
+                                                       Body,
+                                                       Handle))
         {
-            /* Call it and check if it's not letting us close it */
-            if (!ObjectType->TypeInfo.OkayToCloseProcedure(PsGetCurrentProcess(),
-                                                           Body,
-                                                           Handle))
+            /* Fail */
+            ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+            return STATUS_HANDLE_NOT_CLOSABLE;
+        }
+    }
+
+    /* The callback allowed us to close it, but does the handle itself? */
+    if ((HandleEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE) &&
+        !(IgnoreHandleProtection))
+    {
+        /* It doesn't, are we from user mode? */
+        if (AccessMode != KernelMode)
+        {
+            /* We are! Unlock the entry */
+            ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+
+            /* Make sure we have an exception port */
+            if (PsGetCurrentProcess()->ExceptionPort)
             {
-                /* Fail */
-                ExUnlockHandleTableEntry(ObjectTable, HandleEntry);
-                KeLeaveCriticalRegion();
+                /* Raise an exception */
+                return KeRaiseUserException(STATUS_HANDLE_NOT_CLOSABLE);
+            }
+            else
+            {
+                /* Return the error isntead */
                 return STATUS_HANDLE_NOT_CLOSABLE;
             }
         }
 
-        /* The callback allowed us to close it, but does the handle itself? */
-        if(HandleEntry->ObAttributes & EX_HANDLE_ENTRY_PROTECTFROMCLOSE)
-        {
-            /* Fail */
-            ExUnlockHandleTableEntry(ObjectTable, HandleEntry);
-            KeLeaveCriticalRegion();
-            return STATUS_HANDLE_NOT_CLOSABLE;
-        }
-
-        /* Destroy and unlock the handle entry */
-        ExDestroyHandleByEntry(ObjectTable, HandleEntry, Handle);
-
-        /* Now decrement the handle count */
-        ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
-        Status = STATUS_SUCCESS;
-        OBTRACE("OBTRACE - %s - Deleted handle: %lx for %p. HC LC %lx %lx\n",
-                __FUNCTION__,
-                Handle,
-                Body,
-                ObjectHeader->HandleCount,
-                ObjectHeader->PointerCount);
+        /* Otherwise, we are kernel mode, so unlock the entry and return */
+        ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+        return STATUS_HANDLE_NOT_CLOSABLE;
     }
 
-    /* Leave the critical region and return the status */
-    KeLeaveCriticalRegion();
-    return Status;
+    /* Destroy and unlock the handle entry */
+    ExDestroyHandleByEntry(HandleTable, HandleEntry, Handle);
+
+    /* Now decrement the handle count */
+    ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
+
+    /* Dereference the object as well */
+    //ObDereferenceObject(Body); // FIXME: Needs sync changes in other code
+
+    /* Return to caller */
+    OBTRACE("OBTRACE - %s - Closed handle: %lx for %p. HC LC %lx %lx\n",
+            __FUNCTION__,
+            Handle,
+            Body,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
+    return STATUS_SUCCESS;
 }
 
 /*++
@@ -662,6 +680,89 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 
+NTSTATUS
+NTAPI
+ObpCloseHandle(IN HANDLE Handle,
+               IN KPROCESSOR_MODE AccessMode)
+{
+    PVOID HandleTable;
+    BOOLEAN AttachedToProcess = FALSE;
+    KAPC_STATE ApcState;
+    PHANDLE_TABLE_ENTRY HandleTableEntry;
+    NTSTATUS Status;
+    PAGED_CODE();
+    OBTRACE("OBTRACE - %s - Closing handle: %lx\n", __FUNCTION__, Handle);
+
+    /* Check if we're dealing with a kernel handle */
+    if (ObIsKernelHandle(Handle, AccessMode))
+    {
+        /* Use the kernel table and convert the handle */
+        HandleTable = ObpKernelHandleTable;
+        Handle = ObKernelHandleToHandle(Handle);
+
+        /* Check if we're not in the system process */
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        {
+            /* Attach to the system process */
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+            AttachedToProcess = TRUE;
+        }
+    }
+    else
+    {
+        /* Use the process's handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    /* Enter a critical region to protect handle access */
+    KeEnterCriticalRegion();
+
+    /* Get the handle entry */
+    HandleTableEntry = ExMapHandleToPointer(HandleTable, Handle);
+    if (HandleTableEntry)
+    {
+        /* Now close the entry */
+        Status = ObpCloseHandleTableEntry(HandleTable,
+                                          HandleTableEntry,
+                                          Handle,
+                                          AccessMode,
+                                          FALSE);
+
+        /* We can quit the critical region now */
+        KeLeaveCriticalRegion();
+
+        /* Detach and return success */
+        if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* We failed, quit the critical region */
+        KeLeaveCriticalRegion();
+
+        /* Detach */
+        if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+
+        /* Check if this was a user-mode caller with a valid exception port */
+        if ((AccessMode != KernelMode) &&
+            (PsGetCurrentProcess()->ExceptionPort))
+        {
+            /* Raise an exception */
+            Status = KeRaiseUserException(STATUS_INVALID_HANDLE);
+        }
+        else
+        {
+            /* Just return the status */
+            Status = STATUS_INVALID_HANDLE;
+        }
+    }
+
+    /* Return status */
+    OBTRACE("OBTRACE - %s - Closed handle: %lx S: %lx\n",
+            __FUNCTION__, Handle, Status);
+    return Status;
+}
+
 /*++
 * @name ObpSetHandleAttributes
 *
@@ -750,6 +851,25 @@ ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
 * @remarks None.
 *
 *--*/
+#if 0 // waiting on thomas
+BOOLEAN
+NTAPI
+ObpCloseHandleCallback(IN PHANDLE_TABLE_ENTRY HandleTableEntry,
+                       IN HANDLE Handle,
+                       IN PVOID Context)
+{
+    POBP_CLOSE_HANDLE_CONTEXT CloseContext = (POBP_CLOSE_HANDLE_CONTEXT)Context;
+
+    /* Simply decrement the handle count */
+    ObpCloseHandleTableEntry(Context->HandleTable,
+                             HandleTableEntry,
+                             Handle,
+                             Context->AccessMode,
+                             TRUE);
+
+    /* Return success */
+    return TRUE;
+#else
 VOID
 NTAPI
 ObpCloseHandleCallback(IN PHANDLE_TABLE HandleTable,
@@ -757,12 +877,10 @@ ObpCloseHandleCallback(IN PHANDLE_TABLE HandleTable,
                        IN ULONG GrantedAccess,
                        IN PVOID Context)
 {
-    PAGED_CODE();
-
-    /* Simply decrement the handle count */
     ObpDecrementHandleCount(&EX_OBJ_TO_HDR(Object)->Body,
                             PsGetCurrentProcess(),
                             GrantedAccess);
+#endif
 }
 
 /*++
@@ -893,18 +1011,24 @@ VOID
 NTAPI
 ObKillProcess(IN PEPROCESS Process)
 {
+    PHANDLE_TABLE HandleTable = Process->ObjectTable;
+    OBP_CLOSE_HANDLE_CONTEXT Context;
     PAGED_CODE();
 
     /* Enter a critical region */
     KeEnterCriticalRegion();
 
+    /* Fill out the context */
+    Context.AccessMode = KernelMode;
+    Context.HandleTable = HandleTable;
+
     /* Sweep the handle table to close all handles */
-    ExSweepHandleTable(Process->ObjectTable,
+    ExSweepHandleTable(HandleTable,
                        ObpCloseHandleCallback,
                        Process);
 
     /* Destroy the table and leave the critical region */
-    ExDestroyHandleTable(Process->ObjectTable);
+    ExDestroyHandleTable(HandleTable);
     KeLeaveCriticalRegion();
 
     /* Clear the object table */
@@ -1038,7 +1162,7 @@ ObDuplicateObject(PEPROCESS SourceProcess,
             }
 
             /* delete the source handle */
-            ObpDeleteHandle(SourceHandle);
+            NtClose(SourceHandle);
 
             if (AttachedToProcess)
             {
@@ -1629,6 +1753,27 @@ ObInsertObject(IN PVOID Object,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+ObCloseHandle(IN HANDLE Handle,
+              IN KPROCESSOR_MODE AccessMode)
+{
+    //
+    // Call the internal API
+    //
+    return ObpCloseHandle(Handle, AccessMode);
+}
+
+NTSTATUS
+NTAPI
+NtClose(IN HANDLE Handle)
+{
+    //
+    // Call the internal API
+    //
+    return ObpCloseHandle(Handle, ExGetPreviousMode());
+}
+
 /*
 * @implemented
 */
@@ -1770,7 +1915,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
                     AttachedToProcess = TRUE;
                 }
 
-                ObpDeleteHandle(SourceHandle);
+                NtClose(SourceHandle);
 
                 if (AttachedToProcess)
                 {
@@ -1807,55 +1952,6 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
     }
 
     return Status;
-}
-
-NTSTATUS STDCALL
-NtClose(IN HANDLE Handle)
-{
-    PEPROCESS Process, CurrentProcess;
-    BOOLEAN AttachedToProcess = FALSE;
-    KAPC_STATE ApcState;
-    NTSTATUS Status;
-    KPROCESSOR_MODE PreviousMode;
-
-    PAGED_CODE();
-
-    PreviousMode = ExGetPreviousMode();
-    CurrentProcess = PsGetCurrentProcess();
-
-    if(ObIsKernelHandle(Handle, PreviousMode))
-    {
-        Process = PsInitialSystemProcess;
-        Handle = ObKernelHandleToHandle(Handle);
-
-        if (Process != CurrentProcess)
-        {
-            KeStackAttachProcess(&Process->Pcb,
-                &ApcState);
-            AttachedToProcess = TRUE;
-        }
-    }
-    else
-        Process = CurrentProcess;
-
-    Status = ObpDeleteHandle(Handle);
-
-    if (AttachedToProcess)
-    {
-        KeUnstackDetachProcess(&ApcState);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        if((PreviousMode != KernelMode) &&
-            (CurrentProcess->ExceptionPort))
-        {
-            KeRaiseUserException(Status);
-        }
-        return Status;
-    }
-
-    return(STATUS_SUCCESS);
 }
 
 /*++
