@@ -310,6 +310,7 @@ Next:
             }
         }
         RtlFreeUnicodeString(RemainingPath);
+                    *ReturnedObject = Insert;
     }
     else
     {

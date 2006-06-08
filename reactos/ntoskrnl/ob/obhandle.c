@@ -1175,6 +1175,7 @@ ObInsertObject(IN PVOID Object,
     AUX_DATA AuxData;
     BOOLEAN IsNamed = FALSE;
     OB_OPEN_REASON OpenReason = ObCreateHandle;
+    static int LostOptimizations = 0;
     PAGED_CODE();
 
     /* Get the Header and Create Info */
@@ -1182,6 +1183,22 @@ ObInsertObject(IN PVOID Object,
     ObjectCreateInfo = Header->ObjectCreateInfo;
     ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
     ObjectType = Header->Type;
+
+    /* Check if this is an named object */
+    if ((ObjectNameInfo) && (ObjectNameInfo->Name.Buffer)) IsNamed = TRUE;
+
+    /* Check if the object is unnamed and also doesn't have security */
+    if ((!ObjectType->TypeInfo.SecurityRequired) && !(IsNamed))
+    {
+        /*
+         * FIXME: TODO (Optimized path through ObpIncrement*UnNamed*HandleCount).
+         * Described in chapter 6 of Gl00my, but babelfish translation isn't fully
+         * clear, so waiting on Aleksey's translation. Currently just profiling.
+         * (about ~500 calls per boot - not critical atm).
+         */
+        ++LostOptimizations;
+        DPRINT("Optimized case could've be taken: %d times!\n", LostOptimizations);
+    }
 
     /* Check if we didn't get an access state */
     if (!PassedAccessState)
@@ -1200,8 +1217,9 @@ ObInsertObject(IN PVOID Object,
         }
     }
 
-    /* Check if this is an named object */
-    if ((ObjectNameInfo) && (ObjectNameInfo->Name.Buffer)) IsNamed = TRUE;
+    /* Save the security descriptor */
+    PassedAccessState->SecurityDescriptor =
+        ObjectCreateInfo->SecurityDescriptor;
 
     /* Check if the object is named */
     if (IsNamed)
@@ -1218,12 +1236,48 @@ ObInsertObject(IN PVOID Object,
                               ObjectCreateInfo->SecurityQos,
                               ObjectCreateInfo->ParseContext,
                               Object);
-        if (!NT_SUCCESS(Status)) return Status;
-
-        if (FoundObject)
+        /* Check if we found an object that doesn't match the one requested */
+        if ((NT_SUCCESS(Status)) && (FoundObject) && (Object != FoundObject))
         {
-            DPRINT("Getting header: %x\n", FoundObject);
+            /* This means we're opening an object, not creating a new one */
             FoundHeader = OBJECT_TO_OBJECT_HEADER(FoundObject);
+            OpenReason = ObOpenHandle;
+
+            /* Make sure the caller said it's OK to do this */
+            if (ObjectCreateInfo->Attributes & OBJ_OPENIF)
+            {
+                /* He did, but did he want this type? */
+                if (ObjectType != FoundHeader->Type)
+                {
+                    /* Wrong type, so fail */
+                    Status = STATUS_OBJECT_TYPE_MISMATCH;
+                }
+                else
+                {
+                    /* Right type, so warn */
+                    Status = STATUS_OBJECT_NAME_EXISTS;
+                }
+            }
+            else
+            {
+                /* Caller wanted to create a new object, fail */
+                Status = STATUS_OBJECT_NAME_COLLISION;
+            }
+        }
+
+        /* Check if anything until now failed */
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed, dereference the object and delete the access state */
+            ObDereferenceObject(Object);
+            if (PassedAccessState == &AccessState)
+            {
+                /* We used a local one; delete it */
+                SeDeleteAccessState(PassedAccessState);
+            }
+
+            /* Return failure code */
+            return Status;
         }
     }
     else
@@ -1252,57 +1306,60 @@ ObInsertObject(IN PVOID Object,
         }
     }
 
-    /* Check if it's named or forces security */
-    if ((IsNamed) || (ObjectType->TypeInfo.SecurityRequired))
+    /* Now check if this object is being created */
+    if (FoundObject == Object)
     {
-        /* Make sure it's inserted into an object directory */
-        if ((ObjectNameInfo) && (ObjectNameInfo->Directory))
+        /* Check if it's named or forces security */
+        if ((IsNamed) || (ObjectType->TypeInfo.SecurityRequired))
         {
-            /* Get the current descriptor */
-            ObGetObjectSecurity(ObjectNameInfo->Directory,
-                                &DirectorySd,
-                                &SdAllocated);
+            /* Make sure it's inserted into an object directory */
+            if ((ObjectNameInfo) && (ObjectNameInfo->Directory))
+            {
+                /* Get the current descriptor */
+                ObGetObjectSecurity(ObjectNameInfo->Directory,
+                                    &DirectorySd,
+                                    &SdAllocated);
+            }
+
+            /* Now assign it */
+            Status = ObAssignSecurity(PassedAccessState,
+                                      DirectorySd,
+                                      Object,
+                                      ObjectType);
+
+            /* Check if we captured one */
+            if (DirectorySd)
+            {
+                /* We did, release it */
+                ObReleaseObjectSecurity(DirectorySd, SdAllocated);
+            }
+            else if (NT_SUCCESS(Status))
+            {
+                /* Other we didn't, but we were able to use the current SD */
+                SeReleaseSecurityDescriptor(ObjectCreateInfo->SecurityDescriptor,
+                                            ObjectCreateInfo->ProbeMode,
+                                            TRUE);
+
+                /* Clear the current one */
+                PassedAccessState->SecurityDescriptor =
+                    ObjectCreateInfo->SecurityDescriptor = NULL;
+            }
         }
 
-        /* Now assign it */
-        Status = ObAssignSecurity(PassedAccessState,
-                                  DirectorySd,
-                                  Object,
-                                  ObjectType);
-
-        /* Check if we captured one */
-        if (DirectorySd)
+        /* Check if anything until now failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* We did, release it */
-            DPRINT1("Here\n");
-            ObReleaseObjectSecurity(DirectorySd, SdAllocated);
-        }
-        else if (NT_SUCCESS(Status))
-        {
-            /* Other we didn't, but we were able to use the current SD */
-            SeReleaseSecurityDescriptor(ObjectCreateInfo->SecurityDescriptor,
-                                        ObjectCreateInfo->ProbeMode,
-                                        TRUE);
+            /* We failed, dereference the object and delete the access state */
+            ObDereferenceObject(Object);
+            if (PassedAccessState == &AccessState)
+            {
+                /* We used a local one; delete it */
+                SeDeleteAccessState(PassedAccessState);
+            }
 
-            /* Clear the current one */
-            PassedAccessState->SecurityDescriptor =
-                ObjectCreateInfo->SecurityDescriptor = NULL;
+            /* Return failure code */
+            return Status;
         }
-    }
-
-    /* Check if anything until now failed */
-    if (!NT_SUCCESS(Status))
-    {
-        /* We failed, dereference the object and delete the access state */
-        ObDereferenceObject(Object);
-        if (PassedAccessState == &AccessState)
-        {
-            /* We used a local one; delete it */
-            SeDeleteAccessState(PassedAccessState);
-        }
-
-        /* Return failure code */
-        return Status;
     }
 
     /* HACKHACK: Because of ROS's incorrect startup, this can be called
