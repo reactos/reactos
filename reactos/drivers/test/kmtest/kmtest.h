@@ -10,12 +10,6 @@
     Everything else is done by Aleksey Bragin based on PnPTest by Filip Navara
 */
 
-#if 0
-#define DPRINT DbgPrint("%s:%d ", __FILE__, __LINE__), DbgPrint
-#else
-#define DPRINT DbgPrint
-#endif
-
 extern ULONG successes;       /* number of successful tests */
 extern ULONG failures;        /* number of failures */
 //static ULONG todo_successes;  /* number of successful tests inside todo block */

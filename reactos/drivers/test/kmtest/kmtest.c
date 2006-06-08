@@ -105,6 +105,7 @@ int kmtest_ok(int condition, const char *msg, ... )
  */
 VOID FASTCALL DeviceInterfaceTest();
 VOID FASTCALL NtoskrnlIoMdlTest();
+VOID FASTCALL NtoskrnlObTest();
 
 /*
  * DriverEntry
@@ -114,9 +115,10 @@ NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
-    DbgPrint("Kernel Mode Regression Test driver starting...\n");
+    DbgPrint("\n===============================================\nKernel Mode Regression Test driver starting...\n");
     //DeviceInterfaceTest();
     NtoskrnlIoMdlTest();
+    NtoskrnlObTest();
 
     return STATUS_UNSUCCESSFUL;
 }

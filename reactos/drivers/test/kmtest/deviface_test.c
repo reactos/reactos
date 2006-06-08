@@ -25,6 +25,9 @@
 #include <ddk/ntddk.h>
 #include "kmtest.h"
 
+//#define NDEBUG
+#include "debug.h"
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS STDCALL

@@ -25,6 +25,9 @@
 #include <ddk/ntddk.h>
 #include "kmtest.h"
 
+#define NDEBUG
+#include "debug.h"
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID FASTCALL NtoskrnlIoMdlTest()
