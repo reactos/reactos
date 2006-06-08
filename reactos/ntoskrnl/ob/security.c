@@ -117,9 +117,9 @@ ObGetObjectSecurity(IN PVOID Object,
     /* Check if the object uses default security */
     if (Type->TypeInfo.SecurityProcedure == SeDefaultObjectMethod)
     {
-        /* Reference the descriptor and return it */
-        ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
-        *SecurityDescriptor = Header->SecurityDescriptor;
+        /* Reference the descriptor */
+        *SecurityDescriptor =
+            ObpReferenceCachedSecurityDescriptor(Header->SecurityDescriptor);
 
         /* Tell the caller that we didn't have to allocate anything */
         *MemoryAllocated = FALSE;
@@ -134,10 +134,10 @@ ObGetObjectSecurity(IN PVOID Object,
                                               GROUP_SECURITY_INFORMATION |
                                               DACL_SECURITY_INFORMATION |
                                               SACL_SECURITY_INFORMATION,
-                                              NULL,
+                                              *SecurityDescriptor,
                                               &Length,
                                               &Header->SecurityDescriptor,
-                                              PagedPool,
+                                              Type->TypeInfo.PoolType,
                                               &Type->TypeInfo.GenericMapping);
     if (Status != STATUS_BUFFER_TOO_SMALL) return Status;
 
@@ -158,7 +158,7 @@ ObGetObjectSecurity(IN PVOID Object,
                                               *SecurityDescriptor,
                                               &Length,
                                               &Header->SecurityDescriptor,
-                                              PagedPool,
+                                              Type->TypeInfo.PoolType,
                                               &Type->TypeInfo.GenericMapping);
     if (!NT_SUCCESS(Status))
     {

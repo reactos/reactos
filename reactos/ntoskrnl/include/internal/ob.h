@@ -172,9 +172,11 @@ NTSTATUS
 NTAPI
 ObpRemoveSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
-VOID
+PSECURITY_DESCRIPTOR
 NTAPI
-ObpReferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+ObpReferenceCachedSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor
+);
 
 VOID
 NTAPI

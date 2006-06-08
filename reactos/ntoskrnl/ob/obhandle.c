@@ -1167,8 +1167,8 @@ ObInsertObject(IN PVOID Object,
     PVOID FoundObject = NULL;
     POBJECT_HEADER FoundHeader = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    PSECURITY_DESCRIPTOR NewSecurityDescriptor = NULL;
-    SECURITY_SUBJECT_CONTEXT SubjectContext;
+    PSECURITY_DESCRIPTOR DirectorySd = NULL;
+    BOOLEAN SdAllocated;
     OBP_LOOKUP_CONTEXT Context;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     ACCESS_STATE AccessState;
@@ -1252,48 +1252,58 @@ ObInsertObject(IN PVOID Object,
         }
     }
 
-    DPRINT("Security Assignment in progress\n");
-    SeCaptureSubjectContext(&SubjectContext);
-
-    /* Build the new security descriptor */
-    Status = SeAssignSecurity((FoundHeader != NULL) ? FoundHeader->SecurityDescriptor : NULL,
-        (ObjectCreateInfo != NULL) ? ObjectCreateInfo->SecurityDescriptor : NULL,
-        &NewSecurityDescriptor,
-        (Header->Type == ObDirectoryType),
-        &SubjectContext,
-        &Header->Type->TypeInfo.GenericMapping,
-        PagedPool);
-
-    if (NT_SUCCESS(Status))
+    /* Check if it's named or forces security */
+    if ((IsNamed) || (ObjectType->TypeInfo.SecurityRequired))
     {
-        DPRINT("NewSecurityDescriptor %p\n", NewSecurityDescriptor);
-
-        if (Header->Type->TypeInfo.SecurityProcedure != NULL)
+        /* Make sure it's inserted into an object directory */
+        if ((ObjectNameInfo) && (ObjectNameInfo->Directory))
         {
-            /* Call the security method */
-            Status = Header->Type->TypeInfo.SecurityProcedure(&Header->Body,
-                AssignSecurityDescriptor,
-                0,
-                NewSecurityDescriptor,
-                NULL,
-                NULL,
-                NonPagedPool,
-                NULL);
-        }
-        else
-        {
-            /* Assign the security descriptor to the object header */
-            Status = ObpAddSecurityDescriptor(NewSecurityDescriptor,
-                &Header->SecurityDescriptor);
-            DPRINT("Object security descriptor %p\n", Header->SecurityDescriptor);
+            /* Get the current descriptor */
+            ObGetObjectSecurity(ObjectNameInfo->Directory,
+                                &DirectorySd,
+                                &SdAllocated);
         }
 
-        /* Release the new security descriptor */
-        SeDeassignSecurity(&NewSecurityDescriptor);
+        /* Now assign it */
+        Status = ObAssignSecurity(PassedAccessState,
+                                  DirectorySd,
+                                  Object,
+                                  ObjectType);
+
+        /* Check if we captured one */
+        if (DirectorySd)
+        {
+            /* We did, release it */
+            DPRINT1("Here\n");
+            ObReleaseObjectSecurity(DirectorySd, SdAllocated);
+        }
+        else if (NT_SUCCESS(Status))
+        {
+            /* Other we didn't, but we were able to use the current SD */
+            SeReleaseSecurityDescriptor(ObjectCreateInfo->SecurityDescriptor,
+                                        ObjectCreateInfo->ProbeMode,
+                                        TRUE);
+
+            /* Clear the current one */
+            PassedAccessState->SecurityDescriptor =
+                ObjectCreateInfo->SecurityDescriptor = NULL;
+        }
     }
 
-    DPRINT("Security Complete\n");
-    SeReleaseSubjectContext(&SubjectContext);
+    /* Check if anything until now failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, dereference the object and delete the access state */
+        ObDereferenceObject(Object);
+        if (PassedAccessState == &AccessState)
+        {
+            /* We used a local one; delete it */
+            SeDeleteAccessState(PassedAccessState);
+        }
+
+        /* Return failure code */
+        return Status;
+    }
 
     /* HACKHACK: Because of ROS's incorrect startup, this can be called
     * without a valid Process until I finalize the startup patch,
@@ -1301,8 +1311,7 @@ ObInsertObject(IN PVOID Object,
     * a handle if Handle is NULL when the Registry Code calls it, because
     * the registry code totally bastardizes the Ob and needs to be fixed
     */
-    DPRINT("Creating handle\n");
-    if (Handle != NULL)
+    if (Handle)
     {
         /* Create the handle */
         Status = ObpCreateHandle(OpenReason,
@@ -1338,7 +1347,6 @@ ObInsertObject(IN PVOID Object,
     }
 
     /* Return failure code */
-    DPRINT("Status %x\n", Status);
     return Status;
 }
 
