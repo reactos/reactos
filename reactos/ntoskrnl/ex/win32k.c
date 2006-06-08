@@ -35,33 +35,11 @@ GENERIC_MAPPING ExpDesktopMapping =
     STANDARD_RIGHTS_REQUIRED
 };
 
-PKWIN32_OPENMETHOD_CALLOUT ExpWindowStationObjectOpen = NULL;
 PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse = NULL;
 PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete = NULL;
 PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete = NULL;
 
 /* FUNCTIONS ****************************************************************/
-
-NTSTATUS
-STDCALL
-ExpWinStaObjectOpen(OB_OPEN_REASON Reason,
-                    PEPROCESS Process,
-                    PVOID ObjectBody,
-                    ACCESS_MASK GrantedAccess,
-                    ULONG HandleCount)
-{
-    WIN32_OPENMETHOD_PARAMETERS Parameters;
-
-    /* Fill out the callback structure */
-    Parameters.OpenReason = Reason;
-    Parameters.Process = Process;
-    Parameters.Object = ObjectBody;
-    Parameters.GrantedAccess = GrantedAccess;
-    Parameters.HandleCount = HandleCount;
-
-    /* Call the Registered Callback */
-    return ExpWindowStationObjectOpen(&Parameters);
-}
 
 VOID
 STDCALL
@@ -134,7 +112,6 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.GenericMapping = ExpWindowStationMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.OpenProcedure = ExpWinStaObjectOpen;
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
     ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;
     ObCreateObjectType(&Name,
@@ -145,7 +122,6 @@ ExpWin32kInit(VOID)
     /* Create desktop object type */
     RtlInitUnicodeString(&Name, L"Desktop");
     ObjectTypeInitializer.GenericMapping = ExpDesktopMapping;
-    ObjectTypeInitializer.OpenProcedure = NULL;
     ObjectTypeInitializer.DeleteProcedure = ExpDesktopDelete;
     ObjectTypeInitializer.ParseProcedure = NULL;
     ObCreateObjectType(&Name,

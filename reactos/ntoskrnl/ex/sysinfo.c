@@ -839,11 +839,6 @@ QSI_DEF(SystemNonPagedPoolInformation)
 }
 
 
-VOID
-ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
-                               PEPROCESS Process,
-                               int Count);
-
 /* Class 16 - Handle Information */
 QSI_DEF(SystemHandleInformation)
 {
@@ -910,7 +905,7 @@ QSI_DEF(SystemHandleInformation)
 
             for (Count = 0; HandleCount > 0 ; HandleCount--)
                {
-                 ObpGetNextHandleByProcessCount( &Shi->Handles[i], pr, Count);
+                 Shi->Handles[i].UniqueProcessId = (ULONG)pr->UniqueProcessId;
                  Count++;
                  i++;
                }

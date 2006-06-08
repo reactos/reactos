@@ -18,7 +18,6 @@
 
 static PKWIN32_PROCESS_CALLOUT PspWin32ProcessCallback = NULL;
 static PKWIN32_THREAD_CALLOUT PspWin32ThreadCallback = NULL;
-extern PKWIN32_OPENMETHOD_CALLOUT ExpWindowStationObjectOpen;
 extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
@@ -56,7 +55,6 @@ PsEstablishWin32Callouts(PWIN32_CALLOUTS_FPNS CalloutData)
 {
     PspWin32ProcessCallback = CalloutData->ProcessCallout;
     PspWin32ThreadCallback = CalloutData->ThreadCallout;
-    ExpWindowStationObjectOpen = CalloutData->WindowStationOpenProcedure;
     ExpWindowStationObjectParse = CalloutData->WindowStationParseProcedure;
     ExpWindowStationObjectDelete = CalloutData->WindowStationDeleteProcedure;
     ExpDesktopObjectDelete = CalloutData->DesktopDeleteProcedure;

@@ -359,7 +359,7 @@ DriverEntry (
 {
   NTSTATUS Status;
   BOOLEAN Result;
-  WIN32_CALLOUTS_FPNS CalloutData;
+  WIN32_CALLOUTS_FPNS CalloutData = {0};
   PVOID GlobalUserHeapBase = NULL;
 
   /*
@@ -380,7 +380,6 @@ DriverEntry (
     /*
      * Register Object Manager Callbacks
      */
-    CalloutData.WindowStationOpenProcedure = IntWinStaObjectOpen;
     CalloutData.WindowStationParseProcedure = IntWinStaObjectParse;
     CalloutData.WindowStationDeleteProcedure = IntWinStaObjectDelete;
     CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;

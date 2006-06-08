@@ -94,32 +94,6 @@ CleanupWindowStationImpl(VOID)
 
 /* OBJECT CALLBACKS  **********************************************************/
 
-NTSTATUS
-STDCALL
-IntWinStaObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters)
-{
-    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
-    OB_OPEN_REASON Reason = Parameters->OpenReason;
-    NTSTATUS Status;
-
-   if (Reason == ObCreateHandle)
-   {
-      DPRINT("Creating window station (0x%X)\n", WinSta);
-
-      KeInitializeSpinLock(&WinSta->Lock);
-
-      InitializeListHead(&WinSta->DesktopListHead);
-
-      WinSta->AtomTable = NULL;
-      Status = RtlCreateAtomTable(37, &WinSta->AtomTable);
-      WinSta->SystemMenuTemplate = (HANDLE)0;
-
-      DPRINT("Window station successfully created.\n");
-   }
-
-   return STATUS_SUCCESS;
-}
-
 VOID STDCALL
 IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
@@ -484,6 +458,14 @@ NtUserCreateWindowStation(
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
    }
+
+   KeInitializeSpinLock(&WindowStationObject->Lock);
+
+   InitializeListHead(&WindowStationObject->DesktopListHead);
+
+   WindowStationObject->AtomTable = NULL;
+   Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
+   WindowStationObject->SystemMenuTemplate = (HANDLE)0;
 
    WindowStationObject->Name = WindowStationName;
 

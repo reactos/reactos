@@ -316,14 +316,12 @@ ObpIncrementHandleCount(IN PVOID Object,
     /* Check if we have an open procedure */
     if (ObjectType->TypeInfo.OpenProcedure)
     {
-#if 0
         /* Call it */
         ObjectType->TypeInfo.OpenProcedure(OpenReason,
                                            Process,
                                            Object,
                                            AccessState->PreviouslyGrantedAccess,
                                            ProcessHandleCount);
-#endif
     }
 
     /* Increase total number of handles */
@@ -1457,31 +1455,6 @@ ObInsertObject(IN PVOID Object,
 
             /* Return failure code */
             return Status;
-        }
-    }
-    else
-    {
-        /*
-         * OK, if we got here then that means we don't have a name,
-         * so RemainingPath.Buffer/RemainingPath would've been NULL
-         * under the old implemetantation, so just use NULL.
-         * If remaining path wouldn't have been NULL, then we would've
-         * called ObFindObject which already has this code.
-         * We basically kill 3-4 hacks and add 2 new ones.
-         */
-        if (Header->Type == IoFileObjectType)
-        {
-            DPRINT("About to call Open Routine\n");
-            if (Header->Type == IoFileObjectType)
-            {
-                /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
-                DPRINT("Calling IopCreateFile: %x\n", FoundObject);
-                Status = IopCreateFile(&Header->Body,
-                                       FoundObject,
-                                       NULL,
-                                       NULL);
-                DPRINT("Called IopCreateFile: %x\n", Status);
-            }
         }
     }
 

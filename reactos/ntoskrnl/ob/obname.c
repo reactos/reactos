@@ -350,48 +350,33 @@ Next:
             ObjectAttached = TRUE;
         }
 
-        if ((Header->Type == IoFileObjectType) ||
-            (Header->Type->TypeInfo.OpenProcedure != NULL))
-        {    
-            DPRINT("About to call Open Routine\n");
-            if (Header->Type == IoFileObjectType)
-            {
-                /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
-                DPRINT("Calling IopCreateFile: %x\n", FoundObject);
-                Status = IopCreateFile(&Header->Body,
-                    FoundObject,
-                    RemainingPath->Buffer,            
-                    NULL);
-                DPRINT("Called IopCreateFile: %x\n", Status);
+        if (Header->Type == IoFileObjectType)
+        {
+            /* TEMPORARY HACK. DO NOT TOUCH -- Alex */
+            DPRINT("Calling IopCreateFile: %p %p %wZ\n", &Header->Body, FoundObject, RemainingPath);
+            Status = IopCreateFile(&Header->Body,
+                FoundObject,
+                RemainingPath->Buffer,            
+                NULL);
+            DPRINT("Called IopCreateFile: %x\n", Status);
+        }
 
-            }
-            else if (Header->Type->TypeInfo.OpenProcedure != NULL)
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Create Failed\n");
+            if (ObjectAttached == TRUE)
             {
-                DPRINT("Calling %x\n", Header->Type->TypeInfo.OpenProcedure);
-                Status = Header->Type->TypeInfo.OpenProcedure(ObCreateHandle,
-                    NULL,
-                    &Header->Body,
-                    0,
-                    0);
+                ObpDeleteEntryDirectory(Context);
             }
-
-            if (!NT_SUCCESS(Status))
+            if (FoundObject)
             {
-                DPRINT("Create Failed\n");
-                if (ObjectAttached == TRUE)
-                {
-                    ObpDeleteEntryDirectory(Context);
-                }
-                if (FoundObject)
-                {
-                    ObDereferenceObject(FoundObject);
-                }
-                RtlFreeUnicodeString(RemainingPath);
-                return Status;
+                ObDereferenceObject(FoundObject);
             }
+            RtlFreeUnicodeString(RemainingPath);
+            return Status;
         }
         RtlFreeUnicodeString(RemainingPath);
-                    *ReturnedObject = Insert;
+        *ReturnedObject = Insert;
     }
     else
     {
