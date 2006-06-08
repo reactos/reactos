@@ -1152,8 +1152,8 @@ ObMakeTemporaryObject(IN PVOID ObjectBody)
 /*
 * @implemented
 */
-NTSTATUS 
-STDCALL
+NTSTATUS
+NTAPI
 ObInsertObject(IN PVOID Object,
                IN PACCESS_STATE PassedAccessState OPTIONAL,
                IN ACCESS_MASK DesiredAccess,
@@ -1163,6 +1163,7 @@ ObInsertObject(IN PVOID Object,
 {
     POBJECT_CREATE_INFORMATION ObjectCreateInfo;
     POBJECT_HEADER Header;
+    POBJECT_TYPE ObjectType;
     PVOID FoundObject = NULL;
     POBJECT_HEADER FoundHeader = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1172,27 +1173,51 @@ ObInsertObject(IN PVOID Object,
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     ACCESS_STATE AccessState;
     AUX_DATA AuxData;
+    BOOLEAN IsNamed = FALSE;
+    OB_OPEN_REASON OpenReason = ObCreateHandle;
     PAGED_CODE();
 
     /* Get the Header and Create Info */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectCreateInfo = Header->ObjectCreateInfo;
     ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(Header);
+    ObjectType = Header->Type;
 
-    /* First try to find the Object */
-    if (ObjectNameInfo && ObjectNameInfo->Name.Buffer)
+    /* Check if we didn't get an access state */
+    if (!PassedAccessState)
     {
+        /* Use our built-in access state */
+        PassedAccessState = &AccessState;
+        Status = SeCreateAccessState(&AccessState,
+                                     &AuxData,
+                                     DesiredAccess,
+                                     &ObjectType->TypeInfo.GenericMapping);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            ObDereferenceObject(Object);
+            return Status;
+        }
+    }
+
+    /* Check if this is an named object */
+    if ((ObjectNameInfo) && (ObjectNameInfo->Name.Buffer)) IsNamed = TRUE;
+
+    /* Check if the object is named */
+    if (IsNamed)
+    {
+        /* Look it up */
         Status = ObFindObject(ObjectCreateInfo->RootDirectory,
-            &ObjectNameInfo->Name,
-            ObjectCreateInfo->Attributes,
-            KernelMode,
-            &FoundObject,
-            Header->Type,
-            &Context,
-            NULL,
-            ObjectCreateInfo->SecurityQos,
-            NULL,
-            Object);
+                              &ObjectNameInfo->Name,
+                              ObjectCreateInfo->Attributes,
+                              KernelMode,
+                              &FoundObject,
+                              ObjectType,
+                              &Context,
+                              PassedAccessState,
+                              ObjectCreateInfo->SecurityQos,
+                              ObjectCreateInfo->ParseContext,
+                              Object);
         if (!NT_SUCCESS(Status)) return Status;
 
         if (FoundObject)
@@ -1211,8 +1236,7 @@ ObInsertObject(IN PVOID Object,
          * called ObFindObject which already has this code.
          * We basically kill 3-4 hacks and add 2 new ones.
          */
-        if ((Header->Type == IoFileObjectType) ||
-            (Header->Type->TypeInfo.OpenProcedure != NULL))
+        if (Header->Type == IoFileObjectType)
         {
             DPRINT("About to call Open Routine\n");
             if (Header->Type == IoFileObjectType)
@@ -1224,22 +1248,6 @@ ObInsertObject(IN PVOID Object,
                                        NULL,
                                        NULL);
                 DPRINT("Called IopCreateFile: %x\n", Status);
-            }
-            else if (Header->Type->TypeInfo.OpenProcedure)
-            {
-                DPRINT("Calling %x\n", Header->Type->TypeInfo.OpenProcedure);
-                Status = Header->Type->TypeInfo.OpenProcedure(ObCreateHandle,
-                                                              NULL,
-                                                              &Header->Body,
-                                                              0,
-                                                              0);
-            }
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Create Failed\n");
-                if (FoundObject) ObDereferenceObject(FoundObject);
-                return Status;
             }
         }
     }
@@ -1287,24 +1295,6 @@ ObInsertObject(IN PVOID Object,
     DPRINT("Security Complete\n");
     SeReleaseSubjectContext(&SubjectContext);
 
-    /* Check if we didn't get an access state */
-    if (!PassedAccessState)
-    {
-        /* Use our built-in access state */
-        PassedAccessState = &AccessState;
-        Status = SeCreateAccessState(&AccessState,
-                                     &AuxData,
-                                     DesiredAccess,
-                                     &Header->Type->TypeInfo.GenericMapping);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Fail */
-            ObDereferenceObject(Object);
-            return Status;
-        }
-    }
-
-    /* Create the Handle */
     /* HACKHACK: Because of ROS's incorrect startup, this can be called
     * without a valid Process until I finalize the startup patch,
     * so don't create a handle if this is the case. We also don't create
@@ -1314,7 +1304,8 @@ ObInsertObject(IN PVOID Object,
     DPRINT("Creating handle\n");
     if (Handle != NULL)
     {
-        Status = ObpCreateHandle(ObCreateHandle,
+        /* Create the handle */
+        Status = ObpCreateHandle(OpenReason,
                                  &Header->Body,
                                  NULL,
                                  PassedAccessState,
@@ -1329,6 +1320,24 @@ ObInsertObject(IN PVOID Object,
     Header->ObjectCreateInfo = NULL;
     ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
 
+    /* Check if creating the handle failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* If the object had a name, backout everything */
+        if (IsNamed) ObpDeleteNameCheck(Object);
+    }
+
+    /* Remove the extra keep-alive reference */
+    //ObDereferenceObject(Object); FIXME: Will require massive changes
+
+    /* Check if we created our own access state */
+    if (PassedAccessState == &AccessState)
+    {
+        /* We used a local one; delete it */
+        SeDeleteAccessState(PassedAccessState);
+    }
+
+    /* Return failure code */
     DPRINT("Status %x\n", Status);
     return Status;
 }
