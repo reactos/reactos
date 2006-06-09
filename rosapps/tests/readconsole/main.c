@@ -1,5 +1,6 @@
-#include "stdio.h"
-#include "Windows.h"
+#include <stdio.h>
+#include <tchar.h>
+#include <windows.h>
 
 int main()
 {
@@ -20,10 +21,10 @@ int main()
     //
     // We print out this char as an int to show that infact a backspace does count as input
     //
-    printf("You printed %c :: ", Buffer);
-    printf("With a value %d :: ", Buffer);
-    printf("Number of chars recieved %lu :: ", Count);
-    printf("Char equal to backspace %d \n", (Buffer == '\b'));
+    _tprintf(TEXT("You printed %c :: "), Buffer);
+    _tprintf(TEXT("With a value %d :: "), Buffer);
+    _tprintf(TEXT("Number of chars recieved %lu :: "), Count);
+    _tprintf(TEXT("Char equal to backspace %d \n"), (Buffer == TEXT('\b')));
 
     //
     // :)
