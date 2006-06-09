@@ -65,6 +65,44 @@ typedef struct _IO_COMPLETION_PACKET
     IO_STATUS_BLOCK IoStatus;
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
 
+typedef struct _DUMMY_FILE_OBJECT
+{
+    OBJECT_HEADER ObjectHeader;
+    CHAR FileObjectBody[sizeof(FILE_OBJECT)];
+} DUMMY_FILE_OBJECT, *PDUMMY_FILE_OBJECT;
+
+typedef struct _OPEN_PACKET
+{
+    CSHORT Type;
+    CSHORT Size;
+    PFILE_OBJECT FileObject;
+    NTSTATUS FinalStatus;
+    ULONG_PTR Information;
+    ULONG ParseCheck;
+    PFILE_OBJECT RelatedFileObject;
+    OBJECT_ATTRIBUTES OriginalAttributes;
+    LARGE_INTEGER AllocationSize;
+    ULONG CreateOptions;
+    USHORT FileAttributes;
+    USHORT ShareAccess;
+    PVOID EaBuffer;
+    ULONG EaLength;
+    ULONG Options;
+    ULONG Disposition;
+    PFILE_BASIC_INFORMATION BasicInformation;
+    PFILE_NETWORK_OPEN_INFORMATION NetworkInformation;
+    CREATE_FILE_TYPE CreateFileType;
+    PVOID MailslotOrPipeParameters;
+    BOOLEAN Override;
+    BOOLEAN QueryOnly;
+    BOOLEAN DeleteOnly;
+    BOOLEAN FullAttributes;
+    PDUMMY_FILE_OBJECT DummyFileObject;
+    ULONG InternalFlags;
+    //PIO_DRIVER_CREATE_CONTEXT DriverCreateContext; Vista only, needs ROS DDK Update
+} OPEN_PACKET, *POPEN_PACKET;
+
+
 /* List of Bus Type GUIDs */
 typedef struct _IO_BUS_TYPE_GUID_LIST
 {

@@ -288,6 +288,7 @@ Next:
         }
         ObDereferenceObject(CurrentObject);
         CurrentObject = NextObject;
+        if (!current) break;
     }
 
     if (current)

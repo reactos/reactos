@@ -125,120 +125,52 @@ IopCreateFile(PVOID ObjectBody,
               PWSTR RemainingPath,
               POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
-  PDEVICE_OBJECT DeviceObject;
-  PFILE_OBJECT FileObject = (PFILE_OBJECT) ObjectBody;
-  POBJECT_TYPE ParentObjectType;
-  NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
+    PFILE_OBJECT FileObject = (PFILE_OBJECT) ObjectBody;
+    POBJECT_TYPE ParentObjectType;
+    NTSTATUS Status;
 
-  DPRINT("IopCreateFile(ObjectBody 0x%p, Parent 0x%p, RemainingPath %S)\n",
-         ObjectBody,
-         Parent,
-         RemainingPath);
+    DPRINT("IopCreateFile(ObjectBody 0x%p, Parent 0x%p, RemainingPath %S)\n",
+            ObjectBody,
+            Parent,
+            RemainingPath);
 
-  if (NULL == Parent)
+    ParentObjectType = OBJECT_TO_OBJECT_HEADER(Parent)->Type;
+
+    if (ParentObjectType == IoDeviceObjectType)
     {
-      /* This is probably an attempt to create a meta fileobject (eg. for FAT)
-         for the cache manager, so return STATUS_SUCCESS */
-      DPRINT("Parent object was NULL\n");
-      return(STATUS_SUCCESS);
-    }
+        /* Parent is a devce object */
+        DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)Parent);
+        DPRINT1("DeviceObject 0x%p\n", DeviceObject);
 
-  ParentObjectType = OBJECT_TO_OBJECT_HEADER(Parent)->Type;
-
-  if (ParentObjectType != IoDeviceObjectType &&
-      ParentObjectType != IoFileObjectType)
-    {
-      DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
-             &OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(Parent))->Name,
-             OBJECT_TO_OBJECT_HEADER(Parent)->Type->Name.Buffer,
-             RemainingPath);
-      return(STATUS_UNSUCCESSFUL);
-    }
-
-  Status = ObReferenceObjectByPointer(Parent,
-                                      STANDARD_RIGHTS_REQUIRED,
-                                      ParentObjectType,
-                                      UserMode);
-  if (!NT_SUCCESS(Status))
-    {
-      CPRINT("Failed to reference parent object 0x%p\n", Parent);
-      return(Status);
-    }
-
-  if (ParentObjectType == IoDeviceObjectType)
-    {
-      /* Parent is a devce object */
-      DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)Parent);
-      DPRINT("DeviceObject 0x%p\n", DeviceObject);
-
-      if (RemainingPath == NULL)
+        if (DeviceObject->Vpb)
         {
-          FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-          FileObject->FileName.Buffer = 0;
-          FileObject->FileName.Length = FileObject->FileName.MaximumLength = 0;
-        }
-      else
-        {
-          if ((DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
-              && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
-              && (DeviceObject->DeviceType != FILE_DEVICE_CD_ROM)
-              && (DeviceObject->DeviceType != FILE_DEVICE_TAPE)
-              && (DeviceObject->DeviceType != FILE_DEVICE_NETWORK)
-              && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
-              && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
+            if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
             {
-              CPRINT("Device was wrong type\n");
-              return(STATUS_UNSUCCESSFUL);
+                DPRINT1("Mount the logical volume\n");
+                Status = IoMountVolume(DeviceObject, FALSE);
+                DPRINT1("Status %x\n", Status);
             }
-
-          if (DeviceObject->DeviceType != FILE_DEVICE_NETWORK
-              && (DeviceObject->DeviceType != FILE_DEVICE_NAMED_PIPE)
-              && (DeviceObject->DeviceType != FILE_DEVICE_MAILSLOT))
-            {
-              if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-                {
-                  DPRINT("Mount the logical volume\n");
-                  Status = IoMountVolume(DeviceObject, FALSE);
-                  DPRINT("Status %x\n", Status);
-                  if (!NT_SUCCESS(Status))
-                    {
-                      CPRINT("Failed to mount logical volume (Status %x)\n", Status);
-                      return(Status);
-                    }
-                }
-              DeviceObject = DeviceObject->Vpb->DeviceObject;
-              DPRINT("FsDeviceObject %lx\n", DeviceObject);
-            }
-          RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
+            DeviceObject = DeviceObject->Vpb->DeviceObject;
         }
+
+        DPRINT("FsDeviceObject %lx\n", DeviceObject);
+        RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
     }
-  else
+    else
     {
-      /* Parent is a file object */
-      if (RemainingPath == NULL)
-        {
-          CPRINT("Device is unnamed\n");
-          return STATUS_UNSUCCESSFUL;
-        }
+        DeviceObject = ((PFILE_OBJECT)Parent)->DeviceObject;
+        DPRINT("DeviceObject 0x%p\n", DeviceObject);
 
-      DeviceObject = ((PFILE_OBJECT)Parent)->DeviceObject;
-      DPRINT("DeviceObject 0x%p\n", DeviceObject);
+        FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
 
-      FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
-
-      RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
+        RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
     }
 
-  DPRINT("FileObject->FileName %wZ\n",
-         &FileObject->FileName);
-  FileObject->DeviceObject = DeviceObject;
-  DPRINT("FileObject 0x%p DeviceObject 0x%p\n",
-         FileObject,
-         DeviceObject);
-  FileObject->Vpb = DeviceObject->Vpb;
-  FileObject->Type = IO_TYPE_FILE;
-
-  return(STATUS_SUCCESS);
+    FileObject->DeviceObject = DeviceObject;
+    FileObject->Vpb = DeviceObject->Vpb;
+    FileObject->Type = IO_TYPE_FILE;
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -1023,6 +955,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
       OBJECT_ATTRIBUTES tmpObjectAttributes;
       UNICODE_STRING ObjectName;
 
+      DPRINT1("FileExisted: %wZ %lx\n", ObjectAttributes->ObjectName, LocalHandle);
       Status = ObReferenceObjectByHandle(LocalHandle,
                                          DesiredAccess,
                                          NULL,
