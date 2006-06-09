@@ -130,19 +130,11 @@ IopCreateFile(PVOID ObjectBody,
     POBJECT_TYPE ParentObjectType;
     NTSTATUS Status;
 
-    DPRINT("IopCreateFile(ObjectBody 0x%p, Parent 0x%p, RemainingPath %S)\n",
-            ObjectBody,
-            Parent,
-            RemainingPath);
-
     ParentObjectType = OBJECT_TO_OBJECT_HEADER(Parent)->Type;
-
     if (ParentObjectType == IoDeviceObjectType)
     {
-        /* Parent is a devce object */
+        /* Parent is a device object */
         DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)Parent);
-        DPRINT1("DeviceObject 0x%p\n", DeviceObject);
-
         if (DeviceObject->Vpb)
         {
             if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
@@ -153,23 +145,30 @@ IopCreateFile(PVOID ObjectBody,
             }
             DeviceObject = DeviceObject->Vpb->DeviceObject;
         }
-
-        DPRINT("FsDeviceObject %lx\n", DeviceObject);
-        RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
     }
     else
     {
         DeviceObject = ((PFILE_OBJECT)Parent)->DeviceObject;
-        DPRINT("DeviceObject 0x%p\n", DeviceObject);
-
         FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
-
-        RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
     }
 
+#if 0
+    DbgPrint("--------------------- Creating File ---------------------\n");
+    DbgPrint("Parent ObjectType: %wZ\n"
+             "Device Object:     %p\n"
+             "File Object:       %p\n"
+             "Device Name:       %wZ\n"
+             "Remaining Path:    %S\n",
+             &ParentObjectType->Name,
+             DeviceObject,
+             FileObject,
+             &DeviceObject->DriverObject->DriverName,
+             RemainingPath);
+    DbgPrint("--------------------- Created File ----------------------\n");
+#endif
+
+    RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
     FileObject->DeviceObject = DeviceObject;
-    FileObject->Vpb = DeviceObject->Vpb;
-    FileObject->Type = IO_TYPE_FILE;
     return STATUS_SUCCESS;
 }
 
@@ -949,107 +948,72 @@ IoCreateFile(OUT PHANDLE  FileHandle,
                                NULL,
                                &LocalHandle);
 
-   if (NT_SUCCESS(Status))
-   {
-      OBJECT_CREATE_INFORMATION ObjectCreateInfo;
-      OBJECT_ATTRIBUTES tmpObjectAttributes;
-      UNICODE_STRING ObjectName;
+   //
+   // start stuff that should be in IopParseDevice
+   //
+       if (NT_SUCCESS(Status))
+       {
+          Status = ObReferenceObjectByHandle(LocalHandle,
+                                             DesiredAccess,
+                                             NULL,
+                                             KernelMode,
+                                             (PVOID*)&DeviceObject,
+                                             NULL);
+          DPRINT("FileExisted: %wZ %lx %p\n", ObjectAttributes->ObjectName, LocalHandle, DeviceObject);
+          ZwClose(LocalHandle);
 
-      DPRINT1("FileExisted: %wZ %lx\n", ObjectAttributes->ObjectName, LocalHandle);
-      Status = ObReferenceObjectByHandle(LocalHandle,
-                                         DesiredAccess,
-                                         NULL,
-                                         KernelMode,
-                                         (PVOID*)&DeviceObject,
-                                         NULL);
-      ZwClose(LocalHandle);
-      if (!NT_SUCCESS(Status))
-      {
-         return Status;
-      }
-      if (OBJECT_TO_OBJECT_HEADER(DeviceObject)->Type != IoDeviceObjectType)
-      {
-         ObDereferenceObject (DeviceObject);
-         return STATUS_OBJECT_NAME_COLLISION;
-      }
+          /* FIXME: wt... */
+          Status = ObCreateObject(KernelMode,
+                                  IoFileObjectType,
+                                  NULL,
+                                  KernelMode,
+                                  NULL,
+                                  sizeof(FILE_OBJECT),
+                                  0,
+                                  0,
+                                  (PVOID*)&FileObject);
 
-      Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                          AccessMode,
-                                          FALSE,
-                                          &ObjectCreateInfo,
-                                          &ObjectName);
-      if (!NT_SUCCESS(Status))
-      {
-         ObDereferenceObject (DeviceObject);
-         return Status;
-      }
-         
-      InitializeObjectAttributes(&tmpObjectAttributes,
-                                 NULL,
-                                 ObjectCreateInfo.Attributes & OBJ_INHERIT,
-                                 0,
-                                 NULL);
-      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-      if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+          /* Set File Object Data */
+          FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject);
 
-      
-      /* FIXME: wt... */
-      Status = ObCreateObject(KernelMode,
-                              IoFileObjectType,
-                              &tmpObjectAttributes,
-                              KernelMode,
-                              NULL,
-                              sizeof(FILE_OBJECT),
-                              0,
-                              0,
-                              (PVOID*)&FileObject);
+          /* HACK */
+          FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+          DPRINT("%p\n", FileObject->DeviceObject);
+          ObDereferenceObject (DeviceObject);
+       }
 
-   
-      /* Set File Object Data */
-      FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject); 
-      FileObject->Vpb = FileObject->DeviceObject->Vpb;
+       if (FileObject == NULL)
+       {
+          Status = ObCreateObject(AccessMode,
+                                  IoFileObjectType,
+                                  ObjectAttributes,
+                                  AccessMode,
+                                  NULL,
+                                  sizeof(FILE_OBJECT),
+                                  0,
+                                  0,
+                                  (PVOID*)&FileObject);
+       }
 
-      /* HACK */
-      FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-      DPRINT("%wZ\n", ObjectAttributes->ObjectName);
+       RtlMapGenericMask(&DesiredAccess,
+                         &OBJECT_TO_OBJECT_HEADER(FileObject)->Type->TypeInfo.GenericMapping);
 
-      ObDereferenceObject (DeviceObject);
-   }
-
-
-   if (FileObject == NULL)
-   {
-      Status = ObCreateObject(AccessMode,
-                              IoFileObjectType,
-                              ObjectAttributes,
-                              AccessMode,
-                              NULL,
-                              sizeof(FILE_OBJECT),
-                              0,
-                              0,
-                              (PVOID*)&FileObject);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("ObCreateObject() failed! (Status %lx)\n", Status);
-         return Status;
-      }
-   }
-   RtlMapGenericMask(&DesiredAccess,
-                     &OBJECT_TO_OBJECT_HEADER(FileObject)->Type->TypeInfo.GenericMapping);
-
-   Status = ObInsertObject ((PVOID)FileObject,
-                            NULL,
-                            DesiredAccess,
-                            0,
-                            NULL,
-                            &LocalHandle);
-   if (!NT_SUCCESS(Status))
-     {
-       DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
-       ObMakeTemporaryObject(FileObject);
-       ObDereferenceObject (FileObject);
-       return Status;
-     }
+       Status = ObInsertObject ((PVOID)FileObject,
+                                NULL,
+                                DesiredAccess,
+                                0,
+                                NULL,
+                                &LocalHandle);
+       if (!NT_SUCCESS(Status))
+         {
+           DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
+           ObMakeTemporaryObject(FileObject);
+           ObDereferenceObject (FileObject);
+           return Status;
+         }
+   //
+   // stop stuff that should be in IopParseDevice
+   //
 
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {

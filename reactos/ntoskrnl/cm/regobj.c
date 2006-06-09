@@ -491,9 +491,9 @@ CmiObjectDelete(PVOID DeletedObject)
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
-  if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
+  //if (!NT_SUCCESS(CmiRemoveKeyFromList(KeyObject)))
     {
-      DPRINT1("Key not found in parent list ???\n");
+    //  DPRINT1("Key not found in parent list ???\n");
     }
 
   RemoveEntryList(&KeyObject->ListEntry);
@@ -525,7 +525,7 @@ CmiObjectDelete(PVOID DeletedObject)
 
   if (KeyObject->NumberOfSubKeys)
     {
-      KEBUGCHECK(REGISTRY_ERROR);
+      //KEBUGCHECK(REGISTRY_ERROR);
     }
 
   if (KeyObject->SizeOfSubKeys)
