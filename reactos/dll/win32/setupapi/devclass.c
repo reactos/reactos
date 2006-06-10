@@ -599,13 +599,24 @@ SetupDiClassNameFromGuidExW(
     IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
-    HKEY hKey;
-    DWORD dwLength;
+    HKEY hKey = INVALID_HANDLE_VALUE;
+    DWORD dwLength, dwRegType;
     LONG rc;
     BOOL ret = FALSE;
 
     TRACE("%s %p %lu %p %s %p\n", debugstr_guid(ClassGuid), ClassName,
         ClassNameSize, RequiredSize, debugstr_w(MachineName), Reserved);
+
+    if (!ClassGuid)
+    {
+        SetLastError(ERROR_INVALID_CLASS);
+        goto cleanup;
+    }
+    else if (!ClassName && ClassNameSize > 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
 
     hKey = SetupDiOpenClassRegKeyExW(ClassGuid,
                                      KEY_QUERY_VALUE,
@@ -615,38 +626,39 @@ SetupDiClassNameFromGuidExW(
     if (hKey == INVALID_HANDLE_VALUE)
         goto cleanup;
 
-    if (RequiredSize != NULL)
-    {
+    if (ClassNameSize < sizeof(UNICODE_NULL) || !ClassName)
         dwLength = 0;
-        rc = RegQueryValueExW(hKey,
-                              Class,
-                              NULL,
-                              NULL,
-                              NULL,
-                              &dwLength);
-        if (rc != ERROR_SUCCESS)
-        {
-            SetLastError(rc);
-            goto cleanup;
-        }
+    else
+        dwLength = ClassNameSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
 
-        *RequiredSize = dwLength / sizeof(WCHAR);
-    }
-
-    dwLength = ClassNameSize * sizeof(WCHAR);
     rc = RegQueryValueExW(hKey,
                           Class,
                           NULL,
-                          NULL,
+                          &dwRegType,
                           (LPBYTE)ClassName,
                           &dwLength);
-    if (rc != ERROR_SUCCESS)
+    if (rc != ERROR_MORE_DATA && rc != ERROR_SUCCESS)
     {
         SetLastError(rc);
         goto cleanup;
     }
+    else if (dwRegType != REG_SZ)
+    {
+        SetLastError(ERROR_GEN_FAILURE);
+        goto cleanup;
+    }
 
-    ret = TRUE;
+    if (RequiredSize)
+        *RequiredSize = dwLength / sizeof(WCHAR) + 1;
+
+    if (ClassNameSize * sizeof(WCHAR) >= dwLength + sizeof(UNICODE_STRING))
+    {
+        if (ClassNameSize > sizeof(UNICODE_NULL))
+            ClassName[ClassNameSize / sizeof(WCHAR)] = UNICODE_NULL;
+        ret = TRUE;
+    }
+    else
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
 
 cleanup:
     if (hKey != INVALID_HANDLE_VALUE)
@@ -755,11 +767,23 @@ SetupDiGetClassDescriptionExW(
     IN PVOID Reserved)
 {
     HKEY hKey = INVALID_HANDLE_VALUE;
-    DWORD dwLength;
+    DWORD dwLength, dwRegType;
+    LONG rc;
     BOOL ret = FALSE;
 
     TRACE("%s %p %lu %p %s %p\n", debugstr_guid(ClassGuid), ClassDescription,
         ClassDescriptionSize, RequiredSize, debugstr_w(MachineName), Reserved);
+
+    if (!ClassGuid)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
+    else if (!ClassDescription && ClassDescriptionSize > 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
 
     hKey = SetupDiOpenClassRegKeyExW(ClassGuid,
                                      KEY_QUERY_VALUE,
@@ -772,34 +796,39 @@ SetupDiGetClassDescriptionExW(
         goto cleanup;
     }
 
-    if (RequiredSize != NULL)
-    {
+    if (ClassDescriptionSize < sizeof(UNICODE_NULL) || !ClassDescription)
         dwLength = 0;
-        if (RegQueryValueExW(hKey,
-                             NULL,
-                             NULL,
-                             NULL,
-                             NULL,
-                             &dwLength) != ERROR_SUCCESS)
-        {
-            goto cleanup;
-        }
+    else
+        dwLength = ClassDescriptionSize * sizeof(WCHAR) - sizeof(UNICODE_NULL);
 
-        *RequiredSize = dwLength / sizeof(WCHAR);
-    }
-
-    dwLength = ClassDescriptionSize * sizeof(WCHAR);
-    if (RegQueryValueExW(hKey,
-                         NULL,
-                         NULL,
-                         NULL,
-                         (LPBYTE)ClassDescription,
-                         &dwLength) != ERROR_SUCCESS)
+    rc = RegQueryValueExW(hKey,
+                          NULL,
+                          NULL,
+                          &dwRegType,
+                          (LPBYTE)ClassDescription,
+                          &dwLength);
+    if (rc != ERROR_MORE_DATA && rc != ERROR_SUCCESS)
     {
+        SetLastError(rc);
+        goto cleanup;
+    }
+    else if (dwRegType != REG_SZ)
+    {
+        SetLastError(ERROR_GEN_FAILURE);
         goto cleanup;
     }
 
-    ret = TRUE;
+    if (RequiredSize)
+        *RequiredSize = dwLength / sizeof(WCHAR) + 1;
+
+    if (ClassDescriptionSize * sizeof(WCHAR) >= dwLength + sizeof(UNICODE_STRING))
+    {
+        if (ClassDescriptionSize > sizeof(UNICODE_NULL))
+            ClassDescription[ClassDescriptionSize / sizeof(WCHAR)] = UNICODE_NULL;
+        ret = TRUE;
+    }
+    else
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
 
 cleanup:
     if (hKey != INVALID_HANDLE_VALUE)
@@ -1877,7 +1906,7 @@ SetupDiOpenClassRegKeyExW(
     rc = RegOpenKeyExW(HKLM,
                       lpKeyName,
                       0,
-                      ClassGuid ? 0 : samDesired,
+                      ClassGuid ? KEY_ENUMERATE_SUB_KEYS : samDesired,
                       &hClassesKey);
     if (MachineName != NULL)
         RegCloseKey(HKLM);
