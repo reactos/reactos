@@ -836,7 +836,7 @@ NtWriteFile@36
 ObAssignSecurity@16
 ;ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess@20
-;ObCloseHandle@4
+ObCloseHandle@8
 ObCreateObject@36
 ObCreateObjectType@16
 ObDereferenceObject@4

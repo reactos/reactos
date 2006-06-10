@@ -160,9 +160,8 @@ ExfWaitForRundownProtectionRelease(
                                    EX_HANDLE_ENTRY_AUDITONCLOSE)
 
 typedef VOID (STDCALL PEX_SWEEP_HANDLE_CALLBACK)(
-    PHANDLE_TABLE HandleTable, 
-    PVOID Object, 
-    ULONG GrantedAccess, 
+    PHANDLE_TABLE_ENTRY HandleTableEntry,
+    HANDLE Handle,  
     PVOID Context
 );
 

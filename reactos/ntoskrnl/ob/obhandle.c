@@ -385,6 +385,270 @@ ObpIncrementHandleCount(IN PVOID Object,
 }
 
 /*++
+* @name ObpIncrementUnnamedHandleCount
+*
+*     The ObpIncrementUnnamedHandleCount routine <FILLMEIN>
+*
+* @param Object
+*        <FILLMEIN>.
+*
+* @param AccessState
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @param HandleAttributes
+*        <FILLMEIN>.
+*
+* @param Process
+*        <FILLMEIN>.
+*
+* @param OpenReason
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+ObpIncrementUnnamedHandleCount(IN PVOID Object,
+                               IN PACCESS_MASK DesiredAccess,
+                               IN KPROCESSOR_MODE AccessMode,
+                               IN ULONG HandleAttributes,
+                               IN PEPROCESS Process)
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    ULONG ProcessHandleCount;
+    NTSTATUS Status;
+
+    /* Get the object header and type */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = ObjectHeader->Type;
+    OBTRACE("OBTRACE - %s - Incrementing count for: %p. UNNAMED. HC LC %lx %lx\n",
+            __FUNCTION__,
+            Object,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
+
+    /* Charge quota and remove the creator info flag */
+    Status = ObpChargeQuotaForObject(ObjectHeader, ObjectType);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Convert MAXIMUM_ALLOWED to GENERIC_ALL */
+    if (*DesiredAccess & MAXIMUM_ALLOWED)
+    {
+        /* Mask out MAXIMUM_ALLOWED and stick GENERIC_ALL instead */
+        *DesiredAccess &= ~MAXIMUM_ALLOWED;
+        *DesiredAccess |= GENERIC_ALL;
+    }
+
+    /* Check if we have to map the GENERIC mask */
+    if (*DesiredAccess & GENERIC_ACCESS)
+    {
+        /* Map it to the correct access masks */
+        RtlMapGenericMask(DesiredAccess,
+                          &ObjectType->TypeInfo.GenericMapping);
+    }
+
+    /* Increase the handle count */
+    if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
+    {
+        /*
+         * FIXME: Is really needed? Perhaps we should instead take
+         * advantage of the AddtionalReferences parameter to add the
+         * bias when required. This might be the source of the mysterious
+         * ReactOS bug where ObInsertObject *requires* an immediate dereference
+         * even in a success case.
+         * Will have to think more about this when doing the Increment/Create
+         * split later.
+         */
+        ObReferenceObject(Object);
+    }
+
+    /* FIXME: Use the Handle Database */
+    ProcessHandleCount = 0;
+
+    /* Check if we have an open procedure */
+    if (ObjectType->TypeInfo.OpenProcedure)
+    {
+        /* Call it */
+        ObjectType->TypeInfo.OpenProcedure(ObCreateHandle,
+                                           Process,
+                                           Object,
+                                           *DesiredAccess,
+                                           ProcessHandleCount);
+    }
+
+    /* Increase total number of handles */
+    ObjectType->TotalNumberOfHandles++;
+    OBTRACE("OBTRACE - %s - Incremented count for: %p. UNNAMED HC LC %lx %lx\n",
+            __FUNCTION__,
+            Object,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
+    return STATUS_SUCCESS;
+}
+
+/*++
+* @name ObpCreateUnnamedHandle
+*
+*     The ObpCreateUnnamedHandle routine <FILLMEIN>
+*
+* @param Object
+*        <FILLMEIN>.
+*
+* @param DesiredAccess
+*        <FILLMEIN>.
+*
+* @param AdditionalReferences
+*        <FILLMEIN>.
+*
+* @param HandleAttributes
+*        <FILLMEIN>.
+*
+* @param AccessMode
+*        <FILLMEIN>.
+*
+* @param ReturnedObject
+*        <FILLMEIN>.
+*
+* @param ReturnedHandle
+*        <FILLMEIN>.
+*
+* @return <FILLMEIN>.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+ObpCreateUnnamedHandle(IN PVOID Object,
+                       IN ACCESS_MASK DesiredAccess,
+                       IN ULONG AdditionalReferences,
+                       IN ULONG HandleAttributes,
+                       IN KPROCESSOR_MODE AccessMode,
+                       OUT PVOID *ReturnedObject,
+                       OUT PHANDLE ReturnedHandle)
+{
+    HANDLE_TABLE_ENTRY NewEntry;
+    POBJECT_HEADER ObjectHeader;
+    HANDLE Handle;
+    KAPC_STATE ApcState;
+    BOOLEAN AttachedToProcess = FALSE;
+    PVOID HandleTable;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Get the object header and type */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    OBTRACE("OBTRACE - %s - Creating handle for: %p. UNNAMED. HC LC %lx %lx\n",
+            __FUNCTION__,
+            Object,
+            ObjectHeader->HandleCount,
+            ObjectHeader->PointerCount);
+
+    /* Check if this is a kernel handle */
+    if ((HandleAttributes & OBJ_KERNEL_HANDLE) && (AccessMode == KernelMode))
+    {
+        /* Set the handle table */
+        HandleTable = ObpKernelHandleTable;
+
+        /* Check if we're not in the system process */
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        {
+            /* Attach to the system process */
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb, &ApcState);
+            AttachedToProcess = TRUE;
+        }
+    }
+    else
+    {
+        /* Get the current handle table */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    /* Increment the handle count */
+    Status = ObpIncrementUnnamedHandleCount(Object,
+                                            &DesiredAccess,
+                                            AccessMode,
+                                            HandleAttributes,
+                                            PsGetCurrentProcess());
+    if (!NT_SUCCESS(Status))
+    {
+        /*
+         * We failed (meaning security failure, according to NT Internals)
+         * detach and return
+         */
+        if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+        return Status;
+    }
+
+    /* Save the object header (assert its validity too) */
+    ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
+    NewEntry.Object = ObjectHeader;
+
+    /* Mask out the internal attributes */
+    NewEntry.ObAttributes |= HandleAttributes &
+                             (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
+                              EX_HANDLE_ENTRY_INHERITABLE |
+                              EX_HANDLE_ENTRY_AUDITONCLOSE);
+
+    /* Save the access mask */
+    NewEntry.GrantedAccess = DesiredAccess;
+
+    /*
+     * Create the actual handle. We'll need to do this *after* calling
+     * ObpIncrementHandleCount to make sure that Object Security is valid
+     * (specified in Gl00my documentation on Ob)
+     */
+    OBTRACE("OBTRACE - %s - Handle Properties: [%p-%lx-%lx]\n",
+            __FUNCTION__,
+            NewEntry.Object, NewEntry.ObAttributes & 3, NewEntry.GrantedAccess);
+    Handle = ExCreateHandle(HandleTable, &NewEntry);
+
+     /* Detach if needed */
+    if (AttachedToProcess) KeUnstackDetachProcess(&ApcState);
+
+    /* Make sure we got a handle */
+    if (Handle)
+    {
+        /* Handle extra references */
+        while (AdditionalReferences--)
+        {
+            /* Increment the count */
+            InterlockedIncrement(&ObjectHeader->PointerCount);
+        }
+
+        /* Check if this was a kernel handle */
+        if (HandleAttributes & OBJ_KERNEL_HANDLE)
+        {
+            /* Set the kernel handle bit */
+            Handle = ObMarkHandleAsKernelHandle(Handle);
+        }
+
+        /* Return handle and object */
+        *ReturnedHandle = Handle;
+        if (ReturnedObject) *ReturnedObject = Object;
+        OBTRACE("OBTRACE - %s - Returning Handle: %lx HC LC %lx %lx\n",
+                __FUNCTION__,
+                Handle,
+                ObjectHeader->HandleCount,
+                ObjectHeader->PointerCount);
+        return STATUS_SUCCESS;
+    }
+
+    /* Decrement the handle count and detach */
+    ObpDecrementHandleCount(&ObjectHeader->Body,
+                            PsGetCurrentProcess(),
+                            NewEntry.GrantedAccess);
+    return STATUS_INSUFFICIENT_RESOURCES;
+}
+
+/*++
 * @name ObpCreateHandle
 *
 *     The ObpCreateHandle routine <FILLMEIN>
@@ -752,35 +1016,21 @@ ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
 * @remarks None.
 *
 *--*/
-#if 0 // waiting on thomas
-BOOLEAN
+VOID
 NTAPI
 ObpCloseHandleCallback(IN PHANDLE_TABLE_ENTRY HandleTableEntry,
                        IN HANDLE Handle,
                        IN PVOID Context)
 {
+#if 0
     POBP_CLOSE_HANDLE_CONTEXT CloseContext = (POBP_CLOSE_HANDLE_CONTEXT)Context;
 
     /* Simply decrement the handle count */
-    ObpCloseHandleTableEntry(Context->HandleTable,
+    ObpCloseHandleTableEntry(CloseContext->HandleTable,
                              HandleTableEntry,
                              Handle,
-                             Context->AccessMode,
+                             CloseContext->AccessMode,
                              TRUE);
-
-    /* Return success */
-    return TRUE;
-#else
-VOID
-NTAPI
-ObpCloseHandleCallback(IN PHANDLE_TABLE HandleTable,
-                       IN PVOID Object,
-                       IN ULONG GrantedAccess,
-                       IN PVOID Context)
-{
-    ObpDecrementHandleCount(&EX_OBJ_TO_HDR(Object)->Body,
-                            PsGetCurrentProcess(),
-                            GrantedAccess);
 #endif
 }
 
@@ -1409,7 +1659,6 @@ ObInsertObject(IN PVOID Object,
     AUX_DATA AuxData;
     BOOLEAN IsNamed = FALSE;
     OB_OPEN_REASON OpenReason = ObCreateHandle;
-    static int LostOptimizations = 0;
     PAGED_CODE();
 
     /* Get the Header and Create Info */
@@ -1424,14 +1673,31 @@ ObInsertObject(IN PVOID Object,
     /* Check if the object is unnamed and also doesn't have security */
     if ((!ObjectType->TypeInfo.SecurityRequired) && !(IsNamed))
     {
-        /*
-         * FIXME: TODO (Optimized path through ObpIncrement*UnNamed*HandleCount).
-         * Described in chapter 6 of Gl00my, but babelfish translation isn't fully
-         * clear, so waiting on Aleksey's translation. Currently just profiling.
-         * (about ~500 calls per boot - not critical atm).
-         */
-        ++LostOptimizations;
-        DPRINT("Optimized case could've be taken: %d times!\n", LostOptimizations);
+        /* ReactOS HACK */
+        if (Handle)
+        {
+            /* Assume failure */
+            *Handle = NULL;
+
+            /* Create the handle */
+            Status = ObpCreateUnnamedHandle(Object,
+                                            DesiredAccess,
+                                            AdditionalReferences + 1,
+                                            ObjectCreateInfo->Attributes,
+                                            ExGetPreviousMode(),
+                                            ReferencedObject,
+                                            Handle);
+        }
+
+        /* Free the create information */
+        ObpFreeAndReleaseCapturedAttributes(ObjectCreateInfo);
+        Header->ObjectCreateInfo = NULL;
+
+        /* Remove the extra keep-alive reference */
+        //ObDereferenceObject(Object); FIXME: Will require massive changes
+
+        /* Return */
+        return Status;
     }
 
     /* Check if we didn't get an access state */

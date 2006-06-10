@@ -168,6 +168,7 @@ ExSweepHandleTable(IN PHANDLE_TABLE HandleTable,
                    IN PVOID Context  OPTIONAL)
 {
   PHANDLE_TABLE_ENTRY **tlp, **lasttlp, *mlp, *lastmlp;
+  LONG ExHandle = 0;
 
   PAGED_CODE();
 
@@ -209,12 +210,18 @@ ExSweepHandleTable(IN PHANDLE_TABLE HandleTable,
             if(curee->Object != NULL && SweepHandleCallback != NULL)
             {
               curee->ObAttributes |= EX_HANDLE_ENTRY_LOCKED;
-              SweepHandleCallback(HandleTable, curee->Object, curee->GrantedAccess, Context);
+              SweepHandleCallback(curee, EX_HANDLE_TO_HANDLE(ExHandle), Context);
             }
+
+            ExHandle++;
           }
         }
+        else
+          break;
       }
     }
+    else
+      break;
   }
 
   ExReleaseHandleLock(HandleTable);
