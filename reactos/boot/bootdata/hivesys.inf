@@ -568,6 +568,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
 
+; Kernel-Mode Tests
+;HKLM,"SYSTEM\CurrentControlSet\Services\Kmtest","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Kmtest","Group",0x00000000,"Base"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Kmtest","ImagePath",0x00020000,"system32\drivers\kmtest.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Kmtest","Start",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Kmtest","Type",0x00010001,0x00000001
+
 ; Keyboard class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Group",0x00000000,"Keyboard Class"
@@ -659,7 +666,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Type",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ImagePath",0x00020000,"system32\drivers\ntfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","Type",0x00010001,0x00000002
 
 ; Null device driver
