@@ -67,6 +67,7 @@ HANDLE                  DirectoryHandle;
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
+NTAPI
 DumpProc(IN PVOID Object,
          IN POB_DUMP_CONTROL DumpControl)
 {
@@ -75,6 +76,7 @@ DumpProc(IN PVOID Object,
 
 // prototype doesn't match Win2003! (causes BSOD)
 VOID
+NTAPI
 OpenProc(IN OB_OPEN_REASON OpenReason,
          IN PEPROCESS Process,
          IN PVOID Object,
@@ -87,6 +89,7 @@ OpenProc(IN OB_OPEN_REASON OpenReason,
 
 // Tested in Win2k3
 VOID
+NTAPI
 CloseProc(IN PEPROCESS Process,
           IN PVOID Object,
           IN ACCESS_MASK GrantedAccess,
@@ -98,12 +101,14 @@ CloseProc(IN PEPROCESS Process,
 
 // Tested in Win2k3
 VOID
+NTAPI
 DeleteProc(IN PVOID Object)
 {
     DPRINT("DeleteProc() called for Object=0x%p\n", Object);
 }
 
 NTSTATUS
+NTAPI
 ParseProc(IN PVOID ParseObject,
           IN PVOID ObjectType,
           IN OUT PACCESS_STATE AccessState,
@@ -124,16 +129,14 @@ ObtCreateObjectTypes()
 {
     USHORT i;
     NTSTATUS Status;
+    WCHAR   Name[15];
 
     for (i=0; i<NUM_OBTYPES; i++)
     {
         // Prepare object type name
         // TODO: Generate type names and don't use this unprofessional,
-        // ugly looking, and otherwise bad if-condition
-        if (i == 0)
-            RtlInitUnicodeString(&ObTypeName[i], L"MyObjectType1");
-        else
-            RtlInitUnicodeString(&ObTypeName[i], L"MyObjectType2");
+        swprintf(Name, L"MyObjectType%lx", i);
+        RtlInitUnicodeString(&ObTypeName[i], Name);
 
         // Prepare initializer
         RtlZeroMemory(&ObTypeInitializer[i], sizeof(ObTypeInitializer[i]));

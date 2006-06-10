@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 /*
     Some macros, structs, and vars are based or inspired from the great
