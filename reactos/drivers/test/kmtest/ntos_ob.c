@@ -121,7 +121,8 @@ ParseProc(IN PVOID ParseObject,
           OUT PVOID *Object)
 {
     DbgPrint("ParseProc() called\n");
-    return STATUS_SUCCESS;
+    *Object = NULL;
+    return STATUS_OBJECT_NAME_NOT_FOUND;//STATUS_SUCCESS;
 }
 
 VOID
@@ -260,7 +261,7 @@ ObtClose()
     PVOID DirObject;
     NTSTATUS Status;
     //PVOID TypeObject;
-    //USHORT i;
+    USHORT i;
     //UNICODE_STRING ObPathName[NUM_OBTYPES];
 
     // Close what we have opened and free what we allocated
@@ -293,13 +294,11 @@ ObtClose()
         "Failed to close handle with status=0x%lX", Status);
 
     // Now delete the last piece - object types
-    // FIXME: How to do this correctly?
-    /*
+    // In fact, it's weird to get rid of object types, especially the way,
+    // how it's done in the commented section below
     for (i=0; i<NUM_OBTYPES; i++)
-    {
         ObDereferenceObject(ObTypes[i]);
-    }*/
-    /*
+/*
     RtlInitUnicodeString(&ObPathName[0], L"\\ObjectTypes\\MyObjectType1");
     RtlInitUnicodeString(&ObPathName[1], L"\\ObjectTypes\\MyObjectType2");
 
@@ -313,7 +312,8 @@ ObtClose()
         ObDereferenceObject(TypeObject);
         DPRINT("Reference Name %S = %p, ObTypes[%d] = %p\n",
             ObPathName[i], TypeObject, i, ObTypes[i]);
-    }*/
+    }
+*/
 }
 
 VOID
@@ -351,7 +351,7 @@ ObtReferenceTests()
             OBJ_CASE_INSENSITIVE, NULL, 0L, ObTypes[i], KernelMode, NULL,
             &ObBody[0]);
 
-        DPRINT("Ref by name %S = %p\n", ObPathName[i], ObBody[i]);
+        DPRINT("Ref by name %wZ = %p\n", &ObPathName[i], ObBody[i]);
     }
 
     // Dereference now all of them
@@ -394,12 +394,11 @@ NtoskrnlObTest()
     DPRINT("ObtCreateObjects() done\n");
 
     // Reference them in a variety of ways
-    // FIXME: Disabled due to ParseProcedure call
     //ObtReferenceTests();
 
     // Clean up
-    // FIXME: Disabled to see results of creating objects in usermode
-    //        and also due to problems with object types removal
+    // FIXME: Disable to see results of creating objects in usermode.
+    //        Also it has problems with object types removal
     ObtClose();
     DPRINT("Cleanup done\n");
 
