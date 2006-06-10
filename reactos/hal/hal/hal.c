@@ -1051,28 +1051,20 @@ WRITE_PORT_USHORT(
   UNIMPLEMENTED;
 }
 
-/*
- * @unimplemented
- */
 KIRQL
 FASTCALL
 KeAcquireQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-   UNIMPLEMENTED;
-   return 0;
+  UNIMPLEMENTED;
+  return (KIRQL)0;
 }
 
-/*
- * @unimplemented
- */
 VOID
 FASTCALL
 KeReleaseQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle,
                         IN KIRQL OldIrql)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
-
-
 
 /* EOF */
