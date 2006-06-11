@@ -21,10 +21,5 @@ LONG NTAPI
 InterlockedDecrement(
 	LPLONG lpAddend)
 {
-	LONG ret;
-
-	ret = *lpAddend;
-	ret = InterlockedExchangeAdd( lpAddend, ret - 1 );
-
-	return ret;
+	return InterlockedExchangeAdd( lpAddend, -1 ) - 1;
 }

@@ -19,12 +19,7 @@
 
 LONG NTAPI
 InterlockedIncrement(
-	PLONG Addend)
+	LPLONG lpAddend)
 {
-	LONG ret;
-
-	ret = *Addend;
-	ret = InterlockedExchangeAdd( Addend, ret + 1 );
-
-	return ret;
+	return InterlockedExchangeAdd( lpAddend, 1 ) + 1;
 }
