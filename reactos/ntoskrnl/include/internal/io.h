@@ -489,7 +489,7 @@ NTSTATUS
 NTAPI
 IopParseDevice(
     IN PVOID ParseObject,
-    IN POBJECT_TYPE ObjectType,
+    IN PVOID ObjectType,
     IN OUT PACCESS_STATE AccessState,
     IN KPROCESSOR_MODE AccessMode,
     IN ULONG Attributes,
@@ -504,7 +504,7 @@ NTSTATUS
 NTAPI
 IopParseFile(
     IN PVOID ParseObject,
-    IN POBJECT_TYPE ObjectType,
+    IN PVOID ObjectType,
     IN OUT PACCESS_STATE AccessState,
     IN KPROCESSOR_MODE AccessMode,
     IN ULONG Attributes,
