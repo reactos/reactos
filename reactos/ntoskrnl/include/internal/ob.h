@@ -121,18 +121,6 @@ ObpDeleteNameCheck(
     IN PVOID Object
 );
 
-NTSTATUS
-NTAPI
-ObDuplicateObject(
-    PEPROCESS SourceProcess,
-    PEPROCESS TargetProcess,
-    HANDLE SourceHandle,
-    PHANDLE TargetHandle,
-    ACCESS_MASK DesiredAccess,
-    ULONG HandleAttributes,
-    ULONG Options
-);
-
 VOID
 NTAPI
 ObQueryDeviceMapInformation(

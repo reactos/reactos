@@ -215,7 +215,7 @@ typedef NTSTATUS
 (NTAPI *OB_SECURITY_METHOD)(
     IN PVOID Object,
     IN SECURITY_OPERATION_CODE OperationType,
-    IN SECURITY_INFORMATION SecurityInformation,
+    IN SECURITY_INFORMATION SecurityInformation, // FIXME: <= should be a pointer
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN OUT PULONG CapturedLength,
     IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
@@ -229,14 +229,16 @@ typedef NTSTATUS
     IN BOOLEAN HasObjectName,
     OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
     IN ULONG Length,
-    OUT PULONG ReturnLength
+    OUT PULONG ReturnLength,
+    IN KPROCESSOR_MODE AccessMode
 );
 
 typedef NTSTATUS
 (NTAPI *OB_OKAYTOCLOSE_METHOD)(
     IN PEPROCESS Process OPTIONAL,
     IN PVOID Object,
-    IN HANDLE Handle
+    IN HANDLE Handle,
+    IN KPROCESSOR_MODE AccessMode
 );
 
 #else

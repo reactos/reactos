@@ -467,7 +467,8 @@ CmiObjectQueryName (PVOID ObjectBody,
                     IN BOOLEAN HasObjectName,
 		    POBJECT_NAME_INFORMATION ObjectNameInfo,
 		    ULONG Length,
-		    PULONG ReturnLength);
+		    PULONG ReturnLength,
+            IN KPROCESSOR_MODE PreviousMode);
 
 NTSTATUS
 CmiImportHiveBins(PREGISTRY_HIVE Hive,

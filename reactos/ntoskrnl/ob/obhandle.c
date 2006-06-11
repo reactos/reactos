@@ -196,7 +196,8 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         /* Call it and check if it's not letting us close it */
         if (!ObjectType->TypeInfo.OkayToCloseProcedure(PsGetCurrentProcess(),
                                                        Body,
-                                                       Handle))
+                                                       Handle,
+                                                       AccessMode))
         {
             /* Fail */
             ExUnlockHandleTableEntry(HandleTable, HandleEntry);
@@ -1188,158 +1189,201 @@ ObKillProcess(IN PEPROCESS Process)
 
 NTSTATUS
 NTAPI
-ObDuplicateObject(PEPROCESS SourceProcess,
-                  PEPROCESS TargetProcess,
-                  HANDLE SourceHandle,
-                  PHANDLE TargetHandle,
-                  ACCESS_MASK DesiredAccess,
-                  ULONG HandleAttributes,
-                  ULONG Options)
+ObDuplicateObject(IN PEPROCESS SourceProcess,
+                  IN HANDLE SourceHandle,
+                  IN PEPROCESS TargetProcess OPTIONAL,
+                  IN PHANDLE TargetHandle OPTIONAL,
+                  IN ACCESS_MASK DesiredAccess,
+                  IN ULONG HandleAttributes,
+                  IN ULONG Options,
+                  IN KPROCESSOR_MODE PreviousMode)
 {
-    PHANDLE_TABLE_ENTRY SourceHandleEntry;
     HANDLE_TABLE_ENTRY NewHandleEntry;
     BOOLEAN AttachedToProcess = FALSE;
-    PVOID ObjectBody;
+    PVOID SourceObject;
     POBJECT_HEADER ObjectHeader;
-    ULONG NewHandleCount;
-    HANDLE NewTargetHandle;
-    PEPROCESS CurrentProcess;
+    POBJECT_TYPE ObjectType;
+    HANDLE NewHandle;
     KAPC_STATE ApcState;
     NTSTATUS Status = STATUS_SUCCESS;
-
+    ACCESS_MASK TargetAccess, SourceAccess;
+    ACCESS_STATE AccessState;
+    PACCESS_STATE PassedAccessState = NULL;
+    AUX_DATA AuxData;
+    PHANDLE_TABLE HandleTable = NULL;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
     PAGED_CODE();
+    OBTRACE("OBTRACE - %s - Duplicating handle: %lx for %p into %p\n",
+            __FUNCTION__,
+            SourceHandle,
+            SourceProcess,
+            TargetProcess);
 
-    if(SourceProcess == NULL ||
-        ObIsKernelHandle(SourceHandle, ExGetPreviousMode()))
+    /* Check if we're not in the source process */
+    if (SourceProcess != PsGetCurrentProcess())
     {
-        SourceProcess = PsInitialSystemProcess;
-        SourceHandle = ObKernelHandleToHandle(SourceHandle);
-    }
-
-    CurrentProcess = PsGetCurrentProcess();
-
-    KeEnterCriticalRegion();
-
-    if (SourceProcess != CurrentProcess)
-    {
-        KeStackAttachProcess(&SourceProcess->Pcb,
-            &ApcState);
+        /* Attach to it */
+        KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
         AttachedToProcess = TRUE;
     }
-    SourceHandleEntry = ExMapHandleToPointer(SourceProcess->ObjectTable,
-        SourceHandle);
-    if (SourceHandleEntry == NULL)
-    {
-        if (AttachedToProcess)
-        {
-            KeUnstackDetachProcess(&ApcState);
-        }
 
-        KeLeaveCriticalRegion();
-        return STATUS_INVALID_HANDLE;
-    }
+    /* Now reference the source handle */
+    Status = ObReferenceObjectByHandle(SourceHandle,
+                                       0,
+                                       NULL,
+                                       PreviousMode,
+                                       (PVOID*)&SourceObject,
+                                       &HandleInformation);
 
-    ObjectHeader = EX_HTE_TO_HDR(SourceHandleEntry);
-    ObjectBody = &ObjectHeader->Body;
-
-    NewHandleEntry.Object = SourceHandleEntry->Object;
-    if(HandleAttributes & OBJ_INHERIT)
-        NewHandleEntry.ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
-    else
-        NewHandleEntry.ObAttributes &= ~EX_HANDLE_ENTRY_INHERITABLE;
-    NewHandleEntry.GrantedAccess = ((Options & DUPLICATE_SAME_ACCESS) ?
-        SourceHandleEntry->GrantedAccess :
-    DesiredAccess);
-    if (Options & DUPLICATE_SAME_ACCESS)
-    {
-        NewHandleEntry.GrantedAccess = SourceHandleEntry->GrantedAccess;
-    }
-    else
-    {
-        if (DesiredAccess & GENERIC_ACCESS)
-        {
-            RtlMapGenericMask(&DesiredAccess,
-                &ObjectHeader->Type->TypeInfo.GenericMapping);
-        }
-        NewHandleEntry.GrantedAccess = DesiredAccess;
-    }
-
-    /* reference the object so it doesn't get deleted after releasing the lock
-    and before creating a new handle for it */
-    ObReferenceObject(ObjectBody);
-
-    /* increment the handle count of the object, it should always be >= 2 because
-    we're holding a handle lock to this object! if the new handle count was
-    1 here, we're in big trouble... it would've been safe to increment and
-    check the handle count without using interlocked functions because the
-    entry is locked, which means the handle count can't change. */
-    NewHandleCount = InterlockedIncrement(&ObjectHeader->HandleCount);
-    ASSERT(NewHandleCount >= 2);
-
-    ExUnlockHandleTableEntry(SourceProcess->ObjectTable,
-        SourceHandleEntry);
-
+    /* Check if we were attached */
     if (AttachedToProcess)
     {
+        /* We can safely detach now */
         KeUnstackDetachProcess(&ApcState);
         AttachedToProcess = FALSE;
     }
 
-    if (TargetProcess != CurrentProcess)
+    /* Fail if we couldn't reference it */
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get the source access */
+    SourceAccess = HandleInformation.GrantedAccess;
+
+    /* Check if we're not in the target process */
+    if (TargetProcess != PsGetCurrentProcess())
     {
-        KeStackAttachProcess(&TargetProcess->Pcb,
-            &ApcState);
+        /* Attach to it */
+        KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
         AttachedToProcess = TRUE;
     }
 
-    /* attempt to create the new handle */
-    NewTargetHandle = ExCreateHandle(TargetProcess->ObjectTable,
-        &NewHandleEntry);
+    /* Check if we're duplicating the attributes */
+    if (Options & DUPLICATE_SAME_ATTRIBUTES)
+    {
+        /* Duplicate them */
+        HandleAttributes = HandleInformation.HandleAttributes;
+    }
+
+    /* Check if we're duplicating the access */
+    if (Options & DUPLICATE_SAME_ACCESS) DesiredAccess = SourceAccess;
+
+    /* Get object data */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(SourceObject);
+    ObjectType = ObjectHeader->Type;
+
+    /* Fill out the entry */
+    NewHandleEntry.Object = ObjectHeader;
+    NewHandleEntry.ObAttributes |= HandleAttributes &
+                                   (EX_HANDLE_ENTRY_PROTECTFROMCLOSE |
+                                    EX_HANDLE_ENTRY_INHERITABLE |
+                                    EX_HANDLE_ENTRY_AUDITONCLOSE);
+
+    /* Check if we're using a generic mask */
+    if (DesiredAccess & GENERIC_ACCESS)
+    {
+        /* Map it */
+        RtlMapGenericMask(&DesiredAccess, &ObjectType->TypeInfo.GenericMapping);
+    }
+
+    /* Set the target access */
+    TargetAccess = DesiredAccess;
+    NewHandleEntry.GrantedAccess = TargetAccess;
+
+    /* Check if we're asking for new access */
+    if (TargetAccess & ~SourceAccess)
+    {
+        /* We are. We need the security procedure to validate this */
+        if (ObjectType->TypeInfo.SecurityProcedure == SeDefaultObjectMethod)
+        {
+            /* Use our built-in access state */
+            PassedAccessState = &AccessState;
+            Status = SeCreateAccessState(&AccessState,
+                                         &AuxData,
+                                         TargetAccess,
+                                         &ObjectType->TypeInfo.GenericMapping);
+        }
+        else
+        {
+            /* Otherwise we can't allow this privilege elevation */
+            Status = STATUS_ACCESS_DENIED;
+        }
+    }
+    else
+    {
+        /* We don't need an access state */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* Make sure the access state was created OK */
+    if (NT_SUCCESS(Status))
+    {
+        /* Add a new handle */
+        Status = ObpIncrementHandleCount(SourceObject,
+                                         PassedAccessState,
+                                         PreviousMode,
+                                         HandleAttributes,
+                                         PsGetCurrentProcess(),
+                                         ObDuplicateHandle);
+
+        /* Set the handle table, now that we know this handle was added */
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+
+    /* Check if we were attached */
     if (AttachedToProcess)
     {
+        /* We can safely detach now */
         KeUnstackDetachProcess(&ApcState);
         AttachedToProcess = FALSE;
     }
 
-    if (NewTargetHandle != NULL)
+    /* Check if we have to close the source handle */
+    if (Options & DUPLICATE_CLOSE_SOURCE)
     {
-        if (Options & DUPLICATE_CLOSE_SOURCE)
-        {
-            if (SourceProcess != CurrentProcess)
-            {
-                KeStackAttachProcess(&SourceProcess->Pcb,
-                    &ApcState);
-                AttachedToProcess = TRUE;
-            }
-
-            /* delete the source handle */
-            NtClose(SourceHandle);
-
-            if (AttachedToProcess)
-            {
-                KeUnstackDetachProcess(&ApcState);
-            }
-        }
-
-        ObDereferenceObject(ObjectBody);
-
-        *TargetHandle = NewTargetHandle;
-    }
-    else
-    {
-        /* decrement the handle count we previously incremented, but don't call the
-        closing procedure because we're not closing a handle! */
-        if(InterlockedDecrement(&ObjectHeader->HandleCount) == 0)
-        {
-            ObDereferenceObject(ObjectBody);
-        }
-
-        ObDereferenceObject(ObjectBody);
-        Status = STATUS_UNSUCCESSFUL;
+        /* Attach and close */
+        KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
+        NtClose(SourceHandle);
+        KeUnstackDetachProcess(&ApcState);
     }
 
-    KeLeaveCriticalRegion();
+    /* Check if we had an access state */
+    if (PassedAccessState) SeDeleteAccessState(PassedAccessState);
 
+    /* Now check if incrementing actually failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Dereference the source object */
+        ObDereferenceObject(SourceObject);
+        return Status;
+    }
+
+    /* Now create the handle */
+    ObDereferenceObject(SourceObject);
+    NewHandle = ExCreateHandle(HandleTable, &NewHandleEntry);
+    if (!NewHandle)
+    {
+        /* Undo the increment */
+        ObpDecrementHandleCount(SourceObject,
+                                TargetProcess,
+                                TargetAccess);
+
+        /* Deference the object and set failure status */
+        ObDereferenceObject(SourceObject);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Return the handle */
+    if (TargetHandle) *TargetHandle = NewHandle;
+
+    /* Return status */
+    OBTRACE("OBTRACE - %s - Duplicated handle: %lx for %p into %p. Source: %p HC PC %lx %lx\n",
+            __FUNCTION__,
+            NewHandle,
+            SourceProcess,
+            TargetProcess,
+            SourceObject,
+            ObjectHeader->PointerCount,
+            ObjectHeader->HandleCount);
     return Status;
 }
 
@@ -1934,184 +1978,118 @@ NtClose(IN HANDLE Handle)
     return ObpCloseHandle(Handle, ExGetPreviousMode());
 }
 
-/*
-* @implemented
-*/
-NTSTATUS STDCALL
-NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
-                   IN	HANDLE		SourceHandle,
-                   IN	HANDLE		TargetProcessHandle,
-                   OUT	PHANDLE		TargetHandle  OPTIONAL,
-                   IN	ACCESS_MASK	DesiredAccess,
-                   IN	ULONG		HandleAttributes,
-                   IN   ULONG		Options)
+NTSTATUS
+NTAPI
+NtDuplicateObject(IN HANDLE SourceProcessHandle,
+                  IN HANDLE SourceHandle,
+                  IN HANDLE TargetProcessHandle OPTIONAL,
+                  OUT PHANDLE TargetHandle OPTIONAL,
+                  IN ACCESS_MASK DesiredAccess,
+                  IN ULONG HandleAttributes,
+                  IN ULONG Options)
 {
-    PEPROCESS SourceProcess;
-    PEPROCESS TargetProcess;
-    PEPROCESS CurrentProcess;
+    PEPROCESS SourceProcess, TargetProcess, Target;
     HANDLE hTarget;
-    BOOLEAN AttachedToProcess = FALSE;
-    KPROCESSOR_MODE PreviousMode;
-    KAPC_STATE ApcState;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    ACCESS_STATE AccessState;
-    AUX_DATA AuxData;
-    PACCESS_STATE PassedAccessState = NULL;
-
     PAGED_CODE();
+    OBTRACE("OBTRACE - %s - Duplicating handle: %lx for %lx into %lx.\n",
+        __FUNCTION__,
+        SourceHandle,
+        SourceProcessHandle,
+        TargetProcessHandle);
 
-    PreviousMode = ExGetPreviousMode();
-
-    if(TargetHandle != NULL && PreviousMode != KernelMode)
+    if((TargetHandle) && (PreviousMode != KernelMode))
     {
+        /* Enter SEH */
         _SEH_TRY
         {
+            /* Probe the handle */
             ProbeForWriteHandle(TargetHandle);
         }
         _SEH_HANDLE
         {
+            /* Get the exception status */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
+        /* Fail if the pointer was invalid */
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
+    /* Now reference the input handle */
     Status = ObReferenceObjectByHandle(SourceProcessHandle,
-        PROCESS_DUP_HANDLE,
-        NULL,
-        PreviousMode,
-        (PVOID*)&SourceProcess,
-        NULL);
-    if (!NT_SUCCESS(Status))
+                                       PROCESS_DUP_HANDLE,
+                                       PsProcessType,
+                                       PreviousMode,
+                                       (PVOID*)&SourceProcess,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return(Status);
+
+    /* Check if got a target handle */
+    if (TargetProcessHandle)
     {
-        return(Status);
-    }
-
-    Status = ObReferenceObjectByHandle(TargetProcessHandle,
-        PROCESS_DUP_HANDLE,
-        NULL,
-        PreviousMode,
-        (PVOID*)&TargetProcess,
-        NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(SourceProcess);
-        return(Status);
-    }
-
-    CurrentProcess = PsGetCurrentProcess();
-
-    /* Check for magic handle first */
-    if (SourceHandle == NtCurrentThread() ||
-        SourceHandle == NtCurrentProcess())
-    {
-        PVOID ObjectBody;
-        POBJECT_TYPE ObjectType;
-
-        ObjectType = (SourceHandle == NtCurrentThread()) ? PsThreadType : PsProcessType;
-
-        Status = ObReferenceObjectByHandle(SourceHandle,
-            0,
-            ObjectType,
-            PreviousMode,
-            &ObjectBody,
-            NULL);
-        if(NT_SUCCESS(Status))
+        /* Now reference the output handle */
+        Status = ObReferenceObjectByHandle(TargetProcessHandle,
+                                           PROCESS_DUP_HANDLE,
+                                           PsProcessType,
+                                           PreviousMode,
+                                           (PVOID*)&TargetProcess,
+                                           NULL);
+        if (NT_SUCCESS(Status))
         {
-            if (Options & DUPLICATE_SAME_ACCESS)
-            {
-                /* grant all access rights */
-                DesiredAccess = ((ObjectType == PsThreadType) ? THREAD_ALL_ACCESS : PROCESS_ALL_ACCESS);
-            }
-            else
-            {
-                if (DesiredAccess & GENERIC_ACCESS)
-                {
-                    RtlMapGenericMask(&DesiredAccess,
-                        &ObjectType->TypeInfo.GenericMapping);
-                }
-            }
-
-            if (TargetProcess != CurrentProcess)
-            {
-                KeStackAttachProcess(&TargetProcess->Pcb,
-                    &ApcState);
-                AttachedToProcess = TRUE;
-            }
-
-            /* Use our built-in access state */
-            PassedAccessState = &AccessState;
-            Status = SeCreateAccessState(&AccessState,
-                                         &AuxData,
-                                         DesiredAccess,
-                                         &ObjectType->TypeInfo.GenericMapping);
-
-            /* Add a new handle */
-            Status = ObpIncrementHandleCount(ObjectBody,
-                                             PassedAccessState,
-                                             PreviousMode,
-                                             HandleAttributes,
-                                             PsGetCurrentProcess(),
-                                             ObDuplicateHandle);
-
-            if (AttachedToProcess)
-            {
-                KeUnstackDetachProcess(&ApcState);
-                AttachedToProcess = FALSE;
-            }
-
-            ObDereferenceObject(ObjectBody);
-
-            if (Options & DUPLICATE_CLOSE_SOURCE)
-            {
-                if (SourceProcess != CurrentProcess)
-                {
-                    KeStackAttachProcess(&SourceProcess->Pcb,
-                        &ApcState);
-                    AttachedToProcess = TRUE;
-                }
-
-                NtClose(SourceHandle);
-
-                if (AttachedToProcess)
-                {
-                    KeUnstackDetachProcess(&ApcState);
-                }
-            }
+            /* Use this target process */
+            Target = TargetProcess;
+        }
+        else
+        {
+            /* No target process */
+            Target = NULL;
         }
     }
     else
     {
-        Status = ObDuplicateObject(SourceProcess,
-            TargetProcess,
-            SourceHandle,
-            &hTarget,
-            DesiredAccess,
-            HandleAttributes,
-            Options);
+        /* No target process */
+        Status = STATUS_SUCCESS;
+        Target = NULL;
     }
 
-    ObDereferenceObject(TargetProcess);
-    ObDereferenceObject(SourceProcess);
+    /* Call the internal routine */
+    Status = ObDuplicateObject(SourceProcess,
+                               SourceHandle,
+                               Target,
+                               &hTarget,
+                               DesiredAccess,
+                               HandleAttributes,
+                               Options,
+                               PreviousMode);
 
-    if(NT_SUCCESS(Status) && TargetHandle != NULL)
+    /* Check if the caller wanted the return handle */
+    if (TargetHandle)
     {
+        /* Protect the write to user mode */
         _SEH_TRY
         {
+            /* Write the new handle */
             *TargetHandle = hTarget;
         }
         _SEH_HANDLE
         {
+            /* Otherwise, get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
     }
 
+    /* Dereference the processes */
+    OBTRACE("OBTRACE - %s - Duplicated handle: %lx into %lx S %lx\n",
+            __FUNCTION__,
+            hTarget,
+            TargetProcessHandle,
+            Status);
+    ObDereferenceObject(TargetProcess);
+    ObDereferenceObject(SourceProcess);
     return Status;
 }
-
 /* EOF */

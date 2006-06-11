@@ -394,7 +394,7 @@ Next:
 /* PUBLIC FUNCTIONS *********************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 ObQueryNameString(IN  PVOID Object,
                   OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
                   IN  ULONG Length,
@@ -418,7 +418,8 @@ ObQueryNameString(IN  PVOID Object,
                                                                TRUE, //fixme
                                                                ObjectNameInfo,
                                                                Length,
-                                                               ReturnLength);
+                                                               ReturnLength,
+                                                               KernelMode);
     }
 
     /* Check if the object doesn't even have a name */

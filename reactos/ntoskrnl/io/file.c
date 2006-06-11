@@ -411,7 +411,8 @@ IopQueryNameFile(PVOID ObjectBody,
                  IN BOOLEAN HasName,
                  POBJECT_NAME_INFORMATION ObjectNameInfo,
                  ULONG Length,
-                 PULONG ReturnLength)
+                 PULONG ReturnLength,
+                 IN KPROCESSOR_MODE PreviousMode)
 {
     POBJECT_NAME_INFORMATION LocalInfo;
     PFILE_OBJECT FileObject;

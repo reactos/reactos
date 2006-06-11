@@ -518,7 +518,8 @@ IopQueryNameFile(
     IN BOOLEAN HasName,
     POBJECT_NAME_INFORMATION ObjectNameInfo,
     ULONG Length,
-    PULONG ReturnLength
+    PULONG ReturnLength,
+    IN KPROCESSOR_MODE PreviousMode
 );
 
 VOID
