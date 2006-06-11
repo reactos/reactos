@@ -139,9 +139,9 @@ IopCreateFile(PVOID ObjectBody,
         {
             if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
             {
-                DPRINT1("Mount the logical volume\n");
+                DPRINT("Mount the logical volume\n");
                 Status = IoMountVolume(DeviceObject, FALSE);
-                DPRINT1("Status %x\n", Status);
+                DPRINT("Status %x\n", Status);
             }
             DeviceObject = DeviceObject->Vpb->DeviceObject;
         }

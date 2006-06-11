@@ -14,7 +14,7 @@ LsapInitLsa(VOID)
 {
     HANDLE hEvent;
 
-    DPRINT1("LsapInitLsa() called\n");
+    DPRINT("LsapInitLsa() called\n");
 
     LsarStartRpcServer();
 

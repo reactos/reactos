@@ -47,6 +47,7 @@
   <property name="BASEADDRESS_CARDS" value="0x701a0000" />
   <property name="BASEADDRESS_WININET" value="0x70200000" />
   <property name="BASEADDRESS_ACLUI" value="0x71550000" />
+  <property name="BASEADDRESS_DHCPCSVC" value="0x71650000" />
   <property name="BASEADDRESS_SHDOCVW" value="0x71700000" />
   <property name="BASEADDRESS_MSWSOCK" value="0x71a30000" />
   <property name="BASEADDRESS_WSOCK32" value="0x71ab0000" />
@@ -92,29 +93,29 @@
   <property name="BASEADDRESS_WINTRUST" value="0x76c30000" />
   <property name="BASEADDRESS_IMAGEHLP" value="0x76c90000" />
   <property name="BASEADDRESS_FMIFS" value="0x76df0000" />
-  <property name="BASEADDRESS_SHELL32" value="0x77260000" />
-  <property name="BASEADDRESS_IPHLPAPI" value="0x77400000" />
+  <property name="BASEADDRESS_SHELL32" value="0x6a360000" />
+  <property name="BASEADDRESS_IPHLPAPI" value="0x75700000" />
   <property name="BASEADDRESS_MSVFW32" value="0x77400000" />
   <property name="BASEADDRESS_MSACM32" value="0x77400000" />
-  <property name="BASEADDRESS_MMDRV" value="0x77530000" />
+  <property name="BASEADDRESS_MMDRV" value="0x74C30000" />
   <property name="BASEADDRESS_CRTDLL" value="0x77630000" />
   <property name="BASEADDRESS_AUTHZ" value="0x77690000" />
   <property name="BASEADDRESS_CFGMGR32" value="0x77700000" />
   <property name="BASEADDRESS_PACKET" value="0x77780000" />
-  <property name="BASEADDRESS_MSAFD" value="0x777a0000" />
-  <property name="BASEADDRESS_MSI" value="0x777b0000" />
-  <property name="BASEADDRESS_SNMPAPI" value="0x777c0000" />
+  <property name="BASEADDRESS_MSAFD" value="0x77780000" />
+  <property name="BASEADDRESS_MSI" value="0x77790000" />
+  <property name="BASEADDRESS_SNMPAPI" value="0x777a0000" />
   <property name="BASEADDRESS_IPRTPRIO" value="0x777c0000" />
-  <property name="BASEADDRESS_WSHTCPIP" value="0x777c0000" />
-  <property name="BASEADDRESS_WINMM" value="0x777d0000" />
+  <property name="BASEADDRESS_WSHTCPIP" value="0x677b0000" />
+  <property name="BASEADDRESS_WINMM" value="0x697d0000" />
   <property name="BASEADDRESS_WS2HELP" value="0x777e0000" />
   <property name="BASEADDRESS_WSHIRDA" value="0x777f0000" />
   <property name="BASEADDRESS_WINSPOOL" value="0x77800000" />
   <property name="BASEADDRESS_VERSION" value="0x77a40000" />
   <property name="BASEADDRESS_OLE32" value="0x77a50000" />
-  <property name="BASEADDRESS_WS2_32" value="0x77aa0000" />
+  <property name="BASEADDRESS_WS2_32" value="0x74aa0000" />
   <property name="BASEADDRESS_OLEPRO32" value="0x77aa0000" />
-  <property name="BASEADDRESS_CRYPT32" value="0x77ab0000" />
+  <property name="BASEADDRESS_CRYPT32" value="0x67ab0000" />
   <property name="BASEADDRESS_ADVAPI32" value="0x77dc0000" />
   <property name="BASEADDRESS_USER32" value="0x77e50000" />
   <property name="BASEADDRESS_GDI32" value="0x77f10000" />

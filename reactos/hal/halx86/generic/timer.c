@@ -223,7 +223,7 @@ VOID HalpCalibrateStallExecution(VOID)
 
   }
 
-  DbgPrint("Calibrating delay loop... [");
+  DPRINT("Calibrating delay loop... [");
 
   /* Stage 1:  Coarse calibration					    */
 
@@ -246,7 +246,7 @@ VOID HalpCalibrateStallExecution(VOID)
   Pcr->StallScaleFactor >>= 1;		    /* Get bottom value for delay   */
 
   /* Stage 2:  Fine calibration						    */
-  DbgPrint("delay_count: %d", Pcr->StallScaleFactor);
+  DPRINT("delay_count: %d", Pcr->StallScaleFactor);
 
   calib_bit = Pcr->StallScaleFactor;	/* Which bit are we going to test   */
 
@@ -275,9 +275,9 @@ VOID HalpCalibrateStallExecution(VOID)
 
   Pcr->StallScaleFactor /= (MILLISEC / 2);  /* Calculate delay_count for 1ms */
 
-  DbgPrint("]\n");
-  DbgPrint("delay_count: %d\n", Pcr->StallScaleFactor);
-  DbgPrint("CPU speed: %d\n", Pcr->StallScaleFactor / 250);
+  DPRINT("]\n");
+  DPRINT("delay_count: %d\n", Pcr->StallScaleFactor);
+  DPRINT("CPU speed: %d\n", Pcr->StallScaleFactor / 250);
 #if 0
   DbgPrint("About to start delay loop test\n");
   DbgPrint("Waiting for five minutes...");

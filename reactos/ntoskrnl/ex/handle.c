@@ -866,17 +866,20 @@ ExDestroyHandleByEntry(IN PHANDLE_TABLE HandleTable,
 
   DPRINT("DestroyHandleByEntry HT:0x%p Entry:0x%p\n", HandleTable, Entry);
 
-  KeEnterCriticalRegion();
-  ExAcquireHandleLockExclusive(HandleTable);
+  if (!(HandleTable->Flags & EX_HANDLE_TABLE_CLOSING))
+  {
+    KeEnterCriticalRegion();
+    ExAcquireHandleLockExclusive(HandleTable);
 
-  /* free and automatically unlock the handle. However we don't need to pulse
-     the contention event since other locks on this entry will fail */
-  ExpFreeHandleTableEntry(HandleTable,
-                          Entry,
-                          HANDLE_TO_EX_HANDLE(Handle));
+    /* free and automatically unlock the handle. However we don't need to pulse
+       the contention event since other locks on this entry will fail */
+    ExpFreeHandleTableEntry(HandleTable,
+                            Entry,
+                            HANDLE_TO_EX_HANDLE(Handle));
 
-  ExReleaseHandleLock(HandleTable);
-  KeLeaveCriticalRegion();
+    ExReleaseHandleLock(HandleTable);
+    KeLeaveCriticalRegion();
+  }
 }
 
 PHANDLE_TABLE_ENTRY

@@ -1175,7 +1175,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
             if (Class != NULL)
             {
 ClassAlreadyExists:
-                DPRINT1("Class 0x%p does already exist!\n", ClassAtom);
+                DPRINT("Class 0x%p does already exist!\n", ClassAtom);
                 SetLastWin32Error(ERROR_CLASS_ALREADY_EXISTS);
                 return (RTL_ATOM)0;
             }

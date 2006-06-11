@@ -103,6 +103,10 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
+
+        /* Display separator + ReactOS version at start of the debug log */
+        DPRINT1("---------------------------------------------------------------\n");
+        DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
     }
     else if (BootPhase == 2)
     {

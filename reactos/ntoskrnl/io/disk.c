@@ -646,7 +646,7 @@ xHalIoAssignDriveLetters(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
 
   RDiskCount = xHalpGetRDiskCount();
 
-  DPRINT1("RDiskCount %d\n", RDiskCount);
+  DPRINT("RDiskCount %d\n", RDiskCount);
 
   Buffer1 = (PWSTR)ExAllocatePool(PagedPool,
 				  64 * sizeof(WCHAR));

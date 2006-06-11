@@ -62,7 +62,7 @@ static VOID STDCALL I8042MouseInputTestTimeout(PDEVICE_EXTENSION DevExt)
 		/* Check if the last byte came too long ago */
 		if (Now.QuadPart - DevExt->MousePacketStartTime.QuadPart >
 		                           DevExt->Settings.MouseSynchIn100ns) {
-			DPRINT1("Mouse input packet timeout\n");
+			DPRINT("Mouse input packet timeout\n");
 			DevExt->MouseState = MouseIdle;
 		}
 	}

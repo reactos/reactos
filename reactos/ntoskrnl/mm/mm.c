@@ -150,7 +150,7 @@ MmAccessFault(KPROCESSOR_MODE Mode,
    }
    if (PsGetCurrentProcess() == NULL)
    {
-      CPRINT("No current process\n");
+      DPRINT("No current process\n");
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -280,7 +280,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
       /* Allow this! It lets us page alloc much earlier! It won't be needed 
        * after my init patch anyways
        */
-      CPRINT("No current process\n");
+      DPRINT("No current process\n");
       if (Address < (ULONG_PTR)MmSystemRangeStart)
       {
          return(STATUS_UNSUCCESSFUL);

@@ -567,7 +567,7 @@ CopyImage(
    {
       case IMAGE_BITMAP:
          {
-            DbgPrint("WARNING:  Incomplete implementation of CopyImage!\n");
+            DPRINT("WARNING:  Incomplete implementation of CopyImage!\n");
             /*
              * FIXME: Support flags LR_COPYDELETEORG, LR_COPYFROMRESOURCE,
              * LR_COPYRETURNORG, LR_CREATEDIBSECTION and LR_MONOCHROME.
@@ -596,7 +596,7 @@ CopyImage(
             /* FIXME: support loading the image as shared from an instance */
             if (!IconMsgDisplayed)
             {
-               DbgPrint("FIXME: CopyImage doesn't support IMAGE_ICON correctly!\n");
+               DPRINT("FIXME: CopyImage doesn't support IMAGE_ICON correctly!\n");
                IconMsgDisplayed = TRUE;
             }
             return CopyIcon(hnd);
@@ -608,7 +608,7 @@ CopyImage(
             /* FIXME: support loading the image as shared from an instance */
             if (!IconMsgDisplayed)
             {
-               DbgPrint("FIXME: CopyImage doesn't support IMAGE_CURSOR correctly!\n");
+               DPRINT("FIXME: CopyImage doesn't support IMAGE_CURSOR correctly!\n");
                IconMsgDisplayed = TRUE;
             }
             return CopyCursor(hnd);
