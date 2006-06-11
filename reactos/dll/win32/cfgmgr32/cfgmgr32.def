@@ -43,8 +43,8 @@ CM_Create_DevNode_ExW@20=SETUPAPI.CM_Create_DevNode_ExW
 ;CM_Create_Range_List
 CM_Delete_Class_Key@8=SETUPAPI.CM_Delete_Class_Key
 CM_Delete_Class_Key_Ex@12=SETUPAPI.CM_Delete_Class_Key_Ex
-;CM_Delete_DevNode_Key
-;CM_Delete_DevNode_Key_Ex
+CM_Delete_DevNode_Key@12=SETUPAPI.CM_Delete_DevNode_Key
+CM_Delete_DevNode_Key_Ex@16=SETUPAPI.CM_Delete_DevNode_Key_Ex
 ;CM_Delete_Range
 ;CM_Detect_Resource_Conflict
 ;CM_Detect_Resource_Conflict_Ex

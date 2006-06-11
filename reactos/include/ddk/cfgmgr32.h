@@ -827,8 +827,26 @@ CM_Delete_Class_Key_Ex(
   IN ULONG  ulFlags,
   IN HANDLE  hMachine);
 
-/* FIXME: Obsolete CM_Delete_DevNode_Key */
-/* FIXME: Obsolete CM_Delete_DevNode_Key_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Delete_DevNode_Key(
+  IN DEVNODE  dnDevNode,
+  IN ULONG  ulHardwareProfile,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Delete_DevNode_Key_Ex(
+  IN DEVNODE  dnDevNode,
+  IN ULONG  ulHardwareProfile,
+  IN ULONG  ulFlags,
+  IN HANDLE  hMachine);
+
+#define CM_Delete_DevInst_Key CM_Delete_DevNode_Key
+#define CM_Delete_DevInst_Key_Ex CM_Delete_DevNode_Key_Ex
+
 /* FIXME: Obsolete CM_Delete_Range */
 /* FIXME: Obsolete CM_Detected_Resource_Conflict */
 /* FIXME: Obsolete CM_Detected_Resource_Conflict_Ex */

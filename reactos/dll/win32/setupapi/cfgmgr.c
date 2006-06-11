@@ -446,6 +446,30 @@ CONFIGRET WINAPI CM_Delete_Class_Key_Ex(
                              ulFlags);
 }
 
+/***********************************************************************
+ * CM_Delete_DevNode_Key [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Delete_DevNode_Key(
+    DEVNODE dnDevNode, ULONG ulHardwareProfile, ULONG ulFlags)
+{
+    TRACE("%p %lu %lx\n", dnDevNode, ulHardwareProfile, ulFlags);
+    return CM_Delete_DevNode_Key_Ex(dnDevNode, ulHardwareProfile, ulFlags,
+                                    NULL);
+}
+
+/***********************************************************************
+ * CM_Delete_DevNode_Key_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Delete_DevNode_Key_Ex(
+    DEVNODE dnDevNode, ULONG ulHardwareProfile, ULONG ulFlags,
+    HANDLE hMachine)
+{
+    FIXME("%p %lu %lx %p\n",
+          dnDevNode, ulHardwareProfile, ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
 
 /***********************************************************************
  * CM_Disable_DevNode [SETUPAPI.@]

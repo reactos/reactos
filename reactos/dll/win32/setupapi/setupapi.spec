@@ -27,8 +27,8 @@
 @ stub CM_Create_Range_List
 @ stdcall CM_Delete_Class_Key(ptr long)
 @ stdcall CM_Delete_Class_Key_Ex(ptr long long)
-@ stub CM_Delete_DevNode_Key
-@ stub CM_Delete_DevNode_Key_Ex
+@ stdcall CM_Delete_DevNode_Key(long long long)
+@ stdcall CM_Delete_DevNode_Key_Ex(long long long ptr)
 @ stub CM_Delete_Range
 @ stub CM_Detect_Resource_Conflict
 @ stub CM_Detect_Resource_Conflict_Ex
