@@ -51,31 +51,6 @@ VOID INIT_FUNCTION IopInitLookasideLists(VOID);
 #pragma alloc_text(INIT, IoInit3)
 #endif
 
-NTSTATUS
-NTAPI
-IopParseFile(IN PVOID ParseObject,
-             IN PVOID ObjectType,
-             IN OUT PACCESS_STATE AccessState,
-             IN KPROCESSOR_MODE AccessMode,
-             IN ULONG Attributes,
-             IN OUT PUNICODE_STRING CompleteName,
-             IN OUT PUNICODE_STRING RemainingName,
-             IN OUT PVOID Context OPTIONAL,
-             IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-             OUT PVOID *Object);
-
-NTSTATUS
-NTAPI
-IopParseDevice(IN PVOID ParseObject,
-             IN PVOID ObjectType,
-             IN OUT PACCESS_STATE AccessState,
-             IN KPROCESSOR_MODE AccessMode,
-             IN ULONG Attributes,
-             IN OUT PUNICODE_STRING CompleteName,
-             IN OUT PUNICODE_STRING RemainingName,
-             IN OUT PVOID Context OPTIONAL,
-             IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-             OUT PVOID *Object);
 /* INIT FUNCTIONS ************************************************************/
 
 VOID

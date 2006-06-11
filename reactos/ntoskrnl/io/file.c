@@ -39,6 +39,10 @@ IopParseDevice(IN PVOID ParseObject,
                IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
                OUT PVOID *Object)
 {
+    POPEN_PACKET OpenPacket = (POPEN_PACKET)Context;
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status;
+    PFILE_OBJECT FileObject;
     DPRINT("IopParseDevice:\n"
             "DeviceObject : %p, Type : %p, TypeName : %wZ\n"
             "FileObject : %p, Type : %p, TypeName : %wZ\n"
@@ -52,11 +56,61 @@ IopParseDevice(IN PVOID ParseObject,
             CompleteName,
             RemainingName);
 
-    /*
-     * Just clear the object and return success, and ObFindObject will behave
-     * just as if we had no parse procedure, so we can debug in peace.
-     */
-    *Object = NULL;
+    if (!RemainingName || !RemainingName->Buffer)
+    {
+        DeviceObject = ParseObject;
+
+        Status = ObCreateObject(AccessMode,
+                                IoFileObjectType,
+                                NULL,
+                                AccessMode,
+                                NULL,
+                                sizeof(FILE_OBJECT),
+                                0,
+                                0,
+                                (PVOID*)&FileObject);
+        /* Set File Object Data */
+        FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject);
+
+        /* HACK */
+        FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+        *Object = FileObject;
+        return STATUS_SUCCESS;
+    }
+
+    Status = ObCreateObject(AccessMode,
+                        IoFileObjectType,
+                        NULL,
+                        AccessMode,
+                        NULL,
+                        sizeof(FILE_OBJECT),
+                        0,
+                        0,
+                        (PVOID*)&FileObject);
+
+    if (ObjectType == IoDeviceObjectType)
+    {
+        /* Parent is a device object */
+        DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)ParseObject);
+        if (DeviceObject->Vpb)
+        {
+            if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+            {
+                Status = IoMountVolume(DeviceObject, FALSE);
+            }
+            DeviceObject = DeviceObject->Vpb->DeviceObject;
+        }
+    }
+    else
+    {
+        FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
+        DeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
+    }
+
+    RtlCreateUnicodeString(&FileObject->FileName, RemainingName->Buffer);
+    FileObject->DeviceObject = DeviceObject;
+    *Object = FileObject;
+    RemainingName->Buffer = NULL; // ros hack
     return STATUS_SUCCESS;
 }
 
@@ -74,23 +128,11 @@ IopParseFile(IN PVOID ParseObject,
              OUT PVOID *Object)
 {
     PVOID DeviceObject;
+    OPEN_PACKET OpenPacket;
 
     /* Get the device object */
     DeviceObject = IoGetRelatedDeviceObject(ParseObject);
-    Context = ParseObject;
-
-    DPRINT("IopParseFile:\n"
-            "DeviceObject : %p, Type : %p, TypeName : %wZ\n"
-            "FileObject : %p, Type : %p, TypeName : %wZ\n"
-            "CompleteName : %wZ, RemainingName : %wZ\n",
-            DeviceObject,
-            OBJECT_TO_OBJECT_HEADER(DeviceObject)->Type,
-            &OBJECT_TO_OBJECT_HEADER(DeviceObject)->Type->Name,
-            ParseObject,
-            ObjectType,
-            &ObjectType->Name,
-            CompleteName,
-            RemainingName);
+    OpenPacket.RelatedFileObject = ParseObject;
 
     /* Call the main routine */
     return IopParseDevice(DeviceObject,
@@ -100,76 +142,9 @@ IopParseFile(IN PVOID ParseObject,
                           Attributes,
                           CompleteName,
                           RemainingName,
-                          Context,
+                          &OpenPacket,
                           SecurityQos,
                           Object);
-
-}
-
-/*
- * NAME       INTERNAL
- *  IopCreateFile
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- */
-NTSTATUS
-STDCALL
-IopCreateFile(PVOID ObjectBody,
-              PVOID Parent,
-              PWSTR RemainingPath,
-              POBJECT_CREATE_INFORMATION ObjectCreateInfo)
-{
-    PDEVICE_OBJECT DeviceObject;
-    PFILE_OBJECT FileObject = (PFILE_OBJECT) ObjectBody;
-    POBJECT_TYPE ParentObjectType;
-    NTSTATUS Status;
-
-    ParentObjectType = OBJECT_TO_OBJECT_HEADER(Parent)->Type;
-    if (ParentObjectType == IoDeviceObjectType)
-    {
-        /* Parent is a device object */
-        DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)Parent);
-        if (DeviceObject->Vpb)
-        {
-            if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-            {
-                DPRINT("Mount the logical volume\n");
-                Status = IoMountVolume(DeviceObject, FALSE);
-                DPRINT("Status %x\n", Status);
-            }
-            DeviceObject = DeviceObject->Vpb->DeviceObject;
-        }
-    }
-    else
-    {
-        DeviceObject = ((PFILE_OBJECT)Parent)->DeviceObject;
-        FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
-    }
-
-#if 0
-    DbgPrint("--------------------- Creating File ---------------------\n");
-    DbgPrint("Parent ObjectType: %wZ\n"
-             "Device Object:     %p\n"
-             "File Object:       %p\n"
-             "Device Name:       %wZ\n"
-             "Remaining Path:    %S\n",
-             &ParentObjectType->Name,
-             DeviceObject,
-             FileObject,
-             &DeviceObject->DriverObject->DriverName,
-             RemainingPath);
-    DbgPrint("--------------------- Created File ----------------------\n");
-#endif
-
-    RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
-    FileObject->DeviceObject = DeviceObject;
-    return STATUS_SUCCESS;
 }
 
 VOID
@@ -847,7 +822,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
              IN ULONG   Options)
 {
    PFILE_OBJECT  FileObject = NULL;
-   PDEVICE_OBJECT DeviceObject;
+   //PDEVICE_OBJECT DeviceObject;
    PIRP   Irp;
    PEXTENDED_IO_STACK_LOCATION StackLoc;
    IO_SECURITY_CONTEXT  SecurityContext;
@@ -940,6 +915,8 @@ IoCreateFile(OUT PHANDLE  FileHandle,
      DPRINT1("FIXME: IO_CHECK_CREATE_PARAMETERS not yet supported!\n");
    }
 
+   RtlMapGenericMask(&DesiredAccess, &IoFileObjectType->TypeInfo.GenericMapping);
+
    /* First try to open an existing named object */
    Status = ObOpenObjectByName(ObjectAttributes,
                                NULL,
@@ -949,69 +926,14 @@ IoCreateFile(OUT PHANDLE  FileHandle,
                                NULL,
                                &LocalHandle);
 
-   //
-   // start stuff that should be in IopParseDevice
-   //
-       if (NT_SUCCESS(Status))
-       {
-          Status = ObReferenceObjectByHandle(LocalHandle,
-                                             DesiredAccess,
-                                             NULL,
-                                             KernelMode,
-                                             (PVOID*)&DeviceObject,
-                                             NULL);
-          DPRINT("FileExisted: %wZ %lx %p\n", ObjectAttributes->ObjectName, LocalHandle, DeviceObject);
-          ZwClose(LocalHandle);
+    ObReferenceObjectByHandle(LocalHandle,
+                              DesiredAccess,
+                              NULL,
+                              KernelMode,
+                              (PVOID*)&FileObject,
+                              NULL);
+    if (!NT_SUCCESS(Status)) return Status;
 
-          /* FIXME: wt... */
-          Status = ObCreateObject(KernelMode,
-                                  IoFileObjectType,
-                                  NULL,
-                                  KernelMode,
-                                  NULL,
-                                  sizeof(FILE_OBJECT),
-                                  0,
-                                  0,
-                                  (PVOID*)&FileObject);
-
-          /* Set File Object Data */
-          FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject);
-
-          /* HACK */
-          FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-          DPRINT("%p\n", FileObject->DeviceObject);
-          ObDereferenceObject (DeviceObject);
-       }
-
-       if (FileObject == NULL)
-       {
-          Status = ObCreateObject(AccessMode,
-                                  IoFileObjectType,
-                                  ObjectAttributes,
-                                  AccessMode,
-                                  NULL,
-                                  sizeof(FILE_OBJECT),
-                                  0,
-                                  0,
-                                  (PVOID*)&FileObject);
-       }
-
-       RtlMapGenericMask(&DesiredAccess,
-                         &OBJECT_TO_OBJECT_HEADER(FileObject)->Type->TypeInfo.GenericMapping);
-
-       Status = ObInsertObject ((PVOID)FileObject,
-                                NULL,
-                                DesiredAccess,
-                                0,
-                                NULL,
-                                &LocalHandle);
-       if (!NT_SUCCESS(Status))
-         {
-           DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
-           ObMakeTemporaryObject(FileObject);
-           ObDereferenceObject (FileObject);
-           return Status;
-         }
    //
    // stop stuff that should be in IopParseDevice
    //

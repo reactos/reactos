@@ -338,14 +338,6 @@ Next:
             *ReturnedObject = NULL;
             return STATUS_OBJECT_PATH_NOT_FOUND;
         }
-        else if (Header->Type == IoFileObjectType)
-        {
-            /* Otherwise, call the hacked parse routine which will go away soon */
-            Status = IopCreateFile(&Header->Body,
-                                   FoundObject,
-                                   RemainingPath->Buffer,
-                                   NULL);
-        }
 
         if (FoundHeader && FoundHeader->Type == ObDirectoryType &&
             RemainingPath->Buffer)

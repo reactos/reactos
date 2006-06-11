@@ -486,12 +486,33 @@ IopReinitializeDrivers(VOID);
 /* file.c */
 
 NTSTATUS
-STDCALL
-IopCreateFile(
-    PVOID ObjectBody,
-    PVOID Parent,
-    PWSTR RemainingPath,
-    POBJECT_CREATE_INFORMATION ObjectAttributes
+NTAPI
+IopParseDevice(
+    IN PVOID ParseObject,
+    IN POBJECT_TYPE ObjectType,
+    IN OUT PACCESS_STATE AccessState,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ULONG Attributes,
+    IN OUT PUNICODE_STRING CompleteName,
+    IN OUT PUNICODE_STRING RemainingName,
+    IN OUT PVOID Context OPTIONAL,
+    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+    OUT PVOID *Object
+);
+
+NTSTATUS
+NTAPI
+IopParseFile(
+    IN PVOID ParseObject,
+    IN POBJECT_TYPE ObjectType,
+    IN OUT PACCESS_STATE AccessState,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ULONG Attributes,
+    IN OUT PUNICODE_STRING CompleteName,
+    IN OUT PUNICODE_STRING RemainingName,
+    IN OUT PVOID Context OPTIONAL,
+    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+    OUT PVOID *Object
 );
 
 VOID
