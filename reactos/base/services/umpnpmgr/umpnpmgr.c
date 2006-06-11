@@ -1039,24 +1039,117 @@ PNP_UninstallDevInst(handle_t BindingHandle,
 }
 
 
+static BOOL
+CheckForDeviceId(LPWSTR lpDeviceIdList,
+                 LPWSTR lpDeviceId)
+{
+    LPWSTR lpPtr;
+    DWORD dwLength;
+
+    lpPtr = lpDeviceIdList;
+    while (*lpPtr != 0)
+    {
+        dwLength = wcslen(lpPtr);
+        if (!_wcsicmp(lpPtr, lpDeviceId))
+            return TRUE;
+
+        lpPtr += (dwLength + 1);
+    }
+
+    return FALSE;
+}
+
+
+static VOID
+AppendDeviceId(LPWSTR lpDeviceIdList,
+               LPDWORD lpDeviceIdListSize,
+               LPWSTR lpDeviceId)
+{
+    DWORD dwLen;
+    DWORD dwPos;
+
+    dwLen = wcslen(lpDeviceId);
+    dwPos = (*lpDeviceIdListSize / sizeof(WCHAR)) - 1;
+
+    wcscpy(&lpDeviceIdList[dwPos], lpDeviceId);
+
+    dwPos += (dwLen + 1);
+
+    lpDeviceIdList[dwPos] = 0;
+
+    *lpDeviceIdListSize = dwPos * sizeof(WCHAR);
+}
+
+
 /* Function 34 */
 CONFIGRET
 PNP_AddID(handle_t BindingHandle,
-          wchar_t *DeviceInstance, /* in, string, unique */
-          wchar_t *DeviceId,       /* in, string */
+          wchar_t *DeviceInstance,
+          wchar_t *DeviceId,
           DWORD Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
+    HKEY hDeviceKey;
+    LPWSTR pszSubKey;
+    DWORD dwDeviceIdListSize;
+    WCHAR szDeviceIdList[512];
 
-    DPRINT1("PNP_AddID() called\n");
-    DPRINT1("  DeviceInstance: %S\n", DeviceInstance);
-    DPRINT1("  DeviceId: %S\n", DeviceId);
-    DPRINT1("  Flags: %lx\n", Flags);
+    DPRINT("PNP_AddID() called\n");
+    DPRINT("  DeviceInstance: %S\n", DeviceInstance);
+    DPRINT("  DeviceId: %S\n", DeviceId);
+    DPRINT("  Flags: %lx\n", Flags);
 
-    /* FIXME */
-    ret = CR_CALL_NOT_IMPLEMENTED;
+    if (RegOpenKeyExW(hEnumKey,
+                      DeviceInstance,
+                      0,
+                      KEY_QUERY_VALUE | KEY_SET_VALUE,
+                      &hDeviceKey) != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to open the device key!\n");
+        return CR_INVALID_DEVNODE;
+    }
 
-    DPRINT1("PNP_AddID() done (returns %lx)\n", ret);
+    pszSubKey = (Flags & CM_ADD_ID_COMPATIBLE) ? L"CompatibleIDs" : L"HardwareID";
+
+    dwDeviceIdListSize = 512 * sizeof(WCHAR);
+    if (RegQueryValueExW(hDeviceKey,
+                         pszSubKey,
+                         NULL,
+                         NULL,
+                         (LPBYTE)szDeviceIdList,
+                         &dwDeviceIdListSize) != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to query the desired ID string!\n");
+        ret = CR_REGISTRY_ERROR;
+        goto Done;
+    }
+
+    /* Check whether the device ID is already in use */
+    if (CheckForDeviceId(szDeviceIdList, DeviceId))
+    {
+        DPRINT("Device ID was found in the ID string!\n");
+        ret = CR_SUCCESS;
+        goto Done;
+    }
+
+    /* Append the Device ID */
+    AppendDeviceId(szDeviceIdList, &dwDeviceIdListSize, DeviceId);
+
+    if (RegSetValueExW(hDeviceKey,
+                       pszSubKey,
+                       0,
+                       REG_MULTI_SZ,
+                       (LPBYTE)szDeviceIdList,
+                       dwDeviceIdListSize) != ERROR_SUCCESS)
+    {
+        DPRINT("Failed to set the desired ID string!\n");
+        ret = CR_REGISTRY_ERROR;
+    }
+
+Done:
+    RegCloseKey(hDeviceKey);
+
+    DPRINT("PNP_AddID() done (returns %lx)\n", ret);
 
     return ret;
 }
