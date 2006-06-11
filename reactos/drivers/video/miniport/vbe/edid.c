@@ -37,7 +37,8 @@ VBEWriteClockLine(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_WRITE_SCL_CLOCK_LINE;
-   BiosRegisters.Ecx = data;
+   BiosRegisters.Ecx = VBEDeviceExtension->CurrentChildIndex;
+   BiosRegisters.Edx = data;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
@@ -55,7 +56,8 @@ VBEWriteDataLine(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_WRITE_SDA_DATA_LINE;
-   BiosRegisters.Ecx = data;
+   BiosRegisters.Ecx = VBEDeviceExtension->CurrentChildIndex;
+   BiosRegisters.Edx = data;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
@@ -72,6 +74,7 @@ VBEReadClockLine(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_READ_SCL_CLOCK_LINE;
+   BiosRegisters.Ecx = VBEDeviceExtension->CurrentChildIndex;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
@@ -90,6 +93,7 @@ VBEReadDataLine(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_READ_SDA_DATA_LINE;
+   BiosRegisters.Ecx = VBEDeviceExtension->CurrentChildIndex;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
@@ -99,8 +103,9 @@ VBEReadDataLine(
 
 static BOOLEAN
 VBEReadEdidUsingSCI(
-   PVOID HwDeviceExtension,
-   PVBE_EDID Edid)
+   IN PVOID HwDeviceExtension,
+   IN ULONG ChildIndex,
+   OUT PVOID Edid)
 {
    INT10_BIOS_ARGUMENTS BiosRegisters;
    PVBE_DEVICE_EXTENSION VBEDeviceExtension =
@@ -116,6 +121,7 @@ VBEReadEdidUsingSCI(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_REPORT_CAPABILITIES;
+   BiosRegisters.Ecx = VBEDeviceExtension->CurrentChildIndex;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
@@ -131,6 +137,7 @@ VBEReadEdidUsingSCI(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_BEGIN_SCL_SDA_CONTROL;
+   BiosRegisters.Ecx = VBEDeviceExtension->CurrentChildIndex;
    VBEDeviceExtension->Int10Interface.Int10CallBios(
       VBEDeviceExtension->Int10Interface.Context,
       &BiosRegisters);
@@ -140,6 +147,7 @@ VBEReadEdidUsingSCI(
    /*
     * Read EDID information
     */
+   VBEDeviceExtension->CurrentChildIndex = ChildIndex;
    DDCControl.Size = sizeof(DDC_CONTROL);
    DDCControl.I2CCallbacks.WriteClockLine = VBEWriteClockLine;
    DDCControl.I2CCallbacks.WriteDataLine = VBEWriteDataLine;
@@ -150,7 +158,7 @@ VBEReadEdidUsingSCI(
       HwDeviceExtension,
       &DDCControl,
       (PUCHAR)&Edid,
-      sizeof(VBE_EDID));
+      MAX_SIZE_OF_EDID);
 
    /*
     * Disable I²C interface
@@ -168,8 +176,9 @@ VBEReadEdidUsingSCI(
 
 static BOOLEAN
 VBEReadEdid(
-   PVBE_DEVICE_EXTENSION VBEDeviceExtension,
-   PVBE_EDID Edid)
+   IN PVBE_DEVICE_EXTENSION VBEDeviceExtension,
+   IN ULONG ChildIndex,
+   OUT PVOID Edid)
 {
    INT10_BIOS_ARGUMENTS BiosRegisters;
 
@@ -181,6 +190,7 @@ VBEReadEdid(
    VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
    BiosRegisters.Eax = VBE_DDC;
    BiosRegisters.Ebx = VBE_DDC_READ_EDID;
+   BiosRegisters.Ecx = ChildIndex;
    BiosRegisters.Edx = 1;
    BiosRegisters.Edi = VBEDeviceExtension->TrampolineMemoryOffset;
    BiosRegisters.SegEs = VBEDeviceExtension->TrampolineMemorySegment;
@@ -199,7 +209,7 @@ VBEReadEdid(
       VBEDeviceExtension->TrampolineMemorySegment,
       VBEDeviceExtension->TrampolineMemoryOffset,
       Edid,
-      sizeof(VBE_EDID));
+      MAX_SIZE_OF_EDID);
 
    return TRUE;
 }
@@ -215,24 +225,51 @@ VBEGetVideoChildDescriptor(
 {
    PVBE_DEVICE_EXTENSION VBEDeviceExtension =
      (PVBE_DEVICE_EXTENSION)HwDeviceExtension;
-   VBE_EDID Edid;
+   ULONG ChildIndex;
 
    /*
     * We are called very early in device initialization, even before
     * VBEInitialize is called. So, our Int10 interface is not set.
-    * Ignore this call, we will trigger it ourselves later.
+    * Ignore this call, we will trigger another one later.
     */
    if (VBEDeviceExtension->Int10Interface.Size == 0)
       return VIDEO_ENUM_NO_MORE_DEVICES;
 
+   if (ChildEnumInfo->Size != sizeof(VIDEO_CHILD_ENUM_INFO))
+   {
+      VideoPortDebugPrint(Error, "VBEMP: Wrong VIDEO_CHILD_ENUM_INFO structure size\n");
+      return VIDEO_ENUM_NO_MORE_DEVICES;
+   }
+   else if (ChildEnumInfo->ChildDescriptorSize < MAX_SIZE_OF_EDID)
+   {
+      VideoPortDebugPrint(Warn, "VBEMP: Too small buffer for EDID\n");
+      return VIDEO_ENUM_NO_MORE_DEVICES;
+   }
+   else if (ChildEnumInfo->ChildIndex == DISPLAY_ADAPTER_HW_ID)
+   {
+      *VideoChildType = VideoChip;
+      *UId = 0;
+      return VIDEO_ENUM_MORE_DEVICES; /* FIXME: not sure... */
+   }
+
+   /*
+    * Get Child ID
+    */
+   if (ChildEnumInfo->ChildIndex != 0)
+      ChildIndex = ChildEnumInfo->ChildIndex;
+   else
+      ChildIndex = ChildEnumInfo->ACPIHwId;
+   VideoPortDebugPrint(Info, "VBEMP: ChildEnumInfo->ChildIndex %lu, ChildEnumInfo->ACPIHwId %lu => %lu\n",
+      ChildEnumInfo->ChildIndex, ChildEnumInfo->ACPIHwId, ChildIndex);
+
    /*
     * Try to read EDID information using 2 different methods.
     */
-   if (VBEReadEdid(HwDeviceExtension, &Edid))
+   if (VBEReadEdid(HwDeviceExtension, ChildIndex, pChildDescriptor))
    {
       VideoPortDebugPrint(Info, "VBEMP: EDID information read directly\n");
    }
-   else if (VBEReadEdidUsingSCI(HwDeviceExtension, &Edid))
+   else if (VBEReadEdidUsingSCI(HwDeviceExtension, ChildIndex, pChildDescriptor))
    {
       VideoPortDebugPrint(Info, "VBEMP: EDID information read using I²C\n");
    }
@@ -243,9 +280,18 @@ VBEGetVideoChildDescriptor(
    }
 
    /*
-    * Process the EDID data.
+    * Fill return data
     */
-   /* FIXME */
-   VideoPortDebugPrint(Error, "VBEMP: Need to parse EDID information\n");
-   return VIDEO_ENUM_NO_MORE_DEVICES;
+   *VideoChildType = Monitor;
+   if (ChildIndex == 0)
+   {
+      /*
+       * This is the actual display adapter
+       */
+      *UId = DISPLAY_ADAPTER_HW_ID;
+   }
+   else
+      *UId = ChildIndex;
+   *pUnused = 0;
+   return VIDEO_ENUM_MORE_DEVICES;
 }

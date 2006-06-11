@@ -189,10 +189,7 @@ typedef struct
    CHAR Reserved4[189];
 } VBE_MODEINFO, *PVBE_MODEINFO;
 
-typedef struct
-{
-   UCHAR Reserved[128];
-} VBE_EDID, *PVBE_EDID;
+#define MAX_SIZE_OF_EDID 256
 
 #include <poppack.h>
 
@@ -213,6 +210,9 @@ typedef struct
    USHORT *ModeNumbers;
    PVBE_MODEINFO ModeInfo;
    USHORT CurrentMode;
+
+   /* Current child been enumerated */
+   ULONG CurrentChildIndex;
 } VBE_DEVICE_EXTENSION, *PVBE_DEVICE_EXTENSION;
 
 /* edid.c */
