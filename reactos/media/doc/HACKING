@@ -26,19 +26,14 @@ questions,
 	   
 * Style
 
-There is no coding style used for ReactOS, however the following guidelines
-make things easier
+There is a coding style used for ReactOS, it's described in a ReactOS's Wiki
+page called Coding Style: http://www.reactos.org/wiki/index.php/Coding_Style
 
-     Include information at the top of a module about its purpose, contact
-     information for its programmer and any useful notes. 
-     
-     Include a comment by each non-trival function describing its arguments,
-     purpose and any other notes.
-     
-     Update the documentation in this directory
-     
-These guidelines are an ideal, no one manages to implement them all the
-time, straightforward working code is probably just as good.
+However, not all codebase complies with the rules outlined in that page, so
+if you need to hack some code which has not been yet formatted, it's wise
+to keep the kind of formatting it already has, to make it looking good until
+it receives a formatting patch.
+
 
 * Debugging
 
@@ -105,11 +100,11 @@ Debugging kernel-mode code is tricky, these are some snippets
 
     There is a mailing list for kernel development,
     
-            ros-kernel@reactos.com
+            ros-dev@reactos.org
 	    
-    The main developers use a cvs account to coordinate changes, ask 
-    rex (rex@lvcablemodem.com) for an account if you are going to be adding
-    a lot of code. Smaller patches can go to the mailing list or to the
+    The main developers use a svn account to coordinate changes, ask 
+    Aleksey (aleksey@reactos.org) for an account if you are going to be
+    adding a lot of code. Smaller patches can go to the mailing list or to the
     relevant developer (usually the comment at the top of a module will have
     an email address). Regular snapshots are made available for download,
     see the mailing list for announcements.
