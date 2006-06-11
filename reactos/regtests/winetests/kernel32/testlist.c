@@ -22,6 +22,7 @@ extern void func_environ(void);
 extern void func_file(void);
 extern void func_format_msg(void);
 extern void func_heap(void);
+extern void func_interlck(void);
 extern void func_locale(void);
 extern void func_module(void);
 extern void func_mailslot(void);
@@ -49,6 +50,7 @@ const struct test winetest_testlist[] =
     { "file", func_file },
     { "format_msg", func_format_msg },
     { "heap", func_heap },
+    { "interlck", func_interlck },
     { "locale", func_locale },
     { "module", func_module },
     { "mailslot", func_mailslot },

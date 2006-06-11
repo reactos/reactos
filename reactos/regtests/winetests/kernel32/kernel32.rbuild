@@ -15,6 +15,7 @@
     <file>file.c</file>
     <file>format_msg.c</file>
     <file>heap.c</file>
+    <file>interlck.c</file>
     <file>locale.c</file>
     <file>mailslot.c</file>
     <file>module.c</file>
