@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <assert.h>
@@ -234,7 +234,7 @@ static void test_subclass(void)
     ok_sequence(Sub_AfterDeletedTest, "After Deleted");
 
     pSetWindowSubclass(hwnd, WndProcSub, 2, 0);
-    origProc3 = (WNDPROC)SetWindowLong(hwnd, GWL_WNDPROC, (LONG)WndProc3);
+    origProc3 = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG)WndProc3);
     SendMessage(hwnd, WM_USER, 1, 0);
     SendMessage(hwnd, WM_USER, 2, 0);
     ok_sequence(Sub_OldAfterNewTest, "Old after New");
