@@ -106,7 +106,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.hIcon			= LoadIcon(hInstance, (LPCTSTR)IDI_FDEBUG);
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= NULL;//(HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= (LPCSTR)IDC_FDEBUG;
+	wcex.lpszMenuName	= (LPCTSTR)IDC_FDEBUG;
 	wcex.lpszClassName	= szWindowClass;
 	wcex.hIconSm		= LoadIcon(wcex.hInstance, (LPCTSTR)IDI_SMALL);
 
@@ -160,8 +160,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_CREATE:
 
-		hEditWnd = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_AUTOHSCROLL|ES_LEFT|ES_MULTILINE, 0, 0, 0, 0, hWnd, NULL, hInst, NULL);
-		hDisplayWnd = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), "", WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|ES_MULTILINE, 0, 0, 0, 0, hWnd, NULL, hInst, NULL);
+		hEditWnd = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""), WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_AUTOHSCROLL|ES_LEFT|ES_MULTILINE, 0, 0, 0, 0, hWnd, NULL, hInst, NULL);
+		hDisplayWnd = CreateWindowEx(WS_EX_CLIENTEDGE, TEXT("EDIT"), TEXT(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|ES_MULTILINE, 0, 0, 0, 0, hWnd, NULL, hInst, NULL);
 
 		memset(&ncm, 0, sizeof(NONCLIENTMETRICS));
 		ncm.cbSize = sizeof(NONCLIENTMETRICS);
