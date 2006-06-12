@@ -1,53 +1,89 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * FILE:              include/internal/objmgr.h
- * PURPOSE:           Object manager definitions
- * PROGRAMMER:        David Welch (welch@mcmail.com)
- */
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/include/ob.h
+* PURPOSE:         Internal header for the Object Manager
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
+#include "ob_x.h"
 
-#ifndef __INCLUDE_INTERNAL_OBJMGR_H
-#define __INCLUDE_INTERNAL_OBJMGR_H
+//
+// Define this if you want debugging support
+//
+#define _OB_DEBUG_                                      0x00
 
+//
+// These define the Debug Masks Supported
+//
+#define OB_HANDLE_DEBUG                                 0x01
+#define OB_NAMESPACE_DEBUG                              0x02
+#define OB_SECURITY_DEBUG                               0x04
+#define OB_REFERENCE_DEBUG                              0x08
+#define OB_CALLBACK_DEBUG                               0x10
+
+//
+// Debug/Tracing support
+//
+#if _OB_DEBUG_
+#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+#define OBTRACE DbgPrintEx
+#else
+#define OBTRACE(x, ...)                                 \
+    if (x & ObpTraceLevel) DbgPrint(__VA_ARGS__)
+#endif
+#else
+#define OBTRACE(x, ...) DPRINT(__VA_ARGS__)
+#endif
+
+//
+// Mask to detect GENERIC_XXX access masks being used
+//
+#define GENERIC_ACCESS                                  \
+    (GENERIC_READ    |                                  \
+     GENERIC_WRITE   |                                  \
+     GENERIC_EXECUTE |                                  \
+     GENERIC_ALL)
+
+//
+// Identifies a Kernel Handle
+//
+#define KERNEL_HANDLE_FLAG                              \
+    (1 << ((sizeof(HANDLE) * 8) - 1))
+#define ObIsKernelHandle(Handle, ProcessorMode)         \
+    (((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) &&      \
+    ((ProcessorMode) == KernelMode))
+
+//
+// Converts to and from a Kernel Handle to a normal handle
+//
+#define ObKernelHandleToHandle(Handle)                  \
+    (HANDLE)((ULONG_PTR)(Handle) & ~KERNEL_HANDLE_FLAG)
+#define ObMarkHandleAsKernelHandle(Handle)              \
+    (HANDLE)((ULONG_PTR)(Handle) | KERNEL_HANDLE_FLAG)
+
+//
+// Returns the number of handles in a handle table
+//
+#define ObpGetHandleCountByHandleTable(HandleTable)     \
+    ((PHANDLE_TABLE)HandleTable)->HandleCount
+
+//
+// Context Structures for Ex*Handle Callbacks
+//
 typedef struct _OBP_SET_HANDLE_ATTRIBUTES_CONTEXT
 {
     KPROCESSOR_MODE PreviousMode;
     OBJECT_HANDLE_ATTRIBUTE_INFORMATION Information;
 } OBP_SET_HANDLE_ATTRIBUTES_CONTEXT, *POBP_SET_HANDLE_ATTRIBUTES_CONTEXT;
-
 typedef struct _OBP_CLOSE_HANDLE_CONTEXT
 {
     PHANDLE_TABLE HandleTable;
     KPROCESSOR_MODE AccessMode;
 } OBP_CLOSE_HANDLE_CONTEXT, *POBP_CLOSE_HANDLE_CONTEXT;
 
-#define GENERIC_ACCESS (GENERIC_READ |      \
-                        GENERIC_WRITE |     \
-                        GENERIC_EXECUTE |   \
-                        GENERIC_ALL)
-
-#define KERNEL_HANDLE_FLAG (1 << ((sizeof(HANDLE) * 8) - 1))
-#define ObIsKernelHandle(Handle, ProcessorMode)                                \
-  (((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) &&                               \
-   ((ProcessorMode) == KernelMode))
-#define ObKernelHandleToHandle(Handle)                                         \
-  (HANDLE)((ULONG_PTR)(Handle) & ~KERNEL_HANDLE_FLAG)
-#define ObMarkHandleAsKernelHandle(Handle)                                     \
-  (HANDLE)((ULONG_PTR)(Handle) | KERNEL_HANDLE_FLAG)
-#define ObpGetHandleCountByHandleTable(HandleTable)                             \
-    ((PHANDLE_TABLE)HandleTable)->HandleCount
-
-extern KEVENT ObpDefaultObject;
-extern POBJECT_TYPE ObpTypeObjectType;
-extern POBJECT_TYPE ObSymbolicLinkType;
-extern POBJECT_TYPE ObTypeObjectType;
-extern POBJECT_DIRECTORY NameSpaceRoot;
-extern POBJECT_DIRECTORY ObpTypeDirectoryObject;
-extern PHANDLE_TABLE ObpKernelHandleTable;
-extern WORK_QUEUE_ITEM ObpReaperWorkItem;
-extern volatile PVOID ObpReaperList;
-extern NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
-
+//
+// Directory Namespace Functions
+//
 BOOLEAN
 NTAPI
 ObpDeleteEntryDirectory(
@@ -72,12 +108,33 @@ ObpLookupEntryDirectory(
     IN POBP_LOOKUP_CONTEXT Context
 );
 
+//
+// Symbolic Link Functions
+//
 VOID
 NTAPI
 ObInitSymbolicLinkImplementation(
     VOID
 );
 
+NTSTATUS
+NTAPI
+ObpParseSymbolicLink(
+    IN PVOID ParsedObject,
+    IN PVOID ObjectType,
+    IN OUT PACCESS_STATE AccessState,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ULONG Attributes,
+    IN OUT PUNICODE_STRING FullPath,
+    IN OUT PUNICODE_STRING RemainingName,
+    IN OUT PVOID Context OPTIONAL,
+    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+    OUT PVOID *NextObject
+);
+
+//
+// Process/Handle Table Init/Rundown
+//
 NTSTATUS
 NTAPI
 ObpCreateHandleTable(
@@ -91,6 +148,9 @@ ObKillProcess(
     IN PEPROCESS Process
 );
 
+//
+// Object Lookup Functions
+//
 NTSTATUS
 NTAPI
 ObFindObject(
@@ -107,6 +167,9 @@ ObFindObject(
     IN PVOID Insert
 );
 
+//
+// Object Attribute Functions
+//
 BOOLEAN
 NTAPI
 ObpSetHandleAttributes(
@@ -117,24 +180,14 @@ ObpSetHandleAttributes(
 
 VOID
 NTAPI
-ObpDeleteNameCheck(
-    IN PVOID Object
-);
-
-VOID
-NTAPI
 ObQueryDeviceMapInformation(
     IN PEPROCESS Process,
     OUT PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo
 );
 
-VOID
-FASTCALL
-ObpSetPermanentObject(
-    IN PVOID ObjectBody,
-    IN BOOLEAN Permanent
-);
-
+//
+// Object Lifetime Functions
+//
 VOID
 FASTCALL
 ObpDeleteObject(
@@ -147,11 +200,27 @@ ObpReapObject(
     IN PVOID Unused
 );
 
-/* Security descriptor cache functions */
+VOID
+FASTCALL
+ObpSetPermanentObject(
+    IN PVOID ObjectBody,
+    IN BOOLEAN Permanent
+);
 
+VOID
+NTAPI
+ObpDeleteNameCheck(
+    IN PVOID Object
+);
+
+//
+// Security descriptor cache functions
+//
 NTSTATUS
 NTAPI
-ObpInitSdCache(VOID);
+ObpInitSdCache(
+    VOID
+);
 
 NTSTATUS
 NTAPI
@@ -162,7 +231,9 @@ ObpAddSecurityDescriptor(
 
 NTSTATUS
 NTAPI
-ObpRemoveSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+ObpRemoveSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor
+);
 
 PSECURITY_DESCRIPTOR
 NTAPI
@@ -172,37 +243,45 @@ ObpReferenceCachedSecurityDescriptor(
 
 VOID
 NTAPI
-ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+ObpDereferenceCachedSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor
+);
 
+//
+// Executive Fast Referencing Functions
+//
 VOID
 FASTCALL
 ObInitializeFastReference(
     IN PEX_FAST_REF FastRef,
-    PVOID Object
+    IN PVOID Object
 );
 
 PVOID
 FASTCALL
 ObFastReplaceObject(
     IN PEX_FAST_REF FastRef,
-    PVOID Object
+    IN PVOID Object
 );
 
 PVOID
 FASTCALL
-ObFastReferenceObject(IN PEX_FAST_REF FastRef);
+ObFastReferenceObject(
+    IN PEX_FAST_REF FastRef
+);
 
 VOID
 FASTCALL
 ObFastDereferenceObject(
     IN PEX_FAST_REF FastRef,
-    PVOID Object
+    IN PVOID Object
 );
 
-/* Object Create and Object Name Capture Functions */
-
+//
+// Object Create and Object Name Capture Functions
+//
 NTSTATUS
-STDCALL
+NTAPI
 ObpCaptureObjectName(
     IN PUNICODE_STRING CapturedName,
     IN PUNICODE_STRING ObjectName,
@@ -211,7 +290,7 @@ ObpCaptureObjectName(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 ObpCaptureObjectAttributes(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     IN KPROCESSOR_MODE AccessMode,
@@ -220,119 +299,17 @@ ObpCaptureObjectAttributes(
     OUT PUNICODE_STRING ObjectName
 );
 
-VOID
-static __inline
-ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
-{
-    /* Check if we have a security descriptor */
-    if (ObjectCreateInfo->SecurityDescriptor)
-    {
-        /* Release it */
-        SeReleaseSecurityDescriptor(ObjectCreateInfo->SecurityDescriptor,
-                                    ObjectCreateInfo->ProbeMode,
-                                    TRUE);
-        ObjectCreateInfo->SecurityDescriptor = NULL;
-    }
-}
-
-PVOID
-static __inline
-ObpAllocateCapturedAttributes(IN PP_NPAGED_LOOKASIDE_NUMBER Type)
-{
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    PVOID Buffer;
-    PNPAGED_LOOKASIDE_LIST List;
-
-    /* Get the P list first */
-    List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[Type].P;
-
-    /* Attempt allocation */
-    List->L.TotalAllocates++;
-    Buffer = (PVOID)InterlockedPopEntrySList(&List->L.ListHead);
-    if (!Buffer)
-    {
-        /* Let the balancer know that the P list failed */
-        List->L.AllocateMisses++;
-
-        /* Try the L List */
-        List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[Type].L;
-        List->L.TotalAllocates++;
-        Buffer = (PVOID)InterlockedPopEntrySList(&List->L.ListHead);
-        if (!Buffer)
-        {
-            /* Let the balancer know the L list failed too */
-            List->L.AllocateMisses++;
-
-            /* Allocate it */
-            Buffer = List->L.Allocate(List->L.Type, List->L.Size, List->L.Tag);
-        }
-    }
-
-    /* Return buffer */
-    return Buffer;
-}
-
-VOID
-static __inline
-ObpFreeCapturedAttributes(IN PVOID Buffer,
-                          IN PP_NPAGED_LOOKASIDE_NUMBER Type)
-{
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    PNPAGED_LOOKASIDE_LIST List;
-
-    /* Use the P List */
-    List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[Type].P;
-    List->L.TotalFrees++;
-
-    /* Check if the Free was within the Depth or not */
-    if (ExQueryDepthSList(&List->L.ListHead) >= List->L.Depth)
-    {
-        /* Let the balancer know */
-        List->L.FreeMisses++;
-
-        /* Use the L List */
-        List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[Type].L;
-        List->L.TotalFrees++;
-
-        /* Check if the Free was within the Depth or not */
-        if (ExQueryDepthSList(&List->L.ListHead) >= List->L.Depth)
-        {
-            /* All lists failed, use the pool */
-            List->L.FreeMisses++;
-            List->L.Free(Buffer);
-        }
-    }
-    else
-    {
-        /* The free was within the Depth */
-        InterlockedPushEntrySList(&List->L.ListHead,
-                                  (PSINGLE_LIST_ENTRY)Buffer);
-    }
-}
-
-VOID
-static __inline
-ObpReleaseCapturedName(IN PUNICODE_STRING Name)
-{
-    /* We know this is a pool-allocation if the size doesn't match */
-    if (Name->MaximumLength != 248)
-    {
-        ExFreePool(Name->Buffer);
-    }
-    else
-    {
-        /* Otherwise, free from the lookaside */
-        ObpFreeCapturedAttributes(Name, LookasideNameBufferList);
-    }
-}
-
-VOID
-static __inline
-ObpFreeAndReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
-{
-    /* First release the attributes, then free them from the lookaside list */
-    ObpReleaseCapturedAttributes(ObjectCreateInfo);
-    ObpFreeCapturedAttributes(ObjectCreateInfo, LookasideCreateInfoList);
-}
-
-#endif /* __INCLUDE_INTERNAL_OBJMGR_H */
+//
+// Global data inside the Object Manager
+//
+extern ULONG ObpTraceLevel;
+extern KEVENT ObpDefaultObject;
+extern POBJECT_TYPE ObpTypeObjectType;
+extern POBJECT_TYPE ObSymbolicLinkType;
+extern POBJECT_TYPE ObTypeObjectType;
+extern POBJECT_DIRECTORY NameSpaceRoot;
+extern POBJECT_DIRECTORY ObpTypeDirectoryObject;
+extern PHANDLE_TABLE ObpKernelHandleTable;
+extern WORK_QUEUE_ITEM ObpReaperWorkItem;
+extern volatile PVOID ObpReaperList;
+extern NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;

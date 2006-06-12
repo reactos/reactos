@@ -133,7 +133,6 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                 /* Reference the desktop and return it */
                 ObReferenceObject(Desktop);
                 *Object = Desktop;
-                RemainingName->Buffer = NULL; // => ROS Parse routines need to do this
                 return Status;
             }
         }
@@ -168,7 +167,6 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 
     /* Set the desktop object and return success */
     *Object = Desktop;
-    RemainingName->Buffer = NULL; // => ROS Parse routines need to do this
     return STATUS_SUCCESS;
 }
 

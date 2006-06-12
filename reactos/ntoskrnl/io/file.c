@@ -44,19 +44,15 @@ IopParseDevice(IN PVOID ParseObject,
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
     DPRINT("IopParseDevice:\n"
-            "DeviceObject : %p, Type : %p, TypeName : %wZ\n"
-            "FileObject : %p, Type : %p, TypeName : %wZ\n"
-            "CompleteName : %wZ, RemainingName : %wZ\n",
-            ParseObject,
-            ObjectType,
-            &ObjectType->Name,
-            Context,
-            Context ? OBJECT_TO_OBJECT_HEADER(Context)->Type : NULL,
-            Context ? &OBJECT_TO_OBJECT_HEADER(Context)->Type->Name: NULL,
-            CompleteName,
-            RemainingName);
+           "DeviceObject : %p\n"
+           "RelatedFileObject : %p\n"
+           "CompleteName : %wZ, RemainingName : %wZ\n",
+           ParseObject,
+           Context,
+           CompleteName,
+           RemainingName);
 
-    if (!RemainingName || !RemainingName->Buffer)
+    if (!*RemainingName->Buffer)
     {
         DeviceObject = ParseObject;
 
@@ -71,6 +67,7 @@ IopParseDevice(IN PVOID ParseObject,
                                 (PVOID*)&FileObject);
         /* Set File Object Data */
         FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject);
+        DPRINT("DO. DRV Name: %p %wZ\n", DeviceObject, &DeviceObject->DriverObject->DriverName);
 
         /* HACK */
         FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
@@ -88,7 +85,7 @@ IopParseDevice(IN PVOID ParseObject,
                         0,
                         (PVOID*)&FileObject);
 
-    if (ObjectType == IoDeviceObjectType)
+    if (!Context)
     {
         /* Parent is a device object */
         DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)ParseObject);
@@ -110,7 +107,6 @@ IopParseDevice(IN PVOID ParseObject,
     RtlCreateUnicodeString(&FileObject->FileName, RemainingName->Buffer);
     FileObject->DeviceObject = DeviceObject;
     *Object = FileObject;
-    RemainingName->Buffer = NULL; // ros hack
     return STATUS_SUCCESS;
 }
 

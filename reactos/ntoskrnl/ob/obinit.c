@@ -38,6 +38,7 @@ GENERIC_MAPPING ObpDirectoryMapping =
 };
 
 PDEVICE_MAP ObSystemDeviceMap = NULL;
+ULONG ObpTraceLevel = OB_NAMESPACE_DEBUG;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

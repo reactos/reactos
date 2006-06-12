@@ -126,8 +126,8 @@ IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters)
         }
 
         /* Reference the window station and return */
-        //ObReferenceObject(Object);
-        //*NextObject = Object; => ROS Parse routines don't need to do this
+        ObReferenceObject(Parameters->ParseObject);
+        *Parameters->Object = Parameters->ParseObject;
         return STATUS_SUCCESS;
     }
 
@@ -149,10 +149,8 @@ IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters)
 
     /*
      * Check if we are parsing a desktop.
-     * FIXME: ROS Sends the wrong Object Type. The parsed object's type
-     * should be sent, not the parsed parent's.
      */
-    if (Parameters->ObjectType == ExWindowStationObjectType)
+    if (Parameters->ObjectType == ExDesktopObjectType)
     {
         /* Then call the desktop parse routine */
         return IntDesktopObjectParse(Parameters->ParseObject,

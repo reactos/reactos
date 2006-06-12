@@ -19,12 +19,6 @@
 
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
 
-#ifdef _OBDEBUG_
-#define OBTRACE DPRINT1
-#else
-#define OBTRACE DPRINT
-#endif
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
@@ -103,7 +97,8 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     /* Get the object type and header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
     ObjectType = ObjectHeader->Type;
-    OBTRACE("OBTRACE - %s - Decrementing count for: %p. HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Decrementing count for: %p. HC LC %lx %lx\n",
             __FUNCTION__,
             ObjectBody,
             ObjectHeader->HandleCount,
@@ -132,7 +127,8 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
 
     /* Decrease the total number of handles for this type */
     ObjectType->TotalNumberOfHandles--;
-    OBTRACE("OBTRACE - %s - Decremented count for: %p. HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Decremented count for: %p. HC LC %lx %lx\n",
             __FUNCTION__,
             ObjectBody,
             ObjectHeader->HandleCount,
@@ -183,7 +179,8 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     ObjectType = ObjectHeader->Type;
     Body = &ObjectHeader->Body;
     GrantedAccess = HandleEntry->GrantedAccess;
-    OBTRACE("OBTRACE - %s - Closing handle: %lx for %p. HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Closing handle: %lx for %p. HC LC %lx %lx\n",
             __FUNCTION__,
             Handle,
             Body,
@@ -243,7 +240,8 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     //ObDereferenceObject(Body); // FIXME: Needs sync changes in other code
 
     /* Return to caller */
-    OBTRACE("OBTRACE - %s - Closed handle: %lx for %p. HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Closed handle: %lx for %p. HC LC %lx %lx\n",
             __FUNCTION__,
             Handle,
             Body,
@@ -297,7 +295,8 @@ ObpIncrementHandleCount(IN PVOID Object,
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
-    OBTRACE("OBTRACE - %s - Incrementing count for: %p. Reason: %lx. HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Incrementing count for: %p. Reason: %lx. HC LC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -376,7 +375,8 @@ ObpIncrementHandleCount(IN PVOID Object,
 
     /* Increase total number of handles */
     ObjectType->TotalNumberOfHandles++;
-    OBTRACE("OBTRACE - %s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -429,7 +429,8 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
-    OBTRACE("OBTRACE - %s - Incrementing count for: %p. UNNAMED. HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Incrementing count for: %p. UNNAMED. HC LC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -486,7 +487,8 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
 
     /* Increase total number of handles */
     ObjectType->TotalNumberOfHandles++;
-    OBTRACE("OBTRACE - %s - Incremented count for: %p. UNNAMED HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Incremented count for: %p. UNNAMED HC LC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -546,7 +548,8 @@ ObpCreateUnnamedHandle(IN PVOID Object,
 
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-    OBTRACE("OBTRACE - %s - Creating handle for: %p. UNNAMED. HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Creating handle for: %p. UNNAMED. HC LC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -606,7 +609,8 @@ ObpCreateUnnamedHandle(IN PVOID Object,
      * ObpIncrementHandleCount to make sure that Object Security is valid
      * (specified in Gl00my documentation on Ob)
      */
-    OBTRACE("OBTRACE - %s - Handle Properties: [%p-%lx-%lx]\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Handle Properties: [%p-%lx-%lx]\n",
             __FUNCTION__,
             NewEntry.Object, NewEntry.ObAttributes & 3, NewEntry.GrantedAccess);
     Handle = ExCreateHandle(HandleTable, &NewEntry);
@@ -634,7 +638,8 @@ ObpCreateUnnamedHandle(IN PVOID Object,
         /* Return handle and object */
         *ReturnedHandle = Handle;
         if (ReturnedObject) *ReturnedObject = Object;
-        OBTRACE("OBTRACE - %s - Returning Handle: %lx HC LC %lx %lx\n",
+        OBTRACE(OB_HANDLE_DEBUG,
+                "%s %s - Returning Handle: %lx HC LC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -716,7 +721,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     /* Get the object header and type */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
-    OBTRACE("OBTRACE - %s - Creating handle for: %p. Reason: %lx. HC LC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Creating handle for: %p. Reason: %lx. HC LC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -787,7 +793,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
      * ObpIncrementHandleCount to make sure that Object Security is valid
      * (specified in Gl00my documentation on Ob)
      */
-    OBTRACE("OBTRACE - %s - Handle Properties: [%p-%lx-%lx]\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Handle Properties: [%p-%lx-%lx]\n",
             __FUNCTION__,
             NewEntry.Object, NewEntry.ObAttributes & 3, NewEntry.GrantedAccess);
     Handle = ExCreateHandle(HandleTable, &NewEntry);
@@ -815,7 +822,8 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
         /* Return handle and object */
         *ReturnedHandle = Handle;
         if (ReturnedObject) *ReturnedObject = Object;
-        OBTRACE("OBTRACE - %s - Returning Handle: %lx HC LC %lx %lx\n",
+        OBTRACE(OB_HANDLE_DEBUG,
+                "%s - Returning Handle: %lx HC LC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -857,7 +865,8 @@ ObpCloseHandle(IN HANDLE Handle,
     PHANDLE_TABLE_ENTRY HandleTableEntry;
     NTSTATUS Status;
     PAGED_CODE();
-    OBTRACE("OBTRACE - %s - Closing handle: %lx\n", __FUNCTION__, Handle);
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Closing handle: %lx\n", __FUNCTION__, Handle);
 
     /* Check if we're dealing with a kernel handle */
     if (ObIsKernelHandle(Handle, AccessMode))
@@ -924,7 +933,8 @@ ObpCloseHandle(IN HANDLE Handle,
     }
 
     /* Return status */
-    OBTRACE("OBTRACE - %s - Closed handle: %lx S: %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Closed handle: %lx S: %lx\n",
             __FUNCTION__, Handle, Status);
     return Status;
 }
@@ -1213,7 +1223,8 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     PHANDLE_TABLE HandleTable = NULL;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     PAGED_CODE();
-    OBTRACE("OBTRACE - %s - Duplicating handle: %lx for %p into %p\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Duplicating handle: %lx for %p into %p\n",
             __FUNCTION__,
             SourceHandle,
             SourceProcess,
@@ -1376,7 +1387,8 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     if (TargetHandle) *TargetHandle = NewHandle;
 
     /* Return status */
-    OBTRACE("OBTRACE - %s - Duplicated handle: %lx for %p into %p. Source: %p HC PC %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Duplicated handle: %lx for %p into %p. Source: %p HC PC %lx %lx\n",
             __FUNCTION__,
             NewHandle,
             SourceProcess,
@@ -1534,7 +1546,8 @@ Cleanup:
 Quickie:
     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
     if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
-    OBTRACE("OBTRACE: %s returning Object with PC S: %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s returning Object with PC S: %lx %lx\n",
             __FUNCTION__,
             OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
             Status);
@@ -1633,7 +1646,8 @@ ObOpenObjectByPointer(IN PVOID Object,
     ObDereferenceObject(Object);
 
     /* Return */
-    OBTRACE("OBTRACE: %s returning Object with PC S: %lx %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - returning Object with PC S: %lx %lx\n",
             __FUNCTION__,
             OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
             Status);
@@ -1993,11 +2007,12 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
-    OBTRACE("OBTRACE - %s - Duplicating handle: %lx for %lx into %lx.\n",
-        __FUNCTION__,
-        SourceHandle,
-        SourceProcessHandle,
-        TargetProcessHandle);
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Duplicating handle: %lx for %lx into %lx.\n",
+            __FUNCTION__,
+            SourceHandle,
+            SourceProcessHandle,
+            TargetProcessHandle);
 
     if((TargetHandle) && (PreviousMode != KernelMode))
     {
@@ -2083,7 +2098,8 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     }
 
     /* Dereference the processes */
-    OBTRACE("OBTRACE - %s - Duplicated handle: %lx into %lx S %lx\n",
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - Duplicated handle: %lx into %lx S %lx\n",
             __FUNCTION__,
             hTarget,
             TargetProcessHandle,

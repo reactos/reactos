@@ -100,24 +100,45 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     POBJECT_SYMBOLIC_LINK SymlinkObject = (POBJECT_SYMBOLIC_LINK)ParsedObject;
     PUNICODE_STRING TargetPath;
     PWSTR NewTargetPath;
-    ULONG LengthUsed, MaximumLength, RemainLength;
-    PWSTR *RemainingPath = &RemainingName->Buffer;
+    ULONG LengthUsed, MaximumLength;
+    NTSTATUS Status;
 
-    /*
-    * Stop parsing if the entire path has been parsed and
-    * the desired object is a symbolic link object.
-    */
-    if (((*RemainingPath == NULL) || (**RemainingPath == 0)) &&
-        (Attributes & OBJ_OPENLINK))
+    /* Assume failure */
+    *NextObject = NULL;
+
+    /* Check if we're out of name to parse */
+    if (!RemainingName->Length)
     {
-        *NextObject = NULL;
-        return(STATUS_SUCCESS);
+        /* Check if we got an object type */
+        if (ObjectType)
+        {
+            /* Reference the object only */
+            Status = ObReferenceObjectByPointer(ParsedObject,
+                                                0,
+                                                ObjectType,
+                                                AccessMode);
+            if (NT_SUCCESS(Status))
+            {
+                /* Return it */
+                *NextObject = ParsedObject;
+            }
+
+            if ((NT_SUCCESS(Status)) || (Status != STATUS_OBJECT_TYPE_MISMATCH))
+            {
+                /* Fail */
+                return Status;
+            }
+        }
+    }
+    else if (RemainingName->Buffer[0] != OBJ_NAME_PATH_SEPARATOR)
+    {
+        /* Symbolic links must start with a backslash */
+        return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
     /* Set the target path and length */
     TargetPath = &SymlinkObject->LinkTarget;
-    RemainLength = *RemainingPath ? wcslen(*RemainingPath) * sizeof(WCHAR) : 0;
-    LengthUsed = TargetPath->Length + RemainLength;
+    LengthUsed = TargetPath->Length + RemainingName->Length;
 
     /* Optimization: check if the new name is shorter */
     if (FullPath->MaximumLength <= LengthUsed)
@@ -136,12 +157,12 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     }
 
     /* Make sure we have a length */
-    if (RemainLength)
+    if (RemainingName->Length)
     {
         /* Copy the new path */
         RtlMoveMemory((PVOID)((ULONG_PTR)NewTargetPath + TargetPath->Length),
-                      *RemainingPath,
-                      RemainLength);
+                      RemainingName->Buffer,
+                      RemainingName->Length);
     }
 
     /* Copy the target path and null-terminate it */
@@ -156,10 +177,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     FullPath->MaximumLength = MaximumLength;
     FullPath->Buffer = NewTargetPath;
 
-    /* Reinitialize RemainingPath for reparsing */
-    *RemainingPath = FullPath->Buffer;
-
-    *NextObject = NULL;
+    /* Tell the parse routine to start reparsing */
     return STATUS_REPARSE;
 }
 
