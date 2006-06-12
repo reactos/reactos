@@ -23,19 +23,19 @@ extern void func_updown(void);
 
 const struct test winetest_testlist[] =
 {
-//    { "comboex", func_comboex },
+    { "comboex", func_comboex },
     { "dpa", func_dpa },
-//    { "header", func_header },
-//    { "imagelist", func_imagelist },
-//    { "monthcal", func_monthcal },
+    { "header", func_header },
+    { "imagelist", func_imagelist },
+    { "monthcal", func_monthcal },
     { "mru", func_mru },
-//    { "progress", func_progress },
-//    { "propsheet", func_propsheet },
+    { "progress", func_progress },
+    { "propsheet", func_propsheet },
     { "subclass", func_subclass },
     { "tab", func_tab },
-//    { "toolbar", func_toolbar },
-//    { "tooltips", func_tooltips },
-//    { "treeview", func_treeview },
-//    { "updown", func_updown },
+    { "toolbar", func_toolbar },
+    { "tooltips", func_tooltips },
+    { "treeview", func_treeview },
+    { "updown", func_updown },
     { 0, 0 }
 };
