@@ -14,7 +14,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_FDEBUG              ICON    DISCARDABLE     "fdebug.ico"
+IDI_FDEBUG ICON "fdebug.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
