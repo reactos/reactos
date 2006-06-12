@@ -21,3 +21,4 @@
 #include "Ja.rc"
 #include "Pl.rc"
 #include "Tr.rc"
+#include "No.rc"
