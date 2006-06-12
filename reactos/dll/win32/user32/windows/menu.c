@@ -2252,7 +2252,7 @@ MenuSwitchTracking(MTRACKER* Mt, PROSMENUINFO PtMenuInfo, UINT Index)
  *
  * Execute a menu item (for instance when user pressed Enter).
  * Return the wID of the executed item. Otherwise, -1 indicating
- * that no menu item was executed;
+ * that no menu item was executed, -2 if a popup is shown;
  * Have to receive the flags for the TrackPopupMenu options to avoid
  * sending unwanted message.
  *
@@ -2306,6 +2306,7 @@ MenuExecFocusedItem(MTRACKER *Mt, PROSMENUINFO MenuInfo, UINT Flags)
   else
     {
       Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, MenuInfo, TRUE, Flags);
+      return -2;
     }
 
   return -1;
@@ -2406,8 +2407,9 @@ MenuButtonUp(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
         {
           if (0 == (ItemInfo.fType & MF_POPUP))
             {
+              INT ExecutedMenuId = MenuExecFocusedItem(Mt, &MenuInfo, Flags);
               MenuCleanupRosMenuItemInfo(&ItemInfo);
-              return MenuExecFocusedItem(Mt, &MenuInfo, Flags);
+              return (ExecutedMenuId < 0) ? -1 : ExecutedMenuId;
             }
           MenuCleanupRosMenuItemInfo(&ItemInfo);
 
@@ -3355,6 +3357,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                 break;  /* WM_SYSKEYDOWN */
 
               case WM_CHAR:
+              case WM_SYSCHAR:
                 {
                   UINT Pos;
 
@@ -3365,7 +3368,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                   if (L'\r' == Msg.wParam || L' ' == Msg.wParam)
                     {
                       ExecutedMenuId = MenuExecFocusedItem(&Mt, &MenuInfo, Flags);
-                      fEndMenu = (ExecutedMenuId != -1);
+                      fEndMenu = (ExecutedMenuId != -2);
                       break;
                     }
 
@@ -3390,7 +3393,7 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                     {
                       MenuSelectItem(Mt.OwnerWnd, &MenuInfo, Pos, TRUE, 0);
                       ExecutedMenuId = MenuExecFocusedItem(&Mt, &MenuInfo, Flags);
-                      fEndMenu = (-1 != ExecutedMenuId);
+                      fEndMenu = (-2 != ExecutedMenuId);
                     }
 		}
               break;
@@ -3453,7 +3456,9 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
     }
 
   /* The return value is only used by TrackPopupMenu */
-  return (-1 != ExecutedMenuId) ? ExecutedMenuId : 0;
+  if (!(Flags & TPM_RETURNCMD)) return TRUE;
+  if (ExecutedMenuId < 0) ExecutedMenuId = 0;
+      return ExecutedMenuId;
 }
 
 /***********************************************************************
