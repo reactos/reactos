@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
  * 
@@ -131,35 +131,12 @@ static inline int get_bar_position( PROGRESS_INFO *infoPtr, LONG style,
 /***********************************************************************
  * PROGRESS_Invalidate
  *
- * Invalide the range between old and new pos.
+ * Don't be too clever about invalidating the progress bar.
+ * InstallShield depends on this simple behaviour.
  */
 static void PROGRESS_Invalidate( PROGRESS_INFO *infoPtr, INT old, INT new )
 {
-    LONG style = GetWindowLongW (infoPtr->Self, GWL_STYLE);
-    RECT rect;
-    int oldPos, newPos;
-    BOOL barSmooth = (style & PBS_SMOOTH) && !GetWindowTheme (infoPtr->Self);
-
-    get_client_rect( infoPtr->Self, &rect );
-
-    oldPos = get_bar_position( infoPtr, style, &rect, old );
-    newPos = get_bar_position( infoPtr, style, &rect, new );
-
-    if (style & PBS_VERTICAL)
-    {
-        rect.top = rect.bottom - max( oldPos, newPos );
-        rect.bottom = rect.bottom - min( oldPos, newPos );
-        if (!barSmooth) rect.top -=
-            get_led_size (infoPtr, style, &rect) + get_led_gap (infoPtr);
-    }
-    else
-    {
-        rect.left = min( oldPos, newPos );
-        rect.right = max( oldPos, newPos );
-        if (!barSmooth) rect.right +=
-              get_led_size (infoPtr, style, &rect) + get_led_gap (infoPtr);
-    }
-    InvalidateRect( infoPtr->Self, &rect, oldPos > newPos );
+    InvalidateRect( infoPtr->Self, NULL, old > new );
 }
 
 /* Information for a progress bar drawing helper */

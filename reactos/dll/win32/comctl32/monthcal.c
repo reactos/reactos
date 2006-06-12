@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
  * 
@@ -160,14 +160,10 @@ int MONTHCAL_MonthLength(int month, int year)
 /* make sure that time is valid */
 static int MONTHCAL_ValidateTime(SYSTEMTIME time)
 {
-  if(time.wMonth > 12) return FALSE;
+  if(time.wMonth < 1 || time.wMonth > 12 ) return FALSE;
   if(time.wDayOfWeek > 6) return FALSE;
   if(time.wDay > MONTHCAL_MonthLength(time.wMonth, time.wYear))
 	  return FALSE;
-  if(time.wHour > 23) return FALSE;
-  if(time.wMinute > 59) return FALSE;
-  if(time.wSecond > 59) return FALSE;
-  if(time.wMilliseconds > 999) return FALSE;
 
   return TRUE;
 }
@@ -934,48 +930,54 @@ MONTHCAL_GetMaxTodayWidth(MONTHCAL_INFO *infoPtr)
 }
 
 
-/* FIXME: are validated times taken from current date/time or simply
- * copied?
- * FIXME:    check whether MCM_GETMONTHRANGE shows correct result after
- *            adjusting range with MCM_SETRANGE
- */
-
 static LRESULT
 MONTHCAL_SetRange(MONTHCAL_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-  SYSTEMTIME *lprgSysTimeArray=(SYSTEMTIME *)lParam;
-  int prev;
+    SYSTEMTIME *lprgSysTimeArray=(SYSTEMTIME *)lParam;
+    FILETIME ft_min, ft_max;
 
-  TRACE("%x %lx\n", wParam, lParam);
+    TRACE("%x %lx\n", wParam, lParam);
 
-  if(wParam & GDTR_MAX) {
-    if(MONTHCAL_ValidateTime(lprgSysTimeArray[1])){
-      MONTHCAL_CopyTime(&lprgSysTimeArray[1], &infoPtr->maxDate);
-      infoPtr->rangeValid|=GDTR_MAX;
-    } else  {
-      GetSystemTime(&infoPtr->todaysDate);
-      MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->maxDate);
+    if ((wParam & GDTR_MIN && !MONTHCAL_ValidateTime(lprgSysTimeArray[0])) ||
+        (wParam & GDTR_MAX && !MONTHCAL_ValidateTime(lprgSysTimeArray[1])))
+        return FALSE;
+
+    if (wParam & GDTR_MIN)
+    {
+        MONTHCAL_CopyTime(&lprgSysTimeArray[0], &infoPtr->minDate);
+        infoPtr->rangeValid |= GDTR_MIN;
     }
-  }
-  if(wParam & GDTR_MIN) {
-    if(MONTHCAL_ValidateTime(lprgSysTimeArray[0])) {
-      MONTHCAL_CopyTime(&lprgSysTimeArray[0], &infoPtr->minDate);
-      infoPtr->rangeValid|=GDTR_MIN;
-    } else {
-      GetSystemTime(&infoPtr->todaysDate);
-      MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->minDate);
+    if (wParam & GDTR_MAX)
+    {
+        MONTHCAL_CopyTime(&lprgSysTimeArray[1], &infoPtr->maxDate);
+        infoPtr->rangeValid |= GDTR_MAX;
     }
-  }
 
-  prev = infoPtr->monthRange;
-  infoPtr->monthRange = infoPtr->maxDate.wMonth - infoPtr->minDate.wMonth;
+    /* Only one limit set - we are done */
+    if ((infoPtr->rangeValid & (GDTR_MIN | GDTR_MAX)) != (GDTR_MIN | GDTR_MAX))
+        return TRUE;
+    
+    SystemTimeToFileTime(&infoPtr->maxDate, &ft_max);
+    SystemTimeToFileTime(&infoPtr->minDate, &ft_min);
 
-  if(infoPtr->monthRange!=prev) {
-	infoPtr->monthdayState = ReAlloc(infoPtr->monthdayState,
-                                                  infoPtr->monthRange * sizeof(MONTHDAYSTATE));
-  }
+    if (CompareFileTime(&ft_min, &ft_max) > 0)
+    {
+        if ((wParam & (GDTR_MIN | GDTR_MAX)) == (GDTR_MIN | GDTR_MAX))
+        {
+            /* Native swaps limits only when both limits are being set. */
+            SYSTEMTIME st_tmp = infoPtr->minDate;
+            infoPtr->minDate  = infoPtr->maxDate;
+            infoPtr->maxDate  = st_tmp;
+        }
+        else
+        {
+            /* Reset the other limit. */
+            /* FIXME: native sets date&time to 0. Should we do this too? */
+            infoPtr->rangeValid &= wParam & GDTR_MIN ? ~GDTR_MAX : ~GDTR_MIN ;
+        }
+    }
 
-  return 1;
+    return TRUE;
 }
 
 

@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *
@@ -1299,6 +1299,7 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
 	{
 	    TREEVIEW_ITEM *aChild;
 	    TREEVIEW_ITEM *previousChild = NULL;
+            TREEVIEW_ITEM *originalFirst = parentItem->firstChild;
 	    BOOL bItemInserted = FALSE;
 
 	    aChild = parentItem->firstChild;
@@ -1317,6 +1318,9 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
 		if (comp < 0)	/* we are smaller than the current one */
 		{
 		    TREEVIEW_InsertBefore(newItem, aChild, parentItem);
+                    if (infoPtr->firstVisible == originalFirst &&
+                        aChild == originalFirst)
+                        TREEVIEW_SetFirstVisible(infoPtr, newItem, TRUE);
 		    bItemInserted = TRUE;
 		    break;
 		}
@@ -2316,11 +2320,14 @@ TREEVIEW_DrawItemLines(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
     {
 	HPEN hOldPen, hNewPen;
 	HTREEITEM parent;
+        LOGBRUSH lb;
 
 	/*
 	 * Get a dotted grey pen
 	 */
-	hNewPen = CreatePen(PS_ALTERNATE, 0, infoPtr->clrLine);
+        lb.lbStyle = BS_SOLID;
+        lb.lbColor = infoPtr->clrLine;
+        hNewPen = ExtCreatePen(PS_COSMETIC|PS_ALTERNATE, 1, &lb, 0, NULL);
 	hOldPen = SelectObject(hdc, hNewPen);
 
 	MoveToEx(hdc, item->stateOffset, centery, NULL);
@@ -2820,6 +2827,8 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, RECT *rc)
 	    TREEVIEW_DrawItem(infoPtr, hdc, wineItem);
 	}
     }
+
+    TREEVIEW_UpdateScrollBars(infoPtr);
 
     if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
 	infoPtr->cdmode =
@@ -3325,7 +3334,6 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 	    }
 	}
     }
-    TREEVIEW_UpdateScrollBars(infoPtr);
 
     return TRUE;
 }

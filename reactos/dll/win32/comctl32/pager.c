@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *
@@ -59,7 +59,6 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "windowsx.h"
 #include "commctrl.h"
 #include "comctl32.h"
 #include "wine/debug.h"
@@ -1315,7 +1314,7 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return PAGER_Destroy (infoPtr);
 
         case WM_SIZE:
-            return PAGER_Size (infoPtr, (INT)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            return PAGER_Size (infoPtr, (INT)wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
         case WM_NCPAINT:
             return PAGER_NCPaint (infoPtr, (HRGN)wParam);
@@ -1330,18 +1329,18 @@ PAGER_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return PAGER_NCCalcSize (infoPtr, wParam, (LPRECT)lParam);
 
         case WM_NCHITTEST:
-            return PAGER_NCHitTest (infoPtr, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            return PAGER_NCHitTest (infoPtr, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
         case WM_MOUSEMOVE:
             if (infoPtr->bForward && infoPtr->hwndChild)
                 PostMessageW(infoPtr->hwndChild, WM_MOUSEMOVE, wParam, lParam);
-            return PAGER_MouseMove (infoPtr, (INT)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            return PAGER_MouseMove (infoPtr, (INT)wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
         case WM_LBUTTONDOWN:
-            return PAGER_LButtonDown (infoPtr, (INT)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            return PAGER_LButtonDown (infoPtr, (INT)wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
         case WM_LBUTTONUP:
-            return PAGER_LButtonUp (infoPtr, (INT)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            return PAGER_LButtonUp (infoPtr, (INT)wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
         case WM_ERASEBKGND:
             return PAGER_EraseBackground (infoPtr, (HDC)wParam);

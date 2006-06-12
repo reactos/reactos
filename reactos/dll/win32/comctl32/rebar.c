@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *
@@ -1492,10 +1492,11 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	cxsep = (cntonrow == 0) ? 0 : SEP_WIDTH;
 	cx = lpBand->lcx;
 
+        /* In native, 0 as one of the coordinates means no limit */
 	if (infoPtr->dwStyle & CCS_VERT)
-	    dobreak = (y + cx + cxsep > adjcy);
+	    dobreak = (adjcy && (y + cx + cxsep > adjcy));
         else
-	    dobreak = (x + cx + cxsep > adjcx);
+	    dobreak = (adjcx && (x + cx + cxsep > adjcx));
 
 	/* This is the check for whether we need to start a new row */
 	if ( ( (lpBand->fStyle & RBBS_BREAK) && (i != 0) ) ||
@@ -1537,14 +1538,14 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	/* if boundary rect specified then limit mcy */
 	if (lpRect) {
 	    if (infoPtr->dwStyle & CCS_VERT) {
-	        if (x+mcy > adjcx) {
+	        if (adjcx && (x+mcy > adjcx)) {
 		    mcy = adjcx - x;
 		    TRACE("P1 row %u limiting mcy=%d, adjcx=%d, x=%d\n",
 			  i, mcy, adjcx, x);
 		}
 	    }
 	    else {
-	        if (y+mcy > adjcy) {
+	        if (adjcy && (y+mcy > adjcy)) {
 		    mcy = adjcy - y;
 		    TRACE("P1 row %u limiting mcy=%d, adjcy=%d, y=%d\n",
 			  i, mcy, adjcy, y);
@@ -1656,8 +1657,9 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
     /* ******* Start Phase 2 - split rows till adjustment height full ******* */
 
     /* assumes that the following variables contain:                 */
-    /*   y/x     current height/width of all rows                    */
-    if (lpRect) {
+    /*   y/x       current height/width of all rows                  */
+    /* adjcy/adjcx adjustment height/width or 0 (as small as possible) */
+    if (lpRect && ((infoPtr->dwStyle & CCS_VERT) ? adjcx : adjcy)) {
         INT i, prev_rh, new_rh, adj_rh, prev_idx, current_idx;
 	REBAR_BAND *prev, *current, *walk;
 	UINT j;
@@ -4501,9 +4503,14 @@ REBAR_Size (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	if ((lParam == 0) && (rcClient.right + rcClient.bottom != 0) &&
 	    (infoPtr->dwStyle & RBS_AUTOSIZE)) {
 	    /* on a WM_SIZE to zero and current client not zero and AUTOSIZE */
-	    /* native seems to use the current client rect for the size      */
+	    /* native seems to use the current parent width for the size     */
 	    infoPtr->fStatus |= BAND_NEEDS_LAYOUT;
-	    TRACE("sizing rebar to client (%ld,%ld) size is zero but AUTOSIZE set\n",
+	    GetClientRect (GetParent(infoPtr->hwndSelf), &rcClient);
+            if (infoPtr->dwStyle & CCS_VERT)
+                rcClient.right = 0;
+            else
+                rcClient.bottom = 0;
+	    TRACE("sizing rebar to parent (%ld,%ld) size is zero but AUTOSIZE set\n",
 		  rcClient.right, rcClient.bottom);
 	}
 	else {

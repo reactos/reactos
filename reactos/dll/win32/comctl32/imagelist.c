@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
  * 
@@ -1833,6 +1833,7 @@ static HBITMAP _read_bitmap(LPSTREAM pstm,int ilcFlag,int cx,int cy) {
     width = bmih.biWidth;
     height = bmih.biHeight;
     bmihc = (LPBITMAPINFOHEADER)LocalAlloc(LMEM_ZEROINIT,sizeof(bmih)+palspace);
+    if (!bmihc) goto ret1;
     memcpy(bmihc,&bmih,sizeof(bmih));
     longsperline	= ((width*bitsperpixel+31)&~0x1f)>>5;
     bmihc->biSizeImage	= (longsperline*height)<<2;
@@ -1962,8 +1963,10 @@ HIMAGELIST WINAPI ImageList_Read (LPSTREAM pstm)
 #endif
 
     hbmColor = _read_bitmap(pstm,ilHead.flags & ~ILC_MASK,ilHead.cx,ilHead.cy);
-    if (!hbmColor)
+    if (!hbmColor) {
+	WARN("failed to read bitmap from stream\n");
 	return NULL;
+    }
     if (ilHead.flags & ILC_MASK) {
 	hbmMask = _read_bitmap(pstm,0,ilHead.cx,ilHead.cy);
 	if (!hbmMask) {
