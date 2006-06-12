@@ -188,7 +188,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case IDM_HELP_ABOUT:
-            MessageBox(hwnd, _T("Solitare by J Brown\r\n\r\nCardLib version 1.0."), szAppName, MB_OK|MB_ICONINFORMATION);
+            MessageBox(hwnd, _T("Solitaire by J Brown\r\n\r\nCardLib version 1.0."), szAppName, MB_OK|MB_ICONINFORMATION);
 
             return 0;
 
