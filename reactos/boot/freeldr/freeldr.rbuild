@@ -11,6 +11,9 @@
 	<xi:include href="freeldr/freeldr.rbuild" />
 	<xi:include href="freeldr/setupldr.rbuild" />
 </directory>
+<directory name="fdebug">
+	<xi:include href="fdebug/fdebug.rbuild" />
+</directory>
 <directory name="install">
 	<xi:include href="install/installfreeldr.rbuild" />
 </directory>
