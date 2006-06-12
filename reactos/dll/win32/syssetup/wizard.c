@@ -521,6 +521,7 @@ ComputerPageDlgProc(HWND hwndDlg,
                              _T("Setup cannot continue until you enter the name of your computer."),
                              _T("ReactOS Setup"),
                              MB_ICONERROR | MB_OK);
+				  SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
