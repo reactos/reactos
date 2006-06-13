@@ -32,6 +32,31 @@ class FileUnit
 		std::string folder;
 };
 
+enum OptimizationType
+{
+	Debug,
+	Release,
+	Speed
+};
+
+enum HeadersType
+{
+	MSVCHeaders,
+	WineHeaders
+};
+
+class MSVCConfiguration
+{
+	public:
+		MSVCConfiguration(const OptimizationType optimization,
+		                  const HeadersType headers = MSVCHeaders,
+		                  const std::string &name = "");
+		virtual ~MSVCConfiguration() {}
+		std::string name;
+		OptimizationType optimization;
+		HeadersType headers;
+};
+
 class MSVCBackend : public Backend
 {
 	public:

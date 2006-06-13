@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2002 Patrik Stridvall
  * Copyright (C) 2005 Royce Mitchell III
+ * Copyright (C) 2006 Hervé Poussineau
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,12 +40,34 @@ typedef set<string> StringSet;
 #undef OUT
 #endif//OUT
 
+MSVCConfiguration::MSVCConfiguration ( const OptimizationType optimization, const HeadersType headers, const std::string &name )
+{
+	this->optimization = optimization;
+	this->headers = headers;
+	if ( name != "" )
+		this->name = name;
+	else
+	{
+		std::string headers_name;
+		if ( headers == MSVCHeaders )
+			headers_name = "";
+		else
+			headers_name = " - Wine headers";
+		if ( optimization == Debug )
+			this->name = "Debug" + headers_name;
+		else if ( optimization == Release )
+			this->name = "Release" + headers_name;
+		else if ( optimization == Speed )
+			this->name = "Speed" + headers_name;
+		else
+			this->name = "Unknown" + headers_name;
+	}
+}
+
 void
 MSVCBackend::_generate_vcproj ( const Module& module )
 {
 	size_t i;
-	// TODO FIXME wine hack?
-	//const bool wine = false;
 
 	string vcproj_file = VcprojFileName(module);
 	printf ( "Creating MSVC.NET project: '%s'\n", vcproj_file.c_str() );
@@ -95,17 +118,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	//$output->progress("$dsp_file (file $progress_current of $progress_max)");
 
 	string vcproj_path = module.GetBasePath();
-	vector<string> source_files, resource_files, includes, libraries;
+	vector<string> source_files, resource_files, includes, includes_wine, libraries;
 	StringSet common_defines;
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.project.non_if_data );
 	ifs_list.push_back ( &module.non_if_data );
-
-	// MinGW doesn't have a safe-string library yet
-	common_defines.insert ( "_CRT_SECURE_NO_DEPRECATE" );
-	common_defines.insert ( "_CRT_NON_CONFORMING_SWPRINTFS" );
-	// this is a define in MinGW w32api, but not Microsoft's headers
-	common_defines.insert ( "STDCALL=__stdcall" );
 
 	string baseaddr;
 
@@ -136,24 +153,22 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<Include*>& incs = data.includes;
 		for ( i = 0; i < incs.size(); i++ )
 		{
-			// explicitly omit win32api directories
-			if ( !strncmp(incs[i]->directory.c_str(), "include\\ddk", 11 ) )
- 				continue;
- 
-			if ( !strncmp(incs[i]->directory.c_str(), "include\\crt", 11 ) )
-				continue;
-
-			if ( !strncmp(incs[i]->directory.c_str(), "include\\GL", 10 ) )
-				continue;
-
-			// explicitly omit include/wine directories
-			if ( !strncmp(incs[i]->directory.c_str(), "include\\reactos\\wine", 20 ) )
-				continue;
-
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
 				module.GetBasePath() );
-			includes.push_back ( path );
+
+			// add to another list win32api and include/wine directories
+			if ( !strncmp(incs[i]->directory.c_str(), "include\\ddk", 11 ) ||
+			     !strncmp(incs[i]->directory.c_str(), "include\\crt", 11 ) ||
+			     !strncmp(incs[i]->directory.c_str(), "include\\GL", 10 ) ||
+			     !strncmp(incs[i]->directory.c_str(), "include\\reactos\\wine", 20 ) )
+			{
+				includes_wine.push_back ( path );
+			}
+			else
+			{
+				includes.push_back ( path );
+			}
 		}
 		const vector<Library*>& libs = data.libraries;
 		for ( i = 0; i < libs.size(); i++ )
@@ -179,40 +194,22 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	vector<string> header_files;
 
-	bool no_cpp = true;
+	// TODO FIXME wine hack?
 	bool no_msvc_headers = true;
 
-	std::vector<std::string> cfgs;
+	std::vector<MSVCConfiguration*> cfgs;
 
-	cfgs.push_back ( "Debug" );
-	cfgs.push_back ( "Release" );
-	cfgs.push_back ( "Speed" );
-
-	if (!no_cpp)
-	{
-		std::vector<std::string> _cfgs;
-		for ( i = 0; i < cfgs.size(); i++ )
-		{
-			_cfgs.push_back ( cfgs[i] + " C" );
-			_cfgs.push_back ( cfgs[i] + " C++" );
-		}
-		cfgs.resize(0);
-		cfgs = _cfgs;
-	}
+	cfgs.push_back ( new MSVCConfiguration( Debug ));
+	cfgs.push_back ( new MSVCConfiguration( Release ));
+	cfgs.push_back ( new MSVCConfiguration( Speed ));
 
 	if (!no_msvc_headers)
 	{
-		std::vector<std::string> _cfgs;
-		for ( i = 0; i < cfgs.size(); i++ )
-		{
-			_cfgs.push_back ( cfgs[i] + " MSVC Headers" );
-			_cfgs.push_back ( cfgs[i] + " Wine Headers" );
-		}
-		cfgs.resize(0);
-		cfgs = _cfgs;
+		cfgs.push_back ( new MSVCConfiguration( Debug, WineHeaders ));
+		cfgs.push_back ( new MSVCConfiguration( Release, WineHeaders ));
+		cfgs.push_back ( new MSVCConfiguration( Speed, WineHeaders ));
 	}
 
-	string default_cfg = cfgs.back();
 	string include_string;
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
@@ -248,18 +245,16 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	fprintf ( OUT, "\t<Configurations>\r\n" );
 	for ( size_t icfg = 0; icfg < cfgs.size(); icfg++ )
 	{
-		std::string& cfg = cfgs[icfg];
+		const MSVCConfiguration& cfg = *cfgs[icfg];
 
-		bool debug = strstr ( cfg.c_str(), "Debug" ) != NULL;
-		bool speed = strstr ( cfg.c_str(), "Speed" ) != NULL;
-		bool release = (!debug && !speed );
-
-		//bool msvc_headers = ( 0 != strstr ( cfg.c_str(), "MSVC Headers" ) );
+		bool debug = ( cfg.optimization == Debug );
+		bool release = ( cfg.optimization == Release );
+		bool speed = ( cfg.optimization == Speed );
 
 		fprintf ( OUT, "\t\t<Configuration\r\n" );
-		fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.c_str() );
-		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s\\%s\\%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), _get_vc_dir().c_str (), cfg.c_str() );
-		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s\\%s\\%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), _get_vc_dir().c_str (), cfg.c_str() );
+		fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
+		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s\\%s\\%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), _get_vc_dir().c_str (), cfg.name.c_str() );
+		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s\\%s\\%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), _get_vc_dir().c_str (), cfg.name.c_str() );
 		fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", exe ? 1 : dll ? 2 : lib ? 4 : -1 );
 		fprintf ( OUT, "\t\t\tCharacterSet=\"2\">\r\n" );
 
@@ -272,7 +267,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "./;" );
 		for ( i = 0; i < includes.size(); i++ )
 		{
-			const string& include = includes[i];
+			const std::string& include = includes[i];
 			if ( strcmp ( include.c_str(), "." ) )
 			{
 				if ( multiple_includes )
@@ -280,6 +275,18 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 				fprintf ( OUT, "%s", include.c_str() );
 				include_string += " /I " + include;
+				multiple_includes = true;
+			}
+		}
+		if ( cfg.headers == WineHeaders )
+		{
+			for ( i = 0; i < includes_wine.size(); i++ )
+			{
+				const std::string& include = includes_wine[i];
+				if ( multiple_includes )
+					fprintf ( OUT, ";" );
+				fprintf ( OUT, "%s", include.c_str() );
+				//include_string += " /I " + include;
 				multiple_includes = true;
 			}
 		}
@@ -294,6 +301,15 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		else
 		{
 			defines.insert ( "NDEBUG" );
+		}
+
+		if ( cfg.headers == MSVCHeaders )
+		{
+			// this is a define in MinGW w32api, but not Microsoft's headers
+			defines.insert ( "STDCALL=__stdcall" );
+			// MinGW doesn't have a safe-string library yet
+			defines.insert ( "_CRT_SECURE_NO_DEPRECATE" );
+			defines.insert ( "_CRT_NON_CONFORMING_SWPRINTFS" );
 		}
 
 		if ( lib || exe )
@@ -390,9 +406,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					fprintf ( OUT, ";" );
 
 				string libpath = libraries[i].c_str();
-				libpath.replace (libpath.find("---"),
-					             3,
-								 cfg);
+				libpath.replace (libpath.find("---"), 3, cfg.name);
 				libpath = libpath.substr (0, libpath.find_last_of ("\\") );
 				fprintf ( OUT, "%s", libpath.c_str() );
 			}
@@ -457,9 +471,20 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "./;" );
 		for ( i = 0; i < includes.size(); i++ )
 		{
-			const string& include = includes[i];
+			const std::string& include = includes[i];
 			if ( strcmp ( include.c_str(), "." ) )
 			{
+				if ( multiple_includes )
+					fprintf ( OUT, ";" );
+				fprintf ( OUT, "%s", include.c_str() );
+				multiple_includes = true;
+			}
+		}
+		if ( cfg.headers == WineHeaders )
+		{
+			for ( i = 0; i < includes_wine.size(); i++ )
+			{
+				const std::string& include = includes_wine[i];
 				if ( multiple_includes )
 					fprintf ( OUT, ";" );
 				fprintf ( OUT, "%s", include.c_str() );
@@ -500,14 +525,14 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		for ( size_t iconfig = 0; iconfig < cfgs.size(); iconfig++ )
 		{
-			std::string& config = cfgs[iconfig];
+			const MSVCConfiguration& config = *cfgs[iconfig];
 
 			if (( isrcfile == 0 ) && ( module.pch != NULL ))
 			{
 				/* little hack to speed up PCH */
 				fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
 				fprintf ( OUT, "\t\t\t\t\tName=\"" );
-				fprintf ( OUT, config.c_str() );
+				fprintf ( OUT, config.name.c_str() );
 				fprintf ( OUT, "|Win32\">\r\n" );
 				fprintf ( OUT, "\t\t\t\t\t<Tool\r\n" );
 				fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
@@ -520,7 +545,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				{
 					fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
 					fprintf ( OUT, "\t\t\t\t\tName=\"" );
-					fprintf ( OUT, config.c_str() );
+					fprintf ( OUT, config.name.c_str() );
 					fprintf ( OUT, "|Win32\">\r\n" );
 					fprintf ( OUT, "\t\t\t\t\t<Tool\r\n" );
 					if (source_file.find(".idl") != string::npos)
