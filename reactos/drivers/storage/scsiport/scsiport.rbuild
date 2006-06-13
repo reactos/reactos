@@ -1,4 +1,4 @@
-<module name="scsiport" type="kernelmodedriver" installbase="system32/drivers" installname="scsiport.sys">
+<module name="scsiport" type="exportdriver" installbase="system32/drivers" installname="scsiport.sys">
 	<bootstrap base="reactos" />
 	<define name="__USE_W32API" />
 	<define name="_SCSIPORT_" />

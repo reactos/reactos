@@ -97,6 +97,12 @@
 #        output files) or no (to not build non-symbol-stripped versions of
 #        executable output files). The variable defaults to no.
 #
+#    ROS_LEAN_AND_MEAN
+#        This variable controls if all binaries should be stripped out of useless
+#        data added by GCC/LD as well as of RSYM symbol data. Output binary size
+#        will go from 80 to 40MB, memory usage from 58 to 38MB and the install CD
+#        from 18 to 13MB. The variable defaults to no.
+#
 #    ROS_RBUILDFLAGS
 #        Pass parameters to rbuild.
 #            -v           Be verbose.
@@ -203,6 +209,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_REGTESTS=@echo $(QUOTE)[REGTESTS] $@$(QUOTE)
   ECHO_TEST    =@echo $(QUOTE)[TEST]     $@$(QUOTE)
   ECHO_GENDIB  =@echo $(QUOTE)[GENDIB]   $@$(QUOTE)
+  ECHO_STRIP   =@echo $(QUOTE)[STRIP]    $@$(QUOTE)
 else
   ECHO_CP      =
   ECHO_MKDIR   =
@@ -231,6 +238,7 @@ else
   ECHO_REGTESTS=
   ECHO_TEST    =
   ECHO_GENDIB  =
+  ECHO_STRIP   =
 endif
 
 
@@ -256,6 +264,7 @@ endif
 	ar = $(Q)$(PREFIX)-ar
 	objcopy = $(Q)$(PREFIX)-objcopy
 	dlltool = $(Q)$(PREFIX)-dlltool
+	strip = $(Q)$(PREFIX)-strip
 	windres = $(Q)$(PREFIX)-windres
 	rm = $(Q)rm -f
 	cp = $(Q)cp
@@ -275,6 +284,7 @@ else # mingw32-windows
 	ar = $(Q)ar
 	objcopy = $(Q)objcopy
 	dlltool = $(Q)dlltool
+	strip = $(Q)strip
 	windres = $(Q)windres
 	rm = $(Q)rm -f
 	cp = $(Q)cp
@@ -293,6 +303,7 @@ else # mingw32-windows
 	ar = $(Q)ar
 	objcopy = $(Q)objcopy
 	dlltool = $(Q)dlltool
+	strip = $(Q)strip
 	windres = $(Q)windres
 	rm = $(Q)del /f /q
 	cp = $(Q)copy /y

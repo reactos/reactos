@@ -1,4 +1,4 @@
-<module name="videoprt" type="kernelmodedriver" installbase="system32/drivers" installname="videoprt.sys">
+<module name="videoprt" type="exportdriver" installbase="system32/drivers" installname="videoprt.sys">
 	<importlibrary definition="videoprt.def" />
 	<include base="videoprt">.</include>
 	<include base="ntoskrnl">include</include>

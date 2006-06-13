@@ -112,6 +112,7 @@ protected:
 	std::string GetLinkerMacro () const;
 	void GenerateCleanObjectsAsYouGoCode () const;
 	void GenerateRunRsymCode () const;
+	void GenerateRunStripCode () const;
 	void GenerateLinkerCommand ( const std::string& dependencies,
 	                             const std::string& linker,
 	                             const std::string& linkerParameters,

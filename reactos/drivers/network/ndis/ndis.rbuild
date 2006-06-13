@@ -1,4 +1,4 @@
-<module name="ndis" type="kernelmodedriver" installbase="system32/drivers" installname="ndis.sys">
+<module name="ndis" type="exportdriver" installbase="system32/drivers" installname="ndis.sys">
 	<importlibrary definition="ndis.def"></importlibrary>
 	<include base="ndis">include</include>
 	<define name="NDIS_WRAPPER" />

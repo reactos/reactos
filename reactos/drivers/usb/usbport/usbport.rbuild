@@ -1,4 +1,4 @@
-<module name="usbport" type="kernelmodedriver" installbase="system32/drivers" installname="usbport.sys">
+<module name="usbport" type="exportdriver" installbase="system32/drivers" installname="usbport.sys">
 	<importlibrary definition="usbport.def" />
 	<define name="__USE_W32API" />
 	<library>sys_base</library> 

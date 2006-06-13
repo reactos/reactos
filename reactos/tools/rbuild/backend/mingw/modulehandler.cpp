@@ -223,6 +223,7 @@ MingwModuleHandler::InstanciateHandler (
 			handler = new MingwWin32DLLModuleHandler ( module );
 			break;
 		case KernelModeDriver:
+        case ExportDriver: // maybe change this later
 			handler = new MingwKernelModeDriverModuleHandler ( module );
 			break;
 		case BootLoader:
@@ -1450,6 +1451,19 @@ MingwModuleHandler::GenerateRunRsymCode () const
 }
 
 void
+MingwModuleHandler::GenerateRunStripCode () const
+{
+    fprintf ( fMakefile,
+        "ifeq ($(ROS_LEAN_AND_MEAN),yes)\n" );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_STRIP)\n" );
+	fprintf ( fMakefile,
+	          "\t${strip} -sx $@\n\n" );
+    fprintf ( fMakefile,
+        "endif\n" );
+}
+
+void
 MingwModuleHandler::GenerateLinkerCommand (
 	const string& dependencies,
 	const string& linker,
@@ -1521,19 +1535,18 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),
 		          GetLinkerMacro ().c_str () );
-
-		if ( pefixupParameters.length() != 0 )
-		{
-			fprintf ( fMakefile,
-			          "\t$(Q)$(PEFIXUP_TARGET) %s -exports %s\n",
-			          target.c_str (),
-		        	  pefixupParameters.c_str() );
-		}
+		          
+#if 0 // causes crashes sometimes
+		fprintf ( fMakefile,
+		          "\t${objcopy} -R .edata %s\n",
+		          target.c_str () );
+#endif
 	}
 
 	GenerateBuildMapCode ();
 	GenerateBuildNonSymbolStrippedCode ();
 	GenerateRunRsymCode ();
+	GenerateRunStripCode ();
 	GenerateCleanObjectsAsYouGoCode ();
 }
 

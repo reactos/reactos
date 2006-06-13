@@ -1,4 +1,4 @@
-<module name="tcpip" type="kernelmodedriver" installbase="system32/drivers" installname="tcpip.sys">
+<module name="tcpip" type="exportdriver" installbase="system32/drivers" installname="tcpip.sys">
 	<importlibrary definition="tcpip.def"></importlibrary>
 	<include base="tcpip">include</include>
 	<include base="oskittcp">include</include>

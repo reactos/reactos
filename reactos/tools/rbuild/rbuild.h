@@ -264,7 +264,8 @@ enum ModuleType
 	RpcClient = 17,
 	Alias = 18,
 	BootProgram = 19,
-	Win32SCR = 20
+	Win32SCR = 20,
+    ExportDriver = 21
 };
 
 enum HostType

@@ -154,7 +154,7 @@
 		</compilationunit>
 	</directory>
 </module>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
+<module name="win32k" type="exportdriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
 	<importlibrary definition="win32k.def" />
 	<library>win32k_base</library>
 	<library>pseh</library>

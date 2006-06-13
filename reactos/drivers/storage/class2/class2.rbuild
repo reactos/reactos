@@ -1,4 +1,4 @@
-<module name="class2" type="kernelmodedriver" installbase="system32/drivers" installname="class2.sys">
+<module name="class2" type="exportdriver" installbase="system32/drivers" installname="class2.sys">
 	<bootstrap base="reactos" />
 	<define name="__USE_W32API" />
 	<importlibrary definition="class2.def" />

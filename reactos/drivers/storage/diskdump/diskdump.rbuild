@@ -1,4 +1,4 @@
-<module name="diskdump" type="kernelmodedriver" installbase="system32/drivers" installname="diskdump.sys">
+<module name="diskdump" type="exportdriver" installbase="system32/drivers" installname="diskdump.sys">
 	<bootstrap base="reactos" />
 	<define name="__USE_W32API" />
 	<include base="ReactOS">include/reactos/drivers</include>

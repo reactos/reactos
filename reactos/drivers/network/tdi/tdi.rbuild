@@ -1,4 +1,4 @@
-<module name="tdi" type="kernelmodedriver" installbase="system32/drivers" installname="tdi.sys">
+<module name="tdi" type="exportdriver" installbase="system32/drivers" installname="tdi.sys">
 	<importlibrary definition="misc/tdi.def"></importlibrary>
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>

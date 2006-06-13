@@ -43,6 +43,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 	{
 		case Kernel:
 		case KernelModeDLL:
+        case ExportDriver:
 		case NativeDLL:
 		case NativeCUI:
 		case Win32DLL:

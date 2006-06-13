@@ -731,6 +731,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Kernel;
 	if ( attribute.value == "kernelmodedll" )
 		return KernelModeDLL;
+    if ( attribute.value == "exportdriver" )
+        return ExportDriver;
 	if ( attribute.value == "kernelmodedriver" )
 		return KernelModeDriver;
 	if ( attribute.value == "nativedll" )
@@ -793,6 +795,7 @@ Module::GetDefaultModuleExtension () const
 			return ".dll";
 		case KernelModeDriver:
 		case BootLoader:
+        case ExportDriver:
 			return ".sys";
 		case BootSector:
 			return ".o";
@@ -822,6 +825,8 @@ Module::GetDefaultModuleEntrypoint () const
 		case Kernel:
 			return "_NtProcessStartup";
 		case KernelModeDLL:
+        case KernelModeDriver:
+        case ExportDriver:
 			return "_DriverEntry@8";
 		case NativeDLL:
 			return "_DllMainCRTStartup@12";
@@ -841,8 +846,6 @@ Module::GetDefaultModuleEntrypoint () const
 				return "_wWinMainCRTStartup";
 			else
 				return "_WinMainCRTStartup";
-		case KernelModeDriver:
-			return "_DriverEntry@8";
 		case BuildTool:
 		case StaticLibrary:
 		case ObjectLibrary:
@@ -879,6 +882,7 @@ Module::GetDefaultModuleBaseaddress () const
 			return "0x00400000";
 		case KernelModeDLL:
 		case KernelModeDriver:
+        case ExportDriver:
 			return "0x00010000";
 		case BuildTool:
 		case StaticLibrary:
@@ -910,10 +914,11 @@ Module::IsDLL () const
 	{
 		case Kernel:
 		case KernelModeDLL:
+        case ExportDriver:
 		case NativeDLL:
 		case Win32DLL:
+            return true;
 		case KernelModeDriver:
-			return true;
 		case NativeCUI:
 		case Win32CUI:
 		case Test:
@@ -943,6 +948,7 @@ Module::GenerateInOutputTree () const
 	{
 		case Kernel:
 		case KernelModeDLL:
+        case ExportDriver:
 		case NativeDLL:
 		case Win32DLL:
 		case KernelModeDriver:
@@ -1397,6 +1403,7 @@ AutoRegister::IsSupportedModuleType ( ModuleType type )
 			return true;
 		case Kernel:
 		case KernelModeDLL:
+        case ExportDriver:
 		case NativeDLL:
 		case NativeCUI:
 		case Win32CUI:

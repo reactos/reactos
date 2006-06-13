@@ -1,4 +1,4 @@
-<module name="portcls" type="kernelmodedriver" installbase="system32/drivers" installname="portcls.sys">
+<module name="portcls" type="exportdriver" installbase="system32/drivers" installname="portcls.sys">
         <importlibrary definition="portcls.def" />
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
