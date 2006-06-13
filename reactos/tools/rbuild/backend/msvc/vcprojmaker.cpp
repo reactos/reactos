@@ -113,9 +113,15 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	{
 		const IfableData& data = *ifs_list.back();
 		ifs_list.pop_back();
-		// TODO FIXME - refactor needed - we're discarding if conditions
 		for ( i = 0; i < data.ifs.size(); i++ )
-			ifs_list.push_back ( &data.ifs[i]->data );
+		{
+			const Property* property = _lookup_property( module, data.ifs[i]->property );
+			if ( property != NULL )
+			{
+				if ( data.ifs[i]->value == property->value || data.ifs[i]->negated )
+					ifs_list.push_back ( &data.ifs[i]->data );
+			}
+		}
 		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
@@ -732,3 +738,23 @@ MSVCBackend::_generate_sln ( FILE* OUT )
 	_generate_sln_footer ( OUT );
 }
 
+const Property* 
+MSVCBackend::_lookup_property ( const Module& module, const std::string& name ) const
+{
+	/* Check local values */
+	for ( size_t i = 0; i < module.non_if_data.properties.size(); i++ )
+	{
+		const Property& property = *module.non_if_data.properties[i];
+		if ( property.name == name )
+			return &property;
+	}
+	// TODO FIXME - should we check local if-ed properties?
+	for ( size_t i = 0; i < module.project.non_if_data.properties.size(); i++ )
+	{
+		const Property& property = *module.project.non_if_data.properties[i];
+		if ( property.name == name )
+			return &property;
+	}
+	// TODO FIXME - should we check global if-ed properties?
+	return NULL;
+}
