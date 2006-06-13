@@ -535,6 +535,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
                 HeapFree(ProcessHeap,
                          0,
                          PropSheet);
+
+                Info->PropSheet = NULL;
             }
         }
         break;

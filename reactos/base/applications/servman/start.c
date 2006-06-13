@@ -201,7 +201,7 @@ DoStart(PMAIN_WND_INFO Info)
                     (LPARAM) &item);
 
         /* change dialog status */
-        if (Info->PropSheet->hwndGenDlg)
+        if (Info->PropSheet != NULL)
         {
             LoadString(hInstance,
                       IDS_SERVICES_STARTED,
