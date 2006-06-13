@@ -124,7 +124,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
-            else
+			else
 				source_files.push_back ( file );
 		}
 		const vector<Include*>& incs = data.includes;
@@ -180,7 +180,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	cfgs.push_back ( "Debug" );
 	cfgs.push_back ( "Release" );
-    cfgs.push_back ( "Speed" );
+	cfgs.push_back ( "Speed" );
 
 	if (!no_cpp)
 	{
@@ -277,7 +277,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				multiple_includes = true;
 			}
 		}
-		fprintf ( OUT, "\"\r\n " );
+		fprintf ( OUT, "\"\r\n" );
 
 		StringSet defines = common_defines;
 
@@ -316,9 +316,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\"\r\n" );
 
 		fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
-        fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", sys ? 0 : (debug ? "3" : "0") );
+		fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", sys ? 0 : (debug ? "3" : "0") );
 		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"%d\"\r\n", debug? 1: 5 );	// 1=/MTd 5=/MT
-        fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"%s\"\r\n", sys ? "FALSE" : (debug ? "TRUE" : "FALSE" ));
+		fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"%s\"\r\n", sys ? "FALSE" : (debug ? "TRUE" : "FALSE" ));
 		fprintf ( OUT, "\t\t\t\tEnableFunctionLevelLinking=\"%s\"\r\n", debug ? "TRUE" : "FALSE" );
 		
 		if ( module.pch != NULL )
@@ -349,7 +349,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", speed ? "FALSE" : "TRUE");
 		if ( !module.cplusplus )
 			fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
-        fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", (sys || (exe && module.type == Kernel)) ? 2: 0);	// 2=__stdcall 0=__cdecl
+		fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", (sys || (exe && module.type == Kernel)) ? 2: 0);	// 2=__stdcall 0=__cdecl
 		fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : release ? "3": "4");	// 3=/Zi 4=ZI
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
@@ -382,7 +382,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			{
 				if ( i > 0 )
 					fprintf ( OUT, ";" );
- 
+
 				string libpath = libraries[i].c_str();
 				libpath.replace (libpath.find("---"),
 					             3,
@@ -572,32 +572,33 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 std::string
 MSVCBackend::_replace_str(std::string string1, const std::string &find_str, const std::string &replace_str)
 {
-        std::string::size_type pos = string1.find(find_str, 0);
-        int intLen = find_str.length();
+	std::string::size_type pos = string1.find(find_str, 0);
+	int intLen = find_str.length();
 
-        while(std::string::npos != pos)
-        {
-                string1.replace(pos, intLen, replace_str);
-                pos = string1.find(find_str, intLen + pos);
-        }
+	while(std::string::npos != pos)
+	{
+		string1.replace(pos, intLen, replace_str);
+		pos = string1.find(find_str, intLen + pos);
+	}
 
-        return string1;
-} 
+	return string1;
+}
 
 std::string
-MSVCBackend::_get_solution_verion ( void ) {
-    string version;
+MSVCBackend::_get_solution_verion ( void )
+{
+	string version;
 
-    if (configuration.VSProjectVersion.empty())
-        configuration.VSProjectVersion = MS_VS_DEF_VERSION;
+	if (configuration.VSProjectVersion.empty())
+		configuration.VSProjectVersion = MS_VS_DEF_VERSION;
 
-    if (configuration.VSProjectVersion == "7.00")
+	if (configuration.VSProjectVersion == "7.00")
 		version = "7.00";
 
-    if (configuration.VSProjectVersion == "7.10")
+	if (configuration.VSProjectVersion == "7.10")
 		version = "8.00";
 
-    if (configuration.VSProjectVersion == "8.00")
+	if (configuration.VSProjectVersion == "8.00")
 		version = "9.00";
 
 	return version;
@@ -631,9 +632,9 @@ MSVCBackend::_get_solution_verion ( void ) {
 void
 MSVCBackend::_generate_sln_header ( FILE* OUT )
 {
-    fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version %s\r\n", _get_solution_verion().c_str() );
-    fprintf ( OUT, "# Visual Studio 2005\r\n" );
-    fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version %s\r\n", _get_solution_verion().c_str() );
+	fprintf ( OUT, "# Visual Studio 2005\r\n" );
+	fprintf ( OUT, "\r\n" );
 }
 
 
@@ -648,7 +649,7 @@ MSVCBackend::_generate_sln_project (
 {
 	vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
 
-	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"{%s}\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
+	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
 
 	//FIXME: only omit ProjectDependencies in VS 2005 when there are no dependencies
 	//NOTE: VS 2002 do not use ProjectSection; it uses GlobalSection instead
@@ -657,7 +658,7 @@ MSVCBackend::_generate_sln_project (
 		for ( size_t i = 0; i < libraries.size(); i++ )
 		{
 			const Module& module = *libraries[i]->importedModule;
-			fprintf ( OUT, "\t\t{%s} = {%s}\r\n", module.guid.c_str(), module.guid.c_str() );
+			fprintf ( OUT, "\t\t%s = %s\r\n", module.guid.c_str(), module.guid.c_str() );
 		}
 		fprintf ( OUT, "\tEndProjectSection\r\n" );
 	}
@@ -695,7 +696,7 @@ MSVCBackend::_generate_sln_footer ( FILE* OUT )
 
 	if (configuration.VSProjectVersion == "8.00") {
 		fprintf ( OUT, "\tGlobalSection(SolutionProperties) = preSolution\r\n" );
-        	fprintf ( OUT, "\t\tHideSolutionNode = FALSE\r\n" );
+		fprintf ( OUT, "\t\tHideSolutionNode = FALSE\r\n" );
 		fprintf ( OUT, "\tEndGlobalSection\r\n" );
 	}
 
@@ -707,10 +708,10 @@ MSVCBackend::_generate_sln_footer ( FILE* OUT )
 void
 MSVCBackend::_generate_sln_configurations ( FILE* OUT, std::string vcproj_guid )
 {
-	fprintf ( OUT, "\t\t%s.Debug.ActiveCfg = Debug|Win32\r\n", vcproj_guid.c_str() );
-	fprintf ( OUT, "\t\t%s.Debug.Build.0 = Debug|Win32\r\n", vcproj_guid.c_str() );
-	fprintf ( OUT, "\t\t%s.Debug.Release.ActiveCfg = Release|Win32\r\n", vcproj_guid.c_str() );
-	fprintf ( OUT, "\t\t%s.Debug.Release.Build.0 = Release|Win32\r\n", vcproj_guid.c_str() );
+	fprintf ( OUT, "\t\t%s.Debug|Win32.ActiveCfg = Debug|Win32\r\n", vcproj_guid.c_str() );
+	fprintf ( OUT, "\t\t%s.Debug|Win32.Build.0 = Debug|Win32\r\n", vcproj_guid.c_str() );
+	fprintf ( OUT, "\t\t%s.Release|Win32.ActiveCfg = Release|Win32\r\n", vcproj_guid.c_str() );
+	fprintf ( OUT, "\t\t%s.Release|Win32.Build.0 = Release|Win32\r\n", vcproj_guid.c_str() );
 }
 
 void

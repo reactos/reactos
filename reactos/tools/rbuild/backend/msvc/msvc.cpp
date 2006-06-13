@@ -49,7 +49,7 @@ static class MSVCFactory : public Backend::Factory
 
 
 MSVCBackend::MSVCBackend(Project &project,
-                             Configuration& configuration) : Backend(project, configuration)
+	Configuration& configuration) : Backend(project, configuration)
 {
 	m_unitCount = 0;
 }
@@ -379,25 +379,25 @@ MSVCBackend::_clean_project_files ( void )
 bool
 MSVCBackend::_copy_file ( const std::string& inputname, const std::string& targetname ) const
 {
-  FILE * input = fopen ( inputname.c_str (), "rb" );
+	FILE * input = fopen ( inputname.c_str (), "rb" );
 	if ( !input )
 		return false;
 
-  FILE * output = fopen ( targetname.c_str (), "wb+" );
-  if ( !output )
-  {
-	fclose ( input );
-	return false;
-  }
+	FILE * output = fopen ( targetname.c_str (), "wb+" );
+	if ( !output )
+	{
+		fclose ( input );
+		return false;
+	}
 
-  char buffer[256];
-  int num_read;
-  while ( (num_read = fread( buffer, sizeof(char), 256, input) ) || !feof( input ) )
+	char buffer[256];
+	int num_read;
+	while ( (num_read = fread( buffer, sizeof(char), 256, input) ) || !feof( input ) )
 		fwrite( buffer, sizeof(char), num_read, output );
 
-  fclose ( input );
-  fclose ( output );
-  return true;
+	fclose ( input );
+	fclose ( output );
+	return true;
 }
 
 void
