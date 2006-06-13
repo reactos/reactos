@@ -177,15 +177,13 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		while (_istspace (*pp)) /* Skip subsequent spaces */
 			pp++;
 
-		/* are the two sides equal, and does the second end in the same place? */
-		if ( !_tcsncmp(param,pp,p1len) && _tcschr(_T(" ("),pp[p1len]) )
+		/* are the two sides equal*/
+		if ( !_tcsncmp(param,pp,p1len))
 			x_flag ^= X_EXEC;
 		pp += p1len;
 
 		if ( x_flag )
 		{
-			while (*pp && !_istspace (*pp))  /* Find first space, */
-				pp++;
 			x_flag |= X_EMPTY;
 		}
 	}
