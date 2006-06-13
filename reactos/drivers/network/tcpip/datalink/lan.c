@@ -487,8 +487,6 @@ NDIS_STATUS STDCALL ProtocolReceive(
     {
 	if (NdisStatus == NDIS_STATUS_SUCCESS)
         {
-	    ASSERT(PacketSize <= Adapter->MTU);
-
             NdisTransferData(&NdisStatus, Adapter->NdisHandle,
                              MacReceiveContext, 0, PacketSize,
 			     NdisPacket, &BytesTransferred);
