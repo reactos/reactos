@@ -613,13 +613,14 @@ CSR_API(CsrReadConsole)
                   i -= 2;        /* if we already have something to return, just back it up by 2 */
                 }
               else
-                {            /* otherwise, return STATUS_NOTIFY_CLEANUP to tell client to back up its buffer */
+                {
+                  /* otherwise, we will treat the backspace just like any other char and let the client decide what to do */                  
                   Console->WaitingChars--;
                   ConioUnlockConsole(Console);
                   HeapFree(Win32CsrApiHeap, 0, Input);
-                  Request->Data.ReadConsoleRequest.NrCharactersRead = 0;
-                  Request->Status = STATUS_NOTIFY_CLEANUP;
-                  return STATUS_NOTIFY_CLEANUP;
+                  Request->Data.ReadConsoleRequest.NrCharactersRead++;
+                  Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
+                  return Request->Status;  
                 }
               Request->Data.ReadConsoleRequest.nCharsCanBeDeleted--;
               Input->Echoed = TRUE;   /* mark as echoed so we don't echo it below */
