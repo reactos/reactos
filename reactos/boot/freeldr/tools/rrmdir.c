@@ -1,4 +1,4 @@
-/*  $Id: rrmdir.c,v 1.1 2002/06/13 00:39:49 bpalmer Exp $  
+/*  $Id$  
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  *                        Casper S. Hornstrup (chorns@users.sourceforge.net)

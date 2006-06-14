@@ -46,7 +46,7 @@ BEGIN
  ICON IDI_NETSTAT, -1, 110, 85, 18, 20
  ICON IDI_HORIZONTAL, -1, 130, 85, 18, 20
  LTEXT "Empfangen", -1, 149, 90, 37, 8
- LTEXT "Paketes:", -1, 17, 115, 32, 8
+ LTEXT "Pakete:", -1, 17, 115, 32, 8
  RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
  ICON IDI_VERTICAL, -1, 110, 108, 18, 20
  RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
@@ -88,11 +88,11 @@ END
 
 STRINGTABLE 
 BEGIN
-  IDS_ERROR "Error"
-  IDS_ENTER_VALID_IPADDRESS "You must enter a valid IP address"
-  IDS_ENTER_VALID_SUBNET "You must enter a valid subnet mask"
-  IDS_CANNOT_LOAD_CONFIG "Unable to load current config data"
-  IDS_CANNOT_CREATE_PROPSHEET "Unable to create property sheet"
-  IDS_OUT_OF_MEMORY "Out of memory"
-  IDS_CANNOT_SAVE_CHANGES "Unable to save the changes you made"
+  IDS_ERROR "Fehler"
+  IDS_ENTER_VALID_IPADDRESS "Sie müssen eine gültige IP-Adresse angeben"
+  IDS_ENTER_VALID_SUBNET "Sie müssen eine gültige Subnetzmaske angeben"
+  IDS_CANNOT_LOAD_CONFIG "Einstellungen können nicht geladen werden"
+  IDS_CANNOT_CREATE_PROPSHEET "Property sheet kann nicht erstellt werden"
+  IDS_OUT_OF_MEMORY "Nicht genug Arbeitsspeicher"
+  IDS_CANNOT_SAVE_CHANGES "Änderungen können nicht gespeichert werden"
 END

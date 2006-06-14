@@ -24,9 +24,9 @@ CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Installation fehlgeschlagen",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Der Gerät konnte nicht installiert werden, da kein passender Treiber gefunden werden konnte.",
+    LTEXT           "Das Gerät konnte nicht installiert werden, da kein passender Treiber gefunden wurde.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Klicken Sie auf Zurück, wenn Sie eine Treiber CD oder Diskette haben oder den Pfad zum Treiber kennen.",
+    LTEXT           "Klicken Sie auf Zurück, wenn Sie eine Treiber-CD oder -Diskette besitzen oder den Pfad des Treibers kennen.",
                     IDC_STATIC,120,98,181,24
     CONTROL         "Diesen Dialog nicht mehr anzeigen",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
@@ -35,11 +35,11 @@ END
 IDD_INSTALLFAILED DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
-CAPTION "Device installation"
+CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Installation failed",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "The device could not be installed because an unexpected error happened.",
+    LTEXT           "Installation fehlgeschlagen",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Das Gerät konnte aufgrund eines unerwarteten Fehlers nicht installiert werden.",
                     IDC_STATIC,120,40,195,19
     LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,134,55,164,11
 END

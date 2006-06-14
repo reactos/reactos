@@ -263,7 +263,7 @@ BEGIN
     IDS_BAD_VALUE           "Kann den Wert '%s' nicht lesen"
     IDS_UNSUPPORTED_TYPE    "Kann den Schlüssel des Typen (%ld) nicht ändern"
     IDS_TOO_BIG_VALUE       "Der Wert (%ld) ist zu groß"
-    IDS_MULTI_SZ_EMPTY_STRING "Daten vom Typ REG_MULTI_SZ können keine leere Zeichenkette enthalten.\nDie leere Zeichenkette wurden von der Liste gelöscht."
+    IDS_MULTI_SZ_EMPTY_STRING "Daten vom Typ REG_MULTI_SZ können keine leere Zeichenkette enthalten.\nDie leere Zeichenkette wurde aus der Liste gelöscht."
     IDS_QUERY_DELETE_ONE    "Diesen Wert wirklich löschen?"
     IDS_QUERY_DELETE_MORE   "Diese Werte wirklich löschen?"
     IDS_QUERY_DELETE_CONFIRM "Löschen bestätigen"
@@ -341,7 +341,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
     PUSHBUTTON      "A&bbrechen",IDCANCEL,129,24,50,14
-    LTEXT           "&Favorite Name:",IDC_STATIC,7,7,70,10
+    LTEXT           "&Favorit:",IDC_STATIC,7,7,70,10
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
@@ -359,12 +359,12 @@ END
 
 IDD_FIND DIALOG DISCARDABLE  0, 0, 254, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Find"
+CAPTION "Suchen"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "&Weitersuchen",IDOK,197,7,50,14
     PUSHBUTTON      "A&bbrechen",IDCANCEL,197,24,50,14
-    GROUPBOX        "Look at",IDC_STATIC,7,25,63,51
+    GROUPBOX        "Suche in",IDC_STATIC,7,25,63,51
     LTEXT           "Suche &nach:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
     CONTROL         "&Schlüssel",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 

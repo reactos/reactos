@@ -46,6 +46,6 @@ END
 
 STRINGTABLE 
 BEGIN
-  IDS_CPLSYSTEMNAME "Add/Remove Programs"
-  IDS_CPLSYSTEMDESCRIPTION "Sets up programs and creates shortcuts."
+  IDS_CPLSYSTEMNAME "Programme hinzufügen/entfernen"
+  IDS_CPLSYSTEMDESCRIPTION "Installiert Programme und erstellt Verknüpfungen."
 END

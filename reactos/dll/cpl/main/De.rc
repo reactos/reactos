@@ -25,7 +25,7 @@ BEGIN
   LTEXT "Kurz", -1, 35,  50, 30, 10
   LTEXT "Lang", -1, 140, 50, 30, 10
   CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
-  PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
+  PUSHBUTTON "&OK", IDOK, 120, 75, 50, 15
   PUSHBUTTON "&Abbrechen", IDCANCEL, 175, 75, 50, 15
   LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked",-1,60,15,170,30
   ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15

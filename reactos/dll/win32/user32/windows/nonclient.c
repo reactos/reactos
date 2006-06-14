@@ -1149,8 +1149,8 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
     {
         if (uFlags & DC_GRADIENT)
         {
-          static GRADIENT_RECT gcap = {0, 1};
-		  TRIVERTEX vert[2];
+          static GRADIENT_RECT gcap [] = {{0, 1}, {2, 3}};
+		  TRIVERTEX vert[4];
           COLORREF Colors[2];
           LONG xx;
 
@@ -1184,13 +1184,27 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
           vert[0].Alpha = 0;
 
           vert[1].x = r.right;
-          vert[1].y = lprc->bottom - lprc->top;
+          vert[1].y = (lprc->bottom - lprc->top) >> 1;
           vert[1].Red = GetRValue(Colors[1]) << 8;
           vert[1].Green = GetGValue(Colors[1]) << 8;
           vert[1].Blue = GetBValue(Colors[1]) << 8;
           vert[1].Alpha = 0;
 
-          GdiGradientFill(MemDC, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_V);
+          vert[2].x = r.left;
+          vert[2].y = (lprc->bottom - lprc->top) >> 1;
+          vert[2].Red = GetRValue(Colors[1]) << 8;
+          vert[2].Green = GetGValue(Colors[1]) << 8;
+          vert[2].Blue = GetBValue(Colors[1]) << 8;
+          vert[2].Alpha = 0;
+
+          vert[3].x = r.right;
+          vert[3].y = (lprc->bottom - lprc->top);
+          vert[3].Red = GetRValue(Colors[0]) << 8;
+          vert[3].Green = GetGValue(Colors[0]) << 8;
+          vert[3].Blue = GetBValue(Colors[0]) << 8;
+          vert[3].Alpha = 0;
+
+          GdiGradientFill(MemDC, vert, 4, &gcap, 2, GRADIENT_FILL_RECT_V);
 
           if ((uFlags & DC_ICON) && (Style & WS_SYSMENU) && !(uFlags & DC_SMALLCAP))
           {

@@ -35,7 +35,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDC_STATUS, 10, 30, 200, 10, SS_CENTER
  CHECKBOX "Entferne ""Get Firefox"" nach Fertigstellung aus dem Startmenü", IDC_REMOVE,
            10, 44, 200, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Cancel", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Abbrechen", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
 STRINGTABLE

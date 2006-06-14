@@ -123,7 +123,7 @@ END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Benutzervariablen"
+CAPTION "Umgebungsvariablen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   GROUPBOX "Benutzervariablen",-1,7,12,238,100
@@ -163,7 +163,7 @@ END
 STRINGTABLE 
 BEGIN
   IDS_CPLSYSTEMNAME "System"
-  IDS_CPLSYSTEMDESCRIPTION "Zeigt Informationen über Ihren Computer an und ändert System und Hardwareeinstellungen."
+  IDS_CPLSYSTEMDESCRIPTION "Zeigt Informationen über Ihren Computer an und ändert System- und Hardwareeinstellungen."
   IDS_DRIVE "Laufwerk:			%s"
   IDS_SPACE "Verfügbarer Speicherplatz:		%s"
   IDS_MIN "Minimal möglich:	%s"

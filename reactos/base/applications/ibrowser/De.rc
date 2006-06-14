@@ -78,8 +78,8 @@ BEGIN
     POPUP "&Hilfe"
     BEGIN
         MENUITEM "IBrowser &FAQ...",            ID_IBROWSER_FAQ
-        MENUITEM "&About IBrowser...",          ID_ABOUT_IBROWSER
-        MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "&Über IBrowser...",          ID_ABOUT_IBROWSER
+        MENUITEM "Über &OS...",                ID_ABOUT_WINDOWS
     END
 END
 

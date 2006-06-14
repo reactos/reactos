@@ -9,5 +9,5 @@ STRINGTABLE DISCARDABLE
 {
 
 STRING_WelcomeMsg,      "ReactOS Virtuelle DOS Unterstützung.\n"
-STRING_PromptMsg,       "Drücke jetzt r<cr> zum starten, s<cr> zum runterfahren oder q<cr> zum schließen."
+STRING_PromptMsg,       "Drücken Sie r<cr> zum starten, s<cr> zum herunterfahren oder q<cr> zum beenden."
 }

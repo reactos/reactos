@@ -628,12 +628,12 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_ENDTASK              "Schließt den makierten Task."
-    ID_GOTOPROCESS          "Wechselt den Fokus zu dem makierten Task."
+    ID_ENDTASK              "Schließt den markierten Task."
+    ID_GOTOPROCESS          "Wechselt den Fokus zu dem markierten Task."
     ID_RESTORE              "Wiederherstellen des Task-Managers."
-    ID_PROCESS_PAGE_ENDPROCESS "Löscht den Prozess vom System."
+    ID_PROCESS_PAGE_ENDPROCESS "Beendet den Prozess."
     ID_PROCESS_PAGE_ENDPROCESSTREE
-                            "Löscht den Prozess und seine Abhängigkeiten vom System."
+                            "Beendet den Prozess und seine Abhängigkeiten."
     ID_PROCESS_PAGE_DEBUG   "Hängt den Debugger in diesen Prozess ein."
     ID_PROCESS_PAGE_SETAFFINITY
                             "Steuert die Prozessorzugehörigkeit, auf welchen CPUs der Prozess ausgeführt werden darf."
@@ -694,7 +694,7 @@ BEGIN
     IDS_MENU_SHOWKERNELTIMES      "&Kernel-Zeiten anzeigen"
     IDS_CREATENEWTASK             "Neuen Task erstellen"
     IDS_CREATENEWTASK_DESC        "Geben Sie Programme, Ordner, Dokumente oder Internetressourcen an, die geöffnet werden sollen."
-    IDS_MSG_ACCESSPROCESSAFF      "Unable to Access or Set Process Affinity"
+    IDS_MSG_ACCESSPROCESSAFF      "Zugriff auf die / Änderung der Prozess Affinität nicht möglich"
     IDS_MSG_PROCESSONEPRO         "Der Prozess muss eine Zugehörigkeit zu mindestens einem Prozessor aufweisen."
     IDS_MSG_INVALIDOPTION         "Ungültige Auswahl"
     IDS_MSG_UNABLEDEBUGPROCESS    "Kann Prozess nicht debuggen"

@@ -86,7 +86,7 @@ BEGIN
   IDS_SERVICES_YES "Ja"
   IDS_SERVICES_UNKNOWN "Unbekannt"
   IDS_SERVICES_AUTO "Automatisch"
-  IDS_SERVICES_MAN "Manuel"
+  IDS_SERVICES_MAN "Manuell"
   IDS_SERVICES_DIS "Deaktiviert"
 END
 
