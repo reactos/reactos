@@ -3,11 +3,11 @@
 
 	<if property="ARCH" value="i386">
 		<directory name="i386">
-			<file>compareexchange.s</file>
-			<file>decrement.s</file>
-			<file>exchange.s</file>
-			<file>exchangeadd.s</file>
-			<file>increment.s</file>
+			<file>compareexchange.c</file>
+			<file>decrement.c</file>
+			<file>exchange.c</file>
+			<file>exchangeadd.c</file>
+			<file>increment.c</file>
 		</directory>
 	</if>
 	<if property="ARCH" value="ppc">
