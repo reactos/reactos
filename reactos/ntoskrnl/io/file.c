@@ -66,6 +66,7 @@ IopParseDevice(IN PVOID ParseObject,
                                 0,
                                 (PVOID*)&FileObject);
         /* Set File Object Data */
+        ASSERT(DeviceObject);
         FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject);
         DPRINT("DO. DRV Name: %p %wZ\n", DeviceObject, &DeviceObject->DriverObject->DriverName);
 
@@ -89,12 +90,23 @@ IopParseDevice(IN PVOID ParseObject,
     {
         /* Parent is a device object */
         DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)ParseObject);
+
+        /* Check if it has a VPB */
         if (DeviceObject->Vpb)
         {
+            /* Check if it's not already mounted */
             if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
             {
                 Status = IoMountVolume(DeviceObject, FALSE);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Couldn't mount, fail the lookup */
+                    ObDereferenceObject(FileObject);
+                    *Object = NULL;
+                    return STATUS_UNSUCCESSFUL;
+                }
             }
+
             DeviceObject = DeviceObject->Vpb->DeviceObject;
         }
     }
