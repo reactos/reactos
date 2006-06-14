@@ -573,7 +573,7 @@ Cleanup:
   }
   if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
   if (FreeRemainingPath) RtlFreeUnicodeString(&RemainingPath);
-  if (Object != NULL) ObDereferenceObject(Object);
+  //if (Object != NULL) ObDereferenceObject(Object);
 
   return Status;
 }

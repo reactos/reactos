@@ -113,6 +113,7 @@ ObfDereferenceObject(IN PVOID Object)
                      Header->NextToFree);
 
             /* Queue the work item */
+            KeBugCheck(0);
             ExQueueWorkItem(&ObpReaperWorkItem, DelayedWorkQueue);
         }
     }
@@ -193,6 +194,7 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
     }
 
     /* Find the object */
+    *ObjectPtr = NULL;
     Status = ObFindObject(NULL,
                           &ObjectName,
                           Attributes,
@@ -204,18 +206,11 @@ ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
                           NULL,
                           ParseContext,
                           NULL);
-    if (!NT_SUCCESS(Status)) goto Quickie;
-
-    /* ROS Hack */
-    if (Object == NULL)
+    if (NT_SUCCESS(Status))
     {
-        *ObjectPtr = NULL;
-        Status = STATUS_OBJECT_NAME_NOT_FOUND;
-        goto Quickie;
+        /* Return the object */
+        *ObjectPtr = Object;
     }
-
-    /* Return the object */
-    *ObjectPtr = Object;
 
     /* Free the access state */
     if (PassedAccessState == &AccessState)

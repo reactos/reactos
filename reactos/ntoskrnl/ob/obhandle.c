@@ -345,19 +345,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     }
 
     /* Increase the handle count */
-    if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
-    {
-        /*
-         * FIXME: Is really needed? Perhaps we should instead take
-         * advantage of the AddtionalReferences parameter to add the
-         * bias when required. This might be the source of the mysterious
-         * ReactOS bug where ObInsertObject *requires* an immediate dereference
-         * even in a success case.
-         * Will have to think more about this when doing the Increment/Create
-         * split later.
-         */
-        ObReferenceObject(Object);
-    }
+    InterlockedIncrement(&ObjectHeader->HandleCount);
 
     /* FIXME: Use the Handle Database */
     ProcessHandleCount = 0;
@@ -457,19 +445,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     }
 
     /* Increase the handle count */
-    if(InterlockedIncrement(&ObjectHeader->HandleCount) == 1)
-    {
-        /*
-         * FIXME: Is really needed? Perhaps we should instead take
-         * advantage of the AddtionalReferences parameter to add the
-         * bias when required. This might be the source of the mysterious
-         * ReactOS bug where ObInsertObject *requires* an immediate dereference
-         * even in a success case.
-         * Will have to think more about this when doing the Increment/Create
-         * split later.
-         */
-        ObReferenceObject(Object);
-    }
+    InterlockedIncrement(&ObjectHeader->HandleCount);
 
     /* FIXME: Use the Handle Database */
     ProcessHandleCount = 0;
@@ -1531,11 +1507,9 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                              AccessMode,
                              NULL,
                              Handle);
+    if (!NT_SUCCESS(Status)) ObDereferenceObject(Object);
 
 Cleanup:
-    /* Dereference the object */
-    if (Object) ObDereferenceObject(Object);
-
     /* Delete the access state */
     if (PassedAccessState == &AccessState)
     {
@@ -1635,15 +1609,13 @@ ObOpenObjectByPointer(IN PVOID Object,
                              AccessMode,
                              NULL,
                              Handle);
+    if (!NT_SUCCESS(Status)) ObDereferenceObject(Object);
 
     /* Delete the access state */
     if (PassedAccessState == &AccessState)
     {
         SeDeleteAccessState(PassedAccessState);
     }
-
-    /* ROS Hack: Dereference the object and return */
-    ObDereferenceObject(Object);
 
     /* Return */
     OBTRACE(OB_HANDLE_DEBUG,

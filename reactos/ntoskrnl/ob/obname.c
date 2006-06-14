@@ -45,6 +45,7 @@ ObpDeleteNameCheck(IN PVOID Object)
     OBP_LOOKUP_CONTEXT Context;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     POBJECT_TYPE ObjectType;
+    PVOID Directory = NULL;
 
     /* Get object structures */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
@@ -68,7 +69,7 @@ ObpDeleteNameCheck(IN PVOID Object)
                                          0,
                                          FALSE,
                                          &Context);
-        if (Object)
+        if ((Object) && !(ObjectHeader->HandleCount))
         {
             /* First delete it from the directory */
             ObpDeleteEntryDirectory(&Context);
@@ -94,9 +95,15 @@ ObpDeleteNameCheck(IN PVOID Object)
             RtlInitEmptyUnicodeString(&ObjectNameInfo->Name, NULL, 0);
 
             /* Clear the current directory and de-reference it */
-            ObDereferenceObject(ObjectNameInfo->Directory);
-            ObDereferenceObject(Object);
+            Directory = ObjectNameInfo->Directory;
             ObjectNameInfo->Directory = NULL;
+        }
+
+        /* Check if we were inserted in a directory */
+        if (Directory)
+        {
+            ObDereferenceObject(Directory);
+            ObDereferenceObject(Object);
         }
     }
 }

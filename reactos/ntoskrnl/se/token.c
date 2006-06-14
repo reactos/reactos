@@ -1507,8 +1507,6 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
     			  NULL,
     			  &hToken);
 
-      ObDereferenceObject(NewToken);
-
       if (NT_SUCCESS(Status))
       {
         _SEH_TRY
@@ -2263,8 +2261,6 @@ NtCreateToken(OUT PHANDLE TokenHandle,
       DPRINT1("ObInsertObject() failed (Status %lx)\n", Status);
     }
 
-  ObDereferenceObject(AccessToken);
-
   if (NT_SUCCESS(Status))
     {
       _SEH_TRY
@@ -2513,7 +2509,6 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
       Status = ObInsertObject(NewToken, NULL, DesiredAccess, 0, NULL,
                               &hToken);
 
-      ObfDereferenceObject(NewToken);
     }
   else
     {

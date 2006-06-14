@@ -133,7 +133,6 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
                                 0,
                                 NULL,
                                 &hMutant);
-        ObDereferenceObject(Mutant);
 
         /* Check for success */
         if(NT_SUCCESS(Status))

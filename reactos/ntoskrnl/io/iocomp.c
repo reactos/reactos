@@ -273,7 +273,6 @@ NtCreateIoCompletion(OUT PHANDLE IoCompletionHandle,
                                 0,
                                 NULL,
                                 &hIoCompletionHandle);
-        ObDereferenceObject(Queue);
 
         if (NT_SUCCESS(Status)) {
 

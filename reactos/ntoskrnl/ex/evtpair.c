@@ -110,7 +110,6 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
                                  0,
                                  NULL,
                                  &hEventPair);
-        ObDereferenceObject(EventPair);
 
         /* Check for success and return handle */
         if(NT_SUCCESS(Status))

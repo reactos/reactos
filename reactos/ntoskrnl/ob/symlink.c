@@ -359,9 +359,6 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
             }
             _SEH_END;
         }
-
-        /* ReactOS Hack: Our ObInsertObject references an object twice */
-        ObDereferenceObject(SymbolicLink);
     }
 
     /* Return status to caller */

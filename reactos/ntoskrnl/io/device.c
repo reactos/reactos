@@ -583,7 +583,6 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     CreatedDeviceObject->DriverObject = DriverObject;
     CreatedDeviceObject->NextDevice = DriverObject->DeviceObject;
     DriverObject->DeviceObject = CreatedDeviceObject;
-
     NtClose(TempHandle);
 
     /* Return to caller */

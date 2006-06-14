@@ -3408,7 +3408,6 @@ NtCreateSection (OUT PHANDLE SectionHandle,
                                0,
                                NULL,
                                SectionHandle);
-      ObDereferenceObject(SectionObject);
    }
 
    return Status;

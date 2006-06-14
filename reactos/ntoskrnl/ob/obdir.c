@@ -553,9 +553,6 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
             }
             _SEH_END;
         }
-
-        /* ReactOS HACK: ObInsertObject double-references */
-        ObDereferenceObject(Directory);
     }
 
     /* Return status to caller */

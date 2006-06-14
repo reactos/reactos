@@ -129,7 +129,6 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
                                 0,
                                 NULL,
                                 &hSemaphore);
-        ObDereferenceObject(Semaphore);
 
         /* Check for success */
         if(NT_SUCCESS(Status))

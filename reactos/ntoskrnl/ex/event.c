@@ -151,7 +151,6 @@ NtCreateEvent(OUT PHANDLE EventHandle,
                                  0,
                                  NULL,
                                  &hEvent);
-        ObDereferenceObject(Event);
 
         /* Check for success */
         if(NT_SUCCESS(Status))
