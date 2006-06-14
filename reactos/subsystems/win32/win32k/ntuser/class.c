@@ -1366,7 +1366,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
                                              ClassName->Buffer,
                                              &BufLen);
 
-            if (NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
             {
                 SetLastNtError(Status);
                 _SEH_LEAVE;
@@ -1396,7 +1396,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
 {
     ULONG_PTR Ret = 0;
 
-    if (Index > 0)
+    if (Index >= 0)
     {
         PULONG_PTR Data;
 
@@ -1407,7 +1407,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
             return 0;
         }
 
-        Data = (PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset);
+        Data = (PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset + Index);
 
         /* FIXME - Data might be a unaligned pointer! Might be a problem on
                    certain architectures, maybe using RtlCopyMemory is a
@@ -1592,7 +1592,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
     /* change the information in the base class first, then update the clones */
     Class = Class->Base;
 
-    if (Index > 0)
+    if (Index >= 0)
     {
         PULONG_PTR Data;
 
@@ -1603,7 +1603,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
             return 0;
         }
 
-        Data = (PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset);
+        Data = (PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset + Index);
 
         /* FIXME - Data might be a unaligned pointer! Might be a problem on
                    certain architectures, maybe using RtlCopyMemory is a
@@ -1615,7 +1615,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
         Class = Class->Clone;
         while (Class != NULL)
         {
-            *(PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset) = NewLong;
+            *(PULONG_PTR)((ULONG_PTR)Class + Class->ClassExtraDataOffset + Index) = NewLong;
             Class = Class->Next;
         }
 
@@ -2170,6 +2170,9 @@ InvalidParameter:
                                                                               (PVOID)Class->AnsiMenuName :
                                                                               (PVOID)Class->MenuName));
                 }
+
+                /* Undocumented behavior! Return the class atom as a BOOL! */
+                Ret = (BOOL)ClassAtom;
             }
         }
     }
