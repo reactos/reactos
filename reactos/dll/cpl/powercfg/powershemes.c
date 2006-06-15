@@ -1,4 +1,4 @@
-/* $Id: powershemes.c 21500 2006-04-07 10:20:39Z janderwald $
+/* $Id$
  *
  * PROJECT:         ReactOS Power Configuration Applet
  * LICENSE:         GPL - See COPYING in the top level directory
