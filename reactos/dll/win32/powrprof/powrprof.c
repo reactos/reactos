@@ -303,6 +303,15 @@ BOOLEAN WINAPI WritePwrScheme(PUINT puiID, LPWSTR lpszName, LPWSTR lpszDescripti
    return FALSE;
 }
 
+BOOLEAN WINAPI ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pPP)
+{
+   /* FIXME: See note #3 */
+   FIXME("(%p, %p) stub!\n", pGPP, pPP);
+   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+   return FALSE;
+
+}
+
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
    FIXME("(%p, %ld, %p) not fully implemented\n", hinstDLL, fdwReason, lpvReserved);

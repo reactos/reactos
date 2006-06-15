@@ -30,7 +30,7 @@ ReadProcessorPwrScheme@8
 ReadPwrScheme@8
 SetActivePwrScheme@12
 SetSuspendState@12
-;ValidatePowerPolicies@8
+ValidatePowerPolicies@8
 WriteGlobalPwrPolicy@4
 WriteProcessorPwrScheme@8
 WritePwrScheme@16
