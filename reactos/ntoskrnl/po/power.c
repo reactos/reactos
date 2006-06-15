@@ -373,7 +373,6 @@ NtPowerInformation(
       Status = STATUS_NOT_IMPLEMENTED;
       DPRINT1("PowerInformationLevel 0x%x is UNIMPLEMENTED! Have a nice day.\n",
               PowerInformationLevel);
-      for (;;);
       break;
    }
 
