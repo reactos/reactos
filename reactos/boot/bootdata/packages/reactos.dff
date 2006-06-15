@@ -106,6 +106,7 @@ dll\cpl\intl\intl.cpl                               1
 dll\cpl\main\main.cpl                               1
 dll\cpl\mmsys\mmsys.cpl                             1
 dll\cpl\ncpa\ncpa.cpl                               1
+dll\cpl\powercfg\powercfg.cpl                       1
 dll\cpl\sysdm\sysdm.cpl                             1
 dll\cpl\timedate\timedate.cpl                       1
 
@@ -191,6 +192,7 @@ dll\win32\oledlg\oledlg.dll                         1
 dll\win32\olepro32\olepro32.dll                     1
 dll\win32\opengl32\opengl32.dll                     1
 dll\win32\psapi\psapi.dll                           1
+dll\win32\powrprof\powrprof.dll                     1
 dll\win32\riched20\riched20.dll                     1
 dll\win32\richedit\riched32.dll                     1
 dll\win32\rpcrt4\rpcrt4.dll                         1
