@@ -7,6 +7,7 @@
   <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
   <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
   <property name="BASEADDRESS_MMSYS" value="0x588A0000" />
+  <property name="BASEADDRESS_PWRCFG" value="0x587E0000" />
   <property name="BASEADDRESS_UXTHEME" value="0x5AD70000" />
   <property name="BASEADDRESS_VDMDBG" value="0x5B0D0000" />
   <property name="BASEADDRESS_OBJSEL" value="0x5B400000" />
