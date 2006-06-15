@@ -26,6 +26,9 @@
 <directory name="psapi">
 	<xi:include href="psapi/psapi.rbuild" />
 </directory>
+<directory name="powrprof">
+	<xi:include href="powrprof/powrprof.rbuild" />
+</directory>
 <directory name="setupapi">
 	<xi:include href="setupapi/setupapi.rbuild" />
 </directory>
