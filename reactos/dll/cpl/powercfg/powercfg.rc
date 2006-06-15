@@ -16,3 +16,4 @@ IDI_SCREEN ICON "resources/screen.ico"
 
 #include "en.rc"
 #include "de.rc"
+#include "ru.rc"
