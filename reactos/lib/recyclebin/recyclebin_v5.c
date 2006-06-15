@@ -340,7 +340,7 @@ RestoreFile5(
 
 	/* Update INFO2 */
 	/* 1) If not last entry, copy last entry to the current one */
-	if (SetFilePointer(bin->hInfo, -sizeof(DELETED_FILE_RECORD), NULL, FILE_END) == INVALID_SET_FILE_POINTER)
+	if (SetFilePointer(bin->hInfo, -(LONG)sizeof(DELETED_FILE_RECORD), NULL, FILE_END) == INVALID_SET_FILE_POINTER)
 		goto cleanup;
 	if (!ReadFile(bin->hInfo, &LastFile, sizeof(DELETED_FILE_RECORD), &bytesRead, NULL))
 		goto cleanup;
@@ -374,7 +374,7 @@ RestoreFile5(
 		goto cleanup;
 	}
 	/* 3) Truncate file */
-	if (SetFilePointer(bin->hInfo, -sizeof(DELETED_FILE_RECORD), NULL, FILE_END) == INVALID_SET_FILE_POINTER)
+	if (SetFilePointer(bin->hInfo, -(LONG)sizeof(DELETED_FILE_RECORD), NULL, FILE_END) == INVALID_SET_FILE_POINTER)
 		goto cleanup;
 	if (!SetEndOfFile(bin->hInfo))
 		goto cleanup;
