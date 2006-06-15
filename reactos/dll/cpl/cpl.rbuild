@@ -19,6 +19,9 @@
 <directory name="ncpa">
 	<xi:include href="ncpa/ncpa.rbuild" />
 </directory>
+<directory name="powercfg">
+	<xi:include href="powercfg/powercfg.rbuild" />
+</directory>
 <directory name="sysdm">
 	<xi:include href="sysdm/sysdm.rbuild" />
 </directory>
