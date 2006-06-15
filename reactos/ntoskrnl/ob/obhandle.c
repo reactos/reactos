@@ -1009,7 +1009,6 @@ ObpCloseHandleCallback(IN PHANDLE_TABLE_ENTRY HandleTableEntry,
                        IN HANDLE Handle,
                        IN PVOID Context)
 {
-#if 0
     POBP_CLOSE_HANDLE_CONTEXT CloseContext = (POBP_CLOSE_HANDLE_CONTEXT)Context;
 
     /* Simply decrement the handle count */
@@ -1018,7 +1017,6 @@ ObpCloseHandleCallback(IN PHANDLE_TABLE_ENTRY HandleTableEntry,
                              Handle,
                              CloseContext->AccessMode,
                              TRUE);
-#endif
 }
 
 /*++
@@ -1163,7 +1161,7 @@ ObKillProcess(IN PEPROCESS Process)
     /* Sweep the handle table to close all handles */
     ExSweepHandleTable(HandleTable,
                        ObpCloseHandleCallback,
-                       Process);
+                       &Context);
 
     /* Destroy the table and leave the critical region */
     ExDestroyHandleTable(HandleTable);
