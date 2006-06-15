@@ -387,10 +387,18 @@ static void test_key_names(void)
 
 }
 
+static void test_SetupCloseInfFile(void)
+{
+    /* try to close with invalid handles */
+    SetupCloseInfFile( NULL );
+    SetupCloseInfFile( INVALID_HANDLE_VALUE );
+}
+
 START_TEST(parser)
 {
     test_invalid_files();
     test_section_names();
     test_key_names();
+    test_SetupCloseInfFile();
     DeleteFileA( tmpfile );
 }
