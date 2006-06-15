@@ -29,6 +29,7 @@
 #include "powrprof.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
+#include "stdlib.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(powrprof);
 
@@ -308,7 +309,7 @@ BOOLEAN WINAPI ValidatePowerPolicies(PGLOBAL_POWER_POLICY pGPP, PPOWER_POLICY pP
    /* FIXME: See note #3 */
    FIXME("(%p, %p) stub!\n", pGPP, pPP);
    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-   return FALSE;
+   return TRUE;
 
 }
 
