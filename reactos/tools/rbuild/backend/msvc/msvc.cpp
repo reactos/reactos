@@ -56,6 +56,27 @@ MSVCBackend::MSVCBackend(Project &project,
 
 void MSVCBackend::Process()
 {
+	// TODO FIXME wine hack?
+	bool only_msvc_headers = false;
+
+	while ( m_configurations.size () > 0 )
+	{
+		const MSVCConfiguration* cfg = m_configurations.back();
+		m_configurations.pop_back();
+		delete cfg;
+	}
+
+	m_configurations.push_back ( new MSVCConfiguration( Debug ));
+	m_configurations.push_back ( new MSVCConfiguration( Release ));
+	m_configurations.push_back ( new MSVCConfiguration( Speed ));
+
+	if (!only_msvc_headers)
+	{
+		m_configurations.push_back ( new MSVCConfiguration( Debug, WineHeaders ));
+		m_configurations.push_back ( new MSVCConfiguration( Release, WineHeaders ));
+		m_configurations.push_back ( new MSVCConfiguration( Speed, WineHeaders ));
+	}
+
 	if ( configuration.CleanAsYouGo ) {
 		_clean_project_files();
 		return;
@@ -65,20 +86,11 @@ void MSVCBackend::Process()
 		return;
 	}
 	string filename_sln ( ProjectNode.name );
-	//string filename_rules = "gccasm.rules";
 	
 	if ( configuration.VSProjectVersion == "6.00" )
 		filename_sln += "_auto.dsw";
-	else {
+	else
 		filename_sln += "_auto.sln";
-
-		//m_rulesFile = fopen ( filename_rules.c_str(), "wb" );
-		//if ( m_rulesFile )
-		//{
-		//	_generate_rules_file ( m_rulesFile );
-		//}
-		//fclose ( m_rulesFile );
-	}
 
 	printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
 	
@@ -112,14 +124,6 @@ void MSVCBackend::ProcessModules()
 			_generate_dsp ( module );
 		else
 			_generate_vcproj ( module );
-
-
-		/*for(size_t k = 0; k < module.non_if_data.files.size(); k++)
-		{
-			File &file = *module.non_if_data.files[k];
-			
-			ProcessFile(file.name);
-		}*/
 	}
 }
 

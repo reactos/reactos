@@ -86,7 +86,7 @@ class MSVCBackend : public Backend
 		std::string SuoFileName ( const Module& module ) const;
 		std::string NcbFileName ( const Module& module ) const;
 
-
+		std::vector<MSVCConfiguration*> m_configurations;
 
 		std::vector<FileUnit> m_fileUnits;
 		std::vector<std::string> m_folders;

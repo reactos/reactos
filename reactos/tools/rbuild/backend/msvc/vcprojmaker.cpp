@@ -100,23 +100,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	bool console = exe && (module.type == Win32CUI);
 
-	// TODO FIXME - not sure if the count here is right...
-	int parts = 0;
-	const char* p = strpbrk ( vcproj_file.c_str(), "/\\" );
-	while ( p )
-	{
-		++parts;
-		p = strpbrk ( p+1, "/\\" );
-	}
-	string msvc_wine_dir = "..";
-	while ( --parts )
-		msvc_wine_dir += "\\..";
-
-	string wine_include_dir = msvc_wine_dir + "\\include";
-
-	//$progress_current++;
-	//$output->progress("$dsp_file (file $progress_current of $progress_max)");
-
 	string vcproj_path = module.GetBasePath();
 	vector<string> source_files, resource_files, includes, includes_wine, libraries;
 	StringSet common_defines;
@@ -194,22 +177,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	vector<string> header_files;
 
-	// TODO FIXME wine hack?
-	bool no_msvc_headers = true;
-
-	std::vector<MSVCConfiguration*> cfgs;
-
-	cfgs.push_back ( new MSVCConfiguration( Debug ));
-	cfgs.push_back ( new MSVCConfiguration( Release ));
-	cfgs.push_back ( new MSVCConfiguration( Speed ));
-
-	if (!no_msvc_headers)
-	{
-		cfgs.push_back ( new MSVCConfiguration( Debug, WineHeaders ));
-		cfgs.push_back ( new MSVCConfiguration( Release, WineHeaders ));
-		cfgs.push_back ( new MSVCConfiguration( Speed, WineHeaders ));
-	}
-
 	string include_string;
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
@@ -243,9 +210,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	std::string output_dir;
 
 	fprintf ( OUT, "\t<Configurations>\r\n" );
-	for ( size_t icfg = 0; icfg < cfgs.size(); icfg++ )
+	for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 	{
-		const MSVCConfiguration& cfg = *cfgs[icfg];
+		const MSVCConfiguration& cfg = *m_configurations[icfg];
 
 		bool debug = ( cfg.optimization == Debug );
 		bool release = ( cfg.optimization == Release );
@@ -272,7 +239,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			{
 				if ( multiple_includes )
 					fprintf ( OUT, ";" );
-
 				fprintf ( OUT, "%s", include.c_str() );
 				include_string += " /I " + include;
 				multiple_includes = true;
@@ -523,9 +489,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t<File\r\n" );
 		fprintf ( OUT, "\t\t\t\tRelativePath=\"%s\">\r\n", source_file.c_str() );
 
-		for ( size_t iconfig = 0; iconfig < cfgs.size(); iconfig++ )
+		for ( size_t iconfig = 0; iconfig < m_configurations.size(); iconfig++ )
 		{
-			const MSVCConfiguration& config = *cfgs[iconfig];
+			const MSVCConfiguration& config = *m_configurations[iconfig];
 
 			if (( isrcfile == 0 ) && ( module.pch != NULL ))
 			{
@@ -635,31 +601,6 @@ MSVCBackend::_get_solution_verion ( void )
 	return version;
 }
 
-
-//void
-//MSVCBackend::_generate_rules_file ( FILE* OUT )
-//{
-//	fprintf ( OUT, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" );
-//	fprintf ( OUT, "<VisualStudioToolFile\r\n" );
-//	fprintf ( OUT, "\tName=\"GCC Assembler\"\r\n" );
-//	fprintf ( OUT, "\tVersion=\"%s\"\r\n", _get_solution_verion().c_str() );
-//	fprintf ( OUT, "\t>\r\n" );
-//	fprintf ( OUT, "\t<Rules>\r\n" );
-//	fprintf ( OUT, "\t\t<CustomBuildRule\r\n" );
-//	fprintf ( OUT, "\t\t\tName=\"Assembler\"\r\n" );
-//	fprintf ( OUT, "\t\t\tDisplayName=\"Assembler Files\"\r\n" );
-//	fprintf ( OUT, "\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; | as -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n" );
-//	fprintf ( OUT, "\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"\r\n" );	
-//	fprintf ( OUT, "\t\t\tFileExtensions=\"*.S\"\r\n" );
-//	fprintf ( OUT, "\t\t\tExecutionDescription=\"asm\"\r\n" );
-//	fprintf ( OUT, "\t\t\t>\r\n" );
-//	fprintf ( OUT, "\t\t\t<Properties>\r\n" );
-//	fprintf ( OUT, "\t\t\t</Properties>\r\n" );
-//	fprintf ( OUT, "\t\t</CustomBuildRule>\r\n" );
-//	fprintf ( OUT, "\t</Rules>\r\n" );
-//	fprintf ( OUT, "</VisualStudioToolFile>\r\n" );
-//}
-
 void
 MSVCBackend::_generate_sln_header ( FILE* OUT )
 {
@@ -703,8 +644,8 @@ MSVCBackend::_generate_sln_footer ( FILE* OUT )
 {
 	fprintf ( OUT, "Global\r\n" );
 	fprintf ( OUT, "\tGlobalSection(SolutionConfiguration) = preSolution\r\n" );
-	fprintf ( OUT, "\t\tDebug = Debug\r\n" );
-	fprintf ( OUT, "\t\tRelease = Release\r\n" );
+	for ( size_t i = 0; i < m_configurations.size(); i++ )
+		fprintf ( OUT, "\t\t%s = %s\r\n", m_configurations[i]->name.c_str(), m_configurations[i]->name.c_str() );
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
 	fprintf ( OUT, "\tGlobalSection(ProjectConfiguration) = postSolution\r\n" );
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
@@ -739,10 +680,12 @@ MSVCBackend::_generate_sln_footer ( FILE* OUT )
 void
 MSVCBackend::_generate_sln_configurations ( FILE* OUT, std::string vcproj_guid )
 {
-	fprintf ( OUT, "\t\t%s.Debug|Win32.ActiveCfg = Debug|Win32\r\n", vcproj_guid.c_str() );
-	fprintf ( OUT, "\t\t%s.Debug|Win32.Build.0 = Debug|Win32\r\n", vcproj_guid.c_str() );
-	fprintf ( OUT, "\t\t%s.Release|Win32.ActiveCfg = Release|Win32\r\n", vcproj_guid.c_str() );
-	fprintf ( OUT, "\t\t%s.Release|Win32.Build.0 = Release|Win32\r\n", vcproj_guid.c_str() );
+	for ( size_t i = 0; i < m_configurations.size (); i++)
+	{
+		const MSVCConfiguration& cfg = *m_configurations[i];
+		fprintf ( OUT, "\t\t%s.%s|Win32.ActiveCfg = %s|Win32\r\n", vcproj_guid.c_str(), cfg.name.c_str(), cfg.name.c_str() );
+		fprintf ( OUT, "\t\t%s.%s|Win32.Build.0 = %s|Win32\r\n", vcproj_guid.c_str(), cfg.name.c_str(), cfg.name.c_str() );
+	}
 }
 
 void
