@@ -493,7 +493,7 @@ NtUserCallTwoParam(
          {
             DWORD Ret;
             RECT rcRect;
-            PWINDOW_OBJECT Window = UserGetWindowObject((HWND)Param1);
+            Window = UserGetWindowObject((HWND)Param1);
             if (!Window) RETURN(ERROR);
             
             Ret = (DWORD)IntGetWindowRgnBox(Window, &rcRect);
@@ -507,7 +507,7 @@ NtUserCallTwoParam(
          }
       case TWOPARAM_ROUTINE_GETWINDOWRGN:
          {
-            PWINDOW_OBJECT Window = UserGetWindowObject((HWND)Param1);
+            Window = UserGetWindowObject((HWND)Param1);
             if (!Window) RETURN(ERROR);
 
             RETURN( (DWORD)IntGetWindowRgn(Window, (HRGN)Param2));
@@ -567,7 +567,7 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
       {
-         PWINDOW_OBJECT Window = UserGetWindowObject((HWND)Param1);
+         Window = UserGetWindowObject((HWND)Param1);
          if (!Window) RETURN(0);
          
          RETURN( (DWORD)IntShowOwnedPopups(Window, (BOOL) Param2));
@@ -576,19 +576,18 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_ROS_SHOWWINDOW:
          {
 #define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
-            PWINDOW_OBJECT Window;
             DPRINT1("ROS_SHOWWINDOW\n");
             
             if (!(Window = UserGetWindowObject((HWND)Param1)))
             {
-               RETURN( FALSE);
+               RETURN( 1 );
             }
             
             if (Param2)
             {
                if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP))
                {
-                  RETURN( TRUE);
+                  RETURN( -1 );
                }
                Window->Flags &= ~WIN_NEEDS_SHOW_OWNEDPOPUP;
             }
@@ -596,8 +595,9 @@ NtUserCallTwoParam(
                Window->Flags |= WIN_NEEDS_SHOW_OWNEDPOPUP;
 
             DPRINT1("ROS_SHOWWINDOW ---> 0x%x\n",Window->Flags);
-            RETURN( TRUE);
+            RETURN( 0 );
          }
+
       case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
          UNIMPLEMENTED
          RETURN( 0);
