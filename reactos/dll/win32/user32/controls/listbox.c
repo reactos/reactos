@@ -1240,6 +1240,9 @@ static LRESULT LISTBOX_GetItemHeight( LB_DESCR *descr, INT index )
 static LRESULT LISTBOX_SetItemHeight( LB_DESCR *descr, INT index,
                                       INT height, BOOL repaint )
 {
+    if (height > MAXBYTE)
+            return -1;
+
     if (!height) height = 1;
 
     if (descr->style & LBS_OWNERDRAWVARIABLE)
@@ -1436,11 +1439,13 @@ static LRESULT LISTBOX_SelectItemRange( LB_DESCR *descr, INT first,
     /* A few sanity checks */
 
     if (descr->style & LBS_NOSEL) return LB_ERR;
-    if ((last == -1) && (descr->nb_items == 0)) return LB_OKAY;
     if (!(descr->style & LBS_MULTIPLESEL)) return LB_ERR;
-    if (last == -1) last = descr->nb_items - 1;
-    if ((first < 0) || (first >= descr->nb_items)) return LB_ERR;
-    if ((last < 0) || (last >= descr->nb_items)) return LB_ERR;
+
+    if (!descr->nb_items) return LB_OKAY;
+
+    if (last == -1 || last >= descr->nb_items) last = descr->nb_items - 1;
+    if (first < 0) first = 0;
+    if (last < first) return LB_OKAY;
 
     if (on)  /* Turn selection on */
     {
@@ -1817,7 +1822,7 @@ static LRESULT LISTBOX_SetCount( LB_DESCR *descr, INT count )
     else if (count < descr->nb_items)
     {
         while (count < descr->nb_items)
-            if ((ret = LISTBOX_RemoveItem( descr, -1 )) < 0)
+            if ((ret = LISTBOX_RemoveItem( descr, (descr->nb_items - 1) )) < 0)
                 return ret;
     }
     return LB_OKAY;
@@ -1978,8 +1983,7 @@ static LRESULT LISTBOX_HandleHScroll( LB_DESCR *descr, WORD scrollReq, WORD pos 
                              descr->top_item + page * descr->page_size, TRUE );
             break;
         case SB_THUMBPOSITION:
-            LISTBOX_SetTopItem( descr, pos*descr->page_size,
-                                TRUE );
+            LISTBOX_SetTopItem( descr, pos*descr->page_size, TRUE );
             break;
         case SB_THUMBTRACK:
             info.cbSize = sizeof(info);
@@ -2203,7 +2207,6 @@ static LRESULT LISTBOX_HandleLButtonDownCombo( LB_DESCR *pDescr,
             /* Check Vertical scroll bar */
             if (style & WS_VSCROLL)
             {
-
                 clientRect.right += GetSystemMetrics(SM_CXVSCROLL);
                 if (PtInRect( &clientRect, mousePos ))
                     nHitTestType = HTVSCROLL;
@@ -3163,10 +3166,11 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     case WM_GETDLGCODE:
         return DLGC_WANTARROWS | DLGC_WANTCHARS;
 
+    case WM_PRINTCLIENT:
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            HDC hdc = ( wParam ) ? ((HDC)wParam) :  BeginPaint( hwnd, &ps );
+            HDC hdc = ( wParam ) ? ((HDC)wParam) :  BeginPaint( descr->self, &ps );
             ret = LISTBOX_Paint( descr, hdc );
             if( !wParam ) EndPaint( hwnd, &ps );
         }
