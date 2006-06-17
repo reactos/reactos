@@ -51,6 +51,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	MSG msg;
 	HACCEL hAccelTable;
 
+    UNREFERENCED_PARAMETER(lpCmdLine);
+    UNREFERENCED_PARAMETER(hPrevInstance);
+
 	// Initialize global strings
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadString(hInstance, IDC_FDEBUG, szWindowClass, MAX_LOADSTRING);
@@ -74,7 +77,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		}
 	}
 
-	return msg.wParam;
+	return (int)msg.wParam;
 }
 
 
@@ -103,12 +106,17 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
 	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, (LPCTSTR)IDI_FDEBUG);
+	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FDEBUG));
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= NULL;//(HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= (LPCTSTR)IDC_FDEBUG;
+	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_FDEBUG);
 	wcex.lpszClassName	= szWindowClass;
-	wcex.hIconSm		= LoadIcon(wcex.hInstance, (LPCTSTR)IDI_SMALL);
+	wcex.hIconSm		= (HICON)LoadImage(hInstance,
+                                           MAKEINTRESOURCE(IDI_FDEBUG),
+                                           IMAGE_ICON,
+                                           16,
+                                           16,
+                                           LR_SHARED);
 
 	return RegisterClassEx(&wcex);
 }
@@ -299,6 +307,8 @@ LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	HWND	hLicenseEditWnd;
 	TCHAR	strLicense[0x1000];
 
+    UNREFERENCED_PARAMETER(lParam);
+
 	switch (message)
 	{
 	case WM_INITDIALOG:
@@ -324,6 +334,8 @@ LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK ConnectionDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    UNREFERENCED_PARAMETER(lParam);
+
 	switch (message)
 	{
 	case WM_INITDIALOG:
@@ -353,6 +365,8 @@ LRESULT CALLBACK ConnectionDialogProc(HWND hDlg, UINT message, WPARAM wParam, LP
 LRESULT CALLBACK CaptureDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	OPENFILENAME	ofn;
+
+    UNREFERENCED_PARAMETER(lParam);
 
 	switch (message)
 	{
@@ -498,6 +512,8 @@ VOID Rs232Thread(VOID* Parameter)
 	TCHAR	String[MAX_PATH];
 	MSG		msg;
 	DWORD	dwNumberOfBytesWritten;
+
+    UNREFERENCED_PARAMETER(Parameter);
 
 	dwThreadId = GetCurrentThreadId();
 

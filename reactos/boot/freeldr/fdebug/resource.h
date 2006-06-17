@@ -10,7 +10,6 @@
 #define IDM_EXIT                        105
 #define IDS_HELLO                       106
 #define IDI_FDEBUG                      107
-#define IDI_SMALL                       108
 #define IDC_FDEBUG                      109
 #define IDR_MAINFRAME                   128
 #define IDD_CONNECTION                  130

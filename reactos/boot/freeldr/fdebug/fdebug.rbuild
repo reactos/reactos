@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<module name="freeldr_fdebug" type="win32gui" installbase="system32" installname="fdebug.exe" allowwarnings="true">
-	<include base="ReactOS">.</include>
+<module name="freeldr_fdebug" type="win32gui" installbase="system32" installname="fdebug.exe">
+	<include base="freeldr_fdebug">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__REACTOS__" />

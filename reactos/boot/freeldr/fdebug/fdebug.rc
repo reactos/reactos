@@ -1,19 +1,9 @@
-//Microsoft Developer Studio generated resource script.
-//
+#include <windows.h>
 #include "resource.h"
 
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
-#define APSTUDIO_HIDDEN_SYMBOLS
-#include "windows.h"
-#undef APSTUDIO_HIDDEN_SYMBOLS
-#include "resource.h"
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
+IDI_FDEBUG ICON "fdebug.ico"
 
 #include "En.rc"
 #include "De.rc"
