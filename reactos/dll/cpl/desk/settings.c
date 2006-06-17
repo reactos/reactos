@@ -45,9 +45,6 @@ typedef struct _DISPLAY_DEVICE_ENTRY
 static PDISPLAY_DEVICE_ENTRY DisplayDeviceList = NULL;
 static PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice = NULL;
 
-HBITMAP hBitmap = NULL;
-int cxSource, cySource;
-
 static VOID
 UpdateDisplay(IN HWND hwndDlg)
 {
@@ -267,7 +264,6 @@ OnInitDialog(IN HWND hwndDlg)
 	DWORD Result = 0;
 	DWORD iDevNum = 0;
 	DISPLAY_DEVICE displayDevice;
-    BITMAP bitmap;
 	
 	/* Get video cards list */
 	displayDevice.cb = (DWORD)sizeof(DISPLAY_DEVICE);
@@ -299,15 +295,6 @@ OnInitDialog(IN HWND hwndDlg)
 		/* FIXME: multi video adapter */
 		/* FIXME: choose selected adapter being the primary one */
 	}
-
-    hBitmap = LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
-    if (hBitmap != NULL)
-    {
-        GetObject(hBitmap, sizeof(BITMAP), &bitmap);
-
-        cxSource = bitmap.bmWidth;
-        cySource = bitmap.bmHeight;
-    }
 }
 
 static VOID
@@ -571,24 +558,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			}
 			break;
 		}
-
-        case WM_PAINT:
-            {
-                PAINTSTRUCT ps;
-                HDC hdc, hdcMem;
-       
-                hdc = BeginPaint(hwndDlg, &ps);
- 
-                hdcMem = CreateCompatibleDC(hdc);
-                SelectObject(hdcMem, hBitmap);
-
-                TransparentBlt(hdc, 98, 0, cxSource, cySource, hdcMem, 0, 0, cxSource, cySource, 0xFF80FF);
-
-                DeleteDC(hdcMem);
-                EndPaint(hwndDlg, &ps);
-
-            } break;
-
 		case WM_DESTROY:
 		{
 			PDISPLAY_DEVICE_ENTRY Current = DisplayDeviceList;
@@ -605,8 +574,6 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				HeapFree(GetProcessHeap(), 0, Current);
 				Current = Next;
 			}
-
-            DeleteObject(hBitmap);
 		}
 	}
 	return FALSE;
