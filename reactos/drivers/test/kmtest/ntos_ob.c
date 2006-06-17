@@ -64,6 +64,9 @@ HANDLE                  ObHandle1[NUM_OBTYPES];
 HANDLE                  ObHandle2[NUM_OBTYPES];
 HANDLE                  DirectoryHandle;
 
+USHORT                  DumpCount, OpenCount, CloseCount, DeleteCount,
+                        ParseCount, OkayToCloseCount, QueryNameCount;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -72,9 +75,10 @@ DumpProc(IN PVOID Object,
          IN POB_DUMP_CONTROL DumpControl)
 {
     DbgPrint("DumpProc() called\n");
+    DumpCount++;
 }
 
-// prototype doesn't match Win2003! (causes BSOD)
+// Tested in Win2k3
 VOID
 NTAPI
 OpenProc(IN OB_OPEN_REASON OpenReason,
@@ -83,8 +87,9 @@ OpenProc(IN OB_OPEN_REASON OpenReason,
          IN ACCESS_MASK GrantedAccess,
          IN ULONG HandleCount)
 {
-    DbgPrint("OpenProc() called\n");
-    DbgBreakPoint();
+    DbgPrint("OpenProc() 0x%p, OpenReason %d, HC %d, AM 0x%X\n",
+        Object, OpenReason, HandleCount, GrantedAccess);
+    OpenCount++;
 }
 
 // Tested in Win2k3
@@ -96,7 +101,9 @@ CloseProc(IN PEPROCESS Process,
           IN ULONG ProcessHandleCount,
           IN ULONG SystemHandleCount)
 {
-    DPRINT("CloseProc() called for Object=0x%p\n", Object);
+    DbgPrint("CloseProc() 0x%p, PHC %d, SHC %d, AM 0x%X\n", Object,
+        ProcessHandleCount, SystemHandleCount, GrantedAccess);
+    CloseCount++;
 }
 
 // Tested in Win2k3
@@ -104,7 +111,8 @@ VOID
 NTAPI
 DeleteProc(IN PVOID Object)
 {
-    DPRINT("DeleteProc() called for Object=0x%p\n", Object);
+    DbgPrint("DeleteProc() 0x%p\n", Object);
+    DeleteCount++;
 }
 
 NTSTATUS
@@ -122,8 +130,43 @@ ParseProc(IN PVOID ParseObject,
 {
     DbgPrint("ParseProc() called\n");
     *Object = NULL;
+
+    ParseCount++;
     return STATUS_OBJECT_NAME_NOT_FOUND;//STATUS_SUCCESS;
 }
+
+// Tested in Win2k3
+NTSTATUS
+NTAPI
+OkayToCloseProc(IN PEPROCESS Process OPTIONAL,
+                IN PVOID Object,
+                IN HANDLE Handle,
+                IN KPROCESSOR_MODE AccessMode)
+{
+    DbgPrint("OkayToCloseProc() 0x%p, H 0x%p, AM 0x%X\n", Object, Handle,
+        AccessMode);
+    OkayToCloseCount++;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+QueryNameProc(IN PVOID Object,
+              IN BOOLEAN HasObjectName,
+              OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+              IN ULONG Length,
+              OUT PULONG ReturnLength,
+              IN KPROCESSOR_MODE AccessMode)
+{
+    DbgPrint("QueryNameProc() 0x%p, HON %d, Len %d, AM 0x%X\n",
+        Object, HasObjectName, Length, AccessMode);
+    QueryNameCount++;
+
+    ObjectNameInfo = NULL;
+    ReturnLength = 0;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
+}
+
 
 VOID
 ObtCreateObjectTypes()
@@ -158,8 +201,16 @@ ObtCreateObjectTypes()
         ObTypeInitializer[i].CloseProcedure = (OB_CLOSE_METHOD)CloseProc;
         ObTypeInitializer[i].DeleteProcedure = (OB_DELETE_METHOD)DeleteProc;
         ObTypeInitializer[i].DumpProcedure = (OB_DUMP_METHOD)DumpProc;
-        //ObTypeInitializer[i].OpenProcedure = (OB_OPEN_METHOD)OpenProc;
+        ObTypeInitializer[i].OpenProcedure = (OB_OPEN_METHOD)OpenProc;
         ObTypeInitializer[i].ParseProcedure = (OB_PARSE_METHOD)ParseProc;
+        //ObTypeInitializer[i].OkayToCloseProcedure =
+        //    (OB_OKAYTOCLOSE_METHOD)OkayToCloseProc;
+        
+        //ObTypeInitializer[i].QueryNameProcedure =
+        //    (OB_QUERYNAME_METHOD)QueryNameProc;
+        
+        //ObTypeInitializer[i].SecurityProcedure =
+        // (OB_SECURITY_METHOD)SecurityProc;
 
         Status = ObCreateObjectType(&ObTypeName[i], &ObTypeInitializer[i],
             (PSECURITY_DESCRIPTOR)NULL, &ObTypes[i]);
@@ -188,6 +239,8 @@ ObtCreateObjects()
 {
     PVOID ObBody1[2];
     NTSTATUS Status;
+    USHORT OpenSave, CloseSave, DeleteSave, ParseSave,
+           OkayToCloseSave, QueryNameSave;
 
     // Create two objects
     RtlInitUnicodeString(&ObName[0], L"\\ObtDirectory\\MyObject1");
@@ -210,6 +263,11 @@ ObtCreateObjects()
     ok(Status == STATUS_SUCCESS,
         "Failed to create object with status=0x%lX", Status);
 
+    // save counters
+    OpenSave=OpenCount; CloseSave=CloseCount; DeleteSave=DeleteCount;
+    ParseSave=ParseCount; OkayToCloseSave=OkayToCloseCount;
+    QueryNameSave=QueryNameCount;
+
     // Insert them
     Status = ObInsertObject(ObBody[0], NULL, STANDARD_RIGHTS_ALL, 0,
         &ObBody[0], &ObHandle1[0]);
@@ -218,12 +276,34 @@ ObtCreateObjects()
     ok(ObBody[0] != NULL, "Object body = NULL");
     ok(ObHandle1[0] != NULL, "Handle = NULL");
 
+    // check counters
+    ok(OpenSave+1 == OpenCount, "Open method calls mismatch\n");
+    ok(CloseSave == CloseCount, "Excessive Close method call\n");
+    ok(DeleteSave == DeleteCount, "Excessive Delete method call\n");
+    ok(ParseSave == ParseCount, "Excessive Parse method call\n");
+
+    // save counters
+    OpenSave=OpenCount; CloseSave=CloseCount; DeleteSave=DeleteCount;
+    ParseSave=ParseCount; OkayToCloseSave=OkayToCloseCount;
+    QueryNameSave=QueryNameCount;
+
     Status = ObInsertObject(ObBody[1], NULL, GENERIC_ALL, 0,
         &ObBody[1], &ObHandle1[1]); 
     ok(Status == STATUS_SUCCESS,
         "Failed to insert object 1 with status=0x%lX", Status);
     ok(ObBody[1] != NULL, "Object body = NULL");
     ok(ObHandle1[1] != NULL, "Handle = NULL");
+
+    // check counters
+    ok(OpenSave+1 == OpenCount, "Open method calls mismatch\n");
+    ok(CloseSave == CloseCount, "Excessive Close method call\n");
+    ok(DeleteSave == DeleteCount, "Excessive Delete method call\n");
+    ok(ParseSave == ParseCount, "Excessive Parse method call\n");
+
+    // save counters
+    OpenSave=OpenCount; CloseSave=CloseCount; DeleteSave=DeleteCount;
+    ParseSave=ParseCount; OkayToCloseSave=OkayToCloseCount;
+    QueryNameSave=QueryNameCount;
 
     // Now create an object of type 0, of the same name and expect it to fail
     // inserting, but success creation
@@ -236,6 +316,12 @@ ObtCreateObjects()
     ok(Status == STATUS_SUCCESS,
         "Failed to create object with status=0x%lX", Status);
 
+    // check counters
+    ok(OpenSave == OpenCount, "Excessive Open method call\n");
+    ok(CloseSave == CloseCount, "Excessive Close method call\n");
+    ok(DeleteSave == DeleteCount, "Excessive Delete method call\n");
+    ok(ParseSave == ParseCount, "Excessive Parse method call\n");
+
     Status = ObInsertObject(ObBody1[0], NULL, GENERIC_ALL, 0,
         &ObBody1[1], &ObHandle2[0]);
     ok(Status == STATUS_OBJECT_NAME_EXISTS,
@@ -244,15 +330,44 @@ ObtCreateObjects()
         "Object bodies doesn't match, 0x%p != 0x%p", ObBody[0], ObBody1[1]);
     ok(ObHandle2[0] != NULL, "Bad handle returned 0x%lX", (ULONG)ObHandle2[0]);
 
+    DPRINT1("%d %d %d %d %d %d %d\n", DumpCount, OpenCount, // deletecount+1
+        CloseCount, DeleteCount, ParseCount, OkayToCloseCount, QueryNameCount);
+
+    // check counters and then save
+    ok(OpenSave+1 == OpenCount, "Excessive Open method call\n");
+    ok(CloseSave == CloseCount, "Excessive Close method call\n");
+    ok(DeleteSave+1 == DeleteCount, "Delete method call mismatch\n");
+    ok(ParseSave == ParseCount, "Excessive Parse method call\n");
+    OpenSave=OpenCount; CloseSave=CloseCount; DeleteSave=DeleteCount;
+    ParseSave=ParseCount; OkayToCloseSave=OkayToCloseCount;
+    QueryNameSave=QueryNameCount;
+
     // Close its handle
     Status = ZwClose(ObHandle2[0]);
     ok(Status == STATUS_SUCCESS,
         "Failed to close handle status=0x%lX", Status);
 
+    // check counters and then save
+    ok(OpenSave == OpenCount, "Excessive Open method call\n");
+    ok(CloseSave+1 == CloseCount, "Close method call mismatch\n");
+    ok(DeleteSave == DeleteCount, "Excessive Delete method call\n");
+    ok(ParseSave == ParseCount, "Excessive Parse method call\n");
+    OpenSave=OpenCount; CloseSave=CloseCount; DeleteSave=DeleteCount;
+    ParseSave=ParseCount; OkayToCloseSave=OkayToCloseCount;
+    QueryNameSave=QueryNameCount;
+
+
     // Object referenced 2 times:
     // 1) ObInsertObject
     // 2) AdditionalReferences
     ObDereferenceObject(ObBody1[1]);
+
+    //DPRINT1("%d %d %d %d %d %d %d\n", DumpCount, OpenCount, // no change
+    //    CloseCount, DeleteCount, ParseCount, OkayToCloseCount, QueryNameCount);
+    ok(OpenSave == OpenCount, "Open method call mismatch\n");
+    ok(CloseSave == CloseCount, "Close method call mismatch\n");
+    ok(DeleteSave == DeleteCount, "Delete method call mismatch\n");
+    ok(ParseSave == ParseCount, "Parse method call mismatch\n");
 }
 
 VOID
@@ -380,6 +495,9 @@ FASTCALL
 NtoskrnlObTest()
 {
     StartTest();
+
+    DumpCount = 0; OpenCount = 0; CloseCount = 0;
+    DeleteCount = 0; ParseCount = 0;
 
     // Create object-types to use in tests
     ObtCreateObjectTypes();
