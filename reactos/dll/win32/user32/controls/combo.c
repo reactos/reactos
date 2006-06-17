@@ -2096,7 +2096,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                 else /* unlike the unicode version, the ansi version does not overwrite
                         the string if converting case */
                 {
-                    char *p, *string = NULL;
+                    char *string = NULL;
                     LRESULT ret;
                     if( lphc->dwStyle & CBS_LOWERCASE )
                     {
@@ -2129,7 +2129,6 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                 }
                 else
                 {
-                    char *p;
                     if( lphc->dwStyle & CBS_LOWERCASE )
                         CharLowerA((LPSTR)lParam);
                     else if( lphc->dwStyle & CBS_UPPERCASE )
