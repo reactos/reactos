@@ -68,16 +68,13 @@ BEGIN
     IDS_DEV_NO_VALID_LOG_CONF "ReactOS can\'t specify the resources for this device."
     IDS_DEV_FAILED_INSTALL "The drivers for this device are not installed."
     IDS_DEV_HARDWARE_DISABLED "This device is disabled because the BIOS for the device did not give it any resources."
-    IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared. "\
-                           "You must change the conflicting setting or remove the real-mode driver causing the conflict."
+    IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared.\nYou must change the conflicting setting or remove the real-mode driver causing the conflict."
     IDS_DEV_FAILED_ADD "This device is not working properly because $1 is not working properly."
     IDS_DEV_DISABLED_SERVICE "ReactOS cannot install the drivers for this device because it cannot access the drive or network location that has the setup files on it."
     IDS_DEV_TRANSLATION_FAILED "This device isn\'t responding to its driver."
     IDS_DEV_NO_SOFTCONFIG "ReactOS cannot determine the settings for this device. Consult the documentation that came with this device and use the Resource tab to set the configuration."
-    IDS_DEV_BIOS_TABLE "Your computer\'s system firmware does not include enough information to properly configure and use this device. "\
-                       "To use this device, contact your computer manufacturer to obtain a firmware or BIOS update."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "This device is requesting a PCI interrupt but is configured for an ISA interrupt (or vice versa). "\
-                                   "Please use the computer\'s system setup program to reconfigure the interrupt for this device."
+    IDS_DEV_BIOS_TABLE "Your computer\'s system firmware does not include enough information to properly configure and use this device. \nTo use this device, contact your computer manufacturer to obtain a firmware or BIOS update."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "This device is requesting a PCI interrupt but is configured for an ISA interrupt (or vice versa). \nPlease use the computer\'s system setup program to reconfigure the interrupt for this device."
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS cannot initialize the device driver for this hardware."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS cannot load the device driver for this hardware because a previous instance of the device driver is still in memory."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS cannot load the device driver for this hardware. The driver may be corrupted or missing."
@@ -88,7 +85,7 @@ BEGIN
     IDS_DEV_HALTED "An application or service has shut down this hardware device."
     IDS_DEV_PHANTOM "Currently, this hardware device is not connected to the computer."
     IDS_DEV_SYSTEM_SHUTDOWN "ReactOS cannot gain access to this hardware device because the operating system is in the process of shutting down."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS cannot use this hardware device because it has been prepared for \"safe removal\", but it has not been removed from the computer"
+    IDS_DEV_HELD_FOR_EJECT "ReactOS cannot use this hardware device because it has been prepared for safe removal, but it has not been removed from the computer"
     IDS_DEV_DRIVER_BLOCKED "The software for this device has been blocked from starting because it is known to have problems with ReactOS. Contact the hardware vendor for a new driver."
     IDS_DEV_REGISTRY_TOO_LARGE "ReactOS cannot start new hardware devices because the system hive is too large (exceeds the Registry Size Limit)."
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS wasn\'t able to change the settings of this device."
