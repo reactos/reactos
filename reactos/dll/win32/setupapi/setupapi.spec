@@ -101,10 +101,10 @@
 @ stub CM_Get_First_Log_Conf_Ex
 @ stdcall CM_Get_Global_State(ptr long)
 @ stdcall CM_Get_Global_State_Ex(ptr long long)
-@ stub CM_Get_HW_Prof_FlagsA
-@ stub CM_Get_HW_Prof_FlagsW
-@ stub CM_Get_HW_Prof_Flags_ExA
-@ stub CM_Get_HW_Prof_Flags_ExW
+@ stdcall CM_Get_HW_Prof_FlagsA(str long ptr long)
+@ stdcall CM_Get_HW_Prof_FlagsW(wstr long ptr long)
+@ stdcall CM_Get_HW_Prof_Flags_ExA(str long ptr long long)
+@ stdcall CM_Get_HW_Prof_Flags_ExW(wstr long ptr long long)
 @ stub CM_Get_Hardware_Profile_InfoA
 @ stub CM_Get_Hardware_Profile_InfoW
 @ stub CM_Get_Hardware_Profile_Info_ExA

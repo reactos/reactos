@@ -1222,6 +1222,27 @@ PNP_RequestEjectPC(handle_t BindingHandle)
 }
 
 
+/* Function 40 */
+CONFIGRET
+PNP_HwProfFlags(handle_t BindingHandle,
+                unsigned long Action,
+                wchar_t *DeviceId,
+                unsigned long ProfileId,
+                unsigned long *Value, // out
+                unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_HwProfFlags() called\n");
+
+    ret = CR_CALL_NOT_IMPLEMENTED; /* FIXME */
+
+    DPRINT1("PNP_HwProfFlags() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 /* Function 58 */
 CONFIGRET
 PNP_RunDetection(handle_t BindingHandle,

@@ -117,10 +117,10 @@ CM_Get_Device_ID_Size_Ex@16=SETUPAPI.CM_Get_Device_ID_Size_Ex
 ;CM_Get_First_Log_Conf_Ex
 CM_Get_Global_State@8=SETUPAPI.CM_Get_Global_State
 CM_Get_Global_State_Ex@12=SETUPAPI.CM_Get_Global_State_Ex
-;CM_Get_HW_Prof_FlagsA
-;CM_Get_HW_Prof_FlagsW
-;CM_Get_HW_Prof_Flags_ExA
-;CM_Get_HW_Prof_Flags_ExW
+CM_Get_HW_Prof_FlagsA@16=SETUPAPI.CM_Get_HW_Prof_FlagsA
+CM_Get_HW_Prof_FlagsW@16=SETUPAPI.CM_Get_HW_Prof_FlagsW
+CM_Get_HW_Prof_Flags_ExA@20=SETUPAPI.CM_Get_HW_Prof_Flags_ExA
+CM_Get_HW_Prof_Flags_ExW@20=SETUPAPI.CM_Get_HW_Prof_Flags_ExW
 ;CM_Get_Hardware_Profile_InfoA
 ;CM_Get_Hardware_Profile_InfoW
 ;CM_Get_Hardware_Profile_Info_ExA

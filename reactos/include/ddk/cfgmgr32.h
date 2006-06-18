@@ -1428,8 +1428,52 @@ CM_Get_Global_State_Ex(
 
 /* FIXME: Obsolete CM_Get_Hardware_Profile_Info */
 /* FIXME: Obsolete CM_Get_Hardware_Profile_Info_Ex */
-/* FIXME: Obsolete CM_Get_HW_Prof_Flags */
-/* FIXME: Obsolete CM_Get_HW_Prof_Flags_Ex */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_HW_Prof_FlagsA(
+  IN DEVINSTID_A  szDevInstName,
+  IN ULONG  ulHardwareProfile,
+  OUT PULONG  pulValue,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_HW_Prof_FlagsW(
+  IN DEVINSTID_W  szDevInstName,
+  IN ULONG  ulHardwareProfile,
+  OUT PULONG  pulValue,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_HW_Prof_Flags_ExA(
+  IN DEVINSTID_A  szDevInstName,
+  IN ULONG  ulHardwareProfile,
+  OUT PULONG  pulValue,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_HW_Prof_Flags_ExW(
+  IN DEVINSTID_W  szDevInstName,
+  IN ULONG  ulHardwareProfile,
+  OUT PULONG  pulValue,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#ifdef UNICODE
+#define CM_Get_HW_Prof_Flags CM_Get_HW_Prof_FlagsW
+#define CM_Get_HW_Prof_Flags_Ex CM_Get_HW_Prof_Flags_ExW
+#else
+#define CM_Get_HW_Prof_Flags CM_Get_HW_Prof_FlagsA
+#define CM_Get_HW_Prof_Flags_Ex CM_Get_HW_Prof_Flags_ExA
+#endif /* UNICODE */
 
 CMAPI
 CONFIGRET

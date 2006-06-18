@@ -187,6 +187,16 @@ interface pnp
     /* Function 39 */
     CONFIGRET PNP_RequestEjectPC(handle_t BindingHandle);
 
+    /* Function 40 */
+    cpp_quote("#define PNP_SET_HW_PROFILE_FLAGS  0")
+    cpp_quote("#define PNP_GET_HW_PROFILE_FLAGS  1")
+    CONFIGRET PNP_HwProfFlags(handle_t BindingHandle,
+                              [in] DWORD Action,
+                              [in, string] wchar_t *DeviceId,
+                              [in] DWORD ProfileId,
+                              [in, out] unsigned long *Value,
+                              [in] DWORD Flags);
+
     /* Function 58 */
     CONFIGRET PNP_RunDetection(handle_t BindingHandle,
                                [in] unsigned long Flags);
