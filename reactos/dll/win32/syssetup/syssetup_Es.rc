@@ -102,13 +102,13 @@ BEGIN
     LTEXT "La localidad del sistema de ser compatible con la de las aplicaciones "\
           "que usted desea usar. La localidad del usuario controla como se representan los numeros, "\
           "monedas, y fechas que aparecen en el sistema.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Para cambiar la localidad del sistema o de los usuarios, pulse Modificar.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "La disposición de teclado controla los characteres que aparesen cuando usted escribe.",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Para cambiar la disposición de teclad, pulse Modificar.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14

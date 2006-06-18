@@ -1,4 +1,4 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 IDD_PROPPAGENETWORK DIALOG DISCARDABLE  0, 0, 246, 228
 STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -59,10 +59,10 @@ STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "IP-Einstellungen können automatisch zugewiesen werden, wenn das Netzwerk diese Funktion unterstützt. Wenden Sie sich andernfalls an den Netzwerkadministrator, um die geeigneten IP-Einstellungen zu beziehen.", -1, 9, 9, 228, 27
+ LTEXT "IP-Einstellungen können automatisch zugewiesen werden, wenn das Netzwerk diese Funktion unterstützt. Wenden Sie sich andernfalls an den Netzwerkadministrator, um die geeigneten IP-Einstellungen zu beziehen.", -1, 9, 9, 228, 32
  CONTROL "I&P-Adresse automatisch beziehen", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "Folgende IP-&Adresse verwenden:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ CONTROL "Folgende IP-&Adresse verwenden:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
  LTEXT "&IP-Addresse:", -1, 14, 75, 135, 8
  CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,0,150,75-2,80,12
  LTEXT "S&ubnetzmaske:", -1, 14, 90, 135, 8

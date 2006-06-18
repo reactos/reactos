@@ -92,12 +92,12 @@ BEGIN
     LTEXT "A rendszer területi beállítása meghatározzák a használni kívánt nyelvet. "\
           "A területi beállítások határozzák meg, hogy a számok, "\
           "valuta és dátum információk hogyan jelennek meg.", IDC_STATIC, 53, 7, 253, 24
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 35, 250, 16
+    LTEXT "", IDC_LOCALETEXT, 53, 35, 250, 16
     LTEXT "A területi beállítás megváltoztatásához kattints\n" \
 		  "a Kiválasztás gombra.", IDC_STATIC, 53, 56, 184, 16
     PUSHBUTTON "&Kiválasztás...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "A billentyûzet kiosztás határozza meg a gombok mûködését.", IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "A kiosztás megváltoztatásához kattints a Kiosztás gombra.", IDC_STATIC, 53, 126, 230, 8
     PUSHBUTTON "&Kiosztás...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END

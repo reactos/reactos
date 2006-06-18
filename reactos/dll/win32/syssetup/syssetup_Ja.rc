@@ -96,13 +96,13 @@ BEGIN
     LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定して"\
           "ください。ユーザー ロケールは、数値、通貨、日付の表\示方法を制御"\
           "します。", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "システムやユーザーのロケール設定を変更するには、[カスタマイズ] をクリックしてください。",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "カスタマイズ(&C)...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "キーボード レイアウトは、キーを押したときにどの文字が入力されるかを制御します。",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "キーボード レイアウトを変更するには、[カスタマイズ] をクリックしてください。",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "カスタマイズ(&U)...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14

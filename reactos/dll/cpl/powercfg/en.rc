@@ -37,7 +37,7 @@ END
 IDD_PROPPAGEALARMS DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Alarms"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Low battery alarm",-1,10,15,235,95
     CONTROL         "Activate &low battery alarm when power level reaches:",IDC_ALARM1,
@@ -75,7 +75,7 @@ END
 IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Advanced"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
     LTEXT           "Select the power-saving settings you want to use.",-1,30,5,205,20
@@ -101,7 +101,7 @@ END
 IDD_PROPPAGEHIBERNATE DIALOG DISCARDABLE  0, 0, 250, 220
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hibernate"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_SCREEN,IDI_SCREEN,5,5,20,20
     LTEXT           "When your computer hibernates, it stores whatever it has in memory on your hard disk and then shuts down. When your computer comes out of hibernation, it returns to its previous state. ",

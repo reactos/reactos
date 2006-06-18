@@ -96,13 +96,13 @@ BEGIN
     LTEXT "The system locale should match the language of the applications "\
           "you want to use. The user locale controls how numbers, "\
           "currencies, and dates appear.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "To change system or user locale settings, click Customize.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Customize...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "The keyboard layout controls the characters that appear when you type.",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "To change the keyboard layout, click Customize.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "C&ustomize...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-STRINGTABLE LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+STRINGTABLE LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 BEGIN
 
 /* MMSYS errors */
@@ -45,7 +45,7 @@ MIDIERR_STILLPLAYING, 		"Die Funktion kann nicht durchgeführt werden, wenn noch 
 MIDIERR_NOMAP, 		"Es wurde keine MIDI - Map gefunden. Es könnte ein Problem mit dem Treiber geben oder die Datei MIDIMAP.CFG fehlt oder ist beschädigt."
 MIDIERR_NOTREADY, 		"Der Anschluss ist mit der Datenausgabe belegt. Warten Sie, bis die Daten übertragen wurden und versuchen Sie es erneut."
 MIDIERR_NODEVICE, 		"Das gegenwärtige MIDI - Mapper Setup benutzt ein MIDI - Gerät, das nicht installiert ist. Benutzen Sie den MIDI - Mapper, um das Setup zu ändern."
-MIDIERR_INVALIDSETUP, 		"Das aktuelle MIDI Setup ist beschädigt. Kopieren sie die ursprüngliche Datei MIDIMAP.CFG ind das ReactOS - Systemverzeichnis und versuchen Sie es erneut."
+MIDIERR_INVALIDSETUP, 		"Das aktuelle MIDI Setup ist beschädigt. Kopieren sie die ursprüngliche Datei MIDIMAP.CFG in das ReactOS - Systemverzeichnis und versuchen Sie es erneut."
 
 /* MCI errors */
 MCIERR_INVALID_DEVICE_ID, 	"Ungültige MCI - Gerätekennung. Benutzen Sie die zurückgegebene ID, wenn Sie das MCI - Gerät öffnen."

@@ -17,7 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 
 IDD_WELCOMEPAGE DIALOG DISCARDABLE  0, 0, 317, 193
@@ -72,7 +72,7 @@ CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Geben sie einen Computernamen ein, der höchstens 63 Zeichen lang ist. "\
-          "Wenn Sie im Netzwerk sind muss dieser Name einmalig sein.",
+          "Wenn Sie im Netzwerk sind, muss dieser Name einmalig sein.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
@@ -95,17 +95,17 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, "\
           "die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, "\
-          "wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+          "wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 26
+    LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
     LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen",
-          IDC_STATIC, 53, 60, 184, 8
+          IDC_STATIC, 53, 57, 188, 15
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Das Tastaturlayout gibt vor, welche Zeichen erscheinen, wenn Sie eine Taste drücken.",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Um das Tastaturlayout zu ändern, klicken Sie auf Einstellen.",
-          IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "C&ustomize...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+          IDC_STATIC, 53, 126, 189, 8
+    PUSHBUTTON "&Einstellen...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
 

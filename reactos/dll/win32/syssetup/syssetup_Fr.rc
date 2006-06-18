@@ -97,13 +97,13 @@ BEGIN
     LTEXT "La localisation système correspond à la langue souhaitée "\
           "pour les applications. Elle contrôle la manière dont les nombres, "\
           "monnaies et dates sont affichées.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pour changer la localisation système, cliquez sur Modifier.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modifier...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "La configuration clavier contrôle la saisie des touches quand vous tapez.",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pour changer la configuration clavier, cliquez sur Modifier.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "M&odifier...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
