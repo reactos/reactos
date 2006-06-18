@@ -825,23 +825,23 @@ Module::GetDefaultModuleEntrypoint () const
 	switch ( type )
 	{
 		case Kernel:
-			return "NtProcessStartup";
+			return "_NtProcessStartup";
 		case KernelModeDLL:
         case KernelModeDriver:
         case ExportDriver:
-			return "DriverEntry@8";
+			return "_DriverEntry@8";
 		case NativeDLL:
-			return "DllMainCRTStartup@12";
+			return "_DllMainCRTStartup@12";
 		case NativeCUI:
-			return "NtProcessStartup@4";
+			return "_NtProcessStartup@4";
 		case Win32DLL:
-			return "DllMain@12";
+			return "_DllMain@12";
 		case Win32CUI:
 		case Test:
 			if ( isUnicode )
-				return "wmainCRTStartup";
+				return "_wmainCRTStartup";
 			else
-				return "mainCRTStartup";
+				return "_mainCRTStartup";
 		case Win32SCR:
 		case Win32GUI:
 			if ( isUnicode )
