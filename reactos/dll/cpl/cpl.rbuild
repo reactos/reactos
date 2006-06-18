@@ -8,7 +8,7 @@
 	<xi:include href="desk/desk.rbuild" />
 </directory>
 <directory name="hdwwiz">
-	<xi:include href="hdwwiz/hdwwiz.xml" />
+	<xi:include href="hdwwiz/hdwwiz.rbuild" />
 </directory>
 <directory name="intl">
 	<xi:include href="intl/intl.rbuild" />
