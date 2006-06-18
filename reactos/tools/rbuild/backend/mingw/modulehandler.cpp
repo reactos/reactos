@@ -253,6 +253,9 @@ MingwModuleHandler::InstanciateHandler (
 		case Alias:
 			handler = new MingwAliasModuleHandler ( module );
 			break;
+		case IdlHeader:
+			handler = new MingwIdlHeaderModuleHandler ( module );
+			break;
 		default:
 			throw UnknownModuleTypeException (
 				module.node.location,
@@ -296,8 +299,10 @@ MingwModuleHandler::GetActualSourceFilename (
 		string newname;
 		if ( module.type == RpcServer )
 			newname = basename + "_s.c";
-		else
+		else if ( module.type == RpcClient )
 			newname = basename + "_c.c";
+		else //if ( module.type == IdlHeader )
+			newname = basename + ".h";
 		PassThruCacheDirectory ( NormalizeFilename ( newname ),
 		                         backend->intermediateDirectory );
 		return new FileLocation ( backend->intermediateDirectory, NormalizeFilename ( newname ) );
@@ -314,7 +319,10 @@ MingwModuleHandler::GetExtraDependencies (
 	if ( extension == ".idl" || extension == ".IDL" )
 	{
 		string basename = GetBasename ( filename );
-		return GetRpcServerHeaderFilename ( basename ) + " " + GetRpcClientHeaderFilename ( basename );
+		if ( module.type == IdlHeader )
+            return GetIdlHeaderFilename ( basename );
+		else
+			return GetRpcServerHeaderFilename ( basename ) + " " + GetRpcClientHeaderFilename ( basename );
 	}
 	else
 		return "";
@@ -362,6 +370,8 @@ MingwModuleHandler::ReferenceObjects (
 	if ( module.type == RpcServer )
 		return true;
 	if ( module.type == RpcClient )
+		return true;
+	if ( module.type == IdlHeader )
 		return true;
 	return false;
 }
@@ -478,10 +488,15 @@ MingwModuleHandler::GetObjectFilename (
 		newExtension = ".stubs.o";
 	else if ( extension == ".idl" || extension == ".IDL" )
 	{
-		if ( module.type == RpcServer )
-			newExtension = "_s.o";
+		if ( module.type == IdlHeader )
+			newExtension = ".h";
 		else
-			newExtension = "_c.o";
+		{
+			if ( module.type == RpcServer )
+				newExtension = "_s.o";
+			else
+				newExtension = "_c.o";
+		}
 	}
 	else
 		newExtension = ".o";
@@ -759,7 +774,8 @@ MingwModuleHandler::GenerateMacro (
 		string includeDirectory;
 		if ( include.baseModule != NULL &&
 		     ( include.baseModule->type == RpcServer ||
-		       include.baseModule->type == RpcClient ) )
+		       include.baseModule->type == RpcClient ||
+		       include.baseModule->type == IdlHeader) )
 			includeDirectory = PassThruCacheDirectory ( NormalizeFilename ( include.directory ),
 	                                                            backend->intermediateDirectory );
 		else
@@ -1195,6 +1211,13 @@ MingwModuleHandler::GetRpcClientHeaderFilename ( string basename ) const
 	                                backend->intermediateDirectory );
 }
 
+string
+MingwModuleHandler::GetIdlHeaderFilename ( string basename ) const
+{
+	return PassThruCacheDirectory ( basename + ".h",
+	                                backend->intermediateDirectory );
+}
+
 void
 MingwModuleHandler::GenerateWidlCommandsClient (
 	const CompilationUnit& compilationUnit,
@@ -1233,6 +1256,36 @@ MingwModuleHandler::GenerateWidlCommandsClient (
 }
 
 void
+MingwModuleHandler::GenerateWidlCommandsIdlHeader (
+	const CompilationUnit& compilationUnit,
+	const string& widlflagsMacro )
+{
+	FileLocation* sourceFileLocation = compilationUnit.GetFilename ( backend->intermediateDirectory );
+	string filename = sourceFileLocation->filename;
+	string dependencies = filename;
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
+
+	string basename = GetBasename ( filename );
+
+	string generatedHeaderFilename = GetIdlHeaderFilename ( basename );
+	CLEAN_FILE(generatedHeaderFilename);
+
+	fprintf ( fMakefile,
+	          "%s: %s $(WIDL_TARGET) | %s\n",
+	          generatedHeaderFilename.c_str (),
+	          dependencies.c_str (),
+	          GetDirectory ( generatedHeaderFilename ).c_str () );
+	fprintf ( fMakefile, "\t$(ECHO_WIDL)\n" );
+	fprintf ( fMakefile,
+	          "\t%s %s %s -h -H %s %s\n",
+	          "$(Q)$(WIDL_TARGET)",
+	          GetWidlFlags ( compilationUnit ).c_str (),
+	          widlflagsMacro.c_str (),
+	          generatedHeaderFilename.c_str (),
+	          filename.c_str () );
+}
+
+void
 MingwModuleHandler::GenerateWidlCommands (
 	const CompilationUnit& compilationUnit,
 	const string& widlflagsMacro )
@@ -1240,9 +1293,12 @@ MingwModuleHandler::GenerateWidlCommands (
 	if ( module.type == RpcServer )
 		GenerateWidlCommandsServer ( compilationUnit,
 		                             widlflagsMacro );
-	else
+	else if ( module.type == RpcClient )
 		GenerateWidlCommandsClient ( compilationUnit,
 		                             widlflagsMacro );
+	else if ( module.type == IdlHeader )
+		GenerateWidlCommandsIdlHeader ( compilationUnit,
+		                                widlflagsMacro );
 }
 
 void
@@ -1308,10 +1364,13 @@ MingwModuleHandler::GenerateCommands (
 	{
 		GenerateWidlCommands ( compilationUnit,
 		                       widlflagsMacro );
-		GenerateGccCommand ( GetActualSourceFilename ( sourceFileLocation ),
-		                     GetExtraDependencies ( filename ),
-		                     cc,
-		                     cflagsMacro );
+		if ( module.type != IdlHeader )
+		{
+			GenerateGccCommand ( GetActualSourceFilename ( sourceFileLocation ),
+			                     GetExtraDependencies ( filename ),
+		    	                 cc,
+		        	             cflagsMacro );
+		}
 		return;
 	}
 
@@ -1756,7 +1815,8 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 	{
 		Library& library = *module.non_if_data.libraries[i];
 		if ( library.importedModule->type == RpcServer ||
-		     library.importedModule->type == RpcClient )
+		     library.importedModule->type == RpcClient ||
+		     library.importedModule->type == IdlHeader )
 		{
 			for ( size_t j = 0; j < library.importedModule->non_if_data.compilationUnits.size (); j++ )
 			{
@@ -1770,6 +1830,8 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 						dependencies.push_back ( GetRpcServerHeaderFilename ( basename ) );
 					if ( library.importedModule->type == RpcClient )
 						dependencies.push_back ( GetRpcClientHeaderFilename ( basename ) );
+					if ( library.importedModule->type == IdlHeader )
+						dependencies.push_back ( GetIdlHeaderFilename ( basename ) );
 				}
 			}
 		}
@@ -3247,4 +3309,17 @@ MingwAliasModuleHandler::MingwAliasModuleHandler (
 void
 MingwAliasModuleHandler::Process ()
 {
+}
+
+MingwIdlHeaderModuleHandler::MingwIdlHeaderModuleHandler (
+	const Module& module_ )
+
+	: MingwModuleHandler ( module_ )
+{
+}
+
+void
+MingwIdlHeaderModuleHandler::Process ()
+{
+	GenerateRules ();
 }

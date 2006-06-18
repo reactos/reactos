@@ -746,7 +746,7 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 	if ( attribute.value == "win32gui" )
 		return Win32GUI;
 	if ( attribute.value == "win32scr" )
-		return Win32SCR;    
+		return Win32SCR;
 	if ( attribute.value == "bootloader" )
 		return BootLoader;
 	if ( attribute.value == "bootsector" )
@@ -765,6 +765,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return RpcClient;
 	if ( attribute.value == "alias" )
 		return Alias;
+	if ( attribute.value == "idlheader" )
+		return IdlHeader;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -809,8 +811,8 @@ Module::GetDefaultModuleExtension () const
 		case RpcClient:
 			return ".o";
 		case Alias:
-			return "";
 		case BootProgram:
+		case IdlHeader:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -857,6 +859,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case RpcClient:
 		case Alias:
 		case BootProgram:
+		case IdlHeader:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -895,6 +898,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case RpcClient:
 		case Alias:
 		case BootProgram:
+		case IdlHeader:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -935,6 +939,7 @@ Module::IsDLL () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+		case IdlHeader:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -969,6 +974,7 @@ Module::GenerateInOutputTree () const
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+		case IdlHeader:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -1422,6 +1428,7 @@ AutoRegister::IsSupportedModuleType ( ModuleType type )
 		case RpcServer:
 		case RpcClient:
 		case Alias:
+		case IdlHeader:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,

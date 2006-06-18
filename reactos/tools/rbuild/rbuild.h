@@ -265,7 +265,8 @@ enum ModuleType
 	Alias = 18,
 	BootProgram = 19,
 	Win32SCR = 20,
-    ExportDriver = 21
+    ExportDriver = 21,
+    IdlHeader = 22
 };
 
 enum HostType
