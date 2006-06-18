@@ -56,6 +56,7 @@ END
 #include "Fr.rc"
 #include "Hu.rc"
 #include "Ja.rc"
+#include "Nl.rc"
 #include "Sv.rc"
 #include "Ru.rc"
 #include "Uk.rc"
