@@ -825,29 +825,29 @@ Module::GetDefaultModuleEntrypoint () const
 	switch ( type )
 	{
 		case Kernel:
-			return "_NtProcessStartup";
+			return "NtProcessStartup";
 		case KernelModeDLL:
         case KernelModeDriver:
         case ExportDriver:
-			return "_DriverEntry@8";
+			return "DriverEntry@8";
 		case NativeDLL:
-			return "_DllMainCRTStartup@12";
+			return "DllMainCRTStartup@12";
 		case NativeCUI:
-			return "_NtProcessStartup@4";
+			return "NtProcessStartup@4";
 		case Win32DLL:
-			return "_DllMain@12";
+			return "DllMain@12";
 		case Win32CUI:
 		case Test:
 			if ( isUnicode )
-				return "_wmainCRTStartup";
+				return "wmainCRTStartup";
 			else
-				return "_mainCRTStartup";
+				return "mainCRTStartup";
 		case Win32SCR:
 		case Win32GUI:
 			if ( isUnicode )
-				return "_wWinMainCRTStartup";
+				return "wWinMainCRTStartup";
 			else
-				return "_WinMainCRTStartup";
+				return "WinMainCRTStartup";
 		case BuildTool:
 		case StaticLibrary:
 		case ObjectLibrary:
@@ -1036,6 +1036,17 @@ Module::GetInvocationTarget ( const int index ) const
 	return ssprintf ( "%s_invoke_%d",
 	                  name.c_str (),
 	                  index );
+}
+
+string
+Module::GetEntryPoint(bool leadingUnderscore) const
+{
+	string result = "";
+	if (leadingUnderscore)
+		result = "_";
+
+	result += entrypoint;
+	return result;
 }
 
 bool

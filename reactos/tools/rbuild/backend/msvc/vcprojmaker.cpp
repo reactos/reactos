@@ -393,7 +393,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 				fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
-				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DriverEntry" : module.entrypoint.c_str ());
+				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false) == "" ? "DriverEntry" : module.GetEntryPoint(false).c_str ());
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());	
 			}
 			else if ( exe )
@@ -424,7 +424,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 			else if ( dll )
 			{
-				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.entrypoint == "" ? "DllMain" : module.entrypoint.c_str ());
+				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false) == "" ? "DllMain" : module.GetEntryPoint(false).c_str ());
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
 			}
 			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );

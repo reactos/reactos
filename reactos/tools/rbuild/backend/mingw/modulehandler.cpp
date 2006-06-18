@@ -2302,7 +2302,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 		string linkerParameters = ssprintf ( "-Wl,-T,%s%cntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
 		                                     module.GetBasePath ().c_str (),
                                                      cSep,
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        "${gcc}",
@@ -2389,7 +2389,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        "${gcc}",
@@ -2437,7 +2437,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        "${gcc}",
@@ -2484,7 +2484,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -shared",
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        "${gcc}",
@@ -2531,7 +2531,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ()
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib",
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        "${gcc}",
@@ -2584,7 +2584,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 			linker = "${gcc}";
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -shared",
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        linker,
@@ -2637,7 +2637,7 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ()
 			linker = "${gcc}";
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        linker,
@@ -2690,7 +2690,7 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ()
 			linker = "${gcc}";
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,windows -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        linker,
@@ -3255,7 +3255,7 @@ MingwTestModuleHandler::GenerateTestModuleTarget ()
 			linker = "${gcc}";
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
-		                                     module.entrypoint.c_str (),
+		                                     module.GetEntryPoint(true).c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 		                        linker,

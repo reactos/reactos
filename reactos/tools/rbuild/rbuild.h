@@ -285,7 +285,6 @@ public:
 	std::string name;
 	std::string guid;
 	std::string extension;
-	std::string entrypoint;
 	std::string baseaddress;
 	std::string payload;
 	std::string path;
@@ -328,6 +327,7 @@ public:
 	std::string GetPath () const; // "path/foo.exe"
 	std::string GetPathWithPrefix ( const std::string& prefix ) const; // "path/prefixfoo.exe"
 	std::string GetPathToBaseDir() const; // "../" offset to rootdirectory
+	std::string GetEntryPoint(bool leadingUnderscore) const;
 	void GetTargets ( string_list& ) const;
 	std::string GetInvocationTarget ( const int index ) const;
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
@@ -339,6 +339,7 @@ private:
 	std::string GetDefaultModuleExtension () const;
 	std::string GetDefaultModuleEntrypoint () const;
 	std::string GetDefaultModuleBaseaddress () const;
+	std::string entrypoint;
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
 	                            ParseContext& parseContext );
