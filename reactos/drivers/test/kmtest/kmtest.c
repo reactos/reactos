@@ -25,8 +25,8 @@
 #include <ddk/ntddk.h>
 #include "kmtest.h"
 
-ULONG successes;
-ULONG failures;
+LONG successes;
+LONG failures;
 tls_data glob_data;
 
 /* PRIVATE FUNCTIONS ***********************************************************/

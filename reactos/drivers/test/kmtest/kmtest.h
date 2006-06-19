@@ -11,8 +11,8 @@
     Everything else is done by Aleksey Bragin based on PnPTest by Filip Navara
 */
 
-extern ULONG successes;       /* number of successful tests */
-extern ULONG failures;        /* number of failures */
+extern LONG successes;       /* number of successful tests */
+extern LONG failures;        /* number of failures */
 //static ULONG todo_successes;  /* number of successful tests inside todo block */
 //static ULONG todo_failures;   /* number of failures inside todo block */
 
