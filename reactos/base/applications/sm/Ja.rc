@@ -4,7 +4,7 @@
  * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
  */
 
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+LANGUAGE LANG_JAPANESE, SUBLANG_JAPANESE_JAPAN
 STRINGTABLE DISCARDABLE
 {
 IDS_boot, "boot サブシステム名" 

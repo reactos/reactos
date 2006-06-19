@@ -5,7 +5,7 @@
  * Hungarian translation by Robert Horvath - talley at cubeclub.hu
  */
 
-LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_HUNGARIAN, SUBLANG_HUNGARIAN_HUNGARY
 STRINGTABLE DISCARDABLE
 {
 IDS_boot, "boot alrendszer_név" 

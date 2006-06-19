@@ -1,6 +1,6 @@
 // Danish language resource file (Thomas Larsen, 2005-03-11)
 
-LANGUAGE LANG_DANISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_DANISH, 	SUBLANG_DANISH_DENMARK
 
 /////////////////////////////////////////////////////////////////////////////
 //
