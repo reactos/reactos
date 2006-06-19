@@ -1,4 +1,4 @@
-<module name="cacls" type="win32cui" installbase="system32" installname="cacls.exe" usewrc="false">
+<module name="cacls" type="win32cui" installbase="system32" installname="cacls.exe">
 	<include base="cacls">.</include>
 	<define name="__USE_W32API" />
 	<define name="UNICODE" />

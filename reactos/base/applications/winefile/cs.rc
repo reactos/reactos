@@ -22,7 +22,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_CZECH, SUBLANG_CZECH_CZECH_REPUBLIC
+LANGUAGE LANG_CZECH, SUBLANG_NEUTRAL
 #pragma code_page(1250)
 
 

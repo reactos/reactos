@@ -15,7 +15,7 @@
 		<library>comctl32</library>
 		<library>shell32</library>
 		<library>comdlg32</library>
-		<compilationunit name="unit.c">
+		<compilationunit name="about.c">
 			<file>about.c</file>
 			<file>floatwindow.c</file>
 			<file>imageprop.c</file>

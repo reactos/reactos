@@ -22,7 +22,7 @@
 #include "resource.h"
 #include "winecalc.h"
 
-LANGUAGE LANG_DUTCH, SUBLANG_DUTCH //vertaald door Lionel Lowie
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
 
 STRINGTABLE DISCARDABLE
 {
