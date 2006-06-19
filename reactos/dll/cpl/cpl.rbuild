@@ -13,6 +13,9 @@
 <directory name="intl">
 	<xi:include href="intl/intl.rbuild" />
 </directory>
+<directory name="intl_new">
+	<xi:include href="intl_new/intl.rbuild" />
+</directory>
 <directory name="main">
 	<xi:include href="main/main.rbuild" />
 </directory>

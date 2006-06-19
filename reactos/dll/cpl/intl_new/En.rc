@@ -1,0 +1,48 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDD_REGOPTSPAGE DIALOGEX 0, 0, 252, 236
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Regional options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Regional options and standards", IDC_GROUPBOX, 5, 3, 242, 165
+    LTEXT "This option influences a way of display by some programs of numbers, sums of money, dates and time.", IDC_STATIC, 14, 15, 230, 16
+    LTEXT "&Choose an element from the list or press the button ""Setup"" to set formats independently:", IDC_STATIC, 14, 36, 230, 16
+    COMBOBOX IDC_SETREG_COMBO, 14, 54, 168, 120, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+             WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    PUSHBUTTON "Se&tup...", IDC_SETUP_BUTTON, 187, 54, 52, 13
+    LTEXT "Samples", IDC_STATIC, 14, 73, 70, 10
+    LTEXT "Number:", IDC_STATIC, 16, 86, 48, 10 
+    LTEXT "Monetary:", IDC_STATIC, 16, 101, 48, 10
+    LTEXT "Time:", IDC_STATIC, 16, 116, 48, 10
+    LTEXT "Short date:", IDC_STATIC, 16, 131, 48, 10
+    LTEXT "Long date:", IDC_STATIC, 16, 146, 48, 10
+    EDITTEXT IDC_NUMSAMPLE_EDIT, 69, 86, 170, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_MONEYSAMPLE_EDIT, 69, 101, 170, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_TIMESAMPLE_EDIT, 69, 116, 170, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 69, 131, 170, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 69, 146, 170, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+    GROUPBOX "Geographic location", IDC_GROUPBOX, 5, 172, 242, 56
+    LTEXT "Set up your location that services could supply you with the local information, for example, news and reports of weather", IDC_STATIC, 14, 184, 225, 24
+    COMBOBOX IDC_LOCATION_COMBO, 14, 211, 225, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+             WS_VSCROLL | WS_TABSTOP | CBS_SORT
+END
+
+IDD_EXTRAOPTSPAGE DIALOGEX 0, 0, 252, 236
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Extra"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Program language that not unicode supported", IDC_GROUPBOX, 5, 5, 242, 90
+    COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 225, 60, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+             WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    LTEXT "This option...", IDC_STATIC, 14, 18, 223, 33
+    LTEXT "Select language...", IDC_STATIC, 14, 55, 223, 18
+    GROUPBOX "Transformation tables codepages", IDC_GROUPBOX, 5, 101, 242, 88
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Language and regional options"
+    IDS_CPLDESCRIPTION "Choose language and formats of numbers, currencies, time and date"
+END
