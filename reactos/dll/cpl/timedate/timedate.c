@@ -308,7 +308,7 @@ DateTimePageProc(HWND hwndDlg,
         /* set range and current year */
         SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETRANGE, 0, MAKELONG ((short) 9999, (short) 1900));
         SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETPOS, 0, MAKELONG( (short) st.wYear, 0));
-
+#if 0
         InitClockWindowClass();
         CreateWindowExW(0,
                        L"ClockWndClass",
@@ -319,6 +319,7 @@ DateTimePageProc(HWND hwndDlg,
                        NULL,
                        hApplet,
                        NULL);
+#endif
     break;
 
     case WM_TIMER:
