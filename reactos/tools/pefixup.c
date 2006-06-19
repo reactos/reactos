@@ -249,11 +249,13 @@ int main(int argc, char **argv)
    if (len < sizeof(IMAGE_DOS_HEADER))
    {
       close(fd_in);
-      printf("'%s' isn't a PE image.\n", argv[1]);
+      printf("'%s' isn't a PE image (too short)\n", argv[1]);
       return 1;
    }
 
-   buffer = malloc((len + 1) & ~1);
+   /* Lower down we overwrite the byte at len, so here, we need at least
+    * one more byte than len.  We'll be guaranteed one or two now. */
+   buffer = malloc((len + 2) & ~1);
    if (buffer == NULL)
    {
       close(fd_in);
@@ -264,6 +266,7 @@ int main(int argc, char **argv)
    /* Read the whole input file into a buffer */
    lseek(fd_in, 0, SEEK_SET);
    read(fd_in, buffer, len);
+   /* Here is where the block end overwrite was */
    if (len & 1)
       buffer[len] = 0;
 
@@ -279,7 +282,7 @@ int main(int argc, char **argv)
    if (dos_header->e_magic != IMAGE_DOS_SIGNATURE ||
        nt_header->Signature != IMAGE_NT_SIGNATURE)
    {
-      printf("'%s' isn't a PE image.\n", argv[1]);
+      printf("'%s' isn't a PE image (headers %x,%x)\n", argv[1], dos_header->e_magic, nt_header->Signature);
       free(buffer);
       return 1;
    }
