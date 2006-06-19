@@ -31,7 +31,7 @@ END
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,190,182
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Über den Service Manager"
-FONT 8, "Tahoma"
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Service Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,48,7,130,26
@@ -44,7 +44,7 @@ END
 
 IDD_DLG_GENERAL DIALOGEX 6,6,253,225
 CAPTION "Allgemein"
-FONT 8,"MS Sans Serif",0,0
+FONT 8, "MS Shell Dlg",0,0
 STYLE 0x10CF0000
 BEGIN
   CONTROL "Dienstname:",IDC_STATIC,"Static",0x50000000,4,11,53,11
