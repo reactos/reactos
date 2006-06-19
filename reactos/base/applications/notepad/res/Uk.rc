@@ -122,7 +122,7 @@ PUSHBUTTON      "Скасувати", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Про Блокнот ReactOS"
-FONT 8, "Tahoma"
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Блокнот ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\nЗначок запозичено з Notepad2 - http://www.flos-freeware.ch/notepad2.html",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39

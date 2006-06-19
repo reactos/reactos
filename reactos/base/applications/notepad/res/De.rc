@@ -20,7 +20,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 MAIN_MENU MENU
 BEGIN
@@ -101,11 +101,22 @@ PUSHBUTTON    "Abbrechen",     IDCANCEL,               180, 21, 40, 15, WS_TABST
 PUSHBUTTON    "&Hilfe",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
 
+/* Dialog 'Gehe zu...' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Gehe zu Zeile"
+{
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Zeile Nummer:",0x155,5,12,45,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Abbrechen", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+}
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Über ReactOS Notepad"
-FONT 8, "Tahoma"
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39

@@ -6,7 +6,7 @@ CAPTION "Error reporting assistant"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "The system recovered from an error.", -1, 115, 15, 160, 24
-  LTEXT "Would you like to report the error to the ReactOS project?", -1, 115, 35, 160, 17
+  LTEXT "Would you like to report the error to the ReactOS foundation?", -1, 115, 35, 160, 17
 END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -14,7 +14,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Error reporting assistant"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Please describe what you were trying to do when the error occurred.\n\nClick 'Next' to send the report to the ReactOS project or 'Cancel' to not send any information.",-1,10,0,225,40
+  LTEXT "Please describe what you were trying to do when the error occurred.\n\nClick 'Next' to send the report to the ReactOS foundation or 'Cancel' to not send any information.",-1,10,0,225,40
   LTEXT "Your e-mail address (optional):",-1,10,40,120,20
   EDITTEXT IDE_SUBMIT_REPORT_YOUR_EMAIL, 110,40,150,12
   LTEXT "Description of problem (optional):",-1,10,55,120,20
@@ -35,12 +35,12 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Error reporting assistant"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Your error report was successfully sent to the ReactOS project.",-1,25,5,225,20
+  LTEXT "Your error report was successfully sent to the ReactOS foundation.",-1,25,5,225,20
 END
 
 STRINGTABLE
 BEGIN
-  IDS_WIZARD_NAME "Report error to the ReactOS project"
+  IDS_WIZARD_NAME "Report error to the ReactOS foundation"
   IDS_FAILED_TO_CONTACT_SERVER "The system was unable to contact the error reporting server.\nPlease make sure that your system is connected to the internet."
   IDS_FAILED_TO_DELIVER_ERROR_REPORT "The system was unable to deliver the error report."
 END
