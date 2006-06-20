@@ -3742,7 +3742,7 @@ DWORD __readfsdword(DWORD);
 #pragma intrinsic(__readfsdword)
 
 __inline PVOID GetCurrentFiber(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x10); }
-__inline struct _TEB * NtCurrentTeb(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x18); }
+__inline struct _TEB * NtCurrentTeb(void) { return (struct _TEB *)(ULONG_PTR)__readfsdword(0x18); }
 
 #else
 
