@@ -1,0 +1,7 @@
+<package>
+  <name>Firefox</name>
+  <version>1.5</version>
+  <description>The famous OpenSource webbroswer.</description>
+  <scripts inst="firefox.inst.rps"/>
+</package>
+

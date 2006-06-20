@@ -1,0 +1,25 @@
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+  IDS_LOAD	   "Lade ..."
+  ERR_OK	   "Fertig."
+  ERR_PACK	   "Es konnten nicht alle Packages installiert werden.\n\nFür mehr Details schauen Sie bitte in ""logfile.html""."
+  ERR_GENERIC      "Ein Fehler ist aufgetreten. \nnFür mehr Details schauen Sie bitte in ""logfile.html""."
+  ERR_DOWNL	   "Eine benötigte Datei konnte nicht runtergeladen werden!\nFür mehr Details schauen Sie bitte in ""logfile.html""."
+  ERR_FILE	   "Bei der Scriptausfürhung trat ein Fehler auf.\nDatei konnte nicht geöffnet werden."
+ 
+  ERR_SYNATX       "Bei der Scriptausfürhung trat ein Fehler auf.\nSynatx-Fehler."
+  ERR_CALL         "Bei der Scriptausfürhung trat ein Fehler auf.\nUnbekannte Funktion."
+  ERR_PARAMETER    "Bei der Scriptausfürhung trat ein Fehler auf.\nUngültige(r) Parameter."
+
+  ERR_DEP1	   "Um diese Package zu installieren müssen die ebenfall die folende/n Package/s installieren:\n\n"
+  ERR_DEP2	   "\nMöchten sie fortfahren ?"
+  ERR_READY	   "Sie haben %d package/s ausgewählt. Um sie zu installieren müssen sie sich mit jeder einzellnen Lizenz einverstanden erklärt haben. \n\nMöchten sie forfahren ?"
+END
+
+123 RCDATA	   "options.xml"
+
+/* EOF */

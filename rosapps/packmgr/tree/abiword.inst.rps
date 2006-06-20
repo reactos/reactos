@@ -1,0 +1,8 @@
+Sub Main     
+  download "http://www.abiword.org/downloads/abiword/2.4.1/Windows/abiword-setup-2.4.1.exe", "abisetup.exe"
+End Sub
+
+Sub After
+  shell abisetup.exe
+  ' ToDo: Delete abisetup.exe
+End Sub

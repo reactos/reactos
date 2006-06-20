@@ -1,0 +1,9 @@
+Sub Main
+  ' ToDo: Choose from different mirrors
+  download "http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z432.exe", "7z432.exe"
+End Sub
+
+Sub After
+  shell 7z432.exe
+  ' ToDo: Delete 7z432.exe
+End Sub

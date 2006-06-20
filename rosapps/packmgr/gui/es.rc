@@ -1,0 +1,43 @@
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+/* Dialogs */
+IDD_OPTIONS DIALOG DISCARDABLE  0, 0, 180, 200
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Opciones"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT	"Aún no hay opciones disponibles.", 0, 50, 95, 80, 8
+END
+
+IDD_DOIT DIALOG DISCARDABLE  0, 0, 180, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Realizando las operaciones"
+FONT 8, "MS Sans Serif"
+BEGIN    
+
+    CTEXT	    "{Status}", IDC_TSTATUS, 0, 10, 180, 8
+
+    CONTROL         "", IDC_STATUS1, "msctls_progress32", PBS_SMOOTH, 20, 25, 140, 15
+    
+    CONTROL         "", IDC_STATUS2, "msctls_progress32", PBS_SMOOTH, 20, 45, 140, 15
+
+    PUSHBUTTON      "Abort", IDC_CANCEL, 65, 70, 50, 14, WS_DISABLED
+END
+
+IDR_POPUP MENU DISCARDABLE 
+BEGIN
+    POPUP "PopUp", MENUBARBREAK	
+    BEGIN
+        MENUITEM "Ninguna acción",        	    	1, GRAYED 
+        MENUITEM "Instalar (recomendado)",       2, GRAYED
+        MENUITEM "Instalar desde el código fuente",         3, GRAYED
+        MENUITEM "Actualizar",                      4, GRAYED
+        MENUITEM "Desinstalar",                    5, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Opciones",                     8
+        MENUITEM SEPARATOR
+        MENUITEM "¡Hazlo!",                        6
+    END
+END
+

@@ -1,0 +1,9 @@
+Sub Main
+  ' ToDo: Pick a mirror
+  download ("http://switch.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.15-2-win32-installer.exe", "tuxpaint-inst.exe")
+End Sub
+
+Sub After
+  shell tuxpaint-inst.exe
+  ' ToDo: delete tuxpaint-inst.exe
+End Sub
