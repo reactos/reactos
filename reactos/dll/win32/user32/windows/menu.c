@@ -3570,7 +3570,7 @@ CheckMenuRadioItem(HMENU hmenu,
 
   mi.cbSize = sizeof(MENUINFO);
 
-  UNIMPLEMENTED;
+  DPRINT("CheckMenuRadioItem\n");
 
   if(idFirst > idLast) return ret;
 
