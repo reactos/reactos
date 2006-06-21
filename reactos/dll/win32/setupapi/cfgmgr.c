@@ -251,7 +251,14 @@ CONFIGRET WINAPI CM_Connect_MachineW(
 
     TRACE("%s %p\n", debugstr_w(UNCServerName), phMachine);
 
-    pMachine = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MACHINE_INFO));
+    if (!UNCServerName)
+    {
+        FIXME("Connection to local machine not implemented\n");
+        *phMachine = NULL;
+        return CR_SUCCESS;
+    }
+
+    pMachine = HeapAlloc(GetProcessHeap(), 0, sizeof(MACHINE_INFO));
     if (pMachine == NULL)
         return CR_OUT_OF_MEMORY;
 

@@ -1701,6 +1701,8 @@ SetupDiInstallClassExW(
         PVOID callback_context = NULL;
 
         hDeviceInfo = SetupDiCreateDeviceInfoList(NULL, NULL);
+        if (hDeviceInfo == INVALID_HANDLE_VALUE)
+            goto cleanup;
 
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
         if (!SetupDiGetDeviceInstallParamsW(hDeviceInfo, NULL, &InstallParams))

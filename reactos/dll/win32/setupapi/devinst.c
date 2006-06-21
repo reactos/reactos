@@ -160,7 +160,7 @@ SetupDiCreateDeviceInfoListExW(
     LPWSTR UNCServerName = NULL;
     DWORD size;
     DWORD rc;
-    //CONFIGRET cr;
+    CONFIGRET cr;
     HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;;
 
     TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
@@ -169,7 +169,7 @@ SetupDiCreateDeviceInfoListExW(
     size = FIELD_OFFSET(struct DeviceInfoSet, szData);
     if (MachineName)
         size += (strlenW(MachineName) + 3) * sizeof(WCHAR);
-    list = HeapAlloc(GetProcessHeap(), 0, size);
+    list = MyMalloc(size);
     if (!list)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -193,13 +193,14 @@ SetupDiCreateDeviceInfoListExW(
             SetLastError(rc);
             goto cleanup;
         }
-        UNCServerName = HeapAlloc(GetProcessHeap(), 0, (strlenW(MachineName) + 3) * sizeof(WCHAR));
+        UNCServerName = MyMalloc((strlenW(MachineName) + 3) * sizeof(WCHAR));
         if (!UNCServerName)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto cleanup;
         }
 
+        UNCServerName[0] = UNCServerName[1] = '\\';
         strcpyW(UNCServerName + 2, MachineName);
         list->szData[0] = list->szData[1] = '\\';
         strcpyW(list->szData + 2, MachineName);
@@ -207,27 +208,15 @@ SetupDiCreateDeviceInfoListExW(
     }
     else
     {
-        DWORD Size = MAX_PATH;
         list->HKLM = HKEY_LOCAL_MACHINE;
-        UNCServerName = HeapAlloc(GetProcessHeap(), 0, (MAX_PATH + 2) * sizeof(WCHAR));
-        if (!UNCServerName)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        if (!GetComputerNameW(UNCServerName + 2, &Size))
-            goto cleanup;
         list->MachineName = NULL;
-      }
-#if 0
-    UNCServerName[0] = UNCServerName[1] = '\\';
+    }
     cr = CM_Connect_MachineW(UNCServerName, &list->hMachine);
     if (cr != CR_SUCCESS)
     {
         SetLastError(GetErrorCodeFromCrCode(cr));
         goto cleanup;
     }
-#endif
     InitializeListHead(&list->DriverListHead);
     InitializeListHead(&list->ListHead);
 
@@ -240,10 +229,10 @@ cleanup:
         {
             if (list->HKLM != NULL && list->HKLM != HKEY_LOCAL_MACHINE)
                 RegCloseKey(list->HKLM);
-            HeapFree(GetProcessHeap(), 0, list);
+            MyFree(list);
         }
     }
-    HeapFree(GetProcessHeap(), 0, UNCServerName);
+    MyFree(UNCServerName);
     return ret;
 }
 
