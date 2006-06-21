@@ -962,7 +962,7 @@ CreateNTPServerList(HWND hwnd)
 
     SendMessage(hList,
                 CB_SETCURSEL,
-                --Default,
+                --Default, /* reg entries count from 1 */
                 0);
 
     RegCloseKey(hKey);
@@ -987,7 +987,8 @@ SetNTPServer(HWND hwnd)
                             0,
                             0);
 
-    _itow(Sel, szSel, 10);
+    /* reg entries count from 1 */
+    _itow(++Sel, szSel, 10);
 
     Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
