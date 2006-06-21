@@ -991,7 +991,7 @@ SETUP_CreateDevicesListFromEnumerator(
             {
                 goto cleanup;
             }
-            else if (dwRegType != REG_SZ)
+            else if (dwRegType != REG_SZ || dwLength < MAX_GUID_STRING_LEN * sizeof(WCHAR))
             {
                 rc = ERROR_GEN_FAILURE;
                 goto cleanup;
@@ -1077,7 +1077,11 @@ SETUP_CreateDevicesList(
             KEY_ENUMERATE_SUB_KEYS,
             &hEnumeratorKey);
         if (rc != ERROR_SUCCESS)
+        {
+            if (rc == ERROR_FILE_NOT_FOUND)
+                rc = ERROR_INVALID_DATA;
             goto cleanup;
+        }
         rc = SETUP_CreateDevicesListFromEnumerator(list, Class, Enumerator, hEnumeratorKey);
     }
     else
@@ -1155,39 +1159,29 @@ SetupDiGetClassDevsExW(
     else
     {
          hDeviceInfo = SetupDiCreateDeviceInfoListExW(
-             Flags & DIGCF_DEVICEINTERFACE ? NULL : ClassGuid,
+             Flags & (DIGCF_DEVICEINTERFACE | DIGCF_ALLCLASSES) ? NULL : ClassGuid,
              NULL, MachineName, NULL);
          if (hDeviceInfo == INVALID_HANDLE_VALUE)
              goto cleanup;
          list = (struct DeviceInfoSet *)hDeviceInfo;
     }
 
-    if (IsEqualIID(&list->ClassGuid, &GUID_NULL))
-        pClassGuid = NULL;
-    else
-        pClassGuid = &list->ClassGuid;
-
     if (Flags & DIGCF_PROFILE)
         FIXME(": flag DIGCF_PROFILE ignored\n");
 
+    /* FIXME: list->ClassGuid is never used! */
     if (Flags & DIGCF_ALLCLASSES)
+        pClassGuid = NULL;
+    else if (ClassGuid)
+        pClassGuid = ClassGuid;
+    else
     {
-        rc = SETUP_CreateDevicesList(list, MachineName, pClassGuid, Enumerator);
-        if (rc != ERROR_SUCCESS)
-        {
-            SetLastError(rc);
-            goto cleanup;
-        }
-        ret = hDeviceInfo;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
     }
-    else if (Flags & DIGCF_DEVICEINTERFACE)
-    {
-        if (ClassGuid == NULL)
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            goto cleanup;
-        }
 
+    if (Flags & DIGCF_DEVICEINTERFACE)
+    {
         rc = SETUP_CreateInterfaceList(list, MachineName, ClassGuid, Enumerator, Flags & DIGCF_PRESENT);
         if (rc != ERROR_SUCCESS)
         {
@@ -1198,6 +1192,16 @@ SetupDiGetClassDevsExW(
     }
     else
     {
+        if (Flags & DIGCF_ALLCLASSES)
+            rc = SETUP_CreateDevicesList(list, MachineName, NULL, Enumerator);
+        else if (ClassGuid)
+            rc = SETUP_CreateDevicesList(list, MachineName, pClassGuid, Enumerator);
+        else
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            goto cleanup;
+        }
+
         rc = SETUP_CreateDevicesList(list, MachineName, ClassGuid, Enumerator);
         if (rc != ERROR_SUCCESS)
         {
