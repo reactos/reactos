@@ -40,8 +40,6 @@ int main(int argc, char *argv[])
   SERVICE_TABLE_ENTRY ServiceTable[] = {{"RpcSs", ServiceMain},{NULL, NULL}};
 #endif
 
-  HANDLE hEvent;
-
   DPRINT("RpcSs service\n");
 
 #if 0
