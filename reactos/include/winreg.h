@@ -37,6 +37,20 @@ extern "C" {
 #define REG_NOTIFY_CHANGE_LAST_SET 4
 #define REG_NOTIFY_CHANGE_SECURITY 8
 
+#if (_WIN32_WINNT >= 0x0600)
+#define RRF_RT_REG_NONE         (1 << 0)
+#define RRF_RT_REG_SZ           (1 << 1)
+#define RRF_RT_REG_EXPAND_SZ    (1 << 2)
+#define RRF_RT_REG_BINARY       (1 << 3)
+#define RRF_RT_REG_DWORD        (1 << 4)
+#define RRF_RT_REG_MULTI_SZ     (1 << 5)
+#define RRF_RT_REG_QWORD        (1 << 6)
+#define RRF_RT_DWORD            (RRF_RT_REG_BINARY | RRF_RT_REG_DWORD)
+#define RRF_RT_QWORD            (RRF_RT_REG_BINARY | RRF_RT_REG_QWORD)
+#define RRF_NOEXPAND            (1 << 28)
+#define RRF_ZEROONFAILURE       (1 << 29)
+#endif
+
 #ifndef RC_INVOKED
 typedef ACCESS_MASK REGSAM;
 typedef struct value_entA {
@@ -92,6 +106,10 @@ LONG WINAPI RegEnumKeyExA(HKEY,DWORD,LPSTR,PDWORD,PDWORD,LPSTR,PDWORD,PFILETIME)
 LONG WINAPI RegEnumKeyExW(HKEY,DWORD,LPWSTR,PDWORD,PDWORD,LPWSTR,PDWORD,PFILETIME);
 LONG WINAPI RegEnumValueA(HKEY,DWORD,LPSTR,PDWORD,PDWORD,PDWORD,LPBYTE,PDWORD);
 LONG WINAPI RegEnumValueW(HKEY,DWORD,LPWSTR,PDWORD,PDWORD,PDWORD,LPBYTE,PDWORD);
+#if (_WIN32_WINNT >= 0x0600)
+LONG WINAPI RegGetValueA(HKEY,LPCSTR,LPCSTR,DWORD,LPDWORD,PVOID,LPDWORD);
+LONG WINAPI RegGetValueW(HKEY,LPCWSTR,LPCWSTR,DWORD,LPDWORD,PVOID,LPDWORD);
+#endif
 LONG WINAPI RegFlushKey(HKEY);
 LONG WINAPI RegGetKeySecurity(HKEY,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR,PDWORD);
 LONG WINAPI RegLoadKeyA(HKEY,LPCSTR,LPCSTR);
@@ -154,6 +172,9 @@ typedef VALENTW VALENT,*PVALENT;
 #define RegEnumKey RegEnumKeyW
 #define RegEnumKeyEx RegEnumKeyExW
 #define RegEnumValue RegEnumValueW
+#if (_WIN32_WINNT >= 0x0600)
+#define RegGetValue RegGetValueW
+#endif
 #define RegLoadKey RegLoadKeyW
 #if (_WIN32_WINNT >= 0x0600)
 #define RegLoadMUIString RegLoadMUIStringW
@@ -192,6 +213,9 @@ typedef VALENTA VALENT,*PVALENT;
 #define RegEnumKey RegEnumKeyA
 #define RegEnumKeyEx RegEnumKeyExA
 #define RegEnumValue RegEnumValueA
+#if (_WIN32_WINNT >= 0x0600)
+#define RegGetValue RegGetValueA
+#endif
 #define RegLoadKey RegLoadKeyA
 #if (_WIN32_WINNT >= 0x0600)
 #define RegLoadMUIString RegLoadMUIStringA
