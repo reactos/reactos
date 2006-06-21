@@ -2970,7 +2970,7 @@ HWND WINAPI CreateUpDownControl(DWORD,int,int,int,int,HWND,int,HINSTANCE,HWND,in
 #define DateTime_GetMonthCalColor(hwnd, icolor) SNDMSG(hwnd, DTM_GETMONTHCAL, (WPARAM)icolor,0)
 #define DateTime_GetMonthCalFont(hwnd) SNDMSG(hwnd,DTM_GETMCFONT,0,0)
 #define DateTime_GetRange(hwnd,lpsystimearray) SNDMSG(hwnd,DTM_GETRANGE,0,(LPARAM)lpsystimearray)
-#define DateTime_GetSystemTime(hwnd,lpsystime) SNDMSG(hwnd,DTM_GETSYSTEMTIME,0,(LPARAM)lpsystime)
+#define DateTime_GetSystemtime(hwnd,lpsystime) SNDMSG(hwnd,DTM_GETSYSTEMTIME,0,(LPARAM)lpsystime)
 #define DateTime_SetFormat(hwnd,lpszformat) SNDMSG(hwnd,DTM_SETFORMAT,0,(LPARAM)lpszformat)
 #define DateTime_SetMonthCalColor(hwnd,icolor,clr) SNDMSG(hwnd,DTM_SETMCCOLOR,(WPARAM)icolor,(LPARAM)clr)
 #define DateTime_SetMonthCalFont(hwnd,hfont,lparam) SNDMSG(hwnd,DTM_SETMCFONT,(WPARAM)hfont,(LPARAM)lparam)
