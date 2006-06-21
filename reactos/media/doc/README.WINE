@@ -114,7 +114,7 @@ msvcrt -
   reactos/dll/win32/msvcrt/wine/*.c             # Out of sync
 
 User32 -
-  reactos/dll/win32/user32/controls/button.c    # Out of sync
+  reactos/dll/win32/user32/controls/button.c    # Synced at 20060621
   reactos/dll/win32/user32/controls/edit.c      # Out of sync
   reactos/dll/win32/user32/controls/static.c    # Out of sync
   reactos/dll/win32/user32/misc/wsprintf.c      # Out of sync
