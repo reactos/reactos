@@ -156,96 +156,95 @@ SetupDiCreateDeviceInfoListExW(
     IN PCWSTR MachineName OPTIONAL,
     IN PVOID Reserved)
 {
-  struct DeviceInfoSet *list;
-  LPWSTR UNCServerName = NULL;
-  DWORD size;
-  DWORD rc;
-  //CONFIGRET cr;
-  HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;;
+    struct DeviceInfoSet *list;
+    LPWSTR UNCServerName = NULL;
+    DWORD size;
+    DWORD rc;
+    //CONFIGRET cr;
+    HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;;
 
-  TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
-      debugstr_w(MachineName), Reserved);
+    TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
+        debugstr_w(MachineName), Reserved);
 
-  size = FIELD_OFFSET(struct DeviceInfoSet, szData);
-  if (MachineName)
-    size += (strlenW(MachineName) + 3) * sizeof(WCHAR);
-  list = HeapAlloc(GetProcessHeap(), 0, size);
-  if (!list)
-  {
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    goto cleanup;
-  }
-  memset(list, 0, sizeof(struct DeviceInfoSet));
-
-  list->magic = SETUP_DEV_INFO_SET_MAGIC;
-  memcpy(
-    &list->ClassGuid,
-    ClassGuid ? ClassGuid : &GUID_NULL,
-    sizeof(list->ClassGuid));
-  list->InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
-  list->InstallParams.Flags |= DI_CLASSINSTALLPARAMS;
-  list->InstallParams.hwndParent = hwndParent;
-  if (MachineName)
-  {
-    rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &list->HKLM);
-    if (rc != ERROR_SUCCESS)
+    size = FIELD_OFFSET(struct DeviceInfoSet, szData);
+    if (MachineName)
+        size += (strlenW(MachineName) + 3) * sizeof(WCHAR);
+    list = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!list)
     {
-      SetLastError(rc);
-      goto cleanup;
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
     }
-    UNCServerName = HeapAlloc(GetProcessHeap(), 0, (strlenW(MachineName) + 3) * sizeof(WCHAR));
-    if (!UNCServerName)
-    {
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      goto cleanup;
-    }
+    memset(list, 0, sizeof(struct DeviceInfoSet));
 
-    strcpyW(UNCServerName + 2, MachineName);
-    list->szData[0] = list->szData[1] = '\\';
-    strcpyW(list->szData + 2, MachineName);
-    list->MachineName = list->szData;
-  }
-  else
-  {
-    DWORD Size = MAX_PATH;
-    list->HKLM = HKEY_LOCAL_MACHINE;
-    UNCServerName = HeapAlloc(GetProcessHeap(), 0, (MAX_PATH + 2) * sizeof(WCHAR));
-    if (!UNCServerName)
+    list->magic = SETUP_DEV_INFO_SET_MAGIC;
+    memcpy(
+        &list->ClassGuid,
+        ClassGuid ? ClassGuid : &GUID_NULL,
+        sizeof(list->ClassGuid));
+    list->InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
+    list->InstallParams.Flags |= DI_CLASSINSTALLPARAMS;
+    list->InstallParams.hwndParent = hwndParent;
+    if (MachineName)
     {
-      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      goto cleanup;
+        rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &list->HKLM);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        UNCServerName = HeapAlloc(GetProcessHeap(), 0, (strlenW(MachineName) + 3) * sizeof(WCHAR));
+        if (!UNCServerName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+
+        strcpyW(UNCServerName + 2, MachineName);
+        list->szData[0] = list->szData[1] = '\\';
+        strcpyW(list->szData + 2, MachineName);
+        list->MachineName = list->szData;
     }
-    if (!GetComputerNameW(UNCServerName + 2, &Size))
-      goto cleanup;
-    list->MachineName = NULL;
-  }
+    else
+    {
+        DWORD Size = MAX_PATH;
+        list->HKLM = HKEY_LOCAL_MACHINE;
+        UNCServerName = HeapAlloc(GetProcessHeap(), 0, (MAX_PATH + 2) * sizeof(WCHAR));
+        if (!UNCServerName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        if (!GetComputerNameW(UNCServerName + 2, &Size))
+            goto cleanup;
+        list->MachineName = NULL;
+      }
 #if 0
-  UNCServerName[0] = UNCServerName[1] = '\\';
-  cr = CM_Connect_MachineW(UNCServerName, &list->hMachine);
-  if (cr != CR_SUCCESS)
-  {
-    SetLastError(GetErrorCodeFromCrCode(cr));
-    goto cleanup;
-  }
+    UNCServerName[0] = UNCServerName[1] = '\\';
+    cr = CM_Connect_MachineW(UNCServerName, &list->hMachine);
+    if (cr != CR_SUCCESS)
+    {
+        SetLastError(GetErrorCodeFromCrCode(cr));
+        goto cleanup;
+    }
 #endif
-  InitializeListHead(&list->DriverListHead);
-  InitializeListHead(&list->ListHead);
+    InitializeListHead(&list->DriverListHead);
+    InitializeListHead(&list->ListHead);
 
-  ret = (HDEVINFO)list;
+    ret = (HDEVINFO)list;
 
 cleanup:
-  if (ret == INVALID_HANDLE_VALUE)
-  {
-    if (list)
+    if (ret == INVALID_HANDLE_VALUE)
     {
-      if (list->HKLM != NULL && list->HKLM != HKEY_LOCAL_MACHINE)
-        RegCloseKey(list->HKLM);
+        if (list)
+        {
+            if (list->HKLM != NULL && list->HKLM != HKEY_LOCAL_MACHINE)
+                RegCloseKey(list->HKLM);
+            HeapFree(GetProcessHeap(), 0, list);
+        }
     }
-    HeapFree(GetProcessHeap(), 0, list);
-  }
-  if (UNCServerName)
     HeapFree(GetProcessHeap(), 0, UNCServerName);
-  return ret;
+    return ret;
 }
 
 /***********************************************************************
@@ -415,8 +414,8 @@ CheckSectionValid(
 
     static const WCHAR ExtensionArchitectureNone[]  = {0};
     static const WCHAR ExtensionArchitecturealpha[]  = {'a','l','p','h','a',0};
-    static const WCHAR ExtensionArchitectureamd64[]  = {'a','m','d','6','4',0};
-    static const WCHAR ExtensionArchitectureia64[]  = {'i','a','6','4',0};
+    static const WCHAR ExtensionArchitectureamd64[]  = {'A','M','D','6','4',0};
+    static const WCHAR ExtensionArchitectureia64[]  = {'I','A','6','4',0};
     static const WCHAR ExtensionArchitecturemips[]  = {'m','i','p','s',0};
     static const WCHAR ExtensionArchitectureppc[]  = {'p','p','c',0};
     static const WCHAR ExtensionArchitecturex86[]  = {'x','8','6',0};
