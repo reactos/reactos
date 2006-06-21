@@ -11,7 +11,6 @@
 	<define name="WINVER">0x501</define>
 	<library>wine</library>
 	<library>ntdll</library>
-	<library>rtl</library>
 	<library>kernel32</library>
 	<library>ntoskrnl</library>
 	<file>powrprof.c</file>

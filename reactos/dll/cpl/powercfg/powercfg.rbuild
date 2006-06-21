@@ -12,7 +12,6 @@
 	<library>user32</library>
 	<library>powrprof</library>
 	<library>comctl32</library>
-	<library>rtl</library>
 	<file>powercfg.c</file>
 	<file>powershemes.c</file>
 	<file>alarms.c</file>
