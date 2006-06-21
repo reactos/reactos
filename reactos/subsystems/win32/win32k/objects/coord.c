@@ -34,6 +34,24 @@
 
 /* FUNCTIONS *****************************************************************/
 
+void FASTCALL
+IntFixIsotropicMapping(PDC dc)
+{
+  ULONG xdim = EngMulDiv(dc->vportExtX, dc->GDIInfo->ulHorzSize, dc->GDIInfo->ulHorzRes) / dc->wndExtX;
+  ULONG ydim = EngMulDiv(dc->vportExtY, dc->GDIInfo->ulVertSize, dc->GDIInfo->ulVertRes) / dc->wndExtY;
+
+  if (xdim > ydim)
+  {
+    dc->vportExtX = dc->vportExtX * abs(ydim / xdim);
+    if (!dc->vportExtX) dc->vportExtX = 1;
+  }
+  else
+  {
+    dc->vportExtY = dc->vportExtY * abs(xdim / ydim);
+    if (!dc->vportExtY) dc->vportExtY = 1;
+  }
+}
+
 BOOL FASTCALL
 IntGdiCombineTransform(LPXFORM XFormResult,
                        LPXFORM xform1,
@@ -668,7 +686,62 @@ NtGdiSetMapMode(HDC  hDC,
   }
 
   PrevMapMode = dc->w.MapMode;
-  dc->w.MapMode = MapMode;
+
+  if (MapMode != dc->w.MapMode || (MapMode != MM_ISOTROPIC && MapMode != MM_ANISOTROPIC))
+  {
+    dc->w.MapMode = MapMode;
+
+    switch (MapMode)
+    {
+      case MM_TEXT:
+        dc->wndExtX = 1;
+        dc->wndExtY = 1;
+        dc->vportExtX = 1;
+        dc->vportExtY = 1;
+        break;
+
+      case MM_LOMETRIC:
+      case MM_ISOTROPIC:
+        dc->wndExtX = dc->GDIInfo->ulHorzSize * 10;
+        dc->wndExtY = dc->GDIInfo->ulVertSize * 10;
+        dc->vportExtX = dc->GDIInfo->ulHorzRes;
+        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        break;
+
+      case MM_HIMETRIC:
+        dc->wndExtX = dc->GDIInfo->ulHorzSize * 100;
+        dc->wndExtY = dc->GDIInfo->ulVertSize * 100;
+        dc->vportExtX = dc->GDIInfo->ulHorzRes;
+        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        break;
+
+      case MM_LOENGLISH:
+        dc->wndExtX = EngMulDiv(1000, dc->GDIInfo->ulHorzSize, 254);
+        dc->wndExtY = EngMulDiv(1000, dc->GDIInfo->ulVertSize, 254);
+        dc->vportExtX = dc->GDIInfo->ulHorzRes;
+        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        break;
+
+      case MM_HIENGLISH:
+        dc->wndExtX = EngMulDiv(10000, dc->GDIInfo->ulHorzSize, 254);
+        dc->wndExtY = EngMulDiv(10000, dc->GDIInfo->ulVertSize, 254);
+        dc->vportExtX = dc->GDIInfo->ulHorzRes;
+        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        break;
+
+      case MM_TWIPS:
+        dc->wndExtX = EngMulDiv(14400, dc->GDIInfo->ulHorzSize, 254);
+        dc->wndExtY = EngMulDiv(14400, dc->GDIInfo->ulVertSize, 254);
+        dc->vportExtX = dc->GDIInfo->ulHorzRes;
+        dc->vportExtY = -dc->GDIInfo->ulVertRes;
+        break;
+
+      case MM_ANISOTROPIC:
+        break;
+    }
+
+    DC_UpdateXforms(dc);
+  }
 
   DC_UnlockDc(dc);
 
@@ -737,6 +810,8 @@ NtGdiSetViewportExtEx(HDC  hDC,
   dc->vportExtX = XExtent;
   dc->vportExtY = YExtent;
 
+  if (dc->w.MapMode == MM_ISOTROPIC)
+    IntFixIsotropicMapping(dc);
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
 

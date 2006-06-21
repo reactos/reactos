@@ -66,6 +66,7 @@ IntGdiPolygon(PDC    dc,
   ASSERT(BitmapObj);
 
       /* Convert to screen coordinates */
+      IntLPtoDP(dc, UnsafePoints, Count);
       for (CurrentPoint = 0; CurrentPoint < Count; CurrentPoint++)
 	{
 	  UnsafePoints[CurrentPoint].x += dc->w.DCOrgX;
@@ -258,20 +259,22 @@ NtGdiEllipse(
    IntGdiInitBrushInstance(&FillBrushInst, FillBrush, dc->XlateBrush);
    IntGdiInitBrushInstance(&PenBrushInst, PenBrush, dc->XlatePen);
 
-   nLeftRect += dc->w.DCOrgX;
-   nRightRect += dc->w.DCOrgX - 1;
-   nTopRect += dc->w.DCOrgY;
-   nBottomRect += dc->w.DCOrgY - 1;
-
-   RadiusX = max((nRightRect - nLeftRect) >> 1, 1);
-   RadiusY = max((nBottomRect - nTopRect) >> 1, 1);
-   CenterX = nLeftRect + RadiusX;
-   CenterY = nTopRect + RadiusY;
-
    RectBounds.left = nLeftRect;
    RectBounds.right = nRightRect;
    RectBounds.top = nTopRect;
    RectBounds.bottom = nBottomRect;
+
+   IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
+
+   RectBounds.left += dc->w.DCOrgX;
+   RectBounds.right += dc->w.DCOrgX;
+   RectBounds.top += dc->w.DCOrgY;
+   RectBounds.bottom += dc->w.DCOrgY;
+
+   RadiusX = max((RectBounds.right - RectBounds.left) >> 1, 1);
+   RadiusY = max((RectBounds.bottom - RectBounds.top) >> 1, 1);
+   CenterX = RectBounds.left + RadiusX;
+   CenterY = RectBounds.top + RadiusY;
 
    if (RadiusX > RadiusY)
    {
