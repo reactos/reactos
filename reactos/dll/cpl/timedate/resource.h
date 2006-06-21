@@ -8,6 +8,7 @@
 #define IDC_MONTHCB             101
 #define IDC_YEAREDIT            102
 #define IDC_MONTHCALENDAR       103
+#define IDC_CLOCKWND            104
 #define IDC_TIMEZONE            106
 #define IDC_TIMEPICKER          107
 #define IDC_YEAR		108

@@ -3,7 +3,7 @@
 SOCKET Sock;
 SOCKADDR_IN myAddr, ntpAddr;
 
-BOOL InitialiseConnection()
+BOOL InitialiseConnection(CHAR *szIpAddr)
 {
     WSADATA wsaData;
     INT Ret;
@@ -12,7 +12,6 @@ BOOL InitialiseConnection()
                      &wsaData);
     if (Ret != 0)
         return FALSE;
-
 
     Sock = WSASocket(AF_INET,
                      SOCK_DGRAM,
@@ -27,7 +26,7 @@ BOOL InitialiseConnection()
     ZeroMemory(&myAddr, sizeof(myAddr));
     myAddr.sin_family = AF_INET;
     myAddr.sin_port = htons(IPPORT_TIMESERVER);
-    myAddr.sin_addr.s_addr = INADDR_ANY;
+    myAddr.sin_addr.s_addr = inet_addr(szIpAddr);
 
     Ret = bind(Sock,
                (SOCKADDR *)&myAddr,
@@ -69,19 +68,22 @@ BOOL SendData()
 }
 
 
-BOOL RecieveData(CHAR *Buf)
+ULONG RecieveData(ULONG ulTime)
 {
     INT Ret;
     INT Size = sizeof(SOCKADDR_IN);
 
     Ret = recvfrom(Sock,
-                   Buf,
-                   BUFSIZE,
+                   (char *)&ulTime,
+                   4,
                    0,
                    (SOCKADDR *)&ntpAddr,
                    &Size);
-    if (Ret == SOCKET_ERROR)
-        return FALSE;
+    if (Ret != SOCKET_ERROR)
+        ulTime = ntohl(ulTime);
+    else
+        ulTime = 0;
 
-    return TRUE;
+
+    return ulTime;
 }

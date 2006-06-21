@@ -80,7 +80,7 @@ MonthCalNotifyControlParent(IN PMONTHCALWND infoPtr,
                           (WPARAM)pnmh->idFrom,
                           (LPARAM)pnmh);
     }
-    
+
     return Ret;
 }
 
@@ -163,7 +163,7 @@ MonthCalUpdate(IN PMONTHCALWND infoPtr)
     NewCellSize.cy = infoPtr->ClientSize.cy / 7;
 
     if (infoPtr->CellSize.cx != NewCellSize.cx ||
-        infoPtr->CellSize.cy != NewCellSize.cy);
+        infoPtr->CellSize.cy != NewCellSize.cy)
     {
         infoPtr->CellSize = NewCellSize;
         RepaintHeader = TRUE;
@@ -668,15 +668,15 @@ MonthCalWndProc(IN HWND hwnd,
 {
     PMONTHCALWND infoPtr;
     LRESULT Ret = 0;
-    
+
     infoPtr = (PMONTHCALWND)GetWindowLongPtr(hwnd,
                                              0);
-    
+
     if (infoPtr == NULL && uMsg != WM_CREATE)
     {
         goto HandleDefaultMessage;
     }
-    
+
     switch (uMsg)
     {
 #if MONTHCAL_CTRLBG != MONTHCAL_DISABLED_CTRLBG
@@ -815,7 +815,7 @@ MonthCalWndProc(IN HWND hwnd,
         case WM_GETDLGCODE:
         {
             INT virtKey;
-            
+
             virtKey = (lParam != 0 ? (INT)((LPMSG)lParam)->wParam : 0);
             switch (virtKey)
             {

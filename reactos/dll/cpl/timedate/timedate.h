@@ -28,12 +28,18 @@ typedef struct
 
 extern HINSTANCE hApplet;
 
-BOOL InitClockWindowClass();
+/* timedate.c */
+VOID GetError(VOID);
 
-BOOL InitialiseConnection(VOID);
+/* clock.c */
+BOOL RegisterClockControl(VOID);
+VOID UnregisterClockControl(VOID);
+
+/* ntpclient.c */
+BOOL InitialiseConnection(CHAR *szIpAddr);
 VOID DestroyConnection(VOID);
 BOOL SendData(VOID);
-BOOL RecieveData(CHAR *);
+ULONG RecieveData(ULONG ulTime);
 
 /* monthcal.c */
 #define MCCM_SETDATE    (WM_USER + 1)

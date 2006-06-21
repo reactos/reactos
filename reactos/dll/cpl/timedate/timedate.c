@@ -60,6 +60,25 @@ APPLET Applets[NUM_APPLETS] =
   {IDC_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
 };
 
+VOID GetError(VOID)
+{
+    LPVOID lpMsgBuf;
+
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                  FORMAT_MESSAGE_FROM_SYSTEM |
+                  FORMAT_MESSAGE_IGNORE_INSERTS,
+                  NULL,
+                  GetLastError(),
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  (LPTSTR) &lpMsgBuf,
+                  0,
+                  NULL );
+
+    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
+
+    LocalFree(lpMsgBuf);
+}
+
 static BOOL
 SystemSetLocalTime(LPSYSTEMTIME lpSystemTime)
 {
@@ -284,6 +303,8 @@ static VOID
 AutoUpdateMonthCal(HWND hwndDlg,
                    PNMMCCAUTOUPDATE lpAutoUpdate)
 {
+    UNREFERENCED_PARAMETER(lpAutoUpdate);
+
     /* update the controls */
     FillMonthsComboBox(GetDlgItem(hwndDlg,
                                   IDC_MONTHCB));
@@ -292,9 +313,9 @@ AutoUpdateMonthCal(HWND hwndDlg,
 
 INT_PTR CALLBACK
 DTPProc(HWND hwnd,
-         UINT uMsg,
-         WPARAM wParam,
-         LPARAM lParam)
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam)
 {
   switch (uMsg)
   {
@@ -302,11 +323,11 @@ DTPProc(HWND hwnd,
       /* stop the timer when the user is about to change the time */
       if ((wParam != VK_LEFT) & (wParam != VK_RIGHT))
         KillTimer(GetParent(hwnd), ID_TIMER);
-      return CallWindowProc(pOldWndProc, hwnd, uMsg, wParam, lParam);
       break;
-    default:
-      return CallWindowProc(pOldWndProc, hwnd, uMsg, wParam, lParam);
+
   }
+
+  return CallWindowProc(pOldWndProc, hwnd, uMsg, wParam, lParam);
 }
 
 /* Property page dialog callback */
@@ -331,23 +352,13 @@ DateTimePageProc(HWND hwndDlg,
         SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETRANGE, 0, MAKELONG ((short) 9999, (short) 1900));
         SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETPOS, 0, MAKELONG( (short) st.wYear, 0));
 
-        InitClockWindowClass();
-        CreateWindowExW(0,
-                       L"ClockWndClass",
-                       L"Clock",
-                       WS_CHILD | WS_VISIBLE,
-                       208, 14, 150, 150,
-                       hwndDlg,
-                       NULL,
-                       hApplet,
-                       NULL);
-
 		pOldWndProc = (WNDPROC) SetWindowLong(GetDlgItem(hwndDlg, IDC_TIMEPICKER), GWL_WNDPROC, (INT_PTR) DTPProc);
+
     break;
 
     case WM_TIMER:
     {
-        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPICKER), DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM) &st); 
+        SendMessage(GetDlgItem(hwndDlg, IDC_TIMEPICKER), DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM) &st);
         break;
     }
     case WM_COMMAND:
@@ -387,7 +398,7 @@ DateTimePageProc(HWND hwndDlg,
 				      case UDN_DELTAPOS:
                       {
                          short wYear;
-                         LPNMUPDOWN updown = (LPNMUPDOWN) lpnm; 
+                         LPNMUPDOWN updown = (LPNMUPDOWN) lpnm;
                          wYear = SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_GETPOS, 0, 0);
                           /* Enable the 'Apply' button */
                          PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -461,8 +472,6 @@ DateTimePageProc(HWND hwndDlg,
 
   return FALSE;
 }
-
-
 
 
 static PTIMEZONE_ENTRY
@@ -841,15 +850,15 @@ TimeZonePageProc(HWND hwndDlg,
             hdc = BeginPaint(hwndDlg, &ps);
             hdcMem = CreateCompatibleDC(hdc);
             SelectObject(hdcMem, hBitmap);
-            StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top, 
+            StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top,
                        lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
-                       lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top, 
+                       lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
                        hdcMem, 0, 0, cxSource, cySource, SRCCOPY);
             DeleteDC(hdcMem);
             EndPaint(hwndDlg, &ps);
 		}
         break;
-    } 
+    }
     case WM_COMMAND:
       if ((LOWORD(wParam) == IDC_TIMEZONELIST && HIWORD(wParam) == CBN_SELCHANGE) ||
           (LOWORD(wParam) == IDC_AUTODAYLIGHT && HIWORD(wParam) == BN_CLICKED))
@@ -960,22 +969,23 @@ CreateNTPServerList(HWND hwnd)
 
 }
 
-
-VOID SetNTPServer(HWND hwnd)
+/* Set the selected server in the registry */
+static VOID
+SetNTPServer(HWND hwnd)
 {
     HKEY hKey;
     HWND hList;
-    INT Sel;
+    UINT Sel;
     WCHAR szSel[4];
     LONG Ret;
-//DebugBreak();
+
     hList = GetDlgItem(hwnd,
                        IDC_SERVERLIST);
 
-    Sel = (INT)SendMessage(hList,
-                           CB_GETCURSEL,
-                           0,
-                           0);
+    Sel = (UINT)SendMessage(hList,
+                            CB_GETCURSEL,
+                            0,
+                            0);
 
     _itow(Sel, szSel, 10);
 
@@ -985,7 +995,10 @@ VOID SetNTPServer(HWND hwnd)
                         KEY_SET_VALUE,
                         &hKey);
     if (Ret != ERROR_SUCCESS)
+    {
+        GetError();
         return;
+    }
 
     Ret = RegSetValueExW(hKey,
                          L"",
@@ -993,34 +1006,142 @@ VOID SetNTPServer(HWND hwnd)
                          REG_SZ,
                          (LPBYTE)szSel,
                          sizeof(szSel));
-    if (Ret == ERROR_SUCCESS)
-        MessageBoxW(NULL, szSel, NULL, 0);
-    else
-    {
-        WCHAR Buff[20];
-        _itow(Ret, Buff, 10);
-        //MessageBoxW(NULL, Buff, NULL, 0);
-    }
+    if (Ret != ERROR_SUCCESS)
+        GetError();
 
     RegCloseKey(hKey);
 
-
-
 }
 
 
-VOID UpdateSystemTime(HWND hwndDlg)
+/* get the dotted decimal address from the registry */
+static BOOL
+GetNTPServerAddress(CHAR *szIpAddr)
 {
-    //SYSTEMTIME systime;
-    CHAR Buf[BUFSIZE];
+    HKEY hKey;
+    WCHAR szSel[4];
+    WCHAR buf[32];
+    DWORD dwSize;
+    LONG Ret;
 
-    InitialiseConnection();
-    SendData();
-    RecieveData(Buf);
+    Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
+                        0,
+                        KEY_QUERY_VALUE,
+                        &hKey);
+    if (Ret != ERROR_SUCCESS)
+    {
+        GetError();
+        return FALSE;
+    }
+
+    dwSize = sizeof(szSel);
+    Ret = RegQueryValueExW(hKey,
+                           L"",
+                           NULL,
+                           NULL,
+                           (LPBYTE)szSel,
+                           &dwSize);
+    if (Ret != ERROR_SUCCESS)
+    {
+        GetError();
+        return FALSE;
+    }
+
+    dwSize = sizeof(szSel);
+    Ret = RegQueryValueExW(hKey,
+                           szSel,
+                           NULL,
+                           NULL,
+                           (LPBYTE)buf,
+                           &dwSize);
+    if (Ret != ERROR_SUCCESS)
+    {
+        GetError();
+        return FALSE;
+    }
+
+    if (WideCharToMultiByte(CP_ACP,
+                            0,
+                            buf,
+                            sizeof(buf),
+                            szIpAddr,
+                            sizeof(szIpAddr),
+                            NULL,
+                            NULL) == 0)
+    {
+        GetError();
+        return FALSE;
+    }
+
+    /* safety check */
+    if (inet_addr(szIpAddr) == INADDR_NONE)
+        return FALSE;
+
+    return TRUE;
+}
+
+
+/* request the time from the current NTP server */
+static ULONG
+GetTimeFromServer(VOID)
+{
+    CHAR szIpAddr[32];
+    ULONG ulTime = 0;
+
+    if (! GetNTPServerAddress(szIpAddr))
+        return 0;
+
+    if (InitialiseConnection(szIpAddr))
+    {
+        if (SendData())
+        {
+            RecieveData(ulTime);
+        }
+    }
+
     DestroyConnection();
 
-    //DateTime_SetSystemtime(hwndDlg, 0, systime);
+    return ulTime;
 }
+
+/*
+ * NTP servers state the number of seconds passed since
+ * 1st Jan, 1900. The time returned from the server
+ * needs adding to that date to get the current Gregorian time
+ */
+static VOID
+UpdateSystemTime(ULONG ulTime)
+{
+    FILETIME ftNew;
+    LARGE_INTEGER li;
+    SYSTEMTIME stNew;
+
+    /* time at 1st Jan 1900 */
+    stNew.wYear = 1900;
+    stNew.wMonth = 1;
+    stNew.wDay = 1;
+    stNew.wHour = 0;
+    stNew.wMinute = 0;
+    stNew.wSecond = 0;
+    stNew.wMilliseconds = 0;
+
+    /* convert to a file time */
+    SystemTimeToFileTime(&stNew, &ftNew);
+
+    /* add on the time passed since 1st Jan 1900 */
+    li = *(LARGE_INTEGER *)&ftNew;
+    li.QuadPart += (LONGLONG)10000000 * ulTime;
+    ftNew = * (FILETIME *)&li;
+
+    /* convert back to a system time */
+    FileTimeToSystemTime(&ftNew, &stNew);
+
+    if (! SetSystemTime(&stNew))
+         GetError();
+
+}
+
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -1040,36 +1161,46 @@ InetTimePageProc(HWND hwndDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_UPDATEBUTTON:
+                {
+                    ULONG ulTime;
+
                     SetNTPServer(hwndDlg);
-                    //UpdateSystemTime(hwndDlg);
-                    MessageBox(NULL, L"Not yet implemented", NULL, 0);
+
+                    ulTime = GetTimeFromServer();
+                    if (ulTime != 0)
+                        UpdateSystemTime(ulTime);
+
+                }
                 break;
 
                 case IDC_SERVERLIST:
+                {
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                         /* Enable the 'Apply' button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                }
                 break;
 
                 case IDC_AUTOSYNC:
+                {
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                        BOOL bChecked;
                         HWND hCheck = GetDlgItem(hwndDlg, IDC_AUTOSYNC);
-                        //HWND hSerText = GetDlgItem(hwndDlg, IDC_SERVERTEXT);
-                        //HWND hSerList = GetDlgItem(hwndDlg, IDC_SERVERLIST);
-                        //HWND hUpdateBut = GetDlgItem(hwndDlg, IDC_UPDATEBUTTON);
-                        //HWND hSucSync = GetDlgItem(hwndDlg, IDC_SUCSYNC);
-                        //HWND hNextSync = GetDlgItem(hwndDlg, IDC_NEXTSYNC);
+                        UINT Check = (UINT)SendMessageW(hCheck, BM_GETCHECK, 0, 0);
 
-                        INT Check = (INT)SendMessageW(hCheck, BM_GETCHECK, 0, 0);
-                        if (Check)
-                            ;//show all data
-                        else
-                            ;//hide all data
+                        bChecked = (Check == BST_CHECKED) ? TRUE : FALSE;
+
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SERVERTEXT), bChecked);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SERVERLIST), bChecked);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATEBUTTON), bChecked);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_SUCSYNC), bChecked);
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_NEXTSYNC), bChecked);
 
                         /* Enable the 'Apply' button */
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
+                }
                 break;
             }
             break;
@@ -1084,7 +1215,7 @@ InetTimePageProc(HWND hwndDlg,
             switch (lpnm->code)
             {
                 case PSN_APPLY:
-                    //DebugBreak();
+
                     SetNTPServer(hwndDlg);
 
                     return TRUE;
@@ -1120,7 +1251,8 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
   TCHAR Caption[256];
   LONG Ret = 0;
 
-  if (RegisterMonthCalControl(hApplet))
+  if (RegisterMonthCalControl(hApplet) &&
+      RegisterClockControl())
   {
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
@@ -1142,6 +1274,7 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
     Ret = (LONG)(PropertySheet(&psh) != -1);
 
     UnregisterMonthCalControl(hApplet);
+    UnregisterClockControl();
   }
 
   return Ret;
@@ -1193,16 +1326,16 @@ DllMain(HINSTANCE hinstDLL,
   switch (dwReason)
   {
     case DLL_PROCESS_ATTACH:
-      {
-    INITCOMMONCONTROLSEX InitControls;
+    {
+      INITCOMMONCONTROLSEX InitControls;
 
-    InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    InitControls.dwICC = ICC_DATE_CLASSES | ICC_PROGRESS_CLASS | ICC_UPDOWN_CLASS;
-    InitCommonControlsEx(&InitControls);
+      InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+      InitControls.dwICC = ICC_DATE_CLASSES | ICC_PROGRESS_CLASS | ICC_UPDOWN_CLASS;
+      InitCommonControlsEx(&InitControls);
 
-    hApplet = hinstDLL;
-      }
-      break;
+      hApplet = hinstDLL;
+    }
+    break;
   }
 
   return TRUE;
