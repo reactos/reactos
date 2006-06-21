@@ -1128,7 +1128,7 @@ GetLocalSystemTime(HWND hwnd, PSETUPDATA SetupData)
   SYSTEMTIME Date;
   SYSTEMTIME Time;
 
-  if (DateTime_GetSystemTime(GetDlgItem(hwnd, IDC_DATEPICKER), &Date) != GDT_VALID)
+  if (DateTime_GetSystemtime(GetDlgItem(hwnd, IDC_DATEPICKER), &Date) != GDT_VALID)
     {
       return FALSE;
     }
