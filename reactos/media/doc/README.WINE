@@ -115,10 +115,30 @@ msvcrt -
 
 User32 -
   reactos/dll/win32/user32/controls/button.c    # Synced at 20060621
+  reactos/dll/win32/user32/controls/combo.c     # Last sync date unknown
   reactos/dll/win32/user32/controls/edit.c      # Out of sync
+  reactos/dll/win32/user32/controls/icontitle.c # Last sync date unknown
+  reactos/dll/win32/user32/controls/listbox.c   # Out of sync
+  reactos/dll/win32/user32/controls/scrollbar.c # Forked (?)
   reactos/dll/win32/user32/controls/static.c    # Out of sync
+
+  reactos/dll/win32/user32/misc/dde.c           # Last sync date unknown (dde_misc.c)
+  reactos/dll/win32/user32/misc/ddeclient.c     # Last sync date unknown
+  reactos/dll/win32/user32/misc/ddeserver.c     # Last sync date unknown
+  reactos/dll/win32/user32/misc/exticon.c       # Last sync date unknown
+  reactos/dll/win32/user32/misc/resources.c     # Forked?
+  reactos/dll/win32/user32/misc/winhelp.c       # Last sync date unknown
   reactos/dll/win32/user32/misc/wsprintf.c      # Out of sync
+
+  reactos/dll/win32/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
   reactos/dll/win32/user32/windows/mdi.c        # Out of sync
+  reactos/dll/win32/user32/windows/menu.c       # Last sync date unknown
+  reactos/dll/win32/user32/windows/messagebox.c # Forked
+  reactos/dll/win32/user32/windows/rect.c       # Forked (uitools.c)
+  reactos/dll/win32/user32/windows/text.c       # Forked (lstr.c)
+  reactos/dll/win32/user32/windows/winpos.c     # Forked
+
+Update process for shared DLLs
 
 - Cd to the parent directory of your top-level "reactos" directory
 - Check out the Wine release: "cvs -d :pserver:cvs@cvs.winehq.com:2401/home/wine co wine -r Wine-20050211"
