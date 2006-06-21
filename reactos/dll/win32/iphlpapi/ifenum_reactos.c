@@ -263,7 +263,7 @@ NTSTATUS tdiGetMibForIfEntity
            entry->ent.if_mtu,
            entry->ent.if_speed,
            entry->ent.if_physaddrlen);
-    DPRINT("  if_physaddr .................... %02x:%02x:%02x:%02x:%02x:%02x\n",
+    DPRINT("  if_physaddr .................... %02x:%02x:%02x:%02x:%02x:%02x\n"
            "  if_descr ....................... %s\n",
            entry->ent.if_physaddr[0] & 0xff,
            entry->ent.if_physaddr[1] & 0xff,
