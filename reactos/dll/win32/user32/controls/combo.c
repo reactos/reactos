@@ -148,7 +148,7 @@ static LRESULT COMBO_NCCreate(HWND hwnd, LONG style)
     if (COMBO_Init() && (lphc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HEADCOMBO))) )
     {
         lphc->self = hwnd;
-        SetWindowLongW( hwnd, 0, (LONG)lphc );
+        SetWindowLongPtrW( hwnd, 0, (LONG_PTR)lphc );
 
        /* some braindead apps do try to use scrollbar/border flags */
 
