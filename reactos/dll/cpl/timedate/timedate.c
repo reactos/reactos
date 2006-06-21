@@ -124,7 +124,7 @@ SetLocalSystemTime(HWND hwnd)
 {
     SYSTEMTIME Time;
 
-    if (DateTime_GetSystemTime(GetDlgItem(hwnd,
+    if (DateTime_GetSystemtime(GetDlgItem(hwnd,
                                           IDC_TIMEPICKER),
                                &Time) == GDT_VALID &&
         SendMessage(GetDlgItem(hwnd,

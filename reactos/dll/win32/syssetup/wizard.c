@@ -1133,7 +1133,7 @@ GetLocalSystemTime(HWND hwnd, PSETUPDATA SetupData)
       return FALSE;
     }
 
-  if (DateTime_GetSystemTime(GetDlgItem(hwnd, IDC_TIMEPICKER), &Time) != GDT_VALID)
+  if (DateTime_GetSystemtime(GetDlgItem(hwnd, IDC_TIMEPICKER), &Time) != GDT_VALID)
     {
       return FALSE;
     }
