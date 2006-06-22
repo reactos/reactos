@@ -26,6 +26,8 @@ KD_PORT_INFORMATION SerialPortInfo = {DEFAULT_DEBUG_PORT, DEFAULT_DEBUG_BAUD_RAT
 
 /* Current Port in use. FIXME: Do we support more then one? */
 ULONG KdpPort;
+/* If serial debugging is enabled, is pointing to the UART base address. */
+PUCHAR *KdComPortInUse;
 
 /* DEBUG LOG FUNCTIONS *******************************************************/
 
@@ -97,6 +99,8 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 
     if (BootPhase == 0)
     {
+        KdComPortInUse = NULL;
+
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpInitDebugLog;
         DispatchTable->KdpPrintRoutine = KdpPrintToLog;
@@ -180,9 +184,14 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
             KdpDebugMode.Serial = FALSE;
             return;
         }
+        KdComPortInUse = (PUCHAR*)&SerialPortInfo.BaseAddress;
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
+        
+        /* Display separator + ReactOS version at start of the debug log */
+        DPRINT1("---------------------------------------------------------------\n");
+        DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
     }
     else if (BootPhase == 2)
     {

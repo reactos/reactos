@@ -503,6 +503,7 @@ IoWriteTransferCount DATA
 @IofCallDriver@8
 @IofCompleteRequest@8
 IoIsWdmVersionAvailable@8
+KdComPortInUse DATA
 KdDebuggerEnabled DATA
 KdDebuggerNotPresent DATA
 KdDisableDebugger@0
