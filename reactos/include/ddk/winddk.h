@@ -382,19 +382,19 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define FM_LOCK_WAITER_INC      (0x4)
 
 /* Exported object types */
-extern NTOSAPI POBJECT_TYPE ExDesktopObjectType;
-extern NTOSAPI POBJECT_TYPE ExEventObjectType;
-extern NTOSAPI POBJECT_TYPE ExSemaphoreObjectType;
-extern NTOSAPI POBJECT_TYPE ExWindowStationObjectType;
-extern NTOSAPI ULONG IoDeviceHandlerObjectSize;
-extern NTOSAPI POBJECT_TYPE IoDeviceHandlerObjectType;
-extern NTOSAPI POBJECT_TYPE IoDeviceObjectType;
-extern NTOSAPI POBJECT_TYPE IoDriverObjectType;
-extern NTOSAPI POBJECT_TYPE IoFileObjectType;
-extern NTOSAPI POBJECT_TYPE PsThreadType;
-extern NTOSAPI POBJECT_TYPE LpcPortObjectType;
-extern NTOSAPI POBJECT_TYPE MmSectionObjectType;
-extern NTOSAPI POBJECT_TYPE SeTokenObjectType;
+extern POBJECT_TYPE NTSYSAPI ExDesktopObjectType;
+extern POBJECT_TYPE NTSYSAPI ExEventObjectType;
+extern POBJECT_TYPE NTSYSAPI ExSemaphoreObjectType;
+extern POBJECT_TYPE NTSYSAPI ExWindowStationObjectType;
+extern ULONG NTSYSAPI IoDeviceHandlerObjectSize;
+extern POBJECT_TYPE NTSYSAPI IoDeviceHandlerObjectType;
+extern POBJECT_TYPE NTSYSAPI IoDeviceObjectType;
+extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
+extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
+extern POBJECT_TYPE NTSYSAPI PsThreadType;
+extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
+extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
+extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 
 extern NTOSAPI CCHAR KeNumberProcessors;
 
