@@ -296,18 +296,33 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 	string basepath = module.GetBasePath ();
 	string vcdir = _get_vc_dir ();
 	size_t i;
-	string intenv = Environment::GetIntermediatePath () + "\\" + basepath + "\\" + vcdir + "\\";
-	string outenv = Environment::GetOutputPath () + "\\" + basepath + "\\" + vcdir + "\\";
+	string intenv = Environment::GetIntermediatePath () + "\\" + basepath + "\\";
+	string outenv = Environment::GetOutputPath () + "\\" + basepath + "\\";
+	
+	if ( configuration.UseVSVersionInPath )
+	{
+		intenv += vcdir + "\\";
+		outenv += vcdir + "\\";
+	}
+
 	string dbg = vcdir.substr ( 0, 3 );
 
 	vector<string> cfgs;
-	cfgs.push_back ( intenv + "Debug" );
-	cfgs.push_back ( intenv + "Release" );
-	cfgs.push_back ( intenv + "Speed" );
-	cfgs.push_back ( outenv + "Debug" );
-	cfgs.push_back ( outenv + "Release" );
-	cfgs.push_back ( outenv + "Speed" );
 
+	if ( configuration.UseVSConfigurationInPath )
+	{
+		cfgs.push_back ( intenv + "Debug" );
+		cfgs.push_back ( intenv + "Release" );
+		cfgs.push_back ( intenv + "Speed" );
+		cfgs.push_back ( outenv + "Debug" );
+		cfgs.push_back ( outenv + "Release" );
+		cfgs.push_back ( outenv + "Speed" );
+	}
+	else
+	{
+		cfgs.push_back ( intenv );
+		cfgs.push_back ( outenv );
+	}
 
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.project.non_if_data );
@@ -371,8 +386,12 @@ MSVCBackend::_clean_project_files ( void )
 
 		_get_object_files ( module, out );
 		for ( size_t j = 0; j < out.size (); j++)
+		{
+			//printf("Cleaning file %s\n", out[j].c_str () );
 			remove ( out[j].c_str () );
+		}
 	}
+
 	string filename_sln = ProjectNode.name + ".sln";
 	string filename_dsw = ProjectNode.name + ".dsw";
 
