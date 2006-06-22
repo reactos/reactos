@@ -1,7 +1,7 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/ob/security.c
+* FILE:            ntoskrnl/ob/obsecure.c
 * PURPOSE:         SRM Interface of the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
 *                  Eric Kohl
@@ -12,6 +12,8 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
+
+#define TAG_SEC_QUERY   TAG('O', 'b', 'S', 'q')
 
 /* FUNCTIONS ***************************************************************/
 
@@ -144,7 +146,7 @@ ObGetObjectSecurity(IN PVOID Object,
     /* Allocate security descriptor */
     *SecurityDescriptor = ExAllocatePoolWithTag(PagedPool,
                                                 Length,
-                                                TAG('O', 'b', 'S', 'q'));
+                                                TAG_SEC_QUERY);
     if (!(*SecurityDescriptor)) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Query security descriptor */
@@ -248,72 +250,75 @@ NtQuerySecurityObject(IN HANDLE Handle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PVOID Object;
     POBJECT_HEADER Header;
-    ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
+    POBJECT_TYPE Type;
+    ACCESS_MASK DesiredAccess;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
+    /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Enter SEH */
         _SEH_TRY
         {
+            /* Probe the SD and the length pointer */
             ProbeForWrite(SecurityDescriptor, Length, sizeof(ULONG));
-            if (ResultLength != NULL)
-            {
             ProbeForWriteUlong(ResultLength);
-        }
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
+        /* Fail if we got an access violation */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
-    /* get the required access rights for the operation */
-    SeQuerySecurityAccessMask(SecurityInformation,
-                              &DesiredAccess);
+    /* Get the required access rights for the operation */
+    SeQuerySecurityAccessMask(SecurityInformation, &DesiredAccess);
 
+    /* Reference the object */
     Status = ObReferenceObjectByHandle(Handle,
                                        DesiredAccess,
                                        NULL,
                                        PreviousMode,
                                        &Object,
                                        NULL);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    if (NT_SUCCESS(Status))
+    /* Get the Object Header and Type */
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
+    Type = Header->Type;
+
+    /* Call the security procedure's query function */
+    Status = Type->TypeInfo.SecurityProcedure(Object,
+                                              QuerySecurityDescriptor,
+                                              SecurityInformation,
+                                              SecurityDescriptor,
+                                              &Length,
+                                              &Header->SecurityDescriptor,
+                                              Type->TypeInfo.PoolType,
+                                              &Type->TypeInfo.GenericMapping);
+
+    /* Dereference the object */
+    ObDereferenceObject(Object);
+
+    /* Protect write with SEH */
+    _SEH_TRY
     {
-        Header = OBJECT_TO_OBJECT_HEADER(Object);
-        ASSERT(Header->Type != NULL);
-
-        Status = Header->Type->TypeInfo.SecurityProcedure(
-            Object,
-            QuerySecurityDescriptor,
-            SecurityInformation,
-            SecurityDescriptor,
-            &Length,
-            &Header->SecurityDescriptor,
-            Header->Type->TypeInfo.PoolType,
-            &Header->Type->TypeInfo.GenericMapping);
-
-        ObDereferenceObject(Object);
-
-        /* return the required length */
-        if (ResultLength != NULL)
-        {
-        _SEH_TRY
-        {
-            *ResultLength = Length;
-        }
-            _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
+        /* Return the needed length */
+        *ResultLength = Length;
     }
+    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    {
+        /* Get the exception code */
+        Status = _SEH_GetExceptionCode();
     }
+    _SEH_END;
 
+    /* Return status */
     return Status;
 }
 
@@ -346,138 +351,76 @@ NtSetSecurityObject(IN HANDLE Handle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PVOID Object;
     POBJECT_HEADER Header;
-    SECURITY_DESCRIPTOR_RELATIVE *CapturedSecurityDescriptor;
-    ACCESS_MASK DesiredAccess = (ACCESS_MASK)0;
+    POBJECT_TYPE Type;
+    SECURITY_DESCRIPTOR_RELATIVE *CapturedDescriptor;
+    ACCESS_MASK DesiredAccess;
     NTSTATUS Status;
     PAGED_CODE();
 
-    /* make sure the caller doesn't pass a NULL security descriptor! */
-    if (SecurityDescriptor == NULL) return STATUS_ACCESS_DENIED;
+    /* Make sure the caller doesn't pass a NULL security descriptor! */
+    if (!SecurityDescriptor) return STATUS_ACCESS_VIOLATION;
 
-    /* capture and make a copy of the security descriptor */
+    /* Capture and make a copy of the security descriptor */
     Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
                                          PreviousMode,
                                          PagedPool,
                                          TRUE,
                                          (PSECURITY_DESCRIPTOR*)
-                                         &CapturedSecurityDescriptor);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Capturing the security descriptor failed! Status: 0x%lx\n", Status);
-        return Status;
-    }
+                                         &CapturedDescriptor);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /*
-     * make sure the security descriptor passed by the caller
+     * Make sure the security descriptor passed by the caller
      * is valid for the operation we're about to perform
      */
     if (((SecurityInformation & OWNER_SECURITY_INFORMATION) &&
-         (CapturedSecurityDescriptor->Owner == 0)) ||
+         !(CapturedDescriptor->Owner)) ||
         ((SecurityInformation & GROUP_SECURITY_INFORMATION) &&
-         (CapturedSecurityDescriptor->Group == 0)))
+         !(CapturedDescriptor->Group)))
     {
+        /* Set the failure status */
         Status = STATUS_INVALID_SECURITY_DESCR;
     }
     else
     {
-        /* get the required access rights for the operation */
-        SeSetSecurityAccessMask(SecurityInformation,
-                                &DesiredAccess);
+        /* Set the required access rights for the operation */
+        SeSetSecurityAccessMask(SecurityInformation, &DesiredAccess);
 
+        /* Reference the object */
         Status = ObReferenceObjectByHandle(Handle,
                                            DesiredAccess,
                                            NULL,
                                            PreviousMode,
                                            &Object,
                                            NULL);
-
         if (NT_SUCCESS(Status))
         {
+            /* Get the Object Header and Type */
             Header = OBJECT_TO_OBJECT_HEADER(Object);
-            ASSERT(Header->Type != NULL);
+            Type = Header->Type;
 
-            Status = Header->Type->TypeInfo.SecurityProcedure(
-                Object,
-                SetSecurityDescriptor,
-                SecurityInformation,
-                (PSECURITY_DESCRIPTOR)SecurityDescriptor,
-                NULL,
-                &Header->SecurityDescriptor,
-                Header->Type->TypeInfo.PoolType,
-                &Header->Type->TypeInfo.GenericMapping);
+            /* Call the security procedure's set function */
+            Status = Type->TypeInfo.SecurityProcedure(Object,
+                                                      SetSecurityDescriptor,
+                                                      SecurityInformation,
+                                                      SecurityDescriptor,
+                                                      NULL,
+                                                      &Header->
+                                                      SecurityDescriptor,
+                                                      Type->TypeInfo.PoolType,
+                                                      &Type->
+                                                      TypeInfo.GenericMapping);
 
+            /* Now we can dereference the object */
             ObDereferenceObject(Object);
         }
     }
 
-    /* release the descriptor */
-    SeReleaseSecurityDescriptor((PSECURITY_DESCRIPTOR)CapturedSecurityDescriptor,
+    /* Release the descriptor and return status */
+    SeReleaseSecurityDescriptor((PSECURITY_DESCRIPTOR)CapturedDescriptor,
                                 PreviousMode,
                                 TRUE);
-
     return Status;
-}
-
-/*++
-* @name ObLogSecurityDescriptor
-* @unimplemented NT5.2
-*
-*     The ObLogSecurityDescriptor routine <FILLMEIN>
-*
-* @param InputSecurityDescriptor
-*        <FILLMEIN>
-*
-* @param OutputSecurityDescriptor
-*        <FILLMEIN>
-*
-* @param RefBias
-*        <FILLMEIN>
-*
-* @return STATUS_SUCCESS or appropriate error value.
-*
-* @remarks None.
-*
-*--*/
-NTSTATUS
-NTAPI
-ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
-                        OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
-                        IN ULONG RefBias)
-{
-    /* HACK: Return the same descriptor back */
-    PISECURITY_DESCRIPTOR SdCopy;
-    DPRINT1("ObLogSecurityDescriptor is not implemented!\n",
-            InputSecurityDescriptor);
-
-    SdCopy = ExAllocatePool(PagedPool, sizeof(*SdCopy));
-    RtlMoveMemory(SdCopy, InputSecurityDescriptor, sizeof(*SdCopy));
-    *OutputSecurityDescriptor = SdCopy;
-    return STATUS_SUCCESS;
-}
-
-/*++
-* @name ObDereferenceSecurityDescriptor
-* @unimplemented NT5.2
-*
-*     The ObDereferenceSecurityDescriptor routine <FILLMEIN>
-*
-* @param SecurityDescriptor
-*        <FILLMEIN>
-*
-* @param Count
-*        <FILLMEIN>
-*
-* @return STATUS_SUCCESS or appropriate error value.
-*
-* @remarks None.
-*
-*--*/
-VOID
-NTAPI
-ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                                IN ULONG Count)
-{
-    DPRINT1("ObDereferenceSecurityDescriptor is not implemented!\n");
 }
 
 /*++
@@ -543,6 +486,68 @@ ObQueryObjectAuditingByHandle(IN HANDLE Handle,
     /* Leave the critical region and return the status */
     KeLeaveCriticalRegion();
     return Status;
+}
+
+/*++
+* @name ObLogSecurityDescriptor
+* @unimplemented NT5.2
+*
+*     The ObLogSecurityDescriptor routine <FILLMEIN>
+*
+* @param InputSecurityDescriptor
+*        <FILLMEIN>
+*
+* @param OutputSecurityDescriptor
+*        <FILLMEIN>
+*
+* @param RefBias
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+NTAPI
+ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
+                        OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
+                        IN ULONG RefBias)
+{
+    /* HACK: Return the same descriptor back */
+    PISECURITY_DESCRIPTOR SdCopy;
+    DPRINT1("ObLogSecurityDescriptor is not implemented!\n",
+            InputSecurityDescriptor);
+
+    SdCopy = ExAllocatePool(PagedPool, sizeof(*SdCopy));
+    RtlMoveMemory(SdCopy, InputSecurityDescriptor, sizeof(*SdCopy));
+    *OutputSecurityDescriptor = SdCopy;
+    return STATUS_SUCCESS;
+}
+
+/*++
+* @name ObDereferenceSecurityDescriptor
+* @unimplemented NT5.2
+*
+*     The ObDereferenceSecurityDescriptor routine <FILLMEIN>
+*
+* @param SecurityDescriptor
+*        <FILLMEIN>
+*
+* @param Count
+*        <FILLMEIN>
+*
+* @return STATUS_SUCCESS or appropriate error value.
+*
+* @remarks None.
+*
+*--*/
+VOID
+NTAPI
+ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                IN ULONG Count)
+{
+    DPRINT1("ObDereferenceSecurityDescriptor is not implemented!\n");
 }
 
 /* EOF */

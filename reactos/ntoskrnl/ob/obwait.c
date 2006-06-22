@@ -1,10 +1,10 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ob/wait.c
+ * FILE:            ntoskrnl/ob/obwait.c
  * PURPOSE:         Handles Waiting on Objects
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  David Welch (welch@mcmail.com)
+ *                  Thomas Weidenmueller (w3seek@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -65,7 +65,6 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     ACCESS_MASK GrantedAccess;
     PVOID DefaultObject;
     NTSTATUS Status = STATUS_SUCCESS;
-
     DPRINT("NtWaitForMultipleObjects(ObjectCount %lu HandleArray[] %x,"
            " Alertable %d, TimeOut %x)\n",
            ObjectCount, HandleArray, Alertable, TimeOut);
@@ -78,7 +77,6 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     if ((ObjectCount > MAXIMUM_WAIT_OBJECTS) || !ObjectCount)
     {
         Status = STATUS_INVALID_PARAMETER_1;
-        DPRINT1("No object count, or too many objects\n");
         goto Quickie;
     }
 
@@ -86,20 +84,20 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     if ((WaitType != WaitAll) && (WaitType != WaitAny))
     {
         Status = STATUS_INVALID_PARAMETER_3;
-        DPRINT1("Invalid wait type\n");
         goto Quickie;
     }
 
-    /* Capture arguments */
+    /* Enter SEH */
     _SEH_TRY
     {
+        /* Check if the call came from user mode */
         if(PreviousMode != KernelMode)
         {
+            /* Probe all the handles */
             ProbeForRead(HandleArray,
                          ObjectCount * sizeof(HANDLE),
                          sizeof(HANDLE));
-            
-            if(TimeOut)
+            if (TimeOut)
             {
                 /* Make a local copy of the timeout on the stack */
                 SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
@@ -118,18 +116,21 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     }
     _SEH_HANDLE
     {
+        /* Get exception code */
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
 
-    if(!NT_SUCCESS(Status)) goto Quickie;
+    /* Fail if we raised an exception */
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Check if we can use the internal Wait Array */
     if (ObjectCount > THREAD_WAIT_OBJECTS)
     {
         /* Allocate from Pool */
         WaitBlockArray = ExAllocatePoolWithTag(NonPagedPool,
-                                               ObjectCount * sizeof(KWAIT_BLOCK),
+                                               ObjectCount *
+                                               sizeof(KWAIT_BLOCK),
                                                TAG_WAIT);
     }
 
@@ -137,7 +138,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     do
     {
         /* Use the right Executive Handle */
-        if(ObIsKernelHandle(Handles[i], PreviousMode))
+        if (ObIsKernelHandle(Handles[i], PreviousMode))
         {
             /* Use the System Handle Table and decode */
             HandleTable = ObpKernelHandleTable;
@@ -164,7 +165,6 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
             /* Unlock the entry and fail */
             ExUnlockHandleTableEntry(HandleTable, HandleEntry);
             Status = STATUS_ACCESS_DENIED;
-            DPRINT1("Handle doesn't have SYNCH access\n");
             goto Quickie;
         }
 
@@ -218,7 +218,6 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                 {
                     /* Fail */
                     Status = STATUS_INVALID_PARAMETER_MIX;
-                    DPRINT1("Objects duplicated with WaitAll\n");
                     goto Quickie;
                 }
             }
@@ -247,6 +246,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     }
     _SEH_HANDLE
     {
+        /* Get the exception code */
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
@@ -255,9 +255,13 @@ Quickie:
     /* First derefence */
     while (ReferencedObjects)
     {
+        /* Decrease the number of objects */
         ReferencedObjects--;
+
+        /* Check if we had a valid object in this position */
         if (Objects[ReferencedObjects])
         {
+            /* Dereference it */
             ObDereferenceObject(Objects[ReferencedObjects]);
         }
     }
@@ -269,7 +273,6 @@ Quickie:
     if (LockInUse) KeLeaveCriticalRegion();
 
     /* Return status */
-    DPRINT("Returning: %x\n", Status);
     return Status;
 }
 
@@ -303,12 +306,11 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     LARGE_INTEGER SafeTimeOut;
     NTSTATUS Status = STATUS_SUCCESS;
-
     DPRINT("NtWaitForSingleObject(ObjectHandle %x, Alertable %d, TimeOut %x)\n",
             ObjectHandle,Alertable,TimeOut);
 
-    /* Capture timeout */
-    if(TimeOut && PreviousMode != KernelMode)
+    /* Check if we came with a timeout from user mode */
+    if (TimeOut && PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
@@ -318,11 +320,13 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status)) return Status;
+        /* Fail if we got an access violation */
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get the Object */
@@ -345,9 +349,10 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
                                      (ULONG_PTR)WaitableObject);
         }
 
-        /* Now wait. Also SEH this since it can also raise an exception */
+        /* SEH this since it can also raise an exception */
         _SEH_TRY
         {
+            /* Ask the kernel to do the wait */
             Status = KeWaitForSingleObject(WaitableObject,
                                            UserRequest,
                                            PreviousMode,
@@ -356,6 +361,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
@@ -407,9 +413,8 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     OBJECT_HANDLE_INFORMATION HandleInfo;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Capture timeout */
-    DPRINT("NtSignalAndWaitForSingleObject\n");
-    if(TimeOut && PreviousMode != KernelMode)
+    /* Check if we came with a timeout from user mode */
+    if (TimeOut && PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
@@ -419,11 +424,13 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status)) return Status;
+        /* Fail if we got an access violation */
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Start by getting the signal object*/
@@ -433,10 +440,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
                                        PreviousMode,
                                        &SignalObj,
                                        &HandleInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Now get the wait object */
     Status = ObReferenceObjectByHandle(WaitableObjectHandle,
@@ -447,6 +451,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        /* Failed to reference the wait object */
         ObDereferenceObject(SignalObj);
         return Status;
     }
@@ -461,67 +466,88 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
         WaitableObject = (PVOID)((ULONG_PTR)WaitObj +
                                  (ULONG_PTR)WaitableObject);
     }
-    
+
     /* Check Signal Object Type */
     Type = OBJECT_TO_OBJECT_HEADER(WaitObj)->Type;
     if (Type == ExEventObjectType)
     {
+        /* Check if we came from user-mode without the right access */
+        if ((PreviousMode != KernelMode) &&
+            !(HandleInfo.GrantedAccess & EVENT_MODIFY_STATE))
+        {
+            /* Fail: lack of rights */
+            goto Quickie;
+        }
+
         /* Set the Event */
-        /* FIXME: Check permissions */
         KeSetEvent(SignalObj, EVENT_INCREMENT, TRUE);
     }
     else if (Type == ExMutantObjectType)
     {
-        /* Release the Mutant. This can raise an exception*/
+        /* This can raise an exception */
         _SEH_TRY
         {
+            /* Release the mutant */
             KeReleaseMutant(SignalObj, MUTANT_INCREMENT, FALSE, TRUE);
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
-            goto Quickie;
         }
         _SEH_END;
     }
     else if (Type == ExSemaphoreObjectType)
     {
-        /* Release the Semaphore. This can raise an exception*/
-        /* FIXME: Check permissions */
+        /* Check if we came from user-mode without the right access */
+        if ((PreviousMode != KernelMode) &&
+            !(HandleInfo.GrantedAccess & SEMAPHORE_MODIFY_STATE))
+        {
+            /* Fail: lack of rights */
+            goto Quickie;
+        }
+
+        /* This can raise an exception*/
         _SEH_TRY
         {
+            /* Release the semaphore */
             KeReleaseSemaphore(SignalObj, SEMAPHORE_INCREMENT, 1, TRUE);
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
-            goto Quickie;
         }
         _SEH_END;
     }
     else
     {
+        /* This isn't a valid object to be waiting on */
         Status = STATUS_OBJECT_TYPE_MISMATCH;
-        DPRINT1("Waiting on invalid object type\n");
-        goto Quickie;
     }
 
-    /* Now wait. Also SEH this since it can also raise an exception */
-    _SEH_TRY
+    /* Make sure we didn't fail */
+    if (NT_SUCCESS(Status))
     {
-        Status = KeWaitForSingleObject(WaitableObject,
-                                       UserRequest,
-                                       PreviousMode,
-                                       Alertable,
-                                       TimeOut);
+        /* SEH this since it can also raise an exception */
+        _SEH_TRY
+        {
+            /* Perform the wait now */
+            Status = KeWaitForSingleObject(WaitableObject,
+                                           UserRequest,
+                                           PreviousMode,
+                                           Alertable,
+                                           TimeOut);
+        }
+        _SEH_HANDLE
+        {
+            /* Get the exception code */
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
     }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
 
-    /* We're done here */
+    /* We're done here, dereference both objects */
 Quickie:
     ObDereferenceObject(SignalObj);
     ObDereferenceObject(WaitObj);
