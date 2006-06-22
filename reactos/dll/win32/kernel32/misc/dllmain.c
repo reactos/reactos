@@ -56,6 +56,8 @@ DuplicateConsoleHandle(HANDLE hConsole,
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
 
+SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -379,6 +381,17 @@ DllMain(HANDLE hDll,
         if (!BasepInitConsole())
         {
             DPRINT1("Failure to set up console\n");
+            return FALSE;
+        }
+
+        /* Cache static system information */
+        Status = ZwQuerySystemInformation(SystemBasicInformation,
+                                          &BaseCachedSysInfo,
+                                          sizeof(BaseCachedSysInfo),
+                                          NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failure to get system information\n");
             return FALSE;
         }
 
