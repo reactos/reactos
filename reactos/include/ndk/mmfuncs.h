@@ -232,8 +232,8 @@ NtWriteVirtualMemory(
     IN HANDLE ProcessHandle,
     IN PVOID  BaseAddress,
     IN PVOID Buffer,
-    IN ULONG NumberOfBytesToWrite,
-    OUT PULONG NumberOfBytesWritten
+    IN SIZE_T NumberOfBytesToWrite,
+    OUT PSIZE_T NumberOfBytesWritten
 );
 
 NTSYSAPI

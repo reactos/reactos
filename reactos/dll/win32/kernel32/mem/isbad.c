@@ -1,259 +1,246 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+/*
+ * PROJECT:         ReactOS Win32 Base API
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/kernel32/mem/isbad.c
- * PURPOSE:         
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *                  Ge van Geldorp
- *                  Filip Navara
- * UPDATE HISTORY:
- *                  Created 03/10/99
+ * PURPOSE:         Handles probing of memory addresses
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Thomas Weidenmueller (w3seek@reactos.org)
  */
+
+/* INCLUDES ******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include "debug.h"
 
-/* FIXME: Stubs. What is it for? */
-/*
- * @implemented
- */
-UINT
-wcsnlen (
-	LPCWSTR	lpsz,
-	UINT	ucchMax
-	)
-{
-  UINT i = 0;
-  while( i < ucchMax && lpsz[i] ) i++;
-  return i;
-}
+extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
 
-
-/* FIXME: Stubs. What is it for? */
-/*
- * @implemented
- */
-UINT
-strnlen (
-	LPCSTR	lpsz,
-	UINT	uiMax
-	)
-{
-  UINT i = 0;
-  while( i < uiMax && lpsz[i] ) i++;
-  return i;
-}
-
-/* --- --- --- */
+/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
 BOOL
 STDCALL
-IsBadReadPtr (
-	CONST VOID	* lp,
-	UINT		ucb
-	)
+IsBadReadPtr(IN LPCVOID lp,
+             IN UINT_PTR ucb)
 {
-	MEMORY_BASIC_INFORMATION MemoryInformation;
+    ULONG PageSize;
+    BOOLEAN Result = FALSE;
+    volatile CHAR *Current;
+    PCHAR Last;
 
-	if ( ucb == 0 )
-	{
-		return TRUE;
-	}
+    /* Quick cases */
+    if (!ucb) return FALSE;
+    if (!lp) return TRUE;
 
-	VirtualQuery (
-		lp,
-		& MemoryInformation,
-		sizeof (MEMORY_BASIC_INFORMATION)
-		);
+    /* Get the page size */
+    PageSize = BaseCachedSysInfo.PageSize;
 
-	if ( MemoryInformation.State != MEM_COMMIT )
-	{
-		return TRUE;
-	}
+    /* Calculate the last page */
+    Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);
 
-	if ( MemoryInformation.RegionSize < ucb )
-	{
-		return TRUE;
-	}
+    /* Another quick failure case */
+    if ((ULONG_PTR)Last < (ULONG_PTR)lp) return TRUE;
 
-	if ( MemoryInformation.Protect == PAGE_EXECUTE )
-	{
-		return TRUE;
-	}
+    /* Enter SEH */
+    _SEH_TRY
+    {
+        /* Probe the entire range */
+        Current = (volatile CHAR*)lp;
+        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            *Current;
+            Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
+        } while (Current <= Last);
+    }
+    _SEH_HANDLE
+    {
+        /* We hit an exception, so return true */
+        Result = TRUE;
+    }
+    _SEH_END
 
-	if ( MemoryInformation.Protect == PAGE_NOACCESS )
-	{
-		return TRUE;
-	}
-
-	return FALSE;
-
+    /* Return exception status */
+    return Result;
 }
-
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-IsBadHugeReadPtr (
-	CONST VOID	* lp,
-	UINT		ucb
-	)
+NTAPI
+IsBadHugeReadPtr(LPCVOID lp,
+                 UINT_PTR ucb)
 {
-	return IsBadReadPtr (lp, ucb);
+    /* Implementation is the same on 32-bit */
+    return IsBadReadPtr(lp, ucb);
 }
-
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-IsBadCodePtr (
-	FARPROC	lpfn
-	)
+NTAPI
+IsBadCodePtr(FARPROC lpfn)
 {
-	MEMORY_BASIC_INFORMATION MemoryInformation;
-
-
-	VirtualQuery (
-		lpfn,
-		& MemoryInformation,
-		sizeof (MEMORY_BASIC_INFORMATION)
-		);
-
-	if ( MemoryInformation.State != MEM_COMMIT )
-	{
-		return TRUE;
-	}
-
-	if (	(MemoryInformation.Protect == PAGE_EXECUTE)
-		|| (MemoryInformation.Protect == PAGE_EXECUTE_READ)
-		)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
+    /* Executing has the same privileges as reading */
+    return IsBadReadPtr((LPVOID)lpfn, 1);
 }
-
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-IsBadWritePtr (
-	LPVOID	lp,
-	UINT	ucb
-	)
+NTAPI
+IsBadWritePtr(LPVOID lp,
+              UINT_PTR ucb)
 {
-	MEMORY_BASIC_INFORMATION MemoryInformation;
+    ULONG PageSize;
+    BOOLEAN Result = FALSE;
+    volatile CHAR *Current;
+    PCHAR Last;
 
-	if ( ucb == 0 )
-	{
-		return TRUE;
-	}
+    /* Quick cases */
+    if (!ucb) return FALSE;
+    if (!lp) return TRUE;
 
-	VirtualQuery (
-		lp,
-		& MemoryInformation,
-		sizeof (MEMORY_BASIC_INFORMATION)
-		);
+    /* Get the page size */
+    PageSize = BaseCachedSysInfo.PageSize;
 
-	if ( MemoryInformation.State != MEM_COMMIT )
-	{
-		return TRUE;
-	}
+    /* Calculate the last page */
+    Last = (PCHAR)((ULONG_PTR)lp + ucb - 1);
 
-	if ( MemoryInformation.RegionSize < ucb )
-	{
-		return TRUE;
-	}
+    /* Another quick failure case */
+    if ((ULONG_PTR)Last < (ULONG_PTR)lp) return TRUE;
 
+    /* Enter SEH */
+    _SEH_TRY
+    {
+        /* Probe the entire range */
+        Current = (volatile CHAR*)lp;
+        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            *Current = *Current;
+            Current = (volatile CHAR*)(PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
+        } while (Current <= Last);
+    }
+    _SEH_HANDLE
+    {
+        /* We hit an exception, so return true */
+        Result = TRUE;
+    }
+    _SEH_END
 
-	if ( MemoryInformation.Protect == PAGE_READONLY)
-	{
-		return TRUE;
-	}
-
-	if (	(MemoryInformation.Protect == PAGE_EXECUTE)
-		|| (MemoryInformation.Protect == PAGE_EXECUTE_READ)
-		)
-	{
-		return TRUE;
-	}
-
-	if ( MemoryInformation.Protect == PAGE_NOACCESS )
-	{
-		return TRUE;
-	}
-
-	return FALSE;
+    /* Return exception status */
+    return Result;
 }
-
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-IsBadHugeWritePtr (
-	LPVOID	lp,
-	UINT	ucb
-	)
+NTAPI
+IsBadHugeWritePtr(LPVOID lp,
+                  UINT_PTR ucb)
 {
-	return IsBadWritePtr (lp, ucb);
+    /* Implementation is the same on 32-bit */
+    return IsBadWritePtr(lp, ucb);
 }
-
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-IsBadStringPtrW (
-	LPCWSTR	lpsz,
-	UINT	ucchMax
-	)
+NTAPI
+IsBadStringPtrW(IN LPCWSTR lpsz,
+                UINT_PTR ucchMax)
 {
-	UINT Len = wcsnlen (
-			lpsz + 1,
-			ucchMax >> 1
-			);
-	return IsBadReadPtr (
-			lpsz,
-			Len << 1
-			);
-}
+    BOOLEAN Result = FALSE;
+    volatile WCHAR *Current;
+    PWCHAR Last;
+    WCHAR Char;
 
+    /* Quick cases */
+    if (!ucchMax) return FALSE;
+    if (!lpsz) return TRUE;
+
+    /* Calculate the last page */
+    Last = (PWCHAR)((ULONG_PTR)lpsz + (ucchMax * 2) - 2);
+
+    /* Another quick failure case */
+    if ((ULONG_PTR)Last < (ULONG_PTR)lpsz) return TRUE;
+
+    /* Enter SEH */
+    _SEH_TRY
+    {
+        /* Probe the entire range */
+        Current = (volatile WCHAR*)lpsz;
+        Last = (PWCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            Char = *Current;
+            Current++;
+        } while (Char && (Current <= Last));
+    }
+    _SEH_HANDLE
+    {
+        /* We hit an exception, so return true */
+        Result = TRUE;
+    }
+    _SEH_END
+
+    /* Return exception status */
+    return Result;
+}
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-IsBadStringPtrA (
-	LPCSTR	lpsz,
-	UINT	ucchMax
-	)
+NTAPI
+IsBadStringPtrA(IN LPCSTR lpsz,
+                UINT_PTR ucchMax)
 {
-	UINT Len = strnlen (
-			lpsz + 1,
-			ucchMax
-			);
-	return IsBadReadPtr (
-			lpsz,
-			Len
-			);
-}
+    BOOLEAN Result = FALSE;
+    volatile CHAR *Current;
+    PCHAR Last;
+    CHAR Char;
 
+    /* Quick cases */
+    if (!ucchMax) return FALSE;
+    if (!lpsz) return TRUE;
+
+    /* Calculate the last page */
+    Last = (PCHAR)((ULONG_PTR)lpsz + ucchMax - 1);
+
+    /* Another quick failure case */
+    if ((ULONG_PTR)Last < (ULONG_PTR)lpsz) return TRUE;
+
+    /* Enter SEH */
+    _SEH_TRY
+    {
+        /* Probe the entire range */
+        Current = (volatile CHAR*)lpsz;
+        Last = (PCHAR)(PAGE_ROUND_DOWN(Last));
+        do
+        {
+            Char = *Current;
+            Current++;
+        } while (Char && (Current <= Last));
+    }
+    _SEH_HANDLE
+    {
+        /* We hit an exception, so return true */
+        Result = TRUE;
+    }
+    _SEH_END
+
+    /* Return exception status */
+    return Result;
+}
 
 /* EOF */
