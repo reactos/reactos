@@ -288,7 +288,7 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
                     if (vSid != NULL && V_VT(vSid) == (VT_ARRAY | VT_UI1))
                     {
                         hRet = SafeArrayAccessData(V_ARRAY(vSid),
-                                                   (void HUGEP**)&pSid);
+                                                   (void **)&pSid);
                         if (FAILED(hRet))
                         {
                             break;
