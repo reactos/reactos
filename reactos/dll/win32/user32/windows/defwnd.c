@@ -196,12 +196,25 @@ UserGetInsideRectNC(HWND hWnd, RECT *rect)
 VOID
 DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 {
-  if ((BOOL) wParam && 0 == (GetWindowLong(hWnd, GWL_STYLE) & WS_VISIBLE))
+    LONG Style = GetWindowLong(hWnd, GWL_STYLE);
+    /* Content can be redrawn after a change. */
+    if (wParam)
     {
-      ShowWindow(hWnd, SW_NORMAL);
+       if (!(Style & WS_VISIBLE)) /* Not Visible */
+       {
+          SetWindowLong(hWnd, GWL_STYLE, WS_VISIBLE);
+       }
     }
-
-  UNIMPLEMENTED;
+    else /* Content cannot be redrawn after a change. */
+    { 
+       if (Style & WS_VISIBLE) /* Visible */
+       {
+            RedrawWindow( hWnd, NULL, 0, RDW_ALLCHILDREN | RDW_VALIDATE );
+            Style &= ~WS_VISIBLE;
+            SetWindowLong(hWnd, GWL_STYLE, Style); /* clear bits */
+       }
+    }
+    return;
 }
 
 
