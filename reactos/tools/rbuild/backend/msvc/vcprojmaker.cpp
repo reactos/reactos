@@ -75,7 +75,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	vector<string> imports;
 	string module_type = GetExtension(module.GetTargetName());
-	bool lib = (module.type == ObjectLibrary) || (module_type == ".lib") || (module_type == ".a");
+	bool lib = (module.type == ObjectLibrary) || (module.type == RpcClient) ||(module.type == RpcServer) || (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe") || (module_type == ".scr");
 	bool sys = (module_type == ".sys");
@@ -532,9 +532,23 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					fprintf ( OUT, "\t\t\t\t\t<Tool\r\n" );
 					if (source_file.find(".idl") != string::npos)
 					{
-						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCMIDLTool\"\r\n" );
-						fprintf ( OUT, "\t\t\t\t\t\tHeaderFileName=\"$(InputName).h\"\r\n" );
-						fprintf ( OUT, "\t\t\t\t\t\tOutputDirectory=\"$(IntDir)\"/>\r\n" );
+						string src = source_file.substr (0, source_file.find(".idl"));
+
+						if ( src.find (".\\") != string::npos )
+							src.erase (0, 2);
+
+						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
+
+						if ( module.type == RpcClient )
+							fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"midl.exe /cstub %s.c /header %s.h &quot;$(InputPath)&quot; /out &quot;$(IntDir)&quot;", src.c_str (), src.c_str () );
+						else
+							fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"midl.exe /sstub %s.c /header %s.h &quot;$(InputPath)&quot; /out &quot;$(IntDir)&quot;", src.c_str (), src.c_str () );
+
+						fprintf ( OUT, "&#x0D;&#x0A;");
+						fprintf ( OUT, "cl.exe /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_WIN32_WINNT=0x502&quot; /D &quot;_UNICODE&quot; /D &quot;UNICODE&quot; /Gm /EHsc /RTC1 /MDd /Fo&quot;$(IntDir)\\%s.obj&quot; /W3 /c /Wp64 /ZI /TC &quot;$(IntDir)\\%s.c&quot; /nologo /errorReport:prompt", src.c_str (), src.c_str () ); 
+						fprintf ( OUT, "&#x0D;&#x0A;");
+						fprintf ( OUT, "lib.exe /OUT:&quot;$(OutDir)\\%s.lib&quot; &quot;$(IntDir)\\%s.obj&quot;&#x0D;&#x0A;\"\r\n", module.name.c_str (), src.c_str () );
+						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(IntDir)\\$(InputName).obj\"/>\r\n" );
 					}
 					else if ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's'))
 					{
