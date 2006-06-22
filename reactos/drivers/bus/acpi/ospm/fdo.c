@@ -361,6 +361,77 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
 }
 
 
+static BOOLEAN
+AcpiCheckIfIsSerialDebugPort(
+  IN PACPI_DEVICE Device)
+{
+  ACPI_STATUS AcpiStatus;
+  BM_NODE *Node;
+  ACPI_BUFFER Buffer;
+  BOOLEAN Done;
+  RESOURCE* resource;
+
+  if (!KdComPortInUse)
+    return FALSE;
+
+  AcpiStatus = bm_get_node(Device->BmHandle, 0, &Node);
+  if (!ACPI_SUCCESS(AcpiStatus))
+    return FALSE;
+
+  /* Get current resources */
+  Buffer.length = 0;
+  AcpiStatus = acpi_get_current_resources(Node->device.acpi_handle, &Buffer);
+  if ((AcpiStatus & ACPI_OK) == 0)
+    return FALSE;
+  if (Buffer.length == 0)
+    return FALSE;
+
+  Buffer.pointer = ExAllocatePool(PagedPool, Buffer.length);
+  if (!Buffer.pointer)
+    return FALSE;
+  AcpiStatus = acpi_get_current_resources(Node->device.acpi_handle, &Buffer);
+  if (!ACPI_SUCCESS(AcpiStatus))
+  {
+    ExFreePool(Buffer.pointer);
+    return FALSE;
+  }
+
+  /* Loop through the list of resources to see if the
+   * device is using the serial port address
+   */
+  Done = FALSE;
+  resource = (RESOURCE*)Buffer.pointer;
+  while (!Done)
+  {
+    switch (resource->id)
+    {
+      case io:
+      {
+        IO_RESOURCE *io_data = (IO_RESOURCE*) &resource->data;
+        if (*KdComPortInUse == ULongToPtr(io_data->min_base_address))
+        {
+          ExFreePool(Buffer.pointer);
+          return TRUE;
+        }
+        break;
+      }
+      case end_tag:
+      {
+        Done = TRUE;
+        break;
+      }
+      default:
+      {
+        break;
+      }
+    }
+    resource = (RESOURCE *) ((NATIVE_UINT) resource + (NATIVE_UINT) resource->length);
+  }
+
+  ExFreePool(Buffer.pointer);
+  return FALSE;
+}
+
 static NTSTATUS
 FdoQueryBusRelations(
   IN PDEVICE_OBJECT DeviceObject,
@@ -396,6 +467,15 @@ FdoQueryBusRelations(
   {
     ACPI_BUFFER Buffer;
     Device = CONTAINING_RECORD(CurrentEntry, ACPI_DEVICE, DeviceListEntry);
+
+    if (AcpiCheckIfIsSerialDebugPort(Device))
+    {
+      /* Skip this device */
+      DPRINT("Found debug serial port ; skipping it\n");
+      Relations->Count--;
+      CurrentEntry = CurrentEntry->Flink;
+      continue;
+    }
 
     /* FIXME: For ACPI namespace devices on the motherboard create filter DOs
        and attach them just above the ACPI bus device object (PDO) */
