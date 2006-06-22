@@ -1154,9 +1154,14 @@ AccRewriteGetExplicitEntriesFromAcl(PACL pacl,
         }
         else
         {
-            *pcCountOfExplicitEntries = 0;
-            *pListOfExplicitEntries = NULL;
+            goto EmptyACL;
         }
+    }
+    else
+    {
+EmptyACL:
+        *pcCountOfExplicitEntries = 0;
+        *pListOfExplicitEntries = NULL;
     }
 
     /* restore the last error code */
