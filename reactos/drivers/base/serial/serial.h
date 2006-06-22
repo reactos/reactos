@@ -8,6 +8,7 @@
  */
 
 #include <ntddk.h>
+#include <ndk/haltypes.h>
 #include <ntddser.h>
 #include <stdio.h>
 

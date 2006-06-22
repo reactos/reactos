@@ -193,6 +193,13 @@ SerialPnpStartDevice(
 		return STATUS_INSUFFICIENT_RESOURCES;
 	ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
 
+	/* Test if we are trying to start the serial port used for debugging */
+	if (KdComPortInUse && *KdComPortInUse == ULongToPtr(DeviceExtension->BaseAddress))
+	{
+		DPRINT("Failing IRP_MN_START_DEVICE as this serial port is used for debugging\n");
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
 	if (DeviceExtension->UartType == UartUnknown)
 		DeviceExtension->UartType = SerialDetectUartType(ComPortBase);
 
@@ -329,7 +336,6 @@ SerialPnp(
 		*/
 		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
-			BOOLEAN ConflictDetected;
 			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 
 			ASSERT(((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState == dsStopped);
@@ -343,20 +349,6 @@ SerialPnp(
 					((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ComPort);
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 				break;
-			}
-			/* FIXME: HACK: verify that we don't have resource conflict,
-			 * because PnP manager doesn't do it automatically
-			 */
-			Status = IoReportResourceForDetection(
-				DeviceObject->DriverObject, Stack->Parameters.StartDevice.AllocatedResources, 0,
-				NULL, NULL, 0,
-				&ConflictDetected);
-			if (!NT_SUCCESS(Status))
-			{
-				Irp->IoStatus.Information = 0;
-				Irp->IoStatus.Status = Status;
-				IoCompleteRequest(Irp, IO_NO_INCREMENT);
-				return Status;
 			}
 
 			/* Call lower driver */
