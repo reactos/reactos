@@ -1,3 +1,12 @@
+/*
+ * PROJECT:     ReactOS Timedate Control Panel
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/cpl/timedate/clock.c
+ * PURPOSE:     Draws the analog clock
+ * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
+ *
+ */
+
 /* Code based on clock.c from Programming Windows, Charles Petzold */
 
 #include <timedate.h>
@@ -129,27 +138,34 @@ ClockWndProc(HWND hwnd,
     switch (uMsg)
     {
         case WM_CREATE:
+        {
             hGreyPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
             hGreyBrush = CreateSolidBrush(RGB(128, 128, 128));
             SetTimer(hwnd, ID_TIMER, 1000, NULL);
             GetLocalTime(&st);
             stPrevious = st;
+        }
         break;
 
         case WM_SIZE:
+        {
             cxClient = LOWORD(lParam);
             cyClient = HIWORD(lParam);
+        }
         break;
 
         case WM_TIMER:
+        {
             GetLocalTime(&st);
 
             InvalidateRect(hwnd, NULL, TRUE);
 
             stPrevious = st;
+        }
         break;
 
         case WM_PAINT:
+        {
             hdc = BeginPaint(hwnd, &ps);
 
             SetIsotropic(hdc, cxClient, cyClient);
@@ -158,12 +174,15 @@ ClockWndProc(HWND hwnd,
             DrawHands(hdc, &stPrevious, TRUE);
 
             EndPaint(hwnd, &ps);
+        }
         break;
 
         case WM_DESTROY:
+        {
             DeleteObject(hGreyPen);
             DeleteObject(hGreyBrush);
             KillTimer(hwnd, ID_TIMER);
+        }
         break;
 
         default:

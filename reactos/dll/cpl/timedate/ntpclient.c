@@ -1,11 +1,24 @@
+/*
+ * PROJECT:     ReactOS Timedate Control Panel
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        lib/cpl/timedate/ntpclient.c
+ * PURPOSE:     Queries the NTP server
+ * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
+ *
+ */
+
 #include <timedate.h>
+
+#define TIMEOUT 4000 /* 4 second timeout */
 
 SOCKET Sock;
 SOCKADDR_IN myAddr, ntpAddr;
 
-BOOL InitialiseConnection(CHAR *szIpAddr)
+BOOL
+InitialiseConnection(LPSTR lpAddress)
 {
     WSADATA wsaData;
+    HOSTENT *he;
     INT Ret;
 
     Ret = WSAStartup(MAKEWORD(2, 2),
@@ -13,43 +26,37 @@ BOOL InitialiseConnection(CHAR *szIpAddr)
     if (Ret != 0)
         return FALSE;
 
-    Sock = WSASocket(AF_INET,
-                     SOCK_DGRAM,
-                     IPPROTO_UDP,
-                     NULL,
-                     0,
-                     WSA_FLAG_OVERLAPPED);
-    if (Sock == INVALID_SOCKET )
+    Sock = socket(AF_INET,
+                  SOCK_DGRAM,
+                  0);
+    if (Sock == INVALID_SOCKET)
         return FALSE;
 
-    /* setup client socket */
-    ZeroMemory(&myAddr, sizeof(myAddr));
-    myAddr.sin_family = AF_INET;
-    myAddr.sin_port = htons(IPPORT_TIMESERVER);
-    myAddr.sin_addr.s_addr = inet_addr(szIpAddr);
-
-    Ret = bind(Sock,
-               (SOCKADDR *)&myAddr,
-               sizeof(SOCKADDR));
-    if (Ret == SOCKET_ERROR)
+    /* setup server info */
+    he = gethostbyname(lpAddress);
+    if (he != NULL)
+    {
+        /* setup server socket info */
+        ZeroMemory(&ntpAddr, sizeof(SOCKADDR_IN));
+        ntpAddr.sin_family = AF_INET; //he->h_addrtype;
+        ntpAddr.sin_port = htons(NTPPORT);
+        ntpAddr.sin_addr = *((struct in_addr *)he->h_addr);
+    }
+    else
         return FALSE;
-
-    /* setup server socket */
-    ZeroMemory(&ntpAddr, sizeof(ntpAddr));
-    ntpAddr.sin_family = AF_INET;
-    ntpAddr.sin_port = htons(IPPORT_TIMESERVER);
-    ntpAddr.sin_addr.s_addr = INADDR_ANY;
 
     return TRUE;
 }
 
-VOID DestroyConnection()
+VOID
+DestroyConnection()
 {
     WSACleanup();
 }
 
 /* send some data to wake the server up */
-BOOL SendData()
+BOOL
+SendData()
 {
     CHAR Packet[] = "";
     INT Ret;
@@ -58,7 +65,7 @@ BOOL SendData()
                  Packet,
                  sizeof(Packet),
                  0,
-                 (SOCKADDR *)&myAddr,
+                 (SOCKADDR *)&ntpAddr,
                  sizeof(SOCKADDR_IN));
 
     if (Ret == SOCKET_ERROR)
@@ -68,22 +75,36 @@ BOOL SendData()
 }
 
 
-ULONG RecieveData(ULONG ulTime)
+ULONG
+RecieveData(VOID)
 {
+    TIMEVAL timeVal;
+    FD_SET readFDS;
     INT Ret;
-    INT Size = sizeof(SOCKADDR_IN);
+    ULONG ulTime = 0;
 
-    Ret = recvfrom(Sock,
-                   (char *)&ulTime,
-                   4,
-                   0,
-                   (SOCKADDR *)&ntpAddr,
-                   &Size);
-    if (Ret != SOCKET_ERROR)
-        ulTime = ntohl(ulTime);
-    else
-        ulTime = 0;
+    /* monitor socket for incomming connections */
+    FD_ZERO(&readFDS);
+    FD_SET(Sock, &readFDS);
 
+    /* set timeout values */
+    timeVal.tv_sec  = TIMEOUT / 1000;
+    timeVal.tv_usec = TIMEOUT % 1000;
+
+    /* check for data on the socket for TIMEOUT millisecs*/
+    Ret = select(0, &readFDS, NULL, NULL, &timeVal);
+
+    if ((Ret != SOCKET_ERROR) && (Ret != 0))
+    {
+        Ret = recvfrom(Sock,
+                       (char *)&ulTime,
+                       4,
+                       0,
+                       NULL,
+                       NULL);
+        if (Ret != SOCKET_ERROR)
+            ulTime = ntohl(ulTime);
+    }
 
     return ulTime;
 }
