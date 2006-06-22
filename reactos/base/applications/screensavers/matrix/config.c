@@ -69,7 +69,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		prevheight = GetSystemMetrics(SM_CYSCREEN) / GLYPH_HEIGHT + 1;
 
 		//Add any saved messages to the combo box
-		for(index = 0; index <= g_nNumMessages; index++)
+		for(index = 0; index < g_nNumMessages; index++)
 		{
 			if(lstrlen(g_szMessages[index]) > 0)
 				SendDlgItemMessage(hwnd, IDC_COMBO1, CB_ADDSTRING, 0, (LPARAM)g_szMessages[index]);

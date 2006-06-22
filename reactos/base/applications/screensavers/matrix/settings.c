@@ -98,6 +98,7 @@ void LoadSettings()
 	{
 		/* built-in coded message for first run */
 		lstrcpyn(g_szMessages[0], _T("ReactOS"), MAXMSG_LENGTH);
+		++g_nNumMessages;
 	}
 
 	RegCloseKey(hkey);
