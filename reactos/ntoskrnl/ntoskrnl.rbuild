@@ -272,9 +272,9 @@
 			<file>oblife.c</file>
 			<file>obref.c</file>
 			<file>sdcache.c</file>
-			<file>security.c</file>
+			<file>obsecure.c</file>
 			<file>symlink.c</file>
-			<file>wait.c</file>
+			<file>obwait.c</file>
 	</directory>
 	<directory name="po">
 		<file>power.c</file>
