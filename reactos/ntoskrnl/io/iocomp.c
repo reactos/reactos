@@ -279,7 +279,7 @@ NtCreateIoCompletion(OUT PHANDLE IoCompletionHandle,
             _SEH_TRY {
 
                 *IoCompletionHandle = hIoCompletionHandle;
-            } _SEH_HANDLE {
+            } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
                 Status = _SEH_GetExceptionCode();
             } _SEH_END;
@@ -332,7 +332,7 @@ NtOpenIoCompletion(OUT PHANDLE IoCompletionHandle,
         _SEH_TRY {
 
             *IoCompletionHandle = hIoCompletionHandle;
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
         } _SEH_END;
@@ -393,7 +393,7 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
 
                 *ResultLength = sizeof(IO_COMPLETION_BASIC_INFORMATION);
             }
-        } _SEH_HANDLE {
+        } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
         } _SEH_END;
@@ -472,34 +472,40 @@ NtRemoveIoCompletion(IN  HANDLE IoCompletionHandle,
             /* Get the Packet Data */
             Packet = CONTAINING_RECORD(ListEntry, IO_COMPLETION_PACKET, ListEntry);
 
-            _SEH_TRY {
+            /* Check if this is piggybacked on an IRP */
+            if (Packet->PacketType == IrpCompletionPacket)
+            {
+                /* Get the IRP */
+                PIRP Irp = NULL;
+                Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.ListEntry);
+                
+                /* Return values to user */
+                _SEH_TRY {
 
-                /* Check if this is piggybacked on an IRP */
-                if (Packet->PacketType == IrpCompletionPacket)
-                {
-                    /* Get the IRP */
-                    PIRP Irp = NULL;
-                    Irp = CONTAINING_RECORD(ListEntry, IRP, Tail.Overlay.ListEntry);
-                    
-                    /* Return values to user */
                     *CompletionKey = Irp->Tail.CompletionKey;
                     *CompletionContext = Irp->Overlay.AsynchronousParameters.UserApcContext;
                     *IoStatusBlock = Packet->IoStatus;
-                    IoFreeIrp(Irp);
-                }
-                else
-                {
-                    /* This is a user-mode generated or API generated mini-packet */
+                } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
+
+                    Status = _SEH_GetExceptionCode();
+                } _SEH_END;
+
+                IoFreeIrp(Irp);
+            }
+            else
+            {
+                /* This is a user-mode generated or API generated mini-packet */
+                _SEH_TRY {
+
                     *CompletionKey = Packet->Key;
                     *CompletionContext = Packet->Context;
                     *IoStatusBlock = Packet->IoStatus;
-                    IopFreeIoCompletionPacket(Packet);
-                }
+                } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
+                    Status = _SEH_GetExceptionCode();
+                } _SEH_END;
 
-            } _SEH_HANDLE {
-
-                Status = _SEH_GetExceptionCode();
-            } _SEH_END;
+                IopFreeIoCompletionPacket(Packet);
+            }
         }
 
         /* Dereference the Object */
