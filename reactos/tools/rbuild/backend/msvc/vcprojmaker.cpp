@@ -516,8 +516,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					fprintf ( OUT, "\t\t\t\t\t<Tool\r\n" );
 					if (source_file.find(".idl") != string::npos)
 					{
-						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
-						fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n" );
+						fprintf ( OUT, "\t\t\t\t\t\tName=\"VCMIDLTool\"\r\n" );
+						fprintf ( OUT, "\t\t\t\t\t\tHeaderFileName=\"$(InputName).h\"\r\n" );
+						fprintf ( OUT, "\t\t\t\t\t\tOutputDirectory=\"$(IntDir)\"/>\r\n" );
 					}
 					else if ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's'))
 					{
