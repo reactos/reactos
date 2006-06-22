@@ -142,6 +142,8 @@ public:
 	std::string CheckDependenciesForModuleOnlyModule;
 	std::string VSProjectVersion;
 	std::string VSConfigurationType;
+	bool UseVSVersionInPath;
+	bool UseVSConfigurationInPath;
 	bool MakeHandlesInstallDirectories;
 	bool GenerateProxyMakefilesInSourceTree;
 	bool InstallFiles;

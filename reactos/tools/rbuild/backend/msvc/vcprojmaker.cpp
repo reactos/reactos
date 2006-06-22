@@ -85,7 +85,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	string outenv = Environment::GetOutputPath ();
 	string outdir;
 	string intdir;
-	
+	string vcdir;
+
+
 	if ( intenv == "obj-i386" )
 		intdir = path_basedir + "obj-i386"; /* append relative dir from project dir */
 	else
@@ -96,6 +98,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	else
 		outdir = outenv;
 
+	if ( configuration.UseVSVersionInPath )
+	{
+		vcdir = "\\" + _get_vc_dir();
+	}
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
 	bool console = exe && (module.type == Win32CUI);
@@ -220,8 +226,18 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t<Configuration\r\n" );
 		fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
-		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s\\%s\\%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), _get_vc_dir().c_str (), cfg.name.c_str() );
-		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s\\%s\\%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), _get_vc_dir().c_str (), cfg.name.c_str() );
+
+		if ( configuration.UseVSConfigurationInPath )
+		{
+			fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s%s\\%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), vcdir.c_str (), cfg.name.c_str() );
+			fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s%s\\%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), vcdir.c_str (), cfg.name.c_str() );
+		}
+		else
+		{
+			fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s%s\"\r\n", outdir.c_str (), module.GetBasePath ().c_str (), vcdir.c_str () );
+			fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s%s\"\r\n", intdir.c_str (), module.GetBasePath ().c_str (), vcdir.c_str () );
+		}
+
 		fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", exe ? 1 : dll ? 2 : lib ? 4 : -1 );
 		fprintf ( OUT, "\t\t\tCharacterSet=\"2\">\r\n" );
 

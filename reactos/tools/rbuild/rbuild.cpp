@@ -86,6 +86,8 @@ ParseVCProjectSwitch (
 	char switchChar2,
 	char* switchStart )
 {
+	string temp;
+
 	switch ( switchChar2 )
 	{
 		case 's':
@@ -111,6 +113,19 @@ ParseVCProjectSwitch (
 		case 'c':
 			configuration.VSConfigurationType = string (&switchStart[3]);
 			configuration.InstallFiles = true;
+			break;
+		case 'o':
+			if ( strlen ( switchStart ) <= 3 )
+			{
+				printf ( "Invalid switch\n" );
+				return false;
+			}
+			temp = string (&switchStart[3]);
+			if ( temp.find ("configuration") != string::npos )
+				configuration.UseVSConfigurationInPath = true;
+			
+			if ( temp.find ("version") != string::npos )
+				configuration.UseVSVersionInPath = true;
 			break;
 		default:
 			printf ( "Unknown switch -d%c\n",
@@ -238,6 +253,7 @@ main ( int argc, char** argv )
 		printf ( "  -ps           Generate proxy makefiles in source tree instead of the output.\n" );
 		printf ( "                tree.\n" );
 		printf ( "  -vs{version}  Version of MS VS project files. Default is %s.\n", MS_VS_DEF_VERSION );
+		printf ( "  -vo{version|configuration} Adds subdirectory path to the default Intermediate-Outputdirectory.\n" );
 		printf ( "\n" );
 		printf ( "  buildsystem   Target build system. Can be one of:\n" );
  
