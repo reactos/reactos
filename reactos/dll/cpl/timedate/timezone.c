@@ -279,7 +279,7 @@ SetLocalTimeZone(HWND hwnd)
     DWORD dwIndex;
     DWORD i;
 
-    dwIndex = SendMessage(hwnd,
+    dwIndex = (DWORD) SendMessage(hwnd,
                           CB_GETCURSEL,
                           0,
                           0);

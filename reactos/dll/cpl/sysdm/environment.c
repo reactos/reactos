@@ -326,7 +326,7 @@ OnNewVariable(HWND hwndDlg,
   if (!DialogBoxParam(hApplet,
                       MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
                       hwndDlg,
-                      EditVariableDlgProc,
+                      (DLGPROC) EditVariableDlgProc,
                      (LPARAM)VarData) > 0)
   {
     if (VarData->lpName != NULL)
@@ -378,7 +378,7 @@ OnEditVariable(HWND hwndDlg,
       if (DialogBoxParam(hApplet,
                          MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
                          hwndDlg,
-                         EditVariableDlgProc,
+                         (DLGPROC) EditVariableDlgProc,
                         (LPARAM)VarData) > 0)
       {
         ListView_SetItemText(hwndListView, iItem, 0, VarData->lpName);

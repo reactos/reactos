@@ -39,11 +39,11 @@ BOOL LaunchDeviceManager(HWND hWndParent)
   PDEVMGREXEC DevMgrExec;
   BOOL Ret;
 
-  if(!(hDll = LoadLibrary(_TEXT("devmgr.dll"))))
-  {
+  hDll = LoadLibrary(_TEXT("devmgr.dll"));
+  if(!hDll)
     return FALSE;
-  }
-  if(!(DevMgrExec = (PDEVMGREXEC)GetProcAddress(hDll, "DeviceManager_ExecuteW")))
+  DevMgrExec = (PDEVMGREXEC)GetProcAddress(hDll, "DeviceManager_ExecuteW");
+  if(!DevMgrExec)
   {
     FreeLibrary(hDll);
     return FALSE;
@@ -63,6 +63,7 @@ HardwarePageProc(
   LPARAM lParam
 )
 {
+  UNREFERENCED_PARAMETER(lParam)
   switch(uMsg)
   {
     case WM_INITDIALOG:

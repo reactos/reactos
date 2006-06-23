@@ -309,9 +309,9 @@ DateTimePageProc(HWND hwndDlg,
                     {
                         ChangeMonthCalDate(GetDlgItem(hwndDlg,
                                                       IDC_MONTHCALENDAR),
-                                                      -1,
+                                                      (WORD) -1,
                                                       GetCBSelectedMonth((HWND)lParam),
-                                                      -1);
+                                                      (WORD) -1);
                     }
                 }
                 break;
@@ -341,14 +341,14 @@ DateTimePageProc(HWND hwndDlg,
                         {
                             short wYear;
                             LPNMUPDOWN updown = (LPNMUPDOWN) lpnm;
-                            wYear = SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_GETPOS, 0, 0);
+                            wYear = (short) SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_GETPOS, 0, 0);
                             /* Enable the 'Apply' button */
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             ChangeMonthCalDate(GetDlgItem(hwndDlg,
                                                IDC_MONTHCALENDAR),
-                                               -1,
-                                               -1,
-                                               wYear + updown->iDelta);
+                                               (WORD) -1,
+                                               (WORD) -1,
+                                               (WORD) (wYear + updown->iDelta));
                         }
                         break;
                     }
