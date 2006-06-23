@@ -1985,7 +1985,7 @@ BOOL      WINAPI RtlEqualPrefixSid(PSID,PSID);
 BOOL      WINAPI RtlEqualSid(PSID,PSID);
 BOOLEAN   WINAPI RtlEqualString(const STRING*,const STRING*,BOOLEAN);
 BOOLEAN   WINAPI RtlEqualUnicodeString(const UNICODE_STRING*,const UNICODE_STRING*,BOOLEAN);
-void      WINAPI RtlExitUserThread(ULONG) DECLSPEC_NORETURN;
+//void      WINAPI RtlExitUserThread(ULONG) DECLSPEC_NORETURN;
 NTSTATUS  WINAPI RtlExpandEnvironmentStrings_U(PWSTR, const UNICODE_STRING*, UNICODE_STRING*, ULONG*);
 LONGLONG  WINAPI RtlExtendedMagicDivide(LONGLONG,LONGLONG,INT);
 LONGLONG  WINAPI RtlExtendedIntegerMultiply(LONGLONG,INT);
@@ -2227,7 +2227,7 @@ extern NTSTATUS wine_nt_to_unix_file_name( const UNICODE_STRING *nameW, ANSI_STR
 #define RtlZeroMemory(Destination,Length) memset((Destination),0,(Length))
 #endif
 
-inline static BOOLEAN RtlCheckBit(PCRTL_BITMAP lpBits, ULONG ulBit)
+static __inline BOOLEAN RtlCheckBit(PCRTL_BITMAP lpBits, ULONG ulBit)
 {
     if (lpBits && ulBit < lpBits->SizeOfBitMap &&
         lpBits->Buffer[ulBit >> 5] & (1 << (ulBit & 31)))
@@ -2236,11 +2236,11 @@ inline static BOOLEAN RtlCheckBit(PCRTL_BITMAP lpBits, ULONG ulBit)
 }
 
 /* These are implemented as __fastcall, so we can't let Winelib apps link with them */
-inline static USHORT RtlUshortByteSwap(USHORT s)
+static __inline USHORT RtlUshortByteSwap(USHORT s)
 {
     return (s >> 8) | (s << 8);
 }
-inline static ULONG RtlUlongByteSwap(ULONG i)
+static __inline ULONG RtlUlongByteSwap(ULONG i)
 {
 #if defined(__i386__) && defined(__GNUC__)
     ULONG ret;
@@ -2322,7 +2322,7 @@ NTSTATUS WINAPI LdrUnlockLoaderLock(ULONG,ULONG);
 #define InsertTailList(le,e)    do { PLIST_ENTRY b = (le)->Blink; (e)->Flink = (le); (e)->Blink = b; b->Flink = (e); (le)->Blink = (e); } while (0)
 #define IsListEmpty(le)         ((le)->Flink == (le))
 #define RemoveEntryList(e)      do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
-static inline PLIST_ENTRY RemoveHeadList(PLIST_ENTRY le)
+static  __inline PLIST_ENTRY RemoveHeadList(PLIST_ENTRY le)
 {
     PLIST_ENTRY f, b, e;
 
@@ -2335,7 +2335,7 @@ static inline PLIST_ENTRY RemoveHeadList(PLIST_ENTRY le)
     if (e != le) e->Flink = e->Blink = NULL;
     return e;
 }
-static inline PLIST_ENTRY RemoveTailList(PLIST_ENTRY le)
+static __inline PLIST_ENTRY RemoveTailList(PLIST_ENTRY le)
 {
     PLIST_ENTRY f, b, e;
 
