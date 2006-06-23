@@ -96,7 +96,7 @@ static int FindActionIndex(POWER_ACTION * lpAction, DWORD dwActionSize, POWER_AC
 {
   int Index;
 
-  for (Index = 0; Index < dwActionSize; Index++)
+  for (Index = 0; Index < (int) dwActionSize; Index++)
   {
 	if (lpAction[Index] == poAction)
 	    return Index;

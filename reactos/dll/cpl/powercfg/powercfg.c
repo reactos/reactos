@@ -55,6 +55,7 @@ PropSheetProc(
 	LPARAM lParam
 )
 {
+  UNREFERENCED_PARAMETER(hwndDlg)
   switch(uMsg)
   {
     case PSCB_BUTTONPRESSED:
@@ -88,7 +89,12 @@ Applet1(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
   TCHAR Caption[1024];
   SYSTEM_POWER_CAPABILITIES spc;
   INT i=0;
-  
+ 
+  UNREFERENCED_PARAMETER(hwnd)
+  UNREFERENCED_PARAMETER(uMsg)
+  UNREFERENCED_PARAMETER(wParam)
+  UNREFERENCED_PARAMETER(lParam)
+
   memset(Caption, 0x0, sizeof(Caption));
   LoadString(hApplet, IDS_CPLNAME_1, Caption, sizeof(Caption) / sizeof(TCHAR));
   
@@ -104,17 +110,17 @@ Applet1(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
   psh.ppsp = psp;
   psh.pfnCallback = PropSheetProc;
   
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGEPOWERSHEMES, powershemesProc);
+  InitPropSheetPage(&psp[i++], IDD_PROPPAGEPOWERSHEMES, (DLGPROC) powershemesProc);
   if (GetPwrCapabilities(&spc))
   {
     if (spc.SystemBatteriesPresent)
 	{
-	  InitPropSheetPage(&psp[i++], IDD_PROPPAGEALARMS, alarmsProc);
+	  InitPropSheetPage(&psp[i++], IDD_PROPPAGEALARMS, (DLGPROC) alarmsProc);
 	  psh.nPages += 1;
 	}
   }
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGEADVANCED, advancedProc);
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGEHIBERNATE, hibernateProc);
+  InitPropSheetPage(&psp[i++], IDD_PROPPAGEADVANCED, (DLGPROC) advancedProc);
+  InitPropSheetPage(&psp[i++], IDD_PROPPAGEHIBERNATE, (DLGPROC) hibernateProc);
   
   return (LONG)(PropertySheet(&psh) != -1);
 }
@@ -165,6 +171,7 @@ DllMain(
 	DWORD     dwReason,
 	LPVOID    lpvReserved)
 {
+  UNREFERENCED_PARAMETER(lpvReserved)
   switch(dwReason)
   {
     case DLL_PROCESS_ATTACH:

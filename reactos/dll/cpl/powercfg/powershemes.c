@@ -224,6 +224,12 @@ BOOLEAN CALLBACK callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName
                                              LPWSTR sDesc, PPOWER_POLICY pp,LPARAM lParam )
 {
 	int index;
+
+	UNREFERENCED_PARAMETER(lParam)
+	UNREFERENCED_PARAMETER(sDesc)
+	UNREFERENCED_PARAMETER(dwDesc)
+	UNREFERENCED_PARAMETER(dwName)
+
 	if (ValidatePowerPolicies(0,pp))
 	{
 		if (guiIndex >= MAX_POWER_POLICY)
@@ -237,7 +243,7 @@ BOOLEAN CALLBACK callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName
 		memcpy(&gPP[guiIndex], pp, sizeof(POWER_POLICY));
 		guiIndex++;
 
-		index = SendMessage(hList,
+		index = (int) SendMessage(hList,
 			   CB_ADDSTRING,
 			   0,
 			   (LPARAM)sName);
@@ -393,7 +399,7 @@ void LoadConfig(HWND hwndDlg)
 	TCHAR szConfig[MAX_PATH];
 	POWER_POLICY pp;
 
-	iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST),
+	iCurSel = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST),
 		CB_GETCURSEL,
 		0,
 		0);
@@ -402,7 +408,7 @@ void LoadConfig(HWND hwndDlg)
 
 	memcpy(&pp, &gPP[iCurSel], sizeof(POWER_POLICY));
 
-	uiIndex = SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST), CB_GETCURSEL, 0, 0);
+	uiIndex = (UINT) SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST), CB_GETCURSEL, 0, 0);
     if(uiIndex != CB_ERR)
 	{
 		SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST), CB_GETLBTEXT, uiIndex, (LPARAM)szProfile);
@@ -479,14 +485,14 @@ void Pos_SaveData(HWND hwndDlg)
 {
 	INT iCurSel=0,tmp=0;
 
-	iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST),
+	iCurSel = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST),
 		CB_GETCURSEL,
 		0,
 		0);
 	if (iCurSel == CB_ERR)
 		return;
 
-    tmp = SendMessage(GetDlgItem(hwndDlg, IDC_MONITORDCLIST),
+    tmp = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_MONITORDCLIST),
 				   CB_GETCURSEL,
 				   0,
 				   (LPARAM)0);
@@ -494,7 +500,7 @@ void Pos_SaveData(HWND hwndDlg)
 	{
 		gPP[iCurSel].user.VideoTimeoutAc = Sec[tmp];
 	}
-    tmp = SendMessage(GetDlgItem(hwndDlg, IDC_MONITORDCLIST),
+    tmp = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_MONITORDCLIST),
 				   CB_GETCURSEL,
 				   0,
 				   (LPARAM)0);
@@ -502,7 +508,7 @@ void Pos_SaveData(HWND hwndDlg)
 	{
 		gPP[iCurSel].user.VideoTimeoutDc = Sec[tmp];
 	}
-    tmp = SendMessage(GetDlgItem(hwndDlg, IDC_DISKACLIST),
+    tmp = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_DISKACLIST),
 				   CB_GETCURSEL,
 				   0,
 				   (LPARAM)0);
@@ -510,7 +516,7 @@ void Pos_SaveData(HWND hwndDlg)
 	{
 		gPP[iCurSel].user.SpindownTimeoutAc = Sec[tmp+2];
 	}
-    tmp = SendMessage(GetDlgItem(hwndDlg, IDC_DISKDCLIST),
+    tmp = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_DISKDCLIST),
 				   CB_GETCURSEL,
 				   0,
 				   (LPARAM)0);
@@ -518,7 +524,7 @@ void Pos_SaveData(HWND hwndDlg)
 	{
 		gPP[iCurSel].user.SpindownTimeoutDc = Sec[tmp+2];
 	}
-    tmp = SendMessage(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),
+    tmp = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_STANDBYACLIST),
 				   CB_GETCURSEL,
 				   0,
 				   (LPARAM)0);
@@ -526,7 +532,7 @@ void Pos_SaveData(HWND hwndDlg)
 	{
 		gPP[iCurSel].user.IdleTimeoutAc = Sec[tmp];
 	}
-    tmp = SendMessage(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST),
+    tmp = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_STANDBYDCLIST),
 				   CB_GETCURSEL,
 				   0,
 				   (LPARAM)0);
@@ -534,7 +540,7 @@ void Pos_SaveData(HWND hwndDlg)
 	{
 		gPP[iCurSel].user.IdleTimeoutDc = Sec[tmp];
 	}
-    tmp = SendMessage(GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST),
+    tmp = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_HYBERNATEACLIST),
 				   CB_GETCURSEL,
 				   0,
 				   (LPARAM)0);
@@ -542,7 +548,7 @@ void Pos_SaveData(HWND hwndDlg)
 	{
 		gPP[iCurSel].mach.DozeS4TimeoutAc = Sec[tmp];
 	}
-    tmp = SendMessage(GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST),
+    tmp = (INT) SendMessage(GetDlgItem(hwndDlg, IDC_HYBERNATEDCLIST),
 				   CB_GETCURSEL,
 				   0,
 				   (LPARAM)0);
