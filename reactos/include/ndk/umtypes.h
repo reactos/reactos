@@ -19,15 +19,34 @@ Author:
 #if !defined(_NTDEF_) && !defined(_NTDEF_H)
 #define _NTDEF_
 #define _NTDEF_H
-#undef WIN32_NO_STATUS
+
+//
+// NDK Applications must use Unicode
+//
+#ifndef UNICODE
+#define UNICODE
+#endif
+
+//
+// Don't use the SDK status values
+//
+#ifndef WIN32_NO_STATUS
+#define WIN32_NO_STATUS
+#endif
+
+//
+// Let the NDK know we're in Application Mode
+//
 #define NTOS_MODE_USER
 
 //
 // Dependencies
 //
+#include <windef.h>
+#undef WIN32_NO_STATUS
+#include <ntstatus.h>
 #include <winioctl.h>
 #include <ntnls.h>
-#include <ntstatus.h>
 
 //
 // Compiler Definitions

@@ -68,6 +68,19 @@ PsGetThreadWin32Thread(
     PETHREAD Thread
 );
 
+BOOLEAN
+NTAPI
+PsGetThreadHardErrorsAreDisabled(
+    PETHREAD Thread
+);
+
+VOID 
+NTAPI
+PsSetThreadHardErrorsAreDisabled(
+    PETHREAD Thread,
+    IN BOOLEAN Disabled
+);
+
 VOID 
 NTAPI
 PsEstablishWin32Callouts(

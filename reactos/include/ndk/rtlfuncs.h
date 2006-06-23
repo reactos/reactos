@@ -213,6 +213,11 @@ RtlConvertUlongToLuid(ULONG Ulong)
 #endif
 
 //
+// This macro does nothing in kernel mode
+//
+#define RTL_PAGED_CODE NOP_FUNCTION
+
+//
 // RTL Splay Tree Functions
 //
 NTSYSAPI
@@ -299,6 +304,16 @@ RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
+#endif
+
+#ifdef NTOS_KERNEL_RUNTIME
+
+//
+// Executing RTL functions at DISPATCH_LEVEL or higher will result in a
+// bugcheck.
+//
+#define RTL_PAGED_CODE PAGED_CODE
+
 #endif
 
 //
@@ -442,6 +457,18 @@ RtlCompactHeap(
 );
 
 NTSYSAPI
+PVOID
+NTAPI
+RtlDebugCreateHeap(
+    IN ULONG Flags,
+    IN PVOID BaseAddress OPTIONAL,
+    IN SIZE_T SizeToReserve OPTIONAL,
+    IN SIZE_T SizeToCommit OPTIONAL,
+    IN PVOID Lock OPTIONAL,
+    IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL
+);
+
+NTSYSAPI
 HANDLE
 NTAPI
 RtlDestroyHeap(HANDLE hheap);
@@ -456,6 +483,12 @@ RtlFreeHeap(
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlGetNtGlobalFlags(
+    VOID
+);
+
 ULONG
 NTAPI
 RtlGetProcessHeaps(
@@ -2677,7 +2710,7 @@ NTSYSAPI
 ULONG
 NTAPI
 RtlComputeCrc32(
-    IN UINT PartialCrc,
+    IN USHORT PartialCrc,
     IN PUCHAR Buffer,
     IN ULONG Length
 );
@@ -2737,11 +2770,10 @@ RtlIpv6StringToAddressExW(
 //
 // Time Functions
 //
-struct _RTL_TIME_ZONE_INFORMATION;
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlQueryTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation);
+RtlQueryTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation);
 
 NTSYSAPI
 VOID
@@ -2754,7 +2786,7 @@ RtlSecondsSince1970ToTime(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlSetTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation);
+RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation);
 
 NTSYSAPI
 BOOLEAN
@@ -2801,6 +2833,25 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlGetNtProductType(OUT PNT_PRODUCT_TYPE ProductType);
+
+//
+// Secure Memory Functions
+//
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlRegisterSecureMemoryCacheCallback(
+    IN PRTL_SECURE_MEMORY_CACHE_CALLBACK Callback);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlFlushSecureMemoryCache(
+    IN PVOID MemoryCache,
+    IN OPTIONAL SIZE_T MemoryLength
+);
+#endif
 
 #ifdef __cplusplus
 }

@@ -34,6 +34,8 @@ Author:
 //
 // Headers needed for NDK
 //
+#include <stdio.h>          // C Standard Header
+#include <excpt.h>          // C Standard Header
 #include <stdarg.h>         // C Standard Header
 #include <umtypes.h>        // General Definitions
 

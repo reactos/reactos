@@ -24,6 +24,13 @@ Author:
 //
 
 //
+// Machine Types
+//
+#define MACHINE_TYPE_ISA        0x0000
+#define MACHINE_TYPE_EISA       0x0001
+#define MACHINE_TYPE_MCA        0x0002
+
+//
 // X86 80386 Segment Types
 //
 #define I386_TASK_GATE          0x5
@@ -38,16 +45,16 @@ Author:
 //
 #define RPL_MASK                0x0003
 #define MODE_MASK               0x0001
-#define KGDT_R0_CODE            (0x8)
-#define KGDT_R0_DATA            (0x10)
-#define KGDT_R3_CODE            (0x18)
-#define KGDT_R3_DATA            (0x20)
-#define KGDT_TSS                (0x28)
-#define KGDT_R0_PCR             (0x30)
-#define KGDT_R3_TEB             (0x38)
-#define KGDT_LDT                (0x48)
-#define KGDT_DF_TSS             (0x50)
-#define KGDT_NMI_TSS            (0x58)
+#define KGDT_R0_CODE            0x8
+#define KGDT_R0_DATA            0x10
+#define KGDT_R3_CODE            0x18
+#define KGDT_R3_DATA            0x20
+#define KGDT_TSS                0x28
+#define KGDT_R0_PCR             0x30
+#define KGDT_R3_TEB             0x38
+#define KGDT_LDT                0x48
+#define KGDT_DF_TSS             0x50
+#define KGDT_NMI_TSS            0x58
 
 //
 // CR4
@@ -66,9 +73,12 @@ Author:
 //
 // EFlags
 //
-#define EFLAGS_TF               0x100
-#define EFLAGS_INTERRUPT_MASK   0x200
-#define EFLAGS_NESTED_TASK      0x4000
+#define EFLAGS_CF               0x01L
+#define EFLAGS_ZF               0x40L
+#define EFLAGS_TF               0x100L
+#define EFLAGS_INTERRUPT_MASK   0x200L
+#define EFLAGS_DF               0x400L
+#define EFLAGS_NESTED_TASK      0x4000L
 #define EFLAGS_V86_MASK         0x20000
 #define EFLAGS_ALIGN_CHECK      0x40000
 #define EFLAGS_VIF              0x80000
@@ -76,7 +86,6 @@ Author:
 #define EFLAG_SIGN              0x8000
 #define EFLAG_ZERO              0x4000
 
-#ifndef NTOS_MODE_USER
 //
 // IPI Types
 //
@@ -87,48 +96,17 @@ Author:
 #define IPI_SYNCH_REQUEST       16
 
 //
-// FN/FX (FPU) Save Area Structures
+// Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
 //
-typedef struct _FNSAVE_FORMAT
-{
-    ULONG ControlWord;
-    ULONG StatusWord;
-    ULONG TagWord;
-    ULONG ErrorOffset;
-    ULONG ErrorSelector;
-    ULONG DataOffset;
-    ULONG DataSelector;
-    UCHAR RegisterArea[80];
-} FNSAVE_FORMAT, *PFNSAVE_FORMAT;
+#define KSEG0_BASE              0x80000000
 
-typedef struct _FXSAVE_FORMAT
-{
-    USHORT ControlWord;
-    USHORT StatusWord;
-    USHORT TagWord;
-    USHORT ErrorOpcode;
-    ULONG ErrorOffset;
-    ULONG ErrorSelector;
-    ULONG DataOffset;
-    ULONG DataSelector;
-    ULONG MXCsr;
-    ULONG MXCsrMask;
-    UCHAR RegisterArea[128];
-    UCHAR Reserved3[128];
-    UCHAR Reserved4[224];
-    UCHAR Align16Byte[8];
-} FXSAVE_FORMAT, *PFXSAVE_FORMAT;
-
-typedef struct _FX_SAVE_AREA
-{
-    union
-    {
-        FNSAVE_FORMAT FnArea;
-        FXSAVE_FORMAT FxArea;
-    } U;
-    ULONG NpxSavedCpu;
-    ULONG Cr0NpxState;
-} FX_SAVE_AREA, *PFX_SAVE_AREA;
+//
+// Macro to get current KPRCB
+//
+#ifndef _REACTOS_ // fixme
+#define KeGetCurrentPrcb() \
+    (PKPRCB)__readfsdword(KPCR_PRCB);
+#endif
 
 //
 // Trap Frame Definition
@@ -154,7 +132,7 @@ typedef struct _KTRAP_FRAME
     ULONG Ecx;
     ULONG Eax;
     ULONG PreviousPreviousMode;
-    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+    struct _EXCEPTION_REGISTRATION_RECORD FAR *ExceptionList;
     ULONG SegFs;
     ULONG Edi;
     ULONG Esi;
@@ -175,6 +153,8 @@ typedef struct _KTRAP_FRAME
 //
 // LDT Entry Definition
 //
+#ifndef _LDT_ENTRY_DEFINED
+#define _LDT_ENTRY_DEFINED
 typedef struct _LDT_ENTRY
 {
     USHORT LimitLow;
@@ -203,6 +183,7 @@ typedef struct _LDT_ENTRY
         } Bits;
     } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
+#endif
 
 //
 // GDT Entry Definition
@@ -266,12 +247,60 @@ typedef struct _KIDTENTRY
     USHORT ExtendedOffset;
 } KIDTENTRY, *PKIDTENTRY;
 
+#include <pshpack2.h>
 typedef struct _DESCRIPTOR
 {
-    USHORT Pad;
     USHORT Limit;
     ULONG Base;
+    USHORT Padding;
 } KDESCRIPTOR, *PKDESCRIPTOR;
+#include <poppack.h>
+
+#ifndef NTOS_MODE_USER
+
+//
+// FN/FX (FPU) Save Area Structures
+//
+typedef struct _FNSAVE_FORMAT
+{
+    ULONG ControlWord;
+    ULONG StatusWord;
+    ULONG TagWord;
+    ULONG ErrorOffset;
+    ULONG ErrorSelector;
+    ULONG DataOffset;
+    ULONG DataSelector;
+    UCHAR RegisterArea[80];
+} FNSAVE_FORMAT, *PFNSAVE_FORMAT;
+
+typedef struct _FXSAVE_FORMAT
+{
+    USHORT ControlWord;
+    USHORT StatusWord;
+    USHORT TagWord;
+    USHORT ErrorOpcode;
+    ULONG ErrorOffset;
+    ULONG ErrorSelector;
+    ULONG DataOffset;
+    ULONG DataSelector;
+    ULONG MXCsr;
+    ULONG MXCsrMask;
+    UCHAR RegisterArea[128];
+    UCHAR Reserved3[128];
+    UCHAR Reserved4[224];
+    UCHAR Align16Byte[8];
+} FXSAVE_FORMAT, *PFXSAVE_FORMAT;
+
+typedef struct _FX_SAVE_AREA
+{
+    union
+    {
+        FNSAVE_FORMAT FnArea;
+        FXSAVE_FORMAT FxArea;
+    } U;
+    ULONG NpxSavedCpu;
+    ULONG Cr0NpxState;
+} FX_SAVE_AREA, *PFX_SAVE_AREA;
 
 //
 // Special Registers Structure (outside of CONTEXT)
@@ -329,6 +358,7 @@ typedef struct _KPRCB
     ULONG CFlushSize;
     UCHAR PrcbPad0[88];
 #else
+    ULONG CFlushSize;
     UCHAR PrcbPad0[92];
 #endif
     KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];

@@ -180,8 +180,8 @@ NtQuerySection(
     IN HANDLE SectionHandle,
     IN SECTION_INFORMATION_CLASS SectionInformationClass,
     OUT PVOID SectionInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 NTSYSCALLAPI
@@ -192,8 +192,8 @@ NtQueryVirtualMemory(
     IN PVOID Address,
     IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
     OUT PVOID VirtualMemoryInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 NTSYSCALLAPI
@@ -350,8 +350,8 @@ ZwQuerySection(
     IN HANDLE SectionHandle,
     IN SECTION_INFORMATION_CLASS SectionInformationClass,
     OUT PVOID SectionInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 NTSYSAPI
@@ -362,8 +362,8 @@ ZwQueryVirtualMemory(
     IN PVOID Address,
     IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
     OUT PVOID VirtualMemoryInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 NTSYSAPI

@@ -74,8 +74,30 @@ Author:
                                                             0x1
 
 //
-// Heap Flags
+// Public Heap Flags
 //
+#if !defined(NTOS_MODE_USER) && !defined(_NTIFS_)
+#define HEAP_NO_SERIALIZE                                   0x00000001
+#define HEAP_GROWABLE                                       0x00000002
+#define HEAP_GENERATE_EXCEPTIONS                            0x00000004
+#define HEAP_ZERO_MEMORY                                    0x00000008
+#define HEAP_REALLOC_IN_PLACE_ONLY                          0x00000010
+#define HEAP_TAIL_CHECKING_ENABLED                          0x00000020
+#define HEAP_FREE_CHECKING_ENABLED                          0x00000040
+#define HEAP_DISABLE_COALESCE_ON_FREE                       0x00000080
+#define HEAP_CREATE_ALIGN_16                                0x00010000
+#define HEAP_CREATE_ENABLE_TRACING                          0x00020000
+#define HEAP_CREATE_ENABLE_EXECUTE                          0x00040000
+#endif
+
+//
+// User-Defined Heap Flags and Classes
+//
+#define HEAP_SETTABLE_USER_VALUE                            0x00000100
+#define HEAP_SETTABLE_USER_FLAG1                            0x00000200
+#define HEAP_SETTABLE_USER_FLAG2                            0x00000400
+#define HEAP_SETTABLE_USER_FLAG3                            0x00000800
+#define HEAP_SETTABLE_USER_FLAGS                            0x00000E00
 #define HEAP_CLASS_0                                        0x00000000
 #define HEAP_CLASS_1                                        0x00001000
 #define HEAP_CLASS_2                                        0x00002000
@@ -86,6 +108,39 @@ Author:
 #define HEAP_CLASS_7                                        0x00007000
 #define HEAP_CLASS_8                                        0x00008000
 #define HEAP_CLASS_MASK                                     0x0000F000
+
+//
+// Internal HEAP Structure Flags
+//
+#define HEAP_FLAG_PAGE_ALLOCS                               0x01000000
+#define HEAP_PROTECTION_ENABLED                             0x02000000
+#define HEAP_BREAK_WHEN_OUT_OF_VM                           0x04000000
+#define HEAP_NO_ALIGNMENT                                   0x08000000
+#define HEAP_CAPTURE_STACK_BACKTRACES                       0x08000000
+#define HEAP_SKIP_VALIDATION_CHECKS                         0x10000000
+#define HEAP_VALIDATE_ALL_ENABLED                           0x20000000
+#define HEAP_VALIDATE_PARAMETERS_ENABLED                    0x40000000
+#define HEAP_LOCK_USER_ALLOCATED                            0x80000000
+
+//
+// Heap Validation Flags
+//
+#define HEAP_CREATE_VALID_MASK                              \
+    (HEAP_NO_SERIALIZE              |                       \
+     HEAP_GROWABLE                  |                       \
+     HEAP_GENERATE_EXCEPTIONS       |                       \
+     HEAP_ZERO_MEMORY               |                       \
+     HEAP_REALLOC_IN_PLACE_ONLY     |                       \
+     HEAP_TAIL_CHECKING_ENABLED     |                       \
+     HEAP_FREE_CHECKING_ENABLED     |                       \
+     HEAP_DISABLE_COALESCE_ON_FREE  |                       \
+     HEAP_CLASS_MASK                |                       \
+     HEAP_CREATE_ALIGN_16           |                       \
+     HEAP_CREATE_ENABLE_TRACING     |                       \
+     HEAP_CREATE_ENABLE_EXECUTE)
+#ifndef __GNUC__
+C_ASSERT(HEAP_CREATE_VALID_MASK == 0x0007F0FF);
+#endif
 
 //
 // Registry Keys
@@ -462,6 +517,17 @@ typedef NTSTATUS
 );
 
 //
+// RTL Secure Memory callbacks
+//
+#ifdef NTOS_MODE_USER
+typedef NTSTATUS
+(NTAPI *PRTL_SECURE_MEMORY_CACHE_CALLBACK)(
+    IN PVOID Address,
+    IN SIZE_T Length
+);
+#endif
+
+//
 // RTL Range List callbacks
 //
 #ifdef NTOS_MODE_USER
@@ -497,6 +563,7 @@ typedef ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
 
 //
 // Parameters for RtlCreateHeap
+// FIXME: Determine whether Length is SIZE_T or ULONG
 //
 typedef struct _RTL_HEAP_PARAMETERS
 {
@@ -1064,8 +1131,7 @@ typedef struct _RTL_ATOM_TABLE
     PRTL_ATOM_TABLE_ENTRY Buckets[1];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
-#ifndef NTOS_MODE_USER
-
+#ifndef _WINBASE_
 //
 // System Time and Timezone Structures
 //
@@ -1091,8 +1157,12 @@ typedef struct _TIME_ZONE_INFORMATION
     SYSTEMTIME DaylightDate;
     LONG DaylightBias;
 } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
-
 #endif
+
+//
+// Native version of Timezone Structure
+//
+typedef LPTIME_ZONE_INFORMATION PRTL_TIME_ZONE_INFORMATION;
 
 //
 // Hotpatch Header

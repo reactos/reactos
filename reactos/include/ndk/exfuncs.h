@@ -340,8 +340,8 @@ NTAPI
 NtQuerySystemInformation(
     IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     OUT PVOID SystemInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 NTSYSCALLAPI
@@ -481,7 +481,7 @@ NTAPI
 NtSetSystemInformation(
     IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     IN PVOID SystemInformation,
-    IN ULONG SystemInformationLength
+    IN SIZE_T SystemInformationLength
 );
 
 NTSYSCALLAPI
@@ -784,8 +784,8 @@ NTAPI
 ZwQuerySystemInformation(
     IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     OUT PVOID SystemInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 NTSYSAPI
@@ -908,7 +908,7 @@ NTAPI
 ZwSetSystemInformation(
     IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     IN PVOID SystemInformation,
-    IN ULONG SystemInformationLength
+    IN SIZE_T SystemInformationLength
 );
 
 #ifdef NTOS_MODE_USER

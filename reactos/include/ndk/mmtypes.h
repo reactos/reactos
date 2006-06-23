@@ -31,6 +31,11 @@ Author:
 #define PAGE_ROUND_DOWN(x) (((ULONG_PTR)x)&(~(PAGE_SIZE-1)))
 #define PAGE_ROUND_UP(x)    \
     ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
+#ifdef NTOS_MODE_USER
+#define ROUND_TO_PAGES(Size)  (((ULONG_PTR)(Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+#endif
+#define ROUND_TO_ALLOCATION_GRANULARITY(Size)  (((ULONG_PTR)(Size) + MM_ALLOCATION_GRANULARITY - 1) \
+    & ~(MM_ALLOCATION_GRANULARITY - 1))
 
 //
 // Macro for generating pool tags
@@ -577,6 +582,24 @@ typedef struct _MEMORY_BASIC_INFORMATION
     ULONG Protect;
     ULONG Type;
 } MEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
+
+
+//
+// Mm Global Variables
+//
+
+//
+// Default heap size values.  For user mode, these values are copied to a new
+// process's PEB by the kernel in MmCreatePeb.  In kernel mode, RtlCreateHeap
+// reads these variables directly.
+//
+// These variables should be considered "const"; they are written only once,
+// during MmInitSystem.
+//
+extern SIZE_T MmHeapSegmentReserve;
+extern SIZE_T MmHeapSegmentCommit;
+extern SIZE_T MmHeapDeCommitTotalFreeThreshold;
+extern SIZE_T MmHeapDeCommitFreeBlockThreshold;
 
 #endif // !NTOS_MODE_USER
 

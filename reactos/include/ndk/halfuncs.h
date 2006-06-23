@@ -31,8 +31,8 @@ Author:
 // The DDK steals these away from you.
 //
 #ifdef _MSC_VER
-#pragma intrinsic(_enable)
-#pragma intrinsic(_disable)
+//#pragma intrinsic(_enable)
+//#pragma intrinsic(_disable)
 #endif
 
 //
@@ -129,9 +129,9 @@ NTHALAPI
 BOOLEAN
 NTAPI
 HalGetEnvironmentVariable(
-    PCH Name,
-    PCH Value,
-    USHORT ValueLength
+    PCH Variable,
+    USHORT Length,
+    PCH Buffer
 );
 
 NTHALAPI
@@ -159,7 +159,7 @@ NTHALAPI
 VOID
 NTAPI
 HalHandleNMI(
-    ULONG Unknown
+    PVOID NmiInfo
 );
 
 //
@@ -192,7 +192,7 @@ HalSetEnvironmentVariable(
 // Time Functions
 //
 NTHALAPI
-VOID
+BOOLEAN
 NTAPI
 HalQueryRealTimeClock(
     IN PTIME_FIELDS RtcTime

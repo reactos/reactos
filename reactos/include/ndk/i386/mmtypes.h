@@ -28,6 +28,24 @@ Author:
 //
 #define PAGE_SIZE                         0x1000
 #define PAGE_SHIFT                        12L
+#define MM_ALLOCATION_GRANULARITY         0x10000
+#define MM_ALLOCATION_GRANULARITY_SHIFT   16L
+
+//
+// Sanity checks for Paging Macros
+//
+#ifndef __GNUC__
+C_ASSERT(PAGE_SIZE == (1 << PAGE_SHIFT));
+C_ASSERT(MM_ALLOCATION_GRANULARITY == (1 << MM_ALLOCATION_GRANULARITY_SHIFT));
+C_ASSERT(MM_ALLOCATION_GRANULARITY &&
+         !(MM_ALLOCATION_GRANULARITY & (MM_ALLOCATION_GRANULARITY - 1)));
+C_ASSERT(MM_ALLOCATION_GRANULARITY >= PAGE_SIZE);
+#endif
+
+//
+// PAE SEG0 Base?
+//
+#define KSEG0_BASE_PAE                    0xE0000000
 
 //
 // Page Table Entry Definitions
