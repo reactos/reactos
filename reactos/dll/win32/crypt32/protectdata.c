@@ -57,9 +57,6 @@ static const BYTE crypt32_protectdata_secret[] = {
     'w','a','b','b','i','t','s',0
 };
 
-static const WCHAR szNullString[] =
-{ '\0' };
-
 /*
  * The data format returned by the real Windows CryptProtectData seems
  * to be something like this:
@@ -866,7 +863,7 @@ BOOL WINAPI CryptProtectData(DATA_BLOB* pDataIn,
     /* Windows appears to create an empty szDataDescr instead of maintaining
      * a NULL */
     if (!szDataDescr)
-        szDataDescr = szNullString;
+        szDataDescr = L'\0';
 
     /* get crypt context */
     if (!CryptAcquireContextW(&hProv,NULL,NULL,CRYPT32_PROTECTDATA_PROV,CRYPT_VERIFYCONTEXT))
