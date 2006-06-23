@@ -53,6 +53,10 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 	BOOL ret;
 	LONG rc;
 
+	UNREFERENCED_PARAMETER(lParam)
+	UNREFERENCED_PARAMETER(wParam)
+	UNREFERENCED_PARAMETER(uMsg)
+
 	hNewDev = LoadLibrary(_T("newdev.dll"));
 	if (!hNewDev)
 	{
@@ -136,6 +140,7 @@ CPlApplet(HWND hwndCpl,
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
+	UNREFERENCED_PARAMETER(lpvReserved)
 	switch(dwReason)
 	{
 		case DLL_PROCESS_ATTACH:

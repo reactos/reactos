@@ -52,6 +52,7 @@ PropSheetProc(
 	LPARAM lParam
 )
 {
+  UNREFERENCED_PARAMETER(hwndDlg)
   switch(uMsg)
   {
     case PSCB_BUTTONPRESSED:
@@ -99,11 +100,11 @@ SystemApplet(VOID)
   psh.ppsp = psp;
   psh.pfnCallback = PropSheetProc;
   
-  InitPropSheetPage(&psp[0], IDD_PROPPAGEKEYBOARD, KeyboardPageProc);
-  InitPropSheetPage(&psp[1], IDD_PROPPAGESOUND, SoundPageProc);
-  InitPropSheetPage(&psp[2], IDD_PROPPAGEDISPLAY, DisplayPageProc);
-  InitPropSheetPage(&psp[3], IDD_PROPPAGEMOUSE, MousePageProc);
-  InitPropSheetPage(&psp[4], IDD_PROPPAGEGENERAL, GeneralPageProc);
+  InitPropSheetPage(&psp[0], IDD_PROPPAGEKEYBOARD, (DLGPROC) KeyboardPageProc);
+  InitPropSheetPage(&psp[1], IDD_PROPPAGESOUND, (DLGPROC) SoundPageProc);
+  InitPropSheetPage(&psp[2], IDD_PROPPAGEDISPLAY, (DLGPROC) DisplayPageProc);
+  InitPropSheetPage(&psp[3], IDD_PROPPAGEMOUSE, (DLGPROC) MousePageProc);
+  InitPropSheetPage(&psp[4], IDD_PROPPAGEGENERAL, (DLGPROC) GeneralPageProc);
   
   return (LONG)(PropertySheet(&psh) != -1);
 }
@@ -117,7 +118,8 @@ CPlApplet(
 	LPARAM lParam2)
 {
   int i = (int)lParam1;
-  
+  UNREFERENCED_PARAMETER(hwndCPl)
+
   switch(uMsg)
   {
     case CPL_INIT:
@@ -153,6 +155,7 @@ DllMain(
 	DWORD     dwReason,
 	LPVOID    lpvReserved)
 {
+  UNREFERENCED_PARAMETER(lpvReserved)
   switch(dwReason)
   {
     case DLL_PROCESS_ATTACH:

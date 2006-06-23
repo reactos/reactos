@@ -22,6 +22,8 @@ SoundPageProc(
   LPARAM lParam
 )
 {
+  UNREFERENCED_PARAMETER(lParam)
+  UNREFERENCED_PARAMETER(hwndDlg)
   switch(uMsg)
   {
     case WM_INITDIALOG:
