@@ -832,7 +832,9 @@ PNP_GetClassName(handle_t BindingHandle,
 
     lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class");
     lstrcatW(szKeyName, L"\\");
-    lstrcatW(szKeyName, ClassGuid);
+    if(lstrlenW(ClassGuid) < sizeof(szKeyName)-lstrlenW(szKeyName))
+    	lstrcatW(szKeyName, ClassGuid);
+    else return CR_INVALID_DATA;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       szKeyName,
