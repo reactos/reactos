@@ -83,7 +83,7 @@ typedef struct _AUTHZ_ACCESS_REPLY
     DWORD ResultListLength;
     PACCESS_MASK GrantedAccessMask;
     PDWORD SaclEvaluationResults;
-    PDWORD Error;;
+    PDWORD Error;
 } AUTHZ_ACCESS_REPLY, *PAUTHZ_ACCESS_REPLY;
 
 typedef struct _AUTHZ_REGISTRATION_OBJECT_TYPE_NAME_OFFSET
