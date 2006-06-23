@@ -21,8 +21,8 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-    MENUITEM "&Большие Иконки",	FCIDM_SHVIEW_BIGICON
-    MENUITEM "&Мелкие Иконки",	FCIDM_SHVIEW_SMALLICON
+    MENUITEM "&Большие значки",	FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Мелкие значки",	FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Список",		FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Подробно",	FCIDM_SHVIEW_REPORTVIEW
 END
@@ -36,13 +36,13 @@ BEGIN
     BEGIN
         POPUP "&Просмотр"
         BEGIN
-            MENUITEM "&Большие Иконки",	FCIDM_SHVIEW_BIGICON
-            MENUITEM "&Мелкие Иконки",	FCIDM_SHVIEW_SMALLICON
+            MENUITEM "&Большие значки",	FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Мелкие значки",	FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Список",		FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Подробно",	FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM SEPARATOR
-        POPUP "Arrange &Icons"
+        POPUP "Выстроить &значки"
         BEGIN
             MENUITEM "По &Имени",	0x30	/* column 0 */
             MENUITEM "По &Типу",	0x32	/* column 2 */
@@ -51,12 +51,12 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&Автоматически",	FCIDM_SHVIEW_AUTOARRANGE
         END
-        MENUITEM "В&ыровнять иконки",	FCIDM_SHVIEW_SNAPTOGRID
+        MENUITEM "В&ыровнять значки",	FCIDM_SHVIEW_SNAPTOGRID
         MENUITEM SEPARATOR
         MENUITEM "О&бновить",		FCIDM_SHVIEW_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "&Вставить",		FCIDM_SHVIEW_INSERT
-        MENUITEM "Вставить &ярклык",	FCIDM_SHVIEW_INSERTLINK
+        MENUITEM "Вставить &ярлык",	FCIDM_SHVIEW_INSERTLINK
         MENUITEM SEPARATOR
         POPUP "Создать"
         BEGIN
@@ -82,8 +82,8 @@ BEGIN
         MENUITEM "&Вырезать",		FCIDM_SHVIEW_CUT
         MENUITEM "&Копировать",		FCIDM_SHVIEW_COPY
         MENUITEM SEPARATOR
-        MENUITEM "Создать &Яолык",	FCIDM_SHVIEW_CREATELINK
-        MENUITEM "&Удалмть",		FCIDM_SHVIEW_DELETE
+        MENUITEM "Создать &ярлык",	FCIDM_SHVIEW_CREATELINK
+        MENUITEM "&Удалить",		FCIDM_SHVIEW_DELETE
         MENUITEM "Переи&меновать",	FCIDM_SHVIEW_RENAME
         MENUITEM SEPARATOR
         MENUITEM "Сво&йства",		FCIDM_SHVIEW_PROPERTIES
@@ -152,27 +152,27 @@ STRINGTABLE DISCARDABLE
     IDS_MYCOMPUTER		"Мой компьютер"
 
     /* context menus */
-    IDS_VIEW_LARGE		"&Большие Иконки"
-    IDS_VIEW_SMALL		"&Мелкие Иконки"
+    IDS_VIEW_LARGE		"&Большие значки"
+    IDS_VIEW_SMALL		"&Мелкие значки"
     IDS_VIEW_LIST		"&Список"
     IDS_VIEW_DETAILS		"&Подробно"
     IDS_SELECT			"&Выбрать"
     IDS_OPEN			"&Открыть"
 
-    IDS_CREATEFOLDER_DENIED	"Невозможно создать папку - нет полномочий."
+    IDS_CREATEFOLDER_DENIED	"Невозможно создать папку - отказано в доступе"
     IDS_CREATEFOLDER_CAPTION	"Ошибка во время создания папки"
     IDS_DELETEITEM_CAPTION	"Подтверждение удаления файла"
     IDS_DELETEFOLDER_CAPTION	"Подтверждение удаления папки"
     IDS_DELETEITEM_TEXT		"Удалить '%1'?"
-    IDS_DELETEMULTIPLE_TEXT	"Удалить эти обьекты (%1?"
+    IDS_DELETEMULTIPLE_TEXT	"Удалить эти обьекты %1?"
     IDS_OVERWRITEFILE_TEXT	"Заменить файл(ы) %1?"
     IDS_OVERWRITEFILE_CAPTION	"Подтверждение замены файла"
 
     /* message box strings */
     IDS_RESTART_TITLE		"Перезагрузить"
-    IDS_RESTART_PROMPT		"Вы хотите симулировать перезапуск Windows?"
+    IDS_RESTART_PROMPT		"Вы действительно хотите перезагрузить ReactOS?"
     IDS_SHUTDOWN_TITLE		"Выключить питание"
-    IDS_SHUTDOWN_PROMPT		"Вы хотите закинчить работу с Wine?"
+    IDS_SHUTDOWN_PROMPT		"Вы действительно хотите закончить работу с ReactOS?"
 
     /* shell folder path default values */
     IDS_PROGRAMS                "Главное меню\\Программы"
@@ -180,7 +180,7 @@ STRINGTABLE DISCARDABLE
     IDS_FAVORITES               "Избранное"
     IDS_STARTUP                 "Главное меню\\Программы\\Автозагрузка"
     IDS_RECENT                  "Recent"
-    IDS_SENDTO                  "Отпрввить"
+    IDS_SENDTO                  "Отправить"
     IDS_STARTMENU               "Главное меню"
     IDS_MYMUSIC                 "Мои документы\\Моя музыка"
     IDS_MYVIDEO                 "Мои документы\\Мои фильмы"
