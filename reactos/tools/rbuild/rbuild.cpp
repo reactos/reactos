@@ -175,7 +175,7 @@ ParseSwitch ( int argc, char** argv, int index )
 	switch ( switchChar )
 	{
 		case 'v':
-			if (switchChar2 == 's' || switchChar2 == 'c' )
+			if (switchChar2 == 's' || switchChar2 == 'c' || switchChar2 == 'o')
 			{
 				return ParseVCProjectSwitch (
 					switchChar2,
