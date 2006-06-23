@@ -51,11 +51,14 @@ RtlpExecuteVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
                               RTL_VECTORED_EXCEPTION_HANDLER,
                               ListEntry);
       VectoredHandler = RtlDecodePointer(veh->VectoredHandler);
+      RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
+
       if(VectoredHandler(&ExceptionInfo) == EXCEPTION_CONTINUE_EXECUTION)
       {
-        RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
         return ExceptionContinueSearch;
       }
+
+      RtlEnterCriticalSection(&RtlpVectoredExceptionLock);
     }
     RtlLeaveCriticalSection(&RtlpVectoredExceptionLock);
   }
