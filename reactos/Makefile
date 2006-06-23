@@ -414,27 +414,101 @@ $(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
 .PHONY: msvc6
 msvc6: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs6.00 msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs6.00 -voversionconfiguration msvc
 
 .PHONY: msvc7
 msvc7: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 -voversionconfiguration msvc
 
 .PHONY: msvc71
 msvc71: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 -voversionconfiguration msvc
 
 .PHONY: msvc8
 msvc8: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
-	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 -voversionconfiguration msvc
+
+.PHONY: msvc6_clean
+msvc6_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs6.00 -voversionconfiguration msvc
+
+.PHONY: msvc7_clean
+msvc7_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.00 -voversionconfiguration msvc
+
+.PHONY: msvc71_clean
+msvc71_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.10 -voversionconfiguration msvc
+
+.PHONY: msvc8_clean
+msvc8_clean: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs8.00 -voversionconfiguration msvc
 
 .PHONY: msvc_clean
 msvc_clean: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c msvc
+
+.PHONY: msvc_clean_all
+msvc_clean_all: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs6.00 -voversionconfiguration msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.00 -voversionconfiguration msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs7.10 -voversionconfiguration msvc
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -c -vs8.10 -voversionconfiguration msvc
+
+.PHONY: msvc7_install_debug
+msvc7_install_debug: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 -vcdebug -voversionconfiguration msvc
+
+.PHONY: msvc7_install_release
+msvc7_install_release: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 -vcrelease -voversionconfiguration msvc
+
+.PHONY: msvc7_install_speed
+msvc7_install_speed: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 -vcspeed -voversionconfiguration msvc
+
+.PHONY: msvc71_install_debug
+msvc71_install_debug: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 -vcdebug -voversionconfiguration msvc
+
+.PHONY: msvc71_install_release
+msvc71_install_release: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 -vcrelease -voversionconfiguration msvc
+
+
+.PHONY: msvc71_install_speed
+msvc71_install_speed: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 -vcspeed -voversionconfiguration msvc
+
+.PHONY: msvc8_install_debug
+msvc8_install_debug: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 -vcdebug -voversionconfiguration msvc
+
+.PHONY: msvc8_install_release
+msvc8_install_release: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 -vcrelease -voversionconfiguration msvc
+
+.PHONY: msvc8_install_speed
+msvc8_install_speed: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 -vcspeed -voversionconfiguration msvc
 
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
