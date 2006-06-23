@@ -482,7 +482,7 @@ RtlGetProcessHeaps@8
 RtlGetSaclSecurityDescriptor@16
 RtlGetSecurityDescriptorRMControl@8
 RtlGetSetBootStatusData@24
-;RtlGetUserInfoHeap
+RtlGetUserInfoHeap@20
 RtlGetVersion@4
 RtlHashUnicodeString@16
 RtlIdentifierAuthoritySid@4
@@ -638,7 +638,7 @@ RtlSetSecurityObject@20
 RtlSetTimeZoneInformation@4
 ;RtlSetUnicodeCallouts
 ;RtlSetUserFlagsHeap
-;RtlSetUserValueHeap
+RtlSetUserValueHeap@16
 RtlSizeHeap@12
 RtlSplay@4
 ;RtlStartRXact

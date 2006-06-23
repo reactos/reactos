@@ -100,6 +100,7 @@ typedef struct tagHEAP
    RTL_CRITICAL_SECTION critSection;   /* Critical section for serialization */
    ULONG            flags;         /* Heap flags */
    ULONG            magic;         /* Magic number */
+   PVOID UserValue;
    PRTL_HEAP_COMMIT_ROUTINE commitRoutine;
 }
 HEAP, *PHEAP;
@@ -1841,6 +1842,42 @@ RtlZeroHeap(
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+RtlSetUserValueHeap(IN PVOID HeapHandle,
+                    IN ULONG Flags,
+                    IN PVOID BaseAddress,
+                    IN PVOID UserValue)
+{
+    HEAP *heapPtr = HEAP_GetPtr(HeapHandle);
+
+    /* Hack */
+    heapPtr->UserValue = UserValue;
+    return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+RtlGetUserInfoHeap(IN PVOID HeapHandle,
+                   IN ULONG Flags,
+                   IN PVOID BaseAddress,
+                   OUT PVOID *UserValue,
+                   OUT PULONG UserFlags)
+{
+    HEAP *heapPtr = HEAP_GetPtr(HeapHandle);
+
+    /* Hack */
+    if (UserValue) *UserValue = heapPtr->UserValue;
+    if (UserFlags) *UserFlags = heapPtr->flags & HEAP_SETTABLE_USER_FLAGS;
+    return TRUE;
 }
 
 /* EOF */

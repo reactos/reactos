@@ -496,6 +496,16 @@ RtlGetProcessHeaps(
     HANDLE *HeapArray
 );
 
+BOOLEAN
+NTAPI
+RtlGetUserInfoHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN PVOID BaseAddress,
+    OUT PVOID *UserValue,
+    OUT PULONG UserFlags
+);
+
 NTSYSAPI
 PVOID
 NTAPI
@@ -515,6 +525,15 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlUnlockHeap(IN HANDLE Heap);
+
+BOOLEAN
+NTAPI
+RtlSetUserValueHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN PVOID BaseAddress,
+    IN PVOID UserValue
+);
 
 NTSYSAPI
 ULONG
