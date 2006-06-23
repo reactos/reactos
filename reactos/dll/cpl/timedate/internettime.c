@@ -136,7 +136,7 @@ SetNTPServer(HWND hwnd)
 
 /* get the domain name from the registry */
 static BOOL
-GetNTPServerAddress(LPSTR lpAddress)
+GetNTPServerAddress(LPSTR* lpAddress)
 {
     HKEY hKey;
     WCHAR szSel[4];
@@ -144,6 +144,7 @@ GetNTPServerAddress(LPSTR lpAddress)
     DWORD dwSize;
     LONG Ret;
 
+    *lpAddress = NULL;
     Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Servers",
                         0,
@@ -194,19 +195,20 @@ GetNTPServerAddress(LPSTR lpAddress)
     else
         goto fail;
 
-    /* only need half the memory for ASCII storage */
-    lpAddress = HeapAlloc(GetProcessHeap(),
+    /* We still allocate same amount of space for ASCII storage,
+     * as some chars may use several bytes */
+    *lpAddress = HeapAlloc(GetProcessHeap(),
                           0,
-                          sizeof(dwSize) / 2);
-    if (lpAddress == NULL)
+                          sizeof(dwSize));
+    if (*lpAddress == NULL)
         goto fail;
 
     if (! WideCharToMultiByte(CP_ACP,
                               0,
                               buf,
-                              sizeof(buf),
-                              lpAddress,
-                              sizeof(lpAddress),
+                              sizeof(dwSize),
+                              *lpAddress,
+                              sizeof(dwSize),
                               NULL,
                               NULL))
     {
@@ -223,12 +225,8 @@ GetNTPServerAddress(LPSTR lpAddress)
 fail:
     GetError();
     if (hKey) RegCloseKey(hKey);
-    if (buf) HeapFree(GetProcessHeap,
-                      0,
-                      buf);
-    if (lpAddress) HeapFree(GetProcessHeap,
-                            0,
-                            lpAddress);
+    HeapFree(GetProcessHeap, 0, buf);
+    HeapFree(GetProcessHeap, 0, *lpAddress);
     return FALSE;
 
 }
@@ -238,10 +236,10 @@ fail:
 static ULONG
 GetTimeFromServer(VOID)
 {
-    LPSTR lpAddress;
+    LPSTR lpAddress = NULL;
     ULONG ulTime = 0;
 
-    if (! GetNTPServerAddress(lpAddress))
+    if (! GetNTPServerAddress(&lpAddress))
         return 0;
 
     if (InitialiseConnection(lpAddress))
