@@ -137,7 +137,7 @@ POWER_ACTION GetPowerActionFromPolicy(POWER_ACTION_POLICY * Policy)
 	// to PowerActionNone and sets the Flags & EventCode 
 	
 	
-	 swprintf(szBuffer, L"Action: %x EventCode %x Flags %x",Policy->Action, Policy->EventCode, Policy->Flags);
+	 _stprintf(szBuffer, L"Action: %x EventCode %x Flags %x",Policy->Action, Policy->EventCode, Policy->Flags);
 	 MessageBoxW(NULL, szBuffer, NULL, MB_OK);
 	
 	*/

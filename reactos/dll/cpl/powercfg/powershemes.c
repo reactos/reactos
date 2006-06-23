@@ -220,7 +220,7 @@ BOOLEAN Pos_InitData()
 	return TRUE;
 }
 
-BOOLEAN CALLBACK callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPWSTR sName, DWORD dwDesc,
+BOOLEAN CALLBACK callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPTSTR sName, DWORD dwDesc,
                                              LPWSTR sDesc, PPOWER_POLICY pp,LPARAM lParam )
 {
 	int index;
@@ -237,21 +237,21 @@ BOOLEAN CALLBACK callback_EnumPwrScheme(UINT uiIndex, DWORD dwName, LPWSTR sName
 		memcpy(&gPP[guiIndex], pp, sizeof(POWER_POLICY));
 		guiIndex++;
 
-		index = SendMessageW(hList,
+		index = SendMessage(hList,
 			   CB_ADDSTRING,
 			   0,
 			   (LPARAM)sName);
 		if (index == CB_ERR)
 			return FALSE;
 
-		SendMessageW(hList,
+		SendMessage(hList,
 			   CB_SETITEMDATA,
 			   index,
 			   (LPARAM)uiIndex);
 
 		if (aps == uiIndex)
 		{
-			SendMessageW(hList,
+			SendMessage(hList,
 			   CB_SELECTSTRING,
 			   TRUE,
 			   (LPARAM)sName);
@@ -307,7 +307,7 @@ void Pos_InitPage(HWND hwndDlg)
 {
 	int ifrom=0,i=0,imin=0;
 	HWND hwnd = NULL;
-	WCHAR szName[MAX_PATH];
+	TCHAR szName[MAX_PATH];
 	LRESULT index;
 
 	for(i=1;i<9;i++)
@@ -353,7 +353,7 @@ void Pos_InitPage(HWND hwndDlg)
 		{
 			if (LoadString(hApplet, ifrom, szName, MAX_PATH))
 			{
-				index = SendMessageW(hwnd,
+				index = SendMessage(hwnd,
 									 CB_ADDSTRING,
 									 0,
 									(LPARAM)szName);
@@ -361,7 +361,7 @@ void Pos_InitPage(HWND hwndDlg)
 				if (index == CB_ERR)
 					return;
 
-				SendMessageW(hwnd,
+				SendMessage(hwnd,
 							 CB_SETITEMDATA,
 							 index,
 							 (LPARAM)Sec[ifrom-IDS_TIMEOUT16]);
@@ -369,14 +369,14 @@ void Pos_InitPage(HWND hwndDlg)
 		}
 		if (LoadString(hApplet, IDS_TIMEOUT16, szName, MAX_PATH))
 		{
-			index = SendMessageW(hwnd,
+			index = SendMessage(hwnd,
 								 CB_ADDSTRING,
 								 0,
 								 (LPARAM)szName);
 			if (index == CB_ERR)
 				return;
 
-			SendMessageW(hwnd,
+			SendMessage(hwnd,
 					     CB_SETITEMDATA,
 						 index,
 						 (LPARAM)Sec[0]);
@@ -388,12 +388,12 @@ void LoadConfig(HWND hwndDlg)
 {
 	INT i=0, iCurSel=0;
 	UINT uiIndex;
-	WCHAR szProfile[MAX_PATH];
-	WCHAR szTemp[MAX_PATH];
-	WCHAR szConfig[MAX_PATH];
+	TCHAR szProfile[MAX_PATH];
+	TCHAR szTemp[MAX_PATH];
+	TCHAR szConfig[MAX_PATH];
 	POWER_POLICY pp;
 
-	iCurSel = SendMessageW(GetDlgItem(hwndDlg, IDC_ENERGYLIST),
+	iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST),
 		CB_GETCURSEL,
 		0,
 		0);
@@ -408,7 +408,7 @@ void LoadConfig(HWND hwndDlg)
 		SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST), CB_GETLBTEXT, uiIndex, (LPARAM)szProfile);
 		if(LoadString(hApplet, IDS_CONFIG1, szTemp, MAX_PATH))
 		{
-			swprintf(szConfig,szTemp,szProfile);
+			_stprintf(szConfig,szTemp,szProfile);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_GRPDETAIL),szConfig);
 		}
 	}
@@ -479,7 +479,7 @@ void Pos_SaveData(HWND hwndDlg)
 {
 	INT iCurSel=0,tmp=0;
 
-	iCurSel = SendMessageW(GetDlgItem(hwndDlg, IDC_ENERGYLIST),
+	iCurSel = SendMessage(GetDlgItem(hwndDlg, IDC_ENERGYLIST),
 		CB_GETCURSEL,
 		0,
 		0);

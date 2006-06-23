@@ -15,6 +15,7 @@
 #include <commctrl.h>
 #include <cpl.h>
 #include <stdio.h>
+#include <tchar.h>
 
 #include "resource.h"
 #include "powercfg.h"
@@ -65,22 +66,22 @@ void Hib_InitDialog(HWND hwndDlg)
 {
 	SYSTEM_POWER_CAPABILITIES PowerCaps;
 	MEMORYSTATUSEX msex;
-	WCHAR szSize[MAX_PATH];
-	WCHAR szTemp[MAX_PATH];
+	TCHAR szSize[MAX_PATH];
+	TCHAR szTemp[MAX_PATH];
 	ULARGE_INTEGER FreeBytesAvailable, TotalNumberOfBytes, TotalNumberOfFreeBytes;
 
 	if (GetPwrCapabilities(&PowerCaps))
 	{
 		if (PowerCaps.HiberFilePresent)
 		{
-			SendMessageW(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE),
+			SendMessage(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE),
 						 BM_SETCHECK,
 						 (WPARAM)BST_CHECKED,
 						 (LPARAM)0);
 		}
 		else
 		{
-			SendMessageW(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE),
+			SendMessage(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE),
 						 BM_SETCHECK,
 						 (WPARAM)BST_UNCHECKED,
 						 (LPARAM)0);
@@ -106,7 +107,7 @@ void Hib_InitDialog(HWND hwndDlg)
 		{
 			if (LoadString(hApplet, IDS_SIZEMB, szTemp, MAX_PATH))
 			{
-				swprintf(szSize,szTemp,TotalNumberOfFreeBytes.QuadPart / 0x100000);
+				_stprintf(szSize,szTemp,TotalNumberOfFreeBytes.QuadPart / 0x100000);
 				SetWindowText(GetDlgItem(hwndDlg, IDC_FREESPACE),szSize);
 			}
 		}
@@ -114,7 +115,7 @@ void Hib_InitDialog(HWND hwndDlg)
 		{
 			if (LoadString(hApplet, IDS_SIZEBYTS, szTemp, MAX_PATH))
 			{
-				swprintf(szSize,szTemp,TotalNumberOfFreeBytes.QuadPart);
+				_stprintf(szSize,szTemp,TotalNumberOfFreeBytes.QuadPart);
 				SetWindowText(GetDlgItem(hwndDlg, IDC_FREESPACE),szSize);
 			}
 		}
@@ -123,7 +124,7 @@ void Hib_InitDialog(HWND hwndDlg)
 		{
 			if (LoadString(hApplet, IDS_SIZEMB, szTemp, MAX_PATH))
 			{
-				swprintf(szSize,szTemp,msex.ullTotalPhys/0x100000);
+				_stprintf(szSize,szTemp,msex.ullTotalPhys/0x100000);
 				SetWindowText(GetDlgItem(hwndDlg, IDC_SPACEFORHIBERNATEFILE),szSize);
 			}
 		}
@@ -131,7 +132,7 @@ void Hib_InitDialog(HWND hwndDlg)
 		{
 			if (LoadString(hApplet, IDS_SIZEBYTS, szTemp, MAX_PATH))
 			{
-				swprintf(szSize,szTemp,msex.ullTotalPhys);
+				_stprintf(szSize,szTemp,msex.ullTotalPhys);
 				SetWindowText(GetDlgItem(hwndDlg, IDC_SPACEFORHIBERNATEFILE),szSize);
 			}
 		}
@@ -152,7 +153,7 @@ INT_PTR Hib_SaveData(HWND hwndDlg)
 {
 	BOOLEAN bHibernate;
 	
-	bHibernate = (BOOLEAN)SendMessageW(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE),
+	bHibernate = (BOOLEAN)SendMessage(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE),
 		BM_GETCHECK,
 		(WPARAM)0,
 		(LPARAM)0);

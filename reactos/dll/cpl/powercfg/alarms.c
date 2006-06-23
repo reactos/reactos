@@ -14,6 +14,7 @@
 #include <commctrl.h>
 #include <cpl.h>
 #include <stdio.h>
+#include <tchar.h>
 
 #include "resource.h"
 #include "powercfg.h"
@@ -69,19 +70,19 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 		
 		if (LoadString(hApplet, IDS_PROCENT, szTemp, MAX_PATH))
 		{
-			swprintf(szBatteryLevel,szTemp,gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
+			_stprintf(szBatteryLevel,szTemp,gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMVALUE1),szBatteryLevel);
 		}
 
-		SendMessageW(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
+		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
 			TBM_SETRANGE,
 			(WPARAM)TRUE,
 			(LPARAM)MAKELONG(0, 100));
-		SendMessageW(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
+		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
 			TBM_SETTICFREQ,
 			(WPARAM)TRUE,
 			(LPARAM)20);
-		SendMessageW(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
+		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
 			TBM_SETPOS,
 			(WPARAM)TRUE,
 			(LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
@@ -100,14 +101,14 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 			{	
 				if (LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH) && LoadString(hApplet, IDS_TEXT, szText, MAX_PATH))
 				{
-					swprintf(szMessage,L"%s, %s",szSound,szText);
+					_stprintf(szMessage,_T("%s, %s"),szSound,szText);
 				}
 			}
 			else
 			{
 				if (LoadString(hApplet, IDS_TEXT, szText, MAX_PATH))
 				{
-					swprintf(szMessage,L"%s",szText);
+					_stprintf(szMessage,_T("%s"),szText);
 				}
 			}
 		}
@@ -117,7 +118,7 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 			{
 				if (LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH))
 				{
-					swprintf(szMessage,L"%s",szSound);
+					_stprintf(szMessage,_T("%s"),szSound);
 				}
 			}
 		}
@@ -131,28 +132,28 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 	}
 	if (gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].Enable)
 	{
-		SendMessageW(GetDlgItem(hwndDlg, IDC_ALARM2),
+		SendMessage(GetDlgItem(hwndDlg, IDC_ALARM2),
 			BM_SETCHECK,
 			(gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].Enable ? BST_CHECKED : BST_UNCHECKED),
 			(LPARAM)0);
 		if (LoadString(hApplet, IDS_PROCENT, szTemp, MAX_PATH))
 		{
-			swprintf(szBatteryLevel,szTemp,gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
+			_stprintf(szBatteryLevel,szTemp,gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
 			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMVALUE2),szBatteryLevel);
 		}
 
-		SendMessageW(GetDlgItem(hwndDlg, IDC_ALARMBAR2),
+		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR2),
 			TBM_SETRANGE,
 			(WPARAM)TRUE,
 			(LPARAM)MAKELONG(0, 100));
-		SendMessageW(GetDlgItem(hwndDlg, IDC_ALARMBAR2),
+		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR2),
 			TBM_SETPOS,
 			(WPARAM)TRUE,
 			(LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
 
 		if (LoadString(hApplet, gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.Action+IDS_PowerActionNone1, szAction, MAX_PATH))
 		{
-			SendMessageW(GetDlgItem(hwndDlg, IDC_ALARMAKTION2),
+			SendMessage(GetDlgItem(hwndDlg, IDC_ALARMAKTION2),
 									WM_SETTEXT,
 									(WPARAM)0,
 									(LPARAM)szAction);
@@ -167,14 +168,14 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 			{
 				if (LoadString(hApplet, IDS_TEXT, szText, MAX_PATH) && LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH))
 				{
-					swprintf(szMessage,L"%s, %s",szSound,szText);
+					_stprintf(szMessage,_T("%s, %s"),szSound,szText);
 				}
 			}
 			else
 			{
 				if (LoadString(hApplet, IDS_TEXT, szText, MAX_PATH))
 				{
-					swprintf(szMessage,L"%s",szText);
+					_stprintf(szMessage,_T("%s"),szText);
 				}
 			}
 		}
@@ -184,7 +185,7 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 			{
 				if (LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH))
 				{
-					swprintf(szMessage,L"%s",szSound);
+					_stprintf(szMessage,_T("%s"),szSound);
 				}
 			}
 		}

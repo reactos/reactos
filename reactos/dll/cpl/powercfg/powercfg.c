@@ -27,7 +27,7 @@ INT_PTR CALLBACK hibernateProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
 HINSTANCE hApplet = 0;
 GLOBAL_POWER_POLICY gGPP;
-WCHAR langSel[255];
+TCHAR langSel[255];
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] = 
