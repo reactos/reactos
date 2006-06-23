@@ -29,6 +29,10 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/tttables.h>
+#include <freetype/fttrigon.h>
+#include <freetype/ftglyph.h>
+#include <freetype/ftoutln.h>
+#include <freetype/ftwinfnt.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -2227,6 +2231,44 @@ NtGdiGetFontLanguageInfo(HDC  hDC)
   return 0;
 }
 
+static 
+void 
+FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
+{
+    pt->x.value = vec->x >> 6;
+    pt->x.fract = (vec->x & 0x3f) << 10;
+    pt->x.fract |= ((pt->x.fract >> 6) | (pt->x.fract >> 12));
+    pt->y.value = vec->y >> 6;
+    pt->y.fract = (vec->y & 0x3f) << 10;
+    pt->y.fract |= ((pt->y.fract >> 6) | (pt->y.fract >> 12));
+    return;
+}
+
+/* 
+   This function builds an FT_Fixed from a float. It puts the integer part
+   in the highest 16 bits and the decimal part in the lowest 16 bits of the FT_Fixed.
+   It fails if the integer part of the float number is greater than SHORT_MAX.
+*/
+static inline FT_Fixed FT_FixedFromFloat(float f)
+{
+	short value = f;
+	unsigned short fract = (f - value) * 0xFFFF;
+	return (FT_Fixed)((long)value << 16 | (unsigned long)fract);
+}
+
+/* 
+   This function builds an FT_Fixed from a FIXED. It simply put f.value 
+   in the highest 16 bits and f.fract in the lowest 16 bits of the FT_Fixed.
+*/
+static inline FT_Fixed FT_FixedFromFIXED(FIXED f)
+{
+	return (FT_Fixed)((long)f.value << 16 | (unsigned long)f.fract);
+}
+
+/*
+ * Based on WineEngGetGlyphOutline
+ *
+ */
 ULONG
 APIENTRY
 NtGdiGetGlyphOutline(
@@ -2235,12 +2277,631 @@ NtGdiGetGlyphOutline(
     IN UINT iFormat,
     OUT LPGLYPHMETRICS pgm,
     IN ULONG cjBuf,
-    OUT OPTIONAL PVOID pvBuf,
+    OUT OPTIONAL PVOID UnsafeBuf,
     IN LPMAT2 pmat2,
     IN BOOL bIgnoreRotation)
 {
-  UNIMPLEMENTED;
-  return 0;
+  static const FT_Matrix identityMat = {(1 << 16), 0, 0, (1 << 16)};
+  PDC dc;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGDI;
+  HFONT hFont = 0;
+  NTSTATUS Status;
+  GLYPHMETRICS gm;
+  ULONG Size;
+  FT_Face ft_face;
+  FT_UInt glyph_index;
+  DWORD width, height, pitch, needed = 0;
+  FT_Bitmap ft_bitmap;
+  FT_Error error;
+  INT left, right, top = 0, bottom = 0;
+  FT_Angle angle = 0;
+  FT_Int load_flags = FT_LOAD_DEFAULT | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
+  FLOAT eM11, widthRatio = 1.0;
+  FT_Matrix transMat = identityMat;
+  BOOL needsTransform = FALSE;
+  INT orientation;
+  LONG aveWidth;
+  INT adv, lsb, bbx; /* These three hold to widths of the unrotated chars */
+  OUTLINETEXTMETRICW *potm;
+  PVOID pvBuf = NULL;
+
+  DPRINT("%p, %d, %08x, %p, %08lx, %p, %p\n", hdc, wch, iFormat, pgm,
+              cjBuf, UnsafeBuf, pmat2);
+
+  dc = DC_LockDc(hdc);
+  if (!dc)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+   }
+  eM11 = dc->w.xformWorld2Vport.eM11;
+  hFont = dc->w.hFont;
+  TextObj = TEXTOBJ_LockText(hFont);
+  DC_UnlockDc(dc);
+  if (!TextObj)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+   }
+  FontGDI = ObjToGDI(TextObj->Font, FONT);
+  ft_face = FontGDI->face;
+
+  aveWidth = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.lfWidth: 0;
+  orientation = FT_IS_SCALABLE(ft_face) ? TextObj->logfont.lfOrientation: 0;
+
+  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+  potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+  if (!potm)
+    {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      TEXTOBJ_UnlockText(TextObj);
+      return GDI_ERROR;
+    }
+  IntGetOutlineTextMetrics(FontGDI, Size, potm);
+
+  IntLockFreeType;
+
+  /* During testing, I never saw this used. In here just incase.*/
+  if (ft_face->charmap == NULL)
+    {
+      DPRINT("WARNING: No charmap selected!\n");
+      DPRINT("This font face has %d charmaps\n", ft_face->num_charmaps);
+      int n;
+      FT_CharMap found = 0, charmap;
+      
+      for (n = 0; n < ft_face->num_charmaps; n++)
+      {
+         charmap = ft_face->charmaps[n];
+         DPRINT("found charmap encoding: %u\n", charmap->encoding);
+         if (charmap->encoding != 0)
+         {
+            found = charmap;
+            break;
+         }
+      }
+      if (!found)
+      {
+         DPRINT1("WARNING: Could not find desired charmap!\n");
+      }
+      error = FT_Set_Charmap(ft_face, found);
+      if (error)
+        {
+           DPRINT1("WARNING: Could not set the charmap!\n");
+        }
+    }
+
+//  FT_Set_Pixel_Sizes(ft_face,
+//                     TextObj->logfont.lfWidth,
+                     /* FIXME should set character height if neg */
+//                     (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight :
+//                      TextObj->logfont.lfHeight == 0 ? 11 : TextObj->logfont.lfHeight));
+
+  TEXTOBJ_UnlockText(TextObj);
+
+  if (iFormat & GGO_GLYPH_INDEX)
+    {
+       glyph_index = wch;
+       iFormat &= ~GGO_GLYPH_INDEX;
+    }
+  else  glyph_index = FT_Get_Char_Index(ft_face, wch);
+
+  if (orientation || (iFormat != GGO_METRICS && iFormat != GGO_BITMAP) || aveWidth || pmat2)
+        load_flags |= FT_LOAD_NO_BITMAP;
+
+  error = FT_Load_Glyph(ft_face, glyph_index, load_flags);
+  if (error)
+    {
+         DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
+	 IntUnLockFreeType;
+	 if (potm) ExFreePool(potm);
+	 return GDI_ERROR;
+    }
+  IntUnLockFreeType;
+
+  if (aveWidth && potm)
+    {
+       widthRatio = (FLOAT)aveWidth * eM11 / 
+                                 (FLOAT) potm->otmTextMetrics.tmAveCharWidth;
+    }
+
+  left = (INT)(ft_face->glyph->metrics.horiBearingX * widthRatio) & -64;
+  right = (INT)((ft_face->glyph->metrics.horiBearingX + 
+                    ft_face->glyph->metrics.width) * widthRatio + 63) & -64;
+
+  adv = (INT)((ft_face->glyph->metrics.horiAdvance * widthRatio) + 63) >> 6;
+  lsb = left >> 6;
+  bbx = (right - left) >> 6;
+
+  DPRINT("Advance = %d, lsb = %d, bbx = %d\n",adv, lsb, bbx);
+
+  IntLockFreeType;
+  
+   /* Scaling transform */
+  if (aveWidth)
+    {
+        FT_Matrix scaleMat;
+        DPRINT("Scaling Trans!\n");
+        scaleMat.xx = FT_FixedFromFloat(widthRatio);
+        scaleMat.xy = 0;
+        scaleMat.yx = 0;
+        scaleMat.yy = (1 << 16);
+        FT_Matrix_Multiply(&scaleMat, &transMat);
+        needsTransform = TRUE;
+    }
+
+    /* Slant transform */
+  if (potm->otmTextMetrics.tmItalic)
+    {
+        FT_Matrix slantMat;
+        DPRINT("Slant Trans!\n");
+        slantMat.xx = (1 << 16);
+        slantMat.xy = ((1 << 16) >> 2);
+        slantMat.yx = 0;
+        slantMat.yy = (1 << 16);
+        FT_Matrix_Multiply(&slantMat, &transMat);
+        needsTransform = TRUE;
+    }
+
+    /* Rotation transform */
+  if (orientation)
+    {
+        FT_Matrix rotationMat;
+        FT_Vector vecAngle;
+        DPRINT("Rotation Trans!\n");
+        angle = FT_FixedFromFloat((float)orientation / 10.0);
+        FT_Vector_Unit(&vecAngle, angle);
+        rotationMat.xx = vecAngle.x;
+        rotationMat.xy = -vecAngle.y;
+        rotationMat.yx = -rotationMat.xy;
+        rotationMat.yy = rotationMat.xx;
+        FT_Matrix_Multiply(&rotationMat, &transMat);
+        needsTransform = TRUE;
+    }
+
+    /* Extra transformation specified by caller */
+  if (pmat2)
+    {
+        FT_Matrix extraMat;
+        DPRINT("MAT2 Matrix Trans!\n");
+        extraMat.xx = FT_FixedFromFIXED(pmat2->eM11);
+        extraMat.xy = FT_FixedFromFIXED(pmat2->eM21);
+        extraMat.yx = FT_FixedFromFIXED(pmat2->eM12);
+        extraMat.yy = FT_FixedFromFIXED(pmat2->eM22);
+        FT_Matrix_Multiply(&extraMat, &transMat);
+        needsTransform = TRUE;
+    }
+
+  if (potm) ExFreePool(potm); /* It looks like we are finished with potm ATM.*/
+
+  if (!needsTransform)
+    {
+        DPRINT("No Need to be Transformed!\n");
+        top = (ft_face->glyph->metrics.horiBearingY + 63) & -64;
+        bottom = (ft_face->glyph->metrics.horiBearingY -
+                  ft_face->glyph->metrics.height) & -64;
+        gm.gmCellIncX = adv;
+        gm.gmCellIncY = 0;
+    }
+  else 
+    {
+        INT xc, yc;
+        FT_Vector vec;
+        for(xc = 0; xc < 2; xc++)
+        {
+          for(yc = 0; yc < 2; yc++)
+            {
+                vec.x = (ft_face->glyph->metrics.horiBearingX +
+                  xc * ft_face->glyph->metrics.width);
+                vec.y = ft_face->glyph->metrics.horiBearingY -
+                  yc * ft_face->glyph->metrics.height;
+                DPRINT("Vec %ld,%ld\n", vec.x, vec.y);
+                FT_Vector_Transform(&vec, &transMat);
+                if(xc == 0 && yc == 0)
+                {
+                    left = right = vec.x;
+                    top = bottom = vec.y;
+                }
+                else
+                {
+                    if(vec.x < left) left = vec.x;
+                    else if(vec.x > right) right = vec.x;
+                    if(vec.y < bottom) bottom = vec.y;
+                    else if(vec.y > top) top = vec.y;
+                }
+            }
+        }
+        left = left & -64;
+        right = (right + 63) & -64;
+        bottom = bottom & -64;
+        top = (top + 63) & -64;
+
+        DPRINT("transformed box: (%d,%d - %d,%d)\n", left, top, right, bottom);
+        vec.x = ft_face->glyph->metrics.horiAdvance;
+        vec.y = 0;
+        FT_Vector_Transform(&vec, &transMat);
+        gm.gmCellIncX = (vec.x+63) >> 6;
+        gm.gmCellIncY = -((vec.y+63) >> 6);
+    }
+  gm.gmBlackBoxX = (right - left) >> 6;
+  gm.gmBlackBoxY = (top - bottom) >> 6;
+  gm.gmptGlyphOrigin.x = left >> 6;
+  gm.gmptGlyphOrigin.y = top >> 6;
+
+  DPRINT("CX %d CY %d BBX %d BBY %d GOX %d GOY %d\n",
+                           gm.gmCellIncX, gm.gmCellIncY,
+                           gm.gmBlackBoxX, gm.gmBlackBoxY,
+                           gm.gmptGlyphOrigin.x, gm.gmptGlyphOrigin.y);
+
+  IntUnLockFreeType;
+ 
+  if (pgm)
+    {
+      Status = MmCopyToCaller(pgm, &gm,  sizeof(GLYPHMETRICS));
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          return GDI_ERROR;
+        }
+      DPRINT("Copied GLYPHMETRICS to User!\n");
+    }
+
+  if (iFormat == GGO_METRICS)
+    { 
+        DPRINT("GGO_METRICS Exit!\n");
+        return 1; /* FIXME */
+    }
+
+  if (ft_face->glyph->format != ft_glyph_format_outline && iFormat != GGO_BITMAP)
+    {
+        DPRINT1("loaded a bitmap\n");
+        return GDI_ERROR;
+    }
+
+  if (UnsafeBuf && cjBuf)
+    {
+       pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, TAG_GDITEXT);
+       if (pvBuf == NULL)
+         {
+           SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+           return GDI_ERROR;
+         }
+       RtlZeroMemory(pvBuf, cjBuf);
+    }
+    
+
+  switch(iFormat)
+    {
+    case GGO_BITMAP:
+        width = gm.gmBlackBoxX;
+        height = gm.gmBlackBoxY;
+        pitch = ((width + 31) >> 5) << 2;
+        needed = pitch * height;
+
+        if(!pvBuf || !cjBuf) break;
+
+        switch(ft_face->glyph->format)
+        {
+          case ft_glyph_format_bitmap:
+           {
+             BYTE *src = ft_face->glyph->bitmap.buffer, *dst = pvBuf;
+             INT w = (ft_face->glyph->bitmap.width + 7) >> 3;
+             INT h = ft_face->glyph->bitmap.rows;
+             while(h--)
+             {
+                RtlCopyMemory(dst, src, w);
+                src += ft_face->glyph->bitmap.pitch;
+                dst += pitch;
+             }
+             break;
+           }
+
+          case ft_glyph_format_outline:
+            ft_bitmap.width = width;
+            ft_bitmap.rows = height;
+            ft_bitmap.pitch = pitch;
+            ft_bitmap.pixel_mode = ft_pixel_mode_mono;
+            ft_bitmap.buffer = pvBuf;
+
+            IntLockFreeType;
+            if(needsTransform)
+            {
+               FT_Outline_Transform(&ft_face->glyph->outline, &transMat);
+	    }
+            FT_Outline_Translate(&ft_face->glyph->outline, -left, -bottom );
+            /* Note: FreeType will only set 'black' bits for us. */
+            RtlZeroMemory(pvBuf, needed);
+            FT_Outline_Get_Bitmap(library, &ft_face->glyph->outline, &ft_bitmap);
+            IntUnLockFreeType;
+            break;
+
+          default:
+            DPRINT1("loaded glyph format %x\n", ft_face->glyph->format);
+            if(pvBuf) ExFreePool(pvBuf);
+            return GDI_ERROR;
+        }
+        break;
+
+    case GGO_GRAY2_BITMAP:
+    case GGO_GRAY4_BITMAP:
+    case GGO_GRAY8_BITMAP:
+      {
+        unsigned int mult, row, col;
+        BYTE *start, *ptr;
+
+        width = gm.gmBlackBoxX;
+        height = gm.gmBlackBoxY;
+        pitch = (width + 3) / 4 * 4;
+        needed = pitch * height;
+
+        if(!pvBuf || !cjBuf) break;
+
+        ft_bitmap.width = width;
+        ft_bitmap.rows = height;
+        ft_bitmap.pitch = pitch;
+        ft_bitmap.pixel_mode = ft_pixel_mode_grays;
+        ft_bitmap.buffer = pvBuf;
+
+        IntLockFreeType;
+        if(needsTransform)
+        {
+           FT_Outline_Transform(&ft_face->glyph->outline, &transMat);
+        }
+        FT_Outline_Translate(&ft_face->glyph->outline, -left, -bottom );
+        RtlZeroMemory(ft_bitmap.buffer, cjBuf);
+        FT_Outline_Get_Bitmap(library, &ft_face->glyph->outline, &ft_bitmap);
+        IntUnLockFreeType;
+        
+        if(iFormat == GGO_GRAY2_BITMAP)
+            mult = 4;
+        else if(iFormat == GGO_GRAY4_BITMAP)
+            mult = 16;
+        else if(iFormat == GGO_GRAY8_BITMAP)
+            mult = 64;	    
+        else 
+        {
+            ASSERT(0);
+            break;
+        }
+
+        start = pvBuf;
+        for(row = 0; row < height; row++)
+        {
+            ptr = start;
+            for(col = 0; col < width; col++, ptr++)
+            {
+                *ptr = (((int)*ptr) * mult + 128) / 256;
+            }
+            start += pitch;
+        }
+        break;
+      }
+
+    case GGO_NATIVE:
+      {
+        int contour, point = 0, first_pt;
+        FT_Outline *outline = &ft_face->glyph->outline;
+        TTPOLYGONHEADER *pph;
+        TTPOLYCURVE *ppc;
+        DWORD pph_start, cpfx, type;
+
+        if(cjBuf == 0) pvBuf = NULL; /* This is okay, need cjBuf to allocate. */
+
+        IntLockFreeType;
+        if (needsTransform && pvBuf) FT_Outline_Transform(outline, &transMat);
+
+        for(contour = 0; contour < outline->n_contours; contour++)
+        {
+          pph_start = needed;
+          pph = (TTPOLYGONHEADER *)((char *)pvBuf + needed);
+          first_pt = point;
+          if(pvBuf)
+          {
+            pph->dwType = TT_POLYGON_TYPE;
+            FTVectorToPOINTFX(&outline->points[point], &pph->pfxStart);
+          }
+          needed += sizeof(*pph);
+          point++;
+          while(point <= outline->contours[contour])
+          {
+            ppc = (TTPOLYCURVE *)((char *)pvBuf + needed);
+            type = (outline->tags[point] & FT_Curve_Tag_On) ?
+                                            TT_PRIM_LINE : TT_PRIM_QSPLINE;
+            cpfx = 0;
+            do
+            {
+              if(pvBuf)
+                FTVectorToPOINTFX(&outline->points[point], &ppc->apfx[cpfx]);
+              cpfx++;
+              point++;
+            } while(point <= outline->contours[contour] &&
+                       (outline->tags[point] & FT_Curve_Tag_On) ==
+                       (outline->tags[point-1] & FT_Curve_Tag_On));
+
+                /* At the end of a contour Windows adds the start point, but
+                   only for Beziers */
+            if(point > outline->contours[contour] &&
+                   !(outline->tags[point-1] & FT_Curve_Tag_On))
+            {
+              if(pvBuf)
+                FTVectorToPOINTFX(&outline->points[first_pt], &ppc->apfx[cpfx]);
+              cpfx++;
+            } 
+            else if(point <= outline->contours[contour] &&
+                                outline->tags[point] & FT_Curve_Tag_On)
+            {
+              /* add closing pt for bezier */
+              if(pvBuf)
+                FTVectorToPOINTFX(&outline->points[point], &ppc->apfx[cpfx]);
+              cpfx++;
+              point++;
+            }
+            if(pvBuf)
+            {
+               ppc->wType = type;
+               ppc->cpfx = cpfx;
+            }
+            needed += sizeof(*ppc) + (cpfx - 1) * sizeof(POINTFX);
+          }
+          if(pvBuf) pph->cb = needed - pph_start;
+        }
+        IntUnLockFreeType;
+        break;
+      }
+    case GGO_BEZIER:
+      {
+        /* Convert the quadratic Beziers to cubic Beziers.
+           The parametric eqn for a cubic Bezier is, from PLRM:
+           r(t) = at^3 + bt^2 + ct + r0
+           with the control points:
+           r1 = r0 + c/3
+           r2 = r1 + (c + b)/3
+           r3 = r0 + c + b + a
+
+           A quadratic Beizer has the form:
+           p(t) = (1-t)^2 p0 + 2(1-t)t p1 + t^2 p2
+
+           So equating powers of t leads to:
+           r1 = 2/3 p1 + 1/3 p0
+           r2 = 2/3 p1 + 1/3 p2
+           and of course r0 = p0, r3 = p2
+         */
+
+        int contour, point = 0, first_pt;
+        FT_Outline *outline = &ft_face->glyph->outline;
+        TTPOLYGONHEADER *pph;
+        TTPOLYCURVE *ppc;
+        DWORD pph_start, cpfx, type;
+        FT_Vector cubic_control[4];
+        if(cjBuf == 0) pvBuf = NULL;
+
+        if (needsTransform && pvBuf)
+          {
+            IntLockFreeType;
+            FT_Outline_Transform(outline, &transMat);
+            IntUnLockFreeType;
+          }
+
+        for(contour = 0; contour < outline->n_contours; contour++)
+        {
+            pph_start = needed;
+            pph = (TTPOLYGONHEADER *)((char *)pvBuf + needed);
+            first_pt = point;
+            if(pvBuf)
+            {
+                 pph->dwType = TT_POLYGON_TYPE;
+                 FTVectorToPOINTFX(&outline->points[point], &pph->pfxStart);
+            }
+            needed += sizeof(*pph);
+            point++;
+            while(point <= outline->contours[contour])
+            {
+                ppc = (TTPOLYCURVE *)((char *)pvBuf + needed);
+                type = (outline->tags[point] & FT_Curve_Tag_On) ?
+                TT_PRIM_LINE : TT_PRIM_CSPLINE;
+                cpfx = 0;
+                do
+                {
+                    if(type == TT_PRIM_LINE)
+                    {
+                      if(pvBuf)
+                        FTVectorToPOINTFX(&outline->points[point], &ppc->apfx[cpfx]);
+                        cpfx++;
+                        point++;
+                    }
+                    else
+                    {
+                      /* Unlike QSPLINEs, CSPLINEs always have their endpoint
+                         so cpfx = 3n */
+
+                      /* FIXME: Possible optimization in endpoint calculation
+                         if there are two consecutive curves */
+                        cubic_control[0] = outline->points[point-1];
+                        if(!(outline->tags[point-1] & FT_Curve_Tag_On))
+                        {
+                            cubic_control[0].x += outline->points[point].x + 1;
+                            cubic_control[0].y += outline->points[point].y + 1;
+                            cubic_control[0].x >>= 1;
+                            cubic_control[0].y >>= 1;
+                        }
+                        if(point+1 > outline->contours[contour])
+                            cubic_control[3] = outline->points[first_pt];
+                        else
+                        {
+                            cubic_control[3] = outline->points[point+1];
+                            if(!(outline->tags[point+1] & FT_Curve_Tag_On))
+                            {
+                                cubic_control[3].x += outline->points[point].x + 1;
+                                cubic_control[3].y += outline->points[point].y + 1;
+                                cubic_control[3].x >>= 1;
+                                cubic_control[3].y >>= 1;
+                            }
+                        }
+                        /* r1 = 1/3 p0 + 2/3 p1
+                           r2 = 1/3 p2 + 2/3 p1 */
+                        cubic_control[1].x = (2 * outline->points[point].x + 1) / 3;
+                        cubic_control[1].y = (2 * outline->points[point].y + 1) / 3;
+                        cubic_control[2] = cubic_control[1];
+                        cubic_control[1].x += (cubic_control[0].x + 1) / 3;
+                        cubic_control[1].y += (cubic_control[0].y + 1) / 3;
+                        cubic_control[2].x += (cubic_control[3].x + 1) / 3;
+                        cubic_control[2].y += (cubic_control[3].y + 1) / 3;
+                        if(pvBuf)
+                        {
+                            FTVectorToPOINTFX(&cubic_control[1], &ppc->apfx[cpfx]);
+                            FTVectorToPOINTFX(&cubic_control[2], &ppc->apfx[cpfx+1]);
+                            FTVectorToPOINTFX(&cubic_control[3], &ppc->apfx[cpfx+2]);
+                        }
+                        cpfx += 3;
+                        point++;
+                    }
+                } 
+                while(point <= outline->contours[contour] &&
+                        (outline->tags[point] & FT_Curve_Tag_On) ==
+                        (outline->tags[point-1] & FT_Curve_Tag_On));
+                /* At the end of a contour Windows adds the start point,
+                   but only for Beziers and we've already done that.
+                */
+                if(point <= outline->contours[contour] &&
+                                   outline->tags[point] & FT_Curve_Tag_On)
+                {
+                  /* This is the closing pt of a bezier, but we've already
+                    added it, so just inc point and carry on */
+                    point++;
+                }
+                if(pvBuf)
+                {
+                    ppc->wType = type;
+                    ppc->cpfx = cpfx;
+		}
+                needed += sizeof(*ppc) + (cpfx - 1) * sizeof(POINTFX);
+            }
+            if(pvBuf) pph->cb = needed - pph_start;
+        }
+        break;
+      }
+
+    default:
+        DPRINT1("Unsupported format %d\n", iFormat);
+        if(pvBuf) ExFreePool(pvBuf);
+        return GDI_ERROR;
+    }
+
+  if (pvBuf)
+    {
+       Status = MmCopyToCaller(UnsafeBuf, pvBuf, cjBuf);
+       if (! NT_SUCCESS(Status))
+         {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            ExFreePool(pvBuf);
+            return GDI_ERROR;
+         }
+       DPRINT("NtGdiGetGlyphOutline K -> U worked!\n");
+       ExFreePool(pvBuf);
+    }
+
+  DPRINT("NtGdiGetGlyphOutline END and needed %d\n", needed);
+  return needed;
 }
 
 DWORD
