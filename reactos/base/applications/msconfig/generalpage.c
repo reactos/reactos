@@ -15,6 +15,9 @@ HWND hGeneralDialog;
 INT_PTR CALLBACK
 GeneralPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    UNREFERENCED_PARAMETER(lParam)
+    UNREFERENCED_PARAMETER(wParam)
+
     switch (message) {
     case WM_INITDIALOG:
         hGeneralDialog = hDlg;

@@ -21,12 +21,12 @@ BOOL OnCreate(HWND hWnd)
 	TCITEM  item;
 
 	hTabWnd = GetDlgItem(hWnd, IDC_TAB);
-    hGeneralPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_GENERAL_PAGE), hWnd, GeneralPageWndProc);
-    hSystemPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SYSTEM_PAGE), hWnd, SystemPageWndProc);
-    hFreeLdrPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_FREELDR_PAGE), hWnd, FreeLdrPageWndProc);
-    hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd, ServicesPageWndProc);
-    hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd, StartupPageWndProc);
-    hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd, ToolsPageWndProc);
+    hGeneralPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_GENERAL_PAGE), hWnd, (DLGPROC) GeneralPageWndProc);
+    hSystemPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SYSTEM_PAGE), hWnd, (DLGPROC) SystemPageWndProc);
+    hFreeLdrPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_FREELDR_PAGE), hWnd, (DLGPROC) FreeLdrPageWndProc);
+    hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd, (DLGPROC) ServicesPageWndProc);
+    hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd, (DLGPROC) StartupPageWndProc);
+    hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd, (DLGPROC) ToolsPageWndProc);
 
     LoadString(hInst, IDS_MSCONFIG, szTemp, 256);
     SetWindowText(hWnd, szTemp);
@@ -192,13 +192,17 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
     INITCOMMONCONTROLSEX InitControls;
 
+    UNREFERENCED_PARAMETER(hPrevInstance)
+    UNREFERENCED_PARAMETER(lpCmdLine)
+    UNREFERENCED_PARAMETER(nCmdShow)
+
     InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
     InitControls.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES;
     InitCommonControlsEx(&InitControls);
 
     hInst = hInstance;
  
-    DialogBox(hInst, (LPCTSTR)IDD_MSCONFIG_DIALOG, NULL, MsConfigWndProc);
+    DialogBox(hInst, (LPCTSTR)IDD_MSCONFIG_DIALOG, NULL, (DLGPROC) MsConfigWndProc);
   
     return 0;
 }
