@@ -49,6 +49,11 @@ LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
     
+    UNREFERENCED_PARAMETER(lParam)
+    UNREFERENCED_PARAMETER(wParam)
+    UNREFERENCED_PARAMETER(uMsg)
+    UNREFERENCED_PARAMETER(hwnd)
+
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
     
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
@@ -62,10 +67,10 @@ LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
     psh.nStartPage = 0;
     psh.ppsp = psp;
     
-    InitPropSheetPage(&psp[0], IDD_BACKGROUND, BackgroundPageProc);
-    InitPropSheetPage(&psp[1], IDD_SCREENSAVER, ScreenSaverPageProc);
-    InitPropSheetPage(&psp[2], IDD_APPEARANCE, AppearancePageProc);
-    InitPropSheetPage(&psp[3], IDD_SETTINGS, SettingsPageProc);
+    InitPropSheetPage(&psp[0], IDD_BACKGROUND, (DLGPROC) BackgroundPageProc);
+    InitPropSheetPage(&psp[1], IDD_SCREENSAVER, (DLGPROC) ScreenSaverPageProc);
+    InitPropSheetPage(&psp[2], IDD_APPEARANCE, (DLGPROC) AppearancePageProc);
+    InitPropSheetPage(&psp[3], IDD_SETTINGS, (DLGPROC) SettingsPageProc);
     
     return (LONG)(PropertySheet(&psh) != -1);
 }

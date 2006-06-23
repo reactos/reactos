@@ -302,6 +302,8 @@ void OnColorButton()
 
 BOOL CheckListBoxFilename(HWND list, TCHAR *filename)
 {
+    UNREFERENCED_PARAMETER(filename)
+    UNREFERENCED_PARAMETER(list)
     return FALSE;
 }
 
@@ -571,7 +573,7 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                         {
                             if(command == CBN_SELCHANGE)
                             {
-                                g_placementSelection = SendMessage(g_hPlacementCombo, CB_GETCURSEL, 0, 0);
+                                g_placementSelection = (int)SendMessage(g_hPlacementCombo, CB_GETCURSEL, 0, 0);
                                 
                                 InvalidateRect(g_hBackgroundPreview, NULL, TRUE);
                                 
