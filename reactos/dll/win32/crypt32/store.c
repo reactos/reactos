@@ -32,6 +32,7 @@
 #include "winbase.h"
 #include "winnls.h"
 #include "winreg.h"
+#include "wingdi.h"
 #include "winuser.h"
 #include "wincrypt.h"
 #include "wine/debug.h"
