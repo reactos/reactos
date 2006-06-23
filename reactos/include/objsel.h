@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+#include <objidl.h>
+#include <oaidl.h>
+
 /* the PSDK headers defines it as EXTERN_C const GUID CLSID_DsObjectPicker = {...},
  * but that's not a good idea when EXTERN_C is extern... */
 #ifndef DEFINE_GUID
@@ -164,7 +167,7 @@ DECLARE_INTERFACE_(IDsObjectPicker,IUnknown)
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IDsObjectPicker methods ***/
     STDMETHOD_(HRESULT,Initialize)(THIS_ PDSOP_INIT_INFO pInitInfo) PURE;
-    STDMETHOD_(HRESULT,InvokeDialog)(THIS_ HWND hwndParent, IDataObject** ppdoSelections) PURE;
+    STDMETHOD_(HRESULT,InvokeDialog)(THIS_ HWND hwndParent, IDataObject ** ppdoSelections) PURE;
 };
 #undef INTERFACE
 
