@@ -30,6 +30,7 @@
 
 #include "ntddk.h"
 
+#define _NTIFS_INCLUDED_
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -2946,13 +2947,6 @@ VOID
 NTAPI
 HalDisplayString (
     IN PCHAR String
-);
-
-NTHALAPI
-VOID
-NTAPI
-HalQueryRealTimeClock (
-    IN OUT PTIME_FIELDS TimeFields
 );
 
 NTHALAPI

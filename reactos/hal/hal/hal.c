@@ -297,8 +297,8 @@ BOOLEAN
 NTAPI
 HalGetEnvironmentVariable(
   PCH Name,
-  PCH Value,
-  USHORT ValueLength)
+  USHORT ValueLength,
+  PCH Value)
 {
   UNIMPLEMENTED;
 
@@ -325,7 +325,7 @@ HalGetInterruptVector(
 VOID
 NTAPI
 HalHandleNMI(
-  ULONG Unused)
+  PVOID NmiData)
 {
   UNIMPLEMENTED;
 }
@@ -393,12 +393,13 @@ HalQueryDisplayParameters(
 }
 
 
-VOID
+BOOLEAN
 NTAPI
 HalQueryRealTimeClock(
   PTIME_FIELDS Time)
 {
   UNIMPLEMENTED;
+  return FALSE;
 }
 
 

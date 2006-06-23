@@ -925,6 +925,8 @@ typedef struct _MEMORYSTATUSEX {
 	DWORDLONG ullAvailExtendedVirtual;
 } MEMORYSTATUSEX, *LPMEMORYSTATUSEX;
 #endif
+#ifndef _LDT_ENTRY_DEFINED
+#define _LDT_ENTRY_DEFINED
 typedef struct _LDT_ENTRY {
 	WORD LimitLow;
 	WORD BaseLow;
@@ -949,6 +951,7 @@ typedef struct _LDT_ENTRY {
 		} Bits;
 	} HighWord;
 } LDT_ENTRY,*PLDT_ENTRY,*LPLDT_ENTRY;
+#endif
 typedef struct _PROCESS_HEAP_ENTRY {
 	PVOID lpData;
 	DWORD cbData;

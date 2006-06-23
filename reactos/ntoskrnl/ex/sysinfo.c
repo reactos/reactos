@@ -196,7 +196,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
     /*
      * Get the environment variable
      */
-    Result = HalGetEnvironmentVariable(AName.Buffer, Value, ValueBufferLength);
+    Result = HalGetEnvironmentVariable(AName.Buffer, ValueBufferLength, Value);
     if(!Result)
     {
       RtlFreeAnsiString(&AName);
