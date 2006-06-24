@@ -10,7 +10,7 @@
 
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
 
-typedef unsigned char BYTE;
+typedef unsigned char BYTE, *PBYTE;
 typedef unsigned char UCHAR;
 typedef unsigned short WORD;
 typedef unsigned short USHORT;

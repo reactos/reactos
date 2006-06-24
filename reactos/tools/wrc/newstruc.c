@@ -69,6 +69,29 @@ __NEW_STRUCT_FUNC(string)
 __NEW_STRUCT_FUNC(toolbar_item)
 __NEW_STRUCT_FUNC(ani_any)
 
+void hdump( void *v, int l ) {
+    int i;
+    char *c = (char *)v, *begin = c;
+    
+    while( l > 0 ) {
+	if( (c - begin) ) 
+	    printf("\n");
+	printf("%08x:", c);
+	for( i = 0; i < l && i < 16; i++ ) {
+	    printf(" %02x", c[i] & 0xff);
+	}
+	for( ; i < 16; i++ ) {
+	    printf("   ");
+	}
+	printf(" -- ");
+	for( i = 0; i < l && i < 16; i++ ) {
+	    printf("%c", isprint(c[i]) ? c[i] : '.');
+	}
+	c += 16; l -= 16;
+    }
+    printf("\n");
+}
+
 /* New instances for all types of structures */
 /* Very inefficient (in size), but very functional :-]
  * Especially for type-checking.
@@ -984,7 +1007,10 @@ ver_words_t *add_ver_words(ver_words_t *w, int i)
 	return w;
 }
 
-#define MSGTAB_BAD_PTR(p, b, l, r)	(((l) - ((char *)(p) - (char *)(b))) > (r))
+#define MSGTAB_BAD_PTR(p, b, l, r) \
+   (printf("MSGTAB_BAD_PTR(%x,%x,%d,r) => %x > r=%x\n", p,b,l, \
+	   ((l) - ((char *)(p) - (char *)(b))), r), \
+    (((l) - ((char *)(p) - (char *)(b))) > (r)))
 messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 {
 	messagetable_t *msg = (messagetable_t *)xmalloc(sizeof(messagetable_t));
@@ -1023,97 +1049,48 @@ messagetable_t *new_messagetable(raw_data_t *rd, int *memopt)
 	if(!hi && !lo)
 		yyerror("Invalid messagetable block count 0");
 
-	if(!hi && lo)  /* Messagetable byteorder == native byteorder */
-	{
 #ifdef WORDS_BIGENDIAN
-		if(byteorder != WRC_BO_LITTLE) goto out;
+	if(byteorder != WRC_BO_LITTLE) goto out;
 #else
-		if(byteorder != WRC_BO_BIG) goto out;
+	if(byteorder != WRC_BO_BIG) goto out;
 #endif
-		/* Resource byteorder != native byteorder */
-
-		mbp = (msgtab_block_t *)&(((DWORD *)rd->data)[1]);
-		if(MSGTAB_BAD_PTR(mbp, rd->data, rd->size, nblk * sizeof(*mbp)))
-			yyerror("Messagetable's blocks are outside of defined data");
-		for(i = 0; i < nblk; i++)
-		{
-			msgtab_entry_t *mep, *next_mep;
-			DWORD id;
-
-			mep = (msgtab_entry_t *)(((char *)rd->data) + mbp[i].offset);
-
-			for(id = mbp[i].idlo; id <= mbp[i].idhi; id++)
-			{
-				if(MSGTAB_BAD_PTR(mep, rd->data, rd->size, mep->length))
-					yyerror("Messagetable's data for block %d, ID 0x%08lx is outside of defined data", (int)i, id);
-				if(mep->flags == 1)	/* Docu says 'flags == 0x0001' for unicode */
-				{
-					WORD *wp = (WORD *)&mep[1];
-					int l = mep->length/2 - 2; /* Length included header */
-					int n;
-
-					if(mep->length & 1)
-						yyerror("Message 0x%08lx is unicode (block %d), but has odd length (%d)", id, (int)i, mep->length);
-					for(n = 0; n < l; n++)
-						wp[n] = BYTESWAP_WORD(wp[n]);
-
-				}
-				next_mep = (msgtab_entry_t *)(((char *)mep) + mep->length);
-				mep->length = BYTESWAP_WORD(mep->length);
-				mep->flags  = BYTESWAP_WORD(mep->flags);
-				mep = next_mep;
-			}
-
-			mbp[i].idlo   = BYTESWAP_DWORD(mbp[i].idlo);
-			mbp[i].idhi   = BYTESWAP_DWORD(mbp[i].idhi);
-			mbp[i].offset = BYTESWAP_DWORD(mbp[i].offset);
-		}
-	}
-	if(hi && !lo)  /* Messagetable byteorder != native byteorder */
+	/* Resource byteorder != native byteorder */
+	
+	mbp = BYTESWAP_DWORD((msgtab_block_t *)&(((DWORD *)rd->data)[1]));
+	if(MSGTAB_BAD_PTR(mbp, rd->data, rd->size, nblk * sizeof(*mbp)))
+	    yyerror("[1] Messagetable's blocks are outside of defined data");
+	for(i = 0; i < nblk; i++)
 	{
-#ifdef WORDS_BIGENDIAN
-		if(byteorder == WRC_BO_LITTLE) goto out;
-#else
-		if(byteorder == WRC_BO_BIG) goto out;
-#endif
-		/* Resource byteorder == native byteorder */
-
-		mbp = (msgtab_block_t *)&(((DWORD *)rd->data)[1]);
-		nblk = BYTESWAP_DWORD(nblk);
-		if(MSGTAB_BAD_PTR(mbp, rd->data, rd->size, nblk * sizeof(*mbp)))
-			yyerror("Messagetable's blocks are outside of defined data");
-		for(i = 0; i < nblk; i++)
+	    msgtab_entry_t *mep, *next_mep;
+	    DWORD id;
+	    
+	    mep = (msgtab_entry_t *)(((char *)rd->data) + mbp[i].offset);
+	    
+	    for(id = mbp[i].idlo; id <= mbp[i].idhi; id++)
+	    {
+		if(MSGTAB_BAD_PTR(mep, rd->data, rd->size, mep->length))
+		    yyerror("Messagetable's data for block %d, ID 0x%08lx is outside of defined data", (int)i, id);
+		if(BYTESWAP_DWORD(mep->flags) == 1)	/* Docu says 'flags == 0x0001' for unicode */
 		{
-			msgtab_entry_t *mep;
-			DWORD id;
-
-			mbp[i].idlo   = BYTESWAP_DWORD(mbp[i].idlo);
-			mbp[i].idhi   = BYTESWAP_DWORD(mbp[i].idhi);
-			mbp[i].offset = BYTESWAP_DWORD(mbp[i].offset);
-			mep = (msgtab_entry_t *)(((char *)rd->data) + mbp[i].offset);
-
-			for(id = mbp[i].idlo; id <= mbp[i].idhi; id++)
-			{
-				mep->length = BYTESWAP_WORD(mep->length);
-				mep->flags  = BYTESWAP_WORD(mep->flags);
-
-				if(MSGTAB_BAD_PTR(mep, rd->data, rd->size, mep->length))
-					yyerror("Messagetable's data for block %d, ID 0x%08lx is outside of defined data", (int)i, id);
-				if(mep->flags == 1)	/* Docu says 'flags == 0x0001' for unicode */
-				{
-					WORD *wp = (WORD *)&mep[1];
-					int l = mep->length/2 - 2; /* Length included header */
-					int n;
-
-					if(mep->length & 1)
-						yyerror("Message 0x%08lx is unicode (block %d), but has odd length (%d)", id, (int)i, mep->length);
-					for(n = 0; n < l; n++)
-						wp[n] = BYTESWAP_WORD(wp[n]);
-
-				}
-				mep = (msgtab_entry_t *)(((char *)mep) + mep->length);
-			}
+		    WORD *wp = (WORD *)&mep[1];
+		    int l = BYTESWAP_DWORD(mep->length)/2 - 2; /* Length included header */
+		    int n;
+		    
+		    if(BYTESWAP_DWORD(mep->length) & 1)
+			yyerror("Message 0x%08lx is unicode (block %d), but has odd length (%d)", id, (int)i, BYTESWAP_DWORD(mep->length));
+		    for(n = 0; n < l; n++)
+			wp[n] = BYTESWAP_WORD(wp[n]);
+		    
 		}
+		next_mep = (msgtab_entry_t *)(((char *)mep) + BYTESWAP_DWORD(mep->length));
+		mep->length = BYTESWAP_WORD(mep->length);
+		mep->flags  = BYTESWAP_WORD(mep->flags);
+		mep = next_mep;
+	    }
+	    
+	    mbp[i].idlo   = BYTESWAP_DWORD(mbp[i].idlo);
+	    mbp[i].idhi   = BYTESWAP_DWORD(mbp[i].idhi);
+	    mbp[i].offset = BYTESWAP_DWORD(mbp[i].offset);
 	}
 
  out:

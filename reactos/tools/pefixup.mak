@@ -24,11 +24,11 @@ pefixup: $(PEFIXUP_TARGET)
 
 $(PEFIXUP_TARGET): $(PEFIXUP_OBJECTS) | $(PEFIXUP_OUT)
 	$(ECHO_LD)
-	${host_gcc} $(PEFIXUP_OBJECTS) $(PEFIXUP_HOST_LFLAGS) -o $@
+	${host_gcc} -g $(PEFIXUP_OBJECTS) $(PEFIXUP_HOST_LFLAGS) -o $@
 
 $(PEFIXUP_INT_)pefixup.o: $(PEFIXUP_BASE_)pefixup.c | $(PEFIXUP_INT)
 	$(ECHO_CC)
-	${host_gcc} $(PEFIXUP_HOST_CFLAGS) -c $< -o $@
+	${host_gcc} -g $(PEFIXUP_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: pefixup_clean
 pefixup_clean:

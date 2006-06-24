@@ -80,8 +80,13 @@
 #define WRC_HIBYTE(w)		(((WORD)(w) >> 8) & 0xff)
 #define WRC_LOWORD(d)		((DWORD)(d) & 0xffff)
 #define WRC_HIWORD(d)		(((DWORD)(d) >> 16) & 0xffff)
+#ifndef WORDS_BIGENDIAN
 #define BYTESWAP_WORD(w)	((WORD)(((WORD)WRC_LOBYTE(w) << 8) + (WORD)WRC_HIBYTE(w)))
 #define BYTESWAP_DWORD(d)	((DWORD)(((DWORD)BYTESWAP_WORD(WRC_LOWORD(d)) << 16) + ((DWORD)BYTESWAP_WORD(WRC_HIWORD(d)))))
+#else
+#define BYTESWAP_WORD(w)        ((WORD)(w))
+3define BYTESWAP_DWORD(d)       ((DWORD)(d))
+#endif
 
 /* Binary resource structure */
 #define RES_BLOCKSIZE	512

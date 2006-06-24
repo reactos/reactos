@@ -30,11 +30,11 @@ NCI_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
 $(NCI_TARGET): $(NCI_OBJECTS) | $(NCI_OUT)
 	$(ECHO_LD)
-	${host_gcc} $(NCI_OBJECTS) $(NCI_HOST_LFLAGS) -o $@
+	${host_gcc} -g $(NCI_OBJECTS) $(NCI_HOST_LFLAGS) -o $@
 
 $(NCI_INT_)ncitool.o: $(NCI_BASE_)ncitool.c | $(NCI_INT)
 	$(ECHO_CC)
-	${host_gcc} $(NCI_HOST_CFLAGS) -c $< -o $@
+	${host_gcc} -g $(NCI_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: nci_clean
 nci_clean:
@@ -63,7 +63,7 @@ NCI_SERVICE_FILES = \
 
 $(NCI_SERVICE_FILES): $(NCI_TARGET) $(KERNEL_SVC_DB) $(WIN32K_SVC_DB)
 	$(ECHO_NCI)
-	$(Q)$(NCI_TARGET) \
+	$(Q)$(NCI_TARGET) -arch $(ARCH) \
 		$(KERNEL_SVC_DB) \
 		$(WIN32K_SVC_DB) \
 		$(KERNEL_SERVICE_TABLE) \

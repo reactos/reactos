@@ -690,6 +690,7 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 	return true;
 }
 
+#ifdef __i386__
 static bool
 numberfl(std::string& f, long double __n, char exp_sign,  int size, int precision, int type)
 {
@@ -1091,6 +1092,7 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 	}
 	return true;
 }
+#endif
 
 static int
 do_string(std::string& f, const char* s, int len, int field_width, int precision, int flags)
@@ -1507,7 +1509,9 @@ ssvprintf ( const char *fmt, va_list args )
 				} else {
 					if ( precision == -1 )
 						precision = 6;
+#ifdef __i386__
 					result = numberfl(f,_ldouble,*fmt,field_width,precision,flags);
+#endif
 					if (result < 0)
 					{
 						assert(!"TODO FIXME handle error better");
@@ -1831,7 +1835,9 @@ sswvprintf ( const wchar_t* fmt, va_list args )
 				} else {
 					if ( precision == -1 )
 						precision = 6;
+#ifdef __i386__
 					result = wnumberfl(f,_ldouble,*fmt,field_width,precision,flags);
+#endif
 					if (result < 0)
 					{
 						assert(!"TODO FIXME handle error better");

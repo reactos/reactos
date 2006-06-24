@@ -27,6 +27,35 @@
 
 #include "rsym.h"
 
+static inline WORD dtohs(WORD in)
+{
+    PBYTE in_ptr = (PBYTE)&in;
+    return in_ptr[0] | (in_ptr[1] << 8);
+}
+
+static inline WORD htods(WORD in)
+{
+    WORD out;
+    PBYTE out_ptr = (PBYTE)&out;
+    out_ptr[0] = in; out_ptr[1] = in >> 8;
+    return out;
+}
+
+static inline DWORD dtohl(DWORD in)
+{
+    PBYTE in_ptr = (PBYTE)&in;
+    return in_ptr[0] | (in_ptr[1] << 8) | (in_ptr[2] << 16) | (in_ptr[3] << 24);
+}
+
+static inline DWORD htodl(DWORD in)
+{
+    DWORD out;
+    PBYTE out_ptr = (PBYTE)&out;
+    out_ptr[0] = in      ; out_ptr[1] = in >> 8;
+    out_ptr[2] = in >> 16; out_ptr[3] = in >> 24;
+    return out;
+}
+
 static int
 CompareSymEntry(const PROSSYM_ENTRY SymEntry1, const PROSSYM_ENTRY SymEntry2)
 {
@@ -814,6 +843,9 @@ int main(int argc, char* argv[])
 
   /* Check if MZ header exists  */
   PEDosHeader = (PIMAGE_DOS_HEADER) FileData;
+  PEDosHeader->e_magic = dtohs(PEDosHeader->e_magic);
+  PEDosHeader->e_lfanew = dtohl(PEDosHeader->e_lfanew);
+
   if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || PEDosHeader->e_lfanew == 0L)
     {
       perror("Input file is not a PE image.\n");

@@ -70,7 +70,7 @@ wrc: $(WRC_TARGET)
 
 $(WRC_TARGET): $(WRC_OBJECTS) $(WRC_LIBS) | $(WRC_OUT)
 	$(ECHO_LD)
-	${host_gcc} $(WRC_OBJECTS) $(WRC_LIBS) $(WRC_HOST_LFLAGS) -o $@
+	${host_gcc} -g $(WRC_OBJECTS) $(WRC_LIBS) $(WRC_HOST_LFLAGS) -o $@
 
 $(WRC_INT_)dumpres.o: $(WRC_BASE_)dumpres.c | $(WRC_INT)
 	$(ECHO_CC)
@@ -82,7 +82,7 @@ $(WRC_INT_)genres.o: $(WRC_BASE_)genres.c | $(WRC_INT)
 
 $(WRC_INT_)newstruc.o: $(WRC_BASE_)newstruc.c | $(WRC_INT)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
+	${host_gcc} -g $(WRC_HOST_CFLAGS) -c $< -o $@
 
 $(WRC_INT_)readres.o: $(WRC_BASE_)readres.c | $(WRC_INT)
 	$(ECHO_CC)
