@@ -1,0 +1,13 @@
+#include "resource.h"
+/*
+ * Moved all hardcoded strings to En.rc.
+ * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
+ * Gr.rc by Dj Apal®
+ */
+
+LANGUAGE LANG_GREEK, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+IDS_DllNotLoaded,   "LoadLibrary δεν κατάφερε να φορτώσει '%s'"
+IDS_MissingEntry, "Λείπει το σημείο εκκίνησης:%s\nIn %s"
+}
