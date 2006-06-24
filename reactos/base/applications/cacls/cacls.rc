@@ -6,9 +6,5 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"cacls.exe\0"
 #include <reactos/version.rc>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#include "rsrc.rc"
 
-#include "En.rc"
-#include "Nl.rc"
-#include "Ru.rc"
-#include "De.rc"
