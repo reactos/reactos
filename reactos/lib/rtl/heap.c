@@ -1266,7 +1266,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
    if (!(flags & HEAP_NO_SERIALIZE))
       RtlLeaveHeapLock( &heapPtr->critSection );
 
-   DPRINT1("(%p,%08lx,%08lx): returning %p\n",
+   DPRINT("(%p,%08lx,%08lx): returning %p\n",
          heap, flags, size, (PVOID)(pInUse + 1) );
    return (PVOID)(pInUse + 1);
 }
