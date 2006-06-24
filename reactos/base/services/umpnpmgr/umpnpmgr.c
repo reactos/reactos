@@ -832,7 +832,7 @@ PNP_GetClassName(handle_t BindingHandle,
 
     lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class");
     lstrcatW(szKeyName, L"\\");
-    if(lstrlenW(ClassGuid) < sizeof(szKeyName)-lstrlenW(szKeyName))
+    if(lstrlenW(ClassGuid) < sizeof(szKeyName)/sizeof(WCHAR)-lstrlenW(szKeyName))
     	lstrcatW(szKeyName, ClassGuid);
     else return CR_INVALID_DATA;
 
