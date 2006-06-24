@@ -23,8 +23,10 @@
 
 #include "De.rc"
 #include "En.rc"
+#include "Fr.rc"
 #include "Pl.rc"
 #include "Nl.rc"
+
 
 IDI_WINEMINE ICON MOVEABLE "rc/winemine.ico"
 
