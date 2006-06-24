@@ -374,8 +374,10 @@ typedef struct _LSA_TRANSLATED_NAME {
   LONG DomainIndex;
 } LSA_TRANSLATED_NAME, *PLSA_TRANSLATED_NAME;
 
-#ifndef _NTDEF_
+#if defined(_NTDEF_) && !defined(UNICODE_STRING)
 typedef LSA_UNICODE_STRING UNICODE_STRING, *PUNICODE_STRING;
+#endif
+#if defined(_NTDEF_) && !defined(STRING)
 typedef LSA_STRING STRING, *PSTRING ;
 #endif
 
