@@ -1,6 +1,8 @@
 #ifndef _KERNEL32_INCLUDE_KERNEL32_H
 #define _KERNEL32_INCLUDE_KERNEL32_H
 
+#include "baseheap.h"
+
 #define BINARY_UNKNOWN	(0)
 #define BINARY_PE_EXE32	(1)
 #define BINARY_PE_DLL32	(2)

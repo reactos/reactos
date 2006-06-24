@@ -1,740 +1,931 @@
-/* $Id$
- *
- * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
- * These functions included in Win32 for compatibility with 16 bit Windows
- * Especially the moveable blocks and handles are oldish.
- * But the ability to directly allocate memory with GPTR and LPTR is widely
- * used.
- *
- * Updated to support movable memory with algorithms taken from wine.
+/*
+ * PROJECT:         ReactOS Win32 Base API
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/kernel32/mem/global.c
+ * PURPOSE:         Global Memory APIs (sits on top of Heap*)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
+
+/* INCLUDES ******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include "debug.h"
 
-#ifdef _GNUC_
-#define STRUCT_PACK __attribute__((packed))
-#else
-#define STRUCT_PACK
-#endif
+#define BASE_TRACE_FAILURE()                                                 \
+    DbgPrint("[BASE_HEAP] %s : Failing %d\n",                                \
+             __FUNCTION__, __LINE__)
 
-#define MAGIC_GLOBAL_USED 0x5342BEEF
-#define GLOBAL_LOCK_MAX   0xFF
+/* TYPES *********************************************************************/
 
-/*Wine found that some applications complain if memory isn't 8 byte aligned.
-* We make use of that experience here.
-*/
-#define HANDLE_SIZE          8  /*sizeof(HANDLE) *2 */
-
-
-typedef struct __GLOBAL_LOCAL_HANDLE
-{
-    DWORD   Magic;
-    LPVOID  Pointer; STRUCT_PACK
-    BYTE    Flags;
-    BYTE    LockCount;
-} GLOBAL_HANDLE, LOCAL_HANDLE, *PGLOBAL_HANDLE, *PLOCAL_HANDLE;
-
-#define HANDLE_TO_INTERN(h)  ((PGLOBAL_HANDLE)(((char *)(h))-4))
-#define INTERN_TO_HANDLE(i)  ((HGLOBAL) &((i)->Pointer))
-#define POINTER_TO_HANDLE(p) (*(PHANDLE)((ULONG_PTR)p - HANDLE_SIZE))
-#define ISHANDLE(h)          ((((ULONG)(h)) & 0x4)!=0)
-#define ISPOINTER(h)         ((((ULONG)(h)) & 0x4)==0)
-
-
-static void DbgPrintStruct(PGLOBAL_HANDLE h)
-{
-    DPRINT("Magic:     0x%X\n", h->Magic);
-    DPRINT("Pointer:   0x%X\n", h->Pointer);
-    DPRINT("Flags:     0x%X\n", h->Flags);
-    DPRINT("LockCount: 0x%X\n", h->LockCount);
-}
-
-
+extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
+RTL_HANDLE_TABLE BaseGlobalHandleTable;
 
 /* FUNCTIONS ***************************************************************/
 
 /*
  * @implemented
  */
-HGLOBAL STDCALL
+HGLOBAL
+NTAPI
 GlobalAlloc(UINT uFlags,
             DWORD dwBytes)
 {
+    ULONG Flags = 0;
+    PVOID Ptr = NULL;
+    HANDLE hMemory;
+    PGLOBAL_HEAP_HANDLE_ENTRY HandleEntry;
+    BASE_TRACE_ALLOC(dwBytes, uFlags);
+    ASSERT(hProcessHeap);
 
-    PGLOBAL_HANDLE phandle    = 0;
-    PVOID          palloc     = 0;
-    UINT           heap_flags = 0;
-
-    if (uFlags & GMEM_ZEROINIT)
+    /* Make sure the flags are valid */
+    if (uFlags & ~GMEM_VALID_FLAGS)
     {
-        heap_flags = HEAP_ZERO_MEMORY;
+        /* They aren't, fail */
+        BASE_TRACE_FAILURE();
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
     }
 
-    DPRINT("GlobalAlloc( 0x%X, 0x%lX )\n", uFlags, dwBytes);
+    /* Convert ZEROINIT */
+    if (uFlags & GMEM_ZEROINIT) Flags |= HEAP_ZERO_MEMORY;
 
-    //Changed hProcessHeap to GetProcessHeap()
-    if ((uFlags & GMEM_MOVEABLE)==0) /* POINTER */
+    /* Check if we're not movable, which means pointer-based heap */
+    if (!(uFlags & GMEM_MOVEABLE))
     {
-        palloc = RtlAllocateHeap(GetProcessHeap(), heap_flags, dwBytes);
-        if (! ISPOINTER(palloc))
+        /* Check if this is DDESHARE (deprecated) */
+        if (uFlags & GMEM_DDESHARE) Flags |= GLOBAL_HEAP_ENTRY_FLAG_DDESHARE;
+
+        /* Allocate heap for it */
+        Ptr = RtlAllocateHeap(hProcessHeap, Flags, dwBytes);
+        BASE_TRACE_ALLOC2(Ptr);
+        return Ptr;
+    }
+
+    /* This is heap based, so lock it in first */
+    RtlLockHeap(hProcessHeap);
+
+    /*
+     * Disable locking, enable custom flags, and write the
+     * movable flag (deprecated)
+     */
+    Flags |= HEAP_NO_SERIALIZE |
+             HEAP_SETTABLE_USER_VALUE |
+             GLOBAL_HEAP_FLAG_MOVABLE;
+
+    /* Allocate the handle */
+    HandleEntry = GlobalAllocEntry();
+    if (!HandleEntry)
+    {
+        /* Fail */
+        hMemory = NULL;
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        BASE_TRACE_FAILURE();
+        goto Quickie;
+    }
+
+    /* Get the object and make sure we have size */
+    hMemory = &HandleEntry->Object;
+    if (dwBytes)
+    {
+        /* Allocate the actual memory for it */
+        Ptr = RtlAllocateHeap(hProcessHeap, Flags, dwBytes);
+        BASE_TRACE_PTR(HandleEntry, Ptr);
+        if (!Ptr)
         {
-            DPRINT1("GlobalAlloced pointer which is not 8-byte aligned\n");
-            RtlFreeHeap(GetProcessHeap(), 0, palloc);
+            /* We failed, manually set the allocate flag and free the handle */
+            HandleEntry->Flags = RTL_HANDLE_VALID;
+            GlobalFreeEntry(HandleEntry);
+
+            /* For the cleanup case */
+            HandleEntry = NULL;
+        }
+        else
+        {
+            /* All worked well, save our heap entry */
+            RtlSetUserValueHeap(hProcessHeap, HEAP_NO_SERIALIZE, Ptr, hMemory);
+        }
+    }
+
+Quickie:
+    /* Cleanup! First unlock the heap */
+    RtlUnlockHeap(hProcessHeap);
+
+    /* Check if a handle was allocated */
+    if (HandleEntry)
+    {
+        /* Set the pointer and allocated flag */
+        HandleEntry->Object = Ptr;
+        HandleEntry->Flags = RTL_HANDLE_VALID;
+        if (!Ptr)
+        {
+            /* We don't have a valid pointer, but so reuse this handle */
+            HandleEntry->Flags = GLOBAL_HEAP_ENTRY_FLAG_REUSE;
+        }
+
+        /* Check if the handle is discardable */
+        if (uFlags & GMEM_DISCARDABLE)
+        {
+            /* Save it in the handle entry */
+            HandleEntry->Flags |= GLOBAL_HEAP_ENTRY_FLAG_REUSABLE;
+        }
+
+        /* Check if the handle is moveable */
+        if (uFlags & GMEM_MOVEABLE)
+        {
+            /* Save it in the handle entry */
+            HandleEntry->Flags |= GLOBAL_HEAP_ENTRY_FLAG_MOVABLE;
+        }
+
+        /* Check if the handle is DDE Shared */
+        if (uFlags & GMEM_DDESHARE)
+        {
+            /* Save it in the handle entry */
+            HandleEntry->Flags |= GLOBAL_HEAP_ENTRY_FLAG_DDESHARE;
+        }
+
+        /* Set the pointer */
+        Ptr = hMemory;
+    }
+
+    /* Return the pointer */
+    return Ptr;
+}
+
+/*
+ * @implemented
+ */
+SIZE_T
+NTAPI
+GlobalCompact(DWORD dwMinFree)
+{
+    /* Call the RTL Heap Manager */
+    return RtlCompactHeap(hProcessHeap, 0);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+GlobalFix(HGLOBAL hMem)
+{
+    /* Lock the memory if it the handle is valid */
+    if (INVALID_HANDLE_VALUE != hMem) GlobalLock(hMem);
+}
+
+/*
+ * @implemented
+ */
+UINT
+NTAPI
+GlobalFlags(HGLOBAL hMem)
+{
+    PGLOBAL_HEAP_HANDLE_ENTRY HandleEntry;
+    HANDLE Handle = NULL;
+    ULONG Flags = 0;
+    UINT uFlags = GMEM_INVALID_HANDLE;
+
+    /* Start by locking the heap */
+    RtlLockHeap(hProcessHeap);
+
+    /* Check if this is a simple RTL Heap Managed block */
+    if (!((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY))
+    {
+        /* Then we'll query RTL Heap */
+        RtlGetUserInfoHeap(hProcessHeap, Flags, hMem, &Handle, &Flags);
+        BASE_TRACE_PTR(Handle, hMem);
+
+        /*
+         * Check if RTL Heap didn't find a handle associated with us or
+         * said that this heap isn't movable, which means something we're
+         * really not a handle-based heap.
+         */
+        if (!(Handle) || !(Flags & GLOBAL_HEAP_FLAG_MOVABLE))
+        {
+            /* Then set the flags to 0 */
+            uFlags = 0;
+        }
+        else
+        {
+            /* Otherwise we're handle-based, so get the internal handle */
+            hMem = Handle;
+        }
+    }
+
+    /* Check if the handle is actually an entry in our table */
+    if ((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY)
+    {
+        /* Then get the entry */
+        HandleEntry = GlobalGetEntry(hMem);
+        BASE_TRACE_HANDLE(HandleEntry, hMem);
+
+        /* Make sure it's a valid handle */
+        if (GlobalValidateEntry(HandleEntry))
+        {
+            /* Get the lock count first */
+            uFlags = HandleEntry->LockCount & GMEM_LOCKCOUNT;
+
+            /* Now check if it's discarded */
+            if (HandleEntry->Flags & GLOBAL_HEAP_ENTRY_FLAG_REUSABLE)
+            {
+                /* Set the Win32 Flag */
+                uFlags |= GMEM_DISCARDED;
+            }
+
+            /* Check if it's movable */
+            if (HandleEntry->Flags & GLOBAL_HEAP_ENTRY_FLAG_MOVABLE)
+            {
+                /* Set the Win32 Flag */
+                uFlags |= GMEM_MOVEABLE;
+            }
+
+            /* Check if it's DDE Shared */
+            if (HandleEntry->Flags & GLOBAL_HEAP_ENTRY_FLAG_DDESHARE)
+            {
+                /* Set the Win32 Flag */
+                uFlags |= GMEM_DDESHARE;
+            }
+        }
+    }
+
+    /* Check if by now, we still haven't gotten any useful flags */
+    if (uFlags == GMEM_INVALID_HANDLE) SetLastError(ERROR_INVALID_HANDLE);
+
+    /* All done! Unlock heap and return Win32 Flags */
+    RtlUnlockHeap(hProcessHeap);
+    return uFlags;
+}
+
+/*
+ * @implemented
+ */
+HGLOBAL
+NTAPI
+GlobalFree(HGLOBAL hMem)
+{
+    PGLOBAL_HEAP_HANDLE_ENTRY HandleEntry;
+    LPVOID Ptr;
+    BASE_TRACE_DEALLOC(hMem);
+
+    /* Check if this was a simple allocated heap entry */
+    if (!((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY))
+    {
+        /* Free it with the RTL Heap Manager */
+        if (RtlFreeHeap(hProcessHeap, 0, hMem))
+        {
+            /* Return NULL since there's no handle */
             return NULL;
         }
-        return (HGLOBAL) palloc;
-    }
-    else  /* HANDLE */
-    {
-        HeapLock(hProcessHeap);
-
-        phandle = RtlAllocateHeap(GetProcessHeap(), 0,  sizeof(GLOBAL_HANDLE));
-        if (phandle)
+        else
         {
-            phandle->Magic     = MAGIC_GLOBAL_USED;
-            phandle->Flags     = uFlags >> 8;
-            phandle->LockCount = 0;
-            phandle->Pointer   = 0;
+            /* Otherwise fail */
+            BASE_TRACE_FAILURE();
+            SetLastError(ERROR_INVALID_HANDLE);
+            return hMem;
+        }
+    }
 
-            if (dwBytes)
+    /* It's a handle probably, so lock the heap */
+    RtlLockHeap(hProcessHeap);
+
+    /* Make sure that this is an entry in our handle database */
+    if ((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY)
+    {
+        /* Get the entry */
+        HandleEntry = GlobalGetEntry(hMem);
+        BASE_TRACE_HANDLE(HandleEntry, hMem);
+
+        /* Make sure the handle is valid */
+        if (!GlobalValidateEntry(HandleEntry))
+        {
+            /* It's not, fail */
+            SetLastError(ERROR_INVALID_HANDLE);
+            Ptr = NULL;
+        }
+        else
+        {
+            /* It's valid, so get the pointer */
+            Ptr = HandleEntry->Object;
+
+            /* Free this handle */
+            GlobalFreeEntry(HandleEntry);
+
+            /* If the pointer is 0, then we don't have a handle either */
+            if (!Ptr) hMem = NULL;
+        }
+    }
+    else
+    {
+        /* Otherwise, reuse the handle as a pointer */
+        BASE_TRACE_FAILURE();
+        Ptr = hMem;
+    }
+
+    /* Check if we got here with a valid heap pointer */
+    if (Ptr)
+    {
+        /* Free it */
+        RtlFreeHeap(hProcessHeap, HEAP_NO_SERIALIZE, Ptr);
+        hMem = NULL;
+    }
+
+    /* We're done, so unlock the heap and return the handle */
+    RtlUnlockHeap(hProcessHeap);
+    return hMem;
+}
+
+/*
+ * @implemented
+ */
+HGLOBAL
+NTAPI
+GlobalHandle(LPCVOID pMem)
+{
+    HANDLE Handle = NULL;
+    ULONG Flags;
+
+    /* Lock the heap */
+    RtlLockHeap(hProcessHeap);
+
+    /* Query RTL Heap */
+    RtlGetUserInfoHeap(hProcessHeap,
+                       HEAP_NO_SERIALIZE,
+                       (PVOID)pMem,
+                       &Handle,
+                       &Flags);
+    BASE_TRACE_PTR(Handle, pMem);
+
+    /*
+     * Check if RTL Heap didn't find a handle for us or said that
+     * this heap isn't movable.
+     */
+    if (!(Handle) || !(Flags & GLOBAL_HEAP_FLAG_MOVABLE))
+    {
+        /* We're actually handle-based, so the pointer is a handle */
+        Handle = (HANDLE)pMem;
+    }
+
+    /* All done, unlock the heap and return the handle */
+    RtlUnlockHeap(hProcessHeap);
+    return Handle;
+}
+
+/*
+ * @implemented
+ */
+LPVOID
+NTAPI
+GlobalLock(HGLOBAL hMem)
+{
+    PGLOBAL_HEAP_HANDLE_ENTRY HandleEntry;
+    LPVOID Ptr;
+
+    /* Check if this was a simple allocated heap entry */
+    if (!((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY))
+    {
+        /* Then simply return the pointer */
+        return hMem;
+    }
+
+    /* Otherwise, lock the heap */
+    RtlLockHeap(hProcessHeap);
+
+    /* Get the handle entry */
+    HandleEntry = GlobalGetEntry(hMem);
+    BASE_TRACE_HANDLE(HandleEntry, hMem);
+
+    /* Make sure it's valid */
+    if (!GlobalValidateEntry(HandleEntry))
+    {
+        /* It's not, fail */
+        BASE_TRACE_FAILURE();
+        SetLastError(ERROR_INVALID_HANDLE);
+        Ptr = NULL;
+    }
+    else
+    {
+        /* Otherwise, get the pointer */
+        Ptr = HandleEntry->Object;
+        if (Ptr)
+        {
+            /* Increase the lock count, unless we've went too far */
+            if (HandleEntry->LockCount++ == GMEM_LOCKCOUNT)
             {
-                palloc = RtlAllocateHeap(GetProcessHeap(), heap_flags, dwBytes + HANDLE_SIZE);
-                if (palloc)
+                /* In which case we simply unlock once */
+                HandleEntry->LockCount--;
+            }
+        }
+        else
+        {
+            /* The handle is still there but the memory was already freed */
+            SetLastError(ERROR_DISCARDED);
+        }
+    }
+
+    /* All done. Unlock the heap and return the pointer */
+    RtlUnlockHeap(hProcessHeap);
+    return Ptr;
+}
+
+HGLOBAL
+NTAPI
+GlobalReAlloc(HGLOBAL hMem,
+              DWORD dwBytes,
+              UINT uFlags)
+{
+    PGLOBAL_HEAP_HANDLE_ENTRY HandleEntry;
+    HANDLE Handle;
+    LPVOID Ptr;
+    ULONG Flags = 0;
+
+    /* Convert ZEROINIT */
+    if (uFlags & GMEM_ZEROINIT) Flags |= HEAP_ZERO_MEMORY;
+
+    /* If this wasn't a movable heap, then we MUST re-alloc in place */
+    if (!(uFlags & GMEM_MOVEABLE)) Flags |= HEAP_REALLOC_IN_PLACE_ONLY;
+
+    /* Lock the heap and disable built-in locking in the RTL Heap funcitons */
+    RtlLockHeap(hProcessHeap);
+    Flags |= HEAP_NO_SERIALIZE;
+    DPRINT1("hmem: %p Flags: %lx\n", hMem, uFlags);
+
+    /* Check if this is a simple handle-based block */
+    if (((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY))
+    {
+        /* Get the entry */
+        HandleEntry = GlobalGetEntry(hMem);
+        BASE_TRACE_HANDLE(HandleEntry, hMem);
+
+        /* Make sure the handle is valid */
+        if (!GlobalValidateEntry(HandleEntry))
+        {
+            /* Fail */
+            BASE_TRACE_FAILURE();
+            SetLastError(ERROR_INVALID_HANDLE);
+            hMem = NULL;
+        }
+        else if (uFlags & GMEM_MODIFY)
+        {
+            /* User is changing flags... check if the memory was discardable */
+            if (uFlags & GMEM_DISCARDABLE)
+            {
+                /* Then set the flag */
+                HandleEntry->Flags |= GLOBAL_HEAP_ENTRY_FLAG_REUSABLE;
+            }
+            else
+            {
+                /* Otherwise, remove the flag */
+                HandleEntry->Flags &= GLOBAL_HEAP_ENTRY_FLAG_REUSABLE;
+            }
+        }
+        else
+        {
+            /* Otherwise, get the object and check if we have no size */
+            Ptr = HandleEntry->Object;
+            if (!dwBytes)
+            {
+                /* Clear the handle and check for a pointer */
+                hMem = NULL;
+                if (Ptr)
                 {
-                    *(PHANDLE)palloc = INTERN_TO_HANDLE(phandle);
-                    phandle->Pointer = (PVOID)((ULONG_PTR)palloc + HANDLE_SIZE);
+                    /* Make sure the handle isn't locked */
+                    if ((uFlags & GMEM_MOVEABLE) & !(HandleEntry->LockCount))
+                    {
+                        /* Free the current heap */
+                        RtlFreeHeap(hProcessHeap, Flags, Ptr);
+
+                        /* Free the handle */
+                        HandleEntry->Object = NULL;
+                        HandleEntry->Flags |= GLOBAL_HEAP_ENTRY_FLAG_REUSE;
+
+                        /* Get the object pointer */
+                        hMem = &HandleEntry->Object;
+                    }
                 }
-                else /*failed to allocate the memory block*/
+                else
                 {
-                    RtlFreeHeap(GetProcessHeap(), 0, phandle);
-                    phandle = 0;
+                    /* Otherwise just return the object pointer */
+                    hMem = &HandleEntry->Object;
                 }
             }
             else
             {
-                DPRINT("Allocated a 0 size movable block.\n");
-                DbgPrintStruct(phandle);
-                DPRINT("Address of the struct: 0x%X\n", phandle);
-                DPRINT("Address of pointer:    0x%X\n", &(phandle->Pointer));
+                /* Otherwise, we're allocating, so set the new flags needed */
+                Flags |= HEAP_SETTABLE_USER_VALUE | GLOBAL_HEAP_FLAG_MOVABLE;
+                if (!Ptr)
+                {
+                    /* We don't have a base, so allocate one */
+                    Ptr = RtlAllocateHeap(hProcessHeap, Flags, dwBytes);
+                    BASE_TRACE_ALLOC2(Ptr);
+                    if (Ptr)
+                    {
+                        /* Allocation succeeded, so save our entry */
+                        RtlSetUserValueHeap(hProcessHeap,
+                                            HEAP_NO_SERIALIZE,
+                                            Ptr,
+                                            hMem);
+                    }
+                }
+                else
+                {
+                    /*
+                     * If it's not movable or currently locked, we MUST allocate
+                     * in-place!
+                     */
+                    if (!(uFlags & GMEM_MOVEABLE) && (HandleEntry->LockCount))
+                    {
+                        /* Set the flag */
+                        Flags |= HEAP_REALLOC_IN_PLACE_ONLY;
+                    }
+                    else
+                    {
+                        /* Otherwise clear the flag if we set it previously */
+                        Flags &= ~HEAP_REALLOC_IN_PLACE_ONLY;
+                    }
+
+                    /* And do the re-allocation */
+                    Ptr = RtlReAllocateHeap(hProcessHeap, Flags, Ptr, dwBytes);
+                }
+
+                /* Make sure we have a pointer by now */
+                if (Ptr)
+                {
+                    /* Write it in the handle entry and mark it in use */
+                    HandleEntry->Object = Ptr;
+                    HandleEntry->Flags &= ~GLOBAL_HEAP_ENTRY_FLAG_REUSE;
+                }
+                else
+                {
+                    /* Otherwise we failed */
+                    hMem = NULL;
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                }
             }
         }
-        HeapUnlock(hProcessHeap);
-
-        if (phandle)
+    }
+    else if (uFlags & GMEM_MODIFY)
+    {
+        /* This is not a handle-based heap and the caller wants it to be one */
+        if (uFlags & GMEM_MOVEABLE)
         {
-            if (ISPOINTER(INTERN_TO_HANDLE(phandle)))
+            /* Get information on its current state */
+            Handle = hMem;
+            DPRINT1("h h %lx %lx\n", Handle, hMem);
+            RtlGetUserInfoHeap(hProcessHeap,
+                               HEAP_NO_SERIALIZE,
+                               hMem,
+                               &Handle,
+                               &Flags);
+            DPRINT1("h h %lx %lx\n", Handle, hMem);
+
+            /*
+             * Check if the handle matches the pointer or if the moveable flag
+             * isn't there, which is what we expect since it currenly isn't.
+             */
+            if (Handle == hMem || !(Flags & GLOBAL_HEAP_FLAG_MOVABLE))
             {
-                DPRINT1("GlobalAlloced handle which is 8-byte aligned but shouldn't be\n");
-                RtlFreeHeap(GetProcessHeap(), 0, palloc);
-                RtlFreeHeap(GetProcessHeap(), 0, phandle);
-                return NULL;
-            }
-            return INTERN_TO_HANDLE(phandle);
-        }
-        else
-            return (HGLOBAL)0;
-    }
-}
+                /* Allocate a handle for it */
+                HandleEntry = GlobalAllocEntry();
 
+                /* Calculate the size of the current heap */
+                dwBytes = RtlSizeHeap(hProcessHeap, HEAP_NO_SERIALIZE, hMem);
 
-/*
- * @implemented
- */
-SIZE_T STDCALL
-GlobalCompact(DWORD dwMinFree)
-{
-   return RtlCompactHeap(hProcessHeap, 0);
-}
+                /* Set the movable flag */
+                Flags |= HEAP_SETTABLE_USER_VALUE | GLOBAL_HEAP_FLAG_MOVABLE;
 
+                /* Now allocate the actual heap for it */
+                HandleEntry->Object = RtlAllocateHeap(hProcessHeap,
+                                                      Flags,
+                                                      dwBytes);
+                BASE_TRACE_PTR(HandleEntry->Object, HandleEntry);
+                if (!HandleEntry->Object)
+                {
+                    /*
+                     * We failed, manually set the allocate flag and
+                     * free the handle
+                     */
+                    HandleEntry->Flags = RTL_HANDLE_VALID;
+                    GlobalFreeEntry(HandleEntry);
 
-/*
- * @implemented
- */
-VOID STDCALL
-GlobalFix(HGLOBAL hMem)
-{
-   if (INVALID_HANDLE_VALUE != hMem)
-     GlobalLock(hMem);
-}
+                    /* For the cleanup case */
+                    BASE_TRACE_FAILURE();
+                    HandleEntry = NULL;
+                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                }
+                else
+                {
+                    /* Otherwise, copy the current heap and free the old one */
+                    RtlMoveMemory(HandleEntry->Object, hMem, dwBytes);
+                    RtlFreeHeap(hProcessHeap, HEAP_NO_SERIALIZE, hMem);
 
-/*
- * @implemented
- */
-UINT STDCALL
-GlobalFlags(HGLOBAL hMem)
-{
-    DWORD		    retval;
-    PGLOBAL_HANDLE	phandle;
+                    /* Select the heap pointer */
+                    hMem = (HANDLE)&HandleEntry->Object;
 
-    DPRINT("GlobalFlags( 0x%lX )\n", (ULONG)hMem);
+                    /* Initialize the count and default flags */
+                    HandleEntry->LockCount = 0;
+                    HandleEntry->Flags = RTL_HANDLE_VALID |
+                                         GLOBAL_HEAP_ENTRY_FLAG_MOVABLE;
 
-    if(!ISHANDLE(hMem))
-    {
-        DPRINT("GlobalFlags: Fixed memory.\n");
-        retval = 0;
-    }
-    else
-    {
-        HeapLock(GetProcessHeap());
+                    /* Check if it's also discardable */
+                    if (uFlags & GMEM_DISCARDABLE)
+                    {
+                        /* Set the internal flag */
+                        HandleEntry->Flags |= GLOBAL_HEAP_ENTRY_FLAG_REUSABLE;
+                    }
 
-        phandle = HANDLE_TO_INTERN(hMem);
+                    /* Check if it's also DDE Shared */
+                    if (uFlags & GMEM_DDESHARE)
+                    {
+                        /* Set the internal flag */
+                        HandleEntry->Flags |= GLOBAL_HEAP_ENTRY_FLAG_DDESHARE;
+                    }
 
-        /*DbgPrintStruct(phandle);*/
-
-        if (MAGIC_GLOBAL_USED == phandle->Magic)
-        {
-            /*DbgPrint("GlobalFlags: Magic number ok\n");
-            **DbgPrint("GlobalFlags: pointer is 0x%X\n", phandle->Pointer);
-            */
-            retval = phandle->LockCount + (phandle->Flags << 8);
-            if (0 == phandle->Pointer)
-            {
-                retval = retval | GMEM_DISCARDED;
-            }
-        }
-        else
-        {
-            DPRINT1("GlobalSize: invalid handle\n");
-            retval = 0;
-        }
-        HeapUnlock(GetProcessHeap());
-    }
-    return retval;
-}
-
-
-/*
- * @implemented
- */
-HGLOBAL STDCALL
-GlobalFree(HGLOBAL hMem)
-{
-    PGLOBAL_HANDLE phandle;
-    HGLOBAL hreturned;
-
-    DPRINT("GlobalFree( 0x%lX )\n", (ULONG)hMem);
-
-    hreturned = 0;
-    if (ISPOINTER(hMem)) /* POINTER */
-    {
-        if(!RtlFreeHeap(GetProcessHeap(), 0, (PVOID)hMem))
-            hMem = 0;
-    }
-    else /* HANDLE */
-    {
-        HeapLock(GetProcessHeap());
-
-        phandle = HANDLE_TO_INTERN(hMem);
-
-        if(MAGIC_GLOBAL_USED == phandle->Magic)
-        {
-            /* WIN98 does not make this test. That is you can free a */
-            /* block you have not unlocked. Go figure!!              */
-            if(phandle->LockCount!=0)
-            {
-                DPRINT1("Warning! GlobalFree(0x%X) Freeing a handle to a locked object.\n", hMem);
-                SetLastError(ERROR_INVALID_HANDLE);
-            }
-
-            if(phandle->Pointer)
-                if (!RtlFreeHeap(GetProcessHeap(), 0, (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE)))
-                    hreturned = hMem;
-
-            if (!RtlFreeHeap(GetProcessHeap(), 0, phandle))
-                hreturned = hMem;
-        }
-        HeapUnlock(GetProcessHeap());
-
-        hMem = 0;
-    }
-    return hreturned;
-}
-
-
-/*
- * @implemented
- */
-HGLOBAL STDCALL
-GlobalHandle(LPCVOID pMem)
-{
-    HGLOBAL              handle = 0;
-    PGLOBAL_HANDLE         test = 0;
-    LPCVOID        pointer_test = 0;
-
-    DPRINT("GlobalHandle( 0x%lX )\n", (ULONG)pMem);
-    if (0 == pMem) /*Invalid argument */
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        DPRINT1("Error: 0 handle.\n");
-        return 0;
-    }
-
-    HeapLock(GetProcessHeap());
-    /* Now test to see if this pointer is associated with a handle.
-    * This is done by calling RtlValidateHeap() and seeing if it fails.
-    */
-    if (RtlValidateHeap(GetProcessHeap(), 0, (char *)pMem)) /*FIXED*/
-    {
-        handle = (HGLOBAL)pMem;
-        return handle;
-    }
-    else /*MOVABLE*/
-    {
-        handle = POINTER_TO_HANDLE(pMem);
-    }
-
-
-    /* Test to see if this memory is valid*/
-    test  = HANDLE_TO_INTERN(handle);
-    if (!IsBadReadPtr(test, sizeof(GLOBAL_HANDLE)))
-    {
-        if (MAGIC_GLOBAL_USED == test->Magic)
-        {
-            pointer_test = test->Pointer;
-            if (!RtlValidateHeap(GetProcessHeap(), 0, ((char *)pointer_test) - HANDLE_SIZE) ||
-                !RtlValidateHeap(GetProcessHeap(), 0, test))
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                handle = 0;
+                    /* Allocation succeeded, so save our entry */
+                    RtlSetUserValueHeap(hProcessHeap,
+                                        HEAP_NO_SERIALIZE,
+                                        HandleEntry->Object,
+                                        hMem);
+                }
             }
         }
     }
     else
     {
-        DPRINT1("GlobalHandle: Bad read pointer.\n");
+        /* Otherwise, this is a simple RTL Managed Heap, so just call it */
+        hMem = RtlReAllocateHeap(hProcessHeap,
+                                 Flags | HEAP_NO_SERIALIZE,
+                                 hMem,
+                                 dwBytes);
+        if (!hMem)
+        {
+            /* Fail */
+            BASE_TRACE_FAILURE();
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        }
+    }
+
+    /* All done, unlock the heap and return the pointer */
+    RtlUnlockHeap(hProcessHeap);
+    return hMem;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+NTAPI
+GlobalSize(HGLOBAL hMem)
+{
+    PGLOBAL_HEAP_HANDLE_ENTRY HandleEntry;
+    PVOID Handle = NULL;
+    ULONG Flags = 0;
+    SIZE_T dwSize = MAXULONG_PTR;
+
+    /* Lock the heap */
+    RtlLockHeap(hProcessHeap);
+
+    /* Check if this is a simple RTL Heap Managed block */
+    if (!((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY))
+    {
+        /* Then we'll query RTL Heap */
+        RtlGetUserInfoHeap(hProcessHeap, Flags, hMem, &Handle, &Flags);
+        BASE_TRACE_PTR(Handle, hMem);
+
+        /*
+         * Check if RTL Heap didn't give us a handle or said that this heap
+         * isn't movable.
+         */
+        if (!(Handle) || !(Flags & GLOBAL_HEAP_FLAG_MOVABLE))
+        {
+            /* This implies we're not a handle heap, so use the generic call */
+            dwSize = RtlSizeHeap(hProcessHeap, HEAP_NO_SERIALIZE, hMem);
+        }
+        else
+        {
+            /* Otherwise we're a handle heap, so get the internal handle */
+            hMem = Handle;
+        }
+    }
+
+    /* Make sure that this is an entry in our handle database */
+    if ((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY)
+    {
+        /* Get the entry */
+        HandleEntry = GlobalGetEntry(hMem);
+        BASE_TRACE_HANDLE(HandleEntry, hMem);
+
+        /* Make sure the handle is valid */
+        if (!GlobalValidateEntry(HandleEntry))
+        {
+            /* Fail */
+            BASE_TRACE_FAILURE();
+            SetLastError(ERROR_INVALID_HANDLE);
+        }
+        else if (HandleEntry->Flags & GLOBAL_HEAP_ENTRY_FLAG_REUSE)
+        {
+            /* We've reused this block, but we've saved the size for you */
+            dwSize = HandleEntry->OldSize;
+        }
+        else
+        {
+            /* Otherwise, query RTL about it */
+            dwSize = RtlSizeHeap(hProcessHeap,
+                                 HEAP_NO_SERIALIZE,
+                                 HandleEntry->Object);
+        }
+    }
+
+    /* Check if by now, we still haven't gotten any useful size */
+    if (dwSize == MAXULONG_PTR)
+    {
+        /* Fail */
+        BASE_TRACE_FAILURE();
         SetLastError(ERROR_INVALID_HANDLE);
-        handle = 0;
+        dwSize = 0;
     }
 
-    HeapUnlock(GetProcessHeap());
-
-    return handle;
+    /* All done! Unlock heap and return the size */
+    RtlUnlockHeap(hProcessHeap);
+    return dwSize;
 }
-
 
 /*
  * @implemented
  */
-LPVOID STDCALL
-GlobalLock(HGLOBAL hMem)
+VOID
+NTAPI
+GlobalUnfix(HGLOBAL hMem)
 {
-    PGLOBAL_HANDLE phandle;
-    LPVOID         palloc;
-
-    DPRINT("GlobalLock( 0x%lX )\n", (ULONG)hMem);
-
-    if (ISPOINTER(hMem))
-        return (LPVOID) hMem;
-
-    HeapLock(GetProcessHeap());
-
-    phandle = HANDLE_TO_INTERN(hMem);
-
-    if(MAGIC_GLOBAL_USED == phandle->Magic)
-    {
-        if(GLOBAL_LOCK_MAX > phandle->LockCount)
-        {
-            phandle->LockCount++;
-        }
-        palloc = phandle->Pointer;
-    }
-    else
-    {
-        DPRINT("GlobalLock: invalid handle\n");
-        palloc = (LPVOID) hMem;
-    }
-
-    HeapUnlock(GetProcessHeap());
-
-    return palloc;
+    /* If the handle is valid, unlock it */
+    if (hMem != INVALID_HANDLE_VALUE) GlobalUnlock(hMem);
 }
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
+NTAPI
+GlobalUnlock(HGLOBAL hMem)
 {
-  SYSTEM_BASIC_INFORMATION	SysBasicInfo;
-  SYSTEM_PERFORMANCE_INFORMATION	SysPerfInfo;
-  ULONG UserMemory;
-  NTSTATUS Status;
+    PGLOBAL_HEAP_HANDLE_ENTRY HandleEntry;
+    BOOL RetVal = TRUE;
 
-    DPRINT("GlobalMemoryStatusEx\n");
+    /* Check if this was a simple allocated heap entry */
+    if (!((ULONG_PTR)hMem & GLOBAL_HEAP_IS_HANDLE_ENTRY)) return RetVal;
 
-    if (lpBuffer->dwLength != sizeof(MEMORYSTATUSEX))
-      {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-      }
+    /* Otherwise, lock the heap */
+    RtlLockHeap(hProcessHeap);
 
-   Status = ZwQuerySystemInformation(SystemBasicInformation,
-                                     &SysBasicInfo,
-                                     sizeof(SysBasicInfo),
-                                     NULL);
-   if (!NT_SUCCESS(Status))
-     {
-       SetLastErrorByStatus(Status);
-       return FALSE;
-     }
+    /* Get the handle entry */
+    HandleEntry = GlobalGetEntry(hMem);
+    BASE_TRACE_HANDLE(HandleEntry, hMem);
 
-   Status = ZwQuerySystemInformation(SystemPerformanceInformation,
-                                     &SysPerfInfo,
-                                     sizeof(SysPerfInfo),
-                                     NULL);
-   if (!NT_SUCCESS(Status))
-     {
-       SetLastErrorByStatus(Status);
-       return FALSE;
-     }
-
-   Status = ZwQuerySystemInformation(SystemFullMemoryInformation,
-                                     &UserMemory,
-                                     sizeof(ULONG),
-                                     NULL);
-   if (!NT_SUCCESS(Status))
-     {
-       SetLastErrorByStatus(Status);
-       return FALSE;
-     }
-
-/*
- * Load percentage 0 thru 100. 0 is good and 100 is bad.
- *
- *	Um = allocated memory / physical memory
- *	Um =      177 MB      /     256 MB        = 69.1%
- *
- *	Mult allocated memory by 100 to move decimal point up.
- */
-   lpBuffer->dwMemoryLoad = (SysBasicInfo.NumberOfPhysicalPages -
-  			     SysPerfInfo.AvailablePages) * 100 /
-    			     SysBasicInfo.NumberOfPhysicalPages;
-
-   DPRINT1("Memory Load: %d%%\n",lpBuffer->dwMemoryLoad );
-
-   lpBuffer->ullTotalPhys = SysBasicInfo.NumberOfPhysicalPages *
-   					SysBasicInfo.PageSize;
-   lpBuffer->ullAvailPhys = SysPerfInfo.AvailablePages *
-    					SysBasicInfo.PageSize;
-
-	DPRINT("%d\n",SysPerfInfo.AvailablePages );
-	DPRINT("%d\n",lpBuffer->ullAvailPhys );
-
-   lpBuffer->ullTotalPageFile = SysPerfInfo.CommitLimit *
-    					SysBasicInfo.PageSize;
-
-	DPRINT("%d\n",lpBuffer->ullTotalPageFile );
-
-   lpBuffer->ullAvailPageFile = ((SysPerfInfo.CommitLimit -
-    					SysPerfInfo.CommittedPages) *
-    					SysBasicInfo.PageSize);
-
-/* VM available to the calling processes, User Mem? */
-   lpBuffer->ullTotalVirtual = SysBasicInfo.MaximumUserModeAddress -
-    					SysBasicInfo.MinimumUserModeAddress;
-
-   lpBuffer->ullAvailVirtual = (lpBuffer->ullTotalVirtual -
-    					(UserMemory *
-    					 SysBasicInfo.PageSize));
-
-	DPRINT("%d\n",lpBuffer->ullAvailVirtual );
-	DPRINT("%d\n",UserMemory);
-	DPRINT("%d\n",SysBasicInfo.PageSize);
-
-/* lol! Memory from beyond! */
-   lpBuffer->ullAvailExtendedVirtual = 0;
-   return TRUE;
-}
-
-/*
- * @implemented
- */
-VOID STDCALL
-GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
-{
-    MEMORYSTATUSEX lpBufferEx;
-#if 0
-    if (lpBuffer->dwLength != sizeof(MEMORYSTATUS))
-      {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return;
-      }
-#endif
-    lpBufferEx.dwLength = sizeof(MEMORYSTATUSEX);
-
-    if (GlobalMemoryStatusEx(&lpBufferEx))
-      {
-
-	 lpBuffer->dwLength 	   = sizeof(MEMORYSTATUS);
-
-         lpBuffer->dwMemoryLoad    = lpBufferEx.dwMemoryLoad;
-         lpBuffer->dwTotalPhys     = lpBufferEx.ullTotalPhys;
-         lpBuffer->dwAvailPhys     = lpBufferEx.ullAvailPhys;
-         lpBuffer->dwTotalPageFile = lpBufferEx.ullTotalPageFile;
-         lpBuffer->dwAvailPageFile = lpBufferEx.ullAvailPageFile;
-         lpBuffer->dwTotalVirtual  = lpBufferEx.ullTotalVirtual;
-         lpBuffer->dwAvailVirtual  = lpBufferEx.ullAvailVirtual;
-      }
-}
-
-
-HGLOBAL STDCALL
-GlobalReAlloc(HGLOBAL hMem,
-	      DWORD dwBytes,
-	      UINT uFlags)
-{
-
-    LPVOID         palloc = 0;
-    HGLOBAL        hnew = 0;
-    PGLOBAL_HANDLE phandle = 0;
-    ULONG          heap_flags = 0;
-
-    DPRINT("GlobalReAlloc( 0x%lX, 0x%lX, 0x%X )\n", (ULONG)hMem, dwBytes, uFlags);
-
-    if (uFlags & GMEM_ZEROINIT)
+    /* Make sure it's valid */
+    if (!GlobalValidateEntry(HandleEntry))
     {
-        heap_flags = HEAP_ZERO_MEMORY;
-    }
-
-    HeapLock(GetProcessHeap());
-
-    if(uFlags & GMEM_MODIFY) /* modify flags */
-    {
-        if( ISPOINTER(hMem) && (uFlags & GMEM_MOVEABLE))
-        {
-            /* make a fixed block moveable
-            * actually only NT is able to do this. And it's soo simple
-            */
-            if (0 == hMem)
-            {
-                SetLastError( ERROR_NOACCESS );
-                hnew = 0;
-            }
-            else
-            {
-                dwBytes   = RtlSizeHeap(GetProcessHeap(), 0, (LPVOID) hMem);
-                hnew      = GlobalAlloc( uFlags, dwBytes);
-                palloc    = GlobalLock(hnew);
-                memcpy(palloc, (LPVOID) hMem, dwBytes);
-                GlobalUnlock(hnew);
-                RtlFreeHeap(GetProcessHeap(),0,hMem);
-            }
-        }
-        else if(ISPOINTER(hMem) && (uFlags & GMEM_DISCARDABLE))
-        {
-            /* change the flags to make our block "discardable" */
-            phandle = HANDLE_TO_INTERN(hMem);
-            phandle->Flags = phandle->Flags | (GMEM_DISCARDABLE >> 8);
-            hnew = hMem;
-        }
-        else
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            hnew = 0;
-        }
+        /* It's not, fail */
+        BASE_TRACE_FAILURE();
+        SetLastError(ERROR_INVALID_HANDLE);
     }
     else
     {
-        if(ISPOINTER(hMem))
+        /* Otherwise, decrement lock count, unless we're already at 0*/
+        if (!HandleEntry->LockCount--)
         {
-            if (!(uFlags & GMEM_MOVEABLE))
-            {
-                heap_flags |= HEAP_REALLOC_IN_PLACE_ONLY;
-            }
-
-            /* reallocate fixed memory */
-            hnew = (HANDLE)RtlReAllocateHeap(GetProcessHeap(), heap_flags, (LPVOID) hMem, dwBytes);
+            /* In which case we simply lock it back and fail */
+            HandleEntry->LockCount++;
+            SetLastError(ERROR_NOT_LOCKED);
+            RetVal = FALSE;
         }
-        else
+        else if (!HandleEntry->LockCount)
         {
-            /* reallocate a moveable block */
-            phandle= HANDLE_TO_INTERN(hMem);
-            hnew = hMem;
-            
-            if (0 != dwBytes)
-            {
-               if(phandle->Pointer)
-               {
-
-                   if (phandle->LockCount && !(uFlags & GMEM_MOVEABLE))
-                   {
-                       /* Locked memory cant normally move but the MEM_MOVEABLE flag
-                        * override this behaviour. But in this case that flag was not passed.
-                        */ 
-                       heap_flags |= HEAP_REALLOC_IN_PLACE_ONLY;
-                   }
-
-                   palloc = RtlReAllocateHeap(GetProcessHeap(), heap_flags,
-                                      (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE),
-                                      dwBytes + HANDLE_SIZE);
-                   if (0 == palloc)
-                   {
-                       hnew = 0;
-                   }
-                   else
-                   {
-                       *(PHANDLE)palloc = hMem;
-                       phandle->Pointer = (PVOID)((ULONG_PTR)palloc + HANDLE_SIZE);
-                   }
-               }
-               else
-               {
-                   palloc = RtlAllocateHeap(GetProcessHeap(), heap_flags, dwBytes + HANDLE_SIZE);
-                   if (0 == palloc)
-                   {
-                       hnew = 0;
-                   }
-                   else
-                   {
-                       *(PHANDLE)palloc = hMem;
-                       phandle->Pointer = (PVOID)((ULONG_PTR)palloc + HANDLE_SIZE);
-                   }
-               }
-            }
-            else
-            {
-                if(phandle->Pointer)
-                {
-                    RtlFreeHeap(GetProcessHeap(), 0, (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE));
-                    phandle->Pointer = 0;
-                }
-            }
+            /* Nothing to unlock */
+            SetLastError(NO_ERROR);
+            RetVal = FALSE;
         }
     }
 
-    HeapUnlock(GetProcessHeap());
-
-    return hnew;
+    /* All done. Unlock the heap and return the pointer */
+    RtlUnlockHeap(hProcessHeap);
+    return RetVal;
 }
-
-
-DWORD STDCALL
-GlobalSize(HGLOBAL hMem)
-{
-    SIZE_T         retval  = 0;
-    PGLOBAL_HANDLE phandle = 0;
-
-    DPRINT("GlobalSize( 0x%lX )\n", (ULONG)hMem);
-
-    if(ISPOINTER(hMem)) /*FIXED*/
-    {
-        retval = RtlSizeHeap(GetProcessHeap(), 0, hMem);
-    }
-    else /*MOVEABLE*/
-    {
-        HeapLock(GetProcessHeap());
-
-        phandle = HANDLE_TO_INTERN(hMem);
-
-        if (MAGIC_GLOBAL_USED == phandle->Magic)
-        {
-            if (0 != phandle->Pointer)/*NOT DISCARDED*/
-            {
-                retval = RtlSizeHeap(GetProcessHeap(), 0, (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE));
-
-                if (retval == (SIZE_T)-1) /*RtlSizeHeap failed*/
-                {
-                    /*
-                    **TODO: RtlSizeHeap does not set last error.
-                    **      We should choose an error value to set as
-                    **      the last error. Which One?
-                    */
-                    DPRINT("GlobalSize:  RtlSizeHeap failed.\n");
-                    retval = 0;
-                }
-                else /*Everything is ok*/
-                {
-                    retval = retval - HANDLE_SIZE;
-                }
-            }
-        }
-        else
-        {
-            DPRINT("GlobalSize: invalid handle\n");
-        }
-        HeapUnlock(GetProcessHeap());
-    }
-    return retval;
-}
-
 
 /*
  * @implemented
  */
-VOID STDCALL
-GlobalUnfix(HGLOBAL hMem)
-{
-   if (hMem != INVALID_HANDLE_VALUE)
-     GlobalUnlock(hMem);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-GlobalUnlock(HGLOBAL hMem)
-{
-
-   PGLOBAL_HANDLE	phandle;
-   BOOL			    locked = FALSE;
-
-   DPRINT("GlobalUnlock( 0x%lX )\n", (ULONG)hMem);
-
-   if(ISPOINTER(hMem))
-   {
-       SetLastError(ERROR_NOT_LOCKED);
-      return FALSE;
-   }
-
-   HeapLock(GetProcessHeap());
-
-   phandle = HANDLE_TO_INTERN(hMem);
-   if(MAGIC_GLOBAL_USED == phandle->Magic)
-   {
-      if (0 >= phandle->LockCount)
-      {
-          locked = FALSE;
-          SetLastError(ERROR_NOT_LOCKED);
-      }
-      else if (GLOBAL_LOCK_MAX > phandle->LockCount)
-      {
-         phandle->LockCount--;
-         locked = (0 != phandle->LockCount) ? TRUE : FALSE;
-         SetLastError(NO_ERROR);
-      }
-   }
-   else
-   {
-      DPRINT("GlobalUnlock: invalid handle\n");
-      locked = FALSE;
-   }
-   HeapUnlock(GetProcessHeap());
-   return locked;
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
+BOOL
+NTAPI
 GlobalUnWire(HGLOBAL hMem)
 {
-   return GlobalUnlock(hMem);
+    /* This is simply an unlock */
+    return GlobalUnlock(hMem);
 }
-
 
 /*
  * @implemented
  */
-LPVOID STDCALL
+LPVOID
+NTAPI
 GlobalWire(HGLOBAL hMem)
 {
-   return GlobalLock(hMem);
+    /* This is just a lock */
+    return GlobalLock(hMem);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+NTAPI
+GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
+{
+    SYSTEM_PERFORMANCE_INFORMATION PerformanceInfo;
+    VM_COUNTERS VmCounters;
+    QUOTA_LIMITS QuotaLimits;
+    ULONGLONG PageFile, PhysicalMemory;
+
+    /* Query performance information */
+    NtQuerySystemInformation(SystemPerformanceInformation,
+                             &PerformanceInfo,
+                             sizeof(PerformanceInfo),
+                             NULL);
+
+    /* Calculate memory load */
+    lpBuffer->dwMemoryLoad = ((DWORD)(BaseCachedSysInfo.NumberOfPhysicalPages -
+                                      PerformanceInfo.AvailablePages) * 100) /
+                                      BaseCachedSysInfo.NumberOfPhysicalPages;
+
+    /* Save physical memory */
+    PhysicalMemory = BaseCachedSysInfo.NumberOfPhysicalPages *
+                     BaseCachedSysInfo.PageSize;
+    lpBuffer->ullTotalPhys = PhysicalMemory;
+
+    /* Now save available physical memory */
+    PhysicalMemory = PerformanceInfo.AvailablePages *
+                     BaseCachedSysInfo.PageSize;
+    lpBuffer->ullAvailPhys = PhysicalMemory;
+
+    /* Query VM and Quota Limits */
+    NtQueryInformationProcess(NtCurrentProcess(),
+                              ProcessQuotaLimits,
+                              &QuotaLimits,
+                              sizeof(QUOTA_LIMITS),
+                              NULL);
+    NtQueryInformationProcess(NtCurrentProcess(),
+                              ProcessVmCounters,
+                              &VmCounters,
+                              sizeof(VM_COUNTERS),
+                              NULL);
+
+    /* Save the commit limit */
+    lpBuffer->ullTotalPageFile = min(QuotaLimits.PagefileLimit,
+                                     PerformanceInfo.CommitLimit);
+
+    /* Calculate how many pages are left */
+    PageFile = PerformanceInfo.CommitLimit - PerformanceInfo.CommittedPages;
+
+    /* Save the total */
+    lpBuffer->ullAvailPageFile = min(PageFile,
+                                     QuotaLimits.PagefileLimit -
+                                     VmCounters.PagefileUsage);
+    lpBuffer->ullAvailPageFile *= BaseCachedSysInfo.PageSize;
+
+    /* Now calculate the total virtual space */
+    lpBuffer->ullTotalVirtual = (BaseCachedSysInfo.MaximumUserModeAddress -
+                                 BaseCachedSysInfo.MinimumUserModeAddress) + 1;
+
+    /* And finally the avilable virtual space */
+    lpBuffer->ullAvailVirtual = lpBuffer->ullTotalVirtual -
+                                VmCounters.VirtualSize;
+    lpBuffer->ullAvailExtendedVirtual = 0;
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
+{
+    MEMORYSTATUSEX lpBufferEx;
+
+    /* Call the extended function */
+    lpBufferEx.dwLength = sizeof(MEMORYSTATUSEX);
+    if (GlobalMemoryStatusEx(&lpBufferEx))
+    {
+        /* Reset the right size and fill out the information */
+        lpBuffer->dwLength = sizeof(MEMORYSTATUS);
+        lpBuffer->dwMemoryLoad = lpBufferEx.dwMemoryLoad;
+        lpBuffer->dwTotalPhys = lpBufferEx.ullTotalPhys;
+        lpBuffer->dwAvailPhys = lpBufferEx.ullAvailPhys;
+        lpBuffer->dwTotalPageFile = lpBufferEx.ullTotalPageFile;
+        lpBuffer->dwAvailPageFile = lpBufferEx.ullAvailPageFile;
+        lpBuffer->dwTotalVirtual = lpBufferEx.ullTotalVirtual;
+        lpBuffer->dwAvailVirtual = lpBufferEx.ullAvailVirtual;
+    }
 }
 
 /* EOF */
