@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_WINCRYPT_H
@@ -127,6 +127,29 @@ typedef struct _CRYPT_BIT_BLOB {
     BYTE  *pbData;
     DWORD cUnusedBits;
 } CRYPT_BIT_BLOB, *PCRYPT_BIT_BLOB;
+
+typedef struct _CRYPT_KEY_PROV_PARAM {
+    DWORD dwParam;
+    BYTE *pbData;
+    DWORD cbData;
+    DWORD dwFlags;
+} CRYPT_KEY_PROV_PARAM, *PCRYPT_KEY_PROV_PARAM;
+
+typedef struct _CRYPT_KEY_PROV_INFO {
+    LPWSTR                pwszContainerName;
+    LPWSTR                pwszProvName;
+    DWORD                 dwProvType;
+    DWORD                 dwFlags;
+    DWORD                 cProvParam;
+    PCRYPT_KEY_PROV_PARAM rgProvParam;
+    DWORD                 dwKeySpec;
+} CRYPT_KEY_PROV_INFO, *PCRYPT_KEY_PROV_INFO;
+
+typedef struct _CERT_KEY_CONTEXT {
+    DWORD      cbSize;
+    HCRYPTPROV hCryptProv;
+    DWORD      dwKeySpec;
+} CERT_KEY_CONTEXT, *PCERT_KEY_CONTEXT;
 
 typedef struct _CERT_PUBLIC_KEY_INFO {
     CRYPT_ALGORITHM_IDENTIFIER Algorithm;
@@ -892,6 +915,89 @@ typedef const CRYPT_OID_INFO CCRYPT_OID_INFO, *PCCRYPT_OID_INFO;
 
 typedef BOOL (WINAPI *PFN_CRYPT_ENUM_OID_INFO)(PCCRYPT_OID_INFO pInfo,
  void *pvArg);
+
+typedef struct _CRYPT_SIGN_MESSAGE_PARA {
+    DWORD                      cbSize;
+    DWORD                      dwMsgEncodingType;
+    PCCERT_CONTEXT             pSigningCert;
+    CRYPT_ALGORITHM_IDENTIFIER HashAlgorithm;
+    void *                     pvHashAuxInfo;
+    DWORD                      cMsgCert;
+    PCCERT_CONTEXT            *rgpMsgCert;
+    DWORD                      cMsgCrl;
+    PCCRL_CONTEXT             *rgpMsgCrl;
+    DWORD                      cAuthAttr;
+    PCRYPT_ATTRIBUTE           rgAuthAttr;
+    DWORD                      cUnauthAttr;
+    PCRYPT_ATTRIBUTE           rgUnauthAttr;
+    DWORD                      dwFlags;
+    DWORD                      dwInnerContentType;
+#ifdef CRYPT_SIGN_MESSAGE_PARA_HAS_CMS_FIELDS
+    CRYPT_ALGORITHM_IDENTIFIER HashEncryptionAlgorithm;
+    void *                     pvHashEncryptionAuxInfo;
+#endif
+} CRYPT_SIGN_MESSAGE_PARA, *PCRYPT_SIGN_MESSAGE_PARA;
+
+#define CRYPT_MESSAGE_BARE_CONTENT_OUT_FLAG         0x00000001
+#define CRYPT_MESSAGE_ENCAPSULATED_CONTENT_OUT_FLAG 0x00000002
+#define CRYPT_MESSAGE_KEYID_SIGNER_FLAG             0x00000004
+#define CRYPT_MESSAGE_SILENT_KEYSET_FLAG            0x00000008
+
+typedef PCCERT_CONTEXT (WINAPI *PFN_CRYPT_GET_SIGNER_CERTIFICATE)(void *pvArg,
+ DWORD dwCertEncodingType, PCERT_INFO pSignerId, HCERTSTORE hMsgCertStore);
+
+typedef struct _CRYPT_VERIFY_MESSAGE_PARA {
+    DWORD                            cbSize;
+    DWORD                            dwMsgAndCertEncodingType;
+    HCRYPTPROV                       hCryptProv;
+    PFN_CRYPT_GET_SIGNER_CERTIFICATE pfnGetSignerCertificate;
+    void *                           pvGetArg;
+} CRYPT_VERIFY_MESSAGE_PARA, *PCRYPT_VERIFY_MESSAGE_PARA;
+
+typedef struct _CRYPT_ENCRYPT_MESSAGE_PARA {
+    DWORD                      cbSize;
+    DWORD                      dwMsgEncodingType;
+    HCRYPTPROV                 hCryptProv;
+    CRYPT_ALGORITHM_IDENTIFIER ContentEncryptionAlgorithm;
+    void *                     pvEncryptionAuxInfo;
+    DWORD                      dwFlags;
+    DWORD                      dwInnerContentType;
+} CRYPT_ENCRYPT_MESSAGE_PARA, *PCRYPT_ENCRYPT_MESSAGE_PARA;
+
+#define CRYPT_MESSAGE_KEYID_RECIPIENT_FLAG 0x00000004
+
+typedef struct _CRYPT_DECRYPT_MESSAGE_PARA {
+    DWORD       cbSize;
+    DWORD       dwMsgAndCertEncodingType;
+    DWORD       cCertStore;
+    HCERTSTORE *rghCertStore;
+#ifdef CRYPT_DECRYPT_MESSAGE_PARA_HAS_EXTRA_FIELDS
+    DWORD       dwFlags;
+#endif
+} CRYPT_DECRYPT_MESSAGE_PARA, *PCRYPT_DECRYPT_MESSAGE_PARA;
+
+typedef struct _CRYPT_HASH_MESSAGE_PARA {
+    DWORD                      cbSize;
+    DWORD                      dwMsgEncodingType;
+    HCRYPTPROV                 hCryptProv;
+    CRYPT_ALGORITHM_IDENTIFIER HashAlgorithm;
+    void *                     pvHashAuxInfo;
+} CRYPT_HASH_MESSAGE_PARA, *PCRYPT_HASH_MESSAGE_PARA;
+
+typedef struct _CRYPT_KEY_SIGN_MESSAGE_PARA {
+    DWORD                      cbSize;
+    DWORD                      dwMsgAndCertEncodingType;
+    HCRYPTPROV                 hCryptProv;
+    DWORD                      dwKeySpec;
+    CRYPT_ALGORITHM_IDENTIFIER HashAlgorithm;
+    void *                     pvHashAuxInfo;
+} CRYPT_KEY_SIGN_MESSAGE_PARA, *PCRYPT_KEY_SIGN_MESSAGE_PARA;
+
+typedef struct _CRYPT_KEY_VERIFY_MESSAGE_PARA {
+    DWORD      cbSize;
+    DWORD      dwMsgEncodingType;
+    HCRYPTPROV hCryptProv;
+} CRYPT_KEY_VERIFY_MESSAGE_PARA, *PCRYPT_KEY_VERIFY_MESSAGE_PARA;
 
 typedef struct _CRYPT_URL_ARRAY {
     DWORD   cUrl;
@@ -1916,6 +2022,22 @@ static const WCHAR CERT_PHYSICAL_STORE_AUTH_ROOT_NAME[] =
 #define CERT_FIND_VALID_ENHKEY_USAGE_FLAG     0x20
 #define CERT_FIND_VALID_CTL_USAGE_FLAG        0x20
 
+#define CRL_FIND_ANY        0
+#define CRL_FIND_ISSUED_BY  1
+#define CRL_FIND_EXISTING   2
+#define CRL_FIND_ISSUED_FOR 3
+
+#define CRL_FIND_ISSUED_BY_AKI_FLAG       0x1
+#define CRL_FIND_ISSUED_BY_SIGNATURE_FLAG 0x2
+#define CRL_FIND_ISSUED_BY_DELTA_FLAG     0x4
+#define CRL_FIND_ISSUED_BY_BASE_FLAG      0x8
+
+typedef struct _CRL_FIND_ISSUED_FOR_PARA
+{
+    PCCERT_CONTEXT pSubjectCert;
+    PCCERT_CONTEXT pIssuerCert;
+} CRL_FIND_ISSUED_FOR_PARA, *PCRL_FIND_ISSUED_FOR_PARA;
+
 /* PFN_CERT_STORE_PROV_WRITE_CERT dwFlags values */
 #define CERT_STORE_PROV_WRITE_ADD_FLAG 0x1
 
@@ -1928,6 +2050,21 @@ static const WCHAR CERT_PHYSICAL_STORE_AUTH_ROOT_NAME[] =
                                     (1 << CERT_STORE_CERTIFICATE_CONTEXT)
 #define CERT_STORE_CRL_CONTEXT_FLAG (1 << CERT_STORE_CRL_CONTEXT)
 #define CERT_STORE_CTL_CONTEXT_FLAG (1 << CERT_STORE_CTL_CONTEXT)
+
+/* CryptBinaryToString/CryptStringToBinary flags */
+#define CRYPT_STRING_BASE64HEADER        0x00000000
+#define CRYPT_STRING_BASE64              0x00000001
+#define CRYPT_STRING_BINARY              0x00000002
+#define CRYPT_STRING_BASE64REQUESTHEADER 0x00000003
+#define CRYPT_STRING_HEX                 0x00000004
+#define CRYPT_STRING_HEXASCII            0x00000005
+#define CRYPT_STRING_BASE64_ANY          0x00000006
+#define CRYPT_STRING_ANY                 0x00000007
+#define CRYPT_STRING_HEX_ANY             0x00000008
+#define CRYPT_STRING_BASE64X509CRLHEADER 0x00000009
+#define CRYPT_STRING_HEXADDR             0x0000000a
+#define CRYPT_STRING_HEXASCIIADDR        0x0000000b
+#define CRYPT_STRING_NOCR                0x80000000
 
 /* OIDs */
 #define szOID_RSA                           "1.2.840.113549"
@@ -2366,6 +2503,15 @@ static const WCHAR CERT_PHYSICAL_STORE_AUTH_ROOT_NAME[] =
 #define CRYPT_UNICODE_NAME_DECODE_DISABLE_IE4_UTF8_FLAG \
  CERT_RDN_DISABLE_IE4_UTF8_FLAG
 
+#define CERT_STORE_SIGNATURE_FLAG     0x00000001
+#define CERT_STORE_TIME_VALIDITY_FLAG 0x00000002
+#define CERT_STORE_REVOCATION_FLAG    0x00000004
+#define CERT_STORE_NO_CRL_FLAG        0x00010000
+#define CERT_STORE_NO_ISSUER_FLAG     0x00020000
+
+#define CERT_STORE_BASE_CRL_FLAG  0x00000100
+#define CERT_STORE_DELTA_CRL_FLAG 0x00000200
+
 /* subject types for CryptVerifyCertificateSignatureEx */
 #define CRYPT_VERIFY_CERT_SIGN_SUBJECT_BLOB 1
 #define CRYPT_VERIFY_CERT_SIGN_SUBJECT_CERT 2
@@ -2407,6 +2553,12 @@ static const WCHAR CERT_PHYSICAL_STORE_AUTH_ROOT_NAME[] =
 
 #define CERT_NAME_ISSUER_FLAG           0x00000001
 #define CERT_NAME_DISABLE_IE4_UTF8_FLAG 0x00010000
+
+#define CERT_SET_KEY_PROV_HANDLE_PROP_ID 0x00000001
+#define CERT_SET_KEY_CONTEXT_PROP_ID     0x00000001
+
+#define CERT_CREATE_SELFSIGN_NO_SIGN     1
+#define CERT_CREATE_SELFSIGN_NO_KEY_INFO 2
 
 /* function declarations */
 /* advapi32.dll */
@@ -2485,6 +2637,20 @@ BOOL WINAPI CryptVerifySignatureW (HCRYPTHASH hHash, BYTE *pbSignature, DWORD dw
 LPVOID WINAPI CryptMemAlloc(ULONG cbSize);
 LPVOID WINAPI CryptMemRealloc(LPVOID pv, ULONG cbSize);
 VOID   WINAPI CryptMemFree(LPVOID pv);
+
+BOOL WINAPI CryptBinaryToStringA(const BYTE *pbBinary,
+ DWORD cbBinary, DWORD dwFlags, LPSTR pszString, DWORD *pcchString);
+BOOL WINAPI CryptBinaryToStringW(const BYTE *pbBinary,
+ DWORD cbBinary, DWORD dwFlags, LPWSTR pszString, DWORD *pcchString);
+#define CryptBinaryToString WINELIB_NAME_AW(CryptBinaryToString)
+
+BOOL WINAPI CryptStringToBinaryA(LPCSTR pszString,
+ DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
+ DWORD *pdwSkip, DWORD *pdwFlags);
+BOOL WINAPI CryptStringToBinaryW(LPCWSTR pszString,
+ DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
+ DWORD *pdwSkip, DWORD *pdwFlags);
+#define CryptStringToBinary WINELIB_NAME_AW(CryptStringToBinary)
 
 BOOL WINAPI CryptRegisterDefaultOIDFunction(DWORD,LPCSTR,DWORD,LPCWSTR);
 BOOL WINAPI CryptRegisterOIDFunction(DWORD,LPCSTR,LPCSTR,LPCWSTR,LPCSTR);
@@ -2655,6 +2821,15 @@ BOOL WINAPI CertAddSerializedElementToStore(HCERTSTORE hCertStore,
  const BYTE *pbElement, DWORD cbElement, DWORD dwAddDisposition, DWORD dwFlags,
  DWORD dwContextTypeFlags, DWORD *pdwContentType, const void **ppvContext);
 
+BOOL WINAPI CertCompareCertificate(DWORD dwCertEncodingType,
+ PCERT_INFO pCertId1, PCERT_INFO pCertId2);
+BOOL WINAPI CertCompareCertificateName(DWORD dwCertEncodingType,
+ PCERT_NAME_BLOB pCertName1, PCERT_NAME_BLOB pCertName2);
+BOOL WINAPI CertCompareIntegerBlob(PCRYPT_INTEGER_BLOB pInt1,
+ PCRYPT_INTEGER_BLOB pInt2);
+BOOL WINAPI CertComparePublicKeyInfo(DWORD dwCertEncodingType,
+ PCERT_PUBLIC_KEY_INFO pPublicKey1, PCERT_PUBLIC_KEY_INFO pPublicKey2);
+
 const void *CertCreateContext(DWORD dwContextType, DWORD dwEncodingType,
  const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
  PCERT_CREATE_CONTEXT_PARA pCreatePara);
@@ -2667,6 +2842,12 @@ PCCRL_CONTEXT WINAPI CertCreateCRLContext( DWORD dwCertEncodingType,
 
 PCCTL_CONTEXT WINAPI CertCreateCTLContext(DWORD dwMsgAndCertEncodingType,
  const BYTE *pbCtlEncoded, DWORD cbCtlEncoded);
+
+PCCERT_CONTEXT WINAPI CertCreateSelfSignCertificate(HCRYPTPROV hProv,
+ PCERT_NAME_BLOB pSubjectIssuerBlob, DWORD dwFlags,
+ PCRYPT_KEY_PROV_INFO pKeyProvInfo,
+ PCRYPT_ALGORITHM_IDENTIFIER pSignatureAlgorithm, PSYSTEMTIME pStartTime,
+ PSYSTEMTIME pEndTime, PCERT_EXTENSIONS pExtensions);
 
 BOOL WINAPI CertDeleteCertificateFromStore(PCCERT_CONTEXT pCertContext);
 
@@ -2692,6 +2873,16 @@ PCCRL_CONTEXT WINAPI CertFindCRLInStore(HCERTSTORE hCertStore,
 PCCTL_CONTEXT WINAPI CertFindCTLInStore(HCERTSTORE hCertStore,
  DWORD dwCertEncodingType, DWORD dwFindFlags, DWORD dwFindType,
  const void *pvFindPara, PCCTL_CONTEXT pPrevCtlContext);
+
+PCCERT_CONTEXT WINAPI CertGetIssuerCertificateFromStore(HCERTSTORE hCertStore,
+ PCCERT_CONTEXT pSubjectContext, PCCERT_CONTEXT pPrevIssuerContext,
+ DWORD *pdwFlags);
+
+PCCERT_CONTEXT WINAPI CertGetSubjectCertificateFromStore(HCERTSTORE hCertStore,
+ DWORD dwCertEncodingType, PCERT_INFO pCertId);
+
+PCCRL_CONTEXT WINAPI CertGetCRLFromStore(HCERTSTORE hCertStore,
+ PCCERT_CONTEXT pIssuerContext, PCCRL_CONTEXT pPrevCrlContext, DWORD *pdwFlags);
 
 BOOL WINAPI CertSerializeCertificateStoreElement(PCCERT_CONTEXT pCertContext,
  DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
@@ -2764,6 +2955,19 @@ PCERT_EXTENSION WINAPI CertFindExtension(LPCSTR pszObjId, DWORD cExtensions,
  CERT_EXTENSION rgExtensions[]);
 PCERT_RDN_ATTR WINAPI CertFindRDNAttr(LPCSTR pszObjId, PCERT_NAME_INFO pName);
 
+BOOL WINAPI CertIsValidCRLForCertificate(PCCERT_CONTEXT pCert,
+ PCCRL_CONTEXT pCrl, DWORD dwFlags, void *pvReserved);
+BOOL WINAPI CertFindCertificateInCRL(PCCERT_CONTEXT pCert,
+ PCCRL_CONTEXT pCrlContext, DWORD dwFlags, void *pvReserved,
+ PCRL_ENTRY *ppCrlEntry);
+BOOL WINAPI CertVerifyCRLRevocation(DWORD dwCertEncodingType,
+ PCERT_INFO pCertId, DWORD cCrlInfo, PCRL_INFO rgpCrlInfo[]);
+
+BOOL WINAPI CertVerifySubjectCertificateContext(PCCERT_CONTEXT pSubject,
+ PCCERT_CONTEXT pIssuer, DWORD *pdwFlags);
+
+LONG WINAPI CertVerifyCRLTimeValidity(LPFILETIME pTimeToVerify,
+ PCRL_INFO pCrlInfo);
 LONG WINAPI CertVerifyTimeValidity(LPFILETIME pTimeToVerify,
  PCERT_INFO pCertInfo);
 
@@ -2811,6 +3015,71 @@ BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, LPCWSTR pszX500,
  DWORD dwStrType, void *pvReserved, BYTE *pbEncoded, DWORD *pcbEncoded,
  LPCWSTR *ppszError);
 #define CertStrToName WINELIB_NAME_AW(CertStrToName)
+
+BOOL WINAPI CryptSignMessage(PCRYPT_SIGN_MESSAGE_PARA pSignPara,
+ BOOL fDetachedSignature, DWORD cToBeSigned, const BYTE *rgpbToBeSigned[],
+ DWORD rgcbToBeSigned[], BYTE *pbSignedBlob, DWORD *pcbSignedBlob);
+BOOL WINAPI CryptSignMessageWithKey(PCRYPT_KEY_SIGN_MESSAGE_PARA pSignPara,
+ const BYTE *pbToBeSigned, DWORD cbToBeSigned, BYTE *pbSignedBlob,
+ DWORD *pcbSignedBlob);
+
+BOOL WINAPI CryptVerifyMessageSignature(PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
+ DWORD dwSignerIndex, const BYTE* pbSignedBlob, DWORD cbSignedBlob,
+ BYTE* pbDecoded, DWORD* pcbDecoded, PCCERT_CONTEXT* ppSignerCert);
+BOOL WINAPI CryptVerifyMessageSignatureWithKey(
+ PCRYPT_KEY_VERIFY_MESSAGE_PARA pVerifyPara,
+ PCERT_PUBLIC_KEY_INFO pPublicKeyInfo, const BYTE *pbSignedBlob,
+ DWORD cbSignedBlob, BYTE *pbDecoded, DWORD *pcbDecoded);
+
+BOOL WINAPI CryptVerifyDetachedMessageSignature(
+ PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara, DWORD dwSignerIndex,
+ const BYTE *pbDetachedSignBlob, DWORD cbDetachedSignBlob, DWORD cToBeSigned,
+ const BYTE *rgpbToBeSigned[], DWORD rgcbToBeSigned[],
+ PCCERT_CONTEXT *ppSignerCert);
+LONG WINAPI CryptGetMessageSignerCount(DWORD dwMsgEncodingType,
+ const BYTE *pbSignedBlob, DWORD cbSignedBlob);
+
+BOOL WINAPI CryptEncryptMessage(PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptPara,
+ DWORD cRecipientCert, PCCERT_CONTEXT rgpRecipientCert[],
+ const BYTE *pbToBeEncrypted, DWORD cbToBeEncrypted, BYTE *pbEncryptedBlob,
+ DWORD *pcbEncryptedBlob);
+BOOL WINAPI CryptDecryptMessage(PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
+ const BYTE *pbEncryptedBlob, DWORD cbEncryptedBlob, BYTE *pbDecrypted,
+ DWORD *pcbDecrypted, PCCERT_CONTEXT *ppXchgCert);
+
+BOOL WINAPI CryptSignAndEncryptMessage(PCRYPT_SIGN_MESSAGE_PARA pSignPara,
+ PCRYPT_ENCRYPT_MESSAGE_PARA pEncryptPara, DWORD cRecipientCert,
+ PCCERT_CONTEXT rgpRecipientCert[], const BYTE *pbToBeSignedAndEncrypted,
+ DWORD cbToBeSignedAndEncrypted, BYTE *pbSignedAndEncryptedBlob,
+ DWORD *pcbSignedAndEncryptedBlob);
+BOOL WINAPI CryptDecryptAndVerifyMessageSignature(
+ PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
+ PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara, DWORD dwSignerIndex,
+ const BYTE *pbEncryptedBlob, DWORD cbEncryptedBlob, BYTE *pbDecrypted,
+ DWORD *pcbDecrypted, PCCERT_CONTEXT *ppXchgCert, PCCERT_CONTEXT *ppSignerCert);
+
+HCERTSTORE WINAPI CryptGetMessageCertificates(DWORD dwMsgAndCertEncodingType,
+ HCRYPTPROV hCryptProv, DWORD dwFlags, const BYTE *pbSignedBlob,
+ DWORD cbSignedBlob);
+
+BOOL WINAPI CryptDecodeMessage(DWORD dwMsgTypeFlags,
+ PCRYPT_DECRYPT_MESSAGE_PARA pDecryptPara,
+ PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara, DWORD dwSignerIndex,
+ const BYTE *pbEncodedBlob, DWORD cbEncodedBlob, DWORD dwPrevInnerContentType,
+ DWORD *pdwMsgType, DWORD *pdwInnerContentType, BYTE *pbDecoded,
+ DWORD *pcbDecoded, PCCERT_CONTEXT *ppXchgCert, PCCERT_CONTEXT *ppSignerCert);
+
+BOOL WINAPI CryptHashMessage(PCRYPT_HASH_MESSAGE_PARA pHashPara,
+ BOOL fDetachedHash, DWORD cToBeHashed, const BYTE *rgpbToBeHashed[],
+ DWORD rgcbToBeHashed[], BYTE *pbHashedBlob, DWORD *pcbHashedBlob,
+ BYTE *pbComputedHash, DWORD *pcbComputedHash);
+BOOL WINAPI CryptVerifyMessageHash(PCRYPT_HASH_MESSAGE_PARA pHashPara,
+ BYTE *pbHashedBlob, DWORD cbHashedBlob, BYTE *pbToBeHashed,
+ DWORD *pcbToBeHashed, BYTE *pbComputedHash, DWORD *pcbComputedHash);
+BOOL WINAPI CryptVerifyDetachedMessageHash(PCRYPT_HASH_MESSAGE_PARA pHashPara,
+ BYTE *pbDetachedHashBlob, DWORD cbDetachedHashBlob, DWORD cToBeHashed,
+ const BYTE *rgpbToBeHashed[], DWORD rgcbToBeHashed[], BYTE *pbComputedHash,
+ DWORD *pcbComputedHash);
 
 /* cryptnet.dll functions */
 BOOL WINAPI CryptGetObjectUrl(LPCSTR pszUrlOid, LPVOID pvPara, DWORD dwFlags,

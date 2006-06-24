@@ -778,7 +778,7 @@ typedef struct _SYSTEMTIME {
 	WORD wMinute;
 	WORD wSecond;
 	WORD wMilliseconds;
-} SYSTEMTIME,*LPSYSTEMTIME;
+} SYSTEMTIME,*LPSYSTEMTIME,*PSYSTEMTIME;
 typedef struct _WIN32_FILE_ATTRIBUTE_DATA {
 	DWORD	dwFileAttributes;
 	FILETIME	ftCreationTime;
