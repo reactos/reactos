@@ -129,6 +129,7 @@ typedef struct _CPU_REGISTER
 
 static CPU_REGISTER GspRegisters[NUMREGS] =
 {
+#ifdef _M_IX86
   { 4, FIELD_OFFSET(KTRAP_FRAME, Eax), FIELD_OFFSET(CONTEXT, Eax), TRUE },
   { 4, FIELD_OFFSET(KTRAP_FRAME, Ecx), FIELD_OFFSET(CONTEXT, Ecx), TRUE },
   { 4, FIELD_OFFSET(KTRAP_FRAME, Edx), FIELD_OFFSET(CONTEXT, Edx), FALSE },
@@ -145,6 +146,7 @@ static CPU_REGISTER GspRegisters[NUMREGS] =
   { 4, FIELD_OFFSET(KTRAP_FRAME, SegEs), FIELD_OFFSET(CONTEXT, SegEs), TRUE },
   { 4, FIELD_OFFSET(KTRAP_FRAME, SegFs), FIELD_OFFSET(CONTEXT, SegFs), TRUE },
   { 4, FIELD_OFFSET(KTRAP_FRAME, SegGs), FIELD_OFFSET(CONTEXT, SegGs), TRUE }
+#endif
 };
 
 static PCHAR GspThreadStates[DeferredReady+1] =
@@ -563,8 +565,12 @@ GspLong2Hex(PCHAR *Address,
 static LONG
 GspGetEspFromTrapFrame(PKTRAP_FRAME TrapFrame)
 {
+#ifdef _M_IX86
   return KeGetPreviousMode() == KernelMode
          ? (LONG) &TrapFrame->HardwareEsp : (LONG)TrapFrame->HardwareEsp;
+#elif defined(_M_PPC)
+  return 0;
+#endif
 }
 
 
@@ -613,12 +619,14 @@ GspGetRegisters(PCHAR Address,
               case ESP:
                 Value = (ULONG_PTR) (KernelStack + 8);
                 break;
+#ifdef _M_IX86
               case CS:
                 Value = KGDT_R0_CODE;
                 break;
               case DS:
                 Value = KGDT_R0_DATA;
                 break;
+#endif
               default:
                 Value = 0;
                 break;
@@ -1332,12 +1340,16 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
       DPRINT("Thread %p acquired mutex\n", PsGetCurrentThread());
 
       /* Disable hardware debugging while we are inside the stub */
+#ifdef _M_IX86
 #if defined(__GNUC__)
       __asm__("movl %0,%%db7" : /* no output */ : "r" (0));
 #elif defined(_MSC_VER)
       __asm mov eax, 0  __asm mov dr7, eax
 #else
 #error Unknown compiler for inline assembler
+#endif
+#elif defined(_M_PPC)
+	/* XXX arty fixme */
 #endif
 
       GspUnloadBreakpoints(TrapFrame);
@@ -1373,6 +1385,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           ptr = GspMem2Hex((PCHAR) &Esp, ptr, 4, 0);
           *ptr++ = ';';
   
+#ifdef _M_IX86
           *ptr++ = HexChars[EBP];
           *ptr++ = ':';
           ptr = GspMem2Hex((PCHAR) &TrapFrame->Ebp, ptr, 4, 0);       /* FP */
@@ -1382,6 +1395,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           *ptr++ = ':';
           ptr = GspMem2Hex((PCHAR) &TrapFrame->Eip, ptr, 4, 0);        /* PC */
           *ptr++ = ';';
+#endif
 
           *ptr = '\0';
 
@@ -1558,12 +1572,16 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                     Context->EFlags |= 0x100;
                   }
 
+#ifdef _M_IX86
 #if defined(__GNUC__)
                 asm volatile ("movl %%db6, %0\n" : "=r" (dr6_) : );
 #elif defined(_MSC_VER)
                 __asm mov eax, dr6  __asm mov dr6_, eax;
 #else
 #error Unknown compiler for inline assembler
+#endif
+#elif defined(_M_PPC)
+		/* XXX arty fixme */
 #endif
                 if (!(dr6_ & 0x4000))
                   {
@@ -1581,12 +1599,16 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                       }
                   }
                 GspLoadBreakpoints(TrapFrame);
+#ifdef _M_IX86
 #if defined(__GNUC__)
                 asm volatile ("movl %0, %%db6\n" : : "r" (0));
 #elif defined(_MSC_VER)
                 __asm mov eax, 0  __asm mov dr6, eax;
 #else
 #error Unknown compiler for inline assembler
+#endif
+#elif defined(_M_PPC)
+		/* XXX arty fixme */
 #endif
 
                 if (NULL != GspDbgThread)

@@ -1117,7 +1117,11 @@ typedef struct _EPROCESS
 #endif
     union
     {
+#ifdef _M_IX86
         HARDWARE_PTE_X86 PagedirectoryPte;
+#else
+	HARDWARE_PTE_PPC PagedirectoryPte;
+#endif
         ULONGLONG Filler;
     };
     ULONG Session;

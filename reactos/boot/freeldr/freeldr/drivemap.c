@@ -171,6 +171,7 @@ ULONG DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 
 VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 {
+#ifdef _M_IX86
 	ULONG*	RealModeIVT = (ULONG*)0x00000000;
 	USHORT*	BiosLowMemorySize = (USHORT*)0x00000413;
 
@@ -202,6 +203,7 @@ VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 	RealModeIVT[0x13] = DriveMapHandlerSegOff;
 
 	CacheInvalidateCacheData();
+#endif
 	DriveMapInstalled = TRUE;
 }
 

@@ -56,12 +56,14 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
     Event = &GetSetContext->Event;
     Mode = GetSetContext->Mode;
 
+#ifdef _M_IX86
     if (TrapFrame->SegCs == KGDT_R0_CODE && Mode != KernelMode)
     {
         GetSetContext->Status = STATUS_ACCESS_DENIED;
     }
     else
     {
+#endif
         /* Check if it's a set or get */
         if (*SystemArgument1) {
             /* Get the Context */
@@ -71,7 +73,9 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
             KeContextToTrapFrame(Context, NULL, TrapFrame, Context->ContextFlags, Mode);
         }
         GetSetContext->Status = STATUS_SUCCESS;
+#ifdef _M_IX86
     }
+#endif
 
     /* Notify the Native API that we are done */
     KeSetEvent(Event, IO_NO_INCREMENT, FALSE);

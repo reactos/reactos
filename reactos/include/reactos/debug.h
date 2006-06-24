@@ -125,7 +125,7 @@ RtlAssert(
 #elif defined(_M_MIPS)
 #define ASM_BREAKPOINT "\nbreak\n"
 #else
-#error Unsupported architecture.
+#define ASM_BREAKPOINT "\ntwi 1\n"
 #endif
 
 #ifndef KEBUGCHECK

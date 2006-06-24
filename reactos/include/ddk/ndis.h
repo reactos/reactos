@@ -4126,7 +4126,6 @@ typedef struct _NDIS_INTERRUPT {
   KEVENT  DpcsCompletedEvent;
 } NDIS_INTERRUPT, *PNDIS_INTERRUPT;
 
-
 typedef enum _NDIS_WORK_ITEM_TYPE {
   NdisWorkItemRequest,
   NdisWorkItemSend,

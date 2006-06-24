@@ -198,7 +198,11 @@ KeEnterKernelDebugger(VOID)
     KdEnteredDebugger = TRUE;
 
     /* Halt the CPU */
+#ifdef _M_IX86
     for (;;) Ke386HaltProcessor();
+#elif defined(_M_PPC)
+    for (;;);
+#endif
 }
 
 /*

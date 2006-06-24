@@ -45,6 +45,11 @@
 				<file>vdm.c</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file first="true">main_asm.S</file>
+			</directory>
+		</if>
 			<file>apc.c</file>
 			<file>bug.c</file>
 			<file>clock.c</file>

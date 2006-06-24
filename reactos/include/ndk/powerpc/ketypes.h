@@ -31,6 +31,45 @@ Author:
 #define IPI_FREEZE              3
 #define IPI_PACKET_READY        4
 #define IPI_SYNCH_REQUEST       10
+#define MAXIMUM_VECTOR          0x100
+
+#ifndef ROUND_UP
+#define ROUND_UP(x,y) (((x) + ((y)-1)) & ~((y)-1))
+#endif
+
+typedef double DOUBLE;
+
+typedef struct _FX_SAVE_AREA {
+    ULONG Fr[32];
+} FX_SAVE_AREA;
+
+typedef struct _LDT_ENTRY {
+    USHORT LimitLow;
+    USHORT BaseLow;
+    union
+    {
+        struct
+        {
+            UCHAR BaseMid;
+            UCHAR Flags1;
+            UCHAR Flags2;
+            UCHAR BaseHi;
+        } Bytes;
+        struct
+        {
+            ULONG BaseMid : 8;
+            ULONG Type : 5;
+            ULONG Dpl : 2;
+            ULONG Pres : 1;
+            ULONG LimitHi : 4;
+            ULONG Sys : 1;
+            ULONG Reserved_0 : 1;
+            ULONG Default_Big : 1;
+            ULONG Granularity : 1;
+            ULONG BaseHi : 8;
+        } Bits;
+    } HighWord;
+} LDT_ENTRY;
 
 //
 // Trap Frame Definition
@@ -42,7 +81,7 @@ typedef struct _KTRAP_FRAME
     UCHAR PreviousMode;
     UCHAR SavedApcStateIndex;
     UCHAR SavedKernelApcDisable;
-    UCHAR ExceptionRecord[ROUND_UP(sizeof(EXCEPTION_RECORD), ULONGLONG];
+    UCHAR ExceptionRecord[ROUND_UP(sizeof(EXCEPTION_RECORD), sizeof(ULONGLONG))];
     ULONG FILL2;
     ULONG Gpr0;
     ULONG Gpr1;
@@ -403,7 +442,8 @@ typedef struct _KIPCR
 //
 // TSS Definition
 //
-typedef struct _KTSS, KTSS, *PKTSS;
+typedef struct _KTSS {
+} KTSS, *PKTSS;
 
 //
 // PowerPC Exception Frame

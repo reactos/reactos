@@ -6,6 +6,7 @@ _start:
 	.long	0
 	.long	0
 	
+	.globl _begin
 _begin:
 	sync                    
 	isync
@@ -19,15 +20,17 @@ _begin:
 	mtmsr   %r0             
 	isync                   
 
-	bl	setup_bats	                               
-
-	li	%r8,0x3030
-	mtmsr	%r8
-
 	/* Store ofw call addr */
 	mr	%r21,%r5
 	lis	%r10,0xe00000@ha
 	stw	%r5,ofw_call_addr - _start@l(%r10)
+
+	bl	setup_bats
+
+	li	%r8,0x3030
+	mtmsr	%r8
+
+	bl	ofw_print_regs
 
 	lis	%r4,_binary_freeldr_tmp_end@ha
 	addi	%r4,%r4,_binary_freeldr_tmp_end@l
@@ -61,7 +64,7 @@ _begin:
 	lis	%r3,call_ofw@ha
 	addi	%r3,%r3,call_ofw - _start
 	
-	b	call_freeldr
+	blr
 
 /*
  * lifted from ppc/boot/openfirmware/misc.S

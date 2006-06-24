@@ -441,7 +441,7 @@ KiQuantumEnd(VOID)
     /* Set DPC Event if requested */
     if (Prcb->DpcSetEventRequest)
     {
-        KeSetEvent(&Prcb->DpcEvent, 0, 0);
+        KeSetEvent((void *)&Prcb->DpcEvent, 0, 0);
     }
 
     /* Check if Quantum expired */

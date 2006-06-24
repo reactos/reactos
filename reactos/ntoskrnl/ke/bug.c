@@ -35,7 +35,9 @@ static LIST_ENTRY BugcheckCallbackListHead = {NULL,NULL};
 static LIST_ENTRY BugcheckReasonCallbackListHead = {NULL,NULL};
 static ULONG InBugCheck;
 static PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
+#ifdef _M_IX86
 static ULONG KeBugCheckCount = 1;
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
@@ -298,6 +300,7 @@ KeBugCheckWithTf(ULONG BugCheckCode,
                  ULONG BugCheckParameter4,
                  PKTRAP_FRAME Tf)
 {
+#ifdef _M_IX86
     KIRQL OldIrql;
     BOOLEAN GotExtendedCrashInfo = FALSE;
     PVOID Address = 0;
@@ -469,6 +472,9 @@ KeBugCheckWithTf(ULONG BugCheckCode,
 
     /* Halt this CPU now */
     for (;;) Ke386HaltProcessor();
+#elif defined(_M_PPC)
+    for (;;);
+#endif
 }
 
 /*

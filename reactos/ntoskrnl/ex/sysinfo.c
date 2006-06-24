@@ -1646,8 +1646,9 @@ NtFlushInstructionCache (
 	)
 {
         PAGED_CODE();
-
+#ifdef _M_IX86
 	__asm__("wbinvd\n");
+#endif
 	return STATUS_SUCCESS;
 }
 

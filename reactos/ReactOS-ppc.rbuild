@@ -18,14 +18,14 @@
   <define name="_PPC_" />
   <define name="__PowerPC__" />
   <define name="_REACTOS_" />
-  <define name="__MINGW_IMPORT" empty="true" />
+  <define name="__MINGW_IMPORT">extern</define>
   <define name="stdcall" empty="true" />	
   <define name="__stdcall__" empty="true" />
   <define name="fastcall" empty="true" />
   <define name="cdecl" empty="true" />
   <define name="__cdecl__" empty="true" />
   <define name="dllimport" empty="true" />
-  <compilerflag>-v</compilerflag>
+  <define name="WORDS_BIGENDIAN" empty="true" />
   <if property="MP" value="1">
     <define name="CONFIG_SMP" value="1" />
   </if>
@@ -41,18 +41,15 @@
     <define name="KDBG" value="1" />
     <property name="DBG_OR_KDBG" value="true" />
   </if>
-  <compilerflag>-Wpointer-arith</compilerflag>
 
   <include>.</include>
   <include>include</include>
-  <include>include/reactos</include>
-  <include>include/libs</include>
-  <include>include/drivers</include>
-  <include>include/subsys</include>
-  <include>include/ndk</include>
-  <include>include</include>
   <include>include/crt</include>
   <include>include/ddk</include>
+  <include>include/GL</include>
+  <include>include/ndk</include>
+  <include>include/reactos</include>
+  <include>include/reactos/libs</include>
 
   <directory name="base">
     <xi:include href="base/base.rbuild" />

@@ -908,8 +908,10 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     DPRINT("KiInitializeUserApc(TrapFrame %x/%x)\n", TrapFrame,
             KeGetCurrentThread()->TrapFrame);
 
+#ifdef _M_IX86
     /* Don't deliver APCs in V86 mode */
     if (TrapFrame->EFlags & X86_EFLAGS_VM) return;
+#endif
 
     /* Save the full context */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
@@ -928,9 +930,11 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
                       &Context,
                       sizeof(CONTEXT));
 
+#ifdef _M_IX86
         /* Run at APC dispatcher */
         TrapFrame->Eip = (ULONG)KeUserApcDispatcher;
         TrapFrame->HardwareEsp = Stack;
+#endif
 
         /* Setup the stack */
         *(PULONG_PTR)(Stack + 0 * sizeof(ULONG_PTR)) = (ULONG_PTR)NormalRoutine;

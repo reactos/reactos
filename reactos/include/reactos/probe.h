@@ -5,6 +5,10 @@
 #error Header intended for use by NTOSKRNL/WIN32K only!
 #endif
 
+#if defined(_M_PPC)
+extern ULONG_PTR MmUserProbeAddress;
+#endif
+
 static const UNICODE_STRING __emptyUnicodeString = {0};
 static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
 static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};

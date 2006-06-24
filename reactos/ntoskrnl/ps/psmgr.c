@@ -199,7 +199,9 @@ PsInitProcessManagment(VOID)
    RtlZeroMemory(PsIdleProcess, sizeof(EPROCESS));
 
    PsIdleProcess->Pcb.Affinity = 0xFFFFFFFF;
+#ifdef _M_IX86
    PsIdleProcess->Pcb.IopmOffset = 0xffff;
+#endif
    PsIdleProcess->Pcb.BasePriority = PROCESS_PRIORITY_IDLE;
    PsIdleProcess->Pcb.QuantumReset = 6;
    InitializeListHead(&PsIdleProcess->Pcb.ThreadListHead);
@@ -243,7 +245,9 @@ PsInitProcessManagment(VOID)
 #else
    PsInitialSystemProcess->Pcb.Affinity = KeActiveProcessors;
 #endif   
+#ifdef _M_IX86
    PsInitialSystemProcess->Pcb.IopmOffset = 0xffff;
+#endif
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIORITY_NORMAL;
    PsInitialSystemProcess->Pcb.QuantumReset = 6;
    InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);

@@ -5268,9 +5268,189 @@ KfReleaseSpinLock(
 
 #define KeGetDcacheFillSize() 1L
 
+#elif defined(_PPC_)
+
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+
+#define PASSIVE_LEVEL                      0
+#define LOW_LEVEL                          0
+#define APC_LEVEL                          1
+#define DISPATCH_LEVEL                     2
+#define PROFILE_LEVEL                     27
+#define CLOCK1_LEVEL                      28
+#define CLOCK2_LEVEL                      28
+#define IPI_LEVEL                         29
+#define SYNCH_LEVEL			 (IPI_LEVEL-1)
+#define POWER_LEVEL                       30
+#define HIGH_LEVEL                        31
+ 
+extern NTOSAPI PVOID MmHighestUserAddress;
+extern NTOSAPI PVOID MmSystemRangeStart;
+extern NTOSAPI ULONG_PTR MmUserProbeAddress;
+
+#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
+#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
+#define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
+#define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0C00000
+
+#define KI_USER_SHARED_DATA               0xffdf0000
+#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
+
+#define EFLAG_SIGN                        0x8000
+#define EFLAG_ZERO                        0x4000
+#define EFLAG_SELECT                      (EFLAG_SIGN | EFLAG_ZERO)
+
+#define RESULT_NEGATIVE                   ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_ZERO                       ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_POSITIVE                   ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
+
+typedef struct _KPCR_TIB {
+  PVOID  ExceptionList;         /* 00 */
+  PVOID  StackBase;             /* 04 */
+  PVOID  StackLimit;            /* 08 */
+  PVOID  SubSystemTib;          /* 0C */
+  _ANONYMOUS_UNION union {
+    PVOID  FiberData;           /* 10 */
+    DWORD  Version;             /* 10 */
+  } DUMMYUNIONNAME;
+  PVOID  ArbitraryUserPointer;  /* 14 */
+  struct _KPCR_TIB *Self;       /* 18 */
+} KPCR_TIB, *PKPCR_TIB;         /* 1C */
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
+typedef struct _KPCR {
+  KPCR_TIB  Tib;                /* 00 */
+  struct _KPCR  *Self;          /* 1C */
+  struct _KPRCB  *Prcb;         /* 20 */
+  KIRQL  Irql;                  /* 24 */
+  ULONG  IRR;                   /* 28 */
+  ULONG  IrrActive;             /* 2C */
+  ULONG  IDR;                   /* 30 */
+  PVOID  KdVersionBlock;        /* 34 */
+  PUSHORT  IDT;                 /* 38 */
+  PUSHORT  GDT;                 /* 3C */
+  struct _KTSS  *TSS;           /* 40 */
+  USHORT  MajorVersion;         /* 44 */
+  USHORT  MinorVersion;         /* 46 */
+  KAFFINITY  SetMember;         /* 48 */
+  ULONG  StallScaleFactor;      /* 4C */
+  UCHAR  SpareUnused;           /* 50 */
+  UCHAR  Number;                /* 51 */
+} KPCR, *PKPCR;                 /* 54 */
+
+#if !defined(__INTERLOCKED_DECLARED)
+#define __INTERLOCKED_DECLARED
+
+NTOSAPI
+LONG
+DDKFASTAPI
+InterlockedIncrement(
+  IN PLONG  VOLATILE  Addend);
+
+NTOSAPI
+LONG
+DDKFASTAPI
+InterlockedDecrement(
+  IN PLONG  VOLATILE  Addend);
+
+NTOSAPI
+LONG
+DDKFASTAPI
+InterlockedCompareExchange(
+  IN OUT PLONG  VOLATILE  Destination,
+  IN LONG  Exchange,
+  IN LONG  Comparand);
+
+NTOSAPI
+LONG
+DDKFASTAPI
+InterlockedExchange(
+  IN OUT PLONG  VOLATILE  Target,
+  IN LONG Value);
+
+NTOSAPI
+LONG
+DDKFASTAPI
+InterlockedExchangeAdd(
+  IN OUT PLONG VOLATILE  Addend,
+  IN LONG  Value);
+
+/*
+ * PVOID
+ * InterlockedExchangePointer(
+ *   IN OUT PVOID VOLATILE  *Target,
+ *   IN PVOID  Value)
+ */
+#define InterlockedExchangePointer(Target, Value) \
+  ((PVOID) InterlockedExchange((PLONG) Target, (LONG) Value))
+
+/*
+ * PVOID
+ * InterlockedCompareExchangePointer(
+ *   IN OUT PVOID  *Destination,
+ *   IN PVOID  Exchange,
+ *   IN PVOID  Comparand)
+ */
+#define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
+  ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
+
+#endif /* !__INTERLOCKED_DECLARED */
+
+NTOSAPI
+VOID
+DDKFASTAPI
+KefAcquireSpinLockAtDpcLevel(
+  IN PKSPIN_LOCK  SpinLock);
+
+NTOSAPI
+VOID
+DDKFASTAPI
+KefReleaseSpinLockFromDpcLevel(
+  IN PKSPIN_LOCK  SpinLock);
+
+NTHALAPI
+KIRQL
+DDKFASTAPI
+KfAcquireSpinLock(
+  IN PKSPIN_LOCK SpinLock);
+
+NTHALAPI
+VOID
+DDKFASTAPI
+KfReleaseSpinLock(
+  IN PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
+
+#define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
+#define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
+#define KeAcquireSpinLock(a,b)  *(b) = KfAcquireSpinLock(a)
+#define KeReleaseSpinLock(a,b)  KfReleaseSpinLock(a,b)
+
+#define RtlCopyMemoryNonTemporal RtlCopyMemory
+
+#define KeGetDcacheFillSize() 1L
+
+typedef enum _INTERLOCKED_RESULT {
+  ResultNegative = -1,
+  ResultZero = 0,
+  ResultPositive = 1
+} INTERLOCKED_RESULT;
+
+typedef struct _KFLOATING_SAVE {
+    ULONG Fr[32];
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+static __inline
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+	return 0; // XXX arty fixme
+}
 #endif /* _X86_ */
-
-
 
 /*
 ** Utillity functions
@@ -8653,6 +8833,15 @@ KeMemoryBarrier(
 #endif
 }
 
+#elif defined(_PPC_)
+
+static __inline
+VOID
+KeMemoryBarrier(
+  VOID)
+{
+}
+
 #endif
 
 NTOSAPI
@@ -8931,6 +9120,35 @@ KeWaitForSingleObject(
   IN PLARGE_INTEGER  Timeout  OPTIONAL);
 
 #if defined(_X86_)
+
+NTHALAPI
+VOID
+FASTCALL
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTHALAPI
+KIRQL
+FASTCALL
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
+  
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
+
+#define KeLowerIrql(a) KfLowerIrql(a)
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+#elif defined(_PPC_)
 
 NTHALAPI
 VOID

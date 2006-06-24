@@ -34,6 +34,13 @@ typedef struct __SEHJmpBuf
  unsigned long JB_Edi;
 }
 _SEHJmpBuf_t[1];
+#elif defined(_M_PPC)
+typedef struct __SEHJmpBuf
+{
+ unsigned long R[32];
+ unsigned long LR, CTR;
+}
+_SEHJmpBuf_t[1];
 #endif
 
 #ifdef __cplusplus

@@ -962,6 +962,7 @@ int HEAP_IsInsideHeap(
 
 void DumpStackFrames ( PULONG Frame, ULONG FrameCount )
 {
+#ifdef _M_IX86
 	ULONG i=0;
 
 	DbgPrint("Frames: ");
@@ -983,6 +984,7 @@ void DumpStackFrames ( PULONG Frame, ULONG FrameCount )
 		DbgPrint(" ");
 	}
 	DbgPrint("\n");
+#endif
 }
 
 /***********************************************************************

@@ -207,6 +207,7 @@ typedef struct _SECTION_IMAGE_INFORMATION
 //
 // PTE Structures
 //
+#ifndef _M_PPC
 typedef struct _MMPTE
 {
     union
@@ -221,6 +222,12 @@ typedef struct _MMPTE
         MMPTE_LIST List;
     };
 } MMPTE, *PMMPTE;
+#else
+typedef struct _MMPTE
+{
+	ULONG Long;
+} MMPTE, *PMMPTE;
+#endif
 
 //
 // Section Information structure

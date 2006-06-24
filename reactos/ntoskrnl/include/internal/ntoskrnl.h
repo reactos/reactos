@@ -12,9 +12,15 @@
 #ifdef _NTOSKRNL_
 
 #include "ke.h"
+#ifdef _M_IX86
 #include "i386/mm.h"
 #include "i386/fpu.h"
 #include "i386/v86m.h"
+#elif defined(_M_PPC)
+#include "powerpc/mm.h"
+#else
+#error "Unknown CPU"
+#endif
 #include "ob.h"
 #include "mm.h"
 #include "ps.h"
@@ -247,7 +253,8 @@ DefaultQueryInfoBufferCheck(UINT Class,
 /* on Itanium if the 24 most significant bits are set, we're not dealing with
    offsets anymore. */
 #define IsPointerOffset(Ptr)  (((ULONG_PTR)(Ptr) & 0xFFFFFF0000000000ULL) == 0)
-
+#elif defined(_PPC_)
+#define IsPointerOffset(Ptr) ((LONG_PTR)(Ptr) >= 0)
 #else
 #error IsPointerOffset() needs to be defined for this architecture
 #endif

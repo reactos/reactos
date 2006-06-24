@@ -548,6 +548,7 @@ MmDumpToPagingFile(ULONG BugCode,
    Headers->Type = MmCoreDumpType;
    if (TrapFrame != NULL)
    {
+#ifdef _M_IX86
       if (!(TrapFrame->EFlags & (1 << 17)))
       {
          memcpy(&Headers->TrapFrame, TrapFrame,
@@ -555,8 +556,11 @@ MmDumpToPagingFile(ULONG BugCode,
       }
       else
       {
+#endif
          memcpy(&Headers->TrapFrame, TrapFrame, sizeof(KTRAP_FRAME));
+#ifdef _M_IX86
       }
+#endif
    }
    Headers->BugCheckCode = BugCode;
    Headers->BugCheckParameters[0] = BugCodeParameter1;

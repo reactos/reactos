@@ -260,6 +260,7 @@ KeUpdateRunTime(
    CurrentThread = Prcb->CurrentThread;
    CurrentProcess = CurrentThread->ApcState.Process;
 
+#ifdef _M_IX86
    /*
     * Cs bit 0 is always set for user mode if we are in protected mode.
     * V86 mode is counted as user time.
@@ -288,6 +289,7 @@ KeUpdateRunTime(
          Prcb->KernelTime++;
       }
    }
+#endif
 
 #if 0
    DpcLastCount = Prcb->DpcLastCount;
@@ -341,6 +343,7 @@ KeUpdateSystemTime(
  * FUNCTION: Handles a timer interrupt
  */
 {
+#ifdef _M_IX86
    LARGE_INTEGER Time;
 
    ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
@@ -378,6 +381,7 @@ KeUpdateSystemTime(
     * Queue a DPC that will expire timers
     */
    KeInsertQueueDpc(&KiExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
+#endif
 }
 
 /*

@@ -1838,6 +1838,9 @@ typedef struct _CONTEXT {
 	DWORD Dr6;
 	DWORD Dr7;
 } CONTEXT;
+typedef struct _FLOATING_SAVE_AREA {
+	DWORD Fr[32];
+} FLOATING_SAVE_AREA;
 #elif defined(_ALPHA_)
 #define CONTEXT_ALPHA	0x20000
 #define CONTEXT_CONTROL	(CONTEXT_ALPHA|1L)
@@ -3699,16 +3702,21 @@ typedef struct _OBJECT_TYPE_LIST {
 
 static __inline__ PVOID GetCurrentFiber(void)
 {
+#ifdef _X86_
     void* ret;
     __asm__ __volatile__ (
 	"movl	%%fs:0x10,%0"
 	: "=r" (ret) /* allow use of reg eax,ebx,ecx,edx,esi,edi */
 	);
     return ret;
+#elif defined(_PPC_)
+	return NULL;
+#endif
 }
 
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {
+#ifdef _X86_
     struct _TEB *ret;
 
     __asm__ __volatile__ (
@@ -3718,6 +3726,9 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
     );
 
     return ret;
+#elif defined(_PPC_)
+    return NULL;
+#endif
 }
 
 #elif defined(__WATCOMC__)
@@ -3778,13 +3789,14 @@ InterlockedBitTestAndSet(IN LONG *Base,
                          IN LONG Bit)
 {
 	LONG OldBit;
-
+#ifdef _M_IX86
 	__asm__ __volatile__("lock "
 	                     "btsl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Base)
 		             :"Ir" (Bit)
 			     : "memory");
+#endif
 	return OldBit;
 }
 
@@ -3793,19 +3805,24 @@ InterlockedBitTestAndReset(IN LONG *Base,
                           IN LONG Bit)
 {
 	LONG OldBit;
-
+#ifdef _M_IX86
 	__asm__ __volatile__("lock "
 	                     "btrl %2,%1\n\t"
 	                     "sbbl %0,%0\n\t"
 		             :"=r" (OldBit),"=m" (*Base)
 		             :"Ir" (Bit)
 			     : "memory");
+#endif
 	return OldBit;
 }
 
 #endif
 
+#ifdef _M_IX86
 #define YieldProcessor() __asm__ __volatile__("pause");
+#elif defined(_M_PPC)
+#define YieldProcessor() __asm__("ori 0,0,0");
+#endif
 
 #if defined(_AMD64_)
 #if defined(_M_AMD64)

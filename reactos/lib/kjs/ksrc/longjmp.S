@@ -38,7 +38,8 @@
          *     return PC
          */
 
-.globl _longjmp
+#ifdef _M_IX86
+	.globl _longjmp
 _longjmp:
         pushl   %ebp
         movl    %esp,%ebp
@@ -69,4 +70,8 @@ _longjmp:
          */
         
         jmpl    *20(%ecx)
-	
+#else
+	.globl _longjmp
+_longjmp:
+	blr
+#endif

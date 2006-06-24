@@ -21,6 +21,8 @@
 
 #ifdef _M_IX86
 #include <internal/i386/mm.h>
+#elif defined(_M_PPC)
+#include <internal/powerpc/mm.h>
 #else
 #error "Unknown processor"
 #endif

@@ -73,7 +73,9 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
     *   The shared user page has been zeroed-out right after creation.
     *   There is NO need to do this again.
     */
+#ifdef _M_IX86
     Ki386SetProcessorFeatures();
+#endif
 
     /* Set the Version Data */
     SharedUserData->NtProductType = NtProductWinNt;
@@ -238,6 +240,7 @@ VOID
 STDCALL
 ExecuteRuntimeAsserts(VOID)
 {
+#ifdef _M_IX86
     /*
      * Fail at runtime if someone has changed various structures without
      * updating the offsets used for the assembler code.
@@ -265,6 +268,7 @@ ExecuteRuntimeAsserts(VOID)
     ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
     ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
     ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
+#endif
 }
 
 __inline

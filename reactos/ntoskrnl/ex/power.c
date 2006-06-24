@@ -36,7 +36,9 @@ KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
    while (TRUE)
      {
        KfRaiseIrql(SYNCH_LEVEL);
+#ifdef _M_IX86
        Ke386HaltProcessor();
+#endif
      }
 }
 

@@ -126,10 +126,52 @@ __asm__ __volatile__("mfmsr 0\n\t" \
 
 #define KePPCHaltProcessor()     ;
 
-#endif /* __ASM__ */
-
 #define KeArchEraseFlags()
 #define KeArchDisableInterrupts() KePPCDisableInterrupts()
+
+static __inline struct _KPRCB * KeGetCurrentPrcb(
+  VOID)
+{
+  ULONG Value = 0;
+  return (struct _KPRCB *) Value;
+}
+
+static __inline KIRQL KeGetCurrentIrql(
+    VOID)
+{
+    return PASSIVE_LEVEL;
+}
+
+VOID
+STDCALL
+KePPCInitThreadWithContext(
+	PKTHREAD Thread,
+	PKSYSTEM_ROUTINE SystemRoutine,
+	PKSTART_ROUTINE StartRoutine,
+	PVOID StartContext,
+	PCONTEXT Context);
+
+VOID
+STDCALL
+KeApplicationProcessorInitDispatcher(
+  VOID);
+
+VOID
+STDCALL
+KeCreateApplicationProcessorIdleThread(
+  ULONG Id);
+
+#ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
+VOID
+STDCALL
+KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
+                PKSTART_ROUTINE StartRoutine,
+                PVOID StartContext,
+                BOOLEAN UserThread,
+                KTRAP_FRAME TrapFrame);
+#endif
+
+#endif /* __ASM__ */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_POWERPC_KE_H */
 

@@ -4,6 +4,9 @@
 #ifdef _M_IX86
 #define KiArchContextSwitch          KiSwapContext
 #define KiArchInitThreadWithContext  Ke386InitThreadWithContext
+#elif defined(_M_PPC)
+#define KiArchContextSwitch	     KiSwapContext
+#define KiArchInitThreadWithContext  KePPCInitThreadWithContext
 #else
 #error "Unknown processor"
 #endif

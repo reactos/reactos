@@ -16,6 +16,7 @@ extern POBJECT_TYPE ExEventPairObjectType;
   EX_HANDLE_ENTRY_AUDITONCLOSE)))
 
 /* Note: we only use a spinlock on SMP. On UP, we cli/sti intead */
+#ifdef _M_IX86
 #ifndef CONFIG_SMP
 #define ExAcquireResourceLock(l, i) { \
     (void)i; \
@@ -25,6 +26,11 @@ extern POBJECT_TYPE ExEventPairObjectType;
 #else
 #define ExAcquireResourceLock(l, i) KeAcquireSpinLock(l, i);
 #define ExReleaseResourceLock(l, i) KeReleaseSpinLock(l, i);
+#endif /* CONFIG_SMP */
+#elif defined(_M_PPC) /* _M_IX86 */
+/* XXX arty fixme */
+#define ExAcquireResourceLock(l,i) KeAcquireSpinLock(l,i);
+#define ExReleaseResourceLock(l,i) KeReleaseSpinLock(l,i);
 #endif
 
 /* INITIALIZATION FUNCTIONS *************************************************/

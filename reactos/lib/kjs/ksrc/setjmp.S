@@ -37,7 +37,8 @@
          *     ptr to jmp_buf
          *     return PC
          */
-.globl _setjmp
+#ifdef _M_IX86
+	.globl _setjmp
 _setjmp:	
         pushl   %ebp
         movl    %esp,%ebp
@@ -56,4 +57,8 @@ _setjmp:
         xorl    %eax,%eax               /* return 0 the first time */
         leave
         ret
-
+#else
+	.globl _setjmp
+_setjmp:
+	blr
+#endif

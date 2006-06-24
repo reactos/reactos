@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <debug.h>
 
+int xstrnicmp( const char *a, const char *b, int n ) {
+	while( n-- && *a && (*a++ == *b++) );
+	return *a - *b;
+}
+
 /* Base Addres of Kernel in Physical Memory */
 #define KERNEL_BASE_PHYS 0x200000
 
@@ -131,7 +136,7 @@ FrLdrGetKernelBase(VOID)
     while ((p = strchr(p, '/')) != NULL) {
         
         /* Find "/3GB" */
-        if (!strnicmp(p + 1, "3GB", 3)) {
+        if (!xstrnicmp(p + 1, "3GB", 3)) {
             
             /* Make sure there's nothing following it */
             if (p[4] == ' ' || p[4] == 0) {

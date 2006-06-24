@@ -45,7 +45,11 @@ PsIdleThreadMain(PVOID Context)
 
        NtYieldExecution();
 
+#ifdef _M_IX86
        Ke386HaltProcessor();
+#elif defined(_M_PPC)
+       for(;;);
+#endif
      }
 }
 

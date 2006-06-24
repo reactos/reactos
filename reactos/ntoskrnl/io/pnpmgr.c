@@ -775,6 +775,7 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
    return Status;
 }
 
+ULONG TreeTraverse = 0;
 
 NTSTATUS
 IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
@@ -782,6 +783,10 @@ IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
    PDEVICE_NODE ParentDeviceNode;
    PDEVICE_NODE ChildDeviceNode;
    NTSTATUS Status;
+   ULONG Indent = TreeTraverse;
+
+   while( Indent-- ) DbgPrint(" ");
+   DPRINT1("Checking device node 0x%x\n", Context->DeviceNode);
 
    /* Copy context data so we don't overwrite it in subsequent calls to this function */
    ParentDeviceNode = Context->DeviceNode;
@@ -793,6 +798,8 @@ IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
       return Status;
    }
 
+   TreeTraverse++;
+       
    /* Traversal of all children nodes */
    for (ChildDeviceNode = ParentDeviceNode->Child;
         ChildDeviceNode != NULL;
@@ -804,10 +811,19 @@ IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
       Status = IopTraverseDeviceTreeNode(Context);
       if (!NT_SUCCESS(Status))
       {
-         return Status;
+	 Indent = TreeTraverse;
+	 while( Indent-- ) DbgPrint(" ");
+	 DPRINT1("Device node 0x%x done (bad)\n", Context->DeviceNode);
+	 TreeTraverse--;
+	 return Status;
       }
    }
 
+   Indent = TreeTraverse;
+   while( Indent-- ) DbgPrint(" ");
+   DPRINT1("Device node 0x%x done (good)\n", Context->DeviceNode);
+
+   TreeTraverse--;
    return Status;
 }
 

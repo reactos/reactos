@@ -61,6 +61,8 @@
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
 #include <internal/i386/ke.h>
+#elif defined(_PPC_)
+#include <arch/powerpc/compat.h>
 #endif
 /* misc files */
 #include <keycodes.h>

@@ -885,7 +885,9 @@ KeInitializeThread(PKPROCESS Process,
     Thread->UserAffinity = Process->Affinity;
     Thread->DisableBoost = Process->DisableBoost;
     Thread->AutoAlignment = Process->AutoAlignment;
+#ifdef _M_IX86
     Thread->Iopl = Process->Iopl;
+#endif
 
     /* Set the Thread to initalized */
     Thread->State = Initialized;

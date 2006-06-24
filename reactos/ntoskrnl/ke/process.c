@@ -133,7 +133,9 @@ KeInitializeProcess(PKPROCESS Process,
     Process->QuantumReset = 6;
     Process->DirectoryTableBase = DirectoryTableBase;
     Process->AutoAlignment = TRUE;
+#ifdef _M_IX86
     Process->IopmOffset = 0xFFFF;
+#endif
     Process->State = ProcessInMemory;
 
     /* Initialize the Thread List */
@@ -176,8 +178,10 @@ NTAPI
 KiSwapProcess(PKPROCESS NewProcess,
               PKPROCESS OldProcess)
 {
+#ifdef _M_IX86
     DPRINT("Switching CR3 to: %x\n", NewProcess->DirectoryTableBase.u.LowPart);
     Ke386SetPageTableDirectory(NewProcess->DirectoryTableBase.u.LowPart);
+#endif
 }
 
 /*

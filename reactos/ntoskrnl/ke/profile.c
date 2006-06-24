@@ -226,6 +226,7 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
                    IN KPROFILE_SOURCE Source,
                    IN PLIST_ENTRY ListHead)
 {
+#ifdef _M_IX86
     PULONG BucketValue;
     PKPROFILE Profile;
 
@@ -248,6 +249,7 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
         /* Increment the value */
         ++BucketValue;
     }
+#endif
 }
 
 /*

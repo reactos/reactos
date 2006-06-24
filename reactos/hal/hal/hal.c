@@ -836,13 +836,14 @@ KeQueryPerformanceCounter(
 }
 
 #undef KeRaiseIrql
-VOID
-NTAPI
+NTOSAPI
+KIRQL
+DDKAPI
 KeRaiseIrql(
-  KIRQL NewIrql,
-  PKIRQL OldIrql)
+    IN KIRQL NewIrql)
 {
   UNIMPLEMENTED;
+  return 0;
 }
 
 
