@@ -452,8 +452,8 @@ RtlCreateTagHeap(
 ULONG
 NTAPI
 RtlCompactHeap(
-    HANDLE heap,
-    ULONG flags
+    HANDLE Heap,
+    ULONG Flags
 );
 
 NTSYSAPI
@@ -471,7 +471,26 @@ RtlDebugCreateHeap(
 NTSYSAPI
 HANDLE
 NTAPI
-RtlDestroyHeap(HANDLE hheap);
+RtlDestroyHeap(
+    IN HANDLE Heap
+);
+
+NTSYSAPI
+HANDLE
+NTAPI
+RtlDestroyHeap(
+    IN HANDLE Heap
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlExtendHeap(
+    IN HANDLE Heap,
+    IN ULONG Flags,
+    IN PVOID P,
+    IN ULONG Size
+);
 
 NTSYSAPI
 BOOLEAN
@@ -507,6 +526,17 @@ RtlGetUserInfoHeap(
 );
 
 NTSYSAPI
+PWSTR
+NTAPI
+RtlQueryTagHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN USHORT TagIndex,
+    IN BOOLEAN ResetCounters,
+    OUT PRTL_HEAP_TAG_INFO HeapTagInfo
+);
+
+NTSYSAPI
 PVOID
 NTAPI
 RtlReAllocateHeap(
@@ -519,12 +549,25 @@ RtlReAllocateHeap(
 NTSYSAPI
 BOOLEAN
 NTAPI
-RtlLockHeap(IN HANDLE Heap);
+RtlLockHeap(
+    IN HANDLE Heap
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUsageHeap(
+    IN HANDLE Heap,
+    IN ULONG Flags,
+    OUT PRTL_HEAP_USAGE Usage
+);
 
 NTSYSAPI
 BOOLEAN
 NTAPI
-RtlUnlockHeap(IN HANDLE Heap);
+RtlUnlockHeap(
+    IN HANDLE Heap
+);
 
 BOOLEAN
 NTAPI
@@ -550,7 +593,7 @@ NTAPI
 RtlValidateHeap(
     HANDLE Heap,
     ULONG Flags,
-    PVOID pmem
+    PVOID P
 );
 
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)

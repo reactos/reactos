@@ -780,6 +780,31 @@ typedef struct _RTL_PROCESS_MODULE_INFORMATION_EX
     PVOID DefaultBase;
 } RTL_PROCESS_MODULE_INFORMATION_EX, *PRTL_PROCESS_MODULE_INFORMATION_EX;
 
+typedef struct _RTL_HEAP_TAG_INFO
+{
+   ULONG NumberOfAllocations;
+   ULONG NumberOfFrees;
+   ULONG BytesAllocated;
+} RTL_HEAP_TAG_INFO, *PRTL_HEAP_TAG_INFO;
+
+typedef struct _RTL_HEAP_USAGE_ENTRY
+{
+    struct _RTL_HEAP_USAGE_ENTRY *Next;
+} RTL_HEAP_USAGE_ENTRY, *PRTL_HEAP_USAGE_ENTRY;
+
+typedef struct _RTL_HEAP_USAGE
+{
+    ULONG Length;
+    ULONG BytesAllocated;
+    ULONG BytesCommitted;
+    ULONG BytesReserved;
+    ULONG BytesReservedMaximum;
+    PRTL_HEAP_USAGE_ENTRY Entries;
+    PRTL_HEAP_USAGE_ENTRY AddedEntries;
+    PRTL_HEAP_USAGE_ENTRY RemovedEntries;
+    UCHAR Reserved[32];
+} RTL_HEAP_USAGE, *PRTL_HEAP_USAGE;
+
 typedef struct _RTL_HEAP_INFORMATION
 {
     PVOID BaseAddress;

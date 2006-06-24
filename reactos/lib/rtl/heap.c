@@ -1897,4 +1897,55 @@ RtlGetUserInfoHeap(IN PVOID HeapHandle,
     return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+RtlUsageHeap(IN HANDLE Heap,
+             IN ULONG Flags,
+             OUT PRTL_HEAP_USAGE Usage)
+{
+    /* TODO */
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+PWSTR
+NTAPI
+RtlQueryTagHeap(IN PVOID HeapHandle,
+                IN ULONG Flags,
+                IN USHORT TagIndex,
+                IN BOOLEAN ResetCounters,
+                OUT PRTL_HEAP_TAG_INFO HeapTagInfo)
+{
+    /* TODO */
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ULONG
+NTAPI
+RtlExtendHeap(IN HANDLE Heap,
+              IN ULONG Flags,
+              IN PVOID P,
+              IN ULONG Size)
+{
+    /* TODO */
+    UNIMPLEMENTED;
+    return 0;
+}
+
+ULONG
+NTAPI
+RtlCreateTagHeap(IN HANDLE HeapHandle,
+                 IN ULONG Flags,
+                 IN PWSTR TagName,
+                 IN PWSTR TagSubName)
+{
+    /* TODO */
+    UNIMPLEMENTED;
+    return 0;
+}
+
 /* EOF */

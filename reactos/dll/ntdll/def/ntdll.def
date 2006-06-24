@@ -361,7 +361,7 @@ RtlCreateProcessParameters@40
 RtlCreateQueryDebugBuffer@8
 RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
-;RtlCreateTagHeap
+RtlCreateTagHeap@16
 RtlCreateTimer@28
 RtlCreateTimerQueue@4
 RtlCreateUnicodeString@8
@@ -427,7 +427,7 @@ RtlEqualUnicodeString@12
 RtlEraseUnicodeString@4
 RtlExitUserThread@4
 RtlExpandEnvironmentStrings_U@16
-;RtlExtendHeap
+RtlExtendHeap@16
 RtlExtendedIntegerMultiply@12
 RtlExtendedLargeIntegerDivide@16
 RtlExtendedMagicDivide@20
@@ -595,7 +595,7 @@ RtlQueryProcessDebugInformation@12
 ;RtlQueryProcessLockInformation
 RtlQueryRegistryValues@20
 RtlQuerySecurityObject@20
-;RtlQueryTagHeap
+RtlQueryTagHeap@20
 RtlQueryTimeZoneInformation@4
 RtlRaiseException@4
 RtlRaiseStatus@4
@@ -682,7 +682,7 @@ RtlUpcaseUnicodeToOemN@20
 RtlUpdateTimer@16
 RtlUpperChar@4
 RtlUpperString@8
-;RtlUsageHeap
+RtlUsageHeap@12
 @RtlUshortByteSwap@4
 RtlValidAcl@4
 RtlValidRelativeSecurityDescriptor@12
