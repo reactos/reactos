@@ -157,8 +157,8 @@ EnumThreadProc(HWND hwnd, LPARAM lp)
 {
 	DWORD r, pid, tid;
 	LONG style;
-        HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	char buf[256];
+    HANDLE Stdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	
 	GetWindowText(hwnd, (LPTSTR)lp, 30);
 	
@@ -169,7 +169,7 @@ EnumThreadProc(HWND hwnd, LPARAM lp)
 	tid = GetWindowThreadProcessId(hwnd, &pid);
 
 	wsprintf (buf,"w%8d %8x  %08x   %8d   %s\n",pid, hwnd , style, tid, lp );
-       	WriteFile(stdout, buf, lstrlen(buf), &r, NULL);
+       	WriteFile(Stdout, buf, lstrlen(buf), &r, NULL);
        	}
 	return (TRUE);
 }
@@ -178,7 +178,7 @@ int main()
 {
     DWORD r;
     ANSI_STRING astring;
-    HANDLE stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE Stdout = GetStdHandle(STD_OUTPUT_HANDLE);
     PSYSTEM_PROCESSES SystemProcesses = NULL;
     PSYSTEM_PROCESSES CurrentProcess;
     ULONG BufferSize, ReturnSize;
@@ -186,9 +186,9 @@ int main()
     char buf[256];
     char buf1[256];
     
-    WriteFile(stdout, title, lstrlen(title), &r, NULL);
-    WriteFile(stdout, title1, lstrlen(title1), &r, NULL);
-    WriteFile(stdout, title2, lstrlen(title2), &r, NULL);
+    WriteFile(Stdout, title, lstrlen(title), &r, NULL);
+    WriteFile(Stdout, title1, lstrlen(title1), &r, NULL);
+    WriteFile(Stdout, title2, lstrlen(title2), &r, NULL);
 
     /* Get process information. */
     BufferSize = 0;
