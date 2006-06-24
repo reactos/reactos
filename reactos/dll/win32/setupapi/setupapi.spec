@@ -179,10 +179,10 @@
 @ stdcall CM_Set_DevNode_Registry_Property_ExW(long long ptr long long long)
 @ stub CM_Set_HW_Prof
 @ stub CM_Set_HW_Prof_Ex
-@ stub CM_Set_HW_Prof_FlagsA
-@ stub CM_Set_HW_Prof_FlagsW
-@ stub CM_Set_HW_Prof_Flags_ExA
-@ stub CM_Set_HW_Prof_Flags_ExW
+@ stdcall CM_Set_HW_Prof_FlagsA(str long long long)
+@ stdcall CM_Set_HW_Prof_FlagsW(wstr long long long)
+@ stdcall CM_Set_HW_Prof_Flags_ExA(str long long long long)
+@ stdcall CM_Set_HW_Prof_Flags_ExW(wstr long long long long)
 @ stdcall CM_Setup_DevNode(long long)
 @ stdcall CM_Setup_DevNode_Ex(long long long)
 @ stub CM_Test_Range_Available

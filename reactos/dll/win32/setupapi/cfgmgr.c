@@ -2935,6 +2935,100 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
 
 
 /***********************************************************************
+ * CM_Set_HW_Prof_FlagsA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_HW_Prof_FlagsA(
+    DEVINSTID_A szDevInstName, ULONG ulConfig, ULONG ulValue,
+    ULONG ulFlags)
+{
+    TRACE("%s %lu %lu %lx\n", szDevInstName,
+          ulConfig, ulValue, ulFlags);
+    return CM_Set_HW_Prof_Flags_ExA(szDevInstName, ulConfig, ulValue,
+                                    ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Set_HW_Prof_FlagsW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_HW_Prof_FlagsW(
+    DEVINSTID_W szDevInstName, ULONG ulConfig, ULONG ulValue,
+    ULONG ulFlags)
+{
+    TRACE("%s %lu %lu %lx\n", debugstr_w(szDevInstName),
+          ulConfig, ulValue, ulFlags);
+    return CM_Set_HW_Prof_Flags_ExW(szDevInstName, ulConfig, ulValue,
+                                    ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Set_HW_Prof_Flags_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_HW_Prof_Flags_ExA(
+    DEVINSTID_A szDevInstName, ULONG ulConfig, ULONG ulValue,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    DEVINSTID_W pszDevIdW = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%s %lu %lu %lx %lx\n", szDevInstName,
+          ulConfig, ulValue, ulFlags, hMachine);
+
+    if (szDevInstName != NULL)
+    {
+       if (CaptureAndConvertAnsiArg(szDevInstName, &pszDevIdW))
+         return CR_INVALID_DEVICE_ID;
+    }
+
+    ret = CM_Set_HW_Prof_Flags_ExW(pszDevIdW, ulConfig, ulValue,
+                                   ulFlags, hMachine);
+
+    if (pszDevIdW != NULL)
+        MyFree(pszDevIdW);
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Set_HW_Prof_Flags_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Set_HW_Prof_Flags_ExW(
+    DEVINSTID_W szDevInstName, ULONG ulConfig, ULONG ulValue,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    FIXME("%s %lu %lu %lx %lx\n", debugstr_w(szDevInstName),
+          ulConfig, ulValue, ulFlags, hMachine);
+
+    if (szDevInstName == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~ CM_SET_HW_PROF_FLAGS_BITS)
+        return CR_INVALID_FLAG;
+
+    /* FIXME: Check whether szDevInstName is valid */
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_HwProfFlags(BindingHandle, PNP_SET_HW_PROFILE_FLAGS, szDevInstName,
+                           ulConfig, &ulValue, 0);
+}
+
+
+/***********************************************************************
  * CM_Setup_DevNode [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Setup_DevNode(

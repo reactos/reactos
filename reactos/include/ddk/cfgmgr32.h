@@ -2072,8 +2072,57 @@ CM_Set_DevNode_Registry_Property_ExW(
 
 /* FIXME: Obsolete CM_Set_HW_Prof */
 /* FIXME: Obsolete CM_Set_HW_Prof_Ex */
-/* FIXME: Obsolete CM_Set_HW_Prof_Flags */
-/* FIXME: Obsolete CM_Set_HW_Prof_Flags_Ex */
+
+/* CM_Set_HW_Prof_Flags[_Ex].ulFlags constants */
+#define CM_SET_HW_PROF_FLAGS_UI_NOT_OK  (0x00000001)
+#define CM_SET_HW_PROF_FLAGS_BITS       (0x00000001)
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_FlagsA(
+  IN DEVINSTID_A  szDevInstName,
+  IN ULONG  ulConfig,
+  IN ULONG  ulValue,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_FlagsW(
+  IN DEVINSTID_W  szDevInstName,
+  IN ULONG  ulConfig,
+  IN ULONG  ulValue,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_Flags_ExA(
+  IN DEVINSTID_A  szDevInstName,
+  IN ULONG  ulConfig,
+  IN ULONG  ulValue,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_Flags_ExW(
+  IN DEVINSTID_W  szDevInstName,
+  IN ULONG  ulConfig,
+  IN ULONG  ulValue,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#ifdef UNICODE
+#define CM_Set_HW_Prof_Flags CM_Set_HW_Prof_FlagsW
+#define CM_Set_HW_Prof_Flags_Ex CM_Set_HW_Prof_Flags_ExW
+#else
+#define CM_Set_HW_Prof_Flags CM_Set_HW_Prof_FlagsA
+#define CM_Set_HW_Prof_Flags_Ex CM_Set_HW_Prof_Flags_ExA
+#endif /* UNICODE */
+
 /* FIXME: Obsolete CM_Setup_DevNode */
 /* FIXME: Obsolete CM_Setup_DevNode_Ex */
 /* FIXME: Obsolete CM_Test_Range_Available */

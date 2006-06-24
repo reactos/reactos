@@ -195,10 +195,10 @@ CM_Set_DevNode_Registry_Property_ExA@24=SETUPAPI.CM_Set_DevNode_Registry_Propert
 CM_Set_DevNode_Registry_Property_ExW@24=SETUPAPI.CM_Set_DevNode_Registry_Property_ExW
 ;CM_Set_HW_Prof
 ;CM_Set_HW_Prof_Ex
-;CM_Set_HW_Prof_FlagsA
-;CM_Set_HW_Prof_FlagsW
-;CM_Set_HW_Prof_Flags_ExA
-;CM_Set_HW_Prof_Flags_ExW
+CM_Set_HW_Prof_FlagsA@16=SETUPAPI.CM_Set_HW_Prof_FlagsA
+CM_Set_HW_Prof_FlagsW@16=SETUPAPI.CM_Set_HW_Prof_FlagsW
+CM_Set_HW_Prof_Flags_ExA@20=SETUPAPI.CM_Set_HW_Prof_Flags_ExA
+CM_Set_HW_Prof_Flags_ExW@20=SETUPAPI.CM_Set_HW_Prof_Flags_ExW
 CM_Setup_DevNode@8=SETUPAPI.CM_Setup_DevNode
 CM_Setup_DevNode_Ex@12=SETUPAPI.CM_Setup_DevNode_Ex
 ;CM_Test_Range_Available
