@@ -1217,7 +1217,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
          RtlRaiseStatus( STATUS_NO_MEMORY );
       return NULL;
    }
-   flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY;
+   //flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY;
    flags |= heapPtr->flags;
    if (!(flags & HEAP_NO_SERIALIZE))
       RtlEnterHeapLock( &heapPtr->critSection );
@@ -1362,8 +1362,8 @@ PVOID NTAPI RtlReAllocateHeap(
 
    /* Validate the parameters */
 
-   Flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY |
-            HEAP_REALLOC_IN_PLACE_ONLY;
+   //Flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY |
+   //         HEAP_REALLOC_IN_PLACE_ONLY;
    Flags |= heapPtr->flags;
    Size = (Size + 7) & ~7;
    if (Size < HEAP_MIN_BLOCK_SIZE)
@@ -1891,6 +1891,7 @@ RtlGetUserInfoHeap(IN PVOID HeapHandle,
     subheap = HEAP_FindSubHeap( heapPtr, pInUse );
 
     /* Hack */
+    DPRINT1("V/F: %lx %p\n", subheap->UserValue, subheap->UserFlags);
     if (UserValue) *UserValue = subheap->UserValue;
     if (UserFlags) *UserFlags = subheap->UserFlags;
     return TRUE;
