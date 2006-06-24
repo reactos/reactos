@@ -358,7 +358,6 @@ typedef struct _KPRCB
     ULONG CFlushSize;
     UCHAR PrcbPad0[88];
 #else
-    ULONG CFlushSize;
     UCHAR PrcbPad0[92];
 #endif
     KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
