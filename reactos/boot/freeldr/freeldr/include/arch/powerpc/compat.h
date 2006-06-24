@@ -1,0 +1,6 @@
+#ifndef FREELDR_ARCH_POWERPC_COMPAT_H
+#define FREELDR_ARCH_POWERPC_COMPAT_H
+
+#include <string.h>
+
+#endif/*FREELDR_ARCH_POWERPC_COMPAT_H*/
