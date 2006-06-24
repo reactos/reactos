@@ -65,7 +65,7 @@ END
 /* Topic descriptions */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TOPICDESC0          "Створення нової інсталяції ReactOS на Вашому комп’ютері чи оновлення існуючої інсталяції."
+    IDS_TOPICDESC0          "Створення нової інсталяції ReactOS на Вашому комп'ютері чи оновлення існуючої інсталяції."
     IDS_TOPICDESC1          "Проглянути CD."
     IDS_TOPICDESC2          "Натисніть для виходу з цієї програми."
 //    IDS_TOPICDESC3          "Topic description 3.\n\nDescribe topic 3 here."
