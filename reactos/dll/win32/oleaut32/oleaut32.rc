@@ -31,6 +31,7 @@
 #include "oleaut32_Es.rc"
 #include "oleaut32_Cz.rc"
 #include "oleaut32_Fr.rc"
+#include "oleaut32_Gr.rc"
 #include "oleaut32_Hu.rc"
 #include "oleaut32_It.rc"
 #include "oleaut32_Ja.rc"
