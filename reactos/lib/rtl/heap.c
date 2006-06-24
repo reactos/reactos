@@ -87,6 +87,8 @@ typedef struct tagSUBHEAP
    struct tagSUBHEAP  *next;       /* Next sub-heap */
    struct tagHEAP     *heap;       /* Main heap structure */
    ULONG               magic;      /* Magic number */
+   ULONG UserFlags;
+   PVOID UserValue;
 }
 SUBHEAP, *PSUBHEAP;
 
@@ -100,7 +102,6 @@ typedef struct tagHEAP
    RTL_CRITICAL_SECTION critSection;   /* Critical section for serialization */
    ULONG            flags;         /* Heap flags */
    ULONG            magic;         /* Magic number */
-   PVOID UserValue;
    PRTL_HEAP_COMMIT_ROUTINE commitRoutine;
 }
 HEAP, *PHEAP;
@@ -1250,6 +1251,9 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
    pInUse->threadId  = (ULONG)NtCurrentTeb()->Cid.UniqueThread;
    pInUse->magic     = ARENA_INUSE_MAGIC;
 
+   /* Save user flags */
+   subheap->UserFlags = flags & HEAP_SETTABLE_USER_FLAGS;
+
    /* Shrink the block */
 
    HEAP_ShrinkBlock( subheap, pInUse, size );
@@ -1262,7 +1266,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
    if (!(flags & HEAP_NO_SERIALIZE))
       RtlLeaveHeapLock( &heapPtr->critSection );
 
-   DPRINT("(%p,%08lx,%08lx): returning %p\n",
+   DPRINT1("(%p,%08lx,%08lx): returning %p\n",
          heap, flags, size, (PVOID)(pInUse + 1) );
    return (PVOID)(pInUse + 1);
 }
@@ -1855,9 +1859,15 @@ RtlSetUserValueHeap(IN PVOID HeapHandle,
                     IN PVOID UserValue)
 {
     HEAP *heapPtr = HEAP_GetPtr(HeapHandle);
+    ARENA_INUSE *pInUse;
+    SUBHEAP *subheap;
+
+    /* Get the subheap */
+    pInUse  = (ARENA_INUSE *)BaseAddress - 1;
+    subheap = HEAP_FindSubHeap( heapPtr, pInUse );
 
     /* Hack */
-    heapPtr->UserValue = UserValue;
+    subheap->UserValue = UserValue;
     return TRUE;
 }
 
@@ -1873,10 +1883,16 @@ RtlGetUserInfoHeap(IN PVOID HeapHandle,
                    OUT PULONG UserFlags)
 {
     HEAP *heapPtr = HEAP_GetPtr(HeapHandle);
+    ARENA_INUSE *pInUse;
+    SUBHEAP *subheap;
+
+    /* Get the subheap */
+    pInUse  = (ARENA_INUSE *)BaseAddress - 1;
+    subheap = HEAP_FindSubHeap( heapPtr, pInUse );
 
     /* Hack */
-    if (UserValue) *UserValue = heapPtr->UserValue;
-    if (UserFlags) *UserFlags = heapPtr->flags & HEAP_SETTABLE_USER_FLAGS;
+    if (UserValue) *UserValue = subheap->UserValue;
+    if (UserFlags) *UserFlags = subheap->UserFlags;
     return TRUE;
 }
 
