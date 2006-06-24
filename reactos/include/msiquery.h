@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_MSIQUERY_H
@@ -127,6 +127,13 @@ typedef enum tagMSIDBERROR
     MSIDBERROR_BADLOCALIZEATTRIB = 29
 } MSIDBERROR; 
 
+typedef enum tagMSIDBSTATE
+{
+    MSIDBSTATE_ERROR = -1,
+    MSIDBSTATE_READ = 0,
+    MSIDBSTATE_WRITE = 1
+} MSIDBSTATE;
+
 /* view manipulation */
 UINT WINAPI MsiViewFetch(MSIHANDLE,MSIHANDLE*);
 UINT WINAPI MsiViewExecute(MSIHANDLE,MSIHANDLE);
@@ -137,6 +144,8 @@ UINT WINAPI MsiDatabaseOpenViewW(MSIHANDLE,LPCWSTR,MSIHANDLE*);
 MSIDBERROR WINAPI MsiViewGetErrorA(MSIHANDLE,LPSTR,DWORD*);
 MSIDBERROR WINAPI MsiViewGetErrorW(MSIHANDLE,LPWSTR,DWORD*);
 #define     MsiViewGetError WINELIB_NAME_AW(MsiViewGetError)
+
+MSIDBSTATE WINAPI MsiGetDatabaseState(MSIHANDLE);
 
 /* record manipulation */
 MSIHANDLE WINAPI MsiCreateRecord(unsigned int);
@@ -256,8 +265,8 @@ UINT WINAPI MsiOpenDatabaseW(LPCWSTR, LPCWSTR, MSIHANDLE*);
 UINT WINAPI MsiOpenDatabaseA(LPCSTR, LPCSTR, MSIHANDLE*);
 #define     MsiOpenDatabase WINELIB_NAME_AW(MsiOpenDatabase)
 
-UINT WINAPI MsiDatabaseIsTablePersistentA(MSIHANDLE, LPSTR);
-UINT WINAPI MsiDatabaseIsTablePersistentW(MSIHANDLE, LPWSTR);
+MSICONDITION WINAPI MsiDatabaseIsTablePersistentA(MSIHANDLE, LPSTR);
+MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(MSIHANDLE, LPWSTR);
 #define     MsiDatabaseIsTablePersistent WINELIB_NAME_AW(MsiDatabaseIsTablePersistent)
 
 UINT WINAPI MsiSequenceA(MSIHANDLE, LPCSTR, INT);
