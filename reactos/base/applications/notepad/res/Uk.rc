@@ -23,47 +23,47 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 MAIN_MENU MENU
 {
  POPUP "&Файл" {
-  MENUITEM "&Створити",           CMD_NEW
-  MENUITEM "&Відкрити...\tCtrl+O",     CMD_OPEN
+  MENUITEM "&Створити",              CMD_NEW
+  MENUITEM "&Відкрити...\tCtrl+O",   CMD_OPEN
   MENUITEM "&З&берегти\tCtrl+S",     CMD_SAVE
-  MENUITEM "Зберегти &як...",       CMD_SAVE_AS
+  MENUITEM "Зберегти &як...",        CMD_SAVE_AS
   MENUITEM SEPARATOR
-  MENUITEM "Пара&метри сторінки...",    CMD_PAGE_SETUP
-  MENUITEM "Д&рук",            CMD_PRINT
+  MENUITEM "Пара&метри сторінки...", CMD_PAGE_SETUP
+  MENUITEM "Д&рук",                  CMD_PRINT
   MENUITEM "Настройка &принтера...", CMD_PRINTER_SETUP
   MENUITEM SEPARATOR
-  MENUITEM "В&ихід",             CMD_EXIT
+  MENUITEM "В&ихід",                 CMD_EXIT
  }
 POPUP "&Правка" {
   MENUITEM "&Скасувати\tCtrl+Z",     CMD_UNDO
   MENUITEM SEPARATOR
   MENUITEM "&Вирізати\tCtrl+X",      CMD_CUT
   MENUITEM "&Копіювати\tCtrl+C",     CMD_COPY
-  MENUITEM "Вст&авити\tCtrl+V",    CMD_PASTE
-  MENUITEM "В&идалити\tDel",      CMD_DELETE
+  MENUITEM "Вст&авити\tCtrl+V",      CMD_PASTE
+  MENUITEM "В&идалити\tDel",         CMD_DELETE
   MENUITEM SEPARATOR
-  MENUITEM "З&найти...\tCtrl+F",  CMD_SEARCH
-  MENUITEM "Зна&йти далі\tF3",    CMD_SEARCH_NEXT
-  MENUITEM "&Замінити\tCtrl+H",   CMD_REPLACE
-  MENUITEM "Перей&ти...\tCtrl+G",  CMD_GOTO
+  MENUITEM "З&найти...\tCtrl+F",     CMD_SEARCH
+  MENUITEM "Зна&йти далі\tF3",       CMD_SEARCH_NEXT
+  MENUITEM "&Замінити\tCtrl+H",      CMD_REPLACE
+  MENUITEM "Перей&ти...\tCtrl+G",    CMD_GOTO
   MENUITEM SEPARATOR
-  MENUITEM "Виді&лити все\tCtrl+A",       CMD_SELECT_ALL
-  MENUITEM "&Дата й час\tF5",    CMD_TIME_DATE
+  MENUITEM "Виді&лити все\tCtrl+A",  CMD_SELECT_ALL
+  MENUITEM "&Дата й час\tF5",        CMD_TIME_DATE
  }
 POPUP "Фор&мат" {
-  MENUITEM "&Перенос по словах",  CMD_WRAP
-  MENUITEM "&Шрифт...",          CMD_FONT
+  MENUITEM "&Перенос по словах",     CMD_WRAP
+  MENUITEM "&Шрифт...",              CMD_FONT
 }
 POPUP "&Вигляд" {
-  MENUITEM "&Рядок стану",    CMD_STATUSBAR
+  MENUITEM "&Рядок стану",           CMD_STATUSBAR
 }
 POPUP "&Довідка" {
-  MENUITEM "&Зміст",         CMD_HELP_CONTENTS
-  MENUITEM "&Пошук...",        CMD_HELP_SEARCH
-  MENUITEM "&Help on help",     CMD_HELP_ON_HELP
+  MENUITEM "&Зміст",                 CMD_HELP_CONTENTS
+  MENUITEM "&Пошук...",              CMD_HELP_SEARCH
+  MENUITEM "&Help on help",          CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
-  MENUITEM "&Про програму",      CMD_ABOUT_WINE
+		MENUITEM "&Про"      CMD_ABOUT
+  MENUITEM "&Про програму",          CMD_ABOUT_WINE
  }
 }
 
@@ -74,7 +74,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Параметри сторінки"
 {
-LTEXT    "В&ерхній колонтитул:",  0x140,   10, 07, 40, 15
+LTEXT    "В&ерхній колонтитул:", 0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
 LTEXT    "Н&ижній колонтитул:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
@@ -122,11 +122,11 @@ PUSHBUTTON      "Скасувати", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Про Блокнот ReactOS"
-FONT 8, "MS Shell Dlg"
+FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "Блокнот ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\nЗначок запозичено з Notepad2 - http://www.flos-freeware.ch/notepad2.html",
+    CONTROL         "Блокнот ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
-    CONTROL         "Значок запозичено з Notepad2 - http://www.flos-freeware.ch/notepad2.html",
+    CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
     DEFPUSHBUTTON   "Закрити",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
