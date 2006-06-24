@@ -50,3 +50,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Si.rc"
 #include "Sv.rc"
 #include "Hu.rc"
+#include "Uk.rc"
+
