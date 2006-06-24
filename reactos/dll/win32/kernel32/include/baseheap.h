@@ -36,7 +36,7 @@
 //
 // The Handle Table
 //
-extern RTL_HANDLE_TABLE BaseGlobalHandleTable;
+extern RTL_HANDLE_TABLE BaseHeapHandleTable;
 
 //
 // Tracing Support
@@ -62,13 +62,15 @@ extern RTL_HANDLE_TABLE BaseGlobalHandleTable;
 #define BASE_TRACE_DEALLOC(x)                                               \
     BH_PRINT("[BASE_HEAP] %s : Freeing %p\n",                               \
              __FUNCTION__, x)
-
+#define BASE_TRACE_FAILURE()                                                \
+    BH_PRINT("[BASE_HEAP] %s : Failing %d\n",                               \
+             __FUNCTION__, __LINE__)
 //
 // The handle structure for global heap handles.
 // Notice that it nicely overlays with RTL_HANDLE_ENTRY.
 // KEEP IT THAT WAY! ;-)
 //
-typedef struct _GLOBAL_HEAP_HANDLE_ENTRY
+typedef struct _BASE_HEAP_HANDLE_ENTRY
 {
     USHORT Flags;
     USHORT LockCount;
@@ -77,45 +79,45 @@ typedef struct _GLOBAL_HEAP_HANDLE_ENTRY
         PVOID Object;
         ULONG OldSize;
     };
-} GLOBAL_HEAP_HANDLE_ENTRY, *PGLOBAL_HEAP_HANDLE_ENTRY;
+} BASE_HEAP_HANDLE_ENTRY, *PBASE_HEAP_HANDLE_ENTRY;
 
 //
 // Handle entry flags
 // Note that 0x0001 is the shared/generic RTL_HANDLE_VALID
 //
-#define GLOBAL_HEAP_ENTRY_FLAG_MOVABLE      0x0002
-#define GLOBAL_HEAP_ENTRY_FLAG_REUSABLE     0x0004
-#define GLOBAL_HEAP_ENTRY_FLAG_REUSE        0x0008
-#define GLOBAL_HEAP_ENTRY_FLAG_DDESHARE     0x0010
+#define BASE_HEAP_ENTRY_FLAG_MOVABLE        0x0002
+#define BASE_HEAP_ENTRY_FLAG_REUSABLE       0x0004
+#define BASE_HEAP_ENTRY_FLAG_REUSE          0x0008
+#define BASE_HEAP_ENTRY_FLAG_DDESHARE       0x0010
 
 //
 // Easy way to check if the global handle is actually an entry in our table
 //
-#define GLOBAL_HEAP_IS_HANDLE_ENTRY         \
-    (ULONG_PTR)FIELD_OFFSET(GLOBAL_HEAP_HANDLE_ENTRY, Object)
+#define BASE_HEAP_IS_HANDLE_ENTRY           \
+    (ULONG_PTR)FIELD_OFFSET(BASE_HEAP_HANDLE_ENTRY, Object)
 
 //
 // Tags for the entire heap allocation for this global memory.
 // They are set part of the User Flags of the RTL Heap.
 //
-#define GLOBAL_HEAP_FLAG_MOVABLE            HEAP_SETTABLE_USER_FLAG1
-#define GLOBAL_HEAP_FLAG_DDESHARE           HEAP_SETTABLE_USER_FLAG2
+#define BASE_HEAP_FLAG_MOVABLE              HEAP_SETTABLE_USER_FLAG1
+#define BASE_HEAP_FLAG_DDESHARE             HEAP_SETTABLE_USER_FLAG2
 
 //
 // Internal Handle Functions
 //
-#define GlobalAllocEntry()                  \
-    (PGLOBAL_HEAP_HANDLE_ENTRY)RtlAllocateHandle(&BaseGlobalHandleTable, NULL)
+#define BaseHeapAllocEntry()                \
+    (PBASE_HEAP_HANDLE_ENTRY)RtlAllocateHandle(&BaseHeapHandleTable, NULL)
 
-#define GlobalGetEntry(h)                   \
-    (PGLOBAL_HEAP_HANDLE_ENTRY)             \
+#define BaseHeapGetEntry(h)                 \
+    (PBASE_HEAP_HANDLE_ENTRY)               \
         CONTAINING_RECORD(h,                \
-            GLOBAL_HEAP_HANDLE_ENTRY,       \
+            BASE_HEAP_HANDLE_ENTRY,         \
             Object);
 
-#define GlobalValidateEntry(he)             \
-    RtlIsValidHandle(&BaseGlobalHandleTable, (PRTL_HANDLE_TABLE_ENTRY)he)
+#define BaseHeapValidateEntry(he)           \
+    RtlIsValidHandle(&BaseHeapHandleTable, (PRTL_HANDLE_TABLE_ENTRY)he)
 
-#define GlobalFreeEntry(he)                 \
-    RtlFreeHandle(&BaseGlobalHandleTable, (PRTL_HANDLE_TABLE_ENTRY)he);
+#define BaseHeapFreeEntry(he)               \
+    RtlFreeHandle(&BaseHeapHandleTable, (PRTL_HANDLE_TABLE_ENTRY)he);
 

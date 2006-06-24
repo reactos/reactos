@@ -340,8 +340,8 @@ DllMain(HANDLE hDll,
 
         hProcessHeap = RtlGetProcessHeap();
         RtlInitializeHandleTable(0xFFFF,
-                                 sizeof(GLOBAL_HEAP_HANDLE_ENTRY),
-                                 &BaseGlobalHandleTable);
+                                 sizeof(BASE_HEAP_HANDLE_ENTRY),
+                                 &BaseHeapHandleTable);
         hCurrentModule = hDll;
         DPRINT("Heap: %p\n", hProcessHeap);
 
