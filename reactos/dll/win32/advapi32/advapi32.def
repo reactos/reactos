@@ -370,7 +370,7 @@ LsaGetUserName@8
 ;LsaICLookupSids@32
 ;LsaICLookupSidsWithCreds
 ;LsaLookupNames@20
-;LsaLookupNames2
+LsaLookupNames2@24
 ;LsaLookupPrivilegeDisplayName@16
 ;LsaLookupPrivilegeName@12
 ;LsaLookupPrivilegeValue@12
