@@ -15,11 +15,6 @@ _begin:
 	addi    %r1,%r1,stack@l 
 	addi    %r1,%r1,16384 - 0x10
           
-	mfmsr   %r8             
-	li      %r0,0
-	mtmsr   %r0             
-	isync                   
-
 	/* Store ofw call addr */
 	mr	%r21,%r5
 	lis	%r10,0xe00000@ha
@@ -27,10 +22,12 @@ _begin:
 
 	bl	setup_bats
 
-	li	%r8,0x3030
-	mtmsr	%r8
+	lis	%r3,0xe00000@ha
+	addi	%r3,%r3,freeldr_banner - _start
 
-	bl	ofw_print_regs
+	bl	ofw_print_string
+
+	bl	ofw_print_eol
 
 	lis	%r4,_binary_freeldr_tmp_end@ha
 	addi	%r4,%r4,_binary_freeldr_tmp_end@l
@@ -40,18 +37,13 @@ _begin:
 	lis	%r5,0x8000@ha
 	addi	%r5,%r5,0x8000@l
 
+	bl	ofw_print_regs 
+
 	bl	copy_bits
 
 	bl	zero_registers
 
-	lis	%r3,0xe00000@ha
-	addi	%r3,%r3,freeldr_banner - _start
-
-	bl	ofw_print_string
-
-	bl	ofw_print_eol
-
-	bl	setup_exc
+/*	bl	setup_exc */
 
 	/* Zero CTR */
 	mtcr	%r31
@@ -81,36 +73,9 @@ _begin:
  * the address given as the 1st argument.
  */
 setup_bats:
-        mfpvr   5
-        rlwinm  5,5,16,16,31            /* r3 = 1 for 601, 4 for 604 */
-        cmpwi   0,5,1
-        li      0,0
-        bne     4f
-        mtibatl 3,0                     /* invalidate BAT first */
-        ori     3,3,4                   /* set up BAT registers for 601 */
-        li      4,0x7f
-        mtibatu 2,3
-        mtibatl 2,4
-        oris    3,3,0x80
-        oris    4,4,0x80
-        mtibatu 3,3
-        mtibatl 3,4
-        b       5f
-4:	mtdbatu 3,0                     /* invalidate BATs first */
-        mtibatu 3,0
-        ori     3,3,0xff                /* set up BAT registers for 604 */
-        li      4,2
-        mtdbatl 2,4
-        mtdbatu 2,3
-        mtibatl 2,4
-        mtibatu 2,3
-        oris    3,3,0x80
-        oris    4,4,0x80
-        mtdbatl 3,4
-        mtdbatu 3,3
-        mtibatl 3,4
-        mtibatu 3,3
-5:	sync
+	xor	3,3,3
+	
+	sync
         isync
         blr
 	
@@ -498,6 +463,25 @@ ofw_register_loop:
 	lwz	%r3,144(%r1)
 	addi	%r3,%r3,1
 	stw	%r3,144(%r1)
+
+	bl	ofw_print_space
+	
+	lis	%r3,0xe00000@ha
+	addi	%r3,%r3,freeldr_reg_init - _start
+	bl	ofw_print_string
+	lwz	%r3,144(%r1)
+	bl	ofw_print_number
+	bl	ofw_print_space
+	lwz	%r3,144(%r1)
+	mulli	%r3,%r3,4
+	add	%r3,%r1,%r3
+	lwz	%r3,0(%r3)
+	stw	%r3,152(%r1)
+	bl	ofw_print_number
+	lwz	%r3,144(%r1)
+	addi	%r3,%r3,1
+	stw	%r3,144(%r1)
+
 	b	done_dump
 
 dump_optional:	
