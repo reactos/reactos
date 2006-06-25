@@ -2123,11 +2123,48 @@ CM_Set_HW_Prof_Flags_ExW(
 #define CM_Set_HW_Prof_Flags_Ex CM_Set_HW_Prof_Flags_ExA
 #endif /* UNICODE */
 
-/* FIXME: Obsolete CM_Setup_DevNode */
-/* FIXME: Obsolete CM_Setup_DevNode_Ex */
+/* CM_Setup_DevInst[_Ex].ulFlags constants */
+#define CM_SETUP_DEVNODE_READY   (0x00000000)
+#define CM_SETUP_DEVINST_READY   CM_SETUP_DEVNODE_READY
+#define CM_SETUP_DOWNLOAD        (0x00000001)
+#define CM_SETUP_WRITE_LOG_CONFS (0x00000002)
+#define CM_SETUP_PROP_CHANGE     (0x00000003)
+#define CM_SETUP_DEVNODE_RESET   (0x00000004)
+#define CM_SETUP_DEVINST_RESET   CM_SETUP_DEVNODE_RESET
+#define CM_SETUP_BITS            (0x00000007)
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Setup_DevNode(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Setup_DevNode_Ex(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Test_Range_Available */
-/* FIXME: Obsolete CM_Uninstall_DevNode */
-/* FIXME: Obsolete CM_Uninstall_DevNode_Ex */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Uninstall_DevNode(
+  IN DEVINST  dnPhantom,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Uninstall_DevNode_Ex(
+  IN DEVINST  dnPhantom,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Unregister_Device_Interface */
 /* FIXME: Obsolete CM_Unregister_Device_Interface_Ex */
 
