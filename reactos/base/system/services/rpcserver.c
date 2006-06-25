@@ -1790,7 +1790,7 @@ ScmrStartServiceW(handle_t BindingHandle,
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
     /* Start the service */
-    Status = STATUS_SUCCESS; /* FIXME: ScmStartService(lpService); */
+    Status = ScmStartService(lpService);
     if (!NT_SUCCESS(Status))
         return RtlNtStatusToDosError(Status);
 

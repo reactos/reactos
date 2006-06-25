@@ -714,9 +714,8 @@ ScmStartUserModeService(PSERVICE Service)
         {
             DPRINT("Received process id %lu\n", dwProcessId);
 
-            /* FIXME: Send start command */
-
-            Status = STATUS_SUCCESS;
+            /* Send start command */
+            Status = ScmSendStartCommand(Service, NULL);
         }
     }
     else
@@ -730,8 +729,6 @@ ScmStartUserModeService(PSERVICE Service)
         Service->ThreadId = 0;
         Status = STATUS_UNSUCCESSFUL;
     }
-
-    ScmSendStartCommand(Service, NULL);
 
     /* Close process and thread handle */
     CloseHandle(ProcessInformation.hThread);
