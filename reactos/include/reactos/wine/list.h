@@ -63,7 +63,7 @@ struct list
  */
 
 /* add an element after the specified one */
-inline static void list_add_after( struct list *elem, struct list *to_add )
+__inline static void list_add_after( struct list *elem, struct list *to_add )
 {
     to_add->next = elem->next;
     to_add->prev = elem;
@@ -72,7 +72,7 @@ inline static void list_add_after( struct list *elem, struct list *to_add )
 }
 
 /* add an element before the specified one */
-inline static void list_add_before( struct list *elem, struct list *to_add )
+__inline static void list_add_before( struct list *elem, struct list *to_add )
 {
     to_add->next = elem;
     to_add->prev = elem->prev;
@@ -81,26 +81,26 @@ inline static void list_add_before( struct list *elem, struct list *to_add )
 }
 
 /* add element at the head of the list */
-inline static void list_add_head( struct list *list, struct list *elem )
+__inline static void list_add_head( struct list *list, struct list *elem )
 {
     list_add_after( list, elem );
 }
 
 /* add element at the tail of the list */
-inline static void list_add_tail( struct list *list, struct list *elem )
+__inline static void list_add_tail( struct list *list, struct list *elem )
 {
     list_add_before( list, elem );
 }
 
 /* remove an element from its list */
-inline static void list_remove( struct list *elem )
+__inline static void list_remove( struct list *elem )
 {
     elem->next->prev = elem->prev;
     elem->prev->next = elem->next;
 }
 
 /* get the next element */
-inline static struct list *list_next( struct list *list, struct list *elem )
+__inline static struct list *list_next( struct list *list, struct list *elem )
 {
     struct list *ret = elem->next;
     if (elem->next == list) ret = NULL;
@@ -108,7 +108,7 @@ inline static struct list *list_next( struct list *list, struct list *elem )
 }
 
 /* get the previous element */
-inline static struct list *list_prev( struct list *list, struct list *elem )
+__inline static struct list *list_prev( struct list *list, struct list *elem )
 {
     struct list *ret = elem->prev;
     if (elem->prev == list) ret = NULL;
@@ -116,25 +116,25 @@ inline static struct list *list_prev( struct list *list, struct list *elem )
 }
 
 /* get the first element */
-inline static struct list *list_head( struct list *list )
+__inline static struct list *list_head( struct list *list )
 {
     return list_next( list, list );
 }
 
 /* get the last element */
-inline static struct list *list_tail( struct list *list )
+__inline static struct list *list_tail( struct list *list )
 {
     return list_prev( list, list );
 }
 
 /* check if a list is empty */
-inline static int list_empty( struct list *list )
+__inline static int list_empty( struct list *list )
 {
     return list->next == list;
 }
 
 /* initialize a list */
-inline static void list_init( struct list *list )
+__inline static void list_init( struct list *list )
 {
     list->next = list->prev = list;
 }

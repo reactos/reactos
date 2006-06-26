@@ -87,7 +87,7 @@ RtlAssert(
         #ifdef _MSC_VER
             static __inline void DPRINT ( const char* fmt, ... )
             {
-                //UNREFERENCED_PARAMETER(fmt);
+                UNREFERENCED_PARAMETER(fmt);
             }
         #else
             #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)

@@ -36,6 +36,7 @@
 
   <include>.</include>
   <include>include</include>
+  <include>include/psdk</include>
   <include>include/crt</include>
   <include>include/ddk</include>
   <include>include/GL</include>
