@@ -65,6 +65,7 @@ extern RTL_HANDLE_TABLE BaseHeapHandleTable;
 #define BASE_TRACE_FAILURE()                                                \
     BH_PRINT("[BASE_HEAP] %s : Failing %d\n",                               \
              __FUNCTION__, __LINE__)
+
 //
 // The handle structure for global heap handles.
 // Notice that it nicely overlays with RTL_HANDLE_ENTRY.

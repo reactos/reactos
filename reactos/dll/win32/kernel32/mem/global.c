@@ -117,7 +117,7 @@ Quickie:
         if (!Ptr)
         {
             /* We don't have a valid pointer, but so reuse this handle */
-            HandleEntry->Flags = BASE_HEAP_ENTRY_FLAG_REUSE;
+            HandleEntry->Flags |= BASE_HEAP_ENTRY_FLAG_REUSE;
         }
 
         /* Check if the handle is discardable */
@@ -486,7 +486,7 @@ GlobalReAlloc(HGLOBAL hMem,
                 if (Ptr)
                 {
                     /* Make sure the handle isn't locked */
-                    if ((uFlags & GMEM_MOVEABLE) & !(HandleEntry->LockCount))
+                    if ((uFlags & GMEM_MOVEABLE) && !(HandleEntry->LockCount))
                     {
                         /* Free the current heap */
                         RtlFreeHeap(hProcessHeap, Flags, Ptr);
