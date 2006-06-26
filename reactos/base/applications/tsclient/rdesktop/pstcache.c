@@ -22,57 +22,49 @@
 
 #define MAX_CELL_SIZE		0x1000	/* pixels */
 
-#define IS_PERSISTENT(id) (id < 8 && g_pstcache_fd[id] > 0)
+#define IS_PERSISTENT(id) (id < 8 && This->pstcache_fd[id] > 0)
 
-extern int g_server_depth;
-extern BOOL g_bitmap_cache;
-extern BOOL g_bitmap_cache_persist_enable;
-extern BOOL g_bitmap_cache_precache;
-
-int g_pstcache_fd[8];
-int g_pstcache_Bpp;
-BOOL g_pstcache_enumerated = False;
-uint8 zero_key[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+const uint8 zero_key[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
 /* Update mru stamp/index for a bitmap */
 void
-pstcache_touch_bitmap(uint8 cache_id, uint16 cache_idx, uint32 stamp)
+pstcache_touch_bitmap(RDPCLIENT * This, uint8 cache_id, uint16 cache_idx, uint32 stamp)
 {
 	int fd;
 
 	if (!IS_PERSISTENT(cache_id) || cache_idx >= BMPCACHE2_NUM_PSTCELLS)
 		return;
 
-	fd = g_pstcache_fd[cache_id];
-	rd_lseek_file(fd, 12 + cache_idx * (g_pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
+	fd = This->pstcache_fd[cache_id];
+	rd_lseek_file(fd, 12 + cache_idx * (This->pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
 	rd_write_file(fd, &stamp, sizeof(stamp));
 }
 
 /* Load a bitmap from the persistent cache */
 BOOL
-pstcache_load_bitmap(uint8 cache_id, uint16 cache_idx)
+pstcache_load_bitmap(RDPCLIENT * This, uint8 cache_id, uint16 cache_idx)
 {
 	uint8 *celldata;
 	int fd;
 	CELLHEADER cellhdr;
 	HBITMAP bitmap;
 
-	if (!g_bitmap_cache_persist_enable)
+	if (!This->bitmap_cache_persist_enable)
 		return False;
 
 	if (!IS_PERSISTENT(cache_id) || cache_idx >= BMPCACHE2_NUM_PSTCELLS)
 		return False;
 
-	fd = g_pstcache_fd[cache_id];
-	rd_lseek_file(fd, cache_idx * (g_pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
+	fd = This->pstcache_fd[cache_id];
+	rd_lseek_file(fd, cache_idx * (This->pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
 	rd_read_file(fd, &cellhdr, sizeof(CELLHEADER));
 	celldata = (uint8 *) xmalloc(cellhdr.length);
 	rd_read_file(fd, celldata, cellhdr.length);
 
-	bitmap = ui_create_bitmap(cellhdr.width, cellhdr.height, celldata);
+	bitmap = ui_create_bitmap(This, cellhdr.width, cellhdr.height, celldata);
 	DEBUG(("Load bitmap from disk: id=%d, idx=%d, bmp=0x%x)\n", cache_id, cache_idx, bitmap));
-	cache_put_bitmap(cache_id, cache_idx, bitmap);
+	cache_put_bitmap(This, cache_id, cache_idx, bitmap);
 
 	xfree(celldata);
 	return True;
@@ -80,7 +72,7 @@ pstcache_load_bitmap(uint8 cache_id, uint16 cache_idx)
 
 /* Store a bitmap in the persistent cache */
 BOOL
-pstcache_save_bitmap(uint8 cache_id, uint16 cache_idx, uint8 * key,
+pstcache_save_bitmap(RDPCLIENT * This, uint8 cache_id, uint16 cache_idx, uint8 * key,
 		     uint8 width, uint8 height, uint16 length, uint8 * data)
 {
 	int fd;
@@ -95,8 +87,8 @@ pstcache_save_bitmap(uint8 cache_id, uint16 cache_idx, uint8 * key,
 	cellhdr.length = length;
 	cellhdr.stamp = 0;
 
-	fd = g_pstcache_fd[cache_id];
-	rd_lseek_file(fd, cache_idx * (g_pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
+	fd = This->pstcache_fd[cache_id];
+	rd_lseek_file(fd, cache_idx * (This->pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
 	rd_write_file(fd, &cellhdr, sizeof(CELLHEADER));
 	rd_write_file(fd, data, length);
 
@@ -105,7 +97,7 @@ pstcache_save_bitmap(uint8 cache_id, uint16 cache_idx, uint8 * key,
 
 /* List the bitmap keys from the persistent cache file */
 int
-pstcache_enumerate(uint8 id, HASH_KEY * keylist)
+pstcache_enumerate(RDPCLIENT * This, uint8 id, HASH_KEY * keylist)
 {
 	int fd, n;
 	uint16 idx;
@@ -113,18 +105,18 @@ pstcache_enumerate(uint8 id, HASH_KEY * keylist)
 	uint32 mru_stamp[0xa00];
 	CELLHEADER cellhdr;
 
-	if (!(g_bitmap_cache && g_bitmap_cache_persist_enable && IS_PERSISTENT(id)))
+	if (!(This->bitmap_cache && This->bitmap_cache_persist_enable && IS_PERSISTENT(id)))
 		return 0;
 
 	/* The server disconnects if the bitmap cache content is sent more than once */
-	if (g_pstcache_enumerated)
+	if (This->pstcache_enumerated)
 		return 0;
 
 	DEBUG_RDP5(("Persistent bitmap cache enumeration... "));
 	for (idx = 0; idx < BMPCACHE2_NUM_PSTCELLS; idx++)
 	{
-		fd = g_pstcache_fd[id];
-		rd_lseek_file(fd, idx * (g_pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
+		fd = This->pstcache_fd[id];
+		rd_lseek_file(fd, idx * (This->pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
 		if (rd_read_file(fd, &cellhdr, sizeof(CELLHEADER)) <= 0)
 			break;
 
@@ -133,8 +125,8 @@ pstcache_enumerate(uint8 id, HASH_KEY * keylist)
 			memcpy(keylist[idx], cellhdr.key, sizeof(HASH_KEY));
 
 			/* Pre-cache (not possible for 8 bit colour depth cause it needs a colourmap) */
-			if (g_bitmap_cache_precache && cellhdr.stamp && g_server_depth > 8)
-				pstcache_load_bitmap(id, idx);
+			if (This->bitmap_cache_precache && cellhdr.stamp && This->server_depth > 8)
+				pstcache_load_bitmap(This, id, idx);
 
 			/* Sort by stamp */
 			for (n = idx; n > 0 && cellhdr.stamp < mru_stamp[n - 1]; n--)
@@ -154,24 +146,24 @@ pstcache_enumerate(uint8 id, HASH_KEY * keylist)
 
 	DEBUG_RDP5(("%d cached bitmaps.\n", idx));
 
-	cache_rebuild_bmpcache_linked_list(id, mru_idx, idx);
-	g_pstcache_enumerated = True;
+	cache_rebuild_bmpcache_linked_list(This, id, mru_idx, idx);
+	This->pstcache_enumerated = True;
 	return idx;
 }
 
 /* initialise the persistent bitmap cache */
 BOOL
-pstcache_init(uint8 cache_id)
+pstcache_init(RDPCLIENT * This, uint8 cache_id)
 {
 	int fd;
 	char filename[256];
 
-	if (g_pstcache_enumerated)
+	if (This->pstcache_enumerated)
 		return True;
 
-	g_pstcache_fd[cache_id] = 0;
+	This->pstcache_fd[cache_id] = 0;
 
-	if (!(g_bitmap_cache && g_bitmap_cache_persist_enable))
+	if (!(This->bitmap_cache && This->bitmap_cache_persist_enable))
 		return False;
 
 	if (!rd_pstcache_mkdir())
@@ -180,8 +172,8 @@ pstcache_init(uint8 cache_id)
 		return False;
 	}
 
-	g_pstcache_Bpp = (g_server_depth + 7) / 8;
-	sprintf(filename, "cache/pstcache_%d_%d", cache_id, g_pstcache_Bpp);
+	This->pstcache_Bpp = (This->server_depth + 7) / 8;
+	sprintf(filename, "cache/pstcache_%d_%d", cache_id, This->pstcache_Bpp);
 	DEBUG(("persistent bitmap cache file: %s\n", filename));
 
 	fd = rd_open_file(filename);
@@ -195,6 +187,6 @@ pstcache_init(uint8 cache_id)
 		return False;
 	}
 
-	g_pstcache_fd[cache_id] = fd;
+	This->pstcache_fd[cache_id] = fd;
 	return True;
 }

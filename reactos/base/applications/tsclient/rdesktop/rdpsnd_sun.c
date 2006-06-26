@@ -33,8 +33,8 @@
 
 #define MAX_QUEUE	10
 
-int g_dsp_fd;
-BOOL g_dsp_busy = False;
+int This->dsp_;
+BOOL This->dsp_bu = False;
 static BOOL g_reopened;
 static BOOL g_swapaudio;
 static short g_samplewidth;
@@ -57,14 +57,14 @@ wave_out_open(void)
 		dsp_dev = xstrdup("/dev/audio");
 	}
 
-	if ((g_dsp_fd = open(dsp_dev, O_WRONLY | O_NONBLOCK)) == -1)
+	if ((This->dsp_ = open(dsp_dev, O_WRONLY | O_NONBLOCK)) == -1)
 	{
 		perror(dsp_dev);
 		return False;
 	}
 
 	/* Non-blocking so that user interface is responsive */
-	fcntl(g_dsp_fd, F_SETFL, fcntl(g_dsp_fd, F_GETFL) | O_NONBLOCK);
+	fcntl(This->dsp_, F_SETFL, fcntl(This->dsp_, F_GETFL) | O_NONBLOCK);
 
 	queue_lo = queue_hi = 0;
 	g_reopened = True;
@@ -85,12 +85,12 @@ wave_out_close(void)
 
 #if defined I_FLUSH && defined FLUSHW
 	/* Flush the audiobuffer */
-	ioctl(g_dsp_fd, I_FLUSH, FLUSHW);
+	ioctl(This->dsp_, I_FLUSH, FLUSHW);
 #endif
 #if defined AUDIO_FLUSH
-	ioctl(g_dsp_fd, AUDIO_FLUSH, NULL);
+	ioctl(This->dsp_, AUDIO_FLUSH, NULL);
 #endif
-	close(g_dsp_fd);
+	close(This->dsp_);
 }
 
 BOOL
@@ -111,7 +111,7 @@ wave_out_set_format(WAVEFORMATEX * pwfx)
 {
 	audio_info_t info;
 
-	ioctl(g_dsp_fd, AUDIO_DRAIN, 0);
+	ioctl(This->dsp_, AUDIO_DRAIN, 0);
 	g_swapaudio = False;
 	AUDIO_INITINFO(&info);
 
@@ -150,10 +150,10 @@ wave_out_set_format(WAVEFORMATEX * pwfx)
 	info.play.error = 0;
 	g_reopened = True;
 
-	if (ioctl(g_dsp_fd, AUDIO_SETINFO, &info) == -1)
+	if (ioctl(This->dsp_, AUDIO_SETINFO, &info) == -1)
 	{
 		perror("AUDIO_SETINFO");
-		close(g_dsp_fd);
+		close(This->dsp_);
 		return False;
 	}
 
@@ -185,7 +185,7 @@ wave_out_volume(uint16 left, uint16 right)
 	info.play.gain = volume / (65536 / AUDIO_MAX_GAIN);
 	info.play.balance = balance;
 
-	if (ioctl(g_dsp_fd, AUDIO_SETINFO, &info) == -1)
+	if (ioctl(This->dsp_, AUDIO_SETINFO, &info) == -1)
 	{
 		perror("AUDIO_SETINFO");
 		return;
@@ -214,7 +214,7 @@ wave_out_write(STREAM s, uint16 tick, uint8 index)
 	/* we steal the data buffer from s, give it a new one */
 	s->data = malloc(s->size);
 
-	if (!g_dsp_busy)
+	if (!This->dsp_bu)
 		wave_out_play();
 }
 
@@ -245,7 +245,7 @@ wave_out_play(void)
 
 		if (queue_lo == queue_hi)
 		{
-			g_dsp_busy = 0;
+			This->dsp_bu = 0;
 			return;
 		}
 
@@ -274,12 +274,12 @@ wave_out_play(void)
 
 		if (out->end != out->p)
 		{
-			len = write(g_dsp_fd, out->p, out->end - out->p);
+			len = write(This->dsp_, out->p, out->end - out->p);
 			if (len == -1)
 			{
 				if (errno != EWOULDBLOCK)
 					perror("write audio");
-				g_dsp_busy = 1;
+				This->dsp_bu = 1;
 				return;
 			}
 		}
@@ -287,7 +287,7 @@ wave_out_play(void)
 		out->p += len;
 		if (out->p == out->end)
 		{
-			if (ioctl(g_dsp_fd, AUDIO_GETINFO, &info) == -1)
+			if (ioctl(This->dsp_, AUDIO_GETINFO, &info) == -1)
 			{
 				perror("AUDIO_GETINFO");
 				return;
@@ -305,7 +305,7 @@ wave_out_play(void)
 			}
 			else
 			{
-				g_dsp_busy = 1;
+				This->dsp_bu = 1;
 				return;
 			}
 		}

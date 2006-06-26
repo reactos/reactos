@@ -19,23 +19,21 @@
 
 #include "rdesktop.h"
 
-extern RDPDR_DEVICE g_rdpdr_device[];
-
 static PRINTER *
-get_printer_data(NTHANDLE handle)
+get_printer_data(RDPCLIENT * This, NTHANDLE handle)
 {
 	int index;
 
 	for (index = 0; index < RDPDR_MAX_DEVICES; index++)
 	{
-		if (handle == g_rdpdr_device[index].handle)
-			return (PRINTER *) g_rdpdr_device[index].pdevice_data;
+		if (handle == This->rdpdr_device[index].handle)
+			return (PRINTER *) This->rdpdr_device[index].pdevice_data;
 	}
 	return NULL;
 }
 
 int
-printer_enum_devices(uint32 * id, char *optarg)
+printer_enum_devices(RDPCLIENT * This, uint32 * id, char *optarg)
 {
 	PRINTER *pprinter_data;
 
@@ -48,7 +46,7 @@ printer_enum_devices(uint32 * id, char *optarg)
 	   supplied from other -r flags than this one. */
 	while (count < *id)
 	{
-		if (g_rdpdr_device[count].device_type == DEVICE_TYPE_PRINTER)
+		if (This->rdpdr_device[count].device_type == DEVICE_TYPE_PRINTER)
 			already++;
 		count++;
 	}
@@ -62,8 +60,8 @@ printer_enum_devices(uint32 * id, char *optarg)
 	{
 		pprinter_data = (PRINTER *) xmalloc(sizeof(PRINTER));
 
-		strcpy(g_rdpdr_device[*id].name, "PRN");
-		strcat(g_rdpdr_device[*id].name, l_to_a(already + count + 1, 10));
+		strcpy(This->rdpdr_device[*id].name, "PRN");
+		strcat(This->rdpdr_device[*id].name, l_to_a(already + count + 1, 10));
 
 		/* first printer is set as default printer */
 		if ((already + count) == 0)
@@ -88,10 +86,10 @@ printer_enum_devices(uint32 * id, char *optarg)
 			strcpy(pprinter_data->driver, pos2);
 		}
 
-		printf("PRINTER %s to %s driver %s\n", g_rdpdr_device[*id].name,
+		printf("PRINTER %s to %s driver %s\n", This->rdpdr_device[*id].name,
 		       pprinter_data->printer, pprinter_data->driver);
-		g_rdpdr_device[*id].device_type = DEVICE_TYPE_PRINTER;
-		g_rdpdr_device[*id].pdevice_data = (void *) pprinter_data;
+		This->rdpdr_device[*id].device_type = DEVICE_TYPE_PRINTER;
+		This->rdpdr_device[*id].pdevice_data = (void *) pprinter_data;
 		count++;
 		(*id)++;
 
@@ -101,13 +99,13 @@ printer_enum_devices(uint32 * id, char *optarg)
 }
 
 static NTSTATUS
-printer_create(uint32 device_id, uint32 access, uint32 share_mode, uint32 disposition, uint32 flags,
+printer_create(RDPCLIENT * This, uint32 device_id, uint32 access, uint32 share_mode, uint32 disposition, uint32 flags,
 	       char *filename, NTHANDLE * handle)
 {
 	char cmd[256];
 	PRINTER *pprinter_data;
 
-	pprinter_data = (PRINTER *) g_rdpdr_device[device_id].pdevice_data;
+	pprinter_data = (PRINTER *) This->rdpdr_device[device_id].pdevice_data;
 
 	/* default printer name use default printer queue as well in unix */
 	if (pprinter_data->printer == "mydeskjet")
@@ -120,31 +118,31 @@ printer_create(uint32 device_id, uint32 access, uint32 share_mode, uint32 dispos
 		pprinter_data->printer_fp = popen(cmd, "w");
 	}
 
-	g_rdpdr_device[device_id].handle = fileno(pprinter_data->printer_fp);
-	*handle = g_rdpdr_device[device_id].handle;
+	This->rdpdr_device[device_id].handle = fileno(pprinter_data->printer_fp);
+	*handle = This->rdpdr_device[device_id].handle;
 	return STATUS_SUCCESS;
 }
 
 static NTSTATUS
-printer_close(NTHANDLE handle)
+printer_close(RDPCLIENT * This, NTHANDLE handle)
 {
-	int i = get_device_index(handle);
+	int i = get_device_index(This, handle);
 	if (i >= 0)
 	{
-		PRINTER *pprinter_data = g_rdpdr_device[i].pdevice_data;
+		PRINTER *pprinter_data = This->rdpdr_device[i].pdevice_data;
 		if (pprinter_data)
 			pclose(pprinter_data->printer_fp);
-		g_rdpdr_device[i].handle = 0;
+		This->rdpdr_device[i].handle = 0;
 	}
 	return STATUS_SUCCESS;
 }
 
 static NTSTATUS
-printer_write(NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
+printer_write(RDPCLIENT * This, NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
 {
 	PRINTER *pprinter_data;
 
-	pprinter_data = get_printer_data(handle);
+	pprinter_data = get_printer_data(This, handle);
 	*result = length * fwrite(data, length, 1, pprinter_data->printer_fp);
 
 	if (ferror(pprinter_data->printer_fp))

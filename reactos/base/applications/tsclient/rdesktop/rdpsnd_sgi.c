@@ -30,11 +30,11 @@
 
 #define MAX_QUEUE	10
 
-int g_dsp_fd;
+int This->dsp_;
 ALconfig audioconfig;
 ALport output_port;
 
-BOOL g_dsp_busy = False;
+BOOL This->dsp_bu = False;
 static BOOL g_swapaudio;
 static int g_snd_rate;
 static BOOL g_swapaudio;
@@ -273,7 +273,7 @@ wave_out_write(STREAM s, uint16 tick, uint8 index)
 	/* we steal the data buffer from s, give it a new one */
 	s->data = malloc(s->size);
 
-	if (!g_dsp_busy)
+	if (!This->dsp_bu)
 		wave_out_play();
 }
 
@@ -292,7 +292,7 @@ wave_out_play(void)
 	{
 		if (queue_lo == queue_hi)
 		{
-			g_dsp_busy = False;
+			This->dsp_bu = False;
 			return;
 		}
 
@@ -331,7 +331,7 @@ wave_out_play(void)
 #if (defined(IRIX_DEBUG))
 /*  				fprintf(stderr,"Busy playing...\n"); */
 #endif
-				g_dsp_busy = True;
+				This->dsp_bu = True;
 				usleep(10);
 				return;
 			}

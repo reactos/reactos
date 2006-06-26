@@ -21,17 +21,10 @@
 
 #include "rdesktop.h"
 
-#define MAX_CHANNELS			6
 #define CHANNEL_CHUNK_LENGTH		1600
 #define CHANNEL_FLAG_FIRST		0x01
 #define CHANNEL_FLAG_LAST		0x02
 #define CHANNEL_FLAG_SHOW_PROTOCOL	0x10
-
-extern BOOL g_use_rdp5;
-extern BOOL g_encryption;
-
-VCHANNEL g_channels[MAX_CHANNELS];
-unsigned int g_num_channels;
 
 /* FIXME: We should use the information in TAG_SRV_CHANNELS to map RDP5
    channels to MCS channels.
@@ -44,40 +37,40 @@ unsigned int g_num_channels;
 */
 
 VCHANNEL *
-channel_register(char *name, uint32 flags, void (*callback) (STREAM))
+channel_register(RDPCLIENT * This, char *name, uint32 flags, void (*callback) (RDPCLIENT *, STREAM))
 {
 	VCHANNEL *channel;
 
-	if (!g_use_rdp5)
+	if (!This->use_rdp5)
 		return NULL;
 
-	if (g_num_channels >= MAX_CHANNELS)
+	if (This->num_channels >= MAX_CHANNELS)
 	{
 		error("Channel table full, increase MAX_CHANNELS\n");
 		return NULL;
 	}
 
-	channel = &g_channels[g_num_channels];
-	channel->mcs_id = MCS_GLOBAL_CHANNEL + 1 + g_num_channels;
+	channel = &This->channels[This->num_channels];
+	channel->mcs_id = MCS_GLOBAL_CHANNEL + 1 + This->num_channels;
 	strncpy(channel->name, name, 8);
 	channel->flags = flags;
 	channel->process = callback;
-	g_num_channels++;
+	This->num_channels++;
 	return channel;
 }
 
 STREAM
-channel_init(VCHANNEL * channel, uint32 length)
+channel_init(RDPCLIENT * This, VCHANNEL * channel, uint32 length)
 {
 	STREAM s;
 
-	s = sec_init(g_encryption ? SEC_ENCRYPT : 0, length + 8);
+	s = sec_init(This, This->encryption ? SEC_ENCRYPT : 0, length + 8);
 	s_push_layer(s, channel_hdr, 8);
 	return s;
 }
 
 void
-channel_send(STREAM s, VCHANNEL * channel)
+channel_send(RDPCLIENT * This, STREAM s, VCHANNEL * channel)
 {
 	uint32 length, flags;
 	uint32 thislength, remaining;
@@ -103,7 +96,7 @@ channel_send(STREAM s, VCHANNEL * channel)
 	out_uint32_le(s, flags);
 	data = s->end = s->p + thislength;
 	DEBUG_CHANNEL(("Sending %d bytes with FLAG_FIRST\n", thislength));
-	sec_send_to_channel(s, g_encryption ? SEC_ENCRYPT : 0, channel->mcs_id);
+	sec_send_to_channel(This, s, This->encryption ? SEC_ENCRYPT : 0, channel->mcs_id);
 
 	/* subsequent segments copied (otherwise would have to generate headers backwards) */
 	while (remaining > 0)
@@ -116,19 +109,19 @@ channel_send(STREAM s, VCHANNEL * channel)
 
 		DEBUG_CHANNEL(("Sending %d bytes with flags %d\n", thislength, flags));
 
-		s = sec_init(g_encryption ? SEC_ENCRYPT : 0, thislength + 8);
+		s = sec_init(This, This->encryption ? SEC_ENCRYPT : 0, thislength + 8);
 		out_uint32_le(s, length);
 		out_uint32_le(s, flags);
 		out_uint8p(s, data, thislength);
 		s_mark_end(s);
-		sec_send_to_channel(s, g_encryption ? SEC_ENCRYPT : 0, channel->mcs_id);
+		sec_send_to_channel(This, s, This->encryption ? SEC_ENCRYPT : 0, channel->mcs_id);
 
 		data += thislength;
 	}
 }
 
 void
-channel_process(STREAM s, uint16 mcs_channel)
+channel_process(RDPCLIENT * This, STREAM s, uint16 mcs_channel)
 {
 	uint32 length, flags;
 	uint32 thislength;
@@ -136,14 +129,14 @@ channel_process(STREAM s, uint16 mcs_channel)
 	unsigned int i;
 	STREAM in;
 
-	for (i = 0; i < g_num_channels; i++)
+	for (i = 0; i < This->num_channels; i++)
 	{
-		channel = &g_channels[i];
+		channel = &This->channels[i];
 		if (channel->mcs_id == mcs_channel)
 			break;
 	}
 
-	if (i >= g_num_channels)
+	if (i >= This->num_channels)
 		return;
 
 	in_uint32_le(s, length);
@@ -151,7 +144,7 @@ channel_process(STREAM s, uint16 mcs_channel)
 	if ((flags & CHANNEL_FLAG_FIRST) && (flags & CHANNEL_FLAG_LAST))
 	{
 		/* single fragment - pass straight up */
-		channel->process(s);
+		channel->process(This, s);
 	}
 	else
 	{
@@ -175,7 +168,7 @@ channel_process(STREAM s, uint16 mcs_channel)
 		{
 			in->end = in->p;
 			in->p = in->data;
-			channel->process(in);
+			channel->process(This, in);
 		}
 	}
 }

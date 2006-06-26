@@ -137,11 +137,6 @@ dummy_statfs(struct dummy_statfs_t *buf)
 #define STATFS_FN(path,buf) (dummy_statfs(buf))
 #endif
 
-extern RDPDR_DEVICE g_rdpdr_device[];
-
-FILEINFO g_fileinfo[MAX_OPEN_FILES];
-BOOL g_notify_stamp = False;
-
 typedef struct
 {
 	char name[PATH_MAX];
@@ -150,7 +145,7 @@ typedef struct
 	char type[PATH_MAX];
 } FsInfoType;
 
-static NTSTATUS NotifyInfo(NTHANDLE handle, uint32 info_class, NOTIFY * p);
+static NTSTATUS NotifyInfo(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, NOTIFY * p);
 
 static time_t
 get_create_time(struct stat *st)
@@ -308,7 +303,7 @@ open_weak_exclusive(const char *pathname, int flags, mode_t mode)
 /* optarg looks like ':h=/mnt/floppy,b=/mnt/usbdevice1' */
 /* when it arrives to this function.             */
 int
-disk_enum_devices(uint32 * id, char *optarg)
+disk_enum_devices(RDPCLIENT * This, uint32 * id, char *optarg)
 {
 	char *pos = optarg;
 	char *pos2;
@@ -320,14 +315,14 @@ disk_enum_devices(uint32 * id, char *optarg)
 	{
 		pos2 = next_arg(optarg, '=');
 
-		strncpy(g_rdpdr_device[*id].name, optarg, sizeof(g_rdpdr_device[*id].name) - 1);
-		if (strlen(optarg) > (sizeof(g_rdpdr_device[*id].name) - 1))
+		strncpy(This->rdpdr_device[*id].name, optarg, sizeof(This->rdpdr_device[*id].name) - 1);
+		if (strlen(optarg) > (sizeof(This->rdpdr_device[*id].name) - 1))
 			fprintf(stderr, "share name %s truncated to %s\n", optarg,
-				g_rdpdr_device[*id].name);
+				This->rdpdr_device[*id].name);
 
-		g_rdpdr_device[*id].local_path = (char *) xmalloc(strlen(pos2) + 1);
-		strcpy(g_rdpdr_device[*id].local_path, pos2);
-		g_rdpdr_device[*id].device_type = DEVICE_TYPE_DISK;
+		This->rdpdr_device[*id].local_path = (char *) xmalloc(strlen(pos2) + 1);
+		strcpy(This->rdpdr_device[*id].local_path, pos2);
+		This->rdpdr_device[*id].device_type = DEVICE_TYPE_DISK;
 		count++;
 		(*id)++;
 
@@ -338,7 +333,7 @@ disk_enum_devices(uint32 * id, char *optarg)
 
 /* Opens or creates a file or directory */
 static NTSTATUS
-disk_create(uint32 device_id, uint32 accessmask, uint32 sharemode, uint32 create_disposition,
+disk_create(RDPCLIENT * This, uint32 device_id, uint32 accessmask, uint32 sharemode, uint32 create_disposition,
 	    uint32 flags_and_attributes, char *filename, NTHANDLE * phandle)
 {
 	NTHANDLE handle;
@@ -354,7 +349,7 @@ disk_create(uint32 device_id, uint32 accessmask, uint32 sharemode, uint32 create
 
 	if (*filename && filename[strlen(filename) - 1] == '/')
 		filename[strlen(filename) - 1] = 0;
-	sprintf(path, "%s%s", g_rdpdr_device[device_id].local_path, filename);
+	sprintf(path, "%s%s", This->rdpdr_device[device_id].local_path, filename);
 
 	switch (create_disposition)
 	{
@@ -484,31 +479,31 @@ disk_create(uint32 device_id, uint32 accessmask, uint32 sharemode, uint32 create
 	}
 
 	if (dirp)
-		g_fileinfo[handle].pdir = dirp;
+		This->fileinfo[handle].pdir = dirp;
 	else
-		g_fileinfo[handle].pdir = NULL;
+		This->fileinfo[handle].pdir = NULL;
 
-	g_fileinfo[handle].device_id = device_id;
-	g_fileinfo[handle].flags_and_attributes = flags_and_attributes;
-	g_fileinfo[handle].accessmask = accessmask;
-	strncpy(g_fileinfo[handle].path, path, PATH_MAX - 1);
-	g_fileinfo[handle].delete_on_close = False;
-	g_notify_stamp = True;
+	This->fileinfo[handle].device_id = device_id;
+	This->fileinfo[handle].flags_and_attributes = flags_and_attributes;
+	This->fileinfo[handle].accessmask = accessmask;
+	strncpy(This->fileinfo[handle].path, path, PATH_MAX - 1);
+	This->fileinfo[handle].delete_on_close = False;
+	This->notify_stamp = True;
 
 	*phandle = handle;
 	return STATUS_SUCCESS;
 }
 
 static NTSTATUS
-disk_close(NTHANDLE handle)
+disk_close(RDPCLIENT * This, NTHANDLE handle)
 {
 	struct fileinfo *pfinfo;
 
-	pfinfo = &(g_fileinfo[handle]);
+	pfinfo = &(This->fileinfo[handle]);
 
-	g_notify_stamp = True;
+	This->notify_stamp = True;
 
-	rdpdr_abort_io(handle, 0, STATUS_CANCELLED);
+	rdpdr_abort_io(This, handle, 0, STATUS_CANCELLED);
 
 	if (pfinfo->pdir)
 	{
@@ -547,14 +542,14 @@ disk_close(NTHANDLE handle)
 }
 
 static NTSTATUS
-disk_read(NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
+disk_read(RDPCLIENT * This, NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
 {
 	int n;
 
 #if 0
 	/* browsing dir ????        */
 	/* each request is 24 bytes */
-	if (g_fileinfo[handle].flags_and_attributes & FILE_DIRECTORY_FILE)
+	if (This->fileinfo[handle].flags_and_attributes & FILE_DIRECTORY_FILE)
 	{
 		*result = 0;
 		return STATUS_SUCCESS;
@@ -587,7 +582,7 @@ disk_read(NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * 
 }
 
 static NTSTATUS
-disk_write(NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
+disk_write(RDPCLIENT * This, NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
 {
 	int n;
 
@@ -614,13 +609,13 @@ disk_write(NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 *
 }
 
 NTSTATUS
-disk_query_information(NTHANDLE handle, uint32 info_class, STREAM out)
+disk_query_information(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, STREAM out)
 {
 	uint32 file_attributes, ft_high, ft_low;
 	struct stat filestat;
 	char *path, *filename;
 
-	path = g_fileinfo[handle].path;
+	path = This->fileinfo[handle].path;
 
 	/* Get information about file */
 	if (fstat(handle, &filestat) != 0)
@@ -695,7 +690,7 @@ disk_query_information(NTHANDLE handle, uint32 info_class, STREAM out)
 }
 
 NTSTATUS
-disk_set_information(NTHANDLE handle, uint32 info_class, STREAM in, STREAM out)
+disk_set_information(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, STREAM in, STREAM out)
 {
 	uint32 length, file_attributes, ft_high, ft_low, delete_on_close;
 	char newname[PATH_MAX], fullpath[PATH_MAX];
@@ -706,8 +701,8 @@ disk_set_information(NTHANDLE handle, uint32 info_class, STREAM in, STREAM out)
 	struct utimbuf tvs;
 	struct STATFS_T stat_fs;
 
-	pfinfo = &(g_fileinfo[handle]);
-	g_notify_stamp = True;
+	pfinfo = &(This->fileinfo[handle]);
+	This->notify_stamp = True;
 
 	switch (info_class)
 	{
@@ -799,7 +794,7 @@ disk_set_information(NTHANDLE handle, uint32 info_class, STREAM in, STREAM out)
 
 			if (length && (length / 2) < 256)
 			{
-				rdp_in_unistr(in, newname, length);
+				rdp_in_unistr(This, in, newname, length);
 				convert_to_unix_filename(newname);
 			}
 			else
@@ -807,7 +802,7 @@ disk_set_information(NTHANDLE handle, uint32 info_class, STREAM in, STREAM out)
 				return STATUS_INVALID_PARAMETER;
 			}
 
-			sprintf(fullpath, "%s%s", g_rdpdr_device[pfinfo->device_id].local_path,
+			sprintf(fullpath, "%s%s", This->rdpdr_device[pfinfo->device_id].local_path,
 				newname);
 
 			if (rename(pfinfo->path, fullpath) != 0)
@@ -850,7 +845,7 @@ disk_set_information(NTHANDLE handle, uint32 info_class, STREAM in, STREAM out)
 			in_uint32_le(in, length);	/* file size */
 
 			/* prevents start of writing if not enough space left on device */
-			if (STATFS_FN(g_rdpdr_device[pfinfo->device_id].local_path, &stat_fs) == 0)
+			if (STATFS_FN(This->rdpdr_device[pfinfo->device_id].local_path, &stat_fs) == 0)
 				if (stat_fs.f_bfree * stat_fs.f_bsize < length)
 					return STATUS_DISK_FULL;
 
@@ -869,20 +864,20 @@ disk_set_information(NTHANDLE handle, uint32 info_class, STREAM in, STREAM out)
 }
 
 NTSTATUS
-disk_check_notify(NTHANDLE handle)
+disk_check_notify(RDPCLIENT * This, NTHANDLE handle)
 {
 	struct fileinfo *pfinfo;
 	NTSTATUS status = STATUS_PENDING;
 
 	NOTIFY notify;
 
-	pfinfo = &(g_fileinfo[handle]);
+	pfinfo = &(This->fileinfo[handle]);
 	if (!pfinfo->pdir)
 		return STATUS_INVALID_DEVICE_REQUEST;
 
 
 
-	status = NotifyInfo(handle, pfinfo->info_class, &notify);
+	status = NotifyInfo(This, handle, pfinfo->info_class, &notify);
 
 	if (status != STATUS_PENDING)
 		return status;
@@ -900,7 +895,7 @@ disk_check_notify(NTHANDLE handle)
 }
 
 NTSTATUS
-disk_create_notify(NTHANDLE handle, uint32 info_class)
+disk_create_notify(RDPCLIENT * This, NTHANDLE handle, uint32 info_class)
 {
 
 	struct fileinfo *pfinfo;
@@ -908,10 +903,10 @@ disk_create_notify(NTHANDLE handle, uint32 info_class)
 
 	/* printf("start disk_create_notify info_class %X\n", info_class); */
 
-	pfinfo = &(g_fileinfo[handle]);
+	pfinfo = &(This->fileinfo[handle]);
 	pfinfo->info_class = info_class;
 
-	ret = NotifyInfo(handle, info_class, &pfinfo->notify);
+	ret = NotifyInfo(This, handle, info_class, &pfinfo->notify);
 
 	if (info_class & 0x1000)
 	{			/* ???? */
@@ -927,7 +922,7 @@ disk_create_notify(NTHANDLE handle, uint32 info_class)
 }
 
 static NTSTATUS
-NotifyInfo(NTHANDLE handle, uint32 info_class, NOTIFY * p)
+NotifyInfo(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, NOTIFY * p)
 {
 	struct fileinfo *pfinfo;
 	struct stat buf;
@@ -935,7 +930,7 @@ NotifyInfo(NTHANDLE handle, uint32 info_class, NOTIFY * p)
 	char *fullname;
 	DIR *dpr;
 
-	pfinfo = &(g_fileinfo[handle]);
+	pfinfo = &(This->fileinfo[handle]);
 	if (fstat(handle, &buf) < 0)
 	{
 		perror("NotifyInfo");
@@ -1044,13 +1039,13 @@ FsVolumeInfo(char *fpath)
 
 
 NTSTATUS
-disk_query_volume_information(NTHANDLE handle, uint32 info_class, STREAM out)
+disk_query_volume_information(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, STREAM out)
 {
 	struct STATFS_T stat_fs;
 	struct fileinfo *pfinfo;
 	FsInfoType *fsinfo;
 
-	pfinfo = &(g_fileinfo[handle]);
+	pfinfo = &(This->fileinfo[handle]);
 
 	if (STATFS_FN(pfinfo->path, &stat_fs) != 0)
 	{
@@ -1071,7 +1066,7 @@ disk_query_volume_information(NTHANDLE handle, uint32 info_class, STREAM out)
 			out_uint32_le(out, 2 * strlen(fsinfo->label));	/* length of string */
 
 			out_uint8(out, 0);	/* support objects? */
-			rdp_out_unistr(out, fsinfo->label, 2 * strlen(fsinfo->label) - 2);
+			rdp_out_unistr(This, out, fsinfo->label, 2 * strlen(fsinfo->label) - 2);
 			break;
 
 		case FileFsSizeInformation:
@@ -1090,7 +1085,7 @@ disk_query_volume_information(NTHANDLE handle, uint32 info_class, STREAM out)
 			out_uint32_le(out, F_NAMELEN(stat_fs));	/* max length of filename */
 
 			out_uint32_le(out, 2 * strlen(fsinfo->type));	/* length of fs_type */
-			rdp_out_unistr(out, fsinfo->type, 2 * strlen(fsinfo->type) - 2);
+			rdp_out_unistr(This, out, fsinfo->type, 2 * strlen(fsinfo->type) - 2);
 			break;
 
 		case FileFsLabelInformation:
@@ -1109,7 +1104,7 @@ disk_query_volume_information(NTHANDLE handle, uint32 info_class, STREAM out)
 }
 
 NTSTATUS
-disk_query_directory(NTHANDLE handle, uint32 info_class, char *pattern, STREAM out)
+disk_query_directory(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, char *pattern, STREAM out)
 {
 	uint32 file_attributes, ft_low, ft_high;
 	char *dirname, fullpath[PATH_MAX];
@@ -1118,7 +1113,7 @@ disk_query_directory(NTHANDLE handle, uint32 info_class, char *pattern, STREAM o
 	struct stat fstat;
 	struct fileinfo *pfinfo;
 
-	pfinfo = &(g_fileinfo[handle]);
+	pfinfo = &(This->fileinfo[handle]);
 	pdir = pfinfo->pdir;
 	dirname = pfinfo->path;
 	file_attributes = 0;
@@ -1156,7 +1151,7 @@ disk_query_directory(NTHANDLE handle, uint32 info_class, char *pattern, STREAM o
 						memset(&fstat, 0, sizeof(fstat));
 						break;
 					default:
-						/* Fatal error. By returning STATUS_NO_SUCH_FILE, 
+						/* Fatal error. By returning STATUS_NO_SUCH_FILE,
 						   the directory list operation will be aborted */
 						perror(fullpath);
 						out_uint8(out, 0);
@@ -1201,7 +1196,7 @@ disk_query_directory(NTHANDLE handle, uint32 info_class, char *pattern, STREAM o
 			out_uint8s(out, 7);	/* pad? */
 			out_uint8(out, 0);	/* 8.3 file length */
 			out_uint8s(out, 2 * 12);	/* 8.3 unicode length */
-			rdp_out_unistr(out, pdirent->d_name, 2 * strlen(pdirent->d_name));
+			rdp_out_unistr(This, out, pdirent->d_name, 2 * strlen(pdirent->d_name));
 			break;
 
 		default:
@@ -1219,7 +1214,7 @@ disk_query_directory(NTHANDLE handle, uint32 info_class, char *pattern, STREAM o
 
 
 static NTSTATUS
-disk_device_control(NTHANDLE handle, uint32 request, STREAM in, STREAM out)
+disk_device_control(RDPCLIENT * This, NTHANDLE handle, uint32 request, STREAM in, STREAM out)
 {
 	if (((request >> 16) != 20) || ((request >> 16) != 9))
 		return STATUS_INVALID_PARAMETER;

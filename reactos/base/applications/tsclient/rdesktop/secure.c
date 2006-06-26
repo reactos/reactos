@@ -26,41 +26,6 @@
 #include <openssl/bn.h>
 #include <openssl/x509v3.h>
 
-extern char g_hostname[16];
-extern int g_width;
-extern int g_height;
-extern unsigned int g_keylayout;
-extern int g_keyboard_type;
-extern int g_keyboard_subtype;
-extern int g_keyboard_functionkeys;
-extern BOOL g_encryption;
-extern BOOL g_licence_issued;
-extern BOOL g_use_rdp5;
-extern BOOL g_console_session;
-extern int g_server_depth;
-extern uint16 mcs_userid;
-extern VCHANNEL g_channels[];
-extern unsigned int g_num_channels;
-
-static int rc4_key_len;
-static RC4_KEY rc4_decrypt_key;
-static RC4_KEY rc4_encrypt_key;
-static RSA *server_public_key;
-static uint32 server_public_key_len;
-
-static uint8 sec_sign_key[16];
-static uint8 sec_decrypt_key[16];
-static uint8 sec_encrypt_key[16];
-static uint8 sec_decrypt_update_key[16];
-static uint8 sec_encrypt_update_key[16];
-static uint8 sec_crypted_random[SEC_MAX_MODULUS_SIZE];
-
-uint16 g_server_rdp_version = 0;
-
-/* These values must be available to reset state - Session Directory */
-static int sec_encrypt_use_count = 0;
-static int sec_decrypt_use_count = 0;
-
 /*
  * I believe this is based on SSLv3 with the following differences:
  *  MAC algorithm (5.2.3.1) uses only 32-bit length in place of seq_num/type/length fields
@@ -128,7 +93,7 @@ sec_make_40bit(uint8 * key)
 
 /* Generate encryption keys given client and server randoms */
 static void
-sec_generate_keys(uint8 * client_random, uint8 * server_random, int rc4_key_size)
+sec_generate_keys(RDPCLIENT * This, uint8 * client_random, uint8 * server_random, int rc4_key_size)
 {
 	uint8 pre_master_secret[48];
 	uint8 master_secret[48];
@@ -143,43 +108,43 @@ sec_generate_keys(uint8 * client_random, uint8 * server_random, int rc4_key_size
 	sec_hash_48(key_block, master_secret, client_random, server_random, 'X');
 
 	/* First 16 bytes of key material is MAC secret */
-	memcpy(sec_sign_key, key_block, 16);
+	memcpy(This->secure.sign_key, key_block, 16);
 
 	/* Generate export keys from next two blocks of 16 bytes */
-	sec_hash_16(sec_decrypt_key, &key_block[16], client_random, server_random);
-	sec_hash_16(sec_encrypt_key, &key_block[32], client_random, server_random);
+	sec_hash_16(This->secure.decrypt_key, &key_block[16], client_random, server_random);
+	sec_hash_16(This->secure.encrypt_key, &key_block[32], client_random, server_random);
 
 	if (rc4_key_size == 1)
 	{
 		DEBUG(("40-bit encryption enabled\n"));
-		sec_make_40bit(sec_sign_key);
-		sec_make_40bit(sec_decrypt_key);
-		sec_make_40bit(sec_encrypt_key);
-		rc4_key_len = 8;
+		sec_make_40bit(This->secure.sign_key);
+		sec_make_40bit(This->secure.decrypt_key);
+		sec_make_40bit(This->secure.encrypt_key);
+		This->secure.rc4_key_len = 8;
 	}
 	else
 	{
 		DEBUG(("rc_4_key_size == %d, 128-bit encryption enabled\n", rc4_key_size));
-		rc4_key_len = 16;
+		This->secure.rc4_key_len = 16;
 	}
 
 	/* Save initial RC4 keys as update keys */
-	memcpy(sec_decrypt_update_key, sec_decrypt_key, 16);
-	memcpy(sec_encrypt_update_key, sec_encrypt_key, 16);
+	memcpy(This->secure.decrypt_update_key, This->secure.decrypt_key, 16);
+	memcpy(This->secure.encrypt_update_key, This->secure.encrypt_key, 16);
 
 	/* Initialise RC4 state arrays */
-	RC4_set_key(&rc4_decrypt_key, rc4_key_len, sec_decrypt_key);
-	RC4_set_key(&rc4_encrypt_key, rc4_key_len, sec_encrypt_key);
+	RC4_set_key(&This->secure.rc4_decrypt_key, This->secure.rc4_key_len, This->secure.decrypt_key);
+	RC4_set_key(&This->secure.rc4_encrypt_key, This->secure.rc4_key_len, This->secure.encrypt_key);
 }
 
-static uint8 pad_54[40] = {
+static const uint8 pad_54[40] = {
 	54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
 	54, 54, 54,
 	54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
 	54, 54, 54
 };
 
-static uint8 pad_92[48] = {
+static const uint8 pad_92[48] = {
 	92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92,
 	92, 92, 92, 92, 92, 92, 92,
 	92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92, 92,
@@ -226,7 +191,7 @@ sec_sign(uint8 * signature, int siglen, uint8 * session_key, int keylen, uint8 *
 
 /* Update an encryption key */
 static void
-sec_update(uint8 * key, uint8 * update_key)
+sec_update(RDPCLIENT * This, uint8 * key, uint8 * update_key)
 {
 	uint8 shasig[20];
 	SHA_CTX sha;
@@ -234,52 +199,52 @@ sec_update(uint8 * key, uint8 * update_key)
 	RC4_KEY update;
 
 	SHA1_Init(&sha);
-	SHA1_Update(&sha, update_key, rc4_key_len);
+	SHA1_Update(&sha, update_key, This->secure.rc4_key_len);
 	SHA1_Update(&sha, pad_54, 40);
-	SHA1_Update(&sha, key, rc4_key_len);
+	SHA1_Update(&sha, key, This->secure.rc4_key_len);
 	SHA1_Final(shasig, &sha);
 
 	MD5_Init(&md5);
-	MD5_Update(&md5, update_key, rc4_key_len);
+	MD5_Update(&md5, update_key, This->secure.rc4_key_len);
 	MD5_Update(&md5, pad_92, 48);
 	MD5_Update(&md5, shasig, 20);
 	MD5_Final(key, &md5);
 
-	RC4_set_key(&update, rc4_key_len, key);
-	RC4(&update, rc4_key_len, key, key);
+	RC4_set_key(&update, This->secure.rc4_key_len, key);
+	RC4(&update, This->secure.rc4_key_len, key, key);
 
-	if (rc4_key_len == 8)
+	if (This->secure.rc4_key_len == 8)
 		sec_make_40bit(key);
 }
 
 /* Encrypt data using RC4 */
 static void
-sec_encrypt(uint8 * data, int length)
+sec_encrypt(RDPCLIENT * This, uint8 * data, int length)
 {
-	if (sec_encrypt_use_count == 4096)
+	if (This->secure.encrypt_use_count == 4096)
 	{
-		sec_update(sec_encrypt_key, sec_encrypt_update_key);
-		RC4_set_key(&rc4_encrypt_key, rc4_key_len, sec_encrypt_key);
-		sec_encrypt_use_count = 0;
+		sec_update(This, This->secure.encrypt_key, This->secure.encrypt_update_key);
+		RC4_set_key(&This->secure.rc4_encrypt_key, This->secure.rc4_key_len, This->secure.encrypt_key);
+		This->secure.encrypt_use_count = 0;
 	}
 
-	RC4(&rc4_encrypt_key, length, data, data);
-	sec_encrypt_use_count++;
+	RC4(&This->secure.rc4_encrypt_key, length, data, data);
+	This->secure.encrypt_use_count++;
 }
 
 /* Decrypt data using RC4 */
 void
-sec_decrypt(uint8 * data, int length)
+sec_decrypt(RDPCLIENT * This, uint8 * data, int length)
 {
-	if (sec_decrypt_use_count == 4096)
+	if (This->secure.decrypt_use_count == 4096)
 	{
-		sec_update(sec_decrypt_key, sec_decrypt_update_key);
-		RC4_set_key(&rc4_decrypt_key, rc4_key_len, sec_decrypt_key);
-		sec_decrypt_use_count = 0;
+		sec_update(This, This->secure.decrypt_key, This->secure.decrypt_update_key);
+		RC4_set_key(&This->secure.rc4_decrypt_key, This->secure.rc4_key_len, This->secure.decrypt_key);
+		This->secure.decrypt_use_count = 0;
 	}
 
-	RC4(&rc4_decrypt_key, length, data, data);
-	sec_decrypt_use_count++;
+	RC4(&This->secure.rc4_decrypt_key, length, data, data);
+	This->secure.decrypt_use_count++;
 }
 
 static void
@@ -335,16 +300,16 @@ sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint32 modulus_size, uint8 * m
 
 /* Initialise secure transport packet */
 STREAM
-sec_init(uint32 flags, int maxlen)
+sec_init(RDPCLIENT * This, uint32 flags, int maxlen)
 {
 	int hdrlen;
 	STREAM s;
 
-	if (!g_licence_issued)
+	if (!This->licence_issued)
 		hdrlen = (flags & SEC_ENCRYPT) ? 12 : 4;
 	else
 		hdrlen = (flags & SEC_ENCRYPT) ? 12 : 0;
-	s = mcs_init(maxlen + hdrlen);
+	s = mcs_init(This, maxlen + hdrlen);
 	s_push_layer(s, sec_hdr, hdrlen);
 
 	return s;
@@ -352,12 +317,12 @@ sec_init(uint32 flags, int maxlen)
 
 /* Transmit secure transport packet over specified channel */
 void
-sec_send_to_channel(STREAM s, uint32 flags, uint16 channel)
+sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel)
 {
 	int datalen;
 
 	s_pop_layer(s, sec_hdr);
-	if (!g_licence_issued || (flags & SEC_ENCRYPT))
+	if (!This->licence_issued || (flags & SEC_ENCRYPT))
 		out_uint32_le(s, flags);
 
 	if (flags & SEC_ENCRYPT)
@@ -370,50 +335,50 @@ sec_send_to_channel(STREAM s, uint32 flags, uint16 channel)
 		hexdump(s->p + 8, datalen);
 #endif
 
-		sec_sign(s->p, 8, sec_sign_key, rc4_key_len, s->p + 8, datalen);
-		sec_encrypt(s->p + 8, datalen);
+		sec_sign(s->p, 8, This->secure.sign_key, This->secure.rc4_key_len, s->p + 8, datalen);
+		sec_encrypt(This, s->p + 8, datalen);
 	}
 
-	mcs_send_to_channel(s, channel);
+	mcs_send_to_channel(This, s, channel);
 }
 
 /* Transmit secure transport packet */
 
 void
-sec_send(STREAM s, uint32 flags)
+sec_send(RDPCLIENT * This, STREAM s, uint32 flags)
 {
-	sec_send_to_channel(s, flags, MCS_GLOBAL_CHANNEL);
+	sec_send_to_channel(This, s, flags, MCS_GLOBAL_CHANNEL);
 }
 
 
 /* Transfer the client random to the server */
 static void
-sec_establish_key(void)
+sec_establish_key(RDPCLIENT * This)
 {
-	uint32 length = server_public_key_len + SEC_PADDING_SIZE;
+	uint32 length = This->secure.server_public_key_len + SEC_PADDING_SIZE;
 	uint32 flags = SEC_CLIENT_RANDOM;
 	STREAM s;
 
-	s = sec_init(flags, length + 4);
+	s = sec_init(This, flags, length + 4);
 
 	out_uint32_le(s, length);
-	out_uint8p(s, sec_crypted_random, server_public_key_len);
+	out_uint8p(s, This->secure.crypted_random, This->secure.server_public_key_len);
 	out_uint8s(s, SEC_PADDING_SIZE);
 
 	s_mark_end(s);
-	sec_send(s, flags);
+	sec_send(This, s, flags);
 }
 
 /* Output connect initial data blob */
 static void
-sec_out_mcs_data(STREAM s)
+sec_out_mcs_data(RDPCLIENT * This, STREAM s)
 {
-	int hostlen = 2 * strlen(g_hostname);
+	int hostlen = 2 * strlen(This->hostname);
 	int length = 158 + 76 + 12 + 4;
 	unsigned int i;
 
-	if (g_num_channels > 0)
-		length += g_num_channels * 12 + 8;
+	if (This->num_channels > 0)
+		length += This->num_channels * 12 + 8;
 
 	if (hostlen > 30)
 		hostlen = 30;
@@ -438,30 +403,30 @@ sec_out_mcs_data(STREAM s)
 	/* Client information */
 	out_uint16_le(s, SEC_TAG_CLI_INFO);
 	out_uint16_le(s, 212);	/* length */
-	out_uint16_le(s, g_use_rdp5 ? 4 : 1);	/* RDP version. 1 == RDP4, 4 == RDP5. */
+	out_uint16_le(s, This->use_rdp5 ? 4 : 1);	/* RDP version. 1 == RDP4, 4 == RDP5. */
 	out_uint16_le(s, 8);
-	out_uint16_le(s, g_width);
-	out_uint16_le(s, g_height);
+	out_uint16_le(s, This->width);
+	out_uint16_le(s, This->height);
 	out_uint16_le(s, 0xca01);
 	out_uint16_le(s, 0xaa03);
-	out_uint32_le(s, g_keylayout);
+	out_uint32_le(s, This->keylayout);
 	out_uint32_le(s, 2600);	/* Client build. We are now 2600 compatible :-) */
 
 	/* Unicode name of client, padded to 32 bytes */
-	rdp_out_unistr(s, g_hostname, hostlen);
+	rdp_out_unistr(This, s, This->hostname, hostlen);
 	out_uint8s(s, 30 - hostlen);
 
 	/* See
 	   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wceddk40/html/cxtsksupportingremotedesktopprotocol.asp */
-	out_uint32_le(s, g_keyboard_type);
-	out_uint32_le(s, g_keyboard_subtype);
-	out_uint32_le(s, g_keyboard_functionkeys);
+	out_uint32_le(s, This->keyboard_type);
+	out_uint32_le(s, This->keyboard_subtype);
+	out_uint32_le(s, This->keyboard_functionkeys);
 	out_uint8s(s, 64);	/* reserved? 4 + 12 doublewords */
 	out_uint16_le(s, 0xca01);	/* colour depth? */
 	out_uint16_le(s, 1);
 
 	out_uint32(s, 0);
-	out_uint8(s, g_server_depth);
+	out_uint8(s, This->server_depth);
 	out_uint16_le(s, 0x0700);
 	out_uint8(s, 0);
 	out_uint32_le(s, 1);
@@ -469,26 +434,26 @@ sec_out_mcs_data(STREAM s)
 
 	out_uint16_le(s, SEC_TAG_CLI_4);
 	out_uint16_le(s, 12);
-	out_uint32_le(s, g_console_session ? 0xb : 9);
+	out_uint32_le(s, This->console_session ? 0xb : 9);
 	out_uint32(s, 0);
 
 	/* Client encryption settings */
 	out_uint16_le(s, SEC_TAG_CLI_CRYPT);
 	out_uint16_le(s, 12);	/* length */
-	out_uint32_le(s, g_encryption ? 0x3 : 0);	/* encryption supported, 128-bit supported */
+	out_uint32_le(s, This->encryption ? 0x3 : 0);	/* encryption supported, 128-bit supported */
 	out_uint32(s, 0);	/* Unknown */
 
-	DEBUG_RDP5(("g_num_channels is %d\n", g_num_channels));
-	if (g_num_channels > 0)
+	DEBUG_RDP5(("This->num_channels is %d\n", This->num_channels));
+	if (This->num_channels > 0)
 	{
 		out_uint16_le(s, SEC_TAG_CLI_CHANNELS);
-		out_uint16_le(s, g_num_channels * 12 + 8);	/* length */
-		out_uint32_le(s, g_num_channels);	/* number of virtual channels */
-		for (i = 0; i < g_num_channels; i++)
+		out_uint16_le(s, This->num_channels * 12 + 8);	/* length */
+		out_uint32_le(s, This->num_channels);	/* number of virtual channels */
+		for (i = 0; i < This->num_channels; i++)
 		{
-			DEBUG_RDP5(("Requesting channel %s\n", g_channels[i].name));
-			out_uint8a(s, g_channels[i].name, 8);
-			out_uint32_be(s, g_channels[i].flags);
+			DEBUG_RDP5(("Requesting channel %s\n", This->channels[i].name));
+			out_uint8a(s, This->channels[i].name, 8);
+			out_uint32_be(s, This->channels[i].flags);
 		}
 	}
 
@@ -497,7 +462,7 @@ sec_out_mcs_data(STREAM s)
 
 /* Parse a public key structure */
 static BOOL
-sec_parse_public_key(STREAM s, uint8 ** modulus, uint8 ** exponent)
+sec_parse_public_key(RDPCLIENT * This, STREAM s, uint8 ** modulus, uint8 ** exponent)
 {
 	uint32 magic, modulus_len;
 
@@ -520,19 +485,19 @@ sec_parse_public_key(STREAM s, uint8 ** modulus, uint8 ** exponent)
 	in_uint8p(s, *exponent, SEC_EXPONENT_SIZE);
 	in_uint8p(s, *modulus, modulus_len);
 	in_uint8s(s, SEC_PADDING_SIZE);
-	server_public_key_len = modulus_len;
+	This->secure.server_public_key_len = modulus_len;
 
 	return s_check(s);
 }
 
 static BOOL
-sec_parse_x509_key(X509 * cert)
+sec_parse_x509_key(RDPCLIENT * This, X509 * cert)
 {
 	EVP_PKEY *epk = NULL;
 	/* By some reason, Microsoft sets the OID of the Public RSA key to
 	   the oid for "MD5 with RSA Encryption" instead of "RSA Encryption"
 
-	   Kudos to Richard Levitte for the following (. intiutive .) 
+	   Kudos to Richard Levitte for the following (. intiutive .)
 	   lines of code that resets the OID and let's us extract the key. */
 	if (OBJ_obj2nid(cert->cert_info->key->algor->algorithm) == NID_md5WithRSAEncryption)
 	{
@@ -547,13 +512,13 @@ sec_parse_x509_key(X509 * cert)
 		return False;
 	}
 
-	server_public_key = RSAPublicKey_dup((RSA *) epk->pkey.ptr);
+	This->secure.server_public_key = RSAPublicKey_dup((RSA *) epk->pkey.ptr);
 	EVP_PKEY_free(epk);
 
-	server_public_key_len = RSA_size(server_public_key);
-	if ((server_public_key_len < 64) || (server_public_key_len > SEC_MAX_MODULUS_SIZE))
+	This->secure.server_public_key_len = RSA_size(This->secure.server_public_key);
+	if ((This->secure.server_public_key_len < 64) || (This->secure.server_public_key_len > SEC_MAX_MODULUS_SIZE))
 	{
-		error("Bad server public key size (%u bits)\n", server_public_key_len * 8);
+		error("Bad server public key size (%u bits)\n", This->secure.server_public_key_len * 8);
 		return False;
 	}
 
@@ -563,7 +528,7 @@ sec_parse_x509_key(X509 * cert)
 
 /* Parse a crypto information structure */
 static BOOL
-sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
+sec_parse_crypt_info(RDPCLIENT * This, STREAM s, uint32 * rc4_key_size,
 		     uint8 ** server_random, uint8 ** modulus, uint8 ** exponent)
 {
 	uint32 crypt_level, random_len, rsa_info_len;
@@ -608,7 +573,7 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 			switch (tag)
 			{
 				case SEC_TAG_PUBKEY:
-					if (!sec_parse_public_key(s, modulus, exponent))
+					if (!sec_parse_public_key(This, s, modulus, exponent))
 						return False;
 					DEBUG_RDP5(("Got Public key, RDP4-style\n"));
 
@@ -617,7 +582,7 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 				case SEC_TAG_KEYSIG:
 					/* Is this a Microsoft key that we just got? */
 					/* Care factor: zero! */
-					/* Actually, it would probably be a good idea to check if the public key is signed with this key, and then store this 
+					/* Actually, it would probably be a good idea to check if the public key is signed with this key, and then store this
 					   key as a known key of the hostname. This would prevent some MITM-attacks. */
 					break;
 
@@ -663,12 +628,12 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 #endif
 		}
 
-		/* Do da funky X.509 stuffy 
+		/* Do da funky X.509 stuffy
 
 		   "How did I find out about this?  I looked up and saw a
 		   bright light and when I came to I had a scar on my forehead
 		   and knew about X.500"
-		   - Peter Gutman in a early version of 
+		   - Peter Gutman in a early version of
 		   http://www.cs.auckland.ac.nz/~pgut001/pubs/x509guide.txt
 		 */
 
@@ -683,11 +648,11 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 			return False;
 		}
 
-		/* Currently, we don't use the CA Certificate. 
-		   FIXME: 
-		   *) Verify the server certificate (server_cert) with the 
+		/* Currently, we don't use the CA Certificate.
+		   FIXME:
+		   *) Verify the server certificate (server_cert) with the
 		   CA certificate.
-		   *) Store the CA Certificate with the hostname of the 
+		   *) Store the CA Certificate with the hostname of the
 		   server we are connecting to as key, and compare it
 		   when we connect the next time, in order to prevent
 		   MITM-attacks.
@@ -706,11 +671,11 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 
 		in_uint8s(s, 16);	/* Padding */
 
-		/* Note: Verifying the server certificate must be done here, 
+		/* Note: Verifying the server certificate must be done here,
 		   before sec_parse_public_key since we'll have to apply
 		   serious violence to the key after this */
 
-		if (!sec_parse_x509_key(server_cert))
+		if (!sec_parse_x509_key(This, server_cert))
 		{
 			DEBUG_RDP5(("Didn't parse X509 correctly\n"));
 			X509_free(server_cert);
@@ -724,13 +689,13 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 
 /* Process crypto information blob */
 static void
-sec_process_crypt_info(STREAM s)
+sec_process_crypt_info(RDPCLIENT * This, STREAM s)
 {
 	uint8 *server_random, *modulus, *exponent;
 	uint8 client_random[SEC_RANDOM_SIZE];
 	uint32 rc4_key_size;
 
-	if (!sec_parse_crypt_info(s, &rc4_key_size, &server_random, &modulus, &exponent))
+	if (!sec_parse_crypt_info(This, s, &rc4_key_size, &server_random, &modulus, &exponent))
 	{
 		DEBUG(("Failed to parse crypt info\n"));
 		return;
@@ -739,59 +704,59 @@ sec_process_crypt_info(STREAM s)
 	DEBUG(("Generating client random\n"));
 	generate_random(client_random);
 
-	if (NULL != server_public_key)
-	{			/* Which means we should use 
+	if (NULL != This->secure.server_public_key)
+	{			/* Which means we should use
 				   RDP5-style encryption */
 		uint8 inr[SEC_MAX_MODULUS_SIZE];
-		uint32 padding_len = server_public_key_len - SEC_RANDOM_SIZE;
+		uint32 padding_len = This->secure.server_public_key_len - SEC_RANDOM_SIZE;
 
 		/* This is what the MS client do: */
 		memset(inr, 0, padding_len);
 		/*  *ARIGL!* Plaintext attack, anyone?
 		   I tried doing:
 		   generate_random(inr);
-		   ..but that generates connection errors now and then (yes, 
-		   "now and then". Something like 0 to 3 attempts needed before a 
-		   successful connection. Nice. Not! 
+		   ..but that generates connection errors now and then (yes,
+		   "now and then". Something like 0 to 3 attempts needed before a
+		   successful connection. Nice. Not!
 		 */
 		memcpy(inr + padding_len, client_random, SEC_RANDOM_SIZE);
 		reverse(inr + padding_len, SEC_RANDOM_SIZE);
 
-		RSA_public_encrypt(server_public_key_len,
-				   inr, sec_crypted_random, server_public_key, RSA_NO_PADDING);
+		RSA_public_encrypt(This->secure.server_public_key_len,
+				   inr, This->secure.crypted_random, This->secure.server_public_key, RSA_NO_PADDING);
 
-		reverse(sec_crypted_random, server_public_key_len);
+		reverse(This->secure.crypted_random, This->secure.server_public_key_len);
 
-		RSA_free(server_public_key);
-		server_public_key = NULL;
+		RSA_free(This->secure.server_public_key);
+		This->secure.server_public_key = NULL;
 	}
 	else
 	{			/* RDP4-style encryption */
-		sec_rsa_encrypt(sec_crypted_random,
-				client_random, SEC_RANDOM_SIZE, server_public_key_len, modulus,
+		sec_rsa_encrypt(This->secure.crypted_random,
+				client_random, SEC_RANDOM_SIZE, This->secure.server_public_key_len, modulus,
 				exponent);
 	}
-	sec_generate_keys(client_random, server_random, rc4_key_size);
+	sec_generate_keys(This, client_random, server_random, rc4_key_size);
 }
 
 
 /* Process SRV_INFO, find RDP version supported by server */
 static void
-sec_process_srv_info(STREAM s)
+sec_process_srv_info(RDPCLIENT * This, STREAM s)
 {
-	in_uint16_le(s, g_server_rdp_version);
-	DEBUG_RDP5(("Server RDP version is %d\n", g_server_rdp_version));
-	if (1 == g_server_rdp_version)
+	in_uint16_le(s, This->server_rdp_version);
+	DEBUG_RDP5(("Server RDP version is %d\n", This->server_rdp_version));
+	if (1 == This->server_rdp_version)
 	{
-		g_use_rdp5 = 0;
-		g_server_depth = 8;
+		This->use_rdp5 = 0;
+		This->server_depth = 8;
 	}
 }
 
 
 /* Process connect response data blob */
 void
-sec_process_mcs_data(STREAM s)
+sec_process_mcs_data(RDPCLIENT * This, STREAM s)
 {
 	uint16 tag, length;
 	uint8 *next_tag;
@@ -815,16 +780,16 @@ sec_process_mcs_data(STREAM s)
 		switch (tag)
 		{
 			case SEC_TAG_SRV_INFO:
-				sec_process_srv_info(s);
+				sec_process_srv_info(This, s);
 				break;
 
 			case SEC_TAG_SRV_CRYPT:
-				sec_process_crypt_info(s);
+				sec_process_crypt_info(This, s);
 				break;
 
 			case SEC_TAG_SRV_CHANNELS:
 				/* FIXME: We should parse this information and
-				   use it to map RDP5 channels to MCS 
+				   use it to map RDP5 channels to MCS
 				   channels */
 				break;
 
@@ -838,13 +803,13 @@ sec_process_mcs_data(STREAM s)
 
 /* Receive secure transport packet */
 STREAM
-sec_recv(uint8 * rdpver)
+sec_recv(RDPCLIENT * This, uint8 * rdpver)
 {
 	uint32 sec_flags;
 	uint16 channel;
 	STREAM s;
 
-	while ((s = mcs_recv(&channel, rdpver)) != NULL)
+	while ((s = mcs_recv(This, &channel, rdpver)) != NULL)
 	{
 		if (rdpver != NULL)
 		{
@@ -853,24 +818,24 @@ sec_recv(uint8 * rdpver)
 				if (*rdpver & 0x80)
 				{
 					in_uint8s(s, 8);	/* signature */
-					sec_decrypt(s->p, s->end - s->p);
+					sec_decrypt(This, s->p, s->end - s->p);
 				}
 				return s;
 			}
 		}
-		if (g_encryption || !g_licence_issued)
+		if (This->encryption || !This->licence_issued)
 		{
 			in_uint32_le(s, sec_flags);
 
 			if (sec_flags & SEC_ENCRYPT)
 			{
 				in_uint8s(s, 8);	/* signature */
-				sec_decrypt(s->p, s->end - s->p);
+				sec_decrypt(This, s->p, s->end - s->p);
 			}
 
 			if (sec_flags & SEC_LICENCE_NEG)
 			{
-				licence_process(s);
+				licence_process(This, s);
 				continue;
 			}
 
@@ -879,7 +844,7 @@ sec_recv(uint8 * rdpver)
 				uint8 swapbyte;
 
 				in_uint8s(s, 8);	/* signature */
-				sec_decrypt(s->p, s->end - s->p);
+				sec_decrypt(This, s->p, s->end - s->p);
 
 				/* Check for a redirect packet, starts with 00 04 */
 				if (s->p[0] == 0 && s->p[1] == 4)
@@ -912,7 +877,7 @@ sec_recv(uint8 * rdpver)
 
 		if (channel != MCS_GLOBAL_CHANNEL)
 		{
-			channel_process(s, channel);
+			channel_process(This, s, channel);
 			*rdpver = 0xff;
 			return s;
 		}
@@ -925,59 +890,59 @@ sec_recv(uint8 * rdpver)
 
 /* Establish a secure connection */
 BOOL
-sec_connect(char *server, char *username)
+sec_connect(RDPCLIENT * This, char *server, char *username)
 {
 	struct stream mcs_data;
 
 	/* We exchange some RDP data during the MCS-Connect */
 	mcs_data.size = 512;
 	mcs_data.p = mcs_data.data = (uint8 *) xmalloc(mcs_data.size);
-	sec_out_mcs_data(&mcs_data);
+	sec_out_mcs_data(This, &mcs_data);
 
-	if (!mcs_connect(server, &mcs_data, username))
+	if (!mcs_connect(This, server, &mcs_data, username))
 		return False;
 
 	/*      sec_process_mcs_data(&mcs_data); */
-	if (g_encryption)
-		sec_establish_key();
+	if (This->encryption)
+		sec_establish_key(This);
 	xfree(mcs_data.data);
 	return True;
 }
 
 /* Establish a secure connection */
 BOOL
-sec_reconnect(char *server)
+sec_reconnect(RDPCLIENT * This, char *server)
 {
 	struct stream mcs_data;
 
 	/* We exchange some RDP data during the MCS-Connect */
 	mcs_data.size = 512;
 	mcs_data.p = mcs_data.data = (uint8 *) xmalloc(mcs_data.size);
-	sec_out_mcs_data(&mcs_data);
+	sec_out_mcs_data(This, &mcs_data);
 
-	if (!mcs_reconnect(server, &mcs_data))
+	if (!mcs_reconnect(This, server, &mcs_data))
 		return False;
 
 	/*      sec_process_mcs_data(&mcs_data); */
-	if (g_encryption)
-		sec_establish_key();
+	if (This->encryption)
+		sec_establish_key(This);
 	xfree(mcs_data.data);
 	return True;
 }
 
 /* Disconnect a connection */
 void
-sec_disconnect(void)
+sec_disconnect(RDPCLIENT * This)
 {
-	mcs_disconnect();
+	mcs_disconnect(This);
 }
 
 /* reset the state of the sec layer */
 void
-sec_reset_state(void)
+sec_reset_state(RDPCLIENT * This)
 {
-	g_server_rdp_version = 0;
-	sec_encrypt_use_count = 0;
-	sec_decrypt_use_count = 0;
-	mcs_reset_state();
+	This->server_rdp_version = 0;
+	This->secure.encrypt_use_count = 0;
+	This->secure.decrypt_use_count = 0;
+	mcs_reset_state(This);
 }

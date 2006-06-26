@@ -2,7 +2,7 @@
    rdesktop: A Remote Desktop Protocol client.
    RDP licensing negotiation
    Copyright (C) Matthew Chapman 1999-2005
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -12,7 +12,7 @@
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -21,17 +21,9 @@
 #include "rdesktop.h"
 #include <openssl/rc4.h>
 
-extern char g_username[64];
-extern char g_hostname[16];
-
-static uint8 g_licence_key[16];
-static uint8 g_licence_sign_key[16];
-
-BOOL g_licence_issued = False;
-
 /* Generate a session key and RC4 keys, given client and server randoms */
 static void
-licence_generate_keys(uint8 * client_random, uint8 * server_random, uint8 * pre_master_secret)
+licence_generate_keys(RDPCLIENT * This, uint8 * client_random, uint8 * server_random, uint8 * pre_master_secret)
 {
 	uint8 master_secret[48];
 	uint8 key_block[48];
@@ -41,22 +33,22 @@ licence_generate_keys(uint8 * client_random, uint8 * server_random, uint8 * pre_
 	sec_hash_48(key_block, master_secret, server_random, client_random, 'A');
 
 	/* Store first 16 bytes of session key as MAC secret */
-	memcpy(g_licence_sign_key, key_block, 16);
+	memcpy(This->licence.sign_key, key_block, 16);
 
 	/* Generate RC4 key from next 16 bytes */
-	sec_hash_16(g_licence_key, &key_block[16], client_random, server_random);
+	sec_hash_16(This->licence.key, &key_block[16], client_random, server_random);
 }
 
 static void
-licence_generate_hwid(uint8 * hwid)
+licence_generate_hwid(RDPCLIENT * This, uint8 * hwid)
 {
 	buf_out_uint32(hwid, 2);
-	strncpy((char *) (hwid + 4), g_hostname, LICENCE_HWID_SIZE - 4);
+	strncpy((char *) (hwid + 4), This->hostname, LICENCE_HWID_SIZE - 4);
 }
 
 /* Present an existing licence to the server */
 static void
-licence_present(uint8 * client_random, uint8 * rsa_data,
+licence_present(RDPCLIENT * This, uint8 * client_random, uint8 * rsa_data,
 		uint8 * licence_data, int licence_size, uint8 * hwid, uint8 * signature)
 {
 	uint32 sec_flags = SEC_LICENCE_NEG;
@@ -65,7 +57,7 @@ licence_present(uint8 * client_random, uint8 * rsa_data,
 		licence_size + LICENCE_HWID_SIZE + LICENCE_SIGNATURE_SIZE;
 	STREAM s;
 
-	s = sec_init(sec_flags, length + 4);
+	s = sec_init(This, sec_flags, length + 4);
 
 	out_uint8(s, LICENCE_TAG_PRESENT);
 	out_uint8(s, 2);	/* version */
@@ -92,12 +84,12 @@ licence_present(uint8 * client_random, uint8 * rsa_data,
 	out_uint8p(s, signature, LICENCE_SIGNATURE_SIZE);
 
 	s_mark_end(s);
-	sec_send(s, sec_flags);
+	sec_send(This, s, sec_flags);
 }
 
 /* Send a licence request packet */
 static void
-licence_send_request(uint8 * client_random, uint8 * rsa_data, char *user, char *host)
+licence_send_request(RDPCLIENT * This, uint8 * client_random, uint8 * rsa_data, char *user, char *host)
 {
 	uint32 sec_flags = SEC_LICENCE_NEG;
 	uint16 userlen = strlen(user) + 1;
@@ -105,7 +97,7 @@ licence_send_request(uint8 * client_random, uint8 * rsa_data, char *user, char *
 	uint16 length = 128 + userlen + hostlen;
 	STREAM s;
 
-	s = sec_init(sec_flags, length + 2);
+	s = sec_init(This, sec_flags, length + 2);
 
 	out_uint8(s, LICENCE_TAG_REQUEST);
 	out_uint8(s, 2);	/* version */
@@ -130,12 +122,12 @@ licence_send_request(uint8 * client_random, uint8 * rsa_data, char *user, char *
 	out_uint8p(s, host, hostlen);
 
 	s_mark_end(s);
-	sec_send(s, sec_flags);
+	sec_send(This, s, sec_flags);
 }
 
 /* Process a licence demand packet */
 static void
-licence_process_demand(STREAM s)
+licence_process_demand(RDPCLIENT * This, STREAM s)
 {
 	uint8 null_data[SEC_MODULUS_SIZE];
 	uint8 *server_random;
@@ -151,36 +143,36 @@ licence_process_demand(STREAM s)
 	/* We currently use null client keys. This is a bit naughty but, hey,
 	   the security of licence negotiation isn't exactly paramount. */
 	memset(null_data, 0, sizeof(null_data));
-	licence_generate_keys(null_data, server_random, null_data);
+	licence_generate_keys(This, null_data, server_random, null_data);
 
-	licence_size = load_licence(&licence_data);
+	licence_size = load_licence(This, &licence_data);
 	if (licence_size > 0)
 	{
 		/* Generate a signature for the HWID buffer */
-		licence_generate_hwid(hwid);
-		sec_sign(signature, 16, g_licence_sign_key, 16, hwid, sizeof(hwid));
+		licence_generate_hwid(This, hwid);
+		sec_sign(signature, 16, This->licence.sign_key, 16, hwid, sizeof(hwid));
 
 		/* Now encrypt the HWID */
-		RC4_set_key(&crypt_key, 16, g_licence_key);
+		RC4_set_key(&crypt_key, 16, This->licence.key);
 		RC4(&crypt_key, sizeof(hwid), hwid, hwid);
 
-		licence_present(null_data, null_data, licence_data, licence_size, hwid, signature);
+		licence_present(This, null_data, null_data, licence_data, licence_size, hwid, signature);
 		xfree(licence_data);
 		return;
 	}
 
-	licence_send_request(null_data, null_data, g_username, g_hostname);
+	licence_send_request(This, null_data, null_data, This->username, This->hostname);
 }
 
 /* Send an authentication response packet */
 static void
-licence_send_authresp(uint8 * token, uint8 * crypt_hwid, uint8 * signature)
+licence_send_authresp(RDPCLIENT * This, uint8 * token, uint8 * crypt_hwid, uint8 * signature)
 {
 	uint32 sec_flags = SEC_LICENCE_NEG;
 	uint16 length = 58;
 	STREAM s;
 
-	s = sec_init(sec_flags, length + 2);
+	s = sec_init(This, sec_flags, length + 2);
 
 	out_uint8(s, LICENCE_TAG_AUTHRESP);
 	out_uint8(s, 2);	/* version */
@@ -197,7 +189,7 @@ licence_send_authresp(uint8 * token, uint8 * crypt_hwid, uint8 * signature)
 	out_uint8p(s, signature, LICENCE_SIGNATURE_SIZE);
 
 	s_mark_end(s);
-	sec_send(s, sec_flags);
+	sec_send(This, s, sec_flags);
 }
 
 /* Parse an authentication request packet */
@@ -223,7 +215,7 @@ licence_parse_authreq(STREAM s, uint8 ** token, uint8 ** signature)
 
 /* Process an authentication request packet */
 static void
-licence_process_authreq(STREAM s)
+licence_process_authreq(RDPCLIENT * This, STREAM s)
 {
 	uint8 *in_token, *in_sig;
 	uint8 out_token[LICENCE_TOKEN_SIZE], decrypt_token[LICENCE_TOKEN_SIZE];
@@ -237,25 +229,25 @@ licence_process_authreq(STREAM s)
 	memcpy(out_token, in_token, LICENCE_TOKEN_SIZE);
 
 	/* Decrypt the token. It should read TEST in Unicode. */
-	RC4_set_key(&crypt_key, 16, g_licence_key);
+	RC4_set_key(&crypt_key, 16, This->licence.key);
 	RC4(&crypt_key, LICENCE_TOKEN_SIZE, in_token, decrypt_token);
 
 	/* Generate a signature for a buffer of token and HWID */
-	licence_generate_hwid(hwid);
+	licence_generate_hwid(This, hwid);
 	memcpy(sealed_buffer, decrypt_token, LICENCE_TOKEN_SIZE);
 	memcpy(sealed_buffer + LICENCE_TOKEN_SIZE, hwid, LICENCE_HWID_SIZE);
-	sec_sign(out_sig, 16, g_licence_sign_key, 16, sealed_buffer, sizeof(sealed_buffer));
+	sec_sign(out_sig, 16, This->licence.sign_key, 16, sealed_buffer, sizeof(sealed_buffer));
 
 	/* Now encrypt the HWID */
-	RC4_set_key(&crypt_key, 16, g_licence_key);
+	RC4_set_key(&crypt_key, 16, This->licence.key);
 	RC4(&crypt_key, LICENCE_HWID_SIZE, hwid, crypt_hwid);
 
-	licence_send_authresp(out_token, crypt_hwid, out_sig);
+	licence_send_authresp(This, out_token, crypt_hwid, out_sig);
 }
 
 /* Process an licence issue packet */
 static void
-licence_process_issue(STREAM s)
+licence_process_issue(RDPCLIENT * This, STREAM s)
 {
 	RC4_KEY crypt_key;
 	uint32 length;
@@ -267,14 +259,14 @@ licence_process_issue(STREAM s)
 	if (!s_check_rem(s, length))
 		return;
 
-	RC4_set_key(&crypt_key, 16, g_licence_key);
+	RC4_set_key(&crypt_key, 16, This->licence.key);
 	RC4(&crypt_key, length, s->p, s->p);
 
 	in_uint16(s, check);
 	if (check != 0)
 		return;
 
-	g_licence_issued = True;
+	This->licence_issued = True;
 
 	in_uint8s(s, 2);	/* pad */
 
@@ -288,13 +280,13 @@ licence_process_issue(STREAM s)
 			return;
 	}
 
-	g_licence_issued = True;
-	save_licence(s->p, length);
+	This->licence_issued = True;
+	save_licence(This, s->p, length);
 }
 
 /* Process a licence packet */
 void
-licence_process(STREAM s)
+licence_process(RDPCLIENT * This, STREAM s)
 {
 	uint8 tag;
 
@@ -304,15 +296,15 @@ licence_process(STREAM s)
 	switch (tag)
 	{
 		case LICENCE_TAG_DEMAND:
-			licence_process_demand(s);
+			licence_process_demand(This, s);
 			break;
 
 		case LICENCE_TAG_AUTHREQ:
-			licence_process_authreq(s);
+			licence_process_authreq(This, s);
 			break;
 
 		case LICENCE_TAG_ISSUE:
-			licence_process_issue(s);
+			licence_process_issue(This, s);
 			break;
 
 		case LICENCE_TAG_REISSUE:

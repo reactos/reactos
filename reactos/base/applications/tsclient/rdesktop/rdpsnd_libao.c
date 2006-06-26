@@ -30,12 +30,12 @@
 #define MAX_QUEUE	10
 #define WAVEOUTBUF	16
 
-int g_dsp_fd;
+int This->dsp_;
 ao_device *o_device = NULL;
 int default_driver;
 int g_samplerate;
-int g_channels;
-BOOL g_dsp_busy = False;
+int This->channels;
+BOOL This->dsp_bu = False;
 static BOOL g_reopened;
 static short g_samplewidth;
 
@@ -57,7 +57,7 @@ wave_out_open(void)
 
 	format.bits = 16;
 	format.channels = 2;
-	g_channels = 2;
+	This->channels = 2;
 	format.rate = 44100;
 	g_samplerate = 44100;
 	format.byte_format = AO_FMT_LITTLE;
@@ -68,7 +68,7 @@ wave_out_open(void)
 		return False;
 	}
 
-	g_dsp_fd = 0;
+	This->dsp_ = 0;
 	queue_lo = queue_hi = 0;
 
 	g_reopened = True;
@@ -117,7 +117,7 @@ wave_out_set_format(WAVEFORMATEX * pwfx)
 
 	format.bits = pwfx->wBitsPerSample;
 	format.channels = pwfx->nChannels;
-	g_channels = pwfx->nChannels;
+	This->channels = pwfx->nChannels;
 	format.rate = 44100;
 	g_samplerate = pwfx->nSamplesPerSec;
 	format.byte_format = AO_FMT_LITTLE;
@@ -166,7 +166,7 @@ wave_out_write(STREAM s, uint16 tick, uint8 index)
 	/* we steal the data buffer from s, give it a new one */
 	s->data = malloc(s->size);
 
-	if (!g_dsp_busy)
+	if (!This->dsp_bu)
 		wave_out_play();
 }
 
@@ -192,7 +192,7 @@ wave_out_play(void)
 
 	if (queue_lo == queue_hi)
 	{
-		g_dsp_busy = 0;
+		This->dsp_bu = 0;
 		return;
 	}
 
@@ -221,13 +221,13 @@ wave_out_play(void)
 			   data with channels in mind: 1234 -> 12123434
 			   If we have a mono-channel, we can expand the data by simply
 			   doubling the sample-data: 1234 -> 11223344 */
-			if (g_channels == 2)
+			if (This->channels == 2)
 				offset = ((i * 2) - (i & 1)) * g_samplewidth;
 			else
 				offset = (i * 2) * g_samplewidth;
 
 			memcpy(&outbuf[offset], out->p, g_samplewidth);
-			memcpy(&outbuf[g_channels * g_samplewidth + offset], out->p, g_samplewidth);
+			memcpy(&outbuf[This->channels * g_samplewidth + offset], out->p, g_samplewidth);
 
 			out->p += g_samplewidth;
 			len += 2 * g_samplewidth;
@@ -268,6 +268,6 @@ wave_out_play(void)
 		queue_lo = (queue_lo + 1) % MAX_QUEUE;
 	}
 
-	g_dsp_busy = 1;
+	This->dsp_bu = 1;
 	return;
 }

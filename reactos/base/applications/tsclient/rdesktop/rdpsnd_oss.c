@@ -37,8 +37,8 @@
 
 #define MAX_QUEUE	10
 
-int g_dsp_fd;
-BOOL g_dsp_busy = False;
+int This->dsp_;
+BOOL This->dsp_bu = False;
 static int g_snd_rate;
 static short g_samplewidth;
 static BOOL g_driver_broken = False;
@@ -61,21 +61,21 @@ wave_out_open(void)
 		dsp_dev = xstrdup("/dev/dsp");
 	}
 
-	if ((g_dsp_fd = open(dsp_dev, O_WRONLY | O_NONBLOCK)) == -1)
+	if ((This->dsp_ = open(dsp_dev, O_WRONLY | O_NONBLOCK)) == -1)
 	{
 		perror(dsp_dev);
 		return False;
 	}
 
 	/* Non-blocking so that user interface is responsive */
-	fcntl(g_dsp_fd, F_SETFL, fcntl(g_dsp_fd, F_GETFL) | O_NONBLOCK);
+	fcntl(This->dsp_, F_SETFL, fcntl(This->dsp_, F_GETFL) | O_NONBLOCK);
 	return True;
 }
 
 void
 wave_out_close(void)
 {
-	close(g_dsp_fd);
+	close(This->dsp_);
 }
 
 BOOL
@@ -96,8 +96,8 @@ wave_out_set_format(WAVEFORMATEX * pwfx)
 {
 	int stereo, format, fragments;
 
-	ioctl(g_dsp_fd, SNDCTL_DSP_RESET, NULL);
-	ioctl(g_dsp_fd, SNDCTL_DSP_SYNC, NULL);
+	ioctl(This->dsp_, SNDCTL_DSP_RESET, NULL);
+	ioctl(This->dsp_, SNDCTL_DSP_SYNC, NULL);
 
 	if (pwfx->wBitsPerSample == 8)
 		format = AFMT_U8;
@@ -106,10 +106,10 @@ wave_out_set_format(WAVEFORMATEX * pwfx)
 
 	g_samplewidth = pwfx->wBitsPerSample / 8;
 
-	if (ioctl(g_dsp_fd, SNDCTL_DSP_SETFMT, &format) == -1)
+	if (ioctl(This->dsp_, SNDCTL_DSP_SETFMT, &format) == -1)
 	{
 		perror("SNDCTL_DSP_SETFMT");
-		close(g_dsp_fd);
+		close(This->dsp_);
 		return False;
 	}
 
@@ -123,34 +123,34 @@ wave_out_set_format(WAVEFORMATEX * pwfx)
 		stereo = 0;
 	}
 
-	if (ioctl(g_dsp_fd, SNDCTL_DSP_STEREO, &stereo) == -1)
+	if (ioctl(This->dsp_, SNDCTL_DSP_STEREO, &stereo) == -1)
 	{
 		perror("SNDCTL_DSP_CHANNELS");
-		close(g_dsp_fd);
+		close(This->dsp_);
 		return False;
 	}
 
 	g_snd_rate = pwfx->nSamplesPerSec;
-	if (ioctl(g_dsp_fd, SNDCTL_DSP_SPEED, &g_snd_rate) == -1)
+	if (ioctl(This->dsp_, SNDCTL_DSP_SPEED, &g_snd_rate) == -1)
 	{
 		perror("SNDCTL_DSP_SPEED");
-		close(g_dsp_fd);
+		close(This->dsp_);
 		return False;
 	}
 
 	/* try to get 7 fragments of 2^12 bytes size */
 	fragments = (7 << 16) + 12;
-	ioctl(g_dsp_fd, SNDCTL_DSP_SETFRAGMENT, &fragments);
+	ioctl(This->dsp_, SNDCTL_DSP_SETFRAGMENT, &fragments);
 
 	if (!g_driver_broken)
 	{
 		audio_buf_info info;
 
 		memset(&info, 0, sizeof(info));
-		if (ioctl(g_dsp_fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
+		if (ioctl(This->dsp_, SNDCTL_DSP_GETOSPACE, &info) == -1)
 		{
 			perror("SNDCTL_DSP_GETOSPACE");
-			close(g_dsp_fd);
+			close(This->dsp_);
 			return False;
 		}
 
@@ -193,7 +193,7 @@ wave_out_volume(uint16 left, uint16 right)
 		close(fd_mix);
 	}
 
-	if (ioctl(g_dsp_fd, MIXER_WRITE(SOUND_MIXER_PCM), &volume) == -1)
+	if (ioctl(This->dsp_, MIXER_WRITE(SOUND_MIXER_PCM), &volume) == -1)
 	{
 		perror("MIXER_WRITE(SOUND_MIXER_PCM)");
 		use_dev_mixer = True;
@@ -223,7 +223,7 @@ wave_out_write(STREAM s, uint16 tick, uint8 index)
 	/* we steal the data buffer from s, give it a new one */
 	s->data = (uint8 *) malloc(s->size);
 
-	if (!g_dsp_busy)
+	if (!This->dsp_bu)
 		wave_out_play();
 }
 
@@ -243,7 +243,7 @@ wave_out_play(void)
 	{
 		if (queue_lo == queue_hi)
 		{
-			g_dsp_busy = 0;
+			This->dsp_bu = 0;
 			return;
 		}
 
@@ -263,7 +263,7 @@ wave_out_play(void)
 		if (!g_driver_broken)
 		{
 			memset(&info, 0, sizeof(info));
-			if (ioctl(g_dsp_fd, SNDCTL_DSP_GETOSPACE, &info) == -1)
+			if (ioctl(This->dsp_, SNDCTL_DSP_GETOSPACE, &info) == -1)
 			{
 				perror("SNDCTL_DSP_GETOSPACE");
 				return;
@@ -271,7 +271,7 @@ wave_out_play(void)
 
 			if (info.fragments == 0)
 			{
-				g_dsp_busy = 1;
+				This->dsp_bu = 1;
 				return;
 			}
 
@@ -283,12 +283,12 @@ wave_out_play(void)
 		}
 
 
-		len = write(g_dsp_fd, out->p, len);
+		len = write(This->dsp_, out->p, len);
 		if (len == -1)
 		{
 			if (errno != EWOULDBLOCK)
 				perror("write audio");
-			g_dsp_busy = 1;
+			This->dsp_bu = 1;
 			return;
 		}
 
@@ -311,7 +311,7 @@ wave_out_play(void)
 			}
 			else
 			{
-				g_dsp_busy = 1;
+				This->dsp_bu = 1;
 				return;
 			}
 		}

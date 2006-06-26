@@ -1,22 +1,22 @@
 /*  -*- c-basic-offset: 8 -*-
-+   rdesktop: A Remote Desktop Protocol client.
-+   Support for the Matrox "lspci" channel
-+   Copyright (C) 2005 Matrox Graphics Inc. 
-+
-+   This program is free software; you can redistribute it and/or modify
-+   it under the terms of the GNU General Public License as published by
-+   the Free Software Foundation; either version 2 of the License, or
-+   (at your option) any later version.
-+
-+   This program is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+   GNU General Public License for more details.
-+
-+   You should have received a copy of the GNU General Public License
-+   along with this program; if not, write to the Free Software
-+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+*/
+   rdesktop: A Remote Desktop Protocol client.
+   Support for the Matrox "lspci" channel
+   Copyright (C) 2005 Matrox Graphics Inc. 
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
 
 #include "rdesktop.h"
 #include <sys/types.h>
@@ -37,12 +37,12 @@ typedef struct _pci_device
 
 static pci_device current_device;
 
-static void lspci_send(const char *output);
+static void lspci_send(RDPCLIENT * This, const char *output);
 
 
 /* Handle one line of output from the lspci subprocess */
 static BOOL
-handle_child_line(const char *line, void *data)
+handle_child_line(RDPCLIENT * This, const char *line, void *data)
 {
 	const char *val;
 	char buf[1024];
@@ -94,7 +94,7 @@ handle_child_line(const char *line, void *data)
 			 current_device.klass, current_device.vendor,
 			 current_device.device, current_device.subvendor,
 			 current_device.subdevice, current_device.revision, current_device.progif);
-		lspci_send(buf);
+		lspci_send(This, buf);
 		memset(&current_device, 0, sizeof(current_device));
 	}
 	else
@@ -107,16 +107,16 @@ handle_child_line(const char *line, void *data)
 
 /* Process one line of input from virtual channel */
 static BOOL
-lspci_process_line(const char *line, void *data)
+lspci_process_line(RDPCLIENT * This, const char *line, void *data)
 {
 	char *lspci_command[5] = { "lspci", "-m", "-n", "-v", NULL };
 
 	if (!strcmp(line, "LSPCI"))
 	{
 		memset(&current_device, 0, sizeof(current_device));
-		subprocess(lspci_command, handle_child_line, NULL);
+		subprocess(This, lspci_command, handle_child_line, NULL);
 		/* Send single dot to indicate end of enumeration */
-		lspci_send(".\n");
+		lspci_send(This, ".\n");
 	}
 	else
 	{
@@ -128,7 +128,7 @@ lspci_process_line(const char *line, void *data)
 
 /* Process new data from the virtual channel */
 static void
-lspci_process(STREAM s)
+lspci_process(RDPCLIENT * This, STREAM s)
 {
 	unsigned int pkglen;
 	static char *rest = NULL;
@@ -143,29 +143,29 @@ lspci_process(STREAM s)
 	hexdump(s->p, pkglen);
 #endif
 
-	str_handle_lines(buf, &rest, lspci_process_line, NULL);
+	str_handle_lines(This, buf, &rest, lspci_process_line, NULL);
 	xfree(buf);
 }
 
 /* Initialize this module: Register the lspci channel */
 BOOL
-lspci_init(void)
+lspci_init(RDPCLIENT * This)
 {
 	lspci_channel =
-		channel_register("lspci", CHANNEL_OPTION_INITIALIZED | CHANNEL_OPTION_ENCRYPT_RDP,
+		channel_register(This, "lspci", CHANNEL_OPTION_INITIALIZED | CHANNEL_OPTION_ENCRYPT_RDP,
 				 lspci_process);
 	return (lspci_channel != NULL);
 }
 
 /* Send data to channel */
 static void
-lspci_send(const char *output)
+lspci_send(RDPCLIENT * This, const char *output)
 {
 	STREAM s;
 	size_t len;
 
 	len = strlen(output);
-	s = channel_init(lspci_channel, len);
+	s = channel_init(This, lspci_channel, len);
 	out_uint8p(s, output, len) s_mark_end(s);
 
 #if 0
@@ -173,5 +173,5 @@ lspci_send(const char *output)
 	hexdump(s->channel_hdr + 8, s->end - s->channel_hdr - 8);
 #endif
 
-	channel_send(s, lspci_channel);
+	channel_send(This, s, lspci_channel);
 }

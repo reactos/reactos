@@ -34,29 +34,10 @@
 #include "rdesktop.h"
 #include "scancodes.h"
 
-#define KEYMAP_SIZE 0xffff+1
 #define KEYMAP_MASK 0xffff
 #define KEYMAP_MAX_LINE_LENGTH 80
 
-extern Display *g_display;
-extern Window g_wnd;
-extern char g_keymapname[16];
-extern unsigned int g_keylayout;
-extern int g_keyboard_type;
-extern int g_keyboard_subtype;
-extern int g_keyboard_functionkeys;
-extern int g_win_button_size;
-extern BOOL g_enable_compose;
-extern BOOL g_use_rdp5;
-extern BOOL g_numlock_sync;
-
-static BOOL keymap_loaded;
-static key_translation *keymap[KEYMAP_SIZE];
-static int min_keycode;
-static uint16 remote_modifier_state = 0;
-static uint16 saved_remote_modifier_state = 0;
-
-static void update_modifier_state(uint8 scancode, BOOL pressed);
+static void update_modifier_state(RDPCLIENT * This, uint8 scancode, BOOL pressed);
 
 /* Free key_translation structure, including linked list */
 static void
@@ -73,7 +54,7 @@ free_key_translation(key_translation * ptr)
 }
 
 static void
-add_to_keymap(char *keyname, uint8 scancode, uint16 modifiers, char *mapname)
+add_to_keymap(RDPCLIENT * This, char *keyname, uint8 scancode, uint16 modifiers, char *mapname)
 {
 	KeySym keysym;
 	key_translation *tr;
@@ -92,14 +73,14 @@ add_to_keymap(char *keyname, uint8 scancode, uint16 modifiers, char *mapname)
 	memset(tr, 0, sizeof(key_translation));
 	tr->scancode = scancode;
 	tr->modifiers = modifiers;
-	free_key_translation(keymap[keysym & KEYMAP_MASK]);
-	keymap[keysym & KEYMAP_MASK] = tr;
+	free_key_translation(This->xkeymap.keymap[keysym & KEYMAP_MASK]);
+	This->xkeymap.keymap[keysym & KEYMAP_MASK] = tr;
 
 	return;
 }
 
 static void
-add_sequence(char *rest, char *mapname)
+add_sequence(RDPCLIENT * This, char *rest, char *mapname)
 {
 	KeySym keysym;
 	key_translation *tr, **prev_next;
@@ -125,8 +106,8 @@ add_sequence(char *rest, char *mapname)
 
 	DEBUG_KBD(("Adding sequence for keysym (0x%lx, %s) -> ", keysym, keyname));
 
-	free_key_translation(keymap[keysym & KEYMAP_MASK]);
-	prev_next = &keymap[keysym & KEYMAP_MASK];
+	free_key_translation(This->xkeymap.keymap[keysym & KEYMAP_MASK]);
+	prev_next = &This->xkeymap.keymap[keysym & KEYMAP_MASK];
 
 	while (*rest)
 	{
@@ -160,7 +141,7 @@ add_sequence(char *rest, char *mapname)
 }
 
 BOOL
-xkeymap_from_locale(const char *locale)
+xkeymap_from_locale(RDPCLIENT * This, const char *locale)
 {
 	char *str, *ptr;
 	FILE *fp;
@@ -205,7 +186,7 @@ xkeymap_from_locale(const char *locale)
 	if (fp)
 	{
 		fclose(fp);
-		STRNCPY(g_keymapname, str, sizeof(g_keymapname));
+		STRNCPY(This->keymapname, str, sizeof(This->keymapname));
 		xfree(str);
 		return True;
 	}
@@ -276,7 +257,7 @@ xkeymap_open(const char *filename)
 }
 
 static BOOL
-xkeymap_read(char *mapname)
+xkeymap_read(RDPCLIENT * This, char *mapname)
 {
 	FILE *fp;
 	char line[KEYMAP_MAX_LINE_LENGTH];
@@ -315,7 +296,7 @@ xkeymap_read(char *mapname)
 		/* Include */
 		if (str_startswith(line, "include "))
 		{
-			if (!xkeymap_read(line + sizeof("include ") - 1))
+			if (!xkeymap_read(This, line + sizeof("include ") - 1))
 				return False;
 			continue;
 		}
@@ -323,8 +304,8 @@ xkeymap_read(char *mapname)
 		/* map */
 		if (str_startswith(line, "map "))
 		{
-			g_keylayout = strtoul(line + sizeof("map ") - 1, NULL, 16);
-			DEBUG_KBD(("Keylayout 0x%x\n", g_keylayout));
+			This->keylayout = strtoul(line + sizeof("map ") - 1, NULL, 16);
+			DEBUG_KBD(("Keylayout 0x%x\n", This->keylayout));
 			continue;
 		}
 
@@ -332,40 +313,40 @@ xkeymap_read(char *mapname)
 		if (str_startswith(line, "enable_compose"))
 		{
 			DEBUG_KBD(("Enabling compose handling\n"));
-			g_enable_compose = True;
+			This->enable_compose = True;
 			continue;
 		}
 
 		/* sequence */
 		if (str_startswith(line, "sequence"))
 		{
-			add_sequence(line + sizeof("sequence") - 1, mapname);
+			add_sequence(This, line + sizeof("sequence") - 1, mapname);
 			continue;
 		}
 
 		/* keyboard_type */
 		if (str_startswith(line, "keyboard_type "))
 		{
-			g_keyboard_type = strtol(line + sizeof("keyboard_type ") - 1, NULL, 16);
-			DEBUG_KBD(("keyboard_type 0x%x\n", g_keyboard_type));
+			This->keyboard_type = strtol(line + sizeof("keyboard_type ") - 1, NULL, 16);
+			DEBUG_KBD(("keyboard_type 0x%x\n", This->keyboard_type));
 			continue;
 		}
 
 		/* keyboard_subtype */
 		if (str_startswith(line, "keyboard_subtype "))
 		{
-			g_keyboard_subtype =
+			This->keyboard_subtype =
 				strtol(line + sizeof("keyboard_subtype ") - 1, NULL, 16);
-			DEBUG_KBD(("keyboard_subtype 0x%x\n", g_keyboard_subtype));
+			DEBUG_KBD(("keyboard_subtype 0x%x\n", This->keyboard_subtype));
 			continue;
 		}
 
 		/* keyboard_functionkeys */
 		if (str_startswith(line, "keyboard_functionkeys "))
 		{
-			g_keyboard_functionkeys =
+			This->keyboard_functionkeys =
 				strtol(line + sizeof("keyboard_functionkeys ") - 1, NULL, 16);
-			DEBUG_KBD(("keyboard_functionkeys 0x%x\n", g_keyboard_functionkeys));
+			DEBUG_KBD(("keyboard_functionkeys 0x%x\n", This->keyboard_functionkeys));
 			continue;
 		}
 
@@ -421,7 +402,7 @@ xkeymap_read(char *mapname)
 			MASK_ADD_BITS(modifiers, MapInhibitMask);
 		}
 
-		add_to_keymap(keyname, scancode, modifiers, mapname);
+		add_to_keymap(This, keyname, scancode, modifiers, mapname);
 
 		if (strstr(line_rest, "addupper"))
 		{
@@ -430,7 +411,7 @@ xkeymap_read(char *mapname)
 			for (p = keyname; *p; p++)
 				*p = toupper((int) *p);
 			MASK_ADD_BITS(modifiers, MapLeftShiftMask);
-			add_to_keymap(keyname, scancode, modifiers, mapname);
+			add_to_keymap(This, keyname, scancode, modifiers, mapname);
 		}
 	}
 
@@ -441,21 +422,21 @@ xkeymap_read(char *mapname)
 
 /* Before connecting and creating UI */
 void
-xkeymap_init(void)
+xkeymap_init(RDPCLIENT * This)
 {
 	unsigned int max_keycode;
 
-	if (strcmp(g_keymapname, "none"))
+	if (strcmp(This->keymapname, "none"))
 	{
-		if (xkeymap_read(g_keymapname))
-			keymap_loaded = True;
+		if (xkeymap_read(This, This->keymapname))
+			This->xkeymap.keymap_loaded = True;
 	}
 
-	XDisplayKeycodes(g_display, &min_keycode, (int *) &max_keycode);
+	XDisplayKeycodes(This->display, &This->xkeymap.min_keycode, (int *) &max_keycode);
 }
 
 static void
-send_winkey(uint32 ev_time, BOOL pressed, BOOL leftkey)
+send_winkey(RDPCLIENT * This, uint32 ev_time, BOOL pressed, BOOL leftkey)
 {
 	uint8 winkey;
 
@@ -466,57 +447,57 @@ send_winkey(uint32 ev_time, BOOL pressed, BOOL leftkey)
 
 	if (pressed)
 	{
-		if (g_use_rdp5)
+		if (This->use_rdp5)
 		{
-			rdp_send_scancode(ev_time, RDP_KEYPRESS, winkey);
+			rdp_send_scancode(This, ev_time, RDP_KEYPRESS, winkey);
 		}
 		else
 		{
 			/* RDP4 doesn't support winkey. Fake with Ctrl-Esc */
-			rdp_send_scancode(ev_time, RDP_KEYPRESS, SCANCODE_CHAR_LCTRL);
-			rdp_send_scancode(ev_time, RDP_KEYPRESS, SCANCODE_CHAR_ESC);
+			rdp_send_scancode(This, ev_time, RDP_KEYPRESS, SCANCODE_CHAR_LCTRL);
+			rdp_send_scancode(This, ev_time, RDP_KEYPRESS, SCANCODE_CHAR_ESC);
 		}
 	}
 	else
 	{
 		/* key released */
-		if (g_use_rdp5)
+		if (This->use_rdp5)
 		{
-			rdp_send_scancode(ev_time, RDP_KEYRELEASE, winkey);
+			rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, winkey);
 		}
 		else
 		{
-			rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_ESC);
-			rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LCTRL);
+			rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_ESC);
+			rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LCTRL);
 		}
 	}
 }
 
 static void
-reset_winkey(uint32 ev_time)
+reset_winkey(RDPCLIENT * This, uint32 ev_time)
 {
-	if (g_use_rdp5)
+	if (This->use_rdp5)
 	{
 		/* For some reason, it seems to suffice to release
 		 *either* the left or right winkey. */
-		rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LWIN);
+		rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LWIN);
 	}
 }
 
 /* Handle special key combinations */
 BOOL
-handle_special_keys(uint32 keysym, unsigned int state, uint32 ev_time, BOOL pressed)
+handle_special_keys(RDPCLIENT * This, uint32 keysym, unsigned int state, uint32 ev_time, BOOL pressed)
 {
 	switch (keysym)
 	{
 		case XK_Return:
-			if ((get_key_state(state, XK_Alt_L) || get_key_state(state, XK_Alt_R))
-			    && (get_key_state(state, XK_Control_L)
-				|| get_key_state(state, XK_Control_R)))
+			if ((get_key_state(This, state, XK_Alt_L) || get_key_state(This, state, XK_Alt_R))
+			    && (get_key_state(This, state, XK_Control_L)
+				|| get_key_state(This, state, XK_Control_R)))
 			{
 				/* Ctrl-Alt-Enter: toggle full screen */
 				if (pressed)
-					xwin_toggle_fullscreen();
+					xwin_toggle_fullscreen(This);
 				return True;
 			}
 			break;
@@ -525,9 +506,9 @@ handle_special_keys(uint32 keysym, unsigned int state, uint32 ev_time, BOOL pres
 			/* Send Break sequence E0 46 E0 C6 */
 			if (pressed)
 			{
-				rdp_send_scancode(ev_time, RDP_KEYPRESS,
+				rdp_send_scancode(This, ev_time, RDP_KEYPRESS,
 						  (SCANCODE_EXTENDED | 0x46));
-				rdp_send_scancode(ev_time, RDP_KEYPRESS,
+				rdp_send_scancode(This, ev_time, RDP_KEYPRESS,
 						  (SCANCODE_EXTENDED | 0xc6));
 			}
 			/* No release sequence */
@@ -545,17 +526,17 @@ handle_special_keys(uint32 keysym, unsigned int state, uint32 ev_time, BOOL pres
 			   is released. */
 			if (pressed)
 			{
-				rdp_send_input(ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0xe1, 0);
-				rdp_send_input(ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0x1d, 0);
-				rdp_send_input(ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0x45, 0);
-				rdp_send_input(ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0xe1, 0);
-				rdp_send_input(ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0x9d, 0);
-				rdp_send_input(ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0xc5, 0);
+				rdp_send_input(This, ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0xe1, 0);
+				rdp_send_input(This, ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0x1d, 0);
+				rdp_send_input(This, ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0x45, 0);
+				rdp_send_input(This, ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0xe1, 0);
+				rdp_send_input(This, ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0x9d, 0);
+				rdp_send_input(This, ev_time, RDP_INPUT_SCANCODE, RDP_KEYPRESS, 0xc5, 0);
 			}
 			else
 			{
 				/* Release Left Ctrl */
-				rdp_send_input(ev_time, RDP_INPUT_SCANCODE, RDP_KEYRELEASE,
+				rdp_send_input(This, ev_time, RDP_INPUT_SCANCODE, RDP_KEYRELEASE,
 					       0x1d, 0);
 			}
 			return True;
@@ -564,29 +545,29 @@ handle_special_keys(uint32 keysym, unsigned int state, uint32 ev_time, BOOL pres
 		case XK_Meta_L:	/* Windows keys */
 		case XK_Super_L:
 		case XK_Hyper_L:
-			send_winkey(ev_time, pressed, True);
+			send_winkey(This, ev_time, pressed, True);
 			return True;
 			break;
 
 		case XK_Meta_R:
 		case XK_Super_R:
 		case XK_Hyper_R:
-			send_winkey(ev_time, pressed, False);
+			send_winkey(This, ev_time, pressed, False);
 			return True;
 			break;
 
 		case XK_space:
 			/* Prevent access to the Windows system menu in single app mode */
-			if (g_win_button_size
-			    && (get_key_state(state, XK_Alt_L) || get_key_state(state, XK_Alt_R)))
+			if (This->win_button_size
+			    && (get_key_state(This, state, XK_Alt_L) || get_key_state(This, state, XK_Alt_R)))
 				return True;
 			break;
 
 		case XK_Num_Lock:
 			/* Synchronize on key release */
-			if (g_numlock_sync && !pressed)
-				rdp_send_input(0, RDP_INPUT_SYNCHRONIZE, 0,
-					       ui_get_numlock_state(read_keyboard_state()), 0);
+			if (This->numlock_sync && !pressed)
+				rdp_send_input(This, 0, RDP_INPUT_SYNCHRONIZE, 0,
+					       ui_get_numlock_state(This, read_keyboard_state(This)), 0);
 
 			/* Inhibit */
 			return True;
@@ -594,7 +575,7 @@ handle_special_keys(uint32 keysym, unsigned int state, uint32 ev_time, BOOL pres
 		case XK_Overlay1_Enable:
 			/* Toggle SeamlessRDP */
 			if (pressed)
-				ui_seamless_toggle();
+				ui_seamless_toggle(This);
 			break;
 
 	}
@@ -603,12 +584,12 @@ handle_special_keys(uint32 keysym, unsigned int state, uint32 ev_time, BOOL pres
 
 
 key_translation
-xkeymap_translate_key(uint32 keysym, unsigned int keycode, unsigned int state)
+xkeymap_translate_key(RDPCLIENT * This, uint32 keysym, unsigned int keycode, unsigned int state)
 {
 	key_translation tr = { 0, 0, 0, 0 };
 	key_translation *ptr;
 
-	ptr = keymap[keysym & KEYMAP_MASK];
+	ptr = This->xkeymap.keymap[keysym & KEYMAP_MASK];
 	if (ptr)
 	{
 		tr = *ptr;
@@ -638,7 +619,7 @@ xkeymap_translate_key(uint32 keysym, unsigned int keycode, unsigned int state)
 			   solve this, we are releasing Shift if Ctrl
 			   is on, but only if Shift isn't physically pressed. */
 			if (MASK_HAS_BITS(tr.modifiers, MapShiftMask)
-			    && MASK_HAS_BITS(remote_modifier_state, MapCtrlMask)
+			    && MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapCtrlMask)
 			    && !MASK_HAS_BITS(state, ShiftMask))
 			{
 				DEBUG_KBD(("Non-physical Shift + Ctrl pressed, releasing Shift\n"));
@@ -651,14 +632,14 @@ xkeymap_translate_key(uint32 keysym, unsigned int keycode, unsigned int state)
 	}
 	else
 	{
-		if (keymap_loaded)
+		if (This->xkeymap.keymap_loaded)
 			warning("No translation for (keysym 0x%lx, %s)\n", keysym,
 				get_ksname(keysym));
 
 		/* not in keymap, try to interpret the raw scancode */
-		if (((int) keycode >= min_keycode) && (keycode <= 0x60))
+		if (((int) keycode >= This->xkeymap.min_keycode) && (keycode <= 0x60))
 		{
-			tr.scancode = keycode - min_keycode;
+			tr.scancode = keycode - This->xkeymap.min_keycode;
 
 			/* The modifiers to send for this key should be
 			   obtained from the local state. Currently, only
@@ -680,11 +661,11 @@ xkeymap_translate_key(uint32 keysym, unsigned int keycode, unsigned int state)
 }
 
 void
-xkeymap_send_keys(uint32 keysym, unsigned int keycode, unsigned int state, uint32 ev_time,
+xkeymap_send_keys(RDPCLIENT * This, uint32 keysym, unsigned int keycode, unsigned int state, uint32 ev_time,
 		  BOOL pressed, uint8 nesting)
 {
 	key_translation tr, *ptr;
-	tr = xkeymap_translate_key(keysym, keycode, state);
+	tr = xkeymap_translate_key(This, keysym, keycode, state);
 
 	if (tr.seq_keysym == 0)
 	{
@@ -694,14 +675,14 @@ xkeymap_send_keys(uint32 keysym, unsigned int keycode, unsigned int state, uint3
 
 		if (pressed)
 		{
-			save_remote_modifiers(tr.scancode);
-			ensure_remote_modifiers(ev_time, tr);
-			rdp_send_scancode(ev_time, RDP_KEYPRESS, tr.scancode);
-			restore_remote_modifiers(ev_time, tr.scancode);
+			save_remote_modifiers(This, tr.scancode);
+			ensure_remote_modifiers(This, ev_time, tr);
+			rdp_send_scancode(This, ev_time, RDP_KEYPRESS, tr.scancode);
+			restore_remote_modifiers(This, ev_time, tr.scancode);
 		}
 		else
 		{
-			rdp_send_scancode(ev_time, RDP_KEYRELEASE, tr.scancode);
+			rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, tr.scancode);
 		}
 		return;
 	}
@@ -721,8 +702,8 @@ xkeymap_send_keys(uint32 keysym, unsigned int keycode, unsigned int state, uint3
 				return;
 			}
 
-			xkeymap_send_keys(ptr->seq_keysym, keycode, state, ev_time, True, nesting);
-			xkeymap_send_keys(ptr->seq_keysym, keycode, state, ev_time, False, nesting);
+			xkeymap_send_keys(This, ptr->seq_keysym, keycode, state, ev_time, True, nesting);
+			xkeymap_send_keys(This, ptr->seq_keysym, keycode, state, ev_time, False, nesting);
 			ptr = ptr->next;
 		}
 		while (ptr);
@@ -784,16 +765,16 @@ is_modifier(uint8 scancode)
 }
 
 void
-save_remote_modifiers(uint8 scancode)
+save_remote_modifiers(RDPCLIENT * This, uint8 scancode)
 {
 	if (is_modifier(scancode))
 		return;
 
-	saved_remote_modifier_state = remote_modifier_state;
+	This->xkeymap.saved_remote_modifier_state = This->xkeymap.remote_modifier_state;
 }
 
 void
-restore_remote_modifiers(uint32 ev_time, uint8 scancode)
+restore_remote_modifiers(RDPCLIENT * This, uint32 ev_time, uint8 scancode)
 {
 	key_translation dummy;
 
@@ -801,22 +782,22 @@ restore_remote_modifiers(uint32 ev_time, uint8 scancode)
 		return;
 
 	dummy.scancode = 0;
-	dummy.modifiers = saved_remote_modifier_state;
-	ensure_remote_modifiers(ev_time, dummy);
+	dummy.modifiers = This->xkeymap.saved_remote_modifier_state;
+	ensure_remote_modifiers(This, ev_time, dummy);
 }
 
 void
-ensure_remote_modifiers(uint32 ev_time, key_translation tr)
+ensure_remote_modifiers(RDPCLIENT * This, uint32 ev_time, key_translation tr)
 {
 	/* If this key is a modifier, do nothing */
 	if (is_modifier(tr.scancode))
 		return;
 
-	if (!g_numlock_sync)
+	if (!This->numlock_sync)
 	{
 		/* NumLock */
 		if (MASK_HAS_BITS(tr.modifiers, MapNumLockMask)
-		    != MASK_HAS_BITS(remote_modifier_state, MapNumLockMask))
+		    != MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapNumLockMask))
 		{
 			/* The remote modifier state is not correct */
 			uint16 new_remote_state;
@@ -825,61 +806,61 @@ ensure_remote_modifiers(uint32 ev_time, key_translation tr)
 			{
 				DEBUG_KBD(("Remote NumLock state is incorrect, activating NumLock.\n"));
 				new_remote_state = KBD_FLAG_NUMLOCK;
-				remote_modifier_state = MapNumLockMask;
+				This->xkeymap.remote_modifier_state = MapNumLockMask;
 			}
 			else
 			{
 				DEBUG_KBD(("Remote NumLock state is incorrect, deactivating NumLock.\n"));
 				new_remote_state = 0;
-				remote_modifier_state = 0;
+				This->xkeymap.remote_modifier_state = 0;
 			}
 
-			rdp_send_input(0, RDP_INPUT_SYNCHRONIZE, 0, new_remote_state, 0);
+			rdp_send_input(This, 0, RDP_INPUT_SYNCHRONIZE, 0, new_remote_state, 0);
 		}
 	}
 
 
 	/* Shift. Left shift and right shift are treated as equal; either is fine. */
 	if (MASK_HAS_BITS(tr.modifiers, MapShiftMask)
-	    != MASK_HAS_BITS(remote_modifier_state, MapShiftMask))
+	    != MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapShiftMask))
 	{
 		/* The remote modifier state is not correct */
 		if (MASK_HAS_BITS(tr.modifiers, MapLeftShiftMask))
 		{
 			/* Needs left shift. Send down. */
-			rdp_send_scancode(ev_time, RDP_KEYPRESS, SCANCODE_CHAR_LSHIFT);
+			rdp_send_scancode(This, ev_time, RDP_KEYPRESS, SCANCODE_CHAR_LSHIFT);
 		}
 		else if (MASK_HAS_BITS(tr.modifiers, MapRightShiftMask))
 		{
 			/* Needs right shift. Send down. */
-			rdp_send_scancode(ev_time, RDP_KEYPRESS, SCANCODE_CHAR_RSHIFT);
+			rdp_send_scancode(This, ev_time, RDP_KEYPRESS, SCANCODE_CHAR_RSHIFT);
 		}
 		else
 		{
 			/* Should not use this modifier. Send up for shift currently pressed. */
-			if (MASK_HAS_BITS(remote_modifier_state, MapLeftShiftMask))
+			if (MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapLeftShiftMask))
 				/* Left shift is down */
-				rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LSHIFT);
+				rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LSHIFT);
 			else
 				/* Right shift is down */
-				rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RSHIFT);
+				rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RSHIFT);
 		}
 	}
 
 	/* AltGr */
 	if (MASK_HAS_BITS(tr.modifiers, MapAltGrMask)
-	    != MASK_HAS_BITS(remote_modifier_state, MapAltGrMask))
+	    != MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapAltGrMask))
 	{
 		/* The remote modifier state is not correct */
 		if (MASK_HAS_BITS(tr.modifiers, MapAltGrMask))
 		{
 			/* Needs this modifier. Send down. */
-			rdp_send_scancode(ev_time, RDP_KEYPRESS, SCANCODE_CHAR_RALT);
+			rdp_send_scancode(This, ev_time, RDP_KEYPRESS, SCANCODE_CHAR_RALT);
 		}
 		else
 		{
 			/* Should not use this modifier. Send up. */
-			rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RALT);
+			rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RALT);
 		}
 	}
 
@@ -888,7 +869,7 @@ ensure_remote_modifiers(uint32 ev_time, key_translation tr)
 
 
 unsigned int
-read_keyboard_state()
+read_keyboard_state(RDPCLIENT * This)
 {
 #ifdef RDP2VNC
 	return 0;
@@ -897,18 +878,18 @@ read_keyboard_state()
 	Window wdummy;
 	int dummy;
 
-	XQueryPointer(g_display, g_wnd, &wdummy, &wdummy, &dummy, &dummy, &dummy, &dummy, &state);
+	XQueryPointer(This->display, This->wnd, &wdummy, &wdummy, &dummy, &dummy, &dummy, &dummy, &state);
 	return state;
 #endif
 }
 
 
 uint16
-ui_get_numlock_state(unsigned int state)
+ui_get_numlock_state(RDPCLIENT * This, unsigned int state)
 {
 	uint16 numlock_state = 0;
 
-	if (get_key_state(state, XK_Num_Lock))
+	if (get_key_state(This, state, XK_Num_Lock))
 		numlock_state = KBD_FLAG_NUMLOCK;
 
 	return numlock_state;
@@ -916,100 +897,100 @@ ui_get_numlock_state(unsigned int state)
 
 
 void
-reset_modifier_keys()
+reset_modifier_keys(RDPCLIENT * This)
 {
-	unsigned int state = read_keyboard_state();
+	unsigned int state = read_keyboard_state(This);
 
 	/* reset keys */
 	uint32 ev_time;
 	ev_time = time(NULL);
 
-	if (MASK_HAS_BITS(remote_modifier_state, MapLeftShiftMask)
-	    && !get_key_state(state, XK_Shift_L))
-		rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LSHIFT);
+	if (MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapLeftShiftMask)
+	    && !get_key_state(This, state, XK_Shift_L))
+		rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LSHIFT);
 
-	if (MASK_HAS_BITS(remote_modifier_state, MapRightShiftMask)
-	    && !get_key_state(state, XK_Shift_R))
-		rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RSHIFT);
+	if (MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapRightShiftMask)
+	    && !get_key_state(This, state, XK_Shift_R))
+		rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RSHIFT);
 
-	if (MASK_HAS_BITS(remote_modifier_state, MapLeftCtrlMask)
-	    && !get_key_state(state, XK_Control_L))
-		rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LCTRL);
+	if (MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapLeftCtrlMask)
+	    && !get_key_state(This, state, XK_Control_L))
+		rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LCTRL);
 
-	if (MASK_HAS_BITS(remote_modifier_state, MapRightCtrlMask)
-	    && !get_key_state(state, XK_Control_R))
-		rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RCTRL);
+	if (MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapRightCtrlMask)
+	    && !get_key_state(This, state, XK_Control_R))
+		rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RCTRL);
 
-	if (MASK_HAS_BITS(remote_modifier_state, MapLeftAltMask) && !get_key_state(state, XK_Alt_L))
-		rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LALT);
+	if (MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapLeftAltMask) && !get_key_state(This, state, XK_Alt_L))
+		rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_LALT);
 
-	if (MASK_HAS_BITS(remote_modifier_state, MapRightAltMask) &&
-	    !get_key_state(state, XK_Alt_R) && !get_key_state(state, XK_Mode_switch)
-	    && !get_key_state(state, XK_ISO_Level3_Shift))
-		rdp_send_scancode(ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RALT);
+	if (MASK_HAS_BITS(This->xkeymap.remote_modifier_state, MapRightAltMask) &&
+	    !get_key_state(This, state, XK_Alt_R) && !get_key_state(This, state, XK_Mode_switch)
+	    && !get_key_state(This, state, XK_ISO_Level3_Shift))
+		rdp_send_scancode(This, ev_time, RDP_KEYRELEASE, SCANCODE_CHAR_RALT);
 
-	reset_winkey(ev_time);
+	reset_winkey(This, ev_time);
 
-	if (g_numlock_sync)
-		rdp_send_input(ev_time, RDP_INPUT_SYNCHRONIZE, 0, ui_get_numlock_state(state), 0);
+	if (This->numlock_sync)
+		rdp_send_input(This, ev_time, RDP_INPUT_SYNCHRONIZE, 0, ui_get_numlock_state(This, state), 0);
 }
 
 
 static void
-update_modifier_state(uint8 scancode, BOOL pressed)
+update_modifier_state(RDPCLIENT * This, uint8 scancode, BOOL pressed)
 {
 #ifdef WITH_DEBUG_KBD
 	uint16 old_modifier_state;
 
-	old_modifier_state = remote_modifier_state;
+	old_modifier_state = This->xkeymap.remote_modifier_state;
 #endif
 
 	switch (scancode)
 	{
 		case SCANCODE_CHAR_LSHIFT:
-			MASK_CHANGE_BIT(remote_modifier_state, MapLeftShiftMask, pressed);
+			MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state, MapLeftShiftMask, pressed);
 			break;
 		case SCANCODE_CHAR_RSHIFT:
-			MASK_CHANGE_BIT(remote_modifier_state, MapRightShiftMask, pressed);
+			MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state, MapRightShiftMask, pressed);
 			break;
 		case SCANCODE_CHAR_LCTRL:
-			MASK_CHANGE_BIT(remote_modifier_state, MapLeftCtrlMask, pressed);
+			MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state, MapLeftCtrlMask, pressed);
 			break;
 		case SCANCODE_CHAR_RCTRL:
-			MASK_CHANGE_BIT(remote_modifier_state, MapRightCtrlMask, pressed);
+			MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state, MapRightCtrlMask, pressed);
 			break;
 		case SCANCODE_CHAR_LALT:
-			MASK_CHANGE_BIT(remote_modifier_state, MapLeftAltMask, pressed);
+			MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state, MapLeftAltMask, pressed);
 			break;
 		case SCANCODE_CHAR_RALT:
-			MASK_CHANGE_BIT(remote_modifier_state, MapRightAltMask, pressed);
+			MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state, MapRightAltMask, pressed);
 			break;
 		case SCANCODE_CHAR_LWIN:
-			MASK_CHANGE_BIT(remote_modifier_state, MapLeftWinMask, pressed);
+			MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state, MapLeftWinMask, pressed);
 			break;
 		case SCANCODE_CHAR_RWIN:
-			MASK_CHANGE_BIT(remote_modifier_state, MapRightWinMask, pressed);
+			MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state, MapRightWinMask, pressed);
 			break;
 		case SCANCODE_CHAR_NUMLOCK:
 			/* KeyReleases for NumLocks are sent immediately. Toggle the
 			   modifier state only on Keypress */
-			if (pressed && !g_numlock_sync)
+			if (pressed && !This->numlock_sync)
 			{
 				BOOL newNumLockState;
 				newNumLockState =
 					(MASK_HAS_BITS
-					 (remote_modifier_state, MapNumLockMask) == False);
-				MASK_CHANGE_BIT(remote_modifier_state,
+					 (This->xkeymap.remote_modifier_state, MapNumLockMask) == False);
+				MASK_CHANGE_BIT(This->xkeymap.remote_modifier_state,
 						MapNumLockMask, newNumLockState);
 			}
 	}
 
 #ifdef WITH_DEBUG_KBD
-	if (old_modifier_state != remote_modifier_state)
+	if (old_modifier_state != This->xkeymap.remote_modifier_state)
 	{
 		DEBUG_KBD(("Before updating modifier_state:0x%x, pressed=0x%x\n",
 			   old_modifier_state, pressed));
-		DEBUG_KBD(("After updating modifier_state:0x%x\n", remote_modifier_state));
+		DEBUG_KBD(("After updating modifier_state:0x%x\n", This->xkeymap.remote_modifier_state));
 	}
 #endif
 
@@ -1017,20 +998,20 @@ update_modifier_state(uint8 scancode, BOOL pressed)
 
 /* Send keyboard input */
 void
-rdp_send_scancode(uint32 time, uint16 flags, uint8 scancode)
+rdp_send_scancode(RDPCLIENT * This, uint32 time, uint16 flags, uint8 scancode)
 {
-	update_modifier_state(scancode, !(flags & RDP_KEYRELEASE));
+	update_modifier_state(This, scancode, !(flags & RDP_KEYRELEASE));
 
 	if (scancode & SCANCODE_EXTENDED)
 	{
 		DEBUG_KBD(("Sending extended scancode=0x%x, flags=0x%x\n",
 			   scancode & ~SCANCODE_EXTENDED, flags));
-		rdp_send_input(time, RDP_INPUT_SCANCODE, flags | KBD_FLAG_EXT,
+		rdp_send_input(This, time, RDP_INPUT_SCANCODE, flags | KBD_FLAG_EXT,
 			       scancode & ~SCANCODE_EXTENDED, 0);
 	}
 	else
 	{
 		DEBUG_KBD(("Sending scancode=0x%x, flags=0x%x\n", scancode, flags));
-		rdp_send_input(time, RDP_INPUT_SCANCODE, flags, scancode, 0);
+		rdp_send_input(This, time, RDP_INPUT_SCANCODE, flags, scancode, 0);
 	}
 }

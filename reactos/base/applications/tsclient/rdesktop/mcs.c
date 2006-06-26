@@ -2,27 +2,23 @@
    rdesktop: A Remote Desktop Protocol client.
    Protocol services - Multipoint Communications Service
    Copyright (C) Matthew Chapman 1999-2005
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
 #include "rdesktop.h"
-
-uint16 g_mcs_userid;
-extern VCHANNEL g_channels[];
-extern unsigned int g_num_channels;
 
 /* Parse an ASN.1 BER header */
 static BOOL
@@ -118,13 +114,13 @@ mcs_parse_domain_params(STREAM s)
 
 /* Send an MCS_CONNECT_INITIAL message (ASN.1 BER) */
 static void
-mcs_send_connect_initial(STREAM mcs_data)
+mcs_send_connect_initial(RDPCLIENT * This, STREAM mcs_data)
 {
 	int datalen = mcs_data->end - mcs_data->data;
 	int length = 9 + 3 * 34 + 4 + datalen;
 	STREAM s;
 
-	s = iso_init(length + 5);
+	s = iso_init(This, length + 5);
 
 	ber_out_header(s, MCS_CONNECT_INITIAL, length);
 	ber_out_header(s, BER_TAG_OCTET_STRING, 1);	/* calling domain */
@@ -143,18 +139,18 @@ mcs_send_connect_initial(STREAM mcs_data)
 	out_uint8p(s, mcs_data->data, datalen);
 
 	s_mark_end(s);
-	iso_send(s);
+	iso_send(This, s);
 }
 
 /* Expect a MCS_CONNECT_RESPONSE message (ASN.1 BER) */
 static BOOL
-mcs_recv_connect_response(STREAM mcs_data)
+mcs_recv_connect_response(RDPCLIENT * This, STREAM mcs_data)
 {
 	uint8 result;
 	int length;
 	STREAM s;
 
-	s = iso_recv(NULL);
+	s = iso_recv(This, NULL);
 	if (s == NULL)
 		return False;
 
@@ -174,7 +170,7 @@ mcs_recv_connect_response(STREAM mcs_data)
 
 	ber_parse_header(s, BER_TAG_OCTET_STRING, &length);
 
-	sec_process_mcs_data(s);
+	sec_process_mcs_data(This, s);
 	/*
 	   if (length > mcs_data->size)
 	   {
@@ -192,42 +188,42 @@ mcs_recv_connect_response(STREAM mcs_data)
 
 /* Send an EDrq message (ASN.1 PER) */
 static void
-mcs_send_edrq(void)
+mcs_send_edrq(RDPCLIENT * This)
 {
 	STREAM s;
 
-	s = iso_init(5);
+	s = iso_init(This, 5);
 
 	out_uint8(s, (MCS_EDRQ << 2));
 	out_uint16_be(s, 1);	/* height */
 	out_uint16_be(s, 1);	/* interval */
 
 	s_mark_end(s);
-	iso_send(s);
+	iso_send(This, s);
 }
 
 /* Send an AUrq message (ASN.1 PER) */
 static void
-mcs_send_aurq(void)
+mcs_send_aurq(RDPCLIENT * This)
 {
 	STREAM s;
 
-	s = iso_init(1);
+	s = iso_init(This, 1);
 
 	out_uint8(s, (MCS_AURQ << 2));
 
 	s_mark_end(s);
-	iso_send(s);
+	iso_send(This, s);
 }
 
 /* Expect a AUcf message (ASN.1 PER) */
 static BOOL
-mcs_recv_aucf(uint16 * mcs_userid)
+mcs_recv_aucf(RDPCLIENT * This, uint16 * mcs_userid)
 {
 	uint8 opcode, result;
 	STREAM s;
 
-	s = iso_recv(NULL);
+	s = iso_recv(This, NULL);
 	if (s == NULL)
 		return False;
 
@@ -253,30 +249,30 @@ mcs_recv_aucf(uint16 * mcs_userid)
 
 /* Send a CJrq message (ASN.1 PER) */
 static void
-mcs_send_cjrq(uint16 chanid)
+mcs_send_cjrq(RDPCLIENT * This, uint16 chanid)
 {
 	STREAM s;
 
 	DEBUG_RDP5(("Sending CJRQ for channel #%d\n", chanid));
 
-	s = iso_init(5);
+	s = iso_init(This, 5);
 
 	out_uint8(s, (MCS_CJRQ << 2));
-	out_uint16_be(s, g_mcs_userid);
+	out_uint16_be(s, This->mcs_userid);
 	out_uint16_be(s, chanid);
 
 	s_mark_end(s);
-	iso_send(s);
+	iso_send(This, s);
 }
 
 /* Expect a CJcf message (ASN.1 PER) */
 static BOOL
-mcs_recv_cjcf(void)
+mcs_recv_cjcf(RDPCLIENT * This)
 {
 	uint8 opcode, result;
 	STREAM s;
 
-	s = iso_recv(NULL);
+	s = iso_recv(This, NULL);
 	if (s == NULL)
 		return False;
 
@@ -303,11 +299,11 @@ mcs_recv_cjcf(void)
 
 /* Initialise an MCS transport data packet */
 STREAM
-mcs_init(int length)
+mcs_init(RDPCLIENT * This, int length)
 {
 	STREAM s;
 
-	s = iso_init(length + 8);
+	s = iso_init(This, length + 8);
 	s_push_layer(s, mcs_hdr, 8);
 
 	return s;
@@ -315,7 +311,7 @@ mcs_init(int length)
 
 /* Send an MCS transport data packet to a specific channel */
 void
-mcs_send_to_channel(STREAM s, uint16 channel)
+mcs_send_to_channel(RDPCLIENT * This, STREAM s, uint16 channel)
 {
 	uint16 length;
 
@@ -324,29 +320,29 @@ mcs_send_to_channel(STREAM s, uint16 channel)
 	length |= 0x8000;
 
 	out_uint8(s, (MCS_SDRQ << 2));
-	out_uint16_be(s, g_mcs_userid);
+	out_uint16_be(s, This->mcs_userid);
 	out_uint16_be(s, channel);
 	out_uint8(s, 0x70);	/* flags */
 	out_uint16_be(s, length);
 
-	iso_send(s);
+	iso_send(This, s);
 }
 
 /* Send an MCS transport data packet to the global channel */
 void
-mcs_send(STREAM s)
+mcs_send(RDPCLIENT * This, STREAM s)
 {
-	mcs_send_to_channel(s, MCS_GLOBAL_CHANNEL);
+	mcs_send_to_channel(This, s, MCS_GLOBAL_CHANNEL);
 }
 
 /* Receive an MCS transport data packet */
 STREAM
-mcs_recv(uint16 * channel, uint8 * rdpver)
+mcs_recv(RDPCLIENT * This, uint16 * channel, uint8 * rdpver)
 {
 	uint8 opcode, appid, length;
 	STREAM s;
 
-	s = iso_recv(rdpver);
+	s = iso_recv(This, rdpver);
 	if (s == NULL)
 		return NULL;
 	if (rdpver != NULL)
@@ -373,97 +369,97 @@ mcs_recv(uint16 * channel, uint8 * rdpver)
 
 /* Establish a connection up to the MCS layer */
 BOOL
-mcs_connect(char *server, STREAM mcs_data, char *username)
+mcs_connect(RDPCLIENT * This, char *server, STREAM mcs_data, char *username)
 {
 	unsigned int i;
 
-	if (!iso_connect(server, username))
+	if (!iso_connect(This, server, username))
 		return False;
 
-	mcs_send_connect_initial(mcs_data);
-	if (!mcs_recv_connect_response(mcs_data))
+	mcs_send_connect_initial(This, mcs_data);
+	if (!mcs_recv_connect_response(This, mcs_data))
 		goto error;
 
-	mcs_send_edrq();
+	mcs_send_edrq(This);
 
-	mcs_send_aurq();
-	if (!mcs_recv_aucf(&g_mcs_userid))
+	mcs_send_aurq(This);
+	if (!mcs_recv_aucf(This, &This->mcs_userid))
 		goto error;
 
-	mcs_send_cjrq(g_mcs_userid + MCS_USERCHANNEL_BASE);
+	mcs_send_cjrq(This, This->mcs_userid + MCS_USERCHANNEL_BASE);
 
-	if (!mcs_recv_cjcf())
+	if (!mcs_recv_cjcf(This))
 		goto error;
 
-	mcs_send_cjrq(MCS_GLOBAL_CHANNEL);
-	if (!mcs_recv_cjcf())
+	mcs_send_cjrq(This, MCS_GLOBAL_CHANNEL);
+	if (!mcs_recv_cjcf(This))
 		goto error;
 
-	for (i = 0; i < g_num_channels; i++)
+	for (i = 0; i < This->num_channels; i++)
 	{
-		mcs_send_cjrq(g_channels[i].mcs_id);
-		if (!mcs_recv_cjcf())
+		mcs_send_cjrq(This, This->channels[i].mcs_id);
+		if (!mcs_recv_cjcf(This))
 			goto error;
 	}
 	return True;
 
       error:
-	iso_disconnect();
+	iso_disconnect(This);
 	return False;
 }
 
 /* Establish a connection up to the MCS layer */
 BOOL
-mcs_reconnect(char *server, STREAM mcs_data)
+mcs_reconnect(RDPCLIENT * This, char *server, STREAM mcs_data)
 {
 	unsigned int i;
 
-	if (!iso_reconnect(server))
+	if (!iso_reconnect(This, server))
 		return False;
 
-	mcs_send_connect_initial(mcs_data);
-	if (!mcs_recv_connect_response(mcs_data))
+	mcs_send_connect_initial(This, mcs_data);
+	if (!mcs_recv_connect_response(This, mcs_data))
 		goto error;
 
-	mcs_send_edrq();
+	mcs_send_edrq(This);
 
-	mcs_send_aurq();
-	if (!mcs_recv_aucf(&g_mcs_userid))
+	mcs_send_aurq(This);
+	if (!mcs_recv_aucf(This, &This->mcs_userid))
 		goto error;
 
-	mcs_send_cjrq(g_mcs_userid + MCS_USERCHANNEL_BASE);
+	mcs_send_cjrq(This, This->mcs_userid + MCS_USERCHANNEL_BASE);
 
-	if (!mcs_recv_cjcf())
+	if (!mcs_recv_cjcf(This))
 		goto error;
 
-	mcs_send_cjrq(MCS_GLOBAL_CHANNEL);
-	if (!mcs_recv_cjcf())
+	mcs_send_cjrq(This, MCS_GLOBAL_CHANNEL);
+	if (!mcs_recv_cjcf(This))
 		goto error;
 
-	for (i = 0; i < g_num_channels; i++)
+	for (i = 0; i < This->num_channels; i++)
 	{
-		mcs_send_cjrq(g_channels[i].mcs_id);
-		if (!mcs_recv_cjcf())
+		mcs_send_cjrq(This, This->channels[i].mcs_id);
+		if (!mcs_recv_cjcf(This))
 			goto error;
 	}
 	return True;
 
       error:
-	iso_disconnect();
+	iso_disconnect(This);
 	return False;
 }
 
 /* Disconnect from the MCS layer */
 void
-mcs_disconnect(void)
+mcs_disconnect(RDPCLIENT * This)
 {
-	iso_disconnect();
+	iso_disconnect(This);
 }
 
 /* reset the state of the mcs layer */
 void
-mcs_reset_state(void)
+mcs_reset_state(RDPCLIENT * This)
 {
-	g_mcs_userid = 0;
-	iso_reset_state();
+	This->mcs_userid = 0;
+	iso_reset_state(This);
 }

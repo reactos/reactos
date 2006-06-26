@@ -2,12 +2,12 @@
    rdesktop: A Remote Desktop Protocol client.
    Protocol services - TCP layer
    Copyright (C) Matthew Chapman 1999-2005
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -32,36 +32,31 @@
 #define INADDR_NONE ((unsigned long) -1)
 #endif
 
-static int sock;
-static struct stream in;
-static struct stream out;
-int g_tcp_port_rdp = TCP_PORT_RDP;
-
 /* Initialise TCP transport data packet */
 STREAM
-tcp_init(uint32 maxlen)
+tcp_init(RDPCLIENT * This, uint32 maxlen)
 {
-	if (maxlen > out.size)
+	if (maxlen > This->tcp.out.size)
 	{
-		out.data = (uint8 *) xrealloc(out.data, maxlen);
-		out.size = maxlen;
+		This->tcp.out.data = (uint8 *) xrealloc(This->tcp.out.data, maxlen);
+		This->tcp.out.size = maxlen;
 	}
 
-	out.p = out.data;
-	out.end = out.data + out.size;
-	return &out;
+	This->tcp.out.p = This->tcp.out.data;
+	This->tcp.out.end = This->tcp.out.data + This->tcp.out.size;
+	return &This->tcp.out;
 }
 
 /* Send TCP transport data packet */
 void
-tcp_send(STREAM s)
+tcp_send(RDPCLIENT * This, STREAM s)
 {
 	int length = s->end - s->data;
 	int sent, total = 0;
 
 	while (total < length)
 	{
-		sent = send(sock, s->data + total, length - total, 0);
+		sent = send(This->tcp.sock, s->data + total, length - total, 0);
 		if (sent <= 0)
 		{
 			error("send: %s\n", strerror(errno));
@@ -74,7 +69,7 @@ tcp_send(STREAM s)
 
 /* Receive a message on the TCP layer */
 STREAM
-tcp_recv(STREAM s, uint32 length)
+tcp_recv(RDPCLIENT * This, STREAM s, uint32 length)
 {
 	unsigned int new_length, end_offset, p_offset;
 	int rcvd = 0;
@@ -82,13 +77,13 @@ tcp_recv(STREAM s, uint32 length)
 	if (s == NULL)
 	{
 		/* read into "new" stream */
-		if (length > in.size)
+		if (length > This->tcp.in.size)
 		{
-			in.data = (uint8 *) xrealloc(in.data, length);
-			in.size = length;
+			This->tcp.in.data = (uint8 *) xrealloc(This->tcp.in.data, length);
+			This->tcp.in.size = length;
 		}
-		in.end = in.p = in.data;
-		s = &in;
+		This->tcp.in.end = This->tcp.in.p = This->tcp.in.data;
+		s = &This->tcp.in;
 	}
 	else
 	{
@@ -107,11 +102,11 @@ tcp_recv(STREAM s, uint32 length)
 
 	while (length > 0)
 	{
-		if (!ui_select(sock))
+		if (!ui_select(This, This->tcp.sock))
 			/* User quit */
 			return NULL;
 
-		rcvd = recv(sock, s->end, length, 0);
+		rcvd = recv(This->tcp.sock, s->end, length, 0);
 		if (rcvd < 0)
 		{
 			error("recv: %s\n", strerror(errno));
@@ -132,7 +127,7 @@ tcp_recv(STREAM s, uint32 length)
 
 /* Establish a connection on the TCP layer */
 BOOL
-tcp_connect(char *server)
+tcp_connect(RDPCLIENT * This, char *server)
 {
 	int true_value = 1;
 
@@ -142,7 +137,7 @@ tcp_connect(char *server)
 	struct addrinfo hints, *res, *ressave;
 	char tcp_port_rdp_s[10];
 
-	snprintf(tcp_port_rdp_s, 10, "%d", g_tcp_port_rdp);
+	snprintf(tcp_port_rdp_s, 10, "%d", This->tcp_port_rdp);
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_UNSPEC;
@@ -155,22 +150,22 @@ tcp_connect(char *server)
 	}
 
 	ressave = res;
-	sock = -1;
+	This->tcp.sock = -1;
 	while (res)
 	{
-		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-		if (!(sock < 0))
+		This->tcp.sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		if (!(This->tcp.sock < 0))
 		{
-			if (connect(sock, res->ai_addr, res->ai_addrlen) == 0)
+			if (connect(This->tcp.sock, res->ai_addr, res->ai_addrlen) == 0)
 				break;
-			close(sock);
-			sock = -1;
+			close(This->tcp.sock);
+			This->tcp.sock = -1;
 		}
 		res = res->ai_next;
 	}
 	freeaddrinfo(ressave);
 
-	if (sock == -1)
+	if (This->tcp.sock == -1)
 	{
 		error("%s: unable to connect\n", server);
 		return False;
@@ -191,49 +186,49 @@ tcp_connect(char *server)
 		return False;
 	}
 
-	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	if ((This->tcp.sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		error("socket: %s\n", strerror(errno));
 		return False;
 	}
 
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_port = htons(g_tcp_port_rdp);
+	servaddr.sin_port = htons(This->tcp_port_rdp);
 
-	if (connect(sock, (struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0)
+	if (connect(This->tcp.sock, (struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0)
 	{
 		error("connect: %s\n", strerror(errno));
-		close(sock);
+		close(This->tcp.sock);
 		return False;
 	}
 
 #endif /* IPv6 */
 
-	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void *) &true_value, sizeof(true_value));
+	setsockopt(This->tcp.sock, IPPROTO_TCP, TCP_NODELAY, (void *) &true_value, sizeof(true_value));
 
-	in.size = 4096;
-	in.data = (uint8 *) xmalloc(in.size);
+	This->tcp.in.size = 4096;
+	This->tcp.in.data = (uint8 *) xmalloc(This->tcp.in.size);
 
-	out.size = 4096;
-	out.data = (uint8 *) xmalloc(out.size);
+	This->tcp.out.size = 4096;
+	This->tcp.out.data = (uint8 *) xmalloc(This->tcp.out.size);
 
 	return True;
 }
 
 /* Disconnect on the TCP layer */
 void
-tcp_disconnect(void)
+tcp_disconnect(RDPCLIENT * This)
 {
-	close(sock);
+	close(This->tcp.sock);
 }
 
 char *
-tcp_get_address()
+tcp_get_address(RDPCLIENT * This)
 {
 	static char ipaddr[32];
 	struct sockaddr_in sockaddr;
 	socklen_t len = sizeof(sockaddr);
-	if (getsockname(sock, (struct sockaddr *) &sockaddr, &len) == 0)
+	if (getsockname(This->tcp.sock, (struct sockaddr *) &sockaddr, &len) == 0)
 	{
 		unsigned char *ip = (unsigned char *) &sockaddr.sin_addr;
 		sprintf(ipaddr, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
@@ -246,33 +241,33 @@ tcp_get_address()
 /* reset the state of the tcp layer */
 /* Support for Session Directory */
 void
-tcp_reset_state(void)
+tcp_reset_state(RDPCLIENT * This)
 {
-	sock = -1;		/* reset socket */
+	This->tcp.sock = -1;		/* reset socket */
 
 	/* Clear the incoming stream */
-	if (in.data != NULL)
-		xfree(in.data);
-	in.p = NULL;
-	in.end = NULL;
-	in.data = NULL;
-	in.size = 0;
-	in.iso_hdr = NULL;
-	in.mcs_hdr = NULL;
-	in.sec_hdr = NULL;
-	in.rdp_hdr = NULL;
-	in.channel_hdr = NULL;
+	if (This->tcp.in.data != NULL)
+		xfree(This->tcp.in.data);
+	This->tcp.in.p = NULL;
+	This->tcp.in.end = NULL;
+	This->tcp.in.data = NULL;
+	This->tcp.in.size = 0;
+	This->tcp.in.iso_hdr = NULL;
+	This->tcp.in.mcs_hdr = NULL;
+	This->tcp.in.sec_hdr = NULL;
+	This->tcp.in.rdp_hdr = NULL;
+	This->tcp.in.channel_hdr = NULL;
 
 	/* Clear the outgoing stream */
-	if (out.data != NULL)
-		xfree(out.data);
-	out.p = NULL;
-	out.end = NULL;
-	out.data = NULL;
-	out.size = 0;
-	out.iso_hdr = NULL;
-	out.mcs_hdr = NULL;
-	out.sec_hdr = NULL;
-	out.rdp_hdr = NULL;
-	out.channel_hdr = NULL;
+	if (This->tcp.out.data != NULL)
+		xfree(This->tcp.out.data);
+	This->tcp.out.p = NULL;
+	This->tcp.out.end = NULL;
+	This->tcp.out.data = NULL;
+	This->tcp.out.size = 0;
+	This->tcp.out.iso_hdr = NULL;
+	This->tcp.out.mcs_hdr = NULL;
+	This->tcp.out.sec_hdr = NULL;
+	This->tcp.out.rdp_hdr = NULL;
+	This->tcp.out.channel_hdr = NULL;
 }

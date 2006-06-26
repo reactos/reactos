@@ -30,20 +30,12 @@
 #define _NET_WM_STATE_ADD           1	/* add/set property */
 #define _NET_WM_STATE_TOGGLE        2	/* toggle property  */
 
-extern Display *g_display;
-
-static Atom g_net_wm_state_maximized_vert_atom, g_net_wm_state_maximized_horz_atom,
-	g_net_wm_state_hidden_atom, g_net_wm_name_atom, g_utf8_string_atom,
-	g_net_wm_state_skip_taskbar_atom, g_net_wm_state_skip_pager_atom, g_net_wm_state_modal_atom;
-
-Atom g_net_wm_state_atom, g_net_wm_desktop_atom;
-
 /* 
    Get window property value (32 bit format) 
    Returns zero on success, -1 on error
 */
 static int
-get_property_value(Window wnd, char *propname, long max_length,
+get_property_value(RDPCLIENT * This, Window wnd, char *propname, long max_length,
 		   unsigned long *nitems_return, unsigned char **prop_return, int nowarn)
 {
 	int result;
@@ -52,14 +44,14 @@ get_property_value(Window wnd, char *propname, long max_length,
 	int actual_format_return;
 	unsigned long bytes_after_return;
 
-	property = XInternAtom(g_display, propname, True);
+	property = XInternAtom(This->display, propname, True);
 	if (property == None)
 	{
 		fprintf(stderr, "Atom %s does not exist\n", propname);
 		return (-1);
 	}
 
-	result = XGetWindowProperty(g_display, wnd, property, 0,	/* long_offset */
+	result = XGetWindowProperty(This->display, wnd, property, 0,	/* long_offset */
 				    max_length,	/* long_length */
 				    False,	/* delete */
 				    AnyPropertyType,	/* req_type */
@@ -100,14 +92,14 @@ get_property_value(Window wnd, char *propname, long max_length,
    Returns -1 on error
 */
 static int
-get_current_desktop(void)
+get_current_desktop(RDPCLIENT * This)
 {
 	unsigned long nitems_return;
 	unsigned char *prop_return;
 	int current_desktop;
 
 	if (get_property_value
-	    (DefaultRootWindow(g_display), "_NET_CURRENT_DESKTOP", 1, &nitems_return,
+	    (This, DefaultRootWindow(This->display), "_NET_CURRENT_DESKTOP", 1, &nitems_return,
 	     &prop_return, 0) < 0)
 		return (-1);
 
@@ -128,7 +120,7 @@ get_current_desktop(void)
  */
 
 int
-get_current_workarea(uint32 * x, uint32 * y, uint32 * width, uint32 * height)
+get_current_workarea(RDPCLIENT * This, uint32 * x, uint32 * y, uint32 * width, uint32 * height)
 {
 	int current_desktop;
 	unsigned long nitems_return;
@@ -141,7 +133,7 @@ get_current_workarea(uint32 * x, uint32 * y, uint32 * width, uint32 * height)
 	const uint32 max_prop_length = 32 * 4;	/* Max 32 desktops */
 
 	if (get_property_value
-	    (DefaultRootWindow(g_display), "_NET_WORKAREA", max_prop_length, &nitems_return,
+	    (This, DefaultRootWindow(This->display), "_NET_WORKAREA", max_prop_length, &nitems_return,
 	     &prop_return, 0) < 0)
 		return (-1);
 
@@ -151,7 +143,7 @@ get_current_workarea(uint32 * x, uint32 * y, uint32 * width, uint32 * height)
 		return (-1);
 	}
 
-	current_desktop = get_current_desktop();
+	current_desktop = get_current_desktop(This);
 
 	if (current_desktop < 0)
 		return -1;
@@ -172,22 +164,22 @@ get_current_workarea(uint32 * x, uint32 * y, uint32 * width, uint32 * height)
 
 
 void
-ewmh_init()
+ewmh_init(RDPCLIENT * This)
 {
 	/* FIXME: Use XInternAtoms */
-	g_net_wm_state_maximized_vert_atom =
-		XInternAtom(g_display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
-	g_net_wm_state_maximized_horz_atom =
-		XInternAtom(g_display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
-	g_net_wm_state_hidden_atom = XInternAtom(g_display, "_NET_WM_STATE_HIDDEN", False);
-	g_net_wm_state_skip_taskbar_atom =
-		XInternAtom(g_display, "_NET_WM_STATE_SKIP_TASKBAR", False);
-	g_net_wm_state_skip_pager_atom = XInternAtom(g_display, "_NET_WM_STATE_SKIP_PAGER", False);
-	g_net_wm_state_modal_atom = XInternAtom(g_display, "_NET_WM_STATE_MODAL", False);
-	g_net_wm_state_atom = XInternAtom(g_display, "_NET_WM_STATE", False);
-	g_net_wm_desktop_atom = XInternAtom(g_display, "_NET_WM_DESKTOP", False);
-	g_net_wm_name_atom = XInternAtom(g_display, "_NET_WM_NAME", False);
-	g_utf8_string_atom = XInternAtom(g_display, "UTF8_STRING", False);
+	This->ewmhints.state_maximized_vert_atom =
+		XInternAtom(This->display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+	This->ewmhints.state_maximized_horz_atom =
+		XInternAtom(This->display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+	This->ewmhints.state_hidden_atom = XInternAtom(This->display, "_NET_WM_STATE_HIDDEN", False);
+	This->ewmhints.state_skip_taskbar_atom =
+		XInternAtom(This->display, "_NET_WM_STATE_SKIP_TASKBAR", False);
+	This->ewmhints.state_skip_pager_atom = XInternAtom(This->display, "_NET_WM_STATE_SKIP_PAGER", False);
+	This->ewmhints.state_modal_atom = XInternAtom(This->display, "_NET_WM_STATE_MODAL", False);
+	This->net_wm_state_atom = XInternAtom(This->display, "_NET_WM_STATE", False);
+	This->net_wm_desktop_atom = XInternAtom(This->display, "_NET_WM_DESKTOP", False);
+	This->ewmhints.name_atom = XInternAtom(This->display, "_NET_WM_NAME", False);
+	This->ewmhints.utf8_string_atom = XInternAtom(This->display, "UTF8_STRING", False);
 }
 
 
@@ -196,7 +188,7 @@ ewmh_init()
 */
 #ifndef MAKE_PROTO
 int
-ewmh_get_window_state(Window w)
+ewmh_get_window_state(RDPCLIENT * This, Window w)
 {
 	unsigned long nitems_return;
 	unsigned char *prop_return;
@@ -206,18 +198,18 @@ ewmh_get_window_state(Window w)
 
 	maximized_vert = maximized_horz = hidden = False;
 
-	if (get_property_value(w, "_NET_WM_STATE", 64, &nitems_return, &prop_return, 0) < 0)
+	if (get_property_value(This, w, "_NET_WM_STATE", 64, &nitems_return, &prop_return, 0) < 0)
 		return SEAMLESSRDP_NORMAL;
 
 	return_words = (uint32 *) prop_return;
 
 	for (item = 0; item < nitems_return; item++)
 	{
-		if (return_words[item] == g_net_wm_state_maximized_vert_atom)
+		if (return_words[item] == This->ewmhints.state_maximized_vert_atom)
 			maximized_vert = True;
-		if (return_words[item] == g_net_wm_state_maximized_horz_atom)
+		if (return_words[item] == This->ewmhints.state_maximized_horz_atom)
 			maximized_horz = True;
-		if (return_words[item] == g_net_wm_state_hidden_atom)
+		if (return_words[item] == This->ewmhints.state_hidden_atom)
 			hidden = True;
 	}
 
@@ -232,7 +224,7 @@ ewmh_get_window_state(Window w)
 }
 
 static int
-ewmh_modify_state(Window wnd, int add, Atom atom1, Atom atom2)
+ewmh_modify_state(RDPCLIENT * This, Window wnd, int add, Atom atom1, Atom atom2)
 {
 	Status status;
 	XEvent xevent;
@@ -246,7 +238,7 @@ ewmh_modify_state(Window wnd, int add, Atom atom1, Atom atom2)
 	   _NET_WM_STATE attributes on a withdrawn window. In order words, we
 	   modify the attributes directly for withdrawn windows and ask the WM
 	   to do it for active windows. */
-	result = get_property_value(wnd, "WM_STATE", 64, &nitems, &props, 1);
+	result = get_property_value(This, wnd, "WM_STATE", 64, &nitems, &props, 1);
 	if ((result >= 0) && nitems)
 	{
 		state = *(uint32 *) props;
@@ -267,7 +259,7 @@ ewmh_modify_state(Window wnd, int add, Atom atom1, Atom atom2)
 				nitems = 2;
 			}
 
-			XChangeProperty(g_display, wnd, g_net_wm_state_atom, XA_ATOM,
+			XChangeProperty(This->display, wnd, This->net_wm_state_atom, XA_ATOM,
 					32, PropModeAppend, (unsigned char *) atoms, nitems);
 		}
 		else
@@ -275,7 +267,7 @@ ewmh_modify_state(Window wnd, int add, Atom atom1, Atom atom2)
 			Atom *atoms;
 			int i;
 
-			if (get_property_value(wnd, "_NET_WM_STATE", 64, &nitems, &props, 1) < 0)
+			if (get_property_value(This, wnd, "_NET_WM_STATE", 64, &nitems, &props, 1) < 0)
 				return 0;
 
 			atoms = (Atom *) props;
@@ -292,7 +284,7 @@ ewmh_modify_state(Window wnd, int add, Atom atom1, Atom atom2)
 				}
 			}
 
-			XChangeProperty(g_display, wnd, g_net_wm_state_atom, XA_ATOM,
+			XChangeProperty(This->display, wnd, This->net_wm_state_atom, XA_ATOM,
 					32, PropModeReplace, (unsigned char *) atoms, nitems);
 
 			XFree(props);
@@ -303,7 +295,7 @@ ewmh_modify_state(Window wnd, int add, Atom atom1, Atom atom2)
 
 	xevent.type = ClientMessage;
 	xevent.xclient.window = wnd;
-	xevent.xclient.message_type = g_net_wm_state_atom;
+	xevent.xclient.message_type = This->net_wm_state_atom;
 	xevent.xclient.format = 32;
 	if (add)
 		xevent.xclient.data.l[0] = _NET_WM_STATE_ADD;
@@ -313,7 +305,7 @@ ewmh_modify_state(Window wnd, int add, Atom atom1, Atom atom2)
 	xevent.xclient.data.l[2] = atom2;
 	xevent.xclient.data.l[3] = 0;
 	xevent.xclient.data.l[4] = 0;
-	status = XSendEvent(g_display, DefaultRootWindow(g_display), False,
+	status = XSendEvent(This->display, DefaultRootWindow(This->display), False,
 			    SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
 	if (!status)
 		return -1;
@@ -326,7 +318,7 @@ ewmh_modify_state(Window wnd, int add, Atom atom1, Atom atom2)
    Returns -1 on failure. 
 */
 int
-ewmh_change_state(Window wnd, int state)
+ewmh_change_state(RDPCLIENT * This, Window wnd, int state)
 {
 	/*
 	 * Deal with the max atoms
@@ -334,15 +326,15 @@ ewmh_change_state(Window wnd, int state)
 	if (state == SEAMLESSRDP_MAXIMIZED)
 	{
 		if (ewmh_modify_state
-		    (wnd, 1, g_net_wm_state_maximized_vert_atom,
-		     g_net_wm_state_maximized_horz_atom) < 0)
+		    (This, wnd, 1, This->ewmhints.state_maximized_vert_atom,
+		     This->ewmhints.state_maximized_horz_atom) < 0)
 			return -1;
 	}
 	else
 	{
 		if (ewmh_modify_state
-		    (wnd, 0, g_net_wm_state_maximized_vert_atom,
-		     g_net_wm_state_maximized_horz_atom) < 0)
+		    (This, wnd, 0, This->ewmhints.state_maximized_vert_atom,
+		     This->ewmhints.state_maximized_horz_atom) < 0)
 			return -1;
 	}
 
@@ -351,13 +343,13 @@ ewmh_change_state(Window wnd, int state)
 
 
 int
-ewmh_get_window_desktop(Window wnd)
+ewmh_get_window_desktop(RDPCLIENT * This, Window wnd)
 {
 	unsigned long nitems_return;
 	unsigned char *prop_return;
 	int desktop;
 
-	if (get_property_value(wnd, "_NET_WM_DESKTOP", 1, &nitems_return, &prop_return, 0) < 0)
+	if (get_property_value(This, wnd, "_NET_WM_DESKTOP", 1, &nitems_return, &prop_return, 0) < 0)
 		return (-1);
 
 	if (nitems_return != 1)
@@ -373,21 +365,21 @@ ewmh_get_window_desktop(Window wnd)
 
 
 int
-ewmh_move_to_desktop(Window wnd, unsigned int desktop)
+ewmh_move_to_desktop(RDPCLIENT * This, Window wnd, unsigned int desktop)
 {
 	Status status;
 	XEvent xevent;
 
 	xevent.type = ClientMessage;
 	xevent.xclient.window = wnd;
-	xevent.xclient.message_type = g_net_wm_desktop_atom;
+	xevent.xclient.message_type = This->net_wm_desktop_atom;
 	xevent.xclient.format = 32;
 	xevent.xclient.data.l[0] = desktop;
 	xevent.xclient.data.l[1] = 0;
 	xevent.xclient.data.l[2] = 0;
 	xevent.xclient.data.l[3] = 0;
 	xevent.xclient.data.l[4] = 0;
-	status = XSendEvent(g_display, DefaultRootWindow(g_display), False,
+	status = XSendEvent(This->display, DefaultRootWindow(This->display), False,
 			    SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
 	if (!status)
 		return -1;
@@ -396,29 +388,29 @@ ewmh_move_to_desktop(Window wnd, unsigned int desktop)
 }
 
 void
-ewmh_set_wm_name(Window wnd, const char *title)
+ewmh_set_wm_name(RDPCLIENT * This, Window wnd, const char *title)
 {
 	int len;
 
 	len = strlen(title);
-	XChangeProperty(g_display, wnd, g_net_wm_name_atom, g_utf8_string_atom,
+	XChangeProperty(This->display, wnd, This->ewmhints.name_atom, This->ewmhints.utf8_string_atom,
 			8, PropModeReplace, (unsigned char *) title, len);
 }
 
 
 int
-ewmh_set_window_popup(Window wnd)
+ewmh_set_window_popup(RDPCLIENT * This, Window wnd)
 {
 	if (ewmh_modify_state
-	    (wnd, 1, g_net_wm_state_skip_taskbar_atom, g_net_wm_state_skip_pager_atom) < 0)
+	    (This, wnd, 1, This->ewmhints.state_skip_taskbar_atom, This->ewmhints.state_skip_pager_atom) < 0)
 		return -1;
 	return 0;
 }
 
 int
-ewmh_set_window_modal(Window wnd)
+ewmh_set_window_modal(RDPCLIENT * This, Window wnd)
 {
-	if (ewmh_modify_state(wnd, 1, g_net_wm_state_modal_atom, 0) < 0)
+	if (ewmh_modify_state(This, wnd, 1, This->ewmhints.state_modal_atom, 0) < 0)
 		return -1;
 	return 0;
 }
@@ -432,13 +424,13 @@ ewmh_set_window_modal(Window wnd)
    applications. We should implement _NET_WM_MOVERESIZE instead */
 
 int
-ewmh_net_moveresize_window(Window wnd, int x, int y, int width, int height)
+ewmh_net_moveresize_window(RDPCLIENT * This, Window wnd, int x, int y, int width, int height)
 {
 	Status status;
 	XEvent xevent;
 	Atom moveresize;
 
-	moveresize = XInternAtom(g_display, "_NET_MOVERESIZE_WINDOW", False);
+	moveresize = XInternAtom(This->display, "_NET_MOVERESIZE_WINDOW", False);
 	if (!moveresize)
 	{
 		return -1;
@@ -454,7 +446,7 @@ ewmh_net_moveresize_window(Window wnd, int x, int y, int width, int height)
 	xevent.xclient.data.l[3] = width;
 	xevent.xclient.data.l[4] = height;
 
-	status = XSendEvent(g_display, DefaultRootWindow(g_display), False,
+	status = XSendEvent(This->display, DefaultRootWindow(This->display), False,
 			    SubstructureNotifyMask | SubstructureRedirectMask, &xevent);
 	if (!status)
 		return -1;

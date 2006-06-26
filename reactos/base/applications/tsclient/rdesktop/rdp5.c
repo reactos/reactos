@@ -21,19 +21,15 @@
 
 #include "rdesktop.h"
 
-extern uint8 *g_next_packet;
-
-extern RDPCOMP g_mppc_dict;
-
 void
-rdp5_process(STREAM s)
+rdp5_process(RDPCLIENT * This, STREAM s)
 {
 	uint16 length, count, x, y;
 	uint8 type, ctype;
 	uint8 *next;
 
 	uint32 roff, rlen;
-	struct stream *ns = &(g_mppc_dict.ns);
+	struct stream *ns = &(This->mppc_dict.ns);
 	struct stream *ts;
 
 #if 0
@@ -41,7 +37,7 @@ rdp5_process(STREAM s)
 	hexdump(s->p, s->end - s->p);
 #endif
 
-	ui_begin_update();
+	ui_begin_update(This);
 	while (s->p < s->end)
 	{
 		in_uint8(s, type);
@@ -56,17 +52,17 @@ rdp5_process(STREAM s)
 			ctype = 0;
 			in_uint16_le(s, length);
 		}
-		g_next_packet = next = s->p + length;
+		This->next_packet = next = s->p + length;
 
 		if (ctype & RDP_MPPC_COMPRESSED)
 		{
-			if (mppc_expand(s->p, length, ctype, &roff, &rlen) == -1)
+			if (mppc_expand(This, s->p, length, ctype, &roff, &rlen) == -1)
 				error("error while decompressing packet\n");
 
 			/* allocate memory and copy the uncompressed data into the temporary stream */
 			ns->data = (uint8 *) xrealloc(ns->data, rlen);
 
-			memcpy((ns->data), (unsigned char *) (g_mppc_dict.hist + roff), rlen);
+			memcpy((ns->data), (unsigned char *) (This->mppc_dict.hist + roff), rlen);
 
 			ns->size = rlen;
 			ns->end = (ns->data + ns->size);
@@ -82,20 +78,20 @@ rdp5_process(STREAM s)
 		{
 			case 0:	/* update orders */
 				in_uint16_le(ts, count);
-				process_orders(ts, count);
+				process_orders(This, ts, count);
 				break;
 			case 1:	/* update bitmap */
 				in_uint8s(ts, 2);	/* part length */
-				process_bitmap_updates(ts);
+				process_bitmap_updates(This, ts);
 				break;
 			case 2:	/* update palette */
 				in_uint8s(ts, 2);	/* uint16 = 2 */
-				process_palette(ts);
+				process_palette(This, ts);
 				break;
 			case 3:	/* update synchronize */
 				break;
 			case 5:	/* null pointer */
-				ui_set_null_cursor();
+				ui_set_null_cursor(This);
 				break;
 			case 6:	/* default pointer */
 				break;
@@ -103,13 +99,13 @@ rdp5_process(STREAM s)
 				in_uint16_le(ts, x);
 				in_uint16_le(ts, y);
 				if (s_check(ts))
-					ui_move_pointer(x, y);
+					ui_move_pointer(This, x, y);
 				break;
 			case 9:	/* color pointer */
-				process_colour_pointer_pdu(ts);
+				process_colour_pointer_pdu(This, ts);
 				break;
 			case 10:	/* cached pointer */
-				process_cached_pointer_pdu(ts);
+				process_cached_pointer_pdu(This, ts);
 				break;
 			default:
 				unimpl("RDP5 opcode %d\n", type);
@@ -117,5 +113,5 @@ rdp5_process(STREAM s)
 
 		s->p = next;
 	}
-	ui_end_update();
+	ui_end_update(This);
 }

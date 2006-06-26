@@ -29,52 +29,43 @@
 #define RDPSND_SERVERTICK	6
 #define RDPSND_NEGOTIATE	7
 
-#define MAX_FORMATS		10
-
-static VCHANNEL *rdpsnd_channel;
-
-static BOOL device_open;
-static WAVEFORMATEX formats[MAX_FORMATS];
-static unsigned int format_count;
-static unsigned int current_format;
-
 static STREAM
-rdpsnd_init_packet(uint16 type, uint16 size)
+rdpsnd_init_packet(RDPCLIENT * This, uint16 type, uint16 size)
 {
 	STREAM s;
 
-	s = channel_init(rdpsnd_channel, size + 4);
+	s = channel_init(This, This->rdpsnd.channel, size + 4);
 	out_uint16_le(s, type);
 	out_uint16_le(s, size);
 	return s;
 }
 
 static void
-rdpsnd_send(STREAM s)
+rdpsnd_send(RDPCLIENT * This, STREAM s)
 {
 #ifdef RDPSND_DEBUG
 	printf("RDPSND send:\n");
 	hexdump(s->channel_hdr + 8, s->end - s->channel_hdr - 8);
 #endif
 
-	channel_send(s, rdpsnd_channel);
+	channel_send(This, s, This->rdpsnd.channel);
 }
 
 void
-rdpsnd_send_completion(uint16 tick, uint8 packet_index)
+rdpsnd_send_completion(RDPCLIENT * This, uint16 tick, uint8 packet_index)
 {
 	STREAM s;
 
-	s = rdpsnd_init_packet(RDPSND_COMPLETION, 4);
+	s = rdpsnd_init_packet(This, RDPSND_COMPLETION, 4);
 	out_uint16_le(s, tick + 50);
 	out_uint8(s, packet_index);
 	out_uint8(s, 0);
 	s_mark_end(s);
-	rdpsnd_send(s);
+	rdpsnd_send(This, s);
 }
 
 static void
-rdpsnd_process_negotiate(STREAM in)
+rdpsnd_process_negotiate(RDPCLIENT * This, STREAM in)
 {
 	unsigned int in_format_count, i;
 	WAVEFORMATEX *format;
@@ -93,12 +84,12 @@ rdpsnd_process_negotiate(STREAM in)
 		device_available = True;
 	}
 
-	format_count = 0;
+	This->rdpsnd.format_count = 0;
 	if (s_check_rem(in, 18 * in_format_count))
 	{
 		for (i = 0; i < in_format_count; i++)
 		{
-			format = &formats[format_count];
+			format = &This->rdpsnd.formats[This->rdpsnd.format_count];
 			in_uint16_le(in, format->wFormatTag);
 			in_uint16_le(in, format->nChannels);
 			in_uint32_le(in, format->nSamplesPerSec);
@@ -122,27 +113,27 @@ rdpsnd_process_negotiate(STREAM in)
 
 			if (device_available && wave_out_format_supported(format))
 			{
-				format_count++;
-				if (format_count == MAX_FORMATS)
+				This->rdpsnd.format_count++;
+				if (This->rdpsnd.format_count == MAX_FORMATS)
 					break;
 			}
 		}
 	}
 
-	out = rdpsnd_init_packet(RDPSND_NEGOTIATE | 0x200, 20 + 18 * format_count);
+	out = rdpsnd_init_packet(This, RDPSND_NEGOTIATE | 0x200, 20 + 18 * This->rdpsnd.format_count);
 	out_uint32_le(out, 3);	/* flags */
 	out_uint32(out, 0xffffffff);	/* volume */
 	out_uint32(out, 0);	/* pitch */
 	out_uint16(out, 0);	/* UDP port */
 
-	out_uint16_le(out, format_count);
+	out_uint16_le(out, This->rdpsnd.format_count);
 	out_uint8(out, 0x95);	/* pad? */
 	out_uint16_le(out, 2);	/* status */
 	out_uint8(out, 0x77);	/* pad? */
 
-	for (i = 0; i < format_count; i++)
+	for (i = 0; i < This->rdpsnd.format_count; i++)
 	{
-		format = &formats[i];
+		format = &This->rdpsnd.formats[i];
 		out_uint16_le(out, format->wFormatTag);
 		out_uint16_le(out, format->nChannels);
 		out_uint32_le(out, format->nSamplesPerSec);
@@ -153,11 +144,11 @@ rdpsnd_process_negotiate(STREAM in)
 	}
 
 	s_mark_end(out);
-	rdpsnd_send(out);
+	rdpsnd_send(This, out);
 }
 
 static void
-rdpsnd_process_servertick(STREAM in)
+rdpsnd_process_servertick(RDPCLIENT * This, STREAM in)
 {
 	uint16 tick1, tick2;
 	STREAM out;
@@ -166,15 +157,15 @@ rdpsnd_process_servertick(STREAM in)
 	in_uint16_le(in, tick1);
 	in_uint16_le(in, tick2);
 
-	out = rdpsnd_init_packet(RDPSND_SERVERTICK | 0x2300, 4);
+	out = rdpsnd_init_packet(This, RDPSND_SERVERTICK | 0x2300, 4);
 	out_uint16_le(out, tick1);
 	out_uint16_le(out, tick2);
 	s_mark_end(out);
-	rdpsnd_send(out);
+	rdpsnd_send(This, out);
 }
 
 static void
-rdpsnd_process(STREAM s)
+rdpsnd_process(RDPCLIENT * This, STREAM s)
 {
 	uint8 type;
 	uint16 datalen;
@@ -196,22 +187,22 @@ rdpsnd_process(STREAM s)
 			return;
 		}
 
-		if (!device_open || (format != current_format))
+		if (!This->rdpsnd.device_open || (format != This->rdpsnd.current_format))
 		{
-			if (!device_open && !wave_out_open())
+			if (!This->rdpsnd.device_open && !wave_out_open())
 			{
-				rdpsnd_send_completion(tick, packet_index);
+				rdpsnd_send_completion(This, tick, packet_index);
 				return;
 			}
-			if (!wave_out_set_format(&formats[format]))
+			if (!wave_out_set_format(&This->rdpsnd.formats[format]))
 			{
-				rdpsnd_send_completion(tick, packet_index);
+				rdpsnd_send_completion(This, tick, packet_index);
 				wave_out_close();
-				device_open = False;
+				This->rdpsnd.device_open = False;
 				return;
 			}
-			device_open = True;
-			current_format = format;
+			This->rdpsnd.device_open = True;
+			This->rdpsnd.current_format = format;
 		}
 
 		wave_out_write(s, tick, packet_index);
@@ -233,17 +224,17 @@ rdpsnd_process(STREAM s)
 			break;
 		case RDPSND_CLOSE:
 			wave_out_close();
-			device_open = False;
+			This->rdpsnd.device_open = False;
 			break;
 		case RDPSND_NEGOTIATE:
-			rdpsnd_process_negotiate(s);
+			rdpsnd_process_negotiate(This, s);
 			break;
 		case RDPSND_SERVERTICK:
-			rdpsnd_process_servertick(s);
+			rdpsnd_process_servertick(This, s);
 			break;
 		case RDPSND_SET_VOLUME:
 			in_uint32(s, volume);
-			if (device_open)
+			if (This->rdpsnd.device_open)
 			{
 				wave_out_volume((volume & 0xffff), (volume & 0xffff0000) >> 16);
 			}
@@ -255,10 +246,10 @@ rdpsnd_process(STREAM s)
 }
 
 BOOL
-rdpsnd_init(void)
+rdpsnd_init(RDPCLIENT * This)
 {
-	rdpsnd_channel =
-		channel_register("rdpsnd", CHANNEL_OPTION_INITIALIZED | CHANNEL_OPTION_ENCRYPT_RDP,
+	This->rdpsnd.channel =
+		channel_register(This, "rdpsnd", CHANNEL_OPTION_INITIALIZED | CHANNEL_OPTION_ENCRYPT_RDP,
 				 rdpsnd_process);
-	return (rdpsnd_channel != NULL);
+	return (This->rdpsnd.channel != NULL);
 }

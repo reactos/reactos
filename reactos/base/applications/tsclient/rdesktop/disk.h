@@ -79,8 +79,6 @@
 #define ERROR_FILE_NOT_FOUND			2L
 #define ERROR_ALREADY_EXISTS			183L
 
-#define	MAX_OPEN_FILES	0x100
-
 typedef enum _FILE_INFORMATION_CLASS
 {
 	FileDirectoryInformation = 1,

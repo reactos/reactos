@@ -229,7 +229,7 @@ printercache_save_blob(char *printer_name, uint8 * data, uint32 length)
 }
 
 void
-printercache_process(STREAM s)
+printercache_process(RDPCLIENT * This, STREAM s)
 {
 	uint32 type, printer_length, driver_length, printer_unicode_length, blob_length;
 	char device_name[9], printer[256], driver[256];
@@ -245,8 +245,8 @@ printercache_process(STREAM s)
 
 			/* NOTE - 'driver' doesn't contain driver, it contains the new printer name */
 
-			rdp_in_unistr(s, printer, printer_length);
-			rdp_in_unistr(s, driver, driver_length);
+			rdp_in_unistr(This, s, printer, printer_length);
+			rdp_in_unistr(This, s, driver, driver_length);
 
 			printercache_rename_blob(printer, driver);
 			break;
@@ -254,7 +254,7 @@ printercache_process(STREAM s)
 		case 3:	/* delete item */
 			in_uint8(s, printer_unicode_length);
 			in_uint8s(s, 0x3);	/* padding */
-			printer_length = rdp_in_unistr(s, printer, printer_unicode_length);
+			printer_length = rdp_in_unistr(This, s, printer, printer_unicode_length);
 			printercache_unlink_blob(printer);
 			break;
 
@@ -264,7 +264,7 @@ printercache_process(STREAM s)
 
 			if (printer_unicode_length < 2 * 255)
 			{
-				rdp_in_unistr(s, printer, printer_unicode_length);
+				rdp_in_unistr(This, s, printer, printer_unicode_length);
 				printercache_save_blob(printer, s->p, blob_length);
 			}
 			break;

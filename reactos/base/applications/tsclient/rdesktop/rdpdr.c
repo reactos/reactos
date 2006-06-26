@@ -55,48 +55,19 @@
 #define IRP_MN_QUERY_DIRECTORY          0x01
 #define IRP_MN_NOTIFY_CHANGE_DIRECTORY  0x02
 
-extern char g_hostname[16];
 extern DEVICE_FNS serial_fns;
 extern DEVICE_FNS printer_fns;
 extern DEVICE_FNS parallel_fns;
 extern DEVICE_FNS disk_fns;
-extern FILEINFO g_fileinfo[];
-extern BOOL g_notify_stamp;
-
-static VCHANNEL *rdpdr_channel;
-
-/* If select() times out, the request for the device with handle g_min_timeout_fd is aborted */
-NTHANDLE g_min_timeout_fd;
-uint32 g_num_devices;
-
-/* Table with information about rdpdr devices */
-RDPDR_DEVICE g_rdpdr_device[RDPDR_MAX_DEVICES];
-char *g_rdpdr_clientname = NULL;
-
-/* Used to store incoming io request, until they are ready to be completed */
-/* using a linked list ensures that they are processed in the right order, */
-/* if multiple ios are being done on the same fd */
-struct async_iorequest
-{
-	uint32 fd, major, minor, offset, device, id, length, partial_len;
-	long timeout,		/* Total timeout */
-	  itv_timeout;		/* Interval timeout (between serial characters) */
-	uint8 *buffer;
-	DEVICE_FNS *fns;
-
-	struct async_iorequest *next;	/* next element in list */
-};
-
-struct async_iorequest *g_iorequest;
 
 /* Return device_id for a given handle */
 int
-get_device_index(NTHANDLE handle)
+get_device_index(RDPCLIENT * This, NTHANDLE handle)
 {
 	int i;
 	for (i = 0; i < RDPDR_MAX_DEVICES; i++)
 	{
-		if (g_rdpdr_device[i].handle == handle)
+		if (This->rdpdr_device[i].handle == handle)
 			return i;
 	}
 	return -1;
@@ -115,19 +86,19 @@ convert_to_unix_filename(char *filename)
 }
 
 static BOOL
-rdpdr_handle_ok(int device, int handle)
+rdpdr_handle_ok(RDPCLIENT * This, int device, int handle)
 {
-	switch (g_rdpdr_device[device].device_type)
+	switch (This->rdpdr_device[device].device_type)
 	{
 		case DEVICE_TYPE_PARALLEL:
 		case DEVICE_TYPE_SERIAL:
 		case DEVICE_TYPE_PRINTER:
 		case DEVICE_TYPE_SCARD:
-			if (g_rdpdr_device[device].handle != handle)
+			if (This->rdpdr_device[device].handle != handle)
 				return False;
 			break;
 		case DEVICE_TYPE_DISK:
-			if (g_fileinfo[handle].device_id != device)
+			if (This->fileinfo[handle].device_id != device)
 				return False;
 			break;
 	}
@@ -136,22 +107,22 @@ rdpdr_handle_ok(int device, int handle)
 
 /* Add a new io request to the table containing pending io requests so it won't block rdesktop */
 static BOOL
-add_async_iorequest(uint32 device, uint32 file, uint32 id, uint32 major, uint32 length,
+add_async_iorequest(RDPCLIENT * This, uint32 device, uint32 file, uint32 id, uint32 major, uint32 length,
 		    DEVICE_FNS * fns, uint32 total_timeout, uint32 interval_timeout, uint8 * buffer,
 		    uint32 offset)
 {
 	struct async_iorequest *iorq;
 
-	if (g_iorequest == NULL)
+	if (This->iorequest == NULL)
 	{
-		g_iorequest = (struct async_iorequest *) xmalloc(sizeof(struct async_iorequest));
-		if (!g_iorequest)
+		This->iorequest = (struct async_iorequest *) xmalloc(sizeof(struct async_iorequest));
+		if (!This->iorequest)
 			return False;
-		g_iorequest->fd = 0;
-		g_iorequest->next = NULL;
+		This->iorequest->fd = 0;
+		This->iorequest->next = NULL;
 	}
 
-	iorq = g_iorequest;
+	iorq = This->iorequest;
 
 	while (iorq->fd != 0)
 	{
@@ -182,60 +153,60 @@ add_async_iorequest(uint32 device, uint32 file, uint32 id, uint32 major, uint32 
 }
 
 static void
-rdpdr_send_connect(void)
+rdpdr_send_connect(RDPCLIENT * This)
 {
 	uint8 magic[4] = "rDCC";
 	STREAM s;
 
-	s = channel_init(rdpdr_channel, 12);
+	s = channel_init(This, This->rdpdr.channel, 12);
 	out_uint8a(s, magic, 4);
 	out_uint16_le(s, 1);	/* unknown */
 	out_uint16_le(s, 5);
 	out_uint32_be(s, 0x815ed39d);	/* IP address (use 127.0.0.1) 0x815ed39d */
 	s_mark_end(s);
-	channel_send(s, rdpdr_channel);
+	channel_send(This, s, This->rdpdr.channel);
 }
 
 
 static void
-rdpdr_send_name(void)
+rdpdr_send_name(RDPCLIENT * This)
 {
 	uint8 magic[4] = "rDNC";
 	STREAM s;
 	uint32 hostlen;
 
-	if (NULL == g_rdpdr_clientname)
+	if (NULL == This->rdpdr_clientname)
 	{
-		g_rdpdr_clientname = g_hostname;
+		This->rdpdr_clientname = This->hostname;
 	}
-	hostlen = (strlen(g_rdpdr_clientname) + 1) * 2;
+	hostlen = (strlen(This->rdpdr_clientname) + 1) * 2;
 
-	s = channel_init(rdpdr_channel, 16 + hostlen);
+	s = channel_init(This, This->rdpdr.channel, 16 + hostlen);
 	out_uint8a(s, magic, 4);
 	out_uint16_le(s, 0x63);	/* unknown */
 	out_uint16_le(s, 0x72);
 	out_uint32(s, 0);
 	out_uint32_le(s, hostlen);
-	rdp_out_unistr(s, g_rdpdr_clientname, hostlen - 2);
+	rdp_out_unistr(This, s, This->rdpdr_clientname, hostlen - 2);
 	s_mark_end(s);
-	channel_send(s, rdpdr_channel);
+	channel_send(This, s, This->rdpdr.channel);
 }
 
 /* Returns the size of the payload of the announce packet */
 static int
-announcedata_size()
+announcedata_size(RDPCLIENT * This)
 {
 	int size, i;
 	PRINTER *printerinfo;
 
 	size = 8;		/* static announce size */
-	size += g_num_devices * 0x14;
+	size += This->num_devices * 0x14;
 
-	for (i = 0; i < g_num_devices; i++)
+	for (i = 0; i < This->num_devices; i++)
 	{
-		if (g_rdpdr_device[i].device_type == DEVICE_TYPE_PRINTER)
+		if (This->rdpdr_device[i].device_type == DEVICE_TYPE_PRINTER)
 		{
-			printerinfo = (PRINTER *) g_rdpdr_device[i].pdevice_data;
+			printerinfo = (PRINTER *) This->rdpdr_device[i].pdevice_data;
 			printerinfo->bloblen =
 				printercache_load_blob(printerinfo->printer, &(printerinfo->blob));
 
@@ -250,7 +221,7 @@ announcedata_size()
 }
 
 static void
-rdpdr_send_available(void)
+rdpdr_send_available(RDPCLIENT * This)
 {
 
 	uint8 magic[4] = "rDAD";
@@ -259,22 +230,22 @@ rdpdr_send_available(void)
 	STREAM s;
 	PRINTER *printerinfo;
 
-	s = channel_init(rdpdr_channel, announcedata_size());
+	s = channel_init(This, This->rdpdr.channel, announcedata_size(This));
 	out_uint8a(s, magic, 4);
-	out_uint32_le(s, g_num_devices);
+	out_uint32_le(s, This->num_devices);
 
-	for (i = 0; i < g_num_devices; i++)
+	for (i = 0; i < This->num_devices; i++)
 	{
-		out_uint32_le(s, g_rdpdr_device[i].device_type);
+		out_uint32_le(s, This->rdpdr_device[i].device_type);
 		out_uint32_le(s, i);	/* RDP Device ID */
 		/* Is it possible to use share names longer than 8 chars?
 		   /astrand */
-		out_uint8p(s, g_rdpdr_device[i].name, 8);
+		out_uint8p(s, This->rdpdr_device[i].name, 8);
 
-		switch (g_rdpdr_device[i].device_type)
+		switch (This->rdpdr_device[i].device_type)
 		{
 			case DEVICE_TYPE_PRINTER:
-				printerinfo = (PRINTER *) g_rdpdr_device[i].pdevice_data;
+				printerinfo = (PRINTER *) This->rdpdr_device[i].pdevice_data;
 
 				driverlen = 2 * strlen(printerinfo->driver) + 2;
 				printerlen = 2 * strlen(printerinfo->printer) + 2;
@@ -286,8 +257,8 @@ rdpdr_send_available(void)
 				out_uint32_le(s, driverlen);
 				out_uint32_le(s, printerlen);
 				out_uint32_le(s, bloblen);
-				rdp_out_unistr(s, printerinfo->driver, driverlen - 2);
-				rdp_out_unistr(s, printerinfo->printer, printerlen - 2);
+				rdp_out_unistr(This, s, printerinfo->driver, driverlen - 2);
+				rdp_out_unistr(This, s, printerinfo->printer, printerlen - 2);
 				out_uint8a(s, printerinfo->blob, bloblen);
 
 				if (printerinfo->blob)
@@ -306,17 +277,17 @@ rdpdr_send_available(void)
 #endif
 
 	s_mark_end(s);
-	channel_send(s, rdpdr_channel);
+	channel_send(This, s, This->rdpdr.channel);
 }
 
 static void
-rdpdr_send_completion(uint32 device, uint32 id, uint32 status, uint32 result, uint8 * buffer,
+rdpdr_send_completion(RDPCLIENT * This, uint32 device, uint32 id, uint32 status, uint32 result, uint8 * buffer,
 		      uint32 length)
 {
 	uint8 magic[4] = "rDCI";
 	STREAM s;
 
-	s = channel_init(rdpdr_channel, 20 + length);
+	s = channel_init(This, This->rdpdr.channel, 20 + length);
 	out_uint8a(s, magic, 4);
 	out_uint32_le(s, device);
 	out_uint32_le(s, id);
@@ -329,11 +300,11 @@ rdpdr_send_completion(uint32 device, uint32 id, uint32 status, uint32 result, ui
 	printf("--> rdpdr_send_completion\n");
 	/* hexdump(s->channel_hdr + 8, s->end - s->channel_hdr - 8); */
 #endif
-	channel_send(s, rdpdr_channel);
+	channel_send(This, s, This->rdpdr.channel);
 }
 
 static void
-rdpdr_process_irp(STREAM s)
+rdpdr_process_irp(RDPCLIENT * This, STREAM s)
 {
 	uint32 result = 0,
 		length = 0,
@@ -369,7 +340,7 @@ rdpdr_process_irp(STREAM s)
 	buffer = (uint8 *) xmalloc(1024);
 	buffer[0] = 0;
 
-	switch (g_rdpdr_device[device].device_type)
+	switch (This->rdpdr_device[device].device_type)
 	{
 		case DEVICE_TYPE_SERIAL:
 
@@ -415,7 +386,7 @@ rdpdr_process_irp(STREAM s)
 
 			if (length && (length / 2) < 256)
 			{
-				rdp_in_unistr(s, filename, length);
+				rdp_in_unistr(This, s, filename, length);
 				convert_to_unix_filename(filename);
 			}
 			else
@@ -429,7 +400,7 @@ rdpdr_process_irp(STREAM s)
 				break;
 			}
 
-			status = fns->create(device, desired_access, share_mode, disposition,
+			status = fns->create(This, device, desired_access, share_mode, disposition,
 					     flags_and_attributes, filename, &result);
 			buffer_len = 1;
 			break;
@@ -441,7 +412,7 @@ rdpdr_process_irp(STREAM s)
 				break;
 			}
 
-			status = fns->close(file);
+			status = fns->close(This, file);
 			break;
 
 		case IRP_MJ_READ:
@@ -457,7 +428,7 @@ rdpdr_process_irp(STREAM s)
 #if WITH_DEBUG_RDP5
 			DEBUG(("RDPDR IRP Read (length: %d, offset: %d)\n", length, offset));
 #endif
-			if (!rdpdr_handle_ok(device, file))
+			if (!rdpdr_handle_ok(This, device, file))
 			{
 				status = STATUS_INVALID_HANDLE;
 				break;
@@ -471,7 +442,7 @@ rdpdr_process_irp(STREAM s)
 					status = STATUS_CANCELLED;
 					break;
 				}
-				status = fns->read(file, buffer, length, offset, &result);
+				status = fns->read(This, file, buffer, length, offset, &result);
 				buffer_len = result;
 				break;
 			}
@@ -483,9 +454,9 @@ rdpdr_process_irp(STREAM s)
 				status = STATUS_CANCELLED;
 				break;
 			}
-			serial_get_timeout(file, length, &total_timeout, &interval_timeout);
+			serial_get_timeout(This, file, length, &total_timeout, &interval_timeout);
 			if (add_async_iorequest
-			    (device, file, id, major, length, fns, total_timeout, interval_timeout,
+			    (This, device, file, id, major, length, fns, total_timeout, interval_timeout,
 			     pst_buf, offset))
 			{
 				status = STATUS_PENDING;
@@ -510,7 +481,7 @@ rdpdr_process_irp(STREAM s)
 #if WITH_DEBUG_RDP5
 			DEBUG(("RDPDR IRP Write (length: %d)\n", result));
 #endif
-			if (!rdpdr_handle_ok(device, file))
+			if (!rdpdr_handle_ok(This, device, file))
 			{
 				status = STATUS_INVALID_HANDLE;
 				break;
@@ -518,7 +489,7 @@ rdpdr_process_irp(STREAM s)
 
 			if (rw_blocking)	/* Complete immediately */
 			{
-				status = fns->write(file, s->p, length, offset, &result);
+				status = fns->write(This, file, s->p, length, offset, &result);
 				break;
 			}
 
@@ -533,7 +504,7 @@ rdpdr_process_irp(STREAM s)
 			in_uint8a(s, pst_buf, length);
 
 			if (add_async_iorequest
-			    (device, file, id, major, length, fns, 0, 0, pst_buf, offset))
+			    (This, device, file, id, major, length, fns, 0, 0, pst_buf, offset))
 			{
 				status = STATUS_PENDING;
 				break;
@@ -544,7 +515,7 @@ rdpdr_process_irp(STREAM s)
 
 		case IRP_MJ_QUERY_INFORMATION:
 
-			if (g_rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
+			if (This->rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
 			{
 				status = STATUS_INVALID_HANDLE;
 				break;
@@ -553,14 +524,14 @@ rdpdr_process_irp(STREAM s)
 
 			out.data = out.p = buffer;
 			out.size = sizeof(buffer);
-			status = disk_query_information(file, info_level, &out);
+			status = disk_query_information(This, file, info_level, &out);
 			result = buffer_len = out.p - out.data;
 
 			break;
 
 		case IRP_MJ_SET_INFORMATION:
 
-			if (g_rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
+			if (This->rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
 			{
 				status = STATUS_INVALID_HANDLE;
 				break;
@@ -570,13 +541,13 @@ rdpdr_process_irp(STREAM s)
 
 			out.data = out.p = buffer;
 			out.size = sizeof(buffer);
-			status = disk_set_information(file, info_level, s, &out);
+			status = disk_set_information(This, file, info_level, s, &out);
 			result = buffer_len = out.p - out.data;
 			break;
 
 		case IRP_MJ_QUERY_VOLUME_INFORMATION:
 
-			if (g_rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
+			if (This->rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
 			{
 				status = STATUS_INVALID_HANDLE;
 				break;
@@ -586,13 +557,13 @@ rdpdr_process_irp(STREAM s)
 
 			out.data = out.p = buffer;
 			out.size = sizeof(buffer);
-			status = disk_query_volume_information(file, info_level, &out);
+			status = disk_query_volume_information(This, file, info_level, &out);
 			result = buffer_len = out.p - out.data;
 			break;
 
 		case IRP_MJ_DIRECTORY_CONTROL:
 
-			if (g_rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
+			if (This->rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
 			{
 				status = STATUS_INVALID_HANDLE;
 				break;
@@ -608,7 +579,7 @@ rdpdr_process_irp(STREAM s)
 					in_uint8s(s, 0x17);
 					if (length && length < 2 * 255)
 					{
-						rdp_in_unistr(s, filename, length);
+						rdp_in_unistr(This, s, filename, length);
 						convert_to_unix_filename(filename);
 					}
 					else
@@ -617,7 +588,7 @@ rdpdr_process_irp(STREAM s)
 					}
 					out.data = out.p = buffer;
 					out.size = sizeof(buffer);
-					status = disk_query_directory(file, info_level, filename,
+					status = disk_query_directory(This, file, info_level, filename,
 								      &out);
 					result = buffer_len = out.p - out.data;
 					if (!buffer_len)
@@ -631,13 +602,13 @@ rdpdr_process_irp(STREAM s)
 
 					in_uint32_le(s, info_level);	/* notify mask */
 
-					g_notify_stamp = True;
+					This->notify_stamp = True;
 
-					status = disk_create_notify(file, info_level);
+					status = disk_create_notify(This, file, info_level);
 					result = 0;
 
 					if (status == STATUS_PENDING)
-						add_async_iorequest(device, file, id, major, length,
+						add_async_iorequest(This, device, file, id, major, length,
 								    fns, 0, 0, NULL, 0);
 					break;
 
@@ -671,14 +642,14 @@ rdpdr_process_irp(STREAM s)
 
 			out.data = out.p = buffer;
 			out.size = sizeof(buffer);
-			status = fns->device_control(file, request, s, &out);
+			status = fns->device_control(This, file, request, s, &out);
 			result = buffer_len = out.p - out.data;
 
 			/* Serial SERIAL_WAIT_ON_MASK */
 			if (status == STATUS_PENDING)
 			{
 				if (add_async_iorequest
-				    (device, file, id, major, length, fns, 0, 0, NULL, 0))
+				    (This, device, file, id, major, length, fns, 0, 0, NULL, 0))
 				{
 					status = STATUS_PENDING;
 					break;
@@ -689,7 +660,7 @@ rdpdr_process_irp(STREAM s)
 
 		case IRP_MJ_LOCK_CONTROL:
 
-			if (g_rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
+			if (This->rdpdr_device[device].device_type != DEVICE_TYPE_DISK)
 			{
 				status = STATUS_INVALID_HANDLE;
 				break;
@@ -712,7 +683,7 @@ rdpdr_process_irp(STREAM s)
 
 	if (status != STATUS_PENDING)
 	{
-		rdpdr_send_completion(device, id, status, result, buffer, buffer_len);
+		rdpdr_send_completion(This, device, id, status, result, buffer, buffer_len);
 	}
 	if (buffer)
 		xfree(buffer);
@@ -720,12 +691,12 @@ rdpdr_process_irp(STREAM s)
 }
 
 static void
-rdpdr_send_clientcapabilty(void)
+rdpdr_send_clientcapabilty(RDPCLIENT * This)
 {
 	uint8 magic[4] = "rDPC";
 	STREAM s;
 
-	s = channel_init(rdpdr_channel, 0x50);
+	s = channel_init(This, This->rdpdr.channel, 0x50);
 	out_uint8a(s, magic, 4);
 	out_uint32_le(s, 5);	/* count */
 	out_uint16_le(s, 1);	/* first */
@@ -756,11 +727,11 @@ rdpdr_send_clientcapabilty(void)
 	out_uint32_le(s, 1);
 
 	s_mark_end(s);
-	channel_send(s, rdpdr_channel);
+	channel_send(This, s, This->rdpdr.channel);
 }
 
 static void
-rdpdr_process(STREAM s)
+rdpdr_process(RDPCLIENT * This, STREAM s)
 {
 	uint32 handle;
 	uint8 *magic;
@@ -775,20 +746,20 @@ rdpdr_process(STREAM s)
 	{
 		if ((magic[2] == 'R') && (magic[3] == 'I'))
 		{
-			rdpdr_process_irp(s);
+			rdpdr_process_irp(This, s);
 			return;
 		}
 		if ((magic[2] == 'n') && (magic[3] == 'I'))
 		{
-			rdpdr_send_connect();
-			rdpdr_send_name();
+			rdpdr_send_connect(This);
+			rdpdr_send_name(This);
 			return;
 		}
 		if ((magic[2] == 'C') && (magic[3] == 'C'))
 		{
 			/* connect from server */
-			rdpdr_send_clientcapabilty();
-			rdpdr_send_available();
+			rdpdr_send_clientcapabilty(This);
+			rdpdr_send_available(This);
 			return;
 		}
 		if ((magic[2] == 'r') && (magic[3] == 'd'))
@@ -810,7 +781,7 @@ rdpdr_process(STREAM s)
 	{
 		if ((magic[2] == 'C') && (magic[3] == 'P'))
 		{
-			printercache_process(s);
+			printercache_process(This, s);
 			return;
 		}
 	}
@@ -818,28 +789,28 @@ rdpdr_process(STREAM s)
 }
 
 BOOL
-rdpdr_init()
+rdpdr_init(RDPCLIENT * This)
 {
-	if (g_num_devices > 0)
+	if (This->num_devices > 0)
 	{
-		rdpdr_channel =
-			channel_register("rdpdr",
+		This->rdpdr.channel =
+			channel_register(This, "rdpdr",
 					 CHANNEL_OPTION_INITIALIZED | CHANNEL_OPTION_COMPRESS_RDP,
 					 rdpdr_process);
 	}
 
-	return (rdpdr_channel != NULL);
+	return (This->rdpdr.channel != NULL);
 }
 
 /* Add file descriptors of pending io request to select() */
 void
-rdpdr_add_fds(int *n, fd_set * rfds, fd_set * wfds, struct timeval *tv, BOOL * timeout)
+rdpdr_add_fds(RDPCLIENT * This, int *n, fd_set * rfds, fd_set * wfds, struct timeval *tv, BOOL * timeout)
 {
 	uint32 select_timeout = 0;	/* Timeout value to be used for select() (in millisecons). */
 	struct async_iorequest *iorq;
 	char c;
 
-	iorq = g_iorequest;
+	iorq = This->iorequest;
 	while (iorq != NULL)
 	{
 		if (iorq->fd != 0)
@@ -862,7 +833,7 @@ rdpdr_add_fds(int *n, fd_set * rfds, fd_set * wfds, struct timeval *tv, BOOL * t
 					{
 						/* Set new timeout */
 						select_timeout = iorq->timeout;
-						g_min_timeout_fd = iorq->fd;	/* Remember fd */
+						This->min_timeout_fd = iorq->fd;	/* Remember fd */
 						tv->tv_sec = select_timeout / 1000;
 						tv->tv_usec = (select_timeout % 1000) * 1000;
 						*timeout = True;
@@ -874,7 +845,7 @@ rdpdr_add_fds(int *n, fd_set * rfds, fd_set * wfds, struct timeval *tv, BOOL * t
 					{
 						/* Set new timeout */
 						select_timeout = iorq->itv_timeout;
-						g_min_timeout_fd = iorq->fd;	/* Remember fd */
+						This->min_timeout_fd = iorq->fd;	/* Remember fd */
 						tv->tv_sec = select_timeout / 1000;
 						tv->tv_usec = (select_timeout % 1000) * 1000;
 						*timeout = True;
@@ -905,7 +876,7 @@ rdpdr_add_fds(int *n, fd_set * rfds, fd_set * wfds, struct timeval *tv, BOOL * t
 }
 
 struct async_iorequest *
-rdpdr_remove_iorequest(struct async_iorequest *prev, struct async_iorequest *iorq)
+rdpdr_remove_iorequest(RDPCLIENT * This, struct async_iorequest *prev, struct async_iorequest *iorq)
 {
 	if (!iorq)
 		return NULL;
@@ -921,7 +892,7 @@ rdpdr_remove_iorequest(struct async_iorequest *prev, struct async_iorequest *ior
 	else
 	{
 		/* Even if NULL */
-		g_iorequest = iorq->next;
+		This->iorequest = iorq->next;
 		xfree(iorq);
 		iorq = NULL;
 	}
@@ -930,7 +901,7 @@ rdpdr_remove_iorequest(struct async_iorequest *prev, struct async_iorequest *ior
 
 /* Check if select() returned with one of the rdpdr file descriptors, and complete io if it did */
 static void
-_rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
+_rdpdr_check_fds(RDPCLIENT * This, fd_set * rfds, fd_set * wfds, BOOL timed_out)
 {
 	NTSTATUS status;
 	uint32 result = 0;
@@ -947,24 +918,24 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 	{
 		/* check serial iv_timeout */
 
-		iorq = g_iorequest;
+		iorq = This->iorequest;
 		prev = NULL;
 		while (iorq != NULL)
 		{
-			if (iorq->fd == g_min_timeout_fd)
+			if (iorq->fd == This->min_timeout_fd)
 			{
 				if ((iorq->partial_len > 0) &&
-				    (g_rdpdr_device[iorq->device].device_type ==
+				    (This->rdpdr_device[iorq->device].device_type ==
 				     DEVICE_TYPE_SERIAL))
 				{
 
 					/* iv_timeout between 2 chars, send partial_len */
 					/*printf("RDPDR: IVT total %u bytes read of %u\n", iorq->partial_len, iorq->length); */
-					rdpdr_send_completion(iorq->device,
+					rdpdr_send_completion(This, iorq->device,
 							      iorq->id, STATUS_SUCCESS,
 							      iorq->partial_len,
 							      iorq->buffer, iorq->partial_len);
-					iorq = rdpdr_remove_iorequest(prev, iorq);
+					iorq = rdpdr_remove_iorequest(This, prev, iorq);
 					return;
 				}
 				else
@@ -985,11 +956,11 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 
 		}
 
-		rdpdr_abort_io(g_min_timeout_fd, 0, STATUS_TIMEOUT);
+		rdpdr_abort_io(This, This->min_timeout_fd, 0, STATUS_TIMEOUT);
 		return;
 	}
 
-	iorq = g_iorequest;
+	iorq = This->iorequest;
 	prev = NULL;
 	while (iorq != NULL)
 	{
@@ -1008,7 +979,7 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 							8192 ? 8192 : (iorq->length -
 								       iorq->partial_len);
 						/* never read larger chunks than 8k - chances are that it will block */
-						status = fns->read(iorq->fd,
+						status = fns->read(This, iorq->fd,
 								   iorq->buffer + iorq->partial_len,
 								   req_size, iorq->offset, &result);
 
@@ -1028,12 +999,12 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 #if WITH_DEBUG_RDP5
 							DEBUG(("RDPDR: AIO total %u bytes read of %u\n", iorq->partial_len, iorq->length));
 #endif
-							rdpdr_send_completion(iorq->device,
+							rdpdr_send_completion(This, iorq->device,
 									      iorq->id, status,
 									      iorq->partial_len,
 									      iorq->buffer,
 									      iorq->partial_len);
-							iorq = rdpdr_remove_iorequest(prev, iorq);
+							iorq = rdpdr_remove_iorequest(This, prev, iorq);
 						}
 					}
 					break;
@@ -1049,7 +1020,7 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 								       iorq->partial_len);
 
 						/* never write larger chunks than 8k - chances are that it will block */
-						status = fns->write(iorq->fd,
+						status = fns->write(This, iorq->fd,
 								    iorq->buffer +
 								    iorq->partial_len, req_size,
 								    iorq->offset, &result);
@@ -1072,17 +1043,17 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 #if WITH_DEBUG_RDP5
 							DEBUG(("RDPDR: AIO total %u bytes written of %u\n", iorq->partial_len, iorq->length));
 #endif
-							rdpdr_send_completion(iorq->device,
+							rdpdr_send_completion(This, iorq->device,
 									      iorq->id, status,
 									      iorq->partial_len,
 									      (uint8 *) "", 1);
 
-							iorq = rdpdr_remove_iorequest(prev, iorq);
+							iorq = rdpdr_remove_iorequest(This, prev, iorq);
 						}
 					}
 					break;
 				case IRP_MJ_DEVICE_CONTROL:
-					if (serial_get_event(iorq->fd, &result))
+					if (serial_get_event(This, iorq->fd, &result))
 					{
 						buffer = (uint8 *) xrealloc((void *) buffer, 0x14);
 						out.data = out.p = buffer;
@@ -1090,11 +1061,11 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 						out_uint32_le(&out, result);
 						result = buffer_len = out.p - out.data;
 						status = STATUS_SUCCESS;
-						rdpdr_send_completion(iorq->device, iorq->id,
+						rdpdr_send_completion(This, iorq->device, iorq->id,
 								      status, result, buffer,
 								      buffer_len);
 						xfree(buffer);
-						iorq = rdpdr_remove_iorequest(prev, iorq);
+						iorq = rdpdr_remove_iorequest(This, prev, iorq);
 					}
 
 					break;
@@ -1107,7 +1078,7 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 	}
 
 	/* Check notify */
-	iorq = g_iorequest;
+	iorq = This->iorequest;
 	prev = NULL;
 	while (iorq != NULL)
 	{
@@ -1117,21 +1088,21 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 			{
 
 				case IRP_MJ_DIRECTORY_CONTROL:
-					if (g_rdpdr_device[iorq->device].device_type ==
+					if (This->rdpdr_device[iorq->device].device_type ==
 					    DEVICE_TYPE_DISK)
 					{
 
-						if (g_notify_stamp)
+						if (This->notify_stamp)
 						{
-							g_notify_stamp = False;
-							status = disk_check_notify(iorq->fd);
+							This->notify_stamp = False;
+							status = disk_check_notify(This, iorq->fd);
 							if (status != STATUS_PENDING)
 							{
-								rdpdr_send_completion(iorq->device,
+								rdpdr_send_completion(This, iorq->device,
 										      iorq->id,
 										      status, 0,
 										      NULL, 0);
-								iorq = rdpdr_remove_iorequest(prev,
+								iorq = rdpdr_remove_iorequest(This, prev,
 											      iorq);
 							}
 						}
@@ -1151,7 +1122,7 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 }
 
 void
-rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
+rdpdr_check_fds(RDPCLIENT * This, fd_set * rfds, fd_set * wfds, BOOL timed_out)
 {
 	fd_set dummy;
 
@@ -1163,20 +1134,20 @@ rdpdr_check_fds(fd_set * rfds, fd_set * wfds, BOOL timed_out)
 	   any serial wait event must be done before read block will be sent
 	 */
 
-	_rdpdr_check_fds(&dummy, &dummy, False);
-	_rdpdr_check_fds(rfds, wfds, timed_out);
+	_rdpdr_check_fds(This, &dummy, &dummy, False);
+	_rdpdr_check_fds(This, rfds, wfds, timed_out);
 }
 
 
 /* Abort a pending io request for a given handle and major */
 BOOL
-rdpdr_abort_io(uint32 fd, uint32 major, NTSTATUS status)
+rdpdr_abort_io(RDPCLIENT * This, uint32 fd, uint32 major, NTSTATUS status)
 {
 	uint32 result;
 	struct async_iorequest *iorq;
 	struct async_iorequest *prev;
 
-	iorq = g_iorequest;
+	iorq = This->iorequest;
 	prev = NULL;
 	while (iorq != NULL)
 	{
@@ -1185,10 +1156,10 @@ rdpdr_abort_io(uint32 fd, uint32 major, NTSTATUS status)
 		if ((iorq->fd == fd) && (major == 0 || iorq->major == major))
 		{
 			result = 0;
-			rdpdr_send_completion(iorq->device, iorq->id, status, result, (uint8 *) "",
+			rdpdr_send_completion(This, iorq->device, iorq->id, status, result, (uint8 *) "",
 					      1);
 
-			iorq = rdpdr_remove_iorequest(prev, iorq);
+			iorq = rdpdr_remove_iorequest(This, prev, iorq);
 			return True;
 		}
 

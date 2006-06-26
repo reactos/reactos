@@ -47,77 +47,7 @@
 
 #include <openssl/md5.h>
 
-char g_title[64] = "";
-char g_username[64];
-char g_hostname[16];
-char g_keymapname[PATH_MAX] = "";
-unsigned int g_keylayout = 0x409;	/* Defaults to US keyboard layout */
-int g_keyboard_type = 0x4;	/* Defaults to US keyboard layout */
-int g_keyboard_subtype = 0x0;	/* Defaults to US keyboard layout */
-int g_keyboard_functionkeys = 0xc;	/* Defaults to US keyboard layout */
-
-int g_width = 800;		/* width is special: If 0, the
-				   geometry will be fetched from
-				   _NET_WORKAREA. If negative,
-				   absolute value specifies the
-				   percent of the whole screen. */
-int g_height = 600;
-int g_xpos = 0;
-int g_ypos = 0;
-int g_pos = 0;			/* 0 position unspecified,
-				   1 specified,
-				   2 xpos neg,
-				   4 ypos neg  */
-extern int g_tcp_port_rdp;
-int g_server_depth = -1;
-int g_win_button_size = 0;	/* If zero, disable single app mode */
-BOOL g_bitmap_compression = True;
-BOOL g_sendmotion = True;
-BOOL g_bitmap_cache = True;
-BOOL g_bitmap_cache_persist_enable = False;
-BOOL g_bitmap_cache_precache = True;
-BOOL g_encryption = True;
-BOOL packet_encryption = True;
-BOOL g_desktop_save = True;	/* desktop save order */
-BOOL g_polygon_ellipse_orders = True;	/* polygon / ellipse orders */
-BOOL g_fullscreen = False;
-BOOL g_grab_keyboard = True;
-BOOL g_hide_decorations = False;
-BOOL g_use_rdp5 = True;
-BOOL g_rdpclip = True;
-BOOL g_console_session = False;
-BOOL g_numlock_sync = False;
-BOOL lspci_enabled = False;
-BOOL g_owncolmap = False;
-BOOL g_ownbackstore = True;	/* We can't rely on external BackingStore */
-BOOL g_seamless_rdp = False;
-uint32 g_embed_wnd;
-uint32 g_rdp5_performanceflags =
-	RDP5_NO_WALLPAPER | RDP5_NO_FULLWINDOWDRAG | RDP5_NO_MENUANIMATIONS;
-/* Session Directory redirection */
-BOOL g_redirect = False;
-char g_redirect_server[64];
-char g_redirect_domain[16];
-char g_redirect_password[64];
-char g_redirect_username[64];
-char g_redirect_cookie[128];
-uint32 g_redirect_flags = 0;
-
-#ifdef WITH_RDPSND
-BOOL g_rdpsnd = False;
-#endif
-
-#ifdef HAVE_ICONV
-char g_codepage[16] = "";
-#endif
-
-extern RDPDR_DEVICE g_rdpdr_device[];
-extern uint32 g_num_devices;
-extern char *g_rdpdr_clientname;
-
 #ifdef RDP2VNC
-extern int rfb_port;
-extern int defer_time;
 void
 rdp2vnc_connect(char *server, uint32 flags, char *domain, char *password,
 		char *shell, char *directory);
@@ -294,9 +224,9 @@ print_disconnect_reason(uint16 reason)
 }
 
 static void
-rdesktop_reset_state(void)
+rdesktop_reset_state(RDPCLIENT * This)
 {
-	rdp_reset_state();
+	rdp_reset_state(This);
 }
 
 static BOOL
@@ -336,7 +266,7 @@ read_password(char *password, int size)
 }
 
 static void
-parse_server_and_port(char *server)
+parse_server_and_port(RDPCLIENT * This, char *server)
 {
 	char *p;
 #ifdef IPv6
@@ -356,7 +286,7 @@ parse_server_and_port(char *server)
 		if (*server == '[' && p != NULL)
 		{
 			if (*(p + 1) == ':' && *(p + 2) != '\0')
-				g_tcp_port_rdp = strtol(p + 2, NULL, 10);
+				This->tcp_port_rdp = strtol(p + 2, NULL, 10);
 			/* remove the port number and brackets from the address */
 			*p = '\0';
 			strncpy(server, server + 1, strlen(server));
@@ -368,7 +298,7 @@ parse_server_and_port(char *server)
 		p = strchr(server, ':');
 		if (p != NULL)
 		{
-			g_tcp_port_rdp = strtol(p + 1, NULL, 10);
+			This->tcp_port_rdp = strtol(p + 1, NULL, 10);
 			*p = 0;
 		}
 	}
@@ -376,7 +306,7 @@ parse_server_and_port(char *server)
 	p = strchr(server, ':');
 	if (p != NULL)
 	{
-		g_tcp_port_rdp = strtol(p + 1, NULL, 10);
+		This->tcp_port_rdp = strtol(p + 1, NULL, 10);
 		*p = 0;
 	}
 #endif /* IPv6 */
@@ -403,6 +333,58 @@ main(int argc, char *argv[])
 	BOOL geometry_option = False;
 	int run_count = 0;	/* Session Directory support */
 	BOOL continue_connect = True;	/* Session Directory support */
+	RDPCLIENT * This;
+
+	This = xmalloc(sizeof(RDPCLIENT));
+	memset(This, 0, sizeof(RDPCLIENT));
+
+	This->keylayout = 0x409;	/* Defaults to US keyboard layout */
+	This->keyboard_type = 0x4;	/* Defaults to US keyboard layout */
+	This->keyboard_subtype = 0x0;	/* Defaults to US keyboard layout */
+	This->keyboard_functionkeys = 0xc;	/* Defaults to US keyboard layout */
+	This->width = 800;		/* width is special: If 0, the
+					   geometry will be fetched from
+					   _NET_WORKAREA. If negative,
+					   absolute value specifies the
+					   percent of the whole screen. */
+	This->height = 600;
+	This->server_depth = -1;
+	This->bitmap_compression = True;
+	This->sendmotion = True;
+	This->bitmap_cache = True;
+	This->bitmap_cache_persist_enable = False;
+	This->bitmap_cache_precache = True;
+	This->encryption = True;
+	This->packet_encryption = True;
+	This->desktop_save = True;	/* desktop save order */
+	This->polygon_ellipse_orders = True;	/* polygon / ellipse orders */
+	This->fullscreen = False;
+	This->grab_keyboard = True;
+	This->hide_decorations = False;
+	This->use_rdp5 = True;
+	This->rdpclip = True;
+	This->console_session = False;
+	This->numlock_sync = False;
+	This->lspci_enabled = False;
+	This->owncolmap = False;
+	This->ownbackstore = True;	/* We can't rely on external BackingStore */
+	This->seamless_rdp = False;
+	This->rdp5_performanceflags = RDP5_NO_WALLPAPER | RDP5_NO_FULLWINDOWDRAG | RDP5_NO_MENUANIMATIONS;
+	This->tcp_port_rdp = TCP_PORT_RDP;
+
+#define NOT_SET -1
+	This->cache.bmpcache_lru[0] = NOT_SET;
+	This->cache.bmpcache_lru[1] = NOT_SET;
+	This->cache.bmpcache_lru[2] = NOT_SET;
+	This->cache.bmpcache_mru[0] = NOT_SET;
+	This->cache.bmpcache_mru[1] = NOT_SET;
+	This->cache.bmpcache_mru[2] = NOT_SET;
+
+#ifdef HAVE_ICONV
+	This->rdp.iconv_works = True;
+#endif
+
+	This->xclip.auto_mode = True;
 
 #ifdef HAVE_LOCALE_H
 	/* Set locale according to environment */
@@ -416,9 +398,9 @@ main(int argc, char *argv[])
 	flags = RDP_LOGON_NORMAL;
 	prompt_password = False;
 	domain[0] = password[0] = shell[0] = directory[0] = 0;
-	g_embed_wnd = 0;
+	This->embed_wnd = 0;
 
-	g_num_devices = 0;
+	This->num_devices = 0;
 
 #ifdef RDP2VNC
 #define VNCOPT "V:Q:"
@@ -433,30 +415,30 @@ main(int argc, char *argv[])
 		{
 #ifdef RDP2VNC
 			case 'V':
-				rfb_port = strtol(optarg, NULL, 10);
-				if (rfb_port < 100)
-					rfb_port += 5900;
+				This->rfb_port = strtol(optarg, NULL, 10);
+				if (This->rfb_port < 100)
+					This->rfb_port += 5900;
 				break;
 
 			case 'Q':
-				defer_time = strtol(optarg, NULL, 10);
-				if (defer_time < 0)
-					defer_time = 0;
+				This->defer_time = strtol(optarg, NULL, 10);
+				if (This->defer_time < 0)
+					This->defer_time = 0;
 				break;
 #endif
 
 			case 'A':
-				g_seamless_rdp = True;
+				This->seamless_rdp = True;
 				break;
 
 			case 'u':
-				STRNCPY(g_username, optarg, sizeof(g_username));
+				STRNCPY(This->username, optarg, sizeof(This->username));
 				username_option = 1;
 				break;
 
 			case 'L':
 #ifdef HAVE_ICONV
-				STRNCPY(g_codepage, optarg, sizeof(g_codepage));
+				STRNCPY(This->codepage, optarg, sizeof(This->codepage));
 #else
 				error("iconv support not available\n");
 #endif
@@ -491,33 +473,33 @@ main(int argc, char *argv[])
 				break;
 
 			case 'n':
-				STRNCPY(g_hostname, optarg, sizeof(g_hostname));
+				STRNCPY(This->hostname, optarg, sizeof(This->hostname));
 				break;
 
 			case 'k':
-				STRNCPY(g_keymapname, optarg, sizeof(g_keymapname));
+				STRNCPY(This->keymapname, optarg, sizeof(This->keymapname));
 				break;
 
 			case 'g':
 				geometry_option = True;
-				g_fullscreen = False;
+				This->fullscreen = False;
 				if (!strcmp(optarg, "workarea"))
 				{
-					g_width = g_height = 0;
+					This->width = This->height = 0;
 					break;
 				}
 
-				g_width = strtol(optarg, &p, 10);
-				if (g_width <= 0)
+				This->width = strtol(optarg, &p, 10);
+				if (This->width <= 0)
 				{
 					error("invalid geometry\n");
 					return 1;
 				}
 
 				if (*p == 'x')
-					g_height = strtol(p + 1, &p, 10);
+					This->height = strtol(p + 1, &p, 10);
 
-				if (g_height <= 0)
+				if (This->height <= 0)
 				{
 					error("invalid geometry\n");
 					return 1;
@@ -525,66 +507,66 @@ main(int argc, char *argv[])
 
 				if (*p == '%')
 				{
-					g_width = -g_width;
+					This->width = -This->width;
 					p++;
 				}
 
 				if (*p == '+' || *p == '-')
 				{
-					g_pos |= (*p == '-') ? 2 : 1;
-					g_xpos = strtol(p, &p, 10);
+					This->pos |= (*p == '-') ? 2 : 1;
+					This->xpos = strtol(p, &p, 10);
 
 				}
 				if (*p == '+' || *p == '-')
 				{
-					g_pos |= (*p == '-') ? 4 : 1;
-					g_ypos = strtol(p, NULL, 10);
+					This->pos |= (*p == '-') ? 4 : 1;
+					This->ypos = strtol(p, NULL, 10);
 				}
 
 				break;
 
 			case 'f':
-				g_fullscreen = True;
+				This->fullscreen = True;
 				break;
 
 			case 'b':
-				g_bitmap_cache = False;
+				This->bitmap_cache = False;
 				break;
 
 			case 'B':
-				g_ownbackstore = False;
+				This->ownbackstore = False;
 				break;
 
 			case 'e':
-				g_encryption = False;
+				This->encryption = False;
 				break;
 			case 'E':
-				packet_encryption = False;
+				This->packet_encryption = False;
 				break;
 			case 'm':
-				g_sendmotion = False;
+				This->sendmotion = False;
 				break;
 
 			case 'C':
-				g_owncolmap = True;
+				This->owncolmap = True;
 				break;
 
 			case 'D':
-				g_hide_decorations = True;
+				This->hide_decorations = True;
 				break;
 
 			case 'K':
-				g_grab_keyboard = False;
+				This->grab_keyboard = False;
 				break;
 
 			case 'S':
 				if (!strcmp(optarg, "standard"))
 				{
-					g_win_button_size = 18;
+					This->win_button_size = 18;
 					break;
 				}
 
-				g_win_button_size = strtol(optarg, &p, 10);
+				This->win_button_size = strtol(optarg, &p, 10);
 
 				if (*p)
 				{
@@ -595,22 +577,22 @@ main(int argc, char *argv[])
 				break;
 
 			case 'T':
-				STRNCPY(g_title, optarg, sizeof(g_title));
+				STRNCPY(This->title, optarg, sizeof(This->title));
 				break;
 
 			case 'N':
-				g_numlock_sync = True;
+				This->numlock_sync = True;
 				break;
 
 			case 'X':
-				g_embed_wnd = strtol(optarg, NULL, 0);
+				This->embed_wnd = strtol(optarg, NULL, 0);
 				break;
 
 			case 'a':
-				g_server_depth = strtol(optarg, NULL, 10);
-				if (g_server_depth != 8 &&
-				    g_server_depth != 16 &&
-				    g_server_depth != 15 && g_server_depth != 24)
+				This->server_depth = strtol(optarg, NULL, 10);
+				if (This->server_depth != 8 &&
+				    This->server_depth != 16 &&
+				    This->server_depth != 15 && This->server_depth != 24)
 				{
 					error("Invalid server colour depth.\n");
 					return 1;
@@ -625,26 +607,26 @@ main(int argc, char *argv[])
 			case 'x':
 				if (str_startswith(optarg, "m"))	/* modem */
 				{
-					g_rdp5_performanceflags =
+					This->rdp5_performanceflags =
 						RDP5_NO_WALLPAPER | RDP5_NO_FULLWINDOWDRAG |
 						RDP5_NO_MENUANIMATIONS | RDP5_NO_THEMING;
 				}
 				else if (str_startswith(optarg, "b"))	/* broadband */
 				{
-					g_rdp5_performanceflags = RDP5_NO_WALLPAPER;
+					This->rdp5_performanceflags = RDP5_NO_WALLPAPER;
 				}
 				else if (str_startswith(optarg, "l"))	/* lan */
 				{
-					g_rdp5_performanceflags = RDP5_DISABLE_NOTHING;
+					This->rdp5_performanceflags = RDP5_DISABLE_NOTHING;
 				}
 				else
 				{
-					g_rdp5_performanceflags = strtol(optarg, NULL, 16);
+					This->rdp5_performanceflags = strtol(optarg, NULL, 16);
 				}
 				break;
 
 			case 'P':
-				g_bitmap_cache_persist_enable = True;
+				This->bitmap_cache_persist_enable = True;
 				break;
 
 			case 'r':
@@ -663,14 +645,14 @@ main(int argc, char *argv[])
 
 							if (str_startswith(optarg, "local"))
 #ifdef WITH_RDPSND
-								g_rdpsnd = True;
+								This->rdpsnd_enabled = True;
 #else
 								warning("Not compiled with sound support\n");
 #endif
 
 							if (str_startswith(optarg, "off"))
 #ifdef WITH_RDPSND
-								g_rdpsnd = False;
+								This->rdpsnd_enabled = False;
 #else
 								warning("Not compiled with sound support\n");
 #endif
@@ -681,7 +663,7 @@ main(int argc, char *argv[])
 					else
 					{
 #ifdef WITH_RDPSND
-						g_rdpsnd = True;
+						This->rdpsnd_enabled = True;
 #else
 						warning("Not compiled with sound support\n");
 #endif
@@ -690,28 +672,28 @@ main(int argc, char *argv[])
 				else if (str_startswith(optarg, "disk"))
 				{
 					/* -r disk:h:=/mnt/floppy */
-					disk_enum_devices(&g_num_devices, optarg + 4);
+					disk_enum_devices(This, &This->num_devices, optarg + 4);
 				}
 				else if (str_startswith(optarg, "comport"))
 				{
-					serial_enum_devices(&g_num_devices, optarg + 7);
+					serial_enum_devices(This, &This->num_devices, optarg + 7);
 				}
 				else if (str_startswith(optarg, "lspci"))
 				{
-					lspci_enabled = True;
+					This->lspci_enabled = True;
 				}
 				else if (str_startswith(optarg, "lptport"))
 				{
-					parallel_enum_devices(&g_num_devices, optarg + 7);
+					parallel_enum_devices(This, &This->num_devices, optarg + 7);
 				}
 				else if (str_startswith(optarg, "printer"))
 				{
-					printer_enum_devices(&g_num_devices, optarg + 7);
+					printer_enum_devices(This, &This->num_devices, optarg + 7);
 				}
 				else if (str_startswith(optarg, "clientname"))
 				{
-					g_rdpdr_clientname = xmalloc(strlen(optarg + 11) + 1);
-					strcpy(g_rdpdr_clientname, optarg + 11);
+					This->rdpdr_clientname = xmalloc(strlen(optarg + 11) + 1);
+					strcpy(This->rdpdr_clientname, optarg + 11);
 				}
 				else if (str_startswith(optarg, "clipboard"))
 				{
@@ -722,12 +704,12 @@ main(int argc, char *argv[])
 						optarg++;
 
 						if (str_startswith(optarg, "off"))
-							g_rdpclip = False;
+							This->rdpclip = False;
 						else
-							cliprdr_set_mode(optarg);
+							cliprdr_set_mode(This, optarg);
 					}
 					else
-						g_rdpclip = True;
+						This->rdpclip = True;
 				}
 				else
 				{
@@ -736,15 +718,15 @@ main(int argc, char *argv[])
 				break;
 
 			case '0':
-				g_console_session = True;
+				This->console_session = True;
 				break;
 
 			case '4':
-				g_use_rdp5 = False;
+				This->use_rdp5 = False;
 				break;
 
 			case '5':
-				g_use_rdp5 = True;
+				This->use_rdp5 = True;
 				break;
 
 			case 'h':
@@ -762,43 +744,43 @@ main(int argc, char *argv[])
 	}
 
 	STRNCPY(server, argv[optind], sizeof(server));
-	parse_server_and_port(server);
+	parse_server_and_port(This, server);
 
-	if (g_seamless_rdp)
+	if (This->seamless_rdp)
 	{
-		if (g_win_button_size)
+		if (This->win_button_size)
 		{
 			error("You cannot use -S and -A at the same time\n");
 			return 1;
 		}
-		g_rdp5_performanceflags &= ~RDP5_NO_FULLWINDOWDRAG;
+		This->rdp5_performanceflags &= ~RDP5_NO_FULLWINDOWDRAG;
 		if (geometry_option)
 		{
 			error("You cannot use -g and -A at the same time\n");
 			return 1;
 		}
-		if (g_fullscreen)
+		if (This->fullscreen)
 		{
 			error("You cannot use -f and -A at the same time\n");
 			return 1;
 		}
-		if (g_hide_decorations)
+		if (This->hide_decorations)
 		{
 			error("You cannot use -D and -A at the same time\n");
 			return 1;
 		}
-		if (g_embed_wnd)
+		if (This->embed_wnd)
 		{
 			error("You cannot use -X and -A at the same time\n");
 			return 1;
 		}
-		if (!g_use_rdp5)
+		if (!This->use_rdp5)
 		{
 			error("You cannot use -4 and -A at the same time\n");
 			return 1;
 		}
-		g_width = -100;
-		g_grab_keyboard = False;
+		This->width = -100;
+		This->grab_keyboard = False;
 	}
 
 	if (!username_option)
@@ -810,24 +792,24 @@ main(int argc, char *argv[])
 			return 1;
 		}
 
-		STRNCPY(g_username, pw->pw_name, sizeof(g_username));
+		STRNCPY(This->username, pw->pw_name, sizeof(This->username));
 	}
 
 #ifdef HAVE_ICONV
-	if (g_codepage[0] == 0)
+	if (This->codepage[0] == 0)
 	{
 		if (setlocale(LC_CTYPE, ""))
 		{
-			STRNCPY(g_codepage, nl_langinfo(CODESET), sizeof(g_codepage));
+			STRNCPY(This->codepage, nl_langinfo(CODESET), sizeof(This->codepage));
 		}
 		else
 		{
-			STRNCPY(g_codepage, DEFAULT_CODEPAGE, sizeof(g_codepage));
+			STRNCPY(This->codepage, DEFAULT_CODEPAGE, sizeof(This->codepage));
 		}
 	}
 #endif
 
-	if (g_hostname[0] == 0)
+	if (This->hostname[0] == 0)
 	{
 		if (gethostname(fullhostname, sizeof(fullhostname)) == -1)
 		{
@@ -839,18 +821,18 @@ main(int argc, char *argv[])
 		if (p != NULL)
 			*p = 0;
 
-		STRNCPY(g_hostname, fullhostname, sizeof(g_hostname));
+		STRNCPY(This->hostname, fullhostname, sizeof(This->hostname));
 	}
 
-	if (g_keymapname[0] == 0)
+	if (This->keymapname[0] == 0)
 	{
-		if (locale && xkeymap_from_locale(locale))
+		if (locale && xkeymap_from_locale(This, locale))
 		{
-			fprintf(stderr, "Autoselected keyboard map %s\n", g_keymapname);
+			fprintf(stderr, "Autoselected keyboard map %s\n", This->keymapname);
 		}
 		else
 		{
-			STRNCPY(g_keymapname, "en-us", sizeof(g_keymapname));
+			STRNCPY(This->keymapname, "en-us", sizeof(This->keymapname));
 		}
 	}
 	if (locale)
@@ -860,10 +842,10 @@ main(int argc, char *argv[])
 	if (prompt_password && read_password(password, sizeof(password)))
 		flags |= RDP_LOGON_AUTO;
 
-	if (g_title[0] == 0)
+	if (This->title[0] == 0)
 	{
-		strcpy(g_title, "rdesktop - ");
-		strncat(g_title, server, sizeof(g_title) - sizeof("rdesktop - "));
+		strcpy(This->title, "rdesktop - ");
+		strncat(This->title, server, sizeof(This->title) - sizeof("rdesktop - "));
 	}
 
 #ifdef RDP2VNC
@@ -871,74 +853,74 @@ main(int argc, char *argv[])
 	return 0;
 #else
 
-	if (!ui_init())
+	if (!ui_init(This))
 		return 1;
 
 #ifdef WITH_RDPSND
-	if (g_rdpsnd)
-		rdpsnd_init();
+	if (This->rdpsnd_enabled)
+		rdpsnd_init(This);
 #endif
 
-	if (lspci_enabled)
-		lspci_init();
+	if (This->lspci_enabled)
+		lspci_init(This);
 
-	rdpdr_init();
+	rdpdr_init(This);
 
 	while (run_count < 2 && continue_connect)	/* add support for Session Directory; only reconnect once */
 	{
 		if (run_count == 0)
 		{
-			if (!rdp_connect(server, flags, domain, password, shell, directory))
+			if (!rdp_connect(This, server, flags, domain, password, shell, directory))
 				return 1;
 		}
 		else if (!rdp_reconnect
-			 (server, flags, domain, password, shell, directory, g_redirect_cookie))
+			 (This, server, flags, domain, password, shell, directory, This->redirect_cookie))
 			return 1;
 
-		/* By setting encryption to False here, we have an encrypted login 
+		/* By setting encryption to False here, we have an encrypted login
 		   packet but unencrypted transfer of other packets */
-		if (!packet_encryption)
-			g_encryption = False;
+		if (!This->packet_encryption)
+			This->encryption = False;
 
 
 		DEBUG(("Connection successful.\n"));
 		memset(password, 0, sizeof(password));
 
 		if (run_count == 0)
-			if (!ui_create_window())
+			if (!ui_create_window(This))
 				continue_connect = False;
 
 		if (continue_connect)
-			rdp_main_loop(&deactivated, &ext_disc_reason);
+			rdp_main_loop(This, &deactivated, &ext_disc_reason);
 
 		DEBUG(("Disconnecting...\n"));
-		rdp_disconnect();
+		rdp_disconnect(This);
 
-		if ((g_redirect == True) && (run_count == 0))	/* Support for Session Directory */
+		if ((This->redirect == True) && (run_count == 0))	/* Support for Session Directory */
 		{
 			/* reset state of major globals */
-			rdesktop_reset_state();
+			rdesktop_reset_state(This);
 
-			STRNCPY(domain, g_redirect_domain, sizeof(domain));
-			STRNCPY(g_username, g_redirect_username, sizeof(g_username));
-			STRNCPY(password, g_redirect_password, sizeof(password));
-			STRNCPY(server, g_redirect_server, sizeof(server));
+			STRNCPY(domain, This->redirect_domain, sizeof(domain));
+			STRNCPY(This->username, This->redirect_username, sizeof(This->username));
+			STRNCPY(password, This->redirect_password, sizeof(password));
+			STRNCPY(server, This->redirect_server, sizeof(server));
 			flags |= RDP_LOGON_AUTO;
 
-			g_redirect = False;
+			This->redirect = False;
 		}
 		else
 		{
 			continue_connect = False;
-			ui_destroy_window();
+			ui_destroy_window(This);
 			break;
 		}
 
 		run_count++;
 	}
 
-	cache_save_state();
-	ui_deinit();
+	cache_save_state(This);
+	ui_deinit(This);
 
 	if (ext_disc_reason >= 2)
 		print_disconnect_reason(ext_disc_reason);
@@ -1261,7 +1243,7 @@ str_startswith(const char *s, const char *prefix)
    initially point to NULL. When linehandler returns False, stop and
    return False. Otherwise, return True.  */
 BOOL
-str_handle_lines(const char *input, char **rest, str_handle_lines_t linehandler, void *data)
+str_handle_lines(RDPCLIENT * This, const char *input, char **rest, str_handle_lines_t linehandler, void *data)
 {
 	char *buf, *p;
 	char *oldrest;
@@ -1288,7 +1270,7 @@ str_handle_lines(const char *input, char **rest, str_handle_lines_t linehandler,
 		if (newline)
 		{
 			*newline = '\0';
-			if (!linehandler(p, data))
+			if (!linehandler(This, p, data))
 			{
 				p = newline + 1;
 				ret = False;
@@ -1317,7 +1299,7 @@ str_handle_lines(const char *input, char **rest, str_handle_lines_t linehandler,
 /* Execute the program specified by argv. For each line in
    stdout/stderr output, call linehandler. Returns false on failure. */
 BOOL
-subprocess(char *const argv[], str_handle_lines_t linehandler, void *data)
+subprocess(RDPCLIENT * This, char *const argv[], str_handle_lines_t linehandler, void *data)
 {
 	pid_t child;
 	int fd[2];
@@ -1359,7 +1341,7 @@ subprocess(char *const argv[], str_handle_lines_t linehandler, void *data)
 	{
 		n = read(fd[0], output, 255);
 		output[n] = '\0';
-		str_handle_lines(output, &rest, linehandler, data);
+		str_handle_lines(This, output, &rest, linehandler, data);
 	}
 	xfree(rest);
 
@@ -1405,7 +1387,7 @@ l_to_a(long N, int base)
 
 
 int
-load_licence(unsigned char **data)
+load_licence(RDPCLIENT * This, unsigned char **data)
 {
 	char *home, *path;
 	struct stat st;
@@ -1415,8 +1397,8 @@ load_licence(unsigned char **data)
 	if (home == NULL)
 		return -1;
 
-	path = (char *) xmalloc(strlen(home) + strlen(g_hostname) + sizeof("/.rdesktop/licence."));
-	sprintf(path, "%s/.rdesktop/licence.%s", home, g_hostname);
+	path = (char *) xmalloc(strlen(home) + strlen(This->hostname) + sizeof("/.rdesktop/licence."));
+	sprintf(path, "%s/.rdesktop/licence.%s", home, This->hostname);
 
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
@@ -1433,7 +1415,7 @@ load_licence(unsigned char **data)
 }
 
 void
-save_licence(unsigned char *data, int length)
+save_licence(RDPCLIENT * This, unsigned char *data, int length)
 {
 	char *home, *path, *tmppath;
 	int fd;
@@ -1442,7 +1424,7 @@ save_licence(unsigned char *data, int length)
 	if (home == NULL)
 		return;
 
-	path = (char *) xmalloc(strlen(home) + strlen(g_hostname) + sizeof("/.rdesktop/licence."));
+	path = (char *) xmalloc(strlen(home) + strlen(This->hostname) + sizeof("/.rdesktop/licence."));
 
 	sprintf(path, "%s/.rdesktop", home);
 	if ((mkdir(path, 0700) == -1) && errno != EEXIST)
@@ -1453,7 +1435,7 @@ save_licence(unsigned char *data, int length)
 
 	/* write licence to licence.hostname.new, then atomically rename to licence.hostname */
 
-	sprintf(path, "%s/.rdesktop/licence.%s", home, g_hostname);
+	sprintf(path, "%s/.rdesktop/licence.%s", home, This->hostname);
 	tmppath = (char *) xmalloc(strlen(path) + sizeof(".new"));
 	strcpy(tmppath, path);
 	strcat(tmppath, ".new");

@@ -1,7 +1,7 @@
 /* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Copyright (C) Matthew Chapman 1999-2005
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -11,7 +11,7 @@
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -32,15 +32,12 @@
 #include <linux/lp.h>
 #endif
 
-extern RDPDR_DEVICE g_rdpdr_device[];
-
-
 /* Enumeration of devices from rdesktop.c        */
 /* returns numer of units found and initialized. */
 /* optarg looks like ':LPT1=/dev/lp0'            */
 /* when it arrives to this function.             */
 int
-parallel_enum_devices(uint32 * id, char *optarg)
+parallel_enum_devices(RDPCLIENT * This, uint32 * id, char *optarg)
 {
 	PARALLEL_DEVICE *ppar_info;
 
@@ -55,18 +52,18 @@ parallel_enum_devices(uint32 * id, char *optarg)
 		ppar_info = (PARALLEL_DEVICE *) xmalloc(sizeof(PARALLEL_DEVICE));
 
 		pos2 = next_arg(optarg, '=');
-		strcpy(g_rdpdr_device[*id].name, optarg);
+		strcpy(This->rdpdr_device[*id].name, optarg);
 
-		toupper_str(g_rdpdr_device[*id].name);
+		toupper_str(This->rdpdr_device[*id].name);
 
-		g_rdpdr_device[*id].local_path = xmalloc(strlen(pos2) + 1);
-		strcpy(g_rdpdr_device[*id].local_path, pos2);
+		This->rdpdr_device[*id].local_path = xmalloc(strlen(pos2) + 1);
+		strcpy(This->rdpdr_device[*id].local_path, pos2);
 		printf("PARALLEL %s to %s\n", optarg, pos2);
 
 		/* set device type */
-		g_rdpdr_device[*id].device_type = DEVICE_TYPE_PARALLEL;
-		g_rdpdr_device[*id].pdevice_data = (void *) ppar_info;
-		g_rdpdr_device[*id].handle = 0;
+		This->rdpdr_device[*id].device_type = DEVICE_TYPE_PARALLEL;
+		This->rdpdr_device[*id].pdevice_data = (void *) ppar_info;
+		This->rdpdr_device[*id].handle = 0;
 		count++;
 		(*id)++;
 
@@ -76,12 +73,12 @@ parallel_enum_devices(uint32 * id, char *optarg)
 }
 
 static NTSTATUS
-parallel_create(uint32 device_id, uint32 access, uint32 share_mode, uint32 disposition,
+parallel_create(RDPCLIENT * This, uint32 device_id, uint32 access, uint32 share_mode, uint32 disposition,
 		uint32 flags, char *filename, NTHANDLE * handle)
 {
 	int parallel_fd;
 
-	parallel_fd = open(g_rdpdr_device[device_id].local_path, O_RDWR);
+	parallel_fd = open(This->rdpdr_device[device_id].local_path, O_RDWR);
 	if (parallel_fd == -1)
 	{
 		perror("open");
@@ -97,7 +94,7 @@ parallel_create(uint32 device_id, uint32 access, uint32 share_mode, uint32 dispo
 	ioctl(parallel_fd, LPABORT, (int) 1);
 #endif
 
-	g_rdpdr_device[device_id].handle = parallel_fd;
+	This->rdpdr_device[device_id].handle = parallel_fd;
 
 	*handle = parallel_fd;
 
@@ -105,24 +102,24 @@ parallel_create(uint32 device_id, uint32 access, uint32 share_mode, uint32 dispo
 }
 
 static NTSTATUS
-parallel_close(NTHANDLE handle)
+parallel_close(RDPCLIENT * This, NTHANDLE handle)
 {
-	int i = get_device_index(handle);
+	int i = get_device_index(This, handle);
 	if (i >= 0)
-		g_rdpdr_device[i].handle = 0;
+		This->rdpdr_device[i].handle = 0;
 	close(handle);
 	return STATUS_SUCCESS;
 }
 
 static NTSTATUS
-parallel_read(NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
+parallel_read(RDPCLIENT * This, NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
 {
 	*result = read(handle, data, length);
 	return STATUS_SUCCESS;
 }
 
 static NTSTATUS
-parallel_write(NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
+parallel_write(RDPCLIENT * This, NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint32 * result)
 {
 	int rc = STATUS_SUCCESS;
 
@@ -158,7 +155,7 @@ parallel_write(NTHANDLE handle, uint8 * data, uint32 length, uint32 offset, uint
 }
 
 static NTSTATUS
-parallel_device_control(NTHANDLE handle, uint32 request, STREAM in, STREAM out)
+parallel_device_control(RDPCLIENT * This, NTHANDLE handle, uint32 request, STREAM in, STREAM out)
 {
 	if ((request >> 16) != FILE_DEVICE_PARALLEL)
 		return STATUS_INVALID_PARAMETER;

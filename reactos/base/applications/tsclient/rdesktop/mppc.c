@@ -52,11 +52,8 @@
 /* more information is available in         */
 /* http://www.ietf.org/ietf/IPR/hifn-ipr-draft-friend-tls-lzs-compression.txt */
 
-
-RDPCOMP g_mppc_dict;
-
 int
-mppc_expand(uint8 * data, uint32 clen, uint8 ctype, uint32 * roff, uint32 * rlen)
+mppc_expand(RDPCLIENT * This, uint8 * data, uint32 clen, uint8 ctype, uint32 * roff, uint32 * rlen)
 {
 	int k, walker_len = 0, walker;
 	uint32 i = 0;
@@ -65,7 +62,7 @@ mppc_expand(uint8 * data, uint32 clen, uint8 ctype, uint32 * roff, uint32 * rlen
 	int old_offset, match_bits;
 	BOOL big = ctype & RDP_MPPC_BIG ? True : False;
 
-	uint8 *dict = g_mppc_dict.hist;
+	uint8 *dict = This->mppc_dict.hist;
 
 	if ((ctype & RDP_MPPC_COMPRESSED) == 0)
 	{
@@ -76,19 +73,19 @@ mppc_expand(uint8 * data, uint32 clen, uint8 ctype, uint32 * roff, uint32 * rlen
 
 	if ((ctype & RDP_MPPC_RESET) != 0)
 	{
-		g_mppc_dict.roff = 0;
+		This->mppc_dict.roff = 0;
 	}
 
 	if ((ctype & RDP_MPPC_FLUSH) != 0)
 	{
 		memset(dict, 0, RDP_MPPC_DICT_SIZE);
-		g_mppc_dict.roff = 0;
+		This->mppc_dict.roff = 0;
 	}
 
 	*roff = 0;
 	*rlen = 0;
 
-	walker = g_mppc_dict.roff;
+	walker = This->mppc_dict.roff;
 
 	next_offset = walker;
 	old_offset = next_offset;
@@ -371,7 +368,7 @@ mppc_expand(uint8 * data, uint32 clen, uint8 ctype, uint32 * roff, uint32 * rlen
 	while (1);
 
 	/* store history offset */
-	g_mppc_dict.roff = next_offset;
+	This->mppc_dict.roff = next_offset;
 
 	*roff = old_offset;
 	*rlen = next_offset - old_offset;

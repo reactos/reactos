@@ -21,11 +21,11 @@
 
 #include "rdesktop.h"
 
-/* BITMAP CACHE */
-extern int g_pstcache_fd[];
+#undef IS_SET // !!!FIXME!!!
 
+/* BITMAP CACHE */
 #define NUM_ELEMENTS(array) (sizeof(array) / sizeof(array[0]))
-#define IS_PERSISTENT(id) (g_pstcache_fd[id] > 0)
+#define IS_PERSISTENT(id) (This->pstcache_fd[id] > 0)
 #define TO_TOP -1
 #define NOT_SET -1
 #define IS_SET(idx) (idx >= 0)
@@ -38,37 +38,23 @@ extern int g_pstcache_fd[];
  */
 #define BUMP_COUNT 40
 
-struct bmpcache_entry
-{
-	HBITMAP bitmap;
-	sint16 previous;
-	sint16 next;
-};
-
-static struct bmpcache_entry g_bmpcache[3][0xa00];
-static HBITMAP g_volatile_bc[3];
-
-static int g_bmpcache_lru[3] = { NOT_SET, NOT_SET, NOT_SET };
-static int g_bmpcache_mru[3] = { NOT_SET, NOT_SET, NOT_SET };
-static int g_bmpcache_count[3];
-
 /* Setup the bitmap cache lru/mru linked list */
 void
-cache_rebuild_bmpcache_linked_list(uint8 id, sint16 * idx, int count)
+cache_rebuild_bmpcache_linked_list(RDPCLIENT * This, uint8 id, sint16 * idx, int count)
 {
 	int n = count, c = 0;
 	sint16 n_idx;
 
 	/* find top, skip evicted bitmaps */
-	while (--n >= 0 && g_bmpcache[id][idx[n]].bitmap == NULL);
+	while (--n >= 0 && This->cache.bmpcache[id][idx[n]].bitmap == NULL);
 	if (n < 0)
 	{
-		g_bmpcache_mru[id] = g_bmpcache_lru[id] = NOT_SET;
+		This->cache.bmpcache_mru[id] = This->cache.bmpcache_lru[id] = NOT_SET;
 		return;
 	}
 
-	g_bmpcache_mru[id] = idx[n];
-	g_bmpcache[id][idx[n]].next = NOT_SET;
+	This->cache.bmpcache_mru[id] = idx[n];
+	This->cache.bmpcache[id][idx[n]].next = NOT_SET;
 	n_idx = idx[n];
 	c++;
 
@@ -76,62 +62,62 @@ cache_rebuild_bmpcache_linked_list(uint8 id, sint16 * idx, int count)
 	while (n >= 0)
 	{
 		/* skip evicted bitmaps */
-		while (--n >= 0 && g_bmpcache[id][idx[n]].bitmap == NULL);
+		while (--n >= 0 && This->cache.bmpcache[id][idx[n]].bitmap == NULL);
 
 		if (n < 0)
 			break;
 
-		g_bmpcache[id][n_idx].previous = idx[n];
-		g_bmpcache[id][idx[n]].next = n_idx;
+		This->cache.bmpcache[id][n_idx].previous = idx[n];
+		This->cache.bmpcache[id][idx[n]].next = n_idx;
 		n_idx = idx[n];
 		c++;
 	}
 
-	g_bmpcache[id][n_idx].previous = NOT_SET;
-	g_bmpcache_lru[id] = n_idx;
+	This->cache.bmpcache[id][n_idx].previous = NOT_SET;
+	This->cache.bmpcache_lru[id] = n_idx;
 
-	if (c != g_bmpcache_count[id])
+	if (c != This->cache.bmpcache_count[id])
 	{
 		error("Oops. %d in bitmap cache linked list, %d in ui cache...\n", c,
-		      g_bmpcache_count[id]);
+		      This->cache.bmpcache_count[id]);
 		exit(1);
 	}
 }
 
 /* Move a bitmap to a new position in the linked list. */
 void
-cache_bump_bitmap(uint8 id, uint16 idx, int bump)
+cache_bump_bitmap(RDPCLIENT * This, uint8 id, uint16 idx, int bump)
 {
 	int p_idx, n_idx, n;
 
 	if (!IS_PERSISTENT(id))
 		return;
 
-	if (g_bmpcache_mru[id] == idx)
+	if (This->cache.bmpcache_mru[id] == idx)
 		return;
 
 	DEBUG_RDP5(("bump bitmap: id=%d, idx=%d, bump=%d\n", id, idx, bump));
 
-	n_idx = g_bmpcache[id][idx].next;
-	p_idx = g_bmpcache[id][idx].previous;
+	n_idx = This->cache.bmpcache[id][idx].next;
+	p_idx = This->cache.bmpcache[id][idx].previous;
 
 	if (IS_SET(n_idx))
 	{
 		/* remove */
-		--g_bmpcache_count[id];
+		--This->cache.bmpcache_count[id];
 		if (IS_SET(p_idx))
-			g_bmpcache[id][p_idx].next = n_idx;
+			This->cache.bmpcache[id][p_idx].next = n_idx;
 		else
-			g_bmpcache_lru[id] = n_idx;
+			This->cache.bmpcache_lru[id] = n_idx;
 		if (IS_SET(n_idx))
-			g_bmpcache[id][n_idx].previous = p_idx;
+			This->cache.bmpcache[id][n_idx].previous = p_idx;
 		else
-			g_bmpcache_mru[id] = p_idx;
+			This->cache.bmpcache_mru[id] = p_idx;
 	}
 	else
 	{
 		p_idx = NOT_SET;
-		n_idx = g_bmpcache_lru[id];
+		n_idx = This->cache.bmpcache_lru[id];
 	}
 
 	if (bump >= 0)
@@ -139,34 +125,34 @@ cache_bump_bitmap(uint8 id, uint16 idx, int bump)
 		for (n = 0; n < bump && IS_SET(n_idx); n++)
 		{
 			p_idx = n_idx;
-			n_idx = g_bmpcache[id][p_idx].next;
+			n_idx = This->cache.bmpcache[id][p_idx].next;
 		}
 	}
 	else
 	{
-		p_idx = g_bmpcache_mru[id];
+		p_idx = This->cache.bmpcache_mru[id];
 		n_idx = NOT_SET;
 	}
 
 	/* insert */
-	++g_bmpcache_count[id];
-	g_bmpcache[id][idx].previous = p_idx;
-	g_bmpcache[id][idx].next = n_idx;
+	++This->cache.bmpcache_count[id];
+	This->cache.bmpcache[id][idx].previous = p_idx;
+	This->cache.bmpcache[id][idx].next = n_idx;
 
 	if (p_idx >= 0)
-		g_bmpcache[id][p_idx].next = idx;
+		This->cache.bmpcache[id][p_idx].next = idx;
 	else
-		g_bmpcache_lru[id] = idx;
+		This->cache.bmpcache_lru[id] = idx;
 
 	if (n_idx >= 0)
-		g_bmpcache[id][n_idx].previous = idx;
+		This->cache.bmpcache[id][n_idx].previous = idx;
 	else
-		g_bmpcache_mru[id] = idx;
+		This->cache.bmpcache_mru[id] = idx;
 }
 
 /* Evict the least-recently used bitmap from the cache */
 void
-cache_evict_bitmap(uint8 id)
+cache_evict_bitmap(RDPCLIENT * This, uint8 id)
 {
 	uint16 idx;
 	int n_idx;
@@ -174,38 +160,38 @@ cache_evict_bitmap(uint8 id)
 	if (!IS_PERSISTENT(id))
 		return;
 
-	idx = g_bmpcache_lru[id];
-	n_idx = g_bmpcache[id][idx].next;
+	idx = This->cache.bmpcache_lru[id];
+	n_idx = This->cache.bmpcache[id][idx].next;
 	DEBUG_RDP5(("evict bitmap: id=%d idx=%d n_idx=%d bmp=0x%x\n", id, idx, n_idx,
-		    g_bmpcache[id][idx].bitmap));
+		    This->cache.bmpcache[id][idx].bitmap));
 
-	ui_destroy_bitmap(g_bmpcache[id][idx].bitmap);
-	--g_bmpcache_count[id];
-	g_bmpcache[id][idx].bitmap = 0;
+	ui_destroy_bitmap(This, This->cache.bmpcache[id][idx].bitmap);
+	--This->cache.bmpcache_count[id];
+	This->cache.bmpcache[id][idx].bitmap = 0;
 
-	g_bmpcache_lru[id] = n_idx;
-	g_bmpcache[id][n_idx].previous = NOT_SET;
+	This->cache.bmpcache_lru[id] = n_idx;
+	This->cache.bmpcache[id][n_idx].previous = NOT_SET;
 
-	pstcache_touch_bitmap(id, idx, 0);
+	pstcache_touch_bitmap(This, id, idx, 0);
 }
 
 /* Retrieve a bitmap from the cache */
 HBITMAP
-cache_get_bitmap(uint8 id, uint16 idx)
+cache_get_bitmap(RDPCLIENT * This, uint8 id, uint16 idx)
 {
-	if ((id < NUM_ELEMENTS(g_bmpcache)) && (idx < NUM_ELEMENTS(g_bmpcache[0])))
+	if ((id < NUM_ELEMENTS(This->cache.bmpcache)) && (idx < NUM_ELEMENTS(This->cache.bmpcache[0])))
 	{
-		if (g_bmpcache[id][idx].bitmap || pstcache_load_bitmap(id, idx))
+		if (This->cache.bmpcache[id][idx].bitmap || pstcache_load_bitmap(This, id, idx))
 		{
 			if (IS_PERSISTENT(id))
-				cache_bump_bitmap(id, idx, BUMP_COUNT);
+				cache_bump_bitmap(This, id, idx, BUMP_COUNT);
 
-			return g_bmpcache[id][idx].bitmap;
+			return This->cache.bmpcache[id][idx].bitmap;
 		}
 	}
-	else if ((id < NUM_ELEMENTS(g_volatile_bc)) && (idx == 0x7fff))
+	else if ((id < NUM_ELEMENTS(This->cache.volatile_bc)) && (idx == 0x7fff))
 	{
-		return g_volatile_bc[id];
+		return This->cache.volatile_bc[id];
 	}
 
 	error("get bitmap %d:%d\n", id, idx);
@@ -214,33 +200,33 @@ cache_get_bitmap(uint8 id, uint16 idx)
 
 /* Store a bitmap in the cache */
 void
-cache_put_bitmap(uint8 id, uint16 idx, HBITMAP bitmap)
+cache_put_bitmap(RDPCLIENT * This, uint8 id, uint16 idx, HBITMAP bitmap)
 {
 	HBITMAP old;
 
-	if ((id < NUM_ELEMENTS(g_bmpcache)) && (idx < NUM_ELEMENTS(g_bmpcache[0])))
+	if ((id < NUM_ELEMENTS(This->cache.bmpcache)) && (idx < NUM_ELEMENTS(This->cache.bmpcache[0])))
 	{
-		old = g_bmpcache[id][idx].bitmap;
+		old = This->cache.bmpcache[id][idx].bitmap;
 		if (old != NULL)
-			ui_destroy_bitmap(old);
-		g_bmpcache[id][idx].bitmap = bitmap;
+			ui_destroy_bitmap(This, old);
+		This->cache.bmpcache[id][idx].bitmap = bitmap;
 
 		if (IS_PERSISTENT(id))
 		{
 			if (old == NULL)
-				g_bmpcache[id][idx].previous = g_bmpcache[id][idx].next = NOT_SET;
+				This->cache.bmpcache[id][idx].previous = This->cache.bmpcache[id][idx].next = NOT_SET;
 
-			cache_bump_bitmap(id, idx, TO_TOP);
-			if (g_bmpcache_count[id] > BMPCACHE2_C2_CELLS)
-				cache_evict_bitmap(id);
+			cache_bump_bitmap(This, id, idx, TO_TOP);
+			if (This->cache.bmpcache_count[id] > BMPCACHE2_C2_CELLS)
+				cache_evict_bitmap(This, id);
 		}
 	}
-	else if ((id < NUM_ELEMENTS(g_volatile_bc)) && (idx == 0x7fff))
+	else if ((id < NUM_ELEMENTS(This->cache.volatile_bc)) && (idx == 0x7fff))
 	{
-		old = g_volatile_bc[id];
+		old = This->cache.volatile_bc[id];
 		if (old != NULL)
-			ui_destroy_bitmap(old);
-		g_volatile_bc[id] = bitmap;
+			ui_destroy_bitmap(This, old);
+		This->cache.volatile_bc[id] = bitmap;
 	}
 	else
 	{
@@ -250,20 +236,20 @@ cache_put_bitmap(uint8 id, uint16 idx, HBITMAP bitmap)
 
 /* Updates the persistent bitmap cache MRU information on exit */
 void
-cache_save_state(void)
+cache_save_state(RDPCLIENT * This)
 {
 	uint32 id = 0, t = 0;
 	int idx;
 
-	for (id = 0; id < NUM_ELEMENTS(g_bmpcache); id++)
+	for (id = 0; id < NUM_ELEMENTS(This->cache.bmpcache); id++)
 		if (IS_PERSISTENT(id))
 		{
 			DEBUG_RDP5(("Saving cache state for bitmap cache %d...", id));
-			idx = g_bmpcache_lru[id];
+			idx = This->cache.bmpcache_lru[id];
 			while (idx >= 0)
 			{
-				pstcache_touch_bitmap(id, idx, ++t);
-				idx = g_bmpcache[id][idx].next;
+				pstcache_touch_bitmap(This, id, idx, ++t);
+				idx = This->cache.bmpcache[id][idx].next;
 			}
 			DEBUG_RDP5((" %d stamps written.\n", t));
 		}
@@ -271,17 +257,15 @@ cache_save_state(void)
 
 
 /* FONT CACHE */
-static FONTGLYPH g_fontcache[12][256];
-
 /* Retrieve a glyph from the font cache */
 FONTGLYPH *
-cache_get_font(uint8 font, uint16 character)
+cache_get_font(RDPCLIENT * This, uint8 font, uint16 character)
 {
 	FONTGLYPH *glyph;
 
-	if ((font < NUM_ELEMENTS(g_fontcache)) && (character < NUM_ELEMENTS(g_fontcache[0])))
+	if ((font < NUM_ELEMENTS(This->cache.fontcache)) && (character < NUM_ELEMENTS(This->cache.fontcache[0])))
 	{
-		glyph = &g_fontcache[font][character];
+		glyph = &This->cache.fontcache[font][character];
 		if (glyph->pixmap != NULL)
 			return glyph;
 	}
@@ -292,16 +276,16 @@ cache_get_font(uint8 font, uint16 character)
 
 /* Store a glyph in the font cache */
 void
-cache_put_font(uint8 font, uint16 character, uint16 offset,
+cache_put_font(RDPCLIENT * This, uint8 font, uint16 character, uint16 offset,
 	       uint16 baseline, uint16 width, uint16 height, HGLYPH pixmap)
 {
 	FONTGLYPH *glyph;
 
-	if ((font < NUM_ELEMENTS(g_fontcache)) && (character < NUM_ELEMENTS(g_fontcache[0])))
+	if ((font < NUM_ELEMENTS(This->cache.fontcache)) && (character < NUM_ELEMENTS(This->cache.fontcache[0])))
 	{
-		glyph = &g_fontcache[font][character];
+		glyph = &This->cache.fontcache[font][character];
 		if (glyph->pixmap != NULL)
-			ui_destroy_glyph(glyph->pixmap);
+			ui_destroy_glyph(This, glyph->pixmap);
 
 		glyph->offset = offset;
 		glyph->baseline = baseline;
@@ -317,25 +301,23 @@ cache_put_font(uint8 font, uint16 character, uint16 offset,
 
 
 /* TEXT CACHE */
-static DATABLOB g_textcache[256];
-
 /* Retrieve a text item from the cache */
 DATABLOB *
-cache_get_text(uint8 cache_id)
+cache_get_text(RDPCLIENT * This, uint8 cache_id)
 {
 	DATABLOB *text;
 
-	text = &g_textcache[cache_id];
+	text = &This->cache.textcache[cache_id];
 	return text;
 }
 
 /* Store a text item in the cache */
 void
-cache_put_text(uint8 cache_id, void *data, int length)
+cache_put_text(RDPCLIENT * This, uint8 cache_id, void *data, int length)
 {
 	DATABLOB *text;
 
-	text = &g_textcache[cache_id];
+	text = &This->cache.textcache[cache_id];
 	if (text->data != NULL)
 		xfree(text->data);
 	text->data = xmalloc(length);
@@ -345,20 +327,18 @@ cache_put_text(uint8 cache_id, void *data, int length)
 
 
 /* DESKTOP CACHE */
-static uint8 g_deskcache[0x38400 * 4];
-
 /* Retrieve desktop data from the cache */
 uint8 *
-cache_get_desktop(uint32 offset, int cx, int cy, int bytes_per_pixel)
+cache_get_desktop(RDPCLIENT * This, uint32 offset, int cx, int cy, int bytes_per_pixel)
 {
 	int length = cx * cy * bytes_per_pixel;
 
-	if (offset > sizeof(g_deskcache))
+	if (offset > sizeof(This->cache.deskcache))
 		offset = 0;
 
-	if ((offset + length) <= sizeof(g_deskcache))
+	if ((offset + length) <= sizeof(This->cache.deskcache))
 	{
-		return &g_deskcache[offset];
+		return &This->cache.deskcache[offset];
 	}
 
 	error("get desktop %d:%d\n", offset, length);
@@ -367,19 +347,19 @@ cache_get_desktop(uint32 offset, int cx, int cy, int bytes_per_pixel)
 
 /* Store desktop data in the cache */
 void
-cache_put_desktop(uint32 offset, int cx, int cy, int scanline, int bytes_per_pixel, uint8 * data)
+cache_put_desktop(RDPCLIENT * This, uint32 offset, int cx, int cy, int scanline, int bytes_per_pixel, uint8 * data)
 {
 	int length = cx * cy * bytes_per_pixel;
 
-	if (offset > sizeof(g_deskcache))
+	if (offset > sizeof(This->cache.deskcache))
 		offset = 0;
 
-	if ((offset + length) <= sizeof(g_deskcache))
+	if ((offset + length) <= sizeof(This->cache.deskcache))
 	{
 		cx *= bytes_per_pixel;
 		while (cy--)
 		{
-			memcpy(&g_deskcache[offset], data, cx);
+			memcpy(&This->cache.deskcache[offset], data, cx);
 			data += scanline;
 			offset += cx;
 		}
@@ -392,17 +372,15 @@ cache_put_desktop(uint32 offset, int cx, int cy, int scanline, int bytes_per_pix
 
 
 /* CURSOR CACHE */
-static HCURSOR g_cursorcache[0x20];
-
 /* Retrieve cursor from cache */
 HCURSOR
-cache_get_cursor(uint16 cache_idx)
+cache_get_cursor(RDPCLIENT * This, uint16 cache_idx)
 {
 	HCURSOR cursor;
 
-	if (cache_idx < NUM_ELEMENTS(g_cursorcache))
+	if (cache_idx < NUM_ELEMENTS(This->cache.cursorcache))
 	{
-		cursor = g_cursorcache[cache_idx];
+		cursor = This->cache.cursorcache[cache_idx];
 		if (cursor != NULL)
 			return cursor;
 	}
@@ -413,17 +391,17 @@ cache_get_cursor(uint16 cache_idx)
 
 /* Store cursor in cache */
 void
-cache_put_cursor(uint16 cache_idx, HCURSOR cursor)
+cache_put_cursor(RDPCLIENT * This, uint16 cache_idx, HCURSOR cursor)
 {
 	HCURSOR old;
 
-	if (cache_idx < NUM_ELEMENTS(g_cursorcache))
+	if (cache_idx < NUM_ELEMENTS(This->cache.cursorcache))
 	{
-		old = g_cursorcache[cache_idx];
+		old = This->cache.cursorcache[cache_idx];
 		if (old != NULL)
-			ui_destroy_cursor(old);
+			ui_destroy_cursor(This, old);
 
-		g_cursorcache[cache_idx] = cursor;
+		This->cache.cursorcache[cache_idx] = cursor;
 	}
 	else
 	{

@@ -125,7 +125,7 @@ typedef struct _VCHANNEL
 	char name[8];
 	uint32 flags;
 	struct stream in;
-	void (*process) (STREAM);
+	void (*process) (RDPCLIENT *, STREAM);
 }
 VCHANNEL;
 
@@ -171,15 +171,15 @@ typedef uint32 NTHANDLE;
 
 typedef struct _DEVICE_FNS
 {
-	NTSTATUS(*create) (uint32 device, uint32 desired_access, uint32 share_mode,
+	NTSTATUS(*create) (RDPCLIENT * This, uint32 device, uint32 desired_access, uint32 share_mode,
 			   uint32 create_disposition, uint32 flags_and_attributes, char *filename,
 			   NTHANDLE * handle);
-	NTSTATUS(*close) (NTHANDLE handle);
-	NTSTATUS(*read) (NTHANDLE handle, uint8 * data, uint32 length, uint32 offset,
+	NTSTATUS(*close) (RDPCLIENT * This, NTHANDLE handle);
+	NTSTATUS(*read) (RDPCLIENT * This, NTHANDLE handle, uint8 * data, uint32 length, uint32 offset,
 			 uint32 * result);
-	NTSTATUS(*write) (NTHANDLE handle, uint8 * data, uint32 length, uint32 offset,
+	NTSTATUS(*write) (RDPCLIENT * This, NTHANDLE handle, uint8 * data, uint32 length, uint32 offset,
 			  uint32 * result);
-	NTSTATUS(*device_control) (NTHANDLE handle, uint32 request, STREAM in, STREAM out);
+	NTSTATUS(*device_control) (RDPCLIENT * This, NTHANDLE handle, uint32 request, STREAM in, STREAM out);
 }
 DEVICE_FNS;
 
@@ -265,4 +265,4 @@ typedef struct fileinfo
 }
 FILEINFO;
 
-typedef BOOL(*str_handle_lines_t) (const char *line, void *data);
+typedef BOOL(*str_handle_lines_t) (RDPCLIENT * This, const char *line, void *data);

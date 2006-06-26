@@ -22,11 +22,11 @@
 
 /* Send a self-contained ISO PDU */
 static void
-iso_send_msg(uint8 code)
+iso_send_msg(RDPCLIENT * This, uint8 code)
 {
 	STREAM s;
 
-	s = tcp_init(11);
+	s = tcp_init(This, 11);
 
 	out_uint8(s, 3);	/* version */
 	out_uint8(s, 0);	/* reserved */
@@ -39,16 +39,16 @@ iso_send_msg(uint8 code)
 	out_uint8(s, 0);	/* class */
 
 	s_mark_end(s);
-	tcp_send(s);
+	tcp_send(This, s);
 }
 
 static void
-iso_send_connection_request(char *username)
+iso_send_connection_request(RDPCLIENT * This, char *username)
 {
 	STREAM s;
 	int length = 30 + strlen(username);
 
-	s = tcp_init(length);
+	s = tcp_init(This, length);
 
 	out_uint8(s, 3);	/* version */
 	out_uint8(s, 0);	/* reserved */
@@ -67,18 +67,18 @@ iso_send_connection_request(char *username)
 	out_uint8(s, 0x0a);	/* Unknown */
 
 	s_mark_end(s);
-	tcp_send(s);
+	tcp_send(This, s);
 }
 
 /* Receive a message on the ISO layer, return code */
 static STREAM
-iso_recv_msg(uint8 * code, uint8 * rdpver)
+iso_recv_msg(RDPCLIENT * This, uint8 * code, uint8 * rdpver)
 {
 	STREAM s;
 	uint16 length;
 	uint8 version;
 
-	s = tcp_recv(NULL, 4);
+	s = tcp_recv(This, NULL, 4);
 	if (s == NULL)
 		return NULL;
 	in_uint8(s, version);
@@ -98,7 +98,7 @@ iso_recv_msg(uint8 * code, uint8 * rdpver)
 			next_be(s, length);
 		}
 	}
-	s = tcp_recv(s, length - 4);
+	s = tcp_recv(This, s, length - 4);
 	if (s == NULL)
 		return NULL;
 	if (version != 3)
@@ -116,11 +116,11 @@ iso_recv_msg(uint8 * code, uint8 * rdpver)
 
 /* Initialise ISO transport data packet */
 STREAM
-iso_init(int length)
+iso_init(RDPCLIENT * This, int length)
 {
 	STREAM s;
 
-	s = tcp_init(length + 7);
+	s = tcp_init(This, length + 7);
 	s_push_layer(s, iso_hdr, 7);
 
 	return s;
@@ -128,7 +128,7 @@ iso_init(int length)
 
 /* Send an ISO data PDU */
 void
-iso_send(STREAM s)
+iso_send(RDPCLIENT * This, STREAM s)
 {
 	uint16 length;
 
@@ -143,17 +143,17 @@ iso_send(STREAM s)
 	out_uint8(s, ISO_PDU_DT);	/* code */
 	out_uint8(s, 0x80);	/* eot */
 
-	tcp_send(s);
+	tcp_send(This, s);
 }
 
 /* Receive ISO transport data packet */
 STREAM
-iso_recv(uint8 * rdpver)
+iso_recv(RDPCLIENT * This, uint8 * rdpver)
 {
 	STREAM s;
 	uint8 code = 0;
 
-	s = iso_recv_msg(&code, rdpver);
+	s = iso_recv_msg(This, &code, rdpver);
 	if (s == NULL)
 		return NULL;
 	if (rdpver != NULL)
@@ -169,22 +169,22 @@ iso_recv(uint8 * rdpver)
 
 /* Establish a connection up to the ISO layer */
 BOOL
-iso_connect(char *server, char *username)
+iso_connect(RDPCLIENT * This, char *server, char *username)
 {
 	uint8 code = 0;
 
-	if (!tcp_connect(server))
+	if (!tcp_connect(This, server))
 		return False;
 
-	iso_send_connection_request(username);
+	iso_send_connection_request(This, username);
 
-	if (iso_recv_msg(&code, NULL) == NULL)
+	if (iso_recv_msg(This, &code, NULL) == NULL)
 		return False;
 
 	if (code != ISO_PDU_CC)
 	{
 		error("expected CC, got 0x%x\n", code);
-		tcp_disconnect();
+		tcp_disconnect(This);
 		return False;
 	}
 
@@ -193,22 +193,22 @@ iso_connect(char *server, char *username)
 
 /* Establish a reconnection up to the ISO layer */
 BOOL
-iso_reconnect(char *server)
+iso_reconnect(RDPCLIENT * This, char *server)
 {
 	uint8 code = 0;
 
-	if (!tcp_connect(server))
+	if (!tcp_connect(This, server))
 		return False;
 
-	iso_send_msg(ISO_PDU_CR);
+	iso_send_msg(This, ISO_PDU_CR);
 
-	if (iso_recv_msg(&code, NULL) == NULL)
+	if (iso_recv_msg(This, &code, NULL) == NULL)
 		return False;
 
 	if (code != ISO_PDU_CC)
 	{
 		error("expected CC, got 0x%x\n", code);
-		tcp_disconnect();
+		tcp_disconnect(This);
 		return False;
 	}
 
@@ -217,15 +217,15 @@ iso_reconnect(char *server)
 
 /* Disconnect from the ISO layer */
 void
-iso_disconnect(void)
+iso_disconnect(RDPCLIENT * This)
 {
-	iso_send_msg(ISO_PDU_DR);
-	tcp_disconnect();
+	iso_send_msg(This, ISO_PDU_DR);
+	tcp_disconnect(This);
 }
 
 /* reset the state to support reconnecting */
 void
-iso_reset_state(void)
+iso_reset_state(RDPCLIENT * This)
 {
-	tcp_reset_state();
+	tcp_reset_state(This);
 }
