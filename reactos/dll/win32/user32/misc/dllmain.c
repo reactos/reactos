@@ -1,6 +1,6 @@
 #include <user32.h>
-#define NDEBUG
-#include <debug.h>
+
+#include <wine/debug.h>
 
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;

@@ -31,6 +31,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 /* this is the 8 byte accel struct used in Win32 resources (internal only) */
 typedef struct
 {

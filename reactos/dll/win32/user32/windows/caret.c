@@ -30,6 +30,7 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
 /* FUNCTIONS *****************************************************************/
 
 void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo)

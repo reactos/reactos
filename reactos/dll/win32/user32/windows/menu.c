@@ -34,8 +34,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-#define NDEBUG
-#include <debug.h>
+
+#include <wine/debug.h>
 
 /* internal popup menu window messages */
 #define MM_SETMENUHANDLE (WM_USER + 0)

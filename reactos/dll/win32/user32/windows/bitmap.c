@@ -30,6 +30,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 #include "pshpack1.h"
 
 typedef struct {

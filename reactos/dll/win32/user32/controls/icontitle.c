@@ -20,6 +20,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 #ifdef __REACTOS__
 #define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
 #define ICONTITLE_CLASS_ATOM MAKEINTATOMW(32772)

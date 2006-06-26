@@ -13,6 +13,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
 UINT STDCALL

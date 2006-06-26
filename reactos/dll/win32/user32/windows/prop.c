@@ -30,6 +30,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 typedef struct _PROPLISTITEM
 {
   ATOM Atom;

@@ -32,7 +32,6 @@
 #include <win32k/callback.h>
 
 /* WINE Headers */
-#include <wine/debug.h>
 #include <wine/unicode.h>
 
 /* Internal User32 Headers */

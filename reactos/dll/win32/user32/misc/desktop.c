@@ -11,6 +11,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 #define DESKTOP_CLASS_ATOM   MAKEINTATOMA(32769)  /* Desktop */
 static LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
 

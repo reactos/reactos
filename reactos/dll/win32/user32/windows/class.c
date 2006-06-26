@@ -11,6 +11,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 extern BOOL ControlsInitialized;
 
 /*

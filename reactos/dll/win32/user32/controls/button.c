@@ -63,8 +63,9 @@
  *  - Button_SetImageList
  *  - Button_SetTextMargin
  */
-#define NDEBUG // turn off TRACEs
 #include <user32.h>
+
+#include <wine/debug.h>
 
 /* GetWindowLong offsets for window extra information */
 #define STATE_GWL_OFFSET  0

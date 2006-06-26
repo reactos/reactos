@@ -12,8 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-#define NDEBUG
-#include <debug.h>
+
+#include <wine/debug.h>
 
 #ifndef WM_SETVISIBLE
 #define WM_SETVISIBLE 9
