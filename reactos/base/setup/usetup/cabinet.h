@@ -88,7 +88,7 @@ typedef struct _CFFILE
   WORD  FileDate;         // File date stamp, as used by DOS
   WORD  FileTime;         // File time stamp, as used by DOS
   WORD  Attributes;       // File attributes (CAB_ATTRIB_*)
-  CHAR  FileName[];
+  CHAR  FileName[ANYSIZE_ARRAY];
     /* After this is the NULL terminated filename */
 } CFFILE, *PCFFILE;
 

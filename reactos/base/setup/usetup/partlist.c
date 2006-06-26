@@ -422,7 +422,7 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 DiskIdentifierQueryRoutine(PWSTR ValueName,
                            ULONG ValueType,
                            PVOID ValueData,
@@ -449,7 +449,7 @@ DiskIdentifierQueryRoutine(PWSTR ValueName,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 DiskConfigurationDataQueryRoutine(PWSTR ValueName,
                                   ULONG ValueType,
                                   PVOID ValueData,
@@ -485,7 +485,7 @@ DiskConfigurationDataQueryRoutine(PWSTR ValueName,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 SystemConfigurationDataQueryRoutine(PWSTR ValueName,
                                     ULONG ValueType,
                                     PVOID ValueData,

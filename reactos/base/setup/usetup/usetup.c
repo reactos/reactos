@@ -3630,7 +3630,7 @@ SignalInitEvent()
 }
 
 
-VOID STDCALL
+VOID NTAPI
 NtProcessStartup(PPEB Peb)
 {
   NTSTATUS Status;

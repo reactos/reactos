@@ -36,7 +36,7 @@ PPROGRESSBAR ProgressBar = NULL;
 /* FUNCTIONS ****************************************************************/
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 FormatCallback (CALLBACKCOMMAND Command,
 		ULONG Modifier,
 		PVOID Argument)
