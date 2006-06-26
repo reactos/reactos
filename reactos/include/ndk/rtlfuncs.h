@@ -331,10 +331,10 @@ NTSYSAPI
 VOID
 NTAPI
 RtlAssert(
-    PVOID FailedAssertion,
-    PVOID FileName,
-    ULONG LineNumber,
-    PCHAR Message
+    IN PVOID FailedAssertion,
+    IN PVOID FileName,
+    IN ULONG LineNumber,
+    IN PCHAR Message
 );
 
 NTSYSAPI
@@ -347,27 +347,37 @@ RtlSetUnhandledExceptionFilter(
 NTSYSAPI
 VOID
 NTAPI
-RtlCaptureContext(OUT PCONTEXT ContextRecord);
+RtlCaptureContext(
+    OUT PCONTEXT ContextRecord
+);
 
 NTSYSAPI
 PVOID
 NTAPI
-RtlEncodePointer(IN PVOID Pointer);
+RtlEncodePointer(
+    IN PVOID Pointer
+);
 
 NTSYSAPI
 PVOID
 NTAPI
-RtlDecodePointer(IN PVOID Pointer);
+RtlDecodePointer(
+    IN PVOID Pointer
+);
 
 NTSYSAPI
 PVOID
 NTAPI
-RtlEncodeSystemPointer(IN PVOID Pointer);
+RtlEncodeSystemPointer(
+    IN PVOID Pointer
+);
 
 NTSYSAPI
 PVOID
 NTAPI
-RtlDecodeSystemPointer(IN PVOID Pointer);
+RtlDecodeSystemPointer(
+    IN PVOID Pointer
+);
 
 NTSYSAPI
 BOOLEAN
@@ -380,22 +390,37 @@ RtlDispatchException(
 NTSYSAPI
 ULONG
 NTAPI
-RtlNtStatusToDosError(IN NTSTATUS Status);
+RtlNtStatusToDosError(
+    IN NTSTATUS Status
+);
 
 NTSYSAPI
 VOID
 NTAPI
-RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord);
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus(
+    IN NTSTATUS Status
+);
 
 NTSYSAPI
 VOID
 NTAPI
-RtlRaiseStatus(NTSTATUS Status);
+RtlRaiseException(
+    IN PEXCEPTION_RECORD ExceptionRecord
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlRaiseStatus(
+    IN NTSTATUS Status
+);
 
 NTSYSAPI
 LONG
 NTAPI
-RtlUnhandledExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo);
+RtlUnhandledExceptionFilter(
+    IN struct _EXCEPTION_POINTERS* ExceptionInfo
+);
 
 NTSYSAPI
 VOID
@@ -413,7 +438,9 @@ RtlUnwind(
 NTSYSAPI
 USHORT
 NTAPI
-RtlLogStackBackTrace(VOID);
+RtlLogStackBackTrace(
+    VOID
+);
 
 //
 // Heap Functions
