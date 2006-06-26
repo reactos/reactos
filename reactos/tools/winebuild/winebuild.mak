@@ -32,7 +32,7 @@ WINEBUILD_SOURCES = $(addprefix $(WINEBUILD_BASE_), \
 WINEBUILD_OBJECTS = \
   $(addprefix $(INTERMEDIATE_), $(WINEBUILD_SOURCES:.c=.o))
 
-WINEBUILD_HOST_CFLAGS = $(TOOLS_CFLAGS) -D__USE_W32API -Iinclude/reactos/wine -Iinclude -Iinclude/reactos
+WINEBUILD_HOST_CFLAGS = $(TOOLS_CFLAGS) -D__USE_W32API -Iinclude/reactos/wine -Iinclude -Iinclude/reactos -Iinclude/psdk
 
 WINEBUILD_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
