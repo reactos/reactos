@@ -1,0 +1,39 @@
+
+Protocol overview
+=================
+
+The lspci virtual channel makes it possible for the remote RDP server
+to enumerate the local PCI devices. The protocol on this channel is
+text based and line oriented: One single line per request or
+response. UNIX-style LF line breaks are used. The maximum line length
+is 1023, newline included.
+
+rdesktop acts as a server, with only one request:
+
+    LSPCI
+
+The response is several lines with this syntax:
+
+<class>,<vendor>,<device>,<subvendor>,<subdevice>,<revision>,<progif>
+
+After the last line, a line with a single dot is sent. 
+
+Example:
+
+0300,102b,0525,102b,0338,04,00
+0401,8086,24d5,1028,0174,02,8f
+.
+
+
+Usage
+=====
+
+To enable to lspci virtual channel, run rdesktop with "-r lspci".
+
+
+References
+==========
+
+http://www.microsoft.com/msj/1099/terminal/terminal.aspx
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/termserv/termserv/terminal_services_virtual_channels.asp
+
