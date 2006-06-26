@@ -93,6 +93,7 @@
   <property name="BASEADDRESS_GDIPLUS" value="0x76a00000" />
   <property name="BASEADDRESS_WINTRUST" value="0x76c30000" />
   <property name="BASEADDRESS_IMAGEHLP" value="0x76c90000" />
+  <property name="BASEADDRESS_DHCPCSVC" value="0x76d80000" />
   <property name="BASEADDRESS_FMIFS" value="0x76df0000" />
   <property name="BASEADDRESS_SHELL32" value="0x6a360000" />
   <property name="BASEADDRESS_IPHLPAPI" value="0x75700000" />
