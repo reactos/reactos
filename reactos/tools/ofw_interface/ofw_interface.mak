@@ -9,6 +9,10 @@ OFW_INTERFACE_OUTPUT = boot/freeldr/bootsect/ofw.s
 OFW_INTERFACE_SOURCE = boot/freeldr/freeldr/arch/powerpc/ofw.c
 OFW_INTERFACE_HEADER = boot/freeldr/freeldr/include/of_call.h
 OFW_INTERFACE_INPUT = $(OFW_INTERFACE_BASE_)calls.ofw
+OFW_INTERFACE_SERVICE_FILES = \
+	$(OFW_INTERFACE_OUTPUT) \
+	$(OFW_INTERFACE_SOURCE) \
+	$(OFW_INTERFACE_HEADER)
 
 $(OFW_INTERFACE_INT): | $(TOOLS_INT)
 	$(ECHO_MKDIR)
@@ -42,15 +46,16 @@ $(OFW_INTERFACE_INT_)ofw_interface.o: $(OFW_INTERFACE_BASE_)ofw_interface.cpp | 
 	$(ECHO_CC)
 	${host_gpp} $(OFW_INTERFACE_HOST_CFLAGS) -c $< -o $@
 
-$(OFW_INTERFACE_OUTPUT): ofw_interface
-	$(OFW_INTERFACE_TARGET) \
+$(OFW_SERVICE_FILES): $(OFW_INTERFACE_TARGET) $(OFW_INTERFACE_INPUT)
+	$(ECHO_OFW)
+	$(Q)$(OFW_INTERFACE_TARGET) \
 		$(OFW_INTERFACE_INPUT) \
 		$(OFW_INTERFACE_OUTPUT) \
 		$(OFW_INTERFACE_SOURCE) \
 		$(OFW_INTERFACE_HEADER)
 	
 .PHONY: ofw_interface
-ofw_interface: $(OFW_INTERFACE_TARGET) $(OFW_INTERFACE_INPUT)
+ofw_interface: $(OFW_INTERFACE_TARGET)
 
 .PHONY: ofw_interface_clean
 ofw_interface_clean:
