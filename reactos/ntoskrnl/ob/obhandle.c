@@ -1455,6 +1455,14 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     OB_OPEN_REASON OpenReason;
     PAGED_CODE();
 
+    /* Check if we didn't get any Object Attributes */
+    if (!ObjectAttributes)
+    {
+        /* Fail with special status code */
+        *Handle = NULL;
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Capture all the info */
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                         AccessMode,
