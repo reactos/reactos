@@ -89,8 +89,7 @@ ObfDereferenceObject(IN PVOID Object)
     Header = OBJECT_TO_OBJECT_HEADER(Object);
 
     /* Check whether the object can now be deleted. */
-    if (!(InterlockedDecrement(&Header->PointerCount)) &&
-        !(Header->Flags & OB_FLAG_PERMANENT))
+    if (!(InterlockedDecrement(&Header->PointerCount)))
     {
         /* Sanity check */
         ASSERT(!Header->HandleCount);
