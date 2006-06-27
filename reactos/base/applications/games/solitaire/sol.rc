@@ -1,4 +1,4 @@
 #include "resource.h"
 
-#include "De.rc"
-#include "En.rc"
+#include "de.rc"
+#include "en.rc"
