@@ -498,7 +498,7 @@ ClassCallback(
 	}
 	else
 	{
-		DPRINT("ClassCallBack() entered, InputCount = %lu - DOING NOTHING\n", InputCount);
+		DPRINT("ClassCallback(): no more data to process\n");
 	}
 
 	KeReleaseSpinLock(&ClassDeviceExtension->SpinLock, OldIrql);
