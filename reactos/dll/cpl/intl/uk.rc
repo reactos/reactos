@@ -1,0 +1,89 @@
+/*
+ * PROJECT:     International Control Panel Applet
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/cpl/intl/Uk.rc
+ * PURPOSE:     Ukraianian Language File for International Control Panel Applet
+ * PROGRAMMERS: temarez
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_NEUTRAL
+
+IDD_GENERALPAGE DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Загальні"
+FONT 8, "MS Shell Dlg"
+EXSTYLE DS_SHELLFONT
+BEGIN
+  LTEXT "Вкладка властивостей 1",-1,73,74,90,8
+END
+
+
+IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Числа"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Вкладка властивостей 2",-1,73,74,90,8
+END
+
+
+IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Грошова одиниця"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Вкладка властивостей 3",-1,73,74,90,8
+END
+
+
+IDD_TIMEPAGE DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Час"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Зразок вигляду", -1, 7, 7, 228, 33, WS_CHILD | WS_VISIBLE
+  LTEXT "Зразок:", -1, 13, 21, 54, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+  EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
+  LTEXT "&Формат часу:", -1, 13, 52, 54, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+  COMBOBOX IDC_TIMEFORMAT, 68, 50, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  LTEXT "&Розділювач компонентів часу:", -1, 13, 70, 54, 10, WS_VISIBLE | WS_GROUP
+  COMBOBOX IDC_TIMESEPARATOR, 68, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  LTEXT "По&значення часу до полудня (AM):", -1, 13, 88, 54, 10, WS_VISIBLE | WS_GROUP
+  COMBOBOX IDC_TIMEAMSYMBOL, 68, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  LTEXT "&Позначення часу після полудня (PM):", -1, 13, 106, 54, 10, WS_VISIBLE | WS_GROUP
+  COMBOBOX IDC_TIMEPMSYMBOL, 68, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  GROUPBOX "", -1, 7, 124, 228, 60, WS_VISIBLE
+  LTEXT "Позначення формату часу\n\n\
+h = година     m = хвилина     s = секунда     t = АМ або РМ\n\n\
+h = 12-годинний формат доби   H = 24-годинний формат доби\n\
+hh, mm, ss = з виводом нулів на початку   h, m, s = без виводу нулів",
+        -1, 13, 133, 214, 47, WS_CHILD |WS_VISIBLE | WS_GROUP
+END
+
+
+IDD_DATEPAGE DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Дата"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Вкладка властивостей 5",-1,73,74,90,8
+END
+
+
+IDD_LOCALEPAGE DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Мови і розкладки"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Основна мова", -1, 8, 11, 228, 74
+  ICON IDC_FLAGS, IDC_ICON1, 12, 26, 21, 20, SS_ICON
+  LTEXT "Виберіть первинну мову і регіон, який ви бажаєте використовувати:", -1, 38, 25, 193, 22
+  COMBOBOX IDC_LANGUAGELIST, 39, 49, 191, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
+END
+
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME "Регіональні параметри"
+  IDS_CPLDESCRIPTION "Виберіть мови і формат чисел, грошових одиниць, часу і дати."
+END
