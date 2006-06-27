@@ -4,6 +4,7 @@ IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Error reporting assistant"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
+EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "The system recovered from an error.", -1, 115, 15, 160, 24
   LTEXT "Would you like to report the error to the ReactOS foundation?", -1, 115, 35, 160, 17
@@ -13,6 +14,7 @@ IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Error reporting assistant"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
+EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "Please describe what you were trying to do when the error occurred.\n\nClick 'Next' to send the report to the ReactOS foundation or 'Cancel' to not send any information.",-1,10,0,225,40
   LTEXT "Your e-mail address (optional):",-1,10,40,120,20
@@ -25,6 +27,7 @@ IDD_SUBMITTING_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Error reporting assistant"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
+EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "{STATUS}",IDC_SUBMISSION_STATUS,25,58,225,8
   CONTROL "", IDC_SUBMITTING_IN_PROGRESS, "msctls_progress32", PBS_MARQUEE | WS_CHILD | WS_VISIBLE | WS_BORDER, 25, 80, 225, 8
@@ -34,6 +37,7 @@ IDD_SUBMITTED_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Error reporting assistant"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
+EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "Your error report was successfully sent to the ReactOS foundation.",-1,25,5,225,20
 END
