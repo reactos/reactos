@@ -9,6 +9,16 @@ exit			0	0
 child			1	1	int int
 peer			1	1	int int
 seek			2	1	int int int
+# MMU methods 
+# claim (virt size align -- base)
+claim			3	1	int int int int
+# release (virt size --)
+release			2	0	int int
+# map (plo phi virt size mode --)
+map			5	0	int int int int int
+unmap			2	0	int int
+modify			3	0	int int int
+translate		4	1	int int int int int
 # Convenience functions that interact closely with OFW (written in BE asm)
 -dumpregs		0	0
 -print_string		1	0	char*

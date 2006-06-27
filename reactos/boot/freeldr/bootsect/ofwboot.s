@@ -49,10 +49,8 @@ _begin:
 	lis	%r5,0x8000@ha
 	addi	%r5,%r5,0x8000@l
 
-	bl	ofw_dumpregs 
-
+	bl	ofw_dumpregs
 	bl	copy_bits
-
 	bl	zero_registers
 
 	/* Zero CTR */
@@ -63,32 +61,11 @@ _begin:
 
 	mtlr	%r3
 
-	lis	%r3,call_freeldr@ha
-	addi	%r3,%r3,call_freeldr - _start
+	lis	%r3,call_ofw@ha
+	addi	%r3,%r3,call_ofw - _start
 
-	blr
+	b	call_freeldr
 
-/*
- * lifted from ppc/boot/openfirmware/misc.S
- * Copyright (C) Paul Mackerras 1997.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation	;  either version
- * 2 of the License, or (at your option) any later version.
- */
-
-/*
- * Use the BAT2 & 3 registers to map the 1st 16MB of RAM to
- * the address given as the 1st argument.
- */
-setup_bats:
-	xor	3,3,3
-	
-	sync
-        isync
-        blr
-	
 zero_registers:
 	xor	%r2,%r2,%r2
 	mr	%r0,%r2

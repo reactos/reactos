@@ -280,10 +280,12 @@ void PpcInit( of_proxy the_ofproxy ) {
     int len;
     ofproxy = the_ofproxy;
 
+    ofw_print_string("Made it into freeldr LE code ... bootstrap complete\n");
+
     chosen_package = ofw_finddevice( "/chosen" );
 
     ofw_getprop( chosen_package, "stdin",
-                 &stdin_handle, sizeof(stdin_handle) );
+                 (char *)&stdin_handle, sizeof(stdin_handle) );
 
     stdin_handle = REV(stdin_handle);
 

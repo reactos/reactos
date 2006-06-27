@@ -10,7 +10,7 @@
 #include <string.h>
 
 typedef int (*of_proxy)
-    ( int table_off, void *arg1, void *arg2, void *arg3, void *arg4 );
+    ( int table_off, void *arg1, void *arg2, void *arg3, void *arg4, void *arg5 );
 typedef long jmp_buf[100];
 extern of_proxy ofproxy;
 extern void le_swap( void *begin, void *end, void *dest );
