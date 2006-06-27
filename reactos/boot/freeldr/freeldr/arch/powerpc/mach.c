@@ -29,9 +29,9 @@ BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
 jmp_buf jmp;
 
-void le_swap( const void *start_addr_v, 
-              const void *end_addr_v, 
-              const void *target_addr_v ) {
+void le_swap( void *start_addr_v, 
+              void *end_addr_v, 
+              void *target_addr_v ) {
     long *start_addr = (long *)ROUND_DOWN((long)start_addr_v,8), 
         *end_addr = (long *)ROUND_UP((long)end_addr_v,8), 
         *target_addr = (long *)ROUND_DOWN((long)target_addr_v,8);
@@ -43,90 +43,6 @@ void le_swap( const void *start_addr_v,
         start_addr += 2;
         target_addr += 2;
     }
-}
-
-int ofw_finddevice( const char *name ) {
-    int ret, len;
-
-    len = strlen(name);
-    le_swap( name, name + len, name );
-    ret = ofproxy( 0, (char *)name, NULL, NULL, NULL );
-    le_swap( name, name + len, name );
-    return ret;
-}
-
-int ofw_getprop( int package, const char *name, void *buffer, int buflen ) {
-    int ret, len = strlen(name);
-    le_swap( name, name + len, name );
-    le_swap( buffer, (char *)buffer + buflen, buffer );
-    ret = ofproxy
-        ( 4, (void *)package, (char *)name, buffer, (void *)buflen );
-    le_swap( buffer, (char *)buffer + buflen, buffer );
-    le_swap( name, name + len, name );
-    return ret;
-}
-
-/* Since this is from external storage, it doesn't need swapping */
-int ofw_write( int handle, const char *data, int len ) {
-    int ret;
-    le_swap( data, data + len, data );
-    ret = ofproxy
-        ( 8, (void *)handle, (char *)data, (void *)len, NULL );
-    le_swap( data, data + len, data );
-    return ret;
-}
-
-/* Since this is from external storage, it doesn't need swapping */
-int ofw_read( int handle, const char *data, int len ) {
-    int ret;
-
-    le_swap( data, data + len, data );
-    ret = ofproxy
-        ( 12, (void *)handle, (char *)data, (void *)len, NULL );
-    le_swap( data, data + len, data );
-
-    return ret;
-}
-
-void ofw_exit() {
-    ofproxy( 16, NULL, NULL, NULL, NULL );
-}
-
-void ofw_dumpregs() {
-    ofproxy( 20, NULL, NULL, NULL, NULL );
-}
-
-void ofw_print_string( const char *str ) {
-    int len = strlen(str);
-    le_swap( (char *)str, str + len, (char *)str );
-    ofproxy( 24, (void *)str, NULL, NULL, NULL );
-    le_swap( (char *)str, str + len, (char *)str );
-}
-
-void ofw_print_number( int num ) {
-    ofproxy( 28, (void *)num, NULL, NULL, NULL );
-}
-
-int ofw_open( const char *name ) {
-    int ret, len;
-
-    len = strlen(name);
-    le_swap( name, name + len, name );
-    ret = ofproxy( 32, (char *)name, NULL, NULL, NULL );
-    le_swap( name, name + len, name );
-    return ret;
-}
-
-int ofw_child( int package ) {
-    return ofproxy( 36, (void *)package, NULL, NULL, NULL );
-}
-
-int ofw_peer( int package ) {
-    return ofproxy( 40, (void *)package, NULL, NULL, NULL );
-}
-
-int ofw_seek( int handle, long long location ) {
-    return ofproxy( 44, (void *)handle, (void *)(int)(location >> 32), (void *)(int)location, NULL );
 }
 
 void PpcPutChar( int ch ) {

@@ -62,6 +62,7 @@
 				<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
 				<compilerflag>-Os</compilerflag>
 				<file>boot.s</file>
+				<file>ofw.c</file>
 				<file>mach.c</file>
 				<file>mboot.c</file>
 			</module>
