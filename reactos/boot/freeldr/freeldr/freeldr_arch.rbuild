@@ -61,6 +61,9 @@
 				<compilerflag>-fno-inline</compilerflag>
 				<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
 				<compilerflag>-Os</compilerflag>
+				<compilerflag>-fPIC</compilerflag>
+				<compilerflag>-mno-toc</compilerflag>
+				<compilerflag>-meabi</compilerflag>
 				<file>boot.s</file>
 				<file>ofw.c</file>
 				<file>mach.c</file>
