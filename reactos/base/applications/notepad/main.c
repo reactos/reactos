@@ -341,9 +341,33 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         break;
 
     case WM_SIZE:
-        SetWindowPos(Globals.hEdit, NULL, 0, 0, LOWORD(lParam), HIWORD(lParam),
-                     SWP_NOOWNERZORDER | SWP_NOZORDER);
+    {
+        if (Globals.bShowStatusBar)
+        {
+            RECT rcStatusBar;
+            HDWP hdwp;
+
+            if (!GetWindowRect(Globals.hStatusBar, &rcStatusBar))
+                break;
+
+            hdwp = BeginDeferWindowPos(2);
+            if (hdwp == NULL)
+                break;
+
+            hdwp = DeferWindowPos(hdwp, Globals.hEdit, NULL, 0, 0, LOWORD(lParam), HIWORD(lParam) - (rcStatusBar.bottom - rcStatusBar.top), SWP_NOZORDER | SWP_NOMOVE);
+            if (hdwp == NULL)
+                break;
+
+            hdwp = DeferWindowPos(hdwp, Globals.hStatusBar, NULL, 0, 0, LOWORD(lParam), LOWORD(wParam), SWP_NOZORDER);
+
+            if (hdwp != NULL)
+                EndDeferWindowPos(hdwp);
+        }
+        else
+            SetWindowPos(Globals.hEdit, NULL, 0, 0, LOWORD(lParam), HIWORD(lParam), SWP_NOZORDER | SWP_NOMOVE);
+
         break;
+    }
 
     case WM_SETFOCUS:
         SetFocus(Globals.hEdit);
