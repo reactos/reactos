@@ -1,4 +1,76 @@
 	.section .text
+
+	.globl ofw_functions_addr
+ofw_functions_addr:
+	.long	ofw_functions
+
+	.align	4
+call_freeldr:
+	/* Get the address of the functions list --
+	 * Note:
+	 * Because of little endian switch we must use an even number of
+	 * instructions here..  Pad with a nop if needed. */
+	mfmsr	%r10
+	ori	%r10,%r10,1
+	mtmsr	%r10
+
+	nop
+	
+	/* Note that this is little-endian from here on */
+	blr
+	nop
+
+	.align  4
+
+call_ofw:
+	/* R3 has the function offset to call (n * 4) 
+	 * Other arg registers are unchanged.
+	 * Note that these 4 instructions are in reverse order due to
+	 * little-endian convention */
+	andi.	%r0,%r0,65534
+	mfmsr	%r0
+	mtmsr	%r0
+	/* Now normal ordering resumes */
+	subi	%r1,%r1,0x100
+
+	stw	%r8,4(%r1)
+	stw	%r9,8(%r1)
+	stw	%r10,12(%r1)
+	mflr	%r8
+	stw	%r8,16(%r1)
+
+	lis	%r10,0xe00000@ha
+	add	%r9,%r3,%r10
+	lwz	%r3,ofw_functions_addr - _start@l(%r9)
+	lwz	%r3,0(%r3)
+	mtctr	%r3
+	
+	mr	%r3,%r4
+	mr	%r4,%r5
+	mr	%r5,%r6
+	mr	%r6,%r7
+	mr	%r7,%r8
+
+	/* Goto the swapped function */
+	bctrl
+
+	lwz	%r8,16(%r1)
+	mtlr	%r8
+
+	lwz	%r8,4(%r1)
+	lwz	%r9,8(%r1)
+	lwz	%r10,12(%r1)
+
+	addi	%r1,%r1,0x100
+	/* Ok, go back to little endian */
+	mfmsr	%r0
+	ori	%r0,%r0,1
+	mtmsr	%r0
+
+	/* Note that this is little-endian from here on */
+	blr
+	nop
+
 prim_strlen:
 	mr	%r5,%r3
 prim_strlen_loop:	
@@ -14,7 +86,7 @@ prim_strlen_done:
 	
 copy_bits:
 	cmp	0,0,%r3,%r4
-	beqlr
+	bgelr
 
 	lwz	%r6,0(%r3)
 	stw	%r6,0(%r5)
@@ -366,3 +438,29 @@ ofw_register_special:
 		
 	blr
 	
+ofw_chosen_name:
+	.ascii	"/chosen\0"
+
+ofw_stdout_name:
+	.ascii	"stdout\0"
+
+ofw_memory_name:
+	.ascii	"/memory@0\0"
+
+ofw_reg_name:
+	.ascii	"reg\0"
+	
+freeldr_reg_init:
+	.ascii	"r\0"
+
+freeldr_reg_lr:	
+	.ascii	"lr \0"
+
+freeldr_reg_cr:	
+	.ascii	"cr \0"
+	
+freeldr_reg_ctr:	
+	.ascii	"ctr\0"
+
+freeldr_reg_msr:	
+	.ascii	"msr\0"
