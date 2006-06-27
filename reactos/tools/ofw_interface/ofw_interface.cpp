@@ -34,7 +34,7 @@ std::string clip_eol( std::string in, const std::string &eol_marks ) {
 }
 
 int round_up( int x, int factor ) {
-    return (x + (factor - 1)) & (factor - 1);
+    return (x + (factor - 1)) & ~(factor - 1);
 }
 
 std::string c_type( const std::string &intype ) {

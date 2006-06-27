@@ -52,6 +52,7 @@ include tools/gendib/gendib.mak
 include tools/mkhive/mkhive.mak
 include tools/nci/nci.mak
 include tools/rbuild/rbuild.mak
+include tools/ofw_interface/ofw_interface.mak
 include tools/unicode/unicode.mak
 include tools/widl/widl.mak
 include tools/winebuild/winebuild.mak
