@@ -1705,7 +1705,7 @@ ObInsertObject(IN PVOID Object,
     POBJECT_TYPE ObjectType;
     PVOID FoundObject = NULL;
     POBJECT_HEADER FoundHeader = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS, RealStatus;
     PSECURITY_DESCRIPTOR DirectorySd = NULL;
     BOOLEAN SdAllocated;
     OBP_LOOKUP_CONTEXT Context;
@@ -1749,9 +1749,14 @@ ObInsertObject(IN PVOID Object,
         Header->ObjectCreateInfo = NULL;
 
         /* Remove the extra keep-alive reference */
-        //ObDereferenceObject(Object); // FIXME: Needs sync changes
+        if (Handle) ObDereferenceObject(Object); // FIXME: Needs sync changes
 
         /* Return */
+        OBTRACE(OB_HANDLE_DEBUG,
+                "%s - returning Object with PC S: %lx %lx\n",
+                __FUNCTION__,
+                OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
+                Status);
         return Status;
     }
 
@@ -1893,12 +1898,15 @@ ObInsertObject(IN PVOID Object,
         }
     }
 
+    /* Save the actual status until here */
+    RealStatus = Status;
+
     /* HACKHACK: Because of ROS's incorrect startup, this can be called
-    * without a valid Process until I finalize the startup patch,
-    * so don't create a handle if this is the case. We also don't create
-    * a handle if Handle is NULL when the Registry Code calls it, because
-    * the registry code totally bastardizes the Ob and needs to be fixed
-    */
+     * without a valid Process until I finalize the startup patch,
+     * so don't create a handle if this is the case. We also don't create
+     * a handle if Handle is NULL when the Registry Code calls it, because
+     * the registry code totally bastardizes the Ob and needs to be fixed
+     */
     if (Handle)
     {
         /* Create the handle */
@@ -1925,7 +1933,15 @@ ObInsertObject(IN PVOID Object,
     }
 
     /* Remove the extra keep-alive reference */
-    //ObDereferenceObject(Object);
+    if (Handle) ObDereferenceObject(Object);
+
+    /* Check our final status */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Return the status of the failure */
+        *Handle = NULL;
+        RealStatus = Status;
+    }
 
     /* Check if we created our own access state */
     if (PassedAccessState == &AccessState)
@@ -1934,8 +1950,13 @@ ObInsertObject(IN PVOID Object,
         SeDeleteAccessState(PassedAccessState);
     }
 
-    /* Return failure code */
-    return Status;
+    /* Return status code */
+    OBTRACE(OB_HANDLE_DEBUG,
+            "%s - returning Object with PC S/RS: %lx %lx %lx\n",
+            __FUNCTION__,
+            OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
+            RealStatus, Status);
+    return RealStatus;
 }
 
 /*++
