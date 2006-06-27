@@ -564,19 +564,19 @@ RtlUpcaseUnicodeChar(IN WCHAR Source)
 {
    USHORT Offset;
 
-   if (Source < L'a')
+   if (Source < 'a')
       return Source;
 
-   if (Source <= L'z')
-      return (Source - (L'a' - L'A'));
+   if (Source <= 'z')
+      return (Source - ('a' - 'A'));
 
-   Offset = ((USHORT)Source >> 8);
+   Offset = ((USHORT)Source >> 8) & 0xFF;
    Offset = NlsUnicodeUpcaseTable[Offset];
 
-   Offset += (((USHORT)Source & 0x00F0) >> 4);
+   Offset += ((USHORT)Source >> 4) & 0xF;
    Offset = NlsUnicodeUpcaseTable[Offset];
 
-   Offset += ((USHORT)Source & 0x000F);
+   Offset += ((USHORT)Source & 0xF);
    Offset = NlsUnicodeUpcaseTable[Offset];
 
    return Source + (SHORT)Offset;
@@ -727,24 +727,42 @@ RtlUpperChar (IN CHAR Source)
    WCHAR Unicode;
    CHAR Destination;
 
-   if (NlsMbCodePageTag == FALSE)
+   /* Check for simple ANSI case */
+   if (Source <= 'z')
    {
-      /* single-byte code page */
-
-      /* ansi->unicode */
-      Unicode = NlsAnsiToUnicodeTable[(UCHAR)Source];
-
-      /* upcase conversion */
-      Unicode = RtlUpcaseUnicodeChar (Unicode);
-
-      /* unicode -> ansi */
-      Destination = NlsUnicodeToAnsiTable[(USHORT)Unicode];
+       /* Check for simple downcase a-z case */
+       if (Source >= 'a')
+       {
+           /* Just XOR with the difference */
+           return Source ^ ('a' - 'A');
+       }
+       else
+       {
+           /* Otherwise return the same char, it's already upcase */
+           return Source;
+       }
    }
    else
    {
-      /* multi-byte code page */
-      /* FIXME */
-      Destination = Source;
+        if (NlsMbCodePageTag == FALSE)
+        {
+            /* single-byte code page */
+
+            /* ansi->unicode */
+            Unicode = NlsAnsiToUnicodeTable[(UCHAR)Source];
+
+            /* upcase conversion */
+            Unicode = RtlUpcaseUnicodeChar (Unicode);
+
+            /* unicode -> ansi */
+            Destination = NlsUnicodeToAnsiTable[(USHORT)Unicode];
+        }
+        else
+        {
+            /* multi-byte code page */
+            /* FIXME */
+            Destination = Source;
+        }
    }
 
    return Destination;
