@@ -22,6 +22,8 @@
 PVOID	TextVideoBuffer = NULL;
 extern BOOLEAN UiDrawTime;
 extern BOOLEAN UiMinimal;
+extern void ofw_print_string(const char *);
+extern void ofw_print_number(int x);
 
 /*
  * printf() - prints formatted text to stdout
@@ -43,19 +45,20 @@ int printf(const char *format, ... )
 		{
 			switch (c = *(format++))
 			{
-			case 'd': case 'u': case 'x':
-                if (c == 'x')
-                    *_itoa(va_arg(ap, unsigned long), str, 16) = 0;
-                else
-                    *_itoa(va_arg(ap, unsigned long), str, 10) = 0;
+			case 'd': case 'u': case 'x': {
+				unsigned long x = va_arg(ap, unsigned long);
+                		if (c == 'x')
+                		    _itoa(x, str, 16);
+                		else
+                    		    _itoa(x, str, 10);
 
 				ptr = str;
 
 				while (*ptr)
 				{
-					MachConsPutChar(*(ptr++));
+				    MachConsPutChar(*(ptr++));
 				}
-				break;
+			} break;
 
 			case 'c': MachConsPutChar((va_arg(ap,int))&0xff); break;
 
