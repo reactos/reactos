@@ -1,6 +1,6 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ex/error.c
  * PURPOSE:         Error Functions and Status/Exception Dispatching/Raising
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
@@ -22,6 +22,34 @@ PEPROCESS ExpDefaultErrorPortProcess = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
+/*++
+ * @name ExpRaiseHardError
+ *
+ * For now it's a stub
+ *
+ * @param ErrorStatus
+ *        FILLME
+ *
+ * @param NumberOfParameters
+ *        FILLME
+ *
+ * @param UnicodeStringParameterMask
+ *        FILLME
+ *
+ * @param Parameters
+ *        FILLME
+ *
+ * @param ValidResponseOptions
+ *        FILLME
+ *
+ * @param Response
+ *        FILLME
+ *
+ * @return None
+ *
+ * @remarks None
+ *
+ *--*/
 VOID
 NTAPI
 ExpRaiseHardError(IN NTSTATUS ErrorStatus,
@@ -34,9 +62,21 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     UNIMPLEMENTED;
 }
 
-/*
+/*++
+ * @name ExRaiseAccessViolation
  * @implemented
- */
+ *
+ * The ExRaiseAccessViolation routine can be used with structured exception
+ * handling to throw a driver-determined exception for a memory access
+ * violation that occurs when a driver processes I/O requests.
+ * See: http://msdn.microsoft.com/library/en-us/Kernel_r/hh/Kernel_r/k102_71b4c053-599c-4a6d-8a59-08aae6bdc534.xml.asp?frame=true
+ *      http://www.osronline.com/ddkx/kmarch/k102_814i.htm
+ *
+ * @return None
+ *
+ * @remarks None
+ *
+ *--*/
 VOID
 NTAPI
 ExRaiseAccessViolation(VOID)
@@ -45,20 +85,39 @@ ExRaiseAccessViolation(VOID)
     RtlRaiseStatus(STATUS_ACCESS_VIOLATION);
 }
 
-/*
+/*++
+ * @name ExRaiseDatatypeMisalignment
  * @implemented
- */
+ *
+ * ExRaiseDatatypeMisalignment raises an exception with the exception
+ * code set to STATUS_DATATYPE_MISALIGNMENT
+ * See: MSDN / DDK
+ *      http://www.osronline.com/ddkx/kmarch/k102_814i.htm
+ *
+ * @return None
+ *
+ * @remarks None
+ *
+ *--*/
 VOID
 NTAPI
-ExRaiseDatatypeMisalignment (VOID)
+ExRaiseDatatypeMisalignment(VOID)
 {
     /* Raise the Right Status */
     RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
 }
 
-/*
+/*++
+ * @name ExSystemExceptionFilter
  * @implemented
- */
+ *
+ * TODO: Add description
+ *
+ * @return FILLME
+ *
+ * @remarks None
+ *
+ *--*/
 LONG
 NTAPI
 ExSystemExceptionFilter(VOID)
@@ -67,9 +126,35 @@ ExSystemExceptionFilter(VOID)
            EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH;
 }
 
-/*
- * @unimplemented
- */
+/*++
+ * @name ExRaiseHardError
+ * @implemented
+ *
+ * See NtRaiseHardError
+ *
+ * @param ErrorStatus
+ *        Error Code
+ *
+ * @param NumberOfParameters
+ *        Number of optional parameters in Parameters array
+ *
+ * @param UnicodeStringParameterMask
+ *        Optional string parameter (can be only one per error code)
+ *
+ * @param Parameters
+ *        Array of DWORD parameters for use in error message string
+ *
+ * @param ValidResponseOptions
+ *        See HARDERROR_RESPONSE_OPTION for possible values description
+ *
+ * @param Response
+ *        Pointer to HARDERROR_RESPONSE enumeration
+ *
+ * @return None
+ *
+ * @remarks None
+ *
+ *--*/
 VOID
 NTAPI
 ExRaiseHardError(IN NTSTATUS ErrorStatus,
@@ -90,6 +175,38 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                       Response);
 }
 
+/*++
+ * @name NtRaiseHardError
+ * @implemented
+ *
+ * This function sends HARDERROR_MSG LPC message to listener
+ * (typically CSRSS.EXE). See NtSetDefaultHardErrorPort for more information
+ * See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Error/NtRaiseHardError.html
+ *
+ * @param ErrorStatus
+ *        Error Code
+ *
+ * @param NumberOfParameters
+ *        Number of optional parameters in Parameters array
+ *
+ * @param UnicodeStringParameterMask
+ *        Optional string parameter (can be only one per error code)
+ *
+ * @param Parameters
+ *        Array of DWORD parameters for use in error message string
+ *
+ * @param ValidResponseOptions
+ *        See HARDERROR_RESPONSE_OPTION for possible values description
+ *
+ * @param Response
+ *        Pointer to HARDERROR_RESPONSE enumeration
+ *
+ * @return Status
+ *
+ * @remarks NtRaiseHardError is easy way to display message in GUI
+ *          without loading Win32 API libraries
+ *
+ *--*/
 NTSTATUS
 NTAPI
 NtRaiseHardError(IN NTSTATUS ErrorStatus,
@@ -258,6 +375,24 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
     return Status;
 }
 
+/*++
+ * @name NtSetDefaultHardErrorPort
+ * @implemented
+ *
+ * NtSetDefaultHardErrorPort is typically called only once. After call,
+ * kernel set BOOLEAN flag named _ExReadyForErrors to TRUE, and all other
+ * tries to change default port are broken with STATUS_UNSUCCESSFUL error code
+ * See: http://www.windowsitlibrary.com/Content/356/08/2.html
+ *      http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Error/NtSetDefaultHardErrorPort.html
+ *
+ * @param PortHandle
+ *        Handle to named port object
+ *
+ * @return Status
+ *
+ * @remarks Privileges: SE_TCB_PRIVILEGE
+ *
+ *--*/
 NTSTATUS
 NTAPI
 NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
