@@ -20,6 +20,8 @@
 #include "machine.h"
 #include "of.h"
 
+#define TOTAL_HEAP_NEEDED (16 * 1024 * 1024) /* 16 megs */
+
 extern void BootMain( char * );
 extern char *GetFreeLoaderVersionString();
 of_proxy ofproxy;
@@ -162,24 +164,38 @@ VOID PpcVideoSync() {
 VOID PpcVideoPrepareForReactOS() {
     printf( "PrepareForReactOS\n");
 }
-/* XXX FIXME:
- * According to the linux people (this is backed up by my own experience),
- * the memory object in older ofw does not do getprop right.
- *
- * The "right" way is to probe the pci bridge. *sigh*
+/* 
+ * Get memory the proper openfirmware way
  */
 ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
                        ULONG MaxMemoryMapSize ) {
-    printf("GetMemoryMap(chosen=%x)\n", chosen_package);
+    int i, memhandle, returned, total = 0, num_mem = 0;
+    int memdata[256];
 
-    BiosMemoryMap[0].Type = MEMTYPE_USABLE;
-    BiosMemoryMap[0].BaseAddress = 0;
-    BiosMemoryMap[0].Length = 32 * 1024 * 1024; /* Assume 32 meg for now */
+    ofw_getprop(chosen_package, "memory", 
+		(char *)&memhandle, sizeof(memhandle));
+    returned = ofw_getprop(memhandle, "available", 
+			   (char *)memdata, sizeof(memdata));
 
-    printf( "Returning memory map (%dk total)\n", 
-            (int)BiosMemoryMap[0].Length / 1024 );
+    /* We need to leave some for open firmware.  Let's claim up to 16 megs 
+     * for now */
 
-    return 1;
+    for( i = 0; i < returned / sizeof(int) && !num_mem; i += 2 ) {
+	BiosMemoryMap[num_mem].Type = MEMTYPE_USABLE;
+	BiosMemoryMap[num_mem].BaseAddress = memdata[i];
+	BiosMemoryMap[num_mem].Length = memdata[i+1];
+	if( BiosMemoryMap[num_mem].Length >= TOTAL_HEAP_NEEDED ) {
+	    BiosMemoryMap[num_mem].Length = TOTAL_HEAP_NEEDED;	     
+	    ofw_claim(BiosMemoryMap[num_mem].BaseAddress, 
+		      BiosMemoryMap[num_mem].Length, 0x1000); /* claim it */
+	    total += BiosMemoryMap[0].Length;
+	    num_mem++;
+	}
+    }
+
+    printf( "Returning memory map (%dk total)\n", total / 1024 );
+
+    return num_mem;
 }
 
 /* Strategy:
@@ -284,27 +300,15 @@ void PpcInit( of_proxy the_ofproxy ) {
 
     chosen_package = ofw_finddevice( "/chosen" );
 
-    ofw_print_string("Chosen package: ");
-    ofw_print_number(chosen_package);
-    ofw_print_string("\n");
-
     ofw_getprop( chosen_package, "stdin",
                  (char *)&stdin_handle, sizeof(stdin_handle) );
 
-    ofw_print_string("ofw_getprop done\n");
-
     /* stdin_handle = REV(stdin_handle); */
-
-    ofw_print_string("Populating MachVtbl: ");
-    ofw_print_number((int)&MachVtbl);
-    ofw_print_string("\n");
 
     MachVtbl.ConsPutChar = PpcPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;
     MachVtbl.ConsGetCh   = PpcConsGetCh;
 
-    ofw_print_string("About to do printf\n");
-    
     printf( "stdin_handle is %x\n", stdin_handle );
 
     MachVtbl.VideoClearScreen = PpcVideoClearScreen;
