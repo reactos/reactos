@@ -63,6 +63,9 @@ BOOL STDCALL VerifyConsoleIoHandle(HANDLE Handle);
 
 BOOL STDCALL CloseConsoleHandle(HANDLE Handle);
 
+HANDLE STDCALL
+GetConsoleInputWaitHandle (VOID);
+
 HANDLE STDCALL OpenConsoleW (LPWSTR wsName,
 			     DWORD  dwDesiredAccess,
 			     BOOL   bInheritHandle,

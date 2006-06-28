@@ -24,10 +24,13 @@ DbgBreakPoint@0
 DbgPrint
 DbgPrintEx
 DbgPrompt@12
+DbgUiDebugActiveProcess@4
 DbgUiConnectToDbg@0
 DbgUiContinue@8
+DbgUiGetThreadDebugObject@0
 DbgUiIssueRemoteBreakin@4
 DbgUiRemoteBreakin@0
+DbgUiStopDebugging@4
 DbgUiWaitStateChange@8
 DbgUserBreakPoint@0
 KiRaiseUserExceptionDispatcher@0
@@ -230,6 +233,7 @@ NtSetEaFile@16
 NtSetEvent@8
 NtSetHighEventPair@4
 NtSetHighWaitLowEventPair@4
+NtSetInformationDebugObject@20
 NtSetInformationFile@20
 NtSetInformationJobObject@16
 NtSetInformationKey@16

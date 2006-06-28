@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/dbg/dbgui.c
- * PURPOSE:         User-Mode DbgUI Support
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROJECT:         ReactOS NT Layer/System API
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/ntdll/dbg/dbgui.c
+ * PURPOSE:         Native Wrappers for the NT Debug Implementation
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -133,6 +133,54 @@ DbgUiIssueRemoteBreakin(HANDLE Process)
 
     /* Return status */
     return Status;
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+NTAPI
+DbgUiGetThreadDebugObject(VOID)
+{
+    /* Just return the handle from the TEB */
+    return NtCurrentTeb()->DbgSsReserved[0];
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+DbgUiDebugActiveProcess(IN HANDLE Process)
+{
+    NTSTATUS Status;
+
+    /* Tell the kernel to start debugging */
+    Status = NtDebugActiveProcess(Process, NtCurrentTeb()->DbgSsReserved[0]);
+    if (NT_SUCCESS(Status))
+    {
+        /* Now break-in the process */
+        Status = DbgUiIssueRemoteBreakin(Process);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We couldn't break-in, cancel debugging */
+            DbgUiStopDebugging(Process);
+        }
+    }
+
+    /* Return status */
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+DbgUiStopDebugging(IN HANDLE Process)
+{
+    /* Call the kernel to remove the debug object */
+    return NtRemoveProcessDebug(Process, NtCurrentTeb()->DbgSsReserved[0]);
 }
 
 /* EOF */

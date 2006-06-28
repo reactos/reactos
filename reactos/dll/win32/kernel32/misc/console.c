@@ -567,7 +567,7 @@ GetConsoleHardwareState (HANDLE	hConsole,
 /*
  * @implemented
  */
-DWORD STDCALL
+HANDLE STDCALL
 GetConsoleInputWaitHandle (VOID)
      /*
       * Undocumented
@@ -585,7 +585,7 @@ GetConsoleInputWaitHandle (VOID)
       SetLastErrorByStatus(Status);
       return 0;
     }
-  return (DWORD) Request.Data.GetConsoleInputWaitHandle.InputWaitHandle;
+  return Request.Data.GetConsoleInputWaitHandle.InputWaitHandle;
 }
 
 

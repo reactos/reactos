@@ -10,7 +10,6 @@
 	<define name="WINVER">0x502</define>
 	<pch>k32.h</pch>
 	<directory name="debug">
-		<file>break.c</file>
 		<file>debugger.c</file>
 		<file>output.c</file>
 	</directory>
