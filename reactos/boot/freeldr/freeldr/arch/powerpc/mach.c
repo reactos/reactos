@@ -284,14 +284,26 @@ void PpcInit( of_proxy the_ofproxy ) {
 
     chosen_package = ofw_finddevice( "/chosen" );
 
+    ofw_print_string("Chosen package: ");
+    ofw_print_number(chosen_package);
+    ofw_print_string("\n");
+
     ofw_getprop( chosen_package, "stdin",
                  (char *)&stdin_handle, sizeof(stdin_handle) );
 
-    stdin_handle = REV(stdin_handle);
+    ofw_print_string("ofw_getprop done\n");
+
+    /* stdin_handle = REV(stdin_handle); */
+
+    ofw_print_string("Populating MachVtbl: ");
+    ofw_print_number((int)&MachVtbl);
+    ofw_print_string("\n");
 
     MachVtbl.ConsPutChar = PpcPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;
     MachVtbl.ConsGetCh   = PpcConsGetCh;
+
+    ofw_print_string("About to do printf\n");
     
     printf( "stdin_handle is %x\n", stdin_handle );
 

@@ -34,7 +34,9 @@ _begin:
 	addi	%r4,%r4,_binary_freeldr_tmp_end@l
 	lis	%r5,_binary_freeldr_tmp_start@ha
 	addi	%r5,%r5,_binary_freeldr_tmp_start@l
+	/* Make sufficient room for .bss */
 	sub	%r4,%r4,%r5
+	addi	%r4,%r4,0x6000
 		
 	xor	%r5,%r5,%r5
 	li	%r5,0x1000
