@@ -1,12 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/synch/event.c
- * PURPOSE:         Local string functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- * UPDATE HISTORY:
- *                  Created 01/11/98
+/*
+ * PROJECT:         ReactOS Win32 Base API
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/kernel32/synch/event.c
+ * PURPOSE:         Wrappers for the NT Event Implementation
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,228 +11,233 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
-
+#include "debug.h"
 
 /* FUNCTIONS ****************************************************************/
 
-/*
- * @implemented
- */
-HANDLE STDCALL
-CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes,
-	     BOOL bManualReset,
-	     BOOL bInitialState,
-	     LPCSTR lpName)
+HANDLE
+WINAPI
+CreateEventA(IN LPSECURITY_ATTRIBUTES lpEventAttributes OPTIONAL,
+             IN BOOL bManualReset,
+             IN BOOL bInitialState,
+             IN LPCSTR lpName OPTIONAL)
 {
-   UNICODE_STRING EventNameU;
-   ANSI_STRING EventName;
-   HANDLE EventHandle;
+    NTSTATUS Status;
+    ANSI_STRING AnsiName;
+    PUNICODE_STRING UnicodeCache;
+    LPCWSTR UnicodeName = NULL;
 
-   if (lpName)
-     {
-	RtlInitAnsiString(&EventName,
-			  (LPSTR)lpName);
-	RtlAnsiStringToUnicodeString(&EventNameU,
-				     &EventName,
-				     TRUE);
-     }
+    /* Check for a name */
+    if (lpName)
+    {
+        /* Use TEB Cache */
+        UnicodeCache = &NtCurrentTeb()->StaticUnicodeString;
 
-   EventHandle = CreateEventW(lpEventAttributes,
-			      bManualReset,
-			      bInitialState,
-			      (lpName ? EventNameU.Buffer : NULL));
+        /* Convert to unicode */
+        RtlInitAnsiString(&AnsiName, lpName);
+        Status = RtlAnsiStringToUnicodeString(UnicodeCache, &AnsiName, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Conversion failed */
+            SetLastErrorByStatus(Status);
+            return NULL;
+        }
 
-   if (lpName)
-     {
-	RtlFreeUnicodeString(&EventNameU);
-     }
+        /* Otherwise, save the buffer */
+        UnicodeName = (LPCWSTR)UnicodeCache->Buffer;
+    }
 
-   return EventHandle;
+    /* Call the Unicode API */
+    return CreateEventW(lpEventAttributes,
+                        bManualReset,
+                        bInitialState,
+                        UnicodeName);
 }
 
-
-/*
- * @implemented
- */
-HANDLE STDCALL
-CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
-	     BOOL bManualReset,
-	     BOOL bInitialState,
-	     LPCWSTR lpName)
+HANDLE
+WINAPI
+CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes OPTIONAL,
+             IN BOOL bManualReset,
+             IN BOOL bInitialState,
+             IN LPCWSTR lpName OPTIONAL)
 {
-   NTSTATUS Status;
-   HANDLE hEvent;
-   UNICODE_STRING UnicodeName;
-   OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES LocalAttributes;
+    POBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE Handle;
+    UNICODE_STRING ObjectName;
 
-   if (lpName != NULL)
-     {
-	RtlInitUnicodeString(&UnicodeName, (LPWSTR)lpName);
-     }
+    /* Now check if we got a name */
+    if (lpName) RtlInitUnicodeString(&ObjectName, lpName);
 
-   InitializeObjectAttributes(&ObjectAttributes,
-			      (lpName ? &UnicodeName : NULL),
-			      0,
-			      (lpName ? hBaseDir : NULL),
-			      NULL);
+    /* Now convert the object attributes */
+    ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
+                                                    lpEventAttributes,
+                                                    lpName ? &ObjectName : NULL);
 
-   if (lpEventAttributes != NULL)
-     {
-	ObjectAttributes.SecurityDescriptor = lpEventAttributes->lpSecurityDescriptor;
-	if (lpEventAttributes->bInheritHandle)
-	  {
-	     ObjectAttributes.Attributes |= OBJ_INHERIT;
-	  }
-     }
+    /* Create the event */
+    Status = NtCreateEvent(&Handle,
+                           EVENT_ALL_ACCESS,
+                           ObjectAttributes,
+                           bManualReset ?
+                           NotificationEvent : SynchronizationEvent,
+                           (BOOLEAN)bInitialState);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if the object already existed */
+        if (Status == STATUS_OBJECT_NAME_EXISTS)
+        {
+            /* Set distinguished Win32 error code */
+            SetLastError(ERROR_ALREADY_EXISTS);
+        }
+        else
+        {
+            /* Otherwise, set success */
+            SetLastError(ERROR_SUCCESS);
+        }
 
-   Status = NtCreateEvent(&hEvent,
-			  EVENT_ALL_ACCESS,
-			  &ObjectAttributes,
-			  (bManualReset ? NotificationEvent : SynchronizationEvent),
-			  bInitialState);
-   DPRINT( "Called\n" );
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return NULL;
-     }
-
-   return hEvent;
+        /* Return the handle */
+        return Handle;
+    }
+    else
+    {
+        /* Convert the NT Status and fail */
+        SetLastErrorByStatus(Status);
+        return NULL;
+    }
 }
 
-
-/*
- * @implemented
- */
-HANDLE STDCALL
-OpenEventA(DWORD dwDesiredAccess,
-	   BOOL bInheritHandle,
-	   LPCSTR lpName)
+HANDLE
+WINAPI
+OpenEventA(IN DWORD dwDesiredAccess,
+           IN BOOL bInheritHandle,
+           IN LPCSTR lpName)
 {
-   UNICODE_STRING EventNameU;
-   ANSI_STRING EventName;
-   HANDLE EventHandle;
+    NTSTATUS Status;
+    ANSI_STRING AnsiName;
+    PUNICODE_STRING UnicodeCache;
 
-   if (lpName == NULL)
-     {
-	SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	return NULL;
-     }
+    /* Check for a name */
+    if (lpName)
+    {
+        /* Use TEB Cache */
+        UnicodeCache = &NtCurrentTeb()->StaticUnicodeString;
 
-   RtlInitUnicodeString(&EventNameU,
-			NULL);
+        /* Convert to unicode */
+        RtlInitAnsiString(&AnsiName, lpName);
+        Status = RtlAnsiStringToUnicodeString(UnicodeCache, &AnsiName, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Conversion failed */
+            SetLastErrorByStatus(Status);
+            return NULL;
+        }
+    }
+    else
+    {
+        /* We need a name */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
 
-   RtlInitAnsiString(&EventName,
-                     (LPSTR)lpName);
-   RtlAnsiStringToUnicodeString(&EventNameU,
-                                &EventName,
-                                TRUE);
-
-   EventHandle = OpenEventW(dwDesiredAccess,
-			    bInheritHandle,
-			    EventNameU.Buffer);
-
-   RtlFreeUnicodeString(&EventNameU);
-
-   return EventHandle;
+    /* Call the Unicode API */
+    return OpenEventW(dwDesiredAccess,
+                      bInheritHandle,
+                      (LPCWSTR)UnicodeCache->Buffer);
 }
 
-
-/*
- * @implemented
- */
-HANDLE STDCALL
-OpenEventW(DWORD dwDesiredAccess,
-	   BOOL bInheritHandle,
-	   LPCWSTR lpName)
+HANDLE
+WINAPI
+OpenEventW(IN DWORD dwDesiredAccess,
+           IN BOOL bInheritHandle,
+           IN LPCWSTR lpName)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING EventNameString;
-   NTSTATUS Status;
-   HANDLE hEvent = NULL;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ObjectName;
+    NTSTATUS Status;
+    HANDLE Handle;
 
-   if (lpName == NULL)
-     {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return NULL;
-     }
+    /* Make sure we got a name */
+    if (!lpName)
+    {
+        /* Fail without one */
+        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+        return NULL;
+    }
 
-   RtlInitUnicodeString(&EventNameString, (LPWSTR)lpName);
+    /* Initialize the object name and attributes */
+    RtlInitUnicodeString(&ObjectName, lpName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &ObjectName,
+                               bInheritHandle ? OBJ_INHERIT : 0,
+                               hBaseDir,
+                               NULL);
 
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &EventNameString,
-			      (bInheritHandle ? OBJ_INHERIT : 0),
-			      hBaseDir,
-			      NULL);
+    /* Open the event */
+    Status = NtOpenEvent(&Handle, dwDesiredAccess, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Convert the status and fail */
+        SetLastErrorByStatus(Status);
+        return NULL;
+    }
 
-   Status = NtOpenEvent(&hEvent,
-			dwDesiredAccess,
-			&ObjectAttributes);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return NULL;
-     }
-
-   return hEvent;
+    /* Return the handle */
+    return Handle;
 }
 
-
 /*
  * @implemented
  */
-BOOL STDCALL
-PulseEvent(HANDLE hEvent)
+BOOL
+WINAPI
+PulseEvent(IN HANDLE hEvent)
 {
-   NTSTATUS Status;
+    NTSTATUS Status;
 
-   Status = NtPulseEvent(hEvent, NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus (Status);
-	return FALSE;
-     }
+    /* Pulse the event */
+    Status = NtPulseEvent(hEvent, NULL);
+    if (NT_SUCCESS(Status)) return TRUE;
 
-   return TRUE;
+    /* If we got here, then we failed */
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
-
 /*
  * @implemented
  */
-BOOL STDCALL
-ResetEvent(HANDLE hEvent)
+BOOL
+WINAPI
+ResetEvent(IN HANDLE hEvent)
 {
-   NTSTATUS Status;
+    NTSTATUS Status;
 
-   Status = NtClearEvent(hEvent);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return FALSE;
-     }
+    /* Clear the event */
+    Status = NtResetEvent(hEvent, NULL);
+    if (NT_SUCCESS(Status)) return TRUE;
 
-   return TRUE;
+    /* If we got here, then we failed */
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
-
 /*
  * @implemented
  */
-BOOL STDCALL
-SetEvent(HANDLE hEvent)
+BOOL
+WINAPI
+SetEvent(IN HANDLE hEvent)
 {
-   NTSTATUS Status;
+    NTSTATUS Status;
 
-   Status = NtSetEvent(hEvent, NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return FALSE;
-     }
+    /* Set the event */
+    Status = NtSetEvent(hEvent, NULL);
+    if (NT_SUCCESS(Status)) return TRUE;
 
-   return TRUE;
+    /* If we got here, then we failed */
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
 /* EOF */

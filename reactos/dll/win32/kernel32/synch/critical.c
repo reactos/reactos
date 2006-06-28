@@ -1,58 +1,58 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/sync/critical.c
- * PURPOSE:         Critical sections
- * PROGRAMMER:      Filip Navara
- *                  Eric Kohl
- * UPDATE HISTORY:
- *                  Created 30/09/98
+/*
+ * PROJECT:         ReactOS Win32 Base API
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/kernel32/synch/critical.c
+ * PURPOSE:         Wrappers for the RTL Critical Section Implementation
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *****************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
-
+#include "debug.h"
 
 /* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
-VOID STDCALL
-InitializeCriticalSection(LPCRITICAL_SECTION lpCriticalSection)
+VOID
+WINAPI
+InitializeCriticalSection(OUT LPCRITICAL_SECTION lpCriticalSection)
 {
-   NTSTATUS Status;
+    NTSTATUS Status;
 
-   Status = RtlInitializeCriticalSection((PRTL_CRITICAL_SECTION)lpCriticalSection);
-   if (!NT_SUCCESS(Status))
-     {
-	RtlRaiseStatus(Status);
-     }
+    /* Initialize the critical section and raise an exception if we failed */
+    Status = RtlInitializeCriticalSection(
+        (PRTL_CRITICAL_SECTION)lpCriticalSection);
+    if (!NT_SUCCESS(Status)) RtlRaiseStatus(Status);
 }
 
 /*
  * @implemented
  */
 BOOL
-STDCALL
-InitializeCriticalSectionAndSpinCount(
-    LPCRITICAL_SECTION lpCriticalSection,
-    DWORD dwSpinCount
-    )
+WINAPI
+InitializeCriticalSectionAndSpinCount(OUT LPCRITICAL_SECTION lpCriticalSection,
+                                      IN DWORD dwSpinCount)
 {
     NTSTATUS Status;
 
-    Status = RtlInitializeCriticalSectionAndSpinCount((PRTL_CRITICAL_SECTION)lpCriticalSection, dwSpinCount);
-    if (Status)
-      {
-         RtlRaiseStatus(Status);
-      }
-    return NT_SUCCESS(Status);
+    /* Initialize the critical section */
+    Status = RtlInitializeCriticalSectionAndSpinCount(
+        (PRTL_CRITICAL_SECTION)lpCriticalSection,
+        dwSpinCount);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Set failure code */
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    /* Success */
+    return TRUE;
 }
 
 /* EOF */

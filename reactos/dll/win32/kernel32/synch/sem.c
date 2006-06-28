@@ -1,12 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/synch/sem.c
- * PURPOSE:         Semaphore functions
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
- * UPDATE HISTORY:
- *                  Created 01/20/2001
+/*
+ * PROJECT:         ReactOS Win32 Base API
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/kernel32/synch/sem.c
+ * PURPOSE:         Wrappers for the NT Semaphore Implementation
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,204 +11,210 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
-
+#include "debug.h"
 
 /* FUNCTIONS ****************************************************************/
 
 /*
  * @implemented
  */
-HANDLE STDCALL
-CreateSemaphoreA(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
-		 LONG lInitialCount,
-		 LONG lMaximumCount,
-		 LPCSTR lpName)
+HANDLE
+WINAPI
+CreateSemaphoreA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
+                 IN LONG lInitialCount,
+                 IN LONG lMaximumCount,
+                 IN LPCSTR lpName OPTIONAL)
 {
-   UNICODE_STRING NameU;
-   ANSI_STRING Name;
-   HANDLE Handle;
+    NTSTATUS Status;
+    ANSI_STRING AnsiName;
+    PUNICODE_STRING UnicodeCache;
+    LPCWSTR UnicodeName = NULL;
 
-   if (lpName != NULL)
-     {
-        RtlInitAnsiString(&Name,
-                          (LPSTR)lpName);
-        RtlAnsiStringToUnicodeString(&NameU,
-                                     &Name,
-                                     TRUE);
-     }
+    /* Check for a name */
+    if (lpName)
+    {
+        /* Use TEB Cache */
+        UnicodeCache = &NtCurrentTeb()->StaticUnicodeString;
 
-   Handle = CreateSemaphoreW(lpSemaphoreAttributes,
-			     lInitialCount,
-			     lMaximumCount,
-			     (lpName ? NameU.Buffer : NULL));
+        /* Convert to unicode */
+        RtlInitAnsiString(&AnsiName, lpName);
+        Status = RtlAnsiStringToUnicodeString(UnicodeCache, &AnsiName, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Conversion failed */
+            SetLastErrorByStatus(Status);
+            return NULL;
+        }
 
-   if (lpName != NULL)
-     {
-        RtlFreeUnicodeString (&NameU);
-     }
+        /* Otherwise, save the buffer */
+        UnicodeName = (LPCWSTR)UnicodeCache->Buffer;
+    }
 
-   return Handle;
+    /* Call the Unicode API */
+    return CreateSemaphoreW(lpSemaphoreAttributes,
+                            lInitialCount,
+                            lMaximumCount,
+                            UnicodeName);
 }
-
 
 /*
  * @implemented
  */
-HANDLE STDCALL
-CreateSemaphoreW(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
-		 LONG lInitialCount,
-		 LONG lMaximumCount,
-		 LPCWSTR lpName)
+HANDLE
+WINAPI
+CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
+                 IN LONG lInitialCount,
+                 IN LONG lMaximumCount,
+                 IN LPCWSTR lpName OPTIONAL)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   NTSTATUS Status;
-   UNICODE_STRING UnicodeName;
-   HANDLE SemaphoreHandle;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES LocalAttributes;
+    POBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE Handle;
+    UNICODE_STRING ObjectName;
 
-   if (lpName != NULL)
-     {
-       RtlInitUnicodeString(&UnicodeName, lpName);
-     }
+    /* Now check if we got a name */
+    if (lpName) RtlInitUnicodeString(&ObjectName, lpName);
 
-   InitializeObjectAttributes(&ObjectAttributes,
-			      (lpName ? &UnicodeName : NULL),
-			      0,
-			      (lpName ? hBaseDir : NULL),
-			      NULL);
+    /* Now convert the object attributes */
+    ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
+                                                    lpSemaphoreAttributes,
+                                                    lpName ? &ObjectName : NULL);
 
-   if (lpSemaphoreAttributes != NULL)
-     {
-	ObjectAttributes.SecurityDescriptor = lpSemaphoreAttributes->lpSecurityDescriptor;
-	if (lpSemaphoreAttributes->bInheritHandle)
-	  {
-	     ObjectAttributes.Attributes |= OBJ_INHERIT;
-	  }
-     }
+    /* Create the semaphore */
+   Status = NtCreateSemaphore(&Handle,
+                              SEMAPHORE_ALL_ACCESS,
+                              ObjectAttributes,
+                              lInitialCount,
+                              lMaximumCount);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if the object already existed */
+        if (Status == STATUS_OBJECT_NAME_EXISTS)
+        {
+            /* Set distinguished Win32 error code */
+            SetLastError(ERROR_ALREADY_EXISTS);
+        }
+        else
+        {
+            /* Otherwise, set success */
+            SetLastError(ERROR_SUCCESS);
+        }
 
-   Status = NtCreateSemaphore(&SemaphoreHandle,
-			      SEMAPHORE_ALL_ACCESS,
-			      &ObjectAttributes,
-			      lInitialCount,
-			      lMaximumCount);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return NULL;
-     }
-   return SemaphoreHandle;
+        /* Return the handle */
+        return Handle;
+    }
+    else
+    {
+        /* Convert the NT Status and fail */
+        SetLastErrorByStatus(Status);
+        return NULL;
+    }
 }
-
 
 /*
  * @implemented
  */
-HANDLE STDCALL
-OpenSemaphoreA(DWORD dwDesiredAccess,
-	       BOOL bInheritHandle,
-	       LPCSTR lpName)
+HANDLE
+WINAPI
+OpenSemaphoreA(IN DWORD dwDesiredAccess,
+               IN BOOL bInheritHandle,
+               IN LPCSTR lpName)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING NameU;
-   ANSI_STRING Name;
-   HANDLE Handle;
-   NTSTATUS Status;
+    NTSTATUS Status;
+    ANSI_STRING AnsiName;
+    PUNICODE_STRING UnicodeCache;
 
-   if (lpName == NULL)
-     {
-	SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	return NULL;
-     }
+    /* Check for a name */
+    if (lpName)
+    {
+        /* Use TEB Cache */
+        UnicodeCache = &NtCurrentTeb()->StaticUnicodeString;
 
-   RtlInitAnsiString(&Name,
-		     (LPSTR)lpName);
-   RtlAnsiStringToUnicodeString(&NameU,
-				&Name,
-				TRUE);
+        /* Convert to unicode */
+        RtlInitAnsiString(&AnsiName, lpName);
+        Status = RtlAnsiStringToUnicodeString(UnicodeCache, &AnsiName, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Conversion failed */
+            SetLastErrorByStatus(Status);
+            return NULL;
+        }
+    }
+    else
+    {
+        /* We need a name */
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
 
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &NameU,
-			      (bInheritHandle ? OBJ_INHERIT : 0),
-			      hBaseDir,
-			      NULL);
-
-   Status = NtOpenSemaphore(&Handle,
-			    (ACCESS_MASK)dwDesiredAccess,
-			    &ObjectAttributes);
-
-   RtlFreeUnicodeString(&NameU);
-
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return NULL;
-     }
-
-   return Handle;
+    /* Call the Unicode API */
+    return OpenSemaphoreW(dwDesiredAccess,
+                          bInheritHandle,
+                          (LPCWSTR)UnicodeCache->Buffer);
 }
-
 
 /*
  * @implemented
  */
-HANDLE STDCALL
-OpenSemaphoreW(DWORD dwDesiredAccess,
-	       BOOL bInheritHandle,
-	       LPCWSTR lpName)
+HANDLE
+WINAPI
+OpenSemaphoreW(IN DWORD dwDesiredAccess,
+               IN BOOL bInheritHandle,
+               IN LPCWSTR lpName)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING Name;
-   HANDLE Handle;
-   NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ObjectName;
+    NTSTATUS Status;
+    HANDLE Handle;
 
-   if (lpName == NULL)
-     {
-	SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-	return NULL;
-     }
+    /* Make sure we got a name */
+    if (!lpName)
+    {
+        /* Fail without one */
+        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+        return NULL;
+    }
 
-   RtlInitUnicodeString(&Name,
-			(LPWSTR)lpName);
+    /* Initialize the object name and attributes */
+    RtlInitUnicodeString(&ObjectName, lpName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &ObjectName,
+                               bInheritHandle ? OBJ_INHERIT : 0,
+                               hBaseDir,
+                               NULL);
 
-   InitializeObjectAttributes(&ObjectAttributes,
-			      &Name,
-			      (bInheritHandle ? OBJ_INHERIT : 0),
-			      hBaseDir,
-			      NULL);
+    /* Open the semaphore */
+    Status = NtOpenSemaphore(&Handle, dwDesiredAccess, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Convert the status and fail */
+        SetLastErrorByStatus(Status);
+        return NULL;
+    }
 
-   Status = NtOpenSemaphore(&Handle,
-			    (ACCESS_MASK)dwDesiredAccess,
-			    &ObjectAttributes);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return NULL;
-     }
-
-   return Handle;
+    /* Return the handle */
+    return Handle;
 }
-
 
 /*
  * @implemented
  */
-BOOL STDCALL
-ReleaseSemaphore(HANDLE hSemaphore,
-		 LONG lReleaseCount,
-		 LPLONG lpPreviousCount)
+BOOL
+WINAPI
+ReleaseSemaphore(IN HANDLE hSemaphore,
+                 IN LONG lReleaseCount,
+                 IN LPLONG lpPreviousCount)
 {
-   NTSTATUS Status;
+    NTSTATUS Status;
 
-   Status = NtReleaseSemaphore(hSemaphore,
-			       lReleaseCount,
-			       lpPreviousCount);
-   if (!NT_SUCCESS(Status))
-     {
-	SetLastErrorByStatus(Status);
-	return FALSE;
-     }
+    /* Release the semaphore */
+    Status = NtReleaseSemaphore(hSemaphore, lReleaseCount, lpPreviousCount);
+    if (NT_SUCCESS(Status)) return TRUE;
 
-   return TRUE;
+    /* If we got here, then we failed */
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
 /* EOF */

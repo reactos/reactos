@@ -1,12 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/synch/wait.c
- * PURPOSE:         Wait functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- * UPDATE HISTORY:
- *                  Created 01/11/98
+/*
+ * PROJECT:         ReactOS Win32 Base API
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/kernel32/synch/wait.c
+ * PURPOSE:         Wrappers for the NT Wait Implementation
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,296 +11,310 @@
 #include <k32.h>
 
 #define NDEBUG
-#include "../include/debug.h"
+#include "debug.h"
 
-
-/* FUNCTIONS ****************************************************************/
-
-DWORD STDCALL
-GetConsoleInputWaitHandle (VOID);
+/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
-DWORD STDCALL
-WaitForSingleObject(HANDLE hHandle,
-		    DWORD dwMilliseconds)
+DWORD
+WINAPI
+WaitForSingleObject(IN HANDLE hHandle,
+                    IN DWORD dwMilliseconds)
 {
-   return WaitForSingleObjectEx(hHandle,
-				dwMilliseconds,
-				FALSE);
+    /* Call the extended API */
+    return WaitForSingleObjectEx(hHandle, dwMilliseconds, FALSE);
 }
 
-
 /*
  * @implemented
  */
-DWORD STDCALL
-WaitForSingleObjectEx(HANDLE hHandle,
-                      DWORD  dwMilliseconds,
-                      BOOL   bAlertable)
+DWORD
+WINAPI
+WaitForSingleObjectEx(IN HANDLE hHandle,
+                      IN DWORD dwMilliseconds,
+                      IN BOOL bAlertable)
 {
   PLARGE_INTEGER TimePtr;
   LARGE_INTEGER Time;
   NTSTATUS Status;
 
-  /* Get real handle */
-  switch ((ULONG)hHandle)
+    /* Get real handle */
+    switch ((ULONG)hHandle)
     {
-      case STD_INPUT_HANDLE:
-	hHandle = NtCurrentPeb()->ProcessParameters->StandardInput;
-	break;
+        /* Input handle */
+        case STD_INPUT_HANDLE:
 
-      case STD_OUTPUT_HANDLE:
-	hHandle = NtCurrentPeb()->ProcessParameters->StandardOutput;
-	break;
+            /* Read it from the PEB */
+            hHandle = NtCurrentPeb()->ProcessParameters->StandardInput;
+            break;
 
-      case STD_ERROR_HANDLE:
-	hHandle = NtCurrentPeb()->ProcessParameters->StandardError;
-	break;
+        /* Output handle */
+        case STD_OUTPUT_HANDLE:
+
+            /* Read it from the PEB */
+            hHandle = NtCurrentPeb()->ProcessParameters->StandardOutput;
+            break;
+
+        /* Error handle */
+        case STD_ERROR_HANDLE:
+
+            /* Read it from the PEB */
+            hHandle = NtCurrentPeb()->ProcessParameters->StandardError;
+            break;
     }
 
-  /* Check for console handle */
-  if (IsConsoleHandle(hHandle))
+    /* Check for console handle */
+    if ((IsConsoleHandle(hHandle)) && (!VerifyConsoleIoHandle(hHandle)))
     {
-      if (!VerifyConsoleIoHandle(hHandle))
-	{
-	  SetLastError (ERROR_INVALID_HANDLE);
-	  return WAIT_FAILED;
-        }
+        /* Get the real wait handle */
+        hHandle = GetConsoleInputWaitHandle();
+    }
 
-      hHandle = (HANDLE)GetConsoleInputWaitHandle();
-      if (hHandle == NULL || hHandle == INVALID_HANDLE_VALUE)
+    /* Check if this is an infinite wait */
+    if (dwMilliseconds == INFINITE)
+    {
+        /* Under NT, this means no timer argument */
+        TimePtr = NULL;
+    }
+    else
+    {
+        /* Otherwise, convert the time to NT Format */
+        Time.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
+        TimePtr = &Time;
+    }
+
+    /* Start wait loop */
+    do
+    {
+        /* Do the wait */
+        Status = NtWaitForSingleObject(hHandle, (BOOLEAN)bAlertable, TimePtr);
+        if (!NT_SUCCESS(Status))
         {
-	  SetLastError (ERROR_INVALID_HANDLE);
-	  return WAIT_FAILED;
-
-	}
-    }
-
-  if (dwMilliseconds == INFINITE)
-    {
-      TimePtr = NULL;
-    }
-  else
-    {
-      Time.QuadPart = -10000 * (LONGLONG)dwMilliseconds;
-      TimePtr = &Time;
-    }
-
-  do
-    {
-      Status = NtWaitForSingleObject(hHandle,
-				     (BOOLEAN) bAlertable,
-				     TimePtr);
-
-      if (HIWORD(Status))
-        {
-          SetLastErrorByStatus (Status);
-          return WAIT_FAILED;
+            /* The wait failed */
+            SetLastErrorByStatus (Status);
+            return WAIT_FAILED;
         }
+    } while ((Status == STATUS_ALERTED) && (bAlertable));
 
-    } while (Status == STATUS_ALERTED && bAlertable);
-
-  return Status;
+    /* Return wait status */
+    return Status;
 }
-
 
 /*
  * @implemented
  */
-DWORD STDCALL
-WaitForMultipleObjects(DWORD nCount,
-		       CONST HANDLE *lpHandles,
-		       BOOL  bWaitAll,
-		       DWORD dwMilliseconds)
+DWORD
+WINAPI
+WaitForMultipleObjects(IN DWORD nCount,
+                       IN CONST HANDLE *lpHandles,
+                       IN BOOL bWaitAll,
+                       IN DWORD dwMilliseconds)
 {
-  return WaitForMultipleObjectsEx(nCount,
-				  lpHandles,
-				  bWaitAll,
-				  dwMilliseconds,
-				  FALSE);
+    /* Call the extended API */
+    return WaitForMultipleObjectsEx(nCount,
+                                    lpHandles,
+                                    bWaitAll,
+                                    dwMilliseconds,
+                                    FALSE);
 }
-
 
 /*
  * @implemented
  */
-DWORD STDCALL
-WaitForMultipleObjectsEx(DWORD nCount,
-                         CONST HANDLE *lpHandles,
-                         BOOL  bWaitAll,
-                         DWORD dwMilliseconds,
-                         BOOL  bAlertable)
+DWORD
+WINAPI
+WaitForMultipleObjectsEx(IN DWORD nCount,
+                         IN CONST HANDLE *lpHandles,
+                         IN BOOL bWaitAll,
+                         IN DWORD dwMilliseconds,
+                         IN BOOL bAlertable)
 {
-  PLARGE_INTEGER TimePtr;
-  LARGE_INTEGER Time;
-  PHANDLE HandleBuffer;
-  HANDLE Handle[3];
-  DWORD i;
-  NTSTATUS Status;
+    PLARGE_INTEGER TimePtr;
+    LARGE_INTEGER Time;
+    PHANDLE HandleBuffer;
+    HANDLE Handle[8];
+    DWORD i;
+    NTSTATUS Status;
 
-  DPRINT("nCount %lu\n", nCount);
-
-  if (nCount > 3)
+    /* Check if we have more handles then we locally optimize */
+    if (nCount > 8)
     {
-      HandleBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, nCount * sizeof(HANDLE));
-      if (HandleBuffer == NULL)
+        /* Allocate a buffer for them */
+        HandleBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                       0,
+                                       nCount * sizeof(HANDLE));
+        if (!HandleBuffer)
         {
-          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-          return WAIT_FAILED;
+            /* No buffer, fail the wait */
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return WAIT_FAILED;
         }
     }
-  else
+    else
     {
-      HandleBuffer = Handle;
-    }
-  for (i = 0; i < nCount; i++)
-    {
-      switch ((DWORD)lpHandles[i])
-	{
-	  case STD_INPUT_HANDLE:
-	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->StandardInput;
-	    break;
-
-	  case STD_OUTPUT_HANDLE:
-	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->StandardOutput;
-	    break;
-
-	  case STD_ERROR_HANDLE:
-	    HandleBuffer[i] = NtCurrentPeb()->ProcessParameters->StandardError;
-	    break;
-
-	  default:
-	    HandleBuffer[i] = lpHandles[i];
-	    break;
-	}
-
-      /* Check for console handle */
-      if (IsConsoleHandle(HandleBuffer[i]))
-	{
-	  if (!VerifyConsoleIoHandle(HandleBuffer[i]))
-	    {
-	      if (HandleBuffer != Handle)
-	        {
-	          RtlFreeHeap(GetProcessHeap(),0,HandleBuffer);
-	        }
-	      SetLastError (ERROR_INVALID_HANDLE);
-	      return WAIT_FAILED;
-	    }
-	  HandleBuffer[i] = (HANDLE)GetConsoleInputWaitHandle();
-	  if (HandleBuffer[i] == NULL || HandleBuffer[i] == INVALID_HANDLE_VALUE)
-	    {
-	      if (HandleBuffer != Handle)
-	        {
-	          RtlFreeHeap(GetProcessHeap(),0,HandleBuffer);
-	        }
-	      SetLastError (ERROR_INVALID_HANDLE);
-	      return WAIT_FAILED;
-	    }
-	}
+        /* Otherwise, use our local buffer */
+        HandleBuffer = Handle;
     }
 
-  if (dwMilliseconds == INFINITE)
+    /* Copy the handles into our buffer and loop them all */
+    RtlCopyMemory(HandleBuffer, (LPVOID)lpHandles, nCount * sizeof(HANDLE));
+    for (i = 0; i < nCount; i++)
     {
-      TimePtr = NULL;
-    }
-  else
-    {
-      Time.QuadPart = -10000 * (LONGLONG)dwMilliseconds;
-      TimePtr = &Time;
-    }
-
-  do
-    {
-      Status = NtWaitForMultipleObjects (nCount,
-				         HandleBuffer,
-				         bWaitAll  ? WaitAll : WaitAny,
-				         (BOOLEAN)bAlertable,
-				         TimePtr);
-      if (HIWORD(Status))
+        /* Check what kind of handle this is */
+        switch ((ULONG)HandleBuffer[i])
         {
-          SetLastErrorByStatus (Status);
-          Status = WAIT_FAILED;
+            /* Input handle */
+            case STD_INPUT_HANDLE:
+                HandleBuffer[i] = NtCurrentPeb()->
+                                  ProcessParameters->StandardInput;
+                break;
+
+            /* Output handle */
+            case STD_OUTPUT_HANDLE:
+                HandleBuffer[i] = NtCurrentPeb()->
+                                  ProcessParameters->StandardOutput;
+                break;
+
+            /* Error handle */
+            case STD_ERROR_HANDLE:
+                HandleBuffer[i] = NtCurrentPeb()->
+                                  ProcessParameters->StandardError;
+                break;
         }
 
-    } while (Status == STATUS_ALERTED && bAlertable);
+        /* Check for console handle */
+        if ((IsConsoleHandle(HandleBuffer[i])) &&
+            (!VerifyConsoleIoHandle(HandleBuffer[i])))
+        {
+            /* Get the real wait handle */
+            HandleBuffer[i] = GetConsoleInputWaitHandle();
+        }
+    }
 
-  if (HandleBuffer != Handle)
-  {
-      RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
-  }
+    /* Check if this is an infinite wait */
+    if (dwMilliseconds == INFINITE)
+    {
+        /* Under NT, this means no timer argument */
+        TimePtr = NULL;
+    }
+    else
+    {
+        /* Otherwise, convert the time to NT Format */
+        Time.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
+        TimePtr = &Time;
+    }
 
-  return Status;
+    /* Start wait loop */
+    do
+    {
+        /* Do the wait */
+        Status = NtWaitForMultipleObjects(nCount,
+                                          HandleBuffer,
+                                          bWaitAll ? WaitAll : WaitAny,
+                                          (BOOLEAN)bAlertable,
+                                          TimePtr);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Wait failed */
+            SetLastErrorByStatus (Status);
+            return WAIT_FAILED;
+        }
+    } while ((Status == STATUS_ALERTED) && (bAlertable));
+
+    /* Check if we didn't use our local buffer */
+    if (HandleBuffer != Handle)
+    {
+        /* Free the allocated one */
+        RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
+    }
+
+    /* Return wait status */
+    return Status;
 }
-
 
 /*
  * @implemented
  */
-DWORD STDCALL
-SignalObjectAndWait(HANDLE hObjectToSignal,
-		    HANDLE hObjectToWaitOn,
-		    DWORD dwMilliseconds,
-		    BOOL bAlertable)
+DWORD
+WINAPI
+SignalObjectAndWait(IN HANDLE hObjectToSignal,
+                    IN HANDLE hObjectToWaitOn,
+                    IN DWORD dwMilliseconds,
+                    IN BOOL bAlertable)
 {
-  PLARGE_INTEGER TimePtr;
-  LARGE_INTEGER Time;
-  NTSTATUS Status;
+    PLARGE_INTEGER TimePtr;
+    LARGE_INTEGER Time;
+    NTSTATUS Status;
 
-  /* Get real handle */
-  switch ((ULONG)hObjectToWaitOn)
+    /* Get real handle */
+    switch ((ULONG)hObjectToWaitOn)
     {
-      case STD_INPUT_HANDLE:
-	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->StandardInput;
-	break;
+        /* Input handle */
+        case STD_INPUT_HANDLE:
 
-      case STD_OUTPUT_HANDLE:
-	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->StandardOutput;
-	break;
+            /* Read it from the PEB */
+            hObjectToWaitOn = NtCurrentPeb()->
+                              ProcessParameters->StandardInput;
+            break;
 
-      case STD_ERROR_HANDLE:
-	hObjectToWaitOn = NtCurrentPeb()->ProcessParameters->StandardError;
-	break;
+        /* Output handle */
+        case STD_OUTPUT_HANDLE:
+
+            /* Read it from the PEB */
+            hObjectToWaitOn = NtCurrentPeb()->
+                              ProcessParameters->StandardOutput;
+            break;
+
+        /* Error handle */
+        case STD_ERROR_HANDLE:
+
+            /* Read it from the PEB */
+            hObjectToWaitOn = NtCurrentPeb()->
+                              ProcessParameters->StandardError;
+            break;
     }
 
-  /* Check for console handle */
-  if (IsConsoleHandle(hObjectToWaitOn))
+    /* Check for console handle */
+    if ((IsConsoleHandle(hObjectToWaitOn)) &&
+        (!VerifyConsoleIoHandle(hObjectToWaitOn)))
     {
-      if (VerifyConsoleIoHandle(hObjectToWaitOn))
-	{
-	  DPRINT1("Console handles are not supported yet!\n");
-	  SetLastError(ERROR_INVALID_HANDLE);
-	  return WAIT_FAILED;
-	}
+        /* Get the real wait handle */
+        hObjectToWaitOn = GetConsoleInputWaitHandle();
     }
 
-  if (dwMilliseconds == INFINITE)
+    /* Check if this is an infinite wait */
+    if (dwMilliseconds == INFINITE)
     {
-      TimePtr = NULL;
+        /* Under NT, this means no timer argument */
+        TimePtr = NULL;
     }
-  else
+    else
     {
-      Time.QuadPart = -10000 * (LONGLONG)dwMilliseconds;
-      TimePtr = &Time;
+        /* Otherwise, convert the time to NT Format */
+        Time.QuadPart = UInt32x32To64(-10000, dwMilliseconds);
+        TimePtr = &Time;
     }
 
-  do
+    /* Start wait loop */
+    do
     {
-      Status = NtSignalAndWaitForSingleObject (hObjectToSignal,
-					       hObjectToWaitOn,
-					       (BOOLEAN)bAlertable,
-					       TimePtr);
-      if (!NT_SUCCESS(Status))
+        /* Do the wait */
+        Status = NtSignalAndWaitForSingleObject(hObjectToSignal,
+                                                hObjectToWaitOn,
+                                                (BOOLEAN)bAlertable,
+                                                TimePtr);
+        if (!NT_SUCCESS(Status))
         {
-          SetLastErrorByStatus (Status);
-          return WAIT_FAILED;
+            /* The wait failed */
+            SetLastErrorByStatus (Status);
+            return WAIT_FAILED;
         }
+    } while ((Status == STATUS_ALERTED) && (bAlertable));
 
-    } while (Status == STATUS_ALERTED && bAlertable);
-
-  /* STATUS_SUCCESS maps to WAIT_OBJECT_0 */
-  return Status;
+    /* Return wait status */
+    return Status;
 }
 
 /* EOF */
