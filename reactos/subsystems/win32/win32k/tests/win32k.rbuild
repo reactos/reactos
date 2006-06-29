@@ -14,6 +14,8 @@
 	<library>regtests</library>
 	<library>win32k_base</library>
 	<library>pseh</library>
+	<library>freetype</library>
+	<library>ntoskrnl</library>
 	<file>setup.c</file>
 	<xi:include href="stubs.rbuild" />
 </module>
