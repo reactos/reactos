@@ -455,7 +455,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
                                        PreviousMode,
                                        (PVOID*)&Directory,
                                        NULL);
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* FIXME: TODO. UNIMPLEMENTED */
         Status = STATUS_INSUFFICIENT_RESOURCES;

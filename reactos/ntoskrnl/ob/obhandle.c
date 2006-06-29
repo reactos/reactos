@@ -237,7 +237,17 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
 
     /* Dereference the object as well */
-    //ObDereferenceObject(Body); // FIXME: Needs sync changes in other code
+    if (!wcscmp(ObjectHeader->Type->Name.Buffer, L"Key"))
+    {
+        //
+        // WE DONT CLOSE REGISTRY HANDLES BECAUSE CM IS BRAINDEAD
+        //
+        DPRINT("NOT CLOSING THE KEY\n");
+    }
+    else
+    {
+        ObDereferenceObject(Body);
+    }
 
     /* Return to caller */
     OBTRACE(OB_HANDLE_DEBUG,
@@ -310,20 +320,16 @@ ObpIncrementHandleCount(IN PVOID Object,
     /* Check if we're opening an existing handle */
     if (OpenReason == ObOpenHandle)
     {
-        /*
-         * FIXME: Do validation as described in Chapter 8
-         * of Windows Internals 4th.
-         */
-#if 0
+        /* Validate the caller's access to this object */
         if (!ObCheckObjectAccess(Object,
                                  AccessState,
                                  TRUE,
                                  AccessMode,
                                  &Status))
         {
+            /* Access was denied, so fail */
             return Status;
         }
-#endif
     }
     else if (OpenReason == ObCreateHandle)
     {
@@ -982,7 +988,14 @@ ObpSetHandleAttributes(IN PHANDLE_TABLE HandleTable,
     /* Check if making the handle inheritable */
     if (SetHandleInfo->Information.Inherit)
     {
-        /* Set the flag. FIXME: Need to check if this is allowed */
+        /* Check if inheriting is not supported for this object */
+        if (ObjectHeader->Type->TypeInfo.InvalidAttributes & OBJ_INHERIT)
+        {
+            /* Fail without changing anything */
+            return FALSE;
+        }
+
+        /* Set the flag */
         HandleTableEntry->ObAttributes |= EX_HANDLE_ENTRY_INHERITABLE;
     }
     else
@@ -1757,7 +1770,7 @@ ObInsertObject(IN PVOID Object,
         Header->ObjectCreateInfo = NULL;
 
         /* Remove the extra keep-alive reference */
-        if (Handle) ObDereferenceObject(Object); // FIXME: Needs sync changes
+        if (Handle) ObDereferenceObject(Object);
 
         /* Return */
         OBTRACE(OB_HANDLE_DEBUG,

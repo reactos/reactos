@@ -423,8 +423,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     Status = ObInsertObject(Process,
                             NULL,
                             DesiredAccess,
-                            0,
-                            NULL,
+                            1,
+                            (PVOID*)&Process,
                             &hProcess);
     if (NT_SUCCESS(Status))
     {

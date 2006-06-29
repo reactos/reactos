@@ -88,11 +88,30 @@ ObfDereferenceObject(IN PVOID Object)
     /* Extract the object header */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
 
+    if (Header->PointerCount <= Header->HandleCount)
+    {
+        if (!wcscmp(Header->Type->Name.Buffer, L"Event"))
+        {
+            //KEBUGCHECK(0);
+        }
+        DPRINT1("Misbehaving object: %wZ\n", &Header->Type->Name);
+    }
+
     /* Check whether the object can now be deleted. */
     if (!(InterlockedDecrement(&Header->PointerCount)))
     {
         /* Sanity check */
-        ASSERT(!Header->HandleCount);
+        if (wcscmp(Header->Type->Name.Buffer, L"Key"))
+        {
+            if(Header->HandleCount)
+            {
+                DPRINT1("Unexpected misbehaving object: %wZ\n", &Header->Type->Name);
+            }
+        }
+        else
+        {
+            DPRINT1("Cm needs fixing!\n");
+        }
 
         /* Check if we're at PASSIVE */
         if (KeGetCurrentIrql() == PASSIVE_LEVEL)

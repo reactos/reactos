@@ -566,8 +566,8 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     Status = ObInsertObject(CreatedDeviceObject,
                             NULL,
                             FILE_READ_DATA | FILE_WRITE_DATA,
-                            0,
-                            NULL,
+                            1,
+                            (PVOID*)&CreatedDeviceObject,
                             &TempHandle);
 
     if (!NT_SUCCESS(Status))

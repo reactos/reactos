@@ -214,7 +214,7 @@ ObpDeleteNameCheck(
 );
 
 //
-// Security descriptor cache functions
+// Security functions
 //
 NTSTATUS
 NTAPI
@@ -245,6 +245,16 @@ VOID
 NTAPI
 ObpDereferenceCachedSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
+);
+
+BOOLEAN
+NTAPI
+ObCheckObjectAccess(
+    IN PVOID Object,
+    IN OUT PACCESS_STATE AccessState,
+    IN BOOLEAN Unknown,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PNTSTATUS ReturnedStatus
 );
 
 //

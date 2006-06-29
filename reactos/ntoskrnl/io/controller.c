@@ -100,8 +100,8 @@ IoCreateController(ULONG Size)
     Status = ObInsertObject(Controller,
                             NULL,
                             FILE_READ_DATA | FILE_WRITE_DATA,
-                            0,
-                            NULL,
+                            1,
+                            (PVOID*)&Controller,
                             &Handle);
    if (!NT_SUCCESS(Status)) return NULL;
 

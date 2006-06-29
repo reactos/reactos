@@ -946,10 +946,32 @@ NtQueryObject(IN HANDLE ObjectHandle,
     POBJECT_BASIC_INFORMATION BasicInfo;
     ULONG InfoLength;
     PVOID Object = NULL;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
 
-    /* FIXME: Needs SEH */
+    /* Check if the caller is from user mode */
+    if (PreviousMode != KernelMode)
+    {
+        /* Protect validation with SEH */
+        _SEH_TRY
+        {
+            /* Probe the input structure */
+            ProbeForWrite(ObjectInformation, Length, sizeof(UCHAR));
+
+            /* If we have a result length, probe it too */
+            if (ResultLength) ProbeForWriteUlong(ResultLength);
+        }
+        _SEH_HANDLE
+        {
+            /* Get the exception code */
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        /* Fail if we raised an exception */
+        if (!NT_SUCCESS(Status)) return Status;
+    }
 
     /*
      * Make sure this isn't a generic type query, since the caller doesn't
@@ -1082,16 +1104,33 @@ NtQueryObject(IN HANDLE ObjectHandle,
 
         /* Anything else */
         default:
+
             /* Fail it */
             Status = STATUS_INVALID_INFO_CLASS;
             break;
     }
 
-    /* Derefernece the object if we had referenced it */
+    /* Dereference the object if we had referenced it */
     if (Object) ObDereferenceObject (Object);
 
-    /* Return the length and status */
-    if (ResultLength) *ResultLength = InfoLength;
+    /* Check if the caller wanted the return length */
+    if (ResultLength)
+    {
+        /* Protect the write to user mode */
+        _SEH_TRY
+        {
+            /* Write the length */
+            *ResultLength = Length;
+        }
+        _SEH_HANDLE
+        {
+            /* Otherwise, get the exception code */
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+
+    /* Return status */
     return Status;
 }
 
