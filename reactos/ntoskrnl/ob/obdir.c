@@ -220,9 +220,6 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Save the found object */
         FoundObject = CurrentEntry->Object;
         if (!FoundObject) goto Quickie;
-
-        /* Add a reference to the object */
-        ObReferenceObject(FoundObject);
     }
 
     /* Check if the directory was unlocked (which means we locked it) */

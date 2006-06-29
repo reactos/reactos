@@ -2329,12 +2329,28 @@ RtlFindClearBitsAndSet(
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlFindNextForwardRunClear(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG FromIndex,
+    IN PULONG StartingRunIndex
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlInitializeBitMap(
     IN PRTL_BITMAP BitMapHeader,
     IN PULONG BitMapBuffer,
     IN ULONG SizeOfBitMap
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberOfSetBits(
+    IN PRTL_BITMAP BitMapHeader
 );
 
 NTSYSAPI

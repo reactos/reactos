@@ -88,7 +88,7 @@ ObfDereferenceObject(IN PVOID Object)
     /* Extract the object header */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
 
-    if (Header->PointerCount <= Header->HandleCount)
+    if (Header->PointerCount < Header->HandleCount)
     {
         DPRINT1("Misbehaving object: %wZ\n", &Header->Type->Name);
         return;
@@ -98,7 +98,7 @@ ObfDereferenceObject(IN PVOID Object)
     if (!(InterlockedDecrement(&Header->PointerCount)))
     {
         /* Sanity check */
-        if(Header->HandleCount)
+        if (Header->HandleCount)
         {
             DPRINT1("Misbehaving object: %wZ\n", &Header->Type->Name);
             return;

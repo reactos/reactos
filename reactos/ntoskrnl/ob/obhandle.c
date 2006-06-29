@@ -1382,7 +1382,6 @@ ObDuplicateObject(IN PEPROCESS SourceProcess,
     }
 
     /* Now create the handle */
-    ObDereferenceObject(SourceObject);
     NewHandle = ExCreateHandle(HandleTable, &NewHandleEntry);
     if (!NewHandle)
     {

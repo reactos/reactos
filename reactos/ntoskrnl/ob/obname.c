@@ -102,6 +102,7 @@ ObpDeleteNameCheck(IN PVOID Object)
         /* Check if we were inserted in a directory */
         if (Directory)
         {
+            /* We were, so dereference the directory and the object as well */
             ObDereferenceObject(Directory);
             ObDereferenceObject(Object);
         }
