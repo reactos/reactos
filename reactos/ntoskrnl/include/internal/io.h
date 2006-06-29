@@ -1,54 +1,169 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_IO_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_IO_H
+/*
+* PROJECT:         ReactOS Kernel
+* LICENSE:         GPL - See COPYING in the top level directory
+* FILE:            ntoskrnl/include/io.h
+* PURPOSE:         Internal header for the I/O Manager
+* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+*/
+//#include "io_x.h"
+#include "ntdddisk.h"
 
-#include <ntdddisk.h>
+//
+// Define this if you want debugging support
+//
+#define _IO_DEBUG_                                      0x00
 
-/* STRUCTURES ***************************************************************/
+//
+// These define the Debug Masks Supported
+//
+#define IO_IRP_DEBUG                                    0x01
 
-typedef struct _DISKENTRY
-{
-  LIST_ENTRY ListEntry;
-  ULONG DiskNumber;
-  ULONG Signature;
-  ULONG Checksum;
-  PDEVICE_OBJECT DeviceObject;
-} DISKENTRY, *PDISKENTRY; 
+//
+// Debug/Tracing support
+//
+#if _IO_DEBUG_
+#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+#define IOTRACE DbgPrintEx
+#else
+#define IOTRACE(x, ...)                                 \
+    if (x & IopTraceLevel) DbgPrint(__VA_ARGS__)
+#endif
+#else
+#define IOTRACE(x, ...) DPRINT(__VA_ARGS__)
+#endif
 
-#define  PARTITION_TBL_SIZE 4
+//
+// FIXME: What is this?
+//
+#define IO_METHOD_FROM_CTL_CODE(ctlCode)                (ctlCode&0x00000003)
 
-#include <pshpack1.h>
+//
+// Packet Types when piggybacking on the IRP Overlay
+//
+#define IrpCompletionPacket                             0x1
+#define IrpMiniCompletionPacket                         0x2
 
-typedef struct _PARTITION
-{
-  unsigned char   BootFlags;					/* bootable?  0=no, 128=yes  */
-  unsigned char   StartingHead;					/* beginning head number */
-  unsigned char   StartingSector;				/* beginning sector number */
-  unsigned char   StartingCylinder;				/* 10 bit nmbr, with high 2 bits put in begsect */
-  unsigned char   PartitionType;				/* Operating System type indicator code */
-  unsigned char   EndingHead;					/* ending head number */
-  unsigned char   EndingSector;					/* ending sector number */
-  unsigned char   EndingCylinder;				/* also a 10 bit nmbr, with same high 2 bit trick */
-  unsigned int  StartingBlock;					/* first sector relative to start of disk */
-  unsigned int  SectorCount;					/* number of sectors in partition */
-} PARTITION, *PPARTITION;
+//
+// Number of partition tables in the Boot Record
+//
+#define PARTITION_TBL_SIZE                              4
 
-typedef struct _PARTITION_SECTOR
-{
-  UCHAR BootCode[440];				/* 0x000 */
-  ULONG Signature;				/* 0x1B8 */
-  UCHAR Reserved[2];				/* 0x1BC */
-  PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
-  USHORT Magic;					/* 0x1FE */
-} PARTITION_SECTOR, *PPARTITION_SECTOR;
+//
+// Returns the size of a CM_RESOURCE_LIST
+//
+#define CM_RESOURCE_LIST_SIZE(ResList)                  \
+    (ResList->Count == 1) ?                             \
+        FIELD_OFFSET(                                   \
+            CM_RESOURCE_LIST,                           \
+            List[0].PartialResourceList.                \
+            PartialDescriptors[(ResList)->              \
+                               List[0].                 \
+                               PartialResourceList.     \
+                               Count])                  \
+        :                                               \
+        FIELD_OFFSET(CM_RESOURCE_LIST, List)
 
-#include <poppack.h>
+/*
+ * VOID
+ * IopDeviceNodeSetFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Flag);
+ */
+#define IopDeviceNodeSetFlag(DeviceNode, Flag)          \
+    ((DeviceNode)->Flags |= (Flag))
 
-#define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
+/*
+ * VOID
+ * IopDeviceNodeClearFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Flag);
+ */
+#define IopDeviceNodeClearFlag(DeviceNode, Flag)        \
+    ((DeviceNode)->Flags &= ~(Flag))
 
-extern POBJECT_TYPE IoCompletionType;
-extern PDEVICE_NODE IopRootDeviceNode;
+/*
+ * BOOLEAN
+ * IopDeviceNodeHasFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Flag);
+ */
+#define IopDeviceNodeHasFlag(DeviceNode, Flag)          \
+    (((DeviceNode)->Flags & (Flag)) > 0)
 
-/* This is like the IRP Overlay so we can optimize its insertion */
+/*
+ * VOID
+ * IopDeviceNodeSetUserFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG UserFlag);
+ */
+#define IopDeviceNodeSetUserFlag(DeviceNode, UserFlag)  \
+    ((DeviceNode)->UserFlags |= (UserFlag))
+
+/*
+ * VOID
+ * IopDeviceNodeClearUserFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG UserFlag);
+ */
+#define IopDeviceNodeClearUserFlag(DeviceNode, UserFlag)\
+    ((DeviceNode)->UserFlags &= ~(UserFlag))
+
+/*
+ * BOOLEAN
+ * IopDeviceNodeHasUserFlag(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG UserFlag);
+ */
+#define IopDeviceNodeHasUserFlag(DeviceNode, UserFlag)  \
+    (((DeviceNode)->UserFlags & (UserFlag)) > 0)
+
+ /*
+ * VOID
+ * IopDeviceNodeSetProblem(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Problem);
+ */
+#define IopDeviceNodeSetProblem(DeviceNode, Problem)    \
+    ((DeviceNode)->Problem |= (Problem))
+
+/*
+ * VOID
+ * IopDeviceNodeClearProblem(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Problem);
+ */
+#define IopDeviceNodeClearProblem(DeviceNode, Problem)  \
+    ((DeviceNode)->Problem &= ~(Problem))
+
+/*
+ * BOOLEAN
+ * IopDeviceNodeHasProblem(
+ *   PDEVICE_NODE DeviceNode,
+ *   ULONG Problem);
+ */
+#define IopDeviceNodeHasProblem(DeviceNode, Problem)    \
+    (((DeviceNode)->Problem & (Problem)) > 0)
+
+/*
+ * VOID
+ * IopInitDeviceTreeTraverseContext(
+ *   PDEVICETREE_TRAVERSE_CONTEXT DeviceTreeTraverseContext,
+ *   PDEVICE_NODE DeviceNode,
+ *   DEVICETREE_TRAVERSE_ROUTINE Action,
+ *   PVOID Context);
+ */
+#define IopInitDeviceTreeTraverseContext(               \
+    _DeviceTreeTraverseContext, _DeviceNode, _Action,   \
+    _Context) {                                         \
+    (_DeviceTreeTraverseContext)->FirstDeviceNode =     \
+        (_DeviceNode);                                  \
+    (_DeviceTreeTraverseContext)->Action = (_Action);   \
+    (_DeviceTreeTraverseContext)->Context = (_Context); }
+
+//
+// Special version of the IRP Overlay used to optimize I/O completion
+// by not using up a separate structure.
+//
 typedef struct _IO_COMPLETION_PACKET
 {
     struct
@@ -65,12 +180,20 @@ typedef struct _IO_COMPLETION_PACKET
     IO_STATUS_BLOCK IoStatus;
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
 
+//
+// Dummy File Object used inside the Open Packet so that OB knows how to
+// deal with the Object Pointer even though it's not a real file.
+//
 typedef struct _DUMMY_FILE_OBJECT
 {
     OBJECT_HEADER ObjectHeader;
     CHAR FileObjectBody[sizeof(FILE_OBJECT)];
 } DUMMY_FILE_OBJECT, *PDUMMY_FILE_OBJECT;
 
+//
+// Open packet used as a context for Device/File parsing so that the parse
+// routine can know what operation is being requested.
+//
 typedef struct _OPEN_PACKET
 {
     CSHORT Type;
@@ -102,8 +225,9 @@ typedef struct _OPEN_PACKET
     //PIO_DRIVER_CREATE_CONTEXT DriverCreateContext; Vista only, needs ROS DDK Update
 } OPEN_PACKET, *POPEN_PACKET;
 
-
-/* List of Bus Type GUIDs */
+//
+// List of Bus Type GUIDs
+//
 typedef struct _IO_BUS_TYPE_GUID_LIST
 {
     ULONG GuidCount;
@@ -112,145 +236,114 @@ typedef struct _IO_BUS_TYPE_GUID_LIST
 } IO_BUS_TYPE_GUID_LIST, *PIO_BUS_TYPE_GUID_LIST;
 extern PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList;
 
-/* Packet Types */
-#define IrpCompletionPacket     0x1
-#define IrpMiniCompletionPacket 0x2
-
-/*
- * VOID
- * IopDeviceNodeSetFlag(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG Flag);
- */
-#define IopDeviceNodeSetFlag(DeviceNode, Flag) \
-    ((DeviceNode)->Flags |= (Flag))
-
-/*
- * VOID
- * IopDeviceNodeClearFlag(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG Flag);
- */
-#define IopDeviceNodeClearFlag(DeviceNode, Flag) \
-    ((DeviceNode)->Flags &= ~(Flag))
-
-/*
- * BOOLEAN
- * IopDeviceNodeHasFlag(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG Flag);
- */
-#define IopDeviceNodeHasFlag(DeviceNode, Flag) \
-    (((DeviceNode)->Flags & (Flag)) > 0)
-
-/*
- * VOID
- * IopDeviceNodeSetUserFlag(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG UserFlag);
- */
-#define IopDeviceNodeSetUserFlag(DeviceNode, UserFlag) \
-    ((DeviceNode)->UserFlags |= (UserFlag))
-
-/*
- * VOID
- * IopDeviceNodeClearUserFlag(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG UserFlag);
- */
-#define IopDeviceNodeClearUserFlag(DeviceNode, UserFlag) \
-    ((DeviceNode)->UserFlags &= ~(UserFlag))
-
-/*
- * BOOLEAN
- * IopDeviceNodeHasUserFlag(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG UserFlag);
- */
-#define IopDeviceNodeHasUserFlag(DeviceNode, UserFlag) \
-    (((DeviceNode)->UserFlags & (UserFlag)) > 0)
-
- /*
- * VOID
- * IopDeviceNodeSetProblem(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG Problem);
- */
-#define IopDeviceNodeSetProblem(DeviceNode, Problem) \
-    ((DeviceNode)->Problem |= (Problem))
-
-/*
- * VOID
- * IopDeviceNodeClearProblem(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG Problem);
- */
-#define IopDeviceNodeClearProblem(DeviceNode, Problem) \
-    ((DeviceNode)->Problem &= ~(Problem))
-
-/*
- * BOOLEAN
- * IopDeviceNodeHasProblem(
- *   PDEVICE_NODE DeviceNode,
- *   ULONG Problem);
- */
-#define IopDeviceNodeHasProblem(DeviceNode, Problem) \
-    (((DeviceNode)->Problem & (Problem)) > 0)
-
-
-/*
-   Called on every visit of a node during a preorder-traversal of the device
-   node tree.
-   If the routine returns STATUS_UNSUCCESSFUL the traversal will stop and
-   STATUS_SUCCESS is returned to the caller who initiated the tree traversal.
-   Any other returned status code will be returned to the caller. If a status
-   code that indicates an error (other than STATUS_UNSUCCESSFUL) is returned,
-   the traversal is stopped immediately and the status code is returned to
-   the caller.
- */
-typedef NTSTATUS (*DEVICETREE_TRAVERSE_ROUTINE)(
-    PDEVICE_NODE DeviceNode,
-    PVOID Context
+//
+// Called on every visit of a node during a preorder-traversal of the device
+// node tree.
+// If the routine returns STATUS_UNSUCCESSFUL the traversal will stop and
+// STATUS_SUCCESS is returned to the caller who initiated the tree traversal.
+// Any other returned status code will be returned to the caller. If a status
+// code that indicates an error (other than STATUS_UNSUCCESSFUL) is returned,
+// the traversal is stopped immediately and the status code is returned to
+// the caller.
+//
+typedef
+NTSTATUS
+(*DEVICETREE_TRAVERSE_ROUTINE)(
+    IN PDEVICE_NODE DeviceNode,
+    IN PVOID Context
 );
 
-/* Context information for traversing the device tree */
+//
+// Context information for traversing the device tree
+//
 typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 {
-    /* Current device node during a traversal */
+    //
+    // Current device node during a traversal
+    //
     PDEVICE_NODE DeviceNode;
-    /* Initial device node where we start the traversal */
+
+    //
+    // Initial device node where we start the traversal
+    //
     PDEVICE_NODE FirstDeviceNode;
-    /* Action routine to be called for every device node */
+
+    //
+    // Action routine to be called for every device node
+    //
     DEVICETREE_TRAVERSE_ROUTINE Action;
-    /* Context passed to the action routine */
+
+    //
+    // Context passed to the action routine
+    //
     PVOID Context;
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
 
-/*
- * VOID
- * IopInitDeviceTreeTraverseContext(
- *   PDEVICETREE_TRAVERSE_CONTEXT DeviceTreeTraverseContext,
- *   PDEVICE_NODE DeviceNode,
- *   DEVICETREE_TRAVERSE_ROUTINE Action,
- *   PVOID Context);
- */
-#define IopInitDeviceTreeTraverseContext( \
-  _DeviceTreeTraverseContext, _DeviceNode, _Action, _Context) { \
-  (_DeviceTreeTraverseContext)->FirstDeviceNode = (_DeviceNode); \
-  (_DeviceTreeTraverseContext)->Action = (_Action); \
-  (_DeviceTreeTraverseContext)->Context = (_Context); }
+//
+// Internal Representation of a Disk
+//
+typedef struct _DISKENTRY
+{
+    LIST_ENTRY ListEntry;
+    ULONG DiskNumber;
+    ULONG Signature;
+    ULONG Checksum;
+    PDEVICE_OBJECT DeviceObject;
+} DISKENTRY, *PDISKENTRY; 
+
+//
+// Partition Table Entry
+//
+#include <pshpack1.h>
+typedef struct _PARTITION
+{
+    UCHAR BootFlags;
+    UCHAR StartingHead;
+    UCHAR StartingSector;
+    UCHAR StartingCylinder;
+    UCHAR PartitionType;
+    UCHAR EndingHead;
+    UCHAR EndingSector;
+    UCHAR EndingCylinder;
+    ULONG StartingBlock;
+    ULONG SectorCount;
+} PARTITION, *PPARTITION;
+
+//
+// Boot Record Structure
+//
+typedef struct _PARTITION_SECTOR
+{
+  UCHAR BootCode[440];
+  ULONG Signature;
+  UCHAR Reserved[2];
+  PARTITION Partition[PARTITION_TBL_SIZE];
+  USHORT Magic;
+} PARTITION_SECTOR, *PPARTITION_SECTOR;
+#include <poppack.h>
+
+//
+// PNP Routines
+//
+VOID
+PnpInit(
+    VOID
+);
 
 VOID
-PnpInit(VOID);
+PnpInit2(
+    VOID
+);
 
 VOID
-PnpInit2(VOID);
+IopInitDriverImplementation(
+    VOID
+);
 
 VOID
-IopInitDriverImplementation(VOID);
-
-VOID
-IopInitPnpNotificationImplementation(VOID);
+IopInitPnpNotificationImplementation(
+    VOID
+);
 
 VOID
 IopNotifyPlugPlayNotification(
@@ -262,26 +355,108 @@ IopNotifyPlugPlayNotification(
 );
 
 NTSTATUS
-IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject);
-
-NTSTATUS
-IopCreateDeviceNode(
-    PDEVICE_NODE ParentNode,
-    PDEVICE_OBJECT PhysicalDeviceObject,
-    PDEVICE_NODE *DeviceNode
+IopGetSystemPowerDeviceObject(
+    IN PDEVICE_OBJECT *DeviceObject
 );
 
 NTSTATUS
-IopFreeDeviceNode(PDEVICE_NODE DeviceNode);
+IopCreateDeviceNode(
+    IN PDEVICE_NODE ParentNode,
+    IN PDEVICE_OBJECT PhysicalDeviceObject,
+    OUT PDEVICE_NODE *DeviceNode
+);
 
-VOID
-IoInitCancelHandling(VOID);
+NTSTATUS
+IopFreeDeviceNode(
+    IN PDEVICE_NODE DeviceNode
+);
 
-VOID
-IoInitFileSystemImplementation(VOID);
+NTSTATUS
+IopInitiatePnpIrp(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIO_STATUS_BLOCK IoStatusBlock,
+    IN ULONG MinorFunction,
+    IN PIO_STACK_LOCATION Stack
+);
 
-VOID
-IoInitVpbImplementation(VOID);
+PDEVICE_NODE
+FASTCALL
+IopGetDeviceNode(
+    IN PDEVICE_OBJECT DeviceObject
+);
+
+NTSTATUS
+IopActionConfigureChildServices(
+    IN PDEVICE_NODE DeviceNode,
+    IN PVOID Context
+);
+
+NTSTATUS
+IopActionInitChildServices(
+    IN PDEVICE_NODE DeviceNode,
+    IN PVOID Context,
+    IN BOOLEAN BootDrivers
+);
+
+NTSTATUS
+IoCreateDriverList(
+    VOID
+);
+
+NTSTATUS
+IoDestroyDriverList(
+    VOID
+);
+
+NTSTATUS 
+INIT_FUNCTION
+IopInitPlugPlayEvents(VOID);
+
+NTSTATUS
+IopQueueTargetDeviceEvent(
+    const GUID *Guid,
+    PUNICODE_STRING DeviceIds
+);
+
+NTSTATUS
+IopInitializePnpServices(
+    IN PDEVICE_NODE DeviceNode,
+    IN BOOLEAN BootDrivers)
+;
+
+NTSTATUS
+IopInvalidateDeviceRelations(
+    IN PDEVICE_NODE DeviceNode,
+    IN DEVICE_RELATION_TYPE Type
+);
+
+//
+// Initialization Routines
+//
+NTSTATUS
+IoCreateArcNames(
+    VOID
+);
+
+NTSTATUS
+IoCreateSystemRootLink(
+    IN PCHAR ParameterLine
+);
+
+//
+// Device/Volume Routines
+//
+NTSTATUS
+FASTCALL
+IopInitializeDevice(
+    IN PDEVICE_NODE DeviceNode,
+    IN PDRIVER_OBJECT DriverObject
+);
+
+NTSTATUS
+IopStartDevice(
+    IN PDEVICE_NODE DeviceNode
+);
 
 NTSTATUS
 IoMountVolume(
@@ -290,116 +465,120 @@ IoMountVolume(
 );
 
 PVOID 
-IoOpenSymlink(PVOID SymbolicLink);
+IoOpenSymlink(
+    IN PVOID SymbolicLink
+);
 
-PVOID 
+PVOID
 IoOpenFileOnDevice(
-    PVOID SymbolicLink, 
-    PWCHAR Name
+    IN PVOID SymbolicLink,
+    IN PWCHAR Name
 );
 
 NTSTATUS
 STDCALL
-IopCreateDevice(
-    PVOID ObjectBody,
-    PVOID Parent,
-    PWSTR RemainingPath,
-    POBJECT_ATTRIBUTES ObjectAttributes
+IopAttachVpb(
+    IN PDEVICE_OBJECT DeviceObject
 );
 
-NTSTATUS
-STDCALL
-IopAttachVpb(PDEVICE_OBJECT DeviceObject);
-
 VOID
-IoInitShutdownNotification(VOID);
-
-VOID
-IoShutdownRegisteredDevices(VOID);
-
-VOID
-IoShutdownRegisteredFileSystems(VOID);
-
-NTSTATUS
-IoCreateArcNames(VOID);
-
-NTSTATUS
-IoCreateSystemRootLink(PCHAR ParameterLine);
-
-NTSTATUS
-IopInitiatePnpIrp(
-    PDEVICE_OBJECT DeviceObject,
-    PIO_STATUS_BLOCK IoStatusBlock,
-    ULONG MinorFunction,
-    PIO_STACK_LOCATION Stack
+IoInitFileSystemImplementation(
+    VOID
 );
 
-NTSTATUS
-IoCreateDriverList(VOID);
+VOID
+IoInitVpbImplementation(
+    VOID
+);
 
-NTSTATUS
-IoDestroyDriverList(VOID);
-
-/* bootlog.c */
+//
+// Shutdown routines
+//
+VOID
+IoInitShutdownNotification(
+    VOID
+);
 
 VOID
-IopInitBootLog(BOOLEAN StartBootLog);
+IoShutdownRegisteredDevices(
+    VOID
+);
 
 VOID
-IopStartBootLog(VOID);
+IoShutdownRegisteredFileSystems(
+    VOID
+);
+
+//
+// Boot logging support
+//
+VOID
+IopInitBootLog(
+    IN BOOLEAN StartBootLog
+);
 
 VOID
-IopStopBootLog(VOID);
+IopStartBootLog(
+    VOID
+);
+
+VOID
+IopStopBootLog(
+    VOID
+);
 
 VOID
 IopBootLog(
-    PUNICODE_STRING DriverName, 
-    BOOLEAN Success
+    IN PUNICODE_STRING DriverName,
+    IN BOOLEAN Success
 );
 
 VOID
-IopSaveBootLogToFile(VOID);
+IopSaveBootLogToFile(
+    VOID
+);
 
-/* cancel.c */
-
+//
+// I/O Cancellation Routines
+//
 VOID
 STDCALL
-IoCancelThreadIo(PETHREAD Thread);
+IoCancelThreadIo(
+    IN PETHREAD Thread
+);
 
-/* errlog.c */
+VOID
+IoInitCancelHandling(
+    VOID
+);
+
+//
+// Error Logging Routines
+//
 
 NTSTATUS
-IopInitErrorLog(VOID);
+IopInitErrorLog(
+    VOID
+);
 
-/* rawfs.c */
-
+//
+// Raw File System MiniDriver
+//
 BOOLEAN
-RawFsIsRawFileSystemDeviceObject(IN PDEVICE_OBJECT DeviceObject);
+RawFsIsRawFileSystemDeviceObject(
+    IN PDEVICE_OBJECT DeviceObject
+);
 
 NTSTATUS
 STDCALL
-RawFsDriverEntry(PDRIVER_OBJECT DriverObject,
-                 PUNICODE_STRING RegistryPath);
+RawFsDriverEntry(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PUNICODE_STRING RegistryPath
+);
 
-
-/* pnpmgr.c */
-
-PDEVICE_NODE
-FASTCALL
-IopGetDeviceNode(PDEVICE_OBJECT DeviceObject);
-
-NTSTATUS
-IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
-                                PVOID Context);
-
-NTSTATUS
-IopActionInitChildServices(PDEVICE_NODE DeviceNode,
-                           PVOID Context,
-                           BOOLEAN BootDrivers);
-
-
-/* pnproot.c */
-
+//
+// PnP Root MiniDriver
+//
 NTSTATUS
 STDCALL
 PnpRootDriverEntry(
@@ -408,47 +587,42 @@ PnpRootDriverEntry(
 );
 
 NTSTATUS
-PnpRootCreateDevice(PDEVICE_OBJECT *PhysicalDeviceObject);
-
-/* device.c */
-
-NTSTATUS 
-FASTCALL
-IopInitializeDevice(
-    PDEVICE_NODE DeviceNode,
-    PDRIVER_OBJECT DriverObject
+PnpRootCreateDevice(
+    IN OUT PDEVICE_OBJECT *PhysicalDeviceObject
 );
 
-NTSTATUS
-IopStartDevice(PDEVICE_NODE DeviceNode);
-
-/* driver.c */
+//
+// Driver Routines
+//
+VOID
+FASTCALL
+IopInitializeBootDrivers(
+    VOID
+);
 
 VOID
 FASTCALL
-IopInitializeBootDrivers(VOID);
-
-VOID
-FASTCALL
-IopInitializeSystemDrivers(VOID);
+IopInitializeSystemDrivers(
+    VOID
+);
 
 NTSTATUS
 FASTCALL
 IopCreateDriverObject(
-    PDRIVER_OBJECT *DriverObject,
-    PUNICODE_STRING ServiceName,
-    ULONG CreateAttributes,
-    BOOLEAN FileSystemDriver,
-    PVOID DriverImageStart,
-    ULONG DriverImageSize
+    OUT PDRIVER_OBJECT *DriverObject,
+    IN PUNICODE_STRING ServiceName,
+    IN ULONG CreateAttributes,
+    IN BOOLEAN FileSystemDriver,
+    IN PVOID DriverImageStart,
+    IN ULONG DriverImageSize
 );
 
 NTSTATUS
 FASTCALL
 IopGetDriverObject(
-    PDRIVER_OBJECT *DriverObject,
-    PUNICODE_STRING ServiceName,
-    BOOLEAN FileSystem
+    OUT PDRIVER_OBJECT *DriverObject,
+    IN PUNICODE_STRING ServiceName,
+    IN BOOLEAN FileSystem
 );
 
 NTSTATUS
@@ -471,20 +645,25 @@ IopInitializeDriverModule(
 NTSTATUS
 FASTCALL
 IopAttachFilterDrivers(
-    PDEVICE_NODE DeviceNode,
-    BOOLEAN Lower
+    IN PDEVICE_NODE DeviceNode,
+    IN BOOLEAN Lower
 );
 
 VOID
 FASTCALL
-IopMarkLastReinitializeDriver(VOID);
+IopMarkLastReinitializeDriver(
+    VOID
+);
 
 VOID
 FASTCALL
-IopReinitializeDrivers(VOID);
+IopReinitializeDrivers(
+    VOID
+);
 
-/* file.c */
-
+//
+// File Routines
+//
 NTSTATUS
 NTAPI
 IopParseDevice(
@@ -517,29 +696,31 @@ IopParseFile(
 
 VOID
 STDCALL
-IopDeleteFile(PVOID ObjectBody);
+IopDeleteFile(
+    IN PVOID ObjectBody
+);
 
 NTSTATUS
 STDCALL
 IopSecurityFile(
-    PVOID ObjectBody,
-    SECURITY_OPERATION_CODE OperationCode,
-    SECURITY_INFORMATION SecurityInformation,
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
-    PULONG BufferLength,
-	PSECURITY_DESCRIPTOR *OldSecurityDescriptor,    
-    POOL_TYPE PoolType,
-    PGENERIC_MAPPING GenericMapping
+    IN PVOID ObjectBody,
+    IN SECURITY_OPERATION_CODE OperationCode,
+    IN SECURITY_INFORMATION SecurityInformation,
+    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN OUT PULONG BufferLength,
+    OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+    IN POOL_TYPE PoolType,
+    IN OUT PGENERIC_MAPPING GenericMapping
 );
 
 NTSTATUS
 STDCALL
 IopQueryNameFile(
-    PVOID ObjectBody,
+    IN PVOID ObjectBody,
     IN BOOLEAN HasName,
-    POBJECT_NAME_INFORMATION ObjectNameInfo,
-    ULONG Length,
-    PULONG ReturnLength,
+    OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+    IN ULONG Length,
+    OUT PULONG ReturnLength,
     IN KPROCESSOR_MODE PreviousMode
 );
 
@@ -553,54 +734,33 @@ IopCloseFile(
     IN ULONG SystemHandleCount
 );
 
-/* plugplay.c */
-
-NTSTATUS 
-INIT_FUNCTION
-IopInitPlugPlayEvents(VOID);
-
-NTSTATUS
-IopQueueTargetDeviceEvent(
-    const GUID *Guid,
-    PUNICODE_STRING DeviceIds
-);
-
-/* pnpmgr.c */
-
-NTSTATUS
-IopInitializePnpServices(
-    IN PDEVICE_NODE DeviceNode,
-    IN BOOLEAN BootDrivers)
-;
-
-NTSTATUS
-IopInvalidateDeviceRelations(
-    IN PDEVICE_NODE DeviceNode,
-    IN DEVICE_RELATION_TYPE Type
-);
-
-/* timer.c */
+//
+// I/O Timer Routines
+//
 VOID
 FASTCALL
-IopInitTimerImplementation(VOID);
+IopInitTimerImplementation(
+    VOID
+);
 
 VOID
 STDCALL
-IopRemoveTimerFromTimerList(IN PIO_TIMER Timer);
+IopRemoveTimerFromTimerList(
+    IN PIO_TIMER Timer
+);
 
-/* iocomp.c */
+//
+// I/O Completion Routines
+//
 VOID
 FASTCALL
-IopInitIoCompletionImplementation(VOID);
+IopInitIoCompletionImplementation(
+    VOID
+);
 
-#define CM_RESOURCE_LIST_SIZE(ResList) \
-  (ResList->Count == 1) ? \
-    FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList. \
-                 PartialDescriptors[(ResList)->List[0].PartialResourceList.Count]) \
-                        : \
-    FIELD_OFFSET(CM_RESOURCE_LIST, List)
-
-/* xhal.c */
+//
+// I/O HAL Entrypoints
+//
 NTSTATUS
 FASTCALL
 xHalQueryDriveLayout(
@@ -618,7 +778,7 @@ HalExamineMBR(
     OUT PVOID *Buffer
 );
 
-VOID 
+VOID
 FASTCALL
 xHalIoAssignDriveLetters(
     IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
@@ -627,16 +787,16 @@ xHalIoAssignDriveLetters(
     OUT PSTRING NtSystemPathString
 );
 
-NTSTATUS 
+NTSTATUS
 FASTCALL
 xHalIoReadPartitionTable(
-    PDEVICE_OBJECT DeviceObject,
-    ULONG SectorSize,
-    BOOLEAN ReturnRecognizedPartitions,
-    PDRIVE_LAYOUT_INFORMATION *PartitionBuffer
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG SectorSize,
+    IN BOOLEAN ReturnRecognizedPartitions,
+    OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer
 );
 
-NTSTATUS 
+NTSTATUS
 FASTCALL
 xHalIoSetPartitionInformation(
     IN PDEVICE_OBJECT DeviceObject,
@@ -645,7 +805,7 @@ xHalIoSetPartitionInformation(
     IN ULONG PartitionType
 );
 
-NTSTATUS 
+NTSTATUS
 FASTCALL
 xHalIoWritePartitionTable(
     IN PDEVICE_OBJECT DeviceObject,
@@ -655,4 +815,10 @@ xHalIoWritePartitionTable(
     IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer
 );
 
-#endif
+//
+// Global I/O Data
+//
+extern POBJECT_TYPE IoCompletionType;
+extern PDEVICE_NODE IopRootDeviceNode;
+extern ULONG IopTraceLevel;
+

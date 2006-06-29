@@ -1,11 +1,11 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/irp.c
- * PURPOSE:         Handle IRPs
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  David Welch (welch@mcmail.com)
+ * PURPOSE:         IRP Handling Functions
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Gunnar Dalsnes
+ *                  Filip Navara (navaraf@reactos.org)
  */
 
 /* INCLUDES ****************************************************************/
@@ -45,6 +45,8 @@ IopRemoveThreadIrp(VOID)
     PETHREAD IrpThread;
     PLIST_ENTRY IrpEntry;
     PIO_ERROR_LOG_PACKET ErrorLogEntry;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PIO_STACK_LOCATION IoStackLocation;
 
     /* First, raise to APC to protect IrpList */
     KeRaiseIrql(APC_LEVEL, &OldIrql);
@@ -61,26 +63,48 @@ IopRemoveThreadIrp(VOID)
     /* Get the misbehaving IRP */
     IrpEntry = IrpThread->IrpList.Flink;
     DeadIrp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Deassociating IRP %p for %p\n",
+            __FUNCTION__,
+            DeadIrp,
+            IrpThread);
+
+    /* Don't cancel the IRP if it's already been completed far */
+    if (DeadIrp->CurrentLocation == (DeadIrp->StackCount + 2))
+    {
+        /* Return */
+        KeLowerIrql(OldIrql);
+        return;
+    }
 
     /* Disown the IRP! */
     DeadIrp->Tail.Overlay.Thread = NULL;
-    InitializeListHead(&DeadIrp->ThreadListEntry);
     RemoveHeadList(&IrpThread->IrpList);
+    InitializeListHead(&DeadIrp->ThreadListEntry);
 
-    /* Lower IRQL now */
+    /* Get the stack location and check if it's valid */
+    IoStackLocation = IoGetCurrentIrpStackLocation(DeadIrp);
+    if (DeadIrp->CurrentLocation <= DeadIrp->StackCount)
+    {
+        /* Get the device object */
+        DeviceObject = IoStackLocation->DeviceObject;
+    }
+
+    /* Lower IRQL now, since we have the pointers we need */
     KeLowerIrql(OldIrql);
 
     /* Check if we can send an Error Log Entry*/
-    if (DeadIrp->CurrentLocation <= DeadIrp->StackCount)
+    if (DeviceObject)
     {
         /* Allocate an entry */
-        ErrorLogEntry = IoAllocateErrorLogEntry(
-            IoGetCurrentIrpStackLocation(DeadIrp)->DeviceObject,
-                                         sizeof(IO_ERROR_LOG_PACKET));
-
-        /* Write the entry */
-        ErrorLogEntry->ErrorCode = 0xBAADF00D; /* FIXME */
-        IoWriteErrorLogEntry(ErrorLogEntry);
+        ErrorLogEntry = IoAllocateErrorLogEntry(DeviceObject,
+                                                sizeof(IO_ERROR_LOG_PACKET));
+        if (ErrorLogEntry)
+        {
+            /* Write the entry */
+            ErrorLogEntry->ErrorCode = 0xBAADF00D; /* FIXME */
+            IoWriteErrorLogEntry(ErrorLogEntry);
+        }
     }
 }
 
@@ -90,6 +114,11 @@ IopCleanupIrp(IN PIRP Irp,
               IN PFILE_OBJECT FileObject)
 {
     PMDL Mdl;
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Cleaning IRP %p for %p\n",
+            __FUNCTION__,
+            Irp,
+            FileObject);
 
     /* Check if there's an MDL */
     while ((Mdl = Irp->MdlAddress))
@@ -99,15 +128,19 @@ IopCleanupIrp(IN PIRP Irp,
         IoFreeMdl(Mdl);
     }
 
-    /* Free the buffer */
+    /* Check if the IRP has system buffer */
     if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
     {
+        /* Free the buffer */
         ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_SYS_BUF);
     }
 
-    /* Derefernce the User Event */
-    if (Irp->UserEvent && !(Irp->Flags & IRP_SYNCHRONOUS_API) && FileObject)
+    /* Check if this IRP has a user event, a file object, and is async */
+    if ((Irp->UserEvent) &&
+        !(Irp->Flags & IRP_SYNCHRONOUS_API) &&
+        (FileObject))
     {
+        /* Derefernce the User Event */
         ObDereferenceObject(Irp->UserEvent);
     }
 
