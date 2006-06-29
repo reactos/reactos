@@ -42,9 +42,9 @@ BOOL InitializeOptionsFromReg(TCHAR * Path)
   DWORD dwNumSubKeys = 0;
   DWORD dwIndex;
   DWORD dwValueName;
-  DWORD dwBufferSize;
+  DWORD dwValue;
   TCHAR szValueName[MAX_PATH];
-  BYTE szBuffer[MAX_PATH];
+  DWORD Value;
 
   if ( RegOpenCurrentUser(KEY_READ, &hKey) != ERROR_SUCCESS )
 	 return FALSE;
@@ -60,49 +60,42 @@ BOOL InitializeOptionsFromReg(TCHAR * Path)
 
   for (dwIndex = 0; dwIndex < dwNumSubKeys; dwIndex++)
   {
-	 dwBufferSize = MAX_PATH;
+	 dwValue = sizeof(Value);
 	 dwValueName = MAX_PATH;
 
-	 if ( RegEnumValue(hSubKey, dwIndex, szValueName, &dwValueName, NULL, NULL, szBuffer, &dwBufferSize) != ERROR_SUCCESS)
+	 if ( RegEnumValue(hSubKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (BYTE*)&Value, &dwValue) != ERROR_SUCCESS)
 		break;
 
 	 if ( !_tcscmp(szValueName, _T("CursorSize")) )
 	 {
-		int val = _ttoi((TCHAR*)szBuffer);
-		if ( val == 0x32)
-			g_ConsoleInfo.CursorSize = val;
-		else if ( val == 0x64 )
-			g_ConsoleInfo.CursorSize = val;
+		if ( Value == 0x32)
+			g_ConsoleInfo.CursorSize = Value;
+		else if ( Value == 0x64 )
+			g_ConsoleInfo.CursorSize = Value;
 	}
 	else if ( !_tcscmp(szValueName, _T("NumberOfHistoryBuffers")) )
 	{
-			int val = _ttoi((TCHAR*)szBuffer);
-			g_ConsoleInfo.NumberOfHistoryBuffers = val;
+			g_ConsoleInfo.NumberOfHistoryBuffers = Value;
 	 }
 	 else if ( !_tcscmp(szValueName, _T("HistoryBufferSize")) )
 	 {
-		 	int val = _ttoi((TCHAR*)szBuffer);
-			g_ConsoleInfo.HistoryBufferSize = val;
+			g_ConsoleInfo.HistoryBufferSize = Value;
 	 }
 	 else if ( !_tcscmp(szValueName, _T("HistoryNoDup")) )
 	 {
-		int val = _ttoi((TCHAR*)szBuffer);
-		g_ConsoleInfo.HistoryNoDup = val;
+		g_ConsoleInfo.HistoryNoDup = Value;
 	 }
 	 else if ( !_tcscmp(szValueName, _T("FullScreen")) )
 	 {
-		int val = _ttoi((TCHAR*)szBuffer);
-		g_ConsoleInfo.FullScreen = val;
+		g_ConsoleInfo.FullScreen = Value;
 	 }
 	 else if ( !_tcscmp(szValueName, _T("QuickEdit")) )
 	 {
-		int val = _ttoi((TCHAR*)szBuffer);
-		g_ConsoleInfo.QuickEdit = val;
+		g_ConsoleInfo.QuickEdit = Value;
 	 }
 	 else if ( !_tcscmp(szValueName, _T("InsertMode")) )
 	 {
-		int val = _ttoi((TCHAR*)szBuffer);
-		g_ConsoleInfo.InsertMode = val;
+		g_ConsoleInfo.InsertMode = Value;
 	 }
   }
 
@@ -204,23 +197,50 @@ UpdateDialogElements(HWND hwndDlg)
 BOOLEAN InitializeOptionsDialog(HWND hwndDlg)
 {
 	STARTUPINFO StartupInfo;
-
+	TCHAR szBuffer[MAX_PATH];
 	GetStartupInfo(&StartupInfo);
+	TCHAR * ptr;
+	DWORD length;
 
 	if ( StartupInfo.lpTitle )
 	{
-		if ( InitializeOptionsFromReg(StartupInfo.lpTitle) )
+		if ( !GetWindowsDirectory(szBuffer, MAX_PATH) )
+			return FALSE;
+
+		length = _tcslen(szBuffer);
+		if ( !_tcsncmp(szBuffer, StartupInfo.lpTitle, length) )
+		{
+			// Windows XP SP2 uses unexpanded environment vars to get path
+			// i.e. c:\windows\system32\cmd.exe
+			// becomes
+			// %SystemRoot%_system32_cmd.exe		
+
+			_tcscpy(szBuffer, _T("\%SystemRoot\%"));
+			_tcsncpy(&szBuffer[12], &StartupInfo.lpTitle[length], _tcslen(StartupInfo.lpTitle) - length + 1);
+			
+			ptr = &szBuffer[12];
+			while( (ptr = _tcsstr(ptr, _T("\\"))) )
+				ptr[0] = _T('_');
+		}
+
+
+		if ( InitializeOptionsFromReg(szBuffer) )
 		{
 			UpdateDialogElements(hwndDlg);
 			return TRUE;
 		}
-		//TODO
-		//
-		// Windows XP uses unexpanded environment vars to get path
-		// i.e. c:\windows\system32\cmd.exe
-		// becomes
-		// %SystemRoot%_system32_cmd.exe
+		UpdateDialogElements(hwndDlg);
 
+	}
+	else
+	{
+
+		if ( InitializeOptionsFromReg( _T("Console")) )
+		{
+			UpdateDialogElements(hwndDlg);
+			return TRUE;
+
+		}
 	}
 
 	return TRUE;

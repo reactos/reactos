@@ -154,6 +154,13 @@ DllMain(
 	LPVOID    lpvReserved)
 {
   UNREFERENCED_PARAMETER(lpvReserved)
+
+  /* initialize global struct */
+  memset(&g_ConsoleInfo, 0x0, sizeof(ConsoleInfo));
+  g_ConsoleInfo.InsertMode = TRUE;
+  g_ConsoleInfo.HistoryBufferSize = 50;
+  g_ConsoleInfo.NumberOfHistoryBuffers = 5;
+
   switch(dwReason)
   {
     case DLL_PROCESS_ATTACH:

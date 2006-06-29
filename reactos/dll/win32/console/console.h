@@ -20,6 +20,7 @@ typedef struct
 
 typedef struct TAGConsoleInfo
 {
+  LPSTR szProcessName;
   DWORD CursorSize;
   DWORD NumberOfHistoryBuffers;
   DWORD HistoryBufferSize;
