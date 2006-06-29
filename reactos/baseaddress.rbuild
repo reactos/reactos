@@ -19,6 +19,7 @@
   <property name="BASEADDRESS_NCPL" value="0x64ea0000" />
   <property name="BASEADDRESS_MAIN" value="0x64f40000" />
   <property name="BASEADDRESS_INTL" value="0x64fb0000" />
+  <property name="BASEADDRESS_CONSOLE" value="0x6E4D0000" />
   <property name="BASEADDRESS_DESK" value="0x65080000" />
   <property name="BASEADDRESS_APPWIZ" value="0x65100000" />
   <property name="BASEADDRESS_ACCESS" value="0x65180000" />

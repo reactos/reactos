@@ -28,6 +28,9 @@
 <directory name="cfgmgr32">
 	<xi:include href="cfgmgr32/cfgmgr32.rbuild" />
 </directory>
+<directory name="console">
+	<xi:include href="console/console.rbuild" />
+</directory>
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.rbuild" />
 </directory>
