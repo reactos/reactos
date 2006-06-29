@@ -22,7 +22,10 @@ SERVICE_TABLE_ENTRY ServiceTable[2] =
 HANDLE MyHeap = NULL;
 PLOGFILE SystemLog = NULL;
 PLOGFILE ApplicationLog = NULL;
+PLOGFILE SecurityLog = NULL;
 BOOL onLiveCD = FALSE; // On livecd events will go to debug output only
+
+extern CRITICAL_SECTION LogListCs;
 
 VOID CALLBACK ServiceMain(DWORD argc, LPTSTR *argv)
 {
@@ -65,6 +68,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	
+	InitializeCriticalSection(&LogListCs);
+	
 	/*
 	This will be fixed in near future
 	 */
@@ -103,7 +108,9 @@ int main(int argc, char *argv[])
 
     StartServiceCtrlDispatcher(ServiceTable);
 
+
 	LogfClose(SystemLog);
+	DeleteCriticalSection(&LogListCs);
 	HeapDestroy(MyHeap);
 
     return 0;

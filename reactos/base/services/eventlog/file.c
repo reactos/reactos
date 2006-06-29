@@ -8,7 +8,8 @@
  
 #include "eventlog.h"
 
-PLOGFILE _LogListHead = NULL;
+PLOGFILE LogListHead = NULL;
+CRITICAL_SECTION LogListCs;
 extern HANDLE MyHeap;
 
 BOOL LogfInitializeNew(PLOGFILE LogFile)
@@ -292,107 +293,118 @@ VOID LogfClose(PLOGFILE LogFile)
     return;
 }
 
-PLOGFILE LogfListHead()
-{
-    return _LogListHead;
-}
-
 PLOGFILE LogfListItemByName(WCHAR *Name)
 {
-    PLOGFILE Item;
-    Item = LogfListHead();
-    while(Item)
-    {
+    PLOGFILE Item, Ret = NULL;
+    
+    EnterCriticalSection(&LogListCs);
+    
+    for(Item = LogListHead; Item; Item = (PLOGFILE)Item->Next)
         if(Item->LogName && lstrcmpW(Item->LogName, Name)==0)
-            return Item;
-        Item = (PLOGFILE)Item->Next;
-    }
-    return NULL;
+        {
+        	Ret = Item;
+            break;
+        }
+	
+	LeaveCriticalSection(&LogListCs);
+    return Ret;
 }
 
 /* index starting from 1 */
 INT LogfListItemIndexByName(WCHAR *Name)
 {
     PLOGFILE Item;
-	INT i = 1;
+	INT ret = 0, i = 1;
 
-    Item = LogfListHead();
-    
-	while(Item)
-    {
+	EnterCriticalSection(&LogListCs);
+
+	for(Item = LogListHead; Item; i++, Item = (PLOGFILE)Item->Next)
         if(Item->LogName && lstrcmpW(Item->LogName, Name)==0)
-            return i;
-        Item = (PLOGFILE)Item->Next;
-		i++;
-    }
+        {
+        	ret = i;
+            break;
+        }
     
-	return 0;
+	LeaveCriticalSection(&LogListCs);
+	return ret;
 }
 
 /* index starting from 1 */
 PLOGFILE LogfListItemByIndex(INT Index)
 {
     INT i = 1;
-    PLOGFILE Item;
-    Item = LogfListHead();
-    while(Item)
-    {
-        if(i == Index) 
-            return Item;
-        i++;
-        Item = (PLOGFILE)Item->Next;
-    }
-    return NULL;
+    PLOGFILE Item = LogListHead;
+    
+    EnterCriticalSection(&LogListCs);
+    for(; Item && i<Index; Item = (PLOGFILE)Item->Next, i++); 
+    LeaveCriticalSection(&LogListCs);
+    
+    return Item;
 }
 
 INT LogfListItemCount()
 {
-    PLOGFILE Item = NULL;
-    INT i = 1;
-    Item = LogfListHead();
-    if(Item)
-    { 
-        while(Item->Next)
-        {
-            i++;
-            Item = (PLOGFILE) Item->Next;
-        }
-        return i;
+    PLOGFILE Item = LogListHead;
+    INT i = 0;
+    
+    EnterCriticalSection(&LogListCs);
+    while(Item) 
+    {
+    	i++;
+    	Item = (PLOGFILE) Item->Next;
     }
-    else return 0;
+    LeaveCriticalSection(&LogListCs);
+    
+    return i;
 }
 
 VOID LogfListAddItem(PLOGFILE Item)
 {
-    PLOGFILE List;
-	
-	List = LogfListHead();
+    EnterCriticalSection(&LogListCs);
     
-	if(List)
+	if(LogListHead)
     {
+    	PLOGFILE List = LogListHead;
+        
         while(List->Next) 
             List = (PLOGFILE)List->Next;
+                
         Item->Prev = (PVOID)List;
         Item->Next = NULL;
-        InterlockedExchange((PLONG)&List->Next, (LONG)Item);
+        List->Next = Item;
     }
-    else {
+    else 
+    {
         Item->Next = NULL;
         Item->Prev = NULL;
-        InterlockedExchange((PLONG)&_LogListHead, (LONG)Item);
+        LogListHead = Item;
     }
+    
+    LeaveCriticalSection(&LogListCs);
 }
 
 VOID LogfListRemoveItem(PLOGFILE Item)
 {
-    if(Item->Prev)
+    PLOGFILE prev = (PLOGFILE)Item->Prev;
+    PLOGFILE next = (PLOGFILE)Item->Next;
+	
+	EnterCriticalSection(&LogListCs);
+
+    if(prev && next)
     {
-        InterlockedExchange((PLONG)&((PLOGFILE)Item->Prev)->Next,
-                            (LONG)Item->Next);
+        prev->Next = next;
+        next->Prev = prev;
     }
-    else {
-        InterlockedExchange((PLONG)&_LogListHead, (LONG)Item->Next);
+    else if(next)
+    {
+    	LogListHead = next;
+    	next->Prev = NULL;
     }
+    else if(prev) prev->Next = NULL;
+    else LogListHead = NULL;
+        
+    LeaveCriticalSection(&LogListCs);
+
 }
 
 BOOL LogfReadEvent(PLOGFILE LogFile,
@@ -562,7 +574,7 @@ BOOL LogfWriteData(PLOGFILE LogFile,
 
 ULONG LogfOffsetByNumber(PLOGFILE LogFile,
 						 DWORD RecordNumber)
-/* Returns NULL if nothing found. */
+/* Returns 0 if nothing found. */
 {
 	DWORD i;
 	for(i = 0; i < LogFile->OffsetInfoNext; i++)
