@@ -21,350 +21,541 @@
 
 #define TAG_RTLREGISTRY TAG('R', 't', 'l', 'R')
 
-/* FUNCTIONS ***************************************************************/
+/* DATA **********************************************************************/
 
-static NTSTATUS
-RtlpGetRegistryHandle(ULONG RelativeTo,
-		      PWSTR Path,
-		      BOOLEAN Create,
-		      PHANDLE KeyHandle)
+PCWSTR RtlpRegPaths[RTL_REGISTRY_MAXIMUM] =
 {
-  UNICODE_STRING KeyPath;
-  UNICODE_STRING KeyName;
-  WCHAR KeyBuffer[MAX_PATH];
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  NTSTATUS Status;
+    NULL,
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Services",
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control",
+    L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion",
+    L"\\Registry\\Machine\\Hardware\\DeviceMap",
+    L"\\Registry\\User\\.Default",
+};
 
-  DPRINT("RtlpGetRegistryHandle()\n");
+/* PRIVATE FUNCTIONS *********************************************************/
 
-  if (RelativeTo & RTL_REGISTRY_HANDLE)
+NTSTATUS
+NTAPI
+RtlpGetRegistryHandle(IN ULONG RelativeTo,
+                      IN PCWSTR Path,
+                      IN BOOLEAN Create,
+                      IN PHANDLE KeyHandle)
+{
+    UNICODE_STRING KeyPath, KeyName;
+    WCHAR KeyBuffer[MAX_PATH];
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+
+    /* Check if we just want the handle */
+    if (RelativeTo & RTL_REGISTRY_HANDLE)
     {
-      Status = ZwDuplicateObject(NtCurrentProcess(),
-				 (HANDLE)Path,
-				 NtCurrentProcess(),
-				 KeyHandle,
-				 0,
-				 0,
-				 DUPLICATE_SAME_ACCESS);
-#ifndef NDEBUG
-      if(!NT_SUCCESS(Status))
-      {
-        DPRINT("ZwDuplicateObject() failed! Status: 0x%x\n", Status);
-      }
-#endif
-
-      return(Status);
+        *KeyHandle = (HANDLE)Path;
+        return STATUS_SUCCESS;
     }
 
-  if (RelativeTo & RTL_REGISTRY_OPTIONAL)
-    RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
-
-  if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
-  {
-    DPRINT("Invalid relative flag, parameter invalid!\n");
-    return(STATUS_INVALID_PARAMETER);
-  }
-
-  KeyName.Length = 0;
-  KeyName.MaximumLength = sizeof(KeyBuffer);
-  KeyName.Buffer = KeyBuffer;
-  KeyBuffer[0] = 0;
-
-  switch (RelativeTo)
+    /* Check for optional flag */
+    if (RelativeTo & RTL_REGISTRY_OPTIONAL)
     {
-      case RTL_REGISTRY_ABSOLUTE:
-        /* nothing to prefix! */
-	break;
-
-      case RTL_REGISTRY_SERVICES:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-	break;
-
-      case RTL_REGISTRY_CONTROL:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\");
-	break;
-
-      case RTL_REGISTRY_WINDOWS_NT:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\");
-	break;
-
-      case RTL_REGISTRY_DEVICEMAP:
-	RtlAppendUnicodeToString(&KeyName,
-				 L"\\Registry\\Machine\\Hardware\\DeviceMap\\");
-	break;
-
-      case RTL_REGISTRY_USER:
-	Status = RtlFormatCurrentUserKeyPath (&KeyPath);
-	if (!NT_SUCCESS(Status))
-	  return(Status);
-	RtlAppendUnicodeStringToString (&KeyName,
-					&KeyPath);
-	RtlFreeUnicodeString (&KeyPath);
-	RtlAppendUnicodeToString (&KeyName,
-				  L"\\");
-	break;
+        /* Mask it out */
+        RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
     }
 
-  if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE)
+    /* Fail on invalid parameter */
+    if (RelativeTo >= RTL_REGISTRY_MAXIMUM) return STATUS_INVALID_PARAMETER;
+
+    /* Initialize the key name */
+    RtlInitEmptyUnicodeString(&KeyName, KeyBuffer, sizeof(KeyBuffer));
+
+    /* Check if we have to lookup a path to prefix */
+    if (RelativeTo != RTL_REGISTRY_ABSOLUTE)
     {
-      Path++;
+        /* Check if we need the current user key */
+        if (RelativeTo == RTL_REGISTRY_USER)
+        {
+            /* Get the path */
+            Status = RtlFormatCurrentUserKeyPath(&KeyPath);
+            if (!NT_SUCCESS(Status)) return(Status);
+
+            /* Append it */
+            Status = RtlAppendUnicodeStringToString(&KeyName, &KeyPath);
+            RtlFreeUnicodeString (&KeyPath);
+        }
+        else
+        {
+            /* Get one of the prefixes */
+            Status = RtlAppendUnicodeToString(&KeyName,
+                                              RtlpRegPaths[RelativeTo]);
+        }
+
+        /* Check for failure, otherwise, append the path separator */
+        if (!NT_SUCCESS(Status)) return Status;
+        Status = RtlAppendUnicodeToString(&KeyName, L"\\");
+        if (!NT_SUCCESS(Status)) return Status;
     }
-  RtlAppendUnicodeToString(&KeyName,
-			   Path);
 
-  DPRINT("KeyName %wZ\n", &KeyName);
+    /* And now append the path */
+    if (Path[0] == L'\\' && RelativeTo != RTL_REGISTRY_ABSOLUTE) Path++; // HACK!
+    Status = RtlAppendUnicodeToString(&KeyName, Path);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
-			     NULL,
-			     NULL);
+    /* Initialize the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
 
-  if (Create)
+    /* Check if we want to create it */
+    if (Create)
     {
-      Status = ZwCreateKey(KeyHandle,
-			   KEY_ALL_ACCESS,
-			   &ObjectAttributes,
-			   0,
-			   NULL,
-			   0,
-			   NULL);
+        /* Create the key with write privileges */
+        Status = ZwCreateKey(KeyHandle,
+                             GENERIC_WRITE,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             NULL);
     }
-  else
+    else
     {
-      Status = ZwOpenKey(KeyHandle,
-			 KEY_ALL_ACCESS,
-			 &ObjectAttributes);
+        /* Otherwise, just open it with read access */
+        Status = ZwOpenKey(KeyHandle,
+                           MAXIMUM_ALLOWED | GENERIC_READ,
+                           &ObjectAttributes);
     }
 
-#ifndef NDEBUG
-  if(!NT_SUCCESS(Status))
-  {
-    DPRINT("%s failed! Status: 0x%x\n", (Create ? "ZwCreateKey" : "ZwOpenKey"), Status);
-  }
-#endif
-
-  return(Status);
+    /* Return status */
+    return Status;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 RtlCheckRegistryKey(IN ULONG RelativeTo,
-		    IN PWSTR Path)
+                    IN PWSTR Path)
 {
-  HANDLE KeyHandle;
-  NTSTATUS Status;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    PAGED_CODE_RTL();
 
-  PAGED_CODE_RTL();
+    /* Call the helper */
+    Status = RtlpGetRegistryHandle(RelativeTo,
+                                   Path,
+                                   FALSE,
+                                   &KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
-				 FALSE,
-				 &KeyHandle);
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  ZwClose(KeyHandle);
-
-  return(STATUS_SUCCESS);
+    /* All went well, close the handle and return success */
+    ZwClose(KeyHandle);
+    return STATUS_SUCCESS;
 }
-
 
 /*
  * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 RtlCreateRegistryKey(IN ULONG RelativeTo,
-		     IN PWSTR Path)
+                     IN PWSTR Path)
 {
-  HANDLE KeyHandle;
-  NTSTATUS Status;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    PAGED_CODE_RTL();
 
-  PAGED_CODE_RTL();
+    /* Call the helper */
+    Status = RtlpGetRegistryHandle(RelativeTo,
+                                   Path,
+                                   TRUE,
+                                   &KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  Status = RtlpGetRegistryHandle(RelativeTo,
-				 Path,
-				 TRUE,
-				 &KeyHandle);
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  ZwClose(KeyHandle);
-
-  return(STATUS_SUCCESS);
+    /* All went well, close the handle and return success */
+    ZwClose(KeyHandle);
+    return STATUS_SUCCESS;
 }
-
 
 /*
  * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
-		       IN PCWSTR Path,
-		       IN PCWSTR ValueName)
+                       IN PCWSTR Path,
+                       IN PCWSTR ValueName)
 {
-  HANDLE KeyHandle;
-  NTSTATUS Status;
-  UNICODE_STRING Name;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    PAGED_CODE_RTL();
 
-  PAGED_CODE_RTL();
+    /* Call the helper */
+    Status = RtlpGetRegistryHandle(RelativeTo,
+                                   Path,
+                                   TRUE,
+                                   &KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  Status = RtlpGetRegistryHandle(RelativeTo,
-				 (PWSTR)Path,
-				 FALSE,
-				 &KeyHandle);
-  if (!NT_SUCCESS(Status))
-    return(Status);
+    /* Initialize the key name and delete it */
+    RtlInitUnicodeString(&Name, ValueName);
+    Status = ZwDeleteValueKey(KeyHandle, &Name);
 
-  RtlInitUnicodeString(&Name,
-		       ValueName);
-
-  Status = ZwDeleteValueKey(KeyHandle,
-			    &Name);
-
-  ZwClose(KeyHandle);
-
-  return(Status);
+    /* All went well, close the handle and return status */
+    ZwClose(KeyHandle);
+    return Status;
 }
-
 
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
+NTSTATUS
+NTAPI
+RtlWriteRegistryValue(IN ULONG RelativeTo,
+                      IN PCWSTR Path,
+                      IN PCWSTR ValueName,
+                      IN ULONG ValueType,
+                      IN PVOID ValueData,
+                      IN ULONG ValueLength)
 {
-  HANDLE TokenHandle;
-  UCHAR Buffer[256];
-  PSID_AND_ATTRIBUTES SidBuffer;
-  ULONG Length;
-  UNICODE_STRING SidString;
-  NTSTATUS Status;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+    UNICODE_STRING Name;
+    PAGED_CODE_RTL();
 
-  PAGED_CODE_RTL();
+    /* Call the helper */
+    Status = RtlpGetRegistryHandle(RelativeTo,
+                                   Path,
+                                   TRUE,
+                                   &KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
 
-  DPRINT ("RtlFormatCurrentUserKeyPath() called\n");
+    /* Initialize the key name and set it */
+    RtlInitUnicodeString(&Name, ValueName);
+    Status = ZwSetValueKey(KeyHandle,
+                           &Name,
+                           0,
+                           ValueType,
+                           ValueData,
+                           ValueLength);
 
-  Status = ZwOpenThreadToken (NtCurrentThread (),
-			      TOKEN_QUERY,
-			      TRUE,
-			      &TokenHandle);
-  if (!NT_SUCCESS (Status))
-    {
-      if (Status != STATUS_NO_TOKEN)
-	{
-	  DPRINT1 ("ZwOpenThreadToken() failed (Status %lx)\n", Status);
-	  return Status;
-	}
-
-      Status = ZwOpenProcessToken (NtCurrentProcess (),
-				   TOKEN_QUERY,
-				   &TokenHandle);
-      if (!NT_SUCCESS (Status))
-	{
-	  DPRINT1 ("ZwOpenProcessToken() failed (Status %lx)\n", Status);
-	  return Status;
-	}
-    }
-
-  SidBuffer = (PSID_AND_ATTRIBUTES)Buffer;
-  Status = ZwQueryInformationToken (TokenHandle,
-				    TokenUser,
-				    (PVOID)SidBuffer,
-				    256,
-				    &Length);
-  ZwClose (TokenHandle);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("ZwQueryInformationToken() failed (Status %lx)\n", Status);
-      return Status;
-    }
-
-  Status = RtlConvertSidToUnicodeString (&SidString,
-					 SidBuffer[0].Sid,
-					 TRUE);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("RtlConvertSidToUnicodeString() failed (Status %lx)\n", Status);
-      return Status;
-    }
-
-  DPRINT ("SidString: '%wZ'\n", &SidString);
-
-  Length = SidString.Length + sizeof(L"\\Registry\\User\\");
-  DPRINT ("Length: %lu\n", Length);
-
-  KeyPath->Length = 0;
-  KeyPath->MaximumLength = Length;
-  KeyPath->Buffer = RtlpAllocateStringMemory(KeyPath->MaximumLength, TAG_USTR);
-  if (KeyPath->Buffer == NULL)
-    {
-      DPRINT1 ("RtlpAllocateMemory() failed\n");
-      RtlFreeUnicodeString (&SidString);
-      return STATUS_NO_TOKEN;
-    }
-
-  RtlAppendUnicodeToString (KeyPath,
-			    L"\\Registry\\User\\");
-  RtlAppendUnicodeStringToString (KeyPath,
-				  &SidString);
-  RtlFreeUnicodeString (&SidString);
-
-  return STATUS_SUCCESS;
+    /* All went well, close the handle and return status */
+    ZwClose(KeyHandle);
+    return Status;
 }
-
 
 /*
  * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
-		   OUT PHANDLE KeyHandle)
+                   OUT PHANDLE KeyHandle)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyPath;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyPath;
+    NTSTATUS Status;
+    PAGED_CODE_RTL();
 
-  PAGED_CODE_RTL();
-
-  Status = RtlFormatCurrentUserKeyPath(&KeyPath);
-  if (NT_SUCCESS(Status))
+    /* Get the user key */
+    Status = RtlFormatCurrentUserKeyPath(&KeyPath);
+    if (NT_SUCCESS(Status))
     {
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &KeyPath,
-				 OBJ_CASE_INSENSITIVE,
-				 NULL,
-				 NULL);
-      Status = ZwOpenKey(KeyHandle,
-			 DesiredAccess,
-			 &ObjectAttributes);
-      RtlFreeUnicodeString(&KeyPath);
-      if (NT_SUCCESS(Status))
-	{
-	  return STATUS_SUCCESS;
-	}
+        /* Initialize the attributes and open it */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyPath,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
+
+        /* Free the path and return success if it worked */
+        RtlFreeUnicodeString(&KeyPath);
+        if (NT_SUCCESS(Status)) return STATUS_SUCCESS;
     }
 
-  RtlInitUnicodeString (&KeyPath,
-			L"\\Registry\\User\\.Default");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyPath,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status = ZwOpenKey(KeyHandle,
-		     DesiredAccess,
-		     &ObjectAttributes);
+    /* It didn't work, so use the default key */
+    RtlInitUnicodeString(&KeyPath, RtlpRegPaths[RTL_REGISTRY_USER]);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyPath,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
 
-  return Status;
+    /* Return status */
+    return Status;
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlFormatCurrentUserKeyPath(OUT PUNICODE_STRING KeyPath)
+{
+    HANDLE TokenHandle;
+    UCHAR Buffer[256];
+    PSID_AND_ATTRIBUTES SidBuffer;
+    ULONG Length;
+    UNICODE_STRING SidString;
+    NTSTATUS Status;
+    PAGED_CODE_RTL();
+
+    /* Open the thread token */
+    Status = ZwOpenThreadToken(NtCurrentThread(),
+                               TOKEN_QUERY,
+                               TRUE,
+                               &TokenHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, is it because we don't have a thread token? */
+        if (Status != STATUS_NO_TOKEN) return Status;
+
+        /* It is, so use the process token */
+        Status = ZwOpenProcessToken(NtCurrentProcess(),
+                                    TOKEN_QUERY,
+                                    &TokenHandle);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    /* Now query the token information */
+    SidBuffer = (PSID_AND_ATTRIBUTES)Buffer;
+    Status = ZwQueryInformationToken(TokenHandle,
+                                     TokenUser,
+                                     (PVOID)SidBuffer,
+                                     sizeof(Buffer),
+                                     &Length);
+
+    /* Close the handle and handle failure */
+    ZwClose(TokenHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Convert the SID */
+    Status = RtlConvertSidToUnicodeString(&SidString, SidBuffer[0].Sid, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Add the length of the prefix */
+    Length = SidString.Length + sizeof(L"\\REGISTRY\\USER\\");
+
+    /* Initialize a string */
+    RtlInitEmptyUnicodeString(KeyPath,
+                              RtlpAllocateStringMemory(Length, TAG_USTR),
+                              Length);
+    if (!KeyPath->Buffer)
+    {
+        /* Free the string and fail */
+        RtlFreeUnicodeString(&SidString);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Append the prefix and SID */
+    RtlAppendUnicodeToString(KeyPath, L"\\REGISTRY\\USER\\");
+    RtlAppendUnicodeStringToString(KeyPath, &SidString);
+
+    /* Free the temporary string and return success */
+    RtlFreeUnicodeString(&SidString);
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlpNtCreateKey(OUT HANDLE KeyHandle,
+                IN ACCESS_MASK DesiredAccess,
+                IN POBJECT_ATTRIBUTES ObjectAttributes,
+                IN ULONG TitleIndex,
+                IN PUNICODE_STRING Class,
+                OUT PULONG Disposition)
+{
+    /* Check if we have object attributes */
+    if (ObjectAttributes)
+    {
+        /* Mask out the unsupported flags */
+        ObjectAttributes->Attributes &= ~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
+    }
+
+    /* Create the key */
+    return ZwCreateKey(KeyHandle,
+                       DesiredAccess,
+                       ObjectAttributes,
+                       0,
+                       NULL,
+                       0,
+                       Disposition);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
+                      OUT PUNICODE_STRING SubKeyName,
+                      IN ULONG Index,
+                      IN ULONG Unused)
+{
+    PKEY_BASIC_INFORMATION KeyInfo = NULL;
+    ULONG BufferLength = 0;
+    ULONG ReturnedLength;
+    NTSTATUS Status;
+
+    /* Check if we have a name */
+    if (SubKeyName->MaximumLength)
+    {
+        /* Allocate a buffer for it */
+        BufferLength = SubKeyName->MaximumLength +
+                       sizeof(KEY_BASIC_INFORMATION);
+        KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
+        if (!KeyInfo) return STATUS_NO_MEMORY;
+    }
+
+    /* Enumerate the key */
+    Status = ZwEnumerateKey(KeyHandle,
+                            Index,
+                            KeyBasicInformation,
+                            KeyInfo,
+                            BufferLength,
+                            &ReturnedLength);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if the name fits */
+        if (KeyInfo->NameLength <= SubKeyName->MaximumLength)
+        {
+            /* Set the length */
+            SubKeyName->Length = KeyInfo->NameLength;
+
+            /* Copy it */
+            RtlMoveMemory(SubKeyName->Buffer,
+                          KeyInfo->Name,
+                          SubKeyName->Length);
+        }
+        else
+        {
+            /* Otherwise, we ran out of buffer space */
+            Status = STATUS_BUFFER_OVERFLOW;
+        }
+    }
+
+    /* Free the buffer and return status */
+    if (KeyInfo) RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
+{
+    /* This just deletes the key */
+    return ZwDeleteKey(KeyHandle);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlpNtOpenKey(OUT HANDLE KeyHandle,
+              IN ACCESS_MASK DesiredAccess,
+              IN POBJECT_ATTRIBUTES ObjectAttributes,
+              IN ULONG Unused)
+{
+    /* Check if we have object attributes */
+    if (ObjectAttributes)
+    {
+        /* Mask out the unsupported flags */
+        ObjectAttributes->Attributes &= ~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
+    }
+
+    /* Open the key */
+    return ZwOpenKey(KeyHandle, DesiredAccess, ObjectAttributes);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlpNtQueryValueKey(IN HANDLE KeyHandle,
+                    OUT PULONG Type OPTIONAL,
+                    OUT PVOID Data OPTIONAL,
+                    IN OUT PULONG DataLength OPTIONAL,
+                    IN ULONG Unused)
+{
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+    UNICODE_STRING ValueName;
+    ULONG BufferLength = 0;
+    NTSTATUS Status;
+
+    /* Clear the value name */
+    RtlInitEmptyUnicodeString(&ValueName, NULL, 0);
+
+    /* Check if we were already given a length */
+    if (DataLength) BufferLength = *DataLength;
+
+    /* Add the size of the structure */
+    BufferLength += FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+
+    /* Allocate memory for the value */
+    ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
+    if (!ValueInfo) return STATUS_NO_MEMORY;
+
+    /* Query the value */
+    Status = ZwQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             ValueInfo,
+                             BufferLength,
+                             &BufferLength);
+    if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
+    {
+        /* Return the length and type */
+        if (DataLength) *DataLength = ValueInfo->DataLength;
+        if (Type) *Type = ValueInfo->Type;
+    }
+
+    /* Check if the caller wanted data back, and we got it */
+    if ((NT_SUCCESS(Status)) && (Data))
+    {
+        /* Copy it */
+        RtlMoveMemory(Data, ValueInfo->Data, ValueInfo->DataLength);
+    }
+
+    /* Free the memory and return status */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlpNtSetValueKey(IN HANDLE KeyHandle,
+                  IN ULONG Type,
+                  IN PVOID Data,
+                  IN ULONG DataLength)
+{
+    UNICODE_STRING ValueName;
+
+    /* Set the value */
+    RtlInitEmptyUnicodeString(&ValueName, NULL, 0);
+    return ZwSetValueKey(KeyHandle,
+                         &ValueName,
+                         0,
+                         Type,
+                         Data,
+                         DataLength);
+}
 
 /*
  * @unimplemented
@@ -867,236 +1058,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   ZwClose(BaseKeyHandle);
 
   return(Status);
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-RtlWriteRegistryValue(IN ULONG RelativeTo,
-		      IN PCWSTR Path,
-		      IN PCWSTR ValueName,
-		      IN ULONG ValueType,
-		      IN PVOID ValueData,
-		      IN ULONG ValueLength)
-{
-  HANDLE KeyHandle;
-  NTSTATUS Status;
-  UNICODE_STRING Name;
-
-  PAGED_CODE_RTL();
-
-  Status = RtlpGetRegistryHandle(RelativeTo,
-				 (PWSTR)Path,
-				 TRUE,
-				 &KeyHandle);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT("RtlpGetRegistryHandle() failed! Status: 0x%lx\n", Status);
-    return(Status);
-  }
-
-  RtlInitUnicodeString(&Name,
-		       ValueName);
-
-  Status = ZwSetValueKey(KeyHandle,
-			 &Name,
-			 0,
-			 ValueType,
-			 ValueData,
-			 ValueLength);
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("ZwSetValueKey() failed! Status: 0x%lx\n", Status);
-  }
-
-  ZwClose(KeyHandle);
-
-  return(Status);
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-RtlpNtCreateKey(OUT HANDLE KeyHandle,
-		IN ACCESS_MASK DesiredAccess,
-		IN POBJECT_ATTRIBUTES ObjectAttributes,
-		IN ULONG Unused1,
-		OUT PULONG Disposition,
-		IN ULONG Unused2)
-{
-  if (ObjectAttributes != NULL)
-    ObjectAttributes->Attributes &= ~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
-
-  return(ZwCreateKey(KeyHandle,
-		     DesiredAccess,
-		     ObjectAttributes,
-		     0,
-		     NULL,
-		     0,
-		     Disposition));
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
-		      OUT PUNICODE_STRING SubKeyName,
-		      IN ULONG Index,
-		      IN ULONG Unused)
-{
-  PKEY_BASIC_INFORMATION KeyInfo = NULL;
-  ULONG BufferLength = 0;
-  ULONG ReturnedLength;
-  NTSTATUS Status;
-
-  if (SubKeyName->MaximumLength != 0)
-    {
-      BufferLength = SubKeyName->MaximumLength +
-		     sizeof(KEY_BASIC_INFORMATION);
-      KeyInfo = RtlpAllocateMemory(BufferLength, TAG_RTLREGISTRY);
-      if (KeyInfo == NULL)
-	return(STATUS_NO_MEMORY);
-    }
-
-  Status = ZwEnumerateKey(KeyHandle,
-			  Index,
-			  KeyBasicInformation,
-			  KeyInfo,
-			  BufferLength,
-			  &ReturnedLength);
-  if (NT_SUCCESS(Status))
-    {
-      if (KeyInfo->NameLength + sizeof(WCHAR) <= SubKeyName->MaximumLength)
-	{
-	  memmove(SubKeyName->Buffer,
-		  KeyInfo->Name,
-		  KeyInfo->NameLength);
-	  SubKeyName->Buffer[KeyInfo->NameLength / sizeof(WCHAR)] = 0;
-	  SubKeyName->Length = KeyInfo->NameLength;
-	}
-      else
-	{
-	  Status = STATUS_BUFFER_OVERFLOW;
-	}
-    }
-
-  if (KeyInfo != NULL)
-    {
-      RtlpFreeMemory(KeyInfo, TAG_RTLREGISTRY);
-    }
-
-  return(Status);
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
-{
-  return(ZwDeleteKey(KeyHandle));
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-RtlpNtOpenKey(OUT HANDLE KeyHandle,
-	      IN ACCESS_MASK DesiredAccess,
-	      IN POBJECT_ATTRIBUTES ObjectAttributes,
-	      IN ULONG Unused)
-{
-  if (ObjectAttributes != NULL)
-    ObjectAttributes->Attributes &= ~(OBJ_PERMANENT | OBJ_EXCLUSIVE);
-
-  return(ZwOpenKey(KeyHandle,
-		   DesiredAccess,
-		   ObjectAttributes));
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-RtlpNtQueryValueKey(IN HANDLE KeyHandle,
-		    OUT PULONG Type OPTIONAL,
-		    OUT PVOID Data OPTIONAL,
-		    IN OUT PULONG DataLength OPTIONAL,
-		    IN ULONG Unused)
-{
-  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
-  UNICODE_STRING ValueName;
-  ULONG BufferLength;
-  ULONG ReturnedLength;
-  NTSTATUS Status;
-
-  RtlInitUnicodeString(&ValueName,
-		       NULL);
-
-  BufferLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION);
-  if (DataLength != NULL)
-    BufferLength = *DataLength;
-
-  ValueInfo = RtlpAllocateMemory(BufferLength, TAG_RTLREGISTRY);
-  if (ValueInfo == NULL)
-    return(STATUS_NO_MEMORY);
-
-  Status = ZwQueryValueKey(KeyHandle,
-			   &ValueName,
-			   KeyValuePartialInformation,
-			   ValueInfo,
-			   BufferLength,
-			   &ReturnedLength);
-  if (NT_SUCCESS(Status))
-    {
-      if (DataLength != NULL)
-	*DataLength = ValueInfo->DataLength;
-
-      if (Type != NULL)
-	*Type = ValueInfo->Type;
-
-      if (Data != NULL)
-	{
-	  memmove(Data,
-		  ValueInfo->Data,
-		  ValueInfo->DataLength);
-	}
-    }
-
-  RtlpFreeMemory(ValueInfo, TAG_RTLREGISTRY);
-
-  return(Status);
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-RtlpNtSetValueKey(IN HANDLE KeyHandle,
-		  IN ULONG Type,
-		  IN PVOID Data,
-		  IN ULONG DataLength)
-{
-  UNICODE_STRING ValueName;
-
-  RtlInitUnicodeString(&ValueName,
-		       NULL);
-  return(ZwSetValueKey(KeyHandle,
-		       &ValueName,
-		       0,
-		       Type,
-		       Data,
-		       DataLength));
 }
 
 /* EOF */

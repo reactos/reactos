@@ -411,13 +411,26 @@ NtCreateKey(OUT PHANDLE KeyHandle,
      because NtCreateKey doesn't create trees */
   Start = RemainingPath.Buffer;
   if (*Start == L'\\')
+  {
     Start++;
+    //RemainingPath.Length -= sizeof(WCHAR);
+    //RemainingPath.MaximumLength -= sizeof(WCHAR);
+    //RemainingPath.Buffer++;
+    //DPRINT1("String: %wZ\n", &RemainingPath);
+  }
+
+  if (RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] == '\\')
+  {
+    RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+    RemainingPath.Length -= sizeof(WCHAR);
+    RemainingPath.MaximumLength -= sizeof(WCHAR);
+  }
 
   for (i = 1; i < RemainingPath.Length / sizeof(WCHAR); i++)
     {
       if (L'\\' == RemainingPath.Buffer[i])
         {
-          DPRINT("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
+          DPRINT1("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
 
           PostCreateKeyInfo.Object = NULL;
           PostCreateKeyInfo.Status = STATUS_OBJECT_NAME_NOT_FOUND;
@@ -1395,6 +1408,13 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     {
       return Status;
     }
+  }
+
+    if (ObjectAttributes->ObjectName->Buffer[(ObjectAttributes->ObjectName->Length / sizeof(WCHAR)) - 1] == '\\')
+  {
+    ObjectAttributes->ObjectName->Buffer[(ObjectAttributes->ObjectName->Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+    ObjectAttributes->ObjectName->Length -= sizeof(WCHAR);
+    ObjectAttributes->ObjectName->MaximumLength -= sizeof(WCHAR);
   }
 
   /* WINE checks for the length also */

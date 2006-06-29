@@ -110,6 +110,7 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     Attributes = ObjectCreateInfo->Attributes;
     if (ObjectType == ObSymbolicLinkType)
         Attributes |= OBJ_OPENLINK;
+    Attributes |= OBJ_CASE_INSENSITIVE; // hello! My name is ReactOS CM and I'm brain-dead!
 
     while (TRUE)
     {
