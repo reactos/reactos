@@ -237,6 +237,8 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     ObpDecrementHandleCount(Body, PsGetCurrentProcess(), GrantedAccess);
 
     /* Dereference the object as well */
+    ASSERT(ObjectHeader->Type);
+    ASSERT(ObjectHeader->PointerCount != 0xCCCCCCCC);
     if (!wcscmp(ObjectHeader->Type->Name.Buffer, L"Key"))
     {
         //

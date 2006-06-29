@@ -73,7 +73,7 @@ ObpDeallocateObject(IN PVOID Object)
     }
 
     /* Check if a handle database was active */
-    if ((HandleInfo) && (Header->Flags & OB_FLAG_SINGLE_PROCESS))
+    if ((HandleInfo) && !(Header->Flags & OB_FLAG_SINGLE_PROCESS))
     {
         /* Free it */
         ExFreePool(HandleInfo->HandleCountDatabase);
@@ -690,10 +690,69 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     NTSTATUS Status;
     CHAR Tag[4];
     OBP_LOOKUP_CONTEXT Context;
+    PWCHAR p;
+    ULONG i;
+    UNICODE_STRING ObjectName;
+
+    /* Verify parameters */
+    if (!(TypeName) ||
+        !(TypeName->Length) ||
+        !(ObjectTypeInitializer) ||
+        (ObjectTypeInitializer->Length != sizeof(*ObjectTypeInitializer)) ||
+        (ObjectTypeInitializer->InvalidAttributes & ~OBJ_VALID_ATTRIBUTES) ||
+        (ObjectTypeInitializer->MaintainHandleCount &&
+         (!(ObjectTypeInitializer->OpenProcedure) &&
+          !ObjectTypeInitializer->CloseProcedure)) ||
+        ((!ObjectTypeInitializer->UseDefaultObject) &&
+         (ObjectTypeInitializer->PoolType != NonPagedPool)))
+    {
+        /* Fail */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Make sure the name doesn't have a separator */
+    p = TypeName->Buffer;
+    i = TypeName->Length / sizeof(WCHAR);
+    while (i--)
+    {
+        /* Check for one and fail */
+        if (*p++ == OBJ_NAME_PATH_SEPARATOR) return STATUS_OBJECT_NAME_INVALID;
+    }
+
+    /* Check if we've already created the directory of types */
+    if (ObpTypeDirectoryObject)
+    {
+        /* Then scan it to figure out if we've already created this type */
+        Context.Directory = ObpTypeDirectoryObject;
+        Context.DirectoryLocked = TRUE;
+        if (ObpLookupEntryDirectory(ObpTypeDirectoryObject,
+                                    TypeName,
+                                    OBJ_CASE_INSENSITIVE,
+                                    FALSE,
+                                    &Context))
+        {
+            /* We have already created it, so fail */
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+    }
+
+    /* Now make a copy of the object name */
+    ObjectName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                              TypeName->MaximumLength,
+                                              OB_NAME_TAG);
+    if (!ObjectName.Buffer)
+    {
+        /* Out of memory, fail */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Set the length and copy the name */
+    ObjectName.MaximumLength = TypeName->MaximumLength;
+    RtlCopyUnicodeString(&ObjectName, TypeName);
 
     /* Allocate the Object */
     Status = ObpAllocateObject(NULL,
-                               TypeName,
+                               &ObjectName,
                                ObTypeObjectType,
                                sizeof(OBJECT_TYPE) + sizeof(OBJECT_HEADER),
                                KernelMode,
@@ -788,13 +847,6 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     if (ObpTypeDirectoryObject)
     {
         /* Insert it into the Object Directory */
-        Context.Directory = ObpTypeDirectoryObject;
-        Context.DirectoryLocked = TRUE;
-        ObpLookupEntryDirectory(ObpTypeDirectoryObject,
-                                TypeName,
-                                OBJ_CASE_INSENSITIVE,
-                                FALSE,
-                                &Context);
         ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, Header);
         ObReferenceObject(ObpTypeDirectoryObject);
     }
