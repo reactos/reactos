@@ -83,7 +83,7 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_ABOUT:            DialogBox(GetModuleHandle(NULL),
                                          MAKEINTRESOURCE(IDD_ABOUTBOX),
                                          Globals.hMainWnd,
-                                         AboutDialogProc);
+                                         (DLGPROC) AboutDialogProc);
                                break;
     case CMD_ABOUT_WINE:       DIALOG_HelpAboutWine(); break;
 
@@ -101,7 +101,7 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 static BOOL NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, int iTextLength, DWORD dwPosition)
 {
     BOOL bMatches;
-    int iTargetLength;
+    size_t iTargetLength;
 
     iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
 
@@ -115,7 +115,7 @@ static BOOL NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, int i
     {
         if ((dwPosition > 0) && !_istspace(pszText[dwPosition-1]))
             bMatches = FALSE;
-        if ((dwPosition < iTextLength - 1) && !_istspace(pszText[dwPosition+1]))
+        if ((dwPosition < (DWORD) iTextLength - 1) && !_istspace(pszText[dwPosition+1]))
             bMatches = FALSE;
     }
 
@@ -130,14 +130,14 @@ static BOOL NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, int i
 BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
 {
     int iTextLength, iTargetLength;
-    int iAdjustment = 0;
+    size_t iAdjustment = 0;
     LPTSTR pszText = NULL;
     DWORD dwPosition, dwBegin, dwEnd;
     BOOL bMatches = FALSE;
     TCHAR szResource[128], szText[128];
     BOOL bSuccess;
 
-    iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
+    iTargetLength = (int) _tcslen(pFindReplace->lpstrFindWhat);
 
     /* Retrieve the window text */
     iTextLength = GetWindowTextLength(Globals.hEdit);
@@ -151,7 +151,7 @@ BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
     }
 
     SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwBegin, (LPARAM) &dwEnd);
-    if (bReplace && ((dwEnd - dwBegin) == iTargetLength))
+    if (bReplace && ((dwEnd - dwBegin) == (DWORD) iTargetLength))
     {
         if (NOTEPAD_FindTextAt(pFindReplace, pszText, iTextLength, dwBegin))
         {
@@ -164,7 +164,7 @@ BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
     {
         /* Find Down */
         dwPosition = dwEnd;
-        while(dwPosition < iTextLength)
+        while(dwPosition < (DWORD) iTextLength)
         {
             bMatches = NOTEPAD_FindTextAt(pFindReplace, pszText, iTextLength, dwPosition);
             if (bMatches)
@@ -189,7 +189,7 @@ BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
     {
         /* Found target */
         if (dwPosition > dwBegin)
-            dwPosition += iAdjustment;
+            dwPosition += (DWORD) iAdjustment;
         SendMessage(Globals.hEdit, EM_SETSEL, dwPosition, dwPosition + iTargetLength);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
         bSuccess = TRUE;
@@ -263,9 +263,11 @@ static VOID NOTEPAD_InitData(VOID)
 /***********************************************************************
  * Enable/disable items on the menu based on control state
  */
-static VOID NOTEPAD_InitMenuPopup(HMENU menu, int index)
+static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
 {
     int enable;
+
+    UNREFERENCED_PARAMETER(index);
 
     CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
         MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
@@ -278,7 +280,7 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, int index)
         SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
     EnableMenuItem(menu, CMD_PASTE,
         IsClipboardFormatAvailable(CF_TEXT) ? MF_ENABLED : MF_GRAYED);
-    enable = SendMessage(Globals.hEdit, EM_GETSEL, 0, 0);
+    enable = (int) SendMessage(Globals.hEdit, EM_GETSEL, 0, 0);
     enable = (HIWORD(enable) == LOWORD(enable)) ? MF_GRAYED : MF_ENABLED;
     EnableMenuItem(menu, CMD_CUT, enable);
     EnableMenuItem(menu, CMD_COPY, enable);
@@ -532,7 +534,10 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
     static const WCHAR className[] = {'N','P','C','l','a','s','s',0};
     static const WCHAR winName[]   = {'N','o','t','e','p','a','d',0};
 
-    aFINDMSGSTRING = RegisterWindowMessage(FINDMSGSTRING);
+    UNREFERENCED_PARAMETER(prev);
+    UNREFERENCED_PARAMETER(cmdline);
+
+    aFINDMSGSTRING = (ATOM) RegisterWindowMessage(FINDMSGSTRING);
 
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance       = hInstance;
@@ -585,5 +590,5 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
         }
     }
     SaveSettings();
-    return msg.wParam;
+    return (int) msg.wParam;
 }
