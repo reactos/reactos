@@ -22,8 +22,8 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	TCHAR       szTemp[256];
 	DWORD dwStyle;
 
-    UNREFERENCED_PARAMETER(lParam)
-    UNREFERENCED_PARAMETER(wParam)
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
 
     switch (message) {
     case WM_INITDIALOG:
