@@ -14,6 +14,7 @@ HWND hStartupListCtrl;
 HWND hStartupDialog;
 
 void GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName );
+void GetDisabledAutostartEntriesFromRegistry ();
 
 INT_PTR CALLBACK
 StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -59,6 +60,9 @@ StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         GetAutostartEntriesFromRegistry(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"));
         GetAutostartEntriesFromRegistry(HKEY_CURRENT_USER, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"));
+		GetDisabledAutostartEntriesFromRegistry (_T("SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\startupreg"));
+		GetDisabledAutostartEntriesFromRegistry (_T("SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\startupfolder"));
+
         //FIXME: What about HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Userinit
         //FIXME: Common Startup (startmenu)
 
@@ -66,6 +70,83 @@ StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
 
     return 0;
+}
+
+
+ void
+GetDisabledAutostartEntriesFromRegistry (TCHAR * szBasePath)
+{
+    HKEY hKey, hSubKey;
+    DWORD Index, SubIndex, dwValues, dwSubValues, retVal;
+    DWORD dwValueLength, dwDataLength = MAX_VALUE_NAME; 
+    LV_ITEM item;
+    TCHAR* Data;
+    TCHAR szValueName[MAX_KEY_LENGTH];
+    TCHAR szSubValueName[MAX_KEY_LENGTH];
+    TCHAR szSubPath[MAX_KEY_LENGTH];
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szBasePath, 0, KEY_READ | KEY_ENUMERATE_SUB_KEYS, &hKey) == ERROR_SUCCESS)
+    {
+        if (RegQueryInfoKey(hKey, NULL, NULL, NULL, &dwValues, NULL, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+        {
+            for (Index = 0, retVal = ERROR_SUCCESS; Index < dwValues; Index++) 
+            {
+                dwValueLength = MAX_KEY_LENGTH;
+                dwDataLength = MAX_VALUE_NAME;
+                Data = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, MAX_VALUE_NAME * sizeof(TCHAR));
+                if (Data == NULL)
+                    break;
+
+                retVal = RegEnumKeyEx(hKey, Index, szValueName, &dwValueLength, NULL, NULL, NULL, NULL);
+                _stprintf(szSubPath, _T("%s\\%s"), szBasePath, szValueName);
+                memset(&item, 0, sizeof(LV_ITEM));
+                item.mask = LVIF_TEXT;
+                item.iImage = 0;
+                item.pszText = szValueName;
+                item.iItem = ListView_GetItemCount(hStartupListCtrl);
+                item.lParam = 0;
+                (void)ListView_InsertItem(hStartupListCtrl, &item);                
+                if(RegOpenKeyEx(HKEY_LOCAL_MACHINE, szSubPath, 0, KEY_READ | KEY_ENUMERATE_SUB_KEYS, &hSubKey) == ERROR_SUCCESS)
+                {
+                    if (RegQueryInfoKey(hSubKey, NULL, NULL, NULL, NULL, NULL, NULL, &dwSubValues, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+                    {
+                        for(SubIndex = 0; SubIndex < dwSubValues; SubIndex++)
+                        {
+                            dwValueLength = MAX_KEY_LENGTH;
+                            dwDataLength = MAX_VALUE_NAME;
+                            if(RegEnumValue(hSubKey, SubIndex, szSubValueName, &dwValueLength, NULL, NULL, (LPBYTE)Data, &dwDataLength) == ERROR_SUCCESS)
+                            {
+                                if (!_tcscmp(szSubValueName, _T("command")))
+                                {
+                                    GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
+                                    item.pszText = Data;
+                                    item.iSubItem = 1;
+                                    SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);	
+                                }
+                                else if (!_tcscmp(szSubValueName, _T("key")) || !_tcscmp(szSubValueName, _T("location")))
+                                {
+                                    GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
+                                    item.pszText = Data;
+                                    item.iSubItem = 2;
+                                    SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                                }
+                                else if (!_tcscmp(szSubValueName, _T("item")))
+                                {
+                                    GetLongPathName(Data, Data, (DWORD) _tcsclen(Data));
+                                    item.pszText = Data;
+                                    item.iSubItem = 0;
+                                    SendMessage(hStartupListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
+                                }
+                            }
+                        }
+                    }
+                }
+                RegCloseKey(hSubKey);
+                HeapFree(GetProcessHeap(), 0, Data);
+            }
+        }
+    RegCloseKey(hKey);
+    }
 }
 
 void
@@ -100,6 +181,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                     item.iItem = ListView_GetItemCount(hStartupListCtrl);
                     item.lParam = 0;
                     (void)ListView_InsertItem(hStartupListCtrl, &item);
+					ListView_SetCheckState(hStartupListCtrl, item.iItem, TRUE);
 
                     if (dwType == REG_SZ)
                     {
