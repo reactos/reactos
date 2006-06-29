@@ -16,4 +16,5 @@
 	<file>layout.c</file>
 	<file>colors.c</file>
 	<file>console.rc</file>
+	<pch>console.h</pch>
 </module>

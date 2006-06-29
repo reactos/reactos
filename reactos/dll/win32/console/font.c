@@ -8,13 +8,7 @@
  */
 
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include "resource.h"
-
+#include "console.h"
 
 INT_PTR 
 CALLBACK

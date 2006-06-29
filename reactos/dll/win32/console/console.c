@@ -7,11 +7,6 @@
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-
-#include "resource.h"
 #include "console.h"
 
 #define NUM_APPLETS	(1)
