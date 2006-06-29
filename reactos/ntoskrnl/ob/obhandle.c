@@ -728,12 +728,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
             ObjectHeader->PointerCount);
 
     /* Check if the types match */
-    if ((Type) && (ObjectType != Type))
-    {
-        /* They don't; fail */
-        DPRINT1("Type mismatch: %wZ, %wZ\n", &ObjectType->Name, &Type->Name);
-        return STATUS_OBJECT_TYPE_MISMATCH;
-    }
+    if ((Type) && (ObjectType != Type)) return STATUS_OBJECT_TYPE_MISMATCH;
 
     /* Check if this is a kernel handle */
     if ((HandleAttributes & OBJ_KERNEL_HANDLE) && (AccessMode == KernelMode))

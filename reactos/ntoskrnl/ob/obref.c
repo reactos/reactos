@@ -122,7 +122,6 @@ ObfDereferenceObject(IN PVOID Object)
                      Header->NextToFree);
 
             /* Queue the work item */
-            KeBugCheck(0);
             ExQueueWorkItem(&ObpReaperWorkItem, DelayedWorkQueue);
         }
     }

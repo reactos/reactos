@@ -163,7 +163,7 @@ ObpReapObject(IN PVOID Parameter)
     PVOID NextObject;
 
     /* Start reaping */
-    while((ReapObject = InterlockedExchangePointer(&ObpReaperList, NULL)))
+    while ((ReapObject = InterlockedExchangePointer(&ObpReaperList, NULL)))
     {
         /* Start deletion loop */
         do
@@ -176,7 +176,7 @@ ObpReapObject(IN PVOID Parameter)
 
             /* Move to the next one */
             ReapObject = NextObject;
-        } while(NextObject != NULL);
+        } while (NextObject);
     }
 }
 
@@ -266,7 +266,6 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                 (StringLength == (MAXUSHORT - sizeof(UNICODE_NULL) + 1)))
             {
                 /* PS: Please keep the checks above expanded for clarity */
-                DPRINT1("Invalid String Length\n");
                 Status = STATUS_OBJECT_NAME_INVALID;
             }
             else
@@ -305,7 +304,6 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                 else
                 {
                     /* Fail */
-                    DPRINT1("Out of Memory!\n");
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                 }
             }
@@ -523,7 +521,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     }
 
     /* Initialize the Object Name Info */
-    if (HasNameInfo) 
+    if (HasNameInfo)
     {
         NameInfo = (POBJECT_HEADER_NAME_INFO)Header;
         NameInfo->Name = *ObjectName;
@@ -757,8 +755,17 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
                                sizeof(OBJECT_TYPE) + sizeof(OBJECT_HEADER),
                                KernelMode,
                                (POBJECT_HEADER*)&Header);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Free the name and fail */
+        ExFreePool(ObjectName.Buffer);
+        return Status;
+    }
+
+    /* Setup the flags and name */
     LocalObjectType = (POBJECT_TYPE)&Header->Body;
+    LocalObjectType->Name = ObjectName;
+    Header->Flags |= OB_FLAG_KERNEL_MODE | OB_FLAG_PERMANENT;
 
     /* Check if this is the first Object Type */
     if (!ObTypeObjectType)
@@ -778,13 +785,9 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         LocalObjectType->Key = *(PULONG)Tag;
     }
 
-    /* Set it up */
+    /* Set up the type information */
     LocalObjectType->TypeInfo = *ObjectTypeInitializer;
-    LocalObjectType->Name = *TypeName;
     LocalObjectType->TypeInfo.PoolType = ObjectTypeInitializer->PoolType;
-
-    /* These two flags need to be manually set up */
-    Header->Flags |= OB_FLAG_KERNEL_MODE | OB_FLAG_PERMANENT;
 
     /* Check if we have to maintain a type list */
     if (NtGlobalFlag & FLG_MAINTAIN_OBJECT_TYPELIST)

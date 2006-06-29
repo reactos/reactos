@@ -151,9 +151,10 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         }
 
         /* Get a pointer to it */
-        if (!(HandleEntry = ExMapHandleToPointer(HandleTable, Handles[i])))
+        HandleEntry = ExMapHandleToPointer(HandleTable, Handles[i]);
+        if (!HandleEntry)
         {
-            DPRINT1("Invalid handle\n");
+            /* Fail, handle is invalid */
             Status = STATUS_INVALID_HANDLE;
             goto Quickie;
         }
