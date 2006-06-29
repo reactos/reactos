@@ -1274,6 +1274,32 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 		if ( varNameLen )
 			*varNameLen = 2;
 		return ret;
+   
+    case _T('*'):
+        if(bc == NULL)
+        {
+            //
+            // No batch file to see here, move along
+            //
+            if ( !GrowIfNecessary ( 3, &ret, &retlen ) )
+                return NULL;
+            ret[0] = _T('%');
+            ret[1] = _T('*');
+            ret[2] = 0;
+            if ( varNameLen )
+                *varNameLen = 2;
+            return ret;
+        }
+
+        //
+        // Copy over the raw params(not including the batch file name
+        //
+        if ( !GrowIfNecessary ( _tcslen(bc->raw_params)+1, &ret, &retlen ) )
+            return NULL;
+        if ( varNameLen )
+            *varNameLen = 2;
+        _tcscpy ( ret, bc->raw_params );
+        return ret;
 
 	case _T('%'):
 		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )

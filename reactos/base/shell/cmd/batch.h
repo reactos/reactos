@@ -15,6 +15,7 @@ typedef struct tagBATCHCONTEXT
 	HANDLE hBatchFile;
 	LPTSTR forproto;
 	LPTSTR params;
+    LPTSTR raw_params;  /* Holds the raw params given by the input */
 	INT    shiftlevel;
 	BOOL   bEcho;        /* Preserve echo flag across batch calls */
 	HANDLE hFind;        /* Preserve find handle when doing a for */
