@@ -90,27 +90,18 @@ ObfDereferenceObject(IN PVOID Object)
 
     if (Header->PointerCount <= Header->HandleCount)
     {
-        if (!wcscmp(Header->Type->Name.Buffer, L"Event"))
-        {
-            //KEBUGCHECK(0);
-        }
         DPRINT1("Misbehaving object: %wZ\n", &Header->Type->Name);
+        return;
     }
 
     /* Check whether the object can now be deleted. */
     if (!(InterlockedDecrement(&Header->PointerCount)))
     {
         /* Sanity check */
-        if (wcscmp(Header->Type->Name.Buffer, L"Key"))
+        if(Header->HandleCount)
         {
-            if(Header->HandleCount)
-            {
-                DPRINT1("Unexpected misbehaving object: %wZ\n", &Header->Type->Name);
-            }
-        }
-        else
-        {
-            DPRINT1("Cm needs fixing!\n");
+            DPRINT1("Misbehaving object: %wZ\n", &Header->Type->Name);
+            return;
         }
 
         /* Check if we're at PASSIVE */

@@ -242,7 +242,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         //
         // WE DONT CLOSE REGISTRY HANDLES BECAUSE CM IS BRAINDEAD
         //
-        DPRINT("NOT CLOSING THE KEY\n");
+        DPRINT1("NOT CLOSING THE KEY\n");
     }
     else
     {
