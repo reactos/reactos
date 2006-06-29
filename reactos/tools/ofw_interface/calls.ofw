@@ -14,12 +14,12 @@ seek			2	1	int int int
 claim			3	1	int int int int
 # release (virt size --)
 release			2	0	int int
-# map (plo phi virt size mode --)
-map			5	0	int int int int int
-unmap			2	0	int int
-modify			3	0	int int int
-translate		4	1	int int int int int
+# Declare the call-method BE function
++call-method		0	0	
 # Convenience functions that interact closely with OFW (written in BE asm)
 -dumpregs		0	0
 -print_string		1	0	char*
 -print_number		1	0	int
+# MMU Methods
+@phys2virt!translate	4	1	int int int int&0 int
+@virt2phys!translate	2	1	int int&1 int

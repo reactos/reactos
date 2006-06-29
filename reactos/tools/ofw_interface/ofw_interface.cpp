@@ -7,12 +7,55 @@
 
 class ofw_wrappers {
 public:
-    int base, ctindex;
+    int base, ctindex, method_ctindex;
     std::string functions;
     std::string names;
     std::string calltable;
     std::string le_stubs;
     std::string of_call;
+};
+
+class vartype {
+public:
+    vartype( const std::string &typestr ) {
+	size_t amp = typestr.find('&');
+	size_t col = typestr.find(':');
+	if( amp != std::string::npos ) {
+	    if( col > amp && col != std::string::npos )
+		lit_value = typestr.substr(amp+1,col-amp+1);
+	    else lit_value = typestr.substr(amp+1);
+	}
+	if( col != std::string::npos ) {
+	    if( amp > col && amp != std::string::npos ) 
+		len = typestr.substr(col+1,amp-col+1);
+	    else len = typestr.substr(col+1);
+	}
+
+	if( amp != std::string::npos && amp < col ) col = amp;
+	if( col == std::string::npos ) col = typestr.size();
+	c_type = typestr.substr(0,col);
+    }
+
+    vartype( const vartype &other ) 
+	: c_type(other.c_type),
+	  len(other.len),
+	  lit_value(other.lit_value) {
+    }
+
+    vartype &operator = ( const vartype &other ) {
+	c_type = other.c_type;
+	len = other.len;
+	lit_value = other.lit_value;
+	return *this;
+    }
+
+    bool need_swap() const {
+	return c_type.find('*') != std::string::npos;
+    }
+
+    std::string c_type;
+    std::string len;
+    std::string lit_value;
 };
 
 std::string uppercase( const std::string &toucase ) {
@@ -37,45 +80,57 @@ int round_up( int x, int factor ) {
     return (x + (factor - 1)) & ~(factor - 1);
 }
 
-std::string c_type( const std::string &intype ) {
-    size_t colon = intype.find(':');
-    if( colon != std::string::npos ) return intype.substr(0,colon);
-    else if( intype.size() ) return intype;
-    else return "void";
-}
-
-std::string have_len( const std::string &intype ) {
-    size_t colon = intype.find(':');
-    if( colon != std::string::npos ) return intype.substr(colon+1);
-    else return "";
-}
-
-bool need_swap( const std::string &intype ) {
-    return intype.find('*') != std::string::npos;
-}
-
 void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
     std::istringstream iss(line);
-    bool make_function = true;
-    std::string name, argtype, rettype, c_rettype;
-    std::vector<std::string> argtypes;
-    int args, rets, i, local_offset, total_stack;
+    bool make_function = true, method_call = false, make_stub = true, comma;
+    std::string name, nametext, argtype, rettype;
+    std::vector<vartype> argtypes;
+    int args, rets, i, local_offset, total_stack, userarg_start = 0;
+    size_t f;
     std::ostringstream function, ct_csource, le_stub, of_call;
 
     iss >> name >> args >> rets;
 
     if( !name.size() ) return;
+
+    if( (f = name.find('!')) != std::string::npos ) {
+	nametext = name.substr(f+1);
+	name = name.substr(0,f);
+    }
     if( name[0] == '-' ) {
 	name = name.substr(1);
 	make_function = false;
     }
+    if( name[0] == '+' ) {
+	name = name.substr(1);
+	make_stub = false;
+    }
+    if( name[0] == '@' ) {
+	name = name.substr(1);
+	method_call = true;
+	make_function = false;
+    }
+
+    if( !nametext.size() ) nametext = name;
+
+    for( i = 1; i < (int)name.size(); i++ )
+	if( name[i] == '-' ) name[i] = '_';
+
+    if( nametext == "call-method" ) 
+	wrapper.method_ctindex = wrapper.ctindex;
 
     for( i = 0; i < args; i++ ) {
         iss >> argtype;
-	argtypes.push_back(argtype);
+	argtypes.push_back(vartype(argtype));
+    }
+
+    if( method_call ) {
+	userarg_start = 1;
+	args += 2;
     }
 
     iss >> rettype;
+    if( !rettype.size() ) rettype = "void";
 
     local_offset = (3 + rets + args) * 4;
     total_stack = round_up(12 + local_offset, 16);
@@ -118,25 +173,42 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
 	     << "\taddi %r1,%r1," << total_stack << "\n"
 	     << "\tblr\n";
 
-    c_rettype = c_type(rettype);
+    if( method_call ) {
+	argtypes.insert(argtypes.begin(),vartype("int"));
+	argtypes.insert(argtypes.begin(),vartype("char*"));
+    }
 
-    le_stub << c_rettype << " ofw_" << name << "(";
-    for( i = 0; i < args; i++ ) {
-	if( i ) le_stub << ",";
-	le_stub << c_type(argtypes[i]) << " arg" << i;
+    le_stub << rettype << " ofw_" << name << "(";
+
+    comma = false;
+    for( i = userarg_start; i < args; i++ ) {
+	if( !argtypes[i].lit_value.size() ) {
+	    if( !comma ) comma = true; else le_stub << ",";
+	    le_stub << argtypes[i].c_type << " arg" << i;
+	}
     }
     le_stub << ")";
     of_call << le_stub.str() << ";\n";
 
     le_stub << " {\n";
-    if( c_rettype != "void" ) 
-	le_stub << "\t" << c_rettype << " ret;\n";
+    if( rettype != "void" ) 
+	le_stub << "\t" << rettype << " ret;\n";
+
+    if( method_call ) {
+	le_stub << "\tchar arg0[" 
+		<< round_up(nametext.size()+1,8) 
+		<< "] = \"" << nametext << "\";\n";
+    }
 
     for( i = 0; i < args; i++ ) {
-	if( need_swap(argtypes[i]) ) {
+	if( argtypes[i].lit_value.size() ) {
+	    le_stub << "\t" << argtypes[i].c_type << " arg" << i << " = " 
+		    << argtypes[i].lit_value << ";\n";
+	}
+	if( argtypes[i].need_swap() ) {
 	    le_stub << "\tint len" << i << " = ";
-	    if( have_len(argtypes[i]).size() ) 
-		le_stub << have_len(argtypes[i]) << ";\n";
+	    if( argtypes[i].len.size() ) 
+		le_stub << argtypes[i].len << ";\n";
 	    else {
 		le_stub << "strlen(arg" << i << ");\n";
 	    }
@@ -148,11 +220,12 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
     }
 
     le_stub << "\t";
-    if( c_rettype != "void" ) le_stub << "ret = (" << c_rettype << ")";
+    if( rettype != "void" ) le_stub << "ret = (" << rettype << ")";
 
-    le_stub << "ofproxy(" << (wrapper.ctindex * 4);
+    le_stub << "ofproxy(" << 
+	(method_call ? (wrapper.method_ctindex * 4) : (wrapper.ctindex * 4));
     
-    for( i = 0; i < 5; i++ ) {
+    for( i = 0; i < 6; i++ ) {
 	if( i < args ) le_stub << ",(void *)arg" << i;
 	else le_stub << ",NULL";
     }
@@ -160,7 +233,7 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
     le_stub << ");\n";
 
     for( i = args-1; i >= 0; i-- ) {
-	if( need_swap(argtypes[i]) ) {
+	if( argtypes[i].need_swap() ) {
 	    le_stub << "\tle_swap("
 		    << "arg" << i << "," 
 		    << "arg" << i << "+len" << i << ","
@@ -168,17 +241,21 @@ void populate_definition( ofw_wrappers &wrapper, const std::string &line ) {
 	}
     }
 
-    if( c_rettype != "void" ) 
+    if( rettype != "void" ) 
 	le_stub << "\treturn ret;\n";
 
     le_stub << "}\n";
 
     if( make_function ) wrapper.functions += function.str();
-    wrapper.le_stubs += le_stub.str();
-    wrapper.of_call += of_call.str();
-    wrapper.names += name + "_ofw_name:\n\t.asciz \"" + name + "\"\n";
-    wrapper.calltable += std::string("\t.long ofw_") + name + "\n";
-    wrapper.ctindex++;
+    if( make_stub ) {
+	wrapper.le_stubs += le_stub.str();
+	wrapper.of_call += of_call.str();
+    }
+    if( !method_call ) {
+	wrapper.names += name + "_ofw_name:\n\t.asciz \"" + nametext + "\"\n";
+	wrapper.calltable += std::string("\t.long ofw_") + name + "\n";
+	wrapper.ctindex++;
+    }
 }
 
 int main( int argc, char **argv ) {
@@ -239,7 +316,7 @@ int main( int argc, char **argv ) {
 	<< "\t.long 0\n"
 	<< "\n/* Function Wrappers */\n\n"
 	<< wrappers.functions
-	<< "\t/* Function Names */\n\n"
+	<< "\n/* Function Names */\n\n"
 	<< wrappers.names
 	<< "\n/* Function Call Table for Freeldr */\n\n"
 	<< "ofw_functions:\n"
