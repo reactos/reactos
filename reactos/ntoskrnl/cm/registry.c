@@ -36,6 +36,7 @@ ERESOURCE CmiRegistryLock;
 
 KTIMER CmiWorkerTimer;
 LIST_ENTRY CmiKeyObjectListHead;
+LIST_ENTRY CmiConnectedHiveList;
 ULONG CmiTimer = 0;
 
 volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
@@ -385,6 +386,7 @@ CmInitializeRegistry(VOID)
 
   /* Initialize the key object list */
   InitializeListHead(&CmiKeyObjectListHead);
+  InitializeListHead(&CmiConnectedHiveList);
 
   /* Initialize the worker timer */
   KeInitializeTimerEx(&CmiWorkerTimer, SynchronizationTimer);
@@ -694,92 +696,94 @@ CmiCreateCurrentControlSetLink(VOID)
   return Status;
 }
 
-
 NTSTATUS
 CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	       IN PREGISTRY_HIVE RegistryHive)
 {
-  UNICODE_STRING RemainingPath;
-  PKEY_OBJECT ParentKey;
-  PKEY_OBJECT NewKey;
-  NTSTATUS Status;
-  PWSTR SubName;
-  UNICODE_STRING ObjectName;
-  OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    UNICODE_STRING RemainingPath;
+    PKEY_OBJECT ParentKey;
+    PKEY_OBJECT NewKey;
+    NTSTATUS Status;
+    PWSTR SubName;
+    UNICODE_STRING ObjectName;
+    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
 
-  DPRINT("CmiConnectHive(%p, %p) called.\n",
-	 KeyObjectAttributes, RegistryHive);
-     
-   /* Capture all the info */
-   DPRINT("Capturing Create Info\n");
-   Status = ObpCaptureObjectAttributes(KeyObjectAttributes,
-                                       KernelMode,
-                                       FALSE,
-                                       &ObjectCreateInfo,
-                                       &ObjectName);
-   if (!NT_SUCCESS(Status))
-     {
+    DPRINT("CmiConnectHive(%p, %p) called.\n",
+	   KeyObjectAttributes, RegistryHive);
+
+    /* Capture all the info */
+    DPRINT("Capturing Create Info\n");
+    Status = ObpCaptureObjectAttributes(KeyObjectAttributes,
+					KernelMode,
+					FALSE,
+					&ObjectCreateInfo,
+					&ObjectName);
+
+    if (!NT_SUCCESS(Status))
+      {
 	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
 	return Status;
-     }
+      }
 
-  Status = CmFindObject(&ObjectCreateInfo,
-                        &ObjectName,
-			            (PVOID*)&ParentKey,
-                        &RemainingPath,
-                        CmiKeyType,
-                        NULL,
-                        NULL);
-     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-   if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-  DPRINT ("RemainingPath %wZ\n", &RemainingPath);
-
-  if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] == 0))
-    {
-      ObDereferenceObject (ParentKey);
-      RtlFreeUnicodeString(&RemainingPath);
-      return STATUS_OBJECT_NAME_COLLISION;
-    }
-
-  /* Ignore leading backslash */
-  SubName = RemainingPath.Buffer;
-  if (*SubName == L'\\')
-    SubName++;
-
-  /* If RemainingPath contains \ we must return error
-     because CmiConnectHive() can not create trees */
-  if (wcschr (SubName, L'\\') != NULL)
-    {
-      ObDereferenceObject (ParentKey);
-      RtlFreeUnicodeString(&RemainingPath);
-      return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
-  DPRINT("RemainingPath %wZ  ParentKey %p\n",
-	 &RemainingPath, ParentKey);
-
-  Status = ObCreateObject(KernelMode,
+    Status = CmFindObject(&ObjectCreateInfo,
+			  &ObjectName,
+			  (PVOID*)&ParentKey,
+			  &RemainingPath,
 			  CmiKeyType,
 			  NULL,
-			  KernelMode,
-			  NULL,
-			  sizeof(KEY_OBJECT),
-			  0,
-			  0,
-			  (PVOID*)&NewKey);
-                            
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
-      ObDereferenceObject (ParentKey);
-      RtlFreeUnicodeString(&RemainingPath);
-      return Status;
-    }
+			  NULL);
+    /* Yields a new reference */
+    ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+
+    if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    if (!NT_SUCCESS(Status))
+      {
+	return Status;
+      }
+
+    DPRINT ("RemainingPath %wZ\n", &RemainingPath);
+
+    if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] == 0))
+      {
+	ObDereferenceObject (ParentKey);
+	RtlFreeUnicodeString(&RemainingPath);
+	return STATUS_OBJECT_NAME_COLLISION;
+      }
+
+    /* Ignore leading backslash */
+    SubName = RemainingPath.Buffer;
+    if (*SubName == L'\\')
+	SubName++;
+
+    /* If RemainingPath contains \ we must return error
+       because CmiConnectHive() can not create trees */
+    if (wcschr (SubName, L'\\') != NULL)
+      {
+	ObDereferenceObject (ParentKey);
+	RtlFreeUnicodeString(&RemainingPath);
+	return STATUS_OBJECT_NAME_NOT_FOUND;
+      }
+
+    DPRINT("RemainingPath %wZ  ParentKey %p\n",
+	   &RemainingPath, ParentKey);
+
+    Status = ObCreateObject(KernelMode,
+			    CmiKeyType,
+			    NULL,
+			    KernelMode,
+			    NULL,
+			    sizeof(KEY_OBJECT),
+			    0,
+			    0,
+			    (PVOID*)&NewKey);
+        
+    if (!NT_SUCCESS(Status))
+      {
+	DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
+	ObDereferenceObject (ParentKey);
+	RtlFreeUnicodeString(&RemainingPath);
+	return Status;
+      }
     DPRINT("Inserting Key into Object Tree\n");
     Status =  ObInsertObject((PVOID)NewKey,
                              NULL,
@@ -787,56 +791,42 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                              0,
                              NULL,
                              NULL);
-DPRINT("Status %x\n", Status);
-  NewKey->RegistryHive = RegistryHive;
-  NewKey->KeyCellOffset = RegistryHive->HiveHeader->RootKeyOffset;
-  NewKey->KeyCell = CmiGetCell (RegistryHive, NewKey->KeyCellOffset, NULL);
-  NewKey->Flags = 0;
-  NewKey->NumberOfSubKeys = 0;
-  InsertTailList(&CmiKeyObjectListHead, &NewKey->ListEntry);
-  if (NewKey->KeyCell->NumberOfSubKeys != 0)
-    {
-      NewKey->SubKeys = ExAllocatePool(NonPagedPool,
-				       NewKey->KeyCell->NumberOfSubKeys * sizeof(ULONG));
-      if (NewKey->SubKeys == NULL)
-	{
-	  DPRINT("ExAllocatePool() failed\n");
-	  ObDereferenceObject (NewKey);
-	  ObDereferenceObject (ParentKey);
-	  RtlFreeUnicodeString(&RemainingPath);
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
-    }
-  else
-    {
-      NewKey->SubKeys = NULL;
-    }
+    DPRINT("Status %x\n", Status);
+    NewKey->RegistryHive = RegistryHive;
+    NewKey->KeyCellOffset = RegistryHive->HiveHeader->RootKeyOffset;
+    NewKey->KeyCell = CmiGetCell (RegistryHive, NewKey->KeyCellOffset, NULL);
+    NewKey->Flags = 0;
+    NewKey->NumberOfSubKeys = 0;
+    NewKey->SubKeys = NULL;
+    InsertTailList(&CmiKeyObjectListHead, &NewKey->ListEntry);
+    InsertTailList(&CmiConnectedHiveList, &NewKey->HiveList);
 
-  DPRINT ("SubName %S\n", SubName);
+    DPRINT ("SubName %S\n", SubName);
 
-  Status = RtlpCreateUnicodeString(&NewKey->Name,
-              SubName, NonPagedPool);
-  RtlFreeUnicodeString(&RemainingPath);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
-      if (NewKey->SubKeys != NULL)
-	{
-	  ExFreePool (NewKey->SubKeys);
-	}
-      ObDereferenceObject (NewKey);
-      ObDereferenceObject (ParentKey);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    Status = RtlpCreateUnicodeString(&NewKey->Name,
+				     SubName, NonPagedPool);
+    RtlFreeUnicodeString(&RemainingPath);
+    if (!NT_SUCCESS(Status))
+      {
+	DPRINT1("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
+	if (NewKey->SubKeys != NULL)
+	  {
+	    ExFreePool (NewKey->SubKeys);
+	  }
+	ObDereferenceObject (NewKey);
+	ObDereferenceObject (ParentKey);
+	return STATUS_INSUFFICIENT_RESOURCES;
+      }
 
-  CmiAddKeyToList (ParentKey, NewKey);
-  ObDereferenceObject (ParentKey);
+    CmiAddKeyToList (ParentKey, NewKey);
 
-  VERIFY_KEY_OBJECT(NewKey);
+    VERIFY_KEY_OBJECT(NewKey);
 
-  /* Note: Do not dereference NewKey here! */
+    /* We're holding a pointer to the parent key ..  We must keep it 
+     * referenced */
+    /* Note: Do not dereference NewKey here! */
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -845,9 +835,8 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 		   OUT PREGISTRY_HIVE *RegistryHive)
 {
   PKEY_OBJECT KeyObject;
-  PREGISTRY_HIVE Hive;
   HANDLE KeyHandle;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_OBJECT_NAME_NOT_FOUND;
   PLIST_ENTRY CurrentEntry;
   PKEY_OBJECT CurrentKey;
 
@@ -875,6 +864,7 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 				      (PVOID*)&KeyObject,
 				      NULL);
   ZwClose (KeyHandle);
+
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("ObReferenceObjectByName() failed (Status %lx)\n", Status);
@@ -882,61 +872,39 @@ CmiDisconnectHive (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     }
   DPRINT ("KeyObject %p  Hive %p\n", KeyObject, KeyObject->RegistryHive);
 
-  if (!(KeyObject->KeyCell->Flags & REG_KEY_ROOT_CELL))
-    {
-      DPRINT1 ("Key is not the Hive-Root-Key\n");
-      ObDereferenceObject (KeyObject);
-      return STATUS_INVALID_PARAMETER;
-    }
-
   /* Acquire registry lock exclusively */
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
-  CurrentEntry = CmiKeyObjectListHead.Flink;
-  while (CurrentEntry != &CmiKeyObjectListHead)
-  {
-     CurrentKey = CONTAINING_RECORD(CurrentEntry, KEY_OBJECT, ListEntry);
-     if (1 == ObGetObjectPointerCount(CurrentKey) &&
-	 !(CurrentKey->Flags & KO_MARKED_FOR_DELETE))
-     {
-        ObDereferenceObject(CurrentKey);
-        CurrentEntry = CmiKeyObjectListHead.Flink;
-     }
-     else
-     {
-        CurrentEntry = CurrentEntry->Flink;
-     }
+  /* Find out if we represent a connected hive. */
+  for( CurrentEntry = CmiConnectedHiveList.Flink;
+       CurrentEntry != &CmiConnectedHiveList;
+       CurrentEntry = CurrentEntry->Flink ) {
+      CurrentKey = CONTAINING_RECORD(CurrentEntry, KEY_OBJECT, HiveList);
+      if( CurrentKey == KeyObject ) {
+	  /* Remove the connected hive from the connected hive list */
+	  RemoveEntryList(CurrentEntry);
+	  /* found ourselves in the connected hive list */
+	  *RegistryHive = KeyObject->RegistryHive;
+	  Status = STATUS_SUCCESS;
+
+	  /* Release references captured in CmiConnectHive */
+	  ObDereferenceObject (KeyObject->ParentKey);
+	  ObDereferenceObject (KeyObject);
+	  break;
+      }
   }
-
-  if (ObGetObjectHandleCount (KeyObject) != 0 ||
-      ObGetObjectPointerCount (KeyObject) != 2)
-    {
-      DPRINT1 ("Hive is still in use (hc %d, rc %d)\n", ObGetObjectHandleCount (KeyObject), ObGetObjectPointerCount (KeyObject));
-      ObDereferenceObject (KeyObject);
-
-      /* Release registry lock */
-      ExReleaseResourceLite (&CmiRegistryLock);
-      KeLeaveCriticalRegion();
-
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  Hive = KeyObject->RegistryHive;
-
-  /* Dereference KeyObject twice to delete it */
-  ObDereferenceObject (KeyObject);
-  ObDereferenceObject (KeyObject);
-
-  *RegistryHive = Hive;
-
+  
   /* Release registry lock */
   ExReleaseResourceLite (&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
+  /* Release reference above */
+  ObDereferenceObject (KeyObject);
+
   DPRINT ("CmiDisconnectHive() done\n");
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 

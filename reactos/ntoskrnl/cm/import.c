@@ -143,6 +143,8 @@ CmImportBinaryHive (PCHAR ChunkBase,
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
+  DPRINT1("Adding new hive\n");
+
   /* Add the new hive to the hive list */
   InsertTailList(&CmiHiveListHead, &Hive->HiveList);
 
@@ -195,7 +197,6 @@ CmImportSystemHive(PCHAR ChunkBase,
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("CmiConnectHive(%wZ) failed (Status %lx)\n", &KeyName, Status);
-//      CmiRemoveRegistryHive(RegistryHive);
       return FALSE;
     }
 

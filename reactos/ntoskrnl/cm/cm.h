@@ -358,6 +358,9 @@ typedef struct _KEY_OBJECT
 
   /* Time stamp for the last access by the parse routine */
   ULONG TimeStamp;
+
+  /* List entry for connected hives */
+  LIST_ENTRY HiveList;
 } KEY_OBJECT, *PKEY_OBJECT;
 
 /* Bits 31-22 (top 10 bits) of the cell index is the directory index */
