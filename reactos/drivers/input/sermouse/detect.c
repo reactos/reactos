@@ -64,44 +64,6 @@ DeviceIoControl(
 }
 
 static NTSTATUS
-SendIrp(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN ULONG MajorFunction)
-{
-	KEVENT Event;
-	PIRP Irp;
-	IO_STATUS_BLOCK IoStatus;
-	NTSTATUS Status;
-
-	KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-	Irp = IoBuildSynchronousFsdRequest(
-		MajorFunction,
-		DeviceObject,
-		NULL,
-		0,
-		NULL,
-		&Event,
-		&IoStatus);
-	if (Irp == NULL)
-	{
-		DPRINT("IoBuildSynchronousFsdRequest() failed\n");
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
-
-	Status = IoCallDriver(DeviceObject, Irp);
-
-	if (Status == STATUS_PENDING)
-	{
-		DPRINT("Operation pending\n");
-		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-		Status = IoStatus.Status;
-	}
-
-	return Status;
-}
-
-static NTSTATUS
 ReadBytes(
 	IN PDEVICE_OBJECT LowerDevice,
 	OUT PUCHAR Buffer,
@@ -155,6 +117,7 @@ SERMOUSE_MOUSE_TYPE
 SermouseDetectLegacyDevice(
 	IN PDEVICE_OBJECT LowerDevice)
 {
+	HANDLE Handle;
 	ULONG Fcr, Mcr;
 	ULONG BaudRate;
 	ULONG Command;
@@ -170,7 +133,14 @@ SermouseDetectLegacyDevice(
 	RtlZeroMemory(Buffer, sizeof(Buffer));
 
 	/* Open port */
-	Status = SendIrp(LowerDevice, IRP_MJ_CREATE);
+	Status = ObOpenObjectByPointer(
+		LowerDevice,
+		OBJ_EXCLUSIVE | OBJ_KERNEL_HANDLE,
+		NULL,
+		0,
+		NULL,
+		KernelMode,
+		&Handle);
 	if (!NT_SUCCESS(Status)) return mtNone;
 
 	/* Reset UART */
@@ -268,7 +238,7 @@ SermouseDetectLegacyDevice(
 
 ByeBye:
 	/* Close port */
-	SendIrp(LowerDevice, IRP_MJ_CLOSE);
-	SendIrp(LowerDevice, IRP_MJ_CLEANUP);
+	if (Handle)
+		ZwClose(Handle);
 	return MouseType;
 }
