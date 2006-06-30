@@ -1,4 +1,4 @@
-/*
+ o/*
  * Copyright (C) 2005 Casper S. Hornstrup
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1517,7 +1517,7 @@ MingwModuleHandler::GenerateRunStripCode () const
 	fprintf ( fMakefile,
 	          "\t$(ECHO_STRIP)\n" );
 	fprintf ( fMakefile,
-	          "\t${strip} -sx $@\n\n" );
+	          "\t${strip} -s -x -X $@\n\n" );
     fprintf ( fMakefile,
         "endif\n" );
 }
