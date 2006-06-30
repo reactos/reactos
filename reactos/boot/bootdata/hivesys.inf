@@ -532,12 +532,20 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 
 ; Event logging service
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Description",0x00000000,"Enables event log messages issued by Windows-based programs and components to be viewed in Event Viewer. This service cannot be stopped"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Group",0x00000000,"Event log"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ImagePath",0x00020000,"%SystemRoot%\system32\eventlog.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Type",0x00010001,0x00000010
+
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","File",0x00020000,"%SystemRoot%\system32\config\AppEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","File",0x00020000,"%SystemRoot%\system32\config\SecEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","File",0x00020000,"%SystemRoot%\system32\config\SysEvent.Evt"
 
 ; DHCP client service
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Manages network configuration by registering and updating IP addresses and DNS names"
