@@ -1612,10 +1612,14 @@ ObOpenObjectByPointer(IN PVOID Object,
                       IN KPROCESSOR_MODE AccessMode,
                       OUT PHANDLE Handle)
 {
+    POBJECT_HEADER Header;
     NTSTATUS Status;
     ACCESS_STATE AccessState;
     AUX_DATA AuxData;
     PAGED_CODE();
+
+    /* Get the Header Info */
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
 
     /* Reference the object */
     Status = ObReferenceObjectByPointer(Object,
@@ -1632,7 +1636,7 @@ ObOpenObjectByPointer(IN PVOID Object,
         Status = SeCreateAccessState(&AccessState,
                                      &AuxData,
                                      DesiredAccess,
-                                     &ObjectType->TypeInfo.GenericMapping);
+                                     &Header->Type->TypeInfo.GenericMapping);
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
