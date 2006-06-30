@@ -325,22 +325,16 @@ IsDots(IN LPCTSTR str)
 	return TRUE;
 }
 
-static LPTSTR
+static LPCTSTR
 GetFileExt(IN LPTSTR FileName)
 {
-	if (FileName == 0)
+	LPCTSTR Dot;
+
+	Dot = _tcsrchr(FileName, _T('.'));
+	if (!Dot)
 		return _T("");
 
-	int i = _tcsclen(FileName);
-	while ((i >= 0) && (FileName[i] != _T('.')))
-		i--;
-
-	FileName = _tcslwr(FileName);
-
-	if (i >= 0)
-		return &FileName[i];
-	else
-		return _T("");
+	return Dot;
 }
 
 static BOOL
@@ -390,7 +384,7 @@ SearchDriverRecursive(
 		{
 			LPCTSTR pszExtension = GetFileExt(FileName);
 
-			if ((_tcscmp(pszExtension, _T(".inf")) == 0) && (_tcscmp(LastDirPath, DirPath) != 0))
+			if ((_tcsicmp(pszExtension, _T(".inf")) == 0) && (_tcscmp(LastDirPath, DirPath) != 0))
 			{
 				_tcscpy(LastDirPath, DirPath);
 
