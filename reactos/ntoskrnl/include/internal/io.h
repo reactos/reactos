@@ -63,6 +63,15 @@
         :                                               \
         FIELD_OFFSET(CM_RESOURCE_LIST, List)
 
+//
+// Determines if the IRP is Synchronous
+//
+#define IsIrpSynchronous(Irp, FileObject)               \
+    ((Irp->Flags & IRP_SYNCHRONOUS_API)  ||             \
+     (!(FileObject) ?                                   \
+        FALSE :                                         \
+        FileObject->Flags & FO_SYNCHRONOUS_IO))         \
+
 /*
  * VOID
  * IopDeviceNodeSetFlag(
