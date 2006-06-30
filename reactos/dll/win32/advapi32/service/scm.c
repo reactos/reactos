@@ -443,7 +443,7 @@ CreateServiceA(SC_HANDLE hSCManager,
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 
-            return NULL; 
+			goto cleanup; 
         }
         MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
     }
@@ -456,8 +456,7 @@ CreateServiceA(SC_HANDLE hSCManager,
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 
-            HeapFree(GetProcessHeap(), 0, lpServiceNameW);            
-            return NULL; 
+			goto cleanup; 
         }
         MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
     }
@@ -470,9 +469,7 @@ CreateServiceA(SC_HANDLE hSCManager,
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 
-            HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-            HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-            return NULL; 
+			goto cleanup; 
         }
         MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpBinaryPathNameW, len);
     }
@@ -485,10 +482,7 @@ CreateServiceA(SC_HANDLE hSCManager,
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 
-            HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-            HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-            HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-            return NULL; 
+			goto cleanup; 
         }
         MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
     }
@@ -509,11 +503,7 @@ CreateServiceA(SC_HANDLE hSCManager,
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 
-            HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-            HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-            HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-            HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
-            return NULL; 
+			goto cleanup; 
         }
         MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, lpDependenciesW, dwDependenciesLength);
     }
@@ -526,12 +516,7 @@ CreateServiceA(SC_HANDLE hSCManager,
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 
-            HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-            HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-            HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-            HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
-            HeapFree(GetProcessHeap(), 0, lpDependenciesW);
-            return NULL; 
+			goto cleanup; 
         }
         MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
     }
@@ -544,13 +529,7 @@ CreateServiceA(SC_HANDLE hSCManager,
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 
-            HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-            HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-            HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-            HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
-            HeapFree(GetProcessHeap(), 0, lpDependenciesW);
-            HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);            
-            return NULL; 
+			goto cleanup; 
         }
         MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, lpPasswordW, len);
     }
@@ -569,14 +548,35 @@ CreateServiceA(SC_HANDLE hSCManager,
                             lpServiceStartNameW,
                             lpPasswordW);
 
-
-    HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-    HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-    HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-    HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
-    HeapFree(GetProcessHeap(), 0, lpDependenciesW);
-    HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
-    HeapFree(GetProcessHeap(), 0, lpPasswordW);
+cleanup:
+    if (lpServiceNameW !=NULL) 
+	{
+		HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+	}
+    if (lpDisplayNameW != NULL)
+    {
+		HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
+    }
+	if (lpBinaryPathNameW != NULL)
+	{
+		HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+	}
+	if (lpLoadOrderGroupW != NULL)
+	{
+		HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
+	}
+	if (lpDependenciesW != NULL)
+	{
+		HeapFree(GetProcessHeap(), 0, lpDependenciesW);
+	}
+	if (lpServiceStartNameW != NULL)
+	{
+		HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
+	}
+	if (lpPasswordW != NULL)
+	{
+		HeapFree(GetProcessHeap(), 0, lpPasswordW);
+	}
 
     return RetVal;
 }
