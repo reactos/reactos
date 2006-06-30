@@ -18,8 +18,6 @@
 #undef IoCallDriver
 #undef IoCompleteRequest
 
-ULONG IopTraceLevel = IO_IRP_DEBUG;
-
 /* PRIVATE FUNCTIONS  ********************************************************/
 
 VOID
@@ -944,8 +942,8 @@ IoCancelThreadIo(IN PETHREAD Thread)
  */
 NTSTATUS
 NTAPI
-IoCallDriver(PDEVICE_OBJECT DeviceObject,
-             PIRP Irp)
+IoCallDriver(IN PDEVICE_OBJECT DeviceObject,
+             IN PIRP Irp)
 {
     /* Call fast call */
     return IofCallDriver(DeviceObject, Irp);
@@ -956,8 +954,8 @@ IoCallDriver(PDEVICE_OBJECT DeviceObject,
  */
 VOID
 NTAPI
-IoCompleteRequest(PIRP Irp,
-                  CCHAR PriorityBoost)
+IoCompleteRequest(IN PIRP Irp,
+                  IN CCHAR PriorityBoost)
 {
     /* Call the fastcall */
     IofCompleteRequest(Irp, PriorityBoost);
@@ -979,8 +977,8 @@ IoEnqueueIrp(IN PIRP Irp)
  */
 NTSTATUS
 FASTCALL
-IofCallDriver(PDEVICE_OBJECT DeviceObject,
-              PIRP Irp)
+IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
+              IN PIRP Irp)
 {
     PDRIVER_OBJECT DriverObject;
     PIO_STACK_LOCATION Param;
@@ -1262,7 +1260,7 @@ IoForwardIrpSynchronously(IN PDEVICE_OBJECT DeviceObject,
  */
 VOID
 NTAPI
-IoFreeIrp(PIRP Irp)
+IoFreeIrp(IN PIRP Irp)
 {
     PNPAGED_LOOKASIDE_LIST List;
     PP_NPAGED_LOOKASIDE_NUMBER ListType =  LookasideSmallIrpList;
@@ -1444,7 +1442,7 @@ IoMakeAssociatedIrp(IN PIRP Irp,
 
    /* Allocate the IRP */
    AssocIrp = IoAllocateIrp(StackSize, FALSE);
-   if (AssocIrp == NULL) return NULL;
+   if (!AssocIrp) return NULL;
 
    /* Set the Flags */
    AssocIrp->Flags |= IRP_ASSOCIATED_IRP;
@@ -1455,54 +1453,6 @@ IoMakeAssociatedIrp(IN PIRP Irp,
    /* Associate them */
    AssocIrp->AssociatedIrp.MasterIrp = Irp;
    return AssocIrp;
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-IoPageRead(IN PFILE_OBJECT FileObject,
-           IN PMDL Mdl,
-           IN PLARGE_INTEGER Offset,
-           IN PKEVENT Event,
-           IN PIO_STATUS_BLOCK StatusBlock)
-{
-    PIRP Irp;
-    PIO_STACK_LOCATION StackPtr;
-    PDEVICE_OBJECT DeviceObject;
-
-    /* Get the Device Object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
-
-    /* Allocate IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Get the Stack */
-    StackPtr = IoGetNextIrpStackLocation(Irp);
-
-    /* Create the IRP Settings */
-    Irp->MdlAddress = Mdl;
-    Irp->UserBuffer = MmGetMdlVirtualAddress(Mdl);
-    Irp->UserIosb = StatusBlock;
-    Irp->UserEvent = Event;
-    Irp->RequestorMode = KernelMode;
-    Irp->Flags = IRP_PAGING_IO |
-                 IRP_NOCACHE |
-                 IRP_SYNCHRONOUS_PAGING_IO |
-                 IRP_INPUT_OPERATION;
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-    /* Set the Stack Settings */
-    StackPtr->Parameters.Read.Length = MmGetMdlByteCount(Mdl);
-    StackPtr->Parameters.Read.ByteOffset = *Offset;
-    StackPtr->MajorFunction = IRP_MJ_READ;
-    StackPtr->FileObject = FileObject;
-
-    /* Call the Driver */
-    return IofCallDriver(DeviceObject, Irp);
 }
 
 /*
@@ -1571,51 +1521,6 @@ IoSetTopLevelIrp(IN PIRP Irp)
 {
     /* Set the IRP */
     PsGetCurrentThread()->TopLevelIrp = (ULONG)Irp;
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-IoSynchronousPageWrite(PFILE_OBJECT FileObject,
-                       PMDL Mdl,
-                       PLARGE_INTEGER Offset,
-                       PKEVENT Event,
-                       PIO_STATUS_BLOCK StatusBlock)
-{
-    PIRP Irp;
-    PIO_STACK_LOCATION StackPtr;
-    PDEVICE_OBJECT DeviceObject;
-
-    /* Get the Device Object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
-
-    /* Allocate IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* Get the Stack */
-    StackPtr = IoGetNextIrpStackLocation(Irp);
-
-    /* Create the IRP Settings */
-    Irp->MdlAddress = Mdl;
-    Irp->UserBuffer = MmGetMdlVirtualAddress(Mdl);
-    Irp->UserIosb = StatusBlock;
-    Irp->UserEvent = Event;
-    Irp->RequestorMode = KernelMode;
-    Irp->Flags = IRP_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_PAGING_IO;
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-    /* Set the Stack Settings */
-    StackPtr->Parameters.Write.Length = MmGetMdlByteCount(Mdl);
-    StackPtr->Parameters.Write.ByteOffset = *Offset;
-    StackPtr->MajorFunction = IRP_MJ_WRITE;
-    StackPtr->FileObject = FileObject;
-
-    /* Call the Driver */
-    return IofCallDriver(DeviceObject, Irp);
 }
 
 /* EOF */

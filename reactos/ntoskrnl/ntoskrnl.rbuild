@@ -194,7 +194,8 @@
 			<file>timer.c</file>
 			<file>vpb.c</file>
 			<file>wmi.c</file>
-		<file>file.c</file>
+		    <file>file.c</file>
+            <file>iofunc.c</file>
 	</directory>
 	<directory name="kd">
 			<directory name="wrappers">

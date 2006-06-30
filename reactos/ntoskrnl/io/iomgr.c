@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+ULONG IopTraceLevel = IO_IRP_DEBUG;
+
 /* DATA ********************************************************************/
 
 POBJECT_TYPE IoDeviceObjectType = NULL;
