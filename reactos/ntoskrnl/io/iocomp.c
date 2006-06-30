@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/event.c
- * PURPOSE:         I/O Wrappers for the Executive Event Functions
+ * FILE:            ntoskrnl/io/iocomp.c
+ * PURPOSE:         I/O Wrappers (called Completion Ports) for Kernel Queues
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Thomas Weidenmueller (w3seek@reactos.org)
  */
