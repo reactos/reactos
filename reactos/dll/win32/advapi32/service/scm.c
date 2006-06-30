@@ -432,45 +432,58 @@ CreateServiceA(SC_HANDLE hSCManager,
     LPWSTR lpPasswordW = NULL;
     DWORD dwDependenciesLength = 0;
     DWORD dwLength;
+    int len;
     LPSTR lpStr;
 
-    int len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
-    lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!lpServiceNameW)
+    if (lpServiceName)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
+        len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
+        lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpServiceNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
     }
-    MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
 
-    len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
-    lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!lpDisplayNameW)
+    if (lpDisplayName)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
+        len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
+        lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpDisplayNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
     }
-    MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
 
-    len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
-    lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!lpBinaryPathNameW)
+    if (lpBinaryPathName)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
+        len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
+        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpBinaryPathNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpBinaryPathNameW, len);
     }
-    MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpBinaryPathNameW, len);
 
-    len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
-    lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!lpLoadOrderGroupW)
+    if (lpLoadOrderGroup)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
+        len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
+        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpLoadOrderGroupW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
     }
-    MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
 
-    if (lpDependencies != NULL)
+    if (lpDependencies)
     {
         lpStr = (LPSTR)lpDependencies;
         while (*lpStr)
@@ -480,33 +493,39 @@ CreateServiceA(SC_HANDLE hSCManager,
             lpStr = lpStr + dwLength;
         }
         dwDependenciesLength++;
+
+        lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
+        if (!lpDependenciesW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, lpDependenciesW, dwDependenciesLength);
     }
 
-    lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
-    if (!lpDependenciesW)
+    if (lpServiceStartName)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
+        len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
+        lpServiceStartName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpServiceStartNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
     }
-    MultiByteToWideChar(CP_ACP, 0, lpDependencies, -1, lpDependenciesW, dwDependenciesLength);
 
-    len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
-    lpServiceStartName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!lpServiceStartNameW)
+    if (lpPassword)
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
+        len = MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, NULL, 0);
+        lpPasswordW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpPasswordW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, lpPasswordW, len);
     }
-    MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
-
-    len = MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, NULL, 0);
-    lpPasswordW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!lpPasswordW)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        goto cleanup;
-    }
-    MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, lpPasswordW, len);
 
     RetVal = CreateServiceW(hSCManager,
                             lpServiceNameW,
