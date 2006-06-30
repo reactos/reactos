@@ -33,9 +33,9 @@
 #endif
 
 //
-// FIXME: What is this?
+// Returns the type of METHOD_ used in this IOCTL
 //
-#define IO_METHOD_FROM_CTL_CODE(ctlCode)                (ctlCode&0x00000003)
+#define IO_METHOD_FROM_CTL_CODE(c)                      (c & 0x00000003)
 
 //
 // Packet Types when piggybacking on the IRP Overlay

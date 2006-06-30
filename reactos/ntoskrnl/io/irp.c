@@ -394,8 +394,8 @@ IopCompleteRequest(IN PKAPC Apc,
  */
 PIRP
 NTAPI
-IoAllocateIrp(CCHAR StackSize,
-              BOOLEAN ChargeQuota)
+IoAllocateIrp(IN CCHAR StackSize,
+              IN BOOLEAN ChargeQuota)
 {
     PIRP Irp = NULL;
     USHORT Size = IoSizeOfIrp(StackSize);
@@ -478,6 +478,11 @@ IoAllocateIrp(CCHAR StackSize,
     Irp->AllocationFlags = Flags;
 
     /* Return it */
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Allocated IRP %p with allocation flags %lx\n",
+            __FUNCTION__,
+            Irp,
+            Flags);
     return Irp;
 }
 
@@ -486,19 +491,19 @@ IoAllocateIrp(CCHAR StackSize,
  */
 PIRP
 NTAPI
-IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
-                              PDEVICE_OBJECT DeviceObject,
-                              PVOID Buffer,
-                              ULONG Length,
-                              PLARGE_INTEGER StartingOffset,
-                              PIO_STATUS_BLOCK IoStatusBlock)
+IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
+                              IN PDEVICE_OBJECT DeviceObject,
+                              IN PVOID Buffer,
+                              IN ULONG Length,
+                              IN PLARGE_INTEGER StartingOffset,
+                              IN PIO_STATUS_BLOCK IoStatusBlock)
 {
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
-    LOCK_OPERATION AccessType;
 
     /* Allocate IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE))) return Irp;
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return Irp;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -507,9 +512,10 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
     StackPtr->MajorFunction = (UCHAR)MajorFunction;
 
     /* Do not handle the following here */
-    if (MajorFunction != IRP_MJ_FLUSH_BUFFERS &&
-        MajorFunction != IRP_MJ_SHUTDOWN &&
-        MajorFunction != IRP_MJ_PNP)
+    if ((MajorFunction != IRP_MJ_FLUSH_BUFFERS) &&
+        (MajorFunction != IRP_MJ_SHUTDOWN) &&
+        (MajorFunction != IRP_MJ_PNP) &&
+        (MajorFunction != IRP_MJ_POWER))
     {
         /* Check if this is Buffered IO */
         if (DeviceObject->Flags & DO_BUFFERED_IO)
@@ -517,6 +523,12 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
             /* Allocate the System Buffer */
             Irp->AssociatedIrp.SystemBuffer =
                 ExAllocatePoolWithTag(NonPagedPool, Length, TAG_SYS_BUF);
+            if (!Irp->AssociatedIrp.SystemBuffer)
+            {
+                /* Free the IRP and fail */
+                IoFreeIrp(Irp);
+                return NULL;
+            }
 
             /* Set flags */
             Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
@@ -537,35 +549,38 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
         else if (DeviceObject->Flags & DO_DIRECT_IO)
         {
             /* Use an MDL for Direct I/O */
-            Irp->MdlAddress = MmCreateMdl(NULL, Buffer, Length);
-
-            if (MajorFunction == IRP_MJ_READ)
+            Irp->MdlAddress = IoAllocateMdl(Buffer,
+                                            Length,
+                                            FALSE,
+                                            FALSE,
+                                            NULL);
+            if (!Irp->MdlAddress)
             {
-                 AccessType = IoWriteAccess;
-            }
-            else
-            {
-                 AccessType = IoReadAccess;
+                /* Free the IRP and fail */
+                IoFreeIrp(Irp);
+                return NULL;
             }
 
             /* Probe and Lock */
             _SEH_TRY
             {
                 /* Do the probe */
-                MmProbeAndLockPages(Irp->MdlAddress, KernelMode, AccessType);
+                MmProbeAndLockPages(Irp->MdlAddress,
+                                    KernelMode,
+                                    MajorFunction == IRP_MJ_READ ?
+                                    IoWriteAccess : IoReadAccess);
             }
             _SEH_HANDLE
             {
                 /* Free the IRP and its MDL */
                 IoFreeMdl(Irp->MdlAddress);
                 IoFreeIrp(Irp);
-                /* FIXME - pass the exception to the caller? */
                 Irp = NULL;
             }
             _SEH_END;
 
-            if (!Irp)
-                return NULL;
+            /* This is how we know if we failed during the probe */
+            if (!Irp) return NULL;
         }
         else
         {
@@ -573,13 +588,16 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
             Irp->UserBuffer = Buffer;
         }
 
+        /* Check if this is a read */
         if (MajorFunction == IRP_MJ_READ)
         {
+            /* Set the parameters for a read */
             StackPtr->Parameters.Read.Length = Length;
             StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
         }
         else if (MajorFunction == IRP_MJ_WRITE)
         {
+            /* Otherwise, set write parameters */
             StackPtr->Parameters.Write.Length = Length;
             StackPtr->Parameters.Write.ByteOffset = *StartingOffset;
         }
@@ -590,6 +608,13 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
     /* Set the Status Block after all is done */
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Built IRP %p with Major, Buffer, DO %lx %p %p\n",
+            __FUNCTION__,
+            Irp,
+            MajorFunction,
+            Buffer,
+            DeviceObject);
     return Irp;
 }
 
@@ -598,23 +623,23 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
  */
 PIRP
 NTAPI
-IoBuildDeviceIoControlRequest (ULONG IoControlCode,
-                              PDEVICE_OBJECT DeviceObject,
-                              PVOID InputBuffer,
-                              ULONG InputBufferLength,
-                              PVOID OutputBuffer,
-                              ULONG OutputBufferLength,
-                              BOOLEAN InternalDeviceIoControl,
-                              PKEVENT Event,
-                              PIO_STATUS_BLOCK IoStatusBlock)
+IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
+                              IN PDEVICE_OBJECT DeviceObject,
+                              IN PVOID InputBuffer,
+                              IN ULONG InputBufferLength,
+                              IN PVOID OutputBuffer,
+                              IN ULONG OutputBufferLength,
+                              IN BOOLEAN InternalDeviceIoControl,
+                              IN PKEVENT Event,
+                              IN PIO_STATUS_BLOCK IoStatusBlock)
 {
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     ULONG BufferLength;
-    LOCK_OPERATION AccessType;
 
     /* Allocate IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE))) return Irp;
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return Irp;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -633,136 +658,132 @@ IoBuildDeviceIoControlRequest (ULONG IoControlCode,
     /* Handle the Methods */
     switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
     {
+        /* Buffered I/O */
         case METHOD_BUFFERED:
 
-        /* Select the right Buffer Length */
-        BufferLength = InputBufferLength > OutputBufferLength ?
-                       InputBufferLength : OutputBufferLength;
+            /* Select the right Buffer Length */
+            BufferLength = InputBufferLength > OutputBufferLength ?
+                           InputBufferLength : OutputBufferLength;
 
-        /* Make sure there is one */
-        if (BufferLength)
-        {
-            /* Allocate the System Buffer */
-            Irp->AssociatedIrp.SystemBuffer = 
-                ExAllocatePoolWithTag(NonPagedPool, BufferLength, TAG_SYS_BUF);
-
-            /* Fail if we couldn't */
-            if (Irp->AssociatedIrp.SystemBuffer == NULL)
+            /* Make sure there is one */
+            if (BufferLength)
             {
-                IoFreeIrp(Irp);
-                return(NULL);
-            }
+                /* Allocate the System Buffer */
+                Irp->AssociatedIrp.SystemBuffer =
+                    ExAllocatePoolWithTag(NonPagedPool,
+                                          BufferLength,
+                                          TAG_SYS_BUF);
+                if (!Irp->AssociatedIrp.SystemBuffer)
+                {
+                    /* Free the IRP and fail */
+                    IoFreeIrp(Irp);
+                    return NULL;
+                }
 
-            /* Check if we got a buffer */
+                /* Check if we got a buffer */
+                if (InputBuffer)
+                {
+                    /* Copy into the System Buffer */
+                    RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                                  InputBuffer,
+                                  InputBufferLength);
+                }
+
+                /* Write the flags */
+                Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
+                if (OutputBuffer) Irp->Flags |= IRP_INPUT_OPERATION;
+
+                /* Save the Buffer */
+                Irp->UserBuffer = OutputBuffer;
+            }
+            else
+            {
+                /* Clear the Flags and Buffer */
+                Irp->Flags = 0;
+                Irp->UserBuffer = NULL;
+            }
+            break;
+
+        /* Direct I/O */
+        case METHOD_IN_DIRECT:
+        case METHOD_OUT_DIRECT:
+
+            /* Check if we got an input buffer */
             if (InputBuffer)
             {
+                /* Allocate the System Buffer */
+                Irp->AssociatedIrp.SystemBuffer =
+                    ExAllocatePoolWithTag(NonPagedPool,
+                                          InputBufferLength,
+                                          TAG_SYS_BUF);
+                if (!Irp->AssociatedIrp.SystemBuffer)
+                {
+                    /* Free the IRP and fail */
+                    IoFreeIrp(Irp);
+                    return NULL;
+                }
+
                 /* Copy into the System Buffer */
                 RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
                               InputBuffer,
                               InputBufferLength);
+
+                /* Write the flags */
+                Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
+            }
+            else
+            {
+                Irp->Flags = 0;
             }
 
-            /* Write the flags */
-            Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
-            if (OutputBuffer) Irp->Flags |= IRP_INPUT_OPERATION;
-
-            /* Save the Buffer */
-            Irp->UserBuffer = OutputBuffer;
-        }
-        else
-        {
-            /* Clear the Flags and Buffer */
-            Irp->Flags = 0;
-            Irp->UserBuffer = NULL;
-        }
-        break;
-
-        case METHOD_IN_DIRECT:
-        case METHOD_OUT_DIRECT:
-
-        /* Check if we got an input buffer */
-        if (InputBuffer)
-        {
-            /* Allocate the System Buffer */
-            Irp->AssociatedIrp.SystemBuffer =
-                ExAllocatePoolWithTag(NonPagedPool,
-                                      InputBufferLength,
-                                      TAG_SYS_BUF);
-
-            /* Fail if we couldn't */
-            if (Irp->AssociatedIrp.SystemBuffer == NULL)
+            /* Check if we got an output buffer */
+            if (OutputBuffer)
             {
-                IoFreeIrp(Irp);
-                return(NULL);
-            }
-
-            /* Copy into the System Buffer */
-            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-                          InputBuffer,
-                          InputBufferLength);
-
-            /* Write the flags */
-            Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
-        }
-        else
-        {
-            Irp->Flags = 0;
-        }
-
-        /* Check if we got an output buffer */
-        if (OutputBuffer)
-        {
-            /* Allocate the System Buffer */
-            Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
-                                            OutputBufferLength,
-                                            FALSE,
-                                            FALSE,
-                                            Irp);
-
-            /* Fail if we couldn't */
-            if (Irp->MdlAddress == NULL)
-            {
-                IoFreeIrp(Irp);
-                return NULL;
-            }
-
-            /* Probe and Lock */
-            _SEH_TRY
-            {
-                /* Use the right Access Type */
-                if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_IN_DIRECT)
+                /* Allocate the System Buffer */
+                Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
+                                                OutputBufferLength,
+                                                FALSE,
+                                                FALSE,
+                                                Irp);
+                if (!Irp->MdlAddress)
                 {
-                    AccessType = IoReadAccess;
-                }
-                else
-                {
-                    AccessType = IoWriteAccess;
+                    /* Free the IRP and fail */
+                    IoFreeIrp(Irp);
+                    return NULL;
                 }
 
-                /* Do the probe */
-                MmProbeAndLockPages(Irp->MdlAddress, KernelMode, AccessType);
-            }
-            _SEH_HANDLE
-            {
-                /* Free the MDL and IRP */
-                IoFreeMdl(Irp->MdlAddress);
-                IoFreeIrp(Irp);
-                /* FIXME - pass the exception to the caller? */
-                Irp = NULL;
-            }
-            _SEH_END;
+                /* Probe and Lock */
+                _SEH_TRY
+                {
+                    /* Do the probe */
+                    MmProbeAndLockPages(Irp->MdlAddress,
+                                        KernelMode,
+                                        IO_METHOD_FROM_CTL_CODE(IoControlCode) ==
+                                        METHOD_IN_DIRECT ?
+                                        IoReadAccess : IoWriteAccess);
+                }
+                _SEH_HANDLE
+                {
+                    /* Free the MDL */
+                    IoFreeMdl(Irp->MdlAddress);
 
-            if (!Irp)
-                return NULL;
-        }
-        break;
+                    /* Free the input buffer and IRP */
+                    if (InputBuffer) ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+                    IoFreeIrp(Irp);
+                    Irp = NULL;
+                }
+                _SEH_END;
+
+                /* This is how we know if probing failed */
+                if (!Irp) return NULL;
+            }
+            break;
 
         case METHOD_NEITHER:
 
-        /* Just save the Buffer */
-        Irp->UserBuffer = OutputBuffer;
-        StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
-        break;
+            /* Just save the Buffer */
+            Irp->UserBuffer = OutputBuffer;
+            StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
     }
 
     /* Now write the Event and IoSB */
@@ -774,6 +795,14 @@ IoBuildDeviceIoControlRequest (ULONG IoControlCode,
     IoQueueThreadIrp(Irp);
 
     /* Return the IRP */
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Built IRP %p with IOCTL, Buffers, DO %lx %p %p %p\n",
+            __FUNCTION__,
+            Irp,
+            IoControlCode,
+            InputBuffer,
+            OutputBuffer,
+            DeviceObject);
     return Irp;
 }
 
@@ -782,13 +811,13 @@ IoBuildDeviceIoControlRequest (ULONG IoControlCode,
  */
 PIRP
 NTAPI
-IoBuildSynchronousFsdRequest(ULONG MajorFunction,
-                             PDEVICE_OBJECT DeviceObject,
-                             PVOID Buffer,
-                             ULONG Length,
-                             PLARGE_INTEGER StartingOffset,
-                             PKEVENT Event,
-                             PIO_STATUS_BLOCK IoStatusBlock)
+IoBuildSynchronousFsdRequest(IN ULONG MajorFunction,
+                             IN PDEVICE_OBJECT DeviceObject,
+                             IN PVOID Buffer,
+                             IN ULONG Length,
+                             IN PLARGE_INTEGER StartingOffset,
+                             IN PKEVENT Event,
+                             IN PIO_STATUS_BLOCK IoStatusBlock)
 {
     PIRP Irp;
 
@@ -799,6 +828,7 @@ IoBuildSynchronousFsdRequest(ULONG MajorFunction,
                                         Length,
                                         StartingOffset,
                                         IoStatusBlock );
+    if (!Irp) return NULL;
 
     /* Set the Event which makes it Syncronous */
     Irp->UserEvent = Event;
