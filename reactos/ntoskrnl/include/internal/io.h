@@ -198,6 +198,17 @@ typedef struct _IO_COMPLETION_PACKET
 } IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
 
 //
+// I/O Wrapper around the Executive Work Item
+//
+typedef struct _IO_WORKITEM
+{
+    WORK_QUEUE_ITEM Item;
+    PDEVICE_OBJECT DeviceObject;
+    PIO_WORKITEM_ROUTINE WorkerRoutine;
+    PVOID Context;
+} IO_WORKITEM, *PIO_WORKITEM;
+
+//
 // Dummy File Object used inside the Open Packet so that OB knows how to
 // deal with the Object Pointer even though it's not a real file.
 //

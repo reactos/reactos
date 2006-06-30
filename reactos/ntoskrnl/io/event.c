@@ -1,11 +1,10 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/event.c
- * PURPOSE:         Implements named events
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PURPOSE:         I/O Wrappers for the Executive Event Functions
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -13,92 +12,73 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
+
+PKEVENT
+NTAPI
+IopCreateEvent(IN PUNICODE_STRING EventName,
+               IN PHANDLE EventHandle,
+               IN EVENT_TYPE Type)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PKEVENT Event;
+    HANDLE Handle;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Initialize the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               EventName,
+                               OBJ_OPENIF,
+                               NULL,
+                               NULL);
+
+    /* Create the event */
+    Status = ZwCreateEvent(&Handle,
+                           EVENT_ALL_ACCESS,
+                           &ObjectAttributes,
+                           Type,
+                           TRUE);
+    if (!NT_SUCCESS(Status)) return NULL;
+
+    /* Get a handle to it */
+    ObReferenceObjectByHandle(Handle,
+                              0,
+                              ExEventObjectType,
+                              KernelMode,
+                              (PVOID*)&Event,
+                              NULL);
+
+    /* Dereference the extra count, and return the handle */
+    ObDereferenceObject(Event);
+    *EventHandle = Handle;
+    return Event;
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
  */
-PKEVENT STDCALL
-IoCreateNotificationEvent(PUNICODE_STRING EventName,
-			  PHANDLE EventHandle)
+PKEVENT
+NTAPI
+IoCreateNotificationEvent(IN PUNICODE_STRING EventName,
+                          IN PHANDLE EventHandle)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   PKEVENT Event;
-   HANDLE Handle;
-   NTSTATUS Status;
-
-   InitializeObjectAttributes(&ObjectAttributes,
-			      EventName,
-			      OBJ_OPENIF,
-			      NULL,
-			      NULL);
-
-   Status = ZwCreateEvent(&Handle,
-			  EVENT_ALL_ACCESS,
-			  &ObjectAttributes,
-			  NotificationEvent,
-			  TRUE);
-   if (!NT_SUCCESS(Status))
-     {
-	return NULL;
-     }
-
-   ObReferenceObjectByHandle(Handle,
-			     0,
-			     ExEventObjectType,
-			     KernelMode,
-			     (PVOID*)&Event,
-			     NULL);
-   ObDereferenceObject(Event);
-
-   *EventHandle = Handle;
-
-   return Event;
+    /* Call the internal API */
+    return IopCreateEvent(EventName, EventHandle, NotificationEvent);
 }
 
 /*
  * @implemented
  */
-PKEVENT STDCALL
-IoCreateSynchronizationEvent(PUNICODE_STRING EventName,
-			     PHANDLE EventHandle)
+PKEVENT
+NTAPI
+IoCreateSynchronizationEvent(IN PUNICODE_STRING EventName,
+                             IN PHANDLE EventHandle)
 {
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   KPROCESSOR_MODE PreviousMode;
-   PKEVENT Event;
-   HANDLE Handle;
-   NTSTATUS Status;
-
-   PreviousMode = ExGetPreviousMode();
-
-   InitializeObjectAttributes(&ObjectAttributes,
-			      EventName,
-			      OBJ_OPENIF,
-			      NULL,
-			      NULL);
-
-   Status = ZwCreateEvent(&Handle,
-			  EVENT_ALL_ACCESS,
-			  &ObjectAttributes,
-			  SynchronizationEvent,
-			  TRUE);
-
-   if (!NT_SUCCESS(Status))
-     {
-	return NULL;
-     }
-
-   ObReferenceObjectByHandle(Handle,
-			     0,
-			     ExEventObjectType,
-			     KernelMode,
-			     (PVOID*)&Event,
-			     NULL);
-   ObDereferenceObject(Event);
-
-   *EventHandle = Handle;
-
-   return Event;
+    /* Call the internal API */
+    return IopCreateEvent(EventName, EventHandle, SynchronizationEvent);
 }
 
 /* EOF */

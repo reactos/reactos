@@ -1,11 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/iowork.c
- * PURPOSE:         Manage IO system work queues
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PURPOSE:         I/O Wrappers for the Executive Work Item Functions
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Robert Dickenson (odin@pnc.com.au)
  */
 
@@ -15,80 +13,81 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* TYPES ********************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
-typedef struct _IO_WORKITEM
+VOID
+NTAPI
+IopWorkItemCallback(IN PVOID Parameter)
 {
-  WORK_QUEUE_ITEM Item;
-  PDEVICE_OBJECT  DeviceObject;
-  PIO_WORKITEM_ROUTINE WorkerRoutine;
-  PVOID           Context;
-} IO_WORKITEM;
+    PIO_WORKITEM IoWorkItem = (PIO_WORKITEM)Parameter;
+    PDEVICE_OBJECT DeviceObject = IoWorkItem->DeviceObject;
+    PAGED_CODE();
 
-/* FUNCTIONS ****************************************************************/
+    /* Call the work routine */
+    IoWorkItem->WorkerRoutine(DeviceObject, IoWorkItem->Context);
 
-VOID STATIC STDCALL
-IoWorkItemCallback(PVOID Parameter)
-{
-  PIO_WORKITEM IoWorkItem = (PIO_WORKITEM)Parameter;
-  PDEVICE_OBJECT DeviceObject = IoWorkItem->DeviceObject;
-  IoWorkItem->WorkerRoutine(IoWorkItem->DeviceObject, IoWorkItem->Context);
-  ObDereferenceObject(DeviceObject);
+    /* Dereferenece the device object */
+    ObDereferenceObject(DeviceObject);
 }
+
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 IoQueueWorkItem(IN PIO_WORKITEM IoWorkItem,
-		IN PIO_WORKITEM_ROUTINE WorkerRoutine,
-		IN WORK_QUEUE_TYPE QueueType,
-		IN PVOID Context)
-/*
- * FUNCTION: Inserts a work item in a queue for one of the system worker
- * threads to process
- * ARGUMENTS:
- *        IoWorkItem = Item to insert
- *        QueueType = Queue to insert it in
- */
+                IN PIO_WORKITEM_ROUTINE WorkerRoutine,
+                IN WORK_QUEUE_TYPE QueueType,
+                IN PVOID Context)
 {
-  ExInitializeWorkItem(&IoWorkItem->Item, IoWorkItemCallback,
-		       (PVOID)IoWorkItem);
-  IoWorkItem->WorkerRoutine = WorkerRoutine;
-  IoWorkItem->Context = Context;
-  ObReferenceObjectByPointer(IoWorkItem->DeviceObject,
-			     FILE_ALL_ACCESS,
-			     NULL,
-			     KernelMode);
-  ExQueueWorkItem(&IoWorkItem->Item, QueueType);
+    /* Make sure we're called at DISPATCH or lower */
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Reference the device object */
+    ObReferenceObject(IoWorkItem->DeviceObject);
+
+    /* Setup the work item */
+    IoWorkItem->WorkerRoutine = WorkerRoutine;
+    IoWorkItem->Context = Context;
+
+    /* Queue the work item */
+    ExQueueWorkItem(&IoWorkItem->Item, QueueType);
 }
 
 /*
  * @implemented
  */
-VOID STDCALL
-IoFreeWorkItem(PIO_WORKITEM IoWorkItem)
+VOID
+NTAPI
+IoFreeWorkItem(IN PIO_WORKITEM IoWorkItem)
 {
-  ExFreePool(IoWorkItem);
+    /* Free the work item */
+    ExFreePool(IoWorkItem);
 }
 
 /*
  * @implemented
  */
-PIO_WORKITEM STDCALL
-IoAllocateWorkItem(PDEVICE_OBJECT DeviceObject)
+PIO_WORKITEM
+NTAPI
+IoAllocateWorkItem(IN PDEVICE_OBJECT DeviceObject)
 {
-  PIO_WORKITEM IoWorkItem = NULL;
+    PIO_WORKITEM IoWorkItem;
 
-  IoWorkItem =
-    ExAllocatePoolWithTag(NonPagedPool, sizeof(IO_WORKITEM), TAG_IOWI);
-  if (IoWorkItem == NULL)
-    {
-      return(NULL);
-    }
-  RtlZeroMemory(IoWorkItem, sizeof(IO_WORKITEM));
-  IoWorkItem->DeviceObject = DeviceObject;
-  return(IoWorkItem);
+    /* Allocate the work item */
+    IoWorkItem = ExAllocatePoolWithTag(NonPagedPool,
+                                       sizeof(IO_WORKITEM),
+                                       TAG_IOWI);
+    if (!IoWorkItem) return NULL;
+
+    /* Initialize it */
+    IoWorkItem->DeviceObject = DeviceObject;
+    ExInitializeWorkItem(&IoWorkItem->Item, IopWorkItemCallback, IoWorkItem);
+
+    /* Return it */
+    return IoWorkItem;
 }
 
 /* EOF */
