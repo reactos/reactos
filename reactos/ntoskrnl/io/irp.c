@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* Undefine some macros we implement here */
+#undef IoCallDriver
+#undef IoCompleteRequest
+
 ULONG IopTraceLevel = IO_IRP_DEBUG;
 
 /* PRIVATE FUNCTIONS  ********************************************************/
@@ -843,40 +847,61 @@ IoBuildSynchronousFsdRequest(IN ULONG MajorFunction,
  */
 BOOLEAN
 NTAPI
-IoCancelIrp(PIRP Irp)
+IoCancelIrp(IN PIRP Irp)
 {
-   KIRQL oldlvl;
-   PDRIVER_CANCEL CancelRoutine;
+    KIRQL OldIrql;
+    PDRIVER_CANCEL CancelRoutine;
 
-   DPRINT("IoCancelIrp(Irp 0x%p)\n",Irp);
+    /* Acquire the cancel lock and cancel the IRP */
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Canceling IRP %p\n",
+            __FUNCTION__,
+            Irp);
 
-   IoAcquireCancelSpinLock(&oldlvl);
+    IoAcquireCancelSpinLock(&OldIrql);
+    Irp->Cancel = TRUE;
 
-   Irp->Cancel = TRUE;
+    /* Clear the cancel routine and get the old one */
+    CancelRoutine = IoSetCancelRoutine(Irp, NULL);
+    if (CancelRoutine)
+    {
+        /* We had a routine, make sure the IRP isn't completed */
+        if (Irp->CurrentLocation > (Irp->StackCount + 1))
+        {
+            /* It is, bugcheck */
+            KeBugCheckEx(CANCEL_STATE_IN_COMPLETED_IRP,
+                         (ULONG_PTR)Irp,
+                         0,
+                         0,
+                         0);
+        }
 
-   CancelRoutine = IoSetCancelRoutine(Irp, NULL);
-   if (CancelRoutine == NULL)
-   {
-      IoReleaseCancelSpinLock(oldlvl);
-      return(FALSE);
-   }
+        /* Set the cancel IRQL And call the routine */
+        Irp->CancelIrql = OldIrql;
+        CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
+        return TRUE;
+    }
 
-   Irp->CancelIrql = oldlvl;
-   CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
-   return(TRUE);
+    /* Otherwise, release the cancel lock and fail */
+    IoReleaseCancelSpinLock(OldIrql);
+    return FALSE;
 }
 
 /*
- * @name IoCancelThreadIo
+ * @implemented
  */
 VOID
 NTAPI
-IoCancelThreadIo(PETHREAD Thread)
+IoCancelThreadIo(IN PETHREAD Thread)
 {
     PIRP Irp;
     KIRQL OldIrql;
     ULONG Retries = 3000;
     LARGE_INTEGER Interval;
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Canceling IRPs for Thread %p\n",
+            __FUNCTION__,
+            Thread);
 
     /* Raise to APC to protect the IrpList */
     OldIrql = KfRaiseIrql(APC_LEVEL);
@@ -904,19 +929,16 @@ IoCancelThreadIo(PETHREAD Thread)
          * Don't stay here forever if some broken driver doesn't complete
          * the IRP.
          */
-        if (Retries-- == 0) IopRemoveThreadIrp();
+        if (!(Retries--)) IopRemoveThreadIrp();
 
         /* Raise the IRQL Again */
         OldIrql = KfRaiseIrql(APC_LEVEL);
     }
-    
+
     /* We're done, lower the IRQL */
     KfLowerIrql(OldIrql);
 }
 
-#ifdef IoCallDriver
-#undef IoCallDriver
-#endif
 /*
  * @implemented
  */
@@ -932,7 +954,6 @@ IoCallDriver(PDEVICE_OBJECT DeviceObject,
 /*
  * @implemented
  */
-#undef IoCompleteRequest
 VOID
 NTAPI
 IoCompleteRequest(PIRP Irp,
@@ -949,6 +970,7 @@ VOID
 NTAPI
 IoEnqueueIrp(IN PIRP Irp)
 {
+    /* This is the same as calling IoQueueThreadIrp */
     IoQueueThreadIrp(Irp);
 }
 
@@ -966,11 +988,17 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
     /* Get the Driver Object */
     DriverObject = DeviceObject->DriverObject;
 
-    /* Set the Stack Location */
-    IoSetNextIrpStackLocation(Irp);
+    /* Decrease the current location and check if */
+    Irp->CurrentLocation--;
+    if (Irp->CurrentLocation <= 0)
+    {
+        /* This IRP ran out of stack, bugcheck */
+        KeBugCheckEx(NO_MORE_IRP_STACK_LOCATIONS, (ULONG_PTR)Irp, 0, 0, 0);
+    }
 
-    /* Get the current one */
-    Param = IoGetCurrentIrpStackLocation(Irp);
+    /* Now update the stack location */
+    Param = IoGetNextIrpStackLocation(Irp);
+    Irp->Tail.Overlay.CurrentStackLocation = Param;
 
     /* Get the Device Object */
     Param->DeviceObject = DeviceObject;
@@ -980,9 +1008,6 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
                                                              Irp);
 }
 
-#ifdef IoCompleteRequest
-#undef IoCompleteRequest
-#endif
 /*
  * @implemented
  */
@@ -1242,7 +1267,15 @@ IoFreeIrp(PIRP Irp)
     PNPAGED_LOOKASIDE_LIST List;
     PP_NPAGED_LOOKASIDE_NUMBER ListType =  LookasideSmallIrpList;
     PKPRCB Prcb;
-    
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Freeing IRPs %p\n",
+            __FUNCTION__,
+            Irp);
+
+    /* Make sure the Thread IRP list is empty and that it OK to free it */
+    ASSERT(IsListEmpty(&Irp->ThreadListEntry));
+    ASSERT(Irp->CurrentLocation >= Irp->StackCount);
+
     /* If this was a pool alloc, free it with the pool */
     if (!(Irp->AllocationFlags & IRP_ALLOCATED_FIXED_SIZE))
     {
@@ -1252,10 +1285,7 @@ IoFreeIrp(PIRP Irp)
     else
     {
         /* Check if this was a Big IRP */
-        if (Irp->StackCount != 1)
-        {
-            ListType = LookasideLargeIrpList;
-        }
+        if (Irp->StackCount != 1) ListType = LookasideLargeIrpList;
 
         /* Get the PRCB */
         Prcb = KeGetCurrentPrcb();
@@ -1284,7 +1314,7 @@ IoFreeIrp(PIRP Irp)
             }
         }
 
-        /* The free was within dhe Depth */
+        /* The free was within the Depth */
         if (Irp)
         {
            InterlockedPushEntrySList(&List->L.ListHead,
