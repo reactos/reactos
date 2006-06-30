@@ -209,6 +209,27 @@ typedef struct _IO_WORKITEM
 } IO_WORKITEM, *PIO_WORKITEM;
 
 //
+// I/O Wrapper around the Kernel Interrupt
+//
+typedef struct _IO_INTERRUPT
+{
+    KINTERRUPT FirstInterrupt;
+    PKINTERRUPT Interrupt[MAXIMUM_PROCESSORS];
+    KSPIN_LOCK SpinLock;
+} IO_INTERRUPT, *PIO_INTERRUPT;
+
+//
+// To simplify matters, the kernel is made to support both the checked and free
+// version of the I/O Remove Lock in the same binary. This structure includes
+// both, since the DDK has the structure with a compile-time #ifdef.
+//
+typedef struct _EXTENDED_IO_REMOVE_LOCK
+{
+    IO_REMOVE_LOCK_COMMON_BLOCK Common;
+    IO_REMOVE_LOCK_DBG_BLOCK Dbg;
+} EXTENDED_IO_REMOVE_LOCK, *PEXTENDED_IO_REMOVE_LOCK;
+
+//
 // Dummy File Object used inside the Open Packet so that OB knows how to
 // deal with the Object Pointer even though it's not a real file.
 //

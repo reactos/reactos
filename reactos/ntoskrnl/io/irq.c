@@ -1,11 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/irq.c
- * PURPOSE:         IRQ handling
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PURPOSE:         I/O Wrappers (called Completion Ports) for Kernel Queues
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,58 +12,24 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* TYPES ********************************************************************/
-typedef struct _IO_INTERRUPT
-{
-    KINTERRUPT FirstInterrupt;
-    PKINTERRUPT Interrupt[MAXIMUM_PROCESSORS];
-    KSPIN_LOCK SpinLock;
-} IO_INTERRUPT, *PIO_INTERRUPT;
-
 /* FUNCTIONS *****************************************************************/
 
 /*
- * FUNCTION: Registers a driver's isr to be called when its device interrupts
- * ARGUMENTS:
- *        InterruptObject (OUT) = Points to the interrupt object created on
- *                                return
- *        ServiceRoutine = Routine to be called when the device interrupts
- *        ServiceContext = Parameter to be passed to ServiceRoutine
- *        SpinLock = Initalized spinlock that will be used to synchronize
- *                   access between the isr and other driver routines. This is
- *                   required if the isr handles more than one vector or the
- *                   driver has more than one isr
- *        Vector = Interrupt vector to allocate
- *                 (returned from HalGetInterruptVector)
- *        Irql = DIRQL returned from HalGetInterruptVector
- *        SynchronizeIrql = DIRQL at which the isr will execute. This must
- *                          be the highest of all the DIRQLs returned from
- *                          HalGetInterruptVector if the driver has multiple
- *                          isrs
- *        InterruptMode = Specifies if the interrupt is LevelSensitive or
- *                        Latched
- *        ShareVector = Specifies if the vector can be shared
- *        ProcessorEnableMask = Processors on the isr can run
- *        FloatingSave = TRUE if the floating point stack should be saved when
- *                       the isr runs. Must be false for x86 drivers
- * RETURNS: Status
- * IRQL: PASSIVE_LEVEL
- *
  * @implemented
  */
-NTSTATUS 
-STDCALL
-IoConnectInterrupt(PKINTERRUPT* InterruptObject,
-                   PKSERVICE_ROUTINE ServiceRoutine,
-                   PVOID ServiceContext,
-                   PKSPIN_LOCK SpinLock,
-                   ULONG Vector,
-                   KIRQL Irql,
-                   KIRQL SynchronizeIrql,
-                   KINTERRUPT_MODE InterruptMode,
-                   BOOLEAN ShareVector,
-                   KAFFINITY ProcessorEnableMask,
-                   BOOLEAN FloatingSave)
+NTSTATUS
+NTAPI
+IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
+                   IN PKSERVICE_ROUTINE ServiceRoutine,
+                   IN PVOID ServiceContext,
+                   IN PKSPIN_LOCK SpinLock,
+                   IN ULONG Vector,
+                   IN KIRQL Irql,
+                   IN KIRQL SynchronizeIrql,
+                   IN KINTERRUPT_MODE InterruptMode,
+                   IN BOOLEAN ShareVector,
+                   IN KAFFINITY ProcessorEnableMask,
+                   IN BOOLEAN FloatingSave)
 {
     PKINTERRUPT Interrupt;
     PKINTERRUPT InterruptUsed;
@@ -74,10 +38,10 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
     BOOLEAN FirstRun = TRUE;
     ULONG count;
     LONG i;
-    
     PAGED_CODE();
 
-    DPRINT("IoConnectInterrupt(Vector %x)\n",Vector);
+    /* Assume failure */
+    *InterruptObject = NULL;
 
     /* Convert the Mask */
     ProcessorEnableMask &= ((1 << KeNumberProcessors) - 1);
@@ -90,32 +54,25 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
     {
         if (ProcessorEnableMask & (1 << i)) count++;
     }
-    
+
     /* Allocate the array of I/O Interrupts */
     IoInterrupt = ExAllocatePoolWithTag(NonPagedPool,
                                         (count - 1)* sizeof(KINTERRUPT) +
                                         sizeof(IO_INTERRUPT),
                                         TAG_KINTERRUPT);
-    if (!IoInterrupt) return(STATUS_INSUFFICIENT_RESOURCES);
+    if (!IoInterrupt) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Select which Spinlock to use */
-    if (SpinLock)
-    {
-        SpinLockUsed = SpinLock;
-    }
-    else
-    {
-        SpinLockUsed = &IoInterrupt->SpinLock;
-    }
-    
+    SpinLockUsed = SpinLock ? SpinLock : &IoInterrupt->SpinLock;
+
     /* We first start with a built-in Interrupt inside the I/O Structure */
     *InterruptObject = &IoInterrupt->FirstInterrupt;
     Interrupt = (PKINTERRUPT)(IoInterrupt + 1);
     FirstRun = TRUE;
-    
+
     /* Start with a fresh structure */
     RtlZeroMemory(IoInterrupt, sizeof(IO_INTERRUPT));
-    
+
     /* Now create all the interrupts */
     for (i = 0; i < KeNumberProcessors; i++)
     {
@@ -124,7 +81,7 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
         {
             /* Check which one we will use */
             InterruptUsed = FirstRun ? &IoInterrupt->FirstInterrupt : Interrupt;
-            
+
             /* Initialize it */
             KeInitializeInterrupt(InterruptUsed,
                                   ServiceRoutine,
@@ -137,7 +94,7 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
                                   ShareVector,
                                   i,
                                   FloatingSave);
-                                  
+
             /* Connect it */
             if (!KeConnectInterrupt(InterruptUsed))
             {
@@ -152,9 +109,11 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
                     /* Far enough, so disconnect everything */
                     IoDisconnectInterrupt(&IoInterrupt->FirstInterrupt);
                 }
+
+                /* And fail */
                 return STATUS_INVALID_PARAMETER;
             }
-            
+
             /* Now we've used up our First Run */
             if (FirstRun)
             {
@@ -173,39 +132,35 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
 }
 
 /*
- * FUNCTION: Releases a drivers isr
- * ARGUMENTS:
- *        InterruptObject = isr to release
- *
  * @implemented
  */
 VOID 
-STDCALL
+NTAPI
 IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
-
 {
     LONG i;
     PIO_INTERRUPT IoInterrupt;
-    
     PAGED_CODE();
-    
+
     /* Get the I/O Interrupt */
-    IoInterrupt = CONTAINING_RECORD(InterruptObject, 
-                                    IO_INTERRUPT, 
+    IoInterrupt = CONTAINING_RECORD(InterruptObject,
+                                    IO_INTERRUPT,
                                     FirstInterrupt);
-                                    
+
     /* Disconnect the first one */
     KeDisconnectInterrupt(&IoInterrupt->FirstInterrupt);
 
     /* Now disconnect the others */
     for (i = 0; i < KeNumberProcessors; i++)
     {
+        /* Make sure one was registered */
         if (IoInterrupt->Interrupt[i])
         {
+            /* Disconnect it */
             KeDisconnectInterrupt(&InterruptObject[i]);
         }
     }
-    
+
     /* Free the I/O Interrupt */
     ExFreePool(IoInterrupt);
 }
