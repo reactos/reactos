@@ -49,6 +49,14 @@
 #define PARTITION_TBL_SIZE                              4
 
 //
+// We can call the Ob Inlined API, it's the same thing
+//
+#define IopAllocateMdlFromLookaside                     \
+    ObpAllocateCapturedAttributes
+#define IopFreeMdlFromLookaside                         \
+    ObpFreeCapturedAttributes
+
+//
 // Returns the size of a CM_RESOURCE_LIST
 //
 #define CM_RESOURCE_LIST_SIZE(ResList)                  \
@@ -830,4 +838,4 @@ xHalIoWritePartitionTable(
 extern POBJECT_TYPE IoCompletionType;
 extern PDEVICE_NODE IopRootDeviceNode;
 extern ULONG IopTraceLevel;
-
+extern NPAGED_LOOKASIDE_LIST IopMdlLookasideList;

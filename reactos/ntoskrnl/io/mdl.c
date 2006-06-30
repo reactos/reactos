@@ -1,11 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/mdl.c
- * PURPOSE:         Io manager mdl functions
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PURPOSE:         I/O Wrappers for MDL Allocation and Deallocation
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -20,116 +18,143 @@
  * @implemented
  */
 PMDL
-STDCALL
-IoAllocateMdl(PVOID VirtualAddress,
-		   ULONG Length,
-		   BOOLEAN SecondaryBuffer,
-		   BOOLEAN ChargeQuota,
-		   PIRP Irp)
+NTAPI
+IoAllocateMdl(IN PVOID VirtualAddress,
+              IN ULONG Length,
+              IN BOOLEAN SecondaryBuffer,
+              IN BOOLEAN ChargeQuota,
+              IN PIRP Irp)
 {
-   PMDL Mdl;
+    PMDL Mdl = NULL, p;
+    ULONG Flags = 0;
+    ULONG Size;
 
-   if (ChargeQuota)
-     {
-//	Mdl = ExAllocatePoolWithQuota(NonPagedPool,
-//				      MmSizeOfMdl(VirtualAddress,Length));
-	Mdl = ExAllocatePoolWithTag(NonPagedPool,
-				    MmSizeOfMdl(VirtualAddress,Length),
-				    TAG_MDL);
-     }
-   else
-     {
-	Mdl = ExAllocatePoolWithTag(NonPagedPool,
-				    MmSizeOfMdl(VirtualAddress,Length),
-				    TAG_MDL);
-     }
-   MmInitializeMdl(Mdl, (char*)VirtualAddress, Length);
+    /* Fail if allocation is over 2GB */
+    if (Length & 0x80000000) return NULL;
 
-   if (Irp)
-   {
-      if (SecondaryBuffer)
-      {
-         ASSERT(Irp->MdlAddress);
+    /* Calculate the number of pages for the allocation */
+    Size = ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress, Length);
+    if (Size > 23)
+    {
+        /* This is bigger then our fixed-size MDLs. Calculate real size */
+        Size *= sizeof(PFN_NUMBER);
+        Size += sizeof(MDL);
+        if (Size > MAXUSHORT) return NULL;
+    }
+    else
+    {
+        /* Use an internal fixed MDL size */
+        Size = (23 * sizeof(PFN_NUMBER)) + sizeof(MDL);
+        Flags |= MDL_ALLOCATED_FIXED_SIZE;
 
-         /* FIXME: add to end of list maybe?? */
-         Mdl->Next = Irp->MdlAddress->Next;
-         Irp->MdlAddress->Next = Mdl;
+        /* Allocate one from the lookaside list */
+        Mdl = IopAllocateMdlFromLookaside(LookasideMdlList);
+    }
+
+    /* Check if we don't have an mdl yet */
+    if (!Mdl)
+    {
+        /* Allocate one from pool */
+        Mdl = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_MDL);
+        if (!Mdl) return NULL;
+    }
+
+    /* Initialize it */
+    MmInitializeMdl(Mdl, VirtualAddress, Length);
+    Mdl->MdlFlags |= Flags;
+
+    /* Check if an IRP was given too */
+    if (Irp)
+    {
+        /* Check if it came with a secondary buffer */
+        if (SecondaryBuffer)
+        {
+            /* Insert the MDL at the end */
+            p = Irp->MdlAddress;
+            while (p->Next) p = p->Next;
+            p->Next = Mdl;
       }
       else
       {
-         /*
-          * What if there's allready an mdl at Irp->MdlAddress?
-          * Is that bad and should we do something about it?
-          */
-         Irp->MdlAddress = Mdl;
+            /* Otherwise, insert it directly */
+            Irp->MdlAddress = Mdl;
       }
    }
 
-   return(Mdl);
+    /* Return the allocated mdl */
+    return Mdl;
 }
 
 /*
  * @implemented
- *
- * You must IoFreeMdl the slave before freeing the master.
- *
- * IoBuildPartialMdl is more similar to MmBuildMdlForNonPagedPool, the difference
- * is that the former takes the physical addresses from the master MDL, while the
- * latter - from the known location of the NPP.
  */
 VOID
-STDCALL
-IoBuildPartialMdl(PMDL SourceMdl,
-		       PMDL TargetMdl,
-		       PVOID VirtualAddress,
-		       ULONG Length)
+NTAPI
+IoBuildPartialMdl(IN PMDL SourceMdl,
+                  IN PMDL TargetMdl,
+                  IN PVOID VirtualAddress,
+                  IN ULONG Length)
 {
-   PPFN_TYPE TargetPages = (PPFN_TYPE)(TargetMdl + 1);
-   PPFN_TYPE SourcePages = (PPFN_TYPE)(SourceMdl + 1);
-   ULONG Count;
-   ULONG Delta;
+    PPFN_TYPE TargetPages = (PPFN_TYPE)(TargetMdl + 1);
+    PPFN_TYPE SourcePages = (PPFN_TYPE)(SourceMdl + 1);
+    ULONG Offset;
 
-   DPRINT("VirtualAddress 0x%p, SourceMdl->StartVa 0x%p, SourceMdl->MappedSystemVa 0x%p\n",
-          VirtualAddress, SourceMdl->StartVa, SourceMdl->MappedSystemVa);
+    /* Calculate the offset */
+    Offset = (ULONG)((ULONG_PTR)VirtualAddress -
+                     (ULONG_PTR)SourceMdl->StartVa) -
+                     SourceMdl->ByteOffset;
 
-   TargetMdl->StartVa = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);
-   TargetMdl->ByteOffset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)TargetMdl->StartVa;
-   TargetMdl->ByteCount = Length;
-   TargetMdl->Process = SourceMdl->Process;
-   Delta = (ULONG_PTR)VirtualAddress - ((ULONG_PTR)SourceMdl->StartVa + SourceMdl->ByteOffset);
-   TargetMdl->MappedSystemVa = (char*)SourceMdl->MappedSystemVa + Delta;
+    /* Check if we don't have a length and calculate it */
+    if (!Length) Length = SourceMdl->ByteCount - Offset;
 
-   TargetMdl->MdlFlags = SourceMdl->MdlFlags & (MDL_IO_PAGE_READ|MDL_SOURCE_IS_NONPAGED_POOL|MDL_MAPPED_TO_SYSTEM_VA);
-   TargetMdl->MdlFlags |= MDL_PARTIAL;
+    /* Write the process, start VA and byte data */
+    TargetMdl->StartVa = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);
+    TargetMdl->Process = SourceMdl->Process;
+    TargetMdl->ByteCount = Length;
+    TargetMdl->ByteOffset = BYTE_OFFSET(VirtualAddress);
 
-   Delta = ((ULONG_PTR)TargetMdl->StartVa - (ULONG_PTR)SourceMdl->StartVa) / PAGE_SIZE;
-   Count = ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress,Length);
+    /* Recalculate the length in pages */
+    Length = ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress, Length);
 
-   SourcePages += Delta;
+    /* Set the MDL Flags */
+    TargetMdl->MdlFlags = (MDL_ALLOCATED_FIXED_SIZE | MDL_ALLOCATED_MUST_SUCCEED);
+    TargetMdl->MdlFlags |= (MDL_IO_PAGE_READ |
+                            MDL_SOURCE_IS_NONPAGED_POOL |
+                            MDL_MAPPED_TO_SYSTEM_VA |
+                            MDL_IO_SPACE);
+    TargetMdl->MdlFlags |= MDL_PARTIAL;
 
-   DPRINT("Delta %d, Count %d\n", Delta, Count);
+    /* Set the mapped VA */
+    TargetMdl->MappedSystemVa = (PCHAR)SourceMdl->MappedSystemVa + Offset;
 
-   memcpy(TargetPages, SourcePages, Count * sizeof(PFN_TYPE));
-
+    /* Now do the copy */
+    Offset = ((ULONG_PTR)TargetMdl->StartVa - (ULONG_PTR)SourceMdl->StartVa) >>
+             PAGE_SHIFT;
+    SourcePages += Offset;
+    RtlMoveMemory(TargetPages, SourcePages, Length * sizeof(PFN_TYPE));
 }
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 IoFreeMdl(PMDL Mdl)
 {
-   /*
-    * This unmaps partial mdl's from kernel space but also asserts that non-partial
-    * mdl's isn't still mapped into kernel space.
-    */
-   ASSERT(Mdl);
-   ASSERT_IRQL(DISPATCH_LEVEL);
+    /* Tell Mm to reuse the MDL */
+    MmPrepareMdlForReuse(Mdl);
 
-   MmPrepareMdlForReuse(Mdl);
-
-   ExFreePoolWithTag(Mdl, TAG_MDL);
+    /* Check if this was a pool allocation */
+    if (!(Mdl->MdlFlags & MDL_ALLOCATED_FIXED_SIZE))
+    {
+        /* Free it from the pool */
+        ExFreePoolWithTag(Mdl, TAG_MDL);
+    }
+    else
+    {
+        /* Free it from the lookaside */
+        IopFreeMdlFromLookaside(Mdl, LookasideMdlList);
+    }
 }
-
 
 /* EOF */
