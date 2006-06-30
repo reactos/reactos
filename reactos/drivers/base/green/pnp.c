@@ -21,7 +21,7 @@ CreateGreenFdo(
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	ULONG Fcr;
 	HANDLE LocalHandle = 0;
-	ACCESS_MASK DesiredAccess = 0; /* FIXME */
+	ACCESS_MASK DesiredAccess = FILE_ANY_ACCESS;
 	NTSTATUS Status;
 
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
@@ -50,7 +50,7 @@ CreateGreenFdo(
 	InitializeObjectAttributes(&ObjectAttributes, &DriverExtension->AttachedDeviceName, OBJ_KERNEL_HANDLE, NULL, NULL);
 	Status = ObOpenObjectByName(
 		&ObjectAttributes,
-		IoDeviceObjectType,
+		IoFileObjectType,
 		KernelMode,
 		NULL,
 		DesiredAccess,
