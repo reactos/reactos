@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/contrller.c
- * PURPOSE:         Implements the controller object
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/io/controller.c
+ * PURPOSE:         I/O Wrappers (called Controllers) for Kernel Device Queues
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -20,27 +19,16 @@ POBJECT_TYPE IoControllerObjectType;
 
 /*
  * @implemented
- *
- * FUNCTION: Sets up a call to a driver-supplied ControllerControl routine
- * as soon as the device controller, represented by the given controller
- * object, is available to carry out an I/O operation for the target device,
- * represented by the given device object.
- * ARGUMENTS:
- *       ControllerObject = Driver created controller object
- *       DeviceObject = Target device for the current irp
- *       ExecutionRoutine = Routine to be called when the device is available
- *       Context = Driver supplied context to be passed on to the above routine
  */
 VOID
-STDCALL
-IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
-                     PDEVICE_OBJECT DeviceObject,
-                     PDRIVER_CONTROL ExecutionRoutine,
-                     PVOID Context)
+NTAPI
+IoAllocateController(IN PCONTROLLER_OBJECT ControllerObject,
+                     IN PDEVICE_OBJECT DeviceObject,
+                     IN PDRIVER_CONTROL ExecutionRoutine,
+                     IN PVOID Context)
 {
     IO_ALLOCATION_ACTION Result;
-
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT_IRQL(DISPATCH_LEVEL);
 
     /* Initialize the Wait Context Block */
     DeviceObject->Queue.Wcb.DeviceContext = Context;
@@ -50,36 +38,29 @@ IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
     if (!KeInsertDeviceQueue(&ControllerObject->DeviceWaitQueue,
                              &DeviceObject->Queue.Wcb.WaitQueueEntry));
     {
+        /* Call the execution routine */
         Result = ExecutionRoutine(DeviceObject,
                                   DeviceObject->CurrentIrp,
                                   NULL,
                                   Context);
-    }
 
-    if (Result == DeallocateObject)
-    {
-        IoFreeController(ControllerObject);
+        /* Free the controller if this was requested */
+        if (Result == DeallocateObject) IoFreeController(ControllerObject);
     }
 }
 
 /*
  * @implemented
- *
- * FUNCTION: Allocates memory and initializes a controller object
- * ARGUMENTS:
- *        Size = Size (in bytes) to be allocated for the controller extension
- * RETURNS: A pointer to the created object
  */
 PCONTROLLER_OBJECT
-STDCALL
-IoCreateController(ULONG Size)
-
+NTAPI
+IoCreateController(IN ULONG Size)
 {
    PCONTROLLER_OBJECT Controller;
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE Handle;
    NTSTATUS Status;
-   ASSERT_IRQL(PASSIVE_LEVEL);
+   PAGED_CODE();
 
    /* Initialize an empty OBA */
    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
@@ -123,15 +104,10 @@ IoCreateController(ULONG Size)
 
 /*
  * @implemented
- *
- * FUNCTION: Removes a given controller object from the system
- * ARGUMENTS:
- *        ControllerObject = Controller object to be released
  */
 VOID
-STDCALL
-IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
-
+NTAPI
+IoDeleteController(IN PCONTROLLER_OBJECT ControllerObject)
 {
     /* Just Dereference it */
     ObDereferenceObject(ControllerObject);
@@ -139,40 +115,33 @@ IoDeleteController(PCONTROLLER_OBJECT ControllerObject)
 
 /*
  * @implemented
- *
- * FUNCTION: Releases a previously allocated controller object when a
- * device has finished an I/O request
- * ARGUMENTS:
- *       ControllerObject = Controller object to be released
  */
 VOID
-STDCALL
-IoFreeController(PCONTROLLER_OBJECT ControllerObject)
+NTAPI
+IoFreeController(IN PCONTROLLER_OBJECT ControllerObject)
 {
     PKDEVICE_QUEUE_ENTRY QueueEntry;
     PDEVICE_OBJECT DeviceObject;
     IO_ALLOCATION_ACTION Result;
 
     /* Remove the Queue */
-    if ((QueueEntry = KeRemoveDeviceQueue(&ControllerObject->DeviceWaitQueue)))
+    QueueEntry = KeRemoveDeviceQueue(&ControllerObject->DeviceWaitQueue);
+    if (QueueEntry)
     {
         /* Get the Device Object */
         DeviceObject = CONTAINING_RECORD(QueueEntry,
                                          DEVICE_OBJECT,
                                          Queue.Wcb.WaitQueueEntry);
+
         /* Call the routine */
         Result = DeviceObject->Queue.Wcb.DeviceRoutine(DeviceObject,
                                                        DeviceObject->CurrentIrp,
                                                        NULL,
-                                                       DeviceObject->Queue.Wcb.DeviceContext);
-        /* Check the result */
-        if (Result == DeallocateObject)
-        {
-            /* Free it again */
-            IoFreeController(ControllerObject);
-        }
+                                                       DeviceObject->
+                                                       Queue.Wcb.DeviceContext);
+        /* Free the controller if this was requested */
+        if (Result == DeallocateObject) IoFreeController(ControllerObject);
     }
 }
-
 
 /* EOF */
