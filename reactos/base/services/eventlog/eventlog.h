@@ -10,6 +10,7 @@
 #ifndef __EVENTLOG_H__
 #define __EVENTLOG_H__
 
+#define NDEBUG
 #define WIN32_NO_STATUS
 
 #include <windows.h>

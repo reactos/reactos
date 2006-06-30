@@ -121,7 +121,7 @@ BOOL LoadLogFile(HKEY hKey, WCHAR *LogName)
 	
 cleanup:
 	HeapFree(MyHeap, 0, Buf);
-	if(Expanded) HeapFree(MyHeap, 0, Expanded);
+	HeapFree(MyHeap, 0, Expanded);
 	return ret;
 }
 	
