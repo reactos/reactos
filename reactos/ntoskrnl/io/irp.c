@@ -837,7 +837,7 @@ IoBuildSynchronousFsdRequest(IN ULONG MajorFunction,
 
     /* Sync IRPs are queued to requestor thread's irp cancel/cleanup list */
     IoQueueThreadIrp(Irp);
-    return(Irp);
+    return Irp;
 }
 
 /*

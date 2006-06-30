@@ -48,19 +48,6 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoCancelFileOpen(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PFILE_OBJECT    FileObject
-    )
-{
-	UNIMPLEMENTED;
-}
-
 VOID INIT_FUNCTION
 IoInitFileSystemImplementation(VOID)
 {
@@ -422,40 +409,6 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-/*
- * @implemented
- */
-PDEVICE_OBJECT STDCALL
-IoGetDeviceToVerify(IN PETHREAD Thread)
-/*
- * FUNCTION: Returns a pointer to the device, representing a removable-media
- * device, that is the target of the given thread's I/O request
- */
-{
-  return(Thread->DeviceToVerify);
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-IoSetDeviceToVerify(IN PETHREAD Thread,
-		    IN PDEVICE_OBJECT DeviceObject)
-{
-  Thread->DeviceToVerify = DeviceObject;
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-IoSetHardErrorOrVerifyDevice(IN PIRP Irp,
-			     IN PDEVICE_OBJECT DeviceObject)
-{
-  Irp->Tail.Overlay.Thread->DeviceToVerify = DeviceObject;
-}
 
 
 /*

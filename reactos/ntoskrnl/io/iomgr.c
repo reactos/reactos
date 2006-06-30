@@ -34,7 +34,6 @@ GENERIC_MAPPING IopFileMapping = {
     FILE_GENERIC_EXECUTE,
     FILE_ALL_ACCESS};
 
-static KSPIN_LOCK CancelSpinLock;
 extern LIST_ENTRY ShutdownListHead;
 extern KSPIN_LOCK ShutdownListLock;
 extern NPAGED_LOOKASIDE_LIST IoCompletionPacketLookaside;
@@ -60,6 +59,7 @@ VOID
 INIT_FUNCTION
 IoInitCancelHandling(VOID)
 {
+    extern KSPIN_LOCK CancelSpinLock;
     KeInitializeSpinLock(&CancelSpinLock);
 }
 
@@ -477,90 +477,6 @@ IoInit3(VOID)
                          NULL,
                          NULL,
                          NULL);
-}
-
-/* FUNCTIONS *****************************************************************/
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-IoAcquireCancelSpinLock(PKIRQL Irql)
-{
-   KeAcquireSpinLock(&CancelSpinLock,Irql);
-}
-
-/*
- * @implemented
- */
-PVOID
-STDCALL
-IoGetInitialStack(VOID)
-{
-    return(PsGetCurrentThread()->Tcb.InitialStack);
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-IoGetStackLimits(OUT PULONG LowLimit,
-                 OUT PULONG HighLimit)
-{
-    *LowLimit = (ULONG)NtCurrentTeb()->Tib.StackLimit;
-    *HighLimit = (ULONG)NtCurrentTeb()->Tib.StackBase;
-}
-
-/*
- * @implemented
- */
-BOOLEAN
-STDCALL
-IoIsSystemThread(IN PETHREAD Thread)
-{
-    /* Call the Ps Function */
-    return PsIsSystemThread(Thread);
-}
-
-/*
- * @implemented
- */
-BOOLEAN STDCALL
-IoIsWdmVersionAvailable(IN UCHAR MajorVersion,
-                        IN UCHAR MinorVersion)
-{
-   /* MinorVersion = 0x20 : WinXP
-                     0x10 : Win2k
-                     0x5  : WinMe
-                     <0x5 : Win98
-
-      We report Win2k now
-      */
-   if (MajorVersion <= 1 && MinorVersion <= 0x10)
-      return TRUE;
-   return FALSE;
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-IoReleaseCancelSpinLock(KIRQL Irql)
-{
-   KeReleaseSpinLock(&CancelSpinLock,Irql);
-}
-
-/*
- * @implemented
- */
-PEPROCESS
-STDCALL
-IoThreadToProcess(IN PETHREAD Thread)
-{
-    return(Thread->ThreadsProcess);
 }
 
 /* EOF */

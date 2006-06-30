@@ -1105,16 +1105,4 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
      }
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS
-STDCALL
-IoValidateDeviceIoControlAccess(IN  PIRP Irp,
-                                IN  ULONG RequiredAccess)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 /* EOF */

@@ -1462,5 +1462,202 @@ NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                 FileInformation);
 }
 
+/*
+ * @unimplemented
+ */
+BOOLEAN STDCALL
+IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
+			     IN ACCESS_MASK DesiredAccess,
+			     IN ULONG OpenOptions,
+			     OUT PIO_STATUS_BLOCK IoStatus,
+			     OUT PFILE_NETWORK_OPEN_INFORMATION Buffer)
+{
+  UNIMPLEMENTED;
+  return(FALSE);
+}
 
+/*
+ * @implemented
+ */
+VOID STDCALL
+IoUpdateShareAccess(PFILE_OBJECT FileObject,
+		    PSHARE_ACCESS ShareAccess)
+{
+   PAGED_CODE();
+
+   if (FileObject->ReadAccess ||
+       FileObject->WriteAccess ||
+       FileObject->DeleteAccess)
+     {
+       ShareAccess->OpenCount++;
+
+       ShareAccess->Readers += FileObject->ReadAccess;
+       ShareAccess->Writers += FileObject->WriteAccess;
+       ShareAccess->Deleters += FileObject->DeleteAccess;
+       ShareAccess->SharedRead += FileObject->SharedRead;
+       ShareAccess->SharedWrite += FileObject->SharedWrite;
+       ShareAccess->SharedDelete += FileObject->SharedDelete;
+     }
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
+		   IN ULONG DesiredShareAccess,
+		   IN PFILE_OBJECT FileObject,
+		   IN PSHARE_ACCESS ShareAccess,
+		   IN BOOLEAN Update)
+{
+  BOOLEAN ReadAccess;
+  BOOLEAN WriteAccess;
+  BOOLEAN DeleteAccess;
+  BOOLEAN SharedRead;
+  BOOLEAN SharedWrite;
+  BOOLEAN SharedDelete;
+
+  PAGED_CODE();
+
+  ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
+  WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
+  DeleteAccess = (DesiredAccess & DELETE) != 0;
+
+  FileObject->ReadAccess = ReadAccess;
+  FileObject->WriteAccess = WriteAccess;
+  FileObject->DeleteAccess = DeleteAccess;
+
+  if (ReadAccess || WriteAccess || DeleteAccess)
+    {
+      SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
+      SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
+      SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
+
+      FileObject->SharedRead = SharedRead;
+      FileObject->SharedWrite = SharedWrite;
+      FileObject->SharedDelete = SharedDelete;
+
+      if ((ReadAccess && (ShareAccess->SharedRead < ShareAccess->OpenCount)) ||
+          (WriteAccess && (ShareAccess->SharedWrite < ShareAccess->OpenCount)) ||
+          (DeleteAccess && (ShareAccess->SharedDelete < ShareAccess->OpenCount)) ||
+          ((ShareAccess->Readers != 0) && !SharedRead) ||
+          ((ShareAccess->Writers != 0) && !SharedWrite) ||
+          ((ShareAccess->Deleters != 0) && !SharedDelete))
+        {
+          return(STATUS_SHARING_VIOLATION);
+        }
+
+      if (Update)
+        {
+          ShareAccess->OpenCount++;
+
+          ShareAccess->Readers += ReadAccess;
+          ShareAccess->Writers += WriteAccess;
+          ShareAccess->Deleters += DeleteAccess;
+          ShareAccess->SharedRead += SharedRead;
+          ShareAccess->SharedWrite += SharedWrite;
+          ShareAccess->SharedDelete += SharedDelete;
+        }
+    }
+
+  return(STATUS_SUCCESS);
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+IoRemoveShareAccess(IN PFILE_OBJECT FileObject,
+		    IN PSHARE_ACCESS ShareAccess)
+{
+  PAGED_CODE();
+
+  if (FileObject->ReadAccess ||
+      FileObject->WriteAccess ||
+      FileObject->DeleteAccess)
+    {
+      ShareAccess->OpenCount--;
+
+      ShareAccess->Readers -= FileObject->ReadAccess;
+      ShareAccess->Writers -= FileObject->WriteAccess;
+      ShareAccess->Deleters -= FileObject->DeleteAccess;
+      ShareAccess->SharedRead -= FileObject->SharedRead;
+      ShareAccess->SharedWrite -= FileObject->SharedWrite;
+      ShareAccess->SharedDelete -= FileObject->SharedDelete;
+    }
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
+		 IN ULONG DesiredShareAccess,
+		 IN PFILE_OBJECT FileObject,
+		 OUT PSHARE_ACCESS ShareAccess)
+{
+  BOOLEAN ReadAccess;
+  BOOLEAN WriteAccess;
+  BOOLEAN DeleteAccess;
+  BOOLEAN SharedRead;
+  BOOLEAN SharedWrite;
+  BOOLEAN SharedDelete;
+
+  PAGED_CODE();
+
+  ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
+  WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
+  DeleteAccess = (DesiredAccess & DELETE) != 0;
+
+  FileObject->ReadAccess = ReadAccess;
+  FileObject->WriteAccess = WriteAccess;
+  FileObject->DeleteAccess = DeleteAccess;
+
+  if (!ReadAccess && !WriteAccess && !DeleteAccess)
+    {
+      ShareAccess->OpenCount = 0;
+      ShareAccess->Readers = 0;
+      ShareAccess->Writers = 0;
+      ShareAccess->Deleters = 0;
+
+      ShareAccess->SharedRead = 0;
+      ShareAccess->SharedWrite = 0;
+      ShareAccess->SharedDelete = 0;
+    }
+  else
+    {
+      SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
+      SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
+      SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
+
+      FileObject->SharedRead = SharedRead;
+      FileObject->SharedWrite = SharedWrite;
+      FileObject->SharedDelete = SharedDelete;
+
+      ShareAccess->OpenCount = 1;
+      ShareAccess->Readers = ReadAccess;
+      ShareAccess->Writers = WriteAccess;
+      ShareAccess->Deleters = DeleteAccess;
+
+      ShareAccess->SharedRead = SharedRead;
+      ShareAccess->SharedWrite = SharedWrite;
+      ShareAccess->SharedDelete = SharedDelete;
+    }
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+IoCancelFileOpen(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PFILE_OBJECT    FileObject
+    )
+{
+	UNIMPLEMENTED;
+}
 /* EOF */

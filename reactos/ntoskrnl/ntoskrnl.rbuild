@@ -189,7 +189,7 @@
 			<file>rawfs.c</file>
 			<file>remlock.c</file>
 			<file>resource.c</file>
-			<file>share.c</file>
+			<file>util.c</file>
 			<file>symlink.c</file>
 			<file>timer.c</file>
 			<file>vpb.c</file>
