@@ -1350,8 +1350,8 @@ NTAPI
 IoGetRequestorSessionId(IN PIRP Irp,
                         OUT PULONG pSessionId)
 {
+    /* Return the session */
     *pSessionId = IoGetRequestorProcess(Irp)->Session;
-
     return STATUS_SUCCESS;
 }
 
@@ -1370,13 +1370,15 @@ IoGetTopLevelIrp(VOID)
  */
 VOID
 NTAPI
-IoInitializeIrp(PIRP Irp,
-                USHORT PacketSize,
-                CCHAR StackSize)
+IoInitializeIrp(IN PIRP Irp,
+                IN USHORT PacketSize,
+                IN CCHAR StackSize)
 {
-    ASSERT(Irp != NULL);
-
     /* Clear it */
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Initializing IRP %p\n",
+            __FUNCTION__,
+            Irp);
     RtlZeroMemory(Irp, PacketSize);
 
     /* Set the Header and other data */
@@ -1399,10 +1401,12 @@ NTAPI
 IoIsOperationSynchronous(IN PIRP Irp)
 {
     /* Check the flags */
-    if ((Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO) ||
+    if (((Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO) &&
+         (!(Irp->Flags & IRP_PAGING_IO) &&
+          !(Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO))) ||
         (Irp->Flags & IRP_SYNCHRONOUS_API) ||
         (IoGetCurrentIrpStackLocation(Irp)->FileObject->Flags &
-        FO_SYNCHRONOUS_IO))
+         FO_SYNCHRONOUS_IO))
     {
         /* Synch API or Paging I/O is OK, as is Sync File I/O */
         return TRUE;
@@ -1429,10 +1433,14 @@ IoIsValidNameGraftingBuffer(IN PIRP Irp,
  */
 PIRP
 NTAPI
-IoMakeAssociatedIrp(PIRP Irp,
-                    CCHAR StackSize)
+IoMakeAssociatedIrp(IN PIRP Irp,
+                    IN CCHAR StackSize)
 {
-   PIRP AssocIrp;
+    PIRP AssocIrp;
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Associating IRP %p\n",
+            __FUNCTION__,
+            Irp);
 
    /* Allocate the IRP */
    AssocIrp = IoAllocateIrp(StackSize, FALSE);
@@ -1446,7 +1454,6 @@ IoMakeAssociatedIrp(PIRP Irp,
 
    /* Associate them */
    AssocIrp->AssociatedIrp.MasterIrp = Irp;
-
    return AssocIrp;
 }
 
@@ -1455,11 +1462,11 @@ IoMakeAssociatedIrp(PIRP Irp,
  */
 NTSTATUS
 NTAPI
-IoPageRead(PFILE_OBJECT FileObject,
-           PMDL Mdl,
-           PLARGE_INTEGER Offset,
-           PKEVENT Event,
-           PIO_STATUS_BLOCK StatusBlock)
+IoPageRead(IN PFILE_OBJECT FileObject,
+           IN PMDL Mdl,
+           IN PLARGE_INTEGER Offset,
+           IN PKEVENT Event,
+           IN PIO_STATUS_BLOCK StatusBlock)
 {
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
@@ -1470,6 +1477,7 @@ IoPageRead(PFILE_OBJECT FileObject,
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -1505,6 +1513,10 @@ NTAPI
 IoQueueThreadIrp(IN PIRP Irp)
 {
     KIRQL OldIrql;
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Queueing IRP %p\n",
+            __FUNCTION__,
+            Irp);
 
     /* Raise to APC */
     OldIrql = KfRaiseIrql(APC_LEVEL);
@@ -1530,6 +1542,14 @@ IoReuseIrp(IN OUT PIRP Irp,
            IN NTSTATUS Status)
 {
     UCHAR AllocationFlags;
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Reusing IRP %p\n",
+            __FUNCTION__,
+            Irp);
+
+    /* Make sure it's OK to reuse it */
+    ASSERT(!Irp->CancelRoutine);
+    ASSERT(IsListEmpty(&Irp->ThreadListEntry));
 
     /* Get the old flags */
     AllocationFlags = Irp->AllocationFlags;
@@ -1549,6 +1569,7 @@ VOID
 NTAPI
 IoSetTopLevelIrp(IN PIRP Irp)
 {
+    /* Set the IRP */
     PsGetCurrentThread()->TopLevelIrp = (ULONG)Irp;
 }
 
@@ -1572,6 +1593,7 @@ IoSynchronousPageWrite(PFILE_OBJECT FileObject,
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
