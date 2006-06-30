@@ -300,7 +300,7 @@ PLOGFILE LogfListItemByName(WCHAR *Name)
     EnterCriticalSection(&LogListCs);
     
     for(Item = LogListHead; Item; Item = (PLOGFILE)Item->Next)
-        if(Item->LogName && lstrcmpW(Item->LogName, Name)==0)
+        if(Item->LogName && lstrcmpi(Item->LogName, Name)==0)
         {
         	Ret = Item;
             break;
@@ -319,7 +319,7 @@ INT LogfListItemIndexByName(WCHAR *Name)
 	EnterCriticalSection(&LogListCs);
 
 	for(Item = LogListHead; Item; i++, Item = (PLOGFILE)Item->Next)
-        if(Item->LogName && lstrcmpW(Item->LogName, Name)==0)
+        if(Item->LogName && lstrcmpi(Item->LogName, Name)==0)
         {
         	ret = i;
             break;

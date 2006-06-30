@@ -7,25 +7,25 @@
  *                   Copyright 2005 Saveliy Tretiakov
  */
 
+/* INCLUDES *****************************************************************/
 
 #include "eventlog.h"
 
-VOID CALLBACK ServiceMain(DWORD argc, LPTSTR *argv);
+/* GLOBALS ******************************************************************/
 
+VOID CALLBACK ServiceMain(DWORD argc, LPTSTR *argv);
 SERVICE_TABLE_ENTRY ServiceTable[2] =
 {
   {L"EventLog", (LPSERVICE_MAIN_FUNCTION)ServiceMain},
   {NULL, NULL}
 };
 
-/* GLOBAL VARIABLES */
 HANDLE MyHeap = NULL;
-PLOGFILE SystemLog = NULL;
-PLOGFILE ApplicationLog = NULL;
-PLOGFILE SecurityLog = NULL;
 BOOL onLiveCD = FALSE; // On livecd events will go to debug output only
-
 extern CRITICAL_SECTION LogListCs;
+extern PLOGFILE LogListHead;
+
+/* FUNCTIONS ****************************************************************/
 
 VOID CALLBACK ServiceMain(DWORD argc, LPTSTR *argv)
 {
@@ -56,23 +56,146 @@ VOID CALLBACK ServiceMain(DWORD argc, LPTSTR *argv)
     #endif
 }
 
+BOOL LoadLogFile(HKEY hKey, WCHAR *LogName)
+{
+	DWORD MaxValueLen, ValueLen, Type, ExpandedLen;
+	WCHAR *Buf = NULL, *Expanded = NULL;
+	LONG Result;
+	BOOL ret = FALSE;
+	PLOGFILE pLogf;
 
-int main(int argc, char *argv[])
+	DPRINT("LoadLogFile: %S\n", LogName);
+	
+	RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+			NULL, &MaxValueLen, NULL, NULL);
+	
+	Buf = HeapAlloc(MyHeap, 0, MaxValueLen);
+	
+	if(!Buf)
+	{
+		DPRINT1("Can't allocate heap!\n");
+		return FALSE;
+	}
+	
+	ValueLen = MaxValueLen;
+	
+	Result = RegQueryValueEx(hKey, L"File", 
+		NULL, 
+		&Type, 
+		(LPBYTE)Buf, 
+		&ValueLen);
+	
+	if(Result != ERROR_SUCCESS)
+	{
+		DPRINT1("RegQueryValueEx failed: %d\n", GetLastError());
+		goto cleanup;
+	}
+	if(Type != REG_EXPAND_SZ && Type != REG_SZ)
+	{
+		DPRINT1("%S\\File - value of wrong type %x.\n", LogName, Type);
+		goto cleanup;
+	}
+	
+	ExpandedLen = ExpandEnvironmentStrings(Buf, NULL, 0);
+	Expanded = HeapAlloc(MyHeap, 0, ExpandedLen*sizeof(WCHAR));
+	
+	if(!Expanded)
+	{
+		DPRINT1("Can't allocate heap!\n");
+		goto cleanup;
+	}
+	
+	ExpandEnvironmentStrings(Buf, Expanded, ExpandedLen);
+	
+	DPRINT("%S -> %S\n", Buf, Expanded);
+	
+	pLogf = LogfCreate(LogName, Expanded);
+
+	if(pLogf == NULL)
+	{
+		DPRINT1("Failed to create %S!\n", Expanded);
+		goto cleanup;
+	}
+
+	ret = TRUE;
+	
+cleanup:
+	HeapFree(MyHeap, 0, Buf);
+	if(Expanded) HeapFree(MyHeap, 0, Expanded);
+	return ret;
+}
+	
+BOOL LoadLogFiles(HKEY eventlogKey)
+{
+	LONG result;
+	DWORD MaxLognameLen, LognameLen;
+	WCHAR *Buf = NULL;
+	BOOL ret = FALSE;
+	INT i;
+	
+	RegQueryInfoKey(eventlogKey, NULL, NULL, NULL, NULL, &MaxLognameLen, 
+		NULL, NULL, NULL, NULL, NULL, NULL);
+		
+	MaxLognameLen++;
+	 
+	Buf = HeapAlloc(MyHeap, 0, MaxLognameLen*sizeof(WCHAR));
+	
+	if(!Buf)
+	{
+		DPRINT1("Error: can't allocate heap!\n");
+		return ret;
+	}
+	
+	i = 0;
+	LognameLen=MaxLognameLen;
+	 
+	while(RegEnumKeyEx(eventlogKey, i, Buf, &LognameLen, NULL, NULL, 
+		NULL, NULL) == ERROR_SUCCESS)
+	{
+		HKEY SubKey;
+		DPRINT("%S\n", Buf);
+		
+		result = RegOpenKeyEx(eventlogKey, Buf, 0, KEY_ALL_ACCESS, &SubKey);
+		if(result != ERROR_SUCCESS) 
+		{
+			DPRINT1("Failed to open %S key.\n", Buf);
+			goto cleanup;
+		}
+		
+		if(!LoadLogFile(SubKey, Buf))
+			DPRINT1("Failed to load %S\n", Buf);
+		else DPRINT("Loaded %S\n", Buf);
+		
+		RegCloseKey(SubKey);
+		LognameLen=MaxLognameLen;
+		i++;
+	} 
+
+	ret = TRUE;
+	
+cleanup:
+	HeapFree(MyHeap, 0, Buf);
+	return ret;
+}
+
+INT main()
 {
 	WCHAR LogPath[MAX_PATH];
+	PLOGFILE pLogf;
+	INT RetCode = 0;
+	LONG result;
+	HKEY elogKey;
+
+	InitializeCriticalSection(&LogListCs);
+	
 	MyHeap = HeapCreate(0, 1024*256, 0);
 
 	if(MyHeap==NULL)
 	{
-		DbgPrint("EventLog: FATAL ERROR, can't create heap.\n");
-		return 1;
+		DPRINT1("FATAL ERROR, can't create heap.\n");
+		RetCode = 1;
+		goto bye_bye;
 	}
-	
-	InitializeCriticalSection(&LogListCs);
-	
-	/*
-	This will be fixed in near future
-	 */
 	
 	GetWindowsDirectory(LogPath, MAX_PATH);
 	if(GetDriveType(LogPath) == DRIVE_CDROM)
@@ -82,38 +205,34 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		lstrcat(LogPath, L"\\system32\\config\\SysEvent.evt");
-
-		SystemLog = LogfCreate(L"System", LogPath);
-
-		if(SystemLog == NULL)
+		result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+			L"SYSTEM\\CurrentControlSet\\Services\\EventLog",
+			0,
+			KEY_ALL_ACCESS,
+			&elogKey);
+		
+		if(result != ERROR_SUCCESS)
 		{
-			DbgPrint("EventLog: FATAL ERROR, can't create %S\n", LogPath);
-			HeapDestroy(MyHeap);
-			return 1;
+			DPRINT1("Fatal error: can't open eventlog registry key.\n");
+			RetCode = 1;
+			goto bye_bye;
 		}
-
-		GetWindowsDirectory(LogPath, MAX_PATH);
-		lstrcat(LogPath, L"\\system32\\config\\AppEvent.evt");
-
-		ApplicationLog = LogfCreate(L"Application", LogPath);
-
-		if(ApplicationLog == NULL)
-		{
-			DbgPrint("EventLog: FATAL ERROR, can't create %S\n", LogPath);
-			HeapDestroy(MyHeap);
-			return 1;
-		}
+		
+		LoadLogFiles(elogKey);
 	}
 
     StartServiceCtrlDispatcher(ServiceTable);
 
-
-	LogfClose(SystemLog);
+bye_bye:
 	DeleteCriticalSection(&LogListCs);
-	HeapDestroy(MyHeap);
+	
+	// Close all log files.
+	for(pLogf = LogListHead; pLogf; pLogf = ((PLOGFILE)pLogf)->Next)
+		LogfClose(pLogf);
+	 
+	if(MyHeap) HeapDestroy(MyHeap);
 
-    return 0;
+    return RetCode;
 }
 
 VOID EventTimeToSystemTime(DWORD EventTime, 
@@ -238,6 +357,3 @@ VOID PRINT_RECORD(PEVENTLOGRECORD pRec)
 
 	DPRINT("Length2=%d\n", *(PDWORD)(((PBYTE)pRec)+pRec->Length-4));
 }
-
-
-

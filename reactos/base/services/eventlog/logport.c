@@ -15,7 +15,6 @@
 
 HANDLE ConnectPortHandle = NULL;
 HANDLE MessagePortHandle = NULL;
-extern PLOGFILE SystemLog;
 extern HANDLE MyHeap;
 extern BOOL onLiveCD;
 
@@ -125,10 +124,10 @@ NTSTATUS ProcessPortMessage(VOID)
     NTSTATUS Status;
 	PLOGFILE SystemLog = NULL;
     
-    DPRINT1("ProcessPortMessage() called\n");
+    DPRINT("ProcessPortMessage() called\n");
 
-    Status = STATUS_SUCCESS;
-
+	SystemLog = LogfListItemByName(L"System");
+	
     while(TRUE)
     {
         Status = NtReplyWaitReceivePort(
@@ -217,4 +216,3 @@ NTSTATUS ProcessPortMessage(VOID)
     }
     return Status;
 }
-

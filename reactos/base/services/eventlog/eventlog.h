@@ -11,6 +11,7 @@
 #define __EVENTLOG_H__
 
 #define WIN32_NO_STATUS
+
 #include <windows.h>
 #include <lpctypes.h>
 #include <lpcfuncs.h>
