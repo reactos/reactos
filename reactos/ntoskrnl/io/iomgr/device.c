@@ -18,12 +18,6 @@
 
 ULONG IopDeviceObjectNumber = 0;
 
-typedef struct _SHUTDOWN_ENTRY
-{
-    LIST_ENTRY ShutdownList;
-    PDEVICE_OBJECT DeviceObject;
-} SHUTDOWN_ENTRY, *PSHUTDOWN_ENTRY;
-
 LIST_ENTRY ShutdownListHead, LastChanceShutdownListHead;
 KSPIN_LOCK ShutdownListLock;
 

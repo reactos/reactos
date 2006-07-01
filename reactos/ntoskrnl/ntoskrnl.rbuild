@@ -123,6 +123,7 @@
 			<file>callback.c</file>
 			<file>dbgctrl.c</file>
 			<file>error.c</file>
+            <file>efi.c</file>
 			<file>event.c</file>
 			<file>evtpair.c</file>
 			<file>fmutex.c</file>
@@ -162,6 +163,7 @@
 		<file>inbv.c</file>
 	</directory>
 	<directory name="io">
+        <directory name="iomgr">
 			<file>adapter.c</file>
 			<file>arcname.c</file>
 			<file>bootlog.c</file>
@@ -170,33 +172,34 @@
 			<file>deviface.c</file>
 			<file>disk.c</file>
 			<file>driver.c</file>
-			<file>efi.c</file>
 			<file>error.c</file>
 			<file>event.c</file>
-			<file>fs.c</file>
-			<file>iocomp.c</file>
-			<file>iomgr.c</file>
-			<file>iowork.c</file>
-			<file>irp.c</file>
-			<file>irq.c</file>
-			<file>mdl.c</file>
-			<file>plugplay.c</file>
-			<file>pnpdma.c</file>
-			<file>pnpmgr.c</file>
-			<file>pnpnotify.c</file>
-			<file>pnpreport.c</file>
-			<file>pnproot.c</file>
-			<file>rawfs.c</file>
-			<file>remlock.c</file>
-			<file>resource.c</file>
-			<file>util.c</file>
-			<file>symlink.c</file>
-			<file>timer.c</file>
-			<file>vpb.c</file>
-			<file>wmi.c</file>
-		    <file>file.c</file>
+            <file>file.c</file>
+            <file>fs.c</file>
+            <file>iocomp.c</file>
             <file>iofunc.c</file>
-	</directory>
+            <file>iomgr.c</file>
+            <file>iowork.c</file>
+            <file>irp.c</file>
+            <file>irq.c</file>
+            <file>mdl.c</file>
+            <file>rawfs.c</file>
+            <file>remlock.c</file>
+            <file>resource.c</file>
+            <file>util.c</file>
+            <file>symlink.c</file>
+            <file>timer.c</file>
+            <file>vpb.c</file>
+        </directory>
+        <directory name="pnpmgr">
+            <file>plugplay.c</file>
+            <file>pnpdma.c</file>
+            <file>pnpmgr.c</file>
+            <file>pnpnotify.c</file>
+            <file>pnpreport.c</file>
+            <file>pnproot.c</file>
+        </directory>
+    </directory>
 	<directory name="kd">
 			<directory name="wrappers">
 				<file>bochs.c</file>
@@ -321,6 +324,9 @@
 			<file>sid.c</file>
 			<file>token.c</file>
 	</directory>
+    <directory name="wmi">
+        <file>wmi.c</file>
+    </directory>
 	<file>ntoskrnl.rc</file>
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
