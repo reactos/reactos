@@ -171,7 +171,7 @@ IopStartDevice(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
                           IN ACCESS_MASK DesiredAccess,
                           OUT PFILE_OBJECT *FileObject,
@@ -217,6 +217,235 @@ IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
     return Status;
 }
 
+PDEVICE_OBJECT
+NTAPI
+IopGetLowestDevice(IN PDEVICE_OBJECT DeviceObject)
+{
+    PDEVICE_OBJECT LowestDevice;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
+
+    /* Get the current device and its extension */
+    LowestDevice = DeviceObject;
+    DeviceExtension = IoGetDevObjExtension(LowestDevice);
+
+    /* Keep looping as long as we're attached */
+    while (DeviceExtension->AttachedTo)
+    {
+        /* Get the lowest device and its extension */
+        LowestDevice = DeviceExtension->AttachedTo;
+        DeviceExtension = IoGetDevObjExtension(LowestDevice);
+    }
+
+    /* Return the lowest device */
+    return LowestDevice;
+}
+
+VOID
+NTAPI
+IopEditDeviceList(IN PDRIVER_OBJECT DriverObject,
+                  IN PDEVICE_OBJECT DeviceObject,
+                  IN IOP_DEVICE_LIST_OPERATION Type)
+{
+    PDEVICE_OBJECT Previous;
+
+    /* Check the type of operation */
+    if (Type == IopRemove)
+    {
+        /* Get the current device and check if it's the current one */
+        Previous = DeviceObject->DriverObject->DeviceObject;
+        if (Previous == DeviceObject)
+        {
+            /* It is, simply unlink this one directly */
+            DeviceObject->DriverObject->DeviceObject =
+                DeviceObject->NextDevice;
+        }
+        else
+        {
+            /* It's not, so loop until we find the device */
+            while (Previous->NextDevice != DeviceObject)
+            {
+                /* Not this one, keep moving */
+                Previous = Previous->NextDevice;
+            }
+
+            /* We found it, now unlink us */
+            Previous->NextDevice = DeviceObject->NextDevice;
+        }
+    }
+    else
+    {
+        /* Link the device object and the driver object */
+        DeviceObject->NextDevice = DriverObject->DeviceObject;
+        DriverObject->DeviceObject = DeviceObject;
+    }
+}
+
+VOID
+NTAPI
+IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
+{
+    PDRIVER_OBJECT DriverObject = DeviceObject->DriverObject;
+    PDEVICE_OBJECT AttachedDeviceObject, LowestDeviceObject;
+    PEXTENDED_DEVOBJ_EXTENSION ThisExtension, DeviceExtension;
+    PDEVICE_NODE DeviceNode;
+    BOOLEAN SafeToUnload = TRUE;
+
+    /* Check if removal is pending */
+    ThisExtension = IoGetDevObjExtension(DeviceObject);
+    if (ThisExtension->ExtensionFlags & DOE_REMOVE_PENDING)
+    {
+        /* Get the PDO, extension, and node */
+        LowestDeviceObject = IopGetLowestDevice(DeviceObject);
+        DeviceExtension = IoGetDevObjExtension(LowestDeviceObject);
+        DeviceNode = DeviceExtension->DeviceNode;
+
+        /* The PDO needs a device node */
+        ASSERT(DeviceNode != NULL);
+
+        /* Loop all attached objects */
+        AttachedDeviceObject = LowestDeviceObject;
+        while (AttachedDeviceObject)
+        {
+            /* Make sure they're dereferenced */
+            if (AttachedDeviceObject->ReferenceCount) return;
+            AttachedDeviceObject = AttachedDeviceObject->AttachedDevice;
+        }
+
+        /* Loop all attached objects */
+        AttachedDeviceObject = LowestDeviceObject;
+        while (AttachedDeviceObject)
+        {
+            /* Get the device extension */
+            DeviceExtension = IoGetDevObjExtension(AttachedDeviceObject);
+
+            /* Remove the pending flag and set processed */
+            DeviceExtension->ExtensionFlags &= ~DOE_REMOVE_PENDING;
+            DeviceExtension->ExtensionFlags |= DOE_REMOVE_PROCESSED;
+            AttachedDeviceObject = AttachedDeviceObject->AttachedDevice;
+        }
+
+        /*
+         * FIXME: TODO HPOUSSIN
+         * We need to parse/lock the device node, and if we have any pending
+         * surprise removals, query all relationships and send IRP_MN_REMOVE_
+         * _DEVICE to the devices related...
+         */
+        return;
+    }
+
+    /* Check if deletion is pending */
+    if (ThisExtension->ExtensionFlags & DOE_DELETE_PENDING)
+    {
+        /* Make sure unload is pending */
+        if (!(ThisExtension->ExtensionFlags & DOE_UNLOAD_PENDING) ||
+            (DriverObject->Flags & DRVO_UNLOAD_INVOKED))
+        {
+            /* We can't unload anymore */
+            SafeToUnload = FALSE;
+        }
+
+        /*
+         * Check if we have an attached device and fail if we're attached
+         * and still have a reference count.
+         */
+        AttachedDeviceObject = DeviceObject->AttachedDevice;
+        if ((AttachedDeviceObject) && (DeviceObject->ReferenceCount)) return;
+
+        /* Check if we have a Security Descriptor */
+        if (DeviceObject->SecurityDescriptor)
+        {
+            /* Free it */
+            ExFreePool(DeviceObject->SecurityDescriptor);
+        }
+
+        /* Remove the device from the list */
+        IopEditDeviceList(DeviceObject->DriverObject, DeviceObject, IopRemove);
+
+        /* Dereference the keep-alive */
+        ObDereferenceObject(DeviceObject);
+
+        /* If we're not unloading, stop here */
+        if (!SafeToUnload) return;
+    }
+
+    /* Loop all the device objects */
+    DeviceObject = DriverObject->DeviceObject;
+    while (DeviceObject)
+    {
+        /*
+         * Make sure we're not attached, having a reference count
+         * or already deleting
+         */
+        if ((DeviceObject->ReferenceCount) ||
+             (DeviceObject->AttachedDevice) ||
+             (IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
+              (DOE_DELETE_PENDING | DOE_REMOVE_PENDING)))
+        {
+            /* We're not safe to unload, quit */
+            return;
+        }
+
+        /* Check the next device */
+        DeviceObject = DeviceObject->NextDevice;
+    }
+
+    /* Set the unload invoked flag */
+    DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
+
+    /* Unload it */
+    if (DriverObject->DriverUnload) DriverObject->DriverUnload(DriverObject);
+}
+
+VOID
+NTAPI
+IopDereferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject,
+                           IN BOOLEAN ForceUnload)
+{
+    /* Sanity check */
+    ASSERT(DeviceObject->ReferenceCount);
+
+    /* Dereference the device */
+    DeviceObject->ReferenceCount--;
+
+    /*
+     * Check if we can unload it and it's safe to unload (or if we're forcing
+     * an unload, which is OK too).
+     */
+    if (!(DeviceObject->ReferenceCount) &&
+        ((ForceUnload) || (IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
+                           (DOE_UNLOAD_PENDING |
+                            DOE_DELETE_PENDING |
+                            DOE_REMOVE_PENDING |
+                            DOE_REMOVE_PROCESSED))))
+    {
+        /* Unload it */
+        IopUnloadDevice(DeviceObject);
+    }
+}
+
+NTSTATUS
+NTAPI
+IopReferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject)
+{
+    /* Make sure the object is valid */
+    if ((IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
+        (DOE_UNLOAD_PENDING |
+         DOE_DELETE_PENDING |
+         DOE_REMOVE_PENDING |
+         DOE_REMOVE_PROCESSED)) ||
+        (DeviceObject->Flags & DO_DEVICE_INITIALIZING))
+    {
+        /* It's unloading or initializing, so fail */
+        return STATUS_NO_SUCH_DEVICE;
+    }
+    else
+    {
+        /* Increase reference count */
+        DeviceObject->ReferenceCount++;
+        return STATUS_SUCCESS;
+    }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -238,7 +467,7 @@ IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
  *    @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoAttachDevice(PDEVICE_OBJECT SourceDevice,
                PUNICODE_STRING TargetDeviceName,
                PDEVICE_OBJECT *AttachedDevice)
@@ -273,7 +502,7 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
  *    @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoAttachDeviceByPointer(IN PDEVICE_OBJECT SourceDevice,
                         IN PDEVICE_OBJECT TargetDevice)
 {
@@ -295,7 +524,7 @@ IoAttachDeviceByPointer(IN PDEVICE_OBJECT SourceDevice,
  *    @implemented
  */
 PDEVICE_OBJECT
-STDCALL
+NTAPI
 IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
                             PDEVICE_OBJECT TargetDevice)
 {
@@ -315,7 +544,7 @@ IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
                                 IN PDEVICE_OBJECT TargetDevice,
                                 OUT PDEVICE_OBJECT *AttachedToDeviceObject)
@@ -325,15 +554,14 @@ IoAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
 
     /* Get the Attached Device and source extension */
     AttachedDevice = IoGetAttachedDevice(TargetDevice);
-    SourceDeviceExtension = (PEXTENDED_DEVOBJ_EXTENSION)SourceDevice->
-                            DeviceObjectExtension;
+    SourceDeviceExtension = IoGetDevObjExtension(SourceDevice);
 
     /* Make sure that it's in a correct state */
-    if (!(((PEXTENDED_DEVOBJ_EXTENSION)AttachedDevice->DeviceObjectExtension)->
-            ExtensionFlags & (DOE_UNLOAD_PENDING |
-                              DOE_DELETE_PENDING |
-                              DOE_REMOVE_PENDING |
-                              DOE_REMOVE_PROCESSED)))
+    if (!IoGetDevObjExtension(AttachedDevice)->ExtensionFlags &
+        (DOE_UNLOAD_PENDING |
+         DOE_DELETE_PENDING |
+         DOE_REMOVE_PENDING |
+         DOE_REMOVE_PROCESSED))
     {
         /* Update atached device fields */
         AttachedDevice->AttachedDevice = SourceDevice;
@@ -392,7 +620,7 @@ IoAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
  *    @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
                IN ULONG DeviceExtensionSize,
                IN PUNICODE_STRING DeviceName,
@@ -559,8 +787,7 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     /* Now do the final linking */
     ObReferenceObject(DriverObject);
     CreatedDeviceObject->DriverObject = DriverObject;
-    CreatedDeviceObject->NextDevice = DriverObject->DeviceObject;
-    DriverObject->DeviceObject = CreatedDeviceObject;
+    IopEditDeviceList(DriverObject, CreatedDeviceObject, IopAdd);
 
     /* Close the temporary handle and return to caller */
     NtClose(TempHandle);
@@ -575,46 +802,39 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
  *    @implemented
  */
 VOID
-STDCALL
-IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
+NTAPI
+IoDeleteDevice(IN PDEVICE_OBJECT DeviceObject)
 {
-   PDEVICE_OBJECT Previous;
+    PIO_TIMER Timer;
 
-   if (DeviceObject->Flags & DO_SHUTDOWN_REGISTERED)
-      IoUnregisterShutdownNotification(DeviceObject);
+    /* Check if the device is registered for shutdown notifications */
+    if (DeviceObject->Flags & DO_SHUTDOWN_REGISTERED)
+    {
+        /* Call the shutdown notifications */
+        IoUnregisterShutdownNotification(DeviceObject);
+    }
 
-   /* Remove the timer if it exists */
-   if (DeviceObject->Timer)
-   {
-      IopRemoveTimerFromTimerList(DeviceObject->Timer);
-      ExFreePoolWithTag(DeviceObject->Timer, TAG_IO_TIMER);
-   }
+    /* Check if it has a timer */
+    Timer = DeviceObject->Timer;
+    if (Timer)
+    {
+        /* Remove it and free it */
+        IopRemoveTimerFromTimerList(Timer);
+        ExFreePoolWithTag(Timer, TAG_IO_TIMER);
+    }
 
-   /* Remove device from driver device list */
-   Previous = DeviceObject->DriverObject->DeviceObject;
-   if (Previous == DeviceObject)
-   {
-      DeviceObject->DriverObject->DeviceObject = DeviceObject->NextDevice;
-   }
-   else
-   {
-      while (Previous->NextDevice != DeviceObject)
-         Previous = Previous->NextDevice;
-      Previous->NextDevice = DeviceObject->NextDevice;
-   }
+    /* Check if the device has a name */
+    if (DeviceObject->Flags & DO_DEVICE_HAS_NAME)
+    {
+        /* It does, make it temporary so we can remove it */
+        ObMakeTemporaryObject(DeviceObject);
+    }
 
-   /* I guess this should be removed later... but it shouldn't cause problems */
-   ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->ExtensionFlags |= DOE_DELETE_PENDING;
+    /* Set the pending delete flag */
+    IoGetDevObjExtension(DeviceObject)->ExtensionFlags |= DOE_DELETE_PENDING;
 
-   /* Make the object temporary. This should automatically remove the device
-      from the namespace */
-   ObMakeTemporaryObject(DeviceObject);
-
-   /* Dereference the driver object */
-   ObDereferenceObject(DeviceObject->DriverObject);
-
-   /* Remove the keep-alive reference */
-   ObDereferenceObject(DeviceObject);
+    /* Check if the device object can be unloaded */
+    if (!DeviceObject->ReferenceCount) IopUnloadDevice(DeviceObject);
 }
 
 /*
@@ -624,21 +844,28 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
  *    @implemented
  */
 VOID
-STDCALL
-IoDetachDevice(PDEVICE_OBJECT TargetDevice)
+NTAPI
+IoDetachDevice(IN PDEVICE_OBJECT TargetDevice)
 {
-    DPRINT("IoDetachDevice(TargetDevice 0x%p)\n", TargetDevice);
-
     /* Remove the attachment */
-    ((PEXTENDED_DEVOBJ_EXTENSION)TargetDevice->AttachedDevice->DeviceObjectExtension)->AttachedTo = NULL;
+    IoGetDevObjExtension(TargetDevice->AttachedDevice)->AttachedTo = NULL;
     TargetDevice->AttachedDevice = NULL;
+
+    /* Check if it's ok to delete this device */
+    if ((IoGetDevObjExtension(TargetDevice)->ExtensionFlags &
+        (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING | DOE_REMOVE_PENDING)) &&
+        !(TargetDevice->ReferenceCount))
+    {
+        /* It is, do it */
+        IopUnloadDevice(TargetDevice);
+    }
 }
 
 /*
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
                             IN  PDEVICE_OBJECT *DeviceObjectList,
                             IN  ULONG DeviceObjectListSize,
@@ -647,13 +874,8 @@ IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
     ULONG ActualDevices = 1;
     PDEVICE_OBJECT CurrentDevice = DriverObject->DeviceObject;
 
-    DPRINT1("IoEnumerateDeviceObjectList\n");
-
     /* Find out how many devices we'll enumerate */
-    while ((CurrentDevice = CurrentDevice->NextDevice))
-    {
-        ActualDevices++;
-    }
+    while ((CurrentDevice = CurrentDevice->NextDevice)) ActualDevices++;
 
     /* Go back to the first */
     CurrentDevice = DriverObject->DeviceObject;
@@ -698,19 +920,18 @@ IoEnumerateDeviceObjectList(IN  PDRIVER_OBJECT DriverObject,
  *    @implemented
  */
 PDEVICE_OBJECT
-STDCALL
+NTAPI
 IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
 {
-    PDEVICE_OBJECT Current = DeviceObject;
-
     /* Get the last attached device */
-    while (Current->AttachedDevice)
+    while (DeviceObject->AttachedDevice)
     {
-        Current = Current->AttachedDevice;
+        /* Move to the next one */
+        DeviceObject = DeviceObject->AttachedDevice;
     }
 
     /* Return it */
-    return Current;
+    return DeviceObject;
 }
 
 /*
@@ -720,14 +941,13 @@ IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
  *    @implemented
  */
 PDEVICE_OBJECT
-STDCALL
+NTAPI
 IoGetAttachedDeviceReference(PDEVICE_OBJECT DeviceObject)
 {
-    PDEVICE_OBJECT Current = IoGetAttachedDevice(DeviceObject);
-
-    /* Reference the ATtached Device */
-    ObReferenceObject(Current);
-    return Current;
+    /* Reference the Attached Device */
+    DeviceObject = IoGetAttachedDevice(DeviceObject);
+    ObReferenceObject(DeviceObject);
+    return DeviceObject;
 }
 
 /*

@@ -80,6 +80,13 @@
         FALSE :                                         \
         FileObject->Flags & FO_SYNCHRONOUS_IO))         \
 
+//
+// Returns the internal Device Object Extension
+//
+#define IoGetDevObjExtension(DeviceObject)              \
+    ((PEXTENDED_DEVOBJ_EXTENSION)                       \
+     (DeviceObject->DeviceObjectExtension))             \
+
 /*
  * VOID
  * IopDeviceNodeSetFlag(
@@ -176,6 +183,15 @@
         (_DeviceNode);                                  \
     (_DeviceTreeTraverseContext)->Action = (_Action);   \
     (_DeviceTreeTraverseContext)->Context = (_Context); }
+
+//
+// Device List Operations
+//
+typedef enum _IOP_DEVICE_LIST_OPERATION
+{
+    IopRemove,
+    IopAdd
+} IOP_DEVICE_LIST_OPERATION, *PIOP_DEVICE_LIST_OPERATION;
 
 //
 // Special version of the IRP Overlay used to optimize I/O completion
@@ -561,6 +577,12 @@ IoInitFileSystemImplementation(
 VOID
 IoInitVpbImplementation(
     VOID
+);
+
+NTSTATUS
+NTAPI
+IopReferenceDeviceObject(
+    IN PDEVICE_OBJECT DeviceObject
 );
 
 //

@@ -55,6 +55,9 @@ IopParseDevice(IN PVOID ParseObject,
     if (!*RemainingName->Buffer)
     {
         DeviceObject = ParseObject;
+        Status = IopReferenceDeviceObject(DeviceObject);
+        // fixme: NT wouldn't allow this
+        //if (!NT_SUCCESS(Status)) return Status;// KEBUGCHECK(0);
 
         Status = ObCreateObject(AccessMode,
                                 IoFileObjectType,
@@ -116,6 +119,9 @@ IopParseDevice(IN PVOID ParseObject,
         DeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
     }
 
+    Status = IopReferenceDeviceObject(DeviceObject);
+    // fixme: NT wouldn't allow this
+    //if (!NT_SUCCESS(Status)) return Status;// KEBUGCHECK(0);
     RtlCreateUnicodeString(&FileObject->FileName, RemainingName->Buffer);
     FileObject->DeviceObject = DeviceObject;
     *Object = FileObject;
