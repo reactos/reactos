@@ -219,6 +219,29 @@ typedef struct _IO_INTERRUPT
 } IO_INTERRUPT, *PIO_INTERRUPT;
 
 //
+// I/O Error Log Packet Header
+//
+typedef struct _ERROR_LOG_ENTRY
+{
+    CSHORT Type;
+    CSHORT Size;
+    LIST_ENTRY ListEntry;
+    PDEVICE_OBJECT DeviceObject;
+    PDRIVER_OBJECT DriverObject;
+    LARGE_INTEGER TimeStamp;
+} ERROR_LOG_ENTRY, *PERROR_LOG_ENTRY;
+
+//
+// Event Log LPC Message
+//
+typedef struct _ELF_API_MSG
+{
+    PORT_MESSAGE h;
+    ULONG Unknown[2];
+    IO_ERROR_LOG_MESSAGE IoErrorMessage;
+} ELF_API_MSG, *PELF_API_MSG;
+
+//
 // To simplify matters, the kernel is made to support both the checked and free
 // version of the I/O Remove Lock in the same binary. This structure includes
 // both, since the DDK has the structure with a compile-time #ifdef.
@@ -604,10 +627,16 @@ IoInitCancelHandling(
 //
 // Error Logging Routines
 //
-
-NTSTATUS
+VOID
+NTAPI
 IopInitErrorLog(
     VOID
+);
+
+VOID
+NTAPI
+IopLogWorker(
+    IN PVOID Parameter
 );
 
 //

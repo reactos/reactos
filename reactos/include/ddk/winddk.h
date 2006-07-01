@@ -1849,6 +1849,14 @@ typedef struct _IO_ERROR_LOG_MESSAGE {
 #define IO_ERROR_LOG_MESSAGE_HEADER_LENGTH (sizeof(IO_ERROR_LOG_MESSAGE) - \
                                             sizeof(IO_ERROR_LOG_PACKET) + \
                                             (sizeof(WCHAR) * 40))
+#define ERROR_LOG_MESSAGE_LIMIT_SIZE                                          \
+    (ERROR_LOG_LIMIT_SIZE + IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
+#define IO_ERROR_LOG_MESSAGE_LENGTH                                           \
+    ((PORT_MAXIMUM_MESSAGE_LENGTH > ERROR_LOG_MESSAGE_LIMIT_SIZE) ?           \
+        ERROR_LOG_MESSAGE_LIMIT_SIZE :                                        \
+        PORT_MAXIMUM_MESSAGE_LENGTH)
+#define ERROR_LOG_MAXIMUM_SIZE (IO_ERROR_LOG_MESSAGE_LENGTH -                 \
+                                IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
 
 typedef struct _CONTROLLER_OBJECT {
   CSHORT  Type;
