@@ -33,6 +33,10 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
   PDRIVER_FS_NOTIFICATION FSDNotificationProc;
 } FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IoInitVpbImplementation)
+#endif
+
 /* GLOBALS ******************************************************************/
 
 static ERESOURCE FileSystemListLock;
@@ -45,8 +49,39 @@ static VOID
 IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 			  BOOLEAN DriverActive);
 
-
+static KSPIN_LOCK IoVpbLock;
 /* FUNCTIONS *****************************************************************/
+
+VOID INIT_FUNCTION
+IoInitVpbImplementation(VOID)
+{
+   KeInitializeSpinLock(&IoVpbLock);
+}
+
+NTSTATUS
+STDCALL
+IopAttachVpb(PDEVICE_OBJECT DeviceObject)
+{
+    PVPB Vpb;
+
+    /* Allocate the Vpb */
+    Vpb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(VPB),
+                                TAG_VPB);
+    if (Vpb == NULL) return(STATUS_UNSUCCESSFUL);
+
+    /* Clear it so we don't waste time manually */
+    RtlZeroMemory(Vpb, sizeof(VPB));
+
+    /* Set the Header and Device Field */
+    Vpb->Type = IO_TYPE_VPB;
+    Vpb->Size = sizeof(VPB);
+    Vpb->RealDevice = DeviceObject;
+
+    /* link it to the Device Object */
+    DeviceObject->Vpb = Vpb;
+    return(STATUS_SUCCESS);
+}
 
 VOID INIT_FUNCTION
 IoInitFileSystemImplementation(VOID)
@@ -601,6 +636,27 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 	}
 
     }
+}
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+IoAcquireVpbSpinLock(OUT PKIRQL Irql)
+{
+   KeAcquireSpinLock(&IoVpbLock,
+		     Irql);
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+IoReleaseVpbSpinLock(IN KIRQL Irql)
+{
+   KeReleaseSpinLock(&IoVpbLock,
+		     Irql);
 }
 
 /* EOF */

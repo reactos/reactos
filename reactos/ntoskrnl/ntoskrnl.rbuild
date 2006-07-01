@@ -175,7 +175,6 @@
 			<file>error.c</file>
 			<file>event.c</file>
             <file>file.c</file>
-            <file>fs.c</file>
             <file>iocomp.c</file>
             <file>iofunc.c</file>
             <file>iomgr.c</file>
@@ -189,7 +188,7 @@
             <file>util.c</file>
             <file>symlink.c</file>
             <file>timer.c</file>
-            <file>vpb.c</file>
+            <file>volume.c</file>
         </directory>
         <directory name="pnpmgr">
             <file>plugplay.c</file>

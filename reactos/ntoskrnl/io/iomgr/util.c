@@ -195,4 +195,16 @@ IoGetDeviceToVerify(IN PETHREAD Thread)
     return Thread->DeviceToVerify;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoCheckQuerySetVolumeInformation(IN FS_INFORMATION_CLASS FsInformationClass,
+                                 IN ULONG Length,
+                                 IN BOOLEAN SetOperation)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
 /* EOF */
