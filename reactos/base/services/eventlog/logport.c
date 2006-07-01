@@ -120,7 +120,8 @@ NTSTATUS ProcessPortMessage(VOID)
     IO_ERROR_LPC Request;
     PIO_ERROR_LOG_MESSAGE Message;
 	PEVENTLOGRECORD pRec;
-    ULONG ulRecNum, ulRecSize ;
+    ULONG ulRecNum;
+    DWORD dwRecSize;
     NTSTATUS Status;
 	PLOGFILE SystemLog = NULL;
     
@@ -160,7 +161,7 @@ NTSTATUS ProcessPortMessage(VOID)
             Message = (PIO_ERROR_LOG_MESSAGE)&Request.Message;
 			ulRecNum = SystemLog ? SystemLog->Header.NextRecord : 0;
 
-			ulRecSize = LogfBuildNewRecord(NULL,
+			pRec = (PEVENTLOGRECORD)LogfAllocAndBuildNewRecord(&dwRecSize,
 				ulRecNum,
 				Message->Type,
 				Message->EntryData.EventCategory,
@@ -174,31 +175,14 @@ NTSTATUS ProcessPortMessage(VOID)
 				Message->EntryData.DumpDataSize,
 				(LPVOID)(((PBYTE)Message)
 					+sizeof(IO_ERROR_LOG_PACKET)-sizeof(ULONG)));
-
-			DPRINT("ulRecSize = %d\n", ulRecSize);
-
-			pRec = HeapAlloc(MyHeap, 0, ulRecSize);
 
 			if(pRec == NULL)
 			{
-				DPRINT("Can't allocate heap!\n");
+				DPRINT("LogfAllocAndBuildNewRecord failed!\n");
 				return STATUS_NO_MEMORY;
 			}
-
-			LogfBuildNewRecord((PBYTE)pRec,
-				ulRecNum,
-				Message->Type,
-				Message->EntryData.EventCategory,
-				Message->EntryData.ErrorCode,
-				(WCHAR*)(((PBYTE)Message)+Message->DriverNameOffset),
-				L"MyComputer", /* FIXME */
-				0,
-				NULL,
-				Message->EntryData.NumberOfStrings,
-				(WCHAR*)(((PBYTE)Message)+Message->EntryData.StringOffset),
-				Message->EntryData.DumpDataSize,
-				(LPVOID)(((PBYTE)Message)
-					+sizeof(IO_ERROR_LOG_PACKET)-sizeof(ULONG)));
+			
+			DPRINT("dwRecSize = %d\n", dwRecSize);
 			
 			DPRINT("\n --- EVENTLOG RECORD ---\n");
 			PRINT_RECORD(pRec);
@@ -206,12 +190,12 @@ NTSTATUS ProcessPortMessage(VOID)
 			
 			if(!onLiveCD && SystemLog)
 			{
-				if(!LogfWriteData(SystemLog, ulRecSize, (PBYTE)pRec))
+				if(!LogfWriteData(SystemLog, dwRecSize, (PBYTE)pRec))
 					DPRINT("LogfWriteData failed!\n");
 				else DPRINT("Data written to Log!\n");
 			}
 
-			HeapFree(MyHeap, 0, pRec);
+			LogfFreeRecord(pRec);
         }
     }
     return Status;

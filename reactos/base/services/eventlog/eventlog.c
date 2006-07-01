@@ -178,7 +178,8 @@ BOOL LoadLogFiles(HKEY eventlogKey)
 INT main()
 {
 	WCHAR LogPath[MAX_PATH];
-	PLOGFILE pLogf;	
+	PLOGFILE pLogf;
+	INT RetCode = 0;
 	LONG result;
 	HKEY elogKey;
 
@@ -189,15 +190,8 @@ INT main()
 	if(MyHeap==NULL)
 	{
 		DPRINT1("FATAL ERROR, can't create heap.\n");
-		
-		DeleteCriticalSection(&LogListCs);	
-		// Close all log files.
-		for(pLogf = LogListHead; pLogf; pLogf = ((PLOGFILE)pLogf)->Next)
-		{
-			LogfClose(pLogf);
-		}
-
-		return 1;
+		RetCode = 1;
+		goto bye_bye;
 	}
 	
 	GetWindowsDirectory(LogPath, MAX_PATH);
@@ -217,17 +211,8 @@ INT main()
 		if(result != ERROR_SUCCESS)
 		{
 			DPRINT1("Fatal error: can't open eventlog registry key.\n");
-
-			DeleteCriticalSection(&LogListCs);
-	
-			// Close all log files.
-			for(pLogf = LogListHead; pLogf; pLogf = ((PLOGFILE)pLogf)->Next)
-			{
-			    LogfClose(pLogf);
-			}
-	 
-			HeapDestroy(MyHeap);
-			return 1;
+			RetCode = 1;
+			goto bye_bye;
 		}
 		
 		LoadLogFiles(elogKey);
@@ -235,16 +220,16 @@ INT main()
 
     StartServiceCtrlDispatcher(ServiceTable);
 
+bye_bye:
 	DeleteCriticalSection(&LogListCs);
 	
 	// Close all log files.
 	for(pLogf = LogListHead; pLogf; pLogf = ((PLOGFILE)pLogf)->Next)
-	{
 		LogfClose(pLogf);
-	}
 	 
-	HeapDestroy(MyHeap);
-    return 0;
+	if(MyHeap) HeapDestroy(MyHeap);
+
+    return RetCode;
 }
 
 VOID EventTimeToSystemTime(DWORD EventTime, 

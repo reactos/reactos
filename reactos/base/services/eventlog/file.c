@@ -618,7 +618,7 @@ BOOL LogfAddOffsetInformation(PLOGFILE LogFile,
 	return TRUE;
 }
 
-DWORD LogfBuildNewRecord(PBYTE Buffer, 
+PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 						 DWORD dwRecordNumber,
 						 WORD wType,
 						 WORD wCategory,
@@ -637,6 +637,7 @@ DWORD LogfBuildNewRecord(PBYTE Buffer,
 	SYSTEMTIME SysTime;
 	WCHAR *str;
 	UINT i, pos, nStrings;
+	PBYTE Buffer;
 
 	dwRecSize = sizeof(EVENTLOGRECORD) + (lstrlenW(ComputerName) + 
 	lstrlenW(SourceName) + 2)*sizeof(WCHAR);
@@ -654,12 +655,13 @@ DWORD LogfBuildNewRecord(PBYTE Buffer,
 	if(dwRecSize % 4 != 0) dwRecSize += 4 - (dwRecSize % 4);
 	dwRecSize+=4;
 
+	Buffer = HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, dwRecSize);
 	if(!Buffer)
 	{
-		return dwRecSize;
+		DPRINT1("Can't allocate heap!\n");
+		return NULL;
 	}
 
-	ZeroMemory(Buffer, dwRecSize);
 	pRec = (PEVENTLOGRECORD)Buffer;
 	pRec->Length = dwRecSize;
 	pRec->Reserved = LOGFILE_SIGNATURE;
@@ -711,6 +713,12 @@ DWORD LogfBuildNewRecord(PBYTE Buffer,
 
 	if(pos % 4 != 0) pos += 4 - (pos % 4);
 	*((PDWORD)(Buffer+pos)) = dwRecSize;
+	
+	*lpRecSize = dwRecSize;
+	return Buffer;
+}
 
-	return TRUE;
+inline void LogfFreeRecord(LPVOID Rec)
+{
+	HeapFree(MyHeap, 0, Rec);
 }
