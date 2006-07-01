@@ -22,30 +22,34 @@ KSPIN_LOCK CancelSpinLock;
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 IoAcquireCancelSpinLock(PKIRQL Irql)
 {
-   KeAcquireSpinLock(&CancelSpinLock,Irql);
+    /* Just acquire the internal lock */
+    KeAcquireSpinLock(&CancelSpinLock,Irql);
 }
 
 /*
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 IoGetInitialStack(VOID)
 {
-    return(PsGetCurrentThread()->Tcb.InitialStack);
+    /* Return the initial stack from the TCB */
+    return PsGetCurrentThread()->Tcb.InitialStack;
 }
 
 /*
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 IoGetStackLimits(OUT PULONG LowLimit,
                  OUT PULONG HighLimit)
 {
+    /* Return the limits from the TEB... this is wrong! */
+    DPRINT1("FIXME: IoGetStackLimits returning B*LLSHIT!\n");
     *LowLimit = (ULONG)NtCurrentTeb()->Tib.StackLimit;
     *HighLimit = (ULONG)NtCurrentTeb()->Tib.StackBase;
 }
@@ -54,7 +58,7 @@ IoGetStackLimits(OUT PULONG LowLimit,
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 IoIsSystemThread(IN PETHREAD Thread)
 {
     /* Call the Ps Function */
@@ -64,96 +68,93 @@ IoIsSystemThread(IN PETHREAD Thread)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN
+NTAPI
 IoIsWdmVersionAvailable(IN UCHAR MajorVersion,
                         IN UCHAR MinorVersion)
 {
-   /* MinorVersion = 0x20 : WinXP
-                     0x10 : Win2k
-                     0x5  : WinMe
-                     <0x5 : Win98
-
-      We report Win2k now
-      */
-   if (MajorVersion <= 1 && MinorVersion <= 0x10)
-      return TRUE;
-   return FALSE;
+    /* Return support for WDM 1.10 (Windows 2000) */
+    if (MajorVersion <= 1 && MinorVersion <= 0x10) return TRUE;
+    return FALSE;
 }
 
 /*
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 IoReleaseCancelSpinLock(KIRQL Irql)
 {
-   KeReleaseSpinLock(&CancelSpinLock,Irql);
+    /* Release the internal lock */
+    KeReleaseSpinLock(&CancelSpinLock,Irql);
 }
 
 /*
  * @implemented
  */
 PEPROCESS
-STDCALL
+NTAPI
 IoThreadToProcess(IN PETHREAD Thread)
 {
-    return(Thread->ThreadsProcess);
+    /* Return the thread's process */
+    return Thread->ThreadsProcess;
 }
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 IoCheckDesiredAccess(IN OUT PACCESS_MASK DesiredAccess,
-		     IN ACCESS_MASK GrantedAccess)
+                     IN ACCESS_MASK GrantedAccess)
 {
-  PAGED_CODE();
+    PAGED_CODE();
 
-  RtlMapGenericMask(DesiredAccess,
-		    &IoFileObjectType->TypeInfo.GenericMapping);
+    /* Map the generic mask */
+    RtlMapGenericMask(DesiredAccess,
+                      &IoFileObjectType->TypeInfo.GenericMapping);
 
-  if ((~(*DesiredAccess) & GrantedAccess) != 0)
-    return STATUS_ACCESS_DENIED;
-  else
+    /* Fail if the access masks don't grant full access */
+    if ((~(*DesiredAccess) & GrantedAccess)) return STATUS_ACCESS_DENIED;
     return STATUS_SUCCESS;
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS STDCALL
-IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
-			IN ULONG EaLength,
-			OUT PULONG ErrorOffset)
-{
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS STDCALL
-IoCheckFunctionAccess(IN ACCESS_MASK GrantedAccess,
-		      IN UCHAR MajorFunction,
-		      IN UCHAR MinorFunction,
-		      IN ULONG IoControlCode,
-		      IN PVOID ExtraData OPTIONAL,
-		      IN PVOID ExtraData2 OPTIONAL)
-{
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
 }
 
 /*
  * @unimplemented
  */
 NTSTATUS
-STDCALL
-IoValidateDeviceIoControlAccess(IN  PIRP Irp,
-                                IN  ULONG RequiredAccess)
+NTAPI
+IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
+                        IN ULONG EaLength,
+                        OUT PULONG ErrorOffset)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoCheckFunctionAccess(IN ACCESS_MASK GrantedAccess,
+                      IN UCHAR MajorFunction,
+                      IN UCHAR MinorFunction,
+                      IN ULONG IoControlCode,
+                      IN PVOID ExtraData OPTIONAL,
+                      IN PVOID ExtraData2 OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoValidateDeviceIoControlAccess(IN PIRP Irp,
+                                IN ULONG RequiredAccess)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -162,37 +163,36 @@ IoValidateDeviceIoControlAccess(IN  PIRP Irp,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 IoSetDeviceToVerify(IN PETHREAD Thread,
-		    IN PDEVICE_OBJECT DeviceObject)
+                    IN PDEVICE_OBJECT DeviceObject)
 {
-  Thread->DeviceToVerify = DeviceObject;
+    /* Set the pointer in the thread */
+    Thread->DeviceToVerify = DeviceObject;
 }
-
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 IoSetHardErrorOrVerifyDevice(IN PIRP Irp,
-			     IN PDEVICE_OBJECT DeviceObject)
+                             IN PDEVICE_OBJECT DeviceObject)
 {
-  Irp->Tail.Overlay.Thread->DeviceToVerify = DeviceObject;
+    /* Set the pointer in the IRP */
+    Irp->Tail.Overlay.Thread->DeviceToVerify = DeviceObject;
 }
 
 /*
  * @implemented
  */
-PDEVICE_OBJECT STDCALL
+PDEVICE_OBJECT
+NTAPI
 IoGetDeviceToVerify(IN PETHREAD Thread)
-/*
- * FUNCTION: Returns a pointer to the device, representing a removable-media
- * device, that is the target of the given thread's I/O request
- */
 {
-  return(Thread->DeviceToVerify);
+    /* Return the pointer that was set with IoSetDeviceToVerify */
+    return Thread->DeviceToVerify;
 }
-
-
 
 /* EOF */
