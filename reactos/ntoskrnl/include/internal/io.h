@@ -556,7 +556,8 @@ IopStartDevice(
 );
 
 NTSTATUS
-IoMountVolume(
+NTAPI
+IopMountVolume(
     IN PDEVICE_OBJECT DeviceObject,
     IN BOOLEAN AllowRawMount
 );
@@ -573,17 +574,19 @@ IoOpenFileOnDevice(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 IopAttachVpb(
     IN PDEVICE_OBJECT DeviceObject
 );
 
 VOID
+NTAPI
 IoInitFileSystemImplementation(
     VOID
 );
 
 VOID
+NTAPI
 IoInitVpbImplementation(
     VOID
 );
@@ -609,6 +612,7 @@ IoShutdownRegisteredDevices(
 );
 
 VOID
+NTAPI
 IoShutdownRegisteredFileSystems(
     VOID
 );

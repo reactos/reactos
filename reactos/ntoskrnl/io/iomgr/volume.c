@@ -1,11 +1,11 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/fs.c
- * PURPOSE:         Filesystem functions
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/io/iomgr/volume.c
+ * PURPOSE:         Volume and File System I/O Support
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -22,15 +22,15 @@
 
 typedef struct _FILE_SYSTEM_OBJECT
 {
-  PDEVICE_OBJECT DeviceObject;
-  LIST_ENTRY Entry;
+    PDEVICE_OBJECT DeviceObject;
+    LIST_ENTRY Entry;
 } FILE_SYSTEM_OBJECT, *PFILE_SYSTEM_OBJECT;
 
 typedef struct _FS_CHANGE_NOTIFY_ENTRY
 {
-  LIST_ENTRY FsChangeNotifyList;
-  PDRIVER_OBJECT DriverObject;
-  PDRIVER_FS_NOTIFICATION FSDNotificationProc;
+    LIST_ENTRY FsChangeNotifyList;
+    PDRIVER_OBJECT DriverObject;
+    PDRIVER_FS_NOTIFICATION FSDNotificationProc;
 } FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
 
 #if defined (ALLOC_PRAGMA)
@@ -39,28 +39,37 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
 
 /* GLOBALS ******************************************************************/
 
-static ERESOURCE FileSystemListLock;
-static LIST_ENTRY FileSystemListHead;
+ERESOURCE FileSystemListLock;
+LIST_ENTRY FileSystemListHead;
+KGUARDED_MUTEX FsChangeNotifyListLock;
+LIST_ENTRY FsChangeNotifyListHead;
+KSPIN_LOCK IoVpbLock;
 
-static KGUARDED_MUTEX FsChangeNotifyListLock;
-static LIST_ENTRY FsChangeNotifyListHead;
+/* PRIVATE FUNCTIONS *********************************************************/
 
-static VOID
-IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
-			  BOOLEAN DriverActive);
-
-static KSPIN_LOCK IoVpbLock;
-/* FUNCTIONS *****************************************************************/
-
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 IoInitVpbImplementation(VOID)
 {
    KeInitializeSpinLock(&IoVpbLock);
 }
 
+VOID
+INIT_FUNCTION
+NTAPI
+IoInitFileSystemImplementation(VOID)
+{
+  InitializeListHead(&FileSystemListHead);
+  ExInitializeResourceLite(&FileSystemListLock);
+
+  InitializeListHead(&FsChangeNotifyListHead);
+  KeInitializeGuardedMutex(&FsChangeNotifyListLock);
+}
+
 NTSTATUS
 STDCALL
-IopAttachVpb(PDEVICE_OBJECT DeviceObject)
+IopAttachVpb(IN PDEVICE_OBJECT DeviceObject)
 {
     PVPB Vpb;
 
@@ -68,7 +77,7 @@ IopAttachVpb(PDEVICE_OBJECT DeviceObject)
     Vpb = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(VPB),
                                 TAG_VPB);
-    if (Vpb == NULL) return(STATUS_UNSUCCESSFUL);
+    if (!Vpb) return(STATUS_UNSUCCESSFUL);
 
     /* Clear it so we don't waste time manually */
     RtlZeroMemory(Vpb, sizeof(VPB));
@@ -83,580 +92,491 @@ IopAttachVpb(PDEVICE_OBJECT DeviceObject)
     return(STATUS_SUCCESS);
 }
 
-VOID INIT_FUNCTION
-IoInitFileSystemImplementation(VOID)
+VOID
+NTAPI
+IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
+                          IN BOOLEAN DriverActive)
 {
-  InitializeListHead(&FileSystemListHead);
-  ExInitializeResourceLite(&FileSystemListLock);
+    PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
 
-  InitializeListHead(&FsChangeNotifyListHead);
-  KeInitializeGuardedMutex(&FsChangeNotifyListLock);
+    KeAcquireGuardedMutex(&FsChangeNotifyListLock);
+    LIST_FOR_EACH(ChangeEntry, &FsChangeNotifyListHead,FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList) 
+    {
+        (ChangeEntry->FSDNotificationProc)(DeviceObject, DriverActive);
+    }
+    KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 }
-
 
 VOID
+NTAPI
 IoShutdownRegisteredFileSystems(VOID)
 {
-  FILE_SYSTEM_OBJECT* current;
-  PIRP Irp;
-  KEVENT Event;
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
+    FILE_SYSTEM_OBJECT* current;
+    PIRP Irp;
+    KEVENT Event;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
 
-  DPRINT("IoShutdownRegisteredFileSystems()\n");
+    KeEnterCriticalRegion();
+    ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-  KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
-  KeInitializeEvent(&Event,
-		    NotificationEvent,
-		    FALSE);
-
-  LIST_FOR_EACH(current, &FileSystemListHead, FILE_SYSTEM_OBJECT,Entry)
+    LIST_FOR_EACH(current, &FileSystemListHead, FILE_SYSTEM_OBJECT,Entry)
     {
-      /* send IRP_MJ_SHUTDOWN */
-      Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
-					 current->DeviceObject,
-					 NULL,
-					 0,
-					 0,
-					 &Event,
-					 &IoStatusBlock);
+        /* send IRP_MJ_SHUTDOWN */
+        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
+                                           current->DeviceObject,
+                                           NULL,
+                                           0,
+                                           0,
+                                           &Event,
+                                           &IoStatusBlock);
 
-      Status = IoCallDriver(current->DeviceObject,Irp);
-      if (Status == STATUS_PENDING)
-	{
-	  KeWaitForSingleObject(&Event,
-				Executive,
-				KernelMode,
-				FALSE,
-				NULL);
-	}
+        Status = IoCallDriver(current->DeviceObject,Irp);
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+        }
     }
 
-  ExReleaseResourceLite(&FileSystemListLock);
-  KeLeaveCriticalRegion();
+    ExReleaseResourceLite(&FileSystemListLock);
+    KeLeaveCriticalRegion();
 }
-
-
-static NTSTATUS
-IopMountFileSystem(PDEVICE_OBJECT DeviceObject,
-		   PDEVICE_OBJECT DeviceToMount)
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  PIO_STACK_LOCATION StackPtr;
-  KEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
-
-  DPRINT("IopMountFileSystem(DeviceObject 0x%p, DeviceToMount 0x%p)\n",
-	 DeviceObject,DeviceToMount);
-
-  ASSERT_IRQL(PASSIVE_LEVEL);
-
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-  Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-  if (Irp==NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  Irp->UserIosb = &IoStatusBlock;
-  DPRINT("Irp->UserIosb 0x%p\n", Irp->UserIosb);
-  Irp->UserEvent = &Event;
-  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-  StackPtr = IoGetNextIrpStackLocation(Irp);
-  StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
-  StackPtr->MinorFunction = IRP_MN_MOUNT_VOLUME;
-  StackPtr->Flags = 0;
-  StackPtr->Control = 0;
-  StackPtr->DeviceObject = DeviceObject;
-  StackPtr->FileObject = NULL;
-  StackPtr->CompletionRoutine = NULL;
-
-  StackPtr->Parameters.MountVolume.Vpb = DeviceToMount->Vpb;
-  StackPtr->Parameters.MountVolume.DeviceObject = DeviceToMount;
-
-  Status = IoCallDriver(DeviceObject,Irp);
-  if (Status==STATUS_PENDING)
-    {
-      KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-      Status = IoStatusBlock.Status;
-    }
-
-  return(Status);
-}
-
-
-static NTSTATUS
-IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  PIO_STACK_LOCATION StackPtr;
-  KEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
-
-  DPRINT("IopLoadFileSystem(DeviceObject 0x%p)\n", DeviceObject);
-
-  ASSERT_IRQL(PASSIVE_LEVEL);
-
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-  Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-  if (Irp==NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  Irp->UserIosb = &IoStatusBlock;
-  DPRINT("Irp->UserIosb 0x%p\n", Irp->UserIosb);
-  Irp->UserEvent = &Event;
-  Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-  StackPtr = IoGetNextIrpStackLocation(Irp);
-  StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
-  StackPtr->MinorFunction = IRP_MN_LOAD_FILE_SYSTEM;
-  StackPtr->Flags = 0;
-  StackPtr->Control = 0;
-  StackPtr->DeviceObject = DeviceObject;
-  StackPtr->FileObject = NULL;
-  StackPtr->CompletionRoutine = NULL;
-
-  Status = IoCallDriver(DeviceObject,Irp);
-  if (Status==STATUS_PENDING)
-    {
-      KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-      Status = IoStatusBlock.Status;
-    }
-
-  return(Status);
-}
-
 
 NTSTATUS
-IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
-	      IN BOOLEAN AllowRawMount)
-/*
- * FUNCTION: Mounts a logical volume
- * ARGUMENTS:
- *         DeviceObject = Device to mount
- * RETURNS: Status
- */
+NTAPI
+IopMountFileSystem(IN PDEVICE_OBJECT DeviceObject,
+                   IN PDEVICE_OBJECT DeviceToMount)
 {
-  PFILE_SYSTEM_OBJECT current;
-  NTSTATUS Status;
-  DEVICE_TYPE MatchingDeviceType;
-  PDEVICE_OBJECT DevObject;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIO_STACK_LOCATION StackPtr;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
+    ASSERT_IRQL(PASSIVE_LEVEL);
 
-  ASSERT_IRQL(PASSIVE_LEVEL);
-
-  DPRINT("IoMountVolume(DeviceObject 0x%p  AllowRawMount %x)\n",
-	 DeviceObject, AllowRawMount);
-
-  switch (DeviceObject->DeviceType)
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    if (Irp==NULL)
     {
-      case FILE_DEVICE_DISK:
-      case FILE_DEVICE_VIRTUAL_DISK: /* ?? */
-	MatchingDeviceType = FILE_DEVICE_DISK_FILE_SYSTEM;
-	break;
-
-      case FILE_DEVICE_CD_ROM:
-	MatchingDeviceType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
-	break;
-
-      case FILE_DEVICE_NETWORK:
-	MatchingDeviceType = FILE_DEVICE_NETWORK_FILE_SYSTEM;
-	break;
-
-      case FILE_DEVICE_TAPE:
-	MatchingDeviceType = FILE_DEVICE_TAPE_FILE_SYSTEM;
-	break;
-
-      default:
-	CPRINT("No matching file system type found for device type: %x\n",
-	       DeviceObject->DeviceType);
-	return(STATUS_UNRECOGNIZED_VOLUME);
+        return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
-  KeEnterCriticalRegion();
-  ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
+    Irp->UserIosb = &IoStatusBlock;
+    DPRINT("Irp->UserIosb 0x%p\n", Irp->UserIosb);
+    Irp->UserEvent = &Event;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
-restart:
-  LIST_FOR_EACH(current,&FileSystemListHead, FILE_SYSTEM_OBJECT, Entry)
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+    StackPtr->MinorFunction = IRP_MN_MOUNT_VOLUME;
+    StackPtr->Flags = 0;
+    StackPtr->Control = 0;
+    StackPtr->DeviceObject = DeviceObject;
+    StackPtr->FileObject = NULL;
+    StackPtr->CompletionRoutine = NULL;
+
+    StackPtr->Parameters.MountVolume.Vpb = DeviceToMount->Vpb;
+    StackPtr->Parameters.MountVolume.DeviceObject = DeviceToMount;
+
+    Status = IoCallDriver(DeviceObject,Irp);
+    if (Status==STATUS_PENDING)
     {
-      if (current->DeviceObject->DeviceType != MatchingDeviceType)
-	{
-	  continue;
-	}
-      /* If we are not allowed to mount this volume as a raw filesystem volume
+        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    return(Status);
+}
+
+NTSTATUS
+NTAPI
+IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIO_STACK_LOCATION StackPtr;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status;
+    ASSERT_IRQL(PASSIVE_LEVEL);
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    if (Irp==NULL)
+    {
+        return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+    Irp->UserIosb = &IoStatusBlock;
+    Irp->UserEvent = &Event;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+    StackPtr->MinorFunction = IRP_MN_LOAD_FILE_SYSTEM;
+    StackPtr->Flags = 0;
+    StackPtr->Control = 0;
+    StackPtr->DeviceObject = DeviceObject;
+    StackPtr->FileObject = NULL;
+    StackPtr->CompletionRoutine = NULL;
+
+    Status = IoCallDriver(DeviceObject,Irp);
+    if (Status==STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+        Status = IoStatusBlock.Status;
+    }
+
+    return(Status);
+}
+
+NTSTATUS
+NTAPI
+IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
+               IN BOOLEAN AllowRawMount)
+{
+    PFILE_SYSTEM_OBJECT current;
+    NTSTATUS Status;
+    DEVICE_TYPE MatchingDeviceType;
+    PDEVICE_OBJECT DevObject;
+    ASSERT_IRQL(PASSIVE_LEVEL);
+
+    switch (DeviceObject->DeviceType)
+    {
+        case FILE_DEVICE_DISK:
+        case FILE_DEVICE_VIRTUAL_DISK: /* ?? */
+            MatchingDeviceType = FILE_DEVICE_DISK_FILE_SYSTEM;
+            break;
+
+        case FILE_DEVICE_CD_ROM:
+            MatchingDeviceType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
+            break;
+
+        case FILE_DEVICE_NETWORK:
+            MatchingDeviceType = FILE_DEVICE_NETWORK_FILE_SYSTEM;
+            break;
+
+        case FILE_DEVICE_TAPE:
+            MatchingDeviceType = FILE_DEVICE_TAPE_FILE_SYSTEM;
+            break;
+
+        default:
+            CPRINT("No matching file system type found for device type: %x\n",
+                    DeviceObject->DeviceType);
+            return(STATUS_UNRECOGNIZED_VOLUME);
+    }
+
+    KeEnterCriticalRegion();
+    ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
+
+    restart:
+    LIST_FOR_EACH(current,&FileSystemListHead, FILE_SYSTEM_OBJECT, Entry)
+    {
+        if (current->DeviceObject->DeviceType != MatchingDeviceType)
+        {
+            continue;
+        }
+
+        /* If we are not allowed to mount this volume as a raw filesystem volume
          then don't try this */
-      if (!AllowRawMount && RawFsIsRawFileSystemDeviceObject(current->DeviceObject))
+        if (!AllowRawMount && RawFsIsRawFileSystemDeviceObject(current->DeviceObject))
         {
-          Status = STATUS_UNRECOGNIZED_VOLUME;
+            Status = STATUS_UNRECOGNIZED_VOLUME;
         }
-      else
+        else
         {
-          Status = IopMountFileSystem(current->DeviceObject,
-				      DeviceObject);
+            Status = IopMountFileSystem(current->DeviceObject, DeviceObject);
         }
-      switch (Status)
-	{
-	  case STATUS_FS_DRIVER_REQUIRED:
-	    DevObject = current->DeviceObject;
-	    ExReleaseResourceLite(&FileSystemListLock);
-	    Status = IopLoadFileSystem(DevObject);
-	    if (!NT_SUCCESS(Status))
-	      {
-		KeLeaveCriticalRegion();
-		return(Status);
-	      }
-	    ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
-	    goto restart;
 
-	  case STATUS_SUCCESS:
-	    DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
-	                               VPB_MOUNTED;
-	    ExReleaseResourceLite(&FileSystemListLock);
-	    KeLeaveCriticalRegion();
-	    return(STATUS_SUCCESS);
+        switch (Status)
+        {
+            case STATUS_FS_DRIVER_REQUIRED:
+                DevObject = current->DeviceObject;
+                ExReleaseResourceLite(&FileSystemListLock);
+                Status = IopLoadFileSystem(DevObject);
+                if (!NT_SUCCESS(Status))
+                {
+                    KeLeaveCriticalRegion();
+                    return(Status);
+                }
+                ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
+                goto restart;
 
-	  case STATUS_UNRECOGNIZED_VOLUME:
-	  default:
-       /* do nothing */
-       break;
-	}
+            case STATUS_SUCCESS:
+                DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
+                                           VPB_MOUNTED;
+                ExReleaseResourceLite(&FileSystemListLock);
+                KeLeaveCriticalRegion();
+                return(STATUS_SUCCESS);
+
+            case STATUS_UNRECOGNIZED_VOLUME:
+            default:
+                /* do nothing */
+                break;
+        }
     }
-  ExReleaseResourceLite(&FileSystemListLock);
-  KeLeaveCriticalRegion();
 
-  return(STATUS_UNRECOGNIZED_VOLUME);
+    ExReleaseResourceLite(&FileSystemListLock);
+    KeLeaveCriticalRegion();
+    return(STATUS_UNRECOGNIZED_VOLUME);
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	IoVerifyVolume
- *
- * DESCRIPTION
- *	Verify the file system type and volume information or mount
- *	a file system.
- *
- * ARGUMENTS
- *	DeviceObject
- *		Device to verify or mount
- *
- *	AllowRawMount
- *		...
- *
- * RETURN VALUE
- *	Status
- *
- * @implemented
- */
-NTSTATUS STDCALL
-IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
-	       IN BOOLEAN AllowRawMount)
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  PIO_STACK_LOCATION StackPtr;
-  KEVENT Event;
-  PIRP Irp;
-  NTSTATUS Status;
-  PDEVICE_OBJECT DevObject;
-
-  DPRINT("IoVerifyVolume(DeviceObject 0x%p  AllowRawMount %x)\n",
-	 DeviceObject, AllowRawMount);
-
-  Status = STATUS_SUCCESS;
-
-  KeWaitForSingleObject(&DeviceObject->DeviceLock,
-			Executive,
-			KernelMode,
-			FALSE,
-			NULL);
-
-  if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
-    {
-      /* Issue verify request to the FSD */
-      DevObject = DeviceObject->Vpb->DeviceObject;
-
-      KeInitializeEvent(&Event,
-			NotificationEvent,
-			FALSE);
-
-      Irp = IoAllocateIrp(DevObject->StackSize, TRUE);
-      if (Irp==NULL)
-	{
-	  return(STATUS_INSUFFICIENT_RESOURCES);
-	}
-
-      Irp->UserIosb = &IoStatusBlock;
-      Irp->UserEvent = &Event;
-      Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-      StackPtr = IoGetNextIrpStackLocation(Irp);
-      StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
-      StackPtr->MinorFunction = IRP_MN_VERIFY_VOLUME;
-      StackPtr->Flags = 0;
-      StackPtr->Control = 0;
-      StackPtr->DeviceObject = DevObject;
-      StackPtr->FileObject = NULL;
-      StackPtr->CompletionRoutine = NULL;
-
-      StackPtr->Parameters.VerifyVolume.Vpb = DeviceObject->Vpb;
-      StackPtr->Parameters.VerifyVolume.DeviceObject = DeviceObject;
-
-      Status = IoCallDriver(DevObject,
-			    Irp);
-      if (Status==STATUS_PENDING)
-	{
-	  KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-	  Status = IoStatusBlock.Status;
-	}
-
-      if (NT_SUCCESS(Status))
-	{
-	  KeSetEvent(&DeviceObject->DeviceLock,
-		     IO_NO_INCREMENT,
-		     FALSE);
-	  return(STATUS_SUCCESS);
-	}
-    }
-
-  if (Status == STATUS_WRONG_VOLUME)
-    {
-      /* Clean existing VPB. This unmounts the filesystem. */
-      DPRINT("Wrong volume!\n");
-
-      DeviceObject->Vpb->DeviceObject = NULL;
-      DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
-    }
-
-  /* Start mount sequence */
-  Status = IoMountVolume(DeviceObject,
-			 AllowRawMount);
-
-  KeSetEvent(&DeviceObject->DeviceLock,
-	     IO_NO_INCREMENT,
-	     FALSE);
-
-  return(Status);
-}
-
-
-
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
  */
-VOID STDCALL
+NTSTATUS
+NTAPI
+IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
+               IN BOOLEAN AllowRawMount)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIO_STACK_LOCATION StackPtr;
+    KEVENT Event;
+    PIRP Irp;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PDEVICE_OBJECT DevObject;
+
+    KeWaitForSingleObject(&DeviceObject->DeviceLock,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+
+    if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
+    {
+        /* Issue verify request to the FSD */
+        DevObject = DeviceObject->Vpb->DeviceObject;
+
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+        Irp = IoAllocateIrp(DevObject->StackSize, TRUE);
+        if (Irp==NULL)
+        {
+            return(STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        Irp->UserIosb = &IoStatusBlock;
+        Irp->UserEvent = &Event;
+        Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+        StackPtr = IoGetNextIrpStackLocation(Irp);
+        StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+        StackPtr->MinorFunction = IRP_MN_VERIFY_VOLUME;
+        StackPtr->Flags = 0;
+        StackPtr->Control = 0;
+        StackPtr->DeviceObject = DevObject;
+        StackPtr->FileObject = NULL;
+        StackPtr->CompletionRoutine = NULL;
+
+        StackPtr->Parameters.VerifyVolume.Vpb = DeviceObject->Vpb;
+        StackPtr->Parameters.VerifyVolume.DeviceObject = DeviceObject;
+
+        Status = IoCallDriver(DevObject, Irp);
+        if (Status==STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+            Status = IoStatusBlock.Status;
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            KeSetEvent(&DeviceObject->DeviceLock, IO_NO_INCREMENT, FALSE);
+            return(STATUS_SUCCESS);
+        }
+    }
+
+    if (Status == STATUS_WRONG_VOLUME)
+    {
+        /* Clean existing VPB. This unmounts the filesystem. */
+        DPRINT("Wrong volume!\n");
+
+        DeviceObject->Vpb->DeviceObject = NULL;
+        DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
+    }
+
+    /* Start mount sequence */
+    Status = IopMountVolume(DeviceObject, AllowRawMount);
+
+    KeSetEvent(&DeviceObject->DeviceLock, IO_NO_INCREMENT, FALSE);
+    return(Status);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
 IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
-  PFILE_SYSTEM_OBJECT Fs;
+    PFILE_SYSTEM_OBJECT Fs;
 
-  DPRINT("IoRegisterFileSystem(DeviceObject 0x%p)\n", DeviceObject);
+    Fs = ExAllocatePoolWithTag(NonPagedPool,
+                               sizeof(FILE_SYSTEM_OBJECT),
+                               TAG_FILE_SYSTEM);
+    ASSERT(Fs!=NULL);
 
-  Fs = ExAllocatePoolWithTag(NonPagedPool,
-			     sizeof(FILE_SYSTEM_OBJECT),
-			     TAG_FILE_SYSTEM);
-  ASSERT(Fs!=NULL);
+    Fs->DeviceObject = DeviceObject;
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
 
-  Fs->DeviceObject = DeviceObject;
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
-
-  /* The RAW filesystem device objects must be last in the list so the
+    /* The RAW filesystem device objects must be last in the list so the
      raw filesystem driver is the last filesystem driver asked to mount
      a volume. It is always the first filesystem driver registered so
      we use InsertHeadList() here as opposed to the other alternative
      InsertTailList(). */
-  InsertHeadList(&FileSystemListHead,
-		 &Fs->Entry);
+    InsertHeadList(&FileSystemListHead, &Fs->Entry);
 
-  ExReleaseResourceLite(&FileSystemListLock);
-  KeLeaveCriticalRegion();
+    ExReleaseResourceLite(&FileSystemListLock);
+    KeLeaveCriticalRegion();
 
-  IopNotifyFileSystemChange(DeviceObject,
-			    TRUE);
+    IopNotifyFileSystemChange(DeviceObject, TRUE);
 }
-
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
-  PFILE_SYSTEM_OBJECT current;
+    PFILE_SYSTEM_OBJECT current;
 
-  DPRINT("IoUnregisterFileSystem(DeviceObject 0x%p)\n", DeviceObject);
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
 
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
-
-  LIST_FOR_EACH(current,&FileSystemListHead, FILE_SYSTEM_OBJECT,Entry)
+    LIST_FOR_EACH(current,&FileSystemListHead, FILE_SYSTEM_OBJECT,Entry)
     {
-      if (current->DeviceObject == DeviceObject)
-	{
-     RemoveEntryList(&current->Entry);
-	  ExFreePoolWithTag(current, TAG_FILE_SYSTEM);
-	  ExReleaseResourceLite(&FileSystemListLock);
-	  KeLeaveCriticalRegion();
-	  IopNotifyFileSystemChange(DeviceObject, FALSE);
-	  return;
-	}
+        if (current->DeviceObject == DeviceObject)
+        {
+            RemoveEntryList(&current->Entry);
+            ExFreePoolWithTag(current, TAG_FILE_SYSTEM);
+            ExReleaseResourceLite(&FileSystemListLock);
+            KeLeaveCriticalRegion();
+            IopNotifyFileSystemChange(DeviceObject, FALSE);
+            return;
+        }
     }
-    
-  ExReleaseResourceLite(&FileSystemListLock);
-  KeLeaveCriticalRegion();
+
+    ExReleaseResourceLite(&FileSystemListLock);
+    KeLeaveCriticalRegion();
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	IoGetBaseFileSystemDeviceObject@4
- *
- * DESCRIPTION
- *	Get the DEVICE_OBJECT associated to
- *	a FILE_OBJECT.
- *
- * ARGUMENTS
- *	FileObject
- *
- * RETURN VALUE
- *
- * NOTE
- * 	From Bo Branten's ntifs.h v13.
- *
+/*
  * @implemented
  */
-PDEVICE_OBJECT STDCALL
+PDEVICE_OBJECT
+NTAPI
 IoGetBaseFileSystemDeviceObject(IN PFILE_OBJECT FileObject)
 {
-	PDEVICE_OBJECT	DeviceObject = NULL;
-	PVPB		Vpb = NULL;
+    PDEVICE_OBJECT DeviceObject = NULL;
+    PVPB Vpb = NULL;
 
-	/*
-	 * If the FILE_OBJECT's VPB is defined,
-	 * get the device from it.
-	 */
-	if (NULL != (Vpb = FileObject->Vpb))
-	{
-		if (NULL != (DeviceObject = Vpb->DeviceObject))
-		{
-			/* Vpb->DeviceObject DEFINED! */
-			return DeviceObject;
-		}
-	}
-	/*
-	 * If that failed, try the VPB
-	 * in the FILE_OBJECT's DeviceObject.
-	 */
-	DeviceObject = FileObject->DeviceObject;
-	if (NULL == (Vpb = DeviceObject->Vpb))
-	{
-		/* DeviceObject->Vpb UNDEFINED! */
-		return DeviceObject;
-	}
-	/*
-	 * If that pointer to the VPB is again
-	 * undefined, return directly the
-	 * device object from the FILE_OBJECT.
-	 */
-	return (
-		(NULL == Vpb->DeviceObject)
-			? DeviceObject
-			: Vpb->DeviceObject
-		);
-}
-
-
-static VOID
-IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
-			  BOOLEAN DriverActive)
-{
-  PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
-
-  KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-  LIST_FOR_EACH(ChangeEntry, &FsChangeNotifyListHead,FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList) 
+    /*
+    * If the FILE_OBJECT's VPB is defined,
+    * get the device from it.
+    */
+    if (NULL != (Vpb = FileObject->Vpb))
     {
-      (ChangeEntry->FSDNotificationProc)(DeviceObject, DriverActive);
+        if (NULL != (DeviceObject = Vpb->DeviceObject))
+        {
+            /* Vpb->DeviceObject DEFINED! */
+            return DeviceObject;
+        }
     }
-  KeReleaseGuardedMutex(&FsChangeNotifyListLock);
-}
 
+    /*
+    * If that failed, try the VPB
+    * in the FILE_OBJECT's DeviceObject.
+    */
+    DeviceObject = FileObject->DeviceObject;
+    if (NULL == (Vpb = DeviceObject->Vpb))
+    {
+        /* DeviceObject->Vpb UNDEFINED! */
+        return DeviceObject;
+    }
+
+    /*
+    * If that pointer to the VPB is again
+    * undefined, return directly the
+    * device object from the FILE_OBJECT.
+    */
+    return ((NULL == Vpb->DeviceObject) ? DeviceObject : Vpb->DeviceObject);
+}
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+NTAPI
 IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
-			       IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
+                               IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
 {
-  PFS_CHANGE_NOTIFY_ENTRY Entry;
+    PFS_CHANGE_NOTIFY_ENTRY Entry;
 
-  Entry = ExAllocatePoolWithTag(NonPagedPool,
-				sizeof(FS_CHANGE_NOTIFY_ENTRY),
-				TAG_FS_CHANGE_NOTIFY);
-  if (Entry == NULL)
-    return(STATUS_INSUFFICIENT_RESOURCES);
+    Entry = ExAllocatePoolWithTag(NonPagedPool,
+                                  sizeof(FS_CHANGE_NOTIFY_ENTRY),
+                                  TAG_FS_CHANGE_NOTIFY);
+    if (Entry == NULL) return(STATUS_INSUFFICIENT_RESOURCES);
 
-  Entry->DriverObject = DriverObject;
-  Entry->FSDNotificationProc = FSDNotificationProc;
+    Entry->DriverObject = DriverObject;
+    Entry->FSDNotificationProc = FSDNotificationProc;
 
-  KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-  InsertHeadList(&FsChangeNotifyListHead,
-			      &Entry->FsChangeNotifyList);
-  KeReleaseGuardedMutex(&FsChangeNotifyListLock);
+    KeAcquireGuardedMutex(&FsChangeNotifyListLock);
+    InsertHeadList(&FsChangeNotifyListHead, &Entry->FsChangeNotifyList);
+    KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 
-  return(STATUS_SUCCESS);
+    return(STATUS_SUCCESS);
 }
-
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
-				 IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
+                                 IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
 {
-  PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
+    PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
 
-  LIST_FOR_EACH(ChangeEntry, &FsChangeNotifyListHead, FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList)
+    LIST_FOR_EACH(ChangeEntry, &FsChangeNotifyListHead, FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList)
     {
-      if (ChangeEntry->DriverObject == DriverObject &&
-	  ChangeEntry->FSDNotificationProc == FSDNotificationProc)
-	{
-	  KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-     RemoveEntryList(&ChangeEntry->FsChangeNotifyList);
-	  KeReleaseGuardedMutex(&FsChangeNotifyListLock);
+        if (ChangeEntry->DriverObject == DriverObject &&
+        ChangeEntry->FSDNotificationProc == FSDNotificationProc)
+        {
+            KeAcquireGuardedMutex(&FsChangeNotifyListLock);
+            RemoveEntryList(&ChangeEntry->FsChangeNotifyList);
+            KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 
-     ExFreePoolWithTag(ChangeEntry, TAG_FS_CHANGE_NOTIFY);
-	  return;
-	}
-
+            ExFreePoolWithTag(ChangeEntry, TAG_FS_CHANGE_NOTIFY);
+            return;
+        }
     }
 }
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 IoAcquireVpbSpinLock(OUT PKIRQL Irql)
 {
-   KeAcquireSpinLock(&IoVpbLock,
-		     Irql);
+    KeAcquireSpinLock(&IoVpbLock, Irql);
 }
-
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 IoReleaseVpbSpinLock(IN KIRQL Irql)
 {
-   KeReleaseSpinLock(&IoVpbLock,
-		     Irql);
+    KeReleaseSpinLock(&IoVpbLock, Irql);
 }
 
 /* EOF */
