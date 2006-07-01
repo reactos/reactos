@@ -16,52 +16,69 @@
 
 /* GLOBALS ********************************************************************/
 
-static ULONG IopDeviceObjectNumber = 0;
+ULONG IopDeviceObjectNumber = 0;
 
 typedef struct _SHUTDOWN_ENTRY
 {
-   LIST_ENTRY ShutdownList;
-   PDEVICE_OBJECT DeviceObject;
+    LIST_ENTRY ShutdownList;
+    PDEVICE_OBJECT DeviceObject;
 } SHUTDOWN_ENTRY, *PSHUTDOWN_ENTRY;
 
-LIST_ENTRY ShutdownListHead;
+LIST_ENTRY ShutdownListHead, LastChanceShutdownListHead;
 KSPIN_LOCK ShutdownListLock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
+NTAPI
 IoShutdownRegisteredDevices(VOID)
 {
-   PSHUTDOWN_ENTRY ShutdownEntry;
-   IO_STATUS_BLOCK StatusBlock;
-   PIRP Irp;
-   KEVENT Event;
-   NTSTATUS Status;
+    PLIST_ENTRY ListEntry;
+    PDEVICE_OBJECT DeviceObject;
+    PSHUTDOWN_ENTRY ShutdownEntry;
+    IO_STATUS_BLOCK StatusBlock;
+    PIRP Irp;
+    KEVENT Event;
+    NTSTATUS Status;
 
-   LIST_FOR_EACH(ShutdownEntry, &ShutdownListHead, SHUTDOWN_ENTRY, ShutdownList)
-     {
-	KeInitializeEvent (&Event,
-	                   NotificationEvent,
-	                   FALSE);
+    /* Initialize an event to wait on */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-	Irp = IoBuildSynchronousFsdRequest (IRP_MJ_SHUTDOWN,
-	                                    ShutdownEntry->DeviceObject,
-	                                    NULL,
-	                                    0,
-	                                    NULL,
-	                                    &Event,
-	                                    &StatusBlock);
+    /* Get the first entry and start looping */
+    ListEntry = ExInterlockedRemoveHeadList(&ShutdownListHead,
+                                            &ShutdownListLock);
+    while (ListEntry)
+    {
+        /* Get the shutdown entry */
+        ShutdownEntry = CONTAINING_RECORD(ListEntry,
+                                          SHUTDOWN_ENTRY,
+                                          ShutdownList);
 
-	Status = IoCallDriver (ShutdownEntry->DeviceObject,
-	                       Irp);
-	if (Status == STATUS_PENDING)
-	{
-		KeWaitForSingleObject (&Event,
-		                       Executive,
-		                       KernelMode,
-		                       FALSE,
-		                       NULL);
-	}
+        /* Get the attached device */
+        DeviceObject = IoGetAttachedDevice(ShutdownEntry->DeviceObject);
+
+        /* Build the shutdown IRP and call the driver */
+        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
+                                           DeviceObject,
+                                           NULL,
+                                           0,
+                                           NULL,
+                                           &Event,
+                                           &StatusBlock);
+        Status = IoCallDriver(DeviceObject, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            /* Wait on the driver */
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        }
+
+        /* Free the shutdown entry and reset the event */
+        ExFreePool(ShutdownEntry);
+        KeClearEvent(&Event);
+
+        /* Go to the next entry */
+        ListEntry = ExInterlockedRemoveHeadList(&ShutdownListHead,
+                                                &ShutdownListLock);
      }
 }
 
@@ -1097,39 +1114,123 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoRegisterLastChanceShutdownNotification(IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSHUTDOWN_ENTRY Entry;
+
+    /* Allocate the shutdown entry */
+    Entry = ExAllocatePoolWithTag(NonPagedPool,
+                                  sizeof(SHUTDOWN_ENTRY),
+                                  TAG_SHUTDOWN_ENTRY);
+    if (!Entry) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set the DO */
+    Entry->DeviceObject = DeviceObject;
+
+    /* Insert it into the list */
+    ExInterlockedInsertHeadList(&LastChanceShutdownListHead,
+                                &Entry->ShutdownList,
+                                &ShutdownListLock);
+
+    /* Set the shutdown registered flag */
+    DeviceObject->Flags |= DO_SHUTDOWN_REGISTERED;
+    return STATUS_SUCCESS;
 }
 
 /*
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 {
-   PSHUTDOWN_ENTRY Entry;
+    PSHUTDOWN_ENTRY Entry;
 
-   Entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(SHUTDOWN_ENTRY),
-				 TAG_SHUTDOWN_ENTRY);
-   if (Entry == NULL)
-     return STATUS_INSUFFICIENT_RESOURCES;
+    /* Allocate the shutdown entry */
+    Entry = ExAllocatePoolWithTag(NonPagedPool,
+                                  sizeof(SHUTDOWN_ENTRY),
+                                  TAG_SHUTDOWN_ENTRY);
+    if (!Entry) return STATUS_INSUFFICIENT_RESOURCES;
 
-   Entry->DeviceObject = DeviceObject;
+    /* Set the DO */
+    Entry->DeviceObject = DeviceObject;
 
-   ExInterlockedInsertHeadList(&ShutdownListHead,
-			       &Entry->ShutdownList,
-			       &ShutdownListLock);
+    /* Insert it into the list */
+    ExInterlockedInsertHeadList(&ShutdownListHead,
+                                &Entry->ShutdownList,
+                                &ShutdownListLock);
 
-   DeviceObject->Flags |= DO_SHUTDOWN_REGISTERED;
+    /* Set the shutdown registered flag */
+    DeviceObject->Flags |= DO_SHUTDOWN_REGISTERED;
+    return STATUS_SUCCESS;
+}
 
-   return STATUS_SUCCESS;
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
+{
+    PSHUTDOWN_ENTRY ShutdownEntry;
+    PLIST_ENTRY NextEntry;
+    KIRQL OldIrql;
+
+    /* Acquire the shutdown lock and loop the shutdown list */
+    KeAcquireSpinLock(&ShutdownListLock, &OldIrql);
+    NextEntry = ShutdownListHead.Flink;
+    while (NextEntry != &ShutdownListHead)
+    {
+        /* Get the entry */
+        ShutdownEntry = CONTAINING_RECORD(NextEntry,
+                                          SHUTDOWN_ENTRY,
+                                          ShutdownList);
+
+        /* Get if the DO matches */
+        if (ShutdownEntry->DeviceObject == DeviceObject)
+        {
+            /* Remove it from the list */
+            RemoveEntryList(NextEntry);
+            NextEntry = NextEntry->Blink;
+
+            /* Free the entry */
+            ExFreePool(ShutdownEntry);
+        }
+
+        /* Go to the next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Now loop the last chance list */
+    NextEntry = LastChanceShutdownListHead.Flink;
+    while (NextEntry != &LastChanceShutdownListHead)
+    {
+        /* Get the entry */
+        ShutdownEntry = CONTAINING_RECORD(NextEntry,
+                                          SHUTDOWN_ENTRY,
+                                          ShutdownList);
+
+        /* Get if the DO matches */
+        if (ShutdownEntry->DeviceObject == DeviceObject)
+        {
+            /* Remove it from the list */
+            RemoveEntryList(NextEntry);
+            NextEntry = NextEntry->Blink;
+
+            /* Free the entry */
+            ExFreePool(ShutdownEntry);
+        }
+
+        /* Go to the next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Now remove the flag */
+    DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
 }
 
 /*
@@ -1276,46 +1377,6 @@ IoStartPacket(PDEVICE_OBJECT DeviceObject,
    else
      {
         IoReleaseCancelSpinLock(oldirql);
-     }
-
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoSynchronousInvalidateDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
-                                       IN DEVICE_RELATION_TYPE Type)
-{
-    UNIMPLEMENTED;
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
-{
-   PSHUTDOWN_ENTRY ShutdownEntry, tmp;
-   KIRQL oldlvl;
-
-   LIST_FOR_EACH_SAFE(ShutdownEntry, tmp, &ShutdownListHead, SHUTDOWN_ENTRY, ShutdownList) 
-     {
-
-	if (ShutdownEntry->DeviceObject == DeviceObject)
-	  {
-	    DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
-
-	    KeAcquireSpinLock(&ShutdownListLock,&oldlvl);
-       RemoveEntryList(&ShutdownEntry->ShutdownList);
-	    KeReleaseSpinLock(&ShutdownListLock,oldlvl);
-
-       ExFreePool(ShutdownEntry);
-	    return;
-	  }
-
      }
 }
 

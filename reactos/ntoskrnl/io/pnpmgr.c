@@ -84,6 +84,17 @@ IoInvalidateDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
 /*
  * @unimplemented
  */
+VOID
+STDCALL
+IoSynchronousInvalidateDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
+                                       IN DEVICE_RELATION_TYPE Type)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,

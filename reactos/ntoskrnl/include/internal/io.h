@@ -594,6 +594,7 @@ IoInitShutdownNotification(
 );
 
 VOID
+NTAPI
 IoShutdownRegisteredDevices(
     VOID
 );
