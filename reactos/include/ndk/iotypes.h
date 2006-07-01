@@ -125,6 +125,15 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DOE_START_PENDING                       0x10
 
 //
+// Device Object StartIo Flags
+//
+#define DOE_SIO_NO_KEY                          0x20
+#define DOE_SIO_WITH_KEY                        0x40
+#define DOE_SIO_CANCELABLE                      0x80
+#define DOE_SIO_DEFERRED                        0x100
+#define DOE_SIO_NO_CANCEL                       0x200
+
+//
 // Device Node Flags
 //
 #define DNF_PROCESSED                           0x00000001

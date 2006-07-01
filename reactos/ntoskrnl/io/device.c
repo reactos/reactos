@@ -358,6 +358,171 @@ IopReferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject)
     }
 }
 
+VOID
+NTAPI
+IopStartNextPacketByKey(IN PDEVICE_OBJECT DeviceObject,
+                        IN BOOLEAN Cancelable,
+                        IN ULONG Key)
+{
+    PKDEVICE_QUEUE_ENTRY Entry;
+    PIRP Irp;
+    KIRQL OldIrql;
+
+    /* Acquire the cancel lock if this is cancelable */
+    if (Cancelable) IoAcquireCancelSpinLock(&OldIrql);
+
+    /* Clear the current IRP */
+    DeviceObject->CurrentIrp = NULL;
+
+    /* Remove an entry from the queue */
+    Entry = KeRemoveByKeyDeviceQueue(&DeviceObject->DeviceQueue, Key);
+    if (Entry)
+    {
+        /* Get the IRP and set it */
+        Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DeviceQueueEntry);
+        DeviceObject->CurrentIrp = Irp;
+
+        /* Check if this is a cancelable packet */
+        if (Cancelable)
+        {
+            /* Check if the caller requested no cancellation */
+            if (IoGetDevObjExtension(DeviceObject)->StartIoFlags &
+                DOE_SIO_NO_CANCEL)
+            {
+                /* He did, so remove the cancel routine */
+                Irp->CancelRoutine = NULL;
+            }
+
+            /* Release the cancel lock */
+            IoReleaseCancelSpinLock(OldIrql);
+        }
+
+        /* Call the Start I/O Routine */
+        DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+    }
+    else
+    {
+        /* Otherwise, release the cancel lock if we had acquired it */
+        if (Cancelable) IoReleaseCancelSpinLock(OldIrql);
+    }
+}
+
+VOID
+NTAPI
+IopStartNextPacket(IN PDEVICE_OBJECT DeviceObject,
+                   IN BOOLEAN Cancelable)
+{
+    PKDEVICE_QUEUE_ENTRY Entry;
+    PIRP Irp;
+    KIRQL OldIrql;
+
+    /* Acquire the cancel lock if this is cancelable */
+    if (Cancelable) IoAcquireCancelSpinLock(&OldIrql);
+
+    /* Clear the current IRP */
+    DeviceObject->CurrentIrp = NULL;
+
+    /* Remove an entry from the queue */
+    Entry = KeRemoveDeviceQueue(&DeviceObject->DeviceQueue);
+    if (Entry)
+    {
+        /* Get the IRP and set it */
+        Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DeviceQueueEntry);
+        DeviceObject->CurrentIrp = Irp;
+
+        /* Check if this is a cancelable packet */
+        if (Cancelable)
+        {
+            /* Check if the caller requested no cancellation */
+            if (IoGetDevObjExtension(DeviceObject)->StartIoFlags &
+                DOE_SIO_NO_CANCEL)
+            {
+                /* He did, so remove the cancel routine */
+                Irp->CancelRoutine = NULL;
+            }
+
+            /* Release the cancel lock */
+            IoReleaseCancelSpinLock(OldIrql);
+        }
+
+        /* Call the Start I/O Routine */
+        DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+    }
+    else
+    {
+        /* Otherwise, release the cancel lock if we had acquired it */
+        if (Cancelable) IoReleaseCancelSpinLock(OldIrql);
+    }
+}
+
+VOID
+NTAPI
+IopStartNextPacketByKeyEx(IN PDEVICE_OBJECT DeviceObject,
+                          IN ULONG Key,
+                          IN ULONG Flags)
+{
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
+    ULONG CurrentKey = Key;
+    ULONG CurrentFlags = Flags;
+
+    /* Get the device extension and start the packet loop */
+    DeviceExtension = IoGetDevObjExtension(DeviceObject);
+    while (TRUE)
+    {
+        /* Increase the count */
+        if (InterlockedIncrement(&DeviceExtension->StartIoCount) > 1)
+        {
+            /*
+             * We've already called the routine once...
+             * All we have to do is save the key and add the new flags
+             */
+            DeviceExtension->StartIoFlags |= CurrentFlags;
+            DeviceExtension->StartIoKey = CurrentKey;
+        }
+        else
+        {
+            /* Mask out the current packet flags and key */
+            DeviceExtension->StartIoFlags &= ~(DOE_SIO_WITH_KEY |
+                                               DOE_SIO_NO_KEY |
+                                               DOE_SIO_CANCELABLE);
+            DeviceExtension->StartIoKey = 0;
+
+            /* Check if this is a packet start with key */
+            if (Flags & DOE_SIO_WITH_KEY)
+            {
+                /* Start the packet with a key */
+                IopStartNextPacketByKey(DeviceObject,
+                                        (DOE_SIO_CANCELABLE) ? TRUE : FALSE,
+                                        CurrentKey);
+            }
+            else if (Flags & DOE_SIO_NO_KEY)
+            {
+                /* Start the packet */
+                IopStartNextPacket(DeviceObject,
+                                   (DOE_SIO_CANCELABLE) ? TRUE : FALSE);
+            }
+        }
+
+        /* Decrease the Start I/O count and check if it's 0 now */
+        if (!InterlockedDecrement(&DeviceExtension->StartIoCount))
+        {
+            /* Get the current active key and flags */
+            CurrentKey = DeviceExtension->StartIoKey;
+            CurrentFlags = DeviceExtension->StartIoFlags & (DOE_SIO_WITH_KEY |
+                                                            DOE_SIO_NO_KEY |
+                                                            DOE_SIO_CANCELABLE);
+
+            /* Check if we should still loop */
+            if (!(CurrentFlags & (DOE_SIO_WITH_KEY | DOE_SIO_NO_KEY))) break;
+        }
+        else
+        {
+            /* There are still Start I/Os active, so quit this loop */
+            break;
+        }
+    }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -1129,15 +1294,22 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
-STDCALL
+NTAPI
 IoSetStartIoAttributes(IN PDEVICE_OBJECT DeviceObject,
                        IN BOOLEAN DeferredStartIo,
                        IN BOOLEAN NonCancelable)
 {
-    UNIMPLEMENTED;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
+
+    /* Get the Device Extension */
+    DeviceExtension = IoGetDevObjExtension(DeviceObject);
+
+    /* Set the flags the caller requested */
+    DeviceExtension->StartIoFlags |= (DeferredStartIo) ? DOE_SIO_DEFERRED : 0;
+    DeviceExtension->StartIoFlags |= (NonCancelable) ? DOE_SIO_NO_CANCEL : 0;
 }
 
 /*
@@ -1149,34 +1321,24 @@ IoStartNextPacketByKey(IN PDEVICE_OBJECT DeviceObject,
                        IN BOOLEAN Cancelable,
                        IN ULONG Key)
 {
-    PKDEVICE_QUEUE_ENTRY Entry;
-    PIRP Irp;
-    KIRQL OldIrql;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
 
-    /* Acquire the cancel lock if this is cancelable */
-    if (Cancelable) IoAcquireCancelSpinLock(&OldIrql);
+    /* Get the Device Extension */
+    DeviceExtension = IoGetDevObjExtension(DeviceObject);
 
-    /* Clear the current IRP */
-    DeviceObject->CurrentIrp = NULL;
-
-    /* Remove an entry from the queue */
-    Entry = KeRemoveByKeyDeviceQueue(&DeviceObject->DeviceQueue, Key);
-    if (Entry)
+    /* Check if deferred start was requested */
+    if (DeviceExtension->StartIoFlags & DOE_SIO_DEFERRED)
     {
-        /* Get the IRP and set it */
-        Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DeviceQueueEntry);
-        DeviceObject->CurrentIrp = Irp;
-
-        /* Release the cancel lock if we had acquired it */
-        if (Cancelable) IoReleaseCancelSpinLock(OldIrql);
-
-        /* Call the Start I/O Routine */
-        DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+        /* Call our internal function to handle the defered case */
+        return IopStartNextPacketByKeyEx(DeviceObject,
+                                         Key,
+                                         DOE_SIO_WITH_KEY |
+                                         (Cancelable) ? DOE_SIO_CANCELABLE : 0);
     }
     else
     {
-        /* Otherwise, release the cancel lock if we had acquired it */
-        if (Cancelable) IoReleaseCancelSpinLock(OldIrql);
+        /* Call the normal routine */
+        return IopStartNextPacketByKey(DeviceObject, Cancelable, Key);
     }
 }
 
@@ -1188,31 +1350,24 @@ NTAPI
 IoStartNextPacket(IN PDEVICE_OBJECT DeviceObject,
                   IN BOOLEAN Cancelable)
 {
-    PKDEVICE_QUEUE_ENTRY Entry;
-    PIRP Irp;
-    KIRQL OldIrql;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
 
-    /* Acquire the cancel lock if this is cancelable */
-    if (Cancelable) IoAcquireCancelSpinLock(&OldIrql);
+    /* Get the Device Extension */
+    DeviceExtension = IoGetDevObjExtension(DeviceObject);
 
-    /* Clear the current IRP */
-    DeviceObject->CurrentIrp = NULL;
-
-    /* Remove an entry from the queue */
-    Entry = KeRemoveDeviceQueue(&DeviceObject->DeviceQueue);
-    if (Entry)
+    /* Check if deferred start was requested */
+    if (DeviceExtension->StartIoFlags & DOE_SIO_DEFERRED)
     {
-        /* Get the IRP and set it */
-        Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DeviceQueueEntry);
-        DeviceObject->CurrentIrp = Irp;
-
-        /* Call the Start I/O Routine */
-        DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+        /* Call our internal function to handle the defered case */
+        return IopStartNextPacketByKeyEx(DeviceObject,
+                                         0,
+                                         DOE_SIO_NO_KEY |
+                                         (Cancelable) ? DOE_SIO_CANCELABLE : 0);
     }
     else
     {
-        /* Otherwise, release the cancel lock if we had acquired it */
-        if (Cancelable) IoReleaseCancelSpinLock(OldIrql);
+        /* Call the normal routine */
+        return IopStartNextPacket(DeviceObject, Cancelable);
     }
 }
 
@@ -1261,8 +1416,20 @@ IoStartPacket(IN PDEVICE_OBJECT DeviceObject,
         /* Set the IRP */
         DeviceObject->CurrentIrp = Irp;
 
-        /* Release the cancel lock if we had a cancel function */
-        if (CancelFunction) IoReleaseCancelSpinLock(CancelIrql);
+        /* Check if this is a cancelable packet */
+        if (CancelFunction)
+        {
+            /* Check if the caller requested no cancellation */
+            if (IoGetDevObjExtension(DeviceObject)->StartIoFlags &
+                DOE_SIO_NO_CANCEL)
+            {
+                /* He did, so remove the cancel routine */
+                Irp->CancelRoutine = NULL;
+            }
+
+            /* Release the cancel lock */
+            IoReleaseCancelSpinLock(OldIrql);
+        }
 
         /* Call the Start I/O function */
         DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
