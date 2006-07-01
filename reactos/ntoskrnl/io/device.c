@@ -1,11 +1,11 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/device.c
  * PURPOSE:         Device Object Management, including Notifications and Queues.
- *
- * PROGRAMMERS:     Alex Ionescu
- *                  David Welch (welch@cwcom.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Filip Navara (navaraf@reactos.org)
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -184,10 +184,6 @@ IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
     HANDLE FileHandle;
     NTSTATUS Status;
 
-    DPRINT("IoGetDeviceObjectPointer(ObjectName %wZ, DesiredAccess %x,"
-            "FileObject %p DeviceObject %p)\n",
-            ObjectName, DesiredAccess, FileObject, DeviceObject);
-
     /* Open the Device */
     InitializeObjectAttributes(&ObjectAttributes,
                                ObjectName,
@@ -200,12 +196,7 @@ IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
                         &StatusBlock,
                         0,
                         FILE_NON_DIRECTORY_FILE | AttachFlag);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtOpenFile failed, Status: 0x%x\n", Status);
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
@@ -219,10 +210,10 @@ IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
         /* Return the requested data */
         *DeviceObject = IoGetRelatedDeviceObject(LocalFileObject);
         *FileObject = LocalFileObject;
+        ZwClose(FileHandle);
     }
 
     /* Close the handle */
-    ZwClose(FileHandle);
     return Status;
 }
 
@@ -257,25 +248,22 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
    PDEVICE_OBJECT TargetDevice = NULL;
 
     /* Call the helper routine for an attach operation */
-    DPRINT("IoAttachDevice\n");
     Status = IopGetDeviceObjectPointer(TargetDeviceName,
                                        FILE_READ_ATTRIBUTES,
                                        &FileObject,
                                        &TargetDevice,
                                        IO_ATTACH_DEVICE_API);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to get Device Object\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Attach the device */
-    IoAttachDeviceToDeviceStackSafe(SourceDevice, TargetDevice, AttachedDevice);
+    Status = IoAttachDeviceToDeviceStackSafe(SourceDevice,
+                                             TargetDevice,
+                                             AttachedDevice);
+    if (!*AttachedDevice) Status = STATUS_NO_SUCH_DEVICE;
 
-    /* Derference it */
+    /* Dereference it */
     ObDereferenceObject(FileObject);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
@@ -292,12 +280,9 @@ IoAttachDeviceByPointer(IN PDEVICE_OBJECT SourceDevice,
     PDEVICE_OBJECT AttachedDevice;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("IoAttachDeviceByPointer(SourceDevice 0x%p, TargetDevice 0x%p)\n",
-            SourceDevice, TargetDevice);
-
     /* Do the Attach */
     AttachedDevice = IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
-    if (AttachedDevice == NULL) Status = STATUS_NO_SUCH_DEVICE;
+    if (!AttachedDevice) Status = STATUS_NO_SUCH_DEVICE;
 
     /* Return the status */
     return Status;
@@ -318,13 +303,11 @@ IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
     PDEVICE_OBJECT LocalAttach;
 
     /* Attach it safely */
-    DPRINT("IoAttachDeviceToDeviceStack\n");
     Status = IoAttachDeviceToDeviceStackSafe(SourceDevice,
                                              TargetDevice,
                                              &LocalAttach);
 
     /* Return it */
-    DPRINT("IoAttachDeviceToDeviceStack DONE: 0x%p\n", LocalAttach);
     return LocalAttach;
 }
 
@@ -340,25 +323,27 @@ IoAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
     PDEVICE_OBJECT AttachedDevice;
     PEXTENDED_DEVOBJ_EXTENSION SourceDeviceExtension;
 
-    DPRINT("IoAttachDeviceToDeviceStack(SourceDevice 0x%p, TargetDevice 0x%p)\n",
-            SourceDevice, TargetDevice);
-
     /* Get the Attached Device and source extension */
     AttachedDevice = IoGetAttachedDevice(TargetDevice);
-    SourceDeviceExtension = (PEXTENDED_DEVOBJ_EXTENSION)SourceDevice->DeviceObjectExtension;
+    SourceDeviceExtension = (PEXTENDED_DEVOBJ_EXTENSION)SourceDevice->
+                            DeviceObjectExtension;
 
     /* Make sure that it's in a correct state */
-    if (!(((PEXTENDED_DEVOBJ_EXTENSION)AttachedDevice->DeviceObjectExtension)->ExtensionFlags &
-        (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING |
-         DOE_REMOVE_PENDING | DOE_REMOVE_PROCESSED)))
+    if (!(((PEXTENDED_DEVOBJ_EXTENSION)AttachedDevice->DeviceObjectExtension)->
+            ExtensionFlags & (DOE_UNLOAD_PENDING |
+                              DOE_DELETE_PENDING |
+                              DOE_REMOVE_PENDING |
+                              DOE_REMOVE_PROCESSED)))
     {
-        /* Update fields */
+        /* Update atached device fields */
         AttachedDevice->AttachedDevice = SourceDevice;
-        SourceDevice->AttachedDevice = NULL;
+        AttachedDevice->Spare1++;
+
+        /* Update the source with the attached data */
         SourceDevice->StackSize = AttachedDevice->StackSize + 1;
-        SourceDevice->AlignmentRequirement = AttachedDevice->AlignmentRequirement;
+        SourceDevice->AlignmentRequirement = AttachedDevice->
+                                             AlignmentRequirement;
         SourceDevice->SectorSize = AttachedDevice->SectorSize;
-        SourceDevice->Vpb = AttachedDevice->Vpb;
 
         /* Set the attachment in the device extension */
         SourceDeviceExtension->AttachedTo = AttachedDevice;
@@ -408,13 +393,13 @@ IoAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
  */
 NTSTATUS
 STDCALL
-IoCreateDevice(PDRIVER_OBJECT DriverObject,
-               ULONG DeviceExtensionSize,
-               PUNICODE_STRING DeviceName,
-               DEVICE_TYPE DeviceType,
-               ULONG DeviceCharacteristics,
-               BOOLEAN Exclusive,
-               PDEVICE_OBJECT *DeviceObject)
+IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
+               IN ULONG DeviceExtensionSize,
+               IN PUNICODE_STRING DeviceName,
+               IN DEVICE_TYPE DeviceType,
+               IN ULONG DeviceCharacteristics,
+               IN BOOLEAN Exclusive,
+               OUT PDEVICE_OBJECT *DeviceObject)
 {
     WCHAR AutoNameBuffer[20];
     UNICODE_STRING AutoName;
@@ -425,16 +410,17 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     ULONG AlignedDeviceExtensionSize;
     ULONG TotalSize;
     HANDLE TempHandle;
+    PAGED_CODE();
 
-    ASSERT_IRQL(PASSIVE_LEVEL);
-    DPRINT("IoCreateDevice(DriverObject 0x%p)\n", DriverObject);
-
-    /* Generate a name if we have to */
+    /* Check if we have to generate a name */
     if (DeviceCharacteristics & FILE_AUTOGENERATED_DEVICE_NAME)
     {
+        /* Generate it */
         swprintf(AutoNameBuffer,
                  L"\\Device\\%08lx",
                  InterlockedIncrementUL(&IopDeviceObjectNumber));
+
+        /* Initialize the name */
         RtlInitUnicodeString(&AutoName, AutoNameBuffer);
         DeviceName = &AutoName;
    }
@@ -443,24 +429,21 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     InitializeObjectAttributes(&ObjectAttributes, DeviceName, 0, NULL, NULL);
 
     /* Honor exclusive flag */
-    ObjectAttributes.Attributes |= OBJ_EXCLUSIVE;
+    if (Exclusive) ObjectAttributes.Attributes |= OBJ_EXCLUSIVE;
 
     /* Create a permanent object for named devices */
-    if (DeviceName != NULL)
-    {
-        ObjectAttributes.Attributes |= OBJ_PERMANENT;
-    }
+    if (DeviceName) ObjectAttributes.Attributes |= OBJ_PERMANENT;
 
     /* Align the Extension Size to 8-bytes */
     AlignedDeviceExtensionSize = (DeviceExtensionSize + 7) &~ 7;
-    DPRINT("AlignedDeviceExtensionSize %x\n", AlignedDeviceExtensionSize);
 
     /* Total Size */
     TotalSize = AlignedDeviceExtensionSize +
-                sizeof(DEVICE_OBJECT) + sizeof(EXTENDED_DEVOBJ_EXTENSION);
-    DPRINT("TotalSize %x\n", TotalSize);
+                sizeof(DEVICE_OBJECT) +
+                sizeof(EXTENDED_DEVOBJ_EXTENSION);
 
     /* Create the Device Object */
+    *DeviceObject = NULL;
     Status = ObCreateObject(KernelMode,
                             IoDeviceObjectType,
                             &ObjectAttributes,
@@ -470,16 +453,10 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
                             0,
                             0,
                             (PVOID*)&CreatedDeviceObject);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IoCreateDevice() ObCreateObject failed, status: 0x%08X\n", Status);
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Clear the whole Object and extension so we don't null stuff manually */
     RtlZeroMemory(CreatedDeviceObject, TotalSize);
-    DPRINT("CreatedDeviceObject 0x%p\n", CreatedDeviceObject);
 
     /*
      * Setup the Type and Size. Note that we don't use the aligned size,
@@ -494,7 +471,6 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
                              AlignedDeviceExtensionSize);
 
     /* Set the Type and Size. Question: why is Size 0 on Windows? */
-    DPRINT("DeviceObjectExtension 0x%p\n", DeviceObjectExtension);
     DeviceObjectExtension->Type = IO_TYPE_DEVICE_OBJECT_EXTENSION;
     DeviceObjectExtension->Size = 0;
 
@@ -509,10 +485,9 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
                                            CreatedDeviceObject + 1 :
                                            NULL;
     CreatedDeviceObject->StackSize = 1;
-    CreatedDeviceObject->AlignmentRequirement = 1; /* FIXME */
+    CreatedDeviceObject->AlignmentRequirement = 0;
 
     /* Set the Flags */
-    /* FIXME: After the Driver is Loaded, the flag below should be removed */
     CreatedDeviceObject->Flags = DO_DEVICE_INITIALIZING;
     if (Exclusive) CreatedDeviceObject->Flags |= DO_EXCLUSIVE;
     if (DeviceName) CreatedDeviceObject->Flags |= DO_DEVICE_HAS_NAME;
@@ -535,15 +510,20 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     /* Set the right Sector Size */
     switch (DeviceType)
     {
+        /* All disk systems */
         case FILE_DEVICE_DISK_FILE_SYSTEM:
         case FILE_DEVICE_DISK:
         case FILE_DEVICE_VIRTUAL_DISK:
+
+            /* The default is 512 bytes */
             CreatedDeviceObject->SectorSize  = 512;
             break;
 
+        /* CD-ROM file systems */
         case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+
+            /* The default is 2048 bytes */
             CreatedDeviceObject->SectorSize = 2048;
-            break;
     }
 
     /* Create the Device Queue */
@@ -569,11 +549,9 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
                             1,
                             (PVOID*)&CreatedDeviceObject,
                             &TempHandle);
-
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Cannot insert Device Object '%wZ' into Handle Table (status 0x%08lx)\n",
-            DeviceName, Status);
+        /* Clear the device object and fail */
         *DeviceObject = NULL;
         return Status;
     }
@@ -583,9 +561,9 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
     CreatedDeviceObject->DriverObject = DriverObject;
     CreatedDeviceObject->NextDevice = DriverObject->DeviceObject;
     DriverObject->DeviceObject = CreatedDeviceObject;
-    NtClose(TempHandle);
 
-    /* Return to caller */
+    /* Close the temporary handle and return to caller */
+    NtClose(TempHandle);
     *DeviceObject = CreatedDeviceObject;
     return STATUS_SUCCESS;
 }
