@@ -954,11 +954,11 @@ IoGetAttachedDeviceReference(PDEVICE_OBJECT DeviceObject)
  * @implemented
  */
 PDEVICE_OBJECT
-STDCALL
+NTAPI
 IoGetDeviceAttachmentBaseRef(IN PDEVICE_OBJECT DeviceObject)
 {
     /* Return the attached Device */
-    return (((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->AttachedTo);
+    return IoGetDevObjExtension(DeviceObject)->AttachedTo;
 }
 
 /*
@@ -968,7 +968,7 @@ IoGetDeviceAttachmentBaseRef(IN PDEVICE_OBJECT DeviceObject)
  *    @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
                          IN ACCESS_MASK DesiredAccess,
                          OUT PFILE_OBJECT *FileObject,
@@ -986,8 +986,8 @@ IoGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
  * @implemented
  */
 NTSTATUS
-STDCALL
-IoGetDiskDeviceObject(IN  PDEVICE_OBJECT FileSystemDeviceObject,
+NTAPI
+IoGetDiskDeviceObject(IN PDEVICE_OBJECT FileSystemDeviceObject,
                       OUT PDEVICE_OBJECT *DiskDeviceObject)
 {
     PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
@@ -1001,14 +1001,18 @@ IoGetDiskDeviceObject(IN  PDEVICE_OBJECT FileSystemDeviceObject,
     IoAcquireVpbSpinLock(&OldIrql);
 
     /* Get the Device Extension */
-    DeviceExtension = (PEXTENDED_DEVOBJ_EXTENSION)FileSystemDeviceObject->DeviceObjectExtension;
+    DeviceExtension = IoGetDevObjExtension(FileSystemDeviceObject);
 
     /* Make sure this one has a VPB too */
     Vpb = DeviceExtension->Vpb;
     if (!Vpb) return STATUS_INVALID_PARAMETER;
 
-    /* Make sure someone it's mounted */
-    if ((!Vpb->ReferenceCount) || (Vpb->Flags & VPB_MOUNTED)) return STATUS_VOLUME_DISMOUNTED;
+    /* Make sure that it's mounted */
+    if ((!Vpb->ReferenceCount) || (Vpb->Flags & VPB_MOUNTED))
+    {
+        /* It's not, so return failure */
+        return STATUS_VOLUME_DISMOUNTED;
+    }
 
     /* Return the Disk Device Object */
     *DiskDeviceObject = Vpb->RealDevice;
@@ -1022,13 +1026,14 @@ IoGetDiskDeviceObject(IN  PDEVICE_OBJECT FileSystemDeviceObject,
  * @implemented
  */
 PDEVICE_OBJECT
-STDCALL
+NTAPI
 IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
 {
-    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension = (PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
     PDEVICE_OBJECT LowerDeviceObject = NULL;
 
     /* Make sure it's not getting deleted */
+    DeviceExtension = IoGetDevObjExtension(DeviceObject);
     if (DeviceExtension->ExtensionFlags & (DOE_UNLOAD_PENDING |
                                            DOE_DELETE_PENDING |
                                            DOE_REMOVE_PENDING |
@@ -1055,29 +1060,40 @@ IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
  *    @implemented
  */
 PDEVICE_OBJECT
-STDCALL
+NTAPI
 IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
 {
     PDEVICE_OBJECT DeviceObject = FileObject->DeviceObject;
 
-    /* Get logical volume mounted on a physical/virtual/logical device */
-    if (FileObject->Vpb && FileObject->Vpb->DeviceObject)
+    /* Check if we have a VPB with a device object */
+    if ((FileObject->Vpb) && (FileObject->Vpb->DeviceObject))
     {
+        /* Then use the DO from the VPB */
+        ASSERT(!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN));
         DeviceObject = FileObject->Vpb->DeviceObject;
     }
-
-    /*
-     * Check if file object has an associated device object mounted by some
-     * other file system.
-     */
-    if (FileObject->DeviceObject->Vpb &&
-        FileObject->DeviceObject->Vpb->DeviceObject)
+    else if (!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN) &&
+              (FileObject->DeviceObject->Vpb) &&
+              (FileObject->DeviceObject->Vpb->DeviceObject))
     {
+        /* The disk device actually has a VPB, so get the DO from there */
         DeviceObject = FileObject->DeviceObject->Vpb->DeviceObject;
     }
+    else
+    {
+        /* Otherwise, this was a direct open */
+        DeviceObject = FileObject->DeviceObject;
+    }
 
-    /* Return the highest attached device */
-    return IoGetAttachedDevice(DeviceObject);
+    /* Check if we were attached */
+    if (DeviceObject->AttachedDevice)
+    {
+        /* Return the highest attached device */
+        DeviceObject = IoGetAttachedDevice(DeviceObject);
+    }
+
+    /* Return the DO we found */
+    return DeviceObject;
 }
 
 /*
