@@ -42,6 +42,7 @@ typedef struct _MACHINE_INFO
     WCHAR szMachineName[MAX_PATH];
     RPC_BINDING_HANDLE BindingHandle;
     HSTRING_TABLE StringTable;
+    BOOL bLocal;
 } MACHINE_INFO, *PMACHINE_INFO;
 
 
@@ -251,33 +252,48 @@ CONFIGRET WINAPI CM_Connect_MachineW(
 
     TRACE("%s %p\n", debugstr_w(UNCServerName), phMachine);
 
-    if (!UNCServerName)
-    {
-        FIXME("Connection to local machine not implemented\n");
-        *phMachine = NULL;
-        return CR_SUCCESS;
-    }
+    if (phMachine == NULL)
+        return CR_INVALID_POINTER;
+
+    *phMachine = NULL;
 
     pMachine = HeapAlloc(GetProcessHeap(), 0, sizeof(MACHINE_INFO));
     if (pMachine == NULL)
         return CR_OUT_OF_MEMORY;
 
-    lstrcpyW(pMachine->szMachineName, UNCServerName);
-
-    pMachine->StringTable = StringTableInitialize();
-    if (pMachine->StringTable == NULL)
+    if (UNCServerName == NULL || *UNCServerName == 0)
     {
-        HeapFree(GetProcessHeap(), 0, pMachine);
-        return CR_FAILURE;
+        pMachine->bLocal = TRUE;
+
+        /* FIXME: store the computers name in pMachine->szMachineName */
+
+        if (!PnpGetLocalHandles(&pMachine->BindingHandle,
+                                &pMachine->StringTable))
+        {
+            HeapFree(GetProcessHeap(), 0, pMachine);
+            return CR_FAILURE;
+        }
     }
-
-    StringTableAddString(pMachine->StringTable, L"PLT", 1);
-
-    if (!PnpBindRpc(UNCServerName, &pMachine->BindingHandle))
+    else
     {
-        StringTableDestroy(pMachine->StringTable);
-        HeapFree(GetProcessHeap(), 0, pMachine);
-        return CR_INVALID_MACHINENAME;
+        pMachine->bLocal = FALSE;
+        lstrcpyW(pMachine->szMachineName, UNCServerName);
+
+        pMachine->StringTable = StringTableInitialize();
+        if (pMachine->StringTable == NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, pMachine);
+            return CR_FAILURE;
+        }
+
+        StringTableAddString(pMachine->StringTable, L"PLT", 1);
+
+        if (!PnpBindRpc(UNCServerName, &pMachine->BindingHandle))
+        {
+            StringTableDestroy(pMachine->StringTable);
+            HeapFree(GetProcessHeap(), 0, pMachine);
+            return CR_INVALID_MACHINENAME;
+        }
     }
 
     phMachine = (PHMACHINE)pMachine;
@@ -551,11 +567,14 @@ CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
     if (pMachine == NULL)
         return CR_SUCCESS;
 
-    if (pMachine->StringTable != NULL)
-        StringTableDestroy(pMachine->StringTable);
+    if (pMachine->bLocal == FALSE)
+    {
+        if (pMachine->StringTable != NULL)
+            StringTableDestroy(pMachine->StringTable);
 
-    if (!PnpUnbindRpc(pMachine->BindingHandle))
-        return CR_ACCESS_DENIED;
+        if (!PnpUnbindRpc(pMachine->BindingHandle))
+            return CR_ACCESS_DENIED;
+    }
 
     HeapFree(GetProcessHeap(), 0, pMachine);
 
