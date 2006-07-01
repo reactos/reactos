@@ -83,111 +83,6 @@ IoShutdownRegisteredDevices(VOID)
 }
 
 NTSTATUS
-FASTCALL
-IopInitializeDevice(PDEVICE_NODE DeviceNode,
-                    PDRIVER_OBJECT DriverObject)
-{
-   PDEVICE_OBJECT Fdo;
-   NTSTATUS Status;
-   BOOLEAN IsPnpDriver = FALSE;
-
-   if (DriverObject->DriverExtension->AddDevice)
-   {
-      /* This is a Plug and Play driver */
-      DPRINT("Plug and Play driver found\n");
-
-      ASSERT(DeviceNode->PhysicalDeviceObject);
-
-      DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
-         DriverObject->DriverExtension->AddDevice);
-
-      IsPnpDriver = !IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER);
-      Status = DriverObject->DriverExtension->AddDevice(
-         DriverObject, IsPnpDriver ? DeviceNode->PhysicalDeviceObject : NULL);
-
-      if (!NT_SUCCESS(Status))
-      {
-         return Status;
-      }
-
-      if (IsPnpDriver)
-      {
-         Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-
-         if (Fdo == DeviceNode->PhysicalDeviceObject)
-         {
-            /* FIXME: What do we do? Unload the driver or just disable the device? */
-            DbgPrint("An FDO was not attached\n");
-            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-            return STATUS_UNSUCCESSFUL;
-         }
-
-         if (Fdo->DeviceType == FILE_DEVICE_ACPI)
-         {
-            static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
-
-            /* There can be only one system power device */
-            if (!SystemPowerDeviceNodeCreated)
-            {
-               PopSystemPowerDeviceNode = DeviceNode;
-               SystemPowerDeviceNodeCreated = TRUE;
-            }
-         }
-
-         ObDereferenceObject(Fdo);
-      }
-
-      IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
-      IopDeviceNodeSetFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
-   }
-
-   return STATUS_SUCCESS;
-}
-
-NTSTATUS
-IopStartDevice(
-   PDEVICE_NODE DeviceNode)
-{
-   IO_STATUS_BLOCK IoStatusBlock;
-   IO_STACK_LOCATION Stack;
-   PDEVICE_OBJECT Fdo;
-   NTSTATUS Status;
-
-   DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
-
-   Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-   Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
-   Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
-
-   Status = IopInitiatePnpIrp(
-      Fdo,
-      &IoStatusBlock,
-      IRP_MN_START_DEVICE,
-      &Stack);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopInitiatePnpIrp() failed\n");
-   }
-   else
-   {
-	  if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
-      {
-         DPRINT("Device needs enumeration, invalidating bus relations\n");
-         Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
-		 IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
-      }
-   }
-
-   ObDereferenceObject(Fdo);
-
-   if (NT_SUCCESS(Status))
-       DeviceNode->Flags |= DN_STARTED;
-
-   return Status;
-}
-
-NTSTATUS
 NTAPI
 IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
                           IN ACCESS_MASK DesiredAccess,
@@ -1247,137 +1142,157 @@ IoSetStartIoAttributes(IN PDEVICE_OBJECT DeviceObject,
 
 /*
  * @implemented
- *
- * FUNCTION: Dequeues the next packet from the given device object's
- * associated device queue according to a specified sort-key value and calls
- * the drivers StartIo routine with that IRP
- * ARGUMENTS:
- *      DeviceObject = Device object for which the irp is to dequeued
- *      Cancelable = True if IRPs in the key can be canceled
- *      Key = Sort key specifing which entry to remove from the queue
  */
 VOID
-STDCALL
-IoStartNextPacketByKey(PDEVICE_OBJECT DeviceObject,
-                       BOOLEAN Cancelable,
-                       ULONG Key)
+NTAPI
+IoStartNextPacketByKey(IN PDEVICE_OBJECT DeviceObject,
+                       IN BOOLEAN Cancelable,
+                       IN ULONG Key)
 {
-   PKDEVICE_QUEUE_ENTRY entry;
-   PIRP Irp;
+    PKDEVICE_QUEUE_ENTRY Entry;
+    PIRP Irp;
+    KIRQL OldIrql;
 
-   entry = KeRemoveByKeyDeviceQueue(&DeviceObject->DeviceQueue,
-				    Key);
+    /* Acquire the cancel lock if this is cancelable */
+    if (Cancelable) IoAcquireCancelSpinLock(&OldIrql);
 
-   if (entry != NULL)
-     {
-	Irp = CONTAINING_RECORD(entry,
-				IRP,
-				Tail.Overlay.DeviceQueueEntry);
+    /* Clear the current IRP */
+    DeviceObject->CurrentIrp = NULL;
+
+    /* Remove an entry from the queue */
+    Entry = KeRemoveByKeyDeviceQueue(&DeviceObject->DeviceQueue, Key);
+    if (Entry)
+    {
+        /* Get the IRP and set it */
+        Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DeviceQueueEntry);
         DeviceObject->CurrentIrp = Irp;
-	DPRINT("Next irp is 0x%p\n", Irp);
-	DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
-     }
-   else
-     {
-	DPRINT("No next irp\n");
-        DeviceObject->CurrentIrp = NULL;
-     }
+
+        /* Release the cancel lock if we had acquired it */
+        if (Cancelable) IoReleaseCancelSpinLock(OldIrql);
+
+        /* Call the Start I/O Routine */
+        DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+    }
+    else
+    {
+        /* Otherwise, release the cancel lock if we had acquired it */
+        if (Cancelable) IoReleaseCancelSpinLock(OldIrql);
+    }
 }
 
 /*
  * @implemented
- *
- * FUNCTION: Removes the next packet from the device's queue and calls
- * the driver's StartIO
- * ARGUMENTS:
- *         DeviceObject = Device
- *         Cancelable = True if irps in the queue can be canceled
  */
 VOID
-STDCALL
-IoStartNextPacket(PDEVICE_OBJECT DeviceObject,
-                  BOOLEAN Cancelable)
+NTAPI
+IoStartNextPacket(IN PDEVICE_OBJECT DeviceObject,
+                  IN BOOLEAN Cancelable)
 {
-   PKDEVICE_QUEUE_ENTRY entry;
-   PIRP Irp;
+    PKDEVICE_QUEUE_ENTRY Entry;
+    PIRP Irp;
+    KIRQL OldIrql;
 
-   DPRINT("IoStartNextPacket(DeviceObject 0x%p, Cancelable %d)\n",
-	  DeviceObject, Cancelable);
+    /* Acquire the cancel lock if this is cancelable */
+    if (Cancelable) IoAcquireCancelSpinLock(&OldIrql);
 
-   entry = KeRemoveDeviceQueue(&DeviceObject->DeviceQueue);
+    /* Clear the current IRP */
+    DeviceObject->CurrentIrp = NULL;
 
-   if (entry!=NULL)
-     {
-	Irp = CONTAINING_RECORD(entry,IRP,Tail.Overlay.DeviceQueueEntry);
+    /* Remove an entry from the queue */
+    Entry = KeRemoveDeviceQueue(&DeviceObject->DeviceQueue);
+    if (Entry)
+    {
+        /* Get the IRP and set it */
+        Irp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DeviceQueueEntry);
         DeviceObject->CurrentIrp = Irp;
-	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);
-     }
-   else
-     {
-        DeviceObject->CurrentIrp = NULL;
-     }
+
+        /* Call the Start I/O Routine */
+        DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+    }
+    else
+    {
+        /* Otherwise, release the cancel lock if we had acquired it */
+        if (Cancelable) IoReleaseCancelSpinLock(OldIrql);
+    }
 }
 
 /*
  * @implemented
- *
- * FUNCTION: Either call the device's StartIO routine with the packet or,
- * if the device is busy, queue it.
- * ARGUMENTS:
- *       DeviceObject = Device to start the packet on
- *       Irp = Irp to queue
- *       Key = Where to insert the irp
- *             If zero then insert in the tail of the queue
- *       CancelFunction = Optional function to cancel the irqp
  */
 VOID
-STDCALL
-IoStartPacket(PDEVICE_OBJECT DeviceObject,
-              PIRP Irp,
-              PULONG Key,
-              PDRIVER_CANCEL CancelFunction)
+NTAPI
+IoStartPacket(IN PDEVICE_OBJECT DeviceObject,
+              IN PIRP Irp,
+              IN PULONG Key,
+              IN PDRIVER_CANCEL CancelFunction)
 {
-   BOOLEAN stat;
-   KIRQL oldirql;
+    BOOLEAN Stat;
+    KIRQL OldIrql, CancelIrql;
 
-   DPRINT("IoStartPacket(Irp 0x%p)\n", Irp);
+    /* Raise to dispatch level */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
-   ASSERT_IRQL(DISPATCH_LEVEL);
+    /* Check if we should acquire the cancel lock */
+    if (CancelFunction)
+    {
+        /* Acquire and set it */
+        IoAcquireCancelSpinLock(&CancelIrql);
+        Irp->CancelRoutine = CancelFunction;
+    }
 
-   IoAcquireCancelSpinLock(&oldirql);
+    /* Check if we have a key */
+    if (Key)
+    {
+        /* Insert by key */
+        Stat = KeInsertByKeyDeviceQueue(&DeviceObject->DeviceQueue,
+                                        &Irp->Tail.Overlay.DeviceQueueEntry,
+                                        *Key);
+    }
+    else
+    {
+        /* Insert without a key */
+        Stat = KeInsertDeviceQueue(&DeviceObject->DeviceQueue,
+                                   &Irp->Tail.Overlay.DeviceQueueEntry);
+    }
 
-   if (CancelFunction != NULL)
-     {
-	Irp->CancelRoutine = CancelFunction;
-     }
-
-   if (Key!=0)
-     {
-	stat = KeInsertByKeyDeviceQueue(&DeviceObject->DeviceQueue,
-					&Irp->Tail.Overlay.DeviceQueueEntry,
-					*Key);
-     }
-   else
-     {
-	stat = KeInsertDeviceQueue(&DeviceObject->DeviceQueue,
-				   &Irp->Tail.Overlay.DeviceQueueEntry);
-     }
-
-
-   if (!stat)
-     {
-        IoReleaseCancelSpinLock(DISPATCH_LEVEL);
+    /* Check if this was a first insert */
+    if (!Stat)
+    {
+        /* Set the IRP */
         DeviceObject->CurrentIrp = Irp;
-	DeviceObject->DriverObject->DriverStartIo(DeviceObject,Irp);
-	if (oldirql < DISPATCH_LEVEL)
-	  {
-            KeLowerIrql(oldirql);
+
+        /* Release the cancel lock if we had a cancel function */
+        if (CancelFunction) IoReleaseCancelSpinLock(CancelIrql);
+
+        /* Call the Start I/O function */
+        DeviceObject->DriverObject->DriverStartIo(DeviceObject, Irp);
+    }
+    else
+    {
+        /* The packet was inserted... check if we have a cancel function */
+        if (CancelFunction)
+        {
+            /* Check if the IRP got cancelled */
+            if (Irp->Cancel)
+            {
+                /*
+                 * Set the cancel IRQL, clear the currnet cancel routine and
+                 * call ours
+                 */
+                Irp->CancelIrql = CancelIrql;
+                Irp->CancelRoutine = NULL;
+                CancelFunction(DeviceObject, Irp);
+            }
+            else
+            {
+                /* Otherwise, release the lock */
+                IoReleaseCancelSpinLock(CancelIrql);
+            }
         }
-     }
-   else
-     {
-        IoReleaseCancelSpinLock(oldirql);
-     }
+    }
+
+    /* Return back to previous IRQL */
+    KeLowerIrql(OldIrql);
 }
 
 /* EOF */

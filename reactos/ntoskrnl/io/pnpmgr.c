@@ -45,6 +45,111 @@ IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
 }
 
 NTSTATUS
+FASTCALL
+IopInitializeDevice(PDEVICE_NODE DeviceNode,
+                    PDRIVER_OBJECT DriverObject)
+{
+   PDEVICE_OBJECT Fdo;
+   NTSTATUS Status;
+   BOOLEAN IsPnpDriver = FALSE;
+
+   if (DriverObject->DriverExtension->AddDevice)
+   {
+      /* This is a Plug and Play driver */
+      DPRINT("Plug and Play driver found\n");
+
+      ASSERT(DeviceNode->PhysicalDeviceObject);
+
+      DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
+         DriverObject->DriverExtension->AddDevice);
+
+      IsPnpDriver = !IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER);
+      Status = DriverObject->DriverExtension->AddDevice(
+         DriverObject, IsPnpDriver ? DeviceNode->PhysicalDeviceObject : NULL);
+
+      if (!NT_SUCCESS(Status))
+      {
+         return Status;
+      }
+
+      if (IsPnpDriver)
+      {
+         Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+
+         if (Fdo == DeviceNode->PhysicalDeviceObject)
+         {
+            /* FIXME: What do we do? Unload the driver or just disable the device? */
+            DbgPrint("An FDO was not attached\n");
+            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+            return STATUS_UNSUCCESSFUL;
+         }
+
+         if (Fdo->DeviceType == FILE_DEVICE_ACPI)
+         {
+            static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
+
+            /* There can be only one system power device */
+            if (!SystemPowerDeviceNodeCreated)
+            {
+               PopSystemPowerDeviceNode = DeviceNode;
+               SystemPowerDeviceNodeCreated = TRUE;
+            }
+         }
+
+         ObDereferenceObject(Fdo);
+      }
+
+      IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
+      IopDeviceNodeSetFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
+   }
+
+   return STATUS_SUCCESS;
+}
+
+NTSTATUS
+IopStartDevice(
+   PDEVICE_NODE DeviceNode)
+{
+   IO_STATUS_BLOCK IoStatusBlock;
+   IO_STACK_LOCATION Stack;
+   PDEVICE_OBJECT Fdo;
+   NTSTATUS Status;
+
+   DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
+
+   Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+   Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
+   Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
+
+   Status = IopInitiatePnpIrp(
+      Fdo,
+      &IoStatusBlock,
+      IRP_MN_START_DEVICE,
+      &Stack);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IopInitiatePnpIrp() failed\n");
+   }
+   else
+   {
+	  if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
+      {
+         DPRINT("Device needs enumeration, invalidating bus relations\n");
+         Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
+		 IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
+      }
+   }
+
+   ObDereferenceObject(Fdo);
+
+   if (NT_SUCCESS(Status))
+       DeviceNode->Flags |= DN_STARTED;
+
+   return Status;
+}
+
+NTSTATUS
 STDCALL
 IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                            PDEVICE_CAPABILITIES DeviceCaps)
