@@ -17,6 +17,7 @@ HRESULT WINAPI
 Main_DirectDrawVideoPort_QueryInterface (LPDIRECTDRAWVIDEOPORT iface, REFIID riid, LPVOID* ppvObj)
 {
    DX_WINDBG_trace();
+
    DX_STUB;  
 }
 
