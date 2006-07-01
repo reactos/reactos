@@ -67,10 +67,9 @@ END
 /* Dialog `Page setup' */
 
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "ปรับแต่งหน้า"
-EXSTYLE DS_SHELLFONT
 {
 LTEXT    "หัว:",  0x140,   10, 07, 40, 15
 EDITTEXT 0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
@@ -93,10 +92,9 @@ PUSHBUTTON    "ช่วยเหลีอ",       0x153,                180, 39, 40, 15, WS_TABST
 }
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "About ReactOS Notepad"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 BEGIN
     CONTROL         "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
