@@ -9,6 +9,5 @@
 
 1	ICON	DISCARDABLE	res/terminal.ico
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 #include "en.rc"
