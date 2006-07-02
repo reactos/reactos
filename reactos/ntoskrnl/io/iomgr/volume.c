@@ -35,7 +35,8 @@ INIT_FUNCTION
 NTAPI
 IoInitVpbImplementation(VOID)
 {
-   KeInitializeSpinLock(&IoVpbLock);
+    /* Just initialize the VPB Lock */
+    KeInitializeSpinLock(&IoVpbLock);
 }
 
 VOID
@@ -348,7 +349,8 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
         /* Initialize the event to wait on */
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-        /* Get the actual device to mount */
+        /* Remove the verify flag and get the actual device to mount */
+        DeviceObject->Flags &= ~DO_VERIFY_VOLUME;
         while (AttachedDeviceObject->AttachedDevice)
         {
             /* Get the next one */
@@ -777,48 +779,6 @@ IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
     /* Then release the lock */
     ExReleaseResourceLite(&FileSystemListLock);
     KeLeaveCriticalRegion();
-}
-
-/*
- * @implemented
- */
-PDEVICE_OBJECT
-NTAPI
-IoGetBaseFileSystemDeviceObject(IN PFILE_OBJECT FileObject)
-{
-    PDEVICE_OBJECT DeviceObject = NULL;
-    PVPB Vpb = NULL;
-
-    /*
-    * If the FILE_OBJECT's VPB is defined,
-    * get the device from it.
-    */
-    if (NULL != (Vpb = FileObject->Vpb))
-    {
-        if (NULL != (DeviceObject = Vpb->DeviceObject))
-        {
-            /* Vpb->DeviceObject DEFINED! */
-            return DeviceObject;
-        }
-    }
-
-    /*
-    * If that failed, try the VPB
-    * in the FILE_OBJECT's DeviceObject.
-    */
-    DeviceObject = FileObject->DeviceObject;
-    if (NULL == (Vpb = DeviceObject->Vpb))
-    {
-        /* DeviceObject->Vpb UNDEFINED! */
-        return DeviceObject;
-    }
-
-    /*
-    * If that pointer to the VPB is again
-    * undefined, return directly the
-    * device object from the FILE_OBJECT.
-    */
-    return ((NULL == Vpb->DeviceObject) ? DeviceObject : Vpb->DeviceObject);
 }
 
 /*

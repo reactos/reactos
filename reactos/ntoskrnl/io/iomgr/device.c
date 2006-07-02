@@ -1170,6 +1170,41 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
 /*
  * @implemented
  */
+PDEVICE_OBJECT
+NTAPI
+IoGetBaseFileSystemDeviceObject(IN PFILE_OBJECT FileObject)
+{
+    PDEVICE_OBJECT DeviceObject;
+
+    /*
+    * If the FILE_OBJECT's VPB is defined,
+    * get the device from it.
+    */
+    if ((FileObject->Vpb) && (FileObject->Vpb->DeviceObject))
+    {
+        /* Use the VPB's Device Object's */
+        DeviceObject = FileObject->Vpb->DeviceObject;
+    }
+    else if (!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN) &&
+             (FileObject->DeviceObject->Vpb) &&
+             (FileObject->DeviceObject->Vpb->DeviceObject))
+    {
+        /* Use the VPB's File System Object */
+        DeviceObject = FileObject->DeviceObject->Vpb->DeviceObject;
+    }
+    else
+    {
+        /* Use the FO's Device Object */
+        DeviceObject = FileObject->DeviceObject;
+    }
+
+    /* Return the device object we found */
+    return DeviceObject;
+}
+
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
 IoRegisterLastChanceShutdownNotification(IN PDEVICE_OBJECT DeviceObject)
