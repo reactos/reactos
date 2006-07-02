@@ -1699,7 +1699,7 @@ NtReadFile(IN HANDLE FileHandle,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject;
-    PIRP Irp = NULL;
+    PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
@@ -1707,8 +1707,8 @@ NtReadFile(IN HANDLE FileHandle,
     LARGE_INTEGER CapturedByteOffset;
     ULONG CapturedKey = 0;
     BOOLEAN Synchronous = FALSE;
+    PMDL Mdl;
     PAGED_CODE();
-
     CapturedByteOffset.QuadPart = 0;
 
     /* Validate User-Mode Buffers */
@@ -1716,32 +1716,37 @@ NtReadFile(IN HANDLE FileHandle,
     {
         _SEH_TRY
         {
+            /* Probe the status block */
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
-            ProbeForWrite(Buffer,
-                          Length,
-                          1);
 
+            /* Probe the read buffer */
+            ProbeForWrite(Buffer, Length, 1);
+
+            /* Check if we got a byte offset */
             if (ByteOffset)
             {
+                /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             }
 
+            /* Capture and probe the key */
             if (Key) CapturedKey = ProbeForReadUlong(Key);
-
-            /* FIXME - probe other pointers and capture information */
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status)) return Status;
+        /* Check for probe failure */
+        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
+        /* Kernel mode: capture directly */
         if (ByteOffset) CapturedByteOffset = *ByteOffset;
         if (Key) CapturedKey = *Key;
     }
@@ -1755,25 +1760,6 @@ NtReadFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Check if we should use Sync IO or not */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-    {
-        if (ByteOffset == NULL ||
-            (CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
-             CapturedByteOffset.u.HighPart == -1))
-        {
-            /* Use the Current Byte OFfset */
-            CapturedByteOffset = FileObject->CurrentByteOffset;
-        }
-
-        Synchronous = TRUE;
-    }
-    else if (ByteOffset == NULL && !(FileObject->Flags & FO_NAMED_PIPE))
-    {
-        ObDereferenceObject(FileObject);
-        return STATUS_INVALID_PARAMETER;
-    }
-
     /* Check for event */
     if (Event)
     {
@@ -1786,89 +1772,133 @@ NtReadFile(IN HANDLE FileHandle,
                                            NULL);
         if (!NT_SUCCESS(Status))
         {
+            /* Fail */
             ObDereferenceObject(FileObject);
             return Status;
         }
+
+        /* Otherwise reset the event */
         KeClearEvent(EventObject);
     }
 
-    /* Check if this is a direct open or not */
-    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+        /* Lock the file object */
+        IopLockFileObject(FileObject);
+
+        /* Check if we don't have a byte offset avilable */
+        if (!(ByteOffset) ||
+            ((CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION) &&
+             (CapturedByteOffset.u.HighPart == -1)))
+        {
+            /* Use the Current Byte Offset instead */
+            CapturedByteOffset = FileObject->CurrentByteOffset;
+        }
+
+        /* Rememer we are sync */
+        Synchronous = TRUE;
+    }
+    else if (!(ByteOffset) &&
+             !(FileObject->Flags & (FO_NAMED_PIPE | FO_MAILSLOT)))
+    {
+        /* Otherwise, this was async I/O without a byte offset, so fail */
+        if (EventObject) ObDereferenceObject(EventObject);
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* Clear the File Object's event */
+    KeClearEvent(&FileObject->Event);
+
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+
+    /* Set the IRP */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->RequestorMode = KernelMode;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+    Irp->UserIosb = IoStatusBlock;
+    Irp->UserEvent = EventObject;
+    Irp->PendingReturned = FALSE;
+    Irp->Cancel = FALSE;
+    Irp->CancelRoutine = NULL;
+    Irp->AssociatedIrp.SystemBuffer = NULL;
+    Irp->MdlAddress = NULL;
+
+    /* Set the Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_READ;
+    StackPtr->FileObject = FileObject;
+    StackPtr->Parameters.Read.Key = CapturedKey;
+    StackPtr->Parameters.Read.Length = Length;
+    StackPtr->Parameters.Read.ByteOffset = CapturedByteOffset;
+
+    /* Check if this is buffered I/O */
+    if (DeviceObject->Flags & DO_BUFFERED_IO)
+    {
+        /* Check if we have a buffer length */
+        if (Length)
+        {
+            /* Allocate a buffer */
+            Irp->AssociatedIrp.SystemBuffer =
+                ExAllocatePoolWithTag(NonPagedPool,
+                                      Length,
+                                      TAG_SYSB);
+
+            /* Set the buffer and flags */
+            Irp->UserBuffer = Buffer;
+            Irp->Flags = (IRP_BUFFERED_IO |
+                          IRP_DEALLOCATE_BUFFER |
+                          IRP_INPUT_OPERATION);
+        }
+        else
+        {
+            /* Not reading anything */
+            Irp->Flags = IRP_BUFFERED_IO | IRP_INPUT_OPERATION;
+        }
+    }
+    else if (DeviceObject->Flags & DO_DIRECT_IO)
+    {
+        /* Check if we have a buffer length */
+        if (Length)
+        {
+            /* Allocate an MDL */
+            Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
+            MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
+        }
+
+        /* No allocation flags */
+        Irp->Flags = 0;
     }
     else
     {
-        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+        /* No allocation flags, and use the buffer directly */
+        Irp->Flags = 0;
+        Irp->UserBuffer = Buffer;
     }
 
-    KeClearEvent(&FileObject->Event);
-
-    /* Create the IRP */
-    _SEH_TRY
-    {
-        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
-                                           DeviceObject,
-                                           Buffer,
-                                           Length,
-                                           &CapturedByteOffset,
-                                           EventObject,
-                                           IoStatusBlock);
-
-        if (Irp == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-        }
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    /* Cleanup if IRP Allocation Failed */
-    if (!NT_SUCCESS(Status))
-    {
-        if (Event) ObDereferenceObject(EventObject);
-        ObDereferenceObject(FileObject);
-        return Status;
-    }
-
-    /* Set up IRP Data */
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->RequestorMode = PreviousMode;
-    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
-    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
-    Irp->Flags |= IRP_READ_OPERATION;
+    /* Now set the deferred read flags */
+    Irp->Flags |= (IRP_READ_OPERATION | IRP_DEFER_IO_COMPLETION);
 #if 0
-    /* FIXME:
-     *    Vfat doesn't handle non cached files correctly.
-     */     
+    /* FIXME: VFAT SUCKS */
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif      
+#endif
 
-    /* Setup Stack Data */
-    StackPtr = IoGetNextIrpStackLocation(Irp);
-    StackPtr->FileObject = FileObject;
-    StackPtr->Parameters.Read.Key = CapturedKey;
-
-    /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        if (Synchronous)
-        {
-            KeWaitForSingleObject(&FileObject->Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            Status = FileObject->FinalStatus;
-        }
-    }
-
-    /* Return the Status */
-    return Status;
+    /* Perform the call */
+    return IopPerformSynchronousRequest(DeviceObject,
+                                        Irp,
+                                        FileObject,
+                                        TRUE,
+                                        PreviousMode,
+                                        Synchronous,
+                                        IopReadTransfer);
 }
 
 NTSTATUS
