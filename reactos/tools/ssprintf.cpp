@@ -25,6 +25,7 @@
 #include "ssprintf.h"
 
 #ifndef WIN32
+#include <ctype.h>
 #define _finite __finite
 #define _isnan __isnan
 inline int iswdigit ( wchar_t c )
