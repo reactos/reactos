@@ -166,7 +166,7 @@ dll\win32\imm32\imm32.dll                           1
 dll\win32\iphlpapi\iphlpapi.dll                     1
 dll\win32\kernel32\kernel32.dll                     1
 dll\win32\lsasrv\lsasrv.dll                         1
-dll\win32\lzexpand\lz32.dll                         1
+dll\win32\lz32\lz32.dll                             1
 dll\win32\mapi32\mapi32.dll                         1
 dll\win32\winmm\midimap\midimap.dll                 1
 dll\win32\mmdrv\mmdrv.dll                           1
@@ -194,7 +194,7 @@ dll\win32\opengl32\opengl32.dll                     1
 dll\win32\psapi\psapi.dll                           1
 dll\win32\powrprof\powrprof.dll                     1
 dll\win32\riched20\riched20.dll                     1
-dll\win32\richedit\riched32.dll                     1
+dll\win32\riched32\riched32.dll                     1
 dll\win32\rpcrt4\rpcrt4.dll                         1
 dll\win32\samlib\samlib.dll                         1
 dll\win32\samsrv\samsrv.dll                         1

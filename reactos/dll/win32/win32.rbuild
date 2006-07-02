@@ -91,8 +91,8 @@
 <directory name="lsasrv">
 	<xi:include href="lsasrv/lsasrv.rbuild" />
 </directory>
-<directory name="lzexpand">
-	<xi:include href="lzexpand/lz32.rbuild" />
+<directory name="lz32">
+	<xi:include href="lz32/lz32.rbuild" />
 </directory>
 <directory name="mapi32">
 	<xi:include href="mapi32/mapi32.rbuild" />
@@ -172,8 +172,8 @@
 <directory name="riched20">
 	<xi:include href="riched20/riched20.rbuild" />
 </directory>
-<directory name="richedit">
-	<xi:include href="richedit/riched32.rbuild" />
+<directory name="riched32">
+	<xi:include href="riched32/riched32.rbuild" />
 </directory>
 <directory name="rpcrt4">
 	<xi:include href="rpcrt4/rpcrt4.rbuild" />
