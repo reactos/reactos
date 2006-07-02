@@ -159,8 +159,8 @@ CM_Open_Class_KeyA@24=SETUPAPI.CM_Open_Class_KeyA
 CM_Open_Class_KeyW@24=SETUPAPI.CM_Open_Class_KeyW
 CM_Open_Class_Key_ExA@28=SETUPAPI.CM_Open_Class_Key_ExA
 CM_Open_Class_Key_ExW@28=SETUPAPI.CM_Open_Class_Key_ExW
-;CM_Open_DevNode_Key
-;CM_Open_DevNode_Key_Ex
+CM_Open_DevNode_Key@24=SETUPAPI.CM_Open_DevNode_Key
+CM_Open_DevNode_Key_Ex@28=SETUPAPI.CM_Open_DevNode_Key_Ex
 ;CM_Query_Arbitrator_Free_Data
 ;CM_Query_Arbitrator_Free_Data_Ex
 ;CM_Query_Arbitrator_Free_Size

@@ -2482,6 +2482,35 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExW(
 
 
 /***********************************************************************
+ * CM_Open_DevNode_Key [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Open_DevNode_Key(
+    DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile,
+    REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags)
+{
+    TRACE("%lx %lx %lu %lx %p %lx\n", dnDevNode, samDesired,
+          ulHardwareProfile, Disposition, phkDevice, ulFlags);
+    return CM_Open_DevNode_Key_Ex(dnDevNode, samDesired, ulHardwareProfile,
+                                  Disposition, phkDevice, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Open_DevNode_Key_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Open_DevNode_Key_Ex(
+    DEVINST dnDevNode, REGSAM samDesired, ULONG ulHardwareProfile,
+    REGDISPOSITION Disposition, PHKEY phkDevice, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    FIXME("%lx %lx %lu %lx %p %lx %lx\n", dnDevNode, samDesired,
+          ulHardwareProfile, Disposition, phkDevice, ulFlags, hMachine);
+
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
  * CM_Reenumerate_DevNode [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Reenumerate_DevNode(

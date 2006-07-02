@@ -143,8 +143,8 @@
 @ stdcall CM_Open_Class_KeyW(ptr wstr long long ptr long)
 @ stdcall CM_Open_Class_Key_ExA(ptr str long long ptr long long)
 @ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long long)
-@ stub CM_Open_DevNode_Key
-@ stub CM_Open_DevNode_Key_Ex
+@ stdcall CM_Open_DevNode_Key(ptr long long long ptr long)
+@ stdcall CM_Open_DevNode_Key_Ex(ptr long long long ptr long long)
 @ stub CM_Query_Arbitrator_Free_Data
 @ stub CM_Query_Arbitrator_Free_Data_Ex
 @ stub CM_Query_Arbitrator_Free_Size

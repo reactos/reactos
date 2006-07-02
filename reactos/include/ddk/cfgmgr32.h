@@ -1804,8 +1804,31 @@ CM_Open_Class_Key_ExW(
 #define CM_Open_Class_Key_Ex CM_Open_Class_Key_ExA
 #endif /* UNICODE */
 
-/* FIXME: Obsolete CM_Open_DevNode_Key */
-/* FIXME: Obsolete CM_Open_DevNode_Key_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Open_DevNode_Key(
+  IN DEVINST  dnDevNode,
+  IN REGSAM  samDesired,
+  IN ULONG  ulHardwareProfile,
+  IN REGDISPOSITION  Disposition,
+  OUT PHKEY  phkDevice,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Open_DevNode_Key_Ex(
+  IN DEVINST  dnDevNode,
+  IN REGSAM  samDesired,
+  IN ULONG  ulHardwareProfile,
+  IN REGDISPOSITION  Disposition,
+  OUT PHKEY  phkDevice,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#define CM_Open_DevInst_Key CM_Open_DevNode_Key
+#define CM_Open_DevInst_Key_Ex CM_Open_DevNode_Key_Ex
 
 /* CM_Query_And_Remove_SubTree.ulFlags constants */
 #define CM_REMOVE_UI_OK             			0x00000000
