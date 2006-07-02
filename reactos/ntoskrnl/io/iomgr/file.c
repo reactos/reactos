@@ -1469,6 +1469,141 @@ NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                 FileInformation);
 }
 
+/**
+ * @name NtCancelIoFile
+ *
+ * Cancel all pending I/O operations in the current thread for specified
+ * file object.
+ *
+ * @param FileHandle
+ *        Handle to file object to cancel requests for. No specific
+ *        access rights are needed.
+ * @param IoStatusBlock
+ *        Pointer to status block which is filled with final completition
+ *        status on successful return.
+ *
+ * @return Status.
+ *
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+NtCancelIoFile(IN HANDLE FileHandle,
+               OUT PIO_STATUS_BLOCK IoStatusBlock)
+{
+    PFILE_OBJECT FileObject;
+    PETHREAD Thread;
+    PIRP Irp;
+    KIRQL OldIrql;
+    BOOLEAN OurIrpsInList = FALSE;
+    LARGE_INTEGER Interval;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForWrite(IoStatusBlock,
+                          sizeof(IO_STATUS_BLOCK),
+                          sizeof(ULONG));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       0,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FileObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* IRP cancellations are synchronized at APC_LEVEL. */
+    OldIrql = KfRaiseIrql(APC_LEVEL);
+
+    /*
+    * Walk the list of active IRPs and cancel the ones that belong to
+    * our file object.
+    */
+
+    Thread = PsGetCurrentThread();
+
+    LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
+    {
+        if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
+        {
+            IoCancelIrp(Irp);
+            /* Don't break here, we want to cancel all IRPs for the file object. */
+            OurIrpsInList = TRUE;
+        }
+    }
+
+    KfLowerIrql(OldIrql);
+
+    while (OurIrpsInList)
+    {
+        OurIrpsInList = FALSE;
+
+        /* Wait a short while and then look if all our IRPs were completed. */
+        Interval.QuadPart = -1000000; /* 100 milliseconds */
+        KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+
+        OldIrql = KfRaiseIrql(APC_LEVEL);
+
+        /*
+        * Look in the list if all IRPs for the specified file object
+        * are completed (or cancelled). If someone sends a new IRP
+        * for our file object while we're here we can happily loop
+        * forever.
+        */
+
+        LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
+        {
+            if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
+            {
+                OurIrpsInList = TRUE;
+                break;
+            }
+        }
+
+        KfLowerIrql(OldIrql);
+    }
+
+    _SEH_TRY
+    {
+        IoStatusBlock->Status = STATUS_SUCCESS;
+        IoStatusBlock->Information = 0;
+        Status = STATUS_SUCCESS;
+    }
+    _SEH_HANDLE
+    {
+    
+    }
+    _SEH_END;
+
+    ObDereferenceObject(FileObject);
+    return Status;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
+{
+    UNIMPLEMENTED;
+    return(STATUS_NOT_IMPLEMENTED);
+}
+
 /*
  * @unimplemented
  */

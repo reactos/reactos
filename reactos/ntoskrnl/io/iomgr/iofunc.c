@@ -93,6 +93,54 @@ IopAbortInterruptedIrp(IN PKEVENT EventObject,
 
 NTSTATUS
 NTAPI
+IopFinalizeAsynchronousIo(IN NTSTATUS SynchStatus,
+                          IN PKEVENT Event,
+                          IN PIRP Irp,
+                          IN KPROCESSOR_MODE PreviousMode,
+                          IN PIO_STATUS_BLOCK KernelIosb,
+                          OUT PIO_STATUS_BLOCK IoStatusBlock)
+{
+    NTSTATUS FinalStatus = SynchStatus;
+    PAGED_CODE();
+
+    /* Make sure the IRP was completed, but returned pending */
+    if (FinalStatus == STATUS_PENDING)
+    {
+        /* Wait for the IRP */
+        FinalStatus = KeWaitForSingleObject(Event,
+                                            Executive,
+                                            PreviousMode,
+                                            FALSE,
+                                            NULL);
+        if (FinalStatus == STATUS_USER_APC)
+        {
+            /* Abort the request */
+            IopAbortInterruptedIrp(Event, Irp);
+        }
+
+        /* Set the final status */
+        FinalStatus = KernelIosb->Status;
+    }
+
+    /* Wrap potential user-mode write in SEH */
+    _SEH_TRY
+    {
+        *IoStatusBlock = *KernelIosb;
+    }
+    _SEH_HANDLE
+    {
+        /* Get the exception code */
+        FinalStatus = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Free the event and return status */
+    ExFreePool(Event);
+    return FinalStatus;
+}
+
+NTSTATUS
+NTAPI
 IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
                              IN PIRP Irp,
                              IN PFILE_OBJECT FileObject,
@@ -734,141 +782,6 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
 
 /* NATIVE SERVICES ***********************************************************/
 
-/**
- * @name NtCancelIoFile
- *
- * Cancel all pending I/O operations in the current thread for specified
- * file object.
- *
- * @param FileHandle
- *        Handle to file object to cancel requests for. No specific
- *        access rights are needed.
- * @param IoStatusBlock
- *        Pointer to status block which is filled with final completition
- *        status on successful return.
- *
- * @return Status.
- *
- * @implemented
- */
-NTSTATUS
-NTAPI
-NtCancelIoFile(IN HANDLE FileHandle,
-               OUT PIO_STATUS_BLOCK IoStatusBlock)
-{
-    PFILE_OBJECT FileObject;
-    PETHREAD Thread;
-    PIRP Irp;
-    KIRQL OldIrql;
-    BOOLEAN OurIrpsInList = FALSE;
-    LARGE_INTEGER Interval;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
-    PAGED_CODE();
-
-    if (PreviousMode != KernelMode)
-    {
-        _SEH_TRY
-        {
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-
-        if (!NT_SUCCESS(Status)) return Status;
-    }
-
-    Status = ObReferenceObjectByHandle(FileHandle,
-                                       0,
-                                       IoFileObjectType,
-                                       PreviousMode,
-                                       (PVOID*)&FileObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* IRP cancellations are synchronized at APC_LEVEL. */
-    OldIrql = KfRaiseIrql(APC_LEVEL);
-
-    /*
-    * Walk the list of active IRPs and cancel the ones that belong to
-    * our file object.
-    */
-
-    Thread = PsGetCurrentThread();
-
-    LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
-    {
-        if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
-        {
-            IoCancelIrp(Irp);
-            /* Don't break here, we want to cancel all IRPs for the file object. */
-            OurIrpsInList = TRUE;
-        }
-    }
-
-    KfLowerIrql(OldIrql);
-
-    while (OurIrpsInList)
-    {
-        OurIrpsInList = FALSE;
-
-        /* Wait a short while and then look if all our IRPs were completed. */
-        Interval.QuadPart = -1000000; /* 100 milliseconds */
-        KeDelayExecutionThread(KernelMode, FALSE, &Interval);
-
-        OldIrql = KfRaiseIrql(APC_LEVEL);
-
-        /*
-        * Look in the list if all IRPs for the specified file object
-        * are completed (or cancelled). If someone sends a new IRP
-        * for our file object while we're here we can happily loop
-        * forever.
-        */
-
-        LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
-        {
-            if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
-            {
-                OurIrpsInList = TRUE;
-                break;
-            }
-        }
-
-        KfLowerIrql(OldIrql);
-    }
-
-    _SEH_TRY
-    {
-        IoStatusBlock->Status = STATUS_SUCCESS;
-        IoStatusBlock->Information = 0;
-        Status = STATUS_SUCCESS;
-    }
-    _SEH_HANDLE
-    {
-    
-    }
-    _SEH_END;
-
-    ObDereferenceObject(FileObject);
-    return Status;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
-{
-    UNIMPLEMENTED;
-    return(STATUS_NOT_IMPLEMENTED);
-}
-
 /*
  * @implemented
  */
@@ -933,32 +846,36 @@ NTAPI
 NtFlushBuffersFile(IN HANDLE FileHandle,
                    OUT PIO_STATUS_BLOCK IoStatusBlock)
 {
-    PFILE_OBJECT FileObject = NULL;
+    PFILE_OBJECT FileObject;
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT DeviceObject;
-    KEVENT Event;
+    PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
-    ACCESS_MASK DesiredAccess = FILE_WRITE_DATA;
     OBJECT_HANDLE_INFORMATION ObjectHandleInfo;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    IO_STATUS_BLOCK KernelIosb;
     PAGED_CODE();
 
     if (PreviousMode != KernelMode)
     {
+        /* Protect probes */
         _SEH_TRY
         {
+            /* Probe the I/O Status block */
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
+        /* Return exception code, if any */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -969,58 +886,55 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
                                        PreviousMode,
                                        (PVOID*)&FileObject,
                                        &ObjectHandleInfo);
-    if (!NT_SUCCESS(Status)) return(Status);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    /* check if the handle has either FILE_WRITE_DATA or FILE_APPEND_DATA was
-       granted. However, if this is a named pipe, make sure we don't ask for
-       FILE_APPEND_DATA as it interferes with the FILE_CREATE_PIPE_INSTANCE
-       access right! */
-    if (!(FileObject->Flags & FO_NAMED_PIPE))
-        DesiredAccess |= FILE_APPEND_DATA;
-    if (!RtlAreAnyAccessesGranted(ObjectHandleInfo.GrantedAccess,
-                                  DesiredAccess))
+    /*
+     * Check if the handle has either FILE_WRITE_DATA or FILE_APPEND_DATA was
+     * granted. However, if this is a named pipe, make sure we don't ask for
+     * FILE_APPEND_DATA as it interferes with the FILE_CREATE_PIPE_INSTANCE
+     * access right!
+     */
+    if (!(ObjectHandleInfo.GrantedAccess &
+         ((!(FileObject->Flags & FO_NAMED_PIPE) ? FILE_APPEND_DATA : 0) |
+         FILE_WRITE_DATA)))
     {
+        /* We failed */
         ObDereferenceObject(FileObject);
         return STATUS_ACCESS_DENIED;
-    }
-
-    /* Check if this is a direct open or not */
-    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
-    {
-        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
-    }
-    else
-    {
-        DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
 
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
+        /* Lock it */
+        IopLockFileObject(FileObject);
     }
     else
     {
         /* Use local event */
-        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+        Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
     }
 
+    /* Get the Device Object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* Clear the event */
+    KeClearEvent(&FileObject->Event);
+
     /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
-    {
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
 
     /* Set up the IRP */
     Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    Irp->UserIosb = (LocalEvent) ? &KernelIosb : IoStatusBlock;
+    Irp->UserEvent = (LocalEvent) ? Event : NULL;
     Irp->RequestorMode = PreviousMode;
-    Irp->UserIosb = IoStatusBlock;
-    Irp->UserEvent = (LocalEvent) ? &Event : NULL;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
 
     /* Set up Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -1028,27 +942,24 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
     StackPtr->FileObject = FileObject;
 
     /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
+    Status = IopPerformSynchronousRequest(DeviceObject,
+                                          Irp,
+                                          FileObject,
+                                          FALSE,
+                                          PreviousMode,
+                                          !LocalEvent,
+                                          IopOtherTransfer);
+
+    /* Check if this was async I/O */
+    if (LocalEvent)
     {
-        if (LocalEvent)
-        {
-            KeWaitForSingleObject(&Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            Status = IoStatusBlock->Status;
-        }
-        else
-        {
-            KeWaitForSingleObject(&FileObject->Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            Status = FileObject->FinalStatus;
-        }
+        /* It was, finalize this request */
+        Status = IopFinalizeAsynchronousIo(Status,
+                                           Event,
+                                           Irp,
+                                           PreviousMode,
+                                           &KernelIosb,
+                                           IoStatusBlock);
     }
 
     /* Return the Status */
