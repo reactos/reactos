@@ -87,6 +87,60 @@ IopCreateVpb(IN PDEVICE_OBJECT DeviceObject)
 
 VOID
 NTAPI
+IopDereferenceVpb(IN PVPB Vpb)
+{
+    KIRQL OldIrql;
+
+    /* Lock the VPBs and decrease references */
+    IoAcquireVpbSpinLock(&OldIrql);
+    Vpb->ReferenceCount--;
+
+    /* Check if we're out of references */
+    if (!Vpb->ReferenceCount)
+    {
+        /* FIXME: IMPLEMENT CLEANUP! */
+        KEBUGCHECK(0);
+    }
+
+    /* Release VPB lock */
+    IoReleaseVpbSpinLock(OldIrql);
+}
+
+BOOLEAN
+NTAPI
+IopReferenceVpbForVerify(IN PDEVICE_OBJECT DeviceObject,
+                         OUT PDEVICE_OBJECT *FileSystemObject,
+                         OUT PVPB *Vpb)
+{
+    KIRQL OldIrql;
+    PVPB LocalVpb;
+    BOOLEAN Result = FALSE;
+
+    /* Lock the VPBs and assume failure */
+    IoAcquireVpbSpinLock(&OldIrql);
+    *Vpb = NULL;
+    *FileSystemObject = NULL;
+
+    /* Get the VPB and make sure it's mounted */
+    LocalVpb = DeviceObject->Vpb;
+    if ((LocalVpb) && (LocalVpb->Flags & VPB_MOUNTED))
+    {
+        /* Return it */
+        *Vpb = LocalVpb;
+        *FileSystemObject = LocalVpb->DeviceObject;
+
+        /* Reference it */
+        LocalVpb->ReferenceCount++;
+        Result = TRUE;
+    }
+
+    /* Release the VPB lock and return status */
+    IoReleaseVpbSpinLock(OldIrql);
+    return Result;
+}
+
+VOID
+NTAPI
 IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
                           IN BOOLEAN DriverActive)
 {
@@ -335,73 +389,88 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION StackPtr;
     KEVENT Event;
     PIRP Irp;
-    NTSTATUS Status = STATUS_SUCCESS;
-    PDEVICE_OBJECT DevObject;
-    PVPB NewVpb;
+    NTSTATUS Status = STATUS_SUCCESS, VpbStatus;
+    PDEVICE_OBJECT FileSystemDeviceObject;
+    PVPB Vpb, NewVpb;
+    BOOLEAN WasNotMounted = TRUE;
 
+    /* Wait on the device lock */
     KeWaitForSingleObject(&DeviceObject->DeviceLock,
                           Executive,
                           KernelMode,
                           FALSE,
                           NULL);
 
-    if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
+    /* Reference the VPB */
+    if (IopReferenceVpbForVerify(DeviceObject, &FileSystemDeviceObject, &Vpb))
     {
-        /* Issue verify request to the FSD */
-        DevObject = DeviceObject->Vpb->DeviceObject;
-
+        /* Initialize the event */
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-        Irp = IoAllocateIrp(DevObject->StackSize, TRUE);
-        if (Irp==NULL)
+        /* Find the actual File System DO */
+        WasNotMounted = FALSE;
+        FileSystemDeviceObject = DeviceObject->Vpb->DeviceObject;
+        while (FileSystemDeviceObject->AttachedDevice)
         {
-            return(STATUS_INSUFFICIENT_RESOURCES);
+            /* Go to the next one */
+            FileSystemDeviceObject = FileSystemDeviceObject->AttachedDevice;
         }
 
+        /* Allocate the IRP */
+        Irp = IoAllocateIrp(FileSystemDeviceObject->StackSize, FALSE);
+        if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Set it up */
         Irp->UserIosb = &IoStatusBlock;
         Irp->UserEvent = &Event;
         Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+        Irp->Flags = IRP_MOUNT_COMPLETION | IRP_SYNCHRONOUS_PAGING_IO;
+        Irp->RequestorMode = KernelMode;
 
+        /* Get the I/O Stack location and set it */
         StackPtr = IoGetNextIrpStackLocation(Irp);
         StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
         StackPtr->MinorFunction = IRP_MN_VERIFY_VOLUME;
-        StackPtr->Flags = 0;
-        StackPtr->Control = 0;
-        StackPtr->DeviceObject = DevObject;
-        StackPtr->FileObject = NULL;
-        StackPtr->CompletionRoutine = NULL;
+        StackPtr->Flags = AllowRawMount ? SL_ALLOW_RAW_MOUNT : 0;
+        StackPtr->Parameters.VerifyVolume.Vpb = Vpb;
+        StackPtr->Parameters.VerifyVolume.DeviceObject =
+            DeviceObject->Vpb->DeviceObject;
 
-        StackPtr->Parameters.VerifyVolume.Vpb = DeviceObject->Vpb;
-        StackPtr->Parameters.VerifyVolume.DeviceObject = DeviceObject;
-
-        Status = IoCallDriver(DevObject, Irp);
-        if (Status==STATUS_PENDING)
+        /* Call the driver */
+        Status = IoCallDriver(FileSystemDeviceObject, Irp);
+        if (Status == STATUS_PENDING)
         {
-            KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+            /* Wait on it */
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
             Status = IoStatusBlock.Status;
         }
 
-        if (NT_SUCCESS(Status))
-        {
-            KeSetEvent(&DeviceObject->DeviceLock, IO_NO_INCREMENT, FALSE);
-            return(STATUS_SUCCESS);
-        }
+        /* Dereference the VPB */
+        IopDereferenceVpb(Vpb);
     }
 
-    if (Status == STATUS_WRONG_VOLUME)
+    /* Check if we had the wrong volume or didn't mount at all */
+    if ((Status == STATUS_WRONG_VOLUME) || (WasNotMounted))
     {
-        /* Clean existing VPB. This unmounts the filesystem. */
-        DPRINT("Wrong volume!\n");
+        /* Create a VPB */
+        VpbStatus = IopCreateVpb(DeviceObject);
+        if (NT_SUCCESS(VpbStatus))
+        {
+            /* Mount it */
+            VpbStatus = IopMountVolume(DeviceObject,
+                                       AllowRawMount,
+                                       TRUE,
+                                       FALSE,
+                                       &NewVpb);
+        }
 
-        DeviceObject->Vpb->DeviceObject = NULL;
-        DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
+        /* If we failed, remove the verify flag */
+        if (!NT_SUCCESS(VpbStatus)) DeviceObject->Flags &= ~DO_VERIFY_VOLUME;
     }
 
-    /* Start mount sequence */
-    Status = IopMountVolume(DeviceObject, AllowRawMount, TRUE, FALSE, &NewVpb);
-
+    /* Signal the device lock and return */
     KeSetEvent(&DeviceObject->DeviceLock, IO_NO_INCREMENT, FALSE);
-    return(Status);
+    return Status;
 }
 
 /*
