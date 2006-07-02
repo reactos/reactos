@@ -16,24 +16,14 @@
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IoInitFileSystemImplementation)
-#endif
-
-/* TYPES *******************************************************************/
-
-typedef struct _FILE_SYSTEM_OBJECT
-{
-    PDEVICE_OBJECT DeviceObject;
-    LIST_ENTRY Entry;
-} FILE_SYSTEM_OBJECT, *PFILE_SYSTEM_OBJECT;
-
-#if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IoInitVpbImplementation)
 #endif
 
 /* GLOBALS ******************************************************************/
 
 ERESOURCE FileSystemListLock;
-LIST_ENTRY FileSystemListHead;
+LIST_ENTRY IopDiskFsListHead, IopNetworkFsListHead;
+LIST_ENTRY IopCdRomFsListHead, IopTapeFsListHead;
 KGUARDED_MUTEX FsChangeNotifyListLock;
 LIST_ENTRY FsChangeNotifyListHead;
 KSPIN_LOCK IoVpbLock;
@@ -53,11 +43,14 @@ INIT_FUNCTION
 NTAPI
 IoInitFileSystemImplementation(VOID)
 {
-  InitializeListHead(&FileSystemListHead);
-  ExInitializeResourceLite(&FileSystemListLock);
-
-  InitializeListHead(&FsChangeNotifyListHead);
-  KeInitializeGuardedMutex(&FsChangeNotifyListLock);
+    /* Initialize the FS Lists and Locks */
+    InitializeListHead(&IopDiskFsListHead);
+    InitializeListHead(&IopNetworkFsListHead);
+    InitializeListHead(&IopCdRomFsListHead);
+    InitializeListHead(&IopTapeFsListHead);
+    ExInitializeResourceLite(&FileSystemListLock);
+    InitializeListHead(&FsChangeNotifyListHead);
+    KeInitializeGuardedMutex(&FsChangeNotifyListLock);
 }
 
 NTSTATUS
@@ -174,38 +167,57 @@ VOID
 NTAPI
 IoShutdownRegisteredFileSystems(VOID)
 {
-    FILE_SYSTEM_OBJECT* current;
+    PLIST_ENTRY ListEntry;
+    PDEVICE_OBJECT DeviceObject;
+    IO_STATUS_BLOCK StatusBlock;
     PIRP Irp;
     KEVENT Event;
-    IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
+    /* Lock the FS List and initialize an event to wait on */
     KeEnterCriticalRegion();
     ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    LIST_FOR_EACH(current, &FileSystemListHead, FILE_SYSTEM_OBJECT,Entry)
+    /* Get the first entry and start looping */
+    ListEntry = IopDiskFsListHead.Flink;
+    while (ListEntry != &IopDiskFsListHead)
     {
-        /* send IRP_MJ_SHUTDOWN */
+        /* Get the device object */
+        DeviceObject = CONTAINING_RECORD(ListEntry,
+                                         DEVICE_OBJECT,
+                                         Queue.ListEntry);
+
+        /* Check if we're attached */
+        if (DeviceObject->AttachedDevice)
+        {
+            /* Get the attached device */
+            DeviceObject = IoGetAttachedDevice(DeviceObject);
+        }
+
+        /* Build the shutdown IRP and call the driver */
         Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
-                                           current->DeviceObject,
+                                           DeviceObject,
                                            NULL,
                                            0,
-                                           0,
+                                           NULL,
                                            &Event,
-                                           &IoStatusBlock);
-
-        Status = IoCallDriver(current->DeviceObject,Irp);
+                                           &StatusBlock);
+        Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
-            KeWaitForSingleObject(&Event,
-                                  Executive,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
+            /* Wait on the driver */
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
+
+        /* Reset the event */
+        KeClearEvent(&Event);
+
+        /* Go to the next entry */
+        ListEntry = ListEntry->Flink;
     }
 
+    /* Release the lock */
     ExReleaseResourceLite(&FileSystemListLock);
     KeLeaveCriticalRegion();
 }
@@ -311,63 +323,58 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                IN BOOLEAN Alertable,
                OUT PVPB *Vpb)
 {
-    PFILE_SYSTEM_OBJECT current;
     NTSTATUS Status;
-    DEVICE_TYPE MatchingDeviceType;
+    PLIST_ENTRY FsList, ListEntry;
     PDEVICE_OBJECT DevObject;
+    PDEVICE_OBJECT FileSystemDeviceObject;
     ASSERT_IRQL(PASSIVE_LEVEL);
-
-    switch (DeviceObject->DeviceType)
-    {
-        case FILE_DEVICE_DISK:
-        case FILE_DEVICE_VIRTUAL_DISK: /* ?? */
-            MatchingDeviceType = FILE_DEVICE_DISK_FILE_SYSTEM;
-            break;
-
-        case FILE_DEVICE_CD_ROM:
-            MatchingDeviceType = FILE_DEVICE_CD_ROM_FILE_SYSTEM;
-            break;
-
-        case FILE_DEVICE_NETWORK:
-            MatchingDeviceType = FILE_DEVICE_NETWORK_FILE_SYSTEM;
-            break;
-
-        case FILE_DEVICE_TAPE:
-            MatchingDeviceType = FILE_DEVICE_TAPE_FILE_SYSTEM;
-            break;
-
-        default:
-            CPRINT("No matching file system type found for device type: %x\n",
-                    DeviceObject->DeviceType);
-            return(STATUS_UNRECOGNIZED_VOLUME);
-    }
 
     KeEnterCriticalRegion();
     ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
 
     restart:
-    LIST_FOR_EACH(current,&FileSystemListHead, FILE_SYSTEM_OBJECT, Entry)
+    /* For a mount operation, this can only be a Disk, CD-ROM or tape */
+    if ((DeviceObject->DeviceType == FILE_DEVICE_DISK) ||
+        (DeviceObject->DeviceType == FILE_DEVICE_VIRTUAL_DISK))
     {
-        if (current->DeviceObject->DeviceType != MatchingDeviceType)
-        {
-            continue;
-        }
+        /* Use the disk list */
+        FsList = &IopDiskFsListHead;
+    }
+    else if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM)
+    {
+        /* Use the CD-ROM list */
+        FsList = &IopCdRomFsListHead;
+    }
+    else
+    {
+        /* It's gotta be a tape... */
+        FsList = &IopTapeFsListHead;
+    }
+
+    /* Now loop the fs list until one of the file systems accepts us */
+    ListEntry = FsList->Flink;
+    while (ListEntry != FsList)
+    {
+        /* Get the Device Object for this FS */
+        FileSystemDeviceObject = CONTAINING_RECORD(ListEntry,
+                                                   DEVICE_OBJECT,
+                                                   Queue.ListEntry);
 
         /* If we are not allowed to mount this volume as a raw filesystem volume
          then don't try this */
-        if (!AllowRawMount && RawFsIsRawFileSystemDeviceObject(current->DeviceObject))
+        if (!AllowRawMount && RawFsIsRawFileSystemDeviceObject(FileSystemDeviceObject))
         {
             Status = STATUS_UNRECOGNIZED_VOLUME;
         }
         else
         {
-            Status = IopMountFileSystem(current->DeviceObject, DeviceObject);
+            Status = IopMountFileSystem(FileSystemDeviceObject, DeviceObject);
         }
 
         switch (Status)
         {
             case STATUS_FS_DRIVER_REQUIRED:
-                DevObject = current->DeviceObject;
+                DevObject = FileSystemDeviceObject;
                 ExReleaseResourceLite(&FileSystemListLock);
                 IopLoadFileSystem(DevObject);
                 ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
@@ -497,27 +504,59 @@ VOID
 NTAPI
 IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
-    PFILE_SYSTEM_OBJECT Fs;
+    PLIST_ENTRY FsList = NULL;
+    PAGED_CODE();
 
-    Fs = ExAllocatePoolWithTag(NonPagedPool,
-                               sizeof(FILE_SYSTEM_OBJECT),
-                               TAG_FILE_SYSTEM);
-    ASSERT(Fs!=NULL);
-
-    Fs->DeviceObject = DeviceObject;
+    /* Acquire the FS lock */
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
 
-    /* The RAW filesystem device objects must be last in the list so the
-     raw filesystem driver is the last filesystem driver asked to mount
-     a volume. It is always the first filesystem driver registered so
-     we use InsertHeadList() here as opposed to the other alternative
-     InsertTailList(). */
-    InsertHeadList(&FileSystemListHead, &Fs->Entry);
+    /* Check what kind of FS this is */
+    if (DeviceObject->DeviceType == FILE_DEVICE_DISK_FILE_SYSTEM)
+    {
+        /* Use the disk list */
+        FsList = &IopDiskFsListHead;
+    }
+    else if (DeviceObject->DeviceType == FILE_DEVICE_NETWORK_FILE_SYSTEM)
+    {
+        /* Use the network device list */
+        FsList = &IopNetworkFsListHead;
+    }
+    else if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+    {
+        /* Use the CD-ROM list */
+        FsList = &IopCdRomFsListHead;
+    }
+    else if (DeviceObject->DeviceType == FILE_DEVICE_TAPE_FILE_SYSTEM)
+    {
+        /* Use the tape list */
+        FsList = &IopTapeFsListHead;
+    }
 
+    /* Make sure that we have a valid list */
+    if (FsList)
+    {
+        /* Check if we should insert it at the top or bottom of the list */
+        if (DeviceObject->Flags & DO_LOW_PRIORITY_FILESYSTEM)
+        {
+            /* At the bottom */
+            InsertTailList(FsList->Blink, &DeviceObject->Queue.ListEntry);
+        }
+        else
+        {
+            /* On top */
+            InsertHeadList(FsList, &DeviceObject->Queue.ListEntry);
+        }
+    }
+
+    /* Clear the initializing flag */
+    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+    /* Release the FS Lock */
     ExReleaseResourceLite(&FileSystemListLock);
     KeLeaveCriticalRegion();
 
+    /* Notify file systems of the addition */
     IopNotifyFileSystemChange(DeviceObject, TRUE);
 }
 
@@ -528,24 +567,19 @@ VOID
 NTAPI
 IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
-    PFILE_SYSTEM_OBJECT current;
+    PAGED_CODE();
 
+    /* Acquire the FS lock */
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
 
-    LIST_FOR_EACH(current,&FileSystemListHead, FILE_SYSTEM_OBJECT,Entry)
-    {
-        if (current->DeviceObject == DeviceObject)
-        {
-            RemoveEntryList(&current->Entry);
-            ExFreePoolWithTag(current, TAG_FILE_SYSTEM);
-            ExReleaseResourceLite(&FileSystemListLock);
-            KeLeaveCriticalRegion();
-            IopNotifyFileSystemChange(DeviceObject, FALSE);
-            return;
-        }
-    }
+    /* Simply remove the entry */
+    RemoveEntryList(&DeviceObject->Queue.ListEntry);
 
+    /* And notify all registered file systems */
+    IopNotifyFileSystemChange(DeviceObject, FALSE);
+
+    /* Then release the lock */
     ExReleaseResourceLite(&FileSystemListLock);
     KeLeaveCriticalRegion();
 }
