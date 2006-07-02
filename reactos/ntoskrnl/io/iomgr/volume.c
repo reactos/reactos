@@ -145,12 +145,28 @@ IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
                           IN BOOLEAN DriverActive)
 {
     PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
+    PLIST_ENTRY ListEntry;
 
+    /* Acquire the notification lock */
     KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-    LIST_FOR_EACH(ChangeEntry, &FsChangeNotifyListHead,FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList) 
+
+    /* Loop the list */
+    ListEntry = FsChangeNotifyListHead.Flink;
+    while (ListEntry != &FsChangeNotifyListHead)
     {
-        (ChangeEntry->FSDNotificationProc)(DeviceObject, DriverActive);
+        /* Get the entry */
+        ChangeEntry = CONTAINING_RECORD(ListEntry,
+                                        FS_CHANGE_NOTIFY_ENTRY,
+                                        FsChangeNotifyList);
+
+        /* Call the notification procedure */
+        ChangeEntry->FSDNotificationProc(DeviceObject, DriverActive);
+
+        /* Go to the next entry */
+        ListEntry = ListEntry->Flink;
     }
+
+    /* Release the lock */
     KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 }
 
@@ -240,7 +256,7 @@ IopMountFileSystem(IN PDEVICE_OBJECT DeviceObject,
     return(Status);
 }
 
-NTSTATUS
+VOID
 NTAPI
 IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
@@ -249,36 +265,42 @@ IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
     KEVENT Event;
     PIRP Irp;
     NTSTATUS Status;
-    ASSERT_IRQL(PASSIVE_LEVEL);
+    PDEVICE_OBJECT AttachedDeviceObject = DeviceObject;
+    PAGED_CODE();
 
+    /* Loop as long as we're attached */
+    while (AttachedDeviceObject->AttachedDevice)
+    {
+        /* Get the attached device object */
+        AttachedDeviceObject = AttachedDeviceObject->AttachedDevice;
+    }
+
+    /* Initialize the event and build the IRP */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (Irp==NULL)
+    Irp = IoBuildDeviceIoControlRequest(IRP_MJ_DEVICE_CONTROL,
+                                        AttachedDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        0,
+                                        FALSE,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (Irp)
     {
-        return(STATUS_INSUFFICIENT_RESOURCES);
+        /* Set the major and minor functions */
+        StackPtr = IoGetNextIrpStackLocation(Irp);
+        StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+        StackPtr->MinorFunction = IRP_MN_LOAD_FILE_SYSTEM;
+
+        /* Call the driver */
+        Status = IoCallDriver(AttachedDeviceObject, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            /* Wait on it */
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        }
     }
-
-    Irp->UserIosb = &IoStatusBlock;
-    Irp->UserEvent = &Event;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-    StackPtr = IoGetNextIrpStackLocation(Irp);
-    StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
-    StackPtr->MinorFunction = IRP_MN_LOAD_FILE_SYSTEM;
-    StackPtr->Flags = 0;
-    StackPtr->Control = 0;
-    StackPtr->DeviceObject = DeviceObject;
-    StackPtr->FileObject = NULL;
-    StackPtr->CompletionRoutine = NULL;
-
-    Status = IoCallDriver(DeviceObject,Irp);
-    if (Status==STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    return(Status);
 }
 
 NTSTATUS
@@ -347,12 +369,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
             case STATUS_FS_DRIVER_REQUIRED:
                 DevObject = current->DeviceObject;
                 ExReleaseResourceLite(&FileSystemListLock);
-                Status = IopLoadFileSystem(DevObject);
-                if (!NT_SUCCESS(Status))
-                {
-                    KeLeaveCriticalRegion();
-                    return(Status);
-                }
+                IopLoadFileSystem(DevObject);
                 ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
                 goto restart;
 
@@ -584,20 +601,26 @@ IoRegisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
                                IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
 {
     PFS_CHANGE_NOTIFY_ENTRY Entry;
+    PAGED_CODE();
 
-    Entry = ExAllocatePoolWithTag(NonPagedPool,
+    /* Allocate a notification entry */
+    Entry = ExAllocatePoolWithTag(PagedPool,
                                   sizeof(FS_CHANGE_NOTIFY_ENTRY),
                                   TAG_FS_CHANGE_NOTIFY);
-    if (Entry == NULL) return(STATUS_INSUFFICIENT_RESOURCES);
+    if (!Entry) return(STATUS_INSUFFICIENT_RESOURCES);
 
+    /* Save the driver object and notification routine */
     Entry->DriverObject = DriverObject;
     Entry->FSDNotificationProc = FSDNotificationProc;
 
+    /* Insert it into the notification list */
     KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-    InsertHeadList(&FsChangeNotifyListHead, &Entry->FsChangeNotifyList);
+    InsertTailList(&FsChangeNotifyListHead, &Entry->FsChangeNotifyList);
     KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 
-    return(STATUS_SUCCESS);
+    /* Reference the driver */
+    ObReferenceObject(DriverObject);
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -609,20 +632,38 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
                                  IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
 {
     PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
+    PLIST_ENTRY NextEntry;
+    PAGED_CODE();
 
-    LIST_FOR_EACH(ChangeEntry, &FsChangeNotifyListHead, FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList)
+    /* Acquire the list lock */
+    KeAcquireGuardedMutex(&FsChangeNotifyListLock);
+
+    /* Loop the list */
+    NextEntry = FsChangeNotifyListHead.Flink;
+    while (NextEntry != &FsChangeNotifyListHead)
     {
-        if (ChangeEntry->DriverObject == DriverObject &&
-        ChangeEntry->FSDNotificationProc == FSDNotificationProc)
-        {
-            KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-            RemoveEntryList(&ChangeEntry->FsChangeNotifyList);
-            KeReleaseGuardedMutex(&FsChangeNotifyListLock);
+        /* Get the entry */
+        ChangeEntry = CONTAINING_RECORD(NextEntry,
+                                        FS_CHANGE_NOTIFY_ENTRY,
+                                        FsChangeNotifyList);
 
+        /* Check if it matches this de-registration */
+        if ((ChangeEntry->DriverObject == DriverObject) &&
+            (ChangeEntry->FSDNotificationProc == FSDNotificationProc))
+        {
+            /* It does, remove it from the list */
+            RemoveEntryList(&ChangeEntry->FsChangeNotifyList);
             ExFreePoolWithTag(ChangeEntry, TAG_FS_CHANGE_NOTIFY);
-            return;
+            break;
         }
+
+        /* Go to the next entry */
+        NextEntry = NextEntry->Flink;
     }
+
+    /* Release the lock and dereference the driver */
+    KeReleaseGuardedMutex(&FsChangeNotifyListLock);
+    ObDereferenceObject(DriverObject);
 }
 
 /*
@@ -632,6 +673,7 @@ VOID
 NTAPI
 IoAcquireVpbSpinLock(OUT PKIRQL Irql)
 {
+    /* Simply acquire the lock */
     KeAcquireSpinLock(&IoVpbLock, Irql);
 }
 
@@ -642,6 +684,7 @@ VOID
 NTAPI
 IoReleaseVpbSpinLock(IN KIRQL Irql)
 {
+    /* Just release the lock */
     KeReleaseSpinLock(&IoVpbLock, Irql);
 }
 
