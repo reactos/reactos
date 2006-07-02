@@ -330,8 +330,25 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     LIST_ENTRY LocalList;
     ASSERT_IRQL(PASSIVE_LEVEL);
 
+    /* Check if the device isn't already locked */
+    if (!DeviceIsLocked)
+    {
+        /* Lock it ourselves */
+        Status = KeWaitForSingleObject(&DeviceObject->DeviceLock,
+                                       Executive,
+                                       KeGetPreviousMode(),
+                                       Alertable,
+                                       NULL);
+        if ((Status == STATUS_ALERTED) || (Status == STATUS_USER_APC))
+        {
+            /* Don't mount if we were interrupted */
+            return Status;
+        }
+    }
+
+    /* Acquire the FS Lock*/
     KeEnterCriticalRegion();
-    ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
+    ExAcquireResourceSharedLite(&FileSystemListLock, TRUE);
 
     /* For a mount operation, this can only be a Disk, CD-ROM or tape */
     if ((DeviceObject->DeviceType == FILE_DEVICE_DISK) ||
@@ -351,57 +368,90 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
         FsList = &IopTapeFsListHead;
     }
 
-    /* Now loop the fs list until one of the file systems accepts us */
-    ListEntry = FsList->Flink;
-    while (ListEntry != FsList)
+    /* Make sure we weren't already mounted */
+    if (!(DeviceObject->Vpb->Flags & (VPB_MOUNTED | VPB_REMOVE_PENDING)))
     {
-        /* Get the Device Object for this FS */
-        FileSystemDeviceObject = CONTAINING_RECORD(ListEntry,
-                                                   DEVICE_OBJECT,
-                                                   Queue.ListEntry);
-
-        /* If we are not allowed to mount this volume as a raw filesystem volume
-         then don't try this */
-        if (!AllowRawMount && RawFsIsRawFileSystemDeviceObject(FileSystemDeviceObject))
+        /* Now loop the fs list until one of the file systems accepts us */
+        Status = STATUS_UNSUCCESSFUL;
+        ListEntry = FsList->Flink;
+        while (ListEntry != FsList)
         {
-            Status = STATUS_UNRECOGNIZED_VOLUME;
+            /* Get the Device Object for this FS */
+            FileSystemDeviceObject = CONTAINING_RECORD(ListEntry,
+                                                       DEVICE_OBJECT,
+                                                       Queue.ListEntry);
+
+            /* If we are not allowed to mount this volume as a raw filesystem volume
+             then don't try this */
+            if (!AllowRawMount && RawFsIsRawFileSystemDeviceObject(FileSystemDeviceObject))
+            {
+                Status = STATUS_UNRECOGNIZED_VOLUME;
+            }
+            else
+            {
+                Status = IopMountFileSystem(FileSystemDeviceObject, DeviceObject);
+            }
+
+            switch (Status)
+            {
+                case STATUS_FS_DRIVER_REQUIRED:
+                    DevObject = FileSystemDeviceObject;
+                    ExReleaseResourceLite(&FileSystemListLock);
+                    IopLoadFileSystem(DevObject);
+                    ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
+                    /* We need to setup a local list to pickup where we left */
+                    LocalList.Flink = FsList->Flink;
+                    ListEntry = &LocalList;
+                    break;
+
+                case STATUS_SUCCESS:
+                    DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
+                                               VPB_MOUNTED;
+                    ExReleaseResourceLite(&FileSystemListLock);
+                    KeLeaveCriticalRegion();
+                    return(STATUS_SUCCESS);
+
+                case STATUS_UNRECOGNIZED_VOLUME:
+                default:
+                    /* do nothing */
+                    break;
+            }
+
+            ListEntry = ListEntry->Flink;
         }
-        else
-        {
-            Status = IopMountFileSystem(FileSystemDeviceObject, DeviceObject);
-        }
-
-        switch (Status)
-        {
-            case STATUS_FS_DRIVER_REQUIRED:
-                DevObject = FileSystemDeviceObject;
-                ExReleaseResourceLite(&FileSystemListLock);
-                IopLoadFileSystem(DevObject);
-                ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
-                /* We need to setup a local list to pickup where we left */
-                LocalList.Flink = FsList->Flink;
-                ListEntry = &LocalList;
-                break;
-
-            case STATUS_SUCCESS:
-                DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
-                                           VPB_MOUNTED;
-                ExReleaseResourceLite(&FileSystemListLock);
-                KeLeaveCriticalRegion();
-                return(STATUS_SUCCESS);
-
-            case STATUS_UNRECOGNIZED_VOLUME:
-            default:
-                /* do nothing */
-                break;
-        }
-
-        ListEntry = ListEntry->Flink;
+    }
+    else if (DeviceObject->Vpb->Flags & VPB_REMOVE_PENDING)
+    {
+        /* Someone wants to remove us */
+        Status = STATUS_DEVICE_DOES_NOT_EXIST;
+    }
+    else
+    {
+        /* Someone already mounted us */
+        Status = STATUS_SUCCESS;
     }
 
+    /* Release the FS lock */
     ExReleaseResourceLite(&FileSystemListLock);
     KeLeaveCriticalRegion();
-    return(STATUS_UNRECOGNIZED_VOLUME);
+
+    /* Release the device lock if we're holding it */
+    if (DeviceIsLocked) KeSetEvent(&DeviceObject->DeviceLock, 0, FALSE);
+
+    /* Check if we failed to mount the boot partition */
+    if ((!NT_SUCCESS(Status)) &&
+        (DeviceObject->Flags & DO_SYSTEM_BOOT_PARTITION))
+    {
+        /* Bugcheck the system */
+        KeBugCheckEx(INACCESSIBLE_BOOT_DEVICE,
+                     (ULONG_PTR)DeviceObject,
+                     Status,
+                     0,
+                     0);
+    }
+
+    /* Return the mount status */
+    return Status;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
