@@ -347,8 +347,31 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
         /* Now loop the fs list until one of the file systems accepts us */
         Status = STATUS_UNSUCCESSFUL;
         ListEntry = FsList->Flink;
-        while (ListEntry != FsList)
+        while ((ListEntry != FsList) && !(NT_SUCCESS(Status)))
         {
+            /*
+             * If we're not allowed to mount this volume and this is our last
+             * (but not only) chance to mount it...
+             */
+            if (!(AllowRawMount) &&
+                (ListEntry->Flink == FsList) &&
+                (ListEntry != FsList->Flink))
+            {
+                /* Then fail this mount request */
+                break;
+            }
+
+            /*
+             * Also check if this is a raw mount and there are other file
+             * systems on the list.
+             */
+            if ((DeviceObject->Vpb->Flags & VPB_RAW_MOUNT) &&
+                (ListEntry->Flink != FsList))
+            {
+                /* Then skip this entry */
+                continue;
+            }
+
             /* Get the Device Object for this FS */
             FileSystemDeviceObject = CONTAINING_RECORD(ListEntry,
                                                        DEVICE_OBJECT,
@@ -368,56 +391,47 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 FsStackOverhead++;
             }
 
-            /* If we are not allowed to mount this volume as a raw filesystem volume
-             then don't try this */
-            if (!AllowRawMount && RawFsIsRawFileSystemDeviceObject(FileSystemDeviceObject))
+            /* Clear the event */
+            KeClearEvent(&Event);
+
+            /* Allocate the IRP */
+            Irp = IoAllocateIrp(AttachedDeviceObject->StackSize +
+                                FsStackOverhead,
+                                TRUE);
+            if (!Irp)
             {
-                Status = STATUS_UNRECOGNIZED_VOLUME;
+                /* Fail */
+                Status =  STATUS_INSUFFICIENT_RESOURCES;
+                break;
             }
-            else
+
+            /* Setup the IRP */
+            Irp->UserIosb = &IoStatusBlock;
+            Irp->UserEvent = &Event;
+            Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+            Irp->Flags = IRP_MOUNT_COMPLETION | IRP_SYNCHRONOUS_PAGING_IO;
+            Irp->RequestorMode = KernelMode;
+
+            /* Get the I/O Stack location and set it up */
+            StackPtr = IoGetNextIrpStackLocation(Irp);
+            StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+            StackPtr->MinorFunction = IRP_MN_MOUNT_VOLUME;
+            StackPtr->Flags = AllowRawMount;
+            StackPtr->Parameters.MountVolume.Vpb = DeviceObject->Vpb;
+            StackPtr->Parameters.MountVolume.DeviceObject =
+                AttachedDeviceObject;
+
+            /* Call the driver */
+            Status = IoCallDriver(FileSystemDeviceObject, Irp);
+            if (Status == STATUS_PENDING)
             {
-                /* Clear the event */
-                KeClearEvent(&Event);
-
-                /* Allocate the IRP */
-                Irp = IoAllocateIrp(AttachedDeviceObject->StackSize +
-                                    FsStackOverhead,
-                                    TRUE);
-                if (!Irp)
-                {
-                    /* Fail */
-                    Status =  STATUS_INSUFFICIENT_RESOURCES;
-                    break;
-                }
-
-                /* Setup the IRP */
-                Irp->UserIosb = &IoStatusBlock;
-                Irp->UserEvent = &Event;
-                Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-                Irp->Flags = IRP_MOUNT_COMPLETION | IRP_SYNCHRONOUS_PAGING_IO;
-                Irp->RequestorMode = KernelMode;
-
-                /* Get the I/O Stack location and set it up */
-                StackPtr = IoGetNextIrpStackLocation(Irp);
-                StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
-                StackPtr->MinorFunction = IRP_MN_MOUNT_VOLUME;
-                StackPtr->Flags = AllowRawMount;
-                StackPtr->Parameters.MountVolume.Vpb = DeviceObject->Vpb;
-                StackPtr->Parameters.MountVolume.DeviceObject =
-                    AttachedDeviceObject;
-
-                /* Call the driver */
-                Status = IoCallDriver(FileSystemDeviceObject, Irp);
-                if (Status == STATUS_PENDING)
-                {
-                    /* Wait on it */
-                    KeWaitForSingleObject(&Event,
-                                          Executive,
-                                          KernelMode,
-                                          FALSE,
-                                          NULL);
-                    Status = IoStatusBlock.Status;
-                }
+                /* Wait on it */
+                KeWaitForSingleObject(&Event,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+                Status = IoStatusBlock.Status;
             }
 
             switch (Status)
@@ -435,9 +449,6 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 case STATUS_SUCCESS:
                     DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
                                                VPB_MOUNTED;
-                    ExReleaseResourceLite(&FileSystemListLock);
-                    KeLeaveCriticalRegion();
-                    return(STATUS_SUCCESS);
 
                 case STATUS_UNRECOGNIZED_VOLUME:
                 default:
@@ -445,8 +456,12 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                     break;
             }
 
+            /* Go to the next FS entry */
             ListEntry = ListEntry->Flink;
         }
+
+        /* Dereference the device if we failed */
+        if (!NT_SUCCESS(Status)) ObDereferenceObject(AttachedDeviceObject);
     }
     else if (DeviceObject->Vpb->Flags & VPB_REMOVE_PENDING)
     {
