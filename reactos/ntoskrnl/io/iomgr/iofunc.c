@@ -635,59 +635,100 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION StackPtr;
+    BOOLEAN LocalEvent = FALSE;
+    KEVENT Event;
     NTSTATUS Status;
+    PAGED_CODE();
 
-    if (FileInformationClass == FileCompletionInformation)
+    /* Reference the object */
+    ObReferenceObject(FileObject);
+
+    /* Check if this is a file that was opened for Synch I/O */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        return STATUS_NOT_IMPLEMENTED;
+        /* Lock it */
+        IopLockFileObject(FileObject);
+
+        /* Use File Object event */
+        KeClearEvent(&FileObject->Event);
+    }
+    else
+    {
+        /* Use local event */
+        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
     }
 
-    Status = ObReferenceObjectByPointer(FileObject,
-                                        0, /* FIXME - depends on the information class */
-                                        IoFileObjectType,
-                                        KernelMode);
-    if (!NT_SUCCESS(Status)) return(Status);
+    /* Get the Device Object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
 
-    DeviceObject = FileObject->DeviceObject;
-
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (!Irp)
-    {
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Trigger FileObject/Event dereferencing */
+    /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->RequestorMode = KernelMode;
-    Irp->AssociatedIrp.SystemBuffer = FileInformation;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
     Irp->UserIosb = &IoStatusBlock;
-    Irp->UserEvent = &FileObject->Event;
+    Irp->UserEvent = (LocalEvent) ? &Event : NULL;
+    Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    Irp->Flags |= IRP_BUFFERED_IO;
+    Irp->AssociatedIrp.SystemBuffer = FileInformation;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    KeResetEvent( &FileObject->Event );
 
+    /* Set the Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
     StackPtr->MajorFunction = IRP_MJ_SET_INFORMATION;
-    StackPtr->MinorFunction = 0;
-    StackPtr->Flags = 0;
-    StackPtr->Control = 0;
-    StackPtr->DeviceObject = DeviceObject;
     StackPtr->FileObject = FileObject;
+
+    /* Set Parameters */
     StackPtr->Parameters.SetFile.FileInformationClass = FileInformationClass;
     StackPtr->Parameters.SetFile.Length = Length;
 
+    /* Queue the IRP */
+    IopQueueIrpToThread(Irp);
+
+    /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);
-    if (Status==STATUS_PENDING)
+
+    /* Check if this was synch I/O */
+    if (!LocalEvent)
     {
-        KeWaitForSingleObject(&FileObject->Event,
+        /* Check if the requet is pending */
+        if (Status == STATUS_PENDING)
+        {
+            /* Wait on the file object */
+            Status = KeWaitForSingleObject(&FileObject->Event,
+                                           Executive,
+                                           KernelMode,
+                                           FileObject->Flags & FO_ALERTABLE_IO,
+                                           NULL);
+            if (Status == STATUS_ALERTED)
+            {
+                /* Abort the operation */
+                IopAbortInterruptedIrp(&FileObject->Event, Irp);
+            }
+
+            /* Get the final status */
+            Status = FileObject->FinalStatus;
+        }
+
+        /* Release the file lock */
+        IopUnlockFileObject(FileObject);
+    }
+    else if (Status == STATUS_PENDING)
+    {
+        /* Wait on the local event and get the final status */
+        KeWaitForSingleObject(&Event,
                               Executive,
                               KernelMode,
-                              FileObject->Flags & FO_ALERTABLE_IO,
+                              FALSE,
                               NULL);
         Status = IoStatusBlock.Status;
     }
 
+    /* Return the status */
     return Status;
 }
 
