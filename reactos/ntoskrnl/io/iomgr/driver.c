@@ -79,7 +79,7 @@ LdrProcessModule(PVOID ModuleLoadBase,
 		 PUNICODE_STRING ModuleName,
 		 PLDR_DATA_TABLE_ENTRY *ModuleObject);
 
-VOID 
+static VOID
 FASTCALL
 INIT_FUNCTION
 IopDisplayLoadingMessage(PVOID ServiceName, 
@@ -493,8 +493,6 @@ IopLoadServiceModule(
       DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
       return Status;
    }
-   
-   //IopDisplayLoadingMessage(ServiceName->Buffer, TRUE);
 
    /*
     * Normalize the image path for all later processing.
@@ -1702,6 +1700,50 @@ IopReinitializeDrivers(VOID)
   }
 }
 
+VOID FASTCALL
+IopReinitializeBootDrivers(VOID)
+{
+  PDRIVER_REINIT_ITEM ReinitItem;
+  PLIST_ENTRY Entry;
+  KIRQL Irql;
+
+  KeAcquireSpinLock(&DriverBootReinitListLock,
+		    &Irql);
+
+  DriverBootReinitTailEntry = IsListEmpty(&DriverBootReinitListHead) ? NULL : DriverBootReinitListHead.Blink;
+  Entry = DriverBootReinitTailEntry;
+
+  KeReleaseSpinLock(&DriverBootReinitListLock,
+		    Irql);
+
+  if (Entry == NULL)
+  {
+    return;
+  }
+
+  for (;;)
+  {
+    Entry = ExInterlockedRemoveHeadList(&DriverBootReinitListHead,
+				        &DriverBootReinitListLock);
+    if (Entry == NULL)
+      return;
+
+    ReinitItem = (PDRIVER_REINIT_ITEM)CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
+
+    /* Increment reinitialization counter */
+    ReinitItem->DriverObject->DriverExtension->Count++;
+
+    ReinitItem->ReinitRoutine(ReinitItem->DriverObject,
+			      ReinitItem->Context,
+			      ReinitItem->DriverObject->DriverExtension->Count);
+
+    ExFreePool(Entry);
+
+    if (Entry == DriverBootReinitTailEntry)
+      return;
+  }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 
@@ -2110,7 +2152,7 @@ IoRegisterBootDriverReinitialization(
    ExInterlockedInsertTailList(
       &DriverBootReinitListHead,
       &ReinitItem->ItemEntry,
-      &DriverReinitListLock);
+      &DriverBootReinitListLock);
 }
 
 /*

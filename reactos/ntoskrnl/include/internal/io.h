@@ -810,6 +810,12 @@ IopReinitializeDrivers(
     VOID
 );
 
+VOID
+FASTCALL
+IopReinitializeBootDrivers(
+    VOID
+);
+
 //
 // File Routines
 //

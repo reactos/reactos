@@ -470,6 +470,9 @@ IoInit3(VOID)
     IopInitializeSystemDrivers();
     IoDestroyDriverList();
 
+    /* Call back drivers that asked for */
+    IopReinitializeBootDrivers();
+
     /* Stop boot logging */
     IopStopBootLog();
 
