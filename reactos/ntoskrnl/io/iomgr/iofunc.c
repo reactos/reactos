@@ -972,7 +972,7 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
 NTSTATUS
 NTAPI
 NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
-                            IN HANDLE Event OPTIONAL,
+                            IN HANDLE EventHandle OPTIONAL,
                             IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
                             IN PVOID ApcContext OPTIONAL,
                             OUT PIO_STATUS_BLOCK IoStatusBlock,
@@ -982,80 +982,109 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
                             IN BOOLEAN WatchTree)
 {
     PIRP Irp;
+    PKEVENT Event = NULL;
     PDEVICE_OBJECT DeviceObject;
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION IoStack;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN LockedForSync = FALSE;
     PAGED_CODE();
 
-    if(PreviousMode != KernelMode)
+    /* Check if we're called from user mode */
+    if (PreviousMode != KernelMode)
     {
+        /* Enter SEH for probing */
         _SEH_TRY
         {
+            /* Probe the I/O STatus block */
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
-            if(BufferSize) ProbeForWrite(Buffer, BufferSize, sizeof(ULONG));
+
+            /* Probe the buffer */
+            if (BufferSize) ProbeForWrite(Buffer, BufferSize, sizeof(ULONG));
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status)) return Status;
+        /* Check if probing failed */
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
+    /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
                                        FILE_LIST_DIRECTORY,
                                        IoFileObjectType,
                                        PreviousMode,
-                                       (PVOID *)&FileObject,
+                                       (PVOID*)&FileObject,
                                        NULL);
-    if (Status != STATUS_SUCCESS) return(Status);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    DeviceObject = FileObject->DeviceObject;
-
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp)
+    /* Check if we have an event handle */
+    if (EventHandle)
     {
-        ObDereferenceObject(FileObject);
-        return STATUS_UNSUCCESSFUL;
+        /* Reference it */
+        Status = ObReferenceObjectByHandle(EventHandle,
+                                           EVENT_MODIFY_STATE,
+                                           ExEventObjectType,
+                                           PreviousMode,
+                                           (PVOID *)&Event,
+                                           NULL);
+        if (Status != STATUS_SUCCESS) return Status;
+        KeClearEvent(Event);
     }
 
-    if (!Event) Event = &FileObject->Event;
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Lock it */
+        IopLockFileObject(FileObject);
+        LockedForSync = TRUE;
+    }
 
-    /* Trigger FileObject/Event dereferencing */
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    /* Clear File Object event */
+    KeClearEvent(&FileObject->Event);
+
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
+
+    /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
     Irp->UserIosb = IoStatusBlock;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->UserEvent = Event;
-    KeResetEvent( Event );
-    Irp->UserBuffer = Buffer;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
+    /* Set up Stack Data */
     IoStack = IoGetNextIrpStackLocation(Irp);
-
     IoStack->MajorFunction = IRP_MJ_DIRECTORY_CONTROL;
     IoStack->MinorFunction = IRP_MN_NOTIFY_CHANGE_DIRECTORY;
-    IoStack->Flags = 0;
-    IoStack->Control = 0;
-    IoStack->DeviceObject = DeviceObject;
     IoStack->FileObject = FileObject;
 
-    if (WatchTree) IoStack->Flags = SL_WATCH_TREE;
-
+    /* Set parameters */
     IoStack->Parameters.NotifyDirectory.CompletionFilter = CompletionFilter;
     IoStack->Parameters.NotifyDirectory.Length = BufferSize;
+    if (WatchTree) IoStack->Flags = SL_WATCH_TREE;
 
-    Status = IoCallDriver(FileObject->DeviceObject,Irp);
-
-    /* FIXME: Should we wait here or not for synchronously opened files? */
-
-    return Status;
+    /* Perform the call */
+    return IopPerformSynchronousRequest(DeviceObject,
+                                        Irp,
+                                        FileObject,
+                                        FALSE,
+                                        PreviousMode,
+                                        LockedForSync,
+                                        IopOtherTransfer);
 }
 
 /*
