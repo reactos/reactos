@@ -43,6 +43,7 @@ IopParseDevice(IN PVOID ParseObject,
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
+    PVPB Vpb;
     DPRINT("IopParseDevice:\n"
            "DeviceObject : %p\n"
            "RelatedFileObject : %p\n"
@@ -100,7 +101,7 @@ IopParseDevice(IN PVOID ParseObject,
             /* Check if it's not already mounted */
             if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
             {
-                Status = IopMountVolume(DeviceObject, FALSE);
+                Status = IopMountVolume(DeviceObject, FALSE, FALSE, FALSE, &Vpb);
                 if (!NT_SUCCESS(Status))
                 {
                     /* Couldn't mount, fail the lookup */

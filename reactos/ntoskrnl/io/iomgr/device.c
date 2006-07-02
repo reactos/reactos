@@ -798,7 +798,7 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
         CreatedDeviceObject->DeviceType == FILE_DEVICE_TAPE)
     {
         /* Create Vpb */
-        IopAttachVpb(CreatedDeviceObject);
+        IopCreateVpb(CreatedDeviceObject);
 
         /* Initialize Lock Event */
         KeInitializeEvent(&CreatedDeviceObject->DeviceLock,

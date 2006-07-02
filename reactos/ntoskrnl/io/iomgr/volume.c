@@ -26,13 +26,6 @@ typedef struct _FILE_SYSTEM_OBJECT
     LIST_ENTRY Entry;
 } FILE_SYSTEM_OBJECT, *PFILE_SYSTEM_OBJECT;
 
-typedef struct _FS_CHANGE_NOTIFY_ENTRY
-{
-    LIST_ENTRY FsChangeNotifyList;
-    PDRIVER_OBJECT DriverObject;
-    PDRIVER_FS_NOTIFICATION FSDNotificationProc;
-} FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
-
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IoInitVpbImplementation)
 #endif
@@ -68,8 +61,8 @@ IoInitFileSystemImplementation(VOID)
 }
 
 NTSTATUS
-STDCALL
-IopAttachVpb(IN PDEVICE_OBJECT DeviceObject)
+NTAPI
+IopCreateVpb(IN PDEVICE_OBJECT DeviceObject)
 {
     PVPB Vpb;
 
@@ -77,7 +70,7 @@ IopAttachVpb(IN PDEVICE_OBJECT DeviceObject)
     Vpb = ExAllocatePoolWithTag(NonPagedPool,
                                 sizeof(VPB),
                                 TAG_VPB);
-    if (!Vpb) return(STATUS_UNSUCCESSFUL);
+    if (!Vpb) return STATUS_UNSUCCESSFUL;
 
     /* Clear it so we don't waste time manually */
     RtlZeroMemory(Vpb, sizeof(VPB));
@@ -87,9 +80,9 @@ IopAttachVpb(IN PDEVICE_OBJECT DeviceObject)
     Vpb->Size = sizeof(VPB);
     Vpb->RealDevice = DeviceObject;
 
-    /* link it to the Device Object */
+    /* Link it to the Device Object */
     DeviceObject->Vpb = Vpb;
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -237,7 +230,10 @@ IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
 NTSTATUS
 NTAPI
 IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
-               IN BOOLEAN AllowRawMount)
+               IN BOOLEAN AllowRawMount,
+               IN BOOLEAN DeviceIsLocked,
+               IN BOOLEAN Alertable,
+               OUT PVPB *Vpb)
 {
     PFILE_SYSTEM_OBJECT current;
     NTSTATUS Status;
@@ -341,6 +337,7 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp;
     NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT DevObject;
+    PVPB NewVpb;
 
     KeWaitForSingleObject(&DeviceObject->DeviceLock,
                           Executive,
@@ -401,7 +398,7 @@ IoVerifyVolume(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Start mount sequence */
-    Status = IopMountVolume(DeviceObject, AllowRawMount);
+    Status = IopMountVolume(DeviceObject, AllowRawMount, TRUE, FALSE, &NewVpb);
 
     KeSetEvent(&DeviceObject->DeviceLock, IO_NO_INCREMENT, FALSE);
     return(Status);

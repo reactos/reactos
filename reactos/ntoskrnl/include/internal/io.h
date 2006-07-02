@@ -334,6 +334,16 @@ typedef struct _SHUTDOWN_ENTRY
 } SHUTDOWN_ENTRY, *PSHUTDOWN_ENTRY;
 
 //
+// F/S Notification entry for registered File Systems
+//
+typedef struct _FS_CHANGE_NOTIFY_ENTRY
+{
+    LIST_ENTRY FsChangeNotifyList;
+    PDRIVER_OBJECT DriverObject;
+    PDRIVER_FS_NOTIFICATION FSDNotificationProc;
+} FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
+
+//
 // Called on every visit of a node during a preorder-traversal of the device
 // node tree.
 // If the routine returns STATUS_UNSUCCESSFUL the traversal will stop and
@@ -559,7 +569,10 @@ NTSTATUS
 NTAPI
 IopMountVolume(
     IN PDEVICE_OBJECT DeviceObject,
-    IN BOOLEAN AllowRawMount
+    IN BOOLEAN AllowRawMount,
+    IN BOOLEAN DeviceIsLocked,
+    IN BOOLEAN Alertable,
+    OUT PVPB *Vpb
 );
 
 PVOID 
@@ -575,7 +588,7 @@ IoOpenFileOnDevice(
 
 NTSTATUS
 NTAPI
-IopAttachVpb(
+IopCreateVpb(
     IN PDEVICE_OBJECT DeviceObject
 );
 
