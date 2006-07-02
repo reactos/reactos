@@ -156,7 +156,7 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
     PAGED_CODE();
 
     /* Queue the IRP */
-    IopQueueIrpToThread(Irp);
+    //IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(TransferType);
@@ -478,7 +478,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     }
 
     /* Queue the IRP */
-    IopQueueIrpToThread(Irp);
+    //IopQueueIrpToThread(Irp);
 
     /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);
@@ -735,7 +735,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     StackPtr->Parameters.SetFile.Length = Length;
 
     /* Queue the IRP */
-    IopQueueIrpToThread(Irp);
+    //IopQueueIrpToThread(Irp);
 
     /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);

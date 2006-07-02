@@ -895,8 +895,8 @@ IoCancelThreadIo(IN PETHREAD Thread)
     KIRQL OldIrql;
     ULONG Retries = 3000;
     LARGE_INTEGER Interval;
-    //PLIST_ENTRY ListHead, NextEntry;
-    //PIRP Irp;
+    PLIST_ENTRY ListHead, NextEntry;
+    PIRP Irp;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRPs for Thread %p\n",
             __FUNCTION__,
@@ -906,7 +906,6 @@ IoCancelThreadIo(IN PETHREAD Thread)
     OldIrql = KfRaiseIrql(APC_LEVEL);
 
     /* Start by cancelling all the IRPs in the current thread queue. */
-#if 0
     ListHead = &Thread->IrpList;
     NextEntry = ListHead->Flink;
     while (ListHead != NextEntry)
@@ -920,7 +919,6 @@ IoCancelThreadIo(IN PETHREAD Thread)
         /* Move to the next entry */
         NextEntry = NextEntry->Flink;
     }
-#endif
 
      /* Wait 100 milliseconds */
     Interval.QuadPart = -1000000;
