@@ -1059,7 +1059,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -1074,19 +1074,18 @@ NtLockFile(IN HANDLE FileHandle,
            IN BOOLEAN FailImmediately,
            IN BOOLEAN ExclusiveLock)
 {
-    PFILE_OBJECT FileObject = NULL;
+    PFILE_OBJECT FileObject;
     PLARGE_INTEGER LocalLength = NULL;
     PIRP Irp = NULL;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
     PKEVENT Event = NULL;
-    BOOLEAN LocalEvent = FALSE;
+    BOOLEAN LockedForSync = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     LARGE_INTEGER CapturedByteOffset, CapturedLength;
     NTSTATUS Status = STATUS_SUCCESS;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     PAGED_CODE();
-
     CapturedByteOffset.QuadPart = 0;
     CapturedLength.QuadPart = 0;
 
@@ -1099,96 +1098,83 @@ NtLockFile(IN HANDLE FileHandle,
                                        &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
-        /* Must have either FILE_READ_DATA or FILE_WRITE_DATA access unless
-           we're in KernelMode! */
-        if (!(HandleInformation.GrantedAccess & (FILE_WRITE_DATA | FILE_READ_DATA)))
+        /* Must have either FILE_READ_DATA or FILE_WRITE_DATA access */
+        if (!(HandleInformation.GrantedAccess &
+            (FILE_WRITE_DATA | FILE_READ_DATA)))
         {
-            DPRINT1("Invalid access rights\n");
             ObDereferenceObject(FileObject);
             return STATUS_ACCESS_DENIED;
         }
 
+        /* Enter SEH for probing */
         _SEH_TRY
         {
+            /* Probe the I/O STatus block */
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
+
+            /* Probe and capture the large integers */
             CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             CapturedLength = ProbeForReadLargeInteger(Length);
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
+        /* Check if probing failed */
         if (!NT_SUCCESS(Status))
         {
+            /* Dereference the object and return exception code */
             ObDereferenceObject(FileObject);
             return Status;
         }
     }
     else
     {
+        /* Otherwise, capture them directly */
         CapturedByteOffset = *ByteOffset;
         CapturedLength = *Length;
     }
 
-    /* Get Event Object */
+    /* Check if we have an event handle */
     if (EventHandle)
     {
+        /* Reference it */
         Status = ObReferenceObjectByHandle(EventHandle,
                                            EVENT_MODIFY_STATE,
                                            ExEventObjectType,
                                            PreviousMode,
                                            (PVOID *)&Event,
                                            NULL);
-        if (Status != STATUS_SUCCESS) return(Status);
+        if (Status != STATUS_SUCCESS) return Status;
         KeClearEvent(Event);
     }
 
-    /* Check if this is a direct open or not */
-    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
-    {
-        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
-    }
-    else
-    {
-        DeviceObject = IoGetRelatedDeviceObject(FileObject);
-    }
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
+        /* Lock it */
+        IopLockFileObject(FileObject);
+        LockedForSync = TRUE;
     }
-    else
-    {
-        LocalEvent = TRUE;
-    }
+
+    /* Clear File Object event */
+    KeClearEvent(&FileObject->Event);
+    FileObject->LockOperation = TRUE;
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp)
-    {
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Allocate local buffer */
-    LocalLength = ExAllocatePoolWithTag(NonPagedPool,
-                                        sizeof(LARGE_INTEGER),
-                                        TAG_LOCK);
-    if (!LocalLength)
-    {
-        IoFreeIrp(Irp);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    *LocalLength = CapturedLength;
+    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
@@ -1196,6 +1182,8 @@ NtLockFile(IN HANDLE FileHandle,
     Irp->UserEvent = Event;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
     /* Set up Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -1203,7 +1191,24 @@ NtLockFile(IN HANDLE FileHandle,
     StackPtr->MinorFunction = IRP_MN_LOCK;
     StackPtr->FileObject = FileObject;
 
+    /* Allocate local buffer */
+    LocalLength = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(LARGE_INTEGER),
+                                        TAG_LOCK);
+    if (!LocalLength)
+    {
+        /* Fail */
+        IoFreeIrp(Irp);
+        if (Event) ObDereferenceObject(Event);
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Set the length */
+    *LocalLength = CapturedLength;
+
     /* Set Parameters */
+    Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
     StackPtr->Parameters.LockControl.Length = LocalLength;
     StackPtr->Parameters.LockControl.ByteOffset = CapturedByteOffset;
     StackPtr->Parameters.LockControl.Key = Key;
@@ -1212,24 +1217,14 @@ NtLockFile(IN HANDLE FileHandle,
     if (FailImmediately) StackPtr->Flags = SL_FAIL_IMMEDIATELY;
     if (ExclusiveLock) StackPtr->Flags |= SL_EXCLUSIVE_LOCK;
 
-    /* Call the Driver */
-    FileObject->LockOperation = TRUE;
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        if (!LocalEvent)
-        {
-            KeWaitForSingleObject(&FileObject->Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            Status = FileObject->FinalStatus;
-        }
-    }
-
-    /* Return the Status */
-    return Status;
+    /* Perform the call */
+    return IopPerformSynchronousRequest(DeviceObject,
+                                        Irp,
+                                        FileObject,
+                                        FALSE,
+                                        PreviousMode,
+                                        LockedForSync,
+                                        IopOtherTransfer);
 }
 
 /*
