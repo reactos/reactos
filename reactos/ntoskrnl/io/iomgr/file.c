@@ -100,7 +100,7 @@ IopParseDevice(IN PVOID ParseObject,
             /* Check if it's not already mounted */
             if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
             {
-                Status = IoMountVolume(DeviceObject, FALSE);
+                Status = IopMountVolume(DeviceObject, FALSE);
                 if (!NT_SUCCESS(Status))
                 {
                     /* Couldn't mount, fail the lookup */
