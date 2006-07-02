@@ -479,6 +479,15 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
             }
             else
             {
+                /* Check if we failed because of the user */
+                if ((IoIsErrorUserInduced(Status)) &&
+                    (IoStatusBlock.Information == 1))
+                {
+                    /* Break out and fail */
+                    break;
+                }
+
+                /* Otherwise, check if we need to load the FS driver */
                 if (Status == STATUS_FS_DRIVER_REQUIRED)
                 {
                     /* We need to release the lock */
@@ -497,7 +506,6 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                     if (!DeviceIsLocked)
                     {
                         /* Lock it ourselves */
-                        DPRINT1("Waiting\n");
                         Status = KeWaitForSingleObject(&DeviceObject->
                                                        DeviceLock,
                                                        Executive,
@@ -530,6 +538,19 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                     /* We need to setup a local list to pickup where we left */
                     LocalList.Flink = FsList->Flink;
                     ListEntry = &LocalList;
+                }
+
+                /*
+                 * Check if we failed with any other error then an unrecognized
+                 * volume, and if this request doesn't allow mounting the raw
+                 * file system.
+                 */
+                if (!(AllowRawMount) &&
+                    (Status != STATUS_UNRECOGNIZED_VOLUME) && 
+                    (FsRtlIsTotalDeviceFailure(Status)))
+                {
+                    /* Break out and give up */
+                    break;
                 }
             }
 
