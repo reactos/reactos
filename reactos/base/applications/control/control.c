@@ -409,12 +409,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdS
 
   lpParam++;
 
-  if ( _tcslen(lpParam) == 0)
-  {
-      /* No argument on the command line */
-      return RunControlPanelWindow(nCmdShow);
-  }
-
   if (_tcsicmp(lpParam, _T("desktop")) == 0)
     {
       return RunControlPanel(_T("desk.cpl"), 0);
