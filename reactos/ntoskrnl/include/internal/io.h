@@ -5,7 +5,6 @@
 * PURPOSE:         Internal header for the I/O Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
-//#include "io_x.h"
 #include "ntdddisk.h"
 
 //
@@ -192,6 +191,16 @@ typedef enum _IOP_DEVICE_LIST_OPERATION
     IopRemove,
     IopAdd
 } IOP_DEVICE_LIST_OPERATION, *PIOP_DEVICE_LIST_OPERATION;
+
+//
+// Transfer statistics
+//
+typedef enum _IOP_TRANSFER_TYPE
+{
+    IopReadTransfer,
+    IopWriteTransfer,
+    IopOtherTransfer
+} IOP_TRANSFER_TYPE, *PIOP_TRANSFER_TYPE;
 
 //
 // Special version of the IRP Overlay used to optimize I/O completion
@@ -674,6 +683,19 @@ IoInitCancelHandling(
 );
 
 //
+// I/O Completion
+//
+VOID
+NTAPI
+IopCompleteRequest(
+    IN PKAPC Apc,
+    IN PKNORMAL_ROUTINE* NormalRoutine,
+    IN PVOID* NormalContext,
+    IN PVOID* SystemArgument1,
+    IN PVOID* SystemArgument2
+);
+
+//
 // Error Logging Routines
 //
 VOID
@@ -949,3 +971,8 @@ extern POBJECT_TYPE IoCompletionType;
 extern PDEVICE_NODE IopRootDeviceNode;
 extern ULONG IopTraceLevel;
 extern NPAGED_LOOKASIDE_LIST IopMdlLookasideList;
+
+//
+// Inlined Functions
+//
+#include "io_x.h"

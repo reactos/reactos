@@ -5,8 +5,6 @@
 * PURPOSE:         Internal header for the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
-#include "ob_x.h"
-
 //
 // Define this if you want debugging support
 //
@@ -323,3 +321,9 @@ extern PHANDLE_TABLE ObpKernelHandleTable;
 extern WORK_QUEUE_ITEM ObpReaperWorkItem;
 extern volatile PVOID ObpReaperList;
 extern NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
+extern BOOLEAN IoCountOperations;
+
+//
+// Inlined Functions
+//
+#include "ob_x.h"

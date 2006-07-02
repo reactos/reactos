@@ -849,13 +849,13 @@ IoCancelIrp(IN PIRP Irp)
 {
     KIRQL OldIrql;
     PDRIVER_CANCEL CancelRoutine;
-
-    /* Acquire the cancel lock and cancel the IRP */
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRP %p\n",
             __FUNCTION__,
             Irp);
+    ASSERT(Irp->Type == IO_TYPE_IRP);
 
+    /* Acquire the cancel lock and cancel the IRP */
     IoAcquireCancelSpinLock(&OldIrql);
     Irp->Cancel = TRUE;
 
@@ -892,10 +892,11 @@ VOID
 NTAPI
 IoCancelThreadIo(IN PETHREAD Thread)
 {
-    PIRP Irp;
     KIRQL OldIrql;
     ULONG Retries = 3000;
     LARGE_INTEGER Interval;
+    //PLIST_ENTRY ListHead, NextEntry;
+    //PIRP Irp;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRPs for Thread %p\n",
             __FUNCTION__,
@@ -905,11 +906,21 @@ IoCancelThreadIo(IN PETHREAD Thread)
     OldIrql = KfRaiseIrql(APC_LEVEL);
 
     /* Start by cancelling all the IRPs in the current thread queue. */
-    LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
+#if 0
+    ListHead = &Thread->IrpList;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
     {
+        /* Get the IRP */
+        Irp = CONTAINING_RECORD(NextEntry, IRP, ThreadListEntry);
+
         /* Cancel it */
         IoCancelIrp(Irp);
+
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
     }
+#endif
 
      /* Wait 100 milliseconds */
     Interval.QuadPart = -1000000;
@@ -1462,24 +1473,13 @@ VOID
 NTAPI
 IoQueueThreadIrp(IN PIRP Irp)
 {
-    KIRQL OldIrql;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Queueing IRP %p\n",
             __FUNCTION__,
             Irp);
 
-    /* Raise to APC */
-    OldIrql = KfRaiseIrql(APC_LEVEL);
-
-   /*
-    * Synchronous irp's are queued to requestor thread. If they are not
-    * completed when the thread exits, they are canceled (cleaned up).
-    * - Gunnar
-    */
-    InsertTailList(&Irp->Tail.Overlay.Thread->IrpList, &Irp->ThreadListEntry);
-
-    /* Lower back */
-    KfLowerIrql(OldIrql);
+    /* Use our inlined routine */
+    IopQueueIrpToThread(Irp);
 }
 
 /*

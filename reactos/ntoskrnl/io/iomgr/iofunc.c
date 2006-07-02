@@ -23,14 +23,145 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+/* DON'T inline this: it's a failure case */
 NTSTATUS
 NTAPI
-IopQueryDirectoryFileCompletion(IN PDEVICE_OBJECT DeviceObject,
-                                IN PIRP Irp,
-                                IN PVOID Context)
+IopCleanupFailedIrp(IN PFILE_OBJECT FileObject,
+                    IN PKEVENT EventObject)
 {
-    ExFreePool(Context);
-    return STATUS_SUCCESS;
+    PAGED_CODE();
+
+    /* Dereference the event */
+    if (EventObject) ObDereferenceObject(EventObject);
+
+    /* If this was a file opened for synch I/O, then unlock it */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO) IopUnlockFileObject(FileObject);
+
+    /* Now dereference it and return */
+    ObDereferenceObject(FileObject);
+    return STATUS_INSUFFICIENT_RESOURCES;
+}
+
+/* DON'T inline this: it's a failure case */
+VOID
+NTAPI
+IopAbortInterruptedIrp(IN PKEVENT EventObject,
+                       IN PIRP Irp)
+{
+    KIRQL OldIrql;
+    BOOLEAN CancelResult;
+    LARGE_INTEGER Wait;
+    PAGED_CODE();
+
+    /* Raise IRQL to APC */
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
+
+    /* Check if nobody completed it yet */
+    if (!KeReadStateEvent(EventObject))
+    {
+        /* First, cancel it */
+        CancelResult = IoCancelIrp(Irp);
+        KeLowerIrql(OldIrql);
+
+        /* Check if we cancelled it */
+        if (CancelResult)
+        {
+            /* Wait for the IRP to be cancelled */
+            Wait.QuadPart = -100000;
+            while (!KeReadStateEvent(EventObject))
+            {
+                /* Delay indefintely */
+                KeDelayExecutionThread(KernelMode, FALSE, &Wait);
+            }
+        }
+        else
+        {
+            /* No cancellation done, so wait for the I/O system to kill it */
+            KeWaitForSingleObject(EventObject,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+        }
+    }
+    else
+    {
+        /* We got preempted, so give up */
+        KeLowerIrql(OldIrql);
+    }
+}
+
+NTSTATUS
+NTAPI
+IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
+                             IN PIRP Irp,
+                             IN PFILE_OBJECT FileObject,
+                             IN BOOLEAN Deferred,
+                             IN KPROCESSOR_MODE PreviousMode,
+                             IN BOOLEAN SynchIo,
+                             IN IOP_TRANSFER_TYPE TransferType)
+{
+    NTSTATUS Status;
+    PKNORMAL_ROUTINE NormalRoutine;
+    PVOID NormalContext;
+    KIRQL OldIrql;
+    PAGED_CODE();
+
+    /* Queue the IRP */
+    IopQueueIrpToThread(Irp);
+
+    /* Update operation counts */
+    IopUpdateOperationCount(TransferType);
+
+    /* Call the driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+
+    /* Check if we're optimizing this case */
+    if (Deferred)
+    {
+        /* We are! Check if the IRP wasn't completed */
+        if (Status != STATUS_PENDING)
+        {
+            /* Complete it ourselves */
+            ASSERT(!Irp->PendingReturned);
+            KeRaiseIrql(APC_LEVEL, &OldIrql);
+            IopCompleteRequest(&Irp->Tail.Apc,
+                               &NormalRoutine,
+                               &NormalContext,
+                               (PVOID*)&FileObject,
+                               &NormalContext);
+            KeLowerIrql(OldIrql);
+        }
+    }
+
+    /* Check if this was synch I/O */
+    if (SynchIo)
+    {
+        /* Make sure the IRP was completed, but returned pending */
+        if (Status == STATUS_PENDING)
+        {
+            /* Wait for the IRP */
+            Status = KeWaitForSingleObject(&FileObject->Event,
+                                           Executive,
+                                           PreviousMode,
+                                           (FileObject->Flags & FO_ALERTABLE_IO),
+                                           NULL);
+            if ((Status == STATUS_ALERTED) || (Status == STATUS_USER_APC))
+            {
+                /* Abort the request */
+                IopAbortInterruptedIrp(&FileObject->Event, Irp);
+            }
+
+            /* Set the final status */
+            Status = FileObject->FinalStatus;
+        }
+
+        /* Release the file lock */
+        IopUnlockFileObject(FileObject);
+    }
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
@@ -45,7 +176,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                      IN ULONG InputBufferLength OPTIONAL,
                      OUT PVOID OutputBuffer,
                      IN ULONG OutputBufferLength OPTIONAL,
-                     BOOLEAN IsDevIoCtl)
+                     IN BOOLEAN IsDevIoCtl)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject;
@@ -53,54 +184,65 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PKEVENT EventObject = NULL;
-    BOOLEAN LocalEvent = FALSE;
+    BOOLEAN LockedForSynch = FALSE;
     ULONG AccessType;
     OBJECT_HANDLE_INFORMATION HandleInformation;
+    ACCESS_MASK DesiredAccess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
+    /* Get the access type */
     AccessType = IO_METHOD_FROM_CTL_CODE(IoControlCode);
 
+    /* Check if we came from user mode */
     if (PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
+            /* Probe the status block */
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
 
-            /* probe the input and output buffers if needed */
+            /* Check if this is buffered I/O */
             if (AccessType == METHOD_BUFFERED)
             {
-                if (OutputBuffer != NULL)
+                /* Check if we have an output buffer */
+                if (OutputBuffer)
                 {
+                    /* Probe the output buffer */
                     ProbeForWrite(OutputBuffer, OutputBufferLength, 1);
                 }
                 else
                 {
-                    /* make sure the caller can't fake this as we depend on this */
+                    /* Make sure the caller can't fake this as we depend on this */
                     OutputBufferLength = 0;
                 }
             }
 
+            /* Check if we we have an input buffer I/O */
             if (AccessType != METHOD_NEITHER)
             {
-                if (InputBuffer != NULL)
+                /* Check if we have an input buffer */
+                if (InputBuffer)
                 {
+                    /* Probe the input buffer */
                     ProbeForRead(InputBuffer, InputBufferLength, 1);
                 }
                 else
                 {
-                    /* make sure the caller can't fake this as we depend on this */
+                    /* Make sure the caller can't fake this as we depend on this */
                     InputBufferLength = 0;
                 }
             }
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
+        /* Fail if we got an access violation */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -113,15 +255,18 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                        &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Check for sufficient access rights */
+    /* Check if we from user mode */
     if (PreviousMode != KernelMode)
     {
-        ACCESS_MASK DesiredAccess = (ACCESS_MASK)((IoControlCode >> 14) & 3);
-        if (DesiredAccess != FILE_ANY_ACCESS &&
-            !RtlAreAllAccessesGranted(HandleInformation.GrantedAccess,
-                                      (ACCESS_MASK)((IoControlCode >> 14) & 3)))
+        /* Get the access mask */
+        DesiredAccess = (ACCESS_MASK)((IoControlCode >> 14) & 3);
+
+        /* Check if we can open it */
+        if ((DesiredAccess != FILE_ANY_ACCESS) &&
+            (HandleInformation.GrantedAccess & DesiredAccess) != DesiredAccess)
         {
-            ObDereferenceObject (FileObject);
+            /* Dereference the file object and fail */
+            ObDereferenceObject(FileObject);
             return STATUS_ACCESS_DENIED;
         }
     }
@@ -138,7 +283,8 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                            NULL);
         if (!NT_SUCCESS(Status))
         {
-            ObDereferenceObject (FileObject);
+            /* Dereference the file object and fail */
+            ObDereferenceObject(FileObject);
             return Status;
         }
 
@@ -146,27 +292,30 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         KeClearEvent(EventObject);
     }
 
+    /* Check if this is a file that was opened for Synch I/O */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Lock it */
+        IopLockFileObject(FileObject);
+
+        /* Remember to unlock later */
+        LockedForSynch = TRUE;
+    }
+
     /* Check if this is a direct open or not */
     if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
     {
+        /* It's a direct open, get the attached device */
         DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
     }
     else
     {
+        /* Otherwise get the related device */
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
 
-    /* Check if we should use Sync IO or not */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-    {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
-    }
-    else
-    {
-        /* Use local event */
-        LocalEvent = TRUE;
-    }
+    /* Clear the event */
+    KeClearEvent(&FileObject->Event);
 
     /* Build the IRP */
     Irp = IoBuildDeviceIoControlRequest(IoControlCode,
@@ -178,14 +327,10 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                         FALSE,
                                         EventObject,
                                         IoStatusBlock);
-    if (!Irp)
-    {
-        if (EventObject) ObDereferenceObject(EventObject);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
 
     /* Set some extra settings */
+    Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID) NULL;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->RequestorMode = PreviousMode;
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
@@ -196,23 +341,27 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                               IRP_MJ_DEVICE_CONTROL :
                               IRP_MJ_FILE_SYSTEM_CONTROL;
 
-    /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        if (!LocalEvent)
-        {
-            KeWaitForSingleObject(&FileObject->Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            Status = FileObject->FinalStatus;
-        }
-    }
+    /* Use deferred completion for FS I/O */
+    Irp->Flags |= (!IsDevIoCtl) ? IRP_DEFER_IO_COMPLETION : 0;
 
-    /* Return the Status */
-    return Status;
+    /* Perform the call */
+    return IopPerformSynchronousRequest(DeviceObject,
+                                        Irp,
+                                        FileObject,
+                                        !IsDevIoCtl,
+                                        PreviousMode,
+                                        LockedForSynch,
+                                        IopOtherTransfer);
+}
+
+NTSTATUS
+NTAPI
+IopQueryDirectoryFileCompletion(IN PDEVICE_OBJECT DeviceObject,
+                                IN PIRP Irp,
+                                IN PVOID Context)
+{
+    ExFreePool(Context);
+    return STATUS_SUCCESS;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
