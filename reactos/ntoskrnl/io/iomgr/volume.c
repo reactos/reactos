@@ -284,8 +284,10 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION StackPtr;
     PLIST_ENTRY FsList, ListEntry;
     PDEVICE_OBJECT DevObject;
+    PDEVICE_OBJECT AttachedDeviceObject = DeviceObject;
     PDEVICE_OBJECT FileSystemDeviceObject;
     LIST_ENTRY LocalList;
+    ULONG FsStackOverhead;
     PAGED_CODE();
 
     /* Check if the device isn't already locked */
@@ -332,6 +334,16 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
         /* Initialize the event to wait on */
         KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
+        /* Get the actual device to mount */
+        while (AttachedDeviceObject->AttachedDevice)
+        {
+            /* Get the next one */
+            AttachedDeviceObject = AttachedDeviceObject->AttachedDevice;
+        }
+
+        /* Reference it */
+        ObReferenceObject(AttachedDeviceObject);
+
         /* Now loop the fs list until one of the file systems accepts us */
         Status = STATUS_UNSUCCESSFUL;
         ListEntry = FsList->Flink;
@@ -341,6 +353,20 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
             FileSystemDeviceObject = CONTAINING_RECORD(ListEntry,
                                                        DEVICE_OBJECT,
                                                        Queue.ListEntry);
+
+            /*
+             * If this file system device is attached to some other device,
+             * then we must make sure to increase the stack size for the IRP.
+             * The default is +1, for the FS device itself.
+             */
+            FsStackOverhead = 1;
+            while (FileSystemDeviceObject->AttachedDevice)
+            {
+                /* Get the next attached device and increase overhead */
+                FileSystemDeviceObject = FileSystemDeviceObject->
+                                         AttachedDevice;
+                FsStackOverhead++;
+            }
 
             /* If we are not allowed to mount this volume as a raw filesystem volume
              then don't try this */
@@ -354,8 +380,8 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 KeClearEvent(&Event);
 
                 /* Allocate the IRP */
-                Irp = IoAllocateIrp(FileSystemDeviceObject->StackSize +
-                                    1,
+                Irp = IoAllocateIrp(AttachedDeviceObject->StackSize +
+                                    FsStackOverhead,
                                     TRUE);
                 if (!Irp)
                 {
@@ -378,7 +404,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 StackPtr->Flags = AllowRawMount;
                 StackPtr->Parameters.MountVolume.Vpb = DeviceObject->Vpb;
                 StackPtr->Parameters.MountVolume.DeviceObject =
-                    DeviceObject;
+                    AttachedDeviceObject;
 
                 /* Call the driver */
                 Status = IoCallDriver(FileSystemDeviceObject, Irp);
