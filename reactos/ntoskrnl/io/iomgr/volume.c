@@ -327,12 +327,12 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     PLIST_ENTRY FsList, ListEntry;
     PDEVICE_OBJECT DevObject;
     PDEVICE_OBJECT FileSystemDeviceObject;
+    LIST_ENTRY LocalList;
     ASSERT_IRQL(PASSIVE_LEVEL);
 
     KeEnterCriticalRegion();
     ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
 
-    restart:
     /* For a mount operation, this can only be a Disk, CD-ROM or tape */
     if ((DeviceObject->DeviceType == FILE_DEVICE_DISK) ||
         (DeviceObject->DeviceType == FILE_DEVICE_VIRTUAL_DISK))
@@ -378,7 +378,10 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 ExReleaseResourceLite(&FileSystemListLock);
                 IopLoadFileSystem(DevObject);
                 ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
-                goto restart;
+                /* We need to setup a local list to pickup where we left */
+                LocalList.Flink = FsList->Flink;
+                ListEntry = &LocalList;
+                break;
 
             case STATUS_SUCCESS:
                 DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
@@ -392,6 +395,8 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 /* do nothing */
                 break;
         }
+
+        ListEntry = ListEntry->Flink;
     }
 
     ExReleaseResourceLite(&FileSystemListLock);
