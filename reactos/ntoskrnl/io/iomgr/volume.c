@@ -222,52 +222,6 @@ IoShutdownRegisteredFileSystems(VOID)
     KeLeaveCriticalRegion();
 }
 
-NTSTATUS
-NTAPI
-IopMountFileSystem(IN PDEVICE_OBJECT DeviceObject,
-                   IN PDEVICE_OBJECT DeviceToMount)
-{
-    IO_STATUS_BLOCK IoStatusBlock;
-    PIO_STACK_LOCATION StackPtr;
-    KEVENT Event;
-    PIRP Irp;
-    NTSTATUS Status;
-    ASSERT_IRQL(PASSIVE_LEVEL);
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (Irp==NULL)
-    {
-        return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-    Irp->UserIosb = &IoStatusBlock;
-    DPRINT("Irp->UserIosb 0x%p\n", Irp->UserIosb);
-    Irp->UserEvent = &Event;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-    StackPtr = IoGetNextIrpStackLocation(Irp);
-    StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
-    StackPtr->MinorFunction = IRP_MN_MOUNT_VOLUME;
-    StackPtr->Flags = 0;
-    StackPtr->Control = 0;
-    StackPtr->DeviceObject = DeviceObject;
-    StackPtr->FileObject = NULL;
-    StackPtr->CompletionRoutine = NULL;
-
-    StackPtr->Parameters.MountVolume.Vpb = DeviceToMount->Vpb;
-    StackPtr->Parameters.MountVolume.DeviceObject = DeviceToMount;
-
-    Status = IoCallDriver(DeviceObject,Irp);
-    if (Status==STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    return(Status);
-}
-
 VOID
 NTAPI
 IopLoadFileSystem(IN PDEVICE_OBJECT DeviceObject)
@@ -323,12 +277,16 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                IN BOOLEAN Alertable,
                OUT PVPB *Vpb)
 {
+    KEVENT Event;
     NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PIRP Irp;
+    PIO_STACK_LOCATION StackPtr;
     PLIST_ENTRY FsList, ListEntry;
     PDEVICE_OBJECT DevObject;
     PDEVICE_OBJECT FileSystemDeviceObject;
     LIST_ENTRY LocalList;
-    ASSERT_IRQL(PASSIVE_LEVEL);
+    PAGED_CODE();
 
     /* Check if the device isn't already locked */
     if (!DeviceIsLocked)
@@ -371,6 +329,9 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     /* Make sure we weren't already mounted */
     if (!(DeviceObject->Vpb->Flags & (VPB_MOUNTED | VPB_REMOVE_PENDING)))
     {
+        /* Initialize the event to wait on */
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
         /* Now loop the fs list until one of the file systems accepts us */
         Status = STATUS_UNSUCCESSFUL;
         ListEntry = FsList->Flink;
@@ -389,7 +350,48 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
             }
             else
             {
-                Status = IopMountFileSystem(FileSystemDeviceObject, DeviceObject);
+                /* Clear the event */
+                KeClearEvent(&Event);
+
+                /* Allocate the IRP */
+                Irp = IoAllocateIrp(FileSystemDeviceObject->StackSize +
+                                    1,
+                                    TRUE);
+                if (!Irp)
+                {
+                    /* Fail */
+                    Status =  STATUS_INSUFFICIENT_RESOURCES;
+                    break;
+                }
+
+                /* Setup the IRP */
+                Irp->UserIosb = &IoStatusBlock;
+                Irp->UserEvent = &Event;
+                Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+                Irp->Flags = IRP_MOUNT_COMPLETION | IRP_SYNCHRONOUS_PAGING_IO;
+                Irp->RequestorMode = KernelMode;
+
+                /* Get the I/O Stack location and set it up */
+                StackPtr = IoGetNextIrpStackLocation(Irp);
+                StackPtr->MajorFunction = IRP_MJ_FILE_SYSTEM_CONTROL;
+                StackPtr->MinorFunction = IRP_MN_MOUNT_VOLUME;
+                StackPtr->Flags = AllowRawMount;
+                StackPtr->Parameters.MountVolume.Vpb = DeviceObject->Vpb;
+                StackPtr->Parameters.MountVolume.DeviceObject =
+                    DeviceObject;
+
+                /* Call the driver */
+                Status = IoCallDriver(FileSystemDeviceObject, Irp);
+                if (Status == STATUS_PENDING)
+                {
+                    /* Wait on it */
+                    KeWaitForSingleObject(&Event,
+                                          Executive,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL);
+                    Status = IoStatusBlock.Status;
+                }
             }
 
             switch (Status)
