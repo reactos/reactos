@@ -132,6 +132,39 @@ IopReferenceVpbForVerify(IN PDEVICE_OBJECT DeviceObject,
     return Result;
 }
 
+PVPB
+NTAPI
+IopInitializeVpbForMount(IN PDEVICE_OBJECT DeviceObject,
+                         IN PDEVICE_OBJECT AttachedDeviceObject,
+                         IN BOOLEAN Raw)
+{
+    KIRQL OldIrql;
+    PVPB Vpb;
+
+    /* Lock the VPBs */
+    IoAcquireVpbSpinLock(&OldIrql);
+    Vpb = DeviceObject->Vpb;
+
+    /* Set the VPB as mounted and possibly raw */
+    Vpb->Flags |= VPB_MOUNTED | Raw ? VPB_RAW_MOUNT : 0;
+
+    /* Set the stack size */
+    Vpb->DeviceObject->StackSize = AttachedDeviceObject->StackSize;
+
+    /* Add one for the FS Driver */
+    Vpb->DeviceObject->StackSize++;
+
+    /* Set the VPB in the device extension */
+    IoGetDevObjExtension(Vpb->DeviceObject)->Vpb = Vpb;
+
+    /* Reference it */
+    Vpb->ReferenceCount++;
+
+    /* Release the VPB lock and return it */
+    IoReleaseVpbSpinLock(OldIrql);
+    return Vpb;
+}
+
 VOID
 NTAPI
 IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
@@ -283,7 +316,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PLIST_ENTRY FsList, ListEntry;
-    PDEVICE_OBJECT DevObject;
+    PDEVICE_OBJECT ParentFsDeviceObject;
     PDEVICE_OBJECT AttachedDeviceObject = DeviceObject;
     PDEVICE_OBJECT FileSystemDeviceObject;
     LIST_ENTRY LocalList;
@@ -376,6 +409,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
             FileSystemDeviceObject = CONTAINING_RECORD(ListEntry,
                                                        DEVICE_OBJECT,
                                                        Queue.ListEntry);
+            ParentFsDeviceObject = FileSystemDeviceObject;
 
             /*
              * If this file system device is attached to some other device,
@@ -434,26 +468,69 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 Status = IoStatusBlock.Status;
             }
 
-            switch (Status)
+            /* Check if mounting was successful */
+            if (NT_SUCCESS(Status))
             {
-                case STATUS_FS_DRIVER_REQUIRED:
-                    DevObject = FileSystemDeviceObject;
+                /* Mount the VPB */
+                *Vpb = IopInitializeVpbForMount(DeviceObject,
+                                                AttachedDeviceObject,
+                                                (DeviceObject->Vpb->Flags &
+                                                 VPB_RAW_MOUNT));
+            }
+            else
+            {
+                if (Status == STATUS_FS_DRIVER_REQUIRED)
+                {
+                    /* We need to release the lock */
                     ExReleaseResourceLite(&FileSystemListLock);
-                    IopLoadFileSystem(DevObject);
-                    ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
+
+                    /* Release the device lock if we're holding it */
+                    if (!DeviceIsLocked)
+                    {
+                        KeSetEvent(&DeviceObject->DeviceLock, 0, FALSE);
+                    }
+
+                    /* Load the FS */
+                    IopLoadFileSystem(ParentFsDeviceObject);
+
+                    /* Check if the device isn't already locked */
+                    if (!DeviceIsLocked)
+                    {
+                        /* Lock it ourselves */
+                        DPRINT1("Waiting\n");
+                        Status = KeWaitForSingleObject(&DeviceObject->
+                                                       DeviceLock,
+                                                       Executive,
+                                                       KeGetPreviousMode(),
+                                                       Alertable,
+                                                       NULL);
+                        if ((Status == STATUS_ALERTED) ||
+                            (Status == STATUS_USER_APC))
+                        {
+                            /* Don't mount if we were interrupted */
+                            ObDereferenceObject(AttachedDeviceObject);
+                            return Status;
+                        }
+                    }
+
+                    /* Reacquire the lock */
+                    ExAcquireResourceSharedLite(&FileSystemListLock, TRUE);
+
+                    /* When we released the lock, make sure nobody beat us */
+                    if (DeviceObject->Vpb->Flags & VPB_MOUNTED)
+                    {
+                        /* Someone did, break out */
+                        Status = STATUS_SUCCESS;
+                        break;
+                    }
+
+                    /* Start over by setting a failure */
+                    Status = STATUS_UNRECOGNIZED_VOLUME;
+
                     /* We need to setup a local list to pickup where we left */
                     LocalList.Flink = FsList->Flink;
                     ListEntry = &LocalList;
-                    break;
-
-                case STATUS_SUCCESS:
-                    DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
-                                               VPB_MOUNTED;
-
-                case STATUS_UNRECOGNIZED_VOLUME:
-                default:
-                    /* do nothing */
-                    break;
+                }
             }
 
             /* Go to the next FS entry */
@@ -479,7 +556,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     KeLeaveCriticalRegion();
 
     /* Release the device lock if we're holding it */
-    if (DeviceIsLocked) KeSetEvent(&DeviceObject->DeviceLock, 0, FALSE);
+    if (!DeviceIsLocked) KeSetEvent(&DeviceObject->DeviceLock, 0, FALSE);
 
     /* Check if we failed to mount the boot partition */
     if ((!NT_SUCCESS(Status)) &&
