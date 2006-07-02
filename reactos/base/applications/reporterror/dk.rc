@@ -4,7 +4,6 @@ IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Fejl Meddeler Assistenten"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "Systemet er blev genoprettet fra en fejl.", -1, 115, 15, 160, 24
   LTEXT "Ønsker du at indsende en fejl rapport til ReactOS Projektet?", -1, 115, 35, 160, 17
@@ -14,7 +13,6 @@ IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Fejl Meddeler Assistenten"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "Beskriv venligst hvad du prøvede at gøre inden fejlen opstod.\n\nKlik på 'Næste' for at indsende rapporten til ReactOS Projektet eller 'Fortryd' for ikke at indsende nogle informationer.",-1,10,0,225,40
   LTEXT "Din e-mail adresse (valgfri):",-1,10,40,120,20
@@ -27,7 +25,6 @@ IDD_SUBMITTING_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Fejl Meddeler Assistenten"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "{STATUS}",IDC_SUBMISSION_STATUS,25,58,225,8
   CONTROL "", IDC_SUBMITTING_IN_PROGRESS, "msctls_progress32", PBS_MARQUEE | WS_CHILD | WS_VISIBLE | WS_BORDER, 25, 80, 225, 8
@@ -37,7 +34,6 @@ IDD_SUBMITTED_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Fejl Meddeler Assistenten"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "Din fejl rapport blev vellykket indsendt til ReactOS Projektet. Mange Tak.",-1,25,5,225,20
 END

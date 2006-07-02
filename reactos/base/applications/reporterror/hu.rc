@@ -8,7 +8,6 @@ IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hibajelentõ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "A rendszer egy hibából állt helyre.", -1, 115, 15, 160, 24
   LTEXT "Szeretnéd értesíteni errõl a ReactOS projektet?", -1, 115, 35, 160, 17
@@ -18,7 +17,6 @@ IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hibajelentõ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "Kérlek írd le mit csináltál amikor a hiba jelentkezett.\n\nKattints a 'Tovább' gombra, hogy elküld a hibaértesítõt a ReactOS projektnek, vagy a 'Mégse' gombot, ha nem akarsz információkat küldeni.",-1,10,0,225,40
   LTEXT "Az e-mail címed (nem szükséges):",-1,10,40,120,20
@@ -31,7 +29,6 @@ IDD_SUBMITTING_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hibajelentõ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "{STATUS}",IDC_SUBMISSION_STATUS,25,58,225,8
   CONTROL "", IDC_SUBMITTING_IN_PROGRESS, "msctls_progress32", PBS_MARQUEE | WS_CHILD | WS_VISIBLE | WS_BORDER, 25, 80, 225, 8
@@ -41,7 +38,6 @@ IDD_SUBMITTED_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hibajelentõ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-EXSTYLE DS_SHELLFONT
 BEGIN
   LTEXT "A hibajelentésed sikeresen ellett küldve a ReactOS projekt számára. Köszönjük!",-1,25,5,225,20
 END

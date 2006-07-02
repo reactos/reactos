@@ -27,12 +27,10 @@ MENU_WINEMINE MENU DISCARDABLE
     }
 }
 
-DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
+DLG_TIMES DIALOG DISCARDABLE 0, 0, 160, 80
 STYLE  DS_MODALFRAME | DS_3DLOOK |
     WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Beste tijd"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     GROUPBOX        "Beste tijd", IDNONE,  10,  10, 140,  45
     LTEXT           "Beginner",      IDNONE,  20,  20,  40,   8
@@ -47,24 +45,20 @@ EXSTYLE DS_SHELLFONT
     DEFPUSHBUTTON   "OK",                IDOK,  55,  60,  50,  15
 }
 
-DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
+DLG_CONGRATS DIALOG DISCARDABLE  0, 0, 160, 60
 STYLE  DS_MODALFRAME | DS_3DLOOK |
     WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Gefeleciteerd!"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     LTEXT           "Gelieve uw naam in te voeren", IDIGNORE,  10,  10, 150,  10
     EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
-    DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
+    DEFPUSHBUTTON   "Ok",                         IDOK,  60,  40,  40,  15
 }
 
-DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
+DLG_CUSTOM DIALOG DISCARDABLE  0, 0, 100, 100
 STYLE  DS_MODALFRAME | DS_3DLOOK |
     WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Aangepast spel"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     LTEXT           "Rijen",   IDNONE,   5,   5,  30,  10
     LTEXT           "Kolommen",   IDNONE,   5,  35,  30,  10
@@ -76,16 +70,14 @@ EXSTYLE DS_SHELLFONT
     PUSHBUTTON      "Annuleren", IDCANCEL,  40,  50,  50,  15
 }
 
-DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
+DLG_ABOUT DIALOG DISCARDABLE  0, 0, 145, 80
 STYLE  DS_MODALFRAME | DS_3DLOOK |
     WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
 CAPTION "Over"
-FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
     LTEXT                               "WineMine", IDNONE,  10,  10,  35,  10
     LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
-    LTEXT                 "Onder de Wine licentie", IDNONE,  35,  35, 100,  10
+    LTEXT                 "onder de Wine licentie", IDNONE,  35,  35, 100,  10
     ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
     DEFPUSHBUTTON                             "OK", IDOK,      50,  60,  55,  15
 }
