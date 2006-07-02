@@ -2642,111 +2642,137 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
                              IN FS_INFORMATION_CLASS FsInformationClass)
 {
     PFILE_OBJECT FileObject;
-    PDEVICE_OBJECT DeviceObject;
     PIRP Irp;
-    NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION StackPtr;
-    PVOID SystemBuffer;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PDEVICE_OBJECT DeviceObject;
+    PKEVENT Event = NULL;
+    BOOLEAN LocalEvent = FALSE;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    NTSTATUS Status = STATUS_SUCCESS;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
+    IO_STATUS_BLOCK KernelIosb;
+    PAGED_CODE();
 
+    /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Enter SEH for probing */
         _SEH_TRY
         {
-            if (IoStatusBlock)
-            {
-                ProbeForWrite(IoStatusBlock,
-                              sizeof(IO_STATUS_BLOCK),
-                              sizeof(ULONG));
-            }
+            /* Probe the I/O Status block */
+            ProbeForWrite(IoStatusBlock,
+                          sizeof(IO_STATUS_BLOCK),
+                          sizeof(ULONG));
 
+            /* Probe the information */
             if (Length) ProbeForWrite(FsInformation, Length, 1);
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
+        /* Check if probing failed */
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
+    /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
-                                       0, /* FIXME - depends on the information class! */
+                                       0, // FIXME
                                        IoFileObjectType,
                                        PreviousMode,
                                        (PVOID*)&FileObject,
-                                       NULL);
+                                       &HandleInformation);
     if (!NT_SUCCESS(Status)) return Status;
 
-    DeviceObject = FileObject->DeviceObject;
-
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (!Irp)
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        /* Lock it */
+        IopLockFileObject(FileObject);
+    }
+    else
+    {
+        /* Use local event */
+        Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        KeInitializeEvent(Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
     }
 
-    SystemBuffer = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_SYSB);
-    if (!SystemBuffer)
-    {
-        IoFreeIrp(Irp);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
-    /* Trigger FileObject/Event dereferencing */
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    /* Clear File Object event */
+    KeClearEvent(&FileObject->Event);
 
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
+
+    /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
-    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
-    KeResetEvent( &FileObject->Event );
-    Irp->UserEvent = &FileObject->Event;
-    Irp->UserIosb = IoStatusBlock;
+    Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    Irp->UserIosb = (LocalEvent) ? &KernelIosb : IoStatusBlock;
+    Irp->UserEvent = (LocalEvent) ? Event : NULL;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
+    Irp->UserBuffer = FsInformation;
+    Irp->AssociatedIrp.SystemBuffer = NULL;
+    Irp->MdlAddress = NULL;
 
+    /* Set up Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
     StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
-    StackPtr->MinorFunction = 0;
-    StackPtr->Flags = 0;
-    StackPtr->Control = 0;
-    StackPtr->DeviceObject = DeviceObject;
     StackPtr->FileObject = FileObject;
-    StackPtr->Parameters.QueryVolume.Length = Length;
-    StackPtr->Parameters.QueryVolume.FsInformationClass =
-    FsInformationClass;
 
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
+    /* Allocate system buffer */
+    Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                            Length,
+                                                            TAG_SYSB);
+    if (!Irp->AssociatedIrp.SystemBuffer)
     {
-        KeWaitForSingleObject(&FileObject->Event,
-                              UserRequest,
-                              PreviousMode,
-                              FALSE,
-                              NULL);
-        Status = IoStatusBlock->Status;
-     }
+        /* Fail */
+        IoFreeIrp(Irp);
+        if (Event) ObDereferenceObject(Event);
+        ObDereferenceObject(FileObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-    if (NT_SUCCESS(Status))
-        {
-        _SEH_TRY
-        {
-            RtlCopyMemory(FsInformation,
-                          SystemBuffer,
-                          IoStatusBlock->Information);
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-     }
+    /* Set the flags for this buffered + deferred I/O */
+    Irp->Flags |= (IRP_BUFFERED_IO |
+                   IRP_DEALLOCATE_BUFFER |
+                   IRP_INPUT_OPERATION |
+                   IRP_DEFER_IO_COMPLETION);
 
-    ExFreePool(SystemBuffer);
+    /* Set Parameters */
+    StackPtr->Parameters.QueryVolume.Length = Length;
+    StackPtr->Parameters.QueryVolume.FsInformationClass = FsInformationClass;
+
+    /* Call the Driver */
+    Status = IopPerformSynchronousRequest(DeviceObject,
+                                          Irp,
+                                          FileObject,
+                                          TRUE,
+                                          PreviousMode,
+                                          !LocalEvent,
+                                          IopOtherTransfer);
+
+    /* Check if this was async I/O */
+    if (LocalEvent)
+    {
+        /* It was, finalize this request */
+        Status = IopFinalizeAsynchronousIo(Status,
+                                           Event,
+                                           Irp,
+                                           PreviousMode,
+                                           &KernelIosb,
+                                           IoStatusBlock);
+    }
+
+    /* Return status */
     return Status;
 }
 
