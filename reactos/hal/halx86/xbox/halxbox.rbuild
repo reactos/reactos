@@ -1,6 +1,7 @@
 <module name="halxbox" type="kernelmodedll" allowwarnings="true">
 	<importlibrary definition="../../hal/hal.def" />
 	<include base="hal_generic">../include</include>
+	<include base="halxbox">.</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="UP" />
