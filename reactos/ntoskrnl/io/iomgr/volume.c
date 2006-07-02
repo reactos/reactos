@@ -316,10 +316,9 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PLIST_ENTRY FsList, ListEntry;
-    PDEVICE_OBJECT ParentFsDeviceObject;
-    PDEVICE_OBJECT AttachedDeviceObject = DeviceObject;
-    PDEVICE_OBJECT FileSystemDeviceObject;
     LIST_ENTRY LocalList;
+    PDEVICE_OBJECT AttachedDeviceObject = DeviceObject;
+    PDEVICE_OBJECT FileSystemDeviceObject, ParentFsDeviceObject;
     ULONG FsStackOverhead;
     PAGED_CODE();
 
@@ -343,24 +342,6 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
     KeEnterCriticalRegion();
     ExAcquireResourceSharedLite(&FileSystemListLock, TRUE);
 
-    /* For a mount operation, this can only be a Disk, CD-ROM or tape */
-    if ((DeviceObject->DeviceType == FILE_DEVICE_DISK) ||
-        (DeviceObject->DeviceType == FILE_DEVICE_VIRTUAL_DISK))
-    {
-        /* Use the disk list */
-        FsList = &IopDiskFsListHead;
-    }
-    else if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM)
-    {
-        /* Use the CD-ROM list */
-        FsList = &IopCdRomFsListHead;
-    }
-    else
-    {
-        /* It's gotta be a tape... */
-        FsList = &IopTapeFsListHead;
-    }
-
     /* Make sure we weren't already mounted */
     if (!(DeviceObject->Vpb->Flags & (VPB_MOUNTED | VPB_REMOVE_PENDING)))
     {
@@ -376,6 +357,24 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
 
         /* Reference it */
         ObReferenceObject(AttachedDeviceObject);
+
+        /* For a mount operation, this can only be a Disk, CD-ROM or tape */
+        if ((DeviceObject->DeviceType == FILE_DEVICE_DISK) ||
+            (DeviceObject->DeviceType == FILE_DEVICE_VIRTUAL_DISK))
+        {
+            /* Use the disk list */
+            FsList = &IopDiskFsListHead;
+        }
+        else if (DeviceObject->DeviceType == FILE_DEVICE_CD_ROM)
+        {
+            /* Use the CD-ROM list */
+            FsList = &IopCdRomFsListHead;
+        }
+        else
+        {
+            /* It's gotta be a tape... */
+            FsList = &IopTapeFsListHead;
+        }
 
         /* Now loop the fs list until one of the file systems accepts us */
         Status = STATUS_UNSUCCESSFUL;
