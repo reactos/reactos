@@ -1933,6 +1933,18 @@ RtlSetProcessIsCritical(
 #define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
 
 //
+// Thread Pool Functions
+//
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlQueueWorkItem(
+    IN WORKERCALLBACKFUNC Function,
+    IN PVOID Context  OPTIONAL,
+    IN ULONG Flags);
+
+//
 // Environment/Path Functions
 //
 NTSYSAPI
