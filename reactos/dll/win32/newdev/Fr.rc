@@ -8,9 +8,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Bienvenue",IDC_WELCOMETITLE,115,8,195,24
     LTEXT           "Cet assistant installe un nouveau pilote pour:",
-                    IDC_STATIC,115,40,195,16
+                    IDC_STATIC,115,21,195,16
     LTEXT           "Cliquer sur Suivant pour continuer.",IDC_STATIC,115,169,195,17
-    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,129,55,164,11
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,129,36,164,11
+    LTEXT           "ATTENTION ! L'INSTALLATION D'UN PILOTE PEUT ENTRAINER LE BLOCAGE DE VOTRE ORDINATEUR OU LE RENDRE INDEMARRABLE !",IDC_STATIC,105,59,210,16
     CONTROL         "Installer le pilote automatiquement",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,115,112,178,13
     CONTROL         "Installer le pilote depuis un endroit spécifié",IDC_RADIO_MANUAL,

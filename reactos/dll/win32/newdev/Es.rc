@@ -8,9 +8,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Bienvenido",IDC_WELCOMETITLE,120,8,195,24
     LTEXT           "Este asistente lo ayudará a instalar un nuevo controlador de dispositivos para:",
-                    IDC_STATIC,120,40,195,16
+                    IDC_STATIC,120,21,195,16
     LTEXT           "Haga click en Siguiente para continuar.",IDC_STATIC,120,169,195,17
-    LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,134,55,164,11
+    LTEXT           "DISPOSITIVO DESCONOCIDO",IDC_DEVICE,134,36,164,11
+    LTEXT           "WARNING! INSTALLING A CUSTOM DEVICE MAY FREEZE YOUR COMPUTER OR RENDER IT UNBOOTABLE!",IDC_STATIC,120,59,195,16
     CONTROL         "Instalar controlador automáticamente",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
     CONTROL         "Instalar controlador desde una ubicación específica",IDC_RADIO_MANUAL,
