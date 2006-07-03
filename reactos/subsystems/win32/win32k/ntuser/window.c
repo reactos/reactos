@@ -1411,6 +1411,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    POINT Pos;
    SIZE Size;
    PW32THREADINFO ti = NULL;
+   
 #if 0
 
    POINT MaxSize, MaxPos, MinTrack, MaxTrack;
@@ -1419,6 +1420,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    POINT MaxPos;
 #endif
    CREATESTRUCTW Cs;
+   MDICREATESTRUCTW mdi;
    CBT_CREATEWNDW CbtCreate;
    LRESULT Result;
    BOOL MenuChanged;
@@ -1428,6 +1430,11 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
    OwnerWindowHandle = NULL;
+
+   if ((!(dwStyle & WS_CHILD)) && (dwExStyle & WS_EX_MDICHILD))
+   {	   
+      dwStyle |=  WS_CHILD; // Forced Child!
+   }
 
    if (hWndParent == HWND_MESSAGE)
    {
@@ -1626,6 +1633,62 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       RtlInitUnicodeString(&Window->WindowName, NULL);
    }
 
+   if (dwExStyle & WS_EX_MDICHILD)
+   {
+      PWINDOW_OBJECT top_child;
+     
+  /* lpParams of WM_[NC]CREATE is different for MDI children.
+   * MDICREATESTRUCT members have the originally passed values.
+   *
+   * Note: we rely on the fact that MDICREATESTRUCTA and MDICREATESTRUCTW
+   * have the same layout.
+   */
+      mdi.szClass = (LPWSTR)ClassName;
+      mdi.szTitle = (LPWSTR)WindowName;
+      mdi.hOwner = hInstance;
+      mdi.x = x;
+      mdi.y = y;
+      mdi.cx = nWidth;
+      mdi.cy = nHeight;
+      mdi.style = dwStyle;
+      mdi.lParam = (LPARAM)lpParam;
+
+      lpParam = (LPVOID)&mdi;
+      if (ParentWindow->Style & MDIS_ALLCHILDSTYLES)
+      {
+        if (dwStyle & WS_POPUP)
+        {
+           DPRINT1("WS_POPUP with MDIS_ALLCHILDSTYLES is not allowed\n");
+           SetLastWin32Error(ERROR_INVALID_PARAMETER);  
+           RETURN((HWND)0);
+        }
+        dwStyle |= (WS_CHILD | WS_CLIPSIBLINGS);
+      }
+      else
+      {
+        dwStyle &= ~WS_POPUP;
+/* 
+   (|| WS_CHILD) is done at the top. So~ Here is just a bit in a 32/64 bit word.
+*/
+        dwStyle |= (WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION |
+                WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+      }
+
+      top_child = ParentWindow->FirstChild;
+
+      if (top_child)
+      {
+        /* Restore current maximized child */
+        if((dwStyle & WS_VISIBLE) && (top_child->Style & WS_MAXIMIZE))
+        {
+           DPRINT("Restoring current maximized child %p\n", top_child);
+           co_IntSendMessage( top_child->hSelf, WM_SETREDRAW, FALSE, 0 );
+           co_WinPosShowWindow(top_child, SW_RESTORE);
+           co_IntSendMessage( top_child->hSelf, WM_SETREDRAW, TRUE, 0 );
+        }
+      }
+   }
+
    /*
     * This has been tested for WS_CHILD | WS_VISIBLE.  It has not been
     * tested for WS_POPUP
@@ -1636,19 +1699,11 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       dwExStyle |= WS_EX_WINDOWEDGE;
    else
       dwExStyle &= ~WS_EX_WINDOWEDGE;
-
-   /* Correct the window style. */
-   if (!(dwStyle & WS_CHILD))
-   {
-      dwStyle |= WS_CLIPSIBLINGS;
-      DPRINT("3: Style is now %lx\n", dwStyle);
-      if (!(dwStyle & WS_POPUP))
-      {
-         dwStyle |= WS_CAPTION;
-         Window->Flags |= WINDOWOBJECT_NEED_SIZE;
-         DPRINT("4: Style is now %lx\n", dwStyle);
-      }
-   }
+/* 
+   These affect only the style loading into the WindowObject structure. 
+*/
+   Window->ExStyle = dwExStyle;
+   Window->Style = dwStyle & ~WS_VISIBLE;
 
    /* create system menu */
    if((dwStyle & WS_SYSMENU) &&
@@ -1661,6 +1716,23 @@ co_IntCreateWindowEx(DWORD dwExStyle,
          IntReleaseMenuObject(SystemMenu);
       }
    }
+
+   /* Correct the window style. */
+   if (!(Window->Style & WS_CHILD))
+   {
+      Window->Style |= WS_CLIPSIBLINGS;
+      if (!(Window->Style & WS_POPUP))
+      {
+         Window->Style |= WS_CAPTION;
+         Window->Flags |= WINDOWOBJECT_NEED_SIZE;
+      }
+   }
+
+   if ((Window->ExStyle & WS_EX_DLGMODALFRAME) ||
+          (Window->Style & (WS_DLGFRAME | WS_THICKFRAME)))
+      Window->ExStyle |= WS_EX_WINDOWEDGE;
+   else
+      Window->ExStyle &= ~WS_EX_WINDOWEDGE;
 
    /* Insert the window into the thread's window list. */
    InsertTailList (&PsGetWin32Thread()->WindowListHead, &Window->ThreadListEntry);
@@ -1676,9 +1748,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Pos.y = y;
    Size.cx = nWidth;
    Size.cy = nHeight;
-
-   Window->ExStyle = dwExStyle;
-   Window->Style = dwStyle & ~WS_VISIBLE;
 
    /* call hook */
    Cs.lpCreateParams = lpParam;
@@ -1735,9 +1804,27 @@ co_IntCreateWindowEx(DWORD dwExStyle,
             Pos.x = rc.left;
             Pos.y = rc.top;
          }
+/* 
+   According to wine, the ShowMode is set to y if x == CW_USEDEFAULT(16) and
+   y is something else. and Quote!
+ */
 
-         /* According to wine, the ShowMode is set to y if x == CW_USEDEFAULT(16) and
-            y is something else */
+/* Never believe Microsoft's documentation... CreateWindowEx doc says
+ * that if an overlapped window is created with WS_VISIBLE style bit
+ * set and the x parameter is set to CW_USEDEFAULT, the system ignores
+ * the y parameter. However, disassembling NT implementation (WIN32K.SYS)
+ * reveals that
+ *
+ * 1) not only it checks for CW_USEDEFAULT but also for CW_USEDEFAULT16
+ * 2) it does not ignore the y parameter as the docs claim; instead, it
+ *    uses it as second parameter to ShowWindow() unless y is either
+ *    CW_USEDEFAULT or CW_USEDEFAULT16.
+ *
+ * The fact that we didn't do 2) caused bogus windows pop up when wine
+ * was running apps that were using this obscure feature. Example -
+ * calc.exe that comes with Win98 (only Win98, it's different from
+ * the one that comes with Win95 and NT)
+ */
          if(y != CW_USEDEFAULT && y != CW_USEDEFAULT16)
          {
             dwShowMode = y;
@@ -1766,20 +1853,51 @@ co_IntCreateWindowEx(DWORD dwExStyle,
             Pos.x = max(rc.left, 0);
          if(Pos.y > rc.top)
             Pos.y = max(rc.top, 0);
-      }
+      }     
    }
    else
    {
-      /* if CW_USEDEFAULT(16) is set for non-overlapped windows, both values are set to zero) */
-      if(x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
+      if (dwExStyle & WS_EX_MDICHILD)
       {
-         Pos.x = 0;
-         Pos.y = 0;
+         POINT mPos[2];
+         RECT rect;
+         INT nstagger, total = 0, spacing = UserGetSystemMetrics(SM_CYCAPTION) +
+                                           UserGetSystemMetrics(SM_CYFRAME) -1;
+         PWINDOW_OBJECT Child;
+
+         for (Child = ParentWindow->FirstChild; Child; Child = Child->NextSibling)
+            ++total;
+
+         IntGetClientRect(ParentWindow, &rect);
+
+         nstagger = (rect.bottom - rect.top)/(3 * spacing);
+         mPos[1].x = (rect.right - rect.left - nstagger * spacing);
+         mPos[1].y = (rect.bottom - rect.top - nstagger * spacing);
+         mPos[0].x = mPos[0].y = spacing * (total%(nstagger+1));
+
+         if (x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
+         {
+            Pos.x = mPos[0].x;
+            Pos.y = mPos[0].y;
+         }
+         if (nWidth == CW_USEDEFAULT || nWidth == CW_USEDEFAULT16 || !nWidth)
+             Size.cx = mPos[1].x;
+         if (nHeight == CW_USEDEFAULT || nHeight == CW_USEDEFAULT16 || !nHeight)
+             Size.cy = mPos[1].y;
       }
-      if(nWidth == CW_USEDEFAULT || nWidth == CW_USEDEFAULT16)
+      else
       {
-         Size.cx = 0;
-         Size.cy = 0;
+        /* if CW_USEDEFAULT(16) is set for non-overlapped windows, both values are set to zero) */
+         if(x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
+         {
+            Pos.x = 0;
+            Pos.y = 0;
+         }
+         if(nWidth == CW_USEDEFAULT || nWidth == CW_USEDEFAULT16)
+         {
+            Size.cx = 0;
+            Size.cy = 0;
+         }
       }
    }
 
@@ -1985,6 +2103,13 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                         WM_PARENTNOTIFY,
                         MAKEWPARAM(WM_CREATE, Window->IDMenu),
                         (LPARAM)Window->hSelf);
+   }
+
+   if ((dwStyle & WS_VISIBLE) && (dwExStyle & WS_EX_MDICHILD))
+   {
+      co_IntSendMessage(ParentWindow->hSelf, WM_MDIREFRESHMENU, 0, 0);
+      co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW |
+                                                SWP_NOMOVE | SWP_NOSIZE);
    }
 
    if ((!hWndParent) && (!HasOwner))

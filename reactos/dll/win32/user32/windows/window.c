@@ -18,6 +18,7 @@
 BOOL ControlsInitialized = FALSE;
 
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
+INT MDI_GetId(HWND hWndClient);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -186,10 +187,7 @@ CreateWindowExA(DWORD dwExStyle,
 
   if (dwExStyle & WS_EX_MDICHILD)
   {
-     if (!IS_ATOM(lpClassName))
-        RtlFreeUnicodeString(&ClassName);
-     return CreateMDIWindowA(lpClassName, lpWindowName, dwStyle, x, y,
-        nWidth, nHeight, hWndParent, hInstance, (LPARAM)lpParam);
+    if (!(dwStyle & WS_POPUP)) hMenu = (HMENU) MDI_GetId(hWndParent);
   }
 
   if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName))
@@ -221,7 +219,7 @@ CreateWindowExA(DWORD dwExStyle,
 				nHeight,
 				hWndParent,
 				hMenu,
-            hInstance,
+				hInstance,
 				lpParam,
 				SW_SHOW,
 				FALSE);
@@ -262,6 +260,9 @@ CreateWindowExW(DWORD dwExStyle,
   UNICODE_STRING ClassName;
   WNDCLASSEXW wce;
   HANDLE Handle;
+#if 0
+  DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
+#endif
 
   /* Register built-in controls if not already done */
   if (! ControlsInitialized)
@@ -270,8 +271,9 @@ CreateWindowExW(DWORD dwExStyle,
     }
 
   if (dwExStyle & WS_EX_MDICHILD)
-     return CreateMDIWindowW(lpClassName, lpWindowName, dwStyle, x, y,
-        nWidth, nHeight, hWndParent, hInstance, (LPARAM)lpParam);
+    {
+      if (!(dwStyle & WS_POPUP)) hMenu = (HMENU) MDI_GetId(hWndParent);
+    }
 
   if (IS_ATOM(lpClassName))
     {
@@ -304,10 +306,14 @@ CreateWindowExW(DWORD dwExStyle,
 				nHeight,
 				hWndParent,
 				hMenu,
-            hInstance,
+				hInstance,
 				lpParam,
 				SW_SHOW,
 				TRUE);
+
+#if 0
+  DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
+#endif
 
   return (HWND)Handle;
 }
