@@ -110,14 +110,15 @@ typedef struct
     UINT      nTotalCreated;
     UINT      mdiFlags;
     UINT      sbRecalc;   /* SB_xxx flags for scrollbar fixup */
+    HBITMAP   hBmpClose; /* ReactOS modification */
 } MDICLIENTINFO;
 
-static HBITMAP hBmpClose   = 0;
+//static HBITMAP hBmpClose   = 0;
 
 /* ----------------- declarations ----------------- */
 static void MDI_UpdateFrameText( HWND, HWND, LPCWSTR);
 static BOOL MDI_AugmentFrameMenu( HWND, HWND );
-static BOOL MDI_RestoreFrameMenu( HWND, HWND );
+static BOOL MDI_RestoreFrameMenu( HWND, HWND, HBITMAP );
 static LONG MDI_ChildActivate( HWND, HWND );
 static LRESULT MDI_RefreshMenu(MDICLIENTINFO *);
 
@@ -357,7 +358,7 @@ static LRESULT MDISetMenu( HWND hwnd, HMENU hmenuFrame,
         if (hmenuFrame == ci->hFrameMenu) return (LRESULT)hmenuFrame;
 
         if (IsZoomed(ci->hwndActiveChild))
-            MDI_RestoreFrameMenu( hwndFrame, ci->hwndActiveChild );
+            MDI_RestoreFrameMenu( hwndFrame, ci->hwndActiveChild, ci->hBmpClose );
     }
 
     if( hmenuWindow && hmenuWindow != ci->hWindowMenu )
@@ -588,7 +589,7 @@ static LRESULT MDIDestroyChild( HWND client, MDICLIENTINFO *ci,
             ShowWindow(child, SW_HIDE);
             if (IsZoomed(child))
             {
-                MDI_RestoreFrameMenu(GetParent(client), child);
+                MDI_RestoreFrameMenu(GetParent(client), child, ci->hBmpClose);
                 MDI_UpdateFrameText(GetParent(client), client, NULL);
             }
             MDI_ChildActivate(client, 0);
@@ -931,7 +932,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
 /**********************************************************************
  *					MDI_RestoreFrameMenu
  */
-static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild )
+static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
 {
     MENUITEMINFOW menuInfo;
     HMENU menu = GetMenu( frame );
@@ -1077,6 +1078,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 	if (!(ci = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ci))))
 		return FALSE;
         SetWindowLongPtrW( hwnd, 0, (LONG_PTR)ci );
+        ci->hBmpClose = 0;
 	return TRUE;
 #endif
 
@@ -1118,7 +1120,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 	ci->mdiFlags		= 0;
         ci->hFrameMenu = GetMenu(cs->hwndParent);
 
-	if (!hBmpClose) hBmpClose = CreateMDIMenuBitmap();
+	if (!ci->hBmpClose) ci->hBmpClose = CreateMDIMenuBitmap();
 
         TRACE("Client created: hwnd %p, Window menu %p, idFirst = %04x\n",
               hwnd, ci->hWindowMenu, ci->idFirstChild );
@@ -1128,7 +1130,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
       case WM_DESTROY:
       {
           if( IsZoomed(ci->hwndActiveChild) )
-              MDI_RestoreFrameMenu(GetParent(hwnd), ci->hwndActiveChild);
+              MDI_RestoreFrameMenu(GetParent(hwnd), ci->hwndActiveChild, ci->hBmpClose);
 
           ci->nActiveChildren = 0;
           MDI_RefreshMenu(ci);
@@ -1588,7 +1590,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
                 MDI_AugmentFrameMenu( GetParent(client), hwnd );
             }
             else
-                MDI_RestoreFrameMenu( GetParent(client), hwnd );
+                MDI_RestoreFrameMenu( GetParent(client), hwnd , ci->hBmpClose);
         }
 
         MDI_UpdateFrameText( GetParent(client), client, NULL );
