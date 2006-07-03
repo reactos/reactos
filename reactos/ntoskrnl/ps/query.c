@@ -93,7 +93,7 @@ static const struct
     {TRUE, 0},					// ThreadIdealProcessor
     {FALSE, 0},					// ThreadPriorityBoost
     {TRUE, 0},					// ThreadSetTlsArrayAddress
-    {FALSE, 0},					// ThreadIsIoPending
+    {TRUE, sizeof(ULONG)},		// ThreadIsIoPending
     {TRUE, 0}					// ThreadHideFromDebugger
 };
 
@@ -1191,6 +1191,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
       PVOID Address;
       LARGE_INTEGER Count;
       BOOLEAN Last;
+      ULONG IsIoPending;
    }u;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
@@ -1292,6 +1293,18 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
 	     u.Last = FALSE;
 	   }
          break;
+
+       case ThreadIsIoPending:
+       {
+           KIRQL OldIrql;
+
+           /* Raise the IRQL to protect the IRP list */
+           KeRaiseIrql(APC_LEVEL, &OldIrql);
+           u.IsIoPending = !IsListEmpty(&Thread->IrpList);
+           KeLowerIrql(OldIrql);
+           break;
+       }
+
        default:
 	 /* Shoult never occure if the data table is correct */
 	 KEBUGCHECK(0);
