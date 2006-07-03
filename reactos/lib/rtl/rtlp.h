@@ -114,4 +114,11 @@ DebugService(IN ULONG Service,
 #define TAG_ASTR        TAG('A', 'S', 'T', 'R')
 #define TAG_OSTR        TAG('O', 'S', 'T', 'R')
 
+/* Timer Queue */
+
+extern HANDLE TimerThreadHandle;
+
+NTSTATUS
+RtlpInitializeTimerThread(VOID);
+
 /* EOF */

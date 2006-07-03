@@ -94,5 +94,6 @@
 	<file>unicodeprefix.c</file>
 	<file>vectoreh.c</file>
 	<file>version.c</file>
+	<file>workitem.c</file>
 	<pch>rtl.h</pch>
 </module>
