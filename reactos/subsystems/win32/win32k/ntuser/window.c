@@ -1431,11 +1431,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
    OwnerWindowHandle = NULL;
 
-   if ((!(dwStyle & WS_CHILD)) && (dwExStyle & WS_EX_MDICHILD))
-   {	   
-      dwStyle |=  WS_CHILD; // Forced Child!
-   }
-
    if (hWndParent == HWND_MESSAGE)
    {
       /*
@@ -1446,7 +1441,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
    else if (hWndParent)
    {
-      if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+      if (((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD) ||
+                                        (dwExStyle & WS_EX_MDICHILD))
          ParentWindowHandle = hWndParent;
       else
       {
