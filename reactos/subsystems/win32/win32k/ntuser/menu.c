@@ -1397,27 +1397,38 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
 {
    PWINSTATION_OBJECT WinStaObject;
    HANDLE Handle;
+   NTSTATUS Status;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
-   NTSTATUS Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
+   if (CsrProcess != CurrentProcess)
+   {
+      /*
+       * CsrProcess does not have a Win32WindowStation
+	   *
+	   */
+
+      Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                      KernelMode,
                      0,
                      &WinStaObject);
 
-   if (!NT_SUCCESS(Status))
+       if (!NT_SUCCESS(Status))
+       {
+          DPRINT1("Validation of window station handle (0x%X) failed\n",
+             CurrentProcess->Win32WindowStation);
+          SetLastNtError(Status);
+          return (HMENU)0;
+       }
+       IntCreateMenu(&Handle, !PopupMenu);
+       ObDereferenceObject(WinStaObject);
+   }
+   else
    {
-      DPRINT("Validation of window station handle (0x%X) failed\n",
-             PsGetCurrentProcess()->Win32WindowStation);
-      SetLastNtError(Status);
-      return (HMENU)0;
+       IntCreateMenu(&Handle, !PopupMenu);
    }
 
-   IntCreateMenu(&Handle, !PopupMenu);
-
-   ObDereferenceObject(WinStaObject);
    return (HMENU)Handle;
 }
-
-
 
 HMENU STDCALL
 NtUserCreateMenu(BOOL PopupMenu)
