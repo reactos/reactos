@@ -601,6 +601,7 @@ RtlQueryRegistryValues@20
 RtlQuerySecurityObject@20
 RtlQueryTagHeap@20
 RtlQueryTimeZoneInformation@4
+RtlQueueWorkItem@12
 RtlRaiseException@4
 RtlRaiseStatus@4
 RtlRandom@4
