@@ -1539,7 +1539,23 @@ DefWindowProcA(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            return TRUE;
+            ANSI_STRING AnsiString;
+            UNICODE_STRING UnicodeString;
+            LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
+            /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
+             * may have child window IDs instead of window name */
+
+            if(cs->lpszName)
+            {
+              RtlInitAnsiString(&AnsiString, (LPSTR)cs->lpszName);
+              RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
+              NtUserDefSetText(hWnd, &UnicodeString);
+              RtlFreeUnicodeString(&UnicodeString);
+            }
+            else
+              NtUserDefSetText(hWnd, NULL);
+
+            return (1);
         }
 
         case WM_GETTEXTLENGTH:
@@ -1618,7 +1634,16 @@ DefWindowProcW(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            return TRUE;
+            UNICODE_STRING UnicodeString;
+            LPCREATESTRUCTW cs = (LPCREATESTRUCTW)lParam;
+            /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
+             * may have child window IDs instead of window name */
+
+            if(cs->lpszName)
+              RtlInitUnicodeString(&UnicodeString, (LPWSTR)cs->lpszName);
+
+            NtUserDefSetText( hWnd, (cs->lpszName ? &UnicodeString : NULL));
+            return (1);
         }
 
         case WM_GETTEXTLENGTH:
