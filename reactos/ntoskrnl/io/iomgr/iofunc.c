@@ -26,9 +26,9 @@
 // TODO:
 //  - Lock/Unlock <= DONE
 //  - Query/Set Volume Info <= DONE
-//  - Read/Write file
-//  - QuerySet/ File Info
-//  - NtQueryDirectoryFile
+//  - Read/Write file <= DONE
+//  - Query/Set File Info
+//  - QueryDirectoryFile
 //
 ///
 
@@ -2450,20 +2450,19 @@ NtWriteFile(IN HANDLE FileHandle,
             IN PLARGE_INTEGER ByteOffset OPTIONAL,
             IN PULONG Key OPTIONAL)
 {
-    OBJECT_HANDLE_INFORMATION ObjectHandleInfo;
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject;
-    PIRP Irp = NULL;
+    PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    BOOLEAN Synchronous = FALSE;
     PKEVENT EventObject = NULL;
     LARGE_INTEGER CapturedByteOffset;
     ULONG CapturedKey = 0;
-    ACCESS_MASK DesiredAccess = FILE_WRITE_DATA;
+    BOOLEAN Synchronous = FALSE;
+    PMDL Mdl;
+    OBJECT_HANDLE_INFORMATION ObjectHandleInfo;
     PAGED_CODE();
-
     CapturedByteOffset.QuadPart = 0;
 
     /* Get File Object */
@@ -2475,79 +2474,71 @@ NtWriteFile(IN HANDLE FileHandle,
                                        &ObjectHandleInfo);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* If this is a named pipe, make sure we don't ask for FILE_APPEND_DATA as it
-       overlaps with the FILE_CREATE_PIPE_INSTANCE access right! */
-    if (!(FileObject->Flags & FO_NAMED_PIPE))
-        DesiredAccess |= FILE_APPEND_DATA;
-
     /* Validate User-Mode Buffers */
-    if (PreviousMode != KernelMode)
+    if(PreviousMode != KernelMode)
     {
-        /* check if the handle has either FILE_WRITE_DATA or FILE_APPEND_DATA was
-           granted. */
-        if (!RtlAreAnyAccessesGranted(ObjectHandleInfo.GrantedAccess,
-                                      DesiredAccess))
-        {
-            ObDereferenceObject(FileObject);
-            return STATUS_ACCESS_DENIED;
-        }
-
         _SEH_TRY
         {
+            /*
+             * Check if the handle has either FILE_WRITE_DATA or
+             * FILE_APPEND_DATA granted. However, if this is a named pipe,
+             * make sure we don't ask for FILE_APPEND_DATA as it interferes
+             * with the FILE_CREATE_PIPE_INSTANCE access right!
+             */
+            if (!(ObjectHandleInfo.GrantedAccess &
+                 ((!(FileObject->Flags & FO_NAMED_PIPE) ?
+                   FILE_APPEND_DATA : 0) | FILE_WRITE_DATA)))
+            {
+                /* We failed */
+                ObDereferenceObject(FileObject);
+                return STATUS_ACCESS_DENIED;
+            }
+
+            /* Probe the status block */
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
+
+            /* Probe the read buffer */
             ProbeForRead(Buffer, Length, 1);
 
+            /* Check if we got a byte offset */
             if (ByteOffset)
             {
+                /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             }
 
+            /* Capture and probe the key */
             if (Key) CapturedKey = ProbeForReadUlong(Key);
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status)) return Status;
+        /* Check for probe failure */
+        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
+        /* Kernel mode: capture directly */
         if (ByteOffset) CapturedByteOffset = *ByteOffset;
         if (Key) CapturedKey = *Key;
     }
 
-    /* check if this is an append operation */
-    if ((ObjectHandleInfo.GrantedAccess & DesiredAccess) == FILE_APPEND_DATA)
+    /* Check if this is an append operation */
+    if ((ObjectHandleInfo.GrantedAccess &
+        (FILE_APPEND_DATA | FILE_WRITE_DATA)) == FILE_APPEND_DATA)
     {
         /* Give the drivers something to understand */
         CapturedByteOffset.u.LowPart = FILE_WRITE_TO_END_OF_FILE;
         CapturedByteOffset.u.HighPart = -1;
     }
 
-    /* Check if we should use Sync IO or not */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-    {
-        if (ByteOffset == NULL ||
-            (CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
-             CapturedByteOffset.u.HighPart == -1))
-        {
-            /* Use the Current Byte OFfset */
-            CapturedByteOffset = FileObject->CurrentByteOffset;
-        }
-
-        Synchronous = TRUE;
-    }
-    else if (ByteOffset == NULL && !(FileObject->Flags & FO_NAMED_PIPE))
-    {
-        ObDereferenceObject(FileObject);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Check if we got an event */
+    /* Check for event */
     if (Event)
     {
         /* Reference it */
@@ -2559,89 +2550,133 @@ NtWriteFile(IN HANDLE FileHandle,
                                            NULL);
         if (!NT_SUCCESS(Status))
         {
+            /* Fail */
             ObDereferenceObject(FileObject);
             return Status;
         }
+
+        /* Otherwise reset the event */
         KeClearEvent(EventObject);
     }
 
-    /* Check if this is a direct open or not */
-    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
+    /* Check if we should use Sync IO or not */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+        /* Lock the file object */
+        IopLockFileObject(FileObject);
+
+        /* Check if we don't have a byte offset avilable */
+        if (!(ByteOffset) ||
+            ((CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION) &&
+             (CapturedByteOffset.u.HighPart == -1)))
+        {
+            /* Use the Current Byte Offset instead */
+            CapturedByteOffset = FileObject->CurrentByteOffset;
+        }
+
+        /* Rememer we are sync */
+        Synchronous = TRUE;
+    }
+    else if (!(ByteOffset) &&
+             !(FileObject->Flags & (FO_NAMED_PIPE | FO_MAILSLOT)))
+    {
+        /* Otherwise, this was async I/O without a byte offset, so fail */
+        if (EventObject) ObDereferenceObject(EventObject);
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* Clear the File Object's event */
+    KeClearEvent(&FileObject->Event);
+
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+
+    /* Set the IRP */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->RequestorMode = KernelMode;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+    Irp->UserIosb = IoStatusBlock;
+    Irp->UserEvent = EventObject;
+    Irp->PendingReturned = FALSE;
+    Irp->Cancel = FALSE;
+    Irp->CancelRoutine = NULL;
+    Irp->AssociatedIrp.SystemBuffer = NULL;
+    Irp->MdlAddress = NULL;
+
+    /* Set the Stack Data */
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = IRP_MJ_WRITE;
+    StackPtr->FileObject = FileObject;
+    StackPtr->Flags = FileObject->Flags & FO_WRITE_THROUGH ?
+                      SL_WRITE_THROUGH : 0;
+    StackPtr->Parameters.Write.Key = CapturedKey;
+    StackPtr->Parameters.Write.Length = Length;
+    StackPtr->Parameters.Write.ByteOffset = CapturedByteOffset;
+
+    /* Check if this is buffered I/O */
+    if (DeviceObject->Flags & DO_BUFFERED_IO)
+    {
+        /* Check if we have a buffer length */
+        if (Length)
+        {
+            /* Allocate a buffer */
+            Irp->AssociatedIrp.SystemBuffer =
+                ExAllocatePoolWithTag(NonPagedPool,
+                                      Length,
+                                      TAG_SYSB);
+
+            /* Copy the buffer and set flags */
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
+            Irp->Flags = (IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);
+        }
+        else
+        {
+            /* Not writing anything */
+            Irp->Flags = IRP_BUFFERED_IO;
+        }
+    }
+    else if (DeviceObject->Flags & DO_DIRECT_IO)
+    {
+        /* Check if we have a buffer length */
+        if (Length)
+        {
+            /* Allocate an MDL */
+            Mdl = IoAllocateMdl(Buffer, Length, FALSE, TRUE, Irp);
+            MmProbeAndLockPages(Mdl, PreviousMode, IoReadAccess);
+        }
+
+        /* No allocation flags */
+        Irp->Flags = 0;
     }
     else
     {
-        DeviceObject = IoGetRelatedDeviceObject(FileObject);
+        /* No allocation flags, and use the buffer directly */
+        Irp->Flags = 0;
+        Irp->UserBuffer = Buffer;
     }
 
-    KeClearEvent(&FileObject->Event);
-
-    /* Build the IRP */
-    _SEH_TRY
-    {
-        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
-                                           DeviceObject,
-                                           Buffer,
-                                           Length,
-                                           &CapturedByteOffset,
-                                           EventObject,
-                                           IoStatusBlock);
-        if (Irp == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-        }
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    /* Cleanup on failure */
-    if (!NT_SUCCESS(Status))
-    {
-        if (Event) ObDereferenceObject(&EventObject);
-        ObDereferenceObject(FileObject);
-        return Status;
-    }
-
-   /* Set up IRP Data */
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->RequestorMode = PreviousMode;
-    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
-    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
-    Irp->Flags |= IRP_WRITE_OPERATION;
-#if 0    
-    /* FIXME:
-     *    Vfat doesn't handle non cached files correctly.
-     */     
+    /* Now set the deferred read flags */
+    Irp->Flags |= (IRP_WRITE_OPERATION | IRP_DEFER_IO_COMPLETION);
+#if 0
+    /* FIXME: VFAT SUCKS */
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif    
+#endif
 
-    /* Setup Stack Data */
-    StackPtr = IoGetNextIrpStackLocation(Irp);
-    StackPtr->FileObject = FileObject;
-    StackPtr->Parameters.Write.Key = CapturedKey;
-    if (FileObject->Flags & FO_WRITE_THROUGH) StackPtr->Flags = SL_WRITE_THROUGH;
-
-    /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        if (Synchronous)
-        {
-            KeWaitForSingleObject(&FileObject->Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            Status = FileObject->FinalStatus;
-        }
-    }
-
-    /* Return the Status */
-    return Status;
+    /* Perform the call */
+    return IopPerformSynchronousRequest(DeviceObject,
+                                        Irp,
+                                        FileObject,
+                                        TRUE,
+                                        PreviousMode,
+                                        Synchronous,
+                                        IopWriteTransfer);
 }
 
 NTSTATUS
