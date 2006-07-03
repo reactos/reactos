@@ -24,11 +24,17 @@
 ///
 //
 // TODO:
+// - Update to new semantics:
 //  - Lock/Unlock <= DONE
 //  - Query/Set Volume Info <= DONE
 //  - Read/Write file <= DONE
+//  - QueryDirectoryFile <= DONE
 //  - Query/Set File Info
-//  - QueryDirectoryFile
+// - Add SEH to some places where it's missing (MDLs, etc)
+// - Add a generic Cleanup/Exception Routine
+// - Add another parameter to IopCleanupFailedIrp
+// - Add support for Fast Dispatch I/O
+// - Add support for some fast-paths when querying/setting data
 //
 ///
 
@@ -533,16 +539,6 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     /* Return the Length and Status. ReturnedLength is NOT optional */
     *ReturnedLength = IoStatusBlock.Information;
     return Status;
-}
-
-NTSTATUS
-NTAPI
-IopQueryDirectoryFileCompletion(IN PDEVICE_OBJECT DeviceObject,
-                                IN PIRP Irp,
-                                IN PVOID Context)
-{
-    ExFreePool(Context);
-    return STATUS_SUCCESS;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -1273,7 +1269,7 @@ NtLockFile(IN HANDLE FileHandle,
 NTSTATUS
 NTAPI
 NtQueryDirectoryFile(IN HANDLE FileHandle,
-                     IN HANDLE PEvent OPTIONAL,
+                     IN HANDLE EventHandle OPTIONAL,
                      IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
                      IN PVOID ApcContext OPTIONAL,
                      OUT PIO_STATUS_BLOCK IoStatusBlock,
@@ -1286,55 +1282,73 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
 {
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
-    PFILE_OBJECT FileObject = NULL;
+    PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-    BOOLEAN LocalEvent = FALSE;
+    BOOLEAN LockedForSynch = FALSE;
     PKEVENT Event = NULL;
-    PUNICODE_STRING SearchPattern = NULL;
+    PVOID AuxBuffer = NULL;
+    PMDL Mdl;
+    UNICODE_STRING CapturedFileName;
+    PUNICODE_STRING SearchPattern;
     PAGED_CODE();
 
-    /* Validate User-Mode Buffers */
+    /* Check if we came from user mode */
     if(PreviousMode != KernelMode)
     {
+        /* Enter SEH for probing */
         _SEH_TRY
         {
+            /* Probe the I/O Status Block */
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
-            ProbeForWrite(FileInformation,
-                          Length,
-                          sizeof(ULONG));
+
+            /* Probe the file information */
+            ProbeForWrite(FileInformation, Length, sizeof(ULONG));
+
+            /* Check if we have a file name */
             if (FileName)
             {
-                UNICODE_STRING CapturedFileName;
-
+                /* Capture it */
                 CapturedFileName = ProbeForReadUnicodeString(FileName);
-                ProbeForRead(CapturedFileName.Buffer,
-                             CapturedFileName.MaximumLength,
-                             1);
-                SearchPattern = ExAllocatePool(NonPagedPool, CapturedFileName.Length + sizeof(WCHAR) + sizeof(UNICODE_STRING));
-                if (SearchPattern == NULL)
+                if (CapturedFileName.Length)
                 {
-                    Status = STATUS_INSUFFICIENT_RESOURCES;
-                    _SEH_LEAVE;
+                    /* Probe its buffer */
+                    ProbeForRead(CapturedFileName.Buffer,
+                                 CapturedFileName.Length,
+                                 1);
                 }
-                SearchPattern->Buffer = (PWCHAR)((ULONG_PTR)SearchPattern + sizeof(UNICODE_STRING));
-                SearchPattern->MaximumLength = CapturedFileName.Length + sizeof(WCHAR);
-                RtlCopyUnicodeString(SearchPattern, &CapturedFileName);
+
+                /* Allocate the auxiliary buffer */
+                AuxBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                  CapturedFileName.Length +
+                                                  sizeof(UNICODE_STRING),
+                                                  TAG_SYSB);
+                RtlCopyMemory((PVOID)((ULONG_PTR)AuxBuffer +
+                                      sizeof(UNICODE_STRING)),
+                              CapturedFileName.Buffer,
+                              CapturedFileName.Length);
+
+                /* Setup the search pattern */
+                SearchPattern = (PUNICODE_STRING)AuxBuffer;
+                SearchPattern->Buffer = (PWCHAR)((ULONG_PTR)AuxBuffer +
+                                                 sizeof(UNICODE_STRING));
+                SearchPattern->Length = CapturedFileName.Length;
+                SearchPattern->MaximumLength = CapturedFileName.Length;
             }
         }
         _SEH_HANDLE
         {
+            /* Get exception code and free the buffer */
+            if (AuxBuffer) ExFreePool(AuxBuffer);
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
-        if(!NT_SUCCESS(Status)) 
-        {
-            goto Cleanup;
-        }
+        /* Return status on failure */
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get File Object */
@@ -1344,53 +1358,53 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
                                        PreviousMode,
                                        (PVOID *)&FileObject,
                                        NULL);
-    if (!NT_SUCCESS(Status)) goto Cleanup;
-
-    /* Get Event Object */
-    if (PEvent)
+    if (!NT_SUCCESS(Status))
     {
-        Status = ObReferenceObjectByHandle(PEvent,
+        /* Fail */
+        if (AuxBuffer) ExFreePool(AuxBuffer);
+        return Status;
+    }
+
+    /* Check if we have an even handle */
+    if (EventHandle)
+    {
+        /* Get its pointer */
+        Status = ObReferenceObjectByHandle(EventHandle,
                                            EVENT_MODIFY_STATE,
                                            ExEventObjectType,
                                            PreviousMode,
                                            (PVOID *)&Event,
                                            NULL);
-        if (!NT_SUCCESS(Status)) 
+        if (!NT_SUCCESS(Status))
         {
-            goto Cleanup;
+            /* Fail */
+            ObDereferenceObject(FileObject);
+            return Status;
         }
 
+        /* Clear it */
         KeClearEvent(Event);
     }
 
-    /* Check if this is a direct open or not */
-    if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
-    {
-        DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
-    }
-    else
-    {
-        DeviceObject = IoGetRelatedDeviceObject(FileObject);
-    }
-
-    /* Check if we should use Sync IO or not */
+    /* Check if this is a file that was opened for Synch I/O */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
-    }
-    else
-    {
-        LocalEvent = TRUE;
+        /* Lock it */
+        IopLockFileObject(FileObject);
+
+        /* Remember to unlock later */
+        LockedForSynch = TRUE;
     }
 
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* Clear the File Object's event */
+    KeClearEvent(&FileObject->Event);
+
     /* Allocate the IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Cleanup;
-    }
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, EventHandle);
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
@@ -1398,9 +1412,38 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     Irp->UserEvent = Event;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->UserBuffer = FileInformation;
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
     Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
+    Irp->MdlAddress = NULL;
+    Irp->Tail.Overlay.AuxiliaryBuffer = AuxBuffer;
+    Irp->AssociatedIrp.SystemBuffer = NULL;
+
+    /* Check if this is buffered I/O */
+    if (DeviceObject->Flags & DO_BUFFERED_IO)
+    {
+        /* Allocate a buffer */
+        Irp->AssociatedIrp.SystemBuffer =
+            ExAllocatePoolWithTag(NonPagedPool,
+                                  Length,
+                                  TAG_SYSB);
+
+        /* Set the buffer and flags */
+        Irp->UserBuffer = FileInformation;
+        Irp->Flags = (IRP_BUFFERED_IO |
+                      IRP_DEALLOCATE_BUFFER |
+                      IRP_INPUT_OPERATION);
+    }
+    else if (DeviceObject->Flags & DO_DIRECT_IO)
+    {
+        /* Allocate an MDL */
+        Mdl = IoAllocateMdl(FileInformation, Length, FALSE, TRUE, Irp);
+        MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
+    }
+    else
+    {
+        /* No allocation flags, and use the buffer directly */
+        Irp->UserBuffer = FileInformation;
+    }
 
     /* Set up Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -1409,48 +1452,26 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     StackPtr->MinorFunction = IRP_MN_QUERY_DIRECTORY;
 
     /* Set Parameters */
-    StackPtr->Parameters.QueryDirectory.FileInformationClass = FileInformationClass;
-    StackPtr->Parameters.QueryDirectory.FileName = SearchPattern ? SearchPattern : FileName;
+    StackPtr->Parameters.QueryDirectory.FileInformationClass =
+        FileInformationClass;
+    StackPtr->Parameters.QueryDirectory.FileName = AuxBuffer;
     StackPtr->Parameters.QueryDirectory.FileIndex = 0;
     StackPtr->Parameters.QueryDirectory.Length = Length;
     StackPtr->Flags = 0;
     if (RestartScan) StackPtr->Flags = SL_RESTART_SCAN;
     if (ReturnSingleEntry) StackPtr->Flags |= SL_RETURN_SINGLE_ENTRY;
 
-    if (SearchPattern)
-    {
-        IoSetCompletionRoutine(Irp,
-                               IopQueryDirectoryFileCompletion,
-                               SearchPattern,
-                               TRUE,
-                               TRUE,
-                               TRUE);
-    }
+    /* Set deferred I/O */
+    Irp->Flags |= IRP_DEFER_IO_COMPLETION;
 
-    /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        if (!LocalEvent)
-        {
-            KeWaitForSingleObject(&FileObject->Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            Status = FileObject->FinalStatus;
-        }
-    }
-
-    return Status;
-
-Cleanup:
-    if (FileObject) ObDereferenceObject(FileObject);
-    if (Event) ObDereferenceObject(Event);
-    if (SearchPattern) ExFreePool(SearchPattern);
-
-    /* Return the Status */
-    return Status;
+    /* Perform the call */
+    return IopPerformSynchronousRequest(DeviceObject,
+                                        Irp,
+                                        FileObject,
+                                        TRUE,
+                                        PreviousMode,
+                                        LockedForSynch,
+                                        IopOtherTransfer);
 }
 
 /*
