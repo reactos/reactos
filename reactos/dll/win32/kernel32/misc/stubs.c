@@ -625,24 +625,6 @@ MapUserPhysicalPagesScatter(
  */
 BOOL
 STDCALL
-QueueUserWorkItem(
-    LPTHREAD_START_ROUTINE Function,
-    PVOID Context,
-    ULONG Flags
-    )
-{
-    STUB;
-    return 0;
-}
-
-
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 ReadFileScatter(
     HANDLE hFile,
     FILE_SEGMENT_ELEMENT aSegmentArray[],
