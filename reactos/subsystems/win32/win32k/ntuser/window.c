@@ -1692,11 +1692,19 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       dwExStyle |= WS_EX_WINDOWEDGE;
    else
       dwExStyle &= ~WS_EX_WINDOWEDGE;
-/* 
-   These affect only the style loading into the WindowObject structure. 
-*/
-   Window->ExStyle = dwExStyle;
-   Window->Style = dwStyle & ~WS_VISIBLE;
+
+   /* Correct the window style. */
+    if (!(dwStyle & WS_CHILD))
+    {
+      dwStyle |= WS_CLIPSIBLINGS;
+      DPRINT("3: Style is now %lx\n", dwStyle);
+      if (!(dwStyle & WS_POPUP))
+      {
+          dwStyle |= WS_CAPTION;
+          Window->Flags |= WINDOWOBJECT_NEED_SIZE;
+          DPRINT("4: Style is now %lx\n", dwStyle);
+      }
+    }
 
    /* create system menu */
    if((dwStyle & WS_SYSMENU) &&
@@ -1709,23 +1717,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
          IntReleaseMenuObject(SystemMenu);
       }
    }
-
-   /* Correct the window style. */
-   if (!(Window->Style & WS_CHILD))
-   {
-      Window->Style |= WS_CLIPSIBLINGS;
-      if (!(Window->Style & WS_POPUP))
-      {
-         Window->Style |= WS_CAPTION;
-         Window->Flags |= WINDOWOBJECT_NEED_SIZE;
-      }
-   }
-
-   if ((Window->ExStyle & WS_EX_DLGMODALFRAME) ||
-          (Window->Style & (WS_DLGFRAME | WS_THICKFRAME)))
-      Window->ExStyle |= WS_EX_WINDOWEDGE;
-   else
-      Window->ExStyle &= ~WS_EX_WINDOWEDGE;
 
    /* Insert the window into the thread's window list. */
    InsertTailList (&PsGetWin32Thread()->WindowListHead, &Window->ThreadListEntry);
@@ -1741,6 +1732,9 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Pos.y = y;
    Size.cx = nWidth;
    Size.cy = nHeight;
+
+   Window->ExStyle = dwExStyle;
+   Window->Style = dwStyle & ~WS_VISIBLE;
 
    /* call hook */
    Cs.lpCreateParams = lpParam;
