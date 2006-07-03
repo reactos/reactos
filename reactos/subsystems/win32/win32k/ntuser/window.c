@@ -1663,9 +1663,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       else
       {
         dwStyle &= ~WS_POPUP;
-/* 
-   (|| WS_CHILD) is done at the top. So~ Here is just a bit in a 32/64 bit word.
-*/
         dwStyle |= (WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION |
                 WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
       }
