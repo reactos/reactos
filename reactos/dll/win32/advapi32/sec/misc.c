@@ -1915,9 +1915,68 @@ TreeResetNamedSecurityInfoW(LPWSTR pObjectName,
     return ErrorCode;
 }
 
+#ifdef HAS_FN_PROGRESSW
+
+typedef struct _INERNAL_FNPROGRESSW_DATA
+{
+    FN_PROGRESSA fnProgress;
+    PVOID Args;
+} INERNAL_FNPROGRESSW_DATA, *PINERNAL_FNPROGRESSW_DATA;
+
+static VOID STDCALL
+InternalfnProgressW(LPWSTR pObjectName,
+                    DWORD Status,
+                    PPROG_INVOKE_SETTING pInvokeSetting,
+                    PVOID Args,
+                    BOOL SecuritySet)
+{
+    PINERNAL_FNPROGRESSW_DATA pifnProgressData = (PINERNAL_FNPROGRESSW_DATA)Args;
+    INT ObjectNameSize;
+    LPSTR pObjectNameA;
+
+    ObjectNameSize = WideCharToMultiByte(CP_ACP,
+                                         0,
+                                         pObjectName,
+                                         -1,
+                                         NULL,
+                                         0,
+                                         NULL,
+                                         NULL);
+
+    if (ObjectNameSize > 0)
+    {
+        pObjectNameA = RtlAllocateHeap(RtlGetProcessHeap(),
+                                       0,
+                                       ObjectNameSize);
+        if (pObjectNameA != NULL)
+        {
+            pObjectNameA[0] = '\0';
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                pObjectName,
+                                -1,
+                                pObjectNameA,
+                                ObjectNameSize,
+                                NULL,
+                                NULL);
+
+            pifnProgressData->fnProgress(pObjectNameA,
+                                         Status,
+                                         pInvokeSetting,
+                                         pifnProgressData->Args,
+                                         SecuritySet);
+
+            RtlFreeHeap(RtlGetProcessHeap(),
+                        0,
+                        pObjectNameA);
+        }
+    }
+}
+#endif
+
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 TreeResetNamedSecurityInfoA(LPSTR pObjectName,
@@ -1932,9 +1991,42 @@ TreeResetNamedSecurityInfoA(LPSTR pObjectName,
                             PROG_INVOKE_SETTING ProgressInvokeSetting,
                             PVOID Args)
 {
+#ifndef HAS_FN_PROGRESSW
     /* That's all this function does, at least up to w2k3... Even MS was too
        lazy to implement it... */
     return ERROR_CALL_NOT_IMPLEMENTED;
+#else
+    INERNAL_FNPROGRESSW_DATA ifnProgressData;
+    UNICODE_STRING ObjectName;
+    NTSTATUS Status;
+    DWORD Ret;
+
+    Status = RtlCreateUnicodeStringFromAsciiz(&ObjectName,
+                                              pObjectName);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    ifnProgressData.fnProgress = fnProgress;
+    ifnProgressData.Args = Args;
+
+    Ret = TreeResetNamedSecurityInfoW(ObjectName.Buffer,
+                                      ObjectType,
+                                      SecurityInfo,
+                                      pOwner,
+                                      pGroup,
+                                      pDacl,
+                                      pSacl,
+                                      KeepExplicit,
+                                      (fnProgress != NULL ? InternalfnProgressW : NULL),
+                                      ProgressInvokeSetting,
+                                      &ifnProgressData);
+
+    RtlFreeUnicodeString(&ObjectName);
+
+    return Ret;
+#endif
 }
 
 /* EOF */
