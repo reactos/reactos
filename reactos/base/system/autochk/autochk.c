@@ -15,6 +15,7 @@
 #include <stdio.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
+#include <fmifs/fmifs.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
@@ -24,6 +25,22 @@
 
 
 /* FUNCTIONS ****************************************************************/
+//
+// FMIFS function
+//
+typedef
+VOID
+(STDCALL *PCHKDSK)(PWCHAR           DriveRoot,
+                   PWCHAR           Format,
+                   BOOLEAN          CorrectErrors,
+                   BOOLEAN          Verbose,
+                   BOOLEAN          CheckOnlyIfDirty,
+                   BOOLEAN          ScanDrive,
+                   PVOID            Unused2,
+                   PVOID            Unused3,
+                   PFMIFSCALLBACK   Callback);
+
+PCHKDSK     ChkdskFunc = NULL;
 
 void
 DisplayString(LPCWSTR lpwString)
@@ -146,6 +163,98 @@ GetFileSystem(LPCWSTR Drive,
     return STATUS_SUCCESS;
 }
 
+// This is based on SysInternal's ChkDsk app
+BOOLEAN
+STDCALL
+ChkdskCallback(CALLBACKCOMMAND Command,
+               DWORD Modifier,
+               PVOID Argument)
+{
+    PDWORD      Percent;
+    PBOOLEAN    Status;
+    PTEXTOUTPUT Output;
+
+    //
+    // We get other types of commands,
+    // but we don't have to pay attention to them
+    //
+    switch(Command)
+    {
+    case UNKNOWN2:
+        DPRINT("UNKNOWN2\r");
+        break;
+
+    case UNKNOWN3:
+        DPRINT("UNKNOWN3\r");
+        break;
+
+    case UNKNOWN4:
+        DPRINT("UNKNOWN4\r");
+        break;
+
+    case UNKNOWN5:
+        DPRINT("UNKNOWN5\r");
+        break;
+
+    case UNKNOWN7:
+        DPRINT("UNKNOWN7\r");
+        break;
+
+    case UNKNOWN8:
+        DPRINT("UNKNOWN8\r");
+        break;
+
+    case UNKNOWN9:
+        DPRINT("UNKNOWN9\r");
+        break;
+
+    case UNKNOWNA:
+        DPRINT("UNKNOWNA\r");
+        break;
+
+    case UNKNOWNC:
+        DPRINT("UNKNOWNC\r");
+        break;
+
+    case UNKNOWND:
+        DPRINT("UNKNOWND\r");
+        break;
+
+    case INSUFFICIENTRIGHTS:
+        DPRINT("INSUFFICIENTRIGHTS\r");
+        break;
+
+    case STRUCTUREPROGRESS:
+        DPRINT("STRUCTUREPROGRESS\r");
+        break;
+
+    case DONEWITHSTRUCTURE:
+        DPRINT("DONEWITHSTRUCTURE\r");
+        break;
+
+    case PROGRESS:
+        Percent = (PDWORD) Argument;
+        PrintString("%d percent completed.\r", *Percent);
+        break;
+
+    case OUTPUT:
+        Output = (PTEXTOUTPUT) Argument;
+        PrintString("%s", Output->Output);
+        break;
+
+    case DONE:
+        Status = (PBOOLEAN)Argument;
+        if (*Status == TRUE)
+        {
+            PrintString("Autochk was unable to complete successfully.\n\n");
+            //Error = TRUE;
+        }
+        break;
+    }
+    return TRUE;
+}
+
+
 /* Native image's entry point */
 int
 _cdecl
@@ -188,18 +297,30 @@ _main(int argc,
                                        sizeof(FileSystem));
                 PrintString("  Checking drive %c: \n", 'A'+i);
 
-                if (NT_SUCCESS(Status))
-                {
-                    PrintString("   Filesystem type ");
-                    DisplayString(FileSystem);
-                    PrintString("\n");
-                    PrintString("      OK\n");
-                }
-                else
+                if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("Error getting FS information, Status=0x%08X\n",
                         Status);
+                    // skip to the next volume
+                    continue;
                 }
+
+                // FS type known, show it to user and then call chkdsk routine
+                PrintString("   Filesystem type ");
+                DisplayString(FileSystem);
+                PrintString("\n");
+
+                /*ChkdskFunc(DrivePath,
+                       FileSystem,
+                       TRUE, // FixErrors
+                       TRUE, // Verbose
+                       FALSE, // SkipClean
+                       FALSE,// ScanSectors
+                       NULL,
+                       NULL,
+                       ChkdskCallback);*/
+
+                PrintString("      OK\n");
             }
         }
         PrintString("\n");
