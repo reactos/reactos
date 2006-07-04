@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "windef.h"
@@ -1197,6 +1197,7 @@ IDI_TT_ERROR_SM ICON LOADONCALL DISCARDABLE idi_tt_error_sm.ico
 #include "comctl_Cs.rc"
 #include "comctl_De.rc"
 #include "comctl_En.rc"
+#include "comctl_Eo.rc"
 #include "comctl_Es.rc"
 #include "comctl_Fr.rc"
 #include "comctl_Hu.rc"

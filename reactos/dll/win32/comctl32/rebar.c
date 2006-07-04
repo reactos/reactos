@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *
@@ -1920,7 +1920,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	y = clientcy;
     }
     if (infoPtr->dwStyle & CCS_VERT) {
-        if( x < REBAR_MINSIZE )
+        if( infoPtr->uNumBands != 0 && x < REBAR_MINSIZE )
             x = REBAR_MINSIZE;
 	infoPtr->calcSize.cx = x;
 	infoPtr->calcSize.cy = clientcy;
@@ -1929,7 +1929,7 @@ REBAR_Layout (REBAR_INFO *infoPtr, LPRECT lpRect, BOOL notify, BOOL resetclient)
 	if (notify && (x != origheight)) infoPtr->fStatus |= NTF_HGHTCHG;
     }
     else {
-        if( y < REBAR_MINSIZE )
+        if( infoPtr->uNumBands != 0 && y < REBAR_MINSIZE )
             y = REBAR_MINSIZE;
 	infoPtr->calcSize.cx = clientcx;
 	infoPtr->calcSize.cy = y;

@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *     All of these functions are UNDOCUMENTED!! And I mean UNDOCUMENTED!!!!
@@ -386,10 +386,8 @@ INT WINAPI FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData,
     UINT i;
     LPSTR dataA = NULL;
 
-    if (!mp->extview.lpfnCompare) {
-	ERR("MRU list not properly created. No compare procedure.\n");
+    if (!mp->extview.lpfnCompare)
 	return -1;
-    }
 
     if(!(mp->extview.dwFlags & MRUF_BINARY_LIST) && !mp->isUnicode) {
         DWORD len = WideCharToMultiByte(CP_ACP, 0, lpData, -1,
@@ -1104,6 +1102,46 @@ BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc)
 	    Free (*lppDest);
 	    *lppDest = NULL;
 	}
+    }
+
+    return TRUE;
+}
+
+/**************************************************************************
+ * Str_SetPtrWtoA [internal]
+ *
+ * Converts a unicode string to a multi byte string.
+ * If the pointer to the destination buffer is NULL a buffer is allocated.
+ * If the destination buffer is too small to keep the converted wide
+ * string the destination buffer is reallocated. If the source pointer is
+ * NULL, the destination buffer is freed.
+ *
+ * PARAMS
+ *     lppDest [I/O] pointer to a pointer to the destination buffer
+ *     lpSrc   [I] pointer to a wide string
+ *
+ * RETURNS
+ *     TRUE: conversion successful
+ *     FALSE: error
+ */
+BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc)
+{
+    TRACE("(%p %s)\n", lppDest, debugstr_w(lpSrc));
+
+    if (lpSrc) {
+        INT len = WideCharToMultiByte(CP_ACP,0,lpSrc,-1,NULL,0,NULL,FALSE);
+        LPSTR ptr = ReAlloc (*lppDest, len*sizeof(CHAR));
+
+        if (!ptr)
+            return FALSE;
+        WideCharToMultiByte(CP_ACP,0,lpSrc,-1,ptr,len,NULL,FALSE);
+        *lppDest = ptr;
+    }
+    else {
+        if (*lppDest) {
+            Free (*lppDest);
+            *lppDest = NULL;
+        }
     }
 
     return TRUE;
