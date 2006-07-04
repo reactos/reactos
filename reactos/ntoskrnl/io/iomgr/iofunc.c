@@ -830,6 +830,7 @@ NtFsControlFile(IN HANDLE DeviceHandle,
                 OUT PVOID OutputBuffer,
                 IN ULONG OutputBufferLength OPTIONAL)
 {
+    /* Call the Generic Function */
     return IopDeviceFsIoControl(DeviceHandle,
                                 Event,
                                 UserApcRoutine,
@@ -1494,7 +1495,7 @@ NtQueryEaFile(IN HANDLE FileHandle,
 NTSTATUS
 NTAPI
 NtQueryInformationFile(IN HANDLE FileHandle,
-                       IN PIO_STATUS_BLOCK IoStatusBlock,
+                       OUT PIO_STATUS_BLOCK IoStatusBlock,
                        IN PVOID FileInformation,
                        IN ULONG Length,
                        IN FILE_INFORMATION_CLASS FileInformationClass)
@@ -2009,7 +2010,7 @@ NtSetEaFile(IN HANDLE FileHandle,
 NTSTATUS
 NTAPI
 NtSetInformationFile(IN HANDLE FileHandle,
-                     IN PIO_STATUS_BLOCK IoStatusBlock,
+                     OUT PIO_STATUS_BLOCK IoStatusBlock,
                      IN PVOID FileInformation,
                      IN ULONG Length,
                      IN FILE_INFORMATION_CLASS FileInformationClass)
@@ -2324,17 +2325,17 @@ NtSetInformationFile(IN HANDLE FileHandle,
  */
 NTSTATUS
 NTAPI
-NtSetQuotaInformationFile(HANDLE FileHandle,
-                          PIO_STATUS_BLOCK IoStatusBlock,
-                          PVOID Buffer,
-                          ULONG BufferLength)
+NtSetQuotaInformationFile(IN HANDLE FileHandle,
+                          OUT PIO_STATUS_BLOCK IoStatusBlock,
+                          IN PVOID Buffer,
+                          IN ULONG BufferLength)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
