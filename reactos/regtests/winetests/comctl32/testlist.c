@@ -1,5 +1,3 @@
-/* Automatically generated file; DO NOT EDIT!! */
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -10,6 +8,7 @@ extern void func_comboex(void);
 extern void func_dpa(void);
 extern void func_header(void);
 extern void func_imagelist(void);
+extern void func_listview(void);
 extern void func_monthcal(void);
 extern void func_mru(void);
 extern void func_progress(void);
@@ -27,6 +26,7 @@ const struct test winetest_testlist[] =
     { "dpa", func_dpa },
     { "header", func_header },
     { "imagelist", func_imagelist },
+    { "listview", func_listview },
     { "monthcal", func_monthcal },
     { "mru", func_mru },
     { "progress", func_progress },
