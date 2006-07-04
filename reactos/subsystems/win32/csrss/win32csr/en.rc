@@ -26,3 +26,15 @@ BEGIN
     LTEXT           "If you choose to end the program immediately, you will loose any unsaved data. To end the program now, click End Now",
                     IDC_STATIC,7,53,178,26
 END
+
+STRINGTABLE
+BEGIN
+  IDS_MARK "Mark"
+  IDS_COPY "Copy\tEnter"
+  IDS_PASTE "Paste"
+  IDS_SELECTALL "Select All"
+  IDS_SCROLL "Scroll"
+  IDS_FIND "Find..."
+  IDS_DEFAULTS "Defaults"
+  IDS_PROPERTIES "Properties"
+END

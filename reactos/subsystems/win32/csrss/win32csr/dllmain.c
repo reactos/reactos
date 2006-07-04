@@ -20,7 +20,7 @@ extern VOID STDCALL PrivateCsrssInitialized();
 /* GLOBALS *******************************************************************/
 
 HANDLE Win32CsrApiHeap;
-HINSTANCE Win32CsrDllHandle;
+HINSTANCE Win32CsrDllHandle = NULL;
 static CSRSS_EXPORTED_FUNCS CsrExports;
 
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =

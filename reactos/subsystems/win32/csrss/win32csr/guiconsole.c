@@ -30,6 +30,7 @@ typedef struct GUI_CONSOLE_DATA_TAG
   RECT Selection;
   POINT SelectionStart;
   BOOL MouseDown;
+  HMODULE ConsoleLibrary;
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
 #ifndef WM_APP
@@ -634,6 +635,10 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
   KillTimer(hWnd, 1);
   Console->PrivateData = NULL;
   DeleteCriticalSection(&GuiData->Lock);
+  GetSystemMenu(hWnd, TRUE);
+  if (GuiData->ConsoleLibrary)
+    FreeLibrary(GuiData->ConsoleLibrary);
+
   HeapFree(Win32CsrApiHeap, 0, GuiData);
 }
 
@@ -776,6 +781,160 @@ GuiConsoleRightMouseDown(HWND hWnd)
 
 }
 
+static VOID
+GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults)
+{
+  PCSRSS_CONSOLE Console;
+  PGUI_CONSOLE_DATA GuiData;
+  APPLET_PROC CPLFunc;
+  TCHAR szBuffer[MAX_PATH];
+
+  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
+
+  if (GuiData == NULL)
+  {
+    DPRINT1("GuiConsoleGetDataPointers failed\n");
+    return;
+  }
+  if (GuiData->ConsoleLibrary == NULL)
+    {
+		GetWindowsDirectory(szBuffer,MAX_PATH);
+		_tcscat(szBuffer, _T("\\system32\\console.dll"));
+      GuiData->ConsoleLibrary = LoadLibrary(szBuffer);
+
+      if (GuiData->ConsoleLibrary == NULL)
+        {
+          DPRINT1("failed to load console.dll");	
+          return;
+        }
+    }
+
+  CPLFunc = (APPLET_PROC) GetProcAddress(GuiData->ConsoleLibrary, _T("CPlApplet"));
+  if (!CPLFunc)
+  {
+    DPRINT("Error: Console.dll misses CPlApplet export\n");
+    return;
+  }
+
+  if (!CPLFunc(hWnd, CPL_INIT, 0, 0))
+  {
+    DPRINT("Error: failed to initialize console.dll\n");
+    return;
+  }
+
+  if (CPLFunc(hWnd, CPL_GETCOUNT, 0, 0) != 1)
+  {
+    DPRINT("Error: console.dll returned unexpected CPL count\n");
+    return;
+  }
+
+  CPLFunc(hWnd, CPL_DBLCLK, 0, Defaults);
+
+  // TODO
+  //
+  // read back the changes from console.dll
+  //
+  // if the changes are system-wide then 
+  // console.dll should have written it to
+  // registry
+  //
+  // if the changes only apply to this session
+  // then exchange this info with console.dll in
+  // some private way
+}
+static LRESULT FASTCALL
+GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+  DPRINT1("GuiConsoleHandleSysMenuCommand entered %d\n", wParam);
+
+  switch(wParam)
+    {
+      case IDS_MARK:
+      case IDS_COPY:
+      case IDS_PASTE:
+      case IDS_SELECTALL:
+      case IDS_SCROLL:
+      case IDS_FIND:
+        break;
+
+      case IDS_DEFAULTS:
+        GuiConsoleShowConsoleProperties(hWnd, TRUE);
+        break;
+      case IDS_PROPERTIES:
+        GuiConsoleShowConsoleProperties(hWnd, FALSE);
+        break;
+      default:
+        break;
+   }
+
+  return 0;
+}
+static BOOLEAN FASTCALL
+InsertItem(HMENU hMenu, INT fType, INT fMask, INT fState, HMENU hSubMenu, INT ResourceId)
+{
+  MENUITEMINFO MenuItemInfo;
+  TCHAR szBuffer[MAX_PATH];
+
+  memset(&MenuItemInfo, 0x0, sizeof(MENUITEMINFO));
+  MenuItemInfo.cbSize = sizeof (MENUITEMINFO);
+  MenuItemInfo.fMask = fMask;
+  MenuItemInfo.fType = fType;
+  MenuItemInfo.fState = fState;
+  MenuItemInfo.hSubMenu = hSubMenu;
+  MenuItemInfo.wID = ResourceId;
+
+  if (fType != MFT_SEPARATOR)
+    {
+      MenuItemInfo.cch = LoadString(Win32CsrDllHandle, ResourceId, szBuffer, MAX_PATH);
+      if (!MenuItemInfo.cch)
+        {
+          DPRINT("LoadString failed ResourceId %d Error %x\n", ResourceId, GetLastError());
+          return FALSE;
+        }
+        MenuItemInfo.dwTypeData = szBuffer;
+    }
+
+  if (InsertMenuItem(hMenu, ResourceId, FALSE, &MenuItemInfo))
+    return TRUE;
+
+  DPRINT("InsertMenuItem failed Last error %x\n", GetLastError());
+  return FALSE;
+}
+
+
+
+static VOID FASTCALL
+GuiConsoleCreateSysMenu(HWND hWnd)
+{
+  HMENU hMenu;
+  HMENU hSubMenu;
+
+
+  hMenu = GetSystemMenu(hWnd, FALSE);
+  if (hMenu == NULL)
+    {
+      DPRINT("GetSysMenu failed\n");
+      return;
+    }
+  /* insert seperator */
+  InsertItem(hMenu, MFT_SEPARATOR, MIIM_FTYPE, 0, NULL, -1);
+
+    /* create submenu */
+  hSubMenu = CreatePopupMenu();
+  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_MARK);
+  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING | MIIM_STATE, MFS_GRAYED, NULL, IDS_COPY);
+  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_PASTE);
+  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SELECTALL);
+  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLL);
+  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_FIND);
+  InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING | MIIM_SUBMENU, 0, hSubMenu, IDS_EDIT);
+
+  /* create default/properties item */
+  InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_DEFAULTS);
+  InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_PROPERTIES);
+  DrawMenuBar(hWnd);
+}
+
 static LRESULT CALLBACK
 GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -817,6 +976,8 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_MOUSEMOVE:
           GuiConsoleMouseMove(hWnd, wParam, lParam);
         break;
+	  case WM_SYSCOMMAND:
+          return GuiConsoleHandleSysMenuCommand(hWnd, wParam, lParam);		
       default:
         Result = DefWindowProcW(hWnd, msg, wParam, lParam);
         break;
@@ -833,6 +994,8 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   MSG Msg;
   PWCHAR Buffer, Title;
   PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) lParam;
+
+
 
   switch(msg)
     {
@@ -854,7 +1017,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
         NewWindow = CreateWindowW(L"ConsoleWindowClass",
                                   Title,
-                                  WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+                                  WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // | WS_HSCROLL | WS_VSCROLL,
                                   CW_USEDEFAULT,
                                   CW_USEDEFAULT,
                                   CW_USEDEFAULT,
@@ -870,6 +1033,9 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         Console->hWindow = NewWindow;
         if (NULL != NewWindow)
           {
+            GuiConsoleCreateSysMenu(NewWindow);
+            //ShowScrollBar(NewWindow, SB_VERT, FALSE);
+            //ShowScrollBar(NewWindow, SB_HORZ, FALSE);
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
             ShowWindow(NewWindow, SW_SHOW);
           }

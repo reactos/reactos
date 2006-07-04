@@ -19,4 +19,9 @@
 #include "tuiconsole.h"
 #include <win32csr.h>
 
+#include <tchar.h>
+#include <cpl.h>
+
+#include "resource.h"
+
 /* EOF */
