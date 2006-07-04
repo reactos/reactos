@@ -141,11 +141,9 @@ CloseWindow(HWND hWnd)
     return (BOOL)(hWnd);
 }
 
-/*
- * @implemented
- */
+
 HWND STDCALL
-CreateWindowExA(DWORD dwExStyle,
+User32CreateWindowEx(DWORD dwExStyle,
 		LPCSTR lpClassName,
 		LPCSTR lpWindowName,
 		DWORD dwStyle,
@@ -156,18 +154,20 @@ CreateWindowExA(DWORD dwExStyle,
 		HWND hWndParent,
 		HMENU hMenu,
 		HINSTANCE hInstance,
-		LPVOID lpParam)
+		LPVOID lpParam,
+		BOOL Unicode)
 {
   UNICODE_STRING WindowName;
   UNICODE_STRING ClassName;
-  WNDCLASSEXA wce;
+  WNDCLASSEXA wceA;
+  WNDCLASSEXW wceW;
   HWND Handle;
   MDICREATESTRUCTA mdi;
 
 #if 0
-  DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
+  DbgPrint("[window] User32CreateWindowEx style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
 #endif
-
+  
   if (IS_ATOM(lpClassName))
     {
       RtlInitUnicodeString(&ClassName, NULL);
@@ -175,11 +175,16 @@ CreateWindowExA(DWORD dwExStyle,
     }
   else
     {
-      if (!RtlCreateUnicodeStringFromAsciiz(&(ClassName), (PCSZ)lpClassName))
-	{
-	  SetLastError(ERROR_OUTOFMEMORY);
-	  return (HWND)0;
-	}
+       if(Unicode)
+           RtlInitUnicodeString(&ClassName, (PCWSTR)lpClassName);
+       else
+       {
+          if (!RtlCreateUnicodeStringFromAsciiz(&(ClassName), (PCSZ)lpClassName))
+          {
+	     SetLastError(ERROR_OUTOFMEMORY);
+	     return (HWND)0;
+	  }
+       }
     }
 
   /* Register built-in controls if not already done */
@@ -198,8 +203,8 @@ CreateWindowExA(DWORD dwExStyle,
    * Note: we rely on the fact that MDICREATESTRUCTA and MDICREATESTRUCTW
    * have the same layout.
    */
-      mdi.szClass = (LPCSTR)&lpClassName;
-      mdi.szTitle = (LPCSTR)&lpWindowName;
+      mdi.szClass = (LPCSTR)lpClassName;
+      mdi.szTitle = (LPCSTR)lpWindowName;
       mdi.hOwner = hInstance;
       mdi.x = x;
       mdi.y = y;
@@ -258,22 +263,38 @@ CreateWindowExA(DWORD dwExStyle,
       }
   }
 
-  if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName))
-    {
-      if (!IS_ATOM(lpClassName))
-	{
-	  RtlFreeUnicodeString(&ClassName);
-	}
-      SetLastError(ERROR_OUTOFMEMORY);
-      return (HWND)0;
-    }
-
+  if (Unicode)
+    RtlInitUnicodeString(&WindowName, (PCWSTR)lpWindowName);
+  else
+  {
+    if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName))
+      {
+        if (!IS_ATOM(lpClassName))
+	  {
+	    RtlFreeUnicodeString(&ClassName);
+	  }
+        SetLastError(ERROR_OUTOFMEMORY);
+        return (HWND)0;
+      }
+  }
+  
   if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
   {
-    wce.cbSize = sizeof(WNDCLASSEXA);
-    if(GetClassInfoExA(hInstance, lpClassName, &wce) && wce.lpszMenuName)
+    if(Unicode)
     {
-      hMenu = LoadMenuA(hInstance, wce.lpszMenuName);
+       wceW.cbSize = sizeof(WNDCLASSEXW);
+       if(GetClassInfoExW(hInstance, (LPCWSTR)lpClassName, &wceW) && wceW.lpszMenuName)
+       {DbgPrint("LoadingMenu 0x%p %d\n", wceW.lpszMenuName, IS_INTRESOURCE(wceW.lpszMenuName));
+       hMenu = LoadMenuW(hInstance, wceW.lpszMenuName);DbgPrint("Loaded menu: 0x%p\n", hMenu);
+       }
+    }
+    else
+    {
+       wceA.cbSize = sizeof(WNDCLASSEXA);
+       if(GetClassInfoExA(hInstance, lpClassName, &wceA) && wceA.lpszMenuName)
+       {
+         hMenu = LoadMenuA(hInstance, wceA.lpszMenuName);
+       }
     }
   }
 
@@ -303,15 +324,49 @@ CreateWindowExA(DWORD dwExStyle,
                                                 SWP_NOMOVE | SWP_NOSIZE);
    }
 
+  if(!Unicode)
+  {
+    RtlFreeUnicodeString(&WindowName);
 
-  RtlFreeUnicodeString(&WindowName);
-
-  if (!IS_ATOM(lpClassName))
-    {
-      RtlFreeUnicodeString(&ClassName);
-    }
-
+    if (!IS_ATOM(lpClassName))
+      {
+        RtlFreeUnicodeString(&ClassName);
+      }
+  }
   return Handle;
+}
+
+
+/*
+ * @implemented
+ */
+HWND STDCALL
+CreateWindowExA(DWORD dwExStyle,
+		LPCSTR lpClassName,
+		LPCSTR lpWindowName,
+		DWORD dwStyle,
+		int x,
+		int y,
+		int nWidth,
+		int nHeight,
+		HWND hWndParent,
+		HMENU hMenu,
+		HINSTANCE hInstance,
+		LPVOID lpParam)
+{
+   return User32CreateWindowEx(dwExStyle,
+                               lpClassName,
+                               lpWindowName,
+                               dwStyle,
+                               x,
+                               y,
+                               nWidth,
+                               nHeight,
+                               hWndParent,
+                               hMenu,
+                               hInstance,
+                               lpParam,
+                               FALSE);
 }
 
 
@@ -332,143 +387,20 @@ CreateWindowExW(DWORD dwExStyle,
 		HINSTANCE hInstance,
 		LPVOID lpParam)
 {
-  UNICODE_STRING WindowName;
-  UNICODE_STRING ClassName;
-  WNDCLASSEXW wce;
-  HANDLE Handle;
-  MDICREATESTRUCTW mdi;
-  
-#if 0
-  DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
-#endif
-
-  /* Register built-in controls if not already done */
-  if (! ControlsInitialized)
-    {
-      ControlsInitialized = ControlsInit(lpClassName);
-    }
-
-
-  if (dwExStyle & WS_EX_MDICHILD)
-  {
-      POINT mPos[2];
-      UINT id = 0;
-  /* lpParams of WM_[NC]CREATE is different for MDI children.
-   * MDICREATESTRUCT members have the originally passed values.
-   *
-   * Note: we rely on the fact that MDICREATESTRUCTA and MDICREATESTRUCTW
-   * have the same layout.
-   */
-      mdi.szClass = (LPWSTR)&lpClassName;
-      mdi.szTitle = (LPWSTR)&lpWindowName;
-      mdi.hOwner = hInstance;
-      mdi.x = x;
-      mdi.y = y;
-      mdi.cx = nWidth;
-      mdi.cy = nHeight;
-      mdi.style = dwStyle;
-      mdi.lParam = (LPARAM)lpParam;
-
-      lpParam = (LPVOID)&mdi;
-
-      if (GetWindowLongW(hWndParent, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
-      {
-        if (dwStyle & WS_POPUP)
-        {
-           DPRINT1("WS_POPUP with MDIS_ALLCHILDSTYLES is not allowed\n");
-           return(0);
-        }
-        dwStyle |= (WS_CHILD | WS_CLIPSIBLINGS);
-      }
-      else
-      {
-        dwStyle &= ~WS_POPUP;
-        dwStyle |= (WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION |
-                WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX );
-      }
-
-      HWND top_child = GetWindow(hWndParent, GW_CHILD);
-
-      if (top_child)
-      {
-        /* Restore current maximized child */
-        if((dwStyle & WS_VISIBLE) && IsZoomed(top_child))
-        {
-           DPRINT("Restoring current maximized child %p\n", top_child);
-           SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
-           ShowWindow(top_child, SW_RESTORE);
-           SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
-        }
-      }
-
-      MDI_CalcDefaultChildPos(hWndParent, -1, mPos, 0, &id);
-
-      if (!(dwStyle & WS_POPUP)) hMenu = (HMENU)id;
-      if (dwStyle &(WS_CHILD | WS_POPUP))
-      {
-
-         if (x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
-         {
-            x = mPos[0].x;
-            y = mPos[0].y;
-         }
-         if (nWidth == CW_USEDEFAULT || nWidth == CW_USEDEFAULT16 || !nWidth)
-             nWidth = mPos[1].x;
-         if (nHeight == CW_USEDEFAULT || nHeight == CW_USEDEFAULT16 || !nHeight)
-             nHeight = mPos[1].y;
-      }
-  }
-
-  if (IS_ATOM(lpClassName))
-    {
-      RtlInitUnicodeString(&ClassName, NULL);
-      ClassName.Buffer = (LPWSTR)lpClassName;
-    }
-  else
-    {
-      RtlInitUnicodeString(&ClassName, lpClassName);
-    }
-
-  RtlInitUnicodeString(&WindowName, lpWindowName);
-
-  if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
-  {
-    wce.cbSize = sizeof(WNDCLASSEXW);
-    if(GetClassInfoExW(hInstance, lpClassName, &wce) && wce.lpszMenuName)
-    {DbgPrint("LoadingMenu 0x%p %d\n", wce.lpszMenuName, IS_INTRESOURCE(wce.lpszMenuName));
-    hMenu = LoadMenuW(hInstance, wce.lpszMenuName);DbgPrint("Loaded menu: 0x%p\n", hMenu);
-    }
-  }
-
-  Handle = NtUserCreateWindowEx(dwExStyle,
-				&ClassName,
-				&WindowName,
-				dwStyle,
-				x,
-				y,
-				nWidth,
-				nHeight,
-				hWndParent,
-				hMenu,
-				hInstance,
-				lpParam,
-				SW_SHOW,
-				TRUE);
-
-   if ((dwStyle & WS_VISIBLE) && (dwExStyle & WS_EX_MDICHILD))
-   {
-      SendMessageW(hWndParent, WM_MDIREFRESHMENU, 0, 0);
-      SetWindowPos((HWND)Handle, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW |
-                                                SWP_NOMOVE | SWP_NOSIZE);
-   }
-
-#if 0
-  DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
-#endif
-
-  return (HWND)Handle;
+   return User32CreateWindowEx(dwExStyle,
+                               (LPCSTR) lpClassName,
+                               (LPCSTR) lpWindowName,
+                               dwStyle,
+                               x,
+                               y,
+                               nWidth,
+                               nHeight,
+                               hWndParent,
+                               hMenu,
+                               hInstance,
+                               lpParam,
+                               TRUE);
 }
-
 
 /*
  * @unimplemented
