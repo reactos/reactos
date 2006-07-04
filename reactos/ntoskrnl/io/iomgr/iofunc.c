@@ -24,12 +24,6 @@
 ///
 //
 // TODO:
-// - Update to new semantics:
-//  - Lock/Unlock <= DONE
-//  - Query/Set Volume Info <= DONE
-//  - Read/Write file <= DONE
-//  - QueryDirectoryFile <= DONE
-//  - Query/Set File Info
 // - Add SEH to some places where it's missing (MDLs, etc)
 // - Add a generic Cleanup/Exception Routine
 // - Add probe/alignment checks for Query/Set routines
@@ -2014,311 +2008,311 @@ NtSetEaFile(IN HANDLE FileHandle,
  */
 NTSTATUS
 NTAPI
-NtSetInformationFile(HANDLE FileHandle,
-                     PIO_STATUS_BLOCK IoStatusBlock,
-                     PVOID FileInformation,
-                     ULONG Length,
-                     FILE_INFORMATION_CLASS FileInformationClass)
+NtSetInformationFile(IN HANDLE FileHandle,
+                     IN PIO_STATUS_BLOCK IoStatusBlock,
+                     IN PVOID FileInformation,
+                     IN ULONG Length,
+                     IN FILE_INFORMATION_CLASS FileInformationClass)
 {
-    OBJECT_HANDLE_INFORMATION HandleInformation;
-    PIO_STACK_LOCATION StackPtr;
     PFILE_OBJECT FileObject;
-    PDEVICE_OBJECT DeviceObject;
-    PIRP Irp;
-    KEVENT Event;
-    BOOLEAN LocalEvent = FALSE;
     NTSTATUS Status = STATUS_SUCCESS;
+    PIRP Irp;
+    PDEVICE_OBJECT DeviceObject;
+    PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    BOOLEAN Failed = FALSE;
+    PKEVENT Event = NULL;
+    BOOLEAN LocalEvent = FALSE;
+    PKNORMAL_ROUTINE NormalRoutine;
+    PVOID NormalContext;
+    KIRQL OldIrql;
+    IO_STATUS_BLOCK KernelIosb;
+    PVOID Queue;
+    PFILE_COMPLETION_INFORMATION CompletionInfo = FileInformation;
+    PIO_COMPLETION_CONTEXT Context;
 
+    /* Check if we're called from user mode */
     if (PreviousMode != KernelMode)
     {
+        /* Enter SEH for probing */
         _SEH_TRY
         {
-            if (IoStatusBlock)
-            {
-                ProbeForWrite(IoStatusBlock,
-                              sizeof(IO_STATUS_BLOCK),
-                              sizeof(ULONG));
-            }
+            /* Probe the I/O Status block */
+            ProbeForWrite(IoStatusBlock,
+                          sizeof(IO_STATUS_BLOCK),
+                          sizeof(ULONG));
 
+            /* Probe the information */
             if (Length) ProbeForRead(FileInformation, Length, 1);
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-        
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
+
+        /* Check if probing failed */
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
-    /* Get the file object from the file handle */
+    /* Reference the Handle */
     Status = ObReferenceObjectByHandle(FileHandle,
-                                       0,
+                                       0, // FIXME
                                        IoFileObjectType,
                                        PreviousMode,
                                        (PVOID *)&FileObject,
-                                       &HandleInformation);
+                                       NULL);
     if (!NT_SUCCESS(Status)) return Status;
-
-    /* Check information class specific access rights */
-    switch (FileInformationClass)
-    {
-        case FileBasicInformation:
-            if (!(HandleInformation.GrantedAccess & FILE_WRITE_ATTRIBUTES))
-                Failed = TRUE;
-            break;
-
-        case FileDispositionInformation:
-            if (!(HandleInformation.GrantedAccess & DELETE))
-                Failed = TRUE;
-            break;
-
-        case FilePositionInformation:
-            if (!(HandleInformation.GrantedAccess & (FILE_READ_DATA | FILE_WRITE_DATA)) ||
-                !(FileObject->Flags & FO_SYNCHRONOUS_IO))
-                Failed = TRUE;
-            break;
-
-        case FileEndOfFileInformation:
-            if (!(HandleInformation.GrantedAccess & FILE_WRITE_DATA))
-                Failed = TRUE;
-            break;
-
-        default:
-            break;
-    }
-
-    if (Failed)
-    {
-        ObDereferenceObject(FileObject);
-        return STATUS_ACCESS_DENIED;
-    }
-
-    if (FileInformationClass == FilePositionInformation)
-    {
-       if (Length < sizeof(FILE_POSITION_INFORMATION))
-       {
-          Status = STATUS_BUFFER_OVERFLOW;
-       }
-       else
-       {
-          _SEH_TRY
-          {
-             FileObject->CurrentByteOffset = ((PFILE_POSITION_INFORMATION)FileInformation)->CurrentByteOffset;
-             IoStatusBlock->Information = 0;
-             Status = IoStatusBlock->Status = STATUS_SUCCESS;
-          }
-          _SEH_HANDLE
-          {
-             Status = _SEH_GetExceptionCode();
-          }
-          _SEH_END;
-       }
-       ObDereferenceObject(FileObject);
-       return Status;
-    }
-
-    /* FIXME: Later, we can implement a lot of stuff here and avoid a driver call */
-    /* Handle IO Completion Port quickly */
-    if (FileInformationClass == FileCompletionInformation)
-    {
-        PVOID Queue;
-        PFILE_COMPLETION_INFORMATION CompletionInfo = FileInformation;
-        PIO_COMPLETION_CONTEXT Context;
-        
-        if (FileObject->Flags & FO_SYNCHRONOUS_IO || FileObject->CompletionContext != NULL)
-        {
-            Status = STATUS_INVALID_PARAMETER;
-        }
-        else
-        {
-            if (Length < sizeof(FILE_COMPLETION_INFORMATION))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-            }
-            else
-            {
-                /* Reference the Port */
-                Status = ObReferenceObjectByHandle(CompletionInfo->Port, /* FIXME - protect with SEH! */
-                                                   IO_COMPLETION_MODIFY_STATE,
-                                                   IoCompletionType,
-                                                   PreviousMode,
-                                                   (PVOID*)&Queue,
-                                                   NULL);
-                if (NT_SUCCESS(Status))
-                {
-                    /* Allocate the Context */
-                    Context = ExAllocatePoolWithTag(PagedPool,
-                                                    sizeof(IO_COMPLETION_CONTEXT),
-                                                    TAG('I', 'o', 'C', 'p'));
-
-                    if (Context != NULL)
-                    {
-                        /* Set the Data */
-                        Context->Key = CompletionInfo->Key; /* FIXME - protect with SEH! */
-                        Context->Port = Queue;
-                        
-                        if (InterlockedCompareExchangePointer(&FileObject->CompletionContext,
-                                                              Context,
-                                                              NULL) != NULL)
-                        {
-                            /* someone else set the completion port in the
-                               meanwhile, fail */
-                            ExFreePool(Context);
-                            ObDereferenceObject(Queue);
-                            Status = STATUS_INVALID_PARAMETER;
-                        }
-                    }
-                    else
-                    {
-                        /* Dereference the Port now */
-                        ObDereferenceObject(Queue);
-                        Status = STATUS_INSUFFICIENT_RESOURCES;
-                    }
-                }
-            }
-        }
-
-        /* Complete the I/O */
-        ObDereferenceObject(FileObject);
-        return Status;
-    }
 
     /* Check if this is a direct open or not */
     if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
     {
+        /* Get the device object */
         DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
     }
     else
     {
+        /* Get the device object */
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
 
-    /* Check if we should use Sync IO or not */
+    /* Check if this is a file that was opened for Synch I/O */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
-    }
-    else
-    {
-        /* Use local event */
-        KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
-        LocalEvent = TRUE;
-    }
+        /* Lock it */
+        IopLockFileObject(FileObject);
 
-    /* Allocate the IRP */
-    if (!(Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE)))
-    {
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+        /* Check if the caller just wants the position */
+        if (FileInformationClass == FilePositionInformation)
+        {
+            /* Protect write in SEH */
+            _SEH_TRY
+            {
+                /* Write the offset */
+                FileObject->CurrentByteOffset =
+                    ((PFILE_POSITION_INFORMATION)FileInformation)->
+                    CurrentByteOffset;
 
-    /* Allocate the System Buffer */
-    Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                            Length,
-                                                            TAG_SYSB);
-    if (!Irp->AssociatedIrp.SystemBuffer)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto failfreeirp;
-    }
+                /* Fill out the I/O Status Block */
+                IoStatusBlock->Information = 0;
+                Status = IoStatusBlock->Status = STATUS_SUCCESS;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
 
-    /* Copy the data inside */
-    if (PreviousMode != KernelMode)
-    {
-        _SEH_TRY
-        {
-            /* no need to probe again */
-            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-                          FileInformation,
-                          Length);
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer,
-                              TAG_SYSB);
-            Irp->AssociatedIrp.SystemBuffer = NULL;
-failfreeirp:
-            IoFreeIrp(Irp);
+            /* Release the file lock, dereference the file and return */
+            IopUnlockFileObject(FileObject);
             ObDereferenceObject(FileObject);
             return Status;
         }
     }
     else
     {
-        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-                      FileInformation,
-                      Length);
+        /* Use local event */
+        Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        KeInitializeEvent(Event, SynchronizationEvent, FALSE);
+        LocalEvent = TRUE;
     }
 
-    /* Set up the IRP */
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->RequestorMode = PreviousMode;
-    Irp->UserIosb = IoStatusBlock;
-    Irp->UserEvent = (LocalEvent) ? &Event : NULL;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    Irp->Flags = IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER;
-    Irp->Flags |= (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    /* Clear the File Object event */
+    KeClearEvent(&FileObject->Event);
 
-    /* Set up Stack Data */
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+
+    /* Set the IRP */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->RequestorMode = PreviousMode;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
+    Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
+    Irp->UserIosb = (LocalEvent) ? &KernelIosb : IoStatusBlock;
+    Irp->UserEvent = (LocalEvent) ? Event : NULL;
+    Irp->AssociatedIrp.SystemBuffer = NULL;
+    Irp->MdlAddress = NULL;
+    Irp->UserBuffer = FileInformation;
+
+    /* Set the Stack Data */
     StackPtr = IoGetNextIrpStackLocation(Irp);
     StackPtr->MajorFunction = IRP_MJ_SET_INFORMATION;
     StackPtr->FileObject = FileObject;
+
+    /* Allocate a buffer */
+    Irp->AssociatedIrp.SystemBuffer =
+        ExAllocatePoolWithTag(NonPagedPool,
+                              Length,
+                              TAG_SYSB);
+
+    /* Copy the data into it */
+    RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, FileInformation, Length);
+
+    /* Set the flags */
+    Irp->Flags = (IRP_BUFFERED_IO |
+                  IRP_DEALLOCATE_BUFFER |
+                  IRP_DEFER_IO_COMPLETION);
 
     /* Set the Parameters */
     StackPtr->Parameters.SetFile.FileInformationClass = FileInformationClass;
     StackPtr->Parameters.SetFile.Length = Length;
 
-    /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
+    /* Queue the IRP */
+    //IopQueueIrpToThread(Irp);
+
+    /* Update operation counts */
+    IopUpdateOperationCount(IopOtherTransfer);
+
+    /* FIXME: Later, we can implement a lot of stuff here and avoid a driver call */
+    /* Handle IO Completion Port quickly */
+    if (FileInformationClass == FileCompletionInformation)
     {
-        if (LocalEvent)
+        /* Check if the file object already has a completion port */
+        if ((FileObject->Flags & FO_SYNCHRONOUS_IO) ||
+            (FileObject->CompletionContext))
         {
-            KeWaitForSingleObject(&Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
-            _SEH_TRY
-            {
-                Status = IoStatusBlock->Status;
-            }
-            _SEH_HANDLE
-            {
-                Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
+            /* Fail */
+            Status = STATUS_INVALID_PARAMETER;
         }
         else
         {
-            KeWaitForSingleObject(&FileObject->Event,
-                                  Executive,
-                                  PreviousMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
-                                  NULL);
+            /* Reference the Port */
+            CompletionInfo = Irp->AssociatedIrp.SystemBuffer;
+            Status = ObReferenceObjectByHandle(CompletionInfo->Port,
+                                               IO_COMPLETION_MODIFY_STATE,
+                                               IoCompletionType,
+                                               PreviousMode,
+                                               (PVOID*)&Queue,
+                                               NULL);
+            if (NT_SUCCESS(Status))
+            {
+                /* Allocate the Context */
+                Context = ExAllocatePoolWithTag(PagedPool,
+                                                sizeof(IO_COMPLETION_CONTEXT),
+                                                IOC_TAG);
+                if (Context)
+                {
+                    /* Set the Data */
+                    Context->Key = CompletionInfo->Key;
+                    Context->Port = Queue;
+                    if (InterlockedCompareExchangePointer(&FileObject->
+                                                          CompletionContext,
+                                                          Context,
+                                                          NULL))
+                    {
+                        /*
+                         * Someone else set the completion port in the
+                         * meanwhile, so dereference the port and fail.
+                         */
+                        ExFreePool(Context);
+                        ObDereferenceObject(Queue);
+                        Status = STATUS_INVALID_PARAMETER;
+                    }
+                }
+                else
+                {
+                    /* Dereference the Port now */
+                    ObDereferenceObject(Queue);
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+            }
+        }
+
+        /* Set the IRP Status */
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+    }
+    else
+    {
+        /* Call the Driver */
+        Status = IoCallDriver(DeviceObject, Irp);
+    }
+
+    /* Check if we're waiting for the IRP to complete */
+    if (Status == STATUS_PENDING)
+    {
+        /* Check if this was async I/O */
+        if (LocalEvent)
+        {
+            /* Then to a non-alertable wait */
+            Status = KeWaitForSingleObject(&Event,
+                                           Executive,
+                                           PreviousMode,
+                                           FALSE,
+                                           NULL);
+            if (Status == STATUS_USER_APC)
+            {
+                /* Abort the request */
+                IopAbortInterruptedIrp(Event, Irp);
+            }
+
+            /* Set the final status */
+            Status = KernelIosb.Status;
+
+            /* Enter SEH to write the IOSB back */
             _SEH_TRY
             {
-                Status = FileObject->FinalStatus;
+                /* Write it back to the caller */
+                *IoStatusBlock = KernelIosb;
             }
             _SEH_HANDLE
             {
+                /* Get the exception code */
                 Status = _SEH_GetExceptionCode();
             }
             _SEH_END;
+
+            /* Free the event */
+            ExFreePool(Event);
         }
+        else
+        {
+            /* Wait for the IRP */
+            Status = KeWaitForSingleObject(&FileObject->Event,
+                                           Executive,
+                                           PreviousMode,
+                                           FileObject->Flags & FO_ALERTABLE_IO,
+                                           NULL);
+            if ((Status == STATUS_USER_APC) || (Status == STATUS_ALERTED))
+            {
+                /* Abort the request */
+                IopAbortInterruptedIrp(&FileObject->Event, Irp);
+            }
+
+            /* Set the final status */
+            Status = FileObject->FinalStatus;
+
+            /* Release the file lock */
+            IopUnlockFileObject(FileObject);
+        }
+    }
+    else
+    {
+        /* Free the event if we had one */
+        if (LocalEvent)
+        {
+            /* Clear it in the IRP for completion */
+            Irp->UserEvent = NULL;
+            ExFreePool(Event);
+        }
+
+        /* Set the caller IOSB */
+        Irp->UserIosb = IoStatusBlock;
+
+        /* The IRP wasn't completed, complete it ourselves */
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
+        IopCompleteRequest(&Irp->Tail.Apc,
+                           &NormalRoutine,
+                           &NormalContext,
+                           (PVOID*)&FileObject,
+                           &NormalContext);
+        KeLowerIrql(OldIrql);
+
+        /* Release the file object if we had locked it*/
+        if (!LocalEvent) IopUnlockFileObject(FileObject);
     }
 
     /* Return the Status */
