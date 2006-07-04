@@ -23,7 +23,6 @@
 #include "winbase.h"
 #include "wincrypt.h"
 #include "winreg.h"
-#include "wingdi.h"
 #include "winuser.h"
 #include "wine/debug.h"
 #include "wine/list.h"

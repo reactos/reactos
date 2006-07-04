@@ -294,7 +294,7 @@ BOOL WINAPI CryptQueryObject(DWORD dwObjectType, const void* pvObject,
     return FALSE;
 }
 
-BOOL WINAPI CryptVerifyMessageSignature(PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
+BOOL WINAPI CryptVerifyMessageSignature(/*PCRYPT_VERIFY_MESSAGE_PARA*/ void* pVerifyPara,
           DWORD dwSignerIndex, const BYTE* pbSignedBlob, DWORD cbSignedBlob,
           BYTE* pbDecoded, DWORD* pcbDecoded, PCCERT_CONTEXT* ppSignerCert)
 {

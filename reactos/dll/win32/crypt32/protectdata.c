@@ -843,8 +843,6 @@ BOOL WINAPI CryptProtectData(DATA_BLOB* pDataIn,
     HCRYPTKEY hKey;
     DWORD dwLength;
 
-
-
     TRACE("called\n");
 
     SetLastError(ERROR_SUCCESS);
@@ -863,7 +861,7 @@ BOOL WINAPI CryptProtectData(DATA_BLOB* pDataIn,
     /* Windows appears to create an empty szDataDescr instead of maintaining
      * a NULL */
     if (!szDataDescr)
-        szDataDescr = L'\0';
+        szDataDescr=(WCHAR[]){'\0'};
 
     /* get crypt context */
     if (!CryptAcquireContextW(&hProv,NULL,NULL,CRYPT32_PROTECTDATA_PROV,CRYPT_VERIFYCONTEXT))
