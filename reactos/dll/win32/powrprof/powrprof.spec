@@ -18,3 +18,4 @@
 @ stdcall WriteGlobalPwrPolicy (ptr)
 @ stdcall WriteProcessorPwrScheme (long ptr)
 @ stdcall WritePwrScheme (ptr str str ptr)
+@ stdcall ValidatePowerPolicies (ptr ptr)
