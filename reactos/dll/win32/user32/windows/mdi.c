@@ -883,7 +883,7 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     if (!hIcon)
         hIcon = (HICON)GetClassLongPtrW(hChild, GCLP_HICON);
     if (!hIcon)
-        hIcon = LoadImageW(0, MAKEINTRESOURCEW(IDI_WINLOGO), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+        hIcon = LoadIconW(NULL, IDI_APPLICATION);
     if (hIcon)
     {
       HDC hMemDC;
@@ -953,7 +953,7 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
      */
     memset(&menuInfo, 0, sizeof(menuInfo));
     menuInfo.cbSize = sizeof(menuInfo);
-    menuInfo.fMask  = MIIM_DATA | MIIM_TYPE;
+    menuInfo.fMask  = MIIM_DATA | MIIM_TYPE | MIIM_BITMAP;
 
     GetMenuItemInfoW(menu,
 		     0,
@@ -1099,10 +1099,9 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 	if( wndPtr->flags & WIN_ISWIN32 )
 #endif
 	{
-#define ccs ((LPCLIENTCREATESTRUCT) cs->lpCreateParams)
+            LPCLIENTCREATESTRUCT ccs = (LPCLIENTCREATESTRUCT)cs->lpCreateParams;
 	    ci->hWindowMenu	= ccs->hWindowMenu;
 	    ci->idFirstChild	= ccs->idFirstChild;
-#undef ccs
 	}
 #ifndef __REACTOS__
         else
@@ -1785,23 +1784,30 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
 
     /* set common info values */
     info.cbSize = sizeof(info);
-    info.fMask = SIF_POS | SIF_RANGE;
+    info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
 
     /* set the specific */
+    /* Note how we set nPos to 0 because we scroll the clients instead of
+     * the window, and we set nPage to 1 bigger than the clientRect because
+     * otherwise the scrollbar never disables. This causes a somewhat ugly
+     * effect though while scrolling.
+     */
     switch( scroll )
     {
 	case SB_BOTH:
 	case SB_HORZ:
 			info.nMin = childRect.left;
-			info.nMax = childRect.right - clientRect.right;
-			info.nPos = clientRect.left - childRect.left;
+			info.nMax = childRect.right;
+			info.nPos = 0;
+			info.nPage = 1 + clientRect.right - clientRect.left;
 			SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
 			if (scroll == SB_HORZ) break;
 			/* fall through */
 	case SB_VERT:
 			info.nMin = childRect.top;
-			info.nMax = childRect.bottom - clientRect.bottom;
-			info.nPos = clientRect.top - childRect.top;
+			info.nMax = childRect.bottom;
+			info.nPos = 0;
+			info.nPage = 1 + clientRect.bottom - clientRect.top;
 			SetScrollInfo(hwnd, SB_VERT, &info, TRUE);
 			break;
     }
