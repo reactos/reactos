@@ -1,7 +1,7 @@
 /*
  * MPR dll resources
  *
- * Copyright (C) 2004 Hajime Segawa
+ * Copyright (C) 2005 Mikhail Y. Zvyozdochkin
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,29 +18,29 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_JAPANESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_ENTIRENETWORK "ГlГbГgГПБ[ГNСSСћ"
+    IDS_ENTIRENETWORK "¬с€ сеть"
 }
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ГlГbГgГПБ[ГNГpГXГПБ[ГhВћУьЧЌ"
-FONT 9, "MS UI Gothic"
+CAPTION "¬ведите —етевой ѕароль"
+FONT 8, "MS Shell Dlg"
 {
- LTEXT "ГЖБ[ГUБ[ЦЉВ∆ГpГXГПБ[ГhВрУьЧЌВµВƒЙЇВ≥ВҐ:", IDC_EXPLAIN, 40, 6, 150, 15
- LTEXT "ГvГНГLГV", -1, 40, 26, 50, 10
+ LTEXT "ѕожалуйста, введите ¬аши им€ и пароль:", IDC_EXPLAIN, 40, 6, 150, 15
+ LTEXT "ѕрокси-сервер", -1, 40, 26, 50, 10
 /* LTEXT "Realm", -1, 40, 46, 50, 10 */
- LTEXT "ГЖБ[ГUЦЉ", -1, 40, 66, 50, 10
- LTEXT "ГpГXГПБ[Гh", -1, 40, 86, 50, 10
+ LTEXT "»м€ пользовател€", -1, 40, 66, 50, 10
+ LTEXT "ѕароль", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "ГpГXГПБ[ГhВрХџСґВЈВй(&S) (ИјСSВ≈ВЌВ†ВиВ№ВєВс)", IDC_SAVEPASSWORD,
+ CHECKBOX "&—охранить пароль (небезопасно)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "ГLГГГУГZГЛ", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ќтмена", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

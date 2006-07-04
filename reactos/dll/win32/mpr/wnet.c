@@ -22,6 +22,7 @@
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
+#include "winuser.h"
 #include "winnls.h"
 #include "winnetwk.h"
 #include "npapi.h"

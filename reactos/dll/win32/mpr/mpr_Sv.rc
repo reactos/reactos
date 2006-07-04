@@ -1,7 +1,7 @@
 /*
- * MPR dll resources for Turkish
+ * MPR dll Swedish resources
  *
- * Copyright (C) 2006 Fatih Aþýcý
+ * Copyright (C) 2005 Andreas Bjerkeholt
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,29 +18,29 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_ENTIRENETWORK "Tüm Að"
+    IDS_ENTIRENETWORK "Hela nätverket"
 }
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Að Parolanýzý Girin"
+CAPTION "Ange nätverkslösenord"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Lütfen kullanýcý adýnýzý ve parolanýzý girin:", IDC_EXPLAIN, 40, 6, 150, 15
+ LTEXT "Ange ditt användarnamn och lösenord:", IDC_EXPLAIN, 40, 6, 150, 15
  LTEXT "Proxy", -1, 40, 26, 50, 10
 /* LTEXT "Realm", -1, 40, 46, 50, 10 */
- LTEXT "Kullanýcý", -1, 40, 66, 50, 10
- LTEXT "Parola", -1, 40, 86, 50, 10
+ LTEXT "Användare", -1, 40, 66, 50, 10
+ LTEXT "Lösenord", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "Bu parolayý &sakla (Güvensiz)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Spara detta lösenord (Osäkert)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Tamam", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Ýptal", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Avbryt", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

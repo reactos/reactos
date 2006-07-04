@@ -554,12 +554,6 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
 NET_API_STATUS WINAPI NetUserModalsGet(LPCWSTR szServer, DWORD level, LPBYTE *pbuffer)
 {
     FIXME("(%s %ld %p) stub!\n", debugstr_w(szServer), level, pbuffer);
-
-    if (level == 2)
-    {
-        *pbuffer = NULL;
-        return NERR_Success;
-    }
     return NERR_InternalError;
 }
 
