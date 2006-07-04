@@ -115,22 +115,6 @@ VOID
 INIT_FUNCTION
 IopInitDriverImplementation(VOID)
 {
-   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-   UNICODE_STRING Name;
-
-   DPRINT("Creating Registry Object Type\n");
-  
-   /* Initialize the Driver object type  */
-   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-   RtlInitUnicodeString(&Name, L"Driver");
-   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DRIVER_OBJECT);
-   ObjectTypeInitializer.PoolType = NonPagedPool;
-   ObjectTypeInitializer.UseDefaultObject = TRUE;
-   ObjectTypeInitializer.DeleteProcedure = IopDeleteDriver;
-
-   ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDriverObjectType);
-
    InitializeListHead(&DriverReinitListHead);
    KeInitializeSpinLock(&DriverReinitListLock);
    DriverReinitTailEntry = NULL;

@@ -111,26 +111,6 @@ IopDeleteIoCompletion(PVOID ObjectBody)
     }
 }
 
-VOID
-FASTCALL
-IopInitIoCompletionImplementation(VOID)
-{
-    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-    UNICODE_STRING Name;
-
-    /* Initialize the Driver object type  */
-    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-    RtlInitUnicodeString(&Name, L"IoCompletion");
-    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KQUEUE);
-    ObjectTypeInitializer.PoolType = NonPagedPool;
-    ObjectTypeInitializer.ValidAccessMask = IO_COMPLETION_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
-    ObjectTypeInitializer.GenericMapping = IopCompletionMapping;
-    ObjectTypeInitializer.DeleteProcedure = IopDeleteIoCompletion;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoCompletionType);
-}
-
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*

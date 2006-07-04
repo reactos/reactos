@@ -772,6 +772,12 @@ IopInitializeSystemDrivers(
     VOID
 );
 
+VOID
+NTAPI
+IopDeleteDriver(
+    IN PVOID ObjectBody
+);
+
 NTSTATUS
 FASTCALL
 IopCreateDriverObject(
@@ -925,9 +931,9 @@ IopRemoveTimerFromTimerList(
 // I/O Completion Routines
 //
 VOID
-FASTCALL
-IopInitIoCompletionImplementation(
-    VOID
+NTAPI
+IopDeleteIoCompletion(
+    PVOID ObjectBody
 );
 
 //
@@ -994,6 +1000,7 @@ extern POBJECT_TYPE IoCompletionType;
 extern PDEVICE_NODE IopRootDeviceNode;
 extern ULONG IopTraceLevel;
 extern NPAGED_LOOKASIDE_LIST IopMdlLookasideList;
+extern GENERIC_MAPPING IopCompletionMapping;
 
 //
 // Inlined Functions

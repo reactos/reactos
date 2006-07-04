@@ -232,21 +232,14 @@ IoInit (VOID)
     UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\DosDevices");
     HANDLE Handle;
 
-    IopInitDriverImplementation();
-
-    DPRINT("Creating Device Object Type\n");
-
-    /* Initialize the Driver object type  */
+    /* Initialize default settings */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-    RtlInitUnicodeString(&Name, L"Device");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEVICE_OBJECT);
     ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
     ObjectTypeInitializer.ValidAccessMask = FILE_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.GenericMapping = IopFileMapping;
-    ObjectTypeInitializer.ParseProcedure = IopParseDevice;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDeviceObjectType);
 
     /* Do the Adapter Type */
     RtlInitUnicodeString(&Name, L"Adapter");
@@ -257,10 +250,37 @@ IoInit (VOID)
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CONTROLLER_OBJECT);
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoControllerObjectType);
 
+    /* Do the Device Type */
+    RtlInitUnicodeString(&Name, L"Device");
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEVICE_OBJECT);
+    ObjectTypeInitializer.ParseProcedure = IopParseDevice;
+    ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDeviceObjectType);
+
+    /* Initialize the Driver object type */
+    RtlInitUnicodeString(&Name, L"Driver");
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DRIVER_OBJECT);
+    ObjectTypeInitializer.DeleteProcedure = IopDeleteDriver;
+    ObjectTypeInitializer.ParseProcedure = NULL;
+    ObjectTypeInitializer.SecurityProcedure = NULL;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoDriverObjectType);
+
+    /* Initialize the I/O Completion object type */
+    RtlInitUnicodeString(&Name, L"IoCompletion");
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(KQUEUE);
+    ObjectTypeInitializer.ValidAccessMask = IO_COMPLETION_ALL_ACCESS;
+    ObjectTypeInitializer.InvalidAttributes |= OBJ_PERMANENT;
+    ObjectTypeInitializer.GenericMapping = IopCompletionMapping;
+    ObjectTypeInitializer.DeleteProcedure = IopDeleteIoCompletion;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &IoCompletionType);
+
     /* Initialize the File object type  */
     RtlInitUnicodeString(&Name, L"File");
-    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(FILE_OBJECT);
+    ObjectTypeInitializer.InvalidAttributes |= OBJ_EXCLUSIVE;
+    ObjectTypeInitializer.MaintainHandleCount = TRUE;
+    ObjectTypeInitializer.ValidAccessMask = FILE_ALL_ACCESS;
+    ObjectTypeInitializer.GenericMapping = IopFileMapping;
     ObjectTypeInitializer.CloseProcedure = IopCloseFile;
     ObjectTypeInitializer.DeleteProcedure = IopDeleteFile;
     ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
@@ -341,6 +361,7 @@ IoInit (VOID)
   /*
    * Initialize remaining subsubsystem
    */
+  IopInitDriverImplementation();
   IoInitCancelHandling();
   IoInitFileSystemImplementation();
   IoInitVpbImplementation();
@@ -348,7 +369,6 @@ IoInit (VOID)
   IopInitPnpNotificationImplementation();
   IopInitErrorLog();
   IopInitTimerImplementation();
-  IopInitIoCompletionImplementation();
   IopInitLookasideLists();
 
   /*
