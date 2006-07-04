@@ -1,4 +1,5 @@
-/*
+/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
+ *
  * Czech resources or oledlg
  * Copyright 2003 Ulrich Czekalla for CodeWeavers
  * Copyright 2004 David Kredba
@@ -20,9 +21,11 @@
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
+/* Czech strings in CP1250 */
+
 UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Vlo¾it objekt"
+CAPTION "Vložit objekt"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
@@ -49,8 +52,8 @@ END
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_RESULTOBJDESC	"Vlo¾en nový %s objekt do Va¹eho dokumentu"
-  IDS_RESULTFILEOBJDESC	"Vlo¾en obsah souboru jako objekt do Va¹eho dokumentu, tak¾e ho mù¾ete upravit programem, kterým byl vytvoøen."
+  IDS_RESULTOBJDESC	"Vložen nový %s objekt do Vašeho dokumentu"
+  IDS_RESULTFILEOBJDESC	"Vložen obsah souboru jako objekt do Vašeho dokumentu, takže ho mùžete upravit programem, kterým byl vytvoøen."
   IDS_BROWSE            "Procházet"
   IDS_NOTOLEMOD         "Soubor není platným OLE modulem. Nelze registrovat OLE propojení."
   IDS_NOTOLEMODCAPTION  "Pøidat propojení"
