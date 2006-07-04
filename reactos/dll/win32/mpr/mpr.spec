@@ -40,12 +40,12 @@
 @ stdcall NPSNotifyRegisterA(long ptr)
 @ stdcall NPSSetCustomTextA(str)
 @ stdcall NPSSetExtendedErrorA(long str)
-@ stub PwdChangePasswordA
-@ stub PwdChangePasswordW
-@ stub PwdGetPasswordStatusA
-@ stub PwdGetPasswordStatusW
-@ stub PwdSetPasswordStatusA
-@ stub PwdSetPasswordStatusW
+@ stdcall PwdChangePasswordA(str ptr long ptr)
+@ stdcall PwdChangePasswordW(wstr ptr long ptr)
+@ stdcall PwdGetPasswordStatusA(str long ptr)
+@ stdcall PwdGetPasswordStatusW(wstr long ptr)
+@ stdcall PwdSetPasswordStatusA(str long long)
+@ stdcall PwdSetPasswordStatusW(wstr long long)
 @ stdcall WNetAddConnection2A(ptr str str long)
 @ stdcall WNetAddConnection2W(ptr wstr wstr long)
 @ stdcall WNetAddConnection3A(long ptr str str long)
