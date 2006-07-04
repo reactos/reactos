@@ -620,6 +620,23 @@ IopReferenceDeviceObject(
 );
 
 //
+// IRP Routines
+//
+NTSTATUS
+NTAPI
+IopCleanupFailedIrp(
+    IN PFILE_OBJECT FileObject,
+    IN PKEVENT EventObject
+);
+
+VOID
+NTAPI
+IopAbortInterruptedIrp(
+    IN PKEVENT EventObject,
+    IN PIRP Irp
+);
+
+//
 // Shutdown routines
 //
 VOID

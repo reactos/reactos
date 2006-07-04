@@ -163,8 +163,8 @@ IopParseFile(IN PVOID ParseObject,
 }
 
 VOID
-STDCALL
-IopDeleteFile(PVOID ObjectBody)
+NTAPI
+IopDeleteFile(IN PVOID ObjectBody)
 {
     PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
     PIRP Irp;
@@ -173,18 +173,26 @@ IopDeleteFile(PVOID ObjectBody)
     KEVENT Event;
     PDEVICE_OBJECT DeviceObject;
 
-    DPRINT("IopDeleteFile()\n");
-
+    /* Check if the file has a device object */
     if (FileObject->DeviceObject)
     {
         /* Check if this is a direct open or not */
         if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
         {
+            /* Get the attached device */
             DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
         }
         else
         {
+            /* Use the file object's device object */
             DeviceObject = IoGetRelatedDeviceObject(FileObject);
+        }
+
+        /* Check if this file was opened for Synch I/O */
+        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+        {
+            /* Lock it */
+            IopLockFileObject(FileObject);
         }
 
         /* Clear and set up Events */
@@ -193,6 +201,7 @@ IopDeleteFile(PVOID ObjectBody)
 
         /* Allocate an IRP */
         Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+        if (!Irp) return;
 
         /* Set it up */
         Irp->UserEvent = &Event;
@@ -207,104 +216,129 @@ IopDeleteFile(PVOID ObjectBody)
         StackPtr->DeviceObject = DeviceObject;
         StackPtr->FileObject = FileObject;
 
+        /* Queue the IRP */
+        //IopQueueIrpToThread(Irp);
+
         /* Call the FS Driver */
         Status = IoCallDriver(DeviceObject, Irp);
-
-        /* Wait for completion */
         if (Status == STATUS_PENDING)
         {
+            /* Wait for completion */
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
+
+        /* Free the IRP */
         IoFreeIrp(Irp);
 
-    }
+        /* Clear the file name */
+        if (FileObject->FileName.Buffer)
+        {
+           ExFreePool(FileObject->FileName.Buffer);
+           FileObject->FileName.Buffer = NULL;
+        }
 
-    /* Clear the file name */
-    if (FileObject->FileName.Buffer)
-    {
-       ExFreePool(FileObject->FileName.Buffer);
-       FileObject->FileName.Buffer = NULL;
-    }
-
-    /* Free the completion context */
-    if (FileObject->CompletionContext)
-    {
-       ObDereferenceObject(FileObject->CompletionContext->Port);
-       ExFreePool(FileObject->CompletionContext);
+        /* Check if the FO had a completion port */
+        if (FileObject->CompletionContext)
+        {
+            /* Free it */
+            ObDereferenceObject(FileObject->CompletionContext->Port);
+            ExFreePool(FileObject->CompletionContext);
+        }
     }
 }
 
 NTSTATUS
-STDCALL
-IopSecurityFile(PVOID ObjectBody,
-                SECURITY_OPERATION_CODE OperationCode,
-                SECURITY_INFORMATION SecurityInformation,
-                PSECURITY_DESCRIPTOR SecurityDescriptor,
-                PULONG BufferLength,
-                PSECURITY_DESCRIPTOR *OldSecurityDescriptor,    
-                POOL_TYPE PoolType,
-                PGENERIC_MAPPING GenericMapping)
+NTAPI
+IopSecurityFile(IN PVOID ObjectBody,
+                IN SECURITY_OPERATION_CODE OperationCode,
+                IN SECURITY_INFORMATION SecurityInformation,
+                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                IN OUT PULONG BufferLength,
+                IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+                IN POOL_TYPE PoolType,
+                IN OUT PGENERIC_MAPPING GenericMapping)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION StackPtr;
     PFILE_OBJECT FileObject;
     PDEVICE_OBJECT DeviceObject;
-    ULONG MajorFunction;
     PIRP Irp;
     BOOLEAN LocalEvent = FALSE;
     KEVENT Event;
     NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
 
-    DPRINT("IopSecurityFile() called\n");
-
-    FileObject = (PFILE_OBJECT)ObjectBody;
-
-    if (OperationCode == QuerySecurityDescriptor)
+    /* Check if this is a device or file */
+    if (((PFILE_OBJECT)ObjectBody)->Type == IO_TYPE_DEVICE)
     {
-        MajorFunction = IRP_MJ_QUERY_SECURITY;
-        DPRINT("Query security descriptor\n");
-    }
-    else if (OperationCode == DeleteSecurityDescriptor)
-    {
-        DPRINT("Delete\n");
-        return STATUS_SUCCESS;
-    }
-    else if (OperationCode == AssignSecurityDescriptor)
-    {
-        /* If this is a direct open, we can assign it */
-        if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
-        {
-            /* Get the Device Object */
-            DPRINT("here\n");
-            DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
-
-            /* Assign the Security Descriptor */
-            DeviceObject->SecurityDescriptor = SecurityDescriptor;
-        }
-        return STATUS_SUCCESS;
+        /* It's a device */
+        DeviceObject = (PDEVICE_OBJECT)ObjectBody;
+        FileObject = NULL;
     }
     else
     {
-        MajorFunction = IRP_MJ_SET_SECURITY;
-        DPRINT("Set security descriptor\n");
+        /* It's a file */
+        FileObject = (PFILE_OBJECT)ObjectBody;
 
-        /* If this is a direct open, we can set it */
+        /* Check if this is a direct open */
         if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
         {
-            DPRINT1("Set SD unimplemented for Devices\n");
-            return STATUS_SUCCESS;
+            /* Get the Device Object */
+            DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+        }
+        else
+        {
+            /* Otherwise, use the direct device*/
+            DeviceObject = FileObject->DeviceObject;
         }
     }
 
-    /* Get the Device Object */
-    DPRINT1("FileObject: %p\n", FileObject);
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    /* Check if the request was for a device object */
+    if (!(FileObject) || (FileObject->Flags & FO_DIRECT_DEVICE_OPEN))
+    {
+        /* Check what kind of request this was */
+        if (OperationCode == QuerySecurityDescriptor)
+        {
+            DPRINT1("FIXME: Device Query security descriptor UNHANDLED\n");
+            return STATUS_SUCCESS;
+        }
+        else if (OperationCode == DeleteSecurityDescriptor)
+        {
+            /* Simply return success */
+            return STATUS_SUCCESS;
+        }
+        else if (OperationCode == AssignSecurityDescriptor)
+        {
+            /* Make absolutely sure this is a device object */
+            if (!(FileObject) || !(FileObject->Flags & FO_STREAM_FILE))
+            {
+                /* Assign the Security Descriptor */
+                DeviceObject->SecurityDescriptor = SecurityDescriptor;
+            }
+
+            /* Return success */
+            return STATUS_SUCCESS;
+        }
+        else
+        {
+            DPRINT1("FIXME: Set SD unimplemented for Devices\n");
+            return STATUS_SUCCESS;
+        }
+    }
+    else if (OperationCode == DeleteSecurityDescriptor)
+    {
+        /* Same as for devices, do nothing */
+        return STATUS_SUCCESS;
+    }
+
+    /* At this point, we know we're a file. Reference it */
+    ObReferenceObject(FileObject);
 
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
-        /* Use File Object event */
-        KeClearEvent(&FileObject->Event);
+        /* Lock the file object */
+        IopLockFileObject(FileObject);
     }
     else
     {
@@ -313,65 +347,95 @@ IopSecurityFile(PVOID ObjectBody,
         LocalEvent = TRUE;
     }
 
+    /* Clear the File Object event */
+    KeClearEvent(&FileObject->Event);
+
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->RequestorMode = ExGetPreviousMode();
     Irp->UserIosb = &IoStatusBlock;
     Irp->UserEvent = (LocalEvent) ? &Event : NULL;
     Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
 
     /* Set Stack Parameters */
     StackPtr = IoGetNextIrpStackLocation(Irp);
-    StackPtr->MajorFunction = MajorFunction;
     StackPtr->FileObject = FileObject;
 
-    /* Set Parameters */
+    /* Check if this is a query or set */
     if (OperationCode == QuerySecurityDescriptor)
     {
-        StackPtr->Parameters.QuerySecurity.SecurityInformation = SecurityInformation;
+        /* Set the major function and parameters */
+        StackPtr->MajorFunction = IRP_MJ_QUERY_SECURITY;
+        StackPtr->Parameters.QuerySecurity.SecurityInformation =
+            SecurityInformation;
         StackPtr->Parameters.QuerySecurity.Length = *BufferLength;
         Irp->UserBuffer = SecurityDescriptor;
     }
     else
     {
-        StackPtr->Parameters.SetSecurity.SecurityInformation = SecurityInformation;
-        StackPtr->Parameters.SetSecurity.SecurityDescriptor = SecurityDescriptor;
+        /* Set the major function and parameters for a set */
+        StackPtr->MajorFunction = IRP_MJ_SET_SECURITY;
+        StackPtr->Parameters.SetSecurity.SecurityInformation =
+            SecurityInformation;
+        StackPtr->Parameters.SetSecurity.SecurityDescriptor =
+            SecurityDescriptor;
     }
 
-    ObReferenceObject(FileObject);
+    /* Queue the IRP */
+    //IopQueueIrpToThread(Irp);
+
+    /* Update operation counts */
+    IopUpdateOperationCount(IopOtherTransfer);
 
     /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);
 
-    if (Status == STATUS_PENDING)
+    /* Check if this was async I/O */
+    if (LocalEvent)
     {
-        if (LocalEvent)
+        /* Check if the IRP is pending completion */
+        if (Status == STATUS_PENDING)
         {
+            /* Wait on the local event */
             KeWaitForSingleObject(&Event,
                                   Executive,
                                   KernelMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
+                                  FALSE,
                                   NULL);
             Status = IoStatusBlock.Status;
         }
-        else
+    }
+    else
+    {
+        /* Check if the IRP is pending completion */
+        if (Status == STATUS_PENDING)
         {
+            /* Wait on the file obejct */
             KeWaitForSingleObject(&FileObject->Event,
                                   Executive,
                                   KernelMode,
-                                  FileObject->Flags & FO_ALERTABLE_IO,
+                                  FALSE,
                                   NULL);
             Status = FileObject->FinalStatus;
         }
+
+        /* Release the lock */
+        IopUnlockFileObject(FileObject);
     }
 
     /* This Driver doesn't implement Security, so try to give it a default */
     if (Status == STATUS_INVALID_DEVICE_REQUEST)
     {
+        /* Was this a query? */
         if (OperationCode == QuerySecurityDescriptor)
         {
             /* Set a World Security Descriptor */
@@ -387,6 +451,9 @@ IopSecurityFile(PVOID ObjectBody,
     }
     else if (OperationCode == QuerySecurityDescriptor)
     {
+        /* Callers usually expect the normalized form */
+        if (Status == STATUS_BUFFER_OVERFLOW) Status = STATUS_BUFFER_TOO_SMALL;
+
         /* Return length */
         *BufferLength = IoStatusBlock.Information;
     }

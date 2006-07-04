@@ -40,6 +40,72 @@ IopAbortIrpKernelApc(IN PKAPC Apc)
     IoFreeIrp(CONTAINING_RECORD(Apc, IRP, Tail.Apc));
 }
 
+NTSTATUS
+NTAPI
+IopCleanupFailedIrp(IN PFILE_OBJECT FileObject,
+                    IN PKEVENT EventObject)
+{
+    PAGED_CODE();
+
+    /* Dereference the event */
+    if (EventObject) ObDereferenceObject(EventObject);
+
+    /* If this was a file opened for synch I/O, then unlock it */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO) IopUnlockFileObject(FileObject);
+
+    /* Now dereference it and return */
+    ObDereferenceObject(FileObject);
+    return STATUS_INSUFFICIENT_RESOURCES;
+}
+
+VOID
+NTAPI
+IopAbortInterruptedIrp(IN PKEVENT EventObject,
+                       IN PIRP Irp)
+{
+    KIRQL OldIrql;
+    BOOLEAN CancelResult;
+    LARGE_INTEGER Wait;
+    PAGED_CODE();
+
+    /* Raise IRQL to APC */
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
+
+    /* Check if nobody completed it yet */
+    if (!KeReadStateEvent(EventObject))
+    {
+        /* First, cancel it */
+        CancelResult = IoCancelIrp(Irp);
+        KeLowerIrql(OldIrql);
+
+        /* Check if we cancelled it */
+        if (CancelResult)
+        {
+            /* Wait for the IRP to be cancelled */
+            Wait.QuadPart = -100000;
+            while (!KeReadStateEvent(EventObject))
+            {
+                /* Delay indefintely */
+                KeDelayExecutionThread(KernelMode, FALSE, &Wait);
+            }
+        }
+        else
+        {
+            /* No cancellation done, so wait for the I/O system to kill it */
+            KeWaitForSingleObject(EventObject,
+                                  Executive,
+                                  KernelMode,
+                                  FALSE,
+                                  NULL);
+        }
+    }
+    else
+    {
+        /* We got preempted, so give up */
+        KeLowerIrql(OldIrql);
+    }
+}
+
 VOID
 NTAPI
 IopRemoveThreadIrp(VOID)
