@@ -9,9 +9,6 @@
 
 #include "console.h"
 
-
-ConsoleInfo g_ConsoleInfo;
-
 BOOLEAN InitializeOptionsDialog();
 
 INT_PTR 
@@ -23,11 +20,128 @@ OptionsProc(
   LPARAM lParam
 )
 {
+	PConsoleInfo pConInfo;
+	LRESULT lResult;
+	HWND hDlgCtrl;
+    LPPSHNOTIFY lppsn;
+
+	pConInfo = (PConsoleInfo) GetWindowLongPtr(GetParent(hwndDlg), DWLP_USER);
+
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
+		{
 			return InitializeOptionsDialog(hwndDlg);
+		}
+		case WM_NOTIFY:
+		{
+			if (!pConInfo)
+			{
+				break;
+			}
+			lppsn = (LPPSHNOTIFY) lParam; 
+            if (lppsn->hdr.code == UDN_DELTAPOS)
+            {
+				hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_BUFFER_SIZE);
+				pConInfo->HistoryBufferSize = LOWORD(SendMessage(hDlgCtrl, UDM_GETPOS, 0, 0));
 
+				hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_NUM_BUFFER);
+				pConInfo->NumberOfHistoryBuffers = LOWORD(SendMessage(hDlgCtrl, UDM_GETPOS, 0, 0));
+				//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+			}
+			break;
+		}
+		case WM_COMMAND:
+		{
+			if (!pConInfo)
+			{
+				break;
+			}
+			switch(LOWORD(wParam))
+			{
+				case IDC_RADIO_SMALL_CURSOR:
+				{
+					pConInfo->CursorSize = 0x0;
+					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					break;
+				}
+				case IDC_RADIO_MEDIUM_CURSOR:
+				{
+					pConInfo->CursorSize = 0x32;
+					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					break;
+				}
+				case IDC_RADIO_LARGE_CURSOR:
+				{				
+					pConInfo->CursorSize = 0x64;
+					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					break;
+				}
+				case IDC_RADIO_DISPLAY_WINDOW:
+				{
+					pConInfo->FullScreen = FALSE;
+					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					break;
+				}
+				case IDC_RADIO_DISPLAY_FULL:
+				{
+					pConInfo->FullScreen = TRUE;
+					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					break;
+				}
+				case IDC_CHECK_QUICK_EDIT:
+				{
+                    lResult = SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+                    if (lResult == BST_CHECKED)
+                    {
+						pConInfo->QuickEdit = FALSE;
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                    }
+                    else if (lResult == BST_UNCHECKED)
+                    {
+						pConInfo->QuickEdit = TRUE;
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                    }
+					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					break;
+				}
+				case IDC_CHECK_INSERT_MODE:
+				{
+                    lResult = SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+                    if (lResult == BST_CHECKED)
+                    {
+						pConInfo->InsertMode = FALSE;
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                    }
+                    else if (lResult == BST_UNCHECKED)
+                    {
+						pConInfo->InsertMode = TRUE;
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                    }
+					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					break;
+				}
+				case IDC_CHECK_DISCARD_DUPLICATES:
+				{
+                   lResult = SendMessage((HWND)lParam, BM_GETCHECK, (WPARAM)0, (LPARAM)0);
+                    if (lResult == BST_CHECKED)
+                    {
+						pConInfo->HistoryNoDup = FALSE;
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                    }
+                    else if (lResult == BST_UNCHECKED)
+                    {
+						pConInfo->HistoryNoDup = TRUE;
+                        SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                    }
+					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					break;
+				}
+				default:
+					break;
+			}
+			break;
+		}
 		default:
 			break;
 	}
@@ -35,7 +149,7 @@ OptionsProc(
 	return FALSE;
 }
 
-BOOL InitializeOptionsFromReg(TCHAR * Path)
+BOOL InitializeOptionsFromReg(TCHAR * Path, PConsoleInfo pConInfo)
 {
   HKEY hKey;
   HKEY hSubKey;
@@ -66,37 +180,37 @@ BOOL InitializeOptionsFromReg(TCHAR * Path)
 	 if ( RegEnumValue(hSubKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (BYTE*)&Value, &dwValue) != ERROR_SUCCESS)
 		break;
 
-	 if ( !_tcscmp(szValueName, _T("CursorSize")) )
-	 {
+	if ( !_tcscmp(szValueName, _T("CursorSize")) )
+	{
 		if ( Value == 0x32)
-			g_ConsoleInfo.CursorSize = Value;
+			pConInfo->CursorSize = Value;
 		else if ( Value == 0x64 )
-			g_ConsoleInfo.CursorSize = Value;
+			pConInfo->CursorSize = Value;
 	}
 	else if ( !_tcscmp(szValueName, _T("NumberOfHistoryBuffers")) )
 	{
-			g_ConsoleInfo.NumberOfHistoryBuffers = Value;
-	 }
-	 else if ( !_tcscmp(szValueName, _T("HistoryBufferSize")) )
-	 {
-			g_ConsoleInfo.HistoryBufferSize = Value;
-	 }
-	 else if ( !_tcscmp(szValueName, _T("HistoryNoDup")) )
-	 {
-		g_ConsoleInfo.HistoryNoDup = Value;
-	 }
-	 else if ( !_tcscmp(szValueName, _T("FullScreen")) )
-	 {
-		g_ConsoleInfo.FullScreen = Value;
-	 }
-	 else if ( !_tcscmp(szValueName, _T("QuickEdit")) )
-	 {
-		g_ConsoleInfo.QuickEdit = Value;
-	 }
-	 else if ( !_tcscmp(szValueName, _T("InsertMode")) )
-	 {
-		g_ConsoleInfo.InsertMode = Value;
-	 }
+		pConInfo->NumberOfHistoryBuffers = Value;
+	}
+	else if ( !_tcscmp(szValueName, _T("HistoryBufferSize")) )
+	{
+		pConInfo->HistoryBufferSize = Value;
+	}
+	else if ( !_tcscmp(szValueName, _T("HistoryNoDup")) )
+	{
+		pConInfo->HistoryNoDup = Value;
+	}
+	else if ( !_tcscmp(szValueName, _T("FullScreen")) )
+	{
+		pConInfo->FullScreen = Value;
+	}
+	else if ( !_tcscmp(szValueName, _T("QuickEdit")) )
+	{
+		pConInfo->QuickEdit = Value;
+	}
+	else if ( !_tcscmp(szValueName, _T("InsertMode")) )
+	{
+		pConInfo->InsertMode = Value;
+	}
   }
 
   RegCloseKey(hKey);
@@ -105,13 +219,13 @@ BOOL InitializeOptionsFromReg(TCHAR * Path)
 }
 
 void 
-UpdateDialogElements(HWND hwndDlg)
+UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 {
   HWND hDlgCtrl;
   TCHAR szBuffer[MAX_PATH];
 
 	/* update cursor size */
-	if ( g_ConsoleInfo.CursorSize == 0 )
+	if ( pConInfo->CursorSize == 0 )
 	{
 		/* small cursor */
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_SMALL_CURSOR);
@@ -122,7 +236,7 @@ UpdateDialogElements(HWND hwndDlg)
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 	}
-	else if ( g_ConsoleInfo.CursorSize == 0x32 )
+	else if ( pConInfo->CursorSize == 0x32 )
 	{
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_MEDIUM_CURSOR);
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -132,7 +246,7 @@ UpdateDialogElements(HWND hwndDlg)
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 	}
-	else if ( g_ConsoleInfo.CursorSize == 0x64 )
+	else if ( pConInfo->CursorSize == 0x64 )
 	{
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -144,24 +258,30 @@ UpdateDialogElements(HWND hwndDlg)
 	}
 
 	/* update num buffers */
+	hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_NUM_BUFFER);
+	SendMessage(hDlgCtrl, UDM_SETRANGE, 0, MAKELONG((short)999, (short)1));
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_NUM_BUFFER);
-	_stprintf(szBuffer, _T("%d"), g_ConsoleInfo.NumberOfHistoryBuffers);
+	_stprintf(szBuffer, _T("%d"), pConInfo->NumberOfHistoryBuffers);
 	SendMessage(hDlgCtrl, WM_SETTEXT, 0, (LPARAM)szBuffer);
 
 	/* update buffer size */
+	hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_BUFFER_SIZE);
+	SendMessage(hDlgCtrl, UDM_SETRANGE, 0, MAKELONG((short)999, (short)1));
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_BUFFER_SIZE);
-	_stprintf(szBuffer, _T("%d"), g_ConsoleInfo.HistoryBufferSize);
+	_stprintf(szBuffer, _T("%d"), pConInfo->HistoryBufferSize);
 	SendMessage(hDlgCtrl, WM_SETTEXT, 0, (LPARAM)szBuffer);
+    
+
 
 	/* update discard duplicates */
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_DISCARD_DUPLICATES);
-	if ( g_ConsoleInfo.HistoryNoDup )
+	if ( pConInfo->HistoryNoDup )
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 	else
 		SendMessage(hDlgCtrl, BM_SETCHECK, (LPARAM)BST_UNCHECKED, 0);
 
 	/* update full/window screen */
-	if ( g_ConsoleInfo.FullScreen )
+	if ( pConInfo->FullScreen )
 	{
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_DISPLAY_FULL);
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -180,14 +300,14 @@ UpdateDialogElements(HWND hwndDlg)
 
 	/* update quick edit */
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_QUICK_EDIT);
-	if ( g_ConsoleInfo.QuickEdit )
+	if ( pConInfo->QuickEdit )
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 	else
 		SendMessage(hDlgCtrl, BM_SETCHECK, (LPARAM)BST_UNCHECKED, 0);
 
 	/* update insert mode */
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_CHECK_INSERT_MODE);
-	if ( g_ConsoleInfo.InsertMode )
+	if ( pConInfo->InsertMode )
 		SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 	else
 		SendMessage(hDlgCtrl, BM_SETCHECK, (LPARAM)BST_UNCHECKED, 0);
@@ -196,52 +316,68 @@ UpdateDialogElements(HWND hwndDlg)
 
 BOOLEAN InitializeOptionsDialog(HWND hwndDlg)
 {
-	STARTUPINFO StartupInfo;
-	TCHAR szBuffer[MAX_PATH];
-	GetStartupInfo(&StartupInfo);
-	TCHAR * ptr;
-	DWORD length;
+	PConsoleInfo pConInfo = (PConsoleInfo) GetWindowLongPtr(GetParent(hwndDlg), DWLP_USER);
 
-	if ( StartupInfo.lpTitle )
+	if (!pConInfo)
+		return FALSE;
+
+	InitializeOptionsFromReg(pConInfo->szProcessName, pConInfo);
+	UpdateDialogElements(hwndDlg, pConInfo);
+	return TRUE;
+}
+
+BOOL WriteConsoleOptions(PConsoleInfo pConInfo)
+{
+	HKEY hKey;
+	HKEY hSubKey;
+
+	if ( RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hKey) != ERROR_SUCCESS )
+	 return FALSE;
+
+
+	if ( RegOpenKeyEx(hKey, pConInfo->szProcessName, 0, KEY_READ | KEY_SET_VALUE, &hSubKey) != ERROR_SUCCESS)
 	{
-		if ( !GetWindowsDirectory(szBuffer, MAX_PATH) )
-			return FALSE;
-
-		length = _tcslen(szBuffer);
-		if ( !_tcsncmp(szBuffer, StartupInfo.lpTitle, length) )
-		{
-			// Windows XP SP2 uses unexpanded environment vars to get path
-			// i.e. c:\windows\system32\cmd.exe
-			// becomes
-			// %SystemRoot%_system32_cmd.exe		
-
-			_tcscpy(szBuffer, _T("\%SystemRoot\%"));
-			_tcsncpy(&szBuffer[12], &StartupInfo.lpTitle[length], _tcslen(StartupInfo.lpTitle) - length + 1);
-			
-			ptr = &szBuffer[12];
-			while( (ptr = _tcsstr(ptr, _T("\\"))) )
-				ptr[0] = _T('_');
-		}
-
-
-		if ( InitializeOptionsFromReg(szBuffer) )
-		{
-			UpdateDialogElements(hwndDlg);
-			return TRUE;
-		}
-		UpdateDialogElements(hwndDlg);
-
+		RegCloseKey(hKey);
+		return FALSE;
 	}
+
+	if ( pConInfo->CursorSize  == 0x0)
+		RegDeleteKey(hSubKey, _T("CursorSize"));
 	else
-	{
+		RegSetValueEx(hSubKey, _T("CursorSize"), 0, REG_DWORD, (const BYTE *)&pConInfo->CursorSize, sizeof(DWORD));
 
-		if ( InitializeOptionsFromReg( _T("Console")) )
-		{
-			UpdateDialogElements(hwndDlg);
-			return TRUE;
+	if ( pConInfo->NumberOfHistoryBuffers == 0x5 )
+		RegDeleteKey(hSubKey, _T("NumberOfHistoryBuffers"));
+	else
+		RegSetValueEx(hSubKey, _T("NumberOfHistoryBuffers"), 0, REG_DWORD, (const BYTE *)&pConInfo->NumberOfHistoryBuffers, sizeof(DWORD));
 
-		}
-	}
+	if ( pConInfo->HistoryBufferSize == 50 )
+		RegDeleteKey(hSubKey, _T("HistoryBufferSize"));
+	else
+		RegSetValueEx(hSubKey, _T("HistoryBufferSize"), 0, REG_DWORD, (const BYTE *)&pConInfo->HistoryBufferSize, sizeof(DWORD));
+
+	if ( pConInfo->FullScreen == FALSE )
+		RegDeleteKey(hSubKey, _T("FullScreen"));
+	else
+		RegSetValueEx(hSubKey, _T("FullScreen"), 0, REG_DWORD, (const BYTE *)&pConInfo->FullScreen, sizeof(DWORD));
+
+	if ( pConInfo->QuickEdit == FALSE)
+		RegDeleteKey(hSubKey, _T("QuickEdit"));
+	else
+		RegSetValueEx(hSubKey, _T("QuickEdit"), 0, REG_DWORD, (const BYTE *)&pConInfo->QuickEdit, sizeof(DWORD));
+
+	if ( pConInfo->InsertMode == TRUE )
+		RegDeleteKey(hSubKey, _T("InsertMode"));
+	else
+		RegSetValueEx(hSubKey, _T("InsertMode"), 0, REG_DWORD, (const BYTE *)&pConInfo->InsertMode, sizeof(DWORD));
+
+	if ( pConInfo->HistoryNoDup == FALSE )
+		RegDeleteKey(hSubKey, _T("HistoryNoDup"));
+	else
+		RegSetValueEx(hSubKey, _T("HistoryNoDup"), 0, REG_DWORD, (const BYTE *)&pConInfo->HistoryNoDup, sizeof(DWORD));
+
+	RegCloseKey(hKey);
+	RegCloseKey(hSubKey);
 
 	return TRUE;
 }

@@ -20,7 +20,7 @@ typedef struct
 
 typedef struct TAGConsoleInfo
 {
-  LPSTR szProcessName;
+  TCHAR szProcessName[MAX_PATH];
   DWORD CursorSize;
   DWORD NumberOfHistoryBuffers;
   DWORD HistoryBufferSize;
@@ -31,6 +31,7 @@ typedef struct TAGConsoleInfo
 
 } ConsoleInfo, *PConsoleInfo;
 
-extern ConsoleInfo g_ConsoleInfo;
+BOOL WriteConsoleOptions(PConsoleInfo pConInfo);
+BOOL InitConsoleInfo(HWND hwnd);
 
 #endif /* CONSOLE_H__ */

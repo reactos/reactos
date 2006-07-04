@@ -18,6 +18,10 @@ LayoutProc(
   LPARAM lParam
 )
 {
+	UNREFERENCED_PARAMETER(hwndDlg)
+	UNREFERENCED_PARAMETER(wParam)
+	UNREFERENCED_PARAMETER(lParam)
+
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:

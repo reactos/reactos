@@ -36,6 +36,129 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
   psp->pfnDlgProc = DlgProc;
 }
 
+BOOL
+InitConsoleInfo(HWND hwnd)
+{
+	PConsoleInfo pConInfo;
+	STARTUPINFO StartupInfo;
+	TCHAR * ptr;
+	SIZE_T length;
+
+	pConInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ConsoleInfo));
+	if (!pConInfo)
+	  return FALSE;
+
+	/* initialize struct */
+	pConInfo->InsertMode = TRUE;
+	pConInfo->HistoryBufferSize = 50;
+	pConInfo->NumberOfHistoryBuffers = 5;
+
+	GetStartupInfo(&StartupInfo);
+
+	if ( StartupInfo.lpTitle )
+	{
+		if ( _tcslen(StartupInfo.lpTitle) )
+		{
+			if ( !GetWindowsDirectory(pConInfo->szProcessName, MAX_PATH) )
+			{
+				HeapFree(GetProcessHeap(), 0, pConInfo);
+				return FALSE;
+			}
+			length = _tcslen(pConInfo->szProcessName);
+			if ( !_tcsncmp(pConInfo->szProcessName, StartupInfo.lpTitle, length) )
+			{
+				// Windows XP SP2 uses unexpanded environment vars to get path
+				// i.e. c:\windows\system32\cmd.exe
+				// becomes
+				// %SystemRoot%_system32_cmd.exe		
+
+				_tcscpy(pConInfo->szProcessName, _T("%SystemRoot%"));
+				_tcsncpy(&pConInfo->szProcessName[12], &StartupInfo.lpTitle[length], _tcslen(StartupInfo.lpTitle) - length + 1);
+			
+				ptr = &pConInfo->szProcessName[12];
+				while( (ptr = _tcsstr(ptr, _T("\\"))) )
+					ptr[0] = _T('_');
+			}
+		}
+		else
+		{
+			_tcscpy(pConInfo->szProcessName, _T("Console"));
+		}
+	}
+	else
+	{
+		_tcscpy(pConInfo->szProcessName, _T("Console"));
+	}
+
+	SetWindowText(hwnd, pConInfo->szProcessName);
+	SetWindowLongPtr(hwnd, DWLP_USER , (LONG)pConInfo);
+
+	return TRUE;
+}
+
+INT_PTR 
+CALLBACK
+ApplyProc(
+  HWND hwndDlg,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam
+)
+{
+	HWND hDlgCtrl;
+
+	UNREFERENCED_PARAMETER(lParam)
+
+	switch(uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+#if 0
+			hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_APPLY_CURRENT);
+#else
+			hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_APPLY_ALL);
+#endif
+			SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
+			return TRUE;
+		}
+		case WM_COMMAND:
+		{
+			if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+			{
+				hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_APPLY_CURRENT);
+				if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED )
+					EndDialog(hwndDlg, IDC_RADIO_APPLY_CURRENT);
+				else
+					EndDialog(hwndDlg, IDC_RADIO_APPLY_ALL);
+			}
+			break;
+		}
+		default:
+			break;
+	}
+	return FALSE;
+
+}
+
+void
+ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo)
+{
+	INT_PTR res;
+
+	res = DialogBox(hApplet, MAKEINTRESOURCE(IDD_APPLYOPTIONS), hwndDlg, ApplyProc);
+
+	if ( res == IDC_RADIO_APPLY_ALL )
+	{
+		WriteConsoleOptions(pConInfo);
+	}
+	else if ( res == IDC_RADIO_APPLY_CURRENT )
+	{
+		/*
+		 * TODO: check if szProcessName != _T("Console")
+		 *  in that case notify win32csr that the changes are local
+		 */
+	}
+}
 
 /* Property Sheet Callback */
 int CALLBACK
@@ -45,66 +168,78 @@ PropSheetProc(
 	LPARAM lParam
 )
 {
-  UNREFERENCED_PARAMETER(hwndDlg)
-  switch(uMsg)
-  {
-    case PSCB_BUTTONPRESSED:
-      switch(lParam)
-      {
-        case PSBTN_OK: /* OK */
-          break;
-        case PSBTN_CANCEL: /* Cancel */
-          break;
-        case PSBTN_APPLYNOW: /* Apply now */
-          break;
-        case PSBTN_FINISH: /* Close */
-          break;
-        default:
-          return FALSE;
-      }
-      break;
-      
-    case PSCB_INITIALIZED:
-      break;
-  }
-  return TRUE;
+	PConsoleInfo pConInfo = (PConsoleInfo) GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+	switch(uMsg)
+	{
+		case PSCB_BUTTONPRESSED:
+		{
+			switch(lParam)
+			{
+				case PSBTN_OK: /* OK */
+				{
+					if ( pConInfo )
+					{
+						ApplyConsoleInfo(hwndDlg, pConInfo);
+					}
+					break;
+				}
+				case PSBTN_CANCEL: /* Cancel */
+				{
+					break;
+				}
+				case PSBTN_FINISH: /* Close */
+				{
+					break;
+				}
+				default:
+					return FALSE;
+			}
+			break;
+		}
+		case PSCB_INITIALIZED:
+		{
+			break;
+		}
+		default:
+			break;
+	}
+	return TRUE;
 }
 
 /* First Applet */
 LONG APIENTRY
 InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)	
 {
-  PROPSHEETPAGE psp[5];
-  PROPSHEETHEADER psh;
-  TCHAR Caption[1024];
-  INT i=0;
- 
-  UNREFERENCED_PARAMETER(hwnd)
-  UNREFERENCED_PARAMETER(uMsg)
-  UNREFERENCED_PARAMETER(wParam)
-  UNREFERENCED_PARAMETER(lParam)
+	PROPSHEETPAGE psp[4];
+	PROPSHEETHEADER psh;
+	INT i=0;
 
-  memset(Caption, 0x0, sizeof(Caption));
-  LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
+	UNREFERENCED_PARAMETER(hwnd)
+	UNREFERENCED_PARAMETER(uMsg)
+	UNREFERENCED_PARAMETER(wParam)
+	UNREFERENCED_PARAMETER(lParam)
+
+
+
+	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+	psh.dwSize = sizeof(PROPSHEETHEADER);
+	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW | PSH_PROPTITLE | PSH_USECALLBACK;
+	psh.hwndParent = NULL;
+	psh.hInstance = hApplet;
+	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
+	psh.pszCaption = 0;
+	psh.nPages = 4;
+	psh.nStartPage = 0;
+	psh.ppsp = psp;
+	psh.pfnCallback = PropSheetProc;
   
-  ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-  psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
-  psh.hwndParent = NULL;
-  psh.hInstance = hApplet;
-  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-  psh.pszCaption = Caption;
-  psh.nPages = 4;
-  psh.nStartPage = 0;
-  psh.ppsp = psp;
-  psh.pfnCallback = PropSheetProc;
-  
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGEOPTIONS, (DLGPROC) OptionsProc);
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT, (DLGPROC) FontProc);
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGELAYOUT, (DLGPROC) LayoutProc);
-  InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS, (DLGPROC) ColorsProc);
-  
-  return (LONG)(PropertySheet(&psh) != -1);
+	InitPropSheetPage(&psp[i++], IDD_PROPPAGEOPTIONS, (DLGPROC) OptionsProc);
+	InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT, (DLGPROC) FontProc);
+	InitPropSheetPage(&psp[i++], IDD_PROPPAGELAYOUT, (DLGPROC) LayoutProc);
+	InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS, (DLGPROC) ColorsProc);
+
+	return (PropertySheet(&psh) != -1);
 }
 
 /* Control Panel Callback */
@@ -116,7 +251,7 @@ CPlApplet(
 	LPARAM lParam2)
 {
   int i = (int)lParam1;
-  
+
   switch(uMsg)
   {
     case CPL_INIT:
@@ -130,7 +265,6 @@ CPlApplet(
     case CPL_INQUIRE:
     {
       CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-      CPlInfo->lData = 0;
       CPlInfo->idIcon = Applets[i].idIcon;
       CPlInfo->idName = Applets[i].idName;
       CPlInfo->idInfo = Applets[i].idDescription;
@@ -146,7 +280,7 @@ CPlApplet(
 }
 
 
-BOOLEAN
+INT
 WINAPI
 DllMain(
 	HINSTANCE hinstDLL,
@@ -154,12 +288,6 @@ DllMain(
 	LPVOID    lpvReserved)
 {
   UNREFERENCED_PARAMETER(lpvReserved)
-
-  /* initialize global struct */
-  memset(&g_ConsoleInfo, 0x0, sizeof(ConsoleInfo));
-  g_ConsoleInfo.InsertMode = TRUE;
-  g_ConsoleInfo.HistoryBufferSize = 50;
-  g_ConsoleInfo.NumberOfHistoryBuffers = 5;
 
   switch(dwReason)
   {
