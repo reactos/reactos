@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -1404,7 +1404,7 @@ typedef struct
     ULONG            ulObjAccess; /* Object access level */
     ULONG            ulNumValues; /* Number of items in values list */
     struct list      values;      /* List of property values */
-    RTL_CRITICAL_SECTION cs;          /* Lock for thread safety */
+    CRITICAL_SECTION cs;          /* Lock for thread safety */
 } IPropDataImpl;
 
 /* Internal - Get a property value, assumes lock is held */
@@ -1461,13 +1461,13 @@ static IPropDataItem *IMAPIPROP_AddValue(IPropDataImpl *This,
 /* Internal - Lock an IPropData object */
 static inline void IMAPIPROP_Lock(IPropDataImpl *This)
 {
-    RtlEnterCriticalSection(&This->cs);
+    EnterCriticalSection(&This->cs);
 }
 
 /* Internal - Unlock an IPropData object */
 static inline void IMAPIPROP_Unlock(IPropDataImpl *This)
 {
-    RtlLeaveCriticalSection(&This->cs);
+    LeaveCriticalSection(&This->cs);
 }
 
 /* This one seems to be missing from mapidefs.h */
@@ -1553,7 +1553,7 @@ static inline ULONG WINAPI IMAPIProp_fnRelease(LPMAPIPROP iface)
             This->lpFree(current->value);
             This->lpFree(current);
         }
-        RtlDeleteCriticalSection(&This->cs);
+        DeleteCriticalSection(&This->cs);
         This->lpFree(This);
     }
     return (ULONG)lRef;
@@ -2542,7 +2542,7 @@ SCODE WINAPI CreateIProp(LPCIID iid, ALLOCATEBUFFER *lpAlloc,
         lpPropData->ulObjAccess = IPROP_READWRITE;
         lpPropData->ulNumValues = 0;
         list_init(&lpPropData->values);
-        RtlInitializeCriticalSection(&lpPropData->cs);
+        InitializeCriticalSection(&lpPropData->cs);
         *lppPropData = (LPPROPDATA)lpPropData;
     }
     return scode;

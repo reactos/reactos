@@ -15,10 +15,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -35,6 +36,7 @@
 #include "wine/unicode.h"
 #include "mapival.h"
 #include "xcmc.h"
+#include "msi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
@@ -820,4 +822,71 @@ CMC_return_code WINAPI cmc_query_configuration(
 {
 	FIXME("stub");
 	return CMC_E_NOT_SUPPORTED;
+}
+
+/**************************************************************************
+ *  FGetComponentPath   (MAPI32.254)
+ *  FGetComponentPath@20 (MAPI32.255)
+ *
+ * Return the installed component path, usually to the private mapi32.dll.
+ *
+ * PARAMS
+ *  component       [I] Component ID
+ *  qualifier       [I] Application LCID
+ *  dll_path        [O] returned component path
+ *  dll_path_length [I] component path length
+ *  install         [I] install mode
+ *
+ * RETURNS
+ *  Success: TRUE.
+ *  Failure: FALSE.
+ *
+ * NOTES
+ *  Previously documented in Q229700 "How to locate the correct path
+ *  to the Mapisvc.inf file in Microsoft Outlook".
+ */
+BOOL WINAPI FGetComponentPath(LPCSTR component, LPCSTR qualifier, LPSTR dll_path,
+                              DWORD dll_path_length, BOOL install)
+{
+    BOOL ret = FALSE;
+    HMODULE hmsi;
+
+    TRACE("%s %s %p %lu %d\n", component, qualifier, dll_path, dll_path_length, install);
+
+    dll_path[0] = 0;
+
+    hmsi = LoadLibraryA("msi.dll");
+    if (hmsi)
+    {
+        FARPROC pMsiProvideQualifiedComponentA = GetProcAddress(hmsi, "MsiProvideQualifiedComponentA");
+
+        if (pMsiProvideQualifiedComponentA)
+        {
+            static const char * const fmt[] = { "%d\\NT", "%d\\95", "%d" };
+            char lcid_ver[20];
+            UINT i;
+
+            for (i = 0; i < sizeof(fmt)/sizeof(fmt[0]); i++)
+            {
+                /* FIXME: what's the correct behaviour here? */
+                if (!qualifier || qualifier == lcid_ver)
+                {
+                    sprintf(lcid_ver, fmt[i], GetUserDefaultUILanguage());
+                    qualifier = lcid_ver;
+                }
+
+                if (pMsiProvideQualifiedComponentA(component, qualifier,
+                        install ? INSTALLMODE_DEFAULT : INSTALLMODE_EXISTING,
+                        dll_path, &dll_path_length) == ERROR_SUCCESS)
+                {
+                    ret = TRUE;
+                    break;
+                }
+
+                if (qualifier != lcid_ver) break;
+            }
+        }
+        FreeLibrary(hmsi);
+    }
+    return ret;
 }

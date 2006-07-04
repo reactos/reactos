@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -74,7 +74,7 @@ HRESULT WINAPI MAPIInitialize(LPVOID init)
     return SUCCESS_SUCCESS;
 }
 
-ULONG WINAPI MAPILogon(ULONG uiparam, LPSTR profile, LPSTR password,
+ULONG WINAPI MAPILogon(ULONG_PTR uiparam, LPSTR profile, LPSTR password,
     FLAGS flags, ULONG reserved, LPLHANDLE session)
 {
     FIXME("(0x%08lx %s %p 0x%08lx 0x%08lx %p) Stub\n", uiparam,
@@ -84,7 +84,7 @@ ULONG WINAPI MAPILogon(ULONG uiparam, LPSTR profile, LPSTR password,
     return SUCCESS_SUCCESS;
 }
 
-ULONG WINAPI MAPILogoff(LHANDLE session, ULONG uiparam, FLAGS flags,
+ULONG WINAPI MAPILogoff(LHANDLE session, ULONG_PTR uiparam, FLAGS flags,
     ULONG reserved )
 {
     FIXME("(0x%08lx 0x%08lx 0x%08lx 0x%08lx) Stub\n", session,
@@ -98,6 +98,12 @@ HRESULT WINAPI MAPILogonEx(ULONG_PTR uiparam, LPWSTR profile,
     FIXME("(0x%08lx %s %p 0x%08lx %p) Stub\n", uiparam,
           debugstr_w(profile), password, flags, session);
     return SUCCESS_SUCCESS;
+}
+
+HRESULT WINAPI MAPIOpenLocalFormContainer(LPVOID *ppfcnt)
+{
+    FIXME("(%p) Stub\n", ppfcnt);
+    return E_FAIL;
 }
 
 VOID WINAPI MAPIUninitialize(void)
