@@ -247,16 +247,6 @@ static BOOL is_close_enabled(HWND hwnd, HMENU hSysMenu)
     return TRUE;
 }
 
-#ifdef __REACTOS__
-INT
-MDI_GetId(HWND hWndClient)
-{
-    MDICLIENTINFO * ci = get_client_info( hWndClient );
-    if(ci) return ci->idFirstChild + ci->nActiveChildren;
-    return 0;
-}
-#endif
-
 
 /**********************************************************************
  * 			MDI_GetWindow

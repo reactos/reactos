@@ -10,7 +10,7 @@
  */
 
 /* INCLUDES ******************************************************************/
-
+#define DEBUG
 #include <user32.h>
 
 #include <wine/debug.h>
@@ -18,7 +18,9 @@
 BOOL ControlsInitialized = FALSE;
 
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
-INT MDI_GetId(HWND hWndClient);
+void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT delta, UINT *id );
+
+#define CW_USEDEFAULT16 0x00008000
 
 /* FUNCTIONS *****************************************************************/
 
@@ -160,6 +162,7 @@ CreateWindowExA(DWORD dwExStyle,
   UNICODE_STRING ClassName;
   WNDCLASSEXA wce;
   HWND Handle;
+  MDICREATESTRUCTA mdi;
 
 #if 0
   DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
@@ -187,7 +190,72 @@ CreateWindowExA(DWORD dwExStyle,
 
   if (dwExStyle & WS_EX_MDICHILD)
   {
-    if (!(dwStyle & WS_POPUP)) hMenu = (HMENU) MDI_GetId(hWndParent);
+      POINT mPos[2];
+      UINT id = 0;
+  /* lpParams of WM_[NC]CREATE is different for MDI children.
+   * MDICREATESTRUCT members have the originally passed values.
+   *
+   * Note: we rely on the fact that MDICREATESTRUCTA and MDICREATESTRUCTW
+   * have the same layout.
+   */
+      mdi.szClass = (LPCSTR)&lpClassName;
+      mdi.szTitle = (LPCSTR)&lpWindowName;
+      mdi.hOwner = hInstance;
+      mdi.x = x;
+      mdi.y = y;
+      mdi.cx = nWidth;
+      mdi.cy = nHeight;
+      mdi.style = dwStyle;
+      mdi.lParam = (LPARAM)lpParam;
+
+      lpParam = (LPVOID)&mdi;
+
+      if (GetWindowLongW(hWndParent, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+      {
+        if (dwStyle & WS_POPUP)
+        {
+           DPRINT1("WS_POPUP with MDIS_ALLCHILDSTYLES is not allowed\n");
+           return(0);
+        }
+        dwStyle |= (WS_CHILD | WS_CLIPSIBLINGS);
+      }
+      else
+      {
+        dwStyle &= ~WS_POPUP;
+        dwStyle |= (WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION |
+                WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+      }
+
+      HWND top_child = GetWindow(hWndParent, GW_CHILD);
+
+      if (top_child)
+      {
+        /* Restore current maximized child */
+        if((dwStyle & WS_VISIBLE) && IsZoomed(top_child))
+        {
+           DPRINT("Restoring current maximized child %p\n", top_child);
+           SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
+           ShowWindow(top_child, SW_RESTORE);
+           SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
+        }
+      }
+    
+      MDI_CalcDefaultChildPos(hWndParent, -1, mPos, 0, &id);
+
+      if (!(dwStyle & WS_POPUP)) hMenu = (HMENU)id;
+
+      if (dwStyle & (WS_CHILD | WS_POPUP))
+      {
+         if (x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
+         {
+            x = mPos[0].x;
+            y = mPos[0].y;
+         }
+         if (nWidth == CW_USEDEFAULT || nWidth == CW_USEDEFAULT16 || !nWidth)
+             nWidth = mPos[1].x;
+         if (nHeight == CW_USEDEFAULT || nHeight == CW_USEDEFAULT16 || !nHeight)
+             nHeight = mPos[1].y;
+      }
   }
 
   if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName))
@@ -228,6 +296,14 @@ CreateWindowExA(DWORD dwExStyle,
   DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
 #endif
 
+   if ((dwStyle & WS_VISIBLE) && (dwExStyle & WS_EX_MDICHILD))
+   {
+      SendMessageW(hWndParent, WM_MDIREFRESHMENU, 0, 0);
+      SetWindowPos(Handle, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW |
+                                                SWP_NOMOVE | SWP_NOSIZE);
+   }
+
+
   RtlFreeUnicodeString(&WindowName);
 
   if (!IS_ATOM(lpClassName))
@@ -260,6 +336,8 @@ CreateWindowExW(DWORD dwExStyle,
   UNICODE_STRING ClassName;
   WNDCLASSEXW wce;
   HANDLE Handle;
+  MDICREATESTRUCTW mdi;
+  
 #if 0
   DbgPrint("[window] CreateWindowExA style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
 #endif
@@ -270,10 +348,76 @@ CreateWindowExW(DWORD dwExStyle,
       ControlsInitialized = ControlsInit(lpClassName);
     }
 
+
   if (dwExStyle & WS_EX_MDICHILD)
-    {
-      if (!(dwStyle & WS_POPUP)) hMenu = (HMENU) MDI_GetId(hWndParent);
-    }
+  {
+      POINT mPos[2];
+      UINT id = 0;
+  /* lpParams of WM_[NC]CREATE is different for MDI children.
+   * MDICREATESTRUCT members have the originally passed values.
+   *
+   * Note: we rely on the fact that MDICREATESTRUCTA and MDICREATESTRUCTW
+   * have the same layout.
+   */
+      mdi.szClass = (LPWSTR)&lpClassName;
+      mdi.szTitle = (LPWSTR)&lpWindowName;
+      mdi.hOwner = hInstance;
+      mdi.x = x;
+      mdi.y = y;
+      mdi.cx = nWidth;
+      mdi.cy = nHeight;
+      mdi.style = dwStyle;
+      mdi.lParam = (LPARAM)lpParam;
+
+      lpParam = (LPVOID)&mdi;
+
+      if (GetWindowLongW(hWndParent, GWL_STYLE) & MDIS_ALLCHILDSTYLES)
+      {
+        if (dwStyle & WS_POPUP)
+        {
+           DPRINT1("WS_POPUP with MDIS_ALLCHILDSTYLES is not allowed\n");
+           return(0);
+        }
+        dwStyle |= (WS_CHILD | WS_CLIPSIBLINGS);
+      }
+      else
+      {
+        dwStyle &= ~WS_POPUP;
+        dwStyle |= (WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION |
+                WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX );
+      }
+
+      HWND top_child = GetWindow(hWndParent, GW_CHILD);
+
+      if (top_child)
+      {
+        /* Restore current maximized child */
+        if((dwStyle & WS_VISIBLE) && IsZoomed(top_child))
+        {
+           DPRINT("Restoring current maximized child %p\n", top_child);
+           SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
+           ShowWindow(top_child, SW_RESTORE);
+           SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
+        }
+      }
+
+      MDI_CalcDefaultChildPos(hWndParent, -1, mPos, 0, &id);
+
+      if (!(dwStyle & WS_POPUP)) hMenu = (HMENU)id;
+      if (dwStyle &(WS_CHILD | WS_POPUP))
+      {
+
+         if (x == CW_USEDEFAULT || x == CW_USEDEFAULT16)
+         {
+            x = mPos[0].x;
+            y = mPos[0].y;
+         }
+         if (nWidth == CW_USEDEFAULT || nWidth == CW_USEDEFAULT16 || !nWidth)
+             nWidth = mPos[1].x;
+         if (nHeight == CW_USEDEFAULT || nHeight == CW_USEDEFAULT16 || !nHeight)
+             nHeight = mPos[1].y;
+      }
+  }
 
   if (IS_ATOM(lpClassName))
     {
@@ -310,6 +454,13 @@ CreateWindowExW(DWORD dwExStyle,
 				lpParam,
 				SW_SHOW,
 				TRUE);
+
+   if ((dwStyle & WS_VISIBLE) && (dwExStyle & WS_EX_MDICHILD))
+   {
+      SendMessageW(hWndParent, WM_MDIREFRESHMENU, 0, 0);
+      SetWindowPos((HWND)Handle, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW |
+                                                SWP_NOMOVE | SWP_NOSIZE);
+   }
 
 #if 0
   DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
