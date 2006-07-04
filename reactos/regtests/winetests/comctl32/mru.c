@@ -100,7 +100,7 @@ static void check_reg_entries(const char *mrulist, const char**items)
     char buff[128];
     HKEY hKey = NULL;
     DWORD type, size, ret;
-    size_t i;
+    unsigned int i;
 
     ok(!RegOpenKeyA(HKEY_CURRENT_USER, REG_TEST_FULLKEY, &hKey),
        "Couldn't open test key \"%s\"\n", REG_TEST_FULLKEY);

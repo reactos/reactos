@@ -225,7 +225,7 @@ static void check_auto_format(void)
 
     /* Windows implicitly sets some format bits in INSERTITEM */
 
-    /* HDF_STRING is automaticaly set and cleared for no text */
+    /* HDF_STRING is automatically set and cleared for no text */
     hdiCreate.mask = HDI_TEXT|HDI_WIDTH|HDI_FORMAT;
     hdiCreate.pszText = text;
     hdiCreate.cxy = 100;

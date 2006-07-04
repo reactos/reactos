@@ -10,6 +10,7 @@
     <file>dpa.c</file>
     <file>header.c</file>
     <file>imagelist.c</file>
+    <file>listview.c</file>
     <file>monthcal.c</file>
     <file>mru.c</file>
     <file>progress.c</file>
