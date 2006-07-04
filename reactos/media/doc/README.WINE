@@ -39,7 +39,7 @@ The following libraries are shared with Wine.
 
 reactos/dll/win32/avifil32        # Synced to Wine-0_9_5
 reactos/dll/win32/cabinet         # Synced to Wine-0_9_10
-reactos/dll/win32/comctl32        # Synced to Wine-20060328
+reactos/dll/win32/comctl32        # Synced to Wine-0_9_16
 reactos/dll/win32/comdlg32        # Synced to Wine-0_9_5
 reactos/dll/win32/crypt32         # Synced to Wine-0_9_10
 reactos/dll/win32/dbghelp         # 
