@@ -463,61 +463,97 @@ IopSecurityFile(IN PVOID ObjectBody,
 }
 
 NTSTATUS
-STDCALL
-IopQueryNameFile(PVOID ObjectBody,
+NTAPI
+IopQueryNameFile(IN PVOID ObjectBody,
                  IN BOOLEAN HasName,
-                 POBJECT_NAME_INFORMATION ObjectNameInfo,
-                 ULONG Length,
-                 PULONG ReturnLength,
+                 OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+                 IN ULONG Length,
+                 OUT PULONG ReturnLength,
                  IN KPROCESSOR_MODE PreviousMode)
 {
     POBJECT_NAME_INFORMATION LocalInfo;
-    PFILE_OBJECT FileObject;
-    ULONG LocalReturnLength;
+    PFILE_NAME_INFORMATION LocalFileInfo;
+    PFILE_OBJECT FileObject = (PFILE_OBJECT)ObjectBody;
+    ULONG LocalReturnLength, FileLength;
     NTSTATUS Status;
+    PWCHAR p;
 
-    DPRINT1("IopQueryNameFile() called\n");
-
-    FileObject = (PFILE_OBJECT)ObjectBody;
+    /* Validate length */
+    if (Length < sizeof(OBJECT_NAME_INFORMATION))
+    {
+        /* Wrong length, fail */
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
 
     /* Allocate Buffer */
-    LocalInfo = ExAllocatePool(PagedPool,
-                               sizeof(OBJECT_NAME_INFORMATION) +
-                               MAX_PATH * sizeof(WCHAR));
-    if (LocalInfo == NULL) return STATUS_INSUFFICIENT_RESOURCES;
+    LocalInfo = ExAllocatePoolWithTag(PagedPool, Length, TAG_IO);
+    if (!LocalInfo) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Query the name */
     Status = ObQueryNameString(FileObject->DeviceObject,
                                LocalInfo,
-                               MAX_PATH * sizeof(WCHAR),
+                               Length,
                                &LocalReturnLength);
     if (!NT_SUCCESS (Status))
     {
-        ExFreePool (LocalInfo);
-        return Status;
-    }
-    DPRINT ("Device path: %wZ\n", &LocalInfo->Name);
-    
-    /* Write Device Path */
-    Status = RtlAppendUnicodeStringToString(&ObjectNameInfo->Name,
-                                            &(LocalInfo)->Name);
-
-    /* Query the File name */
-    Status = IoQueryFileInformation(FileObject,
-                                    FileNameInformation,
-                                    LocalReturnLength,
-                                    LocalInfo,
-                                    NULL);
-    if (Status != STATUS_SUCCESS)
-    {
+        /* Free the buffer and fail */
         ExFreePool(LocalInfo);
         return Status;
     }
 
-    /* Write the Name */
-    Status = RtlAppendUnicodeToString(&ObjectNameInfo->Name,
-                                      ((PFILE_NAME_INFORMATION)LocalInfo)->FileName);
-    DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
+    /* Copy the information */
+    RtlCopyMemory(ObjectNameInfo,
+                  LocalInfo,
+                  LocalReturnLength > Length ?
+                  Length : LocalReturnLength);
+
+    /* Set buffer pointer */
+    p = (PWCHAR)(ObjectNameInfo + 1);
+    ObjectNameInfo->Name.Buffer = p;
+
+    /* Advance in buffer */
+    p += (LocalInfo->Name.Length / sizeof(WCHAR));
+
+    /* Now get the file name buffer and check the length needed */
+    LocalFileInfo = (PFILE_NAME_INFORMATION)LocalInfo;
+    FileLength = Length -
+                 LocalReturnLength +
+                 FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+
+    /* Query the File name */
+    Status = IoQueryFileInformation(FileObject,
+                                    FileNameInformation,
+                                    Length,
+                                    LocalFileInfo,
+                                    &LocalReturnLength);
+    if (NT_ERROR(Status))
+    {
+        /* Fail on errors only, allow warnings */
+        ExFreePool(LocalInfo);
+        return Status;
+    }
+
+    /* Now calculate the new lenghts left */
+    FileLength = LocalReturnLength -
+                 FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+    LocalReturnLength = (ULONG_PTR)p -
+                        (ULONG_PTR)ObjectNameInfo +
+                        LocalFileInfo->FileNameLength;
+
+    /* Write the Name and null-terminate it */
+    RtlMoveMemory(p, LocalFileInfo->FileName, FileLength);
+    p += (FileLength / sizeof(WCHAR));
+    *p = UNICODE_NULL;
+    LocalReturnLength += sizeof(UNICODE_NULL);
+
+    /* Return the length needed */
+    *ReturnLength = LocalReturnLength;
+
+    /* Setup the length and maximum length */
+    FileLength = (ULONG_PTR)p - (ULONG_PTR)ObjectNameInfo;
+    ObjectNameInfo->Name.Length = Length - sizeof(OBJECT_NAME_INFORMATION);
+    ObjectNameInfo->Name.MaximumLength = ObjectNameInfo->Name.Length +
+                                         sizeof(UNICODE_NULL);
 
     /* Free buffer and return */
     ExFreePool(LocalInfo);
