@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * NOTES
  *
@@ -309,7 +309,6 @@ typedef struct tagLISTVIEW_INFO
   WCHAR szSearchParam[ MAX_PATH ];
   BOOL bIsDrawing;
   INT nMeasureItemHeight;
-  INT xTrackLine;               /* The x coefficient of the track line or -1 if none */
 } LISTVIEW_INFO;
 
 /*
@@ -1634,7 +1633,6 @@ static void LISTVIEW_UpdateScroll(LISTVIEW_INFO *infoPtr)
 {
     UINT uView = infoPtr->dwStyle & LVS_TYPEMASK;
     SCROLLINFO horzInfo, vertInfo;
-    INT dx, dy;
 
     if ((infoPtr->dwStyle & LVS_NOSCROLL) || !is_redrawing(infoPtr)) return;
 
@@ -1667,8 +1665,7 @@ static void LISTVIEW_UpdateScroll(LISTVIEW_INFO *infoPtr)
   
     horzInfo.fMask = SIF_RANGE | SIF_PAGE;
     horzInfo.nMax = max(horzInfo.nMax - 1, 0);
-    dx = GetScrollPos(infoPtr->hwndSelf, SB_HORZ);
-    dx -= SetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &horzInfo, TRUE);
+    SetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &horzInfo, TRUE);
     TRACE("horzInfo=%s\n", debugscrollinfo(&horzInfo));
 
     /* Setting the horizontal scroll can change the listview size
@@ -1699,18 +1696,8 @@ static void LISTVIEW_UpdateScroll(LISTVIEW_INFO *infoPtr)
 
     vertInfo.fMask = SIF_RANGE | SIF_PAGE;
     vertInfo.nMax = max(vertInfo.nMax - 1, 0);
-    dy = GetScrollPos(infoPtr->hwndSelf, SB_VERT);
-    dy -= SetScrollInfo(infoPtr->hwndSelf, SB_VERT, &vertInfo, TRUE);
+    SetScrollInfo(infoPtr->hwndSelf, SB_VERT, &vertInfo, TRUE);
     TRACE("vertInfo=%s\n", debugscrollinfo(&vertInfo));
-
-    /* Change of the range may have changed the scroll pos. If so move the content */
-    if (dx != 0 || dy != 0)
-    {
-        RECT listRect;
-        listRect = infoPtr->rcList;
-        ScrollWindowEx(infoPtr->hwndSelf, dx, dy, &listRect, &listRect, 0, 0,
-            SW_ERASE | SW_INVALIDATE);
-    }
 
     /* Update the Header Control */
     if (uView == LVS_REPORT)
@@ -3058,7 +3045,6 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
     RANGES selection;
     LVITEMW item;
     ITERATOR i;
-    BOOL bOldChange;
 
     if (!(selection = ranges_create(100))) return;
 
@@ -3100,19 +3086,12 @@ static void LISTVIEW_SetGroupSelection(LISTVIEW_INFO *infoPtr, INT nItem)
 	iterator_destroy(&i);
     }
 
-    bOldChange = infoPtr->bDoChangeNotify;
-    infoPtr->bDoChangeNotify = FALSE;
-
     LISTVIEW_DeselectAllSkipItems(infoPtr, selection);
-
-
     iterator_rangesitems(&i, selection);
     while(iterator_next(&i))
 	LISTVIEW_SetItemState(infoPtr, i.nItem, &item);
     /* this will also destroy the selection */
     iterator_destroy(&i);
-
-    infoPtr->bDoChangeNotify = bOldChange;
     
     LISTVIEW_SetItemFocus(infoPtr, nItem);
 }
@@ -4430,7 +4409,6 @@ static BOOL LISTVIEW_DeleteColumn(LISTVIEW_INFO *infoPtr, INT nColumn)
     }
 
     /* update the other column info */
-    LISTVIEW_UpdateItemSize(infoPtr);
     if(DPA_GetPtrCount(infoPtr->hdpaColumns) == 0)
         LISTVIEW_InvalidateList(infoPtr);
     else
@@ -6546,16 +6524,6 @@ static INT LISTVIEW_InsertColumnT(LISTVIEW_INFO *infoPtr, INT nColumn,
     
     ZeroMemory(&hdi, sizeof(HDITEMW));
     column_fill_hditem(infoPtr, &hdi, nColumn, lpColumn, isW);
-    
-    /*
-     * when the iSubItem is available Windows copies it to the header lParam. It seems
-     * to happen only in LVM_INSERTCOLUMN - not in LVM_SETCOLUMN
-     */
-    if (lpColumn->mask & LVCF_SUBITEM)
-    {
-        hdi.mask |= HDI_LPARAM;
-        hdi.lParam = lpColumn->iSubItem;
-    }
 
     /* insert item in header control */
     nNewColumn = SendMessageW(infoPtr->hwndHeader, 
@@ -6772,7 +6740,7 @@ static BOOL LISTVIEW_SetColumnWidth(LISTVIEW_INFO *infoPtr, INT nColumn, INT cx)
 	    hdi.mask = HDI_TEXT;
 	    hdi.cchTextMax = DISP_TEXT_SIZE;
 	    hdi.pszText = szDispText;
-	    if (Header_GetItemW(infoPtr->hwndHeader, nColumn, &hdi))
+	    if (Header_GetItemW(infoPtr->hwndHeader, nColumn, (LPARAM)&hdi))
 	    {
 		HDC hdc = GetDC(infoPtr->hwndSelf);
 		HFONT old_font = SelectObject(hdc, (HFONT)SendMessageW(infoPtr->hwndHeader, WM_GETFONT, 0, 0));
@@ -6794,7 +6762,7 @@ static BOOL LISTVIEW_SetColumnWidth(LISTVIEW_INFO *infoPtr, INT nColumn, INT cx)
     hdi.mask = HDI_WIDTH;
     hdi.cxy = cx;
     TRACE("hdi.cxy=%d\n", hdi.cxy);
-    return Header_SetItemW(infoPtr->hwndHeader, nColumn, &hdi);
+    return Header_SetItemW(infoPtr->hwndHeader, nColumn, (LPARAM)&hdi);
 }
 
 /***
@@ -6873,16 +6841,6 @@ static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD dwM
         if(infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES)
             himl = LISTVIEW_CreateCheckBoxIL(infoPtr);
         LISTVIEW_SetImageList(infoPtr, LVSIL_STATE, himl);
-    }
-    
-    if((infoPtr->dwLvExStyle ^ dwOldStyle) & LVS_EX_HEADERDRAGDROP)
-    {
-        DWORD dwStyle = GetWindowLongW(infoPtr->hwndHeader, GWL_STYLE);
-        if (infoPtr->dwLvExStyle & LVS_EX_HEADERDRAGDROP)
-            dwStyle |= HDS_DRAGDROP;
-        else
-            dwStyle &= ~HDS_DRAGDROP;
-        SetWindowLongW(infoPtr->hwndHeader, GWL_STYLE, dwStyle);
     }
 
     return dwOldStyle;
@@ -7563,40 +7521,6 @@ static BOOL LISTVIEW_Update(LISTVIEW_INFO *infoPtr, INT nItem)
     return TRUE;
 }
 
-/***
- * DESCRIPTION:
- * Draw the track line at the place defined in the infoPtr structure.
- * The line is drawn with a XOR pen so drawing the line for the second time
- * in the same place erases the line.
- *
- * PARAMETER(S):
- * [I] infoPtr : valid pointer to the listview structure
- *
- * RETURN:
- *   SUCCESS : TRUE
- *   FAILURE : FALSE
- */
-static BOOL LISTVIEW_DrawTrackLine(LISTVIEW_INFO *infoPtr)
-{
-    HPEN hOldPen;
-    HDC hdc;
-    INT oldROP;
-
-    if (infoPtr->xTrackLine == -1)
-        return FALSE;
-
-    if (!(hdc = GetDC(infoPtr->hwndSelf)))
-        return FALSE;
-    hOldPen = SelectObject(hdc, GetStockObject(BLACK_PEN));
-    oldROP = SetROP2(hdc, R2_XORPEN);
-    MoveToEx(hdc, infoPtr->xTrackLine, infoPtr->rcList.top, NULL);
-    LineTo(hdc, infoPtr->xTrackLine, infoPtr->rcList.bottom);
-    SetROP2(hdc, oldROP);
-    SelectObject(hdc, hOldPen);
-    ReleaseDC(infoPtr->hwndSelf, hdc);
-    return TRUE;
-}
-
 	
 /***
  * DESCRIPTION:
@@ -7649,7 +7573,6 @@ static LRESULT LISTVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
   infoPtr->nEditLabelItem = -1;
   infoPtr->dwHoverTime = -1; /* default system hover time */
   infoPtr->nMeasureItemHeight = 0;
-  infoPtr->xTrackLine = -1;  /* no track line */
 
   /* get default font (icon title) */
   SystemParametersInfoW(SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
@@ -7659,7 +7582,7 @@ static LRESULT LISTVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
 
   /* create header */
   infoPtr->hwndHeader =	CreateWindowW(WC_HEADERW, NULL,
-    WS_CHILD | HDS_HORZ | HDS_FULLDRAG | (DWORD)((LVS_NOSORTHEADER & lpcs->style)?0:HDS_BUTTONS),
+    WS_CHILD | HDS_HORZ | (DWORD)((LVS_NOSORTHEADER & lpcs->style)?0:HDS_BUTTONS),
     0, 0, 0, 0, hwnd, NULL,
     lpcs->hInstance, NULL);
   if (!infoPtr->hwndHeader) goto fail;
@@ -8442,59 +8365,27 @@ static LRESULT LISTVIEW_HeaderNotification(LISTVIEW_INFO *infoPtr, const NMHEADE
     
     switch (lpnmh->hdr.code)
     {    
+        case HDN_ITEMCHANGINGW:
+        case HDN_ITEMCHANGINGA:
+            return notify_forward_header(infoPtr, lpnmh);
+	case HDN_ITEMCHANGEDW:
+	case HDN_ITEMCHANGEDA:
+            notify_forward_header(infoPtr, lpnmh);
+	    if (!IsWindow(hwndSelf))
+		break;
+            /* Fall through */
 	case HDN_TRACKW:
 	case HDN_TRACKA:
 	{
 	    COLUMN_INFO *lpColumnInfo;
-	    POINT ptOrigin;
-	    INT x;
-	    
-	    if (!lpnmh->pitem || !(lpnmh->pitem->mask & HDI_WIDTH))
-		break;
-
-            /* remove the old line (if any) */
-            LISTVIEW_DrawTrackLine(infoPtr);
-            
-            /* compute & draw the new line */
-            lpColumnInfo = LISTVIEW_GetColumnInfo(infoPtr, lpnmh->iItem);
-            x = lpColumnInfo->rcHeader.left + lpnmh->pitem->cxy;
-            LISTVIEW_GetOrigin(infoPtr, &ptOrigin);
-            infoPtr->xTrackLine = x + ptOrigin.x;
-            LISTVIEW_DrawTrackLine(infoPtr);
-            break;
-	}
-	
-	case HDN_ENDTRACKA:
-	case HDN_ENDTRACKW:
-	    /* remove the track line (if any) */
-	    LISTVIEW_DrawTrackLine(infoPtr);
-	    infoPtr->xTrackLine = -1;
-	    break;
-	    
-        case HDN_ENDDRAG:
-            FIXME("Changing column order not implemented\n");
-            return TRUE;
-            
-        case HDN_ITEMCHANGINGW:
-        case HDN_ITEMCHANGINGA:
-            return notify_forward_header(infoPtr, lpnmh);
-            
-	case HDN_ITEMCHANGEDW:
-	case HDN_ITEMCHANGEDA:
-	{
-	    COLUMN_INFO *lpColumnInfo;
 	    INT dx, cxy;
-	    
-            notify_forward_header(infoPtr, lpnmh);
-	    if (!IsWindow(hwndSelf))
-		break;
 
 	    if (!lpnmh->pitem || !(lpnmh->pitem->mask & HDI_WIDTH))
 	    {
     		HDITEMW hdi;
     
 		hdi.mask = HDI_WIDTH;
-    		if (!Header_GetItemW(infoPtr->hwndHeader, lpnmh->iItem, &hdi)) return 0;
+    		if (!Header_GetItemW(infoPtr->hwndHeader, lpnmh->iItem, (LPARAM)&hdi)) return 0;
 		cxy = hdi.cxy;
 	    }
 	    else

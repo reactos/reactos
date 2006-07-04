@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #ifndef __WINE_COMCTL32_H
@@ -145,11 +145,10 @@ VOID COMCTL32_RefreshSysColors(void);
 void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark, BOOL bHorizontal);
 INT  Str_GetPtrWtoA (LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen);
 BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc);
-BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc);
 
-#define COMCTL32_VERSION_MINOR 81
-#define WINE_FILEVERSION 5, COMCTL32_VERSION_MINOR, 4704, 1100
-#define WINE_FILEVERSIONSTR "5.81"
+#define COMCTL32_VERSION_MINOR 80
+#define WINE_FILEVERSION 5, COMCTL32_VERSION_MINOR, 0, 0
+#define WINE_FILEVERSIONSTR "5.80"
 
 /* Our internal stack structure of the window procedures to subclass */
 typedef struct _SUBCLASSPROCS {

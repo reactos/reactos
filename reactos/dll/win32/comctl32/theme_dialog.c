@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
 
@@ -74,8 +74,8 @@ LRESULT CALLBACK THEMING_DialogSubclassProc (HWND hWnd, UINT msg,
 	if (!doTheming) return THEMING_CallOriginalClass (hWnd, msg, wParam, lParam);
         {
             RECT rc;
-            WNDPROC dlgp = (WNDPROC)GetWindowLongPtrW (hWnd, DWLP_DLGPROC);
-            if (!CallWindowProcW(dlgp, hWnd, msg, wParam, lParam))
+            DLGPROC dlgp = (DLGPROC)GetWindowLongPtrW (hWnd, DWLP_DLGPROC);
+            if (!dlgp (hWnd, msg, wParam, lParam))
             {
                 /* Draw background*/
                 GetClientRect (hWnd, &rc);
@@ -104,8 +104,8 @@ LRESULT CALLBACK THEMING_DialogSubclassProc (HWND hWnd, UINT msg,
     case WM_CTLCOLORSTATIC:
         if (!doTheming) return THEMING_CallOriginalClass (hWnd, msg, wParam, lParam);
         {
-            WNDPROC dlgp = (WNDPROC)GetWindowLongPtrW (hWnd, DWLP_DLGPROC);
-            LRESULT result = CallWindowProcW(dlgp, hWnd, msg, wParam, lParam);
+            DLGPROC dlgp = (DLGPROC)GetWindowLongPtrW (hWnd, DWLP_DLGPROC);
+            LRESULT result = (LRESULT)dlgp (hWnd, msg, wParam, lParam);
             if (!result)
             {
                 /* Override defaults with more suitable values when themed */

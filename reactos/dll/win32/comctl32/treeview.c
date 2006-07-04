@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * NOTES
  *
@@ -1299,7 +1299,6 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
 	{
 	    TREEVIEW_ITEM *aChild;
 	    TREEVIEW_ITEM *previousChild = NULL;
-            TREEVIEW_ITEM *originalFirst = parentItem->firstChild;
 	    BOOL bItemInserted = FALSE;
 
 	    aChild = parentItem->firstChild;
@@ -1318,9 +1317,6 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
 		if (comp < 0)	/* we are smaller than the current one */
 		{
 		    TREEVIEW_InsertBefore(newItem, aChild, parentItem);
-                    if (infoPtr->firstVisible == originalFirst &&
-                        aChild == originalFirst)
-                        TREEVIEW_SetFirstVisible(infoPtr, newItem, TRUE);
 		    bItemInserted = TRUE;
 		    break;
 		}
