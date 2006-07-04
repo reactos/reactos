@@ -78,6 +78,7 @@
 @ stdcall CertSetEnhancedKeyUsage(ptr ptr)
 @ stub CertStrToNameA
 @ stub CertStrToNameW
+@ stub CertVerifyCertificateChainPolicy
 @ stub CertVerifyCRLRevocation
 @ stub CertVerifyCRLTimeValidity
 @ stub CertVerifyCTLUsage

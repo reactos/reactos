@@ -117,7 +117,7 @@ STRINGTABLE DISCARDABLE
     IDS_KEY_RECOVERY_AGENT "Agent zur Schlüsselwiederherstellung"
     IDS_CERTIFICATE_TEMPLATE "Zertifikatsvorlageninformation"
     IDS_ENTERPRISE_ROOT_OID "Unternehmensstamm-OID"
-    IDS_RDN_DUMMY_SIGNER "Attrapenunterzeichner"
+    IDS_RDN_DUMMY_SIGNER "Atrappenunterzeichner"
     IDS_ARCHIVED_KEY_ATTR "Verschlüsselter, privater Schlüssel"
     IDS_CRL_SELF_CDP "Veröffentlichte CRL Standorte"
     IDS_REQUIRE_CERT_CHAIN_POLICY "Erzwinge Zertifikatskettenrichtlinie"
