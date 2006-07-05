@@ -34,6 +34,10 @@ IopParseDevice(IN PVOID ParseObject,
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
     PVPB Vpb;
+    PIRP Irp;
+    PEXTENDED_IO_STACK_LOCATION StackLoc;
+    IO_SECURITY_CONTEXT SecurityContext;
+    IO_STATUS_BLOCK IoStatusBlock;
     DPRINT("IopParseDevice:\n"
            "DeviceObject : %p\n"
            "RelatedFileObject : %p\n"
@@ -45,6 +49,13 @@ IopParseDevice(IN PVOID ParseObject,
 
     /* Validate the open packet */
     if (!IopValidateOpenPacket(OpenPacket)) return STATUS_OBJECT_TYPE_MISMATCH;
+
+    RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
+                      &IoFileObjectType->TypeInfo.GenericMapping);
+    RtlMapGenericMask(&AccessState->OriginalDesiredAccess,
+                      &IoFileObjectType->TypeInfo.GenericMapping);
+    SeSetAccessStateGenericMapping(AccessState,
+                                   &IoFileObjectType->TypeInfo.GenericMapping);
 
     /* Create the actual file object */
     Status = ObCreateObject(AccessMode,
@@ -112,9 +123,145 @@ IopParseDevice(IN PVOID ParseObject,
     Status = IopReferenceDeviceObject(DeviceObject);
     FileObject->DeviceObject = DeviceObject;
 
-    /* Set the file object and return success */
+    FileObject->Type = IO_TYPE_FILE;
+    FileObject->Size = sizeof(FILE_OBJECT);
+
+    if (OpenPacket->CreateOptions &
+        (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
+    {
+        FileObject->Flags |= FO_SYNCHRONOUS_IO;
+        if (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
+        {
+            FileObject->Flags |= FO_ALERTABLE_IO;
+        }
+    }
+
+    if (OpenPacket->CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
+    {
+        FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+    }
+    if (OpenPacket->CreateOptions & FILE_WRITE_THROUGH)
+    {
+        FileObject->Flags |= FO_WRITE_THROUGH;
+    }
+    if (OpenPacket->CreateOptions & FILE_SEQUENTIAL_ONLY)
+    {
+        FileObject->Flags |= FO_SEQUENTIAL_ONLY;
+    }
+    if (OpenPacket->CreateOptions & FILE_RANDOM_ACCESS)
+    {
+        FileObject->Flags |= FO_RANDOM_ACCESS;
+    }
+
+    if (!(Attributes & OBJ_CASE_INSENSITIVE))
+    {
+        FileObject->Flags |= FO_OPENED_CASE_SENSITIVE;
+    }
+
+    SecurityContext.SecurityQos = SecurityQos;
+    SecurityContext.AccessState = AccessState;
+    SecurityContext.DesiredAccess = AccessState->RemainingDesiredAccess;
+    SecurityContext.FullCreateOptions = OpenPacket->CreateOptions;
+
+    KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
+    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
+
+    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
+    if (!Irp) return STATUS_UNSUCCESSFUL;
+
+    /* Now set the IRP data */
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = AccessMode;
+    Irp->Flags = IRP_CREATE_OPERATION |
+                 IRP_SYNCHRONOUS_API;// |
+                 //IRP_DEFER_IO_COMPLETION;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->UserEvent = &FileObject->Event;
+    Irp->UserIosb = &IoStatusBlock;
+    Irp->MdlAddress = NULL;
+    Irp->PendingReturned = FALSE;
+    Irp->UserEvent = NULL;
+    Irp->Cancel = FALSE;
+    Irp->CancelRoutine = NULL;
+    Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
+
+    StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
+    StackLoc->Control = 0;
+    StackLoc->FileObject = FileObject;
+
+    switch (OpenPacket->CreateFileType)
+    {
+        default:
+        case CreateFileTypeNone:
+            StackLoc->MajorFunction = IRP_MJ_CREATE;
+            StackLoc->Flags = OpenPacket->Options;
+            StackLoc->Parameters.Create.EaLength = OpenPacket->EaBuffer != NULL ? OpenPacket->EaLength : 0;
+            StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ? SL_CASE_SENSITIVE: 0;
+            break;
+
+        case CreateFileTypeNamedPipe:
+            StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
+            StackLoc->Parameters.CreatePipe.Parameters = OpenPacket->MailslotOrPipeParameters;
+            break;
+
+        case CreateFileTypeMailslot:
+            StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
+            StackLoc->Parameters.CreateMailslot.Parameters = OpenPacket->MailslotOrPipeParameters;
+            break;
+    }
+
+    /* Set the common data */
+    Irp->Overlay.AllocationSize = OpenPacket->AllocationSize;
+    Irp->AssociatedIrp.SystemBuffer =OpenPacket->EaBuffer;
+    StackLoc->Parameters.Create.Options = (OpenPacket->Disposition << 24) | (OpenPacket->CreateOptions & 0x00FFFFFF);
+    StackLoc->Parameters.Create.FileAttributes = OpenPacket->FileAttributes;
+    StackLoc->Parameters.Create.ShareAccess = OpenPacket->ShareAccess;
+    StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
+
+    /* Reference the file object and call the driver */
+    ObReferenceObject(FileObject);
+    Status = IoCallDriver(FileObject->DeviceObject, Irp );
+
+    /* Copy the status block */
+    OpenPacket->Information = IoStatusBlock.Information;
+    OpenPacket->FinalStatus = IoStatusBlock.Status;
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&FileObject->Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+#if 0
+    else
+    {
+        KIRQL OldIrql;
+        PKNORMAL_ROUTINE NormalRoutine;
+        PVOID NormalContext;
+
+        /* We'll have to complete it ourselves */
+        ASSERT(!Irp->PendingReturned);
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
+        IopCompleteRequest(&Irp->Tail.Apc,
+                           &NormalRoutine,
+                           &NormalContext,
+                           (PVOID*)&FileObject,
+                           &NormalContext);
+        KeLowerIrql(OldIrql);
+    }
+#endif
+    if (!NT_SUCCESS(Status))
+    {
+        FileObject->DeviceObject = NULL;
+        FileObject->Vpb = NULL;
+        FileObject = NULL;
+        //ObDereferenceObject(FileObject);
+    }
+
     *Object = FileObject;
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
@@ -804,20 +951,11 @@ IoCreateFile(OUT PHANDLE FileHandle,
              IN PVOID ExtraCreateParameters OPTIONAL,
              IN ULONG Options)
 {
-    PFILE_OBJECT FileObject = NULL;
-    PIRP Irp;
-    PEXTENDED_IO_STACK_LOCATION StackLoc;
-    IO_SECURITY_CONTEXT SecurityContext;
     KPROCESSOR_MODE AccessMode;
     HANDLE LocalHandle = 0;
     LARGE_INTEGER SafeAllocationSize;
     PVOID SystemEaBuffer = NULL;
-    NTSTATUS  Status = STATUS_SUCCESS;
-    AUX_DATA AuxData;
-    ACCESS_STATE AccessState;
-    KIRQL OldIrql;
-    PKNORMAL_ROUTINE NormalRoutine;
-    PVOID NormalContext;
+    NTSTATUS Status = STATUS_SUCCESS;
     OPEN_PACKET OpenPacket;
     PAGED_CODE();
 
@@ -928,156 +1066,19 @@ IoCreateFile(OUT PHANDLE FileHandle,
                                 &OpenPacket,
                                 &LocalHandle);
 
-    RtlMapGenericMask(&DesiredAccess, &IoFileObjectType->TypeInfo.GenericMapping);
-    ObReferenceObjectByHandle(LocalHandle,
-                              DesiredAccess,
-                              NULL,
-                              KernelMode,
-                              (PVOID*)&FileObject,
-                              NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    DPRINT1("Status: %lx %lx\n", Status, LocalHandle);
 
-    FileObject->Type = IO_TYPE_FILE;
-    FileObject->Size = sizeof(FILE_OBJECT);
-
-    if (CreateOptions &
-        (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
+    _SEH_TRY
     {
-        FileObject->Flags |= FO_SYNCHRONOUS_IO;
-        if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
-        {
-            FileObject->Flags |= FO_ALERTABLE_IO;
-        }
+        *FileHandle = LocalHandle;
+        IoStatusBlock->Information = OpenPacket.Information;
+        IoStatusBlock->Status = OpenPacket.FinalStatus;
     }
-
-    if (CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
+    _SEH_HANDLE
     {
-        FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+        Status = _SEH_GetExceptionCode();
     }
-    if (CreateOptions & FILE_WRITE_THROUGH)
-    {
-        FileObject->Flags |= FO_WRITE_THROUGH;
-    }
-    if (CreateOptions & FILE_SEQUENTIAL_ONLY)
-    {
-        FileObject->Flags |= FO_SEQUENTIAL_ONLY;
-    }
-    if (CreateOptions & FILE_RANDOM_ACCESS)
-    {
-        FileObject->Flags |= FO_RANDOM_ACCESS;
-    }
-
-    if (!(ObjectAttributes->Attributes & OBJ_CASE_INSENSITIVE))
-    {
-        FileObject->Flags |= FO_OPENED_CASE_SENSITIVE;
-    }
-
-    SeCreateAccessState(&AccessState, &AuxData, FILE_ALL_ACCESS, NULL);
-    SecurityContext.SecurityQos = NULL; /* ?? */
-    SecurityContext.AccessState = &AccessState;
-    SecurityContext.DesiredAccess = DesiredAccess;
-    SecurityContext.FullCreateOptions = CreateOptions;
-
-    KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
-    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
-
-    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
-    if (!Irp)
-    {
-        ZwClose(LocalHandle);
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Now set the IRP data */
-    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->RequestorMode = AccessMode;
-    Irp->Flags = IRP_CREATE_OPERATION |
-                 IRP_SYNCHRONOUS_API |
-                 IRP_DEFER_IO_COMPLETION;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    Irp->UserEvent = &FileObject->Event;
-    Irp->UserIosb = IoStatusBlock;
-    Irp->MdlAddress = NULL;
-    Irp->PendingReturned = FALSE;
-    Irp->UserEvent = NULL;
-    Irp->Cancel = FALSE;
-    Irp->CancelRoutine = NULL;
-    Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
-
-    StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
-    StackLoc->Control = 0;
-    StackLoc->FileObject = FileObject;
-
-    switch (CreateFileType)
-    {
-        default:
-        case CreateFileTypeNone:
-            StackLoc->MajorFunction = IRP_MJ_CREATE;
-            StackLoc->Flags = Options;
-            StackLoc->Parameters.Create.EaLength = SystemEaBuffer != NULL ? EaLength : 0;
-            StackLoc->Flags |= !(ObjectAttributes->Attributes & OBJ_CASE_INSENSITIVE) ? SL_CASE_SENSITIVE: 0;
-            break;
-
-        case CreateFileTypeNamedPipe:
-            StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
-            StackLoc->Parameters.CreatePipe.Parameters = ExtraCreateParameters;
-            break;
-
-        case CreateFileTypeMailslot:
-            StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
-            StackLoc->Parameters.CreateMailslot.Parameters = ExtraCreateParameters;
-            break;
-    }
-
-    /* Set the common data */
-    Irp->Overlay.AllocationSize = SafeAllocationSize;
-    Irp->AssociatedIrp.SystemBuffer = SystemEaBuffer;
-    StackLoc->Parameters.Create.Options = (CreateDisposition << 24) | (CreateOptions & 0x00FFFFFF);
-    StackLoc->Parameters.Create.FileAttributes = FileAttributes;
-    StackLoc->Parameters.Create.ShareAccess = ShareAccess;
-    StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
-
-    Status = IofCallDriver(FileObject->DeviceObject, Irp );
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&FileObject->Event,
-                              Executive,
-                              AccessMode,
-                              FALSE,
-                              NULL);
-        Status = IoStatusBlock->Status;
-    }
-    else
-    {
-        /* We'll have to complete it ourselves */
-        ASSERT(!Irp->PendingReturned);
-        KeRaiseIrql(APC_LEVEL, &OldIrql);
-        IopCompleteRequest(&Irp->Tail.Apc,
-                           &NormalRoutine,
-                           &NormalContext,
-                           (PVOID*)&FileObject,
-                           &NormalContext);
-        KeLowerIrql(OldIrql);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        FileObject->DeviceObject = NULL;
-        FileObject->Vpb = NULL;
-        ObDereferenceObject(FileObject);
-    }
-    else
-    {
-        _SEH_TRY
-        {
-            *FileHandle = LocalHandle;
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-    }
+    _SEH_END;
 
     /* cleanup EABuffer if captured */
     if (AccessMode != KernelMode && (SystemEaBuffer))
