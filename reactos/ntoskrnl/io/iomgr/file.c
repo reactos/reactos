@@ -43,6 +43,9 @@ IopParseDevice(IN PVOID ParseObject,
            CompleteName,
            RemainingName);
 
+    /* Validate the open packet */
+    if (!IopValidateOpenPacket(OpenPacket)) return STATUS_OBJECT_TYPE_MISMATCH;
+
     /* Create the actual file object */
     Status = ObCreateObject(AccessMode,
                             IoFileObjectType,
@@ -67,7 +70,7 @@ IopParseDevice(IN PVOID ParseObject,
     else
     {
         /* Check if we don't have a related file object */
-        if (!Context)
+        if (!OpenPacket->RelatedFileObject)
         {
             /* Check if it has a VPB */
             if (DeviceObject->Vpb)
@@ -128,11 +131,14 @@ IopParseFile(IN PVOID ParseObject,
              OUT PVOID *Object)
 {
     PVOID DeviceObject;
-    OPEN_PACKET OpenPacket;
+    POPEN_PACKET OpenPacket = (POPEN_PACKET)Context;
+
+    /* Validate the open packet */
+    if (!IopValidateOpenPacket(OpenPacket)) return STATUS_OBJECT_TYPE_MISMATCH;
 
     /* Get the device object */
     DeviceObject = IoGetRelatedDeviceObject(ParseObject);
-    OpenPacket.RelatedFileObject = ParseObject;
+    OpenPacket->RelatedFileObject = ParseObject;
 
     /* Call the main routine */
     return IopParseDevice(DeviceObject,
@@ -142,7 +148,7 @@ IopParseFile(IN PVOID ParseObject,
                           Attributes,
                           CompleteName,
                           RemainingName,
-                          &OpenPacket,
+                          OpenPacket,
                           SecurityQos,
                           Object);
 }
@@ -812,6 +818,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
     KIRQL OldIrql;
     PKNORMAL_ROUTINE NormalRoutine;
     PVOID NormalContext;
+    OPEN_PACKET OpenPacket;
     PAGED_CODE();
 
     if(Options & IO_NO_PARAMETER_CHECKING)
@@ -884,13 +891,41 @@ IoCreateFile(OUT PHANDLE FileHandle,
         DPRINT1("FIXME: IO_CHECK_CREATE_PARAMETERS not yet supported!\n");
     }
 
+    /* Setup the Open Packet */
+    OpenPacket.Type = IO_TYPE_OPEN_PACKET;
+    OpenPacket.Size = sizeof(OPEN_PACKET);
+    OpenPacket.FileObject = NULL;
+    OpenPacket.FinalStatus = STATUS_SUCCESS;
+    OpenPacket.Information = 0;
+    OpenPacket.ParseCheck = 0;
+    OpenPacket.RelatedFileObject = NULL;
+    OpenPacket.OriginalAttributes = *ObjectAttributes;
+    OpenPacket.AllocationSize = SafeAllocationSize;
+    OpenPacket.CreateOptions = CreateOptions;
+    OpenPacket.FileAttributes = FileAttributes;
+    OpenPacket.ShareAccess = ShareAccess;
+    OpenPacket.EaBuffer = SystemEaBuffer;
+    OpenPacket.EaLength = EaLength;
+    OpenPacket.Options = Options;
+    OpenPacket.Disposition = CreateDisposition;
+    OpenPacket.BasicInformation = NULL;
+    OpenPacket.NetworkInformation = NULL;
+    OpenPacket.CreateFileType = CreateFileType;
+    OpenPacket.MailslotOrPipeParameters = ExtraCreateParameters;
+    OpenPacket.Override = FALSE;
+    OpenPacket.QueryOnly = FALSE;
+    OpenPacket.DeleteOnly = FALSE;
+    OpenPacket.FullAttributes = FALSE;
+    OpenPacket.DummyFileObject = NULL;
+    OpenPacket.InternalFlags = 0;
+
     /* First try to open an existing named object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 NULL,
                                 AccessMode,
                                 NULL,
                                 DesiredAccess,
-                                NULL,
+                                &OpenPacket,
                                 &LocalHandle);
 
     RtlMapGenericMask(&DesiredAccess, &IoFileObjectType->TypeInfo.GenericMapping);

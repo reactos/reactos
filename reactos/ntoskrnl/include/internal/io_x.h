@@ -76,3 +76,19 @@ IopUpdateOperationCount(IN IOP_TRANSFER_TYPE Type)
     }
 }
 
+BOOLEAN
+static __inline
+IopValidateOpenPacket(IN POPEN_PACKET OpenPacket)
+{
+    /* Validate the packet */
+    if (!(OpenPacket) ||
+        (OpenPacket->Type != IO_TYPE_OPEN_PACKET) ||
+        (OpenPacket->Size != sizeof(OPEN_PACKET)))
+    {
+        /* Fail */
+        return FALSE;
+    }
+
+    /* Good packet */
+    return TRUE;
+}
