@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /*
@@ -43,7 +43,7 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuler", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Aide", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Aid&e", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "Lecture seule", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -65,7 +65,7 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuler", 2, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Aide", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Aid&e", pshHelp, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "Lecture seule", chx1, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -136,7 +136,7 @@ FONT 8, "MS Shell Dlg"
     DEFPUSHBUTTON   "OK",IDOK,218,6,40,14,WS_GROUP
     PUSHBUTTON      "Annuler",IDCANCEL,218,23,40,14,WS_GROUP
     PUSHBUTTON      "A&ppliquer", psh3,218,40,40,14,WS_GROUP
-    PUSHBUTTON      "&Aide" , pshHelp,218,57,40,14,WS_GROUP
+    PUSHBUTTON      "Aid&e" , pshHelp,218,57,40,14,WS_GROUP
     GROUPBOX        "Effets",grp1,6,72,84,34,WS_GROUP
     CHECKBOX        "&Barré", chx1, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX        "&Souligné", chx2, 10,94,50,10, BS_AUTOCHECKBOX
@@ -178,7 +178,7 @@ FONT 8, "MS Shell Dlg"
  CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "Ok",  1,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuler", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Aide", pshHelp,100,166, 44, 14
+ PUSHBUTTON "Aid&e", pshHelp,100,166, 44, 14
  PUSHBUTTON "A&jouter couleur personnalisées", 712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Définir couleurs personnalisées >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i in "sol&id" */
@@ -200,7 +200,7 @@ FONT 8, "MS Shell Dlg"
 
  DEFPUSHBUTTON "&Poursuivre", 1, 182, 5, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuler", 2, 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Aide", pshHelp, 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Aid&e", pshHelp, 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -220,7 +220,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Rempla&cer", psh1, 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Remplacer &tout", psh2, 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Annuler", IDCANCEL, 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Aide", pshHelp, 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Aid&e", pshHelp, 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 
@@ -232,7 +232,7 @@ FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "OK",             IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
     PUSHBUTTON      "Annuler",        IDCANCEL, 232,164, 48,14, WS_GROUP
-    PUSHBUTTON      "&Aide",          pshHelp,  50, 161, 48,14, WS_GROUP
+    PUSHBUTTON      "Aid&e",          pshHelp,  50, 161, 48,14, WS_GROUP
 
     GROUPBOX        "Imprimante",     grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Imprimer dans un fichier", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
@@ -350,7 +350,7 @@ FONT 8, "MS Shell Dlg"
 
     DEFPUSHBUTTON	"Ouvrir",		 IDOK,222,110,50,14
     PUSHBUTTON		"Annuler",		 IDCANCEL,222,128,50,14
-    PUSHBUTTON		"&Aide",		 pshHelp,222,145,50,14
+    PUSHBUTTON		"Aid&e",		 pshHelp,222,145,50,14
 }
 
 STRINGTABLE DISCARDABLE

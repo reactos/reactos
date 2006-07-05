@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <ctype.h>
@@ -363,7 +363,7 @@ BOOL16 WINAPI PrintDlg16(
     }
 
     if(lppd->lStructSize != sizeof(PRINTDLG16)) {
-        ERR("structure size (%ld/%d)\n",lppd->lStructSize,sizeof(PRINTDLG16));
+        ERR("structure size %ld\n",lppd->lStructSize);
 	COMDLG32_SetCommDlgExtendedError(CDERR_STRUCTSIZE);
 	return FALSE;
     }

@@ -1,4 +1,5 @@
-/*
+/* Hey, Emacs, open this file with -*- coding: cp1250 -*-
+ *
  * Copyright 1996 Roman Dolejsi
  * Copyright 2005 David Kredba (kredba@math.cas.cz)
  *
@@ -14,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /*
@@ -22,6 +23,8 @@
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* Czech strings in CP1250 */
 
 OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -47,7 +50,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Uloæ pod jmÈnem..."
+CAPTION "Uloû pod jmÈnem..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&JmÈno souboru:", 1090, 6, 6, 76, 9
@@ -60,7 +63,7 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "&DiskovÈ jednotky:", 1091, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Uloæ pod jmÈnem", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Uloû pod jmÈnem", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Storno", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&N·povÏda", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Pouze pro ËtenÌ", 1040, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
@@ -75,7 +78,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "Tisk·rna:", 1088, 6, 6, 40, 9
  LTEXT "", 1089, 60, 6, 150, 9
  GROUPBOX "Rozsah tisku", grp1, 6, 30, 160, 65, BS_GROUPBOX
- RADIOBUTTON "Vπ&e", rad1, 16, 45, 60, 12
+ RADIOBUTTON "Vö&e", rad1, 16, 45, 60, 12
  RADIOBUTTON "&V˝bÏr", rad2, 16, 60, 60, 12
  RADIOBUTTON "&ZadanÈ str·nky", 1058, 16, 75, 60, 12
  DEFPUSHBUTTON "Tiskni", 1, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -104,8 +107,8 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Storno", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&DalöÌ volby...", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Orientace", grp2, 6, 85, 100, 50, BS_GROUPBOX
- RADIOBUTTON "Na &v˝πku", rad3, 50, 100, 40, 12
- RADIOBUTTON "Na πÌ¯&ku", rad4, 50, 115, 40, 12
+ RADIOBUTTON "Na &v˝öku", rad3, 50, 100, 40, 12
+ RADIOBUTTON "Na öÌ¯&ku", rad4, 50, 115, 40, 12
  ICON "LANDSCAP", stc10, 10, 95, 32, 32
  ICON "PORTRAIT", stc11, 10, 95, 32, 32
  GROUPBOX "PapÌr", grp3, 120, 85, 180, 50, BS_GROUPBOX
@@ -132,16 +135,16 @@ FONT 8, "MS Shell Dlg"
                  WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
  DEFPUSHBUTTON   "OK",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON      "Storno",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
- PUSHBUTTON      "&PouæÌt", psh3,218,40,40,14,WS_GROUP | WS_TABSTOP
+ PUSHBUTTON      "&PouûÌt", psh3,218,40,40,14,WS_GROUP | WS_TABSTOP
  PUSHBUTTON      "&N·povÏda" , pshHelp,218,57,40,14,WS_GROUP | WS_TABSTOP
  GROUPBOX        "Efekty",grp1,6,72,84,34,WS_GROUP
- CHECKBOX        "P¯eπ&krtnutÌ", chx1, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
- CHECKBOX        "&PodtræenÌ", chx2, 10,94,50,10, BS_AUTOCHECKBOX
+ CHECKBOX        "P¯eö&krtnutÌ", chx1, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX        "&PodtrûenÌ", chx2, 10,94,50,10, BS_AUTOCHECKBOX
  LTEXT           "&Barva:", stc4 ,6,110,30,9
  COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                  CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
  GROUPBOX        "Uk·zka",grp2,98,72,120,36,WS_GROUP
- CTEXT           "P¯Ìliπ æluªouËk˝ k˘Ú ˙pÏl Ô·belskÈ Ûdy",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+ CTEXT           "P¯Ìliö ûluùouËk˝ k˘Ú ˙pÏl Ô·belskÈ Ûdy",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
  LTEXT           "Skr&ipt:",stc7 ,98,114,40,9
  COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
                  CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
@@ -190,13 +193,13 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Vyhledat:", -1, 4, 8, 42, 8
  EDITTEXT edt1, 47, 7, 128, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Pouze &cel· slova", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Rozliπovat velikost", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "&Rozliöovat velikost", chx2, 4, 42, 64, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "SmÏr", grp1, 107, 26, 68, 28
  CONTROL "N&ahoru", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 111, 38, 20, 12
  CONTROL "&Dol˘", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 138, 38, 30, 12
  
- DEFPUSHBUTTON "NajÌt d&alπÌ", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Zruπit", IDCANCEL, 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "NajÌt d&alöÌ", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Zruöit", IDCANCEL, 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&N·povÏda", pshHelp, 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
@@ -211,11 +214,11 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&ZamÏnit za:", -1, 4, 26, 48, 8
  EDITTEXT edt2, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Pouze &cel· slova", chx1, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Rozliπovat velikost", chx2, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- DEFPUSHBUTTON "Vyhledat d&alπÌ", IDOK, 174,  4, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Rozliöovat velikost", chx2, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ DEFPUSHBUTTON "Vyhledat d&alöÌ", IDOK, 174,  4, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Za&mÏnit", psh1, 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "ZamÏni&t vπe", psh2, 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Zruπit", IDCANCEL, 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "ZamÏni&t vöe", psh2, 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Zruöit", IDCANCEL, 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&N·povÏda", pshHelp, 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
@@ -227,7 +230,7 @@ CAPTION "Tisk"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Zruπit", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "Zruöit", IDCANCEL, 232,164, 48,14, WS_GROUP
     PUSHBUTTON      "&N·povÏda",  pshHelp,  50, 161, 48,14, WS_GROUP
 
     GROUPBOX        "Tisk·rna",        grp4,   8,  4, 272,84, WS_GROUP
@@ -251,7 +254,7 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Rozsah tisku",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Vπe",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&Vöe",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
     CONTROL         "St&r·nky",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
     CONTROL         "V˝&bÏr",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
@@ -267,8 +270,8 @@ CAPTION "NastavenÌ tisku"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
-    PUSHBUTTON      "Zruπit",IDCANCEL,232,156,48,14
-/*    PUSHBUTTON      "SÌª...", psh5, 284,156,48,14 */
+    PUSHBUTTON      "Zruöit",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "SÌù...", psh5, 284,156,48,14 */
 
     GROUPBOX        "Tisk·rna",        grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "&Vlastnosti",    psh2, 212, 17,  60,14, WS_GROUP
@@ -291,8 +294,8 @@ BEGIN
 
     GROUPBOX        "Orientace",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "Na v˝πk&u",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
-    CONTROL         "N&a πÌ¯ku",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+    CONTROL         "Na v˝ök&u",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "N&a öÌ¯ku",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
@@ -309,8 +312,8 @@ BEGIN
   LTEXT "&Tray:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   GROUPBOX "Orientace", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "Na v˝πk&u", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "N&a πÌ¯ku", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "Na v˝ök&u", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "N&a öÌ¯ku", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Okraje", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "L&ev˝:", stc15, 88, 172, 21, 8
   EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
@@ -321,7 +324,7 @@ BEGIN
   LTEXT "&DolnÌ:", stc18, 159, 192, 23, 8
   EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
   DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
-  PUSHBUTTON "Zruπit", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "Zruöit", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "Tisk·&rna...", psh3, 184, 220, 48, 14
 END
 
@@ -345,14 +348,14 @@ FONT 8, "MS Shell Dlg"
     CONTROL	"Jen ke Ët&enÌ",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
 
     DEFPUSHBUTTON	"&Otev¯Ìt",		 IDOK,222,110,50,14
-    PUSHBUTTON		"Zruπit",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"Zruöit",		 IDCANCEL,222,128,50,14
     PUSHBUTTON		"&N·povÏda",		 pshHelp,222,145,50,14
 }
 
 STRINGTABLE DISCARDABLE
 {
     IDS_ABOUTBOX            "&O FolderPicker testu"
-    IDS_DOCUMENTFOLDERS     "Sloæky dokument˘"
+    IDS_DOCUMENTFOLDERS     "Sloûky dokument˘"
     IDS_PERSONAL            "Dokumenty"
     IDS_FAVORITES           "OblÌbenÈ"
     IDS_PATH                "SystÈmov˝ adres·¯"
@@ -363,25 +366,25 @@ STRINGTABLE DISCARDABLE
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_SYSTEMFOLDERS       "SystÈmovÈ sloæky"
+    IDS_SYSTEMFOLDERS       "SystÈmovÈ sloûky"
     IDS_LOCALHARDRIVES      "MÌstnÌ jednotky pevn˝ch disk˘"
     IDS_FILENOTFOUND        "Soubor nebyl nalezen"
-    IDS_VERIFYFILE          "OvÏ¯te prosÌm, æe n·zev souboru byl zad·n spr·vnÏ."
+    IDS_VERIFYFILE          "OvÏ¯te prosÌm, ûe n·zev souboru byl zad·n spr·vnÏ."
     IDS_CREATEFILE          "Soubor neexistuje.\nChcete ho vytvo¯it ?"
-    IDS_OVERWRITEFILE       "Soubor jiæ existuje.\nChcete ho p¯epsat nov˝m ?"
+    IDS_OVERWRITEFILE       "Soubor jiû existuje.\nChcete ho p¯epsat nov˝m ?"
     IDS_INVALID_FILENAME_TITLE "Nedovolen˝(È) znak(y) v cestÏ k souboru."
-    IDS_INVALID_FILENAME    "N·zev souboru nesmÌ obsahovat æ·dn˝ z n·sledujÌcÌch znak˘: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "N·zev souboru nesmÌ obsahovat û·dn˝ z n·sledujÌcÌch znak˘: \n                          / : < > |"
     IDS_PATHNOTEXISTING     "Adres·¯ neexistuje"
     IDS_FILENOTEXISTING     "Soubor neexistuje"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_UPFOLDER         "O jednu ˙roveÚ v˝πe"
-    IDS_NEWFOLDER        "Vytvo¯it novou sloæku"
+    IDS_UPFOLDER         "O jednu ˙roveÚ v˝öe"
+    IDS_NEWFOLDER        "Vytvo¯it novou sloûku"
     IDS_LISTVIEW         "V˝pis"
     IDS_REPORTVIEW       "Podrobnosti"
-    IDS_TODESKTOP        "ProhlÌæet plochu"
+    IDS_TODESKTOP        "ProhlÌûet plochu"
 }
 
 STRINGTABLE DISCARDABLE
@@ -389,20 +392,20 @@ STRINGTABLE DISCARDABLE
     PD32_PRINT_TITLE       "Tisk"
 
     PD32_VALUE_UREADABLE                  "NeËiteln˝ vstup"
-    PD32_INVALID_PAGE_RANGE "Tato hodnota p¯esahuje moænosti str·nky.\n\
+    PD32_INVALID_PAGE_RANGE "Tato hodnota p¯esahuje moûnosti str·nky.\n\
 Zadejte prosÌm hodnotu mezi %d a %d."
-    PD32_FROM_NOT_ABOVE_TO                "Hodnota 'Od' nem˘æe p¯ekroËit \
+    PD32_FROM_NOT_ABOVE_TO                "Hodnota 'Od' nem˘ûe p¯ekroËit \
 hodnotu 'Do'."
-    PD32_MARGINS_OVERLAP                  "DosaæenÌ nebo p¯esah okraj˘ \
+    PD32_MARGINS_OVERLAP                  "DosaûenÌ nebo p¯esah okraj˘ \
 tisknutelnÈ oblasti.\nZadejte prosÌm jinÈ okraje."
     PD32_NR_OF_COPIES_EMPTY               "PoËet kopiÌ musÌ b˝t' \
 zad·n."
-    PD32_TOO_LARGE_COPIES                 "Tak velkÈ mnoæstvÌ kopiÌ nenÌ \
-podporov·no VaπÌ tisk·rnou.\nZadejte prosÌm hodnotu mezi 1 and %d."
+    PD32_TOO_LARGE_COPIES                 "Tak velkÈ mnoûstvÌ kopiÌ nenÌ \
+podporov·no VaöÌ tisk·rnou.\nZadejte prosÌm hodnotu mezi 1 a %d."
     PD32_PRINT_ERROR                      "Nastala chyba tisku."
     PD32_NO_DEFAULT_PRINTER               "V˝chozÌ tisk·rna neexistuje."
     PD32_CANT_FIND_PRINTER                "Nemohu najÌt tisk·rnu."
-    PD32_OUT_OF_MEMORY                    "Dostupn· pamÏª byla vyËerp·na."
+    PD32_OUT_OF_MEMORY                    "Dostupn· pamÏù byla vyËerp·na."
     PD32_GENERIC_ERROR                    "Vyskytla se chyba."
     PD32_DRIVER_UNKNOWN                   "Nezn·m˝ ovladaË tisk·rny."
 
@@ -417,7 +420,7 @@ podporov·no VaπÌ tisk·rnou.\nZadejte prosÌm hodnotu mezi 1 and %d."
     PD32_PRINTER_STATUS_ERROR             "Chyba; "
     PD32_PRINTER_STATUS_PENDING_DELETION  "ProbÌh· maz·nÌ; "
     PD32_PRINTER_STATUS_PAPER_JAM         "Zaseknut˝ papÌr; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "Doπel papÌr; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Doöel papÌr; "
     PD32_PRINTER_STATUS_MANUAL_FEED       "RuËnÌ zakl·d·nÌ papÌru; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "ProblÈm s papÌrem; "
     PD32_PRINTER_STATUS_OFFLINE           "Tisk·rna je nedostupn·; "
@@ -431,13 +434,13 @@ podporov·no VaπÌ tisk·rnou.\nZadejte prosÌm hodnotu mezi 1 and %d."
     PD32_PRINTER_STATUS_INITIALIZING      "Inicializuje se; "
     PD32_PRINTER_STATUS_WARMING_UP        "Zah¯Ìv· se; "
     PD32_PRINTER_STATUS_TONER_LOW         "Doch·zÌ toner; "
-    PD32_PRINTER_STATUS_NO_TONER          "Doπel toner; "
+    PD32_PRINTER_STATUS_NO_TONER          "Doöel toner; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Za¯azov·nÌ; "
-    PD32_PRINTER_STATUS_USER_INTERVENTION "P¯eruπeno uæivatelem; "
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Dostupn· pamÏª byla vyËerp·na; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "P¯eruöeno uûivatelem; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Dostupn· pamÏù byla vyËerp·na; "
     PD32_PRINTER_STATUS_DOOR_OPEN         "Kryt tisk·rny je otev¯en; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Nezn·m˝ tiskov˝ server; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "⁄sporn˝ reæim; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "⁄sporn˝ reûim; "
 }
 
 STRINGTABLE DISCARDABLE /* Color names */
@@ -449,11 +452,11 @@ STRINGTABLE DISCARDABLE /* Color names */
     IDS_COLOR_NAVY      "n·mo¯nÌ"
     IDS_COLOR_PURPLE    "nachov·"
     IDS_COLOR_TEAL      "siv·"
-    IDS_COLOR_GRAY      "πed·"
+    IDS_COLOR_GRAY      "öed·"
     IDS_COLOR_SILVER    "st¯Ìbrn·"
     IDS_COLOR_RED       "Ëerven·"
     IDS_COLOR_LIME      "citronov·"
-    IDS_COLOR_YELLOW    "ælut·"
+    IDS_COLOR_YELLOW    "ûlut·"
     IDS_COLOR_BLUE      "modr·"
     IDS_COLOR_FUCHSIA   "fuchsiov·"
     IDS_COLOR_AQUA      "vodov·"
@@ -463,9 +466,9 @@ STRINGTABLE DISCARDABLE /* Color names */
 STRINGTABLE DISCARDABLE
 {
     IDS_FONT_SIZE   "UrËete velikost fontu mezi %d a %d body."
-    IDS_SAVE_BUTTON "&Uloæit"
-    IDS_SAVE_IN     "Uloæ&it v:"
-    IDS_SAVE        "Uloæit"
-    IDS_SAVE_AS     "Uloæit jako"
+    IDS_SAVE_BUTTON "&Uloûit"
+    IDS_SAVE_IN     "Uloû&it v:"
+    IDS_SAVE        "Uloûit"
+    IDS_SAVE_AS     "Uloûit jako"
     IDS_OPEN_FILE   "Otev¯Ìt soubor"
 }

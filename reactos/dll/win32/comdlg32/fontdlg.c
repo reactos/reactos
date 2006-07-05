@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <ctype.h>
@@ -428,7 +428,7 @@ static int AddFontSizeToCombo3(HWND hwnd, UINT h, LPCHOOSEFONTW lpcf)
  */
 static int SetFontSizesToCombo3(HWND hwnd, LPCHOOSEFONTW lpcf)
 {
-    static const BYTE sizes[]={8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72};
+    static const BYTE sizes[]={6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72};
     int i;
 
     for (i = 0; i < sizeof(sizes)/sizeof(sizes[0]); i++)
@@ -632,9 +632,9 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
                 memcpy(name, strColorName, sizeof(strColorName));
             }
             j=SendDlgItemMessageW(hDlg, cmb4, CB_ADDSTRING, 0, (LPARAM)name);
-            SendDlgItemMessageW(hDlg, cmb4, CB_SETITEMDATA, j, textcolors[j]);
+            SendDlgItemMessageW(hDlg, cmb4, CB_SETITEMDATA, j, textcolors[i]);
             /* look for a fitting value in color combobox */
-            if (textcolors[j]==lpcf->rgbColors)
+            if (textcolors[i]==lpcf->rgbColors)
                 SendDlgItemMessageW(hDlg,cmb4, CB_SETCURSEL,j,0);
         }
     }
@@ -994,7 +994,7 @@ LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam,
         {
             WINDOWINFO wininfo;
 
-            lpcf->rgbColors=textcolors[i];
+            lpcf->rgbColors = SendDlgItemMessageW(hDlg, cmb4, CB_GETITEMDATA, i, 0);
             wininfo.cbSize=sizeof(wininfo);
 
             if( GetWindowInfo( GetDlgItem( hDlg, stc5), &wininfo ) )

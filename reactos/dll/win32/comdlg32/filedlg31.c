@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <ctype.h>
 #include <stdlib.h>
@@ -764,7 +764,7 @@ void FD31_FreeOfnW(LPOPENFILENAMEW ofnW)
    HeapFree(GetProcessHeap(), 0, ofnW->lpstrFileTitle);
    HeapFree(GetProcessHeap(), 0, (LPWSTR) ofnW->lpstrInitialDir);
    HeapFree(GetProcessHeap(), 0, (LPWSTR) ofnW->lpstrTitle);
-   if ((ofnW->lpTemplateName) && (HIWORD(ofnW->lpTemplateName)))
+   if (HIWORD(ofnW->lpTemplateName))
        HeapFree(GetProcessHeap(), 0, (LPWSTR) ofnW->lpTemplateName);
 }
 
