@@ -986,7 +986,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    SecurityContext.DesiredAccess = DesiredAccess;
    SecurityContext.FullCreateOptions = 0; /* ?? */
 
-   KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
+   KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, FALSE);
    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
 
    DPRINT("FileObject 0x%p\n", FileObject);
