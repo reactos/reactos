@@ -14,16 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-extern GENERIC_MAPPING IopFileMapping;
-
-NTSTATUS
-STDCALL
-SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
-                             PSECURITY_DESCRIPTOR SecurityDescriptor,
-                             PULONG BufferLength);
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
@@ -53,79 +43,73 @@ IopParseDevice(IN PVOID ParseObject,
            CompleteName,
            RemainingName);
 
+    /* Create the actual file object */
+    Status = ObCreateObject(AccessMode,
+                            IoFileObjectType,
+                            NULL,
+                            AccessMode,
+                            NULL,
+                            sizeof(FILE_OBJECT),
+                            0,
+                            0,
+                            (PVOID*)&FileObject);
+    RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
+
+    /* Parent is a device object */
+    DeviceObject = IoGetAttachedDevice(ParseObject);
+
+    /* Check if we don't have a remaining name */
     if (!*RemainingName->Buffer)
     {
-        DeviceObject = ParseObject;
-        Status = IopReferenceDeviceObject(DeviceObject);
-        // fixme: NT wouldn't allow this
-        //if (!NT_SUCCESS(Status)) return Status;// KEBUGCHECK(0);
-
-        Status = ObCreateObject(AccessMode,
-                                IoFileObjectType,
-                                NULL,
-                                AccessMode,
-                                NULL,
-                                sizeof(FILE_OBJECT),
-                                0,
-                                0,
-                                (PVOID*)&FileObject);
-        /* Set File Object Data */
-        ASSERT(DeviceObject);
-        RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
-        FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject);
-        DPRINT("DO. DRV Name: %p %wZ\n", DeviceObject, &DeviceObject->DriverObject->DriverName);
-
-        /* HACK */
+        /* Then this is a device */
         FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-        *Object = FileObject;
-        return STATUS_SUCCESS;
-    }
-
-    Status = ObCreateObject(AccessMode,
-                        IoFileObjectType,
-                        NULL,
-                        AccessMode,
-                        NULL,
-                        sizeof(FILE_OBJECT),
-                        0,
-                        0,
-                        (PVOID*)&FileObject);
-    RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
-    if (!Context)
-    {
-        /* Parent is a device object */
-        DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)ParseObject);
-
-        /* Check if it has a VPB */
-        if (DeviceObject->Vpb)
-        {
-            /* Check if it's not already mounted */
-            if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-            {
-                Status = IopMountVolume(DeviceObject, FALSE, FALSE, FALSE, &Vpb);
-                if (!NT_SUCCESS(Status))
-                {
-                    /* Couldn't mount, fail the lookup */
-                    ObDereferenceObject(FileObject);
-                    *Object = NULL;
-                    return STATUS_UNSUCCESSFUL;
-                }
-            }
-
-            DeviceObject = DeviceObject->Vpb->DeviceObject;
-        }
     }
     else
     {
-        FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
-        DeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
+        /* Check if we don't have a related file object */
+        if (!Context)
+        {
+            /* Check if it has a VPB */
+            if (DeviceObject->Vpb)
+            {
+                /* Check if it's not already mounted */
+                if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+                {
+                    /* Mount the volume */
+                    Status = IopMountVolume(DeviceObject,
+                                            FALSE,
+                                            FALSE,
+                                            FALSE,
+                                            &Vpb);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        /* Couldn't mount, fail the lookup */
+                        ObDereferenceObject(FileObject);
+                        *Object = NULL;
+                        return STATUS_UNSUCCESSFUL;
+                    }
+                }
+
+                /* Get the VPB's device object */
+                DeviceObject = DeviceObject->Vpb->DeviceObject;
+            }
+        }
+        else
+        {
+            /* Otherwise, this is an open */
+            FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
+            DeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
+        }
+
+        /* Create the name for the file object */
+        RtlCreateUnicodeString(&FileObject->FileName, RemainingName->Buffer);
     }
 
+    /* Set the device object and reference it */
     Status = IopReferenceDeviceObject(DeviceObject);
-    // fixme: NT wouldn't allow this
-    //if (!NT_SUCCESS(Status)) return Status;// KEBUGCHECK(0);
-    RtlCreateUnicodeString(&FileObject->FileName, RemainingName->Buffer);
     FileObject->DeviceObject = DeviceObject;
+
+    /* Set the file object and return success */
     *Object = FileObject;
     return STATUS_SUCCESS;
 }

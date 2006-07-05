@@ -1001,6 +1001,7 @@ extern PDEVICE_NODE IopRootDeviceNode;
 extern ULONG IopTraceLevel;
 extern NPAGED_LOOKASIDE_LIST IopMdlLookasideList;
 extern GENERIC_MAPPING IopCompletionMapping;
+extern GENERIC_MAPPING IopFileMapping;
 
 //
 // Inlined Functions
