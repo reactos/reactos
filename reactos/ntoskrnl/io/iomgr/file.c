@@ -892,6 +892,9 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    NTSTATUS  Status = STATUS_SUCCESS;
    AUX_DATA AuxData;
    ACCESS_STATE AccessState;
+    KIRQL OldIrql;
+    PKNORMAL_ROUTINE NormalRoutine;
+    PVOID NormalContext;
 
    DPRINT("IoCreateFile(FileHandle 0x%p, DesiredAccess %x, "
           "ObjectAttributes 0x%p ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -1063,8 +1066,8 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
    Irp->RequestorMode = AccessMode;
    Irp->Flags = IRP_CREATE_OPERATION |
-                IRP_SYNCHRONOUS_API;// |
-                //IRP_DEFER_IO_COMPLETION;
+                IRP_SYNCHRONOUS_API |
+                IRP_DEFER_IO_COMPLETION;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    Irp->UserEvent = &FileObject->Event;
    Irp->UserIosb = IoStatusBlock;
@@ -1130,21 +1133,18 @@ IoCreateFile(OUT PHANDLE  FileHandle,
                              NULL);
        Status = IoStatusBlock->Status;
      }
-#if 0
    else
    {
         /* We'll have to complete it ourselves */
         ASSERT(!Irp->PendingReturned);
         KeRaiseIrql(APC_LEVEL, &OldIrql);
-        FileObject->Event.Header.SignalState = 1;
-        if ((Irp->Flags & IRP_BUFFERED_IO) && (Irp->Flags & IRP_DEALLOCATE_BUFFER))
-        {
-            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
-        }
-        IoFreeIrp(Irp);
+        IopCompleteRequest(&Irp->Tail.Apc,
+                           &NormalRoutine,
+                           &NormalContext,
+                           (PVOID*)&FileObject,
+                           &NormalContext);
         KeLowerIrql(OldIrql);
    }
-#endif
    if (!NT_SUCCESS(Status))
      {
        DPRINT("Failing create request with status %x\n", Status);

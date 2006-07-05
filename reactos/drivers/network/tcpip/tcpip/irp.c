@@ -18,7 +18,7 @@ VOID IRPRemember( PIRP Irp, PCHAR File, UINT Line ) {
 }
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
-    TI_DbgPrint(MID_TRACE,("Called: Irp %x, Status %x Event %x\n", Irp, Status, Irp->UserEvent));
+    DbgPrint("Called: Irp %x, Status %x Event %x\n", Irp, Status, Irp->UserEvent);
 
 #ifdef MEMTRACK
     UntrackFL( __FILE__, __LINE__, Irp );
