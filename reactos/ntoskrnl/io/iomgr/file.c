@@ -24,7 +24,7 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
                              PSECURITY_DESCRIPTOR SecurityDescriptor,
                              PULONG BufferLength);
 
-/* INTERNAL FUNCTIONS ********************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
 NTAPI
@@ -619,6 +619,118 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     IoFreeIrp(Irp);
 }
 
+NTSTATUS
+NTAPI
+IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
+                       IN FILE_INFORMATION_CLASS FileInformationClass,
+                       OUT PVOID FileInformation)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+    KPROCESSOR_MODE AccessMode;
+    UNICODE_STRING ObjectName;
+    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    OBJECT_ATTRIBUTES LocalObjectAttributes;
+    ULONG BufferSize;
+    union
+    {
+        FILE_BASIC_INFORMATION BasicInformation;
+        FILE_NETWORK_OPEN_INFORMATION NetworkOpenInformation;
+    }LocalFileInformation;
+
+    if (FileInformationClass == FileBasicInformation)
+    {
+        BufferSize = sizeof(FILE_BASIC_INFORMATION);
+    }
+    else if (FileInformationClass == FileNetworkOpenInformation)
+    {
+        BufferSize = sizeof(FILE_NETWORK_OPEN_INFORMATION);
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    AccessMode = ExGetPreviousMode();
+
+    if (AccessMode != KernelMode)
+    {
+        Status = STATUS_SUCCESS;
+        _SEH_TRY
+        {
+            ProbeForWrite(FileInformation,
+                          BufferSize,
+                          sizeof(ULONG));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        if (NT_SUCCESS(Status))
+        {
+            Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                                AccessMode,
+                                                FALSE,
+                                                &ObjectCreateInfo,
+                                                &ObjectName);
+        }
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+        InitializeObjectAttributes(&LocalObjectAttributes,
+                                   &ObjectName,
+                                   ObjectCreateInfo.Attributes,
+                                   ObjectCreateInfo.RootDirectory,
+                                   ObjectCreateInfo.SecurityDescriptor);
+    }
+
+    /* Open the file */
+    Status = ZwOpenFile(&FileHandle,
+                        SYNCHRONIZE | FILE_READ_ATTRIBUTES,
+                        AccessMode == KernelMode ? ObjectAttributes : &LocalObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (AccessMode != KernelMode)
+    {
+        ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+        if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
+    }
+    if (!NT_SUCCESS (Status))
+    {
+        DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Get file attributes */
+    Status = ZwQueryInformationFile(FileHandle,
+                                    &IoStatusBlock,
+                                    AccessMode == KernelMode ? FileInformation : &LocalFileInformation,
+                                    BufferSize,
+                                    FileInformationClass);
+    if (!NT_SUCCESS (Status))
+    {
+        DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
+    }
+    ZwClose(FileHandle);
+
+    if (NT_SUCCESS(Status) && AccessMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            memcpy(FileInformation, &LocalFileInformation, BufferSize);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+    return Status;
+}
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1022,41 +1134,16 @@ IoCreateFileSpecifyDeviceObjectHint(OUT PHANDLE FileHandle,
 }
 
 /*
- * NAME       EXPORTED
- *  IoCreateStreamFileObject@8
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- * FileObject
- *  ?
- *
- * DeviceObject
- *  ?
- *
- * RETURN VALUE
- *
- * NOTE
- *
- * REVISIONS
- *
  * @implemented
  */
-PFILE_OBJECT 
-STDCALL
-IoCreateStreamFileObject(PFILE_OBJECT FileObject,
-                         PDEVICE_OBJECT DeviceObject)
+PFILE_OBJECT
+NTAPI
+IoCreateStreamFileObject(IN PFILE_OBJECT FileObject,
+                         IN PDEVICE_OBJECT DeviceObject)
 {
     PFILE_OBJECT CreatedFileObject;
     NTSTATUS Status;
-    
-    /* FIXME: This function should call ObInsertObject. The "Lite" version 
-       doesnt. This function is also called from IoCreateFile for some 
-       reason. These hacks need to be removed.
-    */
-
-    DPRINT("IoCreateStreamFileObject(FileObject 0x%p, DeviceObject 0x%p)\n",
-            FileObject, DeviceObject);
+    HANDLE FileHandle;
     PAGED_CODE();
 
     /* Create the File Object */
@@ -1066,33 +1153,35 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
                             KernelMode,
                             NULL,
                             sizeof(FILE_OBJECT),
-                            0,
+                            sizeof(FILE_OBJECT),
                             0,
                             (PVOID*)&CreatedFileObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Could not create FileObject\n");
-        return (NULL);
-    }
+    if (!NT_SUCCESS(Status)) return (NULL);
 
     /* Choose Device Object */
     if (FileObject) DeviceObject = FileObject->DeviceObject;
-    DPRINT("DeviceObject 0x%p\n", DeviceObject);
-    
-    /* HACK */
-    DeviceObject = IoGetAttachedDevice(DeviceObject);
-    
+
     /* Set File Object Data */
+    RtlZeroMemory(CreatedFileObject, sizeof(FILE_OBJECT));
     CreatedFileObject->DeviceObject = DeviceObject; 
-    CreatedFileObject->Vpb = DeviceObject->Vpb;
     CreatedFileObject->Type = IO_TYPE_FILE;
-    CreatedFileObject->Flags |= FO_STREAM_FILE;
+    CreatedFileObject->Size = sizeof(FILE_OBJECT);
+    CreatedFileObject->Flags = FO_STREAM_FILE;
 
-    /* Initialize Lock and Event */
-    KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
-    KeInitializeEvent(&CreatedFileObject->Lock, SynchronizationEvent, TRUE);
+    /* Initialize the wait event */
+    KeInitializeEvent(&CreatedFileObject->Event, SynchronizationEvent, FALSE);
 
-    /* Return file */
+    /* Insert it to create a handle for it */
+    Status = ObInsertObject(CreatedFileObject,
+                            NULL,
+                            FILE_READ_DATA,
+                            1,
+                            (PVOID*)&CreatedFileObject,
+                            &FileHandle);
+    CreatedFileObject->Flags |= FO_HANDLE_CREATED;
+
+    /* Close the extra handle and return file */
+    NtClose(FileHandle);
     return CreatedFileObject;
 }
 
@@ -1438,118 +1527,6 @@ NtOpenFile(PHANDLE FileHandle,
                         CreateFileTypeNone,
                         NULL,
                         0);
-}
-
-NTSTATUS
-IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
-                       IN FILE_INFORMATION_CLASS FileInformationClass,
-                       OUT PVOID FileInformation)
-{
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    NTSTATUS Status;
-    KPROCESSOR_MODE AccessMode;
-    UNICODE_STRING ObjectName;
-    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
-    OBJECT_ATTRIBUTES LocalObjectAttributes;
-    ULONG BufferSize;
-    union
-    {
-        FILE_BASIC_INFORMATION BasicInformation;
-        FILE_NETWORK_OPEN_INFORMATION NetworkOpenInformation;
-    }LocalFileInformation;
-
-    if (FileInformationClass == FileBasicInformation)
-    {
-        BufferSize = sizeof(FILE_BASIC_INFORMATION);
-    }
-    else if (FileInformationClass == FileNetworkOpenInformation)
-    {
-        BufferSize = sizeof(FILE_NETWORK_OPEN_INFORMATION);
-    }
-    else
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    AccessMode = ExGetPreviousMode();
-
-    if (AccessMode != KernelMode)
-    {
-        Status = STATUS_SUCCESS;
-        _SEH_TRY
-        {
-            ProbeForWrite(FileInformation,
-                          BufferSize,
-                          sizeof(ULONG));
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        if (NT_SUCCESS(Status))
-        {
-            Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                                AccessMode,
-                                                FALSE,
-                                                &ObjectCreateInfo,
-                                                &ObjectName);
-        }
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
-        InitializeObjectAttributes(&LocalObjectAttributes,
-                                   &ObjectName,
-                                   ObjectCreateInfo.Attributes,
-                                   ObjectCreateInfo.RootDirectory,
-                                   ObjectCreateInfo.SecurityDescriptor);
-    }
-
-    /* Open the file */
-    Status = ZwOpenFile(&FileHandle,
-                        SYNCHRONIZE | FILE_READ_ATTRIBUTES,
-                        AccessMode == KernelMode ? ObjectAttributes : &LocalObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (AccessMode != KernelMode)
-    {
-        ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-        if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
-    }
-    if (!NT_SUCCESS (Status))
-    {
-        DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    /* Get file attributes */
-    Status = ZwQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    AccessMode == KernelMode ? FileInformation : &LocalFileInformation,
-                                    BufferSize,
-                                    FileInformationClass);
-    if (!NT_SUCCESS (Status))
-    {
-        DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
-    }
-    ZwClose(FileHandle);
-
-    if (NT_SUCCESS(Status) && AccessMode != KernelMode)
-    {
-        _SEH_TRY
-        {
-            memcpy(FileInformation, &LocalFileInformation, BufferSize);
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-    }
-    return Status;
 }
 
 NTSTATUS
