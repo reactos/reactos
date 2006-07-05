@@ -561,7 +561,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
 }
 
 VOID
-STDCALL
+NTAPI
 IopCloseFile(IN PEPROCESS Process OPTIONAL,
              IN PVOID ObjectBody,
              IN ACCESS_MASK GrantedAccess,
@@ -575,19 +575,40 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
 
-    DPRINT("IopCloseFile()\n");
+    /* Check if the file is locked and has more then one handle opened */
+    if ((FileObject->LockOperation) && (SystemHandleCount != 1))
+    {
+        DPRINT1("We need to unlock this file!\n");
+        KEBUGCHECK(0);
+    }
 
-    if (HandleCount > 1 || FileObject->DeviceObject == NULL) return;
+    /* Make sure this is the last handle */
+    if (SystemHandleCount != 1) return;
+
+    /* FIXME: ROS HACK */
+    if (!FileObject->DeviceObject)
+    {
+        DPRINT1("FIXME: MALFORMED FILE OBJECT!\n");
+        return;
+    }
 
     /* Check if this is a direct open or not */
     if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
     {
+        /* Get the attached device */
         DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
     }
     else
     {
+        /* Get the FO's device */
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
+
+    /* Set the handle created flag */
+    FileObject->Flags |= FO_HANDLE_CREATED;
+
+    /* Check if this is a sync FO and lock it */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO) IopLockFileObject(FileObject);
 
     /* Clear and set up Events */
     KeClearEvent(&FileObject->Event);
@@ -595,12 +616,14 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
 
     /* Allocate an IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp) return;
 
     /* Set it up */
     Irp->UserEvent = &Event;
     Irp->UserIosb = &Irp->IoStatus;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
     Irp->Flags = IRP_CLOSE_OPERATION | IRP_SYNCHRONOUS_API;
 
     /* Set up Stack Pointer Data */
@@ -608,15 +631,25 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     StackPtr->MajorFunction = IRP_MJ_CLEANUP;
     StackPtr->FileObject = FileObject;
 
+    /* Queue the IRP */
+    //IopQueueIrpToThread(Irp);
+
+    /* Update operation counts */
+    IopUpdateOperationCount(IopOtherTransfer);
+
     /* Call the FS Driver */
     Status = IoCallDriver(DeviceObject, Irp);
-
-    /* Wait for completion */
     if (Status == STATUS_PENDING)
     {
-        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        /* Wait for completion */
+        KeWaitForSingleObject(&Event, UserRequest, KernelMode, FALSE, NULL);
     }
+
+    /* Free the IRP */
     IoFreeIrp(Irp);
+
+    /* Release the lock if we were holding it */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO) IopUnlockFileObject(FileObject);
 }
 
 NTSTATUS
@@ -986,7 +1019,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    SecurityContext.DesiredAccess = DesiredAccess;
    SecurityContext.FullCreateOptions = 0; /* ?? */
 
-   KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, FALSE);
+   KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
 
    DPRINT("FileObject 0x%p\n", FileObject);
