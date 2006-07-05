@@ -71,6 +71,7 @@ IopParseDevice(IN PVOID ParseObject,
                                 (PVOID*)&FileObject);
         /* Set File Object Data */
         ASSERT(DeviceObject);
+        RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
         FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject);
         DPRINT("DO. DRV Name: %p %wZ\n", DeviceObject, &DeviceObject->DriverObject->DriverName);
 
@@ -89,7 +90,7 @@ IopParseDevice(IN PVOID ParseObject,
                         0,
                         0,
                         (PVOID*)&FileObject);
-
+    RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
     if (!Context)
     {
         /* Parent is a device object */
@@ -992,22 +993,44 @@ IoCreateFile(OUT PHANDLE  FileHandle,
                               NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
+    FileObject->Type = IO_TYPE_FILE;
+    FileObject->Size = sizeof(FILE_OBJECT);
+
    //
    // stop stuff that should be in IopParseDevice
    //
 
-   if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
-     {
-       FileObject->Flags |= (FO_ALERTABLE_IO | FO_SYNCHRONOUS_IO);
-     }
-   if (CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT)
-     {
-       FileObject->Flags |= FO_SYNCHRONOUS_IO;
-     }
+    if (CreateOptions &
+        (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
+    {
+        FileObject->Flags |= FO_SYNCHRONOUS_IO;
+        if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
+        {
+            FileObject->Flags |= FO_ALERTABLE_IO;
+        }
+    }
 
-   if (CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
-     FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+    if (CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
+    {
+        FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+    }
+    if (CreateOptions & FILE_WRITE_THROUGH)
+    {
+        FileObject->Flags |= FO_WRITE_THROUGH;
+    }
+    if (CreateOptions & FILE_SEQUENTIAL_ONLY)
+    {
+        FileObject->Flags |= FO_SEQUENTIAL_ONLY;
+    }
+    if (CreateOptions & FILE_RANDOM_ACCESS)
+    {
+        FileObject->Flags |= FO_RANDOM_ACCESS;
+    }
 
+    if (!(ObjectAttributes->Attributes & OBJ_CASE_INSENSITIVE))
+    {
+        FileObject->Flags |= FO_OPENED_CASE_SENSITIVE;
+    }
     /* 
      * FIXME: We should get the access state from Ob once this function becomes
      * a parse routine once the Ob is refactored.
@@ -1017,7 +1040,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    SecurityContext.SecurityQos = NULL; /* ?? */
    SecurityContext.AccessState = &AccessState;
    SecurityContext.DesiredAccess = DesiredAccess;
-   SecurityContext.FullCreateOptions = 0; /* ?? */
+   SecurityContext.FullCreateOptions = CreateOptions;
 
    KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
@@ -1036,58 +1059,58 @@ IoCreateFile(OUT PHANDLE  FileHandle,
        return STATUS_UNSUCCESSFUL;
      }
 
-   //trigger FileObject/Event dereferencing
+   /* Now set the IRP data */
    Irp->Tail.Overlay.OriginalFileObject = FileObject;
    Irp->RequestorMode = AccessMode;
-   Irp->UserIosb = IoStatusBlock;
-   Irp->AssociatedIrp.SystemBuffer = SystemEaBuffer;
-   Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
+   Irp->Flags = IRP_CREATE_OPERATION |
+                IRP_SYNCHRONOUS_API;// |
+                //IRP_DEFER_IO_COMPLETION;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
    Irp->UserEvent = &FileObject->Event;
-   Irp->Overlay.AllocationSize = SafeAllocationSize;
+   Irp->UserIosb = IoStatusBlock;
+   Irp->MdlAddress = NULL;
+   Irp->PendingReturned = FALSE;
+   Irp->UserEvent = NULL;
+   Irp->Cancel = FALSE;
+   Irp->CancelRoutine = NULL;
+   Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
 
    /*
     * Get the stack location for the new
     * IRP and prepare it.
     */
    StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
-   StackLoc->MinorFunction = 0;
-   StackLoc->Flags = (UCHAR)Options;
    StackLoc->Control = 0;
-   StackLoc->DeviceObject = FileObject->DeviceObject;
    StackLoc->FileObject = FileObject;
 
-   switch (CreateFileType)
+     switch (CreateFileType)
      {
        default:
        case CreateFileTypeNone:
          StackLoc->MajorFunction = IRP_MJ_CREATE;
-         StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
-         StackLoc->Parameters.Create.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
-         StackLoc->Parameters.Create.Options |= (CreateDisposition << 24);
-         StackLoc->Parameters.Create.FileAttributes = (USHORT)FileAttributes;
-         StackLoc->Parameters.Create.ShareAccess = (USHORT)ShareAccess;
+         StackLoc->Flags = Options;
          StackLoc->Parameters.Create.EaLength = SystemEaBuffer != NULL ? EaLength : 0;
+         StackLoc->Flags |= !(ObjectAttributes->Attributes & OBJ_CASE_INSENSITIVE) ? SL_CASE_SENSITIVE: 0;
          break;
 
       case CreateFileTypeNamedPipe:
         StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
-        StackLoc->Parameters.CreatePipe.SecurityContext = &SecurityContext;
-        StackLoc->Parameters.CreatePipe.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
-        StackLoc->Parameters.CreatePipe.Options |= (CreateDisposition << 24);
-        StackLoc->Parameters.CreatePipe.ShareAccess = (USHORT)ShareAccess;
         StackLoc->Parameters.CreatePipe.Parameters = ExtraCreateParameters;
         break;
 
       case CreateFileTypeMailslot:
         StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
-        StackLoc->Parameters.CreateMailslot.SecurityContext = &SecurityContext;
-        StackLoc->Parameters.CreateMailslot.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
-        StackLoc->Parameters.CreateMailslot.Options |= (CreateDisposition << 24);
-        StackLoc->Parameters.CreateMailslot.ShareAccess = (USHORT)ShareAccess;
         StackLoc->Parameters.CreateMailslot.Parameters = ExtraCreateParameters;
         break;
      }
+
+   /* Set the common data */
+   Irp->Overlay.AllocationSize = SafeAllocationSize;
+   Irp->AssociatedIrp.SystemBuffer = SystemEaBuffer;
+   StackLoc->Parameters.Create.Options = (CreateDisposition << 24) | (CreateOptions & 0x00FFFFFF);
+   StackLoc->Parameters.Create.FileAttributes = FileAttributes;
+   StackLoc->Parameters.Create.ShareAccess = ShareAccess;
+   StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
 
    /*
     * Now call the driver and
@@ -1107,13 +1130,27 @@ IoCreateFile(OUT PHANDLE  FileHandle,
                              NULL);
        Status = IoStatusBlock->Status;
      }
+#if 0
+   else
+   {
+        /* We'll have to complete it ourselves */
+        ASSERT(!Irp->PendingReturned);
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
+        FileObject->Event.Header.SignalState = 1;
+        if ((Irp->Flags & IRP_BUFFERED_IO) && (Irp->Flags & IRP_DEALLOCATE_BUFFER))
+        {
+            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+        }
+        IoFreeIrp(Irp);
+        KeLowerIrql(OldIrql);
+   }
+#endif
    if (!NT_SUCCESS(Status))
      {
        DPRINT("Failing create request with status %x\n", Status);
        FileObject->DeviceObject = NULL;
        FileObject->Vpb = NULL;
-
-       ZwClose(LocalHandle);
+       ObDereferenceObject(FileObject);
      }
    else
      {
