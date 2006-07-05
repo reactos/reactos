@@ -385,7 +385,7 @@ TiDispatchOpenClose(
 
   RIRP(Irp);
 
-  DbgPrint("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp);
+//  DbgPrint("Called. DeviceObject is at (0x%X), IRP is at (0x%X).\n", DeviceObject, Irp);
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -413,7 +413,7 @@ TiDispatchOpenClose(
     Status = STATUS_INVALID_DEVICE_REQUEST;
   }
 
-  DbgPrint("Leaving. Status is (0x%X)\n", Status);
+  //DbgPrint("Leaving. Status is (0x%X)\n", Status);
 
   return IRPFinish( Irp, Status );
 }

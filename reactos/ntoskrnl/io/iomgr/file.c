@@ -884,8 +884,6 @@ IoCreateFile(OUT PHANDLE FileHandle,
         DPRINT1("FIXME: IO_CHECK_CREATE_PARAMETERS not yet supported!\n");
     }
 
-    RtlMapGenericMask(&DesiredAccess, &IoFileObjectType->TypeInfo.GenericMapping);
-
     /* First try to open an existing named object */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 NULL,
@@ -894,6 +892,8 @@ IoCreateFile(OUT PHANDLE FileHandle,
                                 DesiredAccess,
                                 NULL,
                                 &LocalHandle);
+
+    RtlMapGenericMask(&DesiredAccess, &IoFileObjectType->TypeInfo.GenericMapping);
     ObReferenceObjectByHandle(LocalHandle,
                               DesiredAccess,
                               NULL,

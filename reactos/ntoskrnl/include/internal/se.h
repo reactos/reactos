@@ -260,7 +260,7 @@ NTSTATUS
 NTAPI
 SeSetWorldSecurityDescriptor(
     SECURITY_INFORMATION SecurityInformation,
-    PSECURITY_DESCRIPTOR SecurityDescriptor,
+    PISECURITY_DESCRIPTOR SecurityDescriptor,
     PULONG BufferLength
 );
 
