@@ -9,6 +9,7 @@
  */
 
 #include "desk.h"
+void SetScreenSaver();
 
 #define MAX_SCREENSAVERS 100
 
@@ -186,6 +187,7 @@ ScreenSaverPageProc(HWND hwndDlg,
            switch(lpnm->code) {   
              case PSN_APPLY:
              {
+				 SetScreenSaver();
                 return TRUE;
              } break;
              case NM_RCLICK:
@@ -396,5 +398,29 @@ void AddListViewItems2()
         if(!FindNextFile(hFind, &fd))
             hFind = INVALID_HANDLE_VALUE;
     }
+}
+
+void SetScreenSaver()
+{
+    HKEY regKey;
+    
+    RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
+    RegSetValueEx(regKey, TEXT("SCRNSAVE.EXE"), 0, REG_SZ, (BYTE *)g_ScreenSaverItems[ImageListSelection].szFilename, _tcslen(g_ScreenSaverItems[ImageListSelection].szFilename)*sizeof(TCHAR));
+   // RegSetValueEx(regKey, TEXT("SCRNSAVE.EXE"), 0, REG_SZ, g_ScreenSaverItems[ImageListSelection].szFilename, sizeof(TCHAR) * 2);        
+   
+
+	 RegCloseKey(regKey);
+    
+    //if(g_backgroundItems[g_backgroundSelection].bWallpaper == TRUE)
+    //{
+    //    SystemParametersInfo(SPI_SETDESKWALLPAPER,
+    //                         0,
+    //                         g_backgroundItems[g_backgroundSelection].szFilename,
+    //                         SPIF_UPDATEINIFILE);
+    //}
+    //else
+    //{   
+    //    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, TEXT(""), SPIF_UPDATEINIFILE);
+    //}
 }
 
