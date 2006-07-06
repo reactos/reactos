@@ -52,6 +52,7 @@
 #define TAG_APC             TAG('K', 'A', 'P', 'C')
 #define TAG_IO              TAG('I', 'o', ' ', ' ')
 #define TAG_ERROR_LOG       TAG('I', 'o', 'E', 'r')
+#define TAG_EA              TAG('I', 'o', 'E', 'a')
 
 /* formerly located in io/work.c */
 #define TAG_IOWI TAG('I', 'O', 'W', 'I')

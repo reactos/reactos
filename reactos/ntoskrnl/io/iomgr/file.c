@@ -47,6 +47,9 @@ IopParseDevice(IN PVOID ParseObject,
            CompleteName,
            RemainingName);
 
+    /* Assume failure */
+    *Object = NULL;
+
     /* Validate the open packet */
     if (!IopValidateOpenPacket(OpenPacket)) return STATUS_OBJECT_TYPE_MISMATCH;
 
@@ -99,7 +102,6 @@ IopParseDevice(IN PVOID ParseObject,
                     {
                         /* Couldn't mount, fail the lookup */
                         ObDereferenceObject(FileObject);
-                        *Object = NULL;
                         return STATUS_UNSUCCESSFUL;
                     }
                 }
@@ -220,6 +222,7 @@ IopParseDevice(IN PVOID ParseObject,
 
     /* Reference the file object and call the driver */
     ObReferenceObject(FileObject);
+    OpenPacket->FileObject = FileObject;
     Status = IoCallDriver(FileObject->DeviceObject, Irp );
 
     /* Copy the status block */
@@ -252,16 +255,45 @@ IopParseDevice(IN PVOID ParseObject,
         KeLowerIrql(OldIrql);
     }
 #endif
+
+    /* The driver failed to create the file */
     if (!NT_SUCCESS(Status))
     {
+        /* Check if we have a name */
+        if (FileObject->FileName.Length)
+        {
+            /* Free it */
+            ExFreePool(FileObject->FileName.Buffer);
+            FileObject->FileName.Length = 0;
+        }
+
+        /* Clear its device object */
         FileObject->DeviceObject = NULL;
-        FileObject->Vpb = NULL;
-        FileObject = NULL;
-        //ObDereferenceObject(FileObject);
+
+        /* Clear the file object in the open packet */
+        OpenPacket->FileObject = NULL;
+
+        /* Dereference the file object */
+        ObDereferenceObject(FileObject);
+
+        /* Set the status and return */
+        OpenPacket->FinalStatus = Status;
+        return Status;
+    }
+    else if (Status == STATUS_REPARSE)
+    {
+        /* FIXME: We don't handle this at all! */
+        KEBUGCHECK(0);
     }
 
+    /* Otherwise, we were successful. Reference the object, set status */
+    ObReferenceObject(FileObject);
+    OpenPacket->FinalStatus = IoStatusBlock.Status;
+    OpenPacket->ParseCheck = TRUE;
+
+    /* Return the object and status */
     *Object = FileObject;
-    return Status;
+    return OpenPacket->FinalStatus;
 }
 
 NTSTATUS
@@ -992,7 +1024,9 @@ IoCreateFile(OUT PHANDLE FileHandle,
                              sizeof(ULONG));
 
                 /* marshal EaBuffer */
-                SystemEaBuffer = ExAllocatePool(NonPagedPool, EaLength);
+                SystemEaBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                       EaLength,
+                                                       TAG_EA);
                 if(!SystemEaBuffer)
                 {
                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1021,7 +1055,13 @@ IoCreateFile(OUT PHANDLE FileHandle,
             SafeAllocationSize.QuadPart = 0;
         }
 
-        if ((EaBuffer) && (EaLength)) SystemEaBuffer = EaBuffer;
+        if ((EaBuffer) && (EaLength))
+        {
+            SystemEaBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                   EaLength,
+                                                   TAG_EA);
+            RtlCopyMemory(SystemEaBuffer, EaBuffer, EaLength);
+        }
     }
 
     if(Options & IO_CHECK_CREATE_PARAMETERS)
@@ -1057,7 +1097,14 @@ IoCreateFile(OUT PHANDLE FileHandle,
     OpenPacket.DummyFileObject = NULL;
     OpenPacket.InternalFlags = 0;
 
-    /* First try to open an existing named object */
+    /*
+     * Attempt opening the file. This will call the I/O Parse Routine for
+     * the File Object (IopParseDevice) which will create the object and
+     * send the IRP to its device object. Note that we have two statuses
+     * to worry about: the Object Manager's status (in Status) and the I/O
+     * status, which is in the Open Packet's Final Status, and determined
+     * by the Parse Check member.
+     */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 NULL,
                                 AccessMode,
@@ -1066,26 +1113,97 @@ IoCreateFile(OUT PHANDLE FileHandle,
                                 &OpenPacket,
                                 &LocalHandle);
 
-    DPRINT1("Status: %lx %lx\n", Status, LocalHandle);
+    /* Free the EA Buffer */
+    if (OpenPacket.EaBuffer) ExFreePool(OpenPacket.EaBuffer);
 
-    _SEH_TRY
+    /* Now check for Ob or Io failure */
+    if (!(NT_SUCCESS(Status)) || (OpenPacket.ParseCheck != TRUE))
     {
-        *FileHandle = LocalHandle;
-        IoStatusBlock->Information = OpenPacket.Information;
-        IoStatusBlock->Status = OpenPacket.FinalStatus;
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
+        /* Check if Ob thinks well went well */
+        if (NT_SUCCESS(Status))
+        {
+            /*
+             * Tell it otherwise. Because we didn't use an ObjectType,
+             * it incorrectly returned us a handle to God knows what.
+             */
+            ZwClose(LocalHandle);
+            Status = STATUS_OBJECT_TYPE_MISMATCH;
+        }
 
-    /* cleanup EABuffer if captured */
-    if (AccessMode != KernelMode && (SystemEaBuffer))
+        /* Now check the Io status */
+        if (!NT_SUCCESS(OpenPacket.FinalStatus))
+        {
+            /* Use this status instead of Ob's */
+            Status = OpenPacket.FinalStatus;
+
+            /* Check if it was only a warning */
+            if (NT_WARNING(Status))
+            {
+                /* Protect write with SEH */
+                _SEH_TRY
+                {
+                    /* In this case, we copy the I/O Status back */
+                    IoStatusBlock->Information = OpenPacket.Information;
+                    IoStatusBlock->Status = OpenPacket.FinalStatus;
+                }
+                _SEH_HANDLE
+                {
+                    /* Get exception code */
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+            }
+        }
+        else if ((OpenPacket.FileObject) && (OpenPacket.ParseCheck != 1))
+        {
+            /*
+             * This can happen in the very bizare case where the parse routine
+             * actually executed more then once (due to a reparse) and ended
+             * up failing after already having created the File Object.
+             */
+            if (OpenPacket.FileObject->FileName.Length)
+            {
+                /* It had a name, free it */
+                ExFreePool(OpenPacket.FileObject->FileName.Buffer);
+            }
+
+            /* Clear the device object to invalidate the FO, and dereference */
+            OpenPacket.FileObject->DeviceObject = NULL;
+            ObDereferenceObject(OpenPacket.FileObject);
+        }
+    }
+    else
     {
-        ExFreePool(SystemEaBuffer);
+        /* We reached success and have a valid file handle */
+        OpenPacket.FileObject->Flags |= FO_HANDLE_CREATED;
+
+        /* Enter SEH for write back */
+        _SEH_TRY
+        {
+            /* Write back the handle and I/O Status */
+            *FileHandle = LocalHandle;
+            IoStatusBlock->Information = OpenPacket.Information;
+            IoStatusBlock->Status = OpenPacket.FinalStatus;
+
+            /* Get the Io status */
+            Status = OpenPacket.FinalStatus;
+        }
+        _SEH_HANDLE
+        {
+            /* Get the exception status */
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
     }
 
+    /* Check if we were 100% successful */
+    if ((OpenPacket.ParseCheck == TRUE) && (OpenPacket.FileObject))
+    {
+        /* Dereference the File Object */
+        ObDereferenceObject(OpenPacket.FileObject);
+    }
+
+    /* Return status */
     return Status;
 }
 
