@@ -73,4 +73,8 @@
 <directory name="utils">
 	<xi:include href="utils/utils.rbuild" />
 </directory>
+<directory name="winver">
+	<xi:include href="winver/winver.rbuild" />
+</directory>
+
 </group>
