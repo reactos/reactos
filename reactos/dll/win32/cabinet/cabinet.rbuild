@@ -12,11 +12,8 @@
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>cabinet_main.c</file>
-	<library>ntdll</library>
 	<file>fci.c</file>
-	<library>ntdll</library>
 	<file>fdi.c</file>
-	<library>ntdll</library>
 	<file>cabinet.rc</file>
 	<file>cabinet.spec</file>
 </module>
