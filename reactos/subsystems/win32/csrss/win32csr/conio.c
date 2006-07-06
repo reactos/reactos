@@ -3301,11 +3301,12 @@ CSR_API(CsrGetProcessList)
   return Request->Status = STATUS_SUCCESS;
 }
 
+static BOOL ScreenSaverRunning = FALSE;
 
 CSR_API(CsrStartScreenSaver)
 {                                            
 
-    DPRINT1("CsrStartScreenSaver : Start Screen Saver \n");
+    DPRINT("CsrStartScreenSaver : Start Screen Saver \n");
     
     if (Request->Data.StartScreenSaver.Start == TRUE)
     {
@@ -3318,33 +3319,51 @@ CSR_API(CsrStartScreenSaver)
         DWORD bufferSize = sizeof(szBuffer);
         DWORD varType = REG_SZ;
         LONG result;
-        
-    
-        
-        // FIXME read the register key for the screen saver
-         //swprintf(szCmdline, L"c:\\reactos\\system32\\matrix.scr /s");  
-                       
-         RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_ALL_ACCESS, &hKey);
-         result = RegQueryValueExW(hKey, L"SCRNSAVE.EXE", 0, &varType, (LPBYTE)szBuffer, &bufferSize);
-         if(result == ERROR_SUCCESS)
-         {                                    
-            swprintf(szCmdline, L"%s /s",szBuffer);       
-            DPRINT1("CsrStartScreenSaver : OK %S\n",szCmdline);                             
-	        ZeroMemory( &si, sizeof(si) );
-            si.cb = sizeof(si);
-            ZeroMemory( &pi, sizeof(pi) );                         
-            if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
-            {                          
-              CloseHandle( pi.hProcess );
-              CloseHandle( pi.hThread );                       
-            }              
-         }
-         else
-         {
-               DPRINT1("CsrStartScreenSaver : FAIL %S\n",szBuffer);   
-         }
                     
-         RegCloseKey(hKey);
+        /* FIXME :
+           1. Make it unicode and ansi compatible with TCHAR
+           
+           2. Return state it is running if a tree try start it
+              one more screen saver when we already have one 
+              screen saver running
+              
+           3. Use GetLongPath or GetPathName so we can use %SystemRoot% in
+              the key that will make it posible for livecd have a preview screen
+              saver install.
+           
+           4. Move the code to winlogon SAS and screen saver must run in
+              the secuar desktop. But current our Winlogon does not working
+              well with SAS and with Secure desktop, So I (Magnus Olsen aka GreatLord) 
+              add the code here as w3seek recomandete  
+         */
+                       
+		if (ScreenSaverRunning == FALSE)
+		{
+		   
+           RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_ALL_ACCESS, &hKey);
+           result = RegQueryValueExW(hKey, L"SCRNSAVE.EXE", 0, &varType, (LPBYTE)szBuffer, &bufferSize);
+           if(result == ERROR_SUCCESS) 
+           {                                    
+              swprintf(szCmdline, L"%s /s",szBuffer);       
+              DPRINT1("CsrStartScreenSaver : OK %S\n",szCmdline);                             
+	          ZeroMemory( &si, sizeof(si) );
+              si.cb = sizeof(si);
+              ZeroMemory( &pi, sizeof(pi) );  
+              ScreenSaverRunning = TRUE;                       
+              if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+              {        
+                
+                CloseHandle( pi.hProcess );
+                CloseHandle( pi.hThread );                       
+                ScreenSaverRunning = FALSE;                    
+              }              
+            }
+            else
+            {
+               DPRINT1("CsrStartScreenSaver : FAIL %S\n",szBuffer);   
+            }                    
+            RegCloseKey(hKey);
+		}
     }    
 	return Request->Status = STATUS_SUCCESS;
 }
