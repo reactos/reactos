@@ -79,13 +79,13 @@ CdfsCreateFCB(PCWSTR FileName)
     {
       wcscpy(Fcb->PathName, FileName);
       if (wcsrchr(Fcb->PathName, '\\') != 0)
-	{
-	  Fcb->ObjectName = wcsrchr(Fcb->PathName, '\\');
-	}
+        {
+          Fcb->ObjectName = wcsrchr(Fcb->PathName, '\\');
+        }
       else
-	{
-	  Fcb->ObjectName = Fcb->PathName;
-	}
+        {
+          Fcb->ObjectName = Fcb->PathName;
+        }
     }
 
   ExInitializeResourceLite(&Fcb->MainResource);
@@ -119,14 +119,14 @@ CdfsFCBIsRoot(PFCB Fcb)
 
 VOID
 CdfsGrabFCB(PDEVICE_EXTENSION Vcb,
-	    PFCB Fcb)
+            PFCB Fcb)
 {
   KIRQL  oldIrql;
 
   DPRINT("grabbing FCB at %x: %S, refCount:%d\n",
-	 Fcb,
-	 Fcb->PathName,
-	 Fcb->RefCount);
+         Fcb,
+         Fcb->PathName,
+         Fcb->RefCount);
 
   KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
   Fcb->RefCount++;
@@ -136,14 +136,14 @@ CdfsGrabFCB(PDEVICE_EXTENSION Vcb,
 
 VOID
 CdfsReleaseFCB(PDEVICE_EXTENSION Vcb,
-	       PFCB Fcb)
+               PFCB Fcb)
 {
   KIRQL  oldIrql;
 
   DPRINT("releasing FCB at %x: %S, refCount:%d\n",
-	 Fcb,
-	 Fcb->PathName,
-	 Fcb->RefCount);
+         Fcb,
+         Fcb->PathName,
+         Fcb->RefCount);
 
   KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
   Fcb->RefCount--;
@@ -158,7 +158,7 @@ CdfsReleaseFCB(PDEVICE_EXTENSION Vcb,
 
 VOID
 CdfsAddFCBToTable(PDEVICE_EXTENSION Vcb,
-		  PFCB Fcb)
+                  PFCB Fcb)
 {
   KIRQL  oldIrql;
 
@@ -171,7 +171,7 @@ CdfsAddFCBToTable(PDEVICE_EXTENSION Vcb,
 
 PFCB
 CdfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
-		     PUNICODE_STRING FileName)
+                     PUNICODE_STRING FileName)
 {
   KIRQL  oldIrql;
   PFCB Fcb;
@@ -195,11 +195,11 @@ CdfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
 
       DPRINT("Comparing '%wZ' and '%S'\n", FileName, Fcb->PathName);
       if (_wcsicmp(FileName->Buffer, Fcb->PathName) == 0)
-	{
-	  Fcb->RefCount++;
-	  KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
-	  return(Fcb);
-	}
+        {
+          Fcb->RefCount++;
+          KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+          return(Fcb);
+        }
 
       //FIXME: need to compare against short name in FCB here
 
@@ -213,7 +213,7 @@ CdfsGrabFCBFromTable(PDEVICE_EXTENSION Vcb,
 
 NTSTATUS
 CdfsFCBInitializeCache(PVCB Vcb,
-		       PFCB Fcb)
+                       PFCB Fcb)
 {
   PFILE_OBJECT FileObject;
   NTSTATUS Status;
@@ -227,7 +227,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
   RtlZeroMemory(newCCB,
-		sizeof(CCB));
+                sizeof(CCB));
 
   FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
   FileObject->FsContext = Fcb;
@@ -238,7 +238,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
 
 #ifdef USE_ROS_AND_FS
   Status = CcRosInitializeFileCache(FileObject,
-				    PAGE_SIZE);
+                                    PAGE_SIZE);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("CcRosInitializeFileCache failed\n");
@@ -248,9 +248,9 @@ CdfsFCBInitializeCache(PVCB Vcb,
   Status = STATUS_SUCCESS;
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-		       FALSE,
-		       NULL,
-		       NULL);
+                       FALSE,
+                       NULL,
+                       NULL);
 #endif
 
   ObDereferenceObject(FileObject);
@@ -294,7 +294,7 @@ CdfsOpenRootFCB(PDEVICE_EXTENSION Vcb)
   RtlInitUnicodeString(&FileName, L"\\");
 
   Fcb = CdfsGrabFCBFromTable(Vcb,
-			     &FileName);
+                             &FileName);
   if (Fcb == NULL)
     {
       Fcb = CdfsMakeRootFCB(Vcb);
@@ -306,8 +306,8 @@ CdfsOpenRootFCB(PDEVICE_EXTENSION Vcb)
 
 static VOID
 CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
-		    PDIR_RECORD Record,
-		    PWSTR Name)
+                    PDIR_RECORD Record,
+                    PWSTR Name)
 /*
  * FUNCTION: Retrieves the file name from a directory record.
  */
@@ -323,19 +323,19 @@ CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
   else
     {
       if (DeviceExt->CdInfo.JolietLevel == 0)
-	{
-	  ULONG i;
+        {
+          ULONG i;
 
-	  for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
-	    Name[i] = (WCHAR)Record->FileId[i];
-	  Name[i] = 0;
-	}
+          for (i = 0; i < Record->FileIdLength && Record->FileId[i] != ';'; i++)
+            Name[i] = (WCHAR)Record->FileId[i];
+          Name[i] = 0;
+        }
       else
-	{
-	  CdfsSwapString(Name,
-			 Record->FileId,
-			 Record->FileIdLength);
-	}
+        {
+          CdfsSwapString(Name,
+                         Record->FileId,
+                         Record->FileIdLength);
+        }
     }
 
   DPRINT("Name '%S'\n", Name);
@@ -344,13 +344,13 @@ CdfsGetDirEntryName(PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS
 CdfsMakeFCBFromDirEntry(PVCB Vcb,
-			PFCB DirectoryFCB,
-			PWSTR LongName,
-			PWSTR ShortName,
-			PDIR_RECORD Record,
-			ULONG DirectorySector,
-			ULONG DirectoryOffset,
-			PFCB * fileFCB)
+                        PFCB DirectoryFCB,
+                        PWSTR LongName,
+                        PWSTR ShortName,
+                        PDIR_RECORD Record,
+                        ULONG DirectorySector,
+                        ULONG DirectoryOffset,
+                        PFCB * fileFCB)
 {
   WCHAR pathName[MAX_PATH];
   PFCB rcFCB;
@@ -412,8 +412,8 @@ CdfsMakeFCBFromDirEntry(PVCB Vcb,
 
 NTSTATUS
 CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
-			  PFCB Fcb,
-			  PFILE_OBJECT FileObject)
+                          PFCB Fcb,
+                          PFILE_OBJECT FileObject)
 {
   PCCB  newCCB;
 
@@ -435,18 +435,18 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 #ifdef USE_ROS_CC_AND_FS
       NTSTATUS Status;
       Status = CcRosInitializeFileCache(FileObject,
-					PAGE_SIZE);
+                                        PAGE_SIZE);
       if (!NT_SUCCESS(Status))
-	{
-	  DbgPrint("CcRosInitializeFileCache failed\n");
-	  KEBUGCHECK(0);
-	}
+        {
+          DbgPrint("CcRosInitializeFileCache failed\n");
+          KEBUGCHECK(0);
+        }
 #else
   CcInitializeCacheMap(FileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-		       FALSE,
-		       NULL,
-		       NULL);
+                       FALSE,
+                       NULL,
+                       NULL);
 #endif
       Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
@@ -459,9 +459,9 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 
 NTSTATUS
 CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
-		PFCB DirectoryFcb,
-		PUNICODE_STRING FileToFind,
-		PFCB *FoundFCB)
+                PFCB DirectoryFcb,
+                PUNICODE_STRING FileToFind,
+                PFCB *FoundFCB)
 {
   UNICODE_STRING TempName;
   WCHAR Name[256];
@@ -487,9 +487,9 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   ASSERT(FileToFind);
 
   DPRINT("CdfsDirFindFile(VCB:%p, dirFCB:%p, File:%wZ)\n",
-	 DeviceExt,
-	 DirectoryFcb,
-	 FileToFind);
+         DeviceExt,
+         DirectoryFcb,
+         FileToFind);
   DPRINT("Dir Path:%S\n", DirectoryFcb->PathName);
 
   /* default to '.' if no filename specified */
@@ -503,11 +503,11 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   StreamOffset.QuadPart = (LONGLONG)DirectoryFcb->Entry.ExtentLocationL * (LONGLONG)BLOCKSIZE;
 
   if (!CcMapData(DeviceExt->StreamFileObject,
-		 &StreamOffset,
-		 BLOCKSIZE,
-		 TRUE,
-		 &Context,
-		 &Block))
+                 &StreamOffset,
+                 BLOCKSIZE,
+                 TRUE,
+                 &Context,
+                 &Block))
     {
       DPRINT("CcMapData() failed\n");
       return STATUS_UNSUCCESSFUL;
@@ -519,13 +519,13 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
   while(TRUE)
     {
       if (Record->RecordLength == 0)
-	{
-	  DPRINT("RecordLength == 0  Stopped!\n");
-	  break;
-	}
+        {
+          DPRINT("RecordLength == 0  Stopped!\n");
+          break;
+        }
 
       DPRINT("RecordLength %u  ExtAttrRecordLength %u  NameLength %u\n",
-	     Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
+             Record->RecordLength, Record->ExtAttrRecordLength, Record->FileIdLength);
 
       CdfsGetDirEntryName(DeviceExt, Record, Name);
       DPRINT ("Name '%S'\n", Name);
@@ -539,66 +539,66 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
       memset(ShortNameBuffer, 0, 26);
 
       if ((RtlIsNameLegalDOS8Dot3(&LongName, NULL, &HasSpaces) == FALSE) ||
-	  (HasSpaces == TRUE))
-	{
-	  /* Build short name */
-	  RtlGenerate8dot3Name(&LongName,
-			       FALSE,
-			       &NameContext,
-			       &ShortName);
-	}
+          (HasSpaces == TRUE))
+        {
+          /* Build short name */
+          RtlGenerate8dot3Name(&LongName,
+                               FALSE,
+                               &NameContext,
+                               &ShortName);
+        }
       else
-	{
-	  /* copy short name */
-	  RtlUpcaseUnicodeString(&ShortName,
-				 &LongName,
-				 FALSE);
-	}
+        {
+          /* copy short name */
+          RtlUpcaseUnicodeString(&ShortName,
+                                 &LongName,
+                                 FALSE);
+        }
 
       DPRINT("ShortName '%wZ'\n", &ShortName);
 
       if (FsRtlIsNameInExpression(FileToFind, &LongName, TRUE, NULL) ||
-	  FsRtlIsNameInExpression(FileToFind, &ShortName, TRUE, NULL))
-	{
-	  DPRINT("Match found, %S\n", Name);
-	  Status = CdfsMakeFCBFromDirEntry(DeviceExt,
-					   DirectoryFcb,
-					   Name,
-					   ShortNameBuffer,
-					   Record,
-					   DirectoryFcb->Entry.ExtentLocationL,
-					   Offset,
-					   FoundFCB);
+          FsRtlIsNameInExpression(FileToFind, &ShortName, TRUE, NULL))
+        {
+          DPRINT("Match found, %S\n", Name);
+          Status = CdfsMakeFCBFromDirEntry(DeviceExt,
+                                           DirectoryFcb,
+                                           Name,
+                                           ShortNameBuffer,
+                                           Record,
+                                           DirectoryFcb->Entry.ExtentLocationL,
+                                           Offset,
+                                           FoundFCB);
 
-	  CcUnpinData(Context);
+          CcUnpinData(Context);
 
-	  return(Status);
-	}
+          return(Status);
+        }
 
       Offset += Record->RecordLength;
       BlockOffset += Record->RecordLength;
       Record = (PDIR_RECORD)((ULONG_PTR)Block + BlockOffset);
       if (BlockOffset >= BLOCKSIZE || Record->RecordLength == 0)
-	{
-	  DPRINT("Map next sector\n");
-	  CcUnpinData(Context);
-	  StreamOffset.QuadPart += BLOCKSIZE;
-	  Offset = ROUND_UP(Offset, BLOCKSIZE);
-	  BlockOffset = 0;
+        {
+          DPRINT("Map next sector\n");
+          CcUnpinData(Context);
+          StreamOffset.QuadPart += BLOCKSIZE;
+          Offset = ROUND_UP(Offset, BLOCKSIZE);
+          BlockOffset = 0;
 
-	  if (!CcMapData(DeviceExt->StreamFileObject,
-			 &StreamOffset,
-			 BLOCKSIZE, TRUE,
-			 &Context, &Block))
-	    {
-	      DPRINT("CcMapData() failed\n");
-	      return(STATUS_UNSUCCESSFUL);
-	    }
-	  Record = (PDIR_RECORD)((ULONG_PTR)Block + BlockOffset);
-	}
+          if (!CcMapData(DeviceExt->StreamFileObject,
+                         &StreamOffset,
+                         BLOCKSIZE, TRUE,
+                         &Context, &Block))
+            {
+              DPRINT("CcMapData() failed\n");
+              return(STATUS_UNSUCCESSFUL);
+            }
+          Record = (PDIR_RECORD)((ULONG_PTR)Block + BlockOffset);
+        }
 
       if (Offset >= DirSize)
-	break;
+        break;
     }
 
   CcUnpinData(Context);
@@ -609,9 +609,9 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS
 CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
-		  PFCB *pParentFCB,
-		  PFCB *pFCB,
-		  PUNICODE_STRING FileName)
+                  PFCB *pParentFCB,
+                  PFCB *pFCB,
+                  PUNICODE_STRING FileName)
 {
   UNICODE_STRING PathName;
   UNICODE_STRING ElementName;
@@ -623,10 +623,10 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
   PFCB  parentFCB;
 
   DPRINT("CdfsGetFCBForFile(%x, %x, %x, '%wZ')\n",
-	 Vcb,
-	 pParentFCB,
-	 pFCB,
-	 FileName);
+         Vcb,
+         pParentFCB,
+         pFCB,
+         FileName);
 
   /* Trivial case, open of the root directory on volume */
   if (FileName->Buffer[0] == L'\0' || wcscmp(FileName->Buffer, L"\\") == 0)
@@ -652,79 +652,79 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
     {
       /*  Skip blank directory levels */
       if ((CdfsGetNextPathElement(currentElement) - currentElement) == 0)
-	{
-	  currentElement++;
-	  continue;
-	}
+        {
+          currentElement++;
+          continue;
+        }
 
       DPRINT("Parsing, currentElement:%S\n", currentElement);
       DPRINT("  parentFCB:%x FCB:%x\n", parentFCB, FCB);
 
       /* Descend to next directory level */
       if (parentFCB)
-	{
-	  CdfsReleaseFCB(Vcb, parentFCB);
-	  parentFCB = NULL;
-	}
+        {
+          CdfsReleaseFCB(Vcb, parentFCB);
+          parentFCB = NULL;
+        }
 
       /* fail if element in FCB is not a directory */
       if (!CdfsFCBIsDirectory(FCB))
-	{
-	  DPRINT("Element in requested path is not a directory\n");
+        {
+          DPRINT("Element in requested path is not a directory\n");
 
-	  CdfsReleaseFCB(Vcb, FCB);
-	  FCB = 0;
-	  *pParentFCB = NULL;
-	  *pFCB = NULL;
+          CdfsReleaseFCB(Vcb, FCB);
+          FCB = 0;
+          *pParentFCB = NULL;
+          *pFCB = NULL;
 
-	  return(STATUS_OBJECT_PATH_NOT_FOUND);
-	}
+          return(STATUS_OBJECT_PATH_NOT_FOUND);
+        }
       parentFCB = FCB;
 
       /* Extract next directory level into dirName */
       CdfsWSubString(pathName,
-		     FileName->Buffer,
-		     CdfsGetNextPathElement(currentElement) - FileName->Buffer);
+                     FileName->Buffer,
+                     CdfsGetNextPathElement(currentElement) - FileName->Buffer);
       DPRINT("  pathName:%S\n", pathName);
 
       RtlInitUnicodeString(&PathName, pathName);
 
       FCB = CdfsGrabFCBFromTable(Vcb, &PathName);
       if (FCB == NULL)
-	{
-	  CdfsWSubString(elementName,
-			 currentElement,
-			 CdfsGetNextPathElement(currentElement) - currentElement);
-	  DPRINT("  elementName:%S\n", elementName);
+        {
+          CdfsWSubString(elementName,
+                         currentElement,
+                         CdfsGetNextPathElement(currentElement) - currentElement);
+          DPRINT("  elementName:%S\n", elementName);
 
-	  RtlInitUnicodeString(&ElementName, elementName);
-	  Status = CdfsDirFindFile(Vcb,
-				   parentFCB,
-				   &ElementName,
-				   &FCB);
-	  if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-	    {
-	      *pParentFCB = parentFCB;
-	      *pFCB = NULL;
-	      currentElement = CdfsGetNextPathElement(currentElement);
-	      if (*currentElement == L'\0' || CdfsGetNextPathElement(currentElement + 1) == 0)
-		{
-		  return(STATUS_OBJECT_NAME_NOT_FOUND);
-		}
-	      else
-		{
-		  return(STATUS_OBJECT_PATH_NOT_FOUND);
-		}
-	    }
-	  else if (!NT_SUCCESS(Status))
-	    {
-	      CdfsReleaseFCB(Vcb, parentFCB);
-	      *pParentFCB = NULL;
-	      *pFCB = NULL;
+          RtlInitUnicodeString(&ElementName, elementName);
+          Status = CdfsDirFindFile(Vcb,
+                                   parentFCB,
+                                   &ElementName,
+                                   &FCB);
+          if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+            {
+              *pParentFCB = parentFCB;
+              *pFCB = NULL;
+              currentElement = CdfsGetNextPathElement(currentElement);
+              if (*currentElement == L'\0' || CdfsGetNextPathElement(currentElement + 1) == 0)
+                {
+                  return(STATUS_OBJECT_NAME_NOT_FOUND);
+                }
+              else
+                {
+                  return(STATUS_OBJECT_PATH_NOT_FOUND);
+                }
+            }
+          else if (!NT_SUCCESS(Status))
+            {
+              CdfsReleaseFCB(Vcb, parentFCB);
+              *pParentFCB = NULL;
+              *pFCB = NULL;
 
-	      return(Status);
-	    }
-	}
+              return(Status);
+            }
+        }
       currentElement = CdfsGetNextPathElement(currentElement);
     }
 
