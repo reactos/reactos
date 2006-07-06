@@ -16,6 +16,7 @@ CSR_API(CsrCreateDesktop);
 CSR_API(CsrShowDesktop);
 CSR_API(CsrHideDesktop);
 CSR_API(CsrRegisterSystemClasses);
+CSR_API(CsrStartScreenSaver);
 
 BOOL FASTCALL DtbgIsDesktopVisible(VOID);
 

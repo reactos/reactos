@@ -3301,4 +3301,52 @@ CSR_API(CsrGetProcessList)
   return Request->Status = STATUS_SUCCESS;
 }
 
+
+CSR_API(CsrStartScreenSaver)
+{                                            
+
+    DPRINT1("CsrStartScreenSaver : Start Screen Saver \n");
+    
+    if (Request->Data.StartScreenSaver.Start == TRUE)
+    {
+        STARTUPINFOW si;
+        PROCESS_INFORMATION pi;
+        WCHAR szCmdline[MAX_PATH]; 
+        
+        HKEY hKey;
+        WCHAR szBuffer[MAX_PATH];
+        DWORD bufferSize = sizeof(szBuffer);
+        DWORD varType = REG_SZ;
+        LONG result;
+        
+    
+        
+        // FIXME read the register key for the screen saver
+         //swprintf(szCmdline, L"c:\\reactos\\system32\\matrix.scr /s");  
+                       
+         RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_ALL_ACCESS, &hKey);
+         result = RegQueryValueExW(hKey, L"SCRNSAVE.EXE", 0, &varType, (LPBYTE)szBuffer, &bufferSize);
+         if(result == ERROR_SUCCESS)
+         {                                    
+            swprintf(szCmdline, L"%s /s",szBuffer);       
+            DPRINT1("CsrStartScreenSaver : OK %S\n",szCmdline);                             
+	        ZeroMemory( &si, sizeof(si) );
+            si.cb = sizeof(si);
+            ZeroMemory( &pi, sizeof(pi) );                         
+            if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+            {                          
+              CloseHandle( pi.hProcess );
+              CloseHandle( pi.hThread );                       
+            }              
+         }
+         else
+         {
+               DPRINT1("CsrStartScreenSaver : FAIL %S\n",szBuffer);   
+         }
+                    
+         RegCloseKey(hKey);
+    }    
+	return Request->Status = STATUS_SUCCESS;
+}
+
 /* EOF */

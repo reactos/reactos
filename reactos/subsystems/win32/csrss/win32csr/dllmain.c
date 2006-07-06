@@ -68,6 +68,7 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(GET_CONSOLE_OUTPUT_CP,        CsrGetConsoleOutputCodePage),
     CSRSS_DEFINE_API(SET_CONSOLE_OUTPUT_CP,        CsrSetConsoleOutputCodePage),
     CSRSS_DEFINE_API(GET_PROCESS_LIST,             CsrGetProcessList),
+    CSRSS_DEFINE_API(START_SCREEN_SAVER,           CsrStartScreenSaver),
     { 0, 0, NULL }
   };
 
