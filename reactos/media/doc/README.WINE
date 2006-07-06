@@ -38,13 +38,14 @@ reactos/tools/widl                # Forked at Wine-20050930
 The following libraries are shared with Wine.
 
 reactos/dll/win32/avifil32        # Synced to Wine-0_9_5
-reactos/dll/win32/cabinet         # Synced to Wine-0_9_10
+reactos/dll/win32/cabinet         # Autosync
 reactos/dll/win32/comctl32        # Synced to Wine-0_9_16
 reactos/dll/win32/comdlg32        # Synced to Wine-0_9_16
-reactos/dll/win32/crypt32         # Synced to Wine-0_9_10
+reactos/dll/win32/crypt32         # Autosync
+reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/dbghelp         # 
 reactos/dll/win32/icmp	          # Synced to Wine-0_9_10
-reactos/dll/win32/imm32           # Synced to Wine-0_9_10
+reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
 reactos/dll/win32/mapi32          # Synced to Wine-0_9_10
