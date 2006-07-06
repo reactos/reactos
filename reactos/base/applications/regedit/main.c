@@ -62,41 +62,38 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     HMENU hEditMenu;
     TCHAR szBuffer[256];
 
-    WNDCLASSEX wcFrame = {
-                             sizeof(WNDCLASSEX),
-                             CS_HREDRAW | CS_VREDRAW/*style*/,
-                             FrameWndProc,
-                             0/*cbClsExtra*/,
-                             0/*cbWndExtra*/,
-                             hInstance,
-                             LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT)),
-                             LoadCursor(0, IDC_ARROW),
-                             0/*hbrBackground*/,
-                             0/*lpszMenuName*/,
-                             szFrameClass,
-                             (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
-                                              GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
-                         };
-    ATOM hFrameWndClass = RegisterClassEx(&wcFrame); /* register frame window class */
+    WNDCLASSEX wcFrame;
+    WNDCLASSEX wcChild;
+    ATOM hFrameWndClass;
+    ATOM hChildWndClass;
 
-    WNDCLASSEX wcChild = {
-                             sizeof(WNDCLASSEX),
-                             CS_HREDRAW | CS_VREDRAW/*style*/,
-                             ChildWndProc,
-                             0/*cbClsExtra*/,
-                             sizeof(HANDLE)/*cbWndExtra*/,
-                             hInstance,
-                             LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT)),
-                             LoadCursor(0, IDC_ARROW),
-                             0/*hbrBackground*/,
-                             0/*lpszMenuName*/,
-                             szChildClass,
-                             (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
-                                              GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
+    ZeroMemory(&wcFrame, sizeof(WNDCLASSEX));
+    wcFrame.cbSize = sizeof(WNDCLASSEX);
+    wcFrame.style = CS_HREDRAW | CS_VREDRAW;
+    wcFrame.lpfnWndProc = FrameWndProc;
+    wcFrame.hInstance = hInstance;
+    wcFrame.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
+    wcFrame.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT),
+                                       IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                       GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+    wcFrame.hCursor = LoadCursor(0, IDC_ARROW); 
+    wcFrame.lpszClassName = szFrameClass;
 
-                         };
-    ATOM hChildWndClass = RegisterClassEx(&wcChild); /* register child windows class */
-    hChildWndClass = hChildWndClass; /* warning eater */
+    hFrameWndClass = RegisterClassEx(&wcFrame); /* register frame window class */
+
+    ZeroMemory(&wcChild, sizeof(WNDCLASSEX));
+    wcChild.cbSize = sizeof(WNDCLASSEX);
+    wcChild.style = CS_HREDRAW | CS_VREDRAW;
+    wcChild.lpfnWndProc = ChildWndProc;
+    wcChild.cbWndExtra = sizeof(HANDLE);
+    wcChild.hInstance = hInstance;
+    wcChild.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
+    wcChild.hCursor = LoadCursor(0, IDC_ARROW),
+    wcChild.lpszClassName =  szChildClass,
+    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
+                                              GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+
+    hChildWndClass = RegisterClassEx(&wcChild); /* register child windows class */
 
     RegisterHexEditorClass(hInstance);
 
@@ -195,6 +192,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     MSG msg;
     HACCEL hAccel;
 
+    UNREFERENCED_PARAMETER(hPrevInstance);
+
     /*
         int hCrt;
         FILE *hf;
@@ -238,5 +237,5 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     }
     
     ExitInstance(hInstance);
-    return msg.wParam;
+    return (int) msg.wParam;
 }

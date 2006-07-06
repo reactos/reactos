@@ -119,6 +119,7 @@ done:
 static void OnEnterMenuLoop(HWND hWnd)
 {
     int nParts;
+    UNREFERENCED_PARAMETER(hWnd);
 
     /* Update the status bar pane sizes */
     nParts = -1;
@@ -191,6 +192,7 @@ static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
 static BOOL CheckCommDlgError(HWND hWnd)
 {
     DWORD dwErrorCode = CommDlgExtendedError();
+    UNREFERENCED_PARAMETER(hWnd);
     switch (dwErrorCode) {
     case CDERR_DIALOGFAILURE:
         break;
@@ -347,6 +349,8 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
     LPTSTR pszSelectedKey;
     OFNOTIFY *pOfnNotify;
 
+    UNREFERENCED_PARAMETER(wParam);
+
 	switch(uiMsg) {
 	case WM_INITDIALOG:
         pOfn = (OPENFILENAME *) lParam;
@@ -453,6 +457,7 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
 {
 #if 1
     PRINTDLG pd;
+    UNREFERENCED_PARAMETER(path);
 
     ZeroMemory(&pd, sizeof(PRINTDLG));
     pd.lStructSize = sizeof(PRINTDLG);
@@ -714,7 +719,7 @@ InvokeRemoteRegistryPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
         STGMEDIUM stm;
         FORMATETC fe;
 
-        fe.cfFormat = RegisterClipboardFormat(CFSTR_DSOP_DS_SELECTION_LIST);
+        fe.cfFormat = (CLIPFORMAT) RegisterClipboardFormat(CFSTR_DSOP_DS_SELECTION_LIST);
         fe.ptd = NULL;
         fe.dwAspect = DVASPECT_CONTENT;
         fe.lindex = -1;
@@ -786,6 +791,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     REGSAM regsam = KEY_READ;
     LONG lRet;
     int item;
+
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(message);
 
     switch (LOWORD(wParam)) {
     case ID_REGISTRY_IMPORTREGISTRYFILE:

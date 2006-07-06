@@ -227,8 +227,8 @@ DWORD convertHexCSVToHex(char *str, BYTE *buf, ULONG bufLen)
     char *s = str;  /* Pointer to current */
     char *b = (char*) buf;  /* Pointer to result  */
 
-    ULONG strLen    = strlen(str);
-    ULONG strPos    = 0;
+    size_t strLen    = strlen(str);
+    size_t strPos    = 0;
     DWORD byteCount = 0;
 
     memset(buf, 0, bufLen);
@@ -645,6 +645,7 @@ void doQueryValue(LPSTR stdInput)
  */
 void doDeleteValue(LPSTR line)
 {
+    UNREFERENCED_PARAMETER(line);
     fprintf(stderr,"%s: deleteValue not yet implemented\n", getAppName());
 }
 
@@ -655,6 +656,7 @@ void doDeleteValue(LPSTR line)
  */
 void doDeleteKey(LPSTR line)
 {
+    UNREFERENCED_PARAMETER(line);
     fprintf(stderr,"%s: deleteKey not yet implemented\n", getAppName());
 }
 
@@ -665,6 +667,7 @@ void doDeleteKey(LPSTR line)
  */
 void doCreateKey(LPSTR line)
 {
+    UNREFERENCED_PARAMETER(line);
     fprintf(stderr,"%s: createKey not yet implemented\n", getAppName());
 }
 
@@ -735,6 +738,7 @@ void processSetValue(LPSTR line)
  */
 void processQueryValue(LPSTR cmdline)
 {
+    UNREFERENCED_PARAMETER(cmdline);
     fprintf(stderr,"ERROR!!! - temporary disabled");
     exit(1);
 #if 0
@@ -1790,6 +1794,8 @@ LONG RegSearch(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength,
 {
     LONG lResult;
     LPCTSTR s;
+
+    UNREFERENCED_PARAMETER(dwValueIndex);
 
     if (dwSearchFlags & (RSF_LOOKATVALUES | RSF_LOOKATDATA))
         return ERROR_CALL_NOT_IMPLEMENTED;    /* NYI */
