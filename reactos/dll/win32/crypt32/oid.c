@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdio.h>
 #include <stdarg.h>
@@ -23,7 +23,6 @@
 #include "winbase.h"
 #include "wincrypt.h"
 #include "winreg.h"
-#include "wingdi.h"
 #include "winuser.h"
 #include "wine/debug.h"
 #include "wine/list.h"
@@ -51,8 +50,8 @@ void crypt_oid_free(void)
     free_oid_info();
 }
 
-CRITICAL_SECTION funcSetCS;
-struct list funcSets;
+static CRITICAL_SECTION funcSetCS;
+static struct list funcSets;
 
 struct OIDFunctionSet
 {
@@ -454,7 +453,7 @@ BOOL WINAPI CryptRegisterOIDFunction(DWORD dwEncodingType, LPCSTR pszFuncName,
      */
     if (!pszFuncName || !pszOID)
     {
-        SetLastError(HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER));
+        SetLastError(E_INVALIDARG);
         return FALSE;
     }
 
@@ -579,8 +578,8 @@ BOOL WINAPI CryptSetOIDFunctionValue(DWORD dwEncodingType, LPCSTR pszFuncName,
     return rc ? FALSE : TRUE;
 }
 
-CRITICAL_SECTION oidInfoCS;
-struct list oidInfo;
+static CRITICAL_SECTION oidInfoCS;
+static struct list oidInfo;
 
 static const WCHAR tripledes[] = { '3','d','e','s',0 };
 static const WCHAR cms3deswrap[] = { 'C','M','S','3','D','E','S','w','r','a',
@@ -678,7 +677,7 @@ static const CRYPT_DATA_BLOB printableStringBlob = { sizeof(printableString),
 static const CRYPT_DATA_BLOB domainCompTypesBlob = { sizeof(domainCompTypes),
  (LPBYTE)domainCompTypes };
 
-struct OIDInfoConstructor {
+static const struct OIDInfoConstructor {
     DWORD   dwGroupId;
     LPCSTR  pszOID;
     UINT    Algid;
@@ -952,7 +951,7 @@ static void init_oid_info(HINSTANCE hinst)
         }
         else
         {
-            int len = LoadStringW(hinst, (UINT)oidInfoConstructors[i].pwszName,
+            int len = LoadStringW(hinst, (UINT_PTR)oidInfoConstructors[i].pwszName,
              NULL, 0);
 
             if (len)
@@ -969,7 +968,7 @@ static void init_oid_info(HINSTANCE hinst)
                      (LPWSTR)((LPBYTE)info + sizeof(struct OIDInfo));
                     info->info.dwGroupId = oidInfoConstructors[i].dwGroupId;
                     info->info.u.Algid = oidInfoConstructors[i].Algid;
-                    LoadStringW(hinst, (UINT)oidInfoConstructors[i].pwszName,
+                    LoadStringW(hinst, (UINT_PTR)oidInfoConstructors[i].pwszName,
                      (LPWSTR)info->info.pwszName, len + 1);
                     if (oidInfoConstructors[i].blob)
                     {

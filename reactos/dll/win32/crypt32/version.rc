@@ -1,5 +1,5 @@
 /*
- * crypt32 dll resources
+ * crypt32 dll version resources
  *
  * Copyright (C) 2006 Juan Lang
  *
@@ -18,19 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"CryptoAPI Library\0"
-#define REACTOS_STR_INTERNAL_NAME	"crypt32\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"crypt32.dll\0"
+#define WINE_FILEDESCRIPTION_STR "Wine CryptoAPI Library"
+#define WINE_FILENAME_STR "crypt32.dll"
+#define WINE_FILEVERSION 5,131,2600,1243
+#define WINE_FILEVERSION_STR "5.131.2600.1243"
+#define WINE_PRODUCTVERSION 5,131,2600,1243
+#define WINE_PRODUCTVERSION_STR "5.131.2600.1243"
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "cryptres.h"
-
-#include <reactos/version.rc>
-
-#include "crypt32_De.rc"
-#include "crypt32_En.rc"
-#include "crypt32_Ko.rc"
-#include "crypt32_No.rc"
+#include "wine/wine_common_ver.rc"

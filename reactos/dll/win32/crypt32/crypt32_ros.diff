@@ -22,16 +22,3 @@ Index: crypt32.rc
  
  #include "crypt32_De.rc"
  #include "crypt32_En.rc"
-Index: main.c
-===================================================================
---- main.c	(revision 22838)
-+++ main.c	(working copy)
-@@ -294,7 +294,7 @@
-     return FALSE;
- }
- 
--BOOL WINAPI CryptVerifyMessageSignature(/*PCRYPT_VERIFY_MESSAGE_PARA*/ void* pVerifyPara,
-+BOOL WINAPI CryptVerifyMessageSignature(PCRYPT_VERIFY_MESSAGE_PARA pVerifyPara,
-           DWORD dwSignerIndex, const BYTE* pbSignedBlob, DWORD cbSignedBlob,
-           BYTE* pbDecoded, DWORD* pcbDecoded, PCCERT_CONTEXT* ppSignerCert)
- {

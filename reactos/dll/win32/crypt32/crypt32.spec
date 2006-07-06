@@ -11,31 +11,34 @@
 @ stdcall CertAddStoreToCollection(ptr ptr long long)
 @ stdcall CertAlgIdToOID(long)
 @ stdcall CertCloseStore(ptr long)
-@ stub CertCompareCertificate
-@ stub CertCompareCertificateName
-@ stub CertCompareIntegerBlob
-@ stub CertComparePublicKeyInfo
+@ stdcall CertCompareCertificate(long ptr ptr)
+@ stdcall CertCompareCertificateName(long ptr ptr)
+@ stdcall CertCompareIntegerBlob(ptr ptr)
+@ stdcall CertComparePublicKeyInfo(long ptr ptr)
 @ stdcall CertControlStore(long long long ptr)
 @ stdcall CertCreateCRLContext(long ptr long)
 @ stdcall CertCreateCTLContext(long ptr long)
 @ stub CertCreateCertificateChainEngine
 @ stdcall CertCreateCertificateContext(long ptr long)
+@ stdcall CertCreateSelfSignCertificate(long ptr long ptr ptr ptr ptr ptr)
 @ stdcall CertDeleteCRLFromStore(ptr)
 @ stdcall CertDeleteCTLFromStore(ptr)
 @ stdcall CertDeleteCertificateFromStore(ptr)
-@ stub CertDuplicateCRLContext
-@ stub CertDuplicateCTLContext
+@ stdcall CertDuplicateCRLContext(ptr)
+@ stdcall CertDuplicateCTLContext(ptr)
 @ stdcall CertDuplicateCertificateContext(ptr)
 @ stdcall CertDuplicateStore(ptr)
-@ stub CertEnumCRLContextProperties
+@ stdcall CertEnumCRLContextProperties(ptr long)
 @ stdcall CertEnumCRLsInStore(ptr ptr)
-@ stub CertEnumCTLContextProperties
+@ stdcall CertEnumCTLContextProperties(ptr long)
 @ stdcall CertEnumCTLsInStore(ptr ptr)
 @ stdcall CertEnumCertificateContextProperties(ptr long)
 @ stdcall CertEnumCertificatesInStore(long ptr)
 @ stdcall CertFindAttribute(str long ptr)
+@ stdcall CertFindCRLInStore(long long long long ptr ptr)
 @ stub CertFindCTLInStore
 @ stdcall CertFindCertificateInStore(long long long long ptr ptr)
+@ stdcall CertFindCertificateInCRL(ptr ptr long ptr ptr)
 @ stdcall CertFindExtension(str long ptr)
 @ stdcall CertFindRDNAttr(str ptr)
 @ stub CertFindSubjectInCTL
@@ -45,19 +48,20 @@
 @ stub CertFreeCertificateChainEngine
 @ stdcall CertFreeCertificateContext(ptr)
 @ stdcall CertGetCRLContextProperty(ptr long ptr ptr)
-@ stub CertGetCRLFromStore
+@ stdcall CertGetCRLFromStore(ptr ptr ptr ptr)
 @ stdcall CertGetCTLContextProperty(ptr long ptr ptr)
 @ stub CertGetCertificateChain
 @ stdcall CertGetCertificateContextProperty(ptr long ptr ptr)
 @ stdcall CertGetEnhancedKeyUsage(ptr long ptr ptr)
 @ stub CertGetIntendedKeyUsage
-@ stub CertGetIssuerCertificateFromStore
+@ stdcall CertGetIssuerCertificateFromStore(long ptr ptr ptr)
 @ stdcall CertGetNameStringA(ptr long long ptr ptr long)
 @ stdcall CertGetNameStringW(ptr long long ptr ptr long)
 @ stub CertGetPublicKeyLength
-@ stub CertGetSubjectCertificateFromStore
+@ stdcall CertGetSubjectCertificateFromStore(ptr long ptr)
 @ stdcall CertGetValidUsages(long ptr ptr ptr ptr)
 @ stub CertIsRDNAttrsInCertificateName
+@ stdcall CertIsValidCRLForCertificate(ptr ptr long ptr)
 @ stdcall CertNameToStrA(long ptr long ptr long)
 @ stdcall CertNameToStrW(long ptr long ptr long)
 @ stdcall CertOIDToAlgId(str)
@@ -78,15 +82,18 @@
 @ stdcall CertSetEnhancedKeyUsage(ptr ptr)
 @ stub CertStrToNameA
 @ stub CertStrToNameW
-@ stub CertVerifyCertificateChainPolicy
-@ stub CertVerifyCRLRevocation
-@ stub CertVerifyCRLTimeValidity
+@ stdcall CertVerifyCRLRevocation(long ptr long ptr)
+@ stdcall CertVerifyCRLTimeValidity(ptr ptr)
 @ stub CertVerifyCTLUsage
 @ stub CertVerifyRevocation
-@ stub CertVerifySubjectCertificateContext
+@ stdcall CertVerifySubjectCertificateContext(ptr ptr ptr)
 @ stdcall CertVerifyTimeValidity(ptr ptr)
 @ stub CertVerifyValidityNesting
 @ stub CreateFileU
+@ stdcall CryptBinaryToStringA(ptr long long ptr ptr)
+@ stub CryptBinaryToStringW # (ptr long long ptr ptr)
+@ stdcall CryptStringToBinaryA(str long long ptr ptr ptr ptr)
+@ stub CryptStringToBinaryW # (wstr long long ptr ptr ptr ptr)
 @ stub CryptAcquireContextU
 @ stub CryptCloseAsyncHandle
 @ stub CryptCreateAsyncHandle

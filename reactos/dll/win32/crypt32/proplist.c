@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <assert.h>
 #include <stdarg.h>
@@ -132,7 +132,6 @@ BOOL ContextPropertyList_SetProperty(PCONTEXT_PROPERTY_LIST list, DWORD id,
             {
                 prop->propID = id;
                 prop->cbData = cbData;
-                list_init(&prop->entry);
                 prop->pbData = data;
                 list_add_tail(&list->properties, &prop->entry);
                 ret = TRUE;
@@ -158,6 +157,7 @@ void ContextPropertyList_RemoveProperty(PCONTEXT_PROPERTY_LIST list, DWORD id)
             list_remove(&prop->entry);
             CryptMemFree(prop->pbData);
             CryptMemFree(prop);
+            break;
         }
     }
     LeaveCriticalSection(&list->cs);
