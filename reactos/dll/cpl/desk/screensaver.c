@@ -243,14 +243,14 @@ void AddListViewItems2()
     LV_ITEM listItem;
     LV_COLUMN dummy;
     RECT clientRect;
-    HKEY regKey;
+    //HKEY regKey;
     SHFILEINFO sfi;
     HIMAGELIST himl;
     HIMAGELIST g_hScreenShellImageList    = NULL;
-    TCHAR wallpaperFilename[MAX_PATH];
-    DWORD bufferSize = sizeof(wallpaperFilename);
-    DWORD varType = REG_SZ;
-    LONG result;
+    //TCHAR wallpaperFilename[MAX_PATH];
+    //DWORD bufferSize = sizeof(wallpaperFilename);
+    //DWORD varType = REG_SZ;
+    //LONG result;
     UINT i = 0;
     int g_ScreenlistViewItemCount         = 0;
     ScreenSaverItem *ScreenSaverItem = NULL;
@@ -288,6 +288,7 @@ void AddListViewItems2()
     g_ScreenlistViewItemCount++;
 
     /* Add current screensaver if any */
+	/*
     RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
     
     result = RegQueryValueEx(regKey, TEXT("SCRNSAVE.EXE"), 0, &varType, (LPBYTE)wallpaperFilename, &bufferSize);
@@ -329,9 +330,12 @@ void AddListViewItems2()
 
             g_ScreenlistViewItemCount++;
         }
-    }
+    } 	
+	
+
     
     RegCloseKey(regKey);
+	*/
 
     /* Add all the screensavers in the C:\ReactOS\System32 directory. */
 
