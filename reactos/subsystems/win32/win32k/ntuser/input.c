@@ -39,6 +39,9 @@ extern BYTE gQueueKeyStateTable[];
 
 /* GLOBALS *******************************************************************/
 
+static HANDLE ScreenSaverThreadHandle;
+static CLIENT_ID ScreenSaverThreadId;
+
 static HANDLE MouseDeviceHandle;
 static HANDLE MouseThreadHandle;
 static CLIENT_ID MouseThreadId;
@@ -47,6 +50,7 @@ static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
+static BOOLEAN ScreenSaverRunning = FALSE;
 PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
 
 /* FUNCTIONS *****************************************************************/
@@ -149,6 +153,65 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 }
 
 VOID STDCALL
+ScreenSaverThreadMain(PVOID StartContext)
+{
+	KEVENT Event;         
+    LARGE_INTEGER Timeout;
+	NTSTATUS Status;
+
+	KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                        LOW_REALTIME_PRIORITY + 3);
+
+	for(;;)
+	{	  
+      DPRINT("Screen Saver auto start Thread Waiting for start event\n");
+      Status = KeWaitForSingleObject(&InputThreadsStart,
+                                     0,
+                                     KernelMode,
+                                     TRUE,
+                                     NULL);
+      DPRINT("Screen Saver auto start Thread Starting...\n");
+	  while(InputThreadsRunning)
+	  {
+		  NTSTATUS OldStatus;
+         /* FIXME 
+            1. read timeout value from reg 
+            2. read timeout value from spi msg             
+         */
+		 OldStatus = STATUS_SUCCESS;
+
+	     Timeout.QuadPart = -150000000LL;  /* 15 second timeout */
+	     KeInitializeEvent(&Event, NotificationEvent, FALSE);
+	     Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &Timeout); 
+
+		 if(Status == STATUS_ALERTED && !InputThreadsRunning)
+         {
+            break;
+         }        
+         if(!NT_SUCCESS(Status))
+         {
+            DPRINT1("Win32K: Failed to read from Screen Saver auto thread.\n");
+            return; //(Status);
+         }
+
+
+	     if ((Status == STATUS_TIMEOUT) && (ScreenSaverRunning == FALSE))
+         { 			
+            DPRINT1("Keyboard and Mouse TimeOut Starting Screen Saver...\n");    
+            CSR_API_MESSAGE Request;                                    
+			ScreenSaverRunning = TRUE;
+            CsrInit();
+            Request.Type = MAKE_CSR_API(START_SCREEN_SAVER, CSR_GUI);
+			Request.Data.StartScreenSaver.Start = TRUE;  			                     			   
+            co_CsrNotifyScreenSaver(&Request );                          
+          }        
+	  }
+	  DPRINT("Screen Saver auto start Thread Stopped...\n");
+	}
+}
+
+
+VOID STDCALL
 MouseThreadMain(PVOID StartContext)
 {
    UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
@@ -222,6 +285,8 @@ MouseThreadMain(PVOID StartContext)
             return; //(Status);
          }
          DPRINT("MouseEvent\n");
+
+		 ScreenSaverRunning = FALSE;
 
          UserEnterExclusive();
 
@@ -491,7 +556,7 @@ KeyboardThreadMain(PVOID StartContext)
          HWND hWnd;
          int id;
 
-	 DPRINT("KeyInput @ %08x\n", &KeyInput);
+	     DPRINT("KeyInput @ %08x\n", &KeyInput);
 
          Status = NtReadFile (KeyboardDeviceHandle,
 			      NULL,
@@ -530,6 +595,8 @@ KeyboardThreadMain(PVOID StartContext)
             DPRINT1("Win32K: Failed to read from keyboard.\n");
             return; //(Status);
          }
+
+		 ScreenSaverRunning = FALSE;
 
          /* Update modifier state */
          fsModifiers = IntKeyboardGetModifiers(&KeyInput);
@@ -808,6 +875,19 @@ InitInputImpl(VOID)
    {
       DPRINT1("Win32K: Failed to create mouse thread.\n");
    }
+
+   Status = PsCreateSystemThread(&ScreenSaverThreadHandle,
+                                 THREAD_ALL_ACCESS,
+                                 NULL,
+                                 NULL,
+                                 &ScreenSaverThreadId,
+                                 ScreenSaverThreadMain,
+                                 NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Win32K: Failed to create ScreenSaver auto start thread.\n");
+   }
+
 
    return STATUS_SUCCESS;
 }

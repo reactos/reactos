@@ -3301,8 +3301,6 @@ CSR_API(CsrGetProcessList)
   return Request->Status = STATUS_SUCCESS;
 }
 
-static BOOL ScreenSaverRunning = FALSE;
-
 CSR_API(CsrStartScreenSaver)
 {                                            
 
@@ -3337,33 +3335,27 @@ CSR_API(CsrStartScreenSaver)
               add the code here as w3seek recomandete  
          */
                        
-		if (ScreenSaverRunning == FALSE)
-		{
-		   
-           RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_ALL_ACCESS, &hKey);
-           result = RegQueryValueExW(hKey, L"SCRNSAVE.EXE", 0, &varType, (LPBYTE)szBuffer, &bufferSize);
-           if(result == ERROR_SUCCESS) 
-           {                                    
-              swprintf(szCmdline, L"%s /s",szBuffer);       
-              DPRINT1("CsrStartScreenSaver : OK %S\n",szCmdline);                             
-	          ZeroMemory( &si, sizeof(si) );
-              si.cb = sizeof(si);
-              ZeroMemory( &pi, sizeof(pi) );  
-              ScreenSaverRunning = TRUE;                       
-              if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
-              {        
-                
-                CloseHandle( pi.hProcess );
-                CloseHandle( pi.hThread );                       
-                ScreenSaverRunning = FALSE;                    
-              }              
-            }
-            else
-            {
-               DPRINT1("CsrStartScreenSaver : FAIL %S\n",szBuffer);   
-            }                    
-            RegCloseKey(hKey);
-		}
+	
+         RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_ALL_ACCESS, &hKey);
+         result = RegQueryValueExW(hKey, L"SCRNSAVE.EXE", 0, &varType, (LPBYTE)szBuffer, &bufferSize);
+         if(result == ERROR_SUCCESS) 
+         {                                    
+            swprintf(szCmdline, L"%s /s",szBuffer);       
+            DPRINT1("CsrStartScreenSaver : OK %S\n",szCmdline);                             
+	        ZeroMemory( &si, sizeof(si) );
+            si.cb = sizeof(si);
+            ZeroMemory( &pi, sizeof(pi) );                                   
+            if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+            {                        
+              CloseHandle( pi.hProcess );
+              CloseHandle( pi.hThread );                                                       
+            }              
+         }
+         else
+         {
+             DPRINT1("CsrStartScreenSaver : FAIL %S\n",szBuffer);   
+         }                    
+         RegCloseKey(hKey);		
     }    
 	return Request->Status = STATUS_SUCCESS;
 }
