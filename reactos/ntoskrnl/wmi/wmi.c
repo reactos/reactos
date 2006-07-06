@@ -22,8 +22,10 @@ NTAPI
 IoWMIRegistrationControl(IN PDEVICE_OBJECT DeviceObject,
                          IN ULONG Action)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT1("IoWMIRegistrationControl() called for DO %p, requesting %d action, returning success\n",
+        DeviceObject, Action);
+
+    return STATUS_SUCCESS;
 }
 
 /*
