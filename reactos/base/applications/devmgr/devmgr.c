@@ -131,8 +131,8 @@ void ListByClass()
 		if (rc == ERROR_SUCCESS)
 		{
 			InsertIntoListView(i,ClassDescription,ClassName);
-			TextOut(hDC, 200, 40, empty, strlen(empty));
-			TextOut(hDC, 200, 40, ClassDescription, strlen(ClassDescription));
+			TextOut(hDC, 200, 40, empty, (int) strlen(empty));
+			TextOut(hDC, 200, 40, ClassDescription, (int) strlen(ClassDescription));
 			_tprintf(_T("%d %s (%s)\n"), i, ClassName, ClassDescription);
 		}
 		else
@@ -183,8 +183,8 @@ void ListByClass()
 			{
 				_tprintf(_T("- %s\n"), PropertyBuffer);
 				InsertIntoListView(0,PropertyBuffer," ");
-				TextOut(hDC, 200, 40, empty, strlen(empty));
-				TextOut(hDC, 200, 40, PropertyBuffer, strlen(PropertyBuffer));
+				TextOut(hDC, 200, 40, empty, (int) strlen(empty));
+				TextOut(hDC, 200, 40, PropertyBuffer, (int) strlen(PropertyBuffer));
 			}
 			else
 				_tprintf(_T("SetupDiGetDeviceRegistryProperty() failed with status 0x%lx\n"), GetLastError());
@@ -239,16 +239,16 @@ CONFIGRET ListSubNodes(DEVINST parent, DWORD Level)
 			_tprintf(_T("%s\n"), DisplayName);
 			sprintf(temp,"%s%s",LevelSpaces,DisplayName);
 			InsertIntoListView(0,temp," ");
-			TextOut(hDC, 200, 40, empty, strlen(empty));
-			TextOut(hDC, 200, 40, DisplayName, strlen(DisplayName));
+			TextOut(hDC, 200, 40, empty, (int) strlen(empty));
+			TextOut(hDC, 200, 40, DisplayName, (int) strlen(DisplayName));
 		}
 		else
 		{
 			_tprintf(_T("(unknown device)\n"));
 			sprintf(temp,"%s%s",LevelSpaces,"(unknown device)");
 			InsertIntoListView(0,temp," ");
-			TextOut(hDC, 200, 40, empty, strlen(empty));
-			TextOut(hDC, 200, 40, "(unknown device)", strlen("(unknown device)"));
+			TextOut(hDC, 200, 40, empty, (int) strlen(empty));
+			TextOut(hDC, 200, 40, "(unknown device)", (int) strlen("(unknown device)"));
 		}
 		cr = ListSubNodes(child, Level + 1);
 		if (cr != CR_SUCCESS)
@@ -328,8 +328,8 @@ int ListByInterface(const GUID* guid)
 		if (SetupDiGetDeviceInterfaceDetail(hDevInfo, &DeviceInterfaceData, DeviceInterfaceDetailData, sizeof(Buffer), NULL, NULL))
 		{
 			_tprintf(_T("- device %-2ld: %s\n"), i, DeviceInterfaceDetailData->DevicePath);
-			TextOut(hDC, 200, 40, empty, strlen(empty));
-			TextOut(hDC, 200, 40, DeviceInterfaceDetailData->DevicePath, strlen(DeviceInterfaceDetailData->DevicePath));
+			TextOut(hDC, 200, 40, empty, (int) strlen(empty));
+			TextOut(hDC, 200, 40, DeviceInterfaceDetailData->DevicePath, (int) strlen(DeviceInterfaceDetailData->DevicePath));
 			InsertIntoListView(i,DeviceInterfaceDetailData->DevicePath," ");
 		}
 		else
@@ -481,7 +481,7 @@ switch (uMessage)
       InitListView();
 
       CreateButtons(g_hInst, hWnd);
-      TextOut(hDC, 200, 40, empty, strlen(empty));
+      TextOut(hDC, 200, 40, empty, (int) strlen(empty));
       break;
 
 
@@ -657,7 +657,7 @@ void InsertIntoListView(int typ, LPTSTR name, LPTSTR intern_name)
     }
     else
     	item.pszText = "";
-    item.cchTextMax = _tcslen(item.pszText);
+    item.cchTextMax = (int) _tcslen(item.pszText);
     if (item.cchTextMax == 0)
         item.pszText = LPSTR_TEXTCALLBACK;
     item.iImage = 0;
