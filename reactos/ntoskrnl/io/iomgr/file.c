@@ -40,6 +40,7 @@ IopParseDevice(IN PVOID ParseObject,
     IO_STATUS_BLOCK IoStatusBlock;
     BOOLEAN DirectOpen = FALSE;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    BOOLEAN OpenCancelled;
     DPRINT("IopParseDevice:\n"
            "DeviceObject : %p\n"
            "RelatedFileObject : %p\n"
@@ -63,7 +64,8 @@ IopParseDevice(IN PVOID ParseObject,
     }
 
     /* Reference the DO FIXME: Don't allow failure */
-    Status = IopReferenceDeviceObject(OriginalDeviceObject);
+    //Status = IopReferenceDeviceObject(OriginalDeviceObject);
+    OriginalDeviceObject->ReferenceCount++;
 
     /* Map the generic mask and set the new mapping in the access state */
     RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
@@ -192,7 +194,6 @@ IopParseDevice(IN PVOID ParseObject,
     SecurityContext.FullCreateOptions = OpenPacket->CreateOptions;
 
     KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
-    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
 
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp) return STATUS_UNSUCCESSFUL;
@@ -275,12 +276,16 @@ IopParseDevice(IN PVOID ParseObject,
 
     /* Reference the file object and call the driver */
     ObReferenceObject(FileObject);
+
+    /* Initialize the File Object event and set the FO */
+    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
     OpenPacket->FileObject = FileObject;
-    Status = IoCallDriver(FileObject->DeviceObject, Irp );
+
+    /* Queue the IRP and call the driver */
+    //IopQueueIrpToThread(Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
 
     /* Copy the status block */
-    OpenPacket->Information = IoStatusBlock.Information;
-    OpenPacket->FinalStatus = IoStatusBlock.Status;
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&FileObject->Event,
@@ -309,6 +314,9 @@ IopParseDevice(IN PVOID ParseObject,
     }
 #endif
 
+    /* Copy the I/O Status */
+    OpenPacket->Information = IoStatusBlock.Information;
+
     /* The driver failed to create the file */
     if (!NT_SUCCESS(Status))
     {
@@ -323,11 +331,17 @@ IopParseDevice(IN PVOID ParseObject,
         /* Clear its device object */
         FileObject->DeviceObject = NULL;
 
+        /* Save this now because the FO might go away */
+        OpenCancelled = FileObject->Flags & FO_FILE_OPEN_CANCELLED;
+
         /* Clear the file object in the open packet */
         OpenPacket->FileObject = NULL;
 
         /* Dereference the file object */
         ObDereferenceObject(FileObject);
+
+        /* Unless the driver canelled the open, dereference the VPB */
+        if (!(OpenCancelled) && (Vpb)) IopDereferenceVpb(Vpb);
 
         /* Set the status and return */
         OpenPacket->FinalStatus = Status;
