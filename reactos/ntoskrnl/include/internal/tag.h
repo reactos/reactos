@@ -53,6 +53,7 @@
 #define TAG_IO              TAG('I', 'o', ' ', ' ')
 #define TAG_ERROR_LOG       TAG('I', 'o', 'E', 'r')
 #define TAG_EA              TAG('I', 'o', 'E', 'a')
+#define TAG_IO_NAME         TAG('I', 'o', 'N', 'm')
 
 /* formerly located in io/work.c */
 #define TAG_IOWI TAG('I', 'O', 'W', 'I')

@@ -612,6 +612,12 @@ IopCreateVpb(
 
 VOID
 NTAPI
+IopDereferenceVpb(
+    IN PVPB Vpb
+);
+
+VOID
+NTAPI
 IoInitFileSystemImplementation(
     VOID
 );

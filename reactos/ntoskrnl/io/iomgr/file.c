@@ -33,7 +33,7 @@ IopParseDevice(IN PVOID ParseObject,
     PDEVICE_OBJECT OriginalDeviceObject = (PDEVICE_OBJECT)ParseObject, DeviceObject;
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
-    PVPB Vpb;
+    PVPB Vpb = NULL;
     PIRP Irp;
     PEXTENDED_IO_STACK_LOCATION StackLoc;
     IO_SECURITY_CONTEXT SecurityContext;
@@ -141,9 +141,6 @@ IopParseDevice(IN PVOID ParseObject,
                             (PVOID*)&FileObject);
     RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
 
-    /* Create the name for the file object */
-    RtlCreateUnicodeString(&FileObject->FileName, RemainingName->Buffer);
-
     /* Set the device object and reference it */
     Status = IopReferenceDeviceObject(DeviceObject);
     FileObject->DeviceObject = DeviceObject;
@@ -248,6 +245,33 @@ IopParseDevice(IN PVOID ParseObject,
     StackLoc->Parameters.Create.FileAttributes = OpenPacket->FileAttributes;
     StackLoc->Parameters.Create.ShareAccess = OpenPacket->ShareAccess;
     StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
+
+    /* Check if the file object has a name */
+    if (RemainingName->Length)
+    {
+        /* Setup the unicode string */
+        FileObject->FileName.MaximumLength = RemainingName->Length;
+        FileObject->FileName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                            RemainingName->
+                                                            Length,
+                                                            TAG_IO_NAME);
+        if (!FileObject->FileName.Buffer)
+        {
+            /* Failed to allocate the name, free the IRP */
+            IoFreeIrp(Irp);
+
+            /* Dereference the device object and VPB */
+            IopDereferenceDeviceObject(DeviceObject, FALSE);
+            if (Vpb) IopDereferenceVpb(Vpb);
+
+            /* Clear the FO */
+            FileObject->DeviceObject = NULL;
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+
+    /* Copy the name */
+    RtlCopyUnicodeString(&FileObject->FileName, RemainingName);
 
     /* Reference the file object and call the driver */
     ObReferenceObject(FileObject);
