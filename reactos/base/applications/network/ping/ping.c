@@ -489,7 +489,7 @@ static BOOL Ping(VOID)
     Packet->Icmp.Type     = ICMPMSG_ECHOREQUEST;
     Packet->Icmp.Code     = 0;
     Packet->Icmp.Id	      = (USHORT)GetCurrentProcessId();
-    Packet->Icmp.SeqNum   = (USHORT)CurrentSeqNum;
+    Packet->Icmp.SeqNum   = htons((USHORT)CurrentSeqNum);
     Packet->Icmp.Checksum = 0;
 
     /* Timestamp is part of data area */
