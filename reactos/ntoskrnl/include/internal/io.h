@@ -574,6 +574,15 @@ IopStartDevice(
     IN PDEVICE_NODE DeviceNode
 );
 
+PVPB
+NTAPI
+IopCheckVpbMounted(
+    IN POPEN_PACKET OpenPacket,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PUNICODE_STRING RemainingName,
+    OUT PNTSTATUS Status
+);
+
 NTSTATUS
 NTAPI
 IopMountVolume(
@@ -617,6 +626,13 @@ NTSTATUS
 NTAPI
 IopReferenceDeviceObject(
     IN PDEVICE_OBJECT DeviceObject
+);
+
+VOID
+NTAPI
+IopDereferenceDeviceObject(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN BOOLEAN ForceUnload
 );
 
 //

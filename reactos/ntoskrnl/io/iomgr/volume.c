@@ -54,6 +54,76 @@ IoInitFileSystemImplementation(VOID)
     KeInitializeGuardedMutex(&FsChangeNotifyListLock);
 }
 
+PVPB
+NTAPI
+IopCheckVpbMounted(IN POPEN_PACKET OpenPacket,
+                   IN PDEVICE_OBJECT DeviceObject,
+                   IN PUNICODE_STRING RemainingName,
+                   OUT PNTSTATUS Status)
+{
+    BOOLEAN Alertable, Raw;
+    KIRQL OldIrql;
+    PVPB Vpb = NULL;
+
+    /* Lock the VPBs */
+    IoAcquireVpbSpinLock(&OldIrql);
+
+    /* Set VPB mount settings */
+    Raw = !RemainingName->Length && !OpenPacket->RelatedFileObject;
+    Alertable = (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT);
+
+    /* Start looping until the VPB is mounted */
+    while (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+    {
+        /* Release the lock */
+        IoReleaseVpbSpinLock(OldIrql);
+
+        /* Mount the volume */
+        *Status = IopMountVolume(DeviceObject,
+                                 Raw,
+                                 FALSE,
+                                 Alertable,
+                                 &Vpb);
+
+        /* Check if we failed or if we were alerted */
+        if (!(NT_SUCCESS(*Status)) ||
+            (*Status == STATUS_USER_APC) ||
+            (*Status == STATUS_ALERTED))
+        {
+            /* Dereference the device, since IopParseDevice referenced it */
+            IopDereferenceDeviceObject(DeviceObject, FALSE);
+
+            /* Check if it was a total failure */
+            if (!NT_SUCCESS(Status)) return NULL;
+
+            /* Otherwise we were alerted */
+            *Status = STATUS_WRONG_VOLUME;
+            return NULL;
+        }
+
+        /* Re-acquire the lock */
+        IoAcquireVpbSpinLock(&OldIrql);
+    }
+
+    /* Make sure the VPB isn't locked */
+    Vpb = DeviceObject->Vpb;
+    if (Vpb->Flags & VPB_LOCKED)
+    {
+        /* We're locked, so fail */
+        *Status = STATUS_ACCESS_DENIED;
+        Vpb = NULL;
+    }
+    else
+    {
+        /* Success! Reference the VPB */
+        Vpb->ReferenceCount++;
+    }
+
+    /* Release the lock and return the VPB */
+    IoReleaseVpbSpinLock(OldIrql);
+    return Vpb;
+}
+
 NTSTATUS
 NTAPI
 IopCreateVpb(IN PDEVICE_OBJECT DeviceObject)

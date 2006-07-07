@@ -92,6 +92,9 @@ IopParseDevice(IN PVOID ParseObject,
         {
             /* Yes, remember it */
             Vpb = OpenPacket->RelatedFileObject->Vpb;
+
+            /* Reference it */
+            InterlockedIncrement(&Vpb->ReferenceCount);
         }
     }
     else
@@ -102,25 +105,15 @@ IopParseDevice(IN PVOID ParseObject,
         /* Check if it has a VPB */
         if ((DeviceObject->Vpb) && !(DirectOpen))
         {
-            /* Check if it's not already mounted */
-            if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-            {
-                /* Mount the volume */
-                Status = IopMountVolume(DeviceObject,
-                                        FALSE,
-                                        FALSE,
-                                        FALSE,
-                                        &Vpb);
-                if (!NT_SUCCESS(Status))
-                {
-                    /* Couldn't mount, fail the lookup */
-                    ObDereferenceObject(FileObject);
-                    return STATUS_UNSUCCESSFUL;
-                }
-            }
+            /* Check if the VPB is mounted, and mount it */
+            Vpb = IopCheckVpbMounted(OpenPacket,
+                                     DeviceObject,
+                                     RemainingName,
+                                     &Status);
+            if (!Vpb) return Status;
 
             /* Get the VPB's device object */
-            DeviceObject = DeviceObject->Vpb->DeviceObject;
+            DeviceObject = Vpb->DeviceObject;
         }
 
         /* Check if there's an attached device */
