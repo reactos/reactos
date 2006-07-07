@@ -30,7 +30,7 @@ IopParseDevice(IN PVOID ParseObject,
                OUT PVOID *Object)
 {
     POPEN_PACKET OpenPacket = (POPEN_PACKET)Context;
-    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT OriginalDeviceObject = (PDEVICE_OBJECT)ParseObject, DeviceObject;
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
     PVPB Vpb;
@@ -38,6 +38,8 @@ IopParseDevice(IN PVOID ParseObject,
     PEXTENDED_IO_STACK_LOCATION StackLoc;
     IO_SECURITY_CONTEXT SecurityContext;
     IO_STATUS_BLOCK IoStatusBlock;
+    BOOLEAN DirectOpen = FALSE;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     DPRINT("IopParseDevice:\n"
            "DeviceObject : %p\n"
            "RelatedFileObject : %p\n"
@@ -53,6 +55,17 @@ IopParseDevice(IN PVOID ParseObject,
     /* Validate the open packet */
     if (!IopValidateOpenPacket(OpenPacket)) return STATUS_OBJECT_TYPE_MISMATCH;
 
+    /* Check if we have a related file object */
+    if (OpenPacket->RelatedFileObject)
+    {
+        /* Use the related file object's device object */
+        OriginalDeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
+    }
+
+    /* Reference the DO FIXME: Don't allow failure */
+    Status = IopReferenceDeviceObject(OriginalDeviceObject);
+
+    /* Map the generic mask and set the new mapping in the access state */
     RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
                       &IoFileObjectType->TypeInfo.GenericMapping);
     RtlMapGenericMask(&AccessState->OriginalDesiredAccess,
@@ -60,10 +73,73 @@ IopParseDevice(IN PVOID ParseObject,
     SeSetAccessStateGenericMapping(AccessState,
                                    &IoFileObjectType->TypeInfo.GenericMapping);
 
+    /* Check if this is a direct open */
+    if (!(RemainingName->Length) && !(OpenPacket->RelatedFileObject))
+    {
+        /* Remember this for later */
+        DirectOpen = TRUE;
+    }
+
+    /* Check if we have a related FO that wasn't a direct open */
+    if ((OpenPacket->RelatedFileObject) &&
+        !(OpenPacket->RelatedFileObject->Flags & FO_DIRECT_DEVICE_OPEN))
+    {
+        /* The device object is the one we were given */
+        DeviceObject = OriginalDeviceObject;
+
+        /* Check if the related FO had a VPB */
+        if (OpenPacket->RelatedFileObject->Vpb)
+        {
+            /* Yes, remember it */
+            Vpb = OpenPacket->RelatedFileObject->Vpb;
+        }
+    }
+    else
+    {
+        /* The device object is the one we were given */
+        DeviceObject = OriginalDeviceObject;
+
+        /* Check if it has a VPB */
+        if ((DeviceObject->Vpb) && !(DirectOpen))
+        {
+            /* Check if it's not already mounted */
+            if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+            {
+                /* Mount the volume */
+                Status = IopMountVolume(DeviceObject,
+                                        FALSE,
+                                        FALSE,
+                                        FALSE,
+                                        &Vpb);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Couldn't mount, fail the lookup */
+                    ObDereferenceObject(FileObject);
+                    return STATUS_UNSUCCESSFUL;
+                }
+            }
+
+            /* Get the VPB's device object */
+            DeviceObject = DeviceObject->Vpb->DeviceObject;
+        }
+
+        /* Check if there's an attached device */
+        if (DeviceObject->AttachedDevice)
+        {
+            /* Get the attached device */
+            DeviceObject = IoGetAttachedDevice(DeviceObject);
+        }
+    }
+
     /* Create the actual file object */
-    Status = ObCreateObject(AccessMode,
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               Attributes,
+                               NULL,
+                               NULL);
+    Status = ObCreateObject(KernelMode,
                             IoFileObjectType,
-                            NULL,
+                            &ObjectAttributes,
                             AccessMode,
                             NULL,
                             sizeof(FILE_OBJECT),
@@ -72,54 +148,8 @@ IopParseDevice(IN PVOID ParseObject,
                             (PVOID*)&FileObject);
     RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
 
-    /* Parent is a device object */
-    DeviceObject = IoGetAttachedDevice(ParseObject);
-
-    /* Check if we don't have a remaining name */
-    if (!*RemainingName->Buffer)
-    {
-        /* Then this is a device */
-        FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-    }
-    else
-    {
-        /* Check if we don't have a related file object */
-        if (!OpenPacket->RelatedFileObject)
-        {
-            /* Check if it has a VPB */
-            if (DeviceObject->Vpb)
-            {
-                /* Check if it's not already mounted */
-                if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-                {
-                    /* Mount the volume */
-                    Status = IopMountVolume(DeviceObject,
-                                            FALSE,
-                                            FALSE,
-                                            FALSE,
-                                            &Vpb);
-                    if (!NT_SUCCESS(Status))
-                    {
-                        /* Couldn't mount, fail the lookup */
-                        ObDereferenceObject(FileObject);
-                        return STATUS_UNSUCCESSFUL;
-                    }
-                }
-
-                /* Get the VPB's device object */
-                DeviceObject = DeviceObject->Vpb->DeviceObject;
-            }
-        }
-        else
-        {
-            /* Otherwise, this is an open */
-            FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
-            DeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
-        }
-
-        /* Create the name for the file object */
-        RtlCreateUnicodeString(&FileObject->FileName, RemainingName->Buffer);
-    }
+    /* Create the name for the file object */
+    RtlCreateUnicodeString(&FileObject->FileName, RemainingName->Buffer);
 
     /* Set the device object and reference it */
     Status = IopReferenceDeviceObject(DeviceObject);
@@ -127,6 +157,7 @@ IopParseDevice(IN PVOID ParseObject,
 
     FileObject->Type = IO_TYPE_FILE;
     FileObject->Size = sizeof(FILE_OBJECT);
+    FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
 
     if (OpenPacket->CreateOptions &
         (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
@@ -155,6 +186,11 @@ IopParseDevice(IN PVOID ParseObject,
         FileObject->Flags |= FO_RANDOM_ACCESS;
     }
 
+    if (DirectOpen)
+    {
+        FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+    }
+
     if (!(Attributes & OBJ_CASE_INSENSITIVE))
     {
         FileObject->Flags |= FO_OPENED_CASE_SENSITIVE;
@@ -168,7 +204,7 @@ IopParseDevice(IN PVOID ParseObject,
     KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
     KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
 
-    Irp = IoAllocateIrp(FileObject->DeviceObject->StackSize, FALSE);
+    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp) return STATUS_UNSUCCESSFUL;
 
     /* Now set the IRP data */
