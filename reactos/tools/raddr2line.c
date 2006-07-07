@@ -85,7 +85,7 @@ find_and_print_offset (
 			else
 			{
 				PROSSYM_ENTRY e = &Entries[i];
-				printf ( "%s:%lu (%s)",
+				printf ( "%s:%lu (%s)\n",
 					&Strings[e->FileOffset],
 					e->SourceLine,
 					&Strings[e->FunctionOffset] );
