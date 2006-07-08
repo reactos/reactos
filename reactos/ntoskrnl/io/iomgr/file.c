@@ -38,18 +38,12 @@ IopParseDevice(IN PVOID ParseObject,
     PEXTENDED_IO_STACK_LOCATION StackLoc;
     IO_SECURITY_CONTEXT SecurityContext;
     IO_STATUS_BLOCK IoStatusBlock;
-    BOOLEAN DirectOpen = FALSE;
+    BOOLEAN DirectOpen = FALSE, OpenCancelled, UseDummyFile;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    BOOLEAN OpenCancelled;
     KIRQL OldIrql;
-    DPRINT("IopParseDevice:\n"
-           "DeviceObject : %p\n"
-           "RelatedFileObject : %p\n"
-           "CompleteName : %wZ, RemainingName : %wZ\n",
-           ParseObject,
-           Context,
-           CompleteName,
-           RemainingName);
+    PDUMMY_FILE_OBJECT DummyFileObject;
+    PFILE_BASIC_INFORMATION FileBasicInfo;
+    ULONG ReturnLength;
 
     /* Assume failure */
     *Object = NULL;
@@ -76,8 +70,13 @@ IopParseDevice(IN PVOID ParseObject,
     SeSetAccessStateGenericMapping(AccessState,
                                    &IoFileObjectType->TypeInfo.GenericMapping);
 
+    /* Check if we can simply use a dummy file */
+    UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
+
     /* Check if this is a direct open */
-    if (!(RemainingName->Length) && !(OpenPacket->RelatedFileObject))
+    if (!(RemainingName->Length) &&
+        !(OpenPacket->RelatedFileObject) &&
+        !(UseDummyFile))
     {
         /* Remember this for later */
         DirectOpen = TRUE;
@@ -127,74 +126,86 @@ IopParseDevice(IN PVOID ParseObject,
         }
     }
 
-    /* Create the actual file object */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               NULL,
-                               Attributes,
-                               NULL,
-                               NULL);
-    Status = ObCreateObject(KernelMode,
-                            IoFileObjectType,
-                            &ObjectAttributes,
-                            AccessMode,
-                            NULL,
-                            sizeof(FILE_OBJECT),
-                            0,
-                            0,
-                            (PVOID*)&FileObject);
-    RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
+    /* Check if we really need to create an object */
+    if (!UseDummyFile)
+    {
+        /* Create the actual file object */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   NULL,
+                                   Attributes,
+                                   NULL,
+                                   NULL);
+        Status = ObCreateObject(KernelMode,
+                                IoFileObjectType,
+                                &ObjectAttributes,
+                                AccessMode,
+                                NULL,
+                                sizeof(FILE_OBJECT),
+                                0,
+                                0,
+                                (PVOID*)&FileObject);
+        RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
 
-    /* Set the device object and reference it */
-    Status = IopReferenceDeviceObject(DeviceObject);
-    FileObject->DeviceObject = DeviceObject;
+        /* Check if this is Synch I/O */
+        if (OpenPacket->CreateOptions &
+            (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
+        {
+            /* Set the synch flag */
+            FileObject->Flags |= FO_SYNCHRONOUS_IO;
+
+            /* Check if it's also alertable */
+            if (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
+            {
+                /* It is, set the alertable flag */
+                FileObject->Flags |= FO_ALERTABLE_IO;
+            }
+        }
+
+        /* Check if the caller requested no intermediate buffering */
+        if (OpenPacket->CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
+        {
+            /* Set the correct flag for the FSD to read */
+            FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
+        }
+
+        /* Check if the caller requested write through support */
+        if (OpenPacket->CreateOptions & FILE_WRITE_THROUGH)
+        {
+            /* Set the correct flag for the FSD to read */
+            FileObject->Flags |= FO_WRITE_THROUGH;
+        }
+
+        /* Check if the caller says the file will be only read sequentially */
+        if (OpenPacket->CreateOptions & FILE_SEQUENTIAL_ONLY)
+        {
+            /* Set the correct flag for the FSD to read */
+            FileObject->Flags |= FO_SEQUENTIAL_ONLY;
+        }
+
+        /* Check if the caller believes the file will be only read randomly */
+        if (OpenPacket->CreateOptions & FILE_RANDOM_ACCESS)
+        {
+            /* Set the correct flag for the FSD to read */
+            FileObject->Flags |= FO_RANDOM_ACCESS;
+        }
+    }
+    else
+    {
+        /* Use the dummy object instead */
+        DummyFileObject = OpenPacket->DummyFileObject;
+        RtlZeroMemory(DummyFileObject, sizeof(DUMMY_FILE_OBJECT));
+
+        /* Set it up */
+        FileObject = (PFILE_OBJECT)&DummyFileObject->ObjectHeader.Body;
+        DummyFileObject->ObjectHeader.Type = IoFileObjectType;
+        DummyFileObject->ObjectHeader.PointerCount = 1;
+    }
 
     /* Setup the file header */
     FileObject->Type = IO_TYPE_FILE;
     FileObject->Size = sizeof(FILE_OBJECT);
     FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
-
-    /* Check if this is Synch I/O */
-    if (OpenPacket->CreateOptions &
-        (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
-    {
-        /* Set the synch flag */
-        FileObject->Flags |= FO_SYNCHRONOUS_IO;
-
-        /* Check if it's also alertable */
-        if (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
-        {
-            /* It is, set the alertable flag */
-            FileObject->Flags |= FO_ALERTABLE_IO;
-        }
-    }
-
-    /* Check if the caller requested no intermediate buffering */
-    if (OpenPacket->CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
-    {
-        /* Set the correct flag for the FSD to read */
-        FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
-    }
-
-    /* Check if the caller requested write through support */
-    if (OpenPacket->CreateOptions & FILE_WRITE_THROUGH)
-    {
-        /* Set the correct flag for the FSD to read */
-        FileObject->Flags |= FO_WRITE_THROUGH;
-    }
-
-    /* Check if the caller believes the file will be only read sequentially */
-    if (OpenPacket->CreateOptions & FILE_SEQUENTIAL_ONLY)
-    {
-        /* Set the correct flag for the FSD to read */
-        FileObject->Flags |= FO_SEQUENTIAL_ONLY;
-    }
-
-    /* Check if the caller believes the file will be only read randomly */
-    if (OpenPacket->CreateOptions & FILE_RANDOM_ACCESS)
-    {
-        /* Set the correct flag for the FSD to read */
-        FileObject->Flags |= FO_RANDOM_ACCESS;
-    }
+    FileObject->DeviceObject = DeviceObject;
 
     /* Check if this is a direct device open */
     if (DirectOpen) FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
@@ -315,8 +326,11 @@ IopParseDevice(IN PVOID ParseObject,
             IopDereferenceDeviceObject(DeviceObject, FALSE);
             if (Vpb) IopDereferenceVpb(Vpb);
 
-            /* Clear the FO */
+            /* Clear the FO and dereference it */
             FileObject->DeviceObject = NULL;
+            if (!UseDummyFile) ObDereferenceObject(FileObject);
+
+            /* Fail */
             return STATUS_INSUFFICIENT_RESOURCES;
         }
     }
@@ -324,7 +338,7 @@ IopParseDevice(IN PVOID ParseObject,
     /* Copy the name */
     RtlCopyUnicodeString(&FileObject->FileName, RemainingName);
 
-    /* Reference the file object and call the driver */
+    /* Reference the file object */
     ObReferenceObject(FileObject);
 
     /* Initialize the File Object event and set the FO */
@@ -402,7 +416,7 @@ IopParseDevice(IN PVOID ParseObject,
         OpenPacket->FileObject = NULL;
 
         /* Dereference the file object */
-        ObDereferenceObject(FileObject);
+        if (!UseDummyFile) ObDereferenceObject(FileObject);
 
         /* Unless the driver canelled the open, dereference the VPB */
         if (!(OpenCancelled) && (Vpb)) IopDereferenceVpb(Vpb);
@@ -417,14 +431,77 @@ IopParseDevice(IN PVOID ParseObject,
         KEBUGCHECK(0);
     }
 
-    /* Otherwise, we were successful. Reference the object, set status */
-    ObReferenceObject(FileObject);
-    OpenPacket->FinalStatus = IoStatusBlock.Status;
-    OpenPacket->ParseCheck = TRUE;
+    /* Make sure we are not using a dummy */
+    if (!UseDummyFile)
+    {
+        /* Reference the object and set the parse check */
+        ObReferenceObject(FileObject);
+        *Object = FileObject;
+        OpenPacket->FinalStatus = IoStatusBlock.Status;
+        OpenPacket->ParseCheck = TRUE;
+        return OpenPacket->FinalStatus;
+    }
+    else
+    {
+        /* Check if this was a query */
+        if (OpenPacket->QueryOnly)
+        {
+            /* Check if the caller wants basic info only */
+            if (!OpenPacket->FullAttributes)
+            {
+                /* Allocate the buffer */
+                FileBasicInfo = ExAllocatePoolWithTag(NonPagedPool,
+                                                      sizeof(*FileBasicInfo),
+                                                      TAG_IO);
+                if (FileBasicInfo)
+                {
+                    /* Do the query */
+                    Status = IoQueryFileInformation(FileObject,
+                                                    FileBasicInformation,
+                                                    sizeof(*FileBasicInfo),
+                                                    FileBasicInfo,
+                                                    &ReturnLength);
+                    if (NT_SUCCESS(Status))
+                    {
+                        /* Copy the data */
+                        RtlCopyMemory(OpenPacket->BasicInformation,
+                                      FileBasicInfo,
+                                      ReturnLength);
+                    }
 
-    /* Return the object and status */
-    *Object = FileObject;
-    return OpenPacket->FinalStatus;
+                    /* Free our buffer */
+                    ExFreePool(FileBasicInfo);
+                }
+                else
+                {
+                    /* Fail */
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+            }
+            else
+            {
+                /* This is a full query */
+                Status = IoQueryFileInformation(
+                    FileObject,
+                    FileNetworkOpenInformation,
+                    sizeof(FILE_NETWORK_OPEN_INFORMATION),
+                    OpenPacket->NetworkInformation,
+                    &ReturnLength);
+                if (!NT_SUCCESS(Status)) ASSERT(Status != STATUS_NOT_IMPLEMENTED);
+            }
+        }
+
+        /* Delete the file object */
+        IopDeleteFile(FileObject);
+
+        /* Clear out the file */
+        OpenPacket->FileObject = NULL;
+
+        /* Set and return status */
+        OpenPacket->FinalStatus = Status;
+        OpenPacket->ParseCheck = TRUE;
+        return Status;
+    }
 }
 
 NTSTATUS
@@ -957,112 +1034,119 @@ NTSTATUS
 NTAPI
 IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                        IN FILE_INFORMATION_CLASS FileInformationClass,
+                       IN ULONG FileInformationSize,
                        OUT PVOID FileInformation)
 {
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    NTSTATUS Status;
-    KPROCESSOR_MODE AccessMode;
-    UNICODE_STRING ObjectName;
-    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
-    OBJECT_ATTRIBUTES LocalObjectAttributes;
-    ULONG BufferSize;
-    union
-    {
-        FILE_BASIC_INFORMATION BasicInformation;
-        FILE_NETWORK_OPEN_INFORMATION NetworkOpenInformation;
-    }LocalFileInformation;
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE AccessMode = ExGetPreviousMode();
+    DUMMY_FILE_OBJECT DummyFileObject;
+    FILE_NETWORK_OPEN_INFORMATION NetworkOpenInfo;
+    HANDLE Handle;
+    OPEN_PACKET OpenPacket;
+    BOOLEAN IsBasic;
+    PAGED_CODE();
 
-    if (FileInformationClass == FileBasicInformation)
+    /* Check if the caller was user mode */
+    if (AccessMode != KernelMode)
     {
-        BufferSize = sizeof(FILE_BASIC_INFORMATION);
+        /* Protect probe in SEH */
+        _SEH_TRY
+        {
+            /* Probe the buffer */
+            ProbeForWrite(FileInformation, FileInformationSize, sizeof(ULONG));
+        }
+        _SEH_HANDLE
+        {
+            /* Get the exception code */
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        /* Fail on exception */
+        if (!NT_SUCCESS(Status))return Status;
     }
-    else if (FileInformationClass == FileNetworkOpenInformation)
+
+    /* Check if this is a basic or full request */
+    IsBasic = (FileInformationSize == sizeof(FILE_BASIC_INFORMATION));
+
+    /* Setup the Open Packet */
+    OpenPacket.Type = IO_TYPE_OPEN_PACKET;
+    OpenPacket.Size = sizeof(OPEN_PACKET);
+    OpenPacket.FileObject = NULL;
+    OpenPacket.FinalStatus = STATUS_SUCCESS;
+    OpenPacket.Information = 0;
+    OpenPacket.ParseCheck = 0;
+    OpenPacket.RelatedFileObject = NULL;
+    OpenPacket.AllocationSize.QuadPart = 0;
+    OpenPacket.CreateOptions = FILE_OPEN_REPARSE_POINT;
+    OpenPacket.FileAttributes = 0;
+    OpenPacket.ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    OpenPacket.EaBuffer = NULL;
+    OpenPacket.EaLength = 0;
+    OpenPacket.Options = 0;
+    OpenPacket.Disposition = FILE_OPEN;
+    OpenPacket.BasicInformation = IsBasic ? FileInformation : NULL;
+    OpenPacket.NetworkInformation = IsBasic ? &NetworkOpenInfo :
+                                    (AccessMode != KernelMode) ?
+                                    &NetworkOpenInfo : FileInformation;
+    OpenPacket.CreateFileType = 0;
+    OpenPacket.MailslotOrPipeParameters = NULL;
+    OpenPacket.Override = FALSE;
+    OpenPacket.QueryOnly = TRUE;
+    OpenPacket.DeleteOnly = FALSE;
+    OpenPacket.FullAttributes = IsBasic ? FALSE : TRUE;
+    OpenPacket.DummyFileObject = &DummyFileObject;
+    OpenPacket.InternalFlags = 0;
+
+    /* Update the operation count */
+    IopUpdateOperationCount(IopOtherTransfer);
+
+    /*
+     * Attempt opening the file. This will call the I/O Parse Routine for
+     * the File Object (IopParseDevice) which will use the dummy file obejct
+     * send the IRP to its device object. Note that we have two statuses
+     * to worry about: the Object Manager's status (in Status) and the I/O
+     * status, which is in the Open Packet's Final Status, and determined
+     * by the Parse Check member.
+     */
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                NULL,
+                                AccessMode,
+                                NULL,
+                                FILE_READ_ATTRIBUTES,
+                                &OpenPacket,
+                                &Handle);
+    if (OpenPacket.ParseCheck != TRUE)
     {
-        BufferSize = sizeof(FILE_NETWORK_OPEN_INFORMATION);
+        /* Parse failed */
+        return Status;
     }
     else
     {
-        return STATUS_INVALID_PARAMETER;
+        /* Use the Io status */
+        Status = OpenPacket.FinalStatus;
     }
 
-    AccessMode = ExGetPreviousMode();
-
-    if (AccessMode != KernelMode)
+    /* Check if we were succesful and this was user mode and a full query */
+    if ((NT_SUCCESS(Status)) && (AccessMode != KernelMode) && !(IsBasic))
     {
-        Status = STATUS_SUCCESS;
+        /* Enter SEH for copy */
         _SEH_TRY
         {
-            ProbeForWrite(FileInformation,
-                          BufferSize,
-                          sizeof(ULONG));
+            /* Copy the buffer back */
+            RtlMoveMemory(FileInformation,
+                          &NetworkOpenInfo,
+                          FileInformationSize);
         }
         _SEH_HANDLE
         {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        if (NT_SUCCESS(Status))
-        {
-            Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                                AccessMode,
-                                                FALSE,
-                                                &ObjectCreateInfo,
-                                                &ObjectName);
-        }
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
-        InitializeObjectAttributes(&LocalObjectAttributes,
-                                   &ObjectName,
-                                   ObjectCreateInfo.Attributes,
-                                   ObjectCreateInfo.RootDirectory,
-                                   ObjectCreateInfo.SecurityDescriptor);
-    }
-
-    /* Open the file */
-    Status = ZwOpenFile(&FileHandle,
-                        SYNCHRONIZE | FILE_READ_ATTRIBUTES,
-                        AccessMode == KernelMode ? ObjectAttributes : &LocalObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (AccessMode != KernelMode)
-    {
-        ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-        if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
-    }
-    if (!NT_SUCCESS (Status))
-    {
-        DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    /* Get file attributes */
-    Status = ZwQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    AccessMode == KernelMode ? FileInformation : &LocalFileInformation,
-                                    BufferSize,
-                                    FileInformationClass);
-    if (!NT_SUCCESS (Status))
-    {
-        DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
-    }
-    ZwClose(FileHandle);
-
-    if (NT_SUCCESS(Status) && AccessMode != KernelMode)
-    {
-        _SEH_TRY
-        {
-            memcpy(FileInformation, &LocalFileInformation, BufferSize);
-        }
-        _SEH_HANDLE
-        {
+            /* Get exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
     }
+
+    /* Return status */
     return Status;
 }
 
@@ -1228,6 +1312,9 @@ IoCreateFile(OUT PHANDLE FileHandle,
     OpenPacket.DummyFileObject = NULL;
     OpenPacket.InternalFlags = 0;
 
+    /* Update the operation count */
+    IopUpdateOperationCount(IopOtherTransfer);
+
     /*
      * Attempt opening the file. This will call the I/O Parse Routine for
      * the File Object (IopParseDevice) which will create the object and
@@ -1386,7 +1473,7 @@ IoCreateStreamFileObject(IN PFILE_OBJECT FileObject,
                             sizeof(FILE_OBJECT),
                             0,
                             (PVOID*)&CreatedFileObject);
-    if (!NT_SUCCESS(Status)) return (NULL);
+    if (!NT_SUCCESS(Status)) return NULL;
 
     /* Choose Device Object */
     if (FileObject) DeviceObject = FileObject->DeviceObject;
@@ -1764,8 +1851,10 @@ STDCALL
 NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                       OUT PFILE_BASIC_INFORMATION FileInformation)
 {
+    /* Call the internal helper API */
     return IopQueryAttributesFile(ObjectAttributes,
                                   FileBasicInformation,
+                                  sizeof(FILE_BASIC_INFORMATION),
                                   FileInformation);
 }
 
@@ -1774,9 +1863,11 @@ STDCALL
 NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                           OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation)
 {
-  return IopQueryAttributesFile(ObjectAttributes,
-                                FileNetworkOpenInformation,
-                                FileInformation);
+    /* Call the internal helper API */
+    return IopQueryAttributesFile(ObjectAttributes,
+                                  FileNetworkOpenInformation,
+                                  sizeof(FILE_NETWORK_OPEN_INFORMATION),
+                                  FileInformation);
 }
 
 /**
