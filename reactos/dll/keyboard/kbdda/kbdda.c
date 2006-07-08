@@ -490,5 +490,8 @@ DllMain(
   ULONG dwReason,
   PVOID reserved)
 {
+  UNREFERENCED_PARAMETER(hinstDll);
+  UNREFERENCED_PARAMETER(dwReason);
+  UNREFERENCED_PARAMETER(reserved);
   return 1;
 }
