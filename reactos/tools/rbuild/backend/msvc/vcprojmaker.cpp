@@ -371,6 +371,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			fprintf ( OUT, "\t\t\t<Tool\r\n" );
 			fprintf ( OUT, "\t\t\t\tName=\"VCLinkerTool\"\r\n" );
+			if (module.GetEntryPoint(false) == "0")
+				fprintf ( OUT, "AdditionalOptions=\"/noentry\"" );
+
 			if (module.importLibrary != NULL)
 				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", module.importLibrary->definition.c_str());
 			fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
