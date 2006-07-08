@@ -237,7 +237,7 @@ MonthCalReload(IN PMONTHCALWND infoPtr)
     TCHAR szBuf[64];
     UINT i;
 
-    infoPtr->UIState = SendMessage(GetAncestor(infoPtr->hSelf,
+    infoPtr->UIState = (DWORD) SendMessage(GetAncestor(infoPtr->hSelf,
                                                GA_PARENT),
                                    WM_QUERYUISTATE,
                                    0,
@@ -439,7 +439,7 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
               IN HDC hDC,
               IN LPRECT prcUpdate)
 {
-    UINT x, y;
+    LONG x, y;
     RECT rcCell;
     COLORREF crOldText, crOldCtrlText = CLR_INVALID;
     HFONT hOldFont;
@@ -993,7 +993,7 @@ MonthCalWndProc(IN HWND hwnd,
         {
             if (wParam == GWL_STYLE)
             {
-                BOOL OldEnabled = infoPtr->Enabled;
+                unsigned int OldEnabled = infoPtr->Enabled;
                 infoPtr->Enabled = !(((LPSTYLESTRUCT)lParam)->styleNew & WS_DISABLED);
 
                 if (OldEnabled != infoPtr->Enabled)

@@ -289,7 +289,7 @@ DateTimePageProc(HWND hwndDlg,
             SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETRANGE, 0, MAKELONG ((short) 9999, (short) 1900));
             SendMessage(GetDlgItem(hwndDlg, IDC_YEAR), UDM_SETPOS, 0, MAKELONG( (short) st.wYear, 0));
 
-            pOldWndProc = (WNDPROC) SetWindowLong(GetDlgItem(hwndDlg, IDC_TIMEPICKER), GWL_WNDPROC, (INT_PTR) DTPProc);
+            pOldWndProc = (WNDPROC) SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_TIMEPICKER), GWL_WNDPROC, (INT_PTR) DTPProc);
         }
         break;
 
@@ -322,7 +322,7 @@ DateTimePageProc(HWND hwndDlg,
         case WM_CTLCOLORSTATIC:
         {
             if ((HWND) lParam == GetDlgItem(hwndDlg, IDC_YEARTEXT))
-                return (int) GetSysColorBrush(COLOR_WINDOW);
+                return (INT_PTR) GetSysColorBrush(COLOR_WINDOW);
 
         }
         break;
