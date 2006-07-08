@@ -5,7 +5,6 @@
 #include <windowsx.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <winsock2.h>
 #include <math.h>
 #include <commctrl.h>
 #include <cpl.h>
