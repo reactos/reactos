@@ -1564,15 +1564,15 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          killAt.c_str () );
 	
 		fprintf ( fMakefile,
-		          "\t%s %s %s %s -o %s %s %s %s\n",
+		          "\t%s %s %s %s %s -o %s %s %s\n",
 		          linker.c_str (),
+	              GetLinkerMacro ().c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
 		          temp_exp.c_str (),
 		          target.c_str (),
 		          objectsMacro.c_str (),
-		          libsMacro.c_str (),
-		          GetLinkerMacro ().c_str () );
+		          libsMacro.c_str () );
 	
 		fprintf ( fMakefile,
 		          "\t$(Q)$(PEFIXUP_TARGET) %s -exports %s\n",
@@ -2263,7 +2263,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ()
 	fprintf ( fMakefile,
 	          "\t%s %s -o $@ %s %s\n\n",
 	          linker.c_str (),
-	          GetLinkerMacro ().c_str (),
+	          GetLinkerMacro().c_str (),
 	          objectsMacro.c_str (),
 	          libsMacro.c_str () );
 }
