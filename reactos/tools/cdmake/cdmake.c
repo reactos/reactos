@@ -1077,12 +1077,19 @@ static void get_file_specifications(PDIR_RECORD d)
 {
   if (d != &root)
   {
-    get_file_specifications(d->parent);
-    append_string_to_source(d->name);
+    get_file_specifications(d->parent);	
+	if (d->joliet_name == NULL)
+        append_string_to_source(d->name);
+	else
+		append_string_to_source(d->joliet_name);
+		 
     if (((d->flags & DIRECTORY_FLAG) == 0 || joliet) && d->extension[0] != 0)
     {
-      *end_source++ = '.';
-      append_string_to_source(d->extension);
+	  if (d->joliet_name == NULL)
+	  {
+         *end_source++ = '.';
+         append_string_to_source(d->extension);
+	  }
     }
     if (d->flags & DIRECTORY_FLAG)
       *end_source++ = DIR_SEPARATOR_CHAR;
