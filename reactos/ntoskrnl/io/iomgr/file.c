@@ -963,13 +963,6 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     /* Make sure this is the last handle */
     if (SystemHandleCount != 1) return;
 
-    /* FIXME: ROS HACK */
-    if (!FileObject->DeviceObject)
-    {
-        DPRINT1("FIXME: MALFORMED FILE OBJECT!\n");
-        return;
-    }
-
     /* Check if this is a direct open or not */
     if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
     {
