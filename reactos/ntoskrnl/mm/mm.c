@@ -38,17 +38,18 @@ MmReleaseMmInfo(PEPROCESS Process)
    DPRINT("MmReleaseMmInfo(Process %x (%s))\n", Process,
           Process->ImageFileName);
 
-   MmLockAddressSpace(&Process->AddressSpace);
+   MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
 
-   while ((MemoryArea = Process->AddressSpace.MemoryAreaRoot) != NULL)
+   while ((MemoryArea = ((PMADDRESS_SPACE)&Process->VadRoot)->MemoryAreaRoot) != NULL)
    {
       switch (MemoryArea->Type)
       {
          case MEMORY_AREA_SECTION_VIEW:
+         case MEMORY_AREA_CACHE_SEGMENT:
              Address = (PVOID)MemoryArea->StartingAddress;
-             MmUnlockAddressSpace(&Process->AddressSpace);
-             MmUnmapViewOfSection(Process, Address);
-             MmLockAddressSpace(&Process->AddressSpace);
+             MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+             MmUnmapViewOfSection((PEPROCESS)Process, Address);
+             MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
              break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
@@ -58,7 +59,7 @@ MmReleaseMmInfo(PEPROCESS Process)
 
          case MEMORY_AREA_SHARED_DATA:
          case MEMORY_AREA_NO_ACCESS:
-             MmFreeMemoryArea(&Process->AddressSpace,
+             MmFreeMemoryArea((PMADDRESS_SPACE)&Process->VadRoot,
                               MemoryArea,
                               NULL,
                               NULL);
@@ -75,8 +76,8 @@ MmReleaseMmInfo(PEPROCESS Process)
 
    Mmi386ReleaseMmInfo(Process);
 
-   MmUnlockAddressSpace(&Process->AddressSpace);
-   MmDestroyAddressSpace(&Process->AddressSpace);
+   MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+   MmDestroyAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
 
    DPRINT("Finished MmReleaseMmInfo()\n");
    return(STATUS_SUCCESS);
@@ -114,7 +115,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    }
    else
    {
-      AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&(PsGetCurrentProcess())->VadRoot;
    }
 
    MmLockAddressSpace(AddressSpace);
@@ -150,7 +151,7 @@ MmAccessFault(KPROCESSOR_MODE Mode,
    }
    if (PsGetCurrentProcess() == NULL)
    {
-      CPRINT("No current process\n");
+      DPRINT("No current process\n");
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -171,7 +172,7 @@ MmAccessFault(KPROCESSOR_MODE Mode,
    }
    else
    {
-      AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&(PsGetCurrentProcess())->VadRoot;
    }
 
    if (!FromMdl)
@@ -280,7 +281,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
       /* Allow this! It lets us page alloc much earlier! It won't be needed 
        * after my init patch anyways
        */
-      CPRINT("No current process\n");
+      DPRINT("No current process\n");
       if (Address < (ULONG_PTR)MmSystemRangeStart)
       {
          return(STATUS_UNSUCCESSFUL);
@@ -304,7 +305,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    }
    else
    {
-      AddressSpace = &PsGetCurrentProcess()->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&(PsGetCurrentProcess())->VadRoot;
    }
 
    if (!FromMdl)
@@ -340,7 +341,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_SECTION_VIEW:
-	 case MEMORY_AREA_CACHE_SEGMENT:
             Status = MmNotPresentFaultSectionView(AddressSpace,
                                                   MemoryArea,
                                                   (PVOID)Address,

@@ -6,7 +6,7 @@ extern PDEVICE_NODE PopSystemPowerDeviceNode;
 VOID
 NTAPI
 PoInit(
-    PLOADER_PARAMETER_BLOCK LoaderBlock, 
+    PROS_LOADER_PARAMETER_BLOCK LoaderBlock, 
     BOOLEAN ForceAcpiDisable
 );
 

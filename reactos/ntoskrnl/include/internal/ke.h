@@ -277,26 +277,12 @@ KeWaitForGate(
 
 /* ipi.c ********************************************************************/
 
-BOOLEAN
-STDCALL
-KiIpiServiceRoutine(
-    IN PKTRAP_FRAME TrapFrame,
-    IN struct _KEXCEPTION_FRAME* ExceptionFrame
-);
-
 VOID
 NTAPI
 KiIpiSendRequest(
     KAFFINITY TargetSet,
     ULONG IpiRequest
 );
-
-VOID   
-NTAPI   
-KeIpiGenericCall(   
-    VOID (STDCALL *WorkerRoutine)(PVOID),   
-    PVOID Argument   
-);   
 
 /* next file ***************************************************************/
 
@@ -713,13 +699,6 @@ KeRosGetStackFrames(
 VOID
 NTAPI
 KiSetSystemTime(PLARGE_INTEGER NewSystemTime);
-
-NTSTATUS 
-STDCALL
-Ke386CallBios(
-    UCHAR Int,
-    PKV86M_REGISTERS Regs
-);
 
 ULONG
 NTAPI

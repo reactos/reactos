@@ -172,7 +172,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
         }
     }
 #endif
-    Status = MmChangeSectionSize (Bcb->Section, &FileSizes->FileSize);
+    Status = MmChangeSectionSize ((PSECTION_OBJECT)Bcb->Section, &FileSizes->FileSize); 
     Bcb->FileSizes = *FileSizes;
 
     ExReleaseFastMutex (&CcCacheViewLock);

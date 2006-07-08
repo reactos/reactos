@@ -29,7 +29,7 @@ MiCreatePebOrTeb(PEPROCESS Process,
                  PVOID BaseAddress)
 {
     NTSTATUS Status;
-    PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
+    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PVOID AllocatedBase = BaseAddress;
@@ -110,7 +110,7 @@ STDCALL
 MmDeleteTeb(PEPROCESS Process,
             PTEB Teb)
 {
-    PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
+    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
     PMEMORY_AREA MemoryArea;
 
     /* Lock the Address Space */
@@ -241,7 +241,7 @@ MmCreatePeb(PEPROCESS Process)
     /* Map NLS Tables */
     DPRINT("Mapping NLS\n");
     Status = MmMapViewOfSection(NlsSectionObject,
-                                Process,
+                                (PEPROCESS)Process,
                                 &TableBase,
                                 0,
                                 0,
@@ -297,12 +297,6 @@ MmCreatePeb(PEPROCESS Process)
     /* Image Data */
     if ((NtHeaders = RtlImageNtHeader(Peb->ImageBaseAddress)))
     {
-        /* Get the Image Config Data too */
-        ImageConfigData = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
-                                                       TRUE,
-                                                       IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
-                                                       &ViewSize);
-
         /* Write subsystem data */
         Peb->ImageSubSystem = NtHeaders->OptionalHeader.Subsystem;
         Peb->ImageSubSystemMajorVersion = NtHeaders->OptionalHeader.MajorSubsystemVersion;
@@ -315,20 +309,8 @@ MmCreatePeb(PEPROCESS Process)
             Peb->OSMinorVersion = (NtHeaders->OptionalHeader.Win32VersionValue >> 8) & 0xFF;
             Peb->OSBuildNumber = (NtHeaders->OptionalHeader.Win32VersionValue >> 16) & 0x3FFF;
 
-            /* Lie about the version if requested */
-            if (ImageConfigData && ImageConfigData->CSDVersion)
-            {
-                Peb->OSCSDVersion = ImageConfigData->CSDVersion;
-            }
-
             /* Set the Platform ID */
             Peb->OSPlatformId = (NtHeaders->OptionalHeader.Win32VersionValue >> 30) ^ 2;
-        }
-
-        /* Check for affinity override */
-        if (ImageConfigData && ImageConfigData->ProcessAffinityMask)
-        {
-            ProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
         }
 
         /* Check if the image is not safe for SMP */
@@ -342,6 +324,37 @@ MmCreatePeb(PEPROCESS Process)
             /* Use affinity from Image Header */
             Peb->ImageProcessAffinityMask = ProcessAffinityMask;
         }
+
+        _SEH_TRY
+        {
+            /* Get the Image Config Data too */
+            ImageConfigData = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
+                                                           TRUE,
+                                                           IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
+                                                           &ViewSize);
+
+            ProbeForRead(ImageConfigData,
+                         sizeof(IMAGE_LOAD_CONFIG_DIRECTORY),
+                         sizeof(ULONG));
+
+            /* Process the image config data overrides if specfied. */
+            if (ImageConfigData != NULL)
+            {
+                if (ImageConfigData->CSDVersion)
+                {
+                    Peb->OSCSDVersion = ImageConfigData->CSDVersion;
+                }
+                if (ImageConfigData->ProcessAffinityMask)
+                {
+                    ProcessAffinityMask = ImageConfigData->ProcessAffinityMask;
+                }
+            }
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
     }
 
     /* Misc data */
@@ -352,7 +365,7 @@ MmCreatePeb(PEPROCESS Process)
     KeDetachProcess();
 
     DPRINT("MmCreatePeb: Peb created at %p\n", Peb);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 PTEB
@@ -408,10 +421,10 @@ MmCreateTeb(PEPROCESS Process,
 NTSTATUS
 STDCALL
 MmCreateProcessAddressSpace(IN PEPROCESS Process,
-                            IN PSECTION_OBJECT Section OPTIONAL)
+                            IN PROS_SECTION_OBJECT Section OPTIONAL)
 {
     NTSTATUS Status;
-    PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
+    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
     PVOID BaseAddress;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
@@ -491,7 +504,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         DPRINT("Mapping process image. Section: %p, Process: %p, ImageBase: %p\n",
                  Section, Process, &ImageBase);
         Status = MmMapViewOfSection(Section,
-                                    Process,
+                                    (PEPROCESS)Process,
                                     (PVOID*)&ImageBase,
                                     0,
                                     0,

@@ -72,7 +72,7 @@ CcFlushCache (IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
         Bcb = (PBCB) SectionObjectPointers->SharedCacheMap;
         ASSERT (Bcb);
 
-        Status = MmFlushDataFileSection (Bcb->Section, FileOffset, Length);
+        Status = MmFlushDataFileSection ((PSECTION_OBJECT)Bcb->Section, FileOffset, Length);
     }
     if (IoStatus)
     {
@@ -190,7 +190,7 @@ CcInitializeCacheMap (IN PFILE_OBJECT FileObject,
 
         DPRINT ("%x %x\n", FileObject, FileSizes->FileSize.QuadPart);
 
-        Status = MmCreateDataFileSection (&Bcb->Section,
+        Status = MmCreateDataFileSection ((PSECTION_OBJECT*)&Bcb->Section,
                                           STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ | SECTION_MAP_WRITE,
                                           NULL, &Bcb->FileSizes.FileSize, PAGE_READWRITE, SEC_COMMIT, Bcb->FileObject, TRUE);
         if (!NT_SUCCESS (Status))
@@ -235,7 +235,7 @@ CcUninitializeCacheMap (IN PFILE_OBJECT FileObject,
         {
             Bcb->RefCount++;
             ExReleaseFastMutex (&CcCacheViewLock);
-            MmFlushDataFileSection (Bcb->Section, NULL, 0);
+            MmFlushDataFileSection ((PSECTION_OBJECT)Bcb->Section, NULL, 0);
             ExAcquireFastMutex (&CcCacheViewLock);
             Bcb->RefCount--;
             if (Bcb->RefCount == 0)

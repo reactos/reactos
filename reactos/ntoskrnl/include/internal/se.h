@@ -256,6 +256,14 @@ SeDefaultObjectMethod(
     PGENERIC_MAPPING GenericMapping
 );
 
+NTSTATUS
+NTAPI
+SeSetWorldSecurityDescriptor(
+    SECURITY_INFORMATION SecurityInformation,
+    PISECURITY_DESCRIPTOR SecurityDescriptor,
+    PULONG BufferLength
+);
+
 #define SepAcquireTokenLockExclusive(Token)                                    \
   do {                                                                         \
     KeEnterCriticalRegion();                                                   \

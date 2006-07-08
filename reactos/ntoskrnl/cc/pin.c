@@ -156,9 +156,8 @@ CcMapData (IN PFILE_OBJECT FileObject,
     iBcb->Index = Index;
 
     *piBcb = iBcb;
-    *pBuffer =
-        (PVOID) ((ULONG_PTR) Bcb->CacheView[Index]->BaseAddress +
-                 (ULONG_PTR) (FileOffset->QuadPart - Bcb->CacheView[Index]->SectionData.ViewOffset));
+    *pBuffer = (PVOID) ((ULONG_PTR) Bcb->CacheView[Index]->BaseAddress +
+                (ULONG_PTR) (FileOffset->QuadPart - Bcb->CacheView[Index]->SectionData.ViewOffset));
 
     DPRINT ("CcMapData() done\n");
 

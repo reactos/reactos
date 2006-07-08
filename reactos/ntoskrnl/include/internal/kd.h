@@ -1,10 +1,61 @@
 #ifndef __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 
+//
+// Kernel Debugger Port Definition
+//
+typedef struct _KD_PORT_INFORMATION
+{
+    ULONG ComPort;
+    ULONG BaudRate;
+    ULONG BaseAddress;
+} KD_PORT_INFORMATION, *PKD_PORT_INFORMATION;
+
 struct _KD_DISPATCH_TABLE;
 extern KD_PORT_INFORMATION GdbPortInfo;
 
+BOOLEAN
+NTAPI
+KdPortInitialize(
+    PKD_PORT_INFORMATION PortInformation,
+    ULONG Unknown1,
+    ULONG Unknown2
+);
+
+BOOLEAN
+NTAPI
+KdPortInitializeEx(
+    PKD_PORT_INFORMATION PortInformation,
+    ULONG Unknown1,
+    ULONG Unknown2
+);
+
+BOOLEAN
+NTAPI
+KdPortGetByte(
+    PUCHAR ByteRecieved);
+
+BOOLEAN
+NTAPI
+KdPortGetByteEx(
+    PKD_PORT_INFORMATION PortInformation,
+    PUCHAR ByteRecieved);
+
+VOID
+NTAPI
+KdPortPutByte(
+    UCHAR ByteToSend
+);
+
+VOID
+NTAPI
+KdPortPutByteEx(
+    PKD_PORT_INFORMATION PortInformation,
+    UCHAR ByteToSend
+);
+
 /* SYMBOL ROUTINES **********************************************************/
+#ifdef __NTOSKRNL__
 
 #if defined(KDBG) || defined(DBG)
 
@@ -284,4 +335,5 @@ extern LIST_ENTRY KdProviders;
 /* Whether to enter KDB as early as possible or not */
 extern BOOLEAN KdpEarlyBreak;
 
+#endif
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */

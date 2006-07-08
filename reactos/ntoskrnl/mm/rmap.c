@@ -92,7 +92,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
    }
    else
    {
@@ -223,7 +223,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->AddressSpace;
+      AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
    }
    else
    {
@@ -308,7 +308,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
         */ 
         MmDeleteVirtualMapping(AddressSpace->Process, (PVOID)Address, FALSE, NULL, NULL);
         MmUnlockAddressSpace(AddressSpace);
-        while(MmUnsharePage(Page));
+        // FIXME Comment out for now // while(MmUnsharePage(Page));
         MmDeleteAllRmaps(Page, NULL, NULL);
         MmReleasePageMemoryConsumer(MC_CACHE, Page);
    }

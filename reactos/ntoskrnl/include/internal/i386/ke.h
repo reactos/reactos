@@ -26,7 +26,7 @@
 #define X86_CR4_OSFXSR          0x00000200 /* enable FXSAVE/FXRSTOR instructions */
 #define X86_CR4_OSXMMEXCPT      0x00000400 /* enable #XF exception */
 
-#define X86_FEATURE_TSC         0x00000010 /* time stamp counters are present */
+#define KF_RDTSC                0x00000002 /* time stamp counters are present */
 #define X86_FEATURE_PAE         0x00000040 /* physical address extension is present */
 #define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
 #define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
@@ -50,81 +50,6 @@
 #define FRAME_EDITED        0xFFF8
 
 #ifndef __ASM__
-
-typedef struct _KIRQ_TRAPFRAME
-{
-   ULONG Magic;
-   ULONG Gs;
-   ULONG Fs;
-   ULONG Es;
-   ULONG Ds;
-   ULONG Eax;
-   ULONG Ecx;
-   ULONG Edx;
-   ULONG Ebx;
-   ULONG Esp;
-   ULONG Ebp;
-   ULONG Esi;
-   ULONG Edi;
-   ULONG Eip;
-   ULONG Cs;
-   ULONG Eflags;
-} KIRQ_TRAPFRAME, *PKIRQ_TRAPFRAME;
-
-/* Emulate cli/sti instructions */
-#define KV86M_EMULATE_CLI_STI          (0x1)
-/* Allow the v86 mode code to access i/o ports */
-#define KV86M_ALLOW_IO_PORT_ACCESS      (0x2)
-
-typedef struct _KV86M_REGISTERS
-{
-    /*
-     * General purpose registers
-     */
-    ULONG Ebp;
-    ULONG Edi;
-    ULONG Esi;
-    ULONG Edx;
-    ULONG Ecx;
-    ULONG Ebx;
-    ULONG Eax;
-    ULONG Ds;
-    ULONG Es;
-    ULONG Fs;
-    ULONG Gs;
-
-    /*
-     * Control registers
-     */
-    ULONG Eip;
-    ULONG Cs;
-    ULONG Eflags;
-    ULONG Esp;
-    ULONG Ss;
-
-    /*
-     * Control structures
-     */
-    ULONG RecoveryAddress;
-    UCHAR RecoveryInstruction[4];
-    ULONG Vif;
-    ULONG Flags;
-    PNTSTATUS PStatus;
-} KV86M_REGISTERS, *PKV86M_REGISTERS;
-
-typedef struct _KV86M_TRAP_FRAME
-{
-    KTRAP_FRAME Tf;
-
-    ULONG SavedExceptionStack;
-
-    /*
-     * These are put on the top of the stack by the routine that entered
-     * v86 mode so the exception handlers can find the control information
-     */
-    struct _KV86M_REGISTERS* regs;
-    ULONG orig_ebp;
-} KV86M_TRAP_FRAME, *PKV86M_TRAP_FRAME;
 
 extern ULONG Ke386CacheAlignment;
 
