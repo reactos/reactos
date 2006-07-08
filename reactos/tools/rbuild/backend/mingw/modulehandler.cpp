@@ -2742,8 +2742,7 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 
 	fprintf ( fMakefile,
-	          "\t${ld} %s -N -Ttext=0x8000 -o %s %s %s\n",
-	          GetLinkerMacro ().c_str (),
+	          "\t${ld} -N -Ttext=0x8000 -o %s %s %s\n",
 	          junk_tmp.c_str (),
 	          objectsMacro.c_str (),
 	          linkDepsMacro.c_str () );
