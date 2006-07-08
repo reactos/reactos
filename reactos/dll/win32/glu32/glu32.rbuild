@@ -15,6 +15,7 @@
 	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>msvcrt</library>
+	<library>opengl32</library>
 	<directory name="libnurbs">
 		<directory name="interface">
  			<file>bezierEval.cc</file>
