@@ -31,6 +31,7 @@ HINSTANCE g_hModule = 0;
  */
 BOOL WINAPI WEP(DWORD Unknown)
 {
+	UNREFERENCED_PARAMETER(Unknown);
 	return TRUE;
 }
 
@@ -229,13 +230,19 @@ BOOL WINAPI cdtDrawExt(HDC hdc, INT x, INT y, INT dx, INT dy, INT card, INT type
  */
 BOOL WINAPI cdtAnimate(HDC hdc, int cardback, int x, int y, int frame)
 {
+	UNREFERENCED_PARAMETER(frame);
+	UNREFERENCED_PARAMETER(y);
+	UNREFERENCED_PARAMETER(x);
+	UNREFERENCED_PARAMETER(cardback);
+	UNREFERENCED_PARAMETER(hdc);
 	return TRUE;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    if (fdwReason == DLL_PROCESS_ATTACH)
+	UNREFERENCED_PARAMETER(lpvReserved);
+	if (fdwReason == DLL_PROCESS_ATTACH)
 		g_hModule = hinstDLL;
 
-    return TRUE;
+	return TRUE;
 }
