@@ -1,0 +1,1 @@
+To build this branch apply the patch to trunk. And replace ntoskrnl/mm, ntoskrnl/cc and drivers/filesystems/vfat with the folders from here.
