@@ -1099,33 +1099,19 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     IsBasic = (FileInformationSize == sizeof(FILE_BASIC_INFORMATION));
 
     /* Setup the Open Packet */
+    RtlZeroMemory(&OpenPacket, sizeof(OPEN_PACKET));
     OpenPacket.Type = IO_TYPE_OPEN_PACKET;
     OpenPacket.Size = sizeof(OPEN_PACKET);
-    OpenPacket.FileObject = NULL;
-    OpenPacket.FinalStatus = STATUS_SUCCESS;
-    OpenPacket.Information = 0;
-    OpenPacket.ParseCheck = 0;
-    OpenPacket.RelatedFileObject = NULL;
-    OpenPacket.AllocationSize.QuadPart = 0;
     OpenPacket.CreateOptions = FILE_OPEN_REPARSE_POINT;
-    OpenPacket.FileAttributes = 0;
     OpenPacket.ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-    OpenPacket.EaBuffer = NULL;
-    OpenPacket.EaLength = 0;
-    OpenPacket.Options = 0;
     OpenPacket.Disposition = FILE_OPEN;
     OpenPacket.BasicInformation = IsBasic ? FileInformation : NULL;
     OpenPacket.NetworkInformation = IsBasic ? &NetworkOpenInfo :
                                     (AccessMode != KernelMode) ?
                                     &NetworkOpenInfo : FileInformation;
-    OpenPacket.CreateFileType = 0;
-    OpenPacket.MailslotOrPipeParameters = NULL;
-    OpenPacket.Override = FALSE;
     OpenPacket.QueryOnly = TRUE;
-    OpenPacket.DeleteOnly = FALSE;
     OpenPacket.FullAttributes = IsBasic ? FALSE : TRUE;
     OpenPacket.DummyFileObject = &DummyFileObject;
-    OpenPacket.InternalFlags = 0;
 
     /* Update the operation count */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -1314,13 +1300,9 @@ IoCreateFile(OUT PHANDLE FileHandle,
     }
 
     /* Setup the Open Packet */
+    RtlZeroMemory(&OpenPacket, sizeof(OPEN_PACKET));
     OpenPacket.Type = IO_TYPE_OPEN_PACKET;
     OpenPacket.Size = sizeof(OPEN_PACKET);
-    OpenPacket.FileObject = NULL;
-    OpenPacket.FinalStatus = STATUS_SUCCESS;
-    OpenPacket.Information = 0;
-    OpenPacket.ParseCheck = 0;
-    OpenPacket.RelatedFileObject = NULL;
     OpenPacket.OriginalAttributes = *ObjectAttributes;
     OpenPacket.AllocationSize = SafeAllocationSize;
     OpenPacket.CreateOptions = CreateOptions;
@@ -1330,16 +1312,8 @@ IoCreateFile(OUT PHANDLE FileHandle,
     OpenPacket.EaLength = EaLength;
     OpenPacket.Options = Options;
     OpenPacket.Disposition = CreateDisposition;
-    OpenPacket.BasicInformation = NULL;
-    OpenPacket.NetworkInformation = NULL;
     OpenPacket.CreateFileType = CreateFileType;
     OpenPacket.MailslotOrPipeParameters = ExtraCreateParameters;
-    OpenPacket.Override = FALSE;
-    OpenPacket.QueryOnly = FALSE;
-    OpenPacket.DeleteOnly = FALSE;
-    OpenPacket.FullAttributes = FALSE;
-    OpenPacket.DummyFileObject = NULL;
-    OpenPacket.InternalFlags = 0;
 
     /* Update the operation count */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -1596,31 +1570,17 @@ IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     PAGED_CODE();
 
     /* Setup the Open Packet */
+    RtlZeroMemory(&OpenPacket, sizeof(OPEN_PACKET));
     OpenPacket.Type = IO_TYPE_OPEN_PACKET;
     OpenPacket.Size = sizeof(OPEN_PACKET);
-    OpenPacket.FileObject = NULL;
-    OpenPacket.FinalStatus = STATUS_SUCCESS;
-    OpenPacket.Information = 0;
-    OpenPacket.ParseCheck = 0;
-    OpenPacket.RelatedFileObject = NULL;
-    OpenPacket.AllocationSize.QuadPart = 0;
     OpenPacket.CreateOptions = OpenOptions | FILE_OPEN_REPARSE_POINT;
-    OpenPacket.FileAttributes = 0;
     OpenPacket.ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-    OpenPacket.EaBuffer = NULL;
-    OpenPacket.EaLength = 0;
     OpenPacket.Options = IO_FORCE_ACCESS_CHECK;
     OpenPacket.Disposition = FILE_OPEN;
-    OpenPacket.BasicInformation = NULL;
     OpenPacket.NetworkInformation = Buffer;
-    OpenPacket.CreateFileType = 0;
-    OpenPacket.MailslotOrPipeParameters = NULL;
-    OpenPacket.Override = FALSE;
     OpenPacket.QueryOnly = TRUE;
-    OpenPacket.DeleteOnly = FALSE;
     OpenPacket.FullAttributes = TRUE;
     OpenPacket.DummyFileObject = &DummyFileObject;
-    OpenPacket.InternalFlags = 0;
 
     /*
      * Attempt opening the file. This will call the I/O Parse Routine for
@@ -2146,25 +2106,32 @@ NtCancelIoFile(IN HANDLE FileHandle,
     LARGE_INTEGER Interval;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+    PLIST_ENTRY ListHead, NextEntry;
     PAGED_CODE();
 
+    /* Check the previous mode */
     if (PreviousMode != KernelMode)
     {
+        /* Enter SEH for probing */
         _SEH_TRY
         {
+            /* Probe the I/O Status Block */
             ProbeForWrite(IoStatusBlock,
                           sizeof(IO_STATUS_BLOCK),
                           sizeof(ULONG));
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
 
+        /* Return exception code on failure */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
+    /* Reference the file object */
     Status = ObReferenceObjectByHandle(FileHandle,
                                        0,
                                        IoFileObjectType,
@@ -2176,59 +2143,77 @@ NtCancelIoFile(IN HANDLE FileHandle,
     /* IRP cancellations are synchronized at APC_LEVEL. */
     OldIrql = KfRaiseIrql(APC_LEVEL);
 
-    /*
-    * Walk the list of active IRPs and cancel the ones that belong to
-    * our file object.
-    */
-
+    /* Get the current thread */
     Thread = PsGetCurrentThread();
 
-    LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
+    /* Update the operation counts */
+    IopUpdateOperationCount(IopOtherTransfer);
+
+    /* Loop the list */
+    ListHead = &Thread->IrpList;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
     {
+        /* Get the IRP and check if the File Object matches */
+        Irp = CONTAINING_RECORD(NextEntry, IRP, ThreadListEntry);
         if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
         {
+            /* Cancel this IRP and keep looping */
             IoCancelIrp(Irp);
-            /* Don't break here, we want to cancel all IRPs for the file object. */
             OurIrpsInList = TRUE;
         }
+
+        /* Go to the next entry */
+        NextEntry = NextEntry->Flink;
     }
 
+    /* Lower the IRQL */
     KfLowerIrql(OldIrql);
 
-    while (OurIrpsInList)
+    /* Check if we had found an IRP */
+    if (OurIrpsInList)
     {
-        OurIrpsInList = FALSE;
+        /* Setup a 10ms wait */
+        Interval.QuadPart = -100000;
 
-        /* Wait a short while and then look if all our IRPs were completed. */
-        Interval.QuadPart = -1000000; /* 100 milliseconds */
-        KeDelayExecutionThread(KernelMode, FALSE, &Interval);
-
-        OldIrql = KfRaiseIrql(APC_LEVEL);
-
-        /*
-        * Look in the list if all IRPs for the specified file object
-        * are completed (or cancelled). If someone sends a new IRP
-        * for our file object while we're here we can happily loop
-        * forever.
-        */
-
-        LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
+        /* Start looping */
+        while (OurIrpsInList)
         {
-            if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
-            {
-                OurIrpsInList = TRUE;
-                break;
-            }
-        }
+            /* Do the wait */
+            KeDelayExecutionThread(KernelMode, FALSE, &Interval);
+            OurIrpsInList = FALSE;
 
-        KfLowerIrql(OldIrql);
+            /* Raise IRQL */
+            OldIrql = KfRaiseIrql(APC_LEVEL);
+
+            /* Now loop the list again */
+            NextEntry = ListHead->Flink;
+            while (NextEntry != ListHead)
+            {
+                /* Get the IRP and check if the File Object matches */
+                Irp = CONTAINING_RECORD(NextEntry, IRP, ThreadListEntry);
+                if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
+                {
+                    /* Keep looping */
+                    OurIrpsInList = TRUE;
+                    break;
+                }
+
+                /* Go to the next entry */
+                NextEntry = NextEntry->Flink;
+            }
+
+            /* Lower the IRQL */
+            KeLowerIrql(OldIrql);
+        }
     }
 
+    /* Enter SEH for writing back the I/O Status */
     _SEH_TRY
     {
+        /* Write success */
         IoStatusBlock->Status = STATUS_SUCCESS;
         IoStatusBlock->Information = 0;
-        Status = STATUS_SUCCESS;
     }
     _SEH_HANDLE
     {
@@ -2236,8 +2221,9 @@ NtCancelIoFile(IN HANDLE FileHandle,
     }
     _SEH_END;
 
+    /* Dereference the file object and return success */
     ObDereferenceObject(FileObject);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -2255,33 +2241,16 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
     PAGED_CODE();
 
     /* Setup the Open Packet */
+    RtlZeroMemory(&OpenPacket, sizeof(OPEN_PACKET));
     OpenPacket.Type = IO_TYPE_OPEN_PACKET;
     OpenPacket.Size = sizeof(OPEN_PACKET);
-    OpenPacket.FileObject = NULL;
-    OpenPacket.FinalStatus = STATUS_SUCCESS;
-    OpenPacket.Information = 0;
-    OpenPacket.ParseCheck = 0;
-    OpenPacket.RelatedFileObject = NULL;
-    OpenPacket.AllocationSize.QuadPart = 0;
     OpenPacket.CreateOptions = FILE_DELETE_ON_CLOSE;
-    OpenPacket.FileAttributes = 0;
     OpenPacket.ShareAccess = FILE_SHARE_READ |
                              FILE_SHARE_WRITE |
                              FILE_SHARE_DELETE;
-    OpenPacket.EaBuffer = NULL;
-    OpenPacket.EaLength = 0;
-    OpenPacket.Options = 0;
     OpenPacket.Disposition = FILE_OPEN;
-    OpenPacket.BasicInformation = NULL;
-    OpenPacket.NetworkInformation = NULL;
-    OpenPacket.CreateFileType = 0;
-    OpenPacket.MailslotOrPipeParameters = NULL;
-    OpenPacket.Override = FALSE;
-    OpenPacket.QueryOnly = FALSE;
     OpenPacket.DeleteOnly = TRUE;
-    OpenPacket.FullAttributes = FALSE;
     OpenPacket.DummyFileObject = &DummyFileObject;
-    OpenPacket.InternalFlags = 0;
 
     /* Update the operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
