@@ -48,7 +48,7 @@
 @ stub CM_First_Range
 @ stub CM_Free_Log_Conf
 @ stub CM_Free_Log_Conf_Ex
-@ stub CM_Free_Log_Conf_Handle
+@ stdcall CM_Free_Log_Conf_Handle(ptr)
 @ stub CM_Free_Range_List
 @ stub CM_Free_Res_Des
 @ stub CM_Free_Res_Des_Ex

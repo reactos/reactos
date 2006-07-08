@@ -919,6 +919,26 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
 
 
 /***********************************************************************
+ * CM_Free_Log_Conf_Handle [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Free_Log_Conf_Handle(
+    LOG_CONF lcLogConf)
+{
+    PLOG_CONF_INFO pLogConfInfo;
+
+    TRACE("%lx\n", lcLogConf);
+
+    pLogConfInfo = (PLOG_CONF_INFO)lcLogConf;
+    if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+        return CR_INVALID_LOG_CONF;
+
+    HeapFree(GetProcessHeap(), 0, pLogConfInfo);
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
  * CM_Get_Child [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Child(
