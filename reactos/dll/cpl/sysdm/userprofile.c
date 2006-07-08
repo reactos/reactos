@@ -39,8 +39,9 @@ UserProfilePageProc(
   LPARAM lParam
 )
 {
-  UNREFERENCED_PARAMETER(lParam)
-  UNREFERENCED_PARAMETER(wParam)
+  UNREFERENCED_PARAMETER(lParam);
+  UNREFERENCED_PARAMETER(wParam);
+  UNREFERENCED_PARAMETER(hwndDlg);
   switch(uMsg)
   {
     case WM_INITDIALOG:

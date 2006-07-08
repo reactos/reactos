@@ -31,8 +31,8 @@ alarmsProc(
   LPARAM lParam
 )
 {
-  UNREFERENCED_PARAMETER(lParam)
-  UNREFERENCED_PARAMETER(wParam)
+  UNREFERENCED_PARAMETER(lParam);
+  UNREFERENCED_PARAMETER(wParam);
   switch(uMsg)
   {
     case WM_INITDIALOG:

@@ -55,7 +55,7 @@ PropSheetProc(
 	LPARAM lParam
 )
 {
-  UNREFERENCED_PARAMETER(hwndDlg)
+  UNREFERENCED_PARAMETER(hwndDlg);
   switch(uMsg)
   {
     case PSCB_BUTTONPRESSED:
@@ -90,10 +90,10 @@ Applet1(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
   SYSTEM_POWER_CAPABILITIES spc;
   INT i=0;
  
-  UNREFERENCED_PARAMETER(hwnd)
-  UNREFERENCED_PARAMETER(uMsg)
-  UNREFERENCED_PARAMETER(wParam)
-  UNREFERENCED_PARAMETER(lParam)
+  UNREFERENCED_PARAMETER(hwnd);
+  UNREFERENCED_PARAMETER(uMsg);
+  UNREFERENCED_PARAMETER(wParam);
+  UNREFERENCED_PARAMETER(lParam);
 
   memset(Caption, 0x0, sizeof(Caption));
   LoadString(hApplet, IDS_CPLNAME_1, Caption, sizeof(Caption) / sizeof(TCHAR));
@@ -171,7 +171,7 @@ DllMain(
 	DWORD     dwReason,
 	LPVOID    lpvReserved)
 {
-  UNREFERENCED_PARAMETER(lpvReserved)
+  UNREFERENCED_PARAMETER(lpvReserved);
   switch(dwReason)
   {
     case DLL_PROCESS_ATTACH:

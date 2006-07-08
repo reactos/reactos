@@ -34,7 +34,7 @@ LocationsEnumProc(GEOID gId)
     int index;
 
     GetGeoInfo(gId, GEO_FRIENDLYNAME, loc, MAX_FMT_SIZE, LANG_SYSTEM_DEFAULT);
-    index = SendMessageW(hGeoList,
+    index = (int) SendMessageW(hGeoList,
                          CB_ADDSTRING,
                          0,
                          (LPARAM)loc);
@@ -69,7 +69,7 @@ CreateLocationsList(HWND hWnd)
 
     SendMessageW(hGeoList,
                  CB_SELECTSTRING,
-                 -1,
+                 (WPARAM) -1,
                  (LPARAM)loc);
 }
 
@@ -85,14 +85,14 @@ LocalesEnumProc(LPTSTR lpLocale)
     lcid = wcstoul(lpLocale, NULL, 16);
 
     GetLocaleInfo(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang));
-    index = SendMessageW(hLocaleList,
+    index = (int) SendMessageW(hLocaleList,
                          CB_ADDSTRING,
                          0,
                          (LPARAM)lang);
 
     SendMessageW(hLocaleList,
                  CB_SETITEMDATA,
-                 index,
+                 (WPARAM) index,
                  (LPARAM)lcid);
 
     return TRUE;
@@ -117,7 +117,7 @@ CreateLanguagesList(HWND hWnd)
 
     SendMessageW(hLocaleList,
                  CB_SELECTSTRING,
-                 -1,
+                 (WPARAM) -1,
                  (LPARAM)langSel);
 }
 
@@ -208,7 +208,7 @@ SetNewLocale(LCID LcidLocale)
     }
 
     wsprintf(Value, L"%04X", (DWORD)LcidLocale);
-    ValueSize = (wcslen(Value) + 1) * sizeof(WCHAR);
+    ValueSize = (DWORD) (wcslen(Value) + 1) * sizeof(WCHAR);
 
     RegSetValueExW(LocaleKey, L"Locale", 0, REG_SZ, (BYTE *)Value, ValueSize);
     RegCloseKey(LocaleKey);
@@ -246,9 +246,9 @@ RegOptsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == CBN_SELCHANGE ||
                         HIWORD(wParam) == CBN_EDITCHANGE)
                     {
-                        CurrSel = SendMessageW((HWND)lParam, CB_GETCURSEL,
+                        CurrSel = (int) SendMessageW((HWND)lParam, CB_GETCURSEL,
                             0, 0);
-                        NewLCID = SendMessageW((HWND)lParam, CB_GETITEMDATA,
+                        NewLCID = (LCID) SendMessageW((HWND)lParam, CB_GETITEMDATA,
                             CurrSel, 0);
                         UpdateLocaleSample(hwndDlg,
                                            MAKELCID(NewLCID, SORT_DEFAULT));
@@ -273,20 +273,20 @@ RegOptsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (lpnm->code == (UINT)PSN_APPLY)
             {
                 /* Set locale */
-                CurrSel = SendMessageW(GetDlgItem(hwndDlg, IDC_SETREG_COMBO),
+                CurrSel = (int) SendMessageW(GetDlgItem(hwndDlg, IDC_SETREG_COMBO),
                     CB_GETCURSEL, 0, 0);
-                NewLCID = SendMessageW(GetDlgItem(hwndDlg, IDC_SETREG_COMBO),
+                NewLCID = (LCID) SendMessageW(GetDlgItem(hwndDlg, IDC_SETREG_COMBO),
                     CB_GETITEMDATA, CurrSel, 0);
                 if (NewLCID == (LCID)CB_ERR) break;
 
                 SetNewLocale(MAKELCID(NewLCID, SORT_DEFAULT));
 
                 /* Set geo location */
-                CurrSel = SendMessageW(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
+                CurrSel = (int) SendMessageW(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
                                CB_GETCURSEL,
                                0,
                                0);
-                NewLocation = SendMessageW(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
+                NewLocation = (GEOID) SendMessageW(GetDlgItem(hwndDlg, IDC_LOCATION_COMBO),
                               CB_GETITEMDATA,
                               CurrSel,
                               0);

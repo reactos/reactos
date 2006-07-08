@@ -244,10 +244,10 @@ OnDisplayDeviceChanged(IN HWND hwndDlg, IN PDISPLAY_DEVICE_ENTRY pDeviceEntry)
 		TCHAR Buffer[64];
 		if (LoadString(hApplet, (2900 + Current->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR)))
 		{
-			index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)Buffer);
+			index = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)Buffer);
 			if (index == (DWORD)CB_ERR)
 			{
-				index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_ADDSTRING, 0, (LPARAM)Buffer);
+				index = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_ADDSTRING, 0, (LPARAM)Buffer);
 				SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SETITEMDATA, index, Current->dmBitsPerPel);
 			}
 		}
@@ -322,8 +322,8 @@ OnBPPChanged(IN HWND hwndDlg)
 	TCHAR Buffer[64];
 
 	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, WM_GETTEXT, (WPARAM)(sizeof(Buffer) / sizeof(TCHAR)), (LPARAM)Buffer);
-	index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)Buffer);
-	dmNewBitsPerPel = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_GETITEMDATA, index, 0);
+	index = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)Buffer);
+	dmNewBitsPerPel = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_GETITEMDATA, index, 0);
 
 	/* find if new parameters are valid */
 	Current = CurrentDisplayDevice->CurrentSettings;
@@ -518,7 +518,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				case TB_BOTTOM:
 				case TB_ENDTRACK:
 				{
-					DWORD newPosition = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_GETPOS, 0, 0);
+					DWORD newPosition = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_RESOLUTION, TBM_GETPOS, 0, 0);
 					OnResolutionChanged(hwndDlg, newPosition);
 				}
 			}
