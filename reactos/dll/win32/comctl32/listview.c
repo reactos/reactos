@@ -3770,9 +3770,8 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
     if (himl && lvItem.iImage >= 0 && !IsRectEmpty(&rcIcon))
     {
         TRACE("iImage=%d\n", lvItem.iImage);
-        ImageList_DrawEx(himl, lvItem.iImage, hdc, rcIcon.left, rcIcon.top,
-                         rcIcon.right - rcIcon.left, rcIcon.bottom - rcIcon.top, infoPtr->clrBk, CLR_DEFAULT,
-                         (lvItem.state & LVIS_SELECTED) && (infoPtr->bFocus) ? ILD_SELECTED : ILD_NORMAL);
+	ImageList_Draw(himl, lvItem.iImage, hdc, rcIcon.left, rcIcon.top,
+			(lvItem.state & LVIS_SELECTED) && (infoPtr->bFocus) ? ILD_SELECTED : ILD_NORMAL);
     }
 
     /* Don't bother painting item being edited */
