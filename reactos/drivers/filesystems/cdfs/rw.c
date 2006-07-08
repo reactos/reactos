@@ -140,7 +140,7 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
   PDEVICE_EXTENSION DeviceExt;
   PIO_STACK_LOCATION Stack;
   PFILE_OBJECT FileObject;
-  PVOID Buffer;
+  PVOID Buffer = NULL;
   ULONG ReadLength;
   LARGE_INTEGER ReadOffset;
   ULONG ReturnedReadLength = 0;
@@ -154,7 +154,7 @@ CdfsRead(PDEVICE_OBJECT DeviceObject,
 
   ReadLength = Stack->Parameters.Read.Length;
   ReadOffset = Stack->Parameters.Read.ByteOffset;
-  Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+  if (ReadLength) Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
 
   Status = CdfsReadFile(DeviceExt,
 			FileObject,
