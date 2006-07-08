@@ -9,7 +9,6 @@
 	<define name="WINVER">0x501</define>
 	<define name="_SHLWAPI_"/>
 	<define name="WINSHLWAPI">""</define>
-	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-lgcc</linkerflag>
 	<library>wine</library>
 	<library>uuid</library>
