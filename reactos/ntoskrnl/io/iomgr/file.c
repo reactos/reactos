@@ -41,6 +41,7 @@ IopParseDevice(IN PVOID ParseObject,
     BOOLEAN DirectOpen = FALSE;
     OBJECT_ATTRIBUTES ObjectAttributes;
     BOOLEAN OpenCancelled;
+    KIRQL OldIrql;
     DPRINT("IopParseDevice:\n"
            "DeviceObject : %p\n"
            "RelatedFileObject : %p\n"
@@ -232,8 +233,8 @@ IopParseDevice(IN PVOID ParseObject,
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->RequestorMode = AccessMode;
     Irp->Flags = IRP_CREATE_OPERATION |
-                 IRP_SYNCHRONOUS_API;// |
-                 //IRP_DEFER_IO_COMPLETION;
+                 IRP_SYNCHRONOUS_API |
+                 IRP_DEFER_IO_COMPLETION;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->UserEvent = &FileObject->Event;
     Irp->UserIosb = &IoStatusBlock;
@@ -341,26 +342,41 @@ IopParseDevice(IN PVOID ParseObject,
                               KernelMode,
                               FALSE,
                               NULL);
+
+        /* Get the new status */
         Status = IoStatusBlock.Status;
     }
-#if 0
     else
     {
-        KIRQL OldIrql;
-        PKNORMAL_ROUTINE NormalRoutine;
-        PVOID NormalContext;
-
         /* We'll have to complete it ourselves */
         ASSERT(!Irp->PendingReturned);
+
+        /* Completion happens at APC_LEVEL */
         KeRaiseIrql(APC_LEVEL, &OldIrql);
-        IopCompleteRequest(&Irp->Tail.Apc,
-                           &NormalRoutine,
-                           &NormalContext,
-                           (PVOID*)&FileObject,
-                           &NormalContext);
+
+        /* Get the new I/O Status block ourselves */
+        IoStatusBlock = Irp->IoStatus;
+        Status = IoStatusBlock.Status;
+
+        /* Manually signal the even, we can't have any waiters */
+        FileObject->Event.Header.SignalState = 1;
+
+        /* Now that we've signaled the events, de-associate the IRP */
+        RemoveEntryList(&Irp->ThreadListEntry);
+        InitializeListHead(&Irp->ThreadListEntry);
+
+        /* Check if the IRP had an input buffer */
+        if ((Irp->Flags & IRP_BUFFERED_IO) &&
+            (Irp->Flags & IRP_DEALLOCATE_BUFFER))
+        {
+            /* Free it. A driver might've tacked one on */
+            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+        }
+
+        /* Free the IRP and bring the IRQL back down */
+        IoFreeIrp(Irp);
         KeLowerIrql(OldIrql);
     }
-#endif
 
     /* Copy the I/O Status */
     OpenPacket->Information = IoStatusBlock.Information;
