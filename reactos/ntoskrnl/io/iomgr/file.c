@@ -5,6 +5,7 @@
  * PURPOSE:         Functions that deal with managing the FILE_OBJECT itself.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gunnar Dalsnes
+ *                  Eric Kohl
  *                  Filip Navara (navaraf@reactos.org)
  */
 
@@ -1197,7 +1198,7 @@ IoCheckQuerySetFileInformation(IN FILE_INFORMATION_CLASS FileInformationClass,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoCheckQuotaBufferValidity(IN PFILE_QUOTA_INFORMATION QuotaBuffer,
                            IN ULONG QuotaLength,
                            OUT PULONG ErrorOffset)
@@ -1457,7 +1458,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 IoCreateFileSpecifyDeviceObjectHint(OUT PHANDLE FileHandle,
                                     IN ACCESS_MASK DesiredAccess,
                                     IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -1534,7 +1535,7 @@ IoCreateStreamFileObject(IN PFILE_OBJECT FileObject,
  * @unimplemented
  */
 PFILE_OBJECT
-STDCALL
+NTAPI
 IoCreateStreamFileObjectEx(IN PFILE_OBJECT FileObject OPTIONAL,
                            IN PDEVICE_OBJECT DeviceObject OPTIONAL,
                            OUT PHANDLE FileObjectHandle OPTIONAL)
@@ -1547,7 +1548,7 @@ IoCreateStreamFileObjectEx(IN PFILE_OBJECT FileObject OPTIONAL,
  * @unimplemented
  */
 PFILE_OBJECT
-STDCALL
+NTAPI
 IoCreateStreamFileObjectLite(IN PFILE_OBJECT FileObject OPTIONAL,
                              IN PDEVICE_OBJECT DeviceObject OPTIONAL)
 {
@@ -1559,9 +1560,10 @@ IoCreateStreamFileObjectLite(IN PFILE_OBJECT FileObject OPTIONAL,
  * @implemented
  */
 PGENERIC_MAPPING
-STDCALL
+NTAPI
 IoGetFileObjectGenericMapping(VOID)
 {
+    /* Return the mapping */
     return &IopFileMapping;
 }
 
@@ -1574,6 +1576,264 @@ IoIsFileOriginRemote(IN PFILE_OBJECT FileObject)
 {
     /* Return the flag status */
     return (FileObject->Flags & FO_REMOTE_ORIGIN);
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
+                             IN ACCESS_MASK DesiredAccess,
+                             IN ULONG OpenOptions,
+                             OUT PIO_STATUS_BLOCK IoStatus,
+                             OUT PFILE_NETWORK_OPEN_INFORMATION Buffer)
+{
+    NTSTATUS Status;
+    DUMMY_FILE_OBJECT DummyFileObject;
+    HANDLE Handle;
+    OPEN_PACKET OpenPacket;
+    PAGED_CODE();
+
+    /* Setup the Open Packet */
+    OpenPacket.Type = IO_TYPE_OPEN_PACKET;
+    OpenPacket.Size = sizeof(OPEN_PACKET);
+    OpenPacket.FileObject = NULL;
+    OpenPacket.FinalStatus = STATUS_SUCCESS;
+    OpenPacket.Information = 0;
+    OpenPacket.ParseCheck = 0;
+    OpenPacket.RelatedFileObject = NULL;
+    OpenPacket.AllocationSize.QuadPart = 0;
+    OpenPacket.CreateOptions = OpenOptions | FILE_OPEN_REPARSE_POINT;
+    OpenPacket.FileAttributes = 0;
+    OpenPacket.ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    OpenPacket.EaBuffer = NULL;
+    OpenPacket.EaLength = 0;
+    OpenPacket.Options = IO_FORCE_ACCESS_CHECK;
+    OpenPacket.Disposition = FILE_OPEN;
+    OpenPacket.BasicInformation = NULL;
+    OpenPacket.NetworkInformation = Buffer;
+    OpenPacket.CreateFileType = 0;
+    OpenPacket.MailslotOrPipeParameters = NULL;
+    OpenPacket.Override = FALSE;
+    OpenPacket.QueryOnly = TRUE;
+    OpenPacket.DeleteOnly = FALSE;
+    OpenPacket.FullAttributes = TRUE;
+    OpenPacket.DummyFileObject = &DummyFileObject;
+    OpenPacket.InternalFlags = 0;
+
+    /*
+     * Attempt opening the file. This will call the I/O Parse Routine for
+     * the File Object (IopParseDevice) which will use the dummy file obejct
+     * send the IRP to its device object. Note that we have two statuses
+     * to worry about: the Object Manager's status (in Status) and the I/O
+     * status, which is in the Open Packet's Final Status, and determined
+     * by the Parse Check member.
+     */
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                NULL,
+                                KernelMode,
+                                NULL,
+                                DesiredAccess,
+                                &OpenPacket,
+                                &Handle);
+    if (OpenPacket.ParseCheck != TRUE)
+    {
+        /* Parse failed */
+        IoStatus->Status = Status;
+    }
+    else
+    {
+        /* Use the Io status */
+        IoStatus->Status = OpenPacket.FinalStatus;
+        IoStatus->Information = OpenPacket.Information;
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IoUpdateShareAccess(IN PFILE_OBJECT FileObject,
+                    OUT PSHARE_ACCESS ShareAccess)
+{
+    PAGED_CODE();
+
+    if (FileObject->ReadAccess ||
+        FileObject->WriteAccess ||
+        FileObject->DeleteAccess)
+    {
+        ShareAccess->OpenCount++;
+
+        ShareAccess->Readers += FileObject->ReadAccess;
+        ShareAccess->Writers += FileObject->WriteAccess;
+        ShareAccess->Deleters += FileObject->DeleteAccess;
+        ShareAccess->SharedRead += FileObject->SharedRead;
+        ShareAccess->SharedWrite += FileObject->SharedWrite;
+        ShareAccess->SharedDelete += FileObject->SharedDelete;
+    }
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
+                   IN ULONG DesiredShareAccess,
+                   IN PFILE_OBJECT FileObject,
+                   IN PSHARE_ACCESS ShareAccess,
+                   IN BOOLEAN Update)
+{
+    BOOLEAN ReadAccess;
+    BOOLEAN WriteAccess;
+    BOOLEAN DeleteAccess;
+    BOOLEAN SharedRead;
+    BOOLEAN SharedWrite;
+    BOOLEAN SharedDelete;
+    PAGED_CODE();
+
+    ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
+    WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
+    DeleteAccess = (DesiredAccess & DELETE) != 0;
+
+    FileObject->ReadAccess = ReadAccess;
+    FileObject->WriteAccess = WriteAccess;
+    FileObject->DeleteAccess = DeleteAccess;
+
+    if (ReadAccess || WriteAccess || DeleteAccess)
+    {
+        SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
+        SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
+        SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
+
+        FileObject->SharedRead = SharedRead;
+        FileObject->SharedWrite = SharedWrite;
+        FileObject->SharedDelete = SharedDelete;
+
+        if ((ReadAccess && (ShareAccess->SharedRead < ShareAccess->OpenCount)) ||
+            (WriteAccess && (ShareAccess->SharedWrite < ShareAccess->OpenCount)) ||
+            (DeleteAccess && (ShareAccess->SharedDelete < ShareAccess->OpenCount)) ||
+            ((ShareAccess->Readers != 0) && !SharedRead) ||
+            ((ShareAccess->Writers != 0) && !SharedWrite) ||
+            ((ShareAccess->Deleters != 0) && !SharedDelete))
+        {
+            return(STATUS_SHARING_VIOLATION);
+        }
+
+        if (Update)
+        {
+            ShareAccess->OpenCount++;
+
+            ShareAccess->Readers += ReadAccess;
+            ShareAccess->Writers += WriteAccess;
+            ShareAccess->Deleters += DeleteAccess;
+            ShareAccess->SharedRead += SharedRead;
+            ShareAccess->SharedWrite += SharedWrite;
+            ShareAccess->SharedDelete += SharedDelete;
+        }
+    }
+
+    return(STATUS_SUCCESS);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IoRemoveShareAccess(IN PFILE_OBJECT FileObject,
+                    IN PSHARE_ACCESS ShareAccess)
+{
+    PAGED_CODE();
+
+    if (FileObject->ReadAccess ||
+        FileObject->WriteAccess ||
+        FileObject->DeleteAccess)
+    {
+        ShareAccess->OpenCount--;
+
+        ShareAccess->Readers -= FileObject->ReadAccess;
+        ShareAccess->Writers -= FileObject->WriteAccess;
+        ShareAccess->Deleters -= FileObject->DeleteAccess;
+        ShareAccess->SharedRead -= FileObject->SharedRead;
+        ShareAccess->SharedWrite -= FileObject->SharedWrite;
+        ShareAccess->SharedDelete -= FileObject->SharedDelete;
+    }
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
+                 IN ULONG DesiredShareAccess,
+                 IN PFILE_OBJECT FileObject,
+                 OUT PSHARE_ACCESS ShareAccess)
+{
+    BOOLEAN ReadAccess;
+    BOOLEAN WriteAccess;
+    BOOLEAN DeleteAccess;
+    BOOLEAN SharedRead;
+    BOOLEAN SharedWrite;
+    BOOLEAN SharedDelete;
+    PAGED_CODE();
+
+    ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
+    WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
+    DeleteAccess = (DesiredAccess & DELETE) != 0;
+
+    FileObject->ReadAccess = ReadAccess;
+    FileObject->WriteAccess = WriteAccess;
+    FileObject->DeleteAccess = DeleteAccess;
+
+    if (!ReadAccess && !WriteAccess && !DeleteAccess)
+    {
+        ShareAccess->OpenCount = 0;
+        ShareAccess->Readers = 0;
+        ShareAccess->Writers = 0;
+        ShareAccess->Deleters = 0;
+
+        ShareAccess->SharedRead = 0;
+        ShareAccess->SharedWrite = 0;
+        ShareAccess->SharedDelete = 0;
+    }
+    else
+    {
+        SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
+        SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
+        SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
+
+        FileObject->SharedRead = SharedRead;
+        FileObject->SharedWrite = SharedWrite;
+        FileObject->SharedDelete = SharedDelete;
+
+        ShareAccess->OpenCount = 1;
+        ShareAccess->Readers = ReadAccess;
+        ShareAccess->Writers = WriteAccess;
+        ShareAccess->Deleters = DeleteAccess;
+
+        ShareAccess->SharedRead = SharedRead;
+        ShareAccess->SharedWrite = SharedWrite;
+        ShareAccess->SharedDelete = SharedDelete;
+    }
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+IoCancelFileOpen(IN PDEVICE_OBJECT DeviceObject,
+                 IN PFILE_OBJECT FileObject)
+{
+    UNIMPLEMENTED;
 }
 
 /*
@@ -1601,25 +1861,7 @@ IoSetFileOrigin(IN PFILE_OBJECT FileObject,
 }
 
 
-
 /*
- * NAME       EXPORTED
- * NtCreateFile@44
- *
- * DESCRIPTION
- * Entry point to call IoCreateFile with
- * default parameters.
- *
- * ARGUMENTS
- *  See IoCreateFile.
- *
- * RETURN VALUE
- *  See IoCreateFile.
- *
- * REVISIONS
- *  2000-03-25 (ea)
- *   Code originally in NtCreateFile moved in IoCreateFile.
- *
  * @implemented
  */
 NTSTATUS
@@ -1665,41 +1907,44 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
                      IN PLARGE_INTEGER TimeOut)
 {
     MAILSLOT_CREATE_PARAMETERS Buffer;
-
-    DPRINT("NtCreateMailslotFile(FileHandle 0x%p, DesiredAccess %x, "
-           "ObjectAttributes 0x%p)\n",
-           FileHandle,DesiredAccess,ObjectAttributes);
-
+    NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
     /* Check for Timeout */
-    if (TimeOut != NULL)
+    if (DefaultTimeout)
     {
+        /* check if the call came from user mode */
         if (KeGetPreviousMode() != KernelMode)
         {
-            NTSTATUS Status = STATUS_SUCCESS;
-
+            /* Enter SEH for Probe */
             _SEH_TRY
             {
-                Buffer.ReadTimeout = ProbeForReadLargeInteger(TimeOut);
+                /* Probe the timeout */
+                Buffer.DefaultTimeout =
+                    ProbeForReadLargeInteger(DefaultTimeout);
             }
             _SEH_HANDLE
             {
+                /* Get exception code */
                 Status = _SEH_GetExceptionCode();
             }
             _SEH_END;
 
+            /* Return the exception */
             if (!NT_SUCCESS(Status)) return Status;
         }
         else
         {
-            Buffer.ReadTimeout = *TimeOut;
+            /* Otherwise, capture directly */
+            Buffer.DefaultTimeout = *DefaultTimeout;
         }
 
+        /* Set the correct setting */
         Buffer.TimeoutSpecified = TRUE;
     }
     else
     {
+        /* Tell the FSD we don't have a timeout */
         Buffer.TimeoutSpecified = FALSE;
     }
 
@@ -1713,7 +1958,7 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
                         ObjectAttributes,
                         IoStatusBlock,
                         NULL,
-                        FILE_ATTRIBUTE_NORMAL,
+                        0,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         FILE_CREATE,
                         CreateOptions,
@@ -1725,58 +1970,63 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
 }
 
 NTSTATUS
-STDCALL
-NtCreateNamedPipeFile(PHANDLE FileHandle,
-                      ACCESS_MASK DesiredAccess,
-                      POBJECT_ATTRIBUTES ObjectAttributes,
-                      PIO_STATUS_BLOCK IoStatusBlock,
-                      ULONG ShareAccess,
-                      ULONG CreateDisposition,
-                      ULONG CreateOptions,
-                      ULONG NamedPipeType,
-                      ULONG ReadMode,
-                      ULONG CompletionMode,
-                      ULONG MaximumInstances,
-                      ULONG InboundQuota,
-                      ULONG OutboundQuota,
-                      PLARGE_INTEGER DefaultTimeout)
+NTAPI
+NtCreateNamedPipeFile(OUT PHANDLE FileHandle,
+                      IN ACCESS_MASK DesiredAccess,
+                      IN POBJECT_ATTRIBUTES ObjectAttributes,
+                      OUT PIO_STATUS_BLOCK IoStatusBlock,
+                      IN ULONG ShareAccess,
+                      IN ULONG CreateDisposition,
+                      IN ULONG CreateOptions,
+                      IN ULONG NamedPipeType,
+                      IN ULONG ReadMode,
+                      IN ULONG CompletionMode,
+                      IN ULONG MaximumInstances,
+                      IN ULONG InboundQuota,
+                      IN ULONG OutboundQuota,
+                      IN PLARGE_INTEGER DefaultTimeout)
 {
     NAMED_PIPE_CREATE_PARAMETERS Buffer;
-
-    DPRINT("NtCreateNamedPipeFile(FileHandle 0x%p, DesiredAccess %x, "
-           "ObjectAttributes 0x%p)\n",
-            FileHandle,DesiredAccess,ObjectAttributes);
-
+    NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
     /* Check for Timeout */
-    if (DefaultTimeout != NULL)
+    if (DefaultTimeout)
     {
+        /* check if the call came from user mode */
         if (KeGetPreviousMode() != KernelMode)
         {
-            NTSTATUS Status = STATUS_SUCCESS;
-
+            /* Enter SEH for Probe */
             _SEH_TRY
             {
-                Buffer.DefaultTimeout = ProbeForReadLargeInteger(DefaultTimeout);
+                /* Probe the timeout */
+                Buffer.DefaultTimeout =
+                    ProbeForReadLargeInteger(DefaultTimeout);
             }
             _SEH_HANDLE
             {
+                /* Get exception code */
                 Status = _SEH_GetExceptionCode();
             }
             _SEH_END;
 
+            /* Return the exception */
             if (!NT_SUCCESS(Status)) return Status;
         }
         else
         {
+            /* Otherwise, capture directly */
             Buffer.DefaultTimeout = *DefaultTimeout;
         }
 
+        /* Set the correct setting */
         Buffer.TimeoutSpecified = TRUE;
     }
     else
+    {
+        /* Tell the FSD we don't have a timeout */
         Buffer.TimeoutSpecified = FALSE;
+    }
 
     /* Set Settings */
     Buffer.NamedPipeType = NamedPipeType;
@@ -1792,7 +2042,7 @@ NtCreateNamedPipeFile(PHANDLE FileHandle,
                         ObjectAttributes,
                         IoStatusBlock,
                         NULL,
-                        FILE_ATTRIBUTE_NORMAL,
+                        0,
                         ShareAccess,
                         CreateDisposition,
                         CreateOptions,
@@ -1804,58 +2054,27 @@ NtCreateNamedPipeFile(PHANDLE FileHandle,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtFlushWriteBuffer(VOID)
 {
     PAGED_CODE();
 
+    /* Call the kernel */
     KeFlushWriteBuffer();
     return STATUS_SUCCESS;
 }
 
 /*
- * NAME       EXPORTED
- *  NtOpenFile@24
- *
- * DESCRIPTION
- *  Opens an existing file (simpler than NtCreateFile).
- *
- * ARGUMENTS
- * FileHandle (OUT)
- *  Variable that receives the file handle on return;
- *
- * DesiredAccess
- *  Access desired by the caller to the file;
- *
- * ObjectAttributes
- *  Structue describing the file to be opened;
- *
- * IoStatusBlock (OUT)
- *  Receives details about the result of the
- *  operation;
- *
- * ShareAccess
- *  Type of shared access the caller requires;
- *
- * OpenOptions
- *  Options for the file open.
- *
- * RETURN VALUE
- *  Status.
- *
- * NOTE
- *  Undocumented.
- *
  * @implemented
  */
 NTSTATUS
-STDCALL
-NtOpenFile(PHANDLE FileHandle,
-           ACCESS_MASK DesiredAccess,
-           POBJECT_ATTRIBUTES ObjectAttributes,
-           PIO_STATUS_BLOCK IoStatusBlock,
-           ULONG ShareAccess,
-           ULONG OpenOptions)
+NTAPI
+NtOpenFile(OUT PHANDLE FileHandle,
+           IN ACCESS_MASK DesiredAccess,
+           IN POBJECT_ATTRIBUTES ObjectAttributes,
+           OUT PIO_STATUS_BLOCK IoStatusBlock,
+           IN ULONG ShareAccess,
+           IN ULONG OpenOptions)
 {
     /* Call the I/O Function */
     return IoCreateFile(FileHandle,
@@ -1875,7 +2094,7 @@ NtOpenFile(PHANDLE FileHandle,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                       OUT PFILE_BASIC_INFORMATION FileInformation)
 {
@@ -1887,7 +2106,7 @@ NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                           OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation)
 {
@@ -2089,263 +2308,4 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
     return OpenPacket.FinalStatus;
 }
 
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
-                             IN ACCESS_MASK DesiredAccess,
-                             IN ULONG OpenOptions,
-                             OUT PIO_STATUS_BLOCK IoStatus,
-                             OUT PFILE_NETWORK_OPEN_INFORMATION Buffer)
-{
-    NTSTATUS Status;
-    DUMMY_FILE_OBJECT DummyFileObject;
-    HANDLE Handle;
-    OPEN_PACKET OpenPacket;
-    PAGED_CODE();
-
-    /* Setup the Open Packet */
-    OpenPacket.Type = IO_TYPE_OPEN_PACKET;
-    OpenPacket.Size = sizeof(OPEN_PACKET);
-    OpenPacket.FileObject = NULL;
-    OpenPacket.FinalStatus = STATUS_SUCCESS;
-    OpenPacket.Information = 0;
-    OpenPacket.ParseCheck = 0;
-    OpenPacket.RelatedFileObject = NULL;
-    OpenPacket.AllocationSize.QuadPart = 0;
-    OpenPacket.CreateOptions = OpenOptions | FILE_OPEN_REPARSE_POINT;
-    OpenPacket.FileAttributes = 0;
-    OpenPacket.ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-    OpenPacket.EaBuffer = NULL;
-    OpenPacket.EaLength = 0;
-    OpenPacket.Options = IO_FORCE_ACCESS_CHECK;
-    OpenPacket.Disposition = FILE_OPEN;
-    OpenPacket.BasicInformation = NULL;
-    OpenPacket.NetworkInformation = Buffer;
-    OpenPacket.CreateFileType = 0;
-    OpenPacket.MailslotOrPipeParameters = NULL;
-    OpenPacket.Override = FALSE;
-    OpenPacket.QueryOnly = TRUE;
-    OpenPacket.DeleteOnly = FALSE;
-    OpenPacket.FullAttributes = TRUE;
-    OpenPacket.DummyFileObject = &DummyFileObject;
-    OpenPacket.InternalFlags = 0;
-
-    /*
-     * Attempt opening the file. This will call the I/O Parse Routine for
-     * the File Object (IopParseDevice) which will use the dummy file obejct
-     * send the IRP to its device object. Note that we have two statuses
-     * to worry about: the Object Manager's status (in Status) and the I/O
-     * status, which is in the Open Packet's Final Status, and determined
-     * by the Parse Check member.
-     */
-    Status = ObOpenObjectByName(ObjectAttributes,
-                                NULL,
-                                KernelMode,
-                                NULL,
-                                DesiredAccess,
-                                &OpenPacket,
-                                &Handle);
-    if (OpenPacket.ParseCheck != TRUE)
-    {
-        /* Parse failed */
-        IoStatus->Status = Status;
-    }
-    else
-    {
-        /* Use the Io status */
-        IoStatus->Status = OpenPacket.FinalStatus;
-        IoStatus->Information = OpenPacket.Information;
-    }
-
-    /* Return success */
-    return TRUE;
-}
-
-/*
- * @implemented
- */
-VOID STDCALL
-IoUpdateShareAccess(PFILE_OBJECT FileObject,
-		    PSHARE_ACCESS ShareAccess)
-{
-   PAGED_CODE();
-
-   if (FileObject->ReadAccess ||
-       FileObject->WriteAccess ||
-       FileObject->DeleteAccess)
-     {
-       ShareAccess->OpenCount++;
-
-       ShareAccess->Readers += FileObject->ReadAccess;
-       ShareAccess->Writers += FileObject->WriteAccess;
-       ShareAccess->Deleters += FileObject->DeleteAccess;
-       ShareAccess->SharedRead += FileObject->SharedRead;
-       ShareAccess->SharedWrite += FileObject->SharedWrite;
-       ShareAccess->SharedDelete += FileObject->SharedDelete;
-     }
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS STDCALL
-IoCheckShareAccess(IN ACCESS_MASK DesiredAccess,
-		   IN ULONG DesiredShareAccess,
-		   IN PFILE_OBJECT FileObject,
-		   IN PSHARE_ACCESS ShareAccess,
-		   IN BOOLEAN Update)
-{
-  BOOLEAN ReadAccess;
-  BOOLEAN WriteAccess;
-  BOOLEAN DeleteAccess;
-  BOOLEAN SharedRead;
-  BOOLEAN SharedWrite;
-  BOOLEAN SharedDelete;
-
-  PAGED_CODE();
-
-  ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
-  WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
-  DeleteAccess = (DesiredAccess & DELETE) != 0;
-
-  FileObject->ReadAccess = ReadAccess;
-  FileObject->WriteAccess = WriteAccess;
-  FileObject->DeleteAccess = DeleteAccess;
-
-  if (ReadAccess || WriteAccess || DeleteAccess)
-    {
-      SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
-      SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
-      SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
-
-      FileObject->SharedRead = SharedRead;
-      FileObject->SharedWrite = SharedWrite;
-      FileObject->SharedDelete = SharedDelete;
-
-      if ((ReadAccess && (ShareAccess->SharedRead < ShareAccess->OpenCount)) ||
-          (WriteAccess && (ShareAccess->SharedWrite < ShareAccess->OpenCount)) ||
-          (DeleteAccess && (ShareAccess->SharedDelete < ShareAccess->OpenCount)) ||
-          ((ShareAccess->Readers != 0) && !SharedRead) ||
-          ((ShareAccess->Writers != 0) && !SharedWrite) ||
-          ((ShareAccess->Deleters != 0) && !SharedDelete))
-        {
-          return(STATUS_SHARING_VIOLATION);
-        }
-
-      if (Update)
-        {
-          ShareAccess->OpenCount++;
-
-          ShareAccess->Readers += ReadAccess;
-          ShareAccess->Writers += WriteAccess;
-          ShareAccess->Deleters += DeleteAccess;
-          ShareAccess->SharedRead += SharedRead;
-          ShareAccess->SharedWrite += SharedWrite;
-          ShareAccess->SharedDelete += SharedDelete;
-        }
-    }
-
-  return(STATUS_SUCCESS);
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-IoRemoveShareAccess(IN PFILE_OBJECT FileObject,
-		    IN PSHARE_ACCESS ShareAccess)
-{
-  PAGED_CODE();
-
-  if (FileObject->ReadAccess ||
-      FileObject->WriteAccess ||
-      FileObject->DeleteAccess)
-    {
-      ShareAccess->OpenCount--;
-
-      ShareAccess->Readers -= FileObject->ReadAccess;
-      ShareAccess->Writers -= FileObject->WriteAccess;
-      ShareAccess->Deleters -= FileObject->DeleteAccess;
-      ShareAccess->SharedRead -= FileObject->SharedRead;
-      ShareAccess->SharedWrite -= FileObject->SharedWrite;
-      ShareAccess->SharedDelete -= FileObject->SharedDelete;
-    }
-}
-
-
-/*
- * @implemented
- */
-VOID STDCALL
-IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
-		 IN ULONG DesiredShareAccess,
-		 IN PFILE_OBJECT FileObject,
-		 OUT PSHARE_ACCESS ShareAccess)
-{
-  BOOLEAN ReadAccess;
-  BOOLEAN WriteAccess;
-  BOOLEAN DeleteAccess;
-  BOOLEAN SharedRead;
-  BOOLEAN SharedWrite;
-  BOOLEAN SharedDelete;
-
-  PAGED_CODE();
-
-  ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
-  WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
-  DeleteAccess = (DesiredAccess & DELETE) != 0;
-
-  FileObject->ReadAccess = ReadAccess;
-  FileObject->WriteAccess = WriteAccess;
-  FileObject->DeleteAccess = DeleteAccess;
-
-  if (!ReadAccess && !WriteAccess && !DeleteAccess)
-    {
-      ShareAccess->OpenCount = 0;
-      ShareAccess->Readers = 0;
-      ShareAccess->Writers = 0;
-      ShareAccess->Deleters = 0;
-
-      ShareAccess->SharedRead = 0;
-      ShareAccess->SharedWrite = 0;
-      ShareAccess->SharedDelete = 0;
-    }
-  else
-    {
-      SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
-      SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
-      SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
-
-      FileObject->SharedRead = SharedRead;
-      FileObject->SharedWrite = SharedWrite;
-      FileObject->SharedDelete = SharedDelete;
-
-      ShareAccess->OpenCount = 1;
-      ShareAccess->Readers = ReadAccess;
-      ShareAccess->Writers = WriteAccess;
-      ShareAccess->Deleters = DeleteAccess;
-
-      ShareAccess->SharedRead = SharedRead;
-      ShareAccess->SharedWrite = SharedWrite;
-      ShareAccess->SharedDelete = SharedDelete;
-    }
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoCancelFileOpen(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PFILE_OBJECT    FileObject
-    )
-{
-	UNIMPLEMENTED;
-}
 /* EOF */
