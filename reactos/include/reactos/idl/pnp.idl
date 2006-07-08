@@ -4,6 +4,7 @@
 
 #define WORD unsigned short
 #define DWORD unsigned long
+#define ULONG unsigned long
 #define CONFIGRET unsigned long
 #define BOOL unsigned long
 #define PBOOL unsigned long *
@@ -196,6 +197,13 @@ interface pnp
                               [in] DWORD ProfileId,
                               [in, out] unsigned long *Value,
                               [in] DWORD Flags);
+
+    /* Function 42 */
+    CONFIGRET PNP_AddEmptyLogConf(handle_t BindingHandle,
+                                  [in, string] wchar_t *DeviceInstance,
+                                  [in] ULONG ulPriority,
+                                  [out] ULONG *ulLogConfTag,
+                                  [in] ULONG ulFlags);
 
     /* Function 58 */
     CONFIGRET PNP_RunDetection(handle_t BindingHandle,

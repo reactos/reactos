@@ -9,8 +9,8 @@
 @ stub CMP_UnregisterNotification
 @ stub CMP_WaitNoPendingInstallEvents
 @ stub CMP_WaitServicesAvailable
-@ stub CM_Add_Empty_Log_Conf
-@ stub CM_Add_Empty_Log_Conf_Ex
+@ stdcall CM_Add_Empty_Log_Conf(ptr ptr long long)
+@ stdcall CM_Add_Empty_Log_Conf_Ex(ptr ptr long long ptr)
 @ stdcall CM_Add_IDA(ptr str long)
 @ stdcall CM_Add_IDW(ptr wstr long)
 @ stdcall CM_Add_ID_ExA(ptr str long ptr)

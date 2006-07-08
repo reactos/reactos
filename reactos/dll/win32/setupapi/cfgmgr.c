@@ -46,6 +46,17 @@ typedef struct _MACHINE_INFO
 } MACHINE_INFO, *PMACHINE_INFO;
 
 
+typedef struct _LOG_CONF_INFO
+{
+    ULONG ulMagic;
+    DEVINST dnDevInst;
+    ULONG ulFlags;
+    ULONG ulTag;
+} LOG_CONF_INFO, *PLOG_CONF_INFO;
+
+#define LOG_CONF_MAGIC 0x464E434C  /* "LCNF" */
+
+
 static BOOL GuidToString(LPGUID Guid, LPWSTR String)
 {
     LPWSTR lpString;
@@ -116,6 +127,96 @@ CONFIGRET WINAPI CMP_Report_LogOn(
             break;
 
         Sleep(5000);
+    }
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Add_Empty_Log_Conf [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Add_Empty_Log_Conf(
+    PLOG_CONF plcLogConf, DEVINST dnDevInst, PRIORITY Priority,
+    ULONG ulFlags)
+{
+    TRACE("%p %p %lu %lx\n", plcLogConf, dnDevInst, Priority, ulFlags);
+    return CM_Add_Empty_Log_Conf_Ex(plcLogConf, dnDevInst, Priority,
+                                    ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Add_Empty_Log_Conf_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Add_Empty_Log_Conf_Ex(
+    PLOG_CONF plcLogConf, DEVINST dnDevInst, PRIORITY Priority,
+    ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    ULONG ulLogConfTag = 0;
+    LPWSTR lpDevInst;
+    PLOG_CONF_INFO pLogConfInfo;
+    CONFIGRET ret = CR_SUCCESS;
+
+    FIXME("%p %p %lu %lx %p\n",
+          plcLogConf, dnDevInst, Priority, ulFlags, hMachine);
+
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
+
+    if (plcLogConf == NULL)
+        return CR_INVALID_POINTER;
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (Priority > 0xFFFF)
+        return CR_INVALID_PRIORITY;
+
+    if (ulFlags & ~(LOG_CONF_BITS | PRIORITY_BIT))
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    ret = PNP_AddEmptyLogConf(BindingHandle, lpDevInst, Priority, &ulLogConfTag, ulFlags);
+    if (ret == CR_SUCCESS)
+    {
+        pLogConfInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_CONF_INFO));
+        if (pLogConfInfo == NULL)
+        {
+            ret = CR_OUT_OF_MEMORY;
+        }
+        else
+        {
+            pLogConfInfo->ulMagic = LOG_CONF_MAGIC;
+            pLogConfInfo->dnDevInst = dnDevInst;
+            pLogConfInfo->ulFlags = ulFlags;
+            pLogConfInfo->ulTag = ulLogConfTag;
+
+            *plcLogConf = (LOG_CONF)pLogConfInfo;
+
+            ret = CR_SUCCESS;
+        }
     }
 
     return ret;

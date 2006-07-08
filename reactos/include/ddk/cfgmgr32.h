@@ -619,6 +619,15 @@ CMP_Report_LogOn(
 /* FIXME: Missing CMP_WaitServicesAvailable */
 
 /* CM_Add_Empty_Log_Conf.ulFlags constants */
+#define BASIC_LOG_CONF                    0x00000000
+#define FILTERED_LOG_CONF                 0x00000001
+#define ALLOC_LOG_CONF                    0x00000002
+#define BOOT_LOG_CONF                     0x00000003
+#define FORCED_LOG_CONF                   0x00000004
+#define OVERRIDE_LOG_CONF                 0x00000005
+#define NUM_LOG_CONF                      0x00000006
+#define LOG_CONF_BITS                     0x00000007
+
 #define PRIORITY_EQUAL_FIRST              0x00000008
 #define PRIORITY_EQUAL_LAST               0x00000000
 #define PRIORITY_BIT                      0x00000008

@@ -1245,6 +1245,26 @@ PNP_HwProfFlags(handle_t BindingHandle,
 }
 
 
+/* Function 42 */
+CONFIGRET
+PNP_AddEmptyLogConf(handle_t BindingHandle,
+                    wchar_t *DeviceInstance,
+                    ULONG ulPriority,
+                    ULONG *ulLogConfTag,
+                    ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_AddEmptyLogConf() called\n");
+
+    *ulLogConfTag = 0; /* FIXME */
+
+    DPRINT1("PNP_AddEmptyLogConf() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 /* Function 58 */
 CONFIGRET
 PNP_RunDetection(handle_t BindingHandle,
