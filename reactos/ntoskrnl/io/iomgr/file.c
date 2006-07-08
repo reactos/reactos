@@ -147,56 +147,86 @@ IopParseDevice(IN PVOID ParseObject,
     Status = IopReferenceDeviceObject(DeviceObject);
     FileObject->DeviceObject = DeviceObject;
 
+    /* Setup the file header */
     FileObject->Type = IO_TYPE_FILE;
     FileObject->Size = sizeof(FILE_OBJECT);
     FileObject->RelatedFileObject = OpenPacket->RelatedFileObject;
 
+    /* Check if this is Synch I/O */
     if (OpenPacket->CreateOptions &
         (FILE_SYNCHRONOUS_IO_ALERT | FILE_SYNCHRONOUS_IO_NONALERT))
     {
+        /* Set the synch flag */
         FileObject->Flags |= FO_SYNCHRONOUS_IO;
+
+        /* Check if it's also alertable */
         if (OpenPacket->CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
         {
+            /* It is, set the alertable flag */
             FileObject->Flags |= FO_ALERTABLE_IO;
         }
     }
 
+    /* Check if the caller requested no intermediate buffering */
     if (OpenPacket->CreateOptions & FILE_NO_INTERMEDIATE_BUFFERING)
     {
+        /* Set the correct flag for the FSD to read */
         FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
     }
+
+    /* Check if the caller requested write through support */
     if (OpenPacket->CreateOptions & FILE_WRITE_THROUGH)
     {
+        /* Set the correct flag for the FSD to read */
         FileObject->Flags |= FO_WRITE_THROUGH;
     }
+
+    /* Check if the caller believes the file will be only read sequentially */
     if (OpenPacket->CreateOptions & FILE_SEQUENTIAL_ONLY)
     {
+        /* Set the correct flag for the FSD to read */
         FileObject->Flags |= FO_SEQUENTIAL_ONLY;
     }
+
+    /* Check if the caller believes the file will be only read randomly */
     if (OpenPacket->CreateOptions & FILE_RANDOM_ACCESS)
     {
+        /* Set the correct flag for the FSD to read */
         FileObject->Flags |= FO_RANDOM_ACCESS;
     }
 
-    if (DirectOpen)
-    {
-        FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-    }
+    /* Check if this is a direct device open */
+    if (DirectOpen) FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
 
+    /* Check if the caller wants case sensitivity */
     if (!(Attributes & OBJ_CASE_INSENSITIVE))
     {
+        /* Tell the driver about it */
         FileObject->Flags |= FO_OPENED_CASE_SENSITIVE;
     }
 
+    /* Setup the security context */
     SecurityContext.SecurityQos = SecurityQos;
     SecurityContext.AccessState = AccessState;
     SecurityContext.DesiredAccess = AccessState->RemainingDesiredAccess;
     SecurityContext.FullCreateOptions = OpenPacket->CreateOptions;
 
-    KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
+    /* Check if this is synch I/O */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Initialize the event */
+        KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
+    }
 
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return STATUS_UNSUCCESSFUL;
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    if (!Irp)
+    {
+        /* Dereference the device and VPB, then fail */
+        IopDereferenceDeviceObject(DeviceObject, FALSE);
+        if (Vpb) IopDereferenceVpb(Vpb);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Now set the IRP data */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -214,35 +244,52 @@ IopParseDevice(IN PVOID ParseObject,
     Irp->CancelRoutine = NULL;
     Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
 
+    /* Get the I/O Stack location */
     StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
     StackLoc->Control = 0;
     StackLoc->FileObject = FileObject;
 
+    /* Check what kind of file this is */
     switch (OpenPacket->CreateFileType)
     {
-        default:
+        /* Normal file */
         case CreateFileTypeNone:
+
+            /* Set the major function and EA Length */
             StackLoc->MajorFunction = IRP_MJ_CREATE;
+            StackLoc->Parameters.Create.EaLength = OpenPacket->EaLength;
+
+            /* Set the flags */
             StackLoc->Flags = OpenPacket->Options;
-            StackLoc->Parameters.Create.EaLength = OpenPacket->EaBuffer != NULL ? OpenPacket->EaLength : 0;
-            StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ? SL_CASE_SENSITIVE: 0;
+            StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ?
+                                SL_CASE_SENSITIVE: 0;
             break;
 
+        /* Named pipe */
         case CreateFileTypeNamedPipe:
+
+            /* Set the named pipe MJ and set the parameters */
             StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
-            StackLoc->Parameters.CreatePipe.Parameters = OpenPacket->MailslotOrPipeParameters;
+            StackLoc->Parameters.CreatePipe.Parameters = 
+                OpenPacket->MailslotOrPipeParameters;
             break;
 
+        /* Mailslot */
         case CreateFileTypeMailslot:
+
+            /* Set the mailslot MJ and set the parameters */
             StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
-            StackLoc->Parameters.CreateMailslot.Parameters = OpenPacket->MailslotOrPipeParameters;
+            StackLoc->Parameters.CreateMailslot.Parameters =
+                OpenPacket->MailslotOrPipeParameters;
             break;
     }
 
     /* Set the common data */
     Irp->Overlay.AllocationSize = OpenPacket->AllocationSize;
     Irp->AssociatedIrp.SystemBuffer =OpenPacket->EaBuffer;
-    StackLoc->Parameters.Create.Options = (OpenPacket->Disposition << 24) | (OpenPacket->CreateOptions & 0x00FFFFFF);
+    StackLoc->Parameters.Create.Options = (OpenPacket->Disposition << 24) |
+                                          (OpenPacket->CreateOptions &
+                                           0xFFFFFF);
     StackLoc->Parameters.Create.FileAttributes = OpenPacket->FileAttributes;
     StackLoc->Parameters.Create.ShareAccess = OpenPacket->ShareAccess;
     StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
@@ -286,10 +333,9 @@ IopParseDevice(IN PVOID ParseObject,
     /* Queue the IRP and call the driver */
     //IopQueueIrpToThread(Irp);
     Status = IoCallDriver(DeviceObject, Irp);
-
-    /* Copy the status block */
     if (Status == STATUS_PENDING)
     {
+        /* Wait for the driver to complete the create */
         KeWaitForSingleObject(&FileObject->Event,
                               Executive,
                               KernelMode,
