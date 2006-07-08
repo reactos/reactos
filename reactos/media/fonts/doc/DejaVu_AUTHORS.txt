@@ -1,0 +1,32 @@
+Adrian Schroeter
+Andrey Valentinovich Panov
+Ben Laenen
+Bhikkhu Pesala
+Dafydd Harries
+Danilo Segan
+David Jez
+David Lawrence Ramsey
+Denis Jacquerye
+Dwayne Bailey
+Eugeniy Meshcheryakov
+Gee Fung Sit
+Heikki Lindroos
+James Cloos
+James Crippen
+Keenan Pepper
+Lars Naesbye Christensen
+Mashrab Kuvatov
+Mederic Boquien
+Misu Moldovan
+Ognyan Kulev
+Ondrej Koala Vacha
+Peter Cernak
+Remy Oudompheng
+Sander Vesik
+Stepan Roh
+Tavmjong Bah
+Tim May
+Valentin Stoykov
+Vasek Stodulka
+
+$Id: AUTHORS 942 2006-06-13 14:26:37Z ben_laenen $

@@ -1,4 +1,23 @@
 <group>
+<installfile base="media/fonts">DejaVuSans-Bold.ttf </installfile>                        
+<installfile base="media/fonts">DejaVuSans.ttf</installfile>
+<installfile base="media/fonts">DejaVuSans-BoldOblique.ttf</installfile>
+<installfile base="media/fonts">DejaVuSansCondensed.ttf</installfile>
+<installfile base="media/fonts">DejaVuSansCondensed-Bold.ttf</installfile>
+<installfile base="media/fonts">DejaVuSansCondensed-Oblique.ttf</installfile>
+<installfile base="media/fonts">DejaVuSans-ExtraLight.ttf</installfile>
+<installfile base="media/fonts">DejaVuSansMono.ttf</installfile>
+<installfile base="media/fonts">DejaVuSansMono-Bold.ttf</installfile>
+<installfile base="media/fonts">DejaVuSansMono-BoldOblique.ttf</installfile>
+<installfile base="media/fonts">DejaVuSansMono-Oblique.ttf</installfile>
+<installfile base="media/fonts">DejaVuSans-Oblique.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerif.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerif-Bold.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerif-BoldOblique.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerifCondensed.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerifCondensed-Bold.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerifCondensed-BoldOblique.ttf</installfile>
+<installfile base="media/fonts">DejaVuSerifCondensed-Oblique.ttf</installfile>
 <installfile base="media/fonts">c0419bt_.ttf</installfile>
 <installfile base="media/fonts">c0582bt_.ttf</installfile>
 <installfile base="media/fonts">c0583bt_.ttf</installfile>
