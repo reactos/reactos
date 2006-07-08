@@ -1,3 +1,3 @@
 LIBRARY kbdda.dll
 EXPORTS
-KbdLayerDescriptor@0
+KbdLayerDescriptor

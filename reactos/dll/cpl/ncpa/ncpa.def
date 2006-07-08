@@ -1,6 +1,6 @@
 LIBRARY ncpa.cpl
 
 EXPORTS
-CPlApplet@16
+CPlApplet
 
 ; EOF

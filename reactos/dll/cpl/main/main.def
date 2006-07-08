@@ -1,6 +1,6 @@
 LIBRARY main.cpl
 
 EXPORTS
-CPlApplet@16
+CPlApplet
 
 ; EOF

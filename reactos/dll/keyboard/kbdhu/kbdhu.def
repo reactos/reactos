@@ -4,5 +4,5 @@
 LIBRARY kbdhu.dll
 
 EXPORTS
-KbdLayerDescriptor@0
+KbdLayerDescriptor
 ;EOF
