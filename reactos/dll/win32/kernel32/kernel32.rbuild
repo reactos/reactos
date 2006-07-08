@@ -128,7 +128,6 @@
 	<library>ntdll</library>
 	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>
-	<linkerflag>-nostdlib</linkerflag>
 	<file>kernel32.rc</file>
 </module>
 <directory name="tests">
