@@ -14,7 +14,6 @@
 	<library>string</library>
 	<library>pseh</library>
 	<linkerflag>-lgcc</linkerflag>
-	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>
 	<directory name="csr">
 		<file>api.c</file>
