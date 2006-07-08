@@ -2034,17 +2034,78 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN
+NTAPI
 IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
-			     IN ACCESS_MASK DesiredAccess,
-			     IN ULONG OpenOptions,
-			     OUT PIO_STATUS_BLOCK IoStatus,
-			     OUT PFILE_NETWORK_OPEN_INFORMATION Buffer)
+                             IN ACCESS_MASK DesiredAccess,
+                             IN ULONG OpenOptions,
+                             OUT PIO_STATUS_BLOCK IoStatus,
+                             OUT PFILE_NETWORK_OPEN_INFORMATION Buffer)
 {
-  UNIMPLEMENTED;
-  return(FALSE);
+    NTSTATUS Status = STATUS_SUCCESS;
+    DUMMY_FILE_OBJECT DummyFileObject;
+    HANDLE Handle;
+    OPEN_PACKET OpenPacket;
+    PAGED_CODE();
+
+    /* Setup the Open Packet */
+    OpenPacket.Type = IO_TYPE_OPEN_PACKET;
+    OpenPacket.Size = sizeof(OPEN_PACKET);
+    OpenPacket.FileObject = NULL;
+    OpenPacket.FinalStatus = STATUS_SUCCESS;
+    OpenPacket.Information = 0;
+    OpenPacket.ParseCheck = 0;
+    OpenPacket.RelatedFileObject = NULL;
+    OpenPacket.AllocationSize.QuadPart = 0;
+    OpenPacket.CreateOptions = OpenOptions | FILE_OPEN_REPARSE_POINT;
+    OpenPacket.FileAttributes = 0;
+    OpenPacket.ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    OpenPacket.EaBuffer = NULL;
+    OpenPacket.EaLength = 0;
+    OpenPacket.Options = IO_FORCE_ACCESS_CHECK;
+    OpenPacket.Disposition = FILE_OPEN;
+    OpenPacket.BasicInformation = NULL;
+    OpenPacket.NetworkInformation = Buffer;
+    OpenPacket.CreateFileType = 0;
+    OpenPacket.MailslotOrPipeParameters = NULL;
+    OpenPacket.Override = FALSE;
+    OpenPacket.QueryOnly = TRUE;
+    OpenPacket.DeleteOnly = FALSE;
+    OpenPacket.FullAttributes = TRUE;
+    OpenPacket.DummyFileObject = &DummyFileObject;
+    OpenPacket.InternalFlags = 0;
+
+    /*
+     * Attempt opening the file. This will call the I/O Parse Routine for
+     * the File Object (IopParseDevice) which will use the dummy file obejct
+     * send the IRP to its device object. Note that we have two statuses
+     * to worry about: the Object Manager's status (in Status) and the I/O
+     * status, which is in the Open Packet's Final Status, and determined
+     * by the Parse Check member.
+     */
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                NULL,
+                                KernelMode,
+                                NULL,
+                                DesiredAccess,
+                                &OpenPacket,
+                                &Handle);
+    if (OpenPacket.ParseCheck != TRUE)
+    {
+        /* Parse failed */
+        IoStatus->Status = Status;
+    }
+    else
+    {
+        /* Use the Io status */
+        IoStatus->Status = OpenPacket.FinalStatus;
+        IoStatus->Information = OpenPacket.Information;
+    }
+
+    /* Return success */
+    return TRUE;
 }
 
 /*
