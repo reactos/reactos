@@ -64,16 +64,13 @@ BEGIN
     IDS_DEV_NO_VALID_LOG_CONF "A ReactOS nemtudja megállapítani, hogy milyen erõforrásokat igényel az eszköz."
     IDS_DEV_FAILED_INSTALL "Az eszközhoz nincsenek illesztõprogramok telepítve."
     IDS_DEV_HARDWARE_DISABLED "Az eszköz levan tiltva, mivel a BIOS-a nem adott neki erõforrást."
-    IDS_DEV_CANT_SHARE_IRQ "Ez az eszköz egy olyan megszakítást (IRQ) igényelt, amit egy másik eszköz használ és nem oszthatja meg. "\
-                           "Meg kell változtatnod az erõforrás kiosztást, vagy eltávolítanod a real-mode (16 bites) illesztõprogramot."
+    IDS_DEV_CANT_SHARE_IRQ "Ez az eszköz egy olyan megszakítást (IRQ) igényelt, amit egy másik eszköz használ és nem oszthatja meg. Meg kell változtatnod az erõforrás kiosztást, vagy eltávolítanod a real-mode (16 bites) illesztõprogramot."
     IDS_DEV_FAILED_ADD "Ez az eszköz nem tud megfelelõen mûködni, mivel a(z) $1 sem mûködik megfelelõen."
     IDS_DEV_DISABLED_SERVICE "A ReactOS nem tudja feltelepíteni az eszköz illesztõprogramjait, mivel a programokat tartalmazó hely nem elérhetõ."
     IDS_DEV_TRANSLATION_FAILED "Ez az eszköz nem válaszol a illesztõprogramjának."
     IDS_DEV_NO_SOFTCONFIG "A ReactOS nem tudja kitalálni a beállításokat ehhez az eszközhöz. Használd a felhasználói utasítást, ami ehhez az eszközhöz jár, és állítsd be az erõforrásait."
-    IDS_DEV_BIOS_TABLE "A számítógép nem tud elég információt adni, hogy ezt az eszközt megfelelõen használja. "\
-                       "Konzultálj a gép karbantartójával, illetve a céggel aki szállította, hogy igényelj egy firmware vagy BIOS frissítést."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Ez az eszköz egy PCI megszakítást igényelt de ISA megszakítást használ (vagy fordítva). "\
-                       "Használd a géphez kapott illesztõprogramokat, hogy beállíthasd megfelelõen."
+    IDS_DEV_BIOS_TABLE "A számítógép nem tud elég információt adni, hogy ezt az eszközt megfelelõen használja. Konzultálj a gép karbantartójával, illetve a céggel aki szállította, hogy igényelj egy firmware vagy BIOS frissítést."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Ez az eszköz egy PCI megszakítást igényelt de ISA megszakítást használ (vagy fordítva). Használd a géphez kapott illesztõprogramokat, hogy beállíthasd megfelelõen."
     IDS_DEV_FAILED_DRIVER_ENTRY "A ReactOS nem tudja elindítani az eszköz illesztõprogramját."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "A ReactOS nem tudja elindítani az eszköz illesztõprogramját mivel egy elõzõ illesztõprogram már bevan töltve a memóriában."
     IDS_DEV_DRIVER_FAILED_LOAD "A ReactOS nem tudja elindítani az eszköz illesztõprogramját. Az illesztõprogram sérült vagy hiányzik."
@@ -84,7 +81,7 @@ BEGIN
     IDS_DEV_HALTED "Egy alkalmazás vagy szolgáltatás leállította ezt az eszközt."
     IDS_DEV_PHANTOM "Jelenleg ez az eszköz nincs a számítógéphez csatlakoztatva."
     IDS_DEV_SYSTEM_SHUTDOWN "A ReactOS nem tud hozzáférni ehhez az eszközhöz, mivel a rendszer a leállítás folyamatában van."
-    IDS_DEV_HELD_FOR_EJECT "A ReactOS nem tudja használni ezt az eszközt, mivel a \"Biztonságos eltávolítás\" fázisba került de még nem lett eltávolítva."
+    IDS_DEV_HELD_FOR_EJECT "A ReactOS nem tudja használni ezt az eszközt, mivel a ""Biztonságos eltávolítás"" fázisba került de még nem lett eltávolítva."
     IDS_DEV_DRIVER_BLOCKED "Az eszközhöz tartozó szoftver nem lett elindítva mivel nem mûködik a ReactOS-al. Kérj egy friss illesztõprogram csomagot a gyártójától."
     IDS_DEV_REGISTRY_TOO_LARGE "A ReactOS nem tudja elindítani ezt az eszközt mert a rendszerleíró elérte a maximum méretét."
     IDS_DEV_SETPROPERTIES_FAILED "A ReactOS nem tudta megváltoztatni az eszköz beállításait."
