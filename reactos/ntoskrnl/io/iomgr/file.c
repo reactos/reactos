@@ -251,10 +251,12 @@ IopParseDevice(IN PVOID ParseObject,
     if (RemainingName->Length)
     {
         /* Setup the unicode string */
-        FileObject->FileName.MaximumLength = RemainingName->Length;
+        FileObject->FileName.MaximumLength = RemainingName->Length +
+                                             sizeof(WCHAR);
         FileObject->FileName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                            RemainingName->
-                                                            Length,
+                                                            FileObject->
+                                                            FileName.
+                                                            MaximumLength,
                                                             TAG_IO_NAME);
         if (!FileObject->FileName.Buffer)
         {
