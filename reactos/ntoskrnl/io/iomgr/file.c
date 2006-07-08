@@ -30,7 +30,8 @@ IopParseDevice(IN PVOID ParseObject,
                OUT PVOID *Object)
 {
     POPEN_PACKET OpenPacket = (POPEN_PACKET)Context;
-    PDEVICE_OBJECT OriginalDeviceObject = (PDEVICE_OBJECT)ParseObject, DeviceObject;
+    PDEVICE_OBJECT OriginalDeviceObject = (PDEVICE_OBJECT)ParseObject;
+    PDEVICE_OBJECT DeviceObject, OwnerDevice;
     NTSTATUS Status;
     PFILE_OBJECT FileObject;
     PVPB Vpb = NULL;
@@ -431,9 +432,43 @@ IopParseDevice(IN PVOID ParseObject,
         KEBUGCHECK(0);
     }
 
+    /* Get the owner of the File Object */
+    OwnerDevice = IoGetRelatedDeviceObject(FileObject);
+
+    /*
+     * It's possible that the device to whom we sent the IRP to
+     * isn't actually the device that ended opening the file object
+     * internally.
+     */
+    if (OwnerDevice != DeviceObject)
+    {
+        /* We have to de-reference the VPB we had associated */
+        if (Vpb) IopDereferenceVpb(Vpb);
+
+        /* And re-associate with the actual one */
+        Vpb = FileObject->Vpb;
+        if (Vpb) InterlockedIncrement(&Vpb->ReferenceCount);
+    }
+
     /* Make sure we are not using a dummy */
     if (!UseDummyFile)
     {
+        /* Check if this was a volume open */
+        if ((!(FileObject->RelatedFileObject) ||
+              (FileObject->RelatedFileObject->Flags & FO_VOLUME_OPEN)) &&
+            !(FileObject->FileName.Length))
+        {
+            /* All signs point to it, but make sure it was actually an FSD */
+            if ((OwnerDevice->DeviceType == FILE_DEVICE_DISK_FILE_SYSTEM) ||
+                (OwnerDevice->DeviceType == FILE_DEVICE_CD_ROM_FILE_SYSTEM) ||
+                (OwnerDevice->DeviceType == FILE_DEVICE_TAPE_FILE_SYSTEM) ||
+                (OwnerDevice->DeviceType == FILE_DEVICE_FILE_SYSTEM))
+            {
+                /* The owner device is an FSD, so this is a volume open for real */
+                FileObject->Flags |= FO_VOLUME_OPEN;
+            }
+        }
+
         /* Reference the object and set the parse check */
         ObReferenceObject(FileObject);
         *Object = FileObject;
