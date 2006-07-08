@@ -1,9 +1,0 @@
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
-
-STRINGTABLE
-BEGIN
-  IDS_CPLNAME_1 "Muis"
-  IDS_CPLDESCRIPTION_1 "De instellingen voor de muis wijzigen."
-  IDS_CPLNAME_2 "Toetsenbord"
-  IDS_CPLDESCRIPTION_2 "De instellingen voor het toetsenbord wijzigen."
-END

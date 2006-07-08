@@ -1,6 +1,0 @@
-/* $Id$ */
-
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS W32 Device Manager Utility\0"
-#define REACTOS_STR_INTERNAL_NAME	"devmgr\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"devmgr.exe\0"
-#include <reactos/version.rc>

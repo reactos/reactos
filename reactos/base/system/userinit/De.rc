@@ -1,9 +1,0 @@
-#include "resource.h"
-
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
-STRINGTABLE DISCARDABLE
-{
-
-STRING_USERINIT_FAIL, "Userinit konnte die Shell nicht starten!\n"
-
-}

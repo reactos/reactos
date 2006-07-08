@@ -1,7 +1,0 @@
-<package>
-  <name>Build Envirement</name>
-  <version>0.1</version>
-  <description>Allows you to build the ReactOS Source. For more instructions see our wiki.</description>
-  <scripts inst="rosbe.inst.rps"/>
-</package>
-
