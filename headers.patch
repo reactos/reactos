@@ -1,0 +1,194 @@
+Index: drivers/filesystems/cdfs/cdfs.h
+===================================================================
+--- drivers/filesystems/cdfs/cdfs.h	(revision 22905)
++++ drivers/filesystems/cdfs/cdfs.h	(working copy)
+@@ -6,7 +6,7 @@
+ #include <ntddcdrm.h>
+ #include <ccros.h>
+ 
+-#define USE_ROS_CC_AND_FS
++//#define USE_ROS_CC_AND_FS
+ 
+ #define CDFS_BASIC_SECTOR 2048
+ #define CDFS_PRIMARY_DESCRIPTOR_LOCATION 16
+Index: drivers/filesystems/ntfs/ntfs.h
+===================================================================
+--- drivers/filesystems/ntfs/ntfs.h	(revision 22905)
++++ drivers/filesystems/ntfs/ntfs.h	(working copy)
+@@ -6,7 +6,7 @@
+ #include <ntdddisk.h>
+ #include <ccros.h>
+ 
+-#define USE_ROS_CC_AND_FS
++//#define USE_ROS_CC_AND_FS
+ 
+ 
+ #define CACHEPAGESIZE(pDeviceExt) \
+Index: include/reactos/exeformat.h
+===================================================================
+--- include/reactos/exeformat.h	(revision 22905)
++++ include/reactos/exeformat.h	(working copy)
+@@ -34,7 +34,8 @@
+ 
+ typedef NTSTATUS (NTAPI * PEXEFMT_CB_READ_FILE)
+ (
+- IN PVOID File,
++ IN PFILE_OBJECT FileObject,
++ ULONG SectorSize,
+  IN PLARGE_INTEGER Offset,
+  IN ULONG Length,
+  OUT PVOID * Data,
+@@ -51,7 +52,7 @@
+ (
+  IN CONST VOID * FileHeader,
+  IN SIZE_T FileHeaderSize,
+- IN PVOID File,
++ IN PFILE_OBJECT FileObject,
+  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
+  OUT PULONG Flags,
+  IN PEXEFMT_CB_READ_FILE ReadFileCb,
+Index: ntoskrnl/include/internal/cc.h
+===================================================================
+--- ntoskrnl/include/internal/cc.h	(revision 22905)
++++ ntoskrnl/include/internal/cc.h	(working copy)
+@@ -1,17 +1,29 @@
+ #ifndef __INCLUDE_INTERNAL_CC_H
+ #define __INCLUDE_INTERNAL_CC_H
+ 
++#define CACHE_VIEW_SIZE	(128 * 1024) // 128kB
++
++struct _BCB;
++
++typedef struct
++{
++    SECTION_DATA SectionData;
++    PVOID BaseAddress;
++    ULONG RefCount;
++    struct _BCB* Bcb;
++    LIST_ENTRY ListEntry;
++} CACHE_VIEW, *PCACHE_VIEW;
++
+ typedef struct _BCB
+ {
+-    LIST_ENTRY BcbSegmentListHead;
+-    LIST_ENTRY BcbRemoveListEntry;
+-    BOOLEAN RemoveOnClose;
+-    ULONG TimeStamp;
+     PFILE_OBJECT FileObject;
+-    ULONG CacheSegmentSize;
+-    LARGE_INTEGER AllocationSize;
+-    LARGE_INTEGER FileSize;
+-    KSPIN_LOCK BcbLock;
++    CC_FILE_SIZES FileSizes;
++    BOOLEAN PinAccess;
++    PCACHE_MANAGER_CALLBACKS CallBacks;
++    PVOID LazyWriterContext;
++    PCACHE_VIEW CacheView[2048];
++    PVOID LargeCacheView;
++    PROS_SECTION_OBJECT Section;
+     ULONG RefCount;
+ #if defined(DBG) || defined(KDBG)
+ 	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
+@@ -56,8 +68,8 @@
+ typedef struct _INTERNAL_BCB
+ {
+     PUBLIC_BCB PFCB;
+-    PCACHE_SEGMENT CacheSegment;
+-    BOOLEAN Dirty;
++    PBCB Bcb;
++    ULONG Index;
+     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
+ } INTERNAL_BCB, *PINTERNAL_BCB;
+ 
+Index: ntoskrnl/include/internal/mm.h
+===================================================================
+--- ntoskrnl/include/internal/mm.h	(revision 22905)
++++ ntoskrnl/include/internal/mm.h	(working copy)
+@@ -165,17 +165,20 @@
+ 
+ typedef struct _MM_SECTION_SEGMENT
+ {
+-    LONGLONG FileOffset;
+-    ULONG_PTR VirtualAddress;
+-    ULONG RawLength;
+-    ULONG Length;
++    LONGLONG FileOffset;		/* start offset into the file for image sections */		     
++    ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
++    ULONG RawLength;		/* length of the segment which is part of the mapped file */
++    ULONG Length;			/* absolute length of the segment */
+     ULONG Protection;
+-    FAST_MUTEX Lock;
++    FAST_MUTEX Lock;		/* lock which protects the page directory */
+     ULONG ReferenceCount;
+     SECTION_PAGE_DIRECTORY PageDirectory;
+     ULONG Flags;
+     ULONG Characteristics;
+     BOOLEAN WriteCopy;
++    LIST_ENTRY ListEntry;
++    ULONG BytesPerSector;
++    PFILE_OBJECT FileObject;
+ } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
+ 
+ typedef struct _MM_IMAGE_SECTION_OBJECT
+@@ -191,6 +194,10 @@
+     USHORT Machine;
+     BOOLEAN Executable;
+     ULONG NrSegments;
++    ULONG RefCount;
++    LIST_ENTRY ListEntry;
++    PFILE_OBJECT FileObject;
++    ULONG BytesPerSector;
+     PMM_SECTION_SEGMENT Segments;
+ } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
+ 
+@@ -209,6 +216,16 @@
+     };
+ } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
+ 
++typedef struct
++{
++   ROS_SECTION_OBJECT* Section;
++   ULONG ViewOffset;
++   LIST_ENTRY ViewListEntry;
++   PMM_SECTION_SEGMENT Segment;
++// BOOLEAN WriteCopyView;
++   LIST_ENTRY RegionListHead;
++} SECTION_DATA, *PSECTION_DATA;
++  
+ typedef struct _MEMORY_AREA
+ {
+     PVOID StartingAddress;
+@@ -223,17 +240,10 @@
+     ULONG PageOpCount;
+     union
+     {
++        SECTION_DATA SectionData;
+         struct
+         {
+-            ROS_SECTION_OBJECT* Section;
+-            ULONG ViewOffset;
+-            PMM_SECTION_SEGMENT Segment;
+-            BOOLEAN WriteCopyView;
+-            LIST_ENTRY RegionListHead;
+-        } SectionData;
+-        struct
+-        {
+-            LIST_ENTRY RegionListHead;
++           LIST_ENTRY RegionListHead;
+         } VirtualMemoryData;
+     } Data;
+ } MEMORY_AREA, *PMEMORY_AREA;
+Index: ntoskrnl/ntoskrnl.def
+===================================================================
+--- ntoskrnl/ntoskrnl.def	(revision 22905)
++++ ntoskrnl/ntoskrnl.def	(working copy)
+@@ -5,9 +5,6 @@
+ ; ReactOS Operating System
+ ;
+ EXPORTS
+-CcRosInitializeFileCache@8
+-CcRosReleaseFileCache@4
+-CcRosTraceCacheMap@8
+ CcCanIWrite@16
+ CcCopyRead@24
+ CcCopyWrite@20
