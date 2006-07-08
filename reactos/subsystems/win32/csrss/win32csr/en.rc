@@ -29,6 +29,7 @@ END
 
 STRINGTABLE
 BEGIN
+  IDS_EDIT "Edit"
   IDS_MARK "Mark"
   IDS_COPY "Copy\tEnter"
   IDS_PASTE "Paste"
