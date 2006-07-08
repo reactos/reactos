@@ -4,6 +4,9 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+#include <accctrl.h>
+#include <psapi.h>
+
 /* Our own BLUE.SYS Driver for Console Output */
 #include <blue/ntddblue.h>
 

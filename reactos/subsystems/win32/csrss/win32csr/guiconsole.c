@@ -54,6 +54,158 @@ GuiConsoleGetDataPointers(HWND hWnd, PCSRSS_CONSOLE *Console, PGUI_CONSOLE_DATA 
 }
 
 static BOOL FASTCALL
+GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle, PHKEY hResult, REGSAM samDesired)
+{
+  HANDLE hProcessToken = NULL;
+  HANDLE hProcess;
+  
+  BYTE Buffer[256];
+  DWORD Length = 0;
+  UNICODE_STRING SidName;
+  LONG res;
+  PTOKEN_USER TokUser;
+  
+  hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | READ_CONTROL, FALSE, ProcessId);
+  if (!hProcess)
+    {
+      DPRINT("Error: OpenProcess failed(0x%x)\n", GetLastError());
+      return FALSE;
+    }
+
+  if (!OpenProcessToken(hProcess, TOKEN_QUERY, &hProcessToken))
+    {
+      DPRINT("Error: OpenProcessToken failed(0x%x)\n", GetLastError());
+      CloseHandle(hProcess);
+      return FALSE;
+    }
+
+  if (!GetTokenInformation(hProcessToken, TokenUser, (PVOID)Buffer, sizeof(Buffer), &Length))
+    {
+      DPRINT("Error: GetTokenInformation failed(0x%x)\n",GetLastError());
+      CloseHandle(hProcess);
+      CloseHandle(hProcessToken);
+      return FALSE;
+    }
+  
+  TokUser = ((PTOKEN_USER)Buffer)->User.Sid;
+  if (!NT_SUCCESS(RtlConvertSidToUnicodeString(&SidName, TokUser, TRUE)))
+    {
+      DPRINT("Error: RtlConvertSidToUnicodeString failed(0x%x)\n", GetLastError());
+      return FALSE;
+    }
+  
+  res = RegOpenKeyExW(HKEY_USERS, SidName.Buffer, 0, samDesired, hResult);
+  RtlFreeUnicodeString(&SidName);
+
+  CloseHandle(hProcessToken);
+  if (hProcHandle)
+    *hProcHandle = hProcess;
+  else
+    CloseHandle(hProcess);
+
+  if (res != ERROR_SUCCESS)
+    return FALSE;
+  else
+    return TRUE;
+}
+
+static BOOL FASTCALL
+GuiConsoleOpenUserSettings(HWND hWnd, DWORD ProcessId, PHKEY hSubKey, REGSAM samDesired)
+{
+  WCHAR szProcessName[MAX_PATH];
+  WCHAR szBuffer[MAX_PATH];
+  UINT fLength, wLength;
+  DWORD dwBitmask, dwLength;
+  WCHAR CurDrive[] = { 'A',':', 0 };
+  HANDLE hProcess;
+  HKEY hKey;
+  WCHAR * ptr, *res;
+  static const WCHAR szSystemRoot[] = { '%','S','y','s','t','e','m','R','o','o','t','%', 0 };
+  
+
+  /*
+   * console properties are stored under
+   * HKCU\Console\*
+   * 
+   * There are 3 ways to store console properties
+   * 
+   *  1. use console title as subkey name
+   *    i.e. cmd.exe
+   *
+   *  2. use application name as subkey name
+   *
+   *  3. use unexpanded path to console application.
+   *     i.e. %SystemRoot%_system32_cmd.exe
+   */
+  
+  if (!GuiConsoleOpenUserRegistryPathPerProcessId(ProcessId, &hProcess, &hKey, samDesired))
+    return FALSE;
+
+  fLength = GetProcessImageFileNameW(hProcess, szProcessName, MAX_PATH);
+  CloseHandle(hProcess);
+
+  if (!fLength)
+    {
+	  DPRINT1("GetProcessImageFileNameW failed(0x%x)ProcessId %d\n", GetLastError(),hProcess);
+	  return FALSE;
+    }
+
+    
+  ptr = wcsrchr(szProcessName, L'\\');
+  swprintf(szBuffer, L"Console%s",ptr);
+
+  if (RegOpenKeyExW(hKey, szBuffer, 0, samDesired, hSubKey) == ERROR_SUCCESS)
+    {
+      RegCloseKey(hKey);
+      return TRUE;
+    }
+
+  dwBitmask = GetLogicalDrives();
+  while(dwBitmask)
+    {
+      if (dwBitmask & 0x1)
+        {
+          dwLength = QueryDosDeviceW(CurDrive, szBuffer, MAX_PATH);
+          if (dwLength)
+            {
+              if (!memcmp(szBuffer, szProcessName, (dwLength-2)*sizeof(WCHAR)))
+                {
+                  wcscpy(szBuffer, CurDrive);
+                  wcscat(&szBuffer[(sizeof(CurDrive)/sizeof(WCHAR))-1], &szProcessName[dwLength-2]);
+                  break;
+                }
+            }
+        }
+      dwBitmask = (dwBitmask >> 1);
+      CurDrive[0]++;
+  }
+  
+  wLength = GetWindowsDirectoryW(szProcessName, MAX_PATH);
+
+  if (!wcsncmp(szProcessName, szBuffer, wLength))
+    {
+      wcscpy(szProcessName, szSystemRoot);
+      wcscpy(&szProcessName[(sizeof(szSystemRoot) / sizeof(WCHAR))-1], &szBuffer[wLength]);
+      ptr = res = szProcessName;
+    }
+  else
+    {
+      ptr = res = szBuffer;
+    }
+
+  while((ptr = wcschr(szProcessName, L'\\')))
+    ptr[0] = L'_';
+
+  if (RegOpenKeyExW(hKey, res, 0, samDesired, hSubKey) == ERROR_SUCCESS)
+    {
+      RegCloseKey(hKey);
+      return TRUE;
+    }
+  RegCloseKey(hKey);
+  return FALSE;
+}
+
+static BOOL FASTCALL
 GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 {
   RECT Rect;
@@ -62,7 +214,20 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   HDC Dc;
   HFONT OldFont;
   TEXTMETRICW Metrics;
+  PCSRSS_PROCESS_DATA ProcessData;
+  HKEY hKey;
 
+  if (Console->ProcessList.Flink != &Console->ProcessList)
+    {
+	  ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
+      if (GuiConsoleOpenUserSettings(hWnd, PtrToUlong(ProcessData->ProcessId), &hKey, KEY_READ))
+	    {
+          // TODO
+          // read registry settings 
+          // and store them in GuiData struct
+          RegCloseKey(hKey);
+	    }
+    }
   GuiData = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY,
                       sizeof(GUI_CONSOLE_DATA) +
                       (Console->Size.X + 1) * sizeof(WCHAR));

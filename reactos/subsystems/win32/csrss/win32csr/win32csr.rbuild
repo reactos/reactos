@@ -6,12 +6,14 @@
 	<include base="ReactOS">include/reactos/drivers</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__USE_W32API" />
-	<define name="_WIN32_WINNT">0x0500</define>
+	<define name="_WIN32_WINNT">0x0501</define>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
-    <pch>w32csr.h</pch>
+	<library>advapi32</library>
+	<library>psapi</library>
+	<pch>w32csr.h</pch>
 	<file>conio.c</file>
 	<file>desktopbg.c</file>
 	<file>dllmain.c</file>
