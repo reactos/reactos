@@ -1911,7 +1911,7 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
     PAGED_CODE();
 
     /* Check for Timeout */
-    if (DefaultTimeout)
+    if (TimeOut)
     {
         /* check if the call came from user mode */
         if (KeGetPreviousMode() != KernelMode)
@@ -1920,8 +1920,7 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
             _SEH_TRY
             {
                 /* Probe the timeout */
-                Buffer.DefaultTimeout =
-                    ProbeForReadLargeInteger(DefaultTimeout);
+                Buffer.ReadTimeout = ProbeForReadLargeInteger(TimeOut);
             }
             _SEH_HANDLE
             {
@@ -1936,7 +1935,7 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
         else
         {
             /* Otherwise, capture directly */
-            Buffer.DefaultTimeout = *DefaultTimeout;
+            Buffer.ReadTimeout = *TimeOut;
         }
 
         /* Set the correct setting */
