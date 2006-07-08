@@ -15,6 +15,25 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#if 0
+    IOTRACE(IO_IRP_DEBUG,
+            "%s - Queueing IRP %p\n",
+            __FUNCTION__,
+            Irp);
+#endif
+
+///
+//
+// TODO:
+// - Add support for Fast Dispatch I/O.
+// - Verify ShareAccess APIs, XP added some new semantics.
+// - Add Access Checks in IopParseDevice.
+// - Add validation checks in IoCreateFile.
+// - Add tracing.
+// - See why queueing IRPs and cancelling them causes crashes
+//
+///
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
@@ -1638,7 +1657,6 @@ IoUpdateShareAccess(IN PFILE_OBJECT FileObject,
     }
 }
 
-
 /*
  * @implemented
  */
@@ -1819,7 +1837,6 @@ IoSetFileOrigin(IN PFILE_OBJECT FileObject,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-
 
 /*
  * @implemented
