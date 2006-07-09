@@ -54,6 +54,11 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
     PROPSHEETHEADER psh;
     TCHAR Caption[MAX_STR_SIZE];
 
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+    UNREFERENCED_PARAMETER(uMsg);
+    UNREFERENCED_PARAMETER(hwnd);
+
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
@@ -117,6 +122,7 @@ STDCALL
 DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
     INITCOMMONCONTROLSEX InitControls;
+    UNREFERENCED_PARAMETER(lpvReserved);
     switch(dwReason)
     {
         case DLL_PROCESS_ATTACH:

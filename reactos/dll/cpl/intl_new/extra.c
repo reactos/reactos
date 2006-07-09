@@ -33,7 +33,7 @@ LanguagesEnumProc(LPTSTR lpLanguage)
     Lcid = wcstoul(lpLanguage, NULL, 16);
 
     GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, Lang, sizeof(Lang));
-    Index = SendMessageW(hLanguageList,
+    Index = (int) SendMessageW(hLanguageList,
                          CB_ADDSTRING,
                          0,
                          (LPARAM)Lang);
@@ -65,7 +65,7 @@ CreateLanguagesList(HWND hWnd)
 
     SendMessageW(hLanguageList,
                  CB_SELECTSTRING,
-                 -1,
+                (WPARAM) -1,
                 (LPARAM)LangSel);
 }
 
@@ -75,6 +75,7 @@ INT_PTR
 CALLBACK
 ExtraOptsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    UNREFERENCED_PARAMETER(wParam);
     switch(uMsg)
     {
         case WM_INITDIALOG:

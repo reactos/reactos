@@ -64,7 +64,7 @@ PropSheetProc(
 	LPARAM lParam
 )
 {
-  UNREFERENCED_PARAMETER(hwndDlg)
+  UNREFERENCED_PARAMETER(hwndDlg);
   switch(uMsg)
   {
     case PSCB_BUTTONPRESSED:
@@ -130,7 +130,7 @@ CPlApplet(
 	LPARAM lParam2)
 {
   int i = (int)lParam1;
-  UNREFERENCED_PARAMETER(hwndCPl)
+  UNREFERENCED_PARAMETER(hwndCPl);
 
   switch(uMsg)
   {
@@ -167,7 +167,7 @@ DllMain(
 	DWORD     dwReason,
 	LPVOID    lpvReserved)
 {
-  UNREFERENCED_PARAMETER(lpvReserved)
+  UNREFERENCED_PARAMETER(lpvReserved);
   switch(dwReason)
   {
     case DLL_PROCESS_ATTACH:

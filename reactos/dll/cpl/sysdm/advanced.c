@@ -40,7 +40,7 @@ AdvancedPageProc(
   WPARAM wParam,
   LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam)
+  UNREFERENCED_PARAMETER(lParam);
   switch (uMsg)
   {
     case WM_INITDIALOG:

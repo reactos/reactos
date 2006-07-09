@@ -302,8 +302,8 @@ void OnColorButton()
 
 BOOL CheckListBoxFilename(HWND list, TCHAR *filename)
 {
-    UNREFERENCED_PARAMETER(filename)
-    UNREFERENCED_PARAMETER(list)
+    UNREFERENCED_PARAMETER(filename);
+    UNREFERENCED_PARAMETER(list);
     return FALSE;
 }
 

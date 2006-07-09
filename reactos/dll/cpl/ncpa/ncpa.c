@@ -169,6 +169,9 @@ NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	TCHAR tpszNotifyObjectCLSID[MAX_PATH];
 	TCHAR *tpszSubKeyCopy;
 	int nIndex;
+
+	UNREFERENCED_PARAMETER(hBaseKey);
+
 //	CLSID CLSID_NotifObj;
 //	IUnknown *pUnk = NULL;
 //	INetCfgComponentControl *pNetCfg;
@@ -224,7 +227,7 @@ NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	}
 
 	RegCloseKey(hKey);
-	nIndex = SendDlgItemMessage(hwndDlg,IDC_COMPONENTSLIST,LB_ADDSTRING,0,(LPARAM)tpszDescription);
+	nIndex = (int) SendDlgItemMessage(hwndDlg,IDC_COMPONENTSLIST,LB_ADDSTRING,0,(LPARAM)tpszDescription);
 	tpszSubKeyCopy = _tcsdup(tpszSubKey);
 	SendDlgItemMessage(hwndDlg,IDC_COMPONENTSLIST,LB_SETITEMDATA,nIndex,(LPARAM)tpszSubKeyCopy);
 }
@@ -309,7 +312,7 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				HKEY hNDIKey;
 				DWORD dwType,dwSize;
 				HWND hListBox = GetDlgItem(hwndDlg,IDC_COMPONENTSLIST);
-				int iListBoxIndex = SendMessage(hListBox,LB_GETCURSEL,0,0);
+				int iListBoxIndex = (int) SendMessage(hListBox,LB_GETCURSEL,0,0);
 				if(iListBoxIndex != LB_ERR) 
 					tpszSubKey = (TCHAR*)SendMessage(hListBox,LB_GETITEMDATA,iListBoxIndex,0);
 				if(!tpszSubKey)
@@ -572,7 +575,7 @@ NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	// How is this done properly ?
 	
 
-	nIndex = SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_ADDSTRING,0,(LPARAM)tpszDisplayName);
+	nIndex = (int) SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_ADDSTRING,0,(LPARAM)tpszDisplayName);
 	SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_SETITEMDATA,nIndex,(LPARAM)ptpszCfgInstanceID);
 	RegCloseKey(hKey);
 }
@@ -629,14 +632,14 @@ NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case IDC_NETCARDLIST:
 			if(HIWORD(wParam)==LBN_DBLCLK) {
-				nIndex = SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_GETCURSEL,0,0);
+				nIndex = (int) SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_GETCURSEL,0,0);
 				if(nIndex!=-1)
 					DisplayNICStatus(hwndDlg,(TCHAR*)SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_GETITEMDATA,nIndex,0));
 			}
 			break;
 
 		case IDC_PROPERTIES:
-			nIndex = SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_GETCURSEL,0,0);
+			nIndex = (int) SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_GETCURSEL,0,0);
 			if(nIndex!=-1)
 				DisplayNICStatus(hwndDlg,(TCHAR*)SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_GETITEMDATA,nIndex,0));
 			break;
@@ -679,6 +682,7 @@ DisplayApplet(VOID)
 LONG CALLBACK
 CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
+	UNREFERENCED_PARAMETER(hwndCPl);
 	switch (uMsg)
 	{
 	case CPL_INIT:
@@ -714,6 +718,8 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
+	UNREFERENCED_PARAMETER(lpvReserved);
+
 	switch(dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
