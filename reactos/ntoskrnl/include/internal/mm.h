@@ -165,12 +165,12 @@ typedef struct
 
 typedef struct _MM_SECTION_SEGMENT
 {
-    LONGLONG FileOffset;
-    ULONG_PTR VirtualAddress;
-    ULONG RawLength;
-    ULONG Length;
+    LONGLONG FileOffset;		/* start offset into the file for image sections */		     
+    ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
+    ULONG RawLength;		/* length of the segment which is part of the mapped file */
+    ULONG Length;			/* absolute length of the segment */
     ULONG Protection;
-    FAST_MUTEX Lock;
+    FAST_MUTEX Lock;		/* lock which protects the page directory */
     ULONG ReferenceCount;
     SECTION_PAGE_DIRECTORY PageDirectory;
     ULONG Flags;
