@@ -31,6 +31,14 @@ typedef struct GUI_CONSOLE_DATA_TAG
   POINT SelectionStart;
   BOOL MouseDown;
   HMODULE ConsoleLibrary;
+  WCHAR FontName[128];
+  DWORD FontSize;
+  DWORD FontWeight;
+  DWORD CursorSize;
+  DWORD HistoryNoDup;
+  DWORD FullScreen;
+  DWORD QuickEdit;
+  DWORD InsertMode;
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
 #ifndef WM_APP
@@ -204,6 +212,96 @@ GuiConsoleOpenUserSettings(HWND hWnd, DWORD ProcessId, PHKEY hSubKey, REGSAM sam
   RegCloseKey(hKey);
   return FALSE;
 }
+static void FASTCALL
+GuiConsoleReadUserSettings(HKEY hKey, PGUI_CONSOLE_DATA GuiData)
+{
+  DWORD dwNumSubKeys = 0;
+  DWORD dwIndex;
+  DWORD dwValueName;
+  DWORD dwValue;
+  DWORD dwType;
+  WCHAR szValueName[MAX_PATH];
+  WCHAR szValue[MAX_PATH];
+  DWORD Value;
+
+  RegQueryInfoKey(hKey, NULL, NULL, NULL, &dwNumSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL );
+
+  for (dwIndex = 0; dwIndex < dwNumSubKeys; dwIndex++)
+    {
+      dwValue = sizeof(Value);
+      dwValueName = MAX_PATH;
+
+      if (RegEnumValueW(hKey, dwIndex, szValueName, &dwValueName, NULL, &dwType, (BYTE*)&Value, &dwValue) != ERROR_SUCCESS)
+        {
+          if (dwType == REG_SZ)
+            {
+              /*
+               * retry in case of string value
+               */
+              dwValue = sizeof(szValue);
+              dwValueName = MAX_PATH;
+              if (RegEnumValueW(hKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (BYTE*)szValue, &dwValue) != ERROR_SUCCESS)
+                break;
+            }
+          else
+            break;
+        }
+
+      if (!wcscmp(szValueName, L"CursorSize"))
+        {
+          if (Value == 0x32)
+            GuiData->CursorSize = Value;
+          else if (Value == 0x64)
+              GuiData->CursorSize = Value;
+        }
+      else if (!wcscmp(szValueName, L"FaceName"))
+        {
+          wcscpy(GuiData->FontName, szValue);
+        }
+      else if (!wcscmp(szValueName, L"FontSize"))
+        {
+          GuiData->FontSize = Value;
+        }
+      else if (!wcscmp(szValueName, L"FontWeight"))
+        {
+          GuiData->FontWeight = Value;
+        }
+      else if (!wcscmp(szValueName, L"HistoryNoDup"))
+        {
+          GuiData->HistoryNoDup = Value;
+        }
+      else if (!wcscmp(szValueName, L"FullScreen"))
+        {
+          GuiData->FullScreen = Value;
+        }
+      else if (!wcscmp(szValueName, L"QuickEdit"))
+        {
+          GuiData->QuickEdit = Value;
+        }
+      else if (!wcscmp(szValueName, L"InsertMode"))
+        {
+          GuiData->InsertMode = Value;
+        }
+   }
+}
+static VOID FASTCALL
+GuiConsoleUseDefaults(PGUI_CONSOLE_DATA GuiData)
+{
+  /*
+   * init guidata with default properties
+   */
+
+  wcscpy(GuiData->FontName, L"Bitstream Vera Sans Mono");
+  GuiData->FontSize = 0x0008000C; // font is 8x12
+  GuiData->FontWeight = FW_NORMAL;
+  GuiData->CursorSize = 0;
+  GuiData->HistoryNoDup = FALSE;
+  GuiData->FullScreen = FALSE;
+  GuiData->QuickEdit = FALSE;
+  GuiData->InsertMode = TRUE;
+}
+
+
 
 static BOOL FASTCALL
 GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
@@ -217,17 +315,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   PCSRSS_PROCESS_DATA ProcessData;
   HKEY hKey;
 
-  if (Console->ProcessList.Flink != &Console->ProcessList)
-    {
-	  ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
-      if (GuiConsoleOpenUserSettings(hWnd, PtrToUlong(ProcessData->ProcessId), &hKey, KEY_READ))
-	    {
-          // TODO
-          // read registry settings 
-          // and store them in GuiData struct
-          RegCloseKey(hKey);
-	    }
-    }
   GuiData = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY,
                       sizeof(GUI_CONSOLE_DATA) +
                       (Console->Size.X + 1) * sizeof(WCHAR));
@@ -237,15 +324,33 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
       return FALSE;
     }
 
+  GuiConsoleUseDefaults(GuiData);
+  if (Console->ProcessList.Flink != &Console->ProcessList)
+    {
+      ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
+      if (GuiConsoleOpenUserSettings(hWnd, PtrToUlong(ProcessData->ProcessId), &hKey, KEY_READ))
+        {
+          GuiConsoleReadUserSettings(hKey, GuiData);
+          RegCloseKey(hKey);
+        }
+    }
+
   InitializeCriticalSection(&GuiData->Lock);
 
   GuiData->LineBuffer = (PWCHAR)(GuiData + 1);
 
-  GuiData->Font = CreateFontW(12, 0, 0, TA_BASELINE, FW_NORMAL,
-                              FALSE, FALSE, FALSE, OEM_CHARSET,
+  GuiData->Font = CreateFontW(LOWORD(GuiData->FontSize), 
+                              0, //HIWORD(GuiData->FontSize), 
+                              0, 
+                              TA_BASELINE, 
+                              GuiData->FontWeight,
+                              FALSE,
+                              FALSE, 
+                              FALSE,
+                              OEM_CHARSET,
                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                               NONANTIALIASED_QUALITY, FIXED_PITCH | FF_DONTCARE,
-                              L"Bitstream Vera Sans Mono");
+                              GuiData->FontName);
   if (NULL == GuiData->Font)
     {
       DPRINT1("GuiConsoleNcCreate: CreateFont failed\n");
