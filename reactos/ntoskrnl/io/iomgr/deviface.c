@@ -635,6 +635,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     ASSERT_IRQL(PASSIVE_LEVEL);
 
     /* Parameters must pass three border of checks */
+    PhysicalDeviceObject = IopGetLowestDevice(PhysicalDeviceObject);
     DeviceObjectExtension = (PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension;
 
     /* 1st level: Presence of a Device Node */
