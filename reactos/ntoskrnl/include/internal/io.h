@@ -862,19 +862,13 @@ IopAttachFilterDrivers(
 );
 
 VOID
-FASTCALL
-IopMarkLastReinitializeDriver(
-    VOID
-);
-
-VOID
-FASTCALL
+NTAPI
 IopReinitializeDrivers(
     VOID
 );
 
 VOID
-FASTCALL
+NTAPI
 IopReinitializeBootDrivers(
     VOID
 );

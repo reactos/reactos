@@ -661,8 +661,6 @@ IopInitializeDriverModule(
    DPRINT("RegistryKey: %wZ\n", &RegistryKey);
    DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
 
-   IopMarkLastReinitializeDriver();
-
    Status = DriverEntry(*DriverObject, &RegistryKey);
 
    RtlFreeUnicodeString(&RegistryKey);
@@ -1630,113 +1628,76 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    return STATUS_SUCCESS;
 }
 
-VOID FASTCALL
-IopMarkLastReinitializeDriver(VOID)
-{
-  KIRQL Irql;
-
-  KeAcquireSpinLock(&DriverReinitListLock,
-		    &Irql);
-
-  if (IsListEmpty(&DriverReinitListHead))
-  {
-    DriverReinitTailEntry = NULL;
-  }
-  else
-  {
-    DriverReinitTailEntry = DriverReinitListHead.Blink;
-  }
-
-  KeReleaseSpinLock(&DriverReinitListLock,
-		    Irql);
-}
-
-
-VOID FASTCALL
+VOID
+NTAPI
 IopReinitializeDrivers(VOID)
 {
-  PDRIVER_REINIT_ITEM ReinitItem;
-  PLIST_ENTRY Entry;
-  KIRQL Irql;
+    PDRIVER_REINIT_ITEM ReinitItem;
+    PLIST_ENTRY Entry;
 
-  KeAcquireSpinLock(&DriverReinitListLock,
-		    &Irql);
-
-  Entry = DriverReinitTailEntry;
-
-  KeReleaseSpinLock(&DriverReinitListLock,
-		    Irql);
-
-  if (Entry == NULL)
-  {
-    return;
-  }
-
-  for (;;)
-  {
+    /* Get the first entry and start looping */
     Entry = ExInterlockedRemoveHeadList(&DriverReinitListHead,
-				        &DriverReinitListLock);
-    if (Entry == NULL)
-      return;
+                                        &DriverReinitListLock);
+    while (Entry)
+    {
+        /* Get the item*/
+        ReinitItem = CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
 
-    ReinitItem = (PDRIVER_REINIT_ITEM)CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
+        /* Increment reinitialization counter */
+        ReinitItem->DriverObject->DriverExtension->Count++;
 
-    /* Increment reinitialization counter */
-    ReinitItem->DriverObject->DriverExtension->Count++;
+        /* Remove the device object flag */
+        ReinitItem->DriverObject->Flags &= ~DRVO_REINIT_REGISTERED;
 
-    ReinitItem->ReinitRoutine(ReinitItem->DriverObject,
-			      ReinitItem->Context,
-			      ReinitItem->DriverObject->DriverExtension->Count);
+        /* Call the routine */
+        ReinitItem->ReinitRoutine(ReinitItem->DriverObject,
+                                  ReinitItem->Context,
+                                  ReinitItem->DriverObject->
+                                  DriverExtension->Count);
 
-    ExFreePool(Entry);
+        /* Free the entry */
+        ExFreePool(Entry);
 
-    if (Entry == DriverReinitTailEntry)
-      return;
-  }
+        /* Move to the next one */
+        Entry = ExInterlockedRemoveHeadList(&DriverReinitListHead,
+                                            &DriverReinitListLock);
+    }
 }
 
-VOID FASTCALL
+VOID
+NTAPI
 IopReinitializeBootDrivers(VOID)
 {
-  PDRIVER_REINIT_ITEM ReinitItem;
-  PLIST_ENTRY Entry;
-  KIRQL Irql;
+    PDRIVER_REINIT_ITEM ReinitItem;
+    PLIST_ENTRY Entry;
 
-  KeAcquireSpinLock(&DriverBootReinitListLock,
-		    &Irql);
-
-  DriverBootReinitTailEntry = IsListEmpty(&DriverBootReinitListHead) ? NULL : DriverBootReinitListHead.Blink;
-  Entry = DriverBootReinitTailEntry;
-
-  KeReleaseSpinLock(&DriverBootReinitListLock,
-		    Irql);
-
-  if (Entry == NULL)
-  {
-    return;
-  }
-
-  for (;;)
-  {
+    /* Get the first entry and start looping */
     Entry = ExInterlockedRemoveHeadList(&DriverBootReinitListHead,
-				        &DriverBootReinitListLock);
-    if (Entry == NULL)
-      return;
+                                        &DriverBootReinitListLock);
+    while (Entry)
+    {
+        /* Get the item*/
+        ReinitItem = CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
 
-    ReinitItem = (PDRIVER_REINIT_ITEM)CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
+        /* Increment reinitialization counter */
+        ReinitItem->DriverObject->DriverExtension->Count++;
 
-    /* Increment reinitialization counter */
-    ReinitItem->DriverObject->DriverExtension->Count++;
+        /* Remove the device object flag */
+        ReinitItem->DriverObject->Flags &= ~DRVO_BOOTREINIT_REGISTERED;
 
-    ReinitItem->ReinitRoutine(ReinitItem->DriverObject,
-			      ReinitItem->Context,
-			      ReinitItem->DriverObject->DriverExtension->Count);
+        /* Call the routine */
+        ReinitItem->ReinitRoutine(ReinitItem->DriverObject,
+                                  ReinitItem->Context,
+                                  ReinitItem->DriverObject->
+                                  DriverExtension->Count);
 
-    ExFreePool(Entry);
+        /* Free the entry */
+        ExFreePool(Entry);
 
-    if (Entry == DriverBootReinitTailEntry)
-      return;
-  }
+        /* Move to the next one */
+        Entry = ExInterlockedRemoveHeadList(&DriverBootReinitListHead,
+                                            &DriverBootReinitListLock);
+    }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

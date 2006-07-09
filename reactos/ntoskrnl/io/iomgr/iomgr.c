@@ -457,6 +457,9 @@ IoInit2(BOOLEAN BootLog)
 
     /* Load boot start drivers */
     IopInitializeBootDrivers();
+
+    /* Call back drivers that asked for */
+    IopReinitializeBootDrivers();
 }
 
 VOID
@@ -490,8 +493,8 @@ IoInit3(VOID)
     IopInitializeSystemDrivers();
     IoDestroyDriverList();
 
-    /* Call back drivers that asked for */
-    IopReinitializeBootDrivers();
+    /* Reinitialize drivers that requested it */
+    IopReinitializeDrivers();
 
     /* Stop boot logging */
     IopStopBootLog();
