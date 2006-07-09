@@ -244,7 +244,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         //
         // WE DONT CLOSE REGISTRY HANDLES BECAUSE CM IS BRAINDEAD
         //
-        DPRINT1("NOT CLOSING THE KEY\n");
+        DPRINT("NOT CLOSING THE KEY\n");
     }
     else
     {
@@ -1117,6 +1117,13 @@ ObpDuplicateHandleCallback(IN PHANDLE_TABLE HandleTable,
 
     /* Return duplication result */
     return Ret;
+}
+
+VOID
+NTAPI
+ObClearProcessHandleTable(IN PEPROCESS Process)
+{
+    /* FIXME */
 }
 
 /*++

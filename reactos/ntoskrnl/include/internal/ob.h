@@ -199,6 +199,17 @@ ObpReapObject(
 );
 
 VOID
+NTAPI
+ObDereferenceDeviceMap(IN PEPROCESS Process);
+
+VOID
+NTAPI
+ObInheritDeviceMap(
+    IN PEPROCESS Parent,
+    IN PEPROCESS Process
+);
+
+VOID
 FASTCALL
 ObpSetPermanentObject(
     IN PVOID ObjectBody,
@@ -211,9 +222,12 @@ ObpDeleteNameCheck(
     IN PVOID Object
 );
 
-//
-// Security functions
-//
+VOID
+NTAPI
+ObClearProcessHandleTable(IN PEPROCESS Process);
+
+/* Security descriptor cache functions */
+
 NTSTATUS
 NTAPI
 ObpInitSdCache(

@@ -1,11 +1,23 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ps/thread.c
- * PURPOSE:         Thread managment
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
- *                  Phillip Susi
+ * PURPOSE:         Process Manager: Thread Management
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Thomas Weidenmueller (w3seek@reactos.org
+ */
+
+/*
+ * Alex FIXMEs:
+ *  - CRITICAL: NtCurrentTeb returns KPCR.
+ *  - CRITICAL: Verify rundown APIs (ex/rundown.c) and use them where necessary.
+ *  - MAJOR: Implement Pushlocks and use them as process lock.
+ *  - MAJOR: Implement Safe Referencing (See PsGetNextProcess/Thread).
+ *  - MAJOR: Implement Fast Referencing (mostly for tokens).
+ *  - MAJOR: Use Guarded Mutex instead of Fast Mutex for Active Process Locks.
+ *  - Generate process cookie for user-more thread.
+ *  - Add security calls where necessary.
+ *  - KeInit/StartThread for better isolation of code
  */
 
 /* INCLUDES ****************************************************************/
@@ -19,83 +31,112 @@
 extern LIST_ENTRY PsActiveProcessHead;
 extern PEPROCESS PsIdleProcess;
 extern PVOID PspSystemDllEntryPoint;
+extern PVOID PspSystemDllBase;
 extern PHANDLE_TABLE PspCidTable;
-
+extern BOOLEAN CcPfEnablePrefetcher;
+extern ULONG MmReadClusterSize;
 POBJECT_TYPE PsThreadType = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
 VOID
-STDCALL
-PspThreadSpecialApc(PKAPC Apc,
-                    PKNORMAL_ROUTINE* NormalRoutine,
-                    PVOID* NormalContext,
-                    PVOID* SystemArgument1,
-                    PVOID* SystemArgument2)
-{
-    ExFreePool(Apc);
-}
-
-VOID
-STDCALL
+NTAPI
 PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
                      PVOID StartContext)
 {
-    PKAPC ThreadApc;
-    PETHREAD Thread = PsGetCurrentThread();
+    PETHREAD Thread;
+    PTEB Teb;
+    BOOLEAN DeadThread = FALSE;
+    PAGED_CODE();
 
-    DPRINT("I am a new USER thread. This is my start routine: %p. This my context: %p."
-           "This is my IRQL: %d. This is my Thread Pointer: %x.\n", StartRoutine,
-            StartContext, KeGetCurrentIrql(), Thread);
+    /* Go to Passive Level */
+    KeLowerIrql(PASSIVE_LEVEL);
+    Thread = PsGetCurrentThread();
 
-    if (!Thread->Terminated) {
-
-        /* Allocate the APC */
-        ThreadApc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG('T', 'h', 'r','d'));
-
-        /* Initialize it */
-        KeInitializeApc(ThreadApc,
-                        &Thread->Tcb,
-                        OriginalApcEnvironment,
-                        PspThreadSpecialApc,
-                        NULL,
-                        PspSystemDllEntryPoint,
-                        UserMode,
-                        NULL);
-
-        /* Insert it into the queue */
-        KeInsertQueueApc(ThreadApc, NULL, NULL, IO_NO_INCREMENT);
-        Thread->Tcb.ApcState.UserApcPending = TRUE;
+    /* Check if the thread is dead */
+    if (Thread->DeadThread)
+    {
+        /* Remember that we're dead */
+        DPRINT1("This thread is already dead\n");
+        DeadThread = TRUE;
+}
+    else
+    {
+        /* Get the Locale ID and save Preferred Proc */
+        Teb =  NtCurrentTeb(); /* FIXME: This returns KPCR!!! */
+        //Teb->CurrentLocale = MmGetSessionLocaleId();
+        //Teb->IdealProcessor = Thread->Tcb.IdealProcessor;
     }
 
-    /* Go to Passive Level and notify debugger */
-    KeLowerIrql(PASSIVE_LEVEL);
-    DbgkCreateThread(StartContext);
+    /* Check if this is a system thread, or if we're hiding */
+    if ((Thread->SystemThread) || (Thread->HideFromDebugger))
+{
+        /* Notify the debugger */
+        DbgkCreateThread(StartContext);
+    }
+
+    /* Make sure we're not already dead */
+    if (!DeadThread)
+    {
+        /* Check if the Prefetcher is enabled */
+        if (CcPfEnablePrefetcher)
+        {
+            /* FIXME: Prepare to prefetch this process */
+        }
+
+        /* Raise to APC */
+        KfRaiseIrql(APC_LEVEL);
+
+        /* Queue the User APC */
+        KiInitializeUserApc(NULL,
+                            (PVOID)((ULONG_PTR)Thread->Tcb.InitialStack -
+                            sizeof(KTRAP_FRAME) -
+                            sizeof(FX_SAVE_AREA)),
+                            PspSystemDllEntryPoint,
+                        NULL,
+                            PspSystemDllBase,
+                        NULL);
+
+        /* Lower it back to passive */
+        KeLowerIrql(PASSIVE_LEVEL);
+    }
+    else
+    {
+        /* We're dead, kill us now */
+        PspTerminateThreadByPointer(Thread, STATUS_THREAD_IS_TERMINATING, TRUE);
+    }
+
+    /* Do we have a cookie set yet? */
+    if (!SharedUserData->Cookie)
+    {
+        /* FIXME: Generate cookie */
+    }
 }
 
 VOID
-STDCALL
+NTAPI
 PspSystemThreadStartup(PKSTART_ROUTINE StartRoutine,
                        PVOID StartContext)
 {
-    PETHREAD Thread = PsGetCurrentThread();
+    PETHREAD Thread;
 
     /* Unlock the dispatcher Database */
     KeLowerIrql(PASSIVE_LEVEL);
+    Thread = PsGetCurrentThread();
 
-    /* Make sure it's not terminated by now */
-    if (!Thread->Terminated) {
-
-        /* Call it */
-        (StartRoutine)(StartContext);
+    /* Make sure the thread isn't gone */
+    if (!(Thread->Terminated) || !(Thread->DeadThread))
+    {
+        /* Call it the Start Routine */
+        StartRoutine(StartContext);
     }
 
     /* Exit the thread */
-    PspExitThread(STATUS_SUCCESS);
+    PspTerminateThreadByPointer(Thread, STATUS_SUCCESS, TRUE);
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 PspCreateThread(OUT PHANDLE ThreadHandle,
                 IN ACCESS_MASK DesiredAccess,
                 IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
@@ -117,46 +158,54 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     NTSTATUS Status;
     HANDLE_TABLE_ENTRY CidEntry;
     ULONG_PTR KernelStack;
+    PAGED_CODE();
+
+    /* If we were called from PsCreateSystemThread, then we're kernel mode */
+    if (StartRoutine) PreviousMode = KernelMode;
 
     /* Reference the Process by handle or pointer, depending on what we got */
-    DPRINT("PspCreateThread: %x, %x, %x\n", ProcessHandle, TargetProcess, ThreadContext);
-    if (ProcessHandle) {
-
+    if (ProcessHandle)
+    {
         /* Normal thread or System Thread */
-        DPRINT("Referencing Parent Process\n");
         Status = ObReferenceObjectByHandle(ProcessHandle,
                                            PROCESS_CREATE_THREAD,
                                            PsProcessType,
                                            PreviousMode,
                                            (PVOID*)&Process,
                                            NULL);
-    } else {
-
+    }
+    else
+    {
         /* System thread inside System Process, or Normal Thread with a bug */
-        if (StartRoutine) {
-
+        if (StartRoutine)
+        {
             /* Reference the Process by Pointer */
-            DPRINT("Referencing Parent System Process\n");
             ObReferenceObject(TargetProcess);
             Process = TargetProcess;
             Status = STATUS_SUCCESS;
-
-        } else {
-
+        }
+        else
+        {
             /* Fake ObReference returning this */
             Status = STATUS_INVALID_HANDLE;
         }
     }
 
     /* Check for success */
-    if(!NT_SUCCESS(Status)) {
-
+    if(!NT_SUCCESS(Status))
+    {
         DPRINT1("Invalid Process Handle, or no handle given\n");
-        return(Status);
+        return Status;
+    }
+
+    /* Also make sure that User-Mode isn't trying to create a system thread */
+    if ((PreviousMode != KernelMode) && (Process == PsInitialSystemProcess))
+    {
+        ObDereferenceObject(Process);
+        return STATUS_INVALID_HANDLE;
     }
 
     /* Create Thread Object */
-    DPRINT("Creating Thread Object\n");
     Status = ObCreateObject(PreviousMode,
                             PsThreadType,
                             ObjectAttributes,
@@ -166,69 +215,61 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
                             0,
                             0,
                             (PVOID*)&Thread);
-
-    /* Check for success */
-    if (!NT_SUCCESS(Status)) {
-
-        /* Dereference the Process */
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed; dereference the process and exit */
         DPRINT1("Failed to Create Thread Object\n");
         ObDereferenceObject(Process);
-        return(Status);
+        return Status;
     }
 
     /* Zero the Object entirely */
-    DPRINT("Cleaning Thread Object\n");
     RtlZeroMemory(Thread, sizeof(ETHREAD));
 
+    /* Set the Process CID */
+    Thread->ThreadsProcess = Process;
+    Thread->Cid.UniqueProcess = Process->UniqueProcessId;
+
     /* Create Cid Handle */
-    DPRINT("Creating Thread Handle (CID)\n");
     CidEntry.Object = Thread;
     CidEntry.GrantedAccess = 0;
     Thread->Cid.UniqueThread = ExCreateHandle(PspCidTable, &CidEntry);
-    if (!Thread->Cid.UniqueThread) {
-
+    if (!Thread->Cid.UniqueThread)
+    {
+        /* We couldn't create the CID, dereference everything and fail */
         DPRINT1("Failed to create Thread Handle (CID)\n");
         ObDereferenceObject(Process);
         ObDereferenceObject(Thread);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Initialize Lists */
-    DPRINT("Initialliazing Thread Lists and Locks\n");
+    /* Save the read cluster size */
+    Thread->ReadClusterSize = MmReadClusterSize;
+
+    /* Initialize the LPC Reply Semaphore */
+    KeInitializeSemaphore(&Thread->LpcReplySemaphore, 0, MAXLONG);
+
+    /* Initialize the list heads and locks */
     InitializeListHead(&Thread->LpcReplyChain);
     InitializeListHead(&Thread->IrpList);
+    InitializeListHead(&Thread->PostBlockList);
     InitializeListHead(&Thread->ActiveTimerListHead);
     KeInitializeSpinLock(&Thread->ActiveTimerListLock);
 
-    /* Initialize LPC */
-    DPRINT("Initialliazing Thread Semaphore\n");
-    KeInitializeSemaphore(&Thread->LpcReplySemaphore, 0, MAXLONG);
-
     /* Allocate Stack for non-GUI Thread */
-    DPRINT("Initialliazing Thread Stack\n");
     KernelStack = (ULONG_PTR)MmCreateKernelStack(FALSE) + KERNEL_STACK_SIZE;
 
-    /* Set the Process CID */
-    DPRINT("Initialliazing Thread PID and Parent Process\n");
-    Thread->Cid.UniqueProcess = Process->UniqueProcessId;
-    Thread->ThreadsProcess = Process;
-
     /* Now let the kernel initialize the context */
-    if (ThreadContext) {
-
-        /* User-mode Thread */
-
-        /* Create Teb */
-        DPRINT("Initialliazing Thread PEB\n");
+    if (ThreadContext)
+    {
+        /* User-mode Thread, create Teb */
         TebBase = MmCreateTeb(Process, &Thread->Cid, InitialTeb);
 
         /* Set the Start Addresses */
-        DPRINT("Initialliazing Thread Start Addresses :%x, %x\n", ThreadContext->Eip, ThreadContext->Eax);
         Thread->StartAddress = (PVOID)ThreadContext->Eip;
         Thread->Win32StartAddress = (PVOID)ThreadContext->Eax;
 
         /* Let the kernel intialize the Thread */
-        DPRINT("Initialliazing Kernel Thread\n");
         KeInitializeThread(&Process->Pcb,
                            &Thread->Tcb,
                            PspUserThreadStartup,
@@ -237,16 +278,14 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
                            ThreadContext,
                            TebBase,
                            (PVOID)KernelStack);
-
-    } else {
-
+    }
+    else
+    {
         /* System Thread */
-        DPRINT("Initialliazing Thread Start Address :%x\n", StartRoutine);
         Thread->StartAddress = StartRoutine;
-        Thread->SystemThread = TRUE;
+        InterlockedOr(&Thread->CrossThreadFlags, 0x10);
 
         /* Let the kernel intialize the Thread */
-        DPRINT("Initialliazing Kernel Thread\n");
         KeInitializeThread(&Process->Pcb,
                            &Thread->Tcb,
                            PspSystemThreadStartup,
@@ -262,61 +301,63 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
      * Note, this is the ETHREAD Thread List. It is removed in
      * ps/kill.c!PspExitThread.
      */
-    DPRINT("Inserting into Process Thread List \n");
     InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
+    Process->ActiveThreads++;
+
+    /* Notify WMI */
+    //WmiTraceProcess(Process, TRUE);
+    //WmiTraceThread(Thread, InitialTeb, TRUE);
 
     /* Notify Thread Creation */
-    DPRINT("Running Thread Notify \n");
     PspRunCreateThreadNotifyRoutines(Thread, TRUE);
 
     /* Suspend the Thread if we have to */
-    if (CreateSuspended) {
-
-        DPRINT("Suspending Thread\n");
+    if (CreateSuspended)
+    {
         KeSuspendThread(&Thread->Tcb);
+    }
+
+    /* Check if we were already terminated */
+    if (Thread->Terminated)
+    {
+        /* Force us to wake up to terminate */
+        KeForceResumeThread(&Thread->Tcb);
     }
 
     /* Reference ourselves as a keep-alive */
     ObReferenceObject(Thread);
 
     /* Insert the Thread into the Object Manager */
-    DPRINT("Inserting Thread\n");
     Status = ObInsertObject((PVOID)Thread,
                             NULL,
                             DesiredAccess,
                             0,
                             NULL,
                             &hThread);
-
-    /* Return Cid and Handle */
-    DPRINT("All worked great!\n");
-    if(NT_SUCCESS(Status)) {
-
-        _SEH_TRY {
-
-            if(ClientId != NULL) {
-
-                *ClientId = Thread->Cid;
-            }
+    if(NT_SUCCESS(Status))
+    {
+        /* Wrap in SEH to protect against bad user-mode pointers */
+        _SEH_TRY
+        {
+            /* Return Cid and Handle */
+            if(ClientId) *ClientId = Thread->Cid;
             *ThreadHandle = hThread;
-
-        } _SEH_HANDLE {
-
+        }
+        _SEH_HANDLE
+        {
             Status = _SEH_GetExceptionCode();
-
-        } _SEH_END;
+        }
+        _SEH_END;
     }
 
     /* FIXME: SECURITY */
 
     /* Dispatch thread */
-    DPRINT("About to dispatch the thread: %x!\n", &Thread->Tcb);
     OldIrql = KeAcquireDispatcherDatabaseLock ();
     KiUnblockThread(&Thread->Tcb, NULL, 0);
     KeReleaseDispatcherDatabaseLock(OldIrql);
 
     /* Return */
-    DPRINT("Returning\n");
     return Status;
 }
 
@@ -324,7 +365,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 PsCreateSystemThread(PHANDLE ThreadHandle,
                      ACCESS_MASK DesiredAccess,
                      POBJECT_ATTRIBUTES ObjectAttributes,
@@ -335,10 +376,11 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 {
     PEPROCESS TargetProcess = NULL;
     HANDLE Handle = ProcessHandle;
+    PAGED_CODE();
 
     /* Check if we have a handle. If not, use the System Process */
-    if (!ProcessHandle) {
-
+    if (!ProcessHandle)
+    {
         Handle = NULL;
         TargetProcess = PsInitialSystemProcess;
     }
@@ -361,7 +403,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 PsLookupThreadByThreadId(IN HANDLE ThreadId,
                          OUT PETHREAD *Thread)
 {
@@ -369,7 +411,6 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     PETHREAD FoundThread;
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PAGED_CODE();
-    
     KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
@@ -392,9 +433,8 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
         ExUnlockHandleTableEntry(PspCidTable, CidEntry);
     }
     
-    KeLeaveCriticalRegion();
-
     /* Return to caller */
+    KeLeaveCriticalRegion();
     return Status;
 }
 
@@ -402,7 +442,7 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
  * @implemented
  */
 HANDLE
-STDCALL
+NTAPI
 PsGetCurrentThreadId(VOID)
 {
     return(PsGetCurrentThread()->Cid.UniqueThread);
@@ -412,7 +452,7 @@ PsGetCurrentThreadId(VOID)
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 PsGetThreadFreezeCount(PETHREAD Thread)
 {
     return Thread->Tcb.FreezeCount;
@@ -422,7 +462,7 @@ PsGetThreadFreezeCount(PETHREAD Thread)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 PsGetThreadHardErrorsAreDisabled(PETHREAD Thread)
 {
     return Thread->HardErrorsAreDisabled;
@@ -432,7 +472,7 @@ PsGetThreadHardErrorsAreDisabled(PETHREAD Thread)
  * @implemented
  */
 HANDLE
-STDCALL
+NTAPI
 PsGetThreadId(PETHREAD Thread)
 {
     return Thread->Cid.UniqueThread;
@@ -442,7 +482,7 @@ PsGetThreadId(PETHREAD Thread)
  * @implemented
  */
 PEPROCESS
-STDCALL
+NTAPI
 PsGetThreadProcess(PETHREAD Thread)
 {
     return Thread->ThreadsProcess;
@@ -452,7 +492,7 @@ PsGetThreadProcess(PETHREAD Thread)
  * @implemented
  */
 HANDLE
-STDCALL
+NTAPI
 PsGetThreadProcessId(PETHREAD Thread)
 {
     return Thread->Cid.UniqueProcess;
@@ -462,7 +502,7 @@ PsGetThreadProcessId(PETHREAD Thread)
  * @implemented
  */
 HANDLE
-STDCALL
+NTAPI
 PsGetThreadSessionId(PETHREAD Thread)
 {
     return (HANDLE)Thread->ThreadsProcess->Session;
@@ -472,7 +512,7 @@ PsGetThreadSessionId(PETHREAD Thread)
  * @implemented
  */
 PTEB
-STDCALL
+NTAPI
 PsGetThreadTeb(PETHREAD Thread)
 {
     return Thread->Tcb.Teb;
@@ -482,7 +522,7 @@ PsGetThreadTeb(PETHREAD Thread)
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 PsGetThreadWin32Thread(PETHREAD Thread)
 {
     return Thread->Tcb.Win32Thread;
@@ -492,7 +532,7 @@ PsGetThreadWin32Thread(PETHREAD Thread)
  * @implemented
  */
 KPROCESSOR_MODE
-STDCALL
+NTAPI
 PsGetCurrentThreadPreviousMode(VOID)
 {
     return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
@@ -502,7 +542,7 @@ PsGetCurrentThreadPreviousMode(VOID)
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 PsGetCurrentThreadStackBase(VOID)
 {
     return PsGetCurrentThread()->Tcb.StackBase;
@@ -512,7 +552,7 @@ PsGetCurrentThreadStackBase(VOID)
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 PsGetCurrentThreadStackLimit(VOID)
 {
     return (PVOID)PsGetCurrentThread()->Tcb.StackLimit;
@@ -522,7 +562,7 @@ PsGetCurrentThreadStackLimit(VOID)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 PsIsThreadTerminating(IN PETHREAD Thread)
 {
     return (Thread->Terminated ? TRUE : FALSE);
@@ -532,7 +572,7 @@ PsIsThreadTerminating(IN PETHREAD Thread)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 PsIsSystemThread(PETHREAD Thread)
 {
     return (Thread->SystemThread ? TRUE: FALSE);
@@ -542,7 +582,7 @@ PsIsSystemThread(PETHREAD Thread)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 PsIsThreadImpersonating(PETHREAD Thread)
 {
     return Thread->ActiveImpersonationInfo;
@@ -552,7 +592,7 @@ PsIsThreadImpersonating(PETHREAD Thread)
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 PsSetThreadHardErrorsAreDisabled(PETHREAD Thread,
                                  BOOLEAN HardErrorsAreDisabled)
 {
@@ -563,7 +603,7 @@ PsSetThreadHardErrorsAreDisabled(PETHREAD Thread,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 PsSetThreadWin32Thread(PETHREAD Thread,
                        PVOID Win32Thread)
 {
@@ -571,7 +611,7 @@ PsSetThreadWin32Thread(PETHREAD Thread,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtCreateThread(OUT PHANDLE ThreadHandle,
                IN ACCESS_MASK DesiredAccess,
                IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
@@ -582,54 +622,52 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
                IN BOOLEAN CreateSuspended)
 {
     INITIAL_TEB SafeInitialTeb;
-    CONTEXT SafeContext;
     NTSTATUS Status = STATUS_SUCCESS;
-
     PAGED_CODE();
 
-    DPRINT("NtCreateThread(ThreadHandle %x, PCONTEXT %x)\n",
-            ThreadHandle,ThreadContext);
-
-    if(KeGetPreviousMode() != KernelMode) {
-
-        if (ThreadContext == NULL) {
+    /* Check if this was from user-mode */
+    if(KeGetPreviousMode() != KernelMode)
+    {
+        /* Make sure that we got a context */
+        if (!ThreadContext)
+        {
             DPRINT1("No context for User-Mode Thread!!\n");
             return STATUS_INVALID_PARAMETER;
         }
 
-        _SEH_TRY {
-
+        /* Protect checks */
+        _SEH_TRY
+        {
+            /* Make sure the handle pointer we got is valid */
             ProbeForWriteHandle(ThreadHandle);
 
-            if(ClientId != NULL) {
-
-                ProbeForWrite(ClientId,
-                              sizeof(CLIENT_ID),
-                              sizeof(ULONG));
+            /* Check if the caller wants a client id */
+            if(ClientId)
+            {
+                /* Make sure we can write to it */
+                ProbeForWrite(ClientId, sizeof(CLIENT_ID), sizeof(ULONG));
             }
 
-            if(ThreadContext != NULL) {
+            /* Make sure that the entire context is readable */
+            ProbeForRead(ThreadContext, sizeof(CONTEXT), sizeof(ULONG));
 
-                ProbeForRead(ThreadContext,
-                             sizeof(CONTEXT),
-                             sizeof(ULONG));
-                SafeContext = *ThreadContext;
-                ThreadContext = &SafeContext;
-            }
-
-            ProbeForRead(InitialTeb,
-                         sizeof(INITIAL_TEB),
-                         sizeof(ULONG));
+            /* Check the Initial TEB */
+            ProbeForRead(InitialTeb, sizeof(INITIAL_TEB), sizeof(ULONG));
             SafeInitialTeb = *InitialTeb;
-            InitialTeb = &SafeInitialTeb;
-
-        } _SEH_HANDLE {
-
+            }
+        _SEH_HANDLE
+        {
             Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-        } _SEH_END;
-
+        /* Handle any failures in our SEH checks */
         if (!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        /* Use the Initial TEB as is */
+        SafeInitialTeb = *InitialTeb;
     }
 
     /* Call the shared function */
@@ -640,7 +678,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
                            NULL,
                            ClientId,
                            ThreadContext,
-                           InitialTeb,
+                           &SafeInitialTeb,
                            CreateSuspended,
                            NULL,
                            NULL);
@@ -650,7 +688,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtOpenThread(OUT PHANDLE ThreadHandle,
              IN ACCESS_MASK DesiredAccess,
              IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -724,19 +762,14 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                     DesiredAccess,
                                     NULL,
                                     &hThread);
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Could not open object by name\n");
+        if (!NT_SUCCESS(Status)) DPRINT1("Could not open object by name\n");
         }
-    }
     else if (ClientId != NULL)
     {
         /* Open by Thread ID */
         if (ClientId->UniqueProcess)
         {
             /* Get the Process */
-            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
             Status = PsLookupProcessThreadByCid(ClientId,
                                                 NULL,
                                                 &Thread);
@@ -744,7 +777,6 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
         else
         {
             /* Get the Process */
-            DPRINT("Opening by Thread ID: %x\n", ClientId->UniqueThread);
             Status = PsLookupThreadByThreadId(ClientId->UniqueThread,
                                               &Thread);
         }
@@ -777,11 +809,13 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
         return STATUS_INVALID_PARAMETER_MIX;
     }
 
-    /* Write back the handle */
+    /* Check for success */
     if(NT_SUCCESS(Status))
     {
+        /* Protect against bad user-mode pointers */
         _SEH_TRY
         {
+            /* Write back the handle */
             *ThreadHandle = hThread;
         }
         _SEH_HANDLE
@@ -796,7 +830,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtYieldExecution(VOID)
 {
     KiDispatchThread(Ready);
@@ -804,7 +838,7 @@ NtYieldExecution(VOID)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtTestAlert(VOID)
 {
     /* Check and Alert Thread if needed */
@@ -815,7 +849,7 @@ NtTestAlert(VOID)
  * @implemented
  */
 KPROCESSOR_MODE
-STDCALL
+NTAPI
 ExGetPreviousMode (VOID)
 {
     return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;

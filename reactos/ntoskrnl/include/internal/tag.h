@@ -156,4 +156,7 @@
 #define TAG_LPC_MESSAGE   TAG('L', 'p', 'c', 'M')
 #define TAG_LPC_ZONE      TAG('L', 'p', 'c', 'Z')
 
+/* Se Process Audit */
+#define TAG_SEPA          TAG('S', 'e', 'P', 'a')
+
 #endif /* _NTOSKRNL_TAG_H */

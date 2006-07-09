@@ -15,37 +15,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
-/**********************************************************************
- * NAME
- *	LpcSendTerminationPort/2
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- */
-NTSTATUS STDCALL
-LpcSendTerminationPort (IN PEPORT Port,
-			IN LARGE_INTEGER CreateTime)
-{
-  NTSTATUS Status;
-  CLIENT_DIED_MSG Msg;
-
-#ifdef __USE_NT_LPC__
-  Msg.h.u2.s2.Type = LPC_CLIENT_DIED;
-#endif
-  Msg.h.u1.s1.TotalLength = sizeof(Msg);
-  Msg.h.u1.s1.DataLength = sizeof(Msg) - sizeof(PORT_MESSAGE);
-  Msg.CreateTime = CreateTime;
-  Status = LpcRequestPort (Port, &Msg.h);
-  return(Status);
-}
-
-
 /**********************************************************************
  * NAME
  *	LpcSendDebugMessagePort/3

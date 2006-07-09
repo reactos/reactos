@@ -979,6 +979,14 @@ Language=English
 SPIN_LOCK_INIT_FAILURE
 .
 
+MessageId=0x94
+Severity=Success
+Facility=System
+SymbolicName=KERNEL_STACK_LOCKED_AT_EXIT
+Language=English
+KERNEL_STACK_LOCKED_AT_EXIT
+.
+
 MessageId=0x96
 Severity=Success
 Facility=System
@@ -1084,6 +1092,23 @@ Language=English
  and you\n are welcome to change it and/or distribute copies of it under
  certain\n conditions. There is absolutely no warranty for ReactOS.\n
 .
+
+MessageId=0xE9
+Severity=Success
+Facility=System
+SymbolicName=ACTIVE_EX_WORKER_THREAD_TERMINATION
+Language=English
+ACTIVE_EX_WORKER_THREAD_TERMINATION
+.
+
+MessageId=0xEF
+Severity=Success
+Facility=System
+SymbolicName=CRITICAL_PROCESS_DIED
+Language=English
+CRITICAL_PROCESS_DIED
+.
+
 
 MessageId=0xFC
 Severity=Success

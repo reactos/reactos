@@ -498,7 +498,8 @@ ULONG
 STDCALL
 KeSetProcess(
     struct _KPROCESS* Process,
-    KPRIORITY Increment
+    KPRIORITY Increment,
+    BOOLEAN InWait
 );
 
 VOID

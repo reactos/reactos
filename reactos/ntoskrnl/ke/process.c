@@ -145,7 +145,8 @@ KeInitializeProcess(PKPROCESS Process,
 ULONG
 NTAPI
 KeSetProcess(PKPROCESS Process,
-             KPRIORITY Increment)
+             KPRIORITY Increment,
+             BOOLEAN InWait)
 {
     KIRQL OldIrql;
     ULONG OldState;

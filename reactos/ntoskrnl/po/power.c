@@ -183,6 +183,13 @@ PoSetDeviceBusy(
 {
 }
 
+VOID
+NTAPI
+PopCleanupPowerState(IN PPOWER_STATE PowerState)
+{
+    /* FIXME */
+}
+
 /*
  * @unimplemented
  */

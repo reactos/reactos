@@ -23,6 +23,33 @@ extern ULONG NtGlobalFlag;
 
 /* FUNCTIONS *****************************************************************/
 
+LCID
+NTAPI
+MmGetSessionLocaleId(VOID)
+{
+    PEPROCESS Process;
+    PAGED_CODE();
+
+    /* Get the current process */
+    Process = PsGetCurrentProcess();
+
+    /* Check if it's the Session Leader */
+    if (Process->Vm.Flags.SessionLeader)
+    {
+        /* Make sure it has a valid Session */
+        if (Process->Session)
+        {
+            /* Get the Locale ID */
+#if ROS_HAS_SESSIONS
+            return ((PMM_SESSION_SPACE)Process->Session)->LocaleId;
+#endif
+        }
+    }
+
+    /* Not a session leader, return the default */
+    return PsDefaultThreadLocaleId;
+}
+
 PVOID
 STDCALL
 MiCreatePebOrTeb(PEPROCESS Process,
@@ -489,6 +516,9 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         goto exit;
      }
 
+    /* The process now has an address space */
+    Process->HasAddressSpace = TRUE;
+
     /* Check if there's a Section Object */
     if (Section)
     {
@@ -558,4 +588,65 @@ exit:
 
     /* Return status to caller */
     return Status;
+}
+
+VOID
+NTAPI
+MmCleanProcessAddressSpace(IN PEPROCESS Process)
+{
+    /* FIXME: Add part of MmDeleteProcessAddressSpace here */
+}
+
+NTSTATUS 
+NTAPI
+MmDeleteProcessAddressSpace(PEPROCESS Process)
+{
+   PVOID Address;
+   PMEMORY_AREA MemoryArea;
+
+   DPRINT("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
+          Process->ImageFileName);
+
+   MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+
+   while ((MemoryArea = ((PMADDRESS_SPACE)&Process->VadRoot)->MemoryAreaRoot) != NULL)
+   {
+      switch (MemoryArea->Type)
+      {
+         case MEMORY_AREA_SECTION_VIEW:
+             Address = (PVOID)MemoryArea->StartingAddress;
+             MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+             MmUnmapViewOfSection(Process, Address);
+             MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+             break;
+
+         case MEMORY_AREA_VIRTUAL_MEMORY:
+         case MEMORY_AREA_PEB_OR_TEB:
+             MmFreeVirtualMemory(Process, MemoryArea);
+             break;
+
+         case MEMORY_AREA_SHARED_DATA:
+         case MEMORY_AREA_NO_ACCESS:
+             MmFreeMemoryArea((PMADDRESS_SPACE)&Process->VadRoot,
+                              MemoryArea,
+                              NULL,
+                              NULL);
+             break;
+
+         case MEMORY_AREA_MDL_MAPPING:
+            KEBUGCHECK(PROCESS_HAS_LOCKED_PAGES);
+            break;
+
+         default:
+            KEBUGCHECK(0);
+      }
+   }
+
+   Mmi386ReleaseMmInfo(Process);
+
+   MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+   MmDestroyAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+
+   DPRINT("Finished MmReleaseMmInfo()\n");
+   return(STATUS_SUCCESS);
 }

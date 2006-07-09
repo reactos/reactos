@@ -5,6 +5,21 @@ VOID
 STDCALL
 DbgkCreateThread(PVOID StartAddress);
 
+VOID
+NTAPI
+DbgkExitProcess(IN NTSTATUS ExitStatus);
+
+VOID
+NTAPI
+DbgkExitThread(IN NTSTATUS ExitStatus);
+
+VOID
+NTAPI
+DbgkCopyProcessDebugPort(
+    IN PEPROCESS Process,
+    IN PEPROCESS Parent
+);
+
 #endif
 
 /* EOF */

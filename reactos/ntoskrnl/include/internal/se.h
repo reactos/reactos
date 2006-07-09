@@ -136,6 +136,14 @@ PTOKEN
 STDCALL
 SepCreateSystemProcessToken(VOID);
 
+BOOLEAN
+NTAPI
+SeDetailedAuditingWithToken(IN PTOKEN Token);
+
+VOID
+NTAPI
+SeAuditProcessExit(IN PEPROCESS Process);
+
 NTSTATUS
 NTAPI
 SeExchangePrimaryToken(

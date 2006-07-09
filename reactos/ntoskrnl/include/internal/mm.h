@@ -619,7 +619,7 @@ MmShowOutOfSpaceMessagePagingFile(VOID);
 NTSTATUS
 STDCALL
 MmCreateProcessAddressSpace(
-    IN struct _EPROCESS* Process,
+    IN PEPROCESS Process,
     IN PROS_SECTION_OBJECT Section OPTIONAL
 );
 
@@ -627,7 +627,7 @@ NTSTATUS
 STDCALL
 MmCreatePeb(struct _EPROCESS *Process);
 
-struct _TEB*
+PTEB
 STDCALL
 MmCreateTeb(
     struct _EPROCESS *Process,
@@ -639,8 +639,20 @@ VOID
 STDCALL
 MmDeleteTeb(
     struct _EPROCESS *Process,
-    struct _TEB* Teb
+    PTEB Teb
 );
+
+VOID
+NTAPI
+MmCleanProcessAddressSpace(IN PEPROCESS Process);
+
+NTSTATUS
+NTAPI
+MmDeleteProcessAddressSpace(IN PEPROCESS Process);
+
+ULONG
+NTAPI
+MmGetSessionLocaleId(VOID);
 
 /* i386/pfault.c *************************************************************/
 

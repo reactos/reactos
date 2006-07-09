@@ -14,4 +14,8 @@ NTSTATUS
 NTAPI
 PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState);
 
+VOID
+NTAPI
+PopCleanupPowerState(IN PPOWER_STATE PowerState);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_PO_H */

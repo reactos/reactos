@@ -153,7 +153,7 @@ ShutdownThreadMain(PVOID Context)
                                           sizeof(PCH))]);
      }
 
-   PiShutdownProcessManager();
+   PspShutdownProcessManager();
    Waittime.QuadPart = (LONGLONG)-10000000; /* 1sec */
    KeDelayExecutionThread(KernelMode, FALSE, &Waittime);
 

@@ -101,6 +101,26 @@ InterlockedAnd(IN OUT LONG volatile *Target,
     return j;
 }
 
+FORCEINLINE
+LONG
+InterlockedOr(IN OUT LONG volatile *Target,
+              IN LONG Set)
+{
+    LONG i;
+    LONG j;
+
+    j = *Target;
+    do {
+        i = j;
+        j = InterlockedCompareExchange((PLONG)Target,
+                                       i | Set,
+                                       i);
+
+    } while (i != j);
+
+    return j;
+}
+
 /*
  * generic information class probing code
  */

@@ -65,15 +65,6 @@ NTSTATUS STDCALL INIT_FUNCTION PspLookupKernelUserEntryPoints(VOID);
 /* FUNCTIONS ***************************************************************/
 
 VOID
-NTAPI
-PiShutdownProcessManager(VOID)
-{
-   DPRINT("PiShutdownProcessManager()\n");
-
-   PspKillMostProcesses();
-}
-
-VOID
 INIT_FUNCTION
 NTAPI
 PiInitProcessManager(VOID)

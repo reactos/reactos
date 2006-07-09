@@ -16,8 +16,8 @@
 
 /* GLOBALS ******************************************************************/
 
-static PKWIN32_PROCESS_CALLOUT PspWin32ProcessCallback = NULL;
-static PKWIN32_THREAD_CALLOUT PspWin32ThreadCallback = NULL;
+PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout = NULL;
+PKWIN32_THREAD_CALLOUT PspW32ThreadCallout = NULL;
 extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
@@ -53,8 +53,8 @@ VOID
 STDCALL
 PsEstablishWin32Callouts(PWIN32_CALLOUTS_FPNS CalloutData)
 {
-    PspWin32ProcessCallback = CalloutData->ProcessCallout;
-    PspWin32ThreadCallback = CalloutData->ThreadCallout;
+    PspW32ProcessCallout = CalloutData->ProcessCallout;
+    PspW32ThreadCallout = CalloutData->ThreadCallout;
     ExpWindowStationObjectParse = CalloutData->WindowStationParseProcedure;
     ExpWindowStationObjectDelete = CalloutData->WindowStationDeleteProcedure;
     ExpDesktopObjectDelete = CalloutData->DesktopDeleteProcedure;
@@ -79,7 +79,7 @@ PsConvertToGuiThread(VOID)
     }
 
     /* Make sure win32k is here */
-    if (!PspWin32ProcessCallback)
+    if (!PspW32ProcessCallout)
     {
         DPRINT1("Danger: Win32K call attempted but Win32k not ready!\n");
         return STATUS_ACCESS_DENIED;
@@ -122,7 +122,7 @@ PsConvertToGuiThread(VOID)
     if (!Process->Win32Process)
     {
         /* Now tell win32k about us */
-        Status = PspWin32ProcessCallback(Process, TRUE);
+        Status = PspW32ProcessCallout(Process, TRUE);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Danger: Win32k wasn't happy about us!\n");
@@ -135,7 +135,7 @@ PsConvertToGuiThread(VOID)
     ASSERT(Thread->Tcb.Win32Thread == 0);
 
     /* Tell Win32k about our thread */
-    Status = PspWin32ThreadCallback(Thread, PsW32ThreadCalloutInitialize);
+    Status = PspW32ThreadCallout(Thread, PsW32ThreadCalloutInitialize);
     if (!NT_SUCCESS(Status))
     {
         /* Revert our table */
@@ -145,39 +145,6 @@ PsConvertToGuiThread(VOID)
 
     /* Return status */
     return Status;
-}
-
-VOID
-NTAPI
-PsTerminateWin32Process (PEPROCESS Process)
-{
-  if (Process->Win32Process == NULL)
-    return;
-
-  if (PspWin32ProcessCallback != NULL)
-    {
-      PspWin32ProcessCallback (Process, FALSE);
-    }
-
-  /* don't delete the W32PROCESS structure at this point, wait until the
-     EPROCESS structure is being freed */
-}
-
-
-VOID
-NTAPI
-PsTerminateWin32Thread (PETHREAD Thread)
-{
-  if (Thread->Tcb.Win32Thread != NULL)
-  {
-    if (PspWin32ThreadCallback != NULL)
-    {
-      PspWin32ThreadCallback (Thread, PsW32ThreadCalloutExit);
-    }
-
-    /* don't delete the W32THREAD structure at this point, wait until the
-       ETHREAD structure is being freed */
-  }
 }
 
 NTSTATUS

@@ -39,6 +39,40 @@ PspUnlockProcessSecurityShared(PEPROCESS Process)
     KeLeaveGuardedRegion();
 }
 
+VOID
+NTAPI
+PspDeleteProcessSecurity(IN PEPROCESS Process)
+{
+    /* Check if we have a token */
+    if (Process->Token.Object)
+    {
+        /* Deassign it */
+        SeDeassignPrimaryToken(Process);
+        Process->Token.Object = NULL;
+    }
+}
+
+VOID
+NTAPI
+PspDeleteThreadSecurity(IN PETHREAD Thread)
+{
+    /* Check if we have active impersonation info */
+    if (Thread->ActiveImpersonationInfo)
+    {
+        /* Dereference its token */
+        ObDereferenceObject(Thread->ImpersonationInfo->Token);
+    }
+
+    /* Check if we have impersonation info */
+    if (Thread->ImpersonationInfo)
+    {
+        /* Free it */
+        ExFreePool(Thread->ImpersonationInfo);
+        Thread->ActiveImpersonationInfo = FALSE;
+        Thread->ImpersonationInfo = NULL;
+    }
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*

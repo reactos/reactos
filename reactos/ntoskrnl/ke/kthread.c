@@ -22,7 +22,7 @@ extern EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
 LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static ULONG PriorityListMask = 0;
 ULONG IdleProcessorMask = 0;
-extern PETHREAD PspReaperList;
+extern LIST_ENTRY PspReaperListHead;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1383,34 +1383,56 @@ KeTerminateThread(IN KPRIORITY Increment)
 {
     KIRQL OldIrql;
     PKTHREAD Thread = KeGetCurrentThread();
+    PKPROCESS Process = Thread->ApcState.Process;
+    PLIST_ENTRY *ListHead;
+    PETHREAD Entry, SavedEntry;
+    PETHREAD *ThreadAddr;
+    DPRINT("Terminating\n");
 
     /* Lock the Dispatcher Database and the APC Queue */
-    DPRINT("Terminating\n");
+    ASSERT_IRQL(DISPATCH_LEVEL);
     OldIrql = KeAcquireDispatcherDatabaseLock();
+    ASSERT(Thread->SwapBusy == FALSE);
 
-    /* Remove the thread from the list */
-    RemoveEntryList(&Thread->ThreadListEntry);
+    /* Make sure we won't get Swapped */
+    Thread->SwapBusy = TRUE;
 
-    /* Insert into the Reaper List */
-    DPRINT("List: %p\n", PspReaperList);
-    ((PETHREAD)Thread)->ReaperLink = PspReaperList;
-    PspReaperList = (PETHREAD)Thread;
-    DPRINT("List: %p\n", PspReaperList);
+    /* Save the Kernel and User Times */
+    Process->KernelTime += Thread->KernelTime;
+    Process->UserTime += Thread->UserTime;
 
-    /* Check if it's active */
-    if (PspReaping == FALSE) {
+    /* Get the current entry and our Port */
+    Entry = (PETHREAD)PspReaperListHead.Flink;
+    ThreadAddr = &((PETHREAD)Thread)->ReaperLink;
 
-        /* Activate it. We use the internal function for speed, and use the Hyper Critical Queue */
-        PspReaping = TRUE;
-        DPRINT("Terminating\n");
+    /* Add it to the reaper's list */
+    do
+    {
+        /* Get the list head */
+        ListHead = &PspReaperListHead.Flink;
+
+        /* Link ourselves */
+        *ThreadAddr = Entry;
+        SavedEntry = Entry;
+
+        /* Now try to do the exchange */
+        Entry = InterlockedCompareExchangePointer(ListHead, ThreadAddr, Entry);
+
+        /* Break out if the change was succesful */
+    } while (Entry != SavedEntry);
+
+    /* Check if the reaper wasn't active */
+    if (!Entry)
+    {
+        /* Activate it as a work item, directly through its Queue */
         KiInsertQueue(&ExWorkerQueue[HyperCriticalWorkQueue].WorkerQueue,
                       &PspReaperWorkItem.List,
                       FALSE);
     }
 
     /* Handle Kernel Queues */
-    if (Thread->Queue) {
-
+    if (Thread->Queue)
+    {
         DPRINT("Waking Queue\n");
         RemoveEntryList(&Thread->QueueListEntry);
         KiWakeQueue(Thread->Queue);
@@ -1418,11 +1440,18 @@ KeTerminateThread(IN KPRIORITY Increment)
 
     /* Signal the thread */
     Thread->DispatcherHeader.SignalState = TRUE;
-    if (IsListEmpty(&Thread->DispatcherHeader.WaitListHead) != TRUE) {
-
+    if (IsListEmpty(&Thread->DispatcherHeader.WaitListHead) != TRUE)
+    {
         /* Satisfy waits */
         KiWaitTest((PVOID)Thread, Increment);
     }
+
+    /* Remove the thread from the list */
+    RemoveEntryList(&Thread->ThreadListEntry);
+
+    /* Set us as terminated, decrease the Process's stack count */
+    Thread->State = Terminated;
+    Process->StackCount--;
 
     /* Find a new Thread */
     KiDispatchThreadNoLock(Terminated);

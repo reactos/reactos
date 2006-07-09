@@ -13,6 +13,22 @@
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
+/* INTERNAL *****************************************************************/
+
+BOOLEAN
+NTAPI
+SeDetailedAuditingWithToken(IN PTOKEN Token)
+{
+    /* FIXME */
+    return FALSE;
+}
+
+VOID
+NTAPI
+SeAuditProcessExit(IN PEPROCESS Process)
+{
+    /* FIXME */
+}
 
 /* FUNCTIONS ****************************************************************/
 

@@ -16,6 +16,24 @@
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NTAPI
+LpcExitThread(IN PETHREAD Thread)
+{
+    /* Make sure that the Reply Chain is empty */
+    if (!IsListEmpty(&Thread->LpcReplyChain))
+    {
+        /* It's not, remove the entry */
+        RemoveEntryList(&Thread->LpcReplyChain);
+    }
+
+    /* Set the thread in exit mode */
+    Thread->LpcExitThreadCalled = TRUE;
+    Thread->LpcReplyMessageId = 0;
+
+    /* FIXME: Reply to the LpcReplyMessage */
+}
+
 /**********************************************************************
  * NAME
  *

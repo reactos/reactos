@@ -4,16 +4,14 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/job.c
  * PURPOSE:         Job Native Functions
- *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) (stubs)
  *                  Thomas Weidenmueller <w3seek@reactos.com>
  */
 
-/* Note: Jobs are only supported on Win2K+ */
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <internal/debug.h>
 
 #if defined (ALLOC_PRAGMA)
@@ -39,7 +37,8 @@ static GENERIC_MAPPING PiJobMapping =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
+VOID
+NTAPI
 PiDeleteJob ( PVOID ObjectBody )
 {
     PEJOB Job = (PEJOB)ObjectBody;
@@ -89,8 +88,7 @@ PsInitJobManagment ( VOID )
 
 NTSTATUS
 NTAPI
-PspAssignProcessToJob (
-    PEPROCESS Process,
+PspAssignProcessToJob(PEPROCESS Process,
     PEJOB Job)
 {
     DPRINT("PspAssignProcessToJob() is unimplemented!\n");
@@ -99,8 +97,7 @@ PspAssignProcessToJob (
 
 NTSTATUS
 NTAPI
-PspTerminateJobObject (
-    PEJOB Job,
+PspTerminateJobObject(PEJOB Job,
     KPROCESSOR_MODE AccessMode,
     NTSTATUS ExitStatus )
 {
@@ -108,6 +105,21 @@ PspTerminateJobObject (
     return STATUS_NOT_IMPLEMENTED;
 }
 
+VOID
+NTAPI
+PspRemoveProcessFromJob(IN PEPROCESS Process,
+                        IN PEJOB Job)
+{
+    /* FIXME */
+}
+
+VOID
+NTAPI
+PspExitProcessFromJob(IN PEJOB Job,
+                      IN PEPROCESS Process)
+{
+    /* FIXME */
+}
 
 /*
  * @unimplemented
@@ -547,8 +559,7 @@ PsGetJobUIRestrictionsClass ( PEJOB Job )
  */
 VOID
 STDCALL
-PsSetJobUIRestrictionsClass (
-    PEJOB Job,
+PsSetJobUIRestrictionsClass(PEJOB Job,
     ULONG UIRestrictionsClass)
 {
     ASSERT(Job);

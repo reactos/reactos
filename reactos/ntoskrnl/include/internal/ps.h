@@ -40,7 +40,7 @@ PiInitProcessManager(VOID);
 
 VOID
 NTAPI
-PiShutdownProcessManager(VOID);
+PspShutdownProcessManager(VOID);
 
 VOID
 NTAPI
@@ -172,6 +172,13 @@ PspAssignPrimaryToken(
     HANDLE TokenHandle
 );
 
+PETHREAD
+NTAPI
+PsGetNextProcessThread(
+    IN PEPROCESS Process,
+    IN PETHREAD Thread OPTIONAL
+);
+
 VOID
 STDCALL
 PsExitSpecialApc(
@@ -218,14 +225,15 @@ VOID
 STDCALL
 PspExitThread(NTSTATUS ExitStatus);
 
-VOID
+NTSTATUS
 STDCALL
 PspTerminateThreadByPointer(
     PETHREAD Thread,
-    NTSTATUS ExitStatus
+    NTSTATUS ExitStatus,
+    BOOLEAN bSelf
 );
 
-VOID
+NTSTATUS
 NTAPI
 PsUnfreezeOtherThread(PETHREAD Thread);
 
@@ -287,9 +295,10 @@ VOID
 NTAPI
 PsInitialiseSuspendImplementation(VOID);
 
-NTSTATUS
+VOID
 STDCALL
-PspExitProcess(PEPROCESS Process);
+PspExitProcess(BOOLEAN LastThread,
+               PEPROCESS Process);
 
 VOID
 STDCALL
@@ -375,5 +384,35 @@ PsLockProcess(
 VOID
 NTAPI
 PsUnlockProcess(PEPROCESS Process);
+
+VOID
+NTAPI
+PspRemoveProcessFromJob(
+    IN PEPROCESS Process,
+    IN PEJOB Job
+);
+
+NTSTATUS
+NTAPI
+PspDeleteLdt(IN PEPROCESS Process);
+
+NTSTATUS
+NTAPI
+PspDeleteVdmObjects(IN PEPROCESS Process);
+
+VOID
+NTAPI
+PspDeleteProcessSecurity(IN PEPROCESS Process);
+
+VOID
+NTAPI
+PspDeleteThreadSecurity(IN PETHREAD Thread);
+
+VOID
+NTAPI
+PspExitProcessFromJob(
+    IN PEJOB Job,
+    IN PEPROCESS Process
+);
 
 #endif /* __INCLUDE_INTERNAL_PS_H */
