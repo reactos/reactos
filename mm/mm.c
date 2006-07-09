@@ -45,7 +45,6 @@ MmReleaseMmInfo(PEPROCESS Process)
       switch (MemoryArea->Type)
       {
          case MEMORY_AREA_SECTION_VIEW:
-         case MEMORY_AREA_CACHE_SEGMENT:
              Address = (PVOID)MemoryArea->StartingAddress;
              MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
              MmUnmapViewOfSection((PEPROCESS)Process, Address);
@@ -341,6 +340,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_SECTION_VIEW:
+         case MEMORY_AREA_CACHE_SEGMENT:
             Status = MmNotPresentFaultSectionView(AddressSpace,
                                                   MemoryArea,
                                                   (PVOID)Address,
