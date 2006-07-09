@@ -630,13 +630,37 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG i;
     NTSTATUS Status;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceObjectExtension;
 
     ASSERT_IRQL(PASSIVE_LEVEL);
 
-    if (!(PhysicalDeviceObject->Flags & DO_BUS_ENUMERATED_DEVICE))
+    /* Parameters must pass three border of checks */
+    DeviceObjectExtension = (PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension;
+
+    /* 1st level: Presence of a Device Node */
+    if (DeviceObjectExtension->DeviceNode == NULL)
     {
-        DPRINT("PhysicalDeviceObject 0x%p is not a valid Pdo\n", PhysicalDeviceObject);
-        return STATUS_INVALID_PARAMETER_1;
+        DPRINT("PhysicalDeviceObject 0x%p doesn't have a DeviceNode\n", PhysicalDeviceObject);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* 2nd level: Presence of an non-zero length InstancePath */
+    if (DeviceObjectExtension->DeviceNode->InstancePath.Length == 0)
+    {
+        DPRINT("PhysicalDeviceObject 0x%p's DOE has zero-length InstancePath\n", PhysicalDeviceObject);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* 3rd level: Optional, based on WDK documentation */
+    if (ReferenceString != NULL)
+    {
+        /* Reference string must not contain path-separator symbols */
+        for (i = 0; i < ReferenceString->Length / sizeof(WCHAR); i++)
+        {
+            if ((ReferenceString->Buffer[i] == '\\') ||
+                (ReferenceString->Buffer[i] == '/'))
+                return STATUS_INVALID_DEVICE_REQUEST;
+        }
     }
 
     Status = RtlStringFromGUID(InterfaceClassGuid, &GuidString);
