@@ -289,7 +289,7 @@ SetLocalTimeZone(HWND hwnd)
     while (i < dwIndex)
     {
         if (Entry == NULL)
-        return;
+            return;
 
         i++;
         Entry = Entry->Next;
@@ -328,6 +328,9 @@ GetAutoDaylightInfo(HWND hwnd)
                       &hKey))
     return;
 
+    /* if the call fails (non zero), the reg value isn't available,
+     * which means it shouldn't be disabled, so we should check the button.  
+     */
     if (RegQueryValueExW(hKey,
                          L"DisableAutoDaylightTimeSet",
                          NULL,

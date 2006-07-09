@@ -216,7 +216,7 @@ GetNTPServerAddress(LPSTR* lpAddress)
     }
 
     RegCloseKey(hKey);
-    HeapFree(GetProcessHeap,
+    HeapFree(GetProcessHeap(),
              0,
              buf);
 
@@ -225,8 +225,8 @@ GetNTPServerAddress(LPSTR* lpAddress)
 fail:
     GetError();
     if (hKey) RegCloseKey(hKey);
-    HeapFree(GetProcessHeap, 0, buf);
-    HeapFree(GetProcessHeap, 0, *lpAddress);
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, *lpAddress);
     return FALSE;
 
 }
@@ -327,10 +327,52 @@ EnableDialogText(HWND hwnd)
 
 
 static VOID
+GetSyncSetting(HWND hwnd)
+{
+    HKEY hKey;
+    HWND hCheck;
+    LONG Ret;
+    WCHAR Data[8];
+    DWORD Size;
+
+    Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DateTime\\Parameters",
+                        0,
+                        KEY_QUERY_VALUE,
+                        &hKey);
+    if (Ret != ERROR_SUCCESS)
+    {
+        GetError();
+        return;
+    }
+
+    Size = sizeof(Data);
+    Ret = RegQueryValueExW(hKey,
+                           L"Type",
+                           NULL,
+                           NULL,
+                           (LPBYTE)Data,
+                           &Size);
+    if (Ret != ERROR_SUCCESS)
+    {
+        GetError();
+    }
+
+    if (lstrcmp(Data, L"NTP") == 0)
+    {
+        hCheck = GetDlgItem(hwnd, IDC_AUTOSYNC);
+        SendMessageW(hCheck, BM_SETCHECK, 0, 0);
+    }
+
+    RegCloseKey(hKey);
+}
+
+
+static VOID
 InitialiseDialog(HWND hwnd)
 {
-    //check registry if button should be checked
-    //set button
+    GetSyncSetting(hwnd);
+
     EnableDialogText(hwnd);
 
     CreateNTPServerList(hwnd);

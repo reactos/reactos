@@ -237,11 +237,11 @@ MonthCalReload(IN PMONTHCALWND infoPtr)
     TCHAR szBuf[64];
     UINT i;
 
-    infoPtr->UIState = (DWORD) SendMessage(GetAncestor(infoPtr->hSelf,
-                                               GA_PARENT),
-                                   WM_QUERYUISTATE,
-                                   0,
-                                   0);
+    infoPtr->UIState = (DWORD)SendMessage(GetAncestor(infoPtr->hSelf,
+                                                      GA_PARENT),
+                                           WM_QUERYUISTATE,
+                                           0,
+                                           0);
 
     /* cache the configuration */
     infoPtr->FirstDayOfWeek = MonthCalFirstDayOfWeek();
@@ -631,8 +631,8 @@ MonthCalChangeFont(IN PMONTHCALWND infoPtr,
 
 static WORD
 MonthCalPtToDay(IN PMONTHCALWND infoPtr,
-                IN SHORT x,
-                IN SHORT y)
+                IN INT x,
+                IN INT y)
 {
     WORD Ret = 0;
 
@@ -1017,7 +1017,7 @@ MonthCalWndProc(IN HWND hwnd,
 
             SetWindowLongPtr(hwnd,
                              0,
-                             (DWORD_PTR)infoPtr);
+                             (LONG_PTR)infoPtr);
 
             ZeroMemory(infoPtr,
                        sizeof(MONTHCALWND));
