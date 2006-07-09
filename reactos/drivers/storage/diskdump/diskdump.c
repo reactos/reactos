@@ -28,7 +28,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntddk.h>
-#include <ntifs.h>
 #include <scsi.h>
 #include <ntdddisk.h>
 #include <ntddscsi.h>
