@@ -1,7 +1,7 @@
 LIBRARY intl.cpl
 
 EXPORTS
-CPlApplet
-LocalePageProc
+CPlApplet@16
+LocalePageProc@16
 
 ; EOF

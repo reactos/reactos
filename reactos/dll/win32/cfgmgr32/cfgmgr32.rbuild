@@ -3,6 +3,5 @@
 	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-lgcc</linkerflag>
 	<importlibrary definition="cfgmgr32.def" />
-	<library>setupapi</library>
 	<file>cfgmgr32.rc</file>
 </module>

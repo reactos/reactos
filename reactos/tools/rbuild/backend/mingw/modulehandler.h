@@ -278,7 +278,7 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D_SEH_NO_NATIVE_NLG"; }
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles"; }
+	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateKernelModeDLLModuleTarget ();
 };
@@ -291,7 +291,7 @@ public:
 	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ();
 	std::string TypeSpecificCFlags() { return "-D__NTDRIVER__ -D_SEH_NO_NATIVE_NLG"; }
-	std::string TypeSpecificLinkerFlags() { return "-nostartfiles"; }
+	std::string TypeSpecificLinkerFlags() { return "-nostartfiles -nostdlib"; }
 private:
 	void GenerateKernelModeDriverModuleTarget ();
 };

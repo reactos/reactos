@@ -41,9 +41,6 @@ KeybSpeedProc(IN HWND hwndDlg,
 	      IN WPARAM wParam,
 	      IN LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
     switch(uMsg)
     {
         case WM_INITDIALOG:
@@ -63,9 +60,6 @@ KeybHardwareProc(IN HWND hwndDlg,
 {
     GUID Guids[1];
     Guids[0] = GUID_DEVCLASS_KEYBOARD;
-
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
 
     switch(uMsg)
     {
@@ -92,11 +86,6 @@ KeyboardApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
   PROPSHEETPAGE psp[2];
   PROPSHEETHEADER psh;
   TCHAR Caption[256];
-
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(wParam);
-  UNREFERENCED_PARAMETER(uMsg);
-  UNREFERENCED_PARAMETER(hwnd);
 
   LoadString(hApplet, IDS_CPLNAME_2, Caption, sizeof(Caption) / sizeof(TCHAR));
 

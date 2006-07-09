@@ -49,10 +49,10 @@ LONG APIENTRY DisplayApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
     
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(uMsg);
-    UNREFERENCED_PARAMETER(hwnd);
+    UNREFERENCED_PARAMETER(lParam)
+    UNREFERENCED_PARAMETER(wParam)
+    UNREFERENCED_PARAMETER(uMsg)
+    UNREFERENCED_PARAMETER(hwnd)
 
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
     
@@ -114,7 +114,6 @@ LONG CALLBACK CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 {
-    UNREFERENCED_PARAMETER(lpvReserved);
     switch(dwReason)
     {
         case DLL_PROCESS_ATTACH:

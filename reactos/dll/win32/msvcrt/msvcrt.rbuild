@@ -1,5 +1,7 @@
 <module name="msvcrt" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT}" mangledsymbols="true" installbase="system32" installname="msvcrt.dll">
 	<linkerflag>-nostartfiles</linkerflag>
+	<linkerflag>--enable-stdcall-fixup</linkerflag>
+	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-lgcc</linkerflag>
 	<importlibrary definition="msvcrt.def" />
 	<include base="msvcrt">.</include>

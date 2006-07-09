@@ -106,8 +106,6 @@ DllMain(HINSTANCE hinstDLL,
 	LPVOID lpReserved)
 {
   INITCOMMONCONTROLSEX InitControls;
-  UNREFERENCED_PARAMETER(lpReserved);
-
   switch(dwReason)
   {
     case DLL_PROCESS_ATTACH:

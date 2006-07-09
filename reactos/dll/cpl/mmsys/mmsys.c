@@ -67,15 +67,14 @@ HardwareDlgProc(HWND hwndDlg,
 	        WPARAM wParam,
 	        LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
     switch(uMsg)
     {
         case WM_INITDIALOG:
         {
-            GUID Guids[2];
-            Guids[0] = GUID_DEVCLASS_CDROM;
-            Guids[1] = GUID_DEVCLASS_MEDIA;
+            GUID Guids[] = {
+                GUID_DEVCLASS_CDROM,
+                GUID_DEVCLASS_MEDIA,
+            };
 
             /* create the hardware page */
             DeviceCreateHardwarePageEx(hwndDlg,
@@ -98,11 +97,6 @@ MmSysApplet(HWND hwnd,
     PROPSHEETPAGE psp[1];
     PROPSHEETHEADER psh = {0};
     TCHAR Caption[256];
-
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(uMsg);
-    UNREFERENCED_PARAMETER(hwnd);
 
     LoadString(hApplet,
                IDS_CPLNAME,
@@ -188,7 +182,6 @@ DllMain(HINSTANCE hinstDLL,
 	DWORD dwReason,
 	LPVOID lpReserved)
 {
-    UNREFERENCED_PARAMETER(lpReserved);
     switch(dwReason)
     {
         case DLL_PROCESS_ATTACH:

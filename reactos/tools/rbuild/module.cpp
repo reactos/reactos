@@ -835,7 +835,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case NativeCUI:
 			return "NtProcessStartup@4";
 		case Win32DLL:
-			return "DllMainCRTStartup@12";
+			return "DllMain@12";
 		case Win32CUI:
 		case Test:
 			if ( isUnicode )

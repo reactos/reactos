@@ -1,8 +1,8 @@
 LIBRARY cards.dll
 EXPORTS
-WEP
-cdtAnimate
-cdtDraw
-cdtDrawExt
-cdtInit
-cdtTerm
+WEP@4
+cdtAnimate@20
+cdtDraw@24
+cdtDrawExt@32
+cdtInit@8
+cdtTerm@0
