@@ -18,6 +18,14 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <windows.h>
+#include <cchannel.h>
+
+#if 0
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,14 +40,18 @@
 #include <limits.h>		/* PATH_MAX */
 
 /* FIXME FIXME */
+#include <windows.h>
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+/* FIXME FIXME */
+#endif
+
+// TODO
 #include <openssl/rc4.h>
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 #include <openssl/bn.h>
 #include <openssl/x509v3.h>
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-/* FIXME FIXME */
 
 #define VERSION "1.4.1"
 
@@ -128,6 +140,7 @@ typedef struct rdpclient RDPCLIENT;
 #include "types.h"
 #include "orders.h"
 
+#if 0
 /* Used to store incoming io request, until they are ready to be completed */
 /* using a linked list ensures that they are processed in the right order, */
 /* if multiple ios are being done on the same fd */
@@ -141,6 +154,7 @@ struct async_iorequest
 
 	struct async_iorequest *next;	/* next element in list */
 };
+#endif
 
 struct bmpcache_entry
 {
@@ -149,6 +163,7 @@ struct bmpcache_entry
 	sint16 next;
 };
 
+#if 0
 typedef struct _seamless_group
 {
 	Window wnd;
@@ -174,32 +189,24 @@ typedef struct _seamless_window
 
 	struct _seamless_window *next;
 } seamless_window;
+#endif
 
 /* holds the whole state of the RDP client */
 struct rdpclient
 {
-	/* Public fields */
 	/* channels.c */
 #define MAX_CHANNELS			6
 	VCHANNEL channels[MAX_CHANNELS];
 	unsigned int num_channels;
 
-	/* disk.c */
-#define	MAX_OPEN_FILES	0x100
-	FILEINFO fileinfo[MAX_OPEN_FILES];
-	BOOL notify_stamp;
-
-	/* ewmhints.c */
-	Atom net_wm_state_atom, net_wm_desktop_atom;
-
 	/* licence.c */
 	BOOL licence_issued;
 
-	/* mppc.c */
-	RDPCOMP mppc_dict;
-
 	/* mcs.c */
 	uint16 mcs_userid;
+
+	/* mppc.c */
+	RDPCOMP mppc_dict;
 
 	/* pstcache.c */
 	int pstcache_fd[8];
@@ -210,7 +217,7 @@ struct rdpclient
 	char title[64];
 	char username[64];
 	char hostname[16];
-	char keymapname[PATH_MAX];
+	char keymapname[MAX_PATH];
 	unsigned int keylayout;
 	int keyboard_type;
 	int keyboard_subtype;
@@ -259,34 +266,9 @@ struct rdpclient
 	char redirect_cookie[128];
 	uint32 redirect_flags;
 
-#ifdef WITH_RDPSND
-	BOOL rdpsnd_enabled;
-#endif
-
-#ifdef HAVE_ICONV
-	char codepage[16];
-#endif
-
 	/* rdp.c */
 	uint8 *next_packet;
 	uint32 rdp_shareid;
-
-	/* rdpdr.c */
-	/* If select() times out, the request for the device with handle min_timeout_fd is aborted */
-	NTHANDLE min_timeout_fd;
-	uint32 num_devices;
-
-	/* Table with information about rdpdr devices */
-	RDPDR_DEVICE rdpdr_device[RDPDR_MAX_DEVICES];
-	char *rdpdr_clientname;
-
-	struct async_iorequest *iorequest;
-
-	/* rdpsndXXX.c */
-#ifdef WITH_RDPSND
-	int dsp_fd;
-	BOOL dsp_busy;
-#endif
 
 	/* secure.c */
 	uint16 server_rdp_version;
@@ -294,15 +276,6 @@ struct rdpclient
 	/* tcp.c */
 	int tcp_port_rdp;
 
-	/* xwin.c */
-	Display *display;
-	BOOL enable_compose;
-	BOOL Unobscured;		/* used for screenblt */
-	Time last_gesturetime;
-	Window wnd;
-
-	/* Private fields */
-	/* FIXME: it's not pretty to spill private fields this way. Use opaque pointers */
 	/* cache.c */
 	struct cache_
 	{
@@ -319,23 +292,6 @@ struct rdpclient
 		HCURSOR cursorcache[0x20];
 	}
 	cache;
-
-	/* cliprdr.c */
-	struct cliprdr_
-	{
-		VCHANNEL *channel;
-		uint8 *last_formats;
-		uint32 last_formats_length;
-	}
-	cliprdr;
-
-	struct ewmhints_
-	{
-		Atom state_maximized_vert_atom, state_maximized_horz_atom,
-			state_hidden_atom, name_atom, utf8_string_atom,
-			state_skip_taskbar_atom, state_skip_pager_atom, state_modal_atom;
-	}
-	ewmhints;
 
 	/* licence.c */
 	struct licence_
@@ -364,36 +320,6 @@ struct rdpclient
 #endif
 	}
 	rdp;
-
-	/* rdpdr.c */
-	struct rdpdr_
-	{
-		VCHANNEL *channel;
-	}
-	rdpdr;
-
-	/* rdpsnd.c */
-	struct rdpsnd_
-	{
-		VCHANNEL *channel;
-
-		BOOL device_open;
-
-#define MAX_FORMATS		10
-		WAVEFORMATEX formats[MAX_FORMATS];
-
-		unsigned int format_count;
-		unsigned int current_format;
-	}
-	rdpsnd;
-
-	/* seamless.c */
-	struct seamless_
-	{
-		VCHANNEL *channel;
-		unsigned int serial;
-	}
-	seamless;
 
 	/* secure.c */
 	struct secure_
@@ -425,6 +351,91 @@ struct rdpclient
 		struct stream out;
 	}
 	tcp;
+
+#if 0
+	/* Public fields */
+	/* disk.c */
+#define	MAX_OPEN_FILES	0x100
+	FILEINFO fileinfo[MAX_OPEN_FILES];
+	BOOL notify_stamp;
+
+	/* ewmhints.c */
+	Atom net_wm_state_atom, net_wm_desktop_atom;
+
+	/* rdpdr.c */
+	/* If select() times out, the request for the device with handle min_timeout_fd is aborted */
+	NTHANDLE min_timeout_fd;
+	uint32 num_devices;
+
+	/* Table with information about rdpdr devices */
+	RDPDR_DEVICE rdpdr_device[RDPDR_MAX_DEVICES];
+	char *rdpdr_clientname;
+
+	struct async_iorequest *iorequest;
+
+	/* rdpsndXXX.c */
+#ifdef WITH_RDPSND
+	int dsp_fd;
+	BOOL dsp_busy;
+#endif
+
+#if 0
+	/* xwin.c */
+	Display *display;
+	BOOL enable_compose;
+	BOOL Unobscured;		/* used for screenblt */
+	Time last_gesturetime;
+	Window wnd;
+#endif
+
+	/* Private fields */
+	/* FIXME: it's not pretty to spill private fields this way. Use opaque pointers */
+	/* cliprdr.c */
+	struct cliprdr_
+	{
+		VCHANNEL *channel;
+		uint8 *last_formats;
+		uint32 last_formats_length;
+	}
+	cliprdr;
+
+	struct ewmhints_
+	{
+		Atom state_maximized_vert_atom, state_maximized_horz_atom,
+			state_hidden_atom, name_atom, utf8_string_atom,
+			state_skip_taskbar_atom, state_skip_pager_atom, state_modal_atom;
+	}
+	ewmhints;
+
+	/* rdpdr.c */
+	struct rdpdr_
+	{
+		VCHANNEL *channel;
+	}
+	rdpdr;
+
+	/* rdpsnd.c */
+	struct rdpsnd_
+	{
+		VCHANNEL *channel;
+
+		BOOL device_open;
+
+#define MAX_FORMATS		10
+		WAVEFORMATEX formats[MAX_FORMATS];
+
+		unsigned int format_count;
+		unsigned int current_format;
+	}
+	rdpsnd;
+
+	/* seamless.c */
+	struct seamless_
+	{
+		VCHANNEL *channel;
+		unsigned int serial;
+	}
+	seamless;
 
 	/* xclip.c */
 	struct xclip_
@@ -520,6 +531,7 @@ struct rdpclient
 	}
 	xkeymap;
 
+#if 0
 	/* xwin.c */
 	struct xwin_
 	{
@@ -565,9 +577,9 @@ struct rdpclient
 		   binary format. If so, we can avoid an expensive translation.
 		   Note that this can be true when compatible_arch is false,
 		   e.g.:
-		   
+
 			 RDP(LE) <-> host(BE) <-> X-Server(LE)
-		     
+
 		   ('host' is the machine running rdesktop; the host simply memcpy's
 			so its endianess doesn't matter)
 		 */
@@ -595,6 +607,8 @@ struct rdpclient
 		XErrorHandler old_error_handler;
 	}
 	xwin;
+#endif
+#endif
 };
 
 #ifndef MAKE_PROTO

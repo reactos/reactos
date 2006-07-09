@@ -19,7 +19,7 @@
 */
 
 #include "rdesktop.h"
-#include <openssl/rc4.h>
+#include <openssl/rc4.h> // TODO: remove dependency on OpenSSL
 
 /* Generate a session key and RC4 keys, given client and server randoms */
 static void

@@ -2,7 +2,7 @@
    rdesktop: A Remote Desktop Protocol client.
    Miscellaneous protocol constants
    Copyright (C) Matthew Chapman 1999-2005
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -311,9 +311,10 @@ enum RDP_INPUT_DEVICE
 #define MASK_HAS_BITS(var, mask) ((var & mask)>0)
 #define MASK_CHANGE_BIT(var, mask, active) (var = ((var & ~mask) | (active ? mask : 0)))
 
-/* Clipboard constants, "borrowed" from GCC system headers in 
+/* Clipboard constants, "borrowed" from GCC system headers in
    the w32 cross compiler */
 
+#if 0
 #define CF_TEXT         1
 #define CF_BITMAP       2
 #define CF_METAFILEPICT 3
@@ -377,7 +378,6 @@ enum RDP_INPUT_DEVICE
 #define STATUS_NOTIFY_ENUM_DIR          0xc000010c
 #define STATUS_CANCELLED                0xc0000120
 
-
 /* RDPDR constants */
 #define RDPDR_MAX_DEVICES               0x10
 #define DEVICE_TYPE_SERIAL              0x01
@@ -413,7 +413,9 @@ enum RDP_INPUT_DEVICE
 #define exDiscReasonLicenseErrClientEncryption		0x0108
 #define exDiscReasonLicenseCantUpgradeLicense		0x0109
 #define exDiscReasonLicenseNoRemoteConnections		0x010a
+#endif
 
+#if 0
 /* SeamlessRDP constants */
 #define SEAMLESSRDP_NOTYETMAPPED -1
 #define SEAMLESSRDP_NORMAL 0
@@ -425,3 +427,4 @@ enum RDP_INPUT_DEVICE
 
 #define SEAMLESSRDP_HELLO_RECONNECT	0x0001
 #define SEAMLESSRDP_HELLO_HIDDEN	0x0002
+#endif

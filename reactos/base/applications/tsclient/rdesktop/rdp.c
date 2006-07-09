@@ -20,7 +20,7 @@
 
 #include <time.h>
 #include <errno.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include "rdesktop.h"
 
 #ifdef HAVE_ICONV
@@ -932,7 +932,7 @@ process_demand_active(RDPCLIENT * This, STREAM s)
 	rdp_recv(This, &type);	/* RDP_CTL_COOPERATE */
 	rdp_recv(This, &type);	/* RDP_CTL_GRANT_CONTROL */
 	rdp_send_input(This, 0, RDP_INPUT_SYNCHRONIZE, 0,
-		       This->numlock_sync ? ui_get_numlock_state(This, read_keyboard_state(This)) : 0, 0);
+		       /*This->numlock_sync ? ui_get_numlock_state(This, read_keyboard_state(This)) :*/ 0, 0); // TODO: keyboard mess
 
 	if (This->use_rdp5)
 	{
@@ -968,7 +968,7 @@ process_colour_pointer_pdu(RDPCLIENT * This, STREAM s)
 	in_uint8p(s, mask, masklen);
 	cursor = ui_create_cursor(This, x, y, width, height, mask, data);
 	ui_set_cursor(This, cursor);
-	cache_put_cursor(This, cache_idx, cursor);
+	// cache_put_cursor(This, cache_idx, cursor); // TODO
 }
 
 /* Process a cached pointer PDU */
@@ -978,7 +978,7 @@ process_cached_pointer_pdu(RDPCLIENT * This, STREAM s)
 	uint16 cache_idx;
 
 	in_uint16_le(s, cache_idx);
-	ui_set_cursor(This, cache_get_cursor(This, cache_idx));
+	ui_set_cursor(This, /*cache_get_cursor(This, cache_idx)*/ NULL); // TODO
 }
 
 /* Process a system pointer PDU */

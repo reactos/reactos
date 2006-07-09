@@ -19,7 +19,9 @@
 */
 
 #include "rdesktop.h"
+#include <string.h>
 
+// TODO: remove dependency on OpenSSL
 #include <openssl/rc4.h>
 #include <openssl/md5.h>
 #include <openssl/sha.h>

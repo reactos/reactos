@@ -18,6 +18,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#if 0 // FIXME: header mess
 #include <unistd.h>		/* select read write close */
 #include <sys/socket.h>		/* socket connect setsockopt */
 #include <sys/time.h>		/* timeval */
@@ -26,7 +27,12 @@
 #include <netinet/tcp.h>	/* TCP_NODELAY */
 #include <arpa/inet.h>		/* inet_addr */
 #include <errno.h>		/* errno */
+#endif
+
 #include "rdesktop.h"
+#include <winsock2.h>
+
+typedef int socklen_t;
 
 #ifndef INADDR_NONE
 #define INADDR_NONE ((unsigned long) -1)
@@ -59,7 +65,7 @@ tcp_send(RDPCLIENT * This, STREAM s)
 		sent = send(This->tcp.sock, s->data + total, length - total, 0);
 		if (sent <= 0)
 		{
-			error("send: %s\n", strerror(errno));
+			// error("send: %s\n", strerror(errno)); // EOF
 			return;
 		}
 
@@ -109,7 +115,7 @@ tcp_recv(RDPCLIENT * This, STREAM s, uint32 length)
 		rcvd = recv(This->tcp.sock, s->end, length, 0);
 		if (rcvd < 0)
 		{
-			error("recv: %s\n", strerror(errno));
+			// error("recv: %s\n", strerror(errno)); // EOF
 			return NULL;
 		}
 		else if (rcvd == 0)
@@ -188,7 +194,7 @@ tcp_connect(RDPCLIENT * This, char *server)
 
 	if ((This->tcp.sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
-		error("socket: %s\n", strerror(errno));
+		// error("socket: %s\n", strerror(errno)); // EOF
 		return False;
 	}
 
@@ -197,7 +203,7 @@ tcp_connect(RDPCLIENT * This, char *server)
 
 	if (connect(This->tcp.sock, (struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0)
 	{
-		error("connect: %s\n", strerror(errno));
+		// error("connect: %s\n", strerror(errno)); // EOF
 		close(This->tcp.sock);
 		return False;
 	}

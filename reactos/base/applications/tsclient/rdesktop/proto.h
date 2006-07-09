@@ -56,6 +56,7 @@ void cliprdr_send_data_request(RDPCLIENT * This, uint32 format);
 void cliprdr_send_data(RDPCLIENT * This, uint8 * data, uint32 length);
 void cliprdr_set_mode(RDPCLIENT * This, const char *optarg);
 BOOL cliprdr_init(RDPCLIENT * This);
+#if 0
 /* disk.c */
 int disk_enum_devices(RDPCLIENT * This, uint32 * id, char *optarg);
 NTSTATUS disk_query_information(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, STREAM out);
@@ -64,6 +65,7 @@ NTSTATUS disk_check_notify(RDPCLIENT * This, NTHANDLE handle);
 NTSTATUS disk_create_notify(RDPCLIENT * This, NTHANDLE handle, uint32 info_class);
 NTSTATUS disk_query_volume_information(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, STREAM out);
 NTSTATUS disk_query_directory(RDPCLIENT * This, NTHANDLE handle, uint32 info_class, char *pattern, STREAM out);
+#endif
 /* mppc.c */
 int mppc_expand(RDPCLIENT * This, uint8 * data, uint32 clen, uint8 ctype, uint32 * roff, uint32 * rlen);
 /* ewmhints.c */
@@ -153,6 +155,7 @@ BOOL rdp_reconnect(RDPCLIENT * This, char *server, uint32 flags, char *domain, c
 		   char *directory, char *cookie);
 void rdp_reset_state(RDPCLIENT * This);
 void rdp_disconnect(RDPCLIENT * This);
+#if 0
 /* rdpdr.c */
 int get_device_index(RDPCLIENT * This, NTHANDLE handle);
 void convert_to_unix_filename(char *filename);
@@ -162,6 +165,8 @@ struct async_iorequest *rdpdr_remove_iorequest(RDPCLIENT * This, struct async_io
 					       struct async_iorequest *iorq);
 void rdpdr_check_fds(RDPCLIENT * This, fd_set * rfds, fd_set * wfds, BOOL timed_out);
 BOOL rdpdr_abort_io(RDPCLIENT * This, uint32 fd, uint32 major, NTSTATUS status);
+#endif
+#if 0
 /* rdpsnd.c */
 void rdpsnd_send_completion(RDPCLIENT * This, uint16 tick, uint8 packet_index);
 BOOL rdpsnd_init(RDPCLIENT * This);
@@ -173,6 +178,7 @@ BOOL wave_out_set_format(WAVEFORMATEX * pwfx);
 void wave_out_volume(uint16 left, uint16 right);
 void wave_out_write(STREAM s, uint16 tick, uint8 index);
 void wave_out_play(void);
+#endif
 /* secure.c */
 void sec_hash_48(uint8 * out, uint8 * in, uint8 * salt1, uint8 * salt2, uint8 salt);
 void sec_hash_16(uint8 * out, uint8 * in, uint8 * salt1, uint8 * salt2);
@@ -189,10 +195,12 @@ BOOL sec_connect(RDPCLIENT * This, char *server, char *username);
 BOOL sec_reconnect(RDPCLIENT * This, char *server);
 void sec_disconnect(RDPCLIENT * This);
 void sec_reset_state(RDPCLIENT * This);
+#if 0
 /* serial.c */
 int serial_enum_devices(RDPCLIENT * This, uint32 * id, char *optarg);
 BOOL serial_get_event(RDPCLIENT * This, NTHANDLE handle, uint32 * result);
 BOOL serial_get_timeout(RDPCLIENT * This, NTHANDLE handle, uint32 length, uint32 * timeout, uint32 * itv_timeout);
+#endif
 /* tcp.c */
 STREAM tcp_init(RDPCLIENT * This, uint32 maxlen);
 void tcp_send(RDPCLIENT * This, STREAM s);
@@ -210,6 +218,7 @@ void ui_clip_sync(RDPCLIENT * This);
 void ui_clip_set_mode(RDPCLIENT * This, const char *optarg);
 void xclip_init(RDPCLIENT * This);
 void xclip_deinit(RDPCLIENT * This);
+#if 0
 /* xkeymap.c */
 BOOL xkeymap_from_locale(RDPCLIENT * This, const char *locale);
 FILE *xkeymap_open(const char *filename);
@@ -227,6 +236,7 @@ unsigned int read_keyboard_state(RDPCLIENT * This);
 uint16 ui_get_numlock_state(RDPCLIENT * This, unsigned int state);
 void reset_modifier_keys(RDPCLIENT * This);
 void rdp_send_scancode(RDPCLIENT * This, uint32 time, uint16 flags, uint8 scancode);
+#endif
 /* xwin.c */
 BOOL get_key_state(RDPCLIENT * This, unsigned int state, uint32 keysym);
 BOOL ui_init(RDPCLIENT * This);

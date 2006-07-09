@@ -2,7 +2,7 @@
    rdesktop: A Remote Desktop Protocol client.
    Common data types
    Copyright (C) Matthew Chapman 1999-2005
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -12,13 +12,15 @@
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#if 0
 typedef int BOOL;
+#endif
 
 #ifndef True
 #define True  (1)
@@ -32,17 +34,25 @@ typedef signed short sint16;
 typedef unsigned int uint32;
 typedef signed int sint32;
 
+// TODO: detect Win32, avoid this mess
+#if 0
 typedef void *HBITMAP;
-typedef void *HGLYPH;
-typedef void *HCOLOURMAP;
 typedef void *HCURSOR;
+#endif
+typedef void *HGLYPH;
 
+// TODO: nuke, use HPALETTE
+typedef void *HCOLOURMAP;
+
+#if 0
 typedef struct _POINT
 {
 	sint16 x, y;
 }
 POINT;
+#endif
 
+// TODO: nuke, use COLORREF
 typedef struct _COLOURENTRY
 {
 	uint8 red;
@@ -52,6 +62,7 @@ typedef struct _COLOURENTRY
 }
 COLOURENTRY;
 
+// TODO: nuke, use LOGPALETTE
 typedef struct _COLOURMAP
 {
 	uint16 ncolours;
@@ -60,6 +71,7 @@ typedef struct _COLOURMAP
 }
 COLOURMAP;
 
+// TODO: nuke, use RECT
 typedef struct _BOUNDS
 {
 	sint16 left;
@@ -70,7 +82,8 @@ typedef struct _BOUNDS
 }
 BOUNDS;
 
-typedef struct _PEN
+// TODO: nuke, use LOGPEN
+typedef struct _PEN 
 {
 	uint8 style;
 	uint8 width;
@@ -79,6 +92,7 @@ typedef struct _PEN
 }
 PEN;
 
+// TODO: nuke, use LOGBRUSH + pattern[8]
 typedef struct _BRUSH
 {
 	uint8 xorigin;
@@ -119,6 +133,7 @@ typedef struct _key_translation
 }
 key_translation;
 
+// TODO: semi-nuke, wrap CHANNEL_DEF
 typedef struct _VCHANNEL
 {
 	uint16 mcs_id;
@@ -145,6 +160,7 @@ CELLHEADER;
 #define MAX_CBSIZE 256
 
 /* RDPSND */
+#if 0
 typedef struct
 {
 	uint16 wFormatTag;
@@ -156,7 +172,7 @@ typedef struct
 	uint16 cbSize;
 	uint8 cb[MAX_CBSIZE];
 } WAVEFORMATEX;
-
+#endif
 typedef struct _RDPCOMP
 {
 	uint32 roff;
@@ -165,6 +181,7 @@ typedef struct _RDPCOMP
 }
 RDPCOMP;
 
+#if 0
 /* RDPDR */
 typedef uint32 NTSTATUS;
 typedef uint32 NTHANDLE;
@@ -264,5 +281,6 @@ typedef struct fileinfo
 	uint32 info_class;
 }
 FILEINFO;
+#endif
 
 typedef BOOL(*str_handle_lines_t) (RDPCLIENT * This, const char *line, void *data);
