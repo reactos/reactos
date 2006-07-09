@@ -172,6 +172,7 @@
 			<file>deviface.c</file>
 			<file>disk.c</file>
 			<file>driver.c</file>
+			<file>drvrlist.c</file>
 			<file>error.c</file>
 			<file>event.c</file>
             <file>file.c</file>
