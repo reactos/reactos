@@ -23,6 +23,9 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
+#if !defined(_NTIFS_)
+typedef PVOID PFS_FILTER_CALLBACKS;
+#endif
 
 #ifndef NTOS_MODE_USER
 
