@@ -3427,7 +3427,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
                            ObjectAttributes,
                            ExGetPreviousMode(),
                            NULL,
-                           sizeof(SECTION_OBJECT),
+                           sizeof(ROS_SECTION_OBJECT),
                            0,
                            0,
                            (PVOID*)(PVOID)&Section);
