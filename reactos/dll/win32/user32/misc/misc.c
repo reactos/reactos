@@ -146,3 +146,125 @@ GetW32ProcessInfo(VOID)
 
     return pi;
 }
+
+
+/*
+ * GetUserObjectSecurity
+ *
+ * Retrieves security information for user object specified
+ * with handle 'hObject'. Descriptor returned in self-relative
+ * format.
+ *
+ * Arguments:
+ *  1) hObject - handle to an object to retrieve information for
+ *  2) pSecurityInfo - type of information to retrieve
+ *  3) pSecurityDescriptor - buffer which receives descriptor
+ *  4) dwLength - size, in bytes, of buffer 'pSecurityDescriptor'
+ *  5) pdwLengthNeeded - reseives actual size of descriptor
+ *
+ * Return Vaules:
+ *  TRUE on success
+ *  FALSE on failure, call GetLastError() for more information
+ */
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetUserObjectSecurity(
+    IN HANDLE hObject,
+    IN PSECURITY_INFORMATION pSecurityInfo,
+    OUT PSECURITY_DESCRIPTOR pSecurityDescriptor,
+    IN DWORD dwLength,
+    OUT PDWORD pdwLengthNeeded
+)
+{
+DWORD dwWin32Error;
+NTSTATUS Status;
+
+
+    Status = NtQuerySecurityObject(
+        hObject,            // Object Handle
+        *pSecurityInfo,     // Security Information
+        pSecurityDescriptor,// Security Descriptor
+        dwLength,           // Buffer Length
+        pdwLengthNeeded     // Actual Length
+    );
+
+    if ( ! NT_SUCCESS( Status ) ) {
+        dwWin32Error = RtlNtStatusToDosError( Status );
+        NtCurrentTeb()->LastErrorValue = dwWin32Error;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * SetUserObjectSecurity
+ *
+ * Sets new security descriptor to user object specified by
+ * handle 'hObject'. Descriptor must be in self-relative format.
+ *
+ * Arguments:
+ *  1) hObject - handle to an object to set information for
+ *  2) pSecurityInfo - type of information to apply
+ *  3) pSecurityDescriptor - buffer which descriptor to set
+ *
+ * Return Vaules:
+ *  TRUE on success
+ *  FALSE on failure, call GetLastError() for more information
+ */
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetUserObjectSecurity(
+    IN HANDLE hObject,
+    IN PSECURITY_INFORMATION pSecurityInfo,
+    IN PSECURITY_DESCRIPTOR pSecurityDescriptor
+)
+{
+DWORD dwWin32Error;
+NTSTATUS Status;
+
+
+    Status = NtSetSecurityObject(
+        hObject,            // Object Handle
+        *pSecurityInfo,     // Security Information
+        pSecurityDescriptor // Security Descriptor
+    );
+
+    if ( ! NT_SUCCESS( Status ) ) {
+        dwWin32Error = RtlNtStatusToDosError( Status );
+        NtCurrentTeb()->LastErrorValue = dwWin32Error;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EndTask(
+	HWND    hWnd,
+	BOOL fShutDown,
+	BOOL fForce)
+{
+    SendMessageW(hWnd, WM_CLOSE, 0, 0);
+
+    if (IsWindow(hWnd))
+    {
+        if (fForce)
+            return DestroyWindow(hWnd);
+        else
+            return FALSE;
+    }
+
+    return TRUE;
+}
