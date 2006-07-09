@@ -52,12 +52,12 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 
         if (rDest!=NULL)
         {
-              memcpy(& mDdBlt.rDest, rDest, sizeof(DDBLTFX));
+              memcpy(& mDdBlt.rDest, rDest, sizeof(RECTL));
         }
 
         if (rSrc!=NULL)
         {
-              memcpy(& mDdBlt.rDest, rSrc, sizeof(DDBLTFX));
+              memcpy(& mDdBlt.rDest, rSrc, sizeof(RECTL));
         }
            
         if (src != NULL)
