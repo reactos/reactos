@@ -685,6 +685,15 @@ typedef struct _IO_TIMER
 } IO_TIMER, *PIO_TIMER;
 
 //
+// Driver Extension
+//
+typedef struct _IO_CLIENT_EXTENSION
+{
+    struct _IO_CLIENT_EXTENSION *NextExtension;
+    PVOID ClientIdentificationAddress;
+} IO_CLIENT_EXTENSION, *PIO_CLIENT_EXTENSION;
+
+//
 // Device Node
 //
 typedef struct _DEVICE_NODE
@@ -787,14 +796,17 @@ typedef struct _EXTENDED_DEVOBJ_EXTENSION
 } EXTENDED_DEVOBJ_EXTENSION, *PEXTENDED_DEVOBJ_EXTENSION;
 
 //
-// Private Driver Extension Descriptor
+// Extended Driver Object Extension Structure
 //
-typedef struct _PRIVATE_DRIVER_EXTENSIONS
+typedef struct _EXTENDED_DRIVER_EXTENSION
 {
-    struct _PRIVATE_DRIVER_EXTENSIONS *Link;
-    PVOID ClientIdentificationAddress;
-    CHAR Extension[1];
-} PRIVATE_DRIVER_EXTENSIONS, *PPRIVATE_DRIVER_EXTENSIONS;
+    struct _DRIVER_OBJECT *DriverObject;
+    PDRIVER_ADD_DEVICE AddDevice;
+    ULONG Count;
+    UNICODE_STRING ServiceKeyName;
+    PIO_CLIENT_EXTENSION ClientDriverExtension;
+    PFS_FILTER_CALLBACKS FsFilterCallbacks;
+} EXTENDED_DRIVER_EXTENSION, *PEXTENDED_DRIVER_EXTENSION;
 
 //
 // Extended I/O Stack Location Structure

@@ -86,6 +86,13 @@
     ((PEXTENDED_DEVOBJ_EXTENSION)                       \
      (DeviceObject->DeviceObjectExtension))             \
 
+//
+// Returns the internal Driver Object Extension
+//
+#define IoGetDrvObjExtension(DriverObject)              \
+    ((PEXTENDED_DRIVER_EXTENSION)                       \
+     (DriverObject->DriverExtension))                   \
+
 /*
  * VOID
  * IopDeviceNodeSetFlag(
@@ -351,6 +358,17 @@ typedef struct _FS_CHANGE_NOTIFY_ENTRY
     PDRIVER_OBJECT DriverObject;
     PDRIVER_FS_NOTIFICATION FSDNotificationProc;
 } FS_CHANGE_NOTIFY_ENTRY, *PFS_CHANGE_NOTIFY_ENTRY;
+
+//
+// Driver (Boot) Re-Initialization Entry
+//
+typedef struct _DRIVER_REINIT_ITEM
+{
+    LIST_ENTRY ItemEntry;
+    PDRIVER_OBJECT DriverObject;
+    PDRIVER_REINITIALIZE ReinitRoutine;
+    PVOID Context;
+} DRIVER_REINIT_ITEM, *PDRIVER_REINIT_ITEM;
 
 //
 // Called on every visit of a node during a preorder-traversal of the device

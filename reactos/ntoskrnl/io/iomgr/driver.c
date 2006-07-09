@@ -1,11 +1,11 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/driver.c
- * PURPOSE:         Loading and unloading of drivers
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
- *                  Filip Navara (xnavara@volny.cz)
+ * PURPOSE:         Driver Object Management
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Filip Navara (navaraf@reactos.org)
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -42,14 +42,6 @@ typedef struct _SERVICE
 
 /*  BOOLEAN ServiceRunning;*/	// needed ??
 } SERVICE, *PSERVICE;
-
-typedef struct _DRIVER_REINIT_ITEM
-{
-  LIST_ENTRY ItemEntry;
-  PDRIVER_OBJECT DriverObject;
-  PDRIVER_REINITIALIZE ReinitRoutine;
-  PVOID Context;
-} DRIVER_REINIT_ITEM, *PDRIVER_REINIT_ITEM;
 
 /* GLOBALS ********************************************************************/
 
@@ -135,29 +127,47 @@ IopInvalidDeviceRequest(
    return STATUS_INVALID_DEVICE_REQUEST;
 }
 
-VOID STDCALL
-IopDeleteDriver(PVOID ObjectBody)
+VOID
+NTAPI
+IopDeleteDriver(IN PVOID ObjectBody)
 {
-   PDRIVER_OBJECT Object = ObjectBody;
-   KIRQL OldIrql;
-   PPRIVATE_DRIVER_EXTENSIONS DriverExtension, NextDriverExtension;
+    PDRIVER_OBJECT DriverObject = ObjectBody;
+    PIO_CLIENT_EXTENSION DriverExtension, NextDriverExtension;
+    PAGED_CODE();
 
-   DPRINT("IopDeleteDriver(ObjectBody 0x%p)\n", ObjectBody);
+    /* Get the extension and loop them */
+    DriverExtension = IoGetDrvObjExtension(DriverObject)->
+                      ClientDriverExtension;
+    while (DriverExtension)
+    {
+        /* Get the next one */
+        NextDriverExtension = DriverExtension->NextExtension;
+        ExFreePoolWithTag(DriverExtension, TAG_DRIVER_EXTENSION);
 
-   ExFreePool(Object->DriverExtension);
-   ExFreePool(Object->DriverName.Buffer);
+        /* Move on */
+        DriverExtension = NextDriverExtension;
+    }
 
-   OldIrql = KeRaiseIrqlToDpcLevel();
+    /* Check if the driver image is still loaded */
+    if (DriverObject->DriverSection)
+    {
+        /* Unload it */
+        LdrpUnloadImage(DriverObject->DriverSection);
+    }
 
-   for (DriverExtension = Object->DriverSection;
-        DriverExtension != NULL;
-        DriverExtension = NextDriverExtension)
-   {
-      NextDriverExtension = DriverExtension->Link;
-      ExFreePoolWithTag(DriverExtension, TAG_DRIVER_EXTENSION);
-   }
+    /* Check if it has a name */
+    if (DriverObject->DriverName.Buffer)
+    {
+        /* Free it */
+        ExFreePool(DriverObject->DriverName.Buffer);
+    }
 
-   KfLowerIrql(OldIrql);
+    /* Check if it has a service key name */
+    if (DriverObject->DriverExtension->ServiceKeyName.Buffer)
+    {
+        /* Free it */
+        ExFreePool(DriverObject->DriverExtension->ServiceKeyName.Buffer);
+    }
 }
 
 NTSTATUS FASTCALL
@@ -289,22 +299,11 @@ IopCreateDriverObject(
       return Status;
    }
 
-   Status = ObInsertObject(Object,
-                           NULL,
-                           FILE_ALL_ACCESS,
-                           0,
-                           NULL,
-                           NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return Status;
-   }  
-
    /* Create driver extension */
    Object->DriverExtension = (PDRIVER_EXTENSION)
       ExAllocatePoolWithTag(
          NonPagedPool,
-         sizeof(DRIVER_EXTENSION),
+         sizeof(EXTENDED_DRIVER_EXTENSION),
          TAG_DRIVER_EXTENSION);
 
    if (Object->DriverExtension == NULL)
@@ -312,7 +311,7 @@ IopCreateDriverObject(
       return STATUS_NO_MEMORY;
    }
 
-   RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
+   RtlZeroMemory(Object->DriverExtension, sizeof(EXTENDED_DRIVER_EXTENSION));
 
    Object->Type = IO_TYPE_DRIVER;
 
@@ -336,6 +335,18 @@ IopCreateDriverObject(
       else
          ExFreePool(Buffer);
    }
+
+
+   Status = ObInsertObject(Object,
+                           NULL,
+                           FILE_ALL_ACCESS,
+                           0,
+                           NULL,
+                           NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      return Status;
+   }  
 
    *DriverObject = Object;
 
@@ -1730,20 +1741,17 @@ IopReinitializeBootDrivers(VOID)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-
 /*
  * @implemented
  */
 NTSTATUS
-STDCALL
-IoCreateDriver (
-	IN PUNICODE_STRING DriverName,   OPTIONAL
-	IN PDRIVER_INITIALIZE InitializationFunction
-	)
+NTAPI
+IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
+               IN PDRIVER_INITIALIZE InitializationFunction)
 {
     WCHAR NameBuffer[100];
     USHORT NameLength;
-    UNICODE_STRING LocalDriverName; /* To reduce code if no name given */
+    UNICODE_STRING LocalDriverName;
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG ObjectSize;
@@ -1753,22 +1761,22 @@ IoCreateDriver (
     ULONG i;
 
     /* First, create a unique name for the driver if we don't have one */
-    if (!DriverName) {
-
+    if (!DriverName)
+    {
         /* Create a random name and set up the string*/
         NameLength = swprintf(NameBuffer, L"\\Driver\\%08u", KeTickCount);
         LocalDriverName.Length = NameLength * sizeof(WCHAR);
         LocalDriverName.MaximumLength = LocalDriverName.Length + sizeof(UNICODE_NULL);
         LocalDriverName.Buffer = NameBuffer;
-
-    } else {
-
+    }
+    else
+    {
         /* So we can avoid another code path, use a local var */
         LocalDriverName = *DriverName;
     }
 
     /* Initialize the Attributes */
-    ObjectSize = sizeof(DRIVER_OBJECT) + sizeof(DRIVER_EXTENSION);
+    ObjectSize = sizeof(DRIVER_OBJECT) + sizeof(EXTENDED_DRIVER_EXTENSION);
     InitializeObjectAttributes(&ObjectAttributes,
                                &LocalDriverName,
                                OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
@@ -1785,8 +1793,6 @@ IoCreateDriver (
                             0,
                             0,
                             (PVOID*)&DriverObject);
-
-    /* Return on failure */
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Set up the Object */
@@ -1798,22 +1804,41 @@ IoCreateDriver (
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;
 
-    /* Invalidate all Major Functions */
+    /* Loop all Major Functions */
     for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
+        /* Invalidate each function */
         DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
     }
 
-    /* Set up the Service Key Name */
-    ServiceKeyName.Buffer = ExAllocatePool(PagedPool, LocalDriverName.Length + sizeof(WCHAR));
+    /* Set up the service key name buffer */
+    ServiceKeyName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                  LocalDriverName.Length +
+                                                  sizeof(WCHAR),
+                                                  TAG_IO);
+    if (!ServiceKeyName.Buffer)
+    {
+        /* Fail */
+        ObMakeTemporaryObject(DriverObject);
+        ObDereferenceObject(DriverObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Fill out the key data and copy the buffer */
     ServiceKeyName.Length = LocalDriverName.Length;
     ServiceKeyName.MaximumLength = LocalDriverName.MaximumLength;
-    RtlMoveMemory(ServiceKeyName.Buffer, LocalDriverName.Buffer, LocalDriverName.Length);
-    ServiceKeyName.Buffer[ServiceKeyName.Length / sizeof(WCHAR)] = L'\0';
+    RtlMoveMemory(ServiceKeyName.Buffer,
+                  LocalDriverName.Buffer,
+                  LocalDriverName.Length);
+
+    /* Null-terminate it and set it */
+    ServiceKeyName.Buffer[ServiceKeyName.Length / sizeof(WCHAR)] = UNICODE_NULL;
     DriverObject->DriverExtension->ServiceKeyName =  ServiceKeyName;
 
     /* Also store it in the Driver Object. This is a bit of a hack. */
-    RtlMoveMemory(&DriverObject->DriverName, &ServiceKeyName, sizeof(UNICODE_STRING));
+    RtlMoveMemory(&DriverObject->DriverName,
+                  &ServiceKeyName,
+                  sizeof(UNICODE_STRING));
 
     /* Add the Object and get its handle */
     Status = ObInsertObject(DriverObject,
@@ -1822,8 +1847,6 @@ IoCreateDriver (
                             0,
                             NULL,
                             &hDriver);
-
-    /* Return on Failure */
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Now reference it */
@@ -1833,12 +1856,21 @@ IoCreateDriver (
                                        KernelMode,
                                        (PVOID*)&DriverObject,
                                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        ObMakeTemporaryObject(DriverObject);
+        ObDereferenceObject(DriverObject);
+        return Status;
+    }
+
+    /* Close the extra handle */
     ZwClose(hDriver);
 
     /* Finally, call its init function */
     Status = (*InitializationFunction)(DriverObject, NULL);
-
-    if (!NT_SUCCESS(Status)) {
+    if (!NT_SUCCESS(Status))
+    {
         /* If it didn't work, then kill the object */
         ObMakeTemporaryObject(DriverObject);
         ObDereferenceObject(DriverObject);
@@ -1852,15 +1884,186 @@ IoCreateDriver (
  * @implemented
  */
 VOID
-STDCALL
-IoDeleteDriver (
-	IN PDRIVER_OBJECT DriverObject
-	)
+NTAPI
+IoDeleteDriver(IN PDRIVER_OBJECT DriverObject)
 {
-	/* Simply derefence the Object */
+    /* Simply derefence the Object */
     ObDereferenceObject(DriverObject);
 }
 
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IoRegisterBootDriverReinitialization(IN PDRIVER_OBJECT DriverObject,
+                                     IN PDRIVER_REINITIALIZE ReinitRoutine,
+                                     IN PVOID Context)
+{
+    PDRIVER_REINIT_ITEM ReinitItem;
+
+    /* Allocate the entry */
+    ReinitItem = ExAllocatePoolWithTag(NonPagedPool,
+                                       sizeof(DRIVER_REINIT_ITEM),
+                                       TAG_REINIT);
+    if (!ReinitItem) return;
+
+    /* Fill it out */
+    ReinitItem->DriverObject = DriverObject;
+    ReinitItem->ReinitRoutine = ReinitRoutine;
+    ReinitItem->Context = Context;
+
+    /* Set the Driver Object flag and insert the entry into the list */
+    DriverObject->Flags |= DRVO_BOOTREINIT_REGISTERED;
+    ExInterlockedInsertTailList(&DriverBootReinitListHead,
+                                &ReinitItem->ItemEntry,
+                                &DriverBootReinitListLock);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+IoRegisterDriverReinitialization(IN PDRIVER_OBJECT DriverObject,
+                                 IN PDRIVER_REINITIALIZE ReinitRoutine,
+                                 IN PVOID Context)
+{
+    PDRIVER_REINIT_ITEM ReinitItem;
+
+    /* Allocate the entry */
+    ReinitItem = ExAllocatePoolWithTag(NonPagedPool,
+                                       sizeof(DRIVER_REINIT_ITEM),
+                                       TAG_REINIT);
+    if (!ReinitItem) return;
+
+    /* Fill it out */
+    ReinitItem->DriverObject = DriverObject;
+    ReinitItem->ReinitRoutine = ReinitRoutine;
+    ReinitItem->Context = Context;
+
+    /* Set the Driver Object flag and insert the entry into the list */
+    DriverObject->Flags |= DRVO_REINIT_REGISTERED;
+    ExInterlockedInsertTailList(&DriverReinitListHead,
+                                &ReinitItem->ItemEntry,
+                                &DriverReinitListLock);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+IoAllocateDriverObjectExtension(IN PDRIVER_OBJECT DriverObject,
+                                IN PVOID ClientIdentificationAddress,
+                                IN ULONG DriverObjectExtensionSize,
+                                OUT PVOID *DriverObjectExtension)
+{
+    KIRQL OldIrql;
+    PIO_CLIENT_EXTENSION DriverExtensions, NewDriverExtension;
+    BOOLEAN Inserted = FALSE;
+
+    /* Assume failure */
+    *DriverObjectExtension = NULL;
+
+    /* Allocate the extension */
+    NewDriverExtension = ExAllocatePoolWithTag(NonPagedPool,
+                                               sizeof(IO_CLIENT_EXTENSION) +
+                                               DriverObjectExtensionSize,
+                                               TAG_DRIVER_EXTENSION);
+    if (!NewDriverExtension) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Clear the extension for teh caller */
+    RtlZeroMemory(NewDriverExtension,
+                  sizeof(IO_CLIENT_EXTENSION) + DriverObjectExtensionSize);
+
+    /* Acqure lock */
+    OldIrql = KeRaiseIrqlToDpcLevel();
+
+    /* Fill out the extension */
+    NewDriverExtension->ClientIdentificationAddress = ClientIdentificationAddress;
+
+    /* Loop the current extensions */
+    DriverExtensions = IoGetDrvObjExtension(DriverObject)->
+                       ClientDriverExtension;
+    while (DriverExtensions)
+    {
+        /* Check if the identifier matches */
+        if (DriverExtensions->ClientIdentificationAddress ==
+            ClientIdentificationAddress)
+        {
+            /* We have a collision, break out */
+            break;
+        }
+
+        /* Go to the next one */
+        DriverExtensions = DriverExtensions->NextExtension;
+    }
+
+    /* Check if we didn't collide */
+    if (!DriverExtensions)
+    {
+        /* Link this one in */
+        NewDriverExtension->NextExtension =
+            IoGetDrvObjExtension(DriverObject)->ClientDriverExtension;
+        IoGetDrvObjExtension(DriverObject)->ClientDriverExtension =
+            NewDriverExtension;
+        Inserted = TRUE;
+    }
+
+    /* Release the lock */
+    KfLowerIrql(OldIrql);
+
+    /* Check if insertion failed */
+    if (!Inserted)
+    {
+        /* Free the entry and fail */
+        ExFreePool(NewDriverExtension);
+        return STATUS_OBJECT_NAME_COLLISION;
+    }
+
+    /* Otherwise, return the pointer */
+    *DriverObjectExtension = NewDriverExtension + 1;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+IoGetDriverObjectExtension(IN PDRIVER_OBJECT DriverObject,
+                           IN PVOID ClientIdentificationAddress)
+{
+    KIRQL OldIrql;
+    PIO_CLIENT_EXTENSION DriverExtensions;
+
+    /* Acquire lock */
+    OldIrql = KeRaiseIrqlToDpcLevel();
+
+    /* Loop the list until we find the right one */
+    DriverExtensions = IoGetDrvObjExtension(DriverObject)->ClientDriverExtension;
+    while (DriverExtensions)
+    {
+        /* Check for a match */
+        if (DriverExtensions->ClientIdentificationAddress ==
+            ClientIdentificationAddress)
+        {
+            /* Break out */
+            break;
+        }
+
+        /* Keep looping */
+        DriverExtensions = DriverExtensions->NextExtension;
+    }
+
+    /* Release lock */
+    KfLowerIrql(OldIrql);
+
+    /* Return nothing or the extension */
+    if (!DriverExtensions) return NULL;
+    return DriverExtensions + 1;
+}
 
 /*
  * NtLoadDriver
@@ -1877,7 +2080,6 @@ IoDeleteDriver (
  * Status
  *    implemented
  */
-
 NTSTATUS STDCALL
 NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 {
@@ -2077,153 +2279,6 @@ NTSTATUS STDCALL
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
    return IopUnloadDriver(DriverServiceName, FALSE);
-}
-
-/*
- * IoRegisterDriverReinitialization
- *
- * Status
- *    @implemented
- */
-
-VOID STDCALL
-IoRegisterDriverReinitialization(
-   PDRIVER_OBJECT DriverObject,
-   PDRIVER_REINITIALIZE ReinitRoutine,
-   PVOID Context)
-{
-   PDRIVER_REINIT_ITEM ReinitItem;
-
-   ReinitItem = ExAllocatePool(NonPagedPool, sizeof(DRIVER_REINIT_ITEM));
-   if (ReinitItem == NULL)
-      return;
-
-   ReinitItem->DriverObject = DriverObject;
-   ReinitItem->ReinitRoutine = ReinitRoutine;
-   ReinitItem->Context = Context;
-
-   DriverObject->Flags |= DRVO_REINIT_REGISTERED;
-
-   ExInterlockedInsertTailList(
-      &DriverReinitListHead,
-      &ReinitItem->ItemEntry,
-      &DriverReinitListLock);
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-IoRegisterBootDriverReinitialization(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
-    IN PVOID Context
-    )
-{
-   PDRIVER_REINIT_ITEM ReinitItem;
-
-   ReinitItem = ExAllocatePool(NonPagedPool, sizeof(DRIVER_REINIT_ITEM));
-   if (ReinitItem == NULL)
-      return;
-
-   ReinitItem->DriverObject = DriverObject;
-   ReinitItem->ReinitRoutine = DriverReinitializationRoutine;
-   ReinitItem->Context = Context;
-
-   DriverObject->Flags |= DRVO_BOOTREINIT_REGISTERED;
-
-   ExInterlockedInsertTailList(
-      &DriverBootReinitListHead,
-      &ReinitItem->ItemEntry,
-      &DriverBootReinitListLock);
-}
-
-/*
- * IoAllocateDriverObjectExtension
- *
- * Status
- *    @implemented
- */
-
-NTSTATUS STDCALL
-IoAllocateDriverObjectExtension(
-   PDRIVER_OBJECT DriverObject,
-   PVOID ClientIdentificationAddress,
-   ULONG DriverObjectExtensionSize,
-   PVOID *DriverObjectExtension)
-{
-   KIRQL OldIrql;
-   PPRIVATE_DRIVER_EXTENSIONS DriverExtensions;
-   PPRIVATE_DRIVER_EXTENSIONS NewDriverExtension;
-
-   NewDriverExtension = ExAllocatePoolWithTag(
-      NonPagedPool,
-      sizeof(PRIVATE_DRIVER_EXTENSIONS) - sizeof(CHAR) +
-      DriverObjectExtensionSize,
-      TAG_DRIVER_EXTENSION);
-
-   if (NewDriverExtension == NULL)
-   {
-      return STATUS_INSUFFICIENT_RESOURCES;
-   }
-
-   OldIrql = KeRaiseIrqlToDpcLevel();
-
-   NewDriverExtension->Link = DriverObject->DriverSection;
-   NewDriverExtension->ClientIdentificationAddress = ClientIdentificationAddress;
-
-   for (DriverExtensions = DriverObject->DriverSection;
-        DriverExtensions != NULL;
-        DriverExtensions = DriverExtensions->Link)
-   {
-      if (DriverExtensions->ClientIdentificationAddress ==
-          ClientIdentificationAddress)
-      {
-         KfLowerIrql(OldIrql);
-         return STATUS_OBJECT_NAME_COLLISION;
-      }
-   }
-
-   DriverObject->DriverSection = NewDriverExtension;
-
-   KfLowerIrql(OldIrql);
-
-   *DriverObjectExtension = &NewDriverExtension->Extension;
-
-   return STATUS_SUCCESS;
-}
-
-/*
- * IoGetDriverObjectExtension
- *
- * Status
- *    @implemented
- */
-
-PVOID STDCALL
-IoGetDriverObjectExtension(
-   PDRIVER_OBJECT DriverObject,
-   PVOID ClientIdentificationAddress)
-{
-   KIRQL OldIrql;
-   PPRIVATE_DRIVER_EXTENSIONS DriverExtensions;
-
-   OldIrql = KeRaiseIrqlToDpcLevel();
-
-   for (DriverExtensions = DriverObject->DriverSection;
-        DriverExtensions != NULL &&
-        DriverExtensions->ClientIdentificationAddress !=
-          ClientIdentificationAddress;
-        DriverExtensions = DriverExtensions->Link)
-      ;
-
-   KfLowerIrql(OldIrql);
-
-   if (DriverExtensions == NULL)
-      return NULL;
-
-   return &DriverExtensions->Extension;
 }
 
 /* EOF */
