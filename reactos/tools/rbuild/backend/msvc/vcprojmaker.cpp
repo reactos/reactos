@@ -449,7 +449,14 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				if (module.GetEntryPoint(false) == "0")
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
 				else
-					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s%s\"\r\n", module.GetEntryPoint(false) == "" ? "" : "_", module.GetEntryPoint(false) == "" ? "_DllMainCRTStartup@12" : module.GetEntryPoint(false).c_str ());
+				{	
+					// get rid of DllMain@12 because MSVC needs to link to _DllMainCRTStartup@12
+					// when using CRT
+					if (module.GetEntryPoint(false) == "DllMain@12") 
+						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
+					else
+						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false).c_str ());
+				}
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
 			}
 			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
@@ -486,6 +493,12 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCMIDLTool\"/>\r\n" );
+		fprintf ( OUT, "\t\t\t<Tool\r\n" );
+		if (configuration.VSProjectVersion == "8.00")
+		{
+			fprintf ( OUT, "\t\t\t\tName=\"VCManifestTool\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tEmbedManifest=\"false\"/>\r\n" );
+		}
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCPostBuildEventTool\"/>\r\n" );
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
