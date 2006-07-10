@@ -15,7 +15,6 @@
 
 #include "resource.h"
 #include "powercfg.h"
-#include "powrprof.h"
 
 #define NUM_APPLETS	(1)
 

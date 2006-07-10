@@ -9,6 +9,10 @@
  *                  Martin Rottensteiner
  */
 
+//#ifndef NSTATUS
+//typedef long NTSTATUS;
+//#endif
+
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
 #include <windows.h>
@@ -16,7 +20,6 @@
 #include <cpl.h>
 #include "resource.h"
 #include "powercfg.h"
-#include "powrprof.h"
 
 HWND hAdv=0;
 
@@ -109,7 +112,7 @@ static BOOLEAN IsBatteryUsed()
 {
 	SYSTEM_BATTERY_STATE sbs;
 
-	if (CallNtPowerInformation(SystemBatteryState,NULL, (ULONG)NULL, &sbs, sizeof(SYSTEM_BATTERY_STATE)) == STATUS_SUCCESS)
+	if (CallNtPowerInformation(SystemBatteryState,NULL, (ULONG)0, &sbs, sizeof(SYSTEM_BATTERY_STATE)) == STATUS_SUCCESS)
 	{
 		if (sbs.BatteryPresent)
 		{
@@ -119,7 +122,6 @@ static BOOLEAN IsBatteryUsed()
 			}
 			return TRUE;
 		}
-		return FALSE;
 	}
 
 	return FALSE;

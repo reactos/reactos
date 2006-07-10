@@ -18,7 +18,6 @@
 
 #include "resource.h"
 #include "powercfg.h"
-#include "powrprof.h"
 
 BOOLEAN Ala_InitData(HWND);
 
