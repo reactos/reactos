@@ -902,7 +902,7 @@ MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
    NTSTATUS Status;
    ULONG SectorSize;
    LARGE_INTEGER FileOffset;
-   ULONG Length;
+   ULONG Length, ReturnedLength;
 
    Status = MmspRequestPages(PageCount, Pages, Consumer);
    if (!NT_SUCCESS(Status))
@@ -942,7 +942,7 @@ MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
                                            FileFsSizeInformation,
                                            sizeof(FILE_FS_SIZE_INFORMATION),
                                            &FileFsSize,
-                                           NULL);
+                                           &ReturnedLength);
 
       if (NT_SUCCESS(tmpStatus))
       {
@@ -4164,13 +4164,13 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
    ULONG Flags;
    ULONG OldNrSegments;
    NTSTATUS Status;
-   ULONG i;
+   ULONG i, ReturnedLength;
 
    Status = IoQueryVolumeInformation(FileObject,
                                      FileFsSizeInformation,
                                      sizeof(FILE_FS_SIZE_INFORMATION),
                                      &FileFsSize,
-                                     NULL);
+                                     &ReturnedLength);
    if (!NT_SUCCESS(Status))
    {
       return Status;
