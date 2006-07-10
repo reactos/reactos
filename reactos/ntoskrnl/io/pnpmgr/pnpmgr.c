@@ -454,6 +454,7 @@ VOID
 STDCALL
 IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
+    UNIMPLEMENTED;
 }
 
 /**
@@ -496,7 +497,10 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    DPRINT("IoOpenDeviceRegistryKey() called\n");
 
    if ((DevInstKeyType & (PLUGPLAY_REGKEY_DEVICE | PLUGPLAY_REGKEY_DRIVER)) == 0)
-      return STATUS_INVALID_PARAMETER;
+   {
+       DPRINT1("IoOpenDeviceRegistryKey(): got wrong params, exiting... \n");
+       return STATUS_INVALID_PARAMETER;
+   }
 
    /*
     * Calculate the length of the base key name. This is the full
@@ -554,6 +558,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
                                    &DriverKeyLength);
       if (!NT_SUCCESS(Status))
       {
+         DPRINT1("Call to IoGetDeviceProperty() failed with Status 0x%08lx\n", Status);
          ExFreePool(KeyNameBuffer);
          return Status;
       }
@@ -614,7 +619,7 @@ VOID
 STDCALL
 IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-	UNIMPLEMENTED;
+   UNIMPLEMENTED;
 }
 
 
