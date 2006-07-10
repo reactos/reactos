@@ -38,6 +38,8 @@ typedef struct _SYSTEM_CURSORINFO
   UINT ButtonsDown;
   CURSORCLIP_INFO CursorClipInfo;
   PCURICON_OBJECT CurrentCursorObject;
+  UINT WheelScroLines;
+  UINT WheelScroChars;
   BYTE ShowingCursor;
   UINT DblClickSpeed;
   UINT DblClickWidth;
@@ -46,6 +48,7 @@ typedef struct _SYSTEM_CURSORINFO
   LONG LastBtnDownX;
   LONG LastBtnDownY;
   HANDLE LastClkWnd;
+  BOOL ScreenSaverRunning;
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
 HCURSOR FASTCALL IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange);

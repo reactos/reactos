@@ -488,6 +488,8 @@ NtUserCreateWindowStation(
    /*
     * Initialize the new window station object
     */
+    WindowStationObject->ScreenSaverRunning = FALSE;
+	WindowStationObject->ScreenSaverTimeOut = 30;
 
    if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
    {
@@ -504,8 +506,11 @@ NtUserCreateWindowStation(
    CurInfo->LastBtnDown = 0;
    CurInfo->CurrentCursorObject = NULL;
    CurInfo->ShowingCursor = 0;
+    
+   CurInfo->WheelScroLines = 3;
+   CurInfo->WheelScroChars = 3;
 
-   /* FIXME: Obtain the following information from the registry */
+   /* FIXME: Obtain the following information from the registry */    
    CurInfo->SwapButtons = FALSE;
    CurInfo->DblClickSpeed = 500;
    CurInfo->DblClickWidth = 4;

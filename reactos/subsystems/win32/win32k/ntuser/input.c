@@ -55,6 +55,8 @@ static BOOLEAN InputThreadsRunning = FALSE;
 PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
 
 /* FUNCTIONS *****************************************************************/
+ULONG FASTCALL
+IntSystemParametersInfo(UINT uiAction, UINT uiParam,PVOID pvParam, UINT fWinIni);
 
 #define ClearMouseInput(mi) \
   mi.dx = 0; \
@@ -162,20 +164,18 @@ ScreenSaverThreadMain(PVOID StartContext)
     LARGE_INTEGER CurrentTime;
     LARGE_INTEGER DiffTimeMouse;
     LARGE_INTEGER DiffTimeKeyboard;
-	LARGE_INTEGER OldTimeMouse;
-    LARGE_INTEGER OldTimeKeyboard;
+	UINT  ScreenSaverTimeOut = 0;
+	BOOL nPreviousState = FALSE;
 	NTSTATUS Status;
+	
 	
 	KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                         LOW_REALTIME_PRIORITY + 3);
 
 	KeQuerySystemTime(&MouseInputCurrentTime);
     KeQuerySystemTime(&KeyboardInputCurrentTime);
-
-	OldTimeMouse.QuadPart = MouseInputCurrentTime.QuadPart;
-    OldTimeKeyboard.QuadPart = MouseInputCurrentTime.QuadPart;
-
-	 DelayTimer.QuadPart = -10000000LL;  /* 1 second timeout */
+	
+	DelayTimer.QuadPart = -10000000LL;  /* 1 second timeout */
 
 	for(;;)
 	{	  
@@ -188,14 +188,12 @@ ScreenSaverThreadMain(PVOID StartContext)
       DPRINT("Screen Saver auto start Thread Starting...\n");
 	  while(InputThreadsRunning)
 	  {		
-         /* FIXME 
-            1. read timeout value from reg 
-            2. read timeout value from spi msg             
-         */
-		          
-         /* 30 second timeout  This value should be read from register */
-	     Timeout.QuadPart = 300000000LL;  
-		
+        
+		 IntSystemParametersInfo(SPI_GETSCREENSAVETIMEOUT, 0, &ScreenSaverTimeOut, 0);
+		 IntSystemParametersInfo(SPI_GETSCREENSAVERRUNNING, 0, &nPreviousState, 0);
+
+		 Timeout.QuadPart = ((LONGLONG)ScreenSaverTimeOut) * 10000000LL;	
+		 
 	     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	     Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DelayTimer); 
 
@@ -211,27 +209,33 @@ ScreenSaverThreadMain(PVOID StartContext)
            
          KeQuerySystemTime(&CurrentTime);
 		 DiffTimeMouse.QuadPart = CurrentTime.QuadPart - MouseInputCurrentTime.QuadPart;
-		 DiffTimeKeyboard.QuadPart = CurrentTime.QuadPart - KeyboardInputCurrentTime.QuadPart;
-		         
-	     if ( DiffTimeMouse.QuadPart >= Timeout.QuadPart && 
-			  DiffTimeKeyboard.QuadPart >= Timeout.QuadPart &&
-			  OldTimeMouse.QuadPart != MouseInputCurrentTime.QuadPart &&
-              OldTimeKeyboard.QuadPart != MouseInputCurrentTime.QuadPart)
-         { 				  
+		 DiffTimeKeyboard.QuadPart = CurrentTime.QuadPart - KeyboardInputCurrentTime.QuadPart;		   
+
+	     if ( (DiffTimeMouse.QuadPart >= Timeout.QuadPart) && 
+			  (DiffTimeKeyboard.QuadPart >= Timeout.QuadPart) &&			
+			  (nPreviousState == FALSE))
+         { 
+			 BOOL nPreviousState = FALSE;
 			 DPRINT1("Keyboard and Mouse TimeOut Starting Screen Saver ...\n");    
              DPRINT1("Keyboard Timeout counter was %I64d\n",DiffTimeKeyboard.QuadPart); 
              DPRINT1("Mouse Timeout counter was %I64d\n",DiffTimeMouse.QuadPart); 
 
-             CSR_API_MESSAGE Request;                               
-
-             OldTimeMouse.QuadPart = MouseInputCurrentTime.QuadPart;
-			 OldTimeKeyboard.QuadPart = MouseInputCurrentTime.QuadPart;
-
+             CSR_API_MESSAGE Request;                                        
              CsrInit();
              Request.Type = MAKE_CSR_API(START_SCREEN_SAVER, CSR_GUI);
 			 Request.Data.StartScreenSaver.Start = TRUE;  			                     			   
-             co_CsrNotifyScreenSaver(&Request );        			             
-         }  
+             co_CsrNotifyScreenSaver(&Request );  
+
+			 IntSystemParametersInfo(SPI_SETSCREENSAVERRUNNING, TRUE, &nPreviousState, 0);			 
+         } 
+		 
+		 if ( (DiffTimeMouse.QuadPart < Timeout.QuadPart) && 
+			  (DiffTimeKeyboard.QuadPart < Timeout.QuadPart) &&
+			  (nPreviousState == TRUE))
+         {			
+            IntSystemParametersInfo(SPI_SETSCREENSAVERRUNNING, FALSE, &nPreviousState, 0);
+		 }
+
 		 
 	  }
 	  DPRINT("Screen Saver auto start Thread Stopped...\n");

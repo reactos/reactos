@@ -992,6 +992,12 @@ IntSystemParametersInfo(
       case SPI_SETDOUBLECLICKTIME:
       case SPI_SETDESKWALLPAPER:
       case SPI_GETDESKWALLPAPER:
+	  case SPI_GETWHEELSCROLLLINES:
+	  case SPI_GETWHEELSCROLLCHARS:
+	  case SPI_SETSCREENSAVERRUNNING: 
+	  case SPI_GETSCREENSAVERRUNNING:
+	  case SPI_GETSCREENSAVETIMEOUT:
+	  case SPI_SETSCREENSAVETIMEOUT:
          {
             PSYSTEM_CURSORINFO CurInfo;
 
@@ -1007,6 +1013,29 @@ IntSystemParametersInfo(
 
             switch(uiAction)
             {
+			   case	SPI_GETSCREENSAVETIMEOUT:
+				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->ScreenSaverTimeOut;                   
+				   return TRUE;
+			   case	SPI_SETSCREENSAVETIMEOUT:				  
+                   WinStaObject->ScreenSaverTimeOut = uiParam;				   
+				   return TRUE;
+			   case SPI_GETSCREENSAVERRUNNING:
+                     if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
+				  return TRUE;
+			   case SPI_SETSCREENSAVERRUNNING:				  
+				   if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
+                   WinStaObject->ScreenSaverRunning = uiParam;				   
+				  return TRUE;
+			   case SPI_GETWHEELSCROLLLINES:
+				    CurInfo = IntGetSysCursorInfo(WinStaObject);
+					if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroLines;
+					/* FIXME add this value to scroll list as scroll value ?? */
+                  return TRUE;
+               case SPI_GETWHEELSCROLLCHARS:
+				    CurInfo = IntGetSysCursorInfo(WinStaObject);
+					if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroChars;
+					// FIXME add this value to scroll list as scroll value ?? 
+                  break;
                case SPI_SETDOUBLECLKWIDTH:
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
                   /* FIXME limit the maximum value? */
@@ -1365,6 +1394,12 @@ UserSystemParametersInfo(
       case SPI_GETGRADIENTCAPTIONS:
       case SPI_GETFOCUSBORDERHEIGHT:
       case SPI_GETFOCUSBORDERWIDTH:
+	  case SPI_GETWHEELSCROLLLINES:
+      case SPI_GETWHEELSCROLLCHARS:
+	  case SPI_GETSCREENSAVERRUNNING:
+	  case SPI_SETSCREENSAVERRUNNING:
+	  case SPI_GETSCREENSAVETIMEOUT:
+	  case SPI_SETSCREENSAVETIMEOUT:
          {
             BOOL Ret;
 
@@ -1458,6 +1493,11 @@ UserSystemParametersInfo(
             }
             return( TRUE);
          }
+      default :
+		  {
+			  DPRINT1("UserSystemParametersInfo : uiAction = %x \n",uiAction );
+			  break;
+		  }
    }
    return( FALSE);
 }

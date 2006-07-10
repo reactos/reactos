@@ -33,6 +33,10 @@ typedef struct _WINSTATION_OBJECT
     HANDLE ShellWindow;
     HANDLE ShellListView;
 
+	 /* ScreenSaver */
+	BOOL ScreenSaverRunning;
+	UINT  ScreenSaverTimeOut;
+
     /* Wallpaper */
     HANDLE hbmWallpaper;
     ULONG cxWallpaper, cyWallpaper;
