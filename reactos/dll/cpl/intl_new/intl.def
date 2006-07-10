@@ -1,8 +1,8 @@
 LIBRARY intl.cpl
 
 EXPORTS
-CPlApplet@16
-RegOptsProc@16
-ExtraOptsProc@16
+CPlApplet
+RegOptsProc
+ExtraOptsProc
 
 ; EOF
