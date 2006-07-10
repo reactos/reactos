@@ -371,6 +371,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			fprintf ( OUT, "\t\t\t<Tool\r\n" );
 			fprintf ( OUT, "\t\t\t\tName=\"VCLinkerTool\"\r\n" );
+			if (module.GetEntryPoint(false) == "0")
+				fprintf ( OUT, "AdditionalOptions=\"/noentry\"" );
+
 			if (module.importLibrary != NULL)
 				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", module.importLibrary->definition.c_str());
 			fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
@@ -443,7 +446,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 			else if ( dll )
 			{
-				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false) == "" ? "DllMain" : module.GetEntryPoint(false).c_str ());
+				if (module.GetEntryPoint(false) == "0")
+					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
+				else
+					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s%s\"\r\n", module.GetEntryPoint(false) == "" ? "" : "_", module.GetEntryPoint(false) == "" ? "_DllMainCRTStartup@12" : module.GetEntryPoint(false).c_str ());
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
 			}
 			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
