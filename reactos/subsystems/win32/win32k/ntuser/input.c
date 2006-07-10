@@ -217,8 +217,9 @@ ScreenSaverThreadMain(PVOID StartContext)
          { 
 			 BOOL nPreviousState = FALSE;
 			 DPRINT1("Keyboard and Mouse TimeOut Starting Screen Saver ...\n");    
-             DPRINT1("Keyboard Timeout counter was %I64d\n",DiffTimeKeyboard.QuadPart); 
-             DPRINT1("Mouse Timeout counter was %I64d\n",DiffTimeMouse.QuadPart); 
+             DPRINT1(" %I64d Keyboard Timeout Value\n",DiffTimeKeyboard.QuadPart); 
+             DPRINT1(" %I64d Mouse Timeout Value \n",DiffTimeMouse.QuadPart); 
+			 DPRINT1(" %I64d TimeOut \n",DiffTimeMouse.QuadPart); 
 
              CSR_API_MESSAGE Request;                                        
              CsrInit();

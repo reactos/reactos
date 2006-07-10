@@ -1016,34 +1016,42 @@ IntSystemParametersInfo(
             switch(uiAction)
             {
 			   case SPI_GETFLATMENU:
-				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->FlatMenu;            
-			       return TRUE;
+				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->FlatMenu;    
+                  return TRUE;
+			      break;
                case SPI_SETFLATMENU:				   
 				   WinStaObject->FlatMenu = uiParam;             
-			   break;
+                  return TRUE;
+			      break;
 			   case	SPI_GETSCREENSAVETIMEOUT:
 				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->ScreenSaverTimeOut;                   
 				   return TRUE;
+				   break;
 			   case	SPI_SETSCREENSAVETIMEOUT:				  
-                   WinStaObject->ScreenSaverTimeOut = uiParam;				   
-				   return TRUE;
+                   WinStaObject->ScreenSaverTimeOut = uiParam;
+                  return TRUE;
+				  break;
 			   case SPI_GETSCREENSAVERRUNNING:
                      if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
-				  return TRUE;
+                  return TRUE;
+				  break;
 			   case SPI_SETSCREENSAVERRUNNING:				  
 				   if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
                    WinStaObject->ScreenSaverRunning = uiParam;				   
-				  return TRUE;
+                  return TRUE;
+				  break;
 			   case SPI_GETWHEELSCROLLLINES:
 				    CurInfo = IntGetSysCursorInfo(WinStaObject);
 					if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroLines;
 					/* FIXME add this value to scroll list as scroll value ?? */
                   return TRUE;
+                  break;
                case SPI_GETWHEELSCROLLCHARS:
 				    CurInfo = IntGetSysCursorInfo(WinStaObject);
 					if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroChars;
 					// FIXME add this value to scroll list as scroll value ?? 
                   return TRUE;
+                  break;
                case SPI_SETDOUBLECLKWIDTH:
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
                   /* FIXME limit the maximum value? */
