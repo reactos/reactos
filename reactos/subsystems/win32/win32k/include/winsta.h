@@ -32,7 +32,8 @@ typedef struct _WINSTATION_OBJECT
     UINT CaretBlinkRate;
     HANDLE ShellWindow;
     HANDLE ShellListView;
-
+     
+	BOOL FlatMenu;
 	 /* ScreenSaver */
 	BOOL ScreenSaverRunning;
 	UINT  ScreenSaverTimeOut;

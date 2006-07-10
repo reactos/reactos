@@ -490,6 +490,7 @@ NtUserCreateWindowStation(
     */
     WindowStationObject->ScreenSaverRunning = FALSE;
 	WindowStationObject->ScreenSaverTimeOut = 30;
+	WindowStationObject->FlatMenu = FALSE;
 
    if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
    {
@@ -509,6 +510,8 @@ NtUserCreateWindowStation(
     
    CurInfo->WheelScroLines = 3;
    CurInfo->WheelScroChars = 3;
+
+   
 
    /* FIXME: Obtain the following information from the registry */    
    CurInfo->SwapButtons = FALSE;

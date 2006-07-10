@@ -998,6 +998,8 @@ IntSystemParametersInfo(
 	  case SPI_GETSCREENSAVERRUNNING:
 	  case SPI_GETSCREENSAVETIMEOUT:
 	  case SPI_SETSCREENSAVETIMEOUT:
+	  case SPI_GETFLATMENU:
+      case SPI_SETFLATMENU:
          {
             PSYSTEM_CURSORINFO CurInfo;
 
@@ -1013,6 +1015,12 @@ IntSystemParametersInfo(
 
             switch(uiAction)
             {
+			   case SPI_GETFLATMENU:
+				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->FlatMenu;            
+			       return TRUE;
+               case SPI_SETFLATMENU:				   
+				   WinStaObject->FlatMenu = uiParam;             
+			   break;
 			   case	SPI_GETSCREENSAVETIMEOUT:
 				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->ScreenSaverTimeOut;                   
 				   return TRUE;
@@ -1035,7 +1043,7 @@ IntSystemParametersInfo(
 				    CurInfo = IntGetSysCursorInfo(WinStaObject);
 					if (pvParam != NULL) *((UINT*)pvParam) = CurInfo->WheelScroChars;
 					// FIXME add this value to scroll list as scroll value ?? 
-                  break;
+                  return TRUE;
                case SPI_SETDOUBLECLKWIDTH:
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
                   /* FIXME limit the maximum value? */
@@ -1400,6 +1408,8 @@ UserSystemParametersInfo(
 	  case SPI_SETSCREENSAVERRUNNING:
 	  case SPI_GETSCREENSAVETIMEOUT:
 	  case SPI_SETSCREENSAVETIMEOUT:
+	  case SPI_GETFLATMENU:
+      case SPI_SETFLATMENU:
          {
             BOOL Ret;
 
