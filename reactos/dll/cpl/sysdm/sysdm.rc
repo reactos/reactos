@@ -2,7 +2,6 @@
 #include "windows.h"
 
 #include <commctrl.h>
-#include "resource.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 

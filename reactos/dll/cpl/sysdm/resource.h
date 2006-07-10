@@ -4,9 +4,9 @@
 /* metrics */
 #define PROPSHEETWIDTH   256
 #define PROPSHEETHEIGHT  218
-#define PROPSHEETPADDING 6
-#define SYSTEM_COLUMN    (18 * PROPSHEETPADDING)
-#define LABELLINE(x)     (((PROPSHEETPADDING + 2) * x) + (x + 2))
+#define PROPSHEETPADDING(x)  (x+x+x+x+x+x)
+#define SYSTEM_COLUMN   PROPSHEETPADDING(18)
+#define LABELLINE(x)  (x+x+x+2+x+x+x+x+x+x)
 #define ICONSIZE         16
 
 /* ids */
