@@ -634,8 +634,10 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
 
     ASSERT_IRQL(PASSIVE_LEVEL);
 
+    DPRINT("IoRegisterDeviceInterface(): PDO %p, RefString: %p, SLName: %p\n",
+        PhysicalDeviceObject, ReferenceString, SymbolicLinkName);
+
     /* Parameters must pass three border of checks */
-    PhysicalDeviceObject = IopGetLowestDevice(PhysicalDeviceObject);
     DeviceObjectExtension = (PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension;
 
     /* 1st level: Presence of a Device Node */
@@ -977,7 +979,10 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
     EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
     if (!StartPosition ||!EndPosition || StartPosition > EndPosition)
+    {
+        DPRINT("IoSetDeviceInterfaceState() returning STATUS_INVALID_PARAMETER_1\n");
         return STATUS_INVALID_PARAMETER_1;
+    }
     GuidString.Buffer = StartPosition;
     GuidString.MaximumLength = GuidString.Length = (ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition;
 
@@ -997,6 +1002,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         &PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
         ExFreePool(ObjectName.Buffer);
         return Status;
     }

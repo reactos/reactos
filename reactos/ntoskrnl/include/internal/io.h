@@ -542,13 +542,7 @@ IoDestroyDriverList(
     VOID
 );
 
-PDEVICE_OBJECT
-NTAPI
-IopGetLowestDevice(
-    IN PDEVICE_OBJECT DeviceObject
-);
-
-NTSTATUS
+NTSTATUS 
 INIT_FUNCTION
 IopInitPlugPlayEvents(VOID);
 
