@@ -971,7 +971,6 @@ GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 			lpCC->wReserved = 0;
 			lpCC->dwProviderSubType = lpComPort->dwProvSubType;
 			lpCC->dwProviderSize = lpComPort->dwProvSpec2;
-			*lpdwSize = lpCC->dwSize+lpCC->dwProviderSize;
 			if( 0 == lpComPort->dwProvSpec2 ) {
 				lpCC->dwProviderOffset = 0;
 			} else {
@@ -985,6 +984,7 @@ GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 				RtlCopyMemory(lpCC->wcProviderData, lpComPort->wcProvChar, lpCC->dwProviderSize);
 				ReturnValue = GetCommState(hCommDev, &lpCC->dcb);
 			}
+			*lpdwSize = lpCC->dwSize+lpCC->dwProviderSize;
 		}
 	}
 
