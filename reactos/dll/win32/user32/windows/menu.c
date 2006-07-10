@@ -4488,10 +4488,13 @@ ModifyMenuA(
       HeapFree(GetProcessHeap(),0, mii.dwTypeData);
     }
     /* Item beginning with a backspace is a help item */
-    if (*lpNewItem == '\b')
-    {
-       mii.fType |= MF_HELP;
-       lpNewItem++;
+	if  (lpNewItem != NULL)
+	{
+		if (*lpNewItem == '\b')
+		{
+			mii.fType |= MF_HELP;
+			lpNewItem++;
+		}
     }
     mii.fMask |= MIIM_TYPE;
     mii.dwTypeData = (LPSTR)lpNewItem;
@@ -4579,14 +4582,18 @@ ModifyMenuW(
   }
   else
   {
-    /*if(mii.dwTypeData != NULL)
+    /*
+    if(mii.dwTypeData != NULL)
     {
       HeapFree(GetProcessHeap(),0, mii.dwTypeData);
-    }*/
-    if (*lpNewItem == '\b')
-    {
-       mii.fType |= MF_HELP;
-       lpNewItem++;
+    } */
+    if  (lpNewItem != NULL)
+	{
+		if (*lpNewItem == '\b')
+		{
+			mii.fType |= MF_HELP;
+			lpNewItem++;
+		}
     }
     mii.fMask |= MIIM_TYPE;
     mii.dwTypeData = (LPWSTR)lpNewItem;
