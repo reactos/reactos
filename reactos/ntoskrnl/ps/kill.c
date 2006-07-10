@@ -50,7 +50,7 @@ PspTerminateProcess(IN PEPROCESS Process,
     }
 
     /* Set the delete flag */
-    InterlockedOr(&Process->Flags, 8);
+    InterlockedOr((PLONG)&Process->Flags, 8);
 
     /* Get the first thread */
     while ((Thread = PsGetNextProcessThread(Process, Thread)))
@@ -401,7 +401,7 @@ PspExitThread(NTSTATUS ExitStatus)
     if (!(--CurrentProcess->ActiveThreads))
     {
         /* Set the delete flag */
-        InterlockedOr(&CurrentProcess->Flags, 8);
+        InterlockedOr((PLONG)&CurrentProcess->Flags, 8);
 
         /* Remember we are last */
         Last = TRUE;
@@ -586,7 +586,7 @@ TryAgain2:
     CmNotifyRunDown(Thread); */
 
     /* Clear NPX Thread */
-    InterlockedCompareExchangePointer(&KeGetCurrentPrcb()->NpxThread, NULL, Thread);
+    (void)InterlockedCompareExchangePointer(&KeGetCurrentPrcb()->NpxThread, NULL, Thread);
 
     /* Rundown Mutexes */
     KeRundownThread();
@@ -829,7 +829,7 @@ PspTerminateThreadByPointer(PETHREAD Thread,
         ASSERT_IRQL(PASSIVE_LEVEL);
 
         /* Mark it as terminated */
-        InterlockedOr(&Thread->CrossThreadFlags, 1);
+        InterlockedOr((PLONG)&Thread->CrossThreadFlags, 1);
 
         /* Directly terminate the thread */
         PspExitThread(ExitStatus);
@@ -849,7 +849,7 @@ PspTerminateThreadByPointer(PETHREAD Thread,
     Flags = Thread->CrossThreadFlags | 1;
 
     /* Set it, and check if it was already set while we were running */
-    if (!(InterlockedExchange(&Thread->CrossThreadFlags, Flags) & 1))
+    if (!(InterlockedExchange((PLONG)&Thread->CrossThreadFlags, Flags) & 1))
     {
         /* Initialize a Kernel Mode APC to Kill the Thread */
         KeInitializeApc(Apc,
@@ -894,7 +894,7 @@ PspExitProcess(IN BOOLEAN LastThread,
     DPRINT1("PspExitProcess %p\n", Process);
 
     /* Set Process Delete flag */
-    InterlockedOr(&Process->Flags, 4);
+    InterlockedOr((PLONG)&Process->Flags, 4);
 
     /* Check if we are the last thread */
     if (LastThread)
@@ -991,7 +991,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     PsLockProcess(Process, FALSE);
 
     /* Set the exit flag */
-    if (!KillByHandle) InterlockedOr(&Process->Flags, 8);
+    if (!KillByHandle) InterlockedOr((PLONG)&Process->Flags, 8);
 
     /* Get the first thread */
     Status = STATUS_NOTHING_TO_TERMINATE;

@@ -1474,12 +1474,11 @@ NTAPI
 IoIsOperationSynchronous(IN PIRP Irp)
 {
     /* Check the flags */
-    if (((Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO) &&
-         (!(Irp->Flags & IRP_PAGING_IO) &&
-          !(Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO))) ||
-        (Irp->Flags & IRP_SYNCHRONOUS_API) ||
-        (IoGetCurrentIrpStackLocation(Irp)->FileObject->Flags &
-         FO_SYNCHRONOUS_IO))
+    if (!(Irp->Flags & (IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO)) &&
+        ((Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO) ||
+         (Irp->Flags & IRP_SYNCHRONOUS_API) ||
+         (IoGetCurrentIrpStackLocation(Irp)->FileObject->Flags &
+          FO_SYNCHRONOUS_IO)))
     {
         /* Synch API or Paging I/O is OK, as is Sync File I/O */
         return TRUE;

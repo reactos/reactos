@@ -243,6 +243,8 @@ IopLogWorker(IN PVOID Parameter)
                 DriverNameString.Buffer = DriverObject->DriverName.Buffer;
                 DriverNameLength = DriverObject->DriverName.Length;
             }
+            else
+                DriverNameString.Buffer = NULL;
 
             /* Check if there isn't a valid name*/
             if (!DriverNameLength)

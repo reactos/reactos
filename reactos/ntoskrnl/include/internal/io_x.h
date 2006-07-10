@@ -11,7 +11,7 @@ static __inline
 IopLockFileObject(IN PFILE_OBJECT FileObject)
 {
     /* Lock the FO and check for contention */
-    if (InterlockedExchange(&FileObject->Busy, TRUE))
+    if (InterlockedExchange((PLONG)&FileObject->Busy, TRUE))
     {
         /* FIXME: Implement contention case */
         KEBUGCHECK(0);
@@ -23,7 +23,7 @@ static __inline
 IopUnlockFileObject(IN PFILE_OBJECT FileObject)
 {
     /* Unlock the FO and wake any waiters up */
-    InterlockedExchange(&FileObject->Busy, FALSE);
+    InterlockedExchange((PLONG)&FileObject->Busy, FALSE);
     if (FileObject->Waiters) KeSetEvent(&FileObject->Lock, 0, FALSE);
 }
 

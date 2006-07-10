@@ -428,7 +428,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         Process->DebugPort = DebugObject;
 
         /* Check if the caller doesn't want the debug stuff inherited */
-        if (Flags & PS_NO_DEBUG_INHERIT) InterlockedOr(&Process->Flags, 2);
+        if (Flags & PS_NO_DEBUG_INHERIT) InterlockedOr((PLONG)&Process->Flags, 2);
     }
     else
     {
@@ -477,7 +477,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                  &DirectoryTableBase);
 
     /* We now have an address space */
-    InterlockedOr(&Process->Flags, 0x40000);
+    InterlockedOr((PLONG)&Process->Flags, 0x40000);
 
     /* Set the maximum WS */
     Process->Vm.MaximumWorkingSetSize = MaxWs;

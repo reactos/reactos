@@ -283,7 +283,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     {
         /* System Thread */
         Thread->StartAddress = StartRoutine;
-        InterlockedOr(&Thread->CrossThreadFlags, 0x10);
+        InterlockedOr((PLONG)&Thread->CrossThreadFlags, 0x10);
 
         /* Let the kernel intialize the Thread */
         KeInitializeThread(&Process->Pcb,

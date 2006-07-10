@@ -117,7 +117,7 @@ IopParseDevice(IN PVOID ParseObject,
             Vpb = OpenPacket->RelatedFileObject->Vpb;
 
             /* Reference it */
-            InterlockedIncrement(&Vpb->ReferenceCount);
+            InterlockedIncrement((PLONG)&Vpb->ReferenceCount);
         }
     }
     else
@@ -467,7 +467,7 @@ IopParseDevice(IN PVOID ParseObject,
 
         /* And re-associate with the actual one */
         Vpb = FileObject->Vpb;
-        if (Vpb) InterlockedIncrement(&Vpb->ReferenceCount);
+        if (Vpb) InterlockedIncrement((PLONG)&Vpb->ReferenceCount);
     }
 
     /* Make sure we are not using a dummy */
