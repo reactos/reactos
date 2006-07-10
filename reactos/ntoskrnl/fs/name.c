@@ -1,6 +1,6 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fs/name.c
  * PURPOSE:         Name and DBCS Name Validation and Dissection Functions.
  *
@@ -9,9 +9,10 @@
  *                  Filip Navara
  */
 
- /* INCLUDES ****************************************************************/
+/* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -153,23 +154,31 @@ PUCHAR FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * NAME    EXPORTED
- *  FsRtlAreNamesEqual@16
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- *  From Bo Branten's ntifs.h v25.
- *
+/*++
+ * @name FsRtlAreNamesEqual
  * @implemented
- */
+ *
+ * FILLME
+ *
+ * @param Name1
+ *        FILLME
+ *
+ * @param Name2
+ *        FILLME
+ *
+ * @param IgnoreCase
+ *        FILLME
+ *
+ * @param UpcaseTable
+ *        FILLME
+ *
+ * @return None
+ *
+ * @remarks From Bo Branten's ntifs.h v25.
+ *
+ *--*/
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlAreNamesEqual(IN PUNICODE_STRING Name1,
                    IN PUNICODE_STRING Name2,
                    IN BOOLEAN IgnoreCase,
@@ -233,36 +242,33 @@ ManualCase:
     }
 }
 
-/*
- * NAME    EXPORTED
- *  FsRtlDissectDbcs@16
+/*++
+ * @name FsRtlDissectDbcs
+ * @implemented
  *
  * Dissects a given path name into first and remaining part.
  *
- * ARGUMENTS
- * Name
- *    ANSI string to dissect.
+ * @param Name
+ *        ANSI string to dissect.
  *
- * FirstPart
- *    Pointer to user supplied ANSI_STRING, that will
- *    later point to the first part of the original name.
+ * @param FirstPart
+ *        Pointer to user supplied ANSI_STRING, that will later point
+ *        to the first part of the original name.
  *
- * RemainingPart
- *    Pointer to user supplied ANSI_STRING, that will
- *    later point to the remaining part of the original name.
+ * @param RemainingPart
+ *        Pointer to user supplied ANSI_STRING, that will later point
+ *        to the remaining part of the original name.
  *
- * RETURN VALUE
- *  None
+ * @return None
  *
- * EXAMPLE
- *  Name:           \test1\test2\test3
- *  FirstPart:      test1
- *  RemainingPart:  test2\test3
+ * @remarks Example:
+ *          Name:           \test1\test2\test3
+ *          FirstPart:      test1
+ *          RemainingPart:  test2\test3
  *
- * @implemented
- */
+ *--*/
 VOID
-STDCALL
+NTAPI
 FsRtlDissectDbcs(IN ANSI_STRING Name,
                  OUT PANSI_STRING FirstPart,
                  OUT PANSI_STRING RemainingPart)
@@ -305,96 +311,94 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
     return;
 }
 
-/*
- * NAME    EXPORTED
- *  FsRtlDissectName@16
- *
- * DESCRIPTION
- *  Dissects a given path name into first and remaining part.
- *
- * ARGUMENTS
- *  Name
- *    Unicode string to dissect.
- *
- *  FirstPart
- *    Pointer to user supplied UNICODE_STRING, that will
- *    later point to the first part of the original name.
- *
- *  RemainingPart
- *    Pointer to user supplied UNICODE_STRING, that will
- *    later point to the remaining part of the original name.
- *
- * RETURN VALUE
- *  None
- *
- * EXAMPLE
- *  Name:          \test1\test2\test3
- *  FirstPart:     test1
- *  RemainingPart: test2\test3
- *
+/*++
+ * @name FsRtlDissectName
  * @implemented
- */
+ *
+ * Dissects a given path name into first and remaining part.
+ *
+ * @param Name
+ *        Unicode string to dissect.
+ *
+ * @param FirstPart
+ *        Pointer to user supplied UNICODE_STRING, that will later point
+ *        to the first part of the original name.
+ *
+ * @param RemainingPart
+ *        Pointer to user supplied UNICODE_STRING, that will later point
+ *        to the remaining part of the original name.
+ *
+ * @return None
+ *
+ * @remarks Example:
+ *          Name:           \test1\test2\test3
+ *          FirstPart:      test1
+ *          RemainingPart:  test2\test3
+ *
+ *--*/
 VOID
-STDCALL
+NTAPI
 FsRtlDissectName(IN UNICODE_STRING Name,
                  OUT PUNICODE_STRING FirstPart,
                  OUT PUNICODE_STRING RemainingPart)
 {
-  USHORT NameOffset = 0;
-  USHORT NameLength = 0;
-  USHORT Length;
+    USHORT NameOffset = 0;
+    USHORT NameLength = 0;
+    USHORT Length;
 
-  FirstPart->Length = 0;
-  FirstPart->MaximumLength = 0;
-  FirstPart->Buffer = NULL;
+    FirstPart->Length = 0;
+    FirstPart->MaximumLength = 0;
+    FirstPart->Buffer = NULL;
 
-  RemainingPart->Length = 0;
-  RemainingPart->MaximumLength = 0;
-  RemainingPart->Buffer = NULL;
+    RemainingPart->Length = 0;
+    RemainingPart->MaximumLength = 0;
+    RemainingPart->Buffer = NULL;
 
-  if (Name.Length == 0)
-    return;
+    if (Name.Length == 0)
+        return;
 
-  /* Skip leading backslash */
-  if (Name.Buffer[0] == L'\\')
-    NameOffset++;
+    /* Skip leading backslash */
+    if (Name.Buffer[0] == L'\\')
+        NameOffset++;
 
-  Length = Name.Length / sizeof(WCHAR);
+    Length = Name.Length / sizeof(WCHAR);
 
-  /* Search for next backslash or end-of-string */
-  while ((NameOffset + NameLength < Length) &&
-         (Name.Buffer[NameOffset + NameLength] != L'\\'))
-  {
-    NameLength++;
-  }
+    /* Search for next backslash or end-of-string */
+    while ((NameOffset + NameLength < Length) &&
+        (Name.Buffer[NameOffset + NameLength] != L'\\'))
+    {
+        NameLength++;
+    }
 
-  FirstPart->Length =
-  FirstPart->MaximumLength = NameLength * sizeof(WCHAR);
-  FirstPart->Buffer = &Name.Buffer[NameOffset];
+    FirstPart->Length =
+        FirstPart->MaximumLength = NameLength * sizeof(WCHAR);
+    FirstPart->Buffer = &Name.Buffer[NameOffset];
 
-  NameOffset += NameLength + 1;
-  if (NameOffset < Length)
-  {
-    RemainingPart->Length = (Length - NameOffset) * sizeof(WCHAR);
-    RemainingPart->MaximumLength = (Length - NameOffset) * sizeof(WCHAR);
-    RemainingPart->Buffer = &Name.Buffer[NameOffset];
-  }
+    NameOffset += NameLength + 1;
+    if (NameOffset < Length)
+    {
+        RemainingPart->Length = (Length - NameOffset) * sizeof(WCHAR);
+        RemainingPart->MaximumLength = (Length - NameOffset) * sizeof(WCHAR);
+        RemainingPart->Buffer = &Name.Buffer[NameOffset];
+    }
 }
 
-/*
- * NAME    EXPORTED
- *  FsRtlDoesDbcsContainWildCards@4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
+/*++
+ * @name FsRtlDoesDbcsContainWildCards
  * @implemented
- */
+ *
+ * FILLME
+ *
+ * @param Name
+ *        FILLME
+ *
+ * @return None
+ *
+ * @remarks None
+ *
+ *--*/
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 {
     ULONG i;
@@ -415,23 +419,22 @@ FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
     return FALSE;
 }
 
-/*
- * NAME    EXPORTED
- *  FsRtlDoesNameContainWildCards@4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- *  From Bo Branten's ntifs.h v12.
- *
+/*++
+ * @name FsRtlDoesNameContainWildCards
  * @implemented
- */
+ *
+ * FILLME
+ *
+ * @param Name
+ *        Pointer to a UNICODE_STRING containing Name to examine
+ *
+ * @return TRUE if Name contains wildcards, FALSE otherwise
+ *
+ * @remarks From Bo Branten's ntifs.h v12.
+ *
+ *--*/
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
 {
     PWCHAR Ptr;
@@ -452,60 +455,89 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
     return FALSE;
 }
 
-/*
- * NAME    EXPORTED
- * FsRtlIsDbcsInExpression@8
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
+/*++
+ * @name FsRtlIsDbcsInExpression
  * @unimplemented
- */
+ *
+ * FILLME
+ *
+ * @param Expression
+ *        FILLME
+ *
+ * @param Name
+ *        FILLME
+ *
+ * @return None
+ *
+ * @remarks None
+ *
+ *--*/
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                         IN PANSI_STRING Name)
 {
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
-/*
- * NAME    EXPORTED
- *  FsRtlIsFatDbcsLegal@20
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
+/*++
+ * @name FsRtlIsFatDbcsLegal
  * @unimplemented
- */
+ *
+ * FILLME
+ *
+ * @param DbcsName
+ *        FILLME
+ *
+ * @param WildCardsPermissible
+ *        FILLME
+ *
+ * @param PathNamePermissible
+ *        FILLME
+ *
+ * @param LeadingBackslashPermissible
+ *        FILLME
+ *
+ * @return TRUE if the DbcsName is legal, FALSE otherwise
+ *
+ * @remarks None
+ *
+ *--*/
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
                     IN BOOLEAN WildCardsPermissible,
                     IN BOOLEAN PathNamePermissible,
                     IN BOOLEAN LeadingBackslashPermissible)
 {
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
-/*
- * NAME    EXPORTED
- *  FsRtlIsHpfsDbcsLegal@20
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
+/*++
+ * @name FsRtlIsHpfsDbcsLegal
  * @unimplemented
- */
+ *
+ * FILLME
+ *
+ * @param DbcsName
+ *        FILLME
+ *
+ * @param WildCardsPermissible
+ *        FILLME
+ *
+ * @param PathNamePermissible
+ *        FILLME
+ *
+ * @param LeadingBackslashPermissible
+ *        FILLME
+ *
+ * @return TRUE if the DbcsName is legal, FALSE otherwise
+ *
+ * @remarks None
+ *
+ *--*/
 BOOLEAN
 STDCALL
 FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
@@ -513,108 +545,111 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                      IN BOOLEAN PathNamePermissible,
                      IN BOOLEAN LeadingBackslashPermissible)
 {
-  return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
-/*
- * NAME    EXPORTED
- *  FsRtlIsNameInExpression@16
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * NOTE
- *  From Bo Branten's ntifs.h v12. This function should be rewritten
- *      to avoid recursion and better wildcard handling should be
- *      implemented (see FsRtlDoesNameContainWildCards).
- *
+/*++
+ * @name FsRtlIsNameInExpression
  * @implemented
- */
+ *
+ * FILLME
+ *
+ * @param DeviceObject
+ *        FILLME
+ *
+ * @param Irp
+ *        FILLME
+ *
+ * @return TRUE if Name is in Expression, FALSE otherwise
+ *
+ * @remarks From Bo Branten's ntifs.h v12. This function should be
+ *          rewritten to avoid recursion and better wildcard handling
+ *          should be implemented (see FsRtlDoesNameContainWildCards).
+ *
+ *--*/
 BOOLEAN
-STDCALL
+NTAPI
 FsRtlIsNameInExpression(IN PUNICODE_STRING Expression,
                         IN PUNICODE_STRING Name,
                         IN BOOLEAN IgnoreCase,
                         IN PWCHAR UpcaseTable OPTIONAL)
 {
-  USHORT ExpressionPosition, NamePosition;
-  UNICODE_STRING TempExpression, TempName;
+    USHORT ExpressionPosition, NamePosition;
+    UNICODE_STRING TempExpression, TempName;
 
-  ExpressionPosition = 0;
-  NamePosition = 0;
-  while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
-         NamePosition < (Name->Length / sizeof(WCHAR)))
+    ExpressionPosition = 0;
+    NamePosition = 0;
+    while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+        NamePosition < (Name->Length / sizeof(WCHAR)))
     {
-      if (Expression->Buffer[ExpressionPosition] == L'*')
+        if (Expression->Buffer[ExpressionPosition] == L'*')
         {
-          ExpressionPosition++;
-          if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)))
+            ExpressionPosition++;
+            if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)))
             {
-              return TRUE;
+                return TRUE;
             }
-          while (NamePosition < (Name->Length / sizeof(WCHAR)))
+            while (NamePosition < (Name->Length / sizeof(WCHAR)))
             {
-              TempExpression.Length =
-              TempExpression.MaximumLength =
-                Expression->Length - (ExpressionPosition * sizeof(WCHAR));
-              TempExpression.Buffer = Expression->Buffer + ExpressionPosition;
-              TempName.Length =
-              TempName.MaximumLength =
-                Name->Length - (NamePosition * sizeof(WCHAR));
-              TempName.Buffer = Name->Buffer + NamePosition;
-              /* FIXME: Rewrite to get rid of recursion */
-              if (FsRtlIsNameInExpression(&TempExpression, &TempName,
-                                          IgnoreCase, UpcaseTable))
+                TempExpression.Length =
+                    TempExpression.MaximumLength =
+                    Expression->Length - (ExpressionPosition * sizeof(WCHAR));
+                TempExpression.Buffer = Expression->Buffer + ExpressionPosition;
+                TempName.Length =
+                    TempName.MaximumLength =
+                    Name->Length - (NamePosition * sizeof(WCHAR));
+                TempName.Buffer = Name->Buffer + NamePosition;
+                /* FIXME: Rewrite to get rid of recursion */
+                if (FsRtlIsNameInExpression(&TempExpression, &TempName,
+                    IgnoreCase, UpcaseTable))
                 {
-                  return TRUE;
+                    return TRUE;
                 }
-              NamePosition++;
+                NamePosition++;
             }
         }
-      else
+        else
         {
-          /* FIXME: Take UpcaseTable into account! */
-          if (Expression->Buffer[ExpressionPosition] == L'?' ||
-              (IgnoreCase &&
-               RtlUpcaseUnicodeChar(Expression->Buffer[ExpressionPosition]) ==
-               RtlUpcaseUnicodeChar(Name->Buffer[NamePosition])) ||
-              (!IgnoreCase &&
-               Expression->Buffer[ExpressionPosition] ==
-               Name->Buffer[NamePosition]))
+            /* FIXME: Take UpcaseTable into account! */
+            if (Expression->Buffer[ExpressionPosition] == L'?' ||
+                (IgnoreCase &&
+                RtlUpcaseUnicodeChar(Expression->Buffer[ExpressionPosition]) ==
+                RtlUpcaseUnicodeChar(Name->Buffer[NamePosition])) ||
+                (!IgnoreCase &&
+                Expression->Buffer[ExpressionPosition] ==
+                Name->Buffer[NamePosition]))
             {
-              NamePosition++;
-              ExpressionPosition++;
+                NamePosition++;
+                ExpressionPosition++;
             }
-          else
+            else
             {
-              return FALSE;
+                return FALSE;
             }
         }
     }
 
-  /* Handle matching of "f0_*.*" expression to "f0_000" file name. */
-  if (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
-      Expression->Buffer[ExpressionPosition] == L'.')
+    /* Handle matching of "f0_*.*" expression to "f0_000" file name. */
+    if (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+        Expression->Buffer[ExpressionPosition] == L'.')
     {
-      while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
-             (Expression->Buffer[ExpressionPosition] == L'.' ||
-              Expression->Buffer[ExpressionPosition] == L'*' ||
-              Expression->Buffer[ExpressionPosition] == L'?'))
+        while (ExpressionPosition < (Expression->Length / sizeof(WCHAR)) &&
+            (Expression->Buffer[ExpressionPosition] == L'.' ||
+            Expression->Buffer[ExpressionPosition] == L'*' ||
+            Expression->Buffer[ExpressionPosition] == L'?'))
         {
-          ExpressionPosition++;
+            ExpressionPosition++;
         }
     }
 
-  if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)) &&
-      NamePosition == (Name->Length / sizeof(WCHAR)))
+    if (ExpressionPosition == (Expression->Length / sizeof(WCHAR)) &&
+        NamePosition == (Name->Length / sizeof(WCHAR)))
     {
-      return TRUE;
+        return TRUE;
     }
 
-  return FALSE;
+    return FALSE;
 }
 
 /* EOF */

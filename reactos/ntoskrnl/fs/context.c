@@ -1,6 +1,6 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fs/context.c
  * PURPOSE:         File and Stream Context Functions
  *
@@ -10,6 +10,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
