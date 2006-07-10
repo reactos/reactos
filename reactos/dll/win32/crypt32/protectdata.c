@@ -107,7 +107,7 @@ struct protect_data_t
 };
 
 /* this is used to check if an incoming structure was built by Wine */
-static const char * crypt_magic_str = "Wine Crypt32 ok";
+static const char crypt_magic_str[] = "Wine Crypt32 ok";
 
 /* debugging tool to print strings of hex chars */
 static const char *
@@ -835,8 +835,8 @@ BOOL WINAPI CryptProtectData(DATA_BLOB* pDataIn,
                              DWORD dwFlags,
                              DATA_BLOB* pDataOut)
 {
+    static const WCHAR empty_str[1];
     BOOL rc = FALSE;
-
     HCRYPTPROV hProv;
     struct protect_data_t protect_data;
     HCRYPTHASH hHash;
@@ -861,7 +861,7 @@ BOOL WINAPI CryptProtectData(DATA_BLOB* pDataIn,
     /* Windows appears to create an empty szDataDescr instead of maintaining
      * a NULL */
     if (!szDataDescr)
-        szDataDescr=(WCHAR[]){'\0'};
+        szDataDescr = empty_str;
 
     /* get crypt context */
     if (!CryptAcquireContextW(&hProv,NULL,NULL,CRYPT32_PROTECTDATA_PROV,CRYPT_VERIFYCONTEXT))

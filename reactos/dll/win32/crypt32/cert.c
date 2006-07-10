@@ -731,12 +731,16 @@ BOOL WINAPI CertVerifySubjectCertificateContext(PCCERT_CONTEXT pSubject,
     }
     if (*pdwFlags & CERT_STORE_REVOCATION_FLAG)
     {
-        PCCRL_CONTEXT crl = CertFindCRLInStore(pSubject->hCertStore,
-         pSubject->dwCertEncodingType, 0, CRL_FIND_ISSUED_BY, pSubject, NULL);
+        DWORD flags = 0;
+        PCCRL_CONTEXT crl = CertGetCRLFromStore(pSubject->hCertStore, pSubject,
+         NULL, &flags);
 
+        /* FIXME: what if the CRL has expired? */
         if (crl)
         {
-            FIXME("check CRL for subject\n");
+            if (CertVerifyCRLRevocation(pSubject->dwCertEncodingType,
+             pSubject->pCertInfo, 1, (PCRL_INFO *)&crl->pCrlInfo))
+                *pdwFlags &= CERT_STORE_REVOCATION_FLAG;
         }
         else
             *pdwFlags |= CERT_STORE_NO_CRL_FLAG;
