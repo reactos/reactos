@@ -158,27 +158,27 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 VOID STDCALL
 ScreenSaverThreadMain(PVOID StartContext)
 {
-	KEVENT Event;         
-    LARGE_INTEGER Timeout;
-	LARGE_INTEGER DelayTimer;
-    LARGE_INTEGER CurrentTime;
-    LARGE_INTEGER DiffTimeMouse;
-    LARGE_INTEGER DiffTimeKeyboard;
-	UINT  ScreenSaverTimeOut = 0;
-	BOOL nPreviousState = FALSE;
-	NTSTATUS Status;
-	
-	
-	KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
-                        LOW_REALTIME_PRIORITY + 3);
+   KEVENT Event;
+   LARGE_INTEGER Timeout;
+   LARGE_INTEGER DelayTimer;
+   LARGE_INTEGER CurrentTime;
+   LARGE_INTEGER DiffTimeMouse;
+   LARGE_INTEGER DiffTimeKeyboard;
+   UINT ScreenSaverTimeOut = 0;
+   BOOL nPreviousState = FALSE;
+   NTSTATUS Status;
 
-	KeQuerySystemTime(&MouseInputCurrentTime);
-    KeQuerySystemTime(&KeyboardInputCurrentTime);
-	
-	DelayTimer.QuadPart = -10000000LL;  /* 1 second timeout */
 
-	for(;;)
-	{	  
+   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                       LOW_REALTIME_PRIORITY + 3);
+
+   KeQuerySystemTime(&MouseInputCurrentTime);
+   KeQuerySystemTime(&KeyboardInputCurrentTime);
+
+   DelayTimer.QuadPart = -10000000LL;  /* 1 second timeout */
+
+   for(;;)
+   {
       DPRINT("Screen Saver auto start Thread Waiting for start event\n");
       Status = KeWaitForSingleObject(&InputThreadsStart,
                                      0,
@@ -186,61 +186,61 @@ ScreenSaverThreadMain(PVOID StartContext)
                                      TRUE,
                                      NULL);
       DPRINT("Screen Saver auto start Thread Starting...\n");
-	  while(InputThreadsRunning)
-	  {		
-        
-		 IntSystemParametersInfo(SPI_GETSCREENSAVETIMEOUT, 0, &ScreenSaverTimeOut, 0);
-		 IntSystemParametersInfo(SPI_GETSCREENSAVERRUNNING, 0, &nPreviousState, 0);
+      while(InputThreadsRunning)
+      {
 
-		 Timeout.QuadPart = ((LONGLONG)ScreenSaverTimeOut) * 10000000LL;	
-		 
-	     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-	     Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DelayTimer); 
+         IntSystemParametersInfo(SPI_GETSCREENSAVETIMEOUT, 0, &ScreenSaverTimeOut, 0);
+         IntSystemParametersInfo(SPI_GETSCREENSAVERRUNNING, 0, &nPreviousState, 0);
 
-		 if(Status == STATUS_ALERTED && !InputThreadsRunning)
+         Timeout.QuadPart = ((LONGLONG)ScreenSaverTimeOut) * 10000000LL;
+
+         KeInitializeEvent(&Event, NotificationEvent, FALSE);
+         Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DelayTimer);
+
+         if(Status == STATUS_ALERTED && !InputThreadsRunning)
          {
             break;
-         }        
+         }
          if(!NT_SUCCESS(Status))
          {
             DPRINT1("Win32K: Failed to read from Screen Saver auto thread.\n");
             return; //(Status);
          }
-           
+
          KeQuerySystemTime(&CurrentTime);
-		 DiffTimeMouse.QuadPart = CurrentTime.QuadPart - MouseInputCurrentTime.QuadPart;
-		 DiffTimeKeyboard.QuadPart = CurrentTime.QuadPart - KeyboardInputCurrentTime.QuadPart;		   
+         DiffTimeMouse.QuadPart = CurrentTime.QuadPart - MouseInputCurrentTime.QuadPart;
+         DiffTimeKeyboard.QuadPart = CurrentTime.QuadPart - KeyboardInputCurrentTime.QuadPart;
 
-	     if ( (DiffTimeMouse.QuadPart >= Timeout.QuadPart) && 
-			  (DiffTimeKeyboard.QuadPart >= Timeout.QuadPart) &&			
-			  (nPreviousState == FALSE))
-         { 
-			 BOOL nPreviousState = FALSE;
-			 DPRINT1("Keyboard and Mouse TimeOut Starting Screen Saver ...\n");    
-             DPRINT1(" %I64d Keyboard Timeout Value\n",DiffTimeKeyboard.QuadPart); 
-             DPRINT1(" %I64d Mouse Timeout Value \n",DiffTimeMouse.QuadPart); 
-			 DPRINT1(" %I64d TimeOut \n",DiffTimeMouse.QuadPart); 
+         if ( (DiffTimeMouse.QuadPart >= Timeout.QuadPart) &&
+              (DiffTimeKeyboard.QuadPart >= Timeout.QuadPart) &&
+              (nPreviousState == FALSE))
+         {
+            BOOL nPreviousState = FALSE;
+            DPRINT("Keyboard and Mouse TimeOut Starting Screen Saver ...\n");
+            DPRINT(" %I64d Keyboard Timeout Value\n",DiffTimeKeyboard.QuadPart);
+            DPRINT(" %I64d Mouse Timeout Value \n",DiffTimeMouse.QuadPart);
+            DPRINT(" %I64d TimeOut \n",DiffTimeMouse.QuadPart);
 
-             CSR_API_MESSAGE Request;                                        
-             CsrInit();
-             Request.Type = MAKE_CSR_API(START_SCREEN_SAVER, CSR_GUI);
-			 Request.Data.StartScreenSaver.Start = TRUE;  			                     			   
-             co_CsrNotifyScreenSaver(&Request );  
+            CSR_API_MESSAGE Request;
+            CsrInit();
+            Request.Type = MAKE_CSR_API(START_SCREEN_SAVER, CSR_GUI);
+            Request.Data.StartScreenSaver.Start = TRUE;
+            co_CsrNotifyScreenSaver(&Request );
 
-			 IntSystemParametersInfo(SPI_SETSCREENSAVERRUNNING, TRUE, &nPreviousState, 0);			 
-         } 
-		 
-		 if ( (DiffTimeMouse.QuadPart < Timeout.QuadPart) && 
-			  (DiffTimeKeyboard.QuadPart < Timeout.QuadPart) &&
-			  (nPreviousState == TRUE))
-         {			
+            IntSystemParametersInfo(SPI_SETSCREENSAVERRUNNING, TRUE, &nPreviousState, 0);
+         }
+
+         if ( (DiffTimeMouse.QuadPart < Timeout.QuadPart) &&
+              (DiffTimeKeyboard.QuadPart < Timeout.QuadPart) &&
+              (nPreviousState == TRUE))
+         {
             IntSystemParametersInfo(SPI_SETSCREENSAVERRUNNING, FALSE, &nPreviousState, 0);
-		 }
+         }
 
-		 
-	  }
-	  DPRINT("Screen Saver auto start Thread Stopped...\n");
-	}
+
+      }
+      DPRINT("Screen Saver auto start Thread Stopped...\n");
+   }
 }
 
 
@@ -263,7 +263,7 @@ MouseThreadMain(PVOID StartContext)
       KEVENT Event;
       DueTime.QuadPart = (LONGLONG)(-10000000);
       KeInitializeEvent(&Event, NotificationEvent, FALSE);
-      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime); 
+      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
       Status = NtOpenFile(&MouseDeviceHandle,
                        FILE_ALL_ACCESS,
                        &MouseObjectAttributes,
@@ -319,8 +319,8 @@ MouseThreadMain(PVOID StartContext)
          }
          DPRINT("MouseEvent\n");
 
-		 KeQuerySystemTime(&MouseInputCurrentTime);
-         		 
+         KeQuerySystemTime(&MouseInputCurrentTime);
+
          UserEnterExclusive();
 
          ProcessMouseInputData(&MouseInput, Iosb.Information / sizeof(MOUSE_INPUT_DATA));
@@ -531,7 +531,7 @@ KeyboardThreadMain(PVOID StartContext)
       KEVENT Event;
       DueTime.QuadPart = (LONGLONG)(-10000000);
       KeInitializeEvent(&Event, NotificationEvent, FALSE);
-      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime); 
+      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime);
       Status = NtOpenFile(&KeyboardDeviceHandle,
                        FILE_ALL_ACCESS,
                        &KeyboardObjectAttributes,
@@ -589,10 +589,10 @@ KeyboardThreadMain(PVOID StartContext)
          HWND hWnd;
          int id;
 
-	     DPRINT("KeyInput @ %08x\n", &KeyInput);
+         DPRINT("KeyInput @ %08x\n", &KeyInput);
 
          Status = NtReadFile (KeyboardDeviceHandle,
-			      NULL,
+                              NULL,
                               NULL,
                               NULL,
                               &Iosb,
@@ -629,7 +629,7 @@ KeyboardThreadMain(PVOID StartContext)
             return; //(Status);
          }
 
-		 KeQuerySystemTime(&KeyboardInputCurrentTime);
+         KeQuerySystemTime(&KeyboardInputCurrentTime);
 
          /* Update modifier state */
          fsModifiers = IntKeyboardGetModifiers(&KeyInput);
@@ -878,7 +878,7 @@ NTSTATUS FASTCALL
 InitInputImpl(VOID)
 {
    NTSTATUS Status;
-  	 
+
    KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
 
    Status = PsCreateSystemThread(&KeyboardThreadHandle,
