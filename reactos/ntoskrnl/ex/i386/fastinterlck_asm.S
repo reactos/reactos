@@ -599,7 +599,7 @@
     LOCK cmpxchg dword ptr [ecx], edx
 
     /* Return */
-    ret
+    ret 4
 
 /*PVOID
  *FASTCALL
