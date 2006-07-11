@@ -8,6 +8,8 @@ extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 extern POBJECT_TYPE ExEventPairObjectType;
 
+#define MAX_FAST_REFS           7
+
 #define EX_OBJ_TO_HDR(eob) ((POBJECT_HEADER)((ULONG_PTR)(eob) &                \
   ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
   EX_HANDLE_ENTRY_AUDITONCLOSE)))

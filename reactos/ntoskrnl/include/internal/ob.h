@@ -292,6 +292,12 @@ ObFastReferenceObject(
     IN PEX_FAST_REF FastRef
 );
 
+PVOID
+FASTCALL
+ObFastReferenceObjectLocked(
+    IN PEX_FAST_REF FastRef
+);
+
 VOID
 FASTCALL
 ObFastDereferenceObject(

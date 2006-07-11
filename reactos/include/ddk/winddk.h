@@ -1158,6 +1158,10 @@ typedef struct _EX_RUNDOWN_REF
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
+#define ASSERT_GATE(object) \
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
+          (((object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
+
 typedef struct _KGATE
 {
     DISPATCHER_HEADER Header;
@@ -5239,6 +5243,10 @@ InterlockedExchangeAdd(
  */
 #define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
   ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
+
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
+#define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
+#define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
 
 #endif /* !__INTERLOCKED_DECLARED */
 

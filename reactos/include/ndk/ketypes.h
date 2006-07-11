@@ -40,6 +40,11 @@ Author:
 #define SSDT_MAX_ENTRIES                2
 
 //
+// Object Type Mask for Kernel Dispatcher Objects
+//
+#define KOBJECT_TYPE_MASK               0x7F
+
+//
 // Dispatcher Priority increments
 //
 #define THREAD_ALERT_INCREMENT          2
@@ -240,7 +245,7 @@ typedef enum _KTHREAD_STATE
     Waiting,
     Transition,
     DeferredReady,
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_WS03)
     GateWait,
 #endif
 } KTHREAD_STATE, *PKTHREAD_STATE;
