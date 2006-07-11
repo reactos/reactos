@@ -370,6 +370,11 @@ cleanup:
 	DeviceExtension->ReadIsPending = FALSE;
 	DeviceExtension->InputCount = 0;
 	DeviceExtension->PortData = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->DataQueueSize * sizeof(KEYBOARD_INPUT_DATA));
+	if (!DeviceExtension->PortData)
+	{
+		ExFreePool(DeviceNameU.Buffer);
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
 	Fdo->Flags |= DO_POWER_PAGABLE;
 	Fdo->Flags |= DO_BUFFERED_IO; /* FIXME: Why is it needed for 1st stage setup? */
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -509,13 +514,12 @@ ClassCallback(
 		 * Move the input data from the port data queue to our class data
 		 * queue.
 		 */
-		RtlMoveMemory(
-			ClassDeviceExtension->PortData,
+		RtlCopyMemory(
+			&ClassDeviceExtension->PortData[ClassDeviceExtension->InputCount],
 			(PCHAR)DataStart,
 			sizeof(KEYBOARD_INPUT_DATA) * ReadSize);
 
-		/* Move the pointer and counter up */
-		ClassDeviceExtension->PortData += ReadSize;
+		/* Move the counter up */
 		ClassDeviceExtension->InputCount += ReadSize;
 
 		(*ConsumedCount) += ReadSize;
@@ -681,6 +685,8 @@ ClassAddDevice(
 	return STATUS_SUCCESS;
 
 cleanup:
+	if (!(Fdo->Flags & DO_DEVICE_INITIALIZING))
+		DPRINT1("FIXME: Need to send IOCTL_INTERNAL_*_DISCONNECT\n");
 	if (DeviceExtension)
 	{
 		if (DeviceExtension->LowerDevice)
@@ -717,19 +723,18 @@ ClassStartIo(
 		Status = FillOneEntry(
 			DeviceObject,
 			Irp,
-			DeviceExtension->PortData - DeviceExtension->InputCount);
+			&DeviceExtension->PortData[DeviceExtension->InputCount - 1]);
 
 		if (NT_SUCCESS(Status))
 		{
 			if (DeviceExtension->InputCount > 1)
 			{
 				RtlMoveMemory(
-					DeviceExtension->PortData - DeviceExtension->InputCount,
-					DeviceExtension->PortData - DeviceExtension->InputCount + 1,
+					&DeviceExtension->PortData[1],
+					&DeviceExtension->PortData[0],
 					(DeviceExtension->InputCount - 1) * sizeof(KEYBOARD_INPUT_DATA));
 			}
 
-			DeviceExtension->PortData--;
 			DeviceExtension->InputCount--;
 			DeviceExtension->ReadIsPending = FALSE;
 
