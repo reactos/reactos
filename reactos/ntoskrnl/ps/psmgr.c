@@ -196,6 +196,7 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsIdleProcess->Pcb.ThreadListHead);
    InitializeListHead(&PsIdleProcess->ThreadListHead);
    InitializeListHead(&PsIdleProcess->ActiveProcessLinks);
+   ObInitializeFastReference(&PsIdleProcess->Token, NULL);
    KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.Header,
 				ProcessObject,
 				sizeof(EPROCESS) / sizeof(LONG),
@@ -278,8 +279,7 @@ PsInitProcessManagment(VOID)
     /* No parent, this is the Initial System Process. Assign Boot Token */
     BootToken = SepCreateSystemProcessToken();
     BootToken->TokenInUse = TRUE;
-    PsInitialSystemProcess->Token.Object = BootToken; /* FIXME */
-    ObReferenceObject(BootToken);
+    ObInitializeFastReference(&PsInitialSystemProcess->Token, BootToken);
 	}
 #endif
 }

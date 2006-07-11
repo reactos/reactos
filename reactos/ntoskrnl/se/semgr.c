@@ -485,7 +485,7 @@ SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 
   if (SubjectContext->PrimaryToken != NULL)
     {
-      ObDereferenceObject(SubjectContext->PrimaryToken);
+      ObFastDereferenceObject(&PsGetCurrentProcess()->Token, SubjectContext->PrimaryToken);
     }
 
   if (SubjectContext->ClientToken != NULL)

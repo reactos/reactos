@@ -121,6 +121,15 @@ NTAPI
 SeDeassignPrimaryToken(struct _EPROCESS *Process);
 
 NTSTATUS
+NTAPI
+SeSubProcessToken(
+    IN PTOKEN Parent,
+    OUT PTOKEN *Token,
+    IN BOOLEAN InUse,
+    IN ULONG SessionId
+);
+
+NTSTATUS
 STDCALL
 SepCreateImpersonationTokenDacl(
     PTOKEN Token,

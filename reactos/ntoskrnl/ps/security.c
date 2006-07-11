@@ -176,7 +176,7 @@ PsReferencePrimaryToken(PEPROCESS Process)
         PspLockProcessSecurityShared(Process);
 
         /* Do a Locked Fast Reference */
-        //Token = ObFastReferenceObjectLocked(&Process->Token);
+        Token = ObFastReferenceObjectLocked(&Process->Token);
 
         /* Unlock the Process */
         PspUnlockProcessSecurityShared(Process);
@@ -222,47 +222,25 @@ PspInitializeProcessSecurity(PEPROCESS Process,
                              PEPROCESS Parent OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    PTOKEN NewToken, ParentToken;
 
     /* If we have a parent, then duplicate the Token */
-    if (Parent) {
-
-        PTOKEN pNewToken;
-        PTOKEN pParentToken;
-        OBJECT_ATTRIBUTES ObjectAttributes;
-
+    if (Parent)
+    {
         /* Get the Parent Token */
-        pParentToken = PsReferencePrimaryToken(Parent);
+        ParentToken = PsReferencePrimaryToken(Parent);
 
-        /* Initialize the Object Attributes */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   NULL,
-                                   0,
-                                   NULL,
-                                   NULL);
+        /* Duplicate it */
+        Status = SeSubProcessToken(ParentToken, &NewToken, TRUE, 0);
 
-        /* Duplicate the Token */
-        Status = SepDuplicateToken(pParentToken,
-                                   &ObjectAttributes,
-                                   FALSE,
-                                   TokenPrimary,
-                                   pParentToken->ImpersonationLevel,
-                                   KernelMode,
-                                   &pNewToken);
-
-        if(!NT_SUCCESS(Status)) {
-
-            DPRINT1("Failed to Duplicate Token\n");
-            return Status;
-        }
-
-        /* Dereference the Token */
-        ObFastDereferenceObject(&Parent->Token, pParentToken);
+        /* Dereference the Parent */
+        ObFastDereferenceObject(&Parent->Token, ParentToken);
 
         /* Set the new Token */
-        ObInitializeFastReference(&Process->Token, pNewToken);
-
-    } else {
-
+        ObInitializeFastReference(&Process->Token, NewToken);
+    }
+    else
+    {
 #ifdef SCHED_REWRITE
         PTOKEN BootToken;
 
@@ -449,7 +427,7 @@ PsReferenceEffectiveToken(PETHREAD Thread,
             PspLockProcessSecurityShared(Process);
 
             /* Do a Locked Fast Reference */
-            //Token = ObFastReferenceObjectLocked(&Process->Token);
+            Token = ObFastReferenceObjectLocked(&Process->Token);
 
             /* Unlock the Process */
             PspUnlockProcessSecurityShared(Process);

@@ -10,10 +10,9 @@
 /*
  * Alex FIXMEs:
  *  - CRITICAL: NtCurrentTeb returns KPCR.
- *  - CRITICAL: Verify rundown APIs (ex/rundown.c) and use them where necessary.
- *  - MAJOR: Implement Pushlocks and use them as process lock.
+ *  - MAJOR: Use Process Rundown
+ *  - MAJOR: Use Process Pushlock Locks
  *  - MAJOR: Implement Safe Referencing (See PsGetNextProcess/Thread).
- *  - MAJOR: Implement Fast Referencing (mostly for tokens).
  *  - MAJOR: Use Guarded Mutex instead of Fast Mutex for Active Process Locks.
  *  - Generate process cookie for user-more thread.
  *  - Add security calls where necessary.

@@ -361,8 +361,8 @@ typedef struct _EX_FAST_REF
     union
     {
         PVOID Object;
-        ULONG RefCnt:3;
-        ULONG Value;
+        ULONG_PTR RefCnt:3;
+        ULONG_PTR Value;
     };
 } EX_FAST_REF, *PEX_FAST_REF;
 

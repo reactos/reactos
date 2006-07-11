@@ -267,7 +267,7 @@ static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
 #define ExpChangeRundown(x, y, z) InterlockedCompareExchange64((PLONGLONG)x, y, z)
 #define ExpSetRundown(x, y) InterlockedExchange64((PLONGLONG)x, y)
 #else
-#define ExpChangeRundown(x, y, z) InterlockedCompareExchange((PLONG)x, y, z)
+#define ExpChangeRundown(x, y, z) InterlockedCompareExchange((PLONG)x, PtrToLong(y), PtrToLong(z))
 #define ExpSetRundown(x, y) InterlockedExchange((PLONG)x, y)
 #endif
 
