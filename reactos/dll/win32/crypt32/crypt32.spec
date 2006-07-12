@@ -95,6 +95,7 @@
 @ stdcall CryptStringToBinaryA(str long long ptr ptr ptr ptr)
 @ stub CryptStringToBinaryW # (wstr long long ptr ptr ptr ptr)
 @ stub CryptAcquireContextU
+@ stdcall CryptAcquireCertificatePrivateKey(ptr long ptr ptr ptr ptr)
 @ stub CryptCloseAsyncHandle
 @ stub CryptCreateAsyncHandle
 @ stub CryptDecodeMessage
