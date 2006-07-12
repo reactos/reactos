@@ -369,6 +369,97 @@ cleanup:
 
 
 DWORD STDCALL
+InstallLiveCD (HINSTANCE hInstance)
+{
+  LONG rc;
+  HKEY hKey = NULL;
+  DWORD dwType;
+  DWORD requiredSize;
+  LPTSTR Shell = NULL;
+  TCHAR CommandLine[MAX_PATH];
+  STARTUPINFO StartupInfo;
+  PROCESS_INFORMATION ProcessInformation;
+  BOOL res;
+
+  /* Load the default shell */
+  rc = RegOpenKeyEx(
+    HKEY_LOCAL_MACHINE,
+    TEXT("SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon"), /* FIXME: should be REGSTR_PATH_WINLOGON */
+    0,
+    KEY_QUERY_VALUE,
+    &hKey);
+  if (rc != ERROR_SUCCESS)
+    goto cleanup;
+  rc = RegQueryValueEx(
+    hKey,
+    TEXT("Shell"),
+    NULL,
+    &dwType,
+    NULL,
+    &requiredSize);
+  if (rc != ERROR_SUCCESS)
+    goto cleanup;
+  else if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+    goto cleanup;
+  else if (requiredSize > (MAX_PATH - 1) * sizeof(TCHAR))
+    goto cleanup;
+  Shell = HeapAlloc(GetProcessHeap(), 0, requiredSize + sizeof(TCHAR));
+  if (!Shell)
+    goto cleanup;
+  Shell[requiredSize / sizeof(WCHAR)] = '\0';
+  rc = RegQueryValueEx(
+    hKey,
+    TEXT("Shell"),
+    NULL,
+    NULL,
+    (LPBYTE)Shell,
+    &requiredSize);
+  if (rc != ERROR_SUCCESS)
+    goto cleanup;
+  if (dwType == REG_EXPAND_SZ)
+    ExpandEnvironmentStrings(Shell, CommandLine, MAX_PATH);
+  else if (dwType == REG_SZ)
+    _tcscpy(CommandLine, Shell);
+
+  /* Run the shell */
+  StartupInfo.cb = sizeof(StartupInfo);
+  StartupInfo.lpReserved = NULL;
+  StartupInfo.lpDesktop = NULL;
+  StartupInfo.lpTitle = NULL;
+  StartupInfo.dwFlags = 0;
+  StartupInfo.cbReserved2 = 0;
+  StartupInfo.lpReserved2 = 0;
+  res = CreateProcess(
+    CommandLine,
+    NULL,
+    NULL,
+    NULL,
+    FALSE,
+    0,
+    NULL,
+    NULL,
+    &StartupInfo,
+    &ProcessInformation);
+  if (!res)
+    goto cleanup;
+
+  /* Wait for process termination */
+  WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+
+cleanup:
+  if (hKey != NULL)
+    RegCloseKey(hKey);
+  HeapFree(GetProcessHeap(), 0, Shell);
+  MessageBoxA(
+    NULL,
+    "You can shutdown your computer, or press ENTER to reboot",
+    "ReactOS LiveCD",
+    MB_OK);
+  return 0;
+}
+
+
+DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
   TCHAR sAccessories[256];

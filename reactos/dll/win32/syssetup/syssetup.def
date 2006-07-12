@@ -4,6 +4,7 @@ EXPORTS
 ;DevInstallW
 ;GenerateScsiHwIdList
 InitializeSetupActionLog@4
+InstallLiveCD@4
 InstallReactOS@4
 KeyboardClassInstaller@12
 LogItem@8

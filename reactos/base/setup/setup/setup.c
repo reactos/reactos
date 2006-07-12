@@ -85,6 +85,33 @@ RunNewSetup (HINSTANCE hInstance)
   FreeLibrary (hDll);
 }
 
+static VOID
+RunLiveCD (HINSTANCE hInstance)
+{
+  HMODULE hDll;
+  PINSTALL_REACTOS InstallLiveCD;
+
+  hDll = LoadLibrary (TEXT("syssetup"));
+  if (hDll == NULL)
+    {
+      DPRINT("Failed to load 'syssetup'!\n");
+      return;
+    }
+
+  DPRINT("Loaded 'syssetup'!\n");
+  InstallLiveCD = (PINSTALL_REACTOS)GetProcAddress (hDll, "InstallLiveCD");
+
+  if (InstallLiveCD == NULL)
+    {
+      DPRINT("Failed to get address for 'InstallReactOS()'!\n");
+      FreeLibrary (hDll);
+      return;
+    }
+
+  InstallLiveCD (hInstance);
+
+  FreeLibrary (hDll);
+}
 
 int STDCALL
 WinMain (HINSTANCE hInstance,
@@ -106,6 +133,10 @@ WinMain (HINSTANCE hInstance,
   if (!lstrcmpi (p, TEXT("-newsetup")))
     {
       RunNewSetup (hInstance);
+    }
+  else if (!lstrcmpi (p, TEXT("-mini")))
+    {
+      RunLiveCD (hInstance);
     }
 
 #if 0
