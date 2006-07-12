@@ -108,14 +108,13 @@ static NTSTATUS FASTCALL
 CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
                            PCSRSS_SCREEN_BUFFER Buffer)
 {
+  DPRINT("CsrInitConsoleScreenBuffer Size X %d Size Y %d\n", Buffer->MaxX, Buffer->MaxY);
+
   Buffer->Header.Type = CONIO_SCREEN_BUFFER_MAGIC;
   Buffer->Header.ReferenceCount = 0;
-  Buffer->MaxX = Console->Size.X;
-  Buffer->MaxY = Console->Size.Y;
   Buffer->ShowX = 0;
   Buffer->ShowY = 0;
-  //FIXME
-  Buffer->Buffer = HeapAlloc(Win32CsrApiHeap, 0, Buffer->MaxX * Buffer->MaxY * 2);
+  Buffer->Buffer = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, Buffer->MaxX * Buffer->MaxY * sizeof(WCHAR));
   if (NULL == Buffer->Buffer)
     {
       return STATUS_INSUFFICIENT_RESOURCES;
@@ -176,7 +175,23 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
     }
   Console->PrivateData = NULL;
   InitializeCriticalSection(&Console->Header.Lock);
+
   GuiMode = DtbgIsDesktopVisible();
+
+  /* allocate console screen buffer */
+  NewBuffer = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_SCREEN_BUFFER));
+  /* make console active, and insert into console list */
+  Console->ActiveBuffer = (PCSRSS_SCREEN_BUFFER) NewBuffer;
+  /* add a reference count because the buffer is tied to the console */
+  InterlockedIncrement(&Console->ActiveBuffer->Header.ReferenceCount);
+  if (NULL == NewBuffer)
+    {
+      RtlFreeUnicodeString(&Console->Title);
+      DeleteCriticalSection(&Console->Header.Lock);
+      CloseHandle(Console->ActiveEvent);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+  
   if (! GuiMode)
     {
       Status = TuiInitConsole(Console);
@@ -191,22 +206,15 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       Status = GuiInitConsole(Console);
       if (! NT_SUCCESS(Status))
         {
+          HeapFree(Win32CsrApiHeap,0, NewBuffer);
           RtlFreeUnicodeString(&Console->Title);
-	  DeleteCriticalSection(&Console->Header.Lock);
+          DeleteCriticalSection(&Console->Header.Lock);
           CloseHandle(Console->ActiveEvent);
+          DPRINT1("GuiInitConsole: failed\n");
           return Status;
         }
     }
 
-  NewBuffer = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_SCREEN_BUFFER));
-  if (NULL == NewBuffer)
-    {
-      ConioCleanupConsole(Console);
-      RtlFreeUnicodeString(&Console->Title);
-      DeleteCriticalSection(&Console->Header.Lock);
-      CloseHandle(Console->ActiveEvent);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
   Status = CsrInitConsoleScreenBuffer(Console, NewBuffer);
   if (! NT_SUCCESS(Status))
     {
@@ -215,12 +223,11 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       DeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
       HeapFree(Win32CsrApiHeap, 0, NewBuffer);
+	  DPRINT1("CsrInitConsoleScreenBuffer: failed\n");
       return Status;
     }
-  Console->ActiveBuffer = NewBuffer;
-  /* add a reference count because the buffer is tied to the console */
-  InterlockedIncrement(&Console->ActiveBuffer->Header.ReferenceCount);
-  /* make console active, and insert into console list */
+
+
   /* copy buffer contents to screen */
   ConioDrawConsole(Console);
 
@@ -2201,24 +2208,38 @@ CSR_API(CsrCreateScreenBuffer)
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-  Buff = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_SCREEN_BUFFER));
-  if (NULL == Buff)
+  Buff = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_SCREEN_BUFFER));
+
+  if (Buff != NULL)
+    {
+      if (Console->ActiveBuffer)
+        {
+          Buff->MaxX = Console->ActiveBuffer->MaxX;
+	      Buff->MaxY = Console->ActiveBuffer->MaxY;
+        }
+
+      if (Buff->MaxX == 0)
+        Buff->MaxX = 80;
+
+      if (Buff->MaxY == 0)
+        Buff->MaxY = 25;
+
+      Status = CsrInitConsoleScreenBuffer(Console, Buff);
+      if(! NT_SUCCESS(Status))
+        {
+          Request->Status = Status;
+        }
+      else
+        {
+          Request->Status = Win32CsrInsertObject(ProcessData, &Request->Data.CreateScreenBufferRequest.OutputHandle, &Buff->Header);
+        }
+    }
+  else
     {
       Request->Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  Status = CsrInitConsoleScreenBuffer(Console, Buff);
-  if(! NT_SUCCESS(Status))
-    {
-      Request->Status = Status;
-    }
-  else
-    {
-      Request->Status = Win32CsrInsertObject(ProcessData, &Request->Data.CreateScreenBufferRequest.OutputHandle, &Buff->Header);
-    }
-
   ConioUnlockConsole(Console);
-
   return Request->Status;
 }
 

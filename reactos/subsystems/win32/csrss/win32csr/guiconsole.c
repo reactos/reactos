@@ -40,7 +40,6 @@ typedef struct GUI_CONSOLE_DATA_TAG
   DWORD FullScreen;
   DWORD QuickEdit;
   DWORD InsertMode;
-  DWORD WindowSize;
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
 #ifndef WM_APP
@@ -215,7 +214,7 @@ GuiConsoleOpenUserSettings(HWND hWnd, DWORD ProcessId, PHKEY hSubKey, REGSAM sam
   return FALSE;
 }
 static void FASTCALL
-GuiConsoleReadUserSettings(HKEY hKey, PGUI_CONSOLE_DATA GuiData)
+GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_SCREEN_BUFFER Buffer)
 {
   DWORD dwNumSubKeys = 0;
   DWORD dwIndex;
@@ -274,7 +273,16 @@ GuiConsoleReadUserSettings(HKEY hKey, PGUI_CONSOLE_DATA GuiData)
         }
       else if (!wcscmp(szValueName, L"WindowSize"))
         {
-          GuiData->WindowSize = Value;
+          Console->Size.X = LOWORD(Value);
+		  Console->Size.Y = HIWORD(Value);
+        }
+      else if (!wcscmp(szValueName, L"ScreenBufferSize"))
+        {
+			if( Buffer)
+			{
+			Buffer->MaxX = LOWORD(Value);
+			Buffer->MaxY = HIWORD(Value);
+			}
         }
       else if (!wcscmp(szValueName, L"FullScreen"))
         {
@@ -291,7 +299,7 @@ GuiConsoleReadUserSettings(HKEY hKey, PGUI_CONSOLE_DATA GuiData)
    }
 }
 static VOID FASTCALL
-GuiConsoleUseDefaults(PGUI_CONSOLE_DATA GuiData)
+GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_SCREEN_BUFFER Buffer)
 {
   /*
    * init guidata with default properties
@@ -299,13 +307,21 @@ GuiConsoleUseDefaults(PGUI_CONSOLE_DATA GuiData)
 
   wcscpy(GuiData->FontName, L"Bitstream Vera Sans Mono");
   GuiData->FontSize = 0x0008000C; // font is 8x12
-  GuiData->WindowSize = 0x00190050; // default window size is 25x80
   GuiData->FontWeight = FW_NORMAL;
   GuiData->CursorSize = 0;
   GuiData->HistoryNoDup = FALSE;
   GuiData->FullScreen = FALSE;
   GuiData->QuickEdit = FALSE;
   GuiData->InsertMode = TRUE;
+
+  Console->Size.X = 80;
+  Console->Size.Y = 25;
+
+  if (Buffer)
+  {
+    Buffer->MaxX = 80;
+    Buffer->MaxY = 25;
+  }
 }
 
 
@@ -328,19 +344,16 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
       return FALSE;
     }
 
-  GuiConsoleUseDefaults(GuiData);
+  GuiConsoleUseDefaults(Console, GuiData, Console->ActiveBuffer);
   if (Console->ProcessList.Flink != &Console->ProcessList)
     {
       ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
       if (GuiConsoleOpenUserSettings(hWnd, PtrToUlong(ProcessData->ProcessId), &hKey, KEY_READ))
         {
-          GuiConsoleReadUserSettings(hKey, GuiData);
+          GuiConsoleReadUserSettings(hKey, Console, GuiData, Console->ActiveBuffer);
           RegCloseKey(hKey);
         }
     }
-
-  Console->Size.X = LOWORD(GuiData->WindowSize);
-  Console->Size.Y = HIWORD(GuiData->WindowSize);
 
   InitializeCriticalSection(&GuiData->Lock);
 
@@ -656,37 +669,40 @@ GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
         if (Console != NULL && GuiData != NULL &&
             Console->ActiveBuffer != NULL)
         {
-            EnterCriticalSection(&GuiData->Lock);
-
-            GuiConsolePaint(Console,
-                            GuiData,
-                            hDC,
-                            &ps.rcPaint);
-
-            if (GuiData->Selection.left != -1)
+            if (Console->ActiveBuffer->Buffer != NULL)
             {
-                RECT rc = GuiData->Selection;
+                EnterCriticalSection(&GuiData->Lock);
 
-                rc.left *= GuiData->CharWidth;
-                rc.top *= GuiData->CharHeight;
-                rc.right *= GuiData->CharWidth;
-                rc.bottom *= GuiData->CharHeight;
+                GuiConsolePaint(Console,
+                                GuiData,
+                                hDC,
+                                &ps.rcPaint);
 
-                /* invert the selection */
-                if (IntersectRect(&rc,
-                                  &ps.rcPaint,
-                                  &rc))
+                if (GuiData->Selection.left != -1)
                 {
-                    PatBlt(hDC,
-                           rc.left,
-                           rc.top,
-                           rc.right - rc.left,
-                           rc.bottom - rc.top,
-                           DSTINVERT);
-                }
-            }
+                    RECT rc = GuiData->Selection;
 
-            LeaveCriticalSection(&GuiData->Lock);
+                    rc.left *= GuiData->CharWidth;
+                    rc.top *= GuiData->CharHeight;
+                    rc.right *= GuiData->CharWidth;
+                    rc.bottom *= GuiData->CharHeight;
+
+                    /* invert the selection */
+                    if (IntersectRect(&rc,
+                                      &ps.rcPaint,
+                                      &rc))
+                    {
+                        PatBlt(hDC,
+                               rc.left,
+                               rc.top,
+                               rc.right - rc.left,
+                               rc.bottom - rc.top,
+                               DSTINVERT);
+                    }
+                }
+
+                LeaveCriticalSection(&GuiData->Lock);
+            }
         }
 
         EndPaint(hWnd, &ps);
@@ -1563,7 +1579,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
 
     /* wait untill initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
-	DPRINT("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
+	DPRINT1("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
     CloseHandle(GuiData->hGuiInitEvent);
     GuiData->hGuiInitEvent = NULL;
 
