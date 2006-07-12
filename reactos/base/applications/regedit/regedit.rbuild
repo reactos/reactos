@@ -31,3 +31,6 @@
 	<file>regedit.rc</file>
 	<pch>regedit.h</pch>
 </module>
+<directory name="clb">
+	<xi:include href="clb/clb.rbuild" />
+</directory>
