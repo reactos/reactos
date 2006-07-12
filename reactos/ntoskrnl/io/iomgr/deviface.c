@@ -634,8 +634,8 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
 
     ASSERT_IRQL(PASSIVE_LEVEL);
 
-    DPRINT("IoRegisterDeviceInterface(): PDO %p, RefString: %p, SLName: %p\n",
-        PhysicalDeviceObject, ReferenceString, SymbolicLinkName);
+    DPRINT("IoRegisterDeviceInterface(): PDO %p, RefString: %wZ\n",
+        PhysicalDeviceObject, ReferenceString);
 
     /* Parameters must pass three border of checks */
     DeviceObjectExtension = (PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension;
@@ -916,14 +916,7 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
         DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
         ExFreePool(SymbolicLinkName->Buffer);
     }
-
-    /* Remove \\?\ at the start of symbolic link name */
-    SymbolicLinkName->Length -= 4 * sizeof(WCHAR);
-    SymbolicLinkName->MaximumLength -= 4 * sizeof(WCHAR);
-    RtlMoveMemory(
-        SymbolicLinkName->Buffer,
-        &SymbolicLinkName->Buffer[4],
-        SymbolicLinkName->Length);
+    SymbolicLinkName->Buffer[1] = '?';
 
     ZwClose(SubKey);
     ZwClose(InterfaceKey);
@@ -962,7 +955,6 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 {
     PDEVICE_OBJECT PhysicalDeviceObject;
     PFILE_OBJECT FileObject;
-    UNICODE_STRING ObjectName;
     UNICODE_STRING GuidString;
     PWCHAR StartPosition;
     PWCHAR EndPosition;
@@ -974,7 +966,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 
     DPRINT("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
 
-    /* Symbolic link name is ACPI#PNP0501#1#{GUID}\ReferenceString */
+    /* Symbolic link name is \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
     /* Get GUID from SymbolicLinkName */
     StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
     EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
@@ -986,24 +978,15 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     GuidString.Buffer = StartPosition;
     GuidString.MaximumLength = GuidString.Length = (ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition;
 
-    /* Create \??\SymbolicLinkName string */
-    ObjectName.Length = 0;
-    ObjectName.MaximumLength = SymbolicLinkName->Length + 4 * sizeof(WCHAR);
-    ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
-    if (!ObjectName.Buffer)
-        return STATUS_INSUFFICIENT_RESOURCES;
-    RtlAppendUnicodeToString(&ObjectName, L"\\??\\");
-    RtlAppendUnicodeStringToString(&ObjectName, SymbolicLinkName);
-
     /* Get pointer to the PDO */
-    Status = IoGetDeviceObjectPointer(&ObjectName,
+    Status = IoGetDeviceObjectPointer(
+        SymbolicLinkName,
         0, /* DesiredAccess */
         &FileObject,
         &PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
-        ExFreePool(ObjectName.Buffer);
         return Status;
     }
 
@@ -1016,7 +999,6 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         (PVOID)SymbolicLinkName);
 
     ObDereferenceObject(FileObject);
-    ExFreePool(ObjectName.Buffer);
 
     return STATUS_SUCCESS;
 }
