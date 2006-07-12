@@ -31,7 +31,8 @@ typedef struct GUI_CONSOLE_DATA_TAG
   POINT SelectionStart;
   BOOL MouseDown;
   HMODULE ConsoleLibrary;
-  WCHAR FontName[128];
+  HANDLE hGuiInitEvent;
+  WCHAR FontName[LF_FACESIZE];
   DWORD FontSize;
   DWORD FontWeight;
   DWORD CursorSize;
@@ -39,6 +40,7 @@ typedef struct GUI_CONSOLE_DATA_TAG
   DWORD FullScreen;
   DWORD QuickEdit;
   DWORD InsertMode;
+  DWORD WindowSize;
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
 #ifndef WM_APP
@@ -270,6 +272,10 @@ GuiConsoleReadUserSettings(HKEY hKey, PGUI_CONSOLE_DATA GuiData)
         {
           GuiData->HistoryNoDup = Value;
         }
+      else if (!wcscmp(szValueName, L"WindowSize"))
+        {
+          GuiData->WindowSize = Value;
+        }
       else if (!wcscmp(szValueName, L"FullScreen"))
         {
           GuiData->FullScreen = Value;
@@ -293,6 +299,7 @@ GuiConsoleUseDefaults(PGUI_CONSOLE_DATA GuiData)
 
   wcscpy(GuiData->FontName, L"Bitstream Vera Sans Mono");
   GuiData->FontSize = 0x0008000C; // font is 8x12
+  GuiData->WindowSize = 0x00190050; // default window size is 25x80
   GuiData->FontWeight = FW_NORMAL;
   GuiData->CursorSize = 0;
   GuiData->HistoryNoDup = FALSE;
@@ -308,16 +315,13 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 {
   RECT Rect;
   PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Create->lpCreateParams;
-  PGUI_CONSOLE_DATA GuiData;
+  PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Console->PrivateData;
   HDC Dc;
   HFONT OldFont;
   TEXTMETRICW Metrics;
   PCSRSS_PROCESS_DATA ProcessData;
   HKEY hKey;
 
-  GuiData = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY,
-                      sizeof(GUI_CONSOLE_DATA) +
-                      (Console->Size.X + 1) * sizeof(WCHAR));
   if (NULL == GuiData)
     {
       DPRINT1("GuiConsoleNcCreate: HeapAlloc failed\n");
@@ -335,9 +339,13 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
         }
     }
 
+  Console->Size.X = LOWORD(GuiData->WindowSize);
+  Console->Size.Y = HIWORD(GuiData->WindowSize);
+
   InitializeCriticalSection(&GuiData->Lock);
 
-  GuiData->LineBuffer = (PWCHAR)(GuiData + 1);
+  GuiData->LineBuffer = (PWCHAR)HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, 
+                                          Console->Size.X * sizeof(WCHAR));
 
   GuiData->Font = CreateFontW(LOWORD(GuiData->FontSize), 
                               0, //HIWORD(GuiData->FontSize), 
@@ -396,7 +404,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   GuiData->ForceCursorOff = FALSE;
 
   GuiData->Selection.left = -1;
-
+  DPRINT("Console %p GuiData %p\n", Console, GuiData);
   Console->PrivateData = GuiData;
   SetWindowLongPtrW(hWnd, GWL_USERDATA, (DWORD_PTR) Console);
 
@@ -409,6 +417,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
              Rect.bottom - Rect.top, FALSE);
 
   SetTimer(hWnd, 1, CURSOR_BLINK_TIME, NULL);
+  SetEvent(GuiData->hGuiInitEvent);
 
   return (BOOL) DefWindowProcW(hWnd, WM_NCCREATE, 0, (LPARAM) Create);
 }
@@ -1487,6 +1496,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
 {
   HANDLE GraphicsStartupEvent;
   HANDLE ThreadHandle;
+  PGUI_CONSOLE_DATA GuiData;
 
   if (! ConsInitialized)
     {
@@ -1499,8 +1509,6 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
     }
 
   Console->Vtbl = &GuiVtbl;
-  Console->Size.X = 80;
-  Console->Size.Y = 25;
   if (NULL == NotifyWnd)
     {
       GraphicsStartupEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
@@ -1533,8 +1541,31 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
           return STATUS_UNSUCCESSFUL;
         }
     }
+    GuiData = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY,
+                        sizeof(GUI_CONSOLE_DATA));
+    if (!GuiData)
+	  {
+        DPRINT1("Win32Csr: Failed to create GUI_CONSOLE_DATA\n");
+        return STATUS_UNSUCCESSFUL;
+      }
 
-  PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
+    Console->PrivateData = (PVOID) GuiData;
+    /*
+	 * we need to wait untill the GUI has been fully initialized
+	 * to retrieve custom settings i.e. WindowSize etc..
+	 * Ideally we could use SendNotifyMessage for this but its not
+	 * yet implemented.
+	 *
+	 */
+    GuiData->hGuiInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    /* create console */
+    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
+
+    /* wait untill initialization has finished */
+    WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
+	DPRINT("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
+    CloseHandle(GuiData->hGuiInitEvent);
+    GuiData->hGuiInitEvent = NULL;
 
   return STATUS_SUCCESS;
 }

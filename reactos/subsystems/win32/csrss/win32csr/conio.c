@@ -114,6 +114,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
   Buffer->MaxY = Console->Size.Y;
   Buffer->ShowX = 0;
   Buffer->ShowY = 0;
+  //FIXME
   Buffer->Buffer = HeapAlloc(Win32CsrApiHeap, 0, Buffer->MaxX * Buffer->MaxY * 2);
   if (NULL == Buffer->Buffer)
     {
@@ -146,6 +147,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->Title.MaximumLength = Console->Title.Length = 0;
   Console->Title.Buffer = NULL;
 
+  //FIXME
   RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
 
   Console->Header.ReferenceCount = 0;
@@ -3022,7 +3024,8 @@ CSR_API(CsrWriteConsoleInput)
 
       Record->Echoed = FALSE;
       Record->Fake = FALSE;
-      Record->InputEvent = *InputRecord++;
+	  //Record->InputEvent = *InputRecord++;
+	  memcpy(&Record->InputEvent, &InputRecord[i], sizeof(INPUT_RECORD)); 
       if (KEY_EVENT == Record->InputEvent.EventType)
         {
           /* FIXME - convert from unicode to ascii!! */
