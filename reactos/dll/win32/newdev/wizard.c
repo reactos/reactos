@@ -502,7 +502,7 @@ WelcomeDlgProc(
 			break;
 	}
 
-	return FALSE;
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 static void
@@ -664,7 +664,7 @@ CHSourceDlgProc(
 			break;
 	}
 
-	return FALSE;
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 static INT_PTR CALLBACK
@@ -759,7 +759,7 @@ SearchDrvDlgProc(
 			break;
 	}
 
-	return FALSE;
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 static INT_PTR CALLBACK
@@ -810,9 +810,25 @@ InstallDrvDlgProc(
 			CloseHandle(hThread);
 			hThread = 0;
 			if (wParam == 0)
-				PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_FINISHPAGE);
-			else
-				PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_INSTALLFAILED);
+			{
+				/* Should we reboot? */
+				SP_DEVINSTALL_PARAMS installParams;
+				installParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+				if (SetupDiGetDeviceInstallParams(
+					DevInstData->hDevInfo,
+					&DevInstData->devInfoData,
+					&installParams))
+				{
+					if (installParams.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT))
+					{
+						PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_NEEDREBOOT);
+					}
+					else
+						PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_FINISHPAGE);
+					break;
+				}
+			}
+			PropSheet_SetCurSelByID(GetParent(hwndDlg), IDD_INSTALLFAILED);
 			break;
 		}
 
@@ -849,7 +865,7 @@ InstallDrvDlgProc(
 			break;
 	}
 
-	return FALSE;
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 static INT_PTR CALLBACK
@@ -873,8 +889,12 @@ NoDriverDlgProc(
 		{
 			BOOL DisableableDevice = FALSE;
 
+			/* Get pointer to the global setup data */
 			DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+
+			/* Center the wizard window */
+			CenterWindow(GetParent(hwndDlg));
 
 			hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
 			ShowWindow(hwndControl, SW_HIDE);
@@ -960,7 +980,7 @@ NoDriverDlgProc(
 			break;
 	}
 
-	return FALSE;
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 static INT_PTR CALLBACK
@@ -986,6 +1006,9 @@ InstallFailedDlgProc(
 			DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
 
+			/* Center the wizard window */
+			CenterWindow(GetParent(hwndDlg));
+
 			hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
 			ShowWindow(hwndControl, SW_HIDE);
 			EnableWindow(hwndControl, FALSE);
@@ -1036,7 +1059,86 @@ InstallFailedDlgProc(
 			break;
 	}
 
-	return FALSE;
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+}
+
+static INT_PTR CALLBACK
+NeedRebootDlgProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	PDEVINSTDATA DevInstData;
+	UNREFERENCED_PARAMETER(wParam);
+
+	/* Retrieve pointer to the global setup data */
+	DevInstData = (PDEVINSTDATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			HWND hwndControl;
+
+			/* Get pointer to the global setup data */
+			DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
+			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
+
+			/* Center the wizard window */
+			CenterWindow(GetParent(hwndDlg));
+
+			hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
+			ShowWindow(hwndControl, SW_HIDE);
+			EnableWindow(hwndControl, FALSE);
+
+			SendDlgItemMessage(
+				hwndDlg,
+				IDC_DEVICE,
+				WM_SETTEXT,
+				0,
+				(LPARAM)DevInstData->drvInfoData.Description);
+
+			/* Set title font */
+			SendDlgItemMessage(
+				hwndDlg,
+				IDC_FINISHTITLE,
+				WM_SETFONT,
+				(WPARAM)DevInstData->hTitleFont,
+				(LPARAM)TRUE);
+			break;
+		}
+
+		case WM_NOTIFY:
+		{
+			LPNMHDR lpnm = (LPNMHDR)lParam;
+
+			switch (lpnm->code)
+			{
+				case PSN_SETACTIVE:
+					/* Enable the correct buttons on for the active page */
+					PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_FINISH);
+					break;
+
+				case PSN_WIZBACK:
+					/* Handle a Back button click, if necessary */
+					break;
+
+				case PSN_WIZFINISH:
+					/* Handle a Finish button click, if necessary */
+					break;
+
+				default:
+					break;
+			}
+			break;
+		}
+
+		default:
+			break;
+	}
+
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 static INT_PTR CALLBACK
@@ -1062,6 +1164,9 @@ FinishDlgProc(
 			DevInstData = (PDEVINSTDATA)((LPPROPSHEETPAGE)lParam)->lParam;
 			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)DevInstData);
 
+			/* Center the wizard window */
+			CenterWindow(GetParent(hwndDlg));
+
 			hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
 			ShowWindow(hwndControl, SW_HIDE);
 			EnableWindow(hwndControl, FALSE);
@@ -1112,7 +1217,7 @@ FinishDlgProc(
 			break;
 	}
 
-	return FALSE;
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 }
 
 static HFONT
@@ -1147,7 +1252,7 @@ DisplayWizard(
 	IN UINT startPage)
 {
 	PROPSHEETHEADER psh;
-	HPROPSHEETPAGE ahpsp[IDD_FINISHPAGE + 1];
+	HPROPSHEETPAGE ahpsp[IDD_MAXIMUMPAGE + 1];
 	PROPSHEETPAGE psp;
 
 	/* Create the Welcome page */
@@ -1190,6 +1295,12 @@ DisplayWizard(
 	psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLFAILED);
 	ahpsp[IDD_INSTALLFAILED] = CreatePropertySheetPage(&psp);
 
+	/* Create the Need reboot page */
+	psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
+	psp.pfnDlgProc = (DLGPROC) NeedRebootDlgProc;
+	psp.pszTemplate = MAKEINTRESOURCE(IDD_NEEDREBOOT);
+	ahpsp[IDD_NEEDREBOOT] = CreatePropertySheetPage(&psp);
+
 	/* Create the Finish page */
 	psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
 	psp.pfnDlgProc = (DLGPROC) FinishDlgProc;
@@ -1201,7 +1312,7 @@ DisplayWizard(
 	psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
 	psh.hInstance = hDllInstance;
 	psh.hwndParent = hwndParent;
-	psh.nPages = IDD_FINISHPAGE + 1;
+	psh.nPages = IDD_MAXIMUMPAGE + 1;
 	psh.nStartPage = startPage;
 	psh.phpage = ahpsp;
 	psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);

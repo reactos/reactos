@@ -188,6 +188,7 @@ NetClassInstaller(
 	HKEY hLinkageKey = NULL;
 	HKEY hNetworkKey = NULL;
 	HKEY hConnectionKey = NULL;
+	SP_DEVINSTALL_PARAMS_W installParams;
 	
 	if (InstallFunction != DIF_INSTALLDEVICE)
 		return ERROR_DI_DO_DEFAULT;
@@ -437,7 +438,27 @@ NetClassInstaller(
 	 * which are installed after its startup. So, we have to reboot to take
 	 * this new netcard into account.
 	 */
-	MessageBox(NULL, TEXT("You need to reboot to finish the installation of your network card."), TEXT("Reboot required"), MB_OK | MB_ICONWARNING);
+	/* Should we reboot? */
+	installParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
+	if (!SetupDiGetDeviceInstallParamsW(
+		DeviceInfoSet,
+		DeviceInfoData,
+		&installParams))
+	{
+		rc = GetLastError();
+		DPRINT("SetupDiGetDeviceInstallParams() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+	installParams.Flags |= DI_NEEDRESTART;
+	if (!SetupDiSetDeviceInstallParamsW(
+		DeviceInfoSet,
+		DeviceInfoData,
+		&installParams))
+	{
+		rc = GetLastError();
+		DPRINT("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
 	rc = ERROR_SUCCESS;
 
 cleanup:

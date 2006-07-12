@@ -457,9 +457,6 @@ PrepareFoldersToScan(
 	DWORD LengthNeeded = 0;
 	LPTSTR Buffer;
 
-	TRACE("Include removable devices: %s\n", IncludeRemovableDevices ? "yes" : "no");
-	TRACE("Include custom path      : %s\n", IncludeCustomPath ? "yes" : "no");
-
 	/* Calculate length needed to store the search paths */
 	if (IncludeRemovableDevices)
 	{
@@ -748,6 +745,20 @@ DevInstallW(
 	{
 		/* Driver found ; install it */
 		retval = InstallCurrentDriver(DevInstData);
+		if (retval && Show != SW_HIDE)
+		{
+			/* Should we display the 'Need to reboot' page? */
+			SP_DEVINSTALL_PARAMS installParams;
+			installParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+			if (SetupDiGetDeviceInstallParams(
+				DevInstData->hDevInfo,
+				&DevInstData->devInfoData,
+				&installParams))
+			{
+				if (installParams.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT))
+					retval = DisplayWizard(DevInstData, hWndParent, IDD_NEEDREBOOT);
+			}
+		}
 		goto cleanup;
 	}
 	else if (Show == SW_HIDE)

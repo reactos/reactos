@@ -7,7 +7,7 @@ CAPTION "Installation de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Bienvenue",IDC_WELCOMETITLE,115,8,195,24
-    LTEXT           "Cet assistant installe un nouveau pilote pour:",
+    LTEXT           "Cet assistant installe un nouveau pilote pour :",
                     IDC_STATIC,115,21,195,16
     LTEXT           "Cliquer sur Suivant pour continuer.",IDC_STATIC,115,169,195,17
     LTEXT           "MATERIEL INCONNU",IDC_DEVICE,129,36,164,11
@@ -79,6 +79,20 @@ BEGIN
     LTEXT           "MATERIEL INCONNU",IDC_DEVICE,51,20,169,16
 END
 
+IDD_NEEDREBOOT DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Device installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Installation terminée",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Vous devez redémarrer l'ordinateur avant d'utiliser :",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Cliquer sur Terminer pour fermer l'assistant.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,148,53,147,12
+END
+
 IDD_FINISHPAGE DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
@@ -86,7 +100,7 @@ CAPTION "Installation de matériel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Installation terminée",IDC_FINISHTITLE,115,8,195,11
-    LTEXT           "L'assistant a fini d'installer le pilote pour:",
+    LTEXT           "L'assistant a fini d'installer le pilote pour :",
                     IDC_STATIC,115,32,195,19
     LTEXT           "Cliquer sur Terminer pour fermer l'assistant.",IDC_STATIC,115,174,
                     179,11
