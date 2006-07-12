@@ -3326,22 +3326,23 @@ CSR_API(CsrGetProcessList)
 }
 
 CSR_API(CsrStartScreenSaver)
-{                                            
+{
 
-    DPRINT("CsrStartScreenSaver : Start Screen Saver \n");
-    
+    DPRINT("CsrStartScreenSaver : %s Screen Saver \n",
+        (Request->Data.StartScreenSaver.Start) ? "Start" : "Stop");
+
     if (Request->Data.StartScreenSaver.Start == TRUE)
     {
         STARTUPINFOW si;
         PROCESS_INFORMATION pi;
         WCHAR szCmdline[MAX_PATH]; 
-        
+
         HKEY hKey;
         WCHAR szBuffer[MAX_PATH];
         DWORD bufferSize = sizeof(szBuffer);
         DWORD varType = REG_SZ;
         LONG result;
-                    
+
         /* FIXME :
            1. Make it unicode and ansi compatible with TCHAR
            
@@ -3356,32 +3357,43 @@ CSR_API(CsrStartScreenSaver)
            4. Move the code to winlogon SAS and screen saver must run in
               the secuar desktop. But current our Winlogon does not working
               well with SAS and with Secure desktop, So I (Magnus Olsen aka GreatLord) 
-              add the code here as w3seek recomandete  
+              add the code here as w3seek recommended  
          */
-                       
-	
-         RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_ALL_ACCESS, &hKey);
-         result = RegQueryValueExW(hKey, L"SCRNSAVE.EXE", 0, &varType, (LPBYTE)szBuffer, &bufferSize);
-         if(result == ERROR_SUCCESS) 
-         {                                    
-            swprintf(szCmdline, L"%s /s",szBuffer);       
-            DPRINT1("CsrStartScreenSaver : OK %S\n",szCmdline);                             
-	        ZeroMemory( &si, sizeof(si) );
-            si.cb = sizeof(si);
-            ZeroMemory( &pi, sizeof(pi) );                                   
-            if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
-            {                        
-              CloseHandle( pi.hProcess );
-              CloseHandle( pi.hThread );                                                       
-            }              
-         }
-         else
-         {
-             DPRINT1("CsrStartScreenSaver : FAIL %S\n",szBuffer);   
-         }                    
-         RegCloseKey(hKey);		
-    }    
-	return Request->Status = STATUS_SUCCESS;
+
+        result = RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_ALL_ACCESS, &hKey);
+        if (result == ERROR_SUCCESS)
+        {
+            result = RegQueryValueExW(hKey, L"SCRNSAVE.EXE", 0, &varType, (LPBYTE)szBuffer, &bufferSize);
+            if(result == ERROR_SUCCESS) 
+            {
+                swprintf(szCmdline, L"%s /s",szBuffer);
+                DPRINT1("CsrStartScreenSaver : OK %S, Name %S\n", szCmdline, szBuffer);
+                ZeroMemory( &si, sizeof(si) );
+                si.cb = sizeof(si);
+                ZeroMemory( &pi, sizeof(pi) );
+                if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+                {
+                    CloseHandle( pi.hProcess );
+                    CloseHandle( pi.hThread );
+                }
+            }
+            else
+            {
+                DPRINT1("CsrStartScreenSaver : failed 0x%08X\n", result);
+            }
+            RegCloseKey(hKey);
+        }
+        else
+        {
+            DPRINT1("CsrStartScreenSaver : failed to RegOpenKeyExW 0x%08X\n", result);
+        }
+        return Request->Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* TODO: Stopping the screensaver */
+        return Request->Status = STATUS_NOT_IMPLEMENTED;
+    }
 }
 
 /* EOF */
