@@ -234,7 +234,7 @@ MenuSetRosMenuItemInfo(HMENU Menu, UINT Index, PROSMENUITEMINFO ItemInfo)
   if (MENU_ITEM_TYPE(ItemInfo->fType) == MF_STRING &&
       ItemInfo->dwTypeData != NULL)
   {
-    ItemInfo->cch = wcslen(ItemInfo->dwTypeData);
+    ItemInfo->cch = strlenW(ItemInfo->dwTypeData);
   }
   ItemInfo->fMask = MIIM_BITMAP | MIIM_CHECKMARKS | MIIM_DATA | MIIM_FTYPE
                     | MIIM_ID | MIIM_STATE | MIIM_STRING | MIIM_SUBMENU | MIIM_TYPE;
@@ -1044,7 +1044,7 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
       /* Align the text on a word boundary.  */
       res += (~((int)res - 1)) & 1;
       mii.dwTypeData = (LPWSTR) res;
-      res += (1 + wcslen(mii.dwTypeData)) * sizeof(WCHAR);
+      res += (1 + strlenW(mii.dwTypeData)) * sizeof(WCHAR);
       /* Align the following fields on a dword boundary.  */
       res += (~((int)res - 1)) & 3;
 
@@ -1109,7 +1109,7 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
     if(!unicode)
       res += strlen(str) + 1;
     else
-      res += (wcslen((LPCWSTR)str) + 1) * sizeof(WCHAR);
+      res += (strlenW((LPCWSTR)str) + 1) * sizeof(WCHAR);
     if (flags & MF_POPUP)
     {
       hSubMenu = CreatePopupMenu();
@@ -1314,7 +1314,7 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
       SIZE Size;
 
       GetTextExtentPoint32W(Dc, (LPWSTR) ItemInfo->dwTypeData,
-                            wcslen((LPWSTR) ItemInfo->dwTypeData), &Size);
+                            strlenW((LPWSTR) ItemInfo->dwTypeData), &Size);
 
       ItemInfo->Rect.right += Size.cx;
       ItemInfo->Rect.bottom += max(Size.cy, GetSystemMetrics(SM_CYMENU) - 1);
@@ -3119,7 +3119,7 @@ MenuFindItemByKey(HWND WndOwner, PROSMENUINFO MenuInfo,
         }
       if (! ForceMenuChar)
         {
-          Key = towupper(Key);
+          Key = toupperW(Key);
           ItemInfo = Items;
           for (i = 0; i < MenuInfo->MenuItemCount; i++, ItemInfo++)
             {
@@ -3128,10 +3128,10 @@ MenuFindItemByKey(HWND WndOwner, PROSMENUINFO MenuInfo,
                   WCHAR *p = (WCHAR *) ItemInfo->dwTypeData - 2;
                   do
                     {
-                      p = wcschr(p + 2, '&');
+                      p = strchrW(p + 2, '&');
 		    }
                   while (NULL != p && L'&' == p[1]);
-                  if (NULL != p && (towupper(p[1]) == Key))
+                  if (NULL != p && (toupperW(p[1]) == Key))
                     {
                       return i;
                     }
@@ -3569,6 +3569,110 @@ VOID
 MenuTrackKbdMenuBar(HWND hWnd, ULONG wParam, ULONG Key)
 {
 }
+
+
+static
+BOOL
+FASTCALL
+MenuSetItemData( 
+  LPMENUITEMINFOW mii,
+  UINT Flags, 
+  UINT_PTR IDNewItem, 
+  LPCWSTR NewItem, 
+  BOOL Unicode)
+{
+  if(Flags & MF_BITMAP)
+  {
+    mii->fType |= MFT_BITMAP;
+    mii->fMask |= MIIM_BITMAP;
+    mii->hbmpItem = (HBITMAP) NewItem;
+  }
+  else if(Flags & MF_OWNERDRAW)
+  {
+    mii->fType |= MFT_OWNERDRAW;
+    mii->fMask |= MIIM_DATA;
+    mii->dwItemData = (DWORD) NewItem;
+  }
+  else /* Default action MF_STRING. */
+  {
+   /*
+    if(mii->dwTypeData != NULL)
+    {
+      HeapFree(GetProcessHeap(),0, mii.dwTypeData);
+    }*/
+    /* Item beginning with a backspace is a help item */
+    if (NewItem != NULL)
+    {
+       if (Unicode)
+       {
+          if (*NewItem == '\b')
+          {
+             mii->fType |= MF_HELP;
+             NewItem++;
+          }
+       }
+       else
+       { 
+          LPCSTR NewItemA = (LPCSTR) NewItem;
+          if (*NewItemA == '\b')
+          {
+             mii->fType |= MF_HELP;
+             NewItemA++;
+             NewItem = (LPCWSTR) NewItemA;
+          }
+       }
+    }
+    else
+    {
+       mii->fType |= MFT_SEPARATOR;
+    }
+    mii->fMask |= MIIM_TYPE;
+    mii->dwTypeData = (LPWSTR)NewItem;
+    if (Unicode)
+       mii->cch = (NULL == NewItem ? 0 : strlenW(NewItem));
+    else
+       mii->cch = (NULL == NewItem ? 0 : strlen((LPCSTR)NewItem));
+    mii->hbmpItem = NULL;
+  }
+
+  if(Flags & MF_RIGHTJUSTIFY)
+  {
+    mii->fType |= MFT_RIGHTJUSTIFY;
+  }
+  if(Flags & MF_MENUBREAK)
+  {
+    mii->fType |= MFT_MENUBREAK;
+  }
+  if(Flags & MF_MENUBARBREAK)
+  {
+    mii->fType |= MFT_MENUBARBREAK;
+  }
+  if(Flags & MF_DISABLED)
+  {
+    mii->fState |= MFS_DISABLED;
+  }
+  if(Flags & MF_GRAYED)
+  {
+    mii->fState |= MFS_GRAYED;
+  }
+
+  if ((mii->fType & MF_POPUP) && (Flags & MF_POPUP) && (mii->hSubMenu != (HMENU)IDNewItem))
+    NtUserDestroyMenu( mii->hSubMenu );   /* ModifyMenu() spec */
+
+  if(Flags & MF_POPUP)
+  {
+    mii->fType |= MF_POPUP;
+    mii->fMask |= MIIM_SUBMENU;
+    mii->hSubMenu = (HMENU)IDNewItem;
+  }
+  else
+  {
+    mii->fMask |= MIIM_ID;
+    mii->wID = (UINT)IDNewItem;
+  }
+  return TRUE;
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -4101,6 +4205,7 @@ HiliteMenuItem(
 }
 
 
+
 /*
  * @implemented
  */
@@ -4119,59 +4224,15 @@ InsertMenuA(
   mii.fType = 0;
   mii.fState = MFS_ENABLED;
 
-  if(uFlags & MF_BITMAP)
-  {
-    mii.fType |= MFT_BITMAP;
-    mii.fMask |= MIIM_BITMAP;
-    mii.hbmpItem = (HBITMAP) lpNewItem;
-  }
-  else if(uFlags & MF_OWNERDRAW)
-  {
-    mii.fType |= MFT_OWNERDRAW;
-    mii.fMask |= MIIM_DATA;
-    mii.dwItemData = (DWORD) lpNewItem;
-  }
-  else
-  {
-    mii.fMask |= MIIM_TYPE;
-    mii.dwTypeData = (LPSTR)lpNewItem;
-    mii.cch = (NULL == lpNewItem ? 0 : strlen(lpNewItem));
-  }
+  MenuSetItemData((LPMENUITEMINFOW) &mii,
+  		   uFlags,
+  		   uIDNewItem,
+  		  (LPCWSTR) lpNewItem,
+  		   FALSE);
 
-  if(uFlags & MF_RIGHTJUSTIFY)
-  {
-    mii.fType |= MFT_RIGHTJUSTIFY;
-  }
-  if(uFlags & MF_MENUBREAK)
-  {
-    mii.fType |= MFT_MENUBREAK;
-  }
-  if(uFlags & MF_MENUBARBREAK)
-  {
-    mii.fType |= MFT_MENUBARBREAK;
-  }
-  if(uFlags & MF_DISABLED)
-  {
-    mii.fState |= MFS_DISABLED;
-  }
-  if(uFlags & MF_GRAYED)
-  {
-    mii.fState |= MFS_GRAYED;
-  }
-
-  if(uFlags & MF_POPUP)
-  {
-    mii.fType |= MF_POPUP;
-    mii.fMask |= MIIM_SUBMENU;
-    mii.hSubMenu = (HMENU)uIDNewItem;
-  }
-  else
-  {
-    mii.fMask |= MIIM_ID;
-    mii.wID = (UINT)uIDNewItem;
-  }
   return InsertMenuItemA(hMenu, uPosition, (BOOL)((MF_BYPOSITION & uFlags) > 0), &mii);
 }
+
 
 
 /*
@@ -4278,57 +4339,12 @@ InsertMenuW(
   mii.fType = 0;
   mii.fState = MFS_ENABLED;
 
-  if(uFlags & MF_BITMAP)
-  {
-    mii.fType |= MFT_BITMAP;
-    mii.fMask |= MIIM_BITMAP;
-    mii.hbmpItem = (HBITMAP) lpNewItem;
-  }
-  else if(uFlags & MF_OWNERDRAW)
-  {
-    mii.fType |= MFT_OWNERDRAW;
-    mii.fMask |= MIIM_DATA;
-    mii.dwItemData = (DWORD) lpNewItem;
-  }
-  else
-  {
-    mii.fMask |= MIIM_TYPE;
-    mii.dwTypeData = (LPWSTR)lpNewItem;
-    mii.cch = (NULL == lpNewItem ? 0 : wcslen(lpNewItem));
-  }
+  MenuSetItemData( &mii,
+  		   uFlags,
+  		   uIDNewItem,
+  		   lpNewItem,
+  		   TRUE);
 
-  if(uFlags & MF_RIGHTJUSTIFY)
-  {
-    mii.fType |= MFT_RIGHTJUSTIFY;
-  }
-  if(uFlags & MF_MENUBREAK)
-  {
-    mii.fType |= MFT_MENUBREAK;
-  }
-  if(uFlags & MF_MENUBARBREAK)
-  {
-    mii.fType |= MFT_MENUBARBREAK;
-  }
-  if(uFlags & MF_DISABLED)
-  {
-    mii.fState |= MFS_DISABLED;
-  }
-  if(uFlags & MF_GRAYED)
-  {
-    mii.fState |= MFS_GRAYED;
-  }
-
-  if(uFlags & MF_POPUP)
-  {
-    mii.fType |= MF_POPUP;
-    mii.fMask |= MIIM_SUBMENU;
-    mii.hSubMenu = (HMENU)uIDNewItem;
-  }
-  else
-  {
-    mii.fMask |= MIIM_ID;
-    mii.wID = (UINT)uIDNewItem;
-  }
   return InsertMenuItemW(hMenu, uPosition, (BOOL)((MF_BYPOSITION & uFlags) > 0), &mii);
 }
 
@@ -4469,73 +4485,11 @@ ModifyMenuA(
                        (BOOL)(MF_BYPOSITION & uFlags),
                         &mii)) return FALSE;
 
-  if(uFlags & MF_BITMAP)
-  {
-    mii.fType |= MFT_BITMAP;
-    mii.fMask |= MIIM_BITMAP;
-    mii.hbmpItem = (HBITMAP) lpNewItem;
-  }
-  else if(uFlags & MF_OWNERDRAW)
-  {
-    mii.fType |= MFT_OWNERDRAW;
-    mii.fMask |= MIIM_DATA;
-    mii.dwItemData = (DWORD) lpNewItem;
-  }
-  else /* Default action MF_STRING. */
-  {
-    if(mii.dwTypeData != NULL)
-    {
-      HeapFree(GetProcessHeap(),0, mii.dwTypeData);
-    }
-    /* Item beginning with a backspace is a help item */
-	if  (lpNewItem != NULL)
-	{
-		if (*lpNewItem == '\b')
-		{
-			mii.fType |= MF_HELP;
-			lpNewItem++;
-		}
-    }
-    mii.fMask |= MIIM_TYPE;
-    mii.dwTypeData = (LPSTR)lpNewItem;
-    mii.cch = (NULL == lpNewItem ? 0 : strlen(lpNewItem));
-  }
-
-  if(uFlags & MF_RIGHTJUSTIFY)
-  {
-    mii.fType |= MFT_RIGHTJUSTIFY;
-  }
-  if(uFlags & MF_MENUBREAK)
-  {
-    mii.fType |= MFT_MENUBREAK;
-  }
-  if(uFlags & MF_MENUBARBREAK)
-  {
-    mii.fType |= MFT_MENUBARBREAK;
-  }
-  if(uFlags & MF_DISABLED)
-  {
-    mii.fState |= MFS_DISABLED;
-  }
-  if(uFlags & MF_GRAYED)
-  {
-    mii.fState |= MFS_GRAYED;
-  }
-
-  if ((mii.fType & MF_POPUP) && (uFlags & MF_POPUP) && (mii.hSubMenu != (HMENU)uIDNewItem))
-    NtUserDestroyMenu( mii.hSubMenu );   /* ModifyMenu() spec */
-
-  if(uFlags & MF_POPUP)
-  {
-    mii.fType |= MF_POPUP;
-    mii.fMask |= MIIM_SUBMENU;
-    mii.hSubMenu = (HMENU)uIDNewItem;
-  }
-  else
-  {
-    mii.fMask |= MIIM_ID;
-    mii.wID = (UINT)uIDNewItem;
-  }
+  MenuSetItemData((LPMENUITEMINFOW) &mii,
+  		   uFlags,
+  		   uIDNewItem,
+  		  (LPCWSTR) lpNewItem,
+  		   FALSE);
 
   return SetMenuItemInfoA( hMnu,
                            uPosition,
@@ -4568,73 +4522,11 @@ ModifyMenuW(
                          (PROSMENUITEMINFO) &mii,
                           FALSE)) return FALSE;
 
-  if(uFlags & MF_BITMAP)
-  {
-    mii.fType |= MFT_BITMAP;
-    mii.fMask |= MIIM_BITMAP;
-    mii.hbmpItem = (HBITMAP) lpNewItem;
-  }
-  else if(uFlags & MF_OWNERDRAW)
-  {
-    mii.fType |= MFT_OWNERDRAW;
-    mii.fMask |= MIIM_DATA;
-    mii.dwItemData = (DWORD) lpNewItem;
-  }
-  else
-  {
-    /*
-    if(mii.dwTypeData != NULL)
-    {
-      HeapFree(GetProcessHeap(),0, mii.dwTypeData);
-    } */
-    if  (lpNewItem != NULL)
-	{
-		if (*lpNewItem == '\b')
-		{
-			mii.fType |= MF_HELP;
-			lpNewItem++;
-		}
-    }
-    mii.fMask |= MIIM_TYPE;
-    mii.dwTypeData = (LPWSTR)lpNewItem;
-    mii.cch = (NULL == lpNewItem ? 0 : wcslen(lpNewItem));
-  }
-
-  if(uFlags & MF_RIGHTJUSTIFY)
-  {
-    mii.fType |= MFT_RIGHTJUSTIFY;
-  }
-  if(uFlags & MF_MENUBREAK)
-  {
-    mii.fType |= MFT_MENUBREAK;
-  }
-  if(uFlags & MF_MENUBARBREAK)
-  {
-    mii.fType |= MFT_MENUBARBREAK;
-  }
-  if(uFlags & MF_DISABLED)
-  {
-    mii.fState |= MFS_DISABLED;
-  }
-  if(uFlags & MF_GRAYED)
-  {
-    mii.fState |= MFS_GRAYED;
-  }
-
-  if ((mii.fType & MF_POPUP) && (uFlags & MF_POPUP) && (mii.hSubMenu != (HMENU)uIDNewItem))
-    NtUserDestroyMenu( mii.hSubMenu );
-
-  if(uFlags & MF_POPUP)
-  {
-    mii.fType |= MF_POPUP;
-    mii.fMask |= MIIM_SUBMENU;
-    mii.hSubMenu = (HMENU)uIDNewItem;
-  }
-  else
-  {
-    mii.fMask |= MIIM_ID;
-    mii.wID = (UINT)uIDNewItem;
-  }
+  MenuSetItemData( &mii,
+  		   uFlags,
+  		   uIDNewItem,
+  		   lpNewItem,
+  		   TRUE);
 
   return SetMenuItemInfoW( hMnu,
                            uPosition,
@@ -4792,7 +4684,7 @@ SetMenuItemInfoW(
   RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
   if (0 != (MenuItemInfoW.fMask & MIIM_STRING))
   {
-    MenuItemInfoW.cch = wcslen(MenuItemInfoW.dwTypeData);
+    MenuItemInfoW.cch = strlenW(MenuItemInfoW.dwTypeData);
   }
 
   return NtUserMenuItemInfo(hMenu, uItem, fByPosition,
