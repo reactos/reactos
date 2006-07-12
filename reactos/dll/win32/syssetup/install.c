@@ -381,6 +381,31 @@ InstallLiveCD (HINSTANCE hInstance)
   PROCESS_INFORMATION ProcessInformation;
   BOOL res;
 
+  hSysSetupInf = SetupOpenInfFileW(
+    L"syssetup.inf",
+    NULL,
+    INF_STYLE_WIN4,
+    NULL);
+  if (hSysSetupInf == INVALID_HANDLE_VALUE)
+  {
+    DebugPrint("SetupOpenInfFileW() failed to open 'syssetup.inf' (Error: %lu)\n", GetLastError());
+    return 0;
+  }
+
+  if (!ProcessSysSetupInf())
+  {
+    DebugPrint("ProcessSysSetupInf() failed!\n");
+    return 0;
+  }
+
+  SetupCloseInfFile(hSysSetupInf);
+
+  if (!EnableUserModePnpManager())
+  {
+    DebugPrint("EnableUserModePnpManager() failed!\n");
+    return 0;
+  }
+
   /* Load the default shell */
   rc = RegOpenKeyEx(
     HKEY_LOCAL_MACHINE,
