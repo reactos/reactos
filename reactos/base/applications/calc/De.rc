@@ -45,7 +45,7 @@ STRINGTABLE DISCARDABLE
    IDS_BTN_SQRT,           "sqrt"
    IDS_ERR_INVALID_INPUT,  "Ungültige Eingabe für Funktion."
    IDS_ERR_DIVIDE_BY_ZERO, "Teilen durch 0 unmöglich."
-   IDS_ERR_UNDEFINED,      "Das Ergebnis der Funktion is undefiniert."
+   IDS_ERR_UNDEFINED,      "Das Ergebnis der Funktion ist undefiniert."
 }
 
 MAIN_MENU MENU DISCARDABLE
@@ -77,14 +77,14 @@ SCIMS_MENU MENU DISCARDABLE
       MENUITEM "&Standard",            IDM_MODE_STANDARD
       MENUITEM "&Wissenschaftlich",    IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
-	  MENUITEM "&Hex\tF5",         ID_CALC_NS_HEX
-	  MENUITEM "De&zimal\tF6",     ID_CALC_NS_DEC
-	  MENUITEM "O&ktal\tF7",       ID_CALC_NS_OCT
-	  MENUITEM "&Binär\tF8",       ID_CALC_NS_BIN
+      MENUITEM "&Hex\tF5",             ID_CALC_NS_HEX
+      MENUITEM "De&zimal\tF6",         ID_CALC_NS_DEC
+      MENUITEM "O&ktal\tF7",           ID_CALC_NS_OCT
+      MENUITEM "&Binär\tF8",           ID_CALC_NS_BIN
       MENUITEM SEPARATOR
       MENUITEM "&Deg\tF2",             ID_CALC_MS_DEGREES
       MENUITEM "&Rad\tF3",             ID_CALC_MS_RADIANS
-	  MENUITEM "&Grad\tF4",        ID_CALC_MS_GRADS
+      MENUITEM "&Grad\tF4",            ID_CALC_MS_GRADS
       MENUITEM SEPARATOR
       MENUITEM "Zifferngr&uppierung",  IDM_DIGIT_GROUPING
    }
@@ -105,15 +105,15 @@ SCIWS_MENU MENU DISCARDABLE
       MENUITEM "&Standard",            IDM_MODE_STANDARD
       MENUITEM "&Wissenschaftlich",    IDM_MODE_SCIENTIFIC
       MENUITEM SEPARATOR
-	  MENUITEM "&Hex\tF5",         ID_CALC_NS_HEX
-	  MENUITEM "De&zimal\tF6",     ID_CALC_NS_DEC
-	  MENUITEM "O&ktal\tF7",       ID_CALC_NS_OCT
-	  MENUITEM "&Binär\tF8",       ID_CALC_NS_BIN
+      MENUITEM "&Hex\tF5",             ID_CALC_NS_HEX
+      MENUITEM "De&zimal\tF6",         ID_CALC_NS_DEC
+      MENUITEM "O&ktal\tF7",           ID_CALC_NS_OCT
+      MENUITEM "&Binär\tF8",           ID_CALC_NS_BIN
       MENUITEM SEPARATOR
-	  MENUITEM "&Qword\tF12",      ID_CALC_WS_QWORD
-	  MENUITEM "Dw&ord\tF2",       ID_CALC_WS_DWORD
-	  MENUITEM "Wo&rd\tF3",        ID_CALC_WS_WORD
-	  MENUITEM "&Byte\tF4",        ID_CALC_WS_BYTE
+      MENUITEM "&Qword\tF12",          ID_CALC_WS_QWORD
+      MENUITEM "Dw&ord\tF2",           ID_CALC_WS_DWORD
+      MENUITEM "Wo&rd\tF3",            ID_CALC_WS_WORD
+      MENUITEM "&Byte\tF4",            ID_CALC_WS_BYTE
       MENUITEM SEPARATOR
       MENUITEM "&Zifferngruppierung",  IDM_DIGIT_GROUPING
    }
