@@ -62,8 +62,10 @@ NTSTATUS
 NTAPI
 IoWMIWriteEvent(IN PVOID WnodeEventItem)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT1("IoWMIWriteEvent() called for WnodeEventItem %p, returning success\n",
+        WnodeEventItem);
+
+    return STATUS_SUCCESS;
 }
 
 /*
