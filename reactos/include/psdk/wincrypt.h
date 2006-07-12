@@ -2560,6 +2560,12 @@ typedef struct _CRL_FIND_ISSUED_FOR_PARA
 #define CERT_CREATE_SELFSIGN_NO_SIGN     1
 #define CERT_CREATE_SELFSIGN_NO_KEY_INFO 2
 
+/* flags for CryptAcquireCertificatePrivateKey */
+#define CRYPT_ACQUIRE_CACHE_FLAG         0x00000001
+#define CRYPT_ACQUIRE_USE_PROV_INFO_FLAG 0x00000002
+#define CRYPT_ACQUIRE_COMPARE_KEY_FLAG   0x00000004
+#define CRYPT_ACQUIRE_SILENT_FLAG        0x00000040
+
 /* function declarations */
 /* advapi32.dll */
 BOOL WINAPI CryptAcquireContextA(HCRYPTPROV *phProv, LPCSTR pszContainer,
@@ -2981,6 +2987,10 @@ BOOL WINAPI CryptImportPublicKeyInfo(HCRYPTPROV hCryptProv,
 BOOL WINAPI CryptImportPublicKeyInfoEx(HCRYPTPROV hCryptProv,
  DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, ALG_ID aiKeyAlg,
  DWORD dwFlags, void *pvAuxInfo, HCRYPTKEY *phKey);
+
+BOOL WINAPI CryptAcquireCertificatePrivateKey(PCCERT_CONTEXT pCert,
+ DWORD dwFlags, void *pvReserved, HCRYPTPROV *phCryptProv, DWORD *pdwKeySpec,
+ BOOL *pfCallerFreeProv);
 
 BOOL WINAPI CryptProtectData( DATA_BLOB* pDataIn, LPCWSTR szDataDescr,
  DATA_BLOB* pOptionalEntropy, PVOID pvReserved,
