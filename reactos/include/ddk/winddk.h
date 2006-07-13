@@ -1189,6 +1189,9 @@ typedef struct _KGUARDED_MUTEX
     };
 } KGUARDED_MUTEX, *PKGUARDED_MUTEX;
 
+#define TIMER_TABLE_SIZE 512
+#define TIMER_TABLE_SHIFT 9
+
 typedef struct _KTIMER {
   DISPATCHER_HEADER  Header;
   ULARGE_INTEGER  DueTime;
@@ -1196,6 +1199,10 @@ typedef struct _KTIMER {
   struct _KDPC  *Dpc;
   LONG  Period;
 } KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
+
+#define ASSERT_TIMER(E) \
+    ASSERT(((E)->Header.Type == TimerNotificationObject) || \
+           ((E)->Header.Type == TimerSynchronizationObject))
 
 typedef struct _KMUTANT {
   DISPATCHER_HEADER  Header;

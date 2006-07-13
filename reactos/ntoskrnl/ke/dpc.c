@@ -25,6 +25,10 @@
 #pragma alloc_text(INIT, KeInitDpc)
 #endif
 
+ULONG KiMaximumDpcQueueDepth = 4;
+ULONG KiMinimumDpcRate = 3;
+ULONG KiAdjustDpcThreshold = 20;
+ULONG KiIdealDpcRate = 20;
 
 /* TYPES *******************************************************************/
 
@@ -49,8 +53,8 @@ KeInitDpc(PKPRCB Prcb)
    KeInitializeEvent(Prcb->DpcEvent, 0, 0);
 #endif
    KeInitializeSpinLock(&Prcb->DpcData[0].DpcLock);
-   Prcb->MaximumDpcQueueDepth = 4;
-   Prcb->MinimumDpcRate = 3;
+   Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
+   Prcb->MinimumDpcRate = KiMinimumDpcRate;
    Prcb->DpcData[0].DpcQueueDepth = 0;
 }
 
