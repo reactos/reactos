@@ -132,8 +132,8 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
         /* Increment the Queue's active threads */
         if (WaitThread->Queue) WaitThread->Queue->CurrentCount++;
 
-        /* Reschedule the Thread */
-        KiUnblockThread(WaitThread, &WaitStatus, EVENT_INCREMENT);
+        /* FIXME: This isn't really correct!!! */
+        KiAbortWaitThread(WaitThread, WaitStatus, EVENT_INCREMENT);
     }
 
 quit:

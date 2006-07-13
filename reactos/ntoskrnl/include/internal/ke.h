@@ -133,14 +133,9 @@ KiSwapThread(
     VOID
 );
 
-/* Removes a thread out of a block state. */
 VOID
-STDCALL
-KiUnblockThread(
-    PKTHREAD Thread,
-    PNTSTATUS WaitStatus,
-    KPRIORITY Increment
-);
+NTAPI
+KiReadyThread(IN PKTHREAD Thread);
 
 NTSTATUS
 STDCALL
@@ -331,9 +326,9 @@ KiTestAlert(VOID);
 VOID
 FASTCALL
 KiAbortWaitThread(
-    PKTHREAD Thread,
-    NTSTATUS WaitStatus,
-    KPRIORITY Increment
+    IN PKTHREAD Thread,
+    IN NTSTATUS WaitStatus,
+    IN KPRIORITY Increment
 );
 
 VOID

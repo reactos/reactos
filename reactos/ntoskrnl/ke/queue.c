@@ -117,7 +117,7 @@ KiInsertQueue(IN PKQUEUE Queue,
         }
 
         /* Reschedule the Thread */
-        KiUnblockThread(Thread, NULL, 0);
+        KiReadyThread(Thread);
     }
     else
     {

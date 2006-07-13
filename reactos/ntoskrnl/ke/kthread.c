@@ -202,84 +202,12 @@ KiDispatchThread(ULONG NewThreadStatus)
 }
 
 VOID
-STDCALL
-KiUnblockThread(PKTHREAD Thread,
-                PNTSTATUS WaitStatus,
-                KPRIORITY Increment)
+NTAPI
+KiReadyThread(IN PKTHREAD Thread)
 {
-    if (Terminated == Thread->State) {
-
-        DPRINT1("Can't unblock thread 0x%x because it's terminating\n",
-               Thread);
-
-    } else if (Ready == Thread->State ||
-               Running == Thread->State) {
-
-        DPRINT1("Can't unblock thread 0x%x because it's %s\n",
-               Thread, (Thread->State == Ready ? "ready" : "running"));
-
-    } else {
-
-        LONG Processor;
-        KAFFINITY Affinity;
-
-        /* FIXME: This propably isn't the right way to do it... */
-        /* No it's not... i'll fix it later-- Alex */
-        if (Thread->Priority < LOW_REALTIME_PRIORITY &&
-            Thread->BasePriority < LOW_REALTIME_PRIORITY - 2) {
-
-            if (!Thread->PriorityDecrement && !Thread->DisableBoost) {
-
-                Thread->Priority = Thread->BasePriority + Increment;
-                Thread->PriorityDecrement = Increment;
-            }
-
-            /* Also decrease quantum */
-            Thread->Quantum--;
-
-        } else {
-
-            Thread->Quantum = Thread->QuantumReset;
-        }
-
-        if (WaitStatus != NULL) {
-
-            Thread->WaitStatus = *WaitStatus;
-        }
-
-        Thread->State = Ready;
-        KiInsertIntoThreadList(Thread->Priority, Thread);
-        Processor = KeGetCurrentProcessorNumber();
-        Affinity = Thread->Affinity;
-
-        if (!(IdleProcessorMask & (1 << Processor) & Affinity) &&
-             (IdleProcessorMask & ~(1 << Processor) & Affinity)) {
-
-            LONG i;
-
-            for (i = 0; i < KeNumberProcessors - 1; i++) {
-
-                Processor++;
-
-                if (Processor >= KeNumberProcessors) {
-
-                    Processor = 0;
-                }
-
-                if (IdleProcessorMask & (1 << Processor) & Affinity) {
-#if 0
-                    /* FIXME:
-                     *   Reschedule the threads on an other processor
-                     */
-                    KeReleaseDispatcherDatabaseLockFromDpcLevel();
-                    KiRequestReschedule(Processor);
-                    KeAcquireDispatcherDatabaseLockAtDpcLevel();
-#endif
-                    break;
-                }
-            }
-        }
-    }
+    /* Makes a thread ready */
+    Thread->State = Ready;
+    KiInsertIntoThreadList(Thread->Priority, Thread);
 }
 
 VOID

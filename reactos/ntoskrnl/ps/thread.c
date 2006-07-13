@@ -353,7 +353,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
     /* Dispatch thread */
     OldIrql = KeAcquireDispatcherDatabaseLock ();
-    KiUnblockThread(&Thread->Tcb, NULL, 0);
+    KiReadyThread(&Thread->Tcb);
     KeReleaseDispatcherDatabaseLock(OldIrql);
 
     /* Return */

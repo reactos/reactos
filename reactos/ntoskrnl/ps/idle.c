@@ -110,7 +110,7 @@ PsInitIdleThread(VOID)
                                   FALSE);
 
     oldIrql = KeAcquireDispatcherDatabaseLock ();
-    KiUnblockThread(&IdleThread->Tcb, NULL, 0);
+    KiReadyThread(&IdleThread->Tcb);
     KeReleaseDispatcherDatabaseLock(oldIrql);
 
     KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;

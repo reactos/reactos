@@ -127,6 +127,7 @@ KiAbortWaitThread(IN PKTHREAD Thread,
 {
     PKWAIT_BLOCK WaitBlock;
     PKTIMER Timer;
+    LONG NewPriority;
 
     /* Update wait status */
     Thread->WaitStatus |= WaitStatus;
@@ -158,8 +159,66 @@ KiAbortWaitThread(IN PKTHREAD Thread,
     /* Increment the Queue's active threads */
     if (Thread->Queue) Thread->Queue->CurrentCount++;
 
+    /* Check if this is a non-RT thread */
+    if (Thread->Priority < LOW_REALTIME_PRIORITY)
+    {
+        /* Check if boosting is enabled and we can boost */
+        if (!(Thread->DisableBoost) && !(Thread->PriorityDecrement))
+        {
+            /* We can boost, so calculate the new priority */
+            NewPriority = Thread->BasePriority + Increment;
+            if (NewPriority > Thread->Priority)
+            {
+                /* Make sure the new priority wouldn't push the thread to RT */
+                if (NewPriority >= LOW_REALTIME_PRIORITY)
+                {
+                    /* Set it just before the RT zone */
+                    Thread->Priority = LOW_REALTIME_PRIORITY - 1;
+                }
+                else
+                {
+                    /* Otherwise, set our calculated priority */
+                    Thread->Priority = NewPriority;
+                }
+            }
+        }
+
+        /* Check if this is a high-priority thread */
+        if (Thread->BasePriority >= 14)
+        {
+            /* It is, simply reset the quantum */
+            Thread->Quantum = Thread->QuantumReset;
+        }
+        else
+        {
+            /* Otherwise, decrease quantum */
+            Thread->Quantum--;
+            if (Thread->Quantum <= 0)
+            {
+                /* We've went below 0, reset it */
+                Thread->Quantum = Thread->QuantumReset;
+
+                /* Apply per-quantum priority decrement */
+                Thread->Priority -= (Thread->PriorityDecrement + 1);
+                if (Thread->Priority < Thread->BasePriority)
+                {
+                    /* We've went too low, reset it */
+                    Thread->Priority = Thread->BasePriority;
+                }
+
+                /* Delete per-quantum decrement */
+                Thread->PriorityDecrement = 0;
+            }
+        }
+    }
+    else
+    {
+        /* For real time threads, just reset the quantum */
+        Thread->Quantum = Thread->QuantumReset;
+    }
+
     /* Reschedule the Thread */
-    KiUnblockThread(Thread, NULL, Increment);
+    KiReadyThread(Thread);
 }
 
 VOID
