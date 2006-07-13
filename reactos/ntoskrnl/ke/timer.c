@@ -210,10 +210,32 @@ KeSetTimerEx (PKTIMER Timer,
     Timer->Header.SignalState = FALSE;
 
     /* Insert it */
-    if (!KiInsertTimer(Timer, DueTime)) {
+    if (!KiInsertTimer(Timer, DueTime))
+    {
+        /* Check if it has any waiters */
+        if (!IsListEmpty(&Timer->Header.WaitListHead))
+        {
+            /* Wake them */
+            KiWaitTest(Timer, IO_NO_INCREMENT);
+        }
 
-       KiHandleExpiredTimer(Timer);
-    };
+        /* Check if the Timer has a DPC */
+        if (Dpc)
+        {
+            /* Insert the DPC */
+            KeInsertQueueDpc(Timer->Dpc,
+                             NULL,
+                             NULL);
+        }
+
+        /* Check if the Timer is periodic */
+        if (Timer->Period)
+        {
+            /* Reinsert the Timer */
+            DueTime.QuadPart = Timer->Period * -SYSTEM_TIME_UNITS_PER_MSEC;
+            while (!KiInsertTimer(Timer, DueTime));
+        }
+    }
 
     /* Release Dispatcher Lock */
     KeReleaseDispatcherDatabaseLock(OldIrql);
@@ -230,13 +252,11 @@ KiExpireTimers(PKDPC Dpc,
                PVOID SystemArgument1,
                PVOID SystemArgument2)
 {
-    PKTIMER Timer, tmp;
+    PKTIMER Timer;
     ULONGLONG InterruptTime;
     LIST_ENTRY ExpiredTimerList;
-    PLIST_ENTRY CurrentEntry = NULL;
+    PLIST_ENTRY ListHead, NextEntry;
     KIRQL OldIrql;
-
-    DPRINT("KiExpireTimers(Dpc: %x)\n", Dpc);
 
     /* Initialize the Expired Timer List */
     InitializeListHead(&ExpiredTimerList);
@@ -247,10 +267,13 @@ KiExpireTimers(PKDPC Dpc,
     /* Query Interrupt Times */
     InterruptTime = KeQueryInterruptTime();
 
-    /* Loop through the Timer List and remove Expired Timers. Insert them into the Expired Listhead */
-    LIST_FOR_EACH_SAFE(Timer, tmp, &KiTimerListHead, KTIMER, TimerListEntry)
+    /* Loop through the Timer List */
+    ListHead = &KiTimerListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
     {
-        DPRINT("Looping for Timer: %x. Duetime: %I64d. InterruptTime %I64d \n", Timer, Timer->DueTime.QuadPart, InterruptTime);
+        /* Get the timer */
+        Timer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
 
         /* Check if we have to Expire it */
         if (InterruptTime < Timer->DueTime.QuadPart) break;
@@ -258,23 +281,24 @@ KiExpireTimers(PKDPC Dpc,
         /* Remove it from the Timer List, add it to the Expired List */
         RemoveEntryList(&Timer->TimerListEntry);
         InsertTailList(&ExpiredTimerList, &Timer->TimerListEntry);
+        NextEntry = ListHead->Flink;
     }
 
     /* Expire the Timers */
-    while (!IsListEmpty(&ExpiredTimerList)) {
-
-        CurrentEntry = RemoveHeadList(&ExpiredTimerList);
-
+    while (ExpiredTimerList.Flink != &ExpiredTimerList)
+    {
         /* Get the Timer */
-        Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
+        Timer = CONTAINING_RECORD(ExpiredTimerList.Flink,
+                                  KTIMER,
+                                  TimerListEntry);
+
+        /* Remove it */
         Timer->Header.Inserted = FALSE;
-        DPRINT("Expiring Timer: %x\n", Timer);
+        RemoveEntryList(&Timer->TimerListEntry);
 
         /* Expire it */
         KiHandleExpiredTimer(Timer);
     }
-
-    DPRINT("Timers expired\n");
 
     /* Release Dispatcher Lock */
     KeReleaseDispatcherDatabaseLock(OldIrql);
@@ -288,21 +312,17 @@ VOID
 STDCALL
 KiHandleExpiredTimer(PKTIMER Timer)
 {
-
     LARGE_INTEGER DueTime;
-    DPRINT("HandleExpiredTime(Timer %x)\n", Timer);
-
-    if(Timer->Header.Inserted) {
-
-       /* First of all, remove the Timer */
-       Timer->Header.Inserted = FALSE;
-       RemoveEntryList(&Timer->TimerListEntry);
-    }
 
     /* Set it as Signaled */
-    DPRINT("Setting Timer as Signaled\n");
     Timer->Header.SignalState = TRUE;
-    KiWaitTest(&Timer->Header, IO_NO_INCREMENT);
+
+    /* Check if it has any waiters */
+    if (!IsListEmpty(&Timer->Header.WaitListHead))
+    {
+        /* Wake them */
+        KiWaitTest(Timer, IO_NO_INCREMENT);
+    }
 
     /* If the Timer is periodic, reinsert the timer with the new due time */
     if (Timer->Period) {
