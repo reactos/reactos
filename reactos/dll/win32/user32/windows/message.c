@@ -1141,6 +1141,12 @@ IntCallWindowProcW(BOOL IsAnsiProc,
   MSG UnicodeMsg;
   LRESULT Result;
 
+  if (WndProc == NULL)
+  {
+      DPRINT1("IntCallWindowsProcW() called with WndProc = NULL!\n");
+      return FALSE;
+  }
+
   if (IsAnsiProc)
     {
       UnicodeMsg.hwnd = hWnd;
@@ -1176,6 +1182,12 @@ IntCallWindowProcA(BOOL IsAnsiProc,
   MSG AnsiMsg;
   MSG UnicodeMsg;
   LRESULT Result;
+
+  if (WndProc == NULL)
+  {
+      DPRINT1("IntCallWindowsProcA() called with WndProc = NULL!\n");
+      return FALSE;
+  }
 
   if (IsAnsiProc)
     {
