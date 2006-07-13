@@ -38,14 +38,13 @@ KiWaitSatisfyAll(PKWAIT_BLOCK FirstBlock)
 
         /* Move to the next block */
         WaitBlock = WaitBlock->NextWaitBlock;
-    }
-    while (WaitBlock != FirstBlock);
+    } while (WaitBlock != FirstBlock);
 }
 
 VOID
 FASTCALL
-KiWaitTest(PVOID ObjectPointer,
-           KPRIORITY Increment)
+KiWaitTest(IN PVOID ObjectPointer,
+           IN KPRIORITY Increment)
 {
     PLIST_ENTRY WaitEntry;
     PLIST_ENTRY WaitList;
@@ -55,10 +54,10 @@ KiWaitTest(PVOID ObjectPointer,
     PKMUTANT FirstObject = ObjectPointer, Object;
 
     /* Loop the Wait Entries */
-    DPRINT("KiWaitTest for Object: %x\n", FirstObject);
     WaitList = &FirstObject->Header.WaitListHead;
     WaitEntry = WaitList->Flink;
-    while ((FirstObject->Header.SignalState > 0) && (WaitEntry != WaitList))
+    while ((FirstObject->Header.SignalState > 0) &&
+           (WaitEntry != WaitList))
     {
         /* Get the current wait block */
         CurrentWaitBlock = CONTAINING_RECORD(WaitEntry,
@@ -70,25 +69,23 @@ KiWaitTest(PVOID ObjectPointer,
         if (CurrentWaitBlock->WaitType == WaitAny)
         {
             /* Easy case, satisfy only this wait */
-            DPRINT("Satisfiying a Wait any\n");
             WaitEntry = WaitEntry->Blink;
             KiSatisfyObjectWait(FirstObject, WaitThread);
         }
         else
         {
             /* Everything must be satisfied */
-            DPRINT("Checking for a Wait All\n");
             NextWaitBlock = CurrentWaitBlock->NextWaitBlock;
 
             /* Loop first to make sure they are valid */
             while (NextWaitBlock != CurrentWaitBlock)
             {
-                /* Check if the object is signaled */
-                Object = NextWaitBlock->Object;
-                DPRINT("Checking: %p %d\n",
-                        Object, Object->Header.SignalState);
+                /* Make sure this isn't a timeout block */
                 if (NextWaitBlock->WaitKey != STATUS_TIMEOUT)
                 {
+                    /* Get the object */
+                    Object = NextWaitBlock->Object;
+
                     /* Check if this is a mutant */
                     if ((Object->Header.Type == MutantObject) &&
                         (Object->Header.SignalState <= 0) &&
@@ -108,69 +105,61 @@ KiWaitTest(PVOID ObjectPointer,
             }
 
             /* All the objects are signaled, we can satisfy */
-            DPRINT("Satisfiying a Wait All\n");
             WaitEntry = WaitEntry->Blink;
             KiWaitSatisfyAll(CurrentWaitBlock);
         }
 
         /* All waits satisfied, unwait the thread */
-        DPRINT("Unwaiting the Thread\n");
         KiAbortWaitThread(WaitThread, CurrentWaitBlock->WaitKey, Increment);
 
 SkipUnwait:
         /* Next entry */
         WaitEntry = WaitEntry->Flink;
     }
-
-    DPRINT("Done\n");
 }
 
 /* Must be called with the dispatcher lock held */
 VOID
 FASTCALL
-KiAbortWaitThread(PKTHREAD Thread,
-                  NTSTATUS WaitStatus,
-                  KPRIORITY Increment)
+KiAbortWaitThread(IN PKTHREAD Thread,
+                  IN NTSTATUS WaitStatus,
+                  IN KPRIORITY Increment)
 {
     PKWAIT_BLOCK WaitBlock;
+    PKTIMER Timer;
 
-    /* If we are blocked, we must be waiting on something also */
-    DPRINT("KiAbortWaitThread: %x, Status: %x, %x \n",
-            Thread, WaitStatus, Thread->WaitBlockList);
+    /* Update wait status */
+    Thread->WaitStatus |= WaitStatus;
 
     /* Remove the Wait Blocks from the list */
-    DPRINT("Removing waits\n");
     WaitBlock = Thread->WaitBlockList;
     do
     {
         /* Remove it */
-        DPRINT("Removing Waitblock: %x, %x\n",
-                WaitBlock, WaitBlock->NextWaitBlock);
         RemoveEntryList(&WaitBlock->WaitListEntry);
 
         /* Go to the next one */
         WaitBlock = WaitBlock->NextWaitBlock;
     } while (WaitBlock != Thread->WaitBlockList);
 
+    /* FIXME: Remove the thread from the wait list! */
+    //RemoveEntryList(&Thread->WaitListEntry);
+
     /* Check if there's a Thread Timer */
-    if (Thread->Timer.Header.Inserted)
+    Timer = &Thread->Timer;
+    if (Timer->Header.Inserted)
     {
-        /* Cancel the Thread Timer with the no-lock fastpath */
-        DPRINT("Removing the Thread's Timer\n");
-        Thread->Timer.Header.Inserted = FALSE;
-        RemoveEntryList(&Thread->Timer.TimerListEntry);
+        /* Remove the timer */
+        Timer->Header.Inserted = FALSE;
+        RemoveEntryList(&Timer->TimerListEntry);
+        //KiRemoveTimer(Timer);
     }
 
     /* Increment the Queue's active threads */
-    if (Thread->Queue)
-    {
-        DPRINT("Incrementing Queue's active threads\n");
-        Thread->Queue->CurrentCount++;
-    }
+    if (Thread->Queue) Thread->Queue->CurrentCount++;
 
     /* Reschedule the Thread */
-    DPRINT("Unblocking the Thread\n");
-    KiUnblockThread(Thread, &WaitStatus, 0);
+    KiUnblockThread(Thread, NULL, Increment);
 }
 
 VOID
@@ -190,19 +179,21 @@ KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
 
 VOID
 FASTCALL
-KiExitDispatcher(KIRQL OldIrql)
+KiExitDispatcher(IN KIRQL OldIrql)
 {
-    /* If it's the idle thread, dispatch */
+    /* Check if it's the idle thread */
     if (!(KeIsExecutingDpc()) &&
         (OldIrql < DISPATCH_LEVEL) &&
         (KeGetCurrentThread()) &&
         (KeGetCurrentThread() == KeGetCurrentPrcb()->IdleThread))
     {
+        /* Dispatch a new thread */
         KiDispatchThreadNoLock(Ready);
     }
     else
     {
-        KeReleaseDispatcherDatabaseLockFromDpcLevel();    
+        /* Otherwise just release the lock */
+        KeReleaseDispatcherDatabaseLockFromDpcLevel();
     }
 
     /* Lower irql back */

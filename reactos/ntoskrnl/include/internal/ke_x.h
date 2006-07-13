@@ -87,7 +87,7 @@
             }                                                               \
                                                                             \
             /* Insert it into the Mutant List */                            \
-            InsertHeadList(&Thread->MutantListHead,                         \
+            InsertHeadList(Thread->MutantListHead.Blink,                    \
                            &(Object)->MutantListEntry);                     \
         }                                                                   \
     }                                                                       \
@@ -132,7 +132,7 @@
         }                                                                   \
                                                                             \
         /* Insert it into the Mutant List */                                \
-        InsertHeadList(&Thread->MutantListHead,                             \
+        InsertHeadList(Thread->MutantListHead.Blink,                        \
                        &(Object)->MutantListEntry);                         \
     }                                                                       \
 }

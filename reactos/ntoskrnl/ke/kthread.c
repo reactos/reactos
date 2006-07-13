@@ -209,13 +209,13 @@ KiUnblockThread(PKTHREAD Thread,
 {
     if (Terminated == Thread->State) {
 
-        DPRINT("Can't unblock thread 0x%x because it's terminating\n",
+        DPRINT1("Can't unblock thread 0x%x because it's terminating\n",
                Thread);
 
     } else if (Ready == Thread->State ||
                Running == Thread->State) {
 
-        DPRINT("Can't unblock thread 0x%x because it's %s\n",
+        DPRINT1("Can't unblock thread 0x%x because it's %s\n",
                Thread, (Thread->State == Ready ? "ready" : "running"));
 
     } else {
