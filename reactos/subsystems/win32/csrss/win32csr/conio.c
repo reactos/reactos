@@ -3379,7 +3379,21 @@ CSR_API(CsrStartScreenSaver)
             }
             else
             {
-                DPRINT1("CsrStartScreenSaver : failed 0x%08X\n", result);
+				GetSystemDirectoryW(szCmdline,MAX_PATH);
+				wprintf(szCmdline, L"%s\\%s /s",szCmdline,szBuffer);
+				DPRINT1("CsrStartScreenSaver : OK %S, Name %S\n", szCmdline, szBuffer);
+                ZeroMemory( &si, sizeof(si) );
+                si.cb = sizeof(si);
+                ZeroMemory( &pi, sizeof(pi) );
+                if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+                {
+                    CloseHandle( pi.hProcess );
+                    CloseHandle( pi.hThread );
+                }
+				else
+				{
+                    DPRINT1("CsrStartScreenSaver : failed 0x%08X\n", result);
+				}
             }
             RegCloseKey(hKey);
         }
