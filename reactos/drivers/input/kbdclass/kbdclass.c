@@ -126,7 +126,7 @@ ClassDeviceControl(
 			PLIST_ENTRY Head = &((PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ListHead;
 			if (Head->Flink != Head)
 			{
-				/* We have at least one keyboard */
+				/* We have at least one device */
 				PPORT_DEVICE_EXTENSION DevExt = CONTAINING_RECORD(Head->Flink, PORT_DEVICE_EXTENSION, ListEntry);
 				IoGetCurrentIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
 				IoSkipCurrentIrpStackLocation(Irp);
@@ -553,6 +553,9 @@ ConnectPortDriver(
 	CONNECT_DATA ConnectData;
 	NTSTATUS Status;
 
+	DPRINT("Connecting PortDO %p [%wZ] to ClassDO %p\n",
+		PortDO, &PortDO->DriverObject->DriverName, ClassDO);
+
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
 	ConnectData.ClassDeviceObject = ClassDO;
@@ -588,6 +591,18 @@ ConnectPortDriver(
 	}
 
 	return IoStatus.Status;
+}
+
+/* Send IOCTL_INTERNAL_*_DISCONNECT to port */
+static NTSTATUS
+DisconnectPortDriver(
+	IN PDEVICE_OBJECT PortDO)
+{
+	DPRINT("Disconnecting PortDO %p [%wZ]\n",
+		PortDO, &PortDO->DriverObject->DriverName);
+
+	DPRINT1("FIXME: Need to send IOCTL_INTERNAL_*_DISCONNECT\n");
+	return STATUS_NOT_IMPLEMENTED;
 }
 
 static NTSTATUS NTAPI
@@ -686,16 +701,17 @@ ClassAddDevice(
 
 cleanup:
 	if (!(Fdo->Flags & DO_DEVICE_INITIALIZING))
-		DPRINT1("FIXME: Need to send IOCTL_INTERNAL_*_DISCONNECT\n");
+		DisconnectPortDriver(Fdo);
 	if (DeviceExtension)
 	{
 		if (DeviceExtension->LowerDevice)
 			IoDetachDevice(DeviceExtension->LowerDevice);
-		if (DriverExtension->ConnectMultiplePorts && DeviceExtension->ClassDO)
+		if (!DriverExtension->ConnectMultiplePorts && DeviceExtension->ClassDO)
 		{
 			PCLASS_DEVICE_EXTENSION ClassDeviceExtension;
 			ClassDeviceExtension = (PCLASS_DEVICE_EXTENSION)DeviceExtension->ClassDO->DeviceExtension;
 			ExFreePool(ClassDeviceExtension->PortData);
+			IoDeleteDevice(DeviceExtension->ClassDO);
 		}
 	}
 	if (Fdo)
