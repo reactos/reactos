@@ -782,4 +782,172 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0501\2\LogConf","BasicConfigVector"
 00,01,01,00,11,00,00,00,08,00,00,00,00,00,00,00,f8,02,00,00,00,00,00,00,ff,02,00,00,00,00,00,00, \
 00,02,01,00,11,00,00,00,03,00,00,00,03,00,00,00
 
+; Static entries to get networking on the LiveCD working
+; PCnet (VMware)
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","NetCfgInstanceId",0x00000000,"{bf3401a0-6e70-11da-2d80-4fc4ac68929a}"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","BUS_TO_SCAN",0x00000000,"ALL"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","BUSTIMER",0x00000000,"0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","BUSTYPE",0x00000000,"5"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","EXTPHY",0x00000000,"0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","FDUP",0x00000000,"0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","LED0",0x00000000,"10000"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","LED1",0x00000000,"10000"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","LED2",0x00000000,"10000"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","LED3",0x00000000,"10000"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","MPMODE",0x00000000,"0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","TP",0x00000000,"1"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","DriverDate",0x00000000,"10-8-2005"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","DriverDateData",0x00000001,00,80,cc,39,9b,cb,c5,01
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","DriverDesc",0x00000000,"AMD 79c970 [PCnet32 LANCE]"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","DriverVersion",0x00000000,"0.0.0.0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","InfPath",0x00000000,"netamd.inf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","InfSection",0x00000000,"PCNet_Inst"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","InfSectionExt",0x00000000,".NT"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","MatchingDeviceId",0x00000000,"PCI\VEN_1022&DEV_2000"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000","ProviderName",0x00000000,"ReactOS Team"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000\Linkage","Export",0x00000000,"\Device\{bf3401a0-6e70-11da-2d80-4fc4ac68929a}"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000\Linkage","RootDevice",0x00000000,"{bf3401a0-6e70-11da-2d80-4fc4ac68929a}"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0000\Linkage","UpperBind",0x00000000,"Tcpip"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{bf3401a0-6e70-11da-2d80-4fc4ac68929a}\Connection","Name",0x00000000,"Network connection"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{bf3401a0-6e70-11da-2d80-4fc4ac68929a}\Connection","PnpInstanceId",0x00000000,"PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{bf3401a0-6e70-11da-2d80-4fc4ac68929a}\Connection","ShowIcon",0x00010001,0x00000001
+
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","Capabilities",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","HardwareID",0x00010000,\
+ "PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10",\
+ "PCI\VEN_1022&DEV_2000&SUBSYS_20001022",\
+ "PCI\VEN_1022&DEV_2000&CC_020000",\
+ "PCI\VEN_1022&DEV_2000&CC_0200"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","CompatibleIDs",0x00010000,\
+ "PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10",\
+ "PCI\VEN_1022&DEV_2000&SUBSYS_20001022",\
+ "PCI\VEN_1022&DEV_2000&CC_020000",\
+ "PCI\VEN_1022&DEV_2000&CC_0200",\
+ "PCI\VEN_1022",\
+ "PCI\CC_020000",\
+ "PCI\CC_0200"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","DeviceDesc",0x00000000,"AMD 79c970 [PCnet32 LANCE]"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","LocationInformation",0x00000000,"PCI-Bus 0, Device 17, Function 0"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","Driver",0x00000000,"{4d36e972-e325-11ce-bfc1-08002be10318}\0000"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","Class",0x00000000,"Net"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","ClassGUID",0x00000000,"{4d36e972-e325-11ce-bfc1-08002be10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","Mfg",0x00000000,"Advanced Micro Devices (AMD)"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\1&f103bba4&11","Service",0x00000000,"PCNet"
+
+HKLM,"SYSTEM\CurrentControlSet\Services\{bf3401a0-6e70-11da-2d80-4fc4ac68929a}\Parameters\Tcpip","DefaultGateway",0x00000000,"0.0.0.0"
+HKLM,"SYSTEM\CurrentControlSet\Services\{bf3401a0-6e70-11da-2d80-4fc4ac68929a}\Parameters\Tcpip","IPAddress",0x00000000,"0.0.0.0"
+HKLM,"SYSTEM\CurrentControlSet\Services\{bf3401a0-6e70-11da-2d80-4fc4ac68929a}\Parameters\Tcpip","SubnetMask",0x00000000,"0.0.0.0"
+
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00000000,"System32\drivers\pcnet.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
+
+; NE1000 (QEmu)
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","NetCfgInstanceId",0x00000000,"{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","BusType",0x00000000,"5"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","DriverDate",0x00000000,"11-14-2005"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","DriverDateData",0x00000001,00,40,15,5b,ae,e8,c5,01,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","DriverDesc",0x00000000,"RTL-8029(AS)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","DriverVersion",0x00000000,"0.0.0.0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","InfPath",0x00000000,"netrtpnt.inf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","InfSection",0x00000000,"NE2000_Inst"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","InfSectionExt",0x00000000,".NT"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","Irq",0x00000000,"B"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","MatchingDeviceId",0x00000000,"PCI\VEN_10EC&DEV_8029"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","NetworkAddress",0x00000000,"001122334455"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","Port",0x00000000,"c100"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001","ProviderName",0x00000000,"ReactOS Team"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Linkage","Export",0x00000000,"\Device\{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Linkage","RootDevice",0x00000000,"{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}\0001\Linkage","UpperBind",0x00000000,"Tcpip"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}\Connection","Name",0x00000000,"Network connection"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}\Connection","PnpInstanceId",0x00000000,"PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}\Connection","ShowIcon",0x00010001,0x00000001
+
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","Capabilities",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","HardwareID",0x00010000,\
+ "PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00",\
+ "PCI\VEN_10EC&DEV_8029&SUBSYS_00000000",\
+ "PCI\VEN_10EC&DEV_8029&CC_020000",\
+ "PCI\VEN_10EC&DEV_8029&CC_0200"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","CompatibleIDs",0x00010000,\
+ "PCI\VEN_10EC&DEV_8029&REV_00",\
+ "PCI\VEN_10EC&DEV_8029&",\
+ "PCI\VEN_10EC&CC_020000",\
+ "PCI\VEN_10EC&CC_0200",\
+ "PCI\VEN_10EC",\
+ "PCI\CC_020000",\
+ "PCI\CC_0200"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","DeviceDesc",0x00000000,"RTL-8029(AS)"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","LocationInformation",0x00000000,"PCI-Bus 0, Device 3, Function 0"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","Driver",0x00000000,"{4d36e972-e325-11ce-bfc1-08002be10318}\0001"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","Class",0x00000000,"Net"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","ClassGUID",0x00000000,"{4d36e972-e325-11ce-bfc1-08002be10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","Mfg",0x00000000,"Realtek Semiconductor"
+HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_10EC&DEV_8029&SUBSYS_00000000&REV_00\1&f103bba4&03","Service",0x00000000,"ne2000"
+
+HKLM,"SYSTEM\CurrentControlSet\Services\{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}\Parameters\Tcpip","DefaultGateway",0x00000000,"0.0.0.0"
+HKLM,"SYSTEM\CurrentControlSet\Services\{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}\Parameters\Tcpip","IPAddress",0x00000000,"0.0.0.0"
+HKLM,"SYSTEM\CurrentControlSet\Services\{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}\Parameters\Tcpip","SubnetMask",0x00000000,"0.0.0.0"
+
+HKLM,"SYSTEM\CurrentControlSet\Services\ne2000","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\ne2000","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\ne2000","ErrorControl",0x00010001,00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ne2000","ImagePath",0x00000000,"System32\drivers\ne2000.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ne2000","Group",0x00000000,"NDIS"
+
+; Common info
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00010000,\
+ "\Device\{bf3401a0-6e70-11da-2d80-4fc4ac68929a}",\
+ "\Device\{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000,\
+ "\Device\Tcpip_{bf3401a0-6e70-11da-2d80-4fc4ac68929a}",\
+ "\Device\Tcpip_{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,\
+ "{bf3401a0-6e70-11da-2d80-4fc4ac68929a}",\
+ "{7f14fc20-6e7d-11da-2d80-4fc4ac68929a}"
+
+; The following entries should be generated from .inf files during installation
+; TCPIP Protocol
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","Characteristics",0x00010001,0x00000080
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","ComponentId",0x00000000,"ms_tcpip"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","Description",0x00000000,"Internet Protocol (TCP/IP)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","InfPath",0x00000000,"BUGBUG_Create from Inffile.inf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","InfSection",0x00000000,"BUGBUG_Create from Inffile.inf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","ClsId",0x00000000,"{A907657F-6FDF-11D0-8EFB-00C04FD912B2}"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","HelpText",0x00000000,"Transmission Control Protocol/Internet Protocol"
+HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","Service",0x00000000,"Tcpip"
+
+; TCP/IP driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Group",0x00000000,"PNP_TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ImagePath",0x00020000,"system32\drivers\tcpip.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Type",0x00010001,0x00000001
+; NOTE: These settings should be added by the network setup
+; These bindings are of the windows 2000 type, and will probably need to be
+; twiddled to get 3rd-party network-related software to work.
+; NT4 puts additional stuff in the Bind, Export, and Route values.
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00010000,"DataBasePath"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00010000,""
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00010000,"ROSHost"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00010000,"0.0.0.0"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","ForwardBroadcasts",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","IPEnableRouter",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","SearchList",0x00010000,""
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","EnableSecurityFilters",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\PersistentRoutes",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","UseDelayedAcceptance",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MaxSockAddrLength",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MinSockAddrLength",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","HelperDllName",0x00000000,"%SystemRoot%\System32\wshtcpip.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","Mapping",0x00000001,0c,00,00,00,03,00,00,00,02,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00,02,00,00,00,03,00,00,00,01,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Winsock\Parameters","Transports",0x00010000,"Tcpip"
+
 ; EOF
