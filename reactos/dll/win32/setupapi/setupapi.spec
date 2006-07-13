@@ -46,8 +46,8 @@
 @ stdcall CM_Enumerate_Enumerators_ExW(long wstr ptr long long)
 @ stub CM_Find_Range
 @ stub CM_First_Range
-@ stub CM_Free_Log_Conf
-@ stub CM_Free_Log_Conf_Ex
+@ stdcall CM_Free_Log_Conf(ptr long)
+@ stdcall CM_Free_Log_Conf_Ex(ptr long ptr)
 @ stdcall CM_Free_Log_Conf_Handle(ptr)
 @ stub CM_Free_Range_List
 @ stub CM_Free_Res_Des

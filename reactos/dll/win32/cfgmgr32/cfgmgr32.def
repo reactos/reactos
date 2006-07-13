@@ -68,9 +68,9 @@ CM_Enumerate_Enumerators_ExA=SETUPAPI.CM_Enumerate_Enumerators_ExA
 CM_Enumerate_Enumerators_ExW=SETUPAPI.CM_Enumerate_Enumerators_ExW
 ;CM_Find_Range
 ;CM_First_Range
-;CM_Free_Log_Conf
-;CM_Free_Log_Conf_Ex
-CM_Free_Log_Conf_Handle@4=SETUPAPI.CM_Free_Log_Conf_Handle
+CM_Free_Log_Conf=SETUPAPI.CM_Free_Log_Conf
+CM_Free_Log_Conf_Ex=SETUPAPI.CM_Free_Log_Conf_Ex
+CM_Free_Log_Conf_Handle=SETUPAPI.CM_Free_Log_Conf_Handle
 ;CM_Free_Range_List
 ;CM_Free_Res_Des
 ;CM_Free_Res_Des_Ex

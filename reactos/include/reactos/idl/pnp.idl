@@ -202,8 +202,15 @@ interface pnp
     CONFIGRET PNP_AddEmptyLogConf(handle_t BindingHandle,
                                   [in, string] wchar_t *DeviceInstance,
                                   [in] ULONG ulPriority,
-                                  [out] ULONG *ulLogConfTag,
+                                  [out] ULONG *pulLogConfTag,
                                   [in] ULONG ulFlags);
+
+    /* Function 43 */
+    CONFIGRET PNP_FreeLogConf(handle_t BindingHandle,
+                              [in, string] wchar_t *DeviceInstance,
+                              [in] ULONG ulType,
+                              [in] ULONG ulLogConfTag,
+                              [in] ULONG ulFlags);
 
     /* Function 58 */
     CONFIGRET PNP_RunDetection(handle_t BindingHandle,

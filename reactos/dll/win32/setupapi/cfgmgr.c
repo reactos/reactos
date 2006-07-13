@@ -919,6 +919,65 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
 
 
 /***********************************************************************
+ * CM_Free_Log_Conf [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Free_Log_Conf(
+    LOG_CONF lcLogConfToBeFreed, ULONG ulFlags)
+{
+    TRACE("%lx %lx\n", lcLogConfToBeFreed, ulFlags);
+    return CM_Free_Log_Conf_Ex(lcLogConfToBeFreed, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Free_Log_Conf_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Free_Log_Conf_Ex(
+    LOG_CONF lcLogConfToBeFreed, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst;
+    PLOG_CONF_INFO pLogConfInfo;
+
+    TRACE("%lx %lx %lx\n", lcLogConfToBeFreed, ulFlags, hMachine);
+
+    if (!IsUserAdmin())
+        return CR_ACCESS_DENIED;
+
+    pLogConfInfo = (PLOG_CONF_INFO)lcLogConfToBeFreed;
+    if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+        return CR_INVALID_LOG_CONF;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_FreeLogConf(BindingHandle, lpDevInst, pLogConfInfo->ulFlags,
+                           pLogConfInfo->ulTag, 0);
+}
+
+
+/***********************************************************************
  * CM_Free_Log_Conf_Handle [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Free_Log_Conf_Handle(
