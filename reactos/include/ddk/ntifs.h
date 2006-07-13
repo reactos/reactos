@@ -1279,6 +1279,8 @@ typedef struct _KQUEUE {
     LIST_ENTRY          ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
+#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
+
 typedef struct _MBCB {
     CSHORT          NodeTypeCode;
     CSHORT          NodeIsInZone;
