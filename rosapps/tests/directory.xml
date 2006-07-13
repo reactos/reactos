@@ -67,6 +67,9 @@
 <directory name="dnsquery">
 	<xi:include href="dnsquery/dnsquery.xml" />
 </directory>
+<directory name="DxHalTest">
+	<xi:include href="DxHalTest/DxHalTest.rbuild" />
+</directory>
 <directory name="edit">
 	<xi:include href="edit/edit.xml" />
 </directory>
@@ -97,9 +100,9 @@
 <directory name="gradient">
 	<xi:include href="gradient/gradient.xml" />
 </directory>
-<directory name="guithreadinfo">
-	<xi:include href="guithreadinfo/guithreadinfo.xml" />
-</directory>
+
+<!-- fixme: guithreadinfo -->
+
 <directory name="hello">
 	<xi:include href="hello/hello.xml" />
 </directory>
