@@ -261,7 +261,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
     {
         /* Update user times */
         CurrentThread->UserTime++;
-        InterlockedIncrement(&CurrentProcess->UserTime);
+        InterlockedIncrement((PLONG)&CurrentProcess->UserTime);
         Prcb->UserTime++;
     }
     else
@@ -276,7 +276,7 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
         {
             /* This was normal kernel time */
             CurrentThread->KernelTime++;
-            InterlockedIncrement(&CurrentProcess->KernelTime);
+            InterlockedIncrement((PLONG)&CurrentProcess->KernelTime);
         }
         else if (Irql == DISPATCH_LEVEL)
         {

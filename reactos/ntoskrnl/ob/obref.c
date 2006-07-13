@@ -224,7 +224,7 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
     }
 
     /* Switch objects */
-    OldRef.Value = InterlockedExchange(&FastRef->Value, NewValue);
+    OldRef.Value = InterlockedExchange((PLONG)&FastRef->Value, NewValue);
     OldObject = (PVOID)((ULONG_PTR)OldRef.Object &~ MAX_FAST_REFS);
     if ((OldObject) && (OldRef.RefCnt))
     {

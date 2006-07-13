@@ -477,6 +477,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
             !(HandleInfo.GrantedAccess & EVENT_MODIFY_STATE))
         {
             /* Fail: lack of rights */
+            Status = STATUS_ACCESS_DENIED;
             goto Quickie;
         }
 
@@ -505,6 +506,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
             !(HandleInfo.GrantedAccess & SEMAPHORE_MODIFY_STATE))
         {
             /* Fail: lack of rights */
+            Status = STATUS_ACCESS_DENIED;
             goto Quickie;
         }
 
