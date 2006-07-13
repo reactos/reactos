@@ -167,6 +167,7 @@ ScreenSaverThreadMain(PVOID StartContext)
    UINT ScreenSaverTimeOut = 0;
    BOOL nPreviousState = FALSE;
    NTSTATUS Status;
+   BOOL FristTime = TRUE;
 
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
@@ -216,18 +217,25 @@ ScreenSaverThreadMain(PVOID StartContext)
               (nPreviousState == FALSE))
          {
             BOOL nPreviousState = FALSE;
-            DPRINT("Keyboard and Mouse TimeOut Starting Screen Saver ...\n");
-            DPRINT(" %I64d Keyboard Timeout Value\n",DiffTimeKeyboard.QuadPart);
-            DPRINT(" %I64d Mouse Timeout Value \n",DiffTimeMouse.QuadPart);
-            DPRINT(" %I64d TimeOut \n",DiffTimeMouse.QuadPart);
+            DPRINT1("Keyboard and Mouse TimeOut Starting Screen Saver ...\n");
+            DPRINT1(" %I64d Keyboard Timeout Value\n",DiffTimeKeyboard.QuadPart);
+            DPRINT1(" %I64d Mouse Timeout Value \n",DiffTimeMouse.QuadPart);
+            DPRINT1(" %I64d TimeOut \n",DiffTimeMouse.QuadPart);
 
-            CSR_API_MESSAGE Request;
-            CsrInit();
-            Request.Type = MAKE_CSR_API(START_SCREEN_SAVER, CSR_GUI);
-            Request.Data.StartScreenSaver.Start = TRUE;
-            co_CsrNotifyScreenSaver(&Request );
+			if (FristTime == FALSE)
+			{
+                CSR_API_MESSAGE Request;
+                CsrInit();
+                Request.Type = MAKE_CSR_API(START_SCREEN_SAVER, CSR_GUI);
+                Request.Data.StartScreenSaver.Start = TRUE;
+                co_CsrNotifyScreenSaver(&Request );
 
-            IntSystemParametersInfo(SPI_SETSCREENSAVERRUNNING, TRUE, &nPreviousState, 0);
+                IntSystemParametersInfo(SPI_SETSCREENSAVERRUNNING, TRUE, &nPreviousState, 0);
+			}
+			else
+			{
+				FristTime = FALSE;
+			}
          }
 
          if ( (DiffTimeMouse.QuadPart < Timeout.QuadPart) &&

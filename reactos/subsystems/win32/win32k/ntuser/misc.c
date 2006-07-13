@@ -1020,16 +1020,14 @@ IntSystemParametersInfo(
                   return TRUE;
 			      break;
                case SPI_SETFLATMENU:				   
-				   WinStaObject->FlatMenu = uiParam;             
-                  return TRUE;
+				   WinStaObject->FlatMenu = uiParam;                               
 			      break;
 			   case	SPI_GETSCREENSAVETIMEOUT:
 				   if (pvParam != NULL) *((UINT*)pvParam) = WinStaObject->ScreenSaverTimeOut;                   
 				   return TRUE;
 				   break;
 			   case	SPI_SETSCREENSAVETIMEOUT:				  
-                   WinStaObject->ScreenSaverTimeOut = uiParam;
-                  return TRUE;
+                   WinStaObject->ScreenSaverTimeOut = uiParam;                  
 				  break;
 			   case SPI_GETSCREENSAVERRUNNING:
                      if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
@@ -1037,8 +1035,7 @@ IntSystemParametersInfo(
 				  break;
 			   case SPI_SETSCREENSAVERRUNNING:				  
 				   if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
-                   WinStaObject->ScreenSaverRunning = uiParam;				   
-                  return TRUE;
+                   WinStaObject->ScreenSaverRunning = uiParam;				                     
 				  break;
 			   case SPI_GETWHEELSCROLLLINES:
 				    CurInfo = IntGetSysCursorInfo(WinStaObject);
