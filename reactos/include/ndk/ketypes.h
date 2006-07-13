@@ -695,8 +695,8 @@ typedef struct _KTHREAD
     {
         struct
         {
-            USHORT KernelApcDisable;
-            USHORT SpecialApcDisable;
+            SHORT KernelApcDisable;
+            SHORT SpecialApcDisable;
         };
         ULONG CombinedApcDisable;
     };

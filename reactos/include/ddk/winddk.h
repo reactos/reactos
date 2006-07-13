@@ -1167,20 +1167,27 @@ typedef struct _KGATE
     DISPATCHER_HEADER Header;
 } KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
 
+#define GM_LOCK_BIT          0x1
+#define GM_LOCK_BIT_V        0x0
+#define GM_LOCK_WAITER_WOKEN 0x2
+#define GM_LOCK_WAITER_INC   0x4
+
 typedef struct _KGUARDED_MUTEX
 {
-    LONG Count;
-    struct _KTHREAD* Owner;
+    volatile LONG Count;
+    PKTHREAD Owner;
     ULONG Contention;
     KGATE Gate;
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             SHORT KernelApcDisable;
             SHORT SpecialApcDisable;
         };
         ULONG CombinedApcDisable;
     };
-} KGUARDED_MUTEX, *PKGUARDED_MUTEX, *RESTRICTED_POINTER PRKGUARDED_MUTEX;
+} KGUARDED_MUTEX, *PKGUARDED_MUTEX;
 
 typedef struct _KTIMER {
   DISPATCHER_HEADER  Header;
@@ -5195,19 +5202,19 @@ NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedIncrement(
-  IN PLONG  VOLATILE  Addend);
+  IN OUT LONG volatile *Addend);
 
 NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedDecrement(
-  IN PLONG  VOLATILE  Addend);
+  IN OUT LONG volatile *Addend);
 
 NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedCompareExchange(
-  IN OUT PLONG  VOLATILE  Destination,
+  IN OUT LONG volatile *Destination,
   IN LONG  Exchange,
   IN LONG  Comparand);
 
@@ -5215,14 +5222,14 @@ NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedExchange(
-  IN OUT PLONG  VOLATILE  Target,
+  IN OUT LONG volatile *Destination,
   IN LONG Value);
 
 NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedExchangeAdd(
-  IN OUT PLONG VOLATILE  Addend,
+  IN OUT LONG volatile *Addend,
   IN LONG  Value);
 
 /*
@@ -6315,48 +6322,52 @@ RtlxUnicodeStringToAnsiSize(
 
 /* Guarded Mutex routines */
 
-VOID 
+VOID
 FASTCALL
 KeAcquireGuardedMutex(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
 VOID
 FASTCALL
 KeAcquireGuardedMutexUnsafe(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
-
-VOID 
-STDCALL
-KeEnterGuardedRegion(VOID);
 
 VOID
-STDCALL
-KeLeaveGuardedRegion(VOID);
+NTAPI
+KeEnterGuardedRegion(
+    VOID
+);
 
-VOID 
+VOID
+NTAPI
+KeLeaveGuardedRegion(
+    VOID
+);
+
+VOID
 FASTCALL
 KeInitializeGuardedMutex(
-    PKGUARDED_MUTEX GuardedMutex
+    OUT PKGUARDED_MUTEX GuardedMutex
 );
 
-VOID 
+VOID
 FASTCALL
 KeReleaseGuardedMutexUnsafe(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
-VOID 
+VOID
 FASTCALL
 KeReleaseGuardedMutex(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
-BOOL 
+BOOLEAN
 FASTCALL
 KeTryToAcquireGuardedMutex(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
 /* Fast Mutex */

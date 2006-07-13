@@ -3785,7 +3785,7 @@ static __inline PVOID GetFiberData(void)
 #if defined(__GNUC__)
 
 static __inline__ BOOLEAN
-InterlockedBitTestAndSet(IN LONG *Base,
+InterlockedBitTestAndSet(IN LONG volatile *Base,
                          IN LONG Bit)
 {
 	LONG OldBit;
@@ -3800,7 +3800,7 @@ InterlockedBitTestAndSet(IN LONG *Base,
 }
 
 static __inline__ BOOLEAN
-InterlockedBitTestAndReset(IN LONG *Base,
+InterlockedBitTestAndReset(IN LONG volatile *Base,
                           IN LONG Bit)
 {
 	LONG OldBit;

@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/gate.c
  * PURPOSE:         Implements the Gate Dispatcher Object
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -18,10 +17,8 @@
 
 VOID
 FASTCALL
-KeInitializeGate(PKGATE Gate)
+KeInitializeGate(IN PKGATE Gate)
 {
-    DPRINT("KeInitializeGate(Gate %x)\n", Gate);
-
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Gate->Header,
                                  GateObject,
@@ -98,7 +95,7 @@ KeWaitForGate(IN PKGATE Gate,
 
 VOID
 FASTCALL
-KeSignalGateBoostPriority(PKGATE Gate)
+KeSignalGateBoostPriority(IN PKGATE Gate)
 {
     PKTHREAD WaitThread;
     PKWAIT_BLOCK WaitBlock;

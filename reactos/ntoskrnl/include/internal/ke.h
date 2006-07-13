@@ -709,4 +709,6 @@ KeV86Exception(
     ULONG address
 );
 
+#include "ke_x.h"
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */
