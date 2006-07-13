@@ -1,256 +1,133 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/timer.c
  * PURPOSE:         Handle Kernel Timers (Kernel-part of Executive Timers)
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Reimplemented some parts, fixed many bugs.
- *                  David Welch (welch@mcmail.com) &  Phillip Susi - Original Implementation.
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ***************************************************************/
 
 #include <ntoskrnl.h>
-
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ****************************************************************/
 
 LIST_ENTRY KiTimerListHead;
-
 #define SYSTEM_TIME_UNITS_PER_MSEC (10000)
 
-/* FUNCTIONS **************************************************************/
+/* PRIVATE FUNCTIONS ******************************************************/
 
-BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
-VOID STDCALL KiHandleExpiredTimer(PKTIMER Timer);
-
-/*
- * @implemented
- *
- * FUNCTION: Removes a timer from the system timer list
- * ARGUMENTS:
- *       Timer = timer to cancel
- * RETURNS: True if the timer was running
- *          False otherwise
- *
- * DANGER!
- * The statement in the DDK for KeCancelTimer that "if a DPC object is
- * associated with the timer, it too is canceled" is wrong -- nothing is
- * done with the DPC object when the timer is removed from the system
- * queue. So its very likely that the DPC will run after you have canceled
- * the timer!
- * For what it's worth, calling KeRemoveQueueDpc after KeCancelTimer would
- * be sufficient to prevent any problems associated with destroying the DPC
- * object, at least as the OS is currently implemented. This is because the
- * DPC dispatcher doesn't need access to the object once the DPC is
- * dequeued, and the dequeuing happens before the DPC routine gets called."
- * -Gunnar (article by Walter Oney)
- */
-BOOLEAN
-STDCALL
-KeCancelTimer(PKTIMER Timer)
-{
-    KIRQL OldIrql;
-    BOOLEAN Inserted = FALSE;
-
-    DPRINT("KeCancelTimer(Timer %x)\n",Timer);
-
-    /* Lock the Database and Raise IRQL */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Check if it's inserted, and remove it if it is */
-    if ((Inserted = Timer->Header.Inserted)) {
-
-        /* Remove from list */
-        DPRINT("Timer was inserted, removing\n");
-        RemoveEntryList(&Timer->TimerListEntry);
-        Timer->Header.Inserted = FALSE;
-
-    } else {
-
-        DPRINT("Timer was not inserted\n");
-    }
-
-    /* Release Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
-
-    /* Return the old state */
-    DPRINT("Old State: %d\n", Inserted);
-    return(Inserted);
-}
-
-/*
- * @implemented
- *
- * FUNCTION: Initalizes a kernel timer object
- * ARGUMENTS:
- *          Timer = caller supplied storage for the timer
- * NOTE: This function initializes a notification timer
- */
 VOID
-STDCALL
-KeInitializeTimer (PKTIMER Timer)
-
+NTAPI
+KiRemoveTimer(IN PKTIMER Timer)
 {
-    /* Call the New Function */
-    KeInitializeTimerEx(Timer, NotificationTimer);
+    /* Remove the timer */
+    Timer->Header.Inserted = FALSE;
+    RemoveEntryList(&Timer->TimerListEntry);
 }
 
 /*
- * @implemented
- *
- * FUNCTION: Initializes a kernel timer object
- * ARGUMENTS:
- *          Timer = caller supplied storage for the timer
- *          Type = the type of timer (notification or synchronization)
- * NOTE: When a notification type expires all waiting threads are released
- * and the timer remains signalled until it is explicitly reset. When a
- * syncrhonization timer expires its state is set to signalled until a
- * single waiting thread is released and then the timer is reset.
- */
-VOID
-STDCALL
-KeInitializeTimerEx (PKTIMER Timer,
-                     TIMER_TYPE Type)
-{
-
-    DPRINT("KeInitializeTimerEx(%x, %d)\n", Timer, Type);
-
-    /* Initialize the Dispatch Header */
-    KeInitializeDispatcherHeader(&Timer->Header,
-                                 TimerNotificationObject + Type,
-                                 sizeof(KTIMER) / sizeof(ULONG),
-                                 FALSE);
-
-    /* Initalize the Other data */
-    Timer->DueTime.QuadPart = 0;
-    Timer->Period = 0;
-}
-
-
-/*
- * @implemented
+ * Note: This function is called with the Dispatcher Lock held.
  */
 BOOLEAN
-STDCALL
-KeReadStateTimer (PKTIMER Timer)
+NTAPI
+KiInsertTimer(IN PKTIMER Timer,
+              IN LARGE_INTEGER DueTime)
 {
-    /* Return the Signal State */
-    return (BOOLEAN)Timer->Header.SignalState;
-}
+    LARGE_INTEGER SystemTime;
+    LARGE_INTEGER DifferenceTime;
+    ULONGLONG InterruptTime;
 
-/*
- * @implemented
- *
- * FUNCTION: Sets the absolute or relative interval at which a timer object
- * is to be set to the signaled state and optionally supplies a
- * CustomTimerDpc to be executed when the timer expires.
- * ARGUMENTS:
- *          Timer = Points to a previously initialized timer object
- *          DueTimer = If positive then absolute time to expire at
- *                     If negative then the relative time to expire at
- *          Dpc = If non-NULL then a dpc to be called when the timer expires
- * RETURNS: True if the timer was already in the system timer queue
- *          False otherwise
- */
-BOOLEAN
-STDCALL
-KeSetTimer (PKTIMER Timer,
-            LARGE_INTEGER DueTime,
-            PKDPC Dpc)
-{
-    /* Call the newer function and supply a period of 0 */
-    return KeSetTimerEx(Timer, DueTime, 0, Dpc);
-}
+    /* Set default data */
+    Timer->Header.Inserted = TRUE;
+    Timer->Header.Absolute = FALSE;
+    if (!Timer->Period) Timer->Header.SignalState = FALSE;
 
-/*
- * @implemented
- *
- * FUNCTION: Sets the absolute or relative interval at which a timer object
- * is to be set to the signaled state and optionally supplies a
- * CustomTimerDpc to be executed when the timer expires.
- * ARGUMENTS:
- *          Timer = Points to a previously initialized timer object
- *          DueTimer = If positive then absolute time to expire at
- *                     If negative then the relative time to expire at
- *          Dpc = If non-NULL then a dpc to be called when the timer expires
- * RETURNS: True if the timer was already in the system timer queue
- *          False otherwise
- */
-BOOLEAN
-STDCALL
-KeSetTimerEx (PKTIMER Timer,
-              LARGE_INTEGER DueTime,
-              LONG Period,
-              PKDPC Dpc)
-{
-    KIRQL OldIrql;
-    BOOLEAN Inserted;
-
-    DPRINT("KeSetTimerEx(Timer %x, DueTime %I64d, Period %d, Dpc %x)\n", Timer, DueTime.QuadPart, Period, Dpc);
-    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
-    /* Lock the Database and Raise IRQL */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Check if it's inserted, and remove it if it is */
-    if ((Inserted = Timer->Header.Inserted)) {
-
-        /* Remove from list */
-        DPRINT("Timer was already inserted\n");
-        RemoveEntryList(&Timer->TimerListEntry);
-        Timer->Header.Inserted = FALSE;
-    }
-
-    /* Set Default Timer Data */
-    Timer->Dpc = Dpc;
-    Timer->Period = Period;
-    Timer->Header.SignalState = FALSE;
-
-    /* Insert it */
-    if (!KiInsertTimer(Timer, DueTime))
+    /* Convert to relative time if needed */
+    if (DueTime.HighPart >= 0)
     {
-        /* Check if it has any waiters */
-        if (!IsListEmpty(&Timer->Header.WaitListHead))
+        /* Get System Time */
+        KeQuerySystemTime(&SystemTime);
+
+        /* Do the conversion */
+        DifferenceTime.QuadPart = SystemTime.QuadPart - DueTime.QuadPart;
+
+        /* Make sure it hasn't already expired */
+        if (DifferenceTime.HighPart >= 0)
         {
-            /* Wake them */
-            KiWaitTest(Timer, IO_NO_INCREMENT);
+            /* Cancel everything */
+            Timer->Header.SignalState = TRUE;
+            Timer->Header.Inserted = FALSE;
+            return FALSE;
         }
 
-        /* Check if the Timer has a DPC */
-        if (Dpc)
-        {
-            /* Insert the DPC */
-            KeInsertQueueDpc(Timer->Dpc,
-                             NULL,
-                             NULL);
-        }
-
-        /* Check if the Timer is periodic */
-        if (Timer->Period)
-        {
-            /* Reinsert the Timer */
-            DueTime.QuadPart = Timer->Period * -SYSTEM_TIME_UNITS_PER_MSEC;
-            while (!KiInsertTimer(Timer, DueTime));
-        }
+        /* Set the time as Absolute */
+        Timer->Header.Absolute = TRUE;
+        DueTime = DifferenceTime;
     }
 
-    /* Release Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Get the Interrupt Time */
+    InterruptTime = KeQueryInterruptTime();
 
-    /* Return old state */
-    DPRINT("Old State: %d\n", Inserted);
-    return Inserted;
+    /* Set the Final Due Time */
+    Timer->DueTime.QuadPart = InterruptTime - DueTime.QuadPart;
+
+    /* Now insert it into the Timer List */
+    InsertAscendingList(&KiTimerListHead,
+                        Timer,
+                        KTIMER,
+                        TimerListEntry,
+                        DueTime.QuadPart);
+    return TRUE;
+}
+
+/*
+ * We enter this function at IRQL DISPATCH_LEVEL, and with the
+ * Dispatcher Lock held!
+ */
+VOID
+NTAPI
+KiHandleExpiredTimer(IN PKTIMER Timer)
+{
+    LARGE_INTEGER DueTime;
+
+    /* Set it as Signaled */
+    Timer->Header.SignalState = TRUE;
+
+    /* Check if it has any waiters */
+    if (!IsListEmpty(&Timer->Header.WaitListHead))
+    {
+        /* Wake them */
+        KiWaitTest(Timer, IO_NO_INCREMENT);
+    }
+
+    /* If the Timer is periodic, reinsert the timer with the new due time */
+    if (Timer->Period)
+    {
+        /* Reinsert the Timer */
+        DueTime.QuadPart = Timer->Period * -SYSTEM_TIME_UNITS_PER_MSEC;
+        while (!KiInsertTimer(Timer, DueTime));
+    }
+
+    /* Check if the Timer has a DPC */
+    if (Timer->Dpc)
+    {
+        /* Insert the DPC */
+        KeInsertQueueDpc(Timer->Dpc,
+                         NULL,
+                         NULL);
+    }
 }
 
 VOID
-STDCALL
-KiExpireTimers(PKDPC Dpc,
-               PVOID DeferredContext,
-               PVOID SystemArgument1,
-               PVOID SystemArgument2)
+NTAPI
+KiExpireTimers(IN PKDPC Dpc,
+               IN PVOID DeferredContext,
+               IN PVOID SystemArgument1,
+               IN PVOID SystemArgument2)
 {
     PKTIMER Timer;
     ULONGLONG InterruptTime;
@@ -293,8 +170,12 @@ KiExpireTimers(PKDPC Dpc,
                                   TimerListEntry);
 
         /* Remove it */
+        ///
+        // GCC IS A BRAINDEAD PIECE OF SHIT. WILL GIVE 5$ FOR EACH DEV KILLED.
+        ///
         Timer->Header.Inserted = FALSE;
         RemoveEntryList(&Timer->TimerListEntry);
+        //KiRemoveTimer(Timer);
 
         /* Expire it */
         KiHandleExpiredTimer(Timer);
@@ -304,111 +185,163 @@ KiExpireTimers(PKDPC Dpc,
     KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
-/*
- * We enter this function at IRQL DISPATCH_LEVEL, and with the
- * Dispatcher Lock held!
- */
-VOID
-STDCALL
-KiHandleExpiredTimer(PKTIMER Timer)
-{
-    LARGE_INTEGER DueTime;
-
-    /* Set it as Signaled */
-    Timer->Header.SignalState = TRUE;
-
-    /* Check if it has any waiters */
-    if (!IsListEmpty(&Timer->Header.WaitListHead))
-    {
-        /* Wake them */
-        KiWaitTest(Timer, IO_NO_INCREMENT);
-    }
-
-    /* If the Timer is periodic, reinsert the timer with the new due time */
-    if (Timer->Period) {
-
-        /* Reinsert the Timer */
-        DueTime.QuadPart = Timer->Period * -SYSTEM_TIME_UNITS_PER_MSEC;
-        if (!KiInsertTimer(Timer, DueTime)) {
-
-           /* FIXME: I will think about how to handle this and fix it ASAP -- Alex */
-           DPRINT("CRITICAL UNHANDLED CASE: TIMER ALREADY EXPIRED!!!\n");
-        };
-    }
-
-    /* Check if the Timer has a DPC */
-    if (Timer->Dpc) {
-
-        DPRINT("Timer->Dpc %x Timer->Dpc->DeferredRoutine %x\n", Timer->Dpc, Timer->Dpc->DeferredRoutine);
-
-        /* Insert the DPC */
-        KeInsertQueueDpc(Timer->Dpc,
-                         NULL,
-                         NULL);
-
-        DPRINT("Finished dpc routine\n");
-    }
-}
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
- * Note: This function is called with the Dispatcher Lock held.
+ * @implemented
  */
 BOOLEAN
-STDCALL
-KiInsertTimer(PKTIMER Timer,
-              LARGE_INTEGER DueTime)
+NTAPI
+KeCancelTimer(IN OUT PKTIMER Timer)
 {
-    LARGE_INTEGER SystemTime;
-    LARGE_INTEGER DifferenceTime;
-    ULONGLONG InterruptTime;
+    KIRQL OldIrql;
+    BOOLEAN Inserted;
+    ASSERT_TIMER(Timer);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    DPRINT("KiInsertTimer(Timer %x DueTime %I64d)\n", Timer, DueTime.QuadPart);
+    /* Lock the Database and Raise IRQL */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
 
-    /* Set default data */
-    Timer->Header.Inserted = TRUE;
-    Timer->Header.Absolute = FALSE;
-    if (!Timer->Period) Timer->Header.SignalState = FALSE;
-
-    /* Convert to relative time if needed */
-    if (DueTime.u.HighPart >= 0) {
-
-        /* Get System Time */
-        KeQuerySystemTime(&SystemTime);
-
-        /* Do the conversion */
-        DifferenceTime.QuadPart = SystemTime.QuadPart - DueTime.QuadPart;
-        DPRINT("Time Difference is: %I64d\n", DifferenceTime.QuadPart);
-
-        /* Make sure it hasn't already expired */
-        if (DifferenceTime.u.HighPart >= 0) {
-
-            /* Cancel everything */
-            DPRINT("Timer already expired: %d\n", DifferenceTime.u.HighPart);
-            Timer->Header.SignalState = TRUE;
-            Timer->Header.Inserted = FALSE;
-            return FALSE;
-        }
-
-        /* Set the time as Absolute */
-        Timer->Header.Absolute = TRUE;
-        DueTime = DifferenceTime;
+    /* Check if it's inserted, and remove it if it is */
+    Inserted = Timer->Header.Inserted;
+    if (Inserted)
+    {
+        ///
+        // GCC IS A BRAINDEAD PIECE OF SHIT. WILL GIVE 5$ FOR EACH DEV KILLED.
+        ///
+        Timer->Header.Inserted = FALSE;
+        RemoveEntryList(&Timer->TimerListEntry);
+        //KiRemoveTimer(Timer);
     }
 
-    /* Get the Interrupt Time */
-    InterruptTime = KeQueryInterruptTime();
-
-    /* Set the Final Due Time */
-    Timer->DueTime.QuadPart = InterruptTime - DueTime.QuadPart;
-    DPRINT("Final Due Time is: %I64d\n", Timer->DueTime.QuadPart);
-
-    /* Now insert it into the Timer List */
-    DPRINT("Inserting Timer into list\n");
-    InsertAscendingList(&KiTimerListHead,
-                        Timer,    
-                        KTIMER,
-                        TimerListEntry,
-                        DueTime.QuadPart);
-
-    return TRUE;
+    /* Release Dispatcher Lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+    return Inserted;
 }
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeInitializeTimer(OUT PKTIMER Timer)
+{
+    /* Call the New Function */
+    KeInitializeTimerEx(Timer, NotificationTimer);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeInitializeTimerEx(OUT PKTIMER Timer,
+                    IN TIMER_TYPE Type)
+{
+    /* Initialize the Dispatch Header */
+    KeInitializeDispatcherHeader(&Timer->Header,
+                                 TimerNotificationObject + Type,
+                                 sizeof(KTIMER) / sizeof(ULONG),
+                                 FALSE);
+
+    /* Initalize the Other data */
+    Timer->DueTime.QuadPart = 0;
+    Timer->Period = 0;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeReadStateTimer(IN PKTIMER Timer)
+{
+    /* Return the Signal State */
+    ASSERT_TIMER(Timer);
+    return (BOOLEAN)Timer->Header.SignalState;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeSetTimer(IN OUT PKTIMER Timer,
+           IN LARGE_INTEGER DueTime,
+           IN PKDPC Dpc OPTIONAL)
+{
+    /* Call the newer function and supply a period of 0 */
+    return KeSetTimerEx(Timer, DueTime, 0, Dpc);
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeSetTimerEx(IN OUT PKTIMER Timer,
+             IN LARGE_INTEGER DueTime,
+             IN LONG Period,
+             IN PKDPC Dpc OPTIONAL)
+{
+    KIRQL OldIrql;
+    BOOLEAN Inserted;
+    ASSERT_TIMER(Timer);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock the Database and Raise IRQL */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Check if it's inserted, and remove it if it is */
+    Inserted = Timer->Header.Inserted;
+    if (Inserted)
+    {
+        ///
+        // GCC IS A BRAINDEAD PIECE OF SHIT. WILL GIVE 5$ FOR EACH DEV KILLED.
+        ///
+        Timer->Header.Inserted = FALSE;
+        RemoveEntryList(&Timer->TimerListEntry);
+        //KiRemoveTimer(Timer);
+    }
+
+    /* Set Default Timer Data */
+    Timer->Dpc = Dpc;
+    Timer->Period = Period;
+    Timer->Header.SignalState = FALSE;
+
+    /* Insert it */
+    if (!KiInsertTimer(Timer, DueTime))
+    {
+        /* Check if it has any waiters */
+        if (!IsListEmpty(&Timer->Header.WaitListHead))
+        {
+            /* Wake them */
+            KiWaitTest(Timer, IO_NO_INCREMENT);
+        }
+
+        /* Check if the Timer has a DPC */
+        if (Dpc)
+        {
+            /* Insert the DPC */
+            KeInsertQueueDpc(Timer->Dpc,
+                             NULL,
+                             NULL);
+        }
+
+        /* Check if the Timer is periodic */
+        if (Timer->Period)
+        {
+            /* Reinsert the Timer */
+            DueTime.QuadPart = Timer->Period * -SYSTEM_TIME_UNITS_PER_MSEC;
+            while (!KiInsertTimer(Timer, DueTime));
+        }
+    }
+
+    /* Release Dispatcher Lock */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+
+    /* Return old state */
+    return Inserted;
+}
+
 /* EOF */
