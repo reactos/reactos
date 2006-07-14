@@ -360,7 +360,9 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
                 return WaitStatus;
             }
 
-            /* FIXME: Fixup interval */
+            /* Check if we had a timeout */
+            DPRINT1("If you see this message, contact Alex ASAP\n");
+            KEBUGCHECK(0);
         }
 
         /* Acquire again the lock */
@@ -533,7 +535,8 @@ KeWaitForSingleObject(PVOID Object,
             /* Check if we had a timeout */
             if (Timeout)
             {
-                 /* FIXME: Fixup interval */
+                DPRINT1("If you see this message, contact Alex ASAP\n");
+                KEBUGCHECK(0);
             }
         }
 
@@ -813,7 +816,8 @@ KeWaitForMultipleObjects(IN ULONG Count,
             /* Check if we had a timeout */
             if (Timeout)
             {
-                /* FIXME: Fixup interval */
+                DPRINT1("If you see this message, contact Alex ASAP\n");
+                KEBUGCHECK(0);
             }
 
             /* Acquire again the lock */

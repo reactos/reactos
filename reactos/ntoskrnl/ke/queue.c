@@ -390,6 +390,10 @@ KeRemoveQueue(IN PKQUEUE Queue,
                         &WaitBlock->WaitListEntry;
                     Timer->Header.WaitListHead.Blink =
                         &WaitBlock->WaitListEntry;
+                    WaitBlock->WaitListEntry.Flink =
+                        &Timer->Header.WaitListHead;
+                    WaitBlock->WaitListEntry.Blink =
+                        &Timer->Header.WaitListHead;
 
                     /* Create Timer */
                     KiInsertTimer(Timer, *Timeout);
@@ -427,8 +431,8 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 /* Check if we had a timeout */
                 if (Timeout)
                 {
-                    /* FIXME: Fixup interval */
-                    DPRINT1("FIXME!!!\n");
+                    DPRINT1("If you see this message, contact Alex ASAP\n");
+                    KEBUGCHECK(0);
                 }
             }
 

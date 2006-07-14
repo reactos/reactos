@@ -764,7 +764,7 @@ KeInitializeThread(PKPROCESS Process,
     /* Initialize the Suspend Semaphore */
     KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);
 
-    /* FIXME OPTIMIZATION OF DOOM. DO NOT ENABLE FIXME */
+    /* Setup the timer */
     Timer = &Thread->Timer;
     KeInitializeTimer(Timer);
     TimerWaitBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
