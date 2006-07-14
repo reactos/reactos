@@ -22,65 +22,11 @@ ULONG MmUserProbeAddress = 0;
 PVOID MmHighestUserAddress = NULL;
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 PVOID MmSystemRangeStart = NULL;
+ULONG MmReadClusterSize;
 
 MM_STATS MmStats;
 
 /* FUNCTIONS ****************************************************************/
-
-
-NTSTATUS 
-NTAPI
-MmReleaseMmInfo(PEPROCESS Process)
-{
-   PVOID Address;
-   PMEMORY_AREA MemoryArea;
-
-   DPRINT("MmReleaseMmInfo(Process %x (%s))\n", Process,
-          Process->ImageFileName);
-
-   MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
-
-   while ((MemoryArea = ((PMADDRESS_SPACE)&Process->VadRoot)->MemoryAreaRoot) != NULL)
-   {
-      switch (MemoryArea->Type)
-      {
-         case MEMORY_AREA_SECTION_VIEW:
-             Address = (PVOID)MemoryArea->StartingAddress;
-             MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
-             MmUnmapViewOfSection((PEPROCESS)Process, Address);
-             MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
-             break;
-
-         case MEMORY_AREA_VIRTUAL_MEMORY:
-         case MEMORY_AREA_PEB_OR_TEB:
-             MmFreeVirtualMemory(Process, MemoryArea);
-             break;
-
-         case MEMORY_AREA_SHARED_DATA:
-         case MEMORY_AREA_NO_ACCESS:
-             MmFreeMemoryArea((PMADDRESS_SPACE)&Process->VadRoot,
-                              MemoryArea,
-                              NULL,
-                              NULL);
-             break;
-
-         case MEMORY_AREA_MDL_MAPPING:
-            KEBUGCHECK(PROCESS_HAS_LOCKED_PAGES);
-            break;
-
-         default:
-            KEBUGCHECK(0);
-      }
-   }
-
-   Mmi386ReleaseMmInfo(Process);
-
-   MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
-   MmDestroyAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
-
-   DPRINT("Finished MmReleaseMmInfo()\n");
-   return(STATUS_SUCCESS);
-}
 
 /*
  * @implemented
