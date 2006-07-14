@@ -143,8 +143,8 @@ KiAbortWaitThread(IN PKTHREAD Thread,
         WaitBlock = WaitBlock->NextWaitBlock;
     } while (WaitBlock != Thread->WaitBlockList);
 
-    /* FIXME: Remove the thread from the wait list! */
-    //RemoveEntryList(&Thread->WaitListEntry);
+    /* Remove the thread from the wait list! */
+    if (Thread->WaitListEntry.Flink) RemoveEntryList(&Thread->WaitListEntry);
 
     /* Check if there's a Thread Timer */
     Timer = &Thread->Timer;
@@ -274,6 +274,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
     PKTIMER ThreadTimer;
     PKTHREAD CurrentThread = KeGetCurrentThread();
     NTSTATUS WaitStatus = STATUS_SUCCESS;
+    BOOLEAN Swappable;
 
     /* Check if the lock is already held */
     if (CurrentThread->WaitNext)
@@ -305,6 +306,10 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
         {
             /* Check if we can do an alertable wait, if requested */
             KiCheckAlertability();
+
+            /* Check if we can swap the thread's stack */
+            CurrentThread->WaitListEntry.Flink = NULL;
+            KiCheckThreadStackSwap(WaitMode, CurrentThread, Swappable);
 
             /* Set status */
             CurrentThread->WaitStatus = STATUS_WAIT_0;
@@ -341,6 +346,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
             CurrentThread->State = Waiting;
 
             /* Find a new thread to run */
+            KiAddThreadToWaitList(CurrentThread, Swappable);
             WaitStatus = KiSwapThread();
             ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -383,6 +389,7 @@ KeWaitForSingleObject(PVOID Object,
     PKTIMER ThreadTimer;
     PKTHREAD CurrentThread = KeGetCurrentThread();
     NTSTATUS WaitStatus = STATUS_SUCCESS;
+    BOOLEAN Swappable;
 
     /* Check if the lock is already held */
     if (CurrentThread->WaitNext)
@@ -461,6 +468,10 @@ KeWaitForSingleObject(PVOID Object,
             /* Make sure we can satisfy the Alertable request */
             KiCheckAlertability();
 
+            /* Check if we can swap the thread's stack */
+            CurrentThread->WaitListEntry.Flink = NULL;
+            KiCheckThreadStackSwap(WaitMode, CurrentThread, Swappable);
+
             /* Enable the Timeout Timer if there was any specified */
             if (Timeout)
             {
@@ -512,6 +523,7 @@ KeWaitForSingleObject(PVOID Object,
             CurrentThread->State = Waiting;
 
             /* Find a new thread to run */
+            KiAddThreadToWaitList(CurrentThread, Swappable);
             WaitStatus = KiSwapThread();
             ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -564,6 +576,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
     ULONG AllObjectsSignaled;
     ULONG WaitIndex;
     NTSTATUS WaitStatus = STATUS_SUCCESS;
+    BOOLEAN Swappable;
 
     /* Set the Current Thread */
     CurrentThread = KeGetCurrentThread();
@@ -727,6 +740,10 @@ KeWaitForMultipleObjects(IN ULONG Count,
             /* Make sure we can satisfy the Alertable request */
             KiCheckAlertability();
 
+            /* Check if we can swap the thread's stack */
+            CurrentThread->WaitListEntry.Flink = NULL;
+            KiCheckThreadStackSwap(WaitMode, CurrentThread, Swappable);
+
             /* Enable the Timeout Timer if there was any specified */
             if (Timeout)
             {
@@ -786,6 +803,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
             CurrentThread->State = Waiting;
 
             /* Find a new thread to run */
+            KiAddThreadToWaitList(CurrentThread, Swappable);
             WaitStatus = KiSwapThread();
             ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 

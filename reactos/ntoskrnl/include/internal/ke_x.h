@@ -156,6 +156,40 @@
 }
 
 //
+// Determines wether a thread should be added to the wait list
+//
+#define KiCheckThreadStackSwap(WaitMode, Thread, Swappable)                 \
+{                                                                           \
+    /* Check the required conditions */                                     \
+    if ((WaitMode != KernelMode) &&                                         \
+        (Thread->EnableStackSwap) &&                                        \
+        (Thread->Priority >= (LOW_REALTIME_PRIORITY + 9)))                  \
+    {                                                                       \
+        /* We are go for swap */                                            \
+        Swappable = TRUE;                                                   \
+    }                                                                       \
+    else                                                                    \
+    {                                                                       \
+        /* Don't swap the thread */                                         \
+        Swappable = FALSE;                                                  \
+    }                                                                       \
+}
+
+//
+// Adds a thread to the wait list
+//
+#define KiAddThreadToWaitList(Thread, Swappable)                            \
+{                                                                           \
+    /* Make sure it's swappable */                                          \
+    if (Swappable)                                                          \
+    {                                                                       \
+        /* Insert it into the PRCB's List */                                \
+        InsertTailList(&KeGetCurrentPrcb()->WaitListHead,                   \
+                       &Thread->WaitListEntry);                             \
+    }                                                                       \
+}
+
+//
 // Rules for checking alertability:
 //  - For Alertable waits ONLY:
 //      * We don't wait and return STATUS_ALERTED if the thread is alerted

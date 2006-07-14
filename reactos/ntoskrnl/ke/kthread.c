@@ -83,7 +83,7 @@ KiScanThreadList(KPRIORITY Priority,
 
             if (current->State != Ready) {
 
-                DPRINT1("%d/%d\n", &current, current->State);
+                DPRINT1("%p/%d\n", current, current->State);
             }
 
             ASSERT(current->State == Ready);

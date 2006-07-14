@@ -252,6 +252,7 @@ KeApplicationProcessorInit(VOID)
   KiCheckFPU();
 
   KeInitDpc(Pcr->Prcb);
+  InitializeListHead(&Pcr->PrcbData.WaitListHead);
 
   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
   {
@@ -332,6 +333,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->NtTib.ExceptionList = (PVOID)-1;
 
    KeInitDpc(KPCR->Prcb);
+   InitializeListHead(&KPCR->PrcbData.WaitListHead);
 
    KeInitExceptions ();
    KeInitInterrupts ();

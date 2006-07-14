@@ -102,7 +102,7 @@ KiInsertQueue(IN PKQUEUE Queue,
 
         /* Remove the queue from the thread's wait list */
         Thread->WaitStatus = (NTSTATUS)Entry;
-        RemoveEntryList(&Thread->WaitListEntry);
+        if (Thread->WaitListEntry.Flink) RemoveEntryList(&Thread->WaitListEntry);
         Thread->WaitReason = 0;
 
         /* Increase the active threads and set the status*/
@@ -248,6 +248,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
     PKQUEUE PreviousQueue;
     PKWAIT_BLOCK WaitBlock;
     PKTIMER Timer;
+    BOOLEAN Swappable;
     ASSERT_QUEUE(Queue);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -354,6 +355,10 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 WaitBlock->Thread = Thread;
                 Thread->WaitStatus = STATUS_WAIT_0;
 
+                /* Check if we can swap the thread's stack */
+                Thread->WaitListEntry.Flink = NULL;
+                KiCheckThreadStackSwap(WaitMode, Thread, Swappable);
+
                 /* We need to wait for the object... check for a timeout */
                 if (Timeout)
                 {
@@ -406,6 +411,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 Thread->State = Waiting;
 
                 /* Find a new thread to run */
+                KiAddThreadToWaitList(Thread, Swappable);
                 Status = KiSwapThread();
 
                 /* Reset the wait reason */
