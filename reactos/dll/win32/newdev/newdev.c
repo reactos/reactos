@@ -325,22 +325,16 @@ IsDots(IN LPCTSTR str)
 	return TRUE;
 }
 
-static LPTSTR
+static LPCTSTR
 GetFileExt(IN LPTSTR FileName)
 {
-	if (FileName == 0)
+	LPCTSTR Dot;
+
+	Dot = _tcsrchr(FileName, _T('.'));
+	if (!Dot)
 		return _T("");
 
-	int i = _tcsclen(FileName);
-	while ((i >= 0) && (FileName[i] != _T('.')))
-		i--;
-
-	FileName = _tcslwr(FileName);
-
-	if (i >= 0)
-		return &FileName[i];
-	else
-		return _T("");
+	return Dot;
 }
 
 static BOOL
@@ -390,7 +384,7 @@ SearchDriverRecursive(
 		{
 			LPCTSTR pszExtension = GetFileExt(FileName);
 
-			if ((_tcscmp(pszExtension, _T(".inf")) == 0) && (_tcscmp(LastDirPath, DirPath) != 0))
+			if ((_tcsicmp(pszExtension, _T(".inf")) == 0) && (_tcscmp(LastDirPath, DirPath) != 0))
 			{
 				_tcscpy(LastDirPath, DirPath);
 
@@ -462,9 +456,6 @@ PrepareFoldersToScan(
 	DWORD CustomTextLength = 0;
 	DWORD LengthNeeded = 0;
 	LPTSTR Buffer;
-
-	TRACE("Include removable devices: %s\n", IncludeRemovableDevices ? "yes" : "no");
-	TRACE("Include custom path      : %s\n", IncludeCustomPath ? "yes" : "no");
 
 	/* Calculate length needed to store the search paths */
 	if (IncludeRemovableDevices)
@@ -754,6 +745,20 @@ DevInstallW(
 	{
 		/* Driver found ; install it */
 		retval = InstallCurrentDriver(DevInstData);
+		if (retval && Show != SW_HIDE)
+		{
+			/* Should we display the 'Need to reboot' page? */
+			SP_DEVINSTALL_PARAMS installParams;
+			installParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+			if (SetupDiGetDeviceInstallParams(
+				DevInstData->hDevInfo,
+				&DevInstData->devInfoData,
+				&installParams))
+			{
+				if (installParams.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT))
+					retval = DisplayWizard(DevInstData, hWndParent, IDD_NEEDREBOOT);
+			}
+		}
 		goto cleanup;
 	}
 	else if (Show == SW_HIDE)
