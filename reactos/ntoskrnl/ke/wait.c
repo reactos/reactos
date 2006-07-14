@@ -379,11 +379,11 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
  */
 NTSTATUS
 NTAPI
-KeWaitForSingleObject(PVOID Object,
-                      KWAIT_REASON WaitReason,
-                      KPROCESSOR_MODE WaitMode,
-                      BOOLEAN Alertable,
-                      PLARGE_INTEGER Timeout)
+KeWaitForSingleObject(IN PVOID Object,
+                      IN KWAIT_REASON WaitReason,
+                      IN KPROCESSOR_MODE WaitMode,
+                      IN BOOLEAN Alertable,
+                      IN PLARGE_INTEGER Timeout OPTIONAL)
 {
     PKMUTANT CurrentObject;
     PKWAIT_BLOCK WaitBlock;
@@ -406,6 +406,7 @@ KeWaitForSingleObject(PVOID Object,
     }
 
     /* Start the actual Loop */
+    WaitBlock = &CurrentThread->WaitBlock[0];
     do
     {
         /* Check if a kernel APC is pending and we're below APC_LEVEL */
@@ -420,10 +421,6 @@ KeWaitForSingleObject(PVOID Object,
         {
             /* Set default status */
             CurrentThread->WaitStatus = STATUS_WAIT_0;
-
-            /* Append wait block to the KTHREAD wait block list */
-            WaitBlock = &CurrentThread->WaitBlock[0];
-            CurrentThread->WaitBlockList = WaitBlock;
 
             /* Get the Current Object */
             CurrentObject = (PKMUTANT)Object;
@@ -460,12 +457,13 @@ KeWaitForSingleObject(PVOID Object,
                 goto DontWait;
             }
 
+            /* Append wait block to the KTHREAD wait block list */
+            CurrentThread->WaitBlockList = WaitBlock;
+
             /* Set up the Wait Block */
             WaitBlock->Object = CurrentObject;
-            WaitBlock->Thread = CurrentThread;
             WaitBlock->WaitKey = (USHORT)(STATUS_SUCCESS);
             WaitBlock->WaitType = WaitAny;
-            WaitBlock->NextWaitBlock = WaitBlock;
 
             /* Make sure we can satisfy the Alertable request */
             KiCheckAlertability();
@@ -508,6 +506,11 @@ KeWaitForSingleObject(PVOID Object,
                     WaitStatus = STATUS_TIMEOUT;
                     goto DontWait;
                 }
+            }
+            else
+            {
+                /* No timer block, so just set our wait block as next */
+                WaitBlock->NextWaitBlock = WaitBlock;
             }
 
             /* Link the Object to this Wait Block */
