@@ -17,6 +17,37 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+BOOLEAN
+FASTCALL
+ObReferenceObjectSafe(IN PVOID Object)
+{
+    POBJECT_HEADER ObjectHeader;
+    LONG OldValue, NewValue;
+
+    /* Get the object header */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+    /* Get the current reference count and fail if it's zero */
+    OldValue = ObjectHeader->PointerCount;
+    if (!OldValue) return FALSE;
+
+    /* Start reference loop */
+    do
+    {
+        /* Increase the reference count */
+        NewValue = InterlockedCompareExchange(&ObjectHeader->PointerCount,
+                                              OldValue + 1,
+                                              OldValue);
+        if (OldValue == NewValue) return TRUE;
+
+        /* Keep looping */
+        OldValue = NewValue;
+    } while (OldValue);
+
+    /* If we got here, then the reference count is now 0 */
+    return FALSE;
+}
+
 VOID
 NTAPI
 ObpDeferObjectDeletion(IN PVOID Object)
@@ -129,7 +160,6 @@ ObFastReferenceObject(IN PEX_FAST_REF FastRef)
     /* Get the object and count */
     Object = (PVOID)(Value &~ MAX_FAST_REFS);
     Count = Value & MAX_FAST_REFS;
-    DPRINT("Ref: %p\n", Object);
 
     /* Check if the reference count is over 1 */
     if (Count > 1) return Object;
@@ -172,7 +202,6 @@ ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
     ULONG_PTR Value, NewValue;
 
     /* Sanity checks */
-    DPRINT("DeRef: %p\n", Object);
     ASSERT(Object);
     ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
 
@@ -287,10 +316,19 @@ ObfDereferenceObject(IN PVOID Object)
     }
 }
 
-#ifdef ObDereferenceObject
-#undef ObDereferenceObject
-#endif
+VOID
+NTAPI
+ObDereferenceObjectDeferDelete(IN PVOID Object)
+{
+    /* Check whether the object can now be deleted. */
+    if (!(InterlockedDecrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount)))
+    {
+        /* Add us to the deferred deletion list */
+        ObpDeferObjectDeletion(Object);
+    }
+}
 
+#undef ObDereferenceObject
 VOID
 NTAPI
 ObDereferenceObject(IN PVOID Object)

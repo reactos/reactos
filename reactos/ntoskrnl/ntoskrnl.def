@@ -841,12 +841,14 @@ ObCloseHandle@8
 ObCreateObject@36
 ObCreateObjectType@16
 ObDereferenceObject@4
+ObDereferenceObjectDeferDelete@4
 ObDereferenceSecurityDescriptor@8
 @ObfDereferenceObject@4
 ObFindHandleForObject@20
 @ObfReferenceObject@4
 ObGetObjectSecurity@12
 ObInsertObject@24
+ObIsKernelHandle@4
 ObLogSecurityDescriptor@12
 ObMakeTemporaryObject@4
 ObOpenObjectByName@28

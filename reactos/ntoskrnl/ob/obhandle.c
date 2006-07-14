@@ -2155,4 +2155,14 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     ObDereferenceObject(SourceProcess);
     return Status;
 }
+
+#undef ObIsKernelHandle
+BOOLEAN
+NTAPI
+ObIsKernelHandle(IN HANDLE Handle)
+{
+    /* We know we're kernel mode, so just check for the kernel handle flag */
+    return (BOOLEAN)((ULONG_PTR)Handle & KERNEL_HANDLE_FLAG);
+}
+
 /* EOF */
