@@ -3976,8 +3976,9 @@ GetMenuItemInfoA(
    BOOL ByPosition,
    LPMENUITEMINFOA mii)
 {
-   LPSTR AnsiBuffer;
    MENUITEMINFOW miiW;
+   LPSTR AnsiBuffer;
+   INT Count;
 
    if (mii->cbSize != sizeof(MENUITEMINFOA) &&
        mii->cbSize != sizeof(MENUITEMINFOA) - sizeof(HBITMAP))
@@ -3992,39 +3993,38 @@ GetMenuItemInfoA(
       return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
    }
 
-   RtlCopyMemory(&miiW, mii, mii->cbSize);
    AnsiBuffer = mii->dwTypeData;
+   Count = mii->cch;
+   RtlCopyMemory(&miiW, mii, mii->cbSize);
+   miiW.dwTypeData = 0;
 
-   if (AnsiBuffer != NULL)
+   if (AnsiBuffer)
    {
       miiW.dwTypeData = RtlAllocateHeap(GetProcessHeap(), 0,
                                         miiW.cch * sizeof(WCHAR));
-      if (miiW.dwTypeData == NULL)
-         return FALSE;
+      if (miiW.dwTypeData == NULL) return FALSE;  
    }
 
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)&miiW, FALSE))
-   {
-      HeapFree(GetProcessHeap(), 0, miiW.dwTypeData);
       return FALSE;
+
+   if (!AnsiBuffer || !Count)
+   {
+      if (miiW.dwTypeData) RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
+      mii->cch = miiW.cch;
+      return TRUE;
    }
 
-   if (AnsiBuffer != NULL)
+   if (IS_STRING_ITEM(miiW.fType))
    {
-      if (IS_STRING_ITEM(miiW.fType))
-      {
-         WideCharToMultiByte(CP_ACP, 0, miiW.dwTypeData, miiW.cch, AnsiBuffer,
+      WideCharToMultiByte(CP_ACP, 0, miiW.dwTypeData, miiW.cch, AnsiBuffer,
                              mii->cch, NULL, NULL);
-      }
-      RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
    }
 
+   RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
    RtlCopyMemory(mii, &miiW, miiW.cbSize);
-   if (AnsiBuffer)
-   {
-        mii->dwTypeData = AnsiBuffer;
-        mii->cch = strlen(AnsiBuffer);
-   }
+   mii->dwTypeData = AnsiBuffer;
+   mii->cch = strlen(AnsiBuffer);
    return TRUE;
 }
 
@@ -4039,7 +4039,55 @@ GetMenuItemInfoW(
    BOOL ByPosition,
    LPMENUITEMINFOW mii)
 {
-   return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
+   MENUITEMINFOW miiW;
+   LPWSTR String;
+   INT Count;
+   
+   if (mii->cbSize != sizeof(MENUITEMINFOW) &&
+       mii->cbSize != sizeof(MENUITEMINFOW) - sizeof(HBITMAP))
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+   }
+
+   if ((mii->fMask & (MIIM_STRING | MIIM_TYPE)) == 0)
+   {
+      /* No text requested, just pass on */
+      return NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) mii, FALSE);
+   }
+
+   String = mii->dwTypeData;
+   Count = mii->cch;
+   RtlCopyMemory(&miiW, mii, mii->cbSize);   
+   miiW.dwTypeData = 0;
+
+   if (String)
+   {
+      miiW.dwTypeData = RtlAllocateHeap(GetProcessHeap(), 0,
+                                        miiW.cch * sizeof(WCHAR));
+      if (miiW.dwTypeData == NULL) return FALSE;  
+   }
+
+   if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) &miiW, FALSE))
+      return FALSE;
+
+   if (!String || !Count)
+   {
+      if (miiW.dwTypeData) RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
+      mii->cch = miiW.cch;
+      return TRUE;
+   }
+
+   if (IS_STRING_ITEM(miiW.fType))
+   {
+      lstrcpynW( String, miiW.dwTypeData, Count );
+   }
+
+   RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
+   RtlCopyMemory(mii, &miiW, miiW.cbSize);
+   mii->dwTypeData = String;
+   mii->cch = strlenW(String);
+   return TRUE;
 }
 
 
@@ -4141,6 +4189,7 @@ GetMenuStringW(
   MENUITEMINFOW miiW;
   miiW.dwTypeData = lpString;
   miiW.fMask = MIIM_STRING;
+  miiW.fType = MF_STRING;
   miiW.cbSize = sizeof(MENUITEMINFOW);
   miiW.cch = nMaxCount;
 
