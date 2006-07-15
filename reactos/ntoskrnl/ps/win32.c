@@ -72,23 +72,15 @@ PsConvertToGuiThread(VOID)
     PAGED_CODE();
 
     /* Validate the previous mode */
-    if (KeGetPreviousMode() == KernelMode)
-    {
-        DPRINT1("Danger: win32k call being made in kernel-mode?!\n");
-        return STATUS_INVALID_PARAMETER;
-    }
+    if (KeGetPreviousMode() == KernelMode) return STATUS_INVALID_PARAMETER;
 
     /* Make sure win32k is here */
-    if (!PspW32ProcessCallout)
-    {
-        DPRINT1("Danger: Win32K call attempted but Win32k not ready!\n");
-        return STATUS_ACCESS_DENIED;
-    }
+    if (!PspW32ProcessCallout) return STATUS_ACCESS_DENIED;
 
     /* Make sure it's not already win32 */
     if (Thread->Tcb.ServiceTable != KeServiceDescriptorTable)
     {
-        DPRINT1("Danger: Thread is already a win32 thread. Limit bypassed?\n");
+        /* We're already a win32 thread */
         return STATUS_ALREADY_WIN32;
     }
 
@@ -123,11 +115,7 @@ PsConvertToGuiThread(VOID)
     {
         /* Now tell win32k about us */
         Status = PspW32ProcessCallout(Process, TRUE);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Danger: Win32k wasn't happy about us!\n");
-            return Status;
-        }
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Set the new service table */
@@ -139,7 +127,6 @@ PsConvertToGuiThread(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Revert our table */
-        DPRINT1("Danger: Win32k wasn't happy about us!\n");
         Thread->Tcb.ServiceTable = KeServiceDescriptorTable;
     }
 

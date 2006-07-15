@@ -9,10 +9,9 @@
 
 /*
  * Alex FIXMEs:
- *  - CRITICAL: NtCurrentTeb returns KPCR.
  *  - MAJOR: Use Process Rundown
  *  - MAJOR: Use Process Pushlock Locks
- *  - MAJOR: Implement Safe Referencing (See PsGetNextProcess/Thread).
+ *  - MAJOR: Use Safe Referencing in PsGetNextProcess/Thread.
  *  - MAJOR: Use Guarded Mutex instead of Fast Mutex for Active Process Locks.
  *  - Generate process cookie for user-more thread.
  *  - Add security calls where necessary.
@@ -56,15 +55,14 @@ PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
     if (Thread->DeadThread)
     {
         /* Remember that we're dead */
-        DPRINT1("This thread is already dead\n");
         DeadThread = TRUE;
 }
     else
     {
         /* Get the Locale ID and save Preferred Proc */
-        Teb =  NtCurrentTeb(); /* FIXME: This returns KPCR!!! */
-        //Teb->CurrentLocale = MmGetSessionLocaleId();
-        //Teb->IdealProcessor = Thread->Tcb.IdealProcessor;
+        Teb =  NtCurrentTeb();
+        Teb->CurrentLocale = MmGetSessionLocaleId();
+        Teb->IdealProcessor = Thread->Tcb.IdealProcessor;
     }
 
     /* Check if this is a system thread, or if we're hiding */
@@ -191,11 +189,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     }
 
     /* Check for success */
-    if(!NT_SUCCESS(Status))
-    {
-        DPRINT1("Invalid Process Handle, or no handle given\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Also make sure that User-Mode isn't trying to create a system thread */
     if ((PreviousMode != KernelMode) && (Process == PsInitialSystemProcess))
@@ -217,7 +211,6 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     if (!NT_SUCCESS(Status))
     {
         /* We failed; dereference the process and exit */
-        DPRINT1("Failed to Create Thread Object\n");
         ObDereferenceObject(Process);
         return Status;
     }
@@ -236,7 +229,6 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     if (!Thread->Cid.UniqueThread)
     {
         /* We couldn't create the CID, dereference everything and fail */
-        DPRINT1("Failed to create Thread Handle (CID)\n");
         ObDereferenceObject(Process);
         ObDereferenceObject(Thread);
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -628,11 +620,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
     if(KeGetPreviousMode() != KernelMode)
     {
         /* Make sure that we got a context */
-        if (!ThreadContext)
-        {
-            DPRINT1("No context for User-Mode Thread!!\n");
-            return STATUS_INVALID_PARAMETER;
-        }
+        if (!ThreadContext) return STATUS_INVALID_PARAMETER;
 
         /* Protect checks */
         _SEH_TRY
@@ -761,9 +749,8 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                     DesiredAccess,
                                     NULL,
                                     &hThread);
-        if (!NT_SUCCESS(Status)) DPRINT1("Could not open object by name\n");
-        }
-    else if (ClientId != NULL)
+    }
+    else if (ClientId)
     {
         /* Open by Thread ID */
         if (ClientId->UniqueProcess)
@@ -780,11 +767,8 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                               &Thread);
         }
 
-        if(!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failure to find Thread\n");
-            return Status;
-        }
+        /* Fail if we didn't find anything */
+        if(!NT_SUCCESS(Status)) return Status;
 
         /* Open the Thread Object */
         Status = ObOpenObjectByPointer(Thread,
@@ -794,10 +778,6 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                        PsThreadType,
                                        PreviousMode,
                                        &hThread);
-        if(!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failure to open Thread\n");
-        }
 
         /* Dereference the thread */
         ObDereferenceObject(Thread);
@@ -809,7 +789,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     }
 
     /* Check for success */
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Protect against bad user-mode pointers */
         _SEH_TRY
