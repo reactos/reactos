@@ -123,7 +123,7 @@ ClassDeviceControl(
 			PLIST_ENTRY Head = &((PCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ListHead;
 			if (Head->Flink != Head)
 			{
-				/* We have at least one device */
+				/* We have at least one mouse */
 				PPORT_DEVICE_EXTENSION DevExt = CONTAINING_RECORD(Head->Flink, PORT_DEVICE_EXTENSION, ListEntry);
 				IoGetCurrentIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
 				IoSkipCurrentIrpStackLocation(Irp);
@@ -687,7 +687,8 @@ cleanup:
 			PCLASS_DEVICE_EXTENSION ClassDeviceExtension;
 			ClassDeviceExtension = (PCLASS_DEVICE_EXTENSION)DeviceExtension->ClassDO->DeviceExtension;
 			ExFreePool(ClassDeviceExtension->PortData);
-			IoDeleteDevice(DeviceExtension->ClassDO);
+			/* FIXME BSOD for second boot when u press on finsih buttom or wait timeout */
+			// IoDeleteDevice(DeviceExtension->ClassDO);
 		}
 	}
 	if (Fdo)
