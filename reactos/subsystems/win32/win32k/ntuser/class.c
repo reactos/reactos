@@ -1772,7 +1772,8 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
 static BOOL
 UserGetClassInfo(IN PWINDOWCLASS Class,
                  OUT PWNDCLASSEXW lpwcx,
-                 IN BOOL Ansi)
+                 IN BOOL Ansi,
+                 HINSTANCE hInstance)
 {
     lpwcx->style = Class->Style;
 
@@ -1783,7 +1784,6 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
 
     lpwcx->cbClsExtra = Class->ClsExtra;
     lpwcx->cbWndExtra = Class->WndExtra;
-    lpwcx->hInstance = Class->hInstance;
     lpwcx->hIcon = Class->hIcon; /* FIXME - get handle from pointer */
     lpwcx->hCursor = Class->hCursor; /* FIXME - get handle from pointer */
     lpwcx->hbrBackground = Class->hbrBackground;
@@ -1792,6 +1792,13 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
         ((PWNDCLASSEXA)lpwcx)->lpszMenuName = Class->AnsiMenuName;
     else
         lpwcx->lpszMenuName = Class->MenuName;
+
+    if (hInstance)
+        lpwcx->hInstance = hInstance;
+    else if (Class->Global)
+        lpwcx->hInstance = NULL;
+    else
+        lpwcx->hInstance = Class->hInstance;
 
     lpwcx->lpszClassName = (LPCWSTR)((ULONG_PTR)Class->Atom); /* FIXME - return the string? */
 
@@ -2154,7 +2161,8 @@ InvalidParameter:
         {
             Ret = UserGetClassInfo(Class,
                                    lpWndClassEx,
-                                   Ansi);
+                                   Ansi,
+                                   hInstance);
 
             if (Ret)
             {
@@ -2173,6 +2181,11 @@ InvalidParameter:
 
                 /* Undocumented behavior! Return the class atom as a BOOL! */
                 Ret = (BOOL)ClassAtom;
+
+                if (!(Class->Global || Class->System) && hInstance == NULL)
+                {
+                    Ret = FALSE;
+                }
             }
         }
     }
