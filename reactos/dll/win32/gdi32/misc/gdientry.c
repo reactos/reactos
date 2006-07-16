@@ -95,7 +95,7 @@ DdFlip(LPDDHAL_FLIPDATA Flip)
                         (PDD_FLIPDATA)Flip);
 }
 
-WORD
+DWORD
 WINAPI
 DdLock(LPDDHAL_LOCKDATA Lock)
 {
@@ -327,6 +327,8 @@ DdGetScanLine(LPDDHAL_GETSCANLINEDATA pGetScanLine)
 }
 
 /* PRIVATE FUNCTIONS *********************************************************/
+static ULONG RemberDdQueryDisplaySettingsUniquenessID = 0;
+
 BOOL
 WINAPI
 bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
@@ -438,24 +440,13 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     return Return;
 }
 
-
-
-
-static LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobalInternal;
-static ULONG RemberDdQueryDisplaySettingsUniquenessID = 0;
-
-BOOL
-intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
-				     BOOL bComplete);
-
-
-
-
 /*
- * @unimplemented
+ * @implemented
+ *
+ * GDIEntry 2
  */
 BOOL
-STDCALL
+WINAPI
 DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                         LPDDHALINFO pHalInfo,
                         LPDDHAL_DDCALLBACKS pDDCallbacks,
@@ -467,36 +458,324 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                         LPDDSURFACEDESC pD3dTextureFormats,
                         LPDWORD pdwFourCC,
                         LPVIDMEM pvmList)
-{
-    BOOL bStatus = FALSE;
-	DD_HALINFO DDHalInfo;
-	LPVOID pCallBackFlags[3];
-	DWORD NumHeaps;
-	DWORD NumFourCC; 
+    {
+    PVIDEOMEMORY VidMemList = NULL;
+    DD_HALINFO HalInfo;
+    D3DNTHAL_CALLBACKS D3dCallbacks;
+    D3DNTHAL_GLOBALDRIVERDATA D3dDriverData;
+    DD_D3DBUFCALLBACKS D3dBufferCallbacks;
+    DWORD CallbackFlags[3];
+    DWORD dwNumHeaps=0, FourCCs;
+    DWORD Flags;
 
-	DDHalInfo.dwSize = sizeof(DD_HALINFO);
+    /* Check if we got a list pointer */
+    if (pvmList)
+    {
+        /* Allocate memory for it */
+        VidMemList = LocalAlloc(LMEM_ZEROINIT,
+                                sizeof(VIDEOMEMORY) *
+                                pHalInfo->vmiData.dwNumHeaps);
+    }
 
-	pCallBackFlags[0] = pDDCallbacks;
-    pCallBackFlags[1] = pDDSurfaceCallbacks;
-	pCallBackFlags[2] = pDDPaletteCallbacks;
-    	
-	bStatus = NtGdiDdQueryDirectDrawObject(
-		      (HANDLE)pDirectDrawGlobal->hDD,
-			  (DD_HALINFO *)&DDHalInfo,
-			  (DWORD *)pCallBackFlags,
-			  (LPD3DNTHAL_CALLBACKS)pD3dCallbacks,
-              (LPD3DNTHAL_GLOBALDRIVERDATA)pD3dDriverData,
-			  (PDD_D3DBUFCALLBACKS)pD3dBufferCallbacks,
-			  (LPDDSURFACEDESC)pD3dTextureFormats,
-			  (DWORD *)&NumHeaps,
-			  (VIDEOMEMORY *)pvmList,
-			  (DWORD *)&NumFourCC,
-              (DWORD *)pdwFourCC);
+    /* Clear the structures */
+    RtlZeroMemory(&HalInfo, sizeof(DD_HALINFO));
+    RtlZeroMemory(&D3dCallbacks, sizeof(D3DNTHAL_CALLBACKS));
+    RtlZeroMemory(&D3dDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+    RtlZeroMemory(&D3dBufferCallbacks, sizeof(DD_D3DBUFCALLBACKS));
 
-    	
-	//SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return bStatus;
+    //* Do the query */
+    if (!NtGdiDdQueryDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
+                                      &HalInfo,
+                                      CallbackFlags,
+                                      &D3dCallbacks,
+                                      &D3dDriverData,
+                                      &D3dBufferCallbacks,
+                                      pD3dTextureFormats,
+                                      &dwNumHeaps,
+                                      VidMemList,
+                                      &FourCCs,
+                                      pdwFourCC))
+    {
+        /* We failed, free the memory and return */
+        if (VidMemList) LocalFree(VidMemList);
+        return FALSE;
+    }
+
+    /* Clear the incoming pointer */
+    RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
+
+    /* Convert all the data */
+    pHalInfo->dwSize = sizeof(DDHALINFO);
+    pHalInfo->lpDDCallbacks = pDDCallbacks;
+    pHalInfo->lpDDSurfaceCallbacks = pDDSurfaceCallbacks;
+    pHalInfo->lpDDPaletteCallbacks = pDDPaletteCallbacks;
+
+    /* Check for NT5+ D3D Data */
+    if (D3dCallbacks.dwSize && D3dDriverData.dwSize)
+    {
+        /* Write these down */
+        pHalInfo->lpD3DGlobalDriverData = (ULONG_PTR)pD3dDriverData;
+        pHalInfo->lpD3DHALCallbacks = (ULONG_PTR)pD3dCallbacks;
+
+        /* Check for Buffer Callbacks */
+        if (D3dBufferCallbacks.dwSize)
+        {
+            /* Write this one too */
+            pHalInfo->lpDDExeBufCallbacks = pD3dBufferCallbacks;
+        }
+    }
+
+    /* Continue converting the rest */
+    pHalInfo->vmiData.dwFlags = HalInfo.vmiData.dwFlags;
+    pHalInfo->vmiData.dwDisplayWidth = HalInfo.vmiData.dwDisplayWidth;
+    pHalInfo->vmiData.dwDisplayHeight = HalInfo.vmiData.dwDisplayHeight;
+    pHalInfo->vmiData.lDisplayPitch = HalInfo.vmiData.lDisplayPitch;
+    pHalInfo->vmiData.fpPrimary = 0;
+    pHalInfo->vmiData.ddpfDisplay = HalInfo.vmiData.ddpfDisplay;
+    pHalInfo->vmiData.dwOffscreenAlign = HalInfo.vmiData.dwOffscreenAlign;
+    pHalInfo->vmiData.dwOverlayAlign = HalInfo.vmiData.dwOverlayAlign;
+    pHalInfo->vmiData.dwTextureAlign = HalInfo.vmiData.dwTextureAlign;
+    pHalInfo->vmiData.dwZBufferAlign = HalInfo.vmiData.dwZBufferAlign;
+    pHalInfo->vmiData.dwAlphaAlign = HalInfo.vmiData.dwAlphaAlign;
+    pHalInfo->vmiData.dwNumHeaps = dwNumHeaps;
+    pHalInfo->vmiData.pvmList = pvmList;
+    // pHalInfo->ddCaps = HalInfo.ddCaps;
+    //  pHalInfo->ddCaps.dwNumFourCCCodes = FourCCs;
+    pHalInfo->lpdwFourCC = pdwFourCC;
+    pHalInfo->ddCaps.dwRops[6] = 0x1000;
+    pHalInfo->dwFlags = HalInfo.dwFlags | DDHALINFO_GETDRIVERINFOSET;
+    //  pHalInfo->GetDriverInfo = DdGetDriverInfo;
+
+    /* Now check if we got any DD callbacks */
+    if (pDDCallbacks)
+    {
+        /* Zero the structure */
+        RtlZeroMemory(pDDCallbacks, sizeof(DDHAL_DDCALLBACKS));
+
+        /* Set the flags for this structure */
+        Flags = CallbackFlags[0];
+
+        /* Write the header */
+        pDDCallbacks->dwSize = sizeof(DDHAL_DDCALLBACKS);
+		pDDCallbacks->dwFlags = Flags;
+        
+        /* Now write the pointers, if applicable */
+        if (Flags & DDHAL_CB32_CREATESURFACE)
+        {
+            pDDCallbacks->CreateSurface = DdCreateSurface;
+        }
+        if (Flags & DDHAL_CB32_WAITFORVERTICALBLANK)
+        {
+            pDDCallbacks->WaitForVerticalBlank = DdWaitForVerticalBlank;
+        }
+        if (Flags & DDHAL_CB32_CANCREATESURFACE)
+        {
+            pDDCallbacks->CanCreateSurface = DdCanCreateSurface;
+        }
+        if (Flags & DDHAL_CB32_GETSCANLINE)
+        {
+            pDDCallbacks->GetScanLine = DdGetScanLine;
+        }
+    }
+
+    /* Check for DD Surface Callbacks */
+    if (pDDSurfaceCallbacks)
+    {
+        /* Zero the structures */
+        RtlZeroMemory(pDDSurfaceCallbacks, sizeof(DDHAL_DDSURFACECALLBACKS));
+
+        /* Set the flags for this one */
+        Flags = CallbackFlags[1];
+		
+
+        /* Write the header, note that some functions are always exposed */
+        pDDSurfaceCallbacks->dwSize  = sizeof(DDHAL_DDSURFACECALLBACKS);
+		
+		pDDSurfaceCallbacks->dwFlags = Flags;
+		/*
+        pDDSurfaceCallBacks->dwFlags = (DDHAL_SURFCB32_LOCK |
+                                        DDHAL_SURFCB32_UNLOCK |
+                                        DDHAL_SURFCB32_SETCOLORKEY |
+                                        DDHAL_SURFCB32_DESTROYSURFACE) | Flags;
+        */
+
+        /* Write the always-on functions */
+        pDDSurfaceCallbacks->Lock = DdLock;
+        pDDSurfaceCallbacks->Unlock = DdUnlock;
+        pDDSurfaceCallbacks->SetColorKey = DdSetColorKey;
+        pDDSurfaceCallbacks->DestroySurface = DdDestroySurface;
+
+        /* Write the optional ones */
+        if (Flags & DDHAL_SURFCB32_FLIP)
+        {
+            pDDSurfaceCallbacks->Flip = DdFlip;
+        }
+        if (Flags & DDHAL_SURFCB32_BLT)
+        {
+            pDDSurfaceCallbacks->Blt = DdBlt;
+        }
+        if (Flags & DDHAL_SURFCB32_GETBLTSTATUS)
+        {
+            pDDSurfaceCallbacks->GetBltStatus = DdGetBltStatus;
+        }
+        if (Flags & DDHAL_SURFCB32_GETFLIPSTATUS)
+        {
+            pDDSurfaceCallbacks->GetFlipStatus = DdGetFlipStatus;
+        }
+        if (Flags & DDHAL_SURFCB32_UPDATEOVERLAY)
+        {
+            pDDSurfaceCallbacks->UpdateOverlay = DdUpdateOverlay;
+        }
+        if (Flags & DDHAL_SURFCB32_SETOVERLAYPOSITION)
+        {
+            pDDSurfaceCallbacks->SetOverlayPosition = DdSetOverlayPosition;
+        }
+        if (Flags & DDHAL_SURFCB32_ADDATTACHEDSURFACE)
+        {
+            pDDSurfaceCallbacks->AddAttachedSurface = DdAddAttachedSurface;
+        }
+    }
+
+    /* Check for DD Palette Callbacks */
+    if (pDDPaletteCallbacks)
+    {
+        /* Zero the struct */
+        RtlZeroMemory(pDDPaletteCallbacks, sizeof(DDHAL_DDPALETTECALLBACKS));
+
+        /* Get the flags for this one */
+        Flags = CallbackFlags[2];
+
+        /* Write the header */
+        pDDPaletteCallbacks->dwSize  = sizeof(DDHAL_DDPALETTECALLBACKS);
+        pDDPaletteCallbacks->dwFlags = Flags;
+    }
+
+    /* Check for D3D Callbacks */
+    if (pD3dCallbacks)
+  {       
+        /* Zero the struct */
+        RtlZeroMemory(pD3dCallbacks, sizeof(D3DHAL_CALLBACKS));
+
+        /* Check if we have one */
+        if (D3dCallbacks.dwSize)
+        {
+            /* Write the header */
+            pD3dCallbacks->dwSize  = sizeof(D3DHAL_CALLBACKS);
+
+            /* Now check for each callback */
+            if (D3dCallbacks.ContextCreate)
+            {
+				 /* FIXME
+                 pD3dCallbacks->ContextCreate = D3dContextCreate; 
+				 */
+            }
+            if (D3dCallbacks.ContextDestroy)
+            {
+                pD3dCallbacks->ContextDestroy = (LPD3DHAL_CONTEXTDESTROYCB) NtGdiD3dContextDestroy;
+            }
+            if (D3dCallbacks.ContextDestroyAll)
+            {
+				/* FIXME 
+                pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
+				*/
+            }
+        }
+    }
+
+    /* Check for D3D Driver Data */
+    if (pD3dDriverData)
+    {
+        /* Copy the struct */
+        RtlMoveMemory(pD3dDriverData,
+                      &D3dDriverData,
+                      sizeof(D3DHAL_GLOBALDRIVERDATA));
+
+        /* Write the pointer to the texture formats */
+        pD3dDriverData->lpTextureFormats = pD3dTextureFormats;
+    }
+
+    /* FIXME: Check for D3D Buffer Callbacks */
+
+    /* Check if we have a video memory list */
+    if (VidMemList)
+    {
+        /* Start a loop here */
+        PVIDEOMEMORY VidMem = VidMemList;
+
+        /* Loop all the heaps we have */
+        while (dwNumHeaps--)
+        {
+            /* Copy from one format to the other */
+            pvmList->dwFlags = VidMem->dwFlags;
+            pvmList->fpStart = VidMem->fpStart;
+            pvmList->fpEnd = VidMem->fpEnd;
+            pvmList->ddsCaps = VidMem->ddsCaps;
+            pvmList->ddsCapsAlt = VidMem->ddsCapsAlt;
+            pvmList->dwHeight = VidMem->dwHeight;
+
+            /* Advance in both structures */
+            pvmList++;
+            VidMem++;
+        }
+
+        /* Free our structure */
+        LocalFree(VidMemList);
+    }
+
+  
+  return TRUE;
 }
+
+/*
+ * @implemented
+ *
+ * GDIEntry 3
+ */
+BOOL 
+WINAPI
+DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
+{
+    BOOL Return = FALSE;
+
+    /* If this is the global object */
+    if(pDirectDrawGlobal->hDD)
+    {
+        /* Free it */
+        Return = NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD);
+    }
+    else if (ghDirectDraw)
+    {
+        /* Always success here */
+        Return = TRUE;
+
+        /* Make sure this is the last instance */
+        if (!(--gcDirectDraw))
+        {
+            /* Delete the object */
+            Return = NtGdiDdDeleteDirectDrawObject(ghDirectDraw);
+            ghDirectDraw = 0;
+        }
+    }
+
+    /* Return */
+    return Return;
+}
+
+/*
+ * @implemented
+ *
+ * GDIEntry 4
+ */
+BOOL 
+WINAPI 
+DdCreateSurfaceObject( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
+                       BOOL bPrimarySurface)
+{
+	return bDDCreateSurface(pSurfaceLocal, TRUE);
+    //return bDdCreateSurfaceObject(pSurfaceLocal, TRUE);
+}
+
+
 
 /*
  * @unimplemented
@@ -512,50 +791,6 @@ DdCreateDIBSection(HDC hdc,
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-/*
- * @implemented
- *
- * GDIEntry 3
- */
-BOOL 
-STDCALL 
-DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
-{
-  BOOL status;                                               
-  /* if pDirectDrawGlobal->hDD == NULL and pDirectDrawGlobalInternal->hDD == NULL
-     return false */
-
-  if (!pDirectDrawGlobal->hDD)
-  {
-     if (!pDirectDrawGlobalInternal->hDD)
-     {
-       return FALSE;
-     }
-    return NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobalInternal->hDD); 
-  }
-  
-  status = NtGdiDdDeleteDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD); 	
-  if ((status == TRUE) && (pDirectDrawGlobalInternal->hDD != 0))
-  {
-     pDirectDrawGlobalInternal->hDD = 0;        
-  }
-     
-  return status; 	
-}
-
-/*
- * @implemented
- *
- * GDIEntry 4
- */
-BOOL 
-STDCALL 
-DdCreateSurfaceObject( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-                       BOOL bPrimarySurface)
-{
-	return intDDCreateSurface(pSurfaceLocal,1);	
 }
 
 /*
@@ -621,20 +856,13 @@ LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
  * GDIEntry 10
  */
 BOOL 
-STDCALL 
+WINAPI 
 DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                            BOOL *pbNewMode)
 {
- if (!pDirectDrawGlobal->hDD)
-  {
-     if (!pDirectDrawGlobalInternal->hDD)
-     {
-       return FALSE;
-     }
-    return NtGdiDdReenableDirectDrawObject((HANDLE)pDirectDrawGlobalInternal->hDD, pbNewMode); 
-  }
-
-  return NtGdiDdReenableDirectDrawObject((HANDLE)pDirectDrawGlobal->hDD, pbNewMode); 	
+    /* Call win32k directly */
+    return NtGdiDdReenableDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
+                                           pbNewMode);
 } 
 
 /*
@@ -647,26 +875,27 @@ STDCALL
 DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
                  LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo)
 {
+    /* Create Surface if it does not exits one */
+    if (pSurfaceFrom->hDDSurface)
+    {
+        if (!bDDCreateSurface(pSurfaceFrom, FALSE))
+        {
+            return FALSE;
+        }
+    }
 
- /* Create Surface if it does not exits one */
- if (pSurfaceFrom->hDDSurface)
- {    
-	if (!intDDCreateSurface(pSurfaceFrom,FALSE))
-	{
-	  return FALSE;
-	}
- }
+    /* Create Surface if it does not exits one */
+    if (pSurfaceTo->hDDSurface)
+    {
+        if (!bDDCreateSurface(pSurfaceTo, FALSE))
+        {
+            return FALSE;
+        }
+    }
 
- /* Create Surface if it does not exits one */
- if (pSurfaceTo->hDDSurface)
- {    
-	if (!intDDCreateSurface(pSurfaceTo,FALSE))
-	{
-	  return FALSE;
-	}
- }
-
- return NtGdiDdAttachSurface( (HANDLE) pSurfaceFrom->hDDSurface, (HANDLE) pSurfaceTo->hDDSurface);
+    /* Call win32k */
+    return NtGdiDdAttachSurface((HANDLE)pSurfaceFrom->hDDSurface,
+                                (HANDLE)pSurfaceTo->hDDSurface);
 }
 
 /*
@@ -700,27 +929,24 @@ DdQueryDisplaySettingsUniqueness()
  * GDIEntry 14
  */
 HANDLE 
-STDCALL 
+WINAPI 
 DdGetDxHandle(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
               LPDDRAWI_DDRAWSURFACE_LCL pSurface,
               BOOL bRelease)
 {
- if (pSurface) 
- {                              
-   return ((HANDLE) NtGdiDdGetDxHandle(NULL, (HANDLE)pSurface->hDDSurface, bRelease));    
- }
+    HANDLE hDD = NULL;
+    HANDLE hSurface = (HANDLE)pSurface->hDDSurface;
 
- 
- if (!pDDraw->lpGbl->hDD)
-  {
-     if (!pDirectDrawGlobalInternal->hDD)
-     {
-       return FALSE;
+    /* Check if we already have a surface */
+    if (!pSurface)
+    {
+        /* We don't have one, use the DirectDraw Object handle instead */
+        hSurface = NULL;
+        hDD = GetDdHandle(pDDraw->lpGbl->hDD);
      }
-   return ((HANDLE) NtGdiDdGetDxHandle( (HANDLE) pDirectDrawGlobalInternal->hDD, (HANDLE) pSurface->hDDSurface, bRelease));
-  }
 
-  return ((HANDLE) NtGdiDdGetDxHandle((HANDLE)pDDraw->lpGbl->hDD, (HANDLE) pSurface->hDDSurface, bRelease));
+    /* Call the API */
+    return (HANDLE)NtGdiDdGetDxHandle(hDD, hSurface, bRelease);
 }
 
 /*
@@ -728,22 +954,16 @@ DdGetDxHandle(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
  *
  * GDIEntry 15
  */
-BOOL STDCALL DdSetGammaRamp( 
-LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-HDC hdc,
-LPVOID lpGammaRamp
-)
+BOOL
+WINAPI
+DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
+               HDC hdc,
+               LPVOID lpGammaRamp)
 {
-	if (!pDDraw->lpGbl->hDD)
-  {
-     if (!pDirectDrawGlobalInternal->hDD)
-     {
-       return FALSE;
-     }
-    return NtGdiDdSetGammaRamp((HANDLE)pDirectDrawGlobalInternal->hDD,hdc,lpGammaRamp);
-  }
-
-  return NtGdiDdSetGammaRamp((HANDLE)pDDraw->lpGbl->hDD,hdc,lpGammaRamp);
+    /* Call win32k directly */
+    return NtGdiDdSetGammaRamp(GetDdHandle(pDDraw->lpGbl->hDD),
+                               hdc,
+                               lpGammaRamp);
 }
 
 /*
@@ -761,67 +981,4 @@ LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
 }
 
 
-/* interal create surface */
-BOOL
-intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
-				     BOOL bComplete)
-{
-  DD_SURFACE_LOCAL SurfaceLocal;
-  DD_SURFACE_GLOBAL SurfaceGlobal;
-  DD_SURFACE_MORE SurfaceMore;
 
-  /* Zero struct */
-  RtlZeroMemory(&SurfaceLocal, sizeof(DD_SURFACE_LOCAL));
-  RtlZeroMemory(&SurfaceGlobal, sizeof(DD_SURFACE_GLOBAL));
-  RtlZeroMemory(&SurfaceMore, sizeof(DD_SURFACE_MORE));
-
-  /* Set up SurfaceLocal struct */
-  SurfaceLocal.ddsCaps.dwCaps = pSurface->ddsCaps.dwCaps;
-  SurfaceLocal.dwFlags = pSurface->dwFlags;
-
-  /* Set up SurfaceMore struct */
-  /* copy  pSurface->ddckCKDestBlt and pSurface->ddckCKSrcBlt to SurfaceMore.ddsCapsEx */  
-  memcpy(&SurfaceMore.ddsCapsEx, &pSurface->ddckCKDestBlt, sizeof(DDSCAPSEX));   
-  SurfaceMore.dwSurfaceHandle =  (DWORD) pSurface->dbnOverlayNode.object_int->lpVtbl; 
-
-
-  /* Set up SurfaceGlobal struct */
-  SurfaceGlobal.fpVidMem = pSurface->lpGbl->fpVidMem;
-  SurfaceGlobal.dwLinearSize = pSurface->lpGbl->dwLinearSize;
-  SurfaceGlobal.wHeight = pSurface->lpGbl->wHeight;
-  SurfaceGlobal.wWidth = pSurface->lpGbl->wWidth;
-
-  /* check which memory type should be use */
-  if ((pSurface->dwFlags & DDRAWISURFGBL_LOCKVRAMSTYLE) == DDRAWISURFGBL_LOCKVRAMSTYLE)
-  {	
-	  memcpy(&SurfaceGlobal.ddpfSurface,&pSurface->lpGbl->lpDD->vmiData.ddpfDisplay, sizeof(DDPIXELFORMAT));
-  }
-  else
-  {
-	  memcpy(&SurfaceGlobal.ddpfSurface,&pSurface->lpGbl->ddpfSurface, sizeof(DDPIXELFORMAT));
-  }
-
-  /* Determer if Gdi32 chace of directdraw handler or not */
-  if (pSurface->lpGbl->lpDD->hDD)
-  {
-     pSurface->hDDSurface = ((DWORD) NtGdiDdCreateSurfaceObject( (HANDLE) pSurface->lpGbl->lpDD->hDD,
-	                                                (HANDLE) pSurface->hDDSurface, &SurfaceLocal, 
-												    &SurfaceMore, &SurfaceGlobal, bComplete));
-  }
-  else
-  {
-     pSurface->hDDSurface = ((DWORD) NtGdiDdCreateSurfaceObject( (HANDLE) pDirectDrawGlobalInternal->hDD,
-	                                                (HANDLE) pSurface->hDDSurface, &SurfaceLocal, 
-												    &SurfaceMore, 
-													&SurfaceGlobal, 
-													bComplete));
-  }
-
-  /* return status */
-  if (pSurface->hDDSurface) 
-  {
-    return TRUE;
-  }
-
-  return FALSE;
-}
