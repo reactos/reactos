@@ -150,7 +150,7 @@
 #endif
 
 /*PLIST_ENTRY
- *NTAPI
+ *FASTCALL
  *ExfInterlockedInsertTailList(IN PLIST_ENTRY ListHead,
  *                            IN PLIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
@@ -270,7 +270,7 @@
 /*PSINGLE_LIST_ENTRY
  *FASTCALL
  *ExfInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
- *                          IN PKSPIN_LOCK Lock)
+ *                           IN PKSPIN_LOCK Lock)
  */
 .global @ExfInterlockedPopEntryList@8
 @ExfInterlockedPopEntryList@8:
@@ -320,7 +320,7 @@
 #endif
 
 /*PSINGLE_LIST_ENTRY
- *NTAPI
+ *FASTCALL
  *ExfInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
  *                            IN PSINGLE_LIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
@@ -375,7 +375,7 @@
 #endif
 
 /*PSINGLE_LIST_ENTRY
- *NTAPI
+ *FASTCALL
  *ExInterlockedPopEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
  *                           IN PKSPIN_LOCK Lock)
  */
@@ -415,7 +415,7 @@
     ret
 
 /*PSINGLE_LIST_ENTRY
- *NTAPI
+ *FASTCALL
  *ExInterlockedPushEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
  *                            IN PSINGLE_LIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
@@ -459,7 +459,7 @@
     ret
 
 /*PSINGLE_LIST_ENTRY
- *NTAPI
+ *FASTCALL
  *ExInterlockedFlushSList(IN PSINGLE_LIST_ENTRY ListHead)
  */
 .global @ExInterlockedFlushSList@4
@@ -682,7 +682,7 @@
 /*** Non-586 functions ***/
 
 /*PSINGLE_LIST_ENTRY
- *NTAPI
+ *FASTCALL
  *ExfInterlockedPopEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
  *                            IN PKSPIN_LOCK Lock)
  */
@@ -729,10 +729,10 @@
 #endif
 
 /*PSINGLE_LIST_ENTRY
- *NTAPI
- *ExInterlockedPushEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
- *                            IN PSINGLE_LIST_ENTRY ListEntry,
- *                            IN PKSPIN_LOCK Lock)
+ *FASTCALL
+ *ExfInterlockedPushEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
+ *                             IN PSINGLE_LIST_ENTRY ListEntry,
+ *                             IN PKSPIN_LOCK Lock)
  */
 .global @ExfInterlockedPushEntrySList@12
 @ExfInterlockedPushEntrySList@12:
@@ -767,7 +767,7 @@
 
     /* Restore flags and return */
     popfd
-    ret 0
+    ret 4
 
 #ifdef CONFIG_SMP
 .spinb:
