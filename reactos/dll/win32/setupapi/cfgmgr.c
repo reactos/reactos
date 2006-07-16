@@ -1946,6 +1946,84 @@ CONFIGRET WINAPI CM_Get_Device_ID_Size_Ex(
 
 
 /***********************************************************************
+ * CM_Get_First_Log_Conf [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_First_Log_Conf(
+    PLOG_CONF plcLogConf, DEVINST dnDevInst, ULONG ulFlags)
+{
+    TRACE("%p %lx %lx\n", plcLogConf, dnDevInst, ulFlags);
+    return CM_Get_First_Log_Conf_Ex(plcLogConf, dnDevInst, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_First_Log_Conf_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_First_Log_Conf_Ex(
+    PLOG_CONF plcLogConf, DEVINST dnDevInst, ULONG ulFlags, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    LPWSTR lpDevInst = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+    ULONG ulTag;
+    PLOG_CONF_INFO pLogConfInfo;
+
+    FIXME("%p %lx %lx %lx\n", plcLogConf, dnDevInst, ulFlags, hMachine);
+
+    if (dnDevInst == 0)
+        return CR_INVALID_DEVINST;
+
+    if (ulFlags & ~LOG_CONF_BITS)
+        return CR_INVALID_FLAG;
+
+    if (plcLogConf)
+        *plcLogConf = 0;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    ret = PNP_GetFirstLogConf(BindingHandle,
+                              lpDevInst,
+                              ulFlags,
+                              &ulTag,
+                              ulFlags);
+    if (ret != CR_SUCCESS)
+        return ret;
+
+    pLogConfInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_CONF_INFO));
+    if (pLogConfInfo == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    pLogConfInfo->ulMagic = LOG_CONF_MAGIC;
+    pLogConfInfo->dnDevInst = dnDevInst;
+    pLogConfInfo->ulFlags = ulFlags;
+    pLogConfInfo->ulTag = ulTag;
+
+    *plcLogConf = (LOG_CONF)pLogConfInfo;
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
  * CM_Get_Global_State [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Global_State(

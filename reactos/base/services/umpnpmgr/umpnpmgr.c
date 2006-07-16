@@ -1284,6 +1284,26 @@ PNP_FreeLogConf(handle_t BindingHandle,
 }
 
 
+/* Function 42 */
+CONFIGRET
+PNP_GetFirstLogConf(handle_t BindingHandle,
+                    wchar_t *DeviceInstance,
+                    ULONG ulPriority,
+                    ULONG *pulLogConfTag,
+                    ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_GetFirstLogConf() called\n");
+
+    *pulLogConfTag = 0; /* FIXME */
+
+    DPRINT1("PNP_GetFirstLogConf() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 /* Function 58 */
 CONFIGRET
 PNP_RunDetection(handle_t BindingHandle,
