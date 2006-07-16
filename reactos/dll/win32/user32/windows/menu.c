@@ -4008,9 +4008,12 @@ GetMenuItemInfoA(
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO)&miiW, FALSE))
       return FALSE;
 
+   RtlCopyMemory(mii, &miiW, miiW.cbSize);
+
    if (!AnsiBuffer || !Count)
    {
       if (miiW.dwTypeData) RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
+      mii->dwTypeData = AnsiBuffer;
       mii->cch = miiW.cch;
       return TRUE;
    }
@@ -4022,7 +4025,6 @@ GetMenuItemInfoA(
    }
 
    RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
-   RtlCopyMemory(mii, &miiW, miiW.cbSize);
    mii->dwTypeData = AnsiBuffer;
    mii->cch = strlen(AnsiBuffer);
    return TRUE;
@@ -4071,9 +4073,12 @@ GetMenuItemInfoW(
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) &miiW, FALSE))
       return FALSE;
 
+   RtlCopyMemory(mii, &miiW, miiW.cbSize); // looks okay to over right user data.
+
    if (!String || !Count)
    {
       if (miiW.dwTypeData) RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
+      mii->dwTypeData = String; // may not be zero.
       mii->cch = miiW.cch;
       return TRUE;
    }
@@ -4084,7 +4089,6 @@ GetMenuItemInfoW(
    }
 
    RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
-   RtlCopyMemory(mii, &miiW, miiW.cbSize);
    mii->dwTypeData = String;
    mii->cch = strlenW(String);
    return TRUE;
