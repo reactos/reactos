@@ -60,7 +60,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData, DWORD
 {
   HANDLE Thread;
 
-  DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n",	ProcessData->ProcessId);
+  DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->ProcessId);
 
   if (ProcessData->CtrlDispatcher)
     {
@@ -191,7 +191,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       CloseHandle(Console->ActiveEvent);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
-  
+
   if (! GuiMode)
     {
       Status = TuiInitConsole(Console);
@@ -223,7 +223,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
       DeleteCriticalSection(&Console->Header.Lock);
       CloseHandle(Console->ActiveEvent);
       HeapFree(Win32CsrApiHeap, 0, NewBuffer);
-	  DPRINT1("CsrInitConsoleScreenBuffer: failed\n");
+      DPRINT1("CsrInitConsoleScreenBuffer: failed\n");
       return Status;
     }
 
@@ -310,8 +310,8 @@ CSR_API(CsrAllocConsole)
     if (NewConsole || !ProcessData->bInheritHandles)
     {
         /* Insert the Objects */
-        Status = Win32CsrInsertObject(ProcessData, 
-                                      &Request->Data.AllocConsoleRequest.InputHandle, 
+        Status = Win32CsrInsertObject(ProcessData,
+                                      &Request->Data.AllocConsoleRequest.InputHandle,
                                       &Console->Header);
         if (! NT_SUCCESS(Status))
         {
@@ -320,15 +320,15 @@ CSR_API(CsrAllocConsole)
             ProcessData->Console = 0;
             return Request->Status = Status;
         }
-    
-        Status = Win32CsrInsertObject(ProcessData, 
-                                      &Request->Data.AllocConsoleRequest.OutputHandle, 
+
+        Status = Win32CsrInsertObject(ProcessData,
+                                      &Request->Data.AllocConsoleRequest.OutputHandle,
                                       &Console->ActiveBuffer->Header);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");
             ConioDeleteConsole((Object_t *) Console);
-            Win32CsrReleaseObject(ProcessData, 
+            Win32CsrReleaseObject(ProcessData,
                                   Request->Data.AllocConsoleRequest.InputHandle);
             ProcessData->Console = 0;
             return Request->Status = Status;
@@ -336,12 +336,12 @@ CSR_API(CsrAllocConsole)
     }
 
     /* Duplicate the Event */
-    if (!DuplicateHandle(GetCurrentProcess(), 
+    if (!DuplicateHandle(GetCurrentProcess(),
                          ProcessData->Console->ActiveEvent,
-                         ProcessData->Process, 
-                         &ProcessData->ConsoleEvent, 
-                         EVENT_ALL_ACCESS, 
-                         FALSE, 
+                         ProcessData->Process,
+                         &ProcessData->ConsoleEvent,
+                         EVENT_ALL_ACCESS,
+                         FALSE,
                          0))
     {
         DPRINT1("DuplicateHandle() failed: %d\n", GetLastError);
@@ -623,13 +623,13 @@ CSR_API(CsrReadConsole)
                 }
               else
                 {
-                  /* otherwise, we will treat the backspace just like any other char and let the client decide what to do */                  
+                  /* otherwise, we will treat the backspace just like any other char and let the client decide what to do */
                   Console->WaitingChars--;
                   ConioUnlockConsole(Console);
                   HeapFree(Win32CsrApiHeap, 0, Input);
                   Request->Data.ReadConsoleRequest.NrCharactersRead++;
                   Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
-                  return Request->Status;  
+                  return Request->Status;
                 }
               Request->Data.ReadConsoleRequest.nCharsCanBeDeleted--;
               Input->Echoed = TRUE;   /* mark as echoed so we don't echo it below */
@@ -724,7 +724,7 @@ inline BOOLEAN ConioIsEqualRect(
   RECT *Rect2)
 {
   return ((Rect1->left == Rect2->left) && (Rect1->right == Rect2->right) &&
-	  (Rect1->top == Rect2->top) && (Rect1->bottom == Rect2->bottom));
+    (Rect1->top == Rect2->top) && (Rect1->bottom == Rect2->bottom));
 }
 
 inline BOOLEAN ConioGetIntersection(
@@ -947,7 +947,7 @@ CSR_API(CsrWriteConsole)
   DPRINT("CsrWriteConsole\n");
 
   if (Request->Header.u1.s1.TotalLength
-      < CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE) 
+      < CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE)
         + (Request->Data.WriteConsoleRequest.NrCharactersToWrite * CharSize))
     {
       DPRINT1("Invalid request size\n");
@@ -956,10 +956,10 @@ CSR_API(CsrWriteConsole)
       return Request->Status = STATUS_INVALID_PARAMETER;
     }
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
-  
+
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-  
+
   if (! NT_SUCCESS(Status))
     {
       return Request->Status = Status;
@@ -967,16 +967,16 @@ CSR_API(CsrWriteConsole)
 
   if(Request->Data.WriteConsoleRequest.Unicode)
     {
-      Length = WideCharToMultiByte(Console->CodePage, 0, 
-                                   (PWCHAR)Request->Data.WriteConsoleRequest.Buffer, 
-                                   Request->Data.WriteConsoleRequest.NrCharactersToWrite, 
+      Length = WideCharToMultiByte(Console->CodePage, 0,
+                                   (PWCHAR)Request->Data.WriteConsoleRequest.Buffer,
+                                   Request->Data.WriteConsoleRequest.NrCharactersToWrite,
                                    NULL, 0, NULL, NULL);
       Buffer = RtlAllocateHeap(GetProcessHeap(), 0, Length);
       if (Buffer)
         {
-          WideCharToMultiByte(Console->CodePage, 0, 
-                              (PWCHAR)Request->Data.WriteConsoleRequest.Buffer, 
-                              Request->Data.WriteConsoleRequest.NrCharactersToWrite, 
+          WideCharToMultiByte(Console->CodePage, 0,
+                              (PWCHAR)Request->Data.WriteConsoleRequest.Buffer,
+                              Request->Data.WriteConsoleRequest.NrCharactersToWrite,
                               Buffer, Length, NULL, NULL);
         }
       else
@@ -988,7 +988,7 @@ CSR_API(CsrWriteConsole)
     {
       Buffer = (PCHAR)Request->Data.WriteConsoleRequest.Buffer;
     }
-  
+
   if (Buffer)
     {
       Status = ConioLockScreenBuffer(ProcessData, Request->Data.WriteConsoleRequest.ConsoleHandle, &Buff);
@@ -1096,11 +1096,11 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
       DPRINT1("Console_Api Ctrl-C\n");
       current_entry = Console->ProcessList.Flink;
       while (current_entry != &Console->ProcessList)
-	{
-	  current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
-	  current_entry = current_entry->Flink;
-	  ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
-	}
+      {
+        current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
+        current_entry = current_entry->Flink;
+        ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
+      }
       HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
       return;
     }
@@ -1111,30 +1111,30 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
           || VK_DOWN == KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode))
     {
       if (KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown)
-	{
-	  /* scroll up or down */
-	  if (NULL == Console)
-	    {
-	      DPRINT1("No Active Console!\n");
-	      HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
-	      return;
-	    }
-	  if (VK_UP == KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode)
-	    {
-	      /* only scroll up if there is room to scroll up into */
-	      if (Console->ActiveBuffer->ShowY != ((Console->ActiveBuffer->CurrentY + 1) %
-                                                   Console->ActiveBuffer->MaxY))
+        {
+          /* scroll up or down */
+          if (NULL == Console)
+            {
+              DPRINT1("No Active Console!\n");
+              HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
+              return;
+            }
+          if (VK_UP == KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode)
+            {
+              /* only scroll up if there is room to scroll up into */
+              if (Console->ActiveBuffer->ShowY != ((Console->ActiveBuffer->CurrentY + 1) %
+                                                     Console->ActiveBuffer->MaxY))
                 {
                   Console->ActiveBuffer->ShowY = (Console->ActiveBuffer->ShowY +
                                                   Console->ActiveBuffer->MaxY - 1) %
                                                  Console->ActiveBuffer->MaxY;
                 }
             }
-	  else if (Console->ActiveBuffer->ShowY != Console->ActiveBuffer->CurrentY)
-	    /* only scroll down if there is room to scroll down into */
+          else if (Console->ActiveBuffer->ShowY != Console->ActiveBuffer->CurrentY)
+            /* only scroll down if there is room to scroll down into */
             {
-	      if (Console->ActiveBuffer->ShowY % Console->ActiveBuffer->MaxY !=
-		  Console->ActiveBuffer->CurrentY)
+              if (Console->ActiveBuffer->ShowY % Console->ActiveBuffer->MaxY !=
+                  Console->ActiveBuffer->CurrentY)
                 {
                   if (((Console->ActiveBuffer->CurrentY + 1) % Console->ActiveBuffer->MaxY) !=
                       (Console->ActiveBuffer->ShowY + Console->ActiveBuffer->MaxY) %
@@ -1208,30 +1208,30 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
     {
       /* walk the input queue looking for a char to backspace */
       for (TempInput = (ConsoleInput *) Console->InputEvents.Blink;
-	   TempInput != (ConsoleInput *) &Console->InputEvents
+           TempInput != (ConsoleInput *) &Console->InputEvents
            && (KEY_EVENT == TempInput->InputEvent.EventType
                || ! TempInput->InputEvent.Event.KeyEvent.bKeyDown
                || '\b' == TempInput->InputEvent.Event.KeyEvent.uChar.AsciiChar);
-	   TempInput = (ConsoleInput *) TempInput->ListEntry.Blink)
+           TempInput = (ConsoleInput *) TempInput->ListEntry.Blink)
         {
           /* NOP */;
         }
       /* if we found one, delete it, otherwise, wake the client */
       if (TempInput != (ConsoleInput *) &Console->InputEvents)
-	{
-	  /* delete previous key in queue, maybe echo backspace to screen, and do not place backspace on queue */
-	  RemoveEntryList(&TempInput->ListEntry);
-	  if (TempInput->Echoed)
+        {
+          /* delete previous key in queue, maybe echo backspace to screen, and do not place backspace on queue */
+          RemoveEntryList(&TempInput->ListEntry);
+         if (TempInput->Echoed)
             {
               ConioWriteConsole(Console, Console->ActiveBuffer,
                                &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar,
                                1, TRUE);
             }
           HeapFree(Win32CsrApiHeap, 0, TempInput);
-	  RemoveEntryList(&KeyEventRecord->ListEntry);
-	  HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
-	  Console->WaitingChars -= 2;
-	}
+          RemoveEntryList(&KeyEventRecord->ListEntry);
+          HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
+          Console->WaitingChars -= 2;
+        }
       else
         {
           SetEvent(Console->ActiveEvent);
@@ -1395,15 +1395,15 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     LastVirtualKey = msg->wParam;
 
   DPRINT  ("csrss: %s %s %s %s %02x %02x '%c' %04x\n",
-	   Down ? "down" : "up  ",
-	   (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
-	   "char" : "key ",
-	   ConInRec->Fake ? "fake" : "real",
-	   ConInRec->NotChar ? "notc" : "char",
-	   VirtualScanCode,
-	   VirtualKeyCode,
-	   (AsciiChar >= ' ') ? AsciiChar : '.',
-	   ShiftState);
+    Down ? "down" : "up  ",
+    (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
+    "char" : "key ",
+    ConInRec->Fake ? "fake" : "real",
+    ConInRec->NotChar ? "notc" : "char",
+    VirtualScanCode,
+    VirtualKeyCode,
+    (AsciiChar >= ' ') ? AsciiChar : '.',
+    ShiftState);
 
   if (! ConInRec->Fake || ! ConInRec->NotChar)
     {
@@ -1590,7 +1590,7 @@ CSR_API(CsrWriteConsoleOutputChar)
   CharSize = (Request->Data.WriteConsoleOutputCharRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
   if (Request->Header.u1.s1.TotalLength
-      < CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR) 
+      < CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR)
         + (Request->Data.WriteConsoleOutputCharRequest.Length * CharSize))
     {
       DPRINT1("Invalid request size\n");
@@ -1606,16 +1606,16 @@ CSR_API(CsrWriteConsoleOutputChar)
     {
       if(Request->Data.WriteConsoleOutputCharRequest.Unicode)
         {
-          Length = WideCharToMultiByte(Console->CodePage, 0, 
-                                      (PWCHAR)Request->Data.WriteConsoleOutputCharRequest.String, 
-                                       Request->Data.WriteConsoleOutputCharRequest.Length, 
+          Length = WideCharToMultiByte(Console->CodePage, 0,
+                                      (PWCHAR)Request->Data.WriteConsoleOutputCharRequest.String,
+                                       Request->Data.WriteConsoleOutputCharRequest.Length,
                                        NULL, 0, NULL, NULL);
           tmpString = String = RtlAllocateHeap(GetProcessHeap(), 0, Length);
           if (String)
             {
-              WideCharToMultiByte(Console->CodePage, 0, 
-                                  (PWCHAR)Request->Data.WriteConsoleOutputCharRequest.String, 
-                                  Request->Data.WriteConsoleOutputCharRequest.Length, 
+              WideCharToMultiByte(Console->CodePage, 0,
+                                  (PWCHAR)Request->Data.WriteConsoleOutputCharRequest.String,
+                                  Request->Data.WriteConsoleOutputCharRequest.Length,
                                   String, Length, NULL, NULL);
             }
           else
@@ -1627,7 +1627,7 @@ CSR_API(CsrWriteConsoleOutputChar)
         {
           String = (PCHAR)Request->Data.WriteConsoleOutputCharRequest.String;
         }
-      
+
       if (String)
         {
           Status = ConioLockScreenBuffer(ProcessData,
@@ -1781,9 +1781,9 @@ CSR_API(CsrReadInputEvent)
 
       if (Done && !Input->Fake)
         {
-	  Request->Data.ReadInputRequest.MoreEvents = TRUE;
-	  break;
-	}
+          Request->Data.ReadInputRequest.MoreEvents = TRUE;
+          break;
+        }
 
       RemoveEntryList(&Input->ListEntry);
 
@@ -1794,14 +1794,14 @@ CSR_API(CsrReadInputEvent)
             {
               ConioInputEventToAnsi(Console, &Request->Data.ReadInputRequest.Input);
             }
-	  Done = TRUE;
-	}
+          Done = TRUE;
+        }
 
       if (Input->InputEvent.EventType == KEY_EVENT)
         {
           if (0 != (Console->Mode & ENABLE_LINE_INPUT)
-	      && Input->InputEvent.Event.KeyEvent.bKeyDown
-	      && '\r' == Input->InputEvent.Event.KeyEvent.uChar.AsciiChar)
+              && Input->InputEvent.Event.KeyEvent.bKeyDown
+              && '\r' == Input->InputEvent.Event.KeyEvent.uChar.AsciiChar)
             {
               Console->WaitingLines--;
             }
@@ -2215,7 +2215,7 @@ CSR_API(CsrCreateScreenBuffer)
       if (Console->ActiveBuffer)
         {
           Buff->MaxX = Console->ActiveBuffer->MaxX;
-	      Buff->MaxY = Console->ActiveBuffer->MaxY;
+          Buff->MaxY = Console->ActiveBuffer->MaxY;
         }
 
       if (Buff->MaxX == 0)
@@ -2694,15 +2694,15 @@ CSR_API(CsrReadConsoleOutputChar)
       Xpos++;
 
       if (Xpos == Buff->MaxX)
-	{
-	  Xpos = 0;
-	  Ypos++;
+        {
+          Xpos = 0;
+          Ypos++;
 
-	  if (Ypos == Buff->MaxY)
+          if (Ypos == Buff->MaxY)
             {
               Ypos = 0;
             }
-	}
+        }
     }
 
   *ReadBuffer = 0;
@@ -2820,7 +2820,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
       if (!Input->Fake)
         {
           NumEvents++;
-	}
+        }
     }
 
   ConioUnlockConsole(Console);
@@ -3045,8 +3045,8 @@ CSR_API(CsrWriteConsoleInput)
 
       Record->Echoed = FALSE;
       Record->Fake = FALSE;
-	  //Record->InputEvent = *InputRecord++;
-	  memcpy(&Record->InputEvent, &InputRecord[i], sizeof(INPUT_RECORD)); 
+      //Record->InputEvent = *InputRecord++;
+      memcpy(&Record->InputEvent, &InputRecord[i], sizeof(INPUT_RECORD));
       if (KEY_EVENT == Record->InputEvent.EventType)
         {
           /* FIXME - convert from unicode to ascii!! */
@@ -3335,7 +3335,7 @@ CSR_API(CsrStartScreenSaver)
     {
         STARTUPINFOW si;
         PROCESS_INFORMATION pi;
-        WCHAR szCmdline[MAX_PATH]; 
+        WCHAR szCmdline[MAX_PATH];
 
         HKEY hKey;
         WCHAR szBuffer[MAX_PATH];
@@ -3345,33 +3345,33 @@ CSR_API(CsrStartScreenSaver)
 
         /* FIXME :
            1. Make it unicode and ansi compatible with TCHAR
-           
+
            2. Return state it is running if a tree try start it
-              one more screen saver when we already have one 
+              one more screen saver when we already have one
               screen saver running
-              
+
            3. Use GetLongPath or GetPathName so we can use %SystemRoot% in
               the key that will make it posible for livecd have a preview screen
               saver install.
-           
+
            4. Move the code to winlogon SAS and screen saver must run in
               the secuar desktop. But current our Winlogon does not working
-              well with SAS and with Secure desktop, So I (Magnus Olsen aka GreatLord) 
-              add the code here as w3seek recommended  
+              well with SAS and with Secure desktop, So I (Magnus Olsen aka GreatLord)
+              add the code here as w3seek recomandete
          */
 
-        result = RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_ALL_ACCESS, &hKey);
+        result = RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Desktop", 0, KEY_QUERY_VALUE, &hKey);
         if (result == ERROR_SUCCESS)
         {
             result = RegQueryValueExW(hKey, L"SCRNSAVE.EXE", 0, &varType, (LPBYTE)szBuffer, &bufferSize);
-            if(result == ERROR_SUCCESS) 
+            if(result == ERROR_SUCCESS)
             {
                 swprintf(szCmdline, L"%s /s",szBuffer);
-                DPRINT1("CsrStartScreenSaver : OK %S, Name %S\n", szCmdline, szBuffer);
+                DPRINT("CsrStartScreenSaver : OK %S, Name %S\n", szCmdline, szBuffer);
                 ZeroMemory( &si, sizeof(si) );
                 si.cb = sizeof(si);
                 ZeroMemory( &pi, sizeof(pi) );
-                if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+                if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi ))
                 {
                     CloseHandle( pi.hProcess );
                     CloseHandle( pi.hThread );
@@ -3379,27 +3379,27 @@ CSR_API(CsrStartScreenSaver)
             }
             else
             {
-				GetSystemDirectoryW(szCmdline,MAX_PATH);
-				wprintf(szCmdline, L"%s\\%s /s",szCmdline,szBuffer);
-				DPRINT1("CsrStartScreenSaver : OK %S, Name %S\n", szCmdline, szBuffer);
+                GetSystemDirectoryW(szCmdline,MAX_PATH);
+                wprintf(szCmdline, L"%s\\%s /s",szCmdline,szBuffer);
+                DPRINT("CsrStartScreenSaver : OK %S, Name %S\n", szCmdline, szBuffer);
                 ZeroMemory( &si, sizeof(si) );
                 si.cb = sizeof(si);
                 ZeroMemory( &pi, sizeof(pi) );
-                if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi )) 
+                if(CreateProcessW( NULL, szCmdline, NULL, NULL, FALSE,  0,  NULL,NULL,&si, &pi ))
                 {
                     CloseHandle( pi.hProcess );
                     CloseHandle( pi.hThread );
                 }
-				else
-				{
-                    DPRINT1("CsrStartScreenSaver : failed 0x%08X\n", result);
-				}
+                else
+                {
+                    DPRINT("CsrStartScreenSaver : failed 0x%08X\n", result);
+                }
             }
             RegCloseKey(hKey);
         }
         else
         {
-            DPRINT1("CsrStartScreenSaver : failed to RegOpenKeyExW 0x%08X\n", result);
+            DPRINT1("CsrStartScreenSaver : failed to RegOpenKeyExW (error 0x%lx)\n", result);
         }
         return Request->Status = STATUS_SUCCESS;
     }
