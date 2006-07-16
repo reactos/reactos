@@ -2,6 +2,9 @@
 <directory name="advapi32">
 	<xi:include href="advapi32/advapi32.rbuild" />
 </directory>
+<directory name="cabinet">
+	<xi:include href="cabinet/cabinet.rbuild" />
+</directory>
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.rbuild" />
 </directory>
