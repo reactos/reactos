@@ -12,11 +12,14 @@
 
 #define NDEBUG
 #include <debug.h>
+GDIDEVICE IntGetPrimarySurface(VOID);
 
 /* swtich this off to get rid of all dx debug msg */
 #define DX_DEBUG
 
 #define DdHandleTable GdiHandleTable
+
+
 
 
 /************************************************************************/
@@ -55,9 +58,8 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
     BOOL success;
     HANDLE hDirectDraw;
     PDD_DIRECTDRAW pDirectDraw;
-#ifdef DX_DEBUG
+	
 	DPRINT1("NtGdiDdCreateDirectDrawObject\n");
-#endif
 
 	RtlZeroMemory(&callbacks, sizeof(DD_CALLBACKS));
 	callbacks.dwSize = sizeof(DD_CALLBACKS);
@@ -70,29 +72,30 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
     /* we need create it, if in that case */
 	if (hdc == NULL)
 	{
+        DPRINT1("FIXME hdc is NULL \n"); 
 	    return NULL;
     }
     
 	pDC = DC_LockDc(hdc);
 	if (!pDC)
-		return NULL;
-
-	if (!pDC->DriverFunctions.EnableDirectDraw)
 	{
-		// Driver doesn't support DirectDraw
+		return NULL;
+	}
+
+	if (pDC->DriverFunctions.EnableDirectDraw == NULL)
+	{
+		/* Driver doesn't support DirectDraw */
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
 	
 	success = pDC->DriverFunctions.EnableDirectDraw(
-		pDC->PDev, &callbacks, &surface_callbacks, &palette_callbacks);
+		      pDC->PDev, &callbacks, &surface_callbacks, &palette_callbacks);
 
 	if (!success)
 	{
-#ifdef DX_DEBUG
         DPRINT1("DirectDraw creation failed\n"); 
-#endif
-		// DirectDraw creation failed
+		/* DirectDraw creation failed */
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
@@ -101,9 +104,6 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (!hDirectDraw)
 	{
 		/* No more memmory */
-#ifdef DX_DEBUG
-		DPRINT1("No more memmory\n"); 
-#endif
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
@@ -112,14 +112,10 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (!pDirectDraw)
 	{
 		/* invalid handle */
-#ifdef DX_DEBUG
-		DPRINT1("invalid handle\n"); 
-#endif
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
 	
-
 	pDirectDraw->Global.dhpdev = pDC->PDev;
 	pDirectDraw->Local.lpGbl = &pDirectDraw->Global;
 
@@ -128,16 +124,17 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 
     /* DD_CALLBACKS setup */	
 	RtlMoveMemory(&pDirectDraw->DD, &callbacks, sizeof(DD_CALLBACKS));
-	
-   	/* DD_SURFACECALLBACKS  setup*/	
+	     	
+   	/* DD_SURFACECALLBACKS  setup*/		
 	RtlMoveMemory(&pDirectDraw->Surf, &surface_callbacks, sizeof(DD_SURFACECALLBACKS));
-
+		
 	/* DD_PALETTECALLBACKS setup*/	
-	RtlMoveMemory(&pDirectDraw->Pal, &surface_callbacks, sizeof(DD_PALETTECALLBACKS));
-	
+	RtlMoveMemory(&pDirectDraw->Pal, &palette_callbacks, sizeof(DD_PALETTECALLBACKS));
+		
 	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 	DC_UnlockDc(pDC);
 
+    DPRINT1("DirectDraw return handler\n"); 
 	return hDirectDraw;
 }
 
