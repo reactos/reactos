@@ -128,6 +128,11 @@ GetClassInfoA(
     return FALSE;
   }
 
+  if ( hInstance == User32Instance )
+  {
+    hInstance = NULL;
+  }
+
   w.cbSize = sizeof(w);
   retval = GetClassInfoExA(hInstance,lpClassName,&w);
   if (retval)
@@ -154,6 +159,11 @@ GetClassInfoW(
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
+  }
+
+  if ( hInstance == User32Instance )
+  {
+    hInstance = NULL;
   }
 
   w.cbSize = sizeof(w);
