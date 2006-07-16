@@ -411,6 +411,8 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     POBJECT_DIRECTORY Directory;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG SkipEntries = 0;
+    ULONG NextEntry = 0;
+    ULONG CopyBytes = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
@@ -454,8 +456,196 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
                                        NULL);
     if (NT_SUCCESS(Status))
     {
-        /* FIXME: TODO. UNIMPLEMENTED */
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        PVOID TemporaryBuffer = ExAllocatePool(NonPagedPool,
+                                               BufferLength);
+        if(TemporaryBuffer != NULL)
+        {
+            POBJECT_HEADER EntryHeader;
+            ULONG RequiredSize = sizeof(OBJECT_DIRECTORY_INFORMATION);
+            ULONG nDirectories = 0;
+            POBJECT_DIRECTORY_INFORMATION DirInfo = (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
+            POBJECT_DIRECTORY_ENTRY DirectoryEntry;
+            ULONG i;
+            BOOLEAN StopIt = FALSE;
+
+            Status = STATUS_NO_MORE_ENTRIES;
+
+            KeEnterCriticalRegion();
+            ExAcquireResourceSharedLite(&Directory->Lock, TRUE);
+
+            for (i = 0; i < NUMBER_HASH_BUCKETS && !StopIt; i++)
+            {
+                DirectoryEntry = Directory->HashBuckets[i];
+                while (DirectoryEntry)
+                {
+                    NextEntry++;
+                    if (SkipEntries == 0)
+                    {
+                        PUNICODE_STRING Name, Type;
+                        ULONG EntrySize;
+
+                        EntryHeader = OBJECT_TO_OBJECT_HEADER(DirectoryEntry->Object);
+
+                        /* Calculate the size of the required buffer space for this entry */
+                        Name = (OBJECT_HEADER_TO_NAME_INFO(EntryHeader)->Name.Length != 0 ? &OBJECT_HEADER_TO_NAME_INFO(EntryHeader)->Name : NULL);
+                        Type = &EntryHeader->Type->Name;
+                        EntrySize = sizeof(OBJECT_DIRECTORY_INFORMATION) +
+                            ((Name != NULL) ? ((ULONG)Name->Length + sizeof(WCHAR)) : 0) +
+                            (ULONG)EntryHeader->Type->Name.Length + sizeof(WCHAR);
+
+                        if (RequiredSize + EntrySize <= BufferLength)
+                        {
+                            /* The buffer is large enough to receive this entry. It would've
+                               been much easier if the strings were directly appended to the
+                               OBJECT_DIRECTORY_INFORMATION structured written into the buffer */
+                            if (Name != NULL && Name->Length > 0)
+                                DirInfo->ObjectName = *Name;
+                            else
+                            {
+                                DirInfo->ObjectName.Length = DirInfo->ObjectName.MaximumLength = 0;
+                                DirInfo->ObjectName.Buffer = NULL;
+                            }
+                            DirInfo->ObjectTypeName = *Type;
+
+                            nDirectories++;
+                            RequiredSize += EntrySize;
+
+                            Status = STATUS_SUCCESS;
+
+                            if (ReturnSingleEntry)
+                            {
+                                /* We're only supposed to query one entry, so bail and copy the
+                                   strings to the buffer */
+                                StopIt = TRUE;
+                                break;
+                            }
+                            DirInfo++;
+                        }
+                        else
+                        {
+                            if (ReturnSingleEntry)
+                            {
+                                /* The buffer is too small, so return the number of bytes that
+                                   would've been required for this query */
+                                RequiredSize += EntrySize;
+                                Status = STATUS_BUFFER_TOO_SMALL;
+                            }
+
+                            /* We couldn't query this entry, so leave the index that will be stored
+                               in Context to this entry so the caller can query it the next time
+                               he queries (hopefully with a buffer that is large enough then...) */
+                            NextEntry--;
+    
+                            /* Just copy the entries that fit into the buffer */
+                            StopIt = TRUE;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        /* Skip the entry */
+                        SkipEntries--;
+                    }
+                    DirectoryEntry = DirectoryEntry->ChainLink;
+                }
+            }
+
+            if (!ReturnSingleEntry)
+            {
+                /* Check if there are more entries to enumerate but the buffer is already
+                   full. Only tell this to the user if he queries multiple entries */
+                if (DirectoryEntry)
+                    Status = STATUS_MORE_ENTRIES;
+                else
+                    for (; i < NUMBER_HASH_BUCKETS; i++)
+                        if (Directory->HashBuckets[i])
+                        {
+                            Status = STATUS_MORE_ENTRIES;
+                            break;
+                        }
+            }
+
+            if (NT_SUCCESS(Status) && nDirectories > 0)
+            {
+                PWSTR strbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer + nDirectories + 1);
+                PWSTR deststrbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)Buffer + nDirectories + 1);
+                memset((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer + nDirectories, 0, sizeof(OBJECT_DIRECTORY_INFORMATION));
+
+                CopyBytes = (nDirectories + 1) * sizeof(OBJECT_DIRECTORY_INFORMATION);
+
+                /* Copy the names from the objects and append them to the list of the
+                   objects. copy to the temporary buffer only because the directory
+                   lock can't be released and the buffer might be pagable memory! */
+                for (DirInfo = (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
+                     nDirectories > 0;
+                     nDirectories--, DirInfo++)
+                {
+                    ULONG NameLength;
+
+                    if (DirInfo->ObjectName.Length > 0)
+                    {
+                        RtlCopyMemory(strbuf,
+                                      DirInfo->ObjectName.Buffer,
+                                      DirInfo->ObjectName.Length);
+                        /* Change the buffer pointer to the buffer */
+                        DirInfo->ObjectName.Buffer = deststrbuf;
+                        NameLength = DirInfo->ObjectName.Length / sizeof(WCHAR);
+                        /* NULL-terminate the string */
+                        strbuf[NameLength] = L'\0';
+                        strbuf += NameLength + 1;
+                        deststrbuf += NameLength + 1;
+
+                        CopyBytes += (NameLength + 1) * sizeof(WCHAR);
+                    }
+
+                    RtlCopyMemory(strbuf,
+                        DirInfo->ObjectTypeName.Buffer,
+                        DirInfo->ObjectTypeName.Length);
+                    /* Change the buffer pointer to the buffer */
+                    DirInfo->ObjectTypeName.Buffer = deststrbuf;
+                    NameLength = DirInfo->ObjectTypeName.Length / sizeof(WCHAR);
+                    /* NULL-terminate the string */
+                    strbuf[NameLength] = L'\0';
+                    strbuf += NameLength + 1;
+                    deststrbuf += NameLength + 1;
+
+                    CopyBytes += (NameLength + 1) * sizeof(WCHAR);
+                }
+            }
+
+            ExReleaseResourceLite(&Directory->Lock);
+            KeLeaveCriticalRegion();
+            ObDereferenceObject(Directory);
+
+            if (NT_SUCCESS(Status) || ReturnSingleEntry)
+            {
+                _SEH_TRY
+                {
+                    if (CopyBytes != 0)
+                    {
+                        RtlCopyMemory(Buffer,
+                                      TemporaryBuffer,
+                                      CopyBytes);
+                    }
+                    *Context = NextEntry;
+                    if(ReturnLength != NULL)
+                    {
+                        *ReturnLength = RequiredSize;
+                    }
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+            }
+
+            ExFreePool(TemporaryBuffer);
+        }
+        else
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
     }
 
     /* Return status to caller */
