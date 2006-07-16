@@ -97,9 +97,9 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PS_INHERIT_HANDLES                      4
 #define PS_UNKNOWN_VALUE                        8
 #define PS_ALL_FLAGS                            (PS_REQUEST_BREAKAWAY | \
-                                                 PS_NO_DEBUG_INHERIT |  \
-                                                 PS_INHERIT_HANDLES |   \
-                                                 PS_UNKNOWN_VALUE)      
+                                                 PS_NO_DEBUG_INHERIT  | \
+                                                 PS_INHERIT_HANDLES   | \
+                                                 PS_UNKNOWN_VALUE)
 
 //
 // Process base priorities
@@ -139,7 +139,6 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
                                                  0xFFF)
 #endif
 
-
 //
 // Job Access Types
 //
@@ -151,6 +150,34 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define JOB_OBJECT_ALL_ACCESS                   (STANDARD_RIGHTS_REQUIRED | \
                                                  SYNCHRONIZE | \
                                                  31)
+
+//
+// Cross Thread Flags
+//
+#define CT_TERMINATED_BIT                       0x1
+#define CT_DEAD_THREAD_BIT                      0x2
+#define CT_HIDE_FROM_DEBUGGER_BIT               0x4
+#define CT_ACTIVE_IMPERSTIONATION_INFO_BIT      0x8
+#define CT_SYSTEM_THREAD_BIT                    0x10
+#define CT_HARD_ERRORS_ARE_DISABLED_BIT         0x20
+#define CT_BREAK_ON_TERMINATION_BIT             0x40
+#define CT_SKIP_CREATION_MSG_BIT                0x80
+#define CT_SKIP_TERMINATION_MSG_BIT             0x100
+
+//
+// Same Thread Passive Flags
+//
+#define STP_ACTIVE_EX_WORKER_BIT                0x1
+#define STP_EX_WORKER_CAN_WAIT_USER_BIT         0x2
+#define STP_MEMORY_MAKER_BIT                    0x4
+#define STP_KEYED_EVENT_IN_USE_BIT              0x8
+
+//
+// Same Thread APC Flags
+//
+#define STA_LPC_RECEIVED_MSG_ID_VALID_BIT       0x1
+#define STA_LPC_EXIT_THREAD_CALLED_BIT          0x2
+#define STA_ADDRESS_SPACE_OWNER_BIT             0x4
 #endif
 
 #ifdef NTOS_MODE_USER

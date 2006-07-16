@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/ps/thread.c
  * PURPOSE:         Process Manager: Thread Management
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Thomas Weidenmueller (w3seek@reactos.org
+ *                  Thomas Weidenmueller (w3seek@reactos.org)
  */
 
 /*
@@ -66,9 +66,9 @@ PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
     }
 
     /* Check if this is a system thread, or if we're hiding */
-    if ((Thread->SystemThread) || (Thread->HideFromDebugger))
-{
-        /* Notify the debugger */
+    if (!(Thread->SystemThread) && !(Thread->HideFromDebugger))
+    {
+        /* We're not, so notify the debugger */
         DbgkCreateThread(StartContext);
     }
 
@@ -90,9 +90,9 @@ PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
                             sizeof(KTRAP_FRAME) -
                             sizeof(FX_SAVE_AREA)),
                             PspSystemDllEntryPoint,
-                        NULL,
+                            NULL,
                             PspSystemDllBase,
-                        NULL);
+                            NULL);
 
         /* Lower it back to passive */
         KeLowerIrql(PASSIVE_LEVEL);
@@ -100,13 +100,21 @@ PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
     else
     {
         /* We're dead, kill us now */
-        PspTerminateThreadByPointer(Thread, STATUS_THREAD_IS_TERMINATING, TRUE);
+        PspTerminateThreadByPointer(Thread,
+                                    STATUS_THREAD_IS_TERMINATING,
+                                    TRUE);
     }
 
     /* Do we have a cookie set yet? */
     if (!SharedUserData->Cookie)
     {
-        /* FIXME: Generate cookie */
+        /*
+         * FIXME: Generate cookie
+         * Formula (roughly): Per-CPU Page Fault ^ Per-CPU Interrupt Time ^
+         *                    Global System Time ^ Stack Address of where
+         *                    the LARGE_INTEGER containing the Global System
+         *                    Time is.
+         */
     }
 }
 
@@ -202,7 +210,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     Status = ObCreateObject(PreviousMode,
                             PsThreadType,
                             ObjectAttributes,
-                            KernelMode,
+                            PreviousMode,
                             NULL,
                             sizeof(ETHREAD),
                             0,
@@ -218,6 +226,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Zero the Object entirely */
     RtlZeroMemory(Thread, sizeof(ETHREAD));
 
+    /* Initialize rundown protection */
+    ExInitializeRundownProtection(&Thread->RundownProtect);
+
     /* Set the Process CID */
     Thread->ThreadsProcess = Process;
     Thread->Cid.UniqueProcess = Process->UniqueProcessId;
@@ -228,8 +239,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     Thread->Cid.UniqueThread = ExCreateHandle(PspCidTable, &CidEntry);
     if (!Thread->Cid.UniqueThread)
     {
-        /* We couldn't create the CID, dereference everything and fail */
-        ObDereferenceObject(Process);
+        /* We couldn't create the CID, dereference the thread and fail */
         ObDereferenceObject(Thread);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -238,7 +248,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     Thread->ReadClusterSize = MmReadClusterSize;
 
     /* Initialize the LPC Reply Semaphore */
-    KeInitializeSemaphore(&Thread->LpcReplySemaphore, 0, MAXLONG);
+    KeInitializeSemaphore(&Thread->LpcReplySemaphore, 0, 1);
 
     /* Initialize the list heads and locks */
     InitializeListHead(&Thread->LpcReplyChain);
@@ -246,6 +256,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     InitializeListHead(&Thread->PostBlockList);
     InitializeListHead(&Thread->ActiveTimerListHead);
     KeInitializeSpinLock(&Thread->ActiveTimerListLock);
+
+    /* Acquire rundown protection */
+    ExAcquireRundownProtection(&Process->RundownProtect);
 
     /* Allocate Stack for non-GUI Thread */
     KernelStack = (ULONG_PTR)MmCreateKernelStack(FALSE) + KERNEL_STACK_SIZE;
@@ -255,6 +268,13 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     {
         /* User-mode Thread, create Teb */
         TebBase = MmCreateTeb(Process, &Thread->Cid, InitialTeb);
+        if (!TebBase)
+        {
+            /* Failed to create the TEB. Release rundown and dereference */
+            ExReleaseRundownProtection(&Process->RundownProtect);
+            ObDereferenceObject(Thread);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
         /* Set the Start Addresses */
         Thread->StartAddress = (PVOID)ThreadContext->Eip;
@@ -274,7 +294,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     {
         /* System Thread */
         Thread->StartAddress = StartRoutine;
-        InterlockedOr((PLONG)&Thread->CrossThreadFlags, 0x10);
+        InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_SYSTEM_THREAD_BIT);
 
         /* Let the kernel intialize the Thread */
         KeInitializeThread(&Process->Pcb,
@@ -294,6 +314,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
      */
     InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
     Process->ActiveThreads++;
+
+    /* Release rundown */
+    ExReleaseRundownProtection(&Process->RundownProtect);
 
     /* Notify WMI */
     //WmiTraceProcess(Process, TRUE);
