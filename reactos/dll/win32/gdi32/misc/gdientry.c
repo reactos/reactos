@@ -14,13 +14,14 @@
 #include <ddrawi.h>
 #include <ddrawint.h>
 #include <ddrawgdi.h>
+#include <ntgdi.h>
 
 /* DATA **********************************************************************/
 
 HANDLE ghDirectDraw;
 ULONG gcDirectDraw;
 
-#define GetDdHandle(Handle) (Handle ? Handle : ghDirectDraw)
+#define GetDdHandle(Handle) ((HANDLE)Handle ? (HANDLE)Handle : ghDirectDraw)
 
 
 /* CALLBACKS *****************************************************************/
@@ -104,7 +105,208 @@ DdLock(LPDDHAL_LOCKDATA Lock)
 						(HANDLE)Lock->lpDDSurface->hDC);
 }
 
+DWORD
+WINAPI
+DdUnlock(LPDDHAL_UNLOCKDATA Unlock)
+{
+    /* Call win32k */
+    return NtGdiDdUnlock((HANDLE)Unlock->lpDDSurface->hDDSurface,
+                          (PDD_UNLOCKDATA)Unlock);
+}
 
+DWORD
+WINAPI
+DdGetBltStatus(LPDDHAL_GETBLTSTATUSDATA GetBltStatus)
+{
+    /* Call win32k */
+    return NtGdiDdGetBltStatus((HANDLE)GetBltStatus->lpDDSurface->hDDSurface,
+                                (PDD_GETBLTSTATUSDATA)GetBltStatus);
+}
+
+DWORD
+WINAPI
+DdGetFlipStatus(LPDDHAL_GETFLIPSTATUSDATA GetFlipStatus)
+{
+    /* Call win32k */
+    return NtGdiDdGetFlipStatus((HANDLE)GetFlipStatus->lpDDSurface->hDDSurface,
+                                 (PDD_GETFLIPSTATUSDATA)GetFlipStatus);
+}
+
+DWORD
+APIENTRY
+DdUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA UpdateOverlay)
+{
+    /* We have to handle this manually here */
+    if (UpdateOverlay->dwFlags & DDOVER_KEYDEST)
+    {
+        /* Use the override */
+        UpdateOverlay->dwFlags &= ~DDOVER_KEYDEST;
+        UpdateOverlay->dwFlags |=  DDOVER_KEYDESTOVERRIDE;
+
+        /* Set the overlay */
+        UpdateOverlay->overlayFX.dckDestColorkey =
+            UpdateOverlay->lpDDDestSurface->ddckCKDestOverlay;
+    }
+    if (UpdateOverlay->dwFlags & DDOVER_KEYSRC)
+    {
+        /* Use the override */
+        UpdateOverlay->dwFlags &= ~DDOVER_KEYSRC;
+        UpdateOverlay->dwFlags |=  DDOVER_KEYSRCOVERRIDE;
+
+        /* Set the overlay */
+        UpdateOverlay->overlayFX.dckSrcColorkey =
+            UpdateOverlay->lpDDSrcSurface->ddckCKSrcOverlay;
+    }
+
+    /* Call win32k */
+    return NtGdiDdUpdateOverlay((HANDLE)UpdateOverlay->lpDDDestSurface->hDDSurface,
+                                 (HANDLE)UpdateOverlay->lpDDSrcSurface->hDDSurface,
+                                 (PDD_UPDATEOVERLAYDATA)UpdateOverlay);
+}
+
+DWORD
+APIENTRY
+DdSetOverlayPosition(LPDDHAL_SETOVERLAYPOSITIONDATA SetOverlayPosition)
+{
+    /* Call win32k */
+    return NtGdiDdSetOverlayPosition((HANDLE)SetOverlayPosition->
+                                      lpDDSrcSurface->hDDSurface,
+                                      (HANDLE)SetOverlayPosition->
+                                      lpDDDestSurface->hDDSurface,
+                                      (PDD_SETOVERLAYPOSITIONDATA)
+                                      SetOverlayPosition);
+}
+
+/*
+ * Dd Callbacks
+ */
+DWORD
+WINAPI
+DdWaitForVerticalBlank(LPDDHAL_WAITFORVERTICALBLANKDATA WaitForVerticalBlank)
+{
+    /* Call win32k */
+    return NtGdiDdWaitForVerticalBlank(GetDdHandle(
+                                       WaitForVerticalBlank->lpDD->hDD),
+                                       (PDD_WAITFORVERTICALBLANKDATA)
+                                       WaitForVerticalBlank);
+}
+
+DWORD
+WINAPI
+DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA CanCreateSurface)
+{
+    /* Call win32k */
+    return NtGdiDdCanCreateSurface(GetDdHandle(CanCreateSurface->lpDD->hDD),
+                                   (PDD_CANCREATESURFACEDATA)CanCreateSurface);
+}
+
+DWORD
+APIENTRY
+DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
+{
+    DWORD Return = DDHAL_DRIVER_NOTHANDLED;
+    ULONG SurfaceCount = pCreateSurface->dwSCnt;
+    DD_SURFACE_LOCAL DdSurfaceLocal;
+    DD_SURFACE_MORE DdSurfaceMore;
+    DD_SURFACE_GLOBAL DdSurfaceGlobal;
+    HANDLE hPrevSurface, hSurface;
+    DD_SURFACE_LOCAL* pDdSurfaceLocal;
+    DD_SURFACE_MORE* pDdSurfaceMore;
+    DD_SURFACE_GLOBAL* pDdSurfaceGlobal;
+    LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal;
+    //LPDDRAWI_DDRAWSURFACE_MORE pSurfaceMore;
+    LPDDRAWI_DDRAWSURFACE_GBL pSurfaceGlobal;
+    PHANDLE phSurface = NULL, puhSurface = NULL;
+    ULONG i;
+    LPDDSURFACEDESC pSurfaceDesc;
+
+    /* Check how many surfaces there are */
+    if (SurfaceCount != 1)
+    {
+        /* We'll have to allocate more data, our stack isn't big enough */
+
+    }
+    else
+    {
+        /* We'll use what we have on the stack */
+        pDdSurfaceLocal = &DdSurfaceLocal;
+        pDdSurfaceMore = &DdSurfaceMore;
+        pDdSurfaceGlobal = &DdSurfaceGlobal;
+        phSurface = &hPrevSurface;
+        puhSurface = &hSurface;
+        
+        /* Clear the structures */
+        RtlZeroMemory(&DdSurfaceLocal, sizeof(DdSurfaceLocal));
+        RtlZeroMemory(&DdSurfaceGlobal, sizeof(DdSurfaceGlobal));
+        RtlZeroMemory(&DdSurfaceMore, sizeof(DdSurfaceMore));  
+    }
+
+    /* Loop for each surface */
+    for (i = 0; i < pCreateSurface->dwSCnt; i++)
+    {
+        /* Get data */
+        pSurfaceLocal = pCreateSurface->lplpSList[i];
+        pSurfaceGlobal = pSurfaceLocal->lpGbl;
+        pSurfaceDesc = pCreateSurface->lpDDSurfaceDesc;
+
+        /* Check if it has pixel data */
+        if (pSurfaceDesc->dwFlags & DDRAWISURF_HASPIXELFORMAT)
+        {
+            /* Use its pixel data */
+            DdSurfaceGlobal.ddpfSurface = pSurfaceDesc->ddpfPixelFormat;
+            DdSurfaceGlobal.ddpfSurface.dwSize = sizeof(DDPIXELFORMAT);
+        }
+        else
+        {
+            /* Use the one from the global surface */
+            DdSurfaceGlobal.ddpfSurface = pSurfaceGlobal->lpDD->vmiData.ddpfDisplay;
+        }
+
+        /* Convert data */
+        DdSurfaceGlobal.wWidth = pSurfaceGlobal->wWidth;
+        DdSurfaceGlobal.wHeight = pSurfaceGlobal->wHeight;
+        DdSurfaceGlobal.lPitch = pSurfaceGlobal->lPitch;
+        DdSurfaceGlobal.fpVidMem = pSurfaceGlobal->fpVidMem;
+        DdSurfaceGlobal.dwBlockSizeX = pSurfaceGlobal->dwBlockSizeX;
+        DdSurfaceGlobal.dwBlockSizeY = pSurfaceGlobal->dwBlockSizeY;
+        // DdSurfaceGlobal.ddsCaps = pSurfaceLocal->ddsCaps | 0xBF0000;
+
+        /* FIXME: Ddscapsex stuff missing */
+
+        /* Call win32k now */
+        pCreateSurface->ddRVal = E_FAIL;
+		
+        Return = NtGdiDdCreateSurface(GetDdHandle(pCreateSurface->lpDD->hDD),
+                                     (HANDLE *)phSurface,
+                                     pSurfaceDesc,
+                                     &DdSurfaceGlobal,
+                                     &DdSurfaceLocal,
+                                     &DdSurfaceMore,
+                                     (PDD_CREATESURFACEDATA)pCreateSurface,
+                                     puhSurface);
+          
+	   
+        /* FIXME: Ddscapsex stuff missing */
+        
+        /* Convert the data back */
+        pSurfaceGlobal->lPitch = DdSurfaceGlobal.lPitch;
+        pSurfaceGlobal->fpVidMem = DdSurfaceGlobal.fpVidMem;
+        pSurfaceGlobal->dwBlockSizeX = DdSurfaceGlobal.dwBlockSizeX;
+        pSurfaceGlobal->dwBlockSizeY = DdSurfaceGlobal.dwBlockSizeY;
+        pCreateSurface->lplpSList[i]->hDDSurface = (DWORD) hSurface;
+
+        /* FIXME: Ddscapsex stuff missing */
+    }
+    
+    /* Check if we have to free all our local allocations */
+    if (SurfaceCount > 1)
+    {
+     /* FIXME: */
+    }
+
+    /* Return */
+    return Return;
+}
 
 
 static LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobalInternal;
