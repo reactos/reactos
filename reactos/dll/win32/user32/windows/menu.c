@@ -4073,7 +4073,7 @@ GetMenuItemInfoW(
    if (!NtUserMenuItemInfo(Menu, Item, ByPosition, (PROSMENUITEMINFO) &miiW, FALSE))
       return FALSE;
 
-   RtlCopyMemory(mii, &miiW, miiW.cbSize); // looks okay to over right user data.
+   RtlCopyMemory(mii, &miiW, miiW.cbSize); // looks okay to over write user data.
 
    if (!String || !Count)
    {
