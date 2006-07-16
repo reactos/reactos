@@ -171,11 +171,11 @@ IntRegisterClassAtom(IN PUNICODE_STRING ClassName,
     return TRUE;
 }
 
-static VOID
+static NTSTATUS
 IntDeregisterClassAtom(IN RTL_ATOM Atom)
 {
-    RtlDeleteAtomFromAtomTable(gAtomTable,
-                               Atom);
+    return RtlDeleteAtomFromAtomTable(gAtomTable,
+                                      Atom);
 }
 
 static BOOL
@@ -1147,38 +1147,28 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
     /* try to find a previously registered class */
     ClassAtom = IntGetClassAtom(ClassName,
-                                NULL,
-                                NULL,
-                                NULL,
+                                lpwcx->hInstance,
+                                pi,
+                                &Class,
                                 NULL);
     if (ClassAtom != (RTL_ATOM)0)
     {
-        Class = IntFindClass(ClassAtom,
-                             lpwcx->hInstance,
-                             &pi->LocalClassList,
-                             NULL);
-        if (Class != NULL)
-        {
-            goto ClassAlreadyExists;
-        }
-
-        /* if CS_GLOBALCLASS is set, try to find a previously registered global class.
-           Re-registering system classes as global classes seems to be allowed,
-           so we don't fail */
         if (lpwcx->style & CS_GLOBALCLASS)
         {
-            Class = IntFindClass(ClassAtom,
-                                 NULL,
-                                 ((dwFlags & REGISTERCLASS_SYSTEM) ?
-                                     &pi->SystemClassList : &pi->GlobalClassList),
-                                 NULL);
-            if (Class != NULL)
+            // global classes shall not have same names as system classes
+            if (Class->Global || Class->System)
             {
-ClassAlreadyExists:
                 DPRINT("Class 0x%p does already exist!\n", ClassAtom);
                 SetLastWin32Error(ERROR_CLASS_ALREADY_EXISTS);
                 return (RTL_ATOM)0;
             }
+        }
+        else if ( !Class->Global && !Class->System)
+        {
+            // local class already exists
+            DPRINT("Class 0x%p does already exist!\n", ClassAtom);
+            SetLastWin32Error(ERROR_CLASS_ALREADY_EXISTS);
+            return (RTL_ATOM)0;
         }
     }
 
@@ -1244,13 +1234,6 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
     ASSERT(Class != NULL);
 
-    if (Class->System)
-    {
-        DPRINT1("Attempted to unregister system class 0x%p!\n", ClassAtom);
-        SetLastWin32Error(ERROR_ACCESS_DENIED);
-        return FALSE;
-    }
-
     if (Class->Windows != 0 ||
         Class->Clone != NULL)
     {
@@ -1264,11 +1247,13 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
     /* unlink the class */
     *Link = Class->Next;
 
-    IntDeregisterClassAtom(Class->Atom);
-
-    /* finally free the resources */
-    IntDestroyClass(Class);
-    return TRUE;
+    if (NT_SUCCESS(IntDeregisterClassAtom(Class->Atom)))
+    {
+        /* finally free the resources */
+        IntDestroyClass(Class);
+        return TRUE;
+    }
+	return FALSE;
 }
 
 INT
@@ -2117,7 +2102,6 @@ NtUserGetClassInfo(
     {
         goto Cleanup;
     }
-
     _SEH_TRY
     {
         /* probe the paramters */
@@ -2184,20 +2168,24 @@ InvalidParameter:
 
                 if (!(Class->Global || Class->System) && hInstance == NULL)
                 {
+                    SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
                     Ret = FALSE;
                 }
             }
-        }
+         }
+         else
+         {
+            SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+         }
     }
     _SEH_HANDLE
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+         SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
     }
     _SEH_END;
 
 Cleanup:
     UserLeave();
-
     return Ret;
 }
 
