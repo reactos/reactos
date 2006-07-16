@@ -1,36 +1,112 @@
 /*
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-/*
- * $Id:
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS GDI32
- * PURPOSE:          Gdi DirectX inteface
+ * PURPOSE:          GDI DirectX inteface
  * FILE:             lib/gdi32/misc/gdientry.c
- * PROGRAMER:        Magnus Olsen (magnus@greatlord.com)
- * REVISION HISTORY: 
- * NOTES:            
+ * PROGRAMERS:       Alex Ionescu (alex@relsoft.net)
+ *                   Magnus Olsen (magnus@greatlord.com)
  */
 
+/* INCLUDES ******************************************************************/
 
 #include "precomp.h"
 #include <ddraw.h>
 #include <ddrawi.h>
 #include <ddrawint.h>
 #include <ddrawgdi.h>
+
+/* DATA **********************************************************************/
+
+HANDLE ghDirectDraw;
+ULONG gcDirectDraw;
+
+#define GetDdHandle(Handle) (Handle ? Handle : ghDirectDraw)
+
+
+/* CALLBACKS *****************************************************************/
+
+/*
+ * Dd Surface Callbacks
+ */
+DWORD
+WINAPI
+DdAddAttachedSurface(LPDDHAL_ADDATTACHEDSURFACEDATA Attach)
+{
+    /* Call win32k */
+    return NtGdiDdAddAttachedSurface((HANDLE)Attach->lpDDSurface->hDDSurface,
+                                      (HANDLE)Attach->lpSurfAttached->hDDSurface,
+                                      (PDD_ADDATTACHEDSURFACEDATA)Attach);
+}
+
+DWORD
+WINAPI
+DdBlt(LPDDHAL_BLTDATA Blt)
+{
+    HANDLE Surface = 0;
+
+    /* Use the right surface */
+    if (Blt->lpDDSrcSurface) Surface = (HANDLE)Blt->lpDDSrcSurface->hDDSurface;
+
+    /* Call win32k */
+    return NtGdiDdBlt((HANDLE)Blt->lpDDDestSurface->hDDSurface, Surface, (PDD_BLTDATA)Blt);
+}
+
+DWORD
+APIENTRY
+DdDestroySurface(LPDDHAL_DESTROYSURFACEDATA pDestroySurface)
+{
+    DWORD Return = DDHAL_DRIVER_NOTHANDLED;
+    BOOL RealDestroy = TRUE;
+    LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal;
+
+    /* Get the local surface */
+    pSurfaceLocal = pDestroySurface->lpDDSurface;
+
+    /* Make sure there's a surface */
+    if (pSurfaceLocal->hDDSurface)
+    {
+        /* Check if we shoudl really destroy it */
+        if ((pSurfaceLocal->dwFlags & DDRAWISURF_DRIVERMANAGED) &&
+            (pSurfaceLocal->dwFlags & DDRAWISURF_INVALID))
+        {
+            RealDestroy = FALSE;
+        }
+        
+        /* Call win32k */
+        Return = NtGdiDdDestroySurface((HANDLE)pSurfaceLocal->hDDSurface,
+                                       RealDestroy);
+    }
+
+    return Return;
+}
+
+DWORD
+WINAPI
+DdFlip(LPDDHAL_FLIPDATA Flip)
+{
+    /* Call win32k */
+	
+    return NtGdiDdFlip( (HANDLE)Flip->lpSurfCurr->hDDSurface,
+                        (HANDLE)Flip->lpSurfTarg->hDDSurface,
+   /* FIXME  the two last should be current left handler */ 
+						(HANDLE)Flip->lpSurfCurr->hDDSurface,
+                        (HANDLE)Flip->lpSurfTarg->hDDSurface,
+                        (PDD_FLIPDATA)Flip);
+}
+
+WORD
+WINAPI
+DdLock(LPDDHAL_LOCKDATA Lock)
+{
+    /* Call win32k */	
+    return NtGdiDdLock((HANDLE)Lock->lpDDSurface->hDDSurface,
+                        (PDD_LOCKDATA)Lock,
+						(HANDLE)Lock->lpDDSurface->hDC);
+}
+
+
+
+
 static LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobalInternal;
 static ULONG RemberDdQueryDisplaySettingsUniquenessID = 0;
 
