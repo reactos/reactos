@@ -52,7 +52,7 @@ typedef struct _PDEV
    PVOID ScreenPtr;
    HPALETTE DefaultPalette;
    PALETTEENTRY *PaletteEntries;
-
+  
 #ifdef EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
    VIDEO_POINTER_ATTRIBUTES PointerAttributes;
    XLATEOBJ *PointerXlateObject;
@@ -61,12 +61,38 @@ typedef struct _PDEV
    HSURF PointerSaveSurface;
    POINTL PointerHotSpot;
 #endif
+
+   /* DirectX Support */   
+   BOOL bDDInitialized;   
 } PDEV, *PPDEV;
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 #define DEVICE_NAME	L"framebuf"
 #define ALLOC_TAG	TAG('F','B','U','F')
+
+VOID STDCALL
+DrvDisableDirectDraw(
+  IN DHPDEV  dhpdev);
+
+
+BOOL STDCALL
+DrvEnableDirectDraw(
+  IN DHPDEV  dhpdev,
+  OUT DD_CALLBACKS  *pCallBacks,
+  OUT DD_SURFACECALLBACKS  *pSurfaceCallBacks,
+  OUT DD_PALETTECALLBACKS  *pPaletteCallBacks);
+
+
+BOOL STDCALL
+DrvGetDirectDrawInfo(
+  IN DHPDEV  dhpdev,
+  OUT DD_HALINFO  *pHalInfo,
+  OUT DWORD  *pdwNumHeaps,
+  OUT VIDEOMEMORY  *pvmList,
+  OUT DWORD  *pdwNumFourCCCodes,
+  OUT DWORD  *pdwFourCC);
+
 
 DHPDEV STDCALL
 DrvEnablePDEV(
@@ -157,4 +183,7 @@ IntSetPalette(
    IN ULONG iStart,
    IN ULONG cColors);
 
+
+
 #endif /* FRAMEBUF_H */
+
