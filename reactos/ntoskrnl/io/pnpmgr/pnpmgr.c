@@ -2314,7 +2314,7 @@ IopInvalidateDeviceRelations(IN PDEVICE_NODE DeviceNode,
    NTSTATUS Status;
    ULONG i;
 
-   DPRINT("DeviceNode 0x%p\n", DeviceNode);
+   DPRINT("DeviceNode 0x%p, Type %d\n", DeviceNode, Type);
 
    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
@@ -2443,6 +2443,7 @@ IopInvalidateDeviceRelations(IN PDEVICE_NODE DeviceNode,
       return Status;
    }
 
+   DPRINT("IopInvalidateDeviceRelations() finished\n");
    return STATUS_SUCCESS;
 }
 
