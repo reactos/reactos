@@ -37,33 +37,94 @@ DrvEnableDirectDraw(
   OUT DD_PALETTECALLBACKS  *pPaletteCallBacks)
 {	 
 	 PPDEV ppdev = (PPDEV)dhpdev;
-
+	
 	 if (ppdev->bDDInitialized == TRUE)
 	 {
 		 return TRUE;
 	 }
 
+	 /* Setup pixel format */	 
+	 ppdev->ddpfDisplay.dwSize = sizeof( DDPIXELFORMAT );
+     ppdev->ddpfDisplay.dwFourCC = 0;
+
+     ppdev->ddpfDisplay.dwRBitMask = ppdev->RedMask;
+     ppdev->ddpfDisplay.dwGBitMask = ppdev->GreenMask;
+     ppdev->ddpfDisplay.dwBBitMask = ppdev->BlueMask;
+
+	 switch(ppdev->BitsPerPixel)
+	 {
+		case BMF_8BPP:
+             ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0;
+             ppdev->ddpfDisplay.dwRGBBitCount=8;
+             ppdev->ddpfDisplay.dwFlags = DDPF_RGB | DDPF_PALETTEINDEXED8;
+             break;
+        
+        case BMF_16BPP:
+             ppdev->ddpfDisplay.dwRGBBitCount=16;
+             switch(ppdev->RedMask)
+             {
+                case 0x7C00:
+                     ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0x8000;
+                     break;
+
+                default:
+                     ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0;
+			 }        
+             break;
+
+        case BMF_24BPP:
+             ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0;
+             ppdev->ddpfDisplay.dwRGBBitCount=24;
+             break;
+
+        case BMF_32BPP:
+             ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0xff000000;
+             ppdev->ddpfDisplay.dwRGBBitCount=32;
+             break;
+        default:
+           /* FIXME unknown pixelformat */
+            break;
+	 }
+
+   
+    //InitDDHAL(ppdev);
+
+
 	 if (pCallBacks !=NULL)
 	 {
 		 memset(pCallBacks,0,sizeof(DD_CALLBACKS));
 
-		 /* FILL pCallBacks with hal stuff */
+		 /* FILL pCallBacks with hal stuff */		  	     
+         pCallBacks->dwSize = sizeof(DDHAL_DDCALLBACKS);     
+         pCallBacks->CanCreateSurface = (PDD_CANCREATESURFACE)DdCanCreateSurface;    		 
+         pCallBacks->CreateSurface =  (PDD_CREATESURFACE)DdCreateSurface;
+
+         /* Fill in the HAL Callback flags */
+         pCallBacks->dwFlags = DDHAL_CB32_CANCREATESURFACE | DDHAL_CB32_CREATESURFACE;
 	 }
 
 	 if (pSurfaceCallBacks !=NULL)
 	 {
 		 memset(pSurfaceCallBacks,0,sizeof(DD_SURFACECALLBACKS));
 
-		 /* FILL pSurfaceCallBacks with hal stuff */
+		 /* FILL pSurfaceCallBacks with hal stuff */	
+         // pSurfaceCallBacks.dwSize = sizeof(DDHAL_DDSURFACECALLBACKS);
+         // pSurfaceCallBacks.DestroySurface = DdDestroySurface;    
+         // pSurfaceCallBacks.Lock = DdLock;        
+         // pSurfaceCallBacks.Blt = DdBlt;
+
+        // pSurfaceCallBacks->dwFlags = DDHAL_SURFCB32_DESTROYSURFACE | DDHAL_SURFCB32_LOCK | DDHAL_SURFCB32_BLT ;
 	 }
 
 	 if (pPaletteCallBacks !=NULL)
 	 {
 		 memset(pPaletteCallBacks,0,sizeof(DD_PALETTECALLBACKS));
-
 		 /* FILL pPaletteCallBacks with hal stuff */
+		 /* We will not support this callback in the framebuf.dll */
 	 }
   
+
+	 /* Fixme fill the ppdev->dxHalInfo with the info we need */
 	 ppdev->bDDInitialized = TRUE;
 	 return ppdev->bDDInitialized;
 }

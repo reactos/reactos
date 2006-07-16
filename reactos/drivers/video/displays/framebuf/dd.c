@@ -22,3 +22,55 @@
 
 #include "framebuf.h"
 
+
+DWORD CALLBACK 
+DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
+{
+	 	  	  	 	
+	 /* We do not support 3d buffer so we fail here */
+	 if ((pccsd->lpDDSurfaceDesc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER) && 
+		(pccsd->lpDDSurfaceDesc->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+	 {
+		pccsd->ddRVal = DDERR_INVALIDPIXELFORMAT;
+        return DDHAL_DRIVER_HANDLED;	
+	 }
+
+
+	 /* Check if another pixel format or not, we fail for now */
+	 if (pccsd->bIsDifferentPixelFormat)
+     {
+		/* check the fourcc diffent FOURCC, but we only support BMP for now */
+		//if(pccsd->lpDDSurfaceDesc->ddpfPixelFormat.dwFlags & DDPF_FOURCC)
+        //{   	 
+		//	/* We do not support other pixel format */
+		//	switch (pccsd->lpDDSurfaceDesc->ddpfPixelFormat.dwFourCC)
+		//	{         
+		//		default:                
+		//			pccsd->ddRVal = DDERR_INVALIDPIXELFORMAT;
+		//			return DDHAL_DRIVER_HANDLED;
+		//	}
+		//}
+		// /* check the texture support, we do not support testure for now */
+		//else if((pccsd->lpDDSurfaceDesc->ddsCaps.dwCaps & DDSCAPS_TEXTURE))
+		//{
+		//	/* We do not support texture surface */
+		//	pccsd->ddRVal = DDERR_INVALIDPIXELFORMAT;
+		//	return DDHAL_DRIVER_HANDLED;            
+		//}
+
+		/* Fail */
+		pccsd->ddRVal = DDERR_INVALIDPIXELFORMAT;
+		return DDHAL_DRIVER_HANDLED;
+    }
+
+	 pccsd->ddRVal = DD_OK;    
+	 return DDHAL_DRIVER_HANDLED;
+}
+
+DWORD CALLBACK 
+DdCreateSurface(PDD_CREATESURFACEDATA lpCreateSurface)
+{
+	lpCreateSurface->ddRVal = DDERR_GENERIC;
+    return DDHAL_DRIVER_NOTHANDLED;
+}
+

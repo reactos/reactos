@@ -64,12 +64,20 @@ typedef struct _PDEV
 
    /* DirectX Support */   
    BOOL bDDInitialized;   
+   DDPIXELFORMAT ddpfDisplay;
+   DDHALINFO   dxHalInfo;
 } PDEV, *PPDEV;
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 #define DEVICE_NAME	L"framebuf"
 #define ALLOC_TAG	TAG('F','B','U','F')
+
+DWORD CALLBACK 
+DdCanCreateSurface( LPDDHAL_CANCREATESURFACEDATA pccsd );
+
+DWORD CALLBACK 
+DdCreateSurface(PDD_CREATESURFACEDATA lpCreateSurface);
 
 VOID STDCALL
 DrvDisableDirectDraw(
