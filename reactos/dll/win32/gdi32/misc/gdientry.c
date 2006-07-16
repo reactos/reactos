@@ -308,6 +308,138 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     return Return;
 }
 
+DWORD
+APIENTRY
+DdSetColorKey(LPDDHAL_SETCOLORKEYDATA pSetColorKey)
+{
+    /* Call win32k */
+    return NtGdiDdSetColorKey((HANDLE)pSetColorKey->lpDDSurface->hDDSurface,
+                               (PDD_SETCOLORKEYDATA)pSetColorKey);
+}
+
+DWORD
+APIENTRY
+DdGetScanLine(LPDDHAL_GETSCANLINEDATA pGetScanLine)
+{
+    /* Call win32k */
+    return NtGdiDdGetScanLine(GetDdHandle(pGetScanLine->lpDD->hDD),
+                               (PDD_GETSCANLINEDATA)pGetScanLine);
+}
+
+/* PRIVATE FUNCTIONS *********************************************************/
+BOOL
+WINAPI
+bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
+                 BOOL bComplete)
+{
+    DD_SURFACE_LOCAL SurfaceLocal;
+    DD_SURFACE_GLOBAL SurfaceGlobal;
+    DD_SURFACE_MORE SurfaceMore;
+
+    /* Zero struct */
+    RtlZeroMemory(&SurfaceLocal, sizeof(DD_SURFACE_LOCAL));
+    RtlZeroMemory(&SurfaceGlobal, sizeof(DD_SURFACE_GLOBAL));
+    RtlZeroMemory(&SurfaceMore, sizeof(DD_SURFACE_MORE));
+
+    /* Set up SurfaceLocal struct */
+    SurfaceLocal.ddsCaps.dwCaps = pSurface->ddsCaps.dwCaps;
+    SurfaceLocal.dwFlags = pSurface->dwFlags;
+
+    /* Set up SurfaceMore struct */
+    RtlMoveMemory(&SurfaceMore.ddsCapsEx,
+                  &pSurface->ddckCKDestBlt,
+                  sizeof(DDSCAPSEX));
+    SurfaceMore.dwSurfaceHandle = (DWORD)pSurface->dbnOverlayNode.object_int->lpVtbl;
+
+    /* Set up SurfaceGlobal struct */
+    SurfaceGlobal.fpVidMem = pSurface->lpGbl->fpVidMem;
+    SurfaceGlobal.dwLinearSize = pSurface->lpGbl->dwLinearSize;
+    SurfaceGlobal.wHeight = pSurface->lpGbl->wHeight;
+    SurfaceGlobal.wWidth = pSurface->lpGbl->wWidth;
+
+    /* Check if we have a pixel format */
+    if (pSurface->dwFlags & DDSD_PIXELFORMAT)
+    {	
+        /* Use global one */
+        SurfaceGlobal.ddpfSurface = pSurface->lpGbl->lpDD->vmiData.ddpfDisplay;
+        SurfaceGlobal.ddpfSurface.dwSize = sizeof(DDPIXELFORMAT);
+    }
+    else
+    {
+        /* Use local one */
+        SurfaceGlobal.ddpfSurface = pSurface->lpGbl->lpDD->vmiData.ddpfDisplay;
+    }
+
+    /* Create the object */
+    pSurface->hDDSurface = (DWORD)NtGdiDdCreateSurfaceObject(GetDdHandle(pSurface->lpGbl->lpDD->hDD),
+                                                             (HANDLE)pSurface->hDDSurface,
+                                                             &SurfaceLocal,
+                                                             &SurfaceMore,
+                                                             &SurfaceGlobal,
+                                                             bComplete);
+
+    /* Return status */
+    if (pSurface->hDDSurface) return TRUE;
+    return FALSE;
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ *
+ * GDIEntry 1 
+ */
+BOOL 
+WINAPI 
+DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
+                         HDC hdc)
+{  
+    BOOL Return = FALSE;
+
+    /* Check if the global hDC (hdc == 0) is being used */
+    if (!hdc)
+  {
+        /* We'll only allow this if the global object doesn't exist yet */
+        if (!ghDirectDraw)
+        {
+            /* Create the DC */
+            if ((hdc = CreateDC(L"Display", NULL, NULL, NULL)))
+            {
+                /* Create the DDraw Object */
+                ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
+
+                /* Delete our DC */                
+				NtGdiDeleteObjectApp(hdc);
+            }
+        }
+
+        /* If we created the object, or had one ...*/
+        if (ghDirectDraw)
+        {
+            /* Increase count and set success */
+            gcDirectDraw++;
+            Return = TRUE;
+        }
+
+        /* Zero the handle */
+        pDirectDrawGlobal->hDD = 0;
+    }
+    else
+    {
+        /* Using the per-process object, so create it */
+    pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc); 
+    
+        /* Set the return value */
+        Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
+    }
+
+    /* Return to caller */
+    return Return;
+}
+
+
+
 
 static LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobalInternal;
 static ULONG RemberDdQueryDisplaySettingsUniquenessID = 0;
@@ -316,65 +448,8 @@ BOOL
 intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
 				     BOOL bComplete);
 
-/*
- * @implemented
- *
- * GDIEntry 1 
- */
-BOOL 
-STDCALL 
-DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
-                         HDC hdc)
-{  
-  HDC newHdc;
-  /* check see if HDC is NULL or not  
-     if it null we need create the DC */
 
-  if (hdc != NULL) 
-  {
-    pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc); 
-    
-    /* if hDD ==NULL */
-    if (!pDirectDrawGlobal->hDD) 
-    {
-      return FALSE;
-    }
-    return TRUE;
-  }
 
-  /* The hdc was not null we need check see if we alread 
-     have create a directdraw handler */
-
-  /* if hDD !=NULL */
-  if (pDirectDrawGlobalInternal->hDD)
-  {
-    /* we have create a directdraw handler already */
-
-    pDirectDrawGlobal->hDD = pDirectDrawGlobalInternal->hDD;    
-    return TRUE;
-  }
-
-  /* Now we create the DC */
-  newHdc = CreateDC(L"DISPLAY\0", NULL, NULL, NULL);
-
-  /* we are checking if we got a hdc or not */
-  if ((ULONG_PTR)newHdc != pDirectDrawGlobalInternal->hDD)
-  {
-    pDirectDrawGlobalInternal->hDD = (ULONG_PTR) NtGdiDdCreateDirectDrawObject(newHdc);
-    NtGdiDeleteObjectApp(newHdc);
-  }
-
-   /* pDirectDrawGlobal->hDD = pDirectDrawGlobalInternal->hDD; ? */
-   pDirectDrawGlobal->hDD = 0; /* ? */
-
-  /* test see if we got a handler */
-  if (!pDirectDrawGlobalInternal->hDD)
-  {       
-    return FALSE;
-  }
-
-  return TRUE;
-}
 
 /*
  * @unimplemented
