@@ -115,8 +115,34 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                         LPDWORD pdwFourCC,
                         LPVIDMEM pvmList)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+    BOOL bStatus = FALSE;
+	DD_HALINFO DDHalInfo;
+	LPVOID pCallBackFlags[3];
+	DWORD NumHeaps;
+	DWORD NumFourCC; 
+
+	DDHalInfo.dwSize = sizeof(DD_HALINFO);
+
+	pCallBackFlags[0] = pDDCallbacks;
+    pCallBackFlags[1] = pDDSurfaceCallbacks;
+	pCallBackFlags[2] = pDDPaletteCallbacks;
+    	
+	bStatus = NtGdiDdQueryDirectDrawObject(
+		      (HANDLE)pDirectDrawGlobal->hDD,
+			  (DD_HALINFO *)&DDHalInfo,
+			  (DWORD *)pCallBackFlags,
+			  (LPD3DNTHAL_CALLBACKS)pD3dCallbacks,
+              (LPD3DNTHAL_GLOBALDRIVERDATA)pD3dDriverData,
+			  (PDD_D3DBUFCALLBACKS)pD3dBufferCallbacks,
+			  (LPDDSURFACEDESC)pD3dTextureFormats,
+			  (DWORD *)&NumHeaps,
+			  (VIDEOMEMORY *)pvmList,
+			  (DWORD *)&NumFourCC,
+              (DWORD *)pdwFourCC);
+
+    	
+	//SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return bStatus;
 }
 
 /*
