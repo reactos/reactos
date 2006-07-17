@@ -11,3 +11,5 @@
 #include "Ja.rc"
 #include "Hu.rc"
 #include "Es.rc"
+#include "No.rc"
+
