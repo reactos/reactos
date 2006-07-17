@@ -776,9 +776,72 @@ DdCreateSurfaceObject( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
 }
 
 
+/*
+ * @implemented
+ *
+ * GDIEntry 5
+ */
+BOOL 
+WINAPI 
+DdDeleteSurfaceObject(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
+{
+    BOOL Return = FALSE;
+
+    /* Make sure there is one */
+    if (pSurfaceLocal->hDDSurface)
+    {
+        /* Delete it */
+        Return = NtGdiDdDeleteSurfaceObject((HANDLE)pSurfaceLocal->hDDSurface);
+        pSurfaceLocal->hDDSurface = 0;
+    }
+
+    return Return;
+}
+
+/*
+ * @implemented
+ *
+ * GDIEntry 6
+ */
+BOOL 
+WINAPI 
+DdResetVisrgn(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal, 
+              HWND hWnd)
+{
+    /* Call win32k directly */
+    return NtGdiDdResetVisrgn((HANDLE) pSurfaceLocal->hDDSurface, hWnd);
+}
+
+/*
+ * @implemented
+ *
+ * GDIEntry 7
+ */
+HDC
+WINAPI
+DdGetDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
+        LPPALETTEENTRY pColorTable)
+{
+    /* Call win32k directly */
+    return NtGdiDdGetDC(pColorTable, (HANDLE) pSurfaceLocal->hDDSurface);
+}
+
+/*
+ * @implemented
+ *
+ * GDIEntry 8
+ */
+BOOL
+WINAPI
+DdReleaseDC(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
+{
+    /* Call win32k directly */
+    return NtGdiDdReleaseDC((HANDLE) pSurfaceLocal->hDDSurface);
+}
 
 /*
  * @unimplemented
+ * GDIEntry 9
  */
 HBITMAP
 STDCALL
@@ -796,63 +859,6 @@ DdCreateDIBSection(HDC hdc,
 /*
  * @implemented
  *
- * GDIEntry 5
- */
-BOOL 
-STDCALL 
-DdDeleteSurfaceObject(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
-{
-  if (!pSurfaceLocal->hDDSurface)
-  {
-    return FALSE;
-  }
-
-  return NtGdiDdDeleteSurfaceObject((HANDLE)pSurfaceLocal->hDDSurface);
-}
-
-/*
- * @implemented
- *
- * GDIEntry 6
- */
-BOOL 
-STDCALL 
-DdResetVisrgn(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal, 
-              HWND hWnd)
-{
- return NtGdiDdResetVisrgn((HANDLE) pSurfaceLocal->hDDSurface, hWnd);
-}
-
-/*
- * @implemented
- *
- * GDIEntry 7
- */
-HDC STDCALL DdGetDC( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-LPPALETTEENTRY pColorTable
-)
-{
-	return NtGdiDdGetDC(pColorTable, (HANDLE) pSurfaceLocal->hDDSurface);
-}
-
-/*
- * @implemented
- *
- * GDIEntry 8
- */
-BOOL STDCALL DdReleaseDC( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
-)
-{
- return NtGdiDdReleaseDC((HANDLE) pSurfaceLocal->hDDSurface);
-}
-
-
-
-/*
- * @implemented
- *
  * GDIEntry 10
  */
 BOOL 
@@ -864,6 +870,7 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     return NtGdiDdReenableDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
                                            pbNewMode);
 } 
+
 
 /*
  * @implemented
@@ -903,12 +910,14 @@ DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
  *
  * GDIEntry 12
  */
-VOID 
-STDCALL 
+VOID
+STDCALL
 DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
                   LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached)
 {
-  NtGdiDdUnattachSurface((HANDLE) pSurface->hDDSurface, (HANDLE) pSurfaceAttached->hDDSurface);	
+    /* Call win32k */
+    NtGdiDdUnattachSurface((HANDLE)pSurface->hDDSurface,
+                           (HANDLE)pSurfaceAttached->hDDSurface);
 }
 
 /*
@@ -965,20 +974,21 @@ DdSetGammaRamp(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
                                hdc,
                                lpGammaRamp);
 }
-
 /*
  * @implemented
  *
  * GDIEntry 16
  */
-DWORD STDCALL DdSwapTextureHandles( 
-LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
-LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
-)
-{  
-	return TRUE;
+DWORD
+WINAPI
+DdSwapTextureHandles(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
+                     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
+                     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2)
+{
+    /* Always returns success */
+    return TRUE;
 }
+
 
 
 
