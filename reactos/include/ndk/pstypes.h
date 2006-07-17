@@ -451,6 +451,15 @@ NTSTATUS
     PVOID Context
 );
 
+//
+// Lego Callback
+//
+typedef
+VOID
+(NTAPI *PLEGO_NOTIFY_ROUTINE)(
+    IN PKTHREAD Thread
+);
+
 #endif
 
 typedef NTSTATUS

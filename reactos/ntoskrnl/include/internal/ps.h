@@ -8,18 +8,6 @@ struct _EJOB;
 
 #include <internal/arch/ps.h>
 
-extern LCID PsDefaultThreadLocaleId;
-extern LCID PsDefaultSystemLocaleId;
-extern LIST_ENTRY PspReaperListHead;
-extern WORK_QUEUE_ITEM PspReaperWorkItem;
-extern BOOLEAN PspReaping;
-extern PEPROCESS PsInitialSystemProcess;
-extern PEPROCESS PsIdleProcess;
-extern LIST_ENTRY PsActiveProcessHead;
-extern FAST_MUTEX PspActiveProcessMutex;
-extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
-extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
-
 /* Top level irp definitions. */
 #define	FSRTL_FSP_TOP_LEVEL_IRP         (0x01)
 #define	FSRTL_CACHE_TOP_LEVEL_IRP       (0x02)
@@ -27,8 +15,9 @@ extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 #define	FSRTL_FAST_IO_TOP_LEVEL_IRP     (0x04)
 #define	FSRTL_MAX_TOP_LEVEL_IRP_FLAG    (0x04)
 
-#define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
-#define MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT  8
+#define PSP_MAX_CREATE_THREAD_NOTIFY            8
+#define PSP_MAX_LOAD_IMAGE_NOTIFY               8
+#define PSP_MAX_CREATE_PROCESS_NOTIFY           8
 
 VOID
 NTAPI
@@ -326,24 +315,6 @@ NTAPI
 PsInitialiseW32Call(VOID);
 
 VOID
-STDCALL
-PspRunCreateThreadNotifyRoutines(
-    PETHREAD,
-    BOOLEAN
-);
-
-VOID
-STDCALL
-PspRunCreateProcessNotifyRoutines(
-    PEPROCESS,
-    BOOLEAN
-);
-
-VOID
-STDCALL
-PspRunLegoRoutine(IN PKTHREAD Thread);
-
-VOID
 NTAPI
 INIT_FUNCTION
 PsInitJobManagment(VOID);
@@ -414,5 +385,27 @@ PspExitProcessFromJob(
     IN PEJOB Job,
     IN PEPROCESS Process
 );
+
+extern LCID PsDefaultThreadLocaleId;
+extern LCID PsDefaultSystemLocaleId;
+extern LIST_ENTRY PspReaperListHead;
+extern WORK_QUEUE_ITEM PspReaperWorkItem;
+extern BOOLEAN PspReaping;
+extern PEPROCESS PsInitialSystemProcess;
+extern PEPROCESS PsIdleProcess;
+extern LIST_ENTRY PsActiveProcessHead;
+extern FAST_MUTEX PspActiveProcessMutex;
+extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
+extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
+extern PCREATE_THREAD_NOTIFY_ROUTINE
+PspThreadNotifyRoutine[PSP_MAX_CREATE_THREAD_NOTIFY];
+extern PCREATE_PROCESS_NOTIFY_ROUTINE
+PspProcessNotifyRoutine[PSP_MAX_CREATE_PROCESS_NOTIFY];
+extern PLOAD_IMAGE_NOTIFY_ROUTINE
+PspLoadImageNotifyRoutine[PSP_MAX_LOAD_IMAGE_NOTIFY];
+extern PLEGO_NOTIFY_ROUTINE PspLegoNotifyRoutine;
+extern ULONG PspThreadNotifyRoutineCount;
+
+#include "ps_x.h"
 
 #endif /* __INCLUDE_INTERNAL_PS_H */
