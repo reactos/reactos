@@ -26,3 +26,5 @@ IDI_CPLICON ICON "resources/applet.ico"
 #include "Nl.rc"
 #include "Ru.rc"
 #include "Uk.rc"
+#include "Gr.rc"
+
