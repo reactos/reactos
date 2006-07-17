@@ -411,8 +411,6 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     POBJECT_DIRECTORY Directory;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG SkipEntries = 0;
-    ULONG NextEntry = 0;
-    ULONG CopyBytes = 0;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID LocalBuffer;
     POBJECT_DIRECTORY_INFORMATION DirectoryInfo;
@@ -423,6 +421,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     POBJECT_HEADER ObjectHeader;
     POBJECT_HEADER_NAME_INFO ObjectNameInfo;
     UNICODE_STRING Name;
+    PWSTR p;
     PAGED_CODE();
 
     /* Check if we need to do any probing */
@@ -573,19 +572,59 @@ Quickie:
     /* Make sure we got success */
     if (NT_SUCCESS(Status))
     {
-        /* We need to parse all the entries and convert absolute to relative */
-        DPRINT1("NOT FULLY IMPLEMENTED\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        /* Clear the current pointer and set it */
+        RtlZeroMemory(DirectoryInfo, sizeof(OBJECT_DIRECTORY_INFORMATION));
+        DirectoryInfo++;
 
-        /* Copy the buffer */
-        RtlMoveMemory(Buffer,
-                      LocalBuffer,
-                      (TotalLength <= BufferLength) ?
-                      TotalLength : BufferLength);
+        /* Set the buffer here now and loop entries */
+        p = (PWSTR)DirectoryInfo;
+        DirectoryInfo = LocalBuffer;
+        while (Count--)
+        {
+            /* Copy the name buffer */
+            RtlMoveMemory(p,
+                          DirectoryInfo->Name.Buffer,
+                          DirectoryInfo->Name.Length);
 
-        /* Check if the caller requested the return length and return it*/
-        if (ReturnLength) *ReturnLength = TotalLength;
+            /* Now fixup the pointers */
+            DirectoryInfo->Name.Buffer = (PVOID)((ULONG_PTR)Buffer +
+                                                 ((ULONG_PTR)p -
+                                                  (ULONG_PTR)LocalBuffer));
+
+            /* Advance in buffer and NULL-terminate */
+            p = (PVOID)((ULONG_PTR)p + DirectoryInfo->Name.Length);
+            *p++ = UNICODE_NULL;
+
+            /* Now copy the type name buffer */
+            RtlMoveMemory(p,
+                          DirectoryInfo->TypeName.Buffer,
+                          DirectoryInfo->TypeName.Length);
+
+            /* Now fixup the pointers */
+            DirectoryInfo->TypeName.Buffer = (PVOID)((ULONG_PTR)Buffer +
+                                                     ((ULONG_PTR)p -
+                                                     (ULONG_PTR)LocalBuffer));
+
+            /* Advance in buffer and NULL-terminate */
+            p = (PVOID)((ULONG_PTR)p + DirectoryInfo->TypeName.Length);
+            *p++ = UNICODE_NULL;
+
+            /* Move to the next entry */
+            DirectoryInfo++;
+        }
+
+        /* Set the key */
+        *Context = CurrentEntry;
     }
+
+    /* Copy the buffer */
+    RtlMoveMemory(Buffer,
+                  LocalBuffer,
+                  (TotalLength <= BufferLength) ?
+                  TotalLength : BufferLength);
+
+    /* Check if the caller requested the return length and return it*/
+    if (ReturnLength) *ReturnLength = TotalLength;
 
     /* Dereference the directory and free our buffer */
     ObDereferenceObject(Directory);
