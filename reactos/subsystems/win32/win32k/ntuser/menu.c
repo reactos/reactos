@@ -277,6 +277,7 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
 {
    if(Menu)
    {
+      PWINDOW_OBJECT Window;
       PWINSTATION_OBJECT WindowStation;
       NTSTATUS Status;
 
@@ -296,6 +297,15 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
                                          NULL);
       if(NT_SUCCESS(Status))
       {
+         if (Menu->MenuInfo.Wnd)
+         {
+            Window = UserGetWindowObject(Menu->MenuInfo.Wnd);
+            if (Window)
+            {
+               Window->IDMenu = 0;;
+            }
+
+         }
          ObmDeleteObject(Menu->MenuInfo.Self, otMenu);
          ObDereferenceObject(WindowStation);
          return TRUE;
