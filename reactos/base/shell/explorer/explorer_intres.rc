@@ -218,6 +218,7 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.ma
 #include "explorer-uk.rc"
 #include "explorer-it.rc"
 #include "explorer-nl.rc"
+#include "explorer-gr.rc"
 
 #ifndef __WINDRES__
 #include "explorer-cn.rc"
