@@ -894,6 +894,7 @@ PsDereferenceImpersonationToken@4=PsDereferencePrimaryToken@4
 PsDereferencePrimaryToken@4
 PsDisableImpersonation@8
 PsEstablishWin32Callouts@4
+PsGetContextThread@12
 PsGetCurrentProcess@0=KeGetCurrentProcess@0
 PsGetCurrentProcessId@0
 PsGetCurrentProcessSessionId@0
@@ -953,6 +954,7 @@ PsReturnProcessNonPagedPoolQuota@8
 PsReturnProcessPagedPoolQuota@8
 PsRevertToSelf@0
 PsRevertThreadToSelf@4
+PsSetContextThread@12
 PsSetCreateProcessNotifyRoutine@8
 PsSetCreateThreadNotifyRoutine@4
 PsSetJobUIRestrictionsClass@8
