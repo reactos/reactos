@@ -6,6 +6,8 @@
 
 #define MAX_PATH 260
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 typedef enum
 {
 	dsStopped,
@@ -56,6 +58,7 @@ typedef struct _CLASS_DEVICE_EXTENSION
 	BOOLEAN ReadIsPending;
 	ULONG InputCount;
 	PKEYBOARD_INPUT_DATA PortData;
+	LPCWSTR DeviceName;
 } CLASS_DEVICE_EXTENSION, *PCLASS_DEVICE_EXTENSION;
 
 /* misc.c */
