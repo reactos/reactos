@@ -65,7 +65,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Створити"
         BEGIN
-            MENUITEM "Кл&юч",                         ID_EDIT_NEW_KEY
+            MENUITEM "Роз&діл",                       ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Рядкове значення",             ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двійкове значення",            ID_EDIT_NEW_BINARYVALUE
@@ -121,7 +121,7 @@ BEGIN
   BEGIN
         POPUP "&Створити"
         BEGIN
-            MENUITEM "Кл&юч",                       ID_EDIT_NEW_KEY
+            MENUITEM "Роз&діл",                     ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Рядкове значення",           ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двійкове значення",          ID_EDIT_NEW_BINARYVALUE
