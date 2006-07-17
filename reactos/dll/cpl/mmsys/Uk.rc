@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/mmsys/Uk.rc
  * PURPOSE:     Ukraianian Language File for Multimedia Control Panel Applet
- * PROGRAMMERS: temarez
+ * PROGRAMMERS: Artem Reznikov
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_NEUTRAL
@@ -18,7 +18,7 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_CPLNAME "Звукові і Аудіо Пристрої"
+    IDS_CPLNAME "Звукові і аудіо пристрої"
     IDS_CPLDESCRIPTION "Зміна звукових схем вашого комп'ютера, настроювання колонок і записуючих пристроїв."
 END
 
