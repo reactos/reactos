@@ -63,6 +63,8 @@ typedef struct _PDEV
 #endif
 
    /* DirectX Support */   
+   DWORD iDitherFormat;
+   ULONG MemHeight;
    BOOL bDDInitialized;   
    DDPIXELFORMAT ddpfDisplay;
    DDHALINFO   dxHalInfo;

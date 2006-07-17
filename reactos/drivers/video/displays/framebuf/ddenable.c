@@ -51,16 +51,17 @@ DrvEnableDirectDraw(
      ppdev->ddpfDisplay.dwGBitMask = ppdev->GreenMask;
      ppdev->ddpfDisplay.dwBBitMask = ppdev->BlueMask;
 
-	 switch(ppdev->BitsPerPixel)
+     ppdev->ddpfDisplay.dwRGBBitCount=ppdev->BitsPerPixel;
+	 ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0;
+	 ppdev->ddpfDisplay.dwFlags = DDPF_RGB;
+
+	 switch(ppdev->iDitherFormat)
 	 {
-		case BMF_8BPP:
-             ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0;
-             ppdev->ddpfDisplay.dwRGBBitCount=8;
-             ppdev->ddpfDisplay.dwFlags = DDPF_RGB | DDPF_PALETTEINDEXED8;
+		case BMF_8BPP:             
+             ppdev->ddpfDisplay.dwFlags  |= DDPF_PALETTEINDEXED8;
              break;
         
-        case BMF_16BPP:
-             ppdev->ddpfDisplay.dwRGBBitCount=16;
+        case BMF_16BPP:             
              switch(ppdev->RedMask)
              {
                 case 0x7C00:
@@ -68,28 +69,23 @@ DrvEnableDirectDraw(
                      break;
 
                 default:
-                     ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0;
+                     break;
 			 }        
              break;
 
-        case BMF_24BPP:
-             ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0;
-             ppdev->ddpfDisplay.dwRGBBitCount=24;
+        case BMF_24BPP:             
              break;
 
         case BMF_32BPP:
-             ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0xff000000;
-             ppdev->ddpfDisplay.dwRGBBitCount=32;
+             ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0xff000000;             
              break;
+
         default:
-           /* FIXME unknown pixelformat */
+           /* FIXME unknown pixel bits */
+			ppdev->ddpfDisplay.dwRGBBitCount=0;
             break;
 	 }
-
-   
-    //InitDDHAL(ppdev);
-
-
+     
 	 if (pCallBacks !=NULL)
 	 {
 		 memset(pCallBacks,0,sizeof(DD_CALLBACKS));
@@ -138,6 +134,52 @@ DrvGetDirectDrawInfo(
   OUT DWORD  *pdwNumFourCCCodes,
   OUT DWORD  *pdwFourCC)
 {	
-	return FALSE;
+	PPDEV ppdev = (PPDEV)dhpdev;
+
+	/* rest some data */
+    *pdwNumFourCCCodes = 0;
+    *pdwNumHeaps = 0;
+
+	 
+
+	/* 
+	   check see if pvmList and pdwFourCC are second call 
+	   or frist. Secon call  we fill in pHalInfo info 
+    */
+
+	if(!(pvmList && pdwFourCC)) 
+	{
+
+		/* Calc how much memmory is left on the video cards memmory */
+		pHalInfo->ddCaps.dwVidMemTotal = (ppdev->MemHeight - ppdev->ScreenHeight) * ppdev->ScreenDelta;
+
+        /* fill in some basic info that we need */
+        pHalInfo->vmiData.pvPrimary                 = ppdev->ScreenPtr;
+        pHalInfo->vmiData.fpPrimary                 = 0;
+        pHalInfo->vmiData.dwDisplayWidth            = ppdev->ScreenWidth;
+        pHalInfo->vmiData.dwDisplayHeight           = ppdev->ScreenHeight;
+        pHalInfo->vmiData.lDisplayPitch             = ppdev->ScreenDelta;
+        pHalInfo->vmiData.ddpfDisplay.dwSize        = sizeof(DDPIXELFORMAT);
+        pHalInfo->vmiData.ddpfDisplay.dwFlags       = DDPF_RGB;
+        pHalInfo->vmiData.ddpfDisplay.dwRGBBitCount = ppdev->BitsPerPixel;
+		pHalInfo->vmiData.ddpfDisplay.dwRBitMask    = ppdev->RedMask;
+        pHalInfo->vmiData.ddpfDisplay.dwGBitMask    = ppdev->GreenMask;
+        pHalInfo->vmiData.ddpfDisplay.dwBBitMask    = ppdev->BlueMask;	
+        pHalInfo->vmiData.dwOffscreenAlign = 4;
+        pHalInfo->vmiData.dwZBufferAlign = 4;
+        pHalInfo->vmiData.dwTextureAlign = 4;
+
+		if ( ppdev->BitsPerPixel == 8 ) 
+		{        
+            pHalInfo->vmiData.ddpfDisplay.dwFlags |= DDPF_PALETTEINDEXED8;		
+        } 
+
+		
+		
+		
+
+	}
+
+	return TRUE;
 }
 
