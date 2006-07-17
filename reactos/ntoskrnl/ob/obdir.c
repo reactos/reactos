@@ -551,6 +551,9 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
                 DirectoryInfo->TypeName.Buffer = ObjectHeader->
                                                  Type->Name.Buffer;
 
+                /* Set success */
+                Status = STATUS_SUCCESS;
+
                 /* Increase statistics */
                 TotalLength += Length;
                 DirectoryInfo++;
@@ -562,10 +565,10 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
                 /* Increase the key by one */
                 SkipEntries++;
             }
-        }
 
-        /* Move to the next directory */
-        Entry = Entry->ChainLink;
+            /* Move to the next directory */
+            Entry = Entry->ChainLink;
+        }
     }
 
 Quickie:
