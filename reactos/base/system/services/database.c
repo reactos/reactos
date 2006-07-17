@@ -470,12 +470,12 @@ ScmCheckDriver(PSERVICE Service)
         if (!NT_SUCCESS(Status))
             break;
 
-        DPRINT("Comparing: '%S'  '%wZ'\n", Service->lpServiceName, &DirInfo->ObjectName);
+        DPRINT("Comparing: '%S'  '%wZ'\n", Service->lpServiceName, &DirInfo->Name);
 
-        if (_wcsicmp(Service->lpServiceName, DirInfo->ObjectName.Buffer) == 0)
+        if (_wcsicmp(Service->lpServiceName, DirInfo->Name.Buffer) == 0)
         {
             DPRINT("Found: '%S'  '%wZ'\n",
-                   Service->lpServiceName, &DirInfo->ObjectName);
+                   Service->lpServiceName, &DirInfo->Name);
 
             /* Mark service as 'running' */
             Service->Status.dwCurrentState = SERVICE_RUNNING;

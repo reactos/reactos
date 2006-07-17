@@ -1235,10 +1235,10 @@ BuildWindowStationNameList(
     */
    ReturnLength = sizeof(DWORD);
    EntryCount = 0;
-   for (DirEntry = (POBJECT_DIRECTORY_INFORMATION) Buffer; 0 != DirEntry->ObjectName.Length;
+   for (DirEntry = (POBJECT_DIRECTORY_INFORMATION) Buffer; 0 != DirEntry->Name.Length;
          DirEntry++)
    {
-      ReturnLength += DirEntry->ObjectName.Length + sizeof(WCHAR);
+      ReturnLength += DirEntry->Name.Length + sizeof(WCHAR);
       EntryCount++;
    }
    DPRINT("Required size: %d Entry count: %d\n", ReturnLength, EntryCount);
@@ -1282,10 +1282,10 @@ BuildWindowStationNameList(
    lpBuffer = (PVOID) ((PCHAR) lpBuffer + sizeof(DWORD));
 
    NullWchar = L'\0';
-   for (DirEntry = (POBJECT_DIRECTORY_INFORMATION) Buffer; 0 != DirEntry->ObjectName.Length;
+   for (DirEntry = (POBJECT_DIRECTORY_INFORMATION) Buffer; 0 != DirEntry->Name.Length;
          DirEntry++)
    {
-      Status = MmCopyToCaller(lpBuffer, DirEntry->ObjectName.Buffer, DirEntry->ObjectName.Length);
+      Status = MmCopyToCaller(lpBuffer, DirEntry->Name.Buffer, DirEntry->Name.Length);
       if (! NT_SUCCESS(Status))
       {
          if (Buffer != InitialBuffer)
@@ -1294,7 +1294,7 @@ BuildWindowStationNameList(
          }
          return Status;
       }
-      lpBuffer = (PVOID) ((PCHAR) lpBuffer + DirEntry->ObjectName.Length);
+      lpBuffer = (PVOID) ((PCHAR) lpBuffer + DirEntry->Name.Length);
       Status = MmCopyToCaller(lpBuffer, &NullWchar, sizeof(WCHAR));
       if (! NT_SUCCESS(Status))
       {

@@ -513,12 +513,12 @@ xHalpGetRDiskCount(VOID)
        if (NT_SUCCESS(Status))
          {
            Count = 0;
-           while (DirectoryInfo[Count].ObjectName.Buffer)
+           while (DirectoryInfo[Count].Name.Buffer)
              {
                DPRINT("Count %x\n", Count);
-               DirectoryInfo[Count].ObjectName.Buffer[DirectoryInfo[Count].ObjectName.Length / sizeof(WCHAR)] = 0;
-               ArcNameBuffer = DirectoryInfo[Count].ObjectName.Buffer;
-               if (DirectoryInfo[Count].ObjectName.Length >= sizeof(L"multi(0)disk(0)rdisk(0)") - sizeof(WCHAR) && 
+               DirectoryInfo[Count].Name.Buffer[DirectoryInfo[Count].Name.Length / sizeof(WCHAR)] = 0;
+               ArcNameBuffer = DirectoryInfo[Count].Name.Buffer;
+               if (DirectoryInfo[Count].Name.Length >= sizeof(L"multi(0)disk(0)rdisk(0)") - sizeof(WCHAR) && 
                    !_wcsnicmp(ArcNameBuffer, L"multi(0)disk(0)rdisk(", (sizeof(L"multi(0)disk(0)rdisk(") - sizeof(WCHAR)) / sizeof(WCHAR)))
                  {
                    DPRINT("%S\n", ArcNameBuffer);
