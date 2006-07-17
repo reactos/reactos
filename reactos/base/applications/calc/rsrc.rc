@@ -36,5 +36,6 @@ IDI_CALCICON ICON "calculator.ico"
 #include "Sv.rc"
 #include "Hu.rc"
 #include "Uk.rc"
+#include "Gr.rc"
 
 LANGUAGE LANG_NEUTRAL,SUBLANG_NEUTRAL
