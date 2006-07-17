@@ -1,11 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ps/win32.c
- * PURPOSE:         win32k support
- *
- * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
+ * PURPOSE:         Process Manager: Win32K Initialization and Support
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ****************************************************************/
@@ -22,43 +20,7 @@ extern PKWIN32_PARSEMETHOD_CALLOUT ExpWindowStationObjectParse;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete;
 extern PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete;
 
-#ifndef ALEX_CB_REWRITE
-typedef struct _NTW32CALL_SAVED_STATE
-{
-  ULONG_PTR SavedStackLimit;
-  PVOID SavedStackBase;
-  PVOID SavedInitialStack;
-  PVOID CallerResult;
-  PULONG CallerResultLength;
-  PNTSTATUS CallbackStatus;
-  PKTRAP_FRAME SavedTrapFrame;
-  PVOID SavedCallbackStack;
-  PVOID SavedExceptionStack;
-} NTW32CALL_SAVED_STATE, *PNTW32CALL_SAVED_STATE;
-#endif
-
-PVOID
-STDCALL
-KeSwitchKernelStack(
-    IN PVOID StackBase,
-    IN PVOID StackLimit
-);
-
-/* FUNCTIONS ***************************************************************/
-
-/*
- * @implemented
- */
-VOID 
-STDCALL
-PsEstablishWin32Callouts(PWIN32_CALLOUTS_FPNS CalloutData)
-{
-    PspW32ProcessCallout = CalloutData->ProcessCallout;
-    PspW32ThreadCallout = CalloutData->ThreadCallout;
-    ExpWindowStationObjectParse = CalloutData->WindowStationParseProcedure;
-    ExpWindowStationObjectDelete = CalloutData->WindowStationDeleteProcedure;
-    ExpDesktopObjectDelete = CalloutData->DesktopDeleteProcedure;
-}
+/* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
 NTAPI
@@ -134,6 +96,23 @@ PsConvertToGuiThread(VOID)
     return Status;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+PsEstablishWin32Callouts(IN PWIN32_CALLOUTS_FPNS CalloutData)
+{
+    /* Setup the callback pointers */
+    PspW32ProcessCallout = CalloutData->ProcessCallout;
+    PspW32ThreadCallout = CalloutData->ThreadCallout;
+    ExpWindowStationObjectParse = CalloutData->WindowStationParseProcedure;
+    ExpWindowStationObjectDelete = CalloutData->WindowStationDeleteProcedure;
+    ExpDesktopObjectDelete = CalloutData->DesktopDeleteProcedure;
+}
+
 NTSTATUS
 STDCALL
 NtW32Call(IN ULONG RoutineIndex,
@@ -145,24 +124,23 @@ NtW32Call(IN ULONG RoutineIndex,
     PVOID RetResult;
     ULONG RetResultLength;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    DPRINT("NtW32Call(RoutineIndex %d, Argument %p, ArgumentLength %d)\n",
-            RoutineIndex, Argument, ArgumentLength);
-
-    /* must not be called as KernelMode! */
     ASSERT(KeGetPreviousMode() != KernelMode);
 
+    /* Enter SEH for probing */
     _SEH_TRY
     {
+        /* Probe arguments */
         ProbeForWritePointer(Result);
         ProbeForWriteUlong(ResultLength);
     }
     _SEH_HANDLE
     {
+        /* Get exception code */
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
 
+    /* Make sure we got success */
     if (NT_SUCCESS(Status))
     {
         /* Call kernel function */
@@ -171,16 +149,18 @@ NtW32Call(IN ULONG RoutineIndex,
                                     ArgumentLength,
                                     &RetResult,
                                     &RetResultLength);
-
         if (NT_SUCCESS(Status))
         {
+            /* Enter SEH for write back */
             _SEH_TRY
             {
+                /* Return results to user mode */
                 *Result = RetResult;
                 *ResultLength = RetResultLength;
             }
             _SEH_HANDLE
             {
+                /* Get the exception code */
                 Status = _SEH_GetExceptionCode();
             }
             _SEH_END;

@@ -310,6 +310,13 @@ KeStartThread(
     IN OUT PKTHREAD Thread
 );
 
+PVOID
+NTAPI
+KeSwitchKernelStack(
+    IN PVOID StackBase,
+    IN PVOID StackLimit
+);
+
 VOID
 STDCALL
 KeRundownThread(VOID);
