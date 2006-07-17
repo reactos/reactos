@@ -10,3 +10,5 @@
 
 #include "clb_En.rc"
 #include "clb_Ja.rc"
+#include "clb_No.rc"
+
