@@ -262,9 +262,9 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Оберіть найбільш зручний для вас інтерфейс провідника:",
                     IDC_STATIC,7,7,160,8
-    CONTROL         "&MDI (багатодокументний інтерфейс)",IDC_MDI,"Button",
+    CONTROL         "&MDI (багатодокументний)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
-    CONTROL         "&SDI (однодокументний інтерфейс)",IDC_SDI,"Button",
+    CONTROL         "&SDI (однодокументний)",IDC_SDI,"Button",
                     BS_AUTORADIOBUTTON,7,62,118,10
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
