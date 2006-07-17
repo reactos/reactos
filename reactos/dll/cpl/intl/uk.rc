@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/intl/Uk.rc
  * PURPOSE:     Ukraianian Language File for International Control Panel Applet
- * PROGRAMMERS: temarez
+ * PROGRAMMERS: Artem Reznikov
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_NEUTRAL
