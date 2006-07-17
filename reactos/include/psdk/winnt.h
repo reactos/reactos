@@ -3814,6 +3814,19 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 	return OldBit;
 }
 
+static __inline__ BOOLEAN
+BitScanReverse(OUT ULONG *Index,
+               IN ULONG Mask)
+{
+	LONG OldBit;
+	__asm__ __volatile__("bsrl %1,%2\n\t"
+	                     "sbbl %0,%0\n\t"
+		             :"=r" (OldBit),"=m" (*Index)
+		             :"Ir" (Mask)
+			     : "memory");
+	return OldBit;
+}
+
 #endif
 
 #define YieldProcessor() __asm__ __volatile__("pause");

@@ -15,7 +15,6 @@
  *  - MAJOR: Use Guarded Mutex instead of Fast Mutex for Active Process Locks.
  *  - Generate process cookie for user-more thread.
  *  - Add security calls where necessary.
- *  - KeInit/StartThread for better isolation of code
  */
 
 /* INCLUDES ****************************************************************/
@@ -56,7 +55,7 @@ PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
     {
         /* Remember that we're dead */
         DeadThread = TRUE;
-}
+    }
     else
     {
         /* Get the Locale ID and save Preferred Proc */
@@ -157,12 +156,11 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     HANDLE hThread;
     PEPROCESS Process;
     PETHREAD Thread;
-    PTEB TebBase;
+    PTEB TebBase = NULL;
     KIRQL OldIrql;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     HANDLE_TABLE_ENTRY CidEntry;
-    ULONG_PTR KernelStack;
     PAGED_CODE();
 
     /* If we were called from PsCreateSystemThread, then we're kernel mode */
@@ -260,9 +258,6 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Acquire rundown protection */
     ExAcquireRundownProtection(&Process->RundownProtect);
 
-    /* Allocate Stack for non-GUI Thread */
-    KernelStack = (ULONG_PTR)MmCreateKernelStack(FALSE) + KERNEL_STACK_SIZE;
-
     /* Now let the kernel initialize the context */
     if (ThreadContext)
     {
@@ -281,14 +276,14 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         Thread->Win32StartAddress = (PVOID)ThreadContext->Eax;
 
         /* Let the kernel intialize the Thread */
-        KeInitializeThread(&Process->Pcb,
-                           &Thread->Tcb,
-                           PspUserThreadStartup,
-                           NULL,
-                           NULL,
-                           ThreadContext,
-                           TebBase,
-                           (PVOID)KernelStack);
+        Status = KeInitThread(&Thread->Tcb,
+                              NULL,
+                              PspUserThreadStartup,
+                              NULL,
+                              Thread->StartAddress,
+                              ThreadContext,
+                              TebBase,
+                              &Process->Pcb);
     }
     else
     {
@@ -297,15 +292,29 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_SYSTEM_THREAD_BIT);
 
         /* Let the kernel intialize the Thread */
-        KeInitializeThread(&Process->Pcb,
-                           &Thread->Tcb,
-                           PspSystemThreadStartup,
-                           StartRoutine,
-                           StartContext,
-                           NULL,
-                           NULL,
-                           (PVOID)KernelStack);
+        Status = KeInitThread(&Thread->Tcb,
+                              NULL,
+                              PspSystemThreadStartup,
+                              StartRoutine,
+                              StartContext,
+                              NULL,
+                              NULL,
+                              &Process->Pcb);
     }
+
+    /* Check if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Delete the TEB if we had done */
+        if (TebBase) MmDeleteTeb(Process, TebBase);
+
+        /* Release rundown and dereference */
+        ExReleaseRundownProtection(&Process->RundownProtect);
+        ObDereferenceObject(Thread);
+        return Status;
+    }
+
+    /* FIXME: Acquire exclusive pushlock */
 
     /*
      * Insert the Thread into the Process's Thread List
@@ -314,6 +323,11 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
      */
     InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
     Process->ActiveThreads++;
+
+    /* Start the thread */
+    KeStartThread(&Thread->Tcb);
+
+    /* FIXME: Wake pushlock */
 
     /* Release rundown */
     ExReleaseRundownProtection(&Process->RundownProtect);
@@ -326,10 +340,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     PspRunCreateThreadNotifyRoutines(Thread, TRUE);
 
     /* Suspend the Thread if we have to */
-    if (CreateSuspended)
-    {
-        KeSuspendThread(&Thread->Tcb);
-    }
+    if (CreateSuspended) KeSuspendThread(&Thread->Tcb);
 
     /* Check if we were already terminated */
     if (Thread->Terminated)

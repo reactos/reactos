@@ -16,6 +16,10 @@
 
 /* GLOBALS *******************************************************************/
 
+KNODE KiNode0;
+PKNODE KeNodeBlock[1];
+UCHAR KeNumberNodes = 1;
+UCHAR KeProcessNodeSeed;
 ULONG KiPcrInitDone = 0;
 static ULONG PcrsAllocated = 0;
 static ULONG Ke386CpuidFlags2, Ke386CpuidExFlags, Ke386CpuidExMisc;
@@ -340,6 +344,10 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 
    KeActiveProcessors |= 1 << 0;
 
+    /* Set Node Data */
+    KeNodeBlock[0] = &KiNode0;
+    KPCR->PrcbData.ParentNode = KeNodeBlock[0];
+    KeNodeBlock[0]->ProcessorMask = KPCR->PrcbData.SetMember;
 
    if (KPCR->PrcbData.FeatureBits & X86_FEATURE_PGE)
    {

@@ -44,6 +44,9 @@ extern ULONG_PTR KERNEL_BASE;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
+extern PKNODE KeNodeBlock[1];
+extern UCHAR KeNumberNodes;
+extern UCHAR KeProcessNodeSeed;
 
 /* MACROS *************************************************************************/
 
@@ -67,6 +70,8 @@ extern ULONG KeI386FxsrPresent;
 #define KeAcquireDispatcherDatabaseLockAtDpcLevel()
 #define KeReleaseDispatcherDatabaseLockFromDpcLevel()
 #endif
+
+#define AFFINITY_MASK(Id) KiMask32Array[Id]
 
 /* The following macro initializes a dispatcher object's header */
 #define KeInitializeDispatcherHeader(Header, t, s, State)                   \
@@ -188,6 +193,13 @@ KiIpiSendRequest(
 
 /* next file ***************************************************************/
 
+UCHAR
+NTAPI
+KeFindNextRightSetAffinity(
+    IN UCHAR Number,
+    IN ULONG Set
+);
+
 VOID 
 STDCALL
 DbgBreakPointNoBugCheck(VOID);
@@ -267,16 +279,35 @@ KiExpireTimers(
 );
 
 VOID
-STDCALL
+NTAPI
 KeInitializeThread(
-    struct _KPROCESS* Process,
-    PKTHREAD Thread,
-    PKSYSTEM_ROUTINE SystemRoutine,
-    PKSTART_ROUTINE StartRoutine,
-    PVOID StartContext,
-    PCONTEXT Context,
-    PVOID Teb,
-    PVOID KernelStack
+    IN PKPROCESS Process,
+    IN OUT PKTHREAD Thread,
+    IN PKSYSTEM_ROUTINE SystemRoutine,
+    IN PKSTART_ROUTINE StartRoutine,
+    IN PVOID StartContext,
+    IN PCONTEXT Context,
+    IN PVOID Teb,
+    IN PVOID KernelStack
+);
+
+NTSTATUS
+NTAPI
+KeInitThread(
+    IN OUT PKTHREAD Thread,
+    IN PVOID KernelStack,
+    IN PKSYSTEM_ROUTINE SystemRoutine,
+    IN PKSTART_ROUTINE StartRoutine,
+    IN PVOID StartContext,
+    IN PCONTEXT Context,
+    IN PVOID Teb,
+    IN PKPROCESS Process
+);
+
+VOID
+NTAPI
+KeStartThread(
+    IN OUT PKTHREAD Thread
 );
 
 VOID

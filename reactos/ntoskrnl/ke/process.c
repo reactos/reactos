@@ -113,13 +113,14 @@ KiAttachProcess(PKTHREAD Thread,
 
 VOID
 NTAPI
-KeInitializeProcess(PKPROCESS Process,
-                    KPRIORITY Priority,
-                    KAFFINITY Affinity,
-                    LARGE_INTEGER DirectoryTableBase)
+KeInitializeProcess(IN OUT PKPROCESS Process,
+                    IN KPRIORITY Priority,
+                    IN KAFFINITY Affinity,
+                    IN LARGE_INTEGER DirectoryTableBase)
 {
-    DPRINT("KeInitializeProcess. Process: %x, DirectoryTableBase: %x\n",
-            Process, DirectoryTableBase);
+    ULONG i = 0;
+    UCHAR IdealNode = 0;
+    PKNODE Node;
 
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Process->Header,
@@ -127,19 +128,58 @@ KeInitializeProcess(PKPROCESS Process,
                                  sizeof(KPROCESS),
                                  FALSE);
 
-    /* Initialize Scheduler Data, Disable Alignment Faults and Set the PDE */
+    /* Initialize Scheduler Data, Alignment Faults and Set the PDE */
     Process->Affinity = Affinity;
-    Process->BasePriority = Priority;
+    Process->BasePriority = (CHAR)Priority;
     Process->QuantumReset = 6;
     Process->DirectoryTableBase = DirectoryTableBase;
     Process->AutoAlignment = TRUE;
     Process->IopmOffset = 0xFFFF;
+
+    /* Initialize the lists */
+    InitializeListHead(&Process->ThreadListHead);
+    InitializeListHead(&Process->ProfileListHead);
+    InitializeListHead(&Process->ReadyListHead);
+
+    /* Initialize the current State */
     Process->State = ProcessInMemory;
 
-    /* Initialize the Thread List */
-    InitializeListHead(&Process->ThreadListHead);
-    KeInitializeSpinLock(&Process->ProcessLock);
-    DPRINT("The Process has now been initalized with the Kernel\n");
+    /* Check how many Nodes there are on the system */
+    if (KeNumberNodes > 1)
+    {
+        /* Set the new seed */
+        KeProcessNodeSeed = (KeProcessNodeSeed + 1) / KeNumberNodes;
+        IdealNode = KeProcessNodeSeed;
+
+        /* Loop every node */
+        do
+        {
+            /* Check if the affinity matches */
+            if (KeNodeBlock[IdealNode]->ProcessorMask != Affinity) break;
+
+            /* No match, try next Ideal Node and increase node loop index */
+            IdealNode++;
+            i++;
+
+            /* Check if the Ideal Node is beyond the total number of nodes */
+            if (IdealNode >= KeNumberNodes)
+            {
+                /* Normalize the Ideal Node */
+                IdealNode -= KeNumberNodes;
+            }
+        } while (i < KeNumberNodes);
+    }
+
+    /* Set the ideal node and get the ideal node block */
+    Process->IdealNode = IdealNode;
+    Node = KeNodeBlock[IdealNode];
+    ASSERT(Node->ProcessorMask & Affinity);
+
+    /* Find the matching affinity set to calculate the thread seed */
+    Affinity &= Node->ProcessorMask;
+    Process->ThreadSeed = KeFindNextRightSetAffinity(Node->Seed,
+                                                     (ULONG)Affinity);
+    Node->Seed = Process->ThreadSeed;
 }
 
 ULONG
