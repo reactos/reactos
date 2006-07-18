@@ -129,6 +129,7 @@
 			<file>fmutex.c</file>
 			<file>handle.c</file>
 			<file>init.c</file>
+			<file>locale.c</file>
 			<file>lookas.c</file>
 			<file>mutant.c</file>
 			<file>power.c</file>
@@ -288,7 +289,6 @@
 			<file>idle.c</file>
 			<file>job.c</file>
 			<file>kill.c</file>
-			<file>locale.c</file>
 			<file>notify.c</file>
 			<file>process.c</file>
 			<file>psmgr.c</file>

@@ -653,9 +653,6 @@ ExpInitializeExecutive(VOID)
     /* Load the System DLL and its Entrypoints */
     PsLocateSystemDll();
 
-    /* Initialize the Default Locale */
-    PiInitDefaultLocale();
-
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
     InitSystemSharedUserPage ((PCHAR)KeLoaderBlock.CommandLine);
 

@@ -21,10 +21,6 @@ struct _EJOB;
 
 VOID
 NTAPI
-PiInitDefaultLocale(VOID);
-
-VOID
-NTAPI
 PiInitProcessManager(VOID);
 
 VOID
