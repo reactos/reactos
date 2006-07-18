@@ -55,6 +55,8 @@ DrvEnableDirectDraw(
 	 ppdev->ddpfDisplay.dwRGBAlphaBitMask = 0;
 	 ppdev->ddpfDisplay.dwFlags = DDPF_RGB;
 
+	 ppdev->pvmList = NULL;
+
 	 switch(ppdev->iDitherFormat)
 	 {
 		case BMF_8BPP:             
@@ -135,8 +137,10 @@ DrvGetDirectDrawInfo(
   OUT DWORD  *pdwFourCC)
 {	
 	PPDEV ppdev = (PPDEV)dhpdev;
-	int i;
-
+	LONG i;
+	DWORD heap = 1; /* we always alloc one heap */
+	BOOL bDDrawHeap = FALSE;
+	
 	if  (ppdev == NULL)
         return FALSE;
 
@@ -152,11 +156,21 @@ DrvGetDirectDrawInfo(
 	
 	if (pdwNumFourCCCodes == NULL)
 		return FALSE;
-	   
-	/* rest some data */
+	  
+	/*  Setup heap */	
+	if ( (ppdev->ScreenWidth < ppdev->MemWidth) || (ppdev->ScreenHeight < ppdev->MemHeight))
+    {   
+       bDDrawHeap = TRUE;
+       heap++;
+    }
+		
+    ppdev->dwHeap = heap;
+    *pdwNumHeaps  = heap;
+
+	/* We do not support other fourcc */ 
     *pdwNumFourCCCodes = 0;
-    *pdwNumHeaps = 0;
-	 
+
+	    	 
 	/* 
 	   check see if pvmList and pdwFourCC are frist call 
 	   or frist. Secon call  we fill in pHalInfo info 
@@ -218,8 +232,28 @@ DrvGetDirectDrawInfo(
         }
 	}
 
-	/* Now fix the memory alloc and other stuff */ 
-	
+	/* Now build pvmList info */ 		
+	if(pvmList) 
+	{
+		ppdev->pvmList = pvmList;
+
+		if ( bDDrawHeap == TRUE)
+		{
+			pvmList->dwFlags        = VIDMEM_ISLINEAR ;
+            pvmList->fpStart        = ppdev->ScreenHeight * ppdev->ScreenDelta;
+            pvmList->fpEnd          = ppdev->MemHeight * ppdev->ScreenDelta - 1;			
+			pvmList->ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+			pvmList++;
+		}
+
+		pvmList->fpStart = 0;
+		pvmList->fpEnd = (ppdev->MemHeight * ppdev->ScreenDelta)  - 1;
+		pvmList->dwFlags = VIDMEM_ISNONLOCAL | VIDMEM_ISLINEAR | VIDMEM_ISWC;
+		pvmList->ddsCaps.dwCaps =  DDSCAPS_FRONTBUFFER | DDSCAPS_BACKBUFFER ;
+		pvmList->ddsCapsAlt.dwCaps = DDSCAPS_FRONTBUFFER | DDSCAPS_BACKBUFFER;                                     
+
+		pvmList = ppdev->pvmList;
+	}
 
 	return TRUE;
 }

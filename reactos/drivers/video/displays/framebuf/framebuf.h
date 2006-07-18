@@ -65,9 +65,12 @@ typedef struct _PDEV
    /* DirectX Support */   
    DWORD iDitherFormat;
    ULONG MemHeight;
+   ULONG MemWidth;
+   DWORD dwHeap;
+   VIDEOMEMORY* pvmList; 
    BOOL bDDInitialized;   
    DDPIXELFORMAT ddpfDisplay;
-   DDHALINFO   dxHalInfo;
+   DDHALINFO   dxHalInfo;    
 } PDEV, *PPDEV;
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
