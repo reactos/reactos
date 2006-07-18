@@ -71,6 +71,7 @@ ExTimerTest()
     ok(Status == STATUS_SUCCESS, "ZwOpenTimer failed with Status=0x%08lX", Status);
 
     // Set the timer, to some rather high value so it doesn't expire
+    DPRINT("Set timer 1\n");
     DueTime.LowPart = -10000;
     DueTime.HighPart = -10;
     PreviousState = TRUE;
@@ -85,6 +86,7 @@ ExTimerTest()
     ok(CurrentState == FALSE, "Incorrect CurrentState returned when canceling the timer");
 
     // Set the timer to some small value, because we'll wait for it to expire
+    DPRINT("Set timer 2\n");
     DueTime.LowPart = -100;
     DueTime.HighPart = -1;
     PreviousState = TRUE;
@@ -93,16 +95,19 @@ ExTimerTest()
     ok(PreviousState == FALSE, "Incorrect PreviousState returned when setting the timer");
 
     // Wait until it expires
+    DPRINT("Wait till timer expires\n");
     Status = ZwWaitForSingleObject(HandleOpened, FALSE, NULL);
     ok(Status == STATUS_SUCCESS, "ZwWaitForSingleObject failed with Status=0x%08lX", Status);
 
     // And cancel it
+    DPRINT("Cancel it\n");
     CurrentState = FALSE;
     Status = ZwCancelTimer(HandleOpened, &CurrentState);
     ok(Status == STATUS_SUCCESS, "ZwCancelTimer failed with Status=0x%08lX", Status);
     ok(CurrentState == TRUE, "Incorrect CurrentState returned when setting the timer");
 
     // Test it with APC: Set, Cancel, check if APC has been called
+    DPRINT("Set timer with Apc (3)\n");
     ApcCount = 0;
     DueTime.LowPart = -10000;
     DueTime.HighPart = -10;
@@ -114,6 +119,7 @@ ExTimerTest()
     ok(Status == STATUS_SUCCESS, "ZwSetTimer failed with Status=0x%08lX", Status);
     ok(PreviousState == TRUE, "Incorrect PreviousState returned when setting the timer");
 
+    DPRINT("Cancel it\n");
     CurrentState = TRUE;
     Status = ZwCancelTimer(HandleOpened, &CurrentState);
     ok(Status == STATUS_SUCCESS, "ZwCancelTimer failed with Status=0x%08lX", Status);
@@ -121,6 +127,7 @@ ExTimerTest()
     ok(ApcCount == 0, "Incorrect count of TimerApcRoutine calls: %ld, should be 0\n", ApcCount);
 
     // Test setting the timer two times in a row, APC routine must not be called
+    DPRINT("Set timer with Apc (4)\n");
     ApcCount = 0;
     DueTime.LowPart = -10000;
     DueTime.HighPart = -10;
@@ -132,6 +139,7 @@ ExTimerTest()
     ok(PreviousState == FALSE, "Incorrect PreviousState returned when setting the timer");
 
     // Set small due time, since we have to wait for timer to finish
+    DPRINT("Set timer with Apc (5)\n");
     DueTime.LowPart = -10;
     DueTime.HighPart = -1;
     PreviousState = TRUE;
@@ -142,6 +150,7 @@ ExTimerTest()
     ok(PreviousState == FALSE, "Incorrect PreviousState returned when setting the timer");
 
     // Now wait till it's finished, and then check APC call
+    DPRINT("Wait for it\n");
     Status = ZwWaitForSingleObject(HandleOpened, FALSE, NULL);
     ok(Status == STATUS_SUCCESS, "ZwWaitForSingleObject failed with Status=0x%08lX", Status);
 
