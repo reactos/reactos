@@ -27,10 +27,23 @@
 #include <ndk/ntndk.h>
 #include "kmtest.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include "debug.h"
 
 /* PRIVATE FUNCTIONS ***********************************************************/
+
+VOID
+NTAPI
+TestTimerApcRoutine(IN PVOID TimerContext,
+                    IN ULONG TimerLowValue,
+                    IN LONG TimerHighValue)
+
+{
+    DPRINT("Timer Apc called!\n");
+    ULONG *ApcCount = (ULONG *)TimerContext;
+    (*ApcCount)++;
+}
+
 
 VOID
 ExTimerTest()
@@ -42,6 +55,7 @@ ExTimerTest()
     LARGE_INTEGER DueTime;
     BOOLEAN PreviousState, CurrentState;
     NTSTATUS Status;
+    ULONG ApcCount;
 
     StartTest();
 
@@ -88,7 +102,54 @@ ExTimerTest()
     ok(Status == STATUS_SUCCESS, "ZwCancelTimer failed with Status=0x%08lX", Status);
     ok(CurrentState == TRUE, "Incorrect CurrentState returned when setting the timer");
 
-    // TODO: Add tests for a timer with APC routines
+    // Test it with APC: Set, Cancel, check if APC has been called
+    ApcCount = 0;
+    DueTime.LowPart = -10000;
+    DueTime.HighPart = -10;
+    PreviousState = FALSE;
+    Status = ZwSetTimer(HandleOpened, &DueTime,
+        (PTIMER_APC_ROUTINE)TestTimerApcRoutine, &ApcCount, FALSE,
+        0L, &PreviousState);
+
+    ok(Status == STATUS_SUCCESS, "ZwSetTimer failed with Status=0x%08lX", Status);
+    ok(PreviousState == TRUE, "Incorrect PreviousState returned when setting the timer");
+
+    CurrentState = TRUE;
+    Status = ZwCancelTimer(HandleOpened, &CurrentState);
+    ok(Status == STATUS_SUCCESS, "ZwCancelTimer failed with Status=0x%08lX", Status);
+    ok(CurrentState == FALSE, "Incorrect CurrentState returned when cancelling the timer");
+    ok(ApcCount == 0, "Incorrect count of TimerApcRoutine calls: %ld, should be 0\n", ApcCount);
+
+    // Test setting the timer two times in a row, APC routine must not be called
+    ApcCount = 0;
+    DueTime.LowPart = -10000;
+    DueTime.HighPart = -10;
+    PreviousState = TRUE;
+    Status = ZwSetTimer(HandleOpened, &DueTime,
+        (PTIMER_APC_ROUTINE)TestTimerApcRoutine, &ApcCount, FALSE,
+        0L, &PreviousState);
+    ok(Status == STATUS_SUCCESS, "ZwSetTimer failed with Status=0x%08lX", Status);
+    ok(PreviousState == FALSE, "Incorrect PreviousState returned when setting the timer");
+
+    // Set small due time, since we have to wait for timer to finish
+    DueTime.LowPart = -10;
+    DueTime.HighPart = -1;
+    PreviousState = TRUE;
+    Status = ZwSetTimer(HandleOpened, &DueTime,
+        (PTIMER_APC_ROUTINE)TestTimerApcRoutine, &ApcCount, FALSE,
+        0L, &PreviousState);
+    ok(Status == STATUS_SUCCESS, "ZwSetTimer failed with Status=0x%08lX", Status);
+    ok(PreviousState == FALSE, "Incorrect PreviousState returned when setting the timer");
+
+    // Now wait till it's finished, and then check APC call
+    Status = ZwWaitForSingleObject(HandleOpened, FALSE, NULL);
+    ok(Status == STATUS_SUCCESS, "ZwWaitForSingleObject failed with Status=0x%08lX", Status);
+
+    CurrentState = FALSE;
+    Status = ZwCancelTimer(HandleOpened, &CurrentState);
+    ok(Status == STATUS_SUCCESS, "ZwCancelTimer failed with Status=0x%08lX", Status);
+    ok(CurrentState == TRUE, "Incorrect CurrentState returned when cancelling the timer");
+    ok(ApcCount == 1, "Incorrect count of TimerApcRoutine calls: %ld, should be 1\n", ApcCount);
 
     // Cleanup...
     Status = ZwClose(HandleOpened);
