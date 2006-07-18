@@ -840,14 +840,6 @@ NtYieldExecution(VOID)
     return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-NTAPI
-NtTestAlert(VOID)
-{
-    /* Check and Alert Thread if needed */
-    return KeTestAlertThread(ExGetPreviousMode()) ? STATUS_ALERTED : STATUS_SUCCESS;
-}
-
 /*
  * @implemented
  */

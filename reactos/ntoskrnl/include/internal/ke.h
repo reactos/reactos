@@ -310,6 +310,25 @@ KeStartThread(
     IN OUT PKTHREAD Thread
 );
 
+BOOLEAN
+NTAPI
+KeAlertThread(
+    IN PKTHREAD Thread,
+    IN KPROCESSOR_MODE AlertMode
+);
+
+ULONG
+NTAPI
+KeAlertResumeThread(
+    IN PKTHREAD Thread
+);
+
+ULONG
+NTAPI
+KeResumeThread(
+    IN PKTHREAD Thread
+);
+
 PVOID
 NTAPI
 KeSwitchKernelStack(

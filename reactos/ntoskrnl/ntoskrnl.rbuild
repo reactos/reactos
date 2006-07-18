@@ -295,7 +295,7 @@
 			<file>query.c</file>
 			<file>quota.c</file>
 			<file>security.c</file>
-			<file>suspend.c</file>
+			<file>state.c</file>
 			<file>thread.c</file>
 			<file>win32.c</file>
 	</directory>

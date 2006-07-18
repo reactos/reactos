@@ -443,8 +443,8 @@ KeRundownThread(VOID)
 }
 
 ULONG
-STDCALL
-KeResumeThread(PKTHREAD Thread)
+NTAPI
+KeResumeThread(IN PKTHREAD Thread)
 {
     ULONG PreviousCount;
     KIRQL OldIrql;
@@ -624,7 +624,7 @@ KeForceResumeThread(IN PKTHREAD Thread)
 }
 
 ULONG
-STDCALL
+NTAPI
 KeAlertResumeThread(IN PKTHREAD Thread)
 {
     ULONG PreviousCount;
@@ -674,9 +674,9 @@ KeAlertResumeThread(IN PKTHREAD Thread)
 }
 
 BOOLEAN
-STDCALL
-KeAlertThread(PKTHREAD Thread,
-              KPROCESSOR_MODE AlertMode)
+NTAPI
+KeAlertThread(IN PKTHREAD Thread,
+              IN KPROCESSOR_MODE AlertMode)
 {
     KIRQL OldIrql;
     BOOLEAN PreviousState;
@@ -1548,109 +1548,6 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
     KiReleaseSpinLock(&Thread->ApcQueueLock);
     KeReleaseDispatcherDatabaseLock(OldIrql);
     return OldState;
-}
-
-/*
- *
- * NOT EXPORTED
- */
-NTSTATUS
-STDCALL
-NtAlertResumeThread(IN  HANDLE ThreadHandle,
-                    OUT PULONG SuspendCount)
-{
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PETHREAD Thread;
-    NTSTATUS Status;
-    ULONG PreviousState;
-
-    /* Check if parameters are valid */
-    if(PreviousMode != KernelMode) {
-
-        _SEH_TRY {
-
-            ProbeForWriteUlong(SuspendCount);
-
-        } _SEH_HANDLE {
-
-            Status = _SEH_GetExceptionCode();
-
-        } _SEH_END;
-    }
-
-    /* Reference the Object */
-    Status = ObReferenceObjectByHandle(ThreadHandle,
-                                       THREAD_SUSPEND_RESUME,
-                                       PsThreadType,
-                                       PreviousMode,
-                                       (PVOID*)&Thread,
-                                       NULL);
-
-    /* Check for Success */
-    if (NT_SUCCESS(Status)) {
-
-        /* Call the Kernel Function */
-        PreviousState = KeAlertResumeThread(&Thread->Tcb);
-
-        /* Dereference Object */
-        ObDereferenceObject(Thread);
-
-        if (SuspendCount) {
-
-            _SEH_TRY {
-
-                *SuspendCount = PreviousState;
-
-            } _SEH_HANDLE {
-
-                Status = _SEH_GetExceptionCode();
-
-            } _SEH_END;
-        }
-    }
-
-    /* Return status */
-    return Status;
-}
-
-/*
- * @implemented
- *
- * EXPORTED
- */
-NTSTATUS
-STDCALL
-NtAlertThread (IN HANDLE ThreadHandle)
-{
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PETHREAD Thread;
-    NTSTATUS Status;
-
-    /* Reference the Object */
-    Status = ObReferenceObjectByHandle(ThreadHandle,
-                                       THREAD_SUSPEND_RESUME,
-                                       PsThreadType,
-                                       PreviousMode,
-                                       (PVOID*)&Thread,
-                                       NULL);
-
-    /* Check for Success */
-    if (NT_SUCCESS(Status)) {
-
-        /*
-         * Do an alert depending on the processor mode. If some kmode code wants to
-         * enforce a umode alert it should call KeAlertThread() directly. If kmode
-         * code wants to do a kmode alert it's sufficient to call it with Zw or just
-         * use KeAlertThread() directly
-         */
-        KeAlertThread(&Thread->Tcb, PreviousMode);
-
-        /* Dereference Object */
-        ObDereferenceObject(Thread);
-    }
-
-    /* Return status */
-    return Status;
 }
 
 NTSTATUS
