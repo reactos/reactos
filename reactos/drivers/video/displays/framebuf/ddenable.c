@@ -179,8 +179,8 @@ DrvGetDirectDrawInfo(
 	if(!(pvmList && pdwFourCC)) 
 	{ 	
 
-         RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
-         pHalInfo->dwSize = sizeof(DDHALINFO);
+         RtlZeroMemory(pHalInfo, sizeof(DD_HALINFO));
+         pHalInfo->dwSize = sizeof(DD_HALINFO);
 
 		 pHalInfo->ddCaps.dwCaps =  DDCAPS_BLT        | DDCAPS_BLTQUEUE | DDCAPS_BLTCOLORFILL | DDCAPS_READSCANLINE | 
 			                        DDCAPS_BLTSTRETCH | DDCAPS_COLORKEY | DDCAPS_CANBLTSYSMEM;
