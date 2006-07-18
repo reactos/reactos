@@ -77,7 +77,7 @@ static VOID ResolveHostname(void);
 static VOID PreparePacket(INT packetSize, USHORT seqNum);
 static INT SendPacket(INT datasize);
 static INT ReceivePacket(INT datasize);
-static INT DecodeResponse(INT packetSize, USHORT seqNum);
+static INT DecodeResponse(INT packetSize);
 static LONGLONG GetTime(void);
 static WORD CheckSum(PUSHORT data, UINT size);
 static VOID Usage(void);
