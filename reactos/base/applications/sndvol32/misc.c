@@ -79,11 +79,11 @@ AllocAndLoadString(OUT LPWSTR *lpTarget,
                                          ln * sizeof(WCHAR));
         if ((*lpTarget) != NULL)
         {
-            INT Ret;
-            if (!(Ret = LoadStringW(hInst,
-                                    uID,
-                                    *lpTarget,
-                                    ln)))
+            INT Ret = LoadStringW(hInst,
+                                  uID,
+                                  *lpTarget,
+                                  ln);
+            if (!Ret)
             {
                 LocalFree((HLOCAL)(*lpTarget));
             }
