@@ -1,4 +1,4 @@
-LIBRARY cplsample.cpl
+LIBRARY access.cpl
 
 EXPORTS
 CPlApplet
