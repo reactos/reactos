@@ -130,6 +130,7 @@
 
 /* formerly located in ps/cid.c */
 #define TAG_CIDOBJECT TAG('C', 'I', 'D', 'O')
+#define TAG_PS_IMPERSONATION    TAG('P', 's', 'I', 'm')
 
 /* formerly located in ps/job.c */
 #define TAG_EJOB TAG('E', 'J', 'O', 'B') /* EJOB */

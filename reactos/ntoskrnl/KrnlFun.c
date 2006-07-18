@@ -29,6 +29,7 @@
 //  - Use Process Pushlock Locks.
 //  - Use Safe Referencing in PsGetNextProcess/Thread.
 //  - Use Guarded Mutex instead of Fast Mutex for Active Process Locks.
+//  - Use Security Locks in security.c
 //  - Fix referencing problem.
 //  - Generate process cookie for user-more thread.
 //  - Add security calls where necessary.
