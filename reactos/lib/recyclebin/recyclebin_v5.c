@@ -24,6 +24,7 @@ static BOOL
 CloseHandle5(
 	IN HANDLE hDeletedFile)
 {
+	UNREFERENCED_PARAMETER(hDeletedFile);
 	/* Nothing to do, as hDeletedFile is simply a DWORD... */
 	return TRUE;
 }
