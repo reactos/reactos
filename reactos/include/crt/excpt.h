@@ -56,6 +56,8 @@ extern "C" {
  * The type of function that is expected as an exception handler to be
  * installed with _try1.
  */
+struct _CONTEXT;
+struct _EXCEPTION_RECORD;
 typedef EXCEPTION_DISPOSITION (*PEXCEPTION_HANDLER)
 		(struct _EXCEPTION_RECORD*, void*, struct _CONTEXT*, void*);
 
