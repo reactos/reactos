@@ -114,6 +114,9 @@ WinMain(HINSTANCE hInst,
                   WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
   BITMAP BitmapInfo;
 
+  UNREFERENCED_PARAMETER(hPrevInstance);
+  UNREFERENCED_PARAMETER(lpszCmdLine);
+
   hInstance = hInst;
 
   /* Load icons */
@@ -314,6 +317,9 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
   DWORD dwTop;
   DWORD dwHeight = 0;
 
+  UNREFERENCED_PARAMETER(wParam);
+  UNREFERENCED_PARAMETER(lParam);
+
   hbrLightBlue = CreateSolidBrush(LIGHT_BLUE);
   hbrDarkBlue = CreateSolidBrush(DARK_BLUE);
   hbrRightPanel = CreateSolidBrush(0x00FFFFFF);
@@ -457,6 +463,8 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 OnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+  UNREFERENCED_PARAMETER(lParam);
+
   if (LOWORD(wParam) == IDC_CLOSEBUTTON)
     {
       DestroyWindow(hWnd);
@@ -517,6 +525,9 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
   int nLength;
   BITMAP bmpInfo;
   TCHAR version[50];
+
+  UNREFERENCED_PARAMETER(wParam);
+  UNREFERENCED_PARAMETER(lParam);
 
   hdc = BeginPaint(hWnd, &ps);
 
@@ -662,6 +673,9 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
   TCHAR szText[80];
   int iBkMode;
 
+  UNREFERENCED_PARAMETER(hWnd);
+  UNREFERENCED_PARAMETER(wParam);
+
   if (lpDis->hwndItem == hwndCloseButton)
     {
       DrawFrameControl(lpDis->hDC,
@@ -707,6 +721,9 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 OnMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+  UNREFERENCED_PARAMETER(wParam);
+  UNREFERENCED_PARAMETER(lParam);
+ 
   if (nTopic != -1)
     {
       nTopic = -1;
@@ -721,6 +738,8 @@ OnMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 OnCtlColorStatic(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+  UNREFERENCED_PARAMETER(hWnd);
+
   if ((HWND)lParam == hwndCheckButton)
     {
       SetBkColor((HDC)wParam, LIGHT_BLUE);
@@ -734,6 +753,9 @@ OnCtlColorStatic(HWND hWnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 OnActivate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
+  UNREFERENCED_PARAMETER(hWnd);
+  UNREFERENCED_PARAMETER(wParam);
+  UNREFERENCED_PARAMETER(lParam);
   nTopic = -1;
   InvalidateRect(hwndMain, &rcRightPanel, TRUE);
 
@@ -745,6 +767,10 @@ static LRESULT
 OnDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   int i;
+
+  UNREFERENCED_PARAMETER(hWnd);
+  UNREFERENCED_PARAMETER(wParam);
+  UNREFERENCED_PARAMETER(lParam);
 
   for (i=0;i<10;i++)
     {
