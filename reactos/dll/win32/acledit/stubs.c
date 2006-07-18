@@ -26,6 +26,7 @@ DWORD
 WINAPI
 EditAuditInfo(DWORD Unknown)
 {
+  UNREFERENCED_PARAMETER(Unknown);
   UNIMPLEMENTED;
   return 0;
 }
@@ -34,6 +35,7 @@ DWORD
 WINAPI
 EditOwnerInfo(DWORD Unknown)
 {
+  UNREFERENCED_PARAMETER(Unknown);
   UNIMPLEMENTED;
   return 0;
 }
@@ -42,6 +44,7 @@ DWORD
 WINAPI
 EditPermissionInfo(DWORD Unknown)
 {
+  UNREFERENCED_PARAMETER(Unknown);
   UNIMPLEMENTED;
   return 0;
 }
@@ -50,8 +53,11 @@ LONG
 WINAPI
 FMExtensionProcW(HWND hWnd,
                  WORD wEvent,
-		 LONG lParam)
+                 LONG lParam)
 {
+  UNREFERENCED_PARAMETER(hWnd);
+  UNREFERENCED_PARAMETER(wEvent);
+  UNREFERENCED_PARAMETER(lParam);
   UNIMPLEMENTED;
   return 0;
 }
@@ -72,6 +78,19 @@ SedDiscretionaryAclEditor(HWND hWndOwner,
                           LPDWORD lpdwChangeContextStatus,
                           DWORD Reserved)
 {
+  UNREFERENCED_PARAMETER(hWndOwner);
+  UNREFERENCED_PARAMETER(hInstance);	
+  UNREFERENCED_PARAMETER(lpMachineName);
+  UNREFERENCED_PARAMETER(pAclDlgControl);
+  UNREFERENCED_PARAMETER(pAclEditControl);
+  UNREFERENCED_PARAMETER(lpObjectName);
+  UNREFERENCED_PARAMETER(pChangeCallback);
+  UNREFERENCED_PARAMETER(pChangeCallbackContext);
+  UNREFERENCED_PARAMETER(pObjectSecurity);
+  UNREFERENCED_PARAMETER(bNoReadPermission);
+  UNREFERENCED_PARAMETER(bReadOnly);
+  UNREFERENCED_PARAMETER(lpdwChangeContextStatus);
+  UNREFERENCED_PARAMETER(Reserved);
   UNIMPLEMENTED;
   return 0;
 }
@@ -87,12 +106,26 @@ SedTakeOwnership(HWND hWndOwner,
                  PACL_CHANGE pChangeCallback,
                  PVOID pChangeCallbackContext,
                  PSECURITY_DESCRIPTOR pObjectSecurity,
-                 BOOL NoReadPermission,
-                 BOOL NoOwnerChange,
+                 BOOL bNoReadPermission,
+                 BOOL bNoOwnerChange,
                  LPDWORD lpdwChangeContextStatus,
                  PACL_HELP_CONTROL pHelpInfo,
                  DWORD Reserved)
 {
+  UNREFERENCED_PARAMETER(hWndOwner);
+  UNREFERENCED_PARAMETER(hInstance);
+  UNREFERENCED_PARAMETER(lpMachineName);
+  UNREFERENCED_PARAMETER(lpObjectType);
+  UNREFERENCED_PARAMETER(lpObjectName);
+  UNREFERENCED_PARAMETER(dwObjectCount);
+  UNREFERENCED_PARAMETER(pChangeCallback);
+  UNREFERENCED_PARAMETER(pChangeCallbackContext);
+  UNREFERENCED_PARAMETER(pObjectSecurity);
+  UNREFERENCED_PARAMETER(bNoReadPermission);
+  UNREFERENCED_PARAMETER(bNoOwnerChange);
+  UNREFERENCED_PARAMETER(lpdwChangeContextStatus);
+  UNREFERENCED_PARAMETER(pHelpInfo);
+  UNREFERENCED_PARAMETER(Reserved);
   UNIMPLEMENTED;
   return 0;
 }
@@ -112,6 +145,18 @@ SedSystemAclEditor(HWND hWndOwner,
                    LPDWORD lpdwChangeContextStatus,
                    DWORD Reserved)
 {
+  UNREFERENCED_PARAMETER(hWndOwner);
+  UNREFERENCED_PARAMETER(hInstance);
+  UNREFERENCED_PARAMETER(lpMachineName);
+  UNREFERENCED_PARAMETER(pAclDlgControl);
+  UNREFERENCED_PARAMETER(pAclEditControl);
+  UNREFERENCED_PARAMETER(lpObjectName);
+  UNREFERENCED_PARAMETER(pChangeCallback);
+  UNREFERENCED_PARAMETER(pChangeCallbackContext);
+  UNREFERENCED_PARAMETER(pObjectSecurity);
+  UNREFERENCED_PARAMETER(bNoReadPermission);
+  UNREFERENCED_PARAMETER(lpdwChangeContextStatus);
+  UNREFERENCED_PARAMETER(Reserved);
   UNIMPLEMENTED;
   return 0;
 }

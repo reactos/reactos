@@ -42,6 +42,8 @@ DllMain(
 	DWORD     dwReason,
 	LPVOID    lpvReserved)
 {
+  UNREFERENCED_PARAMETER(lpvReserved);
+
   switch (dwReason)
   {
     case DLL_PROCESS_ATTACH:
