@@ -1138,7 +1138,7 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults)
   // some private way
 }
 static LRESULT FASTCALL
-GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
+GuiConsoleHandleSysMenuCommand(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   DPRINT1("GuiConsoleHandleSysMenuCommand entered %d\n", wParam);
 
@@ -1159,7 +1159,7 @@ GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         GuiConsoleShowConsoleProperties(hWnd, FALSE);
         break;
       default:
-        break;
+        return DefWindowProcW(hWnd, Msg, wParam, lParam);
    }
 
   return 0;
@@ -1272,7 +1272,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           GuiConsoleMouseMove(hWnd, wParam, lParam);
         break;
 	  case WM_SYSCOMMAND:
-          return GuiConsoleHandleSysMenuCommand(hWnd, wParam, lParam);		
+          return GuiConsoleHandleSysMenuCommand(hWnd, msg, wParam, lParam);		
       default:
         Result = DefWindowProcW(hWnd, msg, wParam, lParam);
         break;
