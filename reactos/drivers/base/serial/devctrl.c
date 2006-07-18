@@ -349,6 +349,7 @@ SerialDeviceControl(
 			{
 				pConfigSize = (PULONG)BufferOut;
 				*pConfigSize = 0;
+				Information = sizeof(ULONG);
 				Status = STATUS_SUCCESS;
 			}
 			break;
@@ -409,6 +410,7 @@ SerialDeviceControl(
 					*pDtrRts |= SERIAL_DTR_STATE;
 				if (DeviceExtension->MCR & SR_MCR_RTS)
 					*pDtrRts |= SERIAL_RTS_STATE;
+				Information = sizeof(ULONG);
 				Status = STATUS_SUCCESS;
 			}
 			break;
@@ -445,6 +447,7 @@ SerialDeviceControl(
 			{
 				pMCR = (PULONG)BufferOut;
 				*pMCR = DeviceExtension->MCR;
+				Information = sizeof(ULONG);
 				Status = STATUS_SUCCESS;
 			}
 			break;
@@ -459,6 +462,7 @@ SerialDeviceControl(
 			{
 				pMSR = (PULONG)BufferOut;
 				*pMSR = DeviceExtension->MSR;
+				Information = sizeof(ULONG);
 				Status = STATUS_SUCCESS;
 			}
 			break;
@@ -500,8 +504,8 @@ SerialDeviceControl(
 			{
 				KeSynchronizeExecution(DeviceExtension->Interrupt,
 					(PKSYNCHRONIZE_ROUTINE)SerialGetPerfStats, Irp);
-				Status = STATUS_SUCCESS;
 				Information = sizeof(SERIALPERF_STATS);
+				Status = STATUS_SUCCESS;
 			}
 			break;
 		}
@@ -513,6 +517,7 @@ SerialDeviceControl(
 			else
 			{
 				*(PSERIAL_TIMEOUTS)BufferOut = DeviceExtension->SerialTimeOuts;
+				Information = sizeof(SERIAL_TIMEOUTS);
 				Status = STATUS_SUCCESS;
 			}
 			break;
@@ -527,6 +532,7 @@ SerialDeviceControl(
 			{
 				pWaitMask = (PULONG)BufferOut;
 				*pWaitMask = DeviceExtension->WaitMask;
+				Information = sizeof(ULONG);
 				Status = STATUS_SUCCESS;
 			}
 			break;
