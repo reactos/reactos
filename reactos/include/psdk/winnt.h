@@ -3818,13 +3818,13 @@ static __inline__ BOOLEAN
 BitScanReverse(OUT ULONG *Index,
                IN ULONG Mask)
 {
-	LONG OldBit;
-	__asm__ __volatile__("bsrl %1,%2\n\t"
-	                     "sbbl %0,%0\n\t"
-		             :"=r" (OldBit),"=m" (*Index)
-		             :"Ir" (Mask)
-			     : "memory");
-	return OldBit;
+	BOOLEAN BitPosition = 0;
+	__asm__ __volatile__("bsrl %2,%0\n\t"
+	                     "setnz %1\n\t"
+                         :"=&r" (*Index), "=r" (BitPosition)
+		                 :"rm" (Mask)
+			             :"memory");
+	return BitPosition;
 }
 
 #endif
