@@ -136,19 +136,41 @@ DrvGetDirectDrawInfo(
 {	
 	PPDEV ppdev = (PPDEV)dhpdev;
 
+	if  (ppdev == NULL)
+        return FALSE;
+
+	/*   check so pHalInfo,  pdwNumHeaps, pdwNumFourCCCodes is not NULL 
+	     pdwFourCC and pvmList can be null 
+	 */
+
+	if (pHalInfo == NULL)
+		return FALSE;
+
+	if (pdwNumHeaps == NULL)
+		return FALSE;
+	
+	if (pdwNumFourCCCodes == NULL)
+		return FALSE;
+	   
 	/* rest some data */
     *pdwNumFourCCCodes = 0;
     *pdwNumHeaps = 0;
-
 	 
-
 	/* 
-	   check see if pvmList and pdwFourCC are second call 
+	   check see if pvmList and pdwFourCC are frist call 
 	   or frist. Secon call  we fill in pHalInfo info 
     */
 
 	if(!(pvmList && pdwFourCC)) 
-	{
+	{ 
+         RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
+         pHalInfo->dwSize = sizeof(DDHALINFO);
+
+		 pHalInfo->ddCaps.dwCaps =  DDCAPS_BLT        | DDCAPS_BLTQUEUE | DDCAPS_BLTCOLORFILL | DDCAPS_READSCANLINE | 
+			                        DDCAPS_BLTSTRETCH | DDCAPS_COLORKEY | DDCAPS_CANBLTSYSMEM;
+
+         pHalInfo->ddCaps.ddsCaps.dwCaps =  DDSCAPS_OFFSCREENPLAIN | DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP;
+		 
 
 		/* Calc how much memmory is left on the video cards memmory */
 		pHalInfo->ddCaps.dwVidMemTotal = (ppdev->MemHeight - ppdev->ScreenHeight) * ppdev->ScreenDelta;
@@ -172,12 +194,7 @@ DrvGetDirectDrawInfo(
 		if ( ppdev->BitsPerPixel == 8 ) 
 		{        
             pHalInfo->vmiData.ddpfDisplay.dwFlags |= DDPF_PALETTEINDEXED8;		
-        } 
-
-		
-		
-		
-
+        } 						
 	}
 
 	return TRUE;
