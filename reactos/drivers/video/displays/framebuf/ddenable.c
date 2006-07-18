@@ -135,6 +135,7 @@ DrvGetDirectDrawInfo(
   OUT DWORD  *pdwFourCC)
 {	
 	PPDEV ppdev = (PPDEV)dhpdev;
+	int i;
 
 	if  (ppdev == NULL)
         return FALSE;
@@ -162,22 +163,34 @@ DrvGetDirectDrawInfo(
     */
 
 	if(!(pvmList && pdwFourCC)) 
-	{ 
+	{ 	
+
          RtlZeroMemory(pHalInfo, sizeof(DDHALINFO));
          pHalInfo->dwSize = sizeof(DDHALINFO);
 
 		 pHalInfo->ddCaps.dwCaps =  DDCAPS_BLT        | DDCAPS_BLTQUEUE | DDCAPS_BLTCOLORFILL | DDCAPS_READSCANLINE | 
 			                        DDCAPS_BLTSTRETCH | DDCAPS_COLORKEY | DDCAPS_CANBLTSYSMEM;
 
-         pHalInfo->ddCaps.ddsCaps.dwCaps =  DDSCAPS_OFFSCREENPLAIN | DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP;
-		 
+		 pHalInfo->ddCaps.dwFXCaps = DDFXCAPS_BLTSTRETCHY     | DDFXCAPS_BLTSTRETCHX        | 
+			                         DDFXCAPS_BLTSTRETCHYN    | DDFXCAPS_BLTSTRETCHXN       | 
+									 DDFXCAPS_BLTSHRINKY      | DDFXCAPS_BLTSHRINKX         |
+                                     DDFXCAPS_BLTSHRINKYN     | DDFXCAPS_BLTSHRINKXN        | 
+									 DDFXCAPS_BLTMIRRORUPDOWN | DDFXCAPS_BLTMIRRORLEFTRIGHT;
+
+		pHalInfo->ddCaps.dwCaps2 = DDCAPS2_NONLOCALVIDMEM | DDCAPS2_NONLOCALVIDMEMCAPS;
+
+		pHalInfo->ddCaps.ddsCaps.dwCaps =  DDSCAPS_OFFSCREENPLAIN | DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP;
+
+		pHalInfo->ddCaps.dwCKeyCaps = DDCKEYCAPS_SRCBLT | DDCKEYCAPS_SRCBLTCLRSPACE;
+	                    		 	       
+	    pHalInfo->ddCaps.dwSVBCaps = DDCAPS_BLT;
+	    pHalInfo->ddCaps.ddsCaps.dwCaps |= DDSCAPS_LOCALVIDMEM | DDSCAPS_NONLOCALVIDMEM;
 
 		/* Calc how much memmory is left on the video cards memmory */
 		pHalInfo->ddCaps.dwVidMemTotal = (ppdev->MemHeight - ppdev->ScreenHeight) * ppdev->ScreenDelta;
 
         /* fill in some basic info that we need */
-        pHalInfo->vmiData.pvPrimary                 = ppdev->ScreenPtr;
-        pHalInfo->vmiData.fpPrimary                 = 0;
+        pHalInfo->vmiData.pvPrimary                 = ppdev->ScreenPtr;       
         pHalInfo->vmiData.dwDisplayWidth            = ppdev->ScreenWidth;
         pHalInfo->vmiData.dwDisplayHeight           = ppdev->ScreenHeight;
         pHalInfo->vmiData.lDisplayPitch             = ppdev->ScreenDelta;
@@ -187,15 +200,26 @@ DrvGetDirectDrawInfo(
 		pHalInfo->vmiData.ddpfDisplay.dwRBitMask    = ppdev->RedMask;
         pHalInfo->vmiData.ddpfDisplay.dwGBitMask    = ppdev->GreenMask;
         pHalInfo->vmiData.ddpfDisplay.dwBBitMask    = ppdev->BlueMask;	
-        pHalInfo->vmiData.dwOffscreenAlign = 4;
-        pHalInfo->vmiData.dwZBufferAlign = 4;
-        pHalInfo->vmiData.dwTextureAlign = 4;
+        pHalInfo->vmiData.dwOffscreenAlign = 4;             
 
 		if ( ppdev->BitsPerPixel == 8 ) 
 		{        
             pHalInfo->vmiData.ddpfDisplay.dwFlags |= DDPF_PALETTEINDEXED8;		
-        } 						
+        } 
+
+	    /*  FIXME 
+		    Config the rops we do not doing that yet
+		     for we need write the rops table 
+        */
+        for(i=0;i<DD_ROP_SPACE;i++ )
+        {
+           // pHALInfo->ddCaps.dwSVBRops[i] = rops[i];
+		  //  pHALInfo->ddCaps.dwRops[i] = rops[i];
+        }
 	}
+
+	/* Now fix the memory alloc and other stuff */ 
+	
 
 	return TRUE;
 }
