@@ -7,16 +7,6 @@
  *                  Thomas Weidenmueller (w3seek@reactos.org)
  */
 
-/*
- * Alex FIXMEs:
- *  - MAJOR: Use Process Rundown
- *  - MAJOR: Use Process Pushlock Locks
- *  - MAJOR: Use Safe Referencing in PsGetNextProcess/Thread.
- *  - MAJOR: Use Guarded Mutex instead of Fast Mutex for Active Process Locks.
- *  - Generate process cookie for user-more thread.
- *  - Add security calls where necessary.
- */
-
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>

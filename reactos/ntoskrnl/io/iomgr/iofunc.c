@@ -21,19 +21,6 @@
             Irp);
 #endif
 
-///
-//
-// TODO:
-// - Add SEH to some places where it's missing (MDLs, etc).
-// - Add a generic Cleanup/Exception Routine.
-// - Add probe/alignment checks for Query/Set routines.
-// - Add another parameter to IopCleanupFailedIrp.
-// - Add support for Fast Dispatch I/O.
-// - Add support for some fast-paths when querying/setting data.
-// - Add tracing.
-//
-///
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS

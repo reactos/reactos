@@ -22,18 +22,6 @@
             Irp);
 #endif
 
-///
-//
-// TODO:
-// - Add support for Fast Dispatch I/O.
-// - Verify ShareAccess APIs, XP added some new semantics.
-// - Add Access Checks in IopParseDevice.
-// - Add validation checks in IoCreateFile.
-// - Add tracing.
-// - See why queueing IRPs and cancelling them causes crashes
-//
-///
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
