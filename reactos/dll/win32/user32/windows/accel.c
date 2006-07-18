@@ -187,6 +187,9 @@ BOOL WINAPI DestroyAcceleratorTable(HACCEL hAccel)
  U32_ACCEL_CACHE_ENTRY ** ppEntry;
  ULONG_PTR nUsage = 0;
 
+ if (!hAccel)
+  return FALSE;
+
  EnterCriticalSection(&U32AccelCacheLock);
 
  /* see if this accelerator table has been cached */
@@ -281,6 +284,8 @@ int WINAPI CopyAcceleratorTableW
  */
 HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccl, int cEntries)
 {
+ if (!cEntries || !lpaccl) return (HACCEL)0;
+
  return NtUserCreateAcceleratorTable(lpaccl, cEntries);
 }
 
@@ -325,6 +330,8 @@ int WINAPI CopyAcceleratorTableA
 HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccl, int cEntries)
 {
  int i;
+
+ if (!cEntries || !lpaccl) return (HACCEL)0;
 
  for(i = 0; i < cEntries; ++ i)
   if(!lpaccl[i].fVirt)
