@@ -68,9 +68,49 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
 }
 
 DWORD CALLBACK 
-DdCreateSurface(PDD_CREATESURFACEDATA lpCreateSurface)
+DdCreateSurface(LPDDHAL_CREATESURFACEDATA pcsd)
 {
-	lpCreateSurface->ddRVal = DDERR_GENERIC;
-    return DDHAL_DRIVER_NOTHANDLED;
+	int i;
+	
+	if (pcsd->dwSCnt == 1)
+	{
+		pcsd->ddRVal = DDERR_GENERIC;
+        return DDHAL_DRIVER_NOTHANDLED;
+	}
+
+	
+	for (i=0; i<(int)pcsd->dwSCnt; i++)
+    {               
+		pcsd->lplpSList[i]->lpGbl->lPitch = (DWORD)(pcsd->lplpSList[i]->lpGbl->wWidth * 
+			                                (pcsd->lplpSList[i]->lpGbl->ddpfSurface.dwRGBBitCount / 8));
+       
+		pcsd->lplpSList[i]->lpGbl->dwBlockSizeX = pcsd->lplpSList[i]->lpGbl->lPitch * 
+			                                      (DWORD)(pcsd->lplpSList[i]->lpGbl->wHeight);
+
+        pcsd->lplpSList[i]->lpGbl->dwBlockSizeY = 1;
+        
+        if ( pcsd->lplpSList[i] ->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
+        {
+			/* We maybe should alloc it with EngAlloc 
+			   for now we trusting ddraw alloc it        */			
+            pcsd->lplpSList[i]->lpGbl->fpVidMem = 0;
+        }
+        else
+        {
+			
+			/* We maybe should alloc it with EngAlloc 
+			   for now we trusting ddraw alloc it        */			
+            pcsd->lplpSList[i]->lpGbl->fpVidMem = DDHAL_PLEASEALLOC_BLOCKSIZE;
+        }
+
+        pcsd->lpDDSurfaceDesc->lPitch = pcsd->lplpSList[i]->lpGbl->lPitch;
+        pcsd->lpDDSurfaceDesc->dwFlags |= DDSD_PITCH;
+       
+    } // for i
+
+
+	    
+	pcsd->ddRVal = DD_OK;
+    return DDHAL_DRIVER_HANDLED;
 }
 
