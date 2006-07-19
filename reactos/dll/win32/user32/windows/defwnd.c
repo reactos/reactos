@@ -766,9 +766,10 @@ DefWndTrackScrollBar(HWND Wnd, WPARAM wParam, POINT Pt)
 
 
 LRESULT
-DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
+DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   WINDOWPLACEMENT wp;
+  POINT Pt;
 
   switch (wParam & 0xfff0)
     {
@@ -804,16 +805,24 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
         SendMessageA(hWnd, WM_CLOSE, 0, 0);
         break;
       case SC_MOUSEMENU:
-        MenuTrackMouseMenuBar(hWnd, wParam & 0x000f, Pt);
+        {
+          Pt.x = (short)LOWORD(lParam);
+          Pt.y = (short)HIWORD(lParam);
+          MenuTrackMouseMenuBar(hWnd, wParam & 0x000f, Pt);
+        }
 	break;
       case SC_KEYMENU:
-        MenuTrackKbdMenuBar(hWnd, wParam, Pt.x);
+        MenuTrackKbdMenuBar(hWnd, wParam, (WCHAR)lParam);
 	break;
       case SC_VSCROLL:
       case SC_HSCROLL:
-        DefWndTrackScrollBar(hWnd, wParam, Pt);
+        {
+          Pt.x = (short)LOWORD(lParam);
+          Pt.y = (short)HIWORD(lParam);
+          DefWndTrackScrollBar(hWnd, wParam, Pt);
+        }
 	break;
-
+        
       default:
 	/* FIXME: Implement */
         UNIMPLEMENTED;
@@ -1305,13 +1314,7 @@ User32DefWindowProc(HWND hWnd,
         }
 
         case WM_SYSCOMMAND:
-        {
-            POINT Pt;
-            Pt.x = GET_X_LPARAM(lParam);
-            Pt.y = GET_Y_LPARAM(lParam);
-            return (DefWndHandleSysCommand(hWnd, wParam, Pt));
-        }
-
+            return (DefWndHandleSysCommand(hWnd, wParam, lParam));
 
         case WM_KEYDOWN:
             if(wParam == VK_F10) iF10Key = VK_F10;

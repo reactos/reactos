@@ -3320,9 +3320,13 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
           fRemove = TRUE;  /* Keyboard messages are always removed */
           switch(Msg.message)
             {
+              case WM_SYSKEYDOWN:
               case WM_KEYDOWN:
                 switch(Msg.wParam)
                   {
+                    case VK_MENU:
+                      fEndMenu = TRUE;
+                      break;
                     case VK_HOME:
                     case VK_END:
                       if (MenuGetRosMenuInfo(&MenuInfo, Mt.CurrentMenu))
@@ -3408,20 +3412,6 @@ MenuTrackMenu(HMENU Menu, UINT Flags, INT x, INT y,
                       break;
                   }
                 break;  /* WM_KEYDOWN */
-
-              case WM_SYSKEYDOWN:
-                switch (Msg.wParam)
-                  {
-                    DbgPrint("Menu.c WM_SYSKEYDOWN wPram %d\n",Msg.wParam);
-                    case VK_MENU:
-                      fEndMenu = TRUE;
-                      break;
-                    case VK_LMENU:
-                      fEndMenu = TRUE;
-                      break;
-                  }
-                break;  /* WM_SYSKEYDOWN */
-
               case WM_CHAR:
               case WM_SYSCHAR:
                 {
@@ -3566,8 +3556,73 @@ MenuTrackMouseMenuBar(HWND Wnd, ULONG Ht, POINT Pt)
 
 
 VOID
-MenuTrackKbdMenuBar(HWND hWnd, ULONG wParam, ULONG Key)
+MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar)
 {
+    UINT uItem = NO_SELECTED_ITEM;
+    HMENU hTrackMenu;
+    ROSMENUINFO MenuInfo;
+    UINT wFlags = TPM_ENTERIDLEEX | TPM_LEFTALIGN | TPM_LEFTBUTTON;
+
+    DPRINT("hwnd %p wParam 0x%04x wChar 0x%04x\n", hWnd, wParam, wChar);
+
+    /* find window that has a menu */
+
+    while (!((GetWindowLongW( hWnd, GWL_STYLE ) &
+                                         (WS_CHILD | WS_POPUP)) != WS_CHILD))
+        if (!(hWnd = GetAncestor( hWnd, GA_PARENT ))) return;
+
+    /* check if we have to track a system menu */
+
+    hTrackMenu = GetMenu( hWnd );
+    if (!hTrackMenu || IsIconic(hWnd) || wChar == ' ' )
+    {
+        if (!(GetWindowLongW( hWnd, GWL_STYLE ) & WS_SYSMENU)) return;
+        hTrackMenu = NtUserGetSystemMenu(hWnd, FALSE);
+        uItem = 0;
+        wParam |= HTSYSMENU; /* prevent item lookup */
+    }
+
+    if (!IsMenu( hTrackMenu )) return;
+
+    MenuInitTracking( hWnd, hTrackMenu, FALSE, wFlags );
+
+    if (! MenuGetRosMenuInfo(&MenuInfo, hTrackMenu))
+    {
+      goto track_menu;
+    }
+
+    if( wChar && wChar != ' ' )
+    {
+        uItem = MenuFindItemByKey( hWnd, &MenuInfo, wChar, (wParam & HTSYSMENU) );
+        if ( uItem >= (UINT)(-2) )
+        {
+            if( uItem == (UINT)(-1) ) MessageBeep(0);
+            /* schedule end of menu tracking */
+            wFlags |= TF_ENDMENU;
+            goto track_menu;
+        }
+    }
+
+    MenuSelectItem( hWnd, &MenuInfo, uItem, TRUE, 0 );
+
+    if (wParam & HTSYSMENU)
+    {
+        /* prevent sysmenu activation for managed windows on Alt down/up */
+//        if (GetPropA( hwnd, "__wine_x11_managed" ))
+            wFlags |= TF_ENDMENU; /* schedule end of menu tracking */
+    }
+    else
+    {
+        if( uItem == NO_SELECTED_ITEM )
+            MenuMoveSelection( hWnd, &MenuInfo, ITEM_NEXT );
+        else
+            PostMessageW( hWnd, WM_KEYDOWN, VK_DOWN, 0L );
+    }
+
+track_menu:
+    MenuTrackMenu( hTrackMenu, wFlags, 0, 0, hWnd, NULL );
+    MenuExitTracking( hWnd );
+
 }
 
 
