@@ -85,7 +85,15 @@ typedef struct _OBJECT_ATTRIBUTES {
 #define NOTHING
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #define TYPE_ALIGNMENT( t ) FIELD_OFFSET( struct { char x; t test; }, test )
-
+#define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
+#define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
+#define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
+#endif
+#ifdef ENABLE_RTL_NUMBER_OF_V2
+#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V2(A)
+#else
+#define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
+#define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
 #define MINCHAR   0x80
 #define MAXCHAR   0x7f
 #define MINSHORT  0x8000
