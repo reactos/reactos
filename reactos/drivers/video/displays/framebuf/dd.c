@@ -68,11 +68,11 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
 }
 
 DWORD CALLBACK 
-DdCreateSurface(LPDDHAL_CREATESURFACEDATA pcsd)
+DdCreateSurface(PDD_CREATESURFACEDATA pcsd)
 {
 	int i;
 	
-	if (pcsd->dwSCnt == 1)
+	if (pcsd->dwSCnt < 1)
 	{
 		pcsd->ddRVal = DDERR_GENERIC;
         return DDHAL_DRIVER_NOTHANDLED;
