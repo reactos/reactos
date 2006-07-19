@@ -474,32 +474,30 @@ DWORD STDCALL NtGdiDdDestroySurface(
 	DWORD  ddRVal  = DDHAL_DRIVER_NOTHANDLED;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
+
 	DPRINT1("NtGdiDdDestroySurface\n");
-#endif
-	if (pDirectDraw == NULL) 
-		return DDHAL_DRIVER_NOTHANDLED;
 
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else	
+	if (pDirectDraw != NULL) 
 	{
-		DD_DESTROYSURFACEDATA DestroySurf; 
+	     if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE)			
+	     {
+			DD_DESTROYSURFACEDATA DestroySurf; 
 	
-		/* FIXME 
-		 * bRealDestroy 
-		 * are we doing right ??
-		 */
-        DestroySurf.lpDD =  &pDirectDraw->Global;
+			/* FIXME 
+			 * bRealDestroy 
+		     * are we doing right ??
+		     */
 
-        DestroySurf.lpDDSurface = hSurface;  // ?
-        DestroySurf.DestroySurface = pDirectDraw->Surf.DestroySurface;		
+			 DestroySurf.lpDD =  &pDirectDraw->Global;
+			 DestroySurf.lpDDSurface = hSurface;  // ?
+             DestroySurf.DestroySurface = pDirectDraw->Surf.DestroySurface;		
 		
-        ddRVal = pDirectDraw->Surf.DestroySurface(&DestroySurf); 
+             ddRVal = pDirectDraw->Surf.DestroySurface(&DestroySurf); 
+		 }
+
+		 GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 	}
 
-	
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;			
 }
 
@@ -511,33 +509,29 @@ DWORD STDCALL NtGdiDdFlip(
     PDD_FLIPDATA puFlipData
 )
 {
-	DWORD  ddRVal;
+	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceTarget, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
+
 	DPRINT1("NtGdiDdFlip\n");
-#endif
+
 	
-	if (pDirectDraw == NULL) 
-		return DDHAL_DRIVER_NOTHANDLED;
+	if (pDirectDraw != NULL) 
+	{	
+		if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_FLIP)
+		{	
+			lgpl = puFlipData->lpDD;	
+			puFlipData->lpDD = &pDirectDraw->Global;	
 
-	/* backup the orignal PDev and info */
-	lgpl = puFlipData->lpDD;
+			ddRVal = pDirectDraw->Surf.Flip(puFlipData);	
 
-	/* use our cache version instead */
-	puFlipData->lpDD = &pDirectDraw->Global;
+			puFlipData->lpDD = lgpl;
+		}
 
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_FLIP))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.Flip(puFlipData);
+		GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+	}
 
-	/* But back the orignal PDev */
-	puFlipData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;		
 }
 
@@ -547,32 +541,28 @@ DWORD STDCALL NtGdiDdLock(
     HDC hdcClip
 )
 {
-	DWORD  ddRVal;
+	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
+
 	DPRINT1("NtGdiDdLock\n");
-#endif
-	if (pDirectDraw == NULL) 
-		return DDHAL_DRIVER_NOTHANDLED;
 
-	/* backup the orignal PDev and info */
-	lgpl = puLockData->lpDD;
+	if (pDirectDraw != NULL) 
+	{
+		if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_LOCK)
+		{
+			lgpl = puLockData->lpDD;	
+			puLockData->lpDD = &pDirectDraw->Global;
+	
+			ddRVal = pDirectDraw->Surf.Lock(puLockData);
+	
+			puLockData->lpDD = lgpl;
+		}
 
-	/* use our cache version instead */
-	puLockData->lpDD = &pDirectDraw->Global;
+		GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+	}
 
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_LOCK))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.Lock(puLockData);
-
-	/* But back the orignal PDev */
-	puLockData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
     return ddRVal;		
 }
 
