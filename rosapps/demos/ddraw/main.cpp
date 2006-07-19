@@ -1,50 +1,59 @@
 #include <windows.h>
 #include <ddraw.h>
-#include "main.h"
+
+LPDIRECTDRAW7 DirectDraw;
+LPDIRECTDRAWSURFACE7 FrontBuffer;
+LPDIRECTDRAWCLIPPER Clipper;
+
+PCHAR DDErrorString (HRESULT hResult);
+LONG WINAPI WndProc (HWND hwnd, UINT message, UINT wParam, LONG lParam);
+
+bool Fullscreen, Running;
 
 
-bool Init (void)
+bool Init (HWND hwnd)
 {
-	DDSURFACEDESC2			ddsd; 
+	DDSURFACEDESC2 ddsd; 
+	HRESULT hResult;
 
 	// Create the main object
 	OutputDebugString("=> DirectDrawCreateEx\n");
-	ddrval = DirectDrawCreateEx(NULL, (VOID**)&pDD, IID_IDirectDraw7, NULL); 
+	hResult = DirectDrawCreateEx(NULL, (VOID**)&DirectDraw, IID_IDirectDraw7, NULL); 
 
-	if (ddrval != DD_OK)
+	if (hResult != DD_OK)
 	{
-		MessageBox(0,DDErrorString(ddrval), "DirectDrawCreateEx", 0);
+		MessageBox(0,DDErrorString(hResult), "DirectDrawCreateEx", 0);
 		return 0;
 	}
 
-	// set fullscreen or not
+	// Set Fullscreen or windowed mode
 	OutputDebugString("=> DDraw->SetCooperativeLevel\n");
 
-	if(fullscreen)
-		ddrval = pDD->SetCooperativeLevel (hwnd, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN);
+	if(Fullscreen)
+		hResult = DirectDraw->SetCooperativeLevel (hwnd, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN);
 	else
-		ddrval = pDD->SetCooperativeLevel (hwnd, DDSCL_NORMAL);
+		hResult = DirectDraw->SetCooperativeLevel (hwnd, DDSCL_NORMAL);
 		
-	if (ddrval != DD_OK)
+	if (hResult != DD_OK)
 	{
-		MessageBox(0,DDErrorString(ddrval), "DDraw->SetCooperativeLevel", 0);
+		MessageBox(0,DDErrorString(hResult), "DDraw->SetCooperativeLevel", 0);
 		return 0;
 	}
 
-	// set the  new resolution
-	if(fullscreen)
+	// Set the new resolution
+	if(Fullscreen)
 	{
 		OutputDebugString("=> DDraw->SetDisplayMode\n");
-		ddrval = pDD->SetDisplayMode (800, 600, 32, 0, 0);
+		hResult = DirectDraw->SetDisplayMode (800, 600, 32, 0, 0);
 			
-		if (ddrval != DD_OK)
+		if (hResult != DD_OK)
 		{
-			MessageBox(0,DDErrorString(ddrval), "DDraw->SetDisplayMode", 0);
+			MessageBox(0,DDErrorString(hResult), "DDraw->SetDisplayMode", 0);
 			return 0;
 		}
 	}
 
-	// create the primary surface
+	// Create the primary surface
 	memset(&ddsd, 0, sizeof(DDSURFACEDESC2));
 
 	ddsd.dwSize = sizeof(DDSURFACEDESC2);
@@ -52,49 +61,76 @@ bool Init (void)
 	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 
 	OutputDebugString("=> DDraw->CreateSurface\n");
-	ddrval = pDD->CreateSurface(&ddsd, &lpddsPrimary, NULL);
+	hResult = DirectDraw->CreateSurface(&ddsd, &FrontBuffer, NULL);
 
-	if (ddrval != DD_OK)
+	if (hResult != DD_OK)
 	{
-		MessageBox(0,DDErrorString(ddrval), "DDraw->CreateSurface", 0);
+		MessageBox(0,DDErrorString(hResult), "DDraw->CreateSurface", 0);
 		return 0;
 	}
+
+	// Set up the clipper
+	OutputDebugString("=> DDraw->CreateClipper\n");
+
+    hResult = DirectDraw->CreateClipper(0,&Clipper,NULL);
+	if (hResult != DD_OK)
+	{
+		MessageBox(0,DDErrorString(hResult), "DDraw->CreateSurface", 0);
+		return 0;
+	}
+
+	OutputDebugString("=> Clipper->SetHWnd\n");
+	hResult = Clipper->SetHWnd(0,hwnd);
+    if (hResult != DD_OK)
+    {
+		MessageBox(0,DDErrorString(hResult), "Clipper->SetHWnd", 0);
+        return  0;
+    }    
+
+	OutputDebugString("=> Suface->SetClipper\n");
+    hResult = FrontBuffer->SetClipper(Clipper);
+    if (hResult != DD_OK)
+    {
+		MessageBox(0,DDErrorString(hResult), "FrontBuffer->SetClipper", 0);
+        return 0;
+    }
 
 	return true;
 }
 
 void Draw (void)
 {
-	// make the windows or hole screen green
-	RECT rect;
-	GetWindowRect(hwnd, &rect);     
+	// Make the fronbuffer pink
 
 	DDBLTFX	 ddbltfx;
 	ddbltfx.dwSize = sizeof(DDBLTFX);
-	ddbltfx.dwFillColor = RGB(0, 255, 0); 
+	ddbltfx.dwFillColor = RGB(255, 0, 255); 
 
 	OutputDebugString("=> Surface->Blt (DDBLT_COLORFILL)\n");
-
-	if(fullscreen)
-		lpddsPrimary->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-	else
-		lpddsPrimary->Blt(&rect, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
+	
+	FrontBuffer->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
 }
 
 void CleanUp (void)
 {
-	if (lpddsPrimary != NULL)
+	if (Clipper != NULL)
 	{
-		OutputDebugString("=> Surface->Release\n");
-		lpddsPrimary->Release();
-		lpddsPrimary = NULL;
+		OutputDebugString("=> Clipper->Release\n");
+		Clipper->Release();
+		Clipper = NULL;
 	}
 
-	if (pDD != NULL)
+	if (FrontBuffer != NULL)
+	{
+		OutputDebugString("=> Surface->Release\n");
+		FrontBuffer->Release();
+		FrontBuffer = NULL;
+	}
+	if (DirectDraw != NULL)
 	{
 		OutputDebugString("=> DDraw->Release\n");
-		pDD->Release();
-		pDD = NULL;
+		DirectDraw->Release();
+		DirectDraw = NULL;
 	}
 }
 
@@ -104,10 +140,9 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 	MSG msg;  
 	WNDCLASS wndclass; 
 
-	// ask
-	fullscreen = MessageBox(0, "Do you want to me to run in fullscreen ?", 0, MB_YESNO) == IDYES;
+	Fullscreen = MessageBox(0, "Do you want to me to run in Fullscreen ?", 0, MB_YESNO) == IDYES;
 
-	// create windnow
+	// Create windnow
 	wndclass.style         = CS_HREDRAW | CS_VREDRAW; 
 	wndclass.lpfnWndProc   = WndProc;
 	wndclass.cbClsExtra    = 0;
@@ -117,13 +152,13 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 	wndclass.hCursor       = LoadCursor (NULL, IDC_ARROW); 
 	wndclass.hbrBackground = (HBRUSH)GetStockObject (LTGRAY_BRUSH);
 	wndclass.lpszMenuName  = NULL;
-	wndclass.lpszClassName = "ddrawdemo"; 
+	wndclass.lpszClassName = "DDrawDemo"; 
 
 	RegisterClass(&wndclass);    
 
-	hwnd = CreateWindow("ddrawdemo", 
+	HWND hwnd = CreateWindow("DDrawDemo", 
                          "ReactOS DirectDraw Demo", 
-						 WS_POPUP, 
+						 Fullscreen ? WS_POPUP :WS_OVERLAPPEDWINDOW,
 			             CW_USEDEFAULT, 
 						 CW_USEDEFAULT,
                          800, 
@@ -132,18 +167,18 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 						 hInst, NULL);
 
 	// Inizalize Ddraw
-	if(Init())
+	if(Init(hwnd))
 	{
-		running = true;
+		Running = true;
 
 		ShowWindow(hwnd, nCmdShow);  
 		UpdateWindow(hwnd);
 	}
     
-	// Go into main loop
-	while (running)
+	// Main loop
+	while (Running)
 	{
-		if(fullscreen)
+		if(Fullscreen)
 			Draw();
 
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))
@@ -154,7 +189,6 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 		}
 	} 
 
-	// the end
 	CleanUp();
 
 	return 0;
@@ -168,7 +202,7 @@ LONG WINAPI WndProc (HWND hwnd, UINT message,
 	{
 		case WM_PAINT:
 		{
-			if(!fullscreen)
+			if(!Fullscreen)
 				Draw();
 		} break;
 
@@ -177,7 +211,7 @@ LONG WINAPI WndProc (HWND hwnd, UINT message,
 			switch (wParam)
 			{
 			case VK_ESCAPE:
-				running=false;
+				Running=false;
 				return 0;
 			} break;
 		}
@@ -192,9 +226,9 @@ LONG WINAPI WndProc (HWND hwnd, UINT message,
 	return DefWindowProc (hwnd, message, wParam, lParam);
 } 
 
-char* DDErrorString (HRESULT hr)
+PCHAR DDErrorString (HRESULT hResult)
 {
-	switch (hr)
+	switch (hResult)
 	{
 		case DD_OK:								 return "DD_OK";
 		case DDERR_ALREADYINITIALIZED:           return "DDERR_ALREADYINITIALIZED";
