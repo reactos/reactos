@@ -257,17 +257,14 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
        DPRINT1("Found DirectDraw Global DriverData \n");                                             
        RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
     }
-    /* FIXME
-	 * we missing  D3DHAL_CALLBACKS in the headers 
-	 *
 
 	if (pHalInfo->lpD3DHALCallbacks )
 	{    
        DPRINT1("Found DirectDraw CallBack for 3D Hal\n");
-	   RtlMoveMemory(puD3dCallbacks, (ULONG *)pHalInfo->lpD3DHALCallbacks, sizeof( D3DHAL_CALLBACKS ));		
+	   RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks, sizeof( D3DNTHAL_CALLBACKS ) );		
 	}
 
-	*/
+
 	if (pHalInfo->lpD3DBufCallbacks)
     {
        DPRINT1("Found DirectDraw CallBack for 3D Hal Bufffer  \n");                                
@@ -288,15 +285,11 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
 	DWORD  ddRVal = 0;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
+
 	DPRINT1("NtGdiDdGetDriverInfo\n");
-#endif
 	
 	if (pDirectDraw == NULL) 
-	{
-#ifdef DX_DEBUG
-        DPRINT1("Can not lock DirectDraw handle \n");
-#endif
+	{     
 		return DDHAL_DRIVER_NOTHANDLED;
     }
 
@@ -312,14 +305,13 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
     /* Now we are doing the call to drv DrvGetDriverInfo */
 	if   (ddRVal == 2)
 	{
-#ifdef DX_DEBUG
          DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED");         
-#endif
 	     ddRVal = DDHAL_DRIVER_NOTHANDLED;
     }
 	else
+	{
 	     ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
-   
+	}
     GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 
 	return ddRVal;
