@@ -5,8 +5,6 @@ Signature="$ReactOS$
 
 HKCU,"Control Panel",,0x00000012
 HKCU,"Control Panel\Appearance",,0x00000012
-HKCU,"Control Panel\Colors",,0x00000012
-HKCU,"Control Panel\Colors","Background",0x00000012, "0 128 128"
 HKCU,"Control Panel\Mouse","MouseTrails",0x00010001,0x00000000
 HKCU,"Control Panel\Mouse","SnapToDefaultButton",0x00010001,0x00000000
 HKCU,"Control Panel\Mouse","MouseSpeed",0x00010001,0x00000001
