@@ -344,42 +344,32 @@ DWORD STDCALL NtGdiDdCreateSurface(
 	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
     PDD_DIRECTDRAW pDirectDraw;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
-#ifdef DX_DEBUG
+
 	DPRINT1("NtGdiDdCreateSurface\n");
-#endif
 
 	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-	if (pDirectDraw == NULL) 
-	{
-#ifdef DX_DEBUG
-       	DPRINT1("Can not lock the DirectDraw handle\n");
-#endif
-		return DDHAL_DRIVER_NOTHANDLED;
-    }
-	
-	/* backup the orignal PDev and info */
-	lgpl = puCreateSurfaceData->lpDD;
 
-	/* use our cache version instead */
-	puCreateSurfaceData->lpDD = &pDirectDraw->Global;
+	if (pDirectDraw != NULL) 
+	{       					
 	
-	/* make the call */
-	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
-	{
-#ifdef DX_DEBUG
-        DPRINT1("DirectDraw HAL does not support Create Surface"); 
-#endif
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-    }
-	else
-	{	  
-	   ddRVal = pDirectDraw->DD.CreateSurface(puCreateSurfaceData);	 
+		if ((pDirectDraw->DD.dwFlags & DDHAL_CB32_CREATESURFACE))
+		{	
+           /* backup the orignal PDev and info */
+		   lgpl = puCreateSurfaceData->lpDD;
+
+		   /* use our cache version instead */
+		   puCreateSurfaceData->lpDD = &pDirectDraw->Global;
+
+		   /* make the call */
+		   ddRVal = pDirectDraw->DD.CreateSurface(puCreateSurfaceData);	
+
+		   /* But back the orignal PDev */
+	       puCreateSurfaceData->lpDD = lgpl;
+	    }
+	       
+	    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);	
 	}
 
-	/* But back the orignal PDev */
-	puCreateSurfaceData->lpDD = lgpl;
-    
-	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);	
 	return ddRVal;
 }
 
