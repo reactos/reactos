@@ -264,7 +264,6 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 	   RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks, sizeof( D3DNTHAL_CALLBACKS ) );		
 	}
 
-
 	if (pHalInfo->lpD3DBufCallbacks)
     {
        DPRINT1("Found DirectDraw CallBack for 3D Hal Bufffer  \n");                                
@@ -370,34 +369,28 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
     PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
 )
 {
-	DWORD  ddRVal;
+	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
     PDD_DIRECTDRAW pDirectDraw;
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdWaitForVerticalBlank\n");
-#endif
 
+	DPRINT1("NtGdiDdWaitForVerticalBlank\n");
 
 	pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-	if (pDirectDraw == NULL) 
-		return DDHAL_DRIVER_NOTHANDLED;
+	
+	if (pDirectDraw != NULL) 
+	{	
+		if (pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
+		{
+			lgpl = puWaitForVerticalBlankData->lpDD;	
+			puWaitForVerticalBlankData->lpDD = &pDirectDraw->Global;        	
 
-	/* backup the orignal PDev and info */
-	lgpl = puWaitForVerticalBlankData->lpDD;
+  	        ddRVal = pDirectDraw->DD.WaitForVerticalBlank(puWaitForVerticalBlankData);
+	
+	        puWaitForVerticalBlankData->lpDD = lgpl;            
+	     }
+		 GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+	}
 
-	/* use our cache version instead */
-	puWaitForVerticalBlankData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else	
-  	    ddRVal = pDirectDraw->DD.WaitForVerticalBlank(puWaitForVerticalBlankData);
-
-	/* But back the orignal PDev */
-	puWaitForVerticalBlankData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
 	return ddRVal;
 }
 
@@ -406,33 +399,33 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
     PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
 )
 {
-	DWORD  ddRVal;
+	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	PDD_DIRECTDRAW_GLOBAL lgpl;	
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
+
 	DPRINT1("NtGdiDdCanCreateSurface\n");
-#endif
+
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
-	/* backup the orignal PDev and info */
-	lgpl = puCanCreateSurfaceData->lpDD;
+	if (pDirectDraw != NULL)
+	{
 
-	/* use our cache version instead */
-	puCanCreateSurfaceData->lpDD = &pDirectDraw->Global;
+		if (pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
+		{	
+			lgpl = puCanCreateSurfaceData->lpDD;	
+			puCanCreateSurfaceData->lpDD = &pDirectDraw->Global;
 
-	/* make the call */
-	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else	
-	    ddRVal = pDirectDraw->DD.CanCreateSurface(puCanCreateSurfaceData);
+	        ddRVal = pDirectDraw->DD.CanCreateSurface(puCanCreateSurfaceData);	
 
-	/* But back the orignal PDev */
-	puCanCreateSurfaceData->lpDD = lgpl;
+	        puCanCreateSurfaceData->lpDD = lgpl;
+		}
 
 	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-	return ddRVal;
+	}
+
+  return ddRVal;
 }
 
 DWORD STDCALL NtGdiDdGetScanLine(
@@ -440,33 +433,29 @@ DWORD STDCALL NtGdiDdGetScanLine(
     PDD_GETSCANLINEDATA puGetScanLineData
 )
 {
-	DWORD  ddRVal;
+	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
+
 	DPRINT1("NtGdiDdGetScanLine\n");
-#endif
-	if (pDirectDraw == NULL) 
-		return DDHAL_DRIVER_NOTHANDLED;
 
-	/* backup the orignal PDev and info */
-	lgpl = puGetScanLineData->lpDD;
+	if (pDirectDraw != NULL) 
+	{
+		if (pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE)
+		{
+			lgpl = puGetScanLineData->lpDD;	
+			puGetScanLineData->lpDD = &pDirectDraw->Global;
+	
+	        ddRVal = pDirectDraw->DD.GetScanLine(puGetScanLineData);
+	
+	        puGetScanLineData->lpDD = lgpl;
+		}
 
-	/* use our cache version instead */
-	puGetScanLineData->lpDD = &pDirectDraw->Global;
+	    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+	}
 
-	/* make the call */
-	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else	
-	    ddRVal = pDirectDraw->DD.GetScanLine(puGetScanLineData);
-
-	/* But back the orignal PDev */
-	puGetScanLineData->lpDD = lgpl;
-
-	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-	return ddRVal;
+   return ddRVal;
 }
 
 
