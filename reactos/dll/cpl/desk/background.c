@@ -6,6 +6,7 @@
  * PURPOSE:         Background property page
  * 
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
+ *                  Alexey Minnekhanov (minlexx@rambler.ru)
  */
 
 #include "desk.h"
@@ -31,6 +32,7 @@ DIBitmap *g_pWallpaperBitmap    = NULL;
 
 int g_placementSelection        = 0;
 int g_backgroundSelection       = 0;
+COLORREF g_backgroundDesktopColor = 0;
 
 int g_listViewItemCount         = 0;
 
@@ -52,7 +54,7 @@ void AddListViewItems()
     WIN32_FIND_DATA fd;
     HANDLE hFind;
     TCHAR szSearchPath[MAX_PATH];
-	TCHAR szFileTypes[MAX_PATH];
+    TCHAR szFileTypes[MAX_PATH];
     LV_ITEM listItem;
     LV_COLUMN dummy;
     RECT clientRect;
@@ -65,8 +67,8 @@ void AddListViewItems()
     LONG result;
     UINT i = 0;
     BackgroundItem *backgroundItem = NULL;
-	TCHAR separators[] = TEXT(";");
-	TCHAR *token;
+    TCHAR separators[] = TEXT(";");
+    TCHAR *token;
 
     GetClientRect(g_hBackgroundList, &clientRect);
     
@@ -76,13 +78,10 @@ void AddListViewItems()
     dummy.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
     
     (void)ListView_InsertColumn(g_hBackgroundList, 0, &dummy);
-
+    
     /* Add the "None" item */
-
-    backgroundItem = &g_backgroundItems[g_listViewItemCount];
-    
+    backgroundItem = &g_backgroundItems[g_listViewItemCount];   
     backgroundItem->bWallpaper = FALSE;
-    
     LoadString(hApplet,
                IDS_NONE,
                backgroundItem->szDisplayName,
@@ -102,9 +101,7 @@ void AddListViewItems()
     g_listViewItemCount++;
 
     /* Add current wallpaper if any */
-    
     RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
-    
     result = RegQueryValueEx(regKey, TEXT("Wallpaper"), 0, &varType, (LPBYTE)wallpaperFilename, &bufferSize);
     
     if((result == ERROR_SUCCESS) && (_tcslen(wallpaperFilename) > 0))
@@ -231,7 +228,9 @@ void InitBackgroundDialog()
     LONG result;
     BITMAP bitmap;
     
-	g_hBackgroundList       = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_LIST);
+    g_backgroundDesktopColor = GetSysColor( COLOR_BACKGROUND );
+    
+    g_hBackgroundList       = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_LIST);
     g_hBackgroundPreview    = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_PREVIEW);
     g_hPlacementCombo       = GetDlgItem(g_hBackgroundPage, IDC_PLACEMENT_COMBO);
     g_hColorButton          = GetDlgItem(g_hBackgroundPage, IDC_COLOR_BUTTON);
@@ -297,7 +296,30 @@ void InitBackgroundDialog()
 
 void OnColorButton()
 {
-    MessageBox(NULL, TEXT("That button doesn't do anything yet"), TEXT("Whoops"), MB_OK);
+    CHOOSECOLOR cc;
+    COLORREF custom_colors[16];
+
+    cc.lStructSize = sizeof(CHOOSECOLOR);
+    cc.hwndOwner = g_hBackgroundPage;
+    cc.hInstance = NULL;
+    cc.rgbResult = g_backgroundDesktopColor;
+
+    memset(custom_colors, RGB(255,255,255), sizeof(custom_colors));
+
+    cc.lpCustColors = custom_colors;
+    cc.Flags = CC_ANYCOLOR | /* Causes the dialog box to display all available colors in the set of basic colors.  */
+        CC_FULLOPEN |  /* opens dialog in full size */
+        CC_RGBINIT ;  /* init chosen color by rgbResult value */
+    cc.lCustData = 0;
+    cc.lpfnHook = NULL;
+    cc.lpTemplateName = NULL;
+
+    if( ChooseColor( &cc ) )
+    {
+        g_backgroundDesktopColor = cc.rgbResult; /* save selected color to var */
+        PropSheet_Changed( GetParent( g_hBackgroundPage ), g_hBackgroundPage ); /* Apply button will be activated */
+        InvalidateRect(g_hBackgroundPreview, NULL, TRUE); /* window will be updated :) */
+    }
 }
 
 BOOL CheckListBoxFilename(HWND list, TCHAR *filename)
@@ -314,9 +336,9 @@ void OnBrowseButton()
     TCHAR fileTitle[256];
     TCHAR filter[MAX_PATH];
     BackgroundItem *backgroundItem = NULL;
-	SHFILEINFO sfi;
-	LV_ITEM listItem;
-        
+    SHFILEINFO sfi;
+    LV_ITEM listItem;
+
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
     ofn.lStructSize = sizeof(OPENFILENAME);
@@ -324,7 +346,7 @@ void OnBrowseButton()
     ofn.lpstrFile = filename;
 
     LoadString(hApplet, IDS_BACKGROUND_COMDLG_FILTER, filter, sizeof(filter) / sizeof(TCHAR));
-        
+
     /* Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
      * use the contents of szFile to initialize itself */
     ofn.lpstrFile[0] = TEXT('\0');
@@ -337,7 +359,7 @@ void OnBrowseButton()
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
     if(GetOpenFileName(&ofn) == TRUE)
-    {   
+    {
         /* Check if there is already a entry that holds this filename */
         if(CheckListBoxFilename(g_hBackgroundList, filename) == TRUE)
             return;
@@ -414,7 +436,11 @@ void DrawBackgroundPreview(LPDRAWITEMSTRUCT draw)
 
     if(g_backgroundItems[g_backgroundSelection].bWallpaper == FALSE)
     {
-        FillRect(draw->hDC, &draw->rcItem, GetSysColorBrush(COLOR_BACKGROUND));
+    	HBRUSH hBrush = CreateSolidBrush( g_backgroundDesktopColor );
+    	//HBRUSH hBrushOld = SelectObject( draw->hDC, hBrush );
+        FillRect(draw->hDC, &draw->rcItem, hBrush );
+        //SelectObject( draw->hDC, hBrushOld );
+        DeleteObject( hBrush );
         return;
     }
     
@@ -534,6 +560,30 @@ void SetWallpaper()
     }
 }
 
+void SetDesktopBackColor()
+{
+    /* change system color */
+    INT iElement = COLOR_BACKGROUND;
+    if(!SetSysColors(1, &iElement, &g_backgroundDesktopColor))
+    {
+        MessageBox(g_hBackgroundPage, TEXT("SetSysColor() failed!"), /* these error texts can need internationalization? */
+                   TEXT("Error!"), MB_ICONSTOP );
+    }
+
+    /* write color to registry key: HKEY_CURRENT_USER\Control Panel\Colors\Background */
+    HKEY hKey = NULL;
+    if( RegOpenKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Colors"), 0, KEY_WRITE, &hKey ) == ERROR_SUCCESS )
+    {
+        TCHAR clText[16] = {0}; // COLORREF(DWORD) holds colors as := 0x00BBGGRR
+        DWORD red   = (g_backgroundDesktopColor & 0x000000FF);
+        DWORD green = (g_backgroundDesktopColor & 0x0000FF00) >> 8;
+        DWORD blue  = (g_backgroundDesktopColor & 0x00FF0000) >> 16;
+        wsprintf( clText, TEXT("%d %d %d"), red, green, blue ); /* format string to be set to registry */
+        RegSetValueEx( hKey, TEXT("Background"), 0, REG_SZ, (BYTE *)clText, lstrlen( clText )*sizeof(TCHAR) + sizeof(TCHAR) );
+        RegCloseKey( hKey );
+    }
+}
+
 INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                                     UINT uMsg,
                                     WPARAM wParam,
@@ -622,7 +672,7 @@ INT_PTR CALLBACK BackgroundPageProc(HWND hwndDlg,
                     case PSN_APPLY:
                         {
                             SetWallpaper();
-
+                            SetDesktopBackColor();
                             return TRUE;
                         } break;
 

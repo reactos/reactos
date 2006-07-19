@@ -1,120 +1,142 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_NEUTRAL
 
-IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 188
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_BACKGROUND DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Фон"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW, 80, 10,
-                    83, 57, WS_EX_STATICEDGE
-    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32", LVS_REPORT | 
-                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP, 8, 114, 174, 68
-    LTEXT           "Выберите изображение для рабочего стола:",
-                    IDC_STATIC, 8, 103, 180, 9
-    PUSHBUTTON      "&Обзор...", IDC_BROWSE_BUTTON, 188, 114, 50, 15
-    PUSHBUTTON      "&Цвет...", IDC_COLOR_BUTTON, 188, 167, 50, 15
-    LTEXT           "Расположение:", IDC_STATIC, 188, 138, 50, 9
-    COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54, CBS_DROPDOWNLIST | 
+    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,80,10,83,
+                    57,WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER | 
+                    WS_BORDER | WS_TABSTOP,8,114,174,68
+    LTEXT           "Выберите изображение для рабочего стола:",IDC_STATIC,8,
+                    103,180,9
+    PUSHBUTTON      "&Обзор...",IDC_BROWSE_BUTTON,188,114,55,15
+    PUSHBUTTON      "&Цвет...",IDC_COLOR_BUTTON,188,167,55,15
+    LTEXT           "Расположение:",IDC_STATIC,188,138,55,9
+    COMBOBOX        IDC_PLACEMENT_COMBO,188,149,55,54,CBS_DROPDOWNLIST | 
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 188
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_SCREENSAVER DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Заставка"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "&Заставка",IDC_SCREENS_DUMMY, 5, 7, 238, 137
-    
-    LTEXT           "Список заставок:",IDC_STATIC,13, 24, 150, 9
+    GROUPBOX        "&Заставка",IDC_SCREENS_DUMMY,5,7,238,137
+    LTEXT           "Список заставок:",IDC_STATIC,13,24,150,9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
-                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,13, 34, 170, 69
-
-    PUSHBUTTON      "&Настройка...",IDC_SCREENS_SETTINGS,188, 34, 50, 15,WS_GROUP
-    PUSHBUTTON      "Про&смотр",IDC_SCREENS_TESTSC,188, 52, 50, 15
-
-    CONTROL         "&Защита паролем.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 13, 121, 119, 18
-
-    LTEXT           "&Интервал:",IDC_STATIC, 13, 110, 20, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 33, 109, 31, 12,ES_RIGHT | WS_GROUP
-    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
-                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP, 52, 109, 12, 12
-    LTEXT           "минут до отображения заставки.",IDC_STATIC, 70, 111, 147, 9
-
-    GROUPBOX        "&Энергосберегающие функции монитора",IDC_SCREENS_DUMMY2, 5, 146, 238, 50
+                    LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER | 
+                    WS_BORDER | WS_TABSTOP,13,34,170,69
+    PUSHBUTTON      "&Настройка...",IDC_SCREENS_SETTINGS,188,34,50,15,
+                    WS_GROUP
+    PUSHBUTTON      "Про&смотр",IDC_SCREENS_TESTSC,188,52,50,15
+    CONTROL         "&Защита паролем.",IDC_SCREENS_USEPASSCHK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,121,119,18
+    LTEXT           "&Интервал:",IDC_STATIC,13,110,35,9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,53,109,31,12,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
+                    WS_BORDER | WS_GROUP,87,108,13,12
+    LTEXT           "минут до отображения заставки.",IDC_STATIC,109,110,118,
+                    9
+    GROUPBOX        "&Энергосберегающие функции монитора",IDC_SCREENS_DUMMY2,
+                    5,146,238,50
     LTEXT           "Для изменения параметров питания монитора нажмите кнопку Параметры Питания.",
-                    IDC_STATIC, 16, 159, 145, 35
-    PUSHBUTTON      "Параметры &Питания",IDC_SCREENS_POWER_BUTTON, 165, 162, 73, 15
+                    IDC_STATIC,16,159,145,35
+    PUSHBUTTON      "Параметры &питания",IDC_SCREENS_POWER_BUTTON,157,162,81,
+                    15
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_APPEARANCE DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Оформление"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Настройки временно отсутсвуют",IDC_STATIC,66,
-                    90,112,8
+    LTEXT           "Настройки временно отсутсвуют",IDC_STATIC,65,87,114,8
 END
 
-IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
-STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+IDD_SETTINGS DIALOGEX 0, 0, 246, 188
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Настройки"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "&Дисплей:",1820,3,100,30,8
     LTEXT           "<нет>",IDC_SETTINGS_DEVICE,9,109,224,8
     GROUPBOX        "&Область экрана",1818,3,120,119,43
-    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
-                    33,130,58,17
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP,33,130,58,17
     LTEXT           "Меньше",1815,7,130,27,8,NOT WS_GROUP
     LTEXT           "Больше",1816,91,130,27,8,NOT WS_GROUP
-    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
+    CTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT 
+                    WS_GROUP
     GROUPBOX        "&Цвета",1817,125,120,115,43
-    COMBOBOX        IDC_SETTINGS_BPP,133,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
-                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_SETTINGS_BPP,133,130,103,80,CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,148,103,9
     PUSHBUTTON      "До&полнительно...",IDC_SETTINGS_ADVANCED,306,165,56,14
 END
 
-IDR_POPUP_MENU MENU DISCARDABLE
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_POPUP_MENU MENU 
 BEGIN
-  POPUP ""
-  BEGIN
-	MENUITEM "&Configure",     ID_MENU_CONFIG
-	MENUITEM "&Preview",       ID_MENU_PREVIEW
-	MENUITEM SEPARATOR
-	MENUITEM "&Add",           ID_MENU_ADD
-	MENUITEM "&Delete\tDel",   ID_MENU_DELETE
-  END
+    POPUP ""
+    BEGIN
+        MENUITEM "&Настроить",                  ID_MENU_CONFIG
+        MENUITEM "&Предпросмотр",               ID_MENU_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Добавить",                   ID_MENU_ADD
+        MENUITEM "&Удалить\tDel",               ID_MENU_DELETE
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLNAME             "Дисплей"
+    IDS_CPLDESCRIPTION      "Выберите дисплей рабочего стола и заставку."
+    IDS_NONE                "(нет)"
+    IDS_CENTER              "По центру"
+    IDS_STRETCH             "Растянуть"
+    IDS_TILE                "Повторять"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_CPLNAME "Дисплей"
-    IDS_CPLDESCRIPTION "Выберите дисплей рабочего стола и заставку."
-    
-    IDS_NONE "(нет)"
-    IDS_CENTER "По центру"
-    IDS_STRETCH "Растянуть"
-    IDS_TILE "Повторять"
+    IDS_COLOR_4BIT          "16 цветов"
+    IDS_COLOR_8BIT          "256 цветов"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE 
 BEGIN
-    IDS_COLOR_4BIT "16 цветов"
-    IDS_COLOR_8BIT "256 цветов"
-    IDS_COLOR_16BIT "High Color (16 бит)"
-    IDS_COLOR_24BIT "True Color (24 бита)"
-    IDS_COLOR_32BIT "True Color (32 бита)"
-    IDS_PIXEL "%lux%lu точек"
+    IDS_COLOR_16BIT         "High Color (16 бит)"
+    IDS_COLOR_24BIT         "True Color (24 бита)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE 
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Картинки (*.bmp;*.dib)\0*.bmp;*.dib\0"
-    IDS_SUPPORTED_EXT "*.bmp;*.dib"
+    IDS_COLOR_32BIT         "True Color (32 бита)"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_PIXEL               "%lux%lu точек"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_BACKGROUND_COMDLG_FILTER "Картинки (*.bmp;*.dib)\000*.bmp;*.dib"
+    IDS_SUPPORTED_EXT       "*.bmp;*.dib"
 END
