@@ -80,7 +80,7 @@ typedef struct _USER_REFERENCE_ENTRY
    PUSER_REFERENCE_ENTRY ref; \
    \
    ASSERT(_obj_); \
-   t = PsGetWin32Thread(); \
+   t = PsGetCurrentThreadWin32Thread(); \
    ASSERT(t); \
    e = t->ReferencesList.Next; \
    ASSERT(e); \
@@ -95,7 +95,7 @@ typedef struct _USER_REFERENCE_ENTRY
    PW32THREAD t; \
    \
    ASSERT(_obj_); \
-   t = PsGetWin32Thread(); \
+   t = PsGetCurrentThreadWin32Thread(); \
    ASSERT(t); \
    ASSERT(_ref_); \
    (_ref_)->obj = _obj_; \
@@ -113,7 +113,7 @@ typedef struct _USER_REFERENCE_ENTRY
    PUSER_REFERENCE_ENTRY ref; \
    \
    ASSERT(_obj_); \
-   t = PsGetWin32Thread(); \
+   t = PsGetCurrentThreadWin32Thread(); \
    ASSERT(t); \
    e = PopEntryList(&t->ReferencesList); \
    ASSERT(e); \

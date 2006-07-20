@@ -13,11 +13,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define LockEvent Spare0[0]
-#define LockCount Spare0[1]
-#define LockOwner Spare0[2]
-
-/* GLOBALS ******************************************************************/
+/* GLOBALS *******************************************************************/
 
 PEPROCESS PsInitialSystemProcess = NULL;
 PEPROCESS PsIdleProcess = NULL;
@@ -26,31 +22,16 @@ extern PHANDLE_TABLE PspCidTable;
 extern POBJECT_TYPE DbgkDebugObjectType;
 
 EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
-
 ULONG PsMinimumWorkingSet, PsMaximumWorkingSet;
 
 LIST_ENTRY PsActiveProcessHead;
 FAST_MUTEX PspActiveProcessMutex;
+
+#if 1
 LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
-
-/* INTERNAL FUNCTIONS *****************************************************************/
-
-NTSTATUS
-NTAPI
-PspDeleteLdt(PEPROCESS Process)
-{
-    /* FIXME */
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-PspDeleteVdmObjects(PEPROCESS Process)
-{
-    /* FIXME */
-    return STATUS_SUCCESS;
-}
-
+#define LockEvent Spare0[0]
+#define LockCount Spare0[1]
+#define LockOwner Spare0[2]
 NTSTATUS
 NTAPI
 PsLockProcess(PEPROCESS Process, BOOLEAN Timeout)
@@ -126,6 +107,25 @@ PsUnlockProcess(PEPROCESS Process)
 
   KeLeaveCriticalRegion();
 }
+#endif
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+NTSTATUS
+NTAPI
+PspDeleteLdt(PEPROCESS Process)
+{
+    /* FIXME */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PspDeleteVdmObjects(PEPROCESS Process)
+{
+    /* FIXME */
+    return STATUS_SUCCESS;
+}
 
 PETHREAD
 NTAPI
@@ -175,80 +175,56 @@ PsGetNextProcessThread(IN PEPROCESS Process,
 
 PEPROCESS
 NTAPI
-PsGetNextProcess(PEPROCESS OldProcess)
+PsGetNextProcess(IN PEPROCESS OldProcess)
 {
-    PEPROCESS NextProcess;
-    NTSTATUS Status;
+    PLIST_ENTRY Entry, ListHead;
+    PEPROCESS FoundProcess = NULL;
     PAGED_CODE();
-
-    /* Check if we have a previous process */
-    if (OldProcess == NULL)
-    {
-        /* We don't, start with the Idle Process */
-        Status = ObReferenceObjectByPointer(PsIdleProcess,
-                                            PROCESS_ALL_ACCESS,
-                                            PsProcessType,
-                                            KernelMode);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("PsGetNextProcess(): ObReferenceObjectByPointer failed for PsIdleProcess\n");
-            KEBUGCHECK(0);
-        }
-
-        return PsIdleProcess;
-    }
 
     /* Acquire the Active Process Lock */
     ExAcquireFastMutex(&PspActiveProcessMutex);
 
-    /* Start at the previous process */
-    NextProcess = OldProcess;
-
-    /* Loop until we fail */
-    while (1)
+    /* Check if we're already starting somewhere */
+    if (OldProcess)
     {
-        /* Get the Process Link */
-        PLIST_ENTRY Flink = (NextProcess == PsIdleProcess ? PsActiveProcessHead.Flink :
-                             NextProcess->ActiveProcessLinks.Flink);
+        /* Start where we left off */
+        Entry = OldProcess->ActiveProcessLinks.Flink;
+    }
+    else
+    {
+        /* Start at the beginning */
+        Entry = PsActiveProcessHead.Flink;
+    }
 
-        /* Move to the next Process if we're not back at the beginning */
-        if (Flink != &PsActiveProcessHead)
-        {
-            NextProcess = CONTAINING_RECORD(Flink, EPROCESS, ActiveProcessLinks);
-        }
-        else
-        {
-            NextProcess = NULL;
-            break;
-        }
+    /* Set the list head and start looping */
+    ListHead = &PsActiveProcessHead;
+    while (ListHead != Entry)
+    {
+        /* Get the Thread */
+        FoundProcess = CONTAINING_RECORD(Entry, EPROCESS, ActiveProcessLinks);
 
-        /* Reference the Process */
-        Status = ObReferenceObjectByPointer(NextProcess,
-                                            PROCESS_ALL_ACCESS,
-                                            PsProcessType,
-                                            KernelMode);
-
-        /* Exit the loop if the reference worked, keep going if there's an error */
-        if (NT_SUCCESS(Status)) break;
+        /* Reference the thread. FIXME: Race, use ObSafeReferenceObject */
+        ObReferenceObject(FoundProcess);
+        break;
     }
 
     /* Release the lock */
     ExReleaseFastMutex(&PspActiveProcessMutex);
 
     /* Reference the Process we had referenced earlier */
-    ObDereferenceObject(OldProcess);
-    return(NextProcess);
+    if (OldProcess) ObDereferenceObject(OldProcess);
+    return FoundProcess;
 }
 
 NTSTATUS
 NTAPI
 PspCreateProcess(OUT PHANDLE ProcessHandle,
                  IN ACCESS_MASK DesiredAccess,
-                 IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
-                 IN HANDLE ParentProcess  OPTIONAL,
+                 IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+                 IN HANDLE ParentProcess OPTIONAL,
                  IN DWORD Flags,
-                 IN HANDLE SectionHandle  OPTIONAL,
-                 IN HANDLE DebugPort  OPTIONAL,
+                 IN HANDLE SectionHandle OPTIONAL,
+                 IN HANDLE DebugPort OPTIONAL,
                  IN HANDLE ExceptionPort OPTIONAL,
                  IN BOOLEAN InJob)
 {
@@ -288,11 +264,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                            PreviousMode,
                                            (PVOID*)&Parent,
                                            NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to reference the parent process: Status: 0x%x\n", Status);
-            return Status;
-        }
+        if (!NT_SUCCESS(Status)) return Status;
 
         /* If this process should be in a job but the parent isn't */
         if ((InJob) && (!Parent->Job))
@@ -309,7 +281,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* We have no parent */
         Parent = NULL;
-#ifdef CONFIG_SMP        
+#ifdef CONFIG_SMP
         /*
          * FIXME: Only the boot cpu is initialized in the early boot phase. 
     */
@@ -333,14 +305,14 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                             0,
                             0,
                             (PVOID*)&Process);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to create process object, Status: 0x%x\n", Status);
-        goto Cleanup;
-    }
+    if (!NT_SUCCESS(Status)) goto Cleanup;
 
     /* Clean up the Object */
     RtlZeroMemory(Process, sizeof(EPROCESS));
+
+    /* Initialize pushlock and rundown protection */
+    ExInitializeRundownProtection(&Process->RundownProtect);
+    Process->ProcessLock.Value = 0;
 
     /* Setup the Thread List Head */
     InitializeListHead(&Process->ThreadListHead);
@@ -356,7 +328,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* Ineherit PID and Hard Error Processing */
         Process->InheritedFromUniqueProcessId = Parent->UniqueProcessId;
-        Process->DefaultHardErrorProcessing = Parent->DefaultHardErrorProcessing;
+        Process->DefaultHardErrorProcessing = Parent->
+                                              DefaultHardErrorProcessing;
     }
     else
     {
@@ -374,11 +347,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                            PreviousMode,
                                            (PVOID*)&SectionObject,
                                            NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to reference process image section: Status: 0x%x\n", Status);
-            goto CleanupWithRef;
-        }
+        if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }
     else
     {
@@ -386,14 +355,14 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (Parent != PsInitialSystemProcess)
         {
             /* It's not, so acquire the process rundown */
-            // FIXME
+            ExAcquireRundownProtection(&Process->RundownProtect);
 
             /* If the parent has a section, use it */
             SectionObject = Parent->SectionObject;
             if (SectionObject) ObReferenceObject(SectionObject);
 
             /* Release process rundown */
-            // FIXME
+            ExReleaseRundownProtection(&Process->RundownProtect);
 
             /* If we don't have a section object */
             if (!SectionObject)
@@ -418,17 +387,17 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                            PreviousMode,
                                            (PVOID*)&DebugObject,
                                            NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to reference the debug port: Status: 0x%x\n", Status);
-            goto CleanupWithRef;
-        }
+        if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
         /* Save the debug object */
         Process->DebugPort = DebugObject;
 
         /* Check if the caller doesn't want the debug stuff inherited */
-        if (Flags & PS_NO_DEBUG_INHERIT) InterlockedOr((PLONG)&Process->Flags, 2);
+        if (Flags & PS_NO_DEBUG_INHERIT)
+        {
+            /* Set the process flag */
+            InterlockedOr((PLONG)&Process->Flags, 2);
+        }
     }
     else
     {
@@ -446,11 +415,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                            PreviousMode,
                                            (PVOID*)&ExceptionPortObject,
                                            NULL);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to reference the exception port: Status: 0x%x\n", Status);
-            goto CleanupWithRef;
-        }
+        if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
         /* Save the exception port */
         Process->ExceptionPort = ExceptionPortObject;
@@ -460,10 +425,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     Process->SectionObject = SectionObject;
 
     /* Setup the Lock Event */
+#if 1
     Process->LockEvent = ExAllocatePoolWithTag(PagedPool,
                                                sizeof(KEVENT),
                                                TAG('P', 's', 'L', 'k'));
     KeInitializeEvent(Process->LockEvent, SynchronizationEvent, FALSE);
+#endif
 
     /* Set default exit code */
     Process->ExitStatus = STATUS_TIMEOUT;
@@ -490,22 +457,14 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Duplicate Parent Token */
     Status = PspInitializeProcessSecurity(Process, Parent);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("PspInitializeProcessSecurity failed (Status %x)\n", Status);
-        goto CleanupWithRef;
-    }
+    if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
     /* Set default priority class */
     Process->PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
 
     /* Create the Process' Address Space */
     Status = MmCreateProcessAddressSpace(Process, (PROS_SECTION_OBJECT)SectionObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to create Address Space\n");
-        goto CleanupWithRef;
-    }
+    if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
     /* Check for parent again */
 #if 0
@@ -542,20 +501,15 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     }
 #endif
 
-    /* Check if we have a section object */
-    if (SectionObject)
-    {
-        /* Map the System Dll */
-        PspMapSystemDll(Process, NULL);
-    }
+    /* Check if we have a section object and map the system DLL */
+    if (SectionObject) PspMapSystemDll(Process, NULL);
 
     /* Create a handle for the Process */
     CidEntry.Object = Process;
     CidEntry.GrantedAccess = 0;
     Process->UniqueProcessId = ExCreateHandle(PspCidTable, &CidEntry);
-    if(!Process->UniqueProcessId)
+    if (!Process->UniqueProcessId)
     {
-        DPRINT1("Failed to create CID handle\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto CleanupWithRef;
     }
@@ -566,11 +520,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (Parent)
     {
         Status = MmCreatePeb(Process);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("NtCreateProcess() Peb creation failed: Status %x\n",Status);
-            goto CleanupWithRef;
-        }
+        if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }
 
     /* The process can now be activated */
@@ -587,6 +537,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                             1,
                             (PVOID*)&Process,
                             &hProcess);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
 
     /* FIXME: Compute Quantum and Priority */
 
@@ -594,32 +545,34 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
      * FIXME: ObGetObjectSecurity(Process, &SecurityDescriptor)
      *        SeAccessCheck
      */
-    ObReferenceObject(Process); // <- Act as if we called ObGetObjectSecurity
 
-    /* Check for success */
-    if (NT_SUCCESS(Status))
+    /* Sanity check */
+    ASSERT(IsListEmpty(&Process->ThreadListHead));
+
+    /* Set the Creation Time */
+    KeQuerySystemTime(&Process->CreateTime);
+
+    /* Set the granted access */
+    Process->GrantedAccess = PROCESS_ALL_ACCESS;
+
+    /* Protect against bad user-mode pointer */
+    _SEH_TRY
     {
-        /* Set the Creation Time */
-        KeQuerySystemTime(&Process->CreateTime);
-
-        /* Protect against bad user-mode pointer */
-        _SEH_TRY
-        {
-            /* Save the process handle */
-           *ProcessHandle = hProcess;
-        }
-        _SEH_HANDLE
-        {
-           Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
+        /* Save the process handle */
+       *ProcessHandle = hProcess;
     }
+    _SEH_HANDLE
+    {
+        /* Get the exception code */
+       Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
 
 CleanupWithRef:
     /* 
      * Dereference the process. For failures, kills the process and does
      * cleanup present in PspDeleteProcess. For success, kills the extra
-     * reference added by ObGetObjectSecurity
+     * reference added by ObInsertObject.
      */
     ObDereferenceObject(Process);
 
@@ -638,10 +591,11 @@ Cleanup:
  */
 NTSTATUS
 NTAPI
-PsCreateSystemProcess(PHANDLE ProcessHandle,
-                      ACCESS_MASK DesiredAccess,
-                      POBJECT_ATTRIBUTES ObjectAttributes)
+PsCreateSystemProcess(OUT PHANDLE ProcessHandle,
+                      IN ACCESS_MASK DesiredAccess,
+                      IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
+    /* Call the internal API */
     return PspCreateProcess(ProcessHandle,
                             DesiredAccess,
                             ObjectAttributes,
@@ -668,8 +622,8 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
     KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
-    if ((CidEntry = ExMapHandleToPointer(PspCidTable,
-                                         ProcessId)))
+    CidEntry = ExMapHandleToPointer(PspCidTable, ProcessId);
+    if (CidEntry)
     {
         /* Get the Process */
         FoundProcess = CidEntry->Object;
@@ -677,7 +631,7 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
         /* Make sure it's really a process */
         if (FoundProcess->Pcb.Header.Type == ProcessObject)
         {
-            /* Reference and return it */
+            /* FIXME: Safe Reference and return it */
             ObReferenceObject(FoundProcess);
             *Process = FoundProcess;
             Status = STATUS_SUCCESS;
@@ -708,8 +662,8 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
     KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
-    if ((CidEntry = ExMapHandleToPointer(PspCidTable,
-                                          Cid->UniqueThread)))
+    CidEntry = ExMapHandleToPointer(PspCidTable, Cid->UniqueThread);
+    if (CidEntry)
     {
         /* Get the Process */
         FoundThread = CidEntry->Object;
@@ -718,7 +672,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
         if ((FoundThread->Tcb.DispatcherHeader.Type == ThreadObject) &&
             (FoundThread->Cid.UniqueProcess == Cid->UniqueProcess))
         {
-            /* Reference and return it */
+            /* FIXME: Safe Reference and return it */
             ObReferenceObject(FoundThread);
             *Thread = FoundThread;
             Status = STATUS_SUCCESS;
@@ -735,40 +689,20 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
         /* Unlock the Entry */
         ExUnlockHandleTableEntry(PspCidTable, CidEntry);
     }
-    
+
     /* Return to caller */
     KeLeaveCriticalRegion();
     return Status;
 }
 
 /*
- * FUNCTION: Returns a pointer to the current process
- *
  * @implemented
  */
-PEPROCESS STDCALL
-IoGetCurrentProcess(VOID)
-{
-   if (PsGetCurrentThread() == NULL ||
-       PsGetCurrentThread()->Tcb.ApcState.Process == NULL)
-     {
-	return(PsInitialSystemProcess);
-     }
-   else
-     {
-	return(PEPROCESS)(PsGetCurrentThread()->Tcb.ApcState.Process);
-     }
-}
-
-/*
- * @implemented
- */
-LARGE_INTEGER STDCALL
+LARGE_INTEGER
+NTAPI
 PsGetProcessExitTime(VOID)
 {
-  LARGE_INTEGER Li;
-  Li.QuadPart = PsGetCurrentProcess()->ExitTime.QuadPart;
-  return Li;
+    return PsGetCurrentProcess()->ExitTime;
 }
 
 /*
@@ -920,16 +854,12 @@ PsGetProcessSessionId(PEPROCESS Process)
     return (HANDLE)Process->Session;
 }
 
-struct _W32THREAD*
-STDCALL
-PsGetWin32Thread(VOID)
-{
-    return(PsGetCurrentThread()->Tcb.Win32Thread);
-}
-
+/*
+ * @implemented
+ */
 struct _W32PROCESS*
-STDCALL
-PsGetWin32Process(VOID)
+NTAPI
+PsGetCurrentProcessWin32Process(VOID)
 {
     return (struct _W32PROCESS*)PsGetCurrentProcess()->Win32Process;
 }
@@ -961,7 +891,7 @@ BOOLEAN
 STDCALL
 PsIsProcessBeingDebugged(PEPROCESS Process)
 {
-    return FALSE; //Process->IsProcessBeingDebugged;
+    return Process->DebugPort != NULL;
 }
 
 /*
@@ -1037,27 +967,27 @@ NtCreateProcessEx(OUT PHANDLE ProcessHandle,
 {
     KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
-
     PAGED_CODE();
 
-    /* Check parameters */
+    /* Check if we came from user mode */
     if(PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
+            /* Probe process handle */
             ProbeForWriteHandle(ProcessHandle);
         }
         _SEH_HANDLE
         {
+            /* Get exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        if(!NT_SUCCESS(Status)) return Status;
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Make sure there's a parent process */
-    if(!ParentProcess)
+    if (!ParentProcess)
     {
         /* Can't create System Processes like this */
         Status = STATUS_INVALID_PARAMETER;
@@ -1087,12 +1017,12 @@ NTSTATUS
 NTAPI
 NtCreateProcess(OUT PHANDLE ProcessHandle,
                 IN ACCESS_MASK DesiredAccess,
-                IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+                IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
                 IN HANDLE ParentProcess,
                 IN BOOLEAN InheritObjectTable,
-                IN HANDLE SectionHandle  OPTIONAL,
-                IN HANDLE DebugPort  OPTIONAL,
-                IN HANDLE ExceptionPort  OPTIONAL)
+                IN HANDLE SectionHandle OPTIONAL,
+                IN HANDLE DebugPort OPTIONAL,
+                IN HANDLE ExceptionPort OPTIONAL)
 {
     ULONG Flags = 0;
 
@@ -1123,7 +1053,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
               IN POBJECT_ATTRIBUTES ObjectAttributes,
               IN PCLIENT_ID ClientId)
 {
-    KPROCESSOR_MODE PreviousMode;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     CLIENT_ID SafeClientId;
     ULONG Attributes = 0;
     HANDLE hProcess;
@@ -1131,30 +1061,32 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     PETHREAD Thread = NULL;
     PEPROCESS Process = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-
+    ACCESS_STATE AccessState;
+    AUX_DATA AuxData;
     PAGED_CODE();
 
-    PreviousMode = KeGetPreviousMode();
-
-    /* Probe the paraemeters */
-    if(PreviousMode != KernelMode)
+    /* Check if we were called from user mode */
+    if (PreviousMode != KernelMode)
     {
+        /* Enter SEH for probing */
         _SEH_TRY
         {
+            /* Probe the thread handle */
             ProbeForWriteHandle(ProcessHandle);
 
-            if(ClientId != NULL)
+            /* Check for a CID structure */
+            if (ClientId)
             {
-                ProbeForRead(ClientId,
-                             sizeof(CLIENT_ID),
-                             sizeof(ULONG));
-
+                /* Probe and capture it */
+                ProbeForRead(ClientId, sizeof(CLIENT_ID), sizeof(ULONG));
                 SafeClientId = *ClientId;
                 ClientId = &SafeClientId;
             }
 
-            /* just probe the object attributes structure, don't capture it
-               completely. This is done later if necessary */
+            /*
+             * Just probe the object attributes structure, don't capture it
+             * completely. This is done later if necessary
+             */
             ProbeForRead(ObjectAttributes,
                          sizeof(OBJECT_ATTRIBUTES),
                          sizeof(ULONG));
@@ -1163,22 +1095,47 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        if(!NT_SUCCESS(Status)) return Status;
+        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
+        /* Otherwise just get the data directly */
         HasObjectName = (ObjectAttributes->ObjectName != NULL);
         Attributes = ObjectAttributes->Attributes;
     }
 
-    if (HasObjectName && ClientId != NULL)
+    /* Can't pass both, fail */
+    if ((HasObjectName) && (ClientId)) return STATUS_INVALID_PARAMETER_MIX;
+
+    /* Create an access state */
+    Status = SeCreateAccessState(&AccessState,
+                                 &AuxData,
+                                 DesiredAccess,
+                                 &PsProcessType->TypeInfo.GenericMapping);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if this is a debugger */
+    if (SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
     {
-        /* can't pass both, n object name and a client id */
-        return STATUS_INVALID_PARAMETER_MIX;
+        /* Did he want full access? */
+        if (AccessState.RemainingDesiredAccess & MAXIMUM_ALLOWED)
+        {
+            /* Give it to him */
+            AccessState.PreviouslyGrantedAccess |= PROCESS_ALL_ACCESS;
+        }
+        else
+        {
+            /* Otherwise just give every other access he could want */
+            AccessState.PreviouslyGrantedAccess |=
+                AccessState.RemainingDesiredAccess;
+        }
+
+        /* The caller desires nothing else now */
+        AccessState.RemainingDesiredAccess = 0;
     }
 
     /* Open by name if one was given */
@@ -1188,25 +1145,21 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         Status = ObOpenObjectByName(ObjectAttributes,
                                     PsProcessType,
                                     PreviousMode,
-                                    NULL,
-                                    DesiredAccess,
+                                    &AccessState,
+                                    0,
                                     NULL,
                                     &hProcess);
 
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Could not open object by name\n");
-        }
+        /* Get rid of the access state */
+        SeDeleteAccessState(&AccessState);
     }
-    else if (ClientId != NULL)
+    else if (ClientId)
     {
         /* Open by Thread ID */
         if (ClientId->UniqueThread)
         {
             /* Get the Process */
-            Status = PsLookupProcessThreadByCid(ClientId,
-                                                &Process,
-                                                &Thread);
+            Status = PsLookupProcessThreadByCid(ClientId, &Process, &Thread);
         }
         else
         {
@@ -1215,24 +1168,25 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
                                                 &Process);
         }
 
-        if(!NT_SUCCESS(Status))
+        /* Check if we didn't find anything */
+        if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failure to find process\n");
+            /* Get rid of the access state and return */
+            SeDeleteAccessState(&AccessState);
             return Status;
         }
 
         /* Open the Process Object */
         Status = ObOpenObjectByPointer(Process,
                                        Attributes,
-                                       NULL,
-                                       DesiredAccess,
+                                       &AccessState,
+                                       0,
                                        PsProcessType,
                                        PreviousMode,
                                        &hProcess);
-        if(!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failure to open process\n");
-        }
+
+        /* Delete the access state */
+        SeDeleteAccessState(&AccessState);
 
         /* Dereference the thread if we used it */
         if (Thread) ObDereferenceObject(Thread);
@@ -1246,20 +1200,24 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         return STATUS_INVALID_PARAMETER_MIX;
     }
 
-    /* Write back the handle */
-    if(NT_SUCCESS(Status))
+    /* Check for success */
+    if (NT_SUCCESS(Status))
     {
+        /* Use SEH for write back */
         _SEH_TRY
         {
+            /* Write back the handle */
             *ProcessHandle = hProcess;
         }
         _SEH_HANDLE
         {
+            /* Get the exception code */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
     }
 
+    /* Return status */
     return Status;
 }
 /* EOF */

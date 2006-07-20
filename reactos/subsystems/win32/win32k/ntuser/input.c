@@ -1003,7 +1003,7 @@ NtUserBlockInput(
    DPRINT("Enter NtUserBlockInput\n");
    UserEnterExclusive();
 
-   RETURN( IntBlockInput(PsGetWin32Thread(), BlockIt));
+   RETURN( IntBlockInput(PsGetCurrentThreadWin32Thread(), BlockIt));
 
 CLEANUP:
    DPRINT("Leave NtUserBlockInput, ret=%i\n",_ret_);
@@ -1062,7 +1062,7 @@ IntMouseInput(MOUSEINPUT *mi)
    ASSERT(mi);
 #if 0
 
-   WinSta = PsGetWin32Process()->WindowStation;
+   WinSta = PsGetCurrentProcessWin32Process()->WindowStation;
 #else
    /* FIXME - ugly hack but as long as we're using this dumb callback from the
    mouse class driver, we can't access the window station from the calling
@@ -1288,7 +1288,7 @@ NtUserSendInput(
    DPRINT("Enter NtUserSendInput\n");
    UserEnterExclusive();
 
-   W32Thread = PsGetWin32Thread();
+   W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
    if(!W32Thread->Desktop)

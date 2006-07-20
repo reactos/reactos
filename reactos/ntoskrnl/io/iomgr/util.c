@@ -81,6 +81,25 @@ IoIsWdmVersionAvailable(IN UCHAR MajorVersion,
 /*
  * @implemented
  */
+PEPROCESS
+NTAPI
+IoGetCurrentProcess(VOID)
+{
+    /* FIXME: Completely broken */
+    if (PsGetCurrentThread() == NULL ||
+        PsGetCurrentThread()->Tcb.ApcState.Process == NULL)
+    {
+        return(PsInitialSystemProcess);
+    }
+    else
+    {
+        return(PEPROCESS)(PsGetCurrentThread()->Tcb.ApcState.Process);
+    }
+}
+
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 IoReleaseCancelSpinLock(KIRQL Irql)

@@ -34,7 +34,7 @@ IntUserHeapCommitRoutine(IN PVOID Base,
     NTSTATUS Status;
     SIZE_T Delta = (SIZE_T)((ULONG_PTR)(*CommitAddress) - (ULONG_PTR)Base);
 
-    W32Process = PsGetWin32Process();
+    W32Process = PsGetCurrentProcessWin32Process();
 
     if (W32Process != NULL)
     {

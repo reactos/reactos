@@ -430,8 +430,8 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
                                         pwszBuff,
                                         cchBuff,
                                         wFlags,
-                                        PsGetWin32Thread() ?
-                                        PsGetWin32Thread()->KeyboardLayout : 0 );
+                                        PsGetCurrentThreadWin32Thread() ?
+                                        PsGetCurrentThreadWin32Thread()->KeyboardLayout : 0 );
    }
 
    return ToUnicodeResult;
@@ -716,7 +716,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    DWORD ScanCode = 0;
 
 
-   keyLayout = PsGetWin32Thread()->KeyboardLayout;
+   keyLayout = PsGetCurrentThreadWin32Thread()->KeyboardLayout;
    if( !keyLayout )
       return FALSE;
 
@@ -726,7 +726,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
    /* All messages have to contain the cursor point. */
-   IntGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation,
+   IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
                         &NewMsg.pt);
 
    UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
@@ -763,14 +763,14 @@ IntTranslateKbdMessage(LPMSG lpMsg,
          NewMsg.wParam = dead_char;
          NewMsg.lParam = lpMsg->lParam;
          dead_char = 0;
-         MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
+         MsqPostMessage(PsGetCurrentThreadWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
       }
 
       NewMsg.hwnd = lpMsg->hwnd;
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
       DPRINT( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
-      MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
+      MsqPostMessage(PsGetCurrentThreadWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
    }
    else if (UState == -1)
@@ -781,7 +781,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
       dead_char = wp[0];
-      MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
+      MsqPostMessage(PsGetCurrentThreadWin32Thread()->MessageQueue, &NewMsg, FALSE, QS_KEY);
       Result = TRUE;
    }
 
@@ -957,7 +957,7 @@ NtUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl )
    DPRINT("Enter NtUserMapVirtualKeyEx\n");
    UserEnterExclusive();
    
-   keyLayout = PsGetWin32Thread() ? PsGetWin32Thread()->KeyboardLayout : 0;
+   keyLayout = PsGetCurrentThreadWin32Thread() ? PsGetCurrentThreadWin32Thread()->KeyboardLayout : 0;
 
    if( !keyLayout )
       RETURN(0);
@@ -1049,8 +1049,8 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    DPRINT("Enter NtUserGetKeyNameText\n");
    UserEnterShared();
    
-   keyLayout = PsGetWin32Thread() ?
-      PsGetWin32Thread()->KeyboardLayout : 0;
+   keyLayout = PsGetCurrentThreadWin32Thread() ?
+      PsGetCurrentThreadWin32Thread()->KeyboardLayout : 0;
 
    if( !keyLayout || nSize < 1 )
       RETURN(0);
@@ -1275,7 +1275,7 @@ UserGetKeyboardLayout(
    PKBDTABLES layout;
 
    if (!dwThreadId)
-      W32Thread = PsGetWin32Thread();
+      W32Thread = PsGetCurrentThreadWin32Thread();
    else
    {
       Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);//fixme: deref thread

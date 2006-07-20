@@ -656,7 +656,7 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
          (MsgFilterMin > WM_PAINT || MsgFilterMax < WM_PAINT))
       return FALSE;
 
-   Message->hwnd = IntFindWindowToRepaint(UserGetDesktopWindow(), PsGetWin32Thread());
+   Message->hwnd = IntFindWindowToRepaint(UserGetDesktopWindow(), PsGetCurrentThreadWin32Thread());
 
    if (Message->hwnd == NULL)
    {

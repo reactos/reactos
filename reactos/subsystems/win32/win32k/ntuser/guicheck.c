@@ -79,7 +79,7 @@ co_IntGraphicsCheck(BOOL Create)
 {
    PW32PROCESS W32Data;
 
-   W32Data = PsGetWin32Process();
+   W32Data = PsGetCurrentProcessWin32Process();
    if (Create)
    {
       if (! (W32Data->Flags & W32PF_CREATEDWINORDC) && ! (W32Data->Flags & W32PF_MANUALGUICHECK))
@@ -106,7 +106,7 @@ NtUserManualGuiCheck(LONG Check)
    DPRINT("Enter NtUserManualGuiCheck\n");
    UserEnterExclusive();
 
-   W32Data = PsGetWin32Process();
+   W32Data = PsGetCurrentProcessWin32Process();
    if (0 == Check)
    {
       W32Data->Flags |= W32PF_MANUALGUICHECK;

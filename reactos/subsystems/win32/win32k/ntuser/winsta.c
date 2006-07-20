@@ -894,7 +894,7 @@ UserGetProcessWindowStation(VOID)
    else
    {
       DPRINT1("Should use ObFindHandleForObject\n");
-      Status = ObOpenObjectByPointer(PsGetWin32Thread()->Desktop->WindowStation,
+      Status = ObOpenObjectByPointer(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
                                      0,
                                      NULL,
                                      WINSTA_ALL_ACCESS,
@@ -942,9 +942,9 @@ IntGetWinStaObj(VOID)
     * just a temporary hack, this will be gone soon
     */
 
-   if(PsGetWin32Thread() != NULL && PsGetWin32Thread()->Desktop != NULL)
+   if(PsGetCurrentThreadWin32Thread() != NULL && PsGetCurrentThreadWin32Thread()->Desktop != NULL)
    {
-      WinStaObj = PsGetWin32Thread()->Desktop->WindowStation;
+      WinStaObj = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
       ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
    }
    else if(PsGetCurrentProcess() != CsrProcess)
@@ -1045,7 +1045,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
    DPRINT("About to set process window station with handle (0x%X)\n",
           hWindowStation);
 
-   if(PsGetWin32Process() != LogonProcess)
+   if(PsGetCurrentProcessWin32Process() != LogonProcess)
    {
       DPRINT1("Unauthorized process attempted to lock the window station!\n");
       SetLastWin32Error(ERROR_ACCESS_DENIED);
@@ -1090,7 +1090,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
    DPRINT("About to set process window station with handle (0x%X)\n",
           hWindowStation);
 
-   if(PsGetWin32Process() != LogonProcess)
+   if(PsGetCurrentProcessWin32Process() != LogonProcess)
    {
       DPRINT1("Unauthorized process attempted to unlock the window station!\n");
       SetLastWin32Error(ERROR_ACCESS_DENIED);

@@ -290,7 +290,7 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 
    ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
 
-   Win32Thread = PsGetWin32Thread();
+   Win32Thread = PsGetCurrentThreadWin32Thread();
    if (NULL == Win32Thread)
    {
       Table = NULL;
@@ -343,7 +343,7 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
    }
    else
    {
-      IntReleaseHookChain(MsqGetHooks(PsGetWin32Thread()->MessageQueue), HookId, WinStaObj);
+      IntReleaseHookChain(MsqGetHooks(PsGetCurrentThreadWin32Thread()->MessageQueue), HookId, WinStaObj);
       IntReleaseHookChain(GlobalHooks, HookId, WinStaObj);
       ObDereferenceObject(WinStaObj);
    }

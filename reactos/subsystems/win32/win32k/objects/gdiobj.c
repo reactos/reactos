@@ -340,7 +340,7 @@ GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
   ULONG Attempts = 0;
 #endif
 
-  W32Process = PsGetWin32Process();
+  W32Process = PsGetCurrentProcessWin32Process();
   /* HACK HACK HACK: simplest-possible quota implementation - don't allow a process
      to take too many GDI objects, itself. */
   if ( W32Process && W32Process->GDIObjects >= 0x2710 )
@@ -521,7 +521,7 @@ LockHandle:
       if(GdiHdr->Locks == 0)
       {
         BOOL Ret;
-        PW32PROCESS W32Process = PsGetWin32Process();
+        PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
         ULONG Type = Entry->Type << 16;
 
         /* Clear the type field so when unlocking the handle it gets finally deleted and increment reuse counter */

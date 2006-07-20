@@ -23,7 +23,7 @@ VOID W32kRegisterPrimitiveMessageQueue(VOID)
    if( !pmPrimitiveMessageQueue )
    {
       PW32THREAD pThread;
-      pThread = PsGetWin32Thread();
+      pThread = PsGetCurrentThreadWin32Thread();
       if( pThread && pThread->MessageQueue )
       {
          pmPrimitiveMessageQueue = pThread->MessageQueue;
@@ -182,7 +182,7 @@ NtUserCallOneParam(
 
    if (Routine == ONEPARAM_ROUTINE_SHOWCURSOR)
    {
-      PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+      PWINSTATION_OBJECT WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
       PSYSTEM_CURSORINFO CurInfo;
                  
       HDC Screen;
@@ -416,7 +416,7 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
          {
             BOOL Enable;
-            PW32PROCESS Process = PsGetWin32Process();
+            PW32PROCESS Process = PsGetCurrentProcessWin32Process();
 
             if(Process != NULL)
             {
@@ -1244,7 +1244,7 @@ IntSystemParametersInfo(
       case SPI_SETWORKAREA:
          {
             RECT *rc;
-            PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+            PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop;
 
             if(!Desktop)
             {
@@ -1260,7 +1260,7 @@ IntSystemParametersInfo(
          }
       case SPI_GETWORKAREA:
          {
-            PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+            PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop;
 
             if(!Desktop)
             {
@@ -1898,7 +1898,7 @@ PW32PROCESSINFO
 GetW32ProcessInfo(VOID)
 {
     PW32PROCESSINFO pi;
-    PW32PROCESS W32Process = PsGetWin32Process();
+    PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
 
     if (W32Process == NULL)
     {
@@ -1938,7 +1938,7 @@ GetW32ThreadInfo(VOID)
 {
     PTEB Teb;
     PW32THREADINFO ti;
-    PW32THREAD W32Thread = PsGetWin32Thread();
+    PW32THREAD W32Thread = PsGetCurrentThreadWin32Thread();
 
     if (W32Thread == NULL)
     {

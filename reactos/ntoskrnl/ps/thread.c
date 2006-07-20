@@ -618,6 +618,16 @@ PsSetThreadHardErrorsAreDisabled(IN PETHREAD Thread,
 /*
  * @implemented
  */
+struct _W32THREAD*
+NTAPI
+PsGetCurrentThreadWin32Thread(VOID)
+{
+    return PsGetCurrentThread()->Tcb.Win32Thread;
+}
+
+/*
+ * @implemented
+ */
 VOID
 NTAPI
 PsSetThreadWin32Thread(IN PETHREAD Thread,

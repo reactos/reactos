@@ -138,7 +138,7 @@ static __inline PVOID
 UserHeapAddressToUser(PVOID lpMem)
 {
     return (PVOID)(((ULONG_PTR)lpMem - (ULONG_PTR)GlobalUserHeap) +
-                   (ULONG_PTR)PsGetWin32Process()->HeapMappings.UserMapping);
+                   (ULONG_PTR)PsGetCurrentProcessWin32Process()->HeapMappings.UserMapping);
 }
 
 #endif /* __W32K_H */

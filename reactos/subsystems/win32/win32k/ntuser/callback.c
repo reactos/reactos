@@ -59,7 +59,7 @@ IntCbAllocateMemory(ULONG Size)
       return NULL;
    }
 
-   W32Thread = PsGetWin32Thread();
+   W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
    /* insert the callback memory into the thread's callback list */
@@ -79,7 +79,7 @@ IntCbFreeMemory(PVOID Data)
 
    Mem = ((PINT_CALLBACK_HEADER)Data - 1);
 
-   W32Thread = PsGetWin32Thread();
+   W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
    /* remove the memory block from the thread's callback list */

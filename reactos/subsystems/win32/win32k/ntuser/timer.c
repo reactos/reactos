@@ -83,7 +83,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       HintIndex = ++IDEvent;
       IntUnlockWindowlessTimerBitmap();
       Ret = IDEvent;
-      MessageQueue = PsGetWin32Thread()->MessageQueue;
+      MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
    }
    else
    {
@@ -151,7 +151,7 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
    DPRINT("IntKillTimer wnd %x id %p systemtimer %s\n",
           Wnd, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
-   if (! MsqKillTimer(PsGetWin32Thread()->MessageQueue, Wnd,
+   if (! MsqKillTimer(PsGetCurrentThreadWin32Thread()->MessageQueue, Wnd,
                       IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
    {
       DPRINT1("Unable to locate timer in message queue\n");

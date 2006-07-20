@@ -44,16 +44,16 @@ IntEngCleanupDriverObjs(struct _EPROCESS *Process,
 {
   PDRIVERGDI DrvObjInt;
 
-  IntEngLockProcessDriverObjs(PsGetWin32Process());
+  IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
   while (!IsListEmpty(&Win32Process->DriverObjListHead))
     {
       DrvObjInt = CONTAINING_RECORD(Win32Process->DriverObjListHead.Flink,
                                     DRIVERGDI, ListEntry);
-      IntEngUnLockProcessDriverObjs(PsGetWin32Process());
+      IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
       EngDeleteDriverObj((HDRVOBJ)(&DrvObjInt->DriverObj), TRUE, FALSE);
-      IntEngLockProcessDriverObjs(PsGetWin32Process());
+      IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
     }
-  IntEngUnLockProcessDriverObjs(PsGetWin32Process());
+  IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
 }
 
 
@@ -88,9 +88,9 @@ EngCreateDriverObj(
 
   /* fill internal object */
   ExInitializeFastMutex(&DrvObjInt->Lock);
-  IntEngLockProcessDriverObjs(PsGetWin32Process());
-  InsertTailList(&PsGetWin32Process()->DriverObjListHead, &DrvObjInt->ListEntry);
-  IntEngUnLockProcessDriverObjs(PsGetWin32Process());
+  IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
+  InsertTailList(&PsGetCurrentProcessWin32Process()->DriverObjListHead, &DrvObjInt->ListEntry);
+  IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
 
   return (HDRVOBJ)DrvObjUser;
 }
@@ -129,9 +129,9 @@ EngDeleteDriverObj(
     }
   
   /* Free the DRIVEROBJ */
-  IntEngLockProcessDriverObjs(PsGetWin32Process());
+  IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
   RemoveEntryList(&DrvObjInt->ListEntry);
-  IntEngUnLockProcessDriverObjs(PsGetWin32Process());
+  IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
   EngFreeMem(DrvObjInt);
   
   return TRUE;

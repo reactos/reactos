@@ -572,7 +572,7 @@ PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
 
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
-   PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
+   PDESKTOP_OBJECT pdo = PsGetCurrentThreadWin32Thread()->Desktop;
    if (NULL == pdo)
    {
       DPRINT1("Thread doesn't have a desktop\n");
@@ -753,7 +753,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
  */
 BOOL IntRegisterShellHookWindow(HWND hWnd)
 {
-   PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+   PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop;
    PSHELL_HOOK_WINDOW Entry;
 
    DPRINT("IntRegisterShellHookWindow\n");
@@ -784,7 +784,7 @@ BOOL IntRegisterShellHookWindow(HWND hWnd)
  */
 BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 {
-   PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+   PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop;
    PSHELL_HOOK_WINDOW Current;
 
    LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
@@ -1326,7 +1326,7 @@ NtUserPaintDesktop(HDC hDC)
    COLORREF color_old;
    UINT align_old;
    int mode_old;
-   PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   PWINSTATION_OBJECT WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
    DECLARE_RETURN(BOOL);
 
    UserEnterExclusive();
@@ -1557,7 +1557,7 @@ NtUserSwitchDesktop(HDESK hDesktop)
     * is the logon application itself
     */
    if((DesktopObject->WindowStation->Flags & WSS_LOCKED) &&
-         LogonProcess != NULL && LogonProcess != PsGetWin32Process())
+         LogonProcess != NULL && LogonProcess != PsGetCurrentProcessWin32Process())
    {
       ObDereferenceObject(DesktopObject);
       DPRINT1("Switching desktop 0x%x denied because the work station is locked!\n", hDesktop);
@@ -1691,7 +1691,7 @@ static NTSTATUS
 IntUnmapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
 {
     PW32THREADINFO ti;
-    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetWin32Process()->HeapMappings.Next;
+    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* unmap if we're the last thread using the desktop */
@@ -1735,7 +1735,7 @@ static NTSTATUS
 IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
 {
     PW32THREADINFO ti;
-    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetWin32Process()->HeapMappings.Next;
+    PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     PVOID UserBase = NULL;
     ULONG ViewSize = 0;
     LARGE_INTEGER Offset;
@@ -1813,7 +1813,7 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
     BOOL MapHeap;
 
     MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
-    W32Thread = PsGetWin32Thread();
+    W32Thread = PsGetCurrentThreadWin32Thread();
 
     if (W32Thread->Desktop != DesktopObject)
     {

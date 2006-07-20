@@ -714,7 +714,7 @@ IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
 
    if(bRevert)
    {
-      W32Thread = PsGetWin32Thread();
+      W32Thread = PsGetCurrentThreadWin32Thread();
 
       if(!W32Thread->Desktop)
          return NULL;
@@ -1426,7 +1426,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    BOOL HasOwner;
    USER_REFERENCE_ENTRY ParentRef, Ref;
 
-   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
+   ParentWindowHandle = PsGetCurrentThreadWin32Thread()->Desktop->DesktopWindow;
    OwnerWindowHandle = NULL;
 
    if (hWndParent == HWND_MESSAGE)
@@ -1470,7 +1470,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* Check the window station. */
    ti = GetW32ThreadInfo();
-   if (ti == NULL || PsGetWin32Thread()->Desktop == NULL)
+   if (ti == NULL || PsGetCurrentThreadWin32Thread()->Desktop == NULL)
    {
       DPRINT1("Thread is not attached to a desktop! Cannot create window!\n");
       RETURN( (HWND)0);
@@ -1508,7 +1508,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        RETURN(NULL);
    }
 
-   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+   WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
 
    //FIXME: Reference thread/desktop instead
    ObReferenceObjectByPointer(WinSta, KernelMode, ExWindowStationObjectType, 0);
@@ -1531,10 +1531,10 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    ObDereferenceObject(WinSta);
 
-   if (NULL == PsGetWin32Thread()->Desktop->DesktopWindow)
+   if (NULL == PsGetCurrentThreadWin32Thread()->Desktop->DesktopWindow)
    {
       /* If there is no desktop window yet, we must be creating it */
-      PsGetWin32Thread()->Desktop->DesktopWindow = hWnd;
+      PsGetCurrentThreadWin32Thread()->Desktop->DesktopWindow = hWnd;
    }
 
    /*
@@ -1562,7 +1562,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       IntSetMenu(Window, hMenu, &MenuChanged);
    }
 
-   Window->MessageQueue = PsGetWin32Thread()->MessageQueue;
+   Window->MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
    IntReferenceMessageQueue(Window->MessageQueue);
    Window->Parent = ParentWindow;
    
@@ -1664,7 +1664,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
 
    /* Insert the window into the thread's window list. */
-   InsertTailList (&PsGetWin32Thread()->WindowListHead, &Window->ThreadListEntry);
+   InsertTailList (&PsGetCurrentThreadWin32Thread()->WindowListHead, &Window->ThreadListEntry);
 
    /* Allocate a DCE for this window. */
    if (dwStyle & CS_OWNDC)
@@ -2245,7 +2245,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
                   continue;
                }
 
-               if (IntWndBelongsToThread(Child, PsGetWin32Thread()))
+               if (IntWndBelongsToThread(Child, PsGetCurrentThreadWin32Thread()))
                {
                   USER_REFERENCE_ENTRY ChildRef;
                   UserRefObjectCo(Child, &ChildRef);//temp hack?
@@ -2277,7 +2277,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    }
 
    /* Destroy the window storage */
-   co_UserFreeWindow(Window, PsGetWin32Process(), PsGetWin32Thread(), TRUE);
+   co_UserFreeWindow(Window, PsGetCurrentProcessWin32Process(), PsGetCurrentThreadWin32Thread(), TRUE);
 
    return TRUE;
 }
@@ -4456,7 +4456,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       //its possible this referencing is useless, thou it shouldnt hurt...
       UserRefObjectCo(DesktopWindow, &Ref);
       
-      Hit = co_WinPosWindowFromPoint(DesktopWindow, PsGetWin32Thread()->MessageQueue, &pt, &Window);
+      Hit = co_WinPosWindowFromPoint(DesktopWindow, PsGetCurrentThreadWin32Thread()->MessageQueue, &pt, &Window);
       
       if(Window)
       {

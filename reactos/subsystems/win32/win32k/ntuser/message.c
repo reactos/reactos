@@ -663,7 +663,7 @@ co_IntPeekMessage(PUSER_MESSAGE Msg,
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
 
    /* Inspect RemoveMsg flags */
    /* FIXME: The only flag we process is PM_REMOVE - processing of others must still be implemented */
@@ -739,7 +739,7 @@ CheckMessages:
       ;
 
    /* Check for paint messages. */
-   if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, PsGetWin32Thread(), &Msg->Msg, RemoveMessages))
+   if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, PsGetCurrentThreadWin32Thread(), &Msg->Msg, RemoveMessages))
    {
       Msg->FreeLParam = FALSE;
       return TRUE;
@@ -922,7 +922,7 @@ co_IntWaitMessage(HWND Wnd,
    NTSTATUS Status;
    USER_MESSAGE Msg;
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
 
    do
    {
@@ -1176,7 +1176,7 @@ UserPostMessage(HWND Wnd,
 
    if (WM_QUIT == Msg)
    {
-      MsqPostQuitMessage(PsGetWin32Thread()->MessageQueue, wParam);
+      MsqPostQuitMessage(PsGetCurrentThreadWin32Thread()->MessageQueue, wParam);
    }
    else if (Wnd == HWND_BROADCAST)
    {
@@ -1221,7 +1221,7 @@ UserPostMessage(HWND Wnd,
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return FALSE;
       }
-      IntGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation,
+      IntGetCursorLocation(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
                            &KernelModeMsg.pt);
       KeQueryTickCount(&LargeTickCount);
       KernelModeMsg.time = LargeTickCount.u.LowPart;
@@ -1362,7 +1362,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    
    UserRefObjectCo(Window, &Ref);
 
-   Win32Thread = PsGetWin32Thread();
+   Win32Thread = PsGetCurrentThreadWin32Thread();
 
    if (NULL != Win32Thread &&
          Window->MessageQueue == Win32Thread->MessageQueue)
@@ -1507,7 +1507,7 @@ co_IntPostOrSendMessage(HWND hWnd,
       return 0;
    }
 
-   if(Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
+   if(Window->MessageQueue != PsGetCurrentThreadWin32Thread()->MessageQueue)
    {
       Result = UserPostMessage(hWnd, Msg, wParam, lParam);
    }
@@ -1556,8 +1556,8 @@ co_IntDoSendMessage(HWND hWnd,
    /* FIXME: Check for an exiting window. */
 
    /* See if the current thread can handle the message */
-   if (HWND_BROADCAST != hWnd && NULL != PsGetWin32Thread() &&
-         Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
+   if (HWND_BROADCAST != hWnd && NULL != PsGetCurrentThreadWin32Thread() &&
+         Window->MessageQueue == PsGetCurrentThreadWin32Thread()->MessageQueue)
    {
       /* Gather the information usermode needs to call the window proc directly */
       Info.HandledByKernel = FALSE;
@@ -1737,7 +1737,7 @@ NtUserGetQueueStatus(BOOL ClearChanges)
    DPRINT("Enter NtUserGetQueueStatus\n");
    UserEnterExclusive();
 
-   Queue = PsGetWin32Thread()->MessageQueue;
+   Queue = PsGetCurrentThreadWin32Thread()->MessageQueue;
 
    Result = MAKELONG(Queue->QueueBits, Queue->ChangedBits);
    if (ClearChanges)

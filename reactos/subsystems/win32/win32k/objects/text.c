@@ -363,7 +363,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
    if (Characteristics & FR_PRIVATE)
    {
-      PW32PROCESS Win32Process = PsGetWin32Process();
+      PW32PROCESS Win32Process = PsGetCurrentProcessWin32Process();
       IntLockProcessPrivateFonts(Win32Process);
       InsertTailList(&Win32Process->PrivateFontListHead, &Entry->ListEntry);
       IntUnLockProcessPrivateFonts(Win32Process);
@@ -983,7 +983,7 @@ FindFaceNameInLists(PUNICODE_STRING FaceName)
   PFONTGDI Font;
 
   /* Search the process local list */
-  Win32Process = PsGetWin32Process();
+  Win32Process = PsGetCurrentProcessWin32Process();
   IntLockProcessPrivateFonts(Win32Process);
   Font = FindFaceNameInList(FaceName, &Win32Process->PrivateFontListHead);
   IntUnLockProcessPrivateFonts(Win32Process);
@@ -1391,7 +1391,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
   IntUnLockGlobalFonts;
 
   /* Enumerate font families in the process local list */
-  Win32Process = PsGetWin32Process();
+  Win32Process = PsGetCurrentProcessWin32Process();
   IntLockProcessPrivateFonts(Win32Process);
   if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size,
                                  &Win32Process->PrivateFontListHead))
@@ -3880,7 +3880,7 @@ TextIntRealizeFont(HFONT FontHandle)
   TextObj->Font = NULL;
 
   /* First search private fonts */
-  Win32Process = PsGetWin32Process();
+  Win32Process = PsGetCurrentProcessWin32Process();
   IntLockProcessPrivateFonts(Win32Process);
   FindBestFontFromList(&TextObj->Font, &MatchScore,
                        &TextObj->logfont, &FaceName,

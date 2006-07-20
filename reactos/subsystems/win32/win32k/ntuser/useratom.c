@@ -36,12 +36,12 @@ IntAddAtom(LPWSTR AtomName)
    NTSTATUS Status = STATUS_SUCCESS;
    RTL_ATOM Atom;
 
-   if (PsGetWin32Thread()->Desktop == NULL)
+   if (PsGetCurrentThreadWin32Thread()->Desktop == NULL)
    {
       SetLastNtError(Status);
       return (RTL_ATOM)0;
    }
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   WinStaObject = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
    Status = RtlAddAtomToAtomTable(WinStaObject->AtomTable,
                                   AtomName, &Atom);
    if (!NT_SUCCESS(Status))
@@ -59,12 +59,12 @@ IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Size = nSize;
 
-   if (PsGetWin32Thread()->Desktop == NULL)
+   if (PsGetCurrentThreadWin32Thread()->Desktop == NULL)
    {
       SetLastNtError(Status);
       return 0;
    }
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   WinStaObject = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
                                     nAtom, NULL, NULL, lpBuffer, &Size);
    if (Size < nSize)

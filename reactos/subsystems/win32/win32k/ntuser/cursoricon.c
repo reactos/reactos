@@ -334,7 +334,7 @@ ReferenceCurIconByProcess(PCURICON_OBJECT CurIcon)
    PW32PROCESS Win32Process;
    PCURICON_PROCESS Current;
 
-   Win32Process = PsGetWin32Process();
+   Win32Process = PsGetCurrentProcessWin32Process();
 
    LIST_FOR_EACH(Current, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
    {
@@ -430,7 +430,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT CurIcon, BOOL
    HBITMAP bmpMask, bmpColor;
    BOOLEAN Ret;
    PCURICON_PROCESS Current = NULL;
-   PW32PROCESS W32Process = PsGetWin32Process();
+   PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
 
    /* Private objects can only be destroyed by their own process */
    if (NULL == CurIcon->hModule)

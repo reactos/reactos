@@ -200,10 +200,10 @@ DesktopHeapGetUserDelta(VOID)
     HANDLE hDesktopHeap;
     ULONG_PTR Delta = 0;
 
-    ASSERT(PsGetWin32Thread()->Desktop != NULL);
-    hDesktopHeap = PsGetWin32Thread()->Desktop->hDesktopHeap;
+    ASSERT(PsGetCurrentThreadWin32Thread()->Desktop != NULL);
+    hDesktopHeap = PsGetCurrentThreadWin32Thread()->Desktop->hDesktopHeap;
 
-    Mapping = PsGetWin32Process()->HeapMappings.Next;
+    Mapping = PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     while (Mapping != NULL)
     {
         if (Mapping->UserMapping == (PVOID)hDesktopHeap)
@@ -224,7 +224,7 @@ DesktopHeapAddressToUser(IN PDESKTOP Desktop,
 {
     PW32HEAP_USER_MAPPING Mapping;
 
-    Mapping = PsGetWin32Process()->HeapMappings.Next;
+    Mapping = PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     while (Mapping != NULL)
     {
         if (Mapping->KernelMapping == (PVOID)Desktop->hKernelHeap)

@@ -897,10 +897,12 @@ PsEstablishWin32Callouts@4
 PsGetContextThread@12
 PsGetCurrentProcess@0=KeGetCurrentProcess@0
 PsGetCurrentProcessId@0
+PsGetCurrentProcessWin32Process@0
 PsGetCurrentProcessSessionId@0
 PsGetCurrentThread@0=KeGetCurrentThread@0
 PsGetCurrentThreadId@0
 PsGetCurrentThreadPreviousMode@0
+PsGetCurrentThreadWin32Thread@0
 PsGetCurrentThreadStackBase@0
 PsGetCurrentThreadStackLimit@0
 PsGetJobLock@4
@@ -931,8 +933,6 @@ PsGetThreadSessionId@4
 PsGetThreadTeb@4
 PsGetThreadWin32Thread@4
 PsGetVersion@16
-PsGetWin32Thread@0
-PsGetWin32Process@0
 PsImpersonateClient@20
 PsInitialSystemProcess DATA
 PsIsProcessBeingDebugged@4

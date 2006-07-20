@@ -43,7 +43,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
       ASSERT(FALSE); \
    } \
    \
-   e = PsGetWin32Thread()->ReferencesList.Next; \
+   e = PsGetCurrentThreadWin32Thread()->ReferencesList.Next; \
    while (e) \
    { \
       PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(e, USER_REFERENCE_ENTRY, Entry); \

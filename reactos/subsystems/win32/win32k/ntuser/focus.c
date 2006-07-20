@@ -42,7 +42,7 @@ HWND FASTCALL
 IntGetThreadFocusWindow()
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
    return ThreadQueue != NULL ? ThreadQueue->FocusWindow : 0;
 }
 
@@ -267,7 +267,7 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
    if (Window)
       ASSERT_REFS_CO(Window);
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
    ASSERT(ThreadQueue != 0);
 
    if (Window != 0)
@@ -307,7 +307,7 @@ co_IntSetFocusWindow(PWINDOW_OBJECT Window)
 
    ASSERT_REFS_CO(Window);
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
    ASSERT(ThreadQueue != 0);
 
    hWndPrev = ThreadQueue->FocusWindow;
@@ -361,7 +361,7 @@ CLEANUP:
 HWND FASTCALL UserGetActiveWindow()
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
    return( ThreadQueue ? ThreadQueue->ActiveWindow : 0);
 }
 
@@ -407,7 +407,7 @@ NtUserSetActiveWindow(HWND hWnd)
 
       DPRINT("(%wZ)\n", &Window->WindowName);
 
-      ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+      ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
 
       if (Window->MessageQueue != ThreadQueue)
       {
@@ -444,7 +444,7 @@ NtUserGetCapture(VOID)
    DPRINT("Enter NtUserGetCapture\n");
    UserEnterShared();
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
    RETURN( ThreadQueue ? ThreadQueue->CaptureWindow : 0);
 
 CLEANUP:
@@ -467,7 +467,7 @@ NtUserSetCapture(HWND hWnd)
    DPRINT("Enter NtUserSetCapture(%x)\n", hWnd);
    UserEnterExclusive();
 
-   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
 
    if((Window = UserGetWindowObject(hWnd)))
    {
@@ -510,7 +510,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
 
       ASSERT_REFS_CO(Window);
 
-      ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+      ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
 
       if (Window->Style & (WS_MINIMIZE | WS_DISABLED))
       {
