@@ -285,18 +285,12 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
         {
             if (NlsLeadByteInfo[*(PUCHAR)MbString++])
             {
-                if (!MbSize)
-                {
-                    /* partial char, ignore it */
-                    Length++;
-                    break;
+            	if (MbSize)
+            	{
+                    /* Move on */
+                    MbSize--;
+                    MbString++;
                 }
-            }
-            else
-            {
-                /* Move on */
-                MbSize--;
-                MbString++;
             }
 
             /* Increase returned size */
