@@ -157,7 +157,7 @@ PsInitProcessManagment(VOID)
    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
 
    InitializeListHead(&PsActiveProcessHead);
-   ExInitializeFastMutex(&PspActiveProcessMutex);
+   KeInitializeGuardedMutex(&PspActiveProcessMutex);
 
    /*
     * Initialize the default quota block.

@@ -180,6 +180,37 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define STA_ADDRESS_SPACE_OWNER_BIT             0x4
 #endif
 
+//
+// Process Flags
+//
+#define PSF_CREATE_REPORTED_BIT                 0x1
+#define PSF_NO_DEBUG_INHERIT_BIT                0x2
+#define PSF_PROCESS_EXITING_BIT                 0x4
+#define PSF_PROCESS_DELETE_BIT                  0x8
+#define PSF_WOW64_SPLIT_PAGES_BIT               0x10
+#define PSF_VM_DELETED_BIT                      0x20
+#define PSF_OUTSWAP_ENABLED_BIT                 0x40
+#define PSF_OUTSWAPPED_BIT                      0x80
+#define PSF_FORK_FAILED_BIT                     0x100
+#define PSF_WOW64_VA_SPACE_4GB_BIT              0x200
+#define PSF_ADDRESS_SPACE_INITIALIZED_BIT       0x400
+#define PSF_SET_TIMER_RESOLUTION_BIT            0x1000
+#define PSF_BREAK_ON_TERMINATION_BIT            0x2000
+#define PSF_SESSION_CREATION_UNDERWAY_BIT       0x4000
+#define PSF_WRITE_WATCH_BIT                     0x8000
+#define PSF_PROCESS_IN_SESSION_BIT              0x10000
+#define PSF_OVERRIDE_ADDRESS_SPACE_BIT          0x20000
+#define PSF_HAS_ADDRESS_SPACE_BIT               0x40000
+#define PSF_LAUNCH_PREFETCHED_BIT               0x80000
+#define PSF_INJECT_INPAGE_ERRORS_BIT            0x100000
+#define PSF_VM_TOP_DOWN_BIT                     0x200000
+#define PSF_IMAGE_NOTIFY_DONE_BIT               0x400000
+#define PSF_PDE_UPDATE_NEEDED_BIT               0x800000
+#define PSF_VDM_ALLOWED_BIT                     0x1000000
+#define PSF_SWAP_ALLOWED_BIT                    0x2000000
+#define PSF_CREATE_FAILED_BIT                   0x4000000
+#define PSF_DEFAULT_IO_PRIORITY_BIT             0x8000000
+
 #ifdef NTOS_MODE_USER
 //
 // Current Process/Thread built-in 'special' handles

@@ -18,13 +18,6 @@
 
 LIST_ENTRY PspReaperListHead = {0};
 WORK_QUEUE_ITEM PspReaperWorkItem;
-extern LIST_ENTRY PsActiveProcessHead;
-extern FAST_MUTEX PspActiveProcessMutex;
-extern PHANDLE_TABLE PspCidTable;
-extern PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout;
-extern PKWIN32_THREAD_CALLOUT PspW32ThreadCallout;
-extern PEPROCESS PsInitialSystemProcess;
-extern PEPROCESS PsIdleProcess;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -45,7 +38,7 @@ PspTerminateProcess(IN PEPROCESS Process,
     }
 
     /* Set the delete flag */
-    InterlockedOr((PLONG)&Process->Flags, 8);
+    InterlockedOr((PLONG)&Process->Flags, PSF_PROCESS_DELETE_BIT);
 
     /* Get the first thread */
     Thread = PsGetNextProcessThread(Process, Thread);
@@ -147,9 +140,9 @@ PspDeleteProcess(PVOID ObjectBody)
     if (Process->ActiveProcessLinks.Flink)
     {
         /* Remove it from the Active List */
-        ExAcquireFastMutex(&PspActiveProcessMutex);
+        KeAcquireGuardedMutex(&PspActiveProcessMutex);
         RemoveEntryList(&Process->ActiveProcessLinks);
-        ExReleaseFastMutex(&PspActiveProcessMutex);
+        KeReleaseGuardedMutex(&PspActiveProcessMutex);
     }
 
     /* Check for Auditing information */
@@ -401,7 +394,7 @@ PspExitThread(NTSTATUS ExitStatus)
     if (!(--CurrentProcess->ActiveThreads))
     {
         /* Set the delete flag */
-        InterlockedOr((PLONG)&CurrentProcess->Flags, 8);
+        InterlockedOr((PLONG)&CurrentProcess->Flags, PSF_PROCESS_DELETE_BIT);
 
         /* Remember we are last */
         Last = TRUE;
@@ -820,7 +813,7 @@ PspTerminateThreadByPointer(PETHREAD Thread,
         ASSERT_IRQL(PASSIVE_LEVEL);
 
         /* Mark it as terminated */
-        InterlockedOr((PLONG)&Thread->CrossThreadFlags, 1);
+        InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_TERMINATED_BIT);
 
         /* Directly terminate the thread */
         PspExitThread(ExitStatus);
@@ -878,8 +871,8 @@ PspExitProcess(IN BOOLEAN LastThread,
     ULONG Actual;
     PAGED_CODE();
 
-    /* Set Process Delete flag */
-    InterlockedOr((PLONG)&Process->Flags, 4);
+    /* Set Process Exit flag */
+    InterlockedOr((PLONG)&Process->Flags, PSF_PROCESS_EXITING_BIT);
 
     /* Check if we are the last thread */
     if (LastThread)
@@ -992,8 +985,9 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     /* Lock the Process */
     ExAcquireRundownProtection(&Process->RundownProtect);
 
-    /* Set the exit flag */
-    if (!KillByHandle) InterlockedOr((PLONG)&Process->Flags, 8);
+    /* Set the delete flag */
+    if (!KillByHandle) InterlockedOr((PLONG)&Process->Flags,
+                                     PSF_PROCESS_DELETE_BIT);
 
     /* Get the first thread */
     Status = STATUS_NOTHING_TO_TERMINATE;

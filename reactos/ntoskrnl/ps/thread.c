@@ -15,9 +15,6 @@
 
 /* GLOBALS ******************************************************************/
 
-extern PVOID PspSystemDllEntryPoint;
-extern PVOID PspSystemDllBase;
-extern PHANDLE_TABLE PspCidTable;
 extern BOOLEAN CcPfEnablePrefetcher;
 extern ULONG MmReadClusterSize;
 POBJECT_TYPE PsThreadType = NULL;

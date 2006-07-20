@@ -20,6 +20,7 @@ DbgkCopyProcessDebugPort(
     IN PEPROCESS Parent
 );
 
+extern POBJECT_TYPE DbgkDebugObjectType;
 #endif
 
 /* EOF */

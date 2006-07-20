@@ -18,10 +18,6 @@
 #pragma alloc_text(INIT, PsInitIdleThread)
 #endif
 
-/* GLOBALS *******************************************************************/
-
-extern PEPROCESS PsIdleProcess;
-
 /* FUNCTIONS *****************************************************************/
 
 /** System idle thread procedure

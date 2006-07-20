@@ -18,14 +18,12 @@
 PEPROCESS PsInitialSystemProcess = NULL;
 PEPROCESS PsIdleProcess = NULL;
 POBJECT_TYPE PsProcessType = NULL;
-extern PHANDLE_TABLE PspCidTable;
-extern POBJECT_TYPE DbgkDebugObjectType;
 
 EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 ULONG PsMinimumWorkingSet, PsMaximumWorkingSet;
 
 LIST_ENTRY PsActiveProcessHead;
-FAST_MUTEX PspActiveProcessMutex;
+KGUARDED_MUTEX PspActiveProcessMutex;
 
 #if 1
 LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
@@ -182,7 +180,7 @@ PsGetNextProcess(IN PEPROCESS OldProcess)
     PAGED_CODE();
 
     /* Acquire the Active Process Lock */
-    ExAcquireFastMutex(&PspActiveProcessMutex);
+    KeAcquireGuardedMutex(&PspActiveProcessMutex);
 
     /* Check if we're already starting somewhere */
     if (OldProcess)
@@ -209,7 +207,7 @@ PsGetNextProcess(IN PEPROCESS OldProcess)
     }
 
     /* Release the lock */
-    ExReleaseFastMutex(&PspActiveProcessMutex);
+    KeReleaseGuardedMutex(&PspActiveProcessMutex);
 
     /* Reference the Process we had referenced earlier */
     if (OldProcess) ObDereferenceObject(OldProcess);
@@ -396,7 +394,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (Flags & PS_NO_DEBUG_INHERIT)
         {
             /* Set the process flag */
-            InterlockedOr((PLONG)&Process->Flags, 2);
+            InterlockedOr((PLONG)&Process->Flags, PSF_NO_DEBUG_INHERIT_BIT);
         }
     }
     else
@@ -444,7 +442,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                  &DirectoryTableBase);
 
     /* We now have an address space */
-    InterlockedOr((PLONG)&Process->Flags, 0x40000);
+    InterlockedOr((PLONG)&Process->Flags, PSF_HAS_ADDRESS_SPACE_BIT);
 
     /* Set the maximum WS */
     Process->Vm.MaximumWorkingSetSize = MaxWs;
@@ -524,9 +522,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     }
 
     /* The process can now be activated */
-    ExAcquireFastMutex(&PspActiveProcessMutex);
+    KeAcquireGuardedMutex(&PspActiveProcessMutex);
     InsertTailList(&PsActiveProcessHead, &Process->ActiveProcessLinks);
-    ExReleaseFastMutex(&PspActiveProcessMutex);
+    KeReleaseGuardedMutex(&PspActiveProcessMutex);
 
     /* FIXME: SeCreateAccessStateEx */
 

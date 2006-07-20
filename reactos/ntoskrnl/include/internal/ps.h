@@ -390,9 +390,10 @@ extern BOOLEAN PspReaping;
 extern PEPROCESS PsInitialSystemProcess;
 extern PEPROCESS PsIdleProcess;
 extern LIST_ENTRY PsActiveProcessHead;
-extern FAST_MUTEX PspActiveProcessMutex;
+extern KGUARDED_MUTEX PspActiveProcessMutex;
 extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
+extern PHANDLE_TABLE PspCidTable;
 extern PCREATE_THREAD_NOTIFY_ROUTINE
 PspThreadNotifyRoutine[PSP_MAX_CREATE_THREAD_NOTIFY];
 extern PCREATE_PROCESS_NOTIFY_ROUTINE
@@ -401,6 +402,10 @@ extern PLOAD_IMAGE_NOTIFY_ROUTINE
 PspLoadImageNotifyRoutine[PSP_MAX_LOAD_IMAGE_NOTIFY];
 extern PLEGO_NOTIFY_ROUTINE PspLegoNotifyRoutine;
 extern ULONG PspThreadNotifyRoutineCount;
+extern PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout;
+extern PKWIN32_THREAD_CALLOUT PspW32ThreadCallout;
+extern PVOID PspSystemDllEntryPoint;
+extern PVOID PspSystemDllBase;
 
 #include "ps_x.h"
 
