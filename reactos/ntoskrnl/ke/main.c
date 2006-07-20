@@ -158,7 +158,7 @@ _main(ULONG MultiBootMagic,
     CHAR* s;
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
-    memcpy(&KeLoaderBlock, _LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
+    memcpy(&KeLoaderBlock, _LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
     memcpy(&KeLoaderModules[1],
            (PVOID)KeLoaderBlock.ModsAddr,
            sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
