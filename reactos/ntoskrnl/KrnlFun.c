@@ -25,16 +25,15 @@
 //  - Add tracing to iofunc.c
 //
 // Ps:
-//  - Use Process Rundown.
+//  - Use Process/Thread Rundown.
 //  - Use Process Pushlock Locks.
-//  - Use Safe Referencing in PsGetNextProcess/Thread.
+//  - Use Safe Referencing where needed.
 //  - Use Guarded Mutex instead of Fast Mutex for Active Process Locks.
 //  - Use Security Locks in security.c
-//  - Fix referencing problem.
+//  - Figure out why processes don't die.
 //  - Generate process cookie for user-more thread.
 //  - Add security calls where necessary.
 //  - Add tracing.
-//  - Fix crash on shutdown due to possibly incorrect win32k uninitailization.
 //  - Add failure/race checks for thread creation.
 //
 // Ob:

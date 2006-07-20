@@ -14,11 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define LockEvent Spare0[0]
-#define LockCount Spare0[1]
-#define LockOwner Spare0[2]
-
-
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY PspReaperListHead = {0};
@@ -31,7 +26,7 @@ extern PKWIN32_THREAD_CALLOUT PspW32ThreadCallout;
 extern PEPROCESS PsInitialSystemProcess;
 extern PEPROCESS PsIdleProcess;
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
 NTAPI
@@ -53,14 +48,16 @@ PspTerminateProcess(IN PEPROCESS Process,
     InterlockedOr((PLONG)&Process->Flags, 8);
 
     /* Get the first thread */
-    while ((Thread = PsGetNextProcessThread(Process, Thread)))
+    Thread = PsGetNextProcessThread(Process, Thread);
+    while (Thread)
     {
         /* Kill it */
         PspTerminateThreadByPointer(Thread, ExitStatus, FALSE);
-        }
+        Thread = PsGetNextProcessThread(Process, Thread);
+    }
 
     /* Clear the handle table */
-    ObClearProcessHandleTable(Process);
+    if (Process->ObjectTable) ObClearProcessHandleTable(Process);
 
     /* Return success*/
     return STATUS_SUCCESS;
@@ -73,7 +70,8 @@ PspShutdownProcessManager(VOID)
     PEPROCESS Process = NULL;
 
     /* Loop every process */
-    while ((Process == PsGetNextProcess(Process)))
+    Process == PsGetNextProcess(Process);
+    while (Process)
     {
         /* Make sure this isn't the idle or initial process */
         if ((Process != PsInitialSystemProcess) && (Process != PsIdleProcess))
@@ -81,6 +79,9 @@ PspShutdownProcessManager(VOID)
             /* Kill it */
             PspTerminateProcess(Process, STATUS_SYSTEM_SHUTDOWN);
         }
+
+        /* Get the next process */
+        Process == PsGetNextProcess(Process);
     }
 }
 
@@ -140,17 +141,15 @@ PspDeleteProcess(PVOID ObjectBody)
 {
     PEPROCESS Process = (PEPROCESS)ObjectBody;
     KAPC_STATE ApcState;
-    DPRINT1("PspDeleteProcess(ObjectBody %x)\n", ObjectBody);
     PAGED_CODE();
-    DPRINT1("Name: %.16s\n", &Process->ImageFileName);
 
     /* Check if it has an Active Process Link */
     if (Process->ActiveProcessLinks.Flink)
     {
-    /* Remove it from the Active List */
-    ExAcquireFastMutex(&PspActiveProcessMutex);
-    RemoveEntryList(&Process->ActiveProcessLinks);
-    ExReleaseFastMutex(&PspActiveProcessMutex);
+        /* Remove it from the Active List */
+        ExAcquireFastMutex(&PspActiveProcessMutex);
+        RemoveEntryList(&Process->ActiveProcessLinks);
+        ExReleaseFastMutex(&PspActiveProcessMutex);
     }
 
     /* Check for Auditing information */
@@ -233,7 +232,7 @@ PspDeleteProcess(PVOID ObjectBody)
 
         /* Completely delete the Address Space */
         MmDeleteProcessAddressSpace(Process);
-}
+    }
 
     /* See if we have a PID */
     if(Process->UniqueProcessId)
@@ -272,9 +271,8 @@ PspDeleteThread(PVOID ObjectBody)
 {
     PETHREAD Thread = (PETHREAD)ObjectBody;
     PEPROCESS Process = Thread->ThreadsProcess;
-    DPRINT1("PspDeleteThread(Thread %p, Process %p)\n", ObjectBody, Process);
     PAGED_CODE();
-    //ASSERT(Thread->Tcb.Win32Thread == NULL); FIXME
+    ASSERT(Thread->Tcb.Win32Thread == NULL);
 
     /* Check if we have a stack */
     if (Thread->Tcb.InitialStack)
@@ -284,9 +282,10 @@ PspDeleteThread(PVOID ObjectBody)
                             Thread->Tcb.LargeStack);
     }
 
-    /* Delete the CID Handle */
-    if(Thread->Cid.UniqueThread)
+    /* Check if we have a CID Handle */
+    if (Thread->Cid.UniqueThread)
     {
+        /* Delete the CID Handle */
         if (!(ExDestroyHandle(PspCidTable, Thread->Cid.UniqueThread)))
         {
             /* Something wrong happened, bugcheck */
@@ -338,7 +337,6 @@ PspExitThread(NTSTATUS ExitStatus)
     PKAPC Apc;
     PTOKEN PrimaryToken;
     PAGED_CODE();
-    DPRINT1("PspExitThread(%p, %lx)\n", PsGetCurrentThread(), ExitStatus);
 
     /* Get the Current Thread and Process */
     Thread = PsGetCurrentThread();
@@ -348,11 +346,12 @@ PspExitThread(NTSTATUS ExitStatus)
     /* Can't terminate a thread if it attached another process */
     if (KeIsAttachedProcess())
     {
+        /* Bugcheck */
         KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
-                     (ULONG)CurrentProcess,
-                     (ULONG)Thread->Tcb.ApcState.Process,
-                     (ULONG)Thread->Tcb.ApcStateIndex,
-                     (ULONG)Thread);
+                     (ULONG_PTR)CurrentProcess,
+                     (ULONG_PTR)Thread->Tcb.ApcState.Process,
+                     (ULONG_PTR)Thread->Tcb.ApcStateIndex,
+                     (ULONG_PTR)Thread);
     }
 
     /* Lower to Passive Level */
@@ -361,8 +360,9 @@ PspExitThread(NTSTATUS ExitStatus)
     /* Can't be a worker thread */
     if (Thread->ActiveExWorker)
     {
+        /* Bugcheck */
         KEBUGCHECKEX(ACTIVE_EX_WORKER_THREAD_TERMINATION,
-                     (ULONG)Thread,
+                     (ULONG_PTR)Thread,
                      0,
                      0,
                      0);
@@ -371,6 +371,7 @@ PspExitThread(NTSTATUS ExitStatus)
     /* Can't have pending APCs */
     if (Thread->Tcb.CombinedApcDisable != 0)
     {
+        /* Bugcheck */
         KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
                      0,
                      Thread->Tcb.KernelApcDisable,
@@ -378,9 +379,8 @@ PspExitThread(NTSTATUS ExitStatus)
                      0);
     }
 
-    /* FIXME: Lock the thread
-     * ExAcquireRundownProtect(&Thread->RundownProtect);
-     */
+    /* Lock the thread */
+    ExWaitForRundownProtectionRelease(&Thread->RundownProtect);
 
     /* Cleanup the power state */
     PopCleanupPowerState((PPOWER_STATE)&Thread->Tcb.PowerState);
@@ -413,7 +413,8 @@ PspExitThread(NTSTATUS ExitStatus)
             if (CurrentProcess->ExitStatus == STATUS_PENDING)
             {
                 /* Use the last exit status */
-                CurrentProcess->ExitStatus = CurrentProcess->LastThreadExitStatus;
+                CurrentProcess->ExitStatus = CurrentProcess->
+                                             LastThreadExitStatus;
             }
         }
         else
@@ -427,15 +428,14 @@ PspExitThread(NTSTATUS ExitStatus)
     else if (ExitStatus != STATUS_THREAD_IS_TERMINATING)
     {
         /* Write down the exit status of the last thread to get killed */
-    CurrentProcess->LastThreadExitStatus = ExitStatus;
+        CurrentProcess->LastThreadExitStatus = ExitStatus;
     }
 
     /* Unlock the Process */
     PsUnlockProcess(CurrentProcess);
 
     /* Check if the process has a debug port and if this is a user thread */
-    if ((CurrentProcess->DebugPort) && 
-        !(Thread->SystemThread))
+    if ((CurrentProcess->DebugPort) && !(Thread->SystemThread))
     {
         /* Notify the Debug API. */
         Last ? DbgkExitProcess(CurrentProcess->ExitStatus) :
@@ -457,7 +457,7 @@ PspExitThread(NTSTATUS ExitStatus)
         {
             /* FIXME: Add critical process support */
             DbgBreakPoint();
-    }
+        }
         else
         {
             /* Bugcheck, we can't allow this */
@@ -560,7 +560,8 @@ TryAgain2:
     }
 
     /* Rundown Win32 Thread if there is one */
-    if (Thread->Tcb.Win32Thread) PspW32ThreadCallout(Thread, FALSE);
+    if (Thread->Tcb.Win32Thread) PspW32ThreadCallout(Thread,
+                                                     PsW32ThreadCalloutExit);
 
     /* If we are the last thread and have a W32 Process */
     if ((Last) && (CurrentProcess->Win32Process))
@@ -585,14 +586,12 @@ TryAgain2:
     /* FIXME: Rundown Registry Notifications (NtChangeNotify)
     CmNotifyRunDown(Thread); */
 
-    /* Clear NPX Thread */
-    (void)InterlockedCompareExchangePointer(&KeGetCurrentPrcb()->NpxThread, NULL, Thread);
-
     /* Rundown Mutexes */
     KeRundownThread();
 
-    /* Free the TEB */
-    if((Teb = Thread->Tcb.Teb))
+    /* Check if we have a TEB */
+    Teb = Thread->Tcb.Teb;
+    if(Teb)
     {
         /* Check if the thread isn't terminated and if we should free stack */
         if (!(Thread->Terminated) && (Teb->FreeStackOnTermination))
@@ -607,10 +606,11 @@ TryAgain2:
                                 &Dummy,
                                 MEM_RELEASE);
         }
-        
+
         /* Free the debug handle */
-        if (Teb->DbgSsReserved[2]) NtClose(Teb->DbgSsReserved[2]);
-        
+        if (Teb->DbgSsReserved[1]) ObCloseHandle(Teb->DbgSsReserved[1],
+                                                 UserMode);
+
         /* Decommit the TEB */
         MmDeleteTeb(CurrentProcess, Teb);
         Thread->Tcb.Teb = NULL;
@@ -680,7 +680,7 @@ TryAgain2:
 
     /* Flush the User APCs */
     FirstEntry = KeFlushQueueApc(&Thread->Tcb, UserMode);
-    if (FirstEntry != NULL)
+    if (FirstEntry)
     {
         CurrentEntry = FirstEntry;
         do
@@ -713,7 +713,8 @@ TryAgain2:
     if (Thread->Tcb.LegoData) PspRunLegoRoutine(&Thread->Tcb);
 
     /* Flush the APC queue, which should be empty */
-    if ((FirstEntry = KeFlushQueueApc(&Thread->Tcb, KernelMode)))
+    FirstEntry = KeFlushQueueApc(&Thread->Tcb, KernelMode);
+    if (FirstEntry)
     {
         /* Bugcheck time */
         KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
@@ -740,10 +741,6 @@ PsExitSpecialApc(PKAPC Apc,
 {
     NTSTATUS Status;
     PAGED_CODE();
-    DPRINT1("PsExitSpecialApc: [%p:%p], '%.16s')\n", 
-            PsGetCurrentThread(),
-            PsGetCurrentProcess(),
-            PsGetCurrentProcess()->ImageFileName);
 
     /* Don't do anything unless we are in User-Mode */
     if (Apc->SystemArgument2)
@@ -766,16 +763,11 @@ PspExitNormalApc(PVOID NormalContext,
     PKAPC Apc = (PKAPC)SystemArgument1;
     PETHREAD Thread = PsGetCurrentThread();
     PAGED_CODE();
-    DPRINT1("PspExitNormalApc: [%p:%p], '%.16s')\n", 
-            PsGetCurrentThread(),
-            PsGetCurrentProcess(),
-            PsGetCurrentProcess()->ImageFileName);
 
     /* This should never happen */
     ASSERT(!(((ULONG_PTR)SystemArgument2) & 1));
 
     /* If we're here, this is not a System Thread, so kill it from User-Mode */
-    DPRINT1("Initializing User-Mode APC\n");
     KeInitializeApc(Apc,
                     &Thread->Tcb,
                     OriginalApcEnvironment,
@@ -812,7 +804,6 @@ PspTerminateThreadByPointer(PETHREAD Thread,
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG Flags;
     PAGED_CODE();
-    DPRINT1("PspTerminateThreadByPointer(%p, %lx)\n", Thread, ExitStatus);
 
     /* Check if this is a Critical Thread, and Bugcheck */
     if (Thread->BreakOnTermination)
@@ -823,7 +814,7 @@ PspTerminateThreadByPointer(PETHREAD Thread,
     }
 
     /* Check if we are already inside the thread */
-    if (bSelf || (PsGetCurrentThread() == Thread))
+    if ((bSelf) || (PsGetCurrentThread() == Thread))
     {
         /* This should only happen at passive */
         ASSERT_IRQL(PASSIVE_LEVEL);
@@ -836,11 +827,7 @@ PspTerminateThreadByPointer(PETHREAD Thread,
     }
 
     /* This shouldn't be a system thread */
-    if (Thread->SystemThread)
-    {
-        DPRINT1("A system thread is being illegaly terminated\n");
-        return STATUS_ACCESS_DENIED;
-    }
+    if (Thread->SystemThread) return STATUS_ACCESS_DENIED;
 
     /* Allocate the APC */
     Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
@@ -880,7 +867,6 @@ PspTerminateThreadByPointer(PETHREAD Thread,
     ExFreePool(Apc);
 
     /* Return Status */
-    DPRINT1("Fail return: %lx\n", Status);
     return Status;
 }
 
@@ -891,7 +877,6 @@ PspExitProcess(IN BOOLEAN LastThread,
 {
     ULONG Actual;
     PAGED_CODE();
-    DPRINT1("PspExitProcess %p\n", Process);
 
     /* Set Process Delete flag */
     InterlockedOr((PLONG)&Process->Flags, 4);
@@ -931,10 +916,8 @@ PspExitProcess(IN BOOLEAN LastThread,
             /* Set it to default */
             ZwSetTimerResolution(KeMaximumIncrement, 0, &Actual);
         }
-    
-        /*
-         * Check if we are part of a Job, and if the job has a completion port
-         */
+
+        /* Check if we are part of a Job that has a completion port */
         if ((Process->Job) && (Process->Job->CompletionPort))
         {
             /* FIXME: Check job status code and do I/O completion if needed */
@@ -949,9 +932,34 @@ PspExitProcess(IN BOOLEAN LastThread,
     }
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
-NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
+PsTerminateSystemThread(NTSTATUS ExitStatus)
+{
+    PETHREAD Thread = PsGetCurrentThread();
+
+    /* Make sure this is a system thread */
+    if (Thread->SystemThread)
+    {
+        DPRINT1("Trying to Terminate a non-system thread!\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Terminate it for real */
+    return PspTerminateThreadByPointer(Thread, ExitStatus, TRUE);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
                    IN NTSTATUS ExitStatus)
 {
     NTSTATUS Status;
@@ -959,8 +967,6 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     PETHREAD Thread, CurrentThread = PsGetCurrentThread();
     BOOLEAN KillByHandle;
     PAGED_CODE();
-    DPRINT1("NtTerminateProcess(ProcessHandle %x, ExitStatus %x)\n",
-            ProcessHandle, ExitStatus);
 
     /* Remember how we will kill it */
     KillByHandle = (ProcessHandle != NULL);
@@ -973,11 +979,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
                                        KeGetPreviousMode(),
                                        (PVOID*)&Process,
                                        NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Invalid handle to Process\n");
-        return(Status);
-    }
+    if (!NT_SUCCESS(Status)) return(Status);
 
     /* Check if this is a Critical Process, and Bugcheck */
     if (Process->BreakOnTermination)
@@ -988,14 +990,15 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     }
 
     /* Lock the Process */
-    PsLockProcess(Process, FALSE);
+    ExAcquireRundownProtection(&Process->RundownProtect);
 
     /* Set the exit flag */
     if (!KillByHandle) InterlockedOr((PLONG)&Process->Flags, 8);
 
     /* Get the first thread */
     Status = STATUS_NOTHING_TO_TERMINATE;
-    if ((Thread = PsGetNextProcessThread(Process, NULL)))
+    Thread = PsGetNextProcessThread(Process, NULL);
+    if (Thread)
     {
         /* We know we have at least a thread */
         Status = STATUS_SUCCESS;
@@ -1015,7 +1018,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     }
 
     /* Unlock the process */
-    PsUnlockProcess(Process);
+    ExReleaseRundownProtection(&Process->RundownProtect);
 
     /* Check if we are killing ourselves */
     if (Process != CurrentProcess)
@@ -1038,10 +1041,9 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
 
     /* Check if there was nothing to terminate, or if we have a Debug Port */
     if ((Status == STATUS_NOTHING_TO_TERMINATE) ||
-        (Process->DebugPort && KillByHandle))
+        ((Process->DebugPort) && (KillByHandle)))
     {
         /* Clear the handle table */
-        DPRINT1("Clearing OB Table\n");
         ObClearProcessHandleTable(Process);
 
         /* Return status now */
@@ -1052,7 +1054,6 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     ObDereferenceObject(Process);
 
     /* Return status */
-    DPRINT1("Returning: %lx\n", Status);
     return Status;
 }
 
@@ -1065,8 +1066,7 @@ NtTerminateThread(IN HANDLE ThreadHandle,
     PETHREAD CurrentThread = PsGetCurrentThread();
     NTSTATUS Status;
     PAGED_CODE();
-    DPRINT1("NtTerminateThread: %lx %lx\n", ThreadHandle, ExitStatus);
-    
+
     /* Handle the special NULL case */
     if (!ThreadHandle)
     {
@@ -1074,14 +1074,11 @@ NtTerminateThread(IN HANDLE ThreadHandle,
         if (PsGetCurrentProcess()->ActiveThreads == 1)
         {
             /* This is invalid */
-            DPRINT1("Can't terminate self\n");
             return STATUS_CANT_TERMINATE_SELF;
         }
-        else
-        {
-            /* Terminate us directly */
-            goto TerminateSelf;
-        }
+
+        /* Terminate us directly */
+        goto TerminateSelf;
     }
     else if (ThreadHandle == NtCurrentThread())
     {
@@ -1099,16 +1096,12 @@ TerminateSelf:
                                        KeGetPreviousMode(),
                                        (PVOID*)&Thread,
                                        NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Could not reference thread object\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check to see if we're running in the same thread */
     if (Thread != CurrentThread)
     {
-             /* Terminate it */
+        /* Terminate it */
         Status = PspTerminateThreadByPointer(Thread, ExitStatus, FALSE);
 
         /* Dereference the Thread and return */
@@ -1121,32 +1114,13 @@ TerminateSelf:
         goto TerminateSelf;
     }
 
+    /* Return status */
     return Status;
 }
 
-/*
- * @implemented
- */
 NTSTATUS
 NTAPI
-PsTerminateSystemThread(NTSTATUS ExitStatus)
-{
-    PETHREAD Thread = PsGetCurrentThread();
-
-    /* Make sure this is a system thread */
-    if (Thread->SystemThread)
-    {
-        DPRINT1("Trying to Terminate a non-system thread!\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Terminate it for real */
-    return PspTerminateThreadByPointer(Thread, ExitStatus, TRUE);
-}
-
-NTSTATUS
-NTAPI
-NtRegisterThreadTerminatePort(HANDLE PortHandle)
+NtRegisterThreadTerminatePort(IN HANDLE PortHandle)
 {
     NTSTATUS Status;
     PTERMINATION_PORT TerminationPort;
@@ -1161,17 +1135,14 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
                                        KeGetPreviousMode(),
                                        &TerminationLpcPort,
                                        NULL);
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1("Failed to reference Port\n");
-        return(Status);
-    }
+    if (!NT_SUCCESS(Status)) return(Status);
 
     /* Allocate the Port and make sure it suceeded */
-    if((TerminationPort = ExAllocatePoolWithTag(NonPagedPool,
-                                                sizeof(TERMINATION_PORT),
-                                                TAG('P', 's', 'T', '=')))) {
-
+    TerminationPort = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(TERMINATION_PORT),
+                                            TAG('P', 's', 'T', '='));
+    if(TerminationPort)
+    {
         /* Associate the Port */
         Thread = PsGetCurrentThread();
         TerminationPort->Port = TerminationLpcPort;
@@ -1179,12 +1150,10 @@ NtRegisterThreadTerminatePort(HANDLE PortHandle)
         Thread->TerminationPort = TerminationPort;
 
         /* Return success */
-        return(STATUS_SUCCESS);
-
-    } else {
-
-        /* Dereference and Fail */
-        ObDereferenceObject(TerminationPort);
-        return(STATUS_INSUFFICIENT_RESOURCES);
+        return STATUS_SUCCESS;
     }
+
+    /* Dereference and Fail */
+    ObDereferenceObject(TerminationPort);
+    return STATUS_INSUFFICIENT_RESOURCES;
 }
