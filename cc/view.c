@@ -97,6 +97,16 @@ CcGetFileObjectFromSectionPtrs (IN PSECTION_OBJECT_POINTERS SectionObjectPointer
     return NULL;
 }
 
+NTSTATUS
+CcTrimMemory (ULONG Target, ULONG Priority, PULONG NrFreedPages)
+{   
+   DPRINT1("Trim function for cache memory is not implemented yet.\n");
+
+   (*NrFreedPages) = 0;
+   
+   return STATUS_SUCCESS;
+}
+
 
 VOID INIT_FUNCTION NTAPI
 CcInitView (VOID)
@@ -149,6 +159,8 @@ CcInitView (VOID)
         InsertTailList (&CcFreeCacheViewListHead, &CcCacheViewArray[i].ListEntry);
         Base = (PVOID) ((ULONG_PTR) Base + CACHE_VIEW_SIZE);
     }
+    
+    MmInitializeMemoryConsumer(MC_CACHE, CcTrimMemory);
     CcInitCacheZeroPage ();
 
 }
