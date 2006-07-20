@@ -208,7 +208,7 @@ dll\win32\shfolder\shfolder.dll                     1
 dll\win32\shlwapi\shlwapi.dll                       1
 dll\win32\smdll\smdll.dll                           1
 dll\win32\syssetup\syssetup.dll                     1
-dll\win32\twain\twain_32.dll                        1
+dll\win32\twain_32\twain_32.dll                     1
 dll\win32\urlmon\urlmon.dll                         1
 dll\win32\user32\user32.dll                         1
 dll\win32\userenv\userenv.dll                       1
