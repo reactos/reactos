@@ -77,9 +77,12 @@ PsGetNextProcessThread(IN PEPROCESS Process,
         /* Get the Thread */
         FoundThread = CONTAINING_RECORD(Entry, ETHREAD, ThreadListEntry);
 
-        /* Reference the thread. FIXME: Race, use ObSafeReferenceObject */
-        ObReferenceObject(FoundThread);
-        break;
+        /* Safe reference the thread */
+        if (ObReferenceObjectSafe(FoundThread)) break;
+
+        /* Nothing found, keep looping */
+        FoundThread = NULL;
+        Entry = Entry->Flink;
     }
 
     /* Unlock the process */
@@ -123,9 +126,12 @@ PsGetNextProcess(IN PEPROCESS OldProcess)
         /* Get the Thread */
         FoundProcess = CONTAINING_RECORD(Entry, EPROCESS, ActiveProcessLinks);
 
-        /* Reference the thread. FIXME: Race, use ObSafeReferenceObject */
-        ObReferenceObject(FoundProcess);
-        break;
+        /* Reference the process */
+        if (ObReferenceObjectSafe(FoundProcess)) break;
+
+        /* Nothing found, keep trying */
+        FoundProcess = NULL;
+        Entry = Entry->Flink;
     }
 
     /* Release the lock */
@@ -543,10 +549,12 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
         /* Make sure it's really a process */
         if (FoundProcess->Pcb.Header.Type == ProcessObject)
         {
-            /* FIXME: Safe Reference and return it */
-            ObReferenceObject(FoundProcess);
-            *Process = FoundProcess;
-            Status = STATUS_SUCCESS;
+            /* Safe Reference and return it */
+            if (ObReferenceObjectSafe(FoundProcess))
+            {
+                *Process = FoundProcess;
+                Status = STATUS_SUCCESS;
+            }
         }
 
         /* Unlock the Entry */
@@ -584,17 +592,19 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
         if ((FoundThread->Tcb.DispatcherHeader.Type == ThreadObject) &&
             (FoundThread->Cid.UniqueProcess == Cid->UniqueProcess))
         {
-            /* FIXME: Safe Reference and return it */
-            ObReferenceObject(FoundThread);
-            *Thread = FoundThread;
-            Status = STATUS_SUCCESS;
-
-            /* Check if we should return the Process too */
-            if (Process)
+            /* Safe Reference and return it */
+            if (ObReferenceObjectSafe(FoundThread))
             {
-                /* Return it and reference it */
-                *Process = FoundThread->ThreadsProcess;
-                ObReferenceObject(*Process);
+                *Thread = FoundThread;
+                Status = STATUS_SUCCESS;
+
+                /* Check if we should return the Process too */
+                if (Process)
+                {
+                    /* Return it and reference it */
+                    *Process = FoundThread->ThreadsProcess;
+                    ObReferenceObject(*Process);
+                }
             }
         }
 

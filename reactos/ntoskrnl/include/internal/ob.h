@@ -199,6 +199,12 @@ ObReferenceObjectEx(
     IN ULONG Count
 );
 
+BOOLEAN
+FASTCALL
+ObReferenceObjectSafe(
+    IN PVOID Object
+);
+
 VOID
 NTAPI
 ObpReapObject(

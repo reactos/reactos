@@ -436,10 +436,12 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
         /* Make sure it's really a process */
         if (FoundThread->Tcb.DispatcherHeader.Type == ThreadObject)
         {
-            /* FIXME: Safe Reference and return it */
-            ObReferenceObject(FoundThread);
-            *Thread = FoundThread;
-            Status = STATUS_SUCCESS;
+            /* Safe Reference and return it */
+            if (ObReferenceObjectSafe(FoundThread))
+            {
+                *Thread = FoundThread;
+                Status = STATUS_SUCCESS;
+            }
         }
 
         /* Unlock the Entry */
