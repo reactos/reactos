@@ -175,7 +175,10 @@ MmspCompleteAndReleasePageOp(PMM_PAGEOP PageOp)
 static NTSTATUS
 MmspWaitForFileLock(PFILE_OBJECT File)
 {
-   return KeWaitForSingleObject(&File->Lock, 0, KernelMode, FALSE, NULL);
+	if(File->Flags & FO_SYNCHRONOUS_IO)
+		return KeWaitForSingleObject(&File->Lock, 0, KernelMode, FALSE, NULL);
+	else 
+		return 0;
 }
 
 
@@ -900,20 +903,16 @@ MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
 				ULONG Consumer)
 {
    NTSTATUS Status;
-   ULONG SectorSize;
    LARGE_INTEGER FileOffset;
-   ULONG Length, ReturnedLength;
-
+   ULONG Length;
+   
+   ASSERT(SegOffset % 512 == 0);
+   ASSERT(SectionData->Segment->FileOffset % 512 == 0);
+   
    Status = MmspRequestPages(PageCount, Pages, Consumer);
    if (!NT_SUCCESS(Status))
    {
       return Status;
-   }
-
-   SectorSize = SectionData->Segment->BytesPerSector;
-   if (SectorSize == 0)
-   {
-      SectorSize = 512;
    }
 
    FileOffset.QuadPart = SegOffset + SectionData->Segment->FileOffset;
@@ -922,46 +921,18 @@ MmspReadSectionSegmentPages(PSECTION_DATA SectionData,
    {
       KEBUGCHECK(0);
    }
-   if (Length + SegOffset > SectionData->Segment->RawLength)
-   {
-      Length = SectionData->Segment->RawLength - SegOffset;
-   }
-   
 
    Status = MmspRawReadPages(SectionData->Section->FileObject,
-                             SectorSize,
+                             512,
                              &FileOffset,
                              Length,
                              Pages);
-   if (!NT_SUCCESS(Status) && SectionData->Segment->BytesPerSector == 0)
-   {
-      NTSTATUS tmpStatus;
-      FILE_FS_SIZE_INFORMATION FileFsSize;
-
-      tmpStatus = IoQueryVolumeInformation(SectionData->Section->FileObject,
-                                           FileFsSizeInformation,
-                                           sizeof(FILE_FS_SIZE_INFORMATION),
-                                           &FileFsSize,
-                                           &ReturnedLength);
-
-      if (NT_SUCCESS(tmpStatus))
-      {
-         DPRINT("%d\n", FileFsSize.BytesPerSector);
-         SectionData->Segment->BytesPerSector = FileFsSize.BytesPerSector;
-         if (FileFsSize.BytesPerSector != 512)
-         {
-            Status = MmspRawReadPages(SectionData->Section->FileObject,
-                                      FileFsSize.BytesPerSector,
-                                      &FileOffset,
-                                      PageCount * PAGE_SIZE,
-                                      Pages);
-         }
-      }
-   }
+                             
    if (!NT_SUCCESS(Status))
    {
       MmspReleasePages(PageCount, Pages, Consumer);
    }
+   
    return Status;
 }
 
@@ -3661,7 +3632,8 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    Section->MaximumSize = MaximumSize;
    ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
 //   CcRosReferenceCache(FileObject);
-   KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+   if(FileObject->Flags & FO_SYNCHRONOUS_IO)
+      KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
    return(STATUS_SUCCESS);
 }
@@ -4527,7 +4499,8 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    }
    Section->FileObject = FileObject;
 //   CcRosReferenceCache(FileObject);
-   KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+   if(FileObject->Flags & FO_SYNCHRONOUS_IO)
+      KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
    DPRINT("%x\n", Section->AllocationAttributes);
    return STATUS_SUCCESS;
