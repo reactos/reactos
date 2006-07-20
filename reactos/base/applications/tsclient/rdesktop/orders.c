@@ -188,7 +188,11 @@ process_destblt(RDPCLIENT * This, STREAM s, DESTBLT_ORDER * os, uint32 present, 
 	DEBUG(("DESTBLT(op=0x%x,x=%d,y=%d,cx=%d,cy=%d)\n",
 	       os->opcode, os->x, os->y, os->cx, os->cy));
 
+#if 0
 	ui_destblt(This, ROP2_S(os->opcode), os->x, os->y, os->cx, os->cy);
+#else
+	ui_destblt(This, os->opcode, os->x, os->y, os->cx, os->cy);
+#endif
 }
 
 /* Process a pattern blt order */
@@ -221,8 +225,13 @@ process_patblt(RDPCLIENT * This, STREAM s, PATBLT_ORDER * os, uint32 present, BO
 	DEBUG(("PATBLT(op=0x%x,x=%d,y=%d,cx=%d,cy=%d,bs=%d,bg=0x%x,fg=0x%x)\n", os->opcode, os->x,
 	       os->y, os->cx, os->cy, os->brush.style, os->bgcolour, os->fgcolour));
 
+#if 0
 	ui_patblt(This, ROP2_P(os->opcode), os->x, os->y, os->cx, os->cy,
 		  &os->brush, os->bgcolour, os->fgcolour);
+#else
+	ui_patblt(This, os->opcode, os->x, os->y, os->cx, os->cy,
+		  &os->brush, os->bgcolour, os->fgcolour);
+#endif
 }
 
 /* Process a screen blt order */
@@ -253,7 +262,11 @@ process_screenblt(RDPCLIENT * This, STREAM s, SCREENBLT_ORDER * os, uint32 prese
 	DEBUG(("SCREENBLT(op=0x%x,x=%d,y=%d,cx=%d,cy=%d,srcx=%d,srcy=%d)\n",
 	       os->opcode, os->x, os->y, os->cx, os->cy, os->srcx, os->srcy));
 
+#if 0
 	ui_screenblt(This, ROP2_S(os->opcode), os->x, os->y, os->cx, os->cy, os->srcx, os->srcy);
+#else
+	ui_screenblt(This, os->opcode, os->x, os->y, os->cx, os->cy, os->srcx, os->srcy);
+#endif
 }
 
 /* Process a line order */
@@ -292,7 +305,11 @@ process_line(RDPCLIENT * This, STREAM s, LINE_ORDER * os, uint32 present, BOOL d
 		return;
 	}
 
+#if 0
 	ui_line(This, os->opcode - 1, os->startx, os->starty, os->endx, os->endy, &os->pen);
+#else
+	ui_line(This, os->opcode, os->startx, os->starty, os->endx, os->endy, &os->pen);
+#endif
 }
 
 /* Process an opaque rectangle order */
@@ -414,7 +431,11 @@ process_memblt(RDPCLIENT * This, STREAM s, MEMBLT_ORDER * os, uint32 present, BO
 	if (bitmap == NULL)
 		return;
 
+#if 0
 	ui_memblt(This, ROP2_S(os->opcode), os->x, os->y, os->cx, os->cy, bitmap, os->srcx, os->srcy);
+#else
+	ui_memblt(This, os->opcode, os->x, os->y, os->cx, os->cy, bitmap, os->srcx, os->srcy);
+#endif
 }
 
 /* Process a 3-way blt order */
@@ -547,8 +568,13 @@ process_polygon(RDPCLIENT * This, STREAM s, POLYGON_ORDER * os, uint32 present, 
 	}
 
 	if (next - 1 == os->npoints)
+#if 0
 		ui_polygon(This, os->opcode - 1, os->fillmode, points, os->npoints + 1, NULL, 0,
 			   os->fgcolour);
+#else
+		ui_polygon(This, os->opcode, os->fillmode, points, os->npoints + 1, NULL, 0,
+			   os->fgcolour);
+#endif
 	else
 		error("polygon parse error\n");
 
@@ -632,8 +658,13 @@ process_polygon2(RDPCLIENT * This, STREAM s, POLYGON2_ORDER * os, uint32 present
 	}
 
 	if (next - 1 == os->npoints)
+#if 0
 		ui_polygon(This, os->opcode - 1, os->fillmode, points, os->npoints + 1,
 			   &os->brush, os->bgcolour, os->fgcolour);
+#else
+		ui_polygon(This, os->opcode, os->fillmode, points, os->npoints + 1,
+			   &os->brush, os->bgcolour, os->fgcolour);
+#endif
 	else
 		error("polygon2 parse error\n");
 
@@ -711,7 +742,11 @@ process_polyline(RDPCLIENT * This, STREAM s, POLYLINE_ORDER * os, uint32 present
 	}
 
 	if (next - 1 == os->lines)
+#if 0
 		ui_polyline(This, os->opcode - 1, points, os->lines + 1, &pen);
+#else
+		ui_polyline(This, os->opcode, points, os->lines + 1, &pen);
+#endif
 	else
 		error("polyline parse error\n");
 
@@ -746,8 +781,13 @@ process_ellipse(RDPCLIENT * This, STREAM s, ELLIPSE_ORDER * os, uint32 present, 
 	DEBUG(("ELLIPSE(l=%d,t=%d,r=%d,b=%d,op=0x%x,fm=%d,fg=0x%x)\n", os->left, os->top,
 	       os->right, os->bottom, os->opcode, os->fillmode, os->fgcolour));
 
+#if 0
 	ui_ellipse(This, os->opcode - 1, os->fillmode, os->left, os->top, os->right - os->left,
 		   os->bottom - os->top, NULL, 0, os->fgcolour);
+#else
+	ui_ellipse(This, os->opcode, os->fillmode, os->left, os->top, os->right - os->left,
+		   os->bottom - os->top, NULL, 0, os->fgcolour);
+#endif
 }
 
 /* Process an ellipse2 order */
@@ -784,8 +824,13 @@ process_ellipse2(RDPCLIENT * This, STREAM s, ELLIPSE2_ORDER * os, uint32 present
 	       os->left, os->top, os->right, os->bottom, os->opcode, os->fillmode, os->brush.style,
 	       os->bgcolour, os->fgcolour));
 
+#if 0
 	ui_ellipse(This, os->opcode - 1, os->fillmode, os->left, os->top, os->right - os->left,
 		   os->bottom - os->top, &os->brush, os->bgcolour, os->fgcolour);
+#else
+	ui_ellipse(This, os->opcode, os->fillmode, os->left, os->top, os->right - os->left,
+		   os->bottom - os->top, &os->brush, os->bgcolour, os->fgcolour);
+#endif
 }
 
 /* Process a text order */
@@ -859,11 +904,19 @@ process_text2(RDPCLIENT * This, STREAM s, TEXT2_ORDER * os, uint32 present, BOOL
 
 	DEBUG(("\n"));
 
+#if 0
 	ui_draw_text(This, os->font, os->flags, os->opcode - 1, os->mixmode, os->x, os->y,
 		     os->clipleft, os->cliptop, os->clipright - os->clipleft,
 		     os->clipbottom - os->cliptop, os->boxleft, os->boxtop,
 		     os->boxright - os->boxleft, os->boxbottom - os->boxtop,
 		     &os->brush, os->bgcolour, os->fgcolour, os->text, os->length);
+#else
+	ui_draw_text(This, os->font, os->flags, os->opcode, os->mixmode, os->x, os->y,
+		     os->clipleft, os->cliptop, os->clipright - os->clipleft,
+		     os->clipbottom - os->cliptop, os->boxleft, os->boxtop,
+		     os->boxright - os->boxleft, os->boxbottom - os->boxtop,
+		     &os->brush, os->bgcolour, os->fgcolour, os->text, os->length);
+#endif
 }
 
 /* Process a raw bitmap cache order */
@@ -887,15 +940,22 @@ process_raw_bmpcache(RDPCLIENT * This, STREAM s)
 	in_uint8p(s, data, bufsize);
 
 	DEBUG(("RAW_BMPCACHE(cx=%d,cy=%d,id=%d,idx=%d)\n", width, height, cache_id, cache_idx));
+#if 0
 	inverted = (uint8 *) xmalloc(width * height * Bpp);
 	for (y = 0; y < height; y++)
 	{
 		memcpy(&inverted[(height - y - 1) * (width * Bpp)], &data[y * (width * Bpp)],
 		       width * Bpp);
 	}
+#endif
 
+#if 0
 	bitmap = ui_create_bitmap(This, width, height, inverted);
 	xfree(inverted);
+#else
+	bitmap = ui_create_bitmap(This, width, height, data);
+#endif
+
 	cache_put_bitmap(This, cache_id, cache_idx, bitmap);
 }
 
@@ -1000,10 +1060,10 @@ process_bmpcache2(RDPCLIENT * This, STREAM s, uint16 flags, BOOL compressed)
 	DEBUG(("BMPCACHE2(compr=%d,flags=%x,cx=%d,cy=%d,id=%d,idx=%d,Bpp=%d,bs=%d)\n",
 	       compressed, flags, width, height, cache_id, cache_idx, Bpp, bufsize));
 
-	bmpdata = (uint8 *) xmalloc(width * height * Bpp);
-
 	if (compressed)
 	{
+		bmpdata = (uint8 *) xmalloc(width * height * Bpp);
+
 		if (!bitmap_decompress(bmpdata, width, height, data, bufsize, Bpp))
 		{
 			DEBUG(("Failed to decompress bitmap data\n"));
@@ -1013,9 +1073,13 @@ process_bmpcache2(RDPCLIENT * This, STREAM s, uint16 flags, BOOL compressed)
 	}
 	else
 	{
+#if 0
 		for (y = 0; y < height; y++)
 			memcpy(&bmpdata[(height - y - 1) * (width * Bpp)],
 			       &data[y * (width * Bpp)], width * Bpp);
+#else
+		bmpdata = data;
+#endif
 	}
 
 	bitmap = ui_create_bitmap(This, width, height, bmpdata);
@@ -1032,7 +1096,8 @@ process_bmpcache2(RDPCLIENT * This, STREAM s, uint16 flags, BOOL compressed)
 		DEBUG(("process_bmpcache2: ui_create_bitmap failed\n"));
 	}
 
-	xfree(bmpdata);
+	if (compressed)
+		xfree(bmpdata);
 }
 
 /* Process a colourmap cache order */

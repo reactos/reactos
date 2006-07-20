@@ -333,8 +333,8 @@ sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel)
 		datalen = s->end - s->p - 8;
 
 #if WITH_DEBUG
-		DEBUG(("Sending encrypted packet:\n"));
-		hexdump(s->p + 8, datalen);
+		//DEBUG(("Sending encrypted packet:\n"));
+		//hexdump(s->p + 8, datalen);
 #endif
 
 		sec_sign(s->p, 8, This->secure.sign_key, This->secure.rc4_key_len, s->p + 8, datalen);

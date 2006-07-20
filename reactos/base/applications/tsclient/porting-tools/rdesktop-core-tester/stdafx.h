@@ -1,5 +1,10 @@
 #pragma once
 
+#define _CRT_SECURE_NO_DEPRECATE
+#define _SCL_SECURE 0
+
+#include <new>
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

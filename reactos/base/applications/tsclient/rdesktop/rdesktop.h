@@ -311,6 +311,7 @@ struct rdpclient
 	/* rdp.c */
 	struct rdp_
 	{
+		int ignore_;
 #if WITH_DEBUG
 		uint32 packetno;
 #endif

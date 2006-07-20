@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="kernel32.lib user32.lib gdi32.lib ws2_32.lib libeay32.lib advapi32.lib $(NoInherit)"
+				AdditionalDependencies="kernel32.lib user32.lib gdi32.lib ws2_32.lib libeay32.lib advapi32.lib msimg32.lib $(NoInherit)"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\All Users\Documenti\openssl-0.9.8b\out32&quot;"
 				GenerateDebugInformation="true"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="kernel32.lib user32.lib gdi32.lib ws2_32.lib libeay32.lib advapi32.lib $(NoInherit)"
+				AdditionalDependencies="kernel32.lib user32.lib gdi32.lib ws2_32.lib libeay32.lib advapi32.lib msimg32.lib $(NoInherit)"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\All Users\Documenti\openssl-0.9.8b\out32&quot;"
 				GenerateDebugInformation="true"

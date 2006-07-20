@@ -92,7 +92,6 @@ typedef struct _PEN
 }
 PEN;
 
-// TODO: nuke, use LOGBRUSH + pattern[8]
 typedef struct _BRUSH
 {
 	uint8 xorigin;

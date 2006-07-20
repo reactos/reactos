@@ -110,9 +110,9 @@ BOOL pstcache_init(RDPCLIENT * This, uint8 cache_id);
 /* rdesktop.c */
 int main(int argc, char *argv[]);
 void generate_random(uint8 * random);
-void *xmalloc(int size);
+void *xmalloc(size_t size);
 char *xstrdup(const char *s);
-void *xrealloc(void *oldmem, int size);
+void *xrealloc(void *oldmem, size_t size);
 void xfree(void *mem);
 void error(char *format, ...);
 void warning(char *format, ...);

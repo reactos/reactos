@@ -23,7 +23,7 @@
 /* comment out #define BITMAP_SPEED_OVER_SIZE below for one slower function */
 /* j@american-data.com */
 
-#define BITMAP_SPEED_OVER_SIZE
+//#define BITMAP_SPEED_OVER_SIZE
 
 /* indent is confused by this file */
 /* *INDENT-OFF* */
@@ -73,14 +73,22 @@ static BOOL
 bitmap_decompress1(uint8 * output, int width, int height, uint8 * input, int size)
 {
 	uint8 *end = input + size;
-	uint8 *prevline = NULL, *line = NULL;
-	int opcode, count, offset, isfillormix, x = width;
+	uint8 *prevline = NULL;
+	int opcode, count, offset, isfillormix;
 	int lastopcode = -1, insertmix = False, bicolour = False;
 	uint8 code;
 	uint8 colour1 = 0, colour2 = 0;
 	uint8 mixmask, mask = 0;
 	uint8 mix = 0xff;
 	int fom_mask = 0;
+#if 0
+	uint8 *line = NULL;
+	int x = width;
+#else
+	uint8 *line = output;
+	int x = 0;
+	int y = 0;
+#endif
 
 	while (input < end)
 	{
@@ -167,12 +175,27 @@ bitmap_decompress1(uint8 * output, int width, int height, uint8 * input, int siz
 		{
 			if (x >= width)
 			{
+#if 0
 				if (height <= 0)
+#else
+				if (y >= height)
+#endif
 					return False;
 				x = 0;
+
+#if 0
 				height--;
+#else
+				y ++;
+#endif
+
 				prevline = line;
+
+#if 0
 				line = output + height * width;
+#else
+				line = output + y * width;
+#endif
 			}
 			switch (opcode)
 			{
@@ -271,14 +294,22 @@ static BOOL
 bitmap_decompress2(uint8 * output, int width, int height, uint8 * input, int size)
 {
 	uint8 *end = input + size;
-	uint16 *prevline = NULL, *line = NULL;
-	int opcode, count, offset, isfillormix, x = width;
+	uint16 *prevline = NULL;
+	int opcode, count, offset, isfillormix;
 	int lastopcode = -1, insertmix = False, bicolour = False;
 	uint8 code;
 	uint16 colour1 = 0, colour2 = 0;
 	uint8 mixmask, mask = 0;
 	uint16 mix = 0xffff;
 	int fom_mask = 0;
+#if 0
+	uint8 *line = NULL;
+	int x = width;
+#else
+	uint8 *line = output;
+	int x = 0;
+	int y = 0;
+#endif
 
 	while (input < end)
 	{
@@ -365,12 +396,27 @@ bitmap_decompress2(uint8 * output, int width, int height, uint8 * input, int siz
 		{
 			if (x >= width)
 			{
+#if 0
 				if (height <= 0)
+#else
+				if (y >= height)
+#endif
 					return False;
 				x = 0;
+
+#if 0
 				height--;
+#else
+				y ++;
+#endif
+
 				prevline = line;
+
+#if 0
 				line = ((uint16 *) output) + height * width;
+#else
+				line = ((uint16 *) output) + y * width;
+#endif
 			}
 			switch (opcode)
 			{
@@ -470,14 +516,22 @@ static BOOL
 bitmap_decompress3(uint8 * output, int width, int height, uint8 * input, int size)
 {
 	uint8 *end = input + size;
-	uint8 *prevline = NULL, *line = NULL;
-	int opcode, count, offset, isfillormix, x = width;
+	uint8 *prevline = NULL;
+	int opcode, count, offset, isfillormix;
 	int lastopcode = -1, insertmix = False, bicolour = False;
 	uint8 code;
 	uint8 colour1[3] = {0, 0, 0}, colour2[3] = {0, 0, 0};
 	uint8 mixmask, mask = 0;
 	uint8 mix[3] = {0xff, 0xff, 0xff};
 	int fom_mask = 0;
+#if 0
+	uint8 *line = NULL;
+	int x = width;
+#else
+	uint8 *line = output;
+	int x = 0;
+	int y = 0;
+#endif
 
 	while (input < end)
 	{
@@ -571,12 +625,27 @@ bitmap_decompress3(uint8 * output, int width, int height, uint8 * input, int siz
 		{
 			if (x >= width)
 			{
+#if 0
 				if (height <= 0)
+#else
+				if (y >= height)
+#endif
 					return False;
 				x = 0;
+
+#if 0
 				height--;
+#else
+				y ++;
+#endif
+
 				prevline = line;
+
+#if 0
 				line = output + height * (width * 3);
+#else
+				line = output + y * (width * 3);
+#endif
 			}
 			switch (opcode)
 			{
@@ -782,14 +851,22 @@ static BOOL
 bitmap_decompressx(uint8 *output, int width, int height, uint8 *input, int size, int Bpp)
 {
 	uint8 *end = input + size;
-	uint8 *prevline = NULL, *line = NULL;
-	int opcode, count, offset, isfillormix, x = width;
+	uint8 *prevline = NULL;
+	int opcode, count, offset, isfillormix;
 	int lastopcode = -1, insertmix = False, bicolour = False;
 	uint8 code;
 	uint32 colour1 = 0, colour2 = 0;
 	uint8 mixmask, mask = 0;
 	uint32 mix = 0xffffffff;
 	int fom_mask = 0;
+#if 0
+	uint8 *line = NULL;
+	int x = width;
+#else
+	uint8 *line = output;
+	int x = 0;
+	int y = 0;
+#endif
 
 	while (input < end)
 	{
@@ -885,14 +962,28 @@ bitmap_decompressx(uint8 *output, int width, int height, uint8 *input, int size,
 		{
 			if (x >= width)
 			{
+#if 0
 				if (height <= 0)
+#else
+				if (y >= height)
+#endif
 					return False;
 
 				x = 0;
+
+#if 0
 				height--;
+#else
+				y ++;
+#endif
 
 				prevline = line;
+
+#if 0
 				line = output + height * width * Bpp;
+#else
+				line = output + y * width * Bpp;
+#endif
 			}
 
 			switch (opcode)

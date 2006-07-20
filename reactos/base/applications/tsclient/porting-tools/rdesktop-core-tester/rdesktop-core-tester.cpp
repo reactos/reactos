@@ -1,7 +1,29 @@
 #include "stdafx.h"
 
+#include <zmouse.h>
+
 #include "rdesktop/rdesktop.h"
 #include "rdesktop/proto.h"
+
+template<class T, class U> T aligndown(const T& X, const U& align)
+{
+	return X & ~(T(align) - 1);		
+}
+
+template<class T, class U> T alignup(const T& X, const U& align)
+{
+	return aligndown(X + (align - 1), align);
+}
+
+#ifdef _WIN64
+#else
+
+#undef InterlockedExchangePointer
+
+#define InterlockedExchangePointer(Target, Value) \
+	LongToPtr(InterlockedExchange((LONG volatile *)(Target), PtrToLong(Value)))
+
+#endif
 
 extern "C"
 {
@@ -83,7 +105,7 @@ extern "C"
 
 	/* malloc; exit if out of memory */
 	void *
-	xmalloc(int size)
+	xmalloc(size_t size)
 	{
 		void *mem = malloc(size);
 		if (mem == NULL)
@@ -98,7 +120,7 @@ extern "C"
 	char *
 	xstrdup(const char *s)
 	{
-		char *mem = strdup(s);
+		char *mem = _strdup(s);
 		if (mem == NULL)
 		{
 			perror("strdup");
@@ -109,7 +131,7 @@ extern "C"
 
 	/* realloc; exit if out of memory */
 	void *
-	xrealloc(void *oldmem, int size)
+	xrealloc(void *oldmem, size_t size)
 	{
 		void *mem;
 
@@ -299,7 +321,9 @@ extern "C"
 	// Globals are totally teh evil, but cut me some slack here
 	HWND hwnd;
 	HBITMAP hbmBuffer;
+	PVOID pBuffer;
 	HDC hdcBuffer;
+	UINT wmZMouseWheel;
 
 #if 0
 	// NOTE: we don't really need these with rdesktop.c out of the picture
@@ -343,33 +367,120 @@ extern "C"
 	void
 	ui_move_pointer(RDPCLIENT * This, int x, int y)
 	{
-		// TODO
+		POINT point;
+		point.x = x;
+		point.y = y;
+
+		ClientToScreen(hwnd, &point);
+		SetCursorPos(point.x, point.y);
+	}
+
+	HCURSOR hcursor;
+
+	struct Bitmap
+	{
+		int width;
+		int height;
+		uint8 data[1];
+	};
+
+	static
+	HBITMAP
+	win32_create_dib(LONG width, LONG height, WORD bitcount, const BYTE * data)
+	{
+		struct b_
+		{
+			BITMAPINFO bmi;
+			RGBQUAD colormap[256 - ARRAYSIZE(RTL_FIELD_TYPE(BITMAPINFO, bmiColors))];
+		}
+		b;
+
+		b.bmi.bmiHeader.biSize = sizeof(b.bmi.bmiHeader);
+		b.bmi.bmiHeader.biWidth = width;
+		b.bmi.bmiHeader.biHeight = height;
+		b.bmi.bmiHeader.biPlanes = 1;
+		b.bmi.bmiHeader.biBitCount = bitcount;
+		b.bmi.bmiHeader.biCompression = BI_RGB;
+		b.bmi.bmiHeader.biSizeImage = 0;
+		b.bmi.bmiHeader.biXPelsPerMeter = 0;
+		b.bmi.bmiHeader.biYPelsPerMeter = 0;
+
+		if(bitcount > 8)
+		{
+			b.bmi.bmiHeader.biClrUsed = 0;
+			b.bmi.bmiHeader.biClrImportant = 0;
+		}
+		else
+		{
+			b.bmi.bmiHeader.biClrUsed = 2 << bitcount;
+			b.bmi.bmiHeader.biClrImportant = 2 << bitcount;
+
+			// TODO: palette
+		}
+
+		HBITMAP hbm = CreateDIBitmap(hdcBuffer, &b.bmi.bmiHeader, CBM_INIT, data, &b.bmi, DIB_RGB_COLORS);
+
+		if(hbm == NULL)
+			error("CreateDIBitmap %dx%dx%d failed\n", width, height, bitcount);
+
+		return hbm;
+	}
+
+	static
+	uint8 *
+	win32_convert_scanlines(int width, int height, int bitcount, int fromalign, int toalign, const uint8 * data, uint8 ** buffer)
+	{
+		assert(width > 0);
+		assert(height);
+		assert(bitcount && bitcount <= 32);
+		assert(fromalign <= toalign);
+		assert(data);
+		assert(buffer);
+
+		bool flipped = height < 0;
+
+		if(flipped)
+			height = - height;
+
+		int bytesperrow = alignup(width * bitcount, 8) / 8;
+		int fromstride = alignup(bytesperrow, fromalign);
+		int tostride = alignup(bytesperrow, toalign);
+		assert(fromstride <= tostride);
+
+		int datasize = tostride * height;
+
+		uint8 * dibits = new(xmalloc(datasize)) uint8;
+
+		const uint8 * src = data;
+		uint8 * dest = dibits;
+
+		const int pad = tostride - fromstride;
+
+		assert(pad < 4);
+		__assume(pad < 4);
+
+		if(flipped)
+		{
+			dest += (height - 1) * tostride;
+			tostride = - tostride;
+		}
+
+		for(int i = 0; i < height; ++ i)
+		{
+			memcpy(dest, src, fromstride);
+			memset(dest + fromstride, 0, pad);
+			src += fromstride;
+			dest += tostride;
+		}
+
+		*buffer = dibits;
+		return dibits;
 	}
 
 	HBITMAP
 	ui_create_bitmap(RDPCLIENT * This, int width, int height, uint8 * data)
 	{
-		void * pBits;
-
-		BITMAPINFOHEADER bmih;
-		BITMAPINFO bmi;
-
-		bmih.biSize = sizeof(bmih);
-		bmih.biWidth = width;
-		bmih.biHeight = - height;
-		bmih.biPlanes = 1;
-		bmih.biBitCount = This->server_depth;
-		bmih.biCompression = BI_RGB;
-		bmih.biSizeImage = 0;
-		bmih.biXPelsPerMeter = 0;
-		bmih.biYPelsPerMeter = 0;
-		bmih.biClrUsed = 0;
-		bmih.biClrImportant = 0;
-
-		bmi.bmiHeader = bmih;
-		memset(bmi.bmiColors, 0, sizeof(bmi.bmiColors));
-
-		return CreateDIBitmap(hdcBuffer, &bmih, CBM_INIT, data, &bmi, DIB_RGB_COLORS);
+		return win32_create_dib(width, height, This->server_depth, data);
 	}
 
 	void
@@ -381,44 +492,105 @@ extern "C"
 	HGLYPH
 	ui_create_glyph(RDPCLIENT * This, int width, int height, const uint8 * data)
 	{
-		// TODO: create 2bpp mask
-		return 0;
+		uint8 * databuf = NULL;
+		uint8 * databits = win32_convert_scanlines(width, height, 1, 1, 2, data, &databuf);
+		
+		HBITMAP hbm = CreateBitmap(width, height, 1, 1, databits);
+
+		if(databuf)
+			xfree(databuf);
+
+		const uint8 * p = data;
+		int stride = alignup(alignup(width, 8) / 8, 1);
+
+		printf("glyph %p\n", hbm);
+
+		for(int i = 0; i < height; ++ i, p += stride)
+		{
+			for(int j = 0; j < width; ++ j)
+			{
+				int B = p[j / 8];
+				int b = 8 - j % 8 - 1;
+
+				if(B & (1 << b))
+					fputs("##", stdout);
+				else
+					fputs("..", stdout);
+			}
+
+			fputc('\n', stdout);
+		}
+
+		fputc('\n', stdout);
+
+		return hbm;
 	}
 
 	void
 	ui_destroy_glyph(RDPCLIENT * This, HGLYPH glyph)
 	{
-		// TODO
+		DeleteObject(glyph);
 	}
 
 	HCURSOR
 	ui_create_cursor(RDPCLIENT * This, unsigned int x, unsigned int y, int width, int height,
 			 uint8 * andmask, uint8 * xormask)
 	{
-		return CreateCursor(NULL, x, y, width, height, andmask, xormask);
+		uint8 * andbuf = NULL;
+		uint8 * xorbuf = NULL;
+
+		uint8 * andbits = win32_convert_scanlines(width, - height, 1, 2, 4, andmask, &andbuf);
+		uint8 * xorbits = win32_convert_scanlines(width, height, 24, 2, 4, xormask, &xorbuf);
+
+		HBITMAP hbmMask = CreateBitmap(width, height, 1, 1, andbits);
+		HBITMAP hbmColor = win32_create_dib(width, height, 24, xorbits);
+
+		ICONINFO iconinfo;
+		iconinfo.fIcon = FALSE;
+		iconinfo.xHotspot = x;
+		iconinfo.yHotspot = y;
+		iconinfo.hbmMask = hbmMask;
+		iconinfo.hbmColor = hbmColor;
+		
+		HICON icon = CreateIconIndirect(&iconinfo);
+
+		if(icon == NULL)
+			error("CreateIconIndirect %dx%d failed\n", width, height);
+
+		if(andbuf)
+			xfree(andbuf);
+
+		if(xorbuf)
+			xfree(xorbuf);
+
+		DeleteObject(hbmMask);
+		DeleteObject(hbmColor);
+
+		return icon;
 	}
 
 	void
 	ui_set_cursor(RDPCLIENT * This, HCURSOR cursor)
 	{
-		// TODO
+		hcursor = cursor;
 	}
 
 	void
 	ui_destroy_cursor(RDPCLIENT * This, HCURSOR cursor)
 	{
-		DestroyCursor(cursor);
+		DestroyIcon(cursor);
 	}
 
 	void
 	ui_set_null_cursor(RDPCLIENT * This)
 	{
-		// TODO
+		hcursor = NULL;
 	}
 
 	HCOLOURMAP
 	ui_create_colourmap(RDPCLIENT * This, COLOURMAP * colours)
 	{
+		// TODO
 		// TODO: kill HCOLOURMAP/COLOURMAP, use HPALETTE/LOGPALETTE
 		return 0;
 	}
@@ -442,9 +614,12 @@ extern "C"
 	{
 		rcClip.left = x;
 		rcClip.top = y;
-		rcClip.right = x + cx - 1;
-		rcClip.bottom = y + cy - 1;
-		SelectObject(hdcBuffer, CreateRectRgnIndirect(&rcClip));
+		rcClip.right = x + cx + 1;
+		rcClip.bottom = y + cy + 1;
+
+		HRGN hrgn = CreateRectRgnIndirect(&rcClip);
+		SelectClipRgn(hdcBuffer, hrgn);
+		DeleteObject(hrgn);
 	}
 
 	void
@@ -452,9 +627,9 @@ extern "C"
 	{
 		rcClip.left = 0;
 		rcClip.top = 0;
-		rcClip.right = This->width;
-		rcClip.bottom = This->height;
-		SelectObject(hdcBuffer, CreateRectRgnIndirect(&rcClip));
+		rcClip.right = This->width + 1;
+		rcClip.bottom = This->height + 1;
+		SelectClipRgn(hdcBuffer, NULL);
 	}
 
 	void
@@ -469,8 +644,17 @@ extern "C"
 	{
 		RECT rcDamage;
 		IntersectRect(&rcDamage, lprc, &rcClip);
+
+#if 0
+		HDC hdc = GetDC(hwnd);
+		SelectObject(hdc, GetStockObject(NULL_PEN));
+		SelectObject(hdc, CreateSolidBrush(RGB(255, 0, 0)));
+		Rectangle(hdc, rcDamage.left, rcDamage.top, rcDamage.right + 1, rcDamage.bottom + 1);
+		ReleaseDC(hwnd, hdc);
+		Sleep(200);
+#endif
+
 		InvalidateRect(hwnd, &rcDamage, FALSE);
-		//Sleep(100);
 	}
 
 	static
@@ -522,24 +706,25 @@ extern "C"
 		InvalidateRgn(hwnd, NULL, FALSE);
 	}
 
-	/*
-		TODO: all of the following could probably be implemented this way:
-		 - perform operation on off-screen buffer
-		 - invalidate affected region of the window
-	*/
 	void
 	ui_paint_bitmap(RDPCLIENT * This, int x, int y, int cx, int cy, int width, int height, uint8 * data)
 	{
-		BITMAPINFO bmi;
-		ZeroMemory(&bmi, sizeof(bmi));
+		GdiFlush();
 
-		bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-		bmi.bmiHeader.biWidth = width;
-		bmi.bmiHeader.biHeight = - height;
-		bmi.bmiHeader.biPlanes = 1;
-		bmi.bmiHeader.biBitCount = This->server_depth;
+		int Bpp = This->server_depth / 8;
+		int fromstride = alignup(width * Bpp, 4);
+		int tostride = alignup(This->width * Bpp, 4);
+		int sizex = cx * Bpp;
 
-		StretchDIBits(hdcBuffer, x, y, cx, cy, 0, 0, width, height, data, &bmi, DIB_RGB_COLORS, SRCCOPY);
+		const uint8 * src = data;
+		uint8 * dst = (uint8 *)pBuffer + (This->height - y - cy) * tostride + x * Bpp;
+
+		for(int i = 0; i < cy; ++ i)
+		{
+			memcpy(dst, src, sizex);
+			src += fromstride;
+			dst += tostride;
+		}
 
 		win32_repaint_area(This, x, y, cx, cy);
 	}
@@ -548,19 +733,57 @@ extern "C"
 	ui_destblt(RDPCLIENT * This, uint8 opcode,
 		   /* dest */ int x, int y, int cx, int cy)
 	{
-		RECT rc;
-		rc.left = x;
-		rc.top = y;
-		rc.right = x + cx;
-		rc.bottom = y + cy;
-
-		int prev = SetROP2(hdcBuffer, MAKELONG(0, opcode | opcode << 4));
-
-		FillRect(hdcBuffer, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH)); // use Rectangle instead?
-
-		SetROP2(hdcBuffer, prev);
+		HGDIOBJ holdbrush = SelectObject(hdcBuffer, GetStockObject(BLACK_BRUSH));
+		PatBlt(hdcBuffer, x, y, cx, cy, MAKELONG(0, opcode));
+		SelectObject(hdcBuffer, holdbrush);		
 
 		win32_repaint_area(This, x, y, cx, cy);
+	}
+
+	static
+	HBRUSH
+	win32_create_brush(RDPCLIENT * This, BRUSH * brush, COLORREF fgcolour)
+	{
+		switch(brush->style)
+		{
+		case BS_SOLID:
+		case BS_NULL:
+		case BS_HATCHED:
+		case BS_PATTERN:
+		case BS_PATTERN8X8:
+			break;
+
+		default:
+			return NULL;
+		}
+
+		switch(brush->style)
+		{
+		case BS_SOLID:
+			return CreateSolidBrush(fgcolour);
+
+		case BS_HATCHED:
+			return CreateHatchBrush(brush->pattern[0], fgcolour);
+
+		case BS_NULL:
+			return (HBRUSH)GetStockObject(NULL_BRUSH);
+
+		case BS_PATTERN:
+		case BS_PATTERN8X8:
+			{
+				uint16 pattern[8];
+
+				for(size_t i = 0; i < 8; ++ i)
+					pattern[7 - i] = brush->pattern[i];
+
+				HBITMAP hpattern = CreateBitmap(8, 8, 1, 1, pattern);
+				HBRUSH hbr = CreatePatternBrush(hpattern);
+				DeleteObject(hpattern);
+				return hbr;
+			}
+
+		DEFAULT_UNREACHABLE;
+		}
 	}
 
 	void
@@ -568,7 +791,22 @@ extern "C"
 		  /* dest */ int x, int y, int cx, int cy,
 		  /* brush */ BRUSH * brush, int bgcolour, int fgcolour)
 	{
-		// TODO
+		HBRUSH hbr = win32_create_brush(This, brush, fgcolour);
+
+		int oldbkcolor = SetBkColor(hdcBuffer, bgcolour);
+		int oldtextcolor = SetTextColor(hdcBuffer, fgcolour);
+		POINT oldbrushorg; SetBrushOrgEx(hdcBuffer, brush->xorigin, brush->yorigin, &oldbrushorg);
+		HGDIOBJ holdbrush = SelectObject(hdcBuffer, hbr);		
+
+		PatBlt(hdcBuffer, x, y, cx, cy, MAKELONG(0, opcode));
+
+		SelectObject(hdcBuffer, holdbrush);
+		SetBrushOrgEx(hdcBuffer, oldbrushorg.x, oldbrushorg.y, NULL);
+		SetTextColor(hdcBuffer, oldtextcolor);
+		SetBkColor(hdcBuffer, oldbkcolor);
+
+		DeleteObject(hbr);
+
 		win32_repaint_area(This, x, y, cx, cy);
 	}
 
@@ -577,7 +815,7 @@ extern "C"
 			 /* dest */ int x, int y, int cx, int cy,
 			 /* src */ int srcx, int srcy)
 	{
-		BitBlt(hdcBuffer, x, y, cx, cy, hdcBuffer, srcx, srcy, MAKELONG(0, opcode | opcode << 4));
+		BitBlt(hdcBuffer, x, y, cx, cy, hdcBuffer, srcx, srcy, MAKELONG(0, opcode));
 		win32_repaint_area(This, x, y, cx, cy);
 	}
 
@@ -589,9 +827,9 @@ extern "C"
 		HDC hdcSrc = CreateCompatibleDC(hdcBuffer);
 		HGDIOBJ hOld = SelectObject(hdcSrc, src);
 
-		BitBlt(hdcBuffer, x, y, cx, cy, hdcSrc, srcx, srcy, MAKELONG(0, opcode | opcode << 4));
+		BitBlt(hdcBuffer, x, y, cx, cy, hdcSrc, srcx, srcy, MAKELONG(0, opcode));
 
-		DeleteObject(hOld);
+		SelectObject(hdcSrc, hOld);
 		DeleteDC(hdcSrc);
 
 		win32_repaint_area(This, x, y, cx, cy);
@@ -603,7 +841,18 @@ extern "C"
 		  /* src */ HBITMAP src, int srcx, int srcy,
 		  /* brush */ BRUSH * brush, int bgcolour, int fgcolour)
 	{
-		// TODO
+		HDC hdcSrc = CreateCompatibleDC(hdcBuffer);
+		HGDIOBJ hOld = SelectObject(hdcSrc, src);
+
+		//SELECT_BRUSH(brush, bgcolour, fgcolour);
+
+		BitBlt(hdcBuffer, x, y, cx, cy, hdcSrc, srcx, srcy, MAKELONG(0, opcode));
+
+		//RESET_BRUSH();
+
+		SelectObject(hdcSrc, hOld);
+		DeleteDC(hdcSrc);
+
 		win32_repaint_area(This, x, y, cx, cy);
 	}
 
@@ -613,20 +862,18 @@ extern "C"
 		/* pen */ PEN * pen)
 	{
 		HPEN hpen = CreatePen(pen->style, pen->width, pen->colour);
-		HGDIOBJ hOld = SelectObject(hdcBuffer, hpen);
 
-		int prevROP = SetROP2(hdcBuffer, opcode);
-
-		POINT prevPos;
-		MoveToEx(hdcBuffer, startx, starty, &prevPos);
+		int oldROP2 = SetROP2(hdcBuffer, opcode);
+		HGDIOBJ holdpen = SelectObject(hdcBuffer, hpen);
+		POINT oldpos; MoveToEx(hdcBuffer, startx, starty, &oldpos);
 
 		LineTo(hdcBuffer, endx, endy);
 
-		MoveToEx(hdcBuffer, prevPos.x, prevPos.y, NULL);
+		MoveToEx(hdcBuffer, oldpos.x, oldpos.y, NULL);
+		SelectObject(hdcBuffer, holdpen);
+		SetROP2(hdcBuffer, oldROP2);
 
-		SetROP2(hdcBuffer, prevROP);
-
-		SelectObject(hdcBuffer, hOld);
+		DeleteObject(hpen);
 
 		RECT rcDamage;
 		
@@ -661,17 +908,19 @@ extern "C"
 			   /* dest */ int x, int y, int cx, int cy,
 			   /* brush */ int colour)
 	{
-		RECT rc;
-		rc.left = x;
-		rc.top = y;
-		rc.right = x + cx;
-		rc.bottom = y + cy;
-
 		HBRUSH hbr = CreateSolidBrush(colour);
-		FillRect(hdcBuffer, &rc, hbr); // use Rectangle instead?
+
+		HGDIOBJ holdbrush = SelectObject(hdcBuffer, hbr);
+		HGDIOBJ holdpen = SelectObject(hdcBuffer, GetStockObject(NULL_PEN));
+
+		Rectangle(hdcBuffer, x, y, x + cx + 1, y + cy + 1);
+
+		SelectObject(hdcBuffer, holdpen);
+		SelectObject(hdcBuffer, holdbrush);
+		
 		DeleteObject(hbr);
 
-		win32_repaint_rect(This, &rc);
+		win32_repaint_area(This, x, y, cx, cy);
 	}
 
 	void
@@ -680,13 +929,19 @@ extern "C"
 		   /* dest */ POINT * point, int npoints,
 		   /* brush */ BRUSH * brush, int bgcolour, int fgcolour)
 	{
-		// TODO: create brush, set fg&bg
+		HBRUSH hbr = win32_create_brush(This, brush, fgcolour);
 
-		int oldRop = SetROP2(hdcBuffer, opcode);
+		int oldbkcolor = SetBkColor(hdcBuffer, bgcolour);
+		int oldtextcolor = SetTextColor(hdcBuffer, fgcolour);
 		int oldFillMode = SetPolyFillMode(hdcBuffer, fillmode);
+		HGDIOBJ holdbrush = SelectObject(hdcBuffer, hbr);
+
 		Polygon(hdcBuffer, point, npoints);
+
+		SelectObject(hdcBuffer, holdbrush);
 		SetPolyFillMode(hdcBuffer, oldFillMode);
-		SetROP2(hdcBuffer, oldRop);
+		SetTextColor(hdcBuffer, oldtextcolor);
+		SetBkColor(hdcBuffer, oldbkcolor);
 
 		win32_repaint_poly(This, point, npoints, 0);
 	}
@@ -696,12 +951,26 @@ extern "C"
 			/* dest */ POINT * points, int npoints,
 			/* pen */ PEN * pen)
 	{
+		POINT last = points[0];
+
+		for(int i = 1; i < npoints; ++ i)
+		{
+			points[i].x += last.x;
+			points[i].y += last.y;
+			last = points[i];
+		}
+
 		HPEN hpen = CreatePen(pen->style, pen->width, pen->colour);
-		HGDIOBJ hOld = SelectObject(hdcBuffer, hpen);
-		int oldRop = SetROP2(hdcBuffer, opcode);
+
+		int oldROP2 = SetROP2(hdcBuffer, opcode);
+		HGDIOBJ holdpen = SelectObject(hdcBuffer, hpen);
+
 		Polyline(hdcBuffer, points, npoints);
-		SetROP2(hdcBuffer, oldRop);
-		SelectObject(hdcBuffer, hOld);
+
+		SelectObject(hdcBuffer, holdpen);
+		SetROP2(hdcBuffer, oldROP2);
+
+		DeleteObject(hpen);
 
 		win32_repaint_poly(This, points, npoints, pen->width);
 	}
@@ -712,13 +981,30 @@ extern "C"
 		   /* dest */ int x, int y, int cx, int cy,
 		   /* brush */ BRUSH * brush, int bgcolour, int fgcolour)
 	{
-#if 0
 		switch(fillmode)
 		{
-		case 0: // outline // HOW? HOW? WITH WHAT PEN?
-		case 1: // filled // TODO
+		case 0: // outline
+			{
+				HPEN hpen = CreatePen(PS_SOLID, 1, fgcolour);
+
+				int oldROP2 = SetROP2(hdcBuffer, opcode);
+				HGDIOBJ holdPen = SelectObject(hdcBuffer, hpen);
+
+				Ellipse(hdcBuffer, x, y, x + cx, y + cy);
+
+				SelectObject(hdcBuffer, holdPen);
+				SetROP2(hdcBuffer, oldROP2);
+
+				DeleteObject(hpen);
+			}
+
+			break;
+
+		case 1:
+			// TODO
+			break;
 		}
-#endif
+
 		win32_repaint_area(This, x, y, cx, cy);
 	}
 
@@ -728,8 +1014,81 @@ extern "C"
 			  /* src */ HGLYPH glyph, int srcx, int srcy,
 			  int bgcolour, int fgcolour)
 	{
-		// TODO!!!
+		HBITMAP hbmGlyph = (HBITMAP)glyph;
+		HDC hdcGlyph = CreateCompatibleDC(hdcBuffer);
+		HGDIOBJ hOld = SelectObject(hdcGlyph, hbmGlyph);
+
+		switch(mixmode)
+		{
+		case MIX_TRANSPARENT:
+			{
+				/*
+					ROP is DSPDxax:
+					 - where the glyph (S) is white, D is set to the foreground color (P)
+					 - where the glyph (S) is black, D is left untouched
+
+					This paints a transparent glyph in the specified color
+				*/
+				HBRUSH hbr = CreateSolidBrush(fgcolour);
+				HGDIOBJ holdbrush = SelectObject(hdcBuffer, hbr);
+				BitBlt(hdcBuffer, x, y, cx, cy, hdcGlyph, srcx, srcy, MAKELONG(0, 0xe2));
+				SelectObject(hdcBuffer, holdbrush);
+				DeleteObject(hbr);
+			}
+
+			break;
+
+		case MIX_OPAQUE:
+			{
+				/* Curiously, glyphs are inverted (white-on-black) */
+				int oldbkcolor = SetBkColor(hdcBuffer, fgcolour);
+				int oldtextcolor = SetTextColor(hdcBuffer, bgcolour);
+				BitBlt(hdcBuffer, x, y, cx, cy, hdcGlyph, srcx, srcy, SRCCOPY);
+				SetTextColor(hdcBuffer, oldtextcolor);
+				SetBkColor(hdcBuffer, oldbkcolor);
+			}
+
+			break;
+		}
+
+		SelectObject(hdcGlyph, hOld);
+		DeleteDC(hdcGlyph);
+
+		win32_repaint_area(This, x, y, cx, cy);
 	}
+
+#define DO_GLYPH(ttext,idx) \
+{\
+  glyph = cache_get_font (This, font, ttext[idx]);\
+  if (!(flags & TEXT2_IMPLICIT_X))\
+  {\
+    xyoffset = ttext[++idx];\
+    if ((xyoffset & 0x80))\
+    {\
+      if (flags & TEXT2_VERTICAL)\
+        y += ttext[idx+1] | (ttext[idx+2] << 8);\
+      else\
+        x += ttext[idx+1] | (ttext[idx+2] << 8);\
+      idx += 2;\
+    }\
+    else\
+    {\
+      if (flags & TEXT2_VERTICAL)\
+        y += xyoffset;\
+      else\
+        x += xyoffset;\
+    }\
+  }\
+  if (glyph != NULL)\
+  {\
+      ui_draw_glyph (This, mixmode, x + (short) glyph->offset,\
+                     y + (short) glyph->baseline,\
+                     glyph->width, glyph->height,\
+                     glyph->pixmap, 0, 0, bgcolour, fgcolour);\
+    if (flags & TEXT2_IMPLICIT_X)\
+      x += glyph->width;\
+  }\
+}
 
 	void
 	ui_draw_text(RDPCLIENT * This, uint8 font, uint8 flags, uint8 opcode, int mixmode, int x, int y,
@@ -737,19 +1096,106 @@ extern "C"
 			 int boxx, int boxy, int boxcx, int boxcy, BRUSH * brush,
 			 int bgcolour, int fgcolour, uint8 * text, uint8 length)
 	{
-		// TODO!!!
+		FONTGLYPH * glyph;
+		int i, j, xyoffset;
+		DATABLOB *entry;
+
+		HBRUSH hbr = CreateSolidBrush(bgcolour);
+		HGDIOBJ holdbrush = SelectObject(hdcBuffer, hbr);
+		HGDIOBJ holdpen = SelectObject(hdcBuffer, GetStockObject(NULL_PEN));
+
+		if (boxcx > 1)
+			Rectangle(hdcBuffer, boxx, boxy, boxx + boxcx + 1, boxy + boxcy + 1);
+		else if (mixmode == MIX_OPAQUE)
+			Rectangle(hdcBuffer, clipx, clipy, clipx + clipcx + 1, clipy + clipcy + 1);
+
+		SelectObject(hdcBuffer, holdpen);
+		SelectObject(hdcBuffer, holdbrush);
+		
+		DeleteObject(hbr);
+
+		if(boxcx > 1)
+			win32_repaint_area(This, boxx, boxy, boxcx, boxcy);
+		else
+			win32_repaint_area(This, clipx, clipy, clipcx, clipcy);
+
+		/* Paint text, character by character */
+		for (i = 0; i < length;)
+		{
+			switch (text[i])
+			{
+				case 0xff:
+					/* At least two bytes needs to follow */
+					if (i + 3 > length)
+					{
+						warning("Skipping short 0xff command:");
+						for (j = 0; j < length; j++)
+							fprintf(stderr, "%02x ", text[j]);
+						fprintf(stderr, "\n");
+						i = length = 0;
+						break;
+					}
+					cache_put_text(This, text[i + 1], text, text[i + 2]);
+					i += 3;
+					length -= i;
+					/* this will move pointer from start to first character after FF command */
+					text = &(text[i]);
+					i = 0;
+					break;
+
+				case 0xfe:
+					/* At least one byte needs to follow */
+					if (i + 2 > length)
+					{
+						warning("Skipping short 0xfe command:");
+						for (j = 0; j < length; j++)
+							fprintf(stderr, "%02x ", text[j]);
+						fprintf(stderr, "\n");
+						i = length = 0;
+						break;
+					}
+					entry = cache_get_text(This, text[i + 1]);
+					if (entry->data != NULL)
+					{
+						if ((((uint8 *) (entry->data))[1] == 0)
+							&& (!(flags & TEXT2_IMPLICIT_X)) && (i + 2 < length))
+						{
+							if (flags & TEXT2_VERTICAL)
+								y += text[i + 2];
+							else
+								x += text[i + 2];
+						}
+						for (j = 0; j < entry->size; j++)
+							DO_GLYPH(((uint8 *) (entry->data)), j);
+					}
+					if (i + 2 < length)
+						i += 3;
+					else
+						i += 2;
+					length -= i;
+					/* this will move pointer from start to first character after FE command */
+					text = &(text[i]);
+					i = 0;
+					break;
+
+				default:
+					DO_GLYPH(text, i);
+					i++;
+					break;
+			}
+		}
 	}
 
 	void
 	ui_desktop_save(RDPCLIENT * This, uint32 offset, int x, int y, int cx, int cy)
 	{
-		// TODO (use GetDIBits)
+		// TODO
 	}
 
 	void
 	ui_desktop_restore(RDPCLIENT * This, uint32 offset, int x, int y, int cx, int cy)
 	{
-		// TODO (use SetDIBitsToDevice)
+		// TODO
 		win32_repaint_whole(This);
 	}
 
@@ -765,6 +1211,24 @@ extern "C"
 		// TODO? use a mutex to arbitrate access to the off-screen buffer?
 	}
 };
+
+static
+void
+mstsc_mousewheel(RDPCLIENT * This, int value, LPARAM lparam)
+{
+	uint16 button;
+
+	if(value < 0)
+		button = MOUSE_FLAG_BUTTON5;
+	else
+		button = MOUSE_FLAG_BUTTON4;
+
+	if(value < 0)
+		value = - value;
+
+	for(int click = 0; click < value; click += WHEEL_DELTA)
+		rdp_send_input(This, GetTickCount(), RDP_INPUT_MOUSE, button | MOUSE_FLAG_DOWN, LOWORD(lparam), HIWORD(lparam));
+}
 
 static
 LRESULT
@@ -783,64 +1247,132 @@ mstsc_WndProc
 
 	switch(uMsg)
 	{
+	case WM_CLOSE:
+		DestroyWindow(hwnd);
+		break;
+
+		// FIXME: temporary
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+
+		/* Initialization */
 	case WM_CREATE:
 		This = static_cast<RDPCLIENT *>(reinterpret_cast<LPCREATESTRUCT>(lparam)->lpCreateParams);
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, PtrToLong(This));
 		break;
 
+		/* Painting */
+	case WM_PRINTCLIENT:
+		if(wparam == 0)
+			break;
+
 	case WM_PAINT:
-		// Obscenely simple code for now...
 		{
-			PAINTSTRUCT ps;
-			HDC hdc = BeginPaint(hwnd, &ps);
+			HDC hdc = (HDC)wparam;
 
-			BitBlt
-			(
-				hdc,
-				ps.rcPaint.left,
-				ps.rcPaint.top,
-				ps.rcPaint.right - ps.rcPaint.left,
-				ps.rcPaint.bottom - ps.rcPaint.top,
-				hdcBuffer,
-				ps.rcPaint.left,
-				ps.rcPaint.top,
-				SRCCOPY
-			);
+			// A DC was provided: print the whole client area into it
+			if(hdc)
+			{
+				RECT rc;
+				GetClientRect(hwnd, &rc);
+				BitBlt(hdc, 0, 0, rc.right, rc.bottom, hdcBuffer, 0, 0, SRCCOPY);
+			}
+			// Otherwise, we're refreshing to screen
+			else
+			{
+				PAINTSTRUCT ps;
+				hdc = BeginPaint(hwnd, &ps);
 
-			EndPaint(hwnd, &ps);
+				BitBlt
+				(
+					hdc,
+					ps.rcPaint.left,
+					ps.rcPaint.top,
+					ps.rcPaint.right - ps.rcPaint.left,
+					ps.rcPaint.bottom - ps.rcPaint.top,
+					hdcBuffer,
+					ps.rcPaint.left,
+					ps.rcPaint.top,
+					SRCCOPY
+				);
+
+				EndPaint(hwnd, &ps);
+			}
 		}
 
 		break;
 
+		/* Keyboard stuff */
 	case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:		
-		rdp_send_input
-		(
-			This,
-			GetMessageTime(),
-			RDP_INPUT_SCANCODE,
-			RDP_KEYPRESS | (lparam & 0x1000000 ? KBD_FLAG_EXT : 0),
-			LOBYTE(HIWORD(lparam)),
-			0
-		);
-
+		rdp_send_input(This, GetMessageTime(), RDP_INPUT_SCANCODE, RDP_KEYPRESS | (lparam & 0x1000000 ? KBD_FLAG_EXT : 0), LOBYTE(HIWORD(lparam)), 0);
 		break;
 
 	case WM_SYSKEYUP:
 	case WM_KEYUP:
-		rdp_send_input
-		(
-			This,
-			GetMessageTime(),
-			RDP_INPUT_SCANCODE,
-			RDP_KEYRELEASE | (lparam & 0x1000000 ? KBD_FLAG_EXT : 0),
-			LOBYTE(HIWORD(lparam)),
-			0
-		);
+		rdp_send_input(This, GetMessageTime(), RDP_INPUT_SCANCODE, RDP_KEYRELEASE | (lparam & 0x1000000 ? KBD_FLAG_EXT : 0), LOBYTE(HIWORD(lparam)), 0);
+		break;
+
+		/* Mouse stuff */
+		// Cursor shape
+	case WM_SETCURSOR:
+		if(LOWORD(lparam) == HTCLIENT)
+		{
+			SetCursor(hcursor);
+			return TRUE;
+		}
 
 		break;
 
+		// Movement
+	case WM_MOUSEMOVE:
+		if(This->sendmotion || wparam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON | MK_XBUTTON1 | MK_XBUTTON2))
+			rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_MOVE, LOWORD(lparam), HIWORD(lparam));
+
+		break;
+
+		// Buttons
+		// TODO: X buttons
+	case WM_LBUTTONDOWN:
+		rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON1 | MOUSE_FLAG_DOWN, LOWORD(lparam), HIWORD(lparam));
+		break;
+
+	case WM_RBUTTONDOWN:
+		rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON2 | MOUSE_FLAG_DOWN, LOWORD(lparam), HIWORD(lparam));
+		break;
+
+	case WM_MBUTTONDOWN:
+		rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON3 | MOUSE_FLAG_DOWN, LOWORD(lparam), HIWORD(lparam));
+		break;
+
+	case WM_LBUTTONUP:
+		rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON1, LOWORD(lparam), HIWORD(lparam));
+		break;
+
+	case WM_RBUTTONUP:
+		rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON2, LOWORD(lparam), HIWORD(lparam));
+		break;
+
+	case WM_MBUTTONUP:
+		rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON3, LOWORD(lparam), HIWORD(lparam));
+		break;
+
+		// Wheel
+	case WM_MOUSEWHEEL:
+		mstsc_mousewheel(This, (SHORT)HIWORD(wparam), lparam);
+		break;
+
 	default:
+		/* Registered messages */
+		// Z-Mouse wheel support - you know, just in case
+		if(uMsg == wmZMouseWheel)
+		{
+			mstsc_mousewheel(This, (int)wparam, lparam);
+			break;
+		}
+
+		/* Unhandled messages */
 		return DefWindowProc(hwnd, uMsg, wparam, lparam);
 	}
 
@@ -857,14 +1389,15 @@ mstsc_ProtocolIOThread
 {
 	RDPCLIENT * This = static_cast<RDPCLIENT *>(lpArgument);
 
-	strcpy(This->username, "Hyperion");
+	strcpy(This->username, "Administrator");
 
 	DWORD dw = sizeof(This->hostname);
 	GetComputerNameA(This->hostname, &dw);
 
 	uint32 flags = RDP_LOGON_NORMAL | RDP_LOGON_COMPRESSION | RDP_LOGON_COMPRESSION2;
 
-	rdp_connect(This, "10.0.0.3", flags, "", "", "", "");
+	//rdp_connect(This, "10.0.0.3", flags, "", "", "", "");
+	rdp_connect(This, "192.168.7.232", flags, "", "", "", "");
 
 	hdcBuffer = CreateCompatibleDC(NULL);
 
@@ -881,9 +1414,7 @@ mstsc_ProtocolIOThread
 	bmi.bmiHeader.biClrUsed = 0; // TODO! palette displays
 	bmi.bmiHeader.biClrImportant = 0; // TODO! palette displays
 
-	void * p;
-
-	hbmBuffer = CreateDIBSection(hdcBuffer, &bmi, DIB_RGB_COLORS, &p, NULL, 0);
+	hbmBuffer = CreateDIBSection(hdcBuffer, &bmi, DIB_RGB_COLORS, &pBuffer, NULL, 0);
 
 	SelectObject(hdcBuffer, hbmBuffer);
 
@@ -896,6 +1427,8 @@ mstsc_ProtocolIOThread
 	uint32 ext_disc_reason;
 
 	rdp_main_loop(This, &deactivated, &ext_disc_reason);
+
+	SendMessage(hwnd, WM_CLOSE, 0, 0);
 
 	return 0;
 }
@@ -936,8 +1469,8 @@ int wmain()
 	This->bitmap_cache_precache = True;
 	This->encryption = True;
 	This->packet_encryption = True;
-	This->desktop_save = True;
-	This->polygon_ellipse_orders = True;
+	This->desktop_save = False; // True;
+	This->polygon_ellipse_orders = False; // = True;
 	This->fullscreen = False;
 	This->grab_keyboard = True;
 	This->hide_decorations = False;
@@ -957,12 +1490,16 @@ int wmain()
 	This->cache.bmpcache_mru[1] = NOT_SET;
 	This->cache.bmpcache_mru[2] = NOT_SET;
 
+	hcursor = NULL;
+
 	WNDCLASS wc;
 	ZeroMemory(&wc, sizeof(wc));
 
 	wc.lpfnWndProc = mstsc_WndProc;
 	wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(HOLLOW_BRUSH));
 	wc.lpszClassName = TEXT("MissTosca_Desktop");
+
+	wmZMouseWheel = RegisterWindowMessage(MSH_MOUSEWHEEL);
 
 	ATOM a = RegisterClass(&wc);
 
