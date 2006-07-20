@@ -28,7 +28,6 @@
 //  - Use Process/Thread Rundown.
 //  - Use Process Pushlock Locks.
 //  - Use Safe Referencing where needed.
-//  - Use Guarded Mutex instead of Fast Mutex for Active Process Locks.
 //  - Use Security Locks in security.c
 //  - Figure out why processes don't die.
 //  - Generate process cookie for user-more thread.

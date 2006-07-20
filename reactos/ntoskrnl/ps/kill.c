@@ -90,7 +90,7 @@ PspExitApcRundown(IN PKAPC Apc)
 
 VOID
 NTAPI
-PspReapRoutine(PVOID Context)
+PspReapRoutine(IN PVOID Context)
 {
     PLIST_ENTRY *ListAddr;
     PLIST_ENTRY NextEntry;
@@ -130,7 +130,7 @@ PspReapRoutine(PVOID Context)
 
 VOID
 NTAPI
-PspDeleteProcess(PVOID ObjectBody)
+PspDeleteProcess(IN PVOID ObjectBody)
 {
     PEPROCESS Process = (PEPROCESS)ObjectBody;
     KAPC_STATE ApcState;
@@ -260,7 +260,7 @@ PspDeleteProcess(PVOID ObjectBody)
 
 VOID
 NTAPI
-PspDeleteThread(PVOID ObjectBody)
+PspDeleteThread(IN PVOID ObjectBody)
 {
     PETHREAD Thread = (PETHREAD)ObjectBody;
     PEPROCESS Process = Thread->ThreadsProcess;
@@ -315,7 +315,7 @@ PspDeleteThread(PVOID ObjectBody)
  */
 VOID
 NTAPI
-PspExitThread(NTSTATUS ExitStatus)
+PspExitThread(IN NTSTATUS ExitStatus)
 {
     CLIENT_DIED_MSG TerminationMsg;
     NTSTATUS Status;
@@ -726,11 +726,11 @@ TryAgain2:
 
 VOID
 NTAPI
-PsExitSpecialApc(PKAPC Apc,
-                 PKNORMAL_ROUTINE* NormalRoutine,
-                 PVOID* NormalContext,
-                 PVOID* SystemArgument1,
-                 PVOID* SystemArguemnt2)
+PsExitSpecialApc(IN PKAPC Apc,
+                 IN OUT PKNORMAL_ROUTINE* NormalRoutine,
+                 IN OUT PVOID* NormalContext,
+                 IN OUT PVOID* SystemArgument1,
+                 IN OUT PVOID* SystemArguemnt2)
 {
     NTSTATUS Status;
     PAGED_CODE();
@@ -749,9 +749,9 @@ PsExitSpecialApc(PKAPC Apc,
 
 VOID
 NTAPI
-PspExitNormalApc(PVOID NormalContext,
-                 PVOID SystemArgument1,
-                 PVOID SystemArgument2)
+PspExitNormalApc(IN PVOID NormalContext,
+                 IN PVOID SystemArgument1,
+                 IN PVOID SystemArgument2)
 {
     PKAPC Apc = (PKAPC)SystemArgument1;
     PETHREAD Thread = PsGetCurrentThread();
@@ -789,9 +789,9 @@ PspExitNormalApc(PVOID NormalContext,
  */
 NTSTATUS
 NTAPI
-PspTerminateThreadByPointer(PETHREAD Thread,
-                            NTSTATUS ExitStatus,
-                            BOOLEAN bSelf)
+PspTerminateThreadByPointer(IN PETHREAD Thread,
+                            IN NTSTATUS ExitStatus,
+                            IN BOOLEAN bSelf)
 {
     PKAPC Apc;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -932,7 +932,7 @@ PspExitProcess(IN BOOLEAN LastThread,
  */
 NTSTATUS
 NTAPI
-PsTerminateSystemThread(NTSTATUS ExitStatus)
+PsTerminateSystemThread(IN NTSTATUS ExitStatus)
 {
     PETHREAD Thread = PsGetCurrentThread();
 
