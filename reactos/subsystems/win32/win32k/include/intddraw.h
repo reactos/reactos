@@ -11,7 +11,8 @@
 #define GDI_OBJECT_TYPE_DD_MOTIONCOMP 0x00650000
 
 typedef struct
-{
+{	
+	HANDLE hDirectDrawLocal;
 	DD_SURFACE_LOCAL Local;
 	DD_SURFACE_MORE More;
 	DD_SURFACE_GLOBAL Global;

@@ -77,6 +77,8 @@
 	<directory name="ntddraw">
 		<compilationunit name="ntddraw.c">
 			<file>ddraw.c</file>
+                  <file>dd.c</file>
+                  <file>ddsurf.c</file>
 			<file>stubs.c</file>
 		</compilationunit>
 	</directory>
