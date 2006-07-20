@@ -465,7 +465,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -477,7 +477,11 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     PEPROCESS Process;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ACCESS_MASK Access;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
+    HANDLE PortHandle = NULL;
+    HANDLE TokenHandle = NULL;
+    PROCESS_SESSION_INFORMATION SessionInfo;
+    PEPORT ExceptionPort;
     PAGED_CODE();
 
     /* Verify Information Class validity */
@@ -487,234 +491,200 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                                        ProcessInformation,
                                        ProcessInformationLength,
                                        PreviousMode);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check what class this is */
+    Access = PROCESS_SET_INFORMATION;
+    if (ProcessInformationClass == ProcessSessionInformation)
     {
-        DPRINT1("NtSetInformationProcess() %x failed, Status: 0x%x\n", Status);
-        return Status;
+        /* Setting the Session ID needs a special mask */
+        Access |= PROCESS_SET_SESSIONID;
+    }
+    else if (ProcessInformationClass == ProcessExceptionPort)
+    {
+        /* Setting the exception port needs a special mask */
+        Access |= PROCESS_SUSPEND_RESUME;
     }
 
-    switch(ProcessInformationClass)
-    {
-        case ProcessSessionInformation:
-            Access = PROCESS_SET_INFORMATION | PROCESS_SET_SESSIONID;
-            break;
-        case ProcessExceptionPort:
-            Access = PROCESS_SET_INFORMATION | PROCESS_SUSPEND_RESUME;
-            break;
-
-        default:
-            Access = PROCESS_SET_INFORMATION;
-            break;
-    }
-
+    /* Reference the process */
     Status = ObReferenceObjectByHandle(ProcessHandle,
                                        Access,
                                        PsProcessType,
                                        PreviousMode,
                                        (PVOID*)&Process,
                                        NULL);
-    if (!NT_SUCCESS(Status)) return(Status);
+    if (!NT_SUCCESS(Status)) return Status;
 
+    /* Check what kind of information class this is */
     switch (ProcessInformationClass)
     {
+        /* Quotas and priorities: not implemented */
         case ProcessQuotaLimits:
         case ProcessBasePriority:
         case ProcessRaisePriority:
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
+        /* Error/Exception Port */
         case ProcessExceptionPort:
+
+            /* Use SEH for capture */
+            _SEH_TRY
             {
-                HANDLE PortHandle = NULL;
-
-                /* make a safe copy of the buffer on the stack */
-                _SEH_TRY
-                {
-                    PortHandle = *(PHANDLE)ProcessInformation;
-                    Status = STATUS_SUCCESS;
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-
-                if(NT_SUCCESS(Status))
-                {
-                    PEPORT ExceptionPort;
-
-                    /* in case we had success reading from the buffer, verify the provided
-                    * LPC port handle
-                    */
-                    Status = ObReferenceObjectByHandle(PortHandle,
-                        0,
-                        LpcPortObjectType,
-                        PreviousMode,
-                        (PVOID)&ExceptionPort,
-                        NULL);
-                    if(NT_SUCCESS(Status))
-                    {
-                        /* lock the process to be thread-safe! */
-
-                        Status = PsLockProcess(Process, FALSE);
-                        if(NT_SUCCESS(Status))
-                        {
-                            /*
-                            * according to "NT Native API" documentation, setting the exception
-                            * port is only permitted once!
-                            */
-                            if(Process->ExceptionPort == NULL)
-                            {
-                                /* keep the reference to the handle! */
-                                Process->ExceptionPort = ExceptionPort;
-                                Status = STATUS_SUCCESS;
-                            }
-                            else
-                            {
-                                ObDereferenceObject(ExceptionPort);
-                                Status = STATUS_PORT_ALREADY_SET;
-                            }
-                            PsUnlockProcess(Process);
-                        }
-                        else
-                        {
-                            ObDereferenceObject(ExceptionPort);
-                        }
-                    }
-                }
-                break;
+                /* Capture the handle */
+                PortHandle = *(PHANDLE)ProcessInformation;
             }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
 
+            /* Get the LPC Port */
+            Status = ObReferenceObjectByHandle(PortHandle,
+                                               0,
+                                               LpcPortObjectType,
+                                               PreviousMode,
+                                               (PVOID)&ExceptionPort,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Lock the process to be thread-safe! */
+            Status = PsLockProcess(Process, FALSE);
+            if(NT_SUCCESS(Status))
+            {
+                /* Make sure we don't already have a port */
+                if (!Process->ExceptionPort)
+                {
+                    /* Save the exception port */
+                    Process->ExceptionPort = ExceptionPort;
+                }
+                else
+                {
+                    /* We already have one, fail */
+                    ObDereferenceObject(ExceptionPort);
+                    Status = STATUS_PORT_ALREADY_SET;
+                }
+
+                /* Unlock the process */
+                PsUnlockProcess(Process);
+            }
+            else
+            {
+                /* Locking failed, dereference the port */
+                ObDereferenceObject(ExceptionPort);
+            }
+            break;
+
+        /* Security Token */
         case ProcessAccessToken:
+
+            /* Use SEH for capture */
+            _SEH_TRY
             {
-                HANDLE TokenHandle = NULL;
-
-                /* make a safe copy of the buffer on the stack */
-                _SEH_TRY
-                {
-                    TokenHandle = ((PPROCESS_ACCESS_TOKEN)ProcessInformation)->Token;
-                    Status = STATUS_SUCCESS;
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-
-                if(NT_SUCCESS(Status))
-                {
-                    /* in case we had success reading from the buffer, perform the actual task */
-                    Status = PspAssignPrimaryToken(Process, TokenHandle);
-                }
-                break;
+                /* Save the token handle */
+                TokenHandle = ((PPROCESS_ACCESS_TOKEN)ProcessInformation)->
+                               Token;
             }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
 
+            /* Assign the actual token */
+            Status = PspAssignPrimaryToken(Process, TokenHandle);
+            break;
+
+        /* Hard error processing */
         case ProcessDefaultHardErrorMode:
-            {
-                _SEH_TRY
-                {
-                    InterlockedExchange((LONG*)&Process->DefaultHardErrorProcessing,
-                        *(PLONG)ProcessInformation);
-                    Status = STATUS_SUCCESS;
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-                break;
-            }
 
+            /* Enter SEH for direct buffer read */
+            _SEH_TRY
+            {
+                /* Update the current mode abd return the previous one */
+                InterlockedExchange((LONG*)&Process->DefaultHardErrorProcessing,
+                                    *(PLONG)ProcessInformation);
+            }
+            _SEH_HANDLE
+            {
+                /* Get exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            break;
+
+        /* Session ID */
         case ProcessSessionInformation:
+
+            /* Enter SEH for capture */
+            _SEH_TRY
             {
-                PROCESS_SESSION_INFORMATION SessionInfo;
-                Status = STATUS_SUCCESS;
+                /* Capture the caller's buffer */
+                SessionInfo = *(PPROCESS_SESSION_INFORMATION)ProcessInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
 
-                RtlZeroMemory(&SessionInfo, sizeof(SessionInfo));
+            /* Setting the session id requires the SeTcbPrivilege */
+            if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
+            {
+                /* Can't set the session ID, bail out. */
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                break;
+            }
 
+            /* FIXME - update the session id for the process token */
+            Status = PsLockProcess(Process, FALSE);
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Write the session ID in the EPROCESS */
+            Process->Session = SessionInfo.SessionId;
+
+            /* Check if the process also has a PEB */
+            if (Process->Peb)
+            {
+                /*
+                 * Attach to the process to make sure we're in the right
+                 * context to access the PEB structure
+                 */
+                KeAttachProcess(&Process->Pcb);
+
+                /* Enter SEH for write to user-mode PEB */
                 _SEH_TRY
                 {
-                    /* copy the structure to the stack */
-                    SessionInfo = *(PPROCESS_SESSION_INFORMATION)ProcessInformation;
+                    /* Write the session ID */
+                    Process->Peb->SessionId = SessionInfo.SessionId;
                 }
                 _SEH_HANDLE
                 {
+                    /* Get exception code */
                     Status = _SEH_GetExceptionCode();
                 }
                 _SEH_END;
 
-                if(NT_SUCCESS(Status))
-                {
-                    /* we successfully copied the structure to the stack, continue processing */
-
-                    /*
-                    * setting the session id requires the SeTcbPrivilege!
-                    */
-                    if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
-                        PreviousMode))
-                    {
-                        DPRINT1("NtSetInformationProcess: Caller requires the SeTcbPrivilege privilege for setting ProcessSessionInformation!\n");
-                        /* can't set the session id, bail! */
-                        Status = STATUS_PRIVILEGE_NOT_HELD;
-                        break;
-                    }
-
-                    /* FIXME - update the session id for the process token */
-
-                    Status = PsLockProcess(Process, FALSE);
-                    if(NT_SUCCESS(Status))
-                    {
-                        Process->Session = SessionInfo.SessionId;
-
-                        /* Update the session id in the PEB structure */
-                        if(Process->Peb != NULL)
-                        {
-                            /* we need to attach to the process to make sure we're in the right
-                            context to access the PEB structure */
-                            KeAttachProcess(&Process->Pcb);
-
-                            _SEH_TRY
-                            {
-                                /* FIXME: Process->Peb->SessionId = SessionInfo.SessionId; */
-
-                                Status = STATUS_SUCCESS;
-                            }
-                            _SEH_HANDLE
-                            {
-                                Status = _SEH_GetExceptionCode();
-                            }
-                            _SEH_END;
-
-                            KeDetachProcess();
-                        }
-
-                        PsUnlockProcess(Process);
-                    }
-                }
-                break;
+                /* Detach from the process */
+                KeDetachProcess();
             }
 
+            /* Unlock the process */
+            PsUnlockProcess(Process);
+            break;
+
+        /* Priority class: HACK! */
         case ProcessPriorityClass:
-            {
-                PROCESS_PRIORITY_CLASS ppc;
+            break;
 
-                _SEH_TRY
-                {
-                    ppc = *(PPROCESS_PRIORITY_CLASS)ProcessInformation;
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-
-                if(NT_SUCCESS(Status))
-                {
-                }
-
-                break;
-            }
-
+        /* We currently don't implement any of these */
         case ProcessLdtInformation:
         case ProcessLdtSize:
         case ProcessIoPortHandlers:
@@ -725,6 +695,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
+        /* Supposedly these are invalid...!? verify! */
         case ProcessBasicInformation:
         case ProcessIoCounters:
         case ProcessTimes:
@@ -736,8 +707,10 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         default:
             Status = STATUS_INVALID_INFO_CLASS;
     }
+
+    /* Dereference and return status */
     ObDereferenceObject(Process);
-    return(Status);
+    return Status;
 }
 
 /*
@@ -907,4 +880,5 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
     ObDereferenceObject(Thread);
     return(Status);
 }
+
 /* EOF */
