@@ -13,7 +13,153 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
+
+NTSTATUS
+NTAPI
+PsResumeThread(IN PETHREAD Thread,
+               OUT PULONG PreviousCount OPTIONAL)
+{
+    ULONG OldCount;
+    PAGED_CODE();
+
+    /* Resume the thread */
+    OldCount = KeResumeThread(&Thread->Tcb);
+
+    /* Return the count if asked */
+    if (PreviousCount) *PreviousCount = OldCount;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PsSuspendThread(IN PETHREAD Thread,
+                OUT PULONG PreviousCount OPTIONAL)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG OldCount = 0;
+    PAGED_CODE();
+
+    /* Guard with SEH because KeSuspendThread can raise an exception */
+    _SEH_TRY
+    {
+        /* Check if we're suspending ourselves */
+        if (Thread == PsGetCurrentThread())
+        {
+            /* Do the suspend */
+            OldCount = KeSuspendThread(&Thread->Tcb);
+        }
+        else
+        {
+            /* Acquire rundown */
+            if (ExAcquireRundownProtection(&Thread->RundownProtect))
+            {
+                /* Make sure the thread isn't terminating */
+                if (Thread->Terminated)
+                {
+                    /* Fail */
+                    Status = STATUS_THREAD_IS_TERMINATING;
+                }
+                else
+                {
+                    /* Otherwise, do the suspend */
+                    OldCount = KeSuspendThread(&Thread->Tcb);
+
+                    /* Check if it terminated during the suspend */
+                    if (Thread->Terminated)
+                    {
+                        /* Wake it back up and fail */
+                        KeForceResumeThread(&Thread->Tcb);
+                        Status = STATUS_THREAD_IS_TERMINATING;
+                        OldCount = 0;
+                    }
+                }
+
+                /* Release rundown protection */
+                ExReleaseRundownProtection(&Thread->RundownProtect);
+            }
+            else
+            {
+                /* Thread is terminating */
+                Status = STATUS_THREAD_IS_TERMINATING;
+            }
+        }
+    }
+    _SEH_HANDLE
+    {
+        Status = _SEH_GetExceptionCode();
+
+        /* Don't fail if we merely couldn't write the handle back */
+        if (Status != STATUS_SUSPEND_COUNT_EXCEEDED) Status = STATUS_SUCCESS;
+    }
+    _SEH_END;
+
+    /* Write back the previous count */
+    if (PreviousCount) *PreviousCount = OldCount;
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PsResumeProcess(IN PEPROCESS Process)
+{
+    PETHREAD Thread;
+    PAGED_CODE();
+
+    /* Lock the Process */
+    if (!ExAcquireRundownProtection(&Process->RundownProtect))
+    {
+        /* Process is terminating */
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
+
+    /* Get the first thread */
+    Thread = PsGetNextProcessThread(Process, NULL);
+    while (Thread)
+    {
+        /* Resume it */
+        KeResumeThread(&Thread->Tcb);
+
+        /* Move to the next thread */
+        Thread = PsGetNextProcessThread(Process, Thread);
+    }
+
+    /* Unlock the process */
+    ExReleaseRundownProtection(&Process->RundownProtect);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PsSuspendProcess(IN PEPROCESS Process)
+{
+    PETHREAD Thread;
+    PAGED_CODE();
+
+    /* Lock the Process */
+    if (!ExAcquireRundownProtection(&Process->RundownProtect))
+    {
+        /* Process is terminating */
+        return STATUS_PROCESS_IS_TERMINATING;
+    }
+
+    /* Get the first thread */
+    Thread = PsGetNextProcessThread(Process, NULL);
+    while (Thread)
+    {
+        /* Resume it */
+        PsSuspendThread(Thread, NULL);
+
+        /* Move to the next thread */
+        Thread = PsGetNextProcessThread(Process, Thread);
+    }
+
+    /* Unlock the process */
+    ExReleaseRundownProtection(&Process->RundownProtect);
+    return STATUS_SUCCESS;
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
@@ -76,8 +222,6 @@ NtAlertResumeThread(IN HANDLE ThreadHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Fail on exception */
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -144,8 +288,6 @@ NtResumeThread(IN HANDLE ThreadHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Fail on exception */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -158,8 +300,8 @@ NtResumeThread(IN HANDLE ThreadHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Call the Kernel Function */
-    Prev = KeResumeThread(&Thread->Tcb);
+    /* Call the internal function */
+    Status = PsResumeThread(Thread, &Prev);
 
     /* Check if the caller wanted the count back */
     if (SuspendCount)
@@ -209,8 +351,6 @@ NtSuspendThread(IN HANDLE ThreadHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        /* Fail on exception */
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -223,33 +363,25 @@ NtSuspendThread(IN HANDLE ThreadHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Guard with SEH because KeSuspendThread can raise an exception */
+    /* Call the internal function */
+    Status = PsSuspendThread(Thread, &Prev);
+    ObDereferenceObject(Thread);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Protect write with SEH */
     _SEH_TRY
     {
-        /* Make sure the thread isn't terminating */
-        if ((Thread != PsGetCurrentThread()) && (Thread->Terminated))
-        {
-            ObDereferenceObject(Thread);
-            return STATUS_THREAD_IS_TERMINATING;
-        }
-
-        /* Call the Kernel function */
-        Prev = KeSuspendThread(&Thread->Tcb);
-
         /* Return the Previous Count */
         if (PreviousSuspendCount) *PreviousSuspendCount = Prev;
     }
     _SEH_HANDLE
     {
+        /* Get the exception code */
         Status = _SEH_GetExceptionCode();
-
-        /* Don't fail if we merely couldn't write the handle back */
-        if (Status != STATUS_SUSPEND_COUNT_EXCEEDED) Status = STATUS_SUCCESS;
     }
     _SEH_END;
 
     /* Return */
-    ObDereferenceObject(Thread);
     return Status;
 }
 
@@ -271,9 +403,8 @@ NtSuspendProcess(IN HANDLE ProcessHandle)
                                        NULL);
     if (NT_SUCCESS(Status))
     {
-        /* FIXME */
-        Status = STATUS_NOT_IMPLEMENTED;
-        DPRINT1("NtSuspendProcess not yet implemented!\n");
+        /* Call the internal function */
+        Status = PsSuspendProcess(Process);
         ObDereferenceObject(Process);
     }
 
@@ -299,9 +430,8 @@ NtResumeProcess(IN HANDLE ProcessHandle)
                                        NULL);
     if (NT_SUCCESS(Status))
     {
-        /* FIXME */
-        Status = STATUS_NOT_IMPLEMENTED;
-        DPRINT1("NtResumeProcess not yet implemented!\n");
+        /* Call the internal function */
+        Status = PsResumeProcess(Process);
         ObDereferenceObject(Process);
     }
 
