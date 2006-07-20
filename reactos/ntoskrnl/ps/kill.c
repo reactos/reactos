@@ -296,13 +296,15 @@ PspDeleteThread(IN PVOID ObjectBody)
     if (Thread->ThreadListEntry.Flink)
     {
         /* Lock the thread's process */
-        PsLockProcess(Process, FALSE);
+        KeEnterCriticalRegion();
+        ExAcquirePushLockExclusive(&Process->ProcessLock);
 
         /* Remove us from the list */
         RemoveEntryList(&Thread->ThreadListEntry);
 
         /* Release the lock */
-        PsUnlockProcess(Process);
+        ExReleasePushLockExclusive(&Process->ProcessLock);
+        KeLeaveCriticalRegion();
     }
 
     /* Dereference the Process */
@@ -385,10 +387,11 @@ PspExitThread(IN NTSTATUS ExitStatus)
     PspRunCreateThreadNotifyRoutines(Thread, FALSE);
 
     /* Lock the Process before we modify its thread entries */
-    PsLockProcess(CurrentProcess, FALSE);
+    KeEnterCriticalRegion();
+    ExAcquirePushLockExclusive(&CurrentProcess->ProcessLock);
 
-    /* Wake up the thread so we don't deadlock on PsLockProcess */
-    KeForceResumeThread(&Thread->Tcb);
+    /* Wake up the thread so we don't deadlock on lock */
+    //KeForceResumeThread(&Thread->Tcb);
 
     /* Decrease the active thread count, and check if it's 0 */
     if (!(--CurrentProcess->ActiveThreads))
@@ -425,7 +428,8 @@ PspExitThread(IN NTSTATUS ExitStatus)
     }
 
     /* Unlock the Process */
-    PsUnlockProcess(CurrentProcess);
+    ExReleasePushLockExclusive(&CurrentProcess->ProcessLock);
+    KeLeaveCriticalRegion();
 
     /* Check if the process has a debug port and if this is a user thread */
     if ((CurrentProcess->DebugPort) && !(Thread->SystemThread))

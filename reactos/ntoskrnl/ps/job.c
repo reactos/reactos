@@ -169,7 +169,7 @@ NtAssignProcessToJobObject (
                 /* lock the process so we can safely assign the process. Note that in the
                 meanwhile another thread could have assigned this process to a job! */
 
-                Status = PsLockProcess(Process, FALSE);
+                ExAcquireRundownProtection(&Process->RundownProtect);
                 if(NT_SUCCESS(Status))
                 {
                     if(Process->Job == NULL && Process->Session == Job->SessionId)
@@ -185,7 +185,7 @@ NtAssignProcessToJobObject (
                         /* process is already assigned to a job or session id differs! */
                         Status = STATUS_ACCESS_DENIED;
                     }
-                    PsUnlockProcess(Process);
+                    ExReleaseRundownProtection(&Process->RundownProtect);
 
                     if(NT_SUCCESS(Status))
                     {

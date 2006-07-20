@@ -25,87 +25,7 @@ ULONG PsMinimumWorkingSet, PsMaximumWorkingSet;
 LIST_ENTRY PsActiveProcessHead;
 KGUARDED_MUTEX PspActiveProcessMutex;
 
-#if 1
-LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
-#define LockEvent Spare0[0]
-#define LockCount Spare0[1]
-#define LockOwner Spare0[2]
-NTSTATUS
-NTAPI
-PsLockProcess(PEPROCESS Process, BOOLEAN Timeout)
-{
-  ULONG Attempts = 0;
-  PKTHREAD PrevLockOwner;
-  NTSTATUS Status = STATUS_UNSUCCESSFUL;
-  PLARGE_INTEGER Delay = (Timeout ? &PsLockTimeout : NULL);
-  PKTHREAD CallingThread = KeGetCurrentThread();
-
-  PAGED_CODE();
-
-  KeEnterCriticalRegion();
-
-  for(;;)
-  {
-    PrevLockOwner = (PKTHREAD)InterlockedCompareExchangePointer(
-      &Process->LockOwner, CallingThread, NULL);
-    if(PrevLockOwner == NULL || PrevLockOwner == CallingThread)
-    {
-      /* we got the lock or already locked it */
-      if(InterlockedIncrementUL(&Process->LockCount) == 1)
-      {
-        KeClearEvent(Process->LockEvent);
-      }
-
-      return STATUS_SUCCESS;
-    }
-    else
-    {
-      if(++Attempts > 2)
-      {
-        Status = KeWaitForSingleObject(Process->LockEvent,
-                                       Executive,
-                                       KernelMode,
-                                       FALSE,
-                                       Delay);
-        if(!NT_SUCCESS(Status) || Status == STATUS_TIMEOUT)
-        {
-#ifndef NDEBUG
-          if(Status == STATUS_TIMEOUT)
-          {
-            DPRINT1("PsLockProcess(0x%x) timed out!\n", Process);
-          }
-#endif
-          KeLeaveCriticalRegion();
-          break;
-        }
-      }
-      else
-      {
-        KeDelayExecutionThread(KernelMode, FALSE, &ShortPsLockDelay);
-      }
-    }
-  }
-
-  return Status;
-}
-
-VOID
-NTAPI
-PsUnlockProcess(PEPROCESS Process)
-{
-  PAGED_CODE();
-
-  ASSERT(Process->LockOwner == KeGetCurrentThread());
-
-  if(InterlockedDecrementUL(&Process->LockCount) == 0)
-  {
-    (void)InterlockedExchangePointer(&Process->LockOwner, NULL);
-    KeSetEvent(Process->LockEvent, IO_NO_INCREMENT, FALSE);
-  }
-
-  KeLeaveCriticalRegion();
-}
-#endif
+LARGE_INTEGER ShortPsLockDelay;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -135,7 +55,8 @@ PsGetNextProcessThread(IN PEPROCESS Process,
     PAGED_CODE();
 
     /* Lock the process */
-    PsLockProcess(Process, FALSE);
+    KeEnterCriticalRegion();
+    ExAcquirePushLockShared(&Process->ProcessLock);
 
     /* Check if we're already starting somewhere */
     if (Thread)
@@ -162,7 +83,8 @@ PsGetNextProcessThread(IN PEPROCESS Process,
     }
 
     /* Unlock the process */
-    PsUnlockProcess(Process);
+    ExReleasePushLockShared(&Process->ProcessLock);
+    KeLeaveCriticalRegion();
 
     /* Check if we had a starting thread, and dereference it */
     if (Thread) ObDereferenceObject(Thread);
@@ -421,14 +343,6 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Save the pointer to the section object */
     Process->SectionObject = SectionObject;
-
-    /* Setup the Lock Event */
-#if 1
-    Process->LockEvent = ExAllocatePoolWithTag(PagedPool,
-                                               sizeof(KEVENT),
-                                               TAG('P', 's', 'L', 'k'));
-    KeInitializeEvent(Process->LockEvent, SynchronizationEvent, FALSE);
-#endif
 
     /* Set default exit code */
     Process->ExitStatus = STATUS_TIMEOUT;

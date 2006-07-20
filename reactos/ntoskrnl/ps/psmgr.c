@@ -138,7 +138,7 @@ PsInitProcessManagment(VOID)
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
 
    ShortPsLockDelay.QuadPart = -100LL;
-   PsLockTimeout.QuadPart = -10000000LL; /* one second */
+
    /*
     * Register the process object type
     */

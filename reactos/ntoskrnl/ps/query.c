@@ -551,30 +551,14 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
-            /* Lock the process to be thread-safe! */
-            Status = PsLockProcess(Process, FALSE);
-            if(NT_SUCCESS(Status))
+            /* Change the pointer */
+            if (InterlockedCompareExchangePointer(&Process->ExceptionPort,
+                                                  ExceptionPort,
+                                                  NULL))
             {
-                /* Make sure we don't already have a port */
-                if (!Process->ExceptionPort)
-                {
-                    /* Save the exception port */
-                    Process->ExceptionPort = ExceptionPort;
-                }
-                else
-                {
-                    /* We already have one, fail */
-                    ObDereferenceObject(ExceptionPort);
-                    Status = STATUS_PORT_ALREADY_SET;
-                }
-
-                /* Unlock the process */
-                PsUnlockProcess(Process);
-            }
-            else
-            {
-                /* Locking failed, dereference the port */
+                /* We already had one, fail */
                 ObDereferenceObject(ExceptionPort);
+                Status = STATUS_PORT_ALREADY_SET;
             }
             break;
 
@@ -644,7 +628,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             }
 
             /* FIXME - update the session id for the process token */
-            Status = PsLockProcess(Process, FALSE);
+            //Status = PsLockProcess(Process, FALSE);
             if (!NT_SUCCESS(Status)) break;
 
             /* Write the session ID in the EPROCESS */
@@ -677,7 +661,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             }
 
             /* Unlock the process */
-            PsUnlockProcess(Process);
+            //PsUnlockProcess(Process);
             break;
 
         /* Priority class: HACK! */

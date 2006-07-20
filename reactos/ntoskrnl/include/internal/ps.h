@@ -21,15 +21,16 @@ struct _EJOB;
 
 VOID
 NTAPI
-PiInitProcessManager(VOID);
-
-VOID
-NTAPI
 PspShutdownProcessManager(VOID);
 
 VOID
 NTAPI
 PsInitThreadManagment(VOID);
+
+VOID
+INIT_FUNCTION
+NTAPI
+PiInitProcessManager(VOID);
 
 VOID
 NTAPI
@@ -38,80 +39,6 @@ PsInitProcessManagment(VOID);
 VOID
 NTAPI
 PsInitIdleThread(VOID);
-
-VOID
-NTAPI
-PiTerminateProcessThreads(
-    PEPROCESS Process,
-    NTSTATUS ExitStatus
-);
-
-VOID
-NTAPI
-PsTerminateCurrentThread(NTSTATUS ExitStatus);
-
-VOID
-NTAPI
-PsTerminateOtherThread(
-    PETHREAD Thread,
-    NTSTATUS ExitStatus
-);
-
-VOID
-NTAPI
-PsReleaseThread(PETHREAD Thread);
-
-VOID
-NTAPI
-PsBeginThread(
-    PKSTART_ROUTINE StartRoutine,
-    PVOID StartContext
-);
-
-VOID
-NTAPI
-PsBeginThreadWithContextInternal(VOID);
-
-VOID
-NTAPI
-PiKillMostProcesses(VOID);
-
-NTSTATUS
-STDCALL
-PiTerminateProcess(
-    PEPROCESS Process,
-    NTSTATUS ExitStatus
-);
-
-VOID
-NTAPI
-PiInitApcManagement(VOID);
-
-VOID
-STDCALL
-PiDeleteThread(PVOID ObjectBody);
-
-VOID
-NTAPI
-PsReapThreads(VOID);
-
-VOID
-NTAPI
-PsInitializeThreadReaper(VOID);
-
-VOID
-NTAPI
-PsQueueThreadReap(PETHREAD Thread);
-
-NTSTATUS
-NTAPI
-PsInitializeThread(
-    PEPROCESS Process,
-    PETHREAD* ThreadPtr,
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    KPROCESSOR_MODE AccessMode,
-    BOOLEAN First
-);
 
 PACCESS_TOKEN
 STDCALL
@@ -127,27 +54,6 @@ STDCALL
 PsOpenTokenOfProcess(
     HANDLE ProcessHandle,
     PACCESS_TOKEN* Token
-);
-
-VOID
-STDCALL
-PspTerminateProcessThreads(
-    PEPROCESS Process,
-    NTSTATUS ExitStatus
-);
-
-NTSTATUS
-NTAPI
-PsSuspendThread(
-    PETHREAD Thread,
-    PULONG PreviousCount
-);
-
-NTSTATUS
-NTAPI
-PsResumeThread(
-    PETHREAD Thread,
-    PULONG PreviousCount
 );
 
 NTSTATUS
@@ -200,10 +106,6 @@ PsInitializeIdleOrFirstThread(
 
 VOID
 STDCALL
-PiDeleteProcess(PVOID ObjectBody);
-
-VOID
-STDCALL
 PspReapRoutine(PVOID Context);
 
 VOID
@@ -218,67 +120,13 @@ PspTerminateThreadByPointer(
     BOOLEAN bSelf
 );
 
-NTSTATUS
-NTAPI
-PsUnfreezeOtherThread(PETHREAD Thread);
-
-VOID
-NTAPI
-PsFreezeOtherThread(PETHREAD Thread);
-
-VOID
-NTAPI
-PsFreezeProcessThreads(PEPROCESS Process);
-
-VOID
-NTAPI
-PsUnfreezeProcessThreads(PEPROCESS Process);
-
-ULONG
-NTAPI
-PsEnumThreadsByProcess(PEPROCESS Process);
-
 PEPROCESS
 STDCALL
 PsGetNextProcess(PEPROCESS OldProcess);
 
 VOID
-NTAPI
-PsApplicationProcessorInit(VOID);
-
-VOID
-NTAPI
-PsPrepareForApplicationProcessorInit(ULONG Id);
-
-VOID
 STDCALL
 PsIdleThreadMain(PVOID Context);
-
-VOID
-STDCALL
-PiSuspendThreadRundownRoutine(PKAPC Apc);
-
-VOID
-STDCALL
-PiSuspendThreadKernelRoutine(
-    PKAPC Apc,
-    PKNORMAL_ROUTINE* NormalRoutine,
-    PVOID* NormalContext,
-    PVOID* SystemArgument1,
-    PVOID* SystemArguemnt2
-);
-
-VOID
-STDCALL
-PiSuspendThreadNormalRoutine(
-    PVOID NormalContext,
-    PVOID SystemArgument1,
-    PVOID SystemArgument2
-);
-
-VOID
-NTAPI
-PsInitialiseSuspendImplementation(VOID);
 
 VOID
 STDCALL
@@ -292,23 +140,6 @@ PspDeleteProcess(PVOID ObjectBody);
 VOID
 STDCALL
 PspDeleteThread(PVOID ObjectBody);
-
-
-NTSTATUS
-NTAPI
-PsInitWin32Thread(PETHREAD Thread);
-
-VOID
-NTAPI
-PsTerminateWin32Process(PEPROCESS Process);
-
-VOID
-NTAPI
-PsTerminateWin32Thread(PETHREAD Thread);
-
-VOID
-NTAPI
-PsInitialiseW32Call(VOID);
 
 VOID
 NTAPI
@@ -340,17 +171,6 @@ PsLocateSystemDll(VOID);
 NTSTATUS
 STDCALL
 PspGetSystemDllEntryPoints(VOID);
-
-NTSTATUS 
-NTAPI
-PsLockProcess(
-    PEPROCESS Process,
-    BOOLEAN Timeout
-);
-
-VOID
-NTAPI
-PsUnlockProcess(PEPROCESS Process);
 
 VOID
 NTAPI
@@ -391,7 +211,7 @@ extern PEPROCESS PsInitialSystemProcess;
 extern PEPROCESS PsIdleProcess;
 extern LIST_ENTRY PsActiveProcessHead;
 extern KGUARDED_MUTEX PspActiveProcessMutex;
-extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
+extern LARGE_INTEGER ShortPsLockDelay;
 extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 extern PHANDLE_TABLE PspCidTable;
 extern PCREATE_THREAD_NOTIFY_ROUTINE
