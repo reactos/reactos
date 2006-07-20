@@ -469,7 +469,7 @@ PsGetCurrentThreadId(VOID)
  */
 ULONG
 NTAPI
-PsGetThreadFreezeCount(PETHREAD Thread)
+PsGetThreadFreezeCount(IN PETHREAD Thread)
 {
     return Thread->Tcb.FreezeCount;
 }
@@ -479,7 +479,7 @@ PsGetThreadFreezeCount(PETHREAD Thread)
  */
 BOOLEAN
 NTAPI
-PsGetThreadHardErrorsAreDisabled(PETHREAD Thread)
+PsGetThreadHardErrorsAreDisabled(IN PETHREAD Thread)
 {
     return Thread->HardErrorsAreDisabled;
 }
@@ -489,7 +489,7 @@ PsGetThreadHardErrorsAreDisabled(PETHREAD Thread)
  */
 HANDLE
 NTAPI
-PsGetThreadId(PETHREAD Thread)
+PsGetThreadId(IN PETHREAD Thread)
 {
     return Thread->Cid.UniqueThread;
 }
@@ -499,7 +499,7 @@ PsGetThreadId(PETHREAD Thread)
  */
 PEPROCESS
 NTAPI
-PsGetThreadProcess(PETHREAD Thread)
+PsGetThreadProcess(IN PETHREAD Thread)
 {
     return Thread->ThreadsProcess;
 }
@@ -509,7 +509,7 @@ PsGetThreadProcess(PETHREAD Thread)
  */
 HANDLE
 NTAPI
-PsGetThreadProcessId(PETHREAD Thread)
+PsGetThreadProcessId(IN PETHREAD Thread)
 {
     return Thread->Cid.UniqueProcess;
 }
@@ -519,7 +519,7 @@ PsGetThreadProcessId(PETHREAD Thread)
  */
 HANDLE
 NTAPI
-PsGetThreadSessionId(PETHREAD Thread)
+PsGetThreadSessionId(IN PETHREAD Thread)
 {
     return (HANDLE)Thread->ThreadsProcess->Session;
 }
@@ -529,7 +529,7 @@ PsGetThreadSessionId(PETHREAD Thread)
  */
 PTEB
 NTAPI
-PsGetThreadTeb(PETHREAD Thread)
+PsGetThreadTeb(IN PETHREAD Thread)
 {
     return Thread->Tcb.Teb;
 }
@@ -539,7 +539,7 @@ PsGetThreadTeb(PETHREAD Thread)
  */
 PVOID
 NTAPI
-PsGetThreadWin32Thread(PETHREAD Thread)
+PsGetThreadWin32Thread(IN PETHREAD Thread)
 {
     return Thread->Tcb.Win32Thread;
 }
