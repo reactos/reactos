@@ -24,6 +24,16 @@ VOID MmPrintMemoryStatistic(VOID);
 /* FUNCTIONS *****************************************************************/
 
 /*
+ * @implemented
+ */
+KPROCESSOR_MODE
+NTAPI
+ExGetPreviousMode (VOID)
+{
+    return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
+}
+
+/*
  * @unimplemented
  */
 VOID

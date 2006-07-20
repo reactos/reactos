@@ -35,6 +35,7 @@
 //  - Add security calls where necessary.
 //  - Add tracing.
 //  - Fix crash on shutdown due to possibly incorrect win32k uninitailization.
+//  - Add failure/race checks for thread creation.
 //
 // Ob:
 //  - Possible bug in deferred deletion under Cc Rewrite branch.

@@ -192,6 +192,13 @@ ObpDeleteObject(
     IN PVOID Object
 );
 
+LONG
+FASTCALL
+ObReferenceObjectEx(
+    IN PVOID Object,
+    IN ULONG Count
+);
+
 VOID
 NTAPI
 ObpReapObject(
