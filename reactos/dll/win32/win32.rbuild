@@ -220,8 +220,8 @@
 <directory name="syssetup">
 	<xi:include href="syssetup/syssetup.rbuild" />
 </directory>
-<directory name="twain">
-	<xi:include href="twain/twain_32.rbuild" />
+<directory name="twain_32">
+	<xi:include href="twain_32/twain_32.rbuild" />
 </directory>
 <directory name="urlmon">
 	<xi:include href="urlmon/urlmon.rbuild" />
