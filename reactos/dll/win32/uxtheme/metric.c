@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -151,8 +151,8 @@ HRESULT WINAPI GetThemeSysInt(HTHEME hTheme, int iIntID, int *piValue)
     TRACE("(%p, %d)\n", hTheme, iIntID);
     if(!hTheme)
         return E_HANDLE;
-    if(iIntID <= TMT_FIRSTINT || iIntID >= TMT_LASTINT) {
-        TRACE("Unknown IntID: %d\n", iIntID);
+    if(iIntID < TMT_FIRSTINT || iIntID > TMT_LASTINT) {
+        WARN("Unknown IntID: %d\n", iIntID);
         return STG_E_INVALIDPARAMETER;
     }
     if((tp = MSSTYLES_FindMetric(TMT_INT, iIntID)))
@@ -215,8 +215,8 @@ HRESULT WINAPI GetThemeSysString(HTHEME hTheme, int iStringID,
     TRACE("(%p, %d)\n", hTheme, iStringID);
     if(!hTheme)
         return E_HANDLE;
-    if(iStringID <= TMT_FIRSTSTRING || iStringID >= TMT_LASTSTRING) {
-        TRACE("Unknown StringID: %d\n", iStringID);
+    if(iStringID < TMT_FIRSTSTRING || iStringID > TMT_LASTSTRING) {
+        WARN("Unknown StringID: %d\n", iStringID);
         return STG_E_INVALIDPARAMETER;
     }
     if((tp = MSSTYLES_FindMetric(TMT_STRING, iStringID)))
