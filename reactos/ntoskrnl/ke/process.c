@@ -221,6 +221,204 @@ KiSwapProcess(PKPROCESS NewProcess,
     Ke386SetPageTableDirectory(NewProcess->DirectoryTableBase.u.LowPart);
 }
 
+VOID
+NTAPI
+KeSetQuantumProcess(IN PKPROCESS Process,
+                    IN UCHAR Quantum)
+{
+    KIRQL OldIrql;
+    PLIST_ENTRY NextEntry, ListHead;
+    PKTHREAD Thread;
+    ASSERT_PROCESS(Process);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock Dispatcher */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Set new quantum */
+    Process->QuantumReset = Quantum;
+
+    /* Loop all child threads */
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
+    {
+        /* Get the thread */
+        Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+        /* Set quantum */
+        Thread->QuantumReset = Quantum;
+
+        /* Go to the next one */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release Dispatcher Database */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+}
+
+KPRIORITY
+NTAPI
+KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
+                               IN KPRIORITY Priority,
+                               IN UCHAR Quantum OPTIONAL)
+{
+    KPRIORITY Delta;
+    PLIST_ENTRY NextEntry, ListHead;
+    KPRIORITY NewPriority, OldPriority;
+    KIRQL OldIrql;
+    PKTHREAD Thread;
+    BOOLEAN Released;
+    ASSERT_PROCESS(Process);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Check if the process already has this priority */
+    if (Process->BasePriority == Priority)
+    {
+        /* Don't change anything */
+        return Process->BasePriority;
+    }
+
+    /* If the caller gave priority 0, normalize to 1 */
+    if (!Priority) Priority = 1;
+
+    /* Lock Dispatcher */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Check if we are modifying the quantum too */
+    if (Quantum) Process->QuantumReset = Quantum;
+
+    /* Save the current base priority and update it */
+    OldPriority = Process->BasePriority;
+    Process->BasePriority = Priority;
+
+    /* Calculate the priority delta */
+    Delta = Priority - OldPriority;
+
+    /* Set the list head and list entry */
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+
+    /* Check if this is a real-time priority */
+    if (Priority >= LOW_REALTIME_PRIORITY)
+    {
+        /* Loop the thread list */
+        while (NextEntry != ListHead)
+        {
+            /* Get the thread */
+            Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+            /* Update the quantum if we had one */
+            if (Quantum) Thread->QuantumReset = Quantum;
+
+            /* Calculate the new priority */
+            NewPriority = Thread->BasePriority + Delta;
+            if (NewPriority < LOW_REALTIME_PRIORITY)
+            {
+                /* We're in real-time range, don't let it go below */
+                NewPriority = LOW_REALTIME_PRIORITY;
+            }
+            else if (NewPriority > HIGH_PRIORITY)
+            {
+                /* We're going beyond the maximum priority, normalize */
+                NewPriority = HIGH_PRIORITY;
+            }
+
+            /*
+             * If priority saturation occured or the old priority was still in
+             * the real-time range, don't do anything.
+             */
+            if (!(Thread->Saturation) || (OldPriority < LOW_REALTIME_PRIORITY))
+            {
+                /* Check if we had priority saturation */
+                if (Thread->Saturation > 0)
+                {
+                    /* Boost priority to maximum */
+                    NewPriority = HIGH_PRIORITY;
+                }
+                else if (Thread->Saturation < 0)
+                {
+                    /* If we had negative saturation, set minimum priority */
+                    NewPriority = LOW_REALTIME_PRIORITY;
+                }
+
+                /* Update priority and quantum */
+                Thread->BasePriority = NewPriority;
+                Thread->Quantum = Thread->QuantumReset;
+
+                /* Disable decrements and update priority */
+                Thread->PriorityDecrement = 0;
+                KiSetPriorityThread(Thread, NewPriority, &Released);
+            }
+
+            /* Go to the next thread */
+            NextEntry = NextEntry->Flink;
+        }
+    }
+    else
+    {
+        /* Loop the thread list */
+        while (NextEntry != ListHead)
+        {
+            /* Get the thread */
+            Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+            /* Update the quantum if we had one */
+            if (Quantum) Thread->QuantumReset = Quantum;
+
+            /* Calculate the new priority */
+            NewPriority = Thread->BasePriority + Delta;
+            if (NewPriority >= LOW_REALTIME_PRIORITY)
+            {
+                /* We're not real-time range, don't let it enter RT range */
+                NewPriority = LOW_REALTIME_PRIORITY - 1;
+            }
+            else if (NewPriority <= LOW_PRIORITY)
+            {
+                /* We're going below the minimum priority, normalize */
+                NewPriority = 1;
+            }
+
+            /*
+             * If priority saturation occured or the old priority was still in
+             * the real-time range, don't do anything.
+             */
+            if (!(Thread->Saturation) ||
+                (OldPriority >= LOW_REALTIME_PRIORITY))
+            {
+                /* Check if we had priority saturation */
+                if (Thread->Saturation > 0)
+                {
+                    /* Boost priority to maximum */
+                    NewPriority = LOW_REALTIME_PRIORITY - 1;
+                }
+                else if (Thread->Saturation < 0)
+                {
+                    /* If we had negative saturation, set minimum priority */
+                    NewPriority = 1;
+                }
+
+                /* Update priority and quantum */
+                Thread->BasePriority = NewPriority;
+                Thread->Quantum = Thread->QuantumReset;
+
+                /* Disable decrements and update priority */
+                Thread->PriorityDecrement = 0;
+                KiSetPriorityThread(Thread, NewPriority, &Released);
+            }
+
+            /* Go to the next thread */
+            NextEntry = NextEntry->Flink;
+        }
+    }
+
+    /* Release Dispatcher Database */
+    if (!Released) KeReleaseDispatcherDatabaseLock(OldIrql);
+
+    /* Return previous priority */
+    return OldPriority;
+}
+
 /*
  * @implemented
  */

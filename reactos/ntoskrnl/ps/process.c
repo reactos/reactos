@@ -27,6 +27,49 @@ KGUARDED_MUTEX PspActiveProcessMutex;
 
 LARGE_INTEGER ShortPsLockDelay;
 
+ULONG PsPrioritySeparation;
+CHAR PspForegroundQuantum[3];
+
+/* Fixed quantum table */
+CHAR PspFixedQuantums[6] =
+{
+    /* Short quantums */
+    3 * 6, /* Level 1 */
+    3 * 6, /* Level 2 */
+    3 * 6, /* Level 3 */
+
+    /* Long quantums */
+    6 * 6, /* Level 1 */
+    6 * 6, /* Level 2 */
+    6 * 6  /* Level 3 */
+};
+
+/* Variable quantum table */
+CHAR PspVariableQuantums[6] =
+{
+    /* Short quantums */
+    1 * 6, /* Level 1 */
+    2 * 6, /* Level 2 */
+    3 * 6, /* Level 3 */
+
+    /* Long quantums */
+    2 * 6, /* Level 1 */
+    4 * 6, /* Level 2 */
+    6 * 6  /* Level 3 */
+};
+
+/* Priority table */
+KPRIORITY PspPriorityTable[PROCESS_PRIORITY_CLASS_ABOVE_NORMAL + 1] =
+{
+    8,
+    4,
+    8,
+    13,
+    24,
+    6,
+    10
+};
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
@@ -140,6 +183,164 @@ PsGetNextProcess(IN PEPROCESS OldProcess)
     /* Reference the Process we had referenced earlier */
     if (OldProcess) ObDereferenceObject(OldProcess);
     return FoundProcess;
+}
+
+KPRIORITY
+NTAPI
+PspComputeQuantumAndPriority(IN PEPROCESS Process,
+                             IN PSPROCESSPRIORITYMODE Mode,
+                             OUT PCHAR Quantum)
+{
+    ULONG i;
+    UCHAR LocalQuantum, MemoryPriority;
+    PAGED_CODE();
+
+    /* Check if this is a foreground process */
+    if (Mode == PsProcessPriorityForeground)
+    {
+        /* Set the memory priority and use priority separation */
+        MemoryPriority = 2;
+        i = PsPrioritySeparation;
+    }
+    else
+    {
+        /* Set the background memory priority and no separation */
+        MemoryPriority = 0;
+        i = 0;
+    }
+
+    /* Make sure that the process mode isn't spinning */
+    if (Mode != PsProcessPrioritySpinning)
+    {
+        /* Set the priority */
+        MmSetMemoryPriorityProcess(Process, MemoryPriority);
+    }
+
+    /* Make sure that the process isn't idle */
+    if (Process->PriorityClass != PROCESS_PRIORITY_CLASS_IDLE)
+    {
+        /* Does the process have a job? */
+        if ((Process->Job) && (PspUseJobSchedulingClasses))
+        {
+            /* Use job quantum */
+            LocalQuantum = PspJobSchedulingClasses[Process->Job->
+                                                   SchedulingClass];
+        }
+        else
+        {
+            /* Use calculated quantum */
+            LocalQuantum = PspForegroundQuantum[i];
+        }
+    }
+    else
+    {
+        /* Process is idle, use default quantum */
+        LocalQuantum = 6;
+    }
+
+    /* Return quantum to caller */
+    *Quantum = LocalQuantum;
+
+    /* Return priority */
+    return PspPriorityTable[Process->PriorityClass];
+}
+
+VOID
+NTAPI
+PsChangeQuantumTable(IN BOOLEAN Immediate,
+                     IN ULONG PrioritySeparation)
+{
+    PEPROCESS Process = NULL;
+    ULONG i;
+    UCHAR Quantum;
+    PCHAR QuantumTable;
+    PAGED_CODE();
+
+    /* Write the current priority separation */
+    PsPrioritySeparation = PspPrioritySeparationFromMask(PrioritySeparation);
+
+    /* Normalize it if it was too high */
+    if (PsPrioritySeparation == 3) PsPrioritySeparation = 2;
+
+    /* Get the quantum table to use */
+    if (PspQuantumTypeFromMask(PrioritySeparation) == PSP_VARIABLE_QUANTUMS)
+    {
+        /* Use a variable table */
+        QuantumTable = PspVariableQuantums;
+    }
+    else
+    {
+        /* Use fixed table */
+        QuantumTable = PspFixedQuantums;
+    }
+
+    /* Now check if we should use long or short */
+    if (PspQuantumLengthFromMask(PrioritySeparation) == PSP_LONG_QUANTUMS)
+    {
+        /* Use long quantums */
+        QuantumTable += 3;
+    }
+
+    /* Check if we're using long fixed quantums */
+    if (QuantumTable == &PspFixedQuantums[3])
+    {
+        /* Use Job scheduling classes */
+         PspUseJobSchedulingClasses = TRUE;
+    }
+    else
+    {
+        /* Otherwise, we don't */
+        PspUseJobSchedulingClasses = FALSE;
+    }
+
+    /* Copy the selected table into the Foreground Quantum table */
+    RtlCopyMemory(PspForegroundQuantum,
+                  QuantumTable,
+                  sizeof(PspForegroundQuantum));
+
+    /* Check if we should apply these changes real-time */
+    if (Immediate)
+    {
+        /* We are...loop every process */
+        Process == PsGetNextProcess(Process);
+        while (Process)
+        {
+            /*
+             * Use the priority separation, unless the process has
+             * low memory priority
+             */
+            i = (Process->Vm.Flags.MemoryPriority == 1) ?
+                0: PsPrioritySeparation;
+
+            /* Make sure that the process isn't idle */
+            if (Process->PriorityClass != PROCESS_PRIORITY_CLASS_IDLE)
+            {
+                /* Does the process have a job? */
+                if ((Process->Job) && (PspUseJobSchedulingClasses))
+                {
+                    /* Use job quantum */
+                    Quantum = PspJobSchedulingClasses[Process->Job->
+                                                      SchedulingClass];
+                }
+                else
+                {
+                    /* Use calculated quantum */
+                    Quantum = PspForegroundQuantum[i];
+                }
+            }
+            else
+            {
+                /* Process is idle, use default quantum */
+                Quantum = 6;
+            }
+
+            /* Now set the quantum */
+            KeSetQuantumProcess(&Process->Pcb, Quantum);
+
+            /* Get the next process */
+            Process == PsGetNextProcess(Process);
+        }
+    }
 }
 
 NTSTATUS
@@ -861,15 +1062,21 @@ PsSetProcessWindowStation(PEPROCESS Process,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-NTSTATUS
+VOID
 NTAPI
 PsSetProcessPriorityByClass(IN PEPROCESS Process,
-                            IN ULONG Type)
+                            IN PSPROCESSPRIORITYMODE Type)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UCHAR Quantum;
+    ULONG Priority;
+
+    /* Compute quantum and priority */
+    Priority = PspComputeQuantumAndPriority(Process, Type, &Quantum);
+
+    /* Set them */
+    KeSetPriorityAndQuantumProcess(&Process->Pcb, Priority, Quantum);
 }
 
 /*

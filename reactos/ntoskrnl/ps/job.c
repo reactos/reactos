@@ -18,14 +18,28 @@
 #pragma alloc_text(INIT, PsInitJobManagment)
 #endif
 
-
-
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE PsJobType = NULL;
 
 LIST_ENTRY PsJobListHead;
 static FAST_MUTEX PsJobListLock;
+
+BOOLEAN PspUseJobSchedulingClasses;
+
+CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES] =
+{
+    1 * 6,
+    2 * 6,
+    3 * 6,
+    4 * 6,
+    5 * 6,
+    6 * 6,
+    7 * 6,
+    8 * 6,
+    9 * 6,
+    10 * 6
+};
 
 static GENERIC_MAPPING PiJobMapping =
 {

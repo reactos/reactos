@@ -109,6 +109,12 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PROCESS_PRIORITY_NORMAL_FOREGROUND      9
 
 //
+// Process Priority Separation Values (OR)
+//
+#define PSP_VARIABLE_QUANTUMS                   4
+#define PSP_LONG_QUANTUMS                       16
+
+//
 // Number of TLS expansion slots
 //
 #define TLS_EXPANSION_SLOTS                     64
@@ -303,6 +309,13 @@ typedef enum _THREADINFOCLASS
 } THREADINFOCLASS;
 
 #else
+
+typedef enum _PSPROCESSPRIORITYMODE
+{
+    PsProcessPriorityForeground,
+    PsProcessPriorityBackground,
+    PsProcessPrioritySpinning
+} PSPROCESSPRIORITYMODE;
 
 typedef enum _JOBOBJECTINFOCLASS
 {

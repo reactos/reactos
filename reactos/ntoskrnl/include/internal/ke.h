@@ -397,6 +397,21 @@ KeInitializeProcess(
     LARGE_INTEGER DirectoryTableBase
 );
 
+VOID
+NTAPI
+KeSetQuantumProcess(
+    IN PKPROCESS Process,
+    IN UCHAR Quantum
+);
+
+KPRIORITY
+NTAPI
+KeSetPriorityAndQuantumProcess(
+    IN PKPROCESS Process,
+    IN KPRIORITY Priority,
+    IN UCHAR Quantum OPTIONAL
+);
+
 ULONG
 STDCALL
 KeForceResumeThread(IN PKTHREAD Thread);

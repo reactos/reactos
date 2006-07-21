@@ -929,6 +929,9 @@ typedef struct _KPROCESS
 #endif
 } KPROCESS, *PKPROCESS;
 
+#define ASSERT_PROCESS(object) \
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == ProcessObject))
+
 //
 // System Service Table Descriptor
 //

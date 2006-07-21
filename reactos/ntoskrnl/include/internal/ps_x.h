@@ -7,6 +7,18 @@
 *                  Thomas Weidenmueller (w3seek@reactos.org)
 */
 
+//
+// Extract Quantum Settings from the Priority Separation Mask
+//
+#define PspPrioritySeparationFromMask(Mask)                 \
+    ((Mask) & 3)
+
+#define PspQuantumTypeFromMask(Mask)                        \
+    ((Mask) & 12)
+
+#define PspQuantumLengthFromMask(Mask)                      \
+    ((Mask) & 48)
+
 VOID
 FORCEINLINE
 PspRunCreateThreadNotifyRoutines(IN PETHREAD CurrentThread,

@@ -654,6 +654,13 @@ ULONG
 NTAPI
 MmGetSessionLocaleId(VOID);
 
+NTSTATUS
+NTAPI
+MmSetMemoryPriorityProcess(
+    IN PEPROCESS Process,
+    IN UCHAR MemoryPriority
+);
+
 /* i386/pfault.c *************************************************************/
 
 NTSTATUS

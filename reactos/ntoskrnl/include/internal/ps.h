@@ -19,6 +19,8 @@ struct _EJOB;
 #define PSP_MAX_LOAD_IMAGE_NOTIFY               8
 #define PSP_MAX_CREATE_PROCESS_NOTIFY           8
 
+#define PSP_JOB_SCHEDULING_CLASSES              10
+
 VOID
 NTAPI
 PspShutdownProcessManager(VOID);
@@ -226,7 +228,8 @@ extern PKWIN32_PROCESS_CALLOUT PspW32ProcessCallout;
 extern PKWIN32_THREAD_CALLOUT PspW32ThreadCallout;
 extern PVOID PspSystemDllEntryPoint;
 extern PVOID PspSystemDllBase;
-
+extern BOOLEAN PspUseJobSchedulingClasses;
+extern CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES];
 #include "ps_x.h"
 
 #endif /* __INCLUDE_INTERNAL_PS_H */
