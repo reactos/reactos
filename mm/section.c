@@ -166,22 +166,6 @@ MmspCompleteAndReleasePageOp(PMM_PAGEOP PageOp)
    MmReleasePageOp(PageOp);
 }
 
-
-/*
- * FUNCTION:  Waits in kernel mode indefinitely for a file object lock.
- * ARGUMENTS: PFILE_OBJECT to wait for.
- * RETURNS:   Status of the wait.
- */
-static NTSTATUS
-MmspWaitForFileLock(PFILE_OBJECT File)
-{
-	if(File->Flags & FO_SYNCHRONOUS_IO)
-		return KeWaitForSingleObject(&File->Lock, 0, KernelMode, FALSE, NULL);
-	else 
-		return 0;
-}
-
-
 VOID
 MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment)
 {
@@ -3556,18 +3540,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
       RtlZeroMemory(&Segment->PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
 
       /*
-       * Lock the file
-       */
-      Status = MmspWaitForFileLock(FileObject);
-      if (Status != STATUS_SUCCESS)
-      {
-         ExFreePool(Segment);
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         return(Status);
-      }
-
-      /*
        * Set the lock before assigning the segment to the file object
        */
       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
@@ -3601,20 +3573,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    }
    else
    {
-      /*
-       * Lock the file
-       */
-      Status = MmspWaitForFileLock(FileObject);
-      if (Status != STATUS_SUCCESS)
-      {
-         ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
-         Segment->ReferenceCount--;
-         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&DataSectionObjectLock);
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         return(Status);
-      }
-
       Section->Segment = Segment;
       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&DataSectionObjectLock);
       MmLockSectionSegment(Segment);
@@ -4418,19 +4376,6 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
 
       Section->ImageSection = ImageSectionObject;
       ASSERT(ImageSectionObject->Segments);
-
-      /*
-       * Lock the file
-       */
-      Status = MmspWaitForFileLock(FileObject);
-      if (!NT_SUCCESS(Status))
-      {
-         ExFreePool(ImageSectionObject->Segments);
-         ExFreePool(ImageSectionObject);
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         return(Status);
-      }
    
       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
       tmpImageSectionObject = InterlockedCompareExchangePointer(&FileObject->SectionObjectPointer->ImageSectionObject,
@@ -4472,20 +4417,6 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    }
    else
    {
-      /*
-       * Lock the file
-       */
-      Status = MmspWaitForFileLock(FileObject);
-      if (Status != STATUS_SUCCESS)
-      {
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ImageSectionObjectLock);
-         ImageSectionObject->RefCount--;
-         ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ImageSectionObjectLock);
-         return(Status);
-      }
-
       Section->ImageSection = ImageSectionObject;
       SectionSegments = ImageSectionObject->Segments;
 
