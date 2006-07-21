@@ -63,7 +63,8 @@ ULONG WINAPI MAPISendMail( LHANDLE session, ULONG_PTR uiparam,
     unsigned int i, to_count = 0, cc_count = 0, bcc_count = 0;
     unsigned int to_size = 0, cc_size = 0, bcc_size = 0, subj_size, body_size;
 
-    char *address = "", *to = NULL, *cc = NULL, *bcc = NULL, *subject, *body;
+    char *to = NULL, *cc = NULL, *bcc = NULL;
+    const char *address, *subject, *body;
     static const char format[] =
         "mailto:\"%s\"?subject=\"%s\"&cc=\"%s\"&bcc=\"%s\"&body=\"%s\"";
     char *mailto = NULL, *escape = NULL;
