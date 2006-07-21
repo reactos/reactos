@@ -1109,6 +1109,13 @@ Language=English
 CRITICAL_PROCESS_DIED
 .
 
+MessageId=0xF4
+Severity=Success
+Facility=System
+SymbolicName=CRITICAL_OBJECT_TERMINATION
+Language=English
+CRITICAL_OBJECT_TERMINATION
+.
 
 MessageId=0xFC
 Severity=Success

@@ -21,6 +21,61 @@ WORK_QUEUE_ITEM PspReaperWorkItem;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+PspCatchCriticalBreak(IN PCHAR Message,
+                      IN PVOID ProcessOrThread,
+                      IN PCHAR ImageName)
+{
+    UCHAR Action[2];
+    BOOLEAN Handled = FALSE;
+    PAGED_CODE();
+
+    /* Check if a debugger is enabled */
+    if (KdDebuggerEnabled)
+    {
+        /* Print out the message */
+        DbgPrint(Message, ProcessOrThread, ImageName);
+        do
+        {
+            /* If a debugger isn't present, don't prompt */
+            if (KdDebuggerNotPresent) break;
+
+            /* A debuger is active, prompt for action */
+            DbgPrompt("Break, or Ignore (bi)?", Action, sizeof(Action));
+            switch (Action[0])
+            {
+                /* Break */
+                case 'B': case 'b':
+
+                    /* Do a breakpoint */
+                    DbgBreakPoint();
+
+                /* Ignore */
+                case 'I': case 'i':
+
+                    /* Handle it */
+                    Handled = TRUE;
+
+                /* Unrecognized */
+                default:
+                    break;
+            }
+        } while (!Handled);
+    }
+
+    /* Did we ultimately handle this? */
+    if (!Handled)
+    {
+        /* We didn't, bugcheck */
+        KeBugCheckEx(CRITICAL_OBJECT_TERMINATION,
+                     ((PKPROCESS)ProcessOrThread)->Header.Type,
+                     (ULONG_PTR)ProcessOrThread,
+                     (ULONG_PTR)ImageName,
+                     (ULONG_PTR)Message);
+    }
+}
+
 NTSTATUS
 NTAPI
 PspTerminateProcess(IN PEPROCESS Process,
@@ -29,12 +84,13 @@ PspTerminateProcess(IN PEPROCESS Process,
     PAGED_CODE();
     PETHREAD Thread = NULL;
 
-    /* Check if this is a Critical Process, and Bugcheck */
+    /* Check if this is a Critical Process */
     if (Process->BreakOnTermination)
     {
-        /* FIXME: Add critical Process support */
-        DPRINT1("A critical Process is being terminated\n");
-        KEBUGCHECK(0);
+        /* Break to debugger */
+        PspCatchCriticalBreak("Terminating critical process 0x%p (%s)\n",
+                              Process,
+                              Process->ImageFileName);
     }
 
     /* Set the delete flag */
@@ -442,8 +498,10 @@ PspExitThread(IN NTSTATUS ExitStatus)
     /* Check if this is a Critical Thread */
     if ((KdDebuggerEnabled) && (Thread->BreakOnTermination))
     {
-        /* FIXME: Add critical thread support */
-        KEBUGCHECK(0);
+        /* Break to debugger */
+        PspCatchCriticalBreak("Critical thread 0x%p (in %s) exited\n",
+                              Thread,
+                              CurrentProcess->ImageFileName);
     }
 
     /* Check if it's the last thread and this is a Critical Process */
@@ -452,8 +510,10 @@ PspExitThread(IN NTSTATUS ExitStatus)
         /* Check if a debugger is here to handle this */
         if (KdDebuggerEnabled)
         {
-            /* FIXME: Add critical process support */
-            DbgBreakPoint();
+            /* Break to debugger */
+            PspCatchCriticalBreak("Critical  process 0x%p (in %s) exited\n",
+                                  CurrentProcess,
+                                  CurrentProcess->ImageFileName);
         }
         else
         {
@@ -805,9 +865,10 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     /* Check if this is a Critical Thread, and Bugcheck */
     if (Thread->BreakOnTermination)
     {
-        /* FIXME: Add critical thread support */
-        DPRINT1("A critical thread is being terminated\n");
-        KEBUGCHECK(0);
+        /* Break to debugger */
+        PspCatchCriticalBreak("Terminating critical thread 0x%p (%s)\n",
+                              Thread,
+                              Thread->ThreadsProcess->ImageFileName);
     }
 
     /* Check if we are already inside the thread */
@@ -981,9 +1042,10 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     /* Check if this is a Critical Process, and Bugcheck */
     if (Process->BreakOnTermination)
     {
-        /* FIXME: Add critical Process support */
-        DPRINT1("A critical Process is being terminated\n");
-        KEBUGCHECK(0);
+        /* Break to debugger */
+        PspCatchCriticalBreak("Terminating critical process 0x%p (%s)\n",
+                              Process,
+                              Process->ImageFileName);
     }
 
     /* Lock the Process */
