@@ -1000,6 +1000,14 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 
     ObDereferenceObject(FileObject);
 
+    /* hpoussin, July 2006. Dereferencing the FileObject once
+     * is not enough to trigger the sending of IRP_MJ_CLEANUP.
+     * So, do it once more... According to Alex, it's because
+     * FileObjects should start with a ref count of 1 instead
+     * of 2 at the moment...
+     */
+    ObDereferenceObject(FileObject);
+
     return STATUS_SUCCESS;
 }
 
