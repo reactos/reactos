@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -159,7 +159,7 @@ static HRESULT register_interfaces(struct regsvr_interface const *list) {
 	}
 
 	if (list->base_iid) {
-	    register_key_guid(iid_key, base_ifa_keyname, list->base_iid);
+	    res = register_key_guid(iid_key, base_ifa_keyname, list->base_iid);
 	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
 	}
 
@@ -181,12 +181,12 @@ static HRESULT register_interfaces(struct regsvr_interface const *list) {
 	}
 
 	if (list->ps_clsid) {
-	    register_key_guid(iid_key, ps_clsid_keyname, list->ps_clsid);
+	    res = register_key_guid(iid_key, ps_clsid_keyname, list->ps_clsid);
 	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
 	}
 
 	if (list->ps_clsid32) {
-	    register_key_guid(iid_key, ps_clsid32_keyname, list->ps_clsid32);
+	    res = register_key_guid(iid_key, ps_clsid32_keyname, list->ps_clsid32);
 	    if (res != ERROR_SUCCESS) goto error_close_iid_key;
 	}
 
