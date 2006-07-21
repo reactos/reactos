@@ -237,7 +237,7 @@ TRACKBAR_GetAutoPageDirection (TRACKBAR_INFO *infoPtr, POINT clickPoint)
     return 0;
 }
 
-static void inline
+inline static void
 TRACKBAR_PageDown (TRACKBAR_INFO *infoPtr)
 {
     if (infoPtr->lPos == infoPtr->lRangeMax) return;
@@ -249,7 +249,7 @@ TRACKBAR_PageDown (TRACKBAR_INFO *infoPtr)
 }
 
 
-static void inline
+inline static void
 TRACKBAR_PageUp (TRACKBAR_INFO *infoPtr)
 {
     if (infoPtr->lPos == infoPtr->lRangeMin) return;
@@ -260,7 +260,7 @@ TRACKBAR_PageUp (TRACKBAR_INFO *infoPtr)
     notify_with_scroll (infoPtr, TB_PAGEUP);
 }
 
-static void inline TRACKBAR_LineUp(TRACKBAR_INFO *infoPtr)
+inline static void TRACKBAR_LineUp(TRACKBAR_INFO *infoPtr)
 {
     if (infoPtr->lPos == infoPtr->lRangeMin) return;
     infoPtr->lPos -= infoPtr->lLineSize;
@@ -269,7 +269,7 @@ static void inline TRACKBAR_LineUp(TRACKBAR_INFO *infoPtr)
     notify_with_scroll (infoPtr, TB_LINEUP);
 }
 
-static void inline TRACKBAR_LineDown(TRACKBAR_INFO *infoPtr)
+inline static void TRACKBAR_LineDown(TRACKBAR_INFO *infoPtr)
 {
     if (infoPtr->lPos == infoPtr->lRangeMax) return;
     infoPtr->lPos += infoPtr->lLineSize;
@@ -404,7 +404,7 @@ TRACKBAR_InvalidateThumbMove (TRACKBAR_INFO *infoPtr, LONG oldPos, LONG newPos)
         TRACKBAR_InvalidateThumb (infoPtr, newPos);
 }
 
-static BOOL inline
+inline static BOOL
 TRACKBAR_HasSelection (TRACKBAR_INFO *infoPtr)
 {
     return infoPtr->lSelMin != infoPtr->lSelMax;
@@ -757,7 +757,7 @@ TRACKBAR_DrawThumb(TRACKBAR_INFO *infoPtr, HDC hdc, DWORD dwStyle)
 }
 
 
-static void inline
+inline static void
 TRACKBAR_ActivateToolTip (TRACKBAR_INFO *infoPtr, BOOL fShow)
 {
     TTTOOLINFOW ti;
@@ -1022,7 +1022,7 @@ TRACKBAR_ClearTics (TRACKBAR_INFO *infoPtr, BOOL fRedraw)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_GetChannelRect (TRACKBAR_INFO *infoPtr, LPRECT lprc)
 {
     if (lprc == NULL) return 0;
@@ -1036,7 +1036,7 @@ TRACKBAR_GetChannelRect (TRACKBAR_INFO *infoPtr, LPRECT lprc)
 }
 
 
-static LONG inline
+inline static LONG
 TRACKBAR_GetNumTics (TRACKBAR_INFO *infoPtr)
 {
     if (GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_NOTICKS)
@@ -1058,7 +1058,7 @@ static int comp_tics(const void *ap, const void *bp)
 }
 
 
-static LONG inline
+inline static LONG
 TRACKBAR_GetTic (TRACKBAR_INFO *infoPtr, INT iTic)
 {
     if ((iTic < 0) || (iTic >= infoPtr->uNumTics) || !infoPtr->tics)
@@ -1069,7 +1069,7 @@ TRACKBAR_GetTic (TRACKBAR_INFO *infoPtr, INT iTic)
 }
 
 
-static LONG inline
+inline static LONG
 TRACKBAR_GetTicPos (TRACKBAR_INFO *infoPtr, INT iTic)
 {
     LONG range, width, pos, tic;
@@ -1111,7 +1111,7 @@ TRACKBAR_SetBuddy (TRACKBAR_INFO *infoPtr, BOOL fLocation, HWND hwndBuddy)
 }
 
 
-static LONG inline
+inline static LONG
 TRACKBAR_SetLineSize (TRACKBAR_INFO *infoPtr, LONG lLineSize)
 {
     LONG lTemp = infoPtr->lLineSize;
@@ -1122,7 +1122,7 @@ TRACKBAR_SetLineSize (TRACKBAR_INFO *infoPtr, LONG lLineSize)
 }
 
 
-static LONG inline
+inline static LONG
 TRACKBAR_SetPageSize (TRACKBAR_INFO *infoPtr, LONG lPageSize)
 {
     LONG lTemp = infoPtr->lPageSize;
@@ -1133,7 +1133,7 @@ TRACKBAR_SetPageSize (TRACKBAR_INFO *infoPtr, LONG lPageSize)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetPos (TRACKBAR_INFO *infoPtr, BOOL fPosition, LONG lPosition)
 {
     LONG oldPos = infoPtr->lPos;
@@ -1152,7 +1152,7 @@ TRACKBAR_SetPos (TRACKBAR_INFO *infoPtr, BOOL fPosition, LONG lPosition)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetRange (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lRange)
 {
     infoPtr->lRangeMin = (SHORT)LOWORD(lRange);
@@ -1177,7 +1177,7 @@ TRACKBAR_SetRange (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lRange)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetRangeMax (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lMax)
 {
     infoPtr->lRangeMax = lMax;
@@ -1195,7 +1195,7 @@ TRACKBAR_SetRangeMax (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lMax)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetRangeMin (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lMin)
 {
     infoPtr->lRangeMin = lMin;
@@ -1213,7 +1213,7 @@ TRACKBAR_SetRangeMin (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lMin)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetSel (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lSel)
 {
     if (!GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_ENABLESELRANGE)
@@ -1234,7 +1234,7 @@ TRACKBAR_SetSel (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lSel)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetSelEnd (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lEnd)
 {
     if (!GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_ENABLESELRANGE)
@@ -1252,7 +1252,7 @@ TRACKBAR_SetSelEnd (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lEnd)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetSelStart (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lStart)
 {
     if (!GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_ENABLESELRANGE)
@@ -1270,7 +1270,7 @@ TRACKBAR_SetSelStart (TRACKBAR_INFO *infoPtr, BOOL fRedraw, LONG lStart)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetThumbLength (TRACKBAR_INFO *infoPtr, UINT iLength)
 {
     if (GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_FIXEDLENGTH) {
@@ -1283,7 +1283,7 @@ TRACKBAR_SetThumbLength (TRACKBAR_INFO *infoPtr, UINT iLength)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetTic (TRACKBAR_INFO *infoPtr, LONG lPos)
 {
     if (GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_AUTOTICKS)
@@ -1310,7 +1310,7 @@ TRACKBAR_SetTic (TRACKBAR_INFO *infoPtr, LONG lPos)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetTicFreq (TRACKBAR_INFO *infoPtr, WORD wFreq)
 {
     if (GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE) & TBS_AUTOTICKS) {
@@ -1323,7 +1323,7 @@ TRACKBAR_SetTicFreq (TRACKBAR_INFO *infoPtr, WORD wFreq)
 }
 
 
-static INT inline
+inline static INT
 TRACKBAR_SetTipSide (TRACKBAR_INFO *infoPtr, INT fLocation)
 {
     INT fTemp = infoPtr->fLocation;
@@ -1334,7 +1334,7 @@ TRACKBAR_SetTipSide (TRACKBAR_INFO *infoPtr, INT fLocation)
 }
 
 
-static LRESULT inline
+inline static LRESULT
 TRACKBAR_SetToolTips (TRACKBAR_INFO *infoPtr, HWND hwndTT)
 {
     infoPtr->hwndToolTip = hwndTT;
@@ -1343,7 +1343,7 @@ TRACKBAR_SetToolTips (TRACKBAR_INFO *infoPtr, HWND hwndTT)
 }
 
 
-static BOOL inline
+inline static BOOL
 TRACKBAR_SetUnicodeFormat (TRACKBAR_INFO *infoPtr, BOOL fUnicode)
 {
     BOOL bTemp = infoPtr->bUnicode;
@@ -1702,7 +1702,7 @@ TRACKBAR_KeyDown (TRACKBAR_INFO *infoPtr, INT nVirtKey, DWORD lKeyData)
 }
 
 
-static BOOL inline
+inline static BOOL
 TRACKBAR_KeyUp (TRACKBAR_INFO *infoPtr, INT nVirtKey, DWORD lKeyData)
 {
     switch (nVirtKey) {

@@ -3770,8 +3770,8 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
     if (himl && lvItem.iImage >= 0 && !IsRectEmpty(&rcIcon))
     {
         TRACE("iImage=%d\n", lvItem.iImage);
-	ImageList_Draw(himl, lvItem.iImage, hdc, rcIcon.left, rcIcon.top,
-			(lvItem.state & LVIS_SELECTED) && (infoPtr->bFocus) ? ILD_SELECTED : ILD_NORMAL);
+        ImageList_Draw(himl, lvItem.iImage, hdc, rcIcon.left, rcIcon.top,
+                       (lvItem.state & LVIS_SELECTED) && (infoPtr->bFocus) ? ILD_SELECTED : ILD_NORMAL);
     }
 
     /* Don't bother painting item being edited */
@@ -5617,9 +5617,11 @@ static BOOL LISTVIEW_GetSubItemRect(LISTVIEW_INFO *infoPtr, INT nItem, LPRECT lp
 {
     POINT Position;
     LVITEMW lvItem;
-    INT nColumn = lprc->top;
+    INT nColumn;
     
     if (!lprc) return FALSE;
+
+    nColumn = lprc->top;
 
     TRACE("(nItem=%d, nSubItem=%ld)\n", nItem, lprc->top);
     /* On WinNT, a subitem of '0' calls LISTVIEW_GetItemRect */
@@ -6274,7 +6276,13 @@ static INT LISTVIEW_InsertItemT(LISTVIEW_INFO *infoPtr, const LVITEMW *lpLVItem,
         memcpy(&item, lpLVItem, offsetof( LVITEMW, iIndent ));
     }
     item.iItem = nItem;
-    if (infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES) item.state &= ~LVIS_STATEIMAGEMASK;
+    if (infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES)
+    {
+        item.mask |= LVIF_STATE;
+        item.stateMask |= LVIS_STATEIMAGEMASK;
+        item.state &= ~LVIS_STATEIMAGEMASK;
+        item.state |= INDEXTOSTATEIMAGEMASK(1);
+    }
     if (!set_main_item(infoPtr, &item, TRUE, isW, &has_changed)) goto undo;
 
     /* if we're sorted, sort the list, and update the index */
@@ -6592,6 +6600,7 @@ static INT LISTVIEW_InsertColumnT(LISTVIEW_INFO *infoPtr, INT nColumn,
 
     /* make space for the new column */
     LISTVIEW_ScrollColumns(infoPtr, nNewColumn + 1, lpColumnInfo->rcHeader.right - lpColumnInfo->rcHeader.left);
+    LISTVIEW_UpdateItemSize(infoPtr);
     
     return nNewColumn;
 
@@ -6871,7 +6880,15 @@ static DWORD LISTVIEW_SetExtendedListViewStyle(LISTVIEW_INFO *infoPtr, DWORD dwM
     {
         HIMAGELIST himl = 0;
         if(infoPtr->dwLvExStyle & LVS_EX_CHECKBOXES)
+        {
+            LVITEMW item;
+            item.mask = LVIF_STATE;
+            item.stateMask = LVIS_STATEIMAGEMASK;
+            item.state = INDEXTOSTATEIMAGEMASK(1);
+            LISTVIEW_SetItemState(infoPtr, -1, &item);
+
             himl = LISTVIEW_CreateCheckBoxIL(infoPtr);
+        }
         LISTVIEW_SetImageList(infoPtr, LVSIL_STATE, himl);
     }
     

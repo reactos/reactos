@@ -2151,8 +2151,7 @@ static void PROPSHEET_SetTitleW(HWND hwndDlg, DWORD dwStyle, LPCWSTR lpszText)
     int lenprop  = strlenW(psInfo->strPropertiesFor);
 
     dest = Alloc( (lentitle + lenprop + 1)*sizeof (WCHAR));
-    strcpyW(dest, psInfo->strPropertiesFor);
-    strcatW(dest, lpszText);
+    wsprintfW(dest, psInfo->strPropertiesFor, lpszText);
 
     SetWindowTextW(hwndDlg, dest);
     Free(dest);

@@ -1,0 +1,26 @@
+Index: comctl32.rbuild
+===================================================================
+--- comctl32.rbuild	(revision 23123)
++++ comctl32.rbuild	(working copy)
+@@ -1,4 +1,5 @@
+ <module name="comctl32" type="win32dll" baseaddress="${BASEADDRESS_COMCTL32}" installbase="system32" installname="comctl32.dll" allowwarnings="true">
++	<autoregister infsection="OleControlDlls" type="DllInstall" />
+ 	<importlibrary definition="comctl32.spec.def" />
+ 	<include base="comctl32">.</include>
+ 	<include base="ReactOS">include/reactos/wine</include>
+Index: listview.c
+===================================================================
+--- listview.c	(revision 23123)
++++ listview.c	(working copy)
+@@ -3770,9 +3770,8 @@
+     if (himl && lvItem.iImage >= 0 && !IsRectEmpty(&rcIcon))
+     {
+         TRACE("iImage=%d\n", lvItem.iImage);
++        ImageList_Draw(himl, lvItem.iImage, hdc, rcIcon.left, rcIcon.top,
++                       (lvItem.state & LVIS_SELECTED) && (infoPtr->bFocus) ? ILD_SELECTED : ILD_NORMAL);
+-        ImageList_DrawEx(himl, lvItem.iImage, hdc, rcIcon.left, rcIcon.top,
+-                         rcIcon.right - rcIcon.left, rcIcon.bottom - rcIcon.top, infoPtr->clrBk, CLR_DEFAULT,
+-                         (lvItem.state & LVIS_SELECTED) && (infoPtr->bFocus) ? ILD_SELECTED : ILD_NORMAL);
+     }
+ 
+     /* Don't bother painting item being edited */
