@@ -363,6 +363,16 @@ const void *CRYPT_ReadSerializedElement(const BYTE *pbElement, DWORD cbElement,
                             ret = contextInterface->setProp(context,
                              hdr->propID, 0, pbElement);
                             break;
+                        case CERT_KEY_PROV_INFO_PROP_ID:
+                        {
+                            PCRYPT_KEY_PROV_INFO info =
+                             (PCRYPT_KEY_PROV_INFO)pbElement;
+
+                            CRYPT_FixKeyProvInfoPointers(info);
+                            ret = contextInterface->setProp(context,
+                             hdr->propID, 0, pbElement);
+                            break;
+                        }
                         default:
                             FIXME("prop ID %ld: stub\n", hdr->propID);
                         }

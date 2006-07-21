@@ -23,13 +23,20 @@
 #define ASN_BOOL            (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x01)
 #define ASN_BITSTRING       (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x03)
 #define ASN_ENUMERATED      (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x0a)
+#define ASN_UTF8STRING      (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x0c)
 #define ASN_SETOF           (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x11)
 #define ASN_NUMERICSTRING   (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x12)
 #define ASN_PRINTABLESTRING (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x13)
 #define ASN_T61STRING       (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x14)
+#define ASN_VIDEOTEXSTRING  (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x15)
 #define ASN_IA5STRING       (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x16)
 #define ASN_UTCTIME         (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x17)
 #define ASN_GENERALTIME     (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x18)
+#define ASN_GRAPHICSTRING   (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x19)
+#define ASN_VISIBLESTRING   (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x1a)
+#define ASN_GENERALSTRING   (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x1b)
+#define ASN_UNIVERSALSTRING (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x1c)
+#define ASN_BMPSTRING       (ASN_UNIVERSAL | ASN_PRIMITIVE | 0x1e)
 
 /* The following aren't defined in wincrypt.h, as they're "reserved" */
 #define CERT_CERT_PROP_ID 32
@@ -96,6 +103,14 @@ extern PCWINE_CONTEXT_INTERFACE pCTLInterface;
  */
 const void *CRYPT_ReadSerializedElement(const BYTE *pbElement,
  DWORD cbElement, DWORD dwContextTypeFlags, DWORD *pdwContentType);
+
+/* Fixes up the the pointers in info, where info is assumed to be a
+ * CRYPT_KEY_PROV_INFO, followed by its container name, provider name, and any
+ * provider parameters, in a contiguous buffer, but where info's pointers are
+ * assumed to be invalid.  Upon return, info's pointers point to the
+ * appropriate memory locations.
+ */
+void CRYPT_FixKeyProvInfoPointers(PCRYPT_KEY_PROV_INFO info);
 
 DWORD CertStore_GetAccessState(HCERTSTORE hCertStore);
 

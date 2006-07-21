@@ -1723,6 +1723,54 @@ static PWINECRYPT_CERTSTORE CRYPT_SysOpenStoreA(HCRYPTPROV hCryptProv,
     return ret;
 }
 
+static PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreW(HCRYPTPROV hCryptProv,
+ DWORD dwFlags, const void *pvPara)
+{
+    FIXME("(%ld, %08lx, %s): stub\n", hCryptProv, dwFlags,
+     debugstr_w((LPCWSTR)pvPara));
+    return NULL;
+}
+
+static PWINECRYPT_CERTSTORE CRYPT_FileNameOpenStoreA(HCRYPTPROV hCryptProv,
+ DWORD dwFlags, const void *pvPara)
+{
+    int len;
+    PWINECRYPT_CERTSTORE ret = NULL;
+
+    TRACE("(%ld, %08lx, %s)\n", hCryptProv, dwFlags,
+     debugstr_a((LPCSTR)pvPara));
+
+    if (!pvPara)
+    {
+        SetLastError(ERROR_FILE_NOT_FOUND);
+        return NULL;
+    }
+    len = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pvPara, -1, NULL, 0);
+    if (len)
+    {
+        LPWSTR storeName = CryptMemAlloc(len * sizeof(WCHAR));
+
+        if (storeName)
+        {
+            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pvPara, -1, storeName, len);
+            ret = CRYPT_FileNameOpenStoreW(hCryptProv, dwFlags, storeName);
+            CryptMemFree(storeName);
+        }
+    }
+    return ret;
+}
+
+static PWINECRYPT_CERTSTORE CRYPT_PhysOpenStoreW(HCRYPTPROV hCryptProv,
+ DWORD dwFlags, const void *pvPara)
+{
+    if (dwFlags & CERT_SYSTEM_STORE_RELOCATE_FLAG)
+        FIXME("(%ld, %08lx, %p): stub\n", hCryptProv, dwFlags, pvPara);
+    else
+        FIXME("(%ld, %08lx, %s): stub\n", hCryptProv, dwFlags,
+         debugstr_w((LPCWSTR)pvPara));
+    return NULL;
+}
+
 HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider,
  DWORD dwMsgAndCertEncodingType, HCRYPTPROV hCryptProv, DWORD dwFlags,
  const void* pvPara)
@@ -1743,6 +1791,12 @@ HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider,
         case (int)CERT_STORE_PROV_REG:
             openFunc = CRYPT_RegOpenStore;
             break;
+        case (int)CERT_STORE_PROV_FILENAME_A:
+            openFunc = CRYPT_FileNameOpenStoreA;
+            break;
+        case (int)CERT_STORE_PROV_FILENAME_W:
+            openFunc = CRYPT_FileNameOpenStoreW;
+            break;
         case (int)CERT_STORE_PROV_COLLECTION:
             openFunc = CRYPT_CollectionOpenStore;
             break;
@@ -1757,6 +1811,9 @@ HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider,
             break;
         case (int)CERT_STORE_PROV_SYSTEM_REGISTRY_W:
             openFunc = CRYPT_SysRegOpenStoreW;
+            break;
+        case (int)CERT_STORE_PROV_PHYSICAL_W:
+            openFunc = CRYPT_PhysOpenStoreW;
             break;
         default:
             if (LOWORD(lpszStoreProvider))

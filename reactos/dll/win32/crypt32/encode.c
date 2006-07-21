@@ -46,6 +46,7 @@
 #include "snmp.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
+#include "wine/unicode.h"
 #include "crypt32_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
@@ -163,6 +164,8 @@ static BOOL CRYPT_EncodeEnsureSpace(DWORD dwFlags,
         SetLastError(ERROR_MORE_DATA);
         ret = FALSE;
     }
+    else
+        *pcbEncoded = bytesNeeded;
     return ret;
 }
 
@@ -381,18 +384,18 @@ static BOOL WINAPI CRYPT_CopyEncodedBlob(DWORD dwCertEncodingType,
         *pcbEncoded = blob->cbData;
         ret = TRUE;
     }
-    else if (*pcbEncoded < blob->cbData)
-    {
-        *pcbEncoded = blob->cbData;
-        SetLastError(ERROR_MORE_DATA);
-        ret = FALSE;
-    }
     else
     {
-        if (blob->cbData)
-            memcpy(pbEncoded, blob->pbData, blob->cbData);
-        *pcbEncoded = blob->cbData;
-        ret = TRUE;
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara, pbEncoded,
+         pcbEncoded, blob->cbData)))
+        {
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            if (blob->cbData)
+                memcpy(pbEncoded, blob->pbData, blob->cbData);
+            *pcbEncoded = blob->cbData;
+            ret = TRUE;
+        }
     }
     return ret;
 }
@@ -910,6 +913,104 @@ static BOOL WINAPI CRYPT_AsnEncodeOid(DWORD dwCertEncodingType,
     return ret;
 }
 
+static BOOL CRYPT_AsnEncodeStringCoerce(const CERT_NAME_VALUE *value,
+ BYTE tag, DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded,
+ DWORD *pcbEncoded)
+{
+    BOOL ret = TRUE;
+    LPCSTR str = (LPCSTR)value->Value.pbData;
+    DWORD bytesNeeded, lenBytes, encodedLen;
+
+    encodedLen = value->Value.cbData ? value->Value.cbData : lstrlenA(str);
+    CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
+    bytesNeeded = 1 + lenBytes + encodedLen;
+    if (!pbEncoded)
+        *pcbEncoded = bytesNeeded;
+    else
+    {
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara,
+         pbEncoded, pcbEncoded, bytesNeeded)))
+        {
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            *pbEncoded++ = tag;
+            CRYPT_EncodeLen(encodedLen, pbEncoded, &lenBytes);
+            pbEncoded += lenBytes;
+            memcpy(pbEncoded, str, encodedLen);
+        }
+    }
+    return ret;
+}
+
+static BOOL CRYPT_AsnEncodeBMPString(const CERT_NAME_VALUE *value,
+ DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded,
+ DWORD *pcbEncoded)
+{
+    BOOL ret = TRUE;
+    LPCWSTR str = (LPCWSTR)value->Value.pbData;
+    DWORD bytesNeeded, lenBytes, strLen;
+
+    strLen = value->Value.cbData ? value->Value.cbData / sizeof(WCHAR) :
+     lstrlenW(str);
+    CRYPT_EncodeLen(strLen * 2, NULL, &lenBytes);
+    bytesNeeded = 1 + lenBytes + strLen * 2;
+    if (!pbEncoded)
+        *pcbEncoded = bytesNeeded;
+    else
+    {
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara,
+         pbEncoded, pcbEncoded, bytesNeeded)))
+        {
+            DWORD i;
+
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            *pbEncoded++ = ASN_BMPSTRING;
+            CRYPT_EncodeLen(strLen * 2, pbEncoded, &lenBytes);
+            pbEncoded += lenBytes;
+            for (i = 0; i < strLen; i++)
+            {
+                *pbEncoded++ = (str[i] & 0xff00) >> 8;
+                *pbEncoded++ = str[i] & 0x00ff;
+            }
+        }
+    }
+    return ret;
+}
+
+static BOOL CRYPT_AsnEncodeUTF8String(const CERT_NAME_VALUE *value,
+ DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded,
+ DWORD *pcbEncoded)
+{
+    BOOL ret = TRUE;
+    LPCWSTR str = (LPCWSTR)value->Value.pbData;
+    DWORD bytesNeeded, lenBytes, encodedLen, strLen;
+
+    strLen = value->Value.cbData ? value->Value.cbData / sizeof(WCHAR) :
+     lstrlenW(str);
+    encodedLen = WideCharToMultiByte(CP_UTF8, 0, str, strLen, NULL, 0, NULL,
+     NULL);
+    CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
+    bytesNeeded = 1 + lenBytes + encodedLen;
+    if (!pbEncoded)
+        *pcbEncoded = bytesNeeded;
+    else
+    {
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara,
+         pbEncoded, pcbEncoded, bytesNeeded)))
+        {
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            *pbEncoded++ = ASN_UTF8STRING;
+            CRYPT_EncodeLen(encodedLen, pbEncoded, &lenBytes);
+            pbEncoded += lenBytes;
+            WideCharToMultiByte(CP_UTF8, 0, str, strLen, (LPSTR)pbEncoded,
+             bytesNeeded - lenBytes - 1, NULL, NULL);
+        }
+    }
+    return ret;
+}
+
 static BOOL WINAPI CRYPT_AsnEncodeNameValue(DWORD dwCertEncodingType,
  LPCSTR lpszStructType, const void *pvStructInfo, DWORD dwFlags,
  PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded, DWORD *pcbEncoded)
@@ -918,65 +1019,355 @@ static BOOL WINAPI CRYPT_AsnEncodeNameValue(DWORD dwCertEncodingType,
 
     __TRY
     {
-        BYTE tag;
-        DWORD bytesNeeded, lenBytes, encodedLen;
         const CERT_NAME_VALUE *value = (CERT_NAME_VALUE *)pvStructInfo;
 
         switch (value->dwValueType)
         {
-        case CERT_RDN_NUMERIC_STRING:
-            tag = ASN_NUMERICSTRING;
-            encodedLen = value->Value.cbData;
-            break;
-        case CERT_RDN_PRINTABLE_STRING:
-            tag = ASN_PRINTABLESTRING;
-            encodedLen = value->Value.cbData;
-            break;
-        case CERT_RDN_T61_STRING:
-            tag = ASN_T61STRING;
-            encodedLen = value->Value.cbData;
-            break;
-        case CERT_RDN_IA5_STRING:
-            tag = ASN_IA5STRING;
-            encodedLen = value->Value.cbData;
-            break;
         case CERT_RDN_ANY_TYPE:
             /* explicitly disallowed */
             SetLastError(E_INVALIDARG);
-            return FALSE;
+            ret = FALSE;
+            break;
+        case CERT_RDN_ENCODED_BLOB:
+            ret = CRYPT_CopyEncodedBlob(dwCertEncodingType, NULL,
+             &value->Value, dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_OCTET_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value, ASN_OCTETSTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_NUMERIC_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value, ASN_NUMERICSTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_PRINTABLE_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value, ASN_PRINTABLESTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_TELETEX_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value, ASN_T61STRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_VIDEOTEX_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value,
+             ASN_VIDEOTEXSTRING, dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_IA5_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value, ASN_IA5STRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_GRAPHIC_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value, ASN_GRAPHICSTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_VISIBLE_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value, ASN_VISIBLESTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_GENERAL_STRING:
+            ret = CRYPT_AsnEncodeStringCoerce(value, ASN_GENERALSTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_UNIVERSAL_STRING:
+            FIXME("CERT_RDN_UNIVERSAL_STRING: unimplemented\n");
+            SetLastError(CRYPT_E_ASN1_CHOICE);
+            ret = FALSE;
+            break;
+        case CERT_RDN_BMP_STRING:
+            ret = CRYPT_AsnEncodeBMPString(value, dwFlags, pEncodePara,
+             pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_UTF8_STRING:
+            ret = CRYPT_AsnEncodeUTF8String(value, dwFlags, pEncodePara,
+             pbEncoded, pcbEncoded);
+            break;
         default:
-            FIXME("String type %ld unimplemented\n", value->dwValueType);
-            return FALSE;
-        }
-        CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
-        bytesNeeded = 1 + lenBytes + encodedLen;
-        if (!pbEncoded)
-            *pcbEncoded = bytesNeeded;
-        else
-        {
-            if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara, pbEncoded,
-             pcbEncoded, bytesNeeded)))
-            {
-                if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
-                    pbEncoded = *(BYTE **)pbEncoded;
-                *pbEncoded++ = tag;
-                CRYPT_EncodeLen(encodedLen, pbEncoded, &lenBytes);
-                pbEncoded += lenBytes;
-                switch (value->dwValueType)
-                {
-                case CERT_RDN_NUMERIC_STRING:
-                case CERT_RDN_PRINTABLE_STRING:
-                case CERT_RDN_T61_STRING:
-                case CERT_RDN_IA5_STRING:
-                    memcpy(pbEncoded, value->Value.pbData, value->Value.cbData);
-                }
-            }
+            SetLastError(CRYPT_E_ASN1_CHOICE);
+            ret = FALSE;
         }
     }
     __EXCEPT_PAGE_FAULT
     {
         SetLastError(STATUS_ACCESS_VIOLATION);
         ret = FALSE;
+    }
+    __ENDTRY
+    return ret;
+}
+
+static BOOL CRYPT_AsnEncodeUnicodeStringCoerce(const CERT_NAME_VALUE *value,
+ BYTE tag, DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded,
+ DWORD *pcbEncoded)
+{
+    BOOL ret = TRUE;
+    LPCWSTR str = (LPCWSTR)value->Value.pbData;
+    DWORD bytesNeeded, lenBytes, encodedLen;
+
+    encodedLen = value->Value.cbData ? value->Value.cbData / sizeof(WCHAR) :
+     lstrlenW(str);
+    CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
+    bytesNeeded = 1 + lenBytes + encodedLen;
+    if (!pbEncoded)
+        *pcbEncoded = bytesNeeded;
+    else
+    {
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara,
+         pbEncoded, pcbEncoded, bytesNeeded)))
+        {
+            DWORD i;
+
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            *pbEncoded++ = tag;
+            CRYPT_EncodeLen(encodedLen, pbEncoded, &lenBytes);
+            pbEncoded += lenBytes;
+            for (i = 0; i < encodedLen; i++)
+                *pbEncoded++ = (BYTE)str[i];
+        }
+    }
+    return ret;
+}
+
+static BOOL CRYPT_AsnEncodeNumericString(const CERT_NAME_VALUE *value,
+ DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded,
+ DWORD *pcbEncoded)
+{
+    BOOL ret = TRUE;
+    LPCWSTR str = (LPCWSTR)value->Value.pbData;
+    DWORD bytesNeeded, lenBytes, encodedLen;
+
+    encodedLen = value->Value.cbData ? value->Value.cbData / sizeof(WCHAR) :
+     lstrlenW(str);
+    CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
+    bytesNeeded = 1 + lenBytes + encodedLen;
+    if (!pbEncoded)
+        *pcbEncoded = bytesNeeded;
+    else
+    {
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara,
+         pbEncoded, pcbEncoded, bytesNeeded)))
+        {
+            DWORD i;
+
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            *pbEncoded++ = ASN_NUMERICSTRING;
+            CRYPT_EncodeLen(encodedLen, pbEncoded, &lenBytes);
+            pbEncoded += lenBytes;
+            for (i = 0; ret && i < encodedLen; i++)
+            {
+                if (isdigitW(str[i]))
+                    *pbEncoded++ = (BYTE)str[i];
+                else
+                {
+                    *pcbEncoded = i;
+                    SetLastError(CRYPT_E_INVALID_NUMERIC_STRING);
+                    ret = FALSE;
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+static inline int isprintableW(WCHAR wc)
+{
+    return isalnumW(wc) || isspaceW(wc) || wc == '\'' || wc == '(' ||
+     wc == ')' || wc == '+' || wc == ',' || wc == '-' || wc == '.' ||
+     wc == '/' || wc == ':' || wc == '=' || wc == '?';
+}
+
+static BOOL CRYPT_AsnEncodePrintableString(const CERT_NAME_VALUE *value,
+ DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded,
+ DWORD *pcbEncoded)
+{
+    BOOL ret = TRUE;
+    LPCWSTR str = (LPCWSTR)value->Value.pbData;
+    DWORD bytesNeeded, lenBytes, encodedLen;
+
+    encodedLen = value->Value.cbData ? value->Value.cbData / sizeof(WCHAR) :
+     lstrlenW(str);
+    CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
+    bytesNeeded = 1 + lenBytes + encodedLen;
+    if (!pbEncoded)
+        *pcbEncoded = bytesNeeded;
+    else
+    {
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara,
+         pbEncoded, pcbEncoded, bytesNeeded)))
+        {
+            DWORD i;
+
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            *pbEncoded++ = ASN_PRINTABLESTRING;
+            CRYPT_EncodeLen(encodedLen, pbEncoded, &lenBytes);
+            pbEncoded += lenBytes;
+            for (i = 0; ret && i < encodedLen; i++)
+            {
+                if (isprintableW(str[i]))
+                    *pbEncoded++ = (BYTE)str[i];
+                else
+                {
+                    *pcbEncoded = i;
+                    SetLastError(CRYPT_E_INVALID_PRINTABLE_STRING);
+                    ret = FALSE;
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+static BOOL CRYPT_AsnEncodeIA5String(const CERT_NAME_VALUE *value,
+ DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded,
+ DWORD *pcbEncoded)
+{
+    BOOL ret = TRUE;
+    LPCWSTR str = (LPCWSTR)value->Value.pbData;
+    DWORD bytesNeeded, lenBytes, encodedLen;
+
+    encodedLen = value->Value.cbData ? value->Value.cbData / sizeof(WCHAR) :
+     lstrlenW(str);
+    CRYPT_EncodeLen(encodedLen, NULL, &lenBytes);
+    bytesNeeded = 1 + lenBytes + encodedLen;
+    if (!pbEncoded)
+        *pcbEncoded = bytesNeeded;
+    else
+    {
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara,
+         pbEncoded, pcbEncoded, bytesNeeded)))
+        {
+            DWORD i;
+
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            *pbEncoded++ = ASN_IA5STRING;
+            CRYPT_EncodeLen(encodedLen, pbEncoded, &lenBytes);
+            pbEncoded += lenBytes;
+            for (i = 0; ret && i < encodedLen; i++)
+            {
+                if (str[i] <= 0x7f)
+                    *pbEncoded++ = (BYTE)str[i];
+                else
+                {
+                    *pcbEncoded = i;
+                    SetLastError(CRYPT_E_INVALID_IA5_STRING);
+                    ret = FALSE;
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+static BOOL CRYPT_AsnEncodeUniversalString(const CERT_NAME_VALUE *value,
+ DWORD dwFlags, PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded,
+ DWORD *pcbEncoded)
+{
+    BOOL ret = TRUE;
+    LPCWSTR str = (LPCWSTR)value->Value.pbData;
+    DWORD bytesNeeded, lenBytes, strLen;
+
+    /* FIXME: doesn't handle composite characters */
+    strLen = value->Value.cbData ? value->Value.cbData / sizeof(WCHAR) :
+     lstrlenW(str);
+    CRYPT_EncodeLen(strLen * 4, NULL, &lenBytes);
+    bytesNeeded = 1 + lenBytes + strLen * 4;
+    if (!pbEncoded)
+        *pcbEncoded = bytesNeeded;
+    else
+    {
+        if ((ret = CRYPT_EncodeEnsureSpace(dwFlags, pEncodePara,
+         pbEncoded, pcbEncoded, bytesNeeded)))
+        {
+            DWORD i;
+
+            if (dwFlags & CRYPT_ENCODE_ALLOC_FLAG)
+                pbEncoded = *(BYTE **)pbEncoded;
+            *pbEncoded++ = ASN_UNIVERSALSTRING;
+            CRYPT_EncodeLen(strLen * 4, pbEncoded, &lenBytes);
+            pbEncoded += lenBytes;
+            for (i = 0; i < strLen; i++)
+            {
+                *pbEncoded++ = 0;
+                *pbEncoded++ = 0;
+                *pbEncoded++ = (BYTE)((str[i] & 0xff00) >> 8);
+                *pbEncoded++ = (BYTE)(str[i] & 0x00ff);
+            }
+        }
+    }
+    return ret;
+}
+
+static BOOL WINAPI CRYPT_AsnEncodeUnicodeNameValue(DWORD dwCertEncodingType,
+ LPCSTR lpszStructType, const void *pvStructInfo, DWORD dwFlags,
+ PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded, DWORD *pcbEncoded)
+{
+    BOOL ret = FALSE;
+
+    __TRY
+    {
+        const CERT_NAME_VALUE *value = (CERT_NAME_VALUE *)pvStructInfo;
+
+        switch (value->dwValueType)
+        {
+        case CERT_RDN_ANY_TYPE:
+        case CERT_RDN_ENCODED_BLOB:
+        case CERT_RDN_OCTET_STRING:
+            SetLastError(CRYPT_E_NOT_CHAR_STRING);
+            break;
+        case CERT_RDN_NUMERIC_STRING:
+            ret = CRYPT_AsnEncodeNumericString(value, dwFlags, pEncodePara,
+             pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_PRINTABLE_STRING:
+            ret = CRYPT_AsnEncodePrintableString(value, dwFlags, pEncodePara,
+             pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_TELETEX_STRING:
+            ret = CRYPT_AsnEncodeUnicodeStringCoerce(value, ASN_T61STRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_VIDEOTEX_STRING:
+            ret = CRYPT_AsnEncodeUnicodeStringCoerce(value,
+             ASN_VIDEOTEXSTRING, dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_IA5_STRING:
+            ret = CRYPT_AsnEncodeIA5String(value, dwFlags, pEncodePara,
+             pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_GRAPHIC_STRING:
+            ret = CRYPT_AsnEncodeUnicodeStringCoerce(value, ASN_GRAPHICSTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_VISIBLE_STRING:
+            ret = CRYPT_AsnEncodeUnicodeStringCoerce(value, ASN_VISIBLESTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_GENERAL_STRING:
+            ret = CRYPT_AsnEncodeUnicodeStringCoerce(value, ASN_GENERALSTRING,
+             dwFlags, pEncodePara, pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_UNIVERSAL_STRING:
+            ret = CRYPT_AsnEncodeUniversalString(value, dwFlags, pEncodePara,
+             pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_BMP_STRING:
+            ret = CRYPT_AsnEncodeBMPString(value, dwFlags, pEncodePara,
+             pbEncoded, pcbEncoded);
+            break;
+        case CERT_RDN_UTF8_STRING:
+            ret = CRYPT_AsnEncodeUTF8String(value, dwFlags, pEncodePara,
+             pbEncoded, pcbEncoded);
+            break;
+        default:
+            SetLastError(CRYPT_E_ASN1_CHOICE);
+        }
+    }
+    __EXCEPT_PAGE_FAULT
+    {
+        SetLastError(STATUS_ACCESS_VIOLATION);
     }
     __ENDTRY
     return ret;
@@ -2395,6 +2786,9 @@ BOOL WINAPI CryptEncodeObjectEx(DWORD dwCertEncodingType, LPCSTR lpszStructType,
             break;
         case (WORD)RSA_CSP_PUBLICKEYBLOB:
             encodeFunc = CRYPT_AsnEncodeRsaPubKey;
+            break;
+        case (WORD)X509_UNICODE_NAME_VALUE:
+            encodeFunc = CRYPT_AsnEncodeUnicodeNameValue;
             break;
         case (WORD)X509_OCTET_STRING:
             encodeFunc = CRYPT_AsnEncodeOctets;
