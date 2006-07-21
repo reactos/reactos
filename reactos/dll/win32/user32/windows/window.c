@@ -1582,7 +1582,7 @@ HWND
 STDCALL
 SetProgmanWindow(HWND hWnd)
 {
-    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
+    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETPROGMANWINDOW);
 }
 
 /*
