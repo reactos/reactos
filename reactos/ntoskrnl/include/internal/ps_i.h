@@ -199,8 +199,8 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     /* ProcessDeviceMap */
     IQS
     (
-        RTL_FIELD_SIZE(PROCESS_DEVICEMAP_INFORMATION, Query),
-        RTL_FIELD_SIZE(PROCESS_DEVICEMAP_INFORMATION, Set),
+        ((PROCESS_DEVICEMAP_INFORMATION*)0)->Query,
+        ((PROCESS_DEVICEMAP_INFORMATION*)0)->Set,
         ULONG,
         ULONG,
         ICIF_QUERY | ICIF_SET
