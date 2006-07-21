@@ -1,6 +1,7 @@
 #ifndef __NEWDEV_PRIVATE_H
 #define __NEWDEV_PRIVATE_H
 
+#define COBJMACROS
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
@@ -9,7 +10,6 @@
 #include <setupapi.h>
 #include <cfgmgr32.h>
 #include <shlobj.h>
-#include <tchar.h>
 #include <wine/debug.h>
 
 #include <stdio.h>
@@ -29,7 +29,7 @@ typedef struct _DEVINSTDATA
 	SP_DEVINFO_DATA devInfoData;
 	SP_DRVINFO_DATA drvInfoData;
 
-	LPTSTR CustomSearchPath; /* MULTI_SZ string */
+	LPWSTR CustomSearchPath; /* MULTI_SZ string */
 } DEVINSTDATA, *PDEVINSTDATA;
 
 #define WM_SEARCH_FINISHED  (WM_USER + 10)

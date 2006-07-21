@@ -1,7 +1,5 @@
 <module name="newdev" type="win32dll" installbase="system32" installname="newdev.dll">
 	<include base="newdev">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<importlibrary definition="newdev.spec.def" />
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>

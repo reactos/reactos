@@ -237,8 +237,8 @@ PopulateCustomPathCombo(
 	HKEY hKey = NULL;
 	DWORD dwRegType;
 	DWORD dwPathLength;
-	LPTSTR Buffer = NULL;
-	LPCTSTR Path;
+	LPWSTR Buffer = NULL;
+	LPCWSTR Path;
 	LONG rc;
 
 	(void)ComboBox_ResetContent(hwndCombo);
@@ -255,9 +255,9 @@ PopulateCustomPathCombo(
 		TRACE("RegOpenKeyEx() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
-	rc = RegQueryValueEx(
+	rc = RegQueryValueExW(
 		hKey,
-		_T("Installation Sources"),
+		L"Installation Sources",
 		NULL,
 		&dwRegType,
 		NULL,
@@ -269,15 +269,15 @@ PopulateCustomPathCombo(
 	}
 
 	/* Allocate enough space to add 2 NULL chars at the end of the string */
-	Buffer = HeapAlloc(GetProcessHeap(), 0, dwPathLength + 2 * sizeof(TCHAR));
+	Buffer = HeapAlloc(GetProcessHeap(), 0, dwPathLength + 2 * sizeof(WCHAR));
 	if (!Buffer)
 	{
 		TRACE("HeapAlloc() failed\n");
 		goto cleanup;
 	}
-	rc = RegQueryValueEx(
+	rc = RegQueryValueExW(
 		hKey,
-		_T("Installation Sources"),
+		L"Installation Sources",
 		NULL,
 		NULL,
 		(LPBYTE)Buffer,
@@ -290,7 +290,7 @@ PopulateCustomPathCombo(
 	Buffer[dwPathLength] = Buffer[dwPathLength + 1] = '\0';
 
 	/* Populate combo box */
-	for (Path = Buffer; *Path; Path += _tcslen(Path) + 1)
+	for (Path = Buffer; *Path; Path += wcslen(Path) + 1)
 	{
 		(void)ComboBox_AddString(hwndCombo, Path);
 		if (Path == Buffer)
@@ -307,10 +307,10 @@ static VOID
 SaveCustomPath(
 	IN HWND hwndCombo)
 {
-	LPTSTR CustomPath = NULL;
+	LPWSTR CustomPath = NULL;
 	DWORD CustomPathLength;
-	LPTSTR Buffer = NULL;
-	LPTSTR pBuffer; /* Pointer into Buffer */
+	LPWSTR Buffer = NULL;
+	LPWSTR pBuffer; /* Pointer into Buffer */
 	int ItemsCount, Length;
 	DWORD i;
 	DWORD TotalLength = 0;
@@ -320,13 +320,13 @@ SaveCustomPath(
 
 	/* Get custom path */
 	Length = ComboBox_GetTextLength(hwndCombo) + 1;
-	CustomPath = HeapAlloc(GetProcessHeap(), 0, Length * sizeof(TCHAR));
+	CustomPath = HeapAlloc(GetProcessHeap(), 0, Length * sizeof(WCHAR));
 	if (!CustomPath)
 	{
 		TRACE("HeapAlloc() failed\n");
 		goto cleanup;
 	}
-	CustomPathLength = ComboBox_GetText(hwndCombo, CustomPath, Length) + 1;
+	CustomPathLength = GetWindowTextW(hwndCombo, CustomPath, Length) + 1;
 
 	/* Calculate length of the buffer */
 	ItemsCount = ComboBox_GetCount(hwndCombo);
@@ -348,7 +348,7 @@ SaveCustomPath(
 	TotalLength++; /* Final NULL char */
 
 	/* Allocate buffer */
-	Buffer = HeapAlloc(GetProcessHeap(), 0, (CustomPathLength + TotalLength + 1) * sizeof(TCHAR));
+	Buffer = HeapAlloc(GetProcessHeap(), 0, (CustomPathLength + TotalLength + 1) * sizeof(WCHAR));
 	if (!Buffer)
 	{
 		TRACE("HeapAlloc() failed\n");
@@ -365,7 +365,7 @@ SaveCustomPath(
 			TRACE("ComboBox_GetLBText() failed\n");
 			goto cleanup;
 		}
-		else if (UseCustomPath && _tcsicmp(CustomPath, pBuffer) == 0)
+		else if (UseCustomPath && wcsicmp(CustomPath, pBuffer) == 0)
 			UseCustomPath = FALSE;
 		pBuffer += 1 + Length;
 	}
@@ -378,7 +378,7 @@ SaveCustomPath(
 	}
 
 	TotalLength += CustomPathLength;
-	_tcscpy(Buffer, CustomPath);
+	wcscpy(Buffer, CustomPath);
 
 	/* Save the buffer */
 	/* RegSetKeyValue would have been better... */
@@ -393,13 +393,13 @@ SaveCustomPath(
 		TRACE("RegOpenKeyEx() failed with error 0x%lx\n", rc);
 		goto cleanup;
 	}
-	rc = RegSetValueEx(
+	rc = RegSetValueExW(
 		hKey,
-		_T("Installation Sources"),
+		L"Installation Sources",
 		0,
 		REG_MULTI_SZ,
 		(const BYTE*)Buffer,
-		TotalLength * sizeof(TCHAR));
+		TotalLength * sizeof(WCHAR));
 	if (rc != ERROR_SUCCESS)
 	{
 		TRACE("RegSetValueEx() failed with error 0x%lx\n", rc);
@@ -595,21 +595,20 @@ CHSourceDlgProc(
 					pidl = SHBrowseForFolder(&bi);
 					if (pidl)
 					{
-						TCHAR Directory[MAX_PATH];
+						WCHAR Directory[MAX_PATH];
 						IMalloc* malloc;
 
-						if (SHGetPathFromIDList(pidl, Directory))
+						if (SHGetPathFromIDListW(pidl, Directory))
 						{
 							/* Set the IDC_COMBO_PATH text */
-							ComboBox_SetText(GetDlgItem(hwndDlg, IDC_COMBO_PATH), Directory);
+							SetWindowTextW(GetDlgItem(hwndDlg, IDC_COMBO_PATH), Directory);
 						}
 
 						/* Free memory, if possible */
 						if (SUCCEEDED(SHGetMalloc(&malloc)))
 						{
-							FIXME("Memory leak!\n");
-							//malloc->Free(pidl);
-							//malloc->Release();
+							IMalloc_Free(malloc, pidl);
+							IMalloc_Release(malloc);
 						}
 						return TRUE;
 					}
@@ -1223,23 +1222,23 @@ FinishDlgProc(
 static HFONT
 CreateTitleFont(VOID)
 {
-	NONCLIENTMETRICS ncm;
-	LOGFONT LogFont;
+	NONCLIENTMETRICSW ncm;
+	LOGFONTW LogFont;
 	HDC hdc;
 	INT FontSize;
 	HFONT hFont;
 
-	ncm.cbSize = sizeof(NONCLIENTMETRICS);
+	ncm.cbSize = sizeof(NONCLIENTMETRICSW);
 	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
 
 	LogFont = ncm.lfMessageFont;
 	LogFont.lfWeight = FW_BOLD;
-	_tcscpy(LogFont.lfFaceName, _T("MS Shell Dlg"));
+	wcscpy(LogFont.lfFaceName, L"MS Shell Dlg");
 
 	hdc = GetDC(NULL);
 	FontSize = 12;
 	LogFont.lfHeight = 0 - GetDeviceCaps (hdc, LOGPIXELSY) * FontSize / 72;
-	hFont = CreateFontIndirect(&LogFont);
+	hFont = CreateFontIndirectW(&LogFont);
 	ReleaseDC(NULL, hdc);
 
 	return hFont;
