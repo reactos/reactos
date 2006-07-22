@@ -302,9 +302,8 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
             Window = UserGetWindowObject(Menu->MenuInfo.Wnd);
             if (Window)
             {
-               Window->IDMenu = 0;;
+               Window->IDMenu = 0;
             }
-
          }
          ObmDeleteObject(Menu->MenuInfo.Self, otMenu);
          ObDereferenceObject(WindowStation);
@@ -352,7 +351,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    Menu->MenuItemList = NULL;
 
    /* Insert menu item into process menu handle list */
-   InsertTailList(&PsGetCurrentProcessWin32Process()->MenuListHead, &Menu->ListEntry);
+   InsertTailList(&PsGetWin32Process()->MenuListHead, &Menu->ListEntry);
 
    return Menu;
 }
@@ -456,7 +455,7 @@ IntCloneMenu(PMENU_OBJECT Source)
    Menu->MenuItemList = NULL;
 
    /* Insert menu item into process menu handle list */
-   InsertTailList(&PsGetCurrentProcessWin32Process()->MenuListHead, &Menu->ListEntry);
+   InsertTailList(&PsGetWin32Process()->MenuListHead, &Menu->ListEntry);
 
    IntCloneMenuItems(Menu, Source);
 
@@ -693,6 +692,10 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
 {
    NTSTATUS Status;
 
+   if(lpmii->fMask & (MIIM_FTYPE | MIIM_TYPE))
+   {
+      lpmii->fType = MenuItem->fType;
+   }
    if(lpmii->fMask & MIIM_BITMAP)
    {
       lpmii->hbmpItem = MenuItem->hbmpItem;
@@ -706,10 +709,6 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
    {
       lpmii->dwItemData = MenuItem->dwItemData;
    }
-   if(lpmii->fMask & (MIIM_FTYPE | MIIM_TYPE))
-   {
-      lpmii->fType = MenuItem->fType;
-   }
    if(lpmii->fMask & MIIM_ID)
    {
       lpmii->wID = MenuItem->wID;
@@ -722,7 +721,9 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
    {
       lpmii->hSubMenu = MenuItem->hSubMenu;
    }
-   if (lpmii->fMask & (MIIM_STRING | MIIM_TYPE))
+
+   if ((lpmii->fMask & MIIM_STRING) ||
+      ((lpmii->fMask & MIIM_TYPE) && (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING)))
    {
       if (lpmii->dwTypeData == NULL)
       {
@@ -745,6 +746,7 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
    {
       lpmii->Rect = MenuItem->Rect;
       lpmii->XTab = MenuItem->XTab;
+      lpmii->Text = MenuItem->Text.Buffer;
    }
 
    return TRUE;
@@ -754,7 +756,7 @@ BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
    PMENU_OBJECT SubMenuObject;
-   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR | MF_POPUP);
+   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MF_BYPOSITION | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR | MF_POPUP);
 
    if(!MenuItem || !MenuObject || !lpmii)
    {
@@ -762,12 +764,52 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    }
    if( lpmii->fType & ~fTypeMask)
    {
-     DPRINT("IntSetMenuItemInfo invalid fType flags %x\n", lpmii->fType & ~fTypeMask);
+     DbgPrint("IntSetMenuItemInfo invalid fType flags %x\n", lpmii->fType & ~fTypeMask);
      lpmii->fMask &= ~(MIIM_TYPE | MIIM_FTYPE);
+   }
+   if(lpmii->fMask &  MIIM_TYPE)
+   {
+      if(lpmii->fMask & ( MIIM_STRING | MIIM_FTYPE | MIIM_BITMAP))
+      {
+         DbgPrint("IntSetMenuItemInfo: Invalid combination of fMask bits used\n");
+         /* this does not happen on Win9x/ME */
+         SetLastNtError( ERROR_INVALID_PARAMETER);
+         return FALSE;
+      }
+      /*
+       * Delete the menu item type when changing type from
+       * MF_STRING.
+       */
+      if (MenuItem->fType != lpmii->fType &&
+            MENU_ITEM_TYPE(MenuItem->fType) == MFT_STRING)
+      {
+         FreeMenuText(MenuItem);
+         RtlInitUnicodeString(&MenuItem->Text, NULL);
+      }
+      if(lpmii->fType & MFT_BITMAP)
+      {
+//         if(lpmii->hbmpItem) 
+           MenuItem->hbmpItem = lpmii->hbmpItem;
+//         else
+//         { /* Win 9x/Me stuff */
+//           MenuItem->hbmpItem = (HBITMAP)lpmii->dwTypeData;
+//         }
+      }
+      MenuItem->fType |= lpmii->fType;
+   }
+   if (lpmii->fMask & MIIM_FTYPE )
+   {
+      if(( lpmii->fType & MFT_BITMAP))
+      {
+         DbgPrint("IntSetMenuItemInfo: Can not use FTYPE and MFT_BITMAP.\n");
+         SetLastNtError( ERROR_INVALID_PARAMETER);
+         return FALSE;
+      }
+      MenuItem->fType |= lpmii->fType;
    }
    if(lpmii->fMask & MIIM_BITMAP)
    {
-      MenuItem->hbmpItem = lpmii->hbmpItem;
+         MenuItem->hbmpItem = lpmii->hbmpItem;
    }
    if(lpmii->fMask & MIIM_CHECKMARKS)
    {
@@ -777,21 +819,6 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    if(lpmii->fMask & MIIM_DATA)
    {
       MenuItem->dwItemData = lpmii->dwItemData;
-   }
-   if(lpmii->fMask & (MIIM_FTYPE | MIIM_TYPE))
-   {
-      /*
-       * Delete the menu item type when changing type from
-       * MF_STRING.
-       */
-      if (MenuItem->fType != lpmii->fType &&
-            MENU_ITEM_TYPE(MenuItem->fType) == MF_STRING)
-      {
-         FreeMenuText(MenuItem);
-         RtlInitUnicodeString(&MenuItem->Text, NULL);
-      }
-      MenuItem->fType &= ~MENU_ITEM_TYPE(MenuItem->fType);
-      MenuItem->fType |= MENU_ITEM_TYPE(lpmii->fType);
    }
    if(lpmii->fMask & MIIM_ID)
    {
@@ -829,8 +856,9 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
          MenuItem->fType &= ~MF_POPUP;
       }
    }
-   if ((lpmii->fMask & (MIIM_TYPE | MIIM_STRING)) &&
-         (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING))
+
+   if ((lpmii->fMask & MIIM_STRING) ||
+      ((lpmii->fMask & MIIM_TYPE) && (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING)))
    {
       FreeMenuText(MenuItem);
 
@@ -870,6 +898,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    {
       MenuItem->Rect = lpmii->Rect;
       MenuItem->XTab = lpmii->XTab;
+      lpmii->Text = MenuItem->Text.Buffer; /* Send back new allocated string or zero */
    }
 
    return TRUE;
