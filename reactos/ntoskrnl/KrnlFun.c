@@ -45,8 +45,5 @@
 //  - Use pushlocks for handle implementation.
 //  - Figure out why cmd.exe won't close anymore.
 //
-// Ke:
-//  - Add code for interval recalulation when wait interrupted by an APC
-//
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -156,6 +156,24 @@
 }
 
 //
+// Recalculates the due time
+//
+PLARGE_INTEGER
+FORCEINLINE
+KiRecalculateDueTime(IN PLARGE_INTEGER OriginalDueTime,
+                     IN PLARGE_INTEGER DueTime,
+                     IN OUT PLARGE_INTEGER NewDueTime)
+{
+    /* Don't do anything for absolute waits */
+    if (OriginalDueTime->QuadPart >= 0) return OriginalDueTime;
+
+    /* Otherwise, query the interrupt time and recalculate */
+    NewDueTime->QuadPart = KeQueryInterruptTime();
+    NewDueTime->QuadPart -= DueTime->QuadPart;
+    return NewDueTime;
+}
+
+//
 // Determines wether a thread should be added to the wait list
 //
 #define KiCheckThreadStackSwap(WaitMode, Thread, Swappable)                 \

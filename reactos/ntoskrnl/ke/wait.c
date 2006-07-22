@@ -275,6 +275,8 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
     PKTHREAD CurrentThread = KeGetCurrentThread();
     NTSTATUS WaitStatus = STATUS_SUCCESS;
     BOOLEAN Swappable;
+    PLARGE_INTEGER OriginalDueTime = Interval;
+    LARGE_INTEGER DueTime, NewDueTime;
 
     /* Check if the lock is already held */
     if (CurrentThread->WaitNext)
@@ -335,6 +337,9 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
                 break;
             }
 
+            /* Save due time */
+            DueTime.QuadPart = ThreadTimer->DueTime.QuadPart;
+
             /* Handle Kernel Queues */
             if (CurrentThread->Queue) KiWakeQueue(CurrentThread->Queue);
 
@@ -360,9 +365,10 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
                 return WaitStatus;
             }
 
-            /* Check if we had a timeout */
-            DPRINT1("If you see this message, contact Alex ASAP\n");
-            KEBUGCHECK(0);
+            /* Recalculate due times */
+            Interval = KiRecalculateDueTime(OriginalDueTime,
+                                            &DueTime,
+                                            &NewDueTime);
         }
 
         /* Acquire again the lock */
@@ -392,6 +398,8 @@ KeWaitForSingleObject(IN PVOID Object,
     PKTHREAD CurrentThread = KeGetCurrentThread();
     NTSTATUS WaitStatus = STATUS_SUCCESS;
     BOOLEAN Swappable;
+    LARGE_INTEGER DueTime, NewDueTime;
+    PLARGE_INTEGER OriginalDueTime = Timeout;
 
     /* Check if the lock is already held */
     if (CurrentThread->WaitNext)
@@ -506,6 +514,9 @@ KeWaitForSingleObject(IN PVOID Object,
                     WaitStatus = STATUS_TIMEOUT;
                     goto DontWait;
                 }
+
+                /* Set the current due time */
+                DueTime.QuadPart = ThreadTimer->DueTime.QuadPart;
             }
             else
             {
@@ -538,8 +549,10 @@ KeWaitForSingleObject(IN PVOID Object,
             /* Check if we had a timeout */
             if (Timeout)
             {
-                DPRINT1("If you see this message, contact Alex ASAP\n");
-                KEBUGCHECK(0);
+                /* Recalculate due times */
+                Timeout = KiRecalculateDueTime(OriginalDueTime,
+                                               &DueTime,
+                                               &NewDueTime);
             }
         }
 
@@ -583,6 +596,8 @@ KeWaitForMultipleObjects(IN ULONG Count,
     ULONG WaitIndex;
     NTSTATUS WaitStatus = STATUS_SUCCESS;
     BOOLEAN Swappable;
+    PLARGE_INTEGER OriginalDueTime = Timeout;
+    LARGE_INTEGER DueTime, NewDueTime;
 
     /* Set the Current Thread */
     CurrentThread = KeGetCurrentThread();
@@ -781,6 +796,9 @@ KeWaitForMultipleObjects(IN ULONG Count,
                     WaitStatus = STATUS_TIMEOUT;
                     goto DontWait;
                 }
+
+                /* Set the current due time */
+                DueTime.QuadPart = ThreadTimer->DueTime.QuadPart;
             }
 
             /* Insert into Object's Wait List*/
@@ -819,8 +837,10 @@ KeWaitForMultipleObjects(IN ULONG Count,
             /* Check if we had a timeout */
             if (Timeout)
             {
-                DPRINT1("If you see this message, contact Alex ASAP\n");
-                KEBUGCHECK(0);
+                /* Recalculate due times */
+                Timeout = KiRecalculateDueTime(OriginalDueTime,
+                                               &DueTime,
+                                               &NewDueTime);
             }
 
             /* Acquire again the lock */

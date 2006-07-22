@@ -249,6 +249,8 @@ KeRemoveQueue(IN PKQUEUE Queue,
     PKWAIT_BLOCK WaitBlock;
     PKTIMER Timer;
     BOOLEAN Swappable;
+    PLARGE_INTEGER OriginalDueTime = Timeout;
+    LARGE_INTEGER DueTime, NewDueTime;
     ASSERT_QUEUE(Queue);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
@@ -396,7 +398,15 @@ KeRemoveQueue(IN PKQUEUE Queue,
                         &Timer->Header.WaitListHead;
 
                     /* Create Timer */
-                    KiInsertTimer(Timer, *Timeout);
+                    if (!KiInsertTimer(Timer, *Timeout))
+                    {
+                        /* FIXME */
+                        DPRINT1("If you see thie message contact Alex ASAP\n");
+                        KEBUGCHECK(0);
+                    }
+
+                    /* Set timer due time */
+                    DueTime.QuadPart = Timer->DueTime.QuadPart;
                 }
 
                 /* Close the loop */
@@ -431,8 +441,10 @@ KeRemoveQueue(IN PKQUEUE Queue,
                 /* Check if we had a timeout */
                 if (Timeout)
                 {
-                    DPRINT1("If you see this message, contact Alex ASAP\n");
-                    KEBUGCHECK(0);
+                    /* Recalculate due times */
+                    Timeout = KiRecalculateDueTime(OriginalDueTime,
+                                                   &DueTime,
+                                                   &NewDueTime);
                 }
             }
 
