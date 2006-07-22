@@ -219,6 +219,14 @@ interface pnp
                                   [out] ULONG *pulLogConfTag,
                                   [in] ULONG ulFlags);
 
+    /* Function 45 */
+    CONFIGRET PNP_GetNextLogConf(handle_t BindingHandle,
+                                 [in, string] wchar_t *DeviceInstance,
+                                 [in] ULONG ulLogConfType,
+                                 [in] ULONG ulCurrentTag,
+                                 [out] ULONG *pulNextTag,
+                                 [in] ULONG ulFlags);
+
     /* Function 58 */
     CONFIGRET PNP_RunDetection(handle_t BindingHandle,
                                [in] unsigned long Flags);

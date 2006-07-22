@@ -2163,6 +2163,91 @@ CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExW(
 
 
 /***********************************************************************
+ * CM_Get_Next_Log_Conf [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Next_Log_Conf(
+    PLOG_CONF plcLogConf, LOG_CONF lcLogConf, ULONG ulFlags)
+{
+    TRACE("%p %p %lx\n", plcLogConf, lcLogConf, ulFlags);
+    return CM_Get_Next_Log_Conf_Ex(plcLogConf, lcLogConf, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Next_Log_Conf_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Next_Log_Conf_Ex(
+    PLOG_CONF plcLogConf, LOG_CONF lcLogConf, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    PLOG_CONF_INFO pLogConfInfo;
+    PLOG_CONF_INFO pNewLogConfInfo;
+    ULONG ulNewTag;
+    LPWSTR lpDevInst;
+    CONFIGRET ret;
+
+    FIXME("%p %p %lx %lx\n", plcLogConf, lcLogConf, ulFlags, hMachine);
+
+    if (plcLogConf)
+        *plcLogConf = 0;
+
+    pLogConfInfo = (PLOG_CONF_INFO)lcLogConf;
+    if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+        return CR_INVALID_LOG_CONF;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    ret = PNP_GetNextLogConf(BindingHandle,
+                             lpDevInst,
+                             pLogConfInfo->ulFlags,
+                             pLogConfInfo->ulTag,
+                             &ulNewTag,
+                             0);
+    if (ret != CR_SUCCESS)
+        return ret;
+
+    if (plcLogConf)
+    {
+        pNewLogConfInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(LOG_CONF_INFO));
+        if (pNewLogConfInfo == NULL)
+            return CR_OUT_OF_MEMORY;
+
+        pNewLogConfInfo->ulMagic = LOG_CONF_MAGIC;
+        pNewLogConfInfo->dnDevInst = pLogConfInfo->dnDevInst;
+        pNewLogConfInfo->ulFlags = pLogConfInfo->ulFlags;
+        pNewLogConfInfo->ulTag = ulNewTag;
+
+        *plcLogConf = (LOG_CONF)pNewLogConfInfo;
+    }
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
  * CM_Get_Parent [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Parent(

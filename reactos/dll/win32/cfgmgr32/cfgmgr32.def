@@ -25,14 +25,12 @@ CMP_Report_LogOn = SETUPAPI.CMP_Report_LogOn
 ;CMP_UnregisterNotification
 ;CMP_WaitNoPendingInstallEvents
 ;CMP_WaitServices
-;CM_Add_Empty_Log_Conf=SETUPAPI.CM_Add_Empty_Log_Conf
-;CM_Add_Empty_Log_Conf_Ex=SETUPAPI.CM_Add_Empty_Log_Conf_Ex
+CM_Add_Empty_Log_Conf=SETUPAPI.CM_Add_Empty_Log_Conf
+CM_Add_Empty_Log_Conf_Ex=SETUPAPI.CM_Add_Empty_Log_Conf_Ex
 CM_Add_IDA=SETUPAPI.CM_Add_IDA
 CM_Add_IDW=SETUPAPI.CM_Add_IDW
 CM_Add_ID_ExA=SETUPAPI.CM_Add_ID_ExA
 CM_Add_ID_ExW=SETUPAPI.CM_Add_ID_ExW
-CM_Add_Empty_Log_Conf=SETUPAPI.CM_Add_Empty_Log_Conf
-CM_Add_Empty_Log_Conf_Ex=SETUPAPI.CM_Add_Empty_Log_Conf_Ex
 CM_Add_IDA=SETUPAPI.CM_Add_IDA
 CM_Add_IDW=SETUPAPI.CM_Add_IDW
 CM_Add_ID_ExA=SETUPAPI.CM_Add_ID_ExA
@@ -133,8 +131,8 @@ CM_Get_HW_Prof_Flags_ExW=SETUPAPI.CM_Get_HW_Prof_Flags_ExW
 ;CM_Get_Hardware_Profile_Info_ExW
 ;CM_Get_Log_Conf_Priority
 ;CM_Get_Log_Conf_Priority_Ex
-;CM_Get_Next_Log_Conf
-;CM_Get_Next_Log_Conf_Ex
+CM_Get_Next_Log_Conf=SETUPAPI.CM_Get_Next_Log_Conf
+CM_Get_Next_Log_Conf_Ex=SETUPAPI.CM_Get_Next_Log_Conf_Ex
 ;CM_Get_Next_Res_Des
 ;CM_Get_Next_Res_Des_Ex
 CM_Get_Parent=SETUPAPI.CM_Get_Parent

@@ -111,8 +111,8 @@
 @ stub CM_Get_Hardware_Profile_Info_ExW
 @ stub CM_Get_Log_Conf_Priority
 @ stub CM_Get_Log_Conf_Priority_Ex
-@ stub CM_Get_Next_Log_Conf
-@ stub CM_Get_Next_Log_Conf_Ex
+@ stdcall CM_Get_Next_Log_Conf(ptr ptr long)
+@ stdcall CM_Get_Next_Log_Conf_Ex(ptr ptr long long)
 @ stub CM_Get_Next_Res_Des
 @ stub CM_Get_Next_Res_Des_Ex
 @ stdcall CM_Get_Parent(ptr long long)
