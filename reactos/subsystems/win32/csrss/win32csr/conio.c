@@ -607,8 +607,12 @@ CSR_API(CsrReadConsole)
           && Input->InputEvent.Event.KeyEvent.bKeyDown
           && Input->InputEvent.Event.KeyEvent.uChar.AsciiChar != '\0')
         {
-          /* backspace handling */
-          if ('\b' == Input->InputEvent.Event.KeyEvent.uChar.AsciiChar)
+          /*
+           * backspace handling - if we are in charge of echoing it then we handle it here
+           * otherwise we treat it like a normal char. 
+           */
+          if ('\b' == Input->InputEvent.Event.KeyEvent.uChar.AsciiChar && 0 
+              != (Console->Mode & ENABLE_ECHO_INPUT))
             {
               /* echo if it has not already been done, and either we or the client has chars to be deleted */
               if (! Input->Echoed
@@ -622,14 +626,14 @@ CSR_API(CsrReadConsole)
                   i -= 2;        /* if we already have something to return, just back it up by 2 */
                 }
               else
-                {
-                  /* otherwise, we will treat the backspace just like any other char and let the client decide what to do */
+                {            /* otherwise, return STATUS_NOTIFY_CLEANUP to tell client to back up its buffer */
                   Console->WaitingChars--;
                   ConioUnlockConsole(Console);
                   HeapFree(Win32CsrApiHeap, 0, Input);
-                  Request->Data.ReadConsoleRequest.NrCharactersRead++;
-                  Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
-                  return Request->Status;
+                  Request->Data.ReadConsoleRequest.NrCharactersRead = 0;
+                  Request->Status = STATUS_NOTIFY_CLEANUP;
+                  return STATUS_NOTIFY_CLEANUP;
+                  
                 }
               Request->Data.ReadConsoleRequest.nCharsCanBeDeleted--;
               Input->Echoed = TRUE;   /* mark as echoed so we don't echo it below */
