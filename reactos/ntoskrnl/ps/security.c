@@ -25,7 +25,7 @@ PspLockProcessSecurityShared(IN PEPROCESS Process)
     KeEnterCriticalRegion();
 
     /* Lock the Process */
-    //ExAcquirePushLockShared(&Process->ProcessLock);
+    ExAcquirePushLockShared(&Process->ProcessLock);
 }
 
 /* FIXME: Turn into Macro */
@@ -34,7 +34,31 @@ NTAPI
 PspUnlockProcessSecurityShared(IN PEPROCESS Process)
 {
     /* Unlock the Process */
-    //ExReleasePushLockShared(&Process->ProcessLock);
+    ExReleasePushLockShared(&Process->ProcessLock);
+
+    /* Leave Critical Region */
+    KeLeaveCriticalRegion();
+}
+
+/* FIXME: Turn into Macro */
+VOID
+NTAPI
+PspLockProcessSecurityExclusive(IN PEPROCESS Process)
+{
+    /* Enter a Critical Region */
+    KeEnterCriticalRegion();
+
+    /* Lock the Process */
+    ExAcquirePushLockExclusive(&Process->ProcessLock);
+}
+
+/* FIXME: Turn into Macro */
+VOID
+NTAPI
+PspUnlockProcessSecurityExclusive(IN PEPROCESS Process)
+{
+    /* Unlock the Process */
+    ExReleasePushLockExclusive(&Process->ProcessLock);
 
     /* Leave Critical Region */
     KeLeaveCriticalRegion();
@@ -119,25 +143,89 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
 NTSTATUS
 NTAPI
 PspAssignPrimaryToken(IN PEPROCESS Process,
-                      IN HANDLE TokenHandle)
+                      IN PTOKEN Token)
 {
-    PACCESS_TOKEN Token, OldToken;
+    PACCESS_TOKEN OldToken;
     NTSTATUS Status;
+    PAGED_CODE();
 
-    /* Reference the Token */
-    Status = ObReferenceObjectByHandle(TokenHandle,
-                                       TOKEN_ASSIGN_PRIMARY,
-                                       SepTokenObjectType,
-                                       KeGetPreviousMode(),
-                                       (PVOID*)&Token,
-                                       NULL);
-    if (!NT_SUCCESS(Status)) return Status;
+    /* Lock the process */
+    PspLockProcessSecurityExclusive(Process);
 
     /* Exchange them */
     Status = SeExchangePrimaryToken(Process, Token, &OldToken);
 
-    /* Derefernece Tokens and Return */
+    /* Release the lock */
+    PspUnlockProcessSecurityExclusive(Process);
+
+    /* Dereference Tokens and Return */
+    if (NT_SUCCESS(Status)) ObDereferenceObject(OldToken);
     ObDereferenceObject(Token);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PspSetPrimaryToken(IN PEPROCESS Process,
+                   IN HANDLE TokenHandle OPTIONAL,
+                   IN PTOKEN Token OPTIONAL)
+{
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    BOOLEAN IsChild;
+    NTSTATUS Status;
+
+    /* Make sure we got a handle */
+    if (TokenHandle)
+    {
+        /* Reference it */
+        Status = ObReferenceObjectByHandle(TokenHandle,
+                                           TOKEN_ASSIGN_PRIMARY,
+                                           SepTokenObjectType,
+                                           PreviousMode,
+                                           (PVOID*)&Token,
+                                           NULL);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    /* Check if this is a child */
+    Status = SeIsTokenChild(Token, &IsChild);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, dereference */
+        if (TokenHandle) ObDereferenceObject(Token);
+        return Status;
+    }
+
+    /* Check if this was an independent token */
+    if (!IsChild)
+    {
+        /* Make sure we have the privilege to assign a new one */
+        if (!SeSinglePrivilegeCheck(SeAssignPrimaryTokenPrivilege,
+                                    PreviousMode))
+        {
+            /* Failed, dereference */
+            if (TokenHandle) ObDereferenceObject(Token);
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
+
+    /* Assign the token */
+    Status = PspAssignPrimaryToken(Process, Token);
+    if (NT_SUCCESS(Status))
+    {
+        /*
+         * The idea here is that we need to completely reverify
+         * if the process still has access to itself under this new
+         * token, by doing an SeAccessCheck with the Primary Token and
+         * the SD of the Process (ObGetObjectSecurity).
+         * In the really twisted case where we lose access to ourselves,
+         * we would set Process->GrantedAccess to 0.
+         */
+        DPRINT1("Process security not complete\n");
+    }
+
+    /* Dereference the token */
+    if (TokenHandle) ObDereferenceObject(Token);
     return Status;
 }
 

@@ -534,6 +534,7 @@ WinMain(HINSTANCE hInstance,
         LPSTR lpCmdLine,
         int nShowCmd)
 {
+    BOOLEAN Old;
 #if SUPPORT_CONSOLESTART
 //  WCHAR LoginName[255];
 //  WCHAR Password[255];
@@ -554,6 +555,9 @@ WinMain(HINSTANCE hInstance,
     ExitProcess(0);
     return 0;
   }
+
+  /* Get privilege */
+  RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
 
 #if START_LSASS
   if (StartProcess(L"StartLsass"))

@@ -59,10 +59,11 @@ PsOpenTokenOfProcess(
 );
 
 NTSTATUS
-STDCALL
-PspAssignPrimaryToken(
-    PEPROCESS Process,
-    HANDLE TokenHandle
+NTAPI
+PspSetPrimaryToken(
+    IN PEPROCESS Process,
+    IN HANDLE TokenHandle OPTIONAL,
+    IN PTOKEN Token OPTIONAL
 );
 
 PETHREAD

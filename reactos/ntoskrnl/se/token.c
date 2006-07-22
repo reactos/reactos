@@ -368,6 +368,36 @@ SeSubProcessToken(IN PTOKEN ParentToken,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+SeIsTokenChild(IN PTOKEN Token,
+               OUT PBOOLEAN IsChild)
+{
+    PTOKEN ProcessToken;
+    LUID ProcessLuid, CallerLuid;
+
+    /* Assume failure */
+    *IsChild = FALSE;
+
+    /* Reference the process token */
+    ProcessToken = PsReferencePrimaryToken(PsGetCurrentProcess());
+
+    /* Get the ID */
+    ProcessLuid = ProcessToken->TokenId;
+
+    /* Dereference the token */
+    ObFastDereferenceObject(&PsGetCurrentProcess()->Token, ProcessToken);
+
+    /* Get our LUID */
+    CallerLuid = Token->TokenId;
+
+    /* Compare the LUIDs */
+    if (RtlEqualLuid(&CallerLuid, &ProcessLuid)) *IsChild = TRUE;
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
 /*
  * @unimplemented
  */

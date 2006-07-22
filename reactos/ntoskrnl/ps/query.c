@@ -581,7 +581,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             if (!NT_SUCCESS(Status)) break;
 
             /* Assign the actual token */
-            Status = PspAssignPrimaryToken(Process, TokenHandle);
+            Status = PspSetPrimaryToken(Process, TokenHandle, NULL);
             break;
 
         /* Hard error processing */

@@ -33,6 +33,7 @@
 #include <winwlx.h>
 #include <rtlfuncs.h>
 #include <exfuncs.h>
+#include <setypes.h>
 
 #include <reactos/winlogon.h>
 

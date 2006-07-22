@@ -130,6 +130,13 @@ SeSubProcessToken(
 );
 
 NTSTATUS
+NTAPI
+SeIsTokenChild(
+    IN PTOKEN Token,
+    OUT PBOOLEAN IsChild
+);
+
+NTSTATUS
 STDCALL
 SepCreateImpersonationTokenDacl(
     PTOKEN Token,
