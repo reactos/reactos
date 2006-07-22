@@ -856,19 +856,11 @@ NtUserCallHwndOpt(
    switch (Routine)
    {
       case HWNDOPT_ROUTINE_SETPROGMANWINDOW:
-         /*
-          * FIXME 
-          * Nothing too hard...validate the hWnd and save it in the Desktop Info
-          */
-         DPRINT1("HWNDOPT_ROUTINE_SETPROGMANWINDOW UNIMPLEMENTED\n");
+         GetW32ThreadInfo()->Desktop->hProgmanWindow = Param;
          break;
 
       case HWNDOPT_ROUTINE_SETTASKMANWINDOW:
-         /*
-          * FIXME 
-          * Nothing too hard...validate the hWnd and save it in the Desktop Info
-          */
-         DPRINT1("HWNDOPT_ROUTINE_SETTASKMANWINDOW UNIMPLEMENTED\n");
+         GetW32ThreadInfo()->Desktop->hTaskManWindow = Param;
          break;
    }
 
@@ -902,6 +894,10 @@ NtUserGetThreadState(
 
       case THREADSTATE_FOCUSWINDOW:
          RETURN( (DWORD)IntGetThreadFocusWindow());
+      case THREADSTATE_PROGMANWINDOW:
+         RETURN( (DWORD)GetW32ThreadInfo()->Desktop->hProgmanWindow);
+      case THREADSTATE_TASKMANWINDOW:
+         RETURN( (DWORD)GetW32ThreadInfo()->Desktop->hTaskManWindow);
    }
    RETURN( 0);
 

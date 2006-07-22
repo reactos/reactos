@@ -1586,25 +1586,23 @@ SetProgmanWindow(HWND hWnd)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND
 STDCALL
 GetProgmanWindow(VOID)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (HWND)NtUserGetThreadState(THREADSTATE_PROGRAMWINDOW);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND
 STDCALL
 GetTaskmanWindow(VOID)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (HWND)NtUserGetThreadState(THREADSTATE_TASKMANWINDOW);
 }
 
 /*

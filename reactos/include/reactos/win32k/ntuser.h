@@ -8,6 +8,8 @@ typedef struct _DESKTOP
 {
     HANDLE hKernelHeap;
     WCHAR szDesktopName[1];
+    HWND hTaskManWindow;
+    HWND hProgmanWindow;
 } DESKTOP, *PDESKTOP;
 
 typedef struct _CALLPROC
@@ -1117,6 +1119,8 @@ NtUserGetThreadDesktop(
 #define THREADSTATE_GETTHREADINFO   (0)
 #define THREADSTATE_FOCUSWINDOW (1)
 #define THREADSTATE_INSENDMESSAGE       (2)
+#define THREADSTATE_PROGMANWINDOW (3)
+#define THREADSTATE_TASKMANWINDOW (4)
 DWORD
 NTAPI
 NtUserGetThreadState(
