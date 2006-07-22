@@ -163,7 +163,7 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define CT_TERMINATED_BIT                       0x1
 #define CT_DEAD_THREAD_BIT                      0x2
 #define CT_HIDE_FROM_DEBUGGER_BIT               0x4
-#define CT_ACTIVE_IMPERSTIONATION_INFO_BIT      0x8
+#define CT_ACTIVE_IMPERSONATION_INFO_BIT        0x8
 #define CT_SYSTEM_THREAD_BIT                    0x10
 #define CT_HARD_ERRORS_ARE_DISABLED_BIT         0x20
 #define CT_BREAK_ON_TERMINATION_BIT             0x40

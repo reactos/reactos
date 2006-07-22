@@ -16,58 +16,12 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-/* FIXME: Turn into Macro */
-VOID
-NTAPI
-PspLockProcessSecurityShared(IN PEPROCESS Process)
-{
-    /* Enter a Critical Region */
-    KeEnterCriticalRegion();
-
-    /* Lock the Process */
-    ExAcquirePushLockShared(&Process->ProcessLock);
-}
-
-/* FIXME: Turn into Macro */
-VOID
-NTAPI
-PspUnlockProcessSecurityShared(IN PEPROCESS Process)
-{
-    /* Unlock the Process */
-    ExReleasePushLockShared(&Process->ProcessLock);
-
-    /* Leave Critical Region */
-    KeLeaveCriticalRegion();
-}
-
-/* FIXME: Turn into Macro */
-VOID
-NTAPI
-PspLockProcessSecurityExclusive(IN PEPROCESS Process)
-{
-    /* Enter a Critical Region */
-    KeEnterCriticalRegion();
-
-    /* Lock the Process */
-    ExAcquirePushLockExclusive(&Process->ProcessLock);
-}
-
-/* FIXME: Turn into Macro */
-VOID
-NTAPI
-PspUnlockProcessSecurityExclusive(IN PEPROCESS Process)
-{
-    /* Unlock the Process */
-    ExReleasePushLockExclusive(&Process->ProcessLock);
-
-    /* Leave Critical Region */
-    KeLeaveCriticalRegion();
-}
-
 VOID
 NTAPI
 PspDeleteProcessSecurity(IN PEPROCESS Process)
 {
+    PAGED_CODE();
+
     /* Check if we have a token */
     if (Process->Token.Object)
     {
@@ -81,6 +35,8 @@ VOID
 NTAPI
 PspDeleteThreadSecurity(IN PETHREAD Thread)
 {
+    PAGED_CODE();
+
     /* Check if we have active impersonation info */
     if (Thread->ActiveImpersonationInfo)
     {
@@ -93,7 +49,8 @@ PspDeleteThreadSecurity(IN PETHREAD Thread)
     {
         /* Free it */
         ExFreePool(Thread->ImpersonationInfo);
-        Thread->ActiveImpersonationInfo = FALSE;
+        InterlockedAnd(&Thread->CrossThreadFlags,
+                       ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
         Thread->ImpersonationInfo = NULL;
     }
 }
@@ -103,6 +60,7 @@ NTAPI
 PspInitializeProcessSecurity(IN PEPROCESS Process,
                              IN PEPROCESS Parent OPTIONAL)
 {
+    PAGED_CODE();
     NTSTATUS Status = STATUS_SUCCESS;
     PTOKEN NewToken, ParentToken;
 
@@ -113,7 +71,10 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
         ParentToken = PsReferencePrimaryToken(Parent);
 
         /* Duplicate it */
-        Status = SeSubProcessToken(ParentToken, &NewToken, TRUE, 0);
+        Status = SeSubProcessToken(ParentToken,
+                                   &NewToken,
+                                   TRUE,
+                                   0);//MmGetSessionId(Process));
 
         /* Dereference the Parent */
         ObFastDereferenceObject(&Parent->Token, ParentToken);
@@ -124,13 +85,9 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
     else
     {
 #ifdef SCHED_REWRITE
-        PTOKEN BootToken;
-
-        /* No parent, this is the Initial System Process. Assign Boot Token */
-        BootToken = SepCreateSystemProcessToken();
-        BootToken->TokenInUse = TRUE;
-        Process->Token = BootToken;
-        ObReferenceObject(BootToken);
+        /* No parent, assign the Boot Token */
+        ObInitializeFastReference(&Process->Token, NULL);
+        SeAssignPrimaryToken(Process, PspBootAccessToken);
 #else
         DPRINT1("PspInitializeProcessSecurity called with no parent.\n");
 #endif
@@ -289,7 +246,7 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
     {
         /* Reference it by handle and dereference the pointer */
         Status = ObOpenObjectByPointer(Token,
-                                       0,
+                                       HandleAttributes,
                                        NULL,
                                        DesiredAccess,
                                        SepTokenObjectType,
@@ -327,6 +284,7 @@ NTAPI
 PsReferencePrimaryToken(PEPROCESS Process)
 {
     PACCESS_TOKEN Token;
+    PAGED_CODE();
 
     /* Fast Reference the Token */
     Token = ObFastReferenceObject(&Process->Token);
@@ -358,6 +316,7 @@ PsOpenTokenOfProcess(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     NTSTATUS Status;
+    PAGED_CODE();
 
     /* Get the Token */
     Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -366,7 +325,7 @@ PsOpenTokenOfProcess(IN HANDLE ProcessHandle,
                                        ExGetPreviousMode(),
                                        (PVOID*)&Process,
                                        NULL);
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Reference the token and dereference the process */
         *Token = PsReferencePrimaryToken(Process);
@@ -388,28 +347,38 @@ PsAssignImpersonationToken(IN PETHREAD Thread,
     PACCESS_TOKEN Token;
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
     NTSTATUS Status;
+    PAGED_CODE();
 
     /* Check if we were given a handle */
-    if (TokenHandle)
+    if (!TokenHandle)
     {
-        /* Get the token object */
-        Status = ObReferenceObjectByHandle(TokenHandle,
-                                           TOKEN_IMPERSONATE,
-                                           SepTokenObjectType,
-                                           KeGetPreviousMode(),
-                                           (PVOID*)&Token,
-                                           NULL);
-        if (!NT_SUCCESS(Status)) return(Status);
+        /* Undo impersonation */
+        PsRevertThreadToSelf(Thread);
+        return STATUS_SUCCESS;
+    }
 
-        /* Get the impersionation level */
-        ImpersonationLevel = SeTokenImpersonationLevel(Token);
-    }
-    else
+    /* Get the token object */
+    Status = ObReferenceObjectByHandle(TokenHandle,
+                                       TOKEN_IMPERSONATE,
+                                       SepTokenObjectType,
+                                       KeGetPreviousMode(),
+                                       (PVOID*)&Token,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return(Status);
+
+    /* Make sure it's an impersonation token */
+    if (SeTokenType(Token) != TokenImpersonation)
     {
-        /* Otherwise, clear values */
-        Token = NULL;
-        ImpersonationLevel = 0;
+        /* Fail */
+        ObDereferenceObject(Token);
+        return STATUS_BAD_TOKEN_TYPE;
     }
+
+    /* Check if this is a job, which we don't support yet */
+    if (Thread->ThreadsProcess->Job) KEBUGCHECK(0);
+
+    /* Get the impersionation level */
+    ImpersonationLevel = SeTokenImpersonationLevel(Token);
 
     /* Call the impersonation API */
     Status = PsImpersonateClient(Thread,
@@ -431,6 +400,7 @@ NTAPI
 PsRevertToSelf(VOID)
 {
     /* Call the per-thread API */
+    PAGED_CODE();
     PsRevertThreadToSelf(PsGetCurrentThread());
 }
 
@@ -441,13 +411,32 @@ VOID
 NTAPI
 PsRevertThreadToSelf(IN PETHREAD Thread)
 {
+    PTOKEN Token = NULL;
+    PAGED_CODE();
+
     /* Make sure we had impersonation information */
     if (Thread->ActiveImpersonationInfo)
     {
-        /* Dereference the impersonation token and set it as false */
-        ObDereferenceObject (Thread->ImpersonationInfo->Token);
-        Thread->ActiveImpersonationInfo = FALSE;
+        /* Lock the thread security */
+        PspLockThreadSecurityExclusive(Thread);
+
+        /* Make sure it's still active */
+        if (Thread->ActiveImpersonationInfo)
+        {
+            /* Disable impersonation */
+            InterlockedAnd(&Thread->CrossThreadFlags,
+                           ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
+
+            /* Get the token */
+            Token = Thread->ImpersonationInfo->Token;
+        }
+
+        /* Release thread security */
+        PspUnlockThreadSecurityExclusive(Thread);
     }
+
+    /* Dereference the impersonation token */
+    if (Token) ObDereferenceObject(Token);
 }
 
 /*
@@ -462,6 +451,8 @@ PsImpersonateClient(IN PETHREAD Thread,
                     IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
     PPS_IMPERSONATION_INFORMATION Impersonation;
+    PTOKEN OldToken = NULL;
+    PAGED_CODE();
 
     /* Check if we don't have a token */
     if (!Token)
@@ -469,52 +460,78 @@ PsImpersonateClient(IN PETHREAD Thread,
         /* Make sure we're impersonating */
         if (Thread->ActiveImpersonationInfo)
         {
-            /* Disable impersonation and check for token */
-            Thread->ActiveImpersonationInfo = FALSE;
-            if (Thread->ImpersonationInfo->Token)
+            /* We seem to be, lock the thread */
+            PspLockThreadSecurityExclusive(Thread);
+
+            /* Make sure we're still impersonating */
+            if (Thread->ActiveImpersonationInfo)
             {
-                /* Dereference it */
-                ObDereferenceObject(Thread->ImpersonationInfo->Token);
+                /* Disable impersonation */
+                InterlockedAnd(&Thread->CrossThreadFlags,
+                               ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
+
+                /* Get the token */
+                OldToken = Thread->ImpersonationInfo->Token;
             }
+
+            /* Unlock the process */
+            PspUnlockThreadSecurityExclusive(Thread);
         }
-
-        /* Return success */
-        return STATUS_SUCCESS;
-    }
-
-    /* Check if we have active impersonation */
-    if (Thread->ActiveImpersonationInfo)
-    {
-        /* Reuse the block and reference the token */
-        Impersonation = Thread->ImpersonationInfo;
-        if (Impersonation->Token) ObDereferenceObject(Impersonation->Token);
-    }
-    else if (Thread->ImpersonationInfo)
-    {
-        /* It's not active, but we can still reuse the block */
-        Impersonation = Thread->ImpersonationInfo;
     }
     else
     {
-        /* We need to allocate a new one */
-        Impersonation = ExAllocatePoolWithTag(PagedPool,
-                                              sizeof(*Impersonation),
-                                              TAG_PS_IMPERSONATION);
-        if (!Impersonation) return STATUS_INSUFFICIENT_RESOURCES;
+        /* Check if we have impersonation info */
+        Impersonation = Thread->ImpersonationInfo;
+        if (!Impersonation)
+        {
+            /* We need to allocate a new one */
+            Impersonation = ExAllocatePoolWithTag(PagedPool,
+                                                  sizeof(*Impersonation),
+                                                  TAG_PS_IMPERSONATION);
+            if (!Impersonation) return STATUS_INSUFFICIENT_RESOURCES;
 
-        /* Update the pointer */
-        Thread->ImpersonationInfo = Impersonation;
+            /* Update the pointer */
+            if (InterlockedCompareExchangePointer(&Thread->ImpersonationInfo,
+                                                  Impersonation,
+                                                  NULL))
+            {
+                /* Someone beat us to it, free our copy */
+                ExFreePool(Impersonation);
+            }
+        }
+
+        /* Check if this is a job, which we don't support yet */
+        if (Thread->ThreadsProcess->Job) KEBUGCHECK(0);
+
+        /* Lock thread security */
+        PspLockThreadSecurityExclusive(Thread);
+
+        /* Check if we're impersonating */
+        if (Thread->ActiveImpersonationInfo)
+        {
+            /* Get the token */
+            OldToken = Impersonation->Token;
+        }
+        else
+        {
+            /* Otherwise, enable impersonation */
+            InterlockedOr(&Thread->CrossThreadFlags,
+                          CT_ACTIVE_IMPERSONATION_INFO_BIT);
+        }
+
+        /* Now fill it out */
+        Impersonation->ImpersonationLevel = ImpersonationLevel;
+        Impersonation->CopyOnOpen = CopyOnOpen;
+        Impersonation->EffectiveOnly = EffectiveOnly;
+        Impersonation->Token = Token;
+
+        /* Unlock the thread */
+        PspUnlockThreadSecurityExclusive(Thread);
     }
 
-    /* Now fill it out */
-    Impersonation->ImpersonationLevel = ImpersonationLevel;
-    Impersonation->CopyOnOpen = CopyOnOpen;
-    Impersonation->EffectiveOnly = EffectiveOnly;
-    Impersonation->Token = Token;
-    Thread->ActiveImpersonationInfo = TRUE;
-
-    /* Reference the token and return success */
-    ObReferenceObject(Impersonation->Token);
+    /* Dereference the token and return success */
+    ObReferenceObject(Token);
+    if (OldToken) ObDereferenceObject(OldToken);
     return STATUS_SUCCESS;
 }
 
@@ -529,12 +546,13 @@ PsReferenceEffectiveToken(IN PETHREAD Thread,
                           OUT PSECURITY_IMPERSONATION_LEVEL Level)
 {
     PEPROCESS Process;
-    PACCESS_TOKEN Token;
+    PACCESS_TOKEN Token = NULL;
+    PAGED_CODE();
 
     /* Check if we don't have impersonation info */
+    Process = Thread->ThreadsProcess;
     if (!Thread->ActiveImpersonationInfo)
     {
-        Process = Thread->ThreadsProcess;
         *TokenType = TokenPrimary;
         *EffectiveOnly = FALSE;
 
@@ -556,14 +574,24 @@ PsReferenceEffectiveToken(IN PETHREAD Thread,
     }
     else
     {
-        /* Get the token */
-        Token = Thread->ImpersonationInfo->Token;
-        ObReferenceObject(Token);
+        /* Lock the Process */
+        PspLockProcessSecurityShared(Process);
 
-        /* Return data to caller */
-        *TokenType = TokenImpersonation;
-        *EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
-        *Level = Thread->ImpersonationInfo->ImpersonationLevel;
+        /* Make sure impersonation is still active */
+        if (Thread->ActiveImpersonationInfo)
+        {
+            /* Get the token */
+            Token = Thread->ImpersonationInfo->Token;
+            ObReferenceObject(Token);
+
+            /* Return data to caller */
+            *TokenType = TokenImpersonation;
+            *EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
+            *Level = Thread->ImpersonationInfo->ImpersonationLevel;
+        }
+
+        /* Unlock the Process */
+        PspUnlockProcessSecurityShared(Process);
     }
 
     /* Return the token */
@@ -580,17 +608,31 @@ PsReferenceImpersonationToken(IN PETHREAD Thread,
                               OUT PBOOLEAN EffectiveOnly,
                               OUT PSECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
+    PTOKEN Token = NULL;
+    PAGED_CODE();
+
     /* If we don't have impersonation info, just quit */
     if (!Thread->ActiveImpersonationInfo) return NULL;
 
-    /* Return data from caller */
-    *ImpersonationLevel = Thread->ImpersonationInfo->ImpersonationLevel;
-    *CopyOnOpen = Thread->ImpersonationInfo->CopyOnOpen;
-    *EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
+    /* Lock the thread */
+    PspLockThreadSecurityShared(Thread);
 
-    /* Reference the token and return it */
-    ObReferenceObject(Thread->ImpersonationInfo->Token);
-    return Thread->ImpersonationInfo->Token;
+    /* Make sure we still have active impersonation */
+    if (Thread->ActiveImpersonationInfo)
+    {
+        /* Return data from caller */
+        ObReferenceObject(Thread->ImpersonationInfo->Token);
+        *ImpersonationLevel = Thread->ImpersonationInfo->ImpersonationLevel;
+        *CopyOnOpen = Thread->ImpersonationInfo->CopyOnOpen;
+        *EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
+
+        /* Set the token */
+        Token = Thread->ImpersonationInfo->Token;
+    }
+
+    /* Unlock thread and return impersonation token */
+    PspUnlockThreadSecurityShared(Thread);
+    return Token;
 }
 
 #undef PsDereferenceImpersonationToken
@@ -601,6 +643,8 @@ VOID
 NTAPI
 PsDereferenceImpersonationToken(IN PACCESS_TOKEN ImpersonationToken)
 {
+    PAGED_CODE();
+
     /* If we got a token, dereference it */
     if (ImpersonationToken) ObDereferenceObject(ImpersonationToken);
 }
@@ -613,6 +657,8 @@ VOID
 NTAPI
 PsDereferencePrimaryToken(IN PACCESS_TOKEN PrimaryToken)
 {
+    PAGED_CODE();
+
     /* Dereference the token*/
     ObDereferenceObject(PrimaryToken);
 }
@@ -625,29 +671,52 @@ NTAPI
 PsDisableImpersonation(IN PETHREAD Thread,
                        IN PSE_IMPERSONATION_STATE ImpersonationState)
 {
-    PPS_IMPERSONATION_INFORMATION Impersonation;
+    PPS_IMPERSONATION_INFORMATION Impersonation = NULL;
+    LONG NewValue, OldValue;
+    PAGED_CODE();
 
     /* Check if we don't have impersonation */
-    if (!Thread->ActiveImpersonationInfo)
+    if (Thread->ActiveImpersonationInfo)
     {
-        /* Clear everything */
-        ImpersonationState->Token = NULL;
-        ImpersonationState->CopyOnOpen = FALSE;
-        ImpersonationState->EffectiveOnly = FALSE;
-        ImpersonationState->Level = SecurityAnonymous;
-        return FALSE;
+        /* Lock thread security */
+        PspLockThreadSecurityExclusive(Thread);
+
+        /* Disable impersonation */
+        OldValue = Thread->CrossThreadFlags;
+        do
+        {
+            /* Attempt to change the flag */
+            NewValue =
+                InterlockedCompareExchange(&Thread->CrossThreadFlags,
+                                           OldValue &~
+                                           CT_ACTIVE_IMPERSONATION_INFO_BIT,
+                                           OldValue);
+        } while (NewValue != OldValue);
+
+        /* Did someone disable behind our back? */
+        if (!(NewValue & CT_ACTIVE_IMPERSONATION_INFO_BIT))
+        {
+            /* Copy the old state */
+            Impersonation = Thread->ImpersonationInfo;
+            ImpersonationState->Token = Impersonation->Token;
+            ImpersonationState->CopyOnOpen = Impersonation->CopyOnOpen;
+            ImpersonationState->EffectiveOnly = Impersonation->EffectiveOnly;
+            ImpersonationState->Level = Impersonation->ImpersonationLevel;
+        }
+
+        /* Unlock thread security */
+        PspUnlockThreadSecurityExclusive(Thread);
+
+        /* If we had impersonation info, return true */
+        if (Impersonation) return TRUE;
     }
 
-    /* Copy the old state */
-    Impersonation = Thread->ImpersonationInfo;
-    ImpersonationState->Token = Impersonation->Token;
-    ImpersonationState->CopyOnOpen = Impersonation->CopyOnOpen;
-    ImpersonationState->EffectiveOnly = Impersonation->EffectiveOnly;
-    ImpersonationState->Level = Impersonation->ImpersonationLevel;
-
-    /* Disable impersonation and return true */
-    Thread->ActiveImpersonationInfo = FALSE;
-    return TRUE;
+    /* Clear everything */
+    ImpersonationState->Token = NULL;
+    ImpersonationState->CopyOnOpen = FALSE;
+    ImpersonationState->EffectiveOnly = FALSE;
+    ImpersonationState->Level = SecurityAnonymous;
+    return FALSE;
 }
 
 /*
@@ -658,15 +727,47 @@ NTAPI
 PsRestoreImpersonation(IN PETHREAD Thread,
                        IN PSE_IMPERSONATION_STATE ImpersonationState)
 {
-    /* Call the impersonation API */
-    PsImpersonateClient(Thread,
-                        ImpersonationState->Token,
-                        ImpersonationState->CopyOnOpen,
-                        ImpersonationState->EffectiveOnly,
-                        ImpersonationState->Level);
+    PTOKEN Token = NULL;
+    PPS_IMPERSONATION_INFORMATION Impersonation;
+    PAGED_CODE();
+
+    /* Lock thread security */
+    PspLockThreadSecurityExclusive(Thread);
+
+    /* Get the impersonation info */
+    Impersonation = Thread->ImpersonationInfo;
+
+    /* Check if we're impersonating */
+    if (Thread->ActiveImpersonationInfo)
+    {
+        /* Get the token */
+        Token = Impersonation->Token;
+    }
+
+    /* Check if we have an impersonation state */
+    if (ImpersonationState)
+    {
+        /* Fill out the impersonation info */
+        Impersonation->ImpersonationLevel = ImpersonationState->Level;
+        Impersonation->CopyOnOpen = ImpersonationState->CopyOnOpen;
+        Impersonation->EffectiveOnly = ImpersonationState->EffectiveOnly;
+        Impersonation->Token = ImpersonationState->Token;
+
+        /* Enable impersonation */
+        InterlockedOr(&Thread->CrossThreadFlags, CT_ACTIVE_IMPERSONATION_INFO_BIT);
+    }
+    else
+    {
+        /* Disable impersonation */
+        InterlockedAnd(&Thread->CrossThreadFlags,
+                       ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
+    }
+
+    /* Unlock the thread */
+    PspUnlockThreadSecurityExclusive(Thread);
 
     /* Dereference the token */
-    ObDereferenceObject(ImpersonationState->Token);
+    if (Token) ObDereferenceObject(Token);
 }
 
 NTSTATUS

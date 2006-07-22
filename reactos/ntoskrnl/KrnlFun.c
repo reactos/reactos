@@ -25,14 +25,13 @@
 //  - Add tracing to iofunc.c
 //
 // Ps:
-//  - Use Process/Thread Rundown.
-//  - Use Process Pushlock Locks.
-//  - Use Security Locks in security.c
 //  - Figure out why processes don't die.
 //  - Generate process cookie for user-more thread.
 //  - Add security calls where necessary.
 //  - Add tracing.
 //  - Add failure/race checks for thread creation.
+//  - Complete PspSetPrimaryToken.
+//  - Update TEB Security information when impersonating.
 //
 // Ob:
 //  - Possible bug in deferred deletion under Cc Rewrite branch.

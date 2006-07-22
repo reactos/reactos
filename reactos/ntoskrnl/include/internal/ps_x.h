@@ -84,3 +84,90 @@ PspRunLegoRoutine(IN PKTHREAD Thread)
     if (PspLegoNotifyRoutine) PspLegoNotifyRoutine(Thread);
 }
 
+VOID
+FORCEINLINE
+PspLockProcessSecurityShared(IN PEPROCESS Process)
+{
+    /* Enter a Critical Region */
+    KeEnterCriticalRegion();
+
+    /* Lock the Process */
+    ExAcquirePushLockShared(&Process->ProcessLock);
+}
+
+VOID
+FORCEINLINE
+PspUnlockProcessSecurityShared(IN PEPROCESS Process)
+{
+    /* Unlock the Process */
+    ExReleasePushLockShared(&Process->ProcessLock);
+
+    /* Leave Critical Region */
+    KeLeaveCriticalRegion();
+}
+
+VOID
+FORCEINLINE
+PspLockProcessSecurityExclusive(IN PEPROCESS Process)
+{
+    /* Enter a Critical Region */
+    KeEnterCriticalRegion();
+
+    /* Lock the Process */
+    ExAcquirePushLockExclusive(&Process->ProcessLock);
+}
+
+VOID
+FORCEINLINE
+PspUnlockProcessSecurityExclusive(IN PEPROCESS Process)
+{
+    /* Unlock the Process */
+    ExReleasePushLockExclusive(&Process->ProcessLock);
+
+    /* Leave Critical Region */
+    KeLeaveCriticalRegion();
+}
+
+VOID
+FORCEINLINE
+PspLockThreadSecurityShared(IN PETHREAD Thread)
+{
+    /* Enter a Critical Region */
+    KeEnterCriticalRegion();
+
+    /* Lock the Thread */
+    ExAcquirePushLockShared(&Thread->ThreadLock);
+}
+
+VOID
+FORCEINLINE
+PspUnlockThreadSecurityShared(IN PETHREAD Thread)
+{
+    /* Unlock the Thread */
+    ExReleasePushLockShared(&Thread->ThreadLock);
+
+    /* Leave Critical Region */
+    KeLeaveCriticalRegion();
+}
+
+VOID
+FORCEINLINE
+PspLockThreadSecurityExclusive(IN PETHREAD Thread)
+{
+    /* Enter a Critical Region */
+    KeEnterCriticalRegion();
+
+    /* Lock the Thread */
+    ExAcquirePushLockExclusive(&Thread->ThreadLock);
+}
+
+VOID
+FORCEINLINE
+PspUnlockThreadSecurityExclusive(IN PETHREAD Thread)
+{
+    /* Unlock the Process */
+    ExReleasePushLockExclusive(&Thread->ThreadLock);
+
+    /* Leave Critical Thread */
+    KeLeaveCriticalRegion();
+}
