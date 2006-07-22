@@ -60,4 +60,13 @@
 -->
 <property name="GDB" value="0" />
 
+
+<!--
+  Whether to compile apps/libs with features covered software patents or not.
+  If you live in a country where software patents are valid/apply, don't
+  enable this (except they/you purchased a license from the patent owner).
+  This settings is disabled (0) by default.
+-->
+<property name="NSWPAT" value="0" />
+
 </rbuild>

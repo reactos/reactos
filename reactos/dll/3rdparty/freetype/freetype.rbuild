@@ -6,6 +6,9 @@
 	<define name="__NTDRIVER__" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="__USE_W32API" />
+	<if property="NSWPAT" value="1">
+		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
+	</if>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="i386">
