@@ -1592,7 +1592,7 @@ HWND
 STDCALL
 GetProgmanWindow(VOID)
 {
-  return (HWND)NtUserGetThreadState(THREADSTATE_PROGRAMWINDOW);
+  return (HWND)NtUserGetThreadState(THREADSTATE_PROGMANWINDOW);
 }
 
 /*
