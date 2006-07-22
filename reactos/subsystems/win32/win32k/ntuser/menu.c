@@ -351,7 +351,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    Menu->MenuItemList = NULL;
 
    /* Insert menu item into process menu handle list */
-   InsertTailList(&PsGetCurrentProcessWin32Process()->MenuListHead, &Menu->ListEntry)
+   InsertTailList(&PsGetCurrentProcessWin32Process()->MenuListHead, &Menu->ListEntry);
 
    return Menu;
 }
