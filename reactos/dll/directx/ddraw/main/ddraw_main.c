@@ -10,6 +10,256 @@
 
 #include "rosdraw.h"
 
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT 
+WINAPI 
+Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface, 
+								REFIID id, 
+								LPVOID *obj) 
+{
+    DX_WINDBG_trace();
+
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    
+    if (IsEqualGUID(&IID_IDirectDraw7, id))
+    {
+        *obj = &This->lpVtbl;
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw, id))
+    {
+        *obj = &This->lpVtbl_v1;
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw2, id))
+    {
+        *obj = &This->lpVtbl_v2;
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw4, id))
+    {
+        *obj = &This->lpVtbl_v4;
+    }
+    else
+    {
+        *obj = NULL;
+        return E_NOINTERFACE;
+    }
+
+    Main_DirectDraw_AddRef(iface);
+    return S_OK;
+}
+
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+ULONG
+WINAPI 
+Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface) 
+{
+    DX_WINDBG_trace();
+
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	ULONG ref=0;
+    
+	if (iface!=NULL)
+	{
+        ref = InterlockedIncrement(  (PLONG) &This->mDDrawLocal.dwLocalRefCnt);       
+	}    
+    return ref;
+}
+
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+ULONG 
+WINAPI 
+Main_DirectDraw_Release (LPDIRECTDRAW7 iface) 
+{
+    DX_WINDBG_trace();
+
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	ULONG ref=0;
+
+	if (iface!=NULL)
+	{	  	
+		ref = InterlockedDecrement( (PLONG) &This->mDDrawLocal.dwLocalRefCnt);
+            
+		if (ref == 0)
+		{
+			// set resoltion back to the one in registry
+			if(This->cooperative_level & DDSCL_EXCLUSIVE)
+			{
+				ChangeDisplaySettings(NULL, 0);
+			}
+            
+			Cleanup(iface);					
+            if (This!=NULL)
+            {              
+			    HeapFree(GetProcessHeap(), 0, This);
+            }
+		}
+    }
+    return ref;
+}
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT 
+WINAPI 
+Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
+{
+	/* MSDN say not implement but my question what does it return then */
+    DX_WINDBG_trace();
+    return DD_OK;
+}
+
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT 
+WINAPI 
+Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface, 
+							  DWORD dwFlags, 
+                              LPDIRECTDRAWCLIPPER *ppClipper, 
+							  IUnknown *pUnkOuter)
+{
+    DX_WINDBG_trace();
+
+    if (pUnkOuter!=NULL) 
+        return DDERR_INVALIDPARAMS; 
+
+    IDirectDrawClipperImpl* That; 
+    That = (IDirectDrawClipperImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawClipperImpl));
+
+    if (That == NULL) 
+        return E_OUTOFMEMORY;
+
+    ZeroMemory(That, sizeof(IDirectDrawClipperImpl));
+
+    That->lpVtbl = &DirectDrawClipper_Vtable;
+    That->ref = 1;
+    *ppClipper = (LPDIRECTDRAWCLIPPER)That;
+
+    return That->lpVtbl->Initialize (*ppClipper, (LPDIRECTDRAW)iface, dwFlags);
+}
+
+
+HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
+                  LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
+{
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	IDirectDrawPaletteImpl* That; 
+	DX_WINDBG_trace();
+
+    if (pUnkOuter!=NULL) 
+	{
+        return CLASS_E_NOAGGREGATION; 
+	}
+    
+	if(!This->cooperative_level)
+    {
+        return DDERR_NOCOOPERATIVELEVELSET;
+    }
+
+	if (This->mDdCreatePalette.CreatePalette == NULL)
+	{
+		return DDERR_NODRIVERSUPPORT;
+	}
+
+    That = (IDirectDrawPaletteImpl*)DxHeapMemAlloc(sizeof(IDirectDrawPaletteImpl));
+    if (That == NULL) 
+	{
+        return E_OUTOFMEMORY;
+	}
+
+    That->lpVtbl = &DirectDrawPalette_Vtable;    
+    *ppPalette = (LPDIRECTDRAWPALETTE)That;
+
+	That->DDPalette.dwRefCnt = 1;
+    That->DDPalette.lpDD_lcl = &This->mDDrawLocal;
+	That->DDPalette.dwProcessId = GetCurrentProcessId();
+    That->DDPalette.lpColorTable = palent;
+
+    if (dwFlags & DDPCAPS_1BIT)
+	{
+		That->DDPalette.dwFlags |= DDRAWIPAL_2 ;
+	}
+	if (dwFlags & DDPCAPS_2BIT)
+	{
+		That->DDPalette.dwFlags |= DDRAWIPAL_4 ;
+	}
+	if (dwFlags & DDPCAPS_4BIT)
+	{
+		That->DDPalette.dwFlags |= DDRAWIPAL_16 ;
+	}
+	if (dwFlags & DDPCAPS_8BIT)
+	{
+		That->DDPalette.dwFlags |= DDRAWIPAL_256 ;
+	}
+
+	if (dwFlags & DDPCAPS_ALPHA)
+	{
+		That->DDPalette.dwFlags |= DDRAWIPAL_ALPHA;
+	}
+	if (dwFlags & DDPCAPS_ALLOW256)
+	{
+		That->DDPalette.dwFlags |= DDRAWIPAL_ALLOW256 ;
+	}
+	/* FIXME see 
+	   http://msdn.microsoft.com/library/default.asp?url=/library/en-us/wceddk5/html/wce50lrfddrawiddrawpalettegbl.asp
+     
+	if (dwFlags & DDPCAPS_8BITENTRIES)
+	{
+		That->DDPalette.dwFlags |= 0;
+	}
+		
+	if (dwFlags & DDPCAPS_INITIALIZE)
+	{
+		That->DDPalette.dwFlags |= 0;
+	}
+	if (dwFlags & DDPCAPS_PRIMARYSURFACE)
+	{
+		That->DDPalette.dwFlags |= 0;
+	}
+	if (dwFlags & DDPCAPS_PRIMARYSURFACELEFT)
+	{
+		That->DDPalette.dwFlags |= 0;
+	}
+	if (dwFlags & DDPCAPS_VSYNC)
+	{
+		That->DDPalette.dwFlags |= 0;
+	}
+    */
+
+
+	/*  We need fill in this right 
+	   That->DDPalette.hHELGDIPalette/dwReserved1 
+       That->DDPalette.dwContentsStamp 
+       That->DDPalette.dwSaveStamp 
+     */
+	
+	This->mDdCreatePalette.lpDDPalette = &That->DDPalette;
+	This->mDdCreatePalette.lpColorTable = palent;
+	
+	if (This->mDdCreatePalette.CreatePalette(&This->mDdCreatePalette) == DDHAL_DRIVER_HANDLED);
+    {				
+		if (This->mDdSetMode.ddRVal == DD_OK)
+		{
+			Main_DirectDraw_AddRef(iface);
+			return That->lpVtbl->Initialize (*ppPalette, (LPDIRECTDRAW)iface, dwFlags, palent);
+		}
+	}
+
+	return  DDERR_NODRIVERSUPPORT;	 		    			    
+}
+
+
+
 const DDPIXELFORMAT pixelformats[] =
 {
     /* 8bpp paletted */
@@ -91,25 +341,10 @@ Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
     return DD_OK;
 }
 
-/*
- * IMPLEMENT
- * Status this api is finish and is 100% correct 
- */
-ULONG
-WINAPI 
-Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface) 
-{
-    DX_WINDBG_trace();
 
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	ULONG ref=0;
-    
-	if (iface!=NULL)
-	{
-        ref = InterlockedIncrement( (PLONG) &This->ref);       
-	}    
-    return ref;
-}
+
+
+
 
 /*
  * IMPLEMENT
@@ -117,36 +352,6 @@ Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
  * not finish yet but is working fine 
  * it prevent memmory leaks at exit
  */
-ULONG 
-WINAPI 
-Main_DirectDraw_Release (LPDIRECTDRAW7 iface) 
-{
-    DX_WINDBG_trace();
-
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	ULONG ref=0;
-
-	if (iface!=NULL)
-	{	  	
-		ref = InterlockedDecrement( (PLONG) &This->ref);
-            
-		if (ref == 0)
-		{
-			// set resoltion back to the one in registry
-			if(This->cooperative_level & DDSCL_EXCLUSIVE)
-			{
-				ChangeDisplaySettings(NULL, 0);
-			}
-            
-			Cleanup(iface);					
-            if (This!=NULL)
-            {              
-			    HeapFree(GetProcessHeap(), 0, This);
-            }
-		}
-    }
-    return ref;
-}
 
 
 
@@ -363,45 +568,7 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
 
 
 
-/*
- * IMPLEMENT
- * Status this api is finish and is 100% correct 
- */
-HRESULT 
-WINAPI 
-Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface, 
-								REFIID id, 
-								LPVOID *obj) 
-{
-    DX_WINDBG_trace();
 
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    
-    if (IsEqualGUID(&IID_IDirectDraw7, id))
-    {
-        *obj = &This->lpVtbl;
-    }
-    else if (IsEqualGUID(&IID_IDirectDraw, id))
-    {
-        *obj = &This->lpVtbl_v1;
-    }
-    else if (IsEqualGUID(&IID_IDirectDraw2, id))
-    {
-        *obj = &This->lpVtbl_v2;
-    }
-    else if (IsEqualGUID(&IID_IDirectDraw4, id))
-    {
-        *obj = &This->lpVtbl_v4;
-    }
-    else
-    {
-        *obj = NULL;
-        return E_NOINTERFACE;
-    }
-
-    Main_DirectDraw_AddRef(iface);
-    return S_OK;
-}
 
 HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
                                             LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter) 
@@ -706,28 +873,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
    
 }
 
-HRESULT WINAPI Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface, DWORD dwFlags, 
-                                             LPDIRECTDRAWCLIPPER *ppClipper, IUnknown *pUnkOuter)
-{
-    DX_WINDBG_trace();
 
-    if (pUnkOuter!=NULL) 
-        return DDERR_INVALIDPARAMS; 
-
-    IDirectDrawClipperImpl* That; 
-    That = (IDirectDrawClipperImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawClipperImpl));
-
-    if (That == NULL) 
-        return E_OUTOFMEMORY;
-
-    ZeroMemory(That, sizeof(IDirectDrawClipperImpl));
-
-    That->lpVtbl = &DirectDrawClipper_Vtable;
-    That->ref = 1;
-    *ppClipper = (LPDIRECTDRAWCLIPPER)That;
-
-    return That->lpVtbl->Initialize (*ppClipper, (LPDIRECTDRAW)iface, dwFlags);
-}
 
 // This function is exported by the dll
 HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
@@ -738,28 +884,7 @@ HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags,
     return Main_DirectDraw_CreateClipper(NULL, dwFlags, lplpDDClipper, pUnkOuter);
 }
 
-HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
-                  LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
-{
-    DX_WINDBG_trace();
 
-    if (pUnkOuter!=NULL) 
-        return DDERR_INVALIDPARAMS; 
-
-    IDirectDrawPaletteImpl* That; 
-    That = (IDirectDrawPaletteImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawPaletteImpl));
-
-    if (That == NULL) 
-        return E_OUTOFMEMORY;
-
-    ZeroMemory(That, sizeof(IDirectDrawPaletteImpl));
-
-    That->lpVtbl = &DirectDrawPalette_Vtable;
-    That->ref = 1;
-    *ppPalette = (LPDIRECTDRAWPALETTE)That;
-
-       return That->lpVtbl->Initialize (*ppPalette, (LPDIRECTDRAW)iface, dwFlags, palent);
-}
 
 HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
 {
@@ -928,11 +1053,7 @@ HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 
 /********************************** Stubs **********************************/
 
-HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
-{
-    DX_WINDBG_trace();
-    DX_STUB;
-}
+
 
 HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRAWSURFACE7 src,
                  LPDIRECTDRAWSURFACE7* dst) 
