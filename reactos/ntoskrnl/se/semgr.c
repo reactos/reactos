@@ -416,36 +416,52 @@ SeDefaultObjectMethod(PVOID Object,
     return STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+SeCaptureSubjectContextEx(IN PETHREAD Thread,
+                          IN PEPROCESS Process,
+                          OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
+{
+    BOOLEAN CopyOnOpen, EffectiveOnly;
+    PAGED_CODE();
+
+    /* ROS HACK */
+    if (!Process) return;
+
+    /* Save the unique ID */
+    SubjectContext->ProcessAuditId = Process->UniqueProcessId;
+
+    /* Check if we have a thread */
+    if (!Thread)
+    {
+        /* We don't, so no token */
+        SubjectContext->ClientToken = NULL;
+    }
+    else
+    {
+        /* Get the impersonation token */
+        SubjectContext->ClientToken =
+            PsReferenceImpersonationToken(Thread,
+                                          &CopyOnOpen,
+                                          &EffectiveOnly,
+                                          &SubjectContext->ImpersonationLevel);
+    }
+
+    /* Get the primary token */
+    SubjectContext->PrimaryToken = PsReferencePrimaryToken(Process);
+}
+
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+NTAPI
 SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
-  PETHREAD Thread;
-  BOOLEAN CopyOnOpen;
-  BOOLEAN EffectiveOnly;
-
-  PAGED_CODE();
-
-  Thread = PsGetCurrentThread();
-  if (Thread == NULL)
-    {
-      SubjectContext->ProcessAuditId = 0;
-      SubjectContext->PrimaryToken = NULL;
-      SubjectContext->ClientToken = NULL;
-      SubjectContext->ImpersonationLevel = 0;
-    }
-  else
-    {
-      SubjectContext->ProcessAuditId = Thread->ThreadsProcess;
-      SubjectContext->ClientToken =
-	PsReferenceImpersonationToken(Thread,
-				      &CopyOnOpen,
-				      &EffectiveOnly,
-				      &SubjectContext->ImpersonationLevel);
-      SubjectContext->PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
-    }
+    /* Call the internal API */
+    SeCaptureSubjectContextEx(PsGetCurrentThread(),
+                              PsGetCurrentProcess(),
+                              SubjectContext);
 }
 
 

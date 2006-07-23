@@ -25,6 +25,13 @@ SeDetailedAuditingWithToken(IN PTOKEN Token)
 
 VOID
 NTAPI
+SeAuditProcessCreate(IN PEPROCESS Process)
+{
+    /* FIXME */
+}
+
+VOID
+NTAPI
 SeAuditProcessExit(IN PEPROCESS Process)
 {
     /* FIXME */

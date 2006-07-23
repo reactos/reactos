@@ -368,6 +368,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PETHREAD CurrentThread;
     PEPROCESS CurrentProcess;
     ULONG MinWs, MaxWs;
+    ACCESS_STATE LocalAccessState;
+    PACCESS_STATE AccessState = &LocalAccessState;
+    AUX_DATA AuxData;
     PAGED_CODE();
     DirectoryTableBase.QuadPart = 0;
 
@@ -633,7 +636,19 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         goto CleanupWithRef;
     }
 
-    /* FIXME: Insert into Job Object */
+    /* Set the handle table PID */
+    Process->ObjectTable->UniqueProcessId = Process->UniqueProcessId;
+
+    /* Check if we need to audit */
+    if (SeDetailedAuditingWithToken(NULL)) SeAuditProcessCreate(Process);
+
+    /* Check if the parent had a job */
+    if ((Parent) && (Parent->Job))
+    {
+        /* FIXME: We need to insert this process */
+        DPRINT1("Jobs not yet supported\n");
+        KEBUGCHECK(0);
+    }
 
     /* Create PEB only for User-Mode Processes */
     if (Parent)
@@ -647,15 +662,29 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     InsertTailList(&PsActiveProcessHead, &Process->ActiveProcessLinks);
     KeReleaseGuardedMutex(&PspActiveProcessMutex);
 
-    /* FIXME: SeCreateAccessStateEx */
+    /* Create an access state */
+    Status = SeCreateAccessStateEx(CurrentThread,
+                                   ((Parent) &&
+                                   (Parent == PsInitialSystemProcess)) ?
+                                    Parent : CurrentProcess,
+                                   &LocalAccessState,
+                                   &AuxData,
+                                   DesiredAccess,
+                                   &PsProcessType->TypeInfo.GenericMapping);
+    if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
     /* Insert the Process into the Object Directory */
     Status = ObInsertObject(Process,
-                            NULL,
+                            AccessState,
                             DesiredAccess,
                             1,
                             (PVOID*)&Process,
                             &hProcess);
+
+    /* Free the access state */
+    if (AccessState) SeDeleteAccessState(AccessState);
+
+    /* Cleanup on failure */
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
     /* FIXME: Compute Quantum and Priority */

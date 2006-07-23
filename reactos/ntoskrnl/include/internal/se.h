@@ -131,6 +131,17 @@ SeSubProcessToken(
 
 NTSTATUS
 NTAPI
+SeCreateAccessStateEx(
+    IN PETHREAD Thread,
+    IN PEPROCESS Process,
+    IN OUT PACCESS_STATE AccessState,
+    IN PAUX_DATA AuxData,
+    IN ACCESS_MASK Access,
+    IN PGENERIC_MAPPING GenericMapping
+);
+
+NTSTATUS
+NTAPI
 SeIsTokenChild(
     IN PTOKEN Token,
     OUT PBOOLEAN IsChild
@@ -160,12 +171,24 @@ VOID
 NTAPI
 SeAuditProcessExit(IN PEPROCESS Process);
 
+VOID
+NTAPI
+SeAuditProcessCreate(IN PEPROCESS Process);
+
 NTSTATUS
 NTAPI
 SeExchangePrimaryToken(
     struct _EPROCESS* Process,
     PACCESS_TOKEN NewToken,
     PACCESS_TOKEN* OldTokenP
+);
+
+VOID
+NTAPI
+SeCaptureSubjectContextEx(
+    IN PETHREAD Thread,
+    IN PEPROCESS Process,
+    OUT PSECURITY_SUBJECT_CONTEXT SubjectContext
 );
 
 NTSTATUS
