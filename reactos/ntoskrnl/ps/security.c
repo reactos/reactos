@@ -263,6 +263,7 @@ PspSetPrimaryToken(IN PEPROCESS Process,
             SubjectContext.ClientToken = NULL;
 
             /* Do the access check */
+            if (!SecurityDescriptor) DPRINT1("FIX PS SDs!!\n");
             Result = SeAccessCheck(SecurityDescriptor,
                                    &SubjectContext,
                                    FALSE,

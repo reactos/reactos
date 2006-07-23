@@ -871,6 +871,14 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
   PAGED_CODE();
 
+  /* Check if we didn't get an SD */
+  if (!SecurityDescriptor)
+  {
+      /* Automatic failure */
+      *AccessStatus = STATUS_ACCESS_DENIED;
+      return FALSE;
+  }
+
   CurrentAccess = PreviouslyGrantedAccess;
 
   if (SubjectContextLocked == FALSE)
