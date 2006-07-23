@@ -23,6 +23,7 @@
 #define PS_STATE_DEBUG                                  0x40
 #define PS_QUOTA_DEBUG                                  0x80
 #define PS_KILL_DEBUG                                   0x100
+#define PS_REF_DEBUG                                    0x200
 
 //
 // Debug/Tracing support
@@ -46,8 +47,13 @@
         DbgPrint(__VA_ARGS__);                              \
     }
 #endif
+#define PSREFTRACE(x)                                       \
+    PSTRACE(PS_REF_DEBUG,                                   \
+            "Pointer Count: %lx\n",                         \
+            OBJECT_TO_OBJECT_HEADER(x)->PointerCount);
 #else
 #define PSTRACE(x, ...) DPRINT(__VA_ARGS__);
+#define PSREFTRACE(x)
 #endif
 
 //

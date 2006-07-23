@@ -97,6 +97,8 @@ PsGetNextProcessThread(IN PEPROCESS Process,
     PETHREAD FoundThread = NULL;
     PLIST_ENTRY ListHead, Entry;
     PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG,
+            "Process: %p Thread: %p\n", Process, Thread);
 
     /* Lock the process */
     KeEnterCriticalRegion();
@@ -147,6 +149,7 @@ PsGetNextProcess(IN PEPROCESS OldProcess)
     PLIST_ENTRY Entry, ListHead;
     PEPROCESS FoundProcess = NULL;
     PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG, "Process: %p\n", OldProcess);
 
     /* Acquire the Active Process Lock */
     KeAcquireGuardedMutex(&PspActiveProcessMutex);
@@ -195,6 +198,7 @@ PspComputeQuantumAndPriority(IN PEPROCESS Process,
     ULONG i;
     UCHAR LocalQuantum, MemoryPriority;
     PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG, "Process: %p Mode: %lx\n", Process, Mode);
 
     /* Check if this is a foreground process */
     if (Mode == PsProcessPriorityForeground)
@@ -256,6 +260,8 @@ PsChangeQuantumTable(IN BOOLEAN Immediate,
     UCHAR Quantum;
     PCHAR QuantumTable;
     PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG,
+            "%lx PrioritySeparation: %lx\n", Immediate, PrioritySeparation);
 
     /* Write the current priority separation */
     PsPrioritySeparation = PspPrioritySeparationFromMask(PrioritySeparation);
@@ -362,12 +368,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PDBGK_DEBUG_OBJECT DebugObject;
     PSECTION_OBJECT SectionObject;
     NTSTATUS Status, AccessStatus;
-    KPROCESSOR_MODE PreviousMode;
-    PHYSICAL_ADDRESS DirectoryTableBase;
+    PHYSICAL_ADDRESS DirectoryTableBase = {{0}};
     KAFFINITY Affinity;
     HANDLE_TABLE_ENTRY CidEntry;
-    PETHREAD CurrentThread;
-    PEPROCESS CurrentProcess;
+    PETHREAD CurrentThread = PsGetCurrentThread();
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PEPROCESS CurrentProcess = PsGetCurrentProcess();
     ULONG MinWs, MaxWs;
     ACCESS_STATE LocalAccessState;
     PACCESS_STATE AccessState = &LocalAccessState;
@@ -377,14 +383,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PAGED_CODE();
-    DirectoryTableBase.QuadPart = 0;
-
-    /* Get the current thread, process and cpu ring mode */
-    CurrentThread = PsGetCurrentThread();
-    ASSERT(&CurrentThread->Tcb == KeGetCurrentThread());
-    PreviousMode = ExGetPreviousMode();
-    ASSERT((CurrentThread) == PsGetCurrentThread());
-    CurrentProcess = (PEPROCESS)CurrentThread->Tcb.ApcState.Process;
+    PSTRACE(PS_PROCESS_DEBUG,
+            "ProcessHandle: %p Parent: %p\n", ProcessHandle, Parent);
 
     /* Validate flags */
     if (Flags & ~PS_ALL_FLAGS) return STATUS_INVALID_PARAMETER;
@@ -400,6 +400,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                            (PVOID*)&Parent,
                                            NULL);
         if (!NT_SUCCESS(Status)) return Status;
+        PSREFTRACE(ParentProcess);
 
         /* If this process should be in a job but the parent isn't */
         if ((InJob) && (!Parent->Job))
@@ -418,7 +419,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         Parent = NULL;
 #ifdef CONFIG_SMP
         /*
-         * FIXME: Only the boot cpu is initialized in the early boot phase. 
+         * FIXME: Only the boot cpu is initialized in the early boot phase.
     */
         Affinity = 0xffffffff;
 #else
@@ -443,6 +444,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
     /* Clean up the Object */
+    PSREFTRACE(Process);
     RtlZeroMemory(Process, sizeof(EPROCESS));
 
     /* Initialize pushlock and rundown protection */
@@ -590,7 +592,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     Process->PriorityClass = PROCESS_PRIORITY_CLASS_NORMAL;
 
     /* Create the Process' Address Space */
-    Status = MmCreateProcessAddressSpace(Process, (PROS_SECTION_OBJECT)SectionObject);
+    Status = MmCreateProcessAddressSpace(Process,
+                                         (PROS_SECTION_OBJECT)SectionObject);
     if (!NT_SUCCESS(Status)) goto CleanupWithRef;
 
     /* Check for parent again */
@@ -690,6 +693,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (AccessState) SeDeleteAccessState(AccessState);
 
     /* Cleanup on failure */
+    PSREFTRACE(Process);
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
     /* Compute Quantum and Priority */
@@ -762,6 +766,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     KeQuerySystemTime(&Process->CreateTime);
 
     /* Protect against bad user-mode pointer */
+    PSREFTRACE(Process);
     _SEH_TRY
     {
         /* Save the process handle */
@@ -787,10 +792,12 @@ Cleanup:
     if (Parent) ObDereferenceObject(Parent);
 
     /* Return status to caller */
+    PSREFTRACE(Process);
+    if (Parent) PSREFTRACE(Parent);
     return Status;
 }
 
-/* PUBLIC FUNCTIONS *****************************************************************/
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
@@ -825,6 +832,7 @@ PsLookupProcessByProcessId(IN HANDLE ProcessId,
     PEPROCESS FoundProcess;
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG, "ProcessId: %p\n", ProcessId);
     KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
@@ -867,6 +875,7 @@ PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
     PETHREAD FoundThread;
     NTSTATUS Status = STATUS_INVALID_CID;
     PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG, "Cid: %p\n", Cid);
     KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
@@ -1158,6 +1167,7 @@ PsSetProcessPriorityByClass(IN PEPROCESS Process,
 {
     UCHAR Quantum;
     ULONG Priority;
+    PSTRACE(PS_PROCESS_DEBUG, "Process: %p Type: %lx\n", Process, Type);
 
     /* Compute quantum and priority */
     Priority = PspComputeQuantumAndPriority(Process, Type, &Quantum);
@@ -1173,7 +1183,7 @@ NTSTATUS
 NTAPI
 NtCreateProcessEx(OUT PHANDLE ProcessHandle,
                   IN ACCESS_MASK DesiredAccess,
-                  IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+                  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
                   IN HANDLE ParentProcess,
                   IN ULONG Flags,
                   IN HANDLE SectionHandle OPTIONAL,
@@ -1184,6 +1194,8 @@ NtCreateProcessEx(OUT PHANDLE ProcessHandle,
     KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG,
+            "ParentProcess: %p Flags: %lx\n", ParentProcess, Flags);
 
     /* Check if we came from user mode */
     if(PreviousMode != KernelMode)
@@ -1241,6 +1253,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
                 IN HANDLE ExceptionPort OPTIONAL)
 {
     ULONG Flags = 0;
+    PSTRACE(PS_PROCESS_DEBUG,
+            "Parent: %p Attributes: %p\n", ParentProcess, ObjectAttributes);
 
     /* Set new-style flags */
     if ((ULONG)SectionHandle & 1) Flags = PS_REQUEST_BREAKAWAY;
@@ -1280,6 +1294,8 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     ACCESS_STATE AccessState;
     AUX_DATA AuxData;
     PAGED_CODE();
+    PSTRACE(PS_PROCESS_DEBUG,
+            "ClientId: %p Attributes: %p\n", ClientId, ObjectAttributes);
 
     /* Check if we were called from user mode */
     if (PreviousMode != KernelMode)
@@ -1409,6 +1425,8 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
 
         /* Dereference the Process */
         ObDereferenceObject(Process);
+        PSREFTRACE(Process);
+        PSREFTRACE(Thread);
     }
     else
     {

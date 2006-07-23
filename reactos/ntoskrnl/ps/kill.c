@@ -85,6 +85,7 @@ PspTerminateProcess(IN PEPROCESS Process,
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG,
             "Process: %p ExitStatus: %p\n", Process, ExitStatus);
+    PSREFTRACE(Process);
 
     /* Check if this is a Critical Process */
     if (Process->BreakOnTermination)
@@ -103,7 +104,9 @@ PspTerminateProcess(IN PEPROCESS Process,
     while (Thread)
     {
         /* Kill it */
+        PSREFTRACE(Thread);
         PspTerminateThreadByPointer(Thread, ExitStatus, FALSE);
+        PSREFTRACE(Thread);
         Thread = PsGetNextProcessThread(Process, Thread);
     }
 
@@ -111,6 +114,7 @@ PspTerminateProcess(IN PEPROCESS Process,
     if (Process->ObjectTable) ObClearProcessHandleTable(Process);
 
     /* Return success*/
+    PSREFTRACE(Process);
     return STATUS_SUCCESS;
 }
 
@@ -181,6 +185,7 @@ PspReapRoutine(IN PVOID Context)
 
             /* Dereference this thread */
             ObDereferenceObject(Thread);
+            PSREFTRACE(Thread);
         } while ((NextEntry != NULL) && (NextEntry != (PVOID)1));
 
         /* Remove magic value, keep looping if it got changed */
@@ -195,6 +200,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
     KAPC_STATE ApcState;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG, "ObjectBody: %p\n", ObjectBody);
+    PSREFTRACE(Process);
 
     /* Check if it has an Active Process Link */
     if (Process->ActiveProcessLinks.Flink)
@@ -316,6 +322,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
 
     /* Destroy the Quota Block */
     PspDestroyQuotaBlock(Process);
+    PSREFTRACE(Process);
 }
 
 VOID
@@ -326,6 +333,7 @@ PspDeleteThread(IN PVOID ObjectBody)
     PEPROCESS Process = Thread->ThreadsProcess;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG, "ObjectBody: %p\n", ObjectBody);
+    PSREFTRACE(Thread);
     ASSERT(Thread->Tcb.Win32Thread == NULL);
 
     /* Check if we have a stack */
@@ -351,6 +359,7 @@ PspDeleteThread(IN PVOID ObjectBody)
     PspDeleteThreadSecurity(Thread);
 
     /* Make sure the thread was inserted, before continuing */
+    PSREFTRACE(Thread);
     if (!Process) return;
 
     /* Check if the thread list is valid */
@@ -370,6 +379,8 @@ PspDeleteThread(IN PVOID ObjectBody)
 
     /* Dereference the Process */
     ObDereferenceObject(Process);
+    PSREFTRACE(Thread);
+    PSREFTRACE(Process);
 }
 
 /*
@@ -401,6 +412,8 @@ PspExitThread(IN NTSTATUS ExitStatus)
     ASSERT((Thread) == PsGetCurrentThread());
 
     /* Can't terminate a thread if it attached another process */
+    PSREFTRACE(Thread);
+    PSREFTRACE(CurrentProcess);
     if (KeIsAttachedProcess())
     {
         /* Bugcheck */
@@ -624,6 +637,7 @@ TryAgain2:
                                                      PsW32ThreadCalloutExit);
 
     /* If we are the last thread and have a W32 Process */
+    PSREFTRACE(Thread);
     if ((Last) && (CurrentProcess->Win32Process))
     {
         /* Run it down too */
@@ -687,6 +701,8 @@ TryAgain2:
     ASSERT(Thread->Tcb.CombinedApcDisable == 0);
 
     /* Check if this is the final thread or not */
+    PSREFTRACE(Thread);
+    PSREFTRACE(CurrentProcess);
     if (Last)
     {
         /* Set the process exit time */
@@ -711,6 +727,7 @@ TryAgain2:
 
         /* Kill the process in the Object Manager */
         ObKillProcess(CurrentProcess);
+        PSREFTRACE(CurrentProcess);
 
         /* Check if we have a section object */
         if (CurrentProcess->SectionObject)
@@ -788,6 +805,8 @@ TryAgain2:
     if (Last) KeSetProcess(&CurrentProcess->Pcb, 0, FALSE);
 
     /* Terminate the Thread from the Scheduler */
+    PSREFTRACE(Thread);
+    PSREFTRACE(CurrentProcess);
     KeTerminateThread(0);
 }
 
@@ -868,6 +887,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     ULONG Flags;
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG, "Thread: %p ExitStatus: %p\n", Thread, ExitStatus);
+    PSREFTRACE(Thread);
 
     /* Check if this is a Critical Thread, and Bugcheck */
     if (Thread->BreakOnTermination)
@@ -932,6 +952,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     ExFreePool(Apc);
 
     /* Return Status */
+    PSREFTRACE(Thread);
     return Status;
 }
 
@@ -944,6 +965,7 @@ PspExitProcess(IN BOOLEAN LastThread,
     PAGED_CODE();
     PSTRACE(PS_KILL_DEBUG,
             "LastThread: %p Process: %p\n", LastThread, Process);
+    PSREFTRACE(Process);
 
     /* Set Process Exit flag */
     InterlockedOr((PLONG)&Process->Flags, PSF_PROCESS_EXITING_BIT);
@@ -975,6 +997,7 @@ PspExitProcess(IN BOOLEAN LastThread,
     }
 
     /* Check if we are the last thread */
+    PSREFTRACE(Process);
     if (LastThread)
     {
         /* Check if we have to set the Timer Resolution */

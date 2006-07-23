@@ -30,6 +30,8 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     PTEB Teb;
     BOOLEAN DeadThread = FALSE;
     PAGED_CODE();
+    PSTRACE(PS_THREAD_DEBUG,
+            "StartRoutine: %p StartContext: %p\n", StartRoutine, StartContext);
 
     /* Go to Passive Level */
     KeLowerIrql(PASSIVE_LEVEL);
@@ -50,6 +52,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     }
 
     /* Check if this is a system thread, or if we're hiding */
+    PSREFTRACE(Thread);
     if (!(Thread->SystemThread) && !(Thread->HideFromDebugger))
     {
         /* We're not, so notify the debugger */
@@ -108,12 +111,15 @@ PspSystemThreadStartup(IN PKSTART_ROUTINE StartRoutine,
                        IN PVOID StartContext)
 {
     PETHREAD Thread;
+    PSTRACE(PS_THREAD_DEBUG,
+            "StartRoutine: %p StartContext: %p\n", StartRoutine, StartContext);
 
     /* Unlock the dispatcher Database */
     KeLowerIrql(PASSIVE_LEVEL);
     Thread = PsGetCurrentThread();
 
     /* Make sure the thread isn't gone */
+    PSREFTRACE(Thread);
     if (!(Thread->Terminated) && !(Thread->DeadThread))
     {
         /* Call it the Start Routine */
@@ -128,7 +134,7 @@ NTSTATUS
 NTAPI
 PspCreateThread(OUT PHANDLE ThreadHandle,
                 IN ACCESS_MASK DesiredAccess,
-                IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+                IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
                 IN HANDLE ProcessHandle,
                 IN PEPROCESS TargetProcess,
                 OUT PCLIENT_ID ClientId,
@@ -153,6 +159,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PAGED_CODE();
+    PSTRACE(PS_THREAD_DEBUG,
+            "ThreadContext: %p TargetProcess: %p ProcessHandle: %p\n",
+            ThreadContext, TargetProcess, ProcessHandle);
 
     /* If we were called from PsCreateSystemThread, then we're kernel mode */
     if (StartRoutine) PreviousMode = KernelMode;
@@ -167,6 +176,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
                                            PreviousMode,
                                            (PVOID*)&Process,
                                            NULL);
+        PSREFTRACE(Process);
     }
     else
     {
@@ -175,6 +185,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         {
             /* Reference the Process by Pointer */
             ObReferenceObject(TargetProcess);
+            PSREFTRACE(TargetProcess);
             Process = TargetProcess;
             Status = STATUS_SUCCESS;
         }
@@ -191,6 +202,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Also make sure that User-Mode isn't trying to create a system thread */
     if ((PreviousMode != KernelMode) && (Process == PsInitialSystemProcess))
     {
+        /* Fail */
         ObDereferenceObject(Process);
         return STATUS_INVALID_HANDLE;
     }
@@ -213,6 +225,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     }
 
     /* Zero the Object entirely */
+    PSREFTRACE(Thread);
     RtlZeroMemory(Thread, sizeof(ETHREAD));
 
     /* Initialize rundown protection */
@@ -294,6 +307,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     }
 
     /* Check if we failed */
+    PSREFTRACE(Thread);
     if (!NT_SUCCESS(Status))
     {
         /* Delete the TEB if we had done */
@@ -389,6 +403,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
                             &hThread);
 
     /* Delete the access state if we had one */
+    PSREFTRACE(Thread);
     if (AccessState) SeDeleteAccessState(AccessState);
 
     /* Check for success */
@@ -440,6 +455,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     ASSERT(!(Thread->CreateTime.HighPart & 0xF0000000));
 
     /* Make sure the thread isn't dead */
+    PSREFTRACE(Thread);
     if (!Thread->DeadThread)
     {
         /* Get the thread's SD */
@@ -505,6 +521,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     }
 
     /* Dispatch thread */
+    PSREFTRACE(Thread);
     OldIrql = KeAcquireDispatcherDatabaseLock ();
     KiReadyThread(&Thread->Tcb);
     KeReleaseDispatcherDatabaseLock(OldIrql);
@@ -513,6 +530,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     ObDereferenceObject(Thread);
 
     /* Return */
+    PSREFTRACE(Thread);
     return Status;
 
     /* Most annoying failure case ever, where we undo almost all manually */
@@ -521,6 +539,7 @@ Quickie:
     ExReleasePushLockExclusive(&Process->ProcessLock);
 
     /* Uninitailize it */
+    PSREFTRACE(Thread);
     KeUninitThread(&Thread->Tcb);
 
     /* If we had a TEB, delete it */
@@ -531,6 +550,7 @@ Quickie:
 
     /* Dereference the thread and return failure */
     ObDereferenceObject(Thread);
+    PSREFTRACE(Thread);
     return STATUS_PROCESS_IS_TERMINATING;
 }
 
@@ -552,6 +572,9 @@ PsCreateSystemThread(OUT PHANDLE ThreadHandle,
     PEPROCESS TargetProcess = NULL;
     HANDLE Handle = ProcessHandle;
     PAGED_CODE();
+    PSTRACE(PS_THREAD_DEBUG,
+            "ProcessHandle: %p StartRoutine: %p StartContext: %p\n",
+            ProcessHandle, StartRoutine, StartContext);
 
     /* Check if we have a handle. If not, use the System Process */
     if (!ProcessHandle)
@@ -586,6 +609,7 @@ PsLookupThreadByThreadId(IN HANDLE ThreadId,
     PETHREAD FoundThread;
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PAGED_CODE();
+    PSTRACE(PS_THREAD_DEBUG, "ThreadId: %p\n", ThreadId);
     KeEnterCriticalRegion();
 
     /* Get the CID Handle Entry */
@@ -811,6 +835,8 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
     INITIAL_TEB SafeInitialTeb;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
+    PSTRACE(PS_THREAD_DEBUG,
+            "ProcessHandle: %p Context: %p\n", ProcessHandle, ThreadContext);
 
     /* Check if this was from user-mode */
     if(KeGetPreviousMode() != KernelMode)
@@ -887,6 +913,8 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     ACCESS_STATE AccessState;
     AUX_DATA AuxData;
     PAGED_CODE();
+    PSTRACE(PS_THREAD_DEBUG,
+            "ClientId: %p ObjectAttributes: %p\n", ClientId, ObjectAttributes);
 
     /* Check if we were called from user mode */
     if (PreviousMode != KernelMode)
