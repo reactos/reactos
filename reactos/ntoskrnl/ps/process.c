@@ -27,6 +27,7 @@ KGUARDED_MUTEX PspActiveProcessMutex;
 
 LARGE_INTEGER ShortPsLockDelay;
 
+ULONG PsRawPrioritySeparation = 0;
 ULONG PsPrioritySeparation;
 CHAR PspForegroundQuantum[3];
 
@@ -360,7 +361,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PEPORT ExceptionPortObject;
     PDBGK_DEBUG_OBJECT DebugObject;
     PSECTION_OBJECT SectionObject;
-    NTSTATUS Status;
+    NTSTATUS Status, AccessStatus;
     KPROCESSOR_MODE PreviousMode;
     PHYSICAL_ADDRESS DirectoryTableBase;
     KAFFINITY Affinity;
@@ -371,6 +372,10 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     ACCESS_STATE LocalAccessState;
     PACCESS_STATE AccessState = &LocalAccessState;
     AUX_DATA AuxData;
+    UCHAR Quantum;
+    BOOLEAN Result, SdAllocated;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
     PAGED_CODE();
     DirectoryTableBase.QuadPart = 0;
 
@@ -687,21 +692,74 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Cleanup on failure */
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
-    /* FIXME: Compute Quantum and Priority */
+    /* Compute Quantum and Priority */
+    Process->Pcb.BasePriority = PspComputeQuantumAndPriority(Process,
+                                                             0,
+                                                             &Quantum);
+    Process->Pcb.QuantumReset = Quantum;
 
-    /* 
-     * FIXME: ObGetObjectSecurity(Process, &SecurityDescriptor)
-     *        SeAccessCheck
-     */
+    /* Check if we have a parent other then the initial system process */
+    if ((Parent) && (Parent != PsInitialSystemProcess))
+    {
+        /* Get the process's SD */
+        Status = ObGetObjectSecurity(Process,
+                                     &SecurityDescriptor,
+                                     &SdAllocated);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed, close the handle and clean up */
+            ObCloseHandle(hProcess, PreviousMode);
+            goto CleanupWithRef;
+        }
+
+        /* Create the subject context */
+        SubjectContext.ProcessAuditId = Process;
+        SubjectContext.PrimaryToken = PsReferencePrimaryToken(Process);
+        SubjectContext.ClientToken = NULL;
+
+        /* Do the access check */
+        if (!SecurityDescriptor) DPRINT1("FIX PS SDs!!\n");
+        Result = SeAccessCheck(SecurityDescriptor,
+                               &SubjectContext,
+                               FALSE,
+                               MAXIMUM_ALLOWED,
+                               0,
+                               NULL,
+                               &PsProcessType->TypeInfo.GenericMapping,
+                               PreviousMode,
+                               &Process->GrantedAccess,
+                               &AccessStatus);
+
+        /* Dereference the token and let go the SD */
+        ObFastDereferenceObject(&Process->Token,
+                                SubjectContext.PrimaryToken);
+        ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+
+        /* Remove access if it failed */
+        if (!Result) Process->GrantedAccess = 0;
+
+        /* Give the process some basic access */
+        Process->GrantedAccess |= (PROCESS_VM_OPERATION |
+                                   PROCESS_VM_READ |
+                                   PROCESS_VM_WRITE |
+                                   PROCESS_QUERY_INFORMATION |
+                                   PROCESS_TERMINATE |
+                                   PROCESS_CREATE_THREAD |
+                                   PROCESS_DUP_HANDLE |
+                                   PROCESS_CREATE_PROCESS |
+                                   PROCESS_SET_INFORMATION);
+    }
+    else
+    {
+        /* Set full granted access */
+        Process->GrantedAccess = PROCESS_ALL_ACCESS;
+    }
 
     /* Sanity check */
     ASSERT(IsListEmpty(&Process->ThreadListHead));
 
     /* Set the Creation Time */
     KeQuerySystemTime(&Process->CreateTime);
-
-    /* Set the granted access */
-    Process->GrantedAccess = PROCESS_ALL_ACCESS;
 
     /* Protect against bad user-mode pointer */
     _SEH_TRY

@@ -151,6 +151,13 @@ PspGetSystemDllEntryPoints(
     VOID
 );
 
+VOID
+NTAPI
+PsChangeQuantumTable(
+    IN BOOLEAN Immediate,
+    IN ULONG PrioritySeparation
+);
+
 //
 // Security Routines
 //
@@ -343,6 +350,7 @@ extern PVOID PspSystemDllEntryPoint;
 extern PVOID PspSystemDllBase;
 extern BOOLEAN PspUseJobSchedulingClasses;
 extern CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES];
+extern ULONG PsRawPrioritySeparation;
 
 //
 // Inlined Functions

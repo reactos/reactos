@@ -159,6 +159,9 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsActiveProcessHead);
    KeInitializeGuardedMutex(&PspActiveProcessMutex);
 
+   /* Setup the quantum table */
+   PsChangeQuantumTable(FALSE, PsRawPrioritySeparation);
+
    /*
     * Initialize the default quota block.
     */
