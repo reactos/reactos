@@ -133,68 +133,74 @@ StartDirectDraw(LPDIRECTDRAW* iface)
 	This->mDdSetMode.lpDD = &This->mDDrawGlobal;
 	This->mDdWaitForVerticalBlank.lpDD = &This->mDDrawGlobal;
 	This->mDdSetColorKey.lpDD = &This->mDDrawGlobal;
-	        
-	This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HELDD.CanCreateSurface;  	
-	This->mDdCreatePalette.CreatePalette = This->mCallbacks.HELDD.CreatePalette;  	
-	This->mDdCreateSurface.CreateSurface = This->mCallbacks.HELDD.CreateSurface;  	
-	This->mDdDestroyDriver.DestroyDriver = This->mCallbacks.HELDD.DestroyDriver;  	
-	This->mDdFlipToGDISurface.FlipToGDISurface = This->mCallbacks.HELDD.FlipToGDISurface; 		
-	This->mDdGetScanLine.GetScanLine = This->mCallbacks.HELDD.GetScanLine; 
-	This->mDdSetExclusiveMode.SetExclusiveMode = This->mCallbacks.HELDD.SetExclusiveMode; 			
-	This->mDdSetMode.SetMode = This->mCallbacks.HELDD.SetMode; 		
-	This->mDdWaitForVerticalBlank.WaitForVerticalBlank = This->mCallbacks.HELDD.WaitForVerticalBlank;  	
-	// This->mDdSetColorKey.SetColorKey = This->mCallbacks.HELDD.SetColorKey;  
 	
-	Flags = This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags;
-    
-    if (Flags & DDHAL_CB32_CANCREATESURFACE) 
+	if (This->devicetype!=1)
 	{
-		This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;  
+		/* both or only hel */
+		This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HELDD.CanCreateSurface;  	
+		This->mDdCreatePalette.CreatePalette = This->mCallbacks.HELDD.CreatePalette;  	
+		This->mDdCreateSurface.CreateSurface = This->mCallbacks.HELDD.CreateSurface;  	
+		This->mDdDestroyDriver.DestroyDriver = This->mCallbacks.HELDD.DestroyDriver;  	
+		This->mDdFlipToGDISurface.FlipToGDISurface = This->mCallbacks.HELDD.FlipToGDISurface; 		
+		This->mDdGetScanLine.GetScanLine = This->mCallbacks.HELDD.GetScanLine; 
+		This->mDdSetExclusiveMode.SetExclusiveMode = This->mCallbacks.HELDD.SetExclusiveMode; 			
+		This->mDdSetMode.SetMode = This->mCallbacks.HELDD.SetMode; 		
+		This->mDdWaitForVerticalBlank.WaitForVerticalBlank = This->mCallbacks.HELDD.WaitForVerticalBlank;  	
+		// This->mDdSetColorKey.SetColorKey = This->mCallbacks.HELDD.SetColorKey;  
 	}
 	
-	if (Flags & DDHAL_CB32_CREATEPALETTE) 
+    if (This->devicetype!=2)
 	{
-		This->mDdCreatePalette.CreatePalette = This->mCallbacks.HALDD.CreatePalette;  
-	}
+		Flags = This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags;    
+		if (Flags & DDHAL_CB32_CANCREATESURFACE) 
+		{
+			This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;  
+		}
 	
-	if (Flags & DDHAL_CB32_CREATESURFACE) 
-	{
-		This->mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
-	}
+		if (Flags & DDHAL_CB32_CREATEPALETTE) 
+		{
+			This->mDdCreatePalette.CreatePalette = This->mCallbacks.HALDD.CreatePalette;  
+		}
 	
-	if (Flags & DDHAL_CB32_DESTROYDRIVER) 
-	{
-		This->mDdDestroyDriver.DestroyDriver = This->mCallbacks.HALDD.DestroyDriver;  
-	}
+		if (Flags & DDHAL_CB32_CREATESURFACE) 
+		{
+			This->mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
+		}
 	
-	if (Flags & DDHAL_CB32_FLIPTOGDISURFACE) 
-	{
-		This->mDdFlipToGDISurface.FlipToGDISurface = This->mCallbacks.HALDD.FlipToGDISurface; 
-	}
+		if (Flags & DDHAL_CB32_DESTROYDRIVER) 
+		{
+			This->mDdDestroyDriver.DestroyDriver = This->mCallbacks.HALDD.DestroyDriver;  
+		}
 	
-	if (Flags & DDHAL_CB32_GETSCANLINE) 
-	{
-		This->mDdGetScanLine.GetScanLine = This->mCallbacks.HALDD.GetScanLine; 
-	}
+		if (Flags & DDHAL_CB32_FLIPTOGDISURFACE) 
+		{
+			This->mDdFlipToGDISurface.FlipToGDISurface = This->mCallbacks.HALDD.FlipToGDISurface; 
+		}
 	
-	if (Flags & DDHAL_CB32_SETEXCLUSIVEMODE) 
-	{
-		This->mDdSetExclusiveMode.SetExclusiveMode = This->mCallbacks.HALDD.SetExclusiveMode; 
-	}
+		if (Flags & DDHAL_CB32_GETSCANLINE) 
+		{
+			This->mDdGetScanLine.GetScanLine = This->mCallbacks.HALDD.GetScanLine; 
+		}
 	
-	if (Flags & DDHAL_CB32_SETMODE) 
-	{
-		This->mDdSetMode.SetMode = This->mCallbacks.HALDD.SetMode; 
-	}
+		if (Flags & DDHAL_CB32_SETEXCLUSIVEMODE) 
+		{
+			This->mDdSetExclusiveMode.SetExclusiveMode = This->mCallbacks.HALDD.SetExclusiveMode; 
+		}
 	
-	if (Flags & DDHAL_CB32_WAITFORVERTICALBLANK) 
-	{
-		This->mDdWaitForVerticalBlank.WaitForVerticalBlank = This->mCallbacks.HALDD.WaitForVerticalBlank;  
-	}
+		if (Flags & DDHAL_CB32_SETMODE) 
+		{
+			This->mDdSetMode.SetMode = This->mCallbacks.HALDD.SetMode; 
+		}
+	
+		if (Flags & DDHAL_CB32_WAITFORVERTICALBLANK) 
+		{
+			This->mDdWaitForVerticalBlank.WaitForVerticalBlank = This->mCallbacks.HALDD.WaitForVerticalBlank;  
+		}
 
-	if (Flags & DDHAL_CB32_SETCOLORKEY) 
-	{
-		// This->mDdSetColorKey.SetColorKey = This->mCallbacks.HALDD.SetColorKey;  
+		if (Flags & DDHAL_CB32_SETCOLORKEY) 
+		{
+			// This->mDdSetColorKey.SetColorKey = This->mCallbacks.HALDD.SetColorKey;  
+		}
 	}
 
 	/* 
@@ -413,7 +419,9 @@ Create_DirectDraw (LPGUID pGUID,
 	DX_WINDBG_trace();
 
 	if (This == NULL) 
+	{
 		return E_OUTOFMEMORY;
+	}
 
 	ZeroMemory(This,sizeof(IDirectDrawImpl));
 
@@ -424,6 +432,18 @@ Create_DirectDraw (LPGUID pGUID,
 	
 	*pIface = (LPDIRECTDRAW)This;
 
+	This->devicetype = 0;
+
+	if (pGUID == (LPGUID) DDCREATE_HARDWAREONLY)
+	{
+		This->devicetype = 1; /* hal only */
+	}
+
+	if (pGUID == (LPGUID) DDCREATE_EMULATIONONLY)
+	{
+	    This->devicetype = 2; /* hel only */
+	}
+	 
 	if(This->lpVtbl->QueryInterface ((LPDIRECTDRAW7)This, id, (void**)&pIface) != S_OK)
 	{
 		return DDERR_INVALIDPARAMS;

@@ -28,8 +28,8 @@ DirectDrawCreate (LPGUID lpGUID,
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
 	{
-		/* we do not use same error code as MS, ms use 0x8004110 */
-		return DDERR_INVALIDPARAMS; 
+		/* we do not use same error code as MS, ms use CLASS_E_NOAGGREGATION  */
+		return CLASS_E_NOAGGREGATION; 
 	}
 	
 	return Create_DirectDraw (lpGUID, lplpDD, &IID_IDirectDraw, FALSE);
@@ -50,8 +50,8 @@ DirectDrawCreateEx(LPGUID lpGUID,
 	/* check see if pUnkOuter is null or not */
 	if (pUnkOuter)
 	{
-		/* we do not use same error code as MS, ms use 0x8004110 */
-		return DDERR_INVALIDPARAMS; 
+		/* we do not use same error code as MS, ms use CLASS_E_NOAGGREGATION */
+		return CLASS_E_NOAGGREGATION; 
 	}
 	
 	/* Is it a DirectDraw 7 Request or not */
