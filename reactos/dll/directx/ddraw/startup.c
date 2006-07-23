@@ -110,7 +110,7 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     This->mDDrawGlobal.lpDDCBtmp = &This->mCallbacks;
     This->mDDrawGlobal.lpExclusiveOwner = &This->mDDrawLocal;
 
-    hal_ret = Hal_DirectDraw_Initialize ((LPDIRECTDRAW7)iface);    
+    hal_ret = StartDirectDrawHal(iface);    
     hel_ret = Hel_DirectDraw_Initialize ((LPDIRECTDRAW7)iface); 
     if ((hal_ret!=DD_OK) &&  (hel_ret!=DD_OK))
     {
@@ -148,6 +148,157 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     This->mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;  
                   
     return DD_OK;
+}
+
+
+HRESULT WINAPI 
+StartDirectDrawHal(LPDIRECTDRAW* iface)
+{
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+	/* HAL Startup process */
+    BOOL newmode = FALSE;	
+	    	
+
+    /* 
+      Startup DX HAL step one of three 
+    */
+    if (!DdCreateDirectDrawObject(&This->mDDrawGlobal, This->hdc))
+    {
+       DxHeapMemFree(This->mpModeInfos);	   
+       DeleteDC(This->hdc);       
+       return DD_FALSE;
+    }
+	
+    // Do not relase HDC it have been map in kernel mode 
+    // DeleteDC(hdc);
+      
+    if (!DdReenableDirectDrawObject(&This->mDDrawGlobal, &newmode))
+    {
+      DxHeapMemFree(This->mpModeInfos);
+      DeleteDC(This->hdc);      
+      return DD_FALSE;
+    }
+           
+	
+    /*
+       Startup DX HAL step two of three 
+    */
+
+    if (!DdQueryDirectDrawObject(&This->mDDrawGlobal,
+                                 &This->mHALInfo,
+                                 &This->mCallbacks.HALDD,
+                                 &This->mCallbacks.HALDDSurface,
+                                 &This->mCallbacks.HALDDPalette, 
+                                 &This->mD3dCallbacks,
+                                 &This->mD3dDriverData,
+                                 &This->mD3dBufferCallbacks,
+                                 NULL,
+                                 NULL,
+                                 NULL))
+    {
+      DxHeapMemFree(This->mpModeInfos);
+      DeleteDC(This->hdc);      
+      // FIXME Close DX fristcall and second call
+      return DD_FALSE;
+    }
+
+    This->mcvmList = This->mHALInfo.vmiData.dwNumHeaps;
+    This->mpvmList = (VIDMEM*) DxHeapMemAlloc(sizeof(VIDMEM) * This->mcvmList);
+    if (This->mpvmList == NULL)
+    {      
+      DxHeapMemFree(This->mpModeInfos);
+      DeleteDC(This->hdc);      
+      // FIXME Close DX fristcall and second call
+      return DD_FALSE;
+    }
+
+    This->mcFourCC = This->mHALInfo.ddCaps.dwNumFourCCCodes;
+    This->mpFourCC = (DWORD *) DxHeapMemAlloc(sizeof(DWORD) * This->mcFourCC);
+    if (This->mpFourCC == NULL)
+    {
+      DxHeapMemFree(This->mpvmList);
+      DxHeapMemFree(This->mpModeInfos);
+      DeleteDC(This->hdc);      
+      // FIXME Close DX fristcall and second call
+      return DD_FALSE;
+    }
+
+    This->mcTextures = This->mD3dDriverData.dwNumTextureFormats;
+    This->mpTextures = (DDSURFACEDESC*) DxHeapMemAlloc(sizeof(DDSURFACEDESC) * This->mcTextures);
+    if (This->mpTextures == NULL)
+    {      
+      DxHeapMemFree( This->mpFourCC);
+      DxHeapMemFree( This->mpvmList);
+      DxHeapMemFree( This->mpModeInfos);
+      DeleteDC(This->hdc);      
+      // FIXME Close DX fristcall and second call
+      return DD_FALSE;
+    }
+
+    This->mHALInfo.vmiData.pvmList = This->mpvmList;
+    This->mHALInfo.lpdwFourCC = This->mpFourCC;
+    This->mD3dDriverData.lpTextureFormats = This->mpTextures;
+
+    if (!DdQueryDirectDrawObject(
+                                    &This->mDDrawGlobal,
+                                    &This->mHALInfo,
+                                    &This->mCallbacks.HALDD,
+                                    &This->mCallbacks.HALDDSurface,
+                                    &This->mCallbacks.HALDDPalette, 
+                                    &This->mD3dCallbacks,
+                                    &This->mD3dDriverData,
+                                    &This->mCallbacks.HALDDExeBuf,
+                                    This->mpTextures,
+                                    This->mpFourCC,
+                                    This->mpvmList))
+  
+    {
+      DxHeapMemFree(This->mpTextures);
+      DxHeapMemFree(This->mpFourCC);
+      DxHeapMemFree(This->mpvmList);
+      DxHeapMemFree(This->mpModeInfos);
+      DeleteDC(This->hdc);      
+	  // FIXME Close DX fristcall and second call
+      return DD_FALSE;
+    }
+
+   /*
+      Copy over from HalInfo to DirectDrawGlobal
+   */
+
+  // this is wrong, cDriverName need be in ASC code not UNICODE 
+  //memcpy(mDDrawGlobal.cDriverName, mDisplayAdapter, sizeof(wchar)*MAX_DRIVER_NAME);
+
+  memcpy(&This->mDDrawGlobal.vmiData, &This->mHALInfo.vmiData,sizeof(VIDMEMINFO));
+  memcpy(&This->mDDrawGlobal.ddCaps,  &This->mHALInfo.ddCaps,sizeof(DDCORECAPS));
+
+  This->mHALInfo.dwNumModes = This->mcModeInfos;
+  This->mHALInfo.lpModeInfo = This->mpModeInfos;
+  This->mHALInfo.dwMonitorFrequency = This->mpModeInfos[0].wRefreshRate;
+
+  This->mDDrawGlobal.dwMonitorFrequency = This->mHALInfo.dwMonitorFrequency;
+  This->mDDrawGlobal.dwModeIndex        = This->mHALInfo.dwModeIndex;
+  This->mDDrawGlobal.dwNumModes         = This->mHALInfo.dwNumModes;
+  This->mDDrawGlobal.lpModeInfo         = This->mHALInfo.lpModeInfo;
+  This->mDDrawGlobal.hInstance          = This->mHALInfo.hInstance;    
+  
+  This->mDDrawGlobal.lp16DD = &This->mDDrawGlobal;
+  
+  //DeleteDC(This->hdc);
+
+   DDHAL_GETDRIVERINFODATA DriverInfo;
+   memset(&DriverInfo,0, sizeof(DDHAL_GETDRIVERINFODATA));
+   DriverInfo.dwSize = sizeof(DDHAL_GETDRIVERINFODATA);
+   DriverInfo.dwContext = This->mDDrawGlobal.hDD; 
+
+  /* Get the MiscellaneousCallbacks  */    
+  DriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
+  DriverInfo.lpvData = &This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous;
+  DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+  This->mHALInfo.GetDriverInfo(&DriverInfo);
+
+  return DD_OK;
 }
 
 HRESULT 

@@ -10,9 +10,10 @@
 #include <d3dhal.h>
 #include <ddrawgdi.h>
 
+HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW* iface);
+HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface);
 HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
 
-HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 );
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 );
 
 /* own macro to alloc memmory */
