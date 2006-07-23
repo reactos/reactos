@@ -483,7 +483,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     HANDLE PortHandle = NULL;
     HANDLE TokenHandle = NULL;
-    PROCESS_SESSION_INFORMATION SessionInfo;
+    PROCESS_SESSION_INFORMATION SessionInfo = {0};
     PEPORT ExceptionPort;
     PAGED_CODE();
 

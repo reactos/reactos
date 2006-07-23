@@ -366,7 +366,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Access state failed, thread is dead */
-        InterlockedOr(&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+        InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
 
         /* If we were suspended, wake it up */
         if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -407,7 +407,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             Status = _SEH_GetExceptionCode();
 
             /* Thread insertion failed, thread is dead */
-            InterlockedOr(&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+            InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
 
             /* If we were suspended, wake it up */
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -429,7 +429,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     else
     {
         /* Thread insertion failed, thread is dead */
-        InterlockedOr(&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+        InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
 
         /* If we were suspended, wake it up */
         if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -449,7 +449,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Thread insertion failed, thread is dead */
-            InterlockedOr(&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+            InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
 
             /* If we were suspended, wake it up */
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);

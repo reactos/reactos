@@ -190,7 +190,7 @@ KPRIORITY
 NTAPI
 PspComputeQuantumAndPriority(IN PEPROCESS Process,
                              IN PSPROCESSPRIORITYMODE Mode,
-                             OUT PCHAR Quantum)
+                             OUT PUCHAR Quantum)
 {
     ULONG i;
     UCHAR LocalQuantum, MemoryPriority;
@@ -303,7 +303,7 @@ PsChangeQuantumTable(IN BOOLEAN Immediate,
     if (Immediate)
     {
         /* We are...loop every process */
-        Process == PsGetNextProcess(Process);
+        Process = PsGetNextProcess(Process);
         while (Process)
         {
             /*
@@ -339,7 +339,7 @@ PsChangeQuantumTable(IN BOOLEAN Immediate,
             KeSetQuantumProcess(&Process->Pcb, Quantum);
 
             /* Get the next process */
-            Process == PsGetNextProcess(Process);
+            Process = PsGetNextProcess(Process);
         }
     }
 }

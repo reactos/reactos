@@ -51,7 +51,7 @@ PspDeleteThreadSecurity(IN PETHREAD Thread)
     {
         /* Free it */
         ExFreePool(Thread->ImpersonationInfo);
-        InterlockedAnd(&Thread->CrossThreadFlags,
+        InterlockedAnd((PLONG)&Thread->CrossThreadFlags,
                        ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
         Thread->ImpersonationInfo = NULL;
     }
@@ -537,7 +537,7 @@ PsRevertThreadToSelf(IN PETHREAD Thread)
         if (Thread->ActiveImpersonationInfo)
         {
             /* Disable impersonation */
-            InterlockedAnd(&Thread->CrossThreadFlags,
+            InterlockedAnd((PLONG)&Thread->CrossThreadFlags,
                            ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
 
             /* Get the token */
@@ -584,7 +584,7 @@ PsImpersonateClient(IN PETHREAD Thread,
             if (Thread->ActiveImpersonationInfo)
             {
                 /* Disable impersonation */
-                InterlockedAnd(&Thread->CrossThreadFlags,
+                InterlockedAnd((PLONG)&Thread->CrossThreadFlags,
                                ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
 
                 /* Get the token */
@@ -632,7 +632,7 @@ PsImpersonateClient(IN PETHREAD Thread,
         else
         {
             /* Otherwise, enable impersonation */
-            InterlockedOr(&Thread->CrossThreadFlags,
+            InterlockedOr((PLONG)&Thread->CrossThreadFlags,
                           CT_ACTIVE_IMPERSONATION_INFO_BIT);
         }
 
@@ -811,7 +811,7 @@ PsDisableImpersonation(IN PETHREAD Thread,
         {
             /* Attempt to change the flag */
             NewValue =
-                InterlockedCompareExchange(&Thread->CrossThreadFlags,
+                InterlockedCompareExchange((PLONG)&Thread->CrossThreadFlags,
                                            OldValue &~
                                            CT_ACTIVE_IMPERSONATION_INFO_BIT,
                                            OldValue);
@@ -880,13 +880,13 @@ PsRestoreImpersonation(IN PETHREAD Thread,
         Impersonation->Token = ImpersonationState->Token;
 
         /* Enable impersonation */
-        InterlockedOr(&Thread->CrossThreadFlags,
+        InterlockedOr((PLONG)&Thread->CrossThreadFlags,
                       CT_ACTIVE_IMPERSONATION_INFO_BIT);
     }
     else
     {
         /* Disable impersonation */
-        InterlockedAnd(&Thread->CrossThreadFlags,
+        InterlockedAnd((PLONG)&Thread->CrossThreadFlags,
                        ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
     }
 

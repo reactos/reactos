@@ -27,7 +27,7 @@ PspCatchCriticalBreak(IN PCHAR Message,
                       IN PVOID ProcessOrThread,
                       IN PCHAR ImageName)
 {
-    UCHAR Action[2];
+    CHAR Action[2];
     BOOLEAN Handled = FALSE;
     PAGED_CODE();
 
@@ -121,7 +121,7 @@ PspShutdownProcessManager(VOID)
     PEPROCESS Process = NULL;
 
     /* Loop every process */
-    Process == PsGetNextProcess(Process);
+    Process = PsGetNextProcess(Process);
     while (Process)
     {
         /* Make sure this isn't the idle or initial process */
@@ -132,7 +132,7 @@ PspShutdownProcessManager(VOID)
         }
 
         /* Get the next process */
-        Process == PsGetNextProcess(Process);
+        Process = PsGetNextProcess(Process);
     }
 }
 
