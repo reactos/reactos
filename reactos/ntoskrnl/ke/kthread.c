@@ -728,6 +728,15 @@ KeCapturePersistentThreadState(IN PVOID CurrentThread,
     UNIMPLEMENTED;
 }
 
+VOID
+NTAPI
+KeUninitThread(IN PKTHREAD Thread)
+{
+    /* Delete the stack */
+    MmDeleteKernelStack(Thread->StackBase, FALSE);
+    Thread->InitialStack = NULL;
+}
+
 NTSTATUS
 NTAPI
 KeInitThread(IN OUT PKTHREAD Thread,

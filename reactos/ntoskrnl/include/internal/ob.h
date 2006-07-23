@@ -195,6 +195,13 @@ ObpDeleteObject(
 
 LONG
 FASTCALL
+ObDereferenceObjectEx(
+    IN PVOID Object,
+    IN ULONG Count
+);
+
+LONG
+FASTCALL
 ObReferenceObjectEx(
     IN PVOID Object,
     IN ULONG Count

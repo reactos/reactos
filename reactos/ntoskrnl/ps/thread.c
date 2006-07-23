@@ -146,6 +146,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     HANDLE_TABLE_ENTRY CidEntry;
+    ACCESS_STATE LocalAccessState;
+    PACCESS_STATE AccessState = &LocalAccessState;
+    AUX_DATA AuxData;
     PAGED_CODE();
 
     /* If we were called from PsCreateSystemThread, then we're kernel mode */
@@ -299,7 +302,21 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         return Status;
     }
 
-    /* FIXME: Acquire exclusive pushlock */
+    /* Lock the process */
+    KeEnterCriticalRegion();
+    ExAcquirePushLockExclusive(&Process->ProcessLock);
+
+    /* Make sure the proces didn't just die on us */
+    if (Process->ProcessDelete) goto Quickie;
+
+    /* Check if the thread was ours, terminated and it was user mode */
+    if ((Thread->Terminated) &&
+        (ThreadContext) &&
+        (Thread->ThreadsProcess == Process))
+    {
+        /* Cleanup, we don't want to start it up and context switch */
+        goto Quickie;
+    }
 
     /*
      * Insert the Thread into the Process's Thread List
@@ -312,7 +329,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Start the thread */
     KeStartThread(&Thread->Tcb);
 
-    /* FIXME: Wake pushlock */
+    /* Release the process lock */
+    ExReleasePushLockExclusive(&Process->ProcessLock);
+    KeLeaveCriticalRegion();
 
     /* Release rundown */
     ExReleaseRundownProtection(&Process->RundownProtect);
@@ -333,13 +352,43 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Check if we were already terminated */
     if (Thread->Terminated) KeForceResumeThread(&Thread->Tcb);
 
+    /* Create an access state */
+    Status = SeCreateAccessStateEx(NULL,
+                                   ThreadContext ?
+                                   PsGetCurrentProcess() : Process,
+                                   &LocalAccessState,
+                                   &AuxData,
+                                   DesiredAccess,
+                                   &PsThreadType->TypeInfo.GenericMapping);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Access state failed, thread is dead */
+        InterlockedOr(&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+
+        /* If we were suspended, wake it up */
+        if (CreateSuspended) KeResumeThread(&Thread->Tcb);
+
+        /* Dispatch thread */
+        OldIrql = KeAcquireDispatcherDatabaseLock ();
+        KiReadyThread(&Thread->Tcb);
+        KeReleaseDispatcherDatabaseLock(OldIrql);
+
+        /* Dereference completely to kill it */
+        ObDereferenceObjectEx(Thread, 2);
+    }
+
     /* Insert the Thread into the Object Manager */
     Status = ObInsertObject(Thread,
-                            NULL,
+                            AccessState,
                             DesiredAccess,
                             0,
                             NULL,
                             &hThread);
+
+    /* Delete the access state if we had one */
+    if (AccessState) SeDeleteAccessState(AccessState);
+
+    /* Check for success */
     if (NT_SUCCESS(Status))
     {
         /* Wrap in SEH to protect against bad user-mode pointers */
@@ -356,6 +405,18 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         }
         _SEH_END;
     }
+    else
+    {
+        /* Thread insertion failed, thread is dead */
+        InterlockedOr(&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+
+        /* If we were suspended, wake it up */
+        if (CreateSuspended) KeResumeThread(&Thread->Tcb);
+    }
+
+    /* Get the create time */
+    KeQuerySystemTime(&Thread->CreateTime);
+    ASSERT(!(Thread->CreateTime.HighPart & 0xF0000000));
 
     /* Set the thread access mask */
     Thread->GrantedAccess = THREAD_ALL_ACCESS;
@@ -370,6 +431,24 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
     /* Return */
     return Status;
+
+    /* Most annoying failure case ever, where we undo almost all manually */
+Quickie:
+    /* When we get here, the process is locked, unlock it */
+    ExReleasePushLockExclusive(&Process->ProcessLock);
+
+    /* Uninitailize it */
+    KeUninitThread(&Thread->Tcb);
+
+    /* If we had a TEB, delete it */
+    if (TebBase) MmDeleteTeb(Process, TebBase);
+
+    /* Release rundown protection, which we also hold */
+    ExReleaseRundownProtection(&Process->RundownProtect);
+
+    /* Dereference the thread and return failure */
+    ObDereferenceObject(Thread);
+    return STATUS_PROCESS_IS_TERMINATING;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

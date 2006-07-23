@@ -291,6 +291,12 @@ KeInitializeThread(
     IN PVOID KernelStack
 );
 
+VOID
+NTAPI
+KeUninitThread(
+    IN PKTHREAD Thread
+);
+
 NTSTATUS
 NTAPI
 KeInitThread(
