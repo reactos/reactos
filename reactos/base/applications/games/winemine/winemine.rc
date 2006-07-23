@@ -26,6 +26,7 @@
 #include "Fr.rc"
 #include "Pl.rc"
 #include "Nl.rc"
+#include "Uk.rc"
 
 
 IDI_WINEMINE ICON MOVEABLE "rc/winemine.ico"

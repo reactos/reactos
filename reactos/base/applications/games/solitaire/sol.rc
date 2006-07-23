@@ -2,3 +2,4 @@
 
 #include "de.rc"
 #include "en.rc"
+#include "uk.rc"

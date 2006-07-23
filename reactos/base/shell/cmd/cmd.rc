@@ -16,6 +16,7 @@
 #include "Ja.rc"
 #include "Hu.rc"
 #include "No.rc"
+#include "Uk.rc"
 
 STRINGTABLE DISCARDABLE
 {
