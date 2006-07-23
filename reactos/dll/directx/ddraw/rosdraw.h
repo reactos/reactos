@@ -71,10 +71,7 @@ typedef struct
     DWORD *mpFourCC;
 
     UINT mcTextures;
-    DDSURFACEDESC *mpTextures;
-
-	
-
+    DDSURFACEDESC2 *mpTextures;
 
 	/* ExclusiveOwner */	
     
@@ -106,7 +103,7 @@ typedef struct
     DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
     DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
 
-    DDSURFACEDESC mddsdPrimary;
+    DDSURFACEDESC2 mddsdPrimary;
 
 	/* adding a switch */
 	DWORD devicetype;

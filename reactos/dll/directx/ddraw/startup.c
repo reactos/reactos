@@ -291,7 +291,7 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
     }
 
     This->mcTextures = This->mD3dDriverData.dwNumTextureFormats;
-    This->mpTextures = (DDSURFACEDESC*) DxHeapMemAlloc(sizeof(DDSURFACEDESC) * This->mcTextures);
+    This->mpTextures = (DDSURFACEDESC2*) DxHeapMemAlloc(sizeof(DDSURFACEDESC2) * This->mcTextures);
     if (This->mpTextures == NULL)
     {      
       DxHeapMemFree( This->mpFourCC);
@@ -304,7 +304,7 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
 
     This->mHALInfo.vmiData.pvmList = This->mpvmList;
     This->mHALInfo.lpdwFourCC = This->mpFourCC;
-    This->mD3dDriverData.lpTextureFormats = This->mpTextures;
+    This->mD3dDriverData.lpTextureFormats = (DDSURFACEDESC*) This->mpTextures;
 
     if (!DdQueryDirectDrawObject(
                                     &This->mDDrawGlobal,
@@ -315,7 +315,7 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
                                     &This->mD3dCallbacks,
                                     &This->mD3dDriverData,
                                     &This->mCallbacks.HALDDExeBuf,
-                                    This->mpTextures,
+                                    (DDSURFACEDESC*)This->mpTextures,
                                     This->mpFourCC,
                                     This->mpvmList))
   
