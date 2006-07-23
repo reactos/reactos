@@ -1325,6 +1325,27 @@ PNP_GetNextLogConf(handle_t BindingHandle,
 }
 
 
+/* Function 46 */
+CONFIGRET
+PNP_GetLogConfPriority(handle_t BindingHandle,
+                       wchar_t *DeviceInstance,
+                       ULONG ulLogConfType,
+                       ULONG ulCurrentTag,
+                       ULONG *pPriority,
+                       ULONG ulFlags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_GetLogConfPriority() called\n");
+
+    *pPriority = 0; /* FIXME */
+
+    DPRINT1("PNP_GetLogConfPriority() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 /* Function 58 */
 CONFIGRET
 PNP_RunDetection(handle_t BindingHandle,

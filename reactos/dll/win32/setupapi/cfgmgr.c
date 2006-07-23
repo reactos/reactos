@@ -2163,6 +2163,70 @@ CONFIGRET WINAPI CM_Get_HW_Prof_Flags_ExW(
 
 
 /***********************************************************************
+ * CM_Get_Log_Conf_Priority [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Log_Conf_Priority(
+    LOG_CONF lcLogConf, PPRIORITY pPriority, ULONG ulFlags)
+{
+    TRACE("%p %p %lx\n", lcLogConf, pPriority, ulFlags);
+    return CM_Get_Log_Conf_Priority_Ex(lcLogConf, pPriority, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Log_Conf_Priority_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Log_Conf_Priority_Ex(
+    LOG_CONF lcLogConf, PPRIORITY pPriority, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    HSTRING_TABLE StringTable = NULL;
+    PLOG_CONF_INFO pLogConfInfo;
+    LPWSTR lpDevInst;
+
+    FIXME("%p %p %lx %lx\n", lcLogConf, pPriority, ulFlags, hMachine);
+
+    pLogConfInfo = (PLOG_CONF_INFO)lcLogConf;
+    if (pLogConfInfo == NULL || pLogConfInfo->ulMagic != LOG_CONF_MAGIC)
+        return CR_INVALID_LOG_CONF;
+
+    if (pPriority == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+
+        StringTable = ((PMACHINE_INFO)hMachine)->StringTable;
+        if (StringTable == 0)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, &StringTable))
+            return CR_FAILURE;
+    }
+
+    lpDevInst = StringTableStringFromId(StringTable, pLogConfInfo->dnDevInst);
+    if (lpDevInst == NULL)
+        return CR_INVALID_DEVNODE;
+
+    return PNP_GetLogConfPriority(BindingHandle,
+                                  lpDevInst,
+                                  pLogConfInfo->ulFlags,
+                                  pLogConfInfo->ulTag,
+                                  pPriority,
+                                  0);
+}
+
+
+/***********************************************************************
  * CM_Get_Next_Log_Conf [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Next_Log_Conf(

@@ -109,8 +109,8 @@
 @ stub CM_Get_Hardware_Profile_InfoW
 @ stub CM_Get_Hardware_Profile_Info_ExA
 @ stub CM_Get_Hardware_Profile_Info_ExW
-@ stub CM_Get_Log_Conf_Priority
-@ stub CM_Get_Log_Conf_Priority_Ex
+@ stdcall CM_Get_Log_Conf_Priority(ptr ptr long)
+@ stdcall CM_Get_Log_Conf_Priority_Ex(ptr ptr long long)
 @ stdcall CM_Get_Next_Log_Conf(ptr ptr long)
 @ stdcall CM_Get_Next_Log_Conf_Ex(ptr ptr long long)
 @ stub CM_Get_Next_Res_Des
