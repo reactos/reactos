@@ -30,8 +30,6 @@
 //  - Add security calls where necessary.
 //  - Add tracing.
 //  - Add failure/race checks for thread creation.
-//  - Complete PspSetPrimaryToken.
-//  - Update TEB Security information when impersonating.
 //
 // Ob:
 //  - Possible bug in deferred deletion under Cc Rewrite branch.

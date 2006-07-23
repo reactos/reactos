@@ -5,6 +5,7 @@
 * PURPOSE:         Internal header for the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
+
 //
 // Define this if you want debugging support
 //

@@ -187,7 +187,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
             /* Special note for Filip: This will release the Dispatcher DB Lock ;-) -- Alex */
             DPRINT("You are : %x, swapping to: %x\n", OldThread, CurrentThread);
-            KiArchContextSwitch(CurrentThread);
+            KiSwapContext(CurrentThread);
             DPRINT("You are : %x, swapped from: %x\n", OldThread, CurrentThread);
             return;
         }
@@ -841,11 +841,11 @@ KeInitThread(IN OUT PKTHREAD Thread,
     _SEH_TRY
     {
         /* Initalize the Thread Context */
-        KiArchInitThreadWithContext(Thread,
-                                    SystemRoutine,
-                                    StartRoutine,
-                                    StartContext,
-                                    Context);
+        Ke386InitThreadWithContext(Thread,
+                                   SystemRoutine,
+                                   StartRoutine,
+                                   StartContext,
+                                   Context);
     }
     _SEH_HANDLE
     {

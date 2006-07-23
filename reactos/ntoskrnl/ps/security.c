@@ -99,6 +99,75 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
 
 NTSTATUS
 NTAPI
+PspWriteTebImpersonationInfo(IN PETHREAD Thread,
+                             IN PETHREAD CurrentThread)
+{
+    PEPROCESS Process;
+    PTEB Teb;
+    BOOLEAN Attached = FALSE;
+    BOOLEAN IsImpersonating;
+    KAPC_STATE ApcState;
+    PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT(CurrentThread == PsGetCurrentThread());
+
+    /* Get process and TEB */
+    Process = Thread->ThreadsProcess;
+    Teb = Thread->Tcb.Teb;
+    if (Teb)
+    {
+        /* Check if we're not in the right process */
+        if (Thread->Tcb.ApcState.Process != &Process->Pcb)
+        {
+            /* Attach to the process */
+            KeStackAttachProcess(&Process->Pcb, &ApcState);
+            Attached = TRUE;
+        }
+
+        /* Check if we're in a different thread */
+        if (Thread != CurrentThread)
+        {
+            /* Acquire thread rundown protection */
+            ExAcquireRundownProtection(&Thread->RundownProtect);
+        }
+
+        /* Check if the thread is impersonating */
+        IsImpersonating = Thread->ActiveImpersonationInfo;
+        if (IsImpersonating)
+        {
+            /* Set TEB data */
+            Teb->ImpersonationLocale = -1;
+            Teb->IsImpersonating = 1;
+        }
+        else
+        {
+            /* Set TEB data */
+            Teb->ImpersonationLocale = 0;
+            Teb->IsImpersonating = 0;
+        }
+
+        /* Set new flag */
+        Thread->ActiveImpersonationInfo = TRUE;
+
+        /* Check if we're in a different thread */
+        if (Thread != CurrentThread)
+        {
+            /* Release protection */
+            ExReleaseRundownProtection(&Thread->RundownProtect);
+        }
+
+        /* Dettach */
+        if (Attached) KeUnstackDetachProcess(&ApcState);
+    }
+
+    /* Return to caller */
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
 PspAssignPrimaryToken(IN PEPROCESS Process,
                       IN PTOKEN Token)
 {
@@ -129,7 +198,10 @@ PspSetPrimaryToken(IN PEPROCESS Process,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     BOOLEAN IsChild;
-    NTSTATUS Status;
+    NTSTATUS Status, AccessStatus;
+    BOOLEAN Result, SdAllocated;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
 
     /* Make sure we got a handle */
     if (TokenHandle)
@@ -171,14 +243,42 @@ PspSetPrimaryToken(IN PEPROCESS Process,
     if (NT_SUCCESS(Status))
     {
         /*
-         * The idea here is that we need to completely reverify
-         * if the process still has access to itself under this new
-         * token, by doing an SeAccessCheck with the Primary Token and
-         * the SD of the Process (ObGetObjectSecurity).
-         * In the really twisted case where we lose access to ourselves,
-         * we would set Process->GrantedAccess to 0.
+         * We need to completely reverify if the process still has access to
+         * itself under this new token.
          */
-        DPRINT1("Process security not complete\n");
+        Status = ObGetObjectSecurity(Process,
+                                     &SecurityDescriptor,
+                                     &SdAllocated);
+        if (NT_SUCCESS(Status))
+        {
+            /* Setup the security context */
+            SubjectContext.ProcessAuditId = Process;
+            SubjectContext.PrimaryToken = PsReferencePrimaryToken(Process);
+            SubjectContext.ClientToken = NULL;
+
+            /* Do the access check */
+            Result = SeAccessCheck(SecurityDescriptor,
+                                   &SubjectContext,
+                                   FALSE,
+                                   MAXIMUM_ALLOWED,
+                                   0,
+                                   NULL,
+                                   &PsProcessType->TypeInfo.GenericMapping,
+                                   PreviousMode,
+                                   &Process->GrantedAccess,
+                                   &AccessStatus);
+
+            /* Dereference the token and let go the SD */
+            ObFastDereferenceObject(&Process->Token,
+                                    SubjectContext.PrimaryToken);
+            ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+
+            /* Remove access if it failed */
+            if (!Result) Process->GrantedAccess = 0;
+        }
+
+        /* Dereference the process */
+        ObDereferenceObject(Process);
     }
 
     /* Dereference the token */
@@ -437,6 +537,9 @@ PsRevertThreadToSelf(IN PETHREAD Thread)
 
     /* Dereference the impersonation token */
     if (Token) ObDereferenceObject(Token);
+
+    /* Write impersonation info to the TEB */
+    PspWriteTebImpersonationInfo(Thread, PsGetCurrentThread());
 }
 
 /*
@@ -529,8 +632,10 @@ PsImpersonateClient(IN PETHREAD Thread,
         PspUnlockThreadSecurityExclusive(Thread);
     }
 
+    /* Write impersonation info to the TEB */
+    PspWriteTebImpersonationInfo(Thread, PsGetCurrentThread());
+
     /* Dereference the token and return success */
-    ObReferenceObject(Token);
     if (OldToken) ObDereferenceObject(OldToken);
     return STATUS_SUCCESS;
 }

@@ -780,7 +780,7 @@ typedef struct _TEB
     ULONG SoftPatchPtr1;
     ULONG SoftPatchPtr2;
     PVOID *TlsExpansionSlots;
-    ULONG ImpersionationLocale;
+    ULONG ImpersonationLocale;
     ULONG IsImpersonating;
     PVOID NlsCache;
     PVOID pShimData;
