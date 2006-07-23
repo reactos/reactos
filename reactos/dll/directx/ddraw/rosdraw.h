@@ -19,11 +19,28 @@ HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id,
 /* DirectDraw Cleanup code only internal use */
 VOID Cleanup(LPDIRECTDRAW7 iface);
 
-
 /* own macro to alloc memmory */
 #define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m) 
 #define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p);
 /******** Main Object ********/
+
+/* Public interface */
+HRESULT WINAPI  Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface, REFIID id, LPVOID *obj);
+ULONG   WINAPI  Main_DirectDraw_AddRef        (LPDIRECTDRAW7 iface);
+ULONG   WINAPI  Main_DirectDraw_Release       (LPDIRECTDRAW7 iface);
+HRESULT WINAPI  Main_DirectDraw_Compact       (LPDIRECTDRAW7 iface); 
+
+HRESULT WINAPI  Main_DirectDraw_CreateClipper (LPDIRECTDRAW7 iface, 
+											   DWORD dwFlags, 
+											   LPDIRECTDRAWCLIPPER *ppClipper, 
+											   IUnknown *pUnkOuter);
+
+HRESULT WINAPI  Main_DirectDraw_CreatePalette (LPDIRECTDRAW7 iface, 
+											   DWORD dwFlags,
+                                               LPPALETTEENTRY palent, 
+											   LPDIRECTDRAWPALETTE* ppPalette, 
+											   LPUNKNOWN pUnkOuter);
+
 
 typedef struct 
 {
@@ -68,10 +85,7 @@ typedef struct
 
 	/* HEL stuff */
 	DWORD HELMemoryAvilable;
-
-    /* internal counter */
-    ULONG ref;
-    
+       
     /* DD Callbacks info */   	
 	DDHAL_DESTROYDRIVERDATA mDdDestroyDriver;
     DDHAL_CREATESURFACEDATA      mDdCreateSurface;
@@ -93,6 +107,9 @@ typedef struct
     DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
 
     DDSURFACEDESC mddsdPrimary;
+
+	/* adding a switch */
+	DWORD devicetype;
 
 } IDirectDrawImpl; 
 
@@ -158,7 +175,7 @@ typedef struct
     LONG ref;
 
     IDirectDrawImpl* owner;
-
+	DDRAWI_DDRAWPALETTE_GBL DDPalette;    
 } IDirectDrawPaletteImpl;
 
 /******** Gamma Object ********/
