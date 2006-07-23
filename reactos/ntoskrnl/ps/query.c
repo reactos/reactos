@@ -16,6 +16,9 @@
 /* Include Information Class Tables */
 #include "internal/ps_i.h"
 
+/* Debugging Level */
+ULONG PspTraceLevel = 0; //PS_KILL_DEBUG | PS_SECURITY_DEBUG;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 /* FIXME:

@@ -21,6 +21,7 @@ NTAPI
 PspDeleteProcessSecurity(IN PEPROCESS Process)
 {
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Process: %p\n", Process);
 
     /* Check if we have a token */
     if (Process->Token.Object)
@@ -36,6 +37,7 @@ NTAPI
 PspDeleteThreadSecurity(IN PETHREAD Thread)
 {
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Thread: %p\n", Thread);
 
     /* Check if we have active impersonation info */
     if (Thread->ActiveImpersonationInfo)
@@ -60,9 +62,10 @@ NTAPI
 PspInitializeProcessSecurity(IN PEPROCESS Process,
                              IN PEPROCESS Parent OPTIONAL)
 {
-    PAGED_CODE();
     NTSTATUS Status = STATUS_SUCCESS;
     PTOKEN NewToken, ParentToken;
+    PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Process: %p\n", Process);
 
     /* If we have a parent, then duplicate the Token */
     if (Parent)
@@ -108,6 +111,7 @@ PspWriteTebImpersonationInfo(IN PETHREAD Thread,
     BOOLEAN IsImpersonating;
     KAPC_STATE ApcState;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Thread: %p\n", Thread);
 
     /* Sanity check */
     ASSERT(CurrentThread == PsGetCurrentThread());
@@ -174,6 +178,7 @@ PspAssignPrimaryToken(IN PEPROCESS Process,
     PACCESS_TOKEN OldToken;
     NTSTATUS Status;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Process: %p Token: %p\n", Process, Token);
 
     /* Lock the process */
     PspLockProcessSecurityExclusive(Process);
@@ -202,6 +207,7 @@ PspSetPrimaryToken(IN PEPROCESS Process,
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
+    PSTRACE(PS_SECURITY_DEBUG, "Process: %p Token: %p\n", Process, Token);
 
     /* Make sure we got a handle */
     if (TokenHandle)
@@ -319,6 +325,8 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG,
+            "Process: %p DesiredAccess: %lx\n", ProcessHandle, DesiredAccess);
 
     /* Check if caller was user-mode */
     if (PreviousMode != KernelMode)
@@ -385,6 +393,7 @@ PsReferencePrimaryToken(PEPROCESS Process)
 {
     PACCESS_TOKEN Token;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Process: %p\n", Process);
 
     /* Fast Reference the Token */
     Token = ObFastReferenceObject(&Process->Token);
@@ -417,6 +426,7 @@ PsOpenTokenOfProcess(IN HANDLE ProcessHandle,
     PEPROCESS Process;
     NTSTATUS Status;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Process: %p\n", ProcessHandle);
 
     /* Get the Token */
     Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -448,6 +458,7 @@ PsAssignImpersonationToken(IN PETHREAD Thread,
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
     NTSTATUS Status;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Thread: %p Token: %p\n", Thread, TokenHandle);
 
     /* Check if we were given a handle */
     if (!TokenHandle)
@@ -513,6 +524,7 @@ PsRevertThreadToSelf(IN PETHREAD Thread)
 {
     PTOKEN Token = NULL;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Thread: %p\n", Thread);
 
     /* Make sure we had impersonation information */
     if (Thread->ActiveImpersonationInfo)
@@ -556,6 +568,7 @@ PsImpersonateClient(IN PETHREAD Thread,
     PPS_IMPERSONATION_INFORMATION Impersonation;
     PTOKEN OldToken = NULL;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Thread: %p, Token: %p\n", Thread, Token);
 
     /* Check if we don't have a token */
     if (!Token)
@@ -653,6 +666,8 @@ PsReferenceEffectiveToken(IN PETHREAD Thread,
     PEPROCESS Process;
     PACCESS_TOKEN Token = NULL;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG,
+            "Thread: %p, TokenType: %p\n", Thread, TokenType);
 
     /* Check if we don't have impersonation info */
     Process = Thread->ThreadsProcess;
@@ -715,6 +730,7 @@ PsReferenceImpersonationToken(IN PETHREAD Thread,
 {
     PTOKEN Token = NULL;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG, "Thread: %p\n", Thread);
 
     /* If we don't have impersonation info, just quit */
     if (!Thread->ActiveImpersonationInfo) return NULL;
@@ -779,6 +795,8 @@ PsDisableImpersonation(IN PETHREAD Thread,
     PPS_IMPERSONATION_INFORMATION Impersonation = NULL;
     LONG NewValue, OldValue;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG,
+            "Thread: %p State: %p\n", Thread, ImpersonationState);
 
     /* Check if we don't have impersonation */
     if (Thread->ActiveImpersonationInfo)
@@ -835,6 +853,8 @@ PsRestoreImpersonation(IN PETHREAD Thread,
     PTOKEN Token = NULL;
     PPS_IMPERSONATION_INFORMATION Impersonation;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG,
+            "Thread: %p State: %p\n", Thread, ImpersonationState);
 
     /* Lock thread security */
     PspLockThreadSecurityExclusive(Thread);
@@ -859,7 +879,8 @@ PsRestoreImpersonation(IN PETHREAD Thread,
         Impersonation->Token = ImpersonationState->Token;
 
         /* Enable impersonation */
-        InterlockedOr(&Thread->CrossThreadFlags, CT_ACTIVE_IMPERSONATION_INFO_BIT);
+        InterlockedOr(&Thread->CrossThreadFlags,
+                      CT_ACTIVE_IMPERSONATION_INFO_BIT);
     }
     else
     {
@@ -888,6 +909,8 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
+    PSTRACE(PS_SECURITY_DEBUG,
+            "Threads: %p %p\n", ThreadHandle, ThreadToImpersonateHandle);
 
     /* Check if call came from user mode */
     if (PreviousMode != KernelMode)

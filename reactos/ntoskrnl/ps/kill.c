@@ -81,8 +81,10 @@ NTAPI
 PspTerminateProcess(IN PEPROCESS Process,
                     IN NTSTATUS ExitStatus)
 {
-    PAGED_CODE();
     PETHREAD Thread = NULL;
+    PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG,
+            "Process: %p ExitStatus: %p\n", Process, ExitStatus);
 
     /* Check if this is a Critical Process */
     if (Process->BreakOnTermination)
@@ -151,6 +153,7 @@ PspReapRoutine(IN PVOID Context)
     PLIST_ENTRY *ListAddr;
     PLIST_ENTRY NextEntry;
     PETHREAD Thread;
+    PSTRACE(PS_KILL_DEBUG, "Context: %p\n", Context);
 
     /* Get the Reaper Address Pointer */
     ListAddr = &PspReaperListHead.Flink;
@@ -191,6 +194,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
     PEPROCESS Process = (PEPROCESS)ObjectBody;
     KAPC_STATE ApcState;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG, "ObjectBody: %p\n", ObjectBody);
 
     /* Check if it has an Active Process Link */
     if (Process->ActiveProcessLinks.Flink)
@@ -321,6 +325,7 @@ PspDeleteThread(IN PVOID ObjectBody)
     PETHREAD Thread = (PETHREAD)ObjectBody;
     PEPROCESS Process = Thread->ThreadsProcess;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG, "ObjectBody: %p\n", ObjectBody);
     ASSERT(Thread->Tcb.Win32Thread == NULL);
 
     /* Check if we have a stack */
@@ -388,6 +393,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     PKAPC Apc;
     PTOKEN PrimaryToken;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG, "ExitStatus: %p\n", ExitStatus);
 
     /* Get the Current Thread and Process */
     Thread = PsGetCurrentThread();
@@ -445,9 +451,6 @@ PspExitThread(IN NTSTATUS ExitStatus)
     /* Lock the Process before we modify its thread entries */
     KeEnterCriticalRegion();
     ExAcquirePushLockExclusive(&CurrentProcess->ProcessLock);
-
-    /* Wake up the thread so we don't deadlock on lock */
-    //KeForceResumeThread(&Thread->Tcb);
 
     /* Decrease the active thread count, and check if it's 0 */
     if (!(--CurrentProcess->ActiveThreads))
@@ -794,10 +797,12 @@ PsExitSpecialApc(IN PKAPC Apc,
                  IN OUT PKNORMAL_ROUTINE* NormalRoutine,
                  IN OUT PVOID* NormalContext,
                  IN OUT PVOID* SystemArgument1,
-                 IN OUT PVOID* SystemArguemnt2)
+                 IN OUT PVOID* SystemArgument2)
 {
     NTSTATUS Status;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG,
+            "Apc: %p SystemArgument2: %p \n", Apc, SystemArgument2);
 
     /* Don't do anything unless we are in User-Mode */
     if (Apc->SystemArgument2)
@@ -820,6 +825,7 @@ PspExitNormalApc(IN PVOID NormalContext,
     PKAPC Apc = (PKAPC)SystemArgument1;
     PETHREAD Thread = PsGetCurrentThread();
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG, "SystemArgument2: %p \n", SystemArgument2);
 
     /* This should never happen */
     ASSERT(!(((ULONG_PTR)SystemArgument2) & 1));
@@ -861,6 +867,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG Flags;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG, "Thread: %p ExitStatus: %p\n", Thread, ExitStatus);
 
     /* Check if this is a Critical Thread, and Bugcheck */
     if (Thread->BreakOnTermination)
@@ -935,6 +942,8 @@ PspExitProcess(IN BOOLEAN LastThread,
 {
     ULONG Actual;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG,
+            "LastThread: %p Process: %p\n", LastThread, Process);
 
     /* Set Process Exit flag */
     InterlockedOr((PLONG)&Process->Flags, PSF_PROCESS_EXITING_BIT);
@@ -1002,11 +1011,7 @@ PsTerminateSystemThread(IN NTSTATUS ExitStatus)
     PETHREAD Thread = PsGetCurrentThread();
 
     /* Make sure this is a system thread */
-    if (Thread->SystemThread)
-    {
-        DPRINT1("Trying to Terminate a non-system thread!\n");
-        return STATUS_INVALID_PARAMETER;
-    }
+    if (Thread->SystemThread) return STATUS_INVALID_PARAMETER;
 
     /* Terminate it for real */
     return PspTerminateThreadByPointer(Thread, ExitStatus, TRUE);
@@ -1025,6 +1030,8 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     PETHREAD Thread, CurrentThread = PsGetCurrentThread();
     BOOLEAN KillByHandle;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG,
+            "ProcessHandle: %p ExitStatus: %p\n", ProcessHandle, ExitStatus);
 
     /* Remember how we will kill it */
     KillByHandle = (ProcessHandle != NULL);
@@ -1126,6 +1133,8 @@ NtTerminateThread(IN HANDLE ThreadHandle,
     PETHREAD CurrentThread = PsGetCurrentThread();
     NTSTATUS Status;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG,
+            "ThreadHandle: %p ExitStatus: %p\n", ThreadHandle, ExitStatus);
 
     /* Handle the special NULL case */
     if (!ThreadHandle)
@@ -1187,6 +1196,7 @@ NtRegisterThreadTerminatePort(IN HANDLE PortHandle)
     PVOID TerminationLpcPort;
     PETHREAD Thread;
     PAGED_CODE();
+    PSTRACE(PS_KILL_DEBUG, "PortHandle: %p\n", PortHandle);
 
     /* Get the Port */
     Status = ObReferenceObjectByHandle(PortHandle,

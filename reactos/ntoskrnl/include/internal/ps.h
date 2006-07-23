@@ -9,7 +9,7 @@
 //
 // Define this if you want debugging support
 //
-#define _PS_DEBUG_                                      0x00
+#define _PS_DEBUG_                                      0x01
 
 //
 // These define the Debug Masks Supported
@@ -22,19 +22,32 @@
 #define PS_WIN32K_DEBUG                                 0x20
 #define PS_STATE_DEBUG                                  0x40
 #define PS_QUOTA_DEBUG                                  0x80
+#define PS_KILL_DEBUG                                   0x100
 
 //
 // Debug/Tracing support
 //
 #if _PS_DEBUG_
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
-#define PSTRACE DbgPrintEx
+#define PSTRACE(x, ...)                                     \
+    {                                                       \
+        DbgPrintEx("%s [%.16s] - ",                         \
+                   __FUNCTION__,                            \
+                   PsGetCurrentProcess()->ImageFileName);   \
+        DbgPrintEx(__VA_ARGS__);                            \
+    }
 #else
-#define PSTRACE(x, ...)                                 \
-    if (x & PspTraceLevel) DbgPrint(__VA_ARGS__)
+#define PSTRACE(x, ...)                                     \
+    if (x & PspTraceLevel)                                  \
+    {                                                       \
+        DbgPrint("%s [%.16s] - ",                           \
+                 __FUNCTION__,                              \
+                 PsGetCurrentProcess()->ImageFileName);     \
+        DbgPrint(__VA_ARGS__);                              \
+    }
 #endif
 #else
-#define PSTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define PSTRACE(x, ...) DPRINT(__VA_ARGS__);
 #endif
 
 //
