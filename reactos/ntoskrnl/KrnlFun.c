@@ -27,9 +27,7 @@
 // Ps:
 //  - Figure out why processes don't die.
 //  - Generate process cookie for user-more thread.
-//  - Add security calls where necessary for thread creation.
 //  - Add tracing.
-//  - Add failure/race checks for thread creation.
 //
 // Ob:
 //  - Possible bug in deferred deletion under Cc Rewrite branch.

@@ -144,11 +144,14 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     PTEB TebBase = NULL;
     KIRQL OldIrql;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status;
+    NTSTATUS Status, AccessStatus;
     HANDLE_TABLE_ENTRY CidEntry;
     ACCESS_STATE LocalAccessState;
     PACCESS_STATE AccessState = &LocalAccessState;
     AUX_DATA AuxData;
+    BOOLEAN Result, SdAllocated;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
     PAGED_CODE();
 
     /* If we were called from PsCreateSystemThread, then we're kernel mode */
@@ -402,8 +405,26 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         {
             /* Get the exception code */
             Status = _SEH_GetExceptionCode();
+
+            /* Thread insertion failed, thread is dead */
+            InterlockedOr(&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+
+            /* If we were suspended, wake it up */
+            if (CreateSuspended) KeResumeThread(&Thread->Tcb);
+
+            /* Dispatch thread */
+            OldIrql = KeAcquireDispatcherDatabaseLock ();
+            KiReadyThread(&Thread->Tcb);
+            KeReleaseDispatcherDatabaseLock(OldIrql);
+
+            /* Dereference it, leaving only the keep-alive */
+            ObDereferenceObject(Thread);
+
+            /* Close its handle, killing it */
+            ObCloseHandle(ThreadHandle, PreviousMode);
         }
         _SEH_END;
+        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -418,8 +439,70 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     KeQuerySystemTime(&Thread->CreateTime);
     ASSERT(!(Thread->CreateTime.HighPart & 0xF0000000));
 
-    /* Set the thread access mask */
-    Thread->GrantedAccess = THREAD_ALL_ACCESS;
+    /* Make sure the thread isn't dead */
+    if (!Thread->DeadThread)
+    {
+        /* Get the thread's SD */
+        Status = ObGetObjectSecurity(Thread,
+                                     &SecurityDescriptor,
+                                     &SdAllocated);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Thread insertion failed, thread is dead */
+            InterlockedOr(&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+
+            /* If we were suspended, wake it up */
+            if (CreateSuspended) KeResumeThread(&Thread->Tcb);
+
+            /* Dispatch thread */
+            OldIrql = KeAcquireDispatcherDatabaseLock ();
+            KiReadyThread(&Thread->Tcb);
+            KeReleaseDispatcherDatabaseLock(OldIrql);
+
+            /* Dereference it, leaving only the keep-alive */
+            ObDereferenceObject(Thread);
+
+            /* Close its handle, killing it */
+            ObCloseHandle(ThreadHandle, PreviousMode);
+            return Status;
+        }
+
+        /* Create the subject context */
+        SubjectContext.ProcessAuditId = Process;
+        SubjectContext.PrimaryToken = PsReferencePrimaryToken(Process);
+        SubjectContext.ClientToken = NULL;
+
+        /* Do the access check */
+        if (!SecurityDescriptor) DPRINT1("FIX PS SDs!!\n");
+        Result = SeAccessCheck(SecurityDescriptor,
+                               &SubjectContext,
+                               FALSE,
+                               MAXIMUM_ALLOWED,
+                               0,
+                               NULL,
+                               &PsThreadType->TypeInfo.GenericMapping,
+                               PreviousMode,
+                               &Thread->GrantedAccess,
+                               &AccessStatus);
+
+        /* Dereference the token and let go the SD */
+        ObFastDereferenceObject(&Process->Token,
+                                SubjectContext.PrimaryToken);
+        ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+
+        /* Remove access if it failed */
+        if (!Result) Process->GrantedAccess = 0;
+
+        /* Set least some minimum access */
+        Thread->GrantedAccess |= (THREAD_TERMINATE |
+                                  THREAD_SET_INFORMATION |
+                                  THREAD_QUERY_INFORMATION);
+    }
+    else
+    {
+        /* Set the thread access mask to maximum */
+        Thread->GrantedAccess = THREAD_ALL_ACCESS;
+    }
 
     /* Dispatch thread */
     OldIrql = KeAcquireDispatcherDatabaseLock ();
