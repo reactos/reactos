@@ -25,6 +25,7 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     UCHAR *pbmiData;
     BITMAPINFO *pbmi;    
     DWORD *pMasks;
+	DWORD Flags;
     
     DX_WINDBG_trace();
 	  
@@ -119,29 +120,88 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     }
 
     /* 
-       Try figout which api we shall use, first we try see if HAL exits 
-       if it does not we select HEL instead 
+       Setup HEL or HAL for DD_CALLBACKS 
     */ 
             
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE) 
-    {
-        This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;  
-    }
-    else
-    {
-        This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HELDD.CanCreateSurface;
-    }
-        
-    This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;
-        
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CREATESURFACE) 
-    {
-        This->mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
-    }
-    else
-    {
-        This->mDdCreateSurface.CreateSurface = This->mCallbacks.HELDD.CreateSurface;
-    }
+    This->mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;
+	This->mDdCreatePalette.lpDD = &This->mDDrawGlobal;
+	This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;
+	This->mDdFlipToGDISurface.lpDD = &This->mDDrawGlobal;
+	This->mDdDestroyDriver.lpDD = &This->mDDrawGlobal;
+	This->mDdGetScanLine.lpDD = &This->mDDrawGlobal;
+    This->mDdSetExclusiveMode.lpDD = &This->mDDrawGlobal;
+	This->mDdSetMode.lpDD = &This->mDDrawGlobal;
+	This->mDdWaitForVerticalBlank.lpDD = &This->mDDrawGlobal;
+	This->mDdSetColorKey.lpDD = &This->mDDrawGlobal;
+	        
+	This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HELDD.CanCreateSurface;  	
+	This->mDdCreatePalette.CreatePalette = This->mCallbacks.HELDD.CreatePalette;  	
+	This->mDdCreateSurface.CreateSurface = This->mCallbacks.HELDD.CreateSurface;  	
+	This->mDdDestroyDriver.DestroyDriver = This->mCallbacks.HELDD.DestroyDriver;  	
+	This->mDdFlipToGDISurface.FlipToGDISurface = This->mCallbacks.HELDD.FlipToGDISurface; 		
+	This->mDdGetScanLine.GetScanLine = This->mCallbacks.HELDD.GetScanLine; 
+	This->mDdSetExclusiveMode.SetExclusiveMode = This->mCallbacks.HELDD.SetExclusiveMode; 			
+	This->mDdSetMode.SetMode = This->mCallbacks.HELDD.SetMode; 		
+	This->mDdWaitForVerticalBlank.WaitForVerticalBlank = This->mCallbacks.HELDD.WaitForVerticalBlank;  	
+	// This->mDdSetColorKey.SetColorKey = This->mCallbacks.HELDD.SetColorKey;  
+	
+	Flags = This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags;
+    
+    if (Flags & DDHAL_CB32_CANCREATESURFACE) 
+	{
+		This->mDdCanCreateSurface.CanCreateSurface = This->mCallbacks.HALDD.CanCreateSurface;  
+	}
+	
+	if (Flags & DDHAL_CB32_CREATEPALETTE) 
+	{
+		This->mDdCreatePalette.CreatePalette = This->mCallbacks.HALDD.CreatePalette;  
+	}
+	
+	if (Flags & DDHAL_CB32_CREATESURFACE) 
+	{
+		This->mDdCreateSurface.CreateSurface = This->mCallbacks.HALDD.CreateSurface;  
+	}
+	
+	if (Flags & DDHAL_CB32_DESTROYDRIVER) 
+	{
+		This->mDdDestroyDriver.DestroyDriver = This->mCallbacks.HALDD.DestroyDriver;  
+	}
+	
+	if (Flags & DDHAL_CB32_FLIPTOGDISURFACE) 
+	{
+		This->mDdFlipToGDISurface.FlipToGDISurface = This->mCallbacks.HALDD.FlipToGDISurface; 
+	}
+	
+	if (Flags & DDHAL_CB32_GETSCANLINE) 
+	{
+		This->mDdGetScanLine.GetScanLine = This->mCallbacks.HALDD.GetScanLine; 
+	}
+	
+	if (Flags & DDHAL_CB32_SETEXCLUSIVEMODE) 
+	{
+		This->mDdSetExclusiveMode.SetExclusiveMode = This->mCallbacks.HALDD.SetExclusiveMode; 
+	}
+	
+	if (Flags & DDHAL_CB32_SETMODE) 
+	{
+		This->mDdSetMode.SetMode = This->mCallbacks.HALDD.SetMode; 
+	}
+	
+	if (Flags & DDHAL_CB32_WAITFORVERTICALBLANK) 
+	{
+		This->mDdWaitForVerticalBlank.WaitForVerticalBlank = This->mCallbacks.HALDD.WaitForVerticalBlank;  
+	}
+
+	if (Flags & DDHAL_CB32_SETCOLORKEY) 
+	{
+		// This->mDdSetColorKey.SetColorKey = This->mCallbacks.HALDD.SetColorKey;  
+	}
+
+	/* 
+       Setup HEL or HAL for SURFACE CALLBACK 
+    */ 
+
+	// FIXME
     
     /* Setup calback struct so we do not need refill same info again */
     This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;    

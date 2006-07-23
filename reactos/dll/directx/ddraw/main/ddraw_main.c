@@ -218,8 +218,8 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
     DX_WINDBG_trace();
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	BOOL dummy = TRUE;
-	DWORD ret;
+	BOOL dummy = TRUE;	
+	//DDHAL_SETMODEDATA mode;
 	
 	/* FIXME check the refresrate if it same if it not same do the mode switch */
 	if ((This->mDDrawGlobal.vmiData.dwDisplayHeight == dwHeight) && 
@@ -230,29 +230,30 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
 		  return DD_OK;
 		}
 
-	/* Check use the Hal or Hel for SetMode */
-	if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETMODE)
+	if (This->mDdSetMode.SetMode == NULL )
 	{
-		ret = Hal_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);   
-        
-    }    
-	else 
-	{
-		ret = Hel_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
+		return DDERR_NODRIVERSUPPORT;
 	}
-	    
-	if (ret == DD_OK)
+
+	
+	This->mDdSetMode.ddRVal = DDERR_NODRIVERSUPPORT;
+
+	// FIXME : add search for which mode.ModeIndex we should use 
+    // FIXME : fill the mode.inexcl; 
+    // FIXME : fill the mode.useRefreshRate; 
+
+	if (This->mDdSetMode.SetMode(&This->mDdSetMode)!=DDHAL_DRIVER_HANDLED);
+    {
+	    This->mDdSetMode.ddRVal = DDERR_NODRIVERSUPPORT;
+	}
+			 		    
+	if (This->mDdSetMode.ddRVal == DD_OK)
 	{
 		DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
 		/* FIXME fill the This->DirectDrawGlobal.vmiData right */
 	}
 	     
-     //This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC( (HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd);
-
-
-
-  
-	return ret;
+	return This->mDdSetMode.ddRVal;
 }
 
 
@@ -751,12 +752,21 @@ HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD d
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK) 
+	if (This->mDdWaitForVerticalBlank.WaitForVerticalBlank == NULL) 
     {
-        return Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);        
+        return DDERR_NODRIVERSUPPORT;
+    }
+   
+    This->mDdWaitForVerticalBlank.dwFlags = dwFlags;
+    This->mDdWaitForVerticalBlank.hEvent = (DWORD)h;
+    This->mDdWaitForVerticalBlank.ddRVal = DDERR_NOTPALETTIZED;
+	
+    if (This->mDdWaitForVerticalBlank.WaitForVerticalBlank(&This->mDdWaitForVerticalBlank) != DDHAL_DRIVER_HANDLED)
+    {
+       return DDERR_NODRIVERSUPPORT;
     }
 
-    return Hel_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);        
+    return This->mDdWaitForVerticalBlank.ddRVal;      
 }
 
 HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,

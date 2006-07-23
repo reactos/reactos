@@ -68,9 +68,17 @@ typedef struct
     /* internal counter */
     ULONG ref;
     
-    /*    Callbacks info */
+    /* DD Callbacks info */   	
+	DDHAL_DESTROYDRIVERDATA mDdDestroyDriver;
     DDHAL_CREATESURFACEDATA      mDdCreateSurface;
-    DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
+	DDHAL_SETCOLORKEYDATA mDdSetColorKey;
+    DDHAL_SETMODEDATA mDdSetMode;
+    DDHAL_WAITFORVERTICALBLANKDATA mDdWaitForVerticalBlank;
+    DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
+    DDHAL_CREATEPALETTEDATA mDdCreatePalette;
+    DDHAL_GETSCANLINEDATA mDdGetScanLine;
+    DDHAL_SETEXCLUSIVEMODEDATA mDdSetExclusiveMode;
+    DDHAL_FLIPTOGDISURFACEDATA mDdFlipToGDISurface;
 
     /* Primarey surface we must reach it from every where */
     DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
