@@ -14,39 +14,6 @@
 #include "d3dhal.h"
 
 
-
-/*
- * IMPLEMENT
- * Status this api is finish and is 100% correct 
- */
-
-HRESULT 
-WINAPI 
-Create_DirectDraw (LPGUID pGUID, 
-				   LPDIRECTDRAW* pIface, 
-				   REFIID id, 
-				   BOOL ex)
-{   
-    IDirectDrawImpl* This = (IDirectDrawImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectDrawImpl));
-
-	if (This == NULL) 
-		return E_OUTOFMEMORY;
-
-	ZeroMemory(This,sizeof(IDirectDrawImpl));
-
-	This->lpVtbl = &DirectDraw7_Vtable;
-	This->lpVtbl_v1 = &DDRAW_IDirectDraw_VTable;
-	This->lpVtbl_v2 = &DDRAW_IDirectDraw2_VTable;
-	This->lpVtbl_v4 = &DDRAW_IDirectDraw4_VTable;
-	
-	*pIface = (LPDIRECTDRAW)This;
-
-	if(This->lpVtbl->QueryInterface ((LPDIRECTDRAW7)This, id, (void**)&pIface) != S_OK)
-		return DDERR_INVALIDPARAMS;
-
-	return This->lpVtbl->Initialize ((LPDIRECTDRAW7)This, pGUID);
-}
-
 /*
  * IMPLEMENT
  * Status this api is finish and is 100% correct 

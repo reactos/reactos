@@ -10,21 +10,10 @@
 #include <d3dhal.h>
 #include <ddrawgdi.h>
 
+HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
 
-/* this sturct are not longer in DDK 
-   I did recrate it by looking diffent betwin DD_xx struct and _DDHAL strucrt 
-   only diffent I found was the global pointer have been change from LPDDRAWI_DDRAWSURFACE_GBL
-   to DD_DIRECTDRAW_GLOBAL
-*/
-
-typedef struct _DDHAL_MAPMEMORYDATA 
-{
-  LPDDRAWI_DDRAWSURFACE_GBL  lpDD;
-  BOOL  bMap;
-  HANDLE  hProcess;
-  FLATPTR  fpProcess;
-  HRESULT  ddRVal;
-} DDHAL_MAPMEMORYDATA;
+HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 );
+HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 );
 
 /* own macro to alloc memmory */
 #define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m) 
@@ -228,8 +217,7 @@ extern IDirectDrawSurfaceKernelVtbl DirectDrawSurfaceKernel_Vtable;
 
 HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps, LPDWORD total, LPDWORD free); 
 
-HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 );
-HRESULT Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 );
+
 VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 );
 HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7, LPDDSCAPS2, LPDWORD, LPDWORD );	
 HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD, HANDLE ); 
