@@ -218,9 +218,9 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
     DX_WINDBG_trace();
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	BOOL dummy = TRUE;	
-	//DDHAL_SETMODEDATA mode;
-	
+	//BOOL dummy = TRUE;	
+		
+	DX_WINDBG_trace_res((int)dwWidth, (int)dwHeight, (int)dwBPP );
 	/* FIXME check the refresrate if it same if it not same do the mode switch */
 	if ((This->mDDrawGlobal.vmiData.dwDisplayHeight == dwHeight) && 
 		(This->mDDrawGlobal.vmiData.dwDisplayWidth == dwWidth)  && 
@@ -238,22 +238,127 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
 	
 	This->mDdSetMode.ddRVal = DDERR_NODRIVERSUPPORT;
 
-	// FIXME : add search for which mode.ModeIndex we should use 
     // FIXME : fill the mode.inexcl; 
     // FIXME : fill the mode.useRefreshRate; 
+    
+	/* FIXME 
+	   we hardcoding modIndex list we should 
+	   try getting it from ReactOS instead and compare it 
+	   for now a small hack for do, using VBE 3.0 mode
+	   index table todo it. 
+	*/
 
-	if (This->mDdSetMode.SetMode(&This->mDdSetMode)!=DDHAL_DRIVER_HANDLED);
+	/* 320x200   15, 16, 32 */
+	if ((dwHeight == 200) && (dwWidth == 320)  && (dwBPP == 15))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x10d;
+	}
+
+	if ((dwHeight == 200) && (dwWidth == 320)  && (dwBPP == 16))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x10e;
+	}
+
+	if ((dwHeight == 200) && (dwWidth == 320)  && (dwBPP == 32))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x10f;
+	}
+
+
+	/* 640x400   8 */
+	if ((dwHeight == 400) && (dwWidth == 640)  && (dwBPP == 8))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x100;
+	}
+
+    /* 640x480   8, 15, 16 , 32*/
+	if ((dwHeight == 480) && (dwWidth == 640)  && (dwBPP == 8))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x101;
+	}
+
+	if ((dwHeight == 480) && (dwWidth == 640)  && (dwBPP == 15))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x110;
+	}
+
+	if ((dwHeight == 480) && (dwWidth == 640)  && (dwBPP == 16))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x111;
+	}
+
+	if ((dwHeight == 480) && (dwWidth == 640)  && (dwBPP == 32))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x112;
+	}
+
+	/* 800x600  4, 8, 15, 16 , 32*/
+	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 4))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x102;
+	}
+	
+	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 8))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x103;
+	}
+
+	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 15))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x113;
+	}
+
+	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 16))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x114;
+	}
+
+	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 32))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x115;
+	}
+
+    /* 1024x768 8, 15, 16 , 32*/
+
+	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 4))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x104;
+	}
+
+	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 8))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x105;
+	}
+
+	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 15))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x116;
+	}
+	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 16))  
+	{          
+	    This->mDdSetMode.dwModeIndex  = 0x117;
+	}
+
+	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 32))  
+	{          
+	    This->mDdSetMode.dwModeIndex   = 0x118;
+	}
+
+	/* not coding for 1280x1024 */
+	
+
+	if (This->mDdSetMode.SetMode(&This->mDdSetMode)==DDHAL_DRIVER_HANDLED);
     {
-	    This->mDdSetMode.ddRVal = DDERR_NODRIVERSUPPORT;
+		
+		//if (This->mDdSetMode.ddRVal == DD_OK)
+	    //{
+	    //	// DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
+	    //	/* FIXME fill the This->DirectDrawGlobal.vmiData right */
+	    //}
+
+		return This->mDdSetMode.ddRVal;
 	}
-			 		    
-	if (This->mDdSetMode.ddRVal == DD_OK)
-	{
-		DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
-		/* FIXME fill the This->DirectDrawGlobal.vmiData right */
-	}
-	     
-	return This->mDdSetMode.ddRVal;
+	return  DDERR_NODRIVERSUPPORT;	 		    	
 }
 
 
