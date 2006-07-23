@@ -16,6 +16,10 @@ HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface);
 HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW* iface);
 HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
 
+/* DirectDraw Cleanup code only internal use */
+VOID Cleanup(LPDIRECTDRAW7 iface);
+
+
 /* own macro to alloc memmory */
 #define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m) 
 #define DxHeapMemFree(p)   HeapFree(GetProcessHeap(), 0, p);

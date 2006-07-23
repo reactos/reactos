@@ -18,6 +18,7 @@
 	<file>main.c</file>
 	<file>regsvr.c</file>
 	<file>startup.c</file>
+	<file>cleanup.c</file>
 
       <file>clipper.c</file>
 	<file>color.c</file>

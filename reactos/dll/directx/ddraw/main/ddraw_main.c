@@ -138,8 +138,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
 				ChangeDisplaySettings(NULL, 0);
 			}
             
-			Hal_DirectDraw_Release(iface);
-			//Hel_DirectDraw_Release(iface);            			
+			Cleanup(iface);					
             if (This!=NULL)
             {              
 			    HeapFree(GetProcessHeap(), 0, This);
