@@ -10,11 +10,11 @@
 #include <d3dhal.h>
 #include <ddrawgdi.h>
 
+/* DirectDraw startup code only internal use  */
 HRESULT WINAPI StartDirectDraw(LPDIRECTDRAW* iface);
 HRESULT WINAPI StartDirectDrawHal(LPDIRECTDRAW* iface);
+HRESULT WINAPI StartDirectDrawHel(LPDIRECTDRAW* iface);
 HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface, REFIID id, BOOL ex);
-
-HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 );
 
 /* own macro to alloc memmory */
 #define DxHeapMemAlloc(m)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, m) 
