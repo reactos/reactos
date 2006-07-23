@@ -172,8 +172,7 @@ typedef struct
 typedef struct 
 {
 	IDirectDrawPaletteVtbl* lpVtbl;
-    LONG ref;
-
+    
     IDirectDrawImpl* owner;
 	DDRAWI_DDRAWPALETTE_GBL DDPalette;    
 } IDirectDrawPaletteImpl;
