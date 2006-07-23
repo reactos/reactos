@@ -400,7 +400,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                            (PVOID*)&Parent,
                                            NULL);
         if (!NT_SUCCESS(Status)) return Status;
-        PSREFTRACE(ParentProcess);
+        PSREFTRACE(Parent);
 
         /* If this process should be in a job but the parent isn't */
         if ((InJob) && (!Parent->Job))
@@ -1426,7 +1426,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         /* Dereference the Process */
         ObDereferenceObject(Process);
         PSREFTRACE(Process);
-        PSREFTRACE(Thread);
+        if (Thread) PSREFTRACE(Thread);
     }
     else
     {

@@ -9,20 +9,19 @@
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
 // Io:
-//  - Add support for Fast Dispatch I/O.
-//  - Verify ShareAccess APIs, XP added some new semantics.
-//  - Add Access Checks in IopParseDevice.
-//  - Add validation checks in IoCreateFile.
 //  - Fix double-reference in IopCreateFile.
-//  - Add tracing to file.c
-//  - See why queueing IRPs and cancelling them causes crashes
 //  - Add SEH to some places where it's missing (MDLs, etc) (iofunc).
 //  - Add a generic Cleanup/Exception Routine (iofunc).
-//  - Add probe/alignment checks for Query/Set routines.
+//  - See why queueing IRPs and cancelling them causes crashes
 //  - Add another parameter to IopCleanupFailedIrp.
-//  - Add support for Fast Dispatch I/O.
-//  - Add support for some fast-paths when querying/setting data.
+//  - Add Access Checks in IopParseDevice.
+//  - Add validation checks in IoCreateFile.
+//  - Add probe/alignment checks for Query/Set routines.
 //  - Add tracing to iofunc.c
+//  - Add tracing to file.c
+//  - Add support for some fast-paths when querying/setting data.
+//  - Verify ShareAccess APIs, XP added some new semantics.
+//  - Add support for Fast Dispatch I/O.
 //
 // Ps:
 //  - Figure out why processes don't die.

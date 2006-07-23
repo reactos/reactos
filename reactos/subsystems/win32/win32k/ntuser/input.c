@@ -169,7 +169,7 @@ ScreenSaverThreadMain(PVOID StartContext)
    NTSTATUS Status;
    BOOL FirstTime = TRUE;
 
-
+    return;
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
 
