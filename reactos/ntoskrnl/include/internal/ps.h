@@ -49,7 +49,7 @@
 #endif
 #define PSREFTRACE(x)                                       \
     PSTRACE(PS_REF_DEBUG,                                   \
-            "Pointer Count [%p] @%lx: %lx\n",               \
+            "Pointer Count [%p] @%d: %lx\n",                \
             x,                                              \
             __LINE__,                                       \
             OBJECT_TO_OBJECT_HEADER(x)->PointerCount);

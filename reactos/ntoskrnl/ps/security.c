@@ -51,8 +51,7 @@ PspDeleteThreadSecurity(IN PETHREAD Thread)
     {
         /* Free it */
         ExFreePool(Thread->ImpersonationInfo);
-        InterlockedAnd((PLONG)&Thread->CrossThreadFlags,
-                       ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
+        PspClearCrossThreadFlag(Thread, CT_ACTIVE_IMPERSONATION_INFO_BIT);
         Thread->ImpersonationInfo = NULL;
     }
 }
@@ -537,8 +536,7 @@ PsRevertThreadToSelf(IN PETHREAD Thread)
         if (Thread->ActiveImpersonationInfo)
         {
             /* Disable impersonation */
-            InterlockedAnd((PLONG)&Thread->CrossThreadFlags,
-                           ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
+            PspClearCrossThreadFlag(Thread, CT_ACTIVE_IMPERSONATION_INFO_BIT);
 
             /* Get the token */
             Token = Thread->ImpersonationInfo->Token;
@@ -584,8 +582,8 @@ PsImpersonateClient(IN PETHREAD Thread,
             if (Thread->ActiveImpersonationInfo)
             {
                 /* Disable impersonation */
-                InterlockedAnd((PLONG)&Thread->CrossThreadFlags,
-                               ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
+                PspClearCrossThreadFlag(Thread,
+                                        CT_ACTIVE_IMPERSONATION_INFO_BIT);
 
                 /* Get the token */
                 OldToken = Thread->ImpersonationInfo->Token;
@@ -632,8 +630,7 @@ PsImpersonateClient(IN PETHREAD Thread,
         else
         {
             /* Otherwise, enable impersonation */
-            InterlockedOr((PLONG)&Thread->CrossThreadFlags,
-                          CT_ACTIVE_IMPERSONATION_INFO_BIT);
+            PspSetCrossThreadFlag(Thread, CT_ACTIVE_IMPERSONATION_INFO_BIT);
         }
 
         /* Now fill it out */
@@ -880,14 +877,12 @@ PsRestoreImpersonation(IN PETHREAD Thread,
         Impersonation->Token = ImpersonationState->Token;
 
         /* Enable impersonation */
-        InterlockedOr((PLONG)&Thread->CrossThreadFlags,
-                      CT_ACTIVE_IMPERSONATION_INFO_BIT);
+        PspSetCrossThreadFlag(Thread, CT_ACTIVE_IMPERSONATION_INFO_BIT);
     }
     else
     {
         /* Disable impersonation */
-        InterlockedAnd((PLONG)&Thread->CrossThreadFlags,
-                       ~CT_ACTIVE_IMPERSONATION_INFO_BIT);
+        PspClearCrossThreadFlag(Thread, CT_ACTIVE_IMPERSONATION_INFO_BIT);
     }
 
     /* Unlock the thread */

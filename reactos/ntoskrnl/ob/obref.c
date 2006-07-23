@@ -150,7 +150,7 @@ ObFastReferenceObject(IN PEX_FAST_REF FastRef)
     {
         /* Get the current count */
         Value = FastRef->Value;
-        if (!Value & MAX_FAST_REFS) break;
+        if (!(Value & MAX_FAST_REFS)) break;
 
         /* Increase the reference count */
         NewValue = Value - 1;

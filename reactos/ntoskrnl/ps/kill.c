@@ -905,7 +905,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
         ASSERT_IRQL(PASSIVE_LEVEL);
 
         /* Mark it as terminated */
-        InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_TERMINATED_BIT);
+        PspSetCrossThreadFlag(Thread, CT_TERMINATED_BIT);
 
         /* Directly terminate the thread */
         PspExitThread(ExitStatus);

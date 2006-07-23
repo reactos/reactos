@@ -19,6 +19,14 @@
 #define PspQuantumLengthFromMask(Mask)                      \
     ((Mask) & 48)
 
+//
+// Cross Thread Flag routines
+//
+#define PspSetCrossThreadFlag(Thread, Flag)                 \
+    InterlockedOr((PLONG)&Thread->CrossThreadFlags, Flag)
+#define PspClearCrossThreadFlag(Thread, Flag)               \
+    InterlockedAnd((PLONG)&Thread->CrossThreadFlags, ~Flag)
+
 VOID
 FORCEINLINE
 PspRunCreateThreadNotifyRoutines(IN PETHREAD CurrentThread,

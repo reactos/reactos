@@ -293,7 +293,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     {
         /* System Thread */
         Thread->StartAddress = StartRoutine;
-        InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_SYSTEM_THREAD_BIT);
+        PspSetCrossThreadFlag(Thread, CT_SYSTEM_THREAD_BIT);
 
         /* Let the kernel intialize the Thread */
         Status = KeInitThread(&Thread->Tcb,
@@ -380,7 +380,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Access state failed, thread is dead */
-        InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+        PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
 
         /* If we were suspended, wake it up */
         if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -422,7 +422,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             Status = _SEH_GetExceptionCode();
 
             /* Thread insertion failed, thread is dead */
-            InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+            PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
 
             /* If we were suspended, wake it up */
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -444,7 +444,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     else
     {
         /* Thread insertion failed, thread is dead */
-        InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+        PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
 
         /* If we were suspended, wake it up */
         if (CreateSuspended) KeResumeThread(&Thread->Tcb);
@@ -465,7 +465,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         if (!NT_SUCCESS(Status))
         {
             /* Thread insertion failed, thread is dead */
-            InterlockedOr((PLONG)&Thread->CrossThreadFlags, CT_DEAD_THREAD_BIT);
+            PspSetCrossThreadFlag(Thread, CT_DEAD_THREAD_BIT);
 
             /* If we were suspended, wake it up */
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
