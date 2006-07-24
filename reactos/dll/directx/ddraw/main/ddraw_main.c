@@ -1108,8 +1108,12 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
 	return This->mDdSetMode.ddRVal;
 }
 
-
-HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
                                                    HANDLE h)
 {
     DX_WINDBG_trace();
@@ -1133,7 +1137,12 @@ HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD d
 	return  DDERR_NODRIVERSUPPORT;	 
 }
 
-HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
                    LPDWORD total, LPDWORD free)                                               
 {    
     DX_WINDBG_trace();
@@ -1165,65 +1174,10 @@ HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS
 	return  DDERR_NODRIVERSUPPORT;	 
 }
 
-
-
-
-
-
-
-
-
-
-
 /*
- * IMPLEMENT
- * Status this api is finish and is 100% correct 
+ * Stub
+ * Status todo
  */
-
-
-
-
-// This function is exported by the dll
-HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
-                                        LPDIRECTDRAWCLIPPER* lplpDDClipper, LPUNKNOWN pUnkOuter)
-{
-    DX_WINDBG_trace();
-
-    return Main_DirectDraw_CreateClipper(NULL, dwFlags, lplpDDClipper, pUnkOuter);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/********************************** Stubs **********************************/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                                   
 HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
                                                 LPDIRECTDRAWSURFACE7 *lpDDS)
 {  
@@ -1231,18 +1185,30 @@ HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
     DX_STUB;
 }
 
+/*
+ * Stub
+ * Status todo
+ */
 HRESULT WINAPI Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW7 iface)
 {
     DX_WINDBG_trace();
     DX_STUB;
 }
 
+/*
+ * Stub
+ * Status todo
+ */
 HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW7 iface) 
 {
     DX_WINDBG_trace();
     DX_STUB;
 }
 
+/*
+ * Stub
+ * Status todo
+ */
 HRESULT WINAPI Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW7 iface,
                    LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
 {    
@@ -1250,6 +1216,10 @@ HRESULT WINAPI Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW7 iface,
     DX_STUB;
 }
 
+/*
+ * Stub
+ * Status todo
+ */
 HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes,
                   DWORD dwNumModes, DWORD dwFlags)
 {
@@ -1257,11 +1227,16 @@ HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes,
     DX_STUB;
 }
 
+/*
+ * Stub
+ * Status todo
+ */
 HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b)
 {  
     DX_WINDBG_trace();
     DX_STUB;
 }
+
 
 IDirectDraw7Vtbl DirectDraw7_Vtable =
 {

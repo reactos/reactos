@@ -27,8 +27,7 @@
 	<file>videoport.c</file>
 	<file>kernel.c</file>
 
-	<directory name="hal">
-		<file>ddraw_hal.c</file>
+	<directory name="hal">		
 		<file>surface_hal.c</file>
 	</directory>
 
@@ -37,8 +36,7 @@
 		<file>surface_main.c</file>				
 	</directory>
 
-	<directory name="soft">
-		<file>ddraw_hel.c</file>
+	<directory name="soft">		
 		<file>surface_hel.c</file>
             <file>surface_callbacks_hel.c</file>
 	</directory>

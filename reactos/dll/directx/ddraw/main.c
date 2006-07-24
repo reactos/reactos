@@ -14,6 +14,15 @@
 #include "d3dhal.h"
 
 
+// This function is exported by the dll
+HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
+                                        LPDIRECTDRAWCLIPPER* lplpDDClipper, LPUNKNOWN pUnkOuter)
+{
+    DX_WINDBG_trace();
+
+    return Main_DirectDraw_CreateClipper(NULL, dwFlags, lplpDDClipper, pUnkOuter);
+}
+
 /*
  * IMPLEMENT
  * Status this api is finish and is 100% correct 
