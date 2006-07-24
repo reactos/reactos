@@ -1022,7 +1022,11 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 	BOOL dummy = TRUE;
-	DWORD ret;
+	DEVMODE DevMode; 	
+    int iMode=0;
+    int Width=0;
+    int Height=0;
+    int BPP=0;
 	
 	/* FIXME check the refresrate if it same if it not same do the mode switch */
 	if ((This->mDDrawGlobal.vmiData.dwDisplayHeight == dwHeight) && 
@@ -1033,29 +1037,49 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
 		  return DD_OK;
 		}
 
+	if (This->mDdSetMode.SetMode == NULL)
+	{
+		return  DDERR_NODRIVERSUPPORT;	 		    	
+	}
+
 	/* Check use the Hal or Hel for SetMode */
-	if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETMODE)
+	// this only for exclusive mode
+	if(!(This->cooperative_level & DDSCL_EXCLUSIVE))
 	{
-		ret = Hal_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);   
-        
-    }    
-	else 
-	{
-		ret = Hel_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
+   		return DDERR_NOEXCLUSIVEMODE;
 	}
-	    
-	if (ret == DD_OK)
-	{
-		DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
-		/* FIXME fill the This->DirectDrawGlobal.vmiData right */
+
+	DevMode.dmSize = (WORD)sizeof(DEVMODE);
+	DevMode.dmDriverExtra = 0;
+
+    while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0 ) != 0)
+    {
+	 
+       if ((dwWidth == DevMode.dmPelsWidth) && (dwHeight == DevMode.dmPelsHeight) && ( dwBPP == DevMode.dmBitsPerPel))
+	   {
+		  Width = DevMode.dmPelsWidth;
+		  Height = DevMode.dmPelsHeight;
+          BPP = DevMode.dmBitsPerPel;		  
+          break;   
+	   }		   
+	   iMode++;		   
+    }
+
+	if ((dwWidth != DevMode.dmPelsWidth) || (dwHeight != DevMode.dmPelsHeight) || ( dwBPP != DevMode.dmBitsPerPel))	
+	{	
+		return DDERR_UNSUPPORTEDMODE;
 	}
-	     
-     //This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC( (HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd);
+	
+	This->mDdSetMode.ddRVal = DDERR_NOTPALETTIZED;
+	
+    This->mDdSetMode.dwModeIndex = iMode; 
+	This->mDdSetMode.SetMode(&This->mDdSetMode);
+	
+	DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
 
-
-
-  
-	return ret;
+	/* FIXME fill the This->DirectDrawGlobal.vmiData right */		     
+     //This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC( (HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd);  
+	return This->mDdSetMode.ddRVal;
 }
 
 

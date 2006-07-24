@@ -69,32 +69,6 @@ HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,H
 }
 
 
-HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
-                                                    DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
-{
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;	
-	DDHAL_SETMODEDATA mode;
 
-    if (!(This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETMODE)) 
-    {
-        return DDERR_NODRIVERSUPPORT;
-    }
-    
-    mode.lpDD = &This->mDDrawGlobal;
-    mode.ddRVal = DDERR_NODRIVERSUPPORT;
-
-	
-
-    // FIXME : add search for which mode.ModeIndex we should use 
-    // FIXME : fill the mode.inexcl; 
-    // FIXME : fill the mode.useRefreshRate; 
-
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.SetMode(&mode) != DDHAL_DRIVER_HANDLED)
-    {
-        return DDERR_NODRIVERSUPPORT;
-    } 
-	   
-	return mode.ddRVal;
-}
 
 
