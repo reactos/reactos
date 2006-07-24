@@ -125,7 +125,7 @@ Main_DDrawSurface_AddAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
    That = (IDirectDrawSurfaceImpl*)pAttach;
    
    //FIXME Have I put This and That in right order ?? DdAttachSurface(from, to) 
-   return DdAttachSurface( That->Surf->mpPrimaryLocals[0],This->Surf->mpPrimaryLocals[0]);
+   return DdAttachSurface( That->Owner->mpPrimaryLocals[0],This->Owner->mpPrimaryLocals[0]);
 }
 
 /* MSDN: "not currently implemented." */
@@ -274,7 +274,7 @@ Main_DDrawSurface_GetCaps(LPDIRECTDRAWSURFACE7 iface, LPDDSCAPS2 pCaps)
     This = (IDirectDrawSurfaceImpl*)iface;        
      
     RtlZeroMemory(pCaps,sizeof(DDSCAPS2));
-    pCaps->dwCaps = This->Surf->mddsdPrimary.ddsCaps.dwCaps;
+    pCaps->dwCaps = This->Owner->mddsdPrimary.ddsCaps.dwCaps;
     
     return DD_OK;
 }
@@ -321,14 +321,14 @@ Main_DDrawSurface_GetDC(LPDIRECTDRAWSURFACE7 iface, HDC *phDC)
       for now we aussme the surface exits and create the hDC for it
     */
      
-    if ((HDC)This->Surf->mPrimaryLocal.hDC == NULL)
+    if ((HDC)This->Owner->mPrimaryLocal.hDC == NULL)
     {
-         This->Surf->mPrimaryLocal.hDC = (ULONG_PTR)GetDC((HWND)This->Owner->mDDrawGlobal.lpExclusiveOwner->hWnd);
-        *phDC = (HDC)This->Surf->mPrimaryLocal.hDC;
+         This->Owner->mPrimaryLocal.hDC = (ULONG_PTR)GetDC((HWND)This->Owner->mDDrawGlobal.lpExclusiveOwner->hWnd);
+        *phDC = (HDC)This->Owner->mPrimaryLocal.hDC;
     }
     else
     {
-       *phDC =  (HDC)This->Surf->mpPrimaryLocals[0]->hDC;
+       *phDC =  (HDC)This->Owner->mpPrimaryLocals[0]->hDC;
     }
 
     return DD_OK;
@@ -420,7 +420,7 @@ Main_DDrawSurface_GetSurfaceDesc(LPDIRECTDRAWSURFACE7 iface,
     }
     
     RtlZeroMemory(pDDSD,dwSize);
-    memcpy(pDDSD, &This->Surf->mddsdPrimary, sizeof(DDSURFACEDESC));
+    memcpy(pDDSD, &This->Owner->mddsdPrimary, sizeof(DDSURFACEDESC));
     pDDSD->dwSize = dwSize;
    
     return DD_OK;
@@ -482,7 +482,7 @@ Main_DDrawSurface_ReleaseDC(LPDIRECTDRAWSURFACE7 iface, HDC hDC)
    
     /* FIXME check if surface exits or not */
 
-    if ((HDC)This->Surf->mPrimaryLocal.hDC == NULL)
+    if ((HDC)This->Owner->mPrimaryLocal.hDC == NULL)
     {
         return DDERR_GENERIC;         
     }
