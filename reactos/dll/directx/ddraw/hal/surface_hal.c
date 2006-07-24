@@ -35,9 +35,9 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
               return DDERR_NODRIVERSUPPORT;
         }
 
-        mDdBlt.lpDDDestSurface = This->Owner->mpPrimaryLocals[0];
+        mDdBlt.lpDDDestSurface = This->Surf->mpPrimaryLocals[0];
 
-        if (!DdResetVisrgn(This->Owner->mpPrimaryLocals[0], NULL)) 
+        if (!DdResetVisrgn(This->Surf->mpPrimaryLocals[0], NULL)) 
         {      
               return DDERR_NOGDI;
         }
@@ -113,7 +113,7 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
    Lock.lpDD = &This->Owner->mDDrawGlobal;   
    Lock.lpSurfData = NULL;
      
-   if (!DdResetVisrgn(&This->Owner->mPrimaryLocal, NULL)) 
+   if (!DdResetVisrgn(&This->Surf->mPrimaryLocal, NULL)) 
    {
       OutputDebugStringA("Here DdResetVisrgn lock");
       return DDERR_UNSUPPORTED;
@@ -138,13 +138,13 @@ HRESULT Hal_DDrawSurface_Lock(LPDIRECTDRAWSURFACE7 iface, LPRECT prect, LPDDSURF
         {
             RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
             // FIXME the interanl mddsdPrimary shall be DDSURFACEDESC2
-            memcpy(pDDSD,&This->Owner->mddsdPrimary,sizeof(DDSURFACEDESC));
+            memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC2));
             pDDSD->dwSize = sizeof(DDSURFACEDESC2);
         }
         if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
         {
             RtlZeroMemory(pDDSD,sizeof(DDSURFACEDESC));
-            memcpy(pDDSD,&This->Owner->mddsdPrimary,sizeof(DDSURFACEDESC));
+            memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
             pDDSD->dwSize = sizeof(DDSURFACEDESC);
         }
 

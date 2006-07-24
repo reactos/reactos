@@ -94,25 +94,27 @@ typedef struct
     DDHAL_GETSCANLINEDATA mDdGetScanLine;
     DDHAL_SETEXCLUSIVEMODEDATA mDdSetExclusiveMode;
     DDHAL_FLIPTOGDISURFACEDATA mDdFlipToGDISurface;
-
-    /* Primarey surface we must reach it from every where */
-    DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
-    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
-    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
-    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
-    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
-    DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
-
-    DDSURFACEDESC2 mddsdPrimary;
-
+   
 	/* adding a switch */
 	DWORD devicetype;
+
+	 /* Primarey surface we must reach it from every where */
+	DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
+	DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
 
 } IDirectDrawImpl; 
 
 /******** Surface Object ********/
 typedef struct 
 {    
+	/* Primarey surface we must reach it from every where */    
+    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
+    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
+    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
+    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;    
+	DDSURFACEDESC2 mddsdPrimary;
+
+
 
     DDRAWI_DDRAWSURFACE_LCL *mpInUseSurfaceLocals[1];
     
@@ -138,12 +140,6 @@ typedef struct
 	IDirectDrawSurface3Vtbl* lpVtbl_v3;
    
     IDirectDrawImpl* Owner;
-
-	DDRAWI_DDRAWSURFACE_GBL Global; 
-	DDRAWI_DDRAWSURFACE_MORE More; 
-	DDRAWI_DDRAWSURFACE_LCL Local;
-	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; 
-	DDSURFACEDESC ddsd; 
 
     DxSurf *Surf;
 
