@@ -364,6 +364,11 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
   DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
   This->mHALInfo.GetDriverInfo(&DriverInfo);
 
+  if (This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY)
+  {
+     This->mDdGetDriverMemory.GetAvailDriverMemory = This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory;
+  }
+
   /* Setup global surface */   
   /*This->mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
   This->mPrimaryGlobal.lpDD       = &This->mDDrawGlobal;
@@ -413,7 +418,7 @@ StartDirectDrawHel(LPDIRECTDRAW* iface)
 
     This->mCallbacks.HELDD.dwFlags += DDHAL_CB32_FLIPTOGDISURFACE;
     This->mCallbacks.HELDD.FlipToGDISurface = HelDdFlipToGDISurface;
-   
+	   
 	return DD_OK;
 }
 

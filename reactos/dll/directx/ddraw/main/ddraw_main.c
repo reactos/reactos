@@ -920,17 +920,20 @@ Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 	return  DDERR_NODRIVERSUPPORT;	 		    	       
 }
 
-
-
-
-
-
-
-
+/*
+ * Stub
+ * Status todo
+ */
+HRESULT WINAPI 
+Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL status)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
 
 /*
  * IMPLEMENT
- * Status this api is finish and is 100% correct 
+ * Status ok
  */
 HRESULT 
 WINAPI 
@@ -957,7 +960,25 @@ Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
     return DD_OK;
 }
 
-HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
+{
+   DX_WINDBG_trace();
+
+   ChangeDisplaySettings(NULL, 0);
+   return DD_OK;
+}
+
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
 {
     // TODO:                                                            
     // - create a scaner that check which driver we should get the HDC from    
@@ -1015,7 +1036,12 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
     return SetExclusiveMode.ddRVal;               
 }
 
-HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
                                                                 DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
     DX_WINDBG_trace();
@@ -1083,9 +1109,76 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
 }
 
 
+HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
+                                                   HANDLE h)
+{
+    DX_WINDBG_trace();
+	
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    
+	if (This->mDdWaitForVerticalBlank.WaitForVerticalBlank == NULL)
+	{
+		return  DDERR_NODRIVERSUPPORT;	 		    	
+	}
+
+	This->mDdWaitForVerticalBlank.dwFlags = dwFlags;
+    This->mDdWaitForVerticalBlank.hEvent = (DWORD)h;
+    This->mDdWaitForVerticalBlank.ddRVal = DDERR_NOTPALETTIZED;
+
+	if (This->mDdWaitForVerticalBlank.WaitForVerticalBlank(&This->mDdWaitForVerticalBlank)==DDHAL_DRIVER_HANDLED);
+    {					
+		return This->mDdWaitForVerticalBlank.ddRVal;
+	}
+
+	return  DDERR_NODRIVERSUPPORT;	 
+}
+
+HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+                   LPDWORD total, LPDWORD free)                                               
+{    
+    DX_WINDBG_trace();
+	DDHAL_GETAVAILDRIVERMEMORYDATA  mem;
+
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    
+	/* Only Hal version exists acodring msdn */
+	if (!(This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY))
+	{
+		return  DDERR_NODRIVERSUPPORT;	 		    	
+	}
+
+	mem.lpDD = &This->mDDrawGlobal;    
+    mem.ddRVal = DDERR_NOTPALETTIZED;
+
+	if (This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem) == DDHAL_DRIVER_HANDLED);
+    {
+		ddscaps->dwCaps = mem.DDSCaps.dwCaps;
+        ddscaps->dwCaps2 = mem.ddsCapsEx.dwCaps2;
+        ddscaps->dwCaps3 = mem.ddsCapsEx.dwCaps3;
+        ddscaps->dwCaps4 = mem.ddsCapsEx.dwCaps4;
+        *total = mem.dwTotal;
+        *free = mem.dwFree;
+
+		return mem.ddRVal;
+	}
+
+	return  DDERR_NODRIVERSUPPORT;	 
+}
 
 
 
+
+
+
+
+
+
+
+
+/*
+ * IMPLEMENT
+ * Status this api is finish and is 100% correct 
+ */
 
 
 
@@ -1105,48 +1198,12 @@ HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags,
 
 
 
-HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
-                                                   HANDLE h)
-{
-    DX_WINDBG_trace();
-
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK) 
-    {
-        return Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);        
-    }
-
-    return Hel_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);        
-}
-
-HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
-                   LPDWORD total, LPDWORD free)                                               
-{    
-    DX_WINDBG_trace();
-
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-	
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY) 
-    {
-        return Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
-    }
-
-    return Hel_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
-}
 
 
 
 
 
-HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
-{
-   DX_WINDBG_trace();
 
-   ChangeDisplaySettings(NULL, 0);
-   return DD_OK;
-}
 
 /********************************** Stubs **********************************/
 
@@ -1163,11 +1220,7 @@ HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 
 
 
-HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL status)
-{
-    DX_WINDBG_trace();
-    DX_STUB;
-}
+
 
 
                                                    

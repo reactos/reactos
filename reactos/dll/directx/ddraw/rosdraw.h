@@ -97,7 +97,7 @@ typedef struct
     DDHAL_GETSCANLINEDATA mDdGetScanLine;
     DDHAL_SETEXCLUSIVEMODEDATA mDdSetExclusiveMode;
     DDHAL_FLIPTOGDISURFACEDATA mDdFlipToGDISurface;
-
+	
     DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
 
 	/* adding a switch */
