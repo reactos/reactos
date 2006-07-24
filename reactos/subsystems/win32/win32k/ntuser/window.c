@@ -1508,17 +1508,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        RETURN(NULL);
    }
 
-   if (Class->System)
-   {
-       if (hWndParent)
-       {
-           /* HACK 
-            * use supplied window handle for notifications 
-            */
-           ParentWindowHandle = hWndParent;
-       }
-   }
-
    WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
 
    //FIXME: Reference thread/desktop instead
