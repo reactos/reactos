@@ -27,10 +27,7 @@ HRESULT Hel_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,H
 	DX_STUB;
 }
 
-HRESULT Hel_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
-{
-	DX_STUB;
-}
+
 
 
 

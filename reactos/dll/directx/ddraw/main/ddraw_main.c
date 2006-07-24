@@ -806,6 +806,127 @@ Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
 }
 
 
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD) 
+{   
+    DX_WINDBG_trace();
+
+    IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
+
+    if (pDDSD == NULL)
+    {
+      return DD_FALSE;
+    }
+        
+    pDDSD->dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_REFRESHRATE | DDSD_WIDTH; 
+    pDDSD->dwHeight  = This->mDDrawGlobal.vmiData.dwDisplayHeight;
+    pDDSD->dwWidth = This->mDDrawGlobal.vmiData.dwDisplayWidth; 
+    pDDSD->lPitch  = This->mDDrawGlobal.vmiData.lDisplayPitch;
+    pDDSD->dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
+    pDDSD->dwAlphaBitDepth = This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth;
+
+    RtlCopyMemory(&pDDSD->ddpfPixelFormat,&This->mDDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
+    RtlCopyMemory(&pDDSD->ddsCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
+    
+    RtlCopyMemory(&pDDSD->ddckCKDestOverlay,&This->mDDrawGlobal.ddckCKDestOverlay,sizeof(DDCOLORKEY));
+    RtlCopyMemory(&pDDSD->ddckCKSrcOverlay,&This->mDDrawGlobal.ddckCKSrcOverlay,sizeof(DDCOLORKEY));
+
+    /* have not check where I should get hold of this info yet
+	DWORD  dwBackBufferCount;    
+    DWORD  dwReserved;
+    LPVOID lpSurface;    
+    DDCOLORKEY    ddckCKDestBlt;    
+    DDCOLORKEY    ddckCKSrcBlt;  
+    DWORD         dwTextureStage;
+    */
+  
+    return DD_OK;
+}
+
+/*
+ * Stub
+ * Status todo
+ */
+HRESULT WINAPI 
+Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD pNumCodes, LPDWORD pCodes)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+/*
+ * Stub
+ * Status todo
+ */
+HRESULT WINAPI 
+Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface, 
+                                             LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7 iface,LPDWORD freq)
+{  
+    DX_WINDBG_trace();
+
+    IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
+
+    if (freq == NULL)
+    {
+        return DD_FALSE;
+    }
+
+    *freq = This->mDDrawGlobal.dwMonitorFrequency;
+    return DD_OK;
+}
+
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
+{    
+
+	DX_WINDBG_trace();
+	
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+    *lpdwScanLine = 0;
+
+	if (This->mDdGetScanLine.GetScanLine == NULL)
+	{
+		return  DDERR_NODRIVERSUPPORT;	 		    	
+	}
+
+	This->mDdGetScanLine.ddRVal = DDERR_NOTPALETTIZED;
+	This->mDdGetScanLine.dwScanLine = 0;
+
+	if (This->mDdGetScanLine.GetScanLine(&This->mDdGetScanLine)==DDHAL_DRIVER_HANDLED);
+    {			
+		*lpdwScanLine = This->mDdGetScanLine.dwScanLine;
+		return This->mDdGetScanLine.ddRVal;
+	}
+
+	return  DDERR_NODRIVERSUPPORT;	 		    	       
+}
+
+
+
+
+
+
+
+
 
 /*
  * IMPLEMENT
@@ -959,42 +1080,6 @@ HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags,
 
 
 
-HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD) 
-{   
-    DX_WINDBG_trace();
-
-    IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
-
-    if (pDDSD == NULL)
-    {
-      return DD_FALSE;
-    }
-    
-    
-    pDDSD->dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_REFRESHRATE | DDSD_WIDTH; 
-    pDDSD->dwHeight  = This->mDDrawGlobal.vmiData.dwDisplayHeight;
-    pDDSD->dwWidth = This->mDDrawGlobal.vmiData.dwDisplayWidth; 
-    pDDSD->lPitch  = This->mDDrawGlobal.vmiData.lDisplayPitch;
-    pDDSD->dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
-    pDDSD->dwAlphaBitDepth = This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth;
-
-    RtlCopyMemory(&pDDSD->ddpfPixelFormat,&This->mDDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
-    RtlCopyMemory(&pDDSD->ddsCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
-    
-    RtlCopyMemory(&pDDSD->ddckCKDestOverlay,&This->mDDrawGlobal.ddckCKDestOverlay,sizeof(DDCOLORKEY));
-    RtlCopyMemory(&pDDSD->ddckCKSrcOverlay,&This->mDDrawGlobal.ddckCKSrcOverlay,sizeof(DDCOLORKEY));
-
-    /* have not check where I should get hold of this info yet
-	DWORD  dwBackBufferCount;    
-    DWORD  dwReserved;
-    LPVOID lpSurface;    
-    DDCOLORKEY    ddckCKDestBlt;    
-    DDCOLORKEY    ddckCKSrcBlt;  
-    DWORD         dwTextureStage;
-    */
-  
-    return DD_OK;
-}
 
 HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
                                                    HANDLE h)
@@ -1027,34 +1112,9 @@ HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS
     return Hel_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
 }
 
-HRESULT WINAPI Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7 iface,LPDWORD freq)
-{  
-    DX_WINDBG_trace();
 
-    IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
 
-    if (freq == NULL)
-    {
-        return DD_FALSE;
-    }
 
-    *freq = This->mDDrawGlobal.dwMonitorFrequency;
-    return DD_OK;
-}
-
-HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
-{    
-    DX_WINDBG_trace();
-
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_GETSCANLINE) 
-    {
-        return Hal_DirectDraw_GetScanLine( iface,  lpdwScanLine);         
-    }
-
-    return Hel_DirectDraw_GetScanLine( iface,  lpdwScanLine);
-}
 
 HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 {
@@ -1075,18 +1135,9 @@ HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 
 
 
-HRESULT WINAPI Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD pNumCodes, LPDWORD pCodes)
-{
-    DX_WINDBG_trace();
-    DX_STUB;
-}
 
-HRESULT WINAPI Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface, 
-                                             LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface)
-{
-    DX_WINDBG_trace();
-    DX_STUB;
-}
+
+
 
 HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL status)
 {
