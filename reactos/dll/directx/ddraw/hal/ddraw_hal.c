@@ -11,6 +11,8 @@
 #include "rosdraw.h"
 
 
+
+
 HRESULT 
 Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
                    LPDWORD total, LPDWORD free)                                               
@@ -42,7 +44,29 @@ Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
     return mem.ddRVal;
 }
 
+HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,HANDLE h) 
+{
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
+    DDHAL_WAITFORVERTICALBLANKDATA WaitVectorData;
+
+    if (!(This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)) 
+    {
+        return DDERR_NODRIVERSUPPORT;
+    }
+      
+    WaitVectorData.lpDD = &This->mDDrawGlobal;
+    WaitVectorData.dwFlags = dwFlags;
+    WaitVectorData.hEvent = (DWORD)h;
+    WaitVectorData.ddRVal = DDERR_NOTPALETTIZED;
+
+    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.WaitForVerticalBlank(&WaitVectorData) != DDHAL_DRIVER_HANDLED)
+    {
+       return DDERR_NODRIVERSUPPORT;
+    }
+
+    return WaitVectorData.ddRVal;
+}
 
 HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 {
@@ -67,31 +91,36 @@ HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
     return  GetScan.ddRVal;
 }
 
-HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
+
+
+
+
+HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
+                                                    DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;	
+	DDHAL_SETMODEDATA mode;
 
-    DDHAL_FLIPTOGDISURFACEDATA FlipGdi;
-
-    if (!(This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE)) 
+    if (!(This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETMODE)) 
     {
         return DDERR_NODRIVERSUPPORT;
     }
-
-    FlipGdi.lpDD = &This->mDDrawGlobal;
-    FlipGdi.ddRVal = DDERR_NOTPALETTIZED;
-
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.FlipToGDISurface(&FlipGdi) != DDHAL_DRIVER_HANDLED)
-    {
-       return DDERR_NODRIVERSUPPORT;
-    }
     
-    /* FIXME where should FlipGdi.dwToGDI be fill in */
-    return  FlipGdi.ddRVal;    
+    mode.lpDD = &This->mDDrawGlobal;
+    mode.ddRVal = DDERR_NODRIVERSUPPORT;
+
+	
+
+    // FIXME : add search for which mode.ModeIndex we should use 
+    // FIXME : fill the mode.inexcl; 
+    // FIXME : fill the mode.useRefreshRate; 
+
+    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.SetMode(&mode) != DDHAL_DRIVER_HANDLED)
+    {
+        return DDERR_NODRIVERSUPPORT;
+    } 
+	   
+	return mode.ddRVal;
 }
-
-
-
-
 
 

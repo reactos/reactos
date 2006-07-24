@@ -8,12 +8,13 @@
  *
  */
 
-#include "rosdraw.h"
-
 /*
  * IMPLEMENT
  * Status ok
  */
+
+#include "rosdraw.h"
+
 HRESULT 
 WINAPI 
 Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface, 
@@ -49,7 +50,6 @@ Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,
     Main_DirectDraw_AddRef(iface);
     return S_OK;
 }
-
 /*
  * IMPLEMENT
  * Status ok
@@ -104,6 +104,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
     }
     return ref;
 }
+
 /*
  * IMPLEMENT
  * Status ok
@@ -131,16 +132,14 @@ Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface,
     DX_WINDBG_trace();
 
     if (pUnkOuter!=NULL) 
-        return DDERR_INVALIDPARAMS; 
+        return CLASS_E_NOAGGREGATION; 
 
     IDirectDrawClipperImpl* That; 
     That = (IDirectDrawClipperImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawClipperImpl));
 
     if (That == NULL) 
         return E_OUTOFMEMORY;
-
-    ZeroMemory(That, sizeof(IDirectDrawClipperImpl));
-
+   
     That->lpVtbl = &DirectDrawClipper_Vtable;
     That->ref = 1;
     *ppClipper = (LPDIRECTDRAWCLIPPER)That;
@@ -148,7 +147,10 @@ Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface,
     return That->lpVtbl->Initialize (*ppClipper, (LPDIRECTDRAW)iface, dwFlags);
 }
 
-
+/*
+ * IMPLEMENT
+ * Status ok
+ */
 HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
                   LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
 {
@@ -258,318 +260,10 @@ HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
 	return  DDERR_NODRIVERSUPPORT;	 		    			    
 }
 
-
-
-const DDPIXELFORMAT pixelformats[] =
-{
-    /* 8bpp paletted */
-     { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, { 24 }, { 0xFF0000 },
-      { 0x00FF00 }, { 0x0000FF } },
-    /* 15bpp 5/5/5 */
-    { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, { 16 }, { 0x7C00 }, { 0x3E0 },
-      { 0x1F } },
-    /* 16bpp 5/6/5 */
-    { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, { 16 }, { 0xF800 }, { 0x7E0 },
-      { 0x1F } },
-    /* 24bpp 8/8/8 */
-    { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, { 24 }, { 0xFF0000 },
-      { 0x00FF00 }, { 0x0000FF } },
-    /* 32bpp 8/8/8 */
-    { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, { 32 }, { 0xFF0000 },
-      { 0x00FF00 }, { 0x0000FF } }
-};
-
-const DWORD pixelformatsCount = sizeof(pixelformats) / sizeof(DDPIXELFORMAT);
-
-/* more surface format not adding it */
-      /* 4 bit  paletted  0 */
-      //   sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_PALETTEINDEXED4, 0, 4, 0x00, 0x00, 0x00, 0x00
-
-      ///* 8bpp paletted  1 */
-      //{sizeof(DDPIXELFORMAT), DDPF_RGB|DDPF_PALETTEINDEXED8, 0, 8, 0, 0, 0, 0},
-
-      ///* 15bpp 5:5:5 RGB  2 */
-      //{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 0x7c00, 0x03e0, 0x001f, 0},
-
-      ///* 15bpp 1:5:5:5 ARGB 3 */
-      //{sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 0x7c00, 0x03e0, 0x001f, 0x8000},
-
-      ///* 16bpp 5:6:5 RGB  4 */
-      //{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 0xf800, 0x07e0, 0x001f, 0}                                 
-
-      ///* 16bpp 4:4:4:4 ARGB 5 */
-      //{sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS,´0, 16,       0x0f00,      0x00f0, 0x000f, 0xf000},
-
-      /* 24bpp 8/8/8 RGB 6 */
-      //  {sizeof(DDPIXELFORMAT), DDPF_RGB,                    0,  24 ,  0x00FF0000, 0x0000FF00 , 0x000000FF, 0 },
-
-      /* 32bpp 8:8:8 RGB  7 */
-      //   {sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0},                     
- 
-      /* 32bpp 8:8:8:8 ARGB  8*/
-       // {sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000}
-      
-
-
-
 /*
- * IMPLEMENT
- * Status this api is finish and is 100% correct 
+ * stub
+ * Status not done
  */
-HRESULT 
-WINAPI 
-Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
-{       
-    DX_WINDBG_trace();
-
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-       
-	if (iface==NULL) 
-	{
-		return DDERR_NOTINITIALIZED;
-	}
-
-	if (This->InitializeDraw == TRUE)
-	{
-        return DDERR_ALREADYINITIALIZED;
-	}
-	else
-	{
-     This->InitializeDraw = TRUE;
-    }
-
-    return DD_OK;
-}
-
-
-
-
-
-
-/*
- * IMPLEMENT
- * Status 
- * not finish yet but is working fine 
- * it prevent memmory leaks at exit
- */
-
-
-
-
-
-
-HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
-{
-    // TODO:                                                            
-    // - create a scaner that check which driver we should get the HDC from    
-    //   for now we always asume it is the active dirver that should be use.
-    // - allow more Flags
-
-    DX_WINDBG_trace();
-
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
-    
-    // check the parameters
-    if ((This->cooperative_level == cooplevel) && ((HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd  == hwnd))
-        return DD_OK;
-    
-    if (This->cooperative_level)
-        return DDERR_EXCLUSIVEMODEALREADYSET;
-
-    if ((cooplevel&DDSCL_EXCLUSIVE) && !(cooplevel&DDSCL_FULLSCREEN))
-        return DDERR_INVALIDPARAMS;
-
-    if (cooplevel&DDSCL_NORMAL && cooplevel&DDSCL_FULLSCREEN)
-        return DDERR_INVALIDPARAMS;
-
-    // set the data
-    This->mDDrawGlobal.lpExclusiveOwner->hWnd = (ULONG_PTR) hwnd;
-    This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC(hwnd);
-
-	
-	/* FIXME : fill the  mDDrawGlobal.lpExclusiveOwner->dwLocalFlags right */
-	//mDDrawGlobal.lpExclusiveOwner->dwLocalFlags
-
-    This->cooperative_level = cooplevel;
-
-    if ((This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)) 
-    {       
-        DX_STUB_str("HAL \n");
-        SetExclusiveMode.SetExclusiveMode = This->mDDrawGlobal.lpDDCBtmp->HALDD.SetExclusiveMode;                            
-    }
-    else
-    {
-        DX_STUB_str("HEL \n");
-        SetExclusiveMode.SetExclusiveMode = This->mDDrawGlobal.lpDDCBtmp->HELDD.SetExclusiveMode;
-    }
-             
-    SetExclusiveMode.lpDD = &This->mDDrawGlobal;
-    SetExclusiveMode.ddRVal = DDERR_NOTPALETTIZED;
-    SetExclusiveMode.dwEnterExcl = This->cooperative_level;
-     
-    if (SetExclusiveMode.SetExclusiveMode(&SetExclusiveMode) != DDHAL_DRIVER_HANDLED)
-    {
-        return DDERR_NODRIVERSUPPORT;
-    }
-
-    return SetExclusiveMode.ddRVal;               
-}
-
-HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
-                                                                DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
-{
-    DX_WINDBG_trace();
-
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	//BOOL dummy = TRUE;	
-		
-	DX_WINDBG_trace_res((int)dwWidth, (int)dwHeight, (int)dwBPP );
-	/* FIXME check the refresrate if it same if it not same do the mode switch */
-	if ((This->mDDrawGlobal.vmiData.dwDisplayHeight == dwHeight) && 
-		(This->mDDrawGlobal.vmiData.dwDisplayWidth == dwWidth)  && 
-		(This->mDDrawGlobal.vmiData.ddpfDisplay.dwRGBBitCount == dwBPP))  
-		{
-          
-		  return DD_OK;
-		}
-
-	if (This->mDdSetMode.SetMode == NULL )
-	{
-		return DDERR_NODRIVERSUPPORT;
-	}
-
-	
-	This->mDdSetMode.ddRVal = DDERR_NODRIVERSUPPORT;
-
-    // FIXME : fill the mode.inexcl; 
-    // FIXME : fill the mode.useRefreshRate; 
-    
-	/* FIXME 
-	   we hardcoding modIndex list we should 
-	   try getting it from ReactOS instead and compare it 
-	   for now a small hack for do, using VBE 3.0 mode
-	   index table todo it. 
-	*/
-
-	/* 320x200   15, 16, 32 */
-	if ((dwHeight == 200) && (dwWidth == 320)  && (dwBPP == 15))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x10d;
-	}
-
-	if ((dwHeight == 200) && (dwWidth == 320)  && (dwBPP == 16))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x10e;
-	}
-
-	if ((dwHeight == 200) && (dwWidth == 320)  && (dwBPP == 32))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x10f;
-	}
-
-
-	/* 640x400   8 */
-	if ((dwHeight == 400) && (dwWidth == 640)  && (dwBPP == 8))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x100;
-	}
-
-    /* 640x480   8, 15, 16 , 32*/
-	if ((dwHeight == 480) && (dwWidth == 640)  && (dwBPP == 8))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x101;
-	}
-
-	if ((dwHeight == 480) && (dwWidth == 640)  && (dwBPP == 15))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x110;
-	}
-
-	if ((dwHeight == 480) && (dwWidth == 640)  && (dwBPP == 16))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x111;
-	}
-
-	if ((dwHeight == 480) && (dwWidth == 640)  && (dwBPP == 32))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x112;
-	}
-
-	/* 800x600  4, 8, 15, 16 , 32*/
-	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 4))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x102;
-	}
-	
-	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 8))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x103;
-	}
-
-	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 15))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x113;
-	}
-
-	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 16))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x114;
-	}
-
-	if ((dwHeight == 600) && (dwWidth == 800)  && (dwBPP == 32))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x115;
-	}
-
-    /* 1024x768 8, 15, 16 , 32*/
-
-	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 4))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x104;
-	}
-
-	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 8))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x105;
-	}
-
-	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 15))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x116;
-	}
-	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 16))  
-	{          
-	    This->mDdSetMode.dwModeIndex  = 0x117;
-	}
-
-	if ((dwHeight == 768) && (dwWidth == 1024)  && (dwBPP == 32))  
-	{          
-	    This->mDdSetMode.dwModeIndex   = 0x118;
-	}
-
-	/* not coding for 1280x1024 */
-	
-
-	if (This->mDdSetMode.SetMode(&This->mDdSetMode)==DDHAL_DRIVER_HANDLED);
-    {
-		
-		//if (This->mDdSetMode.ddRVal == DD_OK)
-	    //{
-	    //	// DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
-	    //	/* FIXME fill the This->DirectDrawGlobal.vmiData right */
-	    //}
-
-		return This->mDdSetMode.ddRVal;
-	}
-	return  DDERR_NODRIVERSUPPORT;	 		    	
-}
-
-
-
-
-
-
 HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
                                             LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter) 
 {
@@ -631,10 +325,10 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
           
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {              
-           memcpy(&That->Owner->mddsdPrimary,pDDSD,sizeof(DDSURFACEDESC));
-           That->Owner->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);          
+           memcpy(&That->Surf->mddsdPrimary,pDDSD,sizeof(DDSURFACEDESC));
+           That->Surf->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);          
            This->mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; 
-           This->mDdCanCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&That->Owner->mddsdPrimary; 
+           This->mDdCanCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary; 
 
            if (This->mDdCanCreateSurface.CanCreateSurface(&This->mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
            {         
@@ -654,26 +348,26 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
            That->Owner->mPrimaryGlobal.wHeight = (WORD)This->mpModeInfos[0].dwHeight;
            That->Owner->mPrimaryGlobal.lPitch  = This->mpModeInfos[0].lPitch;
 
-           memset(&That->Owner->mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
-           That->Owner->mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+           memset(&That->Surf->mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
+           That->Surf->mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
 
-           memset(&That->Owner->mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
-           That->Owner->mPrimaryLocal.lpGbl = &That->Owner->mPrimaryGlobal;
-           That->Owner->mPrimaryLocal.lpSurfMore = &That->Owner->mPrimaryMore;
-           That->Owner->mPrimaryLocal.dwProcessId = GetCurrentProcessId();
+           memset(&That->Surf->mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
+           That->Surf->mPrimaryLocal.lpGbl = &That->Owner->mPrimaryGlobal;
+           That->Surf->mPrimaryLocal.lpSurfMore = &That->Surf->mPrimaryMore;
+           That->Surf->mPrimaryLocal.dwProcessId = GetCurrentProcessId();
 	   
            /*
               FIXME Check the flags if we shall create a primaresurface for overlay or something else 
               Examine windows which flags are being set for we assume this is right unsue I think
            */
            //That->Surf->mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
-           That->Owner->mPrimaryLocal.ddsCaps.dwCaps = That->Owner->mddsdPrimary.ddsCaps.dwCaps;
-           That->Owner->mpPrimaryLocals[0] = &That->Owner->mPrimaryLocal;
+           That->Surf->mPrimaryLocal.ddsCaps.dwCaps = That->Surf->mddsdPrimary.ddsCaps.dwCaps;
+           That->Surf->mpPrimaryLocals[0] = &That->Surf->mPrimaryLocal;
 
           
 
-           This->mDdCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&That->Owner->mddsdPrimary;
-           This->mDdCreateSurface.lplpSList = That->Owner->mpPrimaryLocals;
+           This->mDdCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary;
+           This->mDdCreateSurface.lplpSList = That->Surf->mpPrimaryLocals;
            This->mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ; 
 
             
@@ -700,8 +394,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
               DDSD_ZBUFFERBITDEPTH
            */
 
-           That->Owner->mddsdPrimary.dwFlags = DDSD_CAPS + DDSD_PIXELFORMAT;
-           RtlCopyMemory(&That->Owner->mddsdPrimary.ddpfPixelFormat,&This->mDDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
+           That->Surf->mddsdPrimary.dwFlags = DDSD_CAPS + DDSD_PIXELFORMAT;
+           RtlCopyMemory(&That->Surf->mddsdPrimary.ddpfPixelFormat,&This->mDDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
            //RtlCopyMemory(&That->Surf->mddsdPrimary.ddsCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
     
            //RtlCopyMemory(&pDDSD->ddckCKDestOverlay,&This->mDDrawGlobal.ddckCKDestOverlay,sizeof(DDCOLORKEY));
@@ -709,35 +403,35 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
            if (This->mDDrawGlobal.vmiData.dwDisplayHeight != 0)
            {
-              That->Owner->mddsdPrimary.dwFlags += DDSD_HEIGHT ;
-              That->Owner->mddsdPrimary.dwHeight  = This->mDDrawGlobal.vmiData.dwDisplayHeight;
+              That->Surf->mddsdPrimary.dwFlags += DDSD_HEIGHT ;
+              That->Surf->mddsdPrimary.dwHeight  = This->mDDrawGlobal.vmiData.dwDisplayHeight;
            }
 
            if (This->mDDrawGlobal.vmiData.dwDisplayWidth != 0)
            {
-              That->Owner->mddsdPrimary.dwFlags += DDSD_WIDTH ;
-              That->Owner->mddsdPrimary.dwWidth = This->mDDrawGlobal.vmiData.dwDisplayWidth; 
+              That->Surf->mddsdPrimary.dwFlags += DDSD_WIDTH ;
+              That->Surf->mddsdPrimary.dwWidth = This->mDDrawGlobal.vmiData.dwDisplayWidth; 
            }
 
            if (This->mDDrawGlobal.vmiData.lDisplayPitch != 0)
            {
-              That->Owner->mddsdPrimary.dwFlags += DDSD_PITCH ;           
-              That->Owner->mddsdPrimary.lPitch  = This->mDDrawGlobal.vmiData.lDisplayPitch;
+              That->Surf->mddsdPrimary.dwFlags += DDSD_PITCH ;           
+              That->Surf->mddsdPrimary.lPitch  = This->mDDrawGlobal.vmiData.lDisplayPitch;
            }
 
            if ( This->mDDrawGlobal.dwMonitorFrequency != 0)
            {
-              That->Owner->mddsdPrimary.dwFlags += DDSD_REFRESHRATE ;           
-              That->Owner->mddsdPrimary.dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
+              That->Surf->mddsdPrimary.dwFlags += DDSD_REFRESHRATE ;           
+              That->Surf->mddsdPrimary.dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
            }
           
            if (This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth != 0)
            {
-             That->Owner->mddsdPrimary.dwFlags += DDSD_ALPHABITDEPTH ;
-             That->Owner->mddsdPrimary.dwAlphaBitDepth = This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth;
+             That->Surf->mddsdPrimary.dwFlags += DDSD_ALPHABITDEPTH ;
+             That->Surf->mddsdPrimary.dwAlphaBitDepth = This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth;
            }
 
-           That->Surf->mpInUseSurfaceLocals[0] = &That->Owner->mPrimaryLocal;
+           That->Surf->mpInUseSurfaceLocals[0] = &That->Surf->mPrimaryLocal;
            return DD_OK;
 
         }
@@ -873,32 +567,209 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
    
 }
 
-
-
-// This function is exported by the dll
-HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
-                                        LPDIRECTDRAWCLIPPER* lplpDDClipper, LPUNKNOWN pUnkOuter)
+/*
+ * stub
+ * Status not done
+ */
+HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRAWSURFACE7 src,
+                 LPDIRECTDRAWSURFACE7* dst) 
 {
     DX_WINDBG_trace();
-
-    return Main_DirectDraw_CreateClipper(NULL, dwFlags, lplpDDClipper, pUnkOuter);
+    DX_STUB;    
 }
 
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
+                 LPDDSURFACEDESC2 pDDSD, LPVOID context, LPDDENUMMODESCALLBACK2 callback) 
+{
+     
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    DDSURFACEDESC2 desc_callback;
+    DEVMODE DevMode;   
+    int iMode=0;
+	
+	RtlZeroMemory(&desc_callback, sizeof(DDSURFACEDESC2));
+			    	   
+    desc_callback.dwSize = sizeof(DDSURFACEDESC2);	
 
+    desc_callback.dwFlags = DDSD_HEIGHT|DDSD_WIDTH|DDSD_PIXELFORMAT|DDSD_PITCH;
 
-HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
+    if (dwFlags & DDEDM_REFRESHRATES)
+    {
+	    desc_callback.dwFlags |= DDSD_REFRESHRATE;
+        desc_callback.dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
+    }
+
+  
+     /* FIXME check if the mode are suppretd before sending it back  */
+
+    while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0))
+    {
+       
+	   if (pDDSD)
+	   {
+	       if ((pDDSD->dwFlags & DDSD_WIDTH) && (pDDSD->dwWidth != DevMode.dmPelsWidth))
+	       continue; 
+	       if ((pDDSD->dwFlags & DDSD_HEIGHT) && (pDDSD->dwHeight != DevMode.dmPelsHeight))
+		   continue; 
+	       if ((pDDSD->dwFlags & DDSD_PIXELFORMAT) && (pDDSD->ddpfPixelFormat.dwFlags & DDPF_RGB) &&
+		   (pDDSD->ddpfPixelFormat.dwRGBBitCount != DevMode.dmBitsPerPel))
+		    continue; 
+       } 
+	
+       desc_callback.dwHeight = DevMode.dmPelsHeight;
+	   desc_callback.dwWidth = DevMode.dmPelsWidth;
+	   
+       if (DevMode.dmFields & DM_DISPLAYFREQUENCY)
+       {
+            desc_callback.dwRefreshRate = DevMode.dmDisplayFrequency;
+       }
+
+	   if (desc_callback.dwRefreshRate == 0)
+	   {
+		   DX_STUB_str("dwRefreshRate = 0, we hard code it to value 60");
+           desc_callback.dwRefreshRate = 60; /* Maybe the valye should be biger */
+	   }
+
+      /* above same as wine */
+	  if ((pDDSD->dwFlags & DDSD_PIXELFORMAT) && (pDDSD->ddpfPixelFormat.dwFlags & DDPF_RGB) )
+	  {         
+			switch(DevMode.dmBitsPerPel)
+			{
+				case  8:
+					 desc_callback.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					 desc_callback.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					 desc_callback.ddpfPixelFormat.dwFourCC = 0;
+					 desc_callback.ddpfPixelFormat.dwRGBBitCount=8;
+					 /* FIXME right value */
+					 desc_callback.ddpfPixelFormat.dwRBitMask = 0xFF0000; /* red bitmask */
+					 desc_callback.ddpfPixelFormat.dwGBitMask = 0; /* Green bitmask */
+					 desc_callback.ddpfPixelFormat.dwBBitMask = 0; /* Blue bitmask */
+					break;
+
+				case 15:
+					desc_callback.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					 desc_callback.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					 desc_callback.ddpfPixelFormat.dwFourCC = 0;
+					 desc_callback.ddpfPixelFormat.dwRGBBitCount=15;
+					 /* FIXME right value */
+					 desc_callback.ddpfPixelFormat.dwRBitMask = 0x7C00; /* red bitmask */
+					 desc_callback.ddpfPixelFormat.dwGBitMask = 0x3E0; /* Green bitmask */
+					 desc_callback.ddpfPixelFormat.dwBBitMask = 0x1F; /* Blue bitmask */
+					break;
+
+				case 16: 
+					 desc_callback.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					 desc_callback.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					 desc_callback.ddpfPixelFormat.dwFourCC = 0;
+					 desc_callback.ddpfPixelFormat.dwRGBBitCount=16;
+					 /* FIXME right value */
+					 desc_callback.ddpfPixelFormat.dwRBitMask = 0xF800; /* red bitmask */
+					 desc_callback.ddpfPixelFormat.dwGBitMask = 0x7E0; /* Green bitmask */
+					 desc_callback.ddpfPixelFormat.dwBBitMask = 0x1F; /* Blue bitmask */
+					break;
+
+				case 24: 
+					 desc_callback.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					 desc_callback.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					 desc_callback.ddpfPixelFormat.dwFourCC = 0;
+					 desc_callback.ddpfPixelFormat.dwRGBBitCount=24;
+					 /* FIXME right value */
+					 desc_callback.ddpfPixelFormat.dwRBitMask = 0xFF0000; /* red bitmask */
+					 desc_callback.ddpfPixelFormat.dwGBitMask = 0x00FF00; /* Green bitmask */
+					 desc_callback.ddpfPixelFormat.dwBBitMask = 0x0000FF; /* Blue bitmask */
+					break;
+
+				case 32: 
+					 desc_callback.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					 desc_callback.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					 desc_callback.ddpfPixelFormat.dwFourCC = 0;
+					 desc_callback.ddpfPixelFormat.dwRGBBitCount=8;
+					 /* FIXME right value */
+					 desc_callback.ddpfPixelFormat.dwRBitMask = 0xFF0000; /* red bitmask */
+					 desc_callback.ddpfPixelFormat.dwGBitMask = 0x00FF00; /* Green bitmask */
+					 desc_callback.ddpfPixelFormat.dwBBitMask = 0x0000FF; /* Blue bitmask */
+					break;
+
+				default:
+					break;          
+			}
+			desc_callback.ddsCaps.dwCaps = 0;
+		    if (desc_callback.ddpfPixelFormat.dwFlags & DDPF_PALETTEINDEXED8) 
+		    {
+				/* FIXME srt DDCS Caps flag */
+				desc_callback.ddsCaps.dwCaps |= DDSCAPS_PALETTE;
+		    }    
+	  }
+				  
+	  if (DevMode.dmBitsPerPel==15)
+      {           
+		  desc_callback.lPitch =  DevMode.dmPelsWidth + (8 - ( DevMode.dmPelsWidth % 8)) % 8;
+	  }
+	  else
+	  {
+		  desc_callback.lPitch = DevMode.dmPelsWidth * (DevMode.dmBitsPerPel  / 8);
+	      desc_callback.lPitch = desc_callback.lPitch + (8 - (desc_callback.lPitch % 8)) % 8;
+	  }
+	  	 	  	                                                  
+      if (callback(&desc_callback, context) == DDENUMRET_CANCEL)
+      {
+         return DD_OK;       
+      }
+       
+      iMode++; 
+    }
+
+    return DD_OK;
+}
+
+/*
+ * stub
+ * Status not done
+ */
+HRESULT WINAPI 
+Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
+                 LPDDSURFACEDESC2 lpDDSD2, LPVOID context,
+                 LPDDENUMSURFACESCALLBACK7 callback) 
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) 
-    {
-        return Hal_DirectDraw_FlipToGDISurface( iface);
-    }
+	if (This->mDdFlipToGDISurface.FlipToGDISurface == NULL)
+	{
+		return  DDERR_NODRIVERSUPPORT;	 		    	
+	}
 
-    return Hel_DirectDraw_FlipToGDISurface( iface);
+	This->mDdFlipToGDISurface.ddRVal = DDERR_NOTPALETTIZED;
+	This->mDdFlipToGDISurface.dwToGDI = TRUE;
+
+	if (This->mDdFlipToGDISurface.FlipToGDISurface(&This->mDdFlipToGDISurface)==DDHAL_DRIVER_HANDLED);
+    {				
+		return This->mDdFlipToGDISurface.ddRVal;
+	}
+
+	return  DDERR_NODRIVERSUPPORT;	 		    	   
 }
-
-HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
+ 
+/*
+ * IMPLEMENT
+ * Status ok
+ */
+HRESULT WINAPI 
+Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
             LPDDCAPS pHELCaps) 
 {	
     DX_WINDBG_trace();
@@ -908,10 +779,7 @@ HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps
     IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
 	
     if (pDriverCaps != NULL) 
-    {        
-      
-      
-      
+    {                          
 	  Main_DirectDraw_GetAvailableVidMem(iface, 
 		                                 &ddscaps,
 		                                 &This->mDDrawGlobal.ddCaps.dwVidMemTotal, 
@@ -936,6 +804,160 @@ HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps
     
     return status;
 }
+
+
+
+/*
+ * IMPLEMENT
+ * Status this api is finish and is 100% correct 
+ */
+HRESULT 
+WINAPI 
+Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
+{       
+    DX_WINDBG_trace();
+
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+       
+	if (iface==NULL) 
+	{
+		return DDERR_NOTINITIALIZED;
+	}
+
+	if (This->InitializeDraw == TRUE)
+	{
+        return DDERR_ALREADYINITIALIZED;
+	}
+	else
+	{
+     This->InitializeDraw = TRUE;
+    }
+
+    return DD_OK;
+}
+
+HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
+{
+    // TODO:                                                            
+    // - create a scaner that check which driver we should get the HDC from    
+    //   for now we always asume it is the active dirver that should be use.
+    // - allow more Flags
+
+    DX_WINDBG_trace();
+
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
+    
+    // check the parameters
+    if ((This->cooperative_level == cooplevel) && ((HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd  == hwnd))
+        return DD_OK;
+    
+    if (This->cooperative_level)
+        return DDERR_EXCLUSIVEMODEALREADYSET;
+
+    if ((cooplevel&DDSCL_EXCLUSIVE) && !(cooplevel&DDSCL_FULLSCREEN))
+        return DDERR_INVALIDPARAMS;
+
+    if (cooplevel&DDSCL_NORMAL && cooplevel&DDSCL_FULLSCREEN)
+        return DDERR_INVALIDPARAMS;
+
+    // set the data
+    This->mDDrawGlobal.lpExclusiveOwner->hWnd = (ULONG_PTR) hwnd;
+    This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC(hwnd);
+
+	
+	/* FIXME : fill the  mDDrawGlobal.lpExclusiveOwner->dwLocalFlags right */
+	//mDDrawGlobal.lpExclusiveOwner->dwLocalFlags
+
+    This->cooperative_level = cooplevel;
+
+    if ((This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)) 
+    {       
+        DX_STUB_str("HAL \n");
+        SetExclusiveMode.SetExclusiveMode = This->mDDrawGlobal.lpDDCBtmp->HALDD.SetExclusiveMode;                            
+    }
+    else
+    {
+        DX_STUB_str("HEL \n");
+        SetExclusiveMode.SetExclusiveMode = This->mDDrawGlobal.lpDDCBtmp->HELDD.SetExclusiveMode;
+    }
+             
+    SetExclusiveMode.lpDD = &This->mDDrawGlobal;
+    SetExclusiveMode.ddRVal = DDERR_NOTPALETTIZED;
+    SetExclusiveMode.dwEnterExcl = This->cooperative_level;
+     
+    if (SetExclusiveMode.SetExclusiveMode(&SetExclusiveMode) != DDHAL_DRIVER_HANDLED)
+    {
+        return DDERR_NODRIVERSUPPORT;
+    }
+
+    return SetExclusiveMode.ddRVal;               
+}
+
+HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
+                                                                DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
+{
+    DX_WINDBG_trace();
+
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	BOOL dummy = TRUE;
+	DWORD ret;
+	
+	/* FIXME check the refresrate if it same if it not same do the mode switch */
+	if ((This->mDDrawGlobal.vmiData.dwDisplayHeight == dwHeight) && 
+		(This->mDDrawGlobal.vmiData.dwDisplayWidth == dwWidth)  && 
+		(This->mDDrawGlobal.vmiData.ddpfDisplay.dwRGBBitCount == dwBPP))  
+		{
+          
+		  return DD_OK;
+		}
+
+	/* Check use the Hal or Hel for SetMode */
+	if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETMODE)
+	{
+		ret = Hal_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);   
+        
+    }    
+	else 
+	{
+		ret = Hel_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
+	}
+	    
+	if (ret == DD_OK)
+	{
+		DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
+		/* FIXME fill the This->DirectDrawGlobal.vmiData right */
+	}
+	     
+     //This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC( (HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd);
+
+
+
+  
+	return ret;
+}
+
+
+
+
+
+
+
+
+
+// This function is exported by the dll
+HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
+                                        LPDIRECTDRAWCLIPPER* lplpDDClipper, LPUNKNOWN pUnkOuter)
+{
+    DX_WINDBG_trace();
+
+    return Main_DirectDraw_CreateClipper(NULL, dwFlags, lplpDDClipper, pUnkOuter);
+}
+
+
+
+
+
 
 HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD) 
 {   
@@ -981,21 +1003,12 @@ HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD d
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	if (This->mDdWaitForVerticalBlank.WaitForVerticalBlank == NULL) 
+    if (This->mDDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK) 
     {
-        return DDERR_NODRIVERSUPPORT;
-    }
-   
-    This->mDdWaitForVerticalBlank.dwFlags = dwFlags;
-    This->mDdWaitForVerticalBlank.hEvent = (DWORD)h;
-    This->mDdWaitForVerticalBlank.ddRVal = DDERR_NOTPALETTIZED;
-	
-    if (This->mDdWaitForVerticalBlank.WaitForVerticalBlank(&This->mDdWaitForVerticalBlank) != DDHAL_DRIVER_HANDLED)
-    {
-       return DDERR_NODRIVERSUPPORT;
+        return Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);        
     }
 
-    return This->mDdWaitForVerticalBlank.ddRVal;      
+    return Hel_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);        
 }
 
 HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
@@ -1055,128 +1068,11 @@ HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 
 
 
-HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRAWSURFACE7 src,
-                 LPDIRECTDRAWSURFACE7* dst) 
-{
-    DX_WINDBG_trace();
-    DX_STUB;    
-}
-
-HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
-                 LPDDSURFACEDESC2 pDDSD, LPVOID context, LPDDENUMMODESCALLBACK2 callback) 
-{
-    DX_WINDBG_trace();
-    
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    DDSURFACEDESC2 desc_callback;
-    DEVMODE DevMode;   
-    int iMode=0;
-
-    if (pDDSD!=NULL)
-    {
-        // FIXME fill in pDDSD  
-    }
-
-    RtlZeroMemory(&desc_callback, sizeof(DDSURFACEDESC2));
-    desc_callback.dwSize = sizeof(DDSURFACEDESC2);
-
-    desc_callback.dwFlags = DDSD_HEIGHT|DDSD_WIDTH|DDSD_PIXELFORMAT|DDSD_CAPS | DDSD_PITCH;
-
-    if (dwFlags & DDEDM_REFRESHRATES)
-    {
-	    desc_callback.dwFlags |= DDSD_REFRESHRATE;
-        desc_callback.dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
-    }
-
-  
-    /// FIXME check if the mode are suppretd before sending it back 
-
-    while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0))
-    {
-       
-	   if (pDDSD)
-	   {
-	       if ((pDDSD->dwFlags & DDSD_WIDTH) && (pDDSD->dwWidth != DevMode.dmPelsWidth))
-	       continue; 
-	       if ((pDDSD->dwFlags & DDSD_HEIGHT) && (pDDSD->dwHeight != DevMode.dmPelsHeight))
-		   continue; 
-	       if ((pDDSD->dwFlags & DDSD_PIXELFORMAT) && (pDDSD->ddpfPixelFormat.dwFlags & DDPF_RGB) &&
-		   (pDDSD->ddpfPixelFormat.dwRGBBitCount != DevMode.dmBitsPerPel))
-		    continue; 
-       } 
-
-	
-       desc_callback.dwHeight = DevMode.dmPelsHeight;
-	   desc_callback.dwWidth = DevMode.dmPelsWidth;
-
-       if (DevMode.dmFields & DM_DISPLAYFREQUENCY)
-       {
-            desc_callback.dwRefreshRate = DevMode.dmDisplayFrequency;
-       }
-         
-      switch(DevMode.dmBitsPerPel)
-      {
-        case  8:
-            memcpy(&desc_callback.ddpfPixelFormat,&pixelformats[0],sizeof(DDPIXELFORMAT));
-            break;
-
-        case 15:
-            memcpy(&desc_callback.ddpfPixelFormat,&pixelformats[1],sizeof(DDPIXELFORMAT));
-            break;
-
-        case 16: 
-            memcpy(&desc_callback.ddpfPixelFormat,&pixelformats[2],sizeof(DDPIXELFORMAT));
-            break;
 
 
-       case 24: 
-            memcpy(&desc_callback.ddpfPixelFormat,&pixelformats[3],sizeof(DDPIXELFORMAT));
-            break;
 
-       case 32: 
-            memcpy(&desc_callback.ddpfPixelFormat,&pixelformats[4],sizeof(DDPIXELFORMAT));
-            break;
 
-        default:
-            break;          
-      }
-                        
-       if (desc_callback.ddpfPixelFormat.dwRGBBitCount==15)
-       {           
-            desc_callback.lPitch =  DevMode.dmPelsWidth + (8 - ( DevMode.dmPelsWidth % 8)) % 8;
-       }
-       else
-       {
-           desc_callback.lPitch = DevMode.dmPelsWidth * (desc_callback.ddpfPixelFormat.dwRGBBitCount / 8);
-           desc_callback.lPitch =  desc_callback.lPitch + (8 - (desc_callback.lPitch % 8)) % 8;
-       }
-           
-       desc_callback.ddsCaps.dwCaps = 0;
-       if (desc_callback.ddpfPixelFormat.dwFlags & DDPF_PALETTEINDEXED8) 
-       {
-           desc_callback.ddsCaps.dwCaps |= DDSCAPS_PALETTE;
-       }
-      
 
-       if (callback(&desc_callback, context) == DDENUMRET_CANCEL)
-       {
-
-           return DD_OK;       
-       }
-       
-      iMode++; 
-    }
-
-    return DD_OK;
-}
-
-HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
-                 LPDDSURFACEDESC2 lpDDSD2, LPVOID context,
-                 LPDDENUMSURFACESCALLBACK7 callback) 
-{
-    DX_WINDBG_trace();
-    DX_STUB;
-}
 
 
 HRESULT WINAPI Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD pNumCodes, LPDWORD pCodes)

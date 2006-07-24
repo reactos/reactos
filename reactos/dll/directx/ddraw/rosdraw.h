@@ -71,7 +71,10 @@ typedef struct
     DWORD *mpFourCC;
 
     UINT mcTextures;
-    DDSURFACEDESC2 *mpTextures;
+    DDSURFACEDESC *mpTextures;
+
+	
+
 
 	/* ExclusiveOwner */	
     
@@ -82,7 +85,7 @@ typedef struct
 
 	/* HEL stuff */
 	DWORD HELMemoryAvilable;
-       
+
     /* DD Callbacks info */   	
 	DDHAL_DESTROYDRIVERDATA mDdDestroyDriver;
     DDHAL_CREATESURFACEDATA      mDdCreateSurface;
@@ -95,15 +98,7 @@ typedef struct
     DDHAL_SETEXCLUSIVEMODEDATA mDdSetExclusiveMode;
     DDHAL_FLIPTOGDISURFACEDATA mDdFlipToGDISurface;
 
-    /* Primarey surface we must reach it from every where */
     DDRAWI_DDRAWSURFACE_GBL mPrimaryGlobal;
-    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
-    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
-    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
-    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
-    DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
-
-    DDSURFACEDESC2 mddsdPrimary;
 
 	/* adding a switch */
 	DWORD devicetype;
@@ -113,6 +108,15 @@ typedef struct
 /******** Surface Object ********/
 typedef struct 
 {    
+	 /* Primarey surface we must reach it from every where */
+   
+    DDRAWI_DDRAWSURFACE_MORE mPrimaryMore;
+    DDRAWI_DDRAWSURFACE_LCL mPrimaryLocal;
+    DDRAWI_DDRAWSURFACE_LCL *mpPrimaryLocals[1];
+    DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
+    DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
+
+    DDSURFACEDESC mddsdPrimary;
 
     DDRAWI_DDRAWSURFACE_LCL *mpInUseSurfaceLocals[1];
     
