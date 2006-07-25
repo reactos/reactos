@@ -128,12 +128,12 @@ typedef struct
 	   wine desgin for it 
 	   type IDirectDrawSurfaceImpl;
 	*/
-    LPVOID next_attached;
-    LPVOID first_attached;
-    LPVOID next_complex;
-    LPVOID first_complex;
-	LPVOID next;
-    LPVOID prev;
+    DWORD* next_attached;
+    DWORD* first_attached;
+    DWORD* next_complex;
+    DWORD* first_complex;
+	DWORD* next;
+    DWORD* prev;
 
 	/* Need be delete later */
     DDRAWI_DDRAWSURFACE_GBL mSurfGlobal;

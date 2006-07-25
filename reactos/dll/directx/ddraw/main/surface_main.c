@@ -235,7 +235,7 @@ Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 					  LPDIRECTDRAWSURFACE7* ppSurface)
 {
 	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-	IDirectDrawSurfaceImpl *surf;
+	IDirectDrawSurfaceImpl *surf;	
     DDSCAPS2 our_caps;
 	    
     DX_WINDBG_trace();
@@ -246,7 +246,7 @@ Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 	*/
 	 
 	our_caps = *pCaps;
-    
+    	
     /* 
 	   FIXME adding version check 
 	   Earlier dx apps put garbage into these members, clear them 
@@ -255,32 +255,43 @@ Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
     our_caps.dwCaps3 = 0;
     our_caps.dwCaps4 = 0;
 
-    surf = This;
-	while( (surf = surf->Surf->next_complex) )
-    {
-		 if (((surf->Surf->mddsdPrimary.ddsCaps.dwCaps & our_caps.dwCaps) == our_caps.dwCaps) &&
-            ((surf->Surf->mddsdPrimary.ddsCaps.dwCaps2 & our_caps.dwCaps2) == our_caps.dwCaps2)) 
-		 {         
-            *ppSurface = (LPDIRECTDRAWSURFACE7)surf;
-            Main_DDrawSurface_AddRef(*ppSurface);
-            return DD_OK;
-        }
+	//surf = (IDirectDrawSurfaceImpl*)This->Surf->next_complex;
+	if (This->Surf->next_complex != NULL)
+	{		
+		surf = (IDirectDrawSurfaceImpl*)This->Surf->next_complex;	
+		while( surf != NULL )
+		{
+			if (((surf->Surf->mddsdPrimary.ddsCaps.dwCaps & our_caps.dwCaps) == our_caps.dwCaps) &&
+				((surf->Surf->mddsdPrimary.ddsCaps.dwCaps2 & our_caps.dwCaps2) == our_caps.dwCaps2)) 
+			{         
+				*ppSurface = (LPDIRECTDRAWSURFACE7)surf;
+				Main_DDrawSurface_AddRef(*ppSurface);
+				DX_STUB_str("surf->Surf->next_complex ok");
+				return DD_OK;
+			}
+			surf = (IDirectDrawSurfaceImpl*)This->Surf->next_complex;		    
+		}
 	}
 
-	/* Next, look at the attachment chain */
-    surf = This;
+	if (This->Surf->next_attached != NULL)
+	{
+		surf = (IDirectDrawSurfaceImpl*)This->Surf->next_attached;	
 
-	while( (surf = surf->Surf->next_attached) )
-    {      
-        if (((surf->Surf->mddsdPrimary.ddsCaps.dwCaps & our_caps.dwCaps) == our_caps.dwCaps) &&
-            ((surf->Surf->mddsdPrimary.ddsCaps.dwCaps2 & our_caps.dwCaps2) == our_caps.dwCaps2)) 
-		{        
-            *ppSurface = (LPDIRECTDRAWSURFACE7)surf;
-            Main_DDrawSurface_AddRef(*ppSurface);
-            return DD_OK;
-        }
-    }
+		while(surf != NULL)
+		{      
+			if (((surf->Surf->mddsdPrimary.ddsCaps.dwCaps & our_caps.dwCaps) == our_caps.dwCaps) &&
+				((surf->Surf->mddsdPrimary.ddsCaps.dwCaps2 & our_caps.dwCaps2) == our_caps.dwCaps2)) 
+			{        
+				*ppSurface = (LPDIRECTDRAWSURFACE7)surf;
+				Main_DDrawSurface_AddRef(*ppSurface);
+				DX_STUB_str("surf->Surf->next_attached ok");
+				return DD_OK;
+			}
+			surf = (IDirectDrawSurfaceImpl*)This->Surf->next_attached;	
+		}
+	}
 
+   DX_STUB_str("Fail");
    return DDERR_NOTFOUND;
 }
 

@@ -297,6 +297,8 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
         // FIXME Free memmory at exit
         return E_OUTOFMEMORY;
 	}
+	 ZeroMemory(surf, sizeof(DxSurf));
+
     
  
     That->lpVtbl = &DirectDrawSurface7_Vtable;
