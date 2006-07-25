@@ -552,8 +552,8 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   Status = ObInsertObject(ConnectedPort,
 			  NULL,
 			  PORT_ALL_ACCESS,
-			  0,
-			  NULL,
+			  1,
+			  (PVOID*)&ConnectedPort,
 			  &ConnectedPortHandle);
   if (!NT_SUCCESS(Status))
     {

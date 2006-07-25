@@ -24,7 +24,6 @@
 //  - Add support for Fast Dispatch I/O.
 //
 // Ps:
-//  - Figure out why processes don't die.
 //  - Generate process cookie for user-more thread.
 //
 // Ob:
@@ -32,11 +31,9 @@
 //  - Add Directory Lock.
 //  - Use Object Type Mutex/Lock.
 //  - Implement handle database if anyone needs it.
-//  - Figure out why cmd.exe won't close anymore.
 //
 // Ex:
 //  - Use pushlocks for handle implementation.
-//  - Figure out why cmd.exe won't close anymore.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

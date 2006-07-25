@@ -57,13 +57,11 @@ LpcpClosePort (IN PEPROCESS Process OPTIONAL,
 
   /* FIXME Race conditions here! */
 
-  DPRINT("NiClosePort 0x%p OtherPort 0x%p State %d\n", Port, Port->OtherPort, Port->State);
-
   /*
    * If the client has just closed its handle then tell the server what
    * happened and disconnect this port.
    */
-  if (HandleCount == 1 && Port->State == EPORT_CONNECTED_CLIENT)
+  if (!(HandleCount)&& (Port->State == EPORT_CONNECTED_CLIENT))
     {
       DPRINT("Informing server\n");
       Message.u1.s1.TotalLength = sizeof(PORT_MESSAGE);
@@ -85,7 +83,7 @@ LpcpClosePort (IN PEPROCESS Process OPTIONAL,
    * If the server has closed all of its handles then disconnect the port,
    * don't actually notify the client until it attempts an operation.
    */
-  if (HandleCount == 1 && Port->State == EPORT_CONNECTED_SERVER)
+  if (!(HandleCount)&& (Port->State == EPORT_CONNECTED_SERVER))
     {
         DPRINT("Cleaning up server\n");
 	Port->OtherPort->OtherPort = NULL;
