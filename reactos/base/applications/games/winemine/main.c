@@ -58,7 +58,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     wc.hInstance = hInst;
     wc.hIcon = LoadIcon( hInst, appname );
     wc.hCursor = LoadCursor( NULL_HANDLE, (LPCTSTR)IDI_APPLICATION );
-    wc.hbrBackground = (HBRUSH) GetStockObject( BLACK_BRUSH );
+    wc.hbrBackground = (HBRUSH) GetStockObject( LTGRAY_BRUSH	 );
     wc.lpszMenuName = "MENU_WINEMINE";
     wc.lpszClassName = appname;
 
@@ -519,14 +519,14 @@ void CreateBoard( BOARD *p_board )
     top = BOARD_HMARGIN;
     right = left + LED_WIDTH * 3;
     bottom = top + LED_HEIGHT;
-    SetRect( &p_board->timer_rect, left, top, right, bottom );
+    SetRect( &p_board->counter_rect, left, top, right, bottom );
 
     /* setting the counter rectangle boundary */
     left =  p_board->width - BOARD_WMARGIN - LED_WIDTH * 3;
     top = BOARD_HMARGIN;
     right = p_board->width - BOARD_WMARGIN;
     bottom = top + LED_HEIGHT;
-    SetRect( &p_board->counter_rect, left, top, right, bottom );
+    SetRect( &p_board->timer_rect, left, top, right, bottom );
 
     p_board->status = WAITING;
     p_board->face_bmp = SMILE_BMP;
@@ -723,9 +723,9 @@ void DrawLeds( HDC hdc, HDC hMemDC, BOARD *p_board, int number, int x, int y )
     }
 
     /* use unlit led if not playing */
-    if( p_board->status == WAITING )
+   /* if( p_board->status == WAITING )
         for( i = 0; i < 3; i++ )
-            led[i] = 11;
+            led[i] = 11;*/
 
     hOldObj = SelectObject (hMemDC, p_board->hLedsBMP);
 
@@ -766,7 +766,7 @@ void DrawBoard( HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, BOARD *p_board )
 {
     RECT tmp_rect;
 
-    if( IntersectRect( &tmp_rect, &ps->rcPaint, &p_board->counter_rect ) )
+    if( IntersectRect( &tmp_rect, &ps->rcPaint, &p_board->counter_rect) )
         DrawLeds( hdc, hMemDC, p_board, p_board->mines - p_board->num_flags,
                   p_board->counter_rect.left,
                   p_board->counter_rect.top );
@@ -774,7 +774,7 @@ void DrawBoard( HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, BOARD *p_board )
     if( IntersectRect( &tmp_rect, &ps->rcPaint, &p_board->timer_rect ) )
         DrawLeds( hdc, hMemDC, p_board, p_board->time,
                   p_board->timer_rect.left,
-                  p_board->timer_rect.top );
+                   p_board->timer_rect.top);
 
     if( IntersectRect( &tmp_rect, &ps->rcPaint, &p_board->face_rect ) )
         DrawFace( hdc, hMemDC, p_board );
