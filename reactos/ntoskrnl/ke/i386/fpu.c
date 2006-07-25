@@ -363,14 +363,11 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 {
     if (ExceptionNr == 7) /* device not present */
     {
-        BOOL FpuInitialized = FALSE;
+        //BOOL FpuInitialized = FALSE;
         unsigned int cr0 = Ke386GetCr0();
         PKTHREAD CurrentThread;
-        PFX_SAVE_AREA FxSaveArea;
+        //PFX_SAVE_AREA FxSaveArea;
         KIRQL oldIrql;
-#ifndef CONFIG_SMP
-        PKTHREAD NpxThread;
-#endif
 
         (void) cr0;
         ASSERT((cr0 & X86_CR0_TS) == X86_CR0_TS);
@@ -383,73 +380,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         asm volatile("clts");
 
         CurrentThread = KeGetCurrentThread();
-#ifndef CONFIG_SMP
-        NpxThread = KeGetCurrentPrcb()->NpxThread;
-#endif
-
         ASSERT(CurrentThread != NULL);
-        DPRINT("Device not present exception happened! (Cr0 = 0x%x, NpxState = 0x%x)\n", cr0, CurrentThread->NpxState);
-
-#ifndef CONFIG_SMP
-        /* check if the current thread already owns the FPU */
-        if (NpxThread != CurrentThread) /* FIXME: maybe this could be an assertation */
-        {
-            /* save the FPU state into the owner's save area */
-            if (NpxThread != NULL)
-            {
-                KeGetCurrentPrcb()->NpxThread = NULL;
-                FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)NpxThread->InitialStack - sizeof (FX_SAVE_AREA));
-                /* the fnsave might raise a delayed #MF exception */
-                if (KeI386FxsrPresent)
-                {
-                    asm volatile("fxsave %0" : : "m"(FxSaveArea->U.FxArea));
-                }
-                else
-                {
-                    asm volatile("fnsave %0" : : "m"(FxSaveArea->U.FnArea));
-                    FpuInitialized = TRUE;
-                }
-                NpxThread->NpxState = NPX_STATE_VALID;
-            }
-#endif /* !CONFIG_SMP */
-
-            /* restore the state of the current thread */
-            ASSERT((CurrentThread->NpxState & NPX_STATE_DIRTY) == 0);
-            FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)CurrentThread->InitialStack - sizeof (FX_SAVE_AREA));
-            if (CurrentThread->NpxState & NPX_STATE_VALID)
-            {
-                if (KeI386FxsrPresent)
-                {
-                    FxSaveArea->U.FxArea.MXCsr &= MxcsrFeatureMask;
-                    asm volatile("fxrstor %0" : : "m"(FxSaveArea->U.FxArea));
-                }
-                else
-                {
-                    asm volatile("frstor %0" : : "m"(FxSaveArea->U.FnArea));
-                }
-            }
-            else /* NpxState & NPX_STATE_INVALID */
-            {
-                DPRINT("Setting up clean FPU state\n");
-                if (KeI386FxsrPresent)
-                {
-                    memset(&FxSaveArea->U.FxArea, 0, sizeof(FxSaveArea->U.FxArea));
-                    FxSaveArea->U.FxArea.ControlWord = 0x037f;
-                    if (KeI386XMMIPresent)
-                    {
-                        FxSaveArea->U.FxArea.MXCsr = 0x00001f80 & MxcsrFeatureMask;
-                    }
-                    asm volatile("fxrstor %0" : : "m"(FxSaveArea->U.FxArea));
-                }
-                else if (!FpuInitialized)
-                {
-                    asm volatile("fninit");
-                }
-            }
-            KeGetCurrentPrcb()->NpxThread = CurrentThread;
-#ifndef CONFIG_SMP
-        }
-#endif
 
         CurrentThread->NpxState |= NPX_STATE_DIRTY;
         KeLowerIrql(oldIrql);
