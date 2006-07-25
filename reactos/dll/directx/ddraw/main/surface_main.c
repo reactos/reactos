@@ -113,19 +113,48 @@ HRESULT WINAPI
 Main_DDrawSurface_AddAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 					  LPDIRECTDRAWSURFACE7 pAttach)
 {
+   DWORD ret;
    DX_WINDBG_trace();
 
-   IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;        
-   
-   IDirectDrawSurfaceImpl* That = NULL;
+   IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;           
+   IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)pAttach;
+
    if (pAttach==NULL)
    {
-     return DDERR_INVALIDOBJECT;     
+      return DDERR_CANNOTATTACHSURFACE;     
    }
-   That = (IDirectDrawSurfaceImpl*)pAttach;
+
+   ret = DdAttachSurface( That->Surf->mpPrimaryLocals[0],This->Surf->mpPrimaryLocals[0]);
+
+   if (ret == DD_OK)
+   {
+	   /* 
+	      Here we put in wine code 	   
+
+	      Wine Code from wine cvs 27/7-2006 
+		  with small changes to fith into our ddraw desgin
+
+	   */
+	  if (This->Surf->mddsdPrimary.ddsCaps.dwCaps & That->Surf->mddsdPrimary.ddsCaps.dwCaps & DDSCAPS_MIPMAP)
+      {
+          That->Surf->mddsdPrimary.ddsCaps.dwCaps2 |= DDSCAPS2_MIPMAPSUBLEVEL;        
+      }
+
+	  if( (That->Surf->next_attached != NULL) || (That->Surf->first_attached != (DWORD*)That) )
+      { 
+	      DX_STUB_str("Wine Code fails");
+          return DDERR_CANNOTATTACHSURFACE;
+      }
+
+	  That->Surf->next_attached = This->Surf->next_attached;
+      That->Surf->first_attached = This->Surf->first_attached;
+      This->Surf->next_attached = (DWORD*)That;
+
+      Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)pAttach);
+	  return DD_OK;
+   }
    
-   //FIXME Have I put This and That in right order ?? DdAttachSurface(from, to) 
-   return DdAttachSurface( That->Surf->mpPrimaryLocals[0],This->Surf->mpPrimaryLocals[0]);
+   return ret;
 }
 
 /* MSDN: "not currently implemented." */
