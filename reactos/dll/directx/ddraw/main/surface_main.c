@@ -190,9 +190,45 @@ Main_DDrawSurface_EnumAttachedSurfaces(LPDIRECTDRAWSURFACE7 iface,
 					    LPVOID context,
 					    LPDDENUMSURFACESCALLBACK7 cb)
 {
+	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+    IDirectDrawSurfaceImpl *surf;
+    DDSURFACEDESC2 desc;
+
     DX_WINDBG_trace();
 
-    DX_STUB;
+    /* 
+	    Wine Code from wine cvs 27/7-2006 
+		with small changes to fith into our ddraw desgin
+	*/
+
+	if(cb == NULL)
+	{
+        return DDERR_INVALIDPARAMS;
+	}
+	
+	for (surf = (IDirectDrawSurfaceImpl*)This->Surf->next_complex; surf != NULL; surf = (IDirectDrawSurfaceImpl*)surf->Surf->next_complex)
+    {
+        Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)surf);
+        desc = surf->Surf->mddsdPrimary;
+        /* check: != DDENUMRET_OK or == DDENUMRET_CANCEL? */
+        if (cb((LPDIRECTDRAWSURFACE7)surf, &desc, context) == DDENUMRET_CANCEL)
+		{
+            return DD_OK;
+		}
+    }
+
+	for (surf = (IDirectDrawSurfaceImpl*)This->Surf->next_attached; surf != NULL; surf = (IDirectDrawSurfaceImpl*)surf->Surf->next_attached)	
+    {
+            Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)surf);
+          desc = surf->Surf->mddsdPrimary;
+        /* check: != DDENUMRET_OK or == DDENUMRET_CANCEL? */
+        if (cb((LPDIRECTDRAWSURFACE7)surf, &desc, context) == DDENUMRET_CANCEL)
+		{
+            return DD_OK;
+		}
+    }
+
+    return DD_OK;
 }
 
 HRESULT WINAPI
