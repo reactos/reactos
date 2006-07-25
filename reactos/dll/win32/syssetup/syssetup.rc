@@ -50,4 +50,4 @@ IDR_GPL RT_TEXT "COPYING"
 #include "syssetup_Ja.rc"
 #include "syssetup_Es.rc"
 #include "syssetup_Hu.rc"
-
+#include "syssetup_Uk.rc"
