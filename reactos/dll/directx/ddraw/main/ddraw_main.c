@@ -250,8 +250,9 @@ HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
 	
 	if (This->mDdCreatePalette.CreatePalette(&This->mDdCreatePalette) == DDHAL_DRIVER_HANDLED);
     {				
-		if (This->mDdSetMode.ddRVal == DD_OK)
+		if (This->mDdCreatePalette.ddRVal == DD_OK)
 		{
+			
 			Main_DirectDraw_AddRef(iface);
 			return That->lpVtbl->Initialize (*ppPalette, (LPDIRECTDRAW)iface, dwFlags, palent);
 		}
@@ -305,12 +306,9 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
-    // FIXME free This->mDDrawGlobal.dsList  on release 
-    This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
-                                                                            sizeof(DDRAWI_DDRAWSURFACE_INT));        
+             
     That->Owner = (IDirectDrawImpl *)This;
-    That->Owner->mDDrawGlobal.dsList->dwIntRefCnt =1;
-
+    
     /* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
     That->Owner->mDDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
    
@@ -1101,9 +1099,16 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
 	This->mDdSetMode.ddRVal = DDERR_NOTPALETTIZED;
 	
     This->mDdSetMode.dwModeIndex = iMode; 
-	This->mDdSetMode.SetMode(&This->mDdSetMode);
 	
-	DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
+	if (This->mDdSetMode.SetMode(&This->mDdSetMode) == DDHAL_DRIVER_HANDLED)
+	{
+		if (This->mDdSetMode.ddRVal == DD_OK)
+			//DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
+		}
+	}
+	
+	
+	
 
 	/* FIXME fill the This->DirectDrawGlobal.vmiData right */		     
      //This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC( (HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd);  
