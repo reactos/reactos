@@ -1047,7 +1047,7 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
     DX_WINDBG_trace();
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	BOOL dummy = TRUE;
+	//BOOL dummy = TRUE;
 	DEVMODE DevMode; 	
     int iMode=0;
     int Width=0;
@@ -1103,8 +1103,9 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
 	if (This->mDdSetMode.SetMode(&This->mDdSetMode) == DDHAL_DRIVER_HANDLED)
 	{
 		if (This->mDdSetMode.ddRVal == DD_OK)
+            ;
 			//DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
-		}
+		//}
 	}
 	
 	
