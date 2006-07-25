@@ -116,10 +116,26 @@ typedef struct
     DDRAWI_DDRAWCLIPPER_LCL mPrimaryClipperLocal;
     DDRAWI_DDRAWCLIPPER_GBL mPrimaryClipperGlobal;
 
-    DDSURFACEDESC mddsdPrimary;
+    DDSURFACEDESC2 mddsdPrimary;
 
     DDRAWI_DDRAWSURFACE_LCL *mpInUseSurfaceLocals[1];
     
+	/* 
+	   AttachList We need getting surface pointer 
+	   of already create surface that have some private
+	   data msdn ATTACHLIST can not provide all info 
+	   we need with our desgin therfor we are using 
+	   wine desgin for it 
+	   type IDirectDrawSurfaceImpl;
+	*/
+    LPVOID next_attached;
+    LPVOID first_attached;
+    LPVOID next_complex;
+    LPVOID first_complex;
+	LPVOID next;
+    LPVOID prev;
+
+	/* Need be delete later */
     DDRAWI_DDRAWSURFACE_GBL mSurfGlobal;
     DDRAWI_DDRAWSURFACE_MORE mSurfMore;
     DDRAWI_DDRAWSURFACE_LCL mSurfLocal;

@@ -325,10 +325,10 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
           
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {              
-           memcpy(&That->Surf->mddsdPrimary,pDDSD,sizeof(DDSURFACEDESC));
-           That->Surf->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);          
+           memcpy(&That->Surf->mddsdPrimary,pDDSD,pDDSD->dwSize);
+           That->Surf->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC2);          
            This->mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; 
-           This->mDdCanCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary; 
+           This->mDdCanCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&That->Surf->mddsdPrimary; 
 
            if (This->mDdCanCreateSurface.CanCreateSurface(&This->mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
            {         
@@ -366,7 +366,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
           
 
-           This->mDdCreateSurface.lpDDSurfaceDesc = &That->Surf->mddsdPrimary;
+           This->mDdCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&That->Surf->mddsdPrimary;
            This->mDdCreateSurface.lplpSList = That->Surf->mpPrimaryLocals;
            This->mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ; 
 

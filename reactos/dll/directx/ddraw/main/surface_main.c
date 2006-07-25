@@ -234,9 +234,54 @@ Main_DDrawSurface_GetAttachedSurface(LPDIRECTDRAWSURFACE7 iface,
 					  LPDDSCAPS2 pCaps,
 					  LPDIRECTDRAWSURFACE7* ppSurface)
 {
+	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+	IDirectDrawSurfaceImpl *surf;
+    DDSCAPS2 our_caps;
+	    
     DX_WINDBG_trace();
 
-    DX_STUB;
+	/* 
+	    Wine Code from wine cvs 27/7-2006 
+		with small changes to fith into our ddraw desgin
+	*/
+	 
+	our_caps = *pCaps;
+    
+    /* 
+	   FIXME adding version check 
+	   Earlier dx apps put garbage into these members, clear them 
+	*/
+    our_caps.dwCaps2 = 0;
+    our_caps.dwCaps3 = 0;
+    our_caps.dwCaps4 = 0;
+
+    surf = This;
+	while( (surf = surf->Surf->next_complex) )
+    {
+		 if (((surf->Surf->mddsdPrimary.ddsCaps.dwCaps & our_caps.dwCaps) == our_caps.dwCaps) &&
+            ((surf->Surf->mddsdPrimary.ddsCaps.dwCaps2 & our_caps.dwCaps2) == our_caps.dwCaps2)) 
+		 {         
+            *ppSurface = (LPDIRECTDRAWSURFACE7)surf;
+            Main_DDrawSurface_AddRef(*ppSurface);
+            return DD_OK;
+        }
+	}
+
+	/* Next, look at the attachment chain */
+    surf = This;
+
+	while( (surf = surf->Surf->next_attached) )
+    {      
+        if (((surf->Surf->mddsdPrimary.ddsCaps.dwCaps & our_caps.dwCaps) == our_caps.dwCaps) &&
+            ((surf->Surf->mddsdPrimary.ddsCaps.dwCaps2 & our_caps.dwCaps2) == our_caps.dwCaps2)) 
+		{        
+            *ppSurface = (LPDIRECTDRAWSURFACE7)surf;
+            Main_DDrawSurface_AddRef(*ppSurface);
+            return DD_OK;
+        }
+    }
+
+   return DDERR_NOTFOUND;
 }
 
 HRESULT WINAPI
