@@ -3698,11 +3698,6 @@ MenuSetItemData(
     mii->fType |= MFT_RIGHTJUSTIFY;
   }
 
-  if(Flags & MF_BYPOSITION)
-  {
-    mii->fType |= MF_BYPOSITION;
-  }
-
   if(Flags & MF_MENUBREAK)
   {
     mii->fType |= MFT_MENUBREAK;
@@ -4396,9 +4391,6 @@ InsertMenuItemA(
         ((mi.fMask & MIIM_TYPE) && (MENU_ITEM_TYPE(mi.fType) == MF_STRING)))
           && mi.dwTypeData != NULL)
     {
-      UINT Count = lpmii->cch;
-      if(!Count) Count++;
-      if (IsBadStringPtrA(lpmii->dwTypeData, Count)) return FALSE;
       Status = RtlCreateUnicodeStringFromAsciiz(&MenuText, (LPSTR)mi.dwTypeData);
       if (!NT_SUCCESS (Status))
       {
@@ -4451,9 +4443,6 @@ InsertMenuItemW(
         ((mi.fMask & MIIM_TYPE) && (MENU_ITEM_TYPE(mi.fType) == MF_STRING)))
           && mi.dwTypeData != NULL)
     {
-      UINT Count = lpmii->cch;
-      if(!Count) Count++;
-      if (IsBadStringPtrW(lpmii->dwTypeData, Count)) return FALSE;
       RtlInitUnicodeString(&MenuText, (PWSTR)lpmii->dwTypeData);
       mi.dwTypeData = MenuText.Buffer;
       mi.cch = MenuText.Length / sizeof(WCHAR);
@@ -4826,9 +4815,6 @@ SetMenuItemInfoA(
         && MenuItemInfoW.dwTypeData != NULL)
   {
 /* cch is ignored when the content of a menu item is set by calling SetMenuItemInfo. */
-    UINT Count = lpmii->cch;
-    if(!Count) Count++;
-    if (IsBadStringPtrA(lpmii->dwTypeData, Count )) return FALSE;
     Status = RtlCreateUnicodeStringFromAsciiz(&UnicodeString,
                                      (LPSTR)MenuItemInfoW.dwTypeData);
     if (!NT_SUCCESS (Status))
@@ -4883,9 +4869,6 @@ SetMenuItemInfoW(
                            (MENU_ITEM_TYPE(MenuItemInfoW.fType) == MF_STRING)))
         && MenuItemInfoW.dwTypeData != NULL)
   {
-     UINT Count = lpmii->cch;
-     if (!Count) Count++;
-     if (IsBadStringPtrW(lpmii->dwTypeData, Count)) return FALSE;
      MenuItemInfoW.cch = strlenW(MenuItemInfoW.dwTypeData);
   }
   Result = NtUserMenuItemInfo(hMenu, uItem, fByPosition,

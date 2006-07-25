@@ -756,7 +756,7 @@ BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
    PMENU_OBJECT SubMenuObject;
-   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MF_BYPOSITION | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR | MF_POPUP);
+   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR | MF_POPUP);
 
    if(!MenuItem || !MenuObject || !lpmii)
    {
@@ -805,7 +805,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
          SetLastNtError( ERROR_INVALID_PARAMETER);
          return FALSE;
       }
-      MenuItem->fType |= lpmii->fType;
+      MenuItem->fType |= lpmii->fType; /* Need to save all the flags, this fixed MFT_RIGHTJUSTIFY */
    }
    if(lpmii->fMask & MIIM_BITMAP)
    {
@@ -1058,6 +1058,7 @@ IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
          mii.hSubMenu = CurItem->hSubMenu;
          mii.Rect = CurItem->Rect;
          mii.XTab = CurItem->XTab;
+         mii.Text = CurItem->Text.Buffer;
 
          Status = MmCopyToCaller(Buf, &mii, sizeof(ROSMENUITEMINFO));
          if (! NT_SUCCESS(Status))
