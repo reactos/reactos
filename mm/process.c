@@ -17,11 +17,35 @@ extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
 extern ULONG NtOSCSDVersion;
 extern ULONG NtGlobalFlag;
+extern MM_SYSTEM_SIZE MmSystemSize;
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+NTAPI
+MmSetMemoryPriorityProcess(IN PEPROCESS Process,
+                           IN UCHAR MemoryPriority)
+{
+    UCHAR OldPriority;
+
+    /* Check if we have less then 16MB of Physical Memory */
+    if ((MmSystemSize == MmSmallSystem) &&
+        (MmStats.NrTotalPages < ((15 * 1024 * 1024) / PAGE_SIZE)))
+    {
+        /* Always use background priority */
+        MemoryPriority = 0;
+    }
+
+    /* Save the old priority and update it */
+    OldPriority = Process->Vm.Flags.MemoryPriority;
+    Process->Vm.Flags.MemoryPriority = MemoryPriority;
+
+    /* Return the old priority */
+    return OldPriority;
+}
 
 LCID
 NTAPI

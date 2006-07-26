@@ -29,7 +29,7 @@ extern unsigned int _bss_end__;
 
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
-static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
+MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
 
 PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 
