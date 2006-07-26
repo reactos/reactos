@@ -1138,7 +1138,7 @@ WheelProc(IN HWND hwndDlg,
                 }
                 case IDC_RADIO_WHEEL_SCROLL_PAGE:
                 {
-                    g_WheelScrollLines = -1;
+                    g_WheelScrollLines = UINT_MAX;
                     ShowDialogWheelControls(hwndDlg);
                     break;
                 }
