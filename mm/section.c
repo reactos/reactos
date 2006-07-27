@@ -133,6 +133,17 @@ NTAPI
 MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                              ULONG Offset);
 
+PFILE_OBJECT
+NTAPI
+MmGetFileObjectForSection(IN PROS_SECTION_OBJECT Section)
+{
+    PAGED_CODE();
+    ASSERT(Section);
+
+    /* Return the file object */
+    return Section->FileObject; // Section->ControlArea->FileObject on NT
+}
+
 /* Note: Mmsp prefix denotes "Memory Manager Section Private". */
 
 /*
