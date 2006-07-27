@@ -48,59 +48,6 @@ PsReferenceProcessFilePointer(IN PEPROCESS Process,
     return Section ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
-/* FIXME:
- * This entire API is messed up because:
- * 1) Directly pokes SECTION_OBJECT/FILE_OBJECT without special reffing.
- * 2) Ignores SeAuditProcessImageFileName stuff added in XP (and ROS).
- * 3) Doesn't use ObQueryNameString.
- */
-NTSTATUS
-NTAPI
-PspGetImagePath(IN PEPROCESS Process,
-                OUT PUNICODE_STRING DstPath,
-                IN ULONG ProcessInformationLength)
-{
-    NTSTATUS Status;
-    ULONG ImagePathLen = 0;
-    PROS_SECTION_OBJECT Section;
-    PWSTR SrcBuffer = NULL, DstBuffer = (PWSTR)(DstPath + 1);
-
-    Section = (PROS_SECTION_OBJECT)Process->SectionObject;
-    if ((Section)&& (Section->FileObject))
-    {
-        /* FIXME - check for SEC_IMAGE and/or SEC_FILE instead
-        of relying on FileObject being != NULL? */
-        SrcBuffer = Section->FileObject->FileName.Buffer;
-        if (SrcBuffer) ImagePathLen = Section->FileObject->FileName.Length;
-    }
-
-    if (ProcessInformationLength < (sizeof(UNICODE_STRING) +
-                                    ImagePathLen +
-                                    sizeof(WCHAR)))
-    {
-        return STATUS_INFO_LENGTH_MISMATCH;
-    }
-
-    Status = STATUS_SUCCESS;
-    _SEH_TRY
-    {
-        /* copy the string manually, don't use RtlCopyUnicodeString with DstPath! */
-        DstPath->Length = ImagePathLen;
-        DstPath->MaximumLength = ImagePathLen + sizeof(WCHAR);
-        DstPath->Buffer = DstBuffer;
-        if (ImagePathLen) RtlCopyMemory(DstBuffer, SrcBuffer, ImagePathLen);
-        DstBuffer[ImagePathLen / sizeof(WCHAR)] = L'\0';
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    /* Return status */
-    return Status;
-}
-
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -126,6 +73,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         (PPROCESS_SESSION_INFORMATION)ProcessInformation;
     PVM_COUNTERS VmCounters = (PVM_COUNTERS)ProcessInformation;
     PROCESS_DEVICEMAP_INFORMATION DeviceMap;
+    PUNICODE_STRING ImageName;
     ULONG Cookie;
     PAGED_CODE();
 
@@ -414,9 +362,36 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessImageFileName:
 
             /* Get the image path */
-            Status = PspGetImagePath(Process,
-                                     (PUNICODE_STRING)ProcessInformation,
-                                     ProcessInformationLength);
+            Status = SeLocateProcessImageName(Process, &ImageName);
+            if (NT_SUCCESS(Status))
+            {
+                /* Set return length */
+                Length = ImageName->MaximumLength +
+                         sizeof(OBJECT_NAME_INFORMATION);
+
+                /* Make sure it's large enough */
+                if (Length <= ProcessInformationLength)
+                {
+                    /* Enter SEH to protect write */
+                    _SEH_TRY
+                    {
+                        /* Copy it */
+                        RtlMoveMemory(ProcessInformation,
+                                      ImageName,
+                                      Length);
+
+                        /* Update pointer */
+                        ((PUNICODE_STRING)ProcessInformation)->Buffer =
+                            (PWSTR)((PUNICODE_STRING)ProcessInformation + 1);
+                   }
+                    _SEH_HANDLE
+                    {
+                        /* Get the exception code */
+                        Status = _SEH_GetExceptionCode();
+                    }
+                    _SEH_END;
+                }
+            }
             break;
 
         /* Per-process security cookie */

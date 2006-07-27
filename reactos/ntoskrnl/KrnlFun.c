@@ -10,9 +10,9 @@
 //
 // Io:
 //  - Fix double-reference in IopCreateFile.
+//  - See why queueing IRPs and cancelling them causes crashes.
 //  - Add SEH to some places where it's missing (MDLs, etc) (iofunc).
 //  - Add a generic Cleanup/Exception Routine (iofunc).
-//  - See why queueing IRPs and cancelling them causes crashes
 //  - Add another parameter to IopCleanupFailedIrp.
 //  - Add Access Checks in IopParseDevice.
 //  - Add validation checks in IoCreateFile.
@@ -28,10 +28,9 @@
 //  - Generate process cookie for user-more thread.
 //
 // Ob:
-//  - Possible bug in deferred deletion under Cc Rewrite branch.
+//  - Fix bug related to Deferred Loading (don't requeue active work item).
 //  - Add Directory Lock.
 //  - Use Object Type Mutex/Lock.
-//  - Implement handle database if anyone needs it.
 //
 // Ex:
 //  - Use pushlocks for handle implementation.
