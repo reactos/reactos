@@ -981,6 +981,12 @@ MmGetShareCountPage(PFN_TYPE Pfn)
    return MmPageArray[Pfn].ShareCount;
 }
 
+ULONG 
+MmGetMemoryConsumerPage(PFN_TYPE Pfn)
+{
+	return MmPageArray[Pfn].Flags.Consumer;
+}
+
 PFN_TYPE
 NTAPI
 MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)

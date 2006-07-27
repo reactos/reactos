@@ -125,6 +125,9 @@ MmUnsharePage(PFN_TYPE Pfn);
 ULONG
 MmGetShareCountPage(PFN_TYPE Pfn);
 
+ULONG 
+MmGetMemoryConsumerPage (PFN_TYPE Pfn);
+
 ULONG
 NTAPI
 MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
@@ -564,6 +567,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 {
    ULONG Entry;
    ULONG ShareCount;
+   ULONG Consumer;
    PFN_TYPE Page;
 
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
@@ -578,6 +582,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
       KEBUGCHECK(0);
    }
    Page = PFN_FROM_SSE(Entry);
+   Consumer = MmGetMemoryConsumerPage(Page);
    /*
     * If we reducing the share count of this entry to zero then set the entry
     * to zero and tell the cache the page is no longer mapped.
@@ -599,7 +604,8 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
       if (PageOut)
       {
          MmSetPageEntrySectionSegment(Segment, Offset, 0);
-         MmReleasePageMemoryConsumer(MC_USER, Page);
+		 if(!Dirty && !(Entry & 0x2))
+			 MmReleasePageMemoryConsumer(Consumer, Page); 
       }
       else
       {
@@ -660,7 +666,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                      if (PageOut)
                      {
                         MmSetPageEntrySectionSegment(Segment, Offset, 0);
-                        MmReleasePageMemoryConsumer(MC_USER, Page);
+                        MmReleasePageMemoryConsumer(Consumer, Page);
                      }
                      else
                      {
@@ -672,7 +678,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                      if (PageOut && !Dirty && !(Entry & 0x2))
                      {
                         MmSetPageEntrySectionSegment(Segment, Offset, 0);
-                        MmReleasePageMemoryConsumer(MC_USER, Page);
+                        MmReleasePageMemoryConsumer(Consumer, Page);
                      }
                      else
                      {
@@ -685,7 +691,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                   else
                   {
                      MmSetPageEntrySectionSegment(Segment, Offset, 0);
-                     MmReleasePageMemoryConsumer(MC_USER, Page);
+                     MmReleasePageMemoryConsumer(Consumer, Page);
                   }
                }
             }
@@ -720,7 +726,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
                      CHECKPOINT1;
 //                   MmSetPageEntrySectionSegment(Segment, Offset, 0);            
                   }
-                  MmReleasePageMemoryConsumer(MC_USER, Page);
+                  MmReleasePageMemoryConsumer(Consumer, Page);
                }
                else
                {
@@ -2387,7 +2393,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    MmDeleteRmap(OldPage, AddressSpace->Process, PAddress);
    MmInsertRmap(NewPage, AddressSpace->Process, PAddress);
    MmLockSectionSegment(Segment);
-   MmUnsharePageEntrySectionSegment(Section, Segment, Offset, FALSE, FALSE);
+   MmUnsharePageEntrySectionSegment(Section, Segment, Offset, FALSE, TRUE);
    MmUnlockSectionSegment(Segment);
 
    PageOp->Status = STATUS_SUCCESS;
@@ -4906,7 +4912,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       {
          MmDeleteRmap(Page, AddressSpace->Process, Address);
          DPRINT("%x\n", Address);
-         MmUnsharePageEntrySectionSegment(Section, Segment, Offset, Dirty, FALSE);
+         MmUnsharePageEntrySectionSegment(Section, Segment, Offset, Dirty, TRUE);
       }
    }
 }
@@ -6506,7 +6512,7 @@ MmUnmapViewInSystemCache(PCACHE_VIEW CacheView)
       if (Pfn)
       {
          MmDeleteRmap(Pfn, NULL, (PVOID)((ULONG_PTR)CacheView->BaseAddress + Offset));
-         MmUnsharePageEntrySectionSegment(Section, Segment, CacheView->SectionData.ViewOffset + Offset, Dirty, FALSE);
+         MmUnsharePageEntrySectionSegment(Section, Segment, CacheView->SectionData.ViewOffset + Offset, Dirty, TRUE);
       }
    }
    MmUnlockSectionSegment(Segment);
