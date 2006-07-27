@@ -2159,7 +2159,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
         if (LocalEvent)
         {
             /* Then to a non-alertable wait */
-            Status = KeWaitForSingleObject(&Event,
+            Status = KeWaitForSingleObject(Event,
                                            Executive,
                                            PreviousMode,
                                            FALSE,

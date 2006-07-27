@@ -152,16 +152,16 @@ CdfsGetNameInformation(PFILE_OBJECT FileObject,
   ASSERT(Fcb != NULL);
 
   NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
-  if (*BufferLength < sizeof(FILE_NAME_INFORMATION) + NameLength)
+  NameInfo->FileNameLength = NameLength;
+  if (*BufferLength < (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName) + NameLength))
     return STATUS_BUFFER_OVERFLOW;
 
-  NameInfo->FileNameLength = NameLength;
   RtlCopyMemory(NameInfo->FileName,
 		Fcb->PathName,
 		NameLength + sizeof(WCHAR));
 
   *BufferLength -=
-    (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
+    (FIELD_OFFSET(FILE_NAME_INFORMATION, FileName) + NameLength);
 
   return STATUS_SUCCESS;
 }

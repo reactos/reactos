@@ -155,7 +155,8 @@ MmspCompleteAndReleasePageOp(PMM_PAGEOP PageOp)
 static NTSTATUS
 MmspWaitForFileLock(PFILE_OBJECT File)
 {
-   return KeWaitForSingleObject(&File->Lock, 0, KernelMode, FALSE, NULL);
+    return STATUS_SUCCESS;
+   //return KeWaitForSingleObject(&File->Lock, 0, KernelMode, FALSE, NULL);
 }
 
 
@@ -2476,7 +2477,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
                                       TAG_MM_SECTION_SEGMENT);
       if (Segment == NULL)
       {
-         KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+         //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return(STATUS_NO_MEMORY);
@@ -2531,7 +2532,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    Section->FileObject = FileObject;
    Section->MaximumSize = MaximumSize;
    CcRosReferenceCache(FileObject);
-   KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+   //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
    return(STATUS_SUCCESS);
 }
@@ -3362,7 +3363,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    }
    Section->FileObject = FileObject;
    CcRosReferenceCache(FileObject);
-   KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+   //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
    return(Status);
 }

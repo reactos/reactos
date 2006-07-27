@@ -69,7 +69,12 @@ IopParseDevice(IN PVOID ParseObject,
 
     /* Reference the DO */
     Status = IopReferenceDeviceObject(OriginalDeviceObject);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed, return status */
+        OpenPacket->FinalStatus = Status;
+        return Status;
+    }
 
     /* Map the generic mask and set the new mapping in the access state */
     RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
@@ -135,6 +140,85 @@ IopParseDevice(IN PVOID ParseObject,
         }
     }
 
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
+    if (!Irp)
+    {
+        /* Dereference the device and VPB, then fail */
+        IopDereferenceDeviceObject(DeviceObject, FALSE);
+        if (Vpb) IopDereferenceVpb(Vpb);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Now set the IRP data */
+    Irp->RequestorMode = AccessMode;
+    Irp->Flags = IRP_CREATE_OPERATION |
+                 IRP_SYNCHRONOUS_API |
+                 IRP_DEFER_IO_COMPLETION;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->UserIosb = &IoStatusBlock;
+    Irp->MdlAddress = NULL;
+    Irp->PendingReturned = FALSE;
+    Irp->UserEvent = NULL;
+    Irp->Cancel = FALSE;
+    Irp->CancelRoutine = NULL;
+    Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
+
+    /* Setup the security context */
+    SecurityContext.SecurityQos = SecurityQos;
+    SecurityContext.AccessState = AccessState;
+    SecurityContext.DesiredAccess = AccessState->RemainingDesiredAccess;
+    SecurityContext.FullCreateOptions = OpenPacket->CreateOptions;
+
+    /* Get the I/O Stack location */
+    StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
+    StackLoc->Control = 0;
+
+    /* Check what kind of file this is */
+    switch (OpenPacket->CreateFileType)
+    {
+        /* Normal file */
+        case CreateFileTypeNone:
+
+            /* Set the major function and EA Length */
+            StackLoc->MajorFunction = IRP_MJ_CREATE;
+            StackLoc->Parameters.Create.EaLength = OpenPacket->EaLength;
+
+            /* Set the flags */
+            StackLoc->Flags = OpenPacket->Options;
+            StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ?
+                                SL_CASE_SENSITIVE: 0;
+            break;
+
+        /* Named pipe */
+        case CreateFileTypeNamedPipe:
+
+            /* Set the named pipe MJ and set the parameters */
+            StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
+            StackLoc->Parameters.CreatePipe.Parameters = 
+                OpenPacket->MailslotOrPipeParameters;
+            break;
+
+        /* Mailslot */
+        case CreateFileTypeMailslot:
+
+            /* Set the mailslot MJ and set the parameters */
+            StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
+            StackLoc->Parameters.CreateMailslot.Parameters =
+                OpenPacket->MailslotOrPipeParameters;
+            break;
+    }
+
+    /* Set the common data */
+    Irp->Overlay.AllocationSize = OpenPacket->AllocationSize;
+    Irp->AssociatedIrp.SystemBuffer = OpenPacket->EaBuffer;
+    StackLoc->Parameters.Create.Options = (OpenPacket->Disposition << 24) |
+                                          (OpenPacket->CreateOptions &
+                                           0xFFFFFF);
+    StackLoc->Parameters.Create.FileAttributes = OpenPacket->FileAttributes;
+    StackLoc->Parameters.Create.ShareAccess = OpenPacket->ShareAccess;
+    StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
+
     /* Check if we really need to create an object */
     if (!UseDummyFile)
     {
@@ -153,6 +237,21 @@ IopParseDevice(IN PVOID ParseObject,
                                 0,
                                 0,
                                 (PVOID*)&FileObject);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Create failed, free the IRP */
+            IoFreeIrp(Irp);
+
+            /* Dereference the device and VPB */
+            IopDereferenceDeviceObject(DeviceObject, FALSE);
+            if (Vpb) IopDereferenceVpb(Vpb);
+
+            /* We failed, return status */
+            OpenPacket->FinalStatus = Status;
+            return Status;
+        }
+
+        /* Clear the file object */
         RtlZeroMemory(FileObject, sizeof(FILE_OBJECT));
 
         /* Check if this is Synch I/O */
@@ -168,6 +267,13 @@ IopParseDevice(IN PVOID ParseObject,
                 /* It is, set the alertable flag */
                 FileObject->Flags |= FO_ALERTABLE_IO;
             }
+        }
+
+        /* Check if this is synch I/O */
+        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+        {
+            /* Initialize the event. FIXME: Should be FALSE */
+            KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, FALSE);
         }
 
         /* Check if the caller requested no intermediate buffering */
@@ -226,94 +332,9 @@ IopParseDevice(IN PVOID ParseObject,
         FileObject->Flags |= FO_OPENED_CASE_SENSITIVE;
     }
 
-    /* Setup the security context */
-    SecurityContext.SecurityQos = SecurityQos;
-    SecurityContext.AccessState = AccessState;
-    SecurityContext.DesiredAccess = AccessState->RemainingDesiredAccess;
-    SecurityContext.FullCreateOptions = OpenPacket->CreateOptions;
-
-    /* Check if this is synch I/O */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-    {
-        /* Initialize the event */
-        KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
-    }
-
-    /* Allocate the IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (!Irp)
-    {
-        /* Dereference the device and VPB, then fail */
-        IopDereferenceDeviceObject(DeviceObject, FALSE);
-        if (Vpb) IopDereferenceVpb(Vpb);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Now set the IRP data */
+    /* Now set the file object */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
-    Irp->RequestorMode = AccessMode;
-    Irp->Flags = IRP_CREATE_OPERATION |
-                 IRP_SYNCHRONOUS_API |
-                 IRP_DEFER_IO_COMPLETION;
-    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-    Irp->UserEvent = &FileObject->Event;
-    Irp->UserIosb = &IoStatusBlock;
-    Irp->MdlAddress = NULL;
-    Irp->PendingReturned = FALSE;
-    Irp->UserEvent = NULL;
-    Irp->Cancel = FALSE;
-    Irp->CancelRoutine = NULL;
-    Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
-
-    /* Get the I/O Stack location */
-    StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
-    StackLoc->Control = 0;
     StackLoc->FileObject = FileObject;
-
-    /* Check what kind of file this is */
-    switch (OpenPacket->CreateFileType)
-    {
-        /* Normal file */
-        case CreateFileTypeNone:
-
-            /* Set the major function and EA Length */
-            StackLoc->MajorFunction = IRP_MJ_CREATE;
-            StackLoc->Parameters.Create.EaLength = OpenPacket->EaLength;
-
-            /* Set the flags */
-            StackLoc->Flags = OpenPacket->Options;
-            StackLoc->Flags |= !(Attributes & OBJ_CASE_INSENSITIVE) ?
-                                SL_CASE_SENSITIVE: 0;
-            break;
-
-        /* Named pipe */
-        case CreateFileTypeNamedPipe:
-
-            /* Set the named pipe MJ and set the parameters */
-            StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
-            StackLoc->Parameters.CreatePipe.Parameters = 
-                OpenPacket->MailslotOrPipeParameters;
-            break;
-
-        /* Mailslot */
-        case CreateFileTypeMailslot:
-
-            /* Set the mailslot MJ and set the parameters */
-            StackLoc->MajorFunction = IRP_MJ_CREATE_MAILSLOT;
-            StackLoc->Parameters.CreateMailslot.Parameters =
-                OpenPacket->MailslotOrPipeParameters;
-            break;
-    }
-
-    /* Set the common data */
-    Irp->Overlay.AllocationSize = OpenPacket->AllocationSize;
-    Irp->AssociatedIrp.SystemBuffer =OpenPacket->EaBuffer;
-    StackLoc->Parameters.Create.Options = (OpenPacket->Disposition << 24) |
-                                          (OpenPacket->CreateOptions &
-                                           0xFFFFFF);
-    StackLoc->Parameters.Create.FileAttributes = OpenPacket->FileAttributes;
-    StackLoc->Parameters.Create.ShareAccess = OpenPacket->ShareAccess;
-    StackLoc->Parameters.Create.SecurityContext = &SecurityContext;
 
     /* Check if the file object has a name */
     if (RemainingName->Length)
@@ -347,9 +368,6 @@ IopParseDevice(IN PVOID ParseObject,
     /* Copy the name */
     RtlCopyUnicodeString(&FileObject->FileName, RemainingName);
 
-    /* Reference the file object */
-    ObReferenceObject(FileObject);
-
     /* Initialize the File Object event and set the FO */
     KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
     OpenPacket->FileObject = FileObject;
@@ -373,6 +391,7 @@ IopParseDevice(IN PVOID ParseObject,
     {
         /* We'll have to complete it ourselves */
         ASSERT(!Irp->PendingReturned);
+        ASSERT(!Irp->MdlAddress );
 
         /* Completion happens at APC_LEVEL */
         KeRaiseIrql(APC_LEVEL, &OldIrql);
@@ -385,8 +404,8 @@ IopParseDevice(IN PVOID ParseObject,
         FileObject->Event.Header.SignalState = 1;
 
         /* Now that we've signaled the events, de-associate the IRP */
-        RemoveEntryList(&Irp->ThreadListEntry);
-        InitializeListHead(&Irp->ThreadListEntry);
+        //RemoveEntryList(&Irp->ThreadListEntry);
+        //InitializeListHead(&Irp->ThreadListEntry);
 
         /* Check if the IRP had an input buffer */
         if ((Irp->Flags & IRP_BUFFERED_IO) &&
