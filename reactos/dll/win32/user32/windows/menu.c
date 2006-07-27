@@ -117,6 +117,8 @@ static WORD ArrowBitmapWidth = 0, ArrowBitmapHeight = 0;
 static HBITMAP StdMnArrow = NULL;
 static HBITMAP BmpSysMenu = NULL;
 
+static SIZE MenuCharSize;
+
 /***********************************************************************
  *           MenuGetRosMenuInfo
  *
@@ -768,7 +770,9 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
         SelectObject(DcMem, OrigBitmap);
         DeleteDC(DcMem);
      }
-     Rect.left += CheckBitmapWidth;
+     Rect.left += 4;
+     if( !(MenuInfo->dwStyle & MNS_NOCHECK))
+        Rect.left += CheckBitmapWidth;
      Rect.right -= ArrowBitmapWidth;
   }
   else if (Item->hbmpItem) /* Draw the bitmap */
@@ -785,6 +789,9 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       UINT uFormat = MenuBar ? DT_CENTER | DT_VCENTER | DT_SINGLELINE
                      : DT_LEFT | DT_VCENTER | DT_SINGLELINE;
 
+      if( !(MenuInfo->dwStyle & MNS_CHECKORBMP))
+             Rect.left += MenuInfo->maxBmpSize.cx;
+             
       if (0 != (Item->fState & MFS_DEFAULT))
         {
           FontOld = SelectObject(Dc, hMenuFontBold);
@@ -837,6 +844,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
             }
           else
             {
+              Rect.right = Item->XTab;
               uFormat = DT_RIGHT | DT_VCENTER | DT_SINGLELINE;
             }
 
@@ -1178,7 +1186,7 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
                  INT OrgX, INT OrgY, BOOL MenuBar)
 {
   PWCHAR p;
-  SIZE MenuCharSize;
+  INT itemheight = 0;
   UINT CheckBitmapWidth = GetSystemMetrics(SM_CXMENUCHECK);
 
   DPRINT("dc=%x owner=%x (%d,%d)\n", Dc, WndOwner, OrgX, OrgY);
@@ -1231,83 +1239,114 @@ MenuCalcItemSize(HDC Dc, PROSMENUITEMINFO ItemInfo, PROSMENUINFO MenuInfo, HWND 
             ItemInfo->Rect.right += ArrowBitmapWidth +  MenuCharSize.cx;
       return;
     }
-
+  
+  ItemInfo->XTab = 0;
+  
   if (ItemInfo->hbmpItem)
-    {
+  {
       SIZE Size;
 
-      if (!MenuBar)
+      if (!MenuBar)  /* hbmpItem */
       {
          MenuGetBitmapItemSize(ItemInfo, &Size, WndOwner );
-            /* Keep the size of the bitmap in callback mode to be able
-             * to draw it correctly */
-        ItemInfo->Rect.right = ItemInfo->Rect.left + Size.cx;
-        if (MenuInfo->maxBmpSize.cx < abs(Size.cx) +  MENU_ITEM_HBMP_SPACE ||
-            MenuInfo->maxBmpSize.cy < abs(Size.cy))
-        {
-            MenuInfo->maxBmpSize.cx = abs(Size.cx) + MENU_ITEM_HBMP_SPACE;
-            MenuInfo->maxBmpSize.cy = abs(Size.cy);
-        }
-        MenuSetRosMenuInfo(MenuInfo);
+      /* Keep the size of the bitmap in callback mode to be able
+       * to draw it correctly */
+         ItemInfo->Rect.right = ItemInfo->Rect.left + Size.cx;
+         if (MenuInfo->maxBmpSize.cx < abs(Size.cx) +  MENU_ITEM_HBMP_SPACE ||
+             MenuInfo->maxBmpSize.cy < abs(Size.cy))
+         {
+             MenuInfo->maxBmpSize.cx = abs(Size.cx) + MENU_ITEM_HBMP_SPACE;
+             MenuInfo->maxBmpSize.cy = abs(Size.cy);
+         }
+         MenuSetRosMenuInfo(MenuInfo);
+         ItemInfo->Rect.right += Size.cx + 2;
+         itemheight = Size.cy + 2;
 
-        ItemInfo->Rect.right += 2 * CheckBitmapWidth;
-        if (0 != (ItemInfo->fType & MF_POPUP))
-        {
-            ItemInfo->Rect.right += ArrowBitmapWidth;
-        }
+         if( !(MenuInfo->dwStyle & MNS_NOCHECK))
+           ItemInfo->Rect.right += 2 * CheckBitmapWidth;
+         ItemInfo->Rect.right += 4 + MenuCharSize.cx;
+         ItemInfo->XTab = ItemInfo->Rect.right;
+         ItemInfo->Rect.right += ArrowBitmapWidth;
       }
-      else
+      else /* hbmpItem & MenuBar */
       {
         MenuGetBitmapItemSize(ItemInfo, &Size, WndOwner );
         ItemInfo->Rect.right  += Size.cx;
-        ItemInfo->Rect.bottom += Size.cy;
-
-        /* Leave space for the sunken border */
-        ItemInfo->Rect.right  += 2;
-        ItemInfo->Rect.bottom += 2;
+          if( ItemInfo->Text) ItemInfo->Rect.right  += 2;
+          itemheight = Size.cy;
 
       /* Special case: Minimize button doesn't have a space behind it. */
         if (ItemInfo->hbmpItem == (HBITMAP)HBMMENU_MBAR_MINIMIZE ||
             ItemInfo->hbmpItem == (HBITMAP)HBMMENU_MBAR_MINIMIZE_D)
         ItemInfo->Rect.right -= 1;
       }
-    }
+  }
+  else if (!MenuBar)
+  {
+      if( !(MenuInfo->dwStyle & MNS_NOCHECK))
+           ItemInfo->Rect.right += CheckBitmapWidth;
+      ItemInfo->Rect.right += 4 + MenuCharSize.cx;
+      ItemInfo->XTab = ItemInfo->Rect.right;
+      ItemInfo->Rect.right += ArrowBitmapWidth;
+  }
 
   /* it must be a text item - unless it's the system menu */
   if (0 == (ItemInfo->fType & MF_SYSMENU) && ItemInfo->Text)
-    {
-      SIZE Size;
+  {
+     HFONT hfontOld = NULL;
+     RECT rc = ItemInfo->Rect;
+     LONG txtheight, txtwidth;
 
-      GetTextExtentPoint32W(Dc, (LPWSTR) ItemInfo->dwTypeData,
-                            strlenW((LPWSTR) ItemInfo->dwTypeData), &Size);
-
-      ItemInfo->Rect.right += Size.cx;
-      ItemInfo->Rect.bottom += max(Size.cy, GetSystemMetrics(SM_CYMENU) - 1);
-      ItemInfo->XTab = 0;
-
-      if (MenuBar)
+     if ( ItemInfo->fState & MFS_DEFAULT )
+     {
+        hfontOld = SelectObject( Dc, hMenuFontBold );
+     }
+     if (MenuBar) 
+     {
+        txtheight = DrawTextW( Dc, ItemInfo->dwTypeData, -1, &rc,
+                                                  DT_SINGLELINE|DT_CALCRECT); 
+        ItemInfo->Rect.right  += rc.right - rc.left;
+        itemheight = max( max( itemheight, txtheight),
+                                           GetSystemMetrics( SM_CYMENU) - 1);
+        ItemInfo->Rect.right +=  2 * MenuCharSize.cx;
+     } 
+     else 
+     {
+        if ((p = strchrW( ItemInfo->dwTypeData, '\t' )) != NULL)
         {
-          ItemInfo->Rect.right += MENU_BAR_ITEMS_SPACE;
-        }
-      else if ((p = wcschr((LPWSTR) ItemInfo->dwTypeData, L'\t' )) != NULL)
-	{
-          /* Item contains a tab (only meaningful in popup menus) */
-          GetTextExtentPoint32W(Dc, (LPWSTR) ItemInfo->dwTypeData,
-                                (int)(p - (LPWSTR) ItemInfo->dwTypeData), &Size);
-          ItemInfo->XTab = CheckBitmapWidth + MENU_TAB_SPACE + Size.cx;
-          ItemInfo->Rect.right += MENU_TAB_SPACE;
-        }
-      else
+          RECT tmprc = rc;
+          LONG tmpheight;
+          int n = (int)( p - ItemInfo->dwTypeData);
+         /* Item contains a tab (only meaningful in popup menus) */
+         /* get text size before the tab */
+          txtheight = DrawTextW( Dc, ItemInfo->dwTypeData, n, &rc,
+                                                  DT_SINGLELINE|DT_CALCRECT);
+          txtwidth = rc.right - rc.left;
+          p += 1; /* advance past the Tab */
+         /* get text size after the tab */
+          tmpheight = DrawTextW( Dc, p, -1, &tmprc, DT_SINGLELINE|DT_CALCRECT);
+          ItemInfo->XTab += txtwidth;
+          txtheight = max( txtheight, tmpheight);
+          txtwidth += MenuCharSize.cx + /* space for the tab */
+          tmprc.right - tmprc.left; /* space for the short cut */
+        } 
+        else 
         {
-          if (NULL != wcschr((LPWSTR) ItemInfo->dwTypeData, L'\b'))
-            {
-              ItemInfo->Rect.right += MENU_TAB_SPACE;
-            }
-          ItemInfo->XTab = ItemInfo->Rect.right - CheckBitmapWidth
-	                   - ArrowBitmapWidth;
+          txtheight = DrawTextW( Dc, ItemInfo->dwTypeData, -1, &rc,
+                                                   DT_SINGLELINE|DT_CALCRECT);
+          txtwidth = rc.right - rc.left;
+          ItemInfo->XTab += txtwidth;
         }
-    }
-
+        ItemInfo->Rect.right  += 2 + txtwidth;
+        itemheight = max( itemheight, max( txtheight + 2, MenuCharSize.cy + 4));
+     }
+     if (hfontOld) SelectObject (Dc, hfontOld);
+  } 
+  else if( MenuBar)
+  {
+     itemheight = max( itemheight, GetSystemMetrics(SM_CYMENU)-1);
+  }
+  ItemInfo->Rect.bottom += itemheight;
   DPRINT("(%ld,%ld)-(%ld,%ld)\n", ItemInfo->Rect.left, ItemInfo->Rect.top, ItemInfo->Rect.right, ItemInfo->Rect.bottom);
 }
 
@@ -1336,6 +1375,9 @@ MenuPopupMenuCalcSize(PROSMENUINFO MenuInfo, HWND WndOwner)
 
   Start = 0;
   MaxX = 2 + 1;
+
+  MenuInfo->maxBmpSize.cx = 0;
+  MenuInfo->maxBmpSize.cy = 0;
 
   MenuInitRosMenuItemInfo(&ItemInfo);  
   while (Start < MenuInfo->MenuItemCount)
@@ -1441,6 +1483,9 @@ MenuMenuBarCalcSize(HDC Dc, LPRECT Rect, PROSMENUINFO MenuInfo, HWND WndOwner)
   Start = 0;
   HelpPos = -1;
 
+  MenuInfo->maxBmpSize.cx = 0;
+  MenuInfo->maxBmpSize.cy = 0;
+
   MenuInitRosMenuItemInfo(&ItemInfo);
   while (Start < MenuInfo->MenuItemCount)
     {
@@ -1467,7 +1512,6 @@ MenuMenuBarCalcSize(HDC Dc, LPRECT Rect, PROSMENUINFO MenuInfo, HWND WndOwner)
 
           DPRINT("calling MENU_CalcItemSize org=(%d, %d)\n", OrgX, OrgY);
           MenuCalcItemSize(Dc, &ItemInfo, MenuInfo, WndOwner, OrgX, OrgY, TRUE);
-          
           if (! MenuSetRosMenuItemInfo(MenuInfo->Self, i, &ItemInfo))
             {
               MenuCleanupRosMenuItemInfo(&ItemInfo);
@@ -1770,7 +1814,7 @@ MenuShowPopup(HWND WndOwner, HMENU Menu, UINT Id,
 
   if (GetSystemMetrics(SM_CXSCREEN ) < X + Width)
     {
-      if (0 != XAnchor)
+      if (0 != XAnchor && X >= Width - XAnchor)
         {
           X -= Width - XAnchor;
         }
@@ -1786,7 +1830,7 @@ MenuShowPopup(HWND WndOwner, HMENU Menu, UINT Id,
 
   if (GetSystemMetrics(SM_CYSCREEN) < Y + Height)
     {
-      if (0 != YAnchor)
+      if (0 != YAnchor && Y >= Height + YAnchor)
         {
           Y -= Height + YAnchor;
         }
@@ -2201,9 +2245,10 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
       if (0 != (MenuInfo->Flags & MF_POPUP))
 	{
           Rect.left += ItemInfo.Rect.right - GetSystemMetrics(SM_CXBORDER);
-          Rect.top += ItemInfo.Rect.top;
+          Rect.top += ItemInfo.Rect.top - 3;
           Rect.right = ItemInfo.Rect.left - ItemInfo.Rect.right + GetSystemMetrics(SM_CXBORDER);
-          Rect.bottom = ItemInfo.Rect.top - ItemInfo.Rect.bottom;
+          Rect.bottom = ItemInfo.Rect.top - ItemInfo.Rect.bottom - 3 - 2
+                                                    - GetSystemMetrics(SM_CYBORDER);
         }
       else
         {
