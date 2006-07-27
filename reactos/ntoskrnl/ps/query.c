@@ -63,7 +63,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ULONG Length = 0;
     PPROCESS_BASIC_INFORMATION ProcessBasicInfo =
         (PPROCESS_BASIC_INFORMATION)ProcessInformation;
@@ -881,80 +881,200 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
     PETHREAD Thread;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+    ULONG Access;
+    ULONG Length = 0;
+    PTHREAD_BASIC_INFORMATION ThreadBasicInfo =
+        (PTHREAD_BASIC_INFORMATION)ThreadInformation;
+    PKERNEL_USER_TIMES ThreadTime = (PKERNEL_USER_TIMES)ThreadInformation;
+    KIRQL OldIrql;
     PAGED_CODE();
 
-    DPRINT1("%s called for: %d\n", __FUNCTION__, ThreadInformationClass);
+    /* Verify Information Class validity */
+    Status = DefaultSetInfoBufferCheck(ThreadInformationClass,
+                                       PsThreadInfoClass,
+                                       RTL_NUMBER_OF(PsThreadInfoClass),
+                                       ThreadInformation,
+                                       ThreadInformationLength,
+                                       PreviousMode);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check what class this is */
+    Access = THREAD_QUERY_INFORMATION;
+
+    /* Reference the process */
     Status = ObReferenceObjectByHandle(ThreadHandle,
-                                       THREAD_QUERY_INFORMATION,
+                                       Access,
                                        PsThreadType,
                                        PreviousMode,
                                        (PVOID*)&Thread,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
-#if 0
+    /* Check what kind of information class this is */
     switch (ThreadInformationClass)
     {
+        /* Basic thread information */
         case ThreadBasicInformation:
-            /* A test on W2K agains ntdll shows NtQueryInformationThread return STATUS_PENDING
-            * as ExitStatus for current/running thread, while KETHREAD's ExitStatus is
-            * 0. So do the conversion here:
-            * -Gunnar     */
-            u.TBI.ExitStatus = (Thread->ExitStatus == 0) ? STATUS_PENDING : Thread->ExitStatus;
-            u.TBI.TebBaseAddress = (PVOID)Thread->Tcb.Teb;
-            u.TBI.ClientId = Thread->Cid;
-            u.TBI.AffinityMask = Thread->Tcb.Affinity;
-            u.TBI.Priority = Thread->Tcb.Priority;
-            u.TBI.BasePriority = KeQueryBasePriorityThread(&Thread->Tcb);
+
+            /* Protect writes with SEH */
+            _SEH_TRY
+            {
+                /* Write all the information from the ETHREAD/KTHREAD */
+                ThreadBasicInfo->ExitStatus = (Thread->ExitStatus == 0) ?
+                                               STATUS_PENDING :
+                                               Thread->ExitStatus;
+                ThreadBasicInfo->TebBaseAddress = (PVOID)Thread->Tcb.Teb;
+                ThreadBasicInfo->ClientId = Thread->Cid;
+                ThreadBasicInfo->AffinityMask = Thread->Tcb.Affinity;
+                ThreadBasicInfo->Priority = Thread->Tcb.Priority;
+                ThreadBasicInfo->BasePriority = KeQueryBasePriorityThread(&Thread->Tcb);
+
+                /* Set return length */
+                Length = sizeof(THREAD_BASIC_INFORMATION);
+            }
+            _SEH_HANDLE
+            {
+                /* Get exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
             break;
 
+        /* Thread time information */
         case ThreadTimes:
-            u.TTI.KernelTime.QuadPart = Thread->Tcb.KernelTime * 100000LL;
-            u.TTI.UserTime.QuadPart = Thread->Tcb.UserTime * 100000LL;
-            u.TTI.CreateTime = Thread->CreateTime;
-            /*This works*/
-            u.TTI.ExitTime = Thread->ExitTime;
+
+            /* Protect writes with SEH */
+            _SEH_TRY
+            {
+                /* Copy time information from ETHREAD/KTHREAD */
+                ThreadTime->KernelTime.QuadPart = Thread->Tcb.KernelTime *
+                                                   100000LL;
+                ThreadTime->UserTime.QuadPart = Thread->Tcb.UserTime *
+                                                 100000LL;
+                ThreadTime->CreateTime = Thread->CreateTime;
+                ThreadTime->ExitTime = Thread->ExitTime;
+
+                /* Set the return length */
+                Length = sizeof(KERNEL_USER_TIMES);
+            }
+            _SEH_HANDLE
+            {
+                /* Get exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
             break;
 
         case ThreadQuerySetWin32StartAddress:
-            u.Address = Thread->Win32StartAddress;
+
+            /* Protect write with SEH */
+            _SEH_TRY
+            {
+                /* Return the Win32 Start Address */
+                *(PVOID*)ThreadInformation = Thread->Win32StartAddress;
+
+                /* Set the return length*/
+                Length = sizeof(PVOID);
+            }
+            _SEH_HANDLE
+            {
+                /* Get exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
             break;
 
         case ThreadPerformanceCount:
-            /* Nebbett says this class is always zero */
-            u.Count.QuadPart = 0;
+
+            /* Protect write with SEH */
+            _SEH_TRY
+            {
+                /* FIXME */
+                (*(PLARGE_INTEGER)ThreadInformation).QuadPart = 0;
+
+                /* Set the return length*/
+                Length = sizeof(LARGE_INTEGER);
+            }
+            _SEH_HANDLE
+            {
+                /* Get exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
             break;
 
         case ThreadAmILastThread:
-            if (Thread->ThreadsProcess->ThreadListHead.Flink->Flink ==
-                &Thread->ThreadsProcess->ThreadListHead)
+
+            /* Protect write with SEH */
+            _SEH_TRY
             {
-                u.Last = TRUE;
+                /* Return whether or not we are the last thread */
+                *(PULONG)ThreadInformation = ((Thread->ThreadsProcess->
+                                               ThreadListHead.Flink->Flink ==
+                                               &Thread->ThreadsProcess->
+                                               ThreadListHead) ?
+                                              TRUE : FALSE);
+
+                /* Set the return length*/
+                Length = sizeof(ULONG);
             }
-            else
+            _SEH_HANDLE
             {
-                u.Last = FALSE;
+                /* Get exception code */
+                Status = _SEH_GetExceptionCode();
             }
+            _SEH_END;
             break;
 
         case ThreadIsIoPending:
+
+            /* Raise the IRQL to protect the IRP list */
+            KeRaiseIrql(APC_LEVEL, &OldIrql);
+
+            /* Protect write with SEH */
+            _SEH_TRY
             {
-                KIRQL OldIrql;
+                /* Check if the IRP list is empty or not */
+                *(PULONG)ThreadInformation = !IsListEmpty(&Thread->IrpList);
 
-                /* Raise the IRQL to protect the IRP list */
-                KeRaiseIrql(APC_LEVEL, &OldIrql);
-                u.IsIoPending = !IsListEmpty(&Thread->IrpList);
-                KeLowerIrql(OldIrql);
-                break;
+                /* Set the return length*/
+                Length = sizeof(ULONG);
             }
+            _SEH_HANDLE
+            {
+                /* Get exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
 
+            /* Lower IRQL back */
+            KeLowerIrql(OldIrql);
+            break;
+
+        /* Anything else */
         default:
-            /* Shoult never occure if the data table is correct */
-            KEBUGCHECK(0);
+
+            /* Not yet implemented */
+            DPRINT1("Not implemented: %lx\n", ThreadInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
     }
-#endif
+
+    /* Protect write with SEH */
+    _SEH_TRY
+    {
+        /* Check if caller wanted return length */
+        if (ReturnLength) *ReturnLength = Length;
+    }
+    _SEH_HANDLE
+    {
+        /* Get exception code */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+
+    /* Dereference the thread, and return */
     ObDereferenceObject(Thread);
-    return(Status);
+    return Status;
 }
 
 /* EOF */

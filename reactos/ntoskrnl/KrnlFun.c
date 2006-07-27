@@ -24,7 +24,6 @@
 //  - Add support for Fast Dispatch I/O.
 //
 // Ps:
-//  - Re-enable NtQuery/SetInformation Thread.
 //  - Generate process cookie for user-more thread.
 //
 // Ob:
