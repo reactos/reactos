@@ -400,7 +400,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Get the current process and cookie */
             Process = PsGetCurrentProcess();
             Cookie = Process->Cookie;
-            if(!Cookie)
+            if (!Cookie)
             {
                 LARGE_INTEGER SystemTime;
                 ULONG NewCookie;
@@ -416,7 +416,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 Cookie = InterlockedCompareExchange((LONG*)&Process->Cookie,
                                                     NewCookie,
                                                     Cookie);
-                if(!Cookie) Cookie = NewCookie;
+                if (!Cookie) Cookie = NewCookie;
 
                 /* Set return length */
                 Length = sizeof(ULONG);

@@ -994,10 +994,11 @@ PsGetProcessPriorityClass(PEPROCESS Process)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE
+NTAPI
 PsGetCurrentProcessId(VOID)
 {
-    return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
+    return (HANDLE)PsGetCurrentProcess()->UniqueProcessId;
 }
 
 /*
@@ -1074,7 +1075,7 @@ PsGetProcessWin32WindowStation(PEPROCESS Process)
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 PsIsProcessBeingDebugged(PEPROCESS Process)
 {
     return Process->DebugPort != NULL;

@@ -23,9 +23,6 @@
 //  - Verify ShareAccess APIs, XP added some new semantics.
 //  - Add support for Fast Dispatch I/O.
 //
-// Ps:
-//  - Generate process cookie for user-more thread.
-//
 // Ob:
 //  - Fix bug related to Deferred Loading (don't requeue active work item).
 //  - Add Directory Lock.

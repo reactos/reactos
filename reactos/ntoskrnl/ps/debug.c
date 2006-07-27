@@ -28,7 +28,7 @@ typedef struct _GET_SET_CTX_CONTEXT
 
 #ifdef DBG
 VOID
-STDCALL
+NTAPI
 PspDumpThreads(BOOLEAN IncludeSystem)
 {
     PLIST_ENTRY CurrentThread, CurrentProcess;

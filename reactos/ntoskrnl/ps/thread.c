@@ -95,13 +95,21 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     /* Do we have a cookie set yet? */
     if (!SharedUserData->Cookie)
     {
-        /*
-         * FIXME: Generate cookie
-         * Formula (roughly): Per-CPU Page Fault ^ Per-CPU Interrupt Time ^
-         *                    Global System Time ^ Stack Address of where
-         *                    the LARGE_INTEGER containing the Global System
-         *                    Time is.
-         */
+        LARGE_INTEGER SystemTime;
+        ULONG NewCookie;
+        PKPRCB Prcb;
+
+        /* Generate a new cookie */
+        KeQuerySystemTime(&SystemTime);
+        Prcb = KeGetCurrentPrcb();
+        NewCookie = Prcb->MmPageFaultCount ^ Prcb->InterruptTime ^
+                    SystemTime.u.LowPart ^ SystemTime.u.HighPart ^
+                    (ULONG)&SystemTime;
+
+        /* Set the new cookie*/
+        InterlockedCompareExchange((LONG*)&SharedUserData->Cookie,
+                                   NewCookie,
+                                   0);
     }
 }
 

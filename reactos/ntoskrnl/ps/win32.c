@@ -114,7 +114,7 @@ PsEstablishWin32Callouts(IN PWIN32_CALLOUTS_FPNS CalloutData)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtW32Call(IN ULONG RoutineIndex,
           IN PVOID Argument,
           IN ULONG ArgumentLength,
