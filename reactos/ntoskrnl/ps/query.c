@@ -17,7 +17,7 @@
 #include "internal/ps_i.h"
 
 /* Debugging Level */
-ULONG PspTraceLevel = PS_KILL_DEBUG | PS_REF_DEBUG;
+ULONG PspTraceLevel = 0;//PS_KILL_DEBUG | PS_REF_DEBUG;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -703,7 +703,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -713,70 +713,157 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
                        IN ULONG ThreadInformationLength)
 {
     PETHREAD Thread;
+    ULONG Access;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
+    HANDLE TokenHandle = NULL;
+    KPRIORITY Priority = 0;
+    KAFFINITY Affinity = 0;
+    PVOID Address = NULL;
+    PEPROCESS Process;
     PAGED_CODE();
 
-    DPRINT1("%s called for: %d\n", __FUNCTION__, ThreadInformationClass);
-    /* FIXME: This is REALLY wrong. Some types don't need THREAD_SET_INFORMATION */
-    /* FIXME: We should also check for certain things before doing the reference */
+    /* Verify Information Class validity */
+    Status = DefaultSetInfoBufferCheck(ThreadInformationClass,
+                                       PsThreadInfoClass,
+                                       RTL_NUMBER_OF(PsThreadInfoClass),
+                                       ThreadInformation,
+                                       ThreadInformationLength,
+                                       PreviousMode);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check what class this is */
+    Access = THREAD_SET_INFORMATION;
+    if (ThreadInformationClass == ThreadImpersonationToken)
+    {
+        /* Setting the impersonation token needs a special mask */
+        Access = THREAD_SET_THREAD_TOKEN;
+    }
+
+    /* Reference the process */
     Status = ObReferenceObjectByHandle(ThreadHandle,
-                                       THREAD_SET_INFORMATION,
+                                       Access,
                                        PsThreadType,
                                        PreviousMode,
                                        (PVOID*)&Thread,
                                        NULL);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check what kind of information class this is */
+    switch (ThreadInformationClass)
     {
-#if 0
-        switch (ThreadInformationClass)
-        {
-            case ThreadPriority:
+        /* Thread priority */
+        case ThreadPriority:
 
-                if (u.Priority < LOW_PRIORITY || u.Priority >= MAXIMUM_PRIORITY)
-                {
-                    Status = STATUS_INVALID_PARAMETER;
-                    break;
-                }
-                KeSetPriorityThread(&Thread->Tcb, u.Priority);
-                break;
+            /* Use SEH for capture */
+            _SEH_TRY
+            {
+                /* Get the priority */
+                Priority = *(PLONG)ThreadInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
 
-            case ThreadBasePriority:
-                KeSetBasePriorityThread (&Thread->Tcb, u.Increment);
-                break;
+            /* Set the priority */
+            KeSetPriorityThread(&Thread->Tcb, Priority);
+            break;
 
-            case ThreadAffinityMask:
+        case ThreadBasePriority:
 
-                /* Check if this is valid */
-                DPRINT1("%lx, %lx\n", Thread->ThreadsProcess->Pcb.Affinity, u.Affinity);
-                if ((Thread->ThreadsProcess->Pcb.Affinity & u.Affinity) !=
-                    u.Affinity)
-                {
-                    DPRINT1("Wrong affinity given\n");
-                    Status = STATUS_INVALID_PARAMETER;
-                }
-                else
-                {
-                    Status = KeSetAffinityThread(&Thread->Tcb, u.Affinity);
-                }
-                break;
+            /* Use SEH for capture */
+            _SEH_TRY
+            {
+                /* Get the priority */
+                Priority = *(PLONG)ThreadInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
 
-            case ThreadImpersonationToken:
-                Status = PsAssignImpersonationToken (Thread, u.Handle);
-                break;
+            /* Set the base priority */
+            KeSetBasePriorityThread(&Thread->Tcb, Priority);
+            break;
 
-            case ThreadQuerySetWin32StartAddress:
-                Thread->Win32StartAddress = u.Address;
-                break;
+        case ThreadAffinityMask:
 
-            default:
-                /* Shoult never occure if the data table is correct */
-                KEBUGCHECK(0);
-        }
-#endif
-        ObDereferenceObject (Thread);
+            /* Use SEH for capture */
+            _SEH_TRY
+            {
+                /* Get the priority */
+                Affinity = *(PULONG_PTR)ThreadInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Get the process */
+            Process = Thread->ThreadsProcess;
+
+            /* Set the affinity */
+            KeSetAffinityThread(&Thread->Tcb, Affinity & Process->Pcb.Affinity);
+            break;
+
+        case ThreadImpersonationToken:
+
+            /* Use SEH for capture */
+            _SEH_TRY
+            {
+                /* Save the token handle */
+                TokenHandle = *(PHANDLE)ThreadInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Assign the actual token */
+            Status = PsAssignImpersonationToken(Thread, TokenHandle);
+            break;
+
+        case ThreadQuerySetWin32StartAddress:
+
+            /* Use SEH for capture */
+            _SEH_TRY
+            {
+                /* Get the priority */
+                Address = *(PVOID*)ThreadInformation;
+            }
+            _SEH_HANDLE
+            {
+                /* Get the exception code */
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Set the address */
+            Thread->Win32StartAddress = Address;
+            break;
+
+        default:
+            /* We don't implement it yet */
+            DPRINT1("Not implemented: %lx\n", ThreadInformationClass);
+            Status = STATUS_NOT_IMPLEMENTED;
     }
 
+    /* Dereference and return status */
+    ObDereferenceObject(Thread);
     return Status;
 }
 
