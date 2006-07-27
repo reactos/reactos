@@ -166,6 +166,13 @@ PsChangeQuantumTable(
     IN ULONG PrioritySeparation
 );
 
+NTSTATUS
+NTAPI
+PsReferenceProcessFilePointer(
+    IN PEPROCESS Process,
+    OUT PFILE_OBJECT *FileObject
+);
+
 //
 // Security Routines
 //

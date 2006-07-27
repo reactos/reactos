@@ -593,43 +593,10 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Create the Process' Address Space */
     Status = MmCreateProcessAddressSpace(Process,
-                                         (PROS_SECTION_OBJECT)SectionObject);
+                                         (PROS_SECTION_OBJECT)SectionObject,
+                                         &Process->SeAuditProcessCreationInfo.
+                                         ImageFileName);
     if (!NT_SUCCESS(Status)) goto CleanupWithRef;
-
-    /* Check for parent again */
-#if 0
-    if (!Parent)
-    {
-        /* Allocate our Audit info */
-        Process->SeAuditProcessCreationInfo.ImageFileName = 
-            ExAllocatePoolWithTag(PagedPool,
-                                  sizeof(SE_AUDIT_PROCESS_CREATION_INFO),
-                                  TAG_SEPA);
-        RtlZeroMemory(Process->SeAuditProcessCreationInfo.ImageFileName,
-                      sizeof(SE_AUDIT_PROCESS_CREATION_INFO));
-    }
-    else
-    {
-        /* Allocate our Audit info */
-        Process->SeAuditProcessCreationInfo.ImageFileName = 
-            ExAllocatePoolWithTag(PagedPool,
-                                  sizeof(SE_AUDIT_PROCESS_CREATION_INFO) + 
-                                  Parent->SeAuditProcessCreationInfo.
-                                  ImageFileName->Name.MaximumLength,
-                                  TAG_SEPA);
-
-        /* Copy from parent */
-        RtlCopyMemory(Process->SeAuditProcessCreationInfo.ImageFileName,
-                      Parent->SeAuditProcessCreationInfo.ImageFileName,
-                      sizeof(SE_AUDIT_PROCESS_CREATION_INFO) + 
-                      Parent->SeAuditProcessCreationInfo.ImageFileName->
-                      Name.MaximumLength);
-
-        /* Update buffer pointer */
-        Process->SeAuditProcessCreationInfo.ImageFileName->Name.Buffer = 
-            (PVOID)(Process->SeAuditProcessCreationInfo.ImageFileName + 1);
-    }
-#endif
 
     /* Check if we have a section object and map the system DLL */
     if (SectionObject) PspMapSystemDll(Process, NULL);

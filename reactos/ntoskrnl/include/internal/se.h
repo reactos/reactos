@@ -131,6 +131,21 @@ SeSubProcessToken(
 
 NTSTATUS
 NTAPI
+SeInitializeProcessAuditName(
+    IN PFILE_OBJECT FileObject,
+    IN BOOLEAN DoAudit,
+    OUT POBJECT_NAME_INFORMATION *AuditInfo
+);
+
+NTSTATUS
+NTAPI
+SeLocateProcessImageName(
+    IN PEPROCESS Process,
+    OUT PUNICODE_STRING *ProcessImageName
+);
+
+NTSTATUS
+NTAPI
 SeCreateAccessStateEx(
     IN PETHREAD Thread,
     IN PEPROCESS Process,

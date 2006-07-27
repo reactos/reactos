@@ -37,6 +37,149 @@ SeAuditProcessExit(IN PEPROCESS Process)
     /* FIXME */
 }
 
+NTSTATUS
+NTAPI
+SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
+                             IN BOOLEAN DoAudit,
+                             OUT POBJECT_NAME_INFORMATION *AuditInfo)
+{
+    OBJECT_NAME_INFORMATION LocalNameInfo;
+    POBJECT_NAME_INFORMATION ObjectNameInfo = NULL;
+    ULONG ReturnLength = 8;
+    NTSTATUS Status;
+    PAGED_CODE();
+    ASSERT(AuditInfo);
+
+    /* Check if we should do auditing */
+    if (DoAudit)
+    {
+        /* FIXME: TODO */
+    }
+
+    /* Now query the name */
+    Status = ObQueryNameString(FileObject,
+                               &LocalNameInfo,
+                               sizeof(LocalNameInfo),
+                               &ReturnLength);
+    if (((Status == STATUS_BUFFER_OVERFLOW) ||
+         (Status == STATUS_BUFFER_TOO_SMALL)) &&
+        (ReturnLength != sizeof(LocalNameInfo)))
+    {
+        /* Allocate required size */
+        ObjectNameInfo = ExAllocatePoolWithTag(NonPagedPool,
+                                               ReturnLength,
+                                               TAG_SEPA);
+        if (ObjectNameInfo)
+        {
+            /* Query the name again */
+            Status = ObQueryNameString(FileObject,
+                                       ObjectNameInfo,
+                                       ReturnLength,
+                                       &ReturnLength);
+        }
+    }
+
+    /* Check if we got here due to failure */
+    if ((ObjectNameInfo) &&
+        (!(NT_SUCCESS(Status)) || (ReturnLength == sizeof(LocalNameInfo))))
+    {
+        /* First, free any buffer we might've allocated */
+        KEBUGCHECK(0);
+        if (ObjectNameInfo) ExFreePool(ObjectNameInfo);
+
+        /* Now allocate a temporary one */
+        ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
+        ObjectNameInfo = ExAllocatePoolWithTag(NonPagedPool,
+                                               sizeof(OBJECT_NAME_INFORMATION),
+                                               TAG_SEPA);
+        if (ObjectNameInfo)
+        {
+            /* Clear it */
+            RtlZeroMemory(ObjectNameInfo, ReturnLength);
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    /* Check if memory allocation failed */
+    if (!ObjectNameInfo) Status = STATUS_NO_MEMORY;
+
+    /* Return the audit name */
+    *AuditInfo = ObjectNameInfo;
+
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SeLocateProcessImageName(IN PEPROCESS Process,
+                         OUT PUNICODE_STRING *ProcessImageName)
+{
+    POBJECT_NAME_INFORMATION AuditName;
+    PUNICODE_STRING ImageName;
+    PFILE_OBJECT FileObject;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
+
+    /* Assume failure */
+    *ProcessImageName = NULL;
+
+    /* Check if we have audit info */
+    AuditName = Process->SeAuditProcessCreationInfo.ImageFileName;
+    if (!AuditName)
+    {
+        /* Get the file object */
+        Status = PsReferenceProcessFilePointer(Process, &FileObject);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Initialize the audit structure */
+        Status = SeInitializeProcessAuditName(FileObject, TRUE, &AuditName);
+        if (NT_SUCCESS(Status))
+        {
+            /* Set it */
+            if (InterlockedCompareExchangePointer(&Process->
+                                                  SeAuditProcessCreationInfo,
+                                                  AuditName,
+                                                  NULL))
+            {
+                /* Someone beat us to it, deallocate our copy */
+                ExFreePool(AuditName);
+            }
+        }
+
+        /* Dereference the file object */
+        ObDereferenceObject(FileObject);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+
+    /* Allocate the output string */
+    ImageName = ExAllocatePoolWithTag(NonPagedPool,
+                                      AuditName->Name.MaximumLength +
+                                      sizeof(UNICODE_STRING),
+                                      TAG_SEPA);
+    if (ImageName)
+    {
+        /* Make a copy of it */
+        RtlMoveMemory(ImageName,
+                      &AuditName->Name,
+                      AuditName->Name.MaximumLength + sizeof(UNICODE_STRING));
+
+        /* Fix up the buffer */
+        ImageName->Buffer = (PWSTR)(ImageName + 1);
+
+        /* Return it */
+        *ProcessImageName = ImageName;
+    }
+    else
+    {
+        /* Otherwise, fail */
+        Status = STATUS_NO_MEMORY;
+    }
+
+    /* Return status */
+    return Status;
+}
+
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS

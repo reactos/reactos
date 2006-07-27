@@ -21,6 +21,33 @@ ULONG PspTraceLevel = PS_KILL_DEBUG | PS_REF_DEBUG;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+NTSTATUS
+NTAPI
+PsReferenceProcessFilePointer(IN PEPROCESS Process,
+                              OUT PFILE_OBJECT *FileObject)
+{
+    PROS_SECTION_OBJECT Section;
+    PAGED_CODE();
+
+    /* Lock the process */
+    ExAcquireRundownProtection(&Process->RundownProtect);
+
+    /* Get the section */
+    Section = (PROS_SECTION_OBJECT)Process->SectionObject;
+    if (Section)
+    {
+        /* Get the file object and reference it */
+        *FileObject = MmGetFileObjectForSection(Section);
+        ObReferenceObject(*FileObject);
+    }
+
+    /* Release the protection */
+    ExReleaseRundownProtection(&Process->RundownProtect);
+
+    /* Return status */
+    return Section ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+}
+
 /* FIXME:
  * This entire API is messed up because:
  * 1) Directly pokes SECTION_OBJECT/FILE_OBJECT without special reffing.

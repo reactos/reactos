@@ -620,7 +620,8 @@ NTSTATUS
 STDCALL
 MmCreateProcessAddressSpace(
     IN PEPROCESS Process,
-    IN PROS_SECTION_OBJECT Section OPTIONAL
+    IN PROS_SECTION_OBJECT Section OPTIONAL,
+    IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL
 );
 
 NTSTATUS
@@ -1299,6 +1300,12 @@ MmFindRegion(
 );
 
 /* section.c *****************************************************************/
+
+PFILE_OBJECT
+NTAPI
+MmGetFileObjectForSection(
+    IN PROS_SECTION_OBJECT Section
+);
 
 PVOID 
 STDCALL

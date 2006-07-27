@@ -472,7 +472,8 @@ MmCreateTeb(PEPROCESS Process,
 NTSTATUS
 STDCALL
 MmCreateProcessAddressSpace(IN PEPROCESS Process,
-                            IN PROS_SECTION_OBJECT Section OPTIONAL)
+                            IN PROS_SECTION_OBJECT Section OPTIONAL,
+                            IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
 {
     NTSTATUS Status;
     PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
@@ -579,27 +580,37 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         /* Determine the image file name and save it to EPROCESS */
         DPRINT("Getting Image name\n");
         FileName = Section->FileObject->FileName;
-        szSrc = (PWCHAR)(FileName.Buffer + (FileName.Length / sizeof(WCHAR)) - 1);
-
-        while(szSrc >= FileName.Buffer)
+        szSrc = (PWCHAR)(FileName.Buffer + FileName.Length);
+        while (szSrc >= FileName.Buffer)
         {
-            if(*szSrc == L'\\')
+            /* Make sure this isn't a backslash */
+            if (*--szSrc == OBJ_NAME_PATH_SEPARATOR)
             {
+                /* If so, stop it here */
                 szSrc++;
                 break;
             }
             else
             {
-                szSrc--;
+                /* Otherwise, keep going */
                 lnFName++;
             }
         }
 
         /* Copy the to the process and truncate it to 15 characters if necessary */
-        DPRINT("Copying and truncating\n");
         szDest = Process->ImageFileName;
         lnFName = min(lnFName, sizeof(Process->ImageFileName) - 1);
-        while(lnFName-- > 0) *(szDest++) = (UCHAR)*(szSrc++);
+        while (lnFName--) *szDest++ = (UCHAR)*szSrc++;
+        *szDest = UNICODE_NULL;
+
+        /* Check if caller wants an audit name */
+        if (AuditName)
+        {
+            /* Setup the audit name */
+            SeInitializeProcessAuditName(Section->FileObject,
+                                         FALSE,
+                                         AuditName);
+        }
 
         /* Return status to caller */
         return Status;

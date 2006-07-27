@@ -24,8 +24,6 @@
 //  - Add support for Fast Dispatch I/O.
 //
 // Ps:
-//  - Fix API to get process image name.
-//  - Enabled #ifed out code for Se Process name auditing.
 //  - Re-enable NtQuery/SetInformation Thread.
 //  - Generate process cookie for user-more thread.
 //
