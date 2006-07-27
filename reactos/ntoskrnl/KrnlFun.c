@@ -11,6 +11,8 @@
 // Io:
 //  - Fix double-reference in IopCreateFile.
 //  - See why queueing IRPs and cancelling them causes crashes.
+//  - Find out why 7zip can't create temporary folders due to deferred I/O
+//    completion in IopParseDevice when creating a new File Object.
 //  - Add SEH to some places where it's missing (MDLs, etc) (iofunc).
 //  - Add a generic Cleanup/Exception Routine (iofunc).
 //  - Add another parameter to IopCleanupFailedIrp.
