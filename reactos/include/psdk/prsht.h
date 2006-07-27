@@ -106,6 +106,9 @@ extern "C" {
 #define PSN_HELP	(-205)
 #define PSN_KILLACTIVE	(-201)
 #define PSN_QUERYCANCEL	(-209)
+#define PSN_GETOBJECT   (PSN_FIRST-10)
+#define PSN_TRANSLATEACCELERATOR (PSN_FIRST-12)
+#define PSN_QUERYINITIALFOCUS    (PSN_FIRST-13)
 #define PSN_RESET	(-203)
 #define PSN_SETACTIVE	(-200)
 #define PSN_WIZBACK	(-206)
@@ -304,6 +307,17 @@ int WINAPI PropertySheetW(LPCPROPSHEETHEADERW);
 #define PropSheet_SetTitle(d,w,s) SendMessage(d,PSM_SETTITLE,w,(LPARAM)s)
 #define PropSheet_SetWizButtons(d,f) PostMessage(d,PSM_SETWIZBUTTONS,0,(LPARAM)f)
 #define PropSheet_UnChanged(d,w) SendMessage(d,PSM_UNCHANGED,(WPARAM)w,0)
+#endif
+
+#define WC_PROPSHEETA      "SysPropertySheet"
+#if defined(__GNUC__)
+# define WC_PROPSHEETW (const WCHAR []){ 'S','y','s', \
+  'P','r','o','p','e','r','t','y','S','h','e','e','t',0 }
+#elif defined(_MSC_VER)
+# define WC_PROPSHEETW     L"SysPropertySheet"
+#else
+static const WCHAR WC_PROPSHEETW[] = { 'S','y','s',
+  'P','r','o','p','e','r','t','y','S','h','e','e','t',0 };
 #endif
 
 #ifdef UNICODE

@@ -631,6 +631,15 @@ extern "C" {
 #define TB_MAPACCELERATORW	(WM_USER+90)
 #define TB_GETSTRINGW		(WM_USER+91)
 #define TB_GETSTRINGA		(WM_USER+92)
+
+/* undocumented messages in Toolbar */
+#define TB_UNKWN45D             (WM_USER+93)
+#define TB_UNKWN45E             (WM_USER+94)
+#define TB_UNKWN460             (WM_USER+96)
+#define TB_UNKWN462             (WM_USER+98)
+#define TB_UNKWN463             (WM_USER+99)
+#define TB_UNKWN464             (WM_USER+100)
+
 #define TB_SETCOLORSCHEME	CCM_SETCOLORSCHEME
 #define TB_GETCOLORSCHEME	CCM_GETCOLORSCHEME
 #define TB_SETUNICODEFORMAT	CCM_SETUNICODEFORMAT
@@ -655,6 +664,7 @@ extern "C" {
 #define TBN_DROPDOWN	(TBN_FIRST-10)
 #endif
 #if (_WIN32_IE >= 0x0400)
+#define TBN_GETOBJECT		(TBN_FIRST-12)
 #define TBN_HOTITEMCHANGE	(TBN_FIRST-13)
 #define TBN_DRAGOUT	(TBN_FIRST-14)
 #define TBN_DELETINGBUTTON	(TBN_FIRST-15)
@@ -1212,6 +1222,7 @@ extern "C" {
 #define LVN_SETDISPINFOA	(LVN_FIRST-51)
 #define LVN_SETDISPINFOW	(LVN_FIRST-78)
 #define LVN_KEYDOWN	(LVN_FIRST-55)
+#define LVN_MARQUEEBEGIN	(LVN_FIRST-56)
 #if (_WIN32_IE >= 0x0400)
 #define LVN_GETINFOTIPA	(LVN_FIRST-57)
 #define LVN_GETINFOTIPW	(LVN_FIRST-58)
@@ -1468,6 +1479,7 @@ extern "C" {
 #define TCN_KEYDOWN	TCN_FIRST
 #define TCN_SELCHANGE	(TCN_FIRST-1)
 #define TCN_SELCHANGING	(TCN_FIRST-2)
+#define TCN_GETOBJECT	(TCN_FIRST-3)
 #define NM_OUTOFMEMORY (NM_FIRST-1)
 #define NM_CLICK (NM_FIRST-2)
 #define NM_DBLCLK (NM_FIRST-3)
@@ -1681,6 +1693,7 @@ extern "C" {
 #define LVN_ODFINDITEMW (LVN_FIRST-79)
 #define LVN_ITEMACTIVATE (LVN_FIRST-14)
 #define LVN_ODSTATECHANGED (LVN_FIRST-15)
+#define LVN_HOTTRACK    (LVN_FIRST-21)
 #ifdef UNICODE
 #define LVN_ODFINDITEM LVN_ODFINDITEMW
 #else
@@ -1995,12 +2008,32 @@ typedef struct {
 	char szText[CBEMAXSTRLEN];
 	int iWhy;
 } NMCBEENDEDITA, *LPNMCBEENDEDITA,*PNMCBEENDEDITA;
+typedef struct tagNMOBJECTNOTIFY
+{
+	NMHDR   hdr;
+	int     iItem;
+#ifdef __IID_DEFINED__
+	const IID *piid;
+#else
+	const void *piid;
+#endif
+	void    *pObject;
+	HRESULT hResult;
+	DWORD   dwFlags;
+} NMOBJECTNOTIFY, *LPNMOBJECTNOTIFY;
 typedef struct tagNMKEY
 {
 	NMHDR hdr;
 	UINT nVKey;
 	UINT uFlags;
 } NMKEY, *LPNMKEY;
+typedef struct tagNMCHAR
+{
+	NMHDR   hdr;
+	UINT    ch;
+	DWORD   dwItemPrev;           /* Item previously selected */
+	DWORD   dwItemNext;           /* Item to be selected */
+} NMCHAR, *LPNMCHAR;
 typedef struct _COLORMAP {
 	COLORREF from;
 	COLORREF to;
@@ -2572,6 +2605,19 @@ typedef struct tagNMLVCACHEHINT {
 	int iTo;
 } NMLVCACHEHINT, *PNMLVCACHEHINT;
 #define NM_CACHEHINT NMLVCACHEHINT
+typedef struct tagNMLVFINDITEMA
+{
+	NMHDR hdr;
+	int iStart;
+	LVFINDINFOA lvfi;
+} NMLVFINDITEMA, *LPNMLVFINDITEMA;
+typedef struct tagNMLVFINDITEMW
+{
+	NMHDR hdr;
+	int iStart;
+	LVFINDINFOW lvfi;
+} NMLVFINDITEMW, *LPNMLVFINDITEMW;
+
 typedef struct _TREEITEM *HTREEITEM;
 typedef struct tagTVITEMA {
 	UINT mask;
@@ -2726,11 +2772,16 @@ typedef struct tagNMTVGETINFOTIPW {
 	LPARAM lParam;
 } NMTVGETINFOTIPW, *LPNMTVGETINFOTIPW;
 #endif
-typedef struct _TV_KEYDOWN {
+#include <pshpack1.h>
+typedef struct tagTVKEYDOWN
+{
 	NMHDR hdr;
 	WORD wVKey;
 	UINT flags;
-} TV_KEYDOWN;
+} NMTVKEYDOWN, *LPNMTVKEYDOWN;
+#include <poppack.h>
+#define TV_KEYDOWN NMTVKEYDOWN
+
 typedef struct _TC_ITEMHEADERA {
 	UINT mask;
 	UINT lpReserved1;
