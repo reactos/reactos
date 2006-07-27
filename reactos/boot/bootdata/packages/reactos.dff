@@ -60,7 +60,7 @@ base\applications\screenshot\screenshot.exe         1
 base\applications\screensavers\matrix\matrix.scr    1
 base\applications\servman\servman.exe               1
 base\applications\shutdown\shutdown.exe             1
-;base\applications\sm\sm.exe                        1
+base\applications\sm\sm.exe                         1
 base\applications\taskmgr\taskmgr.exe               1
 ;base\applications\utils\rosperf\rosperf.exe        1
 ;base\applications\utils\ps\ps.exe                  1
