@@ -571,6 +571,8 @@ IopInitializeDriverModule(
    const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
    UNICODE_STRING RegistryKey;
    PDRIVER_INITIALIZE DriverEntry;
+   PDRIVER_OBJECT Driver;
+   PDEVICE_OBJECT DeviceObject;
    NTSTATUS Status;
 
    DriverEntry = ModuleObject->EntryPoint;
@@ -593,13 +595,13 @@ IopInitializeDriverModule(
    }
 
    Status = IopCreateDriverObject(
-      DriverObject,
+      &Driver,
       ServiceName,
       0,
       FileSystemDriver,
       ModuleObject->DllBase,
       ModuleObject->SizeOfImage);
-
+   *DriverObject = Driver;
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IopCreateDriverObject failed (Status %x)\n", Status);
@@ -609,18 +611,28 @@ IopInitializeDriverModule(
    DPRINT("RegistryKey: %wZ\n", &RegistryKey);
    DPRINT("Calling driver entrypoint at %08lx\n", DriverEntry);
 
-   Status = DriverEntry(*DriverObject, &RegistryKey);
+   Status = DriverEntry(Driver, &RegistryKey);
 
    RtlFreeUnicodeString(&RegistryKey);
 
    if (!NT_SUCCESS(Status))
    {
-      ObMakeTemporaryObject(*DriverObject);
-      ObDereferenceObject(*DriverObject);
+      ObMakeTemporaryObject(Driver);
+      ObDereferenceObject(Driver);
       return Status;
    }
 
    IopReinitializeDrivers();
+
+   /* Set the driver as initialized */
+   Driver->Flags |= DRVO_INITIALIZED;
+   DeviceObject = Driver->DeviceObject;
+   while (DeviceObject)
+   {
+       /* Set every device as initialized too */
+       DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+       DeviceObject = DeviceObject->NextDevice;
+   }
 
    return STATUS_SUCCESS;
 }
