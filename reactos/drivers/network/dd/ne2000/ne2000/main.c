@@ -151,6 +151,54 @@ static VOID STDCALL MiniportHalt(
 }
 
 
+static VOID STDCALL MiQueryResources(
+    OUT PNDIS_STATUS    Status,
+    IN  PNIC_ADAPTER    Adapter,
+    IN  NDIS_HANDLE     WrapperConfigurationContext)
+{
+    PNDIS_RESOURCE_LIST AssignedResources;
+    UINT BufferSize = 0;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
+    int i;
+
+    NdisMQueryAdapterResources(Status,
+                               WrapperConfigurationContext,
+                               NULL,
+                               &BufferSize);
+    if (*Status != NDIS_STATUS_RESOURCES)
+        return;
+
+    *Status = NdisAllocateMemory((PVOID)&AssignedResources,
+                                 BufferSize,
+                                 0,
+                                 HighestAcceptableMax);
+    if (*Status != NDIS_STATUS_SUCCESS)
+        return;
+
+    NdisMQueryAdapterResources(Status,
+                               WrapperConfigurationContext,
+                               AssignedResources,
+                               &BufferSize);
+    if (*Status != NDIS_STATUS_SUCCESS)
+        return;
+
+    for (i = 0; i < AssignedResources->Count; i++)
+    {
+        Descriptor = AssignedResources->PartialDescriptors + i;
+        switch (Descriptor->Type)
+        {
+            case CmResourceTypeInterrupt:
+                 Adapter->InterruptLevel = Descriptor->u.Interrupt.Level;
+                 Adapter->InterruptVector = Descriptor->u.Interrupt.Vector;
+                 break;
+            case CmResourceTypePort:
+                 Adapter->IoBaseAddress = Descriptor->u.Port.Start.LowPart;
+                 break;
+        }
+    }
+}
+
+
 static NDIS_STATUS STDCALL MiniportInitialize(
     OUT PNDIS_STATUS    OpenErrorStatus,
     OUT PUINT           SelectedMediumIndex,
@@ -202,13 +250,18 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     NdisZeroMemory(Adapter, sizeof(NIC_ADAPTER));
     Adapter->MiniportAdapterHandle  = MiniportAdapterHandle;
     Adapter->IoBaseAddress          = DRIVER_DEFAULT_IO_BASE_ADDRESS;
-    Adapter->InterruptNumber        = DRIVER_DEFAULT_INTERRUPT_NUMBER;
+    Adapter->InterruptLevel         = DRIVER_DEFAULT_INTERRUPT_NUMBER;
+    Adapter->InterruptVector        = DRIVER_DEFAULT_INTERRUPT_NUMBER;
     Adapter->MaxMulticastListSize   = DRIVER_MAX_MULTICAST_LIST_SIZE;
     Adapter->InterruptMask          = DRIVER_INTERRUPT_MASK;
     Adapter->LookaheadSize          = DRIVER_MAXIMUM_LOOKAHEAD;
 
-     /* get the port, irq, and MAC address from registry */
-    do
+    /* Query the resources from PnP. */
+    MiQueryResources(&Status, Adapter, WrapperConfigurationContext);
+
+    /* Get the port, irq, and MAC address from registry if the PnP
+       failed. */
+    if (Status != NDIS_STATUS_SUCCESS)
     {
         PNDIS_CONFIGURATION_PARAMETER ConfigurationParameter;
         NDIS_HANDLE ConfigurationHandle;
@@ -217,52 +270,54 @@ static NDIS_STATUS STDCALL MiniportInitialize(
         UINT RegNetworkAddressLength = 0;
 
         NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
-        if(Status != NDIS_STATUS_SUCCESS)
+        if (Status == NDIS_STATUS_SUCCESS)
+        {
+            NdisInitUnicodeString(&Keyword, L"Irq");
+            NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterHexInteger);
+            if(Status == NDIS_STATUS_SUCCESS)
+            {
+                NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Irq returned successfully, irq 0x%x\n",
+                        ConfigurationParameter->ParameterData.IntegerData));
+                Adapter->InterruptLevel =
+                Adapter->InterruptVector = ConfigurationParameter->ParameterData.IntegerData;
+            }
+
+            NdisInitUnicodeString(&Keyword, L"Port");
+            NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterHexInteger);
+            if(Status == NDIS_STATUS_SUCCESS)
+            {
+                NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Port returned successfully, port 0x%x\n",
+                        ConfigurationParameter->ParameterData.IntegerData));
+                Adapter->IoBaseAddress = ConfigurationParameter->ParameterData.IntegerData;
+            }
+
+            /* the returned copy of the data is owned by NDIS and will be released on NdisCloseConfiguration */
+            NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
+            if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
+            {
+                int i;
+                NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
+                        RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
+                        RegNetworkAddress[4], RegNetworkAddress[5]));
+                for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+                    Adapter->StationAddress[i] = RegNetworkAddress[i];
+            }
+
+            NdisCloseConfiguration(ConfigurationHandle);
+        }
+        else
         {
             NDIS_DbgPrint(MIN_TRACE,("NdisOpenConfiguration returned error 0x%x\n", Status));
-            break;
         }
-
-        NdisInitUnicodeString(&Keyword, L"Irq");
-        NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterHexInteger);
-        if(Status == NDIS_STATUS_SUCCESS)
-        {
-            NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Irq returned successfully, irq 0x%x\n",
-                    ConfigurationParameter->ParameterData.IntegerData));
-            Adapter->InterruptNumber = ConfigurationParameter->ParameterData.IntegerData;
-        }
-
-        NdisInitUnicodeString(&Keyword, L"Port");
-        NdisReadConfiguration(&Status, &ConfigurationParameter, ConfigurationHandle, &Keyword, NdisParameterHexInteger);
-        if(Status == NDIS_STATUS_SUCCESS)
-        {
-            NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Port returned successfully, port 0x%x\n",
-                    ConfigurationParameter->ParameterData.IntegerData));
-            Adapter->IoBaseAddress = ConfigurationParameter->ParameterData.IntegerData;
-        }
-
-        /* the returned copy of the data is owned by NDIS and will be released on NdisCloseConfiguration */
-        NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
-        if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
-        {
-            int i;
-            NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
-                    RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
-                    RegNetworkAddress[4], RegNetworkAddress[5]));
-            for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
-                Adapter->StationAddress[i] = RegNetworkAddress[i];
-        }
-
-        NdisCloseConfiguration(ConfigurationHandle);
-    } while(0);
+    }
 
      /* find the nic */
     if (!NICCheck(Adapter)) {
         NDIS_DbgPrint(MID_TRACE, ("No adapter found at (0x%X).\n", Adapter->IoBaseAddress));
+        NdisFreeMemory(Adapter, sizeof(NIC_ADAPTER), 0);
         return NDIS_STATUS_ADAPTER_NOT_FOUND;
     } else
         NDIS_DbgPrint(MID_TRACE, ("Adapter found at (0x%X).\n", Adapter->IoBaseAddress));
-
 
     NdisMSetAttributes(
         MiniportAdapterHandle,
@@ -334,8 +389,8 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     Status = NdisMRegisterInterrupt(
         &Adapter->Interrupt,
         MiniportAdapterHandle,
-        Adapter->InterruptNumber,
-        Adapter->InterruptNumber,
+        Adapter->InterruptVector,
+        Adapter->InterruptLevel,
         FALSE,
         FALSE,
         NdisInterruptLatched);
