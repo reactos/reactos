@@ -915,7 +915,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
                                LocalInfo,
                                Length,
                                &LocalReturnLength);
-    if (!NT_SUCCESS (Status))
+    if (!NT_SUCCESS(Status))
     {
         /* Free the buffer and fail */
         ExFreePool(LocalInfo);
@@ -935,6 +935,14 @@ IopQueryNameFile(IN PVOID ObjectBody,
     /* Advance in buffer */
     p += (LocalInfo->Name.Length / sizeof(WCHAR));
 
+    /* Check if this already filled our buffer */
+    if (LocalReturnLength > Length)
+    {
+        /* Free the buffer and fail */
+        ExFreePool(LocalInfo);
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
     /* Now get the file name buffer and check the length needed */
     LocalFileInfo = (PFILE_NAME_INFORMATION)LocalInfo;
     FileLength = Length -
@@ -944,7 +952,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     /* Query the File name */
     Status = IoQueryFileInformation(FileObject,
                                     FileNameInformation,
-                                    Length,
+                                    FileLength,
                                     LocalFileInfo,
                                     &LocalReturnLength);
     if (NT_ERROR(Status))
@@ -953,6 +961,9 @@ IopQueryNameFile(IN PVOID ObjectBody,
         ExFreePool(LocalInfo);
         return Status;
     }
+
+    /* ROS HACK. VFAT SUCKS */
+    if (NT_WARNING(Status)) LocalReturnLength = FileLength;
 
     /* Now calculate the new lenghts left */
     FileLength = LocalReturnLength -
@@ -972,7 +983,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
 
     /* Setup the length and maximum length */
     FileLength = (ULONG_PTR)p - (ULONG_PTR)ObjectNameInfo;
-    ObjectNameInfo->Name.Length = Length - sizeof(OBJECT_NAME_INFORMATION);
+    ObjectNameInfo->Name.Length = FileLength - sizeof(OBJECT_NAME_INFORMATION);
     ObjectNameInfo->Name.MaximumLength = ObjectNameInfo->Name.Length +
                                          sizeof(UNICODE_NULL);
 

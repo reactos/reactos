@@ -620,7 +620,7 @@ ObQueryNameString(IN  PVOID Object,
     }
 
     /* Check if the object doesn't even have a name */
-    if (!LocalInfo || !LocalInfo->Name.Buffer)
+    if (!(LocalInfo) || !(LocalInfo->Name.Buffer))
     {
         /* We're returning the name structure */
         *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
