@@ -1,5 +1,6 @@
 <module name="sm" type="win32cui" installbase="system32" installname="sm.exe">
 	<include base="sm">.</include>
+	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
 	<library>smdll</library>
