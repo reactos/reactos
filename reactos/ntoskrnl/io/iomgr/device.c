@@ -342,6 +342,9 @@ IopReferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject)
         (DeviceObject->Flags & DO_DEVICE_INITIALIZING))
     {
         /* It's unloading or initializing, so fail */
+        DPRINT1("You are seeing this because the following ROS driver: %wZ\n"
+                " sucks. Please fix it's AddDevice Routine\n",
+                &DeviceObject->DriverObject->DriverName);
         return STATUS_NO_SUCH_DEVICE;
     }
     else

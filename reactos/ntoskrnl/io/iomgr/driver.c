@@ -622,8 +622,6 @@ IopInitializeDriverModule(
       return Status;
    }
 
-   IopReinitializeDrivers();
-
    /* Set the driver as initialized */
    Driver->Flags |= DRVO_INITIALIZED;
    DeviceObject = Driver->DeviceObject;
@@ -633,6 +631,8 @@ IopInitializeDriverModule(
        DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
        DeviceObject = DeviceObject->NextDevice;
    }
+
+   IopReinitializeDrivers();
 
    return STATUS_SUCCESS;
 }

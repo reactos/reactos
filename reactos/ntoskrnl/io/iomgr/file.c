@@ -67,9 +67,9 @@ IopParseDevice(IN PVOID ParseObject,
         OriginalDeviceObject = OpenPacket->RelatedFileObject->DeviceObject;
     }
 
-    /* Reference the DO FIXME: Don't allow failure */
-    //Status = IopReferenceDeviceObject(OriginalDeviceObject);
-    OriginalDeviceObject->ReferenceCount++;
+    /* Reference the DO */
+    Status = IopReferenceDeviceObject(OriginalDeviceObject);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Map the generic mask and set the new mapping in the access state */
     RtlMapGenericMask(&AccessState->RemainingDesiredAccess,
