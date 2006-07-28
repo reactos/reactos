@@ -2,14 +2,8 @@
 <directory name="comp">
     <xi:include href="comp/comp.xml" />
 </directory>
-<directory name="find">
-    <xi:include href="find/find.xml" />
-</directory>
 <directory name="mode">
     <xi:include href="mode/mode.xml" />
-</directory>
-<directory name="more">
-    <xi:include href="more/more.xml" />
 </directory>
 <directory name="sort">
     <xi:include href="sort/sort.xml" />
