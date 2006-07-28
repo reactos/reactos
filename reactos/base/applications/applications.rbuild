@@ -7,6 +7,9 @@
 <directory name="calc">
 	<xi:include href="calc/calc.rbuild" />
 </directory>
+<directory name="cmdutils">
+	<xi:include href="cmdutils/cmdutils.xml" />
+</directory>
 <directory name="devmgr">
 	<xi:include href="devmgr/devmgr.rbuild" />
 </directory>
