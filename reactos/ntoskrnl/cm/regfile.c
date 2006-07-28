@@ -1360,7 +1360,11 @@ CmiCalcChecksum(PULONG Buffer)
   ULONG i;
 
   for (i = 0; i < 127; i++)
-    Sum += Buffer[i];
+    Sum ^= Buffer[i];
+  if (Sum == (ULONG)-1)
+    Sum = (ULONG)-2;
+  if (Sum == 0)
+    Sum = 1;
 
   return(Sum);
 }

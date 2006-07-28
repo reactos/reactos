@@ -43,7 +43,7 @@ typedef struct _CM_COMPONENT_INFORMATION
 
 /* CM_COMPONENT_INFORMATION.Flags */
 #define Failed      0x00000001
-#define ReadOnly    0x00000002
+//#define ReadOnly    0x00000002
 #define Removable   0x00000004
 #define ConsoleIn   0x00000008
 #define ConsoleOut  0x00000010

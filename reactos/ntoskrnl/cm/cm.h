@@ -94,7 +94,7 @@ typedef struct _HIVE_HEADER
   ULONG  Unused7;
 
   /* Name of hive file */
-  WCHAR  FileName[48];
+  WCHAR  FileName[32];
 
   ULONG  Reserved[99];
 

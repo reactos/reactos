@@ -1,6 +1,7 @@
 <module name="freeldr_base" type="objectlibrary">
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>
+	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
 	<define name="__USE_W32API" />
 <!--	
