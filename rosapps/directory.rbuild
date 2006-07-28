@@ -1,13 +1,13 @@
 <directory name="cmdutils">
-	<xi:include href="cmdutils/cmdutils.xml" />
+	<xi:include href="cmdutils/cmdutils.rbuild" />
 </directory>
 
 <directory name="demos">
-	<xi:include href="demos/directory.xml" />
+	<xi:include href="demos/directory.rbuild" />
 </directory>
 
 <directory name="devutils">
-	<xi:include href="devutils/directory.xml" />
+	<xi:include href="devutils/directory.rbuild" />
 </directory>
 
 <directory name="dflat32">

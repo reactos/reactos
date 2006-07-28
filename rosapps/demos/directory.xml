@@ -1,7 +1,0 @@
-<directory name="maze">
-	<xi:include href="maze/maze.xml" />
-</directory>
-
-<directory name="ddraw">
-	<xi:include href="ddraw/ddraw.xml" />
-</directory>
