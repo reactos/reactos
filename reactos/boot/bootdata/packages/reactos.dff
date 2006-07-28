@@ -31,6 +31,8 @@ Signature = "$ReactOS$"
 ; Base files
 base\applications\cacls\cacls.exe                   1
 base\applications\calc\calc.exe                     1
+base\rosapps\cmdutils\find\find.exe                 1
+base\rosapps\cmdutils\more\more.exe                 1
 base\applications\control\control.exe               1
 base\applications\devmgr\devmgrapp.exe              1
 base\applications\games\solitaire\sol.exe           1
@@ -410,9 +412,7 @@ modules\rosky\dll\win32\libskygi\libskygi.dll       1   optional
 modules\vms\server\vmssrv.dll                       1   optional
 modules\vms\dll\win32\vmsdll\vmsdll.dll             1   optional
 modules\rosapps\cmdutils\comp\comp.exe              1   optional
-modules\rosapps\cmdutils\find\find.exe              1   optional
 modules\rosapps\cmdutils\mode\mode.exe              1   optional
-modules\rosapps\cmdutils\more\more.exe              1   optional
 modules\rosapps\cmdutils\sort\sort.exe              1   optional
 modules\rosapps\cmdutils\tee\tee.exe                1   optional
 modules\rosapps\cmdutils\touch\touch.exe            1   optional
