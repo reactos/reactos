@@ -31,8 +31,8 @@ Signature = "$ReactOS$"
 ; Base files
 base\applications\cacls\cacls.exe                   1
 base\applications\calc\calc.exe                     1
-base\rosapps\cmdutils\find\find.exe                 1
-base\rosapps\cmdutils\more\more.exe                 1
+base\applications\cmdutils\find\find.exe            1
+base\applications\cmdutils\more\more.exe            1
 base\applications\control\control.exe               1
 base\applications\devmgr\devmgrapp.exe              1
 base\applications\games\solitaire\sol.exe           1
