@@ -1538,6 +1538,9 @@ DefWindowProcA(HWND hWnd,
 	       WPARAM wParam,
 	       LPARAM lParam)
 {
+    LRESULT Result = 0;
+
+    SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
     {
         case WM_NCCREATE:
@@ -1558,12 +1561,14 @@ DefWindowProcA(HWND hWnd,
             else
               NtUserDefSetText(hWnd, NULL);
 
-            return (1);
+            Result = 1;
+            break;
         }
 
         case WM_GETTEXTLENGTH:
         {
-            return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
+            Result = (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
+            break;
         }
 
         case WM_GETTEXT:
@@ -1574,7 +1579,10 @@ DefWindowProcA(HWND hWnd,
 
             Buffer = HeapAlloc(GetProcessHeap(), 0, wParam * sizeof(WCHAR));
             if (!Buffer)
-                return FALSE;
+            {
+                Result = 0;
+                break;
+            }
             Length = NtUserInternalGetWindowText(hWnd, Buffer, wParam);
             if (Length > 0 && wParam > 0 &&
                 !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
@@ -1585,7 +1593,8 @@ DefWindowProcA(HWND hWnd,
 
             HeapFree(GetProcessHeap(), 0, Buffer);
 
-            return (LRESULT)Length;
+            Result = (LRESULT)Length;
+            break;
         }
 
         case WM_SETTEXT:
@@ -1607,11 +1616,12 @@ DefWindowProcA(HWND hWnd,
             {
                 DefWndNCPaint(hWnd, (HRGN)1, -1);
             }
-            return TRUE;
+
+            Result = 1;
+            break;
         }
 
-/*
-        FIXME: Implement these.
+/*      FIXME: Implement these. */
         case WM_IME_CHAR:
         case WM_IME_KEYDOWN:
         case WM_IME_KEYUP:
@@ -1620,10 +1630,14 @@ DefWindowProcA(HWND hWnd,
         case WM_IME_ENDCOMPOSITION:
         case WM_IME_SELECT:
         case WM_IME_SETCONTEXT:
-*/
+            DPRINT1("FIXME: WM_IME_* conversion isn't implemented yet!");
+        /* fall through */
+        default:
+            Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
     }
 
-    return User32DefWindowProc(hWnd, Msg, wParam, lParam, FALSE);
+    SPY_ExitMessage(SPY_RESULT_DEFWND, hWnd, Msg, Result, wParam, lParam);
+    return Result;
 }
 
 
@@ -1633,6 +1647,9 @@ DefWindowProcW(HWND hWnd,
 	       WPARAM wParam,
 	       LPARAM lParam)
 {
+    LRESULT Result = 0;
+
+    SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
     {
         case WM_NCCREATE:
@@ -1646,17 +1663,20 @@ DefWindowProcW(HWND hWnd,
               RtlInitUnicodeString(&UnicodeString, (LPWSTR)cs->lpszName);
 
             NtUserDefSetText( hWnd, (cs->lpszName ? &UnicodeString : NULL));
-            return (1);
+            Result = 1;
+            break;
         }
 
         case WM_GETTEXTLENGTH:
         {
-            return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
+            Result = (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
+            break;
         }
 
         case WM_GETTEXT:
         {
-            return (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lParam, wParam);
+            Result = (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lParam, wParam);
+            break;
         }
 
         case WM_SETTEXT:
@@ -1672,22 +1692,30 @@ DefWindowProcW(HWND hWnd,
             {
                 DefWndNCPaint(hWnd, (HRGN)1, -1);
             }
-            return (1);
+            Result = 1;
+            break;
         }
 
         case WM_IME_CHAR:
         {
             SendMessageW(hWnd, WM_CHAR, wParam, lParam);
-            return (0);
+            Result = 0;
+            break;
         }
 
         case WM_IME_SETCONTEXT:
         {
             /* FIXME */
-            return (0);
+            DPRINT1("FIXME: WM_IME_SETCONTEXT is not implemented!");
+            Result = 0;
+            break;
         }
-    }
 
-    return User32DefWindowProc(hWnd, Msg, wParam, lParam, TRUE);
+        default:
+            Result = User32DefWindowProc(hWnd, Msg, wParam, lParam, TRUE);
+    }
+    SPY_ExitMessage(SPY_RESULT_DEFWND, hWnd, Msg, Result, wParam, lParam);
+
+    return Result;
 }
 

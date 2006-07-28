@@ -2634,8 +2634,8 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     }
     if (descr->style & LBS_COMBOBOX) lphc = descr->lphc;
 
-    //TRACE("[%p]: msg %s wp %08x lp %08lx\n",
-      //    hwnd, SPY_GetMsgName(msg, hwnd), wParam, lParam );
+    TRACE("[%p]: msg %s wp %08x lp %08lx\n",
+          hwnd, SPY_GetMsgName(msg, hwnd), wParam, lParam );
     switch(msg)
     {
 #ifndef __REACTOS__

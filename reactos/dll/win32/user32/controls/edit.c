@@ -445,7 +445,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 	EDITSTATE *es = (EDITSTATE *)GetWindowLongPtrW( hwnd, 0 );
 	LRESULT result = 0;
 
-        //TRACE("hwnd=%p msg=%x (%s) wparam=%x lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
+    TRACE("hwnd=%p msg=%x (%s) wparam=%x lparam=%lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), wParam, lParam);
 
 	if (!es && msg != WM_NCCREATE)
 		return DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
@@ -1108,7 +1108,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 
 	if (es) EDIT_UnlockBuffer(es, FALSE);
 
-        //TRACE("hwnd=%p msg=%x (%s) -- 0x%08lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), result);
+    TRACE("hwnd=%p msg=%x (%s) -- 0x%08lx\n", hwnd, msg, SPY_GetMsgName(msg, hwnd), result);
 
 	return result;
 }

@@ -84,6 +84,11 @@ HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP",
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","SPMajorVersion",0x00010001,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers\WINXP","SPMinorVersion",0x00010001,0x00000000
 
+; DEBUG: Windows Messages SPY configuration
+HKCU,"SOFTWARE\ReactOS\Debug","SpyInclude",0x00020000,"INCLUDEALL"
+;HKCU,"SOFTWARE\ReactOS\Debug","SpyExclude",0x00020000,""
+;HKCU,"SOFTWARE\ReactOS\Debug","SpyExcludeDWP",0x00020000,""
+
 ; GUI Setup
 
 HKCU, "Control Panel\Desktop\WindowMetrics","CaptionFont",0x00000001,f5,ff,ff,ff,00,00,00,\

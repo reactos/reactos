@@ -1297,8 +1297,12 @@ DispatchMessageA(CONST MSG *lpmsg)
   if (! Info.HandledByKernel)
     {
       /* We need to send the message ourselves */
+      SPY_EnterMessage(SPY_DISPATCHMESSAGE, Info.Msg.hwnd, Info.Msg.message,
+                       Info.Msg.wParam, Info.Msg.lParam);
       Result = IntCallWindowProcA(Info.Ansi, Info.Proc, Info.Msg.hwnd,
                                   Info.Msg.message, Info.Msg.wParam, Info.Msg.lParam);
+      SPY_ExitMessage(SPY_RESULT_OK, Info.Msg.hwnd, Info.Msg.message, Result,
+                      Info.Msg.wParam, Info.Msg.lParam);
     }
   MsgConversionCleanup(lpmsg, TRUE, TRUE, &Result);
 
@@ -1321,8 +1325,12 @@ DispatchMessageW(CONST MSG *lpmsg)
   if (! Info.HandledByKernel)
     {
       /* We need to send the message ourselves */
+      SPY_EnterMessage(SPY_DISPATCHMESSAGE, Info.Msg.hwnd, Info.Msg.message,
+                       Info.Msg.wParam, Info.Msg.lParam);
       Result = IntCallWindowProcW(Info.Ansi, Info.Proc, Info.Msg.hwnd,
                                   Info.Msg.message, Info.Msg.wParam, Info.Msg.lParam);
+      SPY_ExitMessage(SPY_RESULT_OK, Info.Msg.hwnd, Info.Msg.message, Result,
+                      Info.Msg.wParam, Info.Msg.lParam);
     }
   MsgConversionCleanup(lpmsg, FALSE, TRUE, &Result);
 
@@ -1791,12 +1799,15 @@ SendMessageTimeoutA(
       return FALSE;
     }
 
+  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
+
   Info.Ansi = TRUE;
   Result = NtUserSendMessageTimeout(UcMsg.hwnd, UcMsg.message,
                                     UcMsg.wParam, UcMsg.lParam,
                                     fuFlags, uTimeout, (ULONG_PTR*)lpdwResult, &Info);
   if(!Result)
   {
+      SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
       return FALSE;
   }
   if (! Info.HandledByKernel)
@@ -1818,7 +1829,8 @@ SendMessageTimeoutA(
                                       UcMsg.message, UcMsg.wParam, UcMsg.lParam);
           if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
             {
-              return FALSE;
+                SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
+                return FALSE;
             }
         }
       if(lpdwResult)
@@ -1830,10 +1842,12 @@ SendMessageTimeoutA(
       /* Message sent by kernel. Convert back to Ansi */
       if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
         {
-          return FALSE;
+            SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
+            return FALSE;
         }
     }
 
+  SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
   return Result;
 }
 
@@ -1855,6 +1869,8 @@ SendMessageTimeoutW(
   NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
 
+  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
+
   Info.Ansi = FALSE;
   Result = NtUserSendMessageTimeout(hWnd, Msg, wParam, lParam, fuFlags, uTimeout,
                                     lpdwResult, &Info);
@@ -1864,9 +1880,12 @@ SendMessageTimeoutW(
       Result = IntCallWindowProcW(Info.Ansi, Info.Proc, hWnd, Msg, wParam, lParam);
       if(lpdwResult)
         *lpdwResult = Result;
+
+      SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
       return TRUE;
     }
 
+  SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
   return Result;
 }
 

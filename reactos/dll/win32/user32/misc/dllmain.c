@@ -101,6 +101,10 @@ DllMain(
             Cleanup();
             return FALSE;
          }
+     
+         /* Initialize message spying */
+        if (!SPY_Init()) return FALSE;
+
          break;
 
       case DLL_THREAD_ATTACH:

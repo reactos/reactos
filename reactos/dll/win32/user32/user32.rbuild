@@ -71,6 +71,7 @@
 		<file>paint.c</file>
 		<file>prop.c</file>
 		<file>rect.c</file>
+		<file>spy.c</file>
 		<file>text.c</file>
 		<file>window.c</file>
 		<file>winpos.c</file>
