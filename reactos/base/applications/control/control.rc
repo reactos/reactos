@@ -25,24 +25,4 @@ IDI_MAINICON            ICON    DISCARDABLE     "resources/config.ico"
 /////////////////////////////////////////////////////////////////////////////
 
 
-/*
- * Everything specific to any language goes in one of the specific
- * files. Note that you can and may override resources which also have
- * a neutral version. This is to get localized bitmaps for example.
- */
-
-#include "En.rc"
-#include "Cz.rc"
-#include "De.rc"
-#include "Dk.rc"
-#include "Gr.rc"
-#include "Ja.rc"
-#include "Nl.rc"
-#include "Pl.rc"
-#include "Ru.rc"
-#include "Sv.rc"
-#include "Es.rc"
-#include "Hu.rc"
-#include "Fi.rc"
-#include "Uk.rc"
-#include "No.rc"
+#include "rsrc.rc"

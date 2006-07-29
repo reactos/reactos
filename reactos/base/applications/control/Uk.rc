@@ -6,7 +6,7 @@
  * PROGRAMMERS: temarez
  */
 
-LANGUAGE LANG_UKRAINIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
 //
