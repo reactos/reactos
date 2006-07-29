@@ -10,8 +10,6 @@
 //
 // Io:
 //  - See why queueing IRPs and cancelling them causes crashes.
-//  - Add SEH to some places where it's missing (MDLs, etc) (iofunc).
-//  - Add a generic Cleanup/Exception Routine (iofunc).
 //  - Add another parameter to IopCleanupFailedIrp.
 //  - Add Access Checks in IopParseDevice.
 //  - Add validation checks in IoCreateFile.

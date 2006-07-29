@@ -23,6 +23,45 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+IopCleanupAfterException(IN PFILE_OBJECT FileObject,
+                         IN PIRP Irp,
+                         IN PKEVENT Event OPTIONAL,
+                         IN PKEVENT LocalEvent OPTIONAL)
+{
+    PAGED_CODE();
+
+    /* Check if we had a buffer */
+    if (Irp->AssociatedIrp.SystemBuffer)
+    {
+        /* Free it */
+        ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+    }
+
+    /* Free the mdl */
+    if (Irp->MdlAddress) IoFreeMdl(Irp->MdlAddress);
+
+    /* Free the IRP */
+    IoFreeIrp(Irp);
+
+    /* Check if we had a file lock */
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        /* Release it */
+        IopUnlockFileObject(FileObject);
+    }
+
+    /* Check if we had an event */
+    if (Event) ObDereferenceObject(Event);
+
+    /* Check if we had a local event */
+    if (LocalEvent) ExFreePool(LocalEvent);
+
+    /* Derefenrce the FO */
+    ObDereferenceObject(FileObject);
+}
+
 NTSTATUS
 NTAPI
 IopFinalizeAsynchronousIo(IN NTSTATUS SynchStatus,
@@ -1027,7 +1066,7 @@ NtLockFile(IN HANDLE FileHandle,
            IN BOOLEAN ExclusiveLock)
 {
     PFILE_OBJECT FileObject;
-    PLARGE_INTEGER LocalLength;
+    PLARGE_INTEGER LocalLength = NULL;
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
@@ -1143,25 +1182,32 @@ NtLockFile(IN HANDLE FileHandle,
     StackPtr->MinorFunction = IRP_MN_LOCK;
     StackPtr->FileObject = FileObject;
 
-    /* Allocate local buffer */
-    LocalLength = ExAllocatePoolWithTag(NonPagedPool,
-                                        sizeof(LARGE_INTEGER),
-                                        TAG_LOCK);
-    if (!LocalLength)
+    /* Enter SEH */
+    _SEH_TRY
     {
-        /* Fail */
-        IoFreeIrp(Irp);
-        if (Event) ObDereferenceObject(Event);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+        /* Allocate local buffer */
+        LocalLength = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(LARGE_INTEGER),
+                                            TAG_LOCK);
 
-    /* Set the length */
-    *LocalLength = CapturedLength;
+        /* Set the length */
+        *LocalLength = CapturedLength;
+        Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
+        StackPtr->Parameters.LockControl.Length = LocalLength;
+    }
+    _SEH_HANDLE
+    {
+        /* Allocating failed, clean up */
+        IopCleanupAfterException(FileObject, Irp, Event, NULL);
+        if (LocalLength) ExFreePool(LocalLength);
+
+        /* Get status */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set Parameters */
-    Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
-    StackPtr->Parameters.LockControl.Length = LocalLength;
     StackPtr->Parameters.LockControl.ByteOffset = CapturedByteOffset;
     StackPtr->Parameters.LockControl.Key = Key;
 
@@ -1337,11 +1383,26 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     /* Check if this is buffered I/O */
     if (DeviceObject->Flags & DO_BUFFERED_IO)
     {
-        /* Allocate a buffer */
-        Irp->AssociatedIrp.SystemBuffer =
-            ExAllocatePoolWithTag(NonPagedPool,
-                                  Length,
-                                  TAG_SYSB);
+        /* Enter SEH */
+        _SEH_TRY
+        {
+            /* Allocate a buffer */
+            Irp->AssociatedIrp.SystemBuffer = 
+                ExAllocatePoolWithTag(NonPagedPool,
+                                      Length,
+                                      TAG_SYSB);
+        }
+        _SEH_HANDLE
+        {
+            /* Allocating failed, clean up */
+            IopCleanupAfterException(FileObject, Irp, Event, NULL);
+            if (AuxBuffer) ExFreePool(AuxBuffer);
+
+            /* Get status */
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        if (!NT_SUCCESS(Status)) return Status;
 
         /* Set the buffer and flags */
         Irp->UserBuffer = FileInformation;
@@ -1545,11 +1606,23 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Allocate a buffer */
-    Irp->AssociatedIrp.SystemBuffer =
-        ExAllocatePoolWithTag(NonPagedPool,
-                              Length,
-                              TAG_SYSB);
+    /* Enter SEH */
+    _SEH_TRY
+    {
+        /* Allocate a buffer */
+        Irp->AssociatedIrp.SystemBuffer =
+            ExAllocatePoolWithTag(NonPagedPool,
+                                  Length,
+                                  TAG_SYSB);
+    }
+    _SEH_HANDLE
+    {
+        /* Allocating failed, clean up */
+        IopCleanupAfterException(FileObject, Irp, NULL, Event);
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags */
     Irp->Flags = (IRP_BUFFERED_IO |
@@ -1575,7 +1648,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         if (LocalEvent)
         {
             /* Then to a non-alertable wait */
-            Status = KeWaitForSingleObject(&Event,
+            Status = KeWaitForSingleObject(Event,
                                            Executive,
                                            PreviousMode,
                                            FALSE,
@@ -1839,11 +1912,23 @@ NtReadFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            /* Allocate a buffer */
-            Irp->AssociatedIrp.SystemBuffer =
-                ExAllocatePoolWithTag(NonPagedPool,
-                                      Length,
-                                      TAG_SYSB);
+            /* Enter SEH */
+            _SEH_TRY
+            {
+                /* Allocate a buffer */
+                Irp->AssociatedIrp.SystemBuffer =
+                    ExAllocatePoolWithTag(NonPagedPool,
+                                          Length,
+                                          TAG_SYSB);
+            }
+            _SEH_HANDLE
+            {
+                /* Allocating failed, clean up */
+                IopCleanupAfterException(FileObject, Irp, NULL, Event);
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+            if (!NT_SUCCESS(Status)) return Status;
 
             /* Set the buffer and flags */
             Irp->UserBuffer = Buffer;
@@ -2063,14 +2148,28 @@ NtSetInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_SET_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Allocate a buffer */
-    Irp->AssociatedIrp.SystemBuffer =
-        ExAllocatePoolWithTag(NonPagedPool,
-                              Length,
-                              TAG_SYSB);
+    /* Enter SEH */
+    _SEH_TRY
+    {
+        /* Allocate a buffer */
+        Irp->AssociatedIrp.SystemBuffer =
+            ExAllocatePoolWithTag(NonPagedPool,
+                                  Length,
+                                  TAG_SYSB);
 
-    /* Copy the data into it */
-    RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, FileInformation, Length);
+        /* Copy the data into it */
+        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                      FileInformation,
+                      Length);
+    }
+    _SEH_HANDLE
+    {
+        /* Allocating failed, clean up */
+        IopCleanupAfterException(FileObject, Irp, NULL, Event);
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags */
     Irp->Flags = (IRP_BUFFERED_IO |
@@ -2266,7 +2365,7 @@ NtUnlockFile(IN HANDLE FileHandle,
              IN ULONG Key OPTIONAL)
 {
     PFILE_OBJECT FileObject;
-    PLARGE_INTEGER LocalLength;
+    PLARGE_INTEGER LocalLength = NULL;
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
     PDEVICE_OBJECT DeviceObject;
@@ -2381,25 +2480,32 @@ NtUnlockFile(IN HANDLE FileHandle,
     StackPtr->MinorFunction = IRP_MN_UNLOCK_SINGLE;
     StackPtr->FileObject = FileObject;
 
-    /* Allocate local buffer */
-    LocalLength = ExAllocatePoolWithTag(NonPagedPool,
-                                        sizeof(LARGE_INTEGER),
-                                        TAG_LOCK);
-    if (!LocalLength)
+    /* Enter SEH */
+    _SEH_TRY
     {
-        /* Fail */
-        IoFreeIrp(Irp);
-        if (Event) ObDereferenceObject(Event);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+        /* Allocate a buffer */
+        LocalLength = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(LARGE_INTEGER),
+                                        TAG_LOCK);
 
-    /* Set the length */
-    *LocalLength = CapturedLength;
+        /* Set the length */
+        *LocalLength = CapturedLength;
+        Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
+        StackPtr->Parameters.LockControl.Length = LocalLength;
+    }
+    _SEH_HANDLE
+    {
+        /* Allocating failed, clean up */
+        IopCleanupAfterException(FileObject, Irp, NULL, Event);
+        if (LocalLength) ExFreePool(LocalLength);
+
+        /* Get exception status */
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set Parameters */
-    Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
-    StackPtr->Parameters.LockControl.Length = LocalLength;
     StackPtr->Parameters.LockControl.ByteOffset = CapturedByteOffset;
     StackPtr->Parameters.LockControl.Key = Key;
 
@@ -2619,14 +2725,27 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Check if we have a buffer length */
         if (Length)
         {
-            /* Allocate a buffer */
-            Irp->AssociatedIrp.SystemBuffer =
-                ExAllocatePoolWithTag(NonPagedPool,
-                                      Length,
-                                      TAG_SYSB);
+            /* Enter SEH */
+            _SEH_TRY
+            {
+                /* Allocate a buffer */
+                Irp->AssociatedIrp.SystemBuffer =
+                    ExAllocatePoolWithTag(NonPagedPool,
+                                          Length,
+                                          TAG_SYSB);
 
-            /* Copy the buffer and set flags */
-            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
+                /* Copy the data into it */
+                RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
+            }
+            _SEH_HANDLE
+            {
+                /* Allocating failed, clean up */
+                IopCleanupAfterException(FileObject, Irp, Event, NULL);
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+
+            /* Set the flags */
             Irp->Flags = (IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);
         }
         else
@@ -2785,18 +2904,23 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_QUERY_VOLUME_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Allocate system buffer */
-    Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                            Length,
-                                                            TAG_SYSB);
-    if (!Irp->AssociatedIrp.SystemBuffer)
+    /* Enter SEH */
+    _SEH_TRY
     {
-        /* Fail */
-        IoFreeIrp(Irp);
-        if (Event) ObDereferenceObject(Event);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        /* Allocate a buffer */
+        Irp->AssociatedIrp.SystemBuffer =
+            ExAllocatePoolWithTag(NonPagedPool,
+                                  Length,
+                                  TAG_SYSB);
     }
+    _SEH_HANDLE
+    {
+        /* Allocating failed, clean up */
+        IopCleanupAfterException(FileObject, Irp, NULL, Event);
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags for this buffered + deferred I/O */
     Irp->Flags |= (IRP_BUFFERED_IO |
@@ -2930,21 +3054,26 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     StackPtr->MajorFunction = IRP_MJ_SET_VOLUME_INFORMATION;
     StackPtr->FileObject = FileObject;
 
-    /* Allocate system buffer */
-    Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                            Length,
-                                                            TAG_SYSB);
-    if (!Irp->AssociatedIrp.SystemBuffer)
+    /* Enter SEH */
+    _SEH_TRY
     {
-        /* Fail */
-        IoFreeIrp(Irp);
-        if (Event) ObDereferenceObject(Event);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
+        /* Allocate a buffer */
+        Irp->AssociatedIrp.SystemBuffer =
+            ExAllocatePoolWithTag(NonPagedPool,
+                                  Length,
+                                  TAG_SYSB);
 
-    /* Copy the data into the buffer */
-    RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, FsInformation, Length);
+        /* Copy the data into it */
+        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, FsInformation, Length);
+    }
+    _SEH_HANDLE
+    {
+        /* Allocating failed, clean up */
+        IopCleanupAfterException(FileObject, Irp, NULL, Event);
+        Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags for this buffered + deferred I/O */
     Irp->Flags |= (IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);
