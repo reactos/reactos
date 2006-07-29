@@ -212,6 +212,8 @@ UserGetSystemMetrics(ULONG Index)
          return(0);
       case SM_CMONITORS:
          return(1);
+      case SM_REMOTESESSION:
+         return (0);
 
       default:
          return(0xFFFFFFFF);
