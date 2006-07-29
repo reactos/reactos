@@ -19,5 +19,5 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<file>welcome.c</file>
-	<file>autorun.rc</file>
+	<file>welcome.rc</file>
 </module>

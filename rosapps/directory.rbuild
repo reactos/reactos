@@ -11,41 +11,41 @@
 </directory>
 
 <directory name="dflat32">
-	<xi:include href="dflat32/dflat32.xml" />
+	<xi:include href="dflat32/dflat32.rbuild" />
 </directory>
 <!--
 <directory name="lib">
-	<xi:include href="lib/directory.xml" />
+	<xi:include href="lib/directory.rbuild" />
 </directory>
 -->
 <directory name="mc">
-	<xi:include href="mc/mc.xml" />
+	<xi:include href="mc/mc.rbuild" />
 </directory>
 
 <directory name="net">
-	<xi:include href="net/directory.xml" />
+	<xi:include href="net/directory.rbuild" />
 </directory>
 
 <directory name="notevil">
-	<xi:include href="notevil/notevil.xml" />
+	<xi:include href="notevil/notevil.rbuild" />
 </directory>
 
 <directory name="packmgr">
-	<xi:include href="packmgr/directory.xml" />
+	<xi:include href="packmgr/directory.rbuild" />
 </directory>
 
 <directory name="sysutils">
-	<xi:include href="sysutils/sysutils.xml" />
+	<xi:include href="sysutils/sysutils.rbuild" />
 </directory>
 
 <directory name="templates">
-	<xi:include href="templates/directory.xml" />
+	<xi:include href="templates/directory.rbuild" />
 </directory>
 <directory name="tests">
-	<xi:include href="tests/directory.xml" />
+	<xi:include href="tests/directory.rbuild" />
 </directory>
-<!--
+
 <directory name="welcome">
-	<xi:include href="welcome/welcome.xml" />
+	<xi:include href="welcome/welcome.rbuild" />
 </directory>
--->
+
