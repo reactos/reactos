@@ -9,14 +9,12 @@
 //              Failure to respect this will *ACHIEVE NOTHING*.
 //
 // Io:
-//  - See why queueing IRPs and cancelling them causes crashes.
+//  - Add tracing to iofunc.c, file.c and device.c
 //  - Add Access Checks in IopParseDevice.
 //  - Add validation checks in IoCreateFile.
 //  - Add probe/alignment checks for Query/Set routines.
-//  - Add tracing to iofunc.c
-//  - Add tracing to file.c
-//  - Add support for some fast-paths when querying/setting data.
 //  - Verify ShareAccess APIs, XP added some new semantics.
+//  - Add support for some fast-paths when querying/setting data.
 //  - Add support for Fast Dispatch I/O.
 //
 // Ob:

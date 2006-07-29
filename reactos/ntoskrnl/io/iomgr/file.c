@@ -373,7 +373,7 @@ IopParseDevice(IN PVOID ParseObject,
     OpenPacket->FileObject = FileObject;
 
     /* Queue the IRP and call the driver */
-    //IopQueueIrpToThread(Irp);
+    IopQueueIrpToThread(Irp);
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
@@ -404,7 +404,7 @@ IopParseDevice(IN PVOID ParseObject,
         FileObject->Event.Header.SignalState = 1;
 
         /* Now that we've signaled the events, de-associate the IRP */
-        //IopUnQueueIrpFromThread(Irp);
+        IopUnQueueIrpFromThread(Irp);
 
         /* Check if the IRP had an input buffer */
         if ((Irp->Flags & IRP_BUFFERED_IO) &&
@@ -611,6 +611,7 @@ IopDeleteFile(IN PVOID ObjectBody)
     NTSTATUS Status;
     KEVENT Event;
     PDEVICE_OBJECT DeviceObject;
+    KIRQL OldIrql;
 
     /* Check if the file has a device object */
     if (FileObject->DeviceObject)
@@ -656,7 +657,7 @@ IopDeleteFile(IN PVOID ObjectBody)
         StackPtr->FileObject = FileObject;
 
         /* Queue the IRP */
-        //IopQueueIrpToThread(Irp);
+        IopQueueIrpToThread(Irp);
 
         /* Call the FS Driver */
         Status = IoCallDriver(DeviceObject, Irp);
@@ -665,6 +666,11 @@ IopDeleteFile(IN PVOID ObjectBody)
             /* Wait for completion */
             KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
         }
+
+        /* Raise to APC level and de-queue the IRP */
+        KeRaiseIrql(APC_LEVEL, &OldIrql);
+        IopUnQueueIrpFromThread(Irp);
+        KeLowerIrql(OldIrql);
 
         /* Free the IRP */
         IoFreeIrp(Irp);
@@ -830,7 +836,7 @@ IopSecurityFile(IN PVOID ObjectBody,
     }
 
     /* Queue the IRP */
-    //IopQueueIrpToThread(Irp);
+    IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -1024,6 +1030,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     PIO_STACK_LOCATION StackPtr;
     NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
+    KIRQL OldIrql;
 
     /* Check if the file is locked and has more then one handle opened */
     if ((FileObject->LockOperation) && (SystemHandleCount != 1))
@@ -1075,7 +1082,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     StackPtr->FileObject = FileObject;
 
     /* Queue the IRP */
-    //IopQueueIrpToThread(Irp);
+    IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -1087,6 +1094,11 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
         /* Wait for completion */
         KeWaitForSingleObject(&Event, UserRequest, KernelMode, FALSE, NULL);
     }
+
+    /* Raise to APC level and de-queue the IRP */
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
+    IopUnQueueIrpFromThread(Irp);
+    KeLowerIrql(OldIrql);
 
     /* Free the IRP */
     IoFreeIrp(Irp);

@@ -16,6 +16,8 @@
 // These define the Debug Masks Supported
 //
 #define IO_IRP_DEBUG                                    0x01
+#define IO_FO_DEBUG                                     0x02
+#define IO_DEVICE_DEBUG                                 0x04
 
 //
 // Debug/Tracing support
