@@ -45,7 +45,4 @@
 	<xi:include href="tests/directory.rbuild" />
 </directory>
 
-<directory name="welcome">
-	<xi:include href="welcome/welcome.rbuild" />
-</directory>
 
