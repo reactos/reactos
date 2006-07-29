@@ -14,402 +14,174 @@
 
 #include "cm.h"
 
-
 /* uncomment to enable hive checks (incomplete and probably buggy) */
-// #define HIVE_CHECK
+//#define HIVE_CHECK
 
 /* LOCAL MACROS *************************************************************/
 
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
 
-BOOLEAN CmiDoVerify = FALSE;
-
-static ULONG
-CmiCalcChecksum(PULONG Buffer);
-
 /* FUNCTIONS ****************************************************************/
 
-VOID
-CmiCreateDefaultHiveHeader(PHIVE_HEADER Header)
+PVOID CMAPI
+CmpAllocate(
+   ULONG Size,
+   BOOLEAN Paged)
 {
-  ASSERT(Header);
-  RtlZeroMemory(Header, sizeof(HIVE_HEADER));
-  Header->BlockId = REG_HIVE_ID;
-  Header->UpdateCounter1 = 0;
-  Header->UpdateCounter2 = 0;
-  Header->DateModified.u.LowPart = 0;
-  Header->DateModified.u.HighPart = 0;
-  Header->MajorVersion = 1;
-  Header->MinorVersion = 3;
-  Header->Type = 0;
-  Header->Format = 1;
-  Header->Unused7 = 1;
-  Header->RootKeyOffset = (BLOCK_OFFSET)-1;
-  Header->BlockSize = REG_BLOCK_SIZE;
-  Header->Checksum = 0;
+   return ExAllocatePoolWithTag(Paged ? PagedPool : NonPagedPool,
+                                Size, TAG('R','E','G',' '));
+}
+
+VOID CMAPI
+CmpFree(
+   PVOID Ptr)
+{
+   ExFreePool(Ptr);
 }
 
 
-VOID
-CmiCreateDefaultBinHeader(PHBIN BinHeader)
+BOOLEAN CMAPI
+CmpFileRead(
+   PREGISTRY_HIVE RegistryHive,
+   ULONG FileType,
+   ULONG FileOffset,
+   PVOID Buffer,
+   ULONG BufferLength)
 {
-  ASSERT(BinHeader);
-  RtlZeroMemory(BinHeader, sizeof(HBIN));
-  BinHeader->HeaderId = REG_BIN_ID;
-  BinHeader->DateModified.u.LowPart = 0;
-  BinHeader->DateModified.u.HighPart = 0;
-  BinHeader->BinSize = REG_BLOCK_SIZE;
+   PEREGISTRY_HIVE CmHive = RegistryHive->Opaque;
+   HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+   LARGE_INTEGER _FileOffset;
+   IO_STATUS_BLOCK IoStatusBlock;
+   NTSTATUS Status;
+
+   _FileOffset.QuadPart = FileOffset;
+   Status = ZwReadFile(HiveHandle, 0, 0, 0, &IoStatusBlock,
+                       Buffer, BufferLength, &_FileOffset, 0);
+   return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
 
-VOID
-CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
+BOOLEAN CMAPI
+CmpFileWrite(
+   PREGISTRY_HIVE RegistryHive,
+   ULONG FileType,
+   ULONG FileOffset,
+   PVOID Buffer,
+   ULONG BufferLength)
 {
-  ASSERT(RootKeyCell);
-  RtlZeroMemory(RootKeyCell, sizeof(KEY_CELL));
-  RootKeyCell->CellSize = -sizeof(KEY_CELL);
-  RootKeyCell->Id = REG_KEY_CELL_ID;
-  RootKeyCell->Flags = REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED;
-  KeQuerySystemTime(&RootKeyCell->LastWriteTime);
-  RootKeyCell->ParentKeyOffset = 0;
-  RootKeyCell->NumberOfSubKeys = 0;
-  RootKeyCell->HashTableOffset = -1;
-  RootKeyCell->NumberOfValues = 0;
-  RootKeyCell->ValueListOffset = -1;
-  RootKeyCell->SecurityKeyOffset = 0;
-  RootKeyCell->ClassNameOffset = -1;
-  RootKeyCell->NameSize = 0;
-  RootKeyCell->ClassSize = 0;
+   PEREGISTRY_HIVE CmHive = RegistryHive->Opaque;
+   HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+   LARGE_INTEGER _FileOffset;
+   IO_STATUS_BLOCK IoStatusBlock;
+   NTSTATUS Status;
+
+   _FileOffset.QuadPart = FileOffset;
+   Status = ZwWriteFile(HiveHandle, 0, 0, 0, &IoStatusBlock,
+                       Buffer, BufferLength, &_FileOffset, 0);
+   return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
 
-VOID
-CmiVerifyBinHeader(PHBIN BinHeader)
+BOOLEAN CMAPI
+CmpFileSetSize(
+   PREGISTRY_HIVE RegistryHive,
+   ULONG FileType,
+   ULONG FileSize)
 {
-  if (CmiDoVerify)
-    {
+   PEREGISTRY_HIVE CmHive = RegistryHive->Opaque;
+   HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+   FILE_END_OF_FILE_INFORMATION EndOfFileInfo;
+   FILE_ALLOCATION_INFORMATION FileAllocationInfo;
+   IO_STATUS_BLOCK IoStatusBlock;
+   NTSTATUS Status;
 
-  ASSERT(BinHeader);
+   EndOfFileInfo.EndOfFile.QuadPart = FileSize;
+   Status = ZwSetInformationFile(HiveHandle, &IoStatusBlock,
+                                 &EndOfFileInfo,
+                                 sizeof(FILE_END_OF_FILE_INFORMATION),
+                                 FileEndOfFileInformation);
+   if (!NT_SUCCESS(Status))
+      return FALSE;
 
-  if (BinHeader->HeaderId != REG_BIN_ID)
-    {
-      DbgPrint("Bin header ID is %.08x (should be %.08x)\n",
-        BinHeader->HeaderId, REG_BIN_ID);
-      ASSERT(BinHeader->HeaderId == REG_BIN_ID);
-    }
+   FileAllocationInfo.AllocationSize.QuadPart = FileSize;
+   Status = ZwSetInformationFile(HiveHandle, &IoStatusBlock,
+                                 &FileAllocationInfo,
+                                 sizeof(FILE_ALLOCATION_INFORMATION),
+                                 FileAllocationInformation);
+   if (!NT_SUCCESS(Status))
+      return FALSE;
 
-  //BinHeader->DateModified.dwLowDateTime
-
-  //BinHeader->DateModified.dwHighDateTime
-
-
-  if (BinHeader->BinSize != REG_BLOCK_SIZE)
-    {
-      DbgPrint("BinSize is %.08x (should be a multiple of %.08x)\n",
-        BinHeader->BinSize, REG_BLOCK_SIZE);
-      ASSERT(BinHeader->BinSize % REG_BLOCK_SIZE == 0);
-    }
-
-    }
+   return TRUE;
 }
 
 
-VOID
-CmiVerifyKeyCell(PKEY_CELL KeyCell)
+BOOLEAN CMAPI
+CmpFileFlush(
+   PREGISTRY_HIVE RegistryHive,
+   ULONG FileType)
 {
-  if (CmiDoVerify)
-    {
+   PEREGISTRY_HIVE CmHive = RegistryHive->Opaque;
+   HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+   IO_STATUS_BLOCK IoStatusBlock;
+   NTSTATUS Status;
 
-  ASSERT(KeyCell);
-
-  if (KeyCell->CellSize == 0)
-    {
-      DbgPrint("CellSize is %d (must not be 0)\n",
-        KeyCell->CellSize);
-      ASSERT(KeyCell->CellSize != 0);
-    }
-
-  if (KeyCell->Id != REG_KEY_CELL_ID)
-    {
-      DbgPrint("Id is %.08x (should be %.08x)\n",
-        KeyCell->Id, REG_KEY_CELL_ID);
-      ASSERT(KeyCell->Id == REG_KEY_CELL_ID);
-    }
-
-  //KeyCell->Flags;
-
-  //KeyCell->LastWriteTime;
-
-  if (KeyCell->ParentKeyOffset < 0)
-    {
-      DbgPrint("ParentKeyOffset is %d (must not be < 0)\n",
-        KeyCell->ParentKeyOffset);
-      ASSERT(KeyCell->ParentKeyOffset >= 0);
-    }
-
-  if (KeyCell->NumberOfSubKeys < 0)
-    {
-      DbgPrint("NumberOfSubKeys is %d (must not be < 0)\n",
-        KeyCell->NumberOfSubKeys);
-      ASSERT(KeyCell->NumberOfSubKeys >= 0);
-    }
-
-  //KeyCell->HashTableOffset;
-
-  if (KeyCell->NumberOfValues < 0)
-    {
-      DbgPrint("NumberOfValues is %d (must not be < 0)\n",
-        KeyCell->NumberOfValues);
-      ASSERT(KeyCell->NumberOfValues >= 0);
-    }
-
-  //KeyCell->ValuesOffset = -1;
-
-  if (KeyCell->SecurityKeyOffset < 0)
-    {
-      DbgPrint("SecurityKeyOffset is %d (must not be < 0)\n",
-        KeyCell->SecurityKeyOffset);
-      ASSERT(KeyCell->SecurityKeyOffset >= 0);
-    }
-
-  //KeyCell->ClassNameOffset = -1;
-
-  //KeyCell->NameSize
-
-  //KeyCell->ClassSize
-
-    }
-}
-
-
-VOID
-CmiVerifyRootKeyCell(PKEY_CELL RootKeyCell)
-{
-  if (CmiDoVerify)
-    {
-
-  CmiVerifyKeyCell(RootKeyCell);
-
-  if (!(RootKeyCell->Flags & REG_KEY_ROOT_CELL))
-    {
-      DbgPrint("Flags is %.08x (should be %.08x)\n",
-        RootKeyCell->Flags, REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED);
-      ASSERT(!(RootKeyCell->Flags & (REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED)));
-    }
-
-    }
-}
-
-
-VOID
-CmiVerifyValueCell(PVALUE_CELL ValueCell)
-{
-  if (CmiDoVerify)
-    {
-
-  ASSERT(ValueCell);
-
-  if (ValueCell->CellSize == 0)
-    {
-      DbgPrint("CellSize is %d (must not be 0)\n",
-        ValueCell->CellSize);
-      ASSERT(ValueCell->CellSize != 0);
-    }
-
-  if (ValueCell->Id != REG_VALUE_CELL_ID)
-    {
-      DbgPrint("Id is %.08x (should be %.08x)\n",
-        ValueCell->Id, REG_VALUE_CELL_ID);
-      ASSERT(ValueCell->Id == REG_VALUE_CELL_ID);
-    }
-
-  //ValueCell->NameSize;
-  //ValueCell->LONG  DataSize;
-  //ValueCell->DataOffset;
-  //ValueCell->ULONG  DataType;
-  //ValueCell->USHORT Flags;
-  //ValueCell->USHORT Unused1;
-  //ValueCell->UCHAR  Name[0];
-    }
-}
-
-
-VOID
-CmiVerifyValueListCell(PVALUE_LIST_CELL ValueListCell)
-{
-  if (CmiDoVerify)
-    {
-
-  if (ValueListCell->CellSize == 0)
-    {
-      DbgPrint("CellSize is %d (must not be 0)\n",
-        ValueListCell->CellSize);
-      ASSERT(ValueListCell->CellSize != 0);
-    }
-
-    }
-}
-
-
-VOID
-CmiVerifyKeyObject(PKEY_OBJECT KeyObject)
-{
-  if (CmiDoVerify)
-    {
-
-  if (KeyObject->RegistryHive == NULL)
-    {
-      DbgPrint("RegistryHive is NULL (must not be NULL)\n",
-        KeyObject->RegistryHive);
-      ASSERT(KeyObject->RegistryHive != NULL);
-    }
-
-  if (KeyObject->KeyCell == NULL)
-    {
-      DbgPrint("KeyCell is NULL (must not be NULL)\n",
-        KeyObject->KeyCell);
-      ASSERT(KeyObject->KeyCell != NULL);
-    }
-
-  if (KeyObject->ParentKey == NULL)
-    {
-      DbgPrint("ParentKey is NULL (must not be NULL)\n",
-        KeyObject->ParentKey);
-      ASSERT(KeyObject->ParentKey != NULL);
-    }
-
-    }
-}
-
-
-VOID
-CmiVerifyHiveHeader(PHIVE_HEADER Header)
-{
-  if (CmiDoVerify)
-    {
-
-  if (Header->BlockId != REG_HIVE_ID)
-    {
-      DbgPrint("BlockId is %.08x (must be %.08x)\n",
-        Header->BlockId,
-        REG_HIVE_ID);
-      ASSERT(Header->BlockId == REG_HIVE_ID);
-    }
-
-  if (Header->MajorVersion != 1)
-    {
-      DbgPrint("MajorVersion is %.08x (must be 1)\n",
-        Header->MajorVersion);
-      ASSERT(Header->MajorVersion == 1);
-    }
-
-  if (Header->MinorVersion != 3)
-    {
-      DbgPrint("MinorVersion is %.08x (must be 3)\n",
-        Header->MajorVersion);
-      ASSERT(Header->MajorVersion == 3);
-    }
-
-  if (Header->Type != 0)
-    {
-      DbgPrint("Type is %.08x (must be 0)\n",
-        Header->Type);
-      ASSERT(Header->Type == 0);
-    }
-
-  if (Header->Format != 1)
-    {
-      DbgPrint("Format is %.08x (must be 1)\n",
-        Header->Format);
-      ASSERT(Header->Format == 1);
-    }
-
-  if (Header->Unused7 != 1)
-    {
-      DbgPrint("Unused7 is %.08x (must be 1)\n",
-        Header->Unused7);
-      ASSERT(Header->Unused7 == 1);
-    }
-
-    }
-}
-
-
-VOID
-CmiVerifyRegistryHive(PREGISTRY_HIVE RegistryHive)
-{
-  if (CmiDoVerify)
-    {
-
-      CmiVerifyHiveHeader(RegistryHive->HiveHeader);
-
-    }
+   Status = ZwFlushBuffersFile(HiveHandle, &IoStatusBlock);
+   return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
 
 
 static NTSTATUS
 CmiCreateNewRegFile(HANDLE FileHandle)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  PCELL_HEADER FreeCell;
-  PHIVE_HEADER HiveHeader;
-  PKEY_CELL RootKeyCell;
+  EREGISTRY_HIVE CmHive;
+  PREGISTRY_HIVE Hive;
   NTSTATUS Status;
-  PHBIN BinHeader;
-  PCHAR Buffer;
 
-  Buffer = (PCHAR) ExAllocatePool(NonPagedPool, 2 * REG_BLOCK_SIZE);
-  if (Buffer == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  RtlZeroMemory (Buffer,
-		 2 * REG_BLOCK_SIZE);
-
-  HiveHeader = (PHIVE_HEADER)Buffer;
-  BinHeader = (PHBIN)((ULONG_PTR)Buffer + REG_BLOCK_SIZE);
-  RootKeyCell = (PKEY_CELL)((ULONG_PTR)Buffer + REG_BLOCK_SIZE + REG_HBIN_DATA_OFFSET);
-  FreeCell = (PCELL_HEADER)((ULONG_PTR)Buffer + REG_BLOCK_SIZE + REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
-
-  CmiCreateDefaultHiveHeader(HiveHeader);
-  CmiCreateDefaultBinHeader(BinHeader);
-  CmiCreateDefaultRootKeyCell(RootKeyCell);
-
-  /* First block */
-  BinHeader->BinOffset = 0;
-
-  /* Offset to root key block */
-  HiveHeader->RootKeyOffset = REG_HBIN_DATA_OFFSET;
-
-  /* The rest of the block is free */
-  FreeCell->CellSize = REG_BLOCK_SIZE - (REG_HBIN_DATA_OFFSET + sizeof(KEY_CELL));
-
-  Status = ZwWriteFile(FileHandle,
-		       NULL,
-		       NULL,
-		       NULL,
-		       &IoStatusBlock,
-		       Buffer,
-		       2 * REG_BLOCK_SIZE,
-		       0,
-		       NULL);
-
-  ExFreePool(Buffer);
-
+  CmHive.HiveHandle = FileHandle;
+  Status = HvInitialize(&Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
+                        CmpAllocate, CmpFree,
+                        CmpFileRead, CmpFileWrite, CmpFileSetSize,
+                        CmpFileFlush, &CmHive);
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return FALSE;
     }
 
-  Status = ZwFlushBuffersFile(FileHandle,
-			      &IoStatusBlock);
+  /* Init root key cell */
+  if (!CmCreateRootNode(Hive, L""))
+    {
+      HvFree (Hive);
+      return FALSE;
+    }
+
+  Status = HvWriteHive(Hive) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+
+  HvFree (Hive);
 
   return(Status);
 }
 
 
 #ifdef HIVE_CHECK
+
+static ULONG
+CmiCalcChecksum(PULONG Buffer)
+{
+  ULONG Sum = 0;
+  ULONG i;
+
+  for (i = 0; i < 127; i++)
+    Sum ^= Buffer[i];
+  if (Sum == (ULONG)-1)
+    Sum = (ULONG)-2;
+  if (Sum == 0)
+    Sum = 1;
+
+  return(Sum);
+}
+
 static NTSTATUS
-CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
+CmiCheckAndFixHive(PEREGISTRY_HIVE RegistryHive)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   FILE_STANDARD_INFORMATION fsi;
@@ -514,7 +286,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
   if (LogHandle == INVALID_HANDLE_VALUE)
     {
       if (HiveHeader->Checksum != CmiCalcChecksum((PULONG)HiveHeader) ||
-	  HiveHeader->UpdateCounter1 != HiveHeader->UpdateCounter2)
+	  HiveHeader->Sequence1 != HiveHeader->Sequence2)
 	{
 	  /* There is no way to fix the hive without log file - BSOD! */
 	  DPRINT("Hive header inconsistent and no log file available!\n");
@@ -528,7 +300,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
     {
       /* Allocate hive header */
       LogHeader = ExAllocatePool(PagedPool,
-				 sizeof(HIVE_HEADER));
+				 HV_LOG_HEADER_SIZE);
       if (LogHeader == NULL)
 	{
 	  DPRINT("ExAllocatePool() failed\n");
@@ -544,7 +316,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 			  0,
 			  &IoStatusBlock,
 			  LogHeader,
-			  sizeof(HIVE_HEADER),
+			  HV_LOG_HEADER_SIZE,
 			  &FileOffset,
 			  0);
       if (!NT_SUCCESS(Status))
@@ -555,10 +327,10 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 
       /* Check log file header integrity */
       if (LogHeader->Checksum != CmiCalcChecksum((PULONG)LogHeader) ||
-          LogHeader->UpdateCounter1 != LogHeader->UpdateCounter2)
+          LogHeader->Sequence1 != LogHeader->Sequence2)
 	{
 	  if (HiveHeader->Checksum != CmiCalcChecksum((PULONG)HiveHeader) ||
-	      HiveHeader->UpdateCounter1 != HiveHeader->UpdateCounter2)
+	      HiveHeader->Sequence1 != HiveHeader->Sequence2)
 	    {
 	      DPRINT("Hive file and log file are inconsistent!\n");
 	      KEBUGCHECK(CONFIG_LIST_FAILED);
@@ -569,8 +341,8 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 	  goto ByeBye;
 	}
 
-      if (HiveHeader->UpdateCounter1 == HiveHeader->UpdateCounter2 &&
-	  HiveHeader->UpdateCounter1 == LogHeader->UpdateCounter1)
+      if (HiveHeader->Sequence1 == HiveHeader->Sequence2 &&
+	  HiveHeader->Sequence1 == LogHeader->Sequence1)
 	{
 	  /* Hive and log file are up-to-date */
 	  Status = STATUS_SUCCESS;
@@ -595,11 +367,9 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
       FileSize = fsi.EndOfFile.u.LowPart;
 
       /* Calculate bitmap and block size */
-      BitmapSize = ROUND_UP((FileSize / REG_BLOCK_SIZE) - 1, sizeof(ULONG) * 8) / 8;
-      BufferSize = sizeof(HIVE_HEADER) +
-			  sizeof(ULONG) +
-			  BitmapSize;
-      BufferSize = ROUND_UP(BufferSize, REG_BLOCK_SIZE);
+      BitmapSize = ROUND_UP((FileSize / HV_BLOCK_SIZE) - 1, sizeof(ULONG) * 8) / 8;
+      BufferSize = HV_LOG_HEADER_SIZE + sizeof(ULONG) + BitmapSize;
+      BufferSize = ROUND_UP(BufferSize, HV_BLOCK_SIZE);
 
       /* Reallocate log header block */
       ExFreePool(LogHeader);
@@ -631,7 +401,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 
       /* Initialize bitmap */
       RtlInitializeBitMap(&BlockBitMap,
-			  (PVOID)((ULONG_PTR)LogHeader + REG_BLOCK_SIZE + sizeof(ULONG)),
+			  (PVOID)((ULONG_PTR)LogHeader + HV_BLOCK_SIZE + sizeof(ULONG)),
 			  BitmapSize * 8);
 
       /* FIXME: Update dirty blocks */
@@ -661,201 +431,8 @@ ByeBye:
 }
 #endif
 
-
-NTSTATUS
-CmiImportHiveBins(PREGISTRY_HIVE Hive,
-		  PUCHAR ChunkPtr)
-{
-  BLOCK_OFFSET BlockOffset;
-  ULONG BlockIndex;
-  PHBIN Bin;
-  ULONG j;
-
-  BlockIndex = 0;
-  BlockOffset = 0;
-  while (BlockIndex < Hive->BlockListSize)
-    {
-      Bin = (PHBIN)((ULONG_PTR)ChunkPtr + BlockOffset);
-
-      if (Bin->HeaderId != REG_BIN_ID)
-	{
-	  DPRINT1 ("Bad bin header id %x, offset %x\n", Bin->HeaderId, BlockOffset);
-	  return STATUS_REGISTRY_CORRUPT;
-	}
-
-      ASSERTMSG("Bin size must be multiple of 4K\n",
-                (Bin->BinSize % REG_BLOCK_SIZE) == 0);
-
-      /* Allocate the hive block */
-      Hive->BlockList[BlockIndex].Bin = ExAllocatePool (PagedPool,
-							Bin->BinSize);
-      if (Hive->BlockList[BlockIndex].Bin == NULL)
-	{
-	  DPRINT1 ("ExAllocatePool() failed\n");
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
-      Hive->BlockList[BlockIndex].Block = (PVOID)Hive->BlockList[BlockIndex].Bin;
-
-      /* Import the Bin */
-      RtlCopyMemory (Hive->BlockList[BlockIndex].Bin,
-		     Bin,
-		     Bin->BinSize);
-
-      if (Bin->BinSize > REG_BLOCK_SIZE)
-	{
-	  for (j = 1; j < Bin->BinSize / REG_BLOCK_SIZE; j++)
-	    {
-	      Hive->BlockList[BlockIndex + j].Bin = Hive->BlockList[BlockIndex].Bin;
-	      Hive->BlockList[BlockIndex + j].Block =
-		(PVOID)((ULONG_PTR)Hive->BlockList[BlockIndex].Bin + (j * REG_BLOCK_SIZE));
-	    }
-	}
-
-      BlockIndex += Bin->BinSize / REG_BLOCK_SIZE;
-      BlockOffset += Bin->BinSize;
-    }
-
-  return STATUS_SUCCESS;
-}
-
-
-VOID
-CmiFreeHiveBins (PREGISTRY_HIVE Hive)
-{
-  ULONG i;
-  PHBIN Bin;
-
-  Bin = NULL;
-  for (i = 0; i < Hive->BlockListSize; i++)
-    {
-      if (Hive->BlockList[i].Bin == NULL)
-	continue;
-
-      if (Hive->BlockList[i].Bin != Bin)
-	{
-	  Bin = Hive->BlockList[i].Bin;
-	  ExFreePool (Hive->BlockList[i].Bin);
-	}
-      Hive->BlockList[i].Bin = NULL;
-      Hive->BlockList[i].Block = NULL;
-    }
-}
-
-
-NTSTATUS
-CmiCreateHiveFreeCellList(PREGISTRY_HIVE Hive)
-{
-  BLOCK_OFFSET BlockOffset;
-  PCELL_HEADER FreeBlock;
-  ULONG BlockIndex;
-  ULONG FreeOffset;
-  PHBIN Bin;
-  NTSTATUS Status;
-
-  /* Initialize the free cell list */
-  Hive->FreeListSize = 0;
-  Hive->FreeListMax = 0;
-  Hive->FreeList = NULL;
-  Hive->FreeListOffset = NULL;
-
-  BlockOffset = 0;
-  BlockIndex = 0;
-  while (BlockIndex < Hive->BlockListSize)
-    {
-      Bin = Hive->BlockList[BlockIndex].Bin;
-
-      /* Search free blocks and add to list */
-      FreeOffset = REG_HBIN_DATA_OFFSET;
-      while (FreeOffset < Bin->BinSize)
-	{
-	  FreeBlock = (PCELL_HEADER) ((ULONG_PTR) Bin + FreeOffset);
-	  if (FreeBlock->CellSize > 0)
-	    {
-	      Status = CmiAddFree(Hive,
-				  FreeBlock,
-				  Bin->BinOffset + FreeOffset,
-				  FALSE);
-
-	      if (!NT_SUCCESS(Status))
-		{
-		  return Status;
-		}
-
-	      FreeOffset += FreeBlock->CellSize;
-	    }
-      else if (FreeBlock->CellSize < 0)
-	    {
-	      FreeOffset -= FreeBlock->CellSize;
-	    }
-      else
-	  {
-#ifdef HIVE_CHECK
-         /* Check and eventually fix a hive */
-         Status = CmiCheckAndFixHive(Hive);
-         if (!NT_SUCCESS(Status))
-           {
-             DPRINT1("CmiCheckAndFixHive() failed (Status %lx)\n", Status);
-             return(Status);
-           }
-#else
-		 break;
-#endif
-	  }
-	}
-
-      BlockIndex += Bin->BinSize / REG_BLOCK_SIZE;
-      BlockOffset += Bin->BinSize;
-    }
-
-  return STATUS_SUCCESS;
-}
-
-
-VOID
-CmiFreeHiveFreeCellList(PREGISTRY_HIVE Hive)
-{
-  ExFreePool (Hive->FreeList);
-  ExFreePool (Hive->FreeListOffset);
-
-  Hive->FreeListSize = 0;
-  Hive->FreeListMax = 0;
-  Hive->FreeList = NULL;
-  Hive->FreeListOffset = NULL;
-}
-
-
-NTSTATUS
-CmiCreateHiveBitmap(PREGISTRY_HIVE Hive)
-{
-  ULONG BitmapSize;
-
-  /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
-  BitmapSize = ROUND_UP(Hive->BlockListSize, sizeof(ULONG) * 8) / 8;
-  DPRINT("Hive->BlockListSize: %lu\n", Hive->BlockListSize);
-  DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
-
-  /* Allocate bitmap */
-  Hive->BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
-					      BitmapSize);
-  if (Hive->BitmapBuffer == NULL)
-    {
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  RtlInitializeBitMap(&Hive->DirtyBitMap,
-		      Hive->BitmapBuffer,
-		      BitmapSize * 8);
-
-  /* Initialize bitmap */
-  RtlClearAllBits(&Hive->DirtyBitMap);
-  Hive->HiveDirty = FALSE;
-
-  return STATUS_SUCCESS;
-}
-
-
 static NTSTATUS
-CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
+CmiInitNonVolatileRegistryHive (PEREGISTRY_HIVE RegistryHive,
 				PWSTR Filename)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -988,37 +565,14 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
     }
   DPRINT("ViewBase %p  ViewSize %lx\n", ViewBase, ViewSize);
 
-  /* Copy hive header and initalize hive */
-  RtlCopyMemory (RegistryHive->HiveHeader,
-		 ViewBase,
-		 sizeof(HIVE_HEADER));
-  RegistryHive->FileSize = ViewSize;
-  RegistryHive->BlockListSize = (RegistryHive->FileSize / REG_BLOCK_SIZE) - 1;
-  RegistryHive->UpdateCounter = RegistryHive->HiveHeader->UpdateCounter1;
-
-  /* Allocate hive block list */
-  RegistryHive->BlockList = ExAllocatePool(NonPagedPool,
-					   RegistryHive->BlockListSize * sizeof(BLOCK_LIST_ENTRY));
-  if (RegistryHive->BlockList == NULL)
-    {
-      DPRINT1("Failed to allocate the hive block list\n");
-      MmUnmapViewOfSection(PsGetCurrentProcess(),
-			   ViewBase);
-      ObDereferenceObject(SectionObject);
-      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
-      RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      ZwClose(FileHandle);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-  RtlZeroMemory (RegistryHive->BlockList,
-		 RegistryHive->BlockListSize * sizeof(BLOCK_LIST_ENTRY));
-
-  /* Import the hive bins */
-  Status = CmiImportHiveBins (RegistryHive,
-			      ViewBase + REG_BLOCK_SIZE);
+  Status = HvInitialize(&RegistryHive->Hive, HV_OPERATION_MEMORY,
+                        (ULONG_PTR)ViewBase, ViewSize,
+                        CmpAllocate, CmpFree,
+                        CmpFileRead, CmpFileWrite, CmpFileSetSize,
+                        CmpFileFlush, RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      ExFreePool(RegistryHive->BlockList);
+      DPRINT1("Failed to open hive\n");
       MmUnmapViewOfSection(PsGetCurrentProcess(),
 			   ViewBase);
       ObDereferenceObject(SectionObject);
@@ -1027,6 +581,8 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
       ZwClose(FileHandle);
       return Status;
     }
+
+  CmPrepareHive(RegistryHive->Hive);
 
   /* Unmap and dereference the hive section */
   MmUnmapViewOfSection(PsGetCurrentProcess(),
@@ -1036,29 +592,6 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
   /* Close the hive file */
   ZwClose(FileHandle);
 
-  /* Initialize the free cell list */
-  Status = CmiCreateHiveFreeCellList (RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      CmiFreeHiveBins(RegistryHive);
-      ExFreePool(RegistryHive->BlockList);
-      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
-      RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      return Status;
-    }
-
-  /* Create the block bitmap */
-  Status = CmiCreateHiveBitmap (RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      CmiFreeHiveFreeCellList(RegistryHive);
-      CmiFreeHiveBins(RegistryHive);
-      ExFreePool(RegistryHive->BlockList);
-      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
-      RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      return Status;
-    }
-
   DPRINT("CmiInitNonVolatileRegistryHive(%p, %S) - Finished.\n",
 	 RegistryHive, Filename);
 
@@ -1067,48 +600,41 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiCreateVolatileHive(PREGISTRY_HIVE *RegistryHive)
+CmiCreateTempHive(PEREGISTRY_HIVE *RegistryHive)
 {
-  PKEY_CELL RootKeyCell;
-  PREGISTRY_HIVE Hive;
+  PEREGISTRY_HIVE Hive;
+  NTSTATUS Status;
 
   *RegistryHive = NULL;
 
   Hive = ExAllocatePool (NonPagedPool,
-			 sizeof(REGISTRY_HIVE));
+			 sizeof(EREGISTRY_HIVE));
   if (Hive == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
 
   RtlZeroMemory (Hive,
-		 sizeof(REGISTRY_HIVE));
+		 sizeof(EREGISTRY_HIVE));
 
   DPRINT("Hive 0x%p\n", Hive);
 
-  Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool (NonPagedPool,
-						   sizeof(HIVE_HEADER));
-  if (Hive->HiveHeader == NULL)
+  Status = HvInitialize(&Hive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
+                        CmpAllocate, CmpFree,
+                        CmpFileRead, CmpFileWrite, CmpFileSetSize,
+                        CmpFileFlush, Hive);
+  if (!NT_SUCCESS(Status))
     {
+      ExFreePool (Hive);
+      return Status;
+    }
+
+  if (!CmCreateRootNode (Hive->Hive, L""))
+    {
+      HvFree (Hive->Hive);
       ExFreePool (Hive);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
-  RtlZeroMemory (Hive->HiveHeader,
-		 sizeof(HIVE_HEADER));
 
-  Hive->Flags = (HIVE_NO_FILE | HIVE_POINTER);
-
-  CmiCreateDefaultHiveHeader (Hive->HiveHeader);
-
-  RootKeyCell = (PKEY_CELL)ExAllocatePool (NonPagedPool,
-					   sizeof(KEY_CELL));
-  if (RootKeyCell == NULL)
-    {
-      ExFreePool(Hive->HiveHeader);
-      ExFreePool(Hive);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  CmiCreateDefaultRootKeyCell (RootKeyCell);
-  Hive->HiveHeader->RootKeyOffset = (BLOCK_OFFSET)RootKeyCell;
+  Hive->Flags = HIVE_NO_FILE;
 
   /* Acquire hive list lock exclusively */
   KeEnterCriticalRegion();
@@ -1131,123 +657,10 @@ CmiCreateVolatileHive(PREGISTRY_HIVE *RegistryHive)
 
 
 NTSTATUS
-CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive)
+CmiCreateVolatileHive(PEREGISTRY_HIVE *RegistryHive)
 {
-  PHBIN BinHeader;
-  PCELL_HEADER FreeCell;
-  PREGISTRY_HIVE Hive;
-  NTSTATUS Status;
-
-  DPRINT ("CmiCreateTempHive() called\n");
-
-  *RegistryHive = NULL;
-
-  Hive = ExAllocatePool (NonPagedPool,
-			 sizeof(REGISTRY_HIVE));
-  if (Hive == NULL)
-    {
-      DPRINT1 ("Failed to allocate registry hive block\n");
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-  RtlZeroMemory (Hive,
-		 sizeof(REGISTRY_HIVE));
-
-  DPRINT ("Hive 0x%p\n", Hive);
-
-  Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool (NonPagedPool,
-						   REG_BLOCK_SIZE);
-  if (Hive->HiveHeader == NULL)
-    {
-      DPRINT1 ("Failed to allocate hive header block\n");
-      ExFreePool (Hive);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-  RtlZeroMemory (Hive->HiveHeader,
-		 REG_BLOCK_SIZE);
-
-  DPRINT ("HiveHeader 0x%p\n", Hive->HiveHeader);
-
-  Hive->Flags = HIVE_NO_FILE;
-
-  RtlInitUnicodeString (&Hive->HiveFileName,
-			NULL);
-  RtlInitUnicodeString (&Hive->LogFileName,
-			NULL);
-
-  CmiCreateDefaultHiveHeader (Hive->HiveHeader);
-
-  /* Allocate hive block list */
-  Hive->BlockList = ExAllocatePool (NonPagedPool,
-				    sizeof(BLOCK_LIST_ENTRY));
-  if (Hive->BlockList == NULL)
-    {
-      DPRINT1 ("Failed to allocate hive block list\n");
-      ExFreePool(Hive->HiveHeader);
-      ExFreePool(Hive);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  /* Allocate first Bin */
-  Hive->BlockList[0].Bin = ExAllocatePool (NonPagedPool,
-					   REG_BLOCK_SIZE);
-  if (Hive->BlockList[0].Bin == NULL)
-    {
-      DPRINT1 ("Failed to allocate first bin\n");
-      ExFreePool(Hive->BlockList);
-      ExFreePool(Hive->HiveHeader);
-      ExFreePool(Hive);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-  Hive->BlockList[0].Block = (PVOID)Hive->BlockList[0].Bin;
-
-  Hive->FileSize = 2* REG_BLOCK_SIZE;
-  Hive->BlockListSize = 1;
-  Hive->UpdateCounter = Hive->HiveHeader->UpdateCounter1;
-
-
-  BinHeader = Hive->BlockList[0].Bin;
-  FreeCell = (PCELL_HEADER)((ULONG_PTR)BinHeader + REG_HBIN_DATA_OFFSET);
-
-  CmiCreateDefaultBinHeader (BinHeader);
-
-  /* First block */
-  BinHeader->BinOffset = 0;
-
-  /* Offset to root key block */
-  Hive->HiveHeader->RootKeyOffset = (BLOCK_OFFSET)-1;
-
-  /* The rest of the block is free */
-  FreeCell->CellSize = REG_BLOCK_SIZE - REG_HBIN_DATA_OFFSET;
-
-  /* Create the free cell list */
-  Status = CmiCreateHiveFreeCellList (Hive);
-  if (Hive->BlockList[0].Bin == NULL)
-    {
-      DPRINT1 ("CmiCreateHiveFreeCellList() failed (Status %lx)\n", Status);
-      ExFreePool(Hive->BlockList[0].Bin);
-      ExFreePool(Hive->BlockList);
-      ExFreePool(Hive->HiveHeader);
-      ExFreePool(Hive);
-      return Status;
-    }
-
-  /* Acquire hive list lock exclusively */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
-
-  /* Add the new hive to the hive list */
-  InsertTailList (&CmiHiveListHead,
-		  &Hive->HiveList);
-
-  /* Release hive list lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
-  KeLeaveCriticalRegion();
-
-  VERIFY_REGISTRY_HIVE (Hive);
-
-  *RegistryHive = Hive;
-
-  return STATUS_SUCCESS;
+  DPRINT ("CmiCreateVolatileHive() called\n");
+  return CmiCreateTempHive(RegistryHive);
 }
 
 
@@ -1256,7 +669,7 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	    IN PUNICODE_STRING FileName,
 	    IN ULONG Flags)
 {
-  PREGISTRY_HIVE Hive;
+  PEREGISTRY_HIVE Hive;
   NTSTATUS Status;
 
   DPRINT ("CmiLoadHive(Filename %wZ)\n", FileName);
@@ -1265,36 +678,24 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     return STATUS_INVALID_PARAMETER;
 
   Hive = ExAllocatePool (NonPagedPool,
-			 sizeof(REGISTRY_HIVE));
+			 sizeof(EREGISTRY_HIVE));
   if (Hive == NULL)
     {
       DPRINT1 ("Failed to allocate hive header.\n");
       return STATUS_INSUFFICIENT_RESOURCES;
     }
   RtlZeroMemory (Hive,
-		 sizeof(REGISTRY_HIVE));
+		 sizeof(EREGISTRY_HIVE));
 
   DPRINT ("Hive 0x%p\n", Hive);
   Hive->Flags = (Flags & REG_NO_LAZY_FLUSH) ? HIVE_NO_SYNCH : 0;
-
-  Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool(NonPagedPool,
-						  sizeof(HIVE_HEADER));
-  if (Hive->HiveHeader == NULL)
-    {
-      DPRINT1 ("Failed to allocate hive header.\n");
-      ExFreePool (Hive);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  RtlZeroMemory (Hive->HiveHeader,
-		 sizeof(HIVE_HEADER));
 
   Status = CmiInitNonVolatileRegistryHive (Hive,
 					   FileName->Buffer);
   if (!NT_SUCCESS (Status))
     {
       DPRINT1 ("CmiInitNonVolatileRegistryHive() failed (Status %lx)\n", Status);
-      ExFreePool (Hive->HiveHeader);
+      HvFree (Hive->Hive);
       ExFreePool (Hive);
       return Status;
     }
@@ -1320,11 +721,8 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
 
 NTSTATUS
-CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive)
+CmiRemoveRegistryHive(PEREGISTRY_HIVE RegistryHive)
 {
-  if (RegistryHive->Flags & HIVE_POINTER)
-    return STATUS_UNSUCCESSFUL;
-
   /* Remove hive from hive list */
   RemoveEntryList (&RegistryHive->HiveList);
 
@@ -1332,90 +730,49 @@ CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive)
   RtlFreeUnicodeString (&RegistryHive->HiveFileName);
   RtlFreeUnicodeString (&RegistryHive->LogFileName);
 
-  /* Release hive bitmap */
-  ExFreePool (RegistryHive->BitmapBuffer);
-
-  /* Release free cell list */
-  ExFreePool (RegistryHive->FreeList);
-  ExFreePool (RegistryHive->FreeListOffset);
-
-  /* Release bins and bin list */
-  CmiFreeHiveBins (RegistryHive);
-  ExFreePool (RegistryHive->BlockList);
-
-  /* Release hive header */
-  ExFreePool (RegistryHive->HiveHeader);
-
   /* Release hive */
-  ExFreePool (RegistryHive);
+  HvFree (RegistryHive->Hive);
 
   return STATUS_SUCCESS;
 }
 
 
-static ULONG
-CmiCalcChecksum(PULONG Buffer)
+NTSTATUS
+CmOpenHiveFiles(PEREGISTRY_HIVE RegistryHive)
 {
-  ULONG Sum = 0;
-  ULONG i;
-
-  for (i = 0; i < 127; i++)
-    Sum ^= Buffer[i];
-  if (Sum == (ULONG)-1)
-    Sum = (ULONG)-2;
-  if (Sum == 0)
-    Sum = 1;
-
-  return(Sum);
-}
-
-
-static NTSTATUS
-CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
-{
-  FILE_END_OF_FILE_INFORMATION EndOfFileInfo;
-  FILE_ALLOCATION_INFORMATION FileAllocationInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
-  HANDLE FileHandle;
-  LARGE_INTEGER FileOffset;
-  ULONG BufferSize;
-  ULONG BitmapSize;
-  PUCHAR Buffer;
-  PUCHAR Ptr;
-  ULONG BlockIndex;
-  ULONG LastIndex;
-  PVOID BlockPtr;
   NTSTATUS Status;
 
-  DPRINT("CmiStartLogUpdate() called\n");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &RegistryHive->HiveFileName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
 
-  BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
-  BufferSize = sizeof(HIVE_HEADER) +
-	       sizeof(ULONG) +
-	       BitmapSize;
-  BufferSize = ROUND_UP(BufferSize, REG_BLOCK_SIZE);
-
-  DPRINT("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
-
-  Buffer = (PUCHAR)ExAllocatePool(NonPagedPool,
-				  BufferSize);
-  if (Buffer == NULL)
+  Status = ZwCreateFile(&RegistryHive->HiveHandle,
+			FILE_ALL_ACCESS,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			NULL,
+			FILE_ATTRIBUTE_NORMAL,
+			0,
+			FILE_OPEN,
+			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+			NULL,
+			0);
+  if (!NT_SUCCESS(Status))
     {
-      DPRINT("ExAllocatePool() failed\n");
-      return(STATUS_INSUFFICIENT_RESOURCES);
+      return(Status);
     }
-  RtlZeroMemory (Buffer,
-		 BufferSize);
 
-  /* Open log file for writing */
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->LogFileName,
 			     OBJ_CASE_INSENSITIVE,
 			     NULL,
 			     NULL);
 
-  Status = ZwCreateFile(&FileHandle,
+  Status = ZwCreateFile(&RegistryHive->LogHandle,
 			FILE_ALL_ACCESS,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -1428,612 +785,63 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
-      ExFreePool(Buffer);
+      ZwClose(RegistryHive->HiveHandle);
       return(Status);
     }
 
-  /* Update firt update counter and checksum */
-  RegistryHive->HiveHeader->UpdateCounter1 = RegistryHive->UpdateCounter + 1;
-  RegistryHive->HiveHeader->Checksum = CmiCalcChecksum((PULONG)RegistryHive->HiveHeader);
-
-  /* Copy hive header */
-  RtlCopyMemory(Buffer,
-		RegistryHive->HiveHeader,
-		sizeof(HIVE_HEADER));
-  Ptr = Buffer + sizeof(HIVE_HEADER);
-
-  RtlCopyMemory(Ptr,
-		"DIRT",
-		4);
-  Ptr += 4;
-  RtlCopyMemory(Ptr,
-		RegistryHive->DirtyBitMap.Buffer,
-		BitmapSize);
-
-  /* Write hive block and block bitmap */
-  FileOffset.QuadPart = (ULONGLONG)0;
-  Status = ZwWriteFile(FileHandle,
-		       NULL,
-		       NULL,
-		       NULL,
-		       &IoStatusBlock,
-		       Buffer,
-		       BufferSize,
-		       &FileOffset,
-		       NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
-      ZwClose(FileHandle);
-      ExFreePool(Buffer);
-      return(Status);
-    }
-  ExFreePool(Buffer);
-
-  /* Write dirty blocks */
-  FileOffset.QuadPart = (ULONGLONG)BufferSize;
-  BlockIndex = 0;
-  while (BlockIndex < RegistryHive->BlockListSize)
-    {
-      LastIndex = BlockIndex;
-      BlockIndex = RtlFindSetBits(&RegistryHive->DirtyBitMap,
-				  1,
-				  BlockIndex);
-      if (BlockIndex == (ULONG)-1 || BlockIndex < LastIndex)
-	{
-	  DPRINT("No more set bits\n");
-	  Status = STATUS_SUCCESS;
-	  break;
-	}
-
-      DPRINT("Block %lu is dirty\n", BlockIndex);
-
-      BlockPtr = RegistryHive->BlockList[BlockIndex].Block;
-      DPRINT("BlockPtr %p\n", BlockPtr);
-      DPRINT("File offset %I64x\n", FileOffset.QuadPart);
-
-      /* Write hive block */
-      Status = ZwWriteFile(FileHandle,
-			   NULL,
-			   NULL,
-			   NULL,
-			   &IoStatusBlock,
-			   BlockPtr,
-			   REG_BLOCK_SIZE,
-			   &FileOffset,
-			   NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("ZwWriteFile() failed (Status %lx)\n", Status);
-	  ZwClose(FileHandle);
-	  return(Status);
-	}
-
-      BlockIndex++;
-      FileOffset.QuadPart += (ULONGLONG)REG_BLOCK_SIZE;
-    }
-
-  /* Truncate log file */
-  EndOfFileInfo.EndOfFile.QuadPart = FileOffset.QuadPart;
-  Status = ZwSetInformationFile(FileHandle,
-				&IoStatusBlock,
-				&EndOfFileInfo,
-				sizeof(FILE_END_OF_FILE_INFORMATION),
-				FileEndOfFileInformation);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwSetInformationFile() failed (Status %lx)\n", Status);
-      ZwClose(FileHandle);
-      return(Status);
-    }
-
-  FileAllocationInfo.AllocationSize.QuadPart = FileOffset.QuadPart;
-  Status = ZwSetInformationFile(FileHandle,
-				&IoStatusBlock,
-				&FileAllocationInfo,
-				sizeof(FILE_ALLOCATION_INFORMATION),
-				FileAllocationInformation);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwSetInformationFile() failed (Status %lx)\n", Status);
-      ZwClose(FileHandle);
-      return(Status);
-    }
-
-  /* Flush the log file */
-  Status = ZwFlushBuffersFile(FileHandle,
-			      &IoStatusBlock);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
-    }
-
-  ZwClose(FileHandle);
-
-  return(Status);
+  return STATUS_SUCCESS;
 }
 
 
-static NTSTATUS
-CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
+VOID
+CmCloseHiveFiles(PEREGISTRY_HIVE RegistryHive)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  HANDLE FileHandle;
-  LARGE_INTEGER FileOffset;
-  ULONG BufferSize;
-  ULONG BitmapSize;
-  PUCHAR Buffer;
-  PUCHAR Ptr;
-  NTSTATUS Status;
-
-  DPRINT("CmiFinishLogUpdate() called\n");
-
-  BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
-  BufferSize = sizeof(HIVE_HEADER) +
-	       sizeof(ULONG) +
-	       BitmapSize;
-  BufferSize = ROUND_UP(BufferSize, REG_BLOCK_SIZE);
-
-  DPRINT("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
-
-  Buffer = (PUCHAR)ExAllocatePool(NonPagedPool, BufferSize);
-  if (Buffer == NULL)
-    {
-      DPRINT("ExAllocatePool() failed\n");
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  /* Open log file for writing */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->LogFileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateFile(&FileHandle,
-			FILE_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OPEN,
-			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
-      ExFreePool(Buffer);
-      return(Status);
-    }
-
-  /* Update first and second update counter and checksum */
-  RegistryHive->HiveHeader->UpdateCounter1 = RegistryHive->UpdateCounter + 1;
-  RegistryHive->HiveHeader->UpdateCounter2 = RegistryHive->UpdateCounter + 1;
-  RegistryHive->HiveHeader->Checksum = CmiCalcChecksum((PULONG)RegistryHive->HiveHeader);
-
-  /* Copy hive header */
-  RtlCopyMemory(Buffer,
-		RegistryHive->HiveHeader,
-		sizeof(HIVE_HEADER));
-  Ptr = Buffer + sizeof(HIVE_HEADER);
-
-  /* Write empty block bitmap */
-  RtlCopyMemory(Ptr,
-		"DIRT",
-		4);
-  Ptr += 4;
-  RtlZeroMemory(Ptr,
-		BitmapSize);
-
-  /* Write hive block and block bitmap */
-  FileOffset.QuadPart = (ULONGLONG)0;
-  Status = ZwWriteFile(FileHandle,
-		       NULL,
-		       NULL,
-		       NULL,
-		       &IoStatusBlock,
-		       Buffer,
-		       BufferSize,
-		       &FileOffset,
-		       NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
-      ZwClose(FileHandle);
-      ExFreePool(Buffer);
-      return(Status);
-    }
-
-  ExFreePool(Buffer);
-
-  /* Flush the log file */
-  Status = ZwFlushBuffersFile(FileHandle,
-			      &IoStatusBlock);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
-    }
-
-  ZwClose(FileHandle);
-
-  return(Status);
-}
-
-
-static NTSTATUS
-CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
-{
-  FILE_END_OF_FILE_INFORMATION EndOfFileInfo;
-  FILE_ALLOCATION_INFORMATION FileAllocationInfo;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  HANDLE FileHandle;
-  ULONG BufferSize;
-  ULONG BitmapSize;
-  NTSTATUS Status;
-
-  DPRINT("CmiCleanupLogUpdate() called\n");
-
-  BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
-  BufferSize = sizeof(HIVE_HEADER) +
-	       sizeof(ULONG) +
-	       BitmapSize;
-  BufferSize = ROUND_UP(BufferSize, REG_BLOCK_SIZE);
-
-  DPRINT("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
-
-  /* Open log file for writing */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->LogFileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateFile(&FileHandle,
-			FILE_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OPEN,
-			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
-      return(Status);
-    }
-
-  /* Truncate log file */
-  EndOfFileInfo.EndOfFile.QuadPart = (ULONGLONG)BufferSize;
-  Status = ZwSetInformationFile(FileHandle,
-				&IoStatusBlock,
-				&EndOfFileInfo,
-				sizeof(FILE_END_OF_FILE_INFORMATION),
-				FileEndOfFileInformation);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwSetInformationFile() failed (Status %lx)\n", Status);
-      ZwClose(FileHandle);
-      return(Status);
-    }
-
-  FileAllocationInfo.AllocationSize.QuadPart = (ULONGLONG)BufferSize;
-  Status = ZwSetInformationFile(FileHandle,
-				&IoStatusBlock,
-				&FileAllocationInfo,
-				sizeof(FILE_ALLOCATION_INFORMATION),
-				FileAllocationInformation);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
-      ZwClose(FileHandle);
-      return(Status);
-    }
-
-  /* Flush the log file */
-  Status = ZwFlushBuffersFile(FileHandle,
-			      &IoStatusBlock);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
-    }
-
-  ZwClose(FileHandle);
-
-  return(Status);
-}
-
-
-static NTSTATUS
-CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  HANDLE FileHandle;
-  LARGE_INTEGER FileOffset;
-  ULONG BlockIndex;
-  ULONG LastIndex;
-  PVOID BlockPtr;
-  NTSTATUS Status;
-
-  DPRINT("CmiStartHiveUpdate() called\n");
-
-  /* Open hive for writing */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->HiveFileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateFile(&FileHandle,
-			FILE_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OPEN,
-			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
-      return(Status);
-    }
-
-  /* Update firt update counter and checksum */
-  RegistryHive->HiveHeader->UpdateCounter1 = RegistryHive->UpdateCounter + 1;
-  RegistryHive->HiveHeader->Checksum = CmiCalcChecksum((PULONG)RegistryHive->HiveHeader);
-
-  /* Write hive block */
-  FileOffset.QuadPart = (ULONGLONG)0;
-  Status = ZwWriteFile(FileHandle,
-		       NULL,
-		       NULL,
-		       NULL,
-		       &IoStatusBlock,
-		       RegistryHive->HiveHeader,
-		       sizeof(HIVE_HEADER),
-		       &FileOffset,
-		       NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
-      ZwClose(FileHandle);
-      return(Status);
-    }
-
-  BlockIndex = 0;
-  while (BlockIndex < RegistryHive->BlockListSize)
-    {
-      LastIndex = BlockIndex;
-      BlockIndex = RtlFindSetBits(&RegistryHive->DirtyBitMap,
-				  1,
-				  BlockIndex);
-      if (BlockIndex == (ULONG)-1 || BlockIndex < LastIndex)
-	{
-	  DPRINT("No more set bits\n");
-	  Status = STATUS_SUCCESS;
-	  break;
-	}
-
-      DPRINT("Block %lu is dirty\n", BlockIndex);
-
-      BlockPtr = RegistryHive->BlockList[BlockIndex].Block;
-      DPRINT("  BlockPtr %p\n", BlockPtr);
-
-      FileOffset.QuadPart = (ULONGLONG)(BlockIndex + 1) * (ULONGLONG)REG_BLOCK_SIZE;
-      DPRINT("  File offset %I64x\n", FileOffset.QuadPart);
-
-      /* Write hive block */
-      Status = ZwWriteFile(FileHandle,
-			   NULL,
-			   NULL,
-			   NULL,
-			   &IoStatusBlock,
-			   BlockPtr,
-			   REG_BLOCK_SIZE,
-			   &FileOffset,
-			   NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
-	  ZwClose(FileHandle);
-	  return(Status);
-	}
-
-      BlockIndex++;
-    }
-
-  Status = ZwFlushBuffersFile(FileHandle,
-			      &IoStatusBlock);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
-    }
-
-  ZwClose(FileHandle);
-
-  return(Status);
-}
-
-
-static NTSTATUS
-CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  LARGE_INTEGER FileOffset;
-  HANDLE FileHandle;
-  NTSTATUS Status;
-
-  DPRINT("CmiFinishHiveUpdate() called\n");
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &RegistryHive->HiveFileName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-
-  Status = ZwCreateFile(&FileHandle,
-			FILE_ALL_ACCESS,
-			&ObjectAttributes,
-			&IoStatusBlock,
-			NULL,
-			FILE_ATTRIBUTE_NORMAL,
-			0,
-			FILE_OPEN,
-			FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-			NULL,
-			0);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
-      return(Status);
-    }
-
-  /* Update second update counter and checksum */
-  RegistryHive->HiveHeader->UpdateCounter1 = RegistryHive->UpdateCounter + 1;
-  RegistryHive->HiveHeader->UpdateCounter2 = RegistryHive->UpdateCounter + 1;
-  RegistryHive->HiveHeader->Checksum = CmiCalcChecksum((PULONG)RegistryHive->HiveHeader);
-
-  /* Write hive block */
-  FileOffset.QuadPart = (ULONGLONG)0;
-  Status = ZwWriteFile(FileHandle,
-		       NULL,
-		       NULL,
-		       NULL,
-		       &IoStatusBlock,
-		       RegistryHive->HiveHeader,
-		       sizeof(HIVE_HEADER),
-		       &FileOffset,
-		       NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwWriteFile() failed (Status %lx)\n", Status);
-      ZwClose(FileHandle);
-      return(Status);
-    }
-
-  Status = ZwFlushBuffersFile(FileHandle,
-			      &IoStatusBlock);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
-    }
-
-  ZwClose(FileHandle);
-
-  return(Status);
+  ZwClose(RegistryHive->HiveHandle);
+  ZwClose(RegistryHive->LogHandle);
 }
 
 
 NTSTATUS
-CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
+CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive)
 {
+  BOOLEAN Success;
   NTSTATUS Status;
 
-  DPRINT("CmiFlushRegistryHive() called\n");
+  ASSERT(!IsNoFileHive(RegistryHive));
 
-  if (RegistryHive->HiveDirty == FALSE)
+  if (RtlFindSetBits(&RegistryHive->Hive->DirtyBitmap, 1, 0) == ~0)
     {
       return(STATUS_SUCCESS);
     }
 
-  DPRINT("Hive '%wZ' is dirty\n",
-	 &RegistryHive->HiveFileName);
-  DPRINT("Log file: '%wZ'\n",
-	 &RegistryHive->LogFileName);
-
-  /* Update hive header modification time */
-  KeQuerySystemTime(&RegistryHive->HiveHeader->DateModified);
-
-  /* Start log update */
-  Status = CmiStartLogUpdate(RegistryHive);
+  Status = CmOpenHiveFiles(RegistryHive);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("CmiStartLogUpdate() failed (Status %lx)\n", Status);
-      return(Status);
+      return Status;
     }
 
-  /* Finish log update */
-  Status = CmiFinishLogUpdate(RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("CmiFinishLogUpdate() failed (Status %lx)\n", Status);
-      return(Status);
-    }
+  Success = HvSyncHive(RegistryHive->Hive);
 
-  /* Start hive update */
-  Status = CmiStartHiveUpdate(RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("CmiStartHiveUpdate() failed (Status %lx)\n", Status);
-      return(Status);
-    }
+  CmCloseHiveFiles(RegistryHive);
 
-  /* Finish the hive update */
-  Status = CmiFinishHiveUpdate(RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("CmiFinishHiveUpdate() failed (Status %lx)\n", Status);
-      return(Status);
-    }
-
-  /* Cleanup log update */
-  Status = CmiCleanupLogUpdate(RegistryHive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("CmiFinishLogUpdate() failed (Status %lx)\n", Status);
-      return(Status);
-    }
-
-  /* Increment hive update counter */
-  RegistryHive->UpdateCounter++;
-
-  /* Clear dirty bitmap and dirty flag */
-  RtlClearAllBits(&RegistryHive->DirtyBitMap);
-  RegistryHive->HiveDirty = FALSE;
-
-  DPRINT("CmiFlushRegistryHive() done\n");
-
-  return(STATUS_SUCCESS);
+  return Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 
 ULONG
 CmiGetNumberOfSubKeys(PKEY_OBJECT KeyObject)
 {
-  PKEY_OBJECT CurKey;
   PKEY_CELL KeyCell;
   ULONG SubKeyCount;
-  ULONG i;
 
   VERIFY_KEY_OBJECT(KeyObject);
 
   KeyCell = KeyObject->KeyCell;
   VERIFY_KEY_CELL(KeyCell);
 
-  SubKeyCount = (KeyCell == NULL) ? 0 : KeyCell->NumberOfSubKeys;
-
-  /* Search for volatile or 'foreign' keys */
-  for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
-    {
-      CurKey = KeyObject->SubKeys[i];
-      if (CurKey->RegistryHive == CmiVolatileHive ||
-	  CurKey->RegistryHive != KeyObject->RegistryHive)
-	{
-	  SubKeyCount++;
-	}
-    }
+  SubKeyCount = (KeyCell == NULL) ? 0 :
+                KeyCell->NumberOfSubKeys[HvStable] +
+                KeyCell->NumberOfSubKeys[HvVolatile];
 
   return SubKeyCount;
 }
@@ -2043,12 +851,12 @@ ULONG
 CmiGetMaxNameLength(PKEY_OBJECT KeyObject)
 {
   PHASH_TABLE_CELL HashBlock;
-  PKEY_OBJECT CurKey;
   PKEY_CELL CurSubKeyCell;
   PKEY_CELL KeyCell;
   ULONG MaxName;
   ULONG NameSize;
   ULONG i;
+  ULONG Storage;
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -2056,77 +864,24 @@ CmiGetMaxNameLength(PKEY_OBJECT KeyObject)
   VERIFY_KEY_CELL(KeyCell);
 
   MaxName = 0;
-  HashBlock = CmiGetCell (KeyObject->RegistryHive,
-			  KeyCell->HashTableOffset,
-			  NULL);
-  if (HashBlock == NULL)
+  for (Storage = HvStable; Storage < HvMaxStorageType; Storage++)
     {
-      DPRINT("CmiGetBlock() failed\n");
-    }
-  else
-    {
-      for (i = 0; i < HashBlock->HashTableSize; i++)
-	{
-	  if (HashBlock->Table[i].KeyOffset != 0)
-	    {
-	      CurSubKeyCell = CmiGetCell (KeyObject->RegistryHive,
-					  HashBlock->Table[i].KeyOffset,
-					   NULL);
-	      if (CurSubKeyCell == NULL)
-	        {
-	          DPRINT("CmiGetBlock() failed\n");
-	          continue;
-	        }
+      if (KeyCell->HashTableOffset[Storage] != HCELL_NULL)
+        {
+          HashBlock = HvGetCell (KeyObject->RegistryHive->Hive, KeyCell->HashTableOffset[Storage]);
+          ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
 
-	      NameSize = CurSubKeyCell->NameSize;
-	      if (CurSubKeyCell->Flags & REG_KEY_NAME_PACKED)
-	        {
-	          NameSize *= sizeof(WCHAR);
-	        }
-
-	      if (NameSize > MaxName)
-	        {
-	          MaxName = NameSize;
-	        }
-	    }
-	}
-    }
-
-  DPRINT ("KeyObject->NumberOfSubKeys %d\n", KeyObject->NumberOfSubKeys);
-  for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
-    {
-      CurKey = KeyObject->SubKeys[i];
-      if (CurKey->RegistryHive == CmiVolatileHive ||
-	  CurKey->RegistryHive != KeyObject->RegistryHive)
-	{
-	  CurSubKeyCell = CurKey->KeyCell;
-	  if (CurSubKeyCell == NULL)
-	    {
-	      DPRINT("CmiGetBlock() failed\n");
-	      continue;
-	    }
-
-	  if ((CurSubKeyCell->Flags & REG_KEY_ROOT_CELL) == REG_KEY_ROOT_CELL)
-	    {
-	      /* Use name of the key object */
-	      NameSize = CurKey->Name.Length;
-	    }
-	  else
-	    {
-	      /* Use name of the key cell */
-	      NameSize = CurSubKeyCell->NameSize;
-	      if (CurSubKeyCell->Flags & REG_KEY_NAME_PACKED)
-		{
-		  NameSize *= sizeof(WCHAR);
-		}
-	    }
-	  DPRINT ("NameSize %lu\n", NameSize);
-
-	  if (NameSize > MaxName)
-	    {
-	      MaxName = NameSize;
-	    }
-	}
+          for (i = 0; i < KeyCell->NumberOfSubKeys[Storage]; i++)
+            {
+              CurSubKeyCell = HvGetCell (KeyObject->RegistryHive->Hive,
+                                         HashBlock->Table[i].KeyOffset);
+              NameSize = CurSubKeyCell->NameSize;
+              if (CurSubKeyCell->Flags & REG_KEY_NAME_PACKED)
+                 NameSize *= sizeof(WCHAR);
+              if (NameSize > MaxName)
+                 MaxName = NameSize;
+            }
+        }
     }
 
   DPRINT ("MaxName %lu\n", MaxName);
@@ -2139,11 +894,11 @@ ULONG
 CmiGetMaxClassLength(PKEY_OBJECT  KeyObject)
 {
   PHASH_TABLE_CELL HashBlock;
-  PKEY_OBJECT CurKey;
   PKEY_CELL CurSubKeyCell;
   PKEY_CELL KeyCell;
   ULONG MaxClass;
   ULONG i;
+  ULONG Storage;
 
   VERIFY_KEY_OBJECT(KeyObject);
 
@@ -2151,55 +906,25 @@ CmiGetMaxClassLength(PKEY_OBJECT  KeyObject)
   VERIFY_KEY_CELL(KeyCell);
 
   MaxClass = 0;
-  HashBlock = CmiGetCell (KeyObject->RegistryHive,
-			  KeyCell->HashTableOffset,
-			  NULL);
-  if (HashBlock == NULL)
+  for (Storage = HvStable; Storage < HvMaxStorageType; Storage++)
     {
-      DPRINT("CmiGetBlock() failed\n");
-    }
-  else
-    {
-      for (i = 0; i < HashBlock->HashTableSize; i++)
-	{
-	  if (HashBlock->Table[i].KeyOffset != 0)
-	    {
-	      CurSubKeyCell = CmiGetCell (KeyObject->RegistryHive,
-					  HashBlock->Table[i].KeyOffset,
-					  NULL);
-	      if (CurSubKeyCell == NULL)
-	        {
-	          DPRINT("CmiGetBlock() failed\n");
-	          continue;
-	        }
+      if (KeyCell->HashTableOffset[Storage] != HCELL_NULL)
+        {
+          HashBlock = HvGetCell (KeyObject->RegistryHive->Hive,
+                                 KeyCell->HashTableOffset[Storage]);
+          ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
 
-	      if (MaxClass < CurSubKeyCell->ClassSize)
-	        {
-	          MaxClass = CurSubKeyCell->ClassSize;
-	        }
-	    }
-	}
-    }
+          for (i = 0; i < KeyCell->NumberOfSubKeys[Storage]; i++)
+            {
+              CurSubKeyCell = HvGetCell (KeyObject->RegistryHive->Hive,
+                                         HashBlock->Table[i].KeyOffset);
 
-  DPRINT("KeyObject->NumberOfSubKeys %d\n", KeyObject->NumberOfSubKeys);
-  for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
-    {
-      CurKey = KeyObject->SubKeys[i];
-      if (CurKey->RegistryHive == CmiVolatileHive ||
-	  CurKey->RegistryHive != KeyObject->RegistryHive)
-	{
-	  CurSubKeyCell = CurKey->KeyCell;
-	  if (CurSubKeyCell == NULL)
-	    {
-	      DPRINT("CmiGetBlock() failed\n");
-	      continue;
-	    }
-
-	  if (MaxClass < CurSubKeyCell->ClassSize)
-	    {
-	      MaxClass = CurSubKeyCell->ClassSize;
-	    }
-	}
+              if (MaxClass < CurSubKeyCell->ClassSize)
+                {
+                  MaxClass = CurSubKeyCell->ClassSize;
+                }
+            }
+        }
     }
 
   return MaxClass;
@@ -2207,7 +932,7 @@ CmiGetMaxClassLength(PKEY_OBJECT  KeyObject)
 
 
 ULONG
-CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
+CmiGetMaxValueNameLength(PEREGISTRY_HIVE RegistryHive,
 			 PKEY_CELL KeyCell)
 {
   PVALUE_LIST_CELL ValueListCell;
@@ -2218,21 +943,19 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
 
   VERIFY_KEY_CELL(KeyCell);
 
-  MaxValueName = 0;
-  ValueListCell = CmiGetCell (RegistryHive,
-			      KeyCell->ValueListOffset,
-			      NULL);
-  if (ValueListCell == NULL)
+  if (KeyCell->ValueListOffset == HCELL_NULL)
     {
-      DPRINT("CmiGetBlock() failed\n");
       return 0;
     }
 
+  MaxValueName = 0;
+  ValueListCell = HvGetCell (RegistryHive->Hive,
+			     KeyCell->ValueListOffset);
+
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetCell (RegistryHive,
-				 ValueListCell->ValueOffset[i],
-				 NULL);
+      CurValueCell = HvGetCell (RegistryHive->Hive,
+				ValueListCell->ValueOffset[i]);
       if (CurValueCell == NULL)
 	{
 	  DPRINT("CmiGetBlock() failed\n");
@@ -2257,7 +980,7 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
 
 
 ULONG
-CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
+CmiGetMaxValueDataLength(PEREGISTRY_HIVE RegistryHive,
 			 PKEY_CELL KeyCell)
 {
   PVALUE_LIST_CELL ValueListCell;
@@ -2267,19 +990,19 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
 
   VERIFY_KEY_CELL(KeyCell);
 
-  MaxValueData = 0;
-  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
-  if (ValueListCell == NULL)
+  if (KeyCell->ValueListOffset == HCELL_NULL)
     {
       return 0;
     }
 
+  MaxValueData = 0;
+  ValueListCell = HvGetCell (RegistryHive->Hive, KeyCell->ValueListOffset);
+
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetCell (RegistryHive,
-                                 ValueListCell->ValueOffset[i],NULL);
-      if ((CurValueCell != NULL) &&
-          (MaxValueData < (LONG)(CurValueCell->DataSize & REG_DATA_SIZE_MASK)))
+      CurValueCell = HvGetCell (RegistryHive->Hive,
+                                ValueListCell->ValueOffset[i]);
+      if ((MaxValueData < (LONG)(CurValueCell->DataSize & REG_DATA_SIZE_MASK)))
         {
           MaxValueData = CurValueCell->DataSize & REG_DATA_SIZE_MASK;
         }
@@ -2290,16 +1013,17 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
+CmiScanForSubKey(IN PEREGISTRY_HIVE RegistryHive,
 		 IN PKEY_CELL KeyCell,
 		 OUT PKEY_CELL *SubKeyCell,
-		 OUT BLOCK_OFFSET *BlockOffset,
+		 OUT HCELL_INDEX *BlockOffset,
 		 IN PUNICODE_STRING KeyName,
 		 IN ACCESS_MASK DesiredAccess,
 		 IN ULONG Attributes)
 {
   PHASH_TABLE_CELL HashBlock;
   PKEY_CELL CurSubKeyCell;
+  ULONG Storage;
   ULONG i;
 
   VERIFY_KEY_CELL(KeyCell);
@@ -2310,78 +1034,61 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 
   *SubKeyCell = NULL;
 
-  /* The key does not have any subkeys */
-  if (KeyCell->HashTableOffset == (BLOCK_OFFSET)-1)
+  for (Storage = HvStable; Storage < HvMaxStorageType; Storage++)
     {
-      return STATUS_SUCCESS;
+      /* The key does not have any subkeys */
+      if (KeyCell->HashTableOffset[Storage] == HCELL_NULL)
+        {
+          continue;
+        }
+
+      /* Get hash table */
+      HashBlock = HvGetCell (RegistryHive->Hive, KeyCell->HashTableOffset[Storage]);
+      ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
+
+      for (i = 0; i < KeyCell->NumberOfSubKeys[Storage]; i++)
+        {
+          if (Attributes & OBJ_CASE_INSENSITIVE)
+            {
+              if ((HashBlock->Table[i].HashValue == 0 ||
+                   CmiCompareHashI(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
+                {
+                  CurSubKeyCell = HvGetCell (RegistryHive->Hive,
+            				 HashBlock->Table[i].KeyOffset);
+
+                  if (CmiCompareKeyNamesI(KeyName, CurSubKeyCell))
+                    {
+                      *SubKeyCell = CurSubKeyCell;
+                      *BlockOffset = HashBlock->Table[i].KeyOffset;
+                      return STATUS_SUCCESS;
+                    }
+                }
+            }
+          else
+            {
+              if ((HashBlock->Table[i].HashValue == 0 ||
+                   CmiCompareHash(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
+                {
+                  CurSubKeyCell = HvGetCell (RegistryHive->Hive,
+            				 HashBlock->Table[i].KeyOffset);
+
+                  if (CmiCompareKeyNames(KeyName, CurSubKeyCell))
+                    {
+                      *SubKeyCell = CurSubKeyCell;
+                      *BlockOffset = HashBlock->Table[i].KeyOffset;
+                      return STATUS_SUCCESS;
+                    }
+                }
+            }
+        }
     }
 
-  /* Get hash table */
-  HashBlock = CmiGetCell (RegistryHive, KeyCell->HashTableOffset, NULL);
-  if (HashBlock == NULL)
-    {
-      DPRINT("CmiGetBlock() failed\n");
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  for (i = 0; (i < KeyCell->NumberOfSubKeys) && (i < HashBlock->HashTableSize); i++)
-    {
-      if (Attributes & OBJ_CASE_INSENSITIVE)
-	{
-	  if (HashBlock->Table[i].KeyOffset != 0 &&
-	      HashBlock->Table[i].KeyOffset != (ULONG_PTR)-1 &&
-	      (HashBlock->Table[i].HashValue == 0 ||
-	       CmiCompareHashI(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
-	    {
-	      CurSubKeyCell = CmiGetCell (RegistryHive,
-					  HashBlock->Table[i].KeyOffset,
-					  NULL);
-	      if (CurSubKeyCell == NULL)
-		{
-		  DPRINT("CmiGetBlock() failed\n");
-		  return STATUS_UNSUCCESSFUL;
-		}
-
-	      if (CmiCompareKeyNamesI(KeyName, CurSubKeyCell))
-		{
-		  *SubKeyCell = CurSubKeyCell;
-		  *BlockOffset = HashBlock->Table[i].KeyOffset;
-		  break;
-		}
-	    }
-	}
-      else
-	{
-	  if (HashBlock->Table[i].KeyOffset != 0 &&
-	      HashBlock->Table[i].KeyOffset != (ULONG_PTR) -1 &&
-	      (HashBlock->Table[i].HashValue == 0 ||
-	       CmiCompareHash(KeyName, (PCHAR)&HashBlock->Table[i].HashValue)))
-	    {
-	      CurSubKeyCell = CmiGetCell (RegistryHive,
-					  HashBlock->Table[i].KeyOffset,
-					  NULL);
-	      if (CurSubKeyCell == NULL)
-		{
-		  DPRINT("CmiGetBlock() failed\n");
-		  return STATUS_UNSUCCESSFUL;
-		}
-
-	      if (CmiCompareKeyNames(KeyName, CurSubKeyCell))
-		{
-		  *SubKeyCell = CurSubKeyCell;
-		  *BlockOffset = HashBlock->Table[i].KeyOffset;
-		  break;
-		}
-	    }
-	}
-    }
-
-  return STATUS_SUCCESS;
+  return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 
 NTSTATUS
-CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
+CmiAddSubKey(PEREGISTRY_HIVE RegistryHive,
 	     PKEY_OBJECT ParentKey,
 	     PKEY_OBJECT SubKey,
 	     PUNICODE_STRING SubKeyName,
@@ -2390,15 +1097,16 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 	     ULONG CreateOptions)
 {
   PHASH_TABLE_CELL HashBlock;
-  BLOCK_OFFSET NKBOffset;
+  HCELL_INDEX NKBOffset;
   PKEY_CELL NewKeyCell;
   ULONG NewBlockSize;
   PKEY_CELL ParentKeyCell;
-  PDATA_CELL ClassCell;
+  PVOID ClassCell;
   NTSTATUS Status;
   USHORT NameSize;
   PWSTR NamePtr;
   BOOLEAN Packable;
+  HV_STORAGE_TYPE Storage;
   ULONG i;
 
   ParentKeyCell = ParentKey->KeyCell;
@@ -2438,27 +1146,35 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 
   Status = STATUS_SUCCESS;
 
+  Storage = (CreateOptions & REG_OPTION_VOLATILE) ? HvVolatile : HvStable;
   NewBlockSize = sizeof(KEY_CELL) + NameSize;
-  Status = CmiAllocateCell (RegistryHive,
-			    NewBlockSize,
-			    (PVOID) &NewKeyCell,
-			    &NKBOffset);
-  if (NewKeyCell == NULL)
+  NKBOffset = HvAllocateCell (RegistryHive->Hive, NewBlockSize, Storage);
+  if (NKBOffset == HCELL_NULL)
     {
       Status = STATUS_INSUFFICIENT_RESOURCES;
     }
   else
     {
+      NewKeyCell = HvGetCell (RegistryHive->Hive, NKBOffset);
       NewKeyCell->Id = REG_KEY_CELL_ID;
-      NewKeyCell->Flags = 0;
+      if (CreateOptions & REG_OPTION_VOLATILE)
+        {
+          NewKeyCell->Flags = REG_KEY_VOLATILE_CELL;
+        }
+      else
+        {
+          NewKeyCell->Flags = 0;
+        }
       KeQuerySystemTime(&NewKeyCell->LastWriteTime);
-      NewKeyCell->ParentKeyOffset = -1;
-      NewKeyCell->NumberOfSubKeys = 0;
-      NewKeyCell->HashTableOffset = -1;
+      NewKeyCell->ParentKeyOffset = HCELL_NULL;
+      NewKeyCell->NumberOfSubKeys[HvStable] = 0;
+      NewKeyCell->NumberOfSubKeys[HvVolatile] = 0;
+      NewKeyCell->HashTableOffset[HvStable] = HCELL_NULL;
+      NewKeyCell->HashTableOffset[HvVolatile] = HCELL_NULL;
       NewKeyCell->NumberOfValues = 0;
-      NewKeyCell->ValueListOffset = -1;
-      NewKeyCell->SecurityKeyOffset = -1;
-      NewKeyCell->ClassNameOffset = -1;
+      NewKeyCell->ValueListOffset = HCELL_NULL;
+      NewKeyCell->SecurityKeyOffset = HCELL_NULL;
+      NewKeyCell->ClassNameOffset = HCELL_NULL;
 
       /* Pack the key name */
       NewKeyCell->NameSize = NameSize;
@@ -2479,14 +1195,15 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 
       VERIFY_KEY_CELL(NewKeyCell);
 
-      if (Class != NULL)
+      if (Class != NULL && Class->Length)
 	{
 	  NewKeyCell->ClassSize = Class->Length;
-	  Status = CmiAllocateCell (RegistryHive,
-				    sizeof(CELL_HEADER) + NewKeyCell->ClassSize,
-				    (PVOID)&ClassCell,
-				    &NewKeyCell->ClassNameOffset);
-	  RtlCopyMemory (ClassCell->Data,
+	  NewKeyCell->ClassNameOffset = HvAllocateCell(
+	    RegistryHive->Hive, NewKeyCell->ClassSize, HvStable);
+	  ASSERT(NewKeyCell->ClassNameOffset != HCELL_NULL); /* FIXME */
+
+	  ClassCell = HvGetCell(RegistryHive->Hive, NewKeyCell->ClassNameOffset);
+	  RtlCopyMemory (ClassCell,
 			 Class->Buffer,
 			 Class->Length);
 	}
@@ -2500,18 +1217,13 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   SubKey->KeyCell = NewKeyCell;
   SubKey->KeyCellOffset = NKBOffset;
 
-  /* Don't modify hash table if key is located in a pointer-based hive and parent key is not */
-  if (IsPointerHive(RegistryHive) && (!IsPointerHive(ParentKey->RegistryHive)))
-    {
-      return(Status);
-    }
-
-  if (ParentKeyCell->HashTableOffset == (ULONG_PTR) -1)
+  if (ParentKeyCell->HashTableOffset[Storage] == HCELL_NULL)
     {
       Status = CmiAllocateHashTableCell (RegistryHive,
 					 &HashBlock,
-					 &ParentKeyCell->HashTableOffset,
-					 REG_INIT_HASH_TABLE_SIZE);
+					 &ParentKeyCell->HashTableOffset[Storage],
+					 REG_INIT_HASH_TABLE_SIZE,
+					 Storage);
       if (!NT_SUCCESS(Status))
 	{
 	  return(Status);
@@ -2519,26 +1231,22 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
     }
   else
     {
-      HashBlock = CmiGetCell (RegistryHive,
-			      ParentKeyCell->HashTableOffset,
-			      NULL);
-      if (HashBlock == NULL)
-	{
-	  DPRINT("CmiGetCell() failed\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
+      HashBlock = HvGetCell (RegistryHive->Hive,
+			     ParentKeyCell->HashTableOffset[Storage]);
+      ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
 
-      if (((ParentKeyCell->NumberOfSubKeys + 1) >= HashBlock->HashTableSize))
+      if (((ParentKeyCell->NumberOfSubKeys[Storage] + 1) >= HashBlock->HashTableSize))
 	{
 	  PHASH_TABLE_CELL NewHashBlock;
-	  BLOCK_OFFSET HTOffset;
+	  HCELL_INDEX HTOffset;
 
 	  /* Reallocate the hash table cell */
 	  Status = CmiAllocateHashTableCell (RegistryHive,
 					     &NewHashBlock,
 					     &HTOffset,
 					     HashBlock->HashTableSize +
-					       REG_EXTEND_HASH_TABLE_SIZE);
+					       REG_EXTEND_HASH_TABLE_SIZE,
+					     Storage);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return Status;
@@ -2549,193 +1257,127 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
 	  RtlCopyMemory(&NewHashBlock->Table[0],
 			&HashBlock->Table[0],
 			sizeof(NewHashBlock->Table[0]) * HashBlock->HashTableSize);
-	  CmiDestroyCell (RegistryHive,
-			  HashBlock,
-			  ParentKeyCell->HashTableOffset);
-	  ParentKeyCell->HashTableOffset = HTOffset;
+	  HvFreeCell (RegistryHive->Hive, ParentKeyCell->HashTableOffset[Storage]);
+	  ParentKeyCell->HashTableOffset[Storage] = HTOffset;
 	  HashBlock = NewHashBlock;
 	}
     }
 
   Status = CmiAddKeyToHashTable(RegistryHive,
 				HashBlock,
-				ParentKeyCell->HashTableOffset,
+				ParentKeyCell,
+				Storage,
 				NewKeyCell,
 				NKBOffset);
   if (NT_SUCCESS(Status))
     {
-      ParentKeyCell->NumberOfSubKeys++;
+      ParentKeyCell->NumberOfSubKeys[Storage]++;
     }
 
   KeQuerySystemTime (&ParentKeyCell->LastWriteTime);
-  CmiMarkBlockDirty (RegistryHive, ParentKey->KeyCellOffset);
+  HvMarkCellDirty (RegistryHive->Hive, ParentKey->KeyCellOffset);
 
   return(Status);
 }
 
 
 NTSTATUS
-CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
+CmiRemoveSubKey(PEREGISTRY_HIVE RegistryHive,
 		PKEY_OBJECT ParentKey,
 		PKEY_OBJECT SubKey)
 {
   PHASH_TABLE_CELL HashBlock;
   PVALUE_LIST_CELL ValueList;
   PVALUE_CELL ValueCell;
-  PDATA_CELL DataCell;
+  HV_STORAGE_TYPE Storage;
   ULONG i;
 
   DPRINT("CmiRemoveSubKey() called\n");
+
+  Storage = (SubKey->KeyCell->Flags & REG_KEY_VOLATILE_CELL) ? HvVolatile : HvStable;
 
   /* Remove all values */
   if (SubKey->KeyCell->NumberOfValues != 0)
     {
       /* Get pointer to the value list cell */
-      ValueList = CmiGetCell (RegistryHive,
-			      SubKey->KeyCell->ValueListOffset,
-			      NULL);
-      if (ValueList == NULL)
-	{
-	  DPRINT("CmiGetCell() failed\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
+      ValueList = HvGetCell (RegistryHive->Hive, SubKey->KeyCell->ValueListOffset);
 
       /* Enumerate all values */
       for (i = 0; i < SubKey->KeyCell->NumberOfValues; i++)
 	{
 	  /* Get pointer to value cell */
-	  ValueCell = CmiGetCell(RegistryHive,
-				 ValueList->ValueOffset[i],
-				 NULL);
-	  if (ValueCell == NULL)
-	    {
-	      DPRINT("CmiGetCell() failed\n");
-	      return STATUS_UNSUCCESSFUL;
-	    }
+	  ValueCell = HvGetCell(RegistryHive->Hive,
+				ValueList->ValueOffset[i]);
 
 	  if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET)
-              && ValueCell->DataSize > sizeof(BLOCK_OFFSET))
+              && ValueCell->DataSize > sizeof(HCELL_INDEX)
+              && ValueCell->DataOffset != HCELL_NULL)
 	    {
-	      DataCell = CmiGetCell (RegistryHive,
-				     ValueCell->DataOffset,
-				     NULL);
-	      if (DataCell == NULL)
-		{
-		  DPRINT("CmiGetCell() failed\n");
-		  return STATUS_UNSUCCESSFUL;
-		}
-
-	      if (DataCell != NULL)
-		{
-		  /* Destroy data cell */
-		  CmiDestroyCell (RegistryHive,
-				  DataCell,
-				  ValueCell->DataOffset);
-		}
+	      /* Destroy data cell */
+	      HvFreeCell (RegistryHive->Hive, ValueCell->DataOffset);
 	    }
 
 	  /* Destroy value cell */
-	  CmiDestroyCell (RegistryHive,
-			  ValueCell,
-			  ValueList->ValueOffset[i]);
+	  HvFreeCell (RegistryHive->Hive, ValueList->ValueOffset[i]);
 	}
 
       /* Destroy value list cell */
-      CmiDestroyCell (RegistryHive,
-		      ValueList,
-		      SubKey->KeyCell->ValueListOffset);
+      HvFreeCell (RegistryHive->Hive, SubKey->KeyCell->ValueListOffset);
 
       SubKey->KeyCell->NumberOfValues = 0;
-      SubKey->KeyCell->ValueListOffset = (BLOCK_OFFSET)-1;
+      SubKey->KeyCell->ValueListOffset = (HCELL_INDEX)-1;
 
-      CmiMarkBlockDirty(RegistryHive,
-			SubKey->KeyCellOffset);
+      HvMarkCellDirty(RegistryHive->Hive, SubKey->KeyCellOffset);
     }
 
   /* Remove the key from the parent key's hash block */
-  if (ParentKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
+  if (ParentKey->KeyCell->HashTableOffset[Storage] != HCELL_NULL)
     {
-      DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset);
-      HashBlock = CmiGetCell (ParentKey->RegistryHive,
-			      ParentKey->KeyCell->HashTableOffset,
-			      NULL);
-      if (HashBlock == NULL)
-	{
-	  DPRINT("CmiGetCell() failed\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
+      DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset[Storage]);
+      HashBlock = HvGetCell (ParentKey->RegistryHive->Hive,
+			     ParentKey->KeyCell->HashTableOffset[Storage]);
+      ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
       DPRINT("ParentKey HashBlock %p\n", HashBlock);
-      if (HashBlock != NULL)
-	{
-	  CmiRemoveKeyFromHashTable(ParentKey->RegistryHive,
-				    HashBlock,
-				    SubKey->KeyCellOffset);
-	  CmiMarkBlockDirty(ParentKey->RegistryHive,
-			    ParentKey->KeyCell->HashTableOffset);
-	}
+      CmiRemoveKeyFromHashTable(ParentKey->RegistryHive,
+				HashBlock,
+				SubKey->KeyCellOffset);
+      HvMarkCellDirty(ParentKey->RegistryHive->Hive,
+                      ParentKey->KeyCell->HashTableOffset[Storage]);
     }
 
   /* Remove the key's hash block */
-  if (SubKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
+  if (SubKey->KeyCell->HashTableOffset[Storage] != HCELL_NULL)
     {
-      DPRINT("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset);
-      HashBlock = CmiGetCell (RegistryHive,
-			      SubKey->KeyCell->HashTableOffset,
-			      NULL);
-      if (HashBlock == NULL)
-	{
-	  DPRINT("CmiGetCell() failed\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
-      DPRINT("SubKey HashBlock %p\n", HashBlock);
-      if (HashBlock != NULL)
-	{
-	  CmiDestroyCell (RegistryHive,
-			  HashBlock,
-			  SubKey->KeyCell->HashTableOffset);
-	  SubKey->KeyCell->HashTableOffset = -1;
-	}
+      DPRINT("SubKey HashTableOffset %lx\n", SubKey->KeyCell->HashTableOffset[Storage]);
+      HvFreeCell (RegistryHive->Hive, SubKey->KeyCell->HashTableOffset[Storage]);
+      SubKey->KeyCell->HashTableOffset[Storage] = HCELL_NULL;
     }
 
   /* Decrement the number of the parent key's sub keys */
   if (ParentKey != NULL)
     {
       DPRINT("ParentKey %p\n", ParentKey);
-      ParentKey->KeyCell->NumberOfSubKeys--;
+      ParentKey->KeyCell->NumberOfSubKeys[Storage]--;
 
       /* Remove the parent key's hash table */
-      if (ParentKey->KeyCell->NumberOfSubKeys == 0)
+      if (ParentKey->KeyCell->NumberOfSubKeys[Storage] == 0 &&
+          ParentKey->KeyCell->HashTableOffset[Storage] != HCELL_NULL)
 	{
 	  DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset);
-	  HashBlock = CmiGetCell (ParentKey->RegistryHive,
-				  ParentKey->KeyCell->HashTableOffset,
-				  NULL);
-	  if (HashBlock == NULL)
-	    {
-	      DPRINT("CmiGetCell() failed\n");
-	      return STATUS_UNSUCCESSFUL;
-	    }
-	  DPRINT("ParentKey HashBlock %p\n", HashBlock);
-	  if (HashBlock != NULL)
-	    {
-	      CmiDestroyCell (ParentKey->RegistryHive,
-			      HashBlock,
-			      ParentKey->KeyCell->HashTableOffset);
-	      ParentKey->KeyCell->HashTableOffset = (BLOCK_OFFSET)-1;
-	    }
+	  HvFreeCell (ParentKey->RegistryHive->Hive,
+		      ParentKey->KeyCell->HashTableOffset[Storage]);
+	  ParentKey->KeyCell->HashTableOffset[Storage] = HCELL_NULL;
 	}
 
       KeQuerySystemTime(&ParentKey->KeyCell->LastWriteTime);
-      CmiMarkBlockDirty(ParentKey->RegistryHive,
-			ParentKey->KeyCellOffset);
+      HvMarkCellDirty(ParentKey->RegistryHive->Hive,
+                      ParentKey->KeyCellOffset);
     }
 
   /* Destroy key cell */
-  CmiDestroyCell (RegistryHive,
-		  SubKey->KeyCell,
-		  SubKey->KeyCellOffset);
+  HvFreeCell (RegistryHive->Hive, SubKey->KeyCellOffset);
   SubKey->KeyCell = NULL;
-  SubKey->KeyCellOffset = (BLOCK_OFFSET)-1;
+  SubKey->KeyCellOffset = (HCELL_INDEX)-1;
 
   DPRINT("CmiRemoveSubKey() done\n");
 
@@ -2744,11 +1386,11 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
+CmiScanKeyForValue(IN PEREGISTRY_HIVE RegistryHive,
 		   IN PKEY_CELL KeyCell,
 		   IN PUNICODE_STRING ValueName,
 		   OUT PVALUE_CELL *ValueCell,
-		   OUT BLOCK_OFFSET *ValueCellOffset)
+		   OUT HCELL_INDEX *ValueCellOffset)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
@@ -2756,36 +1398,24 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 
   *ValueCell = NULL;
   if (ValueCellOffset != NULL)
-    *ValueCellOffset = (BLOCK_OFFSET)-1;
+    *ValueCellOffset = (HCELL_INDEX)-1;
 
   /* The key does not have any values */
-  if (KeyCell->ValueListOffset == (BLOCK_OFFSET)-1)
+  if (KeyCell->ValueListOffset == (HCELL_INDEX)-1)
     {
       return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
-  if (ValueListCell == NULL)
-    {
-      DPRINT("ValueListCell is NULL\n");
-      return STATUS_UNSUCCESSFUL;
-    }
+  ValueListCell = HvGetCell (RegistryHive->Hive, KeyCell->ValueListOffset);
 
   VERIFY_VALUE_LIST_CELL(ValueListCell);
 
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetCell (RegistryHive,
-				 ValueListCell->ValueOffset[i],
-				 NULL);
-      if (CurValueCell == NULL)
-	{
-	  DPRINT("CmiGetBlock() failed\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
+      CurValueCell = HvGetCell (RegistryHive->Hive,
+				ValueListCell->ValueOffset[i]);
 
-      if ((CurValueCell != NULL) &&
-	  CmiComparePackedNames(ValueName,
+      if (CmiComparePackedNames(ValueName,
 				CurValueCell->Name,
 				CurValueCell->NameSize,
 				(BOOLEAN)((CurValueCell->Flags & REG_VALUE_NAME_PACKED) ? TRUE : FALSE)))
@@ -2803,7 +1433,7 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
+CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
 			  IN PKEY_CELL KeyCell,
 			  IN ULONG Index,
 			  OUT PVALUE_CELL *ValueCell)
@@ -2813,7 +1443,7 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
 
   *ValueCell = NULL;
 
-  if (KeyCell->ValueListOffset == (BLOCK_OFFSET)-1)
+  if (KeyCell->ValueListOffset == (HCELL_INDEX)-1)
     {
       return STATUS_NO_MORE_ENTRIES;
     }
@@ -2824,24 +1454,11 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
     }
 
 
-  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
-  if (ValueListCell == NULL)
-    {
-      DPRINT("CmiGetBlock() failed\n");
-      return STATUS_UNSUCCESSFUL;
-    }
+  ValueListCell = HvGetCell (RegistryHive->Hive, KeyCell->ValueListOffset);
 
   VERIFY_VALUE_LIST_CELL(ValueListCell);
 
-
-  CurValueCell = CmiGetCell (RegistryHive,
-			     ValueListCell->ValueOffset[Index],
-			     NULL);
-  if (CurValueCell == NULL)
-    {
-      DPRINT("CmiGetBlock() failed\n");
-      return STATUS_UNSUCCESSFUL;
-    }
+  CurValueCell = HvGetCell (RegistryHive->Hive, ValueListCell->ValueOffset[Index]);
 
   *ValueCell = CurValueCell;
 
@@ -2850,81 +1467,72 @@ CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
+CmiAddValueToKey(IN PEREGISTRY_HIVE RegistryHive,
 		 IN PKEY_CELL KeyCell,
-		 IN BLOCK_OFFSET KeyCellOffset,
+		 IN HCELL_INDEX KeyCellOffset,
 		 IN PUNICODE_STRING ValueName,
 		 OUT PVALUE_CELL *pValueCell,
-		 OUT BLOCK_OFFSET *pValueCellOffset)
+		 OUT HCELL_INDEX *pValueCellOffset)
 {
-  PVALUE_LIST_CELL NewValueListCell;
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL NewValueCell;
-  BLOCK_OFFSET NewValueListCellOffset;
-  BLOCK_OFFSET ValueListCellOffset;
-  BLOCK_OFFSET NewValueCellOffset;
+  HCELL_INDEX ValueListCellOffset;
+  HCELL_INDEX NewValueCellOffset;
   ULONG CellSize;
+  HV_STORAGE_TYPE Storage;
   NTSTATUS Status;
 
   DPRINT("KeyCell->ValuesOffset %lu\n", (ULONG)KeyCell->ValueListOffset);
 
-  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
-  if (ValueListCell == NULL)
+  Storage = (KeyCell->Flags & REG_KEY_VOLATILE_CELL) ? HvVolatile : HvStable;
+  if (KeyCell->ValueListOffset == HCELL_NULL)
     {
       CellSize = sizeof(VALUE_LIST_CELL) +
-		 (3 * sizeof(BLOCK_OFFSET));
-      Status = CmiAllocateCell (RegistryHive,
-				CellSize,
-				(PVOID) &ValueListCell,
-				&ValueListCellOffset);
-      if (!NT_SUCCESS(Status))
+		 (3 * sizeof(HCELL_INDEX));
+      ValueListCellOffset = HvAllocateCell (RegistryHive->Hive, CellSize, Storage);
+      if (ValueListCellOffset == HCELL_NULL)
 	{
-	  return Status;
+	  return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
+      ValueListCell = HvGetCell (RegistryHive->Hive, ValueListCellOffset);
       KeyCell->ValueListOffset = ValueListCellOffset;
-      CmiMarkBlockDirty(RegistryHive, KeyCellOffset);
-      CmiMarkBlockDirty(RegistryHive, ValueListCellOffset);
+      HvMarkCellDirty(RegistryHive->Hive, KeyCellOffset);
     }
-  else if (KeyCell->NumberOfValues >=
-	   (((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(VALUE_LIST_CELL)) / sizeof(BLOCK_OFFSET)))
+  else
     {
-#if 0
-      CellSize = sizeof(VALUE_LIST_CELL) +
-		 ((KeyCell->NumberOfValues + REG_VALUE_LIST_CELL_MULTIPLE) * sizeof(BLOCK_OFFSET));
-#endif
-      CellSize = 2 * (ULONG)ABS_VALUE(ValueListCell->CellSize);
-      Status = CmiAllocateCell (RegistryHive,
-				CellSize,
-				(PVOID) &NewValueListCell,
-				&NewValueListCellOffset);
-      if (!NT_SUCCESS(Status))
-	{
-	  return Status;
-	}
+      ValueListCell = (PVALUE_LIST_CELL) HvGetCell (RegistryHive->Hive, KeyCell->ValueListOffset);
+      CellSize = ABS_VALUE(HvGetCellSize(RegistryHive->Hive, ValueListCell));
 
-      RtlCopyMemory(&NewValueListCell->ValueOffset[0],
-		    &ValueListCell->ValueOffset[0],
-		    sizeof(BLOCK_OFFSET) * KeyCell->NumberOfValues);
-      CmiDestroyCell (RegistryHive, ValueListCell, KeyCell->ValueListOffset);
-      CmiMarkBlockDirty (RegistryHive, KeyCell->ValueListOffset);
+      if (KeyCell->NumberOfValues >=
+	   (CellSize / sizeof(HCELL_INDEX)))
+        {
+          CellSize *= 2;
+          ValueListCellOffset = HvReallocateCell (RegistryHive->Hive, KeyCell->ValueListOffset, CellSize);
+          if (ValueListCellOffset == HCELL_NULL)
+            {
+              return STATUS_INSUFFICIENT_RESOURCES;
+            }
 
-      KeyCell->ValueListOffset = NewValueListCellOffset;
-      ValueListCell = NewValueListCell;
-      CmiMarkBlockDirty (RegistryHive, KeyCellOffset);
-      CmiMarkBlockDirty (RegistryHive, NewValueListCellOffset);
+          ValueListCell = HvGetCell (RegistryHive->Hive, ValueListCellOffset);
+          KeyCell->ValueListOffset = ValueListCellOffset;
+          HvMarkCellDirty (RegistryHive->Hive, KeyCellOffset);
+        }
     }
 
+#if 0
   DPRINT("KeyCell->NumberOfValues %lu, ValueListCell->CellSize %lu (%lu %lx)\n",
 	 KeyCell->NumberOfValues,
 	 (ULONG)ABS_VALUE(ValueListCell->CellSize),
-	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(VALUE_LIST_CELL)) / sizeof(BLOCK_OFFSET),
-	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(VALUE_LIST_CELL)) / sizeof(BLOCK_OFFSET));
+	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(CELL_HEADER)) / sizeof(HCELL_INDEX),
+	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(CELL_HEADER)) / sizeof(HCELL_INDEX));
+#endif
 
   Status = CmiAllocateValueCell(RegistryHive,
 				&NewValueCell,
 				&NewValueCellOffset,
-				ValueName);
+				ValueName,
+				Storage);
   if (!NT_SUCCESS(Status))
     {
       return Status;
@@ -2933,9 +1541,9 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
   ValueListCell->ValueOffset[KeyCell->NumberOfValues] = NewValueCellOffset;
   KeyCell->NumberOfValues++;
 
-  CmiMarkBlockDirty(RegistryHive, KeyCellOffset);
-  CmiMarkBlockDirty(RegistryHive, KeyCell->ValueListOffset);
-  CmiMarkBlockDirty(RegistryHive, NewValueCellOffset);
+  HvMarkCellDirty(RegistryHive->Hive, KeyCellOffset);
+  HvMarkCellDirty(RegistryHive->Hive, KeyCell->ValueListOffset);
+  HvMarkCellDirty(RegistryHive->Hive, NewValueCellOffset);
 
   *pValueCell = NewValueCell;
   *pValueCellOffset = NewValueCellOffset;
@@ -2945,9 +1553,9 @@ CmiAddValueToKey(IN PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
+CmiDeleteValueFromKey(IN PEREGISTRY_HIVE RegistryHive,
 		      IN PKEY_CELL KeyCell,
-		      IN BLOCK_OFFSET KeyCellOffset,
+		      IN HCELL_INDEX KeyCellOffset,
 		      IN PUNICODE_STRING ValueName)
 {
   PVALUE_LIST_CELL ValueListCell;
@@ -2955,23 +1563,13 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
   ULONG i;
   NTSTATUS Status;
 
-  ValueListCell = CmiGetCell (RegistryHive, KeyCell->ValueListOffset, NULL);
-  if (ValueListCell == NULL)
-    {
-      DPRINT1("CmiGetBlock() failed\n");
-      return STATUS_SUCCESS;
-    }
+  ValueListCell = HvGetCell (RegistryHive->Hive, KeyCell->ValueListOffset);
 
   VERIFY_VALUE_LIST_CELL(ValueListCell);
 
   for (i = 0; i < KeyCell->NumberOfValues; i++)
     {
-      CurValueCell = CmiGetCell (RegistryHive, ValueListCell->ValueOffset[i], NULL);
-      if (CurValueCell == NULL)
-	{
-	  DPRINT1("CmiGetBlock() failed\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
+      CurValueCell = HvGetCell (RegistryHive->Hive, ValueListCell->ValueOffset[i]);
 
       if (CmiComparePackedNames(ValueName,
 				CurValueCell->Name,
@@ -2991,7 +1589,7 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 	    {
 	      RtlMoveMemory(&ValueListCell->ValueOffset[i],
 			    &ValueListCell->ValueOffset[i + 1],
-			    sizeof(BLOCK_OFFSET) * (KeyCell->NumberOfValues - 1 - i));
+			    sizeof(HCELL_INDEX) * (KeyCell->NumberOfValues - 1 - i));
 	    }
 	  ValueListCell->ValueOffset[KeyCell->NumberOfValues - 1] = 0;
 
@@ -3000,19 +1598,17 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 
 	  if (KeyCell->NumberOfValues == 0)
 	    {
-	      CmiDestroyCell(RegistryHive,
-			     ValueListCell,
-			     KeyCell->ValueListOffset);
+	      HvFreeCell(RegistryHive->Hive, KeyCell->ValueListOffset);
 	      KeyCell->ValueListOffset = -1;
 	    }
 	  else
 	    {
-	      CmiMarkBlockDirty(RegistryHive,
-				KeyCell->ValueListOffset);
+	      HvMarkCellDirty(RegistryHive->Hive,
+		              KeyCell->ValueListOffset);
 	    }
 
-	  CmiMarkBlockDirty(RegistryHive,
-			    KeyCellOffset);
+	  HvMarkCellDirty(RegistryHive->Hive,
+			  KeyCellOffset);
 
 	  return STATUS_SUCCESS;
 	}
@@ -3025,10 +1621,11 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
+CmiAllocateHashTableCell (IN PEREGISTRY_HIVE RegistryHive,
 	OUT PHASH_TABLE_CELL *HashBlock,
-	OUT BLOCK_OFFSET *HBOffset,
-	IN ULONG SubKeyCount)
+	OUT HCELL_INDEX *HBOffset,
+	IN ULONG SubKeyCount,
+	IN HV_STORAGE_TYPE Storage)
 {
   PHASH_TABLE_CELL NewHashBlock;
   ULONG NewHashSize;
@@ -3038,18 +1635,16 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
   *HashBlock = NULL;
   NewHashSize = sizeof(HASH_TABLE_CELL) +
 		(SubKeyCount * sizeof(HASH_RECORD));
-  Status = CmiAllocateCell (RegistryHive,
-			    NewHashSize,
-			    (PVOID*) &NewHashBlock,
-			    HBOffset);
+  *HBOffset = HvAllocateCell (RegistryHive->Hive, NewHashSize, Storage);
 
-  if ((NewHashBlock == NULL) || (!NT_SUCCESS(Status)))
+  if (*HBOffset == HCELL_NULL)
     {
       Status = STATUS_INSUFFICIENT_RESOURCES;
     }
   else
     {
       ASSERT(SubKeyCount <= 0xffff); /* should really be USHORT_MAX or similar */
+      NewHashBlock = HvGetCell (RegistryHive->Hive, *HBOffset);
       NewHashBlock->Id = REG_HASH_TABLE_CELL_ID;
       NewHashBlock->HashTableSize = (USHORT)SubKeyCount;
       *HashBlock = NewHashBlock;
@@ -3060,64 +1655,47 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
 
 
 PKEY_CELL
-CmiGetKeyFromHashByIndex(PREGISTRY_HIVE RegistryHive,
+CmiGetKeyFromHashByIndex(PEREGISTRY_HIVE RegistryHive,
 			 PHASH_TABLE_CELL HashBlock,
 			 ULONG Index)
 {
-  BLOCK_OFFSET KeyOffset;
+  HCELL_INDEX KeyOffset;
   PKEY_CELL KeyCell;
 
-  if (HashBlock == NULL)
-    return NULL;
-
-  if (IsPointerHive(RegistryHive))
-    {
-      KeyCell = (PKEY_CELL) HashBlock->Table[Index].KeyOffset;
-    }
-  else
-    {
-      KeyOffset =  HashBlock->Table[Index].KeyOffset;
-      KeyCell = CmiGetCell (RegistryHive, KeyOffset, NULL);
-    }
+  KeyOffset =  HashBlock->Table[Index].KeyOffset;
+  KeyCell = HvGetCell (RegistryHive->Hive, KeyOffset);
 
   return KeyCell;
 }
 
 
 NTSTATUS
-CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
+CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
 		     PHASH_TABLE_CELL HashCell,
-		     BLOCK_OFFSET HashCellOffset,
+		     PKEY_CELL KeyCell,
+		     HV_STORAGE_TYPE StorageType,
 		     PKEY_CELL NewKeyCell,
-		     BLOCK_OFFSET NKBOffset)
+		     HCELL_INDEX NKBOffset)
 {
-  ULONG i;
+  ULONG i = KeyCell->NumberOfSubKeys[StorageType];
 
-  for (i = 0; i < HashCell->HashTableSize; i++)
+  HashCell->Table[i].KeyOffset = NKBOffset;
+  HashCell->Table[i].HashValue = 0;
+  if (NewKeyCell->Flags & REG_KEY_NAME_PACKED)
     {
-      if (HashCell->Table[i].KeyOffset == 0)
-	{
-	  HashCell->Table[i].KeyOffset = NKBOffset;
-	  HashCell->Table[i].HashValue = 0;
-	  if (NewKeyCell->Flags & REG_KEY_NAME_PACKED)
-	    {
-	      RtlCopyMemory(&HashCell->Table[i].HashValue,
-			    NewKeyCell->Name,
-			    min(NewKeyCell->NameSize, sizeof(ULONG)));
-	    }
-	  CmiMarkBlockDirty(RegistryHive, HashCellOffset);
-	  return STATUS_SUCCESS;
-	}
+      RtlCopyMemory(&HashCell->Table[i].HashValue,
+                    NewKeyCell->Name,
+                    min(NewKeyCell->NameSize, sizeof(ULONG)));
     }
-
-  return STATUS_UNSUCCESSFUL;
+  HvMarkCellDirty(RegistryHive->Hive, KeyCell->HashTableOffset[StorageType]);
+  return STATUS_SUCCESS;
 }
 
 
 NTSTATUS
-CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
+CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
 			  PHASH_TABLE_CELL HashBlock,
-			  BLOCK_OFFSET NKBOffset)
+			  HCELL_INDEX NKBOffset)
 {
   ULONG i;
 
@@ -3125,8 +1703,10 @@ CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
     {
       if (HashBlock->Table[i].KeyOffset == NKBOffset)
 	{
-	  HashBlock->Table[i].KeyOffset = 0;
-	  HashBlock->Table[i].HashValue = 0;
+	  RtlMoveMemory(HashBlock->Table + i,
+	                HashBlock->Table + i + 1,
+	                (HashBlock->HashTableSize - i - 1) *
+	                sizeof(HashBlock->Table[0]));
 	  return STATUS_SUCCESS;
 	}
     }
@@ -3136,10 +1716,11 @@ CmiRemoveKeyFromHashTable(PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
+CmiAllocateValueCell(PEREGISTRY_HIVE RegistryHive,
 		     PVALUE_CELL *ValueCell,
-		     BLOCK_OFFSET *VBOffset,
-		     IN PUNICODE_STRING ValueName)
+		     HCELL_INDEX *VBOffset,
+		     IN PUNICODE_STRING ValueName,
+		     IN HV_STORAGE_TYPE Storage)
 {
   PVALUE_CELL NewValueCell;
   NTSTATUS Status;
@@ -3154,17 +1735,15 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
 
   DPRINT("ValueName->Length %lu  NameSize %lu\n", ValueName->Length, NameSize);
 
-  Status = CmiAllocateCell (RegistryHive,
-			    sizeof(VALUE_CELL) + NameSize,
-			    (PVOID*) &NewValueCell,
-			    VBOffset);
-  if ((NewValueCell == NULL) || (!NT_SUCCESS(Status)))
+  *VBOffset = HvAllocateCell (RegistryHive->Hive, sizeof(VALUE_CELL) + NameSize, Storage);
+  if (*VBOffset == HCELL_NULL)
     {
       Status = STATUS_INSUFFICIENT_RESOURCES;
     }
   else
     {
       ASSERT(NameSize <= 0xffff); /* should really be USHORT_MAX or similar */
+      NewValueCell = HvGetCell (RegistryHive->Hive, *VBOffset);
       NewValueCell->Id = REG_VALUE_CELL_ID;
       NewValueCell->NameSize = (USHORT)NameSize;
       if (Packable)
@@ -3184,7 +1763,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
 	}
       NewValueCell->DataType = 0;
       NewValueCell->DataSize = 0;
-      NewValueCell->DataOffset = (BLOCK_OFFSET)-1;
+      NewValueCell->DataOffset = (HCELL_INDEX)-1;
       *ValueCell = NewValueCell;
     }
 
@@ -3193,14 +1772,10 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
 
 
 NTSTATUS
-CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
+CmiDestroyValueCell(PEREGISTRY_HIVE RegistryHive,
 		    PVALUE_CELL ValueCell,
-		    BLOCK_OFFSET ValueCellOffset)
+		    HCELL_INDEX ValueCellOffset)
 {
-  NTSTATUS Status;
-  PVOID DataCell;
-  PHBIN Bin;
-
   DPRINT("CmiDestroyValueCell(Cell %p  Offset %lx)\n",
 	 ValueCell, ValueCellOffset);
 
@@ -3208,610 +1783,16 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 
   /* Destroy the data cell */
   if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET)
-      && ValueCell->DataSize > sizeof(BLOCK_OFFSET))
+      && ValueCell->DataSize > sizeof(HCELL_INDEX)
+      && ValueCell->DataOffset != HCELL_NULL)
     {
-      DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, &Bin);
-      if (DataCell == NULL)
-	{
-	  DPRINT("CmiGetCell() failed\n");
-	  return STATUS_UNSUCCESSFUL;
-	}
-
-      Status = CmiDestroyCell (RegistryHive, DataCell, ValueCell->DataOffset);
-      if (!NT_SUCCESS(Status))
-	{
-	  return Status;
-	}
-
-      /* Update time of heap */
-      if (!IsNoFileHive(RegistryHive))
-	KeQuerySystemTime(&Bin->DateModified);
+      HvFreeCell (RegistryHive->Hive, ValueCell->DataOffset);
     }
 
   /* Destroy the value cell */
-  Status = CmiDestroyCell (RegistryHive, ValueCell, ValueCellOffset);
-
-  /* Update time of heap */
-  if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, ValueCellOffset, &Bin))
-    {
-      KeQuerySystemTime(&Bin->DateModified);
-    }
-
-  return Status;
-}
-
-
-NTSTATUS
-CmiAddBin(PREGISTRY_HIVE RegistryHive,
-	  ULONG BlockCount,
-	  PVOID *NewBlock,
-	  BLOCK_OFFSET *NewBlockOffset)
-{
-  PBLOCK_LIST_ENTRY BlockList;
-  PCELL_HEADER tmpBlock;
-  PHBIN tmpBin;
-  ULONG BinSize;
-  ULONG i;
-  ULONG BitmapSize;
-
-  DPRINT ("CmiAddBin (BlockCount %lu)\n", BlockCount);
-
-  BinSize = BlockCount * REG_BLOCK_SIZE;
-  tmpBin = ExAllocatePool(PagedPool, BinSize);
-  if (tmpBin == NULL)
-    {
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-  RtlZeroMemory (tmpBin,
-		 BinSize);
-
-  tmpBin->HeaderId = REG_BIN_ID;
-  tmpBin->BinOffset = RegistryHive->FileSize - REG_BLOCK_SIZE;
-  RegistryHive->FileSize += BinSize;
-  tmpBin->BinSize = BinSize;
-  KeQuerySystemTime(&tmpBin->DateModified);
-  tmpBin->MemAlloc = 0;
-
-  DPRINT ("  BinOffset %lx  BinSize %lx\n", tmpBin->BinOffset,tmpBin->BinSize);
-
-  /* Allocate new block list */
-  BlockList = ExAllocatePool(NonPagedPool,
-			     sizeof(BLOCK_LIST_ENTRY) * (RegistryHive->BlockListSize + BlockCount));
-  if (BlockList == NULL)
-    {
-      ExFreePool(tmpBin);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  if (RegistryHive->BlockListSize > 0)
-    {
-      RtlCopyMemory (BlockList,
-		     RegistryHive->BlockList,
-		     sizeof(BLOCK_LIST_ENTRY) * RegistryHive->BlockListSize);
-      ExFreePool(RegistryHive->BlockList);
-    }
-
-  RegistryHive->BlockList = BlockList;
-  for (i = 0; i < BlockCount; i++)
-    {
-      RegistryHive->BlockList[RegistryHive->BlockListSize + i].Block =
-	(PVOID)((ULONG_PTR)tmpBin + (i * REG_BLOCK_SIZE));
-      RegistryHive->BlockList[RegistryHive->BlockListSize + i].Bin = tmpBin;
-    }
-  RegistryHive->BlockListSize += BlockCount;
-
-  /* Initialize a free block in this heap : */
-  tmpBlock = (PCELL_HEADER)((ULONG_PTR) tmpBin + REG_HBIN_DATA_OFFSET);
-  tmpBlock->CellSize = (BinSize - REG_HBIN_DATA_OFFSET);
-
-  /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
-  BitmapSize = ROUND_UP(RegistryHive->BlockListSize, sizeof(ULONG) * 8) / 8;
-
-  /* Grow bitmap if necessary */
-  if (!IsNoFileHive(RegistryHive) &&
-      BitmapSize > RegistryHive->DirtyBitMap.SizeOfBitMap / 8)
-    {
-      PULONG BitmapBuffer;
-
-      DPRINT("Grow hive bitmap\n");
-
-      DPRINT("RegistryHive->BlockListSize: %lu\n", RegistryHive->BlockListSize);
-      DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
-      BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
-					    BitmapSize);
-      RtlZeroMemory(BitmapBuffer, BitmapSize);
-      RtlCopyMemory(BitmapBuffer,
-		    RegistryHive->DirtyBitMap.Buffer,
-		    RegistryHive->DirtyBitMap.SizeOfBitMap / 8);
-      ExFreePool(RegistryHive->BitmapBuffer);
-      RegistryHive->BitmapBuffer = BitmapBuffer;
-      RtlInitializeBitMap(&RegistryHive->DirtyBitMap,
-			  RegistryHive->BitmapBuffer,
-			  BitmapSize * 8);
-    }
-
-  *NewBlock = (PVOID) tmpBlock;
-
-  if (NewBlockOffset)
-    *NewBlockOffset = tmpBin->BinOffset + REG_HBIN_DATA_OFFSET;
-
-  /* Mark new bin dirty */
-  CmiMarkBinDirty(RegistryHive,
-		  tmpBin->BinOffset);
+  HvFreeCell (RegistryHive->Hive, ValueCellOffset);
 
   return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
-CmiAllocateCell (PREGISTRY_HIVE RegistryHive,
-		 LONG CellSize,
-		 PVOID *Cell,
-		 BLOCK_OFFSET *CellOffset)
-{
-  PCELL_HEADER NewCell;
-  PHBIN Bin;
-  ULONG i;
-  PVOID Temp;
-  NTSTATUS Status;
-
-  /* Round to 16 bytes multiple */
-  CellSize = ROUND_UP(CellSize, 16);
-
-  /* Handle volatile hives first */
-  if (IsPointerHive(RegistryHive))
-    {
-      NewCell = ExAllocatePool(NonPagedPool, CellSize);
-      if (NewCell == NULL)
-	{
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
-
-      RtlZeroMemory (NewCell,
-		     CellSize);
-      NewCell->CellSize = -CellSize;
-
-      *Cell = NewCell;
-      if (CellOffset != NULL)
-	*CellOffset = (BLOCK_OFFSET) NewCell;
-    }
-  else
-    {
-      /* first search in free blocks */
-      NewCell = NULL;
-      for (i = 0; i < RegistryHive->FreeListSize; i++)
-	{
-	  if (RegistryHive->FreeList[i]->CellSize >= CellSize)
-	    {
-	      NewCell = RegistryHive->FreeList[i];
-	      if (CellOffset != NULL)
-		*CellOffset = RegistryHive->FreeListOffset[i];
-
-	      /* Update time of heap */
-	      Temp = CmiGetCell (RegistryHive,
-				 RegistryHive->FreeListOffset[i],
-				 &Bin);
-	      if (Temp == NULL)
-		{
-		  DPRINT("CmiGetBlock() failed\n");
-		  return STATUS_UNSUCCESSFUL;
-		}
-
-	      KeQuerySystemTime(&Bin->DateModified);
-	      CmiMarkBlockDirty(RegistryHive, RegistryHive->FreeListOffset[i]);
-
-	      if ((i + 1) < RegistryHive->FreeListSize)
-		{
-		  RtlMoveMemory(&RegistryHive->FreeList[i],
-				&RegistryHive->FreeList[i + 1],
-				sizeof(RegistryHive->FreeList[0])
-				  * (RegistryHive->FreeListSize - i - 1));
-		  RtlMoveMemory(&RegistryHive->FreeListOffset[i],
-				&RegistryHive->FreeListOffset[i + 1],
-				sizeof(RegistryHive->FreeListOffset[0])
-				  * (RegistryHive->FreeListSize - i - 1));
-		}
-	      RegistryHive->FreeListSize--;
-	      break;
-	    }
-	}
-
-      /* Need to extend hive file : */
-      if (NewCell == NULL)
-	{
-	  /* Add a new bin */
-	  Status = CmiAddBin(RegistryHive,
-			     ((CellSize + sizeof(HBIN) - 1) / REG_BLOCK_SIZE) + 1,
-			     (PVOID *)&NewCell,
-			     CellOffset);
-	  if (!NT_SUCCESS(Status))
-	    return Status;
-	}
-
-      *Cell = NewCell;
-
-      /* Split the block in two parts */
-      if (NewCell->CellSize > CellSize)
-	{
-	  NewCell = (PCELL_HEADER) ((ULONG_PTR) NewCell + CellSize);
-	  NewCell->CellSize = ((PCELL_HEADER) (*Cell))->CellSize - CellSize;
-	  CmiAddFree(RegistryHive,
-		     NewCell,
-		     *CellOffset + CellSize,
-		     TRUE);
-	  CmiMarkBlockDirty(RegistryHive,
-			    *CellOffset + CellSize);
-	}
-      else if (NewCell->CellSize < CellSize)
-	{
-	  return STATUS_UNSUCCESSFUL;
-	}
-
-      RtlZeroMemory(*Cell,
-		    CellSize);
-      ((PCELL_HEADER) (*Cell))->CellSize = -CellSize;
-    }
-
-  return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
-CmiDestroyCell (PREGISTRY_HIVE RegistryHive,
-		PVOID Cell,
-		BLOCK_OFFSET CellOffset)
-{
-  NTSTATUS Status;
-  PHBIN pBin;
-
-  Status = STATUS_SUCCESS;
-
-  if (IsPointerHive(RegistryHive))
-    {
-      ExFreePool(Cell);
-    }
-  else
-    {
-      PCELL_HEADER pFree = Cell;
-
-      if (pFree->CellSize < 0)
-        pFree->CellSize = -pFree->CellSize;
-
-      /* Clear block (except the block size) */
-      RtlZeroMemory(((char*)pFree) + sizeof(ULONG),
-		    pFree->CellSize - sizeof(ULONG));
-
-      /* Add block to the list of free blocks */
-      CmiAddFree(RegistryHive, Cell, CellOffset, TRUE);
-
-      /* Update time of heap */
-      if (!IsNoFileHive(RegistryHive) && CmiGetCell (RegistryHive, CellOffset,&pBin))
-	KeQuerySystemTime(&pBin->DateModified);
-
-      CmiMarkBlockDirty(RegistryHive, CellOffset);
-    }
-
-  return Status;
-}
-
-
-PVOID
-CmiGetCell (PREGISTRY_HIVE RegistryHive,
-	    BLOCK_OFFSET CellOffset,
-	    PHBIN *Bin)
-{
-  PHBIN pBin;
-
-  if (Bin != NULL)
-    {
-      *Bin = NULL;
-    }
-
-  if (CellOffset == (BLOCK_OFFSET)-1)
-    {
-      return NULL;
-    }
-
-  if (IsPointerHive (RegistryHive))
-    {
-      return (PVOID)CellOffset;
-    }
-
-  if (CellOffset > RegistryHive->BlockListSize * REG_BLOCK_SIZE)
-    {
-      DPRINT1("CellOffset exceeds valid range (%lu > %lu)\n",
-	      CellOffset, RegistryHive->BlockListSize * REG_BLOCK_SIZE);
-      return NULL;
-    }
-
-  pBin = RegistryHive->BlockList[CellOffset / REG_BLOCK_SIZE].Bin;
-  if (pBin == NULL)
-    {
-      return NULL;
-    }
-
-  if (Bin != NULL)
-    {
-      *Bin = pBin;
-    }
-
-  return((PVOID)((ULONG_PTR)pBin + (CellOffset - pBin->BinOffset)));
-}
-
-
-static BOOLEAN
-CmiMergeFree(PREGISTRY_HIVE RegistryHive,
-	     PCELL_HEADER FreeBlock,
-	     BLOCK_OFFSET FreeOffset)
-{
-  BLOCK_OFFSET BlockOffset;
-  BLOCK_OFFSET BinOffset;
-  ULONG BlockSize;
-  ULONG BinSize;
-  PHBIN Bin;
-  ULONG i;
-
-  DPRINT("CmiMergeFree(Block %lx  Offset %lx  Size %lx) called\n",
-	 FreeBlock, FreeOffset, FreeBlock->CellSize);
-
-  CmiGetCell (RegistryHive,
-	      FreeOffset,
-	      &Bin);
-  DPRINT("Bin %p\n", Bin);
-  if (Bin == NULL)
-    return(FALSE);
-
-  BinOffset = Bin->BinOffset;
-  BinSize = Bin->BinSize;
-  DPRINT("Bin %p  Offset %lx  Size %lx\n", Bin, BinOffset, BinSize);
-
-  for (i = 0; i < RegistryHive->FreeListSize; i++)
-    {
-      BlockOffset = RegistryHive->FreeListOffset[i];
-      BlockSize = RegistryHive->FreeList[i]->CellSize;
-      if (BlockOffset > BinOffset &&
-	  BlockOffset < BinOffset + BinSize)
-	{
-	  DPRINT("Free block: Offset %lx  Size %lx\n",
-		  BlockOffset, BlockSize);
-
-	  if ((i < (RegistryHive->FreeListSize - 1)) &&
-	      (BlockOffset + BlockSize == FreeOffset) &&
-	      (FreeOffset + FreeBlock->CellSize == RegistryHive->FreeListOffset[i + 1]))
-	    {
-	      DPRINT("Merge current block with previous and next block\n");
-
-	      RegistryHive->FreeList[i]->CellSize +=
-		(FreeBlock->CellSize + RegistryHive->FreeList[i + 1]->CellSize);
-
-	      FreeBlock->CellSize = 0;
-	      RegistryHive->FreeList[i + 1]->CellSize = 0;
-
-
-	      if ((i + 2) < RegistryHive->FreeListSize)
-		{
-		  RtlMoveMemory(&RegistryHive->FreeList[i + 1],
-				&RegistryHive->FreeList[i + 2],
-				sizeof(RegistryHive->FreeList[0])
-				  * (RegistryHive->FreeListSize - i - 2));
-		  RtlMoveMemory(&RegistryHive->FreeListOffset[i + 1],
-				&RegistryHive->FreeListOffset[i + 2],
-				sizeof(RegistryHive->FreeListOffset[0])
-				  * (RegistryHive->FreeListSize - i - 2));
-		}
-	      RegistryHive->FreeListSize--;
-
-	      CmiMarkBlockDirty(RegistryHive, BlockOffset);
-
-	      return(TRUE);
-	    }
-	  else if (BlockOffset + BlockSize == FreeOffset)
-	    {
-	      DPRINT("Merge current block with previous block\n");
-
-	      RegistryHive->FreeList[i]->CellSize += FreeBlock->CellSize;
-	      FreeBlock->CellSize = 0;
-
-	      CmiMarkBlockDirty(RegistryHive, BlockOffset);
-
-	      return(TRUE);
-	    }
-	  else if (FreeOffset + FreeBlock->CellSize == BlockOffset)
-	    {
-	      DPRINT("Merge current block with next block\n");
-
-	      FreeBlock->CellSize += RegistryHive->FreeList[i]->CellSize;
-	      RegistryHive->FreeList[i]->CellSize = 0;
-	      RegistryHive->FreeList[i] = FreeBlock;
-	      RegistryHive->FreeListOffset[i] = FreeOffset;
-
-	      CmiMarkBlockDirty(RegistryHive, FreeOffset);
-
-	      return(TRUE);
-	    }
-	}
-    }
-
-  return(FALSE);
-}
-
-
-NTSTATUS
-CmiAddFree(PREGISTRY_HIVE RegistryHive,
-	   PCELL_HEADER FreeBlock,
-	   BLOCK_OFFSET FreeOffset,
-	   BOOLEAN MergeFreeBlocks)
-{
-  PCELL_HEADER *tmpList;
-  BLOCK_OFFSET *tmpListOffset;
-  LONG minInd;
-  LONG maxInd;
-  LONG medInd;
-
-  ASSERT(RegistryHive);
-  ASSERT(FreeBlock);
-
-  DPRINT("FreeBlock %.08lx  FreeOffset %.08lx\n",
-	 FreeBlock, FreeOffset);
-
-  /* Merge free blocks */
-  if (MergeFreeBlocks == TRUE)
-    {
-      if (CmiMergeFree(RegistryHive, FreeBlock, FreeOffset))
-	return(STATUS_SUCCESS);
-    }
-
-  if ((RegistryHive->FreeListSize + 1) > RegistryHive->FreeListMax)
-    {
-      tmpList = ExAllocatePool(PagedPool,
-			  sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax + 32));
-      if (tmpList == NULL)
-	return STATUS_INSUFFICIENT_RESOURCES;
-
-      tmpListOffset = ExAllocatePool(PagedPool,
-			  sizeof(BLOCK_OFFSET) * (RegistryHive->FreeListMax + 32));
-
-      if (tmpListOffset == NULL)
-	{
-	  ExFreePool(tmpList);
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
-
-      if (RegistryHive->FreeListMax)
-	{
-	  RtlMoveMemory(tmpList,
-			RegistryHive->FreeList,
-			sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax));
-	  RtlMoveMemory(tmpListOffset,
-			RegistryHive->FreeListOffset,
-			sizeof(BLOCK_OFFSET) * (RegistryHive->FreeListMax));
-	  ExFreePool(RegistryHive->FreeList);
-	  ExFreePool(RegistryHive->FreeListOffset);
-	}
-      RegistryHive->FreeList = tmpList;
-      RegistryHive->FreeListOffset = tmpListOffset;
-      RegistryHive->FreeListMax += 32;
-    }
-
-  /* Add new offset to free list, maintaining list in ascending order */
-  if ((RegistryHive->FreeListSize == 0)
-     || (RegistryHive->FreeListOffset[RegistryHive->FreeListSize-1] < FreeOffset))
-    {
-      /* Add to end of list */
-      RegistryHive->FreeList[RegistryHive->FreeListSize] = FreeBlock;
-      RegistryHive->FreeListOffset[RegistryHive->FreeListSize++] = FreeOffset;
-    }
-  else if (RegistryHive->FreeListOffset[0] > FreeOffset)
-    {
-      /* Add to begin of list */
-      RtlMoveMemory(&RegistryHive->FreeList[1],
-		    &RegistryHive->FreeList[0],
-		    sizeof(RegistryHive->FreeList[0]) * RegistryHive->FreeListSize);
-      RtlMoveMemory(&RegistryHive->FreeListOffset[1],
-		    &RegistryHive->FreeListOffset[0],
-		    sizeof(RegistryHive->FreeListOffset[0]) * RegistryHive->FreeListSize);
-      RegistryHive->FreeList[0] = FreeBlock;
-      RegistryHive->FreeListOffset[0] = FreeOffset;
-      RegistryHive->FreeListSize++;
-    }
-  else
-    {
-      /* Search where to insert */
-      minInd = 0;
-      maxInd = RegistryHive->FreeListSize - 1;
-      while ((maxInd - minInd) > 1)
-	{
-	  medInd = (minInd + maxInd) / 2;
-	  if (RegistryHive->FreeListOffset[medInd] > FreeOffset)
-	    maxInd = medInd;
-	  else
-	    minInd = medInd;
-	}
-
-      /* Insert before maxInd */
-      RtlMoveMemory(&RegistryHive->FreeList[maxInd+1],
-		    &RegistryHive->FreeList[maxInd],
-		    sizeof(RegistryHive->FreeList[0]) * (RegistryHive->FreeListSize - minInd));
-      RtlMoveMemory(&RegistryHive->FreeListOffset[maxInd + 1],
-		    &RegistryHive->FreeListOffset[maxInd],
-		    sizeof(RegistryHive->FreeListOffset[0]) * (RegistryHive->FreeListSize-minInd));
-      RegistryHive->FreeList[maxInd] = FreeBlock;
-      RegistryHive->FreeListOffset[maxInd] = FreeOffset;
-      RegistryHive->FreeListSize++;
-    }
-
-  return STATUS_SUCCESS;
-}
-
-
-VOID
-CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
-		  BLOCK_OFFSET BlockOffset)
-{
-  PDATA_CELL Cell;
-  LONG CellSize;
-  ULONG BlockNumber;
-  ULONG BlockCount;
-
-  if (IsNoFileHive(RegistryHive))
-    return;
-
-  DPRINT("CmiMarkBlockDirty(Offset 0x%lx)\n", (ULONG)BlockOffset);
-
-  BlockNumber = (ULONG)BlockOffset / REG_BLOCK_SIZE;
-
-  Cell = CmiGetCell (RegistryHive,
-		     BlockOffset,
-		     NULL);
-
-  CellSize = Cell->CellSize;
-  if (CellSize < 0)
-    CellSize = -CellSize;
-
-  BlockCount = (ROUND_UP(BlockOffset + CellSize, REG_BLOCK_SIZE) -
-		ROUND_DOWN(BlockOffset, REG_BLOCK_SIZE)) / REG_BLOCK_SIZE;
-
-  DPRINT("  BlockNumber %lu  Size %lu (%s)  BlockCount %lu\n",
-	 BlockNumber,
-	 CellSize,
-	 (Cell->CellSize < 0) ? "used" : "free",
-	 BlockCount);
-
-  RegistryHive->HiveDirty = TRUE;
-  RtlSetBits(&RegistryHive->DirtyBitMap,
-	     BlockNumber,
-	     BlockCount);
-}
-
-
-VOID
-CmiMarkBinDirty(PREGISTRY_HIVE RegistryHive,
-		BLOCK_OFFSET BinOffset)
-{
-  ULONG BlockNumber;
-  ULONG BlockCount;
-  PHBIN Bin;
-
-  if (IsNoFileHive(RegistryHive))
-    return;
-
-  DPRINT("CmiMarkBinDirty(Offset 0x%lx)\n", (ULONG)BinOffset);
-
-  BlockNumber = (ULONG)BinOffset / REG_BLOCK_SIZE;
-
-  Bin = RegistryHive->BlockList[BlockNumber].Bin;
-
-  BlockCount = Bin->BinSize / REG_BLOCK_SIZE;
-
-  DPRINT("  BlockNumber %lu  BinSize %lu  BlockCount %lu\n",
-	 BlockNumber,
-	 Bin->BinSize,
-	 BlockCount);
-
-  RegistryHive->HiveDirty = TRUE;
-  RtlSetBits(&RegistryHive->DirtyBitMap,
-	     BlockNumber,
-	     BlockCount);
 }
 
 
@@ -3995,19 +1976,19 @@ CmiCompareKeyNamesI(PUNICODE_STRING KeyName,
 
 
 NTSTATUS
-CmiCopyKey (PREGISTRY_HIVE DstHive,
+CmiCopyKey (PEREGISTRY_HIVE DstHive,
 	    PKEY_CELL DstKeyCell,
-	    PREGISTRY_HIVE SrcHive,
+	    PEREGISTRY_HIVE SrcHive,
 	    PKEY_CELL SrcKeyCell)
 {
   PKEY_CELL NewKeyCell;
   ULONG NewKeyCellSize;
-  BLOCK_OFFSET NewKeyCellOffset;
+  HCELL_INDEX NewKeyCellOffset;
   PHASH_TABLE_CELL NewHashTableCell;
   ULONG NewHashTableSize;
-  BLOCK_OFFSET NewHashTableOffset;
+  HCELL_INDEX NewHashTableOffset;
   ULONG i;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT ("CmiCopyKey() called\n");
 
@@ -4015,47 +1996,38 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
     {
       /* Allocate and copy key cell */
       NewKeyCellSize = sizeof(KEY_CELL) + SrcKeyCell->NameSize;
-      Status = CmiAllocateCell (DstHive,
-				NewKeyCellSize,
-				(PVOID) &NewKeyCell,
-				&NewKeyCellOffset);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
-	  return Status;
-	}
-      if (NewKeyCell == NULL)
+      NewKeyCellOffset = HvAllocateCell (DstHive->Hive, NewKeyCellSize, HvStable);
+      if (NewKeyCellOffset == HCELL_NULL)
 	{
 	  DPRINT1 ("Failed to allocate a key cell\n");
 	  return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
+      NewKeyCell = HvGetCell (DstHive->Hive, NewKeyCellOffset);
       RtlCopyMemory (NewKeyCell,
 		     SrcKeyCell,
 		     NewKeyCellSize);
 
-      DstHive->HiveHeader->RootKeyOffset = NewKeyCellOffset;
+      DstHive->Hive->HiveHeader->RootCell = NewKeyCellOffset;
 
       /* Copy class name */
-      if (SrcKeyCell->ClassNameOffset != (BLOCK_OFFSET) -1)
+      if (SrcKeyCell->ClassNameOffset != (HCELL_INDEX) -1)
 	{
-	  PDATA_CELL SrcClassNameCell;
-	  PDATA_CELL NewClassNameCell;
-	  BLOCK_OFFSET NewClassNameOffset;
+	  PVOID SrcClassNameCell;
+	  PVOID NewClassNameCell;
+	  HCELL_INDEX NewClassNameOffset;
 
-	  SrcClassNameCell = CmiGetCell (SrcHive, SrcKeyCell->ClassNameOffset, NULL),
+	  SrcClassNameCell = HvGetCell (SrcHive->Hive, SrcKeyCell->ClassNameOffset);
 
 	  NewKeyCell->ClassSize = SrcKeyCell->ClassSize;
-	  Status = CmiAllocateCell (DstHive,
-				    sizeof(CELL_HEADER) + NewKeyCell->ClassSize,
-				    (PVOID)&NewClassNameCell,
-				    &NewClassNameOffset);
-	  if (!NT_SUCCESS(Status))
+	  NewClassNameOffset = HvAllocateCell (DstHive->Hive, NewKeyCell->ClassSize, HvStable);
+	  if (NewClassNameOffset == HCELL_NULL)
 	    {
-	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
-	      return Status;
+	      DPRINT1 ("CmiAllocateBlock() failed\n");
+	      return STATUS_INSUFFICIENT_RESOURCES;
 	    }
 
+	  NewClassNameCell = HvGetCell (DstHive->Hive, NewClassNameOffset);
 	  RtlCopyMemory (NewClassNameCell,
 			 SrcClassNameCell,
 			 NewKeyCell->ClassSize);
@@ -4068,19 +2040,20 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
     }
 
   /* Allocate hash table */
-  if (SrcKeyCell->NumberOfSubKeys > 0)
+  if (SrcKeyCell->NumberOfSubKeys[HvStable] > 0)
     {
-      NewHashTableSize = ROUND_UP(SrcKeyCell->NumberOfSubKeys + 1, 4) - 1;
+      NewHashTableSize = ROUND_UP(SrcKeyCell->NumberOfSubKeys[HvStable] + 1, 4) - 1;
       Status = CmiAllocateHashTableCell (DstHive,
 					 &NewHashTableCell,
 					 &NewHashTableOffset,
-					 NewHashTableSize);
+					 NewHashTableSize,
+					 HvStable);
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT1 ("CmiAllocateHashTableBlock() failed (Status %lx)\n", Status);
 	  return Status;
 	}
-      NewKeyCell->HashTableOffset = NewHashTableOffset;
+      NewKeyCell->HashTableOffset[HvStable] = NewHashTableOffset;
     }
   else
     {
@@ -4094,47 +2067,46 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
       PVALUE_LIST_CELL SrcValueListCell;
       PVALUE_CELL NewValueCell;
       PVALUE_CELL SrcValueCell;
-      PDATA_CELL SrcValueDataCell;
-      PDATA_CELL NewValueDataCell;
-      BLOCK_OFFSET ValueCellOffset;
-      BLOCK_OFFSET ValueDataCellOffset;
+      PVOID SrcValueDataCell;
+      PVOID NewValueDataCell;
+      HCELL_INDEX ValueCellOffset;
+      HCELL_INDEX ValueDataCellOffset;
       ULONG NewValueListCellSize;
       ULONG NewValueCellSize;
 
 
       NewValueListCellSize =
-	ROUND_UP(SrcKeyCell->NumberOfValues, 4) * sizeof(BLOCK_OFFSET);
-      Status = CmiAllocateCell (DstHive,
-				NewValueListCellSize,
-				(PVOID)&NewValueListCell,
-				&NewKeyCell->ValueListOffset);
-      if (!NT_SUCCESS(Status))
+	ROUND_UP(SrcKeyCell->NumberOfValues, 4) * sizeof(HCELL_INDEX);
+      NewKeyCell->ValueListOffset = HvAllocateCell (DstHive->Hive,
+				                    NewValueListCellSize,
+				                    HvStable);
+      if (NewKeyCell->ValueListOffset == HCELL_NULL)
 	{
-	  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
-	  return Status;
+	  DPRINT1 ("HvAllocateCell() failed\n");
+	  return STATUS_INSUFFICIENT_RESOURCES;
 	}
+      DPRINT1("KeyCell->ValueListOffset: %x\n", NewKeyCell->ValueListOffset);
 
+      NewValueListCell = HvGetCell (DstHive->Hive, NewKeyCell->ValueListOffset);
       RtlZeroMemory (NewValueListCell,
 		     NewValueListCellSize);
 
       /* Copy values */
-      SrcValueListCell = CmiGetCell (SrcHive, SrcKeyCell->ValueListOffset, NULL);
+      SrcValueListCell = HvGetCell (SrcHive->Hive, SrcKeyCell->ValueListOffset);
       for (i = 0; i < SrcKeyCell->NumberOfValues; i++)
 	{
 	  /* Copy value cell */
-	  SrcValueCell = CmiGetCell (SrcHive, SrcValueListCell->ValueOffset[i], NULL);
+	  SrcValueCell = HvGetCell (SrcHive->Hive, SrcValueListCell->ValueOffset[i]);
 
 	  NewValueCellSize = sizeof(VALUE_CELL) + SrcValueCell->NameSize;
-	  Status = CmiAllocateCell (DstHive,
-				    NewValueCellSize,
-				    (PVOID*) &NewValueCell,
-				    &ValueCellOffset);
-	  if (!NT_SUCCESS(Status))
+	  ValueCellOffset = HvAllocateCell (DstHive->Hive, NewValueCellSize, HvStable);
+	  if (ValueCellOffset == HCELL_NULL)
 	    {
-	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
-	      return Status;
+	      DPRINT1 ("HvAllocateCell() failed (Status %lx)\n", Status);
+	      return STATUS_INSUFFICIENT_RESOURCES;
 	    }
 
+	  NewValueCell = HvGetCell (DstHive->Hive, ValueCellOffset);
 	  NewValueListCell->ValueOffset[i] = ValueCellOffset;
 	  RtlCopyMemory (NewValueCell,
 			 SrcValueCell,
@@ -4143,17 +2115,15 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 	  /* Copy value data cell */
 	  if (SrcValueCell->DataSize > (LONG) sizeof(PVOID))
 	    {
-	      SrcValueDataCell = CmiGetCell (SrcHive, SrcValueCell->DataOffset, NULL);
+	      SrcValueDataCell = HvGetCell (SrcHive->Hive, SrcValueCell->DataOffset);
 
-	      Status = CmiAllocateCell (DstHive,
-					sizeof(CELL_HEADER) + SrcValueCell->DataSize,
-					(PVOID*) &NewValueDataCell,
-					&ValueDataCellOffset);
-	      if (!NT_SUCCESS(Status))
+	      ValueDataCellOffset = HvAllocateCell (DstHive->Hive, SrcValueCell->DataSize, HvStable);
+	      if (ValueDataCellOffset == HCELL_NULL)
 		{
-		  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
-		  return Status;
+		  DPRINT1 ("HvAllocateCell() failed\n");
+		  return STATUS_INSUFFICIENT_RESOURCES;
 		}
+	      NewValueDataCell = HvGetCell (DstHive->Hive, ValueDataCellOffset);
 	      RtlCopyMemory (NewValueDataCell,
 			     SrcValueDataCell,
 			     SrcValueCell->DataSize);
@@ -4163,41 +2133,32 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
     }
 
   /* Copy subkeys */
-  if (SrcKeyCell->NumberOfSubKeys > 0)
+  if (SrcKeyCell->NumberOfSubKeys[HvStable] > 0)
     {
       PHASH_TABLE_CELL SrcHashTableCell;
       PKEY_CELL SrcSubKeyCell;
       PKEY_CELL NewSubKeyCell;
       ULONG NewSubKeyCellSize;
-      BLOCK_OFFSET NewSubKeyCellOffset;
+      HCELL_INDEX NewSubKeyCellOffset;
       PHASH_RECORD SrcHashRecord;
 
-      SrcHashTableCell = CmiGetCell (SrcHive,
-				     SrcKeyCell->HashTableOffset,
-				     NULL);
+      SrcHashTableCell = HvGetCell (SrcHive->Hive, SrcKeyCell->HashTableOffset[HvStable]);
 
-      for (i = 0; i < SrcKeyCell->NumberOfSubKeys; i++)
+      for (i = 0; i < SrcKeyCell->NumberOfSubKeys[HvStable]; i++)
 	{
 	  SrcHashRecord = &SrcHashTableCell->Table[i];
-	  SrcSubKeyCell = CmiGetCell (SrcHive, SrcHashRecord->KeyOffset, NULL);
+	  SrcSubKeyCell = HvGetCell (SrcHive->Hive, SrcHashRecord->KeyOffset);
 
 	  /* Allocate and copy key cell */
 	  NewSubKeyCellSize = sizeof(KEY_CELL) + SrcSubKeyCell->NameSize;
-	  Status = CmiAllocateCell (DstHive,
-				    NewSubKeyCellSize,
-				    (PVOID)&NewSubKeyCell,
-				    &NewSubKeyCellOffset);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
-	      return Status;
-	    }
-	  if (NewKeyCell == NULL)
+	  NewSubKeyCellOffset = HvAllocateCell (DstHive->Hive, NewSubKeyCellSize, HvStable);
+	  if (NewSubKeyCellOffset == HCELL_NULL)
 	    {
 	      DPRINT1 ("Failed to allocate a sub key cell\n");
 	      return STATUS_INSUFFICIENT_RESOURCES;
 	    }
 
+	  NewSubKeyCell = HvGetCell (DstHive->Hive, NewSubKeyCellOffset);
 	  NewHashTableCell->Table[i].KeyOffset = NewSubKeyCellOffset;
 	  NewHashTableCell->Table[i].HashValue = SrcHashRecord->HashValue;
 
@@ -4206,27 +2167,26 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 			 NewSubKeyCellSize);
 
 	  /* Copy class name */
-	  if (SrcSubKeyCell->ClassNameOffset != (BLOCK_OFFSET) -1)
+	  if (SrcSubKeyCell->ClassNameOffset != (HCELL_INDEX) -1)
 	    {
-	      PDATA_CELL SrcClassNameCell;
-	      PDATA_CELL NewClassNameCell;
-	      BLOCK_OFFSET NewClassNameOffset;
+	      PVOID SrcClassNameCell;
+	      PVOID NewClassNameCell;
+	      HCELL_INDEX NewClassNameOffset;
 
-	      SrcClassNameCell = CmiGetCell (SrcHive,
-					     SrcSubKeyCell->ClassNameOffset,
-					     NULL),
+	      SrcClassNameCell = HvGetCell (SrcHive->Hive,
+					    SrcSubKeyCell->ClassNameOffset);
 
 	      NewSubKeyCell->ClassSize = SrcSubKeyCell->ClassSize;
-	      Status = CmiAllocateCell (DstHive,
-					sizeof(CELL_HEADER) + NewSubKeyCell->ClassSize,
-					(PVOID)&NewClassNameCell,
-					&NewClassNameOffset);
-	      if (!NT_SUCCESS(Status))
+	      NewClassNameOffset = HvAllocateCell (DstHive->Hive,
+			                           NewSubKeyCell->ClassSize,
+			                           HvStable);
+	      if (NewClassNameOffset == HCELL_NULL)
 		{
-		  DPRINT1 ("CmiAllocateBlock() failed (Status %lx)\n", Status);
-		  return Status;
+		  DPRINT1 ("HvAllocateCell() failed (Status %lx)\n", Status);
+		  return STATUS_INSUFFICIENT_RESOURCES;
 		}
 
+	      NewClassNameCell = HvGetCell (DstHive->Hive, NewClassNameOffset);
 	      NewSubKeyCell->ClassNameOffset = NewClassNameOffset;
 	      RtlCopyMemory (NewClassNameCell,
 			     SrcClassNameCell,
@@ -4251,72 +2211,11 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 
 
 NTSTATUS
-CmiSaveTempHive (PREGISTRY_HIVE Hive,
+CmiSaveTempHive (PEREGISTRY_HIVE Hive,
 		 HANDLE FileHandle)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  LARGE_INTEGER FileOffset;
-  ULONG BlockIndex;
-  PVOID BlockPtr;
-  NTSTATUS Status;
-
-  DPRINT ("CmiSaveTempHive() called\n");
-
-  Hive->HiveHeader->Checksum = CmiCalcChecksum ((PULONG)Hive->HiveHeader);
-
-  /* Write hive block */
-  FileOffset.QuadPart = (ULONGLONG)0;
-  Status = ZwWriteFile (FileHandle,
-			NULL,
-			NULL,
-			NULL,
-			&IoStatusBlock,
-			Hive->HiveHeader,
-			sizeof(HIVE_HEADER),
-			&FileOffset,
-			NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("ZwWriteFile() failed (Status %lx)\n", Status);
-      return Status;
-    }
-
-  DPRINT ("Saving %lu blocks\n", Hive->BlockListSize);
-  for (BlockIndex = 0; BlockIndex < Hive->BlockListSize; BlockIndex++)
-    {
-      BlockPtr = Hive->BlockList[BlockIndex].Block;
-      DPRINT ("BlockPtr %p\n", BlockPtr);
-
-      FileOffset.QuadPart = (ULONGLONG)(BlockIndex + 1) * (ULONGLONG)REG_BLOCK_SIZE;
-      DPRINT ("File offset %I64x\n", FileOffset.QuadPart);
-
-      /* Write hive block */
-      Status = ZwWriteFile (FileHandle,
-			    NULL,
-			    NULL,
-			    NULL,
-			    &IoStatusBlock,
-			    BlockPtr,
-			    REG_BLOCK_SIZE,
-			    &FileOffset,
-			    NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1 ("ZwWriteFile() failed (Status %lx)\n", Status);
-	  return Status;
-	}
-    }
-
-  Status = ZwFlushBuffersFile (FileHandle,
-			       &IoStatusBlock);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("ZwFlushBuffersFile() failed (Status %lx)\n", Status);
-    }
-
-  DPRINT ("CmiSaveTempHive() done\n");
-
-  return Status;
+  Hive->HiveHandle = FileHandle;
+  return HvWriteHive(Hive->Hive) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 /* EOF */

@@ -18,7 +18,7 @@ extern LIST_ENTRY CmiKeyObjectListHead;
 extern ULONG CmiTimer;
 
 static NTSTATUS
-CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
+CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
 		 PKEY_CELL KeyCell,
 		 PUNICODE_STRING TargetPath);
 
@@ -233,7 +233,7 @@ CmiObjectParse(IN PVOID ParsedObject,
                IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
                OUT PVOID *NextObject)
 {
-  BLOCK_OFFSET BlockOffset;
+  HCELL_INDEX BlockOffset;
   PKEY_OBJECT FoundObject;
   PKEY_OBJECT ParsedKey;
   PKEY_CELL SubKeyCell;
@@ -285,7 +285,6 @@ CmiObjectParse(IN PVOID ParsedObject,
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
-
   Status = CmiScanKeyList(ParsedKey,
 			  &KeyName,
 			  Attributes,
@@ -300,93 +299,93 @@ CmiObjectParse(IN PVOID ParsedObject,
   if (FoundObject == NULL)
     {
       Status = CmiScanForSubKey(ParsedKey->RegistryHive,
-				ParsedKey->KeyCell,
-				&SubKeyCell,
-				&BlockOffset,
-				&KeyName,
-				0,
-				Attributes);
-      if (!NT_SUCCESS(Status) || (SubKeyCell == NULL))
-	{
+                                ParsedKey->KeyCell,
+                                &SubKeyCell,
+                                &BlockOffset,
+                                &KeyName,
+                                0,
+                                Attributes);
+      if (!NT_SUCCESS(Status))
+        {
           ExReleaseResourceLite(&CmiRegistryLock);
           KeLeaveCriticalRegion();
-	  RtlFreeUnicodeString(&KeyName);
-	  return(STATUS_UNSUCCESSFUL);
-	}
+          RtlFreeUnicodeString(&KeyName);
+          return(STATUS_UNSUCCESSFUL);
+        }
 
       if ((SubKeyCell->Flags & REG_KEY_LINK_CELL) &&
-	  !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)))
-	{
-	  RtlInitUnicodeString(&LinkPath, NULL);
-	  Status = CmiGetLinkTarget(ParsedKey->RegistryHive,
-				    SubKeyCell,
-				    &LinkPath);
-	  if (NT_SUCCESS(Status))
-	    {
+          !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)))
+        {
+          RtlInitUnicodeString(&LinkPath, NULL);
+          Status = CmiGetLinkTarget(ParsedKey->RegistryHive,
+                                    SubKeyCell,
+                                    &LinkPath);
+          if (NT_SUCCESS(Status))
+            {
               ExReleaseResourceLite(&CmiRegistryLock);
               KeLeaveCriticalRegion();
 
-	      DPRINT("LinkPath '%wZ'\n", &LinkPath);
+              DPRINT("LinkPath '%wZ'\n", &LinkPath);
 
-	      /* build new FullPath for reparsing */
-	      TargetPath.MaximumLength = LinkPath.MaximumLength;
-	      if (EndPtr != NULL)
-		{
-		  TargetPath.MaximumLength += (wcslen(EndPtr) * sizeof(WCHAR));
-		}
-	      TargetPath.Length = TargetPath.MaximumLength - sizeof(WCHAR);
-	      TargetPath.Buffer = ExAllocatePool(NonPagedPool,
-						 TargetPath.MaximumLength);
-	      wcscpy(TargetPath.Buffer, LinkPath.Buffer);
-	      if (EndPtr != NULL)
-		{
-		  wcscat(TargetPath.Buffer, EndPtr);
-		}
+              /* build new FullPath for reparsing */
+              TargetPath.MaximumLength = LinkPath.MaximumLength;
+              if (EndPtr != NULL)
+                {
+                  TargetPath.MaximumLength += (wcslen(EndPtr) * sizeof(WCHAR));
+                }
+              TargetPath.Length = TargetPath.MaximumLength - sizeof(WCHAR);
+              TargetPath.Buffer = ExAllocatePool(NonPagedPool,
+                                                 TargetPath.MaximumLength);
+              wcscpy(TargetPath.Buffer, LinkPath.Buffer);
+              if (EndPtr != NULL)
+                {
+                  wcscat(TargetPath.Buffer, EndPtr);
+                }
 
-	      RtlFreeUnicodeString(FullPath);
-	      RtlFreeUnicodeString(&LinkPath);
-	      FullPath->Length = TargetPath.Length;
-	      FullPath->MaximumLength = TargetPath.MaximumLength;
-	      FullPath->Buffer = TargetPath.Buffer;
+              RtlFreeUnicodeString(FullPath);
+              RtlFreeUnicodeString(&LinkPath);
+              FullPath->Length = TargetPath.Length;
+              FullPath->MaximumLength = TargetPath.MaximumLength;
+              FullPath->Buffer = TargetPath.Buffer;
 
-	      DPRINT("FullPath '%wZ'\n", FullPath);
+              DPRINT("FullPath '%wZ'\n", FullPath);
 
-	      /* reinitialize Path for reparsing */
-	      *Path = FullPath->Buffer;
+              /* reinitialize Path for reparsing */
+              *Path = FullPath->Buffer;
 
-	      *NextObject = NULL;
+              *NextObject = NULL;
 
-	      RtlFreeUnicodeString(&KeyName);
-	      return(STATUS_REPARSE);
-	    }
-	}
+               RtlFreeUnicodeString(&KeyName);
+               return(STATUS_REPARSE);
+             }
+        }
 
       /* Create new key object and put into linked list */
       DPRINT("CmiObjectParse: %S\n", *Path);
       Status = ObCreateObject(KernelMode,
-			      CmiKeyType,
-			      NULL,
-			      KernelMode,
-			      NULL,
-			      sizeof(KEY_OBJECT),
-			      0,
-			      0,
-			      (PVOID*)&FoundObject);
+                              CmiKeyType,
+                              NULL,
+                              KernelMode,
+                              NULL,
+                              sizeof(KEY_OBJECT),
+                              0,
+                              0,
+                              (PVOID*)&FoundObject);
       if (!NT_SUCCESS(Status))
-	{
+        {
           ExReleaseResourceLite(&CmiRegistryLock);
           KeLeaveCriticalRegion();
-	  RtlFreeUnicodeString(&KeyName);
-	  return(Status);
-	}
-    DPRINT("Inserting Key into Object Tree\n");
-    Status =  ObInsertObject((PVOID)FoundObject,
-                             NULL,
-                             KEY_ALL_ACCESS,
-                             0,
-                             NULL,
-                             NULL);
-    DPRINT("Status %x\n", Status);
+          RtlFreeUnicodeString(&KeyName);
+          return(Status);
+        }
+      DPRINT("Inserting Key into Object Tree\n");
+      Status = ObInsertObject((PVOID)FoundObject,
+                              NULL,
+                              KEY_ALL_ACCESS,
+                              0,
+                              NULL,
+                              NULL);
+      DPRINT("Status %x\n", Status);
 
       /* Add the keep-alive reference */
       ObReferenceObject(FoundObject);
@@ -396,8 +395,7 @@ CmiObjectParse(IN PVOID ParsedObject,
       FoundObject->KeyCellOffset = BlockOffset;
       FoundObject->RegistryHive = ParsedKey->RegistryHive;
       InsertTailList(&CmiKeyObjectListHead, &FoundObject->ListEntry);
-      RtlpCreateUnicodeString(&FoundObject->Name,
-              KeyName.Buffer, NonPagedPool);
+      RtlpCreateUnicodeString(&FoundObject->Name, KeyName.Buffer, NonPagedPool);
       CmiAddKeyToList(ParsedKey, FoundObject);
       DPRINT("Created object 0x%p\n", FoundObject);
     }
@@ -462,7 +460,7 @@ CmiObjectParse(IN PVOID ParsedObject,
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
-  //DPRINT("CmiObjectParse: %s\n", FoundObject->Name);
+  DPRINT("CmiObjectParse: %wZ\n", &FoundObject->Name);
 
   *Path = EndPtr;
 
@@ -509,8 +507,8 @@ CmiObjectDelete(PVOID DeletedObject)
 		      KeyObject);
 
       KeQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
-      CmiMarkBlockDirty (ParentKeyObject->RegistryHive,
-			 ParentKeyObject->KeyCellOffset);
+      HvMarkCellDirty (ParentKeyObject->RegistryHive->Hive,
+                       ParentKeyObject->KeyCellOffset);
 
       if (!IsNoFileHive (KeyObject->RegistryHive) ||
 	  !IsNoFileHive (ParentKeyObject->RegistryHive))
@@ -521,9 +519,6 @@ CmiObjectDelete(PVOID DeletedObject)
 
   ObDereferenceObject (ParentKeyObject);
 
-  ExReleaseResourceLite(&CmiRegistryLock);
-  KeLeaveCriticalRegion();
-
   if (KeyObject->NumberOfSubKeys)
     {
       KEBUGCHECK(REGISTRY_ERROR);
@@ -533,6 +528,9 @@ CmiObjectDelete(PVOID DeletedObject)
     {
       ExFreePool(KeyObject->SubKeys);
     }
+
+  ExReleaseResourceLite(&CmiRegistryLock);
+  KeLeaveCriticalRegion();
 }
 
 
@@ -618,7 +616,7 @@ CmiAssignSecurityDescriptor(PKEY_OBJECT KeyObject,
 			    PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
 #if 0
-  PREGISTRY_HIVE Hive;
+  PEREGISTRY_HIVE Hive;
 
   DPRINT1("CmiAssignSecurityDescriptor() callled\n");
 
@@ -755,6 +753,7 @@ CmiObjectQueryName (PVOID ObjectBody,
 }
 
 
+
 VOID
 CmiAddKeyToList(PKEY_OBJECT ParentKey,
 		PKEY_OBJECT NewKey)
@@ -843,6 +842,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
       CurKey = Parent->SubKeys[Index];
       if (Attributes & OBJ_CASE_INSENSITIVE)
 	{
+	  DPRINT("Comparing %wZ and %wZ\n", KeyName, &CurKey->Name);
 	  if ((KeyName->Length == CurKey->Name.Length)
 	      && (_wcsicmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
 	    {
@@ -863,6 +863,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
   {
      if (CurKey->Flags & KO_MARKED_FOR_DELETE)
      {
+        CHECKPOINT;
         *ReturnedObject = NULL;
 	return STATUS_UNSUCCESSFUL;
      }
@@ -878,13 +879,13 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 
 
 static NTSTATUS
-CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
+CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
 		 PKEY_CELL KeyCell,
 		 PUNICODE_STRING TargetPath)
 {
   UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
   PVALUE_CELL ValueCell;
-  PDATA_CELL DataCell;
+  PVOID DataCell;
   NTSTATUS Status;
 
   DPRINT("CmiGetLinkTarget() called\n");
@@ -920,9 +921,9 @@ CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
 
   if (ValueCell->DataSize > 0)
     {
-      DataCell = CmiGetCell (RegistryHive, ValueCell->DataOffset, NULL);
+      DataCell = HvGetCell (RegistryHive->Hive, ValueCell->DataOffset);
       RtlCopyMemory(TargetPath->Buffer,
-		    DataCell->Data,
+		    DataCell,
 		    TargetPath->Length);
       TargetPath->Buffer[TargetPath->Length / sizeof(WCHAR)] = 0;
     }

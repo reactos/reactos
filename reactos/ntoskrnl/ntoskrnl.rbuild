@@ -8,12 +8,14 @@
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="__USE_W32API" />
 	<include base="kjs">include</include>
+	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>csq</library>
 	<library>hal</library>
 	<library>kjs</library>
 	<library>pseh</library>
+	<library>cmlib</library>
 	<library>rtl</library>
 	<library>rossym</library>
 	<library>string</library>

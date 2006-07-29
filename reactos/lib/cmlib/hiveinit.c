@@ -28,6 +28,16 @@ HvpVerifyHiveHeader(
        HiveHeader->Sequence1 != HiveHeader->Sequence2 ||
        HvpHiveHeaderChecksum(HiveHeader) != HiveHeader->Checksum)
    {
+      DPRINT1("Verify Hive Header failed: \n");
+      DPRINT1("    Signature: 0x%x and not 0x%x, Major: 0x%x and not 0x%x\n",
+          HiveHeader->Signature, HV_SIGNATURE, HiveHeader->Major, HV_MAJOR_VER);
+      DPRINT1("    Minor: 0x%x is not > 0x%x, Type: 0x%x and not 0x%x\n",
+          HiveHeader->Minor, HV_MINOR_VER, HiveHeader->Type, HV_TYPE_PRIMARY);
+      DPRINT1("    Format: 0x%x and not 0x%x, Cluster: 0x%x and not 1\n",
+          HiveHeader->Format, HV_FORMAT_MEMORY, HiveHeader->Cluster);
+      DPRINT1("    Sequence: 0x%x and not 0x%x, Checksum: 0x%x and not 0x%x\n",
+          HiveHeader->Sequence1, HiveHeader->Sequence2,
+          HvpHiveHeaderChecksum(HiveHeader), HiveHeader->Checksum);
       return FALSE;
    }
 
@@ -139,6 +149,8 @@ HvpInitializeMemoryHive(
    if (ChunkSize < sizeof(HIVE_HEADER) ||
        !HvpVerifyHiveHeader((PHIVE_HEADER)ChunkBase))
    {
+      DPRINT1("Registry is corrupt: ChunkSize %d < sizeof(HIVE_HEADER) %d, "
+          "or HvpVerifyHiveHeader() failed\n", ChunkSize, sizeof(HIVE_HEADER));
       return STATUS_REGISTRY_CORRUPT;
    }
 

@@ -24,120 +24,46 @@
 
 static BOOLEAN CmiHardwareHiveImported = FALSE;
 
-
 /* FUNCTIONS ****************************************************************/
 
 static BOOLEAN
 CmImportBinaryHive (PCHAR ChunkBase,
 		    ULONG ChunkSize,
 		    ULONG Flags,
-		    PREGISTRY_HIVE *RegistryHive)
+		    PEREGISTRY_HIVE *RegistryHive)
 {
-  PREGISTRY_HIVE Hive;
+  PEREGISTRY_HIVE Hive;
   NTSTATUS Status;
 
   *RegistryHive = NULL;
 
-  if (strncmp (ChunkBase, "regf", 4))
-    {
-      DPRINT1 ("Found invalid '%*s' magic\n", 4, ChunkBase);
-      return FALSE;
-    }
-
   /* Create a new hive */
   Hive = ExAllocatePool (NonPagedPool,
-			 sizeof(REGISTRY_HIVE));
+			 sizeof(EREGISTRY_HIVE));
   if (Hive == NULL)
     {
       return FALSE;
     }
   RtlZeroMemory (Hive,
-		 sizeof(REGISTRY_HIVE));
+		 sizeof(EREGISTRY_HIVE));
 
   /* Set hive flags */
   Hive->Flags = Flags;
 
   /* Allocate hive header */
-  Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool (NonPagedPool,
-						   sizeof(HIVE_HEADER));
-  if (Hive->HiveHeader == NULL)
+  Status = HvInitialize(&Hive->Hive, HV_OPERATION_MEMORY,
+                        (ULONG_PTR)ChunkBase, ChunkSize,
+                        CmpAllocate, CmpFree,
+                        CmpFileRead, CmpFileWrite, CmpFileSetSize,
+                        CmpFileFlush, Hive);
+  if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("Allocating hive header failed\n");
+      DPRINT1 ("Opening hive failed (%x)\n", Status);
       ExFreePool (Hive);
       return FALSE;
     }
 
-  /* Import the hive header */
-  RtlCopyMemory (Hive->HiveHeader,
-		 ChunkBase,
-		 sizeof(HIVE_HEADER));
-
-  /* Read update counter */
-  Hive->UpdateCounter = Hive->HiveHeader->UpdateCounter1;
-
-  /* Set the hive's size */
-  Hive->FileSize = ChunkSize;
-
-  /* Set the size of the block list */
-  Hive->BlockListSize = (Hive->FileSize / 4096) - 1;
-
-  /* Allocate block list */
-  DPRINT("Space needed for block list describing hive: 0x%x\n",
-	 Hive->BlockListSize * sizeof(BLOCK_LIST_ENTRY));
-  Hive->BlockList = ExAllocatePool (NonPagedPool,
-				    Hive->BlockListSize * sizeof(BLOCK_LIST_ENTRY));
-  if (Hive->BlockList == NULL)
-    {
-      DPRINT1 ("Allocating block list failed\n");
-      ExFreePool (Hive->HiveHeader);
-      ExFreePool (Hive);
-      return FALSE;
-    }
-  RtlZeroMemory (Hive->BlockList,
-		 Hive->BlockListSize * sizeof(BLOCK_LIST_ENTRY));
-
-  /* Import the bins */
-  Status = CmiImportHiveBins(Hive,
-			     (PUCHAR)((ULONG_PTR)ChunkBase + 4096));
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("CmiImportHiveBins() failed (Status %lx)\n", Status);
-      CmiFreeHiveBins (Hive);
-      ExFreePool (Hive->BlockList);
-      ExFreePool (Hive->HiveHeader);
-      ExFreePool (Hive);
-      return (BOOLEAN)Status;
-    }
-
-  /* Initialize the free cell list */
-  Status = CmiCreateHiveFreeCellList (Hive);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1 ("CmiCreateHiveFreeCellList() failed (Status %lx)\n", Status);
-      CmiFreeHiveBins (Hive);
-      ExFreePool (Hive->BlockList);
-      ExFreePool (Hive->HiveHeader);
-      ExFreePool (Hive);
-
-      return (BOOLEAN)Status;
-    }
-
-  if (!(Hive->Flags & HIVE_NO_FILE))
-    {
-      /* Create the block bitmap */
-      Status = CmiCreateHiveBitmap (Hive);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1 ("CmiCreateHiveBitmap() failed (Status %lx)\n", Status);
-	  CmiFreeHiveFreeCellList (Hive);
-	  CmiFreeHiveBins (Hive);
-	  ExFreePool (Hive->BlockList);
-	  ExFreePool (Hive->HiveHeader);
-	  ExFreePool (Hive);
-
-	  return (BOOLEAN)Status;
-	}
-    }
+  CmPrepareHive(Hive->Hive);
 
   /* Acquire hive list lock exclusively */
   KeEnterCriticalRegion();
@@ -163,7 +89,7 @@ CmImportSystemHive(PCHAR ChunkBase,
 		   ULONG ChunkSize)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  PREGISTRY_HIVE RegistryHive;
+  PEREGISTRY_HIVE RegistryHive;
   UNICODE_STRING KeyName;
   NTSTATUS Status;
 
@@ -217,7 +143,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
 		     ULONG ChunkSize)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  PREGISTRY_HIVE RegistryHive;
+  PEREGISTRY_HIVE RegistryHive;
   UNICODE_STRING KeyName;
   HANDLE HardwareKey;
   ULONG Disposition;
