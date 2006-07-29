@@ -461,4 +461,8 @@ static __inline HCELL_INDEX xHvAllocateCell(char *file, int line, PREGISTRY_HIVE
 #define HvAllocateCell(hive, size) xHvAllocateCell(__FILE__, __LINE__, hive, size)
 #endif
 
+// Some Ob definitions for debug messages in Cm
+#define ObGetObjectPointerCount(x) OBJECT_TO_OBJECT_HEADER(x)->PointerCount
+#define ObGetObjectHandleCount(x) OBJECT_TO_OBJECT_HEADER(x)->HandleCount
+
 #endif /*__INCLUDE_CM_H*/
