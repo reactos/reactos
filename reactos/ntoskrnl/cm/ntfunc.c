@@ -638,7 +638,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
-  //DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
+  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
   /* Remove the keep-alive reference */
   ObDereferenceObject(KeyObject);
@@ -652,8 +652,8 @@ NtDeleteKey(IN HANDLE KeyHandle)
   /* Dereference the object */
   ObDereferenceObject(KeyObject);
 
-  //DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
-  //DPRINT("HandleCount %lu\n", ObGetObjectHandleCount((PVOID)KeyObject));
+  DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
+  DPRINT("HandleCount %lu\n", ObGetObjectHandleCount((PVOID)KeyObject));
 
   /*
    * Note:
