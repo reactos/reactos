@@ -666,7 +666,8 @@ NTSTATUS
 NTAPI
 IopCleanupFailedIrp(
     IN PFILE_OBJECT FileObject,
-    IN PKEVENT EventObject
+    IN PKEVENT EventObject,
+    IN PVOID Buffer OPTIONAL
 );
 
 VOID

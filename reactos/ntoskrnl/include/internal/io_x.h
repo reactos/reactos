@@ -44,6 +44,15 @@ IopQueueIrpToThread(IN PIRP Irp)
 }
 
 VOID
+FORCEINLINE
+IopUnQueueIrpFromThread(IN PIRP Irp)
+{
+    /* Remove it from the list and reset it */
+    RemoveEntryList(&Irp->ThreadListEntry);
+    InitializeListHead(&Irp->ThreadListEntry);
+}
+
+VOID
 static __inline
 IopUpdateOperationCount(IN IOP_TRANSFER_TYPE Type)
 {

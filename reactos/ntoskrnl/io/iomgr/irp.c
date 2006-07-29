@@ -43,12 +43,16 @@ IopAbortIrpKernelApc(IN PKAPC Apc)
 NTSTATUS
 NTAPI
 IopCleanupFailedIrp(IN PFILE_OBJECT FileObject,
-                    IN PKEVENT EventObject)
+                    IN PKEVENT EventObject OPTIONAL,
+                    IN PVOID Buffer OPTIONAL)
 {
     PAGED_CODE();
 
     /* Dereference the event */
     if (EventObject) ObDereferenceObject(EventObject);
+
+    /* Free a buffer, if any */
+    if (Buffer) ExFreePool(Buffer);
 
     /* If this was a file opened for synch I/O, then unlock it */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO) IopUnlockFileObject(FileObject);
@@ -348,8 +352,7 @@ IopCompleteRequest(IN PKAPC Apc,
         }
 
         /* Now that we've signaled the events, de-associate the IRP */
-        RemoveEntryList(&Irp->ThreadListEntry);
-        InitializeListHead(&Irp->ThreadListEntry);
+        IopUnQueueIrpFromThread(Irp);
 
         /* Now check if a User APC Routine was requested */
         if (Irp->Overlay.AsynchronousParameters.UserApcRoutine)
@@ -447,8 +450,7 @@ IopCompleteRequest(IN PKAPC Apc,
         }
 
         /* Now that we've signaled the events, de-associate the IRP */
-        RemoveEntryList(&Irp->ThreadListEntry);
-        InitializeListHead(&Irp->ThreadListEntry);
+        IopUnQueueIrpFromThread(Irp);
 
         /* Free the IRP as well */
         IoFreeIrp(Irp);

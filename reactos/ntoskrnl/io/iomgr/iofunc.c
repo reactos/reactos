@@ -346,7 +346,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                                         FALSE,
                                         EventObject,
                                         IoStatusBlock);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, Event, NULL);
 
     /* Set some extra settings */
     Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID) NULL;
@@ -415,7 +415,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -673,7 +673,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -887,7 +887,7 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, Event);
 
     /* Set up the IRP */
     Irp->Flags = (LocalEvent) ? IRP_SYNCHRONOUS_API : 0;
@@ -1017,7 +1017,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, Event, NULL);
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
@@ -1165,7 +1165,7 @@ NtLockFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, Event, NULL);
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
@@ -1366,7 +1366,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, EventHandle);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, EventHandle, AuxBuffer);
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
@@ -1587,7 +1587,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, Event);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -1882,7 +1882,7 @@ NtReadFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -2129,7 +2129,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, Event);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -2463,7 +2463,7 @@ NtUnlockFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, Event);
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
@@ -2693,7 +2693,7 @@ NtWriteFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -2885,7 +2885,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, Event);
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
@@ -3035,7 +3035,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, Event);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, Event);
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;

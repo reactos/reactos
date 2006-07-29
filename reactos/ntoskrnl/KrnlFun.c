@@ -10,7 +10,6 @@
 //
 // Io:
 //  - See why queueing IRPs and cancelling them causes crashes.
-//  - Add another parameter to IopCleanupFailedIrp.
 //  - Add Access Checks in IopParseDevice.
 //  - Add validation checks in IoCreateFile.
 //  - Add probe/alignment checks for Query/Set routines.

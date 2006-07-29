@@ -404,8 +404,7 @@ IopParseDevice(IN PVOID ParseObject,
         FileObject->Event.Header.SignalState = 1;
 
         /* Now that we've signaled the events, de-associate the IRP */
-        //RemoveEntryList(&Irp->ThreadListEntry);
-        //InitializeListHead(&Irp->ThreadListEntry);
+        //IopUnQueueIrpFromThread(Irp);
 
         /* Check if the IRP had an input buffer */
         if ((Irp->Flags & IRP_BUFFERED_IO) &&
@@ -795,7 +794,7 @@ IopSecurityFile(IN PVOID ObjectBody,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
