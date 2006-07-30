@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -30,6 +30,8 @@
 #ifdef HAVE_ALLOCA_H
 #include <alloca.h>
 #endif
+
+#include "windef.h"
 
 #include "widl.h"
 #include "utils.h"
@@ -80,11 +82,12 @@ static void set_type(var_t *v, typeref_t *ref, expr_t *arr);
 static ifref_t *make_ifref(type_t *iface);
 static var_t *make_var(char *name);
 static func_t *make_func(var_t *def, var_t *args);
-static class_t *make_class(char *name);
+static type_t *make_class(char *name);
+static type_t *make_safearray(void);
 
-static type_t *reg_type(type_t *type, char *name, int t);
+static type_t *reg_type(type_t *type, const char *name, int t);
 static type_t *reg_types(type_t *type, var_t *names, int t);
-static type_t *find_type(char *name, int t);
+static type_t *find_type(const char *name, int t);
 static type_t *find_type2(char *name, int t);
 static type_t *get_type(unsigned char type, char *name, int t);
 static type_t *get_typev(unsigned char type, var_t *name, int t);
@@ -111,7 +114,6 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 	var_t *var;
 	func_t *func;
 	ifref_t *ifref;
-	class_t *clas;
 	char *str;
 	UUID *uuid;
 	unsigned int num;
@@ -124,18 +126,22 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %token <uuid> aUUID
 %token aEOF
 %token SHL SHR
-%token tAGGREGATABLE tALLOCATE tAPPOBJECT tARRAYS tASYNC tASYNCUUID
+%token tAGGREGATABLE tALLOCATE tAPPOBJECT tASYNC tASYNCUUID
 %token tAUTOHANDLE tBINDABLE tBOOLEAN tBROADCAST tBYTE tBYTECOUNT
 %token tCALLAS tCALLBACK tCASE tCDECL tCHAR tCOCLASS tCODE tCOMMSTATUS
 %token tCONST tCONTEXTHANDLE tCONTEXTHANDLENOSERIALIZE
 %token tCONTEXTHANDLESERIALIZE tCONTROL tCPPQUOTE
 %token tDEFAULT
+%token tDEFAULTCOLLELEM
 %token tDEFAULTVALUE
+%token tDEFAULTVTABLE
+%token tDISPLAYBIND
 %token tDISPINTERFACE
 %token tDLLNAME tDOUBLE tDUAL
 %token tENDPOINT
 %token tENTRY tENUM tERRORSTATUST
 %token tEXPLICITHANDLE tEXTERN
+%token tFALSE
 %token tFLOAT
 %token tHANDLE
 %token tHANDLET
@@ -144,18 +150,22 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %token tHIDDEN
 %token tHYPER tID tIDEMPOTENT
 %token tIIDIS
+%token tIMMEDIATEBIND
 %token tIMPLICITHANDLE
 %token tIMPORT tIMPORTLIB
-%token tIN tINCLUDE tINLINE
+%token tIN tINLINE
 %token tINPUTSYNC
 %token tINT tINT64
 %token tINTERFACE
+%token tLCID
 %token tLENGTHIS tLIBRARY
 %token tLOCAL
 %token tLONG
 %token tMETHODS
 %token tMODULE
+%token tNONBROWSABLE
 %token tNONCREATABLE
+%token tNONEXTENSIBLE
 %token tOBJECT tODL tOLEAUTOMATION
 %token tOPTIONAL
 %token tOUT
@@ -164,9 +174,12 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %token tPROPGET tPROPPUT tPROPPUTREF
 %token tPTR
 %token tPUBLIC
+%token tRANGE
 %token tREADONLY tREF
+%token tREQUESTEDIT
 %token tRESTRICTED
 %token tRETVAL
+%token tSAFEARRAY
 %token tSHORT
 %token tSIGNED
 %token tSINGLE
@@ -177,6 +190,7 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %token tSTRING tSTRUCT
 %token tSWITCH tSWITCHIS tSWITCHTYPE
 %token tTRANSMITAS
+%token tTRUE
 %token tTYPEDEF
 %token tUNION
 %token tUNIQUE
@@ -187,9 +201,6 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %token tVERSION
 %token tVOID
 %token tWCHAR tWIREMARSHAL
-
-/* used in attr_t */
-%token tPOINTERTYPE
 
 %type <attr> m_attributes attributes attrib_list attribute
 %type <expr> m_exprs /* exprs expr_list */ m_expr expr expr_list_const expr_const
@@ -207,12 +218,12 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 %type <var> dispint_props
 %type <func> funcdef int_statements
 %type <func> dispint_meths
-%type <clas> coclass coclasshdr coclassdef
+%type <type> coclass coclasshdr coclassdef
 %type <num> pointer_type version
 %type <str> libraryhdr
 
 %left ','
-%right COND
+%right '?' ':'
 %left '|'
 %left '&'
 %left '-' '+'
@@ -225,13 +236,20 @@ static type_t std_uhyper = { "MIDL_uhyper" };
 
 %%
 
-input:	  gbl_statements			{ write_proxies($1); write_client($1); write_server($1); }
+input:   gbl_statements                        { write_proxies($1); write_client($1); write_server($1); }
 	;
 
 gbl_statements:					{ $$ = NULL; }
 	| gbl_statements interfacedec		{ $$ = $1; }
 	| gbl_statements interfacedef		{ $$ = make_ifref($2); LINK($$, $1); }
-	| gbl_statements coclassdef		{ $$ = $1; add_coclass($2); }
+	| gbl_statements coclass ';'		{ $$ = $1;
+						  reg_type($2, $2->name, 0);
+						  if (!parse_only && do_header) write_coclass_forward($2);
+						}
+	| gbl_statements coclassdef		{ $$ = $1;
+						  add_coclass($2);
+						  reg_type($2, $2->name, 0);
+						}
 	| gbl_statements moduledef		{ $$ = $1; add_module($2); }
 	| gbl_statements librarydef		{ $$ = $1; }
 	| gbl_statements statement		{ $$ = $1; }
@@ -240,9 +258,13 @@ gbl_statements:					{ $$ = NULL; }
 imp_statements:					{}
 	| imp_statements interfacedec		{ if (!parse_only) add_interface($2); }
 	| imp_statements interfacedef		{ if (!parse_only) add_interface($2); }
-	| imp_statements coclassdef		{ if (!parse_only) add_coclass($2); }
+	| imp_statements coclass ';'		{ reg_type($2, $2->name, 0); if (!parse_only && do_header) write_coclass_forward($2); }
+	| imp_statements coclassdef		{ if (!parse_only) add_coclass($2);
+						  reg_type($2, $2->name, 0);
+						}
 	| imp_statements moduledef		{ if (!parse_only) add_module($2); }
 	| imp_statements statement		{}
+	| imp_statements importlib		{}
 	;
 
 int_statements:					{ $$ = NULL; }
@@ -269,9 +291,13 @@ import_start: tIMPORT aSTRING ';'		{ assert(yychar == YYEMPTY);
 import:   import_start imp_statements aEOF	{}
 	;
 
+importlib: tIMPORTLIB '(' aSTRING ')'		{ if(!parse_only) add_importlib($3); }
+	;
+
 libraryhdr: tLIBRARY aIDENTIFIER		{ $$ = $2; }
 	;
-library_start: attributes libraryhdr '{'	{ start_typelib($2, $1); }
+library_start: attributes libraryhdr '{'	{ start_typelib($2, $1);
+						  if (!parse_only && do_header) write_library($2, $1); }
 	;
 librarydef: library_start imp_statements '}'	{ end_typelib(); }
 	;
@@ -324,17 +350,27 @@ m_attributes:					{ $$ = NULL; }
 	;
 
 attributes:
-	  '[' attrib_list ']'			{ $$ = $2; }
+	  '[' attrib_list ']'			{ $$ = $2;
+						  if (!$$)
+						    yyerror("empty attribute lists unsupported");
+						}
 	;
 
 attrib_list: attribute
-	| attrib_list ',' attribute		{ LINK($3, $1); $$ = $3; }
-	| attrib_list ']' '[' attribute		{ LINK($4, $1); $$ = $4; }
+	| attrib_list ',' attribute		{ if ($3) { LINK($3, $1); $$ = $3; }
+						  else { $$ = $1; }
+						}
+	| attrib_list ']' '[' attribute		{ if ($4) { LINK($4, $1); $$ = $4; }
+						  else { $$ = $1; }
+						}
 	;
 
-attribute:
-	  tASYNC				{ $$ = make_attr(ATTR_ASYNC); }
+attribute:					{ $$ = NULL; }
+	| tAGGREGATABLE				{ $$ = make_attr(ATTR_AGGREGATABLE); }
+	| tAPPOBJECT				{ $$ = make_attr(ATTR_APPOBJECT); }
+	| tASYNC				{ $$ = make_attr(ATTR_ASYNC); }
 	| tAUTOHANDLE				{ $$ = make_attr(ATTR_AUTO_HANDLE); }
+	| tBINDABLE				{ $$ = make_attr(ATTR_BINDABLE); }
 	| tCALLAS '(' ident ')'			{ $$ = make_attrp(ATTR_CALLAS, $3); }
 	| tCASE '(' expr_list_const ')'		{ $$ = make_attrp(ATTR_CASE, $3); }
 	| tCONTEXTHANDLE			{ $$ = make_attrv(ATTR_CONTEXTHANDLE, 0); }
@@ -342,8 +378,11 @@ attribute:
 	| tCONTEXTHANDLESERIALIZE		{ $$ = make_attrv(ATTR_CONTEXTHANDLE, 0); /* RPC_CONTEXT_HANDLE_SERIALIZE */ }
 	| tCONTROL				{ $$ = make_attr(ATTR_CONTROL); }
 	| tDEFAULT				{ $$ = make_attr(ATTR_DEFAULT); }
+	| tDEFAULTCOLLELEM			{ $$ = make_attr(ATTR_DEFAULTCOLLELEM); }
 	| tDEFAULTVALUE '(' expr_const ')'	{ $$ = make_attrp(ATTR_DEFAULTVALUE_EXPR, $3); }
 	| tDEFAULTVALUE '(' aSTRING ')'		{ $$ = make_attrp(ATTR_DEFAULTVALUE_STRING, $3); }
+	| tDEFAULTVTABLE			{ $$ = make_attr(ATTR_DEFAULTVTABLE); }
+	| tDISPLAYBIND				{ $$ = make_attr(ATTR_DISPLAYBIND); }
 	| tDLLNAME '(' aSTRING ')'		{ $$ = make_attrp(ATTR_DLLNAME, $3); }
 	| tDUAL					{ $$ = make_attr(ATTR_DUAL); }
 	| tENDPOINT '(' aSTRING ')'		{ $$ = make_attrp(ATTR_ENDPOINT, $3); }
@@ -360,34 +399,36 @@ attribute:
 	| tID '(' expr_const ')'		{ $$ = make_attrp(ATTR_ID, $3); }
 	| tIDEMPOTENT				{ $$ = make_attr(ATTR_IDEMPOTENT); }
 	| tIIDIS '(' ident ')'			{ $$ = make_attrp(ATTR_IIDIS, $3); }
+	| tIMMEDIATEBIND			{ $$ = make_attr(ATTR_IMMEDIATEBIND); }
 	| tIMPLICITHANDLE '(' tHANDLET aIDENTIFIER ')'	{ $$ = make_attrp(ATTR_IMPLICIT_HANDLE, $4); }
 	| tIN					{ $$ = make_attr(ATTR_IN); }
 	| tINPUTSYNC				{ $$ = make_attr(ATTR_INPUTSYNC); }
-	| tLENGTHIS '(' pident_list ')'		{ $$ = make_attrp(ATTR_LENGTHIS, $3); }
+	| tLENGTHIS '(' m_exprs ')'		{ $$ = make_attrp(ATTR_LENGTHIS, $3); }
 	| tLOCAL				{ $$ = make_attr(ATTR_LOCAL); }
+	| tNONBROWSABLE				{ $$ = make_attr(ATTR_NONBROWSABLE); }
 	| tNONCREATABLE				{ $$ = make_attr(ATTR_NONCREATABLE); }
+	| tNONEXTENSIBLE			{ $$ = make_attr(ATTR_NONEXTENSIBLE); }
 	| tOBJECT				{ $$ = make_attr(ATTR_OBJECT); }
 	| tODL					{ $$ = make_attr(ATTR_ODL); }
 	| tOLEAUTOMATION			{ $$ = make_attr(ATTR_OLEAUTOMATION); }
-	| tOPTIONAL				{ $$ = make_attr(ATTR_OPTIONAL); }
+	| tOPTIONAL                             { $$ = make_attr(ATTR_OPTIONAL); }
 	| tOUT					{ $$ = make_attr(ATTR_OUT); }
 	| tPOINTERDEFAULT '(' pointer_type ')'	{ $$ = make_attrv(ATTR_POINTERDEFAULT, $3); }
 	| tPROPGET				{ $$ = make_attr(ATTR_PROPGET); }
 	| tPROPPUT				{ $$ = make_attr(ATTR_PROPPUT); }
 	| tPROPPUTREF				{ $$ = make_attr(ATTR_PROPPUTREF); }
-	| tPTR					{ $$ = make_attr(ATTR_PTR); }
 	| tPUBLIC				{ $$ = make_attr(ATTR_PUBLIC); }
+	| tRANGE '(' expr_const ',' expr_const ')' { LINK($5, $3); $$ = make_attrp(ATTR_RANGE, $5); }
 	| tREADONLY				{ $$ = make_attr(ATTR_READONLY); }
-	| tREF					{ $$ = make_attr(ATTR_REF); }
+	| tREQUESTEDIT				{ $$ = make_attr(ATTR_REQUESTEDIT); }
 	| tRESTRICTED				{ $$ = make_attr(ATTR_RESTRICTED); }
 	| tRETVAL				{ $$ = make_attr(ATTR_RETVAL); }
-	| tSIZEIS '(' pident_list ')'		{ $$ = make_attrp(ATTR_SIZEIS, $3); }
+	| tSIZEIS '(' m_exprs ')'		{ $$ = make_attrp(ATTR_SIZEIS, $3); }
 	| tSOURCE				{ $$ = make_attr(ATTR_SOURCE); }
 	| tSTRING				{ $$ = make_attr(ATTR_STRING); }
 	| tSWITCHIS '(' expr ')'		{ $$ = make_attrp(ATTR_SWITCHIS, $3); }
 	| tSWITCHTYPE '(' type ')'		{ $$ = make_attrp(ATTR_SWITCHTYPE, type_ref($3)); }
 	| tTRANSMITAS '(' type ')'		{ $$ = make_attrp(ATTR_TRANSMITAS, type_ref($3)); }
-	| tUNIQUE				{ $$ = make_attr(ATTR_UNIQUE); }
 	| tUUID '(' aUUID ')'			{ $$ = make_attrp(ATTR_UUID, $3); }
 	| tV1ENUM				{ $$ = make_attr(ATTR_V1ENUM); }
 	| tVARARG				{ $$ = make_attr(ATTR_VARARG); }
@@ -419,7 +460,6 @@ case:	  tCASE expr ':' field			{ attr_t *a = make_attrp(ATTR_CASE, $2);
 constdef: tCONST type ident '=' expr_const	{ $$ = reg_const($3);
 						  set_type($$, $2, NULL);
 						  $$->eval = $5;
-						  $$->lval = $5->cval;
 						}
 	;
 
@@ -428,29 +468,29 @@ enums:						{ $$ = NULL; }
 	| enum_list
 	;
 
-enum_list: enum
+enum_list: enum					{ if (!$$->eval)
+						    $$->eval = make_exprl(EXPR_NUM, 0 /* default for first enum entry */);
+						}
 	| enum_list ',' enum			{ LINK($3, $1); $$ = $3;
-						  if ($1 && !$3->eval)
-						    $3->lval = $1->lval + 1;
+						  if (!$$->eval)
+						    $$->eval = make_exprl(EXPR_NUM, $1->eval->cval + 1);
 						}
 	;
 
 enum:	  ident '=' expr_const			{ $$ = reg_const($1);
 						  $$->eval = $3;
-						  $$->lval = $3->cval;
-						  $$->type = make_type(RPC_FC_LONG, &std_int);
+                                                  $$->type = make_type(RPC_FC_LONG, &std_int);
 						}
 	| ident					{ $$ = reg_const($1);
-						  $$->lval = 0; /* default for first enum entry */
-						  $$->type = make_type(RPC_FC_LONG, &std_int);
+                                                  $$->type = make_type(RPC_FC_LONG, &std_int);
 						}
 	;
 
 enumdef: tENUM t_ident '{' enums '}'		{ $$ = get_typev(RPC_FC_ENUM16, $2, tsENUM);
 						  $$->fields = $4;
 						  $$->defined = TRUE;
-						  if(in_typelib)
-						      add_enum($$);
+                                                  if(in_typelib)
+                                                      add_enum($$);
 						}
 	;
 
@@ -474,8 +514,10 @@ m_expr:						{ $$ = make_expr(EXPR_VOID); }
 
 expr:	  aNUM					{ $$ = make_exprl(EXPR_NUM, $1); }
 	| aHEXNUM				{ $$ = make_exprl(EXPR_HEXNUM, $1); }
+	| tFALSE				{ $$ = make_exprl(EXPR_TRUEFALSE, 0); }
+	| tTRUE					{ $$ = make_exprl(EXPR_TRUEFALSE, 1); }
 	| aIDENTIFIER				{ $$ = make_exprs(EXPR_IDENTIFIER, $1); }
-	| expr '?' expr ':' expr %prec COND	{ $$ = make_expr3(EXPR_COND, $1, $3, $5); }
+	| expr '?' expr ':' expr		{ $$ = make_expr3(EXPR_COND, $1, $3, $5); }
 	| expr '|' expr				{ $$ = make_expr2(EXPR_OR , $1, $3); }
 	| expr '&' expr				{ $$ = make_expr2(EXPR_AND, $1, $3); }
 	| expr '+' expr				{ $$ = make_expr2(EXPR_ADD, $1, $3); }
@@ -498,7 +540,7 @@ expr_list_const: expr_const
 
 expr_const: expr				{ $$ = $1;
 						  if (!$$->is_const)
-						      yyerror("expression is not constant\n");
+						      yyerror("expression is not constant");
 						}
 	;
 
@@ -528,7 +570,7 @@ funcdef:
 						  $4->attrs = $1;
 						  $$ = make_func($4, $6);
 						  if (is_attr($4->attrs, ATTR_IN)) {
-						    yyerror("Inapplicable attribute");
+						    yyerror("inapplicable attribute [in] for function '%s'",$$->def->name);
 						  }
 						}
 	;
@@ -547,7 +589,11 @@ ident:	  aIDENTIFIER				{ $$ = make_var($1); }
 	| aKNOWNTYPE				{ $$ = make_var($<str>1); }
 	| tASYNC				{ $$ = make_var($<str>1); }
 	| tID					{ $$ = make_var($<str>1); }
+	| tLCID					{ $$ = make_var($<str>1); }
+	| tOBJECT				{ $$ = make_var($<str>1); }
+	| tRANGE				{ $$ = make_var($<str>1); }
 	| tRETVAL				{ $$ = make_var($<str>1); }
+	| tUUID					{ $$ = make_var($<str>1); }
 	| tVERSION				{ $$ = make_var($<str>1); }
 	;
 
@@ -557,7 +603,7 @@ base_type: tBYTE				{ $$ = make_type(RPC_FC_BYTE, NULL); }
 	| tSIGNED int_std			{ $$ = $2; $$->sign = 1; }
 	| tUNSIGNED int_std			{ $$ = $2; $$->sign = -1;
 						  switch ($$->type) {
-						  case RPC_FC_CHAR: break;
+						  case RPC_FC_CHAR:  break;
 						  case RPC_FC_SMALL: $$->type = RPC_FC_USMALL; break;
 						  case RPC_FC_SHORT: $$->type = RPC_FC_USHORT; break;
 						  case RPC_FC_LONG:  $$->type = RPC_FC_ULONG;  break;
@@ -571,9 +617,9 @@ base_type: tBYTE				{ $$ = make_type(RPC_FC_BYTE, NULL); }
 	| tFLOAT				{ $$ = make_type(RPC_FC_FLOAT, NULL); }
 	| tSINGLE				{ $$ = make_type(RPC_FC_FLOAT, NULL); }
 	| tDOUBLE				{ $$ = make_type(RPC_FC_DOUBLE, NULL); }
-	| tBOOLEAN				{ $$ = make_type(RPC_FC_SMALL, &std_bool); }
+	| tBOOLEAN				{ $$ = make_type(RPC_FC_BYTE, &std_bool); /* ? */ }
 	| tERRORSTATUST				{ $$ = make_type(RPC_FC_ERROR_STATUS_T, NULL); }
-	| tHANDLET				{ $$ = make_type(RPC_FC_IGNORE, NULL); }
+	| tHANDLET				{ $$ = make_type(RPC_FC_BIND_PRIMITIVE, NULL); /* ? */ }
 	;
 
 m_int:
@@ -581,8 +627,8 @@ m_int:
 	;
 
 int_std:  tINT					{ $$ = make_type(RPC_FC_LONG, &std_int); } /* win32 only */
-	| tSMALL m_int				{ $$ = make_type(RPC_FC_SMALL, NULL); }
 	| tSHORT m_int				{ $$ = make_type(RPC_FC_SHORT, NULL); }
+	| tSMALL				{ $$ = make_type(RPC_FC_SMALL, NULL); }
 	| tLONG m_int				{ $$ = make_type(RPC_FC_LONG, NULL); }
 	| tHYPER m_int				{ $$ = make_type(RPC_FC_HYPER, NULL); }
 	| tINT64				{ $$ = make_type(RPC_FC_HYPER, &std_int64); }
@@ -590,7 +636,10 @@ int_std:  tINT					{ $$ = make_type(RPC_FC_LONG, &std_int); } /* win32 only */
 	;
 
 coclass:  tCOCLASS aIDENTIFIER			{ $$ = make_class($2); }
-	| tCOCLASS aKNOWNTYPE			{ $$ = make_class($2); }
+	| tCOCLASS aKNOWNTYPE			{ $$ = find_type($2, 0);
+						  if ($$->defined) yyerror("multiple definition error");
+						  if ($$->kind != TKIND_COCLASS) yyerror("%s was not declared a coclass", $2);
+						}
 	;
 
 coclasshdr: attributes coclass			{ $$ = $2;
@@ -617,13 +666,14 @@ dispinterface: tDISPINTERFACE aIDENTIFIER	{ $$ = get_type(0, $2, 0); }
 	|      tDISPINTERFACE aKNOWNTYPE	{ $$ = get_type(0, $2, 0); }
 	;
 
-dispinterfacehdr: attributes dispinterface	{ $$ = $2;
-						  if ($$->defined) yyerror("multiple definition error\n");
-						  $$->attrs = $1;
-						  $$->attrs = make_attr(ATTR_DISPINTERFACE);
-						  LINK($$->attrs, $1);
+dispinterfacehdr: attributes dispinterface	{ attr_t *attrs;
+						  $$ = $2;
+						  if ($$->defined) yyerror("multiple definition error");
+						  attrs = make_attr(ATTR_DISPINTERFACE);
+						  LINK(attrs, $1);
+						  $$->attrs = attrs;
 						  $$->ref = find_type("IDispatch", 0);
-						  if (!$$->ref) yyerror("IDispatch is undefined\n");
+						  if (!$$->ref) yyerror("IDispatch is undefined");
 						  $$->defined = TRUE;
 						  if (!parse_only && do_header) write_forward($$);
 						}
@@ -661,7 +711,7 @@ interface: tINTERFACE aIDENTIFIER		{ $$ = get_type(RPC_FC_IP, $2, 0); }
 	;
 
 interfacehdr: attributes interface		{ $$ = $2;
-						  if ($$->defined) yyerror("multiple definition error\n");
+						  if ($$->defined) yyerror("multiple definition error");
 						  $$->attrs = $1;
 						  $$->defined = TRUE;
 						  if (!parse_only && do_header) write_forward($$);
@@ -679,7 +729,7 @@ interfacedef: interfacehdr inherit
 	| interfacehdr ':' aIDENTIFIER
 	  '{' import int_statements '}'		{ $$ = $1;
 						  $$->ref = find_type2($3, 0);
-						  if (!$$->ref) yyerror("base class %s not found in import\n", $3);
+						  if (!$$->ref) yyerror("base class '%s' not found in import", $3);
 						  $$->funcs = $6;
 						  if (!parse_only && do_header) write_interface($$);
 						}
@@ -723,16 +773,17 @@ pident_list:
 pointer_type:
 	  tREF					{ $$ = RPC_FC_RP; }
 	| tUNIQUE				{ $$ = RPC_FC_UP; }
+	| tPTR					{ $$ = RPC_FC_FP; }
 	;
 
 structdef: tSTRUCT t_ident '{' fields '}'	{ $$ = get_typev(RPC_FC_STRUCT, $2, tsSTRUCT);
-						  /* overwrite RPC_FC_STRUCT with a more exact type */
+                                                  /* overwrite RPC_FC_STRUCT with a more exact type */
 						  $$->type = get_struct_type( $4 );
 						  $$->fields = $4;
 						  $$->defined = TRUE;
-						  if(in_typelib)
-						    add_struct($$);
-						}
+                                                  if(in_typelib)
+                                                      add_struct($$);
+                                                }
 	;
 
 type:	  tVOID					{ $$ = make_tref(NULL, make_type(0, NULL)); }
@@ -745,6 +796,7 @@ type:	  tVOID					{ $$ = make_tref(NULL, make_type(0, NULL)); }
 	| tSTRUCT aIDENTIFIER			{ $$ = make_tref(NULL, get_type(RPC_FC_STRUCT, $2, tsSTRUCT)); }
 	| uniondef				{ $$ = make_tref(NULL, $1); }
 	| tUNION aIDENTIFIER			{ $$ = make_tref(NULL, find_type2($2, tsUNION)); }
+	| tSAFEARRAY '(' type ')'		{ $$ = make_tref(NULL, make_safearray()); }
 	;
 
 typedef: tTYPEDEF m_attributes type pident_list	{ typeref_t *tref = uniq_tref($3);
@@ -831,7 +883,9 @@ static expr_t *make_exprl(enum expr_type type, long val)
   e->is_const = FALSE;
   INIT_LINK(e);
   /* check for numeric constant */
-  if (type == EXPR_NUM || type == EXPR_HEXNUM) {
+  if (type == EXPR_NUM || type == EXPR_HEXNUM || type == EXPR_TRUEFALSE) {
+    /* make sure true/false value is valid */
+    assert(type != EXPR_TRUEFALSE || val == 0 || val == 1);
     e->is_const = TRUE;
     e->cval = val;
   }
@@ -854,7 +908,7 @@ static expr_t *make_exprs(enum expr_type type, char *val)
       e->u.sval = c->name;
       free(val);
       e->is_const = TRUE;
-      e->cval = c->lval;
+      e->cval = c->eval->cval;
     }
   }
   return e;
@@ -870,6 +924,35 @@ static expr_t *make_exprt(enum expr_type type, typeref_t *tref, expr_t *expr)
   e->is_const = FALSE;
   INIT_LINK(e);
   /* check for cast of constant expression */
+  if (type == EXPR_SIZEOF) {
+    switch (tref->ref->type) {
+      case RPC_FC_BYTE:
+      case RPC_FC_CHAR:
+      case RPC_FC_SMALL:
+      case RPC_FC_USMALL:
+        e->is_const = TRUE;
+        e->cval = 1;
+        break;
+      case RPC_FC_WCHAR:
+      case RPC_FC_USHORT:
+      case RPC_FC_SHORT:
+        e->is_const = TRUE;
+        e->cval = 2;
+        break;
+      case RPC_FC_LONG:
+      case RPC_FC_ULONG:
+      case RPC_FC_FLOAT:
+      case RPC_FC_ERROR_STATUS_T:
+        e->is_const = TRUE;
+        e->cval = 4;
+        break;
+      case RPC_FC_HYPER:
+      case RPC_FC_DOUBLE:
+        e->is_const = TRUE;
+        e->cval = 8;
+        break;
+    }
+  }
   if (type == EXPR_CAST && expr->is_const) {
     e->is_const = TRUE;
     e->cval = expr->cval;
@@ -978,12 +1061,13 @@ static type_t *make_type(unsigned char type, type_t *ref)
 {
   type_t *t = xmalloc(sizeof(type_t));
   t->name = NULL;
+  t->kind = TKIND_PRIMITIVE;
   t->type = type;
   t->ref = ref;
-  t->rname = NULL;
   t->attrs = NULL;
   t->funcs = NULL;
   t->fields = NULL;
+  t->ifaces = NULL;
   t->ignore = parse_only;
   t->is_const = FALSE;
   t->sign = 0;
@@ -1052,7 +1136,6 @@ static var_t *make_var(char *name)
   v->attrs = NULL;
   v->array = NULL;
   v->eval = NULL;
-  v->lval = 0;
   INIT_LINK(v);
   return v;
 }
@@ -1068,14 +1151,18 @@ static func_t *make_func(var_t *def, var_t *args)
   return f;
 }
 
-static class_t *make_class(char *name)
+static type_t *make_class(char *name)
 {
-  class_t *c = xmalloc(sizeof(class_t));
+  type_t *c = make_type(0, NULL);
   c->name = name;
-  c->attrs = NULL;
-  c->ifaces = NULL;
+  c->kind = TKIND_COCLASS;
   INIT_LINK(c);
   return c;
+}
+
+static type_t *make_safearray(void)
+{
+  return make_type(RPC_FC_FP, find_type("SAFEARRAY", 0));
 }
 
 #define HASHMAX 64
@@ -1095,7 +1182,7 @@ static int hash_ident(const char *name)
 /***** type repository *****/
 
 struct rtype {
-  char *name;
+  const char *name;
   type_t *type;
   int t;
   struct rtype *next;
@@ -1103,12 +1190,12 @@ struct rtype {
 
 struct rtype *type_hash[HASHMAX];
 
-static type_t *reg_type(type_t *type, char *name, int t)
+static type_t *reg_type(type_t *type, const char *name, int t)
 {
   struct rtype *nt;
   int hash;
   if (!name) {
-    yyerror("registering named type without name\n");
+    yyerror("registering named type without name");
     return type;
   }
   hash = hash_ident(name);
@@ -1118,7 +1205,6 @@ static type_t *reg_type(type_t *type, char *name, int t)
   nt->t = t;
   nt->next = type_hash[hash];
   type_hash[hash] = nt;
-  type->name = name;
   return type;
 }
 
@@ -1141,14 +1227,7 @@ static unsigned char get_pointer_type( type_t *type )
   }
   t = get_attrv( type->attrs, ATTR_POINTERTYPE );
   if (t) return t;
-
-  if(is_attr( type->attrs, ATTR_PTR ))
-    return RPC_FC_FP;
-
-  if(is_attr( type->attrs, ATTR_UNIQUE ))
-    return RPC_FC_UP;
-
-  return RPC_FC_RP;
+  return RPC_FC_FP;
 }
 
 static type_t *reg_types(type_t *type, var_t *names, int t)
@@ -1181,13 +1260,13 @@ static type_t *reg_types(type_t *type, var_t *names, int t)
   return type;
 }
 
-static type_t *find_type(char *name, int t)
+static type_t *find_type(const char *name, int t)
 {
   struct rtype *cur = type_hash[hash_ident(name)];
   while (cur && (cur->t != t || strcmp(cur->name, name)))
     cur = cur->next;
   if (!cur) {
-    yyerror("type %s not found\n", name);
+    yyerror("type '%s' not found", name);
     return NULL;
   }
   return cur->type;
@@ -1241,16 +1320,42 @@ static type_t *get_typev(unsigned char type, var_t *name, int t)
 static int get_struct_type(var_t *field)
 {
   int has_pointer = 0;
-  int has_conformant_array = 0;
-  int has_conformant_string = 0;
+  int has_conformance = 0;
+  int has_variance = 0;
 
-  while (field)
+  for (; field; field = NEXT_LINK(field))
   {
     type_t *t = field->type;
 
     /* get the base type */
     while( (t->type == 0) && t->ref )
       t = t->ref;
+
+    if (field->ptr_level > 0)
+    {
+        has_pointer = 1;
+        continue;
+    }
+
+    if (is_string_type(field->attrs, 0, field->array))
+    {
+        has_conformance = 1;
+        has_variance = 1;
+        continue;
+    }
+
+    if (is_array_type(field->attrs, 0, field->array))
+    {
+        if (field->array && !field->array->is_const)
+        {
+            has_conformance = 1;
+            if (PREV_LINK(field))
+                yyerror("field '%s' deriving from a conformant array must be the last field in the structure",
+                        field->name);
+        }
+        if (is_attr(field->attrs, ATTR_LENGTHIS))
+            has_variance = 1;
+    }
 
     switch (t->type)
     {
@@ -1285,11 +1390,15 @@ static int get_struct_type(var_t *field)
       has_pointer = 1;
       break;
     case RPC_FC_CARRAY:
-      has_conformant_array = 1;
+      has_conformance = 1;
+      if (PREV_LINK(field))
+          yyerror("field '%s' deriving from a conformant array must be the last field in the structure",
+                  field->name);
       break;
     case RPC_FC_C_CSTRING:
     case RPC_FC_C_WSTRING:
-      has_conformant_string = 1;
+      has_conformance = 1;
+      has_variance = 1;
       break;
 
     /*
@@ -1297,17 +1406,24 @@ static int get_struct_type(var_t *field)
      *  a struct should be at least as complex as its member
      */
     case RPC_FC_CVSTRUCT:
-      has_conformant_string = 1;
+      has_conformance = 1;
+      has_variance = 1;
       has_pointer = 1;
       break;
 
     case RPC_FC_CPSTRUCT:
-      has_conformant_array = 1;
+      has_conformance = 1;
+      if (PREV_LINK(field))
+          yyerror("field '%s' deriving from a conformant array must be the last field in the structure",
+                  field->name);
       has_pointer = 1;
       break;
 
     case RPC_FC_CSTRUCT:
-      has_conformant_array = 1;
+      has_conformance = 1;
+      if (PREV_LINK(field))
+          yyerror("field '%s' deriving from a conformant array must be the last field in the structure",
+                  field->name);
       break;
 
     case RPC_FC_PSTRUCT:
@@ -1330,14 +1446,13 @@ static int get_struct_type(var_t *field)
     case RPC_FC_BOGUS_STRUCT:
       return RPC_FC_BOGUS_STRUCT;
     }
-    field = NEXT_LINK(field);
   }
 
-  if( has_conformant_string && has_pointer )
+  if( has_variance )
     return RPC_FC_CVSTRUCT;
-  if( has_conformant_array && has_pointer )
+  if( has_conformance && has_pointer )
     return RPC_FC_CPSTRUCT;
-  if( has_conformant_array )
+  if( has_conformance )
     return RPC_FC_CSTRUCT;
   if( has_pointer )
     return RPC_FC_PSTRUCT;
@@ -1359,7 +1474,7 @@ static var_t *reg_const(var_t *var)
   struct rconst *nc;
   int hash;
   if (!var->name) {
-    yyerror("registering constant without name\n");
+    yyerror("registering constant without name");
     return var;
   }
   hash = hash_ident(var->name);
@@ -1377,7 +1492,7 @@ static var_t *find_const(char *name, int f)
   while (cur && strcmp(cur->name, name))
     cur = cur->next;
   if (!cur) {
-    if (f) yyerror("constant %s not found\n", name);
+    if (f) yyerror("constant '%s' not found", name);
     return NULL;
   }
   return cur->var;

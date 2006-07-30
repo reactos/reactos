@@ -1,10 +1,11 @@
-.TH WIDL 1 "March 2004" "Wine Manpage" "Wine Developers Manual"
+.\" -*- nroff -*-
+.TH WIDL 1 "October 2005" "@PACKAGE_STRING@" "Wine Developers Manual"
 .SH NAME
 widl \- Wine Interface Definition Language Compiler
 .SH SYNOPSIS
 .BR "widl "\fI[options]\fR " \fIinfile.idl\fR"
 .SH DESCRIPTION
-.B widl
+.B widl 
 is a Wine tool which purpose is to compile Interface Definition Language (IDL) files.
 .PP
 .SH OPTIONS
@@ -14,56 +15,56 @@ No options are used.
 The program prints the help info and then exits.
 .PP
 .B General options:
-.IP \fB--oldnames\fR
-Use old naming conventions.
-.IP \fB-V\fR
+.IP "\fB-V\fR"
 Print version number and exits from the program.
 .PP
 .B Header options:
-.IP \fB-h\fR
+.IP "\fB-h\fR"
 Generate header files.
 .IP "\fB-H \fIfile\fR"
 Name of header file to generate. The default header
 filename is infile.h.
+.IP "\fB--oldnames\fR"
+Use old naming conventions.
 .PP
 .B Type library options:
 .IP \fB-t\fR
 Generate a type library.
 .IP "\fB-T \fIfile\fR"
-Define the name of the type library to be generated.
+Define the name of the type library to be generated. 
 The default filename is infile.tlb.
 .PP
 .B Proxy/stub generation options:
-.IP \fB-c\fR
+.IP "\fB-c\fR"
 Generate client stub.
-.IP \fB-C \fIfile\fR
+.IP "\fB-C \fIfile\fR"
 Name of client stub file (default is infile_c.c)
-.IP \fB-c\fR
+.IP "\fB-p\fR"
 Generate proxy.
-.IP \fB-P \fIfile\fR
+.IP "\fB-P \fIfile\fR"
 Name of proxy file (default is infile_p.c)
-.IP \fB-s\fR
+.IP "\fB-s\fR"
 Generate server stub.
-.IP \fB-S \fIfile\fR
+.IP "\fB-S \fIfile\fR"
 Name of server stub file (default is infile_s.c)
 .PP
 .B Preprocessor options:
 .IP "\fB-I \fIpath\fR"
-Add a header search dir to path. Multiple search
+Add a header search dir to path. Multiple search 
 dirs are allowed.
 .IP "\fB-D \fIid[=val]\fR"
 Define preprocessor identifier id value.
-.IP \fB-E\fR
+.IP "\fB-E\fR"
 Preprocess only.
-.IP \fB-N\fR
+.IP "\fB-N\fR"
 Do not preprocess input.
 .PP
 .B Debug options:
-.IP \fB-W\fR
+.IP "\fB-W\fR"
 Enable pedantic warnings.
 .IP "\fB-d \fIn\fR"
 .nf
-Set debug level to n.
+Set debug level to n. 
 n may be '0x01', '0x02', '0x04', '0x08', '0x10' or '0x20'.
 (See section \fBDebug\fR)
 .PP

@@ -16,12 +16,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "widltypes.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+
 #include "hash.h"
 
 static const unsigned char Lookup_16[128 * 3] = {
@@ -511,7 +514,7 @@ unsigned long lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   switch (PRIMARYLANGID(LANGIDFROMLCID(lcid)))
   {
   default:
-    fprintf(stderr, "Unknown lcid %lx, treating as latin-based, please report\n", (long)lcid);
+    fprintf(stderr, "Unknown lcid %lx, treating as latin-based, please report\n", lcid);
     /* .. Fall Through .. */
   case LANG_AFRIKAANS:  case LANG_ALBANIAN:   case LANG_ARMENIAN:
   case LANG_ASSAMESE:   case LANG_AZERI:      case LANG_BASQUE:
@@ -533,8 +536,8 @@ unsigned long lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   case LANG_TATAR:      case LANG_TELUGU:     case LANG_THAI:
   case LANG_UKRAINIAN:  case LANG_URDU:       case LANG_UZBEK:
   case LANG_VIETNAMESE: case LANG_GAELIC:     case LANG_MALTESE:
-  case LANG_MAORI:      case LANG_RHAETO_ROMANCE:
-  case LANG_SAAMI:      case LANG_SORBIAN:    case LANG_SUTU:
+  case LANG_TAJIK:      case LANG_ROMANSH:    case LANG_IRISH:
+  case LANG_SAMI:       case LANG_UPPER_SORBIAN: case LANG_SUTU:
   case LANG_TSONGA:     case LANG_TSWANA:     case LANG_VENDA:
   case LANG_XHOSA:      case LANG_ZULU:       case LANG_ESPERANTO:
   case LANG_WALON:      case LANG_CORNISH:    case LANG_WELSH:
