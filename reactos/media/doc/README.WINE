@@ -9,8 +9,8 @@ please add it.
 
 If you find that a function in ReactOS that is not implemented properly
 and is based on WINE sources, check the latest Winehq CVS and see if
-it has been fixed there. If so, please submit a patch to 
-ros-dev@reactos.com. Otherwise please send a patch to both 
+it has been fixed there. If so, please submit a patch to
+ros-dev@reactos.com. Otherwise please send a patch to both
 wine-patches@winehq.com and ros-dev@reactos.com
 
 When porting a dll from WINE to ReactOS please take a look at how
@@ -21,7 +21,7 @@ TARGET_TYPE = winedll
 
 This will cause the reactos build system to look for a file called
 makefile.ros-template. This file contains all of the information needed
-for the ReactOS build system to make use of the WINE Makefile.in. 
+for the ReactOS build system to make use of the WINE Makefile.in.
 This will allow you to use the WINE tools and librarys with very little
 work to import a new dll.
 
@@ -29,11 +29,11 @@ The following build tools are shared with Wine.
 
 reactos/tools/unicode             # Synced to Wine-0_9_5
 reactos/tools/wpp                 # Synced to Wine-0_9_5
-reactos/tools/bin2res	          # Resource to binary converter
-reactos/tools/winebuild	          # Synced to Wine-0_9_5
+reactos/tools/bin2res             # Resource to binary converter
+reactos/tools/winebuild           # Synced to Wine-0_9_5
 reactos/tools/wmc                 # Synced to Wine-0_9_5
 reactos/tools/wrc                 # Synced to Wine-0_9_5
-reactos/tools/widl                # Forked at Wine-20050930
+reactos/tools/widl                # Synced to Wine-20060729
 
 The following libraries are shared with Wine.
 
@@ -43,8 +43,8 @@ reactos/dll/win32/comctl32        # Autosync
 reactos/dll/win32/comdlg32        # Synced to Wine-0_9_16
 reactos/dll/win32/crypt32         # Autosync
 reactos/dll/win32/cryptdll        # Autosync
-reactos/dll/win32/dbghelp         # 
-reactos/dll/win32/icmp	          # Synced to Wine-0_9_10
+reactos/dll/win32/dbghelp         #
+reactos/dll/win32/icmp            # Synced to Wine-0_9_10
 reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
@@ -52,7 +52,7 @@ reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
 reactos/dll/win32/msvcrt20        # Out of sync
 reactos/dll/win32/mpr             # Synced to Wine-0_9_5
-reactos/dll/win32/msacm	          # Out of sync
+reactos/dll/win32/msacm           # Out of sync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Synced to Wine-0_9_5
 reactos/dll/win32/msvideo         # Out of sync
@@ -73,7 +73,7 @@ reactos/dll/win32/shell32         # Synced to Wine-0_9_5
 reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Synced to Wine-0_9_5
-reactos/dll/win32/twain	          # Out of sync
+reactos/dll/win32/twain           # Out of sync
 reactos/dll/win32/urlmon          # Synced to Wine-0_9_10
 reactos/dll/win32/uxtheme         # Autosync
 reactos/dll/win32/version         # Synced at 20060509
