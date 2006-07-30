@@ -11,6 +11,7 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>netapi32</library>
+	<library>ntdll</library>
 	<file>advanced.c</file>
 	<file>computer.c</file>
 	<file>environment.c</file>
