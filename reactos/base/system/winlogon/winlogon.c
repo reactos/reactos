@@ -1,7 +1,6 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Winlogon
  * FILE:            services/winlogon/winlogon.c
  * PURPOSE:         Logon
  * PROGRAMMER:      David Welch (welch@cwcom.net)
@@ -14,9 +13,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
-#define SUPPORT_CONSOLESTART 1
-#define START_LSASS          1
 
 /* GLOBALS ******************************************************************/
 
@@ -33,10 +29,7 @@ WlxCreateWindowStationAndDesktops(PWLSESSION Session);
 
 HINSTANCE hAppInstance;
 PWLSESSION WLSession = NULL;
-
-#if SUPPORT_CONSOLESTART
-BOOL StartConsole = TRUE;
-#endif
+HWND hwndSASWindow = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -153,7 +146,6 @@ StartServices (VOID)
    return TRUE;
 }
 
-#if START_LSASS
 static BOOLEAN
 StartLsass (VOID)
 {
@@ -205,7 +197,6 @@ StartLsass (VOID)
 
    return(TRUE);
 }
-#endif
 
 
 static BOOLEAN
@@ -280,7 +271,7 @@ static BOOL RestartShell(void)
 VOID STDCALL
 RegisterHotKeys(VOID)
 {
-  RegisterHotKey(NULL, 0, MOD_ALT | MOD_CONTROL, VK_DELETE);
+  RegisterHotKey(hwndSASWindow, 0, MOD_ALT | MOD_CONTROL, VK_DELETE);
 }
 
 VOID STDCALL
@@ -324,34 +315,6 @@ HandleHotKey(MSG *Msg)
     CloseHandle (ProcessInformation.hThread);
   }
 }
-
-#if SUPPORT_CONSOLESTART
-static BOOL StartIntoGUI(VOID)
-{
-  HKEY WinLogonKey;
-  DWORD Type, Size, Value;
-
-  if(OpenRegistryKey(&WinLogonKey))
-  {
-    Size = sizeof(DWORD);
-    if(ERROR_SUCCESS == RegQueryValueEx(WinLogonKey,
-                                        L"StartGUI",
-                                        NULL,
-                                        &Type,
-                                        (LPBYTE)&Value,
-                                        &Size))
-    {
-      if(Type == REG_DWORD)
-      {
-        RegCloseKey(WinLogonKey);
-        return (Value != 0);
-      }
-    }
-    RegCloseKey(WinLogonKey);
-  }
-  return FALSE;
-}
-
 
 static PWCHAR
 GetUserInit (WCHAR *CommandLine)
@@ -496,10 +459,8 @@ DoLogonUser (PWCHAR Name,
 
   while (WaitForSingleObject (ProcessInformation.hProcess, 100) != WAIT_OBJECT_0)
   {
-    if (PeekMessage(&Msg, 0, 0, 0, PM_REMOVE))
+    if (PeekMessage(&Msg, hwndSASWindow, 0, 0, PM_REMOVE))
     {
-      if (Msg.message == WM_HOTKEY)
-        HandleHotKey(&Msg);
       TranslateMessage(&Msg);
       DispatchMessage(&Msg);
     }
@@ -526,7 +487,32 @@ DoLogonUser (PWCHAR Name,
 
   return TRUE;
 }
-#endif
+
+static LRESULT CALLBACK
+SASWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	DbgBreakPoint();
+	switch (uMsg)
+	{
+		case WM_HOTKEY:
+		{
+			switch (lParam)
+			{
+				case MAKELONG(MOD_CONTROL | MOD_ALT, VK_DELETE):
+				{
+					DispatchSAS(WLSession, WLX_SAS_TYPE_CTRL_ALT_DEL);
+					return TRUE;
+				}
+			}
+		}
+	}
+
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+}
 
 int STDCALL
 WinMain(HINSTANCE hInstance,
@@ -535,10 +521,7 @@ WinMain(HINSTANCE hInstance,
         int nShowCmd)
 {
     BOOLEAN Old;
-#if SUPPORT_CONSOLESTART
-//  WCHAR LoginName[255];
-//  WCHAR Password[255];
-#endif
+    WNDCLASS wndClass;
 #if 0
   LSA_STRING ProcessName, PackageName;
   HANDLE LsaHandle;
@@ -559,7 +542,6 @@ WinMain(HINSTANCE hInstance,
   /* Get privilege */
   RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
 
-#if START_LSASS
   if (StartProcess(L"StartLsass"))
   {
     if (!StartLsass())
@@ -571,7 +553,6 @@ WinMain(HINSTANCE hInstance,
   {
 	  DPRINT1("WL: StartProcess() failed!\n");
   }
-#endif
 
   if(!(WLSession = MsGinaInit()))
   {
@@ -615,9 +596,6 @@ WinMain(HINSTANCE hInstance,
     return 0;
   }
 
-#if SUPPORT_CONSOLESTART
-  StartConsole = !StartIntoGUI();
-#endif
   if(!InitializeSAS(WLSession))
   {
     DPRINT1("WL: Failed to initialize SAS\n");
@@ -663,6 +641,17 @@ WinMain(HINSTANCE hInstance,
     *        Register SAS with the window.
     *        Register for logoff notification
     */
+   /* Create a window class */
+   ZeroMemory(&wndClass, sizeof(WNDCLASS));
+   wndClass.style = CS_GLOBALCLASS;
+   wndClass.lpfnWndProc = SASWindowProc;
+   wndClass.hInstance = hInstance;
+   wndClass.lpszClassName = L"SAS Window class";
+   RegisterClass(&wndClass);
+   hwndSASWindow = CreateWindow(
+      L"SAS Window class", L"SAS window", 0,
+      0, 0, 0, 0,
+      NULL, NULL, hInstance, NULL);
 
    /* Main loop */
 #if 0
@@ -703,21 +692,6 @@ WinMain(HINSTANCE hInstance,
    Password[i - 1] =0;
 #endif
 
-#if SUPPORT_CONSOLESTART
- if(StartConsole)
- {
-//   if (! DoLogonUser(LoginName, Password))
-   if (! DoLogonUser(L"Administrator", L"Secret"))
-     {
-     }
-
-   NtShutdownSystem(ShutdownNoReboot);
-   ExitProcess(0);
- }
- else
- {
-#endif
-
    RegisterHotKeys();
 
    SessionLoop(WLSession);
@@ -745,9 +719,6 @@ WinMain(HINSTANCE hInstance,
      DPRINT1("WL: LogonStatus != LOGON_SHUTDOWN!!!\n");
      ExitProcess(0);
    }
-#if SUPPORT_CONSOLESTART
- }
-#endif
 
    return 0;
 }
@@ -759,17 +730,6 @@ DisplayStatusMessage(PWLSESSION Session, HDESK hDesktop, DWORD dwOptions, PWSTR 
   {
     return TRUE;
   }
-
-  #if SUPPORT_CONSOLESTART
-  if(StartConsole)
-  {
-    if(pMessage)
-    {
-      DPRINT1("WL-Status: %ws\n", pMessage);
-    }
-    return TRUE;
-  }
-  #endif
 
   return Session->MsGina.Functions.WlxDisplayStatusMessage(Session->MsGina.Context, hDesktop, dwOptions, pTitle, pMessage);
 }
@@ -848,9 +808,6 @@ SessionLoop(PWLSESSION Session)
       WlxSetTimeout(Session->MsGina.Context, 0);
       Session->SuppressStatus = TRUE;
       /* tell msgina to show a window telling the user one can logon */
-      #if SUPPORT_CONSOLESTART
-      if(!StartConsole)
-      #endif
       DisplaySASNotice(Session);
       Session->SuppressStatus = FALSE;
 
@@ -863,7 +820,11 @@ SessionLoop(PWLSESSION Session)
     }
 
     WlxAction = DoLogin(Session);
-    if(WlxAction == WLX_SAS_ACTION_LOGOFF)
+    if (WlxAction == WLX_SAS_ACTION_LOGON)
+    {
+      DoLogonUser(L"Administrator", L"Secret");
+    }
+    else if(WlxAction == WLX_SAS_ACTION_LOGOFF)
     {
       /* the user doesn't want to login, instead pressed cancel
          we should display the window again so one can logon again */
@@ -900,10 +861,8 @@ SessionLoop(PWLSESSION Session)
     }
 
     /* Message loop for the SAS window */
-    while(GetMessage(&Msg, 0, 0, 0))
+    while(GetMessage(&Msg, hwndSASWindow, 0, 0))
     {
-      if (Msg.message == WM_HOTKEY)
-        HandleHotKey(&Msg);
       TranslateMessage(&Msg);
       DispatchMessage(&Msg);
     }

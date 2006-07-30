@@ -84,7 +84,7 @@ WlxAssignShellProtection(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 int WINAPI
 WlxMessageBox(
@@ -95,12 +95,11 @@ WlxMessageBox(
   UINT fuStyle
 )
 {
-  Unimplemented;
-  return 0;
+  return MessageBoxW(hwndOwner, lpszText, lpszTitle, fuStyle);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 int WINAPI
 WlxDialogBox(
@@ -111,12 +110,11 @@ WlxDialogBox(
   DLGPROC dlgprc
 )
 {
-  Unimplemented;
-  return 0;
+  return (int)DialogBox(hInst, lpszTemplate, hwndOwner, dlgprc);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 int WINAPI
 WlxDialogBoxParam(
@@ -128,8 +126,7 @@ WlxDialogBoxParam(
   LPARAM dwInitParam
 )
 {
-  Unimplemented;
-  return 0;
+  return (int)DialogBoxParam(hInst, lpszTemplate, hwndOwner, dlgprc, dwInitParam);
 }
 
 /*
@@ -144,12 +141,11 @@ WlxDialogBoxIndirect(
   DLGPROC dlgprc
 )
 {
-  Unimplemented;
-  return 0;
+  return (int)DialogBoxIndirect(hInst, hDialogTemplate, hwndOwner, dlgprc);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 int WINAPI
 WlxDialogBoxIndirectParam(
@@ -161,8 +157,7 @@ WlxDialogBoxIndirectParam(
   LPARAM dwInitParam
 )
 {
-  Unimplemented;
-  return 0;
+  return (int)DialogBoxIndirectParam(hInst, hDialogTemplate, hwndOwner, dlgprc, dwInitParam);
 }
 
 /*
