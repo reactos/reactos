@@ -49,7 +49,8 @@ cpp_quote("#endif")
   BOOL ScmrControlService([in] handle_t BindingHandle,
                           [in] SC_HANDLE hService,
                           [in] DWORD dwControl,
-                          [out] LPSERVICE_STATUS lpServiceStatus);
+                          [out] SERVICE_STATUS *lpServiceStatus);
+/*                          [out] LPSERVICE_STATUS lpServiceStatus); */
 
   /* Function 2 */
   DWORD ScmrDeleteService([in] handle_t BindingHandle,
@@ -78,7 +79,8 @@ cpp_quote("#endif")
   /* Function 6 */
   DWORD ScmrQueryServiceStatus([in] handle_t BindingHandle,
                                [in] SC_HANDLE hSCManager,
-                               [out] LPSERVICE_STATUS lpServiceStatus);
+                               [out] SERVICE_STATUS *lpServiceStatus);
+/*                               [out] LPSERVICE_STATUS lpServiceStatus); */
 
   /* Function 7 */
   DWORD ScmrSetServiceStatus([in] handle_t BindingHandle,
