@@ -306,6 +306,7 @@ extern "C" {
 #define SS_BLACKRECT 4
 #define SS_CENTER 1
 #define SS_CENTERIMAGE 512
+#define SS_EDITCONTROL 0x2000
 #define SS_ENHMETAFILE 15
 #define SS_ETCHEDFRAME 18
 #define SS_ETCHEDHORZ 16
@@ -318,6 +319,7 @@ extern "C" {
 #define SS_NOPREFIX 128
 #define SS_NOTIFY 256
 #define SS_OWNERDRAW 0xd
+#define SS_REALSIZECONTROL 0x040
 #define SS_REALSIZEIMAGE 0x800
 #define SS_RIGHT 2
 #define SS_RIGHTJUST 0x400
