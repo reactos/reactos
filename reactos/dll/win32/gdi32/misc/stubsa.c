@@ -32,22 +32,6 @@ DeviceCapabilitiesExA(
   return 0;
 }
 
-/*
- * @unimplemented
- */
-UINT
-APIENTRY
-GetOutlineTextMetricsA(
-	HDC			hdc,
-	UINT			cbData,
-	LPOUTLINETEXTMETRICA	lpOTM
-	)
-{
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-}
-
 
 /*
  * @unimplemented

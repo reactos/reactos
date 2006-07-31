@@ -40,22 +40,6 @@ DeviceCapabilitiesExW(
 #endif
 }
 
-/*
- * @unimplemented
- */
-UINT
-APIENTRY
-GetOutlineTextMetricsW(
-	HDC			hdc,
-	UINT			cbData,
-	LPOUTLINETEXTMETRICW	lpOTM
-	)
-{
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
-}
-
 
 /*
  * @unimplemented
