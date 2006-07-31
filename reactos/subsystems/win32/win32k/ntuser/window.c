@@ -1439,7 +1439,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
    else if (hWndParent)
    {
-      if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+      if (((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD) ||
+                                        (dwExStyle & WS_EX_MDICHILD))
          ParentWindowHandle = hWndParent;
       else
       {
@@ -1736,8 +1737,27 @@ co_IntCreateWindowEx(DWORD dwExStyle,
             Pos.y = rc.top;
          }
 
-         /* According to wine, the ShowMode is set to y if x == CW_USEDEFAULT(16) and
-            y is something else */
+/* 
+   According to wine, the ShowMode is set to y if x == CW_USEDEFAULT(16) and
+   y is something else. and Quote!
+ */
+       
+/* Never believe Microsoft's documentation... CreateWindowEx doc says
+ * that if an overlapped window is created with WS_VISIBLE style bit
+ * set and the x parameter is set to CW_USEDEFAULT, the system ignores
+ * the y parameter. However, disassembling NT implementation (WIN32K.SYS)
+ * reveals that
+ *
+ * 1) not only it checks for CW_USEDEFAULT but also for CW_USEDEFAULT16
+ * 2) it does not ignore the y parameter as the docs claim; instead, it
+ *    uses it as second parameter to ShowWindow() unless y is either
+ *    CW_USEDEFAULT or CW_USEDEFAULT16.
+ *
+ * The fact that we didn't do 2) caused bogus windows pop up when wine
+ * was running apps that were using this obscure feature. Example -
+ * calc.exe that comes with Win98 (only Win98, it's different from
+ * the one that comes with Win95 and NT)
+ */
          if(y != CW_USEDEFAULT && y != CW_USEDEFAULT16)
          {
             dwShowMode = y;

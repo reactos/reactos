@@ -388,12 +388,12 @@ CreateSmallIcon(HICON StdIcon)
    SmallIconHeight = GetSystemMetrics(SM_CYSMICON);
    if (! GetIconInfo(StdIcon, &StdInfo))
    {
-      DPRINT1("Failed to get icon info for icon 0x%x\n", StdIcon);
+      DbgPrint("Failed to get icon info for icon 0x%x\n", StdIcon);
       goto cleanup;
    }
    if (! GetObjectW(StdInfo.hbmMask, sizeof(BITMAP), &StdBitmapInfo))
    {
-      DPRINT1("Failed to get bitmap info for icon 0x%x bitmap 0x%x\n",
+      DbgPrint("Failed to get bitmap info for icon 0x%x bitmap 0x%x\n",
               StdIcon, StdInfo.hbmColor);
       goto cleanup;
    }
@@ -410,71 +410,71 @@ CreateSmallIcon(HICON StdIcon)
    hInfoDc = CreateICW(NULL, NULL, NULL, NULL);
    if (NULL == hInfoDc)
    {
-      DPRINT1("Failed to create info DC\n");
+      DbgPrint("Failed to create info DC\n");
       goto cleanup;
    }
    hSourceDc = CreateCompatibleDC(NULL);
    if (NULL == hSourceDc)
    {
-      DPRINT1("Failed to create source DC\n");
+      DbgPrint("Failed to create source DC\n");
       goto cleanup;
    }
    hDestDc = CreateCompatibleDC(NULL);
    if (NULL == hDestDc)
    {
-      DPRINT1("Failed to create dest DC\n");
+      DbgPrint("Failed to create dest DC\n");
       goto cleanup;
    }
 
    OldSourceBitmap = SelectObject(hSourceDc, StdInfo.hbmColor);
    if (NULL == OldSourceBitmap)
    {
-      DPRINT1("Failed to select source color bitmap\n");
+      DbgPrint("Failed to select source color bitmap\n");
       goto cleanup;
    }
    SmallInfo.hbmColor = CreateCompatibleBitmap(hInfoDc, SmallIconWidth,
                                               SmallIconHeight);
    if (NULL == SmallInfo.hbmColor)
    {
-      DPRINT1("Failed to create color bitmap\n");
+      DbgPrint("Failed to create color bitmap\n");
       goto cleanup;
    }
    OldDestBitmap = SelectObject(hDestDc, SmallInfo.hbmColor);
    if (NULL == OldDestBitmap)
    {
-      DPRINT1("Failed to select dest color bitmap\n");
+      DbgPrint("Failed to select dest color bitmap\n");
       goto cleanup;
    }
    if (! StretchBlt(hDestDc, 0, 0, SmallIconWidth, SmallIconHeight,
                     hSourceDc, 0, 0, StdBitmapInfo.bmWidth,
                     StdBitmapInfo.bmHeight, SRCCOPY))
    {
-     DPRINT1("Failed to stretch color bitmap\n");
+     DbgPrint("Failed to stretch color bitmap\n");
      goto cleanup;
    }
 
    if (NULL == SelectObject(hSourceDc, StdInfo.hbmMask))
    {
-      DPRINT1("Failed to select source mask bitmap\n");
+      DbgPrint("Failed to select source mask bitmap\n");
       goto cleanup;
    }
    SmallInfo.hbmMask = CreateBitmap(SmallIconWidth, SmallIconHeight, 1, 1,
                                     NULL);
    if (NULL == SmallInfo.hbmMask)
    {
-      DPRINT1("Failed to create mask bitmap\n");
+      DbgPrint("Failed to create mask bitmap\n");
       goto cleanup;
    }
    if (NULL == SelectObject(hDestDc, SmallInfo.hbmMask))
    {
-      DPRINT1("Failed to select dest mask bitmap\n");
+      DbgPrint("Failed to select dest mask bitmap\n");
       goto cleanup;
    }
    if (! StretchBlt(hDestDc, 0, 0, SmallIconWidth, SmallIconHeight,
                     hSourceDc, 0, 0, StdBitmapInfo.bmWidth,
                     StdBitmapInfo.bmHeight, SRCCOPY))
    {
-      DPRINT1("Failed to stretch mask bitmap\n");
+      DbgPrint("Failed to stretch mask bitmap\n");
       goto cleanup;
    }
 
@@ -484,7 +484,7 @@ CreateSmallIcon(HICON StdIcon)
    SmallIcon = CreateIconIndirect(&SmallInfo);
    if (NULL == SmallIcon)
    {
-      DPRINT1("Failed to create icon\n");
+      DbgPrint("Failed to create icon\n");
       goto cleanup;
    }
 
