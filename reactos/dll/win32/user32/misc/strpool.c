@@ -2,6 +2,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 typedef struct tagHEAP_STRING_POOLA
 {
 	char* data;

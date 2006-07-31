@@ -1,5 +1,7 @@
 #include <user32.h>
 
+#include <wine/debug.h>
+
 /* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
           does not seem to work properly for stack address space. */
 /* kill `left-hand operand of comma expression has no effect' warning */

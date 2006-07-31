@@ -11,6 +11,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
 {
    WNDCLASSEXW wc;

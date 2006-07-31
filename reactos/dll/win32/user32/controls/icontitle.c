@@ -20,6 +20,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 #ifdef __REACTOS__
 #define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
 #define ICONTITLE_CLASS_ATOM MAKEINTATOMW(32772)
@@ -53,7 +55,7 @@ const struct builtin_class_descr ICONTITLE_builtin_class =
 HWND ICONTITLE_Create( HWND owner )
 {
     HWND hWnd;
-    HINSTANCE instance = (HINSTANCE)GetWindowLongA( owner, GWL_HINSTANCE );
+    HINSTANCE instance = (HINSTANCE)GetWindowLongPtrA( owner, GWLP_HINSTANCE );
     LONG style = WS_CLIPSIBLINGS;
 
     if (!IsWindowEnabled(owner)) style |= WS_DISABLED;
@@ -142,7 +144,7 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
     {
         if( GetWindowLongA( hwnd, GWL_STYLE ) & WS_CHILD )
 	{
-	    hBrush = (HBRUSH) GetClassLongA(hwnd, GCL_HBRBACKGROUND);
+	    hBrush = (HBRUSH) GetClassLongPtrW(hwnd, GCLP_HBRBACKGROUND);
 	    if( hBrush )
 	    {
 		INT level;
