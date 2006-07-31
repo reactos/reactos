@@ -9,7 +9,7 @@ CXX = g++
 LINK = g++
 
 # -D_NO_ALPHABLEND for builds without msimg32.dll dependency
-CFLAGS	= -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DWINVER=0x0500 -fexceptions -Wall -I. -I$(EXPAT_INC)
+CFLAGS	= -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DWINVER=0x0500 -fexceptions -Wall -I.
 RCFLAGS	= -DWIN32 -D__WINDRES__
 LFLAGS	= -Wl,--subsystem,windows
 
@@ -75,14 +75,15 @@ OBJECTS = \
 	searchprogram.o \
 	settings.o \
 	i386-stub-win32.o \
-	xmlstorage.o
+	xmlstorage.o \
+	xs-native.o
 
 LIBS = gdi32 comctl32 msimg32 ole32 uuid
 DELAYIMPORTS = oleaut32 wsock32
 
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll libexpat.dll
+$(TARGET): $(OBJECTS) $(PROGRAM)$(RES_SUFFIX) notifyhook.dll
 	$(LINK) $(LFLAGS) -o $@ $^ $(addprefix -l,$(LIBS)) $(addprefix -l,$(DELAYIMPORTS))
 
 $(PROGRAM)$(RES_SUFFIX): $(PROGRAM)_intres.rc res/*.bmp res/*.ico

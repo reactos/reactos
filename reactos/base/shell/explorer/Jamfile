@@ -7,8 +7,6 @@
 import rc-mingw ;
 
 
-EXPAT_INC = [ modules.peek : EXPAT_INC ] ;
-
 exe explorer :
 	explorer.cpp
 	explorer_intres.rc
@@ -44,7 +42,7 @@ exe explorer :
 	dialogs/settings.cpp
 	i386-stub-win32.c
  :	<define>WIN32 <define>_WIN32_IE=0x0600 <define>_WIN32_WINNT=0x0501 <define>WINVER=0x0500
-	<include>. <include>$(EXPAT_INC)
+	<include>.
 # only for GCC:	<cxxflags>-fexceptions <cxxflags>-Wall <cxxflags>-Wno-unused-value
 	<find-shared-library>gdi32
 	<find-shared-library>ole32
@@ -53,8 +51,6 @@ exe explorer :
 	<find-shared-library>wsock32
 	<find-shared-library>oleaut32
 	<find-shared-library>msimg32
-#	<find-shared-library>expat
 	<linkflags>notifyhook.dll
-	<linkflags>libexpat.dll
  ;
 

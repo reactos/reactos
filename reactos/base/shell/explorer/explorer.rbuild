@@ -22,7 +22,6 @@
     <library>ole32</library>
     <library>oleaut32</library>
     <library>shell32</library>
-    <library>expat</library>
     <library>notifyhook</library>
     <pch>precomp.h</pch>
     <directory name="desktop">
@@ -65,6 +64,7 @@
       <file>dragdropimpl.cpp</file>
       <file>shellbrowserimpl.cpp</file>
       <file>xmlstorage.cpp</file>
+	  <file>xs-native.cpp</file>
     </directory>
     <file>explorer.cpp</file>
     <file>i386-stub-win32.c</file>
