@@ -267,10 +267,6 @@ SOURCE=.\ibrowser_intres.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\res\iexplore.ico
-# End Source File
-# Begin Source File
-
 SOURCE=.\Ja.rc
 # PROP Exclude_From_Build 1
 # End Source File
