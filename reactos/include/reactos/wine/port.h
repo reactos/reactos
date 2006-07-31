@@ -272,6 +272,10 @@ int strncasecmp(const char *str1, const char *str2, size_t n);
 # else
 # define strncasecmp _strnicmp
 # endif
+#else
+# ifndef HAVE__STRNICMP
+# define _strnicmp strncasecmp
+# endif
 #endif /* !defined(HAVE_STRNCASECMP) */
 
 #ifndef HAVE_STRERROR
