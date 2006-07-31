@@ -147,31 +147,6 @@ SetDebugErrorLevel( DWORD dwLevel )
     DbgPrint("(%ld): stub\n", dwLevel);
 }
 
-/* EOF */
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-EndTask(
-	HWND    hWnd,
-	BOOL fShutDown,
-	BOOL fForce)
-{
-    SendMessageW(hWnd, WM_CLOSE, 0, 0);
-
-    if (IsWindow(hWnd))
-    {
-        if (fForce)
-            return DestroyWindow(hWnd);
-        else
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
 
 /*
  * @unimplemented
@@ -271,37 +246,8 @@ DragObject(
   return NtUserDragObject(hwnd1, hwnd2, u1, dw1, hc1);
 }
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetUserObjectSecurity(
-		      HANDLE                hObj,
-		      PSECURITY_INFORMATION pSIRequested,
-		      PSECURITY_DESCRIPTOR  pSID,
-		      DWORD                 nLength,
-		      LPDWORD               lpnLengthNeeded
-		      )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
 
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetUserObjectSecurity(
-		      HANDLE                hObj,
-		      PSECURITY_INFORMATION pSIRequested,
-		      PSECURITY_DESCRIPTOR  pSID
-		      )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
+
 
 /*
  * @unimplemented
