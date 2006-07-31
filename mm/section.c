@@ -612,11 +612,10 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
       FileObject = Section->FileObject;
       SavedSwapEntry = MmGetSavedSwapEntryPage(Page);
 
-      if (PageOut)
+      if (PageOut && !Dirty && !(Entry & 0x2))
       {
          MmSetPageEntrySectionSegment(Segment, Offset, 0);
-		 if(!Dirty && !(Entry & 0x2))
-			 MmReleasePageMemoryConsumer(Consumer, Page); 
+         MmReleasePageMemoryConsumer(Consumer, Page); 
       }
       else
       {
@@ -6615,6 +6614,18 @@ MmFlushDataFileSection(PROS_SECTION_OBJECT Section, PLARGE_INTEGER StartOffset, 
    {
       MmspWriteDataSectionPages(Context);
    }
+
+   /* Release pages which just have been waiting for flushing */
+   for (i = Offset.u.LowPart / PAGE_SIZE; i < Length/PAGE_SIZE; i++)
+   {
+      Entry = MmGetPageEntrySectionSegment(Segment, i * PAGE_SIZE);
+      if(Entry && MmGetShareCountPage(PFN_FROM_SSE(Entry)) == 0)
+      {
+         MmSetPageEntrySectionSegment(Segment, i * PAGE_SIZE, 0);
+         MmReleasePageMemoryConsumer(MC_CACHE, PFN_FROM_SSE(Entry));
+      }
+   }
+
    return STATUS_SUCCESS;
 }
 
