@@ -11,6 +11,8 @@
 
 #include <user32.h>
 
+#include <wine/debug.h>
+
 extern BOOL ControlsInitialized;
 
 /*
@@ -126,6 +128,11 @@ GetClassInfoA(
     return FALSE;
   }
 
+  if ( hInstance == User32Instance )
+  {
+    hInstance = NULL;
+  }
+
   w.cbSize = sizeof(w);
   retval = GetClassInfoExA(hInstance,lpClassName,&w);
   if (retval)
@@ -152,6 +159,11 @@ GetClassInfoW(
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
+  }
+
+  if ( hInstance == User32Instance )
+  {
+    hInstance = NULL;
   }
 
   w.cbSize = sizeof(w);
@@ -388,12 +400,12 @@ CreateSmallIcon(HICON StdIcon)
    SmallIconHeight = GetSystemMetrics(SM_CYSMICON);
    if (! GetIconInfo(StdIcon, &StdInfo))
    {
-      DbgPrint("Failed to get icon info for icon 0x%x\n", StdIcon);
+      DPRINT1("Failed to get icon info for icon 0x%x\n", StdIcon);
       goto cleanup;
    }
    if (! GetObjectW(StdInfo.hbmMask, sizeof(BITMAP), &StdBitmapInfo))
    {
-      DbgPrint("Failed to get bitmap info for icon 0x%x bitmap 0x%x\n",
+      DPRINT1("Failed to get bitmap info for icon 0x%x bitmap 0x%x\n",
               StdIcon, StdInfo.hbmColor);
       goto cleanup;
    }
@@ -410,71 +422,71 @@ CreateSmallIcon(HICON StdIcon)
    hInfoDc = CreateICW(NULL, NULL, NULL, NULL);
    if (NULL == hInfoDc)
    {
-      DbgPrint("Failed to create info DC\n");
+      DPRINT1("Failed to create info DC\n");
       goto cleanup;
    }
    hSourceDc = CreateCompatibleDC(NULL);
    if (NULL == hSourceDc)
    {
-      DbgPrint("Failed to create source DC\n");
+      DPRINT1("Failed to create source DC\n");
       goto cleanup;
    }
    hDestDc = CreateCompatibleDC(NULL);
    if (NULL == hDestDc)
    {
-      DbgPrint("Failed to create dest DC\n");
+      DPRINT1("Failed to create dest DC\n");
       goto cleanup;
    }
 
    OldSourceBitmap = SelectObject(hSourceDc, StdInfo.hbmColor);
    if (NULL == OldSourceBitmap)
    {
-      DbgPrint("Failed to select source color bitmap\n");
+      DPRINT1("Failed to select source color bitmap\n");
       goto cleanup;
    }
    SmallInfo.hbmColor = CreateCompatibleBitmap(hInfoDc, SmallIconWidth,
                                               SmallIconHeight);
    if (NULL == SmallInfo.hbmColor)
    {
-      DbgPrint("Failed to create color bitmap\n");
+      DPRINT1("Failed to create color bitmap\n");
       goto cleanup;
    }
    OldDestBitmap = SelectObject(hDestDc, SmallInfo.hbmColor);
    if (NULL == OldDestBitmap)
    {
-      DbgPrint("Failed to select dest color bitmap\n");
+      DPRINT1("Failed to select dest color bitmap\n");
       goto cleanup;
    }
    if (! StretchBlt(hDestDc, 0, 0, SmallIconWidth, SmallIconHeight,
                     hSourceDc, 0, 0, StdBitmapInfo.bmWidth,
                     StdBitmapInfo.bmHeight, SRCCOPY))
    {
-     DbgPrint("Failed to stretch color bitmap\n");
+     DPRINT1("Failed to stretch color bitmap\n");
      goto cleanup;
    }
 
    if (NULL == SelectObject(hSourceDc, StdInfo.hbmMask))
    {
-      DbgPrint("Failed to select source mask bitmap\n");
+      DPRINT1("Failed to select source mask bitmap\n");
       goto cleanup;
    }
    SmallInfo.hbmMask = CreateBitmap(SmallIconWidth, SmallIconHeight, 1, 1,
                                     NULL);
    if (NULL == SmallInfo.hbmMask)
    {
-      DbgPrint("Failed to create mask bitmap\n");
+      DPRINT1("Failed to create mask bitmap\n");
       goto cleanup;
    }
    if (NULL == SelectObject(hDestDc, SmallInfo.hbmMask))
    {
-      DbgPrint("Failed to select dest mask bitmap\n");
+      DPRINT1("Failed to select dest mask bitmap\n");
       goto cleanup;
    }
    if (! StretchBlt(hDestDc, 0, 0, SmallIconWidth, SmallIconHeight,
                     hSourceDc, 0, 0, StdBitmapInfo.bmWidth,
                     StdBitmapInfo.bmHeight, SRCCOPY))
    {
-      DbgPrint("Failed to stretch mask bitmap\n");
+      DPRINT1("Failed to stretch mask bitmap\n");
       goto cleanup;
    }
 
@@ -484,7 +496,7 @@ CreateSmallIcon(HICON StdIcon)
    SmallIcon = CreateIconIndirect(&SmallInfo);
    if (NULL == SmallIcon)
    {
-      DbgPrint("Failed to create icon\n");
+      DPRINT1("Failed to create icon\n");
       goto cleanup;
    }
 
