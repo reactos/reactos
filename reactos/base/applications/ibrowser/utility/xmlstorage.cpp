@@ -4,7 +4,7 @@
  //
  // xmlstorage.cpp
  //
- // Copyright (c) 2004, 2005 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
 
@@ -36,22 +36,29 @@
 
 */
 
+#ifndef XS_NO_COMMENT
+#define XS_NO_COMMENT	// no #pragma comment(lib, ...) statements in .lib files
+#endif
+
 //#include "xmlstorage.h"
 #include <precomp.h>
 
 
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
-const LPCXSSTR XMLStorage::XS_TRUE = XS_TEXT("true");
-const LPCXSSTR XMLStorage::XS_FALSE = XS_TEXT("false");
-const LPCXSSTR XMLStorage::XS_NUMBERFMT = XS_TEXT("%d");
+const LPCXSSTR XMLStorage::XS_EMPTY = XS_EMPTY_STR;
+const LPCXSSTR XMLStorage::XS_TRUE = XS_TRUE_STR;
+const LPCXSSTR XMLStorage::XS_FALSE = XS_FALSE_STR;
+const LPCXSSTR XMLStorage::XS_INTFMT = XS_INTFMT_STR;
+const LPCXSSTR XMLStorage::XS_FLOATFMT = XS_FLOATFMT_STR;
 #endif
 
 
 namespace XMLStorage {
 
 
-static std::string unescape(const char* s, char b='"', char e='"')
+ /// remove escape characters from zero terminated string
+static std::string unescape(const char* s, char b, char e)
 {
 	const char* end = s + strlen(s);
 
@@ -68,7 +75,13 @@ static std::string unescape(const char* s, char b='"', char e='"')
 	return std::string(s, end-s);
 }
 
-static std::string unescape(const char* s, int l, char b='"', char e='"')
+inline std::string unescape(const char* s)
+{
+	return unescape(s, '"', '"');
+}
+
+ /// remove escape characters from string with specified length
+static std::string unescape(const char* s, size_t l, char b, char e)
 {
 	const char* end = s + l;
 
@@ -83,6 +96,11 @@ static std::string unescape(const char* s, int l, char b='"', char e='"')
 			++s, --end;
 
 	return std::string(s, end-s);
+}
+
+inline std::string unescape(const char* s, size_t l)
+{
+	return unescape(s, l, '"', '"');
 }
 
 
@@ -137,7 +155,7 @@ const XMLNode* XMLNode::find_relative(const char* path) const
 		if (slash == path)
 			return NULL;
 
-		int l = slash? slash-path: strlen(path);
+		size_t l = slash? slash-path: strlen(path);
 		std::string comp(path, l);
 		path += l;
 
@@ -198,7 +216,7 @@ XMLNode* XMLNode::create_relative(const char* path)
 		if (slash == path)
 			return NULL;
 
-		int l = slash? slash-path: strlen(path);
+		size_t l = slash? slash-path: strlen(path);
 		std::string comp(path, l);
 		path += l;
 
@@ -259,239 +277,113 @@ XMLNode* XMLNode::create_relative(const char* path)
 }
 
 
- /// read XML stream into XML tree below _pos
-XML_Status XMLReaderBase::read()
-{
-	XML_Status status = XML_STATUS_OK;
-
-	while(status == XML_STATUS_OK) {
-		char* buffer = (char*) XML_GetBuffer(_parser, BUFFER_LEN);
-
-		int l = read_buffer(buffer, BUFFER_LEN);
-		if (l < 0)
-			break;
-
-		status = XML_ParseBuffer(_parser, l, false);
-	}
-
-	if (status != XML_STATUS_ERROR)
-		status = XML_ParseBuffer(_parser, 0, true);
-
-	if (_pos->_children.empty())
-		_pos->_trailing.append(_content);
-	else
-		_pos->_children.back()->_trailing.append(_content);
-
-	_content.erase();
-
-	return status;
-}
-
-
- /// store XML version and encoding into XML reader
-void XMLCALL XMLReaderBase::XML_XmlDeclHandler(void* userData, const XML_Char* version, const XML_Char* encoding, int standalone)
-{
-	XMLReaderBase* pReader = (XMLReaderBase*) userData;
-
-	if (version)
-		pReader->_xml_version = version;
-
-	if (encoding)
-		pReader->_encoding = encoding;
-}
-
- /// notifications about XML start tag
-void XMLCALL XMLReaderBase::XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts)
-{
-	XMLReaderBase* pReader = (XMLReaderBase*) userData;
-	XMLPos& pos = pReader->_pos;
-
-	 // search for end of first line
-	const char* s = pReader->_content.c_str();
-	const char* p = s;
-	const char* e = p + pReader->_content.length();
-
-	for(; p<e; ++p)
-		if (*p == '\n') {
-			++p;
-			break;
-		}
-
-	if (p != s)
-		if (pos->_children.empty()) {	// no children in last node?
-			if (pReader->_last_tag == TAG_START)
-				pos->_content.append(s, p-s);
-			else if (pReader->_last_tag == TAG_END)
-				pos->_trailing.append(s, p-s);
-			// else TAG_NONE -> don't store white space in root node
-		} else
-			pos->_children.back()->_trailing.append(s, p-s);
-
-	std::string leading;
-
-	if (p != e)
-		leading.assign(p, e-p);
-
-	XMLNode* node = new XMLNode(String_from_XML_Char(name), leading);
-
-	pos.add_down(node);
-
-	while(*atts) {
-		const XML_Char* attr_name = *atts++;
-		const XML_Char* attr_value = *atts++;
-
-		(*node)[String_from_XML_Char(attr_name)] = String_from_XML_Char(attr_value);
-	}
-
-	pReader->_last_tag = TAG_START;
-	pReader->_content.erase();
-}
-
- /// notifications about XML end tag
-void XMLCALL XMLReaderBase::XML_EndElementHandler(void* userData, const XML_Char* name)
-{
-	XMLReaderBase* pReader = (XMLReaderBase*) userData;
-	XMLPos& pos = pReader->_pos;
-
-	 // search for end of first line
-	const char* s = pReader->_content.c_str();
-	const char* p = s;
-	const char* e = p + pReader->_content.length();
-
-	for(; p<e; ++p)
-		if (*p == '\n') {
-			++p;
-			break;
-		}
-
-	if (p != s)
-		if (pos->_children.empty())	// no children in current node?
-			pos->_content.append(s, p-s);
-		else
-			if (pReader->_last_tag == TAG_START)
-				pos->_content.append(s, p-s);
-			else
-				pos->_children.back()->_trailing.append(s, p-s);
-
-	if (p != e)
-		pos->_end_leading.assign(p, e-p);
-
-	pos.back();
-
-	pReader->_last_tag = TAG_END;
-	pReader->_content.erase();
-}
-
- /// store content, white space and comments
-void XMLCALL XMLReaderBase::XML_DefaultHandler(void* userData, const XML_Char* s, int len)
-{
-	XMLReaderBase* pReader = (XMLReaderBase*) userData;
-
-	pReader->_content.append(s, len);
-}
-
-
-std::string XMLReaderBase::get_error_string() const
-{
-	XML_Error error = XML_GetErrorCode(_parser);
-
-	switch(error) {
-	  case XML_ERROR_NONE:								return "XML_ERROR_NONE";
-	  case XML_ERROR_NO_MEMORY:							return "XML_ERROR_NO_MEMORY";
-	  case XML_ERROR_SYNTAX:							return "XML_ERROR_SYNTAX";
-	  case XML_ERROR_NO_ELEMENTS:						return "XML_ERROR_NO_ELEMENTS";
-	  case XML_ERROR_INVALID_TOKEN:						return "XML_ERROR_INVALID_TOKEN";
-	  case XML_ERROR_UNCLOSED_TOKEN:					return "XML_ERROR_UNCLOSED_TOKEN";
-	  case XML_ERROR_PARTIAL_CHAR:						return "XML_ERROR_PARTIAL_CHAR";
-	  case XML_ERROR_TAG_MISMATCH:						return "XML_ERROR_TAG_MISMATCH";
-	  case XML_ERROR_DUPLICATE_ATTRIBUTE:				return "XML_ERROR_DUPLICATE_ATTRIBUTE";
-	  case XML_ERROR_JUNK_AFTER_DOC_ELEMENT:			return "XML_ERROR_JUNK_AFTER_DOC_ELEMENT";
-	  case XML_ERROR_PARAM_ENTITY_REF:					return "XML_ERROR_PARAM_ENTITY_REF";
-	  case XML_ERROR_UNDEFINED_ENTITY:					return "XML_ERROR_UNDEFINED_ENTITY";
-	  case XML_ERROR_RECURSIVE_ENTITY_REF:				return "XML_ERROR_RECURSIVE_ENTITY_REF";
-	  case XML_ERROR_ASYNC_ENTITY:						return "XML_ERROR_ASYNC_ENTITY";
-	  case XML_ERROR_BAD_CHAR_REF:						return "XML_ERROR_BAD_CHAR_REF";
-	  case XML_ERROR_BINARY_ENTITY_REF:					return "XML_ERROR_BINARY_ENTITY_REF";
-	  case XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF:		return "XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF";
-	  case XML_ERROR_MISPLACED_XML_PI:					return "XML_ERROR_MISPLACED_XML_PI";
-	  case XML_ERROR_UNKNOWN_ENCODING:					return "XML_ERROR_UNKNOWN_ENCODING";
-	  case XML_ERROR_INCORRECT_ENCODING:				return "XML_ERROR_INCORRECT_ENCODING";
-	  case XML_ERROR_UNCLOSED_CDATA_SECTION:			return "XML_ERROR_UNCLOSED_CDATA_SECTION";
-	  case XML_ERROR_EXTERNAL_ENTITY_HANDLING:			return "XML_ERROR_EXTERNAL_ENTITY_HANDLING";
-	  case XML_ERROR_NOT_STANDALONE:					return "XML_ERROR_NOT_STANDALONE";
-	  case XML_ERROR_UNEXPECTED_STATE:					return "XML_ERROR_UNEXPECTED_STATE";
-	  case XML_ERROR_ENTITY_DECLARED_IN_PE:				return "XML_ERROR_ENTITY_DECLARED_IN_PE";
-	  case XML_ERROR_FEATURE_REQUIRES_XML_DTD:			return "XML_ERROR_FEATURE_REQUIRES_XML_DTD";
-	  case XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING:	return "XML_ERROR_CANT_CHANGE_FEATURE_ONCE_PARSING";
-	  case XML_ERROR_UNBOUND_PREFIX:					return "XML_ERROR_UNBOUND_PREFIX";
- // EXPAT version >= 1.95.8
-#if XML_MAJOR_VERSION>1 || (XML_MAJOR_VERSION==1 && XML_MINOR_VERSION>95) || (XML_MAJOR_VERSION==1 && XML_MINOR_VERSION==95 && XML_MICRO_VERSION>7)
-	  case XML_ERROR_UNDECLARING_PREFIX:				return "XML_ERROR_UNDECLARING_PREFIX";
-	  case XML_ERROR_INCOMPLETE_PE:						return "XML_ERROR_INCOMPLETE_PE";
-	  case XML_ERROR_XML_DECL:							return "XML_ERROR_XML_DECL";
-	  case XML_ERROR_TEXT_DECL:							return "XML_ERROR_TEXT_DECL";
-	  case XML_ERROR_PUBLICID:							return "XML_ERROR_PUBLICID";
-	  case XML_ERROR_SUSPENDED:							return "XML_ERROR_SUSPENDED";
-	  case XML_ERROR_NOT_SUSPENDED:						return "XML_ERROR_NOT_SUSPENDED";
-	  case XML_ERROR_ABORTED:							return "XML_ERROR_ABORTED";
-	  case XML_ERROR_FINISHED:							return "XML_ERROR_FINISHED";
-	  case XML_ERROR_SUSPEND_PE:						return "XML_ERROR_SUSPEND_PE";
-//#endif
-//#if XML_MAJOR_VERSION>=2
-		/* Added in 2.0. */
-	  case XML_ERROR_RESERVED_PREFIX_XML:				return "XML_ERROR_RESERVED_PREFIX_XML";
-	  case XML_ERROR_RESERVED_PREFIX_XMLNS:				return "XML_ERROR_RESERVED_PREFIX_XMLNS";
-	  case XML_ERROR_RESERVED_NAMESPACE_URI:			return "XML_ERROR_RESERVED_NAMESPACE_URI";
-#endif
-	}
-
-	std::ostringstream out;
-
-	out << "XML parser error #" << error;
-
-	return out.str();
-}
-
-
+ /// encode XML string literals
 std::string EncodeXMLString(const XS_String& str)
 {
 	LPCXSSTR s = str.c_str();
-	LPXSSTR buffer = (LPXSSTR)alloca(5*sizeof(XS_CHAR)*XS_len(s));	// worst case. "&amp;"
-	LPXSSTR o = buffer;
+	size_t l = XS_len(s);
 
-	for(LPCXSSTR p=s; *p; ++p)
-		switch(*p) {
-		  case '&':
-			*o++ = '&';	*o++ = 'a';	*o++ = 'm';	*o++ = 'p';	*o++ = ';';
-			break;
+	if (l <= BUFFER_LEN) {
+		LPXSSTR buffer = (LPXSSTR)alloca(6*sizeof(XS_CHAR)*XS_len(s));	// worst case "&quot;" / "&apos;"
+		LPXSSTR o = buffer;
 
-		  case '<':
-			*o++ = '&';	*o++ = 'l'; *o++ = 't';	*o++ = ';';
-			break;
+		for(LPCXSSTR p=s; *p; ++p)
+			switch(*p) {
+			  case '&':
+				*o++ = '&';	*o++ = 'a';	*o++ = 'm';	*o++ = 'p';	*o++ = ';';
+				break;
 
-		  case '>':
-			*o++ = '&';	*o++ = 'g'; *o++ = 't';	*o++ = ';';
-			break;
+			  case '<':
+				*o++ = '&';	*o++ = 'l'; *o++ = 't';	*o++ = ';';
+				break;
 
-		  case '"':
-			*o++ = '&';	*o++ = 'q'; *o++ = 'u'; *o++ = 'o'; *o++ = 't';	*o++ = ';';
-			break;
+			  case '>':
+				*o++ = '&';	*o++ = 'g'; *o++ = 't';	*o++ = ';';
+				break;
 
-		  case '\'':
-			*o++ = '&';	*o++ = 'a'; *o++ = 'p'; *o++ = 'o'; *o++ = 's';	*o++ = ';';
-			break;
+			  case '"':
+				*o++ = '&';	*o++ = 'q'; *o++ = 'u'; *o++ = 'o'; *o++ = 't';	*o++ = ';';
+				break;
 
-		  default:
-			*o++ = *p;
-		}
+			  case '\'':
+				*o++ = '&';	*o++ = 'a'; *o++ = 'p'; *o++ = 'o'; *o++ = 's';	*o++ = ';';
+				break;
+
+			  default:
+				if ((unsigned)*p<20 && *p!='\t' && *p!='\r' && *p!='\n') {
+					char b[16];
+					sprintf(b, "&%d;", (unsigned)*p);
+					for(const char*q=b; *q; )
+						*o++ = *q++;
+				} else
+					*o++ = *p;
+			}
 
 #ifdef XS_STRING_UTF8
-	return XS_String(buffer, o-buffer);
+		return XS_String(buffer, o-buffer);
 #else
-	return get_utf8(buffer, o-buffer);
+		return get_utf8(buffer, o-buffer);
 #endif
+	} else { // l > BUFFER_LEN
+		 // encode the whole string in a CDATA section
+		std::string ret = "<![CDATA[";
+
+#ifdef XS_STRING_UTF8
+		ret += str;
+#else
+		ret += get_utf8(str);
+#endif
+
+		ret += "]]>";
+
+		return ret;
+
+/* alternative code using ostringstream (beware: quite slow)
+#include <sstream>
+
+		std::ostringstream out;
+
+		LPCXSSTR s = str.c_str();
+
+		for(LPCXSSTR p=s; *p; ++p)
+			switch(*p) {
+			  case '&':
+				out << "&amp;";
+				break;
+
+			  case '<':
+				out << "&lt;";
+				break;
+
+			  case '>':
+				out << "&gt;";
+				break;
+
+			  case '"':
+				out << "&quot;";
+				break;
+
+			  case '\'':
+				out << "&apos;";
+				break;
+
+			  default:
+				if ((unsigned)*p<20 && *p!='\t' *p!='\r' && *p!='\n')
+					out << "&" << (unsigned)*p << ";";
+				else
+					out << *p;
+			}
+
+#ifdef XS_STRING_UTF8
+		return XS_String(out.str());
+#else
+		return get_utf8(out.str());
+#endif
+	*/
+	}
 }
 
+ /// decode XML string literals
 XS_String DecodeXMLString(const XS_String& str)
 {
 	LPCXSSTR s = str.c_str();
@@ -515,6 +407,16 @@ XS_String DecodeXMLString(const XS_String& str)
 			} else if (!XS_nicmp(p+1, XS_TEXT("apos;"), 5)) {
 				*o++ = '\'';
 				p += 5;
+			} else
+				*o++ = *p;
+		} else if (*p=='<' && !XS_nicmp(p+1,XS_TEXT("!CDATA["),7)) {
+			p += 9;
+			LPCXSSTR e = XS_strstr(p, XS_TEXT("]]>"));
+			if (e) {
+				size_t l = e - p;
+				memcpy(o, p, l);
+				o += l;
+				p += 3;
 			} else
 				*o++ = *p;
 		} else
@@ -546,8 +448,28 @@ void XMLNode::write_worker(std::ostream& out, int indent) const
 }
 
 
+ /// print node without any white space
+void XMLNode::plain_write_worker(std::ostream& out) const
+{
+	out << '<' << EncodeXMLString(*this);
+
+	for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
+		out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
+
+	if (!_children.empty()/*@@ || !_content.empty()*/) {
+		out << ">";
+
+		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
+			(*it)->plain_write_worker(out);
+
+		out << "</" << EncodeXMLString(*this) << ">";
+	} else
+		out << "/>";
+}
+
+
  /// pretty print node with children tree to output stream
-void XMLNode::pretty_write_worker(std::ostream& out, int indent) const
+void XMLNode::pretty_write_worker(std::ostream& out, const XMLFormat& format, int indent) const
 {
 	for(int i=indent; i--; )
 		out << XML_INDENT_SPACE;
@@ -557,23 +479,23 @@ void XMLNode::pretty_write_worker(std::ostream& out, int indent) const
 	for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
 		out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
 
-	if (!_children.empty() || !_content.empty()) {
-		out << ">\n";
+	if (!_children.empty()/*@@ || !_content.empty()*/) {
+		out << '>' << format._endl;
 
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-			(*it)->pretty_write_worker(out, indent+1);
+			(*it)->pretty_write_worker(out, format, indent+1);
 
 		for(int i=indent; i--; )
 			out << XML_INDENT_SPACE;
 
-		out << "</" << EncodeXMLString(*this) << ">\n";
+		out << "</" << EncodeXMLString(*this) << '>' << format._endl;
 	} else
-		out << "/>\n";
+		out << "/>" << format._endl;
 }
 
 
  /// write node with children tree to output stream using smart formating
-void XMLNode::smart_write_worker(std::ostream& out, int indent) const
+void XMLNode::smart_write_worker(std::ostream& out, const XMLFormat& format, int indent) const
 {
 	if (_leading.empty())
 		for(int i=indent; i--; )
@@ -592,7 +514,7 @@ void XMLNode::smart_write_worker(std::ostream& out, int indent) const
 		out << '>';
 
 		if (_content.empty())
-			out << '\n';
+			out << format._endl;
 		else
 			out << _content;
 
@@ -600,7 +522,7 @@ void XMLNode::smart_write_worker(std::ostream& out, int indent) const
 
 		if (it != _children.end()) {
 			for(; it!=_children.end(); ++it)
-				(*it)->smart_write_worker(out, indent+1);
+				(*it)->smart_write_worker(out, format, indent+1);
 
 			if (_end_leading.empty())
 				for(int i=indent; i--; )
@@ -614,10 +536,269 @@ void XMLNode::smart_write_worker(std::ostream& out, int indent) const
 	}
 
 	if (_trailing.empty())
-		out << '\n';
+		out << format._endl;
 	else
 		out << _trailing;
 }
+
+
+std::ostream& operator<<(std::ostream& out, const XMLError& err)
+{
+	out << err._systemId << "(" << err._line << ") [column " << err._column << "] : "
+		<< err._message;
+
+	return out;
+}
+
+
+void DocType::parse(const char* p)
+{
+	while(isspace((unsigned char)*p)) ++p;
+
+	const char* start = p;
+	while(isxmlsym(*p)) ++p;
+	_name.assign(start, p-start);
+
+	while(isspace((unsigned char)*p)) ++p;
+
+	start = p;
+	while(isxmlsym(*p)) ++p;
+	std::string keyword(p, p-start);	// "PUBLIC" or "SYSTEM"
+
+	while(isspace((unsigned char)*p)) ++p;
+
+	if (*p=='"' || *p=='\'') {
+		char delim = *p;
+
+		start = ++p;
+		while(*p && *p!=delim) ++p;
+
+		if (*p == delim)
+			_public.assign(start, p++-start);
+	} else
+		_public.erase();
+
+	while(isspace((unsigned char)*p)) ++p;
+
+	if (*p=='"' || *p=='\'') {
+		char delim = *p;
+
+		start = ++p;
+		while(*p && *p!=delim) ++p;
+
+		if (*p == delim)
+			_system.assign(start, p++-start);
+	} else
+		_system.erase();
+}
+
+
+
+void XMLFormat::print_header(std::ostream& out, bool lf) const
+{
+	out << "<?xml version=\"" << _version << "\" encoding=\"" << _encoding << "\"";
+
+	if (_standalone != -1)
+		out << " standalone=\"yes\"";
+
+	out << "?>";
+
+	if (lf)
+		out << _endl;
+
+	if (!_doctype.empty()) {
+		out << "<!DOCTYPE " << _doctype._name;
+
+		if (!_doctype._public.empty()) {
+			out << " PUBLIC " << _doctype._public;
+
+			if (lf)
+				out << _endl;
+
+			out << " " << _doctype._system;
+		} else if (!_doctype._system.empty())
+			out << " SYSTEM " << _doctype._system;
+
+		out << "?>";
+
+		if (lf)
+			out << _endl;
+	}
+
+	for(StyleSheetList::const_iterator it=_stylesheets.begin(); it!=_stylesheets.end(); ++it) {
+		it->print(out);
+
+		if (lf)
+			out << _endl;
+	}
+
+/*	if (!_additional.empty()) {
+		out << _additional;
+
+		if (lf)
+			out << _endl;
+	} */
+}
+
+void StyleSheet::print(std::ostream& out) const
+{
+	out << "<?xml-stylesheet"
+			" href=\"" << _href << "\""
+			" type=\"" << _type << "\"";
+
+	if (!_title.empty())
+		out << " title=\"" << _title << "\"";
+
+	if (!_media.empty())
+		out << " media=\"" << _media << "\"";
+
+	if (!_charset.empty())
+		out << " charset=\"" << _charset << "\"";
+
+	if (_alternate)
+		out << " alternate=\"yes\"";
+
+	out << "?>";
+}
+
+
+ /// return formated error message
+std::string XMLError::str() const
+{
+	std::ostringstream out;
+
+	out << *this;
+
+	return out.str();
+}
+
+
+ /// return merged error strings
+XS_String XMLErrorList::str() const
+{
+	std::ostringstream out;
+
+	for(const_iterator it=begin(); it!=end(); ++it)
+		out << *it << std::endl;
+
+	return out.str();
+}
+
+
+void XMLReaderBase::finish_read()
+{
+	if (_pos->_children.empty())
+		_pos->_trailing.append(_content);
+	else
+		_pos->_children.back()->_trailing.append(_content);
+
+	_content.erase();
+}
+
+
+ /// store XML version and encoding into XML reader
+void XMLReaderBase::XmlDeclHandler(const char* version, const char* encoding, int standalone)
+{
+	if (version)
+		_format._version = version;
+
+	if (encoding)
+		_format._encoding = encoding;
+
+	_format._standalone = standalone;
+}
+
+
+ /// notifications about XML start tag
+void XMLReaderBase::StartElementHandler(const XS_String& name, const XMLNode::AttributeMap& attributes)
+{
+	 // search for end of first line
+	const char* s = _content.c_str();
+	const char* p = s;
+	const char* e = p + _content.length();
+
+	for(; p<e; ++p)
+		if (*p == '\n') {
+			++p;
+			break;
+		}
+
+	if (p != s)
+		if (_pos->_children.empty()) {	// no children in last node?
+			if (_last_tag == TAG_START)
+				_pos->_content.append(s, p-s);
+			else if (_last_tag == TAG_END)
+				_pos->_trailing.append(s, p-s);
+			else // TAG_NONE at root node
+				p = s;
+		} else
+			_pos->_children.back()->_trailing.append(s, p-s);
+
+	std::string leading;
+
+	if (p != e)
+		leading.assign(p, e-p);
+
+	XMLNode* node = new XMLNode(name, leading);
+
+	_pos.add_down(node);
+
+#ifdef XMLNODE_LOCATION
+	node->_location = get_location();
+#endif
+
+	node->_attributes = attributes;
+
+	_last_tag = TAG_START;
+	_content.erase();
+}
+
+ /// notifications about XML end tag
+void XMLReaderBase::EndElementHandler()
+{
+	 // search for end of first line
+	const char* s = _content.c_str();
+	const char* p = s;
+	const char* e = p + _content.length();
+
+	for(; p<e; ++p)
+		if (*p == '\n') {
+			++p;
+			break;
+		}
+
+	if (p != s)
+		if (_pos->_children.empty())	// no children in current node?
+			_pos->_content.append(s, p-s);
+		else
+			if (_last_tag == TAG_START)
+				_pos->_content.append(s, p-s);
+			else
+				_pos->_children.back()->_trailing.append(s, p-s);
+
+	if (p != e)
+		_pos->_end_leading.assign(p, e-p);
+
+	_pos.back();
+
+	_last_tag = TAG_END;
+	_content.erase();
+}
+
+#if defined(XS_USE_XERCES) || defined(XS_USE_EXPAT)
+ /// store content, white space and comments
+void XMLReaderBase::DefaultHandler(const XML_Char* s, int len)
+{
+#if defined(XML_UNICODE) || defined(XS_USE_XERCES)
+	_content.append(String_from_XML_Char(s, len));
+#else
+	_content.append(s, len);
+#endif
+}
+#endif
+
+
+XS_String XMLWriter::s_empty_attr;
 
 
 }	// namespace XMLStorage
