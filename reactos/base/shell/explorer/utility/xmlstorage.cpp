@@ -44,6 +44,9 @@
 #include <precomp.h>
 
 
+namespace XMLStorage {
+
+
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
 const LPCXSSTR XMLStorage::XS_EMPTY = XS_EMPTY_STR;
@@ -52,9 +55,6 @@ const LPCXSSTR XMLStorage::XS_FALSE = XS_FALSE_STR;
 const LPCXSSTR XMLStorage::XS_INTFMT = XS_INTFMT_STR;
 const LPCXSSTR XMLStorage::XS_FLOATFMT = XS_FLOATFMT_STR;
 #endif
-
-
-namespace XMLStorage {
 
 
  /// remove escape characters from zero terminated string
