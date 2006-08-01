@@ -610,14 +610,14 @@ void XMLFormat::print_header(std::ostream& out, bool lf) const
 		out << "<!DOCTYPE " << _doctype._name;
 
 		if (!_doctype._public.empty()) {
-			out << " PUBLIC " << _doctype._public;
+			out << " PUBLIC \"" << _doctype._public << '"';
 
 			if (lf)
 				out << _endl;
 
-			out << " " << _doctype._system;
+			out << " \"" << _doctype._system << '"';
 		} else if (!_doctype._system.empty())
-			out << " SYSTEM " << _doctype._system;
+			out << " SYSTEM \"" << _doctype._system << '"';
 
 		out << "?>";
 
