@@ -875,7 +875,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
         infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
        if (!IsWindow( infoPtr->hwndFocus )) return;
     }
-    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
+    SetFocus( infoPtr->hwndFocus );    
 
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
@@ -1004,7 +1004,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             return 1;
         }
         case WM_NCDESTROY:
-            if ((dlgInfo = GETDLGINFO(hwnd)))
+            if ((dlgInfo = (DIALOGINFO *)SetWindowLongPtrW( hwnd, DWLP_ROS_DIALOGINFO, 0 )))
             {
                 /* Free dialog heap (if created) */
                 /*if (dlgInfo->hDialogHeap)
@@ -1067,8 +1067,8 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 if (hwndFocus)
                 {
                     /* always make combo box hide its listbox control */
-                    if (!SendMessageA( hwndFocus, CB_SHOWDROPDOWN, FALSE, 0 ))
-                        SendMessageA( GetParent(hwndFocus), CB_SHOWDROPDOWN, FALSE, 0 );
+                    if (!SendMessageW( hwndFocus, CB_SHOWDROPDOWN, FALSE, 0 ))
+                        SendMessageW( GetParent(hwndFocus), CB_SHOWDROPDOWN, FALSE, 0 );
                 }
             }
             return DefWindowProcA( hwnd, msg, wParam, lParam );
@@ -1080,9 +1080,6 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             PostMessageA( hwnd, WM_COMMAND, MAKEWPARAM(IDCANCEL, BN_CLICKED),
                             (LPARAM)GetDlgItem( hwnd, IDCANCEL ) );
             return 0;
-
-        case WM_NOTIFYFORMAT:
-             return DefWindowProcA( hwnd, msg, wParam, lParam );
     }
     return 0;
 }
