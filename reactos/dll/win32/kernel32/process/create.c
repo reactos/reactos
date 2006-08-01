@@ -988,7 +988,7 @@ GetAppName:
                                       dwCreationFlags,
                                       lpEnvironment,
                                       lpCurrentDirectory,
-                                      lpStartupInfo,
+                                      &StartupInfo,
                                       lpProcessInformation);    
             } 
 #endif            
@@ -1059,7 +1059,7 @@ GetAppName:
                                       dwCreationFlags,
                                       lpEnvironment,
                                       lpCurrentDirectory,
-                                      lpStartupInfo,
+                                      &StartupInfo,
                                       lpProcessInformation);    
 
             default:
@@ -1278,7 +1278,7 @@ GetAppName:
                                         QuotedCmdLine : lpCommandLine,
                                         lpEnvironment,
                                         EnvSize,
-                                        lpStartupInfo,
+                                        &StartupInfo,
                                         dwCreationFlags,
                                         bInheritHandles);
 
