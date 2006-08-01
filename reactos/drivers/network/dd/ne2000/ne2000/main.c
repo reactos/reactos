@@ -165,7 +165,7 @@ static VOID STDCALL MiQueryResources(
                                WrapperConfigurationContext,
                                NULL,
                                &BufferSize);
-    if (*Status != NDIS_STATUS_SUCCESS)
+    if (*Status == NDIS_STATUS_SUCCESS)
         return;
 
     *Status = NdisAllocateMemory((PVOID)&AssignedResources,
