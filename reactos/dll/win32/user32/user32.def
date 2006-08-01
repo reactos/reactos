@@ -85,7 +85,7 @@ CreateCursor@28
 CreateDesktopA@24
 CreateDesktopW@24
 CreateDialogIndirectParamA@20
-CreateDialogIndirectParamAorW@20
+CreateDialogIndirectParamAorW@24
 CreateDialogIndirectParamW@20
 CreateDialogParamA@20
 CreateDialogParamW@20
@@ -158,7 +158,7 @@ DestroyMenu@4
 DestroyWindow@4
 ;DeviceEventWorker
 DialogBoxIndirectParamA@20
-DialogBoxIndirectParamAorW@20
+DialogBoxIndirectParamAorW@24
 DialogBoxIndirectParamW@20
 DialogBoxParamA@20
 DialogBoxParamW@20
