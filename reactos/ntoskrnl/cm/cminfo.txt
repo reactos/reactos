@@ -1,0 +1,105 @@
+=========================
+-== Cm Rewrite Branch ==-
+=========================
+
+-= At a Glance =-
+
+Owner:  Alex Ionescu (alex.ionescu@reactos.org)
+ETC:    1st October 2006
+Purose: Rewriting the Configuration Manager nearly from scratch.
+
+-= Design Goals =-
+
+Get rid of the outdated, deprecated and mostly incorrect Configuration Manager
+in ReactOS (ntoskrnl\cm) and replace it with a version that is 100% compatible
+with Windows NT internally as well as externally. The following key semantics
+will be highly prioritized:
+
+   - Locality: The NT Configuration Manager dedicates a large part of its inner
+               functionality to the implementation of a memory cache whose main
+               component, the KCB (Key Control Block) serves as a mechanism to
+               store the most frequently used data in a key node. Other parts
+               are also present, such as the NCBs (Name Control Blocks) which
+               are used to store key names in a compressed and hashed/prefixed
+               form and delayed close and private allocations, which allow 
+               re-using pool memory and delaying deletion for better paralel-
+               lism.
+               
+   - Scalability and Thread Safety/MP: The NT Configuration Manager is also
+               extremly scalable and has over 8 highly-scalable locks (based on
+               the pushlock implementation, and also guarded mutex) which also
+               allow shared lock semantics (exclusive vs shared locks). This
+               implementation allows for various operations to happen simulta-
+               nously on a hive, while still maintaining full thread safety,
+               due to the fact that key structures are separated and have their
+               own locks.
+               
+   - Reliability: The NT Configuration Manager offers a variety of complex
+               algorithms which continously check the state of a loaded hive or
+               a hive that is being loaded, as well as per-key node damage.
+               Furthermore, upon detection of a damaged node, the Configuration
+               Manager is often able to repair the Registry and bring it back
+               to a usable state, through a process called self healing.
+               
+   - Object-Oriented: Like many other core structures in NT, the Configuration
+               Manager exposes its interfaces to drivers and user-mode through
+               the Key Object, which is an abstraction and interface that is
+               setup with the Object Manager. The Configuration Manager uses
+               its own internal namespace for managing keys (much like FSDs),
+               and does not depend on the much slower generic Object Manager
+               direction namespace. It provides a full suite of Object Routines
+               for Parse, Open, Close and Security callbacks, giving it full
+               access to the Key Object and allowing the optimization of look-
+               ups and respect of complex semantics such as those of security
+               or registry symbolic linking.
+               
+-= Sources =-
+
+The reimplementation of the NT Configuration Manager benefits from an extensive
+amount of assertions (ASSERT) and debug messages present in checked builds of
+the Windows NT 5.2 Kernel. These assertions, extracted with a simple clean-room
+tool such as "findstr", "strings" or "grep", allow a great understanding of the
+internal macros, definitions and inner semantics of the original code. Further,
+the tracing macros in the code allow for highly detailed analysis of the code
+flow behind the Cm code in NT, even up to dumping parameters sent to each and
+every internal function in the code, most of which also print out information
+at up to every 5 lines of code or so. Mixed with the public symbolic data, this
+allows for the creation of complex call flow analysis that includes the names
+of global variables as well. All these methods are fully clean, since they rely
+on textual messages printed to the debugger, or strings dumped from the image
+or public symbol database (PDB file).
+
+As far as references go, Mark Russinovich has written one or two interesting
+papers on the topic, which also deal with some internals, as well as chapter
+4, section 1, in the Windows Internals 4th Edition book, which explains some of
+the internals behind KCBs, NCBs and Key OBjects. Chapter 9 of Windows Intenrals
+II also has some high-level information on the Registry.
+
+Finally, the KD Extension DLL that comes with WinDBG has an extensive array of
+helper commands to dump all sorts of registry internals, and allows converting
+between hex values of various structure flags to their actual names. Combined
+with assertions, this allows us to create almost entirely all the needed types
+and definitions for a compatible internal implementation.
+
+-= Current State =-
+
+TODO.
+
+-= Structure =-
+
+cmapi.c    - Contains the low-level Cmp APIs that correspond to the external Nt
+             APIs such as NtReadKeyValue, NtCreateKey, etc.
+cmhive.c   - Contains all the functions related to the creation, initialization
+             and manipulation of registry hives.
+cmindex.c  - Contains functions related to cell indexes.
+cminit.c   - Contains the initialization/shutdown code for the NT Configuration
+             Manager, as well as any strictly internal initialization routines.
+cmkcbncb.c - Contains functions related to the creation, initialization and
+             manipulation of Key Control Blocks (KCB) and Name Control Blocks.
+cmname.c   - Contains functions related to the manipulation of key names and/or
+             paths.
+cmobject.c - Contains the implementation of the key object that is exported to
+             the Object Manager.
+ntapi.c    - Contains the Nt APIs exported to drivers and user-mode, which wrap
+             around other internal APIs in this module (mostly cmapi.c).
+
