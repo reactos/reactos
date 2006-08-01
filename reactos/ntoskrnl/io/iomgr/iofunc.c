@@ -14,8 +14,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-ULONG IopMissedOptimizations;
-
 #if 0
     IOTRACE(IO_IRP_DEBUG,
             "%s - Queueing IRP %p\n",
@@ -129,7 +127,7 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
     PAGED_CODE();
 
     /* Queue the IRP */
-    IopQueueIrpToThread(Irp);
+    //IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(TransferType);
@@ -451,7 +449,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     }
 
     /* Queue the IRP */
-    IopQueueIrpToThread(Irp);
+    //IopQueueIrpToThread(Irp);
 
     /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);
@@ -698,17 +696,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     StackPtr->Parameters.SetFile.Length = Length;
 
     /* Queue the IRP */
-    IopQueueIrpToThread(Irp);
-
-    /* FIXME BUGBUG TEMPORARY CODE */
-    if ((FileInformationClass == FileModeInformation) ||
-        (FileInformationClass == FileRenameInformation ) ||
-        (FileInformationClass == FileLinkInformation ) ||
-        (FileInformationClass == FileMoveClusterInformation))
-    {
-        DPRINT1("Missed optimization: %lx\n", FileInformationClass);
-        IopMissedOptimizations++;
-    }
+    //IopQueueIrpToThread(Irp);
 
     /* Call the Driver */
     Status = IoCallDriver(FileObject->DeviceObject, Irp);
@@ -1647,20 +1635,10 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     StackPtr->Parameters.QueryFile.Length = Length;
 
     /* Queue the IRP */
-    IopQueueIrpToThread(Irp);
+    //IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
-
-    /* FIXME BUGBUG TEMPORARY CODE */
-    if ((FileInformationClass == FileAccessInformation) ||
-        (FileInformationClass == FileModeInformation) ||
-        (FileInformationClass == FileAlignmentInformation) ||
-        (FileInformationClass == FileAllInformation))
-    {
-        DPRINT1("Missed optimization: %lx\n", FileInformationClass);
-        IopMissedOptimizations++;
-    }
 
     /* Call the Driver */
     Status = IoCallDriver(DeviceObject, Irp);
@@ -2203,22 +2181,12 @@ NtSetInformationFile(IN HANDLE FileHandle,
     StackPtr->Parameters.SetFile.Length = Length;
 
     /* Queue the IRP */
-    IopQueueIrpToThread(Irp);
+    //IopQueueIrpToThread(Irp);
 
     /* Update operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
 
-    /* FIXME BUGBUG TEMPORARY CODE */
-    if ((FileInformationClass == FileModeInformation) ||
-        (FileInformationClass == FileRenameInformation ) ||
-        (FileInformationClass == FileLinkInformation ) ||
-        (FileInformationClass == FileMoveClusterInformation ) ||
-        (FileInformationClass == FileDispositionInformation ))
-    {
-        DPRINT1("Missed optimization: %lx\n", FileInformationClass);
-        IopMissedOptimizations++;
-    }
-
+    /* FIXME: Later, we can implement a lot of stuff here and avoid a driver call */
     /* Handle IO Completion Port quickly */
     if (FileInformationClass == FileCompletionInformation)
     {
