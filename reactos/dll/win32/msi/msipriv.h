@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_MSI_PRIVATE__
@@ -100,6 +100,8 @@ typedef struct tagMSIRECORD
     MSIFIELD fields[1]; /* nb. array size is count+1 */
 } MSIRECORD;
 
+typedef void *MSIITERHANDLE;
+
 typedef struct tagMSIVIEWOPS
 {
     /*
@@ -114,7 +116,7 @@ typedef struct tagMSIVIEWOPS
     UINT (*fetch_int)( struct tagMSIVIEW *, UINT row, UINT col, UINT *val );
 
     /*
-     * fetch_int - reads one integer from {row,col} in the table
+     * fetch_stream - gets a stream from {row,col} in the table
      *
      *  This function is similar to fetch_int, except fetches a
      *    stream instead of an integer.
@@ -170,12 +172,24 @@ typedef struct tagMSIVIEWOPS
      */
     UINT (*delete)( struct tagMSIVIEW * );
 
+    /*
+     * find_matching_rows - iterates through rows that match a value
+     *
+     * If the column type is a string then a string ID should be passed in. 
+     *  If the value to be looked up is an integer then no transformation of
+     *  the input value is required, except if the column is a string, in which
+     *  case a string ID should be passed in.
+     * The handle is an input/output parameter that keeps track of the current
+     *  position in the iteration. It must be initialised to zero before the
+     *  first call and continued to be passed in to subsequent calls.
+     */
+    UINT (*find_matching_rows)( struct tagMSIVIEW *, UINT col, UINT val, UINT *row, MSIITERHANDLE *handle );
 } MSIVIEWOPS;
 
 struct tagMSIVIEW
 {
     MSIOBJECTHDR hdr;
-    MSIVIEWOPS   *ops;
+    const MSIVIEWOPS *ops;
 };
 
 struct msi_dialog_tag;
@@ -325,6 +339,7 @@ extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );
 extern void ACTION_free_package_structures( MSIPACKAGE* );
 extern UINT ACTION_DialogBox( MSIPACKAGE*, LPCWSTR);
 extern UINT MSI_Sequence( MSIPACKAGE *package, LPCWSTR szTable, INT iSequenceMode );
+extern UINT MSI_SetFeatureStates( MSIPACKAGE *package );
 
 /* record internals */
 extern UINT MSI_RecordSetIStream( MSIRECORD *, unsigned int, IStream *);
@@ -366,6 +381,9 @@ extern UINT MSI_ViewExecute( MSIQUERY*, MSIRECORD * );
 extern UINT MSI_ViewFetch( MSIQUERY*, MSIRECORD ** );
 extern UINT MSI_ViewClose( MSIQUERY* );
 
+/* install internals */
+extern UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel );
+
 /* package internals */
 extern MSIPACKAGE *MSI_CreatePackage( MSIDATABASE * );
 extern UINT MSI_OpenPackageW( LPCWSTR szPackage, MSIPACKAGE ** );
@@ -401,9 +419,16 @@ extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL cr
 extern UINT MSIREG_OpenUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 
+extern LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name );
+extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val);
+
+extern DWORD msi_version_str_to_dword(LPCWSTR p);
+extern LPWSTR msi_version_dword_to_str(DWORD version);
+
 extern LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
 extern LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
 extern LONG msi_reg_set_val_dword( HKEY hkey, LPCWSTR name, DWORD val );
+extern LONG msi_reg_set_subkey_val( HKEY hkey, LPCWSTR path, LPCWSTR name, LPCWSTR val );
 
 /* msi dialog interface */
 typedef UINT (*msi_dialog_event_handler)( MSIPACKAGE*, LPCWSTR, LPCWSTR, msi_dialog* );
@@ -441,6 +466,7 @@ extern INSTALLUI_HANDLERW gUIHandlerW;
 extern DWORD gUIFilter;
 extern LPVOID gUIContext;
 extern WCHAR gszLogFile[MAX_PATH];
+extern HINSTANCE msi_hInstance;
 
 /* memory allocation macro functions */
 static inline void *msi_alloc( size_t len )

@@ -15,10 +15,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define NONAMELESSUNION
+#define NONAMELESSSTRUCT
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -34,6 +35,8 @@
 #include "objidl.h"
 #include "wincrypt.h"
 #include "winuser.h"
+#include "wininet.h"
+#include "urlmon.h"
 #include "shlobj.h"
 #include "wine/unicode.h"
 #include "objbase.h"
@@ -443,11 +446,43 @@ static LPCWSTR copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
 
     if( !CopyFileW( szPackage, filename, FALSE ) )
     {
-        ERR("failed to copy package to temp path %s\n", debugstr_w(filename) );
+        ERR("failed to copy package %s\n", debugstr_w(szPackage) );
         return szPackage;
     }
 
     TRACE("Opening relocated package %s\n", debugstr_w( filename ));
+    return filename;
+}
+
+static LPCWSTR msi_download_package( LPCWSTR szUrl, LPWSTR filename )
+{
+    LPINTERNET_CACHE_ENTRY_INFOW cache_entry;
+    DWORD size = 0;
+    HRESULT hr;
+
+    /* call will always fail, becase size is 0,
+     * but will return ERROR_FILE_NOT_FOUND first
+     * if the file doesn't exist
+     */
+    GetUrlCacheEntryInfoW( szUrl, NULL, &size );
+    if ( GetLastError() != ERROR_FILE_NOT_FOUND )
+    {
+        cache_entry = HeapAlloc( GetProcessHeap(), 0, size );
+        if ( !GetUrlCacheEntryInfoW( szUrl, cache_entry, &size ) )
+        {
+            HeapFree( GetProcessHeap(), 0, cache_entry );
+            return szUrl;
+        }
+
+        lstrcpyW( filename, cache_entry->lpszLocalFileName );
+        HeapFree( GetProcessHeap(), 0, cache_entry );
+        return filename;
+    }
+
+    hr = URLDownloadToCacheFileW( NULL, szUrl, filename, MAX_PATH, 0, NULL );
+    if ( FAILED(hr) )
+        return szUrl;
+
     return filename;
 }
 
@@ -470,7 +505,12 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     else
     {
         WCHAR temppath[MAX_PATH];
-        LPCWSTR file = copy_package_to_temp( szPackage, temppath );
+        LPCWSTR file;
+
+        if ( UrlIsW( szPackage, URLIS_URL ) )
+            file = msi_download_package( szPackage, temppath );
+        else
+            file = copy_package_to_temp( szPackage, temppath );
 
         r = MSI_OpenDatabaseW( file, MSIDBOPEN_READONLY, &db );
 
@@ -512,6 +552,9 @@ UINT WINAPI MsiOpenPackageExW(LPCWSTR szPackage, DWORD dwOptions, MSIHANDLE *phP
     UINT ret;
 
     TRACE("%s %08lx %p\n", debugstr_w(szPackage), dwOptions, phPackage );
+
+    if( szPackage == NULL )
+        return ERROR_INVALID_PARAMETER;
 
     if( dwOptions )
         FIXME("dwOptions %08lx not supported\n", dwOptions);
@@ -575,11 +618,16 @@ MSIHANDLE WINAPI MsiGetActiveDatabase(MSIHANDLE hInstall)
 INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
                                MSIRECORD *record)
 {
+    static const WCHAR szActionData[] =
+        {'A','c','t','i','o','n','D','a','t','a',0};
+    static const WCHAR szSetProgress[] =
+        {'S','e','t','P','r','o','g','r','e','s','s',0};
+    static const WCHAR szActionText[] =
+        {'A','c','t','i','o','n','T','e','x','t',0};
     DWORD log_type = 0;
     LPWSTR message;
     DWORD sz;
     DWORD total_size = 0;
-    INT msg_field=1;
     INT i;
     INT rc;
     char *msg;
@@ -606,34 +654,63 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     if ((eMessageType & 0xff000000) == INSTALLMESSAGE_PROGRESS)
         log_type |= 0x800;
 
-    message = msi_alloc(1*sizeof (WCHAR));
-    message[0]=0;
-    msg_field = MSI_RecordGetFieldCount(record);
-    for (i = 1; i <= msg_field; i++)
+    if ((eMessageType & 0xff000000) == INSTALLMESSAGE_ACTIONSTART)
     {
-        LPWSTR tmp;
-        WCHAR number[3];
-        static const WCHAR format[] = { '%','i',':',' ',0};
-        static const WCHAR space[] = { ' ',0};
-        sz = 0;
-        MSI_RecordGetStringW(record,i,NULL,&sz);
-        sz+=4;
-        total_size+=sz*sizeof(WCHAR);
-        tmp = msi_alloc(sz*sizeof(WCHAR));
-        message = msi_realloc(message,total_size*sizeof (WCHAR));
+        static const WCHAR template_s[]=
+            {'A','c','t','i','o','n',' ','%','s',':',' ','%','s','.',' ',0};
+        static const WCHAR format[] = 
+            {'H','H','\'',':','\'','m','m','\'',':','\'','s','s',0};
+        WCHAR timet[0x100];
+        LPCWSTR action_text, action;
+        LPWSTR deformatted = NULL;
 
-        MSI_RecordGetStringW(record,i,tmp,&sz);
+        GetTimeFormatW(LOCALE_USER_DEFAULT, 0, NULL, format, timet, 0x100);
 
-        if (msg_field > 1)
+        action = MSI_RecordGetString(record, 1);
+        action_text = MSI_RecordGetString(record, 2);
+        deformat_string(package, action_text, &deformatted);
+
+        len = strlenW(timet) + strlenW(action) + strlenW(template_s);
+        if (deformatted)
+            len += strlenW(deformatted);
+        message = msi_alloc(len*sizeof(WCHAR));
+        sprintfW(message, template_s, timet, action);
+        if (deformatted)
+            strcatW(message, deformatted);
+        msi_free(deformatted);
+    }
+    else
+    {
+        INT msg_field=1;
+        message = msi_alloc(1*sizeof (WCHAR));
+        message[0]=0;
+        msg_field = MSI_RecordGetFieldCount(record);
+        for (i = 1; i <= msg_field; i++)
         {
-            sprintfW(number,format,i);
-            strcatW(message,number);
-        }
-        strcatW(message,tmp);
-        if (msg_field > 1)
-            strcatW(message,space);
+            LPWSTR tmp;
+            WCHAR number[3];
+            static const WCHAR format[] = { '%','i',':',' ',0};
+            static const WCHAR space[] = { ' ',0};
+            sz = 0;
+            MSI_RecordGetStringW(record,i,NULL,&sz);
+            sz+=4;
+            total_size+=sz*sizeof(WCHAR);
+            tmp = msi_alloc(sz*sizeof(WCHAR));
+            message = msi_realloc(message,total_size*sizeof (WCHAR));
 
-        msi_free(tmp);
+            MSI_RecordGetStringW(record,i,tmp,&sz);
+
+            if (msg_field > 1)
+            {
+                sprintfW(number,format,i);
+                strcatW(message,number);
+            }
+            strcatW(message,tmp);
+            if (msg_field > 1)
+                strcatW(message,space);
+
+            msi_free(tmp);
+        }
     }
 
     TRACE("(%p %lx %lx %s)\n",gUIHandlerA, gUIFilter, log_type,
@@ -667,8 +744,38 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
         }
     }
     msi_free( msg );
-    
+
     msi_free( message);
+
+    switch (eMessageType & 0xff000000)
+    {
+    case INSTALLMESSAGE_ACTIONDATA:
+        /* FIXME: format record here instead of in ui_actiondata to get the
+         * correct action data for external scripts */
+        ControlEvent_FireSubscribedEvent(package, szActionData, record);
+        break;
+    case INSTALLMESSAGE_ACTIONSTART:
+    {
+        MSIRECORD *uirow;
+        LPWSTR deformated;
+        LPCWSTR action_text = MSI_RecordGetString(record, 2);
+
+        deformat_string(package, action_text, &deformated);
+        uirow = MSI_CreateRecord(1);
+        MSI_RecordSetStringW(uirow, 1, deformated);
+        TRACE("INSTALLMESSAGE_ACTIONSTART: %s\n", debugstr_w(deformated));
+        msi_free(deformated);
+
+        ControlEvent_FireSubscribedEvent(package, szActionText, uirow);
+
+        msiobj_release(&uirow->hdr);
+        break;
+    }
+    case INSTALLMESSAGE_PROGRESS:
+        ControlEvent_FireSubscribedEvent(package, szSetProgress, record);
+        break;
+    }
+
     return ERROR_SUCCESS;
 }
 

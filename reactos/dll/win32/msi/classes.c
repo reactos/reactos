@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* actions handled in this module
@@ -716,7 +716,7 @@ static void mark_progid_for_install( MSIPACKAGE* package, MSIPROGID *progid )
     if (!progid)
         return;
 
-    if (progid->InstallMe == TRUE)
+    if (progid->InstallMe)
         return;
 
     progid->InstallMe = TRUE;
@@ -734,38 +734,6 @@ static void mark_mime_for_install( MSIMIME *mime )
     if (!mime)
         return;
     mime->InstallMe = TRUE;
-}
-
-LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value )
-{
-    DWORD len = value ? (lstrlenW(value) + 1) * sizeof (WCHAR) : 0;
-    return RegSetValueExW( hkey, name, 0, REG_SZ, (LPBYTE)value, len );
-}
-
-LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value )
-{
-    LPCWSTR p = value;
-    while (*p) p += lstrlenW(p) + 1;
-    return RegSetValueExW( hkey, name, 0, REG_MULTI_SZ,
-                           (LPBYTE)value, (p + 1 - value) * sizeof(WCHAR) );
-}
-
-LONG msi_reg_set_val_dword( HKEY hkey, LPCWSTR name, DWORD val )
-{
-    return RegSetValueExW( hkey, name, 0, REG_DWORD, (LPBYTE)&val, sizeof (DWORD) );
-}
-
-LONG msi_reg_set_subkey_val( HKEY hkey, LPCWSTR path, LPCWSTR name, LPCWSTR val )
-{
-    HKEY hsubkey = 0;
-    LONG r;
-
-    r = RegCreateKeyW( hkey, path, &hsubkey );
-    if (r != ERROR_SUCCESS)
-        return r;
-    r = msi_reg_set_val_str( hsubkey, name, val );
-    RegCloseKey( hsubkey );
-    return r;
 }
 
 static UINT register_appid(MSIAPPID *appid, LPCWSTR app )
@@ -832,7 +800,6 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
     static const WCHAR szInprocServer32[] = {'I','n','p','r','o','c','S','e','r','v','e','r','3','2',0};
     static const WCHAR szFileType_fmt[] = {'F','i','l','e','T','y','p','e','\\','%','s','\\','%','i',0};
     HKEY hkey,hkey2,hkey3;
-    BOOL install_on_demand = FALSE;
     MSICLASS *cls;
 
     load_classes_and_such(package);
@@ -863,9 +830,9 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
          * yes. MSDN says that these are based on _Feature_ not on
          * Component.  So verify the feature is to be installed
          */
-        if ((!ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_LOCAL )) &&
-             !(install_on_demand &&
-               ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_ADVERTISED )))
+        if (!ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_LOCAL ))
+             /* && !(install_on_demand &&
+               ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_ADVERTISED ))) */
         {
             TRACE("Skipping class %s reg due to disabled feature %s\n", 
                             debugstr_w(cls->clsid), 
@@ -1161,8 +1128,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
          size += strlenW(verb->Argument);
      size += 4;
 
-     command = msi_alloc(size * sizeof (WCHAR));
-     memset(command,0,size*sizeof(WCHAR));
+     command = msi_alloc_zero(size * sizeof (WCHAR));
 
      strcpyW(command,advertise);
      if (verb->Argument)

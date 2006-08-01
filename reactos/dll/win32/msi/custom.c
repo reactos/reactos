@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /*
@@ -38,7 +38,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/summa
 #include "msi.h"
 #include "msidefs.h"
 #include "msiquery.h"
-#include "fcntl.h"
+#include "msvcrt/fcntl.h"
 #include "objbase.h"
 #include "objidl.h"
 #include "msipriv.h"
@@ -67,6 +67,8 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
                                LPCWSTR target, const INT type, LPCWSTR action);
 static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
                                LPCWSTR target, const INT type, LPCWSTR action);
+static UINT HANDLE_CustomType17(MSIPACKAGE *package, LPCWSTR source,
+                                LPCWSTR target, const INT type, LPCWSTR action);
 static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
                                 LPCWSTR target, const INT type, LPCWSTR action);
 static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
@@ -206,6 +208,9 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
             break;
         case 19: /* Error that halts install */
             rc = HANDLE_CustomType19(package,source,target,type,action);
+            break;
+        case 17:
+            rc = HANDLE_CustomType17(package,source,target,type,action);
             break;
         case 50: /*EXE file specified by a property value */
             rc = HANDLE_CustomType50(package,source,target,type,action);
@@ -437,13 +442,13 @@ static DWORD WINAPI ACTION_CallDllFunction(thread_struct *stuff)
                 ERR("Handle for object %p not found\n", package );
         }
         else
-            ERR("Cannot load functon\n");
+            ERR("failed to resolve functon %s\n", debugstr_a(proc));
 
         msi_free(proc);
         FreeLibrary(hModule);
     }
     else
-        ERR("Unable to load library\n");
+        ERR("failed to load dll %s\n", debugstr_w(stuff->source));
     msiobj_release( &stuff->package->hdr );
     msi_free(stuff->source);
     msi_free(stuff->target);
@@ -468,15 +473,26 @@ static DWORD WINAPI DllThread(LPVOID info)
     return rc;
 }
 
+static HANDLE do_msidbCustomActionTypeDll(MSIPACKAGE *package, LPCWSTR dll, LPCWSTR target)
+{
+    thread_struct *info;
+
+    info = msi_alloc( sizeof(*info) );
+    msiobj_addref( &package->hdr );
+    info->package = package;
+    info->target = strdupW(target);
+    info->source = strdupW(dll);
+
+    return CreateThread(NULL, 0, DllThread, info, 0, NULL);
+}
+
 static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source, 
                                LPCWSTR target, const INT type, LPCWSTR action)
 {
     WCHAR tmp_file[MAX_PATH];
-    thread_struct *info;
-    DWORD ThreadId;
-    HANDLE ThreadHandle;
     UINT rc = ERROR_SUCCESS;
     BOOL finished = FALSE;
+    HANDLE ThreadHandle;
 
     store_binary_to_temp(package, source, tmp_file);
 
@@ -489,13 +505,7 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
         strcatW(tmp_file,dot);
     } 
 
-    info = msi_alloc( sizeof(*info) );
-    msiobj_addref( &package->hdr );
-    info->package = package;
-    info->target = strdupW(target);
-    info->source = strdupW(tmp_file);
-
-    ThreadHandle = CreateThread(NULL,0,DllThread,(LPVOID)info,0,&ThreadId);
+    ThreadHandle = do_msidbCustomActionTypeDll( package, tmp_file, target );
 
     rc = process_handle(package, type, ThreadHandle, NULL, action, &finished );
 
@@ -503,7 +513,7 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
         track_tempfile(package, tmp_file, tmp_file);
     else
         DeleteFileW(tmp_file);
- 
+
     return rc;
 }
 
@@ -566,6 +576,26 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
         DeleteFileW(tmp_file);
     
     return prc;
+}
+
+static UINT HANDLE_CustomType17(MSIPACKAGE *package, LPCWSTR source,
+                                LPCWSTR target, const INT type, LPCWSTR action)
+{
+    HANDLE hThread;
+    MSIFILE *file;
+
+    TRACE("%s %s\n", debugstr_w(source), debugstr_w(target));
+
+    file = get_loaded_file( package, source );
+    if (!file)
+    {
+        ERR("invalid file key %s\n", debugstr_w( source ));
+        return ERROR_FUNCTION_FAILED;
+    }
+
+    hThread = do_msidbCustomActionTypeDll( package, file->TargetPath, target );
+
+    return process_handle(package, type, hThread, NULL, action, NULL );
 }
 
 static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,

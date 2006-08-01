@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -196,8 +196,26 @@ static UINT SELECT_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
+static UINT SELECT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
+    UINT val, UINT *row, MSIITERHANDLE *handle )
+{
+    MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
 
-MSIVIEWOPS select_ops =
+    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
+
+    if( !sv->table )
+         return ERROR_FUNCTION_FAILED;
+
+    if( (col==0) || (col>sv->num_cols) )
+         return ERROR_FUNCTION_FAILED;
+
+    col = sv->cols[ col - 1 ];
+
+    return sv->table->ops->find_matching_rows( sv->table, col, val, row, handle );
+}
+
+
+static const MSIVIEWOPS select_ops =
 {
     SELECT_fetch_int,
     SELECT_fetch_stream,
@@ -208,7 +226,8 @@ MSIVIEWOPS select_ops =
     SELECT_get_dimensions,
     SELECT_get_column_info,
     SELECT_modify,
-    SELECT_delete
+    SELECT_delete,
+    SELECT_find_matching_rows
 };
 
 static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name )
@@ -245,20 +264,23 @@ static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name )
     return ERROR_SUCCESS;
 }
 
+int select_count_columns( column_info *col )
+{
+    int n;
+    for (n = 0; col; col = col->next)
+        n++;
+    return n;
+}
+
 UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
                         column_info *columns )
 {
     MSISELECTVIEW *sv = NULL;
-    UINT count = 0, r;
+    UINT count = 0, r = ERROR_SUCCESS;
 
     TRACE("%p\n", sv );
 
-    r = table->ops->get_dimensions( table, NULL, &count );
-    if( r != ERROR_SUCCESS )
-    {
-        ERR("can't get table dimensions\n");
-        return r;
-    }
+    count = select_count_columns( columns );
 
     sv = msi_alloc_zero( sizeof *sv + count*sizeof (UINT) );
     if( !sv )

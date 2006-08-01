@@ -4,8 +4,8 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = msi.dll
 IMPORTLIB = libmsi.$(IMPLIBEXT)
-IMPORTS   = shell32 shlwapi cabinet oleaut32 ole32 version user32 gdi32 advapi32 kernel32
-EXTRALIBS = -luuid $(LIBUNICODE)
+IMPORTS   = urlmon wininet comctl32 shell32 shlwapi cabinet oleaut32 ole32 version user32 gdi32 advapi32 kernel32
+EXTRALIBS = -luuid
 
 C_SRCS = \
 	action.c \
@@ -24,7 +24,9 @@ C_SRCS = \
 	helpers.c \
 	insert.c \
 	install.c \
+	join.c \
 	msi.c \
+	msi_main.c \
 	msiquery.c \
 	order.c \
 	package.c \
@@ -43,6 +45,11 @@ C_SRCS = \
 	where.c
 
 RC_SRCS = msi.rc
+RC_BINSRC = msi.rc
+RC_BINARIES = \
+	instabsent.bmp \
+	instadvert.bmp \
+	instlocal.bmp
 
 EXTRA_SRCS = sql.y cond.y
 EXTRA_OBJS = sql.tab.o cond.tab.o

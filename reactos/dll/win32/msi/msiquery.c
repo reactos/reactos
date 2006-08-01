@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -353,6 +353,10 @@ UINT WINAPI MsiViewFetch(MSIHANDLE hView, MSIHANDLE *record)
     UINT ret;
 
     TRACE("%ld %p\n", hView, record);
+
+    if( !record )
+        return ERROR_INVALID_PARAMETER;
+    *record = 0;
 
     query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
     if( !query )
@@ -853,16 +857,29 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysA(MSIHANDLE hdb,
     return r;
 }
 
-UINT WINAPI MsiDatabaseIsTablePersistentA(
+MSICONDITION WINAPI MsiDatabaseIsTablePersistentA(
               MSIHANDLE hDatabase, LPSTR szTableName)
 {
-    FIXME("%lx %s\n", hDatabase, debugstr_a(szTableName));
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    LPWSTR szwTableName = NULL;
+    MSICONDITION r;
+
+    TRACE("%lx %s\n", hDatabase, debugstr_a(szTableName));
+
+    if( szTableName )
+    {
+        szwTableName = strdupAtoW( szTableName );
+        if( !szwTableName )
+            return MSICONDITION_ERROR;
+    }
+    r = MsiDatabaseIsTablePersistentW( hDatabase, szwTableName );
+    msi_free( szwTableName );
+
+    return r;
 }
 
-UINT WINAPI MsiDatabaseIsTablePersistentW(
+MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(
               MSIHANDLE hDatabase, LPWSTR szTableName)
 {
     FIXME("%lx %s\n", hDatabase, debugstr_w(szTableName));
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return MSICONDITION_FALSE;
 }

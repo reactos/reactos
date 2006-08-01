@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -100,8 +100,10 @@ MSIHANDLE WINAPI MsiCreateRecord( unsigned int cParams )
 
     rec = MSI_CreateRecord( cParams );
     if( rec )
+    {
         ret = alloc_msihandle( &rec->hdr );
-    msiobj_release( &rec->hdr );
+        msiobj_release( &rec->hdr );
+    }
     return ret;
 }
 
@@ -319,7 +321,7 @@ UINT MSI_RecordGetStringA(MSIRECORD *rec, unsigned int iField,
         break;
     }
 
-    if( *pcchValue < len )
+    if( *pcchValue <= len )
         ret = ERROR_MORE_DATA;
     *pcchValue = len;
 
@@ -387,7 +389,7 @@ UINT MSI_RecordGetStringW(MSIRECORD *rec, unsigned int iField,
         break;
     }
 
-    if( *pcchValue < len )
+    if( *pcchValue <= len )
         ret = ERROR_MORE_DATA;
     *pcchValue = len;
 

@@ -1,8 +1,7 @@
 /*
  * Hungarian resources for MSI
  *
- * Copyright 2005 Mike McCormack
- * Copyright 2005 Gergely Risko
+ * Copyright 2006 Andras Kovacs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,19 +15,19 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-	5 "Az elérési út: %s nem található"
-	9 "Tedd be a következõ lemezt: %s"
-	10 "Rossz paraméterek"
-	11 "Add meg melyik mappa tartalmazza a következõt: %s"
-	12 "Az összetevõ forrása hiányzik"
-	13 "Hiányzik a hálózati meghajtó az össszetevõhöz"
-/* NOT TRANSLATED */	14 "feature from:"
-	15 "Válaszd ki melyik mappa tartalmazza a következõt: %s"
+	5 "%s útvonal nem található"
+	9 "helyezze be a lemezt: %s"
+	10 "rossz paraméterek"
+	11 "adja meg melyik mappa tartalmazza ezt: %s"
+	12 "hiányzó tulajdonság a telepítési forráshoz"
+	13 "hiányzó tulajdonság a hálózati meghajtóhoz"
+	14 "tulajdonság innen:"
+	15 "válassza ki, melyik mappa tartalmazza ezt: %s"
 }

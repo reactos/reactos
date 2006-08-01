@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __MSI_ACTION_H__
@@ -78,7 +78,8 @@ typedef struct tagMSIFOLDER
     struct list entry;
     LPWSTR Directory;
     LPWSTR TargetDefault;
-    LPWSTR SourceDefault;
+    LPWSTR SourceLongPath;
+    LPWSTR SourceShortPath;
 
     LPWSTR ResolvedTarget;
     LPWSTR ResolvedSource;
@@ -109,6 +110,7 @@ typedef struct tagMSIFILE
     MSICOMPONENT *Component;
     LPWSTR FileName;
     LPWSTR ShortName;
+    LPWSTR LongName;
     INT FileSize;
     LPWSTR Version;
     LPWSTR Language;
@@ -255,6 +257,7 @@ extern UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package);
 extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
 extern LPWSTR msi_dup_record_field(MSIRECORD *row, INT index);
 extern LPWSTR msi_dup_property(MSIPACKAGE *package, LPCWSTR prop);
+extern int msi_get_property_int( MSIPACKAGE *package, LPCWSTR prop, int def );
 extern LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
                       BOOL set_prop, MSIFOLDER **folder);
 extern MSICOMPONENT *get_loaded_component( MSIPACKAGE* package, LPCWSTR Component );
@@ -264,7 +267,6 @@ extern MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir );
 extern int track_tempfile(MSIPACKAGE *package, LPCWSTR name, LPCWSTR path);
 extern UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action);
 extern LPWSTR build_icon_path(MSIPACKAGE *, LPCWSTR);
-extern DWORD build_version_dword(LPCWSTR);
 extern LPWSTR build_directory_name(DWORD , ...);
 extern BOOL create_full_pathW(const WCHAR *path);
 extern BOOL ACTION_VerifyComponentForAction(MSICOMPONENT*, INSTALLSTATE);

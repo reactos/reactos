@@ -1,8 +1,7 @@
 /*
  * Russian resources for MSI
  *
- * Copyright 2005 Mikhail Y. Zvyozdochkin
- *                Aleksey Bragin
+ * Copyright 2006 Vitaly Lipatov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
@@ -26,9 +25,9 @@ STRINGTABLE DISCARDABLE
 	5 "путь %s не найден"
 	9 "вставьте диск %s"
 	10 "неверные параметры"
-	11 "введите, какая папка содержит %s"
-	12 "недоступен источник установки (съемный или компакт-диск не вставлен в дисковод)"
-	13 "недоступен сетевой диск, содержащий необходимый файл"
-	14 "функциональность из:"
-	15 "выберите, какая папка содержит %s"
+	11 "укажите каталог, содержащий %s"
+	12 "источник установки данной возможности не указан"
+	13 "сетевой диск для данной возможности не указан"
+	14 "возможность из:"
+	15 "выберите каталог, содержащий %s"
 }

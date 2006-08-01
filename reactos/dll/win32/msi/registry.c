@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -189,39 +189,33 @@ BOOL unsquash_guid(LPCWSTR in, LPWSTR out)
 
 BOOL squash_guid(LPCWSTR in, LPWSTR out)
 {
-    DWORD i,n=0;
+    DWORD i,n=1;
+    GUID guid;
 
-    if(in[n++] != '{')
+    if (FAILED(CLSIDFromString((LPOLESTR)in, &guid)))
         return FALSE;
+
     for(i=0; i<8; i++)
         out[7-i] = in[n++];
-    if(in[n++] != '-')
-        return FALSE;
+    n++;
     for(i=0; i<4; i++)
         out[11-i] = in[n++];
-    if(in[n++] != '-')
-        return FALSE;
+    n++;
     for(i=0; i<4; i++)
         out[15-i] = in[n++];
-    if(in[n++] != '-')
-        return FALSE;
+    n++;
     for(i=0; i<2; i++)
     {
         out[17+i*2] = in[n++];
         out[16+i*2] = in[n++];
     }
-    if(in[n++] != '-')
-        return FALSE;
+    n++;
     for( ; i<8; i++)
     {
         out[17+i*2] = in[n++];
         out[16+i*2] = in[n++];
     }
     out[32]=0;
-    if(in[n++] != '}')
-        return FALSE;
-    if(in[n])
-        return FALSE;
     return TRUE;
 }
 
@@ -305,6 +299,95 @@ BOOL encode_base85_guid( GUID *guid, LPWSTR str )
     return TRUE;
 }
 
+DWORD msi_version_str_to_dword(LPCWSTR p)
+{
+    DWORD major, minor = 0, build = 0, version = 0;
+
+    if (!p)
+        return version;
+
+    major = atoiW(p);
+
+    p = strchrW(p, '.');
+    if (p)
+    {
+        minor = atoiW(p+1);
+        p = strchrW(p+1, '.');
+        if (p)
+            build = atoiW(p+1);
+    }
+
+    return MAKELONG(build, MAKEWORD(minor, major));
+}
+
+LPWSTR msi_version_dword_to_str(DWORD version)
+{
+    const WCHAR fmt[] = { '%','u','.','%','u','.','%','u',0 };
+    LPWSTR str = msi_alloc(20);
+    sprintfW(str, fmt,
+             (version&0xff000000)>>24,
+             (version&0x00ff0000)>>16,
+              version&0x0000ffff);
+    return str;
+}
+
+LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value )
+{
+    DWORD len = value ? (lstrlenW(value) + 1) * sizeof (WCHAR) : 0;
+    return RegSetValueExW( hkey, name, 0, REG_SZ, (LPBYTE)value, len );
+}
+
+LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value )
+{
+    LPCWSTR p = value;
+    while (*p) p += lstrlenW(p) + 1;
+    return RegSetValueExW( hkey, name, 0, REG_MULTI_SZ,
+                           (LPBYTE)value, (p + 1 - value) * sizeof(WCHAR) );
+}
+
+LONG msi_reg_set_val_dword( HKEY hkey, LPCWSTR name, DWORD val )
+{
+    return RegSetValueExW( hkey, name, 0, REG_DWORD, (LPBYTE)&val, sizeof (DWORD) );
+}
+
+LONG msi_reg_set_subkey_val( HKEY hkey, LPCWSTR path, LPCWSTR name, LPCWSTR val )
+{
+    HKEY hsubkey = 0;
+    LONG r;
+
+    r = RegCreateKeyW( hkey, path, &hsubkey );
+    if (r != ERROR_SUCCESS)
+        return r;
+    r = msi_reg_set_val_str( hsubkey, name, val );
+    RegCloseKey( hsubkey );
+    return r;
+}
+
+LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name )
+{
+    DWORD len = 0;
+    LPWSTR val;
+    LONG r;
+
+    r = RegQueryValueExW(hkey, name, NULL, NULL, NULL, &len);
+    if (r != ERROR_SUCCESS)
+        return NULL;
+
+    len += sizeof (WCHAR);
+    val = msi_alloc( len );
+    if (!val)
+        return NULL;
+    val[0] = 0;
+    RegQueryValueExW(hkey, name, NULL, NULL, (LPBYTE) val, &len);
+    return val;
+}
+
+BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val)
+{
+    DWORD type, len = sizeof (DWORD);
+    LONG r = RegQueryValueExW(hkey, name, NULL, &type, (LPBYTE) val, &len);
+    return r == ERROR_SUCCESS && type == REG_DWORD;
+}
 
 UINT MSIREG_OpenUninstallKey(LPCWSTR szProduct, HKEY* key, BOOL create)
 {
@@ -675,6 +758,9 @@ UINT WINAPI MsiEnumFeaturesW(LPCWSTR szProduct, DWORD index,
 
     TRACE("%s %ld %p %p\n",debugstr_w(szProduct),index,szFeature,szParent);
 
+    if( !szProduct )
+        return ERROR_INVALID_PARAMETER;
+
     r = MSIREG_OpenFeaturesKey(szProduct,&hkeyProduct,FALSE);
     if( r != ERROR_SUCCESS )
         return ERROR_NO_MORE_ITEMS;
@@ -977,4 +1063,26 @@ UINT WINAPI MsiEnumRelatedProductsA(LPCSTR szUpgradeCode, DWORD dwReserved,
     }
     msi_free( szwUpgradeCode);
     return r;
+}
+
+/***********************************************************************
+ * MsiEnumPatchesA            [MSI.@]
+ */
+UINT WINAPI MsiEnumPatchesA( LPCSTR szProduct, DWORD iPatchIndex, 
+        LPSTR lpPatchBuf, LPSTR lpTransformsBuf, DWORD* pcchTransformsBuf)
+{
+    FIXME("%s %ld %p %p %p\n", debugstr_a(szProduct),
+          iPatchIndex, lpPatchBuf, lpTransformsBuf, pcchTransformsBuf);
+    return ERROR_NO_MORE_ITEMS;
+}
+
+/***********************************************************************
+ * MsiEnumPatchesW            [MSI.@]
+ */
+UINT WINAPI MsiEnumPatchesW( LPCWSTR szProduct, DWORD iPatchIndex, 
+        LPWSTR lpPatchBuf, LPWSTR lpTransformsBuf, DWORD* pcchTransformsBuf)
+{
+    FIXME("%s %ld %p %p %p\n", debugstr_w(szProduct),
+          iPatchIndex, lpPatchBuf, lpTransformsBuf, pcchTransformsBuf);
+    return ERROR_NO_MORE_ITEMS;
 }

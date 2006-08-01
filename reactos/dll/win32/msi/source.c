@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -37,6 +37,7 @@
 #include "winuser.h"
 #include "wine/unicode.h"
 #include "action.h"
+#include "sddl.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -126,6 +127,7 @@ static UINT find_given_source(HKEY key, LPCWSTR szSource, media_info *ss)
     {
         val = NULL;
         val_size = 0;
+        size = sizeof(szIndex)/sizeof(szIndex[0]);
         rc = RegEnumValueW(key, index, szIndex, &size, NULL, NULL, NULL, &val_size);
         if (rc != ERROR_NO_MORE_ITEMS)
         {
@@ -397,6 +399,61 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
 }
 
 /******************************************************************
+ *  MsiSourceListAddSourceW (MSI.@)
+ */
+UINT WINAPI MsiSourceListAddSourceW( LPCWSTR szProduct, LPCWSTR szUserName,
+        DWORD dwReserved, LPCWSTR szSource)
+{
+    INT ret;
+    LPWSTR sidstr = NULL;
+    DWORD sidsize = 0;
+
+    TRACE("%s %s %s\n", debugstr_w(szProduct), debugstr_w(szUserName), debugstr_w(szSource));
+
+    if (LookupAccountNameW(NULL, szUserName, NULL, &sidsize, NULL, NULL, NULL))
+    {
+        PSID psid = msi_alloc(sidsize);
+
+        if (LookupAccountNameW(NULL, szUserName, psid, &sidsize, NULL, NULL, NULL))
+            ConvertSidToStringSidW(psid, &sidstr);
+
+        msi_free(psid);
+    }
+
+    ret = MsiSourceListAddSourceExW(szProduct, sidstr, 
+        MSIINSTALLCONTEXT_USERMANAGED, MSISOURCETYPE_NETWORK, szSource, 0);
+
+    if (sidstr)
+        LocalFree(sidstr);
+
+    return ret;
+}
+
+/******************************************************************
+ *  MsiSourceListAddSourceA (MSI.@)
+ */
+UINT WINAPI MsiSourceListAddSourceA( LPCSTR szProduct, LPCSTR szUserName,
+        DWORD dwReserved, LPCSTR szSource)
+{
+    INT ret;
+    LPWSTR szwproduct;
+    LPWSTR szwusername;
+    LPWSTR szwsource;
+
+    szwproduct = strdupAtoW( szProduct );
+    szwusername = strdupAtoW( szUserName );
+    szwsource = strdupAtoW( szSource );
+
+    ret = MsiSourceListAddSourceW(szwproduct, szwusername, 0, szwsource);
+
+    msi_free(szwproduct);
+    msi_free(szwusername);
+    msi_free(szwsource);
+
+    return ret;
+}
+
+/******************************************************************
  *  MsiSourceListAddSourceExW (MSI.@)
  */
 UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
@@ -442,6 +499,8 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
         rc = OpenNetworkSubkey(sourcekey, &typekey, TRUE);
     else if (dwOptions & MSISOURCETYPE_URL)
         rc = OpenURLSubkey(sourcekey, &typekey, TRUE);
+    else if (dwOptions & MSISOURCETYPE_MEDIA)
+        rc = OpenMediaSubkey(sourcekey, &typekey, TRUE);
     else
     {
         ERR("unknown media type: %08lx\n", dwOptions);
@@ -556,5 +615,23 @@ UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid,
     RegCloseKey(sourcekey);
     RegCloseKey(mediakey);
 
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************
+ *  MsiSourceListAddSourceExA (MSI.@)
+ */
+UINT WINAPI MsiSourceListClearAllA( LPCSTR szProduct, LPCSTR szUserName, DWORD dwReserved )
+{
+    FIXME("(%s %s %ld) stub\n", debugstr_a(szProduct), debugstr_a(szUserName), dwReserved);
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************
+ *  MsiSourceListAddSourceExW (MSI.@)
+ */
+UINT WINAPI MsiSourceListClearAllW( LPCWSTR szProduct, LPCWSTR szUserName, DWORD dwReserved )
+{
+    FIXME("(%s %s %ld) stub\n", debugstr_w(szProduct), debugstr_w(szUserName), dwReserved);
     return ERROR_SUCCESS;
 }

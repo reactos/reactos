@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -37,9 +37,11 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
+#define HASH_SIZE 67
+
 typedef struct _msistring
 {
-    UINT hash;
+    int hash_next;
     UINT refcount;
     LPWSTR str;
 } msistring;
@@ -49,6 +51,7 @@ struct string_table
     UINT maxcount;         /* the number of strings */
     UINT freeslot;
     UINT codepage;
+    int hash[HASH_SIZE];
     msistring *strings; /* an array of strings (in the tree) */
 };
 
@@ -65,12 +68,13 @@ static UINT msistring_makehash( const WCHAR *str )
         hash *= 53;
         hash = (hash<<5) | (hash>>27);
     }
-    return hash;
+    return hash % HASH_SIZE;
 }
 
 string_table *msi_init_stringtable( int entries, UINT codepage )
 {
     string_table *st;
+    int i;
 
     st = msi_alloc( sizeof (string_table) );
     if( !st )
@@ -78,7 +82,7 @@ string_table *msi_init_stringtable( int entries, UINT codepage )
     if( entries < 1 )
         entries = 1;
     st->strings = msi_alloc_zero( sizeof (msistring) * entries );
-    if( !st )
+    if( !st->strings )
     {
         msi_free( st );
         return NULL;    
@@ -86,6 +90,9 @@ string_table *msi_init_stringtable( int entries, UINT codepage )
     st->maxcount = entries;
     st->freeslot = 1;
     st->codepage = codepage;
+
+    for( i=0; i<HASH_SIZE; i++ )
+        st->hash[i] = -1;
 
     return st;
 }
@@ -133,15 +140,23 @@ static int st_find_free_entry( string_table *st )
     return st->freeslot;
 }
 
-static void st_mark_entry_used( string_table *st, UINT n )
+static void set_st_entry( string_table *st, UINT n, LPWSTR str )
 {
-    if( n >= st->maxcount )
-        return;
-    st->freeslot = n + 1;
+    UINT hash = msistring_makehash( str );
+
+    st->strings[n].refcount = 1;
+    st->strings[n].str = str;
+
+    st->strings[n].hash_next = st->hash[hash];
+    st->hash[hash] = n;
+
+    if( n < st->maxcount )
+        st->freeslot = n + 1;
 }
 
 int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, UINT refcount )
 {
+    LPWSTR str;
     int sz;
 
     if( !data )
@@ -175,21 +190,21 @@ int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, UINT ref
     if( len < 0 )
         len = strlen(data);
     sz = MultiByteToWideChar( st->codepage, 0, data, len, NULL, 0 );
-    st->strings[n].str = msi_alloc( (sz+1)*sizeof(WCHAR) );
-    if( !st->strings[n].str )
+    str = msi_alloc( (sz+1)*sizeof(WCHAR) );
+    if( !str )
         return -1;
-    MultiByteToWideChar( st->codepage, 0, data, len, st->strings[n].str, sz );
-    st->strings[n].str[sz] = 0;
-    st->strings[n].refcount = 1;
-    st->strings[n].hash = msistring_makehash( st->strings[n].str );
+    MultiByteToWideChar( st->codepage, 0, data, len, str, sz );
+    str[sz] = 0;
 
-    st_mark_entry_used( st, n );
+    set_st_entry( st, n, str );
 
     return n;
 }
 
 int msi_addstringW( string_table *st, UINT n, const WCHAR *data, int len, UINT refcount )
 {
+    LPWSTR str;
+
     /* TRACE("[%2d] = %s\n", string_no, debugstr_an(data,len) ); */
 
     if( !data )
@@ -224,16 +239,14 @@ int msi_addstringW( string_table *st, UINT n, const WCHAR *data, int len, UINT r
         len = strlenW(data);
     TRACE("%s, n = %d len = %d\n", debugstr_w(data), n, len );
 
-    st->strings[n].str = msi_alloc( (len+1)*sizeof(WCHAR) );
-    if( !st->strings[n].str )
+    str = msi_alloc( (len+1)*sizeof(WCHAR) );
+    if( !str )
         return -1;
     TRACE("%d\n",__LINE__);
-    memcpy( st->strings[n].str, data, len*sizeof(WCHAR) );
-    st->strings[n].str[len] = 0;
-    st->strings[n].refcount = 1;
-    st->strings[n].hash = msistring_makehash( st->strings[n].str );
+    memcpy( str, data, len*sizeof(WCHAR) );
+    str[len] = 0;
 
-    st_mark_entry_used( st, n );
+    set_st_entry( st, n, str );
 
     return n;
 }
@@ -349,23 +362,19 @@ UINT msi_id2stringA( string_table *st, UINT id, LPSTR buffer, UINT *sz )
  */
 UINT msi_string2idW( string_table *st, LPCWSTR str, UINT *id )
 {
-    UINT hash;
-    UINT i, r = ERROR_INVALID_PARAMETER;
+    UINT n, hash = msistring_makehash( str );
+    msistring *se = st->strings;
 
-    hash = msistring_makehash( str );
-    for( i=0; i<st->maxcount; i++ )
+    for (n = st->hash[hash]; n != -1; n = st->strings[n].hash_next )
     {
-        if ( (str == NULL && st->strings[i].str == NULL) || 
-            ( ( st->strings[i].hash == hash ) &&
-            !strcmpW( st->strings[i].str, str ) ))
+        if ((str == se[n].str) || !lstrcmpW(str, se[n].str))
         {
-            r = ERROR_SUCCESS;
-            *id = i;
-            break;
+            *id = n;
+            return ERROR_SUCCESS;
         }
     }
 
-    return r;
+    return ERROR_INVALID_PARAMETER;
 }
 
 UINT msi_string2idA( string_table *st, LPCSTR buffer, UINT *id )

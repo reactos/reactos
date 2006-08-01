@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -99,7 +99,7 @@ static UINT WHERE_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val
     return wv->table->ops->set_int( wv->table, row, col, val );
 }
 
-static UINT INT_evaluate( UINT lval, UINT op, UINT rval )
+static INT INT_evaluate( INT lval, UINT op, INT rval )
 {
     switch( op )
     {
@@ -156,7 +156,7 @@ static const WCHAR *STRING_evaluate( string_table *st,
 }
 
 static UINT STRCMP_Evaluate( string_table *st, MSIVIEW *table, UINT row, 
-                             struct expr *cond, UINT *val, MSIRECORD *record )
+                             struct expr *cond, INT *val, MSIRECORD *record )
 {
     int sr;
     const WCHAR *l_str, *r_str;
@@ -180,18 +180,25 @@ static UINT STRCMP_Evaluate( string_table *st, MSIVIEW *table, UINT row,
 }
 
 static UINT WHERE_evaluate( MSIDATABASE *db, MSIVIEW *table, UINT row, 
-                             struct expr *cond, UINT *val, MSIRECORD *record )
+                             struct expr *cond, INT *val, MSIRECORD *record )
 {
-    UINT r, lval, rval;
+    UINT r, tval;
+    INT lval, rval;
 
     if( !cond )
         return ERROR_SUCCESS;
 
     switch( cond->type )
     {
-    case EXPR_COL_NUMBER_STRING:
     case EXPR_COL_NUMBER:
-        return table->ops->fetch_int( table, row, cond->u.col_number, val );
+        r = table->ops->fetch_int( table, row, cond->u.col_number, &tval );
+        *val = tval - 0x8000;
+        return ERROR_SUCCESS;
+
+    case EXPR_COL_NUMBER32:
+        r = table->ops->fetch_int( table, row, cond->u.col_number, &tval );
+        *val = tval - 0x80000000;
+        return r;
 
     case EXPR_UVAL:
         *val = cond->u.uval;
@@ -226,7 +233,8 @@ static UINT WHERE_evaluate( MSIDATABASE *db, MSIVIEW *table, UINT row,
 static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
-    UINT count = 0, r, val, i;
+    UINT count = 0, r, i;
+    INT val;
     MSIVIEW *table = wv->table;
 
     TRACE("%p %p\n", wv, record);
@@ -248,6 +256,51 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
         return ERROR_FUNCTION_FAILED;
 
     wv->row_count = 0;
+    if (wv->cond->type == EXPR_STRCMP)
+    {
+        MSIITERHANDLE handle = NULL;
+        UINT row, value, col;
+        struct expr *col_cond = wv->cond->u.expr.left;
+        struct expr *val_cond = wv->cond->u.expr.right;
+
+        /* swap conditionals */
+        if (col_cond->type != EXPR_COL_NUMBER_STRING)
+        {
+            val_cond = wv->cond->u.expr.left;
+            col_cond = wv->cond->u.expr.right;
+        }
+
+        if ((col_cond->type == EXPR_COL_NUMBER_STRING) && (val_cond->type == EXPR_SVAL))
+        {
+            col = col_cond->u.col_number;
+            /* special case for "" - translate it into nil */
+            if (!val_cond->u.sval[0])
+                value = 0;
+            else
+            {
+                r = msi_string2idW(wv->db->strings, val_cond->u.sval, &value);
+                if (r != ERROR_SUCCESS)
+                {
+                    TRACE("no id for %s, assuming it doesn't exist in the table\n", debugstr_w(wv->cond->u.expr.right->u.sval));
+                    return ERROR_SUCCESS;
+                }
+            }
+
+            do
+            {
+                r = table->ops->find_matching_rows(table, col, value, &row, &handle);
+                if (r == ERROR_SUCCESS)
+                    wv->reorder[ wv->row_count ++ ] = row;
+            } while (r == ERROR_SUCCESS);
+
+            if (r == ERROR_NO_MORE_ITEMS)
+                return ERROR_SUCCESS;
+            else
+                return r;
+        }
+        /* else fallback to slow case */
+    }
+
     for( i=0; i<count; i++ )
     {
         val = 0;
@@ -341,8 +394,29 @@ static UINT WHERE_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
+static UINT WHERE_find_matching_rows( struct tagMSIVIEW *view, UINT col,
+    UINT val, UINT *row, MSIITERHANDLE *handle )
+{
+    MSIWHEREVIEW *wv = (MSIWHEREVIEW*)view;
+    UINT r;
 
-MSIVIEWOPS where_ops =
+    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
+
+    if( !wv->table )
+         return ERROR_FUNCTION_FAILED;
+
+    r = wv->table->ops->find_matching_rows( wv->table, col, val, row, handle );
+
+    if( *row > wv->row_count )
+        return ERROR_NO_MORE_ITEMS;
+
+    *row = wv->reorder[ *row ];
+
+    return r;
+}
+
+
+static const MSIVIEWOPS where_ops =
 {
     WHERE_fetch_int,
     WHERE_fetch_stream,
@@ -353,7 +427,8 @@ MSIVIEWOPS where_ops =
     WHERE_get_dimensions,
     WHERE_get_column_info,
     WHERE_modify,
-    WHERE_delete
+    WHERE_delete,
+    WHERE_find_matching_rows
 };
 
 static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr *cond,
@@ -373,6 +448,8 @@ static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr 
             {
                 if (type&MSITYPE_STRING)
                     cond->type = EXPR_COL_NUMBER_STRING;
+                else if ((type&0xff) == 4)
+                    cond->type = EXPR_COL_NUMBER32;
                 else
                     cond->type = EXPR_COL_NUMBER;
                 cond->u.col_number = val;
@@ -423,7 +500,7 @@ static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr 
     case EXPR_IVAL:
         *valid = 1;
         cond->type = EXPR_UVAL;
-        cond->u.uval = cond->u.ival + (1<<15);
+        cond->u.uval = cond->u.ival;
         break;
     case EXPR_WILDCARD:
         *valid = 1;

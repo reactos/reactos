@@ -19,9 +19,12 @@
 	<library>shlwapi</library>
 	<library>winmm</library>
 	<library>cabinet</library>
+	<library>comctl32</library>
 	<library>ole32</library>
 	<library>oleaut32</library>
 	<library>version</library>
+	<library>wininet</library>
+	<library>urlmon</library>
 	<file>action.c</file>
 	<file>appsearch.c</file>
 	<file>classes.c</file>
@@ -39,7 +42,9 @@
 	<file>helpers.c</file>
 	<file>insert.c</file>
 	<file>install.c</file>
+	<file>join.c</file>
 	<file>msi.c</file>
+	<file>msi_main.c</file>
 	<file>msiquery.c</file>
 	<file>order.c</file>
 	<file>package.c</file>

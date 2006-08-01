@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -214,8 +214,16 @@ static UINT INSERT_delete( struct tagMSIVIEW *view )
     return ERROR_SUCCESS;
 }
 
+static UINT INSERT_find_matching_rows( struct tagMSIVIEW *view, UINT col,
+    UINT val, UINT *row, MSIITERHANDLE *handle )
+{
+    TRACE("%p, %d, %u, %p\n", view, col, val, *handle);
 
-MSIVIEWOPS insert_ops =
+    return ERROR_FUNCTION_FAILED;
+}
+
+
+static const MSIVIEWOPS insert_ops =
 {
     INSERT_fetch_int,
     NULL,
@@ -226,7 +234,8 @@ MSIVIEWOPS insert_ops =
     INSERT_get_dimensions,
     INSERT_get_column_info,
     INSERT_modify,
-    INSERT_delete
+    INSERT_delete,
+    INSERT_find_matching_rows
 };
 
 UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,

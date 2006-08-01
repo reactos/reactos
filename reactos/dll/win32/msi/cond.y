@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -110,7 +110,7 @@ static BOOL num_from_prop( LPCWSTR p, INT *val )
     INT       value;
 }
 
-%token COND_SPACE COND_EOF COND_SPACE
+%token COND_SPACE COND_EOF
 %token COND_OR COND_AND COND_NOT COND_XOR COND_IMP COND_EQV
 %token COND_LT COND_GT COND_EQ COND_NE COND_GE COND_LE
 %token COND_ILT COND_IGT COND_IEQ COND_INE COND_IGE COND_ILE
@@ -186,6 +186,7 @@ boolean_factor:
   | value_s
         {
             $$ = ($1 && $1[0]) ? 1 : 0;
+            msi_free($1);
         }
   | value_i operator value_i
         {
@@ -198,6 +199,7 @@ boolean_factor:
                 $$ = compare_int( num, $2, $3 );
             else 
                 $$ = ($2 == COND_NE || $2 == COND_INE );
+            msi_free($1);
         }
   | value_i operator symbol_s
         {
@@ -206,6 +208,7 @@ boolean_factor:
                 $$ = compare_int( $1, $2, num );
             else 
                 $$ = ($2 == COND_NE || $2 == COND_INE );
+            msi_free($3);
         }
   | symbol_s operator symbol_s
         {
@@ -226,10 +229,12 @@ boolean_factor:
   | literal operator value_i
         {
             $$ = 0;
+            msi_free($1);
         }
   | value_i operator literal
         {
             $$ = 0;
+            msi_free($3);
         }
   | COND_LPAR expression COND_RPAR
         {
@@ -463,7 +468,7 @@ static INT compare_int( INT a, INT operator, INT b )
         return a >= b;
     case COND_LE:
     case COND_ILE:
-        return a >= b;
+        return a <= b;
     case COND_SS:
     case COND_ISS:
         return ( a & b ) ? 1 : 0;
@@ -492,21 +497,21 @@ static int COND_GetOperator( COND_input *cond )
         int id;
     } table[] = {
         { {'~','=',0},     COND_IEQ },
-        { {'~','>','=',0}, COND_ILE },
+        { {'~','<','=',0}, COND_ILE },
         { {'~','>','<',0}, COND_ISS },
         { {'~','>','>',0}, COND_IRHS },
-        { {'~','>',0},     COND_ILT },
         { {'~','<','>',0}, COND_INE },
-        { {'~','<','=',0}, COND_IGE },
+        { {'~','<',0},     COND_ILT },
+        { {'~','>','=',0}, COND_IGE },
         { {'~','<','<',0}, COND_ILHS },
-        { {'~','<',0},     COND_IGT },
+        { {'~','>',0},     COND_IGT },
         { {'>','=',0},     COND_GE  },
         { {'>','<',0},     COND_SS  },
-        { {'>','>',0},     COND_LHS },
+        { {'<','<',0},     COND_LHS },
         { {'>',0},         COND_GT  },
         { {'<','>',0},     COND_NE  },
         { {'<','=',0},     COND_LE  },
-        { {'<','<',0},     COND_RHS },
+        { {'>','>',0},     COND_RHS },
         { {'<',0},         COND_LT  },
         { {0},             0        }
     };

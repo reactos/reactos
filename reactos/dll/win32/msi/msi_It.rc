@@ -1,7 +1,7 @@
 /*
- * English resources for MSI
+ * Italian resources for MSI
  *
- * Copyright 2005 Mike McCormack
+ * Copyright 2006 Antonio Codazzi
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_ITALIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-	5 "path %s not found"
-	9 "insert disk %s"
-	10 "bad parameters"
-	11 "enter which folder contains %s"
-	12 "install source for feature missing"
-	13 "network drive for feature missing"
-	14 "feature from:"
-	15 "choose which folder contains %s"
+	5 "percorso %s non trovato"
+	9 "inserire disco %s"
+	10 "parametri incorretti"
+	11 "immettere il nome della cartella che contiene %s"
+	12 "sorgente di installazione per la funzionalità mancante"
+	13 "periferica di rete per la funzionalità mancante"
+	14 "funzionalità da:"
+	15 "selezionare la cartella che contiene %s"
 }

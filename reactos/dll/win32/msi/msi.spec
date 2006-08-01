@@ -45,7 +45,7 @@
 49 stdcall MsiGetActiveDatabase(long)
 50 stdcall MsiGetComponentStateA(long str ptr ptr)
 51 stdcall MsiGetComponentStateW(long wstr ptr ptr)
-52 stub MsiGetDatabaseState
+52 stdcall MsiGetDatabaseState(long)
 53 stub MsiGetFeatureCostA
 54 stub MsiGetFeatureCostW
 55 stub MsiGetFeatureInfoA
@@ -133,7 +133,7 @@
 137 stdcall MsiSetExternalUIW(ptr long ptr)
 138 stdcall MsiSetFeatureStateA(long str long)
 139 stdcall MsiSetFeatureStateW(long wstr long)
-140 stub MsiSetInstallLevel
+140 stdcall MsiSetInstallLevel(long long)
 141 stdcall MsiSetInternalUI(long ptr)
 142 stub MsiVerifyDiskSpace
 143 stdcall MsiSetMode(long long long)
@@ -195,16 +195,16 @@
 199 stdcall MsiMessageBoxW(long long long long long long)
 200 stdcall MsiDecomposeDescriptorA(str ptr ptr ptr ptr)
 201 stdcall MsiDecomposeDescriptorW(wstr ptr ptr ptr ptr)
-202 stub MsiProvideQualifiedComponentExA
+202 stdcall MsiProvideQualifiedComponentExA(str str long str long long ptr ptr)
 203 stdcall MsiProvideQualifiedComponentExW(wstr wstr long wstr long long ptr ptr)
 204 stdcall MsiEnumRelatedProductsA(str long long ptr)
 205 stdcall MsiEnumRelatedProductsW(wstr long long ptr)
 206 stub MsiSetFeatureAttributesA
 207 stub MsiSetFeatureAttributesW
-208 stub MsiSourceListClearAllA
-209 stub MsiSourceListClearAllW
-210 stub MsiSourceListAddSourceA
-211 stub MsiSourceListAddSourceW
+208 stdcall MsiSourceListClearAllA(str str long)
+209 stdcall MsiSourceListClearAllW(wstr wstr long)
+210 stdcall MsiSourceListAddSourceA(str str long str)
+211 stdcall MsiSourceListAddSourceW(wstr wstr long wstr)
 212 stub MsiSourceListForceResolutionA
 213 stub MsiSourceListForceResolutionW
 214 stub MsiIsProductElevatedA

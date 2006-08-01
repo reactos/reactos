@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /*
@@ -42,47 +42,6 @@ static const WCHAR cszDatabase[]={'D','A','T','A','B','A','S','E',0};
 const WCHAR cszSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
 const WCHAR cszRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
 const WCHAR cszbs[]={'\\',0};
-
-DWORD build_version_dword(LPCWSTR version_string)
-{
-    SHORT major,minor;
-    WORD build;
-    DWORD rc = 0x00000000;
-    LPCWSTR ptr1;
-
-    ptr1 = version_string;
-
-    if (!ptr1)
-        return rc;
-    else
-        major = atoiW(ptr1);
-
-
-    if(ptr1)
-        ptr1 = strchrW(ptr1,'.');
-    if (ptr1)
-    {
-        ptr1++;
-        minor = atoiW(ptr1);
-    }
-    else
-        minor = 0;
-
-    if (ptr1)
-        ptr1 = strchrW(ptr1,'.');
-
-    if (ptr1)
-    {
-        ptr1++;
-        build = atoiW(ptr1);
-    }
-    else
-        build = 0;
-
-    rc = MAKELONG(build,MAKEWORD(minor,major));
-    TRACE("%s -> 0x%lx\n",debugstr_w(version_string),rc);
-    return rc;
-}
 
 LPWSTR build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name )
 {
@@ -131,6 +90,14 @@ LPWSTR msi_dup_property(MSIPACKAGE *package, LPCWSTR prop)
         str = NULL;
     }
     return str;
+}
+
+int msi_get_property_int( MSIPACKAGE *package, LPCWSTR prop, int def )
+{
+    LPWSTR str = msi_dup_property( package, prop );
+    int val = str ? atoiW( str ) : def;
+    msi_free( str );
+    return val;
 }
 
 MSICOMPONENT* get_loaded_component( MSIPACKAGE* package, LPCWSTR Component )
@@ -228,6 +195,45 @@ static LPWSTR get_source_root( MSIPACKAGE *package )
     return path;
 }
 
+/*
+ * clean_spaces_from_path()
+ *
+ * removes spaces from the beginning and end of path segments
+ * removes multiple \\ characters
+ */
+static void clean_spaces_from_path( LPWSTR p )
+{
+    LPWSTR q = p;
+    int n, len = 0;
+
+    while (1)
+    {
+        /* copy until the end of the string or a space */
+        while (*p != ' ' && (*q = *p))
+        {
+            p++, len++;
+            /* reduce many backslashes to one */
+            if (*p != '\\' || *q != '\\')
+                q++;
+        }
+
+        /* quit at the end of the string */
+        if (!*p)
+            break;
+
+        /* count the number of spaces */
+        n = 0;
+        while (p[n] == ' ')
+            n++;
+
+        /* if it's leading or trailing space, skip it */
+        if ( len == 0 || p[-1] == '\\' || p[n] == '\\' )
+            p += n;
+        else  /* copy n spaces */
+            while (n && (*q++ = *p++)) n--;
+    }
+}
+
 LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
                       BOOL set_prop, MSIFOLDER **folder)
 {
@@ -255,6 +261,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
 
             /* correct misbuilt target dir */
             path = build_directory_name(2, check_path, NULL);
+            clean_spaces_from_path( path );
             if (strcmpiW(path,check_path)!=0)
                 MSI_SetPropertyW(package,cszTargetDir,path);
             msi_free(check_path);
@@ -307,6 +314,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
             TRACE("   TargetDefault = %s\n", debugstr_w(f->TargetDefault));
 
             path = build_directory_name( 3, p, f->TargetDefault, NULL );
+            clean_spaces_from_path( path );
             f->ResolvedTarget = strdupW( path );
             TRACE("target -> %s\n", debugstr_w(path));
             if (set_prop)
@@ -314,21 +322,37 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
         }
         else 
         {
-            if (f->SourceDefault && f->SourceDefault[0]!='.')
-                path = build_directory_name( 3, p, f->SourceDefault, NULL );
-            else
-                path = strdupW(p);
-            TRACE("source -> %s\n", debugstr_w(path));
+            /* source may be in a few different places ... check each of them */
+            path = NULL;
 
-            /* if the directory doesn't exist, use the root */
-            if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW( path ))
+            /* try the long path directory */
+            if (f->SourceLongPath)
             {
-                msi_free( path );
-                path = get_source_root( package );
-                TRACE("defaulting to %s\n", debugstr_w(path));
+                path = build_directory_name( 3, p, f->SourceLongPath, NULL );
+                if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW( path ))
+                {
+                    msi_free( path );
+                    path = NULL;
+                }
             }
-            else
-                f->ResolvedSource = strdupW( path );
+
+            /* try the short path directory */
+            if (!path && f->SourceShortPath)
+            {
+                path = build_directory_name( 3, p, f->SourceShortPath, NULL );
+                if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW( path ))
+                {
+                    msi_free( path );
+                    path = NULL;
+                }
+            }
+
+            /* try the root of the install */
+            if (!path)
+                path = get_source_root( package );
+
+            TRACE("source -> %s\n", debugstr_w(path));
+            f->ResolvedSource = strdupW( path );
         }
         msi_free(p);
     }
@@ -467,7 +491,8 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
         list_remove( &folder->entry );
         msi_free( folder->Directory );
         msi_free( folder->TargetDefault );
-        msi_free( folder->SourceDefault );
+        msi_free( folder->SourceLongPath );
+        msi_free( folder->SourceShortPath );
         msi_free( folder->ResolvedTarget );
         msi_free( folder->ResolvedSource );
         msi_free( folder->Property );
@@ -496,6 +521,7 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
         msi_free( file->File );
         msi_free( file->FileName );
         msi_free( file->ShortName );
+        msi_free( file->LongName );
         msi_free( file->Version );
         msi_free( file->Language );
         msi_free( file->SourcePath );
@@ -719,8 +745,6 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     WCHAR message[1024];
     MSIRECORD * row = 0;
     DWORD size;
-    static const WCHAR szActionData[] = 
-        {'A','c','t','i','o','n','D','a','t','a',0};
 
     if (!package->LastAction || strcmpW(package->LastAction,action))
     {
@@ -752,8 +776,6 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     MSI_RecordSetStringW(row,1,message);
  
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, row);
-
-    ControlEvent_FireSubscribedEvent(package,szActionData, row);
 
     msiobj_release(&row->hdr);
 }
@@ -803,49 +825,35 @@ void reduce_to_shortfilename(WCHAR* filename)
 LPWSTR create_component_advertise_string(MSIPACKAGE* package, 
                 MSICOMPONENT* component, LPCWSTR feature)
 {
-    GUID clsid;
-    WCHAR productid_85[21];
-    WCHAR component_85[21];
-    /*
-     * I have a fair bit of confusion as to when a < is used and when a > is
-     * used. I do not think i have it right...
-     *
-     * Ok it appears that the > is used if there is a guid for the compoenent
-     * and the < is used if not.
-     */
-    static WCHAR fmt1[] = {'%','s','%','s','<',0,0};
-    static WCHAR fmt2[] = {'%','s','%','s','>','%','s',0,0};
+    static const WCHAR fmt[] = {'%','s','%','s','%','c','%','s',0};
+    WCHAR productid_85[21], component_85[21];
     LPWSTR output = NULL;
     DWORD sz = 0;
+    GUID clsid;
 
-    memset(productid_85,0,sizeof(productid_85));
-    memset(component_85,0,sizeof(component_85));
+    /* > is used if there is a component GUID and < if not.  */
+
+    productid_85[0] = 0;
+    component_85[0] = 0;
 
     CLSIDFromString(package->ProductCode, &clsid);
-    
-    encode_base85_guid(&clsid,productid_85);
+    encode_base85_guid(&clsid, productid_85);
 
-    CLSIDFromString(component->ComponentId, &clsid);
-    encode_base85_guid(&clsid,component_85);
+    if (component)
+    {
+        CLSIDFromString(component->ComponentId, &clsid);
+        encode_base85_guid(&clsid, component_85);
+    }
 
-    TRACE("Doing something with this... %s %s %s\n", 
-            debugstr_w(productid_85), debugstr_w(feature),
-            debugstr_w(component_85));
+    TRACE("prod=%s feat=%s comp=%s\n", debugstr_w(productid_85),
+          debugstr_w(feature), debugstr_w(component_85));
  
-    sz = lstrlenW(productid_85) + lstrlenW(feature);
-    if (component)
-        sz += lstrlenW(component_85);
+    sz = 20 + lstrlenW(feature) + 20 + 3;
 
-    sz+=3;
-    sz *= sizeof(WCHAR);
-           
-    output = msi_alloc(sz);
-    memset(output,0,sz);
+    output = msi_alloc_zero(sz*sizeof(WCHAR));
 
-    if (component)
-        sprintfW(output,fmt2,productid_85,feature,component_85);
-    else
-        sprintfW(output,fmt1,productid_85,feature);
+    sprintfW(output, fmt, productid_85, feature,
+             component?'>':'<', component_85);
     
     return output;
 }

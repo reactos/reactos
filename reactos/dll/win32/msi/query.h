@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_MSI_QUERY_H
@@ -53,6 +53,7 @@
 #define EXPR_STRCMP   7
 #define EXPR_WILDCARD 9
 #define EXPR_COL_NUMBER_STRING 10
+#define EXPR_COL_NUMBER32 11
 
 struct sql_str {
     LPCWSTR data;
@@ -115,6 +116,10 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **, LPWSTR table,
                         column_info *list, struct expr *expr );
 
 UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table );
+
+UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view,
+                      LPCWSTR left, LPCWSTR right,
+                      struct expr *cond );
 
 int sqliteGetToken(const WCHAR *z, int *tokenType);
 

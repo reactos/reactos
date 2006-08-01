@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 
@@ -180,7 +180,7 @@ static long cabinet_seek(INT_PTR hf, long dist, int seektype)
     return SetFilePointer(handle, dist, NULL, seektype);
 }
 
-static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f )
+static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f, const WCHAR *action )
 {
     MSIRECORD *uirow;
     LPWSTR uipath, p;
@@ -194,7 +194,7 @@ static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f )
         p[1]=0;
     MSI_RecordSetStringW( uirow, 9, uipath);
     MSI_RecordSetInteger( uirow, 6, f->FileSize );
-    ui_actiondata( package, szInstallFiles, uirow);
+    ui_actiondata( package, action, uirow);
     msiobj_release( &uirow->hdr );
     msi_free( uipath );
     ui_progress( package, 2, f->FileSize, 0, 0);
@@ -210,6 +210,7 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
         HANDLE handle;
         LPWSTR file;
         MSIFILE *f;
+        DWORD attrs;
 
         file = strdupAtoW(pfdin->psz1);
         f = get_loaded_file(data->package, file);
@@ -227,12 +228,15 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
             return 0;
         }
 
-        msi_file_update_ui( data->package, f );
+        msi_file_update_ui( data->package, f, szInstallFiles );
 
         TRACE("extracting %s\n", debugstr_w(f->TargetPath) );
 
+        attrs = f->Attributes & (FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM);
+        if (!attrs) attrs = FILE_ATTRIBUTE_NORMAL;
+
         handle = CreateFileW( f->TargetPath, GENERIC_READ | GENERIC_WRITE, 0,
-                              NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL );
+                              NULL, CREATE_ALWAYS, attrs, NULL );
         if ( handle == INVALID_HANDLE_VALUE )
         {
             ERR("failed to create %s (error %ld)\n",
@@ -328,88 +332,19 @@ static VOID set_file_source(MSIPACKAGE* package, MSIFILE* file, MSICOMPONENT*
 {
     if (file->Attributes & msidbFileAttributesNoncompressed)
     {
-        LPWSTR p;
+        LPWSTR p, path;
         p = resolve_folder(package, comp->Directory, TRUE, FALSE, NULL);
-        file->SourcePath = build_directory_name(2, p, file->ShortName);
+        path = build_directory_name(2, p, file->ShortName);
+        if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW( path ))
+        {
+            msi_free(path);
+            path = build_directory_name(2, p, file->LongName);
+        }
+        file->SourcePath = path;
         msi_free(p);
     }
     else
         file->SourcePath = build_directory_name(2, path, file->File);
-}
-
-static BOOL check_volume(LPCWSTR path, LPCWSTR want_volume, LPWSTR volume, 
-        UINT *intype)
-{
-    WCHAR drive[4];
-    WCHAR name[MAX_PATH];
-    UINT type;
-
-    if (!(path[0] && path[1] == ':'))
-        return TRUE;
-
-    drive[0] = path[0];
-    drive[1] = path[1];
-    drive[2] = '\\';
-    drive[3] = 0;
-    TRACE("Checking volume %s .. (%s)\n",debugstr_w(drive), debugstr_w(want_volume));
-    type = GetDriveTypeW(drive);
-    TRACE("drive is of type %x\n",type);
-
-    if (type == DRIVE_UNKNOWN || type == DRIVE_NO_ROOT_DIR || 
-            type == DRIVE_FIXED || type == DRIVE_RAMDISK)
-        return TRUE;
-
-    GetVolumeInformationW(drive, name, MAX_PATH, NULL, NULL, NULL, NULL, 0);
-    TRACE("Drive contains %s\n", debugstr_w(name));
-    volume = strdupW(name);
-    if (*intype)
-        *intype=type;
-    return (strcmpiW(want_volume,name)==0);
-}
-
-static BOOL check_for_sourcefile(LPCWSTR source)
-{
-    DWORD attrib = GetFileAttributesW(source);
-    return (!(attrib == INVALID_FILE_ATTRIBUTES));
-}
-
-static UINT ready_volume(MSIPACKAGE* package, LPCWSTR path, LPWSTR last_volume, 
-                         MSIRECORD *row,UINT *type )
-{
-    LPWSTR volume = NULL; 
-    LPCWSTR want_volume = MSI_RecordGetString(row, 5);
-    BOOL ok = check_volume(path, want_volume, volume, type);
-
-    TRACE("Readying Volume for %s (%s, %s)\n", debugstr_w(path),
-          debugstr_w(want_volume), debugstr_w(last_volume));
-
-    if (check_for_sourcefile(path) && !ok)
-    {
-        FIXME("Found the Sourcefile but not on the correct volume.(%s,%s,%s)\n",
-                debugstr_w(path),debugstr_w(want_volume), debugstr_w(volume));
-        return ERROR_SUCCESS;
-    }
-
-    while (!ok)
-    {
-        INT rc;
-        LPCWSTR prompt;
-        LPWSTR msg;
-      
-        prompt = MSI_RecordGetString(row,3);
-        msg = generate_error_string(package, 1302, 1, prompt);
-        rc = MessageBoxW(NULL,msg,NULL,MB_OKCANCEL);
-        msi_free(volume);
-        msi_free(msg);
-        if (rc == IDOK)
-            ok = check_for_sourcefile(path);
-        else
-            return ERROR_INSTALL_USEREXIT;
-    }
-
-    msi_free(last_volume);
-    last_volume = strdupW(volume);
-    return ERROR_SUCCESS;
 }
 
 struct media_info {
@@ -457,7 +392,6 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
     LPCWSTR cab, volume;
     DWORD sz;
     INT seq;
-    UINT type;
     LPCWSTR prompt;
     MSICOMPONENT *comp = file->Component;
 
@@ -489,22 +423,14 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
     {
         mi->last_path = resolve_folder(package, comp->Directory, TRUE, FALSE, NULL);
         set_file_source(package,file,comp,mi->last_path);
-        rc = ready_volume(package, file->SourcePath, mi->last_volume, row,&type);
 
         MsiSourceListAddMediaDiskW(package->ProductCode, NULL, 
             MSIINSTALLCONTEXT_USERMANAGED, MSICODE_PRODUCT, mi->count, volume,
             prompt);
 
-        if (type == DRIVE_REMOVABLE || type == DRIVE_CDROM || 
-                type == DRIVE_RAMDISK)
-            MsiSourceListSetInfoW(package->ProductCode, NULL, 
+        MsiSourceListSetInfoW(package->ProductCode, NULL, 
                 MSIINSTALLCONTEXT_USERMANAGED, 
                 MSICODE_PRODUCT|MSISOURCETYPE_MEDIA,
-                INSTALLPROPERTY_LASTUSEDSOURCEW, mi->last_path);
-        else
-            MsiSourceListSetInfoW(package->ProductCode, NULL, 
-                MSIINSTALLCONTEXT_USERMANAGED, 
-                MSICODE_PRODUCT|MSISOURCETYPE_NETWORK,
                 INSTALLPROPERTY_LASTUSEDSOURCEW, mi->last_path);
         msiobj_release(&row->hdr);
         return rc;
@@ -550,17 +476,9 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
                 strcpyW(mi->last_path,mi->source);
                 strcatW(mi->source,cab);
 
-                rc = ready_volume(package, mi->source, mi->last_volume, row, &type);
-                if (type == DRIVE_REMOVABLE || type == DRIVE_CDROM || 
-                        type == DRIVE_RAMDISK)
-                    MsiSourceListSetInfoW(package->ProductCode, NULL,
+                MsiSourceListSetInfoW(package->ProductCode, NULL,
                             MSIINSTALLCONTEXT_USERMANAGED,
                             MSICODE_PRODUCT|MSISOURCETYPE_MEDIA,
-                            INSTALLPROPERTY_LASTUSEDSOURCEW, mi->last_path);
-                else
-                    MsiSourceListSetInfoW(package->ProductCode, NULL,
-                            MSIINSTALLCONTEXT_USERMANAGED,
-                            MSICODE_PRODUCT|MSISOURCETYPE_NETWORK,
                             INSTALLPROPERTY_LASTUSEDSOURCEW, mi->last_path);
 
                 /* extract the cab file into a folder in the temp folder */
@@ -578,18 +496,10 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
         mi->last_path = msi_alloc(MAX_PATH*sizeof(WCHAR));
         MSI_GetPropertyW(package,cszSourceDir,mi->source,&sz);
         strcpyW(mi->last_path,mi->source);
-        rc = ready_volume(package, mi->last_path, mi->last_volume, row, &type);
 
-        if (type == DRIVE_REMOVABLE || type == DRIVE_CDROM || 
-                type == DRIVE_RAMDISK)
-            MsiSourceListSetInfoW(package->ProductCode, NULL,
+        MsiSourceListSetInfoW(package->ProductCode, NULL,
                     MSIINSTALLCONTEXT_USERMANAGED,
                     MSICODE_PRODUCT|MSISOURCETYPE_MEDIA,
-                    INSTALLPROPERTY_LASTUSEDSOURCEW, mi->last_path);
-        else
-            MsiSourceListSetInfoW(package->ProductCode, NULL,
-                    MSIINSTALLCONTEXT_USERMANAGED,
-                    MSICODE_PRODUCT|MSISOURCETYPE_NETWORK,
                     INSTALLPROPERTY_LASTUSEDSOURCEW, mi->last_path);
     }
     set_file_source(package, file, comp, mi->last_path);
@@ -604,19 +514,14 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
 }
 
 static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key, 
-                                   LPWSTR* file_source)
+                            MSIFILE** file)
 {
-    MSIFILE *file;
-
-    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
+    LIST_FOR_EACH_ENTRY( *file, &package->files, MSIFILE, entry )
     {
-        if (lstrcmpW( file_key, file->File )==0)
+        if (lstrcmpW( file_key, (*file)->File )==0)
         {
-            if (file->state >= msifs_overwrite)
-            {
-                *file_source = strdupW( file->TargetPath );
+            if ((*file)->state >= msifs_overwrite)
                 return ERROR_SUCCESS;
-            }
             else
                 return ERROR_FILE_NOT_FOUND;
         }
@@ -744,13 +649,13 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE *package = (MSIPACKAGE*)param;
-    WCHAR *file_source = NULL;
     WCHAR dest_name[0x100];
     LPWSTR dest_path, dest;
     LPCWSTR file_key, component;
     DWORD sz;
     DWORD rc;
     MSICOMPONENT *comp;
+    MSIFILE *file;
 
     component = MSI_RecordGetString(row,2);
     comp = get_loaded_component(package,component);
@@ -775,17 +680,16 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
         return ERROR_FUNCTION_FAILED;
     }
 
-    rc = get_file_target(package,file_key,&file_source);
+    rc = get_file_target(package,file_key,&file);
 
     if (rc != ERROR_SUCCESS)
     {
         ERR("Original file unknown %s\n",debugstr_w(file_key));
-        msi_free(file_source);
         return ERROR_SUCCESS;
     }
 
     if (MSI_RecordIsNull(row,4))
-        strcpyW(dest_name,strrchrW(file_source,'\\')+1);
+        strcpyW(dest_name,strrchrW(file->TargetPath,'\\')+1);
     else
     {
         sz=0x100;
@@ -796,7 +700,7 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     if (MSI_RecordIsNull(row,5))
     {
         LPWSTR p;
-        dest_path = strdupW(file_source);
+        dest_path = strdupW(file->TargetPath);
         p = strrchrW(dest_path,'\\');
         if (p)
             *p=0;
@@ -813,7 +717,6 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
             if (!dest_path)
             {
                 FIXME("Unable to get destination folder, try AppSearch properties\n");
-                msi_free(file_source);
                 return ERROR_SUCCESS;
             }
         }
@@ -821,23 +724,24 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
 
     dest = build_directory_name(2, dest_path, dest_name);
 
-    TRACE("Duplicating file %s to %s\n",debugstr_w(file_source),
+    TRACE("Duplicating file %s to %s\n",debugstr_w(file->TargetPath),
                     debugstr_w(dest)); 
 
-    if (strcmpW(file_source,dest))
-        rc = !CopyFileW(file_source,dest,TRUE);
+    if (strcmpW(file->TargetPath,dest))
+        rc = !CopyFileW(file->TargetPath,dest,TRUE);
     else
         rc = ERROR_SUCCESS;
 
     if (rc != ERROR_SUCCESS)
         ERR("Failed to copy file %s -> %s, last error %ld\n",
-            debugstr_w(file_source), debugstr_w(dest_path), GetLastError());
+            debugstr_w(file->TargetPath), debugstr_w(dest_path), GetLastError());
 
     FIXME("We should track these duplicate files as well\n");   
 
     msi_free(dest_path);
     msi_free(dest);
-    msi_free(file_source);
+
+    msi_file_update_ui(package, file, szDuplicateFiles);
 
     return ERROR_SUCCESS;
 }
@@ -866,6 +770,9 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
+        MSIRECORD *uirow;
+        LPWSTR uipath, p;
+
         if ( !file->Component )
             continue;
         if ( file->Component->Installed == INSTALLSTATE_LOCAL )
@@ -881,6 +788,19 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         if ( !DeleteFileW( file->TargetPath ) )
             ERR("failed to delete %s\n",  debugstr_w(file->TargetPath) );
         file->state = msifs_missing;
+
+        /* the UI chunk */
+        uirow = MSI_CreateRecord( 9 );
+        MSI_RecordSetStringW( uirow, 1, file->FileName );
+        uipath = strdupW( file->TargetPath );
+        p = strrchrW(uipath,'\\');
+        if (p)
+            p[1]=0;
+        MSI_RecordSetStringW( uirow, 9, uipath);
+        ui_actiondata( package, szRemoveFiles, uirow);
+        msiobj_release( &uirow->hdr );
+        msi_free( uipath );
+        /* FIXME: call ui_progress here? */
     }
 
     return ERROR_SUCCESS;

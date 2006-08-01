@@ -1,7 +1,7 @@
 /*
- * English resources for MSI
+ * Turkish resources for MSI
  *
- * Copyright 2005 Mike McCormack
+ * Copyright 2006 Fatih Aþýcý
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-	5 "path %s not found"
-	9 "insert disk %s"
-	10 "bad parameters"
-	11 "enter which folder contains %s"
-	12 "install source for feature missing"
-	13 "network drive for feature missing"
-	14 "feature from:"
-	15 "choose which folder contains %s"
+	5 "%s yolu bulunamadý"
+	9 "%s nolu diski yerleþtirin"
+	10 "bozuk parametreler"
+	11 "%s öðesini içeren dizini girin"
+	12 "eksik özellik için kurulum kaynaðý"
+	13 "eksik özellik için að sürücüsü"
+	14 "özellik buradan:"
+	15 "%s öðesini içeren dizini seçin"
 }

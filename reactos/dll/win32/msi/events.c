@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 
@@ -35,6 +35,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/contr
 #include "action.h"
 
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -368,7 +369,17 @@ UINT ACTION_DialogBox( MSIPACKAGE* package, LPCWSTR szDialogName )
     return r;
 }
 
-struct _events Events[] = {
+static UINT ControlEvent_SetInstallLevel(MSIPACKAGE* package, LPCWSTR argument,
+                                          msi_dialog* dialog)
+{
+    int iInstallLevel = atolW(argument);
+
+    TRACE("Setting install level: %i\n", iInstallLevel);
+
+    return MSI_SetInstallLevel( package, iInstallLevel );
+}
+
+static const struct _events Events[] = {
     { "EndDialog",ControlEvent_EndDialog },
     { "NewDialog",ControlEvent_NewDialog },
     { "SpawnDialog",ControlEvent_SpawnDialog },
@@ -379,6 +390,7 @@ struct _events Events[] = {
     { "AddSource",ControlEvent_AddSource },
     { "SetTargetPath",ControlEvent_SetTargetPath },
     { "Reset",ControlEvent_Reset },
+    { "SetInstallLevel",ControlEvent_SetInstallLevel },
     { NULL,NULL },
 };
 
