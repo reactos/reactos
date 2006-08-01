@@ -40,8 +40,6 @@ DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
     return 0;  /* all other messages are ignored */
 }
 
-
-
 VOID
 STDCALL
 LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
