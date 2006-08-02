@@ -23,7 +23,7 @@
 /* comment out #define BITMAP_SPEED_OVER_SIZE below for one slower function */
 /* j@american-data.com */
 
-//#define BITMAP_SPEED_OVER_SIZE
+#define BITMAP_SPEED_OVER_SIZE
 
 /* indent is confused by this file */
 /* *INDENT-OFF* */

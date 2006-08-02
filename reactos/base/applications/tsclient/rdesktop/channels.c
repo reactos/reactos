@@ -81,7 +81,7 @@ channel_send(RDPCLIENT * This, STREAM s, VCHANNEL * channel)
 
 	/* first fragment sent in-place */
 	s_pop_layer(s, channel_hdr);
-	length = s->end - s->p - 8;
+	length = s->end - s->p - sizeof(CHANNEL_PDU_HEADER);
 
 	DEBUG_CHANNEL(("channel_send, length = %d\n", length));
 

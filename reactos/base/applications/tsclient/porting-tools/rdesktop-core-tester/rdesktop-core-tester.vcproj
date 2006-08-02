@@ -36,6 +36,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				WarningLevel="1"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -115,6 +116,7 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				WarningLevel="2"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -185,6 +187,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\activex.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\rdesktop-core-tester.cpp"
 				>
 			</File>
@@ -224,6 +230,66 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="MIDL"
+			>
+			<File
+				RelativePath=".\mstsclib.idl"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCMIDLTool"
+						TypeLibraryName="$(IntDir)/mstsclib.tlb"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCMIDLTool"
+						TypeLibraryName="$(IntDir)/mstsclib.tlb"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\mstsclib.rc"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						PreprocessorDefinitions="TYPELIB_PATH__=./$(IntDir)/mstsclib.tlb"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						PreprocessorDefinitions="TYPELIB_PATH__=./$(IntDir)/mstsclib.tlb"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\mstsclib_h.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mstsclib_i.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

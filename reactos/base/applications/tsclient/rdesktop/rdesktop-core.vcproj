@@ -205,10 +205,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\channels.c"
-				>
-			</File>
-			<File
 				RelativePath=".\iso.c"
 				>
 			</File>

@@ -132,12 +132,10 @@ typedef struct _key_translation
 }
 key_translation;
 
-// TODO: semi-nuke, wrap CHANNEL_DEF
 typedef struct _VCHANNEL
 {
+	CHANNEL_DEF def;
 	uint16 mcs_id;
-	char name[8];
-	uint32 flags;
 	struct stream in;
 	void (*process) (RDPCLIENT *, STREAM);
 }

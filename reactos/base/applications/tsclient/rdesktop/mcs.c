@@ -397,7 +397,7 @@ mcs_connect(RDPCLIENT * This, char *server, STREAM mcs_data, char *username)
 
 	for (i = 0; i < This->num_channels; i++)
 	{
-		mcs_send_cjrq(This, This->channels[i].mcs_id);
+		mcs_send_cjrq(This, MCS_GLOBAL_CHANNEL + 1 + i);
 		if (!mcs_recv_cjcf(This))
 			goto error;
 	}
@@ -438,7 +438,7 @@ mcs_reconnect(RDPCLIENT * This, char *server, STREAM mcs_data)
 
 	for (i = 0; i < This->num_channels; i++)
 	{
-		mcs_send_cjrq(This, This->channels[i].mcs_id);
+		mcs_send_cjrq(This, MCS_GLOBAL_CHANNEL + 1 + i);
 		if (!mcs_recv_cjcf(This))
 			goto error;
 	}

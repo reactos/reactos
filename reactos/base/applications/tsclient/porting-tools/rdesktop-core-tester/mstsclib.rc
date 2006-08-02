@@ -1,0 +1,9 @@
+#define TOSTRING_(X) # X
+#define TOSTRING(X) TOSTRING_(X)
+
+LANGUAGE 0, 0
+
+// NOTE: TYPELIB_PATH__ is defined on the command line (-D TYPELIB_PATH__=<path>)
+1 TYPELIB TOSTRING(TYPELIB_PATH__)
+
+// EOF

@@ -318,6 +318,8 @@ sec_init(RDPCLIENT * This, uint32 flags, int maxlen)
 }
 
 /* Transmit secure transport packet over specified channel */
+
+// !!! we need a lock here !!!
 void
 sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel)
 {
@@ -333,8 +335,8 @@ sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel)
 		datalen = s->end - s->p - 8;
 
 #if WITH_DEBUG
-		//DEBUG(("Sending encrypted packet:\n"));
-		//hexdump(s->p + 8, datalen);
+		DEBUG(("Sending encrypted packet:\n"));
+		hexdump(s->p + 8, datalen);
 #endif
 
 		sec_sign(s->p, 8, This->secure.sign_key, This->secure.rc4_key_len, s->p + 8, datalen);
@@ -454,8 +456,8 @@ sec_out_mcs_data(RDPCLIENT * This, STREAM s)
 		for (i = 0; i < This->num_channels; i++)
 		{
 			DEBUG_RDP5(("Requesting channel %s\n", This->channels[i].name));
-			out_uint8a(s, This->channels[i].name, 8);
-			out_uint32_be(s, This->channels[i].flags);
+			out_uint8a(s, This->channel_defs[i].name, 8);
+			out_uint32_be(s, This->channel_defs[i].options);
 		}
 	}
 

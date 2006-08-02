@@ -191,12 +191,20 @@ typedef struct _seamless_window
 } seamless_window;
 #endif
 
+typedef struct CHANNEL_PRIVATE_
+{
+	int opened;
+	PCHANNEL_INIT_EVENT_FN pChannelInitEventProc;
+	PCHANNEL_OPEN_EVENT_FN pChannelOpenEventProc;
+}
+CHANNEL_PRIVATE;
+
 /* holds the whole state of the RDP client */
 struct rdpclient
 {
 	/* channels.c */
-#define MAX_CHANNELS			6
-	VCHANNEL channels[MAX_CHANNELS];
+	CHANNEL_DEF channel_defs[CHANNEL_MAX_COUNT];
+	CHANNEL_PRIVATE channel_data[CHANNEL_MAX_COUNT];
 	unsigned int num_channels;
 
 	/* licence.c */

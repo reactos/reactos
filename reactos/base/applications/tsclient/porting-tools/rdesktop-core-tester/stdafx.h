@@ -20,4 +20,9 @@
 #include <windows.h>
 #include <winsock2.h>
 
+#include <objbase.h>
+#include <oleauto.h>
+#include <ocidl.h>
+#include <objsafe.h>
+
 // EOF

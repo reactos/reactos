@@ -14,12 +14,26 @@ namespace
 
 	HMODULE hmMstscax = NULL;
 
+	extern "C" char __ImageBase;
+	static const HMODULE hmSelf = reinterpret_cast<HMODULE>(&__ImageBase);
+
 	void init()
 	{
 		if(hmMstscax)
 			return;
 
-		hmMstscax = LoadLibrary(TEXT("mstscax_.dll"));
+		TCHAR szFileName[MAX_PATH + 1];
+		GetModuleFileName(hmSelf, szFileName, MAX_PATH);
+
+		std::basic_string<TCHAR> strFileName(&szFileName[0]);
+		std::reverse_iterator<std::basic_string<TCHAR>::const_iterator > begin(strFileName.end());
+		std::reverse_iterator<std::basic_string<TCHAR>::const_iterator > end(strFileName.begin());
+		std::basic_string<TCHAR>::const_iterator endPath = std::find(begin, end, TEXT('\\')).base();
+
+		std::basic_string<TCHAR> strPath(strFileName.begin(), endPath);
+		strPath.append(TEXT("mstscax_.dll"));
+
+		hmMstscax = LoadLibrary(strPath.c_str());
 		pfnDllGetClassObject = (PFNDLLGETCLASSOBJECT)GetProcAddress(hmMstscax, "DllGetClassObject");
 		pfnDllCanUnloadNow = (PFNDLLCANUNLOADNOW)GetProcAddress(hmMstscax, "DllCanUnloadNow");
 		pfnDllGetTscCtlVer = (PFNDLLGETTSCCTLVER)GetProcAddress(hmMstscax, "DllGetTscCtlVer");
@@ -141,7 +155,2067 @@ namespace
 		return X ? TEXT("true") : TEXT("false");
 	}
 
+	std::basic_string<TCHAR> VariantToString(const VARIANT& var)
+	{
+		std::basic_ostringstream<TCHAR> o;
+
+		switch(var.vt & VT_TYPEMASK)
+		{
+		case VT_EMPTY:           o << "<empty>"; break;
+		case VT_NULL:            o << "<null>"; break;
+		case VT_I2:              o << "short"; break;
+		case VT_I4:              o << "long"; break;
+		case VT_R4:              o << "float"; break;
+		case VT_R8:              o << "double"; break;
+		case VT_CY:              o << "CURRENCY"; break;
+		case VT_DATE:            o << "DATE"; break;
+		case VT_BSTR:            o << "string"; break;
+		case VT_DISPATCH:        o << "IDispatch *"; break;
+		case VT_ERROR:           o << "SCODE"; break;
+		case VT_BOOL:            o << "bool"; break;
+		case VT_VARIANT:         o << "VARIANT *"; break;
+		case VT_UNKNOWN:         o << "IUnknown *"; break;
+		case VT_DECIMAL:         o << "DECIMAL"; break;
+		case VT_I1:              o << "char"; break;
+		case VT_UI1:             o << "unsigned char"; break;
+		case VT_UI2:             o << "unsigned short"; break;
+		case VT_UI4:             o << "unsigned long"; break;
+		case VT_I8:              o << "long long"; break;
+		case VT_UI8:             o << "unsigned long long"; break;
+		case VT_INT:             o << "int"; break;
+		case VT_UINT:            o << "unsigned int"; break;
+		case VT_VOID:            o << "void"; break;
+		case VT_HRESULT:         o << "HRESULT"; break;
+		case VT_PTR:             o << "void *"; break;
+		case VT_SAFEARRAY:       o << "SAFEARRAY *"; break;
+		case VT_LPSTR:           o << "LPSTR"; break;
+		case VT_LPWSTR:          o << "LPWSTR"; break;
+		case VT_RECORD:          o << "struct { }"; break;
+		case VT_INT_PTR:         o << "intptr_t"; break;
+		case VT_UINT_PTR:        o << "uintptr_t"; break;
+		case VT_FILETIME:        o << "FILETIME"; break;
+		default:                 o << "???"; break;
+		}
+
+		if(var.vt & VT_ARRAY)
+			o << "[]";
+		else if(var.vt & VT_BYREF)
+			o << " *";
+		else
+		{
+			switch(var.vt & VT_TYPEMASK)
+			{
+			case VT_EMPTY:
+			case VT_NULL:
+			case VT_RECORD:
+			case VT_VOID:
+
+				// TODO
+			case VT_CY:
+			case VT_DATE:
+			case VT_DECIMAL:
+			case VT_FILETIME:
+				break;
+
+			default:
+				o << " = ";
+			}
+
+			switch(var.vt & VT_TYPEMASK)
+			{
+			case VT_I2:       o << var.iVal; break;
+			case VT_I4:       o << var.lVal; break;
+			case VT_R4:       o << var.fltVal; break;
+			case VT_R8:       o << var.dblVal; break;
+			case VT_BSTR:     o << std::wstring(var.bstrVal, var.bstrVal + SysStringLen(var.bstrVal)); break;
+			case VT_BOOL:     o << var.boolVal ? "true" : "false"; break;
+			case VT_I1:       o << int(var.cVal); break;
+			case VT_UI1:      o << unsigned int(var.bVal); break;
+			case VT_UI2:      o << var.uiVal; break;
+			case VT_UI4:      o << var.ulVal; break;
+			case VT_I8:       o << var.llVal; break;
+			case VT_UI8:      o << var.ullVal; break;
+			case VT_INT:      o << var.intVal; break;
+			case VT_UINT:     o << var.uintVal; break;
+			case VT_LPSTR:    o << LPSTR(var.byref); break;
+			case VT_LPWSTR:   o << LPWSTR(var.byref); break;
+			case VT_INT_PTR:  o << var.intVal; break; // BUGBUG
+			case VT_UINT_PTR: o << var.uintVal; break; // BUGBUG
+
+			case VT_DISPATCH:
+			case VT_VARIANT:
+			case VT_UNKNOWN:
+			case VT_PTR:
+			case VT_SAFEARRAY:
+			case VT_RECORD:
+				o << var.byref; break;
+
+			case VT_ERROR:
+			case VT_HRESULT:
+				o << std::hex << var.ulVal; break;
+
+			default:
+				assert(0);
+			}
+		}
+
+		return o.str();
+	}
+
 #pragma warning(disable:4584)
+
+	IConnectionPointContainer * HookIConnectionPointContainer(IConnectionPointContainer * p);
+	IEnumConnectionPoints * HookIEnumConnectionPoints(IEnumConnectionPoints * p);
+	IConnectionPoint * HookIConnectionPoint(IConnectionPoint * p);
+	IEnumConnections * HookIEnumConnections(IEnumConnections * p);
+
+	class CConnectionPointContainer: public IConnectionPointContainer
+	{
+	private:
+		LONG m_refCount;
+		IConnectionPointContainer * m_IConnectionPointContainer;
+
+	public:
+		CConnectionPointContainer(IConnectionPointContainer * pIConnectionPointContainer):
+			m_refCount(1),
+			m_IConnectionPointContainer(pIConnectionPointContainer)
+		{ }
+
+		~CConnectionPointContainer() { m_IConnectionPointContainer->Release(); }
+
+		virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject)
+		{
+			HRESULT hr = S_OK;
+
+			dbgprintf(TEXT("CConnectionPointContainer::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
+
+			if(riid == IID_IUnknown || riid == IID_IConnectionPointContainer)
+				*ppvObject = this;
+			else
+			{
+				*ppvObject = NULL;
+				hr = E_NOINTERFACE;
+			}
+		
+			dbgprintf(TEXT("CConnectionPointContainer::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
+			return hr;
+		}
+
+		virtual ULONG STDMETHODCALLTYPE AddRef(void)
+		{
+			return InterlockedIncrement(&m_refCount);
+		}
+
+		virtual ULONG STDMETHODCALLTYPE Release(void)
+		{
+			LONG n = InterlockedDecrement(&m_refCount);
+
+			if(n == 0)
+				delete this;
+
+			return n;
+		}
+
+        virtual HRESULT STDMETHODCALLTYPE EnumConnectionPoints(IEnumConnectionPoints ** ppEnum)
+		{
+			dbgprintf(TEXT("CConnectionPointContainer::EnumConnectionPoints(%p)"), ppEnum);
+			HRESULT hr = m_IConnectionPointContainer->EnumConnectionPoints(ppEnum);
+			dbgprintf(TEXT("CConnectionPointContainer::EnumConnectionPoints -> %08X, pEnum = %p"), hr, *ppEnum);
+
+			if(SUCCEEDED(hr))
+				*ppEnum = HookIEnumConnectionPoints(*ppEnum);
+
+			return hr;
+		}
+        
+		virtual HRESULT STDMETHODCALLTYPE FindConnectionPoint(REFIID riid, IConnectionPoint ** ppCP)
+		{
+			dbgprintf(TEXT("CConnectionPointContainer::FindConnectionPoint(%ls, %p)"), UUIDToString(riid).c_str(), ppCP);
+			HRESULT hr = m_IConnectionPointContainer->FindConnectionPoint(riid, ppCP);
+			dbgprintf(TEXT("CConnectionPointContainer::FindConnectionPoint -> %08X, pCP = %p"), hr, *ppCP);
+
+			if(SUCCEEDED(hr))
+				*ppCP = HookIConnectionPoint(*ppCP);
+
+			return hr;
+		}
+	};
+
+	class CEnumConnectionPoints: public IEnumConnectionPoints
+	{
+	private:
+		LONG m_refCount;
+		IEnumConnectionPoints * m_IEnumConnectionPoints;
+
+	public:
+		CEnumConnectionPoints(IEnumConnectionPoints * pIEnumConnectionPoints):
+			m_refCount(1),
+			m_IEnumConnectionPoints(pIEnumConnectionPoints)
+		{ }
+
+		~CEnumConnectionPoints() { m_IEnumConnectionPoints->Release(); }
+
+		virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject)
+		{
+			HRESULT hr = S_OK;
+
+			dbgprintf(TEXT("CEnumConnectionPoints::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
+
+			if(riid == IID_IUnknown || riid == IID_IEnumConnectionPoints)
+				*ppvObject = this;
+			else
+			{
+				*ppvObject = NULL;
+				hr = E_NOINTERFACE;
+			}
+		
+			dbgprintf(TEXT("CEnumConnectionPoints::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
+			return hr;
+		}
+
+		virtual ULONG STDMETHODCALLTYPE AddRef(void)
+		{
+			return InterlockedIncrement(&m_refCount);
+		}
+
+		virtual ULONG STDMETHODCALLTYPE Release(void)
+		{
+			LONG n = InterlockedDecrement(&m_refCount);
+
+			if(n == 0)
+				delete this;
+
+			return n;
+		}
+
+        virtual HRESULT STDMETHODCALLTYPE Next(ULONG cConnections, LPCONNECTIONPOINT * ppCP, ULONG * pcFetched)
+		{
+			dbgprintf(TEXT("CEnumConnectionPoints::Next(%lu, %p, %p)"), cConnections, ppCP, pcFetched);
+			HRESULT hr = m_IEnumConnectionPoints->Next(cConnections, ppCP, pcFetched);
+			dbgprintf(TEXT("CEnumConnectionPoints:: -> %08X, pCP = %p, cFetched = %lu"), hr, *ppCP, *pcFetched);
+
+			if(SUCCEEDED(hr))
+				*ppCP = HookIConnectionPoint(*ppCP);
+
+			return hr;
+		}
+        
+        virtual HRESULT STDMETHODCALLTYPE Skip(ULONG cConnections)
+		{
+			dbgprintf(TEXT("CEnumConnectionPoints::Skip(%lu)"), cConnections);
+			HRESULT hr = m_IEnumConnectionPoints->Skip(cConnections);
+			dbgprintf(TEXT("CEnumConnectionPoints:: -> %08X"), hr);
+			return hr;
+		}
+        
+        virtual HRESULT STDMETHODCALLTYPE Reset(void)
+		{
+			dbgprintf(TEXT("CEnumConnectionPoints::Reset()"));
+			HRESULT hr = m_IEnumConnectionPoints->Reset();
+			dbgprintf(TEXT("CEnumConnectionPoints:: -> %08X"), hr);
+			return hr;
+		}
+        
+        virtual HRESULT STDMETHODCALLTYPE Clone(IEnumConnectionPoints ** ppEnum)
+		{
+			dbgprintf(TEXT("CEnumConnectionPoints::Clone(%p)"), ppEnum);
+			HRESULT hr = m_IEnumConnectionPoints->Clone(ppEnum);
+			dbgprintf(TEXT("CEnumConnectionPoints:: -> %08X, pEnum"), hr, *ppEnum);
+
+			if(SUCCEEDED(hr))
+				*ppEnum = HookIEnumConnectionPoints(*ppEnum);
+
+			return hr;
+		}
+	};
+
+	class CConnectionPoint: public IConnectionPoint
+	{
+	private:
+		LONG m_refCount;
+		IConnectionPoint * m_IConnectionPoint;
+
+	public:
+		CConnectionPoint(IConnectionPoint * pIConnectionPoint):
+			m_refCount(1),
+			m_IConnectionPoint(pIConnectionPoint)
+		{ }
+
+		~CConnectionPoint() { m_IConnectionPoint->Release(); }
+
+		virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject)
+		{
+			HRESULT hr = S_OK;
+
+			dbgprintf(TEXT("CConnectionPoint::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
+
+			if(riid == IID_IUnknown || riid == IID_IConnectionPoint)
+				*ppvObject = this;
+			else
+			{
+				*ppvObject = NULL;
+				hr = E_NOINTERFACE;
+			}
+		
+			dbgprintf(TEXT("CConnectionPoint::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
+			return hr;
+		}
+
+		virtual ULONG STDMETHODCALLTYPE AddRef(void)
+		{
+			return InterlockedIncrement(&m_refCount);
+		}
+
+		virtual ULONG STDMETHODCALLTYPE Release(void)
+		{
+			LONG n = InterlockedDecrement(&m_refCount);
+
+			if(n == 0)
+				delete this;
+
+			return n;
+		}
+
+		virtual HRESULT STDMETHODCALLTYPE GetConnectionInterface(IID * pIID)
+		{
+			dbgprintf(TEXT("CConnectionPoint::GetConnectionInterface(%p)"), pIID);
+			HRESULT hr = m_IConnectionPoint->GetConnectionInterface(pIID);
+			dbgprintf(TEXT("CConnectionPoint::GetConnectionInterface -> %08X, IID = %ls"), hr, UUIDToString(*pIID).c_str());
+			return hr;
+		}
+
+		virtual HRESULT STDMETHODCALLTYPE GetConnectionPointContainer(IConnectionPointContainer ** ppCPC)
+		{
+			dbgprintf(TEXT("CConnectionPoint::GetConnectionPointContainer(%p)"), ppCPC);
+			HRESULT hr = m_IConnectionPoint->GetConnectionPointContainer(ppCPC);
+			dbgprintf(TEXT("CConnectionPoint::GetConnectionPointContainer -> %08X, pCPC = %p"), hr, *ppCPC);
+
+			if(SUCCEEDED(hr))
+				*ppCPC = HookIConnectionPointContainer(*ppCPC);
+
+			return hr;
+		}
+
+		virtual HRESULT STDMETHODCALLTYPE Advise(IUnknown * pUnkSink, DWORD * pdwCookie)
+		{
+			dbgprintf(TEXT("CConnectionPoint::Advise(%p, %p)"), pUnkSink, pdwCookie);
+			HRESULT hr = m_IConnectionPoint->Advise(pUnkSink, pdwCookie);
+			dbgprintf(TEXT("CConnectionPoint::Advise -> %08X, dwCookie = %lu"), hr, *pdwCookie);
+			// TODO: hook sink
+			return hr;
+		}
+
+		virtual HRESULT STDMETHODCALLTYPE Unadvise(DWORD dwCookie)
+		{
+			dbgprintf(TEXT("CConnectionPoint::Unadvise(%lu)"), dwCookie);
+			HRESULT hr = m_IConnectionPoint->Unadvise(dwCookie);
+			dbgprintf(TEXT("CConnectionPoint::Unadvise -> %08X"), hr);
+			return hr;
+		}
+
+		virtual HRESULT STDMETHODCALLTYPE EnumConnections(IEnumConnections ** ppEnum)
+		{
+			dbgprintf(TEXT("CConnectionPoint::EnumConnections(%p)"), ppEnum);
+			HRESULT hr = m_IConnectionPoint->EnumConnections(ppEnum);
+			dbgprintf(TEXT("CConnectionPoint::EnumConnections -> %08X, pEnum = %p"), hr, *ppEnum);
+			
+			if(SUCCEEDED(hr))
+				*ppEnum = HookIEnumConnections(*ppEnum);
+
+			return hr;
+		}
+	};
+
+	class CEnumConnections: public IEnumConnections
+	{
+	private:
+		LONG m_refCount;
+		IEnumConnections * m_IEnumConnections;
+
+	public:
+		CEnumConnections(IEnumConnections * pIEnumConnections):
+			m_refCount(1),
+			m_IEnumConnections(pIEnumConnections)
+		{ }
+
+		~CEnumConnections() { m_IEnumConnections->Release(); }
+
+		virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject)
+		{
+			HRESULT hr = S_OK;
+
+			dbgprintf(TEXT("CEnumConnections::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
+
+			if(riid == IID_IUnknown || riid == IID_IEnumConnections)
+				*ppvObject = this;
+			else
+			{
+				*ppvObject = NULL;
+				hr = E_NOINTERFACE;
+			}
+		
+			dbgprintf(TEXT("CEnumConnections::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
+			return hr;
+		}
+
+		virtual ULONG STDMETHODCALLTYPE AddRef(void)
+		{
+			return InterlockedIncrement(&m_refCount);
+		}
+
+		virtual ULONG STDMETHODCALLTYPE Release(void)
+		{
+			LONG n = InterlockedDecrement(&m_refCount);
+
+			if(n == 0)
+				delete this;
+
+			return n;
+		}
+
+		virtual HRESULT STDMETHODCALLTYPE Next(ULONG cConnections, LPCONNECTDATA pCD, ULONG * pcFetched)
+		{
+			dbgprintf(TEXT("CEnumConnections::Next(%lu, %p, %p)"), cConnections, pCD, pcFetched);
+			HRESULT hr = m_IEnumConnections->Next(cConnections, pCD, pcFetched);
+			dbgprintf(TEXT("CEnumConnections:: -> %08X, CD = { pUnk = %p, dwCookie = %lu }, cFetched = %lu"), hr, pCD->pUnk, pCD->dwCookie, *pcFetched);
+			return hr;
+		}
+        
+        virtual HRESULT STDMETHODCALLTYPE Skip(ULONG cConnections)
+		{
+			dbgprintf(TEXT("CEnumConnections::Skip(%lu)"), cConnections);
+			HRESULT hr = m_IEnumConnections->Skip(cConnections);
+			dbgprintf(TEXT("CEnumConnections:: -> %08X"), hr);
+			return hr;
+		}
+        
+        virtual HRESULT STDMETHODCALLTYPE Reset(void)
+		{
+			dbgprintf(TEXT("CEnumConnections::Reset()"));
+			HRESULT hr = m_IEnumConnections->Reset();
+			dbgprintf(TEXT("CEnumConnections:: -> %08X"), hr);
+			return hr;
+		}
+        
+        virtual HRESULT STDMETHODCALLTYPE Clone(IEnumConnections ** ppEnum)
+		{
+			dbgprintf(TEXT("CEnumConnections::Clone(%p)"), ppEnum);
+			HRESULT hr = m_IEnumConnections->Clone(ppEnum);
+			dbgprintf(TEXT("CEnumConnections:: -> %08X, pEnum"), hr, *ppEnum);
+
+			if(SUCCEEDED(hr))
+				*ppEnum = HookIEnumConnections(*ppEnum);
+
+			return hr;
+		}
+	};
+
+	IConnectionPointContainer * HookIConnectionPointContainer(IConnectionPointContainer * p)
+	{
+		return new CConnectionPointContainer(p);
+	}
+
+	IEnumConnectionPoints * HookIEnumConnectionPoints(IEnumConnectionPoints * p)
+	{
+		return new CEnumConnectionPoints(p);
+	}
+
+	IConnectionPoint * HookIConnectionPoint(IConnectionPoint * p)
+	{
+		return new CConnectionPoint(p);
+	}
+
+	IEnumConnections * HookIEnumConnections(IEnumConnections * p)
+	{
+		return new CEnumConnections(p);
+	}
+
+	class CAdvancedSettings: public IMsRdpClientAdvancedSettings4
+	{
+	private:
+		LONG m_refCount;
+		IUnknown * m_IUnknown;
+		IDispatch * m_IDispatch;
+		IMsTscAdvancedSettings * m_IMsTscAdvancedSettings;
+		IMsRdpClientAdvancedSettings * m_IMsRdpClientAdvancedSettings;
+		IMsRdpClientAdvancedSettings2 * m_IMsRdpClientAdvancedSettings2;
+		IMsRdpClientAdvancedSettings3 * m_IMsRdpClientAdvancedSettings3;
+		IMsRdpClientAdvancedSettings4 * m_IMsRdpClientAdvancedSettings4;
+
+		IDispatch * getIDispatch()
+		{
+			assert(m_IDispatch);
+			return m_IDispatch;
+		}
+
+		IMsTscAdvancedSettings * getIMsTscAdvancedSettings()
+		{
+			if(m_IMsTscAdvancedSettings)
+				return m_IMsTscAdvancedSettings;
+			else if(m_IMsRdpClientAdvancedSettings)
+				m_IMsTscAdvancedSettings = m_IMsRdpClientAdvancedSettings;
+			else if(m_IMsRdpClientAdvancedSettings2)
+				m_IMsTscAdvancedSettings = m_IMsRdpClientAdvancedSettings2;
+			else if(m_IMsRdpClientAdvancedSettings3)
+				m_IMsTscAdvancedSettings = m_IMsRdpClientAdvancedSettings3;
+			else if(m_IMsRdpClientAdvancedSettings4)
+				m_IMsTscAdvancedSettings = m_IMsRdpClientAdvancedSettings4;
+
+			if(m_IMsTscAdvancedSettings)
+			{
+				m_IMsTscAdvancedSettings->AddRef();
+				return m_IMsTscAdvancedSettings;
+			}
+
+			m_IUnknown->QueryInterface(&m_IMsTscAdvancedSettings);
+			return m_IMsTscAdvancedSettings;
+		}
+
+		IMsRdpClientAdvancedSettings * getIMsRdpClientAdvancedSettings()
+		{
+			if(m_IMsRdpClientAdvancedSettings)
+				return m_IMsRdpClientAdvancedSettings;
+			else if(m_IMsRdpClientAdvancedSettings2)
+				m_IMsRdpClientAdvancedSettings = m_IMsRdpClientAdvancedSettings2;
+			else if(m_IMsRdpClientAdvancedSettings3)
+				m_IMsRdpClientAdvancedSettings = m_IMsRdpClientAdvancedSettings3;
+			else if(m_IMsRdpClientAdvancedSettings4)
+				m_IMsRdpClientAdvancedSettings = m_IMsRdpClientAdvancedSettings4;
+
+			if(m_IMsRdpClientAdvancedSettings)
+			{
+				m_IMsRdpClientAdvancedSettings->AddRef();
+				return m_IMsRdpClientAdvancedSettings;
+			}
+
+			m_IUnknown->QueryInterface(&m_IMsRdpClientAdvancedSettings);
+			return m_IMsRdpClientAdvancedSettings;
+		}
+
+		IMsRdpClientAdvancedSettings2 * getIMsRdpClientAdvancedSettings2()
+		{
+			if(m_IMsRdpClientAdvancedSettings2)
+				return m_IMsRdpClientAdvancedSettings2;
+			else if(m_IMsRdpClientAdvancedSettings3)
+				m_IMsRdpClientAdvancedSettings2 = m_IMsRdpClientAdvancedSettings3;
+			else if(m_IMsRdpClientAdvancedSettings4)
+				m_IMsRdpClientAdvancedSettings2 = m_IMsRdpClientAdvancedSettings4;
+
+			if(m_IMsRdpClientAdvancedSettings2)
+			{
+				m_IMsRdpClientAdvancedSettings2->AddRef();
+				return m_IMsRdpClientAdvancedSettings2;
+			}
+
+			m_IUnknown->QueryInterface(&m_IMsRdpClientAdvancedSettings2);
+			return m_IMsRdpClientAdvancedSettings2;
+		}
+
+		IMsRdpClientAdvancedSettings3 * getIMsRdpClientAdvancedSettings3()
+		{
+			if(m_IMsRdpClientAdvancedSettings3)
+				return m_IMsRdpClientAdvancedSettings3;
+			else if(m_IMsRdpClientAdvancedSettings4)
+				m_IMsRdpClientAdvancedSettings3 = m_IMsRdpClientAdvancedSettings4;
+
+			if(m_IMsRdpClientAdvancedSettings3)
+			{
+				m_IMsRdpClientAdvancedSettings3->AddRef();
+				return m_IMsRdpClientAdvancedSettings3;
+			}
+
+			m_IUnknown->QueryInterface(&m_IMsRdpClientAdvancedSettings3);
+			return m_IMsRdpClientAdvancedSettings3;
+		}
+
+		IMsRdpClientAdvancedSettings4 * getIMsRdpClientAdvancedSettings4()
+		{
+			if(m_IMsRdpClientAdvancedSettings4)
+				return m_IMsRdpClientAdvancedSettings4;
+
+			if(m_IMsRdpClientAdvancedSettings4)
+			{
+				m_IMsRdpClientAdvancedSettings4->AddRef();
+				return m_IMsRdpClientAdvancedSettings4;
+			}
+
+			m_IUnknown->QueryInterface(&m_IMsRdpClientAdvancedSettings4);
+			return m_IMsRdpClientAdvancedSettings4;
+		}
+
+		~CAdvancedSettings()
+		{
+			m_IUnknown->Release();
+			m_IDispatch->Release();
+
+			if(m_IMsTscAdvancedSettings)
+				m_IMsTscAdvancedSettings->Release();
+
+			if(m_IMsRdpClientAdvancedSettings)
+				m_IMsRdpClientAdvancedSettings->Release();
+
+			if(m_IMsRdpClientAdvancedSettings2)
+				m_IMsRdpClientAdvancedSettings2->Release();
+
+			if(m_IMsRdpClientAdvancedSettings3)
+				m_IMsRdpClientAdvancedSettings3->Release();
+
+			if(m_IMsRdpClientAdvancedSettings4)
+				m_IMsRdpClientAdvancedSettings4->Release();
+		}
+
+		void Init(IMsTscAdvancedSettings * p)
+		{
+			m_IMsTscAdvancedSettings = p;
+		}
+
+		void Init(IMsRdpClientAdvancedSettings * p)
+		{
+			m_IMsRdpClientAdvancedSettings = p;
+		}
+
+		void Init(IMsRdpClientAdvancedSettings2 * p)
+		{
+			m_IMsRdpClientAdvancedSettings2 = p;
+		}
+
+		void Init(IMsRdpClientAdvancedSettings3 * p)
+		{
+			m_IMsRdpClientAdvancedSettings3 = p;
+		}
+
+		void Init(IMsRdpClientAdvancedSettings4 * p)
+		{
+			m_IMsRdpClientAdvancedSettings4 = p;
+		}
+
+	public:
+		template<class Interface> CAdvancedSettings(Interface * p):
+			m_refCount(1),
+			m_IUnknown(p),
+			m_IDispatch(p),
+			m_IMsTscAdvancedSettings(NULL),
+			m_IMsRdpClientAdvancedSettings(NULL),
+			m_IMsRdpClientAdvancedSettings2(NULL),
+			m_IMsRdpClientAdvancedSettings3(NULL),
+			m_IMsRdpClientAdvancedSettings4(NULL)
+		{
+			assert(p);
+			p->AddRef();
+			p->AddRef();
+			Init(p);
+		}
+
+		/* IUnknown */
+        virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject)
+		{
+			HRESULT hr;
+			IUnknown * pvObject;
+			
+			dbgprintf(TEXT("CAdvancedSettings::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
+
+#define QIBEGIN() \
+	if(riid == IID_IUnknown) \
+	{ \
+		hr = S_OK; \
+		pvObject = (IUnknown *)(this); \
+	}
+
+#define QI(I) \
+	else if(riid == IID_ ## I) \
+	{ \
+		if(m_ ## I) \
+		{ \
+			m_ ## I->AddRef(); \
+			hr = S_OK; \
+		} \
+		else \
+		{ \
+			hr = m_IUnknown->QueryInterface(&m_ ## I); \
+		} \
+ \
+		if(SUCCEEDED(hr)) \
+			pvObject = static_cast<I *>(this); \
+	}
+
+#define QIEND() \
+	else \
+	{ \
+		hr = E_NOINTERFACE; \
+		pvObject = (IUnknown *)(this); \
+	}
+
+			QIBEGIN()
+			QI(IDispatch)
+			QI(IMsTscAdvancedSettings)
+			QI(IMsRdpClientAdvancedSettings)
+			QI(IMsRdpClientAdvancedSettings2)
+			QI(IMsRdpClientAdvancedSettings3)
+			QI(IMsRdpClientAdvancedSettings4)
+			QIEND()
+
+#undef QIBEGIN
+#undef QIEND
+#undef QI
+
+			if(SUCCEEDED(hr))
+			{
+				assert(pvObject);
+				pvObject->AddRef();
+			}
+			else
+			{
+				assert(pvObject == NULL);
+			}
+
+			*ppvObject = pvObject;
+
+			dbgprintf(TEXT("CAdvancedSettings::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
+			return hr;
+		}
+
+        virtual ULONG STDMETHODCALLTYPE AddRef(void)
+		{
+			return InterlockedIncrement(&m_refCount);
+		}
+
+        virtual ULONG STDMETHODCALLTYPE Release(void)
+		{
+			LONG n = InterlockedDecrement(&m_refCount);
+
+			if(n == 0)
+				delete this;
+
+			return n;
+		}
+
+		/* IDispatch */
+		/*
+			 * p = get();
+			dbgprintf(TEXT("CAdvancedSettings::()"), );
+			HRESULT hr = p->();
+			dbgprintf(TEXT("CAdvancedSettings:: -> %08X, "), hr, );
+			return hr;
+		*/
+		virtual STDMETHODIMP IDispatch::GetTypeInfoCount(UINT * pctinfo)
+		{
+			IDispatch * pIDispatch = getIDispatch();
+			dbgprintf(TEXT("CAdvancedSettings::GetTypeInfoCount(%p)"), pctinfo);
+			HRESULT hr = pIDispatch->GetTypeInfoCount(pctinfo);
+			dbgprintf(TEXT("CAdvancedSettings::GetTypeInfoCount -> %08X, ctinfo = %u"), hr, *pctinfo);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IDispatch::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo)
+		{
+			IDispatch * pIDispatch = getIDispatch();
+			dbgprintf(TEXT("CAdvancedSettings::GetTypeInfo(%u, %lu, %p)"), iTInfo, lcid, ppTInfo);
+			HRESULT hr = pIDispatch->GetTypeInfo(iTInfo, lcid, ppTInfo);
+			dbgprintf(TEXT("CAdvancedSettings::GetTypeInfo -> %08X, pTInfo = %p"), hr, *ppTInfo);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IDispatch::GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId)
+		{
+			IDispatch * pIDispatch = getIDispatch();
+			dbgprintf(TEXT("CAdvancedSettings::GetIDsOfNames(%ls, %ls, %d, %lu, %p)"), UUIDToString(riid).c_str(), *rgszNames, cNames, lcid, rgDispId);
+			HRESULT hr = pIDispatch->GetIDsOfNames(riid, rgszNames, cNames, lcid, rgDispId);
+			dbgprintf(TEXT("CAdvancedSettings::GetIDsOfNames -> %08X, rgDispId = %ld"), hr, *rgDispId);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr)
+		{
+			// TODO
+			IDispatch * pIDispatch = getIDispatch();
+			dbgprintf(TEXT("CAdvancedSettings::Invoke()")/*, */);
+			HRESULT hr = pIDispatch->Invoke(dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+			dbgprintf(TEXT("CAdvancedSettings::Invoke -> %08X, "), hr/*, */);
+			return hr;
+		}
+
+		/* IMsTscAdvancedSettings */
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_Compress(long pcompress)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_Compress(%ld)"), pcompress);
+			HRESULT hr = pIMsTscAdvancedSettings->put_Compress(pcompress);
+			dbgprintf(TEXT("CAdvancedSettings::put_Compress -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::get_Compress(long * pcompress)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_Compress(%p)"), pcompress);
+			HRESULT hr = pIMsTscAdvancedSettings->get_Compress(pcompress);
+			dbgprintf(TEXT("CAdvancedSettings::get_Compress -> %08X, compress = %ld"), hr, *pcompress);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_BitmapPeristence(long pbitmapPeristence)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapPeristence(%ld)"), pbitmapPeristence);
+			HRESULT hr = pIMsTscAdvancedSettings->put_BitmapPeristence(pbitmapPeristence);
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapPeristence -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::get_BitmapPeristence(long * pbitmapPeristence)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapPeristence(%p)"), pbitmapPeristence);
+			HRESULT hr = pIMsTscAdvancedSettings->get_BitmapPeristence(pbitmapPeristence);
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapPeristence -> %08X, bitmapPeristence = %ld"), hr, *pbitmapPeristence);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_allowBackgroundInput(long pallowBackgroundInput)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_allowBackgroundInput(%ld)"), pallowBackgroundInput);
+			HRESULT hr = pIMsTscAdvancedSettings->put_allowBackgroundInput(pallowBackgroundInput);
+			dbgprintf(TEXT("CAdvancedSettings::put_allowBackgroundInput -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::get_allowBackgroundInput(long * pallowBackgroundInput)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_allowBackgroundInput(%p)"), pallowBackgroundInput);
+			HRESULT hr = pIMsTscAdvancedSettings->get_allowBackgroundInput(pallowBackgroundInput);
+			dbgprintf(TEXT("CAdvancedSettings::get_allowBackgroundInput -> %08X, allowBackgroundInput = %ld"), hr, *pallowBackgroundInput);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_KeyBoardLayoutStr(BSTR rhs)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_KeyBoardLayoutStr(%ls)"), rhs);
+			HRESULT hr = pIMsTscAdvancedSettings->put_KeyBoardLayoutStr(rhs);
+			dbgprintf(TEXT("CAdvancedSettings::put_KeyBoardLayoutStr -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_PluginDlls(BSTR rhs)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_PluginDlls(%ls)"), rhs);
+			HRESULT hr = pIMsTscAdvancedSettings->put_PluginDlls(rhs);
+			dbgprintf(TEXT("CAdvancedSettings::put_PluginDlls -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_IconFile(BSTR rhs)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_IconFile(%ls)"), rhs);
+			HRESULT hr = pIMsTscAdvancedSettings->put_IconFile(rhs);
+			dbgprintf(TEXT("CAdvancedSettings::put_IconFile -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_IconIndex(long rhs)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_IconIndex(%ld)"), rhs);
+			HRESULT hr = pIMsTscAdvancedSettings->put_IconIndex(rhs);
+			dbgprintf(TEXT("CAdvancedSettings::put_IconIndex -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_ContainerHandledFullScreen(long pContainerHandledFullScreen)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_ContainerHandledFullScreen(%ld)"), pContainerHandledFullScreen);
+			HRESULT hr = pIMsTscAdvancedSettings->put_ContainerHandledFullScreen(pContainerHandledFullScreen);
+			dbgprintf(TEXT("CAdvancedSettings::put_ContainerHandledFullScreen -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::get_ContainerHandledFullScreen(long * pContainerHandledFullScreen)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_ContainerHandledFullScreen(%p)"), pContainerHandledFullScreen);
+			HRESULT hr = pIMsTscAdvancedSettings->get_ContainerHandledFullScreen(pContainerHandledFullScreen);
+			dbgprintf(TEXT("CAdvancedSettings::get_ContainerHandledFullScreen -> %08X, ContainerHandledFullScreen = %ld"), hr, *pContainerHandledFullScreen);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::put_DisableRdpdr(long pDisableRdpdr)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_DisableRdpdr(%ld)"), pDisableRdpdr);
+			HRESULT hr = pIMsTscAdvancedSettings->put_DisableRdpdr(pDisableRdpdr);
+			dbgprintf(TEXT("CAdvancedSettings::put_DisableRdpdr -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsTscAdvancedSettings::get_DisableRdpdr(long * pDisableRdpdr)
+		{
+			IMsTscAdvancedSettings * pIMsTscAdvancedSettings = getIMsTscAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_DisableRdpdr(%p)"), pDisableRdpdr);
+			HRESULT hr = pIMsTscAdvancedSettings->get_DisableRdpdr(pDisableRdpdr);
+			dbgprintf(TEXT("CAdvancedSettings::get_DisableRdpdr -> %08X, DisableRdpdr = %ld"), hr, *pDisableRdpdr);
+			return hr;
+		}
+
+		/* IMsRdpClientAdvancedSettings */
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_SmoothScroll(long psmoothScroll)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_SmoothScroll(%ld)"), psmoothScroll);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_SmoothScroll(psmoothScroll);
+			dbgprintf(TEXT("CAdvancedSettings::put_SmoothScroll -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_SmoothScroll(long * psmoothScroll)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_SmoothScroll(%p)"), psmoothScroll);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_SmoothScroll(psmoothScroll);
+			dbgprintf(TEXT("CAdvancedSettings::get_SmoothScroll -> %08X, smoothScroll = %ld"), hr, *psmoothScroll);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_AcceleratorPassthrough(long pacceleratorPassthrough)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_AcceleratorPassthrough(%ld)"), pacceleratorPassthrough);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_AcceleratorPassthrough(pacceleratorPassthrough);
+			dbgprintf(TEXT("CAdvancedSettings::put_AcceleratorPassthrough -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_AcceleratorPassthrough(long * pacceleratorPassthrough)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_AcceleratorPassthrough(%p)"), pacceleratorPassthrough);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_AcceleratorPassthrough(pacceleratorPassthrough);
+			dbgprintf(TEXT("CAdvancedSettings::get_AcceleratorPassthrough -> %08X, acceleratorPassthrough = %ld"), hr, *pacceleratorPassthrough);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ShadowBitmap(long pshadowBitmap)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_ShadowBitmap(%ld)"), pshadowBitmap);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_ShadowBitmap(pshadowBitmap);
+			dbgprintf(TEXT("CAdvancedSettings::put_ShadowBitmap -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_ShadowBitmap(long * pshadowBitmap)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_ShadowBitmap(%p)"), pshadowBitmap);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_ShadowBitmap(pshadowBitmap);
+			dbgprintf(TEXT("CAdvancedSettings::get_ShadowBitmap -> %08X, shadowBitmap = %ld"), hr, *pshadowBitmap);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_TransportType(long ptransportType)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_TransportType(%ld)"), ptransportType);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_TransportType(ptransportType);
+			dbgprintf(TEXT("CAdvancedSettings::put_TransportType -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_TransportType(long * ptransportType)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_TransportType(%p)"), ptransportType);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_TransportType(ptransportType);
+			dbgprintf(TEXT("CAdvancedSettings::get_TransportType -> %08X, transportType = %ld"), hr, *ptransportType);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_SasSequence(long psasSequence)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_SasSequence(%ld)"), psasSequence);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_SasSequence(psasSequence);
+			dbgprintf(TEXT("CAdvancedSettings::put_SasSequence -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_SasSequence(long * psasSequence)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_SasSequence(%p)"), psasSequence);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_SasSequence(psasSequence);
+			dbgprintf(TEXT("CAdvancedSettings::get_SasSequence -> %08X, sasSequence = %ld"), hr, *psasSequence);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_EncryptionEnabled(long pencryptionEnabled)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_EncryptionEnabled(%ld)"), pencryptionEnabled);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_EncryptionEnabled(pencryptionEnabled);
+			dbgprintf(TEXT("CAdvancedSettings::put_EncryptionEnabled -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_EncryptionEnabled(long * pencryptionEnabled)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_EncryptionEnabled(%p)"), pencryptionEnabled);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_EncryptionEnabled(pencryptionEnabled);
+			dbgprintf(TEXT("CAdvancedSettings::get_EncryptionEnabled -> %08X, encryptionEnabled = %ld"), hr, *pencryptionEnabled);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_DedicatedTerminal(long pdedicatedTerminal)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_DedicatedTerminal(%ld)"), pdedicatedTerminal);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_DedicatedTerminal(pdedicatedTerminal);
+			dbgprintf(TEXT("CAdvancedSettings::put_DedicatedTerminal -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_DedicatedTerminal(long * pdedicatedTerminal)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_DedicatedTerminal(%p)"), pdedicatedTerminal);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_DedicatedTerminal(pdedicatedTerminal);
+			dbgprintf(TEXT("CAdvancedSettings::get_DedicatedTerminal -> %08X, dedicatedTerminal = %ld"), hr, *pdedicatedTerminal);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RDPPort(long prdpPort)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_RDPPort(%ld)"), prdpPort);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_RDPPort(prdpPort);
+			dbgprintf(TEXT("CAdvancedSettings::put_RDPPort -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RDPPort(long * prdpPort)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_RDPPort(%p)"), prdpPort);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_RDPPort(prdpPort);
+			dbgprintf(TEXT("CAdvancedSettings::get_RDPPort -> %08X, rdpPort = %ld"), hr, *prdpPort);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_EnableMouse(long penableMouse)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_EnableMouse(%ld)"), penableMouse);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_EnableMouse(penableMouse);
+			dbgprintf(TEXT("CAdvancedSettings::put_EnableMouse -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_EnableMouse(long * penableMouse)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_EnableMouse(%p)"), penableMouse);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_EnableMouse(penableMouse);
+			dbgprintf(TEXT("CAdvancedSettings::get_EnableMouse -> %08X, enableMouse = %ld"), hr, *penableMouse);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_DisableCtrlAltDel(long pdisableCtrlAltDel)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_DisableCtrlAltDel(%ld)"), pdisableCtrlAltDel);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_DisableCtrlAltDel(pdisableCtrlAltDel);
+			dbgprintf(TEXT("CAdvancedSettings::put_DisableCtrlAltDel -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_DisableCtrlAltDel(long * pdisableCtrlAltDel)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_DisableCtrlAltDel(%p)"), pdisableCtrlAltDel);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_DisableCtrlAltDel(pdisableCtrlAltDel);
+			dbgprintf(TEXT("CAdvancedSettings::get_DisableCtrlAltDel -> %08X, disableCtrlAltDel = %ld"), hr, *pdisableCtrlAltDel);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_EnableWindowsKey(long penableWindowsKey)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_EnableWindowsKey(%ld)"), penableWindowsKey);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_EnableWindowsKey(penableWindowsKey);
+			dbgprintf(TEXT("CAdvancedSettings::put_EnableWindowsKey -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_EnableWindowsKey(long * penableWindowsKey)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_EnableWindowsKey(%p)"), penableWindowsKey);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_EnableWindowsKey(penableWindowsKey);
+			dbgprintf(TEXT("CAdvancedSettings::get_EnableWindowsKey -> %08X, enableWindowsKey = %ld"), hr, *penableWindowsKey);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_DoubleClickDetect(long pdoubleClickDetect)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_DoubleClickDetect(%ld)"), pdoubleClickDetect);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_DoubleClickDetect(pdoubleClickDetect);
+			dbgprintf(TEXT("CAdvancedSettings::put_DoubleClickDetect -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_DoubleClickDetect(long * pdoubleClickDetect)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_DoubleClickDetect(%p)"), pdoubleClickDetect);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_DoubleClickDetect(pdoubleClickDetect);
+			dbgprintf(TEXT("CAdvancedSettings::get_DoubleClickDetect -> %08X, doubleClickDetect = %ld"), hr, *pdoubleClickDetect);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_MaximizeShell(long pmaximizeShell)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_MaximizeShell(%ld)"), pmaximizeShell);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_MaximizeShell(pmaximizeShell);
+			dbgprintf(TEXT("CAdvancedSettings::put_MaximizeShell -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_MaximizeShell(long * pmaximizeShell)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_MaximizeShell(%p)"), pmaximizeShell);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_MaximizeShell(pmaximizeShell);
+			dbgprintf(TEXT("CAdvancedSettings::get_MaximizeShell -> %08X, maximizeShell = %ld"), hr, *pmaximizeShell);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyFullScreen(long photKeyFullScreen)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyFullScreen(%ld)"), photKeyFullScreen);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_HotKeyFullScreen(photKeyFullScreen);
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyFullScreen -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyFullScreen(long * photKeyFullScreen)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyFullScreen(%p)"), photKeyFullScreen);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_HotKeyFullScreen(photKeyFullScreen);
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyFullScreen -> %08X, hotKeyFullScreen = %ld"), hr, *photKeyFullScreen);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyCtrlEsc(long photKeyCtrlEsc)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyCtrlEsc(%ld)"), photKeyCtrlEsc);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_HotKeyCtrlEsc(photKeyCtrlEsc);
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyCtrlEsc -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyCtrlEsc(long * photKeyCtrlEsc)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyCtrlEsc(%p)"), photKeyCtrlEsc);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_HotKeyCtrlEsc(photKeyCtrlEsc);
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyCtrlEsc -> %08X, hotKeyCtrlEsc = %ld"), hr, *photKeyCtrlEsc);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyAltEsc(long photKeyAltEsc)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyAltEsc(%ld)"), photKeyAltEsc);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_HotKeyAltEsc(photKeyAltEsc);
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyAltEsc -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyAltEsc(long * photKeyAltEsc)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyAltEsc(%p)"), photKeyAltEsc);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_HotKeyAltEsc(photKeyAltEsc);
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyAltEsc -> %08X, hotKeyAltEsc = %ld"), hr, *photKeyAltEsc);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyAltTab(long photKeyAltTab)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyAltTab(%ld)"), photKeyAltTab);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_HotKeyAltTab(photKeyAltTab);
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyAltTab -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyAltTab(long * photKeyAltTab)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyAltTab(%p)"), photKeyAltTab);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_HotKeyAltTab(photKeyAltTab);
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyAltTab -> %08X, hotKeyAltTab = %ld"), hr, *photKeyAltTab);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyAltShiftTab(long photKeyAltShiftTab)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyAltShiftTab(%ld)"), photKeyAltShiftTab);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_HotKeyAltShiftTab(photKeyAltShiftTab);
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyAltShiftTab -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyAltShiftTab(long * photKeyAltShiftTab)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyAltShiftTab(%p)"), photKeyAltShiftTab);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_HotKeyAltShiftTab(photKeyAltShiftTab);
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyAltShiftTab -> %08X, hotKeyAltShiftTab = %ld"), hr, *photKeyAltShiftTab);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyAltSpace(long photKeyAltSpace)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyAltSpace(%ld)"), photKeyAltSpace);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_HotKeyAltSpace(photKeyAltSpace);
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyAltSpace -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyAltSpace(long * photKeyAltSpace)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyAltSpace(%p)"), photKeyAltSpace);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_HotKeyAltSpace(photKeyAltSpace);
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyAltSpace -> %08X, hotKeyAltSpace = %ld"), hr, *photKeyAltSpace);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyCtrlAltDel(long photKeyCtrlAltDel)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyCtrlAltDel(%ld)"), photKeyCtrlAltDel);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_HotKeyCtrlAltDel(photKeyCtrlAltDel);
+			dbgprintf(TEXT("CAdvancedSettings::put_HotKeyCtrlAltDel -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyCtrlAltDel(long * photKeyCtrlAltDel)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyCtrlAltDel(%p)"), photKeyCtrlAltDel);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_HotKeyCtrlAltDel(photKeyCtrlAltDel);
+			dbgprintf(TEXT("CAdvancedSettings::get_HotKeyCtrlAltDel -> %08X, hotKeyCtrlAltDel = %ld"), hr, *photKeyCtrlAltDel);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_orderDrawThreshold(long porderDrawThreshold)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_orderDrawThreshold(%ld)"), porderDrawThreshold);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_orderDrawThreshold(porderDrawThreshold);
+			dbgprintf(TEXT("CAdvancedSettings::put_orderDrawThreshold -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_orderDrawThreshold(long * porderDrawThreshold)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_orderDrawThreshold(%p)"), porderDrawThreshold);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_orderDrawThreshold(porderDrawThreshold);
+			dbgprintf(TEXT("CAdvancedSettings::get_orderDrawThreshold -> %08X, orderDrawThreshold = %ld"), hr, *porderDrawThreshold);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapCacheSize(long pbitmapCacheSize)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapCacheSize(%ld)"), pbitmapCacheSize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_BitmapCacheSize(pbitmapCacheSize);
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapCacheSize -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapCacheSize(long * pbitmapCacheSize)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapCacheSize(%p)"), pbitmapCacheSize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_BitmapCacheSize(pbitmapCacheSize);
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapCacheSize -> %08X, bitmapCacheSize = %ld"), hr, *pbitmapCacheSize);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapVirtualCacheSize(long pbitmapVirtualCacheSize)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapVirtualCacheSize(%ld)"), pbitmapVirtualCacheSize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_BitmapVirtualCacheSize(pbitmapVirtualCacheSize);
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapVirtualCacheSize -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapVirtualCacheSize(long * pbitmapVirtualCacheSize)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapVirtualCacheSize(%p)"), pbitmapVirtualCacheSize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_BitmapVirtualCacheSize(pbitmapVirtualCacheSize);
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapVirtualCacheSize -> %08X, bitmapVirtualCacheSize = %ld"), hr, *pbitmapVirtualCacheSize);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ScaleBitmapCachesByBPP(long pbScale)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_ScaleBitmapCachesByBPP(%ld)"), pbScale);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_ScaleBitmapCachesByBPP(pbScale);
+			dbgprintf(TEXT("CAdvancedSettings::put_ScaleBitmapCachesByBPP -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_ScaleBitmapCachesByBPP(long * pbScale)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_ScaleBitmapCachesByBPP(%p)"), pbScale);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_ScaleBitmapCachesByBPP(pbScale);
+			dbgprintf(TEXT("CAdvancedSettings::get_ScaleBitmapCachesByBPP -> %08X, bScale = %ld"), hr, *pbScale);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_NumBitmapCaches(long pnumBitmapCaches)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_NumBitmapCaches(%ld)"), pnumBitmapCaches);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_NumBitmapCaches(pnumBitmapCaches);
+			dbgprintf(TEXT("CAdvancedSettings::put_NumBitmapCaches -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_NumBitmapCaches(long * pnumBitmapCaches)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_NumBitmapCaches(%p)"), pnumBitmapCaches);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_NumBitmapCaches(pnumBitmapCaches);
+			dbgprintf(TEXT("CAdvancedSettings::get_NumBitmapCaches -> %08X, numBitmapCaches = %ld"), hr, *pnumBitmapCaches);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_CachePersistenceActive(long pcachePersistenceActive)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_CachePersistenceActive(%ld)"), pcachePersistenceActive);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_CachePersistenceActive(pcachePersistenceActive);
+			dbgprintf(TEXT("CAdvancedSettings::put_CachePersistenceActive -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_CachePersistenceActive(long * pcachePersistenceActive)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_CachePersistenceActive(%p)"), pcachePersistenceActive);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_CachePersistenceActive(pcachePersistenceActive);
+			dbgprintf(TEXT("CAdvancedSettings::get_CachePersistenceActive -> %08X, cachePersistenceActive = %ld"), hr, *pcachePersistenceActive);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_PersistCacheDirectory(BSTR rhs)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_PersistCacheDirectory(%ls)"), rhs);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_PersistCacheDirectory(rhs);
+			dbgprintf(TEXT("CAdvancedSettings::put_PersistCacheDirectory -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_brushSupportLevel(long pbrushSupportLevel)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_brushSupportLevel(%ld)"), pbrushSupportLevel);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_brushSupportLevel(pbrushSupportLevel);
+			dbgprintf(TEXT("CAdvancedSettings::put_brushSupportLevel -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_brushSupportLevel(long * pbrushSupportLevel)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_brushSupportLevel(%p)"), pbrushSupportLevel);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_brushSupportLevel(pbrushSupportLevel);
+			dbgprintf(TEXT("CAdvancedSettings::get_brushSupportLevel -> %08X, brushSupportLevel = %ld"), hr, *pbrushSupportLevel);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_minInputSendInterval(long pminInputSendInterval)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_minInputSendInterval(%ld)"), pminInputSendInterval);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_minInputSendInterval(pminInputSendInterval);
+			dbgprintf(TEXT("CAdvancedSettings::put_minInputSendInterval -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_minInputSendInterval(long * pminInputSendInterval)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_minInputSendInterval(%p)"), pminInputSendInterval);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_minInputSendInterval(pminInputSendInterval);
+			dbgprintf(TEXT("CAdvancedSettings::get_minInputSendInterval -> %08X, minInputSendInterval = %ld"), hr, *pminInputSendInterval);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_InputEventsAtOnce(long pinputEventsAtOnce)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_InputEventsAtOnce(%ld)"), pinputEventsAtOnce);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_InputEventsAtOnce(pinputEventsAtOnce);
+			dbgprintf(TEXT("CAdvancedSettings::put_InputEventsAtOnce -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_InputEventsAtOnce(long * pinputEventsAtOnce)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_InputEventsAtOnce(%p)"), pinputEventsAtOnce);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_InputEventsAtOnce(pinputEventsAtOnce);
+			dbgprintf(TEXT("CAdvancedSettings::get_InputEventsAtOnce -> %08X, inputEventsAtOnce = %ld"), hr, *pinputEventsAtOnce);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_maxEventCount(long pmaxEventCount)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_maxEventCount(%ld)"), pmaxEventCount);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_maxEventCount(pmaxEventCount);
+			dbgprintf(TEXT("CAdvancedSettings::put_maxEventCount -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_maxEventCount(long * pmaxEventCount)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_maxEventCount(%p)"), pmaxEventCount);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_maxEventCount(pmaxEventCount);
+			dbgprintf(TEXT("CAdvancedSettings::get_maxEventCount -> %08X, maxEventCount = %ld"), hr, *pmaxEventCount);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_keepAliveInterval(long pkeepAliveInterval)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_keepAliveInterval(%ld)"), pkeepAliveInterval);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_keepAliveInterval(pkeepAliveInterval);
+			dbgprintf(TEXT("CAdvancedSettings::put_keepAliveInterval -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_keepAliveInterval(long * pkeepAliveInterval)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_keepAliveInterval(%p)"), pkeepAliveInterval);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_keepAliveInterval(pkeepAliveInterval);
+			dbgprintf(TEXT("CAdvancedSettings::get_keepAliveInterval -> %08X, keepAliveInterval = %ld"), hr, *pkeepAliveInterval);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_shutdownTimeout(long pshutdownTimeout)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_shutdownTimeout(%ld)"), pshutdownTimeout);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_shutdownTimeout(pshutdownTimeout);
+			dbgprintf(TEXT("CAdvancedSettings::put_shutdownTimeout -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_shutdownTimeout(long * pshutdownTimeout)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_shutdownTimeout(%p)"), pshutdownTimeout);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_shutdownTimeout(pshutdownTimeout);
+			dbgprintf(TEXT("CAdvancedSettings::get_shutdownTimeout -> %08X, shutdownTimeout = %ld"), hr, *pshutdownTimeout);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_overallConnectionTimeout(long poverallConnectionTimeout)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_overallConnectionTimeout(%ld)"), poverallConnectionTimeout);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_overallConnectionTimeout(poverallConnectionTimeout);
+			dbgprintf(TEXT("CAdvancedSettings::put_overallConnectionTimeout -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_overallConnectionTimeout(long * poverallConnectionTimeout)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_overallConnectionTimeout(%p)"), poverallConnectionTimeout);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_overallConnectionTimeout(poverallConnectionTimeout);
+			dbgprintf(TEXT("CAdvancedSettings::get_overallConnectionTimeout -> %08X, overallConnectionTimeout = %ld"), hr, *poverallConnectionTimeout);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_singleConnectionTimeout(long psingleConnectionTimeout)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_singleConnectionTimeout(%ld)"), psingleConnectionTimeout);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_singleConnectionTimeout(psingleConnectionTimeout);
+			dbgprintf(TEXT("CAdvancedSettings::put_singleConnectionTimeout -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_singleConnectionTimeout(long * psingleConnectionTimeout)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_singleConnectionTimeout(%p)"), psingleConnectionTimeout);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_singleConnectionTimeout(psingleConnectionTimeout);
+			dbgprintf(TEXT("CAdvancedSettings::get_singleConnectionTimeout -> %08X, singleConnectionTimeout = %ld"), hr, *psingleConnectionTimeout);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_KeyboardType(long pkeyboardType)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_KeyboardType(%ld)"), pkeyboardType);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_KeyboardType(pkeyboardType);
+			dbgprintf(TEXT("CAdvancedSettings::put_KeyboardType -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_KeyboardType(long * pkeyboardType)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_KeyboardType(%p)"), pkeyboardType);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_KeyboardType(pkeyboardType);
+			dbgprintf(TEXT("CAdvancedSettings::get_KeyboardType -> %08X, keyboardType = %ld"), hr, *pkeyboardType);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_KeyboardSubType(long pkeyboardSubType)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_KeyboardSubType(%ld)"), pkeyboardSubType);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_KeyboardSubType(pkeyboardSubType);
+			dbgprintf(TEXT("CAdvancedSettings::put_KeyboardSubType -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_KeyboardSubType(long * pkeyboardSubType)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_KeyboardSubType(%p)"), pkeyboardSubType);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_KeyboardSubType(pkeyboardSubType);
+			dbgprintf(TEXT("CAdvancedSettings::get_KeyboardSubType -> %08X, keyboardSubType = %ld"), hr, *pkeyboardSubType);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_KeyboardFunctionKey(long pkeyboardFunctionKey)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_KeyboardFunctionKey(%ld)"), pkeyboardFunctionKey);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_KeyboardFunctionKey(pkeyboardFunctionKey);
+			dbgprintf(TEXT("CAdvancedSettings::put_KeyboardFunctionKey -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_KeyboardFunctionKey(long * pkeyboardFunctionKey)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_KeyboardFunctionKey(%p)"), pkeyboardFunctionKey);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_KeyboardFunctionKey(pkeyboardFunctionKey);
+			dbgprintf(TEXT("CAdvancedSettings::get_KeyboardFunctionKey -> %08X, keyboardFunctionKey = %ld"), hr, *pkeyboardFunctionKey);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_WinceFixedPalette(long pwinceFixedPalette)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_WinceFixedPalette(%ld)"), pwinceFixedPalette);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_WinceFixedPalette(pwinceFixedPalette);
+			dbgprintf(TEXT("CAdvancedSettings::put_WinceFixedPalette -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_WinceFixedPalette(long * pwinceFixedPalette)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_WinceFixedPalette(%p)"), pwinceFixedPalette);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_WinceFixedPalette(pwinceFixedPalette);
+			dbgprintf(TEXT("CAdvancedSettings::get_WinceFixedPalette -> %08X, winceFixedPalette = %ld"), hr, *pwinceFixedPalette);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ConnectToServerConsole(VARIANT_BOOL pConnectToConsole)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_ConnectToServerConsole(%s)"), BooleanToString(pConnectToConsole));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_ConnectToServerConsole(pConnectToConsole);
+			dbgprintf(TEXT("CAdvancedSettings::put_ConnectToServerConsole -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_ConnectToServerConsole(VARIANT_BOOL * pConnectToConsole)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_ConnectToServerConsole(%p)"), pConnectToConsole);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_ConnectToServerConsole(pConnectToConsole);
+			dbgprintf(TEXT("CAdvancedSettings::get_ConnectToServerConsole -> %08X, ConnectToConsole = %s"), hr, BooleanToString(*pConnectToConsole));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapPersistence(long pbitmapPersistence)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapPersistence(%ld)"), pbitmapPersistence);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_BitmapPersistence(pbitmapPersistence);
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapPersistence -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapPersistence(long * pbitmapPersistence)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapPersistence(%p)"), pbitmapPersistence);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_BitmapPersistence(pbitmapPersistence);
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapPersistence -> %08X, bitmapPersistence = %ld"), hr, *pbitmapPersistence);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_MinutesToIdleTimeout(long pminutesToIdleTimeout)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_MinutesToIdleTimeout(%ld)"), pminutesToIdleTimeout);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_MinutesToIdleTimeout(pminutesToIdleTimeout);
+			dbgprintf(TEXT("CAdvancedSettings::put_MinutesToIdleTimeout -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_MinutesToIdleTimeout(long * pminutesToIdleTimeout)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_MinutesToIdleTimeout(%p)"), pminutesToIdleTimeout);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_MinutesToIdleTimeout(pminutesToIdleTimeout);
+			dbgprintf(TEXT("CAdvancedSettings::get_MinutesToIdleTimeout -> %08X, minutesToIdleTimeout = %ld"), hr, *pminutesToIdleTimeout);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_SmartSizing(VARIANT_BOOL pfSmartSizing)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_SmartSizing(%s)"), BooleanToString(pfSmartSizing));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_SmartSizing(pfSmartSizing);
+			dbgprintf(TEXT("CAdvancedSettings::put_SmartSizing -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_SmartSizing(VARIANT_BOOL * pfSmartSizing)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_SmartSizing(%p)"), pfSmartSizing);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_SmartSizing(pfSmartSizing);
+			dbgprintf(TEXT("CAdvancedSettings::get_SmartSizing -> %08X, fSmartSizing = %s"), hr, BooleanToString(*pfSmartSizing));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RdpdrLocalPrintingDocName(BSTR pLocalPrintingDocName)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_RdpdrLocalPrintingDocName(%ls)"), pLocalPrintingDocName);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_RdpdrLocalPrintingDocName(pLocalPrintingDocName);
+			dbgprintf(TEXT("CAdvancedSettings::put_RdpdrLocalPrintingDocName -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RdpdrLocalPrintingDocName(BSTR * pLocalPrintingDocName)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_RdpdrLocalPrintingDocName(%p)"), pLocalPrintingDocName);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_RdpdrLocalPrintingDocName(pLocalPrintingDocName);
+			dbgprintf(TEXT("CAdvancedSettings::get_RdpdrLocalPrintingDocName -> %08X, LocalPrintingDocName = %ls"), hr, *pLocalPrintingDocName);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RdpdrClipCleanTempDirString(BSTR clipCleanTempDirString)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_RdpdrClipCleanTempDirString(%ls)"), clipCleanTempDirString);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_RdpdrClipCleanTempDirString(clipCleanTempDirString);
+			dbgprintf(TEXT("CAdvancedSettings::put_RdpdrClipCleanTempDirString -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RdpdrClipCleanTempDirString(BSTR * clipCleanTempDirString)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_RdpdrClipCleanTempDirString(%p)"), clipCleanTempDirString);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_RdpdrClipCleanTempDirString(clipCleanTempDirString);
+			dbgprintf(TEXT("CAdvancedSettings::get_RdpdrClipCleanTempDirString -> %08X, clipCleanTempDirString = %ls"), hr, *clipCleanTempDirString);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RdpdrClipPasteInfoString(BSTR clipPasteInfoString)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_RdpdrClipPasteInfoString(%ls)"), clipPasteInfoString);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_RdpdrClipPasteInfoString(clipPasteInfoString);
+			dbgprintf(TEXT("CAdvancedSettings::put_RdpdrClipPasteInfoString -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RdpdrClipPasteInfoString(BSTR * clipPasteInfoString)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_RdpdrClipPasteInfoString(%p)"), clipPasteInfoString);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_RdpdrClipPasteInfoString(clipPasteInfoString);
+			dbgprintf(TEXT("CAdvancedSettings::get_RdpdrClipPasteInfoString -> %08X, clipPasteInfoString = %ls"), hr, *clipPasteInfoString);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ClearTextPassword(BSTR rhs)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_ClearTextPassword(%ls)"), rhs);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_ClearTextPassword(rhs);
+			dbgprintf(TEXT("CAdvancedSettings::put_ClearTextPassword -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_DisplayConnectionBar(VARIANT_BOOL pDisplayConnectionBar)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_DisplayConnectionBar(%s)"), BooleanToString(pDisplayConnectionBar));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_DisplayConnectionBar(pDisplayConnectionBar);
+			dbgprintf(TEXT("CAdvancedSettings::put_DisplayConnectionBar -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_DisplayConnectionBar(VARIANT_BOOL * pDisplayConnectionBar)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_DisplayConnectionBar(%p)"), pDisplayConnectionBar);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_DisplayConnectionBar(pDisplayConnectionBar);
+			dbgprintf(TEXT("CAdvancedSettings::get_DisplayConnectionBar -> %08X, DisplayConnectionBar = %s"), hr, BooleanToString(*pDisplayConnectionBar));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_PinConnectionBar(VARIANT_BOOL pPinConnectionBar)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_PinConnectionBar(%s)"), BooleanToString(pPinConnectionBar));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_PinConnectionBar(pPinConnectionBar);
+			dbgprintf(TEXT("CAdvancedSettings::put_PinConnectionBar -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_PinConnectionBar(VARIANT_BOOL * pPinConnectionBar)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_PinConnectionBar(%p)"), pPinConnectionBar);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_PinConnectionBar(pPinConnectionBar);
+			dbgprintf(TEXT("CAdvancedSettings::get_PinConnectionBar -> %08X, PinConnectionBar = %s"), hr, BooleanToString(*pPinConnectionBar));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_GrabFocusOnConnect(VARIANT_BOOL pfGrabFocusOnConnect)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_GrabFocusOnConnect(%s)"), BooleanToString(pfGrabFocusOnConnect));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_GrabFocusOnConnect(pfGrabFocusOnConnect);
+			dbgprintf(TEXT("CAdvancedSettings::put_GrabFocusOnConnect -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_GrabFocusOnConnect(VARIANT_BOOL * pfGrabFocusOnConnect)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_GrabFocusOnConnect(%p)"), pfGrabFocusOnConnect);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_GrabFocusOnConnect(pfGrabFocusOnConnect);
+			dbgprintf(TEXT("CAdvancedSettings::get_GrabFocusOnConnect -> %08X, fGrabFocusOnConnect = %s"), hr, BooleanToString(*pfGrabFocusOnConnect));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_LoadBalanceInfo(BSTR pLBInfo)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_LoadBalanceInfo(%ls)"), pLBInfo);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_LoadBalanceInfo(pLBInfo);
+			dbgprintf(TEXT("CAdvancedSettings::put_LoadBalanceInfo -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_LoadBalanceInfo(BSTR * pLBInfo)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_LoadBalanceInfo(%p)"), pLBInfo);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_LoadBalanceInfo(pLBInfo);
+			dbgprintf(TEXT("CAdvancedSettings::get_LoadBalanceInfo -> %08X, LBInfo = %ls"), hr, *pLBInfo);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RedirectDrives(VARIANT_BOOL pRedirectDrives)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_RedirectDrives(%s)"), BooleanToString(pRedirectDrives));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_RedirectDrives(pRedirectDrives);
+			dbgprintf(TEXT("CAdvancedSettings::put_RedirectDrives -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RedirectDrives(VARIANT_BOOL * pRedirectDrives)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_RedirectDrives(%p)"), pRedirectDrives);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_RedirectDrives(pRedirectDrives);
+			dbgprintf(TEXT("CAdvancedSettings::get_RedirectDrives -> %08X, RedirectDrives = %s"), hr, BooleanToString(*pRedirectDrives));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RedirectPrinters(VARIANT_BOOL pRedirectPrinters)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_RedirectPrinters(%s)"), BooleanToString(pRedirectPrinters));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_RedirectPrinters(pRedirectPrinters);
+			dbgprintf(TEXT("CAdvancedSettings::put_RedirectPrinters -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RedirectPrinters(VARIANT_BOOL * pRedirectPrinters)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_RedirectPrinters(%p)"), pRedirectPrinters);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_RedirectPrinters(pRedirectPrinters);
+			dbgprintf(TEXT("CAdvancedSettings::get_RedirectPrinters -> %08X, RedirectPrinters = %s"), hr, BooleanToString(*pRedirectPrinters));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RedirectPorts(VARIANT_BOOL pRedirectPorts)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_RedirectPorts(%s)"), BooleanToString(pRedirectPorts));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_RedirectPorts(pRedirectPorts);
+			dbgprintf(TEXT("CAdvancedSettings::put_RedirectPorts -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RedirectPorts(VARIANT_BOOL * pRedirectPorts)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_RedirectPorts(%p)"), pRedirectPorts);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_RedirectPorts(pRedirectPorts);
+			dbgprintf(TEXT("CAdvancedSettings::get_RedirectPorts -> %08X, RedirectPorts = %s"), hr, BooleanToString(*pRedirectPorts));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RedirectSmartCards(VARIANT_BOOL pRedirectSmartCards)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_RedirectSmartCards(%s)"), BooleanToString(pRedirectSmartCards));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_RedirectSmartCards(pRedirectSmartCards);
+			dbgprintf(TEXT("CAdvancedSettings::put_RedirectSmartCards -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RedirectSmartCards(VARIANT_BOOL * pRedirectSmartCards)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_RedirectSmartCards(%p)"), pRedirectSmartCards);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_RedirectSmartCards(pRedirectSmartCards);
+			dbgprintf(TEXT("CAdvancedSettings::get_RedirectSmartCards -> %08X, RedirectSmartCards = %s"), hr, BooleanToString(*pRedirectSmartCards));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapVirtualCache16BppSize(long pBitmapVirtualCache16BppSize)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapVirtualCache16BppSize(%ld)"), pBitmapVirtualCache16BppSize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_BitmapVirtualCache16BppSize(pBitmapVirtualCache16BppSize);
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapVirtualCache16BppSize -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapVirtualCache16BppSize(long * pBitmapVirtualCache16BppSize)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapVirtualCache16BppSize(%p)"), pBitmapVirtualCache16BppSize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_BitmapVirtualCache16BppSize(pBitmapVirtualCache16BppSize);
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapVirtualCache16BppSize -> %08X, BitmapVirtualCache16BppSize = %ld"), hr, *pBitmapVirtualCache16BppSize);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapVirtualCache24BppSize(long pBitmapVirtualCache24BppSize)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapVirtualCache24BppSize(%ld)"), pBitmapVirtualCache24BppSize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_BitmapVirtualCache24BppSize(pBitmapVirtualCache24BppSize);
+			dbgprintf(TEXT("CAdvancedSettings::put_BitmapVirtualCache24BppSize -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapVirtualCache24BppSize(long * pBitmapVirtualCache24BppSize)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapVirtualCache24BppSize(%p)"), pBitmapVirtualCache24BppSize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_BitmapVirtualCache24BppSize(pBitmapVirtualCache24BppSize);
+			dbgprintf(TEXT("CAdvancedSettings::get_BitmapVirtualCache24BppSize -> %08X, BitmapVirtualCache24BppSize = %ld"), hr, *pBitmapVirtualCache24BppSize);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_PerformanceFlags(long pDisableList)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_PerformanceFlags(%ld)"), pDisableList);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_PerformanceFlags(pDisableList);
+			dbgprintf(TEXT("CAdvancedSettings::put_PerformanceFlags -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_PerformanceFlags(long * pDisableList)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_PerformanceFlags(%p)"), pDisableList);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_PerformanceFlags(pDisableList);
+			dbgprintf(TEXT("CAdvancedSettings::get_PerformanceFlags -> %08X, DisableList = %ld"), hr, *pDisableList);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ConnectWithEndpoint(VARIANT * rhs)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_ConnectWithEndpoint(%s)"), VariantToString(*rhs).c_str());
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_ConnectWithEndpoint(rhs);
+			dbgprintf(TEXT("CAdvancedSettings::put_ConnectWithEndpoint -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_NotifyTSPublicKey(VARIANT_BOOL pfNotify)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::put_NotifyTSPublicKey(%s)"), BooleanToString(pfNotify));
+			HRESULT hr = pIMsRdpClientAdvancedSettings->put_NotifyTSPublicKey(pfNotify);
+			dbgprintf(TEXT("CAdvancedSettings::put_NotifyTSPublicKey -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_NotifyTSPublicKey(VARIANT_BOOL * pfNotify)
+		{
+			IMsRdpClientAdvancedSettings * pIMsRdpClientAdvancedSettings = getIMsRdpClientAdvancedSettings();
+			dbgprintf(TEXT("CAdvancedSettings::get_NotifyTSPublicKey(%p)"), pfNotify);
+			HRESULT hr = pIMsRdpClientAdvancedSettings->get_NotifyTSPublicKey(pfNotify);
+			dbgprintf(TEXT("CAdvancedSettings::get_NotifyTSPublicKey -> %08X, fNotify = %s"), hr, BooleanToString(*pfNotify));
+			return hr;
+		}
+
+		/* IMsRdpClientAdvancedSettings2 */
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::get_CanAutoReconnect(VARIANT_BOOL * pfCanAutoReconnect)
+		{
+			IMsRdpClientAdvancedSettings2 * pIMsRdpClientAdvancedSettings2 = getIMsRdpClientAdvancedSettings2();
+			dbgprintf(TEXT("CAdvancedSettings::get_CanAutoReconnect(%p)"), pfCanAutoReconnect);
+			HRESULT hr = pIMsRdpClientAdvancedSettings2->get_CanAutoReconnect(pfCanAutoReconnect);
+			dbgprintf(TEXT("CAdvancedSettings::get_CanAutoReconnect -> %08X, fCanAutoReconnect = %s"), hr, BooleanToString(*pfCanAutoReconnect));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::put_EnableAutoReconnect(VARIANT_BOOL pfEnableAutoReconnect)
+		{
+			IMsRdpClientAdvancedSettings2 * pIMsRdpClientAdvancedSettings2 = getIMsRdpClientAdvancedSettings2();
+			dbgprintf(TEXT("CAdvancedSettings::put_EnableAutoReconnect(%s)"), BooleanToString(pfEnableAutoReconnect));
+			HRESULT hr = pIMsRdpClientAdvancedSettings2->put_EnableAutoReconnect(pfEnableAutoReconnect);
+			dbgprintf(TEXT("CAdvancedSettings::put_EnableAutoReconnect -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::get_EnableAutoReconnect(VARIANT_BOOL * pfEnableAutoReconnect)
+		{
+			IMsRdpClientAdvancedSettings2 * pIMsRdpClientAdvancedSettings2 = getIMsRdpClientAdvancedSettings2();
+			dbgprintf(TEXT("CAdvancedSettings::get_EnableAutoReconnect(%p)"), pfEnableAutoReconnect);
+			HRESULT hr = pIMsRdpClientAdvancedSettings2->get_EnableAutoReconnect(pfEnableAutoReconnect);
+			dbgprintf(TEXT("CAdvancedSettings::get_EnableAutoReconnect -> %08X, fEnableAutoReconnect = %s"), hr, BooleanToString(*pfEnableAutoReconnect));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::put_MaxReconnectAttempts(long pMaxReconnectAttempts)
+		{
+			IMsRdpClientAdvancedSettings2 * pIMsRdpClientAdvancedSettings2 = getIMsRdpClientAdvancedSettings2();
+			dbgprintf(TEXT("CAdvancedSettings::put_MaxReconnectAttempts(%ld)"), pMaxReconnectAttempts);
+			HRESULT hr = pIMsRdpClientAdvancedSettings2->put_MaxReconnectAttempts(pMaxReconnectAttempts);
+			dbgprintf(TEXT("CAdvancedSettings::put_MaxReconnectAttempts -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::get_MaxReconnectAttempts(long * pMaxReconnectAttempts)
+		{
+			IMsRdpClientAdvancedSettings2 * pIMsRdpClientAdvancedSettings2 = getIMsRdpClientAdvancedSettings2();
+			dbgprintf(TEXT("CAdvancedSettings::get_MaxReconnectAttempts(%p)"), pMaxReconnectAttempts);
+			HRESULT hr = pIMsRdpClientAdvancedSettings2->get_MaxReconnectAttempts(pMaxReconnectAttempts);
+			dbgprintf(TEXT("CAdvancedSettings::get_MaxReconnectAttempts -> %08X, MaxReconnectAttempts = %ld"), hr, *pMaxReconnectAttempts);
+			return hr;
+		}
+
+		/* IMsRdpClientAdvancedSettings3 */
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings3::put_ConnectionBarShowMinimizeButton(VARIANT_BOOL pfShowMinimize)
+		{
+			IMsRdpClientAdvancedSettings3 * pIMsRdpClientAdvancedSettings3 = getIMsRdpClientAdvancedSettings3();
+			dbgprintf(TEXT("CAdvancedSettings::put_ConnectionBarShowMinimizeButton(%s)"), BooleanToString(pfShowMinimize));
+			HRESULT hr = pIMsRdpClientAdvancedSettings3->put_ConnectionBarShowMinimizeButton(pfShowMinimize);
+			dbgprintf(TEXT("CAdvancedSettings::put_ConnectionBarShowMinimizeButton -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings3::get_ConnectionBarShowMinimizeButton(VARIANT_BOOL * pfShowMinimize)
+		{
+			IMsRdpClientAdvancedSettings3 * pIMsRdpClientAdvancedSettings3 = getIMsRdpClientAdvancedSettings3();
+			dbgprintf(TEXT("CAdvancedSettings::get_ConnectionBarShowMinimizeButton(%p)"), pfShowMinimize);
+			HRESULT hr = pIMsRdpClientAdvancedSettings3->get_ConnectionBarShowMinimizeButton(pfShowMinimize);
+			dbgprintf(TEXT("CAdvancedSettings::get_ConnectionBarShowMinimizeButton -> %08X, fShowMinimize = %s"), hr, BooleanToString(*pfShowMinimize));
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings3::put_ConnectionBarShowRestoreButton(VARIANT_BOOL pfShowRestore)
+		{
+			IMsRdpClientAdvancedSettings3 * pIMsRdpClientAdvancedSettings3 = getIMsRdpClientAdvancedSettings3();
+			dbgprintf(TEXT("CAdvancedSettings::put_ConnectionBarShowRestoreButton(%s)"), BooleanToString(pfShowRestore));
+			HRESULT hr = pIMsRdpClientAdvancedSettings3->put_ConnectionBarShowRestoreButton(pfShowRestore);
+			dbgprintf(TEXT("CAdvancedSettings::put_ConnectionBarShowRestoreButton -> %08X"), hr);
+			return hr;
+		}
+
+		virtual STDMETHODIMP IMsRdpClientAdvancedSettings3::get_ConnectionBarShowRestoreButton(VARIANT_BOOL * pfShowRestore)
+		{
+			IMsRdpClientAdvancedSettings3 * pIMsRdpClientAdvancedSettings3 = getIMsRdpClientAdvancedSettings3();
+			dbgprintf(TEXT("CAdvancedSettings::get_ConnectionBarShowRestoreButton(%p)"), pfShowRestore);
+			HRESULT hr = pIMsRdpClientAdvancedSettings3->get_ConnectionBarShowRestoreButton(pfShowRestore);
+			dbgprintf(TEXT("CAdvancedSettings::get_ConnectionBarShowRestoreButton -> %08X, fShowRestore = %s"), hr, BooleanToString(*pfShowRestore));
+			return hr;
+		}
+
+		/* IMsRdpClientAdvancedSettings4 */
+        virtual STDMETHODIMP IMsRdpClientAdvancedSettings4::put_AuthenticationLevel(unsigned int puiAuthLevel)
+		{
+			IMsRdpClientAdvancedSettings4 * pIMsRdpClientAdvancedSettings4 = getIMsRdpClientAdvancedSettings4();
+			dbgprintf(TEXT("CAdvancedSettings::put_AuthenticationLevel(%u)"), puiAuthLevel);
+			HRESULT hr = pIMsRdpClientAdvancedSettings4->put_AuthenticationLevel(puiAuthLevel);
+			dbgprintf(TEXT("CAdvancedSettings::put_AuthenticationLevel -> %08X"), hr);
+			return hr;
+		}
+        virtual STDMETHODIMP IMsRdpClientAdvancedSettings4::get_AuthenticationLevel(unsigned int * puiAuthLevel)
+		{
+			IMsRdpClientAdvancedSettings4 * pIMsRdpClientAdvancedSettings4 = getIMsRdpClientAdvancedSettings4();
+			dbgprintf(TEXT("CAdvancedSettings::get_AuthenticationLevel(%p)"), puiAuthLevel);
+			HRESULT hr = pIMsRdpClientAdvancedSettings4->get_AuthenticationLevel(puiAuthLevel);
+			dbgprintf(TEXT("CAdvancedSettings::get_AuthenticationLevel -> %08X, uiAuthLevel = %ld"), hr, *puiAuthLevel);
+			return hr;
+		}
+	};
 
 	class CoClass:
 		/* Standard interfaces */
@@ -575,9 +2649,153 @@ namespace
 			return m_IMsRdpClientNonScriptable2;
 		}
 
-	public:
-		CoClass(IUnknown * pUnknw):
+	private:
+		IUnknown * m_outer;
+
+        HRESULT queryInterface(REFIID riid, void ** ppvObject)
+		{
+			HRESULT hr;
+			IUnknown * pvObject = NULL;
+			
+			dbgprintf(TEXT("IUnknown::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
+
+#define QIBEGIN() \
+	if(riid == IID_IUnknown) \
+	{ \
+		assert(0); \
+	}
+
+#define QI(I) \
+	else if(riid == IID_ ## I) \
+	{ \
+		if(m_ ## I) \
+		{ \
+			m_ ## I->AddRef(); \
+			hr = S_OK; \
+		} \
+		else \
+		{ \
+			hr = m_IUnknown->QueryInterface(&m_ ## I); \
+		} \
+ \
+		if(SUCCEEDED(hr)) \
+			pvObject = static_cast<I *>(this); \
+	}
+
+#define QIEND() \
+	else \
+	{ \
+		hr = E_NOINTERFACE; \
+		pvObject = NULL; \
+	}
+
+			QIBEGIN()
+
+			/* Standard interfaces */
+			QI(IDispatch)
+			QI(IConnectionPointContainer)
+			QI(IDataObject)
+			QI(IObjectSafety)
+			QI(IOleControl)
+			QI(IOleInPlaceActiveObject)
+			QI(IOleInPlaceObject)
+			QI(IOleObject)
+			QI(IOleWindow)
+			QI(IPersist)
+			QI(IPersistPropertyBag)
+			QI(IPersistStorage)
+			QI(IPersistStreamInit)
+			QI(IProvideClassInfo)
+			QI(IProvideClassInfo2)
+			QI(IQuickActivate)
+			QI(ISpecifyPropertyPages)
+			QI(IViewObject)
+			QI(IViewObject2)
+
+			/* Terminal services client */
+			QI(IMsRdpClient)
+			QI(IMsRdpClient2)
+			QI(IMsRdpClient3)
+			QI(IMsRdpClient4)
+			QI(IMsTscAx)
+			QI(IMsTscNonScriptable)
+			QI(IMsRdpClientNonScriptable)
+			QI(IMsRdpClientNonScriptable2)
+			QIEND()
+
+#undef QIBEGIN
+#undef QIEND
+#undef QI
+
+			if(SUCCEEDED(hr))
+			{
+				assert(pvObject);
+				pvObject->AddRef();
+			}
+			else
+			{
+				assert(pvObject == NULL);
+			}
+
+			*ppvObject = pvObject;
+
+			dbgprintf(TEXT("IUnknown::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
+			return hr;
+		}
+
+        ULONG addRef()
+		{
+			return InterlockedIncrement(&m_refCount);
+		}
+
+        ULONG release()
+		{
+			LONG n = InterlockedDecrement(&m_refCount);
+
+			if(n == 0)
+				delete this;
+
+			return n;
+		}
+
+		friend class CoClassInner;
+
+		class CoClassInner: public IUnknown
+		{
+		public:
+			virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject)
+			{
+				if(riid == IID_IUnknown)
+				{
+					AddRef();
+					*ppvObject = this;
+					return S_OK;
+				}
+				
+				return InnerToOuter(this)->queryInterface(riid, ppvObject);
+			}
+
+			virtual ULONG STDMETHODCALLTYPE AddRef()
+			{
+				return InnerToOuter(this)->addRef();
+			}
+
+			virtual ULONG STDMETHODCALLTYPE Release()
+			{
+				return InnerToOuter(this)->release();
+			}
+		}
+		m_inner;
+
+		static CoClass * InnerToOuter(CoClassInner * inner)
+		{
+			return CONTAINING_RECORD(inner, CoClass, m_inner);
+		}
+
+	private:
+		CoClass(IUnknown * pUnknw, IUnknown * pUnkOuter):
 			m_refCount(1),
+			m_outer(pUnkOuter),
 			m_IUnknown(pUnknw),
 			m_IDispatch(NULL),
 			m_IConnectionPointContainer(NULL),
@@ -607,9 +2825,41 @@ namespace
 			m_IMsRdpClientNonScriptable(NULL),
 			m_IMsRdpClientNonScriptable2(NULL)
 		{
-			m_IUnknown->AddRef();
+			if(m_outer == NULL)
+				m_outer = &m_inner;
 		}
 
+	public:
+		static HRESULT CreateInstance(IUnknown * pUnknw, IUnknown * pUnkOuter, REFIID riid, void ** ppvObject)
+		{
+			HRESULT hr = S_OK;
+
+			if(pUnkOuter && riid != IID_IUnknown)
+				hr = CLASS_E_NOAGGREGATION;
+			else
+			{
+				CoClass * p = new CoClass(pUnknw, pUnkOuter);
+
+				if(p == NULL)
+					hr = E_OUTOFMEMORY;
+				else
+				{
+					hr = p->m_inner.QueryInterface(riid, ppvObject);
+
+					if(FAILED(hr))
+						delete p;
+					else
+						p->m_inner.Release();
+				}
+			}
+
+			if(FAILED(hr))
+				pUnknw->Release();
+
+			return hr;
+		}
+
+	private:
 		~CoClass()
 		{
 			if(m_IUnknown)
@@ -701,220 +2951,21 @@ namespace
 	public:
         virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject)
 		{
-			HRESULT hr;
-			IUnknown * pvObject = NULL;
-			
-			dbgprintf(TEXT("IUnknown::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
-
-#define QIBEGIN() \
-	if(riid == IID_IUnknown) \
-	{ \
-		hr = S_OK; \
-		pvObject = (IUnknown *)(this); \
-	}
-
-#define QI(I) \
-	else if(riid == IID_ ## I) \
-	{ \
-		if(m_ ## I) \
-		{ \
-			m_ ## I->AddRef(); \
-			hr = S_OK; \
-		} \
-		else \
-		{ \
-			hr = m_IUnknown->QueryInterface(&m_ ## I); \
-		} \
- \
-		if(SUCCEEDED(hr)) \
-			pvObject = static_cast<I *>(this); \
-	}
-
-#define QIEND() \
-	else \
-	{ \
-		hr = E_NOINTERFACE; \
-		pvObject = NULL; \
-	}
-
-			QIBEGIN()
-
-			/* Standard interfaces */
-			QI(IDispatch)
-			QI(IConnectionPointContainer)
-			QI(IDataObject)
-			QI(IObjectSafety)
-			QI(IOleControl)
-			QI(IOleInPlaceActiveObject)
-			QI(IOleInPlaceObject)
-			QI(IOleObject)
-			QI(IOleWindow)
-			QI(IPersist)
-			QI(IPersistPropertyBag)
-			QI(IPersistStorage)
-			QI(IPersistStreamInit)
-			QI(IProvideClassInfo)
-			QI(IProvideClassInfo2)
-			QI(IQuickActivate)
-			QI(ISpecifyPropertyPages)
-			QI(IViewObject)
-			QI(IViewObject2)
-
-			/* Terminal services client */
-			QI(IMsRdpClient)
-			QI(IMsRdpClient2)
-			QI(IMsRdpClient3)
-			QI(IMsRdpClient4)
-			QI(IMsTscAx)
-			QI(IMsTscNonScriptable)
-			QI(IMsRdpClientNonScriptable)
-			QI(IMsRdpClientNonScriptable2)
-			QIEND()
-
-#undef QIBEGIN
-#undef QIEND
-#undef QI
-
-			if(SUCCEEDED(hr))
-			{
-				assert(pvObject);
-				pvObject->AddRef();
-			}
-			else
-			{
-				assert(pvObject == NULL);
-			}
-
-			*ppvObject = pvObject;
-
-			dbgprintf(TEXT("IUnknown::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
-			return hr;
+			return m_outer->QueryInterface(riid, ppvObject);
 		}
 
         virtual ULONG STDMETHODCALLTYPE AddRef(void)
 		{
-			return InterlockedIncrement(&m_refCount);
+			return m_outer->AddRef();
 		}
 
         virtual ULONG STDMETHODCALLTYPE Release(void)
 		{
-			LONG n = InterlockedDecrement(&m_refCount);
-
-			if(n == 0)
-				delete this;
-
-			return n;
+			return m_outer->Release();
 		}
 
 		/* IDispatch */
 	private:
-		static std::basic_string<TCHAR> VariantToString(const VARIANT& var)
-		{
-			std::basic_ostringstream<TCHAR> o;
-
-			switch(var.vt & VT_TYPEMASK)
-			{
-			case VT_EMPTY:           o << "<empty>"; break;
-			case VT_NULL:            o << "<null>"; break;
-			case VT_I2:              o << "short"; break;
-			case VT_I4:              o << "long"; break;
-			case VT_R4:              o << "float"; break;
-			case VT_R8:              o << "double"; break;
-			case VT_CY:              o << "CURRENCY"; break;
-			case VT_DATE:            o << "DATE"; break;
-			case VT_BSTR:            o << "string"; break;
-			case VT_DISPATCH:        o << "IDispatch *"; break;
-			case VT_ERROR:           o << "SCODE"; break;
-			case VT_BOOL:            o << "bool"; break;
-			case VT_VARIANT:         o << "VARIANT *"; break;
-			case VT_UNKNOWN:         o << "IUnknown *"; break;
-			case VT_DECIMAL:         o << "DECIMAL"; break;
-			case VT_I1:              o << "char"; break;
-			case VT_UI1:             o << "unsigned char"; break;
-			case VT_UI2:             o << "unsigned short"; break;
-			case VT_UI4:             o << "unsigned long"; break;
-			case VT_I8:              o << "long long"; break;
-			case VT_UI8:             o << "unsigned long long"; break;
-			case VT_INT:             o << "int"; break;
-			case VT_UINT:            o << "unsigned int"; break;
-			case VT_VOID:            o << "void"; break;
-			case VT_HRESULT:         o << "HRESULT"; break;
-			case VT_PTR:             o << "void *"; break;
-			case VT_SAFEARRAY:       o << "SAFEARRAY *"; break;
-			case VT_LPSTR:           o << "LPSTR"; break;
-			case VT_LPWSTR:          o << "LPWSTR"; break;
-			case VT_RECORD:          o << "struct { }"; break;
-			case VT_INT_PTR:         o << "intptr_t"; break;
-			case VT_UINT_PTR:        o << "uintptr_t"; break;
-			case VT_FILETIME:        o << "FILETIME"; break;
-			default:                 o << "???"; break;
-			}
-
-			if(var.vt & VT_ARRAY)
-				o << "[]";
-			else if(var.vt & VT_BYREF)
-				o << " *";
-			else
-			{
-				switch(var.vt & VT_TYPEMASK)
-				{
-				case VT_EMPTY:
-				case VT_NULL:
-				case VT_RECORD:
-				case VT_VOID:
-
-					// TODO
-				case VT_CY:
-				case VT_DATE:
-				case VT_DECIMAL:
-				case VT_FILETIME:
-					break;
-
-				default:
-					o << " = ";
-				}
-
-				switch(var.vt & VT_TYPEMASK)
-				{
-				case VT_I2:       o << var.iVal; break;
-				case VT_I4:       o << var.lVal; break;
-				case VT_R4:       o << var.fltVal; break;
-				case VT_R8:       o << var.dblVal; break;
-				case VT_BSTR:     o << std::wstring(var.bstrVal, var.bstrVal + SysStringLen(var.bstrVal)); break;
-				case VT_BOOL:     o << var.boolVal ? "true" : "false"; break;
-				case VT_I1:       o << int(var.cVal); break;
-				case VT_UI1:      o << unsigned int(var.bVal); break;
-				case VT_UI2:      o << var.uiVal; break;
-				case VT_UI4:      o << var.ulVal; break;
-				case VT_I8:       o << var.llVal; break;
-				case VT_UI8:      o << var.ullVal; break;
-				case VT_INT:      o << var.intVal; break;
-				case VT_UINT:     o << var.uintVal; break;
-				case VT_LPSTR:    o << LPSTR(var.byref); break;
-				case VT_LPWSTR:   o << LPWSTR(var.byref); break;
-				case VT_INT_PTR:  o << var.intVal; break; // BUGBUG
-				case VT_UINT_PTR: o << var.uintVal; break; // BUGBUG
-
-				case VT_DISPATCH:
-				case VT_VARIANT:
-				case VT_UNKNOWN:
-				case VT_PTR:
-				case VT_SAFEARRAY:
-				case VT_RECORD:
-					o << var.byref; break;
-
-				case VT_ERROR:
-				case VT_HRESULT:
-					o << std::hex << var.ulVal; break;
-
-				default:
-					assert(0);
-				}
-			}
-
-			return o.str();
-		}
-
 		static void FreeExcepInfo(const EXCEPINFO& excepInfo)
 		{
 			if(excepInfo.bstrSource)
@@ -1031,7 +3082,8 @@ namespace
 
 			return hr;
 		}
-        virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr)
+
+		virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr)
 		{
 			IDispatch * pIDispatch = getIDispatch();
 
@@ -1082,9 +3134,12 @@ namespace
 		{
 			IConnectionPointContainer * pIConnectionPointContainer = getIConnectionPointContainer();
 			dbgprintf(TEXT("IConnectionPointContainer::EnumConnectionPoints(%p)"), ppEnum);
-			// TODO: hook enumerator
 			HRESULT hr = pIConnectionPointContainer->EnumConnectionPoints(ppEnum);
 			dbgprintf(TEXT("IConnectionPointContainer::EnumConnectionPoints -> %08X, pEnum = %p"), hr, *ppEnum);
+
+			if(SUCCEEDED(hr))
+				*ppEnum = HookIEnumConnectionPoints(*ppEnum);
+
 			return hr;
 		}
 
@@ -1092,9 +3147,12 @@ namespace
 		{
 			IConnectionPointContainer * pIConnectionPointContainer = getIConnectionPointContainer();
 			dbgprintf(TEXT("IConnectionPointContainer::FindConnectionPoint(%ls, %p)"), UUIDToString(riid).c_str(), ppCP);
-			// TODO: hook connection point
 			HRESULT hr = pIConnectionPointContainer->FindConnectionPoint(riid, ppCP);
 			dbgprintf(TEXT("IConnectionPointContainer::FindConnectionPoint -> %08X, pCP = %p"), hr, *ppCP);
+
+			if(SUCCEEDED(hr))
+				*ppCP = HookIConnectionPoint(*ppCP);
+
 			return hr;
 		}
 
@@ -1279,6 +3337,7 @@ namespace
 			dbgprintf(TEXT("IDataObject::EnumFormatEtc(%lu, %p)"), dwDirection, ppenumFormatEtc);
 			HRESULT hr = pIDataObject->EnumFormatEtc(dwDirection, ppenumFormatEtc);
 			dbgprintf(TEXT("IDataObject::EnumFormatEtc -> %08X, penumFormatEtc = %p"), hr, *ppenumFormatEtc);
+			// TODO: hook
 			return hr;
 		}
 
@@ -1288,6 +3347,7 @@ namespace
 			dbgprintf(TEXT("IDataObject::DAdvise(%s, %lu, %p, %p)"), FormatEtcToString(*pformatetc).c_str(), advf, pAdvSink, pdwConnection);
 			HRESULT hr = pIDataObject->DAdvise(pformatetc, advf, pAdvSink, pdwConnection);
 			dbgprintf(TEXT("IDataObject::DAdvise -> %08X, dwConnection = %lu"), hr, *pdwConnection);
+			// TODO: hook
 			return hr;
 		}
 
@@ -1306,6 +3366,7 @@ namespace
 			dbgprintf(TEXT("IDataObject::EnumDAdvise(%p)"), ppenumAdvise);
 			HRESULT hr = pIDataObject->EnumDAdvise(ppenumAdvise);
 			dbgprintf(TEXT("IDataObject::EnumDAdvise -> %08X, penumAdvise = %p"), hr, *ppenumAdvise);
+			// TODO: hook
 			return hr;
 		}
 
@@ -1319,7 +3380,8 @@ namespace
 			dbgprintf(TEXT("IObjectSafety::GetInterfaceSafetyOptions -> %08X, dwSupportedOptions = %08X, dwEnabledOptions = %08X"), hr, *pdwSupportedOptions, *pdwEnabledOptions);
 			return hr;
 		}
-        virtual HRESULT STDMETHODCALLTYPE IObjectSafety::SetInterfaceSafetyOptions(REFIID riid, DWORD dwOptionSetMask, DWORD dwEnabledOptions)
+
+		virtual HRESULT STDMETHODCALLTYPE IObjectSafety::SetInterfaceSafetyOptions(REFIID riid, DWORD dwOptionSetMask, DWORD dwEnabledOptions)
 		{
 			IObjectSafety * pIObjectSafety = getIObjectSafety();
 			dbgprintf(TEXT("IObjectSafety::SetInterfaceSafetyOptions(%ls, %08X, %08X)"), UUIDToString(riid).c_str(), dwOptionSetMask, dwEnabledOptions);
@@ -1495,6 +3557,7 @@ namespace
 
         virtual HRESULT STDMETHODCALLTYPE ResizeBorder(LPCRECT prcBorder, IOleInPlaceUIWindow * pUIWindow, BOOL fFrameWindow)
 		{
+			// TODO: hook pUIWindow
 			IOleInPlaceActiveObject * pIOleInPlaceActiveObject = getIOleInPlaceActiveObject();
 			dbgprintf(TEXT("IOleInPlaceActiveObject::ResizeBorder(%s)"), RectToString(*prcBorder).c_str(), pUIWindow, BooleanToString(fFrameWindow));
 			HRESULT hr = pIOleInPlaceActiveObject->ResizeBorder(prcBorder, pUIWindow, fFrameWindow);
@@ -1573,6 +3636,7 @@ namespace
 	public:
         virtual HRESULT STDMETHODCALLTYPE SetClientSite(IOleClientSite * pClientSite)
 		{
+			// TODO: hook pClientSite
 			IOleObject * pIOleObject = getIOleObject();
 			dbgprintf(TEXT("IOleObject::SetClientSite(%p)"), pClientSite);
 			HRESULT hr = pIOleObject->SetClientSite(pClientSite);
@@ -1658,6 +3722,7 @@ namespace
 			dbgprintf(TEXT("IOleObject::EnumVerbs(%p)"), ppEnumOleVerb);
 			HRESULT hr = pIOleObject->EnumVerbs(ppEnumOleVerb);
 			dbgprintf(TEXT("IOleObject::EnumVerbs -> %08X, pEnumOleVerb = %p"), hr, *ppEnumOleVerb);
+			// TODO: hook
 			return hr;
 		}
 
@@ -1717,6 +3782,7 @@ namespace
 
         virtual HRESULT STDMETHODCALLTYPE Advise(IAdviseSink * pAdvSink, DWORD * pdwConnection)
 		{
+			// TODO: hook pAdvSink
 			IOleObject * pIOleObject = getIOleObject();
 			dbgprintf(TEXT("IOleObject::Advise(%p, %p)"), pAdvSink, pdwConnection);
 			HRESULT hr = pIOleObject->Advise(pAdvSink, pdwConnection);
@@ -1739,6 +3805,7 @@ namespace
 			dbgprintf(TEXT("IOleObject::EnumAdvise(%p)"), ppenumAdvise);
 			HRESULT hr = pIOleObject->EnumAdvise(ppenumAdvise);
 			dbgprintf(TEXT("IOleObject::EnumAdvise -> %08X, penumAdvise = %p"), hr, *ppenumAdvise);
+			// TODO: hook
 			return hr;
 		}
 
@@ -1778,12 +3845,13 @@ namespace
 			IPersistPropertyBag * pIPersistPropertyBag = getIPersistPropertyBag();
 			dbgprintf(TEXT("IPersistPropertyBag::InitNew()"));
 			HRESULT hr = pIPersistPropertyBag->InitNew();
-			dbgprintf(TEXT("IPersistPropertyBag::InitNew -> %08X, "), hr);
+			dbgprintf(TEXT("IPersistPropertyBag::InitNew -> %08X"), hr);
 			return hr;
 		}
 
         virtual HRESULT STDMETHODCALLTYPE Load(IPropertyBag * pPropBag, IErrorLog * pErrorLog)
 		{
+			// TODO: hook pPropBag, pErrorLog
 			IPersistPropertyBag * pIPersistPropertyBag = getIPersistPropertyBag();
 			dbgprintf(TEXT("IPersistPropertyBag::Load(%p, %p)"), pPropBag, pErrorLog);
 			HRESULT hr = pIPersistPropertyBag->Load(pPropBag, pErrorLog);
@@ -1793,6 +3861,7 @@ namespace
 
         virtual HRESULT STDMETHODCALLTYPE Save(IPropertyBag * pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties)
 		{
+			// TODO: hook pPropBag
 			IPersistPropertyBag * pIPersistPropertyBag = getIPersistPropertyBag();
 			dbgprintf(TEXT("IPersistPropertyBag::Save(%p, %s, %s)"), pPropBag, BooleanToString(fClearDirty), BooleanToString(fSaveAllProperties));
 			HRESULT hr = pIPersistPropertyBag->Save(pPropBag, fClearDirty, fSaveAllProperties);
@@ -1807,7 +3876,7 @@ namespace
 			IPersistStorage * pIPersistStorage = getIPersistStorage();
 			dbgprintf(TEXT("IPersistStorage::IsDirty()"));
 			HRESULT hr = pIPersistStorage->IsDirty();
-			dbgprintf(TEXT("IPersistStorage::IsDirty -> %08X, "), hr);
+			dbgprintf(TEXT("IPersistStorage::IsDirty -> %08X"), hr);
 			return hr;
 		}
 
@@ -1899,7 +3968,7 @@ namespace
 			IPersistStreamInit * pIPersistStreamInit = getIPersistStreamInit();
 			dbgprintf(TEXT("IPersistStreamInit::InitNew()"));
 			HRESULT hr = pIPersistStreamInit->InitNew();
-			dbgprintf(TEXT("IPersistStreamInit::InitNew -> %08X, "), hr);
+			dbgprintf(TEXT("IPersistStreamInit::InitNew -> %08X"), hr);
 			return hr;
 		}
 
@@ -2115,7 +4184,7 @@ namespace
 			IMsTscAx * pIMsTscAx = getIMsTscAx();
 			dbgprintf(TEXT("IMsTscAx::put_DisconnectedText(%ls)"), pDisconnectedText);
 			HRESULT hr = pIMsTscAx->put_DisconnectedText(pDisconnectedText);
-			dbgprintf(TEXT("IMsTscAx::put_DisconnectedText -> %08X, "), hr);
+			dbgprintf(TEXT("IMsTscAx::put_DisconnectedText -> %08X"), hr);
 			return hr;
 		}
 
@@ -2278,6 +4347,10 @@ namespace
 			dbgprintf(TEXT("IMsTscAx::get_AdvancedSettings(%p)"), ppAdvSettings);
 			HRESULT hr = pIMsTscAx->get_AdvancedSettings(ppAdvSettings);
 			dbgprintf(TEXT("IMsTscAx::get_AdvancedSettings -> %08X, pAdvSettings = %p"), hr, *ppAdvSettings);
+
+			if(SUCCEEDED(hr))
+				*ppAdvSettings = new CAdvancedSettings(*ppAdvSettings);
+
 			return hr;
 		}
 
@@ -2290,7 +4363,7 @@ namespace
 			return hr;
 		}
 
-		virtual HRESULT __stdcall raw_Connect()
+		virtual HRESULT __stdcall Connect()
 		{
 			IMsTscAx * pIMsTscAx = getIMsTscAx();
 			dbgprintf(TEXT("IMsTscAx::Connect()"));
@@ -2299,16 +4372,16 @@ namespace
 			return hr;
 		}
 
-		virtual HRESULT __stdcall raw_Disconnect()
+		virtual HRESULT __stdcall Disconnect()
 		{
 			IMsTscAx * pIMsTscAx = getIMsTscAx();
 			dbgprintf(TEXT("IMsTscAx::Disconnect()"));
 			HRESULT hr = pIMsTscAx->Disconnect();
-			dbgprintf(TEXT("IMsTscAx::Disconnect -> %08X, "), hr);
+			dbgprintf(TEXT("IMsTscAx::Disconnect -> %08X"), hr);
 			return hr;
 		}
 
-		virtual HRESULT __stdcall raw_CreateVirtualChannels(BSTR newVal)
+		virtual HRESULT __stdcall CreateVirtualChannels(BSTR newVal)
 		{
 			IMsTscAx * pIMsTscAx = getIMsTscAx();
 			dbgprintf(TEXT("IMsTscAx::CreateVirtualChannels(%ls)"), newVal);
@@ -2317,7 +4390,7 @@ namespace
 			return hr;
 		}
 
-		virtual HRESULT __stdcall raw_SendOnVirtualChannel(BSTR chanName, BSTR ChanData)
+		virtual HRESULT __stdcall SendOnVirtualChannel(BSTR chanName, BSTR ChanData)
 		{
 			IMsTscAx * pIMsTscAx = getIMsTscAx();
 			dbgprintf(TEXT("IMsTscAx::SendOnVirtualChannel(%ls, %p)"), chanName, ChanData);
@@ -2352,6 +4425,10 @@ namespace
 			dbgprintf(TEXT("IMsRdpClient::get_AdvancedSettings2(%p)"), ppAdvSettings);
 			HRESULT hr = pIMsRdpClient->get_AdvancedSettings2(ppAdvSettings);
 			dbgprintf(TEXT("IMsRdpClient::get_AdvancedSettings2 -> %08X, pAdvSettings = %p"), hr, *ppAdvSettings);
+
+			if(SUCCEEDED(hr))
+				*ppAdvSettings = new CAdvancedSettings(*ppAdvSettings);
+
 			return hr;
 		}
 
@@ -2391,29 +4468,29 @@ namespace
 			return hr;
 		}
 
-		virtual HRESULT __stdcall raw_SetVirtualChannelOptions(BSTR chanName, long chanOptions)
+		virtual HRESULT __stdcall SetVirtualChannelOptions(BSTR chanName, long chanOptions)
 		{
 			IMsRdpClient * pIMsRdpClient = getIMsRdpClient();
 			dbgprintf(TEXT("IMsRdpClient::SetVirtualChannelOptions(%ls, %08X)"), chanName, chanOptions);
-			HRESULT hr = pIMsRdpClient->raw_SetVirtualChannelOptions(chanName, chanOptions);
+			HRESULT hr = pIMsRdpClient->SetVirtualChannelOptions(chanName, chanOptions);
 			dbgprintf(TEXT("IMsRdpClient::SetVirtualChannelOptions -> %08X"), hr);
 			return hr;
 		}
 
-		virtual HRESULT __stdcall raw_GetVirtualChannelOptions(BSTR chanName, long * pChanOptions)
+		virtual HRESULT __stdcall GetVirtualChannelOptions(BSTR chanName, long * pChanOptions)
 		{
 			IMsRdpClient * pIMsRdpClient = getIMsRdpClient();
 			dbgprintf(TEXT("IMsRdpClient::GetVirtualChannelOptions(%ls, %p)"), chanName, pChanOptions);
-			HRESULT hr = pIMsRdpClient->raw_GetVirtualChannelOptions(chanName, pChanOptions);
+			HRESULT hr = pIMsRdpClient->GetVirtualChannelOptions(chanName, pChanOptions);
 			dbgprintf(TEXT("IMsRdpClient::GetVirtualChannelOptions -> %08X, ChanOptions = %08X"), hr, *pChanOptions);
 			return hr;
 		}
 
-		virtual HRESULT __stdcall raw_RequestClose(ControlCloseStatus * pCloseStatus)
+		virtual HRESULT __stdcall RequestClose(ControlCloseStatus * pCloseStatus)
 		{
 			IMsRdpClient * pIMsRdpClient = getIMsRdpClient();
 			dbgprintf(TEXT("IMsRdpClient::RequestClose(%p)"), pCloseStatus);
-			HRESULT hr = pIMsRdpClient->raw_RequestClose(pCloseStatus);
+			HRESULT hr = pIMsRdpClient->RequestClose(pCloseStatus);
 			dbgprintf(TEXT("IMsRdpClient::RequestClose -> %08X, CloseStatus = %ld"), hr, *pCloseStatus);
 			return hr;
 		}
@@ -2426,6 +4503,10 @@ namespace
 			dbgprintf(TEXT("IMsRdpClient2::get_AdvancedSettings3(%p)"), ppAdvSettings);
 			HRESULT hr = pIMsRdpClient2->get_AdvancedSettings3(ppAdvSettings);
 			dbgprintf(TEXT("IMsRdpClient2::get_AdvancedSettings3 -> %08X, pAdvSettings = %p"), hr, *ppAdvSettings);
+
+			if(SUCCEEDED(hr))
+				*ppAdvSettings = new CAdvancedSettings(*ppAdvSettings);
+
 			return hr;
 		}
 
@@ -2455,6 +4536,10 @@ namespace
 			dbgprintf(TEXT("IMsRdpClient3::get_AdvancedSettings4(%p)"), ppAdvSettings);
 			HRESULT hr = pIMsRdpClient3->get_AdvancedSettings4(ppAdvSettings);
 			dbgprintf(TEXT("IMsRdpClient3::get_AdvancedSettings4 -> %08X, pAdvSettings = %p"), hr, *ppAdvSettings);
+
+			if(SUCCEEDED(hr))
+				*ppAdvSettings = new CAdvancedSettings(*ppAdvSettings);
+
 			return hr;
 		}
 
@@ -2466,6 +4551,10 @@ namespace
 			dbgprintf(TEXT("IMsRdpClient4::get_AdvancedSettings5(%p)"), ppAdvSettings5);
 			HRESULT hr = pIMsRdpClient4->get_AdvancedSettings5(ppAdvSettings5);
 			dbgprintf(TEXT("IMsRdpClient4::get_AdvancedSettings5 -> %08X, pAdvSettings5 = %p"), hr, *ppAdvSettings5);
+
+			if(SUCCEEDED(hr))
+				*ppAdvSettings5 = new CAdvancedSettings(*ppAdvSettings5);
+
 			return hr;
 		}
 
@@ -2552,11 +4641,11 @@ namespace
 			return hr;
 		}
 
-		virtual HRESULT __stdcall raw_ResetPassword()
+		virtual HRESULT __stdcall ResetPassword()
 		{
 			IMsTscNonScriptable * pIMsTscNonScriptable = getIMsTscNonScriptable();
 			dbgprintf(TEXT("IMsTscNonScriptable::ResetPassword()"));
-			HRESULT hr = pIMsTscNonScriptable->raw_ResetPassword();
+			HRESULT hr = pIMsTscNonScriptable->ResetPassword();
 			dbgprintf(TEXT("IMsTscNonScriptable::ResetPassword -> %08X"), hr);
 			return hr;
 		}
@@ -2564,20 +4653,20 @@ namespace
 
 		/* IMsRdpClientNonScriptable */
 	public:
-		virtual HRESULT __stdcall IMsRdpClientNonScriptable::raw_NotifyRedirectDeviceChange(UINT_PTR wParam, LONG_PTR lParam)
+		virtual HRESULT __stdcall IMsRdpClientNonScriptable::NotifyRedirectDeviceChange(UINT_PTR wParam, LONG_PTR lParam)
 		{
 			IMsRdpClientNonScriptable * pIMsRdpClientNonScriptable = getIMsRdpClientNonScriptable();
 			dbgprintf(TEXT("IMsRdpClientNonScriptable::NotifyRedirectDeviceChange(%p, %p)"), wParam, lParam);
-			HRESULT hr = pIMsRdpClientNonScriptable->raw_NotifyRedirectDeviceChange(wParam, lParam);
+			HRESULT hr = pIMsRdpClientNonScriptable->NotifyRedirectDeviceChange(wParam, lParam);
 			dbgprintf(TEXT("IMsRdpClientNonScriptable::NotifyRedirectDeviceChange -> %08X"), hr);
 			return hr;
 		}
 
-		virtual HRESULT __stdcall IMsRdpClientNonScriptable::raw_SendKeys(long numKeys, VARIANT_BOOL * pbArrayKeyUp, long * plKeyData) // TBD
+		virtual HRESULT __stdcall IMsRdpClientNonScriptable::SendKeys(long numKeys, VARIANT_BOOL * pbArrayKeyUp, long * plKeyData) // TBD
 		{
 			IMsRdpClientNonScriptable * pIMsRdpClientNonScriptable = getIMsRdpClientNonScriptable();
 			dbgprintf(TEXT("IMsRdpClientNonScriptable::SendKeys(%ld, %p, %p)"), numKeys, pbArrayKeyUp, plKeyData);
-			HRESULT hr = pIMsRdpClientNonScriptable->raw_SendKeys(numKeys, pbArrayKeyUp, plKeyData);
+			HRESULT hr = pIMsRdpClientNonScriptable->SendKeys(numKeys, pbArrayKeyUp, plKeyData);
 			dbgprintf(TEXT("IMsRdpClientNonScriptable::SendKeys -> %08X"), hr);
 			return hr;
 		}
@@ -2756,32 +4845,9 @@ namespace
 		{
 			IClassFactory * pIClassFactory = getIClassFactory();
 			dbgprintf(TEXT("IClassFactory::CreateInstance(%p, %ls, %p)"), pUnkOuter, UUIDToString(riid).c_str(), ppvObject);
-			HRESULT hr = pIClassFactory->CreateInstance(pUnkOuter, riid, ppvObject);
+			HRESULT hr = pIClassFactory->CreateInstance(NULL, riid, ppvObject);
 			dbgprintf(TEXT("IClassFactory::CreateInstance -> %08X, pvObject = %p"), hr, *ppvObject);
-
-			IUnknown * pv = NULL;
-
-			if(SUCCEEDED(hr))
-			{
-				IUnknown * punk = (IUnknown *)*ppvObject;
-
-				if(pUnkOuter)
-					hr = CLASS_E_NOAGGREGATION;
-				else
-					pv = new CoClass(punk);
-
-				punk->Release();
-			}
-
-			if(pv)
-			{
-				hr = pv->QueryInterface(riid, ppvObject);
-
-				if(FAILED(hr))
-					pv->Release();
-			}
-
-			return hr;
+			return CoClass::CreateInstance((IUnknown *)*ppvObject, pUnkOuter, riid, ppvObject);
 		}
 
         virtual HRESULT STDMETHODCALLTYPE LockServer(BOOL fLock)
@@ -2817,32 +4883,9 @@ namespace
 		{
 			IClassFactory2 * pIClassFactory2 = getIClassFactory2();
 			dbgprintf(TEXT("IClassFactory2::CreateInstanceLic(%p, %p, %ls, %ls, %p)"), pUnkOuter, pUnkReserved, UUIDToString(riid).c_str(), bstrKey, ppvObj);
-			HRESULT hr = pIClassFactory2->CreateInstanceLic(pUnkOuter, pUnkReserved, riid, bstrKey, ppvObj);
+			HRESULT hr = pIClassFactory2->CreateInstanceLic(NULL, pUnkReserved, riid, bstrKey, ppvObj);
 			dbgprintf(TEXT("IClassFactory2::CreateInstanceLic -> %08X, pvObj = %p"), hr, *ppvObj);
-
-			IUnknown * pv = NULL;
-
-			if(SUCCEEDED(hr))
-			{
-				IUnknown * punk = (IUnknown *)*ppvObj;
-
-				if(pUnkOuter)
-					hr = CLASS_E_NOAGGREGATION;
-				else
-					pv = new CoClass(punk);
-
-				punk->Release();
-			}
-
-			if(pv)
-			{
-				hr = pv->QueryInterface(riid, ppvObj);
-
-				if(FAILED(hr))
-					pv->Release();
-			}
-
-			return hr;
+			return CoClass::CreateInstance((IUnknown *)*ppvObj, pUnkOuter, riid, ppvObj);
 		}
 	};
 
@@ -2900,7 +4943,6 @@ namespace
 
 		return ul;
 	}
-
 }
 
 // EOF
