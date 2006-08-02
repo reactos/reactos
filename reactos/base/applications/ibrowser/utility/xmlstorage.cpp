@@ -49,11 +49,11 @@ namespace XMLStorage {
 
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
-const LPCXSSTR XMLStorage::XS_EMPTY = XS_EMPTY_STR;
-const LPCXSSTR XMLStorage::XS_TRUE = XS_TRUE_STR;
-const LPCXSSTR XMLStorage::XS_FALSE = XS_FALSE_STR;
-const LPCXSSTR XMLStorage::XS_INTFMT = XS_INTFMT_STR;
-const LPCXSSTR XMLStorage::XS_FLOATFMT = XS_FLOATFMT_STR;
+const LPCXSSTR XS_EMPTY = XS_EMPTY_STR;
+const LPCXSSTR XS_TRUE = XS_TRUE_STR;
+const LPCXSSTR XS_FALSE = XS_FALSE_STR;
+const LPCXSSTR XS_INTFMT = XS_INTFMT_STR;
+const LPCXSSTR XS_FLOATFMT = XS_FLOATFMT_STR;
 #endif
 
 
@@ -591,7 +591,6 @@ void DocType::parse(const char* p)
 	} else
 		_system.erase();
 }
-
 
 
 void XMLFormat::print_header(std::ostream& out, bool lf) const
