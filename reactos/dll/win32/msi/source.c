@@ -23,6 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 
+#include "stdio.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"

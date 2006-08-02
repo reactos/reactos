@@ -30,6 +30,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/stand
 
 #define COBJMACROS
 
+#include "stdio.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
