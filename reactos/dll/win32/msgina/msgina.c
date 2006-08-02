@@ -52,7 +52,7 @@ WlxNegotiate(
 	return TRUE;
 }
 
-static BOOL
+static VOID
 ChooseGinaUI(VOID)
 {
 	HKEY WinLogonKey = NULL;
