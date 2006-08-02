@@ -84,6 +84,7 @@ UNICODE_STRING SourceRootPath;
 BOOLEAN IsUnattendedSetup;
 LONG UnattendDestinationDiskNumber;
 LONG UnattendDestinationPartitionNumber;
+LONG UnattendMBRInstallType = -1;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
 
 /* LOCALS *******************************************************************/
@@ -506,9 +507,28 @@ CheckUnattendedSetup(VOID)
   wcscpy(UnattendInstallationDirectory, Value);
 
   InfFreeContext(Context);
-  InfCloseFile(UnattendInf);
 
   IsUnattendedSetup = TRUE;
+
+  /* Search for 'MBRInstallType' in the 'Unattend' section */
+  if (!InfFindFirstLine(UnattendInf, L"Unattend", L"MBRInstallType", &Context))
+    {
+      DPRINT("InfFindFirstLine() failed for key 'MBRInstallType'\n");
+      InfFreeContext(Context);
+      InfCloseFile(UnattendInf);
+      return;
+    }
+  if (!InfGetIntField(Context, 0, &IntValue))
+    {
+      DPRINT("InfGetIntField() failed for key 'MBRInstallType'\n");
+      InfFreeContext(Context);
+      InfCloseFile(UnattendInf);
+      return;
+    }
+  UnattendMBRInstallType = IntValue;
+  InfFreeContext(Context);
+
+  InfCloseFile(UnattendInf);
 
   DPRINT("Running unattended setup\n");
 }
@@ -707,6 +727,12 @@ IntroPage(PINPUT_RECORD Ir)
 
   if (IsUnattendedSetup)
     {
+      //TODO
+      //read options from inf
+      ComputerList = CreateComputerTypeList(SetupInf);
+      DisplayList = CreateDisplayDriverList(SetupInf);
+      KeyboardList = CreateKeyboardDriverList(SetupInf);
+      LayoutList = CreateKeyboardLayoutList(SetupInf);
       return INSTALL_INTRO_PAGE;
     }
 
@@ -3297,6 +3323,22 @@ BootLoaderPage(PINPUT_RECORD Ir)
   if (InstallOnFloppy == TRUE)
     {
       return BOOT_LOADER_FLOPPY_PAGE;
+    }
+
+  if (IsUnattendedSetup)
+    {
+      if (UnattendMBRInstallType == 0) /* skip MBR installation */
+        {
+          return SUCCESS_PAGE;
+        }
+      else if (UnattendMBRInstallType == 1) /* install on floppy */
+        {
+          return BOOT_LOADER_FLOPPY_PAGE;
+        }
+      else if (UnattendMBRInstallType == 2) /* install on hdd */
+        {
+          return BOOT_LOADER_HARDDISK_PAGE;
+        }
     }
 
   SetTextXY(6, 8, "Setup is installing the boot loader");
