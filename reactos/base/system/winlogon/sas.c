@@ -3,75 +3,256 @@
  * PROJECT:         ReactOS kernel
  * FILE:            services/winlogon/sas.c
  * PURPOSE:         Secure Attention Sequence
- * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  * UPDATE HISTORY:
  *                  Created 28/03/2004
  */
 
 #include "winlogon.h"
 
-#define NDEBUG
-#include <debug.h>
+#define YDEBUG
+#include <wine/debug.h>
 
-#define WINLOGON_SAS_CLASS L"SAS window class"
-#define WINLOGON_SAS_TITLE L"SAS"
+#define WINLOGON_SAS_CLASS L"SAS Window class"
+#define WINLOGON_SAS_TITLE L"SAS window"
 
-#define HK_CTRL_ALT_DEL 0
-#define HK_CTRL_SHIFT_ESC   1
+#define HK_CTRL_ALT_DEL   0
+#define HK_CTRL_SHIFT_ESC 1
 
 #ifdef __USE_W32API
 extern BOOL STDCALL SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
 #endif
 
-void
-DispatchSAS(PWLSESSION Session, DWORD dwSasType)
+static BOOL
+StartTaskManager(
+	IN OUT PWLSESSION Session)
 {
-  Session->SASAction = dwSasType;
+	STARTUPINFO StartupInfo;
+	PROCESS_INFORMATION ProcessInformation;
 
+	if (Session->LogonStatus == WKSTA_IS_LOGGED_OFF)
+		return FALSE;
+
+	StartupInfo.cb = sizeof(StartupInfo);
+	StartupInfo.lpReserved = NULL;
+	StartupInfo.lpDesktop = NULL;
+	StartupInfo.lpTitle = NULL;
+	StartupInfo.dwFlags = 0;
+	StartupInfo.cbReserved2 = 0;
+	StartupInfo.lpReserved2 = 0;
+
+	CreateProcessW(
+		L"taskmgr.exe",
+		NULL,
+		NULL,
+		NULL,
+		FALSE,
+		CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS,
+		NULL,
+		NULL,
+		&StartupInfo,
+		&ProcessInformation);
+
+	CloseHandle (ProcessInformation.hProcess);
+	CloseHandle (ProcessInformation.hThread);
+	return TRUE;
 }
 
-void
-UninitSAS(PWLSESSION Session)
+static BOOL
+HandleLogon(
+	IN OUT PWLSESSION Session)
 {
-  if(Session->SASWindow)
-  {
-    DestroyWindow(Session->SASWindow);
-    Session->SASWindow = NULL;
-  }
+	PROFILEINFOW ProfileInfo;
+	LPVOID lpEnvironment = NULL;
+	BOOLEAN Old;
+
+	if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+	{
+		/* Load the user profile */
+		ProfileInfo.dwSize = sizeof(PROFILEINFOW);
+		ProfileInfo.dwFlags = 0;
+		ProfileInfo.lpUserName = Session->MprNotifyInfo.pszUserName;
+		ProfileInfo.lpProfilePath = Session->Profile.pszProfile;
+		ProfileInfo.lpDefaultPath = Session->Profile.pszNetworkDefaultUserProfile;
+		ProfileInfo.lpServerName = Session->Profile.pszServerName;
+		ProfileInfo.lpPolicyPath = Session->Profile.pszPolicy;
+		ProfileInfo.hProfile = NULL;
+
+		if (!LoadUserProfileW(Session->UserToken, &ProfileInfo))
+		{
+			ERR("WL: LoadUserProfileW() failed\n");
+			CloseHandle(Session->UserToken);
+			return FALSE;
+		}
+	}
+
+	/* Create environment block for the user */
+	if (!CreateEnvironmentBlock(
+		&lpEnvironment,
+		Session->UserToken,
+		TRUE))
+	{
+		ERR("WL: CreateEnvironmentBlock() failed\n");
+		UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
+		CloseHandle(Session->UserToken);
+		return FALSE;
+	}
+	/* FIXME: use Session->Profile.pszEnvironment */
+
+	/* Get privilege */
+	/* FIXME: who should do it? winlogon or gina? */
+	/* FIXME: reverting to lower privileges after creating user shell? */
+	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
+
+	return Session->MsGina.Functions.WlxActivateUserShell(
+		Session->MsGina.Context,
+		L"WinSta0\\Default",//NULL, /* FIXME */
+		NULL, /* FIXME */
+		lpEnvironment);
 }
 
-BOOL
-SetupSAS(PWLSESSION Session, HWND hwndSAS)
+static BOOL
+HandleLogoff(
+	IN OUT PWLSESSION Session)
 {
-  /* Register Ctrl+Alt+Del Hotkey */
-  if(!RegisterHotKey(hwndSAS, HK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
-  {
-    DPRINT1("WL-SAS: Unable to register Ctrl+Alt+Del hotkey!\n");
-    return FALSE;
-  }
-
-  /* Register Ctrl+Shift+Esc */
-  Session->TaskManHotkey = RegisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
-  if(!Session->TaskManHotkey)
-  {
-    DPRINT1("WL-SAS: Warning: Unable to register Ctrl+Alt+Esc hotkey!\n");
-  }
-  return TRUE;
+	FIXME("FIXME: HandleLogoff() unimplemented\n");
+	return FALSE;
 }
 
-BOOL
-DestroySAS(PWLSESSION Session, HWND hwndSAS)
+static BOOL
+HandleShutdown(
+	IN OUT PWLSESSION Session)
 {
-  /* Unregister hotkeys */
+	FIXME("FIXME: HandleShutdown() unimplemented\n");
+	return FALSE;
+}
 
-  UnregisterHotKey(hwndSAS, HK_CTRL_ALT_DEL);
+static VOID
+DoGenericAction(
+	IN OUT PWLSESSION Session,
+	IN DWORD wlxAction)
+{
+	switch (wlxAction)
+	{
+		case WLX_SAS_ACTION_LOGON: /* 0x01 */
+			if (HandleLogon(Session))
+			{
+				Session->LogonStatus = WKSTA_IS_LOGGED_ON;
+				SwitchDesktop(WLSession->ApplicationDesktop);
+			}
+			break;
+		case WLX_SAS_ACTION_NONE: /* 0x02 */
+			break;
+		case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
+			if (Session->MsGina.Functions.WlxIsLockOk(Session->MsGina.Context))
+			{
+				SwitchDesktop(WLSession->WinlogonDesktop);
+				Session->LogonStatus = WKSTA_IS_LOCKED;
+				Session->MsGina.Functions.WlxDisplayLockedNotice(Session->MsGina.Context);
+			}
+			break;
+		case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
+		case WLX_SAS_ACTION_SHUTDOWN: /* 0x05 */
+			if (Session->LogonStatus != WKSTA_IS_LOGGED_OFF)
+			{
+				if (!Session->MsGina.Functions.WlxIsLogoffOk(Session->MsGina.Context))
+					break;
+				SwitchDesktop(WLSession->WinlogonDesktop);
+				Session->MsGina.Functions.WlxLogoff(Session->MsGina.Context);
+				HandleLogoff(Session);
+				Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
+				Session->MsGina.Functions.WlxDisplaySASNotice(Session->MsGina.Context);
+			}
+			if (WLX_SHUTTINGDOWN(wlxAction))
+				HandleShutdown(Session);
+			break;
+		case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
+			StartTaskManager(Session);
+			break;
+		default:
+			WARN("Unknown SAS action 0x%lx\n", wlxAction);
+	}
+}
 
-  if(Session->TaskManHotkey)
-  {
-    UnregisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC);
-  }
+VOID
+DispatchSAS(
+	IN OUT PWLSESSION Session,
+	IN DWORD dwSasType)
+{
+	DWORD wlxAction = WLX_SAS_ACTION_NONE;
 
-  return TRUE;
+	if (Session->LogonStatus == WKSTA_IS_LOGGED_ON)
+		wlxAction = Session->MsGina.Functions.WlxLoggedOnSAS(Session->MsGina.Context, dwSasType, NULL);
+	else if (Session->LogonStatus == WKSTA_IS_LOCKED)
+		wlxAction = Session->MsGina.Functions.WlxWkstaLockedSAS(Session->MsGina.Context, dwSasType);
+	else
+	{
+		/* Display a new dialog (if necessary) */
+		switch (dwSasType)
+		{
+			case WLX_SAS_TYPE_TIMEOUT: /* 0x00 */
+			{
+				Session->MsGina.Functions.WlxDisplaySASNotice(Session->MsGina.Context);
+				break;
+			}
+			case WLX_SAS_TYPE_CTRL_ALT_DEL: /* 0x01 */
+			{
+				PSID LogonSid = NULL; /* FIXME */
+
+				ZeroMemory(&Session->Profile, sizeof(Session->Profile));
+				Session->Options = 0;
+
+				wlxAction = Session->MsGina.Functions.WlxLoggedOutSAS(
+					Session->MsGina.Context,
+					Session->SASAction,
+					&Session->LogonId,
+					LogonSid,
+					&Session->Options,
+					&Session->UserToken,
+					&Session->MprNotifyInfo,
+					(PVOID*)&Session->Profile);
+				break;
+			}
+			default:
+				WARN("Unknown SAS type 0x%lx\n", dwSasType);
+		}
+	}
+
+	DoGenericAction(Session, wlxAction);
+}
+
+static BOOL
+RegisterHotKeys(
+	IN PWLSESSION Session,
+	IN HWND hwndSAS)
+{
+	/* Register Ctrl+Alt+Del Hotkey */
+	if (!RegisterHotKey(hwndSAS, HK_CTRL_ALT_DEL, MOD_CONTROL | MOD_ALT, VK_DELETE))
+	{
+		ERR("WL: Unable to register Ctrl+Alt+Del hotkey!\n");
+		return FALSE;
+	}
+
+	/* Register Ctrl+Shift+Esc (optional) */
+	Session->TaskManHotkey = RegisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC, MOD_CONTROL | MOD_SHIFT, VK_ESCAPE);
+	if (!Session->TaskManHotkey)
+		WARN("WL: Warning: Unable to register Ctrl+Alt+Esc hotkey!\n");
+	return TRUE;
+}
+
+static BOOL
+UnregisterHotKeys(
+	IN PWLSESSION Session,
+	IN HWND hwndSAS)
+{
+	/* Unregister hotkeys */
+	UnregisterHotKey(hwndSAS, HK_CTRL_ALT_DEL);
+
+	if (Session->TaskManHotkey)
+		UnregisterHotKey(hwndSAS, HK_CTRL_SHIFT_ESC);
+
+	return TRUE;
 }
 
 #define EWX_ACTION_MASK 0xffffffeb
@@ -196,95 +377,115 @@ HandleExitWindows(PWLSESSION Session, DWORD RequestingProcessId, UINT Flags)
   return 1;
 }
 
-LRESULT CALLBACK
-SASProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK
+SASWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
 {
-  PWLSESSION Session = (PWLSESSION)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-  if(!Session)
-  {
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-  }
-  switch(uMsg)
-  {
-    case WM_HOTKEY:
-    {
-      switch(wParam)
-      {
-        case HK_CTRL_ALT_DEL:
-          DPRINT1("SAS: CTR+ALT+DEL\n");
-          break;
-        case HK_CTRL_SHIFT_ESC:
-          DPRINT1("SAS: CTR+SHIFT+ESC\n");
-          break;
-      }
-      return 0;
-    }
-    case WM_CREATE:
-    {
-      /* Get the session pointer from the create data */
-      Session = (PWLSESSION)((LPCREATESTRUCT)lParam)->lpCreateParams;
+	PWLSESSION Session = (PWLSESSION)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
 
-      /* Save the Session pointer */
-      SetWindowLongPtr(Session->SASWindow, GWLP_USERDATA, (DWORD_PTR)Session);
+	switch (uMsg)
+	{
+		case WM_HOTKEY:
+		{
+			switch (lParam)
+			{
+				case MAKELONG(MOD_CONTROL | MOD_ALT, VK_DELETE):
+				{
+					TRACE("SAS: CONTROL+ALT+DELETE\n");
+					DispatchSAS(Session, WLX_SAS_TYPE_CTRL_ALT_DEL);
+					return TRUE;
+				}
+				case MAKELONG(MOD_CONTROL | MOD_SHIFT, VK_ESCAPE):
+				{
+					TRACE("SAS: CONTROL+SHIFT+ESCAPE\n");
+					DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+					return TRUE;
+				}
+			}
+			break;
+		}
+		case WM_CREATE:
+		{
+			/* Get the session pointer from the create data */
+			Session = (PWLSESSION)((LPCREATESTRUCT)lParam)->lpCreateParams;
 
-      if(!SetupSAS(Session, hwnd))
-      {
-        /* Fail! */
-        return 1;
-      }
-      return 0;
-    }
-    case PM_WINLOGON_EXITWINDOWS:
-    {
-      return HandleExitWindows(Session, (DWORD) wParam, (UINT) lParam);
-    }
-    case WM_DESTROY:
-    {
-      DestroySAS(Session, hwnd);
-      return 0;
-    }
-  }
-  return DefWindowProc(hwnd, uMsg, wParam, lParam);
+			/* Save the Session pointer */
+			SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)Session);
+
+			return RegisterHotKeys(Session, hwndDlg);
+		}
+		case WM_DESTROY:
+		{
+			UnregisterHotKeys(Session, hwndDlg);
+			return TRUE;
+		}
+		case PM_WINLOGON_EXITWINDOWS:
+		{
+			return HandleExitWindows(Session, (DWORD) wParam, (UINT) lParam);
+		}
+	}
+
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+}
+
+static VOID
+UninitializeSAS(
+	IN OUT PWLSESSION Session)
+{
+	if (Session->SASWindow)
+	{
+		DestroyWindow(Session->SASWindow);
+		Session->SASWindow = NULL;
+	}
 }
 
 BOOL
-InitializeSAS(PWLSESSION Session)
+InitializeSAS(
+	IN OUT PWLSESSION Session)
 {
-  WNDCLASSEX swc;
+	WNDCLASSEX swc;
 
-  /* register SAS window class.
-     WARNING! MAKE SURE WE ARE IN THE WINLOGON DESKTOP! */
-  swc.cbSize = sizeof(WNDCLASSEXW);
-  swc.style = CS_SAVEBITS;
-  swc.lpfnWndProc = SASProc;
-  swc.cbClsExtra = 0;
-  swc.cbWndExtra = 0;
-  swc.hInstance = hAppInstance;
-  swc.hIcon = NULL;
-  swc.hCursor = NULL;
-  swc.hbrBackground = NULL;
-  swc.lpszMenuName = NULL;
-  swc.lpszClassName = WINLOGON_SAS_CLASS;
-  swc.hIconSm = NULL;
-  RegisterClassEx(&swc);
+	/* register SAS window class.
+	 * WARNING! MAKE SURE WE ARE IN THE WINLOGON DESKTOP! */
+	swc.cbSize = sizeof(WNDCLASSEXW);
+	swc.style = CS_SAVEBITS;
+	swc.lpfnWndProc = SASWindowProc;
+	swc.cbClsExtra = 0;
+	swc.cbWndExtra = 0;
+	swc.hInstance = hAppInstance;
+	swc.hIcon = NULL;
+	swc.hCursor = NULL;
+	swc.hbrBackground = NULL;
+	swc.lpszMenuName = NULL;
+	swc.lpszClassName = WINLOGON_SAS_CLASS;
+	swc.hIconSm = NULL;
+	RegisterClassEx(&swc); /* FIXME: check return code */
 
-  /* create invisible SAS window */
-  Session->SASWindow = CreateWindowEx(0, WINLOGON_SAS_CLASS, WINLOGON_SAS_TITLE, WS_POPUP,
-                                      0, 0, 0, 0, 0, 0, hAppInstance, Session);
-  if(!Session->SASWindow)
-  {
-    DPRINT1("WL: Failed to create SAS window\n");
-    return FALSE;
-  }
+	/* create invisible SAS window */
+	DPRINT1("Session %p\n", Session);
+	Session->SASWindow = CreateWindowEx(
+		0,
+		WINLOGON_SAS_CLASS,
+		WINLOGON_SAS_TITLE,
+		WS_POPUP,
+		0, 0, 0, 0, 0, 0,
+		hAppInstance, Session);
+	if (!Session->SASWindow)
+	{
+		ERR("WL: Failed to create SAS window\n");
+		return FALSE;
+	}
 
-  /* Register SAS window to receive SAS notifications */
-  if(!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))
-  {
-    UninitSAS(Session);
-    DPRINT1("WL: Failed to register SAS window\n");
-    return FALSE;
-  }
+	/* Register SAS window to receive SAS notifications */
+	if (!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))
+	{
+		UninitializeSAS(Session);
+		ERR("WL: Failed to register SAS window\n");
+		return FALSE;
+	}
 
-  return TRUE;
+	return TRUE;
 }
-

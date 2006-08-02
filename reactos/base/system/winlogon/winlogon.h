@@ -34,39 +34,12 @@
 #include <rtlfuncs.h>
 #include <exfuncs.h>
 #include <setypes.h>
+#include <ntsecapi.h>
 
 #include <reactos/winlogon.h>
 
 #include "setup.h"
 #include "resource.h"
-
-VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
-VOID WINAPI WlxSetContextPointer(HANDLE hWlx, PVOID pWlxContext);
-VOID WINAPI WlxSasNotify(HANDLE hWlx, DWORD dwSasType);
-BOOL WINAPI WlxSetTimeout(HANDLE hWlx, DWORD Timeout);
-int WINAPI WlxAssignShellProtection(HANDLE hWlx, HANDLE hToken, HANDLE hProcess, HANDLE hThread);
-int WINAPI WlxMessageBox(HANDLE hWlx, HWND hwndOwner, LPWSTR lpszText, LPWSTR lpszTitle, UINT fuStyle);
-int WINAPI WlxDialogBox(HANDLE hWlx, HANDLE hInst, LPWSTR lpszTemplate, HWND hwndOwner, DLGPROC dlgprc);
-int WINAPI WlxDialogBoxParam(HANDLE hWlx, HANDLE hInst, LPWSTR lpszTemplate, HWND hwndOwner, DLGPROC dlgprc, LPARAM dwInitParam);
-int WINAPI WlxDialogBoxIndirect(HANDLE hWlx, HANDLE hInst, LPCDLGTEMPLATE hDialogTemplate, HWND hwndOwner, DLGPROC dlgprc);
-int WINAPI WlxDialogBoxIndirectParam(HANDLE hWlx, HANDLE hInst, LPCDLGTEMPLATE hDialogTemplate, HWND hwndOwner, DLGPROC dlgprc, LPARAM dwInitParam);
-int WINAPI WlxSwitchDesktopToUser(HANDLE hWlx);
-int WINAPI WlxSwitchDesktopToWinlogon(HANDLE hWlx);
-int WINAPI WlxChangePasswordNotify(HANDLE hWlx, PWLX_MPR_NOTIFY_INFO pMprInfo, DWORD dwChangeInfo);
-BOOL WINAPI WlxGetSourceDesktop(HANDLE hWlx, PWLX_DESKTOP* ppDesktop);
-BOOL WINAPI WlxSetReturnDesktop(HANDLE hWlx, PWLX_DESKTOP pDesktop);
-BOOL WINAPI WlxCreateUserDesktop(HANDLE hWlx, HANDLE hToken, DWORD Flags, PWSTR pszDesktopName, PWLX_DESKTOP* ppDesktop);
-int WINAPI WlxChangePasswordNotifyEx(HANDLE hWlx, PWLX_MPR_NOTIFY_INFO pMprInfo, DWORD dwChangeInfo, PWSTR ProviderName, PVOID Reserved);
-BOOL WINAPI WlxCloseUserDesktop(HANDLE hWlx, PWLX_DESKTOP pDesktop, HANDLE hToken);
-BOOL WINAPI WlxSetOption(HANDLE hWlx, DWORD Option, ULONG_PTR Value, ULONG_PTR* OldValue);
-BOOL WINAPI WlxGetOption(HANDLE hWlx, DWORD Option, ULONG_PTR* Value);
-VOID WINAPI WlxWin31Migrate(HANDLE hWlx);
-BOOL WINAPI WlxQueryClientCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V1_0 pCred);
-BOOL WINAPI WlxQueryInetConnectorCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V1_0 pCred);
-DWORD WINAPI WlxQueryConsoleSwitchCredentials(PWLX_CONSOLESWITCH_CREDENTIALS_INFO_V1_0 pCred);
-BOOL WINAPI WlxQueryTsLogonCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V2_0 pCred);
-BOOL WINAPI WlxDisconnect(void);
-DWORD WINAPI WlxQueryTerminalServicesData(HANDLE hWlx, PWLX_TERMINAL_SERVICES_DATA pTSData, WCHAR* UserName, WCHAR* Domain);
 
 typedef BOOL (WINAPI * PFWLXNEGOTIATE)  (DWORD, DWORD *);
 typedef BOOL (WINAPI * PFWLXINITIALIZE) (LPWSTR, HANDLE, PVOID, PVOID, PVOID *);
@@ -97,35 +70,49 @@ typedef BOOL (WINAPI * PFWLXREMOVESTATUSMESSAGE) (PVOID);
 
 typedef struct _MSGINAFUNCTIONS
 {
-  PFWLXNEGOTIATE            WlxNegotiate;
-  PFWLXINITIALIZE           WlxInitialize;
-  PFWLXDISPLAYSASNOTICE     WlxDisplaySASNotice;
-  PFWLXLOGGEDOUTSAS         WlxLoggedOutSAS;
-  PFWLXACTIVATEUSERSHELL    WlxActivateUserShell;
-  PFWLXLOGGEDONSAS          WlxLoggedOnSAS;
-  PFWLXDISPLAYLOCKEDNOTICE  WlxDisplayLockedNotice;
-  PFWLXWKSTALOCKEDSAS       WlxWkstaLockedSAS;
-  PFWLXISLOCKOK             WlxIsLockOk;
-  PFWLXISLOGOFFOK           WlxIsLogoffOk;
-  PFWLXLOGOFF               WlxLogoff;
-  PFWLXSHUTDOWN             WlxShutdown;
+	/* Functions always available for a valid GINA */
+	PFWLXNEGOTIATE            WlxNegotiate;
+	PFWLXINITIALIZE           WlxInitialize;
 
-  PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify;
-  PFWLXSTARTAPPLICATION     WlxStartApplication;
+	/* Functions available if WlxVersion >= WLX_VERSION_1_0 (MS Windows 3.5.0) */
+	PFWLXDISPLAYSASNOTICE     WlxDisplaySASNotice;
+	PFWLXLOGGEDOUTSAS         WlxLoggedOutSAS;
+	PFWLXACTIVATEUSERSHELL    WlxActivateUserShell;
+	PFWLXLOGGEDONSAS          WlxLoggedOnSAS;
+	PFWLXDISPLAYLOCKEDNOTICE  WlxDisplayLockedNotice;
+	PFWLXWKSTALOCKEDSAS       WlxWkstaLockedSAS;
+	PFWLXISLOCKOK             WlxIsLockOk;
+	PFWLXISLOGOFFOK           WlxIsLogoffOk;
+	PFWLXLOGOFF               WlxLogoff;
+	PFWLXSHUTDOWN             WlxShutdown;
 
-  PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad;
-  PFWLXDISPLAYSTATUSMESSAGE WlxDisplayStatusMessage;
-  PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage;
-  PFWLXREMOVESTATUSMESSAGE  WlxRemoveStatusMessage;
+	/* Functions available if WlxVersion >= WLX_VERSION_1_1 (MS Windows 3.5.1) */
+	PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify;
+	PFWLXSTARTAPPLICATION     WlxStartApplication;
+
+	/* Functions available if WlxVersion >= WLX_VERSION_1_2 (MS Windows NT 4.0) */
+
+	/* Functions available if WlxVersion >= WLX_VERSION_1_3 (MS Windows 2000) */
+	PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad;
+	PFWLXDISPLAYSTATUSMESSAGE WlxDisplayStatusMessage;
+	PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage;
+	PFWLXREMOVESTATUSMESSAGE  WlxRemoveStatusMessage;
+
+	/* Functions available if WlxVersion >= WLX_VERSION_1_4 (MS Windows XP) */
 } MSGINAFUNCTIONS, *PMSGINAFUNCTIONS;
 
 typedef struct _MSGINAINSTANCE
 {
-  HMODULE hDllInstance;
-  MSGINAFUNCTIONS Functions;
-  PVOID Context;
-  DWORD Version;
+	HMODULE hDllInstance;
+	MSGINAFUNCTIONS Functions;
+	PVOID Context;
+	DWORD Version;
 } MSGINAINSTANCE, *PMSGINAINSTANCE;
+
+/* FIXME: put in an enum */
+#define WKSTA_IS_LOGGED_OFF 0
+#define WKSTA_IS_LOGGED_ON  1
+#define WKSTA_IS_LOCKED     2
 
 typedef struct _WLSESSION
 {
@@ -142,21 +129,15 @@ typedef struct _WLSESSION
   HDESK ScreenSaverDesktop;
   LUID LogonId;
   HANDLE UserToken;
+
+  /* Logon informations */
+  DWORD Options;
+  WLX_MPR_NOTIFY_INFO MprNotifyInfo;
+  WLX_PROFILE_V2_0 Profile;
 } WLSESSION, *PWLSESSION;
 
 extern HINSTANCE hAppInstance;
 extern PWLSESSION WLSession;
-
-BOOL
-InitializeSAS(PWLSESSION Session);
-void
-DispatchSAS(PWLSESSION Session, DWORD dwSasType);
-
-#define LOGON_INITIALIZING  1
-#define LOGON_NONE  2
-#define LOGON_SHOWINGLOGON  3
-
-#define LOGON_SHUTDOWN  9
 
 #define WLX_SHUTTINGDOWN(Status) \
   (((Status) == WLX_SAS_ACTION_SHUTDOWN) || \
@@ -179,6 +160,51 @@ DispatchSAS(PWLSESSION Session, DWORD dwSasType);
 BOOL WINAPI
 UpdatePerUserSystemParameters(DWORD dwUnknown,
                               DWORD dwReserved);
+
+/* sas.c */
+VOID
+DispatchSAS(
+	IN OUT PWLSESSION Session,
+	IN DWORD dwSasType);
+BOOL
+InitializeSAS(
+	IN OUT PWLSESSION Session);
+
+/* wlx.c */
+BOOL
+GinaInit(
+	IN OUT PWLSESSION Session);
+BOOL
+CreateWindowStationAndDesktops(
+	IN OUT PWLSESSION Session);
+
+VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
+VOID WINAPI WlxSetContextPointer(HANDLE hWlx, PVOID pWlxContext);
+VOID WINAPI WlxSasNotify(HANDLE hWlx, DWORD dwSasType);
+BOOL WINAPI WlxSetTimeout(HANDLE hWlx, DWORD Timeout);
+int WINAPI WlxAssignShellProtection(HANDLE hWlx, HANDLE hToken, HANDLE hProcess, HANDLE hThread);
+int WINAPI WlxMessageBox(HANDLE hWlx, HWND hwndOwner, LPWSTR lpszText, LPWSTR lpszTitle, UINT fuStyle);
+int WINAPI WlxDialogBox(HANDLE hWlx, HANDLE hInst, LPWSTR lpszTemplate, HWND hwndOwner, DLGPROC dlgprc);
+int WINAPI WlxDialogBoxParam(HANDLE hWlx, HANDLE hInst, LPWSTR lpszTemplate, HWND hwndOwner, DLGPROC dlgprc, LPARAM dwInitParam);
+int WINAPI WlxDialogBoxIndirect(HANDLE hWlx, HANDLE hInst, LPCDLGTEMPLATE hDialogTemplate, HWND hwndOwner, DLGPROC dlgprc);
+int WINAPI WlxDialogBoxIndirectParam(HANDLE hWlx, HANDLE hInst, LPCDLGTEMPLATE hDialogTemplate, HWND hwndOwner, DLGPROC dlgprc, LPARAM dwInitParam);
+int WINAPI WlxSwitchDesktopToUser(HANDLE hWlx);
+int WINAPI WlxSwitchDesktopToWinlogon(HANDLE hWlx);
+int WINAPI WlxChangePasswordNotify(HANDLE hWlx, PWLX_MPR_NOTIFY_INFO pMprInfo, DWORD dwChangeInfo);
+BOOL WINAPI WlxGetSourceDesktop(HANDLE hWlx, PWLX_DESKTOP* ppDesktop);
+BOOL WINAPI WlxSetReturnDesktop(HANDLE hWlx, PWLX_DESKTOP pDesktop);
+BOOL WINAPI WlxCreateUserDesktop(HANDLE hWlx, HANDLE hToken, DWORD Flags, PWSTR pszDesktopName, PWLX_DESKTOP* ppDesktop);
+int WINAPI WlxChangePasswordNotifyEx(HANDLE hWlx, PWLX_MPR_NOTIFY_INFO pMprInfo, DWORD dwChangeInfo, PWSTR ProviderName, PVOID Reserved);
+BOOL WINAPI WlxCloseUserDesktop(HANDLE hWlx, PWLX_DESKTOP pDesktop, HANDLE hToken);
+BOOL WINAPI WlxSetOption(HANDLE hWlx, DWORD Option, ULONG_PTR Value, ULONG_PTR* OldValue);
+BOOL WINAPI WlxGetOption(HANDLE hWlx, DWORD Option, ULONG_PTR* Value);
+VOID WINAPI WlxWin31Migrate(HANDLE hWlx);
+BOOL WINAPI WlxQueryClientCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V1_0 pCred);
+BOOL WINAPI WlxQueryInetConnectorCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V1_0 pCred);
+DWORD WINAPI WlxQueryConsoleSwitchCredentials(PWLX_CONSOLESWITCH_CREDENTIALS_INFO_V1_0 pCred);
+BOOL WINAPI WlxQueryTsLogonCredentials(PWLX_CLIENT_CREDENTIALS_INFO_V2_0 pCred);
+BOOL WINAPI WlxDisconnect(VOID);
+DWORD WINAPI WlxQueryTerminalServicesData(HANDLE hWlx, PWLX_TERMINAL_SERVICES_DATA pTSData, WCHAR* UserName, WCHAR* Domain);
 
 #endif /* __WINLOGON_MAIN_H__ */
 
