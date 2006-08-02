@@ -1439,16 +1439,14 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
    else if (hWndParent)
    {
-      if (((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD) ||
-                                        (dwExStyle & WS_EX_MDICHILD))
-         ParentWindowHandle = hWndParent;
-      else
-      {
-         //temp hack
+      if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+      {  //temp hack
          PWINDOW_OBJECT Par = UserGetWindowObject(hWndParent), Root;
          if (Par && (Root = UserGetAncestor(Par, GA_ROOT)))
             OwnerWindowHandle = Root->hSelf;
       }
+      else
+         ParentWindowHandle = hWndParent;
    }
    else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
@@ -1685,7 +1683,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Cs.lpCreateParams = lpParam;
    Cs.hInstance = hInstance;
    Cs.hMenu = hMenu;
-   Cs.hwndParent = ParentWindowHandle;
+   Cs.hwndParent = hWndParent; //Pass the original Parent handle!
    Cs.cx = Size.cx;
    Cs.cy = Size.cy;
    Cs.x = Pos.x;
