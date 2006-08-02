@@ -384,9 +384,9 @@ typedef struct _FLT_WND
     BOOL bOpaque;
 } FLT_WND, *PFLT_WND;
 
-VOID FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info);
-VOID FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info);
-VOID FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info);
+BOOL FloatToolbarCreateToolsGui(PMAIN_WND_INFO Info);
+BOOL FloatToolbarCreateColorsGui(PMAIN_WND_INFO Info);
+BOOL FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info);
 BOOL InitFloatWndClass(VOID);
 VOID UninitFloatWndImpl(VOID);
 BOOL ShowHideWindow(PFLT_WND FltInfo);
