@@ -226,7 +226,7 @@ LoggedOutWindowProc(
 			SetFocus(GetDlgItem(hwndDlg, IDC_USERNAME));
 
 			pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-			break;
+			return TRUE;
 		}
 		case WM_PAINT:
 		{
@@ -238,12 +238,12 @@ LoggedOutWindowProc(
 				DrawState(hdc, NULL, NULL, (LPARAM)pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
 				EndPaint(hwndDlg, &ps);
 			}
-			break;
+			return TRUE;
 		}
 		case WM_DESTROY:
 		{
 			DeleteObject(pgContext->hBitmap);
-			break;
+			return TRUE;
 		}
 		case WM_COMMAND:
 		{
@@ -281,7 +281,7 @@ LoggedOutWindowProc(
 		}
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static INT_PTR CALLBACK
@@ -318,7 +318,7 @@ LoggedOnWindowProc(
 		case WM_INITDIALOG:
 		{
 			SetFocus(GetDlgItem(hwndDlg, IDNO));
-			break;
+			return TRUE;
 		}
 		case WM_CLOSE:
 		{
@@ -327,7 +327,7 @@ LoggedOnWindowProc(
 		}
 	}
 
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static INT
