@@ -556,7 +556,6 @@ WinMain(
 		DPRINT("Winlogon: CheckForSetup() in setup mode\n");
 
 		/* Run setup and reboot when done */
-		RemoveStatusMessage(WLSession);
 		SwitchDesktop(WLSession->ApplicationDesktop);
 		RunSetup();
 
