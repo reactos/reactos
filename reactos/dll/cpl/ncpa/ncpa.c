@@ -338,10 +338,10 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					tpszCfgInstanceID = (TCHAR*)pPage->lParam;
 					while(pAdapter)
 					{
-						TCHAR tpszAdatperName[MAX_PATH];
-						swprintf(tpszAdatperName,L"%S",pAdapter->AdapterName);
-						DPRINT("IPHLPAPI returned: %S\n", tpszAdatperName);
-						if(_tcscmp(tpszAdatperName,tpszCfgInstanceID)==0)
+						TCHAR tpszAdapterName[MAX_PATH];
+						swprintf(tpszAdapterName,L"%S",pAdapter->AdapterName);
+						DPRINT("IPHLPAPI returned: %S\n", tpszAdapterName);
+						if(_tcscmp(tpszAdapterName,tpszCfgInstanceID)==0)
 						{
 							DisplayTCPIPProperties(hwndDlg,pAdapter);
 							break;

@@ -466,7 +466,15 @@ DisplayTCPIPProperties(HWND hParent, IP_ADAPTER_INFO *pInfo)
     PROPSHEETHEADERW psh;
     INITCOMMONCONTROLSEX cce;
     TCPIP_PROPERTIES_DATA DlgData;
-
+    TCHAR tpszCaption[MAX_PATH];
+    HWND hListBox = GetDlgItem(hParent,IDC_COMPONENTSLIST);
+    int iListBoxIndex = (int) SendMessage(hListBox,LB_GETCURSEL,0,0);
+    if(iListBoxIndex != LB_ERR)
+        SendMessage(hListBox,LB_GETTEXT,iListBoxIndex,(LPARAM)tpszCaption);
+    else
+        _stprintf(tpszCaption,_T("[ERROR]"));
+    _tcscat(tpszCaption,_T(" Properties"));
+    
     if (! LoadDataFromInfo(&DlgData, pInfo))
     {
         ShowError(hParent, IDS_CANNOT_LOAD_CONFIG);
@@ -483,7 +491,7 @@ DisplayTCPIPProperties(HWND hParent, IP_ADAPTER_INFO *pInfo)
     psh.hwndParent = hParent;
     psh.hInstance = hApplet;
     psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
-    psh.pszCaption = NULL;//Caption;
+    psh.pszCaption = tpszCaption;
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;
     psh.ppsp = psp;
