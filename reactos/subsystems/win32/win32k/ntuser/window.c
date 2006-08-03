@@ -1439,7 +1439,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
    else if (hWndParent)
    {
-      if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+      if ((dwStyle & (WS_CHILD | WS_POPUP)) != WS_CHILD)
       {  //temp hack
          PWINDOW_OBJECT Par = UserGetWindowObject(hWndParent), Root;
          if (Par && (Root = UserGetAncestor(Par, GA_ROOT)))
