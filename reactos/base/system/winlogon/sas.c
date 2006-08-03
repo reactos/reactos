@@ -28,35 +28,11 @@ static BOOL
 StartTaskManager(
 	IN OUT PWLSESSION Session)
 {
-	STARTUPINFO StartupInfo;
-	PROCESS_INFORMATION ProcessInformation;
-
-	if (Session->LogonStatus == WKSTA_IS_LOGGED_OFF)
-		return FALSE;
-
-	StartupInfo.cb = sizeof(StartupInfo);
-	StartupInfo.lpReserved = NULL;
-	StartupInfo.lpDesktop = NULL;
-	StartupInfo.lpTitle = NULL;
-	StartupInfo.dwFlags = 0;
-	StartupInfo.cbReserved2 = 0;
-	StartupInfo.lpReserved2 = 0;
-
-	CreateProcessW(
-		L"taskmgr.exe",
+	return Session->MsGina.Functions.WlxStartApplication(
+		Session->MsGina.Context,
+		L"Default",
 		NULL,
-		NULL,
-		NULL,
-		FALSE,
-		CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS,
-		NULL,
-		NULL,
-		&StartupInfo,
-		&ProcessInformation);
-
-	CloseHandle (ProcessInformation.hProcess);
-	CloseHandle (ProcessInformation.hThread);
-	return TRUE;
+		L"taskmgr.exe");
 }
 
 static BOOL
@@ -107,25 +83,31 @@ HandleLogon(
 
 	return Session->MsGina.Functions.WlxActivateUserShell(
 		Session->MsGina.Context,
-		L"WinSta0\\Default",//NULL, /* FIXME */
+		L"Default",//NULL, /* FIXME */
 		NULL, /* FIXME */
 		lpEnvironment);
 }
 
-static BOOL
+static VOID
 HandleLogoff(
 	IN OUT PWLSESSION Session)
 {
 	FIXME("FIXME: HandleLogoff() unimplemented\n");
-	return FALSE;
 }
 
 static BOOL
 HandleShutdown(
-	IN OUT PWLSESSION Session)
+	IN OUT PWLSESSION Session,
+	IN DWORD wlxAction)
 {
 	FIXME("FIXME: HandleShutdown() unimplemented\n");
-	return FALSE;
+	if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
+		NtShutdownSystem(ShutdownReboot);
+	else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
+		NtShutdownSystem(ShutdownPowerOff);
+	else
+		NtShutdownSystem(ShutdownNoReboot);
+	return TRUE;
 }
 
 static VOID
@@ -138,8 +120,8 @@ DoGenericAction(
 		case WLX_SAS_ACTION_LOGON: /* 0x01 */
 			if (HandleLogon(Session))
 			{
+				SwitchDesktop(Session->ApplicationDesktop);
 				Session->LogonStatus = WKSTA_IS_LOGGED_ON;
-				SwitchDesktop(WLSession->ApplicationDesktop);
 			}
 			break;
 		case WLX_SAS_ACTION_NONE: /* 0x02 */
@@ -154,6 +136,8 @@ DoGenericAction(
 			break;
 		case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
 		case WLX_SAS_ACTION_SHUTDOWN: /* 0x05 */
+		case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
+		case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
 			if (Session->LogonStatus != WKSTA_IS_LOGGED_OFF)
 			{
 				if (!Session->MsGina.Functions.WlxIsLogoffOk(Session->MsGina.Context))
@@ -165,10 +149,15 @@ DoGenericAction(
 				Session->MsGina.Functions.WlxDisplaySASNotice(Session->MsGina.Context);
 			}
 			if (WLX_SHUTTINGDOWN(wlxAction))
-				HandleShutdown(Session);
+				HandleShutdown(Session, wlxAction);
 			break;
 		case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
+			SwitchDesktop(WLSession->ApplicationDesktop);
 			StartTaskManager(Session);
+			break;
+		case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
+			SwitchDesktop(WLSession->ApplicationDesktop);
+			Session->LogonStatus = WKSTA_IS_LOGGED_ON;
 			break;
 		default:
 			WARN("Unknown SAS action 0x%lx\n", wlxAction);

@@ -51,7 +51,7 @@ ShutdownComputerWindowProc(
 }
 
 static BOOL
-StartServicesManager(void)
+StartServicesManager(VOID)
 {
    HANDLE ServicesInitEvent;
    BOOLEAN Result;
@@ -182,6 +182,7 @@ StartLsass(VOID)
 	return TRUE;
 }
 
+#if 0
 static BOOL
 OpenRegistryKey(
 	OUT HKEY *WinLogonKey)
@@ -192,6 +193,7 @@ OpenRegistryKey(
                                         KEY_QUERY_VALUE,
                                         WinLogonKey);
 }
+#endif
 
 #if 0
 static BOOL
@@ -228,7 +230,8 @@ StartProcess(
 #endif
 
 /*
-static BOOL RestartShell(void)
+static BOOL RestartShell(
+	IN OUT PWLSESSION Session)
 {
   HKEY WinLogonKey;
   DWORD Type, Size, Value;
@@ -255,6 +258,7 @@ static BOOL RestartShell(void)
 }
 */
 
+#if 0
 static PWCHAR
 GetUserInit(
 	OUT WCHAR *CommandLine,
@@ -300,8 +304,7 @@ GetUserInit(
    return CommandLine;
 }
 
-
-BOOL
+static BOOL
 DoBrokenLogonUser(
 	IN PWLSESSION WLSession,
 	IN PWLX_MPR_NOTIFY_INFO pMprNotifyInfo)
@@ -423,6 +426,7 @@ DoBrokenLogonUser(
 
   return TRUE;
 }
+#endif
 
 static BOOL
 DisplayStatusMessage(
@@ -440,70 +444,6 @@ DisplayStatusMessage(
 
 	return Session->MsGina.Functions.WlxDisplayStatusMessage(Session->MsGina.Context, hDesktop, 0, NULL, StatusMsg);
 }
-
-#if 0
-static BOOL
-InitServices(VOID)
-{
-  /*WCHAR StatusMsg[256];
-
-  LoadString(hAppInstance, IDS_REACTOSISSTARTINGUP, StatusMsg, 256 * sizeof(WCHAR));
-  DisplayStatusMessage(WLSession, WLSession->ApplicationDesktop, 0, NULL, StatusMsg);*/
-
-  /* start system processes (services.exe & lsass.exe) */
-  if(StartProcess(L"StartServices"))
-  {
-	if(!StartServicesManager())
-    {
-      DPRINT1("WL: Failed to start Services (0x%X)\n", GetLastError());
-    }
-  }
-  else
-  {
-	  DPRINT1("WL: StartProcess() failed!\n");
-  }
-
-  return TRUE;
-}
-#endif
-
-#if 0
-static DWORD
-DoLogin(
-	IN OUT PWLSESSION Session)
-{
-  DWORD WlxAction, Options;
-  WLX_MPR_NOTIFY_INFO MprNotifyInfo;
-  PWLX_PROFILE_V2_0 Profile;
-  PSID LogonSid = NULL;
-  HANDLE Token;
-
-  /* FIXME - Create a Logon Sid
-  if(!(LogonSid = CreateUserLogonSid(NULL)))
-  {
-    return WLX_SAS_ACTION_NONE;
-  }
-  */
-
-  Options = 0;
-  WlxAction = Session->MsGina.Functions.WlxLoggedOutSAS(Session->MsGina.Context,
-                                                        Session->SASAction,
-                                                        &Session->LogonId,
-                                                        LogonSid,
-                                                        &Options,
-                                                        &Token,
-                                                        &MprNotifyInfo,
-                                                        (PVOID*)&Profile);
-
-  if (WlxAction == WLX_SAS_ACTION_LOGON)
-  {
-    Session->UserToken = Token;
-    if (!DoBrokenLogonUser(Session, &MprNotifyInfo))
-      WlxAction = WLX_SAS_ACTION_NONE;
-  }
-  return WlxAction;
-}
-#endif
 
 static VOID
 SessionLoop(
@@ -526,73 +466,20 @@ SessionLoop(
 
 	/* Don't go there! */
 
-#if 0
-    /* FIXME - don't leave the loop when suspending the computer */
-    if(WLX_SUSPENDING(WlxAction))
-    {
-      Session->LogonStatus = LOGON_NONE;
-      WlxAction = WLX_SAS_ACTION_NONE;
-      /* don't leave the loop */
-      continue;
-    }
-
-    if(WLX_SHUTTINGDOWN(WlxAction))
-    {
-      Session->LogonStatus = LOGON_SHUTDOWN;
-      /* leave the loop here */
-      break;
-    }
-
-#endif
    /*
-   LoadString(hAppInstance, IDS_PREPARENETWORKCONNECTIONS, StatusMsg, 256 * sizeof(WCHAR));
-   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
-                                                  ApplicationDesktop,
-                                                  0,
-                                                  NULL,
-                                                  StatusMsg);
-
-
+   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_PREPARENETWORKCONNECTIONS);
    Sleep(150);
 
-   LoadString(hAppInstance, IDS_APPLYINGCOMPUTERSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
-   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
-                                                  ApplicationDesktop,
-                                                  0,
-                                                  NULL,
-                                                  StatusMsg);
-
-
+   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
    Sleep(150);
 
-   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
-   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
-   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
-
-
-    Sleep(250);
-
-   LoadString(hAppInstance, IDS_LOADINGYOURPERSONALSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
-   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
-                                                  ApplicationDesktop,
-                                                  0,
-                                                  NULL,
-                                                  StatusMsg);
-
+   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
    Sleep(150);
 
-   LoadString(hAppInstance, IDS_APPLYINGYOURPERSONALSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
-   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
-                                                  ApplicationDesktop,
-                                                  0,
-                                                  NULL,
-                                                  StatusMsg);
-
-
+   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
    Sleep(150);
 
-   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
-   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
+   RemoveStatusMessage(Session);
 
    if(!MsGinaInst->Functions->WlxActivateUserShell(MsGinaInst->Context,
                                                    L"WinSta0\\Default",
@@ -604,34 +491,19 @@ SessionLoop(
      SetEvent(hShutdownEvent);
    }
 
-
    WaitForSingleObject(hShutdownEvent, INFINITE);
    CloseHandle(hShutdownEvent);
 
-   LoadString(hAppInstance, IDS_SAVEYOURSETTINGS, StatusMsg, 256 * sizeof(WCHAR));
-   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
-                                                  ApplicationDesktop,
-                                                  0,
-                                                  NULL,
-                                                  StatusMsg);
-
+   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
    Sleep(150);
 
    MsGinaInst->Functions->WlxShutdown(MsGinaInst->Context, WLX_SAS_ACTION_SHUTDOWN);
-
-   LoadString(hAppInstance, IDS_REACTOSISSHUTTINGDOWN, StatusMsg, 256 * sizeof(WCHAR));
-   MsGinaInst->Functions->WlxDisplayStatusMessage(MsGinaInst->Context,
-                                                  ApplicationDesktop,
-                                                  0,
-                                                  NULL,
-                                                  StatusMsg);
-
+   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
    Sleep(250);
 
-   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
-   MsGinaInst->Functions->WlxRemoveStatusMessage(MsGinaInst->Context);
+   RemoveStatusMessage(Session);
    */
 }
 
@@ -668,6 +540,7 @@ WinMain(
 		ExitProcess(1);
 		return 1;
 	}
+	WLSession->DialogTimeout = 120; /* 2 minutes */
 
 	if (!CreateWindowStationAndDesktops(WLSession))
 	{
@@ -675,6 +548,7 @@ WinMain(
 		ExitProcess(1);
 		return 1;
 	}
+	LockWorkstation(WLSession);
 
 	/* Check for pending setup */
 	if (GetSetupType() != 0)
@@ -682,6 +556,7 @@ WinMain(
 		DPRINT("Winlogon: CheckForSetup() in setup mode\n");
 
 		/* Run setup and reboot when done */
+		RemoveStatusMessage(WLSession);
 		SwitchDesktop(WLSession->ApplicationDesktop);
 		RunSetup();
 

@@ -15,9 +15,49 @@
 #define YDEBUG
 #include <wine/debug.h>
 
-//#define UNIMPLEMENTED DbgPrint("WL: %S() at %S:%i unimplemented!\n", __FUNCTION__, __FILE__, __LINE__)
+static DLGPROC PreviousWindowProc;
+static UINT_PTR IdTimer;
 
-#define WINLOGON_DESKTOP   L"Winlogon"
+static INT_PTR CALLBACK
+DefaultWlxWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	if (uMsg == WM_TIMER && (UINT_PTR)wParam == IdTimer)
+	{
+		CHECKPOINT1;
+		EndDialog(hwndDlg, -1);
+		KillTimer(hwndDlg, IdTimer);
+		CHECKPOINT1;
+		return TRUE;
+	}
+	else if (uMsg == WM_INITDIALOG)
+	{
+		CHECKPOINT1;
+		PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
+		IdTimer = SetTimer(hwndDlg, 0, WLSession->DialogTimeout * 1000, NULL);
+		CHECKPOINT1;
+		if (IdTimer == 0)
+			return FALSE;
+		return TRUE;
+	}
+	else if (uMsg == WM_NCDESTROY)
+	{
+		CHECKPOINT1;
+		PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
+		CHECKPOINT1;
+		PreviousWindowProc = NULL;
+		return TRUE;
+	}
+	else
+	{
+		INT_PTR ret = PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
+		ret = PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
+		return ret;
+	}
+}
 
 /*
  * @implemented
@@ -52,15 +92,16 @@ WlxSasNotify(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 WlxSetTimeout(
 	HANDLE hWlx,
 	DWORD Timeout)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+	PWLSESSION Session = (PWLSESSION)hWlx;
+	Session->DialogTimeout = Timeout;
+	return TRUE;
 }
 
 /*
@@ -88,6 +129,7 @@ WlxMessageBox(
 	LPWSTR lpszTitle,
 	UINT fuStyle)
 {
+	/* FIXME: Provide a custom window proc to be able to handle timeout */
 	return MessageBoxW(hwndOwner, lpszText, lpszTitle, fuStyle);
 }
 
@@ -102,7 +144,10 @@ WlxDialogBox(
 	HWND hwndOwner,
 	DLGPROC dlgprc)
 {
-	return (int)DialogBox(hInst, lpszTemplate, hwndOwner, dlgprc);
+	if (PreviousWindowProc != NULL)
+		return -1;
+	PreviousWindowProc = dlgprc;
+	return (int)DialogBox(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc);
 }
 
 /*
@@ -117,7 +162,10 @@ WlxDialogBoxParam(
 	DLGPROC dlgprc,
 	LPARAM dwInitParam)
 {
-	return (int)DialogBoxParam(hInst, lpszTemplate, hwndOwner, dlgprc, dwInitParam);
+	if (PreviousWindowProc != NULL)
+		return -1;
+	PreviousWindowProc = dlgprc;
+	return (int)DialogBoxParam(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc, dwInitParam);
 }
 
 /*
@@ -131,7 +179,10 @@ WlxDialogBoxIndirect(
 	HWND hwndOwner,
 	DLGPROC dlgprc)
 {
-	return (int)DialogBoxIndirect(hInst, hDialogTemplate, hwndOwner, dlgprc);
+	if (PreviousWindowProc != NULL)
+		return -1;
+	PreviousWindowProc = dlgprc;
+	return (int)DialogBoxIndirect(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc);
 }
 
 /*
@@ -146,7 +197,10 @@ WlxDialogBoxIndirectParam(
 	DLGPROC dlgprc,
 	LPARAM dwInitParam)
 {
-	return (int)DialogBoxIndirectParam(hInst, hDialogTemplate, hwndOwner, dlgprc, dwInitParam);
+	if (PreviousWindowProc != NULL)
+		return -1;
+	PreviousWindowProc = dlgprc;
+	return (int)DialogBoxIndirectParam(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc, dwInitParam);
 }
 
 /*
@@ -626,6 +680,7 @@ GinaInit(
 	Session->MsGina.Context = NULL;
 	Session->MsGina.Version = GinaDllVersion;
 	Session->SuppressStatus = FALSE;
+	PreviousWindowProc = NULL;
 
 	return Session->MsGina.Functions.WlxInitialize(
 		Session->InteractiveWindowStationName,
@@ -675,7 +730,7 @@ CreateWindowStationAndDesktops(
 	 * Create the winlogon desktop
 	 */
 	Session->WinlogonDesktop = CreateDesktop(
-		WINLOGON_DESKTOP,
+		L"Winlogon",
 		NULL,
 		NULL,
 		0, /* FIXME: Set some flags */

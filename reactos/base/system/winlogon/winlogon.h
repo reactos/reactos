@@ -114,6 +114,9 @@ typedef struct _MSGINAINSTANCE
 #define WKSTA_IS_LOGGED_ON  1
 #define WKSTA_IS_LOCKED     2
 
+#define LockWorkstation(Session)
+#define UnlockWorkstation(Session)
+
 typedef struct _WLSESSION
 {
   MSGINAINSTANCE MsGina;
@@ -129,6 +132,8 @@ typedef struct _WLSESSION
   HDESK ScreenSaverDesktop;
   LUID LogonId;
   HANDLE UserToken;
+
+  DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
 
   /* Logon informations */
   DWORD Options;
