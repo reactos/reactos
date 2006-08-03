@@ -516,5 +516,8 @@ DisplayTCPIPProperties(HWND hParent, IP_ADAPTER_INFO *pInfo)
         ShowError(hParent, IDS_CANNOT_CREATE_PROPSHEET);
     }
 
+    if (tpszCaption != NULL)
+        HeapFree(GetProcessHeap(), 0, tpszCaption);
+
     return;
 }
