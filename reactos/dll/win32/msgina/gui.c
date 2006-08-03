@@ -14,6 +14,9 @@
 #undef DPRINT
 #undef DPRINT1
 
+static HBITMAP hBitmap = NULL;
+static int cxSource, cySource;
+
 typedef struct _DISPLAYSTATUSMSG
 {
 	PGINA_CONTEXT Context;
@@ -207,6 +210,8 @@ LoggedOutWindowProc(
 	IN WPARAM wParam,
 	IN LPARAM lParam)
 {
+	BITMAP bitmap;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -214,6 +219,31 @@ LoggedOutWindowProc(
 			/* FIXME: take care of DontDisplayLastUserName, NoDomainUI, ShutdownWithoutLogon */
 			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)lParam);
 			SetFocus(GetDlgItem(hwndDlg, IDC_USERNAME));
+
+ 			hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDC_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+			if (hBitmap != NULL)
+			{
+				GetObject(hBitmap, sizeof(BITMAP), &bitmap);
+				cxSource = bitmap.bmWidth;
+				cySource = bitmap.bmHeight;
+			}
+			break;
+		}
+	case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC hdc, hdcMem;
+			hdc = BeginPaint(hwndDlg, &ps);
+			hdcMem = CreateCompatibleDC(hdc);
+			SelectObject(hdcMem, hBitmap);
+			BitBlt(hdc, 0, 0, cxSource, cySource, hdcMem, 0, 0, SRCCOPY);
+			DeleteDC(hdcMem);
+			EndPaint(hwndDlg, &ps);
+			break;
+		}
+		case WM_DESTROY:
+		{
+			DeleteObject(hBitmap);
 			break;
 		}
 		case WM_COMMAND:

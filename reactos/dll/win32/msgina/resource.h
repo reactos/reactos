@@ -11,6 +11,7 @@
 #define IDC_PASSWORD                    1003
 #define IDC_SHUTDOWN                    1004
 #define IDC_STATUSLABEL                 1005
+#define IDC_ROSLOGO			1006
 #define IDS_ASKFORUSER                  40000
 #define IDS_PRESSCTRLALTDELETE          40001
 #define IDS_ASKFORPASSWORD              40002
