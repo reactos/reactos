@@ -466,14 +466,25 @@ DisplayTCPIPProperties(HWND hParent, IP_ADAPTER_INFO *pInfo)
     PROPSHEETHEADERW psh;
     INITCOMMONCONTROLSEX cce;
     TCPIP_PROPERTIES_DATA DlgData;
-    TCHAR tpszCaption[MAX_PATH];
-    HWND hListBox = GetDlgItem(hParent,IDC_COMPONENTSLIST);
-    int iListBoxIndex = (int) SendMessage(hListBox,LB_GETCURSEL,0,0);
+    LPTSTR tpszCaption = NULL;
+    INT StrLen;
+
+    HWND hListBox = GetDlgItem(hParent, IDC_COMPONENTSLIST);
+    int iListBoxIndex = (int) SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+
     if(iListBoxIndex != LB_ERR)
-        SendMessage(hListBox,LB_GETTEXT,iListBoxIndex,(LPARAM)tpszCaption);
-    else
-        _stprintf(tpszCaption,_T("[ERROR]"));
-    _tcscat(tpszCaption,_T(" Properties"));
+    {
+        StrLen = SendMessage(hListBox, LB_GETTEXTLEN, iListBoxIndex, 0);
+
+        if (StrLen != LB_ERR)
+        {
+            TCHAR suffix[] = _T(" Properties");
+            INT HeapSize = ((StrLen + 1) + (_tcslen(suffix) + 1)) * sizeof(TCHAR);
+            tpszCaption = (LPTSTR)HeapAlloc(GetProcessHeap(), 0, HeapSize);
+            SendMessage(hListBox, LB_GETTEXT, iListBoxIndex, (LPARAM)tpszCaption);
+            _tcscat(tpszCaption, suffix);
+        }
+    }
     
     if (! LoadDataFromInfo(&DlgData, pInfo))
     {
