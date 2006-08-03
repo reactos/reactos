@@ -11,10 +11,14 @@
 #define IDC_PASSWORD                    1003
 #define IDC_SHUTDOWN                    1004
 #define IDC_STATUSLABEL                 1005
-#define IDC_ROSLOGO			1006
+#define IDC_LOCK                        1006
+#define IDC_ROSLOGO                     1007
+#define IDI_ROSLOGO                     1008
 #define IDS_ASKFORUSER                  40000
 #define IDS_PRESSCTRLALTDELETE          40001
+#define IDC_TASKMGR                     40002
 #define IDS_ASKFORPASSWORD              40002
+
 
 #endif /* __MSGINA_RESOURCE_H */
 

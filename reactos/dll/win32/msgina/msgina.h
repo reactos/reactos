@@ -21,6 +21,9 @@ typedef struct {
 	PHANDLE phToken;
 	PWLX_MPR_NOTIFY_INFO pNprNotifyInfo;
 	PVOID *pProfile;
+
+	/* Current logo to display */
+	HBITMAP hBitmap;
 } GINA_CONTEXT, *PGINA_CONTEXT;
 
 HINSTANCE hDllInstance;

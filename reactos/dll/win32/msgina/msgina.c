@@ -42,7 +42,7 @@ WlxNegotiate(
 	IN DWORD dwWinlogonVersion,
 	OUT PDWORD pdwDllVersion)
 {
-	DPRINT1("WlxNegotiate(%lx, %p)\n", dwWinlogonVersion, pdwDllVersion);
+	TRACE("WlxNegotiate(%lx, %p)\n", dwWinlogonVersion, pdwDllVersion);
 
 	if(!pdwDllVersion || (dwWinlogonVersion < WLX_VERSION_1_3))
 		return FALSE;
@@ -147,20 +147,22 @@ WlxStartApplication(
 	PWSTR pszCmdLine)
 {
   PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
-  STARTUPINFO si;
-  PROCESS_INFORMATION pi;
+  STARTUPINFO StartupInfo;
+  PROCESS_INFORMATION ProcessInformation;
+  WCHAR CurrentDirectory[MAX_PATH];
   BOOL Ret;
   
-  si.cb = sizeof(STARTUPINFO);
-  si.lpReserved = NULL;
-  si.lpTitle = pszCmdLine;
-  si.dwX = si.dwY = si.dwXSize = si.dwYSize = 0L;
-  si.dwFlags = 0;
-  si.wShowWindow = SW_SHOW;  
-  si.lpReserved2 = NULL;
-  si.cbReserved2 = 0;
-  si.lpDesktop = pszDesktopName;
+  StartupInfo.cb = sizeof(STARTUPINFO);
+  StartupInfo.lpReserved = NULL;
+  StartupInfo.lpTitle = pszCmdLine;
+  StartupInfo.dwX = StartupInfo.dwY = StartupInfo.dwXSize = StartupInfo.dwYSize = 0L;
+  StartupInfo.dwFlags = 0;
+  StartupInfo.wShowWindow = SW_SHOW;  
+  StartupInfo.lpReserved2 = NULL;
+  StartupInfo.cbReserved2 = 0;
+  StartupInfo.lpDesktop = pszDesktopName;
   
+  GetWindowsDirectoryW (CurrentDirectory, MAX_PATH);
   Ret = CreateProcessAsUser(pgContext->UserToken,
                             NULL,
                             pszCmdLine,
@@ -169,11 +171,11 @@ WlxStartApplication(
                             FALSE,
                             CREATE_UNICODE_ENVIRONMENT,
                             pEnvironment,
-                            NULL,
-                            &si,
-                            &pi);
+                            CurrentDirectory,
+                            &StartupInfo,
+                            &ProcessInformation);
   
-  VirtualFree(pEnvironment, 0, MEM_RELEASE);
+  //VirtualFree(pEnvironment, 0, MEM_RELEASE);
   return Ret;
 }
 
@@ -188,15 +190,10 @@ WlxActivateUserShell(
 	PWSTR pszMprLogonScript,
 	PVOID pEnvironment)
 {
-  PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
-  STARTUPINFO StartupInfo;
-  PROCESS_INFORMATION ProcessInformation;
   HKEY hKey;
   DWORD BufSize, ValueType;
   WCHAR pszUserInitApp[MAX_PATH];
   WCHAR pszExpUserInitApp[MAX_PATH];
-  BOOL Ret;
-  WCHAR CurrentDirectory[MAX_PATH];
   
   /* get the path of userinit */
   if(RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
@@ -216,38 +213,12 @@ WlxActivateUserShell(
     return FALSE;
   }
   RegCloseKey(hKey);
-  
-  /* start userinit */
-  /* FIXME - allow to start more applications that are comma-separated */
-  StartupInfo.cb = sizeof(STARTUPINFO);
-  StartupInfo.lpReserved = NULL;
-  StartupInfo.lpDesktop = pszDesktopName;
-  StartupInfo.lpTitle = NULL;
-  StartupInfo.dwFlags = 0;
-  StartupInfo.lpReserved2 = NULL;
-  StartupInfo.cbReserved2 = 0;
-  StartupInfo.dwX = StartupInfo.dwY = StartupInfo.dwXSize = StartupInfo.dwYSize = 0;
-  StartupInfo.wShowWindow = SW_SHOW;
-  
   ExpandEnvironmentStrings(pszUserInitApp, pszExpUserInitApp, MAX_PATH);
   
-  GetWindowsDirectoryW (CurrentDirectory, MAX_PATH);
-  Ret = CreateProcessAsUser(pgContext->UserToken,
-                            NULL,
-                            pszExpUserInitApp,
-                            NULL,
-                            NULL,
-                            FALSE,
-                            CREATE_UNICODE_ENVIRONMENT,
-                            pEnvironment,
-                            CurrentDirectory,
-                            &StartupInfo,
-                            &ProcessInformation);
-  if(!Ret) ERR("GINA: Failed: 3, error %lu\n", GetLastError());
-  VirtualFree(pEnvironment, 0, MEM_RELEASE);
-  Ret = pgContext->pWlxFuncs->WlxSwitchDesktopToUser(pgContext->hWlx);
-  if(!Ret) ERR("GINA: Failed: 4, error %lu\n", GetLastError());
-  return Ret;
+  /* Start userinit */
+  /* FIXME - allow to start more applications that are comma-separated */
+  /* FIXME: Call VirtualFree(pEnvironment, 0, MEM_RELEASE); ? */
+  return WlxStartApplication(pWlxContext, pszDesktopName, pEnvironment, pszExpUserInitApp);
 }
 
 
@@ -261,10 +232,36 @@ WlxLoggedOnSAS(
 	PVOID pReserved)
 {
 	PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+	INT SasAction = WLX_SAS_ACTION_NONE;
 
-	DPRINT1("WlxLoggedOnSAS(0x%lx)\n", dwSasType);
+	TRACE("WlxLoggedOnSAS(0x%lx)\n", dwSasType);
 
-	return pGinaUI->LoggedOnSAS(pgContext, dwSasType);
+	switch (dwSasType)
+	{
+		case WLX_SAS_TYPE_CTRL_ALT_DEL:
+		case WLX_SAS_TYPE_TIMEOUT:
+		{
+			SasAction = pGinaUI->LoggedOnSAS(pgContext, dwSasType);
+			break;
+		}
+		case WLX_SAS_TYPE_SC_INSERT:
+		{
+			FIXME("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_INSERT not supported!\n");
+			break;
+		}
+		case WLX_SAS_TYPE_SC_REMOVE:
+		{
+			FIXME("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_REMOVE not supported!\n");
+			break;
+		}
+		default:
+		{
+			WARN("WlxLoggedOnSAS: Unknown SasType: 0x%x\n", dwSasType);
+			break;
+		}
+	}
+
+	return SasAction;
 }
 
 /*
@@ -280,7 +277,7 @@ WlxDisplayStatusMessage(
 {
 	PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
 
-	DPRINT1("WlxDisplayStatusMessage(\"%S\")\n", pMessage);
+	TRACE("WlxDisplayStatusMessage(\"%S\")\n", pMessage);
 
 	return pGinaUI->DisplayStatusMessage(pgContext, hDesktop, dwOptions, pTitle, pMessage);
 }
@@ -363,13 +360,13 @@ DoLoginTasks(
 		LOGON32_PROVIDER_DEFAULT,
 		pgContext->phToken))
 	{
-		WARN("GINA: Logonuser() failed\n");
+		WARN("LogonUserW() failed\n");
 		return FALSE;
 	}
 
-	if(!(*pgContext->phToken))
+	if(!*pgContext->phToken)
 	{
-		WARN("GINA: *phToken == NULL!\n");
+		WARN("*phToken == NULL!\n");
 		return FALSE;
 	}
 
@@ -384,7 +381,7 @@ DoLoginTasks(
 		sizeof(TOKEN_STATISTICS),
 		&cbStats))
 	{
-		WARN("GINA: Couldn't get Authentication id from user token!\n");
+		WARN("Couldn't get Authentication id from user token!\n");
 		return FALSE;
 	}
 	*pgContext->pAuthenticationId = Stats.AuthenticationId; 
@@ -482,7 +479,7 @@ WlxDisplaySASNotice(
 {
 	PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
 
-	DPRINT1("WlxDisplaySASNotice(%p)\n", pWlxContext);
+	TRACE("WlxDisplaySASNotice(%p)\n", pWlxContext);
 
 	if (GetSystemMetrics(SM_REMOTESESSION))
 	{
@@ -501,7 +498,7 @@ WlxDisplaySASNotice(
 
 	pGinaUI->DisplaySASNotice(pgContext);
 
-	DPRINT1("WlxDisplaySASNotice() done\n");
+	TRACE("WlxDisplaySASNotice() done\n");
 }
 
 /*
@@ -520,7 +517,7 @@ WlxLoggedOutSAS(
 {
 	PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
 
-	DPRINT1("WlxLoggedOutSAS()\n");
+	TRACE("WlxLoggedOutSAS()\n");
 
 	pgContext->pAuthenticationId = pAuthenticationId;
 	pgContext->pdwOptions = pdwOptions;

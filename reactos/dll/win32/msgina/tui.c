@@ -7,12 +7,8 @@
 
 #include "msgina.h"
 
-#include <debug.h>
-#define TRACE DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-#define FIXME DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-#define WARN DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-#undef DPRINT
-#undef DPRINT1
+#define YDEBUG
+#include <wine/debug.h>
 
 static BOOL
 TUIInitialize(
@@ -77,8 +73,15 @@ TUILoggedOnSAS(
 	IN DWORD dwSasType)
 {
 	TRACE("TUILoggedOnSAS()\n");
-	for (;;) FIXME("FIXME!\n");
-	return 0;
+
+	if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
+	{
+		/* Nothing to do for WLX_SAS_TYPE_TIMEOUT */
+		return WLX_SAS_ACTION_NONE;
+	}
+
+	FIXME("FIXME: TUILoggedOnSAS(): Let's suppose the user wants to log off...\n");
+	return WLX_SAS_ACTION_LOGOFF;
 }
 
 static BOOL
@@ -122,18 +125,18 @@ static INT
 TUILoggedOutSAS(
 	IN OUT PGINA_CONTEXT pgContext)
 {
-	WCHAR User[256];
+	WCHAR UserName[256];
 	WCHAR Password[256];
 
 	TRACE("TUILoggedOutSAS()\n");
 
 	/* Ask the user for credentials */
-	if (!ReadString(pgContext, IDS_ASKFORUSER, User, 256, TRUE))
+	if (!ReadString(pgContext, IDS_ASKFORUSER, UserName, 256, TRUE))
 		return WLX_SAS_ACTION_NONE;
 	if (!ReadString(pgContext, IDS_ASKFORPASSWORD, Password, 256, FALSE))
 		return WLX_SAS_ACTION_NONE;
 
-	if (DoLoginTasks(pgContext, User, NULL, Password))
+	if (DoLoginTasks(pgContext, UserName, NULL, Password))
 		return WLX_SAS_ACTION_LOGON;
 	else
 		return WLX_SAS_ACTION_NONE;

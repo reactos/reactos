@@ -56,7 +56,7 @@ WlxIsLockOk(
 	PVOID pWlxContext)
 {
   UNIMPLEMENTED;
-  return FALSE;
+  return TRUE;
 }
 
 
@@ -68,7 +68,7 @@ WlxIsLogoffOk(
 	PVOID pWlxContext)
 {
   UNIMPLEMENTED;
-  return FALSE;
+  return TRUE;
 }
 
 
@@ -106,7 +106,7 @@ WlxWkstaLockedSAS(
 	DWORD dwSasType)
 {
   UNIMPLEMENTED;
-  return 0;
+  return WLX_SAS_ACTION_UNLOCK_WKSTA;
 }
 
 

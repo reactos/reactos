@@ -7,15 +7,8 @@
 
 #include "msgina.h"
 
-#include <debug.h>
-#define TRACE DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-#define FIXME DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-#define WARN DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-#undef DPRINT
-#undef DPRINT1
-
-static HBITMAP hBitmap = NULL;
-static int cxSource, cySource;
+#define YDEBUG
+#include <wine/debug.h>
 
 typedef struct _DISPLAYSTATUSMSG
 {
@@ -155,21 +148,30 @@ GUIDisplayStatusMessage(
 	return TRUE;
 }
 
+static INT_PTR CALLBACK
+DisplaySASNoticeWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+}
+
 static VOID
 GUIDisplaySASNotice(
 	IN OUT PGINA_CONTEXT pgContext)
 {
-	int result;
+	INT result;
 
 	TRACE("GUIDisplaySASNotice()\n");
 
 	/* Display the notice window */
-	result = pgContext->pWlxFuncs->WlxDialogBoxParam(
-		pgContext->hWlx,
+	result = DialogBoxParam(
 		pgContext->hDllInstance,
 		MAKEINTRESOURCE(IDD_NOTICE_DLG),
 		NULL,
-		(DLGPROC)DefWindowProc,
+		DisplaySASNoticeWindowProc,
 		(LPARAM)NULL);
 	if (result == -1)
 	{
@@ -210,40 +212,37 @@ LoggedOutWindowProc(
 	IN WPARAM wParam,
 	IN LPARAM lParam)
 {
-	BITMAP bitmap;
+	PGINA_CONTEXT pgContext;
+
+	pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
 
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
 		{
 			/* FIXME: take care of DontDisplayLastUserName, NoDomainUI, ShutdownWithoutLogon */
-			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)lParam);
+			pgContext = (PGINA_CONTEXT)lParam;
+			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
 			SetFocus(GetDlgItem(hwndDlg, IDC_USERNAME));
 
- 			hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDC_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-			if (hBitmap != NULL)
-			{
-				GetObject(hBitmap, sizeof(BITMAP), &bitmap);
-				cxSource = bitmap.bmWidth;
-				cySource = bitmap.bmHeight;
-			}
+			pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 			break;
 		}
-	case WM_PAINT:
+		case WM_PAINT:
 		{
 			PAINTSTRUCT ps;
-			HDC hdc, hdcMem;
-			hdc = BeginPaint(hwndDlg, &ps);
-			hdcMem = CreateCompatibleDC(hdc);
-			SelectObject(hdcMem, hBitmap);
-			BitBlt(hdc, 0, 0, cxSource, cySource, hdcMem, 0, 0, SRCCOPY);
-			DeleteDC(hdcMem);
-			EndPaint(hwndDlg, &ps);
+			HDC hdc;
+			if (pgContext->hBitmap)
+			{
+				hdc = BeginPaint(hwndDlg, &ps);
+				DrawState(hdc, NULL, NULL, (LPARAM)pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+				EndPaint(hwndDlg, &ps);
+			}
 			break;
 		}
 		case WM_DESTROY:
 		{
-			DeleteObject(hBitmap);
+			DeleteObject(pgContext->hBitmap);
 			break;
 		}
 		case WM_COMMAND:
@@ -252,10 +251,8 @@ LoggedOutWindowProc(
 			{
 				case IDOK:
 				{
-					PGINA_CONTEXT pgContext;
 					LPWSTR UserName = NULL, Password = NULL;
 					INT result = WLX_SAS_ACTION_NONE;
-					pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
 
 					if (GetTextboxText(hwndDlg, IDC_USERNAME, &UserName) && *UserName == '\0')
 						break;
@@ -300,14 +297,23 @@ LoggedOnWindowProc(
 		{
 			switch (LOWORD(wParam))
 			{
-				case IDYES:
-				case IDNO:
-				{
-					EndDialog(hwndDlg, LOWORD(wParam));
-					break;
-				}
+				case IDC_LOCK:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_LOCK_WKSTA);
+					return TRUE;
+				case IDC_LOGOFF:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
+					return TRUE;
+				case IDC_SHUTDOWN:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
+					return TRUE;
+				case IDC_TASKMGR:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_TASKLIST);
+					return TRUE;
+				case IDCANCEL:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
+					return TRUE;
 			}
-			return TRUE;
+			break;
 		}
 		case WM_INITDIALOG:
 		{
@@ -329,50 +335,30 @@ GUILoggedOnSAS(
 	IN OUT PGINA_CONTEXT pgContext,
 	IN DWORD dwSasType)
 {
-	INT SasAction = WLX_SAS_ACTION_NONE;
+	INT result;
 
 	TRACE("GUILoggedOnSAS()\n");
 
-	switch (dwSasType)
+	if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
 	{
-		case WLX_SAS_TYPE_CTRL_ALT_DEL:
-		{
-			INT result;
-			/* Display "Are you sure you want to log off?" dialog */
-			result = pgContext->pWlxFuncs->WlxDialogBoxParam(
-				pgContext->hWlx,
-				pgContext->hDllInstance,
-				MAKEINTRESOURCE(IDD_LOGGEDON_DLG),
-				NULL,
-				LoggedOnWindowProc,
-				(LPARAM)pgContext);
-			if (result == IDOK)
-				SasAction = WLX_SAS_ACTION_LOCK_WKSTA;
-			break;
-		}
-		case WLX_SAS_TYPE_SC_INSERT:
-		{
-			FIXME("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_INSERT not supported!\n");
-			break;
-		}
-		case WLX_SAS_TYPE_SC_REMOVE:
-		{
-			FIXME("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_SC_REMOVE not supported!\n");
-			break;
-		}
-		case WLX_SAS_TYPE_TIMEOUT:
-		{
-			FIXME("WlxLoggedOnSAS: SasType WLX_SAS_TYPE_TIMEOUT not supported!\n");
-			break;
-		}
-		default:
-		{
-			WARN("WlxLoggedOnSAS: Unknown SasType: 0x%x\n", dwSasType);
-			break;
-		}
+		/* Nothing to do for WLX_SAS_TYPE_TIMEOUT ; the dialog will
+		 * close itself thanks to the use of WlxDialogBoxParam */
+		return WLX_SAS_ACTION_NONE;
 	}
 
-	return SasAction;
+	result = pgContext->pWlxFuncs->WlxDialogBoxParam(
+		pgContext->hWlx,
+		pgContext->hDllInstance,
+		MAKEINTRESOURCE(IDD_LOGGEDON_DLG),
+		NULL,
+		LoggedOnWindowProc,
+		(LPARAM)pgContext);
+	if (result >= WLX_SAS_ACTION_LOGON &&
+	    result <= WLX_SAS_ACTION_SWITCH_CONSOLE)
+	{
+		return result;
+	}
+	return WLX_SAS_ACTION_NONE;
 }
 
 static INT

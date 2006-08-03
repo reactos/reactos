@@ -7,8 +7,7 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"msgina.dll\0"
 #include <reactos/version.rc>
 
-
-IDC_ROSLOGO BITMAP "resources/reactos.bmp"
+IDI_ROSLOGO BITMAP "resources/reactos.bmp"
 
 #include "En.rc"
 
