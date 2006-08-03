@@ -62,6 +62,25 @@ DWORD APIENTRY DhcpNotifyConfigChange(LPWSTR ServerName, LPWSTR AdapterName,
 
 static void
 ManualDNS(HWND Dlg, BOOL Enabled) {
+    PTCPIP_PROPERTIES_DATA DlgData = 
+        (PTCPIP_PROPERTIES_DATA) GetWindowLongPtrW(Dlg, GWL_USERDATA);
+
+        if (! DlgData->OldDhcpEnabled)
+        {
+            if (INADDR_NONE != DlgData->OldIpAddress) {
+                SendDlgItemMessage(Dlg, IDC_IPADDR, IPM_SETADDRESS, 0,
+                                   ntohl(DlgData->OldIpAddress));
+            }
+            if (INADDR_NONE != DlgData->OldSubnetMask) {
+                SendDlgItemMessage(Dlg, IDC_SUBNETMASK, IPM_SETADDRESS, 0,
+                                   ntohl(DlgData->OldSubnetMask));
+            }
+            if (INADDR_NONE != DlgData->OldGateway) {
+                SendDlgItemMessage(Dlg, IDC_DEFGATEWAY, IPM_SETADDRESS, 0,
+                                   ntohl(DlgData->OldGateway));
+            }
+        }
+
     CheckDlgButton(Dlg, IDC_FIXEDDNS,
                    Enabled ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(Dlg, IDC_AUTODNS,
