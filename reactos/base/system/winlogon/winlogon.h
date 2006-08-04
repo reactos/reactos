@@ -68,7 +68,7 @@ typedef BOOL (WINAPI * PFWLXDISPLAYSTATUSMESSAGE) (PVOID, HDESK, DWORD, PWSTR, P
 typedef BOOL (WINAPI * PFWLXGETSTATUSMESSAGE) (PVOID, DWORD *, PWSTR, DWORD);
 typedef BOOL (WINAPI * PFWLXREMOVESTATUSMESSAGE) (PVOID);
 
-typedef struct _MSGINAFUNCTIONS
+typedef struct _GINAFUNCTIONS
 {
 	/* Functions always available for a valid GINA */
 	PFWLXNEGOTIATE            WlxNegotiate;
@@ -99,15 +99,16 @@ typedef struct _MSGINAFUNCTIONS
 	PFWLXREMOVESTATUSMESSAGE  WlxRemoveStatusMessage;
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_4 (MS Windows XP) */
-} MSGINAFUNCTIONS, *PMSGINAFUNCTIONS;
+} GINAFUNCTIONS, *PGINAFUNCTIONS;
 
-typedef struct _MSGINAINSTANCE
+typedef struct _GINAINSTANCE
 {
 	HMODULE hDllInstance;
-	MSGINAFUNCTIONS Functions;
+	GINAFUNCTIONS Functions;
 	PVOID Context;
 	DWORD Version;
-} MSGINAINSTANCE, *PMSGINAINSTANCE;
+	BOOL UseCtrlAltDelete;
+} GINAINSTANCE, *PGINAINSTANCE;
 
 /* FIXME: put in an enum */
 #define WKSTA_IS_LOGGED_OFF 0
@@ -119,7 +120,7 @@ typedef struct _MSGINAINSTANCE
 
 typedef struct _WLSESSION
 {
-  MSGINAINSTANCE MsGina;
+  GINAINSTANCE Gina;
   DWORD SASAction;
   DWORD LogonStatus;
   BOOL SuppressStatus;
@@ -157,9 +158,9 @@ extern PWLSESSION WLSession;
   )
 
 #define RemoveStatusMessage(Session) \
-  Session->MsGina.Functions.WlxRemoveStatusMessage(Session->MsGina.Context);
+  Session->Gina.Functions.WlxRemoveStatusMessage(Session->Gina.Context);
 #define DisplaySASNotice(Session) \
-  Session->MsGina.Functions.WlxDisplaySASNotice(Session->MsGina.Context);
+  Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
 
 /* user32 */
 BOOL WINAPI

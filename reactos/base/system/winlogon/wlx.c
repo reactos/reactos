@@ -27,35 +27,25 @@ DefaultWlxWindowProc(
 {
 	if (uMsg == WM_TIMER && (UINT_PTR)wParam == IdTimer)
 	{
-		CHECKPOINT1;
 		EndDialog(hwndDlg, -1);
 		KillTimer(hwndDlg, IdTimer);
-		CHECKPOINT1;
 		return TRUE;
 	}
 	else if (uMsg == WM_INITDIALOG)
 	{
-		CHECKPOINT1;
-		PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
 		IdTimer = SetTimer(hwndDlg, 0, WLSession->DialogTimeout * 1000, NULL);
-		CHECKPOINT1;
-		if (IdTimer == 0)
-			return FALSE;
-		return TRUE;
+		return PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);;
 	}
 	else if (uMsg == WM_NCDESTROY)
 	{
-		CHECKPOINT1;
-		PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
-		CHECKPOINT1;
+		BOOL ret;
+		ret = PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
 		PreviousWindowProc = NULL;
-		return TRUE;
+		return ret;
 	}
 	else
 	{
-		INT_PTR ret = PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
-		ret = PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
-		return ret;
+		return PreviousWindowProc(hwndDlg, uMsg, wParam, lParam);
 	}
 }
 
@@ -66,7 +56,8 @@ VOID WINAPI
 WlxUseCtrlAltDel(
 	HANDLE hWlx)
 {
-	WlxSetOption(hWlx, WLX_OPTION_USE_CTRL_ALT_DEL, TRUE, NULL);
+	ULONG_PTR OldValue;
+	WlxSetOption(hWlx, WLX_OPTION_USE_CTRL_ALT_DEL, TRUE, &OldValue);
 }
 
 /*
@@ -77,7 +68,8 @@ WlxSetContextPointer(
 	HANDLE hWlx,
 	PVOID pWlxContext)
 {
-	WlxSetOption(hWlx, WLX_OPTION_CONTEXT_POINTER, (ULONG_PTR)pWlxContext, NULL);
+	ULONG_PTR OldValue;
+	WlxSetOption(hWlx, WLX_OPTION_CONTEXT_POINTER, (ULONG_PTR)pWlxContext, &OldValue);
 }
 
 /*
@@ -147,7 +139,7 @@ WlxDialogBox(
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
-	return (int)DialogBox(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc);
+	return (int)DialogBoxW(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc);
 }
 
 /*
@@ -165,7 +157,7 @@ WlxDialogBoxParam(
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
-	return (int)DialogBoxParam(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc, dwInitParam);
+	return (int)DialogBoxParamW(hInst, lpszTemplate, hwndOwner, DefaultWlxWindowProc, dwInitParam);
 }
 
 /*
@@ -182,7 +174,7 @@ WlxDialogBoxIndirect(
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
-	return (int)DialogBoxIndirect(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc);
+	return (int)DialogBoxIndirectW(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc);
 }
 
 /*
@@ -200,7 +192,7 @@ WlxDialogBoxIndirectParam(
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
-	return (int)DialogBoxIndirectParam(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc, dwInitParam);
+	return (int)DialogBoxIndirectParamW(hInst, hDialogTemplate, hwndOwner, DefaultWlxWindowProc, dwInitParam);
 }
 
 /*
@@ -316,30 +308,27 @@ WlxSetOption(
 	ULONG_PTR* OldValue)
 {
 	PWLSESSION Session = (PWLSESSION)hWlx;
-	UNIMPLEMENTED;
 
-	if (Session || !Value)
+	switch (Option)
 	{
-		switch (Option)
-		{
-			case WLX_OPTION_USE_CTRL_ALT_DEL:
-				return TRUE;
-			case WLX_OPTION_CONTEXT_POINTER:
-			{
-				*OldValue = (ULONG_PTR)Session->MsGina.Context;
-				Session->MsGina.Context = (PVOID)Value;
-				return TRUE;
-			}
-			case WLX_OPTION_USE_SMART_CARD:
-				return FALSE;
-		}
+		case WLX_OPTION_USE_CTRL_ALT_DEL:
+			*OldValue = (ULONG_PTR)Session->Gina.UseCtrlAltDelete;
+			Session->Gina.UseCtrlAltDelete = (BOOL)Value;
+			return TRUE;
+		case WLX_OPTION_CONTEXT_POINTER:
+			*OldValue = (ULONG_PTR)Session->Gina.Context;
+			Session->Gina.Context = (PVOID)Value;
+			return TRUE;
+		case WLX_OPTION_USE_SMART_CARD:
+			UNIMPLEMENTED;
+			return FALSE;
 	}
 
 	return FALSE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 WlxGetOption(
@@ -347,28 +336,26 @@ WlxGetOption(
 	DWORD Option,
 	ULONG_PTR* Value)
 {
-	PMSGINAINSTANCE Instance = (PMSGINAINSTANCE)hWlx;
-	UNIMPLEMENTED;
+	PWLSESSION Session = (PWLSESSION)hWlx;
 
-	if (Instance || !Value)
+	switch (Option)
 	{
-		switch (Option)
+		case WLX_OPTION_USE_CTRL_ALT_DEL:
+			*Value = (ULONG_PTR)Session->Gina.UseCtrlAltDelete;
+			return TRUE;
+		case WLX_OPTION_CONTEXT_POINTER:
 		{
-			case WLX_OPTION_USE_CTRL_ALT_DEL:
-				return TRUE;
-			case WLX_OPTION_CONTEXT_POINTER:
-			{
-				*Value = (ULONG_PTR)Instance->Context;
-				return TRUE;
-			}
-			case WLX_OPTION_USE_SMART_CARD:
-			case WLX_OPTION_SMART_CARD_PRESENT:
-			case WLX_OPTION_SMART_CARD_INFO:
-				*Value = 0;
-				return FALSE;
-			case WLX_OPTION_DISPATCH_TABLE_SIZE:
-			{
-			switch (Instance->Version)
+			*Value = (ULONG_PTR)Session->Gina.Context;
+			return TRUE;
+		}
+		case WLX_OPTION_USE_SMART_CARD:
+		case WLX_OPTION_SMART_CARD_PRESENT:
+		case WLX_OPTION_SMART_CARD_INFO:
+			UNIMPLEMENTED;
+			return FALSE;
+		case WLX_OPTION_DISPATCH_TABLE_SIZE:
+		{
+			switch (Session->Gina.Version)
 			{
 				case WLX_VERSION_1_0:
 					*Value = sizeof(WLX_DISPATCH_VERSION_1_0);
@@ -387,9 +374,8 @@ WlxGetOption(
 					break;
 				default:
 					return FALSE;
-				}
-				return TRUE;
 			}
+			return TRUE;
 		}
 	}
 
@@ -516,7 +502,7 @@ GetGinaPath(
 	DWORD Type, Size;
 	HKEY hKey;
 
-	Status = RegOpenKeyEx(
+	Status = RegOpenKeyExW(
 		HKEY_LOCAL_MACHINE,
 		L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
 		0,
@@ -530,7 +516,7 @@ GetGinaPath(
 	}
 
 	Size = Len * sizeof(WCHAR);
-	Status = RegQueryValueEx(
+	Status = RegQueryValueExW(
 		hKey,
 		L"GinaDLL",
 		NULL,
@@ -543,74 +529,30 @@ GetGinaPath(
 	return TRUE;
 }
 
-static INT_PTR CALLBACK
-GinaLoadFailedWindowProc(
-	IN HWND hwndDlg,
-	IN UINT uMsg,
-	IN WPARAM wParam,
-	IN LPARAM lParam)
-{
-	switch (uMsg)
-	{
-		case WM_COMMAND:
-		{
-			switch (LOWORD(wParam))
-			{
-				case IDOK:
-					EndDialog(hwndDlg, IDOK);
-					break;
-			}
-			break;
-		}
-		case WM_INITDIALOG:
-		{
-			int len;
-			WCHAR templateText[MAX_PATH], text[MAX_PATH];
-
-			len = GetDlgItemText(hwndDlg, IDC_GINALOADFAILED, templateText, MAX_PATH);
-			if (len)
-			{
-				wsprintf(text, templateText, (LPWSTR)lParam);
-				SetDlgItemText(hwndDlg, IDC_GINALOADFAILED, text);
-			}
-			SetFocus(GetDlgItem(hwndDlg, IDOK));
-			break;
-		}
-		case WM_CLOSE:
-		{
-			EndDialog(hwndDlg, IDCANCEL);
-			return TRUE;
-		}
-	}
-
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
-}
-
-#define FAIL_AND_RETURN() return DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), 0, GinaLoadFailedWindowProc, (LPARAM)GinaDll) && FALSE
 static BOOL
 LoadGina(
-	IN OUT PMSGINAFUNCTIONS Functions,
+	IN OUT PGINAFUNCTIONS Functions,
 	OUT DWORD *DllVersion,
 	OUT HMODULE *GinaInstance)
 {
-	HMODULE hGina;
+	HMODULE hGina = NULL;
 	WCHAR GinaDll[MAX_PATH + 1];
+	BOOL ret = FALSE;
 
 	GinaDll[0] = '\0';
 	if (!GetGinaPath(GinaDll, MAX_PATH))
-		FAIL_AND_RETURN();
+		goto cleanup;
 	/* Terminate string */
 	GinaDll[MAX_PATH] = '\0';
 
-	if (!(hGina = LoadLibrary(GinaDll)))
-		FAIL_AND_RETURN();
-	*GinaInstance = hGina;
+	if (!(hGina = LoadLibraryW(GinaDll)))
+		goto cleanup;
 
 	Functions->WlxNegotiate = (PFWLXNEGOTIATE)GetProcAddress(hGina, "WlxNegotiate");
 	Functions->WlxInitialize = (PFWLXINITIALIZE)GetProcAddress(hGina, "WlxInitialize");
 
 	if (!Functions->WlxInitialize)
-		FAIL_AND_RETURN();
+		goto cleanup;
 
 	if (!Functions->WlxNegotiate)
 	{
@@ -618,55 +560,64 @@ LoadGina(
 		*DllVersion = WLX_CURRENT_VERSION;
 	}
 	else if (!Functions->WlxNegotiate(WLX_CURRENT_VERSION, DllVersion))
-		FAIL_AND_RETURN();
+		goto cleanup;
 
 	if (*DllVersion >= WLX_VERSION_1_0)
 	{
 		Functions->WlxActivateUserShell = (PFWLXACTIVATEUSERSHELL)GetProcAddress(hGina, "WlxActivateUserShell");
-		if (!Functions->WlxActivateUserShell) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxDisplayLockedNotice = (PFWLXDISPLAYLOCKEDNOTICE)GetProcAddress(hGina, "WlxDisplayLockedNotice");
-		if (!Functions->WlxDisplayLockedNotice) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxDisplaySASNotice = (PFWLXDISPLAYSASNOTICE)GetProcAddress(hGina, "WlxDisplaySASNotice");
-		if (!Functions->WlxDisplaySASNotice) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxIsLockOk = (PFWLXISLOCKOK)GetProcAddress(hGina, "WlxIsLockOk");
-		if (!Functions->WlxIsLockOk) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxIsLogoffOk = (PFWLXISLOGOFFOK)GetProcAddress(hGina, "WlxIsLogoffOk");
-		if (!Functions->WlxIsLogoffOk) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxLoggedOnSAS = (PFWLXLOGGEDONSAS)GetProcAddress(hGina, "WlxLoggedOnSAS");
-		if (!Functions->WlxLoggedOnSAS) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxLoggedOutSAS = (PFWLXLOGGEDOUTSAS)GetProcAddress(hGina, "WlxLoggedOutSAS");
-		if (!Functions->WlxLoggedOutSAS) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxLogoff = (PFWLXLOGOFF)GetProcAddress(hGina, "WlxLogoff");
-		if (!Functions->WlxLogoff) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxShutdown = (PFWLXSHUTDOWN)GetProcAddress(hGina, "WlxShutdown");
-		if (!Functions->WlxShutdown) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxWkstaLockedSAS = (PFWLXWKSTALOCKEDSAS)GetProcAddress(hGina, "WlxWkstaLockedSAS");
-		if (!Functions->WlxWkstaLockedSAS) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 	}
 
 	if (*DllVersion >= WLX_VERSION_1_1)
 	{
 		Functions->WlxScreenSaverNotify = (PFWLXSCREENSAVERNOTIFY)GetProcAddress(hGina, "WlxScreenSaverNotify");
-		if (!Functions->WlxScreenSaverNotify) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxStartApplication = (PFWLXSTARTAPPLICATION)GetProcAddress(hGina, "WlxStartApplication");
-		if (!Functions->WlxStartApplication) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 	}
 
 	if (*DllVersion >= WLX_VERSION_1_3)
 	{
 		Functions->WlxDisplayStatusMessage = (PFWLXDISPLAYSTATUSMESSAGE)GetProcAddress(hGina, "WlxDisplayStatusMessage");
-		if (!Functions->WlxDisplayStatusMessage) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxGetStatusMessage = (PFWLXGETSTATUSMESSAGE)GetProcAddress(hGina, "WlxGetStatusMessage");
-		if (!Functions->WlxGetStatusMessage) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxNetworkProviderLoad = (PFWLXNETWORKPROVIDERLOAD)GetProcAddress(hGina, "WlxNetworkProviderLoad");
-		if (!Functions->WlxNetworkProviderLoad) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxRemoveStatusMessage = (PFWLXREMOVESTATUSMESSAGE)GetProcAddress(hGina, "WlxRemoveStatusMessage");
-		if (!Functions->WlxRemoveStatusMessage) FAIL_AND_RETURN();
+		if (!Functions->WlxActivateUserShell) goto cleanup;
 	}
 
-	return TRUE;
+	ret = TRUE;
+
+cleanup:
+	if (!ret)
+	{
+		if (hGina)
+			FreeLibrary(hGina);
+	}
+	else
+		*GinaInstance = hGina;
+	return ret;
 }
-#undef FAIL_AND_RETURN
 
 BOOL
 GinaInit(
@@ -674,20 +625,21 @@ GinaInit(
 {
 	DWORD GinaDllVersion;
 
-	if (!LoadGina(&Session->MsGina.Functions, &GinaDllVersion, &Session->MsGina.hDllInstance))
+	if (!LoadGina(&Session->Gina.Functions, &GinaDllVersion, &Session->Gina.hDllInstance))
 		return FALSE;
 
-	Session->MsGina.Context = NULL;
-	Session->MsGina.Version = GinaDllVersion;
+	Session->Gina.Context = NULL;
+	Session->Gina.Version = GinaDllVersion;
+	Session->Gina.UseCtrlAltDelete = FALSE;
 	Session->SuppressStatus = FALSE;
 	PreviousWindowProc = NULL;
 
-	return Session->MsGina.Functions.WlxInitialize(
+	return Session->Gina.Functions.WlxInitialize(
 		Session->InteractiveWindowStationName,
 		(HANDLE)Session,
 		NULL,
 		(PVOID)&FunctionTable,
-		&Session->MsGina.Context);
+		&Session->Gina.Context);
 }
 
 BOOL
@@ -698,7 +650,7 @@ CreateWindowStationAndDesktops(
 	 * Create the interactive window station
 	 */
 	Session->InteractiveWindowStationName = L"WinSta0";
-	Session->InteractiveWindowStation = CreateWindowStation(
+	Session->InteractiveWindowStation = CreateWindowStationW(
 		Session->InteractiveWindowStationName,
 		0,
 		WINSTA_CREATEDESKTOP,
@@ -713,7 +665,7 @@ CreateWindowStationAndDesktops(
 	/*
 	 * Create the application desktop
 	 */
-	Session->ApplicationDesktop = CreateDesktop(
+	Session->ApplicationDesktop = CreateDesktopW(
 		L"Default",
 		NULL,
 		NULL,
@@ -729,7 +681,7 @@ CreateWindowStationAndDesktops(
 	/*
 	 * Create the winlogon desktop
 	 */
-	Session->WinlogonDesktop = CreateDesktop(
+	Session->WinlogonDesktop = CreateDesktopW(
 		L"Winlogon",
 		NULL,
 		NULL,
@@ -745,7 +697,7 @@ CreateWindowStationAndDesktops(
 	/*
 	 * Create the screen saver desktop
 	 */
-	Session->ScreenSaverDesktop = CreateDesktop(
+	Session->ScreenSaverDesktop = CreateDesktopW(
 		L"Screen-Saver",
 		NULL,
 		NULL,

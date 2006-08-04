@@ -36,7 +36,7 @@ ShutdownComputerWindowProc(
 			{
 				case IDC_BTNSHTDOWNCOMPUTER:
 					EndDialog(hwndDlg, IDC_BTNSHTDOWNCOMPUTER);
-					break;
+					return TRUE;
 			}
 			break;
 		}
@@ -44,10 +44,10 @@ ShutdownComputerWindowProc(
 		{
 			RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
 			SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
-			break;
+			return TRUE;
 		}
 	}
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static BOOL
@@ -55,7 +55,7 @@ StartServicesManager(VOID)
 {
    HANDLE ServicesInitEvent;
    BOOLEAN Result;
-   STARTUPINFO StartupInfo;
+   STARTUPINFOW StartupInfo;
    PROCESS_INFORMATION ProcessInformation;
    DWORD Count;
    WCHAR ServiceString[] = L"services.exe";
@@ -74,7 +74,7 @@ StartServicesManager(VOID)
    DPRINT1(L"WL: Creating new process - \"services.exe\".\n");
 #endif
 
-   Result = CreateProcess(NULL,
+   Result = CreateProcessW(NULL,
                           ServiceString,
                           NULL,
                           NULL,
@@ -96,7 +96,7 @@ StartServicesManager(VOID)
         Sleep(1000);
 
         DPRINT("WL: Attempting to open event \"SvcctrlStartEvent_A3725DX\"\n");
-        ServicesInitEvent = OpenEvent(EVENT_ALL_ACCESS, //SYNCHRONIZE,
+        ServicesInitEvent = OpenEventW(EVENT_ALL_ACCESS, //SYNCHRONIZE,
                                       FALSE,
                                       L"SvcctrlStartEvent_A3725DX");
         if (ServicesInitEvent != NULL)
@@ -133,7 +133,7 @@ StartCustomService(
 	if (!hSCManager)
 		goto cleanup;
 
-	hService = OpenService(hSCManager, ServiceName, SERVICE_START);
+	hService = OpenServiceW(hSCManager, ServiceName, SERVICE_START);
 	if (!hService)
 		goto cleanup;
 #if 0
@@ -156,7 +156,7 @@ StartLsass(VOID)
 {
 	HANDLE LsassInitEvent;
 
-	LsassInitEvent = CreateEvent(
+	LsassInitEvent = CreateEventW(
 		NULL,
 		TRUE,
 		FALSE,
@@ -393,7 +393,7 @@ DoBrokenLogonUser(
       DestroyEnvironmentBlock (lpEnvironment);
       return FALSE;
     }
-  /*WLSession->MsGina.Functions.WlxActivateUserShell(WLSession->MsGina.Context,
+  /*WLSession->Gina.Functions.WlxActivateUserShell(WLSession->Gina.Context,
                                                    L"WinSta0\\Default",
                                                    NULL,
                                                    NULL);*/
@@ -439,10 +439,10 @@ DisplayStatusMessage(
 	if (Session->SuppressStatus)
 		return TRUE;
 
-	if (LoadString(hAppInstance, ResourceId, StatusMsg, MAX_PATH) == 0)
+	if (LoadStringW(hAppInstance, ResourceId, StatusMsg, MAX_PATH) == 0)
 		return FALSE;
 
-	return Session->MsGina.Functions.WlxDisplayStatusMessage(Session->MsGina.Context, hDesktop, 0, NULL, StatusMsg);
+	return Session->Gina.Functions.WlxDisplayStatusMessage(Session->Gina.Context, hDesktop, 0, NULL, StatusMsg);
 }
 
 static VOID
@@ -481,7 +481,7 @@ SessionLoop(
 
    RemoveStatusMessage(Session);
 
-   if(!MsGinaInst->Functions->WlxActivateUserShell(MsGinaInst->Context,
+   if(!GinaInst->Functions->WlxActivateUserShell(GinaInst->Context,
                                                    L"WinSta0\\Default",
                                                    NULL,
                                                    NULL))
@@ -498,13 +498,56 @@ SessionLoop(
 
    Sleep(150);
 
-   MsGinaInst->Functions->WlxShutdown(MsGinaInst->Context, WLX_SAS_ACTION_SHUTDOWN);
+   GinaInst->Functions->WlxShutdown(GinaInst->Context, WLX_SAS_ACTION_SHUTDOWN);
    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
    Sleep(250);
 
    RemoveStatusMessage(Session);
    */
+}
+
+static INT_PTR CALLBACK
+GinaLoadFailedWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_COMMAND:
+		{
+			switch (LOWORD(wParam))
+			{
+				case IDOK:
+					EndDialog(hwndDlg, IDOK);
+					return TRUE;
+			}
+			break;
+		}
+		case WM_INITDIALOG:
+		{
+			int len;
+			WCHAR templateText[MAX_PATH], text[MAX_PATH];
+
+			len = GetDlgItemTextW(hwndDlg, IDC_GINALOADFAILED, templateText, MAX_PATH);
+			if (len)
+			{
+				wsprintfW(text, templateText, (LPWSTR)lParam);
+				SetDlgItemTextW(hwndDlg, IDC_GINALOADFAILED, text);
+			}
+			SetFocus(GetDlgItem(hwndDlg, IDOK));
+			return TRUE;
+		}
+		case WM_CLOSE:
+		{
+			EndDialog(hwndDlg, IDCANCEL);
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
 
 int WINAPI
@@ -550,10 +593,18 @@ WinMain(
 	}
 	LockWorkstation(WLSession);
 
+	if (!StartServicesManager())
+	{
+		ERR("WL: Could not start services.exe\n");
+		NtShutdownSystem(ShutdownNoReboot);
+		ExitProcess(0);
+		return 0;
+	}
+
 	/* Check for pending setup */
 	if (GetSetupType() != 0)
 	{
-		DPRINT("Winlogon: CheckForSetup() in setup mode\n");
+		TRACE("WL: Setup mode detected\n");
 
 		/* Run setup and reboot when done */
 		SwitchDesktop(WLSession->ApplicationDesktop);
@@ -568,20 +619,13 @@ WinMain(
 	if (!GinaInit(WLSession))
 	{
 		ERR("WL: Failed to initialize Gina\n");
-		NtShutdownSystem(ShutdownNoReboot);
+		DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), 0, GinaLoadFailedWindowProc, (LPARAM)L"");
+		NtShutdownSystem(ShutdownReboot);
 		ExitProcess(0);
 		return 0;
 	}
 
 	DisplayStatusMessage(WLSession, WLSession->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
-
-	if (!StartServicesManager())
-	{
-		ERR("WL: Could not start services.exe\n");
-		NtShutdownSystem(ShutdownNoReboot);
-		ExitProcess(0);
-		return 0;
-	}
 
 	if (!StartLsass())
 	{
@@ -597,7 +641,12 @@ WinMain(
 	if (Status == STATUS_PORT_CONNECTION_REFUSED)
 	{
 		/* Add the 'SeTcbPrivilege' privilege and try again */
-		RtlAdjustPrivilege(SE_TCB_PRIVILEGE, TRUE, TRUE, &Old);
+		Status = RtlAdjustPrivilege(SE_TCB_PRIVILEGE, TRUE, TRUE, &Old);
+		if (!NT_SUCCESS(Status))
+		{
+			ERR("RtlAdjustPrivilege() failed with error %lu\n", LsaNtStatusToWinError(Status));
+			return 1;
+		}
 		Status = LsaRegisterLogonProcess(&ProcessName, &LsaHandle, &Mode);
 	}
 	if (!NT_SUCCESS(Status))

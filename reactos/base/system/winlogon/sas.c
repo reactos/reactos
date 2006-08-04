@@ -28,8 +28,8 @@ static BOOL
 StartTaskManager(
 	IN OUT PWLSESSION Session)
 {
-	return Session->MsGina.Functions.WlxStartApplication(
-		Session->MsGina.Context,
+	return Session->Gina.Functions.WlxStartApplication(
+		Session->Gina.Context,
 		L"Default",
 		NULL,
 		L"taskmgr.exe");
@@ -81,8 +81,8 @@ HandleLogon(
 	/* FIXME: reverting to lower privileges after creating user shell? */
 	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
 
-	return Session->MsGina.Functions.WlxActivateUserShell(
-		Session->MsGina.Context,
+	return Session->Gina.Functions.WlxActivateUserShell(
+		Session->Gina.Context,
 		L"Default",//NULL, /* FIXME */
 		NULL, /* FIXME */
 		lpEnvironment);
@@ -127,11 +127,11 @@ DoGenericAction(
 		case WLX_SAS_ACTION_NONE: /* 0x02 */
 			break;
 		case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
-			if (Session->MsGina.Functions.WlxIsLockOk(Session->MsGina.Context))
+			if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
 			{
 				SwitchDesktop(WLSession->WinlogonDesktop);
 				Session->LogonStatus = WKSTA_IS_LOCKED;
-				Session->MsGina.Functions.WlxDisplayLockedNotice(Session->MsGina.Context);
+				Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
 			}
 			break;
 		case WLX_SAS_ACTION_LOGOFF: /* 0x04 */
@@ -140,13 +140,13 @@ DoGenericAction(
 		case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
 			if (Session->LogonStatus != WKSTA_IS_LOGGED_OFF)
 			{
-				if (!Session->MsGina.Functions.WlxIsLogoffOk(Session->MsGina.Context))
+				if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
 					break;
 				SwitchDesktop(WLSession->WinlogonDesktop);
-				Session->MsGina.Functions.WlxLogoff(Session->MsGina.Context);
+				Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
 				HandleLogoff(Session);
 				Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
-				Session->MsGina.Functions.WlxDisplaySASNotice(Session->MsGina.Context);
+				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
 			}
 			if (WLX_SHUTTINGDOWN(wlxAction))
 				HandleShutdown(Session, wlxAction);
@@ -172,9 +172,9 @@ DispatchSAS(
 	DWORD wlxAction = WLX_SAS_ACTION_NONE;
 
 	if (Session->LogonStatus == WKSTA_IS_LOGGED_ON)
-		wlxAction = Session->MsGina.Functions.WlxLoggedOnSAS(Session->MsGina.Context, dwSasType, NULL);
+		wlxAction = Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
 	else if (Session->LogonStatus == WKSTA_IS_LOCKED)
-		wlxAction = Session->MsGina.Functions.WlxWkstaLockedSAS(Session->MsGina.Context, dwSasType);
+		wlxAction = Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
 	else
 	{
 		/* Display a new dialog (if necessary) */
@@ -182,7 +182,7 @@ DispatchSAS(
 		{
 			case WLX_SAS_TYPE_TIMEOUT: /* 0x00 */
 			{
-				Session->MsGina.Functions.WlxDisplaySASNotice(Session->MsGina.Context);
+				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
 				break;
 			}
 			case WLX_SAS_TYPE_CTRL_ALT_DEL: /* 0x01 */
@@ -192,8 +192,8 @@ DispatchSAS(
 				ZeroMemory(&Session->Profile, sizeof(Session->Profile));
 				Session->Options = 0;
 
-				wlxAction = Session->MsGina.Functions.WlxLoggedOutSAS(
-					Session->MsGina.Context,
+				wlxAction = Session->Gina.Functions.WlxLoggedOutSAS(
+					Session->Gina.Context,
 					Session->SASAction,
 					&Session->LogonId,
 					LogonSid,
@@ -384,6 +384,8 @@ SASWindowProc(
 				case MAKELONG(MOD_CONTROL | MOD_ALT, VK_DELETE):
 				{
 					TRACE("SAS: CONTROL+ALT+DELETE\n");
+					if (!Session->Gina.UseCtrlAltDelete)
+						break;
 					DispatchSAS(Session, WLX_SAS_TYPE_CTRL_ALT_DEL);
 					return TRUE;
 				}
@@ -435,7 +437,7 @@ BOOL
 InitializeSAS(
 	IN OUT PWLSESSION Session)
 {
-	WNDCLASSEX swc;
+	WNDCLASSEXW swc;
 
 	/* register SAS window class.
 	 * WARNING! MAKE SURE WE ARE IN THE WINLOGON DESKTOP! */
@@ -451,11 +453,11 @@ InitializeSAS(
 	swc.lpszMenuName = NULL;
 	swc.lpszClassName = WINLOGON_SAS_CLASS;
 	swc.hIconSm = NULL;
-	RegisterClassEx(&swc); /* FIXME: check return code */
+	RegisterClassExW(&swc); /* FIXME: check return code */
 
 	/* create invisible SAS window */
 	DPRINT1("Session %p\n", Session);
-	Session->SASWindow = CreateWindowEx(
+	Session->SASWindow = CreateWindowExW(
 		0,
 		WINLOGON_SAS_CLASS,
 		WINLOGON_SAS_TITLE,

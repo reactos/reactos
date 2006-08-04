@@ -43,7 +43,7 @@ GetSetupType(VOID)
   DWORD dwSize;
   DWORD dwSetupType;
 
-  dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+  dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
 			 L"SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
 			 0,
 			 KEY_QUERY_VALUE,
@@ -54,7 +54,7 @@ GetSetupType(VOID)
     }
 
   dwSize = sizeof(DWORD);
-  dwError = RegQueryValueEx (hKey,
+  dwError = RegQueryValueExW (hKey,
 			     L"SetupType", //TEXT("SetupType"),
 			     NULL,
 			     &dwType,
@@ -76,7 +76,7 @@ SetSetupType (DWORD dwSetupType)
   DWORD dwError;
   HKEY hKey;
 
-  dwError = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+  dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
 			 L"SYSTEM\\Setup", //TEXT("SYSTEM\\Setup"),
 			 0,
 			 KEY_SET_VALUE,
@@ -86,7 +86,7 @@ SetSetupType (DWORD dwSetupType)
       return FALSE;
     }
 
-  dwError = RegSetValueEx (hKey,
+  dwError = RegSetValueExW (hKey,
 			   L"SetupType", //TEXT("SetupType"),
 			   0,
 			   REG_DWORD,
@@ -106,7 +106,7 @@ BOOL
 RunSetup (VOID)
 {
   PROCESS_INFORMATION ProcessInformation;
-  STARTUPINFO StartupInfo;
+  STARTUPINFOW StartupInfo;
   WCHAR Shell[MAX_PATH];
   WCHAR CommandLine[MAX_PATH];
   BOOLEAN Result;
