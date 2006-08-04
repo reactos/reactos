@@ -783,6 +783,9 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
       return STATUS_ACCESS_DENIED;
     }
 
+  DPRINT1("FIXME: Need to close all user processes!\n");
+  return STATUS_SUCCESS;
+
   CallerThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, ThreadId);
   if (NULL == CallerThread)
     {

@@ -273,6 +273,20 @@ LogoffShutdownThread(LPVOID Parameter)
   }
   RevertToSelf();
 
+  /* This is not right (see top of reactos/dll/win32/user32/misc/exit.c),
+   * but this should be enough atm */
+  switch (LSData->Flags & EWX_ACTION_MASK)
+  {
+    case EWX_SHUTDOWN:
+      NtShutdownSystem(ShutdownNoReboot);
+      break;
+    case EWX_REBOOT:
+      NtShutdownSystem(ShutdownReboot);
+      break;
+    default:
+     UNIMPLEMENTED;
+  }
+
   HeapFree(GetProcessHeap(), 0, LSData);
 
   return 1;
