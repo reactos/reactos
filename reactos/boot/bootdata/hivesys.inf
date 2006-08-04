@@ -645,23 +645,16 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000\LogConf","BasicConfigVect
 01,00,00,00,01,00,01,00,01,00,00,00, \
 00,06,00,00,00,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
-; We need the PCI bus to be installed at 3rd boot to enumerate display cards and to
-; not have the "CsrServerInitialization: failed to initialize video (Status=c0000001)"
-; error when a custom driver (as the VMware one) is installed. At the moment,
-; StartServiceW is not implemented, so PlugPlay service  can't start during
-; second stage setup. => We have to code PCI bus parameters it in registry...
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000","Service",0x00000000,"pci"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCI","ErrorControl",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Group",0x00000000,"Boot Bus Extender"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCI","ImagePath",0x00020000,"system32\drivers\pci.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\PCI","Tag",0x00010001,0x00000002
-
 ; ACPI bus
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","HardwareID",0x00010000,"*PNP0C08"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","DeviceDesc",0x00000000,"ACPI bus"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","Service",0x00000000,"acpi"
+
+; NetLogon
+HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
 
 ; Named Pipe filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
