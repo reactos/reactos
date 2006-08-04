@@ -47,6 +47,14 @@ TUIDisplayStatusMessage(
 			NULL);
 }
 
+static BOOL
+TUIRemoveStatusMessage(
+	IN PGINA_CONTEXT pgContext)
+{
+	/* Nothing to do */
+	return TRUE;
+}
+
 static VOID
 TUIDisplaySASNotice(
 	IN OUT PGINA_CONTEXT pgContext)
@@ -145,6 +153,7 @@ TUILoggedOutSAS(
 GINA_UI GinaTextUI = {
 	TUIInitialize,
 	TUIDisplayStatusMessage,
+	TUIRemoveStatusMessage,
 	TUIDisplaySASNotice,
 	TUILoggedOnSAS,
 	TUILoggedOutSAS,

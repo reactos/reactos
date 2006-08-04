@@ -148,6 +148,19 @@ GUIDisplayStatusMessage(
 	return TRUE;
 }
 
+static BOOL
+GUIRemoveStatusMessage(
+	IN PGINA_CONTEXT pgContext)
+{
+	if (pgContext->hStatusWindow)
+	{
+		EndDialog(pgContext->hStatusWindow, 0);
+		pgContext->hStatusWindow = 0;
+	}
+
+	return TRUE;
+}
+
 static INT_PTR CALLBACK
 DisplaySASNoticeWindowProc(
 	IN HWND hwndDlg,
@@ -390,6 +403,7 @@ GUILoggedOutSAS(
 GINA_UI GinaGraphicalUI = {
 	GUIInitialize,
 	GUIDisplayStatusMessage,
+	GUIRemoveStatusMessage,
 	GUIDisplaySASNotice,
 	GUILoggedOnSAS,
 	GUILoggedOutSAS,

@@ -5,7 +5,13 @@
 #include <winwlx.h>
 #include "resource.h"
 
-typedef struct {
+/* Values for GINA_CONTEXT.AutoLogonState */
+#define AUTOLOGON_CHECK_REGISTRY 1
+#define AUTOLOGON_ONCE           2
+#define AUTOLOGON_DISABLED       3
+
+typedef struct
+{
 	HANDLE hWlx;
 	LPWSTR station;
 	PWLX_DISPATCH_VERSION_1_3 pWlxFuncs;
@@ -13,7 +19,7 @@ typedef struct {
 	HANDLE UserToken;
 	HWND hStatusWindow;
 	BOOL SignaledStatusWindowCreated;
-	BOOL DoAutoLogonOnce;
+	DWORD AutoLogonState;
 
 	/* Informations to be filled during logon */
 	PLUID pAuthenticationId;
@@ -30,6 +36,7 @@ HINSTANCE hDllInstance;
 
 typedef BOOL (*PFGINA_INITIALIZE)(PGINA_CONTEXT);
 typedef BOOL (*PFGINA_DISPLAYSTATUSMESSAGE)(PGINA_CONTEXT, HDESK, DWORD, PWSTR, PWSTR);
+typedef BOOL (*PFGINA_REMOVESTATUSMESSAGE)(PGINA_CONTEXT);
 typedef VOID (*PFGINA_DISPLAYSASNOTICE)(PGINA_CONTEXT);
 typedef INT (*PFGINA_LOGGEDONSAS)(PGINA_CONTEXT, DWORD);
 typedef INT (*PFGINA_LOGGEDOUTSAS)(PGINA_CONTEXT);
@@ -37,6 +44,7 @@ typedef struct _GINA_UI
 {
 	PFGINA_INITIALIZE Initialize;
 	PFGINA_DISPLAYSTATUSMESSAGE DisplayStatusMessage;
+	PFGINA_REMOVESTATUSMESSAGE RemoveStatusMessage;
 	PFGINA_DISPLAYSASNOTICE DisplaySASNotice;
 	PFGINA_LOGGEDONSAS LoggedOnSAS;
 	PFGINA_LOGGEDOUTSAS LoggedOutSAS;

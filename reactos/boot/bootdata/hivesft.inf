@@ -734,11 +734,10 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tonga Standard Tim
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-;HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\system32\cmd.exe"
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","ConsoleShell",0x00020000,"%SystemRoot%\system32\cmd.exe"
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\explorer.exe"
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartServices",0x00010001,0x00000001
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartLsass",0x00010001,0x00000001
-HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","StartGUI",0x00010001,0x00000000
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","AutoAdminLogon",0x00000000,"1"
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\Winlogon","DefaultUserName",0x00000000,"Administrator"

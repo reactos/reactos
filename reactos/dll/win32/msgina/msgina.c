@@ -26,13 +26,14 @@
 
 #include "msgina.h"
 
+//#define YDEBUG
 #include <wine/debug.h>
 
 extern HINSTANCE hDllInstance;
 
 extern GINA_UI GinaGraphicalUI;
 extern GINA_UI GinaTextUI;
-static PGINA_UI pGinaUI = &GinaGraphicalUI; /* Default value */
+static PGINA_UI pGinaUI;
 
 /*
  * @implemented
@@ -52,41 +53,83 @@ WlxNegotiate(
 	return TRUE;
 }
 
+static LONG
+ReadRegSzKey(
+	IN HKEY hKey,
+	IN LPCWSTR pszKey,
+	OUT LPWSTR* pValue)
+{
+	LONG rc;
+	DWORD dwType;
+	DWORD cbData = 0;
+	LPWSTR Value;
+
+	rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, NULL, &cbData);
+	if (rc != ERROR_SUCCESS)
+		return rc;
+	if (dwType != REG_SZ)
+		return ERROR_FILE_NOT_FOUND;
+	Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
+	if (!Value)
+		return ERROR_NOT_ENOUGH_MEMORY;
+	rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)Value, &cbData);
+	if (rc != ERROR_SUCCESS)
+	{
+		HeapFree(GetProcessHeap(), 0, Value);
+		return rc;
+	}
+	/* NULL-terminate the string */
+	Value[cbData / sizeof(WCHAR)] = '\0';
+
+	*pValue = Value;
+	return ERROR_SUCCESS;
+}
+
 static VOID
 ChooseGinaUI(VOID)
 {
-	HKEY WinLogonKey = NULL;
-	DWORD Type, Size, Value;
+	HKEY ControlKey = NULL;
+	LPWSTR SystemStartOptions = NULL;
+	LPWSTR CurrentOption, NextOption; /* Pointers into SystemStartOptions */
+	BOOL ConsoleBoot = FALSE;
 	LONG rc;
 
 	rc = RegOpenKeyEx(
 		HKEY_LOCAL_MACHINE,
-		L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon",
+		L"SYSTEM\\CurrentControlSet\\Control",
 		0,
 		KEY_QUERY_VALUE,
-		&WinLogonKey);
+		&ControlKey);
+
+	rc = ReadRegSzKey(ControlKey, L"SystemStartOptions", &SystemStartOptions);
 	if (rc != ERROR_SUCCESS)
 		goto cleanup;
 
-	Size = sizeof(DWORD);
-	rc = RegQueryValueEx(
-		WinLogonKey,
-		L"StartGUI",
-		NULL,
-		&Type,
-		(LPBYTE)&Value,
-		&Size);
-	if (rc != ERROR_SUCCESS || Type != REG_DWORD || Size != sizeof(DWORD))
-		goto cleanup;
-
-	if (Value != 0)
-		pGinaUI = &GinaGraphicalUI;
-	else
-		pGinaUI = &GinaTextUI;
+	/* Check for CMDCONS in SystemStartOptions */
+	CurrentOption = SystemStartOptions;
+	while (CurrentOption)
+	{
+		NextOption = wcschr(CurrentOption, L' ');
+		if (NextOption)
+			*NextOption = L'\0';
+		if (wcsicmp(CurrentOption, L"CMDCONS") == 0)
+		{
+			TRACE("Found %S. Switching to console boot\n", CurrentOption);
+			ConsoleBoot = TRUE;
+			goto cleanup;
+		}
+		CurrentOption = NextOption ? NextOption + 1 : NULL;
+	}
 
 cleanup:
-	if (WinLogonKey != NULL)
-		RegCloseKey(WinLogonKey);
+	if (ConsoleBoot)
+		pGinaUI = &GinaTextUI;
+	else
+		pGinaUI = &GinaGraphicalUI;
+
+	if (ControlKey != NULL)
+		RegCloseKey(ControlKey);
+	HeapFree(GetProcessHeap(), 0, SystemStartOptions);
 }
 
 /*
@@ -129,7 +172,7 @@ WlxInitialize(
   /* Locates the authentification package */
   //LsaRegisterLogonProcess(...);
 
-  pgContext->DoAutoLogonOnce = FALSE;
+  pgContext->AutoLogonState = AUTOLOGON_CHECK_REGISTRY;
 
   ChooseGinaUI();
   return pGinaUI->Initialize(pgContext);
@@ -290,45 +333,10 @@ WlxRemoveStatusMessage(
 	IN PVOID pWlxContext)
 {
 	PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
-	if (pgContext->hStatusWindow)
-	{
-		EndDialog(pgContext->hStatusWindow, 0);
-		pgContext->hStatusWindow = 0;
-	}
 
-	return TRUE;
-}
+	TRACE("WlxRemoveStatusMessage()\n");
 
-static LONG
-ReadRegSzKey(
-	IN HKEY hKey,
-	IN LPCWSTR pszKey,
-	OUT LPWSTR* pValue)
-{
-	LONG rc;
-	DWORD dwType;
-	DWORD cbData = 0;
-	LPWSTR Value;
-
-	rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, NULL, &cbData);
-	if (rc != ERROR_SUCCESS)
-		return rc;
-	if (dwType != REG_SZ)
-		return ERROR_FILE_NOT_FOUND;
-	Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
-	if (!Value)
-		return ERROR_NOT_ENOUGH_MEMORY;
-	rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)Value, &cbData);
-	if (rc != ERROR_SUCCESS)
-	{
-		HeapFree(GetProcessHeap(), 0, Value);
-		return rc;
-	}
-	/* NULL-terminate the string */
-	Value[cbData / sizeof(WCHAR)] = '\0';
-
-	*pValue = Value;
-	return ERROR_SUCCESS;
+	return pGinaUI->RemoveStatusMessage(pgContext);
 }
 
 static PWSTR
@@ -394,8 +402,7 @@ DoLoginTasks(
 
 static BOOL
 DoAutoLogon(
-	IN PGINA_CONTEXT pgContext,
-	IN BOOL CheckOnly)
+	IN PGINA_CONTEXT pgContext)
 {
 	HKEY WinLogonKey = NULL;
 	LPWSTR AutoLogon = NULL;
@@ -407,6 +414,12 @@ DoAutoLogon(
 	BOOL result = FALSE;
 	LONG rc;
 
+	TRACE("DoAutoLogon(): AutoLogonState = %lu\n",
+		pgContext->AutoLogonState);
+
+	if (pgContext->AutoLogonState == AUTOLOGON_DISABLED)
+		return FALSE;
+
 	rc = RegOpenKeyEx(
 		HKEY_LOCAL_MACHINE,
 		L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon",
@@ -416,47 +429,54 @@ DoAutoLogon(
 	if (rc != ERROR_SUCCESS)
 		goto cleanup;
 
-	rc = ReadRegSzKey(WinLogonKey, L"AutoAdminLogon", &AutoLogon);
-	if (rc != ERROR_SUCCESS)
-		goto cleanup;
-	if (wcscmp(AutoLogon, L"1") != 0)
-		goto cleanup;
-
-	rc = ReadRegSzKey(WinLogonKey, L"AutoLogonCount", &AutoCount);
-	if (rc == ERROR_SUCCESS && wcscmp(AutoCount, L"0") == 0)
-		goto cleanup;
-	else if (rc != ERROR_FILE_NOT_FOUND)
-		goto cleanup;
-
-	rc = ReadRegSzKey(WinLogonKey, L"IgnoreShiftOverride", &UserName);
-	if (rc == ERROR_SUCCESS)
+	if (pgContext->AutoLogonState == AUTOLOGON_CHECK_REGISTRY)
 	{
-		if (wcscmp(AutoLogon, L"1") != 0 && GetKeyState(VK_SHIFT) < 0)
+		/* Set it by default to disabled, we might reenable it again later */
+		pgContext->AutoLogonState = AUTOLOGON_DISABLED;
+
+		rc = ReadRegSzKey(WinLogonKey, L"AutoAdminLogon", &AutoLogon);
+		if (rc != ERROR_SUCCESS)
 			goto cleanup;
-	}
-	else if (GetKeyState(VK_SHIFT) < 0)
-	{
-		/* User pressed SHIFT */
-		goto cleanup;
-	}
+		if (wcscmp(AutoLogon, L"1") != 0)
+			goto cleanup;
 
-	if (CheckOnly)
-	{
+		rc = ReadRegSzKey(WinLogonKey, L"AutoLogonCount", &AutoCount);
+		if (rc == ERROR_SUCCESS && wcscmp(AutoCount, L"0") == 0)
+			goto cleanup;
+		else if (rc != ERROR_FILE_NOT_FOUND)
+			goto cleanup;
+
+		rc = ReadRegSzKey(WinLogonKey, L"IgnoreShiftOverride", &UserName);
+		if (rc == ERROR_SUCCESS)
+		{
+			if (wcscmp(AutoLogon, L"1") != 0 && GetKeyState(VK_SHIFT) < 0)
+				goto cleanup;
+		}
+		else if (GetKeyState(VK_SHIFT) < 0)
+		{
+			/* User pressed SHIFT */
+			goto cleanup;
+		}
+
+		pgContext->AutoLogonState = AUTOLOGON_ONCE;
 		result = TRUE;
-		goto cleanup;
 	}
+	else /* pgContext->AutoLogonState == AUTOLOGON_ONCE */
+	{
+		pgContext->AutoLogonState = AUTOLOGON_DISABLED;
 
-	rc = ReadRegSzKey(WinLogonKey, L"DefaultUserName", &UserName);
-	if (rc != ERROR_SUCCESS)
-		goto cleanup;
-	rc = ReadRegSzKey(WinLogonKey, L"DefaultDomainName", &DomainName);
-	if (rc != ERROR_SUCCESS && rc != ERROR_FILE_NOT_FOUND)
-		goto cleanup;
-	rc = ReadRegSzKey(WinLogonKey, L"DefaultPassword", &Password);
-	if (rc != ERROR_SUCCESS)
-		goto cleanup;
+		rc = ReadRegSzKey(WinLogonKey, L"DefaultUserName", &UserName);
+		if (rc != ERROR_SUCCESS)
+			goto cleanup;
+		rc = ReadRegSzKey(WinLogonKey, L"DefaultDomainName", &DomainName);
+		if (rc != ERROR_SUCCESS && rc != ERROR_FILE_NOT_FOUND)
+			goto cleanup;
+		rc = ReadRegSzKey(WinLogonKey, L"DefaultPassword", &Password);
+		if (rc != ERROR_SUCCESS)
+			goto cleanup;
 
-	result = DoLoginTasks(pgContext, UserName, DomainName, Password);
+		result = DoLoginTasks(pgContext, UserName, DomainName, Password);
+	}
 
 cleanup:
 	if (WinLogonKey != NULL)
@@ -467,6 +487,8 @@ cleanup:
 	HeapFree(GetProcessHeap(), 0, UserName);
 	HeapFree(GetProcessHeap(), 0, DomainName);
 	HeapFree(GetProcessHeap(), 0, Password);
+	TRACE("DoAutoLogon(): AutoLogonState = %lu, returning %d\n",
+		pgContext->AutoLogonState, result);
 	return result;
 }
 
@@ -488,13 +510,15 @@ WlxDisplaySASNotice(
 		return;
 	}
 
-	if (DoAutoLogon(NULL, TRUE))
+	if (DoAutoLogon(pgContext))
 	{
 		/* Don't display the window, we want to do an automatic logon */
-		pgContext->DoAutoLogonOnce = TRUE;
+		pgContext->AutoLogonState = AUTOLOGON_ONCE;
 		pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
 		return;
 	}
+	else
+		pgContext->AutoLogonState = AUTOLOGON_DISABLED;
 
 	pGinaUI->DisplaySASNotice(pgContext);
 
@@ -526,12 +550,10 @@ WlxLoggedOutSAS(
 	pgContext->pProfile = pProfile;
 
 	if (!GetSystemMetrics(SM_REMOTESESSION) &&
-	    pgContext->DoAutoLogonOnce &&
-	    DoAutoLogon(pgContext, FALSE))
+	    DoAutoLogon(pgContext))
 	{
 		/* User is local and registry contains information
 		 * to log on him automatically */
-		pgContext->DoAutoLogonOnce = FALSE;
 		return WLX_SAS_ACTION_LOGON;
 	}
 
