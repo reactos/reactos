@@ -393,7 +393,7 @@ static const INFORMATION_CLASS_INFO PsThreadInfoClass[] =
     (
         HANDLE,
         ULONG,
-        ICIF_QUERY
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ThreadDescriptorTableEntry */
