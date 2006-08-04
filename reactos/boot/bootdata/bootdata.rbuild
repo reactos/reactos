@@ -7,6 +7,7 @@
 <cdfile base="reactos">hivesft.inf</cdfile>
 <cdfile base="reactos">hivesys.inf</cdfile>
 <cdfile base="reactos">txtsetup.sif</cdfile>
+<!--<cdfile base="reactos">unattend.inf</cdfile>-->
 <directory name="bootcd">
 	<xi:include href="bootcd/bootcd.rbuild" />
 </directory>
