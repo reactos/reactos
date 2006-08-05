@@ -2454,7 +2454,7 @@ RtlFreeRangeList(IN PRTL_RANGE_LIST RangeList);
 ULONG
 __cdecl
 DbgPrint(
-    IN PCCH  Format,
+    IN PCCHAR  Format,
     IN ...
 );
 
@@ -2464,7 +2464,7 @@ __cdecl
 DbgPrintEx(
     IN ULONG ComponentId,
     IN ULONG Level,
-    IN PCCH Format,
+    IN PCCHAR Format,
     IN ...
 );
 

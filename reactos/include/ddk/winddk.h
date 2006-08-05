@@ -10450,7 +10450,7 @@ DbgBreakPointWithStatus(
 ULONG
 __cdecl
 DbgPrint(
-  IN PCCH  Format,
+  IN PCCHAR  Format,
   IN ...);
 
 ULONG
@@ -10458,7 +10458,7 @@ __cdecl
 DbgPrintEx(
   IN ULONG  ComponentId,
   IN ULONG  Level,
-  IN PCCH  Format,
+  IN PCCHAR  Format,
   IN ...);
 
 NTOSAPI
