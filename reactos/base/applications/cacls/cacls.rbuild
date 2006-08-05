@@ -10,6 +10,6 @@
 	<library>advapi32</library>
 	<library>ntdll</library>
 	<file>cacls.c</file>
-	<file>cacls.rc</file>
+	<file>lang/cacls.rc</file>
 	<pch>precomp.h</pch>
 </module>
