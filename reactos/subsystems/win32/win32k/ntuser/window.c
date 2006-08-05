@@ -1450,6 +1450,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
    else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
+      SetLastWin32Error(ERROR_TLW_WITH_WSCHILD);
       RETURN( (HWND)0);  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
    }
 
