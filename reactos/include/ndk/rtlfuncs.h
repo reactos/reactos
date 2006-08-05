@@ -503,13 +503,6 @@ RtlDestroyHeap(
 );
 
 NTSYSAPI
-HANDLE
-NTAPI
-RtlDestroyHeap(
-    IN HANDLE Heap
-);
-
-NTSYSAPI
 ULONG
 NTAPI
 RtlExtendHeap(
@@ -1935,14 +1928,14 @@ RtlSetProcessIsCritical(
 //
 // Thread Pool Functions
 //
-
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlQueueWorkItem(
     IN WORKERCALLBACKFUNC Function,
-    IN PVOID Context  OPTIONAL,
-    IN ULONG Flags);
+    IN PVOID Context OPTIONAL,
+    IN ULONG Flags
+);
 
 //
 // Environment/Path Functions
@@ -2461,7 +2454,7 @@ RtlFreeRangeList(IN PRTL_RANGE_LIST RangeList);
 ULONG
 __cdecl
 DbgPrint(
-    IN PCH  Format,
+    IN PCCH  Format,
     IN ...
 );
 
@@ -2471,7 +2464,7 @@ __cdecl
 DbgPrintEx(
     IN ULONG ComponentId,
     IN ULONG Level,
-    IN PCH Format,
+    IN PCCH Format,
     IN ...
 );
 

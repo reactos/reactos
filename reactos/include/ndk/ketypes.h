@@ -959,7 +959,15 @@ extern struct _ROS_LOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
 // Exported Hardware Data
 //
 extern KAFFINITY NTSYSAPI KeActiveProcessors;
-extern CHAR NTSYSAPI KeNumberProcessors;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+extern volatile CCHAR NTSYSAPI KeNumberProcessors;
+#else
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+extern CCHAR NTSYSAPI KeNumberProcessors;
+#else
+extern PCCHAR KeNumberProcessors;
+#endif
+#endif
 extern ULONG NTSYSAPI KiDmaIoCoherency;
 extern ULONG NTSYSAPI KeMaximumIncrement;
 extern ULONG NTSYSAPI KeMinimumIncrement;
