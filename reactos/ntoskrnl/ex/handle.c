@@ -18,6 +18,8 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NTDDI_VERSION NTDDI_WIN2K
+
 #include <ntoskrnl.h>
 
 #define NDEBUG

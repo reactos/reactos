@@ -8,6 +8,11 @@
 
 /* INCLUDES ******************************************************************/
 
+/* Temporary hack */
+#ifndef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WS03
+#endif
+
 /* We are the Kernel */
 #define NTKERNELAPI
 #define _NTSYSTEM_

@@ -261,7 +261,10 @@ static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
     return ExSystemExceptionFilter();
 }
 
+
 /* RUNDOWN *******************************************************************/
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 
 #ifdef _WIN64
 #define ExpChangeRundown(x, y, z) InterlockedCompareExchange64((PLONGLONG)x, y, z)
@@ -436,6 +439,7 @@ ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
     /* Mark the counter as active */
     ExpSetRundown(&RunRef->Count, EX_RUNDOWN_ACTIVE);
 }
+#endif
 
 /* PUSHLOCKS *****************************************************************/
 
