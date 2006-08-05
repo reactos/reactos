@@ -8,7 +8,7 @@
 #ifndef CMLIB_H
 #define CMLIB_H
 
-#include <ddk/ntddk.h>
+#include <ntddk.h>
 #include "hivedata.h"
 #include "cmdata.h"
 
@@ -83,8 +83,8 @@ typedef struct _REGISTRY_HIVE
  * Public functions.
  */
 
-#define HV_OPERATION_CREATE_HIVE    1
-#define HV_OPERATION_MEMORY         2
+#define HV_OPERATION_CREATE_HIVE    0
+#define HV_OPERATION_MEMORY         1
 #define HV_OPERATION_MEMORY_INPLACE 3
 
 NTSTATUS CMAPI
