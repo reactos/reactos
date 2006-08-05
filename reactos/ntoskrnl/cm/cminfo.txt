@@ -83,7 +83,10 @@ and definitions for a compatible internal implementation.
 
 -= Current State =-
 
-TODO.
+**As of 04/08/2006
+  ~40-50% of the Initialization code is complete.
+  ~60% of the KCB/NCB code is complete.
+  Blocking on cmlib being modified to use actual NT _HHIVE.
 
 -= Structure =-
 
