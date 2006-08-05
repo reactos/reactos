@@ -440,6 +440,28 @@ ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 /* PUSHLOCKS *****************************************************************/
 
 /*++
+ * @name ExInitializePushLock
+ * INTERNAL MACRO
+ *
+ *     The ExInitializePushLock macro initializes a PushLock.
+ *
+ * @params PushLock
+ *         Pointer to the pushlock which is to be initialized.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+FORCEINLINE
+ExInitializePushLock(IN PEX_PUSH_LOCK PushLock)
+{
+    /* Set the value to 0 */
+    PushLock->Value = 0;
+}
+
+/*++
  * @name ExAcquirePushLockExclusive
  * INTERNAL MACRO
  *
@@ -511,6 +533,45 @@ ExAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
     /* Sanity checks */
     ASSERT(PushLock->Locked);
     ASSERT(PushLock->Waiting || PushLock->Shared > 0);
+}
+
+/*++
+ * @name ExConvertPushLockSharedToExclusive
+ * INTERNAL MACRO
+ *
+ *     The ExConvertPushLockSharedToExclusive macro converts an exclusive
+ *     pushlock to a shared pushlock.
+ *
+ * @params PushLock
+ *         Pointer to the pushlock which is to be converted.
+ *
+ * @return FALSE if conversion failed, TRUE otherwise.
+ *
+ * @remarks The function attempts the quickest route to convert the lock, which is
+ *          to simply set the lock bit and remove any other bits.
+ *
+ *--*/
+BOOLEAN
+FORCEINLINE
+ExConvertPushLockSharedToExclusive(IN PEX_PUSH_LOCK PushLock)
+{
+    EX_PUSH_LOCK OldValue;
+
+    /* Set the expected old value */
+    OldValue.Value = EX_PUSH_LOCK_LOCK | EX_PUSH_LOCK_SHARE_INC;
+
+    /* Try converting the lock */
+    if (InterlockedCompareExchange((PLONG)PushLock,
+                                   EX_PUSH_LOCK_LOCK,
+                                   OldValue.Value) != OldValue.Value)
+    {
+        /* Conversion failed */
+        return FALSE;
+    }
+
+    /* Sanity check */
+    ASSERT(PushLock->Locked);
+    return TRUE;
 }
 
 /*++
