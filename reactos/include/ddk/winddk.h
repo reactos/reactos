@@ -396,7 +396,15 @@ extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
 extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 
-extern NTOSAPI CCHAR KeNumberProcessors;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+extern volatile CCHAR NTSYSAPI KeNumberProcessors;
+#else
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+extern CCHAR NTSYSAPI KeNumberProcessors;
+#else
+extern PCCHAR KeNumberProcessors;
+#endif
+#endif
 
 #define PROCESSOR_FEATURE_MAX 64
 #define MAX_WOW64_SHARED_ENTRIES 16
@@ -10442,7 +10450,7 @@ DbgBreakPointWithStatus(
 ULONG
 __cdecl
 DbgPrint(
-  IN PCH  Format,
+  IN PCCH  Format,
   IN ...);
 
 ULONG
@@ -10450,7 +10458,7 @@ __cdecl
 DbgPrintEx(
   IN ULONG  ComponentId,
   IN ULONG  Level,
-  IN PCH  Format,
+  IN PCCH  Format,
   IN ...);
 
 NTOSAPI

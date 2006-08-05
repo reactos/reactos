@@ -45,7 +45,7 @@
 # define _SEHSetJmp setjmp
 # define _SEHJmpBuf_t jmp_buf
 #endif
-unsigned long DbgPrint(char * Format,...);
+unsigned long DbgPrint(const char * Format,...);
 typedef struct __SEHFrame
 {
  _SEHPortableFrame_t SEH_Header;
