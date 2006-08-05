@@ -8,7 +8,5 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"clb.dll\0"
 #include <reactos/version.rc>
 
-#include "clb_En.rc"
-#include "clb_Ja.rc"
-#include "clb_No.rc"
+#include "rsrc.rc"
 
