@@ -1,12 +1,12 @@
 #include <windows.h>
-#include "reporterror.h"
+#include "resource.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Error Reporting Assistant\0"
 #define REACTOS_STR_INTERNAL_NAME	"reporterror\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"reporterror.exe\0"
 #include <reactos/version.rc>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 1 24 DISCARDABLE "manifest.xml"
 
@@ -14,12 +14,4 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
 
-#include "en.rc"
-#include "de.rc"
-#include "dk.rc"
-#include "Ja.rc"
-#include "sv.rc"
-#include "hu.rc"
-#include "Nl.rc"
-#include "ru.rc"
-#include "no.rc"
+#include "rsrc.rc"
