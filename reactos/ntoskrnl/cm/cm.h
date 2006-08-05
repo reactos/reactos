@@ -6,7 +6,7 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
-//#include "cmlib.h"
+#include "cmlib.h"
 
 //
 // Define this if you want debugging support
@@ -66,6 +66,13 @@
 #define HFILE_TYPE_LOG                                  2
 #define HFILE_TYPE_EXTERNAL                             3
 #define HFILE_TYPE_MAX                                  4
+
+//
+// Hive sizes
+//
+#define HBLOCK_SIZE                                     0x1000
+#define HSECTOR_SIZE                                    0x200
+#define HSECTOR_COUNT                                   8
 
 //
 // CM_KEY_CONTROL_BLOCK Flags
