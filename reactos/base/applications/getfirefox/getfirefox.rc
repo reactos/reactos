@@ -14,22 +14,9 @@
 #define REACTOS_STR_ORIGINAL_FILENAME   "getfirefox.exe\0"
 #include <reactos/version.rc>
 
-/*
- * Note: this icon is the "default logo" referenced here:
- * http://www.mozilla.org/foundation/trademarks/faq.html (under "What are the
- * Mozilla Trademarks and Logos?"). Don't use the official Firefox logo as it
- * is trademarked.
- */
-1 ICON  "firefox.ico"
+#include "rsrc.rc"
 
-#include "De.rc"
-#include "En.rc"
-#include "Fr.rc"
-#include "Hu.rc"
-#include "Nl.rc"
-#include "No.rc"
-#include "Ru.rc"
-#include "Sv.rc"
-#include "Uk.rc"
+
+
 
 
