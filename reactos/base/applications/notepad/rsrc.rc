@@ -25,43 +25,28 @@
 #include "commctrl.h"
 #include "notepad_res.h"
 
-ID_ACCEL ACCELERATORS
-{
-    "^A", CMD_SELECT_ALL
-    "^C", CMD_COPY
-    "^F", CMD_SEARCH
-    "^G", CMD_GOTO
-    "H", CMD_REPLACE, VIRTKEY, CONTROL 
-    "^O", CMD_OPEN
-    "^S", CMD_SAVE
-    "^V", CMD_PASTE
-    "^X", CMD_CUT
-    "^Z", CMD_UNDO
-    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
-    VK_F5, CMD_TIME_DATE, VIRTKEY
-}
-
 IDI_NPICON ICON "res/notepad.ico"
 
-#include "res/En.rc"
-#include "res/Cs.rc"
-#include "res/Da.rc"
-#include "res/De.rc"
-#include "res/Es.rc"
-#include "res/Fi.rc"
-#include "res/Fr.rc"
-#include "res/Gr.rc"
-//#include "res/Hu.rc"
-#include "res/It.rc"
-#include "res/Ja.rc"
-#include "res/Nl.rc"
-#include "res/Pl.rc"
-#include "res/Pt.rc"
-#include "res/Ru.rc"
-#include "res/Si.rc"
-#include "res/Sk.rc"
-#include "res/Sv.rc"
-#include "res/Th.rc"
-#include "res/Uk.rc"
-#include "res/Wa.rc"
-#include "res/Zh.rc"
+#include "lang/En.rc"
+#include "lang/Cs.rc"
+#include "lang/Da.rc"
+#include "lang/De.rc"
+#include "lang/Es.rc"
+#include "lang/Fi.rc"
+#include "lang/Fr.rc"
+#include "lang/Gr.rc"
+#include "lang/Hu.rc"
+#include "lang/It.rc"
+#include "lang/Ja.rc"
+#include "lang/Nl.rc"
+#include "lang/Pl.rc"
+#include "lang/Pt.rc"
+#include "lang/Ru.rc"
+#include "lang/Si.rc"
+#include "lang/Sk.rc"
+#include "lang/Sv.rc"
+#include "lang/Th.rc"
+#include "lang/Uk.rc"
+//#include "lang/Wa.rc"
+#include "lang/Zh.rc"
+

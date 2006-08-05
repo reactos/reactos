@@ -1,10 +1,11 @@
 /*
- *  Notepad (Polish resources)
+ *  Notepad (Italian resources)
  *
  *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
  *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
  *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- *  Copyright 2004 Jacek Caban <jack@itma.pwr.wroc.pl>
+ *  Copyright 2003 Marcelo Duarte
+ *  Copyright 2003-2004 Ivan Leo Puoti
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,49 +22,65 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+ID_ACCEL ACCELERATORS
+{
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "^O", CMD_OPEN
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+}
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Plik"
+	POPUP "&File" 
 	BEGIN
-		MENUITEM "&Nowy...",           CMD_NEW
-		MENUITEM "&Otwórz\tCtrl+O",     CMD_OPEN
-		MENUITEM "&Zapisz\tCtrl+S",     CMD_SAVE
-		MENUITEM "Z&apisz jako...",       CMD_SAVE_AS
+		MENUITEM "&Nuovo",           CMD_NEW
+		MENUITEM "&Apri...\tCtrl+O",     CMD_OPEN
+		MENUITEM "&Salva\tCtrl+S",     CMD_SAVE
+		MENUITEM "Salva &con nome...",       CMD_SAVE_AS
 		MENUITEM SEPARATOR
-		MENUITEM "&Drukuj",            CMD_PRINT
-		MENUITEM "&Ustawienia strony...",    CMD_PAGE_SETUP
-		MENUITEM "Ustawienia &drukarki...", CMD_PRINTER_SETUP
+		MENUITEM "&Stampa",            CMD_PRINT
+		MENUITEM "&Imposta pagina...",    CMD_PAGE_SETUP
+		MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
 		MENUITEM SEPARATOR
-		MENUITEM "Zakoñ&cz",             CMD_EXIT
+		MENUITEM "E&sci",             CMD_EXIT
 	END
-	POPUP "&Edycja" 
+	POPUP "&Modifica" 
 	BEGIN
-		MENUITEM "&Cofnij\tCtrl+Z",     CMD_UNDO
+		MENUITEM "&Anulla\tCtrl+Z",     CMD_UNDO
 		MENUITEM SEPARATOR
-		MENUITEM "&Wytnij\tCtrl+X",      CMD_CUT
-		MENUITEM "&Kopiuj\tCtrl+C",     CMD_COPY
-		MENUITEM "Wkl&ej\tCtrl+V",    CMD_PASTE
-		MENUITEM "&Usuñ\tDel",      CMD_DELETE
+		MENUITEM "&Taglia\tCtrl+X",      CMD_CUT
+		MENUITEM "&Copia\tCtrl+C",     CMD_COPY
+		MENUITEM "&Incolla\tCtrl+V",    CMD_PASTE
+		MENUITEM "&Elimina\tDel",      CMD_DELETE
 		MENUITEM SEPARATOR
-		MENUITEM "&ZnajdŸ\tCtrl+F",   CMD_SEARCH
-		MENUITEM "Z&najdŸ nastêpny\tF3",  CMD_SEARCH_NEXT
+		MENUITEM "&Trova\tCtrl+F",   CMD_SEARCH
+		MENUITEM "&Trova successivo\tF3",  CMD_SEARCH_NEXT
 		MENUITEM SEPARATOR
-		MENUITEM "Zaznacz w&szystko\tCtrl+A",       CMD_SELECT_ALL
-		MENUITEM "Godzina/&Data\tF5",    CMD_TIME_DATE
+		MENUITEM "Seleziona &tutto\tCtrl+A",       CMD_SELECT_ALL
+		MENUITEM "&Ora/Data\tF5",    CMD_TIME_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "&Zawijanie wierszy",  CMD_WRAP
-		MENUITEM "Czci&onka...",          CMD_FONT
+		MENUITEM "&A campo automatico",  CMD_WRAP
+		MENUITEM "&Imposta carattere...",          CMD_FONT
 	END
-	POPUP "Pomo&c" 
+	POPUP "&Aiuto" 
 	BEGIN
-		MENUITEM "&Tematy pomocy",         CMD_HELP_CONTENTS
-		MENUITEM "&Szukaj...",        CMD_HELP_SEARCH
-		MENUITEM "&Pomoc",     CMD_HELP_ON_HELP
+		MENUITEM "&Contenuti",         CMD_HELP_CONTENTS
+		MENUITEM "&Trova...",        CMD_HELP_SEARCH
+		MENUITEM "&Aiuto sulla Guida",     CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
 		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "In&fo...",      CMD_ABOUT_WINE
+		MENUITEM "Inf&o...",      CMD_ABOUT_WINE
 	END
 END
 
@@ -72,26 +89,26 @@ END
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Ustawienia strony"
+CAPTION "Setup di pagina"
 {
-LTEXT    "&Nag³ówek:",  0x140,   10, 07, 40, 15
+LTEXT    "&Note a inizio pagina:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Stopka:",  0x142,   10, 24, 40, 15
+LTEXT    "&Note a piè di pagina:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "&Marginesy:",      0x144,     10, 43,160, 45
-LTEXT    "&Lewy:",        0x145,   20, 55, 30, 10, WS_CHILD
+GROUPBOX "&Margini:",      0x144,     10, 43,160, 45
+LTEXT    "&Sinistro:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Górny:",         0x148,    20, 73, 30, 10, WS_CHILD
+LTEXT    "&Superiore:",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "P&rawy:",       0x14B, 100, 55, 30, 10, WS_CHILD
+LTEXT    "&Destro:",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Dolny:",      0x14E,100, 73, 30, 10, WS_CHILD
+LTEXT    "&Inferiore:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Anuluj",     0x152,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Pomoc",       0x153,                180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Cancella",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Aiuto",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
@@ -117,32 +134,32 @@ END
 STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "Strona &s"   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Page &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,                                 "Notatnik"
-STRING_ERROR,                                   "B£¥D"
-STRING_WARNING,                                 "OSTRZE¯ENIE"
-STRING_INFO,                                    "Informacja"
+STRING_NOTEPAD,                                 "Blocco note"
+STRING_ERROR,                                   "ERRORE"
+STRING_WARNING,                                 "ATTENZIONE"
+STRING_INFO,                                    "Info"
 
-STRING_UNTITLED,                                "(bez tytu³u)"
+STRING_UNTITLED,                                "(senza nome)"
 
-STRING_ALL_FILES,                               "Wszystkie piki (*.*)"
-STRING_TEXT_FILES_TXT,                  "Pliki tekstowe (*.txt)"
+STRING_ALL_FILES,                               "Tutti i file (*.*)"
+STRING_TEXT_FILES_TXT,                  "File di testo (*.txt)"
 
-STRING_TOOLARGE,                                "Plik '%s' jest za du¿y dla notatnika.\n \
-Proszê u¿yæ innego edytora."
-STRING_NOTEXT,                                  "Nie wprowadzi³eœ ¿adnego tekstu. \
-\nProszê coœ wpisaæ i spróbowaæ ponownie."
-STRING_DOESNOTEXIST,                            "Plik '%s' nie istnieje\n\n \
-Czy chcesz utworzyæ nowy plik ?"
-STRING_NOTSAVED,                                "Plik '%s'\nzosta³ zmodyfikowany\n\n \
-Czy chcesz zachowaæ zmiany ?"
-STRING_NOTFOUND,                                        "Nie mo¿na odnaleŸæ '%s'."
-STRING_OUT_OF_MEMORY,                   "Za ma³o pamiêci do wykonania tego zadania.\n \
-Zamknij jedn¹ lub wiêcej aplikacji aby zwiêkszyæ iloœæ wolnej pamiêci."
+STRING_TOOLARGE,                                "Il file '%s' è troppo grande per il blocco note.\n \
+Per favore usare un altro editor."
+STRING_NOTEXT,                                  "Non è stato inserito alcun testo. \
+\nPer favore digitare qualcosa e riprovare"
+STRING_DOESNOTEXIST,                            "Il file '%s'\nnon esiste\n\n \
+Creare un nuovo file ?"
+STRING_NOTSAVED,                                "Il file '%s'\ne' stato modificato\n\n \
+Salvare le modifiche ?"
+STRING_NOTFOUND,                                        "'%s' non è stato trovato."
+STRING_OUT_OF_MEMORY,                   "Memoria insufficente per completare questa operazione \
+task. \nChiudere una o più applicazioni per aumentare la quantita'\n di memoria libera."
 
 }

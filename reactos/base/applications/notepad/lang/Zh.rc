@@ -1,7 +1,7 @@
 /*
- * Notepad (Slovenian resources)
+ *  Notepad (Simplified Chinese resources)
  *
- * Copyright 2002-2003 Rok Mandeljc <rok.mandeljc@gimb.org>
+ *  Copyright 2002 liuspider <liuspider@yahoo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,76 +18,92 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_SLOVENIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-MAIN_MENU MENU
+ID_ACCEL ACCELERATORS
+{
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "^O", CMD_OPEN
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+}
+
+MAIN_MENU MENU 
 BEGIN
-	POPUP "&Datoteka" 
+	POPUP "ÎÄ¼þ£¨&F£©"
 	BEGIN
-		MENUITEM "&Nova",           CMD_NEW
-		MENUITEM "&Odpri ...",             CMD_OPEN
-		MENUITEM "&Shrani",             CMD_SAVE
-		MENUITEM "Shrani &kot ...",       CMD_SAVE_AS
+		MENUITEM "ÐÂ½¨£¨&N£©...",           CMD_NEW
+		MENUITEM "´ò¿ª£¨&O£©",             CMD_OPEN
+		MENUITEM "±£´æ£¨&S£©",             CMD_SAVE
+		MENUITEM "Áí´æÎª(&A)...",       CMD_SAVE_AS
+		MENUITEM "´òÓ¡£¨&P£©",            CMD_PRINT
+		MENUITEM "Ò³ÃæÉèÖÃ£¨&T£©...",    CMD_PAGE_SETUP
+		MENUITEM "´òÓ¡ÉèÖÃ£¨&R£©...", CMD_PRINTER_SETUP
 		MENUITEM SEPARATOR
-		MENUITEM "Na&tisni",            CMD_PRINT
-		MENUITEM "P&riprava strani ...",    CMD_PAGE_SETUP
-		MENUITEM "&Tiskalnik ...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "Iz&hod",             CMD_EXIT
+		MENUITEM "ÍË³ö£¨&E£©",             CMD_EXIT
 	END
-	POPUP "&Urejanje"
+	POPUP "±à¼­£¨&E£©"
 	BEGIN
-		MENUITEM "&Razveljavi\tCtrl+Z",     CMD_UNDO
+		MENUITEM "³·Ïû£¨&U£©\tCtrl+Z",     CMD_UNDO
 		MENUITEM SEPARATOR
-		MENUITEM "&Izreži\tCtrl+X",      CMD_CUT
-		MENUITEM "&Kopiraj\tCtrl+C",     CMD_COPY
-		MENUITEM "&Prilepi\tCtrl+V",    CMD_PASTE
-		MENUITEM "Izbri&ši\tDel",      CMD_DELETE
+		MENUITEM "¼ôÇÐ£¨&T£©\tCtrl+X",      CMD_CUT
+		MENUITEM "¸´ÖÆ£¨&C£©\tCtrl+C",     CMD_COPY
+		MENUITEM "Õ³Ìù£¨&P£©\tCtrl+V",    CMD_PASTE
+		MENUITEM "É¾³ý£¨&D£©\tDel",      CMD_DELETE
 		MENUITEM SEPARATOR
-		MENUITEM "&Najdi ...",           CMD_SEARCH
-		MENUITEM "Na&daljuj iskanje\tF3",  CMD_SEARCH_NEXT
+		MENUITEM "ËÑË÷£¨&S£©",           CMD_SEARCH
+		MENUITEM "ËÑË÷ÏÂÒ»¸ö£¨&S£©\tF3",  CMD_SEARCH_NEXT
 		MENUITEM SEPARATOR
-		MENUITEM "Izberi &vse",       CMD_SELECT_ALL
-		MENUITEM "Èas/&Datum\tF5",    CMD_TIME_DATE
+		MENUITEM "È«Ñ¡£¨&A£©",       CMD_SELECT_ALL
+		MENUITEM "²åÈëÈÕÆÚ¡¢Ê±¼ä£¨&T£©\tF5",    CMD_TIME_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Pr&elom vrstice",  CMD_WRAP
- END
-	POPUP "&Pomoè"
+		MENUITEM "×Ô¶¯»»ÐÐ£¨&W£©",  CMD_WRAP
+	END
+	POPUP "°ïÖú£¨&H£©"
 	BEGIN
-		MENUITEM "&Teme pomoèi",         CMD_HELP_CONTENTS
-		MENUITEM "&Najdi ...",        CMD_HELP_SEARCH
-		MENUITEM "&O pomoèi",     CMD_HELP_ON_HELP
+		MENUITEM "ÄÚÈÝ£¨&C£©",         CMD_HELP_CONTENTS
+		MENUITEM "ËÑË÷£¨&S£©...",        CMD_HELP_SEARCH
+		MENUITEM "ÈçºÎÊ¹ÓÃ°ïÖú£¨&H£©",     CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
 		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "Inf&ormacije ...",      CMD_ABOUT_WINE
+		MENUITEM "×ÊÁÏÐÅÏ¢£¨&O£©...",      CMD_ABOUT_WINE
 	END
 END
 
 /* Dialog `Page setup' */
 
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Page Setup"
+FONT 10, "MS Shell Dlg"
+CAPTION "Ò³ÃæÉèÖÃ"
 {
-LTEXT    "&Glava:",  0x140,   10, 07, 40, 15
+LTEXT    "Ò³Ã¼£¨&H£©:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Noga:",  0x142,   10, 24, 40, 15
+LTEXT    "½Å×¢£¨&F£©:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "Robovi",      0x144,     10, 43,160, 45
-LTEXT    "&Levo:",        0x145,   20, 55, 30, 10, WS_CHILD
+GROUPBOX "±ßÔµ¿Õ°×£¨&M£©£º",      0x144,     10, 43,160, 45
+LTEXT    "×ó£¨&L£©£º",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Desno:",         0x148,    20, 73, 30, 10, WS_CHILD
+LTEXT    "ÉÏ£¨&T£©£º",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Zgoraj:",       0x14B, 100, 55, 30, 10, WS_CHILD
+LTEXT    "ÓÒ£¨&R£©£º",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Spodaj:",      0x14E,100, 73, 30, 10, WS_CHILD
+LTEXT    "ÏÂ£¨&B£©£º",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
-DEFPUSHBUTTON "V redu",         0x151,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Preklièi",     0x152,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Pomoè",       0x153,                180, 39, 40, 15, WS_TABSTOP
+DEFPUSHBUTTON "È·¶¨",         0x151,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "È¡Ïû",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "°ïÖú£¨&£©",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
@@ -113,32 +129,32 @@ END
 STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "Stran &s"   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "Page &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,                                 "Beležnica"
-STRING_ERROR,                                   "NAPAKA"
-STRING_WARNING,                                 "OPOZORILO"
-STRING_INFO,                                    "Informacija"
+STRING_NOTEPAD,                                 "¼ÇÊÂ±¾"
+STRING_ERROR,                                   "´íÎó"
+STRING_WARNING,                                 "¾¯¸æ"
+STRING_INFO,                                    "ÐÅÏ¢"
 
-STRING_UNTITLED,                                "Neimenovana"
+STRING_UNTITLED,                                "£¨Î´ÃüÃû£©"
 
-STRING_ALL_FILES,                               "Vse datoteke (*.*)"
-STRING_TEXT_FILES_TXT,                  "Datoteke z besedilom (*.txt)"
+STRING_ALL_FILES,                               "ËùÓÐÎÄ¼þ (*.*)"
+STRING_TEXT_FILES_TXT,                  "ÎÄ±¾ÎÄ¼þ (*.txt)"
 
-STRING_TOOLARGE,                                "Datoteka '%s' je prevelika za Beležnico.\n \
-Uporabite drug urejevalnik."
-STRING_NOTEXT,                                  "Niste vnesli besedila. \
-\nVnesite besedilo in poskusite znova."
-STRING_DOESNOTEXIST,                            "Datoteka '%s' ne obstaja.\n\n \
-Ali želite ustvariti novo datoteko?"
-STRING_NOTSAVED,                                "Vsebina datoteke '%s'je bila spremenjena.\n\n \
-Ali želite shraniti spremembe?"
-STRING_NOTFOUND,                                        "Ni mogoèe najti '%s'."
-STRING_OUT_OF_MEMORY,                   "Na voljo ni dovolj pomnilnika, da bi bilo mogoèe dokonèati to \
-operacijo. \nÈe ga želite sprostiti, konèajte enega ali veè programov in poskusite znova. "
+STRING_TOOLARGE,                                "¼ÇÊÂ±¾²»ÄÜ´ò¿ª '%s' ÕâÃ´´óµÄÎÄ¼þ¡£\n \
+ÇëÊ¹ÓÃ±ðµÄ±à¼­Æ÷¡£"
+STRING_NOTEXT,                                  "ÄúÃ»ÓÐÊäÈëÈÎºÎÎÄ±¾¡£ \
+\nÇëÊäÈëÒ»Ð©ÔÙÊÔ"
+STRING_DOESNOTEXIST,                            "ÎÄ¼þ '%s'\n²»´æÔÚ\n\n \
+ÄúÏëÐÂ½¨Ò»¸öÎÄ¼þÂð£¿"
+STRING_NOTSAVED,                                "ÎÄ¼þ '%s'\nÕýÎÄÒÑ¸ü¸Ä\n\n \
+ÊÇ·ñ±£´æ¸ü¸Ä£¿"
+STRING_NOTFOUND,                                        "ÕÒ²»µ½ÎÄ¼þ '%s'"
+STRING_OUT_OF_MEMORY,                   "Ã»ÓÐ×ã¹»µÄÄÚ´æ¿ÉÒÔÓÃÀ´Íê³É´ËÏîÈÎÎñ¡£ \
+\nÇë¹Ø±ÕÒ»Ð©³ÌÐòÊ©·ÅÄÚ´æºóÔÙÊÔ¡£"
 
 }

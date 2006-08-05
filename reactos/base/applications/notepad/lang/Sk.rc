@@ -1,10 +1,9 @@
 /*
- * Notepad
- * Portuguese Language Support
+ *  Notepad (Slovak resources)
  *
- * Copyright 1999 Marcel Baur <alves@correionet.com.br>
- * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- * Copyright 2003 Marcelo Duarte
+ *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
+ *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
+ *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,79 +20,97 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+{
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "^O", CMD_OPEN
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+}
 
 MAIN_MENU MENU
-BEGIN
-	POPUP "&Arquivo" 
+{
+	POPUP "&File"
 	BEGIN
-		MENUITEM "&Novo...",		CMD_NEW
-		MENUITEM "A&brir",		CMD_OPEN
-		MENUITEM "&Salvar",		CMD_SAVE
-		MENUITEM "Salvar &como...",	CMD_SAVE_AS
+		MENUITEM "&New...",		CMD_NEW
+		MENUITEM "&Open",		CMD_OPEN
+		MENUITEM "&Save",		CMD_SAVE
+		MENUITEM "Save &as...",	CMD_SAVE_AS
+		MENUITEM "&Print",		CMD_PRINT
+		MENUITEM "Page Se&tup...",	CMD_PAGE_SETUP
+		MENUITEM "P&rinter Setup...", CMD_PRINTER_SETUP
 		MENUITEM SEPARATOR
-		MENUITEM "&Imprimir",		CMD_PRINT
-		MENUITEM "C&onfigurar página...",	CMD_PAGE_SETUP
-		MENUITEM "Configurar i&mpressora...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "Sai&r",		CMD_EXIT
-	END
-	POPUP "&Editar"
+		MENUITEM "&Exit",		CMD_EXIT
+ }
+	POPUP "&Edit"
 	BEGIN
-		MENUITEM "&Desfazer\tCtrl+Z", CMD_UNDO
+		MENUITEM "&Undo\tCtrl+Z",	CMD_UNDO
 		MENUITEM SEPARATOR
-		MENUITEM "&Recortar\tCtrl+X",	CMD_CUT
-		MENUITEM "&Copiar\tCtrl+C",	CMD_COPY
-		MENUITEM "C&olar\tCtrl+V",	CMD_PASTE
-		MENUITEM "E&xcluir\tDel",	CMD_DELETE
+		MENUITEM "Cu&t\tCtrl+X",	CMD_CUT
+		MENUITEM "&Copy\tCtrl+C",	CMD_COPY
+		MENUITEM "&Paste\tCtrl+V",	CMD_PASTE
+		MENUITEM "&Delete\tDel",	CMD_DELETE
 		MENUITEM SEPARATOR
-		MENUITEM "&Localizar...",	CMD_SEARCH
-		MENUITEM "Localizar &próxima\tF3",	CMD_SEARCH_NEXT
+		MENUITEM "Select &all",	CMD_SELECT_ALL
+		MENUITEM "&Time/Date\tF5",	CMD_TIME_DATE
 		MENUITEM SEPARATOR
-		MENUITEM "Selecionar &tudo",	CMD_SELECT_ALL
-		MENUITEM "&Data/Hora\tF5",	CMD_TIME_DATE
-		MENUITEM SEPARATOR
-		MENUITEM "&Quebrar automática de linha",	CMD_WRAP
-		MENUITEM "&Fonte...",          CMD_FONT
-	END
-	POPUP "&Ajuda"
+		MENUITEM "&Wrap long lines",	CMD_WRAP
+ }
+	POPUP "&Search"
 	BEGIN
-		MENUITEM "&Conteúdo",		CMD_HELP_CONTENTS
-		MENUITEM "&Procurar...",	CMD_HELP_SEARCH
-		MENUITEM "&Ajuda na ajuda",	CMD_HELP_ON_HELP
+		MENUITEM "&Search", CMD_SEARCH
+		MENUITEM "&Search next\tF3",	CMD_SEARCH_NEXT
+ }
+	POPUP "&Help" 
+	BEGIN
+		MENUITEM "&Contents",		CMD_HELP_CONTENTS
+		MENUITEM "&Search...",	CMD_HELP_SEARCH
+		MENUITEM "&Help on help",	CMD_HELP_ON_HELP
 		MENUITEM SEPARATOR
+	POPUP "Inf&o..."
+	BEGIN
 		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "&Informações...",	CMD_ABOUT_WINE
-	END
-END
+		MENUITEM "&About Wine",	CMD_ABOUT_WINE
+  }
+ }
+}
 
 /* Dialog `Page setup' */
 
 DIALOG_PAGESETUP DIALOG 0, 0, 225, 95
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Configurar página"
+CAPTION "Page Setup"
 {
-LTEXT    "&Cabeçalho:",  0x140,   10, 07, 40, 15
+LTEXT    "&Header:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
-LTEXT    "&Rodapé:",  0x142,   10, 24, 40, 15
+LTEXT    "&Footer:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
-GROUPBOX "&Margens:",      0x144,     10, 43,160, 45
-LTEXT    "&Esquerda:",        0x145,   20, 55, 30, 10, WS_CHILD
+GROUPBOX "&Margins:",      0x144,     10, 43,160, 45
+LTEXT    "&Left:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Superior:",         0x148,    20, 73, 30, 10, WS_CHILD
+LTEXT    "&Top:",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Direita:",       0x14B, 100, 55, 30, 10, WS_CHILD
+LTEXT    "&Right:",       0x14B, 100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "&Inferior:",      0x14E,100, 73, 30, 10, WS_CHILD
+LTEXT    "&Bottom:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Cancelar",     0x152,               180, 21, 40, 15, WS_TABSTOP
-PUSHBUTTON    "&Ajuda",       0x153,                180, 39, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Cancel",     0x152,               180, 21, 40, 15, WS_TABSTOP
+PUSHBUTTON    "&Help",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
-
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22,16,284,170
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
@@ -114,35 +131,37 @@ STRINGTABLE DISCARDABLE
 BEGIN
   STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
+
 STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,	"&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,	"Página &s"   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,	"Page &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,		"20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,	"20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,		"25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,	"25 mm"     /* FIXME */
 
 STRING_NOTEPAD,					"Notepad"
-STRING_ERROR,					"ERRO"
-STRING_WARNING,					"AVISO"
-STRING_INFO,					"Informação"
+STRING_ERROR,					"ERROR"
+STRING_WARNING,					"WARNING"
+STRING_INFO,					"Information"
 
-STRING_UNTITLED,				"(sem nome)"
+STRING_UNTITLED,				"(untitled)"
 
-STRING_ALL_FILES,				"Todos os arquivos (*.*)"
-STRING_TEXT_FILES_TXT,			"Arquivos texto (*.txt)"
+STRING_ALL_FILES,				"All files (*.*)"
+STRING_TEXT_FILES_TXT,			"Text files (*.txt)"
 
-STRING_TOOLARGE,				"Arquivo '%s' é muito longo para o notepad.\n \
-Por favor use um editor diferente."
-STRING_NOTEXT,					"Você não digitou nenhum texto. \
-\nPor favor digite alguma coisa e tente novamente"
-STRING_DOESNOTEXIST,				"Arquivo '%s'\nnão existe\n\n \
-Você deseja criar um novo arquivo?"
-STRING_NOTSAVED,				"Arquivo '%s'\nfoi modificado\n\n \
-Gostaria de salvar as alteraçÕes?"
-STRING_NOTFOUND,					"'%s' não pode ser encontrado."
-STRING_OUT_OF_MEMORY,			"Não há memória suficiente para completar essa \
-tarefa. \nFeche uma ou mais aplicações para aumentar a quantidade de memória livre."
+STRING_TOOLARGE,				"File '%s' is too large for notepad.\n \
+Please use a different editor."
+STRING_NOTEXT,					"You didn't enter any text. \
+\nPlease type something and try again"
+STRING_DOESNOTEXIST,				"File '%s'\ndoes not exist\n\n \
+Do you want to create a new file ?"
+STRING_NOTSAVED,				"File '%s'\nhas been modified\n\n \
+Would you like to save the changes ?"
+STRING_NOTFOUND,					"'%s' can not be found."
+STRING_OUT_OF_MEMORY,			"Not enough memory to complete this \
+task. \nClose one or more applications to increase the amount of \nfree \
+memory."
 
 }
