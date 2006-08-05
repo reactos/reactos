@@ -77,6 +77,6 @@ IDB_COLORSLESS BITMAP DISCARDABLE "res/icons/color/ColorLess.bmp"
 IDC_PAINTBRUSHCURSOR CURSOR DISCARDABLE "res/cursors/PaintBrushToolCursor.cur"
 IDC_PAINTBRUSHCURSORMOUSEDOWN CURSOR DISCARDABLE "res/cursors/PaintBrushToolCursorMouseDown.cur"
 
-#include "En.rc"
-/* please do not add any other languages whilst this is being developed */
+#include "rsrc.rc"
+
 
