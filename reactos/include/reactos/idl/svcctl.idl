@@ -4,21 +4,13 @@
 
 //#include <windef.h>
 //#include <winsvc.h>
+#include "include/reactos/idl/wtypes.idl"
 
-#define BYTE unsigned char
-#define DWORD unsigned long
-#define BOOL unsigned long
 #define SC_HANDLE unsigned int
 #define SC_LOCK unsigned int
 #define SERVICE_STATUS_HANDLE unsigned long
 #define SC_STATUS_TYPE unsigned long
 #define SC_ENUM_TYPE unsigned long
-#define LPSTR char*
-#define LPCSTR char*
-#define LPWSTR wchar_t*
-#define LPCWSTR wchar_t*
-#define LPBYTE unsigned char*
-#define LPDWORD unsigned long*
 
 [
   uuid(367abb81-9844-35f1-ad32-98f038001003),
