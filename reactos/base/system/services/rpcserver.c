@@ -1522,7 +1522,7 @@ ScmrOpenSCManagerW(handle_t BindingHandle,
 
 
 /* Function 16 */
-unsigned int
+unsigned long
 ScmrOpenServiceW(handle_t BindingHandle,
                  unsigned int hSCManager,
                  wchar_t *lpServiceName,

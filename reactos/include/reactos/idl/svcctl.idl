@@ -46,11 +46,11 @@ cpp_quote("#endif")
                                [in] SC_HANDLE hSCObject);
 
   /* Function 1 */
-  BOOL ScmrControlService([in] handle_t BindingHandle,
-                          [in] SC_HANDLE hService,
-                          [in] DWORD dwControl,
-                          [out] SERVICE_STATUS *lpServiceStatus);
-/*                          [out] LPSERVICE_STATUS lpServiceStatus); */
+  DWORD ScmrControlService([in] handle_t BindingHandle,
+                           [in] SC_HANDLE hService,
+                           [in] DWORD dwControl,
+                           [out] SERVICE_STATUS *lpServiceStatus);
+/*                           [out] LPSERVICE_STATUS lpServiceStatus); */
 
   /* Function 2 */
   DWORD ScmrDeleteService([in] handle_t BindingHandle,
@@ -165,11 +165,11 @@ cpp_quote("#endif")
                            [out] SC_HANDLE *hScm);
 
   /* Function 16 */
-  SC_HANDLE ScmrOpenServiceW([in] handle_t BindingHandle,
-                             [in] SC_HANDLE hSCManager,
-                             [in, string] LPCWSTR lpServiceName,
-                             [in] DWORD dwDesiredAccess,
-                             [out] SC_HANDLE *hScm);
+  DWORD ScmrOpenServiceW([in] handle_t BindingHandle,
+                         [in] SC_HANDLE hSCManager,
+                         [in, string] LPCWSTR lpServiceName,
+                         [in] DWORD dwDesiredAccess,
+                         [out] SC_HANDLE *hScm);
 
   /* Function 17 */
   DWORD ScmrQueryServiceConfigW([in] handle_t BindingHandle,
