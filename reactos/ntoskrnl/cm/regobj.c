@@ -55,7 +55,7 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     {
         ObReferenceObjectByPointer(NameSpaceRoot,
             DIRECTORY_TRAVERSE,
-            NULL,
+            CmiKeyType,
             ObjectCreateInfo->ProbeMode);
         CurrentObject = NameSpaceRoot;
     }
@@ -147,7 +147,7 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
 
             ObReferenceObjectByPointer(FoundObject,
                 STANDARD_RIGHTS_REQUIRED,
-                NULL,
+                CmiKeyType,
                 UserMode);
             if (End != NULL)
             {
@@ -197,7 +197,7 @@ Next:
 
             ObReferenceObjectByPointer(NextObject,
                 DIRECTORY_TRAVERSE,
-                NULL,
+                CmiKeyType,
                 ObjectCreateInfo->ProbeMode);
         }
 
@@ -789,7 +789,7 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
 
   ObReferenceObjectByPointer(ParentKey,
 		STANDARD_RIGHTS_REQUIRED,
-		NULL,
+		CmiKeyType,
 		UserMode);
   NewKey->ParentKey = ParentKey;
 }
