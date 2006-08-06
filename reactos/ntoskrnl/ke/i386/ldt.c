@@ -58,8 +58,20 @@ BOOL PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
     SegLimit=(SegLimit << 12) | 0xfff;
   }
 
-  return ((Base + SegLimit > (ULONG) MmHighestUserAddress) ||
-          (Base > Base+SegLimit) ? FALSE : TRUE);
+  if ((Base + SegLimit > (ULONG_PTR) MmHighestUserAddress) ||
+      (Base > Base+SegLimit))
+  {
+    DPRINT1("WARNING: Windows would mark this descriptor invalid!");
+  }
+
+  /*
+     Certain "DOS32" programs expect to be able to create DPMI selectors
+     that wrap the address space.  Windows NT does not allow user-created
+     selectors to reach into kernel memory.  However, there is no security
+     risk in allowing it; the page table will prevent access anyway.
+  */  
+  return (/*(Base + SegLimit > (ULONG_PTR) MmHighestUserAddress) ||
+          (Base > Base+SegLimit) ? FALSE : TRUE*/ TRUE);
 }
 
 NTSTATUS STDCALL
