@@ -1326,11 +1326,9 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
 	{
 		return  DDERR_NODRIVERSUPPORT;	 		    	
 	}
-
-	mem.lpDD = &This->mDDrawGlobal;    
-    mem.ddRVal = DDERR_NOTPALETTIZED;
-
+	
 	mem.lpDD = This->mDDrawLocal.lpGbl;
+    mem.ddRVal = DDERR_NOTPALETTIZED;	
     mem.DDSCaps.dwCaps = ddscaps->dwCaps;
     mem.ddsCapsEx.dwCaps2 = ddscaps->dwCaps2;
     mem.ddsCapsEx.dwCaps3 = ddscaps->dwCaps3;
