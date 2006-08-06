@@ -1330,15 +1330,20 @@ Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
 	mem.lpDD = &This->mDDrawGlobal;    
     mem.ddRVal = DDERR_NOTPALETTIZED;
 
+	mem.lpDD = This->mDDrawLocal.lpGbl;
+    mem.DDSCaps.dwCaps = ddscaps->dwCaps;
+    mem.ddsCapsEx.dwCaps2 = ddscaps->dwCaps2;
+    mem.ddsCapsEx.dwCaps3 = ddscaps->dwCaps3;
+    mem.ddsCapsEx.dwCaps4 = ddscaps->dwCaps4;
+
 	if (This->mDDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem) == DDHAL_DRIVER_HANDLED);
     {
-		ddscaps->dwCaps = mem.DDSCaps.dwCaps;
-        ddscaps->dwCaps2 = mem.ddsCapsEx.dwCaps2;
-        ddscaps->dwCaps3 = mem.ddsCapsEx.dwCaps3;
-        ddscaps->dwCaps4 = mem.ddsCapsEx.dwCaps4;
-        *total = mem.dwTotal;
-        *free = mem.dwFree;
+		if (total !=NULL)
+		{
+           *total = mem.dwTotal;
+		}
 
+        *free = mem.dwFree;
 		return mem.ddRVal;
 	}
 
