@@ -1548,12 +1548,12 @@ static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest)
             hr = HRESULT_FROM_WIN32(GetLastError());
         else
             hr = S_OK;
-        if (SUCCEEDED(hr) && szDest[0] == '%')
-            strcpyW(szTemp, szDest);
-        else
+        /* By default, terminate loop */
+        szTemp[0] = '\0';
+        if (SUCCEEDED(hr) && strcmpW(szSrc, szDest) != 0)
         {
-            /* terminate loop */
-            szTemp[0] = '\0';
+            /* Continue the loop */
+            strcpyW(szTemp, szDest);
         }
     }
 end:
