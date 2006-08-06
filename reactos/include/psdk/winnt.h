@@ -2334,6 +2334,8 @@ typedef struct _SID {
    SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
    DWORD SubAuthority[ANYSIZE_ARRAY];
 } SID, *PISID;
+#define SECURITY_MIN_SID_SIZE (sizeof(SID))
+#define SECURITY_MAX_SID_SIZE (FIELD_OFFSET(SID, SubAuthority) + SID_MAX_SUB_AUTHORITIES * sizeof(DWORD))
 typedef struct _SID_AND_ATTRIBUTES {
 	PSID Sid;
 	DWORD Attributes;
