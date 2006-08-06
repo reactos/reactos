@@ -870,7 +870,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 
 #undef DbgPrint
 ULONG
-DbgPrint(char *Fmt, ...)
+DbgPrint(const char *Fmt, ...)
 {
   UiMessageBox(Fmt);
   return 0;

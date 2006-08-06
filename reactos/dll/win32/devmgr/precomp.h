@@ -10,7 +10,7 @@
 
 extern HINSTANCE hDllInstance;
 
-ULONG DbgPrint(PCH Format,...);
+ULONG DbgPrint(PCCH Format,...);
 
 BOOL
 WINAPI

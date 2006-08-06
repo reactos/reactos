@@ -29,7 +29,7 @@
 ULONG
 __cdecl
 DbgPrint(
-    IN PCCHAR  Format,
+    IN PCCH  Format,
     IN ...
 );
 

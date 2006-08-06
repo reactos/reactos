@@ -31,7 +31,7 @@
 
 #include "mmdef.h"
 
-ULONG DbgPrint(PCH Format, ...);
+ULONG DbgPrint(PCCH Format, ...);
 
 /*
 #define SOUND_MAX_DEVICE_NAME 1024   // GUESSWORK

@@ -402,7 +402,8 @@ extern volatile CCHAR NTSYSAPI KeNumberProcessors;
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 extern CCHAR NTSYSAPI KeNumberProcessors;
 #else
-extern PCCHAR KeNumberProcessors;
+//extern PCCHAR KeNumberProcessors;
+extern NTSYSAPI CCHAR KeNumberProcessors; //FIXME: Note to Alex: I won't fix this atm, since I prefer to discuss this with you first.
 #endif
 #endif
 
@@ -10450,7 +10451,7 @@ DbgBreakPointWithStatus(
 ULONG
 __cdecl
 DbgPrint(
-  IN PCCHAR  Format,
+  IN PCCH  Format,
   IN ...);
 
 ULONG
@@ -10458,7 +10459,7 @@ __cdecl
 DbgPrintEx(
   IN ULONG  ComponentId,
   IN ULONG  Level,
-  IN PCCHAR  Format,
+  IN PCCH  Format,
   IN ...);
 
 NTOSAPI

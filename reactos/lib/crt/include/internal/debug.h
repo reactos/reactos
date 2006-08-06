@@ -28,7 +28,7 @@
    #define sT "s"
 #endif
 
-unsigned long DbgPrint(char *Format,...);
+unsigned long DbgPrint(const char *Format,...);
 
 #ifdef __GNUC__
 	#define TRACE(...)
@@ -83,7 +83,7 @@ unsigned long DbgPrint(char *Format,...);
 
 
 /* ULONG CDECL DbgPrint(PCH Format, ...); */
-ULONG DbgPrint(PCH Format,...);
+ULONG DbgPrint(PCCH Format,...);
 /* unsigned long DbgPrint(const char* Format, ...); */
 
 

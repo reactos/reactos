@@ -15,7 +15,7 @@
 #define FASTCALL __fastcall
 #define DDKCDECLAPI __cdecl
 
-ULONG DbgPrint(PCH Format,...);
+ULONG DbgPrint(PCCH Format,...);
 VOID DDKAPI DbgBreakPoint(VOID);
 VOID DDKAPI WRITE_PORT_UCHAR(IN PUCHAR  Port, IN UCHAR  Value);
 VOID DDKAPI WRITE_REGISTER_UCHAR(IN PUCHAR  Register, IN UCHAR  Value);

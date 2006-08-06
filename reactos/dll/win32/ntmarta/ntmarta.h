@@ -13,7 +13,7 @@
 #define FN_PROGRESSA FN_PROGRESS
 #endif
 
-ULONG DbgPrint(PCH Format,...);
+ULONG DbgPrint(PCCH Format,...);
 
 extern HINSTANCE hDllInstance;
 

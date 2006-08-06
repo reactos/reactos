@@ -43,7 +43,7 @@ static const WCHAR szMachPowerPoliciesSubKey[] = { 'S', 'O', 'F', 'T', 'W', 'A',
 
 static const WCHAR szTempPwrScheme[] = { '9', '9', 0 };
 
-ULONG DbgPrint(PCH X,...)
+ULONG DbgPrint(PCCH X,...)
 {
    return (ULONG)NULL;
 }
