@@ -149,7 +149,10 @@ DoGenericAction(
 				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
 			}
 			if (WLX_SHUTTINGDOWN(wlxAction))
+			{
+				Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
 				HandleShutdown(Session, wlxAction);
+			}
 			break;
 		case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
 			SwitchDesktop(WLSession->ApplicationDesktop);
@@ -256,128 +259,164 @@ typedef struct tagLOGOFF_SHUTDOWN_DATA
 static DWORD WINAPI
 LogoffShutdownThread(LPVOID Parameter)
 {
-  PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA) Parameter;
+	PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA) Parameter;
 
-  if (! ImpersonateLoggedOnUser(LSData->Session->UserToken))
-  {
-    DPRINT1("ImpersonateLoggedOnUser failed with error %d\n", GetLastError());
-    return 0;
-  }
-  if (! ExitWindowsEx(EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK)
-                      | (EWX_LOGOFF == (LSData->Flags & EWX_ACTION_MASK) ? EWX_INTERNAL_FLAG_LOGOFF : 0),
-                      0))
-  {
-    DPRINT1("Unable to kill user apps, error %d\n", GetLastError());
-    RevertToSelf();
-    return 0;
-  }
-  RevertToSelf();
+	if (!ImpersonateLoggedOnUser(LSData->Session->UserToken))
+	{
+		ERR("ImpersonateLoggedOnUser failed with error %lu\n", GetLastError());
+		return 0;
+	}
 
-  /* This is not right (see top of reactos/dll/win32/user32/misc/exit.c),
-   * but this should be enough atm */
-  switch (LSData->Flags & EWX_ACTION_MASK)
-  {
-    case EWX_SHUTDOWN:
-      NtShutdownSystem(ShutdownNoReboot);
-      break;
-    case EWX_REBOOT:
-      NtShutdownSystem(ShutdownReboot);
-      break;
-    default:
-     UNIMPLEMENTED;
-  }
+	/* Close processes of the interactive user */
+	if (!ExitWindowsEx(
+		EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
+		(EWX_LOGOFF == (LSData->Flags & EWX_ACTION_MASK) ? EWX_INTERNAL_FLAG_LOGOFF : 0),
+		0))
+	{
+		ERR("Unable to kill user apps, error %lu\n", GetLastError());
+		RevertToSelf();
+		return 0;
+	}
 
-  HeapFree(GetProcessHeap(), 0, LSData);
+	/* FIXME: Call ExitWindowsEx() to terminate COM processes */
 
-  return 1;
+	RevertToSelf();
+
+	return 1;
+}
+
+static NTSTATUS
+CheckPrivilegeForRequestedAction(
+	IN UINT Action,
+	IN DWORD RequestingProcessId)
+{
+	HANDLE Process;
+	HANDLE Token;
+	BOOL CheckResult;
+	PPRIVILEGE_SET PrivSet;
+
+	TRACE("CheckPrivilegeForRequestedAction(%u)\n", Action);
+
+	if (Action == EWX_LOGOFF)
+		/* No privilege needed to log off */
+		return STATUS_SUCCESS;
+
+	/* Check for invalid arguments */
+	if (Action != EWX_SHUTDOWN && Action != EWX_REBOOT && Action != EWX_POWEROFF)
+	{
+		ERR("Invalid exit action %u\n", Action);
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, RequestingProcessId);
+	if (!Process)
+	{
+		WARN("OpenProcess() failed with error %lu\n", GetLastError());
+		return STATUS_INVALID_HANDLE;
+	}
+	if (!OpenProcessToken(Process, TOKEN_QUERY, &Token))
+	{
+		WARN("OpenProcessToken() failed with error %lu\n", GetLastError());
+		CloseHandle(Process);
+		return STATUS_INVALID_HANDLE;
+	}
+	CloseHandle(Process);
+	PrivSet = HeapAlloc(GetProcessHeap(), 0, sizeof(PRIVILEGE_SET) + sizeof(LUID_AND_ATTRIBUTES));
+	if (!PrivSet)
+	{
+		ERR("Failed to allocate mem for privilege set\n");
+		CloseHandle(Token);
+		return STATUS_NO_MEMORY;
+	}
+	PrivSet->PrivilegeCount = 1;
+	PrivSet->Control = PRIVILEGE_SET_ALL_NECESSARY;
+	if (!LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &PrivSet->Privilege[0].Luid))
+	{
+		WARN("LookupPrivilegeValue() failed with error %lu\n", GetLastError());
+		HeapFree(GetProcessHeap(), 0, PrivSet);
+		CloseHandle(Token);
+		return STATUS_UNSUCCESSFUL;
+	}
+	if (!PrivilegeCheck(Token, PrivSet, &CheckResult))
+	{
+		WARN("PrivilegeCheck() failed with error %lu\n", GetLastError());
+		HeapFree(GetProcessHeap(), 0, PrivSet);
+		CloseHandle(Token);
+		return STATUS_ACCESS_DENIED;
+	}
+	HeapFree(GetProcessHeap(), 0, PrivSet);
+	CloseHandle(Token);
+
+	if (!CheckResult)
+	{
+		WARN("SE_SHUTDOWN privilege not enabled\n");
+		return STATUS_ACCESS_DENIED;
+	}
 }
 
 static LRESULT
-HandleExitWindows(PWLSESSION Session, DWORD RequestingProcessId, UINT Flags)
+HandleExitWindows(
+	IN OUT PWLSESSION Session,
+	IN DWORD RequestingProcessId,
+	IN UINT Flags)
 {
-  UINT Action;
-  HANDLE Process;
-  HANDLE Token;
-  HANDLE Thread;
-  BOOL CheckResult;
-  PPRIVILEGE_SET PrivSet;
-  PLOGOFF_SHUTDOWN_DATA LSData;
+	UINT Action;
+	PLOGOFF_SHUTDOWN_DATA LSData;
+	HANDLE hThread;
+	NTSTATUS Status;
 
-  /* Check parameters */
-  Action = Flags & EWX_ACTION_MASK;
-  if (EWX_LOGOFF != Action && EWX_SHUTDOWN != Action && EWX_REBOOT != Action
-      && EWX_POWEROFF != Action)
-  {
-    DPRINT1("Invalid ExitWindows action 0x%x\n", Action);
-    return STATUS_INVALID_PARAMETER;
-  }
+	/* Check parameters */
+	Action = Flags & EWX_ACTION_MASK;
+	if (Action != EWX_LOGOFF &&
+	    Action != EWX_SHUTDOWN &&
+	    Action != EWX_REBOOT &&
+	    Action != EWX_POWEROFF)
+	{
+		ERR("Invalid ExitWindows action 0x%x\n", Action);
+		return STATUS_INVALID_PARAMETER;
+	}
 
-  /* Check privilege */
-  if (EWX_LOGOFF != Action)
-  {
-    Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, RequestingProcessId);
-    if (NULL == Process)
-    {
-      DPRINT1("OpenProcess failed with error %d\n", GetLastError());
-      return STATUS_INVALID_HANDLE;
-    }
-    if (! OpenProcessToken(Process, TOKEN_QUERY, &Token))
-    {
-      DPRINT1("OpenProcessToken failed with error %d\n", GetLastError());
-      CloseHandle(Process);
-      return STATUS_INVALID_HANDLE;
-    }
-    CloseHandle(Process);
-    PrivSet = HeapAlloc(GetProcessHeap(), 0, sizeof(PRIVILEGE_SET) + sizeof(LUID_AND_ATTRIBUTES));
-    if (NULL == PrivSet)
-    {
-      DPRINT1("Failed to allocate mem for privilege set\n");
-      CloseHandle(Token);
-      return STATUS_NO_MEMORY;
-    }
-    PrivSet->PrivilegeCount = 1;
-    PrivSet->Control = PRIVILEGE_SET_ALL_NECESSARY;
-    if (! LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &PrivSet->Privilege[0].Luid))
-    {
-      DPRINT1("LookupPrivilegeValue failed with error %d\n", GetLastError());
-      HeapFree(GetProcessHeap(), 0, PrivSet);
-      CloseHandle(Token);
-      return STATUS_UNSUCCESSFUL;
-    }
-    if (! PrivilegeCheck(Token, PrivSet, &CheckResult))
-    {
-      DPRINT1("PrivilegeCheck failed with error %d\n", GetLastError());
-      HeapFree(GetProcessHeap(), 0, PrivSet);
-      CloseHandle(Token);
-      return STATUS_ACCESS_DENIED;
-    }
-    HeapFree(GetProcessHeap(), 0, PrivSet);
-    CloseHandle(Token);
-    if (! CheckResult)
-    {
-      DPRINT1("SE_SHUTDOWN privilege not enabled\n");
-      return STATUS_ACCESS_DENIED;
-    }
-  }
+	/* Check privilege */
+	Status = CheckPrivilegeForRequestedAction(Action, RequestingProcessId);
+	if (!NT_SUCCESS(Status))
+		return Status;
 
-  LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
-  if (NULL == LSData)
-  {
-    DPRINT1("Failed to allocate mem for thread data\n");
-    return STATUS_NO_MEMORY;
-  }
-  LSData->Flags = Flags;
-  LSData->Session = Session;
-  Thread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID) LSData, 0, NULL);
-  if (NULL == Thread)
-  {
-    DPRINT1("Unable to create shutdown thread, error %d\n", GetLastError());
-    HeapFree(GetProcessHeap(), 0, LSData);
-    return STATUS_UNSUCCESSFUL;
-  }
-  CloseHandle(Thread);
+	/* Prepare data for logoff/shutdown thread */
+	LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
+	if (!LSData)
+	{
+		ERR("Failed to allocate mem for thread data\n");
+		return STATUS_NO_MEMORY;
+	}
+	LSData->Flags = Flags;
+	LSData->Session = Session;
 
-  return 1;
+	/* Run logoff/shutdown thread */
+	hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+	if (!hThread)
+	{
+		ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
+		HeapFree(GetProcessHeap(), 0, LSData);
+		return STATUS_UNSUCCESSFUL;
+	}
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+	HeapFree(GetProcessHeap(), 0, LSData);
+
+	Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
+	if (Action == EWX_LOGOFF)
+	{
+		DispatchSAS(Session, WLX_SAS_TYPE_TIMEOUT);
+		return 1;
+	}
+
+	/* Handle shutdown */
+	FIXME("FIXME: Call ExitWindowEx in SYSTEM process context\n");
+
+	FIXME("FIXME: Call SMSS API #1\n");
+	NtShutdownSystem(ShutdownNoReboot); /* FIXME: should go in smss */
+
+	return 1;
 }
 
 static LRESULT CALLBACK

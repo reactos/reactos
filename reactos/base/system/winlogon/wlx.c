@@ -57,6 +57,9 @@ WlxUseCtrlAltDel(
 	HANDLE hWlx)
 {
 	ULONG_PTR OldValue;
+
+	TRACE("WlxUseCtrlAltDel()\n");
+
 	WlxSetOption(hWlx, WLX_OPTION_USE_CTRL_ALT_DEL, TRUE, &OldValue);
 }
 
@@ -69,6 +72,9 @@ WlxSetContextPointer(
 	PVOID pWlxContext)
 {
 	ULONG_PTR OldValue;
+
+	TRACE("WlxSetContextPointer(%p)\n", pWlxContext);
+
 	WlxSetOption(hWlx, WLX_OPTION_CONTEXT_POINTER, (ULONG_PTR)pWlxContext, &OldValue);
 }
 
@@ -80,6 +86,7 @@ WlxSasNotify(
 	HANDLE hWlx,
 	DWORD dwSasType)
 {
+	TRACE("WlxSasNotify(0x%lx)\n", dwSasType);
 	DispatchSAS((PWLSESSION)hWlx, dwSasType);
 }
 
@@ -92,6 +99,9 @@ WlxSetTimeout(
 	DWORD Timeout)
 {
 	PWLSESSION Session = (PWLSESSION)hWlx;
+
+	TRACE("WlxSetTimeout(%lu)\n", Timeout);
+
 	Session->DialogTimeout = Timeout;
 	return TRUE;
 }
@@ -121,6 +131,7 @@ WlxMessageBox(
 	LPWSTR lpszTitle,
 	UINT fuStyle)
 {
+	TRACE("WlxMessageBox()\n");
 	/* FIXME: Provide a custom window proc to be able to handle timeout */
 	return MessageBoxW(hwndOwner, lpszText, lpszTitle, fuStyle);
 }
@@ -136,6 +147,8 @@ WlxDialogBox(
 	HWND hwndOwner,
 	DLGPROC dlgprc)
 {
+	TRACE("WlxDialogBox()\n");
+
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
@@ -154,6 +167,8 @@ WlxDialogBoxParam(
 	DLGPROC dlgprc,
 	LPARAM dwInitParam)
 {
+	TRACE("WlxDialogBoxParam()\n");
+
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
@@ -171,6 +186,8 @@ WlxDialogBoxIndirect(
 	HWND hwndOwner,
 	DLGPROC dlgprc)
 {
+	TRACE("WlxDialogBoxIndirect()\n");
+
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
@@ -189,6 +206,8 @@ WlxDialogBoxIndirectParam(
 	DLGPROC dlgprc,
 	LPARAM dwInitParam)
 {
+	TRACE("WlxDialogBoxIndirectParam()\n");
+
 	if (PreviousWindowProc != NULL)
 		return -1;
 	PreviousWindowProc = dlgprc;
@@ -203,6 +222,9 @@ WlxSwitchDesktopToUser(
 	HANDLE hWlx)
 {
 	PWLSESSION Session = (PWLSESSION)hWlx;
+
+	TRACE("WlxSwitchDesktopToUser()\n");
+
 	return (int)SwitchDesktop(Session->ApplicationDesktop);
 }
 
@@ -214,6 +236,9 @@ WlxSwitchDesktopToWinlogon(
 	HANDLE hWlx)
 {
 	PWLSESSION Session = (PWLSESSION)hWlx;
+
+	TRACE("WlxSwitchDesktopToWinlogon()\n");
+
 	return (int)SwitchDesktop(Session->WinlogonDesktop);
 }
 
@@ -309,6 +334,8 @@ WlxSetOption(
 {
 	PWLSESSION Session = (PWLSESSION)hWlx;
 
+	TRACE("WlxSetOption(%lu)\n", Option);
+
 	switch (Option)
 	{
 		case WLX_OPTION_USE_CTRL_ALT_DEL:
@@ -337,6 +364,8 @@ WlxGetOption(
 	ULONG_PTR* Value)
 {
 	PWLSESSION Session = (PWLSESSION)hWlx;
+
+	TRACE("WlxGetOption(%lu)\n", Option);
 
 	switch (Option)
 	{
@@ -460,7 +489,7 @@ WlxQueryTsLogonCredentials(
 	return FALSE;
 }
 
-static const
+static
 WLX_DISPATCH_VERSION_1_4 FunctionTable = {
 	WlxUseCtrlAltDel,
 	WlxSetContextPointer,
@@ -559,8 +588,15 @@ LoadGina(
 		/* Assume current version */
 		*DllVersion = WLX_CURRENT_VERSION;
 	}
-	else if (!Functions->WlxNegotiate(WLX_CURRENT_VERSION, DllVersion))
-		goto cleanup;
+	else
+	{
+		TRACE("About to negociate with Gina %S. Winlogon uses version %lx\n",
+			GinaDll, WLX_CURRENT_VERSION);
+		if (!Functions->WlxNegotiate(WLX_CURRENT_VERSION, DllVersion))
+			goto cleanup;
+	}
+
+	TRACE("Gina uses WLX_VERSION %lx\n", *DllVersion);
 
 	if (*DllVersion >= WLX_VERSION_1_0)
 	{
