@@ -1,8 +1,8 @@
 /*
- * IMAGEHLP library
+ *	IMAGEHLP library
  *
- * Copyright 1998 Patrik Stridvall
- * Copyright 2005 Alex Ionescu
+ *	Copyright 1998	Patrik Stridvall
+ *	Copyright 2005 Alex Ionescu
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,24 +16,33 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-/* INCLUDES ******************************************************************/
 
 #include "precomp.h"
 
 //#define NDEBUG
 #include <debug.h>
+#define _WINNT_H
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
 
 /* DATA **********************************************************************/
 
 CHAR BoundLibraries[4096];
 LPSTR BoundLibrariesPointer;
 
-/* FUNCTIONS *****************************************************************/
+/***********************************************************************
+ *		BindImage (IMAGEHLP.@)
+ */
+BOOL WINAPI BindImage(
+  LPSTR ImageName, LPSTR DllPath, LPSTR SymbolPath)
+{
+  return BindImageEx(0, ImageName, DllPath, SymbolPath, NULL);
+}
 
-LPSTR
+static LPSTR
 IMAGEAPI
 BindpCaptureImportModuleName(LPSTR ModuleName)
 {
@@ -68,128 +77,46 @@ BindpCaptureImportModuleName(LPSTR ModuleName)
     return Name;
 }
 
-PIMAGE_BOUND_IMPORT_DESCRIPTOR
+
+static PIMPORT_DESCRIPTOR
 IMAGEAPI
-BindpCreateNewImportSection(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
-                            PULONG BoundImportsSize)
+BindpAddImportDescriptor(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
+                         PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor,
+                         LPSTR DllName,
+                         PLOADED_IMAGE Image)
 {
-    ULONG BoundLibraryNamesSize = 0, BoundImportTableSize = 0;
-    PBOUND_FORWARDER_REFS Forwarder, *NextForwarder;
     PIMPORT_DESCRIPTOR Descriptor, *NextDescriptor;
-    LPSTR BoundLibraryNames;
-    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundTableEntry, BoundTable;
-    PIMAGE_BOUND_FORWARDER_REF BoundForwarder;
 
-    /* Zero the outoging size */
-    *BoundImportsSize = 0;
-
-    /* Loop the descriptors and forwarders to get the size */
+    /* Loop descriptors and check if this library has already been bound */
     NextDescriptor = BoundImportDescriptor;
     while ((Descriptor = *NextDescriptor))
     {
-        /* Add to the size of the Bound Import Table */
-        BoundImportTableSize += sizeof(IMAGE_BOUND_IMPORT_DESCRIPTOR);
-
-        /* Check Forwarders */
-        NextForwarder = &Descriptor->Forwarders;
-        while ((Forwarder = *NextForwarder))
-        {
-            /* Add to size of Bound Import Table */
-            BoundImportTableSize += sizeof(IMAGE_BOUND_FORWARDER_REF);
-
-            /* Next Forwarder */
-            NextForwarder = &Forwarder->Next;
-        }
-
-        /* Read Next Internal Descriptor */
+        /* Compare the names and return the descriptor if found */
+        if (!_stricmp(Descriptor->ModuleName, DllName)) return Descriptor;
+        
+        /* Move to the next one */
         NextDescriptor = &Descriptor->Next;
     }
 
-    /* Add Terminator for PE Loader*/
-    BoundImportTableSize += sizeof(IMAGE_BOUND_IMPORT_DESCRIPTOR);
-    DPRINT("Table size: %lx\n", BoundImportTableSize);
+    /* Allocate a new descriptor */
+    Descriptor = HeapAlloc(IMAGEHLP_hHeap,
+                           HEAP_ZERO_MEMORY,
+                           sizeof(IMPORT_DESCRIPTOR));
 
-    /* Name of Libraries Bound in Bound Import Table */
-    BoundLibraryNamesSize = (ULONG)((ULONG_PTR)BoundLibrariesPointer -
-                                    (ULONG_PTR)BoundLibraries);
-    BoundLibrariesPointer = NULL;
-
-    /* Size of the whole table, dword aligned */
-    *BoundImportsSize = BoundImportTableSize + 
-                        ((BoundLibraryNamesSize + sizeof(ULONG) - 1) &
-                        ~(sizeof(ULONG) - 1));
-
-    /* Allocate it */
-    BoundTable = HeapAlloc(IMAGEHLP_hHeap, HEAP_ZERO_MEMORY, *BoundImportsSize);
+    /* Set its Data and check if we have a valid loaded image */
+    Descriptor->ModuleName = BindpCaptureImportModuleName(DllName);
+    *NextDescriptor = Descriptor;
+    if (Image)
+    {
+        /* Save the time stamp */
+        Descriptor->TimeDateStamp = Image->FileHeader->FileHeader.TimeDateStamp;
+    }
     
-    /* Pointer Library Names inside the Bound Import Table */
-    BoundLibraryNames = (LPSTR)BoundTable + BoundImportTableSize;
-
-    /* Copy the Library Names */
-    RtlCopyMemory(BoundLibraryNames, BoundLibraries, BoundLibraryNamesSize);
-
-    /* Now loop both tables */
-    BoundTableEntry = BoundTable;
-    NextDescriptor = BoundImportDescriptor;
-    while ((Descriptor = *NextDescriptor))
-    {
-        /* Copy the data */
-        BoundTableEntry->TimeDateStamp = Descriptor->TimeDateStamp;
-        BoundTableEntry->OffsetModuleName = (USHORT)(BoundImportTableSize +
-                                                     (Descriptor->ModuleName -
-                                                      (ULONG_PTR)BoundLibraries));
-        BoundTableEntry->NumberOfModuleForwarderRefs = Descriptor->ForwaderReferences;
-
-        /* Now loop the forwarders */
-        BoundForwarder = (PIMAGE_BOUND_FORWARDER_REF)BoundTableEntry + 1;
-        NextForwarder = &Descriptor->Forwarders;
-        while ((Forwarder = *NextForwarder))
-        {
-            /* Copy the data */
-            BoundForwarder->TimeDateStamp = Forwarder->TimeDateStamp;
-            BoundForwarder->OffsetModuleName = (USHORT)(BoundImportTableSize +
-                                                       (Forwarder->ModuleName -
-                                                       (ULONG_PTR)BoundLibraries));
-
-            /* Move to the next new forwarder, and move to the next entry */
-            BoundForwarder++;
-            NextForwarder = &Forwarder->Next;
-        }
-
-        /* Move to next Bound Import Table Entry */
-        BoundTableEntry = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)BoundForwarder;
-
-        /* Move to the next descriptor */
-        NextDescriptor = &Descriptor->Next;
-    }
-
-    /* Loop the descriptors and forwarders to free them */
-    NextDescriptor = BoundImportDescriptor;
-    while ((Descriptor = *NextDescriptor))
-    {
-        /* Read next internal descriptor */
-        *NextDescriptor = Descriptor->Next;
-
-        /* Loop its forwarders */
-        NextForwarder = &Descriptor->Forwarders;
-        while ((Forwarder = *NextForwarder))
-        {
-            /* Next Forwarder */
-            *NextForwarder = Forwarder->Next;
-
-            /* Free it */
-            HeapFree(IMAGEHLP_hHeap, 0, Forwarder);
-        }
-
-        /* Free it */
-        HeapFree(IMAGEHLP_hHeap, 0, Descriptor);
-    }
-
-    /* Return the Bound Import Table */
-    return BoundTable;
+    /* Return the descriptor */
+    return Descriptor;
 }
 
-PCHAR
+static PCHAR
 IMAGEAPI
 BindpAddForwarderReference(LPSTR ModuleName,
                            LPSTR ImportName,
@@ -370,7 +297,7 @@ NextForwarder:
     return ForwarderString;
 }
 
-BOOL
+static BOOL
 IMAGEAPI
 BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
                  PLOADED_IMAGE Image,
@@ -527,45 +454,128 @@ BindpLookupThunk(PIMAGE_THUNK_DATA Thunk,
     return TRUE;
 }
 
-PIMPORT_DESCRIPTOR
+static PIMAGE_BOUND_IMPORT_DESCRIPTOR
 IMAGEAPI
-BindpAddImportDescriptor(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
-                         PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor,
-                         LPSTR DllName,
-                         PLOADED_IMAGE Image)
+BindpCreateNewImportSection(PIMPORT_DESCRIPTOR *BoundImportDescriptor,
+                            PULONG BoundImportsSize)
 {
+    ULONG BoundLibraryNamesSize = 0, BoundImportTableSize = 0;
+    PBOUND_FORWARDER_REFS Forwarder, *NextForwarder;
     PIMPORT_DESCRIPTOR Descriptor, *NextDescriptor;
+    LPSTR BoundLibraryNames;
+    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundTableEntry, BoundTable;
+    PIMAGE_BOUND_FORWARDER_REF BoundForwarder;
 
-    /* Loop descriptors and check if this library has already been bound */
+    /* Zero the outoging size */
+    *BoundImportsSize = 0;
+
+    /* Loop the descriptors and forwarders to get the size */
     NextDescriptor = BoundImportDescriptor;
     while ((Descriptor = *NextDescriptor))
     {
-        /* Compare the names and return the descriptor if found */
-        if (!_stricmp(Descriptor->ModuleName, DllName)) return Descriptor;
-        
-        /* Move to the next one */
+        /* Add to the size of the Bound Import Table */
+        BoundImportTableSize += sizeof(IMAGE_BOUND_IMPORT_DESCRIPTOR);
+
+        /* Check Forwarders */
+        NextForwarder = &Descriptor->Forwarders;
+        while ((Forwarder = *NextForwarder))
+        {
+            /* Add to size of Bound Import Table */
+            BoundImportTableSize += sizeof(IMAGE_BOUND_FORWARDER_REF);
+
+            /* Next Forwarder */
+            NextForwarder = &Forwarder->Next;
+        }
+
+        /* Read Next Internal Descriptor */
         NextDescriptor = &Descriptor->Next;
     }
 
-    /* Allocate a new descriptor */
-    Descriptor = HeapAlloc(IMAGEHLP_hHeap,
-                           HEAP_ZERO_MEMORY,
-                           sizeof(IMPORT_DESCRIPTOR));
+    /* Add Terminator for PE Loader*/
+    BoundImportTableSize += sizeof(IMAGE_BOUND_IMPORT_DESCRIPTOR);
+    DPRINT("Table size: %lx\n", BoundImportTableSize);
 
-    /* Set its Data and check if we have a valid loaded image */
-    Descriptor->ModuleName = BindpCaptureImportModuleName(DllName);
-    *NextDescriptor = Descriptor;
-    if (Image)
-    {
-        /* Save the time stamp */
-        Descriptor->TimeDateStamp = Image->FileHeader->FileHeader.TimeDateStamp;
-    }
+    /* Name of Libraries Bound in Bound Import Table */
+    BoundLibraryNamesSize = (ULONG)((ULONG_PTR)BoundLibrariesPointer -
+                                    (ULONG_PTR)BoundLibraries);
+    BoundLibrariesPointer = NULL;
+
+    /* Size of the whole table, dword aligned */
+    *BoundImportsSize = BoundImportTableSize + 
+                        ((BoundLibraryNamesSize + sizeof(ULONG) - 1) &
+                        ~(sizeof(ULONG) - 1));
+
+    /* Allocate it */
+    BoundTable = HeapAlloc(IMAGEHLP_hHeap, HEAP_ZERO_MEMORY, *BoundImportsSize);
     
-    /* Return the descriptor */
-    return Descriptor;
+    /* Pointer Library Names inside the Bound Import Table */
+    BoundLibraryNames = (LPSTR)BoundTable + BoundImportTableSize;
+
+    /* Copy the Library Names */
+    RtlCopyMemory(BoundLibraryNames, BoundLibraries, BoundLibraryNamesSize);
+
+    /* Now loop both tables */
+    BoundTableEntry = BoundTable;
+    NextDescriptor = BoundImportDescriptor;
+    while ((Descriptor = *NextDescriptor))
+    {
+        /* Copy the data */
+        BoundTableEntry->TimeDateStamp = Descriptor->TimeDateStamp;
+        BoundTableEntry->OffsetModuleName = (USHORT)(BoundImportTableSize +
+                                                     (Descriptor->ModuleName -
+                                                      (ULONG_PTR)BoundLibraries));
+        BoundTableEntry->NumberOfModuleForwarderRefs = Descriptor->ForwaderReferences;
+
+        /* Now loop the forwarders */
+        BoundForwarder = (PIMAGE_BOUND_FORWARDER_REF)BoundTableEntry + 1;
+        NextForwarder = &Descriptor->Forwarders;
+        while ((Forwarder = *NextForwarder))
+        {
+            /* Copy the data */
+            BoundForwarder->TimeDateStamp = Forwarder->TimeDateStamp;
+            BoundForwarder->OffsetModuleName = (USHORT)(BoundImportTableSize +
+                                                       (Forwarder->ModuleName -
+                                                       (ULONG_PTR)BoundLibraries));
+
+            /* Move to the next new forwarder, and move to the next entry */
+            BoundForwarder++;
+            NextForwarder = &Forwarder->Next;
+        }
+
+        /* Move to next Bound Import Table Entry */
+        BoundTableEntry = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)BoundForwarder;
+
+        /* Move to the next descriptor */
+        NextDescriptor = &Descriptor->Next;
+    }
+
+    /* Loop the descriptors and forwarders to free them */
+    NextDescriptor = BoundImportDescriptor;
+    while ((Descriptor = *NextDescriptor))
+    {
+        /* Read next internal descriptor */
+        *NextDescriptor = Descriptor->Next;
+
+        /* Loop its forwarders */
+        NextForwarder = &Descriptor->Forwarders;
+        while ((Forwarder = *NextForwarder))
+        {
+            /* Next Forwarder */
+            *NextForwarder = Forwarder->Next;
+
+            /* Free it */
+            HeapFree(IMAGEHLP_hHeap, 0, Forwarder);
+        }
+
+        /* Free it */
+        HeapFree(IMAGEHLP_hHeap, 0, Descriptor);
+    }
+
+    /* Return the Bound Import Table */
+    return BoundTable;
 }
 
-VOID
+static VOID
 IMAGEAPI
 BindpWalkAndProcessImports(PLOADED_IMAGE File,
                            LPSTR DllPath,
@@ -864,16 +874,12 @@ BindpWalkAndProcessImports(PLOADED_IMAGE File,
     
 }
 
-/*
- * @implemented
+/***********************************************************************
+ *		BindImageEx (IMAGEHLP.@)
  */
-BOOL 
-IMAGEAPI 
-BindImageEx(IN DWORD Flags,
-            IN LPSTR ImageName,
-            IN LPSTR DllPath,
-            IN LPSTR SymbolPath,
-            IN PIMAGEHLP_STATUS_ROUTINE StatusRoutine)
+BOOL IMAGEAPI BindImageEx(
+  DWORD Flags, LPSTR ImageName, LPSTR DllPath, LPSTR SymbolPath,
+  PIMAGEHLP_STATUS_ROUTINE StatusRoutine)
 {
     LOADED_IMAGE FileData;
     PLOADED_IMAGE File;
@@ -969,70 +975,7 @@ Skip:
     return TRUE;
 }
 
-/*
- * @implemented
- */
-BOOL
-IMAGEAPI
-BindImage(LPSTR ImageName,
-          LPSTR DllPath,
-          LPSTR SymbolPath)
-{
-    /* Call the newer API */
-    return BindImageEx(0,
-                       ImageName,
-                       DllPath,
-                       SymbolPath,
-                       NULL);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-IMAGEAPI
-ReBaseImage(LPSTR CurrentImageName,
-            LPSTR SymbolPath,
-            BOOL fReBase,
-            BOOL fRebaseSysfileOk,
-            BOOL fGoingDown,
-            ULONG CheckImageSize,
-            ULONG *OldImageSize,
-            ULONG *OldImageBase,
-            ULONG *NewImageSize,
-            ULONG *NewImageBase,
-            ULONG TimeStamp)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-VOID
-IMAGEAPI
-RemoveRelocations(PCHAR ImageName)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-IMAGEAPI
-SplitSymbols(LPSTR ImageName,
-             LPSTR SymbolsPath,
-             LPSTR SymbolFilePath,
-             DWORD Flags)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
+/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
@@ -1057,4 +1000,222 @@ TouchFileTimes(HANDLE FileHandle,
                         NULL,
                         NULL,
                         &FileTime));
+}
+
+/***********************************************************************
+ *		MapFileAndCheckSumA (IMAGEHLP.@)
+ */
+DWORD IMAGEAPI MapFileAndCheckSumA(
+  LPSTR Filename, LPDWORD HeaderSum, LPDWORD CheckSum)
+{
+  HANDLE hFile;
+  HANDLE hMapping;
+  LPVOID BaseAddress;
+  DWORD FileLength;
+
+  TRACE("(%s, %p, %p): stub\n",
+    debugstr_a(Filename), HeaderSum, CheckSum
+  );
+
+  hFile = CreateFileA(Filename,
+		      GENERIC_READ,
+		      FILE_SHARE_READ | FILE_SHARE_WRITE,
+		      NULL,
+		      OPEN_EXISTING,
+		      FILE_ATTRIBUTE_NORMAL,
+		      0);
+  if (hFile == INVALID_HANDLE_VALUE)
+  {
+    return CHECKSUM_OPEN_FAILURE;
+  }
+
+  hMapping = CreateFileMappingW(hFile,
+			       NULL,
+			       PAGE_READONLY,
+			       0,
+			       0,
+			       NULL);
+  if (hMapping == 0)
+  {
+    CloseHandle(hFile);
+    return CHECKSUM_MAP_FAILURE;
+  }
+
+  BaseAddress = MapViewOfFile(hMapping,
+			      FILE_MAP_READ,
+			      0,
+			      0,
+			      0);
+  if (hMapping == 0)
+  {
+    CloseHandle(hMapping);
+    CloseHandle(hFile);
+    return CHECKSUM_MAPVIEW_FAILURE;
+  }
+
+  FileLength = GetFileSize(hFile,
+			   NULL);
+
+  CheckSumMappedFile(BaseAddress,
+		     FileLength,
+		     HeaderSum,
+		     CheckSum);
+
+  UnmapViewOfFile(BaseAddress);
+  CloseHandle(hMapping);
+  CloseHandle(hFile);
+
+  return 0;
+}
+
+/***********************************************************************
+ *		MapFileAndCheckSumW (IMAGEHLP.@)
+ */
+DWORD IMAGEAPI MapFileAndCheckSumW(
+  LPWSTR Filename, LPDWORD HeaderSum, LPDWORD CheckSum)
+{
+  HANDLE hFile;
+  HANDLE hMapping;
+  LPVOID BaseAddress;
+  DWORD FileLength;
+
+  TRACE("(%s, %p, %p): stub\n",
+    debugstr_w(Filename), HeaderSum, CheckSum
+  );
+
+  hFile = CreateFileW(Filename,
+		      GENERIC_READ,
+		      FILE_SHARE_READ | FILE_SHARE_WRITE,
+		      NULL,
+		      OPEN_EXISTING,
+		      FILE_ATTRIBUTE_NORMAL,
+		      0);
+  if (hFile == INVALID_HANDLE_VALUE)
+  {
+  return CHECKSUM_OPEN_FAILURE;
+  }
+
+  hMapping = CreateFileMappingW(hFile,
+			       NULL,
+			       PAGE_READONLY,
+			       0,
+			       0,
+			       NULL);
+  if (hMapping == 0)
+  {
+    CloseHandle(hFile);
+    return CHECKSUM_MAP_FAILURE;
+  }
+
+  BaseAddress = MapViewOfFile(hMapping,
+			      FILE_MAP_READ,
+			      0,
+			      0,
+			      0);
+  if (hMapping == 0)
+  {
+    CloseHandle(hMapping);
+    CloseHandle(hFile);
+    return CHECKSUM_MAPVIEW_FAILURE;
+  }
+
+  FileLength = GetFileSize(hFile,
+			   NULL);
+
+  CheckSumMappedFile(BaseAddress,
+		     FileLength,
+		     HeaderSum,
+		     CheckSum);
+
+  UnmapViewOfFile(BaseAddress);
+  CloseHandle(hMapping);
+  CloseHandle(hFile);
+
+  return 0;
+}
+
+/***********************************************************************
+ *		ReBaseImage (IMAGEHLP.@)
+ */
+BOOL IMAGEAPI ReBaseImage(
+  LPSTR CurrentImageName, LPSTR SymbolPath, BOOL fReBase,
+  BOOL fRebaseSysfileOk, BOOL fGoingDown, ULONG CheckImageSize,
+  ULONG *OldImageSize, ULONG *OldImageBase, ULONG *NewImageSize,
+  ULONG *NewImageBase, ULONG TimeStamp)
+{
+  FIXME(
+    "(%s, %s, %d, %d, %d, %ld, %p, %p, %p, %p, %ld): stub\n",
+      debugstr_a(CurrentImageName),debugstr_a(SymbolPath), fReBase,
+      fRebaseSysfileOk, fGoingDown, CheckImageSize, OldImageSize,
+      OldImageBase, NewImageSize, NewImageBase, TimeStamp
+  );
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+/***********************************************************************
+ *		RemovePrivateCvSymbolic (IMAGEHLP.@)
+ */
+BOOL IMAGEAPI RemovePrivateCvSymbolic(
+  PCHAR DebugData, PCHAR *NewDebugData, ULONG *NewDebugSize)
+{
+  FIXME("(%p, %p, %p): stub\n",
+    DebugData, NewDebugData, NewDebugSize
+  );
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+/***********************************************************************
+ *		RemoveRelocations (IMAGEHLP.@)
+ */
+VOID IMAGEAPI RemoveRelocations(PCHAR ImageName)
+{
+  FIXME("(%p): stub\n", ImageName);
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+/***********************************************************************
+ *		SplitSymbols (IMAGEHLP.@)
+ */
+BOOL IMAGEAPI SplitSymbols(
+  LPSTR ImageName, LPSTR SymbolsPath,
+  LPSTR SymbolFilePath, DWORD Flags)
+{
+  FIXME("(%s, %s, %s, %ld): stub\n",
+    debugstr_a(ImageName), debugstr_a(SymbolsPath),
+    debugstr_a(SymbolFilePath), Flags
+  );
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+/***********************************************************************
+ *		UpdateDebugInfoFile (IMAGEHLP.@)
+ */
+BOOL IMAGEAPI UpdateDebugInfoFile(
+  LPSTR ImageFileName, LPSTR SymbolPath,
+  LPSTR DebugFilePath, PIMAGE_NT_HEADERS NtHeaders)
+{
+  FIXME("(%s, %s, %s, %p): stub\n",
+    debugstr_a(ImageFileName), debugstr_a(SymbolPath),
+    debugstr_a(DebugFilePath), NtHeaders
+  );
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
+}
+
+/***********************************************************************
+ *		UpdateDebugInfoFileEx (IMAGEHLP.@)
+ */
+BOOL IMAGEAPI UpdateDebugInfoFileEx(
+  LPSTR ImageFileName, LPSTR SymbolPath, LPSTR DebugFilePath,
+  PIMAGE_NT_HEADERS NtHeaders, DWORD OldChecksum)
+{
+  FIXME("(%s, %s, %s, %p, %ld): stub\n",
+    debugstr_a(ImageFileName), debugstr_a(SymbolPath),
+    debugstr_a(DebugFilePath), NtHeaders, OldChecksum
+  );
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }

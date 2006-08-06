@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /*
@@ -30,6 +30,10 @@
 
 //#define NDEBUG
 #include <debug.h>
+#define _WINNT_H
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -44,7 +48,8 @@ IMAGEHLP_GetSecurityDirOffset(HANDLE handle,
     DWORD count;
     BOOL r;
     IMAGE_DATA_DIRECTORY *sd;
-    DPRINT("handle %p\n", handle );
+
+    TRACE("handle %p\n", handle );
 
     /* read the DOS header */
     count = SetFilePointer( handle, 0, NULL, FILE_BEGIN );
@@ -71,19 +76,21 @@ IMAGEHLP_GetSecurityDirOffset(HANDLE handle,
     sd = &nt_hdr.OptionalHeader.
                     DataDirectory[IMAGE_DIRECTORY_ENTRY_SECURITY];
 
-    DPRINT("size = %lx addr = %lx\n", sd->Size, sd->VirtualAddress);
+    TRACE("size = %lx addr = %lx\n", sd->Size, sd->VirtualAddress);
     *pdwSize = sd->Size;
     *pdwOfs = sd->VirtualAddress;
 
     return TRUE;
 }
 
-static
-BOOL
-IMAGEHLP_GetCertificateOffset(HANDLE handle,
-                              DWORD num,
-                              DWORD *pdwOfs,
-                              DWORD *pdwSize)
+/***********************************************************************
+ * IMAGEHLP_GetCertificateOffset (INTERNAL)
+ *
+ * Read a file's PE header, and return the offset and size of the 
+ *  security directory.
+ */
+static BOOL IMAGEHLP_GetCertificateOffset( HANDLE handle, DWORD num,
+                                           DWORD *pdwOfs, DWORD *pdwSize )
 {
     DWORD size, count, offset, len, sd_VirtualAddr;
     BOOL r;
@@ -124,7 +131,8 @@ IMAGEHLP_GetCertificateOffset(HANDLE handle,
     *pdwOfs = sd_VirtualAddr + offset;
     *pdwSize = len;
 
-    DPRINT("len = %lx addr = %lx\n", len, sd_VirtualAddr + offset);
+    TRACE("len = %lx addr = %lx\n", len, sd_VirtualAddr + offset);
+
     return TRUE;
 }
 
@@ -167,28 +175,24 @@ ImageAddCertificate(HANDLE FileHandle,
     return FALSE;
 }
 
-/*
- * @unimplemented
+/***********************************************************************
+ *		ImageEnumerateCertificates (IMAGEHLP.@)
  */
-BOOL
-IMAGEAPI
-ImageEnumerateCertificates(HANDLE FileHandle,
-                           WORD TypeFilter,
-                           PDWORD CertificateCount,
-                           PDWORD Indices,
-                           DWORD IndexCount)
+BOOL IMAGEAPI ImageEnumerateCertificates(
+    HANDLE FileHandle, WORD TypeFilter, PDWORD CertificateCount,
+    PDWORD Indices, DWORD IndexCount)
 {
     DWORD size, count, offset, sd_VirtualAddr;
     WIN_CERTIFICATE hdr;
     const size_t cert_hdr_size = sizeof hdr - sizeof hdr.bCertificate;
     BOOL r;
 
-    DPRINT("%p %hd %p %p %ld\n",
+    TRACE("%p %hd %p %p %ld\n",
            FileHandle, TypeFilter, CertificateCount, Indices, IndexCount);
 
     if( Indices )
     {
-        DPRINT1("Indicies not FileHandled!\n");
+        FIXME("Indicies not handled!\n");
         return FALSE;
     }
 
@@ -211,7 +215,8 @@ ImageEnumerateCertificates(HANDLE FileHandle,
         if( count != cert_hdr_size )
             return FALSE;
 
-        DPRINT("Size = %08lx  id = %08hx\n", hdr.dwLength, hdr.wCertificateType );
+        TRACE("Size = %08lx  id = %08hx\n",
+               hdr.dwLength, hdr.wCertificateType );
 
         /* check the certificate is not too big or too small */
         if( hdr.dwLength < cert_hdr_size )
@@ -232,18 +237,18 @@ ImageEnumerateCertificates(HANDLE FileHandle,
     return TRUE;
 }
 
-/*
- * @implemented
+/***********************************************************************
+ *		ImageGetCertificateData (IMAGEHLP.@)
+ *
+ *  FIXME: not sure that I'm dealing with the Index the right way
  */
-BOOL
-IMAGEAPI
-ImageGetCertificateData(HANDLE handle,
-                        DWORD Index,
-                        LPWIN_CERTIFICATE Certificate,
-                        PDWORD RequiredLength)
+BOOL IMAGEAPI ImageGetCertificateData(
+                HANDLE handle, DWORD Index,
+                LPWIN_CERTIFICATE Certificate, PDWORD RequiredLength)
 {
     DWORD r, offset, ofs, size, count;
-    DPRINT("%p %ld %p %p\n", handle, Index, Certificate, RequiredLength);
+
+    TRACE("%p %ld %p %p\n", handle, Index, Certificate, RequiredLength);
 
     if( !IMAGEHLP_GetCertificateOffset( handle, Index, &ofs, &size ) )
         return FALSE;
@@ -273,18 +278,16 @@ ImageGetCertificateData(HANDLE handle,
     if( count != size )
         return FALSE;
 
-    DPRINT("OK\n");
+    TRACE("OK\n");
+
     return TRUE;
 }
 
-/*
- * @unimplemented
+/***********************************************************************
+ *		ImageGetCertificateHeader (IMAGEHLP.@)
  */
-BOOL
-IMAGEAPI
-ImageGetCertificateHeader(HANDLE FileHandle,
-                          DWORD CertificateIndex,
-                          LPWIN_CERTIFICATE Certificateheader)
+BOOL IMAGEAPI ImageGetCertificateHeader(
+    HANDLE FileHandle, DWORD CertificateIndex, LPWIN_CERTIFICATE Certificateheader)
 {
     DWORD r, offset, ofs, size, count;
     const size_t cert_hdr_size = sizeof *Certificateheader -
@@ -308,36 +311,33 @@ ImageGetCertificateHeader(HANDLE FileHandle,
     if( count != cert_hdr_size )
         return FALSE;
 
-    DPRINT("OK\n");
+    TRACE("OK\n");
+
     return TRUE;
 }
 
-/*
- * @unimplemented
+/***********************************************************************
+ *		ImageGetDigestStream (IMAGEHLP.@)
  */
-BOOL
-IMAGEAPI
-ImageGetDigestStream(HANDLE FileHandle,
-                     DWORD DigestLevel,
-                     DIGEST_FUNCTION DigestFunction,
-                     DIGEST_HANDLE DigestHandle)
+BOOL IMAGEAPI ImageGetDigestStream(
+  HANDLE FileHandle, DWORD DigestLevel,
+  DIGEST_FUNCTION DigestFunction, DIGEST_HANDLE DigestHandle)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+  FIXME("(%p, %ld, %p, %p): stub\n",
+    FileHandle, DigestLevel, DigestFunction, DigestHandle
+  );
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
-/*
- * @unimplemented
+/***********************************************************************
+ *		ImageRemoveCertificate (IMAGEHLP.@)
  */
-BOOL
-IMAGEAPI
-ImageRemoveCertificate(HANDLE FileHandle,
-                       DWORD Index)
+BOOL IMAGEAPI ImageRemoveCertificate(HANDLE FileHandle, DWORD Index)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+  FIXME("(%p, %ld): stub\n", FileHandle, Index);
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return FALSE;
 }
 
 
@@ -391,138 +391,4 @@ CheckSumMappedFile(LPVOID BaseAddress,
   *HeaderSum = Header->OptionalHeader.CheckSum;
 
   return Header;
-}
-
-/*
- * @implemented
- */
-DWORD
-IMAGEAPI
-MapFileAndCheckSumA(LPSTR Filename,
-                    LPDWORD HeaderSum,
-                    LPDWORD CheckSum)
-{
-  HANDLE hFile;
-  HANDLE hMapping;
-  LPVOID BaseAddress;
-  DWORD FileLength;
-
-  DPRINT("(%s, %p, %p): stub\n", Filename, HeaderSum, CheckSum);
-
-  hFile = CreateFileA(Filename,
-              GENERIC_READ,
-              FILE_SHARE_READ | FILE_SHARE_WRITE,
-              NULL,
-              OPEN_EXISTING,
-              FILE_ATTRIBUTE_NORMAL,
-              0);
-  if (hFile == INVALID_HANDLE_VALUE)
-  {
-    return CHECKSUM_OPEN_FAILURE;
-  }
-
-  hMapping = CreateFileMappingW(hFile,
-                   NULL,
-                   PAGE_READONLY,
-                   0,
-                   0,
-                   NULL);
-  if (hMapping == 0)
-  {
-    CloseHandle(hFile);
-    return CHECKSUM_MAP_FAILURE;
-  }
-
-  BaseAddress = MapViewOfFile(hMapping,
-                  FILE_MAP_READ,
-                  0,
-                  0,
-                  0);
-  if (hMapping == 0)
-  {
-    CloseHandle(hMapping);
-    CloseHandle(hFile);
-    return CHECKSUM_MAPVIEW_FAILURE;
-  }
-
-  FileLength = GetFileSize(hFile,
-               NULL);
-
-  CheckSumMappedFile(BaseAddress,
-             FileLength,
-             HeaderSum,
-             CheckSum);
-
-  UnmapViewOfFile(BaseAddress);
-  CloseHandle(hMapping);
-  CloseHandle(hFile);
-
-  return 0;
-}
-
-/*
- * @implemented
- */
-DWORD
-IMAGEAPI
-MapFileAndCheckSumW(LPWSTR Filename,
-                    LPDWORD HeaderSum,
-                    LPDWORD CheckSum)
-{
-  HANDLE hFile;
-  HANDLE hMapping;
-  LPVOID BaseAddress;
-  DWORD FileLength;
-
-  DPRINT("(%S, %p, %p): stub\n", Filename, HeaderSum, CheckSum);
-
-  hFile = CreateFileW(Filename,
-              GENERIC_READ,
-              FILE_SHARE_READ | FILE_SHARE_WRITE,
-              NULL,
-              OPEN_EXISTING,
-              FILE_ATTRIBUTE_NORMAL,
-              0);
-  if (hFile == INVALID_HANDLE_VALUE)
-  {
-  return CHECKSUM_OPEN_FAILURE;
-  }
-
-  hMapping = CreateFileMappingW(hFile,
-                   NULL,
-                   PAGE_READONLY,
-                   0,
-                   0,
-                   NULL);
-  if (hMapping == 0)
-  {
-    CloseHandle(hFile);
-    return CHECKSUM_MAP_FAILURE;
-  }
-
-  BaseAddress = MapViewOfFile(hMapping,
-                  FILE_MAP_READ,
-                  0,
-                  0,
-                  0);
-  if (hMapping == 0)
-  {
-    CloseHandle(hMapping);
-    CloseHandle(hFile);
-    return CHECKSUM_MAPVIEW_FAILURE;
-  }
-
-  FileLength = GetFileSize(hFile,
-               NULL);
-
-  CheckSumMappedFile(BaseAddress,
-             FileLength,
-             HeaderSum,
-             CheckSum);
-
-  UnmapViewOfFile(BaseAddress);
-  CloseHandle(hMapping);
-  CloseHandle(hFile);
-
-  return 0;
 }
