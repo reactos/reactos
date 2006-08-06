@@ -4,13 +4,13 @@
  * FILE:            drivers/dd/serial/close.c
  * PURPOSE:         Serial IRP_MJ_CLOSE operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
 #include "serial.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)

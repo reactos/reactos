@@ -4,7 +4,7 @@
  * FILE:            drivers/dd/serial/create.c
  * PURPOSE:         Serial IRP_MJ_READ/IRP_MJ_WRITE operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -113,7 +113,7 @@ ReadBytes(
 		Irp->IoStatus.Status = STATUS_SUCCESS;
 }
 
-static VOID STDCALL
+static VOID NTAPI
 SerialReadWorkItem(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PVOID pWorkItemData /* real type PWORKITEM_DATA */)
@@ -134,7 +134,7 @@ SerialReadWorkItem(
 	ExFreePoolWithTag(pWorkItemData, SERIAL_TAG);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialRead(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -245,7 +245,7 @@ ByeBye:
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialWrite(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)

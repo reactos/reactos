@@ -4,14 +4,14 @@
  * FILE:            drivers/dd/serial/misc.c
  * PURPOSE:         Misceallenous operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 
 #define NDEBUG
 #include "serial.h"
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 ForwardIrpAndWaitCompletion(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,
@@ -50,7 +50,7 @@ ForwardIrpAndWait(
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -63,7 +63,7 @@ ForwardIrpAndForget(
 	return IoCallDriver(LowerDevice, Irp);
 }
 
-VOID STDCALL
+VOID NTAPI
 SerialReceiveByte(
 	IN PKDPC Dpc,
 	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
@@ -100,7 +100,7 @@ SerialReceiveByte(
 	WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_DATA_RECEIVED);
 }
 
-VOID STDCALL
+VOID NTAPI
 SerialSendByte(
 	IN PKDPC Dpc,
 	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
@@ -138,7 +138,7 @@ SerialSendByte(
 	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
 }
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 SerialInterruptService(
 	IN PKINTERRUPT Interrupt,
 	IN OUT PVOID ServiceContext)
@@ -179,6 +179,14 @@ SerialInterruptService(
 					KeInsertQueueDpc(&DeviceExtension->ReceivedByteDpc, NULL, NULL);
 				else
 					; /* FIXME: stop reception */
+			}
+			if (MSR & SR_MSR_RI_CHANGED)
+			{
+				DPRINT("SR_MSR_RI_CHANGED changed: now %d\n", MSR & SI_MSR_RI);
+			}
+			if (MSR & SR_MSR_DCD_CHANGED)
+			{
+				DPRINT("SR_MSR_DCD_CHANGED changed: now %d\n", MSR & SR_MSR_DCD);
 			}
 			IER = READ_PORT_UCHAR(SER_IER(ComPortBase));
 			WRITE_PORT_UCHAR(SER_IER(ComPortBase), IER | SR_IER_MSR_CHANGE);

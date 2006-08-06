@@ -4,7 +4,7 @@
  * FILE:            drivers/dd/serial/circularbuffer.c
  * PURPOSE:         Operations on a circular buffer
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG

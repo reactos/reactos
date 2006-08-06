@@ -4,7 +4,7 @@
  * FILE:            drivers/dd/serial/pnp.c
  * PURPOSE:         Serial IRP_MJ_PNP operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 
@@ -12,7 +12,7 @@
 #define NDEBUG
 #include "serial.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialAddDeviceInternal(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo,
@@ -104,7 +104,7 @@ ByeBye:
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialAddDevice(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo)
@@ -122,7 +122,7 @@ SerialAddDevice(
 	return SerialAddDeviceInternal(DriverObject, Pdo, UartUnknown, NULL, NULL);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialPnpStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PCM_RESOURCE_LIST ResourceList,
@@ -294,7 +294,7 @@ SerialPnpStartDevice(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialPnp(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)

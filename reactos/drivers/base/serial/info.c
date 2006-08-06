@@ -4,13 +4,13 @@
  * FILE:            drivers/dd/serial/info.c
  * PURPOSE:         Serial IRP_MJ_QUERY_INFORMATION operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
 #include "serial.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialQueryInformation(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)

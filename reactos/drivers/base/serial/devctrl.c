@@ -4,7 +4,7 @@
  * FILE:            drivers/dd/serial/devctrl.c
  * PURPOSE:         Serial IRP_MJ_DEVICE_CONTROL operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
@@ -45,7 +45,7 @@ SerialGetUserBuffers(
 	}
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialSetBaudRate(
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension,
 	IN ULONG NewBaudRate)
@@ -54,6 +54,9 @@ SerialSetBaudRate(
 	USHORT divisor;
 	PUCHAR ComPortBase = (PUCHAR)DeviceExtension->BaseAddress;
 	NTSTATUS Status = STATUS_SUCCESS;
+
+	if (NewBaudRate == 0)
+		return STATUS_INVALID_PARAMETER;
 
 	divisor = (USHORT)(BAUD_CLOCK / (CLOCKS_PER_BIT * NewBaudRate));
 	BaudRate = BAUD_CLOCK / (CLOCKS_PER_BIT * divisor);
@@ -80,7 +83,7 @@ SerialSetBaudRate(
 	return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialSetLineControl(
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension,
 	IN PSERIAL_LINE_CONTROL NewSettings)
@@ -272,7 +275,7 @@ SerialGetCommStatus(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SerialDeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
