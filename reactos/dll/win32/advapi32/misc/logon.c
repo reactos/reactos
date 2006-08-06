@@ -666,7 +666,7 @@ LogonUserW (LPWSTR lpszUsername,
       DPRINT ("SamGetUserSid() failed\n");
       RtlAllocateAndInitializeSid (&SystemAuthority,
 				   5,
-				   SECURITY_NT_NON_UNIQUE_RID,
+				   SECURITY_NT_NON_UNIQUE,
 				   0x12345678,
 				   0x12345678,
 				   0x12345678,

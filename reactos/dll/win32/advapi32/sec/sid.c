@@ -31,6 +31,63 @@ typedef struct _ACEFLAG
    DWORD value;
 } ACEFLAG, *LPACEFLAG;
 
+typedef struct _MAX_SID
+{
+    /* same fields as struct _SID */
+    BYTE Revision;
+    BYTE SubAuthorityCount;
+    SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+    DWORD SubAuthority[SID_MAX_SUB_AUTHORITIES];
+} MAX_SID;
+
+typedef struct WELLKNOWNSID
+{
+    WCHAR wstr[2];
+    WELL_KNOWN_SID_TYPE Type;
+    MAX_SID Sid;
+} WELLKNOWNSID;
+
+static const WELLKNOWNSID WellKnownSids[] =
+{
+    { {0,0}, WinNullSid, { SID_REVISION, 1, { SECURITY_NULL_SID_AUTHORITY }, { SECURITY_NULL_RID } } },
+    { {'W','D'}, WinWorldSid, { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY }, { SECURITY_WORLD_RID } } },
+    { {0,0}, WinLocalSid, { SID_REVISION, 1, { SECURITY_LOCAL_SID_AUTHORITY }, { SECURITY_LOCAL_RID } } },
+    { {'C','O'}, WinCreatorOwnerSid, { SID_REVISION, 1, { SECURITY_CREATOR_SID_AUTHORITY }, { SECURITY_CREATOR_OWNER_RID } } },
+    { {'C','G'}, WinCreatorGroupSid, { SID_REVISION, 1, { SECURITY_CREATOR_SID_AUTHORITY }, { SECURITY_CREATOR_GROUP_RID } } },
+    { {0,0}, WinCreatorOwnerServerSid, { SID_REVISION, 1, { SECURITY_CREATOR_SID_AUTHORITY }, { SECURITY_CREATOR_OWNER_SERVER_RID } } },
+    { {0,0}, WinCreatorGroupServerSid, { SID_REVISION, 1, { SECURITY_CREATOR_SID_AUTHORITY }, { SECURITY_CREATOR_GROUP_SERVER_RID } } },
+    { {0,0}, WinNtAuthoritySid, { SID_REVISION, 0, { SECURITY_NT_AUTHORITY }, { } } },
+    { {0,0}, WinDialupSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_DIALUP_RID } } },
+    { {'N','U'}, WinNetworkSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_NETWORK_RID } } },
+    { {0,0}, WinBatchSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_BATCH_RID } } },
+    { {'I','U'}, WinInteractiveSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_INTERACTIVE_RID } } },
+    { {'S','U'}, WinServiceSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_SERVICE_RID } } },
+    { {'A','N'}, WinAnonymousSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_ANONYMOUS_LOGON_RID } } },
+    { {0,0}, WinProxySid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_PROXY_RID } } },
+    { {'E','D'}, WinEnterpriseControllersSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_ENTERPRISE_CONTROLLERS_RID } } },
+    { {'P','S'}, WinSelfSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_PRINCIPAL_SELF_RID } } },
+    { {'A','U'}, WinAuthenticatedUserSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_AUTHENTICATED_USER_RID } } },
+    { {'R','C'}, WinRestrictedCodeSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_RESTRICTED_CODE_RID } } },
+    { {0,0}, WinTerminalServerSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_TERMINAL_SERVER_RID } } },
+    { {0,0}, WinRemoteLogonIdSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_REMOTE_LOGON_RID } } },
+    { {'S','Y'}, WinLocalSystemSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_LOCAL_SYSTEM_RID } } },
+    { {'L','S'}, WinLocalServiceSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_LOCAL_SERVICE_RID } } },
+    { {'N','S'}, WinNetworkServiceSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_NETWORK_SERVICE_RID } } },
+    { {0,0}, WinBuiltinDomainSid, { SID_REVISION, 1, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID } } },
+    { {'B','A'}, WinBuiltinAdministratorsSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS } } },
+    { {'B','U'}, WinBuiltinUsersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_USERS } } },
+    { {'B','G'}, WinBuiltinGuestsSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_GUESTS } } },
+    { {'P','U'}, WinBuiltinPowerUsersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_POWER_USERS } } },
+    { {'A','O'}, WinBuiltinAccountOperatorsSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ACCOUNT_OPS } } },
+    { {'S','O'}, WinBuiltinSystemOperatorsSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_SYSTEM_OPS } } },
+    { {'P','O'}, WinBuiltinPrintOperatorsSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_PRINT_OPS } } },
+    { {'B','O'}, WinBuiltinBackupOperatorsSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_BACKUP_OPS } } },
+    { {'R','E'}, WinBuiltinReplicatorSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_REPLICATOR } } },
+    { {'R','U'}, WinBuiltinPreWindows2000CompatibleAccessSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_PREW2KCOMPACCESS } } },
+    { {'R','D'}, WinBuiltinRemoteDesktopUsersSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS } } },
+    { {'N','O'}, WinBuiltinNetworkConfigurationOperatorsSid, { SID_REVISION, 2, { SECURITY_NT_AUTHORITY }, { SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS } } },
+};
+
 static const SID sidWorld = { SID_REVISION, 1, { SECURITY_WORLD_SID_AUTHORITY} , { SECURITY_WORLD_RID } };
 
 /*
@@ -67,6 +124,57 @@ static const WCHAR SDDL_INHERIT_ONLY[]       = {'I','O',0};
 static const WCHAR SDDL_INHERITED[]          = {'I','D',0};
 static const WCHAR SDDL_AUDIT_SUCCESS[]      = {'S','A',0};
 static const WCHAR SDDL_AUDIT_FAILURE[]      = {'F','A',0};
+
+static const char * debugstr_sid(PSID sid)
+{
+    int auth = 0;
+    SID * psid = (SID *)sid;
+
+    if (psid == NULL)
+        return "(null)";
+
+    auth = psid->IdentifierAuthority.Value[5] +
+           (psid->IdentifierAuthority.Value[4] << 8) +
+           (psid->IdentifierAuthority.Value[3] << 16) +
+           (psid->IdentifierAuthority.Value[2] << 24);
+
+    switch (psid->SubAuthorityCount) {
+    case 0:
+        return wine_dbg_sprintf("S-%d-%d", psid->Revision, auth);
+    case 1:
+        return wine_dbg_sprintf("S-%d-%d-%lu", psid->Revision, auth,
+            psid->SubAuthority[0]);
+    case 2:
+        return wine_dbg_sprintf("S-%d-%d-%lu-%lu", psid->Revision, auth,
+            psid->SubAuthority[0], psid->SubAuthority[1]);
+    case 3:
+        return wine_dbg_sprintf("S-%d-%d-%lu-%lu-%lu", psid->Revision, auth,
+            psid->SubAuthority[0], psid->SubAuthority[1], psid->SubAuthority[2]);
+    case 4:
+        return wine_dbg_sprintf("S-%d-%d-%lu-%lu-%lu-%lu", psid->Revision, auth,
+            psid->SubAuthority[0], psid->SubAuthority[1], psid->SubAuthority[2],
+            psid->SubAuthority[3]);
+    case 5:
+        return wine_dbg_sprintf("S-%d-%d-%lu-%lu-%lu-%lu-%lu", psid->Revision, auth,
+            psid->SubAuthority[0], psid->SubAuthority[1], psid->SubAuthority[2],
+            psid->SubAuthority[3], psid->SubAuthority[4]);
+    case 6:
+        return wine_dbg_sprintf("S-%d-%d-%lu-%lu-%lu-%lu-%lu-%lu", psid->Revision, auth,
+            psid->SubAuthority[3], psid->SubAuthority[1], psid->SubAuthority[2],
+            psid->SubAuthority[0], psid->SubAuthority[4], psid->SubAuthority[5]);
+    case 7:
+        return wine_dbg_sprintf("S-%d-%d-%lu-%lu-%lu-%lu-%lu-%lu-%lu", psid->Revision, auth,
+            psid->SubAuthority[0], psid->SubAuthority[1], psid->SubAuthority[2],
+            psid->SubAuthority[3], psid->SubAuthority[4], psid->SubAuthority[5],
+            psid->SubAuthority[6]);
+    case 8:
+        return wine_dbg_sprintf("S-%d-%d-%lu-%lu-%lu-%lu-%lu-%lu-%lu-%lu", psid->Revision, auth,
+            psid->SubAuthority[0], psid->SubAuthority[1], psid->SubAuthority[2],
+            psid->SubAuthority[3], psid->SubAuthority[4], psid->SubAuthority[5],
+            psid->SubAuthority[6], psid->SubAuthority[7]);
+    }
+    return "(too-big)";
+}
 
 /* set last error code from NT status and get the proper boolean return value */
 /* used for functions that are a simple wrapper around the corresponding ntdll API */
@@ -1020,7 +1128,36 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
                    OUT PSID pSid,
                    IN OUT DWORD* cbSid)
 {
-    FIXME("unimplemented!\n", __FUNCTION__);
+    int i;
+    TRACE("(%d, %s, %p, %p)\n", WellKnownSidType, debugstr_sid(DomainSid), pSid, cbSid);
+
+    if (DomainSid != NULL) {
+        FIXME("Only local computer supported!\n");
+        SetLastError(ERROR_INVALID_PARAMETER);	/* FIXME */
+        return FALSE;
+    }
+
+    if (cbSid == NULL || pSid == NULL) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++) {
+        if (WellKnownSids[i].Type == WellKnownSidType) {
+            DWORD length = GetSidLengthRequired(WellKnownSids[i].Sid.SubAuthorityCount);
+
+            if (*cbSid < length) {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return FALSE;
+            }
+
+            CopyMemory(pSid, &WellKnownSids[i].Sid.Revision, length);
+            *cbSid = length;
+            return TRUE;
+        }
+    }
+
+    SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
 }
 
@@ -1032,7 +1169,14 @@ BOOL STDCALL
 IsWellKnownSid(IN PSID pSid,
                IN WELL_KNOWN_SID_TYPE WellKnownSidType)
 {
-    FIXME("unimplemented!\n", __FUNCTION__);
+    int i;
+    TRACE("(%s, %d)\n", debugstr_sid(pSid), WellKnownSidType);
+
+    for (i = 0; i < sizeof(WellKnownSids)/sizeof(WellKnownSids[0]); i++)
+        if (WellKnownSids[i].Type == WellKnownSidType)
+            if (EqualSid(pSid, (PSID)&(WellKnownSids[i].Sid.Revision)))
+                return TRUE;
+
     return FALSE;
 }
 
