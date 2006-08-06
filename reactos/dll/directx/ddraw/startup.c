@@ -212,7 +212,8 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     /* Setup calback struct so we do not need refill same info again */
     This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;    
     This->mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;  
-                  
+       
+	This->mDDrawLocal.lpGbl = &This->mDDrawGlobal;
     return DD_OK;
 }
 

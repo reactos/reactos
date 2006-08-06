@@ -61,13 +61,18 @@ Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
     DX_WINDBG_trace();
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	ULONG ref=0;
-    
+	   
 	if (iface!=NULL)
 	{
-        ref = InterlockedIncrement(  (PLONG) &This->mDDrawLocal.dwLocalRefCnt);       
+		This->mDDrawLocal.dwLocalRefCnt++;
+        This->Ref++;  
+
+		if (This->mDDrawLocal.lpGbl != NULL)
+		{
+			This->mDDrawLocal.lpGbl->dwRefCnt++;
+		}
 	}    
-    return ref;
+    return This->Ref;
 }
 
 /*
@@ -81,13 +86,18 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
     DX_WINDBG_trace();
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	ULONG ref=0;
-
+	
 	if (iface!=NULL)
 	{	  	
-		ref = InterlockedDecrement( (PLONG) &This->mDDrawLocal.dwLocalRefCnt);
+		This->mDDrawLocal.dwLocalRefCnt--;
+        This->Ref--;  
+
+		if (This->mDDrawLocal.lpGbl != NULL)
+		{
+			This->mDDrawLocal.lpGbl->dwRefCnt--;
+		}
             
-		if (ref == 0)
+		if ( This->Ref == 0)
 		{
 			// set resoltion back to the one in registry
 			if(This->cooperative_level & DDSCL_EXCLUSIVE)
@@ -102,7 +112,7 @@ Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
             }
 		}
     }
-    return ref;
+    return This->Ref;
 }
 
 /*

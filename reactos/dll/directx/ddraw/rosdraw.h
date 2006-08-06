@@ -50,6 +50,8 @@ typedef struct
 	IDirectDraw2Vtbl* lpVtbl_v2;
 	IDirectDrawVtbl*  lpVtbl_v1;
 
+	ULONG Ref;
+
 	/* The main struct that contain all info from the HAL and HEL */	
 	HDC hdc;
     DDRAWI_DIRECTDRAW_GBL mDDrawGlobal;
