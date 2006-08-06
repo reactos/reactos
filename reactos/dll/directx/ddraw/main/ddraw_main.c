@@ -250,9 +250,8 @@ HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
 	
 	if (This->mDdCreatePalette.CreatePalette(&This->mDdCreatePalette) == DDHAL_DRIVER_HANDLED);
     {				
-		if (This->mDdCreatePalette.ddRVal == DD_OK)
+		if (This->mDdSetMode.ddRVal == DD_OK)
 		{
-			
 			Main_DirectDraw_AddRef(iface);
 			return That->lpVtbl->Initialize (*ppPalette, (LPDIRECTDRAW)iface, dwFlags, palent);
 		}
@@ -261,6 +260,7 @@ HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
 	return  DDERR_NODRIVERSUPPORT;	 		    			    
 }
 
+HRESULT internal_CreateNewSurface(IDirectDrawImpl* This, IDirectDrawSurfaceImpl* That);
 /*
  * stub
  * Status not done
@@ -271,53 +271,260 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     DX_WINDBG_trace();
 
     DxSurf *surf;
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    IDirectDrawSurfaceImpl* That; 
+	DEVMODE DevMode; 
+	LONG extra_surfaces = 0;
 
     if (pUnkOuter!=NULL) 
-        return DDERR_INVALIDPARAMS; 
+	{
+        return CLASS_E_NOAGGREGATION; 
+	}
 
     if(sizeof(DDSURFACEDESC2)!=pDDSD->dwSize && sizeof(DDSURFACEDESC)!=pDDSD->dwSize)
+	{
         return DDERR_UNSUPPORTED;
-
-    // the nasty com stuff
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-    IDirectDrawSurfaceImpl* That; 
-
-    That = (IDirectDrawSurfaceImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawSurfaceImpl));
+	}
+    
+    That = (IDirectDrawSurfaceImpl*)DxHeapMemAlloc(sizeof(IDirectDrawSurfaceImpl));
     
     if (That == NULL) 
 	{
         return E_OUTOFMEMORY;
 	}
-    ZeroMemory(That, sizeof(IDirectDrawSurfaceImpl));
-    
-    surf = (DxSurf*)HeapAlloc(GetProcessHeap(), 0, sizeof(DxSurf));
+
+    surf = (DxSurf*)DxHeapMemAlloc(sizeof(DxSurf));
 
     if (surf == NULL) 
 	{
-        // FIXME Free memmory at exit
+		DxHeapMemFree(That);
         return E_OUTOFMEMORY;
 	}
-	 ZeroMemory(surf, sizeof(DxSurf));
 
-    
- 
     That->lpVtbl = &DirectDrawSurface7_Vtable;
     That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
-             
-    That->Owner = (IDirectDrawImpl *)This;
-    
-    /* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
-    That->Owner->mDDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
-   
-   
+    // FIXME free This->mDDrawGlobal.dsList  on release 
+	if (This->mDDrawGlobal.dsList == NULL)
+	{
+		This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT));  
+		if (This->mDDrawGlobal.dsList == NULL)
+		{			
+			DxHeapMemFree(surf);
+			DxHeapMemFree(That);
+            return E_OUTOFMEMORY;
+		}
+
+		That->Owner = (IDirectDrawImpl *)This;
+		That->Owner->mDDrawGlobal.dsList->dwIntRefCnt =1;
+
+		/* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
+		That->Owner->mDDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
+	}
+      
     That->Surf = surf;
 
-    // UINT i;
-    //IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    //IDirectDrawSurfaceImpl* That = ppSurf;        
+	/* Code from wine cvs 24/7-2006 */
+
+	if (!(pDDSD->dwFlags & DDSD_CAPS))
+    {
+        /* DVIDEO.DLL does forget the DDSD_CAPS flag ... *sigh* */
+        pDDSD->dwFlags |= DDSD_CAPS;
+    }
+    if (pDDSD->ddsCaps.dwCaps == 0)
+    {
+        /* This has been checked on real Windows */
+        pDDSD->ddsCaps.dwCaps = DDSCAPS_LOCALVIDMEM | DDSCAPS_VIDEOMEMORY;
+    }
+
+    if (pDDSD->ddsCaps.dwCaps & DDSCAPS_ALLOCONLOAD)
+    {
+        /* If the surface is of the 'alloconload' type, ignore the LPSURFACE field */
+        pDDSD->dwFlags &= ~DDSD_LPSURFACE;
+    }
+
+    if ((pDDSD->dwFlags & DDSD_LPSURFACE) && (pDDSD->lpSurface == NULL))
+    {
+        /* Frank Herbert's Dune specifies a null pointer for the surface, ignore the LPSURFACE field */       
+        pDDSD->dwFlags &= ~DDSD_LPSURFACE;
+    }
+
+	 
+	/* continue with my own code */
+	memcpy(&That->Surf->mddsdPrimary,pDDSD,pDDSD->dwSize);
+    That->Surf->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC2);     
+
+	memset(&DevMode,0,sizeof(DEVMODE));
+	DevMode.dmSize = (WORD)sizeof(DEVMODE);
+	DevMode.dmDriverExtra = 0;
+
+	EnumDisplaySettingsEx(NULL, ENUM_CURRENT_SETTINGS, &DevMode, 0);
+	if(!(pDDSD->dwFlags & DDSD_PIXELFORMAT))
+	{			
+		That->Surf->mddsdPrimary.dwFlags |= DDSD_PIXELFORMAT;
+        That->Surf->mddsdPrimary.ddpfPixelFormat.dwSize=sizeof(DDPIXELFORMAT);
+		
+		if(pDDSD->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+        {
+			/* FIXME */
+			DX_STUB_str("DDSCAPS_ZBUFFER not implement");
+			switch(pDDSD->dwMipMapCount) 
+            {
+                case 15:            
+                    break;
+                case 16:                    
+                    break;
+                case 24:                   
+                    break;
+                case 32:                    
+                    break;
+                default:
+                    DX_STUB_str("nknown Z buffer bit depth");
+            }
+		}
+		else
+		{
+			switch(DevMode.dmBitsPerPel)
+			{
+				case  8:					 
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFourCC = 0;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRGBBitCount=8;
+					/* FIXME right value */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRBitMask = 0xFF0000; /* red bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwGBitMask = 0; /* Green bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwBBitMask = 0; /* Blue bitmask */
+				break;
+
+				case 15:
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFourCC = 0;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRGBBitCount=15;
+					/* FIXME right value */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRBitMask = 0x7C00; /* red bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwGBitMask = 0x3E0; /* Green bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwBBitMask = 0x1F; /* Blue bitmask */
+				break;
+
+				case 16: 
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFourCC = 0;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRGBBitCount=16;
+					/* FIXME right value */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRBitMask = 0xF800; /* red bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwGBitMask = 0x7E0; /* Green bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwBBitMask = 0x1F; /* Blue bitmask */
+				break;
+
+				case 24: 
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFourCC = 0;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRGBBitCount=24;
+					/* FIXME right value */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRBitMask = 0xFF0000; /* red bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwGBitMask = 0x00FF00; /* Green bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwBBitMask = 0x0000FF; /* Blue bitmask */
+				break;
+
+				case 32: 
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFlags = DDPF_RGB;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwFourCC = 0;
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRGBBitCount=8;
+					/* FIXME right value */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwRBitMask = 0xFF0000; /* red bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwGBitMask = 0x00FF00; /* Green bitmask */
+					That->Surf->mddsdPrimary.ddpfPixelFormat.dwBBitMask = 0x0000FF; /* Blue bitmask */
+				break;
+
+				default:
+				break;          
+			}
+		}	/* end else */					
+	} /* end if(!(pDDSD->dwFlags & DDSD_PIXELFORMAT)) */
+
+	/* Code from wine cvs 24/7-2006 */
+    if(!(pDDSD->dwFlags & DDSD_WIDTH) || !(pDDSD->dwFlags & DDSD_HEIGHT) )
+    {
+        HWND window = (HWND) This->mDDrawGlobal.lpExclusiveOwner->hWnd;
+
+        /* Fallback: From WineD3D / original mode */
+        That->Surf->mddsdPrimary.dwFlags |= DDSD_WIDTH | DDSD_HEIGHT;
+
+        That->Surf->mddsdPrimary.dwWidth =DevMode.dmPelsWidth;
+        That->Surf->mddsdPrimary.dwHeight = DevMode.dmPelsHeight;
+      
+        if( (window != 0) )
+        {
+            RECT rect;
+            if(GetWindowRect(window, &rect) )
+            {
+                /* This is a hack until I find a better solution */
+                if( (rect.right - rect.left) <= 1 ||
+                    (rect.bottom - rect.top) <= 1 )
+                {
+					/*
+                    FIXME("Wanted to get surface dimensions from window %p, but it has only \
+                           a size of %ldx%ld. Using full screen dimensions\n",
+                           window, rect.right - rect.left, rect.bottom - rect.top);
+				   */
+                }
+                else
+                {
+                    /* Not sure if this is correct */
+                    That->Surf->mddsdPrimary.dwWidth = rect.right - rect.left;
+                    That->Surf->mddsdPrimary.dwHeight = rect.bottom - rect.top;
+                    /* TRACE("Using window %p's dimensions: %ldx%ld\n", window, desc2.dwWidth, desc2.dwHeight); */
+                }
+            }
+        }
+	}
+
+	/* Mipmap count fixes */
+    if(That->Surf->mddsdPrimary.ddsCaps.dwCaps & DDSCAPS_MIPMAP)
+    {
+        if(That->Surf->mddsdPrimary.ddsCaps.dwCaps & DDSCAPS_COMPLEX)
+        {
+            if(!That->Surf->mddsdPrimary.dwFlags & DDSD_MIPMAPCOUNT)
+            {            
+                /* Undocumented feature: Create sublevels until
+                 * either the width or the height is 1
+                 */
+                DWORD min = That->Surf->mddsdPrimary.dwWidth < That->Surf->mddsdPrimary.dwHeight ? 
+					        That->Surf->mddsdPrimary.dwWidth : That->Surf->mddsdPrimary.dwHeight;
+
+                That->Surf->mddsdPrimary.dwMipMapCount = 0;
+                while( min )
+                {
+                    That->Surf->mddsdPrimary.dwMipMapCount += 1;
+                    min >>= 1;
+                }
+            }
+        }
+        else
+        {            
+            That->Surf->mddsdPrimary.dwMipMapCount = 1;
+        }
+        extra_surfaces = That->Surf->mddsdPrimary.dwMipMapCount - 1;        
+        That->Surf->mddsdPrimary.dwFlags |= DDSD_MIPMAPCOUNT;
+    }
+
+	if( (That->Surf->mddsdPrimary.dwFlags & DDSD_CAPS) && 
+		(That->Surf->mddsdPrimary.ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE) )
+    {
+        That->Surf->mddsdPrimary.ddsCaps.dwCaps |= DDSCAPS_FRONTBUFFER;
+    }
+
+    
+
+  
+
+
 
     
 	
@@ -325,118 +532,14 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
           
     if (pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {              
-           memcpy(&That->Surf->mddsdPrimary,pDDSD,pDDSD->dwSize);
-           That->Surf->mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC2);          
-           This->mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; 
-           This->mDdCanCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&That->Surf->mddsdPrimary; 
+           
+         return internal_CreateNewSurface( This,  That);
 
-           if (This->mDdCanCreateSurface.CanCreateSurface(&This->mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
-           {         
-              return DDERR_NOTINITIALIZED;
-           }
-
-           if (This->mDdCanCreateSurface.ddRVal != DD_OK)
-           {
-              return DDERR_NOTINITIALIZED;
-           }
-
-           memset(&That->Owner->mPrimaryGlobal, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
-           That->Owner->mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
-           That->Owner->mPrimaryGlobal.lpDD       = &This->mDDrawGlobal;
-           That->Owner->mPrimaryGlobal.lpDDHandle = &This->mDDrawGlobal;
-           That->Owner->mPrimaryGlobal.wWidth  = (WORD)This->mpModeInfos[0].dwWidth;
-           That->Owner->mPrimaryGlobal.wHeight = (WORD)This->mpModeInfos[0].dwHeight;
-           That->Owner->mPrimaryGlobal.lPitch  = This->mpModeInfos[0].lPitch;
-
-           memset(&That->Surf->mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
-           That->Surf->mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-
-           memset(&That->Surf->mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
-           That->Surf->mPrimaryLocal.lpGbl = &That->Owner->mPrimaryGlobal;
-           That->Surf->mPrimaryLocal.lpSurfMore = &That->Surf->mPrimaryMore;
-           That->Surf->mPrimaryLocal.dwProcessId = GetCurrentProcessId();
-	   
-           /*
-              FIXME Check the flags if we shall create a primaresurface for overlay or something else 
-              Examine windows which flags are being set for we assume this is right unsue I think
-           */
-           //That->Surf->mPrimaryLocal.dwFlags = DDRAWISURF_PARTOFPRIMARYCHAIN|DDRAWISURF_HASOVERLAYDATA;
-           That->Surf->mPrimaryLocal.ddsCaps.dwCaps = That->Surf->mddsdPrimary.ddsCaps.dwCaps;
-           That->Surf->mpPrimaryLocals[0] = &That->Surf->mPrimaryLocal;
-
-          
-
-           This->mDdCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&That->Surf->mddsdPrimary;
-           This->mDdCreateSurface.lplpSList = That->Surf->mpPrimaryLocals;
-           This->mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ; 
-
-            
-           if (This->mDdCreateSurface.CreateSurface(&This->mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
-           {
-              return DDERR_NOTINITIALIZED;
-           }
-
-           if (This->mDdCreateSurface.ddRVal != DD_OK) 
-           {   
-              return This->mDdCreateSurface.ddRVal;
-           }
-                     
-            
-           /* FIXME fill in this if they are avali
-              DDSD_BACKBUFFERCOUNT 
-              DDSD_CKDESTBLT 
-              DDSD_CKDESTOVERLAY 
-              DDSD_CKSRCBLT 
-              DDSD_CKSRCOVERLAY 
-              DDSD_LINEARSIZE 
-              DDSD_LPSURFACE 
-              DDSD_MIPMAPCOUNT 
-              DDSD_ZBUFFERBITDEPTH
-           */
-
-           That->Surf->mddsdPrimary.dwFlags = DDSD_CAPS + DDSD_PIXELFORMAT;
-           RtlCopyMemory(&That->Surf->mddsdPrimary.ddpfPixelFormat,&This->mDDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
-           //RtlCopyMemory(&That->Surf->mddsdPrimary.ddsCaps,&This->mDDrawGlobal.ddCaps,sizeof(DDCORECAPS));
-    
-           //RtlCopyMemory(&pDDSD->ddckCKDestOverlay,&This->mDDrawGlobal.ddckCKDestOverlay,sizeof(DDCOLORKEY));
-           //RtlCopyMemory(&pDDSD->ddckCKSrcOverlay,&This->mDDrawGlobal.ddckCKSrcOverlay,sizeof(DDCOLORKEY));
-
-           if (This->mDDrawGlobal.vmiData.dwDisplayHeight != 0)
-           {
-              That->Surf->mddsdPrimary.dwFlags += DDSD_HEIGHT ;
-              That->Surf->mddsdPrimary.dwHeight  = This->mDDrawGlobal.vmiData.dwDisplayHeight;
-           }
-
-           if (This->mDDrawGlobal.vmiData.dwDisplayWidth != 0)
-           {
-              That->Surf->mddsdPrimary.dwFlags += DDSD_WIDTH ;
-              That->Surf->mddsdPrimary.dwWidth = This->mDDrawGlobal.vmiData.dwDisplayWidth; 
-           }
-
-           if (This->mDDrawGlobal.vmiData.lDisplayPitch != 0)
-           {
-              That->Surf->mddsdPrimary.dwFlags += DDSD_PITCH ;           
-              That->Surf->mddsdPrimary.lPitch  = This->mDDrawGlobal.vmiData.lDisplayPitch;
-           }
-
-           if ( This->mDDrawGlobal.dwMonitorFrequency != 0)
-           {
-              That->Surf->mddsdPrimary.dwFlags += DDSD_REFRESHRATE ;           
-              That->Surf->mddsdPrimary.dwRefreshRate = This->mDDrawGlobal.dwMonitorFrequency;
-           }
-          
-           if (This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth != 0)
-           {
-             That->Surf->mddsdPrimary.dwFlags += DDSD_ALPHABITDEPTH ;
-             That->Surf->mddsdPrimary.dwAlphaBitDepth = This->mDDrawGlobal.vmiData.ddpfDisplay.dwAlphaBitDepth;
-           }
-
-           That->Surf->mpInUseSurfaceLocals[0] = &That->Surf->mPrimaryLocal;
-           return DD_OK;
-
-        }
+    }
         else if (pDDSD->ddsCaps.dwCaps & DDSCAPS_OVERLAY)
-        {            
+        {       
+			 return internal_CreateNewSurface( This,  That);
+
             memset(&That->Surf->mddsdOverlay, 0, sizeof(DDSURFACEDESC));
             memcpy(&That->Surf->mddsdOverlay, pDDSD, sizeof(DDSURFACEDESC));
             That->Surf->mddsdOverlay.dwSize = sizeof(DDSURFACEDESC);
@@ -567,6 +670,60 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
    
 }
 
+HRESULT 
+internal_CreateNewSurface(IDirectDrawImpl* This, IDirectDrawSurfaceImpl* That)
+{
+           This->mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; 
+           This->mDdCanCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&That->Surf->mddsdPrimary; 
+
+           if (This->mDdCanCreateSurface.CanCreateSurface(&This->mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+           {         
+              return DDERR_NOTINITIALIZED;
+           }
+
+           if (This->mDdCanCreateSurface.ddRVal != DD_OK)
+           {
+              return DDERR_NOTINITIALIZED;
+           }
+
+           memset(&That->Owner->mPrimaryGlobal, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
+           That->Owner->mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
+           That->Owner->mPrimaryGlobal.lpDD       = &This->mDDrawGlobal;
+           That->Owner->mPrimaryGlobal.lpDDHandle = &This->mDDrawGlobal;
+           That->Owner->mPrimaryGlobal.wWidth  = (WORD)This->mpModeInfos[0].dwWidth;
+           That->Owner->mPrimaryGlobal.wHeight = (WORD)This->mpModeInfos[0].dwHeight;
+           That->Owner->mPrimaryGlobal.lPitch  = This->mpModeInfos[0].lPitch;
+
+           memset(&That->Surf->mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
+           That->Surf->mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+
+           memset(&That->Surf->mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
+           That->Surf->mPrimaryLocal.lpGbl = &That->Owner->mPrimaryGlobal;
+           That->Surf->mPrimaryLocal.lpSurfMore = &That->Surf->mPrimaryMore;
+           That->Surf->mPrimaryLocal.dwProcessId = GetCurrentProcessId();
+	             
+           That->Surf->mPrimaryLocal.ddsCaps.dwCaps = That->Surf->mddsdPrimary.ddsCaps.dwCaps;
+           That->Surf->mpPrimaryLocals[0] = &That->Surf->mPrimaryLocal;
+          
+           This->mDdCreateSurface.lpDDSurfaceDesc = (DDSURFACEDESC*)&That->Surf->mddsdPrimary;
+           This->mDdCreateSurface.lplpSList = That->Surf->mpPrimaryLocals;
+           This->mDdCreateSurface.dwSCnt = This->mDDrawGlobal.dsList->dwIntRefCnt ; 
+
+            
+           if (This->mDdCreateSurface.CreateSurface(&This->mDdCreateSurface) == DDHAL_DRIVER_NOTHANDLED)
+           {
+              return DDERR_NOTINITIALIZED;
+           }
+
+           if (This->mDdCreateSurface.ddRVal != DD_OK) 
+           {   
+              return This->mDdCreateSurface.ddRVal;
+           }
+                              
+           That->Surf->mpInUseSurfaceLocals[0] = &That->Surf->mPrimaryLocal;
+           return DD_OK;
+}
+
 /*
  * stub
  * Status not done
@@ -605,6 +762,10 @@ HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFla
 
   
      /* FIXME check if the mode are suppretd before sending it back  */
+
+	memset(&DevMode,0,sizeof(DEVMODE));
+	DevMode.dmSize = (WORD)sizeof(DEVMODE);
+	DevMode.dmDriverExtra = 0;
 
     while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0))
     {
@@ -1047,7 +1208,7 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
     DX_WINDBG_trace();
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	//BOOL dummy = TRUE;
+	BOOL dummy = TRUE;
 	DEVMODE DevMode; 	
     int iMode=0;
     int Width=0;
@@ -1099,17 +1260,9 @@ Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeig
 	This->mDdSetMode.ddRVal = DDERR_NOTPALETTIZED;
 	
     This->mDdSetMode.dwModeIndex = iMode; 
+	This->mDdSetMode.SetMode(&This->mDdSetMode);
 	
-	if (This->mDdSetMode.SetMode(&This->mDdSetMode) == DDHAL_DRIVER_HANDLED)
-	{
-		if (This->mDdSetMode.ddRVal == DD_OK)
-            ;
-			//DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
-		//}
-	}
-	
-	
-	
+	DdReenableDirectDrawObject(&This->mDDrawGlobal, &dummy);
 
 	/* FIXME fill the This->DirectDrawGlobal.vmiData right */		     
      //This->mDDrawGlobal.lpExclusiveOwner->hDC  = (ULONG_PTR)GetDC( (HWND)This->mDDrawGlobal.lpExclusiveOwner->hWnd);  

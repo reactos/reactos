@@ -212,19 +212,6 @@ StartDirectDraw(LPDIRECTDRAW* iface)
     /* Setup calback struct so we do not need refill same info again */
     This->mDdCreateSurface.lpDD = &This->mDDrawGlobal;    
     This->mDdCanCreateSurface.lpDD = &This->mDDrawGlobal;  
-
-
-    /* Setup global surface */  
-	// FIXME free dsList when we exist
-	This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT)); 
-	This->mDDrawGlobal.dsList->dwIntRefCnt =1;
-
-    This->mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
-    This->mPrimaryGlobal.lpDD       = &This->mDDrawGlobal;
-    This->mPrimaryGlobal.lpDDHandle = &This->mDDrawGlobal;
-    This->mPrimaryGlobal.wWidth  = (WORD)This->mpModeInfos[0].dwWidth;
-    This->mPrimaryGlobal.wHeight = (WORD)This->mpModeInfos[0].dwHeight;
-    This->mPrimaryGlobal.lPitch  = This->mpModeInfos[0].lPitch;
                   
     return DD_OK;
 }
@@ -377,7 +364,13 @@ StartDirectDrawHal(LPDIRECTDRAW* iface)
   DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
   This->mHALInfo.GetDriverInfo(&DriverInfo);
 
-  
+  /* Setup global surface */   
+  /*This->mPrimaryGlobal.dwGlobalFlags = DDRAWISURFGBL_ISGDISURFACE;
+  This->mPrimaryGlobal.lpDD       = &This->mDDrawGlobal;
+  This->mPrimaryGlobal.lpDDHandle = &This->mDDrawGlobal;
+  This->mPrimaryGlobal.wWidth  = (WORD)This->mpModeInfos[0].dwWidth;
+  This->mPrimaryGlobal.wHeight = (WORD)This->mpModeInfos[0].dwHeight;
+  This->mPrimaryGlobal.lPitch  = This->mpModeInfos[0].lPitch;*/
 
   /* FIXME free it in cleanup */
   // This->mDDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)DxHeapMemAlloc(sizeof(DDRAWI_DDRAWSURFACE_INT)); 
