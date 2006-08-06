@@ -239,17 +239,8 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     /* Dereference the object as well */
     ASSERT(ObjectHeader->Type);
     ASSERT(ObjectHeader->PointerCount != 0xCCCCCCCC);
-    if (!wcscmp(ObjectHeader->Type->Name.Buffer, L"Key"))
-    {
-        //
-        // WE DONT CLOSE REGISTRY HANDLES BECAUSE CM IS BRAINDEAD
-        //
-        DPRINT("NOT CLOSING THE KEY\n");
-    }
-    else
-    {
-        ObDereferenceObject(Body);
-    }
+
+    ObDereferenceObject(Body);
 
     /* Return to caller */
     OBTRACE(OB_HANDLE_DEBUG,

@@ -148,7 +148,7 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
             ObReferenceObjectByPointer(FoundObject,
                 STANDARD_RIGHTS_REQUIRED,
                 CmiKeyType,
-                UserMode);
+                KernelMode);
             if (End != NULL)
             {
                 *End = L'\\';
@@ -790,7 +790,7 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
   ObReferenceObjectByPointer(ParentKey,
 		STANDARD_RIGHTS_REQUIRED,
 		CmiKeyType,
-		UserMode);
+		KernelMode);
   NewKey->ParentKey = ParentKey;
 }
 
