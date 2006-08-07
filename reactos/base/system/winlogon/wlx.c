@@ -603,43 +603,41 @@ LoadGina(
 		Functions->WlxActivateUserShell = (PFWLXACTIVATEUSERSHELL)GetProcAddress(hGina, "WlxActivateUserShell");
 		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxDisplayLockedNotice = (PFWLXDISPLAYLOCKEDNOTICE)GetProcAddress(hGina, "WlxDisplayLockedNotice");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxDisplayLockedNotice) goto cleanup;
 		Functions->WlxDisplaySASNotice = (PFWLXDISPLAYSASNOTICE)GetProcAddress(hGina, "WlxDisplaySASNotice");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxDisplaySASNotice) goto cleanup;
 		Functions->WlxIsLockOk = (PFWLXISLOCKOK)GetProcAddress(hGina, "WlxIsLockOk");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxIsLockOk) goto cleanup;
 		Functions->WlxIsLogoffOk = (PFWLXISLOGOFFOK)GetProcAddress(hGina, "WlxIsLogoffOk");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxIsLogoffOk) goto cleanup;
 		Functions->WlxLoggedOnSAS = (PFWLXLOGGEDONSAS)GetProcAddress(hGina, "WlxLoggedOnSAS");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxLoggedOnSAS) goto cleanup;
 		Functions->WlxLoggedOutSAS = (PFWLXLOGGEDOUTSAS)GetProcAddress(hGina, "WlxLoggedOutSAS");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxLoggedOutSAS) goto cleanup;
 		Functions->WlxLogoff = (PFWLXLOGOFF)GetProcAddress(hGina, "WlxLogoff");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxLogoff) goto cleanup;
 		Functions->WlxShutdown = (PFWLXSHUTDOWN)GetProcAddress(hGina, "WlxShutdown");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxShutdown) goto cleanup;
 		Functions->WlxWkstaLockedSAS = (PFWLXWKSTALOCKEDSAS)GetProcAddress(hGina, "WlxWkstaLockedSAS");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxWkstaLockedSAS) goto cleanup;
 	}
 
 	if (*DllVersion >= WLX_VERSION_1_1)
 	{
 		Functions->WlxScreenSaverNotify = (PFWLXSCREENSAVERNOTIFY)GetProcAddress(hGina, "WlxScreenSaverNotify");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
 		Functions->WlxStartApplication = (PFWLXSTARTAPPLICATION)GetProcAddress(hGina, "WlxStartApplication");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
 	}
 
 	if (*DllVersion >= WLX_VERSION_1_3)
 	{
 		Functions->WlxDisplayStatusMessage = (PFWLXDISPLAYSTATUSMESSAGE)GetProcAddress(hGina, "WlxDisplayStatusMessage");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxDisplayStatusMessage) goto cleanup;
 		Functions->WlxGetStatusMessage = (PFWLXGETSTATUSMESSAGE)GetProcAddress(hGina, "WlxGetStatusMessage");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxGetStatusMessage) goto cleanup;
 		Functions->WlxNetworkProviderLoad = (PFWLXNETWORKPROVIDERLOAD)GetProcAddress(hGina, "WlxNetworkProviderLoad");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxNetworkProviderLoad) goto cleanup;
 		Functions->WlxRemoveStatusMessage = (PFWLXREMOVESTATUSMESSAGE)GetProcAddress(hGina, "WlxRemoveStatusMessage");
-		if (!Functions->WlxActivateUserShell) goto cleanup;
+		if (!Functions->WlxRemoveStatusMessage) goto cleanup;
 	}
 
 	ret = TRUE;
@@ -670,6 +668,7 @@ GinaInit(
 	Session->SuppressStatus = FALSE;
 	PreviousWindowProc = NULL;
 
+	TRACE("Calling WlxInitialize(\"%S\")\n", Session->InteractiveWindowStationName);
 	return Session->Gina.Functions.WlxInitialize(
 		Session->InteractiveWindowStationName,
 		(HANDLE)Session,
@@ -682,6 +681,77 @@ BOOL
 CreateWindowStationAndDesktops(
 	IN OUT PWLSESSION Session)
 {
+	BYTE LocalSystemBuffer[SECURITY_MAX_SID_SIZE];
+	BYTE InteractiveBuffer[SECURITY_MAX_SID_SIZE];
+	PSID pLocalSystemSid = (PSID)&LocalSystemBuffer;
+	PSID pInteractiveSid = (PSID)InteractiveBuffer;
+	DWORD SidSize, AclSize;
+	PACL pDefaultAcl = NULL;
+	PACL pUserDesktopAcl = NULL;
+	SECURITY_ATTRIBUTES DefaultSecurity;
+	SECURITY_ATTRIBUTES UserDesktopSecurity;
+	BOOL ret = FALSE;
+
+	/*
+	 * Prepare information for ACLs we will apply
+	 */
+	SidSize = SECURITY_MAX_SID_SIZE;
+	if (!CreateWellKnownSid(WinLocalSystemSid, NULL, pLocalSystemSid, &SidSize))
+	{
+		ERR("WL: CreateWellKnownSid() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+	SidSize = SECURITY_MAX_SID_SIZE;
+	if (!CreateWellKnownSid(WinInteractiveSid, NULL, pInteractiveSid, &SidSize))
+	{
+		ERR("WL: CreateWellKnownSid() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+
+	AclSize = sizeof(ACL)
+		+ FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + GetLengthSid(pLocalSystemSid)
+		+ FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + GetLengthSid(pInteractiveSid);
+	pDefaultAcl = HeapAlloc(GetProcessHeap(), 0, AclSize);
+	pUserDesktopAcl = HeapAlloc(GetProcessHeap(), 0, AclSize);
+	if (!pDefaultAcl || !pUserDesktopAcl)
+	{
+		ERR("WL: HeapAlloc() failed\n");
+		goto cleanup;
+	}
+
+	if (!InitializeAcl(pDefaultAcl, AclSize, ACL_REVISION)
+	 || !InitializeAcl(pUserDesktopAcl, AclSize, ACL_REVISION))
+	{
+		ERR("WL: InitializeAcl() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+
+	/*
+	 * Create default ACL (window station, winlogon desktop, screen saver desktop)
+	 */
+	if (!AddAccessAllowedAce(pDefaultAcl, ACL_REVISION, GENERIC_ALL, pLocalSystemSid)
+	 || !AddAccessAllowedAce(pDefaultAcl, ACL_REVISION, GENERIC_READ, pInteractiveSid))
+	{
+		ERR("WL: AddAccessAllowedAce() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+	DefaultSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
+	DefaultSecurity.lpSecurityDescriptor = pDefaultAcl;
+	DefaultSecurity.bInheritHandle = TRUE;
+
+	/*
+	 * Create user desktop ACL
+	 */
+	if (!AddAccessAllowedAce(pUserDesktopAcl, ACL_REVISION, GENERIC_ALL, pLocalSystemSid)
+	 || !AddAccessAllowedAce(pUserDesktopAcl, ACL_REVISION, GENERIC_ALL, pInteractiveSid))
+	{
+		ERR("WL: AddAccessAllowedAce() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+	UserDesktopSecurity.nLength = sizeof(SECURITY_ATTRIBUTES);
+	UserDesktopSecurity.lpSecurityDescriptor = pUserDesktopAcl;
+	UserDesktopSecurity.bInheritHandle = TRUE;
+
 	/*
 	 * Create the interactive window station
 	 */
@@ -690,13 +760,17 @@ CreateWindowStationAndDesktops(
 		Session->InteractiveWindowStationName,
 		0,
 		WINSTA_CREATEDESKTOP,
-		NULL);
+		&DefaultSecurity);
 	if (!Session->InteractiveWindowStation)
 	{
 		ERR("WL: Failed to create window station (%lu)\n", GetLastError());
-		return FALSE;
+		goto cleanup;
 	}
-	SetProcessWindowStation(Session->InteractiveWindowStation);
+	if (!SetProcessWindowStation(Session->InteractiveWindowStation))
+	{
+		ERR("WL: SetProcessWindowStation() failed (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
 
 	/*
 	 * Create the application desktop
@@ -705,13 +779,13 @@ CreateWindowStationAndDesktops(
 		L"Default",
 		NULL,
 		NULL,
-		0, /* FIXME: Set some flags */
+		0, /* FIXME: Add DF_ALLOWOTHERACCOUNTHOOK flag? */
 		GENERIC_ALL,
-		NULL);
+		&UserDesktopSecurity);
 	if (!Session->ApplicationDesktop)
 	{
 		ERR("WL: Failed to create Default desktop (%lu)\n", GetLastError());
-		return FALSE;
+		goto cleanup;
 	}
 
 	/*
@@ -721,13 +795,13 @@ CreateWindowStationAndDesktops(
 		L"Winlogon",
 		NULL,
 		NULL,
-		0, /* FIXME: Set some flags */
+		0,
 		GENERIC_ALL,
-		NULL);
+		&DefaultSecurity);
 	if (!Session->WinlogonDesktop)
 	{
 		ERR("WL: Failed to create Winlogon desktop (%lu)\n", GetLastError());
-		return FALSE;
+		goto cleanup;
 	}
 
 	/*
@@ -737,13 +811,13 @@ CreateWindowStationAndDesktops(
 		L"Screen-Saver",
 		NULL,
 		NULL,
-		0, /* FIXME: Set some flags */
+		0,
 		GENERIC_ALL,
-		NULL);
+		&DefaultSecurity);
 	if(!Session->ScreenSaverDesktop)
 	{
 		ERR("WL: Failed to create Screen-Saver desktop (%lu)\n", GetLastError());
-		return FALSE;
+		goto cleanup;
 	}
 
 	/* FIXME: big HACK */
@@ -756,8 +830,24 @@ CreateWindowStationAndDesktops(
 	    !SwitchDesktop(Session->WinlogonDesktop))
 	{
 		ERR("WL: Cannot switch to Winlogon desktop (%lu)\n", GetLastError());
-		return FALSE;
+		goto cleanup;
 	}
 
-	return TRUE;
+	ret = TRUE;
+
+cleanup:
+	if (!ret)
+	{
+		if (Session->ApplicationDesktop)
+			CloseDesktop(Session->ApplicationDesktop);
+		if (Session->WinlogonDesktop)
+			CloseDesktop(Session->WinlogonDesktop);
+		if (Session->ScreenSaverDesktop)
+			CloseDesktop(Session->ScreenSaverDesktop);
+		if (Session->InteractiveWindowStation)
+			CloseWindowStation(Session->InteractiveWindowStation);
+	}
+	HeapFree(GetProcessHeap(), 0, pDefaultAcl);
+	HeapFree(GetProcessHeap(), 0, pUserDesktopAcl);
+	return ret;
 }

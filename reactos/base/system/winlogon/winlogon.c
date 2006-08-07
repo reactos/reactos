@@ -137,7 +137,7 @@ StartCustomService(
 	if (!hService)
 		goto cleanup;
 #if 0
-	if (!StartService(hService, 0, NULL))
+	if (!StartServiceW(hService, 0, NULL))
 		goto cleanup;
 #endif
 
@@ -615,6 +615,12 @@ WinMain(
 		return 0;
 	}
 
+	if (!StartLsass())
+	{
+		DPRINT1("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
+		return 1;
+	}
+
 	/* Load and initialize gina */
 	if (!GinaInit(WLSession))
 	{
@@ -626,12 +632,6 @@ WinMain(
 	}
 
 	DisplayStatusMessage(WLSession, WLSession->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
-
-	if (!StartLsass())
-	{
-		DPRINT1("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
-		return 1;
-	}
 
 #if 0
 	/* Connect to NetLogon service (lsass.exe) */
