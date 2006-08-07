@@ -2094,8 +2094,7 @@ ScmrStartServiceA(handle_t BindingHandle,
                   unsigned long cbBufSize)
 {
     DPRINT1("ScmrStartServiceA() called\n");
-    return ERROR_SUCCESS;
-//    return ERROR_CALL_NOT_IMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 

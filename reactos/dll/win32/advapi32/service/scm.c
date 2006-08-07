@@ -1970,16 +1970,16 @@ StartServiceA(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCSTR *lpServiceArgVectors)
 {
-    LPSTR lpBuffer;
-    LPSTR lpStr;
+    LPWSTR lpBuffer;
+    LPWSTR lpStr;
     DWORD dwError;
     DWORD dwBufSize;
-    DWORD i;
+    DWORD i, step;
 
     dwBufSize = 0;
     for (i = 0; i < dwNumServiceArgs; i++)
     {
-        dwBufSize += (strlen(lpServiceArgVectors[i]) + 1);
+        dwBufSize += MultiByteToWideChar(CP_ACP, 0, lpServiceArgVectors[i], -1, NULL, 0);
     }
     DPRINT1("dwBufSize: %lu\n", dwBufSize);
 
@@ -1993,11 +1993,15 @@ StartServiceA(SC_HANDLE hService,
     lpStr = lpBuffer;
     for (i = 0; i < dwNumServiceArgs; i++)
     {
-        strcpy(lpStr, lpServiceArgVectors[i]);
-        lpStr += (strlen(lpServiceArgVectors[i]) + 1);
+        step = MultiByteToWideChar(CP_ACP, 0,
+            lpServiceArgVectors[i], -1,
+            lpStr, lpBuffer + dwBufSize - lpStr);
+        if (step == 0)
+            return FALSE;
+        lpStr += step + 1;
     }
 
-    dwError = ScmrStartServiceA(BindingHandle,
+    dwError = ScmrStartServiceW(BindingHandle,
                                 (unsigned int)hService,
                                 dwNumServiceArgs,
                                 (unsigned char *)lpBuffer,
@@ -2007,7 +2011,7 @@ StartServiceA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrStartServiceA() failed (Error %lu)\n", dwError);
+        DPRINT1("ScmrStartServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
