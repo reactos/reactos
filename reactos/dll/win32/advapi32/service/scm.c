@@ -1055,7 +1055,8 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
         lpStatusPtr++;
     }
 
-    if (dwError != ERROR_SUCCESS)
+    if (dwError != ERROR_SUCCESS &&
+        dwError != ERROR_MORE_DATA)
     {
         DPRINT1("ScmrEnumServicesStatusExW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
@@ -1970,16 +1971,16 @@ StartServiceA(SC_HANDLE hService,
               DWORD dwNumServiceArgs,
               LPCSTR *lpServiceArgVectors)
 {
-    LPWSTR lpBuffer;
-    LPWSTR lpStr;
+    LPSTR lpBuffer;
+    LPSTR lpStr;
     DWORD dwError;
     DWORD dwBufSize;
-    DWORD i, step;
+    DWORD i;
 
     dwBufSize = 0;
     for (i = 0; i < dwNumServiceArgs; i++)
     {
-        dwBufSize += MultiByteToWideChar(CP_ACP, 0, lpServiceArgVectors[i], -1, NULL, 0);
+        dwBufSize += (strlen(lpServiceArgVectors[i]) + 1);
     }
     DPRINT1("dwBufSize: %lu\n", dwBufSize);
 
@@ -1993,15 +1994,11 @@ StartServiceA(SC_HANDLE hService,
     lpStr = lpBuffer;
     for (i = 0; i < dwNumServiceArgs; i++)
     {
-        step = MultiByteToWideChar(CP_ACP, 0,
-            lpServiceArgVectors[i], -1,
-            lpStr, lpBuffer + dwBufSize - lpStr);
-        if (step == 0)
-            return FALSE;
-        lpStr += step + 1;
+        strcpy(lpStr, lpServiceArgVectors[i]);
+        lpStr += (strlen(lpServiceArgVectors[i]) + 1);
     }
 
-    dwError = ScmrStartServiceW(BindingHandle,
+    dwError = ScmrStartServiceA(BindingHandle,
                                 (unsigned int)hService,
                                 dwNumServiceArgs,
                                 (unsigned char *)lpBuffer,
@@ -2011,7 +2008,7 @@ StartServiceA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmrStartServiceW() failed (Error %lu)\n", dwError);
+        DPRINT1("ScmrStartServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }

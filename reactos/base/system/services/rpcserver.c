@@ -2093,8 +2093,51 @@ ScmrStartServiceA(handle_t BindingHandle,
                   unsigned char *lpServiceArgBuffer,
                   unsigned long cbBufSize)
 {
+    DWORD dwError = ERROR_SUCCESS;
+    PSERVICE_HANDLE hSvc;
+    PSERVICE lpService = NULL;
+    NTSTATUS Status;
+
     DPRINT1("ScmrStartServiceA() called\n");
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    hSvc = (PSERVICE_HANDLE)hService;
+    if (hSvc->Handle.Tag != SERVICE_TAG)
+    {
+        DPRINT1("Invalid handle tag!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  SERVICE_START))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    lpService = hSvc->ServiceEntry;
+    if (lpService == NULL)
+    {
+        DPRINT1("lpService == NULL!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (lpService->dwStartType == SERVICE_DISABLED)
+        return ERROR_SERVICE_DISABLED;
+
+    if (lpService->bDeleted)
+        return ERROR_SERVICE_MARKED_FOR_DELETE;
+
+    /* FIXME: Convert argument vector to Unicode */
+
+    /* Start the service */
+    Status = ScmStartService(lpService);
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    return dwError;
 }
 
 
