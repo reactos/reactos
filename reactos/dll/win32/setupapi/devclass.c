@@ -1201,8 +1201,6 @@ SetupDiGetClassDevsExW(
             SetLastError(ERROR_INVALID_PARAMETER);
             goto cleanup;
         }
-
-        rc = SETUP_CreateDevicesList(list, MachineName, ClassGuid, Enumerator);
         if (rc != ERROR_SUCCESS)
         {
             SetLastError(rc);
