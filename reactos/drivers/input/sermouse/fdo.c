@@ -23,6 +23,9 @@ SermouseAddDevice(
 
 	DPRINT("SermouseAddDevice called. Pdo = 0x%p\n", Pdo);
 
+	if (Pdo == NULL)
+		return STATUS_SUCCESS;
+
 	/* Create new device object */
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 	Status = IoCreateDevice(
