@@ -2,12 +2,9 @@
  * Plug and Play Manager RPC interface definition
  */
 
-#define WORD unsigned short
-#define DWORD unsigned long
-#define ULONG unsigned long
+#include "include/reactos/idl/wtypes.idl"
+
 #define CONFIGRET unsigned long
-#define BOOL unsigned long
-#define PBOOL unsigned long *
 
 [
   uuid (809F4e40-A03D-11CE-8F69-08003E30051B),
