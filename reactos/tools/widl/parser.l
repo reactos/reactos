@@ -289,7 +289,7 @@ static struct keyword {
         {"small",			tSMALL},
 /* ... */
 	{"source",			tSOURCE},
-/* ... */
+/* ... */	
 	{"string",			tSTRING},
 	{"struct",			tSTRUCT},
 	{"switch",			tSWITCH},
