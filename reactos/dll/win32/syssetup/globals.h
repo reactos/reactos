@@ -37,8 +37,6 @@ typedef struct _TIMEZONE_ENTRY
   ULONG Index;
 } TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
 
-
-
 typedef struct _SETUPDATA
 {
   HFONT hTitleFont;
@@ -47,10 +45,14 @@ typedef struct _SETUPDATA
   TCHAR OwnerOrganization[51];
   TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];	/* max. 63 characters */
   TCHAR AdminPassword[15];				/* max. 14 characters */
+  BOOL  UnattendSetup;
 
   SYSTEMTIME SystemTime;
   PTIMEZONE_ENTRY TimeZoneListHead;
   PTIMEZONE_ENTRY TimeZoneListTail;
+  DWORD TimeZoneIndex;
+  DWORD DisableAutoDaylightTimeSet;
+  LCID LocaleID;
 } SETUPDATA, *PSETUPDATA;
 
 
