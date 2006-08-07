@@ -122,7 +122,7 @@ LsarStartRpcServer(VOID)
 }
 
 /* Function 0 */
-unsigned int
+NTSTATUS
 LsarClose(IN handle_t BindingHandle,
           IN unsigned long ObjectHandle)
 {
@@ -145,7 +145,7 @@ LsarClose(IN handle_t BindingHandle,
 }
 
 /* Function 1 */
-unsigned int
+NTSTATUS
 LsarDelete(IN handle_t BindingHandle,
            IN unsigned long ObjectHandle)
 {
