@@ -8,3 +8,11 @@ InstallationDirectory=ReactOS
 ;MBRInstallType=1  install MBR on floppy  
 ;MBRInstallType=2  install MBR on hdd
 MBRInstallType=2 
+FullName="MyName"
+;OrgName="MyOrg"
+ComputerName="MyComputerName";
+AdminPassword="MyPassword"
+; TimeZone is set GMT as default
+TimeZoneIndex=85
+; enable this setting to disable daylight saving changes
+; DisableAutoDaylightTimeSet = 1
