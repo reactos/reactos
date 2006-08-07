@@ -1,11 +1,17 @@
 /* $Id$
  *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/cm/ntfunc.c
  * PURPOSE:         Ntxxx function for registry access
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Hartmut Birr
+ *                  Casper Hornstrup
+ *                  Alex Ionescu
+ *                  Rex Jolliff
+ *                  Eric Kohl
+ *                  Filip Navara
+ *                  Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/

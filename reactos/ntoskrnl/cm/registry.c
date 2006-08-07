@@ -1,13 +1,17 @@
 /* $Id$
  *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/cm/registry.c
  * PURPOSE:         Registry functions
  *
- * PROGRAMMERS:     Rex Jolliff
+ * PROGRAMMERS:     Hartmut Birr
+ *                  Alex Ionescu
+ *                  Rex Jolliff
+ *                  Eric Kohl
  *                  Matt Pyne
  *                  Jean Michault
+ *                  Art Yerkes
  */
 
 #include <ntoskrnl.h>

@@ -1,11 +1,13 @@
 /* $Id$
  *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/cm/regfile.c
  * PURPOSE:         Registry file manipulation routines
  *
- * PROGRAMMERS:     No programmer listed.
+ * PROGRAMMERS:     Casper Hornstrup
+ *                  Eric Kohl
+ *                  Filip Navara
  */
 
 #include <ntoskrnl.h>
