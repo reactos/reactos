@@ -20,7 +20,7 @@ LsapInitLsa(VOID)
 
     hEvent = OpenEventW(EVENT_MODIFY_STATE,
                         FALSE,
-                        L"\\SECURITY_SERVICES_STARTED");
+                        L"Global\\SECURITY_SERVICES_STARTED");
     if (hEvent != NULL)
     {
         SetEvent(hEvent);
