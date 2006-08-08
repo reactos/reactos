@@ -689,12 +689,11 @@ NtUserDragDetect(
 DWORD
 NTAPI
 NtUserDragObject(
-	   HWND    hwnd1,
-	   HWND    hwnd2,
-	   UINT    u1,
-	   DWORD   dw1,
-	   HCURSOR hc1
-	   );
+   HWND    hwnd1,
+   HWND    hwnd2,
+   UINT    u1,
+   DWORD   dw1,
+   HCURSOR hc1);
 
 DWORD
 NTAPI
@@ -704,24 +703,24 @@ NtUserDrawAnimatedRects(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+BOOL
 NTAPI
 NtUserDrawCaption(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+   HWND hWnd,
+   HDC hDc,
+   LPCRECT lpRc,
+   UINT uFlags);
 
 DWORD
-NTAPI
+STDCALL
 NtUserDrawCaptionTemp(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6);
+   DWORD Unknown0,
+   DWORD Unknown1,
+   DWORD Unknown2,
+   DWORD Unknown3,
+   DWORD Unknown4,
+   DWORD Unknown5,
+   DWORD Unknown6);
 
 BOOL
 NTAPI

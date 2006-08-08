@@ -210,6 +210,12 @@ IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes)
   return nBrushes > 0;
 }
 
+HGDIOBJ FASTCALL
+IntGetSysColorBrush(INT Object)
+{
+  return ((Object < 0) || (NUM_SYSCOLORS <= Object)) ? NULL : SysColorBrushes[Object];
+}
+
 BOOL FASTCALL
 IntGetSysColorPens(HPEN *Pens, UINT nPens)
 {
@@ -252,6 +258,12 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
   }
 
   return nColors > 0;
+}
+
+DWORD FASTCALL
+IntGetSysColor(INT nIndex)
+{
+  return ((nIndex < 0) || (NUM_SYSCOLORS <= nIndex)) ? 0 : SysColors[nIndex];
 }
 
 VOID FASTCALL

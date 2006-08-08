@@ -193,19 +193,6 @@ NtUserDrawAnimatedRects(
 
 DWORD
 STDCALL
-NtUserDrawCaption(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-STDCALL
 NtUserDrawCaptionTemp(
    DWORD Unknown0,
    DWORD Unknown1,
