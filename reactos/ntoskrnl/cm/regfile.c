@@ -697,7 +697,6 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   if (!NT_SUCCESS (Status))
     {
       DPRINT1 ("CmiInitNonVolatileRegistryHive() failed (Status %lx)\n", Status);
-      HvFree (Hive->Hive);
       ExFreePool (Hive);
       return Status;
     }
