@@ -83,7 +83,7 @@ int CreateOptions (TREE* tree)
 {
 	Log("* Load options.xml from the Internet (Temporary Hack)");
 
-	CopyFileA( PML_Download(tree, "http://svn.reactos.org/viewcvs/*checkout*/trunk/rosapps/packmgr/lib/options.xml", NULL, "options.xml"), "options.xml", TRUE);
+	CopyFileA( PML_Download(tree, "http://svn.reactos.org/svn/*checkout*/reactos/trunk/rosapps/packmgr/lib/options.xml", NULL, "options.xml"), "options.xml", TRUE);
 	
 	return ERR_OK;
 }
