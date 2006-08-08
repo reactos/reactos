@@ -1430,9 +1430,8 @@ IntDrawCaptionText(HDC hDc,
    COLORREF OldTextColor;
    NONCLIENTMETRICS nclm;
    NTSTATUS Status;
-   INT i;
-   
    #ifndef NDEBUG
+   INT i;
    DPRINT("%s:", __FUNCTION__);
    for(i = 0; i < Text->Length/sizeof(WCHAR); i++)
       DbgPrint("%C", Text->Buffer[i]);
