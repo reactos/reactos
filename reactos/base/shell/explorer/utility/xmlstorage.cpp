@@ -1,11 +1,12 @@
 
  //
- // XML storage classes
- //
- // xmlstorage.cpp
+ // XML storage classes Version 1.1
  //
  // Copyright (c) 2004, 2005, 2006 Martin Fuchs <martin-fuchs@gmx.net>
  //
+
+ /// \file xmlstorage.cpp
+ /// XMLStorage implementation file
 
 
 /*
@@ -591,7 +592,6 @@ void DocType::parse(const char* p)
 	} else
 		_system.erase();
 }
-
 
 
 void XMLFormat::print_header(std::ostream& out, bool lf) const

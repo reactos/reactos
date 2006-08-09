@@ -1,11 +1,12 @@
 
  //
- // XML storage classes
- //
- // xs-native.cpp
+ // XML storage classes Version 1.1
  //
  // Copyright (c) 2006 Martin Fuchs <martin-fuchs@gmx.net>
  //
+
+ /// \file xs-native.cpp
+ /// native internal XMLStorage parser
 
 
 /*
@@ -69,6 +70,8 @@ void XMLReaderBase::read()
 	finish_read();
 }
 
+
+ /// line buffer for XS-native parser
 
 struct Buffer
 {

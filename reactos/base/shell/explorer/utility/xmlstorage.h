@@ -1,11 +1,12 @@
 
  //
- // XML storage classes
- //
- // xmlstorage.h
+ // XML storage classes Version 1.1
  //
  // Copyright (c) 2004, 2005, 2006 Martin Fuchs <martin-fuchs@gmx.net>
  //
+
+ /// \file xmlstorage.h
+ /// XMLStorage header file
 
 
 /*
@@ -347,14 +348,14 @@ extern const LPCXSSTR XS_FLOATFMT;
 #ifndef XS_STRING_UTF8
 
  // from UTF-8 to XS internal string encoding
-inline void assign_utf8(XS_String& s, const char* str, int lutf8)
+inline void assign_utf8(XS_String& s, const char* str, size_t lutf8)
 {
 #ifdef UNICODE
 	LPTSTR buffer = (LPTSTR)alloca(sizeof(TCHAR)*lutf8);
-	int l = MultiByteToWideChar(CP_UTF8, 0, str, lutf8, buffer, lutf8);
+	int l = MultiByteToWideChar(CP_UTF8, 0, str, (int)lutf8, buffer, (int)lutf8);
 #else
 	LPWSTR wbuffer = (LPWSTR)alloca(sizeof(WCHAR)*lutf8);
-	int l = MultiByteToWideChar(CP_UTF8, 0, str, lutf8, wbuffer, lutf8);
+	int l = MultiByteToWideChar(CP_UTF8, 0, str, (int)lutf8, wbuffer, (int)lutf8);
 
 	int bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
 	l = WideCharToMultiByte(CP_ACP, 0, wbuffer, l, buffer, bl, 0, 0);
@@ -419,6 +420,7 @@ typedef __gnu_cxx::stdio_filebuf<char> STDIO_FILEBUF;
 typedef std::filebuf STDIO_FILEBUF;
 #endif
 
+ /// base class for XMLStorage::tifstream and XMLStorage::tofstream
 struct FileHolder
 {
 	FileHolder(LPCTSTR path, LPCTSTR mode)
@@ -553,6 +555,7 @@ struct XMLError
 	int _error_code;
 };
 
+ /// list of XMLError entries
 struct XMLErrorList : public std::list<XMLError>
 {
 	XS_String str() const;
@@ -594,6 +597,7 @@ enum PRETTY_FLAGS {
 };
 
 
+ /// XML Stylesheet entry
 struct StyleSheet
 {
 	std::string	_href;		// CDATA #REQUIRED
@@ -616,9 +620,10 @@ struct StyleSheet
 	void print(std::ostream& out) const;
 };
 
+ /// list of StyleSheet entries
 struct StyleSheetList : public std::list<StyleSheet>
 {
-	void	set(const StyleSheet& stylesheet)
+	void set(const StyleSheet& stylesheet)
 	{
 		clear();
 		push_back(stylesheet);
@@ -626,6 +631,7 @@ struct StyleSheetList : public std::list<StyleSheet>
 };
 
 
+ /// XML document type description
 struct DocType
 {
 	std::string	_name;
@@ -683,6 +689,7 @@ enum WRITE_MODE {
 struct XMLNode : public XS_String
 {
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
+	 /// map of XML node attributes
 	 // optimized read access without temporary A/U conversion when using ASCII attribute names
 	struct AttributeMap : public std::map<XS_String, XS_String>
 	{
@@ -718,6 +725,7 @@ struct XMLNode : public XS_String
 		}
 	};
 #else
+	 /// map of XML node attributes
 	struct AttributeMap : public std::map<XS_String, XS_String>
 	{
 		XS_String get(const char* x, LPXSSTR def=XS_EMPTY_STR) const
@@ -2280,6 +2288,7 @@ protected:
 };
 
 
+ /// helper structure to read XML messages from strings
 struct XMLMessageFromString : public XMLMessage
 {
 	XMLMessageFromString(const std::string& xml_str, const std::string& system_id=std::string())
@@ -2308,6 +2317,7 @@ protected:
 };
 
 
+ /// on the fly XML writer
 struct XMLWriter
 {
 	XMLWriter(std::ostream& out, const XMLFormat& format=XMLFormat())
@@ -2399,6 +2409,7 @@ protected:
 
 	typedef XMLNode::AttributeMap AttrMap;
 
+	 /// container for XMLWriter state information
 	struct StackEntry {
 		XS_String	_node_name;
 		AttrMap		_attributes;

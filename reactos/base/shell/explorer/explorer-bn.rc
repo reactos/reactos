@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// Bengali resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -379,7 +379,7 @@ BEGIN
     IDS_TASKBAR             "Kvh©Kvix `Û"
 END
 
-#endif    // English (U.S.) resources
+#endif    // Bengali resources
 /////////////////////////////////////////////////////////////////////////////
 
 
