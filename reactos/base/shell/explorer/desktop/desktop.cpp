@@ -457,6 +457,14 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		goto def;
 
+	  case WM_SYSCOLORCHANGE:
+		 // redraw background window
+		InvalidateRect(g_Globals._hwndShellView, NULL, TRUE);
+
+		 // forward message to shell view window to redraw icon backgrounds
+		SendMessage(g_Globals._hwndShellView, WM_SYSCOLORCHANGE, wparam, lparam);
+		break;
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -480,7 +488,7 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
  :	super(hwnd),
 	_pShellView(pShellView)
 {
-	_hwndListView = ::GetNextWindow(hwnd, GW_CHILD);
+	_hwndListView = GetNextWindow(hwnd, GW_CHILD);
 
 	SetWindowStyle(_hwndListView, GetWindowStyle(_hwndListView)&~LVS_ALIGNMASK);//|LVS_ALIGNTOP|LVS_AUTOARRANGE);
 
