@@ -239,6 +239,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     /* Initialize rundown protection */
     ExInitializeRundownProtection(&Thread->RundownProtect);
 
+    /* Initialize exit code */
+    Thread->ExitStatus = STATUS_PENDING;
+
     /* Set the Process CID */
     Thread->ThreadsProcess = Process;
     Thread->Cid.UniqueProcess = Process->UniqueProcessId;

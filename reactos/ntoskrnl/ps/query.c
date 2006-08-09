@@ -921,9 +921,7 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
             _SEH_TRY
             {
                 /* Write all the information from the ETHREAD/KTHREAD */
-                ThreadBasicInfo->ExitStatus = (Thread->ExitStatus == 0) ?
-                                               STATUS_PENDING :
-                                               Thread->ExitStatus;
+                ThreadBasicInfo->ExitStatus = Thread->ExitStatus;
                 ThreadBasicInfo->TebBaseAddress = (PVOID)Thread->Tcb.Teb;
                 ThreadBasicInfo->ClientId = Thread->Cid;
                 ThreadBasicInfo->AffinityMask = Thread->Tcb.Affinity;
