@@ -890,12 +890,13 @@ NtQueryInformationThread(IN HANDLE ThreadHandle,
     PAGED_CODE();
 
     /* Verify Information Class validity */
-    Status = DefaultSetInfoBufferCheck(ThreadInformationClass,
-                                       PsThreadInfoClass,
-                                       RTL_NUMBER_OF(PsThreadInfoClass),
-                                       ThreadInformation,
-                                       ThreadInformationLength,
-                                       PreviousMode);
+    Status = DefaultQueryInfoBufferCheck(ThreadInformationClass,
+                                         PsThreadInfoClass,
+                                         RTL_NUMBER_OF(PsThreadInfoClass),
+                                         ThreadInformation,
+                                         ThreadInformationLength,
+                                         ReturnLength,
+                                         PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Check what class this is */
