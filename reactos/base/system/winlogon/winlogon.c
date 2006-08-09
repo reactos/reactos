@@ -11,7 +11,7 @@
 /* INCLUDES *****************************************************************/
 #include "winlogon.h"
 
-#define YDEBUG
+//#define YDEBUG
 #include <wine/debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -270,128 +270,6 @@ GetUserInit(
    return CommandLine;
 }
 
-static BOOL
-DoBrokenLogonUser(
-	IN PWLSESSION WLSession,
-	IN PWLX_MPR_NOTIFY_INFO pMprNotifyInfo)
-{
-  PROCESS_INFORMATION ProcessInformation;
-  STARTUPINFO StartupInfo;
-  WCHAR CommandLine[MAX_PATH];
-  WCHAR CurrentDirectory[MAX_PATH];
-  PROFILEINFOW ProfileInfo;
-  BOOL Result;
-  LPVOID lpEnvironment = NULL;
-  MSG Msg;
-  BOOLEAN Old;
-
-  SwitchDesktop(WLSession->ApplicationDesktop);
-
-  /* Load the user profile */
-  ProfileInfo.dwSize = sizeof(PROFILEINFOW);
-  ProfileInfo.dwFlags = 0;
-  ProfileInfo.lpUserName = pMprNotifyInfo->pszUserName;
-  ProfileInfo.lpProfilePath = NULL;
-  ProfileInfo.lpDefaultPath = NULL;
-  ProfileInfo.lpServerName = NULL;
-  ProfileInfo.lpPolicyPath = NULL;
-  ProfileInfo.hProfile = NULL;
-
-  if (!LoadUserProfileW (WLSession->UserToken,
-			 &ProfileInfo))
-    {
-      DPRINT1 ("WL: LoadUserProfileW() failed\n");
-      CloseHandle (WLSession->UserToken);
-      RtlDestroyEnvironment (lpEnvironment);
-      return FALSE;
-    }
-
-  if (!CreateEnvironmentBlock (&lpEnvironment,
-			       WLSession->UserToken,
-			       TRUE))
-    {
-      DPRINT1("WL: CreateEnvironmentBlock() failed\n");
-      return FALSE;
-    }
-
-  if (ImpersonateLoggedOnUser(WLSession->UserToken))
-    {
-      UpdatePerUserSystemParameters(0, TRUE);
-      RevertToSelf();
-    }
-
-  GetWindowsDirectoryW (CurrentDirectory, MAX_PATH);
-
-  StartupInfo.cb = sizeof(StartupInfo);
-  StartupInfo.lpReserved = NULL;
-  StartupInfo.lpDesktop = NULL;
-  StartupInfo.lpTitle = NULL;
-  StartupInfo.dwFlags = 0;
-  StartupInfo.cbReserved2 = 0;
-  StartupInfo.lpReserved2 = 0;
-  
-  /* Get privilege */
-  RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
-
-  Result = CreateProcessAsUserW(
-				 WLSession->UserToken,
-				 NULL,
-				 GetUserInit (CommandLine, MAX_PATH),
-				 NULL,
-				 NULL,
-				 FALSE,
-				 CREATE_UNICODE_ENVIRONMENT,
-				 lpEnvironment,
-				 CurrentDirectory,
-				 &StartupInfo,
-				 &ProcessInformation);
-  if (!Result)
-    {
-      DPRINT1("WL: Failed to execute user shell %ws\n", CommandLine);
-      if (ImpersonateLoggedOnUser(WLSession->UserToken))
-        {
-          UpdatePerUserSystemParameters(0, FALSE);
-          RevertToSelf();
-        }
-      UnloadUserProfile (WLSession->UserToken,
-			 ProfileInfo.hProfile);
-      CloseHandle (WLSession->UserToken);
-      DestroyEnvironmentBlock (lpEnvironment);
-      return FALSE;
-    }
-  /*WLSession->Gina.Functions.WlxActivateUserShell(WLSession->Gina.Context,
-                                                   L"WinSta0\\Default",
-                                                   NULL,
-                                                   NULL);*/
-
-  while (WaitForSingleObject (ProcessInformation.hProcess, 100) != WAIT_OBJECT_0)
-  {
-    if (PeekMessage(&Msg, WLSession->SASWindow, 0, 0, PM_REMOVE))
-    {
-      TranslateMessage(&Msg);
-      DispatchMessage(&Msg);
-    }
-  }
-
-  CloseHandle (ProcessInformation.hProcess);
-  CloseHandle (ProcessInformation.hThread);
-
-  if (ImpersonateLoggedOnUser(WLSession->UserToken))
-    {
-      UpdatePerUserSystemParameters(0, FALSE);
-      RevertToSelf();
-    }
-
-  /* Unload user profile */
-  UnloadUserProfile (WLSession->UserToken,
-		     ProfileInfo.hProfile);
-
-  CloseHandle (WLSession->UserToken);
-
-  RtlDestroyEnvironment (lpEnvironment);
-
-  return TRUE;
-}
 #endif
 
 BOOL

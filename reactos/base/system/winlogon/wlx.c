@@ -12,7 +12,7 @@
 
 #include "winlogon.h"
 
-#define YDEBUG
+//#define YDEBUG
 #include <wine/debug.h>
 
 static DLGPROC PreviousWindowProc;
@@ -323,7 +323,7 @@ WlxCloseUserDesktop(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 WlxSetOption(

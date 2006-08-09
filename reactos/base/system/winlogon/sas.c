@@ -75,6 +75,7 @@ HandleLogon(
 		return FALSE;
 	}
 	/* FIXME: use Session->Profile.pszEnvironment */
+	/* FIXME: UpdatePerUserSystemParameters(0, TRUE); */
 
 	/* Get privilege */
 	/* FIXME: who should do it? winlogon or gina? */
@@ -124,7 +125,7 @@ LogoffShutdownThread(LPVOID Parameter)
 {
 	PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
 
-	if (!ImpersonateLoggedOnUser(LSData->Session->UserToken))
+	if (LSData->Session->UserToken && !ImpersonateLoggedOnUser(LSData->Session->UserToken))
 	{
 		ERR("ImpersonateLoggedOnUser failed with error %lu\n", GetLastError());
 		return 0;
@@ -143,7 +144,8 @@ LogoffShutdownThread(LPVOID Parameter)
 
 	/* FIXME: Call ExitWindowsEx() to terminate COM processes */
 
-	RevertToSelf();
+	if (LSData->Session->UserToken)
+		RevertToSelf();
 
 	return 1;
 }
@@ -155,6 +157,7 @@ HandleLogoff(
 {
 	PLOGOFF_SHUTDOWN_DATA LSData;
 	HANDLE hThread;
+	DWORD exitCode;
 
 	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
@@ -172,15 +175,30 @@ HandleLogoff(
 	hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
 	if (!hThread)
 	{
-		ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
+		ERR("Unable to create logoff thread, error %lu\n", GetLastError());
 		HeapFree(GetProcessHeap(), 0, LSData);
 		return STATUS_UNSUCCESSFUL;
 	}
 	WaitForSingleObject(hThread, INFINITE);
-	CloseHandle(hThread);
 	HeapFree(GetProcessHeap(), 0, LSData);
+	if (!GetExitCodeThread(hThread, &exitCode))
+	{
+		ERR("Unable to get exit code of logoff thread (error %lu)\n", GetLastError());
+		CloseHandle(hThread);
+		return STATUS_UNSUCCESSFUL;
+	}
+	CloseHandle(hThread);
+	if (exitCode == 0)
+	{
+		ERR("Logoff thread returned failure\n");
+		return STATUS_UNSUCCESSFUL;
+	}
 
+	//UnloadUserProfile(Session->UserToken, ProfileInfo.hProfile);
+	//CloseHandle(Session->UserToken);
+	//UpdatePerUserSystemParameters(0, FALSE);
 	Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
+	Session->UserToken = NULL;
 	return STATUS_SUCCESS;
 }
 
@@ -232,6 +250,7 @@ HandleShutdown(
 {
 	PLOGOFF_SHUTDOWN_DATA LSData;
 	HANDLE hThread;
+	DWORD exitCode;
 
 	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
@@ -259,8 +278,19 @@ HandleShutdown(
 		return STATUS_UNSUCCESSFUL;
 	}
 	WaitForSingleObject(hThread, INFINITE);
-	CloseHandle(hThread);
 	HeapFree(GetProcessHeap(), 0, LSData);
+	if (!GetExitCodeThread(hThread, &exitCode))
+	{
+		ERR("Unable to get exit code of shutdown thread (error %lu)\n", GetLastError());
+		CloseHandle(hThread);
+		return STATUS_UNSUCCESSFUL;
+	}
+	CloseHandle(hThread);
+	if (exitCode == 0)
+	{
+		ERR("Shutdown thread returned failure\n");
+		return STATUS_UNSUCCESSFUL;
+	}
 
 	/* Destroy SAS window */
 	UninitializeSAS(Session);
@@ -315,12 +345,19 @@ DoGenericAction(
 				SwitchDesktop(WLSession->WinlogonDesktop);
 				Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
 				if (!NT_SUCCESS(HandleLogoff(Session, EWX_LOGOFF)))
+				{
+					RemoveStatusMessage(Session);
 					break;
+				}
 			}
 			if (WLX_SHUTTINGDOWN(wlxAction))
 			{
 				Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
-				HandleShutdown(Session, wlxAction);
+				if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
+				{
+					RemoveStatusMessage(Session);
+					Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+				}
 			}
 			else
 			{
