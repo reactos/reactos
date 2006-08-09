@@ -81,32 +81,202 @@ HandleLogon(
 	/* FIXME: reverting to lower privileges after creating user shell? */
 	RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &Old);
 
-	return Session->Gina.Functions.WlxActivateUserShell(
+	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
+	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
+
+	if (!Session->Gina.Functions.WlxActivateUserShell(
 		Session->Gina.Context,
-		L"Default",//NULL, /* FIXME */
+		L"Default",
 		NULL, /* FIXME */
-		lpEnvironment);
+		lpEnvironment))
+	{
+		return FALSE;
+	}
+	   /*if(!GinaInst->Functions->WlxActivateUserShell(GinaInst->Context,
+                                                   L"WinSta0\\Default",
+                                                   NULL,
+                                                   NULL))
+   {
+     LoadString(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, 256 * sizeof(WCHAR));
+     MessageBox(0, StatusMsg, NULL, MB_ICONERROR);
+     SetEvent(hShutdownEvent);
+   }
+
+   WaitForSingleObject(hShutdownEvent, INFINITE);
+   CloseHandle(hShutdownEvent);
+
+   RemoveStatusMessage(Session);
+   */
+	return TRUE;
+}
+
+#define EWX_ACTION_MASK 0xffffffeb
+#define EWX_FLAGS_MASK  0x00000014
+
+typedef struct tagLOGOFF_SHUTDOWN_DATA
+{
+  UINT Flags;
+  PWLSESSION Session;
+} LOGOFF_SHUTDOWN_DATA, *PLOGOFF_SHUTDOWN_DATA;
+
+static DWORD WINAPI
+LogoffShutdownThread(LPVOID Parameter)
+{
+	PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+
+	if (!ImpersonateLoggedOnUser(LSData->Session->UserToken))
+	{
+		ERR("ImpersonateLoggedOnUser failed with error %lu\n", GetLastError());
+		return 0;
+	}
+
+	/* Close processes of the interactive user */
+	if (!ExitWindowsEx(
+		EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
+		(EWX_LOGOFF == (LSData->Flags & EWX_ACTION_MASK) ? EWX_INTERNAL_FLAG_LOGOFF : 0),
+		0))
+	{
+		ERR("Unable to kill user apps, error %lu\n", GetLastError());
+		RevertToSelf();
+		return 0;
+	}
+
+	/* FIXME: Call ExitWindowsEx() to terminate COM processes */
+
+	RevertToSelf();
+
+	return 1;
+}
+
+static NTSTATUS
+HandleLogoff(
+	IN OUT PWLSESSION Session,
+	IN UINT Flags)
+{
+	PLOGOFF_SHUTDOWN_DATA LSData;
+	HANDLE hThread;
+
+	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
+
+	/* Prepare data for logoff thread */
+	LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
+	if (!LSData)
+	{
+		ERR("Failed to allocate mem for thread data\n");
+		return STATUS_NO_MEMORY;
+	}
+	LSData->Flags = Flags;
+	LSData->Session = Session;
+
+	/* Run logoff thread */
+	hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+	if (!hThread)
+	{
+		ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
+		HeapFree(GetProcessHeap(), 0, LSData);
+		return STATUS_UNSUCCESSFUL;
+	}
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+	HeapFree(GetProcessHeap(), 0, LSData);
+
+	Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
+	return STATUS_SUCCESS;
+}
+
+static INT_PTR CALLBACK
+ShutdownComputerWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_COMMAND:
+		{
+			switch (LOWORD(wParam))
+			{
+				case IDC_BTNSHTDOWNCOMPUTER:
+					EndDialog(hwndDlg, IDC_BTNSHTDOWNCOMPUTER);
+					return TRUE;
+			}
+			break;
+		}
+		case WM_INITDIALOG:
+		{
+			RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
+			SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 static VOID
-HandleLogoff(
+UninitializeSAS(
 	IN OUT PWLSESSION Session)
 {
-	FIXME("FIXME: HandleLogoff() unimplemented\n");
+	if (Session->SASWindow)
+	{
+		DestroyWindow(Session->SASWindow);
+		Session->SASWindow = NULL;
+	}
+	UnregisterClassW(WINLOGON_SAS_CLASS, hAppInstance);
 }
 
-static BOOL
+BOOL
 HandleShutdown(
 	IN OUT PWLSESSION Session,
 	IN DWORD wlxAction)
 {
-	FIXME("FIXME: HandleShutdown() unimplemented\n");
+	PLOGOFF_SHUTDOWN_DATA LSData;
+	HANDLE hThread;
+
+	DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
+
+	/* Prepare data for shutdown thread */
+	LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
+	if (!LSData)
+	{
+		ERR("Failed to allocate mem for thread data\n");
+		return STATUS_NO_MEMORY;
+	}
+	if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
+		LSData->Flags = EWX_POWEROFF;
+	else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
+		LSData->Flags = EWX_REBOOT;
+	else
+		LSData->Flags = EWX_SHUTDOWN;
+	LSData->Session = Session;
+
+	/* Run shutdown thread */
+	hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+	if (!hThread)
+	{
+		ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
+		HeapFree(GetProcessHeap(), 0, LSData);
+		return STATUS_UNSUCCESSFUL;
+	}
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+	HeapFree(GetProcessHeap(), 0, LSData);
+
+	/* Destroy SAS window */
+	UninitializeSAS(Session);
+
+	FIXME("FIXME: Call SMSS API #1\n");
 	if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
 		NtShutdownSystem(ShutdownReboot);
-	else if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_POWER_OFF)
-		NtShutdownSystem(ShutdownPowerOff);
 	else
+	{
+		if (FALSE)
+		{
+			/* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), 0, ShutdownComputerWindowProc);
+		}
 		NtShutdownSystem(ShutdownNoReboot);
+	}
 	return TRUE;
 }
 
@@ -144,14 +314,18 @@ DoGenericAction(
 					break;
 				SwitchDesktop(WLSession->WinlogonDesktop);
 				Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
-				HandleLogoff(Session);
-				Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
-				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
+				if (!NT_SUCCESS(HandleLogoff(Session, EWX_LOGOFF)))
+					break;
 			}
 			if (WLX_SHUTTINGDOWN(wlxAction))
 			{
 				Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
 				HandleShutdown(Session, wlxAction);
+			}
+			else
+			{
+				RemoveStatusMessage(Session);
+				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
 			}
 			break;
 		case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
@@ -247,47 +421,8 @@ UnregisterHotKeys(
 	return TRUE;
 }
 
-#define EWX_ACTION_MASK 0xffffffeb
-#define EWX_FLAGS_MASK  0x00000014
-
-typedef struct tagLOGOFF_SHUTDOWN_DATA
-{
-  UINT Flags;
-  PWLSESSION Session;
-} LOGOFF_SHUTDOWN_DATA, *PLOGOFF_SHUTDOWN_DATA;
-
-static DWORD WINAPI
-LogoffShutdownThread(LPVOID Parameter)
-{
-	PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA) Parameter;
-
-	if (!ImpersonateLoggedOnUser(LSData->Session->UserToken))
-	{
-		ERR("ImpersonateLoggedOnUser failed with error %lu\n", GetLastError());
-		return 0;
-	}
-
-	/* Close processes of the interactive user */
-	if (!ExitWindowsEx(
-		EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
-		(EWX_LOGOFF == (LSData->Flags & EWX_ACTION_MASK) ? EWX_INTERNAL_FLAG_LOGOFF : 0),
-		0))
-	{
-		ERR("Unable to kill user apps, error %lu\n", GetLastError());
-		RevertToSelf();
-		return 0;
-	}
-
-	/* FIXME: Call ExitWindowsEx() to terminate COM processes */
-
-	RevertToSelf();
-
-	return 1;
-}
-
 static NTSTATUS
-CheckPrivilegeForRequestedAction(
-	IN UINT Action,
+CheckForShutdownPrivilege(
 	IN DWORD RequestingProcessId)
 {
 	HANDLE Process;
@@ -295,18 +430,7 @@ CheckPrivilegeForRequestedAction(
 	BOOL CheckResult;
 	PPRIVILEGE_SET PrivSet;
 
-	TRACE("CheckPrivilegeForRequestedAction(%u)\n", Action);
-
-	if (Action == EWX_LOGOFF)
-		/* No privilege needed to log off */
-		return STATUS_SUCCESS;
-
-	/* Check for invalid arguments */
-	if (Action != EWX_SHUTDOWN && Action != EWX_REBOOT && Action != EWX_POWEROFF)
-	{
-		ERR("Invalid exit action %u\n", Action);
-		return STATUS_INVALID_PARAMETER;
-	}
+	TRACE("CheckForShutdownPrivilege()\n");
 
 	Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, RequestingProcessId);
 	if (!Process)
@@ -352,71 +476,6 @@ CheckPrivilegeForRequestedAction(
 		WARN("SE_SHUTDOWN privilege not enabled\n");
 		return STATUS_ACCESS_DENIED;
 	}
-}
-
-static LRESULT
-HandleExitWindows(
-	IN OUT PWLSESSION Session,
-	IN DWORD RequestingProcessId,
-	IN UINT Flags)
-{
-	UINT Action;
-	PLOGOFF_SHUTDOWN_DATA LSData;
-	HANDLE hThread;
-	NTSTATUS Status;
-
-	/* Check parameters */
-	Action = Flags & EWX_ACTION_MASK;
-	if (Action != EWX_LOGOFF &&
-	    Action != EWX_SHUTDOWN &&
-	    Action != EWX_REBOOT &&
-	    Action != EWX_POWEROFF)
-	{
-		ERR("Invalid ExitWindows action 0x%x\n", Action);
-		return STATUS_INVALID_PARAMETER;
-	}
-
-	/* Check privilege */
-	Status = CheckPrivilegeForRequestedAction(Action, RequestingProcessId);
-	if (!NT_SUCCESS(Status))
-		return Status;
-
-	/* Prepare data for logoff/shutdown thread */
-	LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
-	if (!LSData)
-	{
-		ERR("Failed to allocate mem for thread data\n");
-		return STATUS_NO_MEMORY;
-	}
-	LSData->Flags = Flags;
-	LSData->Session = Session;
-
-	/* Run logoff/shutdown thread */
-	hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
-	if (!hThread)
-	{
-		ERR("Unable to create shutdown thread, error %lu\n", GetLastError());
-		HeapFree(GetProcessHeap(), 0, LSData);
-		return STATUS_UNSUCCESSFUL;
-	}
-	WaitForSingleObject(hThread, INFINITE);
-	CloseHandle(hThread);
-	HeapFree(GetProcessHeap(), 0, LSData);
-
-	Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
-	if (Action == EWX_LOGOFF)
-	{
-		DispatchSAS(Session, WLX_SAS_TYPE_TIMEOUT);
-		return 1;
-	}
-
-	/* Handle shutdown */
-	FIXME("FIXME: Call ExitWindowEx in SYSTEM process context\n");
-
-	FIXME("FIXME: Call SMSS API #1\n");
-	NtShutdownSystem(ShutdownNoReboot); /* FIXME: should go in smss */
-
-	return 1;
 }
 
 static LRESULT CALLBACK
@@ -468,22 +527,36 @@ SASWindowProc(
 		}
 		case PM_WINLOGON_EXITWINDOWS:
 		{
-			return HandleExitWindows(Session, (DWORD) wParam, (UINT) lParam);
+			UINT Flags = (UINT)lParam;
+			UINT Action = Flags & EWX_ACTION_MASK;
+			DWORD wlxAction;
+
+			/* Check parameters */
+			switch (Action)
+			{
+				case EWX_LOGOFF: wlxAction = WLX_SAS_ACTION_LOGOFF; break;
+				case EWX_SHUTDOWN: wlxAction = WLX_SAS_ACTION_SHUTDOWN; break;
+				case EWX_REBOOT: wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT; break;
+				case EWX_POWEROFF: wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF; break;
+				default:
+				{
+					ERR("Invalid ExitWindows action 0x%x\n", Action);
+					return STATUS_INVALID_PARAMETER;
+				}
+			}
+
+			if (WLX_SHUTTINGDOWN(wlxAction))
+			{
+				NTSTATUS Status = CheckForShutdownPrivilege((DWORD)wParam);
+				if (!NT_SUCCESS(Status))
+					return Status;
+			}
+			DoGenericAction(Session, wlxAction);
+			return 1;
 		}
 	}
 
 	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
-}
-
-static VOID
-UninitializeSAS(
-	IN OUT PWLSESSION Session)
-{
-	if (Session->SASWindow)
-	{
-		DestroyWindow(Session->SASWindow);
-		Session->SASWindow = NULL;
-	}
 }
 
 BOOL
@@ -506,10 +579,13 @@ InitializeSAS(
 	swc.lpszMenuName = NULL;
 	swc.lpszClassName = WINLOGON_SAS_CLASS;
 	swc.hIconSm = NULL;
-	RegisterClassExW(&swc); /* FIXME: check return code */
+	if (RegisterClassExW(&swc) == 0)
+	{
+		ERR("WL: Failed to register SAS window class\n");
+		return FALSE;
+	}
 
 	/* create invisible SAS window */
-	DPRINT1("Session %p\n", Session);
 	Session->SASWindow = CreateWindowExW(
 		0,
 		WINLOGON_SAS_CLASS,
@@ -520,6 +596,7 @@ InitializeSAS(
 	if (!Session->SASWindow)
 	{
 		ERR("WL: Failed to create SAS window\n");
+		UninitializeSAS(Session);
 		return FALSE;
 	}
 

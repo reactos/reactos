@@ -71,7 +71,7 @@ typedef BOOL (WINAPI * PFWLXREMOVESTATUSMESSAGE) (PVOID);
 typedef struct _GINAFUNCTIONS
 {
 	/* Functions always available for a valid GINA */
-	PFWLXNEGOTIATE            WlxNegotiate;
+	PFWLXNEGOTIATE            WlxNegotiate; /* optional */
 	PFWLXINITIALIZE           WlxInitialize;
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_0 (MS Windows 3.5.0) */
@@ -87,15 +87,15 @@ typedef struct _GINAFUNCTIONS
 	PFWLXSHUTDOWN             WlxShutdown;
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_1 (MS Windows 3.5.1) */
-	PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify;
-	PFWLXSTARTAPPLICATION     WlxStartApplication;
+	PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify; /* optional, not called ATM */
+	PFWLXSTARTAPPLICATION     WlxStartApplication; /* optional, not called ATM */
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_2 (MS Windows NT 4.0) */
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_3 (MS Windows 2000) */
-	PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad;
+	PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad; /* not called ATM */
 	PFWLXDISPLAYSTATUSMESSAGE WlxDisplayStatusMessage;
-	PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage;
+	PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage; /* doesn't need to be called */
 	PFWLXREMOVESTATUSMESSAGE  WlxRemoveStatusMessage;
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_4 (MS Windows XP) */
@@ -111,6 +111,7 @@ typedef struct _GINAINSTANCE
 } GINAINSTANCE, *PGINAINSTANCE;
 
 /* FIXME: put in an enum */
+/* See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/secauthn/security/winlogon_states.asp */
 #define WKSTA_IS_LOGGED_OFF 0
 #define WKSTA_IS_LOGGED_ON  1
 #define WKSTA_IS_LOCKED     2
@@ -157,11 +158,6 @@ extern PWLSESSION WLSession;
    ((Status) == WLX_SAS_ACTION_SHUTDOWN_HIBERNATE) \
   )
 
-#define RemoveStatusMessage(Session) \
-  Session->Gina.Functions.WlxRemoveStatusMessage(Session->Gina.Context);
-#define DisplaySASNotice(Session) \
-  Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
-
 /* user32 */
 BOOL WINAPI
 UpdatePerUserSystemParameters(DWORD dwUnknown,
@@ -176,6 +172,17 @@ BOOL
 InitializeSAS(
 	IN OUT PWLSESSION Session);
 
+/* winlogon.c */
+BOOL
+DisplayStatusMessage(
+	IN PWLSESSION Session,
+	IN HDESK hDesktop,
+	IN UINT ResourceId);
+
+BOOL
+RemoveStatusMessage(
+	IN PWLSESSION Session);
+
 /* wlx.c */
 BOOL
 GinaInit(
@@ -183,6 +190,11 @@ GinaInit(
 BOOL
 CreateWindowStationAndDesktops(
 	IN OUT PWLSESSION Session);
+
+BOOL
+HandleShutdown(
+	IN OUT PWLSESSION Session,
+	IN DWORD wlxAction);
 
 VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
 VOID WINAPI WlxSetContextPointer(HANDLE hWlx, PVOID pWlxContext);

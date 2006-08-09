@@ -21,104 +21,70 @@ PWLSESSION WLSession = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-static INT_PTR CALLBACK
-ShutdownComputerWindowProc(
-	IN HWND hwndDlg,
-	IN UINT uMsg,
-	IN WPARAM wParam,
-	IN LPARAM lParam)
-{
-	switch (uMsg)
-	{
-		case WM_COMMAND:
-		{
-			switch (LOWORD(wParam))
-			{
-				case IDC_BTNSHTDOWNCOMPUTER:
-					EndDialog(hwndDlg, IDC_BTNSHTDOWNCOMPUTER);
-					return TRUE;
-			}
-			break;
-		}
-		case WM_INITDIALOG:
-		{
-			RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
-			SetFocus(GetDlgItem(hwndDlg, IDC_BTNSHTDOWNCOMPUTER));
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-
 static BOOL
 StartServicesManager(VOID)
 {
-   HANDLE ServicesInitEvent;
-   BOOLEAN Result;
-   STARTUPINFOW StartupInfo;
-   PROCESS_INFORMATION ProcessInformation;
-   DWORD Count;
-   WCHAR ServiceString[] = L"services.exe";
+	HANDLE ServicesInitEvent;
+	STARTUPINFOW StartupInfo;
+	PROCESS_INFORMATION ProcessInformation;
+	DWORD Count;
+	LPCWSTR ServiceString = L"services.exe";
+	BOOL res;
 
-   /* Start the service control manager (services.exe) */
+	/* Start the service control manager (services.exe) */
+	StartupInfo.cb = sizeof(StartupInfo);
+	StartupInfo.lpReserved = NULL;
+	StartupInfo.lpDesktop = NULL;
+	StartupInfo.lpTitle = NULL;
+	StartupInfo.dwFlags = 0;
+	StartupInfo.cbReserved2 = 0;
+	StartupInfo.lpReserved2 = 0;
 
-   StartupInfo.cb = sizeof(StartupInfo);
-   StartupInfo.lpReserved = NULL;
-   StartupInfo.lpDesktop = NULL;
-   StartupInfo.lpTitle = NULL;
-   StartupInfo.dwFlags = 0;
-   StartupInfo.cbReserved2 = 0;
-   StartupInfo.lpReserved2 = 0;
+	TRACE("WL: Creating new process - %S\n", ServiceString);
 
-#if 0
-   DPRINT1(L"WL: Creating new process - \"services.exe\".\n");
-#endif
+	res = CreateProcessW(
+		ServiceString,
+		NULL,
+		NULL,
+		NULL,
+		FALSE,
+		DETACHED_PROCESS,
+		NULL,
+		NULL,
+		&StartupInfo,
+		&ProcessInformation);
+	if (!res)
+	{
+		ERR("WL: Failed to execute services (error %lu)\n", GetLastError());
+		return FALSE;
+	}
 
-   Result = CreateProcessW(NULL,
-                          ServiceString,
-                          NULL,
-                          NULL,
-                          FALSE,
-                          DETACHED_PROCESS,
-                          NULL,
-                          NULL,
-                          &StartupInfo,
-                          &ProcessInformation);
-   if (!Result)
-     {
-        DPRINT1("WL: Failed to execute services\n");
-        return FALSE;
-     }
+	/* Wait for event creation (by SCM) for max. 20 seconds */
+	for (Count = 0; Count < 20; Count++)
+	{
+		Sleep(1000);
 
-   /* wait for event creation (by SCM) for max. 20 seconds */
-   for (Count = 0; Count < 20; Count++)
-     {
-        Sleep(1000);
+		TRACE("WL: Attempting to open event \"SvcctrlStartEvent_A3725DX\"\n");
+		ServicesInitEvent = OpenEventW(
+			EVENT_ALL_ACCESS, //SYNCHRONIZE,
+			FALSE,
+			L"SvcctrlStartEvent_A3725DX");
+		if (ServicesInitEvent)
+			break;
+	}
 
-        DPRINT("WL: Attempting to open event \"SvcctrlStartEvent_A3725DX\"\n");
-        ServicesInitEvent = OpenEventW(EVENT_ALL_ACCESS, //SYNCHRONIZE,
-                                      FALSE,
-                                      L"SvcctrlStartEvent_A3725DX");
-        if (ServicesInitEvent != NULL)
-          {
-             break;
-          }
-     }
+	if (!ServicesInitEvent)
+	{
+		ERR("WL: Failed to open event \"SvcctrlStartEvent_A3725DX\"\n");
+		return FALSE;
+	}
 
-   if (ServicesInitEvent == NULL)
-     {
-        DPRINT1("WL: Failed to open event \"SvcctrlStartEvent_A3725DX\"\n");
-        return FALSE;
-     }
+	/* Wait for event signalization */
+	WaitForSingleObject(ServicesInitEvent, INFINITE);
+	CloseHandle(ServicesInitEvent);
+	TRACE("WL: StartServicesManager() done.\n");
 
-   /* wait for event signalization */
-   DPRINT("WL: Waiting forever on event handle: %x\n", ServicesInitEvent);
-   WaitForSingleObject(ServicesInitEvent, INFINITE);
-   DPRINT("WL: Closing event object \"SvcctrlStartEvent_A3725DX\"\n");
-   CloseHandle(ServicesInitEvent);
-   DPRINT("WL: StartServicesManager() Done.\n");
-
-   return TRUE;
+	return TRUE;
 }
 
 static BOOL
@@ -428,13 +394,16 @@ DoBrokenLogonUser(
 }
 #endif
 
-static BOOL
+BOOL
 DisplayStatusMessage(
 	IN PWLSESSION Session,
 	IN HDESK hDesktop,
 	IN UINT ResourceId)
 {
 	WCHAR StatusMsg[MAX_PATH];
+
+	if (Session->Gina.Version < WLX_VERSION_1_3)
+		return TRUE;
 
 	if (Session->SuppressStatus)
 		return TRUE;
@@ -445,66 +414,14 @@ DisplayStatusMessage(
 	return Session->Gina.Functions.WlxDisplayStatusMessage(Session->Gina.Context, hDesktop, 0, NULL, StatusMsg);
 }
 
-static VOID
-SessionLoop(
-	IN OUT PWLSESSION Session)
+BOOL
+RemoveStatusMessage(
+	IN PWLSESSION Session)
 {
-	//WCHAR StatusMsg[256];
-	//HANDLE hShutdownEvent;
-	MSG Msg;
+	if (Session->Gina.Version < WLX_VERSION_1_3)
+		return TRUE;
 
-	Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
-	RemoveStatusMessage(Session);
-	DispatchSAS(Session, WLX_SAS_TYPE_TIMEOUT);
-
-	/* Message loop for the SAS window */
-	while (GetMessage(&Msg, WLSession->SASWindow, 0, 0))
-	{
-		TranslateMessage(&Msg);
-		DispatchMessage(&Msg);
-	}
-
-	/* Don't go there! */
-
-   /*
-   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_PREPARENETWORKCONNECTIONS);
-   Sleep(150);
-
-   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
-   Sleep(150);
-
-   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
-   Sleep(150);
-
-   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
-   Sleep(150);
-
-   RemoveStatusMessage(Session);
-
-   if(!GinaInst->Functions->WlxActivateUserShell(GinaInst->Context,
-                                                   L"WinSta0\\Default",
-                                                   NULL,
-                                                   NULL))
-   {
-     LoadString(hAppInstance, IDS_FAILEDACTIVATEUSERSHELL, StatusMsg, 256 * sizeof(WCHAR));
-     MessageBox(0, StatusMsg, NULL, MB_ICONERROR);
-     SetEvent(hShutdownEvent);
-   }
-
-   WaitForSingleObject(hShutdownEvent, INFINITE);
-   CloseHandle(hShutdownEvent);
-
-   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
-
-   Sleep(150);
-
-   GinaInst->Functions->WlxShutdown(GinaInst->Context, WLX_SAS_ACTION_SHUTDOWN);
-   DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
-
-   Sleep(250);
-
-   RemoveStatusMessage(Session);
-   */
+	return Session->Gina.Functions.WlxRemoveStatusMessage(Session->Gina.Context);
 }
 
 static INT_PTR CALLBACK
@@ -565,20 +482,24 @@ WinMain(
 	ULONG AuthenticationPackage;
 	NTSTATUS Status;
 #endif
+	MSG Msg;
 
 	hAppInstance = hInstance;
 
 	if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
 	{
 		ERR("WL: Could not register logon process\n");
+		HandleShutdown(NULL, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
 		NtShutdownSystem(ShutdownNoReboot);
 		ExitProcess(0);
 		return 0;
 	}
 
-	WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLSESSION));
+	WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), 0, sizeof(WLSESSION));
+	ZeroMemory(WLSession, sizeof(WLSESSION));
 	if (!WLSession)
 	{
+		ERR("WL: Could not allocate memory for winlogon instance\n");
 		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
 		ExitProcess(1);
 		return 1;
@@ -587,6 +508,7 @@ WinMain(
 
 	if (!CreateWindowStationAndDesktops(WLSession))
 	{
+		ERR("WL: Could not create window station and desktops\n");
 		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
 		ExitProcess(1);
 		return 1;
@@ -596,9 +518,9 @@ WinMain(
 	if (!StartServicesManager())
 	{
 		ERR("WL: Could not start services.exe\n");
-		NtShutdownSystem(ShutdownNoReboot);
-		ExitProcess(0);
-		return 0;
+		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+		ExitProcess(1);
+		return 1;
 	}
 
 	/* Check for pending setup */
@@ -610,7 +532,7 @@ WinMain(
 		SwitchDesktop(WLSession->ApplicationDesktop);
 		RunSetup();
 
-		NtShutdownSystem(ShutdownReboot);
+		HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
 		ExitProcess(0);
 		return 0;
 	}
@@ -618,6 +540,8 @@ WinMain(
 	if (!StartLsass())
 	{
 		DPRINT1("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
+		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
+		ExitProcess(1);
 		return 1;
 	}
 
@@ -626,9 +550,9 @@ WinMain(
 	{
 		ERR("WL: Failed to initialize Gina\n");
 		DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), 0, GinaLoadFailedWindowProc, (LPARAM)L"");
-		NtShutdownSystem(ShutdownReboot);
-		ExitProcess(0);
-		return 0;
+		HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
+		ExitProcess(1);
+		return 1;
 	}
 
 	DisplayStatusMessage(WLSession, WLSession->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
@@ -673,30 +597,22 @@ WinMain(
 		return 2;
 	}
 
-	/* Main loop */
-	SessionLoop(WLSession);
+	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_PREPARENETWORKCONNECTIONS);
+	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
 
-   /* FIXME - Flush disks and registry, ... */
+	/* Display logged out screen */
+	WLSession->LogonStatus = WKSTA_IS_LOGGED_OFF;
+	RemoveStatusMessage(WLSession);
+	DispatchSAS(WLSession, WLX_SAS_TYPE_TIMEOUT);
 
-   if(WLSession->LogonStatus == 0)
-   {
-     /* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
-     switch(DialogBox(hInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), 0, ShutdownComputerWindowProc))
-     {
-       case IDC_BTNSHTDOWNCOMPUTER:
-         NtShutdownSystem(ShutdownReboot);
-         break;
-       default:
-         NtShutdownSystem(ShutdownNoReboot);
-         break;
-     }
-     ExitProcess(0);
-   }
-   else
-   {
-     DPRINT1("WL: LogonStatus != LOGON_SHUTDOWN!!!\n");
-     ExitProcess(0);
-   }
+	/* Message loop for the SAS window */
+	while (GetMessage(&Msg, WLSession->SASWindow, 0, 0))
+	{
+		TranslateMessage(&Msg);
+		DispatchMessage(&Msg);
+	}
 
-   return 0;
+	/* We never go there */
+
+	return 0;
 }
