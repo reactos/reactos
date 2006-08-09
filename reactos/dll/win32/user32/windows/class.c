@@ -1,8 +1,8 @@
 /* $Id$
  *
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/class.c
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * FILE:            dll/win32/user32/windows/class.c
  * PURPOSE:         Window classes
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -27,6 +27,11 @@ GetClassInfoExA(
 {
     UNICODE_STRING ClassName = {0};
     BOOL Ret;
+
+    TRACE("%p class/atom: %s/%04x %p\n", hinst,
+        IS_ATOM(lpszClass) ? NULL : lpszClass,
+        IS_ATOM(lpszClass) ? lpszClass : 0,
+        lpwcx);
 
     if (lpszClass == NULL)
     {
@@ -79,6 +84,11 @@ GetClassInfoExW(
   LPWNDCLASSEXW lpwcx)
 {
     UNICODE_STRING ClassName = {0};
+
+    TRACE("%p class/atom: %S/%04x %p\n", hinst,
+        IS_ATOM(lpszClass) ? NULL : lpszClass,
+        IS_ATOM(lpszClass) ? lpszClass : 0,
+        lpwcx);
 
     if (lpszClass == NULL)
     {
@@ -182,6 +192,8 @@ GetClassInfoW(
 DWORD STDCALL
 GetClassLongA(HWND hWnd, int nIndex)
 {
+   TRACE("%p %d\n", hWnd, nIndex);
+
    switch (nIndex)
    {
       case GCL_HBRBACKGROUND:
@@ -213,6 +225,8 @@ GetClassLongA(HWND hWnd, int nIndex)
 DWORD STDCALL
 GetClassLongW ( HWND hWnd, int nIndex )
 {
+   TRACE("%p %d\n", hWnd, nIndex);
+
    switch (nIndex)
    {
       case GCL_HBRBACKGROUND:
@@ -249,13 +263,21 @@ GetClassNameA(
   int nMaxCount)
 {
     ANSI_STRING ClassName;
+    int Result;
 
     ClassName.MaximumLength = nMaxCount;
     ClassName.Buffer = lpClassName;
 
-    return NtUserGetClassName(hWnd,
-                              (PUNICODE_STRING)&ClassName,
-                              TRUE);
+    Result = NtUserGetClassName(hWnd,
+                                (PUNICODE_STRING)&ClassName,
+                                TRUE);
+
+    TRACE("%p class/atom: %s/%04x %x\n", hWnd,
+        IS_ATOM(lpClassName) ? NULL : lpClassName,
+        IS_ATOM(lpClassName) ? lpClassName : 0,
+        nMaxCount);
+
+    return Result;
 }
 
 
@@ -270,13 +292,21 @@ GetClassNameW(
   int nMaxCount)
 {
     UNICODE_STRING ClassName;
+    int Result;
 
     ClassName.MaximumLength = nMaxCount;
     ClassName.Buffer = lpClassName;
 
-    return NtUserGetClassName(hWnd,
-                              &ClassName,
-                              FALSE);
+    Result = NtUserGetClassName(hWnd,
+                                &ClassName,
+                                FALSE);
+
+    TRACE("%p class/atom: %S/%04x %x\n", hWnd,
+        IS_ATOM(lpClassName) ? NULL : lpClassName,
+        IS_ATOM(lpClassName) ? lpClassName : 0,
+        nMaxCount);
+
+    return Result;
 }
 
 
@@ -292,6 +322,8 @@ GetClassWord(
  * NOTE: Obsoleted in 32-bit windows
  */
 {
+    TRACE("%p %x\n", hWnd, nIndex);
+
     if ((nIndex < 0) && (nIndex != GCW_ATOM))
         return 0;
 
@@ -614,6 +646,10 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
                                 REGISTERCLASS_ANSI,
                                 hMenu);
 
+    TRACE("atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
+          Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
+          lpwcx->style, lpwcx->cbClsExtra, lpwcx->cbWndExtra, WndClass);
+
    if (!IS_INTRESOURCE(WndClass.lpszMenuName))
       RtlFreeUnicodeString(&MenuName);
    if (!IS_ATOM(WndClass.lpszClassName))
@@ -628,6 +664,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 ATOM STDCALL
 RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
 {
+   ATOM Atom;
    WNDCLASSEXW WndClass;
    UNICODE_STRING ClassName;
    UNICODE_STRING MenuName = {0};
@@ -695,12 +732,18 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
       RtlInitUnicodeString(&ClassName, WndClass.lpszClassName);
    }
 
-   return (ATOM)NtUserRegisterClassEx(&WndClass,
+   Atom = (ATOM)NtUserRegisterClassEx(&WndClass,
                                       &ClassName,
                                       &MenuName,
                                       NULL,
                                       0,
                                       hMenu);
+
+    TRACE("atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
+          Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
+          lpwcx->style, lpwcx->cbClsExtra, lpwcx->cbWndExtra, WndClass);
+
+   return Atom;
 }
 
 /*
@@ -752,6 +795,8 @@ SetClassLongA (HWND hWnd,
     UNICODE_STRING Value = {0};
     BOOL Allocated = FALSE;
     DWORD Ret;
+
+    TRACE("%p %d %lx\n", hWnd, nIndex, dwNewLong);
 
     /* FIXME - portability!!!! */
 
@@ -817,6 +862,8 @@ SetClassLongW(HWND hWnd,
 {
     PWSTR lpStr = (PWSTR)dwNewLong;
     UNICODE_STRING Value = {0};
+
+    TRACE("%p %d %lx\n", hWnd, nIndex, dwNewLong);
 
     /* FIXME - portability!!!! */
 
@@ -913,6 +960,11 @@ UnregisterClassA(
     NTSTATUS Status;
     BOOL Ret;
 
+    TRACE("class/atom: %s/%04x %p\n",
+        IS_ATOM(lpClassName) ? NULL : lpClassName,
+        IS_ATOM(lpClassName) ? lpClassName : 0,
+        hInstance);
+
     if (!IS_ATOM(lpClassName))
     {
         Status = HEAP_strdupAtoW(&ClassName.Buffer, lpClassName, NULL);
@@ -948,6 +1000,11 @@ UnregisterClassW(
   HINSTANCE hInstance)
 {
     UNICODE_STRING ClassName = {0};
+
+    TRACE("class/atom: %S/%04x %p\n",
+        IS_ATOM(lpClassName) ? NULL : lpClassName,
+        IS_ATOM(lpClassName) ? lpClassName : 0,
+        hInstance);
 
     if (!IS_ATOM(lpClassName))
     {
