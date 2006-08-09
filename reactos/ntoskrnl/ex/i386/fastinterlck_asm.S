@@ -767,7 +767,7 @@
 
     /* Restore flags and return */
     popfd
-    ret 0
+    ret 4 //ret 0
 
 #ifdef CONFIG_SMP
 .spinb:
