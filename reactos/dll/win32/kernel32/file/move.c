@@ -121,7 +121,7 @@ static BOOL add_boot_rename_entry( LPCWSTR source, LPCWSTR dest, DWORD flags )
                           &ObjectAttributes,
                           0,
                           NULL,
-                          0,
+                          REG_OPTION_NON_VOLATILE,
                           NULL);
 
      if (Status == STATUS_ACCESS_DENIED)
