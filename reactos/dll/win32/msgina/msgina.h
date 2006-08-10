@@ -16,15 +16,14 @@ typedef struct
 	LPWSTR station;
 	PWLX_DISPATCH_VERSION_1_3 pWlxFuncs;
 	HANDLE hDllInstance;
-	HANDLE UserToken;
 	HWND hStatusWindow;
 	BOOL SignaledStatusWindowCreated;
 	DWORD AutoLogonState;
 
 	/* Informations to be filled during logon */
+	HANDLE UserToken;
 	PLUID pAuthenticationId;
 	PDWORD pdwOptions;
-	PHANDLE phToken;
 	PWLX_MPR_NOTIFY_INFO pNprNotifyInfo;
 	PVOID *pProfile;
 
@@ -40,6 +39,7 @@ typedef BOOL (*PFGINA_REMOVESTATUSMESSAGE)(PGINA_CONTEXT);
 typedef VOID (*PFGINA_DISPLAYSASNOTICE)(PGINA_CONTEXT);
 typedef INT (*PFGINA_LOGGEDONSAS)(PGINA_CONTEXT, DWORD);
 typedef INT (*PFGINA_LOGGEDOUTSAS)(PGINA_CONTEXT);
+typedef INT (*PFGINA_LOCKEDSAS)(PGINA_CONTEXT);
 typedef struct _GINA_UI
 {
 	PFGINA_INITIALIZE Initialize;
@@ -48,6 +48,7 @@ typedef struct _GINA_UI
 	PFGINA_DISPLAYSASNOTICE DisplaySASNotice;
 	PFGINA_LOGGEDONSAS LoggedOnSAS;
 	PFGINA_LOGGEDOUTSAS LoggedOutSAS;
+	PFGINA_LOCKEDSAS LockedSAS;
 } GINA_UI, *PGINA_UI;
 
 /* msgina.c */

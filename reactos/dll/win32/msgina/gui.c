@@ -7,7 +7,7 @@
 
 #include "msgina.h"
 
-#define YDEBUG
+//#define YDEBUG
 #include <wine/debug.h>
 
 typedef struct _DISPLAYSTATUSMSG
@@ -46,17 +46,17 @@ StatusMessageWindowProc(
 			msg->Context->hStatusWindow = hwndDlg;
 
 			if (msg->pTitle)
-				SetWindowText(hwndDlg, msg->pTitle);
-			SetDlgItemText(hwndDlg, IDC_STATUSLABEL, msg->pMessage);
+				SetWindowTextW(hwndDlg, msg->pTitle);
+			SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, msg->pMessage);
 			if (!msg->Context->SignaledStatusWindowCreated)
 			{
 				msg->Context->SignaledStatusWindowCreated = TRUE;
 				SetEvent(msg->StartupEvent);
 			}
-			break;
+			return TRUE;
 		}
 	}
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
+	return FALSE;
 }
 
 static DWORD WINAPI
@@ -141,9 +141,9 @@ GUIDisplayStatusMessage(
 	}
 
 	if(pTitle)
-		SetWindowText(pgContext->hStatusWindow, pTitle);
+		SetWindowTextW(pgContext->hStatusWindow, pTitle);
 
-	SetDlgItemText(pgContext->hStatusWindow, IDC_STATUSLABEL, pMessage);
+	SetDlgItemTextW(pgContext->hStatusWindow, IDC_STATUSLABEL, pMessage);
 
 	return TRUE;
 }
@@ -161,16 +161,6 @@ GUIRemoveStatusMessage(
 	return TRUE;
 }
 
-static INT_PTR CALLBACK
-DisplaySASNoticeWindowProc(
-	IN HWND hwndDlg,
-	IN UINT uMsg,
-	IN WPARAM wParam,
-	IN LPARAM lParam)
-{
-	return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
-}
-
 static VOID
 GUIDisplaySASNotice(
 	IN OUT PGINA_CONTEXT pgContext)
@@ -184,7 +174,7 @@ GUIDisplaySASNotice(
 		pgContext->hDllInstance,
 		MAKEINTRESOURCE(IDD_NOTICE_DLG),
 		NULL,
-		DisplaySASNoticeWindowProc,
+		NULL,
 		(LPARAM)NULL);
 	if (result == -1)
 	{
@@ -209,13 +199,90 @@ GetTextboxText(
 	Text = HeapAlloc(GetProcessHeap(), 0, (Count + 1) * sizeof(WCHAR));
 	if (!Text)
 		return FALSE;
-	if (Count != GetWindowText(GetDlgItem(hwndDlg, TextboxId), Text, Count + 1))
+	if (Count != GetWindowTextW(GetDlgItem(hwndDlg, TextboxId), Text, Count + 1))
 	{
 		HeapFree(GetProcessHeap(), 0, Text);
 		return FALSE;
 	}
 	*pText = Text;
 	return TRUE;
+}
+
+static INT_PTR CALLBACK
+LoggedOnWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_COMMAND:
+		{
+			switch (LOWORD(wParam))
+			{
+				case IDC_LOCK:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_LOCK_WKSTA);
+					return TRUE;
+				case IDC_LOGOFF:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
+					return TRUE;
+				case IDC_SHUTDOWN:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
+					return TRUE;
+				case IDC_TASKMGR:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_TASKLIST);
+					return TRUE;
+				case IDCANCEL:
+					EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
+					return TRUE;
+			}
+			break;
+		}
+		case WM_INITDIALOG:
+		{
+			SetFocus(GetDlgItem(hwndDlg, IDNO));
+			return TRUE;
+		}
+		case WM_CLOSE:
+		{
+			EndDialog(hwndDlg, IDNO);
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+static INT
+GUILoggedOnSAS(
+	IN OUT PGINA_CONTEXT pgContext,
+	IN DWORD dwSasType)
+{
+	INT result;
+
+	TRACE("GUILoggedOnSAS()\n");
+
+	if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
+	{
+		/* Nothing to do for WLX_SAS_TYPE_TIMEOUT ; the dialog will
+		 * close itself thanks to the use of WlxDialogBoxParam */
+		return WLX_SAS_ACTION_NONE;
+	}
+
+	result = pgContext->pWlxFuncs->WlxDialogBoxParam(
+		pgContext->hWlx,
+		pgContext->hDllInstance,
+		MAKEINTRESOURCEW(IDD_LOGGEDON_DLG),
+		NULL,
+		LoggedOnWindowProc,
+		(LPARAM)pgContext);
+	if (result >= WLX_SAS_ACTION_LOGON &&
+	    result <= WLX_SAS_ACTION_SWITCH_CONSOLE)
+	{
+		return result;
+	}
+	return WLX_SAS_ACTION_NONE;
 }
 
 static INT_PTR CALLBACK
@@ -297,83 +364,6 @@ LoggedOutWindowProc(
 	return FALSE;
 }
 
-static INT_PTR CALLBACK
-LoggedOnWindowProc(
-	IN HWND hwndDlg,
-	IN UINT uMsg,
-	IN WPARAM wParam,
-	IN LPARAM lParam)
-{
-	switch (uMsg)
-	{
-		case WM_COMMAND:
-		{
-			switch (LOWORD(wParam))
-			{
-				case IDC_LOCK:
-					EndDialog(hwndDlg, WLX_SAS_ACTION_LOCK_WKSTA);
-					return TRUE;
-				case IDC_LOGOFF:
-					EndDialog(hwndDlg, WLX_SAS_ACTION_LOGOFF);
-					return TRUE;
-				case IDC_SHUTDOWN:
-					EndDialog(hwndDlg, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
-					return TRUE;
-				case IDC_TASKMGR:
-					EndDialog(hwndDlg, WLX_SAS_ACTION_TASKLIST);
-					return TRUE;
-				case IDCANCEL:
-					EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
-					return TRUE;
-			}
-			break;
-		}
-		case WM_INITDIALOG:
-		{
-			SetFocus(GetDlgItem(hwndDlg, IDNO));
-			return TRUE;
-		}
-		case WM_CLOSE:
-		{
-			EndDialog(hwndDlg, IDNO);
-			return TRUE;
-		}
-	}
-
-	return FALSE;
-}
-
-static INT
-GUILoggedOnSAS(
-	IN OUT PGINA_CONTEXT pgContext,
-	IN DWORD dwSasType)
-{
-	INT result;
-
-	TRACE("GUILoggedOnSAS()\n");
-
-	if (dwSasType != WLX_SAS_TYPE_CTRL_ALT_DEL)
-	{
-		/* Nothing to do for WLX_SAS_TYPE_TIMEOUT ; the dialog will
-		 * close itself thanks to the use of WlxDialogBoxParam */
-		return WLX_SAS_ACTION_NONE;
-	}
-
-	result = pgContext->pWlxFuncs->WlxDialogBoxParam(
-		pgContext->hWlx,
-		pgContext->hDllInstance,
-		MAKEINTRESOURCE(IDD_LOGGEDON_DLG),
-		NULL,
-		LoggedOnWindowProc,
-		(LPARAM)pgContext);
-	if (result >= WLX_SAS_ACTION_LOGON &&
-	    result <= WLX_SAS_ACTION_SWITCH_CONSOLE)
-	{
-		return result;
-	}
-	return WLX_SAS_ACTION_NONE;
-}
-
 static INT
 GUILoggedOutSAS(
 	IN OUT PGINA_CONTEXT pgContext)
@@ -385,7 +375,7 @@ GUILoggedOutSAS(
 	result = pgContext->pWlxFuncs->WlxDialogBoxParam(
 		pgContext->hWlx,
 		pgContext->hDllInstance,
-		MAKEINTRESOURCE(IDD_LOGGEDOUT_DLG),
+		MAKEINTRESOURCEW(IDD_LOGGEDOUT_DLG),
 		NULL,
 		LoggedOutWindowProc,
 		(LPARAM)pgContext);
@@ -400,6 +390,16 @@ GUILoggedOutSAS(
 	return WLX_SAS_ACTION_NONE;
 }
 
+static INT
+GUILockedSAS(
+	IN OUT PGINA_CONTEXT pgContext)
+{
+	TRACE("GUILockedSAS()\n");
+
+	UNIMPLEMENTED;
+	return WLX_SAS_ACTION_UNLOCK_WKSTA;
+}
+
 GINA_UI GinaGraphicalUI = {
 	GUIInitialize,
 	GUIDisplayStatusMessage,
@@ -407,4 +407,5 @@ GINA_UI GinaGraphicalUI = {
 	GUIDisplaySASNotice,
 	GUILoggedOnSAS,
 	GUILoggedOutSAS,
+	GUILockedSAS,
 };

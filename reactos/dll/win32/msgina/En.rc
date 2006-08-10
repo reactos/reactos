@@ -47,7 +47,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PRESSCTRLALTDELETE  "Press CONTROL+ALT+DELETE key combination\n"
-    IDS_ASKFORUSER  "User name: "
-    IDS_ASKFORPASSWORD  "Password: "
+    IDS_LOGGEDOUTSAS "Welcome!"
+    IDS_LOCKEDSAS "The computer is currently locked"
+    IDS_PRESSCTRLALTDELETE "Press CONTROL+ALT+DELETE key combination"
+    IDS_ASKFORUSER "User name: "
+    IDS_ASKFORPASSWORD "Password: "
+    IDS_FORCELOGOFF "This will close the the session of the current user, and loose all his unsaved work. Continue?"
 END

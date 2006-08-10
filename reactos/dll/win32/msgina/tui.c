@@ -55,24 +55,45 @@ TUIRemoveStatusMessage(
 	return TRUE;
 }
 
+static BOOL
+DisplayResourceText(
+	IN UINT uIdResourceText,
+	IN BOOL AddNewLine)
+{
+	WCHAR Prompt[256];
+	static LPCWSTR newLine = L"\n";
+	DWORD count;
+
+	if (!LoadStringW(hDllInstance, uIdResourceText, Prompt, 256))
+		return FALSE;
+	if (!WriteConsole(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		Prompt, wcslen(Prompt),
+		&count, NULL))
+	{
+		return FALSE;
+	}
+	if (AddNewLine)
+	{
+		if (!WriteConsoleW(
+			GetStdHandle(STD_OUTPUT_HANDLE),
+			newLine, wcslen(newLine),
+			&count, NULL))
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 static VOID
 TUIDisplaySASNotice(
 	IN OUT PGINA_CONTEXT pgContext)
 {
-	WCHAR CtrlAltDelPrompt[256];
-	DWORD count;
-
 	TRACE("TUIDisplaySASNotice()\n");
 
-	if (LoadString(hDllInstance, IDS_PRESSCTRLALTDELETE, CtrlAltDelPrompt, 256))
-	{
-		WriteConsole(
-			GetStdHandle(STD_OUTPUT_HANDLE),
-			CtrlAltDelPrompt,
-			wcslen(CtrlAltDelPrompt),
-			&count,
-			NULL);
-	}
+	DisplayResourceText(IDS_LOGGEDOUTSAS, TRUE);
+	DisplayResourceText(IDS_PRESSCTRLALTDELETE, TRUE);
 }
 
 static INT
@@ -100,7 +121,6 @@ ReadString(
 	IN DWORD BufferLength,
 	IN BOOL ShowString)
 {
-	WCHAR Prompt[256];
 	DWORD count, i;
 
 	if (!SetConsoleMode(
@@ -110,10 +130,7 @@ ReadString(
 		return FALSE;
 	}
 
-	if (!LoadString(hDllInstance, uIdResourcePrompt, Prompt, 256))
-		return FALSE;
-
-	if (!WriteConsole(GetStdHandle(STD_OUTPUT_HANDLE), Prompt, wcslen(Prompt), &count, NULL))
+	if (!DisplayResourceText(uIdResourcePrompt, FALSE))
 		return FALSE;
 
 	i = 0;
@@ -150,6 +167,28 @@ TUILoggedOutSAS(
 		return WLX_SAS_ACTION_NONE;
 }
 
+static INT
+TUILockedSAS(
+	IN OUT PGINA_CONTEXT pgContext)
+{
+	WCHAR UserName[256];
+	WCHAR Password[256];
+
+	TRACE("TUILockedSAS()\n");
+
+	if (!DisplayResourceText(IDS_LOGGEDOUTSAS, TRUE))
+		return WLX_SAS_ACTION_UNLOCK_WKSTA;
+
+	/* Ask the user for credentials */
+	if (!ReadString(pgContext, IDS_ASKFORUSER, UserName, 256, TRUE))
+		return WLX_SAS_ACTION_NONE;
+	if (!ReadString(pgContext, IDS_ASKFORPASSWORD, Password, 256, FALSE))
+		return WLX_SAS_ACTION_NONE;
+
+	FIXME("FIXME: Check user/password\n");
+	return WLX_SAS_ACTION_UNLOCK_WKSTA;
+}
+
 GINA_UI GinaTextUI = {
 	TUIInitialize,
 	TUIDisplayStatusMessage,
@@ -157,4 +196,5 @@ GINA_UI GinaTextUI = {
 	TUIDisplaySASNotice,
 	TUILoggedOnSAS,
 	TUILoggedOutSAS,
+	TUILockedSAS,
 };

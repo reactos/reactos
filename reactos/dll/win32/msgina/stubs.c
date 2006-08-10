@@ -100,26 +100,14 @@ WlxShutdown(
 /*
  * @unimplemented
  */
-int WINAPI
-WlxWkstaLockedSAS(
-	PVOID pWlxContext,
-	DWORD dwSasType)
-{
-  UNIMPLEMENTED;
-  return WLX_SAS_ACTION_UNLOCK_WKSTA;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL WINAPI
 WlxScreenSaverNotify(
 	PVOID pWlxContext,
 	BOOL  *pSecure)
 {
+  //HKLM\Software\Policies\Microsoft\Windows\Control Panel\Desktop : ScreenSaverIsSecure
   UNIMPLEMENTED;
-  return FALSE;
+  return TRUE;
 }
 
 

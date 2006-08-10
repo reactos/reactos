@@ -94,7 +94,7 @@ ChooseGinaUI(VOID)
 	BOOL ConsoleBoot = FALSE;
 	LONG rc;
 
-	rc = RegOpenKeyEx(
+	rc = RegOpenKeyExW(
 		HKEY_LOCAL_MACHINE,
 		L"SYSTEM\\CurrentControlSet\\Control",
 		0,
@@ -178,7 +178,6 @@ WlxInitialize(
   return pGinaUI->Initialize(pgContext);
 }
 
-
 /*
  * @implemented
  */
@@ -190,12 +189,12 @@ WlxStartApplication(
 	PWSTR pszCmdLine)
 {
   PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
-  STARTUPINFO StartupInfo;
+  STARTUPINFOW StartupInfo;
   PROCESS_INFORMATION ProcessInformation;
   WCHAR CurrentDirectory[MAX_PATH];
   BOOL Ret;
   
-  StartupInfo.cb = sizeof(STARTUPINFO);
+  StartupInfo.cb = sizeof(STARTUPINFOW);
   StartupInfo.lpReserved = NULL;
   StartupInfo.lpTitle = pszCmdLine;
   StartupInfo.dwX = StartupInfo.dwY = StartupInfo.dwXSize = StartupInfo.dwYSize = 0L;
@@ -206,9 +205,9 @@ WlxStartApplication(
   StartupInfo.lpDesktop = pszDesktopName;
   
   GetWindowsDirectoryW (CurrentDirectory, MAX_PATH);
-  Ret = CreateProcessAsUser(pgContext->UserToken,
-                            NULL,
+  Ret = CreateProcessAsUserW(pgContext->UserToken,
                             pszCmdLine,
+                            NULL,
                             NULL,
                             NULL,
                             FALSE,
@@ -237,7 +236,7 @@ WlxActivateUserShell(
   DWORD BufSize, ValueType;
   WCHAR pszUserInitApp[MAX_PATH];
   WCHAR pszExpUserInitApp[MAX_PATH];
-  
+  TRACE("WlxActivateUserShell()\n");
   /* get the path of userinit */
   if(RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
                   L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon", 
@@ -247,7 +246,7 @@ WlxActivateUserShell(
     return FALSE;
   }
   BufSize = MAX_PATH * sizeof(WCHAR);
-  if((RegQueryValueEx(hKey, L"Userinit", NULL, &ValueType, (LPBYTE)pszUserInitApp, 
+  if((RegQueryValueExW(hKey, L"Userinit", NULL, &ValueType, (LPBYTE)pszUserInitApp, 
                      &BufSize) != ERROR_SUCCESS) || 
                      !((ValueType == REG_SZ) || (ValueType == REG_EXPAND_SZ)))
   {ERR("GINA: Failed: 2\n");
@@ -256,7 +255,7 @@ WlxActivateUserShell(
     return FALSE;
   }
   RegCloseKey(hKey);
-  ExpandEnvironmentStrings(pszUserInitApp, pszExpUserInitApp, MAX_PATH);
+  ExpandEnvironmentStringsW(pszUserInitApp, pszExpUserInitApp, MAX_PATH);
   
   /* Start userinit */
   /* FIXME - allow to start more applications that are comma-separated */
@@ -363,27 +362,25 @@ DoLoginTasks(
 	TOKEN_STATISTICS Stats;
 	DWORD cbStats;
 
-	if(!LogonUserW(UserName, Domain, Password,
+	if (!LogonUserW(UserName, Domain, Password,
 		LOGON32_LOGON_INTERACTIVE, /* FIXME - use LOGON32_LOGON_UNLOCK instead! */
 		LOGON32_PROVIDER_DEFAULT,
-		pgContext->phToken))
+		&pgContext->UserToken))
 	{
 		WARN("LogonUserW() failed\n");
 		return FALSE;
 	}
 
-	if(!*pgContext->phToken)
+	if (!pgContext->UserToken)
 	{
-		WARN("*phToken == NULL!\n");
+		WARN("UserToken == NULL!\n");
 		return FALSE;
 	}
 
-	pgContext->UserToken =*pgContext->phToken;
-
 	*pgContext->pdwOptions = 0;
-	*pgContext->pProfile =NULL; 
+	*pgContext->pProfile = NULL;
 
-	if(!GetTokenInformation(*pgContext->phToken,
+	if (!GetTokenInformation(pgContext->UserToken,
 		TokenStatistics,
 		(PVOID)&Stats,
 		sizeof(TOKEN_STATISTICS),
@@ -420,7 +417,7 @@ DoAutoLogon(
 	if (pgContext->AutoLogonState == AUTOLOGON_DISABLED)
 		return FALSE;
 
-	rc = RegOpenKeyEx(
+	rc = RegOpenKeyExW(
 		HKEY_LOCAL_MACHINE,
 		L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon",
 		0,
@@ -540,12 +537,12 @@ WlxLoggedOutSAS(
 	OUT PVOID *pProfile)
 {
 	PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+	INT res;
 
 	TRACE("WlxLoggedOutSAS()\n");
 
 	pgContext->pAuthenticationId = pAuthenticationId;
 	pgContext->pdwOptions = pdwOptions;
-	pgContext->phToken = phToken;
 	pgContext->pNprNotifyInfo = pNprNotifyInfo;
 	pgContext->pProfile = pProfile;
 
@@ -554,10 +551,28 @@ WlxLoggedOutSAS(
 	{
 		/* User is local and registry contains information
 		 * to log on him automatically */
+		*phToken = pgContext->UserToken;
 		return WLX_SAS_ACTION_LOGON;
 	}
 
-	return pGinaUI->LoggedOutSAS(pgContext);
+	res = pGinaUI->LoggedOutSAS(pgContext);
+	*phToken = pgContext->UserToken;
+	return res;
+}
+
+/*
+ * @implemented
+ */
+int WINAPI
+WlxWkstaLockedSAS(
+	PVOID pWlxContext,
+	DWORD dwSasType)
+{
+	PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+
+	TRACE("WlxWkstaLockedSAS()\n");
+
+	return pGinaUI->LockedSAS(pgContext);
 }
 
 BOOL WINAPI
