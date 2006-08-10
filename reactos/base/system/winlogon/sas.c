@@ -535,6 +535,7 @@ CheckForShutdownPrivilege(
 		WARN("SE_SHUTDOWN privilege not enabled\n");
 		return STATUS_ACCESS_DENIED;
 	}
+	return STATUS_SUCCESS;
 }
 
 static LRESULT CALLBACK
