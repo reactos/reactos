@@ -87,7 +87,7 @@ typedef struct _GINAFUNCTIONS
 	PFWLXSHUTDOWN             WlxShutdown;
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_1 (MS Windows 3.5.1) */
-	PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify; /* optional, not called ATM */
+	PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify; /* optional */
 	PFWLXSTARTAPPLICATION     WlxStartApplication; /* optional, not called ATM */
 
 	/* Functions available if WlxVersion >= WLX_VERSION_1_2 (MS Windows NT 4.0) */
@@ -123,7 +123,6 @@ typedef struct _WLSESSION
 {
   GINAINSTANCE Gina;
   DWORD SASAction;
-  DWORD LogonStatus;
   BOOL SuppressStatus;
   BOOL TaskManHotkey;
   HWND SASWindow;
@@ -134,8 +133,16 @@ typedef struct _WLSESSION
   HDESK ScreenSaverDesktop;
   LUID LogonId;
   HANDLE UserToken;
-
+  DWORD LogonStatus;
   DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
+
+  /* Screen-saver informations */
+  HHOOK KeyboardHook;
+  HHOOK MouseHook;
+  HANDLE hEndOfScreenSaverThread;
+  HANDLE hScreenSaverParametersChanged;
+  HANDLE hUserActivity;
+  DWORD LastActivity;
 
   /* Logon informations */
   DWORD Options;
@@ -164,13 +171,18 @@ UpdatePerUserSystemParameters(DWORD dwUnknown,
                               DWORD dwReserved);
 
 /* sas.c */
-VOID
-DispatchSAS(
-	IN OUT PWLSESSION Session,
-	IN DWORD dwSasType);
 BOOL
 InitializeSAS(
 	IN OUT PWLSESSION Session);
+
+/* screensaver.c */
+BOOL
+InitializeScreenSaver(
+	IN OUT PWLSESSION Session);
+
+VOID
+StartScreenSaver(
+	IN PWLSESSION Session);
 
 /* winlogon.c */
 BOOL

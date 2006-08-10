@@ -11,6 +11,7 @@
 	<library>userenv</library>
 	<library>secur32</library>
 	<file>sas.c</file>
+	<file>screensaver.c</file>
 	<file>setup.c</file>
 	<file>winlogon.c</file>
 	<file>wlx.c</file>

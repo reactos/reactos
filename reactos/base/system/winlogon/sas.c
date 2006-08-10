@@ -108,6 +108,10 @@ HandleLogon(
 
    RemoveStatusMessage(Session);
    */
+
+	if (!InitializeScreenSaver(Session))
+		ERR("WL: Failed to initialize screen saver\n");
+
 	return TRUE;
 }
 
@@ -127,7 +131,7 @@ LogoffShutdownThread(LPVOID Parameter)
 
 	if (LSData->Session->UserToken && !ImpersonateLoggedOnUser(LSData->Session->UserToken))
 	{
-		ERR("ImpersonateLoggedOnUser failed with error %lu\n", GetLastError());
+		ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
 		return 0;
 	}
 
@@ -240,6 +244,8 @@ UninitializeSAS(
 		DestroyWindow(Session->SASWindow);
 		Session->SASWindow = NULL;
 	}
+	if (Session->hEndOfScreenSaverThread)
+		SetEvent(Session->hEndOfScreenSaverThread);
 	UnregisterClassW(WINLOGON_SAS_CLASS, hAppInstance);
 }
 
@@ -378,7 +384,7 @@ DoGenericAction(
 	}
 }
 
-VOID
+static VOID
 DispatchSAS(
 	IN OUT PWLSESSION Session,
 	IN DWORD dwSasType)
@@ -399,7 +405,7 @@ DispatchSAS(
 				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
 				break;
 			}
-			case WLX_SAS_TYPE_CTRL_ALT_DEL: /* 0x01 */
+			default:
 			{
 				PSID LogonSid = NULL; /* FIXME */
 
@@ -417,10 +423,26 @@ DispatchSAS(
 					(PVOID*)&Session->Profile);
 				break;
 			}
-			default:
-				WARN("Unknown SAS type 0x%lx\n", dwSasType);
 		}
 	}
+
+	if (dwSasType == WLX_SAS_TYPE_SCRNSVR_TIMEOUT)
+	{
+		BOOL bSecure = TRUE;
+		if (!Session->Gina.Functions.WlxScreenSaverNotify(Session->Gina.Context, &bSecure))
+		{
+			/* Skip start of screen saver */
+			SetEvent(Session->hUserActivity);
+		}
+		else
+		{
+			if (bSecure)
+				DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
+			StartScreenSaver(Session);
+		}
+	}
+	else if (dwSasType == WLX_SAS_TYPE_SCRNSVR_ACTIVITY)
+		SetEvent(Session->hUserActivity);
 
 	DoGenericAction(Session, wlxAction);
 }
@@ -535,7 +557,7 @@ SASWindowProc(
 					TRACE("SAS: CONTROL+ALT+DELETE\n");
 					if (!Session->Gina.UseCtrlAltDelete)
 						break;
-					DispatchSAS(Session, WLX_SAS_TYPE_CTRL_ALT_DEL);
+					PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
 					return TRUE;
 				}
 				case MAKELONG(MOD_CONTROL | MOD_SHIFT, VK_ESCAPE):
@@ -560,6 +582,21 @@ SASWindowProc(
 		case WM_DESTROY:
 		{
 			UnregisterHotKeys(Session, hwndDlg);
+			return TRUE;
+		}
+		case WM_SETTINGCHANGE:
+		{
+			UINT uiAction = (UINT)wParam;
+			if (uiAction == SPI_SETSCREENSAVETIMEOUT
+			 || uiAction == SPI_SETSCREENSAVEACTIVE)
+			{
+				SetEvent(Session->hScreenSaverParametersChanged);
+			}
+			return TRUE;
+		}
+		case WLX_WM_SAS:
+		{
+			DispatchSAS(Session, (DWORD)wParam);
 			return TRUE;
 		}
 		case PM_WINLOGON_EXITWINDOWS:
@@ -601,6 +638,7 @@ InitializeSAS(
 	IN OUT PWLSESSION Session)
 {
 	WNDCLASSEXW swc;
+	BOOL ret = FALSE;
 
 	/* register SAS window class.
 	 * WARNING! MAKE SURE WE ARE IN THE WINLOGON DESKTOP! */
@@ -619,7 +657,7 @@ InitializeSAS(
 	if (RegisterClassExW(&swc) == 0)
 	{
 		ERR("WL: Failed to register SAS window class\n");
-		return FALSE;
+		goto cleanup;
 	}
 
 	/* create invisible SAS window */
@@ -633,17 +671,20 @@ InitializeSAS(
 	if (!Session->SASWindow)
 	{
 		ERR("WL: Failed to create SAS window\n");
-		UninitializeSAS(Session);
-		return FALSE;
+		goto cleanup;
 	}
 
 	/* Register SAS window to receive SAS notifications */
 	if (!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))
 	{
-		UninitializeSAS(Session);
 		ERR("WL: Failed to register SAS window\n");
-		return FALSE;
+		goto cleanup;
 	}
 
-	return TRUE;
+	ret = TRUE;
+
+cleanup:
+	if (!ret)
+		UninitializeSAS(Session);
+	return ret;
 }

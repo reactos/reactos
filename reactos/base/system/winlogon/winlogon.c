@@ -66,7 +66,7 @@ StartServicesManager(VOID)
 
 		TRACE("WL: Attempting to open event \"SvcctrlStartEvent_A3725DX\"\n");
 		ServicesInitEvent = OpenEventW(
-			EVENT_ALL_ACCESS, //SYNCHRONIZE,
+			SYNCHRONIZE,
 			FALSE,
 			L"SvcctrlStartEvent_A3725DX");
 		if (ServicesInitEvent)
@@ -481,13 +481,13 @@ WinMain(
 	/* Display logged out screen */
 	WLSession->LogonStatus = WKSTA_IS_LOGGED_OFF;
 	RemoveStatusMessage(WLSession);
-	DispatchSAS(WLSession, WLX_SAS_TYPE_TIMEOUT);
+	PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_TIMEOUT, 0);
 
 	/* Message loop for the SAS window */
-	while (GetMessage(&Msg, WLSession->SASWindow, 0, 0))
+	while (GetMessageW(&Msg, WLSession->SASWindow, 0, 0))
 	{
 		TranslateMessage(&Msg);
-		DispatchMessage(&Msg);
+		DispatchMessageW(&Msg);
 	}
 
 	/* We never go there */

@@ -86,8 +86,12 @@ WlxSasNotify(
 	HANDLE hWlx,
 	DWORD dwSasType)
 {
+	PWLSESSION Session = (PWLSESSION)hWlx;
+
 	TRACE("WlxSasNotify(0x%lx)\n", dwSasType);
-	DispatchSAS((PWLSESSION)hWlx, dwSasType);
+
+	if (dwSasType == WLX_SAS_TYPE_CTRL_ALT_DEL || dwSasType > WLX_SAS_TYPE_MAX_MSFT_VALUE)
+		PostMessageW(Session->SASWindow, WLX_WM_SAS, dwSasType, 0);
 }
 
 /*
@@ -558,6 +562,16 @@ GetGinaPath(
 	return TRUE;
 }
 
+static BOOL WINAPI
+DefaultWlxScreenSaverNotify(
+	IN PVOID pWlxContext,
+	IN OUT BOOL *pSecure)
+{
+	if (*pSecure)
+		*pSecure = WLSession->Gina.Functions.WlxIsLogoffOk(pWlxContext);
+	return TRUE;
+}
+
 static BOOL
 LoadGina(
 	IN OUT PGINAFUNCTIONS Functions,
@@ -639,6 +653,10 @@ LoadGina(
 		Functions->WlxRemoveStatusMessage = (PFWLXREMOVESTATUSMESSAGE)GetProcAddress(hGina, "WlxRemoveStatusMessage");
 		if (!Functions->WlxRemoveStatusMessage) goto cleanup;
 	}
+
+	/* Provide some default functions */
+	if (!Functions->WlxScreenSaverNotify)
+		Functions->WlxScreenSaverNotify = DefaultWlxScreenSaverNotify;
 
 	ret = TRUE;
 
