@@ -10,7 +10,7 @@ InstallationDirectory=ReactOS
 MBRInstallType=2 
 FullName="MyName"
 ;OrgName="MyOrg"
-ComputerName="MyComputerName";
+ComputerName="MYCOMPUTERNAME";
 AdminPassword="MyPassword"
 ; TimeZone is set GMT as default
 TimeZoneIndex=85
