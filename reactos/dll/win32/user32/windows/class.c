@@ -21,17 +21,25 @@ extern BOOL ControlsInitialized;
 BOOL
 STDCALL
 GetClassInfoExA(
-  HINSTANCE hinst,
+  HINSTANCE hInstance,
   LPCSTR lpszClass,
   LPWNDCLASSEXA lpwcx)
 {
     UNICODE_STRING ClassName = {0};
     BOOL Ret;
 
-    TRACE("%p class/atom: %s/%04x %p\n", hinst,
+    TRACE("%p class/atom: %s/%04x %p\n", hInstance,
         IS_ATOM(lpszClass) ? NULL : lpszClass,
         IS_ATOM(lpszClass) ? lpszClass : 0,
         lpwcx);
+
+    //HACKHACK: This is ROS-specific and should go away
+    lpwcx->cbSize = sizeof(*lpwcx);
+
+    if (hInstance == User32Instance)
+    {
+        hInstance = NULL;
+    }
 
     if (lpszClass == NULL)
     {
@@ -59,7 +67,7 @@ GetClassInfoExA(
         ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
-    Ret = NtUserGetClassInfo(hinst,
+    Ret = NtUserGetClassInfo(hInstance,
                              &ClassName,
                              (LPWNDCLASSEXW)lpwcx,
                              TRUE);
@@ -79,16 +87,24 @@ GetClassInfoExA(
 BOOL
 STDCALL
 GetClassInfoExW(
-  HINSTANCE hinst,
+  HINSTANCE hInstance,
   LPCWSTR lpszClass,
   LPWNDCLASSEXW lpwcx)
 {
     UNICODE_STRING ClassName = {0};
 
-    TRACE("%p class/atom: %S/%04x %p\n", hinst,
+    TRACE("%p class/atom: %S/%04x %p\n", hInstance,
         IS_ATOM(lpszClass) ? NULL : lpszClass,
         IS_ATOM(lpszClass) ? lpszClass : 0,
         lpwcx);
+
+    //HACKHACK: This is ROS-specific and should go away
+    lpwcx->cbSize = sizeof(*lpwcx);
+
+    if (hInstance == User32Instance)
+    {
+        hInstance = NULL;
+    }
 
     if (lpszClass == NULL)
     {
@@ -112,7 +128,7 @@ GetClassInfoExW(
         ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
-    return NtUserGetClassInfo(hinst,
+    return NtUserGetClassInfo(hInstance,
                               &ClassName,
                               lpwcx,
                               FALSE);
@@ -129,27 +145,25 @@ GetClassInfoA(
   LPCSTR lpClassName,
   LPWNDCLASSA lpWndClass)
 {
-  WNDCLASSEXA w;
-  BOOL retval;
+    WNDCLASSEXA wcex;
+    BOOL retval;
 
-  if ( !lpClassName || !lpWndClass )
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
+    retval = GetClassInfoExA(hInstance, lpClassName, &wcex);
+    if (retval)
+    {
+        lpWndClass->style         = wcex.style;
+        lpWndClass->lpfnWndProc   = wcex.lpfnWndProc;
+        lpWndClass->cbClsExtra    = wcex.cbClsExtra;
+        lpWndClass->cbWndExtra    = wcex.cbWndExtra;
+        lpWndClass->hInstance     = wcex.hInstance;
+        lpWndClass->hIcon         = wcex.hIcon;
+        lpWndClass->hCursor       = wcex.hCursor;
+        lpWndClass->hbrBackground = wcex.hbrBackground;
+        lpWndClass->lpszMenuName  = wcex.lpszMenuName;
+        lpWndClass->lpszClassName = wcex.lpszClassName;
+    }
 
-  if ( hInstance == User32Instance )
-  {
-    hInstance = NULL;
-  }
-
-  w.cbSize = sizeof(w);
-  retval = GetClassInfoExA(hInstance,lpClassName,&w);
-  if (retval)
-  {
-    RtlCopyMemory ( lpWndClass, &w.style, sizeof(WNDCLASSA) );
-  }
-  return retval;
+    return retval;
 }
 
 /*
@@ -162,29 +176,25 @@ GetClassInfoW(
   LPCWSTR lpClassName,
   LPWNDCLASSW lpWndClass)
 {
-  WNDCLASSEXW w;
-  BOOL retval;
+    WNDCLASSEXW wcex;
+    BOOL retval;
 
-  if(!lpClassName || !lpWndClass)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  if ( hInstance == User32Instance )
-  {
-    hInstance = NULL;
-  }
-
-  w.cbSize = sizeof(w);
-  retval = GetClassInfoExW(hInstance,lpClassName,&w);
-  if (retval)
-  {
-    RtlCopyMemory (lpWndClass,&w.style,sizeof(WNDCLASSW));
-  }
-  return retval;
+    retval = GetClassInfoExW(hInstance, lpClassName, &wcex);
+    if (retval)
+    {
+        lpWndClass->style         = wcex.style;
+        lpWndClass->lpfnWndProc   = wcex.lpfnWndProc;
+        lpWndClass->cbClsExtra    = wcex.cbClsExtra;
+        lpWndClass->cbWndExtra    = wcex.cbWndExtra;
+        lpWndClass->hInstance     = wcex.hInstance;
+        lpWndClass->hIcon         = wcex.hIcon;
+        lpWndClass->hCursor       = wcex.hCursor;
+        lpWndClass->hbrBackground = wcex.hbrBackground;
+        lpWndClass->lpszMenuName  = wcex.lpszMenuName;
+        lpWndClass->lpszClassName = wcex.lpszClassName;
+    }
+    return retval;
 }
-
 
 /*
  * @implemented
