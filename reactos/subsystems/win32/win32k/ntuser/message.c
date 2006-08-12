@@ -1103,19 +1103,13 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
       /* Copy data if required */
       if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
       {
-
-         DPRINT1("Copy message to kernel from the User! %x from %x\n", KernelMem, UserModeMsg->lParam);
-         RtlCopyMemory(KernelMem, (PVOID) UserModeMsg->lParam, Size);
-         Status = STATUS_SUCCESS;
- 
-
-//         Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
-//         if (! NT_SUCCESS(Status))
-//         {
-//            DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
-//            ExFreePool(KernelMem);
-//            return Status;
-//         }
+         Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
+         if (! NT_SUCCESS(Status))
+         {
+            DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
+            ExFreePool(KernelMem);
+            return Status;
+         }
       }
       else
       {
