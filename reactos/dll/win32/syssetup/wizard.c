@@ -724,7 +724,7 @@ RunControlPanelApplet(HWND hwnd, TCHAR *lpCommandLine)
   ZeroMemory(&StartupInfo, sizeof(STARTUPINFO));
   StartupInfo.cb = sizeof(STARTUPINFO);
 
-  if (!CreateProcess(_T("rundll32.exe"),
+  if (!CreateProcess(NULL,
                        lpCommandLine,
                        NULL,
                        NULL,
@@ -752,6 +752,7 @@ LocalePageDlgProc(HWND hwndDlg,
                   LPARAM lParam)
 {
   PSETUPDATA SetupData;
+  TCHAR szBuffer[MAX_PATH];
 
   /* Retrieve pointer to the global setup data */
   SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -777,14 +778,16 @@ LocalePageDlgProc(HWND hwndDlg,
           {
         case IDC_CUSTOMLOCALE:
           {
-            RunControlPanelApplet(hwndDlg, _T("shell32.dll,Control_RunDLL intl.cpl,,5"));
+            _tcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5"));
+            RunControlPanelApplet(hwndDlg, szBuffer);
             /* FIXME: Update input locale name */
           }
           break;
 
         case IDC_CUSTOMLAYOUT:
           {
-            RunControlPanelApplet(hwndDlg, _T("shell32.dll,Control_RunDLL main.cpl,@1"));
+            _tcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL main.cpl,@1"));
+            RunControlPanelApplet(hwndDlg, szBuffer);
           }
           break;
           }
@@ -802,7 +805,8 @@ LocalePageDlgProc(HWND hwndDlg,
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                 if (SetupData->UnattendSetup)
                   {
-                    RunControlPanelApplet(hwndDlg, _T("shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\""));
+                    _tcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\""));
+                    RunControlPanelApplet(hwndDlg, szBuffer);
                     SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
                     return TRUE;
                   }
