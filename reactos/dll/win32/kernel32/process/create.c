@@ -1227,6 +1227,7 @@ GetAppName:
         
         DPRINT("Quoted CmdLine: %S\n", QuotedCmdLine);
     }
+#if 0
     else if(lpApplicationName && lpCommandLine)
     {
         int len;
@@ -1289,7 +1290,7 @@ GetAppName:
         }
         lpCommandLine = QuotedCmdLine;
     }
-
+#endif
     if (Escape)
     {
         if (QuotedCmdLine == NULL)
