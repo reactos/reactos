@@ -131,7 +131,7 @@ LPTSTR *WINAPI CommandLineToArgv(LPCTSTR lpCmdLine, int *lpArgc)
 	}
 
 	// Allocate space for the pointers in argv and the strings in one block
-	argv = (LPTSTR *)malloc(argc * sizeof(LPTSTR) + (_tcslen(lpArg) + 1) * sizeof(TCHAR));
+	argv = (LPTSTR *)malloc(argc * sizeof(LPTSTR) + (_tcslen(lpArg) + argc) * sizeof(TCHAR));
 
 	if (!argv) {
 		// Memory allocation failed
