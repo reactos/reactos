@@ -673,7 +673,7 @@ CreateProcessInternalW(HANDLE hToken,
      * key (see http://blogs.msdn.com/oldnewthing/archive/2005/12/19/505449.aspx)
      */
 
-    DPRINT1("CreateProcessW: lpApplicationName: %S lpCommandLine: %S"
+    DPRINT("CreateProcessW: lpApplicationName: %S lpCommandLine: %S"
            " lpEnvironment: %p lpCurrentDirectory: %S dwCreationFlags: %lx\n",
            lpApplicationName, lpCommandLine, lpEnvironment, lpCurrentDirectory,
            dwCreationFlags);
@@ -1248,6 +1248,10 @@ GetAppName:
         {
             /* remove application name */
             NullBuffer = wcschr(lpCommandLine, L' ');
+        }
+        else if (!_wcsnicmp(lpApplicationName, lpCommandLine, wcslen(lpApplicationName)))
+        {
+            NullBuffer = lpCommandLine + wcslen(lpApplicationName) + 1;
         }
         else
         {
