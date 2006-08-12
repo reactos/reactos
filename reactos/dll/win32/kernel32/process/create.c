@@ -1227,70 +1227,7 @@ GetAppName:
         
         DPRINT("Quoted CmdLine: %S\n", QuotedCmdLine);
     }
-#if 0
-    else if(lpApplicationName && lpCommandLine)
-    {
-        int len;
-        int Size = 0;
-        WCHAR * AppName;
 
-        AppName = wcsrchr(lpApplicationName, L'\\');
-        if (AppName)
-        {
-            AppName++;
-        }
-        else
-        {
-            AppName = (WCHAR*)lpApplicationName;
-        }
-
-        len = wcslen(AppName);
-        if (!_wcsnicmp(AppName, lpCommandLine, len-4) && lpCommandLine[len-4] == L' ')
-        {
-            /* remove application name */
-            NullBuffer = wcschr(lpCommandLine, L' ');
-        }
-        else if (!_wcsnicmp(lpApplicationName, lpCommandLine, wcslen(lpApplicationName)))
-        {
-            NullBuffer = lpCommandLine + wcslen(lpApplicationName) + 1;
-        }
-        else
-        {
-            NullBuffer = (WCHAR*)lpCommandLine;
-        }
-        
-        if (NullBuffer)
-        {
-            Size = wcslen(NullBuffer) + 1;
-        }
-
-        /* Allocate a buffer */
-        QuotedCmdLine = RtlAllocateHeap(RtlGetProcessHeap(),
-                                        0,
-                                        (Size + wcslen(lpApplicationName) + 2 + 1) *
-                                        sizeof(WCHAR));
-        if (QuotedCmdLine == NULL)
-        {
-            DPRINT1("Cannot allocate memory for quoted command line\n");
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto Cleanup;
-        }
-
-        /* Copy the first quote */
-        wcscpy(QuotedCmdLine, L"\"");
-        
-        /* Add the command line and the finishing quote */
-        wcscat(QuotedCmdLine, lpApplicationName);
-        wcscat(QuotedCmdLine, L"\"");
-
-        if (Size)
-        {
-          wcscat(QuotedCmdLine, L" ");
-          wcscat(QuotedCmdLine, NullBuffer);
-        }
-        lpCommandLine = QuotedCmdLine;
-    }
-#endif
     if (Escape)
     {
         if (QuotedCmdLine == NULL)
