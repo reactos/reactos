@@ -26,6 +26,8 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <cpl.h>
+#include <setupapi.h>
+#include <tchar.h>
 
 #include "intl.h"
 #include "resource.h"
@@ -38,7 +40,7 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
 
 
 HINSTANCE hApplet = 0;
-
+HINF hSetupInf = INVALID_HANDLE_VALUE;
 
 /* Applets */
 APPLET Applets[NUM_APPLETS] = 
@@ -58,6 +60,71 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
   psp->pfnDlgProc = DlgProc;
 }
 
+BOOL
+OpenSetupInf()
+{
+  LPTSTR lpCmdLine;
+  LPTSTR lpSwitch;
+  size_t len;
+
+  lpCmdLine = GetCommandLine();
+  
+  lpSwitch = _tcsstr(lpCmdLine, _T("/f:\""));
+
+  if(!lpSwitch)
+  {
+    return FALSE;
+  }
+
+  len = _tcslen(lpSwitch);
+  if (len < 5)
+  {
+    return FALSE;
+  }
+
+  if(lpSwitch[len-1] != _T('\"'))
+  {
+    return FALSE;
+  }
+
+  lpSwitch[len-1] = _T('\0');
+  
+  hSetupInf = SetupOpenInfFile(&lpSwitch[4],
+                               NULL,
+                               INF_STYLE_OLDNT,
+                               NULL);
+
+  return (hSetupInf != INVALID_HANDLE_VALUE);
+}
+
+LONG ParseSetupInf()
+{
+  INFCONTEXT InfContext;
+  INT LocaleID;
+  TCHAR szBuffer[30];
+
+  if (!SetupFindFirstLine(hSetupInf,
+              _T("Unattend"),
+              _T("LocaleID"),
+              &InfContext))
+  {
+    return -1;
+  }
+
+  if (!SetupGetStringField(&InfContext,
+                        1,
+                        szBuffer,
+                        sizeof(szBuffer) / sizeof(TCHAR),
+                        NULL))
+  {
+    return -1;
+  }
+  LocaleID = _ttoi(szBuffer);
+  SetNewLocale((LCID)LocaleID);
+  SetupCloseInfFile(hSetupInf);
+
+  return 0;
+}
 
 LONG APIENTRY
 Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
@@ -65,6 +132,11 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
   PROPSHEETPAGE psp[6];
   PROPSHEETHEADER psh;
   TCHAR Caption[256];
+
+  if (OpenSetupInf())
+  {
+    return ParseSetupInf();
+  }
 
   LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
