@@ -715,48 +715,34 @@ SetKeyboardLayoutName(HWND hwnd)
 }
 
 
-static VOID
-RunInputLocalePage(HWND hwnd)
-{
-  PROPSHEETPAGE psp = {0};
-  PROPSHEETHEADER psh = {0};
-  HMODULE hDll;
-//  TCHAR Caption[256];
-
-  hDll = LoadLibrary(_T("intl.cpl"));
-  if (hDll == NULL)
-    return;
-
-  psp.dwSize = sizeof(PROPSHEETPAGE);
-  psp.dwFlags = PSP_DEFAULT;
-  psp.hInstance = hDll;
-  psp.pszTemplate = MAKEINTRESOURCE(105); /* IDD_LOCALEPAGE from intl.cpl */
-  psp.pfnDlgProc = GetProcAddress(hDll, "LocalePageProc");
-
-//  LoadString(hDll, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
-
-  psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
-//  psh.hwndParent = hwnd;
-//  psh.hInstance = hDll;
-//  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-  psh.pszCaption = _T("Title"); //Caption;
-  psh.nPages = 1;
-  psh.nStartPage = 0;
-  psh.ppsp = &psp;
-
-  PropertySheet(&psh);
-
-  FreeLibrary(hDll);
-}
-
 static BOOL
-SetInputLocale()
+RunControlPanelApplet(HWND hwnd, TCHAR *lpCommandLine)
 {
-  //TODO
-  //store the default locale
+  STARTUPINFO StartupInfo;
+  PROCESS_INFORMATION ProcessInformation;
 
-  return FALSE;
+  ZeroMemory(&StartupInfo, sizeof(STARTUPINFO));
+  StartupInfo.cb = sizeof(STARTUPINFO);
+
+  if (!CreateProcess(_T("rundll32.exe"),
+                       lpCommandLine,
+                       NULL,
+                       NULL,
+                       FALSE,
+                       0,
+                       NULL,
+                       NULL,
+                       &StartupInfo,
+                       &ProcessInformation))
+    {
+      MessageBox(hwnd, _T("Error: failed to launch rundll32"), _T("Error"), MB_ICONERROR);
+      return FALSE;
+    }
+
+  WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+  CloseHandle(ProcessInformation.hThread);
+  CloseHandle(ProcessInformation.hProcess);
+  return TRUE;
 }
 
 static INT_PTR CALLBACK
@@ -785,24 +771,24 @@ LocalePageDlgProc(HWND hwndDlg,
         break;
 
       case WM_COMMAND:
-	if (HIWORD(wParam) == BN_CLICKED)
-	  {
-	    switch (LOWORD(wParam))
-	      {
-		case IDC_CUSTOMLOCALE:
-		  {
-		    RunInputLocalePage(hwndDlg);
-		    /* FIXME: Update input locale name */
-		  }
-		  break;
+    if (HIWORD(wParam) == BN_CLICKED)
+      {
+        switch (LOWORD(wParam))
+          {
+        case IDC_CUSTOMLOCALE:
+          {
+            RunControlPanelApplet(hwndDlg, _T("shell32.dll,Control_RunDLL intl.cpl,,5"));
+            /* FIXME: Update input locale name */
+          }
+          break;
 
-		case IDC_CUSTOMLAYOUT:
-		  {
-//		    RunKeyboardLayoutControlPanel(hwndDlg);
-		  }
-		  break;
-	      }
-	  }
+        case IDC_CUSTOMLAYOUT:
+          {
+            RunControlPanelApplet(hwndDlg, _T("shell32.dll,Control_RunDLL main.cpl,@1"));
+          }
+          break;
+          }
+      }
 	break;
 
       case WM_NOTIFY:
@@ -814,8 +800,9 @@ LocalePageDlgProc(HWND hwndDlg,
               case PSN_SETACTIVE:
                 /* Enable the Back and Next buttons */
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
-                if (SetupData->UnattendSetup && SetInputLocale())
+                if (SetupData->UnattendSetup)
                   {
+                    RunControlPanelApplet(hwndDlg, _T("shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\""));
                     SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
                     return TRUE;
                   }
