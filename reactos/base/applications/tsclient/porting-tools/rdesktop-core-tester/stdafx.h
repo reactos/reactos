@@ -1,9 +1,10 @@
 #pragma once
 
 #define _CRT_SECURE_NO_DEPRECATE
-#define _SCL_SECURE 0
+#define _SECURE_SCL 0
 
 #include <new>
+#include <algorithm>
 
 #include <assert.h>
 #include <stdio.h>
@@ -22,6 +23,7 @@
 
 #include <objbase.h>
 #include <oleauto.h>
+#include <olectl.h>
 #include <ocidl.h>
 #include <objsafe.h>
 

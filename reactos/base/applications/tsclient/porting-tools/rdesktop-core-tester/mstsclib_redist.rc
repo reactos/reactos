@@ -1,3 +1,3 @@
-#define TYPELIB_RESOURCEID__ 1
+#define TYPELIB_RESOURCEID__ 2
 #include "./typelib.rh"
 // EOF

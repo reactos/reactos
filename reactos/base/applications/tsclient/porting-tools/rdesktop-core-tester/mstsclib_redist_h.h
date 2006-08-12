@@ -4,9 +4,9 @@
 
 
  /* File created by MIDL compiler version 7.00.0493 */
-/* at Sat Aug 12 22:21:54 2006
+/* at Sat Aug 12 22:21:53 2006
  */
-/* Compiler settings for .\mstsclib.idl:
+/* Compiler settings for .\mstsclib_redist.idl:
     Oicf, W2, Zp8, env=Win32 (32b run)
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
@@ -32,8 +32,8 @@
 #endif // __RPCNDR_H_VERSION__
 
 
-#ifndef __mstsclib_h_h__
-#define __mstsclib_h_h__
+#ifndef __mstsclib_redist_h_h__
+#define __mstsclib_redist_h_h__
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -396,7 +396,7 @@ EXTERN_C const IID IID_IMsTscAx;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("8C11EFAE-92C3-11D1-BC1E-00C04FA31489")
+    MIDL_INTERFACE("327BB5CD-834E-4400-AEF2-B30E15E5D682")
     IMsTscAx : public IDispatch
     {
     public:
@@ -8896,7 +8896,7 @@ EXTERN_C const CLSID CLSID_MsTscAx;
 
 #ifdef __cplusplus
 
-class DECLSPEC_UUID("A41A4187-5A86-4E26-B40A-856F9035D9CB")
+class DECLSPEC_UUID("1FB464C8-09BB-4017-A2F5-EB742F04392F")
 MsTscAx;
 #endif
 
@@ -8904,7 +8904,7 @@ EXTERN_C const CLSID CLSID_MsRdpClient;
 
 #ifdef __cplusplus
 
-class DECLSPEC_UUID("7CACBD7B-0D99-468F-AC33-22E495C0AFE5")
+class DECLSPEC_UUID("791FA017-2DE3-492E-ACC5-53C67A2B94D0")
 MsRdpClient;
 #endif
 
@@ -8912,7 +8912,7 @@ EXTERN_C const CLSID CLSID_MsRdpClient2;
 
 #ifdef __cplusplus
 
-class DECLSPEC_UUID("3523C2FB-4031-44E4-9A3B-F1E94986EE7F")
+class DECLSPEC_UUID("9059F30F-4EB1-4BD2-9FDC-36F43A218F4A")
 MsRdpClient2;
 #endif
 
@@ -8920,7 +8920,7 @@ EXTERN_C const CLSID CLSID_MsRdpClient3;
 
 #ifdef __cplusplus
 
-class DECLSPEC_UUID("ACE575FD-1FCF-4074-9401-EBAB990FA9DE")
+class DECLSPEC_UUID("7584C670-2274-4EFB-B00B-D6AABA6D3850")
 MsRdpClient3;
 #endif
 

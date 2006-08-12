@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="kernel32.lib user32.lib gdi32.lib ws2_32.lib libeay32.lib advapi32.lib msimg32.lib $(NoInherit)"
+				AdditionalDependencies="kernel32.lib user32.lib gdi32.lib ws2_32.lib libeay32.lib advapi32.lib msimg32.lib ole32.lib oleaut32.lib $(NoInherit)"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\All Users\Documenti\openssl-0.9.8b\out32&quot;"
 				GenerateDebugInformation="true"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="kernel32.lib user32.lib gdi32.lib ws2_32.lib libeay32.lib advapi32.lib msimg32.lib $(NoInherit)"
+				AdditionalDependencies="kernel32.lib user32.lib gdi32.lib ws2_32.lib libeay32.lib advapi32.lib msimg32.lib ole32.lib oleaut32.lib $(NoInherit)"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\All Users\Documenti\openssl-0.9.8b\out32&quot;"
 				GenerateDebugInformation="true"
@@ -242,7 +242,7 @@
 					>
 					<Tool
 						Name="VCMIDLTool"
-						TypeLibraryName="$(IntDir)/mstsclib.tlb"
+						TypeLibraryName="$(IntDir)/$(InputName).tlb"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -250,7 +250,7 @@
 					>
 					<Tool
 						Name="VCMIDLTool"
-						TypeLibraryName="$(IntDir)/mstsclib.tlb"
+						TypeLibraryName="$(IntDir)/$(InputName).tlb"
 					/>
 				</FileConfiguration>
 			</File>
@@ -262,7 +262,7 @@
 					>
 					<Tool
 						Name="VCResourceCompilerTool"
-						PreprocessorDefinitions="TYPELIB_PATH__=./$(IntDir)/mstsclib.tlb"
+						PreprocessorDefinitions="TYPELIB_PATH__=$(IntDir)/$(InputName).tlb"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -270,7 +270,7 @@
 					>
 					<Tool
 						Name="VCResourceCompilerTool"
-						PreprocessorDefinitions="TYPELIB_PATH__=./$(IntDir)/mstsclib.tlb"
+						PreprocessorDefinitions="TYPELIB_PATH__=$(IntDir)/$(InputName).tlb"
 					/>
 				</FileConfiguration>
 			</File>
@@ -286,9 +286,89 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="_MIDL_USE_GUIDDEF_"
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="_MIDL_USE_GUIDDEF_"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\mstsclib_redist.idl"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCMIDLTool"
+						TypeLibraryName="$(IntDir)/$(InputName).tlb"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCMIDLTool"
+						TypeLibraryName="$(IntDir)/$(InputName).tlb"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\mstsclib_redist.rc"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						PreprocessorDefinitions="TYPELIB_PATH__=$(IntDir)/$(InputName).tlb"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCResourceCompilerTool"
+						PreprocessorDefinitions="TYPELIB_PATH__=$(IntDir)/$(InputName).tlb"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\mstsclib_redist_h.h"
+				>
+			</File>
+			<File
+				RelativePath=".\mstsclib_redist_i.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="_MIDL_USE_GUIDDEF_"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="_MIDL_USE_GUIDDEF_"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\typelib.rh"
+				>
 			</File>
 		</Filter>
 	</Files>

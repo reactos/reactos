@@ -11,19 +11,42 @@ namespace MSTSCLib
 namespace
 {
 #ifdef _MSC_VER
-	extern "C" char __ImageBase;
+extern "C" char __ImageBase;
 #endif
 
-	HMODULE GetCurrentModule()
-	{
-		return reinterpret_cast<HMODULE>(&__ImageBase);
-	}
+HMODULE GetCurrentModule()
+{
+	return reinterpret_cast<HMODULE>(&__ImageBase);
+}
+
+}
+
+namespace
+{
+
+LONG g_moduleRefCount = 0;
+
+void lockServer()
+{
+	InterlockedIncrement(&g_moduleRefCount);
+}
+
+void unlockServer()
+{
+	InterlockedDecrement(&g_moduleRefCount);
+}
+
+bool canUnloadServer()
+{
+	return g_moduleRefCount == 0;
+}
+
 }
 
 #pragma warning(push)
 #pragma warning(disable: 4584)
 
-class RdpClient:
+class RdpClient sealed: // FIXME: wrap "sealed" in a macro
 	/* COM basics */
 	public IUnknown,
 	public IDispatch,
@@ -50,6 +73,9 @@ class RdpClient:
 	// NOTE: the original has a vestigial implementation of this, which we omit
 	// public ISpecifyPropertyPages,
 
+	// Hidden interfaces, not available through QueryInterface
+	public IConnectionPoint,
+
 	/* RDP client interface */
 	public MSTSCLib::IMsRdpClient4,
 	public MSTSCLib::IMsRdpClientNonScriptable2,
@@ -59,111 +85,500 @@ class RdpClient:
 {
 private:
 	/* An endless amount of COM glue */
-	volatile LONG * m_moduleRefCount;
-	IUnknown * m_punkOuter;
-	CLSID m_classId;
-	ITypeLib * m_typeLib;
-	ITypeInfo * m_dispTypeInfo;
+	// Reference counting
 	LONG m_refCount;
 
-	/* Inner IUnknown for aggregation support */
+	// Aggregation support
+	IUnknown * m_punkOuter;
+
 	class RdpClientInner: public IUnknown
 	{
+	private:
+		RdpClient * Outer()
+		{
+			return InnerToOuter(this);
+		}
+
 	public:
 		virtual STDMETHODIMP IUnknown::QueryInterface(REFIID riid, void ** ppvObject)
 		{
-			RdpClient * outerThis = InnerToOuter(this);
-
-			using namespace MSTSCLib;
-
-			IUnknown * pvObject = NULL;
-
-			if(riid == IID_IUnknown)
-				pvObject = static_cast<IUnknown *>(this); // use of "this" is NOT an error!
-			else if(riid == IID_IConnectionPointContainer)
-				pvObject = static_cast<IConnectionPointContainer *>(outerThis);
-			else if(riid == IID_IDataObject)
-				pvObject = static_cast<IDataObject *>(outerThis);
-			else if(riid == IID_IObjectSafety)
-				pvObject = static_cast<IObjectSafety *>(outerThis);
-			else if(riid == IID_IOleControl)
-				pvObject = static_cast<IOleControl *>(outerThis);
-			else if(riid == IID_IOleInPlaceActiveObject)
-				pvObject = static_cast<IOleInPlaceActiveObject *>(outerThis);
-			else if(riid == IID_IOleInPlaceObject)
-				pvObject = static_cast<IOleInPlaceObject *>(outerThis);
-			else if(riid == IID_IOleObject)
-				pvObject = static_cast<IOleObject *>(outerThis);
-			else if(riid == IID_IOleWindow)
-				pvObject = static_cast<IOleWindow *>(outerThis);
-			else if(riid == IID_IPersist)
-				pvObject = static_cast<IPersist *>(outerThis);
-			else if(riid == IID_IPersistPropertyBag)
-				pvObject = static_cast<IPersistPropertyBag *>(outerThis);
-			else if(riid == IID_IPersistStorage)
-				pvObject = static_cast<IPersistStorage *>(outerThis);
-			else if(riid == IID_IPersistStreamInit)
-				pvObject = static_cast<IPersistStreamInit *>(outerThis);
-			else if(riid == IID_IQuickActivate)
-				pvObject = static_cast<IQuickActivate *>(outerThis);
-			else if(riid == IID_IViewObject)
-				pvObject = static_cast<IViewObject *>(outerThis);
-			else if(riid == IID_IViewObject2)
-				pvObject = static_cast<IViewObject2 *>(outerThis);
-			else if(riid == IID_IMsTscAx)
-				pvObject = static_cast<IMsTscAx *>(outerThis);
-			else if(riid == IID_IMsRdpClient)
-				pvObject = static_cast<IMsRdpClient *>(outerThis);
-			else if(riid == IID_IMsRdpClient2)
-				pvObject = static_cast<IMsRdpClient2 *>(outerThis);
-			else if(riid == IID_IMsRdpClient3)
-				pvObject = static_cast<IMsRdpClient3 *>(outerThis);
-			else if(riid == IID_IMsRdpClient4)
-				pvObject = static_cast<IMsRdpClient4 *>(outerThis);
-			else if(riid == IID_IMsTscNonScriptable)
-				pvObject = static_cast<IMsTscNonScriptable *>(outerThis);
-			else if(riid == IID_IMsRdpClientNonScriptable)
-				pvObject = static_cast<IMsRdpClientNonScriptable *>(outerThis);
-			else if(riid == IID_IMsRdpClientNonScriptable2)
-				pvObject = static_cast<IMsRdpClientNonScriptable2 *>(outerThis);
-
-			*ppvObject = pvObject;
-
-			if(pvObject)
-			{
-				pvObject->AddRef();
-				return S_OK;
-			}
-
-			return E_NOINTERFACE;
+			return Outer()->queryInterface(riid, ppvObject);
 		}
 
 		virtual STDMETHODIMP_(ULONG) IUnknown::AddRef()
 		{
-			return InnerToOuter(this)->addRef();
+			return Outer()->addRef();
 		}
 
 		virtual STDMETHODIMP_(ULONG) IUnknown::Release()
 		{
-			return InnerToOuter(this)->release();
+			return Outer()->release();
 		}
 
 	}
 	m_inner;
 
-	// FIXME: (re)use fixed buffers for these
-	BSTR m_server;
-	BSTR m_domain;
-	BSTR m_userName;
-	BSTR m_disconnectedText;
-	BSTR m_connectingText;
-	BSTR m_fullScreenTitle;
+	// Persistence support
+	CLSID m_classId;
 
-	bool m_nonIdle;
-	bool m_connected;
-	bool m_startConnected;
+	// Late binding support
+	ITypeLib * m_typeLib;
+	ITypeInfo * m_dispTypeInfo;
 
-	/* Reference counting */
+	// Event sinks
+	size_t m_EventSinksCount;
+
+	union
+	{
+		MSTSCLib::IMsTscAxEvents * m_EventSinksStatic[1];
+		MSTSCLib::IMsTscAxEvents ** m_EventSinks;
+	};
+
+	// OLE control glue
+	HWND m_controlWindow;
+	IOleClientSite * m_clientSite;
+
+	// UrlMon security
+	DWORD m_SafetyOptions;
+
+	bool IsSafeForScripting() const
+	{
+		return m_SafetyOptions & INTERFACESAFE_FOR_UNTRUSTED_CALLER;
+	}
+
+	/* Properties */
+	// Storage fields
+	// NOTE: keep sorted by alignment (pointers and handles, integers, enumerations, booleans)
+	BSTR m_Server;
+	BSTR m_Domain;
+	BSTR m_UserName;
+	BSTR m_DisconnectedText;
+	BSTR m_ConnectingText;
+	BSTR m_FullScreenTitle;
+	BSTR m_StartProgram;
+	BSTR m_WorkDir;
+	BSTR m_LoadBalanceInfo;
+	BSTR m_ConnectedStatusText;
+	BSTR m_ClearTextPassword; // FIXME! dangerous, shouldn't store in cleartext!
+	BSTR m_RdpdrLocalPrintingDocName;
+	BSTR m_RdpdrClipCleanTempDirString;
+	BSTR m_RdpdrClipPasteInfoString;
+	// TODO: keyboard layout
+	// TODO: plugin DLLs
+	HWND m_UIParentWindowHandle;
+	long m_DesktopWidth;
+	long m_DesktopHeight;
+	long m_StartConnected;
+	long m_HorizontalScrollBarVisible;
+	long m_VerticalScrollBarVisible;
+	long m_ColorDepth;
+	long m_KeyboardHookMode;
+	long m_AudioRedirectionMode;
+	long m_TransportType;
+	long m_SasSequence;
+	long m_RDPPort;
+	long m_HotKeyFullScreen;
+	long m_HotKeyAltEsc;
+	long m_HotKeyAltShiftTab;
+	long m_HotKeyAltSpace;
+	long m_HotKeyAltTab;
+	long m_HotKeyCtrlAltDel;
+	long m_HotKeyCtrlEsc;
+	long m_orderDrawThresold;
+	long m_BitmapCacheSize;
+	long m_BitmapVirtualCacheSize;
+	long m_NumBitmapCaches;
+	long m_brushSupportLevel;
+	long m_minInputSendInterval;
+	long m_InputEventsAtOnce;
+	long m_maxEventCount;
+	long m_keepAliveInternal;
+	long m_shutdownTimeout;
+	long m_overallConnectionTimeout;
+	long m_singleConnectionTimeout;
+	long m_MinutesToIdleTimeout;
+	long m_BitmapVirtualCache16BppSize;
+	long m_BitmapVirtualCache24BppSize;
+	long m_PerformanceFlags;
+	long m_MaxReconnectAttempts;
+	unsigned int m_AuthenticationLevel;
+
+	MSTSCLib::ExtendedDisconnectReasonCode m_ExtendedDisconnectReason;
+
+	bool m_Connected;
+	bool m_Compress;
+	bool m_BitmapPersistence;
+	bool m_allowBackgroundInput;
+	bool m_ContainerHandledFullScreen;
+	bool m_DisableRdpdr;
+	bool m_SecuredSettingsEnabled;
+	bool m_FullScreen;
+	bool m_AcceleratorPassthrough;
+	bool m_ShadowBitmap;
+	bool m_EncryptionEnabled;
+	bool m_DedicatedTerminal;
+	bool m_EnableMouse;
+	bool m_DisableCtrlAltDel;
+	bool m_EnableWindowsKey;
+	bool m_DoubleClickDetect;
+	bool m_MaximizeShell;
+	bool m_ScaleBitmapCachesByBpp;
+	bool m_CachePersistenceActive;
+	bool m_ConnectToServerConsole;
+	bool m_SmartSizing; // FIXME: this can be set while the control is connected
+	bool m_DisplayConnectionBar;
+	bool m_PinConnectionBar;
+	bool m_GrabFocusOnConnect;
+	bool m_RedirectDrives;
+	bool m_RedirectPrinters;
+	bool m_RedirectPorts;
+	bool m_RedirectSmartCards;
+	bool m_NotifyTSPublicKey;
+	bool m_CanAutoReconnect;
+	bool m_EnableAutoReconnect;
+	bool m_ConnectionBarShowMinimizeButton;
+	bool m_ConnectionBarShowRestoreButton;
+
+	// Generic getters/setters
+	HRESULT GetProperty(BSTR& prop, BSTR * retVal) const
+	{
+		if(retVal == NULL)
+			return E_POINTER;
+
+		*retVal = SysAllocStringLen(prop, SysStringLen(prop));
+
+		if(*retVal == NULL)
+			return E_OUTOFMEMORY;
+
+		return S_OK;
+	}
+
+	HRESULT SetProperty(BSTR& prop, BSTR newValue)
+	{
+		if(m_Connected)
+			return E_FAIL;
+
+		SysFreeString(prop);
+
+		UINT len = SysStringLen(newValue);
+
+		if(len)
+		{
+			// no embedded NULs, please
+			if(len != lstrlenW(newValue))
+				return E_INVALIDARG;
+
+			prop = SysAllocStringLen(newValue, len);
+
+			if(prop == NULL)
+				return E_OUTOFMEMORY;
+		}
+		else
+			prop = NULL;
+
+		return S_OK;
+	}
+
+	template<class Type> HRESULT SetProperty(bool& prop, const Type& newValue)
+	{
+		if(m_Connected)
+			return E_FAIL;
+
+		prop = !!newValue;
+		return S_OK;
+	}
+
+	template<class Type> HRESULT SetProperty(Type& prop, const Type& newValue)
+	{
+		if(m_Connected)
+			return E_FAIL;
+
+		prop = newValue;
+		return S_OK;
+	}
+
+	template<class Type> HRESULT GetProperty(const bool& prop, Type * retVal) const
+	{
+		if(retVal == NULL)
+			return E_POINTER;
+
+		*retVal = prop ? VARIANT_TRUE : VARIANT_FALSE;
+		return S_OK;
+	}
+
+	template<class Type> HRESULT GetProperty(const Type& prop, Type * retVal) const
+	{
+		if(retVal == NULL)
+			return E_POINTER;
+
+		*retVal = prop;
+		return S_OK;
+	}
+
+	/* Events */
+	MSTSCLib::IMsTscAxEvents * const * GetSinks() const
+	{
+		if(m_EventSinksCount > 1)
+			return m_EventSinks;
+		else
+			return m_EventSinksStatic;
+	}
+
+	// Generic event riser & helpers
+	void FireEvent(DISPID eventId, VARIANTARG rgvarg[], unsigned int cArgs, VARIANTARG * retval)
+	{
+		DISPPARAMS params;
+
+		params.rgvarg = rgvarg;
+		params.rgdispidNamedArgs = NULL;
+		params.cArgs = cArgs;
+		params.cNamedArgs = 0;
+
+		MSTSCLib::IMsTscAxEvents * const * sinks = GetSinks();
+
+		for(size_t i = 0; i < m_EventSinksCount; ++ i)
+		{
+			sinks[i]->Invoke(eventId, IID_NULL, 0, DISPATCH_METHOD, &params, retval, NULL, NULL);
+
+			// BUGBUG: should we keep looping if the event has a return value?
+		}
+	}
+
+	void FireEvent(DISPID eventId, VARIANTARG * retval = NULL)
+	{
+		return FireEvent(eventId, NULL, 0, retval);
+	}
+
+	void FireEvent(DISPID eventId, VARIANTARG& arg, VARIANTARG * retval = NULL)
+	{
+		return FireEvent(eventId, &arg, 1, retval);
+	}
+
+	template<unsigned int N> void FireEvent(DISPID eventId, VARIANTARG (& args)[N], VARIANTARG * retval = NULL)
+	{
+		return FireEvent(eventId, args, (N), retval);
+	}
+
+	// Specific events
+	void FireConnecting()
+	{
+		FireEvent(1);
+	}
+
+	void FireConnected()
+	{
+		FireEvent(2);
+	}
+
+	void FireLoginComplete()
+	{
+		FireEvent(3);
+	}
+
+	void FireDisconnected(long reason)
+	{
+		VARIANTARG arg = { };
+
+		arg.vt = VT_I4;
+		arg.lVal = reason;
+
+		FireEvent(4, arg);
+	}
+
+	void FireEnterFullScreenMode()
+	{
+		FireEvent(5);
+	}
+
+	void FireLeaveFullScreenMode()
+	{
+		FireEvent(6);
+	}
+
+	void FireChannelReceivedData(BSTR chanName, BSTR chanData)
+	{
+		VARIANTARG args[2] = { };
+
+		args[1].vt = VT_BSTR;
+		args[1].bstrVal = chanName;
+
+		args[0].vt = VT_BSTR;
+		args[0].bstrVal = chanData;
+
+		FireEvent(7, args);
+	}
+
+	void FireRequestGoFullScreen()
+	{
+		FireEvent(8);
+	}
+
+	void FireRequestLeaveFullScreen()
+	{
+		FireEvent(9);
+	}
+
+	void FireFatalError(long errorCode)
+	{
+		VARIANTARG arg = { };
+
+		arg.vt = VT_I4;
+		arg.lVal = errorCode;
+
+		FireEvent(10, arg);
+	}
+
+	void FireWarning(long warningCode)
+	{
+		VARIANTARG arg = { };
+
+		arg.vt = VT_I4;
+		arg.lVal = warningCode;
+
+		FireEvent(11);
+	}
+
+	void FireRemoteDesktopSizeChange(long width, long height)
+	{
+		VARIANTARG args[2] = { };
+
+		args[1].vt = VT_I4;
+		args[1].lVal = width;
+
+		args[0].vt = VT_I4;
+		args[0].lVal = height;
+
+		FireEvent(12, args);
+	}
+
+	void FireIdleTimeoutNotification()
+	{
+		FireEvent(13);
+	}
+
+	void FireRequestContainerMinimize()
+	{
+		FireEvent(14);
+	}
+
+	void FireConfirmClose(VARIANT_BOOL * pfAllowClose)
+	{
+		VARIANTARG retval = { };
+
+		retval.vt = VT_BYREF | VT_BOOL;
+		retval.pboolVal = pfAllowClose;
+
+		FireEvent(15, &retval);
+	}
+
+    void FireReceivedTSPublicKey(BSTR publicKey, VARIANT_BOOL * pfContinueLogon)
+	{
+		VARIANTARG arg = { };
+		VARIANTARG retval = { };
+
+		arg.vt = VT_BSTR;
+		arg.bstrVal = publicKey;
+
+		retval.vt = VT_BYREF | VT_BOOL;
+		retval.pboolVal = pfContinueLogon;
+
+		FireEvent(16, arg, &retval);
+	}
+
+	void FireAutoReconnecting(long disconnectReason, long attemptCount, MSTSCLib::AutoReconnectContinueState * pArcContinueStatus)
+	{
+		VARIANTARG args[2] = { };
+		VARIANTARG retval = { };
+
+		args[1].vt = VT_I4;
+		args[1].lVal = disconnectReason;
+
+		args[0].vt = VT_I4;
+		args[0].lVal = attemptCount;
+
+		retval.vt = VT_BYREF | VT_I4;
+		retval.plVal = (LONG *)pArcContinueStatus;
+
+		FireEvent(17, args, &retval);
+	}
+
+    void FireAuthenticationWarningDisplayed()
+	{
+		FireEvent(18);
+	}
+
+    void FireAuthenticationWarningDismissed()
+	{
+		FireEvent(19);
+	}
+
+	/* Actual IUnknown implementation */
+	HRESULT queryInterface(REFIID riid, void ** ppvObject)
+	{
+		IUnknown * pvObject = NULL;
+
+		using namespace MSTSCLib;
+
+		if(riid == IID_IUnknown)
+			pvObject = static_cast<IUnknown *>(&m_inner);
+		else if(riid == IID_IConnectionPointContainer)
+			pvObject = static_cast<IConnectionPointContainer *>(this);
+		else if(riid == IID_IDataObject)
+			pvObject = static_cast<IDataObject *>(this);
+		else if(riid == IID_IObjectSafety)
+			pvObject = static_cast<IObjectSafety *>(this);
+		else if(riid == IID_IOleControl)
+			pvObject = static_cast<IOleControl *>(this);
+		else if(riid == IID_IOleInPlaceActiveObject)
+			pvObject = static_cast<IOleInPlaceActiveObject *>(this);
+		else if(riid == IID_IOleInPlaceObject)
+			pvObject = static_cast<IOleInPlaceObject *>(this);
+		else if(riid == IID_IOleObject)
+			pvObject = static_cast<IOleObject *>(this);
+		else if(riid == IID_IOleWindow)
+			pvObject = static_cast<IOleWindow *>(this);
+		else if(riid == IID_IPersist)
+			pvObject = static_cast<IPersist *>(this);
+		else if(riid == IID_IPersistPropertyBag)
+			pvObject = static_cast<IPersistPropertyBag *>(this);
+		else if(riid == IID_IPersistStorage)
+			pvObject = static_cast<IPersistStorage *>(this);
+		else if(riid == IID_IPersistStreamInit)
+			pvObject = static_cast<IPersistStreamInit *>(this);
+		else if(riid == IID_IQuickActivate)
+			pvObject = static_cast<IQuickActivate *>(this);
+		else if(riid == IID_IViewObject)
+			pvObject = static_cast<IViewObject *>(this);
+		else if(riid == IID_IViewObject2)
+			pvObject = static_cast<IViewObject2 *>(this);
+		else if(riid == IID_IMsTscAx)
+			pvObject = static_cast<IMsTscAx *>(this);
+		else if(riid == IID_IMsRdpClient)
+			pvObject = static_cast<IMsRdpClient *>(this);
+		else if(riid == IID_IMsRdpClient2)
+			pvObject = static_cast<IMsRdpClient2 *>(this);
+		else if(riid == IID_IMsRdpClient3)
+			pvObject = static_cast<IMsRdpClient3 *>(this);
+		else if(riid == IID_IMsRdpClient4)
+			pvObject = static_cast<IMsRdpClient4 *>(this);
+		else if(riid == IID_IMsTscNonScriptable)
+			pvObject = static_cast<IMsTscNonScriptable *>(this);
+		else if(riid == IID_IMsRdpClientNonScriptable)
+			pvObject = static_cast<IMsRdpClientNonScriptable *>(this);
+		else if(riid == IID_IMsRdpClientNonScriptable2)
+			pvObject = static_cast<IMsRdpClientNonScriptable2 *>(this);
+
+		*ppvObject = pvObject;
+
+		if(pvObject)
+		{
+			pvObject->AddRef();
+			return S_OK;
+		}
+
+		return E_NOINTERFACE;
+	}
+
 	ULONG addRef()
 	{
 		return InterlockedIncrement(&m_refCount);
@@ -180,10 +595,102 @@ private:
 	}
 
 	/* Constructor */
-	RdpClient(REFCLSID classId, IUnknown * punkOuter, LONG * moduleRefCount):
-		m_classId(classId),
+	RdpClient(REFCLSID classId, IUnknown * punkOuter):
+		// COM/OLE internals
+		m_refCount(0),
 		m_punkOuter(punkOuter),
-		m_moduleRefCount(moduleRefCount)
+		m_classId(classId),
+		m_typeLib(),
+		m_dispTypeInfo(),
+		m_clientSite(),
+		m_SafetyOptions(),
+
+		// Properties
+		m_Server(),
+		m_Domain(),
+		m_UserName(),
+		m_DisconnectedText(),
+		m_ConnectingText(),
+		m_FullScreenTitle(),
+		m_StartProgram(),
+		m_WorkDir(),
+		m_LoadBalanceInfo(),
+		m_ConnectedStatusText(),
+		m_ClearTextPassword(),
+		m_RdpdrLocalPrintingDocName(),
+		m_RdpdrClipCleanTempDirString(),
+		m_RdpdrClipPasteInfoString(),
+		m_UIParentWindowHandle(),
+		m_DesktopWidth(),
+		m_DesktopHeight(),
+		m_StartConnected(),
+		m_HorizontalScrollBarVisible(),
+		m_VerticalScrollBarVisible(),
+		m_ColorDepth(16),
+		m_KeyboardHookMode(2),
+		m_AudioRedirectionMode(0),
+		m_TransportType(1), // BUGBUG: ???
+		m_SasSequence(0xAA03), // BUGBUG: ???
+		m_RDPPort(3389),
+		m_HotKeyFullScreen(VK_CANCEL),
+		m_HotKeyAltEsc(VK_INSERT),
+		m_HotKeyAltShiftTab(VK_NEXT),
+		m_HotKeyAltSpace(VK_DELETE),
+		m_HotKeyAltTab(VK_PRIOR),
+		m_HotKeyCtrlAltDel(VK_END),
+		m_HotKeyCtrlEsc(VK_HOME),
+		m_orderDrawThresold(0),
+		m_BitmapCacheSize(1500),
+		m_BitmapVirtualCacheSize(10),
+		m_NumBitmapCaches(),
+		m_brushSupportLevel(),
+		m_minInputSendInterval(),
+		m_InputEventsAtOnce(),
+		m_maxEventCount(),
+		m_keepAliveInternal(0),
+		m_shutdownTimeout(10),
+		m_overallConnectionTimeout(120),
+		m_singleConnectionTimeout(30),
+		m_MinutesToIdleTimeout(0),
+		m_BitmapVirtualCache16BppSize(20),
+		m_BitmapVirtualCache24BppSize(30),
+		m_PerformanceFlags(),
+		m_MaxReconnectAttempts(20),
+		m_AuthenticationLevel(0),
+		m_ExtendedDisconnectReason(MSTSCLib::exDiscReasonNoInfo),
+		m_Connected(false),
+		m_Compress(true),
+		m_BitmapPersistence(true),
+		m_allowBackgroundInput(false),
+		m_ContainerHandledFullScreen(false),
+		m_DisableRdpdr(false),
+		m_SecuredSettingsEnabled(true),
+		m_FullScreen(false),
+		m_AcceleratorPassthrough(true),
+		m_ShadowBitmap(true),
+		m_EncryptionEnabled(true),
+		m_DedicatedTerminal(false),
+		m_EnableMouse(true),
+		m_DisableCtrlAltDel(true),
+		m_EnableWindowsKey(true),
+		m_DoubleClickDetect(false),
+		m_MaximizeShell(true),
+		m_ScaleBitmapCachesByBpp(false),
+		m_CachePersistenceActive(false),
+		m_ConnectToServerConsole(false),
+		m_SmartSizing(false),
+		m_DisplayConnectionBar(true),
+		m_PinConnectionBar(true),
+		m_GrabFocusOnConnect(true),
+		m_RedirectDrives(false),
+		m_RedirectPrinters(false),
+		m_RedirectPorts(false),
+		m_RedirectSmartCards(false),
+		m_NotifyTSPublicKey(false),
+		m_CanAutoReconnect(false),
+		m_EnableAutoReconnect(true),
+		m_ConnectionBarShowMinimizeButton(true),
+		m_ConnectionBarShowRestoreButton(true)
 	{
 		if(m_punkOuter == NULL)
 			m_punkOuter = &m_inner;
@@ -194,41 +701,59 @@ private:
 	/* Destructor */
 	~RdpClient()
 	{
-		InterlockedDecrement(m_moduleRefCount);
+		assert(m_refCount == 0);
+
+		if(m_typeLib)
+			m_typeLib->Release();
+
+		if(m_dispTypeInfo)
+			m_dispTypeInfo->Release();
+
+		MSTSCLib::IMsTscAxEvents * const * sinks = GetSinks();
+
+		for(size_t i = 0; i < m_EventSinksCount; ++ i)
+			sinks[i]->Release();
+
+		if(m_EventSinksCount > 1)
+			CoTaskMemFree(m_EventSinks);
+
+		if(m_clientSite)
+			m_clientSite->Release();
+
+		SysFreeString(m_Server);
+		SysFreeString(m_Domain);
+		SysFreeString(m_UserName);
+		SysFreeString(m_DisconnectedText);
+		SysFreeString(m_DisconnectedText);
+		SysFreeString(m_FullScreenTitle);
+		SysFreeString(m_StartProgram);
+		SysFreeString(m_WorkDir);
+		SysFreeString(m_LoadBalanceInfo);
+		SysFreeString(m_ConnectedStatusText);
+		SysFreeString(m_ClearTextPassword);
+		SysFreeString(m_RdpdrLocalPrintingDocName);
+		SysFreeString(m_RdpdrClipCleanTempDirString);
+		SysFreeString(m_RdpdrClipPasteInfoString);
+
+		// TODO: decrease module reference count
 	}
 
-	/* Helpers */
-	static HRESULT SetStringProperty(BSTR& prop, BSTR newValue)
-	{
-		if(newValue == NULL)
-			return E_INVALIDARG;
-
-		SysFreeString(prop);
-
-		prop = SysAllocStringLen(newValue, SysStringLen(newValue));
-
-		if(prop == NULL)
-			return E_OUTOFMEMORY;
-
-		return S_OK;
-	}
-
-	static HRESULT GetStringProperty(BSTR& prop, BSTR * retVal)
-	{
-		*retVal = SysAllocStringLen(prop, SysStringLen(prop));
-
-		if(*retVal == NULL)
-			return E_OUTOFMEMORY;
-
-		return S_OK;
-	}
-
-	/* Advanced settings */
+	/* Advanced settings wrapper */
 	friend class AdvancedSettings;
 
-	class AdvancedSettings: public MSTSCLib::IMsRdpClientAdvancedSettings4
+	class AdvancedSettings sealed: public MSTSCLib::IMsRdpClientAdvancedSettings4
 	{
 	private:
+		RdpClient * Outer()
+		{
+			return InnerToOuter(this);
+		}
+
+		const RdpClient * Outer() const
+		{
+			return InnerToOuter(this);
+		}
+
 		/* IDispatch type information */
 		ITypeInfo * m_dispTypeInfo;
 
@@ -237,12 +762,12 @@ private:
 			if(m_dispTypeInfo)
 				return S_OK;
 
-			HRESULT hr = InnerToOuter(this)->LoadTypeLibrary();
+			HRESULT hr = Outer()->LoadTypeLibrary();
 
 			if(FAILED(hr))
 				return hr;
 
-			hr = InnerToOuter(this)->m_typeLib->GetTypeInfoOfGuid(MSTSCLib::IID_IMsRdpClientAdvancedSettings4, &m_dispTypeInfo);
+			hr = Outer()->m_typeLib->GetTypeInfoOfGuid(MSTSCLib::IID_IMsRdpClientAdvancedSettings4, &m_dispTypeInfo);
 
 			if(FAILED(hr))
 				return hr;
@@ -287,7 +812,7 @@ private:
 			)
 			{
 				*ppvObject = this;
-				InnerToOuter(this)->addRef();
+				Outer()->addRef();
 				return S_OK;
 			}
 			else
@@ -299,12 +824,12 @@ private:
 
 		virtual STDMETHODIMP_(ULONG) IUnknown::AddRef()
 		{
-			return InnerToOuter(this)->addRef();
+			return Outer()->addRef();
 		}
 
 		virtual STDMETHODIMP_(ULONG) IUnknown::Release()
 		{
-			return InnerToOuter(this)->release();
+			return Outer()->release();
 		}
 
 		/* IDispatch */
@@ -349,32 +874,35 @@ private:
 		/* IMsTscAdvancedSettings */
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_Compress(long pcompress)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_Compress, pcompress);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::get_Compress(long * pcompress)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_Compress, pcompress);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_BitmapPeristence(long pbitmapPeristence)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_BitmapPersistence, pbitmapPeristence);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::get_BitmapPeristence(long * pbitmapPeristence)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_BitmapPersistence, pbitmapPeristence);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_allowBackgroundInput(long pallowBackgroundInput)
 		{
-			return E_NOTIMPL; // TODO
+			if(Outer()->IsSafeForScripting())
+				return S_FALSE;
+
+			return Outer()->SetProperty(Outer()->m_allowBackgroundInput, pallowBackgroundInput);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::get_allowBackgroundInput(long * pallowBackgroundInput)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_allowBackgroundInput, pallowBackgroundInput);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_KeyBoardLayoutStr(BSTR rhs)
@@ -384,623 +912,670 @@ private:
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_PluginDlls(BSTR rhs)
 		{
+			// TODO: split rhs into an array
+
+			// Control marked safe for scripting: only allow filenames
+			if(Outer()->IsSafeForScripting())
+			{
+				// TODO: validate entries
+				// TODO: replace each entry with a full path based on the Virtual Channel DLL path
+			}
+
 			return E_NOTIMPL; // TODO
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_IconFile(BSTR rhs)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_IconIndex(long rhs)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_ContainerHandledFullScreen(long pContainerHandledFullScreen)
 		{
-			return E_NOTIMPL; // TODO
+			if(Outer()->IsSafeForScripting())
+				return S_FALSE;
+
+			return Outer()->SetProperty(Outer()->m_ContainerHandledFullScreen, pContainerHandledFullScreen);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::get_ContainerHandledFullScreen(long * pContainerHandledFullScreen)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_ContainerHandledFullScreen, pContainerHandledFullScreen);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::put_DisableRdpdr(long pDisableRdpdr)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_DisableRdpdr, pDisableRdpdr);
 		}
 
 		virtual STDMETHODIMP IMsTscAdvancedSettings::get_DisableRdpdr(long * pDisableRdpdr)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_DisableRdpdr, pDisableRdpdr);
 		}
 
 		/* IMsRdpClientAdvancedSettings */
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_SmoothScroll(long psmoothScroll)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_SmoothScroll(long * psmoothScroll)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_AcceleratorPassthrough(long pacceleratorPassthrough)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_AcceleratorPassthrough, pacceleratorPassthrough);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_AcceleratorPassthrough(long * pacceleratorPassthrough)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_AcceleratorPassthrough, pacceleratorPassthrough);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ShadowBitmap(long pshadowBitmap)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_ShadowBitmap, pshadowBitmap);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_ShadowBitmap(long * pshadowBitmap)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_ShadowBitmap, pshadowBitmap);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_TransportType(long ptransportType)
 		{
-			return E_NOTIMPL; // TODO
+			// Reserved
+			return Outer()->SetProperty(Outer()->m_TransportType, ptransportType);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_TransportType(long * ptransportType)
 		{
-			return E_NOTIMPL; // TODO
+			// Reserved
+			return Outer()->GetProperty(Outer()->m_TransportType, ptransportType);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_SasSequence(long psasSequence)
 		{
-			return E_NOTIMPL; // TODO
+			// Reserved
+			return Outer()->SetProperty(Outer()->m_SasSequence, psasSequence);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_SasSequence(long * psasSequence)
 		{
-			return E_NOTIMPL; // TODO
+			// Reserved
+			return Outer()->GetProperty(Outer()->m_SasSequence, psasSequence);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_EncryptionEnabled(long pencryptionEnabled)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_EncryptionEnabled, pencryptionEnabled);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_EncryptionEnabled(long * pencryptionEnabled)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_EncryptionEnabled, pencryptionEnabled);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_DedicatedTerminal(long pdedicatedTerminal)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_DedicatedTerminal, pdedicatedTerminal);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_DedicatedTerminal(long * pdedicatedTerminal)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_DedicatedTerminal, pdedicatedTerminal);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RDPPort(long prdpPort)
 		{
-			return E_NOTIMPL; // TODO
+			if(prdpPort == 0 || prdpPort > 65535)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_RDPPort, prdpPort);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RDPPort(long * prdpPort)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_RDPPort, prdpPort);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_EnableMouse(long penableMouse)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE; // TBD? implement?
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_EnableMouse(long * penableMouse)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE; // TBD? implement?
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_DisableCtrlAltDel(long pdisableCtrlAltDel)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_DisableCtrlAltDel, pdisableCtrlAltDel);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_DisableCtrlAltDel(long * pdisableCtrlAltDel)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_DisableCtrlAltDel, pdisableCtrlAltDel);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_EnableWindowsKey(long penableWindowsKey)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_EnableWindowsKey, penableWindowsKey);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_EnableWindowsKey(long * penableWindowsKey)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_EnableWindowsKey, penableWindowsKey);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_DoubleClickDetect(long pdoubleClickDetect)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_DoubleClickDetect, pdoubleClickDetect);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_DoubleClickDetect(long * pdoubleClickDetect)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_DoubleClickDetect, pdoubleClickDetect);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_MaximizeShell(long pmaximizeShell)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_MaximizeShell, pmaximizeShell);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_MaximizeShell(long * pmaximizeShell)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_MaximizeShell, pmaximizeShell);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyFullScreen(long photKeyFullScreen)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_HotKeyFullScreen, photKeyFullScreen);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyFullScreen(long * photKeyFullScreen)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_HotKeyFullScreen, photKeyFullScreen);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyCtrlEsc(long photKeyCtrlEsc)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_HotKeyCtrlEsc, photKeyCtrlEsc);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyCtrlEsc(long * photKeyCtrlEsc)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_HotKeyCtrlEsc, photKeyCtrlEsc);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyAltEsc(long photKeyAltEsc)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_HotKeyAltEsc, photKeyAltEsc);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyAltEsc(long * photKeyAltEsc)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_HotKeyAltEsc, photKeyAltEsc);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyAltTab(long photKeyAltTab)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_HotKeyAltTab, photKeyAltTab);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyAltTab(long * photKeyAltTab)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_HotKeyAltTab, photKeyAltTab);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyAltShiftTab(long photKeyAltShiftTab)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_HotKeyAltShiftTab, photKeyAltShiftTab);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyAltShiftTab(long * photKeyAltShiftTab)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_HotKeyAltShiftTab, photKeyAltShiftTab);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyAltSpace(long photKeyAltSpace)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_HotKeyAltSpace, photKeyAltSpace);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyAltSpace(long * photKeyAltSpace)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_HotKeyAltSpace, photKeyAltSpace);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_HotKeyCtrlAltDel(long photKeyCtrlAltDel)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_HotKeyCtrlAltDel, photKeyCtrlAltDel);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_HotKeyCtrlAltDel(long * photKeyCtrlAltDel)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_HotKeyCtrlAltDel, photKeyCtrlAltDel);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_orderDrawThreshold(long porderDrawThreshold)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_orderDrawThreshold(long * porderDrawThreshold)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapCacheSize(long pbitmapCacheSize)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapCacheSize(long * pbitmapCacheSize)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapVirtualCacheSize(long pbitmapVirtualCacheSize)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_BitmapVirtualCacheSize, pbitmapVirtualCacheSize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapVirtualCacheSize(long * pbitmapVirtualCacheSize)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_BitmapVirtualCacheSize, pbitmapVirtualCacheSize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ScaleBitmapCachesByBPP(long pbScale)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_ScaleBitmapCachesByBPP(long * pbScale)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_NumBitmapCaches(long pnumBitmapCaches)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_NumBitmapCaches(long * pnumBitmapCaches)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_CachePersistenceActive(long pcachePersistenceActive)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_CachePersistenceActive, pcachePersistenceActive);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_CachePersistenceActive(long * pcachePersistenceActive)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_CachePersistenceActive, pcachePersistenceActive);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_PersistCacheDirectory(BSTR rhs)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_brushSupportLevel(long pbrushSupportLevel)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_brushSupportLevel, pbrushSupportLevel);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_brushSupportLevel(long * pbrushSupportLevel)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_brushSupportLevel, pbrushSupportLevel);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_minInputSendInterval(long pminInputSendInterval)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_minInputSendInterval(long * pminInputSendInterval)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_InputEventsAtOnce(long pinputEventsAtOnce)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_InputEventsAtOnce(long * pinputEventsAtOnce)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_maxEventCount(long pmaxEventCount)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_maxEventCount(long * pmaxEventCount)
 		{
-			return E_NOTIMPL; // TODO
+			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_keepAliveInterval(long pkeepAliveInterval)
 		{
-			return E_NOTIMPL; // TODO
+			if(pkeepAliveInterval && pkeepAliveInterval < 10)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_keepAliveInternal, pkeepAliveInterval);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_keepAliveInterval(long * pkeepAliveInterval)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_keepAliveInternal, pkeepAliveInterval);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_shutdownTimeout(long pshutdownTimeout)
 		{
-			return E_NOTIMPL; // TODO
+			if(pshutdownTimeout >= 600)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_shutdownTimeout, pshutdownTimeout);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_shutdownTimeout(long * pshutdownTimeout)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_shutdownTimeout, pshutdownTimeout);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_overallConnectionTimeout(long poverallConnectionTimeout)
 		{
-			return E_NOTIMPL; // TODO
+			if(poverallConnectionTimeout >= 600)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_overallConnectionTimeout, poverallConnectionTimeout);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_overallConnectionTimeout(long * poverallConnectionTimeout)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_overallConnectionTimeout, poverallConnectionTimeout);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_singleConnectionTimeout(long psingleConnectionTimeout)
 		{
-			return E_NOTIMPL; // TODO
+			if(psingleConnectionTimeout >= 600)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_singleConnectionTimeout, psingleConnectionTimeout);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_singleConnectionTimeout(long * psingleConnectionTimeout)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_singleConnectionTimeout, psingleConnectionTimeout);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_KeyboardType(long pkeyboardType)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_KeyboardType(long * pkeyboardType)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_KeyboardSubType(long pkeyboardSubType)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_KeyboardSubType(long * pkeyboardSubType)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_KeyboardFunctionKey(long pkeyboardFunctionKey)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_KeyboardFunctionKey(long * pkeyboardFunctionKey)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_WinceFixedPalette(long pwinceFixedPalette)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_WinceFixedPalette(long * pwinceFixedPalette)
 		{
-			return E_NOTIMPL; // TODO
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ConnectToServerConsole(VARIANT_BOOL pConnectToConsole)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_ConnectToServerConsole, pConnectToConsole);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_ConnectToServerConsole(VARIANT_BOOL * pConnectToConsole)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_ConnectToServerConsole, pConnectToConsole);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapPersistence(long pbitmapPersistence)
 		{
-			return E_NOTIMPL; // TODO
+			return put_BitmapPeristence(pbitmapPersistence);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapPersistence(long * pbitmapPersistence)
 		{
-			return E_NOTIMPL; // TODO
+			return get_BitmapPeristence(pbitmapPersistence);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_MinutesToIdleTimeout(long pminutesToIdleTimeout)
 		{
-			return E_NOTIMPL; // TODO
+			if(pminutesToIdleTimeout > 240)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_MinutesToIdleTimeout, pminutesToIdleTimeout);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_MinutesToIdleTimeout(long * pminutesToIdleTimeout)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_MinutesToIdleTimeout, pminutesToIdleTimeout);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_SmartSizing(VARIANT_BOOL pfSmartSizing)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_SmartSizing, pfSmartSizing);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_SmartSizing(VARIANT_BOOL * pfSmartSizing)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_SmartSizing, pfSmartSizing);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RdpdrLocalPrintingDocName(BSTR pLocalPrintingDocName)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_RdpdrLocalPrintingDocName, pLocalPrintingDocName);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RdpdrLocalPrintingDocName(BSTR * pLocalPrintingDocName)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_RdpdrLocalPrintingDocName, pLocalPrintingDocName);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RdpdrClipCleanTempDirString(BSTR clipCleanTempDirString)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_RdpdrClipCleanTempDirString, clipCleanTempDirString);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RdpdrClipCleanTempDirString(BSTR * clipCleanTempDirString)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_RdpdrClipCleanTempDirString, clipCleanTempDirString);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RdpdrClipPasteInfoString(BSTR clipPasteInfoString)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_RdpdrClipPasteInfoString, clipPasteInfoString);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RdpdrClipPasteInfoString(BSTR * clipPasteInfoString)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_RdpdrClipPasteInfoString, clipPasteInfoString);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ClearTextPassword(BSTR rhs)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->put_ClearTextPassword(rhs);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_DisplayConnectionBar(VARIANT_BOOL pDisplayConnectionBar)
 		{
-			return E_NOTIMPL; // TODO
+			if(!pDisplayConnectionBar && Outer()->IsSafeForScripting())
+				return E_FAIL;
+
+			return Outer()->SetProperty(Outer()->m_DisplayConnectionBar, pDisplayConnectionBar);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_DisplayConnectionBar(VARIANT_BOOL * pDisplayConnectionBar)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_DisplayConnectionBar, pDisplayConnectionBar);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_PinConnectionBar(VARIANT_BOOL pPinConnectionBar)
 		{
-			return E_NOTIMPL; // TODO
+			if(Outer()->IsSafeForScripting())
+				return E_NOTIMPL;
+
+			return Outer()->SetProperty(Outer()->m_PinConnectionBar, pPinConnectionBar);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_PinConnectionBar(VARIANT_BOOL * pPinConnectionBar)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_PinConnectionBar, pPinConnectionBar);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_GrabFocusOnConnect(VARIANT_BOOL pfGrabFocusOnConnect)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_GrabFocusOnConnect, pfGrabFocusOnConnect);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_GrabFocusOnConnect(VARIANT_BOOL * pfGrabFocusOnConnect)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_GrabFocusOnConnect, pfGrabFocusOnConnect);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_LoadBalanceInfo(BSTR pLBInfo)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_LoadBalanceInfo, pLBInfo);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_LoadBalanceInfo(BSTR * pLBInfo)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_LoadBalanceInfo, pLBInfo);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RedirectDrives(VARIANT_BOOL pRedirectDrives)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_RedirectDrives, pRedirectDrives);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RedirectDrives(VARIANT_BOOL * pRedirectDrives)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_RedirectDrives, pRedirectDrives);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RedirectPrinters(VARIANT_BOOL pRedirectPrinters)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_RedirectPrinters, pRedirectPrinters);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RedirectPrinters(VARIANT_BOOL * pRedirectPrinters)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_RedirectPrinters, pRedirectPrinters);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RedirectPorts(VARIANT_BOOL pRedirectPorts)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_RedirectPorts, pRedirectPorts);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RedirectPorts(VARIANT_BOOL * pRedirectPorts)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_RedirectPorts, pRedirectPorts);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_RedirectSmartCards(VARIANT_BOOL pRedirectSmartCards)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_RedirectSmartCards, pRedirectSmartCards);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_RedirectSmartCards(VARIANT_BOOL * pRedirectSmartCards)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_RedirectSmartCards, pRedirectSmartCards);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapVirtualCache16BppSize(long pBitmapVirtualCache16BppSize)
 		{
-			return E_NOTIMPL; // TODO
+			if(pBitmapVirtualCache16BppSize < 0 || pBitmapVirtualCache16BppSize > 32)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_BitmapVirtualCache16BppSize, pBitmapVirtualCache16BppSize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapVirtualCache16BppSize(long * pBitmapVirtualCache16BppSize)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_BitmapVirtualCache16BppSize, pBitmapVirtualCache16BppSize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapVirtualCache24BppSize(long pBitmapVirtualCache24BppSize)
 		{
-			return E_NOTIMPL; // TODO
+			if(pBitmapVirtualCache24BppSize < 0 || pBitmapVirtualCache24BppSize > 32)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_BitmapVirtualCache24BppSize, pBitmapVirtualCache24BppSize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapVirtualCache24BppSize(long * pBitmapVirtualCache24BppSize)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_BitmapVirtualCache24BppSize, pBitmapVirtualCache24BppSize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_PerformanceFlags(long pDisableList)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_PerformanceFlags, pDisableList);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_PerformanceFlags(long * pDisableList)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_PerformanceFlags, pDisableList);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_ConnectWithEndpoint(VARIANT * rhs)
 		{
-			return E_NOTIMPL; // TODO
+			// TBD? the Microsoft client implements this, but what does it mean?
+			return E_NOTIMPL;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_NotifyTSPublicKey(VARIANT_BOOL pfNotify)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_NotifyTSPublicKey, pfNotify);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_NotifyTSPublicKey(VARIANT_BOOL * pfNotify)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_NotifyTSPublicKey, pfNotify);
 		}
 
 		/* IMsRdpClientAdvancedSettings2 */
@@ -1011,54 +1586,58 @@ private:
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::put_EnableAutoReconnect(VARIANT_BOOL pfEnableAutoReconnect)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_EnableAutoReconnect, pfEnableAutoReconnect);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::get_EnableAutoReconnect(VARIANT_BOOL * pfEnableAutoReconnect)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_EnableAutoReconnect, pfEnableAutoReconnect);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::put_MaxReconnectAttempts(long pMaxReconnectAttempts)
 		{
-			return E_NOTIMPL; // TODO
+			if(pMaxReconnectAttempts < 0 || pMaxReconnectAttempts > 200)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_MaxReconnectAttempts, pMaxReconnectAttempts);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings2::get_MaxReconnectAttempts(long * pMaxReconnectAttempts)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_MaxReconnectAttempts, pMaxReconnectAttempts);
 		}
 
 		/* IMsRdpClientAdvancedSettings3 */
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings3::put_ConnectionBarShowMinimizeButton(VARIANT_BOOL pfShowMinimize)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_ConnectionBarShowMinimizeButton, pfShowMinimize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings3::get_ConnectionBarShowMinimizeButton(VARIANT_BOOL * pfShowMinimize)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_ConnectionBarShowMinimizeButton, pfShowMinimize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings3::put_ConnectionBarShowRestoreButton(VARIANT_BOOL pfShowRestore)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_ConnectionBarShowRestoreButton, pfShowRestore);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings3::get_ConnectionBarShowRestoreButton(VARIANT_BOOL * pfShowRestore)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_ConnectionBarShowRestoreButton, pfShowRestore);
 		}
 
 		/* IMsRdpClientAdvancedSettings4 */
         virtual STDMETHODIMP IMsRdpClientAdvancedSettings4::put_AuthenticationLevel(unsigned int puiAuthLevel)
 		{
-			return E_NOTIMPL; // TODO
+			// TODO: this isn't implemented in rdesktop yet...
+			return Outer()->SetProperty(Outer()->m_AuthenticationLevel, puiAuthLevel);
 		}
-        
+
         virtual STDMETHODIMP IMsRdpClientAdvancedSettings4::get_AuthenticationLevel(unsigned int * puiAuthLevel)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_AuthenticationLevel, puiAuthLevel);
 		}
 	}
 	m_advancedSettings;
@@ -1070,12 +1649,22 @@ private:
 		return S_OK;
 	}
 
-	/* Secured settings */
+	/* Secured settings wrapper */
 	friend class SecuredSettings;
 
-	class SecuredSettings: public MSTSCLib::IMsRdpClientSecuredSettings
+	class SecuredSettings sealed: public MSTSCLib::IMsRdpClientSecuredSettings
 	{
 	private:
+		RdpClient * Outer()
+		{
+			return InnerToOuter(this);
+		}
+
+		const RdpClient * Outer() const
+		{
+			return InnerToOuter(this);
+		}
+
 		/* IDispatch type information */
 		ITypeInfo * m_dispTypeInfo;
 
@@ -1084,12 +1673,12 @@ private:
 			if(m_dispTypeInfo)
 				return S_OK;
 
-			HRESULT hr = InnerToOuter(this)->LoadTypeLibrary();
+			HRESULT hr = Outer()->LoadTypeLibrary();
 
 			if(FAILED(hr))
 				return hr;
 
-			hr = InnerToOuter(this)->m_typeLib->GetTypeInfoOfGuid(MSTSCLib::IID_IMsRdpClientSecuredSettings, &m_dispTypeInfo);
+			hr = Outer()->m_typeLib->GetTypeInfoOfGuid(MSTSCLib::IID_IMsRdpClientSecuredSettings, &m_dispTypeInfo);
 
 			if(FAILED(hr))
 				return hr;
@@ -1109,7 +1698,6 @@ private:
 			*ppTI = m_dispTypeInfo;
 			return S_OK;
 		}
-
 
 	public:
 		~SecuredSettings()
@@ -1132,7 +1720,7 @@ private:
 			)
 			{
 				*ppvObject = this;
-				InnerToOuter(this)->addRef();
+				Outer()->addRef();
 				return S_OK;
 			}
 			else
@@ -1144,12 +1732,12 @@ private:
 
 		virtual STDMETHODIMP_(ULONG) IUnknown::AddRef()
 		{
-			return InnerToOuter(this)->addRef();
+			return Outer()->addRef();
 		}
 
 		virtual STDMETHODIMP_(ULONG) IUnknown::Release()
 		{
-			return InnerToOuter(this)->release();
+			return Outer()->release();
 		}
 
 		/* IDispatch */
@@ -1194,56 +1782,72 @@ private:
 		/* IMsTscSecuredSettings */
 		virtual STDMETHODIMP IMsTscSecuredSettings::put_StartProgram(BSTR pStartProgram)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_StartProgram, pStartProgram);
 		}
 
 		virtual STDMETHODIMP IMsTscSecuredSettings::get_StartProgram(BSTR * pStartProgram)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_StartProgram, pStartProgram);
 		}
 
 		virtual STDMETHODIMP IMsTscSecuredSettings::put_WorkDir(BSTR pWorkDir)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->SetProperty(Outer()->m_WorkDir, pWorkDir);
 		}
 
 		virtual STDMETHODIMP IMsTscSecuredSettings::get_WorkDir(BSTR * pWorkDir)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_WorkDir, pWorkDir);
 		}
 
 		virtual STDMETHODIMP IMsTscSecuredSettings::put_FullScreen(long pfFullScreen)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->put_FullScreen(!!pfFullScreen);
 		}
 
 		virtual STDMETHODIMP IMsTscSecuredSettings::get_FullScreen(long * pfFullScreen)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_FullScreen, pfFullScreen);
 		}
 
 		/* IMsRdpClientSecuredSettings */
 		virtual STDMETHODIMP IMsRdpClientSecuredSettings::put_KeyboardHookMode(long pkeyboardHookMode)
 		{
-			return E_NOTIMPL; // TODO
+			if(pkeyboardHookMode < 0 || pkeyboardHookMode > 2)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_KeyboardHookMode, pkeyboardHookMode);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientSecuredSettings::get_KeyboardHookMode(long * pkeyboardHookMode)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_KeyboardHookMode, pkeyboardHookMode);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientSecuredSettings::put_AudioRedirectionMode(long pAudioRedirectionMode)
 		{
-			return E_NOTIMPL; // TODO
+			if(pAudioRedirectionMode < 0 || pAudioRedirectionMode > 2)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_AudioRedirectionMode, pAudioRedirectionMode);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientSecuredSettings::get_AudioRedirectionMode(long * pAudioRedirectionMode)
 		{
-			return E_NOTIMPL; // TODO
+			return Outer()->GetProperty(Outer()->m_AudioRedirectionMode, pAudioRedirectionMode);
 		}
 	}
 	m_securedSettings;
+
+	template<class Interface> HRESULT GetSecuredSettings(Interface ** ppSecuredSettings)
+	{
+		if(!m_SecuredSettingsEnabled)
+			return E_FAIL;
+
+		addRef();
+		*ppSecuredSettings = &m_securedSettings;
+		return S_OK;
+	}
 
 	/* Type library loading */
 	HRESULT LoadTypeLibrary()
@@ -1314,16 +1918,41 @@ public:
 		return CONTAINING_RECORD(innerThis, RdpClient, m_securedSettings);
 	}
 
+	static const RdpClient * InnerToOuter(const RdpClientInner * innerThis)
+	{
+		return CONTAINING_RECORD(innerThis, RdpClient, m_inner);
+	}
+
+	static const RdpClient * InnerToOuter(const AdvancedSettings * innerThis)
+	{
+		return CONTAINING_RECORD(innerThis, RdpClient, m_advancedSettings);
+	}
+
+	static const RdpClient * InnerToOuter(const SecuredSettings * innerThis)
+	{
+		return CONTAINING_RECORD(innerThis, RdpClient, m_securedSettings);
+	}
+
 public:
 	/* Class factory */
-	static HRESULT CreateInstance(REFCLSID classId, IUnknown * punkOuter, LONG * moduleRefCount, IUnknown ** ppObj)
+	static HRESULT CreateInstance(REFCLSID rclsid, IUnknown * punkOuter, REFIID riid, void ** ppObj)
 	{
-		RdpClient * obj = new RdpClient(classId, punkOuter, moduleRefCount);
+		RdpClient * obj = new RdpClient(rclsid, punkOuter);
 
 		if(obj == NULL)
 			return E_OUTOFMEMORY;
 
-		*ppObj = &obj->m_inner;
+		HRESULT hr = obj->m_inner.QueryInterface(riid, ppObj);
+
+		if(FAILED(hr))
+		{
+			delete obj;
+			return hr;
+		}
+
+		assert(obj->m_refCount == 1);
+		assert(*ppObj != NULL);
+
 		return S_OK;
 	}
 
@@ -1391,15 +2020,176 @@ public:
 		);
 	}
 
-	/* IConnectionPointContainer */ // 0/2
+	/* IConnectionPoint */ // DONE // FIXME! support more than one connection!
+	virtual STDMETHODIMP GetConnectionInterface(IID * pIID)
+	{
+		assert(pIID);
+		*pIID = MSTSCLib::DIID_IMsTscAxEvents;
+		return S_OK;
+	}
+
+	virtual STDMETHODIMP GetConnectionPointContainer(IConnectionPointContainer ** ppCPC)
+	{
+		assert(ppCPC);
+		addRef();
+		*ppCPC = this;
+		return S_OK;
+	}
+
+	virtual STDMETHODIMP Advise(IUnknown * pUnkSink, DWORD * pdwCookie)
+	{
+		if(m_EventSinksCount == 0)
+		{
+			if(FAILED(pUnkSink->QueryInterface(&m_EventSinksStatic[0])))
+				return CONNECT_E_CANNOTCONNECT;
+
+			++ m_EventSinksCount;
+
+			*pdwCookie = 1;
+			return S_OK;
+		}
+
+		return CONNECT_E_ADVISELIMIT;
+	}
+
+	virtual STDMETHODIMP Unadvise(DWORD dwCookie)
+	{
+		if(dwCookie != 1 || m_EventSinksCount == 0)
+			return CONNECT_E_NOCONNECTION;
+
+		m_EventSinksStatic[0]->Release();
+		m_EventSinksStatic[0] = NULL;
+		m_EventSinksCount = 0;
+		return S_OK;
+	}
+
+	virtual STDMETHODIMP EnumConnections(IEnumConnections ** ppEnum)
+	{
+		// I see no real value in this
+		return E_NOTIMPL;
+	}
+
+	/* IConnectionPointContainer */ // DONE
+	class CEnumConnectionPoints: public IEnumConnectionPoints
+	{
+	private:
+		LONG m_refCount;
+		IConnectionPoint * m_cp;
+		bool m_done;
+
+	public:
+		CEnumConnectionPoints(IConnectionPoint * cp): m_refCount(1), m_cp(cp), m_done(false)
+		{
+			assert(m_cp);
+			m_cp->AddRef();
+		}
+
+		CEnumConnectionPoints(const CEnumConnectionPoints& ecp): m_refCount(1), m_cp(ecp.m_cp), m_done(ecp.m_done)
+		{
+			assert(m_cp);
+			m_cp->AddRef();
+		}
+
+		~CEnumConnectionPoints()
+		{
+			assert(m_cp);
+			m_cp->Release();
+		}
+
+		virtual STDMETHODIMP QueryInterface(REFIID riid, void ** ppvObject)
+		{
+			if(riid == IID_IUnknown || riid == IID_IEnumConnectionPoints)
+			{
+				*ppvObject = this;
+				return S_OK;
+			}
+			else
+			{
+				*ppvObject = NULL;
+				return E_NOINTERFACE;
+			}
+		}
+
+		virtual STDMETHODIMP_(ULONG) AddRef()
+		{
+			return InterlockedIncrement(&m_refCount);
+		}
+
+		virtual STDMETHODIMP_(ULONG) Release()
+		{
+			LONG n = InterlockedDecrement(&m_refCount);
+
+			if(n == 0)
+				delete this;
+
+			return n;
+		}
+
+		virtual STDMETHODIMP Next(ULONG cConnections, LPCONNECTIONPOINT * ppCP, ULONG * pcFetched)
+		{
+			if(cConnections == 0 || m_done)
+				return S_FALSE;
+
+			m_done = true;
+			m_cp->AddRef();
+			*ppCP = m_cp;
+			*pcFetched = 1;
+
+			return S_OK;
+		}
+
+		virtual STDMETHODIMP Skip(ULONG cConnections)
+		{
+			if(cConnections == 0)
+				return S_OK;
+
+			if(cConnections == 1 && !m_done)
+			{
+				m_done = true;
+				return S_OK;
+			}
+
+			assert(cConnections > 1 || m_done);
+
+			return S_FALSE;
+		}
+
+		virtual STDMETHODIMP Reset()
+		{
+			m_done = false;
+			return S_OK;
+		}
+
+		virtual STDMETHODIMP Clone(IEnumConnectionPoints ** ppEnum)
+		{
+			*ppEnum = new CEnumConnectionPoints(*this);
+
+			if(*ppEnum == NULL)
+				return E_OUTOFMEMORY;
+
+			return S_OK;
+		}
+	};
+
 	virtual STDMETHODIMP IConnectionPointContainer::EnumConnectionPoints(IEnumConnectionPoints ** ppEnum)
 	{
-		return E_NOTIMPL;
+		*ppEnum = new CEnumConnectionPoints(this);
+
+		if(*ppEnum == NULL)
+			return E_OUTOFMEMORY;
+
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IConnectionPointContainer::FindConnectionPoint(REFIID riid, IConnectionPoint ** ppCP)
 	{
-		return E_NOTIMPL;
+		if(riid != MSTSCLib::DIID_IMsTscAxEvents)
+			return CONNECT_E_NOCONNECTION;
+
+		addRef();
+		*ppCP = this;
+
+		return S_OK;
 	}
 
 	/* IDataObject */ // 0/9
@@ -1448,18 +2238,30 @@ public:
 		return E_NOTIMPL;
 	}
 
-	/* IObjectSafety */ // 0/2
+	/* IObjectSafety */ // DONE
 	virtual STDMETHODIMP IObjectSafety::GetInterfaceSafetyOptions(REFIID riid, DWORD * pdwSupportedOptions, DWORD * pdwEnabledOptions)
 	{
-		return E_NOTIMPL;
+		if(pdwSupportedOptions == NULL || pdwEnabledOptions == NULL)
+			return E_POINTER;
+
+		if(riid != IID_IDispatch)
+			return E_NOINTERFACE;
+
+		*pdwSupportedOptions = INTERFACESAFE_FOR_UNTRUSTED_CALLER;
+		*pdwEnabledOptions = m_SafetyOptions;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IObjectSafety::SetInterfaceSafetyOptions(REFIID riid, DWORD dwOptionSetMask, DWORD dwEnabledOptions)
 	{
-		return E_NOTIMPL;
+		if(riid != IID_IDispatch)
+			return E_NOINTERFACE;
+
+		m_SafetyOptions = dwEnabledOptions & (dwOptionSetMask & INTERFACESAFE_FOR_UNTRUSTED_CALLER);
+		return S_OK;
 	}
 
-	/* IOleControl */ // 0/4
+	/* IOleControl */ // DONE
 	virtual STDMETHODIMP IOleControl::GetControlInfo(CONTROLINFO * pCI)
 	{
 		return E_NOTIMPL;
@@ -1472,15 +2274,16 @@ public:
 
 	virtual STDMETHODIMP IOleControl::OnAmbientPropertyChange(DISPID dispID)
 	{
-		return E_NOTIMPL;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleControl::FreezeEvents(BOOL bFreeze)
 	{
-		return E_NOTIMPL;
+		// TODO? do we need special processing for this?
+		return S_OK;
 	}
 
-	/* IOleInPlaceActiveObject */ // 0/5
+	/* IOleInPlaceActiveObject */ // 3/5
 	virtual STDMETHODIMP IOleInPlaceActiveObject::TranslateAccelerator(LPMSG lpmsg)
 	{
 		return E_NOTIMPL;
@@ -1488,22 +2291,24 @@ public:
 
 	virtual STDMETHODIMP IOleInPlaceActiveObject::OnFrameWindowActivate(BOOL fActivate)
 	{
+		// TODO?
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IOleInPlaceActiveObject::OnDocWindowActivate(BOOL fActivate)
 	{
+		// TODO?
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IOleInPlaceActiveObject::ResizeBorder(LPCRECT prcBorder, IOleInPlaceUIWindow * pUIWindow, BOOL fFrameWindow)
 	{
-		return E_NOTIMPL;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleInPlaceActiveObject::EnableModeless(BOOL fEnable)
 	{
-		return E_NOTIMPL;
+		return S_OK;
 	}
 
 	/* IOleInPlaceObject */ // 0/4
@@ -1527,25 +2332,40 @@ public:
 		return E_NOTIMPL;
 	}
 
-	/* IOleObject */ // 0/21
+	/* IOleObject */ // 14/21
 	virtual STDMETHODIMP IOleObject::SetClientSite(IOleClientSite * pClientSite)
 	{
-		return E_NOTIMPL;
+		if(m_clientSite)
+			m_clientSite->Release();
+
+		m_clientSite = pClientSite;
+
+		if(m_clientSite)
+			m_clientSite->AddRef();
+
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleObject::GetClientSite(IOleClientSite ** ppClientSite)
 	{
-		return E_NOTIMPL;
+		if(ppClientSite == NULL)
+			return E_POINTER;
+
+		if(m_clientSite)
+			m_clientSite->AddRef();
+
+		*ppClientSite = m_clientSite;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleObject::SetHostNames(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj)
 	{
-		return E_NOTIMPL;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleObject::Close(DWORD dwSaveOption)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IOleObject::SetMoniker(DWORD dwWhichMoniker, IMoniker * pmk)
@@ -1570,62 +2390,63 @@ public:
 
 	virtual STDMETHODIMP IOleObject::DoVerb(LONG iVerb, LPMSG lpmsg, IOleClientSite * pActiveSite, LONG lindex, HWND hwndParent, LPCRECT lprcPosRect)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IOleObject::EnumVerbs(IEnumOLEVERB ** ppEnumOleVerb)
 	{
-		return E_NOTIMPL;
+		return OleRegEnumVerbs(m_classId, ppEnumOleVerb);
 	}
 
 	virtual STDMETHODIMP IOleObject::Update()
 	{
-		return E_NOTIMPL;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleObject::IsUpToDate()
 	{
-		return E_NOTIMPL;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleObject::GetUserClassID(CLSID * pClsid)
 	{
-		return E_NOTIMPL;
+		*pClsid = m_classId;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleObject::GetUserType(DWORD dwFormOfType, LPOLESTR * pszUserType)
 	{
-		return E_NOTIMPL;
+		return OleRegGetUserType(m_classId, dwFormOfType, pszUserType);
 	}
 
 	virtual STDMETHODIMP IOleObject::SetExtent(DWORD dwDrawAspect, SIZEL * psizel)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IOleObject::GetExtent(DWORD dwDrawAspect, SIZEL * psizel)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IOleObject::Advise(IAdviseSink * pAdvSink, DWORD * pdwConnection)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IOleObject::Unadvise(DWORD dwConnection)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IOleObject::EnumAdvise(IEnumSTATDATA ** ppenumAdvise)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IOleObject::GetMiscStatus(DWORD dwAspect, DWORD * pdwStatus)
 	{
-		return E_NOTIMPL;
+		return OleRegGetMiscStatus(m_classId, dwAspect, pdwStatus);
 	}
 
 	virtual STDMETHODIMP IOleObject::SetColorScheme(LOGPALETTE * pLogpal)
@@ -1633,10 +2454,17 @@ public:
 		return E_NOTIMPL;
 	}
 
-	/* IOleWindow */ // 0/2
+	/* IOleWindow */ // DONE
 	virtual STDMETHODIMP IOleWindow::GetWindow(HWND * phwnd)
 	{
-		return E_NOTIMPL;
+		if(phwnd == NULL)
+			return E_POINTER;
+
+		if(m_controlWindow == NULL)
+			return E_FAIL;
+
+		*phwnd = m_controlWindow;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IOleWindow::ContextSensitiveHelp(BOOL fEnterMode)
@@ -1745,26 +2573,26 @@ public:
 		return S_OK;
 	}
 
-	/* IQuickActivate */ // 0/3
+	/* IQuickActivate */ // 2/3
 	virtual STDMETHODIMP IQuickActivate::QuickActivate(QACONTAINER * pQaContainer, QACONTROL * pQaControl)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IQuickActivate::SetContentExtent(LPSIZEL pSizel)
 	{
-		return E_NOTIMPL;
+		return SetExtent(DVASPECT_CONTENT, pSizel);
 	}
 
 	virtual STDMETHODIMP IQuickActivate::GetContentExtent(LPSIZEL pSizel)
 	{
-		return E_NOTIMPL;
+		return GetExtent(DVASPECT_CONTENT, pSizel);
 	}
 
-	/* IViewObject */ // 0/6
+	/* IViewObject */ // 3/6
 	virtual STDMETHODIMP IViewObject::Draw(DWORD dwDrawAspect, LONG lindex, void * pvAspect, DVTARGETDEVICE * ptd, HDC hdcTargetDev, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds, BOOL (STDMETHODCALLTYPE * pfnContinue)(ULONG_PTR dwContinue), ULONG_PTR dwContinue)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IViewObject::GetColorSet(DWORD dwDrawAspect, LONG lindex, void * pvAspect, DVTARGETDEVICE * ptd, HDC hicTargetDev, LOGPALETTE ** ppColorSet)
@@ -1784,173 +2612,160 @@ public:
 
 	virtual STDMETHODIMP IViewObject::SetAdvise(DWORD aspects, DWORD advf, IAdviseSink * pAdvSink)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IViewObject::GetAdvise(DWORD * pAspects, DWORD * pAdvf, IAdviseSink ** ppAdvSink)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
 	/* IViewObject2 */ // 0/1
 	virtual STDMETHODIMP IViewObject2::GetExtent(DWORD dwDrawAspect, LONG lindex, DVTARGETDEVICE * ptd, LPSIZEL lpsizel)
 	{
-		return E_NOTIMPL;
+		return E_NOTIMPL; // TODO
 	}
 
-	/* IMsTscAx */ // ??/30
+	/* IMsTscAx */ // 23/30
 	virtual STDMETHODIMP IMsTscAx::put_Server(BSTR pServer)
 	{
-		if(m_nonIdle)
-			return E_FAIL;
-
-		return SetStringProperty(m_server, pServer);
+		return SetProperty(m_Server, pServer);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_Server(BSTR * pServer)
 	{
-		return GetStringProperty(m_server, pServer);
+		return GetProperty(m_Server, pServer);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_Domain(BSTR pDomain)
 	{
-		if(m_nonIdle)
-			return E_FAIL;
-
-		return SetStringProperty(m_domain, pDomain);
+		return SetProperty(m_Domain, pDomain);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_Domain(BSTR * pDomain)
 	{
-		return GetStringProperty(m_domain, pDomain);
+		return GetProperty(m_Domain, pDomain);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_UserName(BSTR pUserName)
 	{
-		if(m_nonIdle)
-			return E_FAIL;
-
-		return SetStringProperty(m_userName, pUserName);
+		return SetProperty(m_UserName, pUserName);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_UserName(BSTR * pUserName)
 	{
-		return GetStringProperty(m_userName, pUserName);
+		return GetProperty(m_UserName, pUserName);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_DisconnectedText(BSTR pDisconnectedText)
 	{
-		if(m_nonIdle)
-			return E_FAIL;
-
-		return SetStringProperty(m_disconnectedText, pDisconnectedText);
+		return SetProperty(m_DisconnectedText, pDisconnectedText);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_DisconnectedText(BSTR * pDisconnectedText)
 	{
-		return GetStringProperty(m_disconnectedText, pDisconnectedText);
+		return GetProperty(m_DisconnectedText, pDisconnectedText);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_ConnectingText(BSTR pConnectingText)
 	{
-		if(m_nonIdle)
-			return E_FAIL;
-
-		return SetStringProperty(m_connectingText, pConnectingText);
+		return SetProperty(m_ConnectingText, pConnectingText);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_ConnectingText(BSTR * pConnectingText)
 	{
-		return GetStringProperty(m_connectingText, pConnectingText);
+		return GetProperty(m_ConnectingText, pConnectingText);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_Connected(short * pIsConnected)
 	{
-		* pIsConnected = m_nonIdle;
-		return S_OK;
+		return GetProperty(m_Connected, pIsConnected);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_DesktopWidth(long pVal)
 	{
-		if(m_nonIdle)
-			return E_FAIL;
+		if(pVal < 200 || pVal > 1600)
+			return E_INVALIDARG;
 
-		// TODO: validate
-
-		width = pVal;
-		return S_OK;
+		return SetProperty(m_DesktopWidth, pVal);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_DesktopWidth(long * pVal)
 	{
-		* pVal = width;
-		return S_OK;
+		return GetProperty(m_DesktopWidth, pVal);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_DesktopHeight(long pVal)
 	{
-		if(m_nonIdle)
-			return E_FAIL;
+		if(pVal < 200 || pVal > 1200)
+			return E_INVALIDARG;
 
-		// TODO: validate
-		
-		height = pVal;
-		return S_OK;
+		return SetProperty(m_DesktopHeight, pVal);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_DesktopHeight(long * pVal)
 	{
-		* pVal = height;
-		return S_OK;
+		return GetProperty(m_DesktopHeight, pVal);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_StartConnected(long pfStartConnected)
 	{
-		// TODO: check that the object isn't running
-		m_startConnected = pfStartConnected != 0;
-		return S_OK;
+		return SetProperty(m_StartConnected, pfStartConnected);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_StartConnected(long * pfStartConnected)
 	{
-		* pfStartConnected = m_startConnected;
-		return S_OK;
+		return GetProperty(m_StartConnected, pfStartConnected);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_HorizontalScrollBarVisible(long * pfHScrollVisible)
 	{
-		return E_NOTIMPL; // TODO
+		return GetProperty(m_HorizontalScrollBarVisible, pfHScrollVisible);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_VerticalScrollBarVisible(long * pfVScrollVisible)
 	{
-		return E_NOTIMPL; // TODO
+		return GetProperty(m_VerticalScrollBarVisible, pfVScrollVisible);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_FullScreenTitle(BSTR rhs)
 	{
-		return SetStringProperty(m_fullScreenTitle, rhs);
+		// TODO: limit length
+		return SetProperty(m_FullScreenTitle, rhs);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_CipherStrength(long * pCipherStrength)
 	{
-		return E_NOTIMPL; // TODO
+		if(pCipherStrength == NULL)
+			return E_INVALIDARG;
+
+		*pCipherStrength = 128; // BUGBUG: a later version may change this. Use a compile-time constant
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_Version(BSTR * pVersion)
 	{
-		// EASY!!!
-		return E_NOTIMPL; // TODO
+		if(pVersion == NULL)
+			return E_INVALIDARG;
+
+		BSTR version = SysAllocString(L"5.2.3790.1830"); // BUGBUG: don't use hardcoded string
+
+		if(version == NULL)
+			return E_OUTOFMEMORY;
+
+		*pVersion = version;
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_SecuredSettingsEnabled(long * pSecuredSettingsEnabled)
 	{
-		return E_NOTIMPL; // TODO
+		// TODO: initialize m_SecuredSettingsEnabled as soon as we have an OLE client site
+		return GetProperty(m_SecuredSettingsEnabled, pSecuredSettingsEnabled);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_SecuredSettings(MSTSCLib::IMsTscSecuredSettings ** ppSecuredSettings)
 	{
-		return E_NOTIMPL; // TODO
+		return GetSecuredSettings(ppSecuredSettings);
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_AdvancedSettings(MSTSCLib::IMsTscAdvancedSettings ** ppAdvSettings)
@@ -1960,7 +2775,6 @@ public:
 
 	virtual STDMETHODIMP IMsTscAx::get_Debugger(MSTSCLib::IMsTscDebug ** ppDebugger)
 	{
-		// DO NOT IMPLEMENT
 		return E_NOTIMPL;
 	}
 
@@ -1984,15 +2798,28 @@ public:
 		return E_NOTIMPL; // TODO
 	}
 
-	/* IMsRdpClient */ // 1/10
+	/* IMsRdpClient */ // 6/10
 	virtual STDMETHODIMP IMsRdpClient::put_ColorDepth(long pcolorDepth)
 	{
-		return E_NOTIMPL; // TODO
+		switch(pcolorDepth)
+		{
+		case 8:
+		case 15:
+		case 16:
+		case 24:
+		case 32:
+			break;
+
+		default:
+			return E_INVALIDARG;
+		}
+
+		return SetProperty(m_ColorDepth, pcolorDepth);
 	}
 
 	virtual STDMETHODIMP IMsRdpClient::get_ColorDepth(long * pcolorDepth)
 	{
-		return E_NOTIMPL; // TODO
+		return GetProperty(m_ColorDepth, pcolorDepth);
 	}
 
 	virtual STDMETHODIMP IMsRdpClient::get_AdvancedSettings2(MSTSCLib::IMsRdpClientAdvancedSettings ** ppAdvSettings)
@@ -2002,22 +2829,29 @@ public:
 
 	virtual STDMETHODIMP IMsRdpClient::get_SecuredSettings2(MSTSCLib::IMsRdpClientSecuredSettings ** ppSecuredSettings)
 	{
-		return E_NOTIMPL; // TODO
+		return GetSecuredSettings(ppSecuredSettings);
 	}
 
 	virtual STDMETHODIMP IMsRdpClient::get_ExtendedDisconnectReason(MSTSCLib::ExtendedDisconnectReasonCode * pExtendedDisconnectReason)
 	{
-		return E_NOTIMPL; // TODO
+		return GetProperty(m_ExtendedDisconnectReason, pExtendedDisconnectReason);
 	}
 
 	virtual STDMETHODIMP IMsRdpClient::put_FullScreen(VARIANT_BOOL pfFullScreen)
 	{
-		return E_NOTIMPL; // TODO
+		if(!m_Connected)
+			return E_FAIL;
+
+		if(pfFullScreen && !m_SecuredSettingsEnabled)
+			return E_FAIL;
+
+		// TODO
+		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsRdpClient::get_FullScreen(VARIANT_BOOL * pfFullScreen)
 	{
-		return E_NOTIMPL; // TODO
+		return GetProperty(m_FullScreen, pfFullScreen);
 	}
 
 	virtual STDMETHODIMP IMsRdpClient::SetVirtualChannelOptions(BSTR chanName, long chanOptions)
@@ -2035,7 +2869,7 @@ public:
 		return E_NOTIMPL; // TODO
 	}
 
-	/* IMsRdpClient2 */ // 1/3
+	/* IMsRdpClient2 */ // DONE
 	virtual STDMETHODIMP IMsRdpClient2::get_AdvancedSettings3(MSTSCLib::IMsRdpClientAdvancedSettings2 ** ppAdvSettings)
 	{
 		return GetAdvancedSettings(ppAdvSettings);
@@ -2043,14 +2877,12 @@ public:
 
 	virtual STDMETHODIMP IMsRdpClient2::put_ConnectedStatusText(BSTR pConnectedStatusText)
 	{
-		// EASY!!!
-		return E_NOTIMPL; // TODO
+		return SetProperty(m_ConnectedStatusText, pConnectedStatusText);
 	}
 
 	virtual STDMETHODIMP IMsRdpClient2::get_ConnectedStatusText(BSTR * pConnectedStatusText)
 	{
-		// EASY!!!
-		return E_NOTIMPL; // TODO
+		return GetProperty(m_ConnectedStatusText, pConnectedStatusText);
 	}
 
 	/* IMsRdpClient3 */ // DONE
@@ -2065,63 +2897,55 @@ public:
 		return GetAdvancedSettings(ppAdvSettings5);
 	}
 
-	/* IMsTscNonScriptable */ // 8/10
+	/* IMsTscNonScriptable */ // DONE
 	virtual STDMETHODIMP IMsTscNonScriptable::put_ClearTextPassword(BSTR rhs)
 	{
-		return E_NOTIMPL; // TODO
+		return SetProperty(m_ClearTextPassword, rhs);
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::put_PortablePassword(BSTR pPortablePass)
 	{
-		// OBSOLETE
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::get_PortablePassword(BSTR * pPortablePass)
 	{
-		// OBSOLETE
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::put_PortableSalt(BSTR pPortableSalt)
 	{
-		// OBSOLETE
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::get_PortableSalt(BSTR * pPortableSalt)
 	{
-		// OBSOLETE
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::put_BinaryPassword(BSTR pBinaryPassword)
 	{
-		// OBSOLETE
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::get_BinaryPassword(BSTR * pBinaryPassword)
 	{
-		// OBSOLETE
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::put_BinarySalt(BSTR pSalt)
 	{
-		// OBSOLETE
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::get_BinarySalt(BSTR * pSalt)
 	{
-		// OBSOLETE
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IMsTscNonScriptable::ResetPassword()
 	{
-		return E_NOTIMPL; // TODO
+		return SetProperty(m_ClearTextPassword, NULL);
 	}
 
 	/* IMsRdpClientNonScriptable */ // 0/2
@@ -2137,19 +2961,122 @@ public:
 		return E_NOTIMPL; // TODO
 	}
 
-	/* IMsRdpClientNonScriptable2 */ // 0/2
+	/* IMsRdpClientNonScriptable2 */ // DONE
 	virtual STDMETHODIMP IMsRdpClientNonScriptable2::put_UIParentWindowHandle(HWND phwndUIParentWindowHandle)
 	{
-		return E_NOTIMPL; // TODO
+		return SetProperty(m_UIParentWindowHandle, phwndUIParentWindowHandle);
 	}
 
 	virtual STDMETHODIMP IMsRdpClientNonScriptable2::get_UIParentWindowHandle(HWND * phwndUIParentWindowHandle)
 	{
-		return E_NOTIMPL; // TODO
+		return GetProperty(m_UIParentWindowHandle, phwndUIParentWindowHandle);
 	}
-
 };
 
 #pragma warning(pop)
+
+class ClassFactory: public IClassFactory
+{
+private:
+	LONG m_refCount;
+	CLSID m_classId;
+
+public:
+	ClassFactory(REFCLSID rclsid):
+		m_refCount(1),
+		m_classId(rclsid)
+	{
+		lockServer();
+	}
+
+	~ClassFactory()
+	{
+		unlockServer();
+	}
+
+	virtual STDMETHODIMP QueryInterface(REFIID riid, void ** ppvObject)
+	{
+		if(riid == IID_IUnknown || riid == IID_IClassFactory)
+		{
+			*ppvObject = this;
+			return S_OK;
+		}
+		else
+		{
+			*ppvObject = NULL;
+			return E_NOINTERFACE;
+		}
+	}
+
+	virtual STDMETHODIMP_(ULONG) AddRef()
+	{
+		return InterlockedIncrement(&m_refCount);
+	}
+
+	virtual STDMETHODIMP_(ULONG) Release()
+	{
+		LONG n = InterlockedDecrement(&m_refCount);
+
+		if(n == 0)
+			delete this;
+
+		return n;
+	}
+
+	virtual STDMETHODIMP CreateInstance(IUnknown * pUnkOuter, REFIID riid, void ** ppvObject)
+	{
+		if(pUnkOuter && riid != IID_IUnknown)
+			return CLASS_E_NOAGGREGATION;
+
+		return RdpClient::CreateInstance(m_classId, pUnkOuter, riid, ppvObject);
+	}
+    
+	virtual STDMETHODIMP LockServer(BOOL fLock)
+	{
+		if(fLock)
+			lockServer();
+		else
+			unlockServer();
+
+		return S_OK;
+	}
+};
+
+extern "C"
+{
+
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID * ppv)
+{
+	if
+	(
+		rclsid != MSTSCLib::CLSID_MsTscAx &&
+		rclsid != MSTSCLib::CLSID_MsRdpClient &&
+		rclsid != MSTSCLib::CLSID_MsRdpClient2 &&
+		rclsid != MSTSCLib::CLSID_MsRdpClient3 &&
+		rclsid != MSTSCLib::CLSID_MsRdpClient4
+	)
+		return CLASS_E_CLASSNOTAVAILABLE;
+
+	ClassFactory * p = new ClassFactory(rclsid);
+
+	if(p == NULL)
+		return E_OUTOFMEMORY;
+
+	HRESULT hr = p->QueryInterface(riid, ppv);
+
+	p->Release();
+
+	if(FAILED(hr))
+		return hr;
+
+	return S_OK;
+}
+
+STDAPI DllCanUnloadNow(void)
+{
+	return canUnloadServer() ? S_OK : S_FALSE;
+}
+
+}
 
 // EOF

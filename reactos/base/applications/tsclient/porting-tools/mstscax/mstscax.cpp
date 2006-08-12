@@ -31,7 +31,7 @@ namespace
 		std::basic_string<TCHAR>::const_iterator endPath = std::find(begin, end, TEXT('\\')).base();
 
 		std::basic_string<TCHAR> strPath(strFileName.begin(), endPath);
-		strPath.append(TEXT("mstscax_.dll"));
+		strPath.append(TEXT("original\\mstscax.dll"));
 
 		hmMstscax = LoadLibrary(strPath.c_str());
 		pfnDllGetClassObject = (PFNDLLGETCLASSOBJECT)GetProcAddress(hmMstscax, "DllGetClassObject");
@@ -47,6 +47,8 @@ namespace
 		va_start(args, fmt);
 		StringCbVPrintf(buf, sizeof(buf), fmt, args);
 		va_end(args);
+
+		StringCbCat(buf, sizeof(buf), TEXT("\n"));
 
 		OutputDebugString(buf);
 	}
@@ -131,6 +133,9 @@ namespace
 
 	std::basic_string<TCHAR> RectToString(const RECT& rc)
 	{
+		if(&rc == NULL)
+			return TEXT("<null>");
+
 		std::basic_ostringstream<TCHAR> o;
 		o << "{" << " left:" << rc.left << " top:" << rc.top << " right:" << rc.right << " bottom:" << rc.bottom << " }";
 		return o.str();
@@ -138,6 +143,9 @@ namespace
 
 	std::basic_string<TCHAR> RectToString(const RECTL& rc)
 	{
+		if(&rc == NULL)
+			return TEXT("<null>");
+
 		std::basic_ostringstream<TCHAR> o;
 		o << "{" << " left:" << rc.left << " top:" << rc.top << " right:" << rc.right << " bottom:" << rc.bottom << " }";
 		return o.str();
@@ -145,6 +153,9 @@ namespace
 
 	std::basic_string<TCHAR> SizeToString(const SIZE& sz)
 	{
+		if(&sz == NULL)
+			return TEXT("<null>");
+
 		std::basic_ostringstream<TCHAR> o;
 		o << "{ " << " cx:" << sz.cx << " cy:" << sz.cy << " }";
 		return o.str();
@@ -253,6 +264,11 @@ namespace
 			case VT_ERROR:
 			case VT_HRESULT:
 				o << std::hex << var.ulVal; break;
+
+			case VT_EMPTY:
+			case VT_NULL:
+			case VT_VOID:
+				break;
 
 			default:
 				assert(0);
@@ -842,7 +858,7 @@ namespace
 	else \
 	{ \
 		hr = E_NOINTERFACE; \
-		pvObject = (IUnknown *)(this); \
+		pvObject = NULL; \
 	}
 
 			QIBEGIN()
@@ -3043,7 +3059,7 @@ namespace
         virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId)
 		{
 			IDispatch * pIDispatch = getIDispatch();
-			std::wstring strtemp;
+ 			std::wstring strtemp;
 
 			std::wostringstream strtempo;
 
@@ -3078,7 +3094,7 @@ namespace
 
 			strtempo << L" ]";
 
-			dbgprintf(TEXT("IDispatch::GetIDsOfNames -> %08X, rgDispId = [%ls]"), hr, strtemp.c_str());
+			dbgprintf(TEXT("IDispatch::GetIDsOfNames -> %08X, rgDispId = %ls"), hr, strtempo.str().c_str());
 
 			return hr;
 		}
@@ -3089,26 +3105,26 @@ namespace
 
 			std::basic_ostringstream<TCHAR> strtempo;
 
-			strtempo << L"{\n";
+			strtempo << L"{";
 
 			for(unsigned int i = pDispParams->cArgs, j = pDispParams->cNamedArgs; j < pDispParams->cArgs; -- i, ++ j)
 			{
-				strtempo << L"\t";
+				strtempo << L" ";
 				strtempo << VariantToString(pDispParams->rgvarg[i - 1]);
-				strtempo << L"\n";
+				strtempo << L",";
 			}
 
 			for(unsigned int i = pDispParams->cArgs - pDispParams->cNamedArgs; i > 0; -- i)
 			{
-				strtempo << L"\t";
+				strtempo << L" ";
 				strtempo << L"["; strtempo << pDispParams->rgdispidNamedArgs[i - 1]; strtempo << L"] => ";
 				strtempo << VariantToString(pDispParams->rgvarg[i - 1]);
-				strtempo << L"\n";
+				strtempo << L",";
 			}
 
-			strtempo << L"}";
+			strtempo << L" }";
 
-			dbgprintf(TEXT("IDispatch::Invoke(%ld, %ls, %08X, %04X, %s, %p, %p, %p)"), dispIdMember, UUIDToString(riid), lcid, wFlags, strtempo.str().c_str(), pVarResult, pExcepInfo, puArgErr);
+			dbgprintf(TEXT("IDispatch::Invoke(%ld, %ls, %08X, %04X, %s, %p, %p, %p)"), dispIdMember, UUIDToString(riid).c_str(), lcid, wFlags, strtempo.str().c_str(), pVarResult, pExcepInfo, puArgErr);
 
 			VARIANT VarResult = { };
 			EXCEPINFO ExcepInfo = { };
@@ -3160,6 +3176,9 @@ namespace
 	private:
 		static std::basic_string<TCHAR> TargetDeviceToString(const DVTARGETDEVICE& targetdev)
 		{
+			if(&targetdev == NULL)
+				return TEXT("<null>");
+
 			std::basic_ostringstream<TCHAR> o;
 
 			o << "{";
@@ -3999,9 +4018,53 @@ namespace
 		virtual HRESULT STDMETHODCALLTYPE IQuickActivate::QuickActivate(QACONTAINER * pQaContainer, QACONTROL * pQaControl) // TODO
 		{
 			IQuickActivate * pIQuickActivate = getIQuickActivate();
-			dbgprintf(TEXT("IQuickActivate::QuickActivate(%p, %p)"), pQaContainer, pQaControl);
+
+			std::basic_stringstream<TCHAR> o1;
+
+			o1 << "{ ";
+			o1 << "pClientSite = " << (void *)pQaContainer->pClientSite << ", ";
+			o1 << "pAdviseSink = " << (void *)pQaContainer->pAdviseSink << ", ";
+			o1 << "pPropertyNotifySink = " << (void *)pQaContainer->pPropertyNotifySink << ", ";
+			o1 << "pUnkEventSink = " << (void *)pQaContainer->pUnkEventSink << ", ";
+
+			o1 << std::hex;
+			o1 << "dwAmbientFlags = " << pQaContainer->dwAmbientFlags << ", ";
+			o1 << "colorFore = " << pQaContainer->colorFore << ", ";
+			o1 << "colorBack = " << pQaContainer->colorBack << ", ";
+			o1 << std::dec;
+
+			o1 << "pFont = " << (void *)pQaContainer->pFont << ", ";
+			o1 << "pUndoMgr = " << (void *)pQaContainer->pUndoMgr << ", ";
+
+			o1 << std::hex;
+			o1 << "dwAppearance = " << pQaContainer->dwAppearance << ", ";
+			o1 << "lcid = " << pQaContainer->lcid << ", ";
+			o1 << std::dec;
+
+			o1 << "hpal = " << (void *)pQaContainer->hpal << ", ";
+			o1 << "pBindHost = " << (void *)pQaContainer->pBindHost << ", ";
+			o1 << "pOleControlSite = " << (void *)pQaContainer->pOleControlSite << ", ";
+			o1 << "pServiceProvider = " << (void *)pQaContainer->pServiceProvider << ", ";
+			o1 << "}";
+
+			dbgprintf(TEXT("IQuickActivate::QuickActivate(%s, %p)"), o1.str().c_str(), pQaControl);
+
 			HRESULT hr = pIQuickActivate->QuickActivate(pQaContainer, pQaControl);
-			dbgprintf(TEXT("IQuickActivate::QuickActivate -> %08X, pQaControl = %p"), hr, pQaControl);
+			
+			std::basic_stringstream<TCHAR> o2;
+
+			o2 << "{ ";
+			o2 << std::hex;
+			o2 << "dwMiscStatus = " << pQaControl->dwMiscStatus << ", ";
+			o2 << "dwViewStatus = " << pQaControl->dwViewStatus << ", ";
+			o2 << "dwEventCookie = " << pQaControl->dwEventCookie << ", ";
+			o2 << "dwPropNotifyCookie = " << pQaControl->dwPropNotifyCookie << ", ";
+			o2 << "dwPointerActivationPolicy = " << pQaControl->dwPointerActivationPolicy << ", ";
+			o2 << std::dec;
+			o2 << "}";
+
+			dbgprintf(TEXT("IQuickActivate::QuickActivate -> %08X, QaControl = %s"), hr, o2.str().c_str());
+
 			return hr;
 		}
 
@@ -4764,7 +4827,7 @@ namespace
         virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void ** ppvObject)
 		{
 			HRESULT hr;
-			IUnknown * pvObject;
+			IUnknown * pvObject = NULL;
 			
 			dbgprintf(TEXT("IUnknown::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
 
@@ -4796,7 +4859,7 @@ namespace
 	else \
 	{ \
 		hr = E_NOINTERFACE; \
-		pvObject = (IUnknown *)(this); \
+		pvObject = NULL; \
 	}
 
 			QIBEGIN()
