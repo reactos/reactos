@@ -1901,8 +1901,30 @@ SendNotifyMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MSG AnsiMsg, UcMsg;
+  MSG KMMsg;
+  LRESULT Result;
+
+  AnsiMsg.hwnd = hWnd;
+  AnsiMsg.message = Msg;
+  AnsiMsg.wParam = wParam;
+  AnsiMsg.lParam = lParam;
+  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+    {
+      return FALSE;
+    }
+
+  if (! MsgiUMToKMMessage(&UcMsg, &KMMsg, TRUE))
+    {
+      MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+      return FALSE;
+    }
+  Result = NtUserSendNotifyMessage(KMMsg.hwnd, KMMsg.message,
+                                   KMMsg.wParam, KMMsg.lParam);
+  MsgiUMToKMCleanup(&UcMsg, &KMMsg);
+  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+
+  return Result;
 }
 
 
@@ -1917,8 +1939,22 @@ SendNotifyMessageW(
   WPARAM wParam,
   LPARAM lParam)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MSG UMMsg, KMMsg;
+  LRESULT Result;
+
+  UMMsg.hwnd = hWnd;
+  UMMsg.message = Msg;
+  UMMsg.wParam = wParam;
+  UMMsg.lParam = lParam;
+  if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
+    {
+      return FALSE;
+    }
+  Result = NtUserSendNotifyMessage(KMMsg.hwnd, KMMsg.message,
+                                   KMMsg.wParam, KMMsg.lParam);
+  MsgiUMToKMCleanup(&UMMsg, &KMMsg);
+
+  return Result;
 }
 
 

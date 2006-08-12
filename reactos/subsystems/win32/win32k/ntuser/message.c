@@ -1103,13 +1103,19 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
       /* Copy data if required */
       if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
       {
-         Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
-         if (! NT_SUCCESS(Status))
-         {
-            DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
-            ExFreePool(KernelMem);
-            return Status;
-         }
+
+         DPRINT1("Copy message to kernel from the User! %x from %x\n", KernelMem, UserModeMsg->lParam);
+         RtlCopyMemory(KernelMem, (PVOID) UserModeMsg->lParam, Size);
+         Status = STATUS_SUCCESS;
+ 
+
+//         Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
+//         if (! NT_SUCCESS(Status))
+//         {
+//            DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
+//            ExFreePool(KernelMem);
+//            return Status;
+//         }
       }
       else
       {
@@ -1700,16 +1706,98 @@ NtUserSendMessageCallback(HWND hWnd,
    return 0;
 }
 
+
+BOOL FASTCALL
+UserSendNotifyMessage(HWND hWnd,
+                      UINT Msg,
+                      WPARAM wParam,
+                      LPARAM lParam)
+{
+   BOOL Result = TRUE;
+   // Basicly the same as IntPostOrSendMessage
+   if (hWnd == HWND_BROADCAST) //Handle Broadcast
+   {
+      HWND *List;
+      PWINDOW_OBJECT DesktopWindow;
+      ULONG i;
+
+      DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+      List = IntWinListChildren(DesktopWindow);
+      
+      if (List != NULL)
+      {
+         for (i = 0; List[i]; i++)
+         {
+            UserSendNotifyMessage(List[i], Msg, wParam, lParam);
+         }
+         ExFreePool(List);
+      }
+   }
+   else
+   {
+     ULONG_PTR PResult;
+     PWINDOW_OBJECT Window;
+     NTSTATUS Status;
+     MSG UserModeMsg;
+     MSG KernelModeMsg;
+     PMSGMEMORY MsgMemoryEntry;
+
+      if(!(Window = UserGetWindowObject(hWnd))) return FALSE;
+
+      if(Window->MessageQueue != PsGetCurrentThreadWin32Thread()->MessageQueue)
+      { // Send message w/o waiting for it.
+         Result = UserPostMessage(hWnd, Msg, wParam, lParam);
+      }
+      else
+      { // Handle message and callback.
+         UserModeMsg.hwnd = hWnd;
+         UserModeMsg.message = Msg;
+         UserModeMsg.wParam = wParam;
+         UserModeMsg.lParam = lParam;
+         MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
+         Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
+         if (! NT_SUCCESS(Status))
+         {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return FALSE;
+         }
+         Result = co_IntSendMessageTimeoutSingle(
+                                   KernelModeMsg.hwnd, KernelModeMsg.message,
+                                   KernelModeMsg.wParam, KernelModeMsg.lParam,
+                                   SMTO_NORMAL, 0, &PResult);
+
+         Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
+         if (! NT_SUCCESS(Status))
+         {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return FALSE;
+         }
+      }
+   }
+   return Result;
+}
+
+
 BOOL STDCALL
 NtUserSendNotifyMessage(HWND hWnd,
                         UINT Msg,
                         WPARAM wParam,
                         LPARAM lParam)
 {
-   UNIMPLEMENTED;
+   DECLARE_RETURN(BOOL);
 
-   return 0;
+   DPRINT("EnterNtUserSendNotifyMessage\n");
+   UserEnterExclusive();
+
+   RETURN(UserSendNotifyMessage(hWnd, Msg, wParam, lParam));
+
+CLEANUP:
+   DPRINT("Leave NtUserSendNotifyMessage, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+
 }
+
 
 BOOL STDCALL
 NtUserWaitMessage(VOID)
