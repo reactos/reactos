@@ -30,8 +30,8 @@
 
 #include <w32k.h>
 
-#define NDEBUG
-#include <debug.h>
+//#define YDEBUG
+#include <wine/debug.h>
 
 /* WINDOWCLASS ***************************************************************/
 
@@ -826,6 +826,9 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
     PWINDOWCLASS Class = NULL;
     RTL_ATOM Atom;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("lpwcx=%p ClassName=%wZ MenuName=%wZ wpExtra=%p dwFlags=%08x Desktop=%p pi=%p\n",
+        lpwcx, ClassName, MenuName, wpExtra, dwFlags, Desktop, pi);
 
     if (!IntRegisterClassAtom(ClassName,
                               &Atom))
@@ -2100,12 +2103,19 @@ NtUserGetClassInfo(
     pi = GetW32ProcessInfo();
     if (pi == NULL)
     {
+        ERR("GetW32ProcessInfo() returned NULL!\n");
         goto Cleanup;
     }
     _SEH_TRY
     {
         /* probe the paramters */
         CapturedClassName = ProbeForReadUnicodeString(ClassName);
+
+        if (IS_ATOM(CapturedClassName.Buffer))
+            TRACE("hInst %p atom %04X lpWndClassEx %p Ansi %d\n", hInstance, CapturedClassName.Buffer, lpWndClassEx, Ansi);
+        else
+            TRACE("hInst %p class %wZ lpWndClassEx %p Ansi %d\n", hInstance, &CapturedClassName, lpWndClassEx, Ansi);
+
         if (CapturedClassName.Length & 1)
         {
             goto InvalidParameter;
@@ -2121,6 +2131,7 @@ NtUserGetClassInfo(
         {
             if (!IS_ATOM(CapturedClassName.Buffer))
             {
+                ERR("NtUserGetClassInfo() got ClassName instead of Atom!\n");
                 goto InvalidParameter;
             }
         }
@@ -2151,7 +2162,6 @@ InvalidParameter:
             if (Ret)
             {
                 lpWndClassEx->lpszClassName = CapturedClassName.Buffer;
-
                 /* FIXME - handle Class->Desktop == NULL!!!!! */
 
                 if (Class->MenuName != NULL &&
@@ -2168,6 +2178,7 @@ InvalidParameter:
 
                 if (!(Class->Global || Class->System) && hInstance == NULL)
                 {
+                    WARN("Tried to get information of a non-existing class\n");
                     SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
                     Ret = FALSE;
                 }
@@ -2175,6 +2186,7 @@ InvalidParameter:
          }
          else
          {
+            WARN("Tried to get information of a non-existing class\n");
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
          }
     }

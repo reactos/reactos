@@ -31,8 +31,8 @@
 
 #include <w32k.h>
 
-#define NDEBUG
-#include <debug.h>
+//#define YDEBUG
+#include <wine/debug.h>
 
 static
 VOID
@@ -1694,6 +1694,8 @@ IntUnmapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink = &PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    TRACE("DO %p\n");
+
     /* unmap if we're the last thread using the desktop */
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
@@ -1756,6 +1758,7 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
     }
 
     /* we're the first, map the heap */
+    DPRINT("Noone mapped the desktop heap %p yet, so - map it!\n", DesktopObject->hDesktopHeap);
     Offset.QuadPart = 0;
     Status = MmMapViewOfSection(DesktopObject->DesktopHeapSection,
                                 PsGetCurrentProcess(),
@@ -1769,7 +1772,7 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
                                 PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
     if (!NT_SUCCESS(Status))
     {
-        DbgPrint("Failed to map desktop\n");
+        DPRINT1("Failed to map desktop\n");
         return Status;
     }
 
@@ -1779,6 +1782,7 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
     {
         MmUnmapViewOfSection(PsGetCurrentProcess(),
                              UserBase);
+        DPRINT1("UserHeapAlloc() failed!\n");
         return STATUS_NO_MEMORY;
     }
 
@@ -1786,6 +1790,7 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
     HeapMapping->KernelMapping = (PVOID)DesktopObject->hDesktopHeap;
     HeapMapping->UserMapping = UserBase;
     HeapMapping->Count = 1;
+    *PrevLink = HeapMapping;
 
     ObReferenceObject(DesktopObject);
 
@@ -1812,6 +1817,7 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
     NTSTATUS Status;
     BOOL MapHeap;
 
+    DPRINT("IntSetThreadDesktop() DO=%p, FOF=%d\n", DesktopObject, FreeOnFailure);
     MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
     W32Thread = PsGetCurrentThreadWin32Thread();
 
