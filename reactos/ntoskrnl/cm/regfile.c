@@ -1564,6 +1564,11 @@ CmiDeleteValueFromKey(IN PEREGISTRY_HIVE RegistryHive,
   ULONG i;
   NTSTATUS Status;
 
+  if (KeyCell->ValueListOffset == -1)
+    {
+      return STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+
   ValueListCell = HvGetCell (RegistryHive->Hive, KeyCell->ValueListOffset);
 
   VERIFY_VALUE_LIST_CELL(ValueListCell);
