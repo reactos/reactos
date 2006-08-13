@@ -274,7 +274,15 @@ MoveFileWithProgressW (
            return FALSE;
         }
 
-	FileRename = alloca(sizeof(FILE_RENAME_INFORMATION) + DstPathU.Length);
+	FileRename = RtlAllocateHeap(
+		RtlGetProcessHeap(),
+		HEAP_ZERO_MEMORY,
+		sizeof(FILE_RENAME_INFORMATION) + DstPathU.Length);
+	if( !FileRename ) {
+		CloseHandle(hFile);
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
+	}
 	if( dwFlags & MOVEFILE_REPLACE_EXISTING ) {
 		FileRename->ReplaceIfExists = TRUE;
 	}
@@ -287,17 +295,15 @@ MoveFileWithProgressW (
         RtlFreeHeap (RtlGetProcessHeap (),
 		     0,
 		     DstPathU.Buffer);
-	/*
-	 * FIXME:
-	 *   Is the length the count of characters or the length of the buffer?
-	 */
-	FileRename->FileNameLength = DstPathU.Length / sizeof(WCHAR);
+
+	FileRename->FileNameLength = DstPathU.Length;
 	errCode = NtSetInformationFile (hFile,
 	                                &IoStatusBlock,
 	                                FileRename,
 	                                sizeof(FILE_RENAME_INFORMATION) + DstPathU.Length,
 	                                FileRenameInformation);
 	CloseHandle(hFile);
+	RtlFreeHeap(RtlGetProcessHeap(), 0, FileRename);
 
 	if (GetFileAttributesW(lpExistingFileName) & FILE_ATTRIBUTE_DIRECTORY)
 	{
@@ -325,12 +331,12 @@ MoveFileWithProgressW (
 		                      lpProgressRoutine,
 		                      lpData,
 		                      NULL,
-		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS);
+		                      (dwFlags & MOVEFILE_REPLACE_EXISTING) ? 0 : COPY_FILE_FAIL_IF_EXISTS);
  		    if (Result)
 		    {
 			/* Cleanup the source file */			
 	                Result = DeleteFileW (lpExistingFileName);
-		    } 
+		    }
                   }
 		 else
 		 {
