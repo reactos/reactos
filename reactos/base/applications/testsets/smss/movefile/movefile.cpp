@@ -83,10 +83,12 @@ int Generate()
 	char sBuf[255];
 	DWORD dwSize;
 	HANDLE hFile = NULL;
+	BOOL fReturnValue;
 
+	char *szxReplacedFile = "c:\\testFileIsReplaced";
+	char *szxMovedFileWithRepl = "c:\\testFileShouldBeMovedW";
 	char *szxMovedFile = "c:\\testFileShouldBeMoved";
 	char *szxNewMovedFile = "c:\\testFileIsMoved";
-
 	char *szxDeletedFile = "c:\\testFileShouldBeDeleted";
 
 	memset(sBuf, 0xaa, sizeof(sBuf));
@@ -123,15 +125,44 @@ int Generate()
 	WriteFile(hFile, sBuf, sizeof(sBuf), &dwSize, NULL);
 	CloseHandle(hFile);
 
+	hFile = CreateFile(
+		szxReplacedFile,
+		FILE_ALL_ACCESS,
+		0,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL);
+	if(NULL == hFile) {
+		printf("Can't create the %s file, err=%ld \n", szxReplacedFile, GetLastError());
+		return 1;
+	}
+	WriteFile(hFile, sBuf, sizeof(sBuf), &dwSize, NULL);
+	CloseHandle(hFile);
 
-	BOOL fReturnValue;
+	
+	hFile = CreateFile(
+		szxMovedFileWithRepl,
+		FILE_ALL_ACCESS,
+		0,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL);
+	if(NULL == hFile) {
+		printf("Can't create the %s file, err=%ld \n", szxMovedFileWithRepl, GetLastError());
+		return 1;
+	}
+	WriteFile(hFile, sBuf, sizeof(sBuf), &dwSize, NULL);
+	CloseHandle(hFile);
+
 
 	fReturnValue = MoveFileEx(
 		szxDeletedFile,
 		NULL,
 		MOVEFILE_DELAY_UNTIL_REBOOT);
 	if( !fReturnValue ) {
-		printf("Can't move the %s file, err=%ld \n", szxMovedFile, GetLastError());
+		printf("Can't move the %s file, err=%ld \n", szxDeletedFile, GetLastError());
 		return 1;
 	}
 
@@ -143,6 +174,17 @@ int Generate()
 		MOVEFILE_DELAY_UNTIL_REBOOT);
 	if( !fReturnValue ) {
 		printf("Can't move the %s file, err=%ld \n", szxMovedFile, GetLastError());
+		return 1;
+	}
+
+	ShowRegValue();
+
+	fReturnValue = MoveFileEx(
+		szxMovedFileWithRepl,
+		szxReplacedFile,
+		MOVEFILE_DELAY_UNTIL_REBOOT|MOVEFILE_REPLACE_EXISTING);
+	if( !fReturnValue ) {
+		printf("Can't move the %s file, err=%ld \n", szxMovedFileWithRepl, GetLastError());
 		return 1;
 	}
 
