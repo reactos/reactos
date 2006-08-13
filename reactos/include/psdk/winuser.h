@@ -1435,6 +1435,7 @@ extern "C" {
 #define WM_MENURBUTTONUP 290
 #endif
 #define WM_MENUCHAR 288
+#define WM_MENUCOMMAND 294
 #define WM_MENUSELECT 287
 #define WM_NEXTMENU 531
 #define WM_MOVE 3

@@ -2387,7 +2387,12 @@ MenuExecFocusedItem(MTRACKER *Mt, PROSMENUINFO MenuInfo, UINT Flags)
                 }
               else
                 {
-                  PostMessageW(Mt->OwnerWnd, WM_COMMAND, ItemInfo.wID, 0);
+                  if (MenuInfo->dwStyle & MNS_NOTIFYBYPOS)
+                      PostMessageW(Mt->OwnerWnd, WM_MENUCOMMAND,
+                                                 MenuInfo->FocusedItem,
+                                                       (LPARAM)MenuInfo->Self);
+                  else
+                    PostMessageW(Mt->OwnerWnd, WM_COMMAND, ItemInfo.wID, 0);
                 }
             }
           wID = ItemInfo.wID;
