@@ -103,7 +103,7 @@ NdisMQueryAdapterResources(
   ULONG ResourceListSize;
 
   PAGED_CODE();
-  ASSERT((Status && ResourceList) || *BufferSize != 0);
+  ASSERT((Status && ResourceList) || (BufferSize && *BufferSize == 0));
 
   NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
