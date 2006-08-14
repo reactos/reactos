@@ -11,7 +11,7 @@
 
 static BOOLEAN CMAPI
 HvpWriteLog(
-   PREGISTRY_HIVE RegistryHive)
+   PHHIVE RegistryHive)
 {
    ULONG FileOffset;
    ULONG BufferSize;
@@ -33,7 +33,7 @@ HvpWriteLog(
       return FALSE;
    }
 
-   BitmapSize = RegistryHive->DirtyBitmap.SizeOfBitMap;
+   BitmapSize = RegistryHive->DirtyVector.SizeOfBitMap;
    BufferSize = HV_LOG_HEADER_SIZE + sizeof(ULONG) + BitmapSize;
    BufferSize = ROUND_UP(BufferSize, HV_BLOCK_SIZE);
 
@@ -56,7 +56,7 @@ HvpWriteLog(
    Ptr = Buffer + HV_LOG_HEADER_SIZE;
    RtlCopyMemory(Ptr, "DIRT", 4);
    Ptr += 4;
-   RtlCopyMemory(Ptr, RegistryHive->DirtyBitmap.Buffer, BitmapSize);
+   RtlCopyMemory(Ptr, RegistryHive->DirtyVector.Buffer, BitmapSize);
 
    /* Write hive block and block bitmap */
    Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_LOG,
@@ -71,16 +71,16 @@ HvpWriteLog(
    /* Write dirty blocks */
    FileOffset = BufferSize;
    BlockIndex = 0;
-   while (BlockIndex < RegistryHive->Storage[HvStable].BlockListSize)
+   while (BlockIndex < RegistryHive->Storage[HvStable].Length)
    {
       LastIndex = BlockIndex;
-      BlockIndex = RtlFindSetBits(&RegistryHive->DirtyBitmap, 1, BlockIndex);
+      BlockIndex = RtlFindSetBits(&RegistryHive->DirtyVector, 1, BlockIndex);
       if (BlockIndex == ~0 || BlockIndex < LastIndex)
       {
          break;
       }
 
-      BlockPtr = RegistryHive->Storage[HvStable].BlockList[BlockIndex].Block;
+      BlockPtr = (PVOID)RegistryHive->Storage[HvStable].BlockList[BlockIndex].Block;
 
       /* Write hive block */
       Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_LOG,
@@ -135,7 +135,7 @@ HvpWriteLog(
 
 static BOOLEAN CMAPI
 HvpWriteHive(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    BOOLEAN OnlyDirty)
 {
    ULONG FileOffset;
@@ -163,26 +163,26 @@ HvpWriteHive(
    /* Write hive block */
    Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_PRIMARY,
                                      0, RegistryHive->HiveHeader,
-                                     sizeof(HIVE_HEADER));
+                                     sizeof(HBASE_BLOCK));
    if (!Success)
    {
       return FALSE;
    }
 
    BlockIndex = 0;
-   while (BlockIndex < RegistryHive->Storage[HvStable].BlockListSize)
+   while (BlockIndex < RegistryHive->Storage[HvStable].Length)
    {
       if (OnlyDirty)
       {
          LastIndex = BlockIndex;
-         BlockIndex = RtlFindSetBits(&RegistryHive->DirtyBitmap, 1, BlockIndex);
+         BlockIndex = RtlFindSetBits(&RegistryHive->DirtyVector, 1, BlockIndex);
          if (BlockIndex == ~0 || BlockIndex < LastIndex)
          {
             break;
          }
       }
 
-      BlockPtr = RegistryHive->Storage[HvStable].BlockList[BlockIndex].Block;
+      BlockPtr = (PVOID)RegistryHive->Storage[HvStable].BlockList[BlockIndex].Block;
       FileOffset = (ULONGLONG)(BlockIndex + 1) * (ULONGLONG)HV_BLOCK_SIZE;
 
       /* Write hive block */
@@ -211,7 +211,7 @@ HvpWriteHive(
    /* Write hive block */
    Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_PRIMARY,
                                      0, RegistryHive->HiveHeader,
-                                     sizeof(HIVE_HEADER));
+                                     sizeof(HBASE_BLOCK));
    if (!Success)
    {
       return FALSE;
@@ -228,11 +228,11 @@ HvpWriteHive(
 
 BOOLEAN CMAPI
 HvSyncHive(
-   PREGISTRY_HIVE RegistryHive)
+   PHHIVE RegistryHive)
 {
    ASSERT(RegistryHive->ReadOnly == FALSE);
 
-   if (RtlFindSetBits(&RegistryHive->DirtyBitmap, 1, 0) == ~0)
+   if (RtlFindSetBits(&RegistryHive->DirtyVector, 1, 0) == ~0)
    {
       return TRUE;
    }
@@ -253,14 +253,14 @@ HvSyncHive(
    }
 
    /* Clear dirty bitmap. */
-   RtlClearAllBits(&RegistryHive->DirtyBitmap);
+   RtlClearAllBits(&RegistryHive->DirtyVector);
 
    return TRUE;
 }
 
 BOOLEAN CMAPI
 HvWriteHive(
-   PREGISTRY_HIVE RegistryHive)
+   PHHIVE RegistryHive)
 {
    ASSERT(RegistryHive->ReadOnly == FALSE);
 

@@ -17,7 +17,7 @@
 
 BOOLEAN CMAPI
 HvpVerifyHiveHeader(
-   PHIVE_HEADER HiveHeader)
+   PHBASE_BLOCK HiveHeader)
 {
    if (HiveHeader->Signature != HV_SIGNATURE ||
        HiveHeader->Major != HV_MAJOR_VER ||
@@ -53,7 +53,7 @@ HvpVerifyHiveHeader(
 
 VOID CMAPI
 HvpFreeHiveBins(
-   PREGISTRY_HIVE Hive)
+   PHHIVE Hive)
 {        	
    ULONG i;
    PHBIN Bin;
@@ -62,20 +62,20 @@ HvpFreeHiveBins(
    for (Storage = HvStable; Storage < HvMaxStorageType; Storage++)
    {
       Bin = NULL;
-      for (i = 0; i < Hive->Storage[Storage].BlockListSize; i++)
+      for (i = 0; i < Hive->Storage[Storage].Length; i++)
       {
-         if (Hive->Storage[Storage].BlockList[i].Bin == NULL)
+         if (Hive->Storage[Storage].BlockList[i].Bin == (ULONG_PTR)NULL)
             continue;
-         if (Hive->Storage[Storage].BlockList[i].Bin != Bin)
+         if (Hive->Storage[Storage].BlockList[i].Bin != (ULONG_PTR)Bin)
          {
-            Bin = Hive->Storage[Storage].BlockList[i].Bin;
-            Hive->Free(Hive->Storage[Storage].BlockList[i].Bin);
+            Bin = (PHBIN)Hive->Storage[Storage].BlockList[i].Bin;
+            Hive->Free((PHBIN)Hive->Storage[Storage].BlockList[i].Bin);
          }
-         Hive->Storage[Storage].BlockList[i].Bin = NULL;
-         Hive->Storage[Storage].BlockList[i].Block = NULL;
+         Hive->Storage[Storage].BlockList[i].Bin = (ULONG_PTR)NULL;
+         Hive->Storage[Storage].BlockList[i].Block = (ULONG_PTR)NULL;
       }
 
-      if (Hive->Storage[Storage].BlockListSize)
+      if (Hive->Storage[Storage].Length)
          Hive->Free(Hive->Storage[Storage].BlockList);
    }
 }
@@ -91,15 +91,15 @@ HvpFreeHiveBins(
 
 NTSTATUS CMAPI
 HvpCreateHive(
-   PREGISTRY_HIVE RegistryHive)
+   PHHIVE RegistryHive)
 {
-   PHIVE_HEADER HiveHeader;
+   PHBASE_BLOCK HiveHeader;
    ULONG Index;
 
-   HiveHeader = RegistryHive->Allocate(sizeof(HIVE_HEADER), FALSE);
+   HiveHeader = RegistryHive->Allocate(sizeof(HBASE_BLOCK), FALSE);
    if (HiveHeader == NULL)
       return STATUS_NO_MEMORY;
-   RtlZeroMemory(HiveHeader, sizeof(HIVE_HEADER));
+   RtlZeroMemory(HiveHeader, sizeof(HBASE_BLOCK));
    HiveHeader->Signature = HV_SIGNATURE;
    HiveHeader->Major = HV_MAJOR_VER;
    HiveHeader->Minor = HV_MINOR_VER;
@@ -116,10 +116,10 @@ HvpCreateHive(
    RegistryHive->HiveHeader = HiveHeader;
    for (Index = 0; Index < 24; Index++)
    {
-      RegistryHive->Storage[HvStable].FreeListOffset[Index] = HCELL_NULL;
-      RegistryHive->Storage[HvVolatile].FreeListOffset[Index] = HCELL_NULL;
+      RegistryHive->Storage[HvStable].FreeDisplay[Index] = HCELL_NULL;
+      RegistryHive->Storage[HvVolatile].FreeDisplay[Index] = HCELL_NULL;
    }
-   RtlInitializeBitMap(&RegistryHive->DirtyBitmap, NULL, 0);
+   RtlInitializeBitMap(&RegistryHive->DirtyVector, NULL, 0);
 
    return STATUS_SUCCESS;
 }
@@ -136,7 +136,7 @@ HvpCreateHive(
 
 NTSTATUS CMAPI
 HvpInitializeMemoryHive(
-   PREGISTRY_HIVE Hive,
+   PHHIVE Hive,
    ULONG_PTR ChunkBase,
    SIZE_T ChunkSize)
 {
@@ -146,30 +146,30 @@ HvpInitializeMemoryHive(
    ULONG BitmapSize;
    PULONG BitmapBuffer;
    
-   if (ChunkSize < sizeof(HIVE_HEADER) ||
-       !HvpVerifyHiveHeader((PHIVE_HEADER)ChunkBase))
+   if (ChunkSize < sizeof(HBASE_BLOCK) ||
+       !HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
    {
-      DPRINT1("Registry is corrupt: ChunkSize %d < sizeof(HIVE_HEADER) %d, "
-          "or HvpVerifyHiveHeader() failed\n", ChunkSize, sizeof(HIVE_HEADER));
+      DPRINT1("Registry is corrupt: ChunkSize %d < sizeof(HBASE_BLOCK) %d, "
+          "or HvpVerifyHiveHeader() failed\n", ChunkSize, sizeof(HBASE_BLOCK));
       return STATUS_REGISTRY_CORRUPT;
    }
 
-   Hive->HiveHeader = Hive->Allocate(sizeof(HIVE_HEADER), FALSE);
+   Hive->HiveHeader = Hive->Allocate(sizeof(HBASE_BLOCK), FALSE);
    if (Hive->HiveHeader == NULL)
    {
       return STATUS_NO_MEMORY;
    }
-   RtlCopyMemory(Hive->HiveHeader, (PVOID)ChunkBase, sizeof(HIVE_HEADER));
+   RtlCopyMemory(Hive->HiveHeader, (PVOID)ChunkBase, sizeof(HBASE_BLOCK));
 
    /*
     * Build a block list from the in-memory chunk and copy the data as
     * we go.
     */
    
-   Hive->Storage[HvStable].BlockListSize = (ChunkSize / HV_BLOCK_SIZE) - 1;
+   Hive->Storage[HvStable].Length = (ChunkSize / HV_BLOCK_SIZE) - 1;
    Hive->Storage[HvStable].BlockList =
-      Hive->Allocate(Hive->Storage[HvStable].BlockListSize *
-                     sizeof(BLOCK_LIST_ENTRY), FALSE);
+      Hive->Allocate(Hive->Storage[HvStable].Length *
+                     sizeof(HMAP_ENTRY), FALSE);
    if (Hive->Storage[HvStable].BlockList == NULL)
    {
       DPRINT1("Allocating block list failed\n");
@@ -177,7 +177,7 @@ HvpInitializeMemoryHive(
       return STATUS_NO_MEMORY;
    }
 
-   for (BlockIndex = 0; BlockIndex < Hive->Storage[HvStable].BlockListSize; )
+   for (BlockIndex = 0; BlockIndex < Hive->Storage[HvStable].Length; )
    {
       Bin = (PHBIN)((ULONG_PTR)ChunkBase + (BlockIndex + 1) * HV_BLOCK_SIZE);
       if (Bin->Signature != HV_BIN_SIGNATURE ||
@@ -196,8 +196,8 @@ HvpInitializeMemoryHive(
          return STATUS_NO_MEMORY;
       }
 
-      Hive->Storage[HvStable].BlockList[BlockIndex].Bin = NewBin;
-      Hive->Storage[HvStable].BlockList[BlockIndex].Block = NewBin;
+      Hive->Storage[HvStable].BlockList[BlockIndex].Bin = (ULONG_PTR)NewBin;
+      Hive->Storage[HvStable].BlockList[BlockIndex].Block = (ULONG_PTR)NewBin;
 
       RtlCopyMemory(NewBin, Bin, Bin->BinSize);
 
@@ -205,9 +205,9 @@ HvpInitializeMemoryHive(
       {
          for (i = 1; i < Bin->BinSize / HV_BLOCK_SIZE; i++)
          {
-            Hive->Storage[HvStable].BlockList[BlockIndex + i].Bin = NewBin;
+            Hive->Storage[HvStable].BlockList[BlockIndex + i].Bin = (ULONG_PTR)NewBin;
             Hive->Storage[HvStable].BlockList[BlockIndex + i].Block =
-               (PVOID)((ULONG_PTR)NewBin + (i * HV_BLOCK_SIZE));
+               ((ULONG_PTR)NewBin + (i * HV_BLOCK_SIZE));
          }
       }
 
@@ -221,7 +221,7 @@ HvpInitializeMemoryHive(
       return STATUS_NO_MEMORY;
    }
 
-   BitmapSize = ROUND_UP(Hive->Storage[HvStable].BlockListSize,
+   BitmapSize = ROUND_UP(Hive->Storage[HvStable].Length,
                          sizeof(ULONG) * 8) / 8;
    BitmapBuffer = (PULONG)Hive->Allocate(BitmapSize, TRUE);
    if (BitmapBuffer == NULL)
@@ -231,8 +231,8 @@ HvpInitializeMemoryHive(
       return STATUS_NO_MEMORY;
    }
 
-   RtlInitializeBitMap(&Hive->DirtyBitmap, BitmapBuffer, BitmapSize * 8);
-   RtlClearAllBits(&Hive->DirtyBitmap);
+   RtlInitializeBitMap(&Hive->DirtyVector, BitmapBuffer, BitmapSize * 8);
+   RtlClearAllBits(&Hive->DirtyVector);
 
    return STATUS_SUCCESS;
 }
@@ -249,17 +249,17 @@ HvpInitializeMemoryHive(
 
 NTSTATUS CMAPI
 HvpInitializeMemoryInplaceHive(
-   PREGISTRY_HIVE Hive,
+   PHHIVE Hive,
    ULONG_PTR ChunkBase,
    SIZE_T ChunkSize)
 {
-   if (ChunkSize < sizeof(HIVE_HEADER) ||
-       !HvpVerifyHiveHeader((PHIVE_HEADER)ChunkBase))
+   if (ChunkSize < sizeof(HBASE_BLOCK) ||
+       !HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
    {
       return STATUS_REGISTRY_CORRUPT;
    }
 
-   Hive->HiveHeader = (PHIVE_HEADER)ChunkBase;
+   Hive->HiveHeader = (PHBASE_BLOCK)ChunkBase;
    Hive->ReadOnly = TRUE;
    Hive->Flat = TRUE;
 
@@ -299,29 +299,29 @@ HvpInitializeMemoryInplaceHive(
 
 NTSTATUS CMAPI
 HvInitialize(
-   PREGISTRY_HIVE *RegistryHive,
+   PHHIVE *RegistryHive,
    ULONG Operation,
    ULONG_PTR ChunkBase,
    SIZE_T ChunkSize,
-   PHV_ALLOCATE Allocate,
-   PHV_FREE Free,
-   PHV_FILE_READ FileRead,
-   PHV_FILE_WRITE FileWrite,
-   PHV_FILE_SET_SIZE FileSetSize,
-   PHV_FILE_FLUSH FileFlush,
+   PALLOCATE_ROUTINE Allocate,
+   PFREE_ROUTINE Free,
+   PFILE_READ_ROUTINE FileRead,
+   PFILE_WRITE_ROUTINE FileWrite,
+   PFILE_SET_SIZE_ROUTINE FileSetSize,
+   PFILE_FLUSH_ROUTINE FileFlush,
    PVOID Opaque)
 {
    NTSTATUS Status;
-   PREGISTRY_HIVE Hive;
+   PHHIVE Hive;
 
    /*
     * Create a new hive structure that will hold all the maintenance data.
     */
 
-   Hive = Allocate(sizeof(REGISTRY_HIVE), TRUE);
+   Hive = Allocate(sizeof(HHIVE), TRUE);
    if (Hive == NULL)
       return STATUS_NO_MEMORY;
-   RtlZeroMemory(Hive, sizeof(REGISTRY_HIVE));
+   RtlZeroMemory(Hive, sizeof(HHIVE));
 
    Hive->Allocate = Allocate;
    Hive->Free = Free;
@@ -370,14 +370,14 @@ HvInitialize(
 
 VOID CMAPI 
 HvFree(
-   PREGISTRY_HIVE RegistryHive)
+   PHHIVE RegistryHive)
 {
    if (!RegistryHive->ReadOnly)
    {
       /* Release hive bitmap */
-      if (RegistryHive->DirtyBitmap.Buffer)
+      if (RegistryHive->DirtyVector.Buffer)
       {
-         RegistryHive->Free(RegistryHive->DirtyBitmap.Buffer);
+         RegistryHive->Free(RegistryHive->DirtyVector.Buffer);
       }
 
       HvpFreeHiveBins(RegistryHive);

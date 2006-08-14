@@ -44,7 +44,7 @@ CmpFree(
 
 BOOLEAN CMAPI
 CmpFileRead(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG FileType,
    ULONG FileOffset,
    PVOID Buffer,
@@ -65,7 +65,7 @@ CmpFileRead(
 
 BOOLEAN CMAPI
 CmpFileWrite(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG FileType,
    ULONG FileOffset,
    PVOID Buffer,
@@ -86,7 +86,7 @@ CmpFileWrite(
 
 BOOLEAN CMAPI
 CmpFileSetSize(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG FileType,
    ULONG FileSize)
 {
@@ -119,7 +119,7 @@ CmpFileSetSize(
 
 BOOLEAN CMAPI
 CmpFileFlush(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG FileType)
 {
    PEREGISTRY_HIVE CmHive = RegistryHive->Opaque;
@@ -136,7 +136,7 @@ static NTSTATUS
 CmiCreateNewRegFile(HANDLE FileHandle)
 {
   EREGISTRY_HIVE CmHive;
-  PREGISTRY_HIVE Hive;
+  PHHIVE Hive;
   NTSTATUS Status;
 
   CmHive.HiveHandle = FileHandle;
@@ -190,8 +190,8 @@ CmiCheckAndFixHive(PEREGISTRY_HIVE RegistryHive)
   IO_STATUS_BLOCK IoStatusBlock;
   HANDLE HiveHandle = INVALID_HANDLE_VALUE;
   HANDLE LogHandle = INVALID_HANDLE_VALUE;
-  PHIVE_HEADER HiveHeader = NULL;
-  PHIVE_HEADER LogHeader = NULL;
+  PHBASE_BLOCK HiveHeader = NULL;
+  PHBASE_BLOCK LogHeader = NULL;
   LARGE_INTEGER FileOffset;
   ULONG FileSize;
   ULONG BufferSize;
@@ -260,7 +260,7 @@ CmiCheckAndFixHive(PEREGISTRY_HIVE RegistryHive)
 
   /* Allocate hive header */
   HiveHeader = ExAllocatePool(PagedPool,
-			      sizeof(HIVE_HEADER));
+			      sizeof(HBASE_BLOCK));
   if (HiveHeader == NULL)
     {
       DPRINT("ExAllocatePool() failed\n");
@@ -276,7 +276,7 @@ CmiCheckAndFixHive(PEREGISTRY_HIVE RegistryHive)
 		      0,
 		      &IoStatusBlock,
 		      HiveHeader,
-		      sizeof(HIVE_HEADER),
+		      sizeof(HBASE_BLOCK),
 		      &FileOffset,
 		      0);
   if (!NT_SUCCESS(Status))
@@ -810,7 +810,7 @@ CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive)
 
   ASSERT(!IsNoFileHive(RegistryHive));
 
-  if (RtlFindSetBits(&RegistryHive->Hive->DirtyBitmap, 1, 0) == ~0)
+  if (RtlFindSetBits(&RegistryHive->Hive->DirtyVector, 1, 0) == ~0)
     {
       return(STATUS_SUCCESS);
     }

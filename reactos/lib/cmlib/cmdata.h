@@ -20,6 +20,17 @@
 
 #include <pshpack1.h>
 
+typedef struct _CM_VIEW_OF_FILE
+{
+    LIST_ENTRY LRUViewList;
+    LIST_ENTRY PinViewList;
+    ULONG FileOffset;
+    ULONG Size;
+    PULONG ViewAddress;
+    PVOID Bcb;
+    ULONG UseCount;
+} CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
+
 typedef struct _KEY_CELL
 {
    /* Key cell identifier "kn" (0x6b6e) */
@@ -34,25 +45,25 @@ typedef struct _KEY_CELL
    /* ? */
    ULONG UnUsed1;
 
-   /* Block offset of parent key cell */
+   /* BlockAddress offset of parent key cell */
    HCELL_INDEX ParentKeyOffset;
 
    /* Count of sub keys for the key in this key cell (stable & volatile) */
    ULONG NumberOfSubKeys[HvMaxStorageType];
 
-   /* Block offset of has table for FIXME: subkeys/values? (stable & volatile) */
+   /* BlockAddress offset of has table for FIXME: subkeys/values? (stable & volatile) */
    HCELL_INDEX HashTableOffset[HvMaxStorageType];
 
    /* Count of values contained in this key cell */
    ULONG NumberOfValues;
 
-   /* Block offset of VALUE_LIST_CELL */
+   /* BlockAddress offset of VALUE_LIST_CELL */
    HCELL_INDEX ValueListOffset;
 
-   /* Block offset of security cell */
+   /* BlockAddress offset of security cell */
    HCELL_INDEX SecurityKeyOffset;
 
-   /* Block offset of registry key class */
+   /* BlockAddress offset of registry key class */
    HCELL_INDEX ClassNameOffset;
 
    /* ? */

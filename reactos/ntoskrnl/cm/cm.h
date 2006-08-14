@@ -40,7 +40,7 @@
 typedef struct _EREGISTRY_HIVE
 {
   LIST_ENTRY  HiveList;
-  PREGISTRY_HIVE  Hive;
+  PHHIVE  Hive;
   UNICODE_STRING  HiveFileName;
   UNICODE_STRING  LogFileName;
   PSECURITY_CELL  RootSecurityCell;
@@ -411,7 +411,7 @@ CmpFree(
 
 BOOLEAN CMAPI
 CmpFileRead(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG FileType,
    ULONG FileOffset,
    PVOID Buffer,
@@ -419,7 +419,7 @@ CmpFileRead(
 
 BOOLEAN CMAPI
 CmpFileWrite(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG FileType,
    ULONG FileOffset,
    PVOID Buffer,
@@ -427,29 +427,29 @@ CmpFileWrite(
 
 BOOLEAN CMAPI
 CmpFileSetSize(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG FileType,
    ULONG FileSize);
 
 BOOLEAN CMAPI
 CmpFileFlush(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    ULONG FileType);
 
 #if 0
-static __inline PVOID xHvGetCell(char *file, int line, PREGISTRY_HIVE Hive, HCELL_INDEX Cell)
+static __inline PVOID xHvGetCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)
 {
    DPRINT1("xHvGetCell @ %s:%d %x @ %x\n", file, line, Cell, Hive);
    return HvGetCell(Hive, Cell);
 }
 
-static __inline VOID xHvFreeCell(char *file, int line, PREGISTRY_HIVE Hive, HCELL_INDEX Cell)
+static __inline VOID xHvFreeCell(char *file, int line, PHHIVE Hive, HCELL_INDEX Cell)
 {
    DPRINT1("xHvFreeCell @ %s:%d %x @ %x\n", file, line, Cell, Hive);
    HvFreeCell(Hive, Cell);
 }
 
-static __inline HCELL_INDEX xHvAllocateCell(char *file, int line, PREGISTRY_HIVE Hive, SIZE_T Size)
+static __inline HCELL_INDEX xHvAllocateCell(char *file, int line, PHHIVE Hive, SIZE_T Size)
 {
    HCELL_INDEX Offset = HvAllocateCell(Hive, Size);
    DPRINT1("xHvAllocateCell @ %s:%d (%x) %x @ %x\n", file, line, Size, Offset, Hive);

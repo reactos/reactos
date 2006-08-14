@@ -42,7 +42,7 @@ CmpFree (PVOID Ptr)
 
 
 static BOOLEAN
-CmiAllocateHashTableCell (PREGISTRY_HIVE Hive,
+CmiAllocateHashTableCell (PHHIVE Hive,
 			  PHCELL_INDEX HBOffset,
 			  ULONG SubKeyCount)
 {
@@ -66,7 +66,7 @@ CmiAllocateHashTableCell (PREGISTRY_HIVE Hive,
 
 
 static BOOLEAN
-CmiAddKeyToParentHashTable (PREGISTRY_HIVE Hive,
+CmiAddKeyToParentHashTable (PHHIVE Hive,
 			    HCELL_INDEX ParentKeyOffset,
 			    PKEY_CELL NewKeyCell,
 			    HCELL_INDEX NKBOffset)
@@ -96,7 +96,7 @@ CmiAddKeyToParentHashTable (PREGISTRY_HIVE Hive,
 
 
 static BOOLEAN
-CmiAllocateValueListCell (PREGISTRY_HIVE Hive,
+CmiAllocateValueListCell (PHHIVE Hive,
 			  PHCELL_INDEX ValueListOffset,
 			  ULONG ValueCount)
 {
@@ -116,7 +116,7 @@ CmiAllocateValueListCell (PREGISTRY_HIVE Hive,
 
 
 static BOOLEAN
-CmiAllocateValueCell(PREGISTRY_HIVE Hive,
+CmiAllocateValueCell(PHHIVE Hive,
 		     PVALUE_CELL *ValueCell,
 		     HCELL_INDEX *ValueCellOffset,
 		     PWCHAR ValueName)
@@ -175,7 +175,7 @@ CmiAllocateValueCell(PREGISTRY_HIVE Hive,
 
 
 static BOOLEAN
-CmiAddValueToKeyValueList(PREGISTRY_HIVE Hive,
+CmiAddValueToKeyValueList(PHHIVE Hive,
 			  HCELL_INDEX KeyCellOffset,
 			  HCELL_INDEX ValueCellOffset)
 {
@@ -203,7 +203,7 @@ CmiAddValueToKeyValueList(PREGISTRY_HIVE Hive,
 }
 
 static BOOLEAN
-CmiExportValue (PREGISTRY_HIVE Hive,
+CmiExportValue (PHHIVE Hive,
 		HCELL_INDEX KeyCellOffset,
 		FRLDRHKEY Key,
 		PVALUE Value)
@@ -277,7 +277,7 @@ CmiExportValue (PREGISTRY_HIVE Hive,
 
 
 static BOOLEAN
-CmiExportSubKey (PREGISTRY_HIVE Hive,
+CmiExportSubKey (PHHIVE Hive,
 		 HCELL_INDEX ParentKeyOffset,
 		 FRLDRHKEY ParentKey,
 		 FRLDRHKEY Key)
@@ -427,7 +427,7 @@ CmiExportSubKey (PREGISTRY_HIVE Hive,
 
 
 static BOOLEAN
-CmiExportHive (PREGISTRY_HIVE Hive,
+CmiExportHive (PHHIVE Hive,
 	       PCWSTR KeyName)
 {
   PKEY_CELL KeyCell;
@@ -520,7 +520,7 @@ CmiExportHive (PREGISTRY_HIVE Hive,
 
 
 static BOOLEAN
-RegImportValue (PREGISTRY_HIVE Hive,
+RegImportValue (PHHIVE Hive,
 		PVALUE_CELL ValueCell,
 		FRLDRHKEY Key)
 {
@@ -599,7 +599,7 @@ RegImportValue (PREGISTRY_HIVE Hive,
 
 
 static BOOLEAN
-RegImportSubKey(PREGISTRY_HIVE Hive,
+RegImportSubKey(PHHIVE Hive,
 		PKEY_CELL KeyCell,
 		FRLDRHKEY ParentKey)
 {
@@ -707,7 +707,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
   FRLDRHKEY SystemKey;
   ULONG i;
   LONG Error;
-  PREGISTRY_HIVE Hive;
+  PHHIVE Hive;
   NTSTATUS Status;
 
   DbgPrint((DPRINT_REGISTRY, "RegImportBinaryHive(%x, %u) called\n",ChunkBase,ChunkSize));
@@ -769,7 +769,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
 
 
 static VOID
-CmiWriteHive(PREGISTRY_HIVE Hive,
+CmiWriteHive(PHHIVE Hive,
              PCHAR ChunkBase,
              ULONG* ChunkSize)
 {
@@ -781,11 +781,11 @@ CmiWriteHive(PREGISTRY_HIVE Hive,
   Size = HV_BLOCK_SIZE;
 
   Bin = NULL;
-  for (i = 0; i < Hive->Storage[HvStable].BlockListSize; i++)
+  for (i = 0; i < Hive->Storage[HvStable].Length; i++)
     {
-      if (Hive->Storage[HvStable].BlockList[i].Bin != Bin)
+      if (Hive->Storage[HvStable].BlockList[i].Bin != (ULONG_PTR)Bin)
 	{
-	  Bin = Hive->Storage[HvStable].BlockList[i].Bin;
+	  Bin = (PHBIN)Hive->Storage[HvStable].BlockList[i].Bin;
 	  memcpy (ChunkBase + (i + 1) * HV_BLOCK_SIZE,
 	          Bin, Bin->BinSize);
 	  Size += Bin->BinSize;
@@ -803,7 +803,7 @@ RegExportBinaryHive(PCWSTR KeyName,
 		    PCHAR ChunkBase,
 		    ULONG* ChunkSize)
 {
-  PREGISTRY_HIVE Hive;
+  PHHIVE Hive;
   NTSTATUS Status;
 
   DbgPrint((DPRINT_REGISTRY, "Creating binary hardware hive\n"));

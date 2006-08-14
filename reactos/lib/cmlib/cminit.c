@@ -9,7 +9,7 @@
 
 BOOLEAN CMAPI
 CmCreateRootNode(
-   PREGISTRY_HIVE Hive,
+   PHHIVE Hive,
    PCWSTR Name)
 {
    PKEY_CELL KeyCell;
@@ -46,7 +46,7 @@ CmCreateRootNode(
 
 static VOID CMAPI
 CmpPrepareKey(
-   PREGISTRY_HIVE RegistryHive,
+   PHHIVE RegistryHive,
    PKEY_CELL KeyCell)
 {
    PKEY_CELL SubKeyCell;
@@ -73,7 +73,7 @@ CmpPrepareKey(
 
 VOID CMAPI
 CmPrepareHive(
-   PREGISTRY_HIVE RegistryHive)
+   PHHIVE RegistryHive)
 { 
    PKEY_CELL RootCell;
 

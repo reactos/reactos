@@ -15,7 +15,7 @@
 
 ULONG CMAPI
 HvpHiveHeaderChecksum(
-   PHIVE_HEADER HiveHeader)
+   PHBASE_BLOCK HiveHeader)
 {
    PULONG Buffer = (PULONG)HiveHeader;
    ULONG Sum = 0;

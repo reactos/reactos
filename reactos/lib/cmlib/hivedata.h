@@ -9,7 +9,7 @@
 #define CMLIB_HIVEDATA_H
 
 #define HV_BLOCK_SIZE                  4096
-#define HV_LOG_HEADER_SIZE             FIELD_OFFSET(HIVE_HEADER, Reserved2)
+#define HV_LOG_HEADER_SIZE             FIELD_OFFSET(HBASE_BLOCK, Reserved2)
 #define HV_SIGNATURE                   0x66676572
 #define HV_BIN_SIGNATURE               0x6e696268
 
@@ -44,12 +44,12 @@ typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 #include <pshpack1.h>
 
 /**
- * @name HIVE_HEADER
+ * @name HBASE_BLOCK
  *
  * On-disk header for registry hive file.
  */
 
-typedef struct _HIVE_HEADER
+typedef struct _HBASE_BLOCK
 {
    /* Hive identifier "regf" (0x66676572) */
    ULONG Signature;
@@ -87,15 +87,17 @@ typedef struct _HIVE_HEADER
    ULONG Cluster;
 
    /* Name of hive file */
-   WCHAR FileName[32];
+   CHAR FileName[64];
 
    ULONG Reserved1[99];
 
    /* Checksum of first 0x200 bytes */
    ULONG Checksum;
 
-   ULONG Reserved2[0x380];
-} HIVE_HEADER, *PHIVE_HEADER;
+   ULONG Reserved2[0x37E];
+   ULONG BootType;
+   ULONG BootRecover;
+} HBASE_BLOCK, *PHBASE_BLOCK;
 
 typedef struct _BIN_HEADER
 {
