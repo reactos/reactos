@@ -1792,7 +1792,10 @@ ScmrStartServiceW(handle_t BindingHandle,
     /* Start the service */
     Status = ScmStartService(lpService);
     if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ScmStartService failed!\n");
         return RtlNtStatusToDosError(Status);
+    }
 
     return dwError;
 }
