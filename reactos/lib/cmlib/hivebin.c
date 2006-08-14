@@ -21,7 +21,7 @@ HvpAddBin(
    ULONG BitmapSize;
    ULONG BlockCount;
    ULONG OldBlockListSize;
-   PCELL_HEADER Block;
+   PHCELL Block;
 
    BinSize = ROUND_UP(Size + sizeof(HBIN), HV_BLOCK_SIZE);
    BlockCount = BinSize / HV_BLOCK_SIZE;
@@ -64,8 +64,8 @@ HvpAddBin(
    }
 
    /* Initialize a free block in this heap. */
-   Block = (PCELL_HEADER)(Bin + 1);
-   Block->CellSize = BinSize - sizeof(HBIN);
+   Block = (PHCELL)(Bin + 1);
+   Block->Size = BinSize - sizeof(HBIN);
 
    if (Storage == HvStable)
    {

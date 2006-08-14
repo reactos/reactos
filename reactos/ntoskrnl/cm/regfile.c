@@ -1522,11 +1522,11 @@ CmiAddValueToKey(IN PEREGISTRY_HIVE RegistryHive,
     }
 
 #if 0
-  DPRINT("KeyCell->ValueList.Count %lu, ValueListCell->CellSize %lu (%lu %lx)\n",
+  DPRINT("KeyCell->ValueList.Count %lu, ValueListCell->Size %lu (%lu %lx)\n",
 	 KeyCell->ValueList.Count,
-	 (ULONG)ABS_VALUE(ValueListCell->CellSize),
-	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(CELL_HEADER)) / sizeof(HCELL_INDEX),
-	 ((ULONG)ABS_VALUE(ValueListCell->CellSize) - sizeof(CELL_HEADER)) / sizeof(HCELL_INDEX));
+	 (ULONG)ABS_VALUE(ValueListCell->Size),
+	 ((ULONG)ABS_VALUE(ValueListCell->Size) - sizeof(HCELL)) / sizeof(HCELL_INDEX),
+	 ((ULONG)ABS_VALUE(ValueListCell->Size) - sizeof(HCELL)) / sizeof(HCELL_INDEX));
 #endif
 
   Status = CmiAllocateValueCell(RegistryHive,
