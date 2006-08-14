@@ -114,7 +114,7 @@ typedef struct _VALUE_LIST_CELL
   HCELL_INDEX  ValueOffset[0];
 } VALUE_LIST_CELL, *PVALUE_LIST_CELL;
 
-typedef struct _VALUE_CELL
+typedef struct _CM_KEY_VALUE
 {
   USHORT Id;	// "kv"
   USHORT NameSize;	// length of Name
@@ -124,12 +124,12 @@ typedef struct _VALUE_CELL
   USHORT Flags;
   USHORT Unused1;
   UCHAR  Name[0]; /* warning : not zero terminated */
-} VALUE_CELL, *PVALUE_CELL;
+} CM_KEY_VALUE, *PCM_KEY_VALUE;
 
-/* VALUE_CELL.Flags constants */
+/* CM_KEY_VALUE.Flags constants */
 #define REG_VALUE_NAME_PACKED             0x0001
 
-/* VALUE_CELL.DataSize mask constants */
+/* CM_KEY_VALUE.DataSize mask constants */
 #define REG_DATA_SIZE_MASK                 0x7FFFFFFF
 #define REG_DATA_IN_OFFSET                 0x80000000
 

@@ -987,7 +987,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   PKEY_OBJECT  KeyObject;
   PEREGISTRY_HIVE  RegistryHive;
   PCM_KEY_NODE  KeyCell;
-  PVALUE_CELL  ValueCell;
+  PCM_KEY_VALUE  ValueCell;
   PVOID  DataCell;
   ULONG NameSize, DataSize;
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
@@ -1667,7 +1667,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   PKEY_OBJECT  KeyObject;
   PEREGISTRY_HIVE  RegistryHive;
   PCM_KEY_NODE  KeyCell;
-  PVALUE_CELL  ValueCell;
+  PCM_KEY_VALUE  ValueCell;
   PVOID  DataCell;
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
@@ -1927,7 +1927,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   PKEY_OBJECT  KeyObject;
   PEREGISTRY_HIVE  RegistryHive;
   PCM_KEY_NODE  KeyCell;
-  PVALUE_CELL  ValueCell;
+  PCM_KEY_VALUE  ValueCell;
   HCELL_INDEX ValueCellOffset;
   PVOID DataCell;
   ULONG DesiredAccess;
@@ -2374,7 +2374,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
 			 OUT PULONG ReturnLength)
 {
   PEREGISTRY_HIVE RegistryHive;
-  PVALUE_CELL ValueCell;
+  PCM_KEY_VALUE ValueCell;
   PKEY_OBJECT KeyObject;
   PVOID DataCell;
   ULONG BufferLength = 0;

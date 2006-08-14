@@ -117,11 +117,11 @@ CmiAllocateValueListCell (PHHIVE Hive,
 
 static BOOLEAN
 CmiAllocateValueCell(PHHIVE Hive,
-		     PVALUE_CELL *ValueCell,
+		     PCM_KEY_VALUE *ValueCell,
 		     HCELL_INDEX *ValueCellOffset,
 		     PWCHAR ValueName)
 {
-  PVALUE_CELL NewValueCell;
+  PCM_KEY_VALUE NewValueCell;
   ULONG NameSize;
   BOOLEAN Packable = TRUE;
   ULONG i;
@@ -136,14 +136,14 @@ CmiAllocateValueCell(PHHIVE Hive,
           break;
         }
     }
-  *ValueCellOffset = HvAllocateCell (Hive, sizeof(VALUE_CELL) + NameSize, HvStable);
+  *ValueCellOffset = HvAllocateCell (Hive, sizeof(CM_KEY_VALUE) + NameSize, HvStable);
   if (*ValueCellOffset == HCELL_NULL)
     {
       DbgPrint((DPRINT_REGISTRY, "CmiAllocateCell() failed\n"));
       return FALSE;
     }
 
-  NewValueCell = (PVALUE_CELL) HvGetCell (Hive, *ValueCellOffset);
+  NewValueCell = (PCM_KEY_VALUE) HvGetCell (Hive, *ValueCellOffset);
   NewValueCell->Id = REG_VALUE_CELL_ID;
   NewValueCell->NameSize = NameSize;
   NewValueCell->Flags = 0;
@@ -210,7 +210,7 @@ CmiExportValue (PHHIVE Hive,
 {
   HCELL_INDEX ValueCellOffset;
   HCELL_INDEX DataCellOffset;
-  PVALUE_CELL ValueCell;
+  PCM_KEY_VALUE ValueCell;
   PVOID DataCell;
   ULONG DataSize;
   ULONG DataType;
@@ -521,7 +521,7 @@ CmiExportHive (PHHIVE Hive,
 
 static BOOLEAN
 RegImportValue (PHHIVE Hive,
-		PVALUE_CELL ValueCell,
+		PCM_KEY_VALUE ValueCell,
 		FRLDRHKEY Key)
 {
   PVOID DataCell;
@@ -606,7 +606,7 @@ RegImportSubKey(PHHIVE Hive,
   PHASH_TABLE_CELL HashCell;
   PCM_KEY_NODE SubKeyCell;
   PVALUE_LIST_CELL ValueListCell;
-  PVALUE_CELL ValueCell = NULL;
+  PCM_KEY_VALUE ValueCell = NULL;
   PWCHAR wName;
   FRLDRHKEY SubKey;
   LONG Error;
@@ -664,7 +664,7 @@ RegImportSubKey(PHHIVE Hive,
 	{
 	  DbgPrint((DPRINT_REGISTRY, "ValueOffset[%d]: %x\n", i, ValueListCell->ValueOffset[i]));
 
-	  ValueCell = (PVALUE_CELL) HvGetCell (Hive, ValueListCell->ValueOffset[i]);
+	  ValueCell = (PCM_KEY_VALUE) HvGetCell (Hive, ValueListCell->ValueOffset[i]);
 
 	  DbgPrint((DPRINT_REGISTRY, "ValueCell[%d]: %x\n", i, ValueCell));
 

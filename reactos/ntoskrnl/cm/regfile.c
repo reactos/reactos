@@ -937,7 +937,7 @@ CmiGetMaxValueNameLength(PEREGISTRY_HIVE RegistryHive,
 			 PCM_KEY_NODE KeyCell)
 {
   PVALUE_LIST_CELL ValueListCell;
-  PVALUE_CELL CurValueCell;
+  PCM_KEY_VALUE CurValueCell;
   ULONG MaxValueName;
   ULONG Size;
   ULONG i;
@@ -985,7 +985,7 @@ CmiGetMaxValueDataLength(PEREGISTRY_HIVE RegistryHive,
 			 PCM_KEY_NODE KeyCell)
 {
   PVALUE_LIST_CELL ValueListCell;
-  PVALUE_CELL CurValueCell;
+  PCM_KEY_VALUE CurValueCell;
   LONG MaxValueData;
   ULONG i;
 
@@ -1289,7 +1289,7 @@ CmiRemoveSubKey(PEREGISTRY_HIVE RegistryHive,
 {
   PHASH_TABLE_CELL HashBlock;
   PVALUE_LIST_CELL ValueList;
-  PVALUE_CELL ValueCell;
+  PCM_KEY_VALUE ValueCell;
   HV_STORAGE_TYPE Storage;
   ULONG i;
 
@@ -1390,11 +1390,11 @@ NTSTATUS
 CmiScanKeyForValue(IN PEREGISTRY_HIVE RegistryHive,
 		   IN PCM_KEY_NODE KeyCell,
 		   IN PUNICODE_STRING ValueName,
-		   OUT PVALUE_CELL *ValueCell,
+		   OUT PCM_KEY_VALUE *ValueCell,
 		   OUT HCELL_INDEX *ValueCellOffset)
 {
   PVALUE_LIST_CELL ValueListCell;
-  PVALUE_CELL CurValueCell;
+  PCM_KEY_VALUE CurValueCell;
   ULONG i;
 
   *ValueCell = NULL;
@@ -1437,10 +1437,10 @@ NTSTATUS
 CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
 			  IN PCM_KEY_NODE KeyCell,
 			  IN ULONG Index,
-			  OUT PVALUE_CELL *ValueCell)
+			  OUT PCM_KEY_VALUE *ValueCell)
 {
   PVALUE_LIST_CELL ValueListCell;
-  PVALUE_CELL CurValueCell;
+  PCM_KEY_VALUE CurValueCell;
 
   *ValueCell = NULL;
 
@@ -1472,11 +1472,11 @@ CmiAddValueToKey(IN PEREGISTRY_HIVE RegistryHive,
 		 IN PCM_KEY_NODE KeyCell,
 		 IN HCELL_INDEX KeyCellOffset,
 		 IN PUNICODE_STRING ValueName,
-		 OUT PVALUE_CELL *pValueCell,
+		 OUT PCM_KEY_VALUE *pValueCell,
 		 OUT HCELL_INDEX *pValueCellOffset)
 {
   PVALUE_LIST_CELL ValueListCell;
-  PVALUE_CELL NewValueCell;
+  PCM_KEY_VALUE NewValueCell;
   HCELL_INDEX ValueListCellOffset;
   HCELL_INDEX NewValueCellOffset;
   ULONG CellSize;
@@ -1560,7 +1560,7 @@ CmiDeleteValueFromKey(IN PEREGISTRY_HIVE RegistryHive,
 		      IN PUNICODE_STRING ValueName)
 {
   PVALUE_LIST_CELL ValueListCell;
-  PVALUE_CELL CurValueCell;
+  PCM_KEY_VALUE CurValueCell;
   ULONG i;
   NTSTATUS Status;
 
@@ -1723,12 +1723,12 @@ CmiRemoveKeyFromHashTable(PEREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiAllocateValueCell(PEREGISTRY_HIVE RegistryHive,
-		     PVALUE_CELL *ValueCell,
+		     PCM_KEY_VALUE *ValueCell,
 		     HCELL_INDEX *VBOffset,
 		     IN PUNICODE_STRING ValueName,
 		     IN HV_STORAGE_TYPE Storage)
 {
-  PVALUE_CELL NewValueCell;
+  PCM_KEY_VALUE NewValueCell;
   NTSTATUS Status;
   BOOLEAN Packable;
   ULONG NameSize;
@@ -1741,7 +1741,7 @@ CmiAllocateValueCell(PEREGISTRY_HIVE RegistryHive,
 
   DPRINT("ValueName->Length %lu  NameSize %lu\n", ValueName->Length, NameSize);
 
-  *VBOffset = HvAllocateCell (RegistryHive->Hive, sizeof(VALUE_CELL) + NameSize, Storage);
+  *VBOffset = HvAllocateCell (RegistryHive->Hive, sizeof(CM_KEY_VALUE) + NameSize, Storage);
   if (*VBOffset == HCELL_NULL)
     {
       Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1779,7 +1779,7 @@ CmiAllocateValueCell(PEREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiDestroyValueCell(PEREGISTRY_HIVE RegistryHive,
-		    PVALUE_CELL ValueCell,
+		    PCM_KEY_VALUE ValueCell,
 		    HCELL_INDEX ValueCellOffset)
 {
   DPRINT("CmiDestroyValueCell(Cell %p  Offset %lx)\n",
@@ -2071,8 +2071,8 @@ CmiCopyKey (PEREGISTRY_HIVE DstHive,
     {
       PVALUE_LIST_CELL NewValueListCell;
       PVALUE_LIST_CELL SrcValueListCell;
-      PVALUE_CELL NewValueCell;
-      PVALUE_CELL SrcValueCell;
+      PCM_KEY_VALUE NewValueCell;
+      PCM_KEY_VALUE SrcValueCell;
       PVOID SrcValueDataCell;
       PVOID NewValueDataCell;
       HCELL_INDEX ValueCellOffset;
@@ -2104,7 +2104,7 @@ CmiCopyKey (PEREGISTRY_HIVE DstHive,
 	  /* Copy value cell */
 	  SrcValueCell = HvGetCell (SrcHive->Hive, SrcValueListCell->ValueOffset[i]);
 
-	  NewValueCellSize = sizeof(VALUE_CELL) + SrcValueCell->NameSize;
+	  NewValueCellSize = sizeof(CM_KEY_VALUE) + SrcValueCell->NameSize;
 	  ValueCellOffset = HvAllocateCell (DstHive->Hive, NewValueCellSize, HvStable);
 	  if (ValueCellOffset == HCELL_NULL)
 	    {

@@ -888,7 +888,7 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
 		 PUNICODE_STRING TargetPath)
 {
   UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
-  PVALUE_CELL ValueCell;
+  PCM_KEY_VALUE ValueCell;
   PVOID DataCell;
   NTSTATUS Status;
 
