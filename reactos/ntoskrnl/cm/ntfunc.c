@@ -487,7 +487,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   KeyObject->ParentKey = Object;
   KeyObject->RegistryHive = KeyObject->ParentKey->RegistryHive;
   KeyObject->Flags = 0;
-  KeyObject->NumberOfSubKeys = 0;
+  KeyObject->SubKeyCounts = 0;
   KeyObject->SizeOfSubKeys = 0;
   KeyObject->SubKeys = NULL;
 
@@ -531,7 +531,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       RtlpCreateUnicodeString(&KeyObject->Name, Start, NonPagedPool);
     }
 
-  KeyObject->KeyCell->ParentKeyOffset = KeyObject->ParentKey->KeyCellOffset;
+  KeyObject->KeyCell->Parent = KeyObject->ParentKey->KeyCellOffset;
   KeyObject->KeyCell->SecurityKeyOffset = KeyObject->ParentKey->KeyCell->SecurityKeyOffset;
 
   DPRINT("RemainingPath: %wZ\n", &RemainingPath);
@@ -628,8 +628,8 @@ NtDeleteKey(IN HANDLE KeyHandle)
   VERIFY_KEY_OBJECT(KeyObject);
 
   /* Check for subkeys */
-  if (KeyObject->KeyCell->NumberOfSubKeys[HvStable] != 0 ||
-      KeyObject->KeyCell->NumberOfSubKeys[HvVolatile] != 0)
+  if (KeyObject->KeyCell->SubKeyCounts[HvStable] != 0 ||
+      KeyObject->KeyCell->SubKeyCounts[HvVolatile] != 0)
     {
       Status = STATUS_CANNOT_DELETE;
     }
@@ -682,7 +682,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 {
   PKEY_OBJECT KeyObject;
   PEREGISTRY_HIVE  RegistryHive;
-  PKEY_CELL  KeyCell, SubKeyCell;
+  PCM_KEY_NODE  KeyCell, SubKeyCell;
   PHASH_TABLE_CELL  HashTableBlock;
   PKEY_BASIC_INFORMATION  BasicInformation;
   PKEY_NODE_INFORMATION  NodeInformation;
@@ -746,8 +746,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   RegistryHive = KeyObject->RegistryHive;
 
   /* Check for hightest possible sub key index */
-  if (Index >= KeyCell->NumberOfSubKeys[HvStable] +
-               KeyCell->NumberOfSubKeys[HvVolatile])
+  if (Index >= KeyCell->SubKeyCounts[HvStable] +
+               KeyCell->SubKeyCounts[HvVolatile])
     {
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
@@ -759,10 +759,10 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     }
 
   /* Get pointer to SubKey */
-  if (Index >= KeyCell->NumberOfSubKeys[HvStable])
+  if (Index >= KeyCell->SubKeyCounts[HvStable])
     {
       Storage = HvVolatile;
-      BaseIndex = Index - KeyCell->NumberOfSubKeys[HvStable];
+      BaseIndex = Index - KeyCell->SubKeyCounts[HvStable];
     }
   else
     {
@@ -770,7 +770,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       BaseIndex = Index;
     }
 
-  if (KeyCell->HashTableOffset[Storage] == HCELL_NULL)
+  if (KeyCell->SubKeyLists[Storage] == HCELL_NULL)
     {
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
@@ -780,8 +780,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       return STATUS_NO_MORE_ENTRIES;
     }
 
-  ASSERT(KeyCell->HashTableOffset[Storage] != HCELL_NULL);
-  HashTableBlock = HvGetCell (RegistryHive->Hive, KeyCell->HashTableOffset[Storage]);
+  ASSERT(KeyCell->SubKeyLists[Storage] != HCELL_NULL);
+  HashTableBlock = HvGetCell (RegistryHive->Hive, KeyCell->SubKeyLists[Storage]);
 
   SubKeyCell = CmiGetKeyFromHashByIndex(RegistryHive,
                                         HashTableBlock,
@@ -929,10 +929,10 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) -
 	      sizeof(WCHAR);
 	    FullInformation->ClassLength = SubKeyCell->ClassSize;
-	    FullInformation->SubKeys = CmiGetNumberOfSubKeys(KeyObject); //SubKeyCell->NumberOfSubKeys;
+	    FullInformation->SubKeys = CmiGetNumberOfSubKeys(KeyObject); //SubKeyCell->SubKeyCounts;
 	    FullInformation->MaxNameLen = CmiGetMaxNameLength(KeyObject);
 	    FullInformation->MaxClassLen = CmiGetMaxClassLength(KeyObject);
-	    FullInformation->Values = SubKeyCell->NumberOfValues;
+	    FullInformation->Values = SubKeyCell->ValueList.Count;
 	    FullInformation->MaxValueNameLen =
 	      CmiGetMaxValueNameLength(RegistryHive, SubKeyCell);
 	    FullInformation->MaxValueDataLen =
@@ -986,7 +986,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PEREGISTRY_HIVE  RegistryHive;
-  PKEY_CELL  KeyCell;
+  PCM_KEY_NODE  KeyCell;
   PVALUE_CELL  ValueCell;
   PVOID  DataCell;
   ULONG NameSize, DataSize;
@@ -1441,7 +1441,7 @@ NtQueryKey(IN HANDLE KeyHandle,
   PEREGISTRY_HIVE RegistryHive;
   PVOID ClassCell;
   PKEY_OBJECT KeyObject;
-  PKEY_CELL KeyCell;
+  PCM_KEY_NODE KeyCell;
   ULONG NameSize, ClassSize;
   NTSTATUS Status;
   REG_QUERY_KEY_INFORMATION QueryKeyInfo;
@@ -1603,10 +1603,10 @@ NtQueryKey(IN HANDLE KeyHandle,
 	    FullInformation->TitleIndex = 0;
 	    FullInformation->ClassOffset = sizeof(KEY_FULL_INFORMATION) - sizeof(WCHAR);
 	    FullInformation->ClassLength = KeyCell->ClassSize;
-	    FullInformation->SubKeys = CmiGetNumberOfSubKeys(KeyObject); //KeyCell->NumberOfSubKeys;
+	    FullInformation->SubKeys = CmiGetNumberOfSubKeys(KeyObject); //KeyCell->SubKeyCounts;
 	    FullInformation->MaxNameLen = CmiGetMaxNameLength(KeyObject);
 	    FullInformation->MaxClassLen = CmiGetMaxClassLength(KeyObject);
-	    FullInformation->Values = KeyCell->NumberOfValues;
+	    FullInformation->Values = KeyCell->ValueList.Count;
 	    FullInformation->MaxValueNameLen =
 	      CmiGetMaxValueNameLength(RegistryHive, KeyCell);
 	    FullInformation->MaxValueDataLen =
@@ -1666,7 +1666,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   ULONG NameSize, DataSize;
   PKEY_OBJECT  KeyObject;
   PEREGISTRY_HIVE  RegistryHive;
-  PKEY_CELL  KeyCell;
+  PCM_KEY_NODE  KeyCell;
   PVALUE_CELL  ValueCell;
   PVOID  DataCell;
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
@@ -1926,7 +1926,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PEREGISTRY_HIVE  RegistryHive;
-  PKEY_CELL  KeyCell;
+  PCM_KEY_NODE  KeyCell;
   PVALUE_CELL  ValueCell;
   HCELL_INDEX ValueCellOffset;
   PVOID DataCell;
@@ -2378,7 +2378,7 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   PKEY_OBJECT KeyObject;
   PVOID DataCell;
   ULONG BufferLength = 0;
-  PKEY_CELL KeyCell;
+  PCM_KEY_NODE KeyCell;
   NTSTATUS Status;
   PUCHAR DataPtr;
   ULONG i;

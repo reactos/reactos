@@ -31,7 +31,13 @@ typedef struct _CM_VIEW_OF_FILE
     ULONG UseCount;
 } CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
 
-typedef struct _KEY_CELL
+typedef struct _CHILD_LIST
+{
+    ULONG Count;
+    HCELL_INDEX List;
+} CHILD_LIST, *PCHILD_LIST;
+
+typedef struct _CM_KEY_NODE
 {
    /* Key cell identifier "kn" (0x6b6e) */
    USHORT Id;
@@ -42,23 +48,18 @@ typedef struct _KEY_CELL
    /* Time of last flush */
    LARGE_INTEGER LastWriteTime;
 
-   /* ? */
-   ULONG UnUsed1;
+   ULONG Spare;
 
    /* BlockAddress offset of parent key cell */
-   HCELL_INDEX ParentKeyOffset;
+   HCELL_INDEX Parent;
 
    /* Count of sub keys for the key in this key cell (stable & volatile) */
-   ULONG NumberOfSubKeys[HvMaxStorageType];
+   ULONG SubKeyCounts[HvMaxStorageType];
 
    /* BlockAddress offset of has table for FIXME: subkeys/values? (stable & volatile) */
-   HCELL_INDEX HashTableOffset[HvMaxStorageType];
+   HCELL_INDEX SubKeyLists[HvMaxStorageType];
 
-   /* Count of values contained in this key cell */
-   ULONG NumberOfValues;
-
-   /* BlockAddress offset of VALUE_LIST_CELL */
-   HCELL_INDEX ValueListOffset;
+   CHILD_LIST ValueList;
 
    /* BlockAddress offset of security cell */
    HCELL_INDEX SecurityKeyOffset;
@@ -66,8 +67,11 @@ typedef struct _KEY_CELL
    /* BlockAddress offset of registry key class */
    HCELL_INDEX ClassNameOffset;
 
-   /* ? */
-   ULONG Unused4[5];
+   ULONG MaxNameLen;
+   ULONG MaxClassLen;
+   ULONG MaxValueNameLen;
+   ULONG MaxValueDataLen;
+   ULONG WorkVar;
 
    /* Size in bytes of key name */
    USHORT NameSize;
@@ -77,9 +81,9 @@ typedef struct _KEY_CELL
 
    /* Name of key (not zero terminated) */
    UCHAR Name[0];
-} KEY_CELL, *PKEY_CELL;
+} CM_KEY_NODE, *PCM_KEY_NODE;
 
-/* KEY_CELL.Flags constants */
+/* CM_KEY_NODE.Flags constants */
 #define  REG_KEY_VOLATILE_CELL             0x01
 #define  REG_KEY_ROOT_CELL                 0x0C
 #define  REG_KEY_LINK_CELL                 0x10

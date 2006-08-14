@@ -255,7 +255,7 @@ CmInitializeRegistry(VOID)
   RootKey->KeyCell = HvGetCell (CmiVolatileHive->Hive, RootKey->KeyCellOffset);
   RootKey->ParentKey = RootKey;
   RootKey->Flags = 0;
-  RootKey->NumberOfSubKeys = 0;
+  RootKey->SubKeyCounts = 0;
   RootKey->SubKeys = NULL;
   RootKey->SizeOfSubKeys = 0;
   InsertTailList(&CmiKeyObjectListHead, &RootKey->ListEntry);
@@ -608,7 +608,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                              NULL);
   DPRINT("Status %x\n", Status);
   NewKey->Flags = 0;
-  NewKey->NumberOfSubKeys = 0;
+  NewKey->SubKeyCounts = 0;
   NewKey->SubKeys = NULL;
   NewKey->SizeOfSubKeys = 0;
   InsertTailList(&CmiKeyObjectListHead, &NewKey->ListEntry);

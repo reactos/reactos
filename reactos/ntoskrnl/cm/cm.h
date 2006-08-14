@@ -85,8 +85,8 @@ typedef struct _KEY_OBJECT
   /* Block offset of the key cell this key belongs in */
   HCELL_INDEX KeyCellOffset;
 
-  /* KEY_CELL this key belong in */
-  PKEY_CELL KeyCell;
+  /* CM_KEY_NODE this key belong in */
+  PCM_KEY_NODE KeyCell;
 
   /* Link to the parent KEY_OBJECT for this key */
   struct _KEY_OBJECT *ParentKey;
@@ -95,7 +95,7 @@ typedef struct _KEY_OBJECT
   LIST_ENTRY ListEntry;
 
   /* Subkeys loaded in SubKeys */
-  ULONG NumberOfSubKeys;
+  ULONG SubKeyCounts;
 
   /* Space allocated in SubKeys */
   ULONG SizeOfSubKeys;
@@ -236,16 +236,16 @@ CmiGetMaxClassLength(IN PKEY_OBJECT KeyObject);
 
 ULONG
 CmiGetMaxValueNameLength(IN PEREGISTRY_HIVE RegistryHive,
-			 IN PKEY_CELL KeyCell);
+			 IN PCM_KEY_NODE KeyCell);
 
 ULONG
 CmiGetMaxValueDataLength(IN PEREGISTRY_HIVE RegistryHive,
-			 IN PKEY_CELL KeyCell);
+			 IN PCM_KEY_NODE KeyCell);
 
 NTSTATUS
 CmiScanForSubKey(IN PEREGISTRY_HIVE RegistryHive,
-		 IN PKEY_CELL KeyCell,
-		 OUT PKEY_CELL *SubKeyCell,
+		 IN PCM_KEY_NODE KeyCell,
+		 OUT PCM_KEY_NODE *SubKeyCell,
 		 OUT HCELL_INDEX *BlockOffset,
 		 IN PUNICODE_STRING KeyName,
 		 IN ACCESS_MASK DesiredAccess,
@@ -267,20 +267,20 @@ CmiRemoveSubKey(IN PEREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiScanKeyForValue(IN PEREGISTRY_HIVE RegistryHive,
-		   IN PKEY_CELL KeyCell,
+		   IN PCM_KEY_NODE KeyCell,
 		   IN PUNICODE_STRING ValueName,
 		   OUT PVALUE_CELL *ValueCell,
 		   OUT HCELL_INDEX *VBOffset);
 
 NTSTATUS
 CmiGetValueFromKeyByIndex(IN PEREGISTRY_HIVE RegistryHive,
-			  IN PKEY_CELL KeyCell,
+			  IN PCM_KEY_NODE KeyCell,
 			  IN ULONG Index,
 			  OUT PVALUE_CELL *ValueCell);
 
 NTSTATUS
 CmiAddValueToKey(IN PEREGISTRY_HIVE RegistryHive,
-		 IN PKEY_CELL KeyCell,
+		 IN PCM_KEY_NODE KeyCell,
 		 IN HCELL_INDEX KeyCellOffset,
 		 IN PUNICODE_STRING ValueName,
 		 OUT PVALUE_CELL *pValueCell,
@@ -288,7 +288,7 @@ CmiAddValueToKey(IN PEREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiDeleteValueFromKey(IN PEREGISTRY_HIVE RegistryHive,
-		      IN PKEY_CELL KeyCell,
+		      IN PCM_KEY_NODE KeyCell,
 		      IN HCELL_INDEX KeyCellOffset,
 		      IN PUNICODE_STRING ValueName);
 
@@ -299,7 +299,7 @@ CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,
 			 IN ULONG HashTableSize,
 			 IN HV_STORAGE_TYPE Storage);
 
-PKEY_CELL
+PCM_KEY_NODE
 CmiGetKeyFromHashByIndex(PEREGISTRY_HIVE RegistryHive,
 			 PHASH_TABLE_CELL HashBlock,
 			 ULONG Index);
@@ -307,9 +307,9 @@ CmiGetKeyFromHashByIndex(PEREGISTRY_HIVE RegistryHive,
 NTSTATUS
 CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
 		     PHASH_TABLE_CELL HashCell,
-		     PKEY_CELL KeyCell,
+		     PCM_KEY_NODE KeyCell,
 		     HV_STORAGE_TYPE StorageType,
-		     PKEY_CELL NewKeyCell,
+		     PCM_KEY_NODE NewKeyCell,
 		     HCELL_INDEX NKBOffset);
 
 NTSTATUS
@@ -365,11 +365,11 @@ CmiCompareHashI(PUNICODE_STRING KeyName,
 
 BOOLEAN
 CmiCompareKeyNames(PUNICODE_STRING KeyName,
-		   PKEY_CELL KeyCell);
+		   PCM_KEY_NODE KeyCell);
 
 BOOLEAN
 CmiCompareKeyNamesI(PUNICODE_STRING KeyName,
-		    PKEY_CELL KeyCell);
+		    PCM_KEY_NODE KeyCell);
 
 
 VOID
@@ -381,9 +381,9 @@ CmiCreateTempHive(PEREGISTRY_HIVE *RegistryHive);
 
 NTSTATUS
 CmiCopyKey (PEREGISTRY_HIVE DstHive,
-	    PKEY_CELL DstKeyCell,
+	    PCM_KEY_NODE DstKeyCell,
 	    PEREGISTRY_HIVE SrcHive,
-	    PKEY_CELL SrcKeyCell);
+	    PCM_KEY_NODE SrcKeyCell);
 
 NTSTATUS
 CmiSaveTempHive (PEREGISTRY_HIVE Hive,

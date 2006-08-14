@@ -67,16 +67,16 @@ CmiAllocateHashTableCell (PHHIVE Hive,
 
 static BOOLEAN
 CmiAddKeyToParentHashTable (PHHIVE Hive,
-			    HCELL_INDEX ParentKeyOffset,
-			    PKEY_CELL NewKeyCell,
+			    HCELL_INDEX Parent,
+			    PCM_KEY_NODE NewKeyCell,
 			    HCELL_INDEX NKBOffset)
 {
   PHASH_TABLE_CELL HashBlock;
-  PKEY_CELL ParentKeyCell;
+  PCM_KEY_NODE ParentKeyCell;
   ULONG i;
 
-  ParentKeyCell = HvGetCell (Hive, ParentKeyOffset);
-  HashBlock = HvGetCell (Hive, ParentKeyCell->HashTableOffset[HvStable]);
+  ParentKeyCell = HvGetCell (Hive, Parent);
+  HashBlock = HvGetCell (Hive, ParentKeyCell->SubKeyLists[HvStable]);
 
   for (i = 0; i < HashBlock->HashTableSize; i++)
     {
@@ -86,7 +86,7 @@ CmiAddKeyToParentHashTable (PHHIVE Hive,
 	  memcpy (&HashBlock->Table[i].HashValue,
 		  NewKeyCell->Name,
 		  min(NewKeyCell->NameSize, sizeof(ULONG)));
-	  ParentKeyCell->NumberOfSubKeys[HvStable]++;
+	  ParentKeyCell->SubKeyCounts[HvStable]++;
 	  return TRUE;
 	}
     }
@@ -180,7 +180,7 @@ CmiAddValueToKeyValueList(PHHIVE Hive,
 			  HCELL_INDEX ValueCellOffset)
 {
   PVALUE_LIST_CELL ValueListCell;
-  PKEY_CELL KeyCell;
+  PCM_KEY_NODE KeyCell;
 
   KeyCell = HvGetCell (Hive, KeyCellOffset);
   if (KeyCell == NULL)
@@ -189,15 +189,15 @@ CmiAddValueToKeyValueList(PHHIVE Hive,
       return FALSE;
     }
 
-  ValueListCell = HvGetCell (Hive, KeyCell->ValueListOffset);
+  ValueListCell = HvGetCell (Hive, KeyCell->ValueList.List);
   if (ValueListCell == NULL)
     {
       DbgPrint((DPRINT_REGISTRY, "HvGetCell() failed\n"));
       return FALSE;
     }
 
-  ValueListCell->ValueOffset[KeyCell->NumberOfValues] = ValueCellOffset;
-  KeyCell->NumberOfValues++;
+  ValueListCell->ValueOffset[KeyCell->ValueList.Count] = ValueCellOffset;
+  KeyCell->ValueList.Count++;
 
   return TRUE;
 }
@@ -278,12 +278,12 @@ CmiExportValue (PHHIVE Hive,
 
 static BOOLEAN
 CmiExportSubKey (PHHIVE Hive,
-		 HCELL_INDEX ParentKeyOffset,
+		 HCELL_INDEX Parent,
 		 FRLDRHKEY ParentKey,
 		 FRLDRHKEY Key)
 {
   HCELL_INDEX NKBOffset;
-  PKEY_CELL NewKeyCell;
+  PCM_KEY_NODE NewKeyCell;
   ULONG KeyCellSize;
   ULONG SubKeyCount;
   ULONG ValueCount;
@@ -312,7 +312,7 @@ CmiExportSubKey (PHHIVE Hive,
     }
           
   /* Allocate key cell */
-  KeyCellSize = sizeof(KEY_CELL) + NameSize;
+  KeyCellSize = sizeof(CM_KEY_NODE) + NameSize;
   NKBOffset = HvAllocateCell (Hive, KeyCellSize, HvStable);
   if (NKBOffset == HCELL_NULL)
     {
@@ -321,15 +321,15 @@ CmiExportSubKey (PHHIVE Hive,
     }
 
   /* Initialize key cell */
-  NewKeyCell = (PKEY_CELL) HvGetCell (Hive, NKBOffset);
+  NewKeyCell = (PCM_KEY_NODE) HvGetCell (Hive, NKBOffset);
   NewKeyCell->Id = REG_KEY_CELL_ID;
   NewKeyCell->Flags = 0;
   NewKeyCell->LastWriteTime.QuadPart = 0ULL;
-  NewKeyCell->ParentKeyOffset = ParentKeyOffset;
-  NewKeyCell->NumberOfSubKeys[HvStable] = 0;
-  NewKeyCell->HashTableOffset[HvStable] = -1;
-  NewKeyCell->NumberOfValues = 0;
-  NewKeyCell->ValueListOffset = -1;
+  NewKeyCell->Parent = Parent;
+  NewKeyCell->SubKeyCounts[HvStable] = 0;
+  NewKeyCell->SubKeyLists[HvStable] = -1;
+  NewKeyCell->ValueList.Count = 0;
+  NewKeyCell->ValueList.List = -1;
   NewKeyCell->SecurityKeyOffset = -1;
   NewKeyCell->ClassNameOffset = -1;
   NewKeyCell->NameSize = NameSize;
@@ -352,7 +352,7 @@ CmiExportSubKey (PHHIVE Hive,
 
   /* Add key cell to the parent key's hash table */
   if (!CmiAddKeyToParentHashTable (Hive,
-				   ParentKeyOffset,
+				   Parent,
 				   NewKeyCell,
 				   NKBOffset))
     {
@@ -366,7 +366,7 @@ CmiExportSubKey (PHHIVE Hive,
     {
       /* Allocate value list cell */
       if (!CmiAllocateValueListCell (Hive,
-				     &NewKeyCell->ValueListOffset,
+				     &NewKeyCell->ValueList.List,
 				     ValueCount))
 	{
 	  DbgPrint((DPRINT_REGISTRY, "CmiAllocateValueListCell() failed\n"));
@@ -400,7 +400,7 @@ CmiExportSubKey (PHHIVE Hive,
     {
       /* Allocate hash table cell */
       if (!CmiAllocateHashTableCell (Hive,
-				     &NewKeyCell->HashTableOffset[HvStable],
+				     &NewKeyCell->SubKeyLists[HvStable],
 				     SubKeyCount))
 	{
 	  DbgPrint((DPRINT_REGISTRY, "CmiAllocateHashTableCell() failed\n"));
@@ -430,7 +430,7 @@ static BOOLEAN
 CmiExportHive (PHHIVE Hive,
 	       PCWSTR KeyName)
 {
-  PKEY_CELL KeyCell;
+  PCM_KEY_NODE KeyCell;
   FRLDRHKEY Key;
   ULONG SubKeyCount;
   ULONG ValueCount;
@@ -459,7 +459,7 @@ CmiExportHive (PHHIVE Hive,
     {
       /* Allocate value list cell */
       if (!CmiAllocateValueListCell (Hive,
-				     &KeyCell->ValueListOffset,
+				     &KeyCell->ValueList.List,
 				     ValueCount))
 	{
 	  DbgPrint((DPRINT_REGISTRY, "CmiAllocateValueListCell() failed\n"));
@@ -493,7 +493,7 @@ CmiExportHive (PHHIVE Hive,
     {
       /* Allocate hash table cell */
       if (!CmiAllocateHashTableCell (Hive,
-				     &KeyCell->HashTableOffset[HvStable],
+				     &KeyCell->SubKeyLists[HvStable],
 				     SubKeyCount))
 	{
 	  DbgPrint((DPRINT_REGISTRY, "CmiAllocateHashTableCell() failed\n"));
@@ -600,11 +600,11 @@ RegImportValue (PHHIVE Hive,
 
 static BOOLEAN
 RegImportSubKey(PHHIVE Hive,
-		PKEY_CELL KeyCell,
+		PCM_KEY_NODE KeyCell,
 		FRLDRHKEY ParentKey)
 {
   PHASH_TABLE_CELL HashCell;
-  PKEY_CELL SubKeyCell;
+  PCM_KEY_NODE SubKeyCell;
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL ValueCell = NULL;
   PWCHAR wName;
@@ -651,16 +651,16 @@ RegImportSubKey(PHHIVE Hive,
       DbgPrint((DPRINT_REGISTRY, "RegCreateKey() failed!\n"));
       return FALSE;
     }
-  DbgPrint((DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->NumberOfSubKeys));
-  DbgPrint((DPRINT_REGISTRY, "Values: %u\n", KeyCell->NumberOfValues));
+  DbgPrint((DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->SubKeyCounts));
+  DbgPrint((DPRINT_REGISTRY, "Values: %u\n", KeyCell->ValueList.Count));
 
   /* Enumerate and add values */
-  if (KeyCell->NumberOfValues > 0)
+  if (KeyCell->ValueList.Count > 0)
     {
-      ValueListCell = (PVALUE_LIST_CELL) HvGetCell (Hive, KeyCell->ValueListOffset);
+      ValueListCell = (PVALUE_LIST_CELL) HvGetCell (Hive, KeyCell->ValueList.List);
       DbgPrint((DPRINT_REGISTRY, "ValueListCell: %x\n", ValueListCell));
 
-      for (i = 0; i < KeyCell->NumberOfValues; i++)
+      for (i = 0; i < KeyCell->ValueList.Count; i++)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "ValueOffset[%d]: %x\n", i, ValueListCell->ValueOffset[i]));
 
@@ -674,17 +674,17 @@ RegImportSubKey(PHHIVE Hive,
     }
 
   /* Enumerate and add subkeys */
-  if (KeyCell->NumberOfSubKeys[HvStable] > 0)
+  if (KeyCell->SubKeyCounts[HvStable] > 0)
     {
-      HashCell = (PHASH_TABLE_CELL) HvGetCell (Hive, KeyCell->HashTableOffset[HvStable]);
+      HashCell = (PHASH_TABLE_CELL) HvGetCell (Hive, KeyCell->SubKeyLists[HvStable]);
       DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
-      DbgPrint((DPRINT_REGISTRY, "NumberOfSubKeys: %x\n", KeyCell->NumberOfSubKeys));
+      DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts));
 
-      for (i = 0; i < KeyCell->NumberOfSubKeys[HvStable]; i++)
+      for (i = 0; i < KeyCell->SubKeyCounts[HvStable]; i++)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "KeyOffset[%d]: %x\n", i, HashCell->Table[i].KeyOffset));
 
-	  SubKeyCell = (PKEY_CELL) HvGetCell (Hive, HashCell->Table[i].KeyOffset);
+	  SubKeyCell = (PCM_KEY_NODE) HvGetCell (Hive, HashCell->Table[i].KeyOffset);
 
 	  DbgPrint((DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell));
 
@@ -701,9 +701,9 @@ BOOLEAN
 RegImportBinaryHive(PCHAR ChunkBase,
 		    ULONG ChunkSize)
 {
-  PKEY_CELL KeyCell;
+  PCM_KEY_NODE KeyCell;
   PHASH_TABLE_CELL HashCell;
-  PKEY_CELL SubKeyCell;
+  PCM_KEY_NODE SubKeyCell;
   FRLDRHKEY SystemKey;
   ULONG i;
   LONG Error;
@@ -731,8 +731,8 @@ RegImportBinaryHive(PCHAR ChunkBase,
       return FALSE;
     }
 
-  DbgPrint((DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->NumberOfSubKeys));
-  DbgPrint((DPRINT_REGISTRY, "Values: %u\n", KeyCell->NumberOfValues));
+  DbgPrint((DPRINT_REGISTRY, "Subkeys: %u\n", KeyCell->SubKeyCounts));
+  DbgPrint((DPRINT_REGISTRY, "Values: %u\n", KeyCell->ValueList.Count));
 
   /* Open 'System' key */
   Error = RegOpenKey(NULL,
@@ -745,13 +745,13 @@ RegImportBinaryHive(PCHAR ChunkBase,
     }
 
   /* Enumerate and add subkeys */
-  if (KeyCell->NumberOfSubKeys[HvStable] > 0)
+  if (KeyCell->SubKeyCounts[HvStable] > 0)
     {
-      HashCell = HvGetCell (Hive, KeyCell->HashTableOffset[HvStable]);
+      HashCell = HvGetCell (Hive, KeyCell->SubKeyLists[HvStable]);
       DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
-      DbgPrint((DPRINT_REGISTRY, "NumberOfSubKeys: %x\n", KeyCell->NumberOfSubKeys[HvStable]));
+      DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts[HvStable]));
 
-      for (i = 0; i < KeyCell->NumberOfSubKeys[HvStable]; i++)
+      for (i = 0; i < KeyCell->SubKeyCounts[HvStable]; i++)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "KeyOffset[%d]: %x\n", i, HashCell->Table[i].KeyOffset));
 

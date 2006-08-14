@@ -23,7 +23,7 @@ extern ULONG CmiTimer;
 
 static NTSTATUS
 CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
-		 PKEY_CELL KeyCell,
+		 PCM_KEY_NODE KeyCell,
 		 PUNICODE_STRING TargetPath);
 
 /* FUNCTONS *****************************************************************/
@@ -240,7 +240,7 @@ CmiObjectParse(IN PVOID ParsedObject,
   HCELL_INDEX BlockOffset;
   PKEY_OBJECT FoundObject;
   PKEY_OBJECT ParsedKey;
-  PKEY_CELL SubKeyCell;
+  PCM_KEY_NODE SubKeyCell;
   NTSTATUS Status;
   PWSTR StartPtr;
   PWSTR EndPtr;
@@ -523,7 +523,7 @@ CmiObjectDelete(PVOID DeletedObject)
 
   ObDereferenceObject (ParentKeyObject);
 
-  if (KeyObject->NumberOfSubKeys)
+  if (KeyObject->SubKeyCounts)
     {
       KEBUGCHECK(REGISTRY_ERROR);
     }
@@ -766,28 +766,28 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
   DPRINT("ParentKey %.08x\n", ParentKey);
 
 
-  if (ParentKey->SizeOfSubKeys <= ParentKey->NumberOfSubKeys)
+  if (ParentKey->SizeOfSubKeys <= ParentKey->SubKeyCounts)
     {
       PKEY_OBJECT *tmpSubKeys = ExAllocatePool(NonPagedPool,
-	(ParentKey->NumberOfSubKeys + 1) * sizeof(ULONG));
+	(ParentKey->SubKeyCounts + 1) * sizeof(ULONG));
 
-      if (ParentKey->NumberOfSubKeys > 0)
+      if (ParentKey->SubKeyCounts > 0)
 	{
 	  RtlCopyMemory (tmpSubKeys,
 			 ParentKey->SubKeys,
-			 ParentKey->NumberOfSubKeys * sizeof(ULONG));
+			 ParentKey->SubKeyCounts * sizeof(ULONG));
 	}
 
       if (ParentKey->SubKeys)
 	ExFreePool(ParentKey->SubKeys);
 
       ParentKey->SubKeys = tmpSubKeys;
-      ParentKey->SizeOfSubKeys = ParentKey->NumberOfSubKeys + 1;
+      ParentKey->SizeOfSubKeys = ParentKey->SubKeyCounts + 1;
     }
 
   /* FIXME: Please maintain the list in alphabetic order */
   /*      to allow a dichotomic search */
-  ParentKey->SubKeys[ParentKey->NumberOfSubKeys++] = NewKey;
+  ParentKey->SubKeys[ParentKey->SubKeyCounts++] = NewKey;
 
   DPRINT("Reference parent key: 0x%p\n", ParentKey);
 
@@ -807,15 +807,15 @@ CmiRemoveKeyFromList(PKEY_OBJECT KeyToRemove)
 
   ParentKey = KeyToRemove->ParentKey;
   /* FIXME: If list maintained in alphabetic order, use dichotomic search */
-  for (Index = 0; Index < ParentKey->NumberOfSubKeys; Index++)
+  for (Index = 0; Index < ParentKey->SubKeyCounts; Index++)
     {
       if (ParentKey->SubKeys[Index] == KeyToRemove)
 	{
-	  if (Index < ParentKey->NumberOfSubKeys-1)
+	  if (Index < ParentKey->SubKeyCounts-1)
 	    RtlMoveMemory(&ParentKey->SubKeys[Index],
 			  &ParentKey->SubKeys[Index + 1],
-			  (ParentKey->NumberOfSubKeys - Index - 1) * sizeof(PKEY_OBJECT));
-	  ParentKey->NumberOfSubKeys--;
+			  (ParentKey->SubKeyCounts - Index - 1) * sizeof(PKEY_OBJECT));
+	  ParentKey->SubKeyCounts--;
 
 	  DPRINT("Dereference parent key: 0x%x\n", ParentKey);
 
@@ -841,7 +841,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	 KeyName, &Parent->Name);
 
   /* FIXME: if list maintained in alphabetic order, use dichotomic search */
-  for (Index=0; Index < Parent->NumberOfSubKeys; Index++)
+  for (Index=0; Index < Parent->SubKeyCounts; Index++)
     {
       CurKey = Parent->SubKeys[Index];
       if (Attributes & OBJ_CASE_INSENSITIVE)
@@ -863,7 +863,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 	}
     }
 
-  if (Index < Parent->NumberOfSubKeys)
+  if (Index < Parent->SubKeyCounts)
   {
      if (CurKey->Flags & KO_MARKED_FOR_DELETE)
      {
@@ -884,7 +884,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 
 static NTSTATUS
 CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
-		 PKEY_CELL KeyCell,
+		 PCM_KEY_NODE KeyCell,
 		 PUNICODE_STRING TargetPath)
 {
   UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");

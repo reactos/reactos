@@ -77,7 +77,7 @@ typedef struct _HBASE_BLOCK
    ULONG Format;
 
    /* Offset into file from the byte after the end of the base block.
-      If the hive is volatile, this is the actual pointer to the KEY_CELL */
+      If the hive is volatile, this is the actual pointer to the CM_KEY_NODE */
    HCELL_INDEX RootCell;
 
    /* Size of each hive block ? */
