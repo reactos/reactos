@@ -9,14 +9,16 @@
 
 #include <catalog.h>
 
-typedef struct _PROVIDER_HANDLE {
+typedef struct _PROVIDER_HANDLE
+{
     HANDLE Handle;
     PCATALOG_ENTRY Provider;
 } PROVIDER_HANDLE, *PPROVIDER_HANDLE;
 
 #define HANDLE_BLOCK_ENTRIES ((1024-sizeof(LIST_ENTRY))/sizeof(PROVIDER_HANDLE))
 
-typedef struct _PROVIDER_HANDLE_BLOCK {
+typedef struct _PROVIDER_HANDLE_BLOCK
+{
     LIST_ENTRY Entry;
     PROVIDER_HANDLE Handles[HANDLE_BLOCK_ENTRIES];
 } PROVIDER_HANDLE_BLOCK, *PPROVIDER_HANDLE_BLOCK;

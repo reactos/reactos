@@ -17,9 +17,8 @@
  */
 BOOL
 WSPAPI
-WPUCloseEvent(
-    IN  WSAEVENT hEvent,
-    OUT LPINT lpErrno)
+WPUCloseEvent(IN  WSAEVENT hEvent,
+              OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -32,9 +31,8 @@ WPUCloseEvent(
  */
 INT
 WSPAPI
-WPUCloseSocketHandle(
-    IN  SOCKET s,
-    OUT LPINT lpErrno)
+WPUCloseSocketHandle(IN  SOCKET s,
+                     OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -47,9 +45,8 @@ WPUCloseSocketHandle(
  */
 INT
 WSPAPI
-WPUCloseThread(
-    IN  LPWSATHREADID lpThreadId,
-    OUT LPINT lpErrno)
+WPUCloseThread(IN  LPWSATHREADID lpThreadId,
+               OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -62,8 +59,7 @@ WPUCloseThread(
  */
 WSAEVENT
 WSPAPI
-WPUCreateEvent(
-    OUT LPINT lpErrno)
+WPUCreateEvent(OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -76,10 +72,9 @@ WPUCreateEvent(
  */
 SOCKET
 WSPAPI
-WPUCreateSocketHandle(
-    IN  DWORD dwCatalogEntryId,
-    IN  DWORD dwContext,
-    OUT LPINT lpErrno)
+WPUCreateSocketHandle(IN  DWORD dwCatalogEntryId,
+                      IN  DWORD dwContext,
+                      OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -92,9 +87,8 @@ WPUCreateSocketHandle(
  */
 SOCKET
 WSPAPI
-WPUFDIsSet(
-    IN  SOCKET s,
-    IN  LPFD_SET set)
+WPUFDIsSet(IN  SOCKET s,
+           IN  LPFD_SET set)
 {
     UNIMPLEMENTED
 
@@ -107,11 +101,10 @@ WPUFDIsSet(
  */
 INT
 WSPAPI
-WPUGetProviderPath(
-    IN      LPGUID lpProviderId,
-    OUT     LPWSTR lpszProviderDllPath,
-    IN OUT  LPINT lpProviderDllPathLen,
-    OUT     LPINT lpErrno)
+WPUGetProviderPath(IN      LPGUID lpProviderId,
+                   OUT     LPWSTR lpszProviderDllPath,
+                   IN OUT  LPINT lpProviderDllPathLen,
+                   OUT     LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -124,34 +117,33 @@ WPUGetProviderPath(
  */
 SOCKET
 WSPAPI
-WPUModifyIFSHandle(
-    IN  DWORD dwCatalogEntryId,
-    IN  SOCKET ProposedHandle,
-    OUT LPINT lpErrno)
+WPUModifyIFSHandle(IN  DWORD dwCatalogEntryId,
+                   IN  SOCKET ProposedHandle,
+                   OUT LPINT lpErrno)
 {
-  PCATALOG_ENTRY Provider;
-  SOCKET Socket;
+    PCATALOG_ENTRY Provider;
+    SOCKET Socket;
 
-  WS_DbgPrint(MID_TRACE, ("dwCatalogEntryId (%d)  ProposedHandle (0x%X).\n",
+    WS_DbgPrint(MID_TRACE, ("dwCatalogEntryId (%d)  ProposedHandle (0x%X).\n",
     dwCatalogEntryId, ProposedHandle));
 
-  Provider = LocateProviderById(dwCatalogEntryId);
-  if (!Provider) {
-    WS_DbgPrint(MIN_TRACE, ("Provider with catalog entry id (%d) was not found.\n",
-      dwCatalogEntryId));
-    if( lpErrno ) *lpErrno = WSAEINVAL;
-    WS_DbgPrint(MID_TRACE, ("Returning invalid socket\n"));
-    return INVALID_SOCKET;
-  }
+    Provider = LocateProviderById(dwCatalogEntryId);
+    if (!Provider)
+    {
+        WS_DbgPrint(MIN_TRACE, ("Provider with catalog entry id (%d) was not found.\n",
+                    dwCatalogEntryId));
+        if( lpErrno ) *lpErrno = WSAEINVAL;
+        WS_DbgPrint(MID_TRACE, ("Returning invalid socket\n"));
+        return INVALID_SOCKET;
+    }
 
-  Socket = (SOCKET)CreateProviderHandle(
-    (HANDLE)ProposedHandle,
-    Provider);
+    Socket = (SOCKET)CreateProviderHandle((HANDLE)ProposedHandle,
+                                          Provider);
 
-  if( lpErrno ) *lpErrno = NO_ERROR;
+    if( lpErrno ) *lpErrno = NO_ERROR;
 
-  WS_DbgPrint(MID_TRACE, ("Socket: %x\n", Socket));
-  return Socket;
+    WS_DbgPrint(MID_TRACE, ("Socket: %x\n", Socket));
+    return Socket;
 }
 
 
@@ -160,9 +152,8 @@ WPUModifyIFSHandle(
  */
 INT
 WSPAPI
-WPUOpenCurrentThread(
-    OUT LPWSATHREADID lpThreadId,
-    OUT LPINT lpErrno)
+WPUOpenCurrentThread(OUT LPWSATHREADID lpThreadId,
+                     OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -175,11 +166,10 @@ WPUOpenCurrentThread(
  */
 INT
 WSPAPI
-WPUQueryBlockingCallback(
-    IN  DWORD dwCatalogEntryId,
-    OUT LPBLOCKINGCALLBACK FAR* lplpfnCallback,
-    OUT LPDWORD lpdwContext,
-    OUT LPINT lpErrno)
+WPUQueryBlockingCallback(IN  DWORD dwCatalogEntryId,
+                         OUT LPBLOCKINGCALLBACK FAR* lplpfnCallback,
+                         OUT LPDWORD lpdwContext,
+                         OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -192,10 +182,9 @@ WPUQueryBlockingCallback(
  */
 INT
 WSPAPI
-WPUQuerySocketHandleContext(
-    IN  SOCKET s,
-    OUT LPDWORD lpContext,
-    OUT LPINT lpErrno)
+WPUQuerySocketHandleContext(IN  SOCKET s,
+                            OUT LPDWORD lpContext,
+                            OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -208,11 +197,10 @@ WPUQuerySocketHandleContext(
  */
 INT
 WSPAPI
-WPUQueueApc(
-    IN  LPWSATHREADID lpThreadId,
-    IN  LPWSAUSERAPC lpfnUserApc,
-    IN  DWORD dwContext,
-    OUT LPINT lpErrno)
+WPUQueueApc(IN  LPWSATHREADID lpThreadId,
+            IN  LPWSAUSERAPC lpfnUserApc,
+            IN  DWORD dwContext,
+            OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -225,9 +213,8 @@ WPUQueueApc(
  */
 BOOL
 WSPAPI
-WPUResetEvent(
-    IN  WSAEVENT hEvent,
-    OUT LPINT lpErrno)
+WPUResetEvent(IN  WSAEVENT hEvent,
+              OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 
@@ -240,9 +227,8 @@ WPUResetEvent(
  */
 BOOL
 WSPAPI
-WPUSetEvent(
-    IN  WSAEVENT hEvent,
-    OUT LPINT lpErrno)
+WPUSetEvent(IN  WSAEVENT hEvent,
+            OUT LPINT lpErrno)
 {
     UNIMPLEMENTED
 

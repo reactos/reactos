@@ -16,22 +16,22 @@
  */
 BOOL
 EXPORT
-WSACloseEvent(
-  IN  WSAEVENT hEvent)
+WSACloseEvent(IN WSAEVENT hEvent)
 {
-  BOOL Success;
+    BOOL Success;
 
-  if (!WSAINITIALIZED) {
-    WSASetLastError(WSANOTINITIALISED);
-    return FALSE;
-  }
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
 
-  Success = CloseHandle((HANDLE)hEvent);
+    Success = CloseHandle((HANDLE)hEvent);
 
-  if (!Success)
-    WSASetLastError(WSA_INVALID_HANDLE);
+    if (!Success)
+        WSASetLastError(WSA_INVALID_HANDLE);
 
-  return Success;
+    return Success;
 }
 
 
@@ -42,19 +42,20 @@ WSAEVENT
 EXPORT
 WSACreateEvent(VOID)
 {
-  HANDLE Event;
+    HANDLE Event;
 
-  if (!WSAINITIALIZED) {
-    WSASetLastError(WSANOTINITIALISED);
-    return FALSE;
-  }
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
 
-  Event = CreateEventW(NULL, TRUE, FALSE, NULL);
+    Event = CreateEventW(NULL, TRUE, FALSE, NULL);
 
-  if (Event == INVALID_HANDLE_VALUE)
-    WSASetLastError(WSA_INVALID_HANDLE);
+    if (Event == INVALID_HANDLE_VALUE)
+        WSASetLastError(WSA_INVALID_HANDLE);
 
-  return (WSAEVENT)Event;
+    return (WSAEVENT)Event;
 }
 
 
@@ -63,22 +64,22 @@ WSACreateEvent(VOID)
  */
 BOOL
 EXPORT
-WSAResetEvent(
-  IN  WSAEVENT hEvent)
+WSAResetEvent(IN WSAEVENT hEvent)
 {
-  BOOL Success;
+    BOOL Success;
 
-  if (!WSAINITIALIZED) {
-    WSASetLastError(WSANOTINITIALISED);
-    return FALSE;
-  }
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
 
-  Success = ResetEvent((HANDLE)hEvent);
+    Success = ResetEvent((HANDLE)hEvent);
 
-  if (!Success)
-    WSASetLastError(WSA_INVALID_HANDLE);
+    if (!Success)
+        WSASetLastError(WSA_INVALID_HANDLE);
 
-  return Success;
+    return Success;
 }
 
 
@@ -87,22 +88,22 @@ WSAResetEvent(
  */
 BOOL
 EXPORT
-WSASetEvent(
-  IN  WSAEVENT hEvent)
+WSASetEvent(IN WSAEVENT hEvent)
 {
-  BOOL Success;
+    BOOL Success;
 
-  if (!WSAINITIALIZED) {
-    WSASetLastError(WSANOTINITIALISED);
-    return FALSE;
-  }
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
 
-  Success = SetEvent((HANDLE)hEvent);
+    Success = SetEvent((HANDLE)hEvent);
 
-  if (!Success)
-    WSASetLastError(WSA_INVALID_HANDLE);
+    if (!Success)
+        WSASetLastError(WSA_INVALID_HANDLE);
 
-  return Success;
+    return Success;
 }
 
 
@@ -111,35 +112,40 @@ WSASetEvent(
  */
 DWORD
 EXPORT
-WSAWaitForMultipleEvents(
-  IN  DWORD cEvents,
-  IN  CONST WSAEVENT FAR* lphEvents,
-  IN  BOOL fWaitAll,
-  IN  DWORD dwTimeout,
-  IN  BOOL fAlertable)
+WSAWaitForMultipleEvents(IN  DWORD cEvents,
+                         IN  CONST WSAEVENT FAR* lphEvents,
+                         IN  BOOL fWaitAll,
+                         IN  DWORD dwTimeout,
+                         IN  BOOL fAlertable)
 {
-  DWORD Status;
+    DWORD Status;
 
-  if (!WSAINITIALIZED) {
-    WSASetLastError(WSANOTINITIALISED);
-    return FALSE;
-  }
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return FALSE;
+    }
 
-  Status = WaitForMultipleObjectsEx(cEvents, lphEvents, fWaitAll, dwTimeout, fAlertable);
-  if (Status == WAIT_FAILED) {
-    Status = GetLastError();
+    Status = WaitForMultipleObjectsEx(cEvents,
+                                      lphEvents,
+                                      fWaitAll,
+                                      dwTimeout,
+                                      fAlertable);
+    if (Status == WAIT_FAILED)
+    {
+        Status = GetLastError();
 
-    if (Status == ERROR_NOT_ENOUGH_MEMORY)
-      WSASetLastError(WSA_NOT_ENOUGH_MEMORY);
-    else if (Status == ERROR_INVALID_HANDLE)
-      WSASetLastError(WSA_INVALID_HANDLE);
-    else
-      WSASetLastError(WSA_INVALID_PARAMETER);
+        if (Status == ERROR_NOT_ENOUGH_MEMORY)
+            WSASetLastError(WSA_NOT_ENOUGH_MEMORY);
+        else if (Status == ERROR_INVALID_HANDLE)
+            WSASetLastError(WSA_INVALID_HANDLE);
+        else
+            WSASetLastError(WSA_INVALID_PARAMETER);
 
-    return WSA_WAIT_FAILED;
-  }
+        return WSA_WAIT_FAILED;
+    }
 
-  return Status;
+    return Status;
 }
 
 
@@ -148,45 +154,52 @@ WSAWaitForMultipleEvents(
  */
 INT
 EXPORT
-WSAEnumNetworkEvents(
-  IN  SOCKET s,
-  IN  WSAEVENT hEventObject,
-  OUT LPWSANETWORKEVENTS lpNetworkEvents)
+WSAEnumNetworkEvents(IN  SOCKET s,
+                     IN  WSAEVENT hEventObject,
+                     OUT LPWSANETWORKEVENTS lpNetworkEvents)
 {
-  PCATALOG_ENTRY Provider;
-  INT Status;
-  INT Errno;
+    PCATALOG_ENTRY Provider;
+    INT Status;
+    INT Errno;
 
-  WS_DbgPrint(MID_TRACE,("Called (Socket %x, hEventObject %x, "
-			 "lpNetworkEvents %x)\n",
-			 s, hEventObject, lpNetworkEvents));
+    WS_DbgPrint(MID_TRACE,("Called (Socket %x, hEventObject %x, "
+                "lpNetworkEvents %x)\n",
+                s,
+                hEventObject,
+                lpNetworkEvents));
 
-  if (!lpNetworkEvents) {
-    WSASetLastError(WSAEINVAL);
-    return SOCKET_ERROR;
-  }
+    if (!lpNetworkEvents)
+    {
+        WSASetLastError(WSAEINVAL);
+        return SOCKET_ERROR;
+    }
 
-  if (!WSAINITIALIZED) {
-    WSASetLastError(WSANOTINITIALISED);
-    return SOCKET_ERROR;
-  }
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return SOCKET_ERROR;
+    }
 
-  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
-    WSASetLastError(WSAENOTSOCK);
-    return SOCKET_ERROR;
-  }
+    if (!ReferenceProviderByHandle((HANDLE)s,
+                                   &Provider))
+    {
+        WSASetLastError(WSAENOTSOCK);
+        return SOCKET_ERROR;
+    }
 
-  Status = Provider->ProcTable.lpWSPEnumNetworkEvents(
-    s, hEventObject, lpNetworkEvents, &Errno);
+    Status = Provider->ProcTable.lpWSPEnumNetworkEvents(s,
+                                                        hEventObject,
+                                                        lpNetworkEvents,
+                                                        &Errno);
 
-  DereferenceProviderByPointer(Provider);
+    DereferenceProviderByPointer(Provider);
 
-  if (Status == SOCKET_ERROR)
-    WSASetLastError(Errno);
+    if (Status == SOCKET_ERROR)
+        WSASetLastError(Errno);
 
-  WS_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
+    WS_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
 
-  return Status;
+    return Status;
 }
 
 
@@ -195,34 +208,37 @@ WSAEnumNetworkEvents(
  */
 INT
 EXPORT
-WSAEventSelect(
-    IN  SOCKET s,
-    IN  WSAEVENT hEventObject,
-    IN  LONG lNetworkEvents)
+WSAEventSelect(IN  SOCKET s,
+               IN  WSAEVENT hEventObject,
+               IN  LONG lNetworkEvents)
 {
-  PCATALOG_ENTRY Provider;
-  INT Status;
-  INT Errno;
+    PCATALOG_ENTRY Provider;
+    INT Status;
+    INT Errno;
 
-  if (!WSAINITIALIZED) {
-    WSASetLastError(WSANOTINITIALISED);
-    return SOCKET_ERROR;
-  }
+    if (!WSAINITIALIZED)
+    {
+        WSASetLastError(WSANOTINITIALISED);
+        return SOCKET_ERROR;
+    }
 
-  if (!ReferenceProviderByHandle((HANDLE)s, &Provider)) {
-    WSASetLastError(WSAENOTSOCK);
-    return SOCKET_ERROR;
-  }
+    if (!ReferenceProviderByHandle((HANDLE)s, &Provider))
+    {
+        WSASetLastError(WSAENOTSOCK);
+        return SOCKET_ERROR;
+    }
 
-  Status = Provider->ProcTable.lpWSPEventSelect(
-    s, hEventObject, lNetworkEvents, &Errno);
+    Status = Provider->ProcTable.lpWSPEventSelect(s,
+                                                  hEventObject,
+                                                  lNetworkEvents,
+                                                  &Errno);
 
-  DereferenceProviderByPointer(Provider);
+    DereferenceProviderByPointer(Provider);
 
-  if (Status == SOCKET_ERROR)
-    WSASetLastError(Errno);
+    if (Status == SOCKET_ERROR)
+        WSASetLastError(Errno);
 
-  return Status;
+    return Status;
 }
 
 /* EOF */
