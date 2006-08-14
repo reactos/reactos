@@ -715,7 +715,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
   Status = HvInitialize (&Hive, HV_OPERATION_MEMORY_INPLACE,
                          (ULONG_PTR)ChunkBase, ChunkSize,
                          CmpAllocate, CmpFree,
-                         NULL, NULL, NULL, NULL, NULL);
+                         NULL, NULL, NULL, NULL, NULL, NULL);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint((DPRINT_REGISTRY, "Invalid hive id!\n"));
@@ -810,7 +810,7 @@ RegExportBinaryHive(PCWSTR KeyName,
 
   Status = HvInitialize (&Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
                          CmpAllocate, CmpFree,
-                         NULL, NULL, NULL, NULL, NULL);
+                         NULL, NULL, NULL, NULL, NULL, NULL);
   if (!NT_SUCCESS(Status))
     {
       return FALSE;

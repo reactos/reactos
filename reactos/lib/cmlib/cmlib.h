@@ -130,15 +130,16 @@ NTSTATUS CMAPI
 HvInitialize(
    PHHIVE *RegistryHive,
    ULONG Operation,
-   ULONG_PTR ChunkBase,
-   SIZE_T ChunkSize,
+   ULONG_PTR HiveData OPTIONAL,
+   SIZE_T Cluster, // HACK!!
    PALLOCATE_ROUTINE Allocate,
    PFREE_ROUTINE Free,
    PFILE_READ_ROUTINE FileRead,
    PFILE_WRITE_ROUTINE FileWrite,
    PFILE_SET_SIZE_ROUTINE FileSetSize,
    PFILE_FLUSH_ROUTINE FileFlush,
-   PVOID Opaque);
+   PVOID Opaque, // HACK!!
+   IN PUNICODE_STRING FileName);
 
 VOID CMAPI 
 HvFree(

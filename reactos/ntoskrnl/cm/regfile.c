@@ -143,7 +143,7 @@ CmiCreateNewRegFile(HANDLE FileHandle)
   Status = HvInitialize(&Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,
-                        CmpFileFlush, &CmHive);
+                        CmpFileFlush, &CmHive, NULL);
   if (!NT_SUCCESS(Status))
     {
       return FALSE;
@@ -571,7 +571,7 @@ CmiInitNonVolatileRegistryHive (PEREGISTRY_HIVE RegistryHive,
                         (ULONG_PTR)ViewBase, ViewSize,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,
-                        CmpFileFlush, RegistryHive);
+                        CmpFileFlush, RegistryHive, NULL);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Failed to open hive\n");
@@ -622,7 +622,7 @@ CmiCreateTempHive(PEREGISTRY_HIVE *RegistryHive)
   Status = HvInitialize(&Hive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,
-                        CmpFileFlush, Hive);
+                        CmpFileFlush, Hive, NULL);
   if (!NT_SUCCESS(Status))
     {
       ExFreePool (Hive);
