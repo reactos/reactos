@@ -37,18 +37,6 @@
 #define  REG_SAM_FILE_NAME		L"\\sam"
 #define  REG_SEC_FILE_NAME		L"\\security"
 
-typedef struct _EREGISTRY_HIVE
-{
-  LIST_ENTRY  HiveList;
-  PHHIVE  Hive;
-  UNICODE_STRING  HiveFileName;
-  UNICODE_STRING  LogFileName;
-  PCM_KEY_SECURITY  RootSecurityCell;
-  ULONG  Flags;
-  HANDLE  HiveHandle;
-  HANDLE  LogHandle;
-} EREGISTRY_HIVE, *PEREGISTRY_HIVE;
-
 /* When set, the hive is not backed by a file.
    Therefore, it can not be flushed to disk. */
 #define HIVE_NO_FILE    0x00000002

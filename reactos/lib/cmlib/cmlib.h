@@ -115,8 +115,19 @@ typedef struct _HHIVE
     ULONG StorageTypeCount;
     ULONG Version;
     DUAL Storage[HvMaxStorageType];
-    PVOID Opaque; // FIXME: KILL!
 } HHIVE, *PHHIVE;
+
+typedef struct _EREGISTRY_HIVE
+{
+  HHIVE Hive;
+  LIST_ENTRY  HiveList;
+  UNICODE_STRING  HiveFileName;
+  UNICODE_STRING  LogFileName;
+  PCM_KEY_SECURITY  RootSecurityCell;
+  ULONG  Flags;
+  HANDLE  HiveHandle;
+  HANDLE  LogHandle;
+} EREGISTRY_HIVE, *PEREGISTRY_HIVE;
 
 /*
  * Public functions.
@@ -128,7 +139,7 @@ typedef struct _HHIVE
 
 NTSTATUS CMAPI
 HvInitialize(
-   PHHIVE *RegistryHive,
+   PHHIVE RegistryHive,
    ULONG Operation,
    ULONG_PTR HiveData OPTIONAL,
    SIZE_T Cluster, // HACK!!
@@ -138,7 +149,6 @@ HvInitialize(
    PFILE_WRITE_ROUTINE FileWrite,
    PFILE_SET_SIZE_ROUTINE FileSetSize,
    PFILE_FLUSH_ROUTINE FileFlush,
-   PVOID Opaque, // HACK!!
    IN PUNICODE_STRING FileName);
 
 VOID CMAPI 

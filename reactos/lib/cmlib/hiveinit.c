@@ -299,7 +299,7 @@ HvpInitializeMemoryInplaceHive(
 
 NTSTATUS CMAPI
 HvInitialize(
-   PHHIVE *RegistryHive,
+   PHHIVE RegistryHive,
    ULONG Operation,
    ULONG_PTR ChunkBase,
    SIZE_T ChunkSize,
@@ -309,19 +309,15 @@ HvInitialize(
    PFILE_WRITE_ROUTINE FileWrite,
    PFILE_SET_SIZE_ROUTINE FileSetSize,
    PFILE_FLUSH_ROUTINE FileFlush,
-   PVOID Opaque,
    IN PUNICODE_STRING FileName)
 {
    NTSTATUS Status;
-   PHHIVE Hive;
+   PHHIVE Hive = RegistryHive;
 
    /*
     * Create a new hive structure that will hold all the maintenance data.
     */
 
-   Hive = Allocate(sizeof(HHIVE), TRUE);
-   if (Hive == NULL)
-      return STATUS_NO_MEMORY;
    RtlZeroMemory(Hive, sizeof(HHIVE));
 
    Hive->Allocate = Allocate;
@@ -330,7 +326,6 @@ HvInitialize(
    Hive->FileWrite = FileWrite;
    Hive->FileSetSize = FileSetSize;
    Hive->FileFlush = FileFlush;
-   Hive->Opaque = Opaque;
 
    switch (Operation)
    {
@@ -358,8 +353,6 @@ HvInitialize(
       return Status;
    }
 
-   *RegistryHive = Hive;
-   
    return Status;
 }
 

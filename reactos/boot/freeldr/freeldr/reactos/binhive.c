@@ -707,21 +707,24 @@ RegImportBinaryHive(PCHAR ChunkBase,
   FRLDRHKEY SystemKey;
   ULONG i;
   LONG Error;
+  PEREGISTRY_HIVE CmHive;
   PHHIVE Hive;
   NTSTATUS Status;
 
   DbgPrint((DPRINT_REGISTRY, "RegImportBinaryHive(%x, %u) called\n",ChunkBase,ChunkSize));
 
-  Status = HvInitialize (&Hive, HV_OPERATION_MEMORY_INPLACE,
+  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
+  Status = HvInitialize (&CmHive->Hive, HV_OPERATION_MEMORY_INPLACE,
                          (ULONG_PTR)ChunkBase, ChunkSize,
                          CmpAllocate, CmpFree,
-                         NULL, NULL, NULL, NULL, NULL, NULL);
+                         NULL, NULL, NULL, NULL, NULL);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint((DPRINT_REGISTRY, "Invalid hive id!\n"));
       return FALSE;
     }
 
+  Hive = &CmHive->Hive;
   KeyCell = HvGetCell (Hive, Hive->HiveHeader->RootCell);
   DbgPrint((DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell));
   DbgPrint((DPRINT_REGISTRY, "KeyCell->Id: %x\n", KeyCell->Id));
@@ -803,14 +806,17 @@ RegExportBinaryHive(PCWSTR KeyName,
 		    PCHAR ChunkBase,
 		    ULONG* ChunkSize)
 {
+  PEREGISTRY_HIVE CmHive;
   PHHIVE Hive;
   NTSTATUS Status;
 
   DbgPrint((DPRINT_REGISTRY, "Creating binary hardware hive\n"));
 
-  Status = HvInitialize (&Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
+  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
+  Status = HvInitialize (&CmHive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0,
                          CmpAllocate, CmpFree,
-                         NULL, NULL, NULL, NULL, NULL, NULL);
+                         NULL, NULL, NULL, NULL, NULL);
+  Hive = &CmHive->Hive;
   if (!NT_SUCCESS(Status))
     {
       return FALSE;

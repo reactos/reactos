@@ -251,8 +251,8 @@ CmInitializeRegistry(VOID)
 			  &RootKeyHandle);
   ASSERT(NT_SUCCESS(Status));
   RootKey->RegistryHive = CmiVolatileHive;
-  RootKey->KeyCellOffset = CmiVolatileHive->Hive->HiveHeader->RootCell;
-  RootKey->KeyCell = HvGetCell (CmiVolatileHive->Hive, RootKey->KeyCellOffset);
+  RootKey->KeyCellOffset = CmiVolatileHive->Hive.HiveHeader->RootCell;
+  RootKey->KeyCell = HvGetCell (&CmiVolatileHive->Hive, RootKey->KeyCellOffset);
   RootKey->ParentKey = RootKey;
   RootKey->Flags = 0;
   RootKey->SubKeyCounts = 0;
@@ -630,8 +630,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-  NewKey->KeyCellOffset = RegistryHive->Hive->HiveHeader->RootCell;
-  NewKey->KeyCell = HvGetCell (RegistryHive->Hive, NewKey->KeyCellOffset);
+  NewKey->KeyCellOffset = RegistryHive->Hive.HiveHeader->RootCell;
+  NewKey->KeyCell = HvGetCell (&RegistryHive->Hive, NewKey->KeyCellOffset);
   NewKey->RegistryHive = RegistryHive;
 
   Status = RtlpCreateUnicodeString(&NewKey->Name,

@@ -55,7 +55,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
                         (ULONG_PTR)ChunkBase, ChunkSize,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,
-                        CmpFileFlush, Hive, NULL);
+                        CmpFileFlush, NULL);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("Opening hive failed (%x)\n", Status);
@@ -63,7 +63,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
       return FALSE;
     }
 
-  CmPrepareHive(Hive->Hive);
+  CmPrepareHive(&Hive->Hive);
 
   /* Acquire hive list lock exclusively */
   KeEnterCriticalRegion();

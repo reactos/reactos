@@ -511,7 +511,7 @@ CmiObjectDelete(PVOID DeletedObject)
 		      KeyObject);
 
       KeQuerySystemTime (&ParentKeyObject->KeyCell->LastWriteTime);
-      HvMarkCellDirty (ParentKeyObject->RegistryHive->Hive,
+      HvMarkCellDirty (&ParentKeyObject->RegistryHive->Hive,
                        ParentKeyObject->KeyCellOffset);
 
       if (!IsNoFileHive (KeyObject->RegistryHive) ||
@@ -925,7 +925,7 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
 
   if (ValueCell->DataSize > 0)
     {
-      DataCell = HvGetCell (RegistryHive->Hive, ValueCell->DataOffset);
+      DataCell = HvGetCell (&RegistryHive->Hive, ValueCell->DataOffset);
       RtlCopyMemory(TargetPath->Buffer,
 		    DataCell,
 		    TargetPath->Length);
