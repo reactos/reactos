@@ -668,6 +668,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
   {
     HPEN oldPen;
     RECT rc = Rect;
+    rc.left -= 3;
     rc.top = 3;
     rc.bottom = Height - 3;
     if (flat_menu)
@@ -1408,11 +1409,11 @@ MenuPopupMenuCalcSize(PROSMENUINFO MenuInfo, HWND WndOwner)
               MenuSetRosMenuInfo(MenuInfo);
               return;
             }
-
-          if (0 != (ItemInfo.fType & MF_MENUBARBREAK))
-            {
-              OrgX++;
-            }
+// Not sure here,, The patch from wine removes this.
+//          if (0 != (ItemInfo.fType & MF_MENUBARBREAK))
+//            {
+//              OrgX++;
+//            }
           MaxX = max(MaxX, ItemInfo.Rect.right);
           OrgY = ItemInfo.Rect.bottom;
           if ((ItemInfo.Text) && 0 != ItemInfo.XTab)
@@ -2664,7 +2665,7 @@ static UINT MenuGetStartOfNextColumn(PROSMENUINFO MenuInfo)
 
   for (i++ ; i < MenuInfo->MenuItemCount; i++)
     {
-      if (0 != (MenuItems[i].fType & MF_MENUBARBREAK))
+      if (0 != (MenuItems[i].fType & (MF_MENUBREAK | MF_MENUBARBREAK)))
         {
           return i;
         }
@@ -2696,7 +2697,7 @@ MenuGetStartOfPrevColumn(PROSMENUINFO MenuInfo)
   /* Find the start of the column */
 
   for (i = MenuInfo->FocusedItem;
-       0 != i && 0 == (MenuItems[i].fType & MF_MENUBARBREAK);
+       0 != i && 0 == (MenuItems[i].fType & (MF_MENUBREAK | MF_MENUBARBREAK));
        --i)
     {
       ; /* empty */
@@ -2710,7 +2711,7 @@ MenuGetStartOfPrevColumn(PROSMENUINFO MenuInfo)
 
   for (--i; 0 != i; --i)
     {
-      if (MenuItems[i].fType & MF_MENUBARBREAK)
+      if (MenuItems[i].fType & (MF_MENUBREAK | MF_MENUBARBREAK))
         {
           break;
         }
