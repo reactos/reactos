@@ -32,9 +32,9 @@ HvpAddBin(
    RtlZeroMemory(Bin, sizeof(HBIN));
 
    Bin->Signature = HV_BIN_SIGNATURE;
-   Bin->BinOffset = RegistryHive->Storage[Storage].Length *
+   Bin->FileOffset = RegistryHive->Storage[Storage].Length *
                     HV_BLOCK_SIZE;
-   Bin->BinSize = BinSize;
+   Bin->Size = BinSize;
 
    /* Allocate new block list */
    OldBlockListSize = RegistryHive->Storage[Storage].Length;
@@ -90,7 +90,7 @@ HvpAddBin(
 
       /* Mark new bin dirty. */
       RtlSetBits(&RegistryHive->DirtyVector,
-                 Bin->BinOffset / HV_BLOCK_SIZE,
+                 Bin->FileOffset / HV_BLOCK_SIZE,
                  BlockCount);
    }
 

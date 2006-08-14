@@ -43,7 +43,7 @@ typedef struct _EREGISTRY_HIVE
   PHHIVE  Hive;
   UNICODE_STRING  HiveFileName;
   UNICODE_STRING  LogFileName;
-  PSECURITY_CELL  RootSecurityCell;
+  PCM_KEY_SECURITY  RootSecurityCell;
   ULONG  Flags;
   HANDLE  HiveHandle;
   HANDLE  LogHandle;

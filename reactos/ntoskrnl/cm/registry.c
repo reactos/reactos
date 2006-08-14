@@ -164,7 +164,7 @@ CmInitializeRegistry(VOID)
   UNICODE_STRING KeyName;
   PKEY_OBJECT RootKey;
 #if 0
-  PSECURITY_CELL RootSecurityCell;
+  PCM_KEY_SECURITY RootSecurityCell;
 #endif
   HANDLE RootKeyHandle;
   HANDLE KeyHandle;

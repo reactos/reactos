@@ -787,8 +787,8 @@ CmiWriteHive(PHHIVE Hive,
 	{
 	  Bin = (PHBIN)Hive->Storage[HvStable].BlockList[i].Bin;
 	  memcpy (ChunkBase + (i + 1) * HV_BLOCK_SIZE,
-	          Bin, Bin->BinSize);
-	  Size += Bin->BinSize;
+	          Bin, Bin->Size);
+	  Size += Bin->Size;
 	}
     }
 

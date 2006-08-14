@@ -99,21 +99,21 @@ typedef struct _HBASE_BLOCK
    ULONG BootRecover;
 } HBASE_BLOCK, *PHBASE_BLOCK;
 
-typedef struct _BIN_HEADER
+typedef struct _HBIN
 {
    /* Bin identifier "hbin" (0x6E696268) */
    ULONG Signature;
 
    /* Block offset of this bin */
-   HCELL_INDEX BinOffset;
+   HCELL_INDEX FileOffset;
 
    /* Size in bytes, multiple of the block size (4KB) */
-   ULONG BinSize;
+   ULONG Size;
 
-   ULONG Reserved[2];
+   ULONG Reserved1[2];
 
    /* When this bin was last modified */
-   LARGE_INTEGER DateModified;
+   LARGE_INTEGER TimeStamp;
 
    /* ? (In-memory only) */
    ULONG MemAlloc;

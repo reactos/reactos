@@ -181,14 +181,14 @@ HvpInitializeMemoryHive(
    {
       Bin = (PHBIN)((ULONG_PTR)ChunkBase + (BlockIndex + 1) * HV_BLOCK_SIZE);
       if (Bin->Signature != HV_BIN_SIGNATURE ||
-          (Bin->BinSize % HV_BLOCK_SIZE) != 0)
+          (Bin->Size % HV_BLOCK_SIZE) != 0)
       {
          Hive->Free(Hive->HiveHeader);
          Hive->Free(Hive->Storage[HvStable].BlockList);
          return STATUS_REGISTRY_CORRUPT;
       }
 
-      NewBin = Hive->Allocate(Bin->BinSize, TRUE);
+      NewBin = Hive->Allocate(Bin->Size, TRUE);
       if (NewBin == NULL)
       {
          Hive->Free(Hive->HiveHeader);
@@ -199,11 +199,11 @@ HvpInitializeMemoryHive(
       Hive->Storage[HvStable].BlockList[BlockIndex].Bin = (ULONG_PTR)NewBin;
       Hive->Storage[HvStable].BlockList[BlockIndex].Block = (ULONG_PTR)NewBin;
 
-      RtlCopyMemory(NewBin, Bin, Bin->BinSize);
+      RtlCopyMemory(NewBin, Bin, Bin->Size);
 
-      if (Bin->BinSize > HV_BLOCK_SIZE)
+      if (Bin->Size > HV_BLOCK_SIZE)
       {
-         for (i = 1; i < Bin->BinSize / HV_BLOCK_SIZE; i++)
+         for (i = 1; i < Bin->Size / HV_BLOCK_SIZE; i++)
          {
             Hive->Storage[HvStable].BlockList[BlockIndex + i].Bin = (ULONG_PTR)NewBin;
             Hive->Storage[HvStable].BlockList[BlockIndex + i].Block =
@@ -211,7 +211,7 @@ HvpInitializeMemoryHive(
          }
       }
 
-      BlockIndex += Bin->BinSize / HV_BLOCK_SIZE;
+      BlockIndex += Bin->Size / HV_BLOCK_SIZE;
    }
 
    if (HvpCreateHiveFreeCellList(Hive))

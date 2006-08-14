@@ -242,12 +242,12 @@ HvpCreateHiveFreeCellList(
 
       /* Search free blocks and add to list */
       FreeOffset = sizeof(HBIN);
-      while (FreeOffset < Bin->BinSize)
+      while (FreeOffset < Bin->Size)
       {
          FreeBlock = (PCELL_HEADER)((ULONG_PTR)Bin + FreeOffset);
          if (FreeBlock->CellSize > 0)
          {
-            Status = HvpAddFree(Hive, FreeBlock, Bin->BinOffset + FreeOffset);
+            Status = HvpAddFree(Hive, FreeBlock, Bin->FileOffset + FreeOffset);
             if (!NT_SUCCESS(Status))
                return Status;
 
@@ -259,8 +259,8 @@ HvpCreateHiveFreeCellList(
          }
       }
 
-      BlockIndex += Bin->BinSize / HV_BLOCK_SIZE;
-      BlockOffset += Bin->BinSize;
+      BlockIndex += Bin->Size / HV_BLOCK_SIZE;
+      BlockOffset += Bin->Size;
    }
 
    return STATUS_SUCCESS;
@@ -291,7 +291,7 @@ HvAllocateCell(
       Bin = HvpAddBin(RegistryHive, Size, Storage);
       if (Bin == NULL)
          return HCELL_NULL;
-      FreeCellOffset = Bin->BinOffset + sizeof(HBIN);
+      FreeCellOffset = Bin->FileOffset + sizeof(HBIN);
       FreeCellOffset |= Storage << HCELL_TYPE_SHIFT;
    }
 
@@ -387,14 +387,14 @@ HvFreeCell(
    Bin = (PHBIN)RegistryHive->Storage[CellType].BlockList[CellBlock].Bin;
 
    if ((CellIndex & ~HCELL_TYPE_MASK) + Free->CellSize <
-       Bin->BinOffset + Bin->BinSize)
+       Bin->FileOffset + Bin->Size)
    {
       Neighbor = (PCELL_HEADER)((ULONG_PTR)Free + Free->CellSize);
       if (Neighbor->CellSize > 0)
       {
          HvpRemoveFree(RegistryHive, Neighbor,
                        ((HCELL_INDEX)Neighbor - (HCELL_INDEX)Bin +
-                       Bin->BinOffset) | (CellIndex & HCELL_TYPE_MASK));
+                       Bin->FileOffset) | (CellIndex & HCELL_TYPE_MASK));
          Free->CellSize += Neighbor->CellSize;
       }
    }
@@ -410,7 +410,7 @@ HvFreeCell(
             if (CellType == HvStable)
                HvMarkCellDirty(RegistryHive,
                                (HCELL_INDEX)Neighbor - (HCELL_INDEX)Bin +
-                               Bin->BinOffset);
+                               Bin->FileOffset);
             return;
          }
          Neighbor = (PCELL_HEADER)((ULONG_PTR)Neighbor + Neighbor->CellSize);

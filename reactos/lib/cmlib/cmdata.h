@@ -133,16 +133,17 @@ typedef struct _CM_KEY_VALUE
 #define REG_DATA_SIZE_MASK                 0x7FFFFFFF
 #define REG_DATA_IN_OFFSET                 0x80000000
 
-typedef struct _SECURITY_CELL
+typedef struct _CM_KEY_SECURITY
 {
-  USHORT Id;	// "sk"
-  USHORT Reserved;
-  HCELL_INDEX PrevSecurityCell;
-  HCELL_INDEX NextSecurityCell;
-  ULONG RefCount;
-  ULONG SdSize;
-  UCHAR Data[0];
-} SECURITY_CELL, *PSECURITY_CELL;
+    USHORT Signature; // "sk"
+    USHORT Reserved;
+    HCELL_INDEX Flink;
+    HCELL_INDEX Blink;
+    ULONG ReferenceCount;
+    ULONG DescriptorLength;
+    //SECURITY_DESCRIPTOR_RELATIVE Descriptor;
+    UCHAR Data[0];
+} CM_KEY_SECURITY, *PCM_KEY_SECURITY;
 
 #include <poppack.h>
 
