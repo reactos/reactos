@@ -142,7 +142,7 @@ HvInitialize(
    PHHIVE RegistryHive,
    ULONG Operation,
    ULONG_PTR HiveData OPTIONAL,
-   SIZE_T Cluster, // HACK!!
+   ULONG Cluster OPTIONAL,
    PALLOCATE_ROUTINE Allocate,
    PFREE_ROUTINE Free,
    PFILE_READ_ROUTINE FileRead,

@@ -715,7 +715,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
 
   CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
   Status = HvInitialize (&CmHive->Hive, HV_OPERATION_MEMORY_INPLACE,
-                         (ULONG_PTR)ChunkBase, ChunkSize,
+                         (ULONG_PTR)ChunkBase, 0,
                          CmpAllocate, CmpFree,
                          NULL, NULL, NULL, NULL, NULL);
   if (!NT_SUCCESS(Status))

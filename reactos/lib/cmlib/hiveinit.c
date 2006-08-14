@@ -137,15 +137,22 @@ HvpCreateHive(
 NTSTATUS CMAPI
 HvpInitializeMemoryHive(
    PHHIVE Hive,
-   ULONG_PTR ChunkBase,
-   SIZE_T ChunkSize)
+   ULONG_PTR ChunkBase)
 {
    SIZE_T BlockIndex;
    PHBIN Bin, NewBin;
    ULONG i;
    ULONG BitmapSize;
    PULONG BitmapBuffer;
-   
+   SIZE_T ChunkSize;
+
+   //
+   // This hack is similar in magnitude to the US's National Debt
+   //
+   ChunkSize = ((PHBASE_BLOCK)ChunkBase)->Length;
+   ((PHBASE_BLOCK)ChunkBase)->Length = HV_BLOCK_SIZE;
+   DPRINT1("ChunkSize: %lx\n", ChunkSize);
+
    if (ChunkSize < sizeof(HBASE_BLOCK) ||
        !HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
    {
@@ -250,11 +257,9 @@ HvpInitializeMemoryHive(
 NTSTATUS CMAPI
 HvpInitializeMemoryInplaceHive(
    PHHIVE Hive,
-   ULONG_PTR ChunkBase,
-   SIZE_T ChunkSize)
+   ULONG_PTR ChunkBase)
 {
-   if (ChunkSize < sizeof(HBASE_BLOCK) ||
-       !HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
+   if (!HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
    {
       return STATUS_REGISTRY_CORRUPT;
    }
@@ -301,8 +306,8 @@ NTSTATUS CMAPI
 HvInitialize(
    PHHIVE RegistryHive,
    ULONG Operation,
-   ULONG_PTR ChunkBase,
-   SIZE_T ChunkSize,
+   ULONG_PTR HiveData OPTIONAL,
+   ULONG Cluster OPTIONAL,
    PALLOCATE_ROUTINE Allocate,
    PFREE_ROUTINE Free,
    PFILE_READ_ROUTINE FileRead,
@@ -334,11 +339,11 @@ HvInitialize(
          break;
 
       case HV_OPERATION_MEMORY:
-         Status = HvpInitializeMemoryHive(Hive, ChunkBase, ChunkSize);
+         Status = HvpInitializeMemoryHive(Hive, HiveData);
          break;
 
       case HV_OPERATION_MEMORY_INPLACE:
-         Status = HvpInitializeMemoryInplaceHive(Hive, ChunkBase, ChunkSize);
+         Status = HvpInitializeMemoryInplaceHive(Hive, HiveData);
          break;
 
       default:

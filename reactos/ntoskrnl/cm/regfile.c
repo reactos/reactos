@@ -569,8 +569,9 @@ CmiInitNonVolatileRegistryHive (PEREGISTRY_HIVE RegistryHive,
     }
   DPRINT("ViewBase %p  ViewSize %lx\n", ViewBase, ViewSize);
 
+  ((PHBASE_BLOCK)ViewBase)->Length = ViewSize;
   Status = HvInitialize(&RegistryHive->Hive, HV_OPERATION_MEMORY,
-                        (ULONG_PTR)ViewBase, ViewSize,
+                        (ULONG_PTR)ViewBase, 0,
                         CmpAllocate, CmpFree,
                         CmpFileRead, CmpFileWrite, CmpFileSetSize,
                         CmpFileFlush, NULL);
