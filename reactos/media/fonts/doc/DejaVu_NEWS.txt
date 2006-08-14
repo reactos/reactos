@@ -1,24 +1,101 @@
+Changes from 2.8 to 2.9:
+
+- DejaVuSansExtraLight.sfd: changed family name from "DejaVu Sans" to
+  "DejaVu Sans Light" (in case we add a Light weight variant), so legacy
+  apps that understand only 4 styles are happy. (by Denis Jacquerye)
+- added Name ID 16, aka preferred family name, and Name ID 17, aka
+  preferred style name, so contemporary apps that understand more that 4
+  styles can use big fonts families "DejaVu Sans" and "DejaVu Serif". For
+  those, Extralight and Condensed are just styles not different families.
+  (by Denis Jacquerye)
+- added U+22B6-22BD, U+22C0-22C1, U+22D6-22D7 to Sans. (by Remy Oudompheng)
+- added U+037B, U+2184, U+2C67-U+2C6A and U+2C75-U+2C77 to Sans (by Gee
+  Fung Sit)
+- adjusted asteriskmath (U+2217) for consistency with other mathematical
+  operators in Sans (by Ben Laenen)
+- hinted some Armenian capitals in Sans Book (by Ben Laenen)
+- added U+0246 - U+0249 (by Ben Laenen)
+- BUGFIX : swapped U+224E and U+224F, in Sans, Sans Condensed and Sans Mono
+  (by Remy Oudompheng)
+- adjusted U+20B5 (by Mederic Boquien)
+- swapped U+21DA and U+21DB which were in wrong order (by Heikki Lindroos)
+- added U+222E-2233, U+239B-23AD, U+2A00-2A02, U+2A0F-2A1C to Sans (by Remy
+  Oudompheng)
+- added U+239B-23AD to Mono (by Remy Oudompheng)
+- added U+2024-2025 to Serif (by Mederic Boquien)
+- added U+222C-222D, U+2A0C-2A0E to Serif (by Remy Oudompheng)
+- added U+2190-21FF to Mono (by Heikki Lindroos)
+- added Hebrew glyphs - U+05B0-U+05BD, U+05BF-U+05C3, U+05C6, U+05C7,
+  U+05D0-U+05EA, U+05F0-U+05F2, U+FB1F, U+FB20, U+FB2A-U+FB36,
+  U+FB38-U+FB3C, U+FB3E, U+FB40, U+FB41, U+FB43, U+FB44, U+FB46-U+FB4E (by
+  Gee Fung Sit and Eugeniy Meshcheryakov)
+- adjustments for Cyrillic in Sans (by Andrey V. Panov)
+- made italic shape for U+0434, U+0456, U+0457 in SerifOblique and Serif
+  Bold Oblique (by Andrey V. Panov)
+
+Changes from 2.7 to 2.8:
+
+- fixed instructions for U+0423, U+0427, U+0447, U+0448 in Serif, so they
+  look good at large sizes too (by Eugeniy Meshcheryakov)
+- added U+FB00 and U+FB03 to U+FB06 to Serif typefaces (by Heikki Lindroos)
+- added U+26B0-U+26B1, U+2701-U+2704, U+2706-U+2709, U+270C-U+2727, U+2729
+  to U+274B, U+274D, U+274F to U+2752, U+2756, U+2758-U+275E, U+2761 to
+  U+2775 (by Heikki Lindroos)
+- added and improved instructions for Cyrillic letters in Mono and Serif
+  (Book, by Eugeniy Meshcheryakov)
+- rotated U+26B0 (was too small in mono) (by Gee Fung Sit)
+- adjusted U+1EDA-U+1EDD, U+1EE8-U+1EEB, capitals using capital specific
+  accent and moved diacritics to match position on U+00F2 (ograve), etc.
+  (by Denis Jacquerye)
+- added U+20D6, U+20D7 to Sans (by Gee Fung Sit)
+- made Armenian ligatures discretionary since the Firefox ligature problem
+  still isn't fixed (by Ben Laenen)
+- moved Armenian hyphen U+058A to a higher position (bug #7436) (by Ben
+  Laenen)
+- hinted Greek glyphs in Sans Bold (by Ben Laenen)
+- enabled Arabic lam-alif ligatures when diacritics are used (by Ben Laenen)
+
 Changes from 2.6 to 2.7:
--  added glyphs needed for Kurdish: U+0695, U+06B5, U+06C6, U+06CE and their init/medi/fina forms in Sans (by Ben Laenen)
-- added U+02CD, U+01F8 - U+01F9, U+1E3E - U+1E3F, U+1E30 - U+1E35, U+1EBC - U+1EBD, U+1EF8 - U+1EF9 (includes glyphs needed for Yoruba, Maori, Guarani and Twi) (by Ben Laenen)
-- added U+22C8-22CC, U+29CE-29D5, U+2A7D-2AA0, U+2AAE-2ABA, U+2AF9-2AFA to Sans (by Remy Oudompheng)
-- adjusted diacritics on Vietnamese, Pinyin and other characters: U+01A0-U+01A1, U+01AF-U+01B0, U+01D5-U+01DC, U+01DE-01E1, U+01FA-U+01FB U+022A-U+022D, U+0230-U+0231, U+1E14-U+1E17, U+1E4C-U+1E53, U+1E78-U+1E7B, U+1EA4-U+1EF1 in Sans (Book, Bold and Oblique) (by Denis Jacquerye)
-- added basic arrows U+2190-U+2193 in Serif, which completes MES-1 compliance for Serif (by Ben Laenen)
-- added U+01E4, U+01E5, U+01FA, U+01FB, U+02BD, U+02C9 and U+02EE to Serif (by Ben Laenen)
+
+- added glyphs needed for Kurdish: U+0695, U+06B5, U+06C6, U+06CE and their
+  init/medi/fina forms in Sans (by Ben Laenen)
+- added U+02CD, U+01F8 - U+01F9, U+1E3E - U+1E3F, U+1E30 - U+1E35, U+1EBC -
+  U+1EBD, U+1EF8 - U+1EF9 (includes glyphs needed for Yoruba, Maori, Guarani
+  and Twi) (by Ben Laenen)
+- added U+22C8-22CC, U+29CE-29D5, U+2A7D-2AA0, U+2AAE-2ABA, U+2AF9-2AFA to
+  Sans (by Remy Oudompheng)
+- adjusted diacritics on Vietnamese, Pinyin and other characters:
+  U+01A0-U+01A1, U+01AF-U+01B0, U+01D5-U+01DC, U+01DE-01E1, U+01FA-U+01FB
+  U+022A-U+022D, U+0230-U+0231, U+1E14-U+1E17, U+1E4C-U+1E53, U+1E78-U+1E7B,
+  U+1EA4-U+1EF1 in Sans (Book, Bold and Oblique) (by Denis Jacquerye)
+- added basic arrows U+2190-U+2193 in Serif, which completes MES-1 compliance
+  for Serif (by Ben Laenen)
+- added U+01E4, U+01E5, U+01FA, U+01FB, U+02BD, U+02C9 and U+02EE to Serif
+  (by Ben Laenen)
 - fixed U+0209 in Serif Bold Oblique (by Ben Laenen)
-- adjusted Box Drawing block characters U+2500-257F in Mono to fit character cell, shifting them up by 416 (Denis Jacquerye)
+- adjusted Box Drawing block characters U+2500-257F in Mono to fit character
+  cell, shifting them up by 416 (Denis Jacquerye)
 - redid U+0194 in Sans (by Ben Laenen)
 - added U+2217-2218, U+2295-22A1 to Mono (by Remy Oudompheng)
 - added U+0462 to Serif (by Andrey V. Panov)
-- added U+226C, U+228C-228E, U+2293-2294, U+22F2-22FF to Sans (by Remy Oudompheng)
+- added U+226C, U+228C-228E, U+2293-2294, U+22F2-22FF to Sans (by Remy
+  Oudompheng)
 - adjusted U+2208-220D in Sans (by Remy Oudompheng)
-- improved some Cyrillic glyphs in Mono (by Andrey V. Panov), rewritten instructions for changed glyphs (by Eugeniy Meshcheryakov)
-- added U+1E0E-1E0F, U+1E8E-1E8F to Mono fonts (by Denis Jacquerye). (bug #7166)
-- renamed 'Dotabove' to 'Dotaccent' in Mono Sans Oblique to match other fonts (by Denis Jacquerye).
-- added U+200B-U+200F in Sans faces and Serif faces, U+200B and U+200C were in Sans already (by Lars Naesbye Christensen)
-- added U+2601-U+262F, U+263D, U+263E, U+2648-U+265F, U+2668, U+2670-U+268B, U+2690-U+269C, U+26A0, U+26A1, U+2794, U+2798-U+27AF, U+27B1-U+27BE to Mono (by Heikki Lindroos)
-- replaced the references with unshifted ones for both κ U+03BA and к U+043A in Mono Book (by Denis Jacquerye)
-- fixing glyph for U+04ED in Mono Book, consisted only of dieresis (by Andrey V. Panov). 
+- improved some Cyrillic glyphs in Mono (by Andrey V. Panov), rewritten
+  instructions for changed glyphs (by Eugeniy Meshcheryakov)
+- added U+1E0E-1E0F, U+1E8E-1E8F to Mono fonts (by Denis Jacquerye). (bug
+  #7166)
+- renamed 'Dotabove' to 'Dotaccent' in Mono Sans Oblique to match other fonts
+  (by Denis Jacquerye).
+- added U+200B-U+200F in Sans faces and Serif faces, U+200B and U+200C were
+  in Sans already (by Lars Naesbye Christensen)
+- added U+2601-U+262F, U+263D, U+263E, U+2648-U+265F, U+2668, U+2670-U+268B,
+  U+2690-U+269C, U+26A0, U+26A1, U+2794, U+2798-U+27AF, U+27B1-U+27BE to Mono
+  (by Heikki Lindroos)
+- replaced the references with unshifted ones for both κ U+03BA and к U+043A
+  in Mono Book (by Denis Jacquerye)
+- fixing glyph for U+04ED in Mono Book, consisted only of dieresis (by Andrey
+  V. Panov).
 
 Changes from 2.5 to 2.6:
 
@@ -485,4 +562,4 @@ Changes from 0.9 to 0.9.1:
 - proper caron shape for dcaron and tcaron
 - minor visual changes
 
-$Id: NEWS 891 2006-05-14 15:26:27Z ben_laenen $
+$Id: NEWS 1072 2006-08-13 12:10:14Z ben_laenen $
