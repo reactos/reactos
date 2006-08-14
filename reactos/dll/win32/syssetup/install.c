@@ -488,7 +488,7 @@ InstallReactOS (HINSTANCE hInstance)
 {
   TCHAR sAccessories[256];
   TCHAR sGames[256];
-    
+  TCHAR szBuffer[MAX_PATH];  
 
 # if 0
   OutputDebugStringA ("InstallReactOS() called\n");
@@ -626,6 +626,13 @@ InstallReactOS (HINSTANCE hInstance)
 
   CreateTempDir(L"TEMP");
   CreateTempDir(L"TMP");
+
+  if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
+  {
+    PathAddBackslash(szBuffer);
+    _tcscat(szBuffer, _T("system"));
+    CreateDirectory(szBuffer, NULL);
+  }
 
   hSysSetupInf = SetupOpenInfFileW(L"syssetup.inf",
 				   NULL,
