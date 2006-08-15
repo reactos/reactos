@@ -788,12 +788,12 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       }
       if(lpmii->fType & MFT_BITMAP)
       {
-//         if(lpmii->hbmpItem) 
+         if(lpmii->hbmpItem)
            MenuItem->hbmpItem = lpmii->hbmpItem;
-//         else
-//         { /* Win 9x/Me stuff */
-//           MenuItem->hbmpItem = (HBITMAP)lpmii->dwTypeData;
-//         }
+         else
+         { /* Win 9x/Me stuff */
+           MenuItem->hbmpItem = (HBITMAP)((ULONG_PTR)(LOWORD(lpmii->dwTypeData)));
+         }
       }
       MenuItem->fType |= lpmii->fType;
    }
