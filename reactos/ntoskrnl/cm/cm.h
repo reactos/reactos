@@ -114,19 +114,37 @@
 #define CMP_HASH_PRIME                                  1000000007
 
 //
+// CmpCreateKcb Flags
+//
+#define CMP_CREATE_FAKE_KCB                             0x1
+#define CMP_LOCK_HASHES_FOR_KCB                         0x2
+
+//
+// Number of items that can fit inside an Allocation Page
+//
+#define CM_KCBS_PER_PAGE                                \
+    PAGE_SIZE / sizeof(CM_KEY_CONTROL_BLOCK)
+#define CM_DELAYS_PER_PAGE                       \
+    PAGE_SIZE / sizeof(CM_DELAYED_CLOSE_ENTRY)
+
+//
 // A Cell Index is just a ULONG
 //
 typedef ULONG HCELL_INDEX;
 
 //
-// TEMPORARY HACK HACK
+// Mapped View of a Hive
 //
-typedef struct _HHIVE
+typedef struct _CM_VIEW_OF_FILE
 {
-    ULONG I;
-    ULONG Love;
-    ULONG Filip;
-} HHIVE, *PHHIVE;
+    LIST_ENTRY LRUViewList;
+    LIST_ENTRY PinViewList;
+    ULONG FileOffset;
+    ULONG Size;
+    PULONG ViewAddress;
+    PVOID Bcb;
+    ULONG UseCount;
+} CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
 
 //
 // Key Hash
@@ -270,7 +288,7 @@ typedef struct _CM_NAME_CONTROL_BLOCK
 typedef struct _CM_KEY_CONTROL_BLOCK
 {
     USHORT RefCount;
-    ULONG Flags;
+    USHORT Flags;
     ULONG ExtFlags:8;
     ULONG PrivateAlloc:1;
     ULONG Delete:1;
@@ -294,8 +312,11 @@ typedef struct _CM_KEY_CONTROL_BLOCK
     PCM_INDEX_HINT_BLOCK IndexHint;
     ULONG HashKey;
     ULONG SubKeyCount;
-    LIST_ENTRY KeyBodyListHead;
-    LIST_ENTRY FreeListEntry;
+    union
+    {
+        LIST_ENTRY KeyBodyListHead;
+        LIST_ENTRY FreeListEntry;
+    };
     PCM_KEY_BODY KeyBodyArray[4];
     PVOID DelayCloseEntry;
     LARGE_INTEGER KcbLastWriteTime;
@@ -337,6 +358,15 @@ typedef struct _CM_ALLOC_PAGE
     ULONG Reserved;
     PVOID AllocPage;
 } CM_ALLOC_PAGE, *PCM_ALLOC_PAGE;
+
+//
+// Delayed Close Entry
+//
+typedef struct _CM_DELAYED_CLOSE_ENTRY
+{
+    LIST_ENTRY DelayedLRUList;
+    PCM_KEY_CONTROL_BLOCK KeyControlBlock;
+} CM_DELAYED_CLOSE_ENTRY, *PCM_DELAYED_CLOSE_ENTRY;
 
 //
 // Use Count Log and Entry
@@ -498,6 +528,15 @@ NTAPI
 CmCheckRegistry(
     IN PCMHIVE Hive,
     IN BOOLEAN CleanFlag
+);
+
+//
+// Registry Lock
+//
+BOOLEAN
+NTAPI
+CmpTestRegistryLockExclusive(
+    VOID
 );
 
 //

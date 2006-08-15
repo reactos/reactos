@@ -127,7 +127,7 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
                   IN ULONG Operation,
                   IN ULONG Flags,
                   IN ULONG FileType,
-                  IN PVOID Context,
+                  IN PVOID HiveData,
                   IN HANDLE Primary,
                   IN HANDLE Alternate,
                   IN HANDLE Log,
@@ -146,7 +146,7 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
      * An external hive that is also internal.
      * An alternate hive or a log hive that's not a primary hive too.
      * A volatile hive that's linked to permanent storage.
-     * An in-memory initailization without context data.
+     * An in-memory initailization without hive data.
      * A log hive or alternative hive that's not linked to a correct file type.
      */
     if ((Alternate && Log) ||
@@ -155,7 +155,7 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
         (Log && !Primary) ||
         ((Flags & HIVE_VOLATILE) &&
          (Alternate || Primary || External || Log)) ||
-        ((Operation == HINIT_MEMORY) && (!Context)) ||
+        ((Operation == HINIT_MEMORY) && (!HiveData)) ||
         (Log && (FileType != HFILE_TYPE_LOG)) ||
         (Alternate && (FileType != HFILE_TYPE_ALTERNATE)))
     {
@@ -274,7 +274,7 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
                           Operation,
                           Flags,
                           FileType,
-                          Context,
+                          (ULONG_PTR)HiveData,
                           CmpAllocate,
                           CmpFree,
                           CmpFileRead,
