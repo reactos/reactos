@@ -80,3 +80,20 @@
                                      (k)->ConvKey).Lock);           \
 }
 
+//
+// Exclusively acquires an NCB
+//
+#define CmpAcquireNcbLockExclusive(n)                               \
+{                                                                   \
+    ExAcquirePushLockExclusive(GET_HASH_ENTRY(CmpNameCacheTable,    \
+                                              (n)->ConvKey).Lock);  \
+}
+
+//
+// Releases an exlusively or shared acquired NCB
+//
+#define CmpReleaseNcbLock(k)                                        \
+{                                                                   \
+    ExReleasePushLock(GET_HASH_ENTRY(CmpNameCacheTable,             \
+                                     (k)->ConvKey).Lock);           \
+}

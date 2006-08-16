@@ -290,6 +290,79 @@ CmpFreeKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
 }
 
 VOID
+CmpDereferenceNcbWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
+{
+    PCM_NAME_HASH Current, Next;
+
+    /* Lock the NCB */
+    CmpAcquireNcbLockExclusive(Ncb);
+
+    /* Decrease the reference count */
+    if (!(--Ncb->RefCount))
+    {
+        /* Find the NCB in the table */
+        Next = GET_HASH_ENTRY(CmpNameCacheTable, Ncb->ConvKey).Entry;
+        while (TRUE)
+        {
+            /* Check the current entry */
+            Current = Next;
+            ASSERT(Current != NULL);
+            if (Current == &Ncb->NameHash) break;
+
+            /* Get to the next one */
+            Next = Current->NextHash;
+        }
+
+        /* Found it, now unlink it and free it */
+        Current->NextHash = Next->NextHash;
+        ExFreePool(Ncb);
+    }
+
+    /* Release the lock */
+    CmpReleaseNcbLock(Ncb);
+}
+
+VOID
+NTAPI
+CmpFreeDelayItem(PVOID Entry)
+{
+    PCM_DELAYED_CLOSE_ENTRY AllocEntry = (PCM_DELAYED_CLOSE_ENTRY)Entry;
+    PCM_DELAYED_CLOSE_ENTRY *AllocTable;
+    PCM_ALLOC_PAGE AllocPage;
+    ULONG i;
+    PAGED_CODE();
+
+    /* Lock the table */
+    KeAcquireGuardedMutex(&CmpDelayAllocBucketLock);
+
+    /* Add the entry at the end */
+    InsertTailList(&CmpFreeDelayItemsListHead, &AllocEntry->DelayedLRUList);
+
+    /* Get the alloc page */
+    AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Entry & 0xFFFFF000);
+    ASSERT(AllocPage->FreeCount != CM_DELAYS_PER_PAGE);
+
+    /* Increase the number of free items */
+    if (++AllocPage->FreeCount == CM_DELAYS_PER_PAGE)
+    {
+        /* Page is totally free now, loop each entry */
+        AllocTable = (PCM_DELAYED_CLOSE_ENTRY*)&AllocPage->AllocPage;
+        for (i = CM_DELAYS_PER_PAGE; i; i--)
+        {
+            /* Get the entry and unlink it */
+            AllocEntry = AllocTable[i];
+            RemoveEntryList(&AllocEntry->DelayedLRUList);
+        }
+
+        /* Now free the page */
+        ExFreePool(AllocPage);
+    }
+
+    /* Release the lock */
+    KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
+}
+
+VOID
 NTAPI
 CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
