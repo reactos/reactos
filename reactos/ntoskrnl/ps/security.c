@@ -814,8 +814,8 @@ PsDisableImpersonation(IN PETHREAD Thread,
                                            OldValue);
         } while (NewValue != OldValue);
 
-        /* Did someone disable behind our back? */
-        if (!(NewValue & CT_ACTIVE_IMPERSONATION_INFO_BIT))
+        /* Make sure nobody disabled it behind our back */
+        if (NewValue & CT_ACTIVE_IMPERSONATION_INFO_BIT)
         {
             /* Copy the old state */
             Impersonation = Thread->ImpersonationInfo;
