@@ -1810,6 +1810,10 @@ MingwModuleHandler::GenerateOtherMacros ()
 		globalCflags += " -pipe";
 	if ( !module.allowWarnings )
 		globalCflags += " -Werror";
+
+	// Always force disabling of sibling calls optimisation for GCC
+	// (TODO: Move to version-specific once this bug is fixed in GCC)
+	globalCflags += " -fno-optimize-sibling-calls";
 	
 	fprintf (
 		fMakefile,
