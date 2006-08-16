@@ -75,6 +75,12 @@
 #define HSECTOR_COUNT                                   8
 
 //
+// Cell Masks
+//
+#define HCELL_NIL                                       0
+#define HCELL_CACHED                                    1
+
+//
 // CM_KEY_CONTROL_BLOCK Flags
 //
 #define CM_KCB_NO_SUBKEY                                0x01
@@ -369,6 +375,15 @@ typedef struct _CM_DELAYED_CLOSE_ENTRY
 } CM_DELAYED_CLOSE_ENTRY, *PCM_DELAYED_CLOSE_ENTRY;
 
 //
+// Delayed KCB Dereference Entry
+//
+typedef struct _CM_DELAY_DEREF_KCB_ITEM
+{
+    LIST_ENTRY ListEntry;
+    PCM_KEY_CONTROL_BLOCK Kcb;
+} CM_DELAY_DEREF_KCB_ITEM, *PCM_DELAY_DEREF_KCB_ITEM;
+
+//
 // Use Count Log and Entry
 //
 typedef struct _CM_USE_COUNT_LOG_ENTRY
@@ -521,6 +536,29 @@ typedef struct _CELL_DATA
 } CELL_DATA, *PCELL_DATA;
 
 //
+// Cached Value Index
+//
+typedef struct _CM_CACHED_VALUE_INDEX
+{
+    HCELL_INDEX CellIndex;
+    union
+    {
+        CELL_DATA CellData;
+        ULONG_PTR List[ANYSIZE_ARRAY];
+    } Data;
+} CM_CACHED_VALUE_INDEX, *PCM_CACHED_VALUE_INDEX;
+
+//
+// Cached Value
+//
+typedef struct _CM_CACHED_VALUE
+{
+    USHORT DataCacheType;
+    USHORT ValueKeySize;
+    CM_KEY_VALUE KeyValue;
+} CM_CACHED_VALUE, *PCM_CACHED_VALUE;
+
+//
 // Registry Validation Functions
 //
 BOOLEAN
@@ -531,12 +569,22 @@ CmCheckRegistry(
 );
 
 //
-// Registry Lock
+// Registry Locking Functions
 //
 BOOLEAN
 NTAPI
 CmpTestRegistryLockExclusive(
     VOID
+);
+
+//
+// KCB Functions
+//
+VOID
+NTAPI
+CmpDereferenceKcbWithLock(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN BOOLEAN LockHeldExclusively
 );
 
 //

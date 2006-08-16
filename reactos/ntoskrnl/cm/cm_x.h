@@ -21,6 +21,24 @@
     (*Table[GET_HASH_INDEX(ConvKey)])
 
 //
+// Returns whether or not the cell is cached
+//
+#define CMP_IS_CELL_CACHED(c)                                       \
+    (((c) & HCELL_CACHED) && ((c) != HCELL_NIL))
+
+//
+// Return data from a cached cell
+//
+#define CMP_GET_CACHED_CELL(c)                                      \
+    (ULONG_PTR)((c) & ~HCELL_CACHED)
+#define CMP_GET_CACHED_DATA(c)                                      \
+    (&(((PCM_CACHED_VALUE_INDEX)(CMP_GET_CACHED_CELL(c)))->Data.CellData))
+#define CMP_GET_CACHED_INDEX(c)                                     \
+    (&(((PCM_CACHED_ENTRY)(CMP_GET_CACHED_CELL(c)))->CellIndex))
+#define CMP_GET_CACHED_VALUE(c)                                     \
+    (&(((PCM_CACHED_VALUE)(CMP_GET_CACHED_CELL(c)))->KeyValue))
+
+//
 // Makes sure that the registry is locked
 //
 #define CMP_ASSERT_REGISTRY_LOCK                                    \

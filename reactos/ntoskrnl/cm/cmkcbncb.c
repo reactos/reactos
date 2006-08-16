@@ -29,6 +29,14 @@ LIST_ENTRY CmpFreeDelayItemsListHead;
 ULONG CmpDelayCloseIntervalInSeconds = 5;
 KDPC CmpDelayCloseDpc;
 KTIMER CmpDelayCloseTimer;
+
+KGUARDED_MUTEX CmpDelayDerefKCBLock;
+BOOLEAN CmpDelayDerefKCBWorkItemActive;
+LIST_ENTRY CmpDelayDerefKCBListHead;
+ULONG CmpDelayDerefKCBIntervalInSeconds = 5;
+KDPC CmpDelayDerefKCBDpc;
+KTIMER CmpDelayDerefKCBTimer;
+
 BOOLEAN CmpHoldLazyFlush;
 
 /* FUNCTIONS *****************************************************************/
@@ -281,6 +289,56 @@ CmpFreeKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
     }
 }
 
+VOID
+NTAPI
+CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    PCM_DELAYED_CLOSE_ENTRY Entry;
+    ULONG NewRefCount, OldRefCount;
+    PAGED_CODE();
+
+    /* Sanity checks */
+    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+    if (Kcb->DelayedCloseIndex == CmpDelayedCloseSize) ASSERT(FALSE);
+
+    /* Get the entry and lock the table */
+    Entry = Kcb->DelayCloseEntry;
+    KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
+
+    /* Remove the entry */
+    RemoveEntryList(&Entry->DelayedLRUList);
+
+    /* Release the lock */
+    KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
+
+    /* Free the entry */
+    CmpFreeDelayItem(Entry);
+
+    /* Reduce the number of elements */
+    InterlockedDecrement(&CmpDelayedCloseElements);
+
+    /* Sanity check */
+    if (!Kcb->InDelayClose) ASSERT(FALSE);
+
+    /* Get the old reference count */
+    OldRefCount = Kcb->InDelayClose;
+    ASSERT(OldRefCount == 1);
+
+    /* Set it to 0 */
+    NewRefCount = InterlockedCompareExchange(&Kcb->InDelayClose,
+                                             0,
+                                             OldRefCount);
+    if (NewRefCount != OldRefCount) ASSERT(FALSE);
+
+    /* Remove the link to the entry */
+    Kcb->DelayCloseEntry = NULL;
+
+    /* Set new delay size and remove the delete flag */
+    Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
+    Kcb->Delete = FALSE;
+}
+
 BOOLEAN
 NTAPI
 CmpReferenceKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
@@ -359,7 +417,7 @@ CmpReferenceKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
 }
 
 // FIXME: THIS FUNCTION IS PARTIALLY FUCKED
-PCM_DELAYED_CLOSE_ENTRY
+PVOID
 NTAPI
 CmpAllocateDelayItem(VOID)
 {
@@ -408,6 +466,131 @@ CmpAllocateDelayItem(VOID)
     /* Release the lock */
     KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
     return Entry;
+}
+
+VOID
+NTAPI
+CmpDelayDerefKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    USHORT OldRefCount, NewRefCount;
+    LARGE_INTEGER Timeout;
+    PCM_DELAY_DEREF_KCB_ITEM Entry;
+    PAGED_CODE();
+
+    /* Get the previous reference count */
+    OldRefCount = Kcb->RefCount;
+
+    /* Write the new one */
+    NewRefCount = (USHORT)InterlockedCompareExchange((PLONG)&Kcb->RefCount,
+                                                     OldRefCount - 1,
+                                                     OldRefCount);
+    if (NewRefCount != OldRefCount) return;
+
+    /* Allocate a delay item */
+    Entry = CmpAllocateDelayItem();
+    if (!Entry) return;
+
+    /* Set the KCB */
+    Entry->Kcb = Kcb;
+
+    /* Acquire the delayed deref table lock */
+    KeAcquireGuardedMutex(&CmpDelayDerefKCBLock);
+
+    /* Insert the entry into the list */
+    InsertHeadList(&CmpDelayDerefKCBListHead, &Entry->ListEntry);
+
+    /* Check if we need to enable anything */
+    if (CmpDelayDerefKCBWorkItemActive)
+    {
+        /* Yes, we have no work item, setup the interval */
+        Timeout.QuadPart = CmpDelayDerefKCBIntervalInSeconds * -10000000;
+        KeSetTimer(&CmpDelayDerefKCBTimer, Timeout, &CmpDelayDerefKCBDpc);
+    }
+
+    /* Release the table lock */
+    KeReleaseGuardedMutex(&CmpDelayDerefKCBLock);
+}
+
+VOID
+NTAPI
+CmpCleanUpKcbValueCache(IN PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    PULONG_PTR CachedList;
+    ULONG i;
+
+    /* Sanity check */
+    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+
+    /* Check if the value list is cached */
+    if (CMP_IS_CELL_CACHED(Kcb->ValueCache.ValueList))
+    {
+        /* Get the cache list */
+        CachedList = (PULONG_PTR)CMP_GET_CACHED_DATA(Kcb->ValueCache.ValueList);
+        for (i = 0; i < Kcb->ValueCache.Count; i++)
+        {
+            /* Check if this cell is cached */
+            if (CMP_IS_CELL_CACHED(CachedList[i]))
+            {
+                /* Free it */
+                ExFreePool((PVOID)CMP_GET_CACHED_CELL(CachedList[i]));
+            }
+        }
+
+        /* Now free the list */
+        ExFreePool((PVOID)CMP_GET_CACHED_CELL(Kcb->ValueCache.ValueList));
+        Kcb->ValueCache.ValueList = HCELL_NIL;
+    }
+    else if (Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND)
+    {
+        /* This is a sym link, check if there's only one reference left */
+        if ((Kcb->ValueCache.RealKcb->RefCount == 1) &&
+            !(Kcb->ValueCache.RealKcb->Delete))
+        {
+            /* Disable delay close for the KCB */
+            Kcb->ValueCache.RealKcb->ExtFlags |= CM_KCB_NO_DELAY_CLOSE;
+        }
+
+        /* Dereference the KCB */
+        CmpDelayDerefKcb(Kcb->ValueCache.RealKcb);
+        Kcb->ExtFlags &= ~ CM_KCB_SYM_LINK_FOUND;
+    }
+}
+
+VOID
+NTAPI
+CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                           IN BOOLEAN LockHeldExclusively)
+{
+    PCM_KEY_CONTROL_BLOCK Parent;
+    PAGED_CODE();
+
+    /* Sanity checks */
+    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+    ASSERT(Kcb->RefCount == 0);
+
+    /* Cleanup the value cache */
+    CmpCleanUpKcbValueCache(Kcb);
+
+    /* Reference the NCB */
+    CmpDereferenceNcbWithLock(Kcb->NameBlock);
+
+    /* Check if we have an index hint block and free it */
+    if (Kcb->ExtFlags & CM_KCB_SUBKEY_HINT) ExFreePool(Kcb->IndexHint);
+
+    /* Check if we were already deleted */
+    Parent = Kcb->ParentKcb;
+    if (!Kcb->Delete) CmpFreeKcb(Kcb);
+
+    /* Check if we have a parent */
+    if (Parent)
+    {
+        /* Dereference the parent */
+        LockHeldExclusively ? CmpDereferenceKcbWithLock(Kcb,
+                              LockHeldExclusively) :
+                              CmpDelayDerefKcb(Kcb);
+    }
 }
 
 VOID
