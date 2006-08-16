@@ -88,6 +88,10 @@ and definitions for a compatible internal implementation.
   ~60% of the KCB/NCB code is complete.
   Blocking on cmlib being modified to use actual NT _HHIVE.
 
+**As of 16/08/2006
+  ~90% of the KCB/NCB code is complete.
+  Work about to resume on initialization code.
+
 -= Structure =-
 
 cmapi.c    - Contains the low-level Cmp APIs that correspond to the external Nt
