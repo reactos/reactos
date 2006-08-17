@@ -28,6 +28,7 @@ unsigned long strtoul(const char *nptr, char **endptr, int base);
 
 #define EXPORT STDCALL
 
+extern HINSTANCE g_hInstDll;
 extern HANDLE GlobalHeap;
 extern BOOL WsaInitialized;	/* TRUE if WSAStartup() has been successfully called */
 extern WSPUPCALLTABLE UpcallTable;

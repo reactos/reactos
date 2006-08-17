@@ -27,7 +27,7 @@ DWORD DebugTraceLevel = 0;
 /* To make the linker happy */
 VOID STDCALL KeBugCheck (ULONG BugCheckCode) {}
 
-
+HINSTANCE g_hInstDll;
 HANDLE GlobalHeap;
 BOOL WsaInitialized = FALSE;    /* TRUE if WSAStartup() has been successfully called */
 WSPUPCALLTABLE UpcallTable;
@@ -86,8 +86,8 @@ WSAStartup(IN  WORD wVersionRequested,
     if (lpWSAData == NULL)
         return WSAEFAULT;
 
-    Low = LOWBYTE(wVersionRequested);
-    High  = HIGHBYTE(wVersionRequested);
+    Low = LOBYTE(wVersionRequested);
+    High  = HIBYTE(wVersionRequested);
 
     if (Low < 1)
     {
@@ -840,6 +840,8 @@ DllMain(HANDLE hInstDll,
         case DLL_PROCESS_ATTACH:
         {
             GlobalHeap = GetProcessHeap();
+
+            g_hInstDll = hInstDll;
 
             CreateCatalog();
 
