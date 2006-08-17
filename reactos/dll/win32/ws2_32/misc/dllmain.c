@@ -76,15 +76,61 @@ EXPORT
 WSAStartup(IN  WORD wVersionRequested,
            OUT LPWSADATA lpWSAData)
 {
+    BYTE Low, High;
+
     WS_DbgPrint(MAX_TRACE, ("WSAStartup of ws2_32.dll\n"));
 
+    if (!g_hInstDll) 
+        return WSASYSNOTREADY;
+
+    if (lpWSAData == NULL)
+        return WSAEFAULT;
+
+    Low = LOWBYTE(wVersionRequested);
+    High  = HIGHBYTE(wVersionRequested);
+
+    if (Low < 1)
+    {
+        WS_DbgPrint(MAX_TRACE, ("Bad winsock version requested, %d,%d", Low, High));
+        return WSAVERNOTSUPPORTED;
+    }
+
+    if (Low == 1) 
+    {
+        if (High == 0)
+        {
+            lpWSAData->wVersion = wVersionRequested;
+        }
+        else
+        {
+            lpWSAData->wVersion = MAKEWORD(1, 1);
+        }
+    }
+    else if (Low == 2)
+    {
+        if (High <= 2)
+        {
+            lpWSAData->wVersion = MAKEWORD(2, High);
+        }
+        else
+        {
+            lpWSAData->wVersion = MAKEWORD(2, 2);
+        }
+    }
+    else
+    {
+        lpWSAData->wVersion = MAKEWORD(2, 2);
+    }
+
     lpWSAData->wVersion     = wVersionRequested;
-    lpWSAData->wHighVersion = 2;
-    lstrcpyA(lpWSAData->szDescription, "WinSock 2.0");
+    lpWSAData->wHighVersion = MAKEWORD(2,2);
+    lstrcpyA(lpWSAData->szDescription, "WinSock 2.2");
     lstrcpyA(lpWSAData->szSystemStatus, "Running");
     lpWSAData->iMaxSockets  = 0;
     lpWSAData->iMaxUdpDg    = 0;
     lpWSAData->lpVendorInfo = NULL;
+
+    /*FIXME: increment internal counter */
 
     WSASETINITIALIZED;
 
