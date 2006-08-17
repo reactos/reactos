@@ -17,15 +17,14 @@
 ULONG CmpHashTableSize;
 PCM_KEY_HASH_TABLE_ENTRY *CmpCacheTable;
 PCM_NAME_HASH_TABLE_ENTRY *CmpNameCacheTable;
-BOOLEAN CmpAllocInited;
-KGUARDED_MUTEX CmpAllocBucketLock, CmpDelayAllocBucketLock;
 LIST_ENTRY CmpFreeKCBListHead;
+BOOLEAN CmpAllocInited;
+KGUARDED_MUTEX CmpAllocBucketLock;
 ULONG CmpDelayedCloseSize;
 ULONG CmpDelayedCloseElements;
 KGUARDED_MUTEX CmpDelayedCloseTableLock;
 BOOLEAN CmpDelayCloseWorkItemActive;
 LIST_ENTRY CmpDelayedLRUListHead;
-LIST_ENTRY CmpFreeDelayItemsListHead;
 ULONG CmpDelayCloseIntervalInSeconds = 5;
 KDPC CmpDelayCloseDpc;
 KTIMER CmpDelayCloseTimer;
@@ -201,6 +200,9 @@ CmpGetNcb(IN PUNICODE_STRING NodeName)
         /* Go to the next hash */
         HashEntry = HashEntry->NextHash;
     }
+
+    /* Return the NCB found */
+    return Ncb;
 }
 
 BOOLEAN
@@ -320,46 +322,6 @@ CmpDereferenceNcbWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
 
     /* Release the lock */
     CmpReleaseNcbLock(Ncb);
-}
-
-VOID
-NTAPI
-CmpFreeDelayItem(PVOID Entry)
-{
-    PCM_DELAYED_CLOSE_ENTRY AllocEntry = (PCM_DELAYED_CLOSE_ENTRY)Entry;
-    PCM_DELAYED_CLOSE_ENTRY *AllocTable;
-    PCM_ALLOC_PAGE AllocPage;
-    ULONG i;
-    PAGED_CODE();
-
-    /* Lock the table */
-    KeAcquireGuardedMutex(&CmpDelayAllocBucketLock);
-
-    /* Add the entry at the end */
-    InsertTailList(&CmpFreeDelayItemsListHead, &AllocEntry->DelayedLRUList);
-
-    /* Get the alloc page */
-    AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Entry & 0xFFFFF000);
-    ASSERT(AllocPage->FreeCount != CM_DELAYS_PER_PAGE);
-
-    /* Increase the number of free items */
-    if (++AllocPage->FreeCount == CM_DELAYS_PER_PAGE)
-    {
-        /* Page is totally free now, loop each entry */
-        AllocTable = (PCM_DELAYED_CLOSE_ENTRY*)&AllocPage->AllocPage;
-        for (i = CM_DELAYS_PER_PAGE; i; i--)
-        {
-            /* Get the entry and unlink it */
-            AllocEntry = AllocTable[i];
-            RemoveEntryList(&AllocEntry->DelayedLRUList);
-        }
-
-        /* Now free the page */
-        ExFreePool(AllocPage);
-    }
-
-    /* Release the lock */
-    KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
 }
 
 VOID
@@ -487,58 +449,6 @@ CmpReferenceKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
     /* Return success */
     return TRUE;
-}
-
-// FIXME: THIS FUNCTION IS PARTIALLY FUCKED
-PVOID
-NTAPI
-CmpAllocateDelayItem(VOID)
-{
-    PCM_DELAYED_CLOSE_ENTRY Entry;
-    PCM_ALLOC_PAGE AllocPage;
-    ULONG i;
-    PLIST_ENTRY NextEntry;
-    PAGED_CODE();
-
-    /* Lock the allocation buckets */
-    KeAcquireGuardedMutex(&CmpDelayAllocBucketLock);
-    if (TRUE)
-    {
-        /* Allocate an allocation page */
-        AllocPage = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, TAG_CM);
-        if (AllocPage)
-        {
-            /* Set default entries */
-            AllocPage->FreeCount = CM_DELAYS_PER_PAGE;
-
-            /* Loop each entry */
-            for (i = 0; i < CM_DELAYS_PER_PAGE; i++)
-            {
-                /* Get this entry and link it */
-                Entry = (PCM_DELAYED_CLOSE_ENTRY)(&AllocPage[i]);
-                InsertHeadList(&Entry->DelayedLRUList,
-                               &CmpFreeDelayItemsListHead);
-            }
-        }
-
-        /* Get the entry and the alloc page */
-        Entry = CONTAINING_RECORD(NextEntry,
-                                  CM_DELAYED_CLOSE_ENTRY,
-                                  DelayedLRUList);
-        AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Entry & 0xFFFFF000);
-
-        /* Decrease free entries */
-        ASSERT(AllocPage->FreeCount != 0);
-        AllocPage->FreeCount--;
-
-        /* Release the lock */
-        KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
-        return Entry;
-    }
-
-    /* Release the lock */
-    KeReleaseGuardedMutex(&CmpDelayAllocBucketLock);
-    return Entry;
 }
 
 VOID

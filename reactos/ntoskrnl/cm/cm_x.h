@@ -41,14 +41,14 @@
 //
 // Makes sure that the registry is locked
 //
-#define CMP_ASSERT_REGISTRY_LOCK                                    \
+#define CMP_ASSERT_REGISTRY_LOCK()                                  \
     ASSERT((CmpSpecialBootCondition == TRUE) ||                     \
            (CmpTestRegistryLock() == TRUE))
 
 //
 // Makes sure that the registry is exclusively locked
 //
-#define CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK                          \
+#define CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK()                        \
     ASSERT((CmpSpecialBootCondition == TRUE) ||                     \
            (CmpTestRegistryLockExclusive() == TRUE))
 

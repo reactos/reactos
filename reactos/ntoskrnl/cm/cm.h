@@ -569,12 +569,24 @@ CmCheckRegistry(
 );
 
 //
-// Registry Locking Functions
+// Registry Utility Functions
 //
 BOOLEAN
 NTAPI
 CmpTestRegistryLockExclusive(
     VOID
+);
+
+PVOID
+NTAPI
+CmpAllocateDelayItem(
+    VOID
+);
+
+VOID
+NTAPI
+CmpFreeDelayItem(
+    PVOID Entry
 );
 
 //
@@ -588,8 +600,22 @@ CmpDereferenceKcbWithLock(
 );
 
 //
+// Name Functions
+//
+LONG
+NTAPI
+CmpCompareCompressedName(
+    IN PUNICODE_STRING SearchName,
+    IN PWCHAR CompressedName,
+    IN ULONG NameLength
+);
+
+//
 // Global variables accessible from all of Cm
 //
+extern BOOLEAN CmpSpecialBootCondition;
+extern BOOLEAN CmpFlushOnLockRelease;
+
 
 //
 // Inlined functions

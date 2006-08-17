@@ -107,6 +107,8 @@ cmname.c   - Contains functions related to the manipulation of key names and/or
              paths.
 cmobject.c - Contains the implementation of the key object that is exported to
              the Object Manager.
+cmutil.c   - Contains utility functions such as the registry lock and delayed
+             item allocation and de-allocation routines.
 ntapi.c    - Contains the Nt APIs exported to drivers and user-mode, which wrap
              around other internal APIs in this module (mostly cmapi.c).
 
