@@ -94,7 +94,7 @@ EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,PVOID pCookie,HKEY hBaseKey,TCHAR *tps
 		return;
 	}
 
-	for(i=0;;i++)
+	for(i=1;;i++)
 	{
 		TCHAR pszNewPath[MAX_PATH];
 		ret = RegEnumKeyEx(hKey,i,tpszName,&dwNameLen,NULL,NULL,NULL,NULL);
