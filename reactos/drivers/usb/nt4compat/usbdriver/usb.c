@@ -152,7 +152,7 @@ PUSB_DEV* ppdev
 	PUSB_DEV pdev;
 	BOOL valid_dev;
 
-	USE_IRQL;
+	USE_NON_PENDING_IRQL;
 
 	*ppdev = NULL;
 
@@ -212,7 +212,7 @@ usb_unlock_dev(
 PUSB_DEV dev
 )
 {
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( dev == NULL )
 		return STATUS_INVALID_PARAMETER;
@@ -237,7 +237,7 @@ PVOID param
 	PUSB_DEV pdev;
 	LONG if_idx, endp_idx;
 	PUSB_ENDPOINT pendp;
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( dev_mgr == NULL )
 		return STATUS_INVALID_PARAMETER;
@@ -297,7 +297,7 @@ PVOID param
 	NTSTATUS 				status;
 	DEV_HANDLE 				dev_handle;
 
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( pdev == NULL || pendp == NULL )
 		return STATUS_INVALID_PARAMETER;
@@ -345,7 +345,7 @@ PVOID context
 	PUSB_DEV pdev;
 	PUSB_ENDPOINT pendp;
 
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( purb == NULL || context == NULL )
 		return;
@@ -623,7 +623,7 @@ PURB purb
 	NTSTATUS status;
 	PHCD hcd;
 
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( purb == NULL )
 		return STATUS_INVALID_PARAMETER;
@@ -712,14 +712,14 @@ PURB purb
 )
 {
 	NTSTATUS status;
-	PUSB_DEV pdev, parent_dev;
+	PUSB_DEV pdev;
 	LONG if_idx, endp_idx;
-	DEV_HANDLE endp_handle, parent_dev_handle;
+	DEV_HANDLE endp_handle;
 	PUSB_CTRL_SETUP_PACKET psetup;
 	PUSB_ENDPOINT pendp;
 
 	PHCD hcd;
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( purb == NULL || dev_mgr == NULL)
 		return STATUS_INVALID_PARAMETER;
@@ -820,7 +820,7 @@ PURB purb
 				&& psetup->bRequest == USB_REQ_CLEAR_FEATURE
 				&& psetup->wValue == 0 ) //reset pipe
 		{
-			ULONG endp_addr, endp_handle_to_reset;
+			ULONG endp_addr;
 			BOOL found;
 			endp_addr = psetup->wIndex;
 			if( ( endp_addr & 0xf ) == 0 )
@@ -887,7 +887,7 @@ PVOID context
 	ULONG config_val;
 	NTSTATUS status;
 
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( purb == NULL )
 	{
@@ -992,7 +992,7 @@ PURB purb
 	PBYTE buf;
 	PUSB_CONFIGURATION_DESC pcfg_desc1;
 
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( pdev == NULL || purb == NULL )
 		return STATUS_INVALID_PARAMETER;
@@ -1192,7 +1192,6 @@ VOID
 usb_cal_cpu_freq()
 {
 	LARGE_INTEGER tick1, tick2;
-	LARGE_INTEGER interval;
 	LONG i;
 	// interval.QuadPart = -40 * 1000 * 1000;
 
@@ -1227,7 +1226,7 @@ PURB purb
 	NTSTATUS status;
 
 	PHCD hcd;
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	purb1 = purb;
 	pdev = purb->pdev;
@@ -1363,7 +1362,7 @@ PVOID context
 	ULONG i;
 	PLIST_ENTRY pthis, pnext;
 
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( purb == NULL )
 		return;

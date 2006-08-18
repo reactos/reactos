@@ -17,8 +17,12 @@
 #define WORD                        USHORT
 #define DWORD						ULONG
 
+#ifndef LOWORD
 #define LOWORD(l)					( (WORD) ( ( l ) & 0xffff ) )
+#endif
+#ifndef HIWORD
 #define HIWORD(l)					( (WORD) ( ( l ) >> 16 ) )
+#endif
 
 #define PCI_MAX_FUNCTIONS           8
 
@@ -505,6 +509,13 @@ typedef struct _USB_CONFIGURATION
 
 #define USE_IRQL \
 KIRQL _pending_endp_lock_old_irql, _pending_endp_list_lock_old_irql, _dev_lock_old_irql, old_irql;
+
+#define USE_NON_PENDING_IRQL \
+KIRQL _dev_lock_old_irql, old_irql;
+
+#define USE_BASIC_NON_PENDING_IRQL \
+KIRQL _dev_lock_old_irql;
+
 
 #define USB_DEV_STATE_MASK          ( 0xff << 8 )
 #define USB_DEV_STATE_POWERED       ( 0x01 << 8 )
