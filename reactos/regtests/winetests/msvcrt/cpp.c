@@ -126,7 +126,7 @@ static void* bAncientVersion;
 
 /* Emulate a __thiscall */
 #ifdef _MSC_VER
-inline static void* do_call_func1(void *func, void *_this)
+_inline static void* do_call_func1(void *func, void *_this)
 {
   volatile void* retval = 0;
   __asm
@@ -140,7 +140,7 @@ inline static void* do_call_func1(void *func, void *_this)
   return (void*)retval;
 }
 
-inline static void* do_call_func2(void *func, void *_this, void* arg)
+_inline static void* do_call_func2(void *func, void *_this, void* arg)
 {
   volatile void* retval = 0;
   __asm
