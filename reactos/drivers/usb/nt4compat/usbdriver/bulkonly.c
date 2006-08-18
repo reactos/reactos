@@ -23,6 +23,10 @@
 #include "debug.h"
 #include "usb.h"
 #include "umss.h"
+
+// ULONG_PTR defining hack, to use ntddsci.h from reactos
+//FIXME: Move to a header file later
+typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #include <ntddscsi.h>
 
 #define OLYMPUS_CSW( pdev_EXT, staTUS ) \

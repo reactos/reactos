@@ -484,7 +484,7 @@ PUHCI_TD  ptd
 
 	while( IsListEmpty( &ptd->ptde->vert_link ) == FALSE )
 	{
-		pthis = RemoveHeadList( &ptd->ptde->vert_link )	
+		pthis = RemoveHeadList( &ptd->ptde->vert_link );
 		ptofree = ( ( PTD_EXTENSION)pthis  )->ptd;
 		free_td( pool_list, ptofree );
 	}

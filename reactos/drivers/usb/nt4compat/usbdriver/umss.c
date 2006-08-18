@@ -26,9 +26,18 @@
 #include "umss.h"
 #include "usb.h"
 #include "hub.h"
-#include "storage\inc\srb.h"
-#include "storage\inc\ntddscsi.h"
-#include "storage\inc\scsi.h"
+
+// ULONG_PTR defining hack, to use ntddsci.h from reactos
+// plus hack for __field_ecount for a new WDK
+//FIXME: Move to a header file later
+typedef unsigned long ULONG_PTR, *PULONG_PTR;
+#ifndef __field_ecount
+#    define __field_ecount(x)
+#endif
+
+#include <srb.h>
+#include <ntddscsi.h>
+#include <scsi.h>
 
 #define UMSS_EXIT_DISPATCH( dev_OBJ, staTUS, iRp ) \
 {\
