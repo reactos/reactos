@@ -1,6 +1,6 @@
 LIBRARY access.cpl
 
 EXPORTS
-CPlApplet@16
+CPlApplet
 
 ; EOF
