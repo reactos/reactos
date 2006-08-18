@@ -123,26 +123,6 @@ typedef struct _HCELL
 {
    /* <0 if used, >0 if free */
    LONG Size;
-   union
-   {
-       struct
-       {
-           ULONG Last;
-           union
-           {
-               ULONG UserData;
-               HCELL_INDEX Next;
-           } u;
-       } OldCell;
-       struct
-       {
-           union
-           {
-               ULONG UserData;
-               HCELL_INDEX Next;
-           } u;
-       } NewCell;
-   } u;
 } HCELL, *PHCELL;
 
 #include <poppack.h>
