@@ -15,5 +15,5 @@
 	<file>compdrv.c</file>
 	<file>etd.c</file>
 	<file>gendrv.c</file>
-	<file>ehci.rc</file>
+	<file>usbdriver.rc</file>
 </module>

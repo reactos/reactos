@@ -57,7 +57,7 @@
 	return;\
 }
 
-extern POBJECT_TYPE *IoDriverObjectType;
+extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 
 extern VOID
 disp_urb_completion(
@@ -295,9 +295,8 @@ DEV_HANDLE dev_handle
 	PUSB_CTRL_SETUP_PACKET psetup;
 	NTSTATUS status;
 	PUCHAR buf;
-	LONG credit, i, j, match;
+	LONG i;
 	PUSB_CONFIGURATION_DESC pconfig_desc;
-	PUSB_INTERFACE_DESC pif_desc;
 	PUSB_DEV_MANAGER dev_mgr;
 
 	if( param == NULL || dev_handle == 0 )
@@ -401,7 +400,6 @@ ULONG param
 	// and call its AddDevice.
 	//
 	LONG 					i;
-	NTSTATUS 				status;
 	PUSB_DRIVER				pdrvr;
 	PGENDRV_DRVR_EXTENSION	pdrvr_ext;
 	PGENDRV_EXT_DRVR_ENTRY  pentry;
@@ -411,10 +409,9 @@ ULONG param
 
 	PDEVICE_OBJECT			pdev_obj;
 	PDRIVER_OBJECT			pdrvr_obj;
-	HANDLE					handle;
 	PLIST_ENTRY				pthis, pnext;
 
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( pdev == NULL )
 		return FALSE;
@@ -509,12 +506,11 @@ PVOID context
 {
 	DEV_HANDLE 			dev_handle;
 	PUSB_DEV_MANAGER 	dev_mgr;
-	PWORK_QUEUE_ITEM 	pwork_item;
 	PUSB_DRIVER 		pdriver;
 	NTSTATUS 			status;
 	PUSB_DEV			pdev;
 	PUSB_EVENT 			pevent;
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	if( purb == NULL || context == NULL )
 		return;
@@ -576,7 +572,7 @@ PVOID context
 	pevent->context = 0;
 	pevent->param = ( ULONG )pdriver;
 	pevent->pnext = 0;         //vertical queue for serialized operation
-	pevent->process_event = gendrv_event_select_driver;
+	pevent->process_event = (PROCESS_EVENT)gendrv_event_select_driver;
 	pevent->process_queue = event_list_default_process_queue;
 
 	InsertTailList( &dev_mgr->event_list, &pevent->event_link );
@@ -828,7 +824,6 @@ PDEVICE_OBJECT pdev_obj,
 PVOID pctx
 )
 {
-	PDRIVER_EXTENSION pwin_drvr_ext;
 	if( pdev_obj == NULL )
 		return STATUS_INVALID_PARAMETER;
 
@@ -842,7 +837,7 @@ PVOID pctx
 			pdrvr_obj = (PDRIVER_OBJECT )pctx;
 			if( pdrvr_obj->DriverExtension )
 			{
-				return pdrvr_obj->DriverExtension->AddDevice( pdrvr_obj, &pdev_obj );
+				return pdrvr_obj->DriverExtension->AddDevice( pdrvr_obj, pdev_obj );
 			}
 			return STATUS_IO_DEVICE_ERROR;
 		}
@@ -896,9 +891,8 @@ DEV_HANDLE if_handle
 
 	PDEVICE_OBJECT			pdev_obj;
 	PDRIVER_OBJECT			pdrvr_obj;
-	HANDLE					handle;
 	PLIST_ENTRY				pthis, pnext;
-	USE_IRQL;
+	USE_BASIC_NON_PENDING_IRQL;
 
 	pdev = NULL;
 	usb_dbg_print( DBGLVL_MAXIMUM, ( "gendrv_if_connect(): entering...\n" ) );
@@ -1062,13 +1056,11 @@ BOOL is_if
 )
 {
 	PUSB_DEV pdev;
-	PDEVICE_OBJECT dev_obj;
+	PDEVICE_OBJECT dev_obj = NULL;
 	NTSTATUS status;
 	PUSB_DRIVER pdrvr;
-	PGENDRV_DRVR_EXTENSION pdrvr_ext;
-	PGENDRV_EXT_DRVR_ENTRY pentry;
-	PLIST_ENTRY pthis;
-	PGENDRV_DEVICE_EXTENSION pdev_ext;
+	PGENDRV_DRVR_EXTENSION pdrvr_ext = NULL;
+	PGENDRV_DEVICE_EXTENSION pdev_ext = NULL;
 	ULONG if_idx;
 
 	status = usb_query_and_lock_dev( dev_mgr, if_handle, &pdev );
@@ -1178,8 +1170,7 @@ PUSB_DRIVER pdriver
 )
 {
 	PGENDRV_DRVR_EXTENSION pdrvr_ext;
-	LONG i;
-	PLIST_ENTRY pthis, pnext;
+	PLIST_ENTRY pthis;
 	PGENDRV_EXT_DRVR_ENTRY pentry;
 	if( dev_mgr == NULL || pdriver == NULL )
 		return FALSE;
@@ -1225,7 +1216,7 @@ PUNICODE_STRING unicode_string
 	OBJECT_ATTRIBUTES oa;
 	HANDLE drvr_handle;
 	UNICODE_STRING oname;
-	PDRIVER_OBJECT pdrvr;
+	PDRIVER_OBJECT pdrvr = NULL;
 
 	RtlZeroMemory( &oa, sizeof( oa ) );
 	oa.Length = sizeof( oa );
@@ -1235,7 +1226,7 @@ PUNICODE_STRING unicode_string
 	RtlAppendUnicodeStringToString( &oname, unicode_string );
 
 	status = ObOpenObjectByName( &oa,
-		*IoDriverObjectType, 		// object type
+		IoDriverObjectType, 		// object type
 		KernelMode, 				// access mode
 		NULL, 						// access state
 		FILE_READ_DATA, 			// STANDARD_RIGHTS_READ, access right
@@ -1248,9 +1239,9 @@ PUNICODE_STRING unicode_string
 	}
 	ObReferenceObjectByHandle( drvr_handle,
 		FILE_READ_DATA,
-		*IoDriverObjectType,
+		IoDriverObjectType,
 		KernelMode,
-		&pdrvr,
+		(PVOID)&pdrvr,
 		NULL // OUT POBJECT_HANDLE_INFORMATION HandleInformation OPTIONAL
 		);
 	ZwClose( drvr_handle );
@@ -1334,8 +1325,6 @@ PIRP irp
 			}
 			else if( irpstack->MinorFunction == IOCTL_GET_DEV_HANDLE )
 			{
-				PUCHAR user_buffer;
-				ULONG user_buffer_length;
 				PGENDRV_DEVICE_EXTENSION pdev_ext;
 				pdev_ext = dev_obj->DeviceExtension;
 				if( irpstack->Parameters.DeviceIoControl.OutputBufferLength < sizeof( LONG ) )
@@ -1383,8 +1372,6 @@ PIRP irp
 			}
 			else if( irpstack->MinorFunction == IOCTL_GET_DEV_HANDLE )
 			{
-				PUCHAR user_buffer;
-				ULONG user_buffer_length;
 				PGENDRV_DEVICE_EXTENSION pdev_ext;
 				pdev_ext = dev_obj->DeviceExtension;
 				if( irpstack->Parameters.DeviceIoControl.OutputBufferLength < sizeof( LONG ) )
@@ -1409,14 +1396,14 @@ PDEVICE_OBJECT dev_obj,
 PUSB_DEV_MANAGER dev_mgr
 )
 {
-	PDEVEXT_HEADER dev_hdr;
+	PDEVEXT_HEADER dev_hdr = NULL;
 	if( dev_obj == NULL || dev_mgr == NULL )
 		return FALSE;
 
 	dev_hdr = ( PDEVEXT_HEADER )dev_obj->DeviceExtension;
 	dev_hdr->type = NTDEV_TYPE_CLIENT_DEV;
 	dev_hdr->dispatch = gendrv_dispatch;
-	dev_hdr->start_io = gendrv_startio;
+	dev_hdr->start_io = (PDRIVER_STARTIO)gendrv_startio;
 	return TRUE;
 }
 
@@ -1557,7 +1544,6 @@ PDEVICE_OBJECT dev_obj
 	UCHAR 	dev_name[ 64 ];
 	STRING	string;
 	UNICODE_STRING symb_link;
-	NTSTATUS status;
 	PGENDRV_DRVR_EXTENSION pdrvr_ext;
 
 	if( dev_mgr == NULL || dev_obj == 0 )
@@ -1810,7 +1796,7 @@ IN PIRP irp
 	PIO_STACK_LOCATION irp_stack;
 	ULONG ctrl_code;
 	PUSB_DEV_MANAGER dev_mgr;
-	USE_IRQL;
+	USE_NON_PENDING_IRQL;
 
 	if( dev_obj == NULL || irp == NULL )
 		return;
@@ -1847,17 +1833,14 @@ IN PIRP irp
 	case IOCTL_SUBMIT_URB_NOIO:
 	case IOCTL_SUBMIT_URB_WR:
 		{
-			LONG 			buf_size;
 			PURB 			purb;
-			KIRQL 			old_irql;
-			ULONG 			endp_idx, if_idx, user_buffer_length;
-			PUCHAR			user_buffer;
+			ULONG 			endp_idx, if_idx, user_buffer_length = 0;
+			PUCHAR			user_buffer = NULL;
 			PUSB_DEV 		pdev;
 			DEV_HANDLE 		endp_handle;
 			PUSB_ENDPOINT 	pendp;
 			
 			NTSTATUS		status;
-			PUSB_CTRL_SETUP_PACKET	psetup;
 
 			if( irp_stack->Parameters.DeviceIoControl.InputBufferLength < sizeof( URB ) )
 			{
@@ -2004,8 +1987,7 @@ PDEVICE_OBJECT dev_obj
     KIRQL cancelIrql;
     PIRP irp, cur_irp;
     PKDEVICE_QUEUE_ENTRY packet;
-	LIST_ENTRY cancel_irps, *pthis, *pnext;
-	PDEVEXT_HEADER dev_hdr;
+	LIST_ENTRY cancel_irps, *pthis;
 
 	//
 	// cancel all the irps in the queue
@@ -2018,7 +2000,7 @@ PDEVICE_OBJECT dev_obj
 	// remove the irps from device queue
 	IoAcquireCancelSpinLock( &cancelIrql );
 	cur_irp = dev_obj->CurrentIrp;
-    while( packet = KeRemoveDeviceQueue( &dev_obj->DeviceQueue ) )
+    while(( packet = KeRemoveDeviceQueue( &dev_obj->DeviceQueue ) ))
    	{
         irp = struct_ptr( packet, IRP, Tail.Overlay.DeviceQueueEntry );
 		InsertTailList( &cancel_irps, &irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry );
@@ -2050,7 +2032,6 @@ PIRP pirp
 	// cancel routine for irps queued in the device queue
 	PUSB_DEV_MANAGER dev_mgr;
 	PDEVEXT_HEADER	pdev_ext_hdr;
-	ULONG i;
 
 	pdev_ext_hdr = ( PDEVEXT_HEADER )dev_obj->DeviceExtension;
 	dev_mgr = pdev_ext_hdr->dev_mgr;

@@ -1076,6 +1076,7 @@ LONG usb_count_list( PLIST_HEAD list_head )
 	return count;
 }
 
+// checks if processor supports Time Stamp Counter
 __inline BOOL
 usb_query_clicks(
 PLARGE_INTEGER	clicks
@@ -1084,6 +1085,8 @@ PLARGE_INTEGER	clicks
 	BOOL ret_val;
 	//so we have to use intel's cpu???
 	ret_val = FALSE;
+
+#ifdef _MSC_VER
 	__asm
 	{
 		push ebx;
@@ -1102,6 +1105,9 @@ LBL_OUT:
 		pop eax;
 		pop ebx;
 	}
+#else
+	ret_val = FALSE;
+#endif
 	return ret_val;
 }
 
