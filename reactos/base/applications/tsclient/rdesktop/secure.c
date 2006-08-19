@@ -902,7 +902,7 @@ sec_recv(RDPCLIENT * This, uint8 * rdpver)
 
 /* Establish a secure connection */
 BOOL
-sec_connect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie) // EXITS
+sec_connect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie)
 {
 	struct stream mcs_data;
 	void * p = malloc(512);
@@ -930,7 +930,7 @@ sec_connect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie) // 
 
 /* Establish a secure connection */
 BOOL
-sec_reconnect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie) // EXITS
+sec_reconnect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie)
 {
 	struct stream mcs_data;
 	void * p = malloc(512);

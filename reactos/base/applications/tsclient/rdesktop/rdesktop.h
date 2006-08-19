@@ -164,34 +164,6 @@ struct bmpcache_entry
 	sint16 next;
 };
 
-#if 0
-typedef struct _seamless_group
-{
-	Window wnd;
-	unsigned long id;
-	unsigned int refcnt;
-} seamless_group;
-typedef struct _seamless_window
-{
-	Window wnd;
-	unsigned long id;
-	unsigned long behind;
-	seamless_group *group;
-	int xoffset, yoffset;
-	int width, height;
-	int state;		/* normal/minimized/maximized. */
-	unsigned int desktop;
-	struct timeval *position_timer;
-
-	BOOL outstanding_position;
-	unsigned int outpos_serial;
-	int outpos_xoffset, outpos_yoffset;
-	int outpos_width, outpos_height;
-
-	struct _seamless_window *next;
-} seamless_window;
-#endif
-
 /* holds the whole state of the RDP client */
 struct rdpclient
 {

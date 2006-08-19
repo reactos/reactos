@@ -35,7 +35,7 @@
 
 /* Receive an RDP packet */
 static STREAM
-rdp_recv(RDPCLIENT * This, uint8 * type) // EXITS
+rdp_recv(RDPCLIENT * This, uint8 * type)
 {
 	static STREAM rdp_s; // FIXME HORROR
 	uint16 length, pdu_type;
@@ -948,7 +948,7 @@ rdp_process_server_caps(RDPCLIENT * This, STREAM s, uint16 length)
 
 /* Respond to a demand active PDU */
 static BOOL
-process_demand_active(RDPCLIENT * This, STREAM s) // EXITS
+process_demand_active(RDPCLIENT * This, STREAM s)
 {
 	uint8 type;
 	uint16 len_src_descriptor, len_combined_caps;
@@ -1081,7 +1081,7 @@ process_pointer_pdu(RDPCLIENT * This, STREAM s)
 
 /* Process bitmap updates */
 void
-process_bitmap_updates(RDPCLIENT * This, STREAM s) // EXITS
+process_bitmap_updates(RDPCLIENT * This, STREAM s)
 {
 	uint16 num_updates;
 	uint16 left, top, right, bottom, width, height;
@@ -1161,7 +1161,7 @@ process_bitmap_updates(RDPCLIENT * This, STREAM s) // EXITS
 
 /* Process a palette update */
 void
-process_palette(RDPCLIENT * This, STREAM s) // EXITS
+process_palette(RDPCLIENT * This, STREAM s)
 {
 	COLOURENTRY *entry;
 	COLOURMAP map;
@@ -1242,7 +1242,7 @@ process_disconnect_pdu(STREAM s, uint32 * ext_disc_reason)
 
 /* Process data PDU */
 static BOOL
-process_data_pdu(RDPCLIENT * This, STREAM s, uint32 * ext_disc_reason) // EXITS
+process_data_pdu(RDPCLIENT * This, STREAM s, uint32 * ext_disc_reason)
 {
 	uint8 data_pdu_type;
 	uint8 ctype;
@@ -1397,7 +1397,7 @@ rdp_main_loop(RDPCLIENT * This, BOOL * deactivated, uint32 * ext_disc_reason)
 
 /* used in uiports and rdp_main_loop, processes the rdp packets waiting */
 BOOL
-rdp_loop(RDPCLIENT * This, BOOL * deactivated, uint32 * ext_disc_reason) // EXITS
+rdp_loop(RDPCLIENT * This, BOOL * deactivated, uint32 * ext_disc_reason)
 {
 	uint8 type;
 	BOOL disc = False;	/* True when a disconnect PDU was received */
@@ -1441,7 +1441,7 @@ rdp_loop(RDPCLIENT * This, BOOL * deactivated, uint32 * ext_disc_reason) // EXIT
 /* Establish a connection up to the RDP layer */
 BOOL
 rdp_connect(RDPCLIENT * This, char *server, uint32 flags, wchar_t *username, wchar_t *domain, wchar_t *password,
-	    wchar_t *command, wchar_t *directory, wchar_t *hostname, char *cookie) // EXITS
+	    wchar_t *command, wchar_t *directory, wchar_t *hostname, char *cookie)
 {
 	if (!sec_connect(This, server, hostname, cookie))
 		return False;
@@ -1453,7 +1453,7 @@ rdp_connect(RDPCLIENT * This, char *server, uint32 flags, wchar_t *username, wch
 /* Establish a reconnection up to the RDP layer */
 BOOL
 rdp_reconnect(RDPCLIENT * This, char *server, uint32 flags, wchar_t *username, wchar_t *domain, wchar_t *password,
-	      wchar_t *command, wchar_t *directory, wchar_t *hostname, char *cookie) // EXITS
+	      wchar_t *command, wchar_t *directory, wchar_t *hostname, char *cookie)
 {
 	if (!sec_reconnect(This, server, hostname, cookie))
 		return False;

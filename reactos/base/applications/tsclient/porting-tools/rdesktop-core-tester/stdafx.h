@@ -27,4 +27,6 @@
 #include <ocidl.h>
 #include <objsafe.h>
 
+#include <commctrl.h>
+
 // EOF
