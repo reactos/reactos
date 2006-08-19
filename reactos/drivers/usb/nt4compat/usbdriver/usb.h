@@ -260,7 +260,15 @@
 	pseTup->wIndex = endp_aDdr;\
 }
 
-
+// Forward structs declarations
+struct _URB;
+struct _HCD;
+struct _USB_DEV_MANAGER;
+struct _USB_DEV;
+struct _USB_ENDPOINT;
+struct _USB_EVENT;
+struct _USB_EVENT_POOL;
+struct _USB_DRIVER;
 
 /* USB constants */
 
