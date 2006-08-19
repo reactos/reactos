@@ -545,7 +545,11 @@ process_polygon(RDPCLIENT * This, STREAM s, POLYGON_ORDER * os, uint32 present, 
 		return;
 	}
 
-	points = (POINT *) xmalloc((os->npoints + 1) * sizeof(POINT));
+	points = (POINT *) malloc((os->npoints + 1) * sizeof(POINT));
+
+	if(points == NULL)
+		return;
+
 	memset(points, 0, (os->npoints + 1) * sizeof(POINT));
 
 	points[0].x = os->x;
@@ -578,7 +582,7 @@ process_polygon(RDPCLIENT * This, STREAM s, POLYGON_ORDER * os, uint32 present, 
 	else
 		error("polygon parse error\n");
 
-	xfree(points);
+	free(points);
 }
 
 /* Process a polygon2 order */
@@ -635,7 +639,11 @@ process_polygon2(RDPCLIENT * This, STREAM s, POLYGON2_ORDER * os, uint32 present
 		return;
 	}
 
-	points = (POINT *) xmalloc((os->npoints + 1) * sizeof(POINT));
+	points = (POINT *) malloc((os->npoints + 1) * sizeof(POINT));
+
+	if(points == NULL)
+		return;
+
 	memset(points, 0, (os->npoints + 1) * sizeof(POINT));
 
 	points[0].x = os->x;
@@ -668,7 +676,7 @@ process_polygon2(RDPCLIENT * This, STREAM s, POLYGON2_ORDER * os, uint32 present
 	else
 		error("polygon2 parse error\n");
 
-	xfree(points);
+	free(points);
 }
 
 /* Process a polyline order */
@@ -717,7 +725,11 @@ process_polyline(RDPCLIENT * This, STREAM s, POLYLINE_ORDER * os, uint32 present
 		return;
 	}
 
-	points = (POINT *) xmalloc((os->lines + 1) * sizeof(POINT));
+	points = (POINT *) malloc((os->lines + 1) * sizeof(POINT));
+
+	if(points == NULL)
+		return;
+
 	memset(points, 0, (os->lines + 1) * sizeof(POINT));
 
 	points[0].x = os->x;
@@ -750,7 +762,7 @@ process_polyline(RDPCLIENT * This, STREAM s, POLYLINE_ORDER * os, uint32 present
 	else
 		error("polyline parse error\n");
 
-	xfree(points);
+	free(points);
 }
 
 /* Process an ellipse order */
@@ -926,8 +938,7 @@ process_raw_bmpcache(RDPCLIENT * This, STREAM s)
 	HBITMAP bitmap;
 	uint16 cache_idx, bufsize;
 	uint8 cache_id, width, height, bpp, Bpp;
-	uint8 *data, *inverted;
-	int y;
+	uint8 *data;
 
 	in_uint8(s, cache_id);
 	in_uint8s(s, 1);	/* pad */
@@ -1000,7 +1011,10 @@ process_bmpcache(RDPCLIENT * This, STREAM s)
 
 	DEBUG(("BMPCACHE(cx=%d,cy=%d,id=%d,idx=%d,bpp=%d,size=%d,pad1=%d,bufsize=%d,pad2=%d,rs=%d,fs=%d)\n", width, height, cache_id, cache_idx, bpp, size, pad1, bufsize, pad2, row_size, final_size));
 
-	bmpdata = (uint8 *) xmalloc(width * height * Bpp);
+	bmpdata = (uint8 *) malloc(width * height * Bpp);
+
+	if(bmpdata == NULL)
+		return;
 
 	if (bitmap_decompress(bmpdata, width, height, data, size, Bpp))
 	{
@@ -1012,7 +1026,7 @@ process_bmpcache(RDPCLIENT * This, STREAM s)
 		DEBUG(("Failed to decompress bitmap data\n"));
 	}
 
-	xfree(bmpdata);
+	free(bmpdata);
 }
 
 /* Process a bitmap cache v2 order */
@@ -1020,7 +1034,6 @@ static void
 process_bmpcache2(RDPCLIENT * This, STREAM s, uint16 flags, BOOL compressed)
 {
 	HBITMAP bitmap;
-	int y;
 	uint8 cache_id, cache_idx_low, width, height, Bpp;
 	uint16 cache_idx, bufsize;
 	uint8 *data, *bmpdata, *bitmap_id;
@@ -1062,12 +1075,15 @@ process_bmpcache2(RDPCLIENT * This, STREAM s, uint16 flags, BOOL compressed)
 
 	if (compressed)
 	{
-		bmpdata = (uint8 *) xmalloc(width * height * Bpp);
+		bmpdata = (uint8 *) malloc(width * height * Bpp);
+
+		if(bmpdata == NULL)
+			return;
 
 		if (!bitmap_decompress(bmpdata, width, height, data, bufsize, Bpp))
 		{
 			DEBUG(("Failed to decompress bitmap data\n"));
-			xfree(bmpdata);
+			free(bmpdata);
 			return;
 		}
 	}
@@ -1097,7 +1113,7 @@ process_bmpcache2(RDPCLIENT * This, STREAM s, uint16 flags, BOOL compressed)
 	}
 
 	if (compressed)
-		xfree(bmpdata);
+		free(bmpdata);
 }
 
 /* Process a colourmap cache order */
@@ -1113,7 +1129,13 @@ process_colcache(RDPCLIENT * This, STREAM s)
 	in_uint8(s, cache_id);
 	in_uint16_le(s, map.ncolours);
 
-	map.colours = (COLOURENTRY *) xmalloc(sizeof(COLOURENTRY) * map.ncolours);
+	map.colours = (COLOURENTRY *) malloc(sizeof(COLOURENTRY) * map.ncolours);
+
+	if(map.colours == NULL)
+	{
+		in_uint8s(s, map.ncolours * 4);
+		return;
+	}
 
 	for (i = 0; i < map.ncolours; i++)
 	{
@@ -1131,7 +1153,7 @@ process_colcache(RDPCLIENT * This, STREAM s)
 	if (cache_id)
 		ui_set_colourmap(This, hmap);
 
-	xfree(map.colours);
+	free(map.colours);
 }
 
 /* Process a font cache order */

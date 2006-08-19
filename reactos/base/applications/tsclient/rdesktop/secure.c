@@ -290,7 +290,7 @@ sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint32 modulus_size, uint8 * m
 	BN_mod_exp(&y, &x, &exp, &mod, ctx);
 	outlen = BN_bn2bin(&y, out);
 	reverse(out, outlen);
-	if (outlen < modulus_size)
+	if ((uint32)outlen < modulus_size)
 		memset(out + outlen, 0, modulus_size - outlen);
 
 	BN_free(&y);
@@ -312,6 +312,10 @@ sec_init(RDPCLIENT * This, uint32 flags, int maxlen)
 	else
 		hdrlen = (flags & SEC_ENCRYPT) ? 12 : 0;
 	s = mcs_init(This, maxlen + hdrlen);
+
+	if(s == NULL)
+		return s;
+
 	s_push_layer(s, sec_hdr, hdrlen);
 
 	return s;
@@ -320,7 +324,7 @@ sec_init(RDPCLIENT * This, uint32 flags, int maxlen)
 /* Transmit secure transport packet over specified channel */
 
 // !!! we need a lock here !!!
-void
+BOOL
 sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel)
 {
 	int datalen;
@@ -332,7 +336,7 @@ sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel)
 	if (flags & SEC_ENCRYPT)
 	{
 		flags &= ~SEC_ENCRYPT;
-		datalen = s->end - s->p - 8;
+		datalen = (int)(s->end - s->p - 8);
 
 #if WITH_DEBUG
 		DEBUG(("Sending encrypted packet:\n"));
@@ -343,15 +347,15 @@ sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel)
 		sec_encrypt(This, s->p + 8, datalen);
 	}
 
-	mcs_send_to_channel(This, s, channel);
+	return mcs_send_to_channel(This, s, channel);
 }
 
 /* Transmit secure transport packet */
 
-void
+BOOL
 sec_send(RDPCLIENT * This, STREAM s, uint32 flags)
 {
-	sec_send_to_channel(This, s, flags, MCS_GLOBAL_CHANNEL);
+	return sec_send_to_channel(This, s, flags, MCS_GLOBAL_CHANNEL);
 }
 
 
@@ -375,9 +379,9 @@ sec_establish_key(RDPCLIENT * This)
 
 /* Output connect initial data blob */
 static void
-sec_out_mcs_data(RDPCLIENT * This, STREAM s)
+sec_out_mcs_data(RDPCLIENT * This, STREAM s, wchar_t * hostname)
 {
-	int hostlen = 2 * strlen(This->hostname);
+	int hostlen = 2 * (int)wcslen(hostname);
 	int length = 158 + 76 + 12 + 4;
 	unsigned int i;
 
@@ -417,7 +421,7 @@ sec_out_mcs_data(RDPCLIENT * This, STREAM s)
 	out_uint32_le(s, 2600);	/* Client build. We are now 2600 compatible :-) */
 
 	/* Unicode name of client, padded to 32 bytes */
-	rdp_out_unistr(This, s, This->hostname, hostlen);
+	rdp_out_unistr(This, s, hostname, hostlen);
 	out_uint8s(s, 30 - hostlen);
 
 	/* See
@@ -607,6 +611,7 @@ sec_parse_crypt_info(RDPCLIENT * This, STREAM s, uint32 * rc4_key_size,
 		if (certcount < 2)
 		{
 			error("Server didn't send enough X509 certificates\n");
+			This->disconnect_reason = 1798;
 			return False;
 		}
 
@@ -649,6 +654,7 @@ sec_parse_crypt_info(RDPCLIENT * This, STREAM s, uint32 * rc4_key_size,
 		if (NULL == cacert)
 		{
 			error("Couldn't load CA Certificate from server\n");
+			This->disconnect_reason = 1798;
 			return False;
 		}
 
@@ -670,6 +676,7 @@ sec_parse_crypt_info(RDPCLIENT * This, STREAM s, uint32 * rc4_key_size,
 		if (NULL == server_cert)
 		{
 			error("Couldn't load Certificate from server\n");
+			This->disconnect_reason = 1798;
 			return False;
 		}
 
@@ -683,6 +690,7 @@ sec_parse_crypt_info(RDPCLIENT * This, STREAM s, uint32 * rc4_key_size,
 		{
 			DEBUG_RDP5(("Didn't parse X509 correctly\n"));
 			X509_free(server_cert);
+			This->disconnect_reason = 1798;
 			return False;
 		}
 		X509_free(server_cert);
@@ -822,7 +830,7 @@ sec_recv(RDPCLIENT * This, uint8 * rdpver)
 				if (*rdpver & 0x80)
 				{
 					in_uint8s(s, 8);	/* signature */
-					sec_decrypt(This, s->p, s->end - s->p);
+					sec_decrypt(This, s->p, (int)(s->end - s->p));
 				}
 				return s;
 			}
@@ -834,7 +842,7 @@ sec_recv(RDPCLIENT * This, uint8 * rdpver)
 			if (sec_flags & SEC_ENCRYPT)
 			{
 				in_uint8s(s, 8);	/* signature */
-				sec_decrypt(This, s->p, s->end - s->p);
+				sec_decrypt(This, s->p, (int)(s->end - s->p));
 			}
 
 			if (sec_flags & SEC_LICENCE_NEG)
@@ -848,7 +856,7 @@ sec_recv(RDPCLIENT * This, uint8 * rdpver)
 				uint8 swapbyte;
 
 				in_uint8s(s, 8);	/* signature */
-				sec_decrypt(This, s->p, s->end - s->p);
+				sec_decrypt(This, s->p, (int)(s->end - s->p));
 
 				/* Check for a redirect packet, starts with 00 04 */
 				if (s->p[0] == 0 && s->p[1] == 4)
@@ -894,43 +902,57 @@ sec_recv(RDPCLIENT * This, uint8 * rdpver)
 
 /* Establish a secure connection */
 BOOL
-sec_connect(RDPCLIENT * This, char *server, char *username)
+sec_connect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie) // EXITS
 {
 	struct stream mcs_data;
+	void * p = malloc(512);
+
+	if(p == NULL)
+	{
+		This->disconnect_reason = 262;
+		return False;
+	}
 
 	/* We exchange some RDP data during the MCS-Connect */
 	mcs_data.size = 512;
-	mcs_data.p = mcs_data.data = (uint8 *) xmalloc(mcs_data.size);
-	sec_out_mcs_data(This, &mcs_data);
+	mcs_data.p = mcs_data.data = (uint8 *) p;
+	sec_out_mcs_data(This, &mcs_data, hostname);
 
-	if (!mcs_connect(This, server, &mcs_data, username))
+	if (!mcs_connect(This, server, cookie, &mcs_data))
 		return False;
 
 	/*      sec_process_mcs_data(&mcs_data); */
 	if (This->encryption)
 		sec_establish_key(This);
-	xfree(mcs_data.data);
+	free(mcs_data.data);
 	return True;
 }
 
 /* Establish a secure connection */
 BOOL
-sec_reconnect(RDPCLIENT * This, char *server)
+sec_reconnect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie) // EXITS
 {
 	struct stream mcs_data;
+	void * p = malloc(512);
+
+	if(p == NULL)
+	{
+		This->disconnect_reason = 262;
+		return False;
+	}
 
 	/* We exchange some RDP data during the MCS-Connect */
 	mcs_data.size = 512;
-	mcs_data.p = mcs_data.data = (uint8 *) xmalloc(mcs_data.size);
-	sec_out_mcs_data(This, &mcs_data);
+	mcs_data.p = mcs_data.data = (uint8 *) p;
+	sec_out_mcs_data(This, &mcs_data, hostname);
 
-	if (!mcs_reconnect(This, server, &mcs_data))
+	if (!mcs_reconnect(This, server, cookie, &mcs_data))
 		return False;
 
 	/*      sec_process_mcs_data(&mcs_data); */
 	if (This->encryption)
 		sec_establish_key(This);
-	xfree(mcs_data.data);
+	free(mcs_data.data);
 	return True;
 }
 

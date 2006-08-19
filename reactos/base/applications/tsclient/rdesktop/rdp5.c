@@ -21,7 +21,7 @@
 
 #include "rdesktop.h"
 
-void
+BOOL
 rdp5_process(RDPCLIENT * This, STREAM s)
 {
 	uint16 length, count, x, y;
@@ -56,11 +56,21 @@ rdp5_process(RDPCLIENT * This, STREAM s)
 
 		if (ctype & RDP_MPPC_COMPRESSED)
 		{
+			void * p;
+
 			if (mppc_expand(This, s->p, length, ctype, &roff, &rlen) == -1)
 				error("error while decompressing packet\n");
 
 			/* allocate memory and copy the uncompressed data into the temporary stream */
-			ns->data = (uint8 *) xrealloc(ns->data, rlen);
+			p = realloc(ns->data, rlen);
+
+			if(p == NULL)
+			{
+				This->disconnect_reason = 262;
+				return False;
+			}
+
+			ns->data = (uint8 *) p;
 
 			memcpy((ns->data), (unsigned char *) (This->mppc_dict.hist + roff), rlen);
 
@@ -114,4 +124,5 @@ rdp5_process(RDPCLIENT * This, STREAM s)
 		s->p = next;
 	}
 	ui_end_update(This);
+	return True;
 }

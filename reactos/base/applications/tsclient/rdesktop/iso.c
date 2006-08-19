@@ -21,12 +21,15 @@
 #include "rdesktop.h"
 
 /* Send a self-contained ISO PDU */
-static void
+static BOOL
 iso_send_msg(RDPCLIENT * This, uint8 code)
 {
 	STREAM s;
 
 	s = tcp_init(This, 11);
+
+	if(s == NULL)
+		return False;
 
 	out_uint8(s, 3);	/* version */
 	out_uint8(s, 0);	/* reserved */
@@ -39,16 +42,20 @@ iso_send_msg(RDPCLIENT * This, uint8 code)
 	out_uint8(s, 0);	/* class */
 
 	s_mark_end(s);
-	tcp_send(This, s);
+	return tcp_send(This, s);
 }
 
-static void
-iso_send_connection_request(RDPCLIENT * This, char *username)
+static BOOL
+iso_send_connection_request(RDPCLIENT * This, char *cookie)
 {
 	STREAM s;
-	int length = 30 + strlen(username);
+	int cookielen = (int)strlen(cookie);
+	int length = 11 + cookielen;
 
 	s = tcp_init(This, length);
+
+	if(s == NULL)
+		return False;
 
 	out_uint8(s, 3);	/* version */
 	out_uint8(s, 0);	/* reserved */
@@ -60,14 +67,10 @@ iso_send_connection_request(RDPCLIENT * This, char *username)
 	out_uint16(s, 0);	/* src_ref */
 	out_uint8(s, 0);	/* class */
 
-	out_uint8p(s, "Cookie: mstshash=", strlen("Cookie: mstshash="));
-	out_uint8p(s, username, strlen(username));
-
-	out_uint8(s, 0x0d);	/* Unknown */
-	out_uint8(s, 0x0a);	/* Unknown */
+	out_uint8p(s, cookie, cookielen);
 
 	s_mark_end(s);
-	tcp_send(This, s);
+	return tcp_send(This, s);
 }
 
 /* Receive a message on the ISO layer, return code */
@@ -121,19 +124,23 @@ iso_init(RDPCLIENT * This, int length)
 	STREAM s;
 
 	s = tcp_init(This, length + 7);
+
+	if(s == NULL)
+		return NULL;
+
 	s_push_layer(s, iso_hdr, 7);
 
 	return s;
 }
 
 /* Send an ISO data PDU */
-void
+BOOL
 iso_send(RDPCLIENT * This, STREAM s)
 {
 	uint16 length;
 
 	s_pop_layer(s, iso_hdr);
-	length = s->end - s->p;
+	length = (uint16)(s->end - s->p);
 
 	out_uint8(s, 3);	/* version */
 	out_uint8(s, 0);	/* reserved */
@@ -143,7 +150,7 @@ iso_send(RDPCLIENT * This, STREAM s)
 	out_uint8(s, ISO_PDU_DT);	/* code */
 	out_uint8(s, 0x80);	/* eot */
 
-	tcp_send(This, s);
+	return tcp_send(This, s);
 }
 
 /* Receive ISO transport data packet */
@@ -169,14 +176,15 @@ iso_recv(RDPCLIENT * This, uint8 * rdpver)
 
 /* Establish a connection up to the ISO layer */
 BOOL
-iso_connect(RDPCLIENT * This, char *server, char *username)
+iso_connect(RDPCLIENT * This, char *server, char *cookie)
 {
 	uint8 code = 0;
 
 	if (!tcp_connect(This, server))
 		return False;
 
-	iso_send_connection_request(This, username);
+	if (!iso_send_connection_request(This, cookie))
+		return False;
 
 	if (iso_recv_msg(This, &code, NULL) == NULL)
 		return False;
@@ -193,14 +201,15 @@ iso_connect(RDPCLIENT * This, char *server, char *username)
 
 /* Establish a reconnection up to the ISO layer */
 BOOL
-iso_reconnect(RDPCLIENT * This, char *server)
+iso_reconnect(RDPCLIENT * This, char *server, char *cookie)
 {
 	uint8 code = 0;
 
 	if (!tcp_connect(This, server))
 		return False;
 
-	iso_send_msg(This, ISO_PDU_CR);
+	if (!iso_send_connection_request(This, cookie)) // BUGBUG should we really pass the cookie here?
+		return False;
 
 	if (iso_recv_msg(This, &code, NULL) == NULL)
 		return False;
@@ -216,11 +225,13 @@ iso_reconnect(RDPCLIENT * This, char *server)
 }
 
 /* Disconnect from the ISO layer */
-void
+BOOL
 iso_disconnect(RDPCLIENT * This)
 {
-	iso_send_msg(This, ISO_PDU_DR);
-	tcp_disconnect(This);
+	if(!iso_send_msg(This, ISO_PDU_DR))
+		return False;
+
+	return tcp_disconnect(This);
 }
 
 /* reset the state to support reconnecting */

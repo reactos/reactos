@@ -7,7 +7,7 @@
 
 template<class T, class U> T aligndown(const T& X, const U& align)
 {
-	return X & ~(T(align) - 1);		
+	return X & ~(T(align) - 1);
 }
 
 template<class T, class U> T alignup(const T& X, const U& align)
@@ -91,56 +91,6 @@ extern "C"
 		va_start(ap, format);
 		vfprintf(stderr, format, ap);
 		va_end(ap);
-	}
-
-	/* malloc; exit if out of memory */
-	void *
-	xmalloc(size_t size)
-	{
-		void *mem = malloc(size);
-		if (mem == NULL)
-		{
-			error("xmalloc %d\n", size);
-			exit(1);
-		}
-		return mem;
-	}
-
-	/* strdup */
-	char *
-	xstrdup(const char *s)
-	{
-		char *mem = _strdup(s);
-		if (mem == NULL)
-		{
-			perror("strdup");
-			exit(1);
-		}
-		return mem;
-	}
-
-	/* realloc; exit if out of memory */
-	void *
-	xrealloc(void *oldmem, size_t size)
-	{
-		void *mem;
-
-		if (size < 1)
-			size = 1;
-		mem = realloc(oldmem, size);
-		if (mem == NULL)
-		{
-			error("xrealloc %d\n", size);
-			exit(1);
-		}
-		return mem;
-	}
-
-	/* free */
-	void
-	xfree(void *mem)
-	{
-		free(mem);
 	}
 
 	/* Create the bitmap cache directory */
@@ -231,78 +181,12 @@ extern "C"
 	int
 	load_licence(RDPCLIENT * This, unsigned char **data)
 	{
-		char *home, *path;
-		struct stat st;
-		int fd, length;
-
-		home = getenv("HOME");
-		if (home == NULL)
-			return -1;
-
-		path = (char *) xmalloc(strlen(home) + strlen(This->hostname) + sizeof("/.rdesktop/licence."));
-		sprintf(path, "%s/.rdesktop/licence.%s", home, This->hostname);
-
-		fd = _open(path, O_RDONLY);
-		if (fd == -1)
-			return -1;
-
-		if (fstat(fd, &st))
-			return -1;
-
-		*data = (uint8 *) xmalloc(st.st_size);
-		length = _read(fd, *data, st.st_size);
-		_close(fd);
-		xfree(path);
-		return length;
+		return -1;
 	}
 
 	void
 	save_licence(RDPCLIENT * This, unsigned char *data, int length)
 	{
-		char *home, *path, *tmppath;
-		int fd;
-
-		home = getenv("HOME");
-		if (home == NULL)
-			return;
-
-		path = (char *) xmalloc(strlen(home) + strlen(This->hostname) + sizeof("/.rdesktop/licence."));
-
-		sprintf(path, "%s/.rdesktop", home);
-		if ((_mkdir(path) == -1) && errno != EEXIST)
-		{
-			perror(path);
-			return;
-		}
-
-		/* write licence to licence.hostname.new, then atomically rename to licence.hostname */
-
-		sprintf(path, "%s/.rdesktop/licence.%s", home, This->hostname);
-		tmppath = (char *) xmalloc(strlen(path) + sizeof(".new"));
-		strcpy(tmppath, path);
-		strcat(tmppath, ".new");
-
-		fd = _open(tmppath, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-		if (fd == -1)
-		{
-			perror(tmppath);
-			return;
-		}
-
-		if (_write(fd, data, length) != length)
-		{
-			perror(tmppath);
-			_unlink(tmppath);
-		}
-		else if (rename(tmppath, path) == -1)
-		{
-			perror(path);
-			_unlink(tmppath);
-		}
-
-		_close(fd);
-		xfree(tmppath);
-		xfree(path);
 	}
 
 	/* ==== END POOP ==== */
@@ -381,7 +265,10 @@ extern "C"
 
 		int datasize = tostride * height;
 
-		uint8 * dibits = new(xmalloc(datasize)) uint8;
+		uint8 * dibits = new(malloc(datasize)) uint8;
+
+		if(dibits == NULL)
+			return NULL;
 
 		const uint8 * src = data;
 		uint8 * dest = dibits;
@@ -412,11 +299,13 @@ extern "C"
 	void
 	ui_resize_window(RDPCLIENT * This)
 	{
+		// EVENT: OnRemoteDesktopSizeChange
+		// TODO: resize buffer
 		SetWindowPos(hwnd, NULL, 0, 0, This->width, This->height, SWP_ASYNCWINDOWPOS | SWP_NOACTIVATE | SWP_NOCOPYBITS | SWP_NOMOVE);
 	}
 
 	int
-	ui_select(RDPCLIENT * This, int rdp_socket)
+	ui_select(RDPCLIENT * This, SOCKET rdp_socket)
 	{
 		return 1; // TODO: return 0 for user quit. Or just kill this silly function
 	}
@@ -451,11 +340,14 @@ extern "C"
 	{
 		uint8 * databuf = NULL;
 		uint8 * databits = win32_convert_scanlines(width, height, 1, 1, 2, data, &databuf);
-		
+
+		if(databits == NULL)
+			return NULL;
+
 		HBITMAP hbm = CreateBitmap(width, height, 1, 1, databits);
 
 		if(databuf)
-			xfree(databuf);
+			free(databuf);
 
 		const uint8 * p = data;
 		int stride = alignup(alignup(width, 8) / 8, 1);
@@ -497,7 +389,17 @@ extern "C"
 		uint8 * xorbuf = NULL;
 
 		uint8 * andbits = win32_convert_scanlines(width, - height, 1, 2, 4, andmask, &andbuf);
+
+		if(andbits == NULL)
+			return NULL;
+
 		uint8 * xorbits = win32_convert_scanlines(width, height, 24, 2, 4, xormask, &xorbuf);
+
+		if(xorbits == NULL)
+		{
+			free(andbits);
+			return NULL;
+		}
 
 		HBITMAP hbmMask = CreateBitmap(width, height, 1, 1, andbits);
 		HBITMAP hbmColor = win32_create_dib(width, height, 24, xorbits);
@@ -508,17 +410,17 @@ extern "C"
 		iconinfo.yHotspot = y;
 		iconinfo.hbmMask = hbmMask;
 		iconinfo.hbmColor = hbmColor;
-		
+
 		HICON icon = CreateIconIndirect(&iconinfo);
 
 		if(icon == NULL)
 			error("CreateIconIndirect %dx%d failed\n", width, height);
 
 		if(andbuf)
-			xfree(andbuf);
+			free(andbuf);
 
 		if(xorbuf)
-			xfree(xorbuf);
+			free(xorbuf);
 
 		DeleteObject(hbmMask);
 		DeleteObject(hbmColor);
@@ -763,7 +665,7 @@ extern "C"
 		SetBkColor(hdcBuffer, bgcolour);
 		SetTextColor(hdcBuffer, fgcolour);
 		SetBrushOrgEx(hdcBuffer, brush->xorigin, brush->yorigin, NULL);
-		SelectObject(hdcBuffer, hbr);		
+		SelectObject(hdcBuffer, hbr);
 
 		PatBlt(hdcBuffer, x, y, cx, cy, MAKELONG(0, opcode));
 
@@ -841,7 +743,7 @@ extern "C"
 		DeleteObject(hpen);
 
 		RECT rcDamage;
-		
+
 		if(startx < endx)
 		{
 			rcDamage.left = startx;
@@ -1058,7 +960,7 @@ extern "C"
 
 		SelectObject(hdcBuffer, holdpen);
 		SelectObject(hdcBuffer, holdbrush);
-		
+
 		DeleteObject(hbr);
 
 		if(boxcx > 1)
@@ -1179,6 +1081,15 @@ extern "C"
 	{
 		RestoreDC(hdcBuffer, nSavedDC);
 	}
+
+	int event_pubkey(RDPCLIENT * This, const unsigned char * key, size_t key_size)
+	{
+		return True;
+	}
+
+	void event_logon(RDPCLIENT * This)
+	{
+	}
 };
 
 static
@@ -1268,7 +1179,7 @@ mstsc_WndProc(HWND hwnd, UINT uMsg, WPARAM wparam, LPARAM lparam)
 
 		/* Keyboard stuff */
 	case WM_SYSKEYDOWN:
-	case WM_KEYDOWN:		
+	case WM_KEYDOWN:
 		rdp_send_input(This, GetMessageTime(), RDP_INPUT_SCANCODE, RDP_KEYPRESS | (lparam & 0x1000000 ? KBD_FLAG_EXT : 0), LOBYTE(HIWORD(lparam)), 0);
 		break;
 
@@ -1290,7 +1201,7 @@ mstsc_WndProc(HWND hwnd, UINT uMsg, WPARAM wparam, LPARAM lparam)
 
 		// Movement
 	case WM_MOUSEMOVE:
-		if(This->sendmotion || wparam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON | MK_XBUTTON1 | MK_XBUTTON2))
+		//if(This->sendmotion || wparam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON | MK_XBUTTON1 | MK_XBUTTON2))
 			rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_MOVE, LOWORD(lparam), HIWORD(lparam));
 
 		break;
@@ -1352,14 +1263,13 @@ mstsc_ProtocolIOThread
 {
 	RDPCLIENT * This = static_cast<RDPCLIENT *>(lpArgument);
 
-	strcpy(This->username, "Administrator");
-
-	DWORD dw = sizeof(This->hostname);
-	GetComputerNameA(This->hostname, &dw);
+	WCHAR hostname[MAX_COMPUTERNAME_LENGTH + 1];
+	DWORD dw = ARRAYSIZE(hostname);
+	GetComputerNameW(hostname, &dw);
 
 	uint32 flags = RDP_LOGON_NORMAL | RDP_LOGON_COMPRESSION | RDP_LOGON_COMPRESSION2;
 
-	rdp_connect(This, "10.0.0.3", flags, "", "", "", "");
+	rdp_connect(This, "10.0.0.3", flags, L"Administrator", L"", L"", L"", L"", hostname, "");
 	//rdp_connect(This, "192.168.7.232", flags, "", "", "", "");
 
 	hdcBuffer = CreateCompatibleDC(NULL);
@@ -1390,6 +1300,8 @@ mstsc_ProtocolIOThread
 	uint32 ext_disc_reason;
 
 	rdp_main_loop(This, &deactivated, &ext_disc_reason);
+	// TODO: handle redirection
+	// EVENT: OnDisconnect
 
 	SendMessage(hwnd, WM_CLOSE, 0, 0);
 
@@ -1450,6 +1362,7 @@ VirtualChannelInit
 
 	memcpy(This->channel_defs + This->num_channels, pChannel, sizeof(*pChannel) * channelCount);
 
+#if 0 // TODO
 	for(INT i = 0; i < channelCount; ++ i)
 	{
 		pChannel[i].options |= CHANNEL_OPTION_INITIALIZED;
@@ -1459,6 +1372,7 @@ VirtualChannelInit
 		This->channel_data[j].pChannelInitEventProc = pChannelInitEventProc;
 		This->channel_data[j].pChannelOpenEventProc = NULL;
 	}
+#endif
 
 	This->num_channels += channelCount;
 
@@ -1491,6 +1405,7 @@ VirtualChannelOpen
 
 	RDPCLIENT * This = (RDPCLIENT *)pInitHandle;
 
+#if 0 // TODO
 	for(unsigned i = 0; i < This->num_channels; ++ i)
 	{
 		if(strcmp(pChannelName, This->channel_defs[i].name) == 0)
@@ -1507,6 +1422,7 @@ VirtualChannelOpen
 			break;
 		}
 	}
+#endif
 
 	return CHANNEL_RC_OK;
 }
@@ -1562,7 +1478,7 @@ int wmain()
 	This->height = 600;
 	This->server_depth = 24;
 	This->bitmap_compression = True;
-	This->sendmotion = True;
+	//This->sendmotion = True;
 	This->bitmap_cache = True;
 	This->bitmap_cache_persist_enable = False;
 	This->bitmap_cache_precache = True;
@@ -1570,14 +1486,14 @@ int wmain()
 	This->packet_encryption = True;
 	This->desktop_save = True;
 	This->polygon_ellipse_orders = False; // = True;
-	This->fullscreen = False;
-	This->grab_keyboard = True;
-	This->hide_decorations = False;
+	//This->fullscreen = False;
+	//This->grab_keyboard = True;
+	//This->hide_decorations = False;
 	This->use_rdp5 = True;
-	This->rdpclip = True;
+	//This->rdpclip = True;
 	This->console_session = False;
-	This->numlock_sync = False;
-	This->seamless_rdp = False;
+	//This->numlock_sync = False;
+	//This->seamless_rdp = False;
 	This->rdp5_performanceflags = RDP5_NO_WALLPAPER | RDP5_NO_FULLWINDOWDRAG | RDP5_NO_MENUANIMATIONS;
 	This->tcp_port_rdp = TCP_PORT_RDP;
 
@@ -1588,6 +1504,8 @@ int wmain()
 	This->cache.bmpcache_mru[0] = NOT_SET;
 	This->cache.bmpcache_mru[1] = NOT_SET;
 	This->cache.bmpcache_mru[2] = NOT_SET;
+
+	This->rdp.current_status = 1;
 
 	hcursor = NULL;
 

@@ -72,8 +72,8 @@ typedef struct stream
 #else
 #define in_uint16_be(s,v)	{ v = *((s)->p++); next_be(s,v); }
 #define in_uint32_be(s,v)	{ in_uint16_be(s,v); next_be(s,v); next_be(s,v); }
-#define out_uint16_be(s,v)	{ *((s)->p++) = ((v) >> 8) & 0xff; *((s)->p++) = (v) & 0xff; }
-#define out_uint32_be(s,v)	{ out_uint16_be(s, ((v) >> 16) & 0xffff); out_uint16_be(s, (v) & 0xffff); }
+#define out_uint16_be(s,v)	{ *((s)->p++) = (uint8)((v) >> 8) & 0xff; *((s)->p++) = (uint8)((v) & 0xff); }
+#define out_uint32_be(s,v)	{ out_uint16_be(s, (uint16)(((v) >> 16) & 0xffff)); out_uint16_be(s, (uint16)((v) & 0xffff)); }
 #endif
 
 #ifndef B_ENDIAN_PREFERRED

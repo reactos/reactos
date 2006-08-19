@@ -59,14 +59,18 @@ pstcache_load_bitmap(RDPCLIENT * This, uint8 cache_id, uint16 cache_idx)
 	fd = This->pstcache_fd[cache_id];
 	rd_lseek_file(fd, cache_idx * (This->pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
 	rd_read_file(fd, &cellhdr, sizeof(CELLHEADER));
-	celldata = (uint8 *) xmalloc(cellhdr.length);
+	celldata = (uint8 *) malloc(cellhdr.length);
+
+	if(celldata == NULL)
+		return False;
+
 	rd_read_file(fd, celldata, cellhdr.length);
 
 	bitmap = ui_create_bitmap(This, cellhdr.width, cellhdr.height, celldata);
 	DEBUG(("Load bitmap from disk: id=%d, idx=%d, bmp=0x%x)\n", cache_id, cache_idx, bitmap));
 	cache_put_bitmap(This, cache_id, cache_idx, bitmap);
 
-	xfree(celldata);
+	free(celldata);
 	return True;
 }
 

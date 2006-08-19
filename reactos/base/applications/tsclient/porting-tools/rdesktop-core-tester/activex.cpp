@@ -78,10 +78,7 @@ class RdpClient sealed: // FIXME: wrap "sealed" in a macro
 
 	/* RDP client interface */
 	public MSTSCLib::IMsRdpClient4,
-	public MSTSCLib::IMsRdpClientNonScriptable2,
-
-	/* RDP client context */
-	public RDPCLIENT
+	public MSTSCLib::IMsRdpClientNonScriptable2
 {
 private:
 	/* An endless amount of COM glue */
@@ -137,6 +134,10 @@ private:
 	// OLE control glue
 	HWND m_controlWindow;
 	IOleClientSite * m_clientSite;
+	IOleInPlaceSite * m_inPlaceSite;
+	IOleAdviseHolder * m_adviseHolder;
+	LONG m_freezeEvents;
+	bool m_uiActive;
 
 	// UrlMon security
 	DWORD m_SafetyOptions;
@@ -145,6 +146,10 @@ private:
 	{
 		return m_SafetyOptions & INTERFACESAFE_FOR_UNTRUSTED_CALLER;
 	}
+
+	/* Glue to interface to rdesktop-core */
+	RDPCLIENT m_protocolState;
+	HANDLE m_protocolThread;
 
 	/* Properties */
 	// Storage fields
@@ -217,7 +222,6 @@ private:
 	bool m_ShadowBitmap;
 	bool m_EncryptionEnabled;
 	bool m_DedicatedTerminal;
-	bool m_EnableMouse;
 	bool m_DisableCtrlAltDel;
 	bool m_EnableWindowsKey;
 	bool m_DoubleClickDetect;
@@ -316,16 +320,22 @@ private:
 	}
 
 	/* Events */
-	MSTSCLib::IMsTscAxEvents * const * GetSinks() const
+	MSTSCLib::IMsTscAxEvents ** GetSinks() const
 	{
 		if(m_EventSinksCount > 1)
 			return m_EventSinks;
 		else
-			return m_EventSinksStatic;
+			return const_cast<MSTSCLib::IMsTscAxEvents **>(m_EventSinksStatic);
+	}
+
+	// Event freezing
+	void UnfreezeEvents()
+	{
+		// Just in case
 	}
 
 	// Generic event riser & helpers
-	void FireEvent(DISPID eventId, VARIANTARG rgvarg[], unsigned int cArgs, VARIANTARG * retval)
+	void InvokeSinks(DISPID eventId, VARIANTARG rgvarg[], unsigned int cArgs, VARIANTARG * retval)
 	{
 		DISPPARAMS params;
 
@@ -334,45 +344,154 @@ private:
 		params.cArgs = cArgs;
 		params.cNamedArgs = 0;
 
-		MSTSCLib::IMsTscAxEvents * const * sinks = GetSinks();
+		MSTSCLib::IMsTscAxEvents ** sinks = GetSinks();
 
 		for(size_t i = 0; i < m_EventSinksCount; ++ i)
-		{
 			sinks[i]->Invoke(eventId, IID_NULL, 0, DISPATCH_METHOD, &params, retval, NULL, NULL);
+	}
 
-			// BUGBUG: should we keep looping if the event has a return value?
+	typedef void (RdpClient::* AsyncEventCallback)
+	(
+		DISPID eventId,
+		VARIANTARG * rgvarg,
+		unsigned int cArgs,
+		VARIANTARG * retVal
+	);
+
+	void CleanupEventArgumentsCallback
+	(
+		DISPID eventId,
+		VARIANTARG * rgvarg,
+		unsigned int cArgs,
+		VARIANTARG * retVal
+	)
+	{
+		assert((rgvarg == NULL) == (cArgs == 0));
+
+		for(unsigned int i = 0; i < cArgs; ++ i)
+			VariantClear(&rgvarg[i]);
+
+		if(retVal)
+			VariantClear(retVal);
+	}
+
+	// synchronous call from inside the apartment that owns the object
+	void FireEventInsideApartment
+	(
+		DISPID eventId,
+		VARIANTARG * rgvarg = NULL,
+		unsigned int cArgs = 0,
+		VARIANTARG * retval = NULL,
+		AsyncEventCallback callback = NULL
+	)
+	{
+		if(retval == NULL && callback)
+		{
+			VARIANTARG localRetval = { };
+			retval = &localRetval;
 		}
+
+		InvokeSinks(eventId, rgvarg, cArgs, retval);
+
+		if(callback)
+			(this->*callback)(eventId, rgvarg, cArgs, retval);
 	}
 
-	void FireEvent(DISPID eventId, VARIANTARG * retval = NULL)
+	struct EventArguments
 	{
-		return FireEvent(eventId, NULL, 0, retval);
+		DISPID eventId;
+		VARIANTARG * rgvarg;
+		unsigned int cArgs;
+		VARIANTARG * retval;
+		AsyncEventCallback callback;
+	};
+
+	static const UINT RDPC_WM_SYNC_EVENT = WM_USER + 1;
+	static const UINT RDPC_WM_ASYNC_EVENT = WM_USER + 2;
+
+	bool HandleEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& result)
+	{
+		switch(uMsg)
+		{
+		case RDPC_WM_SYNC_EVENT:
+		case RDPC_WM_ASYNC_EVENT:
+			break;
+
+		default:
+			return false;
+		}
+
+		const EventArguments * eventArgs = reinterpret_cast<EventArguments *>(lParam);
+		assert(eventArgs);
+
+		FireEventInsideApartment(eventArgs->eventId, eventArgs->rgvarg, eventArgs->cArgs, eventArgs->retval, eventArgs->callback);
+
+		if(uMsg == RDPC_WM_ASYNC_EVENT)
+			delete eventArgs;
+
+		return true;
 	}
 
-	void FireEvent(DISPID eventId, VARIANTARG& arg, VARIANTARG * retval = NULL)
+	// synchronous call from outside the apartment
+	void FireEventOutsideApartment
+	(
+		DISPID eventId,
+		VARIANTARG * rgvarg = NULL,
+		unsigned int cArgs = 0,
+		VARIANTARG * retval = NULL,
+		AsyncEventCallback callback = NULL
+	)
 	{
-		return FireEvent(eventId, &arg, 1, retval);
+		EventArguments syncEvent = { eventId, rgvarg, cArgs, retval, callback };
+		SendMessage(m_controlWindow, RDPC_WM_SYNC_EVENT, 0, reinterpret_cast<LPARAM>(&syncEvent));
 	}
 
-	template<unsigned int N> void FireEvent(DISPID eventId, VARIANTARG (& args)[N], VARIANTARG * retval = NULL)
+	// asynchronous call from outside the apartment
+	HRESULT FireEventOutsideApartmentAsync
+	(
+		DISPID eventId,
+		VARIANTARG * rgvarg = NULL,
+		unsigned int cArgs = 0, 
+		VARIANTARG * retval = NULL,
+		AsyncEventCallback callback = NULL
+	)
 	{
-		return FireEvent(eventId, args, (N), retval);
+		EventArguments * asyncEvent = new EventArguments();
+
+		if(asyncEvent == NULL)
+			return E_OUTOFMEMORY;
+
+		asyncEvent->eventId = eventId;
+		asyncEvent->rgvarg = rgvarg;
+		asyncEvent->cArgs = cArgs;
+		asyncEvent->retval = NULL;
+
+		if(!PostMessage(m_controlWindow, RDPC_WM_ASYNC_EVENT, 0, reinterpret_cast<LPARAM>(asyncEvent)))
+		{
+			delete asyncEvent;
+			return HRESULT_FROM_WIN32(GetLastError());
+		}
+
+		return S_OK;
 	}
 
 	// Specific events
 	void FireConnecting()
 	{
-		FireEvent(1);
+		// Source: protocol
+		FireEventOutsideApartment(1);
 	}
 
 	void FireConnected()
 	{
-		FireEvent(2);
+		// Source: protocol
+		FireEventOutsideApartment(2);
 	}
 
 	void FireLoginComplete()
 	{
-		FireEvent(3);
+		// Source: protocol
+		FireEventOutsideApartment(3);
 	}
 
 	void FireDisconnected(long reason)
@@ -382,40 +501,71 @@ private:
 		arg.vt = VT_I4;
 		arg.lVal = reason;
 
-		FireEvent(4, arg);
+		// Source: protocol
+		FireEventOutsideApartment(4, &arg, 1);
 	}
 
 	void FireEnterFullScreenMode()
 	{
-		FireEvent(5);
+		// Source: UI window
+		FireEventInsideApartment(5);
 	}
 
 	void FireLeaveFullScreenMode()
 	{
-		FireEvent(6);
+		// Source: UI window
+		FireEventInsideApartment(6);
 	}
 
-	void FireChannelReceivedData(BSTR chanName, BSTR chanData)
+	HRESULT FireChannelReceivedData(char (& chanName)[CHANNEL_NAME_LEN + 1], void * chanData, unsigned int chanDataSize)
 	{
+		// BUGBUG: what to do when we run outside of memory?
+
+		OLECHAR wchanName[ARRAYSIZE(chanName)];
+		std::copy(chanName + 0, chanName + ARRAYSIZE(chanName), wchanName);
+
+		BSTR bstrChanName = SysAllocString(wchanName);
+
+		if(bstrChanName == NULL)
+			return E_OUTOFMEMORY;
+
+		BSTR bstrChanData = SysAllocStringByteLen(NULL, chanDataSize);
+
+		if(bstrChanData == NULL)
+		{
+			SysFreeString(bstrChanName);
+			return E_OUTOFMEMORY;
+		}
+
+		CopyMemory(bstrChanData, chanData, chanDataSize);
+
 		VARIANTARG args[2] = { };
 
 		args[1].vt = VT_BSTR;
-		args[1].bstrVal = chanName;
+		args[1].bstrVal = bstrChanName;
 
 		args[0].vt = VT_BSTR;
-		args[0].bstrVal = chanData;
+		args[0].bstrVal = bstrChanData;
 
-		FireEvent(7, args);
+		// Source: protocol
+		HRESULT hr = FireEventOutsideApartmentAsync(7, args, ARRAYSIZE(args), NULL, &RdpClient::CleanupEventArgumentsCallback);
+
+		if(FAILED(hr))
+			CleanupEventArgumentsCallback(7, args, ARRAYSIZE(args), NULL);
+
+		return hr;
 	}
 
 	void FireRequestGoFullScreen()
 	{
-		FireEvent(8);
+		// Source: UI window
+		FireEventInsideApartment(8);
 	}
 
 	void FireRequestLeaveFullScreen()
 	{
-		FireEvent(9);
+		// Source: UI window
+		FireEventInsideApartment(9);
 	}
 
 	void FireFatalError(long errorCode)
@@ -425,7 +575,8 @@ private:
 		arg.vt = VT_I4;
 		arg.lVal = errorCode;
 
-		FireEvent(10, arg);
+		// Source: protocol
+		FireEventOutsideApartment(10, &arg, 1);
 	}
 
 	void FireWarning(long warningCode)
@@ -435,7 +586,8 @@ private:
 		arg.vt = VT_I4;
 		arg.lVal = warningCode;
 
-		FireEvent(11);
+		// Source: protocol
+		FireEventOutsideApartment(11, &arg, 1);
 	}
 
 	void FireRemoteDesktopSizeChange(long width, long height)
@@ -448,45 +600,64 @@ private:
 		args[0].vt = VT_I4;
 		args[0].lVal = height;
 
-		FireEvent(12, args);
+		// Source: UI window
+		FireEventInsideApartment(12, args, ARRAYSIZE(args));
 	}
 
 	void FireIdleTimeoutNotification()
 	{
-		FireEvent(13);
+		// Source: input thread
+		FireEventOutsideApartment(13);
 	}
 
 	void FireRequestContainerMinimize()
 	{
-		FireEvent(14);
+		// Source: UI window
+		FireEventInsideApartment(14);
 	}
 
-	void FireConfirmClose(VARIANT_BOOL * pfAllowClose)
+	bool FireConfirmClose()
 	{
 		VARIANTARG retval = { };
+		VARIANT_BOOL allowClose = VARIANT_TRUE;
 
 		retval.vt = VT_BYREF | VT_BOOL;
-		retval.pboolVal = pfAllowClose;
+		retval.pboolVal = &allowClose;
 
-		FireEvent(15, &retval);
+		// Source: ??? // BUGBUG: fix this!
+		FireEventOutsideApartment(15, NULL, 0, &retval);
+
+		return allowClose != VARIANT_FALSE;
 	}
 
-    void FireReceivedTSPublicKey(BSTR publicKey, VARIANT_BOOL * pfContinueLogon)
+    HRESULT FireReceivedTSPublicKey(void * publicKey, unsigned int publicKeyLength)
 	{
+		BSTR bstrPublicKey = SysAllocStringByteLen(NULL, publicKeyLength);
+
+		if(bstrPublicKey == NULL)
+			return E_OUTOFMEMORY;
+
+		CopyMemory(bstrPublicKey, publicKey, publicKeyLength);
+
+		VARIANT_BOOL continueLogon = VARIANT_TRUE;
 		VARIANTARG arg = { };
 		VARIANTARG retval = { };
 
 		arg.vt = VT_BSTR;
-		arg.bstrVal = publicKey;
+		arg.bstrVal = bstrPublicKey;
 
 		retval.vt = VT_BYREF | VT_BOOL;
-		retval.pboolVal = pfContinueLogon;
+		retval.pboolVal = &continueLogon;
 
-		FireEvent(16, arg, &retval);
+		// Source: protocol
+		FireEventOutsideApartment(16, &arg, 1, &retval);
+
+		return continueLogon ? S_OK : S_FALSE;
 	}
 
-	void FireAutoReconnecting(long disconnectReason, long attemptCount, MSTSCLib::AutoReconnectContinueState * pArcContinueStatus)
+	LONG FireAutoReconnecting(long disconnectReason, long attemptCount)
 	{
+		LONG continueStatus = MSTSCLib::autoReconnectContinueAutomatic;
 		VARIANTARG args[2] = { };
 		VARIANTARG retval = { };
 
@@ -497,19 +668,24 @@ private:
 		args[0].lVal = attemptCount;
 
 		retval.vt = VT_BYREF | VT_I4;
-		retval.plVal = (LONG *)pArcContinueStatus;
+		retval.plVal = &continueStatus;
 
-		FireEvent(17, args, &retval);
+		// Source: protocol
+		FireEventOutsideApartment(17, args, ARRAYSIZE(args), &retval);
+
+		return continueStatus;
 	}
 
     void FireAuthenticationWarningDisplayed()
 	{
-		FireEvent(18);
+		// Source: protocol
+		FireEventOutsideApartment(18);
 	}
 
     void FireAuthenticationWarningDismissed()
 	{
-		FireEvent(19);
+		// Source: protocol
+		FireEventOutsideApartment(19);
 	}
 
 	/* Actual IUnknown implementation */
@@ -602,8 +778,17 @@ private:
 		m_classId(classId),
 		m_typeLib(),
 		m_dispTypeInfo(),
+		m_controlWindow(NULL),
 		m_clientSite(),
+		m_inPlaceSite(),
+		m_adviseHolder(),
+		m_freezeEvents(0),
+		m_uiActive(false),
 		m_SafetyOptions(),
+
+		// rdesktop-core interface
+		m_protocolState(),
+		m_protocolThread(),
 
 		// Properties
 		m_Server(),
@@ -642,7 +827,6 @@ private:
 		m_orderDrawThresold(0),
 		m_BitmapCacheSize(1500),
 		m_BitmapVirtualCacheSize(10),
-		m_NumBitmapCaches(),
 		m_brushSupportLevel(),
 		m_minInputSendInterval(),
 		m_InputEventsAtOnce(),
@@ -670,7 +854,6 @@ private:
 		m_ShadowBitmap(true),
 		m_EncryptionEnabled(true),
 		m_DedicatedTerminal(false),
-		m_EnableMouse(true),
 		m_DisableCtrlAltDel(true),
 		m_EnableWindowsKey(true),
 		m_DoubleClickDetect(false),
@@ -703,22 +886,32 @@ private:
 	{
 		assert(m_refCount == 0);
 
+		// TODO: if connected, disconnect
+
+		DestroyControlWindow();
+
 		if(m_typeLib)
 			m_typeLib->Release();
 
 		if(m_dispTypeInfo)
 			m_dispTypeInfo->Release();
 
-		MSTSCLib::IMsTscAxEvents * const * sinks = GetSinks();
+		MSTSCLib::IMsTscAxEvents ** sinks = GetSinks();
 
 		for(size_t i = 0; i < m_EventSinksCount; ++ i)
 			sinks[i]->Release();
 
 		if(m_EventSinksCount > 1)
-			CoTaskMemFree(m_EventSinks);
+			delete[] m_EventSinks;
 
 		if(m_clientSite)
 			m_clientSite->Release();
+
+		if(m_inPlaceSite)
+			m_inPlaceSite->Release();
+
+		if(m_adviseHolder)
+			m_adviseHolder->Release();
 
 		SysFreeString(m_Server);
 		SysFreeString(m_Domain);
@@ -1177,16 +1370,23 @@ private:
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapCacheSize(long pbitmapCacheSize)
 		{
-			return S_FALSE;
+			// NOTE: the upper bound of "32" for a field with a default value of 1500 seems to be a bug
+			if(pbitmapCacheSize < 0 || pbitmapCacheSize > 32)
+				return E_INVALIDARG;
+
+			return Outer()->SetProperty(Outer()->m_BitmapCacheSize, pbitmapCacheSize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_BitmapCacheSize(long * pbitmapCacheSize)
 		{
-			return S_FALSE;
+			return Outer()->GetProperty(Outer()->m_BitmapCacheSize, pbitmapCacheSize);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_BitmapVirtualCacheSize(long pbitmapVirtualCacheSize)
 		{
+			if(pbitmapVirtualCacheSize < 0 || pbitmapVirtualCacheSize > 32)
+				return E_INVALIDARG;
+
 			return Outer()->SetProperty(Outer()->m_BitmapVirtualCacheSize, pbitmapVirtualCacheSize);
 		}
 
@@ -1207,12 +1407,12 @@ private:
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_NumBitmapCaches(long pnumBitmapCaches)
 		{
-			return S_FALSE;
+			return Outer()->SetProperty(Outer()->m_NumBitmapCaches, pnumBitmapCaches);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_NumBitmapCaches(long * pnumBitmapCaches)
 		{
-			return S_FALSE;
+			return Outer()->GetProperty(Outer()->m_NumBitmapCaches, pnumBitmapCaches);
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_CachePersistenceActive(long pcachePersistenceActive)
@@ -1242,31 +1442,37 @@ private:
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_minInputSendInterval(long pminInputSendInterval)
 		{
+			// TODO
 			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_minInputSendInterval(long * pminInputSendInterval)
 		{
+			// TODO
 			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_InputEventsAtOnce(long pinputEventsAtOnce)
 		{
+			// TODO
 			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_InputEventsAtOnce(long * pinputEventsAtOnce)
 		{
+			// TODO
 			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_maxEventCount(long pmaxEventCount)
 		{
+			// TODO
 			return S_FALSE;
 		}
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::get_maxEventCount(long * pmaxEventCount)
 		{
+			// TODO
 			return S_FALSE;
 		}
 
@@ -1933,6 +2139,130 @@ public:
 		return CONTAINING_RECORD(innerThis, RdpClient, m_securedSettings);
 	}
 
+private:
+	/* Thread that hosts rdesktop-core */
+	static DWORD WINAPI ProtocolLoopThreadProc(LPVOID lpParam)
+	{
+		static_cast<RdpClient *>(lpParam)->ProtocolLoop();
+		return 0;
+	}
+
+	void ProtocolLoop()
+	{
+		FireConnecting();
+
+		uint32 flags = 0; // TODO
+
+		// Initial connection
+		rdp_connect
+		(
+			&m_protocolState,
+			NULL, // TODO server
+			flags,
+			m_UserName,
+			m_Domain,
+			m_ClearTextPassword,
+			m_StartProgram,
+			m_WorkDir,
+			NULL, // TODO hostname
+			NULL // TODO cookie
+		);
+
+		BOOL disconnected = False;
+
+		do
+		{
+			BOOL deactivated = False;
+			uint32 extendedDisconnectReason = 0;
+
+			// The main protocol loop
+			rdp_main_loop(&m_protocolState, &deactivated, &extendedDisconnectReason);
+
+			// Redirection
+			if(m_protocolState.redirect)
+			{
+				m_protocolState.redirect = False;
+				rdp_reset_state(&m_protocolState);
+
+				// TODO: reset connection parameters
+				// This has to be done in the main thread, so use SendMessage on the control window
+
+				flags |= RDP_LOGON_AUTO;
+
+				// retry
+				continue;
+			}
+
+			// Disconnection
+			m_ExtendedDisconnectReason = static_cast<MSTSCLib::ExtendedDisconnectReasonCode>(extendedDisconnectReason);
+
+			// Clean disconnection
+			if(deactivated)
+				break;
+
+			BOOL success;
+
+			long autoReconnections = 0;
+			long totalReconnections = 0;
+
+			// Reconnection
+			do
+			{
+				++ totalReconnections;
+
+				// ask the container whether we should reconnect
+				long reconnectMode = FireAutoReconnecting(m_protocolState.disconnect_reason, totalReconnections);
+
+				// do not reconnect
+				if(reconnectMode == MSTSCLib::autoReconnectContinueStop)
+				{
+					disconnected = True;
+					break;
+				}
+
+				// the container will reconnect manually with Connect or abort with Disconnect
+				if(reconnectMode == MSTSCLib::autoReconnectContinueManual)
+				{
+					// TODO: wait for a call to Connect or Disconnect
+				}
+				// reconnect automatically
+				else
+				{
+					// automatic reconnection is disabled
+					if(m_EnableAutoReconnect)
+						break;
+
+					// too many consecutive automatic reconnections
+					if(autoReconnections == m_MaxReconnectAttempts)
+						break;
+
+					++ autoReconnections;
+				}
+
+				// Reconnection
+				success = rdp_reconnect
+				(
+					&m_protocolState,
+					NULL, // TODO
+					flags,
+					m_UserName,
+					m_Domain,
+					m_ClearTextPassword,
+					m_StartProgram,
+					m_WorkDir,
+					NULL, // TODO
+					NULL // TODO
+				);
+			}
+			while(!success);
+		}
+		while(!disconnected);
+
+		// Disconnected
+		// TODO: clean up protocol state, clear "connected" flag
+		FireDisconnected(m_protocolState.disconnect_reason);
+	}
+
 public:
 	/* Class factory */
 	static HRESULT CreateInstance(REFCLSID rclsid, IUnknown * punkOuter, REFIID riid, void ** ppObj)
@@ -1956,120 +2286,8 @@ public:
 		return S_OK;
 	}
 
-	/* IUnknown */ // DONE
-	/*
-		NOTE: this is the delegating implementation, to support aggregation. The actual
-		implementation is RdpClientInner, above
-	*/
-	virtual STDMETHODIMP IUnknown::QueryInterface(REFIID riid, void ** ppvObject)
-	{
-		return m_punkOuter->QueryInterface(riid, ppvObject);
-	}
-
-	virtual STDMETHODIMP_(ULONG) IUnknown::AddRef()
-	{
-		return m_punkOuter->AddRef();
-	}
-
-	virtual STDMETHODIMP_(ULONG) IUnknown::Release()
-	{
-		return m_punkOuter->Release();
-	}
-
-	/* IDispatch */ // DONE
-	virtual STDMETHODIMP IDispatch::GetTypeInfoCount(UINT * pctinfo)
-	{
-		*pctinfo = 1;
-		return S_OK;
-	}
-
-	virtual STDMETHODIMP IDispatch::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo)
-	{
-		if(iTInfo != 0)
-			return DISP_E_BADINDEX;
-	
-		return AcquireDispTypeInfo(ppTInfo);
-	}
-
-	virtual STDMETHODIMP IDispatch::GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId)
-	{
-		HRESULT hr = LoadDispTypeInfo();
-
-		if(FAILED(hr))
-			return hr;
-
-		return m_dispTypeInfo->GetIDsOfNames(rgszNames, cNames, rgDispId);
-	}
-
-	virtual STDMETHODIMP IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr)
-	{
-		HRESULT hr = LoadDispTypeInfo();
-
-		if(FAILED(hr))
-			return hr;
-
-		return m_dispTypeInfo->Invoke
-		(
-			static_cast<MSTSCLib::IMsRdpClient4 *>(this),
-			dispIdMember,
-			wFlags,
-			pDispParams,
-			pVarResult,
-			pExcepInfo,
-			puArgErr
-		);
-	}
-
-	/* IConnectionPoint */ // DONE // FIXME! support more than one connection!
-	virtual STDMETHODIMP GetConnectionInterface(IID * pIID)
-	{
-		assert(pIID);
-		*pIID = MSTSCLib::DIID_IMsTscAxEvents;
-		return S_OK;
-	}
-
-	virtual STDMETHODIMP GetConnectionPointContainer(IConnectionPointContainer ** ppCPC)
-	{
-		assert(ppCPC);
-		addRef();
-		*ppCPC = this;
-		return S_OK;
-	}
-
-	virtual STDMETHODIMP Advise(IUnknown * pUnkSink, DWORD * pdwCookie)
-	{
-		if(m_EventSinksCount == 0)
-		{
-			if(FAILED(pUnkSink->QueryInterface(&m_EventSinksStatic[0])))
-				return CONNECT_E_CANNOTCONNECT;
-
-			++ m_EventSinksCount;
-
-			*pdwCookie = 1;
-			return S_OK;
-		}
-
-		return CONNECT_E_ADVISELIMIT;
-	}
-
-	virtual STDMETHODIMP Unadvise(DWORD dwCookie)
-	{
-		if(dwCookie != 1 || m_EventSinksCount == 0)
-			return CONNECT_E_NOCONNECTION;
-
-		m_EventSinksStatic[0]->Release();
-		m_EventSinksStatic[0] = NULL;
-		m_EventSinksCount = 0;
-		return S_OK;
-	}
-
-	virtual STDMETHODIMP EnumConnections(IEnumConnections ** ppEnum)
-	{
-		// I see no real value in this
-		return E_NOTIMPL;
-	}
-
-	/* IConnectionPointContainer */ // DONE
+private:
+	/* Connection point enumerator */
 	class CEnumConnectionPoints: public IEnumConnectionPoints
 	{
 	private:
@@ -2162,6 +2380,9 @@ public:
 
 		virtual STDMETHODIMP Clone(IEnumConnectionPoints ** ppEnum)
 		{
+			if(ppEnum == NULL)
+				return E_POINTER;
+
 			*ppEnum = new CEnumConnectionPoints(*this);
 
 			if(*ppEnum == NULL)
@@ -2171,6 +2392,284 @@ public:
 		}
 	};
 
+	/* Pay no attention, ActiveX glue... */
+	HRESULT CreateControlWindow()
+	{
+		// TODO
+		m_UIParentWindowHandle = m_controlWindow;
+		return E_FAIL;
+	}
+
+	HRESULT DestroyControlWindow()
+	{
+		if(m_controlWindow == NULL)
+			return S_FALSE;
+
+		HWND controlWindow = NULL;
+		std::swap(controlWindow, m_controlWindow);
+		DestroyWindow(controlWindow);
+		return S_OK;
+	}
+
+	HRESULT Activate(LONG iVerb, IOleClientSite * pActiveSite, HWND hwndParent, LPCRECT lprcPosRect)
+	{
+		if(pActiveSite == NULL)
+			pActiveSite = m_clientSite;
+
+		if(pActiveSite == NULL)
+			return E_FAIL;
+
+		// TODO: store this until we are closed or deactivated
+		IOleInPlaceSite * site;
+
+		HRESULT hr = pActiveSite->QueryInterface(&site);
+
+		if(FAILED(hr))
+			return hr;
+
+		IOleInPlaceFrame * frame = NULL;
+		IOleInPlaceUIWindow * uiWindow = NULL;
+
+		for(;;)
+		{
+			hr = site->CanInPlaceActivate();
+
+			if(hr == S_FALSE)
+				hr = E_FAIL;
+
+			if(FAILED(hr))
+				break;
+
+			site->OnInPlaceActivate();
+
+			if(hwndParent == NULL)
+			{
+				hr = site->GetWindow(&hwndParent);
+
+				if(FAILED(hr))
+					break;
+			}
+
+			RECT rcPos;
+			RECT rcClip;
+			OLEINPLACEFRAMEINFO frameInfo = { sizeof(frameInfo) };
+
+			site->GetWindowContext(&frame, &uiWindow, &rcPos, &rcClip, &frameInfo);
+
+			if(lprcPosRect == NULL)
+				lprcPosRect = &rcPos;
+
+			if(m_controlWindow)
+				ShowWindow(m_controlWindow, SW_SHOW);
+			else
+			{
+				hr = CreateControlWindow();
+				
+				if(FAILED(hr))
+					break;
+			}
+
+			SetObjectRects(lprcPosRect, &rcClip);
+
+			// UI activation
+			if((iVerb == OLEIVERB_PRIMARY || iVerb == OLEIVERB_UIACTIVATE) && !m_uiActive)
+			{
+				m_uiActive = true;
+
+				hr = site->OnUIActivate();
+
+				if(FAILED(hr))
+					break;
+
+				// TODO: focus the control window
+
+				if(frame)
+				{
+					frame->SetActiveObject(this, NULL);
+					frame->SetBorderSpace(NULL);
+				}
+
+				if(uiWindow)
+				{
+					uiWindow->SetActiveObject(this, NULL);
+					uiWindow->SetBorderSpace(NULL);
+				}
+			}
+
+			break;
+		}
+
+		if(uiWindow)
+			uiWindow->Release();
+
+		if(frame)
+			frame->Release();
+
+		site->Release();
+
+		if(SUCCEEDED(hr))
+			pActiveSite->ShowObject();
+
+		return hr;
+	}
+
+public:
+	/* IUnknown */
+	/*
+		NOTE: this is the delegating implementation, to support aggregation. The actual
+		implementation is RdpClientInner, above
+	*/
+	virtual STDMETHODIMP IUnknown::QueryInterface(REFIID riid, void ** ppvObject)
+	{
+		return m_punkOuter->QueryInterface(riid, ppvObject);
+	}
+
+	virtual STDMETHODIMP_(ULONG) IUnknown::AddRef()
+	{
+		return m_punkOuter->AddRef();
+	}
+
+	virtual STDMETHODIMP_(ULONG) IUnknown::Release()
+	{
+		return m_punkOuter->Release();
+	}
+
+	/* IDispatch */
+	virtual STDMETHODIMP IDispatch::GetTypeInfoCount(UINT * pctinfo)
+	{
+		*pctinfo = 1;
+		return S_OK;
+	}
+
+	virtual STDMETHODIMP IDispatch::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo)
+	{
+		if(iTInfo != 0)
+			return DISP_E_BADINDEX;
+	
+		return AcquireDispTypeInfo(ppTInfo);
+	}
+
+	virtual STDMETHODIMP IDispatch::GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId)
+	{
+		HRESULT hr = LoadDispTypeInfo();
+
+		if(FAILED(hr))
+			return hr;
+
+		return m_dispTypeInfo->GetIDsOfNames(rgszNames, cNames, rgDispId);
+	}
+
+	virtual STDMETHODIMP IDispatch::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr)
+	{
+		HRESULT hr = LoadDispTypeInfo();
+
+		if(FAILED(hr))
+			return hr;
+
+		return m_dispTypeInfo->Invoke
+		(
+			static_cast<MSTSCLib::IMsRdpClient4 *>(this),
+			dispIdMember,
+			wFlags,
+			pDispParams,
+			pVarResult,
+			pExcepInfo,
+			puArgErr
+		);
+	}
+
+	/* IConnectionPoint */
+	virtual STDMETHODIMP GetConnectionInterface(IID * pIID)
+	{
+		if(pIID == NULL)
+			return E_POINTER;
+
+		*pIID = MSTSCLib::DIID_IMsTscAxEvents;
+		return S_OK;
+	}
+
+	virtual STDMETHODIMP GetConnectionPointContainer(IConnectionPointContainer ** ppCPC)
+	{
+		if(ppCPC == NULL)
+			return E_POINTER;
+
+		addRef();
+		*ppCPC = this;
+		return S_OK;
+	}
+
+	virtual STDMETHODIMP Advise(IUnknown * pUnkSink, DWORD * pdwCookie)
+	{
+		MSTSCLib::IMsTscAxEvents * sink;
+
+		if(FAILED(pUnkSink->QueryInterface(&sink)))
+			return CONNECT_E_CANNOTCONNECT;
+
+		MSTSCLib::IMsTscAxEvents ** sinks = GetSinks();
+		DWORD cookie = 0;
+
+		if(m_EventSinksCount)
+		{
+			bool found = false;
+
+			for(size_t i = 0; i < m_EventSinksCount; ++ i)
+			{
+				found = (sinks[i] == NULL);
+
+				if(found)
+				{
+					cookie = static_cast<DWORD>(i);
+					break;
+				}
+			}
+
+			if(!found)
+			{
+				MSTSCLib::IMsTscAxEvents ** newSinks = new MSTSCLib::IMsTscAxEvents *[m_EventSinksCount + 1];
+
+				if(newSinks == NULL)
+				{
+					sink->Release();
+					return E_OUTOFMEMORY;
+				}
+
+				std::copy(sinks, sinks + m_EventSinksCount, newSinks);			
+
+				m_EventSinks = newSinks;
+				sinks = newSinks;
+
+				cookie = static_cast<DWORD>(m_EventSinksCount);
+			}
+		}
+
+		sinks[cookie] = sink;
+		*pdwCookie = cookie;
+
+		return S_OK;
+	}
+
+	virtual STDMETHODIMP Unadvise(DWORD dwCookie)
+	{
+		MSTSCLib::IMsTscAxEvents ** sinks = GetSinks();
+
+		if(dwCookie >= m_EventSinksCount || sinks[dwCookie] == NULL)
+			return CONNECT_E_NOCONNECTION;
+
+		sinks[dwCookie]->Release();
+		sinks[dwCookie] = NULL;
+
+		// BUGBUG: the array currently grows forever. Trim it whenever possible
+
+		return S_OK;
+	}
+
+	virtual STDMETHODIMP EnumConnections(IEnumConnections ** ppEnum)
+	{
+		// I see no real value in this
+		return E_NOTIMPL;
+	}
+
+	/* IConnectionPointContainer */
 	virtual STDMETHODIMP IConnectionPointContainer::EnumConnectionPoints(IEnumConnectionPoints ** ppEnum)
 	{
 		*ppEnum = new CEnumConnectionPoints(this);
@@ -2238,7 +2737,7 @@ public:
 		return E_NOTIMPL;
 	}
 
-	/* IObjectSafety */ // DONE
+	/* IObjectSafety */
 	virtual STDMETHODIMP IObjectSafety::GetInterfaceSafetyOptions(REFIID riid, DWORD * pdwSupportedOptions, DWORD * pdwEnabledOptions)
 	{
 		if(pdwSupportedOptions == NULL || pdwEnabledOptions == NULL)
@@ -2261,7 +2760,7 @@ public:
 		return S_OK;
 	}
 
-	/* IOleControl */ // DONE
+	/* IOleControl */ // 3/4
 	virtual STDMETHODIMP IOleControl::GetControlInfo(CONTROLINFO * pCI)
 	{
 		return E_NOTIMPL;
@@ -2279,7 +2778,11 @@ public:
 
 	virtual STDMETHODIMP IOleControl::FreezeEvents(BOOL bFreeze)
 	{
-		// TODO? do we need special processing for this?
+		if(bFreeze)
+			InterlockedIncrement(&m_freezeEvents);
+		else if(InterlockedDecrement(&m_freezeEvents) == 0)
+			UnfreezeEvents();
+
 		return S_OK;
 	}
 
@@ -2291,13 +2794,13 @@ public:
 
 	virtual STDMETHODIMP IOleInPlaceActiveObject::OnFrameWindowActivate(BOOL fActivate)
 	{
-		// TODO?
+		// TODO
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IOleInPlaceActiveObject::OnDocWindowActivate(BOOL fActivate)
 	{
-		// TODO?
+		// TODO
 		return E_NOTIMPL;
 	}
 
@@ -2311,19 +2814,22 @@ public:
 		return S_OK;
 	}
 
-	/* IOleInPlaceObject */ // 0/4
+	/* IOleInPlaceObject */ // 1/4
 	virtual STDMETHODIMP IOleInPlaceObject::InPlaceDeactivate()
 	{
+		// TODO: UIDeactivate, destroy window, inplacesite->OnInPlaceDeactivate
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IOleInPlaceObject::UIDeactivate()
 	{
+		// TODO
 		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IOleInPlaceObject::SetObjectRects(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
 	{
+		// TODO: reposition the control window and set its region here
 		return E_NOTIMPL;
 	}
 
@@ -2332,7 +2838,7 @@ public:
 		return E_NOTIMPL;
 	}
 
-	/* IOleObject */ // 14/21
+	/* IOleObject */ // 18/21
 	virtual STDMETHODIMP IOleObject::SetClientSite(IOleClientSite * pClientSite)
 	{
 		if(m_clientSite)
@@ -2365,6 +2871,7 @@ public:
 
 	virtual STDMETHODIMP IOleObject::Close(DWORD dwSaveOption)
 	{
+		// TODO: deactivate, destroy window, release in-place site, release advise sink
 		return E_NOTIMPL; // TODO
 	}
 
@@ -2390,7 +2897,33 @@ public:
 
 	virtual STDMETHODIMP IOleObject::DoVerb(LONG iVerb, LPMSG lpmsg, IOleClientSite * pActiveSite, LONG lindex, HWND hwndParent, LPCRECT lprcPosRect)
 	{
-		return E_NOTIMPL; // TODO
+		HRESULT hr;
+
+		switch(iVerb)
+		{
+		case OLEIVERB_PRIMARY:
+		case OLEIVERB_SHOW:
+		case OLEIVERB_UIACTIVATE:
+		case OLEIVERB_INPLACEACTIVATE:
+			hr = S_OK;
+			break;
+
+		default:			
+			if(iVerb > 0)
+				hr = OLEOBJ_S_INVALIDVERB;
+			else
+				hr = E_NOTIMPL;
+		}
+
+		if(FAILED(hr))
+			return hr;
+
+		HRESULT hrActivate = Activate(iVerb, pActiveSite, hwndParent, lprcPosRect);
+
+		if(FAILED(hrActivate))
+			hr = hrActivate;
+
+		return hr;
 	}
 
 	virtual STDMETHODIMP IOleObject::EnumVerbs(IEnumOLEVERB ** ppEnumOleVerb)
@@ -2421,27 +2954,52 @@ public:
 
 	virtual STDMETHODIMP IOleObject::SetExtent(DWORD dwDrawAspect, SIZEL * psizel)
 	{
-		return E_NOTIMPL; // TODO
+		// TODO: resize
+		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IOleObject::GetExtent(DWORD dwDrawAspect, SIZEL * psizel)
 	{
-		return E_NOTIMPL; // TODO
+		// TODO: return size
+		return E_NOTIMPL;
+	}
+
+	HRESULT NeedAdviseHolder()
+	{
+		if(m_adviseHolder)
+			return S_OK;
+
+		return CreateOleAdviseHolder(&m_adviseHolder);
 	}
 
 	virtual STDMETHODIMP IOleObject::Advise(IAdviseSink * pAdvSink, DWORD * pdwConnection)
 	{
-		return E_NOTIMPL; // TODO
+		HRESULT hr = NeedAdviseHolder();
+
+		if(FAILED(hr))
+			return hr;
+
+		return m_adviseHolder->Advise(pAdvSink, pdwConnection);
 	}
 
 	virtual STDMETHODIMP IOleObject::Unadvise(DWORD dwConnection)
 	{
-		return E_NOTIMPL; // TODO
+		HRESULT hr = NeedAdviseHolder();
+
+		if(FAILED(hr))
+			return hr;
+
+		return m_adviseHolder->Unadvise(dwConnection);
 	}
 
 	virtual STDMETHODIMP IOleObject::EnumAdvise(IEnumSTATDATA ** ppenumAdvise)
 	{
-		return E_NOTIMPL; // TODO
+		HRESULT hr = NeedAdviseHolder();
+
+		if(FAILED(hr))
+			return hr;
+
+		return m_adviseHolder->EnumAdvise(ppenumAdvise);
 	}
 
 	virtual STDMETHODIMP IOleObject::GetMiscStatus(DWORD dwAspect, DWORD * pdwStatus)
@@ -2454,7 +3012,7 @@ public:
 		return E_NOTIMPL;
 	}
 
-	/* IOleWindow */ // DONE
+	/* IOleWindow */
 	virtual STDMETHODIMP IOleWindow::GetWindow(HWND * phwnd)
 	{
 		if(phwnd == NULL)
@@ -2472,7 +3030,7 @@ public:
 		return E_NOTIMPL;
 	}
 
-	/* IPersist */ // DONE
+	/* IPersist */
 	virtual STDMETHODIMP IPersist::GetClassID(CLSID * pClassID)
 	{
 		*pClassID = m_classId;
@@ -2552,7 +3110,7 @@ public:
 		return E_NOTIMPL;
 	}
 
-	/* IProvideClassInfo */ // DONE
+	/* IProvideClassInfo */
 	virtual STDMETHODIMP IProvideClassInfo::GetClassInfo(ITypeInfo ** ppTI)
 	{
 		HRESULT hr = LoadTypeLibrary();
@@ -2563,7 +3121,7 @@ public:
 		return m_typeLib->GetTypeInfoOfGuid(m_classId, ppTI);
 	}
 
-	/* IProvideClassInfo2 */ // DONE
+	/* IProvideClassInfo2 */
 	virtual STDMETHODIMP IProvideClassInfo2::GetGUID(DWORD dwGuidKind, GUID * pGUID)
 	{
 		if(dwGuidKind != GUIDKIND_DEFAULT_SOURCE_DISP_IID)
@@ -2573,10 +3131,30 @@ public:
 		return S_OK;
 	}
 
-	/* IQuickActivate */ // 2/3
+	/* IQuickActivate */
 	virtual STDMETHODIMP IQuickActivate::QuickActivate(QACONTAINER * pQaContainer, QACONTROL * pQaControl)
 	{
-		return E_NOTIMPL; // TODO
+		if(pQaContainer == NULL || pQaControl == NULL)
+			return E_POINTER;
+
+		if(pQaContainer->cbSize < sizeof(*pQaContainer) || pQaControl->cbSize < sizeof(*pQaControl))
+			return E_INVALIDARG;
+
+		ULONG cb = pQaControl->cbSize;
+		ZeroMemory(pQaControl, cb);
+		pQaControl->cbSize = cb;
+
+		SetClientSite(pQaContainer->pClientSite);
+
+		if(pQaContainer->pAdviseSink)
+			SetAdvise(DVASPECT_CONTENT, 0, pQaContainer->pAdviseSink);
+
+		if(pQaContainer->pUnkEventSink)
+			Advise(pQaContainer->pUnkEventSink, &pQaControl->dwEventCookie);
+
+		GetMiscStatus(DVASPECT_CONTENT, &pQaControl->dwMiscStatus);
+
+		return E_NOTIMPL;
 	}
 
 	virtual STDMETHODIMP IQuickActivate::SetContentExtent(LPSIZEL pSizel)
@@ -2780,16 +3358,59 @@ public:
 
 	virtual STDMETHODIMP IMsTscAx::Connect()
 	{
-		return E_NOTIMPL; // TODO
+		if(m_Connected)
+			return E_FAIL;
+
+		m_Connected = true;
+
+		// TODO: if the protocol thread is waiting to reconnect, wake it up
+
+		// TODO: initialize plugin DLLs/channels
+
+		HRESULT hr;
+
+		if(m_controlWindow == NULL)
+		{
+			hr = CreateControlWindow();
+
+			if(FAILED(hr))
+				return hr;
+		}
+
+		for(;;)
+		{
+			// TODO: initialize m_protocolState
+
+			DWORD dwIgnore;
+			m_protocolThread = CreateThread(NULL, 0, ProtocolLoopThreadProc, this, 0, &dwIgnore);
+
+			hr = S_OK;
+			break;
+		}
+
+		if(FAILED(hr))
+			m_Connected = false;
+
+		return hr;
 	}
 
 	virtual STDMETHODIMP IMsTscAx::Disconnect()
 	{
+		if(!m_Connected)
+			return E_FAIL;
+
+		// TODO: if the protocol thread is waiting to reconnect, wake it up
+
 		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IMsTscAx::CreateVirtualChannels(BSTR newVal)
 	{
+		UINT strLength = SysStringLen(newVal);
+
+		if(strLength < 1 || strLength > 300)
+			return E_INVALIDARG;
+
 		return E_NOTIMPL; // TODO
 	}
 
@@ -2869,7 +3490,7 @@ public:
 		return E_NOTIMPL; // TODO
 	}
 
-	/* IMsRdpClient2 */ // DONE
+	/* IMsRdpClient2 */
 	virtual STDMETHODIMP IMsRdpClient2::get_AdvancedSettings3(MSTSCLib::IMsRdpClientAdvancedSettings2 ** ppAdvSettings)
 	{
 		return GetAdvancedSettings(ppAdvSettings);
@@ -2885,19 +3506,19 @@ public:
 		return GetProperty(m_ConnectedStatusText, pConnectedStatusText);
 	}
 
-	/* IMsRdpClient3 */ // DONE
+	/* IMsRdpClient3 */
 	virtual STDMETHODIMP IMsRdpClient3::get_AdvancedSettings4(MSTSCLib::IMsRdpClientAdvancedSettings3 ** ppAdvSettings)
 	{
 		return GetAdvancedSettings(ppAdvSettings);
 	}
 
-	/* IMsRdpClient4 */ // DONE
+	/* IMsRdpClient4 */
     virtual STDMETHODIMP IMsRdpClient4::get_AdvancedSettings5(MSTSCLib::IMsRdpClientAdvancedSettings4 ** ppAdvSettings5)
 	{
 		return GetAdvancedSettings(ppAdvSettings5);
 	}
 
-	/* IMsTscNonScriptable */ // DONE
+	/* IMsTscNonScriptable */
 	virtual STDMETHODIMP IMsTscNonScriptable::put_ClearTextPassword(BSTR rhs)
 	{
 		return SetProperty(m_ClearTextPassword, rhs);
@@ -2961,7 +3582,7 @@ public:
 		return E_NOTIMPL; // TODO
 	}
 
-	/* IMsRdpClientNonScriptable2 */ // DONE
+	/* IMsRdpClientNonScriptable2 */
 	virtual STDMETHODIMP IMsRdpClientNonScriptable2::put_UIParentWindowHandle(HWND phwndUIParentWindowHandle)
 	{
 		return SetProperty(m_UIParentWindowHandle, phwndUIParentWindowHandle);
@@ -3075,6 +3696,12 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID * ppv)
 STDAPI DllCanUnloadNow(void)
 {
 	return canUnloadServer() ? S_OK : S_FALSE;
+}
+
+STDAPI_(ULONG) DllGetTscCtlVer(void)
+{
+	// BUGBUG: don't hardcode this
+	return 0x05020ECE; // 5.2.3790
 }
 
 }

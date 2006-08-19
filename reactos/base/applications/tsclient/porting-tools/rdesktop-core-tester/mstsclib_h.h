@@ -4,10 +4,10 @@
 
 
  /* File created by MIDL compiler version 7.00.0493 */
-/* at Sat Aug 12 22:21:54 2006
+/* at Sun Aug 13 16:46:06 2006
  */
 /* Compiler settings for .\mstsclib.idl:
-    Oicf, W2, Zp8, env=Win32 (32b run)
+    Oicf, W1, Zp8, env=Win32 (32b run)
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
     VC __declspec() decoration level: 

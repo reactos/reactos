@@ -316,11 +316,15 @@ void
 cache_put_text(RDPCLIENT * This, uint8 cache_id, void *data, int length)
 {
 	DATABLOB *text;
+	void * p = malloc(length);
+
+	if(p == NULL)
+		return;
 
 	text = &This->cache.textcache[cache_id];
 	if (text->data != NULL)
-		xfree(text->data);
-	text->data = xmalloc(length);
+		free(text->data);
+	text->data = p;
 	text->size = length;
 	memcpy(text->data, data, length);
 }

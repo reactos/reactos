@@ -73,21 +73,21 @@ int get_current_workarea(RDPCLIENT * This, uint32 * x, uint32 * y, uint32 * widt
 void ewmh_init(RDPCLIENT * This);
 /* iso.c */
 STREAM iso_init(RDPCLIENT * This, int length);
-void iso_send(RDPCLIENT * This, STREAM s);
+BOOL iso_send(RDPCLIENT * This, STREAM s);
 STREAM iso_recv(RDPCLIENT * This, uint8 * rdpver);
-BOOL iso_connect(RDPCLIENT * This, char *server, char *username);
-BOOL iso_reconnect(RDPCLIENT * This, char *server);
-void iso_disconnect(RDPCLIENT * This);
+BOOL iso_connect(RDPCLIENT * This, char *server, char *cookie);
+BOOL iso_reconnect(RDPCLIENT * This, char *server, char *cookie);
+BOOL iso_disconnect(RDPCLIENT * This);
 void iso_reset_state(RDPCLIENT * This);
 /* licence.c */
 void licence_process(RDPCLIENT * This, STREAM s);
 /* mcs.c */
 STREAM mcs_init(RDPCLIENT * This, int length);
-void mcs_send_to_channel(RDPCLIENT * This, STREAM s, uint16 channel);
-void mcs_send(RDPCLIENT * This, STREAM s);
+BOOL mcs_send_to_channel(RDPCLIENT * This, STREAM s, uint16 channel);
+BOOL mcs_send(RDPCLIENT * This, STREAM s);
 STREAM mcs_recv(RDPCLIENT * This, uint16 * channel, uint8 * rdpver);
-BOOL mcs_connect(RDPCLIENT * This, char *server, STREAM mcs_data, char *username);
-BOOL mcs_reconnect(RDPCLIENT * This, char *server, STREAM mcs_data);
+BOOL mcs_connect(RDPCLIENT * This, char *server, char *cookie, STREAM mcs_data);
+BOOL mcs_reconnect(RDPCLIENT * This, char *server, char *cookie, STREAM mcs_data);
 void mcs_disconnect(RDPCLIENT * This);
 void mcs_reset_state(RDPCLIENT * This);
 /* orders.c */
@@ -110,10 +110,6 @@ BOOL pstcache_init(RDPCLIENT * This, uint8 cache_id);
 /* rdesktop.c */
 int main(int argc, char *argv[]);
 void generate_random(uint8 * random);
-void *xmalloc(size_t size);
-char *xstrdup(const char *s);
-void *xrealloc(void *oldmem, size_t size);
-void xfree(void *mem);
 void error(char *format, ...);
 void warning(char *format, ...);
 void unimpl(char *format, ...);
@@ -134,13 +130,13 @@ int rd_write_file(int fd, void *ptr, int len);
 int rd_lseek_file(int fd, int offset);
 BOOL rd_lock_file(int fd, int start, int len);
 /* rdp5.c */
-void rdp5_process(RDPCLIENT * This, STREAM s);
+BOOL rdp5_process(RDPCLIENT * This, STREAM s);
 /* rdp.c */
-void rdp_out_unistr(RDPCLIENT * This, STREAM s, char *string, int len);
-int rdp_in_unistr(RDPCLIENT * This, STREAM s, char *string, int uni_len);
-void rdp_send_input(RDPCLIENT * This, uint32 time, uint16 message_type, uint16 device_flags, uint16 param1,
+void rdp_out_unistr(RDPCLIENT * This, STREAM s, wchar_t *string, int len);
+int rdp_in_unistr(RDPCLIENT * This, STREAM s, wchar_t *string, int uni_len);
+BOOL rdp_send_input(RDPCLIENT * This, uint32 time, uint16 message_type, uint16 device_flags, uint16 param1,
 		    uint16 param2);
-void rdp_send_client_window_status(RDPCLIENT * This, int status);
+BOOL rdp_send_client_window_status(RDPCLIENT * This, int status);
 void process_colour_pointer_pdu(RDPCLIENT * This, STREAM s);
 void process_cached_pointer_pdu(RDPCLIENT * This, STREAM s);
 void process_system_pointer_pdu(RDPCLIENT * This, STREAM s);
@@ -149,10 +145,10 @@ void process_palette(RDPCLIENT * This, STREAM s);
 void process_disconnect_pdu(STREAM s, uint32 * ext_disc_reason);
 void rdp_main_loop(RDPCLIENT * This, BOOL * deactivated, uint32 * ext_disc_reason);
 BOOL rdp_loop(RDPCLIENT * This, BOOL * deactivated, uint32 * ext_disc_reason);
-BOOL rdp_connect(RDPCLIENT * This, char *server, uint32 flags, char *domain, char *password, char *command,
-		 char *directory);
-BOOL rdp_reconnect(RDPCLIENT * This, char *server, uint32 flags, char *domain, char *password, char *command,
-		   char *directory, char *cookie);
+BOOL rdp_connect(RDPCLIENT * This, char *server, uint32 flags, wchar_t *username, wchar_t *domain, wchar_t *password, wchar_t *command,
+		 wchar_t *directory, wchar_t *hostname, char *cookie);
+BOOL rdp_reconnect(RDPCLIENT * This, char *server, uint32 flags, wchar_t *username, wchar_t *domain, wchar_t *password, wchar_t *command,
+		   wchar_t *directory, wchar_t *hostname, char *cookie);
 void rdp_reset_state(RDPCLIENT * This);
 void rdp_disconnect(RDPCLIENT * This);
 #if 0
@@ -187,12 +183,12 @@ void sec_sign(uint8 * signature, int siglen, uint8 * session_key, int keylen, ui
 	      int datalen);
 void sec_decrypt(RDPCLIENT * This, uint8 * data, int length);
 STREAM sec_init(RDPCLIENT * This, uint32 flags, int maxlen);
-void sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel);
-void sec_send(RDPCLIENT * This, STREAM s, uint32 flags);
+BOOL sec_send_to_channel(RDPCLIENT * This, STREAM s, uint32 flags, uint16 channel);
+BOOL sec_send(RDPCLIENT * This, STREAM s, uint32 flags);
 void sec_process_mcs_data(RDPCLIENT * This, STREAM s);
 STREAM sec_recv(RDPCLIENT * This, uint8 * rdpver);
-BOOL sec_connect(RDPCLIENT * This, char *server, char *username);
-BOOL sec_reconnect(RDPCLIENT * This, char *server);
+BOOL sec_connect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie);
+BOOL sec_reconnect(RDPCLIENT * This, char *server, wchar_t *hostname, char *cookie);
 void sec_disconnect(RDPCLIENT * This);
 void sec_reset_state(RDPCLIENT * This);
 #if 0
@@ -203,11 +199,11 @@ BOOL serial_get_timeout(RDPCLIENT * This, NTHANDLE handle, uint32 length, uint32
 #endif
 /* tcp.c */
 STREAM tcp_init(RDPCLIENT * This, uint32 maxlen);
-void tcp_send(RDPCLIENT * This, STREAM s);
+BOOL tcp_send(RDPCLIENT * This, STREAM s);
 STREAM tcp_recv(RDPCLIENT * This, STREAM s, uint32 length);
 BOOL tcp_connect(RDPCLIENT * This, char *server);
-void tcp_disconnect(RDPCLIENT * This);
-char *tcp_get_address(RDPCLIENT * This);
+BOOL tcp_disconnect(RDPCLIENT * This);
+wchar_t *tcp_get_address(RDPCLIENT * This);
 void tcp_reset_state(RDPCLIENT * This);
 /* xclip.c */
 void ui_clip_format_announce(RDPCLIENT * This, uint8 * data, uint32 length);
@@ -245,7 +241,7 @@ BOOL ui_create_window(RDPCLIENT * This);
 void ui_resize_window(RDPCLIENT * This);
 void ui_destroy_window(RDPCLIENT * This);
 void xwin_toggle_fullscreen(RDPCLIENT * This);
-int ui_select(RDPCLIENT * This, int rdp_socket);
+int ui_select(RDPCLIENT * This, SOCKET rdp_socket);
 void ui_move_pointer(RDPCLIENT * This, int x, int y);
 HBITMAP ui_create_bitmap(RDPCLIENT * This, int width, int height, uint8 * data);
 void ui_paint_bitmap(RDPCLIENT * This, int x, int y, int cx, int cy, int width, int height, uint8 * data);
@@ -312,6 +308,10 @@ unsigned int seamless_send_position(RDPCLIENT * This, unsigned long id, int x, i
 void seamless_select_timeout(RDPCLIENT * This, struct timeval *tv);
 unsigned int seamless_send_zchange(RDPCLIENT * This, unsigned long id, unsigned long below, unsigned long flags);
 unsigned int seamless_send_focus(RDPCLIENT * This, unsigned long id, unsigned long flags);
+
+/* events */
+int event_pubkey(RDPCLIENT * This, const unsigned char * key, size_t key_size);
+void event_logon(RDPCLIENT * This);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

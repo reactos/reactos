@@ -44,7 +44,17 @@ tcp_init(RDPCLIENT * This, uint32 maxlen)
 {
 	if (maxlen > This->tcp.out.size)
 	{
-		This->tcp.out.data = (uint8 *) xrealloc(This->tcp.out.data, maxlen);
+		void * p;
+
+		p = realloc(This->tcp.out.data, maxlen);
+
+		if (p == NULL)
+		{
+			This->disconnect_reason = 262;
+			return NULL;
+		}
+
+		This->tcp.out.data = (uint8 *)p;
 		This->tcp.out.size = maxlen;
 	}
 
@@ -54,10 +64,10 @@ tcp_init(RDPCLIENT * This, uint32 maxlen)
 }
 
 /* Send TCP transport data packet */
-void
+BOOL
 tcp_send(RDPCLIENT * This, STREAM s)
 {
-	int length = s->end - s->data;
+	int length = (int)(s->end - s->data);
 	int sent, total = 0;
 
 	while (total < length)
@@ -66,11 +76,14 @@ tcp_send(RDPCLIENT * This, STREAM s)
 		if (sent <= 0)
 		{
 			// error("send: %s\n", strerror(errno)); // EOF
-			return;
+			This->disconnect_reason = 772;
+			return False;
 		}
 
 		total += sent;
 	}
+
+	return True;
 }
 
 /* Receive a message on the TCP layer */
@@ -85,7 +98,15 @@ tcp_recv(RDPCLIENT * This, STREAM s, uint32 length)
 		/* read into "new" stream */
 		if (length > This->tcp.in.size)
 		{
-			This->tcp.in.data = (uint8 *) xrealloc(This->tcp.in.data, length);
+			void * p = realloc(This->tcp.in.data, length);
+
+			if(p == NULL)
+			{
+				This->disconnect_reason = 262;
+				return NULL;
+			}
+
+			This->tcp.in.data = (uint8 *) p;
 			This->tcp.in.size = length;
 		}
 		This->tcp.in.end = This->tcp.in.p = This->tcp.in.data;
@@ -94,12 +115,20 @@ tcp_recv(RDPCLIENT * This, STREAM s, uint32 length)
 	else
 	{
 		/* append to existing stream */
-		new_length = (s->end - s->data) + length;
+		new_length = (unsigned int)(s->end - s->data) + length;
 		if (new_length > s->size)
 		{
-			p_offset = s->p - s->data;
-			end_offset = s->end - s->data;
-			s->data = (uint8 *) xrealloc(s->data, new_length);
+			void * p = realloc(s->data, new_length);
+
+			if(p == NULL)
+			{
+				This->disconnect_reason = 262;
+				return NULL;
+			}
+
+			p_offset = (unsigned int)(s->p - s->data);
+			end_offset = (unsigned int)(s->end - s->data);
+			s->data = (uint8 *) p;
 			s->size = new_length;
 			s->p = s->data + p_offset;
 			s->end = s->data + end_offset;
@@ -116,11 +145,13 @@ tcp_recv(RDPCLIENT * This, STREAM s, uint32 length)
 		if (rcvd < 0)
 		{
 			// error("recv: %s\n", strerror(errno)); // EOF
+			This->disconnect_reason = 1028;
 			return NULL;
 		}
 		else if (rcvd == 0)
 		{
 			error("Connection closed\n");
+			This->disconnect_reason = 2308;
 			return NULL;
 		}
 
@@ -189,6 +220,7 @@ tcp_connect(RDPCLIENT * This, char *server)
 	else if ((servaddr.sin_addr.s_addr = inet_addr(server)) == INADDR_NONE)
 	{
 		error("%s: unable to resolve host\n", server);
+		This->disconnect_reason = 260;
 		return False;
 	}
 
@@ -204,7 +236,8 @@ tcp_connect(RDPCLIENT * This, char *server)
 	if (connect(This->tcp.sock, (struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0)
 	{
 		// error("connect: %s\n", strerror(errno)); // EOF
-		close(This->tcp.sock);
+		This->disconnect_reason = 516;
+		closesocket(This->tcp.sock);
 		return False;
 	}
 
@@ -213,24 +246,38 @@ tcp_connect(RDPCLIENT * This, char *server)
 	setsockopt(This->tcp.sock, IPPROTO_TCP, TCP_NODELAY, (void *) &true_value, sizeof(true_value));
 
 	This->tcp.in.size = 4096;
-	This->tcp.in.data = (uint8 *) xmalloc(This->tcp.in.size);
+	This->tcp.in.data = (uint8 *) malloc(This->tcp.in.size);
+
+	if(This->tcp.in.data == NULL)
+	{
+		This->disconnect_reason = 262;
+		return False;
+	}
 
 	This->tcp.out.size = 4096;
-	This->tcp.out.data = (uint8 *) xmalloc(This->tcp.out.size);
+	This->tcp.out.data = (uint8 *) malloc(This->tcp.out.size);
+
+	if(This->tcp.out.data == NULL)
+	{
+		This->disconnect_reason = 262;
+		return False;
+	}
 
 	return True;
 }
 
 /* Disconnect on the TCP layer */
-void
+BOOL
 tcp_disconnect(RDPCLIENT * This)
 {
-	close(This->tcp.sock);
+	closesocket(This->tcp.sock);
+	return True;
 }
 
-char *
+wchar_t *
 tcp_get_address(RDPCLIENT * This)
 {
+#if 0
 	static char ipaddr[32];
 	struct sockaddr_in sockaddr;
 	socklen_t len = sizeof(sockaddr);
@@ -242,6 +289,8 @@ tcp_get_address(RDPCLIENT * This)
 	else
 		strcpy(ipaddr, "127.0.0.1");
 	return ipaddr;
+#endif
+	return NULL; // TODO
 }
 
 /* reset the state of the tcp layer */
@@ -253,7 +302,7 @@ tcp_reset_state(RDPCLIENT * This)
 
 	/* Clear the incoming stream */
 	if (This->tcp.in.data != NULL)
-		xfree(This->tcp.in.data);
+		free(This->tcp.in.data);
 	This->tcp.in.p = NULL;
 	This->tcp.in.end = NULL;
 	This->tcp.in.data = NULL;
@@ -266,7 +315,7 @@ tcp_reset_state(RDPCLIENT * This)
 
 	/* Clear the outgoing stream */
 	if (This->tcp.out.data != NULL)
-		xfree(This->tcp.out.data);
+		free(This->tcp.out.data);
 	This->tcp.out.p = NULL;
 	This->tcp.out.end = NULL;
 	This->tcp.out.data = NULL;
