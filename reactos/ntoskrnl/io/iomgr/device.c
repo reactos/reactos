@@ -1096,7 +1096,7 @@ IoGetDiskDeviceObject(IN PDEVICE_OBJECT FileSystemDeviceObject,
         else
         {
             /* It's not, so return failure */
-            return STATUS_VOLUME_DISMOUNTED;
+            Status = STATUS_VOLUME_DISMOUNTED;
         }
     }
     else
