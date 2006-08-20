@@ -115,19 +115,30 @@ BadThread:
 .globl @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
 
+    /* Save WaitIrql APC-bypass in EFLAGS */
+    or cl, cl
+
     /* Set the Thread to running */
     mov byte ptr [esi+KTHREAD_STATE], Running
 
+    /* Save the flags */
+    pushf
+
     /* Save the Exception list */
     push [ebx+KPCR_EXCEPTION_LIST]
-    
+
+    /* DPC shouldn't be active */
+    cmp byte ptr [ebx+KPCR_PRCB_DPC_ROUTINE_ACTIVE], 0
+    jnz BugCheckDpc
+
     /* Switching, disable interrupts now */
     cli
 
-    /* Save the initial stack in EAX */
-    mov eax, [esi+KTHREAD_INITIAL_STACK]
+    /* Update kernel stack */
+    mov [edi+KTHREAD_KERNEL_STACK], esp
 
-    /* Save the stack limit in ecx */
+    /* Get stack pointers */
+    mov eax, [esi+KTHREAD_INITIAL_STACK]
     mov ecx, [esi+KTHREAD_STACK_LIMIT]
 
     /* Make space for the NPX Frame */
@@ -137,8 +148,7 @@ BadThread:
     mov [ebx+KPCR_INITIAL_STACK], eax
     mov [ebx+KPCR_STACK_LIMIT], ecx
 
-    /* Save the stack pointer in this processors TSS */
-    mov ebp, [ebx+KPCR_TSS]
+    /* FIXME Check and update CR0 */
 
     /* Check if this isn't V86 Mode, so we can bias the Esp0 */
     test dword ptr [eax - KTRAP_FRAME_SIZE + KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
@@ -150,38 +160,22 @@ BadThread:
 NoAdjust:
 
     /* Set new ESP0 */
-    mov [ebp+KTSS_ESP0], eax
+    mov ecx, [ebx+KPCR_TSS]
+    mov [ecx+KTSS_ESP0], eax
+
+    /* Switch to new stack */
+    mov esp, [esi+KTHREAD_KERNEL_STACK]
 
     /* Set TEB pointer */
     mov eax, [esi+KTHREAD_TEB]
     mov [ebx+KPCR_TEB], eax
 
-    /* Check if address space switch is needed */
-    mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
-    cmp eax, [edi+KTHREAD_APCSTATE_PROCESS]
-    mov eax, [eax+KPROCESS_DIRECTORY_TABLE_BASE]
-
-    /* Switch stacks */
-    mov [edi+KTHREAD_KERNEL_STACK], esp
-    mov esp, [esi+KTHREAD_KERNEL_STACK]
-
-    jz	NoAddressSpaceSwitch
-
-    /* Clear gs */
-    xor ecx, ecx
-    mov gs, cx
-
-    /* Switch address space */
-    mov cr3, eax
-    mov [ebp+KTSS_CR3], eax
-
-NoAddressSpaceSwitch:
-
     /* Stack is OK, safe to enable interrupts now */
     sti
 
-    /* Check if address space switch is needed (the result from above is valid) */
-    /* If they match, then use the fast-path and skip all this */
+    /* Check if address space switch is needed */
+    mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
+    cmp eax, [edi+KTHREAD_APCSTATE_PROCESS]
     jz SameProcess
 
     /* Get the new Process. */
@@ -190,31 +184,31 @@ NoAddressSpaceSwitch:
     /* Check if we need an LDT */
     xor eax, eax
     cmp [edi+KPROCESS_LDT_DESCRIPTOR0], eax
-    jz NoLdt
+    jnz LdtStuff
 
-    /* Write the LDT Selector */
-    mov ecx, [ebx+KPCR_GDT]
-    mov eax, [edi+KPROCESS_LDT_DESCRIPTOR0]
-    mov [ecx+KGDT_LDT], eax
-    mov eax, [edi+KPROCESS_LDT_DESCRIPTOR1]
-    mov [ecx+KGDT_LDT+4], eax
-
-    /* Save LDT Selector */
-    mov eax, KGDT_LDT
-
-NoLdt:
-
+LoadLdt:
     /* Load LDT */
     lldt ax
 
-    /* Get the IOPM */
+    /* Clear gs */
+    xor eax, eax
+    mov gs, ax
+
+    /* Get the address space */
+    mov eax, [edi+KPROCESS_DIRECTORY_TABLE_BASE]
+
+    /* Get the IOPM and TSS */
+    mov ebp, [ebx+KPCR_TSS]
     mov ecx, [edi+KPROCESS_IOPM_OFFSET]
+
+    /* Switch address space */
+    mov [ebp+KTSS_CR3], eax
+    mov cr3, eax
 
     /* Set current IOPM offset in the TSS */
     mov [ebp+KTSS_IOMAPBASE], cx
 
 SameProcess:
-
     /* Set the TEB */
     mov eax, [esi+KTHREAD_TEB]
     mov ecx, [ebx+KPCR_GDT]
@@ -225,12 +219,34 @@ SameProcess:
 
     /* Increase context switches */
     inc dword ptr [esi+KTHREAD_CONTEXT_SWITCHES]
+    //inc dword ptr [esi+KPRC_PRCB_CONTEXT_SWITCHES]
 
     /* Restore exception list */
     pop [ebx+KPCR_EXCEPTION_LIST]
 
-    /* Return */
+    /* Retore EFLAGS */
+    popf
+
+    /* Return no APC pending */
+    xor eax, eax
     ret
+
+LdtStuff:
+
+    /* Write the LDT Selector */
+    mov ecx, [ebx+KPCR_GDT]
+    mov eax, [edi+KPROCESS_LDT_DESCRIPTOR0]
+    mov [ecx+KGDT_LDT], eax
+    mov eax, [edi+KPROCESS_LDT_DESCRIPTOR1]
+    mov [ecx+KGDT_LDT+4], eax
+
+    /* Save LDT Selector */
+    mov eax, KGDT_LDT
+    jmp LoadLdt
+
+BugCheckDpc:
+    push ATTEMPTED_SWITCH_FROM_DPC
+    call _KeBugCheck@4
 
 /*++
  * KiSwapContext 
@@ -275,11 +291,11 @@ SameProcess:
     /* Get the New Thread */
     mov esi, edx
 
-    /* Get the wait IRQL */
-    movzx ecx, byte ptr [edi+KTHREAD_WAIT_IRQL]
-
     /* Save it as Current thread */
     mov fs:[KPCR_CURRENT_THREAD], esi
+
+    /* Get the wait IRQL */
+    movzx ecx, byte ptr [edi+KTHREAD_WAIT_IRQL]
 
     /* Do the swap with the registers correctly setup */
     call @KiSwapContextInternal@0

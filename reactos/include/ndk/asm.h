@@ -148,6 +148,7 @@ Author:
 #define KPCR_DR6                                0x428
 #define KPCR_DR7                                0x42C
 #define KPCR_SYSTEM_CALLS                       0x6B8
+#define KPCR_PRCB_DPC_ROUTINE_ACTIVE            0x994
 
 //
 // KGDTENTRY Offsets
@@ -383,6 +384,7 @@ Author:
 #define APC_INDEX_MISMATCH                      0x01
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
+#define ATTEMPTED_SWITCH_FROM_DPC               0xB8
 #endif
 
 //
