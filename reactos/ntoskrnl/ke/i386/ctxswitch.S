@@ -115,9 +115,6 @@ BadThread:
 .globl @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
 
-    /* Get the PCR. It's faster to use ebx+offset then fs:offset */
-    mov ebx, [fs:KPCR_SELF]
-    
     /* Set the Thread to running */
     mov byte ptr [esi+KTHREAD_STATE], Running
 
@@ -140,24 +137,6 @@ BadThread:
     mov [ebx+KPCR_INITIAL_STACK], eax
     mov [ebx+KPCR_STACK_LIMIT], ecx
 
-#ifdef CONFIG_SMP
-    /* Save FPU state if the thread has used it. */
-    mov ecx, [edi+KTHREAD_INITIAL_STACK]
-    sub ecx, NPX_FRAME_LENGTH
-    mov dword ptr [ebx+KPCR_NPX_THREAD], 0
-    test byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_DIRTY
-    jz 3f
-    cmp dword ptr _KeI386FxsrPresent, 0
-    je 1f
-    fxsave [ecx]
-    jmp 2f
-1:
-    fnsave [ecx]
-2:
-    mov byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_VALID
-3:
-#endif /* CONFIG_SMP */
-
     /* Save the stack pointer in this processors TSS */
     mov ebp, [ebx+KPCR_TSS]
 
@@ -169,9 +148,6 @@ BadThread:
     sub eax, KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
 
 NoAdjust:
-
-    /* Save it */
-    push [ebp+KTSS_ESP0]
 
     /* Set new ESP0 */
     mov [ebp+KTSS_ESP0], eax
@@ -250,28 +226,11 @@ SameProcess:
     /* Increase context switches */
     inc dword ptr [esi+KTHREAD_CONTEXT_SWITCHES]
 
-    /* Set TS in cr0 to catch FPU code and load the FPU state when needed */
-#ifndef CONFIG_SMP
-    cmp [ebx+KPCR_NPX_THREAD], esi
-    je 4f
-#endif /* !CONFIG_SMP */
-    mov eax, cr0
-    or eax, X86_CR0_TS
-    mov cr0, eax
-4:
-
-    /* Restore ESP0 */
-    pop [ebp+KTSS_ESP0]
-
     /* Restore exception list */
     pop [ebx+KPCR_EXCEPTION_LIST]
 
     /* Return */
-#ifdef CONFIG_SMP
-    mov ecx, offset _DispatcherDatabaseLock
-    call @KefReleaseSpinLockFromDpcLevel@4
-#endif
-    ret 
+    ret
 
 /*++
  * KiSwapContext 
@@ -294,37 +253,43 @@ SameProcess:
  *     another thread switches to IT.
  *
  *--*/
-.globl @KiSwapContext@4
-@KiSwapContext@4:
+.globl @KiSwapContext@8
+@KiSwapContext@8:
     /* Note, we CANNOT touch ebp */
 
     /* Save 4 registers */
     sub esp, 4 * 4
-    
+
     /* Save all the non-volatile ones */
     mov [esp+12], ebx
     mov [esp+8], esi
     mov [esp+4], edi
     mov [esp+0], ebp
-    
+
+    /* Get the current KPCR */
+    mov ebx, fs:[KPCR_SELF]
+
     /* Get the Current Thread */
-    mov edi, fs:[KPCR_CURRENT_THREAD]
-    
+    mov edi, ecx
+
     /* Get the New Thread */
-    mov esi, ecx
-    
+    mov esi, edx
+
+    /* Get the wait IRQL */
+    movzx ecx, byte ptr [edi+KTHREAD_WAIT_IRQL]
+
     /* Save it as Current thread */
     mov fs:[KPCR_CURRENT_THREAD], esi
-        
+
     /* Do the swap with the registers correctly setup */
     call @KiSwapContextInternal@0
-    
+
     /* Return the registers */
     mov ebp, [esp+0]
     mov edi, [esp+4]
     mov esi, [esp+8]
     mov ebx, [esp+12]
-    
+
     /* Clean stack */
     add esp, 4 * 4
     ret

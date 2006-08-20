@@ -122,7 +122,7 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 /* Thread Scheduler Functions */
 
 /* Readies a Thread for Execution. */
-VOID
+BOOLEAN
 STDCALL
 KiDispatchThreadNoLock(ULONG NewThreadStatus);
 
@@ -148,7 +148,10 @@ KeSuspendThread(PKTHREAD Thread);
 
 NTSTATUS
 FASTCALL
-KiSwapContext(PKTHREAD NewThread);
+KiSwapContext(
+    IN PKTHREAD CurrentThread,
+    IN PKTHREAD NewThread
+);
 
 VOID
 STDCALL

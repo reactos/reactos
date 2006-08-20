@@ -128,7 +128,7 @@ KiScanThreadList(KPRIORITY Priority,
     return(NULL);
 }
 
-VOID
+BOOLEAN
 STDCALL
 KiDispatchThreadNoLock(ULONG NewThreadStatus)
 {
@@ -136,6 +136,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
     PKTHREAD Candidate;
     ULONG Affinity;
     PKTHREAD CurrentThread = KeGetCurrentThread();
+    BOOLEAN ApcState;
 
     DPRINT("KiDispatchThreadNoLock() %d/%d/%d/%d\n", KeGetCurrentProcessorNumber(),
             CurrentThread, NewThreadStatus, CurrentThread->State);
@@ -158,7 +159,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
             Candidate->State = Running;
             KeReleaseDispatcherDatabaseLockFromDpcLevel();
-            return;
+            return FALSE;
         }
 
         if (Candidate != NULL) {
@@ -186,15 +187,16 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
             MmUpdatePageDir((PEPROCESS)PsGetCurrentProcess(),((PETHREAD)CurrentThread)->ThreadsProcess, sizeof(EPROCESS));
 
             /* Special note for Filip: This will release the Dispatcher DB Lock ;-) -- Alex */
-            DPRINT("You are : %x, swapping to: %x\n", OldThread, CurrentThread);
-            KiSwapContext(CurrentThread);
+            DPRINT("You are : %x, swapping to: %x.\n", OldThread, CurrentThread);
+            ApcState = KiSwapContext(OldThread, CurrentThread);
             DPRINT("You are : %x, swapped from: %x\n", OldThread, CurrentThread);
-            return;
+            return ApcState;
         }
     }
 
     DPRINT1("CRITICAL: No threads are ready (CPU%d)\n", KeGetCurrentProcessorNumber());
     KEBUGCHECK(0);
+    return FALSE;
 }
 
 NTSTATUS
@@ -202,13 +204,26 @@ NTAPI
 KiSwapThread(VOID)
 {
     PKTHREAD CurrentThread = KeGetCurrentThread();
+    BOOLEAN ApcState;
 
     /* Find a new thread to run */
     DPRINT("Dispatching Thread as blocked\n");
-    KiDispatchThreadNoLock(Waiting);
+    ApcState = KiDispatchThreadNoLock(Waiting);
 
-    /* Lower IRQL back */
-    DPRINT("Lowering IRQL \n");
+#if 0
+    /* Check if we need to deliver APCs */
+    if (ApcState)
+    {
+        /* Lower to APC_LEVEL */
+        KeLowerIrql(APC_LEVEL);
+
+        /* Deliver APCs */
+        KiDeliverApc(KernelMode, NULL, NULL);
+        ASSERT(CurrentThread->WaitIrql == 0);
+    }
+#endif
+
+    /* Lower IRQL back to what it was */
     KfLowerIrql(CurrentThread->WaitIrql);
 
     /* Return the wait status */

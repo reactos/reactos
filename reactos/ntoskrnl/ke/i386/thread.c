@@ -14,7 +14,6 @@
 
 typedef struct _KSHARED_CTXSWITCH_FRAME
 {
-    ULONG Esp0;
     PVOID ExceptionList;
     PVOID RetEip;
 } KSHARED_CTXSWITCH_FRAME, *PKSHARED_CTXSWITCH_FRAME;
@@ -94,7 +93,6 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
         /* Setup the Fx Area */
         FxSaveArea = &InitFrame->FxSaveArea;
-        Thread->NpxState = NPX_STATE_INVALID;
 
         /* Check if we support FXsr */
         if (KeI386FxsrPresent)
@@ -108,7 +106,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
             FxSaveFormat->TagWord = 0;
             FxSaveFormat->ErrorOffset = 0;
             FxSaveFormat->ErrorSelector = 0;
-            FxSaveFormat->DataOffset =0;
+            FxSaveFormat->DataOffset = 0;
             FxSaveFormat->DataSelector = 0;
             FxSaveFormat->MXCsr = 0x1F80;
         }
@@ -137,7 +135,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
                                                   CONTEXT_FLOATING_POINT;
 
             /* Set the Thread's NPX State */
-            Thread->NpxState = NPX_STATE_INVALID;
+            Thread->NpxState = NPX_STATE_NOT_LOADED;
             Thread->DispatcherHeader.NpxIrql = PASSIVE_LEVEL;
         }
         else
@@ -232,9 +230,6 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
     /* And set up the Context Switch Frame */
     CtxSwitchFrame->RetEip = KiThreadStartup;
-    CtxSwitchFrame->Esp0 = (ULONG_PTR)Thread->InitialStack -
-                                      sizeof(FX_SAVE_AREA) -
-                                      0x10;
     CtxSwitchFrame->ExceptionList = (PVOID)0xFFFFFFFF;
 
     /* Save back the new value of the kernel stack. */

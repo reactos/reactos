@@ -90,17 +90,20 @@ Author:
 #define KTHREAD_STACK_LIMIT                     0x1C
 #define KTHREAD_TEB                             0x74
 #define KTHREAD_KERNEL_STACK                    0x20
-#define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_STATE                           0x4C
+#define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_ALERTED                         0x5E
 #define KTHREAD_APCSTATE_PROCESS                0x28 + 0x10
 #define KTHREAD_PENDING_USER_APC                0x28 + 0x16
 #define KTHREAD_PENDING_KERNEL_APC              0x28 + 0x15
 #define KTHREAD_CONTEXT_SWITCHES                0x48
 #define KTHREAD_WAIT_IRQL                       0x4E
+#define KTHREAD_NEXT_PROCESSOR                  0x40
+#define KTHREAD_SWAP_BUSY                       0x5D
 #define KTHREAD_SERVICE_TABLE                   0x118
 #define KTHREAD_PREVIOUS_MODE                   0xD7
 #define KTHREAD_COMBINED_APC_DISABLE            0x70
+#define KTHREAD_SPECIAL_APC_DISABLE             0x72
 #define KTHREAD_LARGE_STACK                     0x107
 #define KTHREAD_TRAP_FRAME                      0x110
 #define KTHREAD_CALLBACK_STACK                  0x114
@@ -113,7 +116,10 @@ Author:
 #define KPROCESS_DIRECTORY_TABLE_BASE           0x18
 #define KPROCESS_LDT_DESCRIPTOR0                0x20
 #define KPROCESS_LDT_DESCRIPTOR1                0x24
+#define KPROCESS_INT21_DESCRIPTOR0              0x28
+#define KPROCESS_INT21_DESCRIPTOR1              0x2C
 #define KPROCESS_IOPM_OFFSET                    0x30
+#define KPROCESS_ACTIVE_PROCESSORS              0x34
 
 //
 // KPCR Offsets
@@ -121,12 +127,15 @@ Author:
 #define KPCR_EXCEPTION_LIST                     0x0
 #define KPCR_INITIAL_STACK                      0x4
 #define KPCR_STACK_LIMIT                        0x8
+#define KPCR_PERF_GLOBAL_GROUP_MASK             0x8
+#define KPCR_CONTEXT_SWITCHES                   0x10
 #define KPCR_SET_MEMBER_COPY                    0x14
 #define KPCR_TEB                                0x18
 #define KPCR_SELF                               0x1C
 #define KPCR_PRCB                               0x20
 #define KPCR_IRQL                               0x24
 #define KPCR_KD_VERSION_BLOCK                   0x34
+#define KPCR_IDT                                0x38
 #define KPCR_GDT                                0x3C
 #define KPCR_TSS                                0x40
 #define KPCR_SET_MEMBER                         0x48
@@ -134,6 +143,7 @@ Author:
 #define KPCR_CURRENT_THREAD                     0x124
 #define KPCR_PROCESSOR_NUMBER                   0x130
 #define KPCR_PRCB_SET_MEMBER                    0x134
+#define KPCR_PRCB_CPU_TYPE                      0x138
 #define KPCR_NPX_THREAD                         0x640
 #define KPCR_DR6                                0x428
 #define KPCR_DR7                                0x42C
