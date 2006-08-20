@@ -9,7 +9,13 @@
 
 #include "console.h"
 
-BOOLEAN InitializeOptionsDialog();
+static
+void 
+UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo);
+
+static
+BOOL
+InitializeOptionsFromReg(TCHAR * Path, PConsoleInfo pConInfo);
 
 INT_PTR 
 CALLBACK
@@ -25,13 +31,17 @@ OptionsProc(
 	HWND hDlgCtrl;
     LPPSHNOTIFY lppsn;
 
-	pConInfo = (PConsoleInfo) GetWindowLongPtr(GetParent(hwndDlg), DWLP_USER);
+	pConInfo = (PConsoleInfo) GetWindowLongPtr(hwndDlg, DWLP_USER);
 
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-			return InitializeOptionsDialog(hwndDlg);
+			pConInfo = (PConsoleInfo) ((LPPROPSHEETPAGE)lParam)->lParam;
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
+			InitializeOptionsFromReg(pConInfo->szProcessName, pConInfo);
+			UpdateDialogElements(hwndDlg, pConInfo);
+			return TRUE;
 		}
 		case WM_NOTIFY:
 		{
@@ -149,6 +159,7 @@ OptionsProc(
 	return FALSE;
 }
 
+static
 BOOL InitializeOptionsFromReg(TCHAR * Path, PConsoleInfo pConInfo)
 {
   HKEY hKey;
@@ -157,7 +168,9 @@ BOOL InitializeOptionsFromReg(TCHAR * Path, PConsoleInfo pConInfo)
   DWORD dwIndex;
   DWORD dwValueName;
   DWORD dwValue;
+  DWORD dwType;
   TCHAR szValueName[MAX_PATH];
+  TCHAR szValue[MAX_PATH];
   DWORD Value;
 
   if ( RegOpenCurrentUser(KEY_READ, &hKey) != ERROR_SUCCESS )
@@ -170,26 +183,39 @@ BOOL InitializeOptionsFromReg(TCHAR * Path, PConsoleInfo pConInfo)
 		return FALSE;
   }
 
-  RegQueryInfoKey(hKey, NULL, NULL, NULL, &dwNumSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL );
+  RegQueryInfoKey(hSubKey, NULL, NULL, NULL, &dwNumSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL );
 
   for (dwIndex = 0; dwIndex < dwNumSubKeys; dwIndex++)
   {
 	 dwValue = sizeof(Value);
 	 dwValueName = MAX_PATH;
 
-	 if ( RegEnumValue(hSubKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (BYTE*)&Value, &dwValue) != ERROR_SUCCESS)
-		break;
+      if ( RegEnumValue(hSubKey, dwIndex, szValueName, &dwValueName, NULL, &dwType, (BYTE*)&Value, &dwValue) != ERROR_SUCCESS)
+        {
+          if (dwType == REG_SZ)
+            {
+              /*
+			   * retry in case of string value
+			   */
+              dwValue = sizeof(szValue);
+              dwValueName = MAX_PATH;
+              if (RegEnumValue(hSubKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (BYTE*)szValue, &dwValue) != ERROR_SUCCESS)
+                break;
+            }
+		  else
+            break;
+	    }
 
-	if ( !_tcscmp(szValueName, _T("CursorSize")) )
+    if ( !_tcscmp(szValueName, _T("CursorSize")) )
 	{
-		if ( Value == 0x32)
-			pConInfo->CursorSize = Value;
-		else if ( Value == 0x64 )
-			pConInfo->CursorSize = Value;
-	}
-	else if ( !_tcscmp(szValueName, _T("NumberOfHistoryBuffers")) )
-	{
-		pConInfo->NumberOfHistoryBuffers = Value;
+        if ( Value == 0x32)
+            pConInfo->CursorSize = Value;
+        else if ( Value == 0x64 )
+            pConInfo->CursorSize = Value;
+    }
+    else if ( !_tcscmp(szValueName, _T("NumberOfHistoryBuffers")) )
+    {
+        pConInfo->NumberOfHistoryBuffers = Value;
 	}
 	else if ( !_tcscmp(szValueName, _T("HistoryBufferSize")) )
 	{
@@ -218,6 +244,7 @@ BOOL InitializeOptionsFromReg(TCHAR * Path, PConsoleInfo pConInfo)
   return TRUE;
 }
 
+static
 void 
 UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 {
@@ -321,8 +348,7 @@ BOOLEAN InitializeOptionsDialog(HWND hwndDlg)
 	if (!pConInfo)
 		return FALSE;
 
-	InitializeOptionsFromReg(pConInfo->szProcessName, pConInfo);
-	UpdateDialogElements(hwndDlg, pConInfo);
+
 	return TRUE;
 }
 

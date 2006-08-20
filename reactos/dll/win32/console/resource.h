@@ -88,4 +88,8 @@
 #define IDC_STATIC_COLOR15              626
 #define IDC_STATIC_COLOR16              627
 
+
+//string ids
+#define IDS_SCREEN_TEXT					700
+
 #endif

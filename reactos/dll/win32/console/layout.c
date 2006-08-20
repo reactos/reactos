@@ -18,15 +18,19 @@ LayoutProc(
   LPARAM lParam
 )
 {
-	UNREFERENCED_PARAMETER(hwndDlg)
-	UNREFERENCED_PARAMETER(wParam)
-	UNREFERENCED_PARAMETER(lParam)
+	PConsoleInfo pConInfo = (PConsoleInfo)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+	UNREFERENCED_PARAMETER(hwndDlg);
+	UNREFERENCED_PARAMETER(wParam);
 
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
+		{
+			pConInfo = (PConsoleInfo) ((LPPROPSHEETPAGE)lParam)->lParam;
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
 			return TRUE;
-
+		}
 		default:
 			break;
 	}

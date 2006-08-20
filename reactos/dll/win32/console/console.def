@@ -1,6 +1,6 @@
 LIBRARY console.dll
 
 EXPORTS
-CPlApplet@16
+CPlApplet
 
 ; EOF

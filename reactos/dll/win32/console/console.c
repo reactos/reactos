@@ -26,7 +26,7 @@ APPLET Applets[NUM_APPLETS] =
 };
 
 static void
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPARAM lParam)
 {
   ZeroMemory(psp, sizeof(PROPSHEETPAGE));
   psp->dwSize = sizeof(PROPSHEETPAGE);
@@ -34,10 +34,11 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
   psp->hInstance = hApplet;
   psp->pszTemplate = MAKEINTRESOURCE(idDlg);
   psp->pfnDlgProc = DlgProc;
+  psp->lParam = lParam;
 }
 
-BOOL
-InitConsoleInfo(HWND hwnd)
+PConsoleInfo
+InitConsoleInfo()
 {
 	PConsoleInfo pConInfo;
 	STARTUPINFO StartupInfo;
@@ -46,14 +47,26 @@ InitConsoleInfo(HWND hwnd)
 
 	pConInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ConsoleInfo));
 	if (!pConInfo)
-	  return FALSE;
+	{
+		return NULL;
+	}
 
 	/* initialize struct */
 	pConInfo->InsertMode = TRUE;
 	pConInfo->HistoryBufferSize = 50;
 	pConInfo->NumberOfHistoryBuffers = 5;
+    pConInfo->ScreenText = RGB(192, 192, 192); 
+	pConInfo->ScreenBackground = RGB(0, 0, 0); 
+	pConInfo->PopupText = RGB(128, 0, 128); 
+	pConInfo->PopupBackground = RGB(255, 255, 255); 
+
+
+	GetModuleFileName(NULL, pConInfo->szProcessName, MAX_PATH);
+	//MessageBox(hwnd, pConInfo->szProcessName, _T("GetModuleFileName"), MB_OK);
 
 	GetStartupInfo(&StartupInfo);
+
+
 
 	if ( StartupInfo.lpTitle )
 	{
@@ -89,11 +102,7 @@ InitConsoleInfo(HWND hwnd)
 	{
 		_tcscpy(pConInfo->szProcessName, _T("Console"));
 	}
-
-	SetWindowText(hwnd, pConInfo->szProcessName);
-	SetWindowLongPtr(hwnd, DWLP_USER , (LONG)pConInfo);
-
-	return TRUE;
+	return pConInfo;
 }
 
 INT_PTR 
@@ -107,7 +116,7 @@ ApplyProc(
 {
 	HWND hDlgCtrl;
 
-	UNREFERENCED_PARAMETER(lParam)
+	UNREFERENCED_PARAMETER(lParam);
 
 	switch(uMsg)
 	{
@@ -168,7 +177,7 @@ PropSheetProc(
 	LPARAM lParam
 )
 {
-	PConsoleInfo pConInfo = (PConsoleInfo) GetWindowLongPtr(hwndDlg, DWLP_USER);
+	PConsoleInfo pConInfo = (PConsoleInfo) GetWindowLongPtr(GetParent(hwndDlg), DWLP_USER);
 
 	switch(uMsg)
 	{
@@ -197,10 +206,7 @@ PropSheetProc(
 			}
 			break;
 		}
-		case PSCB_INITIALIZED:
-		{
-			break;
-		}
+
 		default:
 			break;
 	}
@@ -214,13 +220,14 @@ InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 	PROPSHEETPAGE psp[4];
 	PROPSHEETHEADER psh;
 	INT i=0;
+	PConsoleInfo pConInfo;
 
-	UNREFERENCED_PARAMETER(hwnd)
-	UNREFERENCED_PARAMETER(uMsg)
-	UNREFERENCED_PARAMETER(wParam)
-	UNREFERENCED_PARAMETER(lParam)
+	UNREFERENCED_PARAMETER(hwnd);
+	UNREFERENCED_PARAMETER(uMsg);
+	UNREFERENCED_PARAMETER(wParam);
+	UNREFERENCED_PARAMETER(lParam);
 
-
+	pConInfo = InitConsoleInfo();
 
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -234,10 +241,10 @@ InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 	psh.ppsp = psp;
 	psh.pfnCallback = PropSheetProc;
   
-	InitPropSheetPage(&psp[i++], IDD_PROPPAGEOPTIONS, (DLGPROC) OptionsProc);
-	InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT, (DLGPROC) FontProc);
-	InitPropSheetPage(&psp[i++], IDD_PROPPAGELAYOUT, (DLGPROC) LayoutProc);
-	InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS, (DLGPROC) ColorsProc);
+	InitPropSheetPage(&psp[i++], IDD_PROPPAGEOPTIONS, (DLGPROC) OptionsProc, (LPARAM)pConInfo);
+	InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT, (DLGPROC) FontProc, (LPARAM)pConInfo);
+	InitPropSheetPage(&psp[i++], IDD_PROPPAGELAYOUT, (DLGPROC) LayoutProc, (LPARAM)pConInfo);
+	InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS, (DLGPROC) ColorsProc, (LPARAM)pConInfo);
 
 	return (PropertySheet(&psh) != -1);
 }
@@ -287,7 +294,7 @@ DllMain(
 	DWORD     dwReason,
 	LPVOID    lpvReserved)
 {
-  UNREFERENCED_PARAMETER(lpvReserved)
+  UNREFERENCED_PARAMETER(lpvReserved);
 
   switch(dwReason)
   {

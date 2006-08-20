@@ -29,9 +29,17 @@ typedef struct TAGConsoleInfo
   DWORD QuickEdit;
   DWORD InsertMode;
 
+  DWORD ActiveStaticControl;
+  COLORREF ScreenText;
+  COLORREF ScreenBackground;
+  COLORREF PopupText;
+  COLORREF PopupBackground;
+
 } ConsoleInfo, *PConsoleInfo;
 
 BOOL WriteConsoleOptions(PConsoleInfo pConInfo);
-BOOL InitConsoleInfo(HWND hwnd);
+
+//globals
+extern HINSTANCE hApplet;
 
 #endif /* CONSOLE_H__ */
