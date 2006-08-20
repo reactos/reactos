@@ -382,9 +382,16 @@ Author:
 #define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
 #define STATUS_NO_CALLBACK_ACTIVE               0xC0000258
 #define APC_INDEX_MISMATCH                      0x01
+#define TRAP_CAUSE_UNKNOWN                      0x12
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
 #define ATTEMPTED_SWITCH_FROM_DPC               0xB8
+
+//
+// IRQL Levels
+//
+#define PASSIVE_LEVEL                           0x0
+#define APC_LEVEL                               0x1
 #endif
 
 //

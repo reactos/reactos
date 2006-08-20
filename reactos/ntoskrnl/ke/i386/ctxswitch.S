@@ -15,15 +15,190 @@
 #include <ndk/asm.h>
 .intel_syntax noprefix
 
-#define Running 2 
-#define SIZEOF_TRAP_FRAME 0x8c
-#define APC_LEVEL 1
-
-/* GLOBALS ****************************************************************/  
-
-.extern _DispatcherDatabaseLock
+#define Running 2
 
 /* FUNCTIONS ****************************************************************/
+
+.globl _KiIsNpxPresent@0
+.func KiIsNpxPresent@0
+_KiIsNpxPresent@0:
+
+    /* Save stack */
+    push ebp
+
+    /* Get CR0 and mask out FPU flags */
+    mov eax, cr0
+    and eax, ~(CR0_MP + CR0_TS + CR0_EM + CR0_ET)
+
+    /* Initialize the FPU and assume FALSE for return */
+    xor edx, edx
+    fninit
+
+    /* Save magic value on stack */
+    mov ecx, 0x42424242
+    push ecx
+
+    /* Setup stack for FPU store */
+    mov ebp ,esp
+    fnstsw [ebp]
+
+    /* Now check if our magic got cleared */
+    cmp byte ptr [ebp], 0
+    jnz NoFpu
+
+    /* Enable FPU, set return to TRUE */
+    or eax, CR0_ET
+    mov edx, 1
+
+    /* If this is a 486 or higher, enable INT 16 as well */
+    cmp dword ptr fs:KPCR_PRCB_CPU_TYPE, 3
+    jbe NoFpu
+    or eax, CR0_NE
+
+NoFpu:
+    /* Set emulation enabled during the first boot phase and set the CR0 */
+    or eax, (CR0_EM + CR0_TS)
+    mov cr0, eax
+
+    /* Restore stack */
+    pop eax
+    pop ebp
+
+    /* Return true or false */
+    mov eax, edx
+    ret
+.endfunc
+
+.globl _KiFlushNPXState@4
+.func KiFlushNPXState@4
+_KiFlushNPXState@4:
+
+    /* Save volatiles and disable interrupts */
+    push esi
+    push edi
+    push ebx
+    pushfd
+    cli
+
+    /* Save the PCR and get the current thread */
+    mov edi, fs:[KPCR_SELF]
+    mov esi, [edi+KPCR_CURRENT_THREAD]
+
+    /* Check if we're already loaded */
+    cmp byte ptr [esi+KTHREAD_NPX_STATE], NPX_STATE_LOADED
+    je IsValid
+
+    /* Check if we're supposed to get it */
+    cmp dword ptr [esp+20], 0
+    je Return
+
+#ifdef DBG
+    /* Assert Fxsr support */
+    test byte ptr _KeI386FxsrPresent, 1
+    jnz AssertOk
+    int 3
+AssertOk:
+#endif
+
+    /* Get CR0 and test if it's valid */
+    mov ebx, cr0
+    test bl, CR0_MP + CR0_TS + CR0_EM
+    jz Cr0OK
+
+    /* Enable fnsave to work */
+    and ebx, ~(CR0_MP + CR0_TS + CR0_EM)
+    mov cr0, ebx
+
+Cr0OK:
+    /* Check if we are the NPX Thread */
+    mov eax, [edi+KPCR_NPX_THREAD]
+    or eax, eax
+    jz DontSave
+
+    /* Check if it's not loaded */
+    cmp byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+    jnz DontSave
+
+#ifdef DBG
+    /* We are the NPX Thread with an unloaded NPX State... this isn't normal! */
+    int 3
+#endif
+
+    /* Save the NPX State */
+    mov ecx, [eax+KTHREAD_INITIAL_STACK]
+    sub ecx, NPX_FRAME_LENGTH
+    fxsave [ecx]
+    mov byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+
+DontSave:
+    /* Load the NPX State */
+    mov ecx, [esi+KTHREAD_INITIAL_STACK]
+    sub ecx, NPX_FRAME_LENGTH
+    fxrstor [ecx]
+
+    /* Get the CR0 state and destination */
+    mov edx, [ecx+FN_CR0_NPX_STATE]
+    mov ecx, [esp+20]
+    jmp DoneLoad
+
+IsValid:
+    /* We already have a valid state, flush it */
+    mov ebx, cr0
+    test bl, CR0_MP + CR0_TS + CR0_EM
+    jz Cr0OK2
+
+    /* Enable fnsave to work */
+    and ebx, ~(CR0_MP + CR0_TS + CR0_EM)
+    mov cr0, ebx
+
+Cr0OK2:
+    /* Get the kernel stack */
+    mov ecx, [esi+KTHREAD_INITIAL_STACK]
+    test byte ptr _KeI386FxsrPresent, 1
+    lea ecx, [ecx-NPX_FRAME_LENGTH]
+
+    /* Set the NPX State */
+    mov byte ptr [esi+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+
+    /* Get Cr0 */
+    mov edx, [ecx+FN_CR0_NPX_STATE]
+    jz DoneLoad
+
+    /* Save the FX State */
+    fxsave [ecx]
+
+    /* Check if we also have to save it in the parameter */
+    mov ecx, [esp+20]
+    jecxz NoSave
+
+DoneLoad:
+    /* Save the Fn state in the parameter we got */
+    fnsave [ecx]
+    fwait
+
+NoSave:
+    /* Clear eax */
+    xor eax, eax
+
+    /* Add NPX State */
+    or ebx, NPX_STATE_NOT_LOADED
+
+    /* Clear the NPX thread */
+    mov [edi+KPCR_NPX_THREAD], eax
+
+    /* Add saved CR0 into NPX State, and set it */
+    or ebx, edx
+    mov cr0, ebx
+
+    /* Re-enable interrupts and return */
+Return:
+    popf
+    pop ebx
+    pop edi
+    pop esi
+    ret 4
+
+.endfunc
 
 /*++
  * KiThreadStartup

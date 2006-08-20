@@ -819,6 +819,7 @@ _KiTrap6:
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
+.func KiTrap7
 _KiTrap7:
     /* Push error code */
     push 0
@@ -826,18 +827,134 @@ _KiTrap7:
     /* Enter trap */
     TRAP_PROLOG(7)
 
-    /* Call the C exception handler */
-    push 7
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Get the current thread and stack */
+StartTrapHandle:
+    mov eax, [fs:KPCR_CURRENT_THREAD]
+    mov ecx, [eax+KTHREAD_INITIAL_STACK]
+    sub ecx, NPX_FRAME_LENGTH
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if emulation is enabled */
+    test dword ptr [ecx+FN_CR0_NPX_STATE], CR0_EM
+    jnz EmulationEnabled
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+CheckState:
+    /* Check if the NPX state is loaded */
+    cmp byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_LOADED
+    mov ebx, cr0
+    jz IsLoaded
+
+    /* Remove flags */
+    and ebx, ~(CR0_MP + CR0_TS + CR0_EM)
+    mov cr0, ebx
+
+    /* Check the NPX thread */
+    mov edx, [fs:KPCR_NPX_THREAD]
+    or edx, edx
+    jz NoNpxThread
+
+    /* Get the NPX Stack */
+    mov esi, [edx+KTHREAD_INITIAL_STACK]
+    sub esi, NPX_FRAME_LENGTH
+
+    /* Check if we have FXSR and check which operand to use */
+    test byte ptr _KeI386FxsrPresent, 1
+    jz FnSave
+    fxsave [esi]
+    jmp AfterSave
+
+FnSave:
+    fnsave [esi]
+
+AfterSave:
+    /* Set the thread's state to dirty */
+    mov byte ptr [edx+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+
+NoNpxThread:
+    /* Check if we have FXSR and choose which operand to use */
+    test byte ptr _KeI386FxsrPresent, 1
+    jz FrRestore
+    fxrstor [ecx]
+    jmp AfterRestore
+
+FrRestore:
+    frstor [esi]
+
+AfterRestore:
+    /* Set state loaded */
+    mov byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_LOADED
+    mov [fs:KPCR_NPX_THREAD], eax
+
+    /* Enable interrupts to happen now */
+    sti
+    nop
+
+    /* Check if CR0 needs to be reloaded due to a context switch */
+    cmp dword ptr [ecx+FN_CR0_NPX_STATE], 0
+    jz _Kei386EoiHelper@0
+
+    /* We have to reload CR0... disable interrupts */
+    cli
+
+    /* Get CR0 and update it */
+    mov ebx, cr0
+    or ebx, [ecx+FN_CR0_NPX_STATE]
+    mov cr0, ebx
+
+    /* Restore interrupts and check if TS is back on */
+    sti
+    test bl, CR0_TS
+    jz _Kei386EoiHelper@0
+
+    /* Clear TS, and loop handling again */
+    clts
+    cli
+    jmp StartTrapHandle
+
+IsLoaded:
+    /* Check if TS is set */
+    test bl, CR0_TS
+    jnz TsSetOnLoadedState
+
+    /* Check if the trap came from user-mode */
+    int 3
+
+EmulationEnabled:
+    /* Did this come from kernel-mode? */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
+    jz CheckState
+
+    /* It came from user-mode, so this would only be valid inside a VDM */
+    /* Since we don't actually have VDMs in ROS, bugcheck. */
+    jmp BogusTrap2
+
+TsSetOnLoadedState:
+    /* TS shouldn't be set, unless this we don't have a Math Processor */
+    test bl, CR0_MP
+    jnz BogusTrap
+
+    /* Strange that we got a trap at all, but ignore and continue */
+    clts
+    jmp _Kei386EoiHelper@0
+
+BogusTrap2:
+    /* Cause a bugcheck */
+    sti
+    push 0
+    push 0
+    push eax
+    push 1
+    push TRAP_CAUSE_UNKNOWN
+    call _KeBugCheckEx@20
+
+BogusTrap:
+    /* Cause a bugcheck */
+    push 0
+    push 0
+    push ebx
+    push 2
+    push TRAP_CAUSE_UNKNOWN
+    call _KeBugCheckEx@20
+.endfunc
 
 .globl _KiTrap8
 _KiTrap8:
@@ -864,6 +981,7 @@ _KiTrap9:
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
+#if 1
 _KiTrap10:
     /* Enter trap */
     TRAP_PROLOG(10)
@@ -880,6 +998,7 @@ _KiTrap10:
     /* Return to caller */
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
+#endif
 
 _KiTrap11:
     /* Enter trap */
@@ -915,6 +1034,7 @@ _KiTrap12:
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
+#if 1
 _KiTrap13:
     /* Enter trap */
     TRAP_PROLOG(13)
@@ -931,6 +1051,7 @@ _KiTrap13:
     /* Return to caller */
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
+#endif
 
 _KiTrap14:
     /* Enter trap */

@@ -28,10 +28,18 @@
 #pragma alloc_text(INIT, KeInitExceptions)
 #endif
 
+#define SIZE_OF_FX_REGISTERS 32
+
 VOID
 NTAPI
 Ki386AdjustEsp0(
     IN PKTRAP_FRAME TrapFrame
+);
+
+VOID
+NTAPI
+KiFlushNPXState(
+    IN FLOATING_SAVE_AREA *SaveArea
 );
 
 extern KIDTENTRY KiIdt[];
@@ -467,10 +475,10 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
  */
 {
    ULONG_PTR cr2;
-   NTSTATUS Status;
    ULONG Esp0;
 
    ASSERT(ExceptionNr != 14);
+   ASSERT((ExceptionNr != 7 && ExceptionNr != 16 && ExceptionNr != 19));
 
    /* Use the address of the trap frame as approximation to the ring0 esp */
    Esp0 = (ULONG)&Tf->Eip;
@@ -523,18 +531,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	  after the breakpoint.
        */
        return(0);
-     }
-
-   /*
-    * Try to handle device-not-present, math-fault and xmm-fault exceptions.
-    */
-   if (ExceptionNr == 7 || ExceptionNr == 16 || ExceptionNr == 19)
-     {
-       Status = KiHandleFpuFault(Tf, ExceptionNr);
-       if (NT_SUCCESS(Status))
-         {
-           return(0);
-         }
      }
 
    /*
@@ -662,6 +658,23 @@ KiSsToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     }
 }
 
+USHORT
+NTAPI
+KiTagWordFnsaveToFxsave(USHORT TagWord)
+{
+    INT FxTagWord = ~TagWord; 
+
+    /* 
+     * Empty is now 00, any 2 bits containing 1 mean valid
+     * Now convert the rest (11->0 and the rest to 1)
+     */
+    FxTagWord = (FxTagWord | (FxTagWord >> 1)) & 0x5555; /* 0V0V0V0V0V0V0V0V */
+    FxTagWord = (FxTagWord | (FxTagWord >> 1)) & 0x3333; /* 00VV00VV00VV00VV */
+    FxTagWord = (FxTagWord | (FxTagWord >> 2)) & 0x0f0f; /* 0000VVVV0000VVVV */
+    FxTagWord = (FxTagWord | (FxTagWord >> 4)) & 0x00ff; /* 00000000VVVVVVVV */
+    return FxTagWord;
+}
+
 VOID
 NTAPI
 KeContextToTrapFrame(IN PCONTEXT Context,
@@ -671,7 +684,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                      IN KPROCESSOR_MODE PreviousMode)
 {
     PFX_SAVE_AREA FxSaveArea;
-    //ULONG i; Future Use
+    ULONG i;
     BOOLEAN V86Switch = FALSE;
 
     /* Start with the basic Registers */
@@ -784,7 +797,21 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         /* Check if NPX is present */
         if (KeI386NpxPresent)
         {
-            /* Future use */
+            /* Flush the NPX State */
+            KiFlushNPXState(NULL);
+
+            /* Copy the FX State */
+            RtlCopyMemory(&FxSaveArea->U.FxArea,
+                          &Context->ExtendedRegisters[0],
+                          MAXIMUM_SUPPORTED_EXTENSION);
+
+            /* Remove reserved bits from MXCSR */
+            FxSaveArea->U.FxArea.MXCsr &= ~0xFFBF;
+
+            /* Mask out any invalid flags */
+            FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
+
+            /* FIXME: Check if this is a VDM app */
         }
     }
 
@@ -799,11 +826,58 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         /* Check if NPX is present */
         if (KeI386NpxPresent)
         {
-            /* Future use */
+            /* Flush the NPX State */
+            KiFlushNPXState(NULL);
+
+            /* Check if we have Fxsr support */
+            if (KeI386FxsrPresent)
+            {
+                /* Convert the Fn Floating Point state to Fx */
+                FxSaveArea->U.FxArea.ControlWord =
+                    (USHORT)Context->FloatSave.ControlWord;
+                FxSaveArea->U.FxArea.StatusWord =
+                    (USHORT)Context->FloatSave.StatusWord;
+                FxSaveArea->U.FxArea.TagWord =
+                    KiTagWordFnsaveToFxsave((USHORT)Context->FloatSave.TagWord);
+                FxSaveArea->U.FxArea.ErrorOpcode =
+                    (USHORT)(Context->FloatSave.ErrorSelector >> 16);
+                FxSaveArea->U.FxArea.ErrorOffset =
+                    Context->FloatSave.ErrorOffset;
+                FxSaveArea->U.FxArea.ErrorSelector =
+                    Context->FloatSave.ErrorSelector & 0xFFFF;
+                FxSaveArea->U.FxArea.DataOffset =
+                    Context->FloatSave.DataOffset;
+                FxSaveArea->U.FxArea.DataSelector =
+                    Context->FloatSave.DataSelector & 0xFFFF;
+
+                /* Clear out the Register Area */
+                RtlZeroMemory(&FxSaveArea->U.FxArea.RegisterArea[0], SIZE_OF_FX_REGISTERS);
+
+                /* Loop the 8 floating point registers */
+                for (i = 0; i < 8; i++)
+                {
+                    /* Copy from Fn to Fx */
+                    RtlCopyMemory(FxSaveArea->U.FxArea.RegisterArea + (i * 16),
+                                  Context->FloatSave.RegisterArea + (i * 10),
+                                  10);
+                }
+            }
+            else
+            {
+                /* Just dump the Fn state in */
+                RtlCopyMemory(&FxSaveArea->U.FnArea,
+                              &Context->FloatSave,
+                              sizeof(FNSAVE_FORMAT));
+            }
+
+            /* Mask out any invalid flags */
+            FxSaveArea->Cr0NpxState &= ~(CR0_EM | CR0_MP | CR0_TS);
+
+            /* FIXME: Check if this is a VDM app */
         }
         else
         {
-            /* Future use */
+            /* FIXME: Handle FPU Emulation */
         }
     }
 
@@ -826,9 +900,6 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                 (Context->Dr7 & DR7_ACTIVE);
         }
     }
-
-    /* Handle FPU and Extended Registers */
-    KiContextToFxSaveArea((PFX_SAVE_AREA)(TrapFrame + 1), Context);
 }
 
 VOID
@@ -837,7 +908,13 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
                      IN PKEXCEPTION_FRAME ExceptionFrame,
                      IN OUT PCONTEXT Context)
 {
-    PFX_SAVE_AREA FxSaveArea = NULL;
+    PFX_SAVE_AREA FxSaveArea;
+    struct _AlignHack
+    {
+        UCHAR Hack[15];
+        FLOATING_SAVE_AREA UnalignedArea;
+    } FloatSaveBuffer;
+    FLOATING_SAVE_AREA *FloatSaveArea;
 
     /* Start with the Control flags */
     if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
@@ -920,19 +997,13 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         /* Make sure NPX is present */
         if (KeI386NpxPresent)
         {
-            /* Future use */
-        }
+            /* Flush the NPX State */
+            KiFlushNPXState(NULL);
 
-        /* Old code */
-        FxSaveArea = KiGetFpuState(KeGetCurrentThread());
-        if (FxSaveArea != NULL)
-        {
-            memcpy(Context->ExtendedRegisters, &FxSaveArea->U.FxArea,
-                   min(sizeof (Context->ExtendedRegisters), sizeof (FxSaveArea->U.FxArea)) );
-        }
-        else
-        {
-            Context->ContextFlags &= (~CONTEXT_EXTENDED_REGISTERS) | CONTEXT_i386;
+            /* Copy the registers */
+            RtlCopyMemory(&Context->ExtendedRegisters[0],
+                          &FxSaveArea->U.FxArea,
+                          MAXIMUM_SUPPORTED_EXTENSION);
         }
     }
 
@@ -946,24 +1017,34 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
         /* Make sure we have an NPX */
         if (KeI386NpxPresent)
-        {
-            /* Future use */
-        }
-        else
-        {
-            /* Future Use */
-        }
+         {
+            /* Check if we have Fxsr support */
+            if (KeI386FxsrPresent)
+            {
+                /* Align the floating area to 16-bytes */
+                FloatSaveArea = (FLOATING_SAVE_AREA*)
+                                ((ULONG_PTR)&FloatSaveBuffer.UnalignedArea &~ 0xF);
 
-        /* Old code */
-        FxSaveArea = KiGetFpuState(KeGetCurrentThread());
-        if (FxSaveArea != NULL)
-        {
-            KiFxSaveAreaToFloatingSaveArea(&Context->FloatSave, FxSaveArea);
-        }
-        else
-        {
-            Context->ContextFlags &= (~CONTEXT_FLOATING_POINT) | CONTEXT_i386;
-        }
+                /* Get the State */
+                KiFlushNPXState(FloatSaveArea);
+            }
+            else
+            {
+                /* We don't, use the FN area and flush the NPX State */
+                FloatSaveArea = (FLOATING_SAVE_AREA*)&FxSaveArea->U.FnArea;
+                KiFlushNPXState(NULL);
+            }
+
+            /* Copy into the Context */
+            RtlCopyMemory(&Context->FloatSave,
+                          &FxSaveArea->U.FnArea,
+                          sizeof(FNSAVE_FORMAT));
+         }
+         else
+         {
+            /* FIXME: Handle Emulation */
+             Context->ContextFlags &= (~CONTEXT_FLOATING_POINT) | CONTEXT_i386;
+         }
     }
 
     /* Handle debug registers */
