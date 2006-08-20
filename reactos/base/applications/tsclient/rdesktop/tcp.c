@@ -68,17 +68,36 @@ BOOL
 tcp_send(RDPCLIENT * This, STREAM s)
 {
 	int length = (int)(s->end - s->data);
-	int sent, total = 0;
+	int total = 0;
+	DWORD sent;
+
+	OVERLAPPED overlapped;
+	memset(&overlapped, 0, sizeof(overlapped));
 
 	while (total < length)
 	{
-		sent = send(This->tcp.sock, s->data + total, length - total, 0);
-		if (sent <= 0)
+		WriteFile((HANDLE)This->tcp.sock, s->data + total, length - total, NULL, &overlapped);
+
+		switch(WaitForSingleObjectEx((HANDLE)This->tcp.sock, INFINITE, TRUE))
 		{
-			// error("send: %s\n", strerror(errno)); // EOF
+			/* Success */
+		case WAIT_OBJECT_0:
+			break;
+
+			/* Timeout or error */
+		case WAIT_TIMEOUT:
+		default:
 			This->disconnect_reason = 772;
-			return False;
+
+			/* Aborted, must disconnect ASAP */
+		case WAIT_IO_COMPLETION:
+			CancelIo((HANDLE)This->tcp.sock);
+			break;
 		}
+
+		/* Wait for completion. We could hang here, but we shouldn't */
+		if(!GetOverlappedResult((HANDLE)This->tcp.sock, &overlapped, &sent, TRUE))
+			return False;
 
 		total += sent;
 	}
@@ -91,7 +110,7 @@ STREAM
 tcp_recv(RDPCLIENT * This, STREAM s, uint32 length)
 {
 	unsigned int new_length, end_offset, p_offset;
-	int rcvd = 0;
+	DWORD rcvd = 0;
 
 	if (s == NULL)
 	{
@@ -137,18 +156,37 @@ tcp_recv(RDPCLIENT * This, STREAM s, uint32 length)
 
 	while (length > 0)
 	{
+		OVERLAPPED overlapped;
+		memset(&overlapped, 0, sizeof(overlapped));
+
 		if (!ui_select(This, This->tcp.sock))
 			/* User quit */
 			return NULL;
 
-		rcvd = recv(This->tcp.sock, s->end, length, 0);
-		if (rcvd < 0)
+		ReadFile((HANDLE)This->tcp.sock, s->end, length, NULL, &overlapped);
+
+		switch(WaitForSingleObjectEx((HANDLE)This->tcp.sock, INFINITE, TRUE))
 		{
-			// error("recv: %s\n", strerror(errno)); // EOF
+			/* Success */
+		case WAIT_OBJECT_0:
+			break;
+
+			/* Timeout or error */
+		case WAIT_TIMEOUT:
+		default:
 			This->disconnect_reason = 1028;
-			return NULL;
+
+			/* Aborted, must disconnect ASAP */
+		case WAIT_IO_COMPLETION:
+			CancelIo((HANDLE)This->tcp.sock);
+			break;
 		}
-		else if (rcvd == 0)
+
+		/* Wait for completion. We could hang here, but we shouldn't */
+		if(!GetOverlappedResult((HANDLE)This->tcp.sock, &overlapped, &rcvd, TRUE))
+			return False;
+
+		if (rcvd == 0)
 		{
 			error("Connection closed\n");
 			This->disconnect_reason = 2308;
@@ -232,6 +270,8 @@ tcp_connect(RDPCLIENT * This, char *server)
 
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(This->tcp_port_rdp);
+
+	// TODO: apply connection timeout here
 
 	if (connect(This->tcp.sock, (struct sockaddr *) &servaddr, sizeof(struct sockaddr)) < 0)
 	{

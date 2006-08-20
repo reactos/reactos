@@ -303,6 +303,7 @@ struct rdpclient
 		SOCKET sock;
 		struct stream in;
 		struct stream out;
+		long connection_timeout;
 	}
 	tcp;
 };

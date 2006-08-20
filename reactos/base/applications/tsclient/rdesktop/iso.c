@@ -228,9 +228,7 @@ iso_reconnect(RDPCLIENT * This, char *server, char *cookie)
 BOOL
 iso_disconnect(RDPCLIENT * This)
 {
-	if(!iso_send_msg(This, ISO_PDU_DR))
-		return False;
-
+	iso_send_msg(This, ISO_PDU_DR);
 	return tcp_disconnect(This);
 }
 

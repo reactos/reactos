@@ -310,8 +310,9 @@ unsigned int seamless_send_zchange(RDPCLIENT * This, unsigned long id, unsigned 
 unsigned int seamless_send_focus(RDPCLIENT * This, unsigned long id, unsigned long flags);
 
 /* events */
-int event_pubkey(RDPCLIENT * This, const unsigned char * key, size_t key_size);
+BOOL event_pubkey(RDPCLIENT * This, unsigned char * key, unsigned int key_size);
 void event_logon(RDPCLIENT * This);
+BOOL event_redirect(RDPCLIENT * This, uint32 flags, uint32 server_len, wchar_t * server, uint32 cookie_len, char * cookie, uint32 username_len, wchar_t * username, uint32 domain_len, wchar_t * domain, uint32 password_len, wchar_t * password);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

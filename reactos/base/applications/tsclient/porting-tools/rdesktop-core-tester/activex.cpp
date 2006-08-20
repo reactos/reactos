@@ -52,27 +52,51 @@ bool canUnloadServer()
 namespace
 {
 
-LPSTR BstrToLpsz(BSTR bstr)
+void FreeLpsz(LPSTR lpsz)
 {
-	int cch = WideCharToMultiByte(CP_ACP, 0, bstr, -1, NULL, 0, NULL, NULL);
+	if(lpsz)
+		delete[] lpsz;
+}
+
+LPSTR AllocLpsz(const CHAR * lpsz, size_t cb)
+{
+	LPSTR lpszNew = new CHAR[cb + 1];
+
+	if(lpszNew == NULL)
+		return NULL;
+
+	CopyMemory(lpszNew, lpsz, cb);
+	lpszNew[cb] = 0;
+
+	return lpszNew;
+}
+
+LPSTR AllocLpsz(const WCHAR * lpwsz, int cchIn)
+{
+	int cch = WideCharToMultiByte(CP_ACP, 0, lpwsz, cchIn, NULL, 0, NULL, NULL);
 
 	if(cch <= 0)
 		return NULL;
 
-	LPSTR lpsz = new char[cch];
+	LPSTR lpsz = new CHAR[cch];
 
 	if(lpsz == NULL)
 		return NULL;
 
-	cch = WideCharToMultiByte(CP_ACP, 0, bstr, -1, lpsz, cch, NULL, NULL);
+	cch = WideCharToMultiByte(CP_ACP, 0, lpwsz, cchIn, lpsz, cch, NULL, NULL);
 
 	if(cch <= 0)
 	{
-		delete[] lpsz;
+		FreeLpsz(lpsz);
 		return NULL;
 	}
 
 	return lpsz;
+}
+
+LPSTR BstrToLpsz(BSTR bstr)
+{
+	return AllocLpsz(bstr, SysStringLen(bstr));
 }
 
 BSTR LpszToBstr(LPSTR lpsz)
@@ -99,6 +123,168 @@ BSTR LpszToBstr(LPSTR lpsz)
 }
 
 }
+
+namespace
+{
+
+template<class T, class U> T aligndown(const T& X, const U& align)
+{
+	return X & ~(T(align) - 1);
+}
+
+template<class T, class U> T alignup(const T& X, const U& align)
+{
+	return aligndown(X + (align - 1), align);
+}
+
+/* Convert between bitmap formats */
+uint8 * win32_convert_scanlines(int width, int height, int bitcount, int fromalign, int toalign, const uint8 * data, uint8 ** buffer)
+{
+	// TBD: profile & optimize the most common cases
+	assert(width > 0);
+	assert(height);
+	assert(bitcount && bitcount <= 32);
+	assert(fromalign <= toalign);
+	assert(data);
+	assert(buffer);
+
+	bool flipped = height < 0;
+
+	if(flipped)
+		height = - height;
+
+	int bytesperrow = alignup(width * bitcount, 8) / 8;
+	int fromstride = alignup(bytesperrow, fromalign);
+	int tostride = alignup(bytesperrow, toalign);
+	assert(fromstride <= tostride);
+
+	int datasize = tostride * height;
+
+	uint8 * dibits = new uint8[datasize];
+
+	const uint8 * src = data;
+	uint8 * dest = dibits;
+
+	const int pad = tostride - fromstride;
+
+	assert(pad < 4);
+	__assume(pad < 4);
+
+	if(flipped)
+	{
+		dest += (height - 1) * tostride;
+		tostride = - tostride;
+	}
+
+	for(int i = 0; i < height; ++ i)
+	{
+		memcpy(dest, src, fromstride);
+		memset(dest + fromstride, 0, pad);
+		src += fromstride;
+		dest += tostride;
+	}
+
+	*buffer = dibits;
+	return dibits;
+}
+
+/* Creates bitmaps */
+HBITMAP win32_create_dib(LONG width, LONG height, WORD bitcount, const BYTE * data)
+{
+	struct b_
+	{
+		BITMAPINFO bmi;
+		RGBQUAD colormap[256 - ARRAYSIZE(RTL_FIELD_TYPE(BITMAPINFO, bmiColors))];
+	}
+	b;
+
+	b.bmi.bmiHeader.biSize = sizeof(b.bmi.bmiHeader);
+	b.bmi.bmiHeader.biWidth = width;
+	b.bmi.bmiHeader.biHeight = height;
+	b.bmi.bmiHeader.biPlanes = 1;
+	b.bmi.bmiHeader.biBitCount = bitcount;
+	b.bmi.bmiHeader.biCompression = BI_RGB;
+	b.bmi.bmiHeader.biSizeImage = 0;
+	b.bmi.bmiHeader.biXPelsPerMeter = 0;
+	b.bmi.bmiHeader.biYPelsPerMeter = 0;
+
+	if(bitcount > 8)
+	{
+		b.bmi.bmiHeader.biClrUsed = 0;
+		b.bmi.bmiHeader.biClrImportant = 0;
+	}
+	else
+	{
+		b.bmi.bmiHeader.biClrUsed = 2 << bitcount;
+		b.bmi.bmiHeader.biClrImportant = 2 << bitcount;
+
+		// TODO: palette
+	}
+
+	// FIXME: beyond ugly
+	HDC hdc = CreateCompatibleDC(NULL);
+
+	if(hdc == NULL)
+		return NULL;
+
+	HBITMAP hbm = CreateDIBitmap(hdc, &b.bmi.bmiHeader, CBM_INIT, data, &b.bmi, DIB_RGB_COLORS);
+
+	if(hbm == NULL)
+		error("CreateDIBitmap %dx%dx%d failed\n", width, height, bitcount);
+
+	DeleteDC(hdc);
+	return hbm;
+}
+
+/* Creates brushes */
+HBRUSH win32_create_brush(BRUSH * brush, COLORREF fgcolour)
+{
+	if(brush == NULL)
+		return (HBRUSH)GetStockObject(NULL_BRUSH);
+
+	switch(brush->style)
+	{
+	case BS_SOLID:
+	case BS_NULL:
+	case BS_HATCHED:
+	case BS_PATTERN:
+	case BS_PATTERN8X8:
+		break;
+
+	default:
+		return NULL;
+	}
+
+	switch(brush->style)
+	{
+	case BS_SOLID:
+		return CreateSolidBrush(fgcolour);
+
+	case BS_HATCHED:
+		return CreateHatchBrush(brush->pattern[0], fgcolour);
+
+	case BS_NULL:
+		return (HBRUSH)GetStockObject(NULL_BRUSH);
+
+	case BS_PATTERN:
+	case BS_PATTERN8X8:
+		{
+			uint16 pattern[8];
+
+			for(size_t i = 0; i < 8; ++ i)
+				pattern[i] = brush->pattern[i];
+
+			HBITMAP hpattern = CreateBitmap(8, 8, 1, 1, pattern);
+			HBRUSH hbr = CreatePatternBrush(hpattern);
+			DeleteObject(hpattern);
+			return hbr;
+		}
+
+	DEFAULT_UNREACHABLE;
+	}
+}
+};
+
 /*
 	"sealed" can improve optimizations by asserting a class cannot be derived
 	from, optimizing out accesses to the v-table from inside the class
@@ -109,9 +295,952 @@ BSTR LpszToBstr(LPSTR lpsz)
 #define SEALED_
 #endif
 
+
+/* Class that implements the RDP client GUI */
+class RdpClientUI
+{
+public:
+	// TODO: pass the client settings relevant to the GUI here
+	HRESULT Initialize(HWND hwndParent)
+	{
+		// TODO: create the various windows
+		// TODO: create display window thread
+		// TODO: create input thread
+		return E_FAIL;
+	}
+
+public:
+	static BOOL Startup()
+	{
+		WNDCLASSEX wcexUI = { sizeof(wcexUI) };
+		WNDCLASSEX wcexConsole = { sizeof(wcexConsole) };
+		WNDCLASSEX wcexDisplay = { sizeof(wcexDisplay) };
+		WNDCLASSEX wcexInput = { sizeof(wcexInput) };
+
+		HBRUSH nullBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+
+		wcexUI.lpfnWndProc = NULL; // TODO
+		wcexUI.hInstance = GetCurrentModule();
+		wcexUI.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wcexUI.hbrBackground = nullBrush;
+		wcexUI.lpszClassName = TEXT("MissTosca_UI");
+
+		wcexConsole.style = CS_VREDRAW | CS_HREDRAW;
+		wcexConsole.lpfnWndProc = NULL; // TODO
+		wcexConsole.hInstance = GetCurrentModule();
+		wcexConsole.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wcexConsole.hbrBackground = nullBrush;
+		wcexConsole.lpszClassName = TEXT("MissTosca_Console");
+
+		wcexDisplay.style = CS_VREDRAW | CS_HREDRAW;
+		wcexDisplay.lpfnWndProc = NULL; // TODO
+		wcexDisplay.hInstance = GetCurrentModule();
+		wcexDisplay.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wcexDisplay.hbrBackground = nullBrush;
+		wcexDisplay.lpszClassName = TEXT("MissTosca_Display");
+		
+		wcexInput.style = CS_VREDRAW | CS_HREDRAW;
+		wcexInput.lpfnWndProc = NULL; // TODO
+		wcexInput.hInstance = GetCurrentModule();
+		wcexInput.hCursor = NULL;
+		wcexInput.hbrBackground = nullBrush;
+		wcexInput.lpszClassName = TEXT("MissTosca_Input");
+
+		return
+			RegisterClassEx(&wcexUI) &&
+			RegisterClassEx(&wcexConsole) &&
+			RegisterClassEx(&wcexDisplay) &&
+			RegisterClassEx(&wcexInput);
+	}
+
+	static void Shutdown()
+	{
+		// TODO
+	}
+
+	/*
+		This is the main UI window. It's the direct child of the control
+		window, it fills its whole extent and it contains the scrollbars.
+		When activated, it will move keyboard focus to the input window
+	*/
+private:
+	HWND m_uiWindow;
+	LONG m_scrollHPos;
+	LONG m_scrollVPos;
+
+	LRESULT UIWindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		switch(uMsg)
+		{
+			// Keep the keyboard focus on the input window
+		case WM_ACTIVATE:
+			switch(LOWORD(wParam))
+			{
+			case WA_INACTIVE:
+				break;
+
+			case WA_ACTIVE:
+			case WA_CLICKACTIVE:
+				if(!HIWORD(wParam))
+					SetFocus(m_inputWindow);
+			}
+
+			return 0;
+
+			// Resized: rearrange children windows, adjust scrollbars
+		case WM_SIZE:
+			{
+				if(IsIconic(m_uiWindow))
+					break;
+
+				RECT rcClient;
+				GetWindowRect(m_uiWindow, &rcClient);
+
+				if(m_smartSizing)
+				{
+					// we are not supposed to maintain aspect ratio. Container has to do that
+					m_consoleX = 0;
+					m_consoleY = 0;
+					m_consoleWidth = rcClient.right;
+					m_consoleHeight = rcClient.bottom;
+				}
+				else
+				{
+					// center horizontally, no horizontal scrollbar
+					if(rcClient.right >= m_consoleWidth)
+						m_consoleX = (m_consoleWidth - rcClient.right) / 2;
+
+					// center vertically, no vertical scrollbar
+					if(rcClient.bottom >= m_consoleHeight)
+						m_consoleY = (m_consoleHeight - rcClient.right) / 2;
+				}
+
+				SCROLLINFO scroll = { sizeof(scroll), SIF_ALL, 0 };
+			
+				// update the horizontal scrollbar
+				scroll.nMax = m_consoleWidth;
+				scroll.nPage = rcClient.right;
+				scroll.nPos = 0 - m_consoleX;
+				SetScrollInfo(m_uiWindow, SB_HORZ, &scroll, TRUE);
+
+				// update the vertical scrollbar
+				scroll.nMax = m_consoleHeight;
+				scroll.nPage = rcClient.bottom;
+				scroll.nPos = 0 - m_consoleY;
+				SetScrollInfo(m_uiWindow, SB_VERT, &scroll, TRUE);
+
+				// move/resize the console window
+				MoveWindow(m_consoleWindow, m_consoleX, m_consoleY, m_consoleWidth, m_consoleHeight, TRUE);
+			}
+
+			return 0;
+
+		case WM_HSCROLL:
+			{
+				SCROLLINFO scroll = { sizeof(scroll), SIF_TRACKPOS };
+				GetScrollInfo(m_uiWindow, SB_HORZ, &scroll);
+				m_consoleX = - scroll.nTrackPos;
+				MoveWindow(m_consoleWindow, m_consoleX, m_consoleY, m_consoleWidth, m_consoleHeight, TRUE);
+			}
+
+			return 0;
+
+		case WM_VSCROLL:
+			{
+				SCROLLINFO scroll = { sizeof(scroll), SIF_TRACKPOS };
+				GetScrollInfo(m_uiWindow, SB_VERT, &scroll);
+				m_consoleY = - scroll.nTrackPos;
+				MoveWindow(m_consoleWindow, m_consoleX, m_consoleY, m_consoleWidth, m_consoleHeight, TRUE);
+			}
+
+			return 0;
+
+		default:
+			break;
+		}
+
+		return DefWindowProc(m_uiWindow, uMsg, wParam, lParam);
+	}
+
+	/*
+		This is the full-screen title bar. It's displayed at the top of the
+		main UI window while in full-screen mode, and it contains two toolbars
+		with the pin, minimize, restore and close buttons
+	*/
+	HWND m_fullScreenBarWindow;
+
+	/*
+		This is the console window. It has the same extent as the display on
+		the remote computer, or it fills the UI window in smart resizing mode,
+		and it contains the input and display windows
+	*/
+private:
+	HWND m_consoleWindow;
+	LONG m_consoleX;
+	LONG m_consoleY;
+	LONG m_consoleWidth;
+	LONG m_consoleHeight;
+	bool m_smartSizing;
+
+	LRESULT ConsoleWindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		switch(uMsg)
+		{
+		case WM_SIZE:
+			{
+				RECT rcClient;
+				GetClientRect(m_consoleWindow, &rcClient);
+
+				MoveWindow(m_inputWindow, 0, 0, rcClient.right, rcClient.bottom, TRUE);
+				MoveWindow(m_displayWindow, 0, 0, rcClient.right, rcClient.bottom, TRUE);
+			}
+
+			return 0;
+
+		default:
+			break;
+		}
+
+		return DefWindowProc(m_consoleWindow, uMsg, wParam, lParam);
+	}
+
+	/*
+		This is the display window. It represents the virtual display of the
+		remote computer. It completely fills its parent, the console window,
+		and it runs in its own thread for performance reasons
+	*/
+private:
+	HWND m_displayWindow;
+	LONG m_displayBufferWidth;
+	LONG m_displayBufferHeight;
+	HDC m_displayBuffer;
+	void * m_displayBufferRaw;
+	int m_displayBufferSave;
+	int m_displayBufferBitDepth;
+	int m_displayBufferByteDepth;
+	int m_displayBufferStride;
+	RECT m_displayBufferClip;
+	CRITICAL_SECTION m_displayBufferMutex;
+
+	LRESULT DisplayWindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		switch(uMsg)
+		{
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			return 0;
+
+		case WM_PRINTCLIENT:
+			if(wParam == 0)
+				break;
+
+		case WM_PAINT:
+			{
+				HDC hdc = (HDC)wParam;
+
+				EnterCriticalSection(&m_displayBufferMutex);
+
+				if(hdc)
+				{
+					RECT rc;
+					GetClientRect(m_displayWindow, &rc);
+					BitBlt(hdc, 0, 0, rc.right, rc.bottom, m_displayBuffer, 0, 0, SRCCOPY);
+				}
+				else
+				{
+					PAINTSTRUCT ps;
+					hdc = BeginPaint(m_displayWindow, &ps);
+
+					if(!m_smartSizing)
+					{
+						BitBlt
+						(
+							hdc,
+							ps.rcPaint.left,
+							ps.rcPaint.top,
+							ps.rcPaint.right - ps.rcPaint.left,
+							ps.rcPaint.bottom - ps.rcPaint.top,
+							m_displayBuffer,
+							ps.rcPaint.left,
+							ps.rcPaint.top,
+							SRCCOPY
+						);
+					}
+					else
+					{
+						// bleh. There has to be a better way
+						SetStretchBltMode(hdc, HALFTONE);
+
+						StretchBlt
+						(
+							hdc,
+							0,
+							0,
+							m_consoleWidth,
+							m_consoleHeight,
+							m_displayBuffer,
+							0,
+							0,
+							m_displayBufferWidth,
+							m_displayBufferHeight,
+							SRCCOPY
+						);
+					}
+
+					EndPaint(m_displayWindow, &ps);
+				}
+
+				LeaveCriticalSection(&m_displayBufferMutex);
+			}
+
+			return 0;
+
+		default:
+			break;
+		}
+
+		return DefWindowProc(m_displayWindow, uMsg, wParam, lParam);
+	}
+
+	/* Screen repainting */
+	void Display_RepaintRect(const RECT * lprc)
+	{
+		if(m_smartSizing)
+			return Display_RepaintAll();
+
+		RECT rcDamage;
+		IntersectRect(&rcDamage, lprc, &m_displayBufferClip);
+		InvalidateRect(m_displayWindow, &rcDamage, FALSE);
+	}
+
+	void Display_RepaintArea(int x, int y, int cx, int cy)
+	{
+		if(m_smartSizing)
+			return Display_RepaintAll();
+
+		RECT rcDamage;
+		rcDamage.left = x;
+		rcDamage.top = y;
+		rcDamage.right = x + cx;
+		rcDamage.bottom = y + cy;
+		Display_RepaintRect(&rcDamage);
+	}
+
+	void Display_RepaintPolygon(POINT * point, int npoints, int linewidth)
+	{
+		if(m_smartSizing)
+			return Display_RepaintAll();
+
+		RECT rcDamage;
+
+		rcDamage.left = MAXLONG;
+		rcDamage.top = MAXLONG;
+		rcDamage.right = 0;
+		rcDamage.bottom = 0;
+
+		for(int i = 0; i < npoints; ++ i)
+		{
+			if(point[i].x < rcDamage.left)
+				rcDamage.left = point[i].x;
+
+			if(point[i].y < rcDamage.top)
+				rcDamage.top = point[i].y;
+
+			if(point[i].x > rcDamage.right)
+				rcDamage.right = point[i].x;
+
+			if(point[i].y > rcDamage.bottom)
+				rcDamage.bottom = point[i].y;
+		}
+
+		InflateRect(&rcDamage, linewidth, linewidth);
+		Display_RepaintRect(&rcDamage);
+	}
+
+	void Display_RepaintAll()
+	{
+		InvalidateRgn(m_displayWindow, NULL, FALSE);
+	}
+
+public:
+	void Display_SetClip(int x, int y, int cx, int cy)
+	{
+		m_displayBufferClip.left = x;
+		m_displayBufferClip.top = y;
+		m_displayBufferClip.right = x + cx + 1;
+		m_displayBufferClip.bottom = y + cy + 1;
+
+		HRGN hrgn = CreateRectRgnIndirect(&m_displayBufferClip);
+		SelectClipRgn(m_displayBuffer, hrgn);
+		DeleteObject(hrgn);
+	}
+
+	void Display_ResetClip()
+	{
+		m_displayBufferClip.left = 0;
+		m_displayBufferClip.top = 0;
+		m_displayBufferClip.right = m_displayBufferWidth;
+		m_displayBufferClip.bottom = m_displayBufferHeight;
+		SelectClipRgn(m_displayBuffer, NULL);
+	}
+
+	void Display_PaintBitmap(int x, int y, int cx, int cy, int width, int height, uint8 * data)
+	{
+		GdiFlush();
+
+		int fromstride = alignup(width * m_displayBufferByteDepth, 4);
+		int sizex = cx * m_displayBufferByteDepth;
+
+		const uint8 * src = data;
+
+		uint8 * dst =
+			(uint8 *)m_displayBufferRaw +
+			(m_displayBufferHeight - y - cy) * m_displayBufferStride +
+			x * m_displayBufferByteDepth;
+
+		for(int i = 0; i < cy; ++ i)
+		{
+			memcpy(dst, src, sizex);
+			src += fromstride;
+			dst += m_displayBufferStride;
+		}
+
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	void Display_DestBlt(uint8 opcode, int x, int y, int cx, int cy)
+	{
+		int dcsave = SaveDC(m_displayBuffer);
+		SelectObject(m_displayBuffer, GetStockObject(BLACK_BRUSH));
+		PatBlt(m_displayBuffer, x, y, cx, cy, MAKELONG(0, opcode));
+		RestoreDC(m_displayBuffer, dcsave);
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	void Display_PatBlt(uint8 opcode, int x, int y, int cx, int cy, BRUSH * brush, int bgcolour, int fgcolour)
+	{
+		HBRUSH hbr = win32_create_brush(brush, fgcolour);
+
+		int dcsave = SaveDC(m_displayBuffer);
+
+		SetBkColor(m_displayBuffer, bgcolour);
+		SetTextColor(m_displayBuffer, fgcolour);
+		SetBrushOrgEx(m_displayBuffer, brush->xorigin, brush->yorigin, NULL);
+		SelectObject(m_displayBuffer, hbr);
+
+		PatBlt(m_displayBuffer, x, y, cx, cy, MAKELONG(0, opcode));
+
+		RestoreDC(m_displayBuffer, dcsave);
+
+		DeleteObject(hbr);
+
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	void Display_ScreenBlt(uint8 opcode, int x, int y, int cx, int cy, int srcx, int srcy)
+	{
+		BitBlt(m_displayBuffer, x, y, cx, cy, m_displayBuffer, srcx, srcy, MAKELONG(0, opcode));
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	void Display_MemBlt(uint8 opcode, int x, int y, int cx, int cy, HBITMAP src, int srcx, int srcy)
+	{
+		HDC hdcSrc = CreateCompatibleDC(m_displayBuffer);
+		HGDIOBJ hOld = SelectObject(hdcSrc, src);
+
+		BitBlt(m_displayBuffer, x, y, cx, cy, hdcSrc, srcx, srcy, MAKELONG(0, opcode));
+
+		SelectObject(hdcSrc, hOld);
+		DeleteDC(hdcSrc);
+
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	void Display_TriBlt(uint8 opcode, int x, int y, int cx, int cy, HBITMAP src, int srcx, int srcy, BRUSH * brush, int bgcolour, int fgcolour)
+	{
+		// TODO
+		HDC hdcSrc = CreateCompatibleDC(m_displayBuffer);
+		HGDIOBJ hOld = SelectObject(hdcSrc, src);
+
+		//SELECT_BRUSH(brush, bgcolour, fgcolour);
+
+		BitBlt(m_displayBuffer, x, y, cx, cy, hdcSrc, srcx, srcy, MAKELONG(0, opcode));
+
+		//RESET_BRUSH();
+
+		SelectObject(hdcSrc, hOld);
+		DeleteDC(hdcSrc);
+
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	void Display_Line(uint8 opcode, int startx, int starty, int endx, int endy, PEN * pen)
+	{
+		HPEN hpen = CreatePen(pen->style, pen->width, pen->colour);
+
+		int dcsave = SaveDC(m_displayBuffer);
+
+		SetROP2(m_displayBuffer, opcode);
+		SelectObject(m_displayBuffer, hpen);
+		MoveToEx(m_displayBuffer, startx, starty, NULL);
+
+		LineTo(m_displayBuffer, endx, endy);
+
+		RestoreDC(m_displayBuffer, dcsave);
+
+		DeleteObject(hpen);
+
+		RECT rcDamage;
+
+		if(startx < endx)
+		{
+			rcDamage.left = startx;
+			rcDamage.right = endx;
+		}
+		else
+		{
+			rcDamage.left = endx;
+			rcDamage.right = startx;
+		}
+
+		if(starty < endy)
+		{
+			rcDamage.top = starty;
+			rcDamage.bottom = endy;
+		}
+		else
+		{
+			rcDamage.top = endy;
+			rcDamage.bottom = starty;
+		}
+
+		InflateRect(&rcDamage, pen->width, pen->width);
+		Display_RepaintRect(&rcDamage);
+	}
+
+	void Display_Rect(int x, int y, int cx, int cy, int colour)
+	{
+		HBRUSH hbr = CreateSolidBrush(colour);
+
+		int dcsave = SaveDC(m_displayBuffer);
+
+		SelectObject(m_displayBuffer, hbr);
+		SelectObject(m_displayBuffer, GetStockObject(NULL_PEN));
+
+		Rectangle(m_displayBuffer, x, y, x + cx + 1, y + cy + 1);
+
+		RestoreDC(m_displayBuffer, dcsave);
+
+		DeleteObject(hbr);
+
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	void Display_Polygon(uint8 opcode, uint8 fillmode, POINT * point, int npoints, BRUSH * brush, int bgcolour, int fgcolour)
+	{
+		HBRUSH hbr = win32_create_brush(brush, fgcolour);
+
+		int dcsave = SaveDC(m_displayBuffer);
+
+		SetBkColor(m_displayBuffer, bgcolour);
+		SetTextColor(m_displayBuffer, fgcolour);
+		SetPolyFillMode(m_displayBuffer, fillmode);
+		SelectObject(m_displayBuffer, hbr);
+
+		Polygon(m_displayBuffer, point, npoints);
+
+		RestoreDC(m_displayBuffer, dcsave);
+
+		Display_RepaintPolygon(point, npoints, 0);
+	}
+
+	void Display_Polyline(uint8 opcode, POINT * points, int npoints, PEN * pen)
+	{
+		POINT last = points[0];
+
+		for(int i = 1; i < npoints; ++ i)
+		{
+			points[i].x += last.x;
+			points[i].y += last.y;
+			last = points[i];
+		}
+
+		HPEN hpen = CreatePen(pen->style, pen->width, pen->colour);
+
+		int dcsave = SaveDC(m_displayBuffer);
+
+		SetROP2(m_displayBuffer, opcode);
+		SelectObject(m_displayBuffer, hpen);
+
+		Polyline(m_displayBuffer, points, npoints);
+
+		RestoreDC(m_displayBuffer, dcsave);
+
+		DeleteObject(hpen);
+
+		Display_RepaintPolygon(points, npoints, pen->width);
+	}
+
+	void Display_Ellypse(uint8 opcode, uint8 fillmode, int x, int y, int cx, int cy, BRUSH * brush, int bgcolour, int fgcolour)
+	{
+		// TODO
+
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	// TBD: optimize text drawing
+	void Display_DrawGlyph(int mixmode, int x, int y, int cx, int cy, HGLYPH glyph, int srcx, int srcy, int bgcolour, int fgcolour)
+	{
+		HBITMAP hbmGlyph = (HBITMAP)glyph;
+		HDC hdcGlyph = CreateCompatibleDC(m_displayBuffer);
+		HGDIOBJ hOld = SelectObject(hdcGlyph, hbmGlyph);
+
+		int dcsave = SaveDC(m_displayBuffer);
+
+		switch(mixmode)
+		{
+		case MIX_TRANSPARENT:
+			{
+				/*
+					ROP is DSPDxax:
+					 - where the glyph (S) is white, D is set to the foreground color (P)
+					 - where the glyph (S) is black, D is left untouched
+
+					This paints a transparent glyph in the specified color
+				*/
+				HBRUSH hbr = CreateSolidBrush(fgcolour);
+				SelectObject(m_displayBuffer, hbr);
+				BitBlt(m_displayBuffer, x, y, cx, cy, hdcGlyph, srcx, srcy, MAKELONG(0, 0xe2));
+				DeleteObject(hbr);
+			}
+
+			break;
+
+		case MIX_OPAQUE:
+			{
+				/* Curiously, glyphs are inverted (white-on-black) */
+				SetBkColor(m_displayBuffer, fgcolour);
+				SetTextColor(m_displayBuffer, bgcolour);
+				BitBlt(m_displayBuffer, x, y, cx, cy, hdcGlyph, srcx, srcy, SRCCOPY);
+			}
+
+			break;
+		}
+
+		RestoreDC(m_displayBuffer, dcsave);
+
+		SelectObject(hdcGlyph, hOld);
+		DeleteDC(hdcGlyph);
+
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+	void Display_DoGlyph(uint8 font, uint8 flags, int mixmode, int& x, int& y, int bgcolour, int fgcolour, const uint8 * ttext, int& idx)
+	{
+		FONTGLYPH * glyph;
+
+		glyph = cache_get_font(/*This*/NULL, font, ttext[idx]);
+
+		if(!(flags & TEXT2_IMPLICIT_X))
+		{
+			int xyoffset = ttext[++ idx];
+
+			if((xyoffset & 0x80))
+			{
+				if (flags & TEXT2_VERTICAL)
+					y += ttext[idx + 1] | (ttext[idx + 2] << 8);
+				else
+					x += ttext[idx + 1] | (ttext[idx + 2] << 8);
+
+			  idx += 2;
+			}
+			else
+			{
+				if (flags & TEXT2_VERTICAL)
+					y += xyoffset;
+				else
+					x += xyoffset;
+			}
+		}
+
+		if(glyph)
+		{
+			Display_DrawGlyph
+			(
+				mixmode,
+				x + (short)glyph->offset,
+				y + (short)glyph->baseline,
+				glyph->width,
+				glyph->height,
+				glyph->pixmap,
+				0,
+				0,
+				bgcolour,
+				fgcolour
+			);
+
+			if(flags & TEXT2_IMPLICIT_X)
+				x += glyph->width;
+		}
+	}
+
+	void Display_DrawText
+	(
+		uint8 font,
+		uint8 flags,
+		uint8 opcode,
+		int mixmode,
+		int x,
+		int y,
+		int clipx,
+		int clipy,
+		int clipcx,
+		int clipcy,
+		int boxx,
+		int boxy,
+		int boxcx,
+		int boxcy,
+		BRUSH * brush,
+		int bgcolour,
+		int fgcolour,
+		uint8 * text,
+		uint8 length
+	)
+	{
+		int i, j;
+		DATABLOB *entry;
+
+		HBRUSH hbr = CreateSolidBrush(bgcolour);
+		HGDIOBJ holdbrush = SelectObject(m_displayBuffer, hbr);
+		HGDIOBJ holdpen = SelectObject(m_displayBuffer, GetStockObject(NULL_PEN));
+
+		if (boxcx > 1)
+			Rectangle(m_displayBuffer, boxx, boxy, boxx + boxcx + 1, boxy + boxcy + 1);
+		else if (mixmode == MIX_OPAQUE)
+			Rectangle(m_displayBuffer, clipx, clipy, clipx + clipcx + 1, clipy + clipcy + 1);
+
+		SelectObject(m_displayBuffer, holdpen);
+		SelectObject(m_displayBuffer, holdbrush);
+
+		DeleteObject(hbr);
+
+		if(boxcx > 1)
+			Display_RepaintArea(boxx, boxy, boxcx, boxcy);
+		else
+			Display_RepaintArea(clipx, clipy, clipcx, clipcy);
+
+		/* Paint text, character by character */
+		for (i = 0; i < length;)
+		{
+			switch (text[i])
+			{
+				case 0xff:
+					/* At least two bytes needs to follow */
+					if (i + 3 > length)
+					{
+						warning("Skipping short 0xff command:");
+						for (j = 0; j < length; j++)
+							fprintf(stderr, "%02x ", text[j]);
+						fprintf(stderr, "\n");
+						i = length = 0;
+						break;
+					}
+					cache_put_text(NULL /* TODO */, text[i + 1], text, text[i + 2]);
+					i += 3;
+					length -= i;
+					/* this will move pointer from start to first character after FF command */
+					text = &(text[i]);
+					i = 0;
+					break;
+
+				case 0xfe:
+					/* At least one byte needs to follow */
+					if (i + 2 > length)
+					{
+						warning("Skipping short 0xfe command:");
+						for (j = 0; j < length; j++)
+							fprintf(stderr, "%02x ", text[j]);
+						fprintf(stderr, "\n");
+						i = length = 0;
+						break;
+					}
+					entry = cache_get_text(/*This*/NULL, text[i + 1]);
+					if (entry->data != NULL)
+					{
+						if ((((uint8 *) (entry->data))[1] == 0)
+							&& (!(flags & TEXT2_IMPLICIT_X)) && (i + 2 < length))
+						{
+							if (flags & TEXT2_VERTICAL)
+								y += text[i + 2];
+							else
+								x += text[i + 2];
+						}
+						for (j = 0; j < entry->size; j++)
+							Display_DoGlyph(font, flags, mixmode, x, y, bgcolour, fgcolour, ((uint8 *) (entry->data)), j);
+					}
+					if (i + 2 < length)
+						i += 3;
+					else
+						i += 2;
+					length -= i;
+					/* this will move pointer from start to first character after FE command */
+					text = &(text[i]);
+					i = 0;
+					break;
+
+				default:
+					Display_DoGlyph(font, flags, mixmode, x, y, bgcolour, fgcolour, text, i);
+					i++;
+					break;
+			}
+		}
+	}
+
+	void Display_SaveDesktop(uint32 offset, int x, int y, int cx, int cy)
+	{
+		GdiFlush();
+
+		uint8 * data =
+			(uint8 *)m_displayBufferRaw +
+			x * m_displayBufferByteDepth +
+			(m_displayBufferHeight - y - cy) * m_displayBufferStride;
+
+		cache_put_desktop
+		(
+			/*This*/NULL,
+			offset * m_displayBufferByteDepth,
+			cx,
+			cy,
+			m_displayBufferStride,
+			m_displayBufferByteDepth,
+			data
+		);
+	}
+
+	void Display_RestoreDesktop(uint32 offset, int x, int y, int cx, int cy)
+	{
+		int fromstride = cx * m_displayBufferByteDepth;
+
+		const uint8 * src = cache_get_desktop(/*This*/NULL, offset, cx, cy, m_displayBufferByteDepth);
+		
+		uint8 * dst =
+			(uint8 *)m_displayBufferRaw +
+			x * m_displayBufferByteDepth +
+			(m_displayBufferHeight - y - cy) * m_displayBufferStride;
+
+		GdiFlush();
+
+		for(int i = 0; i < cy; ++ i)
+		{
+			memcpy(dst, src, fromstride);
+			src += fromstride;
+			dst += m_displayBufferStride;
+		}
+
+		Display_RepaintArea(x, y, cx, cy);
+	}
+
+
+	void Display_BeginUpdate()
+	{
+		EnterCriticalSection(&m_displayBufferMutex);
+		m_displayBufferSave = SaveDC(m_displayBuffer);
+	}
+
+	void Display_EndUpdate()
+	{
+		RestoreDC(m_displayBuffer, m_displayBufferSave);
+		LeaveCriticalSection(&m_displayBufferMutex);
+	}
+
+	/*
+		This is the input window. It receives the keyboard and mouse input from
+		the user, and it's the only window that can receive the keyboard focus.
+		It completely fills its parent, the console window, and it runs in its
+		own thread for performance reasons and because of technical reasons
+		involving keyboard hooks in full-screen mode
+	*/
+	HWND m_inputWindow;
+	HCURSOR m_inputCursor;
+
+	LRESULT InputWindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		switch(uMsg)
+		{
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			return 0;
+
+			/* Keyboard stuff */
+			// TODO: we need a good way to post output cross-thread
+		case WM_SYSKEYDOWN:
+		case WM_KEYDOWN:		
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_SCANCODE, RDP_KEYPRESS | (lparam & 0x1000000 ? KBD_FLAG_EXT : 0), LOBYTE(HIWORD(lparam)), 0);
+			break;
+
+		case WM_SYSKEYUP:
+		case WM_KEYUP:
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_SCANCODE, RDP_KEYRELEASE | (lparam & 0x1000000 ? KBD_FLAG_EXT : 0), LOBYTE(HIWORD(lparam)), 0);
+			break;
+
+			/* Mouse stuff */
+			// Cursor shape
+		case WM_SETCURSOR:
+			if(LOWORD(lParam) == HTCLIENT)
+			{
+				SetCursor(m_inputCursor);
+				return TRUE;
+			}
+
+			break;
+
+			// Movement
+		case WM_MOUSEMOVE:
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_MOVE, LOWORD(lparam), HIWORD(lparam));
+			break;
+
+			// Buttons
+			// TODO: X buttons
+		case WM_LBUTTONDOWN:
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON1 | MOUSE_FLAG_DOWN, LOWORD(lparam), HIWORD(lparam));
+			break;
+
+		case WM_RBUTTONDOWN:
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON2 | MOUSE_FLAG_DOWN, LOWORD(lparam), HIWORD(lparam));
+			break;
+
+		case WM_MBUTTONDOWN:
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON3 | MOUSE_FLAG_DOWN, LOWORD(lparam), HIWORD(lparam));
+			break;
+
+		case WM_LBUTTONUP:
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON1, LOWORD(lparam), HIWORD(lparam));
+			break;
+
+		case WM_RBUTTONUP:
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON2, LOWORD(lparam), HIWORD(lparam));
+			break;
+
+		case WM_MBUTTONUP:
+			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_MOUSE, MOUSE_FLAG_BUTTON3, LOWORD(lparam), HIWORD(lparam));
+			break;
+
+			// Wheel
+		case WM_MOUSEWHEEL:
+			//mstsc_mousewheel(This, (SHORT)HIWORD(wparam), lparam);
+			break;
+		}
+
+		return DefWindowProc(m_inputWindow, uMsg, wParam, lParam);
+	}
+
+public:
+};
+
 #pragma warning(push)
 #pragma warning(disable: 4584)
 
+/* The ActiveX control */
 class RdpClient SEALED_:
 	/* COM basics */
 	public IUnknown,
@@ -137,7 +1266,7 @@ class RdpClient SEALED_:
 	public IViewObject2,
 
 	// NOTE: the original has a vestigial, non-functional implementation of this, which we omit
-	// public ISpecifyPropertyPages,
+	// ISpecifyPropertyPages
 
 	// Hidden interfaces, not available through QueryInterface
 	public IConnectionPoint,
@@ -145,6 +1274,10 @@ class RdpClient SEALED_:
 	/* RDP client interface */
 	public MSTSCLib::IMsRdpClient4,
 	public MSTSCLib::IMsRdpClientNonScriptable2
+
+	// NOTE: implemented by inner classes due to requiring distinct IDispatch implementations
+	// IMsRdpClientAdvancedSettings4
+	// IMsRdpClientSecuredSettings
 {
 private:
 	/* An endless amount of COM glue */
@@ -224,8 +1357,13 @@ private:
 	}
 
 	/* Glue to interface to rdesktop-core */
+	RdpClientUI * m_clientUI;
 	RDPCLIENT m_protocolState;
 	HANDLE m_protocolThread;
+	HANDLE m_protocolThreadWaitingReconnection;
+	bool m_reconnectAborted;
+	bool m_actuallyConnected;
+	bool m_loggedIn;
 
 	/* Properties */
 	// Storage fields
@@ -250,8 +1388,6 @@ private:
 	long m_DesktopWidth;
 	long m_DesktopHeight;
 	long m_StartConnected;
-	long m_HorizontalScrollBarVisible;
-	long m_VerticalScrollBarVisible;
 	long m_ColorDepth;
 	long m_KeyboardHookMode;
 	long m_AudioRedirectionMode;
@@ -378,6 +1514,16 @@ private:
 		return S_OK;
 	}
 
+	HRESULT ReplaceProperty(BSTR& prop, BSTR newValue)
+	{
+		assert(InsideApartment());
+		assert((prop == NULL && newValue == NULL) || prop != newValue);
+
+		SysFreeString(prop);
+		prop = newValue;
+		return S_OK;
+	}
+
 	HRESULT SetProperty(LPSTR& prop, BSTR newValue)
 	{
 		assert(InsideApartment());
@@ -397,6 +1543,18 @@ private:
 		else
 			prop = NULL;
 
+		return S_OK;
+	}
+
+	HRESULT ReplaceProperty(LPSTR& prop, LPSTR newValue)
+	{
+		assert(InsideApartment());
+		assert((prop == NULL && newValue == NULL) || prop != newValue);
+
+		if(prop)
+			delete[] prop;
+
+		prop = newValue;
 		return S_OK;
 	}
 
@@ -535,19 +1693,46 @@ private:
 		AsyncEventCallback callback;
 	};
 
+	struct RedirectArguments
+	{
+		uint32 flags;
+		uint32 server_len;
+		wchar_t * server;
+		uint32 cookie_len;
+		char * cookie;
+		uint32 username_len;
+		wchar_t * username;
+		uint32 domain_len;
+		wchar_t * domain;
+		uint32 password_len;
+		wchar_t * password;
+	};
+
 	enum
 	{
 		RDPC_WM_ = WM_USER,
 		RDPC_WM_SYNC_EVENT,
 		RDPC_WM_ASYNC_EVENT,
 		RDPC_WM_DISCONNECT,
+		RDPC_WM_REQUEST_CLOSE,
+		RDPC_WM_REDIRECT,
 	};
+
+	static VOID CALLBACK DisconnectAPC(ULONG_PTR)
+	{
+		// no need to do anything. The interruption will be enough
+	}
 
 	bool HandleEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT& result)
 	{
+		result = 0;
+
 		switch(uMsg)
 		{
+			/* Regular event to be dispatched to the container's sink */
 		case RDPC_WM_SYNC_EVENT:
+			assert(InSendMessage());
+
 		case RDPC_WM_ASYNC_EVENT:
 			{
 				const EventArguments * eventArgs = reinterpret_cast<EventArguments *>(lParam);
@@ -568,26 +1753,122 @@ private:
 
 			break;
 
+			/* The protocol thread is about to die: prepare for disconnection */
 		case RDPC_WM_DISCONNECT:
 			{
 				assert(m_Connected);
+				assert(InsideApartment());
+				assert(InSendMessage());
 
-				VARIANTARG arg = { };
+				// Unblock the protocol thread and wait for it to terminate
+				ReplyMessage(0);
+				JoinProtocolThread();
 
-				arg.vt = VT_I4;
-				arg.lVal = static_cast<long>(wParam);
+				// Finish disconnecting
+				PerformDisconnect(static_cast<long>(wParam));
+			}
 
-				FireEventInsideApartment(4, &arg, 1);
+			break;
 
-				if(m_protocolThread)
+		case RDPC_WM_REDIRECT:
+			{
+				assert(InSendMessage());
+				assert(lParam);
+				assert(m_Connected);
+				assert(m_protocolState.redirect);
+
+				RedirectArguments * redirectArgs = reinterpret_cast<RedirectArguments *>(lParam);
+
+				// BUGBUG: this is extremely messy and more prone to out-of-memory than it should be
+				LPSTR lpszNewServer = NULL;
+				LPSTR lpszNewCookie = NULL;
+				BSTR strNewUsername = NULL;
+				BSTR strNewDomain = NULL;
+				BSTR strNewPassword = NULL;
+				HRESULT hr = S_OK;
+
+				for(;;)
 				{
-					WaitForSingleObject(m_protocolThread, INFINITE);
-					CloseHandle(m_protocolThread);
+					// Allocate the new properties
+					hr = E_OUTOFMEMORY;
+
+					// FIXME: convert the hostname to Punycode, not the ANSI codepage
+					lpszNewServer = AllocLpsz(redirectArgs->server, redirectArgs->server_len / sizeof(OLECHAR));
+
+					if(lpszNewServer == NULL && redirectArgs->server_len)
+						break;
+
+					lpszNewCookie = AllocLpsz(redirectArgs->cookie, redirectArgs->cookie_len);
+
+					if(lpszNewCookie == NULL && redirectArgs->cookie_len)
+						break;
+
+					strNewUsername = SysAllocStringLen(redirectArgs->username, redirectArgs->username_len / sizeof(OLECHAR));
+
+					if(strNewUsername == NULL && redirectArgs->username_len)
+						break;
+
+					strNewDomain = SysAllocStringLen(redirectArgs->domain, redirectArgs->domain_len / sizeof(OLECHAR));
+
+					if(strNewDomain == NULL && redirectArgs->domain_len)
+						break;
+
+					strNewPassword = SysAllocStringLen(redirectArgs->password, redirectArgs->password_len / sizeof(OLECHAR));
+					
+					if(strNewPassword == NULL && redirectArgs->password_len)
+						break;
+
+					hr = S_OK;
+					break;
 				}
 
-				// TODO: do other disconnection work here...
+				// Success
+				if(SUCCEEDED(hr))
+				{
+					// set the new properties
+					ReplaceProperty(m_Server, lpszNewServer);
+					ReplaceProperty(m_LoadBalanceInfo, lpszNewCookie);
+					ReplaceProperty(m_UserName, strNewUsername);
+					ReplaceProperty(m_Domain, strNewDomain);
+					ReplaceProperty(m_ClearTextPassword, strNewPassword);
+				}
+				// Failure
+				else
+				{
+					// free the buffers
+					FreeLpsz(lpszNewServer);
+					FreeLpsz(lpszNewCookie);
+					SysFreeString(strNewUsername);
+					SysFreeString(strNewDomain);
+					SysFreeString(strNewPassword);
 
-				m_Connected = false;
+					// signal the error
+					m_protocolState.disconnect_reason = 262;
+					m_protocolState.redirect = False;
+					result = -1;
+				}
+			}
+
+			break;
+
+			// BUGBUG: this could potentially disconnect an unrelated connection established later...
+		case RDPC_WM_REQUEST_CLOSE:
+			{
+				assert(!InSendMessage());
+
+				if(m_Connected)
+				{
+					// Ask confirmation to the container in case we are logged in
+					if(m_loggedIn && !FireConfirmClose())
+						break;
+
+					// For reentrancy (OnConfirmClose could deviously call Disconnect)
+					if(m_protocolThread == NULL)
+						break;
+
+					// Terminate the protocol thread. It will fire the Disconnected event on exit
+					TerminateProtocolThread();
+				}
 			}
 
 			break;
@@ -595,6 +1876,10 @@ private:
 		default:
 			return false;
 		}
+
+		// If the calling thread is blocked, unblock it ASAP
+		if(InSendMessage())
+			ReplyMessage(result);
 
 		return true;
 	}
@@ -666,8 +1951,8 @@ private:
 
 	void FireDisconnected(long reason)
 	{
-		// Source: control or protocol. Special handling
-		SendNotifyMessage(m_controlWindow, RDPC_WM_DISCONNECT, reason, 0);
+		// Source: protocol. Special handling
+		SendMessage(m_controlWindow, RDPC_WM_DISCONNECT, reason, 0);
 	}
 
 	void FireEnterFullScreenMode()
@@ -744,6 +2029,17 @@ private:
 		FireEventOutsideApartment(10, &arg, 1);
 	}
 
+	void FireFatalErrorFromApartment(long errorCode)
+	{
+		VARIANTARG arg = { };
+
+		arg.vt = VT_I4;
+		arg.lVal = errorCode;
+
+		// Source: control
+		FireEventInsideApartment(10, &arg, 1);
+	}
+
 	void FireWarning(long warningCode)
 	{
 		VARIANTARG arg = { };
@@ -789,14 +2085,19 @@ private:
 		retval.vt = VT_BYREF | VT_BOOL;
 		retval.pboolVal = &allowClose;
 
-		// Source: ??? // BUGBUG: fix this!
-		FireEventOutsideApartment(15, NULL, 0, &retval);
+		// Source: control
+		FireEventInsideApartment(15, NULL, 0, &retval);
 
 		return allowClose != VARIANT_FALSE;
 	}
 
     HRESULT FireReceivedTSPublicKey(void * publicKey, unsigned int publicKeyLength)
 	{
+		assert(m_Connected);
+
+		if(!m_NotifyTSPublicKey)
+			return S_OK;
+
 		BSTR bstrPublicKey = SysAllocStringByteLen(NULL, publicKeyLength);
 
 		if(bstrPublicKey == NULL)
@@ -979,8 +2280,6 @@ private:
 		m_DesktopWidth(),
 		m_DesktopHeight(),
 		m_StartConnected(),
-		m_HorizontalScrollBarVisible(),
-		m_VerticalScrollBarVisible(),
 		m_ColorDepth(16),
 		m_KeyboardHookMode(2),
 		m_AudioRedirectionMode(0),
@@ -1054,7 +2353,17 @@ private:
 	{
 		assert(m_refCount == 0);
 
-		// TODO: if connected, disconnect
+		if(m_Connected)
+		{
+			// Terminate the protocol thread
+			TerminateProtocolThread();
+
+			// Dispatch the RDPC_WM_DISCONNECT message sent by the dying thread
+			MSG msg;
+			PeekMessage(&msg, m_controlWindow, 0, 0, PM_NOREMOVE);
+
+			assert(!m_Connected);
+		}
 
 		DestroyControlWindow();
 
@@ -1094,11 +2403,8 @@ private:
 		SysFreeString(m_RdpdrClipCleanTempDirString);
 		SysFreeString(m_RdpdrClipPasteInfoString);
 
-		if(m_LoadBalanceInfo)
-			delete[] m_LoadBalanceInfo;
-
-		if(m_Server)
-			delete[] m_Server;
+		FreeLpsz(m_LoadBalanceInfo);
+		FreeLpsz(m_Server);
 
 		unlockServer();
 	}
@@ -1678,7 +2984,7 @@ private:
 
 		virtual STDMETHODIMP IMsRdpClientAdvancedSettings::put_overallConnectionTimeout(long poverallConnectionTimeout)
 		{
-			if(poverallConnectionTimeout >= 600)
+			if(poverallConnectionTimeout < 0 || poverallConnectionTimeout >= 600)
 				return E_INVALIDARG;
 
 			return Outer()->SetProperty(Outer()->m_overallConnectionTimeout, poverallConnectionTimeout);
@@ -2315,6 +3621,11 @@ public:
 		return CONTAINING_RECORD(innerThis, RdpClient, m_securedSettings);
 	}
 
+	static RdpClient * InnerToOuter(RDPCLIENT * innerThis)
+	{
+		return CONTAINING_RECORD(innerThis, RdpClient, m_protocolState);
+	}
+
 	static const RdpClient * InnerToOuter(const RdpClientInner * innerThis)
 	{
 		return CONTAINING_RECORD(innerThis, RdpClient, m_inner);
@@ -2330,24 +3641,142 @@ public:
 		return CONTAINING_RECORD(innerThis, RdpClient, m_securedSettings);
 	}
 
+	static const RdpClient * InnerToOuter(const RDPCLIENT * innerThis)
+	{
+		return CONTAINING_RECORD(innerThis, RdpClient, m_protocolState);
+	}
+
+	RdpClientUI * GetUI() const
+	{
+		assert(m_clientUI);
+		return m_clientUI;
+	}
+
+	/* Glue for rdesktop-core */
+public:
+	static bool OnPublicKey(RDPCLIENT * This, unsigned char * key, unsigned int key_size)
+	{
+		return InnerToOuter(This)->OnPublicKey(key, key_size);
+	}
+
+	static void OnLogon(RDPCLIENT * This)
+	{
+		return InnerToOuter(This)->OnLogon();
+	}
+
+	static bool OnRedirect
+	(
+		RDPCLIENT * This,
+		uint32 flags,
+		uint32 server_len,
+		wchar_t * server,
+		uint32 cookie_len,
+		char * cookie,
+		uint32 username_len,
+		wchar_t * username,
+		uint32 domain_len,
+		wchar_t * domain,
+		uint32 password_len,
+		wchar_t * password
+	)
+	{
+		return InnerToOuter(This)->OnRedirect
+		(
+			flags,
+			server_len,
+			server,
+			cookie_len,
+			cookie,
+			username_len,
+			username,
+			domain_len,
+			domain,
+			password_len,
+			password
+		);
+	}
+
 private:
-	/* Thread that hosts rdesktop-core */
+	bool OnPublicKey(unsigned char * key, unsigned int key_size)
+	{
+		HRESULT hr = FireReceivedTSPublicKey(key, key_size);
+
+		if(FAILED(hr))
+		{
+			m_protocolState.disconnect_reason = 262;
+			return false;
+		}
+
+		return hr == S_OK;
+	}
+
+	void OnLogon()
+	{
+		m_loggedIn = true;
+		FireLoginComplete();
+	}
+
+	bool OnRedirect
+	(
+		uint32 flags,
+		uint32 server_len,
+		wchar_t * server,
+		uint32 cookie_len,
+		char * cookie,
+		uint32 username_len,
+		wchar_t * username,
+		uint32 domain_len,
+		wchar_t * domain,
+		uint32 password_len,
+		wchar_t * password
+	)
+	{
+		assert(m_Connected);
+		assert(!InsideApartment());
+		assert(IsWindow(m_controlWindow));
+
+		RedirectArguments redirectArgs =
+		{
+			flags,
+			server_len,
+			server,
+			cookie_len,
+			cookie,
+			username_len,
+			username,
+			domain_len,
+			domain,
+			password_len,
+			password
+		};
+
+		return SendMessage(m_controlWindow, RDPC_WM_REDIRECT, 0, reinterpret_cast<LPARAM>(&redirectArgs)) == 0;
+	}
+
+private:
 	static DWORD WINAPI ProtocolLoopThreadProc(LPVOID lpParam)
 	{
 		static_cast<RdpClient *>(lpParam)->ProtocolLoop();
 		return 0;
 	}
 
+	static VOID CALLBACK ConnectionTimerAPC(LPVOID, DWORD, DWORD)
+	{
+	}
+
+	// FIXME: various potential inconsistencies due to lack of detailed documentation of expected semantics
 	void ProtocolLoop()
 	{
+		HANDLE waitingReconnection = NULL;
+
+		// Retrieve the local hostname to be passed to the server
 		WCHAR hostname[MAX_COMPUTERNAME_LENGTH + 1];
 		DWORD hostnameLen = ARRAYSIZE(hostname);
 
 		if(!GetComputerNameW(hostname, &hostnameLen))
 			hostname[0] = 0;
 
-		FireConnecting();
-
+		// Set some connection flags
 		uint32 flags = RDP_LOGON_NORMAL;
 
 		if(m_Compress)
@@ -2358,6 +3787,27 @@ private:
 
 		if(m_ClearTextPassword)
 			flags |= RDP_LOGON_AUTO;
+
+		// Notify the container that the connection process is beginning now
+		FireConnecting();
+
+		// Set the overall connection timer, if a timeout is set
+		// BUGBUG: the timeout semantics are ambiguous and have been most probably misinterpreted
+		HANDLE overallConnectionTimer = NULL;
+		LARGE_INTEGER overallTimeout;
+
+		if(m_overallConnectionTimeout)
+		{
+			overallTimeout.QuadPart = - ((m_overallConnectionTimeout * 1000 * 1000 * 1000) / 100);
+
+			overallConnectionTimer = CreateWaitableTimer(NULL, FALSE, NULL);
+
+			if(overallConnectionTimer == NULL)
+				goto l_Disconnect;
+		}
+
+		if(overallConnectionTimer)			
+			SetWaitableTimer(overallConnectionTimer, &overallTimeout, 0, ConnectionTimerAPC, NULL, FALSE);
 
 		// Initial connection
 		BOOL disconnected = rdp_connect
@@ -2374,15 +3824,32 @@ private:
 			m_LoadBalanceInfo
 		);
 
-		while(!disconnected)
+		if(overallConnectionTimer)
+			CancelWaitableTimer(overallConnectionTimer);
+
+		if(disconnected)
+			goto l_Disconnect;
+
+		// TODO: set the disconnect reason for every instance in which we abort the loop
+		for(;;)
 		{
 			BOOL deactivated = False;
 			uint32 extendedDisconnectReason = 0;
 
-			// The main protocol loop
+			m_actuallyConnected = true;
+
+			// Notify the container of the successful connection
+			FireConnected();
+
+			// Main protocol loop
+			m_loggedIn = false;
 			rdp_main_loop(&m_protocolState, &deactivated, &extendedDisconnectReason);
+			rdp_disconnect(&m_protocolState);
+
+			m_actuallyConnected = false;
 
 			// Redirection
+			// BUGBUG: redirection is very messy and probably this implementation is not "canonical"
 			if(m_protocolState.redirect)
 			{
 				m_protocolState.redirect = False;
@@ -2420,15 +3887,34 @@ private:
 
 				// do not reconnect
 				if(reconnectMode == MSTSCLib::autoReconnectContinueStop)
-				{
-					disconnected = True;
-					break;
-				}
+					goto l_Disconnect;
 
-				// the container will reconnect manually with Connect or abort with Disconnect
+				// the container will reconnect or abort manually
 				if(reconnectMode == MSTSCLib::autoReconnectContinueManual)
 				{
-					// TODO: wait for a call to Connect or Disconnect
+					assert(!m_reconnectAborted);
+					assert(m_protocolThreadWaitingReconnection == NULL);
+
+					if(waitingReconnection == NULL)
+					{
+						waitingReconnection = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+						if(waitingReconnection == NULL)
+							// TODO: fatal error
+							goto l_Disconnect;
+					}
+
+					m_protocolThreadWaitingReconnection = waitingReconnection;
+
+					WaitForSingleObject(waitingReconnection, INFINITE);
+
+					m_protocolThreadWaitingReconnection = NULL;
+
+					if(m_reconnectAborted)
+					{
+						// FIXME? do we set the disconnection status here?
+						goto l_Disconnect;
+					}
 				}
 				// reconnect automatically
 				else
@@ -2444,6 +3930,9 @@ private:
 					++ autoReconnections;
 				}
 
+				if(overallConnectionTimer)			
+					SetWaitableTimer(overallConnectionTimer, &overallTimeout, 0, ConnectionTimerAPC, NULL, FALSE);
+
 				// Reconnection
 				success = rdp_reconnect
 				(
@@ -2458,26 +3947,94 @@ private:
 					hostname,
 					m_LoadBalanceInfo
 				);
+
+				if(overallConnectionTimer)
+					CancelWaitableTimer(overallConnectionTimer);
 			}
 			while(!success);
 		}
 
+l_Disconnect:
 		// Disconnected
-		// TODO: clean up protocol state, clear "connected" flag
 		FireDisconnected(m_protocolState.disconnect_reason);
+
+		if(overallConnectionTimer)
+			CloseHandle(overallConnectionTimer);
+	}
+
+	void JoinProtocolThread()
+	{
+		assert(m_protocolThread);
+		WaitForSingleObject(m_protocolThread, INFINITE);
+		CloseHandle(m_protocolThread);
+		m_protocolThread = NULL;
+	}
+
+	void TerminateProtocolThread()
+	{
+		assert(m_protocolThread);
+
+		// wake it up if it's waiting for a manual reconnection
+		if(m_protocolThreadWaitingReconnection)
+		{
+			assert(!m_reconnectAborted);
+			m_reconnectAborted = true;
+			SetEvent(m_protocolThreadWaitingReconnection);
+		}
+		// otherwise, attempt to interrupt any current blocking operation
+		else
+		{
+			// shutdown(m_protocolState.tcp.sock, SD_BOTH); // TBD: maybe in the future?
+			QueueUserAPC(DisconnectAPC, m_protocolThread, 0);
+		}
+
+		assert(m_protocolThreadWaitingReconnection == NULL);
+	}
+
+	void PerformDisconnect(long reason)
+	{
+		assert(InsideApartment());
+		assert(m_Connected);
+
+		// TODO: notify virtual channels
+
+		// TODO: do any other disconnection work here...
+
+		// Put the control in the disconnected state
+		m_Connected = false;
+		m_loggedIn = false;
+
+		// Notify the container
+		VARIANTARG arg = { };
+
+		arg.vt = VT_I4;
+		arg.lVal = reason;
+
+		FireEventInsideApartment(4, &arg, 1);
 	}
 
 public:
 	/* Startup initialization */
 	static BOOL Startup()
 	{
-		// TODO: register control window class here
-		return TRUE;
+		if(!RdpClientUI::Startup())
+			return FALSE;
+
+		WNDCLASSEX wcex = { sizeof(wcex) };
+
+		wcex.style = CS_HREDRAW | CS_VREDRAW;
+		wcex.lpfnWndProc = ControlWindowProc;
+		wcex.hInstance = GetCurrentModule();
+		wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+		wcex.lpszClassName = TEXT("MissTosca_Control");
+
+		return RegisterClassEx(&wcex);;
 	}
 
 	static void Shutdown()
 	{
-		// TODO
+		UnregisterClass(TEXT("MissTosca_Control"), GetCurrentModule());
 	}
 
 	/* Class factory */
@@ -2609,11 +4166,128 @@ private:
 	};
 
 	/* Pay no attention, ActiveX glue... */
-	HRESULT CreateControlWindow()
+	LRESULT ControlWindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
-		// TODO
+		switch(uMsg)
+		{
+		case WM_SIZE:
+			{
+				// TODO: resize UI
+			}
+
+			return 0;
+
+		case WM_PAINT:
+			{
+				LPCWSTR text = NULL;
+
+				if(!m_Connected)
+					text = m_DisconnectedText;
+				else if(m_actuallyConnected)
+					text = m_ConnectedStatusText;
+				else
+					text = m_ConnectingText;
+
+				RECT clientRect;
+				GetClientRect(m_controlWindow, &clientRect);
+
+				PAINTSTRUCT ps;
+				HDC hdc = BeginPaint(m_controlWindow, &ps);
+
+				SetBkColor(hdc, GetSysColor(COLOR_WINDOW));
+				SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+				SelectObject(hdc, GetStockObject(SYSTEM_FONT));
+
+				RECT textRect = clientRect;
+
+				DrawTextW
+				(
+					hdc,
+					text,
+					-1,
+					&textRect,
+					DT_CENTER | DT_EDITCONTROL | DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK | DT_CALCRECT
+				);
+
+				if(textRect.right > clientRect.right)
+					textRect.right = clientRect.right;
+
+				if(textRect.bottom > clientRect.bottom)
+					textRect.bottom = clientRect.bottom;
+
+				textRect.left = (clientRect.right - textRect.right) / 2;
+				textRect.right += textRect.left;
+				textRect.top = (clientRect.bottom - textRect.bottom) / 2;
+				textRect.bottom += textRect.top;
+
+				DrawTextW
+				(
+					hdc,
+					text,
+					-1,
+					&textRect,
+					DT_CENTER | DT_EDITCONTROL | DT_END_ELLIPSIS | DT_NOPREFIX | DT_WORDBREAK
+				);
+
+				EndPaint(m_controlWindow, &ps);
+			}
+
+			return 0;
+			
+		default:
+			{
+				LRESULT result;
+				
+				if(HandleEvent(uMsg, wParam, lParam, result))
+					return result;
+			}
+
+			break;
+		}
+
+		return DefWindowProc(m_controlWindow, uMsg, wParam, lParam);
+	}
+
+	static LRESULT CALLBACK ControlWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	{
+		if(uMsg == WM_CREATE)
+		{
+			SetWindowLongPtr
+			(
+				hwnd,
+				GWLP_USERDATA,
+				(LONG_PTR)reinterpret_cast<LPCREATESTRUCT>(lParam)->lpCreateParams
+			);
+		}
+
+		RdpClient * Self = reinterpret_cast<RdpClient *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+		assert(Self);
+
+		return Self->ControlWindowProc(uMsg, wParam, lParam);
+	}
+
+	HRESULT CreateControlWindow(HWND hwndParent)
+	{
+		m_controlWindow = CreateWindow
+		(
+			TEXT("MissTosca_Control"),
+			NULL,
+			WS_CHILD | WS_CLIPCHILDREN,
+			CW_USEDEFAULT,
+			CW_USEDEFAULT,
+			CW_USEDEFAULT,
+			CW_USEDEFAULT,
+			hwndParent,
+			NULL,
+			GetCurrentModule(),
+			this
+		);
+
+		if(m_controlWindow == NULL)
+			return HRESULT_FROM_WIN32(GetLastError());
+
 		m_UIParentWindowHandle = m_controlWindow;
-		return E_FAIL;
+		return S_OK;
 	}
 
 	HRESULT DestroyControlWindow()
@@ -2679,7 +4353,7 @@ private:
 				ShowWindow(m_controlWindow, SW_SHOW);
 			else
 			{
-				hr = CreateControlWindow();
+				hr = CreateControlWindow(hwndParent);
 				
 				if(FAILED(hr))
 					break;
@@ -2697,7 +4371,16 @@ private:
 				if(FAILED(hr))
 					break;
 
-				// TODO: focus the control window
+				SetWindowPos
+				(
+					m_controlWindow,
+					NULL,
+					lprcPosRect->left,
+					lprcPosRect->top,
+					lprcPosRect->right - lprcPosRect->left,
+					lprcPosRect->bottom - lprcPosRect->top,
+					SWP_SHOWWINDOW
+				);
 
 				if(frame)
 				{
@@ -3045,7 +4728,21 @@ public:
 
 	virtual STDMETHODIMP IOleInPlaceObject::SetObjectRects(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
 	{
-		// TODO: reposition the control window and set its region here
+		if(m_controlWindow == NULL)
+			return E_FAIL;
+
+		MoveWindow
+		(
+			m_controlWindow,
+			lprcPosRect->left,
+			lprcPosRect->top,
+			lprcPosRect->right - lprcPosRect->left,
+			lprcPosRect->bottom - lprcPosRect->top,
+			TRUE
+		);
+
+		SetWindowRgn(m_controlWindow, CreateRectRgnIndirect(lprcClipRect), TRUE);
+
 		return E_NOTIMPL;
 	}
 
@@ -3515,12 +5212,12 @@ public:
 
 	virtual STDMETHODIMP IMsTscAx::get_HorizontalScrollBarVisible(long * pfHScrollVisible) const
 	{
-		return GetProperty(m_HorizontalScrollBarVisible, pfHScrollVisible);
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IMsTscAx::get_VerticalScrollBarVisible(long * pfVScrollVisible) const
 	{
-		return GetProperty(m_VerticalScrollBarVisible, pfVScrollVisible);
+		return E_NOTIMPL; // TODO
 	}
 
 	virtual STDMETHODIMP IMsTscAx::put_FullScreenTitle(BSTR rhs)
@@ -3576,17 +5273,24 @@ public:
 	virtual STDMETHODIMP IMsTscAx::Connect()
 	{
 		if(m_Connected)
+		{
+			// Protocol thread waiting for a manual reconnection: wake it up
+			if(m_protocolThreadWaitingReconnection)
+			{
+				SetEvent(m_protocolThreadWaitingReconnection);
+				return S_OK;
+			}
+
 			return E_FAIL;
+		}
 
 		m_Connected = true;
-
-		// TODO: if the protocol thread is waiting to reconnect, wake it up
 
 		HRESULT hr;
 
 		if(m_controlWindow == NULL)
 		{
-			hr = CreateControlWindow();
+			hr = CreateControlWindow(NULL);
 
 			if(FAILED(hr))
 				return hr;
@@ -3595,6 +5299,16 @@ public:
 		for(;;)
 		{
 			// TODO: initialize plugin DLLs/channels
+
+			m_clientUI = new RdpClientUI();
+
+			if(m_clientUI == NULL)
+			{
+				hr = E_OUTOFMEMORY;
+				break;
+			}
+
+			m_clientUI->Initialize(m_controlWindow);
 
 			m_protocolState.licence_username = BstrToLpsz(m_UserName);
 
@@ -3688,9 +5402,9 @@ public:
 		if(!m_Connected)
 			return E_FAIL;
 
-		// TODO: if the protocol thread is waiting to reconnect, wake it up
-
-		return E_NOTIMPL; // TODO
+		// Terminate the protocol thread. On exit, it will fire the Disconnected event
+		TerminateProtocolThread();
+		return S_OK;
 	}
 
 	virtual STDMETHODIMP IMsTscAx::CreateVirtualChannels(BSTR newVal)
@@ -3776,7 +5490,21 @@ public:
 
 	virtual STDMETHODIMP IMsRdpClient::RequestClose(MSTSCLib::ControlCloseStatus * pCloseStatus)
 	{
-		return E_NOTIMPL; // TODO
+		if(pCloseStatus == NULL)
+			return E_POINTER;
+
+		if(!m_Connected)
+		{
+			*pCloseStatus = MSTSCLib::controlCloseCanProceed;
+			return S_OK;
+		}
+
+		*pCloseStatus = MSTSCLib::controlCloseWaitForEvents;
+
+		if(!PostMessage(m_controlWindow, RDPC_WM_REQUEST_CLOSE, 0, 0))
+			return HRESULT_FROM_WIN32(GetLastError());
+
+		return S_OK;
 	}
 
 	/* IMsRdpClient2 */
@@ -3884,6 +5612,330 @@ public:
 };
 
 #pragma warning(pop)
+
+/* More glue to interface to the rdesktop code */
+extern "C"
+{
+
+/* Orders */
+/* support routines */
+void ui_begin_update(RDPCLIENT * This)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_BeginUpdate();
+}
+
+void ui_end_update(RDPCLIENT * This)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_EndUpdate();
+}
+
+void ui_set_clip(RDPCLIENT * This, int x, int y, int cx, int cy)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_SetClip(x, y, cx, cy);
+}
+
+void ui_reset_clip(RDPCLIENT * This)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_ResetClip();
+}
+
+/* blits */
+void ui_destblt(RDPCLIENT * This, uint8 opcode, int x, int y, int cx, int cy)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_DestBlt(opcode, x, y, cx, cy);
+}
+
+void ui_memblt(RDPCLIENT * This, uint8 opcode, int x, int y, int cx, int cy, HBITMAP src, int srcx, int srcy)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_MemBlt(opcode, x, y, cx, cy, src, srcx, srcy);
+}
+
+void ui_patblt(RDPCLIENT * This, uint8 opcode, int x, int y, int cx, int cy, BRUSH * brush, int bgcolour, int fgcolour)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_PatBlt(opcode, x, y, cx, cy, brush, bgcolour, fgcolour);
+}
+
+void ui_screenblt(RDPCLIENT * This, uint8 opcode, int x, int y, int cx, int cy, int srcx, int srcy)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_ScreenBlt(opcode, x, y, cx, cy, srcx, srcy);
+}
+
+void ui_triblt(RDPCLIENT * This, uint8 opcode, int x, int y, int cx, int cy, HBITMAP src, int srcx, int srcy, BRUSH * brush, int bgcolour, int fgcolour)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_TriBlt(opcode, x, y, cx, cy, src, srcx, srcy, brush, bgcolour, fgcolour);
+}
+
+void ui_paint_bitmap(RDPCLIENT * This, int x, int y, int cx, int cy, int width, int height, uint8 * data)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_PaintBitmap(x, y, cx, cy, width, height, data);
+}
+
+/* shapes */
+void ui_ellipse(RDPCLIENT * This, uint8 opcode, uint8 fillmode, int x, int y, int cx, int cy, BRUSH * brush, int bgcolour, int fgcolour)
+{
+	// TODO
+//	RdpClient::InnerToOuter(This)->GetUI()->Display_Ellipse(opcode, fillmode, x, y, cx, cy, brush, bgcolour, fgcolour);
+}
+
+void ui_line(RDPCLIENT * This, uint8 opcode, int startx, int starty, int endx, int endy, PEN * pen)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_Line(opcode, startx, starty, endx, endy, pen);
+}
+
+void ui_polygon(RDPCLIENT * This, uint8 opcode, uint8 fillmode, POINT * point, int npoints, BRUSH * brush, int bgcolour, int fgcolour)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_Polygon(opcode, fillmode, point, npoints, brush, bgcolour, fgcolour);
+}
+
+void ui_polyline(RDPCLIENT * This, uint8 opcode, POINT * points, int npoints, PEN * pen)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_Polyline(opcode, points, npoints, pen);
+}
+
+void ui_rect(RDPCLIENT * This, int x, int y, int cx, int cy, int colour)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_Rect(x, y, cx, cy, colour);
+}
+
+/* text */
+void ui_draw_text
+(
+	RDPCLIENT * This,
+	uint8 font,
+	uint8 flags,
+	uint8 opcode,
+	int mixmode,
+	int x,
+	int y,
+	int clipx,
+	int clipy,
+	int clipcx,
+	int clipcy,
+	int boxx,
+	int boxy,
+	int boxcx,
+	int boxcy,
+	BRUSH * brush,
+	int bgcolour,
+	int fgcolour,
+	uint8 * text,
+	uint8 length
+)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_DrawText
+	(
+		font,
+		flags,
+		opcode,
+		mixmode,
+		x,
+		y,
+		clipx,
+		clipy,
+		clipcx,
+		clipcy,
+		boxx,
+		boxy,
+		boxcx,
+		boxcy,
+		brush,
+		bgcolour,
+		fgcolour,
+		text,
+		length
+	);
+}
+
+/* desktop save/restore */
+void ui_desktop_save(RDPCLIENT * This, uint32 offset, int x, int y, int cx, int cy)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_SaveDesktop(offset, x, y, cx, cy);
+}
+
+void ui_desktop_restore(RDPCLIENT * This, uint32 offset, int x, int y, int cx, int cy)
+{
+	RdpClient::InnerToOuter(This)->GetUI()->Display_RestoreDesktop(offset, x, y, cx, cy);
+}
+
+/* Resources */
+/* bitmaps */
+HBITMAP ui_create_bitmap(RDPCLIENT * This, int width, int height, uint8 * data)
+{
+	return win32_create_dib(width, height, This->server_depth, data);
+}
+
+void ui_destroy_bitmap(RDPCLIENT *, HBITMAP bmp)
+{
+	DeleteObject(bmp);
+}
+
+/* palettes */
+HCOLOURMAP ui_create_colourmap(RDPCLIENT *, COLOURMAP * colours)
+{
+	return NULL;
+}
+
+void ui_set_colourmap(RDPCLIENT * This, HCOLOURMAP map)
+{
+	// TODO
+}
+
+/* cursors */
+HCURSOR ui_create_cursor(RDPCLIENT * This, unsigned int x, unsigned int y, int width, int height, uint8 * andmask, uint8 * xormask)
+{
+	uint8 * andbuf = NULL;
+	uint8 * xorbuf = NULL;
+
+	uint8 * andbits = win32_convert_scanlines(width, - height, 1, 2, 4, andmask, &andbuf);
+	uint8 * xorbits = win32_convert_scanlines(width, height, 24, 2, 4, xormask, &xorbuf);
+
+	HBITMAP hbmMask = CreateBitmap(width, height, 1, 1, andbits);
+	HBITMAP hbmColor = win32_create_dib(width, height, 24, xorbits);
+
+	ICONINFO iconinfo;
+	iconinfo.fIcon = FALSE;
+	iconinfo.xHotspot = x;
+	iconinfo.yHotspot = y;
+	iconinfo.hbmMask = hbmMask;
+	iconinfo.hbmColor = hbmColor;
+	
+	HICON icon = CreateIconIndirect(&iconinfo);
+
+	if(icon == NULL)
+		error("CreateIconIndirect %dx%d failed\n", width, height);
+
+	if(andbuf)
+		delete[] andbuf;
+
+	if(xorbuf)
+		delete[] xorbuf;
+
+	DeleteObject(hbmMask);
+	DeleteObject(hbmColor);
+
+	return icon;
+}
+
+void ui_destroy_cursor(RDPCLIENT *, HCURSOR cursor)
+{
+	DestroyIcon(cursor);
+}
+
+/* glyphs */
+HGLYPH ui_create_glyph(RDPCLIENT * This, int width, int height, const uint8 * data)
+{
+	uint8 * databuf = NULL;
+	uint8 * databits = win32_convert_scanlines(width, height, 1, 1, 2, data, &databuf);
+
+	HBITMAP hbm = CreateBitmap(width, height, 1, 1, databits);
+
+	if(databuf)
+		delete[] databuf;
+
+	const uint8 * p = data;
+	int stride = alignup(alignup(width, 8) / 8, 1);
+
+#ifdef _DEBUG
+	printf("glyph %p\n", hbm);
+
+	for(int i = 0; i < height; ++ i, p += stride)
+	{
+		for(int j = 0; j < width; ++ j)
+		{
+			int B = p[j / 8];
+			int b = 8 - j % 8 - 1;
+
+			if(B & (1 << b))
+				fputs("##", stdout);
+			else
+				fputs("..", stdout);
+		}
+
+		fputc('\n', stdout);
+	}
+
+	fputc('\n', stdout);
+#endif
+
+	return hbm;
+}
+
+void ui_destroy_glyph(RDPCLIENT *, HGLYPH glyph)
+{
+	DeleteObject(glyph);
+}
+
+/* Input window */
+void ui_move_pointer(RDPCLIENT * This, int x, int y)
+{
+	// TODO
+}
+
+void ui_set_cursor(RDPCLIENT * This, HCURSOR cursor)
+{
+	// TODO
+}
+
+void ui_set_null_cursor(RDPCLIENT * This)
+{
+	// TODO
+}
+
+/* Miscellaneous */
+void ui_resize_window(RDPCLIENT * This)
+{
+}
+
+void ui_bell(RDPCLIENT *)
+{
+	MessageBeep(0);
+}
+
+int ui_select(RDPCLIENT * This, SOCKET rdp_socket)
+{
+	return SleepEx(0, TRUE) == WAIT_IO_COMPLETION;
+}
+
+/* Events */
+BOOL event_pubkey(RDPCLIENT * This, unsigned char * key, unsigned int key_size)
+{
+	if(!RdpClient::OnPublicKey(This, key, key_size))
+		return FALSE;
+	else
+		return TRUE;
+}
+
+void event_logon(RDPCLIENT * This)
+{
+	RdpClient::OnLogon(This);
+}
+
+BOOL event_redirect(RDPCLIENT * This, uint32 flags, uint32 server_len, wchar_t * server, uint32 cookie_len, char * cookie, uint32 username_len, wchar_t * username, uint32 domain_len, wchar_t * domain, uint32 password_len, wchar_t * password)
+{
+	if
+	(
+		!RdpClient::OnRedirect
+		(
+			This,
+			flags,
+			server_len,
+			server,
+			cookie_len,
+			cookie,
+			username_len,
+			username,
+			domain_len,
+			domain,
+			password_len,
+			password
+		)
+	)
+		return FALSE;
+	else
+		return TRUE;
+}
+
+}
 
 class ClassFactory: public IClassFactory
 {
@@ -4016,8 +6068,6 @@ DWORD WINAPI DllMain(HINSTANCE hInstance, DWORD fdwReason, LPVOID lpvReserved)
 	case DLL_PROCESS_ATTACH:
 		{
 			DisableThreadLibraryCalls(hInstance);
-
-			InitCommonControls();
 
 			if(!RdpClient::Startup())
 				return FALSE;
