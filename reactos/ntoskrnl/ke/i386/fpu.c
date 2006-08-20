@@ -330,10 +330,10 @@ KiGetFpuState(PKTHREAD Thread)
     ULONG Cr0;
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    if (Thread->NpxState & NPX_STATE_VALID)
+    if (Thread->NpxState & NPX_STATE_LOADED)
     {
         FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)Thread->InitialStack - sizeof (FX_SAVE_AREA));
-        if (Thread->NpxState & NPX_STATE_DIRTY)
+        if (Thread->NpxState & NPX_STATE_NOT_LOADED)
         {
             ASSERT(KeGetCurrentPrcb()->NpxThread == Thread);
 
@@ -349,7 +349,7 @@ KiGetFpuState(PKTHREAD Thread)
                 KeGetCurrentPrcb()->NpxThread = NULL;
             }
             Ke386SetCr0(Cr0);
-            Thread->NpxState = NPX_STATE_VALID;
+            Thread->NpxState = NPX_STATE_LOADED;
         }
     }
     KeLowerIrql(OldIrql);
@@ -382,7 +382,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         CurrentThread = KeGetCurrentThread();
         ASSERT(CurrentThread != NULL);
 
-        CurrentThread->NpxState |= NPX_STATE_DIRTY;
+        CurrentThread->NpxState |= NPX_STATE_NOT_LOADED;
         KeLowerIrql(oldIrql);
         DPRINT("Device not present exception handled!\n");
 

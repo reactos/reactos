@@ -210,7 +210,6 @@ KiSwapThread(VOID)
     DPRINT("Dispatching Thread as blocked\n");
     ApcState = KiDispatchThreadNoLock(Waiting);
 
-#if 0
     /* Check if we need to deliver APCs */
     if (ApcState)
     {
@@ -221,7 +220,6 @@ KiSwapThread(VOID)
         KiDeliverApc(KernelMode, NULL, NULL);
         ASSERT(CurrentThread->WaitIrql == 0);
     }
-#endif
 
     /* Lower IRQL back to what it was */
     KfLowerIrql(CurrentThread->WaitIrql);

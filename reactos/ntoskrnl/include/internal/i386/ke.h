@@ -42,11 +42,6 @@
 
 #define DR7_ACTIVE              0x00000055  /* If any of these bits are set, a Dr is active */
 
-/* Possible values for KTHREAD's NpxState */
-#define NPX_STATE_INVALID   0x01
-#define NPX_STATE_VALID     0x02
-#define NPX_STATE_DIRTY     0x04
-
 #define FRAME_EDITED        0xFFF8
 
 #ifndef __ASM__
