@@ -15,7 +15,7 @@
 typedef struct _KSHARED_CTXSWITCH_FRAME
 {
     PVOID ExceptionList;
-    ULONG Flags;
+    KIRQL WaitIrql;
     PVOID RetEip;
 } KSHARED_CTXSWITCH_FRAME, *PKSHARED_CTXSWITCH_FRAME;
 
@@ -231,7 +231,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
     /* And set up the Context Switch Frame */
     CtxSwitchFrame->RetEip = KiThreadStartup;
-    CtxSwitchFrame->Flags = EFLAGS_INTERRUPT_MASK;
+    CtxSwitchFrame->WaitIrql = APC_LEVEL;
     CtxSwitchFrame->ExceptionList = (PVOID)0xFFFFFFFF;
 
     /* Save back the new value of the kernel stack. */

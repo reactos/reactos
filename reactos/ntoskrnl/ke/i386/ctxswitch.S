@@ -115,14 +115,11 @@ BadThread:
 .globl @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
 
-    /* Save WaitIrql APC-bypass in EFLAGS */
-    or cl, cl
-
     /* Set the Thread to running */
     mov byte ptr [esi+KTHREAD_STATE], Running
 
-    /* Save the flags */
-    pushf
+    /* Save the IRQL */
+    push ecx
 
     /* Save the Exception list */
     push [ebx+KPCR_EXCEPTION_LIST]
@@ -224,11 +221,34 @@ SameProcess:
     /* Restore exception list */
     pop [ebx+KPCR_EXCEPTION_LIST]
 
-    /* Retore EFLAGS */
-    popf
+    /* Restore IRQL */
+    pop ecx
 
-    /* Return no APC pending */
+    /* Check if kernel APCs are pending */
+    cmp byte ptr [esi+KTHREAD_PENDING_KERNEL_APC], 0
+    jnz CheckApc
+
+    /* No APCs, return */
     xor eax, eax
+    ret
+
+CheckApc:
+
+    /* Check if they're disabled */
+    cmp word ptr [esi+KTHREAD_SPECIAL_APC_DISABLE], 0
+    jnz ApcReturn
+    test cl, cl
+    jz ApcReturn
+
+    /* Request APC Delivery */
+    mov cl, APC_LEVEL
+    call @HalRequestSoftwareInterrupt@4
+    or eax, esp
+
+ApcReturn:
+
+    /* Return with APC pending */
+    setz al
     ret
 
 LdtStuff:
@@ -239,6 +259,13 @@ LdtStuff:
     mov [ecx+KGDT_LDT], eax
     mov eax, [edi+KPROCESS_LDT_DESCRIPTOR1]
     mov [ecx+KGDT_LDT+4], eax
+
+    /* Write the INT21 handler */
+    mov ecx, [ebx+KPCR_IDT]
+    mov eax, [ebp+KPROCESS_INT21_DESCRIPTOR0]
+    mov [ecx+0x108], eax
+    mov eax, [ebp+KPROCESS_INT21_DESCRIPTOR1]
+    mov [ecx+0x10C], eax
 
     /* Save LDT Selector */
     mov eax, KGDT_LDT
