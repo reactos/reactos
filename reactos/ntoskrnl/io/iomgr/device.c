@@ -1067,6 +1067,7 @@ IoGetDiskDeviceObject(IN PDEVICE_OBJECT FileSystemDeviceObject,
     PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
     PVPB Vpb;
     KIRQL OldIrql;
+    NTSTATUS Status;
 
     /* Make sure there's a VPB */
     if (!FileSystemDeviceObject->Vpb) return STATUS_INVALID_PARAMETER;
@@ -1079,21 +1080,34 @@ IoGetDiskDeviceObject(IN PDEVICE_OBJECT FileSystemDeviceObject,
 
     /* Make sure this one has a VPB too */
     Vpb = DeviceExtension->Vpb;
-    if (!Vpb) return STATUS_INVALID_PARAMETER;
-
-    /* Make sure that it's mounted */
-    if ((!Vpb->ReferenceCount) || (Vpb->Flags & VPB_MOUNTED))
+    if (Vpb)
     {
-        /* It's not, so return failure */
-        return STATUS_VOLUME_DISMOUNTED;
-    }
+        /* Make sure that it's mounted */
+        if ((Vpb->ReferenceCount) &&
+            (Vpb->Flags & VPB_MOUNTED))
+        {
+            /* Return the Disk Device Object */
+            *DiskDeviceObject = Vpb->RealDevice;
 
-    /* Return the Disk Device Object */
-    *DiskDeviceObject = Vpb->RealDevice;
+            /* Reference it and return success */
+            ObReferenceObject(Vpb->RealDevice);
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* It's not, so return failure */
+            return STATUS_VOLUME_DISMOUNTED;
+        }
+    }
+    else
+    {
+        /* Fail */
+        Status = STATUS_INVALID_PARAMETER;
+    }
 
     /* Release the lock */
     IoReleaseVpbSpinLock(OldIrql);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
