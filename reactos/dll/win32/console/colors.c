@@ -57,6 +57,12 @@ PaintStaticControls(HWND hwndDlg, PConsoleInfo pConInfo, LPDRAWITEMSTRUCT drawIt
 			hBrush = CreateSolidBrush(nbkColor);
 			ntColor = pConInfo->PopupText;
 		}
+
+		if (!hBrush)
+		{
+			return FALSE;
+		}
+
 		FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
 		DeleteObject((HGDIOBJ)hBrush);
 		ptColor = SetTextColor(drawItem->hDC, ntColor);

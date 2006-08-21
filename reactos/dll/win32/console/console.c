@@ -59,7 +59,9 @@ InitConsoleInfo()
 	pConInfo->ScreenBackground = RGB(0, 0, 0); 
 	pConInfo->PopupText = RGB(128, 0, 128); 
 	pConInfo->PopupBackground = RGB(255, 255, 255); 
-
+	pConInfo->WindowSize = (DWORD)MAKELONG(80, 25);
+	pConInfo->WindowPosition = -1;
+	pConInfo->ScreenBuffer = MAKELONG(80, 300);
 
 	GetModuleFileName(NULL, pConInfo->szProcessName, MAX_PATH);
 	//MessageBox(hwnd, pConInfo->szProcessName, _T("GetModuleFileName"), MB_OK);

@@ -29,6 +29,12 @@ typedef struct TAGConsoleInfo
   DWORD QuickEdit;
   DWORD InsertMode;
 
+  DWORD ScreenBuffer;
+  DWORD WindowSize;
+  DWORD WindowPosition;
+  
+
+
   DWORD ActiveStaticControl;
   COLORREF ScreenText;
   COLORREF ScreenBackground;

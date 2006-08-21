@@ -27,9 +27,95 @@ LayoutProc(
 	{
 		case WM_INITDIALOG:
 		{
+			DWORD xres, yres;
+			HDC hDC;
 			pConInfo = (PConsoleInfo) ((LPPROPSHEETPAGE)lParam)->lParam;
 			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
+			SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, HIWORD(pConInfo->ScreenBuffer), FALSE);
+			SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, LOWORD(pConInfo->ScreenBuffer), FALSE);
+			SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, HIWORD(pConInfo->WindowSize), FALSE);
+			SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, LOWORD(pConInfo->WindowSize), FALSE);
+			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_SCREEN_BUFFER_HEIGHT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 0));
+			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_SCREEN_BUFFER_WIDTH), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 0));
+			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_HEIGHT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 0));
+			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_WIDTH), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 0));
+			
+			hDC = GetDC(NULL);
+			xres = GetDeviceCaps(hDC, HORZRES);
+			yres = GetDeviceCaps(hDC, VERTRES);
+			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(xres, 0));
+			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP), UDM_SETRANGE, 0, (LPARAM)MAKELONG(yres, 0));
+
+			if (pConInfo->WindowPosition != -1)
+			{
+				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, LOWORD(pConInfo->WindowPosition), FALSE);
+				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, HIWORD(pConInfo->WindowPosition), FALSE);
+			}
+			else
+			{
+				//FIXME calculate window pos from xres, yres
+				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, 88, FALSE);
+				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, 88, FALSE);
+				EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), FALSE);
+				EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), FALSE);
+				EnableWindow(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT), FALSE);
+				EnableWindow(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP), FALSE);
+				SendMessage(GetDlgItem(hwndDlg, IDC_CHECK_SYSTEM_POS_WINDOW), BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+			}
+			
 			return TRUE;
+		}
+		case WM_DRAWITEM:
+		{
+			COLORREF bkColor;
+			HBRUSH hBrush;
+			LPDRAWITEMSTRUCT drawItem;
+
+			bkColor = GetSysColor(COLOR_BACKGROUND);
+			hBrush = CreateSolidBrush(bkColor);
+			drawItem = (LPDRAWITEMSTRUCT) lParam;
+
+			FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
+			//TODO draw console image
+//			MoveToEx(drawItem->hDC, 0, 0, NULL);
+//			LineTo(drawItem->hDC, 10, 10);
+//			MoveToEx(drawItem->hDC, 30, 30, NULL);
+//			LineTo(drawItem->hDC, 40, 40);
+
+			DeleteObject((HGDIOBJ)hBrush);
+			return TRUE;
+		}
+		case WM_COMMAND:
+		{
+			switch(LOWORD(wParam))
+			{
+				case IDC_CHECK_SYSTEM_POS_WINDOW:
+				{
+					LONG res = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
+					if (res == BST_CHECKED)
+					{
+						ULONG left, top;
+
+						left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, FALSE);
+						top = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, FALSE);
+						pConInfo->WindowPosition = MAKELONG(left, top);
+						SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+						EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), TRUE);
+						EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), TRUE);
+						EnableWindow(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT), TRUE);
+						EnableWindow(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP), TRUE);
+					}
+					else if (res == BST_UNCHECKED)
+					{
+						pConInfo->WindowPosition = -1;
+						SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+						EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), FALSE);
+						EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), FALSE);
+						EnableWindow(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT), FALSE);
+						EnableWindow(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP), FALSE);
+					}
+				}
+			}
 		}
 		default:
 			break;
