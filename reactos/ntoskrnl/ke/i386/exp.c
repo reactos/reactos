@@ -551,7 +551,8 @@ NTAPI
 KiEspFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
 {
     /* Check if this is user-mode or V86 */
-    if ((TrapFrame->SegCs & MODE_MASK) || (TrapFrame->EFlags & X86_EFLAGS_VM))
+    if ((TrapFrame->SegCs & MODE_MASK) ||
+        (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
         /* Return it directly */
         return TrapFrame->HardwareEsp;
@@ -580,7 +581,7 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     ULONG Previous = KiEspFromTrapFrame(TrapFrame);
 
     /* Check if this is user-mode or V86 */
-    if ((TrapFrame->SegCs & MODE_MASK) || (TrapFrame->EFlags & X86_EFLAGS_VM))
+    if ((TrapFrame->SegCs & MODE_MASK) || (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
         /* Write it directly */
         TrapFrame->HardwareEsp = Esp;
@@ -588,10 +589,7 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     else
     {
         /* Don't allow ESP to be lowered, this is illegal */
-        if (Esp < Previous)
-        {
-            KeBugCheck(SET_OF_INVALID_CONTEXT);
-        }
+        if (Esp < Previous) KeBugCheck(SET_OF_INVALID_CONTEXT);
 
         /* Create an edit frame, check if it was alrady */
         if (!(TrapFrame->SegCs & FRAME_EDITED))
@@ -620,7 +618,7 @@ NTAPI
 KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
 {
     /* If this was V86 Mode */
-    if (TrapFrame->EFlags & X86_EFLAGS_VM)
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
     {
         /* Just return it */
         return TrapFrame->HardwareSegSs;
@@ -646,7 +644,7 @@ KiSsToTrapFrame(IN PKTRAP_FRAME TrapFrame,
     Ss &= 0xFFFF;
 
     /* If this was V86 Mode */
-    if (TrapFrame->EFlags & X86_EFLAGS_VM)
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
     {
         /* Just write it */
         TrapFrame->HardwareSegSs = Ss;
@@ -686,13 +684,17 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     PFX_SAVE_AREA FxSaveArea;
     ULONG i;
     BOOLEAN V86Switch = FALSE;
+    KIRQL OldIrql = APC_LEVEL;
+
+    /* Do this at APC_LEVEL */
+    if (KeGetCurrentIrql() < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Start with the basic Registers */
     if ((ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
     {
         /* Check if we went through a V86 switch */
-        if ((Context->EFlags & X86_EFLAGS_VM) !=
-            (TrapFrame->EFlags & X86_EFLAGS_VM))
+        if ((Context->EFlags & EFLAGS_V86_MASK) !=
+            (TrapFrame->EFlags & EFLAGS_V86_MASK))
         {
             /* We did, remember this for later */
             V86Switch = TRUE;
@@ -706,7 +708,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         TrapFrame->Eip = Context->Eip;
 
         /* Check if we were in V86 Mode */
-        if (TrapFrame->EFlags & X86_EFLAGS_VM)
+        if (TrapFrame->EFlags & EFLAGS_V86_MASK)
         {
             /* Simply copy the CS value */
             TrapFrame->SegCs = Context->SegCs;
@@ -737,6 +739,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     /* Process the Integer Registers */
     if ((ContextFlags & CONTEXT_INTEGER) == CONTEXT_INTEGER)
     {
+        /* Copy them manually */
         TrapFrame->Eax = Context->Eax;
         TrapFrame->Ebx = Context->Ebx;
         TrapFrame->Ecx = Context->Ecx;
@@ -749,7 +752,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     if ((ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
     {
         /* Check if we were in V86 Mode */
-        if (TrapFrame->EFlags & X86_EFLAGS_VM)
+        if (TrapFrame->EFlags & EFLAGS_V86_MASK)
         {
             /* Copy the V86 Segments directlry */
             TrapFrame->V86Ds = Context->SegDs;
@@ -788,8 +791,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
 
     /* Handle the extended registers */
     if (((ContextFlags & CONTEXT_EXTENDED_REGISTERS) ==
-        CONTEXT_EXTENDED_REGISTERS) &&
-        ((TrapFrame->SegCs & MODE_MASK) == UserMode))
+        CONTEXT_EXTENDED_REGISTERS) && (TrapFrame->SegCs & MODE_MASK))
     {
         /* Get the FX Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
@@ -817,8 +819,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
 
     /* Handle the floating point state */
     if (((ContextFlags & CONTEXT_FLOATING_POINT) ==
-        CONTEXT_FLOATING_POINT) &&
-        ((TrapFrame->SegCs & MODE_MASK) == UserMode))
+        CONTEXT_FLOATING_POINT) && (TrapFrame->SegCs & MODE_MASK))
     {
         /* Get the FX Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
@@ -840,7 +841,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                 FxSaveArea->U.FxArea.TagWord =
                     KiTagWordFnsaveToFxsave((USHORT)Context->FloatSave.TagWord);
                 FxSaveArea->U.FxArea.ErrorOpcode =
-                    (USHORT)(Context->FloatSave.ErrorSelector >> 16);
+                    (USHORT)((Context->FloatSave.ErrorSelector >> 16) & 0xFFFF);
                 FxSaveArea->U.FxArea.ErrorOffset =
                     Context->FloatSave.ErrorOffset;
                 FxSaveArea->U.FxArea.ErrorSelector =
@@ -848,10 +849,11 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                 FxSaveArea->U.FxArea.DataOffset =
                     Context->FloatSave.DataOffset;
                 FxSaveArea->U.FxArea.DataSelector =
-                    Context->FloatSave.DataSelector & 0xFFFF;
+                    Context->FloatSave.DataSelector;
 
                 /* Clear out the Register Area */
-                RtlZeroMemory(&FxSaveArea->U.FxArea.RegisterArea[0], SIZE_OF_FX_REGISTERS);
+                RtlZeroMemory(&FxSaveArea->U.FxArea.RegisterArea[0],
+                              SIZE_OF_FX_REGISTERS);
 
                 /* Loop the 8 floating point registers */
                 for (i = 0; i < 8; i++)
@@ -878,6 +880,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         else
         {
             /* FIXME: Handle FPU Emulation */
+            ASSERT(FALSE);
         }
     }
 
@@ -900,6 +903,9 @@ KeContextToTrapFrame(IN PCONTEXT Context,
                 (Context->Dr7 & DR7_ACTIVE);
         }
     }
+
+    /* Restore IRQL */
+    if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
 }
 
 VOID
@@ -915,6 +921,10 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         FLOATING_SAVE_AREA UnalignedArea;
     } FloatSaveBuffer;
     FLOATING_SAVE_AREA *FloatSaveArea;
+    KIRQL OldIrql = APC_LEVEL;
+
+    /* Do this at APC_LEVEL */
+    if (KeGetCurrentIrql() < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Start with the Control flags */
     if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
@@ -926,7 +936,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
         /* Return the correct CS */
         if (!(TrapFrame->SegCs & FRAME_EDITED) &&
-            !(TrapFrame->EFlags & X86_EFLAGS_VM))
+            !(TrapFrame->EFlags & EFLAGS_V86_MASK))
         {
             /* Get it from the Temp location */
             Context->SegCs = TrapFrame->TempSegCs & 0xFFFF;
@@ -946,7 +956,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
     {
         /* Do V86 Mode first */
-        if (TrapFrame->EFlags & X86_EFLAGS_VM)
+        if (TrapFrame->EFlags & EFLAGS_V86_MASK)
         {
             /* Return from the V86 location */
             Context->SegGs = TrapFrame->V86Gs & 0xFFFF;
@@ -988,8 +998,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
     /* Handle extended registers */
     if (((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) ==
-        CONTEXT_EXTENDED_REGISTERS) &&
-        ((TrapFrame->SegCs & MODE_MASK) == UserMode))
+        CONTEXT_EXTENDED_REGISTERS) && (TrapFrame->SegCs & MODE_MASK))
     {
         /* Get the FX Save Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
@@ -1009,8 +1018,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
     /* Handle Floating Point */
     if (((Context->ContextFlags & CONTEXT_FLOATING_POINT) ==
-        CONTEXT_FLOATING_POINT) &&
-        ((TrapFrame->SegCs & MODE_MASK) == UserMode))
+        CONTEXT_FLOATING_POINT) && (TrapFrame->SegCs & MODE_MASK))
     {
         /* Get the FX Save Area */
         FxSaveArea = (PFX_SAVE_AREA)(TrapFrame + 1);
@@ -1037,13 +1045,13 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
             /* Copy into the Context */
             RtlCopyMemory(&Context->FloatSave,
-                          &FxSaveArea->U.FnArea,
+                          FloatSaveArea,
                           sizeof(FNSAVE_FORMAT));
          }
          else
          {
             /* FIXME: Handle Emulation */
-             Context->ContextFlags &= (~CONTEXT_FLOATING_POINT) | CONTEXT_i386;
+            ASSERT(FALSE);
          }
     }
 
@@ -1072,6 +1080,9 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
             Context->Dr7 = 0;
         }
     }
+
+    /* Restore IRQL */
+    if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
 }
 
 VOID
