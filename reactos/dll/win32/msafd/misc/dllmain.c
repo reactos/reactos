@@ -597,11 +597,7 @@ WSPSelect(
     ULONG				i, j = 0, x;
     HANDLE                              SockEvent;
     BOOL                                HandleCounted;
-    
-    Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
-			    NULL, 1, FALSE );
-    
-    if( !NT_SUCCESS(Status) ) return SOCKET_ERROR;
+    LARGE_INTEGER                       Timeout;
     
     /* Find out how many sockets we have, and how large the buffer needs 
      * to be */
@@ -613,30 +609,54 @@ WSPSelect(
 
     if( HandleCount < 0 || nfds != 0 ) HandleCount = nfds * 3;
 
-    PollBufferSize = sizeof(*PollInfo) + 
-	(HandleCount * sizeof(AFD_HANDLE));
+    PollBufferSize = sizeof(*PollInfo) + (HandleCount * sizeof(AFD_HANDLE));
     
     AFD_DbgPrint(MID_TRACE,("HandleCount: %d BufferSize: %d\n", 
                             HandleCount, PollBufferSize));
 
-    /* Allocate */
-    PollBuffer = HeapAlloc(GlobalHeap, 0, PollBufferSize);
-    PollInfo = (PAFD_POLL_INFO)PollBuffer;
-    
-    RtlZeroMemory( PollInfo, PollBufferSize );
-
     /* Convert Timeout to NT Format */
     if (timeout == NULL) {
-	PollInfo->Timeout.u.LowPart = -1;
-	PollInfo->Timeout.u.HighPart = 0x7FFFFFFF;
+	Timeout.u.LowPart = -1;
+	Timeout.u.HighPart = 0x7FFFFFFF;
+	AFD_DbgPrint(MAX_TRACE,("Infinite timeout\n"));
     } else {
-	PollInfo->Timeout = RtlEnlargedIntegerMultiply
-	    ((timeout->tv_sec * 1000) + timeout->tv_usec, -10000);
+	Timeout = RtlEnlargedIntegerMultiply
+	    ((timeout->tv_sec * 1000) + (timeout->tv_usec / 1000), -10000);
+	/* Negative timeouts are illegal.  Since the kernel represents an 
+	 * incremental timeout as a negative number, we check for a positive
+	 * result.
+	 */
+	if (Timeout.QuadPart > 0) {
+	  if (lpErrno) *lpErrno = WSAEINVAL;
+	  return SOCKET_ERROR;
+	}
+	AFD_DbgPrint(MAX_TRACE,("Timeout: Orig %d.%06d kernel %d\n",
+				timeout->tv_sec, timeout->tv_usec,
+				Timeout.u.LowPart));
     }
     
+    Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+			    NULL, 1, FALSE );
+    
+    if( !NT_SUCCESS(Status) ) return SOCKET_ERROR;
+    
+    /* Allocate */
+    PollBuffer = HeapAlloc(GlobalHeap, 0, PollBufferSize);
+
+    if (!PollBuffer) {
+      if (*lpErrno) *lpErrno = WSAEFAULT;
+      NtClose(SockEvent);
+      return SOCKET_ERROR;
+    }
+
+    PollInfo = (PAFD_POLL_INFO)PollBuffer;
+
+    RtlZeroMemory( PollInfo, PollBufferSize );
+
     /* Number of handles for AFD to Check */
     PollInfo->HandleCount = HandleCount;
     PollInfo->Exclusive = FALSE;
+    PollInfo->Timeout = Timeout;
     
     if (readfds != NULL) {
 	for (i = 0; i < readfds->fd_count; i++, j++) {
@@ -734,6 +754,7 @@ WSPSelect(
 	}
     }
 
+    HeapFree( GlobalHeap, 0, PollBuffer );
     NtClose( SockEvent );
 
     AFD_DbgPrint(MID_TRACE,("lpErrno = %x\n", lpErrno));
