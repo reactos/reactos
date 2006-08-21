@@ -135,6 +135,9 @@ Author:
 #define KPCR_SELF                               0x1C
 #define KPCR_PRCB                               0x20
 #define KPCR_IRQL                               0x24
+#define KPCR_IRR                                0x28
+#define KPCR_IRR_ACTIVE                         0x2C
+#define KPCR_IDR                                0x30
 #define KPCR_KD_VERSION_BLOCK                   0x34
 #define KPCR_IDT                                0x38
 #define KPCR_GDT                                0x3C
@@ -148,6 +151,7 @@ Author:
 #define KPCR_NPX_THREAD                         0x640
 #define KPCR_DR6                                0x428
 #define KPCR_DR7                                0x42C
+#define KPCR_PRCB_INTERRUPT_COUNT               0x644
 #define KPCR_SYSTEM_CALLS                       0x6B8
 #define KPCR_PRCB_DPC_ROUTINE_ACTIVE            0x994
 
@@ -400,6 +404,9 @@ Author:
 //
 #define PASSIVE_LEVEL                           0x0
 #define APC_LEVEL                               0x1
+#define DISPATCH_LEVEL                          0x2
+#define CLOCK2_LEVEL                            0x1C
+#define HIGH_LEVEL                              0x1F
 #endif
 
 //
@@ -423,6 +430,11 @@ Author:
 #define MACHINE_TYPE_ISA                        0x0000
 #define MACHINE_TYPE_EISA                       0x0001
 #define MACHINE_TYPE_MCA                        0x0002
+
+//
+// Vector base
+//
+#define PRIMARY_VECTOR_BASE                     0x30
 
 //
 // Kernel Feature Bits

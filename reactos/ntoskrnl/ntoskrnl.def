@@ -656,7 +656,7 @@ KeWaitForMutexObject@20=KeWaitForSingleObject@20
 KeWaitForSingleObject@20
 @KefAcquireSpinLockAtDpcLevel@4
 @KefReleaseSpinLockFromDpcLevel@4
-;Kei386EoiHelper
+Kei386EoiHelper@0
 @KiAcquireSpinLock@4
 ;KiBugCheckData DATA
 KiCoprocessorError@0
@@ -667,7 +667,7 @@ KiEnableTimerWatchdog
 KiInterruptDispatch2@8
 KiIpiServiceRoutine@8
 @KiReleaseSpinLock@4
-KiUnexpectedInterrupt@0
+KiUnexpectedInterrupt
 ;Kii386SpinOnSpinLock
 KiRawTicks DATA
 LdrAccessResource@16

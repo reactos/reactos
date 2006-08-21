@@ -64,19 +64,86 @@
 #endif
 
 //
-// @name SET_TF_DEBUG_HEADER
+// @name IDT
 //
-// This macro sets up the debug header in the trap frame.
+// This macro creates an IDT entry for the given handler
 //
-// @param None.
+// @param Handler
+//        Pointer to the IDT handler
 //
-// @remark ebp = PKTRAP_FRAME.
-//         edi/ebx = Have been saved and can be used.
+// @param Bits
+//        Descriptor Bits to associate
+//
+// @remark None.
 //
 .macro idt Handler, Bits
     .long \Handler
     .short \Bits
     .short KGDT_R0_CODE
+.endm
+
+//
+// @name GENERATE_IDT_STUB
+//
+// This macro creates an IDT entry for an unexpected interrupt handler.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro GENERATE_IDT_STUB Number
+idt _KiUnexpectedInterrupt&Number, INT_32_DPL0
+.endm
+
+//
+// @name GENERATE_IDT_STUBS
+//
+// This macro creates unexpected interrupt IDT entries.
+//
+// @param None.
+//
+// @remark None.
+//
+.altmacro
+.macro GENERATE_IDT_STUBS
+.set i, 0
+.rept 208
+    GENERATE_IDT_STUB %i
+    .set i, i + 1
+.endr
+.endm
+
+//
+// @name GENERATE_INT_HANDLER
+//
+// This macro creates an unexpected interrupt handler.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro GENERATE_INT_HANDLER Number
+_KiUnexpectedInterrupt&Number:
+    push PRIMARY_VECTOR_BASE + Number
+    jmp _KiEndUnexpected
+.endm
+
+//
+// @name GENERATE_INT_HANDLERS
+//
+// This macro creates the unexpected interrupt handlers.
+//
+// @param None.
+//
+// @remark None.
+//
+.altmacro
+.macro GENERATE_INT_HANDLERS
+.set i, 0
+.rept 208
+    GENERATE_INT_HANDLER %i
+    .set i, i + 1
+.endr
 .endm
 
 //
@@ -252,6 +319,93 @@
 \
     /* Set the Trap Frame Debug Header */ \
     SET_TF_DEBUG_HEADER
+
+//
+// @name INT_PROLOG
+// 
+// This macro creates a standard interrupt entry prologue.
+// It should be used for entry into any interrupt, including software.
+//
+// @param Label
+//        Identifying name of the caller function; will be used to append
+//        to the name V86, ABIOS and DR helper functions, which must exist.
+//
+// @remark For software interrupts, make sure that a fake INT stack is created.
+//
+.macro INT_PROLOG Label
+    /* Save fake error code */
+    push esp
+
+    /* Save the non-volatiles */
+    push ebp
+    push ebx
+    push esi
+    push edi
+
+    /* Skip debug registers and other stuff */
+    sub esp, 0x54
+
+    /* Set up frame */
+    mov ebp, esp
+
+    /* Save volatiles */ 
+    mov [esp+KTRAP_FRAME_EAX], eax
+    mov [esp+KTRAP_FRAME_ECX], ecx
+    mov [esp+KTRAP_FRAME_EDX], edx
+    mov dword ptr [esp+KTRAP_FRAME_EXCEPTION_LIST], -1
+
+    /* Check if this was from V86 Mode */
+    /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK */
+    /* jnz V86_&Label*/
+
+    /* Check if this was kernel mode */
+    cmp dword ptr [esp+KTRAP_FRAME_CS], KGDT_R0_CODE
+    jz 1f
+
+    /* Set segments */
+    mov word ptr [esp+KTRAP_FRAME_FS], fs
+    mov word ptr [esp+KTRAP_FRAME_DS], ds
+    mov word ptr [esp+KTRAP_FRAME_ES], es
+    mov word ptr [esp+KTRAP_FRAME_GS], gs
+
+    /* Load the segment registers */
+    mov ebx, KGDT_R0_PCR
+    mov eax, KGDT_R3_DATA | RPL_MASK
+    mov fs, bx
+    mov ds, ax
+    mov es, ax
+
+1: 
+    /* Save the previous exception list */
+    mov ebx, [fs:KPCR_EXCEPTION_LIST]
+    mov [esp+KTRAP_FRAME_EXCEPTION_LIST], ebx
+
+    /* Set the exception handler chain terminator */
+    mov dword ptr [fs:KPCR_EXCEPTION_LIST], -1
+
+    /* Check if this is the ABIOS stack */
+    /* cmp esp, 0x10000*/
+    /* jb Abios_Label*/
+
+    /* Delete error code */
+    and dword ptr [esp+KTRAP_FRAME_ERROR_CODE], 0
+
+    /* Get the current thread and clear direction flag */
+    mov ecx, [fs:KPCR_CURRENT_THREAD]
+    cld
+
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
+
+    /* Save DR registers if needed */
+    //jnz Dr_&Label
+
+    /* Set the trap frame debug header */
+    SET_TF_DEBUG_HEADER
+.endm
 
 //
 // @name SYSCALL_PROLOG

@@ -46,9 +46,7 @@ idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
 idt _KiDebugService,   INT_32_DPL3  /* INT 2D: Debug Service Handler        */
 idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
-.rept 220
-idt _KiTrap0F,         INT_32_DPL0  /* INT 30-FF: UNDEFINED INTERRUPTS      */
-.endr
+GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
 /* System call entrypoints:                                                 */
 .globl _KiFastCallEntry
@@ -62,13 +60,14 @@ idt _KiTrap0F,         INT_32_DPL0  /* INT 30-FF: UNDEFINED INTERRUPTS      */
 .globl _KiServiceExit               /* Exit from syscall                    */
 .globl _KiServiceExit2              /* Exit from syscall with complete frame*/
 .globl _Kei386EoiHelper@0           /* Exit from interrupt or H/W trap      */
+.globl _Kei386EoiHelper2ndEntry     /* Exit from unexpected interrupt       */
 
 .globl _KiIdtDescriptor
 _KiIdtDescriptor:
     .short 0x800
     .long _KiIdt
 
-/* FUNCTIONS ****************************************************************/
+/* SOFTWARE INTERRUPT SERVICES ***********************************************/
 
 _KiGetTickCount:
 _KiCallbackReturn:
@@ -490,6 +489,7 @@ _Kei386EoiHelper@0:
     CHECK_FOR_APC_DELIVER 0
 
     /* Exit and cleanup */
+_Kei386EoiHelper2ndEntry:
     TRAP_EPILOG NotFromSystemCall, DoNotRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
 .endfunc
 
@@ -670,6 +670,8 @@ Error:
     jmp _KiServiceExit
 .endfunc
 
+/* EXCEPTION DISPATCHERS *****************************************************/
+
 .func CommonDispatchException
 _CommonDispatchException:
 
@@ -746,6 +748,8 @@ _DispatchTwoParam:
     mov ecx, 2
     call _CommonDispatchException
 .endfunc
+
+/* HARDWARE TRAP HANDLERS ****************************************************/
 
 .func KiTrap0
 _KiTrap0:
@@ -1291,4 +1295,54 @@ _KiSystemFatalException:
     ret
 .endfunc
 
+/* INTERRUPT HANDLERS ********************************************************/
 
+.globl _KiStartUnexpected
+_KiStartUnexpected:
+
+GENERATE_INT_HANDLERS
+
+_KiEndUnexpected:
+    jmp _KiUnexpectedInterruptTail
+
+.func KiUnexpectedInterruptTail
+_KiUnexpectedInterruptTail:
+
+    /* Enter interrupt trap */
+    INT_PROLOG(kui)
+
+    /* Increase interrupt count */
+    inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]
+
+    /* Put vector in EBX and make space for KIRQL */
+    mov ebx, [esp]
+    sub esp, 4
+
+    /* Begin interrupt */
+    push esp
+    push ebx
+    push HIGH_LEVEL
+    call _HalBeginSystemInterrupt@12
+
+    /* Check if it was spurious or not */
+    or eax, eax
+    jnz Handled
+
+    /* Spurious, ignore it */
+    add esp, 8
+    jmp _Kei386EoiHelper2ndEntry
+
+Handled:
+    /* Unexpected, exit the interrupt */
+    mov esi, $
+    cli
+    call _HalEndSystemInterrupt@8
+    jmp _Kei386EoiHelper@0
+.endfunc
+
+.globl _KiUnexpectedInterrupt
+_KiUnexpectedInterrupt:
+
+    /* Bugcheck with invalid interrupt code */
+    push 0x12
+    call _KeBugCheck@4
