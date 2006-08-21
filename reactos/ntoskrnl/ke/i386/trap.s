@@ -12,17 +12,6 @@
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
 
-/*
-  * FIXMEs:
-  *         - Implement kernel-mode GPF handler, possibly fixing below:
-  *         - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
-  *           and only when called from user-mode, and returning to user-mode.
-  *         - Implement Invalid Opcode handler.
-  *         - Figure out what the DEBUGEIP hack is for and how it can be moved away.
-  *         - Add DR macro/save and VM macro/save.
-  *         - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
-  */
-
 /* GLOBALS ******************************************************************/
 
 .globl _KiIdt

@@ -24,6 +24,20 @@
 //  - Add Directory Lock.
 //  - Use Object Type Mutex/Lock.
 //
+// Ke:
+//  - Make sure IRQ trap code is synchronized with current trap code.
+//  - Reimplement the V86 support using a mode that will be compatible with
+//    VDM and the future and use ABIOS gates.
+//  - Implement Invalid Opcode and GPD handlers for V86-mode.
+//  - Implement stack fault and segment fault handlers.
+//  - Implement kernel-mode GPF handler, possibly fixing below:
+//  - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
+//    and only when called from user-mode, and returning to user-mode.
+//  - Figure out what the DEBUGEIP hack is for and how it can be moved away.
+//  - Add DR macro/save and VM macro/save.
+//  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
+//
+//
 // Ex:
 //  - Use pushlocks for handle implementation.
 //

@@ -27,7 +27,6 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file first="true">main_asm.S</file>
-				<file>bios.c</file>
 				<file>cpu.S</file>
 				<file>ctxswitch.S</file>
 				<file>exp.c</file>
@@ -41,7 +40,6 @@
 				<file>trap.s</file>
 				<file>tss.c</file>
 				<file>usercall_asm.S</file>
-				<file>usertrap.c</file>
 				<file>v86m.c</file>
 				<file>v86m_sup.S</file>
 				<file>vdm.c</file>
