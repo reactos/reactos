@@ -1979,6 +1979,9 @@ NtReadFile(IN HANDLE FileHandle,
                                         IopReadTransfer);
 }
 
+/*
+ * @unimplemented
+ */
 NTSTATUS
 NTAPI
 NtReadFileScatter(IN HANDLE FileHandle,
