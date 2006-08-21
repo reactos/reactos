@@ -916,7 +916,7 @@ IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
    static LOGFONTW DefaultFont = {
                                     -11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                                     0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS,
-                                    L"MS Sans Serif"
+                                    L"Bitstream Vera Sans"
                                  };
 
    RtlZeroMemory(&QueryTable, sizeof(QueryTable));
