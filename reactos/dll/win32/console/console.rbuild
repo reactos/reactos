@@ -10,6 +10,7 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>gdi32</library>
 	<file>console.c</file>
 	<file>options.c</file>
 	<file>font.c</file>
