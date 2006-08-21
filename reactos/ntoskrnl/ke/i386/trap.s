@@ -679,6 +679,84 @@ Error:
     jmp _KiServiceExit
 .endfunc
 
+.func CommonDispatchException
+_CommonDispatchException:
+
+    /* Make space for an exception record */
+    sub esp, EXCEPTION_RECORD_LENGTH
+
+    /* Set it up */
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_CODE], eax
+    xor eax, eax
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_FLAGS], eax
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_RECORD], eax
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_ADDRESS], ebx
+    mov [esp+EXCEPTION_RECORD_NUMBER_PARAMETERS], ecx
+
+    /* Check parameter count */
+    cmp eax, 0
+    jz NoParams
+
+    /* Get information */
+    lea ebx, [esp+SIZEOF_EXCEPTION_RECORD]
+    mov [ebx], edx
+    mov [ebx+4], esi
+    mov [ebx+8], edi
+
+NoParams:
+
+    /* Set the record in ECX and check if this was V86 */
+    mov ecx, esp
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jz SetPreviousMode
+
+    /* Set V86 mode */
+    mov eax, 0xFFFF
+    jmp MaskMode
+
+SetPreviousMode:
+
+    /* Calculate the previous mode */
+    mov eax, [ebp+KTRAP_FRAME_CS]
+MaskMode:
+    and eax, MODE_MASK
+
+    /* Dispatch the exception */
+    push 1
+    push eax
+    push ebp
+    push 0
+    push ecx
+    call _KiDispatchException@20
+
+    /* End the trap */
+    jmp _Kei386EoiHelper@0
+.endfunc
+
+.func DispatchNoParam
+_DispatchNoParam:
+    /* Call the common dispatcher */
+    xor ecx, ecx
+    call _CommonDispatchException
+.endfunc
+
+.func DispatchOneParam
+_DispatchOneParam:
+    /* Call the common dispatcher */
+    xor edx, edx
+    mov ecx, 1
+    call _CommonDispatchException
+.endfunc
+
+.func DispatchTwoParam
+_DispatchTwoParam:
+    /* Call the common dispatcher */
+    xor edx, edx
+    mov ecx, 2
+    call _CommonDispatchException
+.endfunc
+
+.func KiTrap0
 _KiTrap0:
     /* Push error code */
     push 0
@@ -686,19 +764,38 @@ _KiTrap0:
     /* Enter trap */
     TRAP_PROLOG(0)
 
-    /* Call the C exception handler */
-    push 0
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int0
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz EnableInterrupts
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Check the old mode */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne VdmCheck
 
+SendException:
+    /* Re-enable interrupts for user-mode and send the exception */
+    sti
+    mov eax, STATUS_INTEGER_DIVIDE_BY_ZERO
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    jmp _DispatchNoParam
+
+VdmCheck:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz SendException
+
+    /* We don't support this yet! */
+V86Int0:
+    int 3
+.endfunc
+
+.func KiTrap1
 _KiTrap1:
     /* Push error code */
     push 0
@@ -706,38 +803,51 @@ _KiTrap1:
     /* Enter trap */
     TRAP_PROLOG(1)
 
-    /* Call the C exception handler */
-    push 1
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int1
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz PrepInt1
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Check the old mode */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne V86Int1
 
+EnableInterrupts:
+    /* Enable interrupts for user-mode */
+    sti
+
+PrepInt1:
+    /* Prepare the exception */
+    and dword ptr [ebp+KTRAP_FRAME_EFLAGS], ~EFLAGS_TF
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov eax, STATUS_SINGLE_STEP
+    jmp _DispatchNoParam
+
+V86Int1:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz EnableInterrupts
+
+    /* We don't support VDM! */
+    int 3
+.endfunc
+
+.func KiTrap2
 _KiTrap2:
-    /* Push error code */
+
+    /* FIXME: This is an NMI, nothing like a normal exception */
     push 0
-
-    /* Enter trap */
-    TRAP_PROLOG(2)
-
-    /* Call the C exception handler */
+    push 0
+    push 0
     push 2
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    push UNEXPECTED_KERNEL_MODE_TRAP
+    call _KeBugCheckEx@20
+.endfunc
 
 _KiTrap3:
     /* Push error code */

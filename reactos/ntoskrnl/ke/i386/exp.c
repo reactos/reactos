@@ -499,6 +499,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    /*
     * Check for stack underflow, this may be obsolete
     */
+   DPRINT1("Exception: %x\n", ExceptionNr);
    if (PsGetCurrentThread() != NULL &&
        Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
      {

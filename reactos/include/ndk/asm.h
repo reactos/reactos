@@ -120,6 +120,7 @@ Author:
 #define KPROCESS_INT21_DESCRIPTOR1              0x2C
 #define KPROCESS_IOPM_OFFSET                    0x30
 #define KPROCESS_ACTIVE_PROCESSORS              0x34
+#define EPROCESS_VDM_OBJECTS                    0x144
 
 //
 // KPCR Offsets
@@ -272,6 +273,7 @@ Author:
 #define EXCEPTION_RECORD_EXCEPTION_ADDRESS      0xC
 #define EXCEPTION_RECORD_NUMBER_PARAMETERS      0x10
 #define SIZEOF_EXCEPTION_RECORD                 0x14
+#define EXCEPTION_RECORD_LENGTH                 0x50
 
 //
 // TEB Offsets
@@ -381,6 +383,9 @@ Author:
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
 #define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
 #define STATUS_NO_CALLBACK_ACTIVE               0xC0000258
+#define STATUS_SINGLE_STEP                      0x80000004
+#define STATUS_INTEGER_DIVIDE_BY_ZERO           0xC0000094
+#define STATUS_INTEGER_OVERFLOW                 0xC0000095
 #define APC_INDEX_MISMATCH                      0x01
 #define TRAP_CAUSE_UNKNOWN                      0x12
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
