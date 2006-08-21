@@ -770,7 +770,7 @@ _KiTrap0:
 
     /* Check if the frame was from kernelmode */
     test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz EnableInterrupts
+    jz SendException
 
     /* Check the old mode */
     cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
@@ -849,6 +849,7 @@ _KiTrap2:
     call _KeBugCheckEx@20
 .endfunc
 
+.func KiTrap3
 _KiTrap3:
     /* Push error code */
     push 0
@@ -856,19 +857,47 @@ _KiTrap3:
     /* Enter trap */
     TRAP_PROLOG(3)
 
-    /* Call the C exception handler */
-    push 3
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int3
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz PrepInt3
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Check the old mode */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne V86Int3
 
+EnableInterrupts3:
+    /* Enable interrupts for user-mode */
+    sti
+
+PrepInt3:
+    /* Prepare the exception */
+    mov esi, ecx
+    mov edi, edx
+    mov edx, eax
+
+    /* Setup EIP, NTSTATUS and parameter count, then dispatch */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    dec ebx
+    mov eax, STATUS_BREAKPOINT
+    mov ecx, 3
+    call _CommonDispatchException
+
+V86Int3:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz EnableInterrupts3
+
+    /* We don't support VDM! */
+    int 3
+.endfunc
+
+.func KiTrap4
 _KiTrap4:
     /* Push error code */
     push 0
@@ -876,19 +905,39 @@ _KiTrap4:
     /* Enter trap */
     TRAP_PROLOG(4)
 
-    /* Call the C exception handler */
-    push 4
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int4
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz SendException4
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Check the old mode */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne VdmCheck4
 
+SendException4:
+    /* Re-enable interrupts for user-mode and send the exception */
+    sti
+    mov eax, STATUS_INTEGER_OVERFLOW
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    dec ebx
+    jmp _DispatchNoParam
+
+VdmCheck4:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz SendException4
+
+    /* We don't support this yet! */
+V86Int4:
+    int 3
+.endfunc
+
+.func KiTrap5
 _KiTrap5:
     /* Push error code */
     push 0
@@ -896,18 +945,45 @@ _KiTrap5:
     /* Enter trap */
     TRAP_PROLOG(5)
 
-    /* Call the C exception handler */
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int5
+
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jnz CheckMode
+
+    /* It did, and this should never happen */
+    push 0
+    push 0
+    push 0
     push 5
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    push UNEXPECTED_KERNEL_MODE_TRAP
+    call _KeBugCheckEx@20
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check the old mode */
+CheckMode:
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne VdmCheck5
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Re-enable interrupts for user-mode and send the exception */
+SendException5:
+    sti
+    mov eax, STATUS_ARRAY_BOUNDS_EXCEEDED
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    jmp _DispatchNoParam
+
+VdmCheck5:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz SendException5
+
+    /* We don't support this yet! */
+V86Int5:
+    int 3
+.endfunc
 
 _KiTrap6:
     /* Push error code */
