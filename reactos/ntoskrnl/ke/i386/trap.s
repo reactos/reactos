@@ -41,7 +41,7 @@ idt _KiTrap11,         INT_32_DPL0  /* INT 0B: Segment Not Present (#NP)    */
 idt _KiTrap12,         INT_32_DPL0  /* INT 0C: Stack Fault Exception (#SS)  */
 idt _KiTrap13,         INT_32_DPL0  /* INT 0D: General Protection (#GP)     */
 idt _KiTrap14,         INT_32_DPL0  /* INT 0E: Page-Fault Exception (#PF)   */
-idt _KiTrap15,         INT_32_DPL0  /* INT 0F: RESERVED [FIXME: HBIRR HACK] */
+idt _KiTrap0F,         INT_32_DPL0  /* INT 0F: RESERVED                     */
 idt _KiTrap16,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
 idt _KiTrap17,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
@@ -1143,10 +1143,19 @@ BogusTrap:
 .endfunc
 
 .globl _KiTrap8
+.func KiTrap8
 _KiTrap8:
-    call _KiDoubleFaultHandler
-    iret
 
+    /* Can't really do too much */
+    push 0
+    push 0
+    push 0
+    push 8
+    push UNEXPECTED_KERNEL_MODE_TRAP
+    call _KeBugCheckEx@20
+.endfunc
+
+.func KiTrap9
 _KiTrap9:
     /* Push error code */
     push 0
@@ -1154,37 +1163,48 @@ _KiTrap9:
     /* Enter trap */
     TRAP_PROLOG(9)
 
-    /* Call the C exception handler */
+    /* Enable interrupts and bugcheck */
+    sti
+    push 0
+    push 0
+    push 0
     push 9
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    push UNEXPECTED_KERNEL_MODE_TRAP
+    call _KeBugCheckEx@20
+.endfunc
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
-#if 1
+.func KiTrap10
 _KiTrap10:
     /* Enter trap */
     TRAP_PROLOG(10)
 
-    /* Call the C exception handler */
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86IntA
+
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz Fatal
+
+V86IntA:
+    /* Check if OF was set during iretd */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAG_ZERO
+    sti
+    jz Fatal
+
+    /* It was, just mask it out */
+    and dword ptr [ebp+KTRAP_FRAME_EFLAGS], ~EFLAG_ZERO
+    jmp _Kei386EoiHelper@0
+
+Fatal:
+    /* TSS failure for some other reason: crash */
+    push 0
+    push 0
+    push 0
     push 10
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-#endif
+    push UNEXPECTED_KERNEL_MODE_TRAP
+    call _KeBugCheckEx@20
+.endfunc
 
 _KiTrap11:
     /* Enter trap */
@@ -1220,7 +1240,6 @@ _KiTrap12:
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
-#if 1
 _KiTrap13:
     /* Enter trap */
     TRAP_PROLOG(13)
@@ -1237,7 +1256,6 @@ _KiTrap13:
     /* Return to caller */
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
-#endif
 
 _KiTrap14:
     /* Enter trap */
@@ -1256,25 +1274,17 @@ _KiTrap14:
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
 
-_KiTrap15:
+_KiTrap0F:
     /* Push error code */
     push 0
 
     /* Enter trap */
     TRAP_PROLOG(15)
+    sti
 
-    /* Call the C exception handler */
-    push 15
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Raise a fatal exception */
+    mov eax, 15
+    jmp _KiSystemFatalException
 
 _KiTrap16:
     /* Push error code */
@@ -1315,18 +1325,6 @@ _KiTrap17:
     /* Return to caller */
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
-
-_KiTrap0F:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG(15)
-    sti
-
-    /* Raise a fatal exception */
-    mov eax, 15
-    jmp _KiSystemFatalException
 
 .func KiSystemFatalException
 _KiSystemFatalException:
