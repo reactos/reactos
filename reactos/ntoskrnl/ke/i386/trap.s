@@ -841,12 +841,8 @@ V86Int1:
 _KiTrap2:
 
     /* FIXME: This is an NMI, nothing like a normal exception */
-    push 0
-    push 0
-    push 0
-    push 2
-    push UNEXPECTED_KERNEL_MODE_TRAP
-    call _KeBugCheckEx@20
+    mov eax, 2
+    jmp _KiSystemFatalException
 .endfunc
 
 .func KiTrap3
@@ -954,12 +950,8 @@ _KiTrap5:
     jnz CheckMode
 
     /* It did, and this should never happen */
-    push 0
-    push 0
-    push 0
-    push 5
-    push UNEXPECTED_KERNEL_MODE_TRAP
-    call _KeBugCheckEx@20
+    mov eax, 5
+    jmp _KiSystemFatalException
 
     /* Check the old mode */
 CheckMode:
@@ -1147,12 +1139,8 @@ BogusTrap:
 _KiTrap8:
 
     /* Can't really do too much */
-    push 0
-    push 0
-    push 0
-    push 8
-    push UNEXPECTED_KERNEL_MODE_TRAP
-    call _KeBugCheckEx@20
+    mov eax, 8
+    jmp _KiSystemFatalException
 .endfunc
 
 .func KiTrap9
@@ -1165,12 +1153,8 @@ _KiTrap9:
 
     /* Enable interrupts and bugcheck */
     sti
-    push 0
-    push 0
-    push 0
-    push 9
-    push UNEXPECTED_KERNEL_MODE_TRAP
-    call _KeBugCheckEx@20
+    mov eax, 9
+    jmp _KiSystemFatalException
 .endfunc
 
 .func KiTrap10
@@ -1198,12 +1182,8 @@ V86IntA:
 
 Fatal:
     /* TSS failure for some other reason: crash */
-    push 0
-    push 0
-    push 0
-    push 10
-    push UNEXPECTED_KERNEL_MODE_TRAP
-    call _KeBugCheckEx@20
+    mov eax, 10
+    jmp _KiSystemFatalException
 .endfunc
 
 _KiTrap11:
