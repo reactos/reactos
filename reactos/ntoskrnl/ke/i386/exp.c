@@ -144,43 +144,6 @@ KiRosPrintAddress(PVOID address)
    return(FALSE);
 }
 
-ULONG
-KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
-{
-  EXCEPTION_RECORD Er;
-
-  Er.ExceptionFlags = 0;
-  Er.ExceptionRecord = NULL;
-  Er.ExceptionAddress = (PVOID)Tf->Eip;
-
-  if (ExceptionNr == 14)
-    {
-      Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
-      Er.NumberParameters = 2;
-      Er.ExceptionInformation[0] = Tf->ErrCode & 0x1;
-      Er.ExceptionInformation[1] = (ULONG)Cr2;
-    }
-  else
-    {
-      if (ExceptionNr < ARRAY_SIZE(ExceptionToNtStatus))
-	{
-	  Er.ExceptionCode = ExceptionToNtStatus[ExceptionNr];
-	}
-      else
-	{
-	  Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
-	}
-      Er.NumberParameters = 0;
-    }
-
-  /* FIXME: Which exceptions are noncontinuable? */
-  Er.ExceptionFlags = 0;
-
-  KiDispatchException(&Er, NULL, Tf, KernelMode, TRUE);
-
-  return(0);
-}
-
 VOID
 NTAPI
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
@@ -266,13 +229,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
  */
 {
    ULONG_PTR cr2;
-   ULONG Esp0;
-
-   ASSERT(ExceptionNr != 14);
-   ASSERT((ExceptionNr != 7 && ExceptionNr != 16 && ExceptionNr != 19));
-
-   /* Use the address of the trap frame as approximation to the ring0 esp */
-   Esp0 = (ULONG)&Tf->Eip;
+   ASSERT(ExceptionNr == 13 || ExceptionNr == 6);
 
    /* Get CR2 */
    cr2 = Ke386GetCr2();
@@ -286,56 +243,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
        DPRINT("Tf->Eflags, %x, Tf->Eip %x, ExceptionNr: %d\n", Tf->EFlags, Tf->Eip, ExceptionNr);
        return(KeV86Exception(ExceptionNr, Tf, cr2));
      }
-
-   /*
-    * Check for stack underflow, this may be obsolete
-    */
-   DPRINT1("Exception: %x\n", ExceptionNr);
-   if (PsGetCurrentThread() != NULL &&
-       Esp0 < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
-     {
-	DPRINT1("Stack underflow (tf->esp %x Limit %x Eip %x)\n",
-		Esp0, (ULONG)PsGetCurrentThread()->Tcb.StackLimit, Tf->Eip);
-	ExceptionNr = 12;
-     }
-
-   if (ExceptionNr == 15)
-     {
-       /*
-        * FIXME:
-        *   This exception should never occur. The P6 has a bug, which does sometimes deliver
-        *   the apic spurious interrupt as exception 15. On an athlon64, I get one exception
-        *   in the early boot phase in apic mode (using the smp build). I've looked to the linux
-        *   sources. Linux does ignore this exception.
-        *
-        */
-       DPRINT1("Ignoring P6 Local APIC Spurious Interrupt Bug...\n");
-       return(0);
-     }
-
-   /*
-    * Check for a breakpoint that was only for the attention of the debugger.
-    */
-   if (ExceptionNr == 3 && Tf->Eip == ((ULONG)DbgBreakPointNoBugCheck) + 1)
-     {
-       /*
-	  EIP is already adjusted by the processor to point to the instruction
-	  after the breakpoint.
-       */
-       return(0);
-     }
-
-   /*
-    * Handle user exceptions differently
-    */
-   if ((Tf->SegCs & 0xFFFF) == (KGDT_R3_CODE | RPL_MASK))
-     {
-       return(KiUserTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
-     }
-   else
-    {
-      return(KiKernelTrapHandler(Tf, ExceptionNr, (PVOID)cr2));
-    }
+   return 0;
 }
 
 ULONG

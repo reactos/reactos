@@ -32,6 +32,7 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    ULONG_PTR cr2;
    NTSTATUS Status;
    KPROCESSOR_MODE Mode;
+   EXCEPTION_RECORD Er;
    
    ASSERT(ExceptionNr == 14);
    
@@ -120,16 +121,18 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
       return 0;
    }
 
-   /*
-    * Handle user exceptions differently
-    */
-   if (Mode == KernelMode)
-   {
-      return(KiKernelTrapHandler(Tf, 14, (PVOID)cr2));
-   }
-   else
-   {
-      return(KiUserTrapHandler(Tf, 14, (PVOID)cr2));
-   }
+  Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
+  Er.ExceptionFlags = 0;
+  Er.ExceptionRecord = NULL;
+  Er.ExceptionAddress = (PVOID)Tf->Eip;
+  Er.NumberParameters = 2;
+  Er.ExceptionInformation[0] = Tf->ErrCode & 0x1;
+  Er.ExceptionInformation[1] = (ULONG)cr2;
+
+  /* FIXME: Which exceptions are noncontinuable? */
+  Er.ExceptionFlags = 0;
+
+  KiDispatchException(&Er, 0, Tf, Mode, TRUE);
+  return 0;
 }
 

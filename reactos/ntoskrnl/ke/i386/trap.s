@@ -14,8 +14,10 @@
 
 /*
   * FIXMEs:
+  *         - Implement kernel-mode GPF handler, possibly fixing below:
   *         - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
   *           and only when called from user-mode, and returning to user-mode.
+  *         - Implement Invalid Opcode handler.
   *         - Figure out what the DEBUGEIP hack is for and how it can be moved away.
   *         - Add DR macro/save and VM macro/save.
   *         - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
@@ -977,6 +979,7 @@ V86Int5:
     int 3
 .endfunc
 
+.func KiTrap6
 _KiTrap6:
     /* Push error code */
     push 0
@@ -996,6 +999,7 @@ _KiTrap6:
     /* Return to caller */
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
+.endfunc
 
 .func KiTrap7
 _KiTrap7:
@@ -1186,40 +1190,27 @@ Fatal:
     jmp _KiSystemFatalException
 .endfunc
 
+.func KiTrap11
 _KiTrap11:
     /* Enter trap */
     TRAP_PROLOG(11)
 
-    /* Call the C exception handler */
-    push 11
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* FIXME: ROS Doesn't handle segment faults yet */
+    mov eax, 11
+    jmp _KiSystemFatalException
+.endfunc
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
+.func KiTrap12
 _KiTrap12:
     /* Enter trap */
     TRAP_PROLOG(12)
 
-    /* Call the C exception handler */
-    push 12
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* FIXME: ROS Doesn't handle stack faults yet */
+    mov eax, 12
+    jmp _KiSystemFatalException
+.endfunc
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
+.func KiTrap13
 _KiTrap13:
     /* Enter trap */
     TRAP_PROLOG(13)
@@ -1236,7 +1227,9 @@ _KiTrap13:
     /* Return to caller */
     jne _Kei386EoiHelper@0
     jmp _KiV86Complete
+.endfunc
 
+.func KiTrap14
 _KiTrap14:
     /* Enter trap */
     TRAP_PROLOG(14)
@@ -1247,13 +1240,11 @@ _KiTrap14:
     call _KiPageFaultHandler
     add esp, 8
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
     /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    jmp _Kei386EoiHelper@0
+.endfunc
 
+.func KiTrap0F
 _KiTrap0F:
     /* Push error code */
     push 0
@@ -1265,7 +1256,9 @@ _KiTrap0F:
     /* Raise a fatal exception */
     mov eax, 15
     jmp _KiSystemFatalException
+.endfunc
 
+.func KiTrap16
 _KiTrap16:
     /* Push error code */
     push 0
@@ -1273,19 +1266,12 @@ _KiTrap16:
     /* Enter trap */
     TRAP_PROLOG(16)
 
-    /* Call the C exception handler */
-    push 16
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* FIXME: ROS Doesn't handle FPU faults yet */
+    mov eax, 16
+    jmp _KiSystemFatalException
+.endfunc
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
+.func KiTrap17
 _KiTrap17:
     /* Push error code */
     push 0
@@ -1293,18 +1279,10 @@ _KiTrap17:
     /* Enter trap */
     TRAP_PROLOG(17)
 
-    /* Call the C exception handler */
-    push 17
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* FIXME: ROS Doesn't handle alignment faults yet */
+    mov eax, 17
+    jmp _KiSystemFatalException
+.endfunc
 
 .func KiSystemFatalException
 _KiSystemFatalException:
