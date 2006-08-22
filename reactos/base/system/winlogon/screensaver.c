@@ -17,7 +17,7 @@ KeyboardActivityProc(
 	IN WPARAM wParam,
 	IN LPARAM lParam)
 {
-	InterlockedExchange(&WLSession->LastActivity, ((PKBDLLHOOKSTRUCT)lParam)->time);
+	InterlockedExchange((LONG*)&WLSession->LastActivity, ((PKBDLLHOOKSTRUCT)lParam)->time);
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
@@ -27,7 +27,7 @@ MouseActivityProc(
 	IN WPARAM wParam,
 	IN LPARAM lParam)
 {
-	InterlockedExchange(&WLSession->LastActivity, ((PMSLLHOOKSTRUCT)lParam)->time);
+	InterlockedExchange((LONG*)&WLSession->LastActivity, ((PMSLLHOOKSTRUCT)lParam)->time);
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
@@ -108,7 +108,7 @@ ScreenSaverThreadMain(
 			LoadScreenSaverParameters(&Timeout);
 
 		/* Check if we didn't had recent activity */
-		LastActivity = InterlockedCompareExchange(&Session->LastActivity, 0, 0);
+		LastActivity = InterlockedCompareExchange((LONG*)&Session->LastActivity, 0, 0);
 		if (LastActivity + Timeout > GetTickCount())
 			continue;
 
