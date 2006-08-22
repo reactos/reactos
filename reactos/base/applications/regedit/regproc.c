@@ -315,7 +315,7 @@ DWORD getDataType(LPSTR *lpValue, DWORD* parse_type)
 LPSTR getArg( LPSTR arg)
 {
     LPSTR tmp = NULL;
-    ULONG len;
+    size_t len;
 
     if (arg == NULL)
         return NULL;
@@ -339,9 +339,9 @@ LPSTR getArg( LPSTR arg)
  */
 static void REGPROC_unescape_string(LPSTR str)
 {
-    int str_idx = 0;            /* current character under analysis */
-    int val_idx = 0;            /* the last character of the unescaped string */
-    int len = strlen(str);
+    size_t str_idx = 0;            /* current character under analysis */
+    size_t val_idx = 0;            /* the last character of the unescaped string */
+    size_t len = strlen(str);
     for (str_idx = 0; str_idx < len; str_idx++, val_idx++) {
         if (str[str_idx] == '\\') {
             str_idx++;
@@ -391,7 +391,7 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
 
     if ( dwParseType == REG_SZ)        /* no conversion for string */
     {
-        dwLen = strlen(val_data);
+        dwLen = (DWORD) strlen(val_data);
         if (dwLen>0 && val_data[dwLen-1]=='"')
         {
             dwLen--;
@@ -406,11 +406,11 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
         lpbData = convert;
     } else                               /* Convert the hexadecimal types */
     {
-        int b_len = strlen (val_data)+2/3;
+        size_t b_len = strlen (val_data)+2/3;
         if (b_len > KEY_MAX_LEN) {
             bBigBuffer = HeapAlloc (GetProcessHeap(), 0, b_len);
             CHECK_ENOUGH_MEMORY(bBigBuffer);
-            dwLen = convertHexCSVToHex(val_data, bBigBuffer, b_len);
+            dwLen = convertHexCSVToHex(val_data, bBigBuffer, (ULONG) b_len);
             lpbData = bBigBuffer;
         } else {
             dwLen   = convertHexCSVToHex(val_data, convert, KEY_MAX_LEN);
@@ -873,7 +873,7 @@ void processQueryValue(LPSTR cmdline)
 void processRegLines(FILE *in, CommandAPI command)
 {
     LPSTR line           = NULL;  /* line read from input stream */
-    ULONG lineSize       = REG_VAL_BUF_SIZE;
+    size_t lineSize       = REG_VAL_BUF_SIZE;
 
     line = HeapAlloc(GetProcessHeap(), 0, lineSize);
     CHECK_ENOUGH_MEMORY(line);
@@ -907,7 +907,7 @@ void processRegLines(FILE *in, CommandAPI command)
             /* Get as much as possible into the buffer, terminated either by
              * eof, error, eol or getting the maximum amount.  Abort on error.
              */
-            size_to_get = (size_remaining > INT_MAX ? INT_MAX : size_remaining);
+            size_to_get = (int) (size_remaining > INT_MAX ? INT_MAX : size_remaining);
             if (NULL == fgets (s, size_to_get, in)) {
                 if (ferror(in)) {
                     perror ("While reading input");
@@ -1146,7 +1146,7 @@ static void export_hkey(FILE *file, HKEY key,
                        ) != ERROR_SUCCESS) {
         REGPROC_print_error();
     }
-    curr_len = strlen(*reg_key_name_buf);
+    curr_len = (DWORD) strlen(*reg_key_name_buf);
     REGPROC_resize_char_buffer(reg_key_name_buf, reg_key_name_len,
                                max_sub_key_len + curr_len + 1);
     REGPROC_resize_char_buffer(val_name_buf, val_name_len,
@@ -1223,8 +1223,8 @@ static void export_hkey(FILE *file, HKEY key,
 
                     /* position of where the next character will be printed */
                     /* NOTE: yes, strlen("hex:") is used even for hex(x): */
-                    cur_pos = strlen("\"\"=") + strlen("hex:") +
-                              strlen(*val_name_buf);
+                    cur_pos = (int) (strlen("\"\"=") + strlen("hex:") +
+                              strlen(*val_name_buf));
 
                     fputs(hex_prefix, file);
                     for (i1 = 0; i1 < val_size1; i1++) {
@@ -1324,7 +1324,7 @@ BOOL export_registry_key(const TCHAR *file_name, CHAR *reg_key_name)
         HKEY key;
 
         REGPROC_resize_char_buffer(&reg_key_name_buf, &reg_key_name_len,
-                                   strlen(reg_key_name));
+                                   (DWORD) strlen(reg_key_name));
         strcpy(reg_key_name_buf, reg_key_name);
 
         /* open the specified key */
@@ -1421,7 +1421,7 @@ static void delete_branch(HKEY key,
                        ) != ERROR_SUCCESS) {
         REGPROC_print_error();
     }
-    curr_len = strlen(*reg_key_name_buf);
+    curr_len = (DWORD) strlen(*reg_key_name_buf);
     REGPROC_resize_char_buffer(reg_key_name_buf, reg_key_name_len,
                                max_sub_key_len + curr_len + 1);
 
@@ -1469,7 +1469,7 @@ void delete_registry_key(CHAR *reg_key_name)
     }
     branch_name = getRegKeyName(reg_key_name);
     CHECK_ENOUGH_MEMORY(branch_name);
-    branch_name_len = strlen(branch_name);
+    branch_name_len = (DWORD) strlen(branch_name);
     if (!branch_name[0]) {
         fprintf(stderr,"%s: Can't delete registry class '%s'\n",
                 getAppName(), reg_key_name);
@@ -1698,7 +1698,7 @@ static LONG RegNextKey(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength)
     /* Try accessing a subkey */
     if (RegOpenKeyEx(hKey, lpSubKey, 0, KEY_ALL_ACCESS, &hSubKey) == ERROR_SUCCESS)
     {
-        cbName = iSubKeyLength - _tcslen(lpSubKey) - 1;
+        cbName = (DWORD) iSubKeyLength - _tcslen(lpSubKey) - 1;
         lResult = RegEnumKeyEx(hSubKey, 0, lpSubKey + _tcslen(lpSubKey) + 1,
             &cbName, NULL, NULL, NULL, &ft);
         RegCloseKey(hSubKey);

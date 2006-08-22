@@ -735,7 +735,7 @@ InvokeRemoteRegistryPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
             {
                 if (SelectionList->cItems == 1)
                 {
-                    UINT nlen = wcslen(SelectionList->aDsSelection[0].pwzName);
+                    size_t nlen = wcslen(SelectionList->aDsSelection[0].pwzName);
                     if (nlen >= uSize)
                     {
                         nlen = uSize - 1;

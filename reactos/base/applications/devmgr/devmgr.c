@@ -362,6 +362,9 @@ int WINAPI WinMain(  HINSTANCE hInstance,
 {
 MSG  msg;
 
+UNREFERENCED_PARAMETER(lpCmdLine);
+UNREFERENCED_PARAMETER(hInstance);
+
 g_hInst = hInstance;
 
 if(!hPrevInstance)
@@ -525,6 +528,8 @@ void CreateListView(HINSTANCE hInstance, HWND hwndParent)
 {
 DWORD       dwStyle;
 
+UNREFERENCED_PARAMETER(hInstance);
+
 dwStyle =   WS_TABSTOP |
             WS_CHILD |
             WS_BORDER |
@@ -675,6 +680,8 @@ void InsertIntoListView(int typ, LPTSTR name, LPTSTR intern_name)
 
 void CreateButtons(HINSTANCE hInstance, HWND hwndParent)
 {
+
+	  UNREFERENCED_PARAMETER(hInstance);
 
 	  hwndButtonListByClass = CreateWindowEx (
 	          0,

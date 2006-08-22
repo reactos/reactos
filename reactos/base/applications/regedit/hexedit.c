@@ -128,7 +128,7 @@ HEXEDIT_Update(PHEXEDIT_DATA hed)
   GetClientRect(hed->hWndSelf, &rcClient);
   hed->style = GetWindowLong(hed->hWndSelf, GWL_STYLE);
 
-  bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
+  bufsize = (hed->hBuffer ? (INT) LocalSize(hed->hBuffer) : 0);
   hed->nLines = max(bufsize / hed->ColumnsPerLine, 1);
   if(bufsize > hed->ColumnsPerLine && (bufsize % hed->ColumnsPerLine) > 0)
   {
@@ -340,7 +340,7 @@ HEXEDIT_PositionFromPoint(PHEXEDIT_DATA hed, POINTS pt, DWORD Hit, POINT *EditPo
     case HEHT_ADDRESS:
     case HEHT_ADDRESSSPACING:
     case HEHT_HEXDUMP:
-      pt.x -= hed->LeftMargin + ((4 + hed->AddressSpacing) * hed->CharWidth);
+      pt.x -= (SHORT) hed->LeftMargin + ((4 + hed->AddressSpacing) * hed->CharWidth);
       *EditField = TRUE;
       break;
 
@@ -356,7 +356,7 @@ HEXEDIT_PositionFromPoint(PHEXEDIT_DATA hed, POINTS pt, DWORD Hit, POINT *EditPo
     EditPos->x = min(hed->ColumnsPerLine, pt.x / BlockWidth);
   }
 
-  bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
+  bufsize = (hed->hBuffer ? (DWORD) LocalSize(hed->hBuffer) : 0);
   Pos = (EditPos->y * hed->ColumnsPerLine) + EditPos->x;
   if(Pos > bufsize)
   {
@@ -433,7 +433,7 @@ HEXEDIT_HEM_LOADBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
 static LRESULT
 HEXEDIT_HEM_COPYBUFFER(PHEXEDIT_DATA hed, PVOID Buffer, DWORD Size)
 {
-  DWORD nCpy;
+  size_t nCpy;
 
   if(!hed->hBuffer)
   {
@@ -767,7 +767,7 @@ HEXEDIT_WM_LBUTTONDOWN(PHEXEDIT_DATA hed, INT Buttons, POINTS Pt)
 static BOOL
 HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 {
-  DWORD bufsize;
+  size_t bufsize;
   BOOL shift, control;
 
   if(GetKeyState(VK_MENU) & 0x8000)
@@ -836,15 +836,15 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 	  hed->CaretLine++;
 	  if(hed->Position > (INT)bufsize)
 	  {
-	    hed->Position = bufsize;
+	    hed->Position = (INT) bufsize;
 	    hed->CaretLine = (hed->nLines > 0 ? hed->nLines - 1 : 0);
-	    hed->CaretCol = bufsize % hed->ColumnsPerLine;
+	    hed->CaretCol = (INT) bufsize % hed->ColumnsPerLine;
 	  }
 	}
 	else
 	{
-	  INT tmp = bufsize % hed->ColumnsPerLine;
-	  hed->Position = bufsize;
+	  INT tmp = (INT) bufsize % hed->ColumnsPerLine;
+	  hed->Position = (INT) bufsize;
 	  hed->CaretCol = (tmp == 0 ? hed->ColumnsPerLine : tmp);
 	}
       }

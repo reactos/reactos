@@ -50,7 +50,8 @@ static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCF
 
 LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
 {
-    int item, len, maxLen;
+    int item;
+	size_t len, maxLen;
     LPTSTR newStr;
     LVITEM LVItem;
     PLINE_INFO lineinfo;
