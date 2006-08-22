@@ -664,7 +664,6 @@ KiCheckForKernelApcDelivery@0
 KiDeliverApc@12
 KiDispatchInterrupt@0
 KiEnableTimerWatchdog
-KiInterruptDispatch2@8
 KiIpiServiceRoutine@8
 @KiReleaseSpinLock@4
 KiUnexpectedInterrupt

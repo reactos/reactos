@@ -16,24 +16,12 @@
 
 /* GLOBALS ******************************************************************/
 
-/*
- * FIXME: Use EISA_CONTROL STRUCTURE INSTEAD OF HARD-CODED OFFSETS 
-*/
-
 UCHAR Table[8] =
 {
     0, 0,
     1, 1,
     2, 2, 2, 2
 };
-
-static ULONG HalpPendingInterruptCount[NR_IRQS] = {0};
-
-#define DIRQL_TO_IRQ(x)  (PROFILE_LEVEL - x)
-#define IRQ_TO_DIRQL(x)  (PROFILE_LEVEL - x)
-
-VOID STDCALL
-KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -61,38 +49,6 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
 }
 
 VOID STATIC
-HalpExecuteIrqs(KIRQL NewIrql)
-{
-  ULONG IrqLimit, i;
-  
-  IrqLimit = min(PROFILE_LEVEL - NewIrql, NR_IRQS);
-
-  /*
-   * For each irq if there have been any deferred interrupts then now
-   * dispatch them.
-   */
-  for (i = 0; i < IrqLimit; i++)
-    {
-      if (HalpPendingInterruptCount[i] > 0)
-	{
-	   KeGetPcr()->Irql = (KIRQL)IRQ_TO_DIRQL(i);
-
-           while (HalpPendingInterruptCount[i] > 0)
-	     {
-	       /*
-	        * For each deferred interrupt execute all the handlers at DIRQL.
-	        */
-	       HalpPendingInterruptCount[i]--;
-	       KiInterruptDispatch2(i + IRQ_BASE, NewIrql);
-	     }
-	   KeGetPcr()->Irql--;
-	   HalpEndSystemInterrupt(KeGetPcr()->Irql);
-	}
-    }
-
-}
-
-VOID STATIC
 HalpLowerIrql(KIRQL NewIrql)
 {
   if (NewIrql >= PROFILE_LEVEL)
@@ -100,7 +56,6 @@ HalpLowerIrql(KIRQL NewIrql)
       KeGetPcr()->Irql = NewIrql;
       return;
     }
-  HalpExecuteIrqs(NewIrql);
   if (NewIrql >= DISPATCH_LEVEL)
     {
       KeGetPcr()->Irql = NewIrql;
