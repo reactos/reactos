@@ -2,6 +2,7 @@
  *
  * Copyright 2003 Thomas Mertes
  * Copyright 2005 Brad DeMorrow
+ * Copyright 2006 Dmitry Philippov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -84,16 +85,18 @@ static NTSTATUS (WINAPI * pRtlFreeUnicodeString)(PUNICODE_STRING);
 static NTSTATUS (WINAPI * pNtDeleteValueKey)(IN HANDLE, IN PUNICODE_STRING);
 static NTSTATUS (WINAPI * pRtlQueryRegistryValues)(IN ULONG, IN PCWSTR,IN PRTL_QUERY_REGISTRY_TABLE, IN PVOID,IN PVOID);
 static NTSTATUS (WINAPI * pRtlCheckRegistryKey)(IN ULONG,IN PWSTR);
-static NTSTATUS (WINAPI * pRtlOpenCurrentUser)(IN ACCESS_MASK, OUT PHKEY);
+static NTSTATUS (WINAPI * pRtlOpenCurrentUser)(IN ACCESS_MASK, OUT PHANDLE);
 static NTSTATUS (WINAPI * pNtOpenKey)(PHANDLE, IN ACCESS_MASK, IN POBJECT_ATTRIBUTES);
 static NTSTATUS (WINAPI * pNtClose)(IN HANDLE);
 static NTSTATUS (WINAPI * pNtDeleteValueKey)(IN HANDLE, IN PUNICODE_STRING);
-static NTSTATUS (WINAPI * pNtDeleteKey)(HKEY);
-static NTSTATUS (WINAPI * pNtCreateKey)( PHKEY retkey, ACCESS_MASK access, const OBJECT_ATTRIBUTES *attr,
+static NTSTATUS (WINAPI * pNtDeleteKey)(HANDLE);
+static NTSTATUS (WINAPI * pNtCreateKey)( PHANDLE retkey, ACCESS_MASK access, const OBJECT_ATTRIBUTES *attr,
                              ULONG TitleIndex, const UNICODE_STRING *class, ULONG options,
                              PULONG dispos );
-static NTSTATUS (WINAPI * pNtSetValueKey)( PHKEY, const PUNICODE_STRING, ULONG,
+static NTSTATUS (WINAPI * pNtSetValueKey)( HANDLE, const PUNICODE_STRING, ULONG,
                                ULONG, const PVOID, ULONG  );
+static NTSTATUS (WINAPI * pNtQueryValueKey)( HANDLE,const UNICODE_STRING *,KEY_VALUE_INFORMATION_CLASS,
+                                            void *,DWORD,DWORD * );
 static NTSTATUS (WINAPI * pRtlFormatCurrentUserKeyPath)(PUNICODE_STRING);
 static NTSTATUS (WINAPI * pRtlCreateUnicodeString)( PUNICODE_STRING, LPCWSTR);
 static NTSTATUS (WINAPI * pRtlReAllocateHeap)(IN PVOID, IN ULONG, IN PVOID, IN ULONG);
@@ -136,6 +139,7 @@ static BOOL InitFunctionPtrs(void)
         NTDLL_GET_PROC(NtCreateKey)
         NTDLL_GET_PROC(NtDeleteKey)
         NTDLL_GET_PROC(NtSetValueKey)
+        NTDLL_GET_PROC(NtQueryValueKey)
         NTDLL_GET_PROC(NtOpenKey)
         NTDLL_GET_PROC(RtlFormatCurrentUserKeyPath)
         NTDLL_GET_PROC(RtlReAllocateHeap)
@@ -153,8 +157,9 @@ static NTSTATUS WINAPI QueryRoutine (IN PCWSTR ValueName, IN ULONG ValueType, IN
                               IN ULONG ValueLength, IN PVOID Context, IN PVOID EntryContext)
 {
     NTSTATUS ret = STATUS_SUCCESS;
-    int ValueNameLength = 0;
     LPSTR ValName = 0;
+    LPSTR ValData = 0;
+    int ValueNameLength = 0;
     trace("**Test %d**\n", CurrentTest);
 
     if(ValueName)
@@ -163,12 +168,19 @@ static NTSTATUS WINAPI QueryRoutine (IN PCWSTR ValueName, IN ULONG ValueType, IN
 
         ValName = (LPSTR)pRtlAllocateHeap(GetProcessHeap(), 0, ValueNameLength);
 
-        WideCharToMultiByte(0, 0, ValueName, ValueNameLength+1,ValName, ValueNameLength, 0, 0);
 
         trace("ValueName: %s\n", ValName);
     }
     else
         trace("ValueName: (null)\n");
+
+    if( ValueType == REG_SZ ||
+        ValueType == REG_MULTI_SZ ||
+        ValueType == REG_EXPAND_SZ )
+    {
+        ValData = (LPSTR)pRtlAllocateHeap(GetProcessHeap(), 0, ValueLength);
+        WideCharToMultiByte(0, 0, ValueData, ValueLength, ValData, ValueLength, 0, 0);
+    }
 
     switch(ValueType)
     {
@@ -184,17 +196,17 @@ static NTSTATUS WINAPI QueryRoutine (IN PCWSTR ValueName, IN ULONG ValueType, IN
 
             case REG_SZ:
                 trace("ValueType: REG_SZ\n");
-                trace("ValueData: %s\n", (char*)ValueData);
+                trace("ValueData: %s\n", ValData);
                 break;
 
             case REG_MULTI_SZ:
                 trace("ValueType: REG_MULTI_SZ\n");
-                trace("ValueData: %s\n", (char*)ValueData);
+                trace("ValueData: %s", (char*)ValData);
                 break;
 
             case REG_EXPAND_SZ:
                 trace("ValueType: REG_EXPAND_SZ\n");
-                trace("ValueData: %s\n", (char*)ValueData);
+                trace("ValueData: %s\n", (char*)ValData);
                 break;
 
             case REG_DWORD:
@@ -213,6 +225,9 @@ static NTSTATUS WINAPI QueryRoutine (IN PCWSTR ValueName, IN ULONG ValueType, IN
 
     if(ValName)
         pRtlFreeHeap(GetProcessHeap(), 0, ValName);
+
+    if(ValData)
+        pRtlFreeHeap(GetProcessHeap(), 0, ValData);
 
     return ret;
 }
@@ -269,14 +284,14 @@ static void test_RtlQueryRegistryValues(void)
     QueryTable[0].DefaultLength = 100;
 
     QueryTable[1].QueryRoutine = QueryRoutine;
-    QueryTable[1].Flags = 0;
-    QueryTable[1].Name = NULL;
+    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DELETE;
+    QueryTable[1].Name = L"multisztest";
     QueryTable[1].EntryContext = 0;
     QueryTable[1].DefaultType = REG_NONE;
     QueryTable[1].DefaultData = NULL;
     QueryTable[1].DefaultLength = 0;
 
-    QueryTable[2].QueryRoutine = NULL;
+    QueryTable[2].QueryRoutine = QueryRoutine;
     QueryTable[2].Flags = 0;
     QueryTable[2].Name = NULL;
     QueryTable[2].EntryContext = 0;
@@ -294,7 +309,7 @@ static void test_NtCreateKey(void)
 {
     /*Create WineTest*/
     OBJECT_ATTRIBUTES attr;
-    HKEY key;
+    HANDLE key;
     ACCESS_MASK am = GENERIC_ALL;
     NTSTATUS status;
 
@@ -302,7 +317,7 @@ static void test_NtCreateKey(void)
     status = pNtCreateKey(&key, am, &attr, 0, 0, 0, 0);
     ok(status == STATUS_SUCCESS, "NtCreateKey Failed: 0x%08lx\n", status);
 
-    pNtClose(&key);
+    pNtClose(key);
 }
 
 static void test_NtSetValueKey(void)
@@ -312,10 +327,14 @@ static void test_NtSetValueKey(void)
     OBJECT_ATTRIBUTES attr;
     ACCESS_MASK am = KEY_WRITE;
     UNICODE_STRING ValName;
+    UNICODE_STRING ValNameMultiSz;
     DWORD data = 711;
+    static const WCHAR DataMultiSz[] = {'T','e','s','t','V','a','l','u','e','1',0,
+                                        'T','e','s','t','V','a','l','u','e','2',0,
+                                        'T','e','s','t','V','a','l','u','e','3',0,0,
+                                        'T','e','s','t','V','a','l','u','e','5',0,0,0};
 
     pRtlCreateUnicodeStringFromAsciiz(&ValName, "deletetest");
-
     InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
     status = pNtOpenKey(&key, am, &attr);
     ok(status == STATUS_SUCCESS, "NtOpenKey Failed: 0x%08lx\n", status);
@@ -324,16 +343,24 @@ static void test_NtSetValueKey(void)
     ok(status == STATUS_SUCCESS, "NtSetValueKey Failed: 0x%08lx\n", status);
 
     pRtlFreeUnicodeString(&ValName);
-    pNtClose(&key);
+
+    pRtlCreateUnicodeStringFromAsciiz(&ValNameMultiSz, "multisztest");
+
+    status = pNtSetValueKey(key, &ValNameMultiSz, 0, REG_MULTI_SZ, (PVOID)DataMultiSz, sizeof(DataMultiSz));
+    ok(status == STATUS_SUCCESS, "NtSetValueKey Failed: 0x%08lx\n", status);
+
+    pRtlFreeUnicodeString(&ValNameMultiSz);
+
+    pNtClose(key);
 }
 
 static void test_RtlOpenCurrentUser(void)
 {
     NTSTATUS status;
-    HKEY handle;
+    HANDLE handle;
     status=pRtlOpenCurrentUser(KEY_READ, &handle);
     ok(status == STATUS_SUCCESS, "RtlOpenCurrentUser Failed: 0x%08lx\n", status);
-    pNtClose(&handle);
+    pNtClose(handle);
 }
 
 static void test_RtlCheckRegistryKey(void)
@@ -345,6 +372,29 @@ static void test_RtlCheckRegistryKey(void)
 
     status = pRtlCheckRegistryKey((RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL), winetestpath.Buffer);
     ok(status == STATUS_SUCCESS, "RtlCheckRegistryKey with RTL_REGISTRY_ABSOLUTE and RTL_REGISTRY_OPTIONAL: 0x%08lx\n", status);
+}
+
+static void test_RtlQueryRegistryDelete(void)
+{
+    HANDLE key;
+    NTSTATUS status;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING ValNameMultiSz;
+    WCHAR sBuf[255];
+    DWORD ValueSize;
+
+    InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
+    status = pNtOpenKey(&key, KEY_READ, &attr);
+    ok(status == STATUS_SUCCESS, "NtOpenKey Failed: 0x%08lx\n", status);
+
+    pRtlCreateUnicodeStringFromAsciiz(&ValNameMultiSz, "multisztest");
+
+    status = pNtQueryValueKey(key, &ValNameMultiSz, 0, (void*)sBuf, sizeof(sBuf), &ValueSize);
+    ok(status == STATUS_OBJECT_NAME_NOT_FOUND, "NtOpenKey returns: 0x%08lx instead of STATUS_OBJECT_NAME_NOT_FOUND\n", status);
+
+    pRtlFreeUnicodeString(&ValNameMultiSz);
+
+    pNtClose(key);
 }
 
 static void test_NtDeleteKey(void)
@@ -359,6 +409,8 @@ static void test_NtDeleteKey(void)
 
     status = pNtDeleteKey(hkey);
     ok(status == STATUS_SUCCESS, "NtDeleteKey Failed: 0x%08lx\n", status);
+
+    pNtClose(hkey);
 }
 
 START_TEST(reg)
@@ -378,6 +430,7 @@ START_TEST(reg)
     test_RtlCheckRegistryKey();
     test_RtlOpenCurrentUser();
     test_RtlQueryRegistryValues();
+    test_RtlQueryRegistryDelete();
     test_NtDeleteKey();
 
     pRtlFreeUnicodeString(&winetestpath);
