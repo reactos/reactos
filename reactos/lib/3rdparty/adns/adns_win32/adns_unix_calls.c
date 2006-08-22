@@ -63,30 +63,35 @@ int adns_getpid()
 	return GetCurrentProcessId();
 }
 
+/* ReactOS: Fixed gettimeofday implementation.  Was wrong by a factor of
+ * 10 */
 int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
-	static __int64 Adjustment;
-	__int64 Now = 0;
-       
+    static __int64 Adjustment;
+    __int64 Now = 0;
+    
+    
+    if (!Adjustment)
+    {
+	SYSTEMTIME st = {1970,1,3,0,0,0,0};
 	
-	if (!Adjustment)
-	{ 
-                         SYSTEMTIME st = {1970,1,3,0,0,0,0};       						 
-			 SystemTimeToFileTime(&st, ((LPFILETIME)(VOID *)&Adjustment));
-	}
-	
-	if (tz)
-	{
-		errno = EINVAL;
-		return -1;
-	}
-	
-	GetSystemTimeAsFileTime(((LPFILETIME)(VOID *)&Now));
-	Now -= Adjustment;
-	
-	tv->tv_sec = (long)(Now / 100000000);
-	tv->tv_usec = (long)((Now / 100) - (((__int64)tv->tv_sec * 1000) * 100));
-	return 0;
+	SystemTimeToFileTime(&st, ((LPFILETIME)(VOID *)&Adjustment));
+    }
+    
+    if (tz)
+    {
+	return -1;
+    }
+    
+    GetSystemTimeAsFileTime(((LPFILETIME)(VOID *)&Now));
+    Now -= Adjustment;
+    
+    /* 100 ns
+       .1  us
+       10 * 1000000 */
+    tv->tv_sec = (long)(Now / 10000000);
+    tv->tv_usec = (long)((Now /     10) % 1000000);
+    return 0;
 }
 
 /* Memory allocated in the DLL must be freed in the dll, so
