@@ -220,13 +220,11 @@ _HalDisableSystemInterrupt@8:
     ret 8
 .endfunc
 
-#if 0
 .globl _HalEnableSystemInterrupt@12
 .func HalEnableSystemInterrupt@12
 _HalEnableSystemInterrupt@12:
 
     /* Get the vector and validate it */
-    jmp $
     movzx ecx, byte ptr [esp+4]
     sub ecx, PRIMARY_VECTOR_BASE
     jb Invalid
@@ -290,7 +288,6 @@ Invalid:
     xor eax, eax
     ret 12
 .endfunc
-#endif
 
 .globl _HalBeginSystemInterrupt@12
 .func HalBeginSystemInterrupt@12

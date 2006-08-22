@@ -167,30 +167,4 @@ VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
   HalpEndSystemInterrupt(Irql);
 }
 
-BOOLEAN
-STDCALL
-HalEnableSystemInterrupt(
-  ULONG Vector,
-  KIRQL Irql,
-  KINTERRUPT_MODE InterruptMode)
-{
-  ULONG irq;
-  ULONG Mask;
-
-  if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
-    return FALSE;
-
-  irq = Vector - IRQ_BASE;
-  KeGetPcr()->IDR &= ~(1 << irq);
-
-  Mask = KeGetPcr()->IDR | KiI8259MaskTable[KeGetPcr()->Irql];
-  WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
-  Mask >>= 8;
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
-
-  return TRUE;
-}
-
-
-
 /* EOF */
