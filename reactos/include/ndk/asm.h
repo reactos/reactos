@@ -432,19 +432,15 @@ Author:
 #define MACHINE_TYPE_MCA                        0x0002
 
 //
-// Vector base
-// ROS HACK HACK HACK
-//
-#define PRIMARY_VECTOR_BASE                     0x40
-
-//
 // Kernel Feature Bits
 //
 #define KF_RDTSC                                0x00000002
 #endif
+
 //
 // Generic Definitions
 //
+#define PRIMARY_VECTOR_BASE                     0x40 // FIXME: HACK
 #define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
 

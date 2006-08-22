@@ -70,7 +70,6 @@ _KiI8259MaskTable:
     .long 0xFFFFFFFB                    /* IRQL 30 */
     .long 0xFFFFFFFB                    /* IRQL 31 */
 
-#if 0
 HalpSysIntHandler:
 .rept 8
     .long GenericIRQ                    /* IRQ 0-7 */
@@ -83,7 +82,6 @@ HalpSysIntHandler:
 .rept 20
     .long GenericIRQ                    /* IRQ 16-35 */
 .endr
-#endif
 
 SoftIntByteTable:
     .byte PASSIVE_LEVEL                 /* IRR 0 */
@@ -202,7 +200,7 @@ _HalDisableSystemInterrupt@8:
     mov edx, 1
     shl edx, cl
     cli
-    or [fs+KPCR_IDR], edx
+    or [fs:KPCR_IDR], edx
 
     /* Get the current mask */
     xor eax, eax
@@ -292,18 +290,18 @@ Invalid:
     xor eax, eax
     ret 12
 .endfunc
+#endif
 
 .globl _HalBeginSystemInterrupt@12
 .func HalBeginSystemInterrupt@12
 _HalBeginSystemInterrupt@12:
 
     /* Convert to vector and call the handler */
-    movzx ebx, byte ptr [esp+8]
-    sub ebx, PRIMARY_VECTOR_BASE
-    jmp HalpSysIntHandler[ebx*4]
+    mov edx, [esp+8]
+    sub edx, PRIMARY_VECTOR_BASE
+    jmp HalpSysIntHandler[edx*4]
 
 IRQ15:
-
     /* This is IRQ 15, check if it's spurious */
     mov al, 0xB
     out 0xA0, al
@@ -318,7 +316,6 @@ IRQ15:
     ret 12
 
 IRQ7:
-
     /* This is IRQ 7, check if it's spurious */
     mov al, 0xB
     out 0x20, al
@@ -331,10 +328,9 @@ IRQ7:
     ret 12
 
 GenericIRQ:
-
     /* Return the current IRQL */
     mov eax, [esp+12]
-    movzx ecx, word ptr [fs:KPCR_IRQL]
+    movzx ecx, byte ptr [fs:KPCR_IRQL]
     mov [eax], cl
 
     /* Set the new IRQL */
@@ -349,7 +345,7 @@ GenericIRQ:
     out 0xA1, al
 
     /* Check to which PIC the EOI was sent */
-    mov eax, ebx
+    mov eax, edx
     cmp eax, 8
     jnb Pic1
 
@@ -366,7 +362,6 @@ Pic1:
     out 0x20, al
 
 DoneBegin:
-
     /* Enable interrupts and return TRUE */
     in al, 0x21
     sti
@@ -374,6 +369,7 @@ DoneBegin:
     ret 12
 .endfunc
 
+#if 0
 .globl _HalEndSystemInterrupt@8
 .func HalEndSystemInterrupt@8
 _HalEndSystemInterrupt@8:

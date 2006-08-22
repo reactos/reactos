@@ -12,6 +12,7 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+#include <ndk/asm.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -25,8 +26,6 @@ UCHAR Table[8] =
     1, 1,
     2, 2, 2, 2
 };
-
-ULONG pic_mask = {0xFFFFFFFA};
 
 static ULONG HalpPendingInterruptCount[NR_IRQS] = {0};
 
@@ -52,7 +51,7 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
   Ki386SaveFlags(flags);
   Ki386DisableInterrupts();
 
-  Mask = pic_mask | KiI8259MaskTable[Irql];
+  Mask = KeGetPcr()->IDR | KiI8259MaskTable[Irql];
   WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
   Mask >>= 8;
   WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
@@ -158,44 +157,6 @@ KfLowerIrql (KIRQL	NewIrql)
   HalpLowerIrql(NewIrql);
 }
 
-
-BOOLEAN STDCALL 
-HalBeginSystemInterrupt (KIRQL Irql,
-			 ULONG Vector,
-			 PKIRQL OldIrql)
-{
-  ULONG irq;
-  ULONG Mask;
-
-  if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
-    {
-      return(FALSE);
-    }
-  irq = Vector - IRQ_BASE;
-
-  Mask = pic_mask | KiI8259MaskTable[Irql];
-  WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
-  Mask >>= 8;
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
-
-  if (irq < 8)
-  {
-     WRITE_PORT_UCHAR((PUCHAR)0x20, 0x60 | irq);
-  }
-  else
-  {
-     /* Send EOI to the PICs */
-     WRITE_PORT_UCHAR((PUCHAR)0x20,0x62);
-     WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
-  }
-
-  *OldIrql = KeGetPcr()->Irql;
-  KeGetPcr()->Irql = Irql;
-
-  return(TRUE);
-}
-
-
 VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
 /*
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
@@ -220,9 +181,9 @@ HalEnableSystemInterrupt(
     return FALSE;
 
   irq = Vector - IRQ_BASE;
-  pic_mask &= ~(1 << irq);
+  KeGetPcr()->IDR &= ~(1 << irq);
 
-  Mask = pic_mask | KiI8259MaskTable[KeGetPcr()->Irql];
+  Mask = KeGetPcr()->IDR | KiI8259MaskTable[KeGetPcr()->Irql];
   WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
   Mask >>= 8;
   WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
