@@ -464,14 +464,12 @@ _@KfRaiseIrql@4:
     /* Set the new IRQL */
     mov [fs:KPCR_IRQL], cl
 
-#if 0
     /* Mask the interrupts in the PIC */
     mov eax, _KiI8259MaskTable[ecx*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
     out 0xA1, al
-#endif
 
     /* Restore interrupts and return old IRQL */
     popf

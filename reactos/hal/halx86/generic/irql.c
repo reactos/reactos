@@ -51,6 +51,15 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
 VOID STATIC
 HalpLowerIrql(KIRQL NewIrql)
 {
+    ULONG Mask;
+
+    if (KeGetPcr()->Irql > DISPATCH_LEVEL)
+    {
+        Mask = KeGetPcr()->IDR | KiI8259MaskTable[NewIrql];
+        WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
+        Mask >>= 8;
+        WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
+    }
   if (NewIrql >= PROFILE_LEVEL)
     {
       KeGetPcr()->Irql = NewIrql;
@@ -111,6 +120,7 @@ KfLowerIrql (KIRQL	NewIrql)
   
   HalpLowerIrql(NewIrql);
 }
+
 
 VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
 /*
