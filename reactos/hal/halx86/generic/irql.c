@@ -60,6 +60,7 @@ HalpLowerIrql(KIRQL NewIrql)
         Mask >>= 8;
         WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
     }
+
   if (NewIrql >= PROFILE_LEVEL)
     {
       KeGetPcr()->Irql = NewIrql;
@@ -73,18 +74,24 @@ HalpLowerIrql(KIRQL NewIrql)
   KeGetPcr()->Irql = DISPATCH_LEVEL;
   if (Table[KeGetPcr()->IRR] >= NewIrql)
     {
-      KeGetPcr()->IRR &= ~4;
-      KiDispatchInterrupt();
+        if (Table[KeGetPcr()->IRR] == DISPATCH_LEVEL)
+        {
+            KeGetPcr()->IRR &= ~4;
+            KiDispatchInterrupt();
+        }
     }
   KeGetPcr()->Irql = APC_LEVEL;
   if (NewIrql == APC_LEVEL)
     {
       return;
     }
-  if (KeGetCurrentThread() != NULL && 
-      KeGetCurrentThread()->ApcState.KernelApcPending)
+  if (Table[KeGetPcr()->IRR] >= NewIrql)
     {
+        if (Table[KeGetPcr()->IRR] == APC_LEVEL)
+        {
+        KeGetPcr()->IRR &= ~2;
       KiDeliverApc(KernelMode, NULL, NULL);
+        }
     }
   KeGetPcr()->Irql = PASSIVE_LEVEL;
 }
