@@ -433,8 +433,9 @@ Author:
 
 //
 // Vector base
+// ROS HACK HACK HACK
 //
-#define PRIMARY_VECTOR_BASE                     0x30
+#define PRIMARY_VECTOR_BASE                     0x40
 
 //
 // Kernel Feature Bits

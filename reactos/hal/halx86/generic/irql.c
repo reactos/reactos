@@ -19,38 +19,16 @@
  * FIXME: Use EISA_CONTROL STRUCTURE INSTEAD OF HARD-CODED OFFSETS 
 */
 
-typedef union
+UCHAR Table[8] =
 {
-   USHORT both;
-   struct
-   {
-      BYTE master;
-      BYTE slave;
-   };
-}
-PIC_MASK;
-   
-/* 
- * PURPOSE: - Mask for HalEnableSystemInterrupt and HalDisableSystemInterrupt
- *          - At startup enable timer and cascade 
- */
-#if defined(__GNUC__)
-static PIC_MASK pic_mask = {.both = 0xFFFA};
-#else
-static PIC_MASK pic_mask = { 0xFFFA };
-#endif
+    0, 0,
+    1, 1,
+    2, 2, 2, 2
+};
 
+ULONG pic_mask = {0xFFFFFFFA};
 
-/*
- * PURPOSE: Mask for disabling of acknowledged interrupts 
- */
-#if defined(__GNUC__)
-static PIC_MASK pic_mask_intr = {.both = 0x0000};
-#else
-static PIC_MASK pic_mask_intr = { 0 };
-#endif
-
-static ULONG HalpPendingInterruptCount[NR_IRQS];
+static ULONG HalpPendingInterruptCount[NR_IRQS] = {0};
 
 #define DIRQL_TO_IRQ(x)  (PROFILE_LEVEL - x)
 #define IRQ_TO_DIRQL(x)  (PROFILE_LEVEL - x)
@@ -60,40 +38,7 @@ KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
 
 /* FUNCTIONS ****************************************************************/
 
-#undef KeGetCurrentIrql
-KIRQL STDCALL KeGetCurrentIrql (VOID)
-/*
- * PURPOSE: Returns the current irq level
- * RETURNS: The current irq level
- */
-{
-  return(KeGetPcr()->Irql);
-}
-
-VOID HalpInitPICs(VOID)
-{
-  memset(HalpPendingInterruptCount, 0, sizeof(HalpPendingInterruptCount));
-
-  /* Initialization sequence */
-  WRITE_PORT_UCHAR((PUCHAR)0x20, 0x11);
-  WRITE_PORT_UCHAR((PUCHAR)0xa0, 0x11);
-  /* Start of hardware irqs (0x24) */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, IRQ_BASE);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, IRQ_BASE + 8);
-  /* 8259-1 is master */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x4);
-  /* 8259-2 is slave */
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x2);
-  /* 8086 mode */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x1);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x1);   
-  /* Enable interrupts */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, pic_mask.master);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, pic_mask.slave);
-  
-  /* We can now enable interrupts */
-  Ki386EnableInterrupts();
-}
+extern ULONG KiI8259MaskTable[];
 
 VOID HalpEndSystemInterrupt(KIRQL Irql)
 /*
@@ -101,21 +46,16 @@ VOID HalpEndSystemInterrupt(KIRQL Irql)
  */
 {
   ULONG flags;
-  const USHORT mask[] = 
-  {
-     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-     0x0000, 0x0000, 0x0000, 0x0000, 0x8000, 0xc000, 0xe000, 0xf000,
-     0xf800, 0xfc00, 0xfe00, 0xff00, 0xff80, 0xffc0, 0xffe0, 0xfff0,
-     0xfff8, 0xfffc, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-  };     
+  ULONG Mask;
 
   /* Interrupts should be disable while enabling irqs of both pics */
   Ki386SaveFlags(flags);
   Ki386DisableInterrupts();
 
-  pic_mask_intr.both &= mask[Irql];
-  WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
+  Mask = pic_mask | KiI8259MaskTable[Irql];
+  WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
+  Mask >>= 8;
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
 
   /* restore flags */
   Ki386RestoreFlags(flags);
@@ -168,9 +108,9 @@ HalpLowerIrql(KIRQL NewIrql)
       return;
     }
   KeGetPcr()->Irql = DISPATCH_LEVEL;
-  if (((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST])
+  if (Table[KeGetPcr()->IRR] >= NewIrql)
     {
-      ((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST] = FALSE;
+      KeGetPcr()->IRR &= ~4;
       KiDispatchInterrupt();
     }
   KeGetPcr()->Irql = APC_LEVEL;
@@ -219,172 +159,36 @@ KfLowerIrql (KIRQL	NewIrql)
 }
 
 
-/**********************************************************************
- * NAME							EXPORTED
- *	KeLowerIrql
- *
- * DESCRIPTION
- *	Restores the irq level on the current processor
- *
- * ARGUMENTS
- *	NewIrql = Irql to lower to
- *
- * RETURN VALUE
- *	None
- *
- * NOTES
- */
-#undef KeLowerIrql
-VOID STDCALL
-KeLowerIrql (KIRQL NewIrql)
-{
-  KfLowerIrql (NewIrql);
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	KfRaiseIrql
- *
- * DESCRIPTION
- *	Raises the hardware priority (irql)
- *
- * ARGUMENTS
- *	NewIrql = Irql to raise to
- *
- * RETURN VALUE
- *	previous irq level
- *
- * NOTES
- *	Uses fastcall convention
- */
-
-KIRQL FASTCALL
-KfRaiseIrql (KIRQL	NewIrql)
-{
-  KIRQL OldIrql;
-  
-  DPRINT("KfRaiseIrql(NewIrql %d)\n", NewIrql);
-  
-  if (NewIrql < KeGetPcr()->Irql)
-    {
-      DbgPrint ("%s:%d CurrentIrql %x NewIrql %x\n",
-		__FILE__,__LINE__,KeGetPcr()->Irql,NewIrql);
-      KEBUGCHECK (0);
-      for(;;);
-    }
-  
-  OldIrql = KeGetPcr()->Irql;
-  KeGetPcr()->Irql = NewIrql;
-  return OldIrql;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	KeRaiseIrql
- *
- * DESCRIPTION
- *	Raises the hardware priority (irql)
- *
- * ARGUMENTS
- *	NewIrql = Irql to raise to
- *	OldIrql (OUT) = Caller supplied storage for the previous irql
- *
- * RETURN VALUE
- *	None
- *
- * NOTES
- *	Calls KfRaiseIrql
- */
-#undef KeRaiseIrql
-VOID STDCALL
-KeRaiseIrql (KIRQL	NewIrql,
-	     PKIRQL	OldIrql)
-{
-  *OldIrql = KfRaiseIrql (NewIrql);
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	KeRaiseIrqlToDpcLevel
- *
- * DESCRIPTION
- *	Raises the hardware priority (irql) to DISPATCH level
- *
- * ARGUMENTS
- *	None
- *
- * RETURN VALUE
- *	Previous irq level
- *
- * NOTES
- *	Calls KfRaiseIrql
- */
-
-KIRQL STDCALL
-KeRaiseIrqlToDpcLevel (VOID)
-{
-  return KfRaiseIrql (DISPATCH_LEVEL);
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	KeRaiseIrqlToSynchLevel
- *
- * DESCRIPTION
- *	Raises the hardware priority (irql) to CLOCK2 level
- *
- * ARGUMENTS
- *	None
- *
- * RETURN VALUE
- *	Previous irq level
- *
- * NOTES
- *	Calls KfRaiseIrql
- */
-
-KIRQL STDCALL
-KeRaiseIrqlToSynchLevel (VOID)
-{
-  return KfRaiseIrql (CLOCK2_LEVEL);
-}
-
-
 BOOLEAN STDCALL 
 HalBeginSystemInterrupt (KIRQL Irql,
 			 ULONG Vector,
 			 PKIRQL OldIrql)
 {
   ULONG irq;
+  ULONG Mask;
+
   if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
     {
       return(FALSE);
     }
   irq = Vector - IRQ_BASE;
-  pic_mask_intr.both |= ((1 << irq) & 0xfffe);	// do not disable the timer interrupt
+
+  Mask = pic_mask | KiI8259MaskTable[Irql];
+  WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
+  Mask >>= 8;
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
 
   if (irq < 8)
   {
-     WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
-     WRITE_PORT_UCHAR((PUCHAR)0x20, 0x20);
+     WRITE_PORT_UCHAR((PUCHAR)0x20, 0x60 | irq);
   }
   else
   {
-     WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
      /* Send EOI to the PICs */
-     WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
+     WRITE_PORT_UCHAR((PUCHAR)0x20,0x62);
      WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
   }
-  
-  if (KeGetPcr()->Irql >= Irql)
-    {
-      HalpPendingInterruptCount[irq]++;
-      return(FALSE);
-    }
+
   *OldIrql = KeGetPcr()->Irql;
   KeGetPcr()->Irql = Irql;
 
@@ -397,35 +201,10 @@ VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
 {
+    //DPRINT1("ENDING: %lx %lx\n", Irql, Unknown2);
   HalpLowerIrql(Irql);
   HalpEndSystemInterrupt(Irql);
 }
-  
-BOOLEAN
-STDCALL
-HalDisableSystemInterrupt(
-  ULONG Vector,
-  KIRQL Irql)
-{
-  ULONG irq;
-  
-  if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
-    return FALSE;
-
-  irq = Vector - IRQ_BASE;
-  pic_mask.both |= (1 << irq);
-  if (irq < 8)
-     {
-      WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.slave));
-     }
-  else
-    {
-      WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
-    }
-  
-  return TRUE;
-}
-
 
 BOOLEAN
 STDCALL
@@ -435,42 +214,22 @@ HalEnableSystemInterrupt(
   KINTERRUPT_MODE InterruptMode)
 {
   ULONG irq;
+  ULONG Mask;
 
   if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
     return FALSE;
 
   irq = Vector - IRQ_BASE;
-  pic_mask.both &= ~(1 << irq);
-  if (irq < 8)
-    {
-      WRITE_PORT_UCHAR((PUCHAR)0x21, (UCHAR)(pic_mask.master|pic_mask_intr.master));
-    }
-  else
-     {
-       WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)(pic_mask.slave|pic_mask_intr.slave));
-     }
+  pic_mask &= ~(1 << irq);
+
+  Mask = pic_mask | KiI8259MaskTable[KeGetPcr()->Irql];
+  WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
+  Mask >>= 8;
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
 
   return TRUE;
 }
 
 
-VOID FASTCALL
-HalRequestSoftwareInterrupt(
-  IN KIRQL Request)
-{
-  switch (Request)
-  {
-    case APC_LEVEL:
-      ((PKIPCR)KeGetPcr())->HalReserved[HAL_APC_REQUEST] = TRUE;
-      break;
-
-    case DISPATCH_LEVEL:
-      ((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST] = TRUE;
-      break;
-      
-    default:
-      KEBUGCHECK(0);
-  }
-}
 
 /* EOF */

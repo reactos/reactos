@@ -32,6 +32,7 @@
 	<define name="__USE_W32API" />
 	<file>ipi.c</file>
 	<file>irql.c</file>
+    <file>irq.S</file>
 	<file>processor.c</file>
 	<file>resource.c</file>
 	<file>spinlock.c</file>

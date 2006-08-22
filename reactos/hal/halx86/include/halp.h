@@ -29,7 +29,7 @@ PADAPTER_OBJECT STDCALL HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN
 VOID HalpInitBusHandlers (VOID);
 
 /* irql.c */
-VOID HalpInitPICs(VOID);
+VOID NTAPI HalpInitPICs(VOID);
 
 /* udelay.c */
 VOID HalpCalibrateStallExecution(VOID);
