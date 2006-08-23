@@ -387,18 +387,16 @@ SkipMask2:
 
     /* Set IRQL and check if there are pending software interrupts */
     mov [fs:KPCR_IRQL], cl
-#if 0
     mov eax, [fs:KPCR_IRR]
     mov al, _SoftIntByteTable[eax]
     cmp al, cl
-    ja DoCall
-#endif
+    //ja DoCall
     ret 8
 
 DoCall:
 
     /* There are pending softwate interrupts, call their handlers */
-    add esp, 8
+    add esp, 12
     jmp SoftIntHandlerTable2[eax*4]
 .endfunc
 
@@ -627,12 +625,10 @@ _HalpEndSoftwareInterrupt@4:
 SoftwareInt:
     /* Check if there are pending software interrupts */
     mov [fs:KPCR_IRQL], cl
-#if 0
-    mov eax, [fs:KPCR_IDR]
+    mov eax, [fs:KPCR_IRR]
     mov al, _SoftIntByteTable[eax]
     cmp al, cl
     ja DoCall2
-#endif
     ret 4
 
 DoCall2:
