@@ -19,18 +19,10 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "uhciver.h"
-#include "ntddk.h"
-#include "stdio.h"
-#include "debug.h"
-#include "umss.h"
-#include "usb.h"
-#include "hub.h"
+#include "usbdriver.h"
 
-// ULONG_PTR defining hack, to use ntddsci.h from reactos
-// plus hack for __field_ecount for a new WDK
+// Hack for __field_ecount for a new WDK
 //FIXME: Move to a header file later
-typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #ifndef __field_ecount
 #    define __field_ecount(x)
 #endif

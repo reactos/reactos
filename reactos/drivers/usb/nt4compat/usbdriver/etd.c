@@ -19,8 +19,8 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <usbdriver.h>
 #include "ehci.h"
-#include "debug.h"
 
 #define init_elem( ptr, type, ehci_elem_type ) \
 {\

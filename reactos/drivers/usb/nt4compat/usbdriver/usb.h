@@ -1,6 +1,5 @@
 #ifndef __USBD_H__
 #define __USBD_H__
-#include "ntddk.h"
 /*
  * Some USB bandwidth allocation constants.
  */
@@ -8,6 +7,8 @@
 #ifndef BOOL
 #define BOOL ULONG
 #endif
+
+typedef unsigned long ULONG_PTR, *PULONG_PTR;
 
 #define USB2_HOST_DELAY	5			/* nsec, guess */
 #define BW_HOST_DELAY	1000L		/* nanoseconds */
@@ -778,8 +779,6 @@ typedef struct _CTRL_REQ_STACK
 } CTRL_REQ_STACK, *PCTRL_REQ_STACK;
 
 #pragma pack( pop, usb_align )
-
-#include "td.h"
 
 typedef struct _URB_HS_PIPE_CONTENT
 {

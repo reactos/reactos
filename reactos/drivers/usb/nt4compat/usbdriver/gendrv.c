@@ -20,15 +20,8 @@
  */
 
 //this driver is part of the dev manager responsible to manage non-driver device
-
-#include "td.h"
-#include "ntddk.h"
-#include "umss.h"
-#include "usb.h"
-#include "hub.h"
-#include "debug.h"
+#include "usbdriver.h"
 #include "gendrv.h"
-#include "stdio.h"
 
 #define if_dev( dev_obj ) \
 ( ( ( ( PGENDRV_DEVICE_EXTENSION)dev_obj->DeviceExtension )->pdriver->driver_desc.flags & USB_DRIVER_FLAG_IF_CAPABLE ) != 0 )
@@ -581,6 +574,7 @@ gendrv_load_ext_drvr(PGENDRV_DRVR_EXTENSION pdrvr_ext, PUSB_DESC_HEADER pdesc)
     val_info = NULL;
     RtlInitUnicodeString(&usz, L"");
     gendrv_build_reg_string(pdesc, &usz);
+DbgPrint("UHCI: Trying to load driver %wZ\n", &usz);
     if (gendrv_open_reg_key(&handle, NULL, &usz, KEY_READ, FALSE) != STATUS_SUCCESS)
     {
         goto ERROR_OUT;

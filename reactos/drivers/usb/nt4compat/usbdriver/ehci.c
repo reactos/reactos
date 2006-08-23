@@ -19,13 +19,9 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "td.h"
-#include "hub.h"
-#include "debug.h"
-#include "stdio.h"
-#include "usb.h"
-#include <ntddk.h>
+#include "usbdriver.h"
 #include "ehci.h"
+
 //----------------------------------------------------------
 // ehci routines
 //#define DEMO

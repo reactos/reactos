@@ -19,18 +19,13 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "ntddk.h"
-#include "usb.h"
-#include "hub.h"
-#include "debug.h"
+#include "usbdriver.h"
 
 LONG g_alloc_cnt = 0;
 ULONG cpu_clock_freq = 0;
 
 NTSTATUS usb_get_descriptor(PUSB_DEV pdev, PURB purb);
-
 VOID usb_set_interface_completion(PURB purb, PVOID context);
-
 NTSTATUS usb_set_interface(PURB purb);
 
 PVOID

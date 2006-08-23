@@ -19,18 +19,12 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <ntddk.h>
-#include "debug.h"
-#include "umss.h"
+#include "usbdriver.h"
 
 VOID umss_cbi_send_adsc_complete(PURB purb, PVOID context);
-
 VOID umss_cbi_transfer_data(PUMSS_DEVICE_EXTENSION pdev_ext);
-
 VOID umss_cbi_get_status(PUMSS_DEVICE_EXTENSION pdev_ext);
-
 VOID umss_cbi_transfer_data_complete(PURB purb, PVOID context);
-
 VOID umss_cbi_get_status_complete(PURB purb, PVOID context);
 
 NTSTATUS

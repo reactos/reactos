@@ -20,22 +20,12 @@
  */
 
 //this driver is part of the dev manager responsible to manage if device
-
-#include "td.h"
-#include "ntddk.h"
-#include "umss.h"
-#include "usb.h"
-#include "hub.h"
-#include "debug.h"
+#include "usbdriver.h"
 
 VOID compdev_set_cfg_completion(PURB purb, PVOID context);
-
 VOID compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
-
 BOOL compdev_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle);
-
 BOOL compdev_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
-
 BOOL compdev_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
 BOOL

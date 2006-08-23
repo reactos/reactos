@@ -1,0 +1,12 @@
+#include <ntddk.h>
+#include <stdio.h>
+#include "debug.h"
+#include "usb.h"
+#include "hcd.h"
+#include "td.h"
+#include "irplist.h"
+#include "events.h"
+#include "devmgr.h"
+#include "hub.h"
+#include "umss.h"
+#include "uhciver.h"

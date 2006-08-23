@@ -5,10 +5,6 @@
 #ifndef __UHCI_H__
 #define __UHCI_H__
 
-#include "usb.h"
-#include "ntddk.h"
-#include "hcd.h"
-
 #define BOOL                        ULONG
 #define LIST_HEAD                   LIST_ENTRY
 #define PLIST_HEAD                  PLIST_ENTRY

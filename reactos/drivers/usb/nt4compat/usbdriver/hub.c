@@ -19,10 +19,8 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "hub.h"
-#include "td.h"
-#include "debug.h"
-#include "umss.h"
+#include "usbdriver.h"
+
 //----------------------------------------------------------
 //event pool routines
 #define crash_machine() \
@@ -47,8 +45,6 @@
 \
 }
 
-#define hub_ext_from_dev( pdEV ) ( ( PHUB2_EXTENSION )pdEV->dev_ext )
-
 #define realloc_buf( pdEV, puRB ) \
 {\
 	PBYTE data_buf;\
@@ -65,88 +61,9 @@
 	( puRB )->data_buffer = &data_buf[ ( LONG ) ( puRB )->context ];\
 }
 
-
-BOOL
-dev_mgr_set_if_driver(PUSB_DEV_MANAGER dev_mgr,
-                      DEV_HANDLE if_handle,
-                      PUSB_DRIVER pdriver,
-                      PUSB_DEV pdev //if pdev != NULL, we use pdev instead if_handle, and must have dev_lock acquired.
-                      )
-{
-    ULONG i;
-    USE_IRQL;
-
-    if (dev_mgr == NULL || if_handle == 0 || pdriver == NULL)
-        return FALSE;
-
-    i = if_idx_from_handle(if_handle);
-    if (pdev != NULL)
-    {
-        if (dev_state(pdev) < USB_DEV_STATE_BEFORE_ZOMB)
-        {
-            pdev->usb_config->interf[i].pif_drv = pdriver;
-            return TRUE;
-        }
-        return FALSE;
-    }
-
-    if (usb_query_and_lock_dev(dev_mgr, if_handle, &pdev) != STATUS_SUCCESS)
-        return FALSE;
-
-    lock_dev(pdev, TRUE);
-    if (dev_state(pdev) != USB_DEV_STATE_ZOMB)
-    {
-        pdev->usb_config->interf[i].pif_drv = pdriver;
-    }
-    unlock_dev(pdev, TRUE);
-    usb_unlock_dev(pdev);
-    return TRUE;
-}
-
-BOOL
-dev_mgr_set_driver(PUSB_DEV_MANAGER dev_mgr,
-                   DEV_HANDLE dev_handle,
-                   PUSB_DRIVER pdriver,
-                   PUSB_DEV pdev  //if pdev != NULL, we use pdev instead if_handle
-                   )
-{
-    USE_IRQL;
-
-    if (dev_mgr == NULL || dev_handle == 0 || pdriver == NULL)
-        return FALSE;
-
-    if (pdev != NULL)
-    {
-        if (dev_state(pdev) < USB_DEV_STATE_BEFORE_ZOMB)
-        {
-            pdev->dev_driver = pdriver;
-            return TRUE;
-        }
-        return FALSE;
-    }
-
-    if (usb_query_and_lock_dev(dev_mgr, dev_handle, &pdev) != STATUS_SUCCESS)
-        return FALSE;
-
-    lock_dev(pdev, FALSE);
-    if (dev_state(pdev) < USB_DEV_STATE_BEFORE_ZOMB)
-    {
-        pdev->dev_driver = pdriver;
-    }
-    unlock_dev(pdev, FALSE);
-    usb_unlock_dev(pdev);
-
-    return TRUE;
-
-}
-
-USB_DRIVER g_driver_list[DEVMGR_MAX_DRIVERS];
-USB_DEV_MANAGER g_dev_mgr;
 extern ULONG cpu_clock_freq;
 
 BOOL hub_check_reset_port_status(PUSB_DEV pdev, LONG port_idx);
-
-BOOL hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOL from_dpc);
 
 VOID hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOL from_dpc);
 
@@ -178,12 +95,6 @@ void hub_get_hub_desc_completion(PURB purb, PVOID pcontext);
 
 NTSTATUS hub_start_int_request(PUSB_DEV pdev);
 
-BOOL hub_remove_reset_event(PUSB_DEV pdev, ULONG port_idx, BOOL from_dpc);
-
-BOOL hub_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
-
-BOOL hub_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
-
 BOOL hub_connect(PCONNECT_DATA init_param, DEV_HANDLE dev_handle);
 
 BOOL hub_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
@@ -193,25 +104,6 @@ BOOL hub_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 NTSTATUS hub_disable_port_request(PUSB_DEV pdev, UCHAR port_idx);
 
 VOID hub_start_reset_port_completion(PURB purb, PVOID context);
-
-BOOL dev_mgr_start_config_dev(PUSB_DEV pdev);
-
-BOOL dev_mgr_event_init(PUSB_DEV dev,   //always null. we do not use this param
-                        ULONG event,
-                        ULONG context,
-                        ULONG param);
-
-VOID dev_mgr_get_desc_completion(PURB purb, PVOID context);
-
-VOID dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG param);
-
-LONG dev_mgr_score_driver_for_dev(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver, PUSB_DEVICE_DESC pdev_desc);
-
-NTSTATUS dev_mgr_destroy_usb_config(PUSB_CONFIGURATION pcfg);
-
-BOOL dev_mgr_start_select_driver(PUSB_DEV pdev);
-
-VOID dev_mgr_cancel_irp(PDEVICE_OBJECT pdev_obj, PIRP pirp);
 
 BOOL
 init_event_pool(PUSB_EVENT_POOL pool)
@@ -363,23 +255,6 @@ destroy_timer_svc_pool(PTIMER_SVC_POOL pool)
     return TRUE;
 }
 
-BOOL
-dev_mgr_post_event(PUSB_DEV_MANAGER dev_mgr, PUSB_EVENT event)
-{
-    KIRQL old_irql;
-
-    if (dev_mgr == NULL || event == NULL)
-        return FALSE;
-
-    KeAcquireSpinLock(&dev_mgr->event_list_lock, &old_irql);
-    InsertTailList(&dev_mgr->event_list, &event->event_link);
-    KeReleaseSpinLock(&dev_mgr->event_list_lock, old_irql);
-
-    KeSetEvent(&dev_mgr->wake_up_event, 0, FALSE);
-    return TRUE;
-}
-
-
 VOID
 event_list_default_process_queue(PLIST_HEAD event_list,
                                  PUSB_EVENT_POOL event_pool, PUSB_EVENT usb_event, PUSB_EVENT out_event)
@@ -463,1046 +338,6 @@ psq_push(PPORT_STATUS_QUEUE psq, ULONG status)
     return TRUE;
 }
 
-VOID
-dev_mgr_driver_entry_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr)
-{
-    // Device Info
-
-    RtlZeroMemory(pdrvr, sizeof(USB_DRIVER) * DEVMGR_MAX_DRIVERS);
-
-    pdrvr[RH_DRIVER_IDX].driver_init = rh_driver_init;  // in fact, this routine will init the rh device rather that the driver struct.
-    pdrvr[RH_DRIVER_IDX].driver_destroy = rh_driver_destroy;    // we do not need rh to destroy currently, since that may means fatal hardware failure
-
-    pdrvr[HUB_DRIVER_IDX].driver_init = hub_driver_init;        //no need, since dev_mgr is also a hub driver
-    pdrvr[HUB_DRIVER_IDX].driver_destroy = hub_driver_destroy;
-
-    pdrvr[UMSS_DRIVER_IDX].driver_init = umss_if_driver_init;
-    pdrvr[UMSS_DRIVER_IDX].driver_destroy = umss_if_driver_destroy;
-
-    pdrvr[COMP_DRIVER_IDX].driver_init = compdev_driver_init;
-    pdrvr[COMP_DRIVER_IDX].driver_destroy = compdev_driver_destroy;
-
-    pdrvr[GEN_DRIVER_IDX].driver_init = gendrv_driver_init;
-    pdrvr[GEN_DRIVER_IDX].driver_destroy = gendrv_driver_destroy;
-
-    pdrvr[GEN_IF_DRIVER_IDX].driver_init = gendrv_if_driver_init;
-    pdrvr[GEN_IF_DRIVER_IDX].driver_destroy = gendrv_if_driver_destroy;
-}
-
-BOOL
-dev_mgr_strobe(PUSB_DEV_MANAGER dev_mgr)
-{
-    PUSB_EVENT pevent;
-    HANDLE thread_handle;
-
-    if (dev_mgr == NULL)
-        return FALSE;
-    if (dev_mgr->hcd_count == 0)
-        return FALSE;
-
-    dev_mgr->term_flag = FALSE;
-
-    if (dev_mgr->hcd_count == 0)
-        return FALSE;
-
-    KeInitializeSpinLock(&dev_mgr->event_list_lock);
-    InitializeListHead(&dev_mgr->event_list);
-    init_event_pool(&dev_mgr->event_pool);
-
-    pevent = alloc_event(&dev_mgr->event_pool, 1);
-    if (pevent == NULL)
-    {
-        destroy_event_pool(&dev_mgr->event_pool);
-        return FALSE;
-    }
-
-    pevent->flags = USB_EVENT_FLAG_ACTIVE;
-    pevent->event = USB_EVENT_INIT_DEV_MGR;
-
-    pevent->process_queue = event_list_default_process_queue;
-    pevent->process_event = dev_mgr_event_init;
-
-    pevent->context = (ULONG) dev_mgr;
-
-    KeInitializeEvent(&dev_mgr->wake_up_event, SynchronizationEvent, FALSE);
-
-    InsertTailList(&dev_mgr->event_list, &pevent->event_link);
-
-    if (PsCreateSystemThread(&thread_handle, 0, NULL, NULL, NULL, dev_mgr_thread, dev_mgr) != STATUS_SUCCESS)
-    {
-        destroy_event_pool(&dev_mgr->event_pool);
-        return FALSE;
-    }
-
-    ObReferenceObjectByHandle(thread_handle,
-                              THREAD_ALL_ACCESS, NULL, KernelMode, (PVOID *) & dev_mgr->pthread, NULL);
-
-    ZwClose(thread_handle);
-
-    return TRUE;
-}
-
-BOOL
-dev_mgr_event_init(PUSB_DEV pdev,       //always null. we do not use this param
-                   ULONG event, ULONG context, ULONG param)
-{
-    LARGE_INTEGER due_time;
-    PUSB_DEV_MANAGER dev_mgr;
-    LONG i;
-
-    usb_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_event_init(): dev_mgr=0x%x, event=0x%x\n", context, event));
-    dev_mgr = (PUSB_DEV_MANAGER) context;
-    if (dev_mgr == NULL)
-        return FALSE;
-
-    if (event != USB_EVENT_INIT_DEV_MGR)
-        return FALSE;
-
-    //dev_mgr->root_hub = NULL;
-    KeInitializeTimer(&dev_mgr->dev_mgr_timer);
-
-    KeInitializeDpc(&dev_mgr->dev_mgr_timer_dpc, dev_mgr_timer_dpc_callback, (PVOID) dev_mgr);
-
-    KeInitializeSpinLock(&dev_mgr->timer_svc_list_lock);
-    InitializeListHead(&dev_mgr->timer_svc_list);
-    init_timer_svc_pool(&dev_mgr->timer_svc_pool);
-    dev_mgr->timer_click = 0;
-
-    init_irp_list(&dev_mgr->irp_list);
-
-    KeInitializeSpinLock(&dev_mgr->dev_list_lock);
-    InitializeListHead(&dev_mgr->dev_list);
-
-    dev_mgr->hub_count = 0;
-    InitializeListHead(&dev_mgr->hub_list);
-
-    dev_mgr->conn_count = 0;
-    dev_mgr->driver_list = g_driver_list;
-
-    dev_mgr_driver_entry_init(dev_mgr, dev_mgr->driver_list);
-
-    for(i = 0; i < DEVMGR_MAX_DRIVERS; i++)
-    {
-        if (dev_mgr->driver_list[i].driver_init == NULL)
-            continue;
-
-        if (dev_mgr->driver_list[i].driver_init(dev_mgr, &dev_mgr->driver_list[i]) == FALSE)
-            break;
-    }
-    if (i == DEVMGR_MAX_DRIVERS)
-    {
-        due_time.QuadPart = -(DEV_MGR_TIMER_INTERVAL_NS - 10);
-
-        KeSetTimerEx(&dev_mgr->dev_mgr_timer,
-                     due_time, DEV_MGR_TIMER_INTERVAL_MS, &dev_mgr->dev_mgr_timer_dpc);
-
-        return TRUE;
-    }
-
-    i--;
-
-    for(; i >= 0; i--)
-    {
-        if (dev_mgr->driver_list[i].driver_destroy)
-            dev_mgr->driver_list[i].driver_destroy(dev_mgr, &dev_mgr->driver_list[i]);
-    }
-
-    KeCancelTimer(&dev_mgr->dev_mgr_timer);
-    KeRemoveQueueDpc(&dev_mgr->dev_mgr_timer_dpc);
-    return FALSE;
-
-}
-
-VOID
-dev_mgr_destroy(PUSB_DEV_MANAGER dev_mgr)
-{
-    LONG i;
-    // oops...
-    KeCancelTimer(&dev_mgr->dev_mgr_timer);
-    KeRemoveQueueDpc(&dev_mgr->dev_mgr_timer_dpc);
-
-    for(i = DEVMGR_MAX_DRIVERS - 1; i >= 0; i--)
-        dev_mgr->driver_list[i].driver_destroy(dev_mgr, &dev_mgr->driver_list[i]);
-
-    destroy_irp_list(&dev_mgr->irp_list);
-    destroy_timer_svc_pool(&dev_mgr->timer_svc_pool);
-    destroy_event_pool(&dev_mgr->event_pool);
-
-}
-
-VOID
-dev_mgr_thread(PVOID context)
-{
-    PUSB_DEV_MANAGER dev_mgr;
-    PUSB_EVENT pevent;
-    PLIST_ENTRY pthis, pnext;
-    USB_EVENT usb_event;
-    LARGE_INTEGER time_out;
-    NTSTATUS status;
-    BOOL dev_mgr_inited;
-    KIRQL old_irql;
-    LONG i;
-
-    dev_mgr = (PUSB_DEV_MANAGER) context;
-    dev_mgr_inited = FALSE;
-    usb_cal_cpu_freq();
-    time_out.u.LowPart = (10 * 1000 * 1000) * 100 - 1;  //1 minutes
-    time_out.u.HighPart = 0;
-    time_out.QuadPart = -time_out.QuadPart;
-
-    //usb_dbg_print( DBGLVL_MAXIMUM + 1, ( "dev_mgr_thread(): current uhci status=0x%x\n", uhci_status( dev_mgr->pdev_ext->uhci ) ) );
-
-    while (dev_mgr->term_flag == FALSE)
-    {
-        KeAcquireSpinLock(&dev_mgr->event_list_lock, &old_irql);
-        if (IsListEmpty(&dev_mgr->event_list) == TRUE)
-        {
-            KeReleaseSpinLock(&dev_mgr->event_list_lock, old_irql);
-            status = KeWaitForSingleObject(&dev_mgr->wake_up_event, Executive, KernelMode, TRUE, &time_out);
-            continue;
-        }
-
-        // usb_dbg_print( DBGLVL_MAXIMUM, ( "dev_mgr_thread(): current element in event list is 0x%x\n", \
-        //                      dbg_count_list( &dev_mgr->event_list ) ) );
-
-        dev_mgr_inited = TRUE;  //since we have post one event, if this statement is executed, dev_mgr_event_init must be called sometime later or earlier
-
-        ListFirst(&dev_mgr->event_list, pthis);
-        pevent = struct_ptr(pthis, USB_EVENT, event_link);
-
-        while (pevent && ((pevent->flags & USB_EVENT_FLAG_ACTIVE) == 0))
-        {
-            //skip inactive ones
-            ListNext(&dev_mgr->event_list, &pevent->event_link, pnext);
-            pevent = struct_ptr(pnext, USB_EVENT, event_link);
-        }
-
-        if (pevent != NULL)
-        {
-            if (pevent->process_queue == NULL)
-                pevent->process_queue = event_list_default_process_queue;
-
-            pevent->process_queue(&dev_mgr->event_list, &dev_mgr->event_pool, pevent, &usb_event);
-        }
-        else
-        {
-            //no active event
-            KeReleaseSpinLock(&dev_mgr->event_list_lock, old_irql);
-            status = KeWaitForSingleObject(&dev_mgr->wake_up_event, Executive, KernelMode, TRUE, &time_out      // 10 minutes
-                );
-
-            usb_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_thread(): wake up, reason=0x%x\n", status));
-            continue;
-        }
-
-        KeReleaseSpinLock(&dev_mgr->event_list_lock, old_irql);
-
-        if (usb_event.process_event)
-        {
-            usb_event.process_event(usb_event.pdev, usb_event.event, usb_event.context, usb_event.param);
-        }
-        else
-        {
-            event_list_default_process_event(usb_event.pdev,
-                                             usb_event.event, usb_event.context, usb_event.param);
-        }
-    }
-
-    if (dev_mgr_inited)
-    {
-        for(i = 0; i < dev_mgr->hcd_count; i++)
-            dev_mgr_disconnect_dev(dev_mgr->hcd_array[i]->hcd_get_root_hub(dev_mgr->hcd_array[i]));
-        dev_mgr_destroy(dev_mgr);
-    }
-    PsTerminateSystemThread(0);
-}
-
-VOID
-dev_mgr_timer_dpc_callback(PKDPC Dpc, PVOID context, PVOID SystemArgument1, PVOID SystemArgument2)
-{
-    PUSB_DEV_MANAGER dev_mgr;
-    LIST_HEAD templist;
-    PLIST_ENTRY pthis, pnext;
-    static ULONG ticks = 0;
-
-    ticks++;
-    dev_mgr = (PUSB_DEV_MANAGER) context;
-    if (dev_mgr == NULL)
-        return;
-
-    dev_mgr->timer_click++;
-    InitializeListHead(&templist);
-
-    KeAcquireSpinLockAtDpcLevel(&dev_mgr->timer_svc_list_lock);
-    if (IsListEmpty(&dev_mgr->timer_svc_list) == TRUE)
-    {
-        KeReleaseSpinLockFromDpcLevel(&dev_mgr->timer_svc_list_lock);
-        return;
-    }
-
-    ListFirst(&dev_mgr->timer_svc_list, pthis);
-    while (pthis)
-    {
-        ((PTIMER_SVC) pthis)->counter++;
-        ListNext(&dev_mgr->timer_svc_list, pthis, pnext);
-        if (((PTIMER_SVC) pthis)->counter >= ((PTIMER_SVC) pthis)->threshold)
-        {
-            RemoveEntryList(pthis);
-            InsertTailList(&templist, pthis);
-        }
-        pthis = pnext;
-    }
-
-    KeReleaseSpinLockFromDpcLevel(&dev_mgr->timer_svc_list_lock);
-
-
-    while (IsListEmpty(&templist) == FALSE)
-    {
-        pthis = RemoveHeadList(&templist);
-        ((PTIMER_SVC) pthis)->func(((PTIMER_SVC) pthis)->pdev, (PVOID) ((PTIMER_SVC) pthis)->context);
-        KeAcquireSpinLockAtDpcLevel(&dev_mgr->timer_svc_list_lock);
-        free_timer_svc(&dev_mgr->timer_svc_pool, (PTIMER_SVC) pthis);
-        KeReleaseSpinLockFromDpcLevel(&dev_mgr->timer_svc_list_lock);
-    }
-
-}
-
-BOOL
-dev_mgr_request_timer_svc(PUSB_DEV_MANAGER dev_mgr,
-                          PUSB_DEV pdev, ULONG context, ULONG due_time, TIMER_SVC_HANDLER handler)
-{
-    PTIMER_SVC timer_svc;
-    KIRQL old_irql;
-
-    if (dev_mgr == NULL || pdev == NULL || due_time == 0 || handler == NULL)
-        return FALSE;
-
-    KeAcquireSpinLock(&dev_mgr->timer_svc_list_lock, &old_irql);
-    timer_svc = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
-    if (timer_svc == NULL)
-    {
-        KeReleaseSpinLock(&dev_mgr->timer_svc_list_lock, old_irql);
-        return FALSE;
-    }
-    timer_svc->pdev = pdev;
-    timer_svc->threshold = due_time;
-    timer_svc->func = handler;
-    timer_svc->counter = 0;
-
-    InsertTailList(&dev_mgr->timer_svc_list, &timer_svc->timer_svc_link);
-    KeReleaseSpinLock(&dev_mgr->timer_svc_list_lock, old_irql);
-    return TRUE;
-}
-
-BYTE
-dev_mgr_alloc_addr(PUSB_DEV_MANAGER dev_mgr, PHCD hcd)
-{
-    // alloc a usb addr for the device within 1-128
-    ULONG i;
-    if (dev_mgr == NULL || hcd == NULL)
-        return 0xff;
-
-    return hcd->hcd_alloc_addr(hcd);
-}
-
-BOOL
-dev_mgr_free_addr(PUSB_DEV_MANAGER dev_mgr, PUSB_DEV pdev, BYTE addr)
-{
-    PHCD hcd;
-    if (addr & 0x80)
-        return FALSE;
-
-    if (dev_mgr == NULL || pdev == NULL)
-        return FALSE;
-
-    hcd = pdev->hcd;
-    if (hcd == NULL)
-        return FALSE;
-    hcd->hcd_free_addr(hcd, addr);
-    return TRUE;
-}
-
-PUSB_DEV
-dev_mgr_alloc_device(PUSB_DEV_MANAGER dev_mgr, PHCD hcd)
-{
-    BYTE addr;
-    PUSB_DEV pdev;
-
-    if ((addr = dev_mgr_alloc_addr(dev_mgr, hcd)) == 0xff)
-        return NULL;
-
-    pdev = usb_alloc_mem(NonPagedPool, sizeof(USB_DEV));
-    if (pdev == NULL)
-        return NULL;
-
-    RtlZeroMemory(pdev, sizeof(USB_DEV));
-
-    KeInitializeSpinLock(&pdev->dev_lock);
-    dev_mgr->conn_count++;
-
-    pdev->flags = USB_DEV_STATE_RESET;  //class | cur_state | low speed
-    pdev->ref_count = 0;
-    pdev->dev_addr = addr;
-
-    pdev->hcd = hcd;
-
-    pdev->dev_id = dev_mgr->conn_count; //will be used to compose dev_handle
-
-    InitializeListHead(&pdev->default_endp.urb_list);
-    pdev->default_endp.pusb_if = (PUSB_INTERFACE) pdev;
-    pdev->default_endp.flags = USB_ENDP_FLAG_DEFAULT_ENDP;      //toggle | busy-count | stall | default-endp
-
-    return pdev;
-}
-
-VOID
-dev_mgr_free_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DEV pdev)
-{
-    if (pdev == NULL || dev_mgr == NULL)
-        return;
-
-    dev_mgr_free_addr(dev_mgr, pdev, pdev->dev_addr);
-    if (pdev->usb_config && pdev != pdev->hcd->hcd_get_root_hub(pdev->hcd))
-    {
-        //root hub has its config and desc buf allocated together,
-        //so no usb_config allocated seperately
-        dev_mgr_destroy_usb_config(pdev->usb_config);
-        pdev->usb_config = NULL;
-    }
-    if (pdev->desc_buf)
-    {
-        usb_free_mem(pdev->desc_buf);
-        pdev->desc_buf = NULL;
-    }
-    usb_free_mem(pdev);
-    pdev = NULL;
-    return;
-}
-
-BOOL
-rh_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
-{
-    LONG i;
-    PHCD hcd;
-
-    if (dev_mgr == NULL)
-        return FALSE;
-
-    for(i = 0; i < dev_mgr->hcd_count; i++)
-    {
-        hcd = dev_mgr->hcd_array[i];
-        // if( hcd->hcd_get_type( hcd ) != HCD_TYPE_UHCI )
-        // continue;
-        rh_destroy(hcd->hcd_get_root_hub(hcd));
-    }
-    return TRUE;
-}
-
-BOOL
-rh_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
-{
-
-    PUSB_DEV rh;
-    PUSB_CONFIGURATION_DESC pconfig_desc;
-    PUSB_INTERFACE_DESC pif_desc;
-    PUSB_ENDPOINT_DESC pendp_desc;
-    PUSB_CONFIGURATION pconfig;
-    PUSB_INTERFACE pif;
-    PUSB_ENDPOINT pendp;
-    PHUB2_EXTENSION phub_ext;
-    PTIMER_SVC ptimer;
-    PURB purb;
-    NTSTATUS status;
-    PHCD hcd;
-    LONG i;
-
-    if (dev_mgr == NULL || pdriver == NULL)
-        return FALSE;
-
-    //init driver structure, no PNP table functions
-    pdriver->driver_desc.flags = USB_DRIVER_FLAG_DEV_CAPABLE;
-    pdriver->driver_desc.vendor_id = 0xffff;    // USB Vendor ID
-    pdriver->driver_desc.product_id = 0xffff;   // USB Product ID.
-    pdriver->driver_desc.release_num = 0xffff;  // Release Number of Device
-
-    pdriver->driver_desc.config_val = 0;        // Configuration Value
-    pdriver->driver_desc.if_num = 0;    // Interface Number
-    pdriver->driver_desc.if_class = USB_CLASS_HUB;      // Interface Class
-    pdriver->driver_desc.if_sub_class = 0;      // Interface SubClass
-    pdriver->driver_desc.if_protocol = 0;       // Interface Protocol
-
-    pdriver->driver_desc.driver_name = "USB root hub";  // Driver name for Name Registry
-    pdriver->driver_desc.dev_class = USB_CLASS_HUB;
-    pdriver->driver_desc.dev_sub_class = 0;     // Device Subclass
-    pdriver->driver_desc.dev_protocol = 0;      // Protocol Info.
-
-    //pdriver->driver_init = rh_driver_init;                                        // initialized in dev_mgr_init_driver
-    //pdriver->driver_destroy = rh_driver_destroy;
-    pdriver->disp_tbl.version = 1;      // other fields of the dispatch table is not used since rh needs no pnp
-
-    pdriver->driver_ext = 0;
-    pdriver->driver_ext_size = 0;
-
-    for(i = 0; i < dev_mgr->hcd_count; i++)
-    {
-        hcd = dev_mgr->hcd_array[i];
-        //if( hcd->hcd_get_type( hcd ) != HCD_TYPE_UHCI )
-        //    continue;
-
-        if ((rh = dev_mgr_alloc_device(dev_mgr, hcd)) == NULL)
-            return FALSE;
-
-        rh->parent_dev = NULL;
-        rh->port_idx = 0;
-        rh->hcd = hcd;
-        rh->flags = USB_DEV_CLASS_ROOT_HUB | USB_DEV_STATE_CONFIGURED;
-
-        if (usb2(hcd))
-            rh->flags |= USB_DEV_FLAG_HIGH_SPEED;
-
-        rh->dev_driver = pdriver;
-
-        rh->desc_buf_size = sizeof(USB_DEVICE_DESC)
-            + sizeof(USB_CONFIGURATION_DESC)
-            + sizeof(USB_INTERFACE_DESC)
-            + sizeof(USB_ENDPOINT_DESC) + sizeof(USB_CONFIGURATION) + sizeof(HUB2_EXTENSION);
-
-        rh->desc_buf = usb_alloc_mem(NonPagedPool, rh->desc_buf_size);
-
-        if (rh->desc_buf == NULL)
-        {
-            return FALSE;
-        }
-        else
-            RtlZeroMemory(rh->desc_buf, rh->desc_buf_size);
-
-        rh->pusb_dev_desc = (PUSB_DEVICE_DESC) rh->desc_buf;
-
-        rh->pusb_dev_desc->bLength = sizeof(USB_DEVICE_DESC);
-        rh->pusb_dev_desc->bDescriptorType = USB_DT_DEVICE;
-        rh->pusb_dev_desc->bcdUSB = 0x110;
-        if (usb2(hcd))
-            rh->pusb_dev_desc->bcdUSB = 0x200;
-        rh->pusb_dev_desc->bDeviceClass = USB_CLASS_HUB;
-        rh->pusb_dev_desc->bDeviceSubClass = 0;
-        rh->pusb_dev_desc->bDeviceProtocol = 0;
-        rh->pusb_dev_desc->bMaxPacketSize0 = 8;
-        if (usb2(hcd))
-        {
-            rh->pusb_dev_desc->bDeviceProtocol = 1;
-            rh->pusb_dev_desc->bMaxPacketSize0 = 64;
-        }
-        rh->pusb_dev_desc->idVendor = 0;
-        rh->pusb_dev_desc->idProduct = 0;
-        rh->pusb_dev_desc->bcdDevice = 0x100;
-        rh->pusb_dev_desc->iManufacturer = 0;
-        rh->pusb_dev_desc->iProduct = 0;
-        rh->pusb_dev_desc->iSerialNumber = 0;
-        rh->pusb_dev_desc->bNumConfigurations = 1;
-
-        pconfig_desc = (PUSB_CONFIGURATION_DESC) & rh->desc_buf[sizeof(USB_DEVICE_DESC)];
-        pif_desc = (PUSB_INTERFACE_DESC) & pconfig_desc[1];
-        pendp_desc = (PUSB_ENDPOINT_DESC) & pif_desc[1];
-
-        pconfig_desc->bLength = sizeof(USB_CONFIGURATION_DESC);
-        pconfig_desc->bDescriptorType = USB_DT_CONFIG;
-
-        pconfig_desc->wTotalLength = sizeof(USB_CONFIGURATION_DESC)
-            + sizeof(USB_INTERFACE_DESC) + sizeof(USB_ENDPOINT_DESC);
-
-        pconfig_desc->bNumInterfaces = 1;
-        pconfig_desc->bConfigurationValue = 1;
-        pconfig_desc->iConfiguration = 0;
-        pconfig_desc->bmAttributes = 0Xe0;      //self-powered and support remoke wakeup
-        pconfig_desc->MaxPower = 0;
-
-        pif_desc->bLength = sizeof(USB_INTERFACE_DESC);
-        pif_desc->bDescriptorType = USB_DT_INTERFACE;
-        pif_desc->bInterfaceNumber = 0;
-        pif_desc->bAlternateSetting = 0;
-        pif_desc->bNumEndpoints = 1;
-        pif_desc->bInterfaceClass = USB_CLASS_HUB;
-        pif_desc->bInterfaceSubClass = 0;
-        pif_desc->bInterfaceProtocol = 0;
-        pif_desc->iInterface = 0;
-
-        pendp_desc->bLength = sizeof(USB_ENDPOINT_DESC);
-        pendp_desc->bDescriptorType = USB_DT_ENDPOINT;
-        pendp_desc->bEndpointAddress = 0x81;
-        pendp_desc->bmAttributes = 0x03;
-        pendp_desc->wMaxPacketSize = 8;
-        pendp_desc->bInterval = USB_HUB_INTERVAL;
-        if (usb2(hcd))
-            pendp_desc->bInterval = 0x0c;
-
-        pconfig = rh->usb_config = (PUSB_CONFIGURATION) & pendp_desc[1];
-        rh->active_config_idx = 0;
-        pconfig->pusb_config_desc = pconfig_desc;
-        pconfig->if_count = 1;
-        pconfig->pusb_dev = rh;
-        pif = &pconfig->interf[0];
-
-        pif->endp_count = 1;
-        pendp = &pif->endp[0];
-        pif->pusb_config = pconfig;;
-        pif->pusb_if_desc = pif_desc;
-
-        pif->if_ext_size = 0;
-        pif->if_ext = NULL;
-
-        phub_ext = (PHUB2_EXTENSION) & pconfig[1];
-        phub_ext->port_count = 2;
-
-        if (usb2(hcd))
-        {
-            // port count is configurable in usb2
-            hcd->hcd_dispatch(hcd, HCD_DISP_READ_PORT_COUNT, &phub_ext->port_count);
-        }
-
-        {
-            int j;
-            for(j = 0; j < phub_ext->port_count; j++)
-            {
-                psq_init(&phub_ext->port_status_queue[j]);
-                phub_ext->child_dev[j] = NULL;
-                usb_dbg_print(DBGLVL_MAXIMUM, ("rh_driver_init(): port[ %d ].flag=0x%x\n",
-                                               j, phub_ext->port_status_queue[j].port_flags));
-            }
-        }
-
-        phub_ext->pif = pif;
-        phub_ext->hub_desc.bLength = sizeof(USB_HUB_DESCRIPTOR);
-        phub_ext->hub_desc.bDescriptorType = USB_DT_HUB;
-        phub_ext->hub_desc.bNbrPorts = (UCHAR) phub_ext->port_count;
-        phub_ext->hub_desc.wHubCharacteristics = 0;
-        phub_ext->hub_desc.bPwrOn2PwrGood = 0;
-        phub_ext->hub_desc.bHubContrCurrent = 50;
-
-        rh->dev_ext = (PBYTE) phub_ext;
-        rh->dev_ext_size = sizeof(HUB2_EXTENSION);
-
-        rh->default_endp.flags = USB_ENDP_FLAG_DEFAULT_ENDP;
-        InitializeListHead(&rh->default_endp.urb_list);
-        rh->default_endp.pusb_if = (PUSB_INTERFACE) rh;
-        rh->default_endp.pusb_endp_desc = NULL; //???
-        rh->time_out_count = 0;
-        rh->error_count = 0;
-
-        InitializeListHead(&pendp->urb_list);
-        pendp->flags = 0;
-        pendp->pusb_endp_desc = pendp_desc;
-        pendp->pusb_if = pif;
-
-        //add to device list
-        InsertTailList(&dev_mgr->dev_list, &rh->dev_link);
-        hcd->hcd_set_root_hub(hcd, rh);
-        status = hub_start_int_request(rh);
-        pdriver->driver_ext = 0;
-    }
-    return TRUE;
-}
-
-//to be the reverse of what init does, we assume that the timer is now killed
-//int is disconnected and the hub thread will not process event anymore
-BOOL
-rh_destroy(PUSB_DEV pdev)
-{
-    PUSB_DEV rh;
-    PLIST_ENTRY pthis, pnext;
-    PUSB_DEV_MANAGER dev_mgr;
-
-    if (pdev == NULL)
-        return FALSE;
-
-    dev_mgr = dev_mgr_from_dev(pdev);
-
-    //???
-    rh = pdev->hcd->hcd_get_root_hub(pdev->hcd);
-    if (rh == pdev)
-    {
-        //free all the buf
-        dev_mgr_free_device(dev_mgr, rh);
-        //dev_mgr->root_hub = NULL;
-    }
-
-    return TRUE;
-}
-
-VOID
-rh_timer_svc_int_completion(PUSB_DEV pdev, PVOID context)
-{
-    PUSB_EVENT pevent;
-    PURB purb;
-    ULONG status, i;
-    PHCD hcd;
-    USE_IRQL;
-
-    if (pdev == NULL || context == NULL)
-        return;
-
-    purb = (PURB) context;
-
-    lock_dev(pdev, TRUE);
-
-    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
-    {
-        pdev->ref_count -= 2;   //      one for timer_svc and one for urb, for those rh requests
-        unlock_dev(pdev, TRUE);
-        usb_free_mem(purb);
-        usb_dbg_print(DBGLVL_MAXIMUM, ("rh_timer_svc_int_completion(): the dev is zomb, 0x%x\n", pdev));
-        return;
-    }
-
-    hcd = pdev->hcd;
-    if (purb->data_length < 1)
-    {
-        purb->status = STATUS_INVALID_PARAMETER;
-        unlock_dev(pdev, TRUE);
-        goto LBL_OUT;
-    }
-
-    pdev->hcd->hcd_dispatch(pdev->hcd, HCD_DISP_READ_RH_DEV_CHANGE, purb->data_buffer);
-    purb->status = STATUS_SUCCESS;
-    unlock_dev(pdev, TRUE);
-
-  LBL_OUT:
-    hcd->hcd_generic_urb_completion(purb, purb->context);
-
-    lock_dev(pdev, TRUE);
-    pdev->ref_count -= 2;
-    //      one for timer_svc and one for urb, for those rh requests
-    //      that completed immediately, the ref_count of the dev for
-    //      that urb won't increment and for normal hub request
-    //      completion, hcd_generic_urb_completion will be called
-    //  by the xhci_dpc_callback, and the ref_count for the urb
-    //  is maintained there. So only rh's timer-svc cares refcount
-    //  when hcd_generic_urb_completion is called.
-    usb_dbg_print(DBGLVL_MAXIMUM, ("rh_timer_svc_int_completion(): rh's ref_count=0x%x\n", pdev->ref_count));
-    unlock_dev(pdev, TRUE);
-    usb_dbg_print(DBGLVL_MAXIMUM, ("rh_timer_svc_int_completion(): exitiing...\n"));
-    return;
-}
-
-VOID
-rh_timer_svc_reset_port_completion(PUSB_DEV pdev, PVOID context)
-{
-    PURB purb;
-    ULONG i;
-    USHORT port_num;
-    PHUB2_EXTENSION hub_ext;
-    PLIST_ENTRY pthis, pnext;
-    PUSB_DEV_MANAGER dev_mgr;
-    PUSB_CTRL_SETUP_PACKET psetup;
-
-    USE_IRQL;
-
-    if (pdev == NULL || context == NULL)
-        return;
-
-    dev_mgr = dev_mgr_from_dev(pdev); //readonly and hold ref_count
-
-    //block the rh polling
-    KeAcquireSpinLockAtDpcLevel(&dev_mgr->timer_svc_list_lock);
-    if (IsListEmpty(&dev_mgr->timer_svc_list) == FALSE)
-    {
-        ListFirst(&dev_mgr->timer_svc_list, pthis);
-        while (pthis)
-        {
-            if (((PTIMER_SVC) pthis)->pdev == pdev && ((PTIMER_SVC) pthis)->threshold == RH_INTERVAL)
-            {
-                ((PTIMER_SVC) pthis)->threshold = RH_INTERVAL + 0x800000;
-                break;
-            }
-
-            ListNext(&dev_mgr->timer_svc_list, pthis, pnext);
-            pthis = pnext;
-        }
-    }
-    KeReleaseSpinLockFromDpcLevel(&dev_mgr->timer_svc_list_lock);
-
-    purb = (PURB) context;
-    psetup = (PUSB_CTRL_SETUP_PACKET) purb->setup_packet;
-
-    lock_dev(pdev, TRUE);
-    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
-    {
-        //purb->status = STATUS_ERROR;
-        //pdev->hcd->hcd_generic_urb_completion( purb, purb->context );
-
-        pdev->ref_count -= 2;
-        unlock_dev(pdev, TRUE);
-        usb_free_mem(purb);
-        return;
-    }
-
-    i = pdev->hcd->hcd_rh_reset_port(pdev->hcd, (UCHAR) psetup->wIndex);
-
-    hub_ext = hub_ext_from_dev(pdev);
-
-    {
-        USHORT temp;
-        PUCHAR pbuf;
-        if (psetup->wIndex < 16)
-        {
-            temp = 1 << psetup->wIndex;
-            pbuf = (PUCHAR) & temp;
-            if (temp > 128)
-                pbuf++;
-            hub_ext->int_data_buf[psetup->wIndex / 8] |= *pbuf;
-            if (i == TRUE)
-                hub_ext->rh_port_status[psetup->wIndex].wPortChange |= USB_PORT_STAT_C_RESET;
-            else                // notify that is not a high speed device, will lost definitely
-                hub_ext->rh_port_status[psetup->wIndex].wPortChange |= USB_PORT_STAT_C_CONNECTION;
-        }
-    }
-
-    //???how to construct port status map
-    // decrease the timer_svc ref-count
-    pdev->ref_count--;
-    unlock_dev(pdev, TRUE);
-
-    purb->status = STATUS_SUCCESS;
-    //we delegate the completion to the rh_timer_svc_int_completion.
-    //this function is equivalent to hub_start_reset_port_completion
-
-    usb_free_mem(purb);
-
-    //expire the rh polling timer
-    KeAcquireSpinLockAtDpcLevel(&dev_mgr->timer_svc_list_lock);
-    if (IsListEmpty(&dev_mgr->timer_svc_list) == FALSE)
-    {
-        ListFirst(&dev_mgr->timer_svc_list, pthis);
-        while (pthis)
-        {
-            if (((PTIMER_SVC) pthis)->pdev == pdev &&
-                ((PTIMER_SVC) pthis)->threshold == RH_INTERVAL + 0x800000)
-            {
-                ((PTIMER_SVC) pthis)->counter = RH_INTERVAL;
-                ((PTIMER_SVC) pthis)->threshold = RH_INTERVAL;
-                break;
-            }
-
-            ListNext(&dev_mgr->timer_svc_list, pthis, pnext);
-            pthis = pnext;
-        }
-    }
-    KeReleaseSpinLockFromDpcLevel(&dev_mgr->timer_svc_list_lock);
-
-    lock_dev(pdev, TRUE);
-    pdev->ref_count--;
-    unlock_dev(pdev, TRUE);
-    return;
-}
-
-//called when a disconnect is detected on the port
-VOID
-dev_mgr_disconnect_dev(PUSB_DEV pdev)
-{
-    PLIST_ENTRY pthis, pnext;
-    PHUB2_EXTENSION phub_ext;
-    PUSB_CONFIGURATION pconfig;
-    PUSB_INTERFACE pif;
-    PUSB_DEV_MANAGER dev_mgr;
-    PHCD hcd;
-    BOOL is_hub, found;
-    ULONG dev_id;
-    int i;
-
-    USE_IRQL;
-
-    if (pdev == NULL)
-        return;
-
-    found = FALSE;
-
-    usb_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_disconnect_dev(): entering, pdev=0x%x\n", pdev));
-    lock_dev(pdev, FALSE);
-    pdev->flags &= ~USB_DEV_STATE_MASK;
-    pdev->flags |= USB_DEV_STATE_BEFORE_ZOMB;
-    dev_mgr = dev_mgr_from_dev(pdev);
-    unlock_dev(pdev, FALSE);
-
-    // notify dev_driver that the dev stops function before any operations
-    if (pdev->dev_driver && pdev->dev_driver->disp_tbl.dev_stop)
-        pdev->dev_driver->disp_tbl.dev_stop(dev_mgr, dev_handle_from_dev(pdev));
-
-    //safe to use the dev pointer in this function.
-    lock_dev(pdev, FALSE);
-    pdev->flags &= ~USB_DEV_STATE_MASK;
-    pdev->flags |= USB_DEV_STATE_ZOMB;
-    hcd = pdev->hcd;
-    dev_id = pdev->dev_id;
-    unlock_dev(pdev, FALSE);
-
-    if (dev_mgr == NULL)
-        return;
-
-    hcd->hcd_remove_device(hcd, pdev);
-
-    //disconnect its children
-    if ((pdev->flags & USB_DEV_CLASS_MASK) == USB_DEV_CLASS_HUB ||
-        (pdev->flags & USB_DEV_CLASS_MASK) == USB_DEV_CLASS_ROOT_HUB)
-    {
-        phub_ext = hub_ext_from_dev(pdev);
-        if (phub_ext)
-        {
-            for(i = 1; i <= phub_ext->port_count; i++)
-            {
-                if (phub_ext->child_dev[i])
-                {
-                    dev_mgr_disconnect_dev(phub_ext->child_dev[i]);
-                    phub_ext->child_dev[i] = NULL;
-                }
-            }
-        }
-    }
-
-    pconfig = pdev->usb_config;
-
-    //remove event belong to the dev
-    is_hub = ((pdev->flags & USB_DEV_CLASS_MASK) == USB_DEV_CLASS_HUB);
-
-    if (phub_ext && is_hub)
-    {
-        for(i = 1; i <= phub_ext->port_count; i++)
-        {
-            found = hub_remove_reset_event(pdev, i, FALSE);
-            if (found)
-                break;
-        }
-    }
-
-    //free event of the dev from the event list
-    KeAcquireSpinLock(&dev_mgr->event_list_lock, &old_irql);
-    ListFirst(&dev_mgr->event_list, pthis);
-    while (pthis)
-    {
-        ListNext(&dev_mgr->event_list, pthis, pnext);
-        if (((PUSB_EVENT) pthis)->pdev == pdev)
-        {
-            PLIST_ENTRY p1;
-            RemoveEntryList(pthis);
-            if ((((PUSB_EVENT) pthis)->flags & USB_EVENT_FLAG_QUE_TYPE) != USB_EVENT_FLAG_NOQUE)
-            {
-                //has a queue, re-insert the queue
-                if (p1 = (PLIST_ENTRY) ((PUSB_EVENT) pthis)->pnext)
-                {
-                    InsertHeadList(&dev_mgr->event_list, p1);
-                    free_event(&dev_mgr->event_pool, struct_ptr(pthis, USB_EVENT, event_link));
-                    pthis = p1;
-                    //note: this queue will be examined again in the next loop
-                    //to find the matched dev in the queue
-                    continue;
-                }
-            }
-            free_event(&dev_mgr->event_pool, struct_ptr(pthis, USB_EVENT, event_link));
-        }
-        else if (((((PUSB_EVENT) pthis)->flags & USB_EVENT_FLAG_QUE_TYPE)
-                  != USB_EVENT_FLAG_NOQUE) && ((PUSB_EVENT) pthis)->pnext)
-        {
-            //has a queue, examine the queue
-            PUSB_EVENT p1, p2;
-            p1 = (PUSB_EVENT) pthis;
-            p2 = p1->pnext;
-            while (p2)
-            {
-                if (p2->pdev == pdev)
-                {
-                    p1->pnext = p2->pnext;
-                    p2->pnext = NULL;
-                    free_event(&dev_mgr->event_pool, p2);
-                    p2 = p1->pnext;
-                }
-                else
-                {
-                    p1 = p2;
-                    p2 = p2->pnext;
-                }
-            }
-        }
-        pthis = pnext;
-    }
-    KeReleaseSpinLock(&dev_mgr->event_list_lock, old_irql);
-
-    // found indicates the reset event on one of the dev's port in process
-    if (found)
-        hub_start_next_reset_port(dev_mgr_from_dev(pdev), FALSE);
-
-    // remove timer-svc belonging to the dev
-    KeAcquireSpinLock(&dev_mgr->timer_svc_list_lock, &old_irql);
-    ListFirst(&dev_mgr->timer_svc_list, pthis);
-    i = 0;
-    while (pthis)
-    {
-        ListNext(&dev_mgr->timer_svc_list, pthis, pnext);
-        if (((PUSB_EVENT) pthis)->pdev == pdev)
-        {
-            RemoveEntryList(pthis);
-            free_timer_svc(&dev_mgr->timer_svc_pool, struct_ptr(pthis, TIMER_SVC, timer_svc_link));
-            i++;
-        }
-        pthis = pnext;
-    }
-    KeReleaseSpinLock(&dev_mgr->timer_svc_list_lock, old_irql);
-
-    // release the refcount
-    if (i)
-    {
-        lock_dev(pdev, FALSE);
-        pdev->ref_count -= i;
-        unlock_dev(pdev, FALSE);
-    }
-
-    // wait for all the reference count be released
-    for(;;)
-    {
-        LARGE_INTEGER interval;
-
-        lock_dev(pdev, FALSE);
-        if (pdev->ref_count == 0)
-        {
-            unlock_dev(pdev, FALSE);
-            break;
-        }
-        unlock_dev(pdev, FALSE);
-        // Wait two ms.
-        interval.QuadPart = -20000;
-        KeDelayExecutionThread(KernelMode, FALSE, &interval);
-    }
-
-    if (pdev->dev_driver && pdev->dev_driver->disp_tbl.dev_disconnect)
-        pdev->dev_driver->disp_tbl.dev_disconnect(dev_mgr, dev_handle_from_dev(pdev));
-
-    // we put it here to let handle valid before disconnect
-    KeAcquireSpinLock(&dev_mgr->dev_list_lock, &old_irql);
-    ListFirst(&dev_mgr->dev_list, pthis);
-    while (pthis)
-    {
-        if (((PUSB_DEV) pthis) == pdev)
-        {
-            RemoveEntryList(pthis);
-            break;
-        }
-        ListNext(&dev_mgr->dev_list, pthis, pnext);
-        pthis = pnext;
-    }
-    KeReleaseSpinLock(&dev_mgr->dev_list_lock, old_irql);
-
-
-    if (pdev != pdev->hcd->hcd_get_root_hub(pdev->hcd))
-    {
-        dev_mgr_free_device(dev_mgr, pdev);
-    }
-    else
-    {
-        //rh_destroy( pdev );
-        //TRAP();
-        //destroy it in dev_mgr_destroy
-    }
-
-    return;
-}
-
 BOOL
 hub_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
@@ -1553,7 +388,7 @@ hub_reset_pipe_completion(PURB purb,    //only for reference, can not be release
     PUSB_ENDPOINT pendp;
     NTSTATUS status;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL)
     {
@@ -1592,7 +427,7 @@ hub_start_int_request(PUSB_DEV pdev)
     PHUB2_EXTENSION hub_ext;
     NTSTATUS status;
     PHCD hcd;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1653,7 +488,7 @@ hub_int_completion(PURB purb, PVOID pcontext)
     LONG i;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL)
         return;
@@ -1762,7 +597,7 @@ hub_get_port_status_completion(PURB purb, PVOID context)
     NTSTATUS status;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL || context == NULL)
         return;
@@ -1881,20 +716,17 @@ hub_clear_port_feature_completion(PURB purb, PVOID context)
 {
     BYTE port_idx;
     LONG i;
-    BOOL bReset, event_post, brh;
+    BOOL event_post, brh;
     ULONG pc;
     PHCD hcd;
     NTSTATUS status;
-    PUSB_DEV pdev, pdev2;
-    PUSB_EVENT pevent;
-    PUSB_ENDPOINT pendp;
-    PUSB_INTERFACE pif;
+    PUSB_DEV pdev;
     PHUB2_EXTENSION hub_ext;
     PUSB_DEV_MANAGER dev_mgr;
 
     PUSB_CTRL_SETUP_PACKET psetup;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL)
         return;
@@ -2016,7 +848,7 @@ hub_clear_port_feature_completion(PURB purb, PVOID context)
             if (status == STATUS_SUCCESS)
             {
                 usb_dbg_print(DBGLVL_MAXIMUM,
-                              ("hub_clear_port_stataus_completion(): port_idx=0x%x, hcd=0x%x, \
+                              ("hub_clear_port_status_completion(): port_idx=0x%x, hcd=0x%x, \
                               pdev=0x%x, purb=0x%x, hub_ext=0x%x, wPortChange=0x%x \n",
                               port_idx, pdev->hcd, pdev, purb, hub_ext, pc));
 
@@ -2170,7 +1002,7 @@ hub_event_examine_status_que(PUSB_DEV pdev,
     PTIMER_SVC ptimer;
     PUSB_DEV_MANAGER dev_mgr;
 
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;
 
     if (pdev == NULL || context == 0 || param == 0)
         return;
@@ -2298,11 +1130,10 @@ hub_timer_wait_dev_stable(PUSB_DEV pdev,
 
     PHUB2_EXTENSION hub_ext;
     PUSB_INTERFACE pif;
-    PUSB_EVENT pevent;
     ULONG param;
     PUSB_DEV_MANAGER dev_mgr;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL || context == 0)
         return;
@@ -2346,7 +1177,7 @@ VOID
 hub_event_dev_stable(PUSB_DEV pdev,
                      ULONG event,
                      ULONG context, //hub_ext
-                     ULONG param        //port_idx
+                     ULONG param    //port_idx
                      )
 {
 
@@ -2360,7 +1191,7 @@ hub_event_dev_stable(PUSB_DEV pdev,
     PURB purb;
     PUSB_CTRL_SETUP_PACKET psetup;
 
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;
 
     if (pdev == NULL || context == 0 || param == 0)
         return;
@@ -2467,7 +1298,7 @@ hub_start_reset_port_completion(PURB purb, PVOID context)
     ULONG port_idx;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
     if (purb == NULL)
         return;
 
@@ -2525,7 +1356,7 @@ hub_set_address_completion(PURB purb, PVOID context)
     ULONG port_idx;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (purb == NULL)
         return;
@@ -2631,7 +1462,7 @@ hub_disable_port_request(PUSB_DEV pdev, UCHAR port_idx)
     PUSB_CTRL_SETUP_PACKET psetup;
     NTSTATUS status;
     PHCD hcd;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (pdev == NULL || port_idx == 0)
         return STATUS_INVALID_PARAMETER;
@@ -2760,7 +1591,7 @@ hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOL from_dpc)
     PUSB_CTRL_SETUP_PACKET psetup;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;;
 
     if (dev_mgr == NULL)
         return FALSE;
@@ -2906,9 +1737,8 @@ hub_check_reset_port_status(PUSB_DEV pdev, LONG port_idx)
 
     PUSB_CTRL_SETUP_PACKET psetup;
     ULONG status;
-    LARGE_INTEGER delay;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     //let's check whether the status change is a reset complete
     usb_dbg_print(DBGLVL_MAXIMUM, ("hub_check_reset_port_status(): entering...\n"));
@@ -3042,7 +1872,7 @@ hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOL from_dpc)
     PHUB2_EXTENSION hub_ext;
     PUSB_DEV_MANAGER dev_mgr;
 
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;;
 
     if (hub_dev == NULL || port_idx == 0)
         return;
@@ -3083,13 +1913,12 @@ hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOL from_dpc)
 BOOL
 dev_mgr_start_config_dev(PUSB_DEV pdev)
 {
-    PUSB_DEV_MANAGER dev_mgr;
     PBYTE data_buf;
     PUSB_CTRL_SETUP_PACKET psetup;
     PURB purb;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (pdev == NULL)
         return FALSE;
@@ -3156,10 +1985,9 @@ dev_mgr_get_desc_completion(PURB purb, PVOID context)
     PUSB_DEV_MANAGER dev_mgr;
     NTSTATUS status;
     PUSB_CTRL_SETUP_PACKET psetup;
-    LONG i;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (purb == NULL)
         return;
@@ -3342,7 +2170,7 @@ dev_mgr_start_select_driver(PUSB_DEV pdev)
     PUSB_EVENT pevent;
     BOOL bret;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (pdev == NULL)
         return FALSE;
@@ -3393,7 +2221,7 @@ dev_mgr_connect_to_dev(PVOID Parameter)
     PUSB_DEV_MANAGER dev_mgr;
     CONNECT_DATA param;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (pcd == NULL)
         return FALSE;
@@ -3425,7 +2253,7 @@ dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG par
     DEV_HANDLE handle;
     CONNECT_DATA cd;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (pdev == NULL)
         return;
@@ -3612,7 +2440,7 @@ NTSTATUS
 dev_mgr_destroy_usb_config(PUSB_CONFIGURATION pcfg)
 {
     long i;
-    PLIST_ENTRY pthis, pnext;
+    PLIST_ENTRY pthis;
     PUSB_INTERFACE pif;
 
     if (pcfg == NULL)
@@ -3707,18 +2535,18 @@ dev_mgr_score_driver_for_if(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver, PUSB_
 #define is_equal_driver( pd1, pd2, ret ) \
 {\
     int i;\
-	ret = TRUE;\
+    ret = TRUE;\
     PUSB_DRIVER pdr1, pdr2;\
     pdr1 = ( PUSB_DRIVER )( pd1 );\
     pdr2 = ( PUSB_DRIVER ) ( pd2 );\
-	for( i = 0; i < 16; i++ )\
-	{\
-		if( pdr1->driver_name[ i ] != pdr2->driver_name[ i ] )\
-		{\
-			ret = FALSE;\
-			break;\
-		}\
-	}\
+    for( i = 0; i < 16; i++ )\
+    {\
+        if( pdr1->driver_name[ i ] != pdr2->driver_name[ i ] )\
+        {\
+            ret = FALSE;\
+            break;\
+        }\
+    }\
 }
 
 //return value is the hcd id
@@ -3738,7 +2566,6 @@ dev_mgr_register_hcd(PUSB_DEV_MANAGER dev_mgr, PHCD hcd)
 BOOL
 dev_mgr_register_irp(PUSB_DEV_MANAGER dev_mgr, PIRP pirp, PURB purb)
 {
-    KIRQL old_irql;
     if (dev_mgr == NULL)
         return FALSE;
 
@@ -3769,7 +2596,6 @@ dev_mgr_cancel_irp(PDEVICE_OBJECT dev_obj, PIRP pirp)
 {
     PUSB_DEV_MANAGER dev_mgr;
     PDEVEXT_HEADER pdev_ext_hdr;
-    ULONG i;
 
     pdev_ext_hdr = (PDEVEXT_HEADER) dev_obj->DeviceExtension;
     dev_mgr = pdev_ext_hdr->dev_mgr;
@@ -3843,7 +2669,7 @@ hub_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
     LONG i, j, found, cfg_val;
     PUSB_DEV_MANAGER dev_mgr;
     PUSB_DEV pdev;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
 
     if (param == NULL || dev_handle == 0)
@@ -3954,7 +2780,7 @@ hub_set_cfg_completion(PURB purb, PVOID pcontext)
     PUSB_INTERFACE pif;
     BOOL high_speed, multiple_tt;
     NTSTATUS status;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (purb == NULL || pcontext == NULL)
         return;
@@ -4033,8 +2859,6 @@ hub_set_cfg_completion(PURB purb, PVOID pcontext)
 void
 hub_set_interface_completion(PURB purb, PVOID pcontext)
 {
-
-    PUSB_ENDPOINT pendp;
     NTSTATUS status;
     PUSB_CTRL_SETUP_PACKET psetup;
     PUSB_DEV_MANAGER dev_mgr;
@@ -4101,7 +2925,7 @@ VOID
 hub_power_on_port_completion(PURB purb, PVOID pcontext)
 {
     PUSB_DEV_MANAGER dev_mgr;
-    PUSB_DEV pdev;
+
     if (purb == NULL)
         return;
     if (pcontext == NULL)
@@ -4128,16 +2952,13 @@ LBL_OUT:
 NTSTATUS
 hub_power_on_port(PUSB_DEV pdev, UCHAR port_idx)
 {
-    PUSB_ENDPOINT pendp;
     NTSTATUS status;
     PUSB_CTRL_SETUP_PACKET psetup;
     PUSB_DEV_MANAGER dev_mgr;
-    PBYTE dev_ext;
-    DEV_HANDLE endp_handle;
     PURB purb;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
     if (pdev == NULL || port_idx == 0)
         return STATUS_INVALID_PARAMETER;
 
@@ -4198,7 +3019,7 @@ hub_get_hub_desc_completion(PURB purb, PVOID pcontext)
     PUSB_DRIVER pdriver;
     DEV_HANDLE dev_handle;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (purb == NULL)
     {
@@ -4311,11 +3132,10 @@ hub_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 static BOOL
 hub_lock_unlock_tt(PUSB_DEV pdev, UCHAR port_idx, UCHAR type, BOOL lock)
 {
-    PUSB_INTERFACE pif;
     PHUB2_EXTENSION dev_ext;
     PULONG pmap;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (pdev == NULL || port_idx > 127)
         return FALSE;
@@ -4410,7 +3230,7 @@ hub_clear_tt_buffer(PUSB_DEV pdev, URB_HS_PIPE_CONTENT pipe_content, UCHAR port_
     PHUB2_EXTENSION hub_ext;
     PHCD hcd;
     NTSTATUS status;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;;
 
     if (pdev == NULL)
         return FALSE;
@@ -4497,7 +3317,7 @@ hub_post_clear_tt_event(PUSB_DEV pdev, BYTE port_idx, ULONG pipe)
 {
     PUSB_DEV_MANAGER dev_mgr;
     PUSB_EVENT pevent;
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;;
 
     dev_mgr = dev_mgr_from_dev(pdev);
 
@@ -4614,7 +3434,7 @@ remove_irp_from_list(PIRP_LIST irp_list,
     PUSB_ENDPOINT pendp;
     PHCD hcd;
 
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;;
 
     if (irp_list == NULL || pirp == NULL)
         return NULL;

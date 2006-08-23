@@ -19,14 +19,7 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <ntddk.h>
-#include "debug.h"
-#include "usb.h"
-#include "umss.h"
-
-// ULONG_PTR defining hack, to use ntddsci.h from reactos
-//FIXME: Move to a header file later
-typedef unsigned long ULONG_PTR, *PULONG_PTR;
+#include "usbdriver.h"
 #include <ntddscsi.h>
 
 #define OLYMPUS_CSW( pdev_EXT, staTUS ) \

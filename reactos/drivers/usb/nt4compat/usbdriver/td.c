@@ -19,8 +19,7 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "td.h"
-#include "debug.h"
+#include "usbdriver.h"
 
 #define UHCI_MIN_TD_POOLS 4
 

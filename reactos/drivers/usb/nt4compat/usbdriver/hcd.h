@@ -1,8 +1,6 @@
 #ifndef __HCD_H__
 #define __HCD_H__
 
-#include "ntddk.h"
-
 #define HCD_TYPE_MASK 	0xf0
 #define HCD_TYPE_UHCI	0x10
 #define HCD_TYPE_OHCI	0x20
@@ -20,6 +18,12 @@
 #define HCD_DISP_READ_PORT_COUNT	1		// the param is a pointer to UCHAR
 #define HCD_DISP_READ_RH_DEV_CHANGE	2		// the param is a buffer to hold conn change on all the port 
 											// must have the rh dev_lock acquired
+
+struct _HCD;
+struct _USB_DEV_MANAGER;
+struct _USB_DEV;
+struct _USB_ENDPOINT;
+struct _URB;
 
 typedef	VOID ( *PHCD_SET_DEV_MGR )( struct _HCD* hcd, struct _USB_DEV_MANAGER  *dev_mgr );
 typedef	struct _USB_DEV_MANAGER* ( *PHCD_GET_DEV_MGR )( struct _HCD* hcd );

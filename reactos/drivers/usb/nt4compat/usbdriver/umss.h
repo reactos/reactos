@@ -1,9 +1,6 @@
 #ifndef __UMSS_H__
 #define __UMSS_H__
 
-#include "td.h"
-#include "hub.h"
-
 #define MAX_BULK_TRANSFER_LENGTH		0x100000
 
 #define PROTOCOL_CBI       				0x00

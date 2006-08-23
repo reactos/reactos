@@ -1,9 +1,6 @@
 #ifndef __GENDRV_H__
 #define __GENDRV_H__
 
-#include "td.h"
-#include "hub.h"
-
 #define GENDRV_MAX_EXT_DRVR  		2
 #define GENDRV_DRVR_FLAG_IF_DRVR	0x01
 

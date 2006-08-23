@@ -15,9 +15,6 @@
  * along with this program; if not, write to the Free Software Foundation,
  * Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-#include "hcd.h"
-#include "usb.h"
-#include "td.h"
 #ifndef __EHCI_H__
 #define __EHCI_H__
 
