@@ -35,8 +35,7 @@ PICInitTable:
     /* End of initialization table */
     .short 0
 
-.globl _KiI8259MaskTable
-_KiI8259MaskTable:
+KiI8259MaskTable:
     .long 0                             /* IRQL 0 */
     .long 0                             /* IRQL 1 */
     .long 0                             /* IRQL 2 */
@@ -83,8 +82,7 @@ HalpSysIntHandler:
     .long GenericIRQ                    /* IRQ 16-35 */
 .endr
 
-.globl _SoftIntByteTable
-_SoftIntByteTable:
+SoftIntByteTable:
     .byte PASSIVE_LEVEL                 /* IRR 0 */
     .byte PASSIVE_LEVEL                 /* IRR 1 */
     .byte APC_LEVEL                     /* IRR 2 */
@@ -94,8 +92,7 @@ _SoftIntByteTable:
     .byte DISPATCH_LEVEL                /* IRR 6 */
     .byte DISPATCH_LEVEL                /* IRR 7 */
 
-.globl _SoftIntHandlerTable
-_SoftIntHandlerTable:
+SoftIntHandlerTable:
     .long _KiUnexpectedInterrupt        /* PASSIVE_LEVEL */
     .long _HalpApcInterrupt             /* APC_LEVEL */
     .long _HalpDispatchInterrupt        /* DISPATCH_LEVEL */
@@ -175,12 +172,12 @@ _@HalRequestSoftwareInterrupt@4:
 
     /* Get highest pending software interrupt and check if it's higher */
     xor edx, edx
-    mov dl, _SoftIntByteTable[eax]
+    mov dl, SoftIntByteTable[eax]
     cmp dl, cl
     jbe AfterCall
 
     /* Call the pending interrupt */
-    call _SoftIntHandlerTable[edx*4]
+    call SoftIntHandlerTable[edx*4]
 
 AfterCall:
 
@@ -272,7 +269,7 @@ AfterMask:
 
     /* Get the current IRQL and mask the IRQs in the PIC */
     movzx eax, byte ptr [fs:KPCR_IRQL]
-    mov eax, _KiI8259MaskTable[eax*4]
+    mov eax, KiI8259MaskTable[eax*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
@@ -336,7 +333,7 @@ GenericIRQ:
     mov [fs:KPCR_IRQL], al
 
     /* Set IRQ mask in the PIC */
-    mov eax, _KiI8259MaskTable[eax*4]
+    mov eax, KiI8259MaskTable[eax*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
@@ -377,7 +374,7 @@ _HalEndSystemInterrupt@8:
     jbe SkipMask2
 
     /* Hardware interrupt, mask the appropriate IRQs in the PIC */
-    mov eax, _KiI8259MaskTable[ecx*4]
+    mov eax, KiI8259MaskTable[ecx*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
@@ -388,16 +385,19 @@ SkipMask2:
     /* Set IRQL and check if there are pending software interrupts */
     mov [fs:KPCR_IRQL], cl
     mov eax, [fs:KPCR_IRR]
-    mov al, _SoftIntByteTable[eax]
+    mov al, SoftIntByteTable[eax]
     cmp al, cl
-    //ja DoCall
+    ja DoCall
     ret 8
 
 DoCall:
 
-    /* There are pending softwate interrupts, call their handlers */
-    add esp, 12
-    jmp SoftIntHandlerTable2[eax*4]
+    /* There are pending software interrupts, call their handlers */
+    /* FIXME: Because ROS IRQs don't setup a nice trap frame yet, we can't optimize a 2nd entry */
+    //add esp, 12
+    //jmp SoftIntHandlerTable2[eax*4]
+    call SoftIntHandlerTable[eax*4]
+    ret 8
 .endfunc
 
 .globl @KfLowerIrql@4
@@ -415,7 +415,7 @@ _@KfLowerIrql@4:
     jbe SkipMask
 
     /* Clear interrupt masks since there's a pending hardware interrupt */
-    mov eax, _KiI8259MaskTable[ecx*4]
+    mov eax, KiI8259MaskTable[ecx*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
@@ -426,12 +426,12 @@ SkipMask:
     /* Set the new IRQL and check if there's a pending software interrupt */
     mov [fs:KPCR_IRQL], cl
     mov eax, [fs:KPCR_IRR]
-    mov al, _SoftIntByteTable[eax]
+    mov al, SoftIntByteTable[eax]
     cmp al, cl
     jbe DoCall3
 
     /* There is, call it */
-    call _SoftIntHandlerTable[eax*4]
+    call SoftIntHandlerTable[eax*4]
 
 DoCall3:
 
@@ -464,7 +464,7 @@ _@KfRaiseIrql@4:
     mov [fs:KPCR_IRQL], cl
 
     /* Mask the interrupts in the PIC */
-    mov eax, _KiI8259MaskTable[ecx*4]
+    mov eax, KiI8259MaskTable[ecx*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
@@ -513,7 +513,7 @@ _KeRaiseIrqlToSynchLevel@0:
     cli
 
     /* Mask out interrupts */
-    mov eax, _KiI8259MaskTable + DISPATCH_LEVEL * 2
+    mov eax, KiI8259MaskTable + DISPATCH_LEVEL * 2
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
@@ -616,7 +616,7 @@ _HalpEndSoftwareInterrupt@4:
     jbe SoftwareInt
 
     /* Set the right mask in the PIC for the hardware IRQ */
-    mov eax, _KiI8259MaskTable[ecx*4]
+    mov eax, KiI8259MaskTable[ecx*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
@@ -626,7 +626,7 @@ SoftwareInt:
     /* Check if there are pending software interrupts */
     mov [fs:KPCR_IRQL], cl
     mov eax, [fs:KPCR_IRR]
-    mov al, _SoftIntByteTable[eax]
+    mov al, SoftIntByteTable[eax]
     cmp al, cl
     ja DoCall2
     ret 4
