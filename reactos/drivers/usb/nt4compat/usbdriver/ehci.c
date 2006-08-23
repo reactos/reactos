@@ -58,10 +58,15 @@
 
 #define endp_mult_count( endp ) ( ( ( endp->pusb_endp_desc->wMaxPacketSize & 0x1800 ) >> 11 ) + 1 )
 
+#if 0
+/* WTF?! */
 #define release_adapter( padapTER ) \
 {\
     ( ( padapTER ) ); \
 }
+#else
+#define release_adapter( padapTER ) (void)(padapTER)
+#endif
 
 #define get_int_idx( _urb, _idx ) \
 {\
@@ -210,8 +215,12 @@
 	}\
 }
 
+#ifndef min
 #define min( a, b ) ( ( a ) > ( b ) ? ( b ) : ( a ) )
+#endif
+#ifndef max
 #define max( a, b ) ( ( a ) > ( b ) ? ( a ) : ( b ) )
+#endif
 
 #define CLR_RH2_PORTSTAT( port_idx, x ) \
 {\
@@ -276,7 +285,7 @@ static VOID ehci_stop(PEHCI_DEV ehci);
 
 BOOL ehci_destroy_schedule(PEHCI_DEV ehci);
 
-BOOLEAN ehci_sync_insert_urb_schedule(PVOID context);
+BOOLEAN NTAPI ehci_sync_insert_urb_schedule(PVOID context);
 
 VOID ehci_init_hcd_interface(PEHCI_DEV ehci);
 
@@ -316,7 +325,7 @@ BOOL ehci_delete_device(PDEVICE_OBJECT pdev);
 
 VOID ehci_get_capabilities(PEHCI_DEV ehci, PBYTE base);
 
-BOOLEAN ehci_isr(PKINTERRUPT interrupt, PVOID context);
+BOOLEAN NTAPI ehci_isr(PKINTERRUPT interrupt, PVOID context);
 
 BOOL ehci_start(PHCD hcd);
 
@@ -429,7 +438,7 @@ extern BOOL destroy_pending_endp_pool(PUHCI_PENDING_ENDP_POOL pool);
 
 //end of pending endpoint pool funcs
 
-static VOID
+static VOID NTAPI
 ehci_cancel_pending_endp_urb(IN PVOID Parameter)
 {
     PLIST_ENTRY abort_list;
@@ -467,14 +476,13 @@ ehci_process_pending_endp(PEHCI_DEV ehci)
     PLIST_ENTRY pthis;
     PURB purb;
     PUSB_ENDPOINT pendp;
-    BOOL can_submit;
+    BOOL can_submit = FALSE;
     PWORK_QUEUE_ITEM pwork_item;
     PLIST_ENTRY cancel_list;
-    PUSB_DEV pparent;
-    UCHAR port_idx;
+    PUSB_DEV pparent = NULL;
+    UCHAR port_idx = 0;
     BOOL tt_needed;
-    UCHAR hub_addr;
-    PURB_HS_CONTEXT_CONTENT phcc;
+    UCHAR hub_addr = 0;
     USE_IRQL;
 
     if (ehci == NULL)
@@ -678,7 +686,6 @@ BOOL
 ehci_submit_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 {
     int i;
-    PLIST_ENTRY pthis, pnext;
     PUHCI_PENDING_ENDP pending_endp;
     NTSTATUS status;
     USE_IRQL;
@@ -883,7 +890,7 @@ ehci_set_error_code(PURB purb, ULONG raw_status)
     return purb->status;
 }
 
-BOOLEAN
+static BOOLEAN NTAPI
 ehci_sync_remove_urb_finished(PVOID context)
 {
     PEHCI_DEV ehci;
@@ -897,7 +904,7 @@ ehci_sync_remove_urb_finished(PVOID context)
 
     if (ehci == NULL)
     {
-        return (UCHAR) pparam->ret = FALSE;
+        return (UCHAR) (pparam->ret = FALSE);
     }
 
     ListFirst(&ehci->urb_list, pthis);
@@ -919,7 +926,7 @@ ehci_sync_remove_urb_finished(PVOID context)
     return (UCHAR) TRUE;
 }
 
-VOID
+VOID NTAPI
 ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
 {
     PEHCI_DEV ehci;
@@ -930,13 +937,12 @@ ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     PEHCI_QH pqh;
     PEHCI_QTD ptd;
     PUHCI_PENDING_ENDP pending_endp;
-    PEHCI_FSTN pfstn;
     PUSB_DEV pdev;
     PUSB_ENDPOINT pendp;
 
     BOOL finished;
     LONG i;
-    ULONG ehci_status, urb_status, toggle = 0;
+    ULONG ehci_status, urb_status;
 
     SYNC_PARAM sync_param;
     UCHAR ep_type;
@@ -991,7 +997,7 @@ ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
                 InsertHeadList(&purb->trasac_list, pthis);
                 for(i = 0, purb->bytes_transfered = 0; i < purb->td_count; i++)
                 {
-                    PEHCI_QTD_CONTENT ptdc;
+                    PEHCI_QTD_CONTENT ptdc = NULL;
                     PEHCI_ITD_CONTENT pitdc;
                     PEHCI_SITD_CONTENT psitdc;
 
@@ -1208,7 +1214,7 @@ ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     return;
 }
 
-BOOLEAN
+static BOOLEAN NTAPI
 ehci_sync_cancel_urbs_dev(PVOID context)
 {
     //cancel all the urbs on one dev
@@ -1224,7 +1230,7 @@ ehci_sync_cancel_urbs_dev(PVOID context)
 
     if (ehci == NULL || dest_dev == NULL)
     {
-        return (UCHAR) sync_param->ret = FALSE;
+        return (UCHAR) (sync_param->ret = FALSE);
     }
     count = 0;
     ListFirst(&ehci->urb_list, pthis);
@@ -1245,7 +1251,7 @@ ehci_sync_cancel_urbs_dev(PVOID context)
         // signal an int for further process
         press_doorbell(ehci);
     }
-    return (UCHAR) sync_param->ret = TRUE;
+    return (UCHAR) (sync_param->ret = TRUE);
 }
 
 BOOL
@@ -1387,10 +1393,11 @@ ehci_insert_tds_qh(PEHCI_DEV ehci, PEHCI_QH pqh, PEHCI_QTD td_chain)
     if (pqh == NULL || td_chain == NULL)
         return FALSE;
 
+    UNREFERENCED_PARAMETER(ehci);
+
     ehci_copy_overlay((PEHCI_QH_CONTENT) pqh, (PEHCI_QTD_CONTENT) td_chain);
     InsertTailList(&td_chain->elem_head_link->elem_link, &pqh->elem_head_link->elem_link);
     return TRUE;
-    ehci;
 }
 
 static BOOL
@@ -1548,14 +1555,14 @@ ehci_internal_submit_bulk(PEHCI_DEV ehci, PURB purb)
 //
 {
 
-    LONG max_packet_size, td_count, offset, bytes_to_transfer, data_load;
+    LONG max_packet_size, td_count, offset, bytes_to_transfer;
     PBYTE start_addr;
     PEHCI_QTD ptd;
     PEHCI_QH pqh;
     LIST_ENTRY td_list, *pthis, *pnext;
     BOOL old_toggle, toggle, ret;
     UCHAR pid;
-    LONG i, j, k;
+    LONG i, j;
     PURB_HS_PIPE_CONTENT pipe_content;
     PEHCI_QTD_CONTENT ptdc;
     PEHCI_QH_CONTENT pqhc;
@@ -1748,7 +1755,7 @@ ehci_internal_submit_ctrl(PEHCI_DEV ehci, PURB purb)
 {
 
     LIST_ENTRY td_list, *pthis, *pnext;
-    LONG i, j, td_count;
+    LONG i, td_count;
     LONG toggle;
     LONG max_packet_size, bytes_to_transfer, bytes_rest, start_idx;
 
@@ -1954,7 +1961,6 @@ ehci_internal_submit_ctrl(PEHCI_DEV ehci, PURB purb)
 static NTSTATUS
 ehci_internal_submit_int(PEHCI_DEV ehci, PURB purb)
 {
-    LIST_ENTRY td_list, *pthis, *pnext;
     LONG i, max_packet_size;
     PEHCI_QTD ptd;
     BOOL ret;
@@ -2193,8 +2199,7 @@ ehci_internal_submit_iso(PEHCI_DEV ehci, PURB purb)
     PEHCI_SITD_CONTENT psitdc;
     PEHCI_ITD_CONTENT pitdc;
     LIST_ENTRY td_list, *pthis, *pnext, *pprev;
-    BOOL toggle, ret;
-    KIRQL old_irql;
+    BOOL ret;
     PURB_HS_PIPE_CONTENT pipe_content;
     PUSB_DEV pdev;
     PEHCI_ELEM_LINKS pelnk;
@@ -2426,7 +2431,7 @@ ehci_internal_submit_iso(PEHCI_DEV ehci, PURB purb)
             }
             else                // interval == 0
             {
-                LONG m, n, n2;
+                LONG m, n = 0, n2 = 0;
                 // fill the page buffer first
                 // calculate the page buffer needed
                 offset = phys_addr[0] & (PAGE_SIZE - 1);
@@ -2646,7 +2651,7 @@ ehci_internal_submit_iso(PEHCI_DEV ehci, PURB purb)
         pitdc = (PEHCI_ITD_CONTENT) itd_from_list_entry(pthis);
         for(i = 7; i >= 0; i--)
         {
-            if (pitdc->status_slot[i].status = 0x08)
+            if (pitdc->status_slot[i].status == 0x08)
             {
                 pitdc->status_slot[i].ioc = 1;
                 break;
@@ -2687,9 +2692,9 @@ ehci_internal_submit_iso(PEHCI_DEV ehci, PURB purb)
     return STATUS_SUCCESS;
 }
 
-BOOLEAN
-ehci_sync_insert_urb_schedule(PVOID context)
+BOOLEAN NTAPI
 //this function used as the KeSynchronizeExecution param to delegate control to ehci_insert_urb_schedule
+ehci_sync_insert_urb_schedule(PVOID context)
 {
     PSYNC_PARAM sync_param;
     PEHCI_DEV ehci;
@@ -2703,12 +2708,12 @@ ehci_sync_insert_urb_schedule(PVOID context)
     purb = (PURB) sync_param->context;
 
     if (ehci == NULL || purb == NULL)
-        return (UCHAR) sync_param->ret = FALSE;
+        return (UCHAR) (sync_param->ret = FALSE);
 
     return (UCHAR) (sync_param->ret = ehci_insert_urb_schedule(ehci, purb));
 }
 
-BOOLEAN
+static BOOLEAN NTAPI
 ehci_sync_cancel_urb(PVOID context)
 {
     //cancel a single purb
@@ -2726,7 +2731,7 @@ ehci_sync_cancel_urb(PVOID context)
     dest_urb = (PURB) sync_param->context;
 
     if (ehci == NULL || dest_urb == NULL)
-        return (UCHAR) sync_param->ret = FALSE;
+        return (UCHAR) (sync_param->ret = FALSE);
 
     ListFirst(&ehci->urb_list, pthis);
     while (pthis)
@@ -2753,8 +2758,6 @@ NTSTATUS
 ehci_cancel_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 //note any fields of the purb can not be referenced unless it is found in some queue
 {
-
-    NTSTATUS status;
     PLIST_ENTRY pthis, pnext;
     BOOL found;
     PURB purb2;
@@ -2835,8 +2838,7 @@ VOID
 ehci_generic_urb_completion(PURB purb, PVOID context)
 {
     PUSB_DEV pdev;
-    KIRQL cur_irql;
-    BOOL is_ctrl;
+    BOOL is_ctrl = FALSE;
     USE_IRQL;
 
     old_irql = KeGetCurrentIrql();
@@ -2884,7 +2886,6 @@ ehci_generic_urb_completion(PURB purb, PVOID context)
 
     }
 
-    is_ctrl = FALSE;
     if (endp_type(purb->pendp) == USB_ENDPOINT_XFER_CONTROL)
         is_ctrl = TRUE;
 
@@ -2898,7 +2899,6 @@ ehci_generic_urb_completion(PURB purb, PVOID context)
     }
     else
     {
-        PCTRL_REQ_STACK pstack;
         if (purb->ctrl_req_context.ctrl_stack_count == 0)
         {
             if (purb->completion)
@@ -3417,7 +3417,7 @@ ehci_hcd_dispatch(PHCD hcd, LONG disp_code, PVOID param)
 //
 VOID ehci_init_int8_qh(PEHCI_QH_CONTENT qh);
 
-BOOLEAN
+static BOOLEAN NTAPI
 ehci_cal_cpu_freq(PVOID context)
 {
     usb_cal_cpu_freq();
@@ -3427,7 +3427,7 @@ ehci_cal_cpu_freq(PVOID context)
 PDEVICE_OBJECT
 ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER dev_mgr)
 {
-    LONG bus, i, j, ret;
+    LONG bus, i, j, ret = 0;
     PCI_SLOT_NUMBER slot_num;
     PPCI_COMMON_CONFIG pci_config;
     PDEVICE_OBJECT pdev;
@@ -3490,14 +3490,12 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 {
 
     LONG frd_num, prd_num;
-    UCHAR buffer[PCI_COMMON_HDR_LENGTH];
     PDEVICE_OBJECT pdev;
     PEHCI_DEVICE_EXTENSION pdev_ext;
     ULONG vector, addr_space;
     LONG bus, i;
     KIRQL irql;
     KAFFINITY affinity;
-    UCHAR hcd_id;
 
     DEVICE_DESCRIPTION dev_desc;
     CM_PARTIAL_RESOURCE_DESCRIPTOR *pprd;
@@ -3773,13 +3771,11 @@ BOOL
 ehci_init_schedule(PEHCI_DEV ehci, PADAPTER_OBJECT padapter)
 {
     PEHCI_DEVICE_EXTENSION pdev_ext;
-    BOOL ret;
+    BOOL ret = TRUE;
     LONG i;
     PEHCI_QH_CONTENT pqh_content;
     PEHCI_QH pqh;
-    PEHCI_QTD ptd;
     PEHCI_ELEM_LINKS pelnk;
-    PEHCI_FSTN pfstn;
 
     if (ehci == NULL)
         return FALSE;
@@ -3968,7 +3964,6 @@ VOID
 ehci_get_capabilities(PEHCI_DEV ehci, PBYTE base)
 // fetch capabilities register from ehci
 {
-    NTSTATUS status;
     PEHCI_CAPS pcap;
     PEHCI_HCS_CONTENT phcs;
     LONG i;
@@ -4042,8 +4037,6 @@ ehci_release(PDEVICE_OBJECT pdev)
 {
     PEHCI_DEVICE_EXTENSION pdev_ext;
     PEHCI_DEV ehci;
-    KIRQL disp_level;
-    KIRQL old_level;
 
     if (pdev == NULL)
         return FALSE;
@@ -4084,9 +4077,7 @@ ehci_start(PHCD hcd)
 {
     ULONG tmp;
     PBYTE base;
-    LONG i;
     PEHCI_USBCMD_CONTENT usbcmd;
-    LARGE_INTEGER interval;
     PEHCI_DEV ehci;
 
     if (hcd == NULL)
@@ -4428,7 +4419,7 @@ ehci_claim_bw_for_iso(PEHCI_DEV ehci, PURB purb, BOOL release)
     LONG i, j, k;
     ULONG interval, bus_time, ss_time, cs_time, remainder;
     BOOL bw_avail;
-    ULONG cur_uframe, start_uframe, max_time, max_packet_size;
+    ULONG cur_uframe, start_uframe = 0, max_time, max_packet_size;
     PBYTE base;
     if (ehci == NULL || purb == NULL)
         return FALSE;
@@ -4917,7 +4908,6 @@ ehci_insert_bulk_schedule(PEHCI_DEV ehci, PURB purb)
 {
     PLIST_ENTRY list_head;
     PEHCI_QH pqh, pqhprev, pqhnext;
-    PEHCI_QTD ptd;
     PLIST_ENTRY pthis, pprev, pnext;
 
     if (ehci == NULL || purb == NULL)
@@ -4961,7 +4951,6 @@ ehci_remove_bulk_from_schedule(PEHCI_DEV ehci, PURB purb)
 {
     PLIST_ENTRY list_head;
     PEHCI_QH pqh, pqhprev, pqhnext;
-    PEHCI_QTD ptd;
     PEHCI_QH_CONTENT pqhc;
     PLIST_ENTRY pthis, pprev, pnext;
 
@@ -5013,9 +5002,8 @@ ehci_insert_fstn_schedule(PEHCI_DEV ehci, PURB purb)
 {
 
     PURB_HS_PIPE_CONTENT pipe_content, pc;
-    PLIST_ENTRY pthis, list_head, pnext, pprev;
-    PEHCI_ELEM_LINKS elem_link;
-    PEHCI_QH pqh, pqhprev, pqhnext;
+    PLIST_ENTRY pthis, list_head, pnext = NULL, pprev;
+    PEHCI_QH pqhnext;
     PEHCI_FSTN pfstn;
     PURB purb1;
 
@@ -5228,7 +5216,6 @@ ehci_remove_fstn_from_schedule(PEHCI_DEV ehci, PURB purb)
     PURB_HS_PIPE_CONTENT pipe_content;
     PLIST_ENTRY pthis, list_head, pnext, pprev;
     PEHCI_FSTN pfstn;
-    PURB purb1;
 
     ULONG interval, start_frame, start_uframe;
     LONG i;
@@ -5298,7 +5285,7 @@ static VOID
 ehci_insert_int_schedule(PEHCI_DEV ehci, PURB purb)
 {
     PURB_HS_PIPE_CONTENT pipe_content, pc;
-    PLIST_ENTRY pthis, list_head, pnext, pprev;
+    PLIST_ENTRY pthis, list_head, pnext = NULL, pprev;
     PEHCI_ELEM_LINKS elem_link;
     PEHCI_QH pqh, pqhprev, pqhnext;
     PURB purb1;
@@ -5537,13 +5524,11 @@ ehci_insert_int_schedule(PEHCI_DEV ehci, PURB purb)
 static VOID
 ehci_remove_int_from_schedule(PEHCI_DEV ehci, PURB purb)
 {
-    PURB_HS_PIPE_CONTENT pipe_content, pc;
+    PURB_HS_PIPE_CONTENT pipe_content;
     PLIST_ENTRY pthis, list_head, pnext, pprev, pcur;
-    PEHCI_ELEM_LINKS elem_link;
-    PEHCI_QH pqh, pqhprev, pqhnext;
-    PURB purb1;
+    PEHCI_QH pqh, pqhprev;
 
-    ULONG interval, start_frame, start_uframe, u;
+    ULONG interval, start_frame, start_uframe;
     LONG i;
 
     if (ehci == NULL || purb == NULL)
@@ -5666,7 +5651,7 @@ static VOID
 ehci_insert_iso_schedule(PEHCI_DEV ehci, PURB purb)
 {
     PURB_HS_PIPE_CONTENT pipe_content;
-    PLIST_ENTRY pthis, list_head, pnext, pprev, pcur;
+    PLIST_ENTRY pthis, list_head, pnext;
 
     ULONG interval, start_frame;
     LONG i;
@@ -5806,7 +5791,7 @@ NTSTATUS
 ehci_isr_removing_urb(PEHCI_DEV ehci, PURB purb, BOOL doorbell_rings, ULONG cur_frame)
 {
     UCHAR type;
-    PLIST_ENTRY pthis, plast;
+    PLIST_ENTRY pthis;
     PURB_HS_PIPE_CONTENT pipe_content;
     PEHCI_ITD_CONTENT pitd_content;
     PEHCI_SITD_CONTENT psitd_content;
@@ -6066,7 +6051,7 @@ ehci_scan_iso_error(PEHCI_DEV ehci, PURB purb)
     return 0;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 ehci_isr(PKINTERRUPT interrupt, PVOID context)
     // we can not use endp here for it is within the dev scope, and
     // we can not acquire the dev-lock, fortunately we saved some

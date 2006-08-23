@@ -504,13 +504,13 @@ typedef struct _USB_CONFIGURATION
 } USB_CONFIGURATION, *PUSB_CONFIGURATION;
 
 #define USE_IRQL \
-KIRQL _pending_endp_lock_old_irql, _pending_endp_list_lock_old_irql, _dev_lock_old_irql, old_irql;
+KIRQL _pending_endp_lock_old_irql=0, _pending_endp_list_lock_old_irql=0, _dev_lock_old_irql=0, old_irql=0;
 
 #define USE_NON_PENDING_IRQL \
-KIRQL _dev_lock_old_irql, old_irql;
+KIRQL _dev_lock_old_irql=0, old_irql=0;
 
 #define USE_BASIC_NON_PENDING_IRQL \
-KIRQL _dev_lock_old_irql;
+KIRQL _dev_lock_old_irql=0;
 
 
 #define USB_DEV_STATE_MASK          ( 0xff << 8 )

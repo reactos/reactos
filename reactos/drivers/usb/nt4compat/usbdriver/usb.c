@@ -34,7 +34,7 @@ usb_alloc_mem(POOL_TYPE pool_type, LONG size)
     PVOID ret;
     g_alloc_cnt++;
     ret = ExAllocatePool(pool_type, size);
-    usb_dbg_print(DBGLVL_MAXIMUM, ("usb_alloc_mem(): alloced=0x%x\n", g_alloc_cnt));
+    usb_dbg_print(DBGLVL_ULTRA, ("usb_alloc_mem(): alloced=0x%x\n", g_alloc_cnt));
     return ret;
 }
 
@@ -42,7 +42,7 @@ VOID
 usb_free_mem(PVOID pbuf)
 {
     g_alloc_cnt--;
-    usb_dbg_print(DBGLVL_MAXIMUM, ("usb_free_mem(): alloced=0x%x\n", g_alloc_cnt));
+    usb_dbg_print(DBGLVL_ULTRA, ("usb_free_mem(): alloced=0x%x\n", g_alloc_cnt));
     ExFreePool(pbuf);
 }
 
@@ -115,7 +115,7 @@ usb_query_and_lock_dev(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle, PUSB_DEV
 {
     int i;
     PLIST_ENTRY pthis, pnext;
-    PUSB_DEV pdev;
+    PUSB_DEV pdev = NULL;
     BOOL valid_dev;
 
     USE_NON_PENDING_IRQL;

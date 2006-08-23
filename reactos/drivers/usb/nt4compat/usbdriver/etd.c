@@ -45,7 +45,7 @@
 // get the actual max list count of the pool, two limit, max_elem_pool and max_lists_pool
 #define get_max_lists_count( pOOL, max_liSTS ) \
 {\
-	LONG ii1;\
+	LONG ii1=0;\
 	switch( elem_pool_get_type( pOOL ) )\
 	{\
 	case INIT_LIST_FLAG_QTD:\
@@ -86,12 +86,18 @@ LONG elem_list_get_ref(PEHCI_ELEM_LIST plist);
 BOOL
 elem_pool_lock(PEHCI_ELEM_POOL pool, BOOL at_dpc)
 {
+    UNREFERENCED_PARAMETER(pool);
+    UNREFERENCED_PARAMETER(at_dpc);
+
     return TRUE;
 }
 
 BOOL
 elem_pool_unlock(PEHCI_ELEM_POOL pool, BOOL at_dpc)
 {
+    UNREFERENCED_PARAMETER(pool);
+    UNREFERENCED_PARAMETER(at_dpc);
+
     return TRUE;
 }
 
@@ -400,7 +406,7 @@ PEHCI_ELEM_LINKS
 elem_pool_alloc_elem(PEHCI_ELEM_POOL pool)
 {
     LONG i;
-    PEHCI_ELEM_LIST pel;
+    PEHCI_ELEM_LIST pel = NULL;
     PLIST_HEAD lh;
     PEHCI_ELEM_LINKS elnk;
 

@@ -321,9 +321,9 @@ rh_timer_svc_int_completion(PUSB_DEV pdev, PVOID context)
     //  by the xhci_dpc_callback, and the ref_count for the urb
     //  is maintained there. So only rh's timer-svc cares refcount
     //  when hcd_generic_urb_completion is called.
-    usb_dbg_print(DBGLVL_MAXIMUM, ("rh_timer_svc_int_completion(): rh's ref_count=0x%x\n", pdev->ref_count));
+    usb_dbg_print(DBGLVL_ULTRA, ("rh_timer_svc_int_completion(): rh's ref_count=0x%x\n", pdev->ref_count));
     unlock_dev(pdev, TRUE);
-    usb_dbg_print(DBGLVL_MAXIMUM, ("rh_timer_svc_int_completion(): exitiing...\n"));
+    usb_dbg_print(DBGLVL_ULTRA, ("rh_timer_svc_int_completion(): exitiing...\n"));
     return;
 }
 

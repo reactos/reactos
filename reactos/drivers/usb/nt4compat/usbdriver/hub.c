@@ -386,7 +386,6 @@ hub_reset_pipe_completion(PURB purb,    //only for reference, can not be release
 {
     PUSB_DEV pdev;
     PUSB_ENDPOINT pendp;
-    NTSTATUS status;
 
     USE_BASIC_NON_PENDING_IRQL;
 
@@ -454,7 +453,7 @@ hub_start_int_request(PUSB_DEV pdev)
     purb->data_length = (hub_ext->port_count + 7) / 8;
 
     hub_if_from_dev(pdev, pif);
-    usb_dbg_print(DBGLVL_MAXIMUM, ("hub_start_int_request(): pdev=0x%x, pif=0x%x\n", pdev, pif));
+    usb_dbg_print(DBGLVL_ULTRA, ("hub_start_int_request(): pdev=0x%x, pif=0x%x\n", pdev, pif));
     purb->pendp = &pif->endp[0];
     purb->pdev = pdev;
 
@@ -499,7 +498,7 @@ hub_int_completion(PURB purb, PVOID pcontext)
         return;
     }
 
-    usb_dbg_print(DBGLVL_MAXIMUM, ("hub_int_completion(): entering...\n"));
+    usb_dbg_print(DBGLVL_ULTRA, ("hub_int_completion(): entering...\n"));
 
     pdev = purb->pdev;
     hub_ext = pcontext;
@@ -721,7 +720,7 @@ hub_clear_port_feature_completion(PURB purb, PVOID context)
     PHCD hcd;
     NTSTATUS status;
     PUSB_DEV pdev;
-    PHUB2_EXTENSION hub_ext;
+    PHUB2_EXTENSION hub_ext = NULL;
     PUSB_DEV_MANAGER dev_mgr;
 
     PUSB_CTRL_SETUP_PACKET psetup;
@@ -1129,7 +1128,6 @@ hub_timer_wait_dev_stable(PUSB_DEV pdev,
 {
 
     PHUB2_EXTENSION hub_ext;
-    PUSB_INTERFACE pif;
     ULONG param;
     PUSB_DEV_MANAGER dev_mgr;
 
@@ -1293,8 +1291,8 @@ hub_start_reset_port_completion(PURB purb, PVOID context)
 {
     PUSB_DEV pdev;
     PUSB_ENDPOINT pendp;
-    PUSB_DEV_MANAGER dev_mgr;
-    NTSTATUS status;
+    PUSB_DEV_MANAGER dev_mgr = NULL;
+    NTSTATUS status = STATUS_SUCCESS;
     ULONG port_idx;
     PHCD hcd;
 
@@ -1355,8 +1353,9 @@ hub_set_address_completion(PURB purb, PVOID context)
     NTSTATUS status;
     ULONG port_idx;
     PHCD hcd;
+    USE_BASIC_NON_PENDING_IRQL;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    hcd_dbg_print(DBGLVL_MAXIMUM, ("hub_set_address_completion: purb=%p context=%p\n", purb, context));
 
     if (purb == NULL)
         return;
@@ -1426,7 +1425,6 @@ LBL_RESET_NEXT:
 VOID
 hub_disable_port_completion(PURB purb, PVOID pcontext)
 {
-    PHUB2_EXTENSION hub_ext;
     PUSB_DEV pdev;
     PUSB_DEV_MANAGER dev_mgr;
     UCHAR port_idx;
@@ -1530,7 +1528,7 @@ hub_remove_reset_event(PUSB_DEV pdev, ULONG port_idx, BOOL from_dpc)
     PUSB_EVENT pevent, pnext_event;
     BOOL found;
 
-    KIRQL old_irql;
+    KIRQL old_irql = 0;
 
     if (pdev == NULL)
         return FALSE;
@@ -1583,13 +1581,13 @@ hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOL from_dpc)
 {
     PLIST_ENTRY pthis, pnext;
     PUSB_EVENT pevent, pnext_event;
-    PUSB_DEV pdev;
+    PUSB_DEV pdev = NULL;
     PHUB2_EXTENSION hub_ext;
     BOOL bret;
-    PURB purb;
+    PURB purb = NULL;
     BOOL processed;
     PUSB_CTRL_SETUP_PACKET psetup;
-    PHCD hcd;
+    PHCD hcd = NULL;
 
     USE_NON_PENDING_IRQL;;
 
@@ -1606,7 +1604,7 @@ hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOL from_dpc)
 
     ListFirst(&dev_mgr->event_list, pthis);
 
-    while (pevent = (PUSB_EVENT) pthis)
+    while ((pevent = (PUSB_EVENT) pthis))
     {
         while (pevent->event == USB_EVENT_WAIT_RESET_PORT &&
                (pevent->flags & USB_EVENT_FLAG_QUE_TYPE) == USB_EVENT_FLAG_QUE_RESET)
@@ -1718,7 +1716,7 @@ hub_post_esq_event(PUSB_DEV pdev, BYTE port_idx, PROCESS_EVENT pe)
 
     InsertTailList(&dev_mgr->event_list, &pevent->event_link);
     KeSetEvent(&dev_mgr->wake_up_event, 0, FALSE);
-    // usb_dbg_print( DBGLVL_MAXIMUM, ( "hub_post_esq_event(): current element in event list is 0x%x\n", \
+    // usb_dbg_print( DBGLVL_MAXIMUM, ( "hub_post_esq_event(): current element in event list is 0x%x\n",
     //                      dbg_count_list( &dev_mgr->event_list ) ) );
     return;
 }
@@ -1917,8 +1915,9 @@ dev_mgr_start_config_dev(PUSB_DEV pdev)
     PUSB_CTRL_SETUP_PACKET psetup;
     PURB purb;
     PHCD hcd;
+    USE_BASIC_NON_PENDING_IRQL;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    hcd_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_start_config_dev: pdev=%p\n", pdev));
 
     if (pdev == NULL)
         return FALSE;
@@ -1991,6 +1990,9 @@ dev_mgr_get_desc_completion(PURB purb, PVOID context)
 
     if (purb == NULL)
         return;
+
+    hcd_dbg_print(DBGLVL_MAXIMUM,
+        ("dev_mgr_get_desc_completion: purb->reference=%d\n", purb->reference));
 
     pdev = purb->pdev;
     pendp = purb->pendp;
@@ -2135,6 +2137,8 @@ dev_mgr_get_desc_completion(PURB purb, PVOID context)
                     unlock_dev(pdev, TRUE);
                     usb_free_mem(purb);
                     purb = NULL;
+
+                    // load driver for the device
                     dev_mgr_start_select_driver(pdev);
                 }
             }
@@ -2221,8 +2225,6 @@ dev_mgr_connect_to_dev(PVOID Parameter)
     PUSB_DEV_MANAGER dev_mgr;
     CONNECT_DATA param;
 
-    USE_BASIC_NON_PENDING_IRQL;;
-
     if (pcd == NULL)
         return FALSE;
     dev_handle = pcd->dev_handle;
@@ -2247,13 +2249,14 @@ VOID
 dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG param)
 {
     PUSB_DEV_MANAGER dev_mgr;
-    PLIST_ENTRY pthis, pnext;
     PUSB_DRIVER pdriver, pcand;
     LONG credit, match, i;
-    DEV_HANDLE handle;
+    DEV_HANDLE handle = 0;
     CONNECT_DATA cd;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
+
+    usb_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_event_select_driver(): pdev=%p event=0x%x\n", pdev, event));
 
     if (pdev == NULL)
         return;
@@ -2583,7 +2586,6 @@ PURB
 dev_mgr_remove_irp(PUSB_DEV_MANAGER dev_mgr, PIRP pirp)
 {
     PURB purb;
-    KIRQL old_irql;
     if (dev_mgr == NULL)
         return NULL;
 
@@ -2666,10 +2668,9 @@ hub_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
     PUSB_INTERFACE_DESC pif_desc;
     PUSB_CTRL_SETUP_PACKET psetup;
     NTSTATUS status;
-    LONG i, j, found, cfg_val;
+    LONG i, j, found, cfg_val = 0;
     PUSB_DEV_MANAGER dev_mgr;
     PUSB_DEV pdev;
-    USE_BASIC_NON_PENDING_IRQL;;
 
 
     if (param == NULL || dev_handle == 0)
@@ -2775,7 +2776,7 @@ hub_set_cfg_completion(PURB purb, PVOID pcontext)
     PUSB_DRIVER pdriver;
     ULONG endp_handle, dev_handle;
     PUSB_CTRL_SETUP_PACKET psetup;
-    UCHAR if_idx, if_alt_idx;
+    UCHAR if_idx = 0;
     PUSB_DEV pdev;
     PUSB_INTERFACE pif;
     BOOL high_speed, multiple_tt;
@@ -3013,7 +3014,7 @@ hub_get_hub_desc_completion(PURB purb, PVOID pcontext)
     PHUB2_EXTENSION hub_ext;
     PUSB_DEV pdev;
     LONG i;
-    PUSB_INTERFACE pif;
+    PUSB_INTERFACE pif = NULL;
     ULONG status;
     LONG port_count;
     PUSB_DRIVER pdriver;
@@ -3133,7 +3134,7 @@ static BOOL
 hub_lock_unlock_tt(PUSB_DEV pdev, UCHAR port_idx, UCHAR type, BOOL lock)
 {
     PHUB2_EXTENSION dev_ext;
-    PULONG pmap;
+    PULONG pmap = NULL;
 
     USE_BASIC_NON_PENDING_IRQL;;
 
@@ -3302,14 +3303,14 @@ hub_clear_tt_buffer(PUSB_DEV pdev, URB_HS_PIPE_CONTENT pipe_content, UCHAR port_
     return TRUE;
 }
 
-BOOL
+VOID
 hub_event_clear_tt_buffer(PUSB_DEV pdev,        //always null. we do not use this param
                           ULONG event,
                           ULONG context,
                           ULONG param)
 {
     hub_clear_tt_buffer(pdev, *((PURB_HS_PIPE_CONTENT) & context), (UCHAR) param);
-    return TRUE;
+    return;
 }
 
 VOID
@@ -3413,7 +3414,7 @@ add_irp_to_list(PIRP_LIST irp_list, PIRP pirp, PURB purb)
 
     irp_list->irp_free_list_count--;
     InsertTailList(&irp_list->irp_busy_list, &pile->irp_link);
-    IoSetCancelRoutine(pirp, dev_mgr_cancel_irp);
+    (void)IoSetCancelRoutine(pirp, dev_mgr_cancel_irp);
 
     KeReleaseSpinLockFromDpcLevel(&irp_list->irp_list_lock);
     IoReleaseCancelSpinLock(old_irql);

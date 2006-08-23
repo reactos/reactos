@@ -88,7 +88,7 @@ disp_noio_urb_completion(PURB purb, PVOID context)
     PUSB_CTRL_SETUP_PACKET psetup;
     PURB purb2;
     PUSB_DEV_MANAGER dev_mgr;
-    NTSTATUS status;
+    NTSTATUS status = STATUS_SUCCESS;
     PIO_STACK_LOCATION irp_stack;
     PDEVEXT_HEADER dev_hdr;
 
@@ -190,7 +190,7 @@ dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
             case IOCTL_ENUM_DEVICES:
                 {
                     PLIST_ENTRY pthis, pnext;
-                    LONG dev_count, array_size, i, j;
+                    LONG dev_count, array_size, i, j = 0;
                     PUSB_DEV pdev;
                     PENUM_DEV_ARRAY peda;
 
@@ -360,8 +360,8 @@ dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
                     LONG buf_size;
                     PURB purb;
                     KIRQL old_irql;
-                    ULONG endp_idx, if_idx, user_buffer_length;
-                    PUCHAR user_buffer;
+                    ULONG endp_idx, if_idx, user_buffer_length = 0;
+                    PUCHAR user_buffer = NULL;
                     PUSB_DEV pdev;
                     DEV_HANDLE endp_handle;
                     PUSB_ENDPOINT pendp;

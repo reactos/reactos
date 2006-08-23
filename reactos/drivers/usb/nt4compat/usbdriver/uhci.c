@@ -65,10 +65,15 @@ extern PDEVICE_OBJECT ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_pa
   : enDP->pusb_endp_desc->wMaxPacketSize )
 
 
+#if 0
+/* WTF?! */
 #define release_adapter( padapTER ) \
 {\
     ( ( padapTER ) ); \
 }
+#else
+#define release_adapter( padapTER ) (void)(padapTER)
+#endif
 
 #define get_int_idx( _urb, _idx ) \
 {\
@@ -111,7 +116,7 @@ static VOID uhci_stop(PUHCI_DEV uhci);
 
 BOOL uhci_destroy_schedule(PUHCI_DEV uhci);
 
-BOOLEAN uhci_sync_insert_urb_schedule(PVOID context);
+BOOL NTAPI uhci_sync_insert_urb_schedule(PVOID context);
 
 VOID uhci_init_hcd_interface(PUHCI_DEV uhci);
 
@@ -123,7 +128,7 @@ extern VOID rh_timer_svc_reset_port_completion(PUSB_DEV dev, PVOID context);
 
 extern VOID rh_timer_svc_int_completion(PUSB_DEV dev, PVOID context);
 
-ULONG debug_level = DBGLVL_MAXIMUM;
+ULONG debug_level = DBGLVL_ULTRA;//DBGLVL_MAXIMUM;
 PDRIVER_OBJECT usb_driver_obj = NULL;
 extern USB_DEV_MANAGER g_dev_mgr;
 
@@ -225,7 +230,6 @@ uhci_fill_td(PUHCI_TD td, ULONG status, ULONG info, ULONG buffer)
 BOOL
 uhci_insert_td_fl(PUHCI_TD prev_td, PUHCI_TD ptd)
 {
-    ULONG temp;
     PLIST_ENTRY temp_entry;
 
     if (prev_td == NULL || ptd == NULL)
@@ -263,7 +267,6 @@ uhci_insert_qh_fl(PVOID prev_item, PUHCI_QH pqh)
     //only horizontal link allowed
     PUHCI_QH pprev_qh;
     PUHCI_TD pprev_td;
-    ULONG temp;
     PLIST_ENTRY temp_entry;
 
     if (prev_item == NULL || pqh == NULL)
@@ -501,13 +504,18 @@ uhci_delete_device(PDEVICE_OBJECT pdev)
 // we can not use endp here for it is within the dev scope, and
 // we can not acquire the dev-lock, fortunately we saved some
 // info in urb->pipe in uhci_internal_submit_XXX.
-BOOLEAN
+BOOLEAN NTAPI
 uhci_isr(PKINTERRUPT interrupt, PVOID context)
 {
     PUHCI_DEV uhci;
     USHORT status;
     PLIST_ENTRY pthis, pnext;
     PURB purb;
+
+    UNREFERENCED_PARAMETER(interrupt);
+    UNREFERENCED_PARAMETER(context);
+
+    uhci_dbg_print(DBGLVL_ULTRA, ("uhci_isr(): context=0x%x\n", context));
 
     /*
      * Read the interrupt status, and write it back to clear the
@@ -593,9 +601,11 @@ uhci_isr(PKINTERRUPT interrupt, PVOID context)
     return TRUE;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 uhci_cal_cpu_freq(PVOID context)
 {
+    UNREFERENCED_PARAMETER(context);
+
     usb_cal_cpu_freq();
     return TRUE;
 }
@@ -603,7 +613,7 @@ uhci_cal_cpu_freq(PVOID context)
 PDEVICE_OBJECT
 uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER dev_mgr)
 {
-    LONG bus, i, j, ret;
+    LONG bus, i, j, ret = 0;
     PCI_SLOT_NUMBER slot_num;
     PPCI_COMMON_CONFIG pci_config;
     PDEVICE_OBJECT pdev;
@@ -674,14 +684,12 @@ PDEVICE_OBJECT
 uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PUSB_DEV_MANAGER dev_mgr)
 {
     LONG frd_num, prd_num;
-    UCHAR buffer[PCI_COMMON_HDR_LENGTH];
     PDEVICE_OBJECT pdev;
     PDEVICE_EXTENSION pdev_ext;
     ULONG vector, addr_space;
     LONG bus;
     KIRQL irql;
     KAFFINITY affinity;
-    UCHAR hcd_id;
 
     DEVICE_DESCRIPTION dev_desc;
     CM_PARTIAL_RESOURCE_DESCRIPTOR *pprd;
@@ -728,10 +736,10 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         return NULL;
     }
 
-    DbgPrint("uhci_alloc(): reg_path=0x%x, \n \
+    DbgPrint("uhci_alloc(): reg_path=%p, \n \
              uhci_alloc(): PCIBus=0x%x, bus=0x%x, bus_addr=0x%x \n \
-             uhci_alloc(): slot_num=0x%x, &res_list=0x%x  \n", (DWORD) reg_path, (DWORD) PCIBus, (DWORD) bus,
-             (DWORD) bus_addr, (DWORD) slot_num.u.AsULONG, (DWORD) & pdev_ext->res_list);
+             uhci_alloc(): slot_num=0x%x, &res_list=%p \n", reg_path, (DWORD) PCIBus, (DWORD) bus,
+             (DWORD) bus_addr, (DWORD) slot_num.u.AsULONG, & pdev_ext->res_list);
 
     //let's allocate resources for this device
     DbgPrint("uhci_alloc(): about to assign slot res\n");
@@ -861,8 +869,6 @@ uhci_release(PDEVICE_OBJECT pdev)
 {
     PDEVICE_EXTENSION pdev_ext;
     PUHCI_DEV uhci;
-    KIRQL disp_level;
-    KIRQL old_level;
 
     if (pdev == NULL)
         return FALSE;
@@ -956,8 +962,6 @@ uhci_stop(PUHCI_DEV uhci)
 static VOID
 uhci_reset(PUHCI_DEV uhci)
 {
-    PUSB_DEV_MANAGER dev_mgr;
-    PLIST_ENTRY pthis, pnext;
     PBYTE io_addr = uhci->port_base;
 
     uhci_stop(uhci);
@@ -971,7 +975,7 @@ uhci_reset(PUHCI_DEV uhci)
     usb_wait_ms_dpc(10);
 }
 
-static VOID
+VOID
 uhci_suspend(PUHCI_DEV uhci)
 {
     PBYTE io_addr = uhci->port_base;
@@ -981,7 +985,7 @@ uhci_suspend(PUHCI_DEV uhci)
 
 }
 
-static VOID
+VOID
 uhci_wakeup(PUHCI_DEV uhci)
 {
     PBYTE io_addr;
@@ -1052,6 +1056,7 @@ uhci_init_schedule(PUHCI_DEV uhci, PADAPTER_OBJECT padapter)
 
     uhci->skel_int1_td->link = uhci->skel_ls_control_qh->phy_addr;
 
+    // Hack for PIIX
     uhci_fill_td(uhci->skel_term_td, 0, (UHCI_NULL_DATA_SIZE << 21) | (0x7f << 8) | USB_PID_IN, 0);
     uhci->skel_term_td->link = uhci->skel_term_td->phy_addr;
 
@@ -1120,13 +1125,13 @@ uhci_destroy_schedule(PUHCI_DEV uhci)
 
 }
 
-static VOID
+VOID NTAPI
 uhci_cancel_pending_endp_urb(IN PVOID Parameter)
 {
     PLIST_ENTRY abort_list;
     PUSB_DEV pdev;
     PURB purb;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     abort_list = (PLIST_ENTRY) Parameter;
 
@@ -1150,7 +1155,7 @@ uhci_cancel_pending_endp_urb(IN PVOID Parameter)
     return;
 }
 
-static BOOL
+BOOL
 uhci_process_pending_endp(PUHCI_DEV uhci)
 {
     PUSB_DEV pdev;
@@ -1158,7 +1163,7 @@ uhci_process_pending_endp(PUHCI_DEV uhci)
     PLIST_ENTRY pthis;
     PURB purb;
     PUSB_ENDPOINT pendp;
-    BOOL can_submit;
+    BOOL can_submit = FALSE;
     PWORK_QUEUE_ITEM pwork_item;
     PLIST_ENTRY cancel_list;
     USE_IRQL;
@@ -1189,7 +1194,7 @@ uhci_process_pending_endp(PUHCI_DEV uhci)
         {
             unlock_dev(pdev, TRUE);
             free_pending_endp(&uhci->pending_endp_pool, struct_ptr(pthis, UHCI_PENDING_ENDP, endp_link));
-            //delegate to uhci_remove_device for remiving the urb queue on the endpoint
+            //delegate to uhci_remove_device for removing the urb queue on the endpoint
             continue;
         }
 
@@ -1302,11 +1307,10 @@ uhci_process_pending_endp(PUHCI_DEV uhci)
     return TRUE;
 }
 
-BOOL
+NTSTATUS
 uhci_submit_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 {
     int i;
-    PLIST_ENTRY pthis, pnext;
     PUHCI_PENDING_ENDP pending_endp;
     NTSTATUS status;
     USE_IRQL;
@@ -1414,7 +1418,7 @@ LBL_OUT:
     return status;
 }
 
-static NTSTATUS
+NTSTATUS
 uhci_set_error_code(PURB urb, ULONG raw_status)
 {
     if ((raw_status & TD_CTRL_ANY_ERROR) == 0)
@@ -1447,7 +1451,7 @@ uhci_set_error_code(PURB urb, ULONG raw_status)
     return urb->status;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 uhci_sync_remove_urb_finished(PVOID context)
 {
     PUHCI_DEV uhci;
@@ -1461,7 +1465,7 @@ uhci_sync_remove_urb_finished(PVOID context)
 
     if (uhci == NULL)
     {
-        return (UCHAR) pparam->ret = FALSE;
+        return (UCHAR) (pparam->ret = FALSE);
     }
 
     ListFirst(&uhci->urb_list, pthis);
@@ -1502,7 +1506,7 @@ uhci_drop_fsbr(PUHCI_DEV uhci)
     return (UCHAR) TRUE;
 }
 
-VOID
+VOID NTAPI
 uhci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
 {
     PUHCI_DEV uhci;
@@ -1511,7 +1515,6 @@ uhci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     PLIST_ENTRY pthis, pnext;
     PURB purb;
     PQH_EXTENSION pqhe;
-    PTD_EXTENSION ptde;
     PUHCI_PENDING_ENDP pending_endp;
     PUSB_DEV pdev;
     PUSB_ENDPOINT pendp;
@@ -1521,7 +1524,9 @@ uhci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     ULONG uhci_status, urb_status, toggle = 0;
 
     SYNC_PARAM sync_param;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
+
+    UNREFERENCED_PARAMETER(dpc);
 
     uhci = (PUHCI_DEV) context;
     if (uhci == NULL)
@@ -1735,7 +1740,7 @@ uhci_add_device(PUHCI_DEV uhci, PUSB_DEV dev)
     return TRUE;
 }
 
-BOOLEAN
+BOOLEAN NTAPI
 uhci_sync_cancel_urbs_dev(PVOID context)
 {
     //cancel all the urbs on one dev
@@ -1751,7 +1756,7 @@ uhci_sync_cancel_urbs_dev(PVOID context)
 
     if (uhci == NULL || dest_dev == NULL)
     {
-        return (UCHAR) sync_param->ret = FALSE;
+        return (UCHAR) (sync_param->ret = FALSE);
     }
     count = 0;
     ListFirst(&uhci->urb_list, pthis);
@@ -1769,7 +1774,7 @@ uhci_sync_cancel_urbs_dev(PVOID context)
     if (count)
         uhci->skel_term_td->status |= TD_CTRL_IOC;
 
-    return (UCHAR) sync_param->ret = TRUE;
+    return (UCHAR) (sync_param->ret = TRUE);
 }
 
 BOOL
@@ -1878,7 +1883,7 @@ uhci_remove_device(PUHCI_DEV uhci, PUSB_DEV dev)
 // urb comes from dev's endpoint urb-list. it is already removed from
 // the endpoint urb-list.
 //
-static NTSTATUS
+NTSTATUS
 uhci_internal_submit_bulk(PUHCI_DEV uhci, PURB urb)
 {
 
@@ -2027,7 +2032,7 @@ uhci_internal_submit_bulk(PUHCI_DEV uhci, PURB urb)
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
+NTSTATUS
 uhci_internal_submit_ctrl(PUHCI_DEV uhci, PURB urb)
 {
     LIST_ENTRY td_list, *pthis, *pnext;
@@ -2204,10 +2209,9 @@ uhci_internal_submit_ctrl(PUHCI_DEV uhci, PURB urb)
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS
+NTSTATUS
 uhci_internal_submit_int(PUHCI_DEV uhci, PURB urb)
 {
-    LIST_ENTRY td_list, *pthis, *pnext;
     LONG i;
     LONG toggle = 0;
     LONG max_packet_size;
@@ -2302,14 +2306,13 @@ uhci_internal_submit_int(PUHCI_DEV uhci, PURB urb)
 }
 
 
-static NTSTATUS
+NTSTATUS
 uhci_internal_submit_iso(PUHCI_DEV uhci, PURB urb)
 {
     PUHCI_TD ptd;
     LIST_ENTRY td_list, *pthis, *pnext;
     int i;
     BOOL toggle, ret;
-    KIRQL old_irql;
 
     if (uhci == NULL || urb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -2403,13 +2406,12 @@ uhci_internal_submit_iso(PUHCI_DEV uhci, PURB urb)
 }
 
 // runs in uhci_isr
-static BOOL
+BOOL
 uhci_is_xfer_finished(PURB urb)
 {
     PLIST_ENTRY pthis, pnext;
     PUHCI_TD ptd;
-    PUHCI_QH pqh;
-    BOOL ret;
+    BOOL ret = TRUE;
     PTD_EXTENSION ptde;
 
     if (urb->last_finished_td == NULL)
@@ -2419,7 +2421,7 @@ uhci_is_xfer_finished(PURB urb)
 
     if (&urb->trasac_list == urb->last_finished_td)
         ListFirst(&urb->trasac_list, pthis)
-        else
+    else
         ListNext(&urb->trasac_list, urb->last_finished_td, pthis);
 
     while (pthis)
@@ -2470,7 +2472,7 @@ uhci_is_xfer_finished(PURB urb)
 // never try to acquire any spin-lock
 // remove the bulk urb from schedule, and mark it not in
 // the schedule
-static BOOL
+BOOL
 uhci_remove_urb_from_schedule(PUHCI_DEV uhci, PURB urb)
 {
     BOOL ret = FALSE;
@@ -2506,7 +2508,7 @@ uhci_remove_urb_from_schedule(PUHCI_DEV uhci, PURB urb)
 // never try to acquire any spin-lock
 // remove the bulk urb from schedule, and mark it not in
 // the schedule
-static BOOL
+BOOL
 uhci_remove_bulk_from_schedule(PUHCI_DEV uhci, PURB urb)
 {
 
@@ -2557,10 +2559,10 @@ uhci_remove_bulk_from_schedule(PUHCI_DEV uhci, PURB urb)
     return TRUE;
 }
 
-static BOOL
+BOOL
 uhci_remove_iso_from_schedule(PUHCI_DEV uhci, PURB urb)
 {
-    PUHCI_TD ptd, pnext_td, pprev_td;
+    PUHCI_TD ptd, pprev_td;
     PLIST_ENTRY pthis, pnext, pprev;
     int i, idx;
 
@@ -2598,7 +2600,7 @@ uhci_remove_iso_from_schedule(PUHCI_DEV uhci, PURB urb)
     return TRUE;
 }
 
-static BOOL
+BOOL
 uhci_remove_int_from_schedule(PUHCI_DEV uhci, PURB urb)
 {
     PUHCI_TD ptd, pnext_td, pprev_td;
@@ -2647,7 +2649,7 @@ uhci_remove_int_from_schedule(PUHCI_DEV uhci, PURB urb)
     return TRUE;
 }
 
-static BOOL
+BOOL
 uhci_insert_tds_qh(PUHCI_QH pqh, PUHCI_TD td_chain)
 {
     if (pqh == NULL || td_chain == NULL)
@@ -2658,7 +2660,7 @@ uhci_insert_tds_qh(PUHCI_QH pqh, PUHCI_TD td_chain)
     return TRUE;
 }
 
-static BOOL
+BOOL
 uhci_insert_qh_urb(PURB urb, PUHCI_QH qh_chain)
 {
     if (urb == NULL || qh_chain == NULL)
@@ -2670,7 +2672,7 @@ uhci_insert_qh_urb(PURB urb, PUHCI_QH qh_chain)
 }
 
 // must have dev_lock and frame_list_lock acquired
-static BOOL
+BOOL
 uhci_insert_urb_schedule(PUHCI_DEV uhci, PURB urb)
 {
     PUHCI_QH pqh, pskel_qh, pnext_qh;
@@ -2809,7 +2811,7 @@ uhci_insert_urb_schedule(PUHCI_DEV uhci, PURB urb)
 }
 
 //this function used as the KeSynchronizeExecution param to delegate control to uhci_insert_urb_schedule
-BOOLEAN
+BOOL NTAPI
 uhci_sync_insert_urb_schedule(PVOID context)
 {
     PSYNC_PARAM sync_param;
@@ -2824,13 +2826,13 @@ uhci_sync_insert_urb_schedule(PVOID context)
     purb = (PURB) sync_param->context;
 
     if (uhci == NULL || purb == NULL)
-        return (UCHAR) sync_param->ret = FALSE;
+        return (UCHAR) (sync_param->ret = FALSE);
 
     return (UCHAR) (sync_param->ret = uhci_insert_urb_schedule(uhci, purb));
 }
 
 // be sure pending_endp_list_lock acquired
-static BOOL
+BOOL
 uhci_claim_bandwidth(PUHCI_DEV uhci,
                      PURB urb,
                      BOOL claim_bw    //true to claim bandwidth, false to free bandwidth
@@ -2953,7 +2955,7 @@ uhci_claim_bandwidth(PUHCI_DEV uhci,
 
 
 //cancel a single urb
-BOOLEAN
+BOOLEAN NTAPI
 uhci_sync_cancel_urb(PVOID context)
 {
     PUHCI_DEV uhci;
@@ -2970,7 +2972,7 @@ uhci_sync_cancel_urb(PVOID context)
     dest_urb = (PURB) sync_param->context;
 
     if (uhci == NULL || dest_urb == NULL)
-        return (UCHAR) sync_param->ret = FALSE;
+        return (UCHAR) (sync_param->ret = FALSE);
 
     ListFirst(&uhci->urb_list, pthis);
     while (pthis)
@@ -2995,15 +2997,13 @@ uhci_sync_cancel_urb(PVOID context)
 NTSTATUS
 uhci_cancel_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 {
-
-    NTSTATUS status;
     PLIST_ENTRY pthis, pnext;
     BOOL found;
     PURB purb2;
 
     SYNC_PARAM sync_param;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (uhci == NULL || purb == NULL || pdev == NULL || pendp == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -3077,8 +3077,7 @@ VOID
 uhci_generic_urb_completion(PURB purb, PVOID context)
 {
     PUSB_DEV pdev;
-    KIRQL cur_irql;
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;
 
     old_irql = KeGetCurrentIrql();
     if (old_irql > DISPATCH_LEVEL)
@@ -3144,6 +3143,7 @@ uhci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
     PUSB_CTRL_SETUP_PACKET psetup;
     PUHCI_DEV uhci;
     NTSTATUS status;
+    USHORT port_status;
 #ifndef INCLUDE_EHCI
     PHUB_EXTENSION hub_ext;
 #else
@@ -3151,8 +3151,8 @@ uhci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
 #endif
     PUSB_PORT_STATUS ps, psret;
     LONG i;
+    USE_NON_PENDING_IRQL;
 
-    USE_IRQL;
     if (pdev == NULL || purb == NULL)
         return STATUS_INVALID_PARAMETER;
 
@@ -3335,8 +3335,8 @@ uhci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 {
                     i = USBPORTSC2;
                 }
-                status = READ_PORT_USHORT((PUSHORT)(uhci->port_base + i));
-                purb->data_buffer[0] = (status & USBPORTSC_LS);
+                port_status = READ_PORT_USHORT((PUSHORT)(uhci->port_base + i));
+                purb->data_buffer[0] = (port_status & USBPORTSC_LS);
 
                 // reverse the order
                 purb->data_buffer[0] ^= 0x3;
@@ -3394,7 +3394,7 @@ uhci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
             //start the timer
             InsertTailList(&dev_mgr->timer_svc_list, &ptimer->timer_svc_link);
 
-            usb_dbg_print(DBGLVL_MAXIMUM,
+            usb_dbg_print(DBGLVL_ULTRA,
                           ("uhci_rh_submit_urb(): current rh's ref_count=0x%x\n", pdev->ref_count));
             pdev->ref_count += 2;       //one for timer and one for urb
 
@@ -3469,13 +3469,12 @@ uhci_dispatch_irp(IN PDEVICE_OBJECT DeviceObject, IN PIRP irp)
     return dev_mgr_dispatch(dev_mgr, irp);
 }
 
-VOID
+VOID NTAPI
 uhci_unload(IN PDRIVER_OBJECT DriverObject)
 {
     PDEVICE_OBJECT pdev;
     PDEVICE_EXTENSION pdev_ext;
     PUSB_DEV_MANAGER dev_mgr;
-    LONG i;
 
     pdev = DriverObject->DeviceObject;
 
@@ -3650,7 +3649,7 @@ uhci_rh_get_dev_change(PHCD hcd, PBYTE buf)
 
     uhci = uhci_from_hcd(hcd);
     status = READ_PORT_USHORT((PUSHORT) (uhci->port_base + USBPORTSC1));
-    usb_dbg_print(DBGLVL_MAXIMUM, ("uhci_rh_get_dev_change(): rh port1 status=0x%x\n", status));
+    usb_dbg_print(DBGLVL_ULTRA, ("uhci_rh_get_dev_change(): rh port1 status=0x%x\n", status));
 
     if ((status & USBPORTSC_PEC) || (status & USBPORTSC_CSC))
     {
@@ -3658,7 +3657,7 @@ uhci_rh_get_dev_change(PHCD hcd, PBYTE buf)
     }
 
     status = READ_PORT_USHORT((PUSHORT) (uhci->port_base + USBPORTSC2));
-    usb_dbg_print(DBGLVL_MAXIMUM, ("rh_timer_svc_int_completion(): rh port2 status=0x%x\n", status));
+    usb_dbg_print(DBGLVL_ULTRA, ("uhci_rh_get_dev_change(): rh port2 status=0x%x\n", status));
 
     if ((status & USBPORTSC_PEC) || (status & USBPORTSC_CSC))
     {
@@ -3670,8 +3669,6 @@ uhci_rh_get_dev_change(PHCD hcd, PBYTE buf)
 NTSTATUS
 uhci_dispatch(PHCD hcd, LONG disp_code, PVOID param)    // locking depends on type of code
 {
-    ULONG status;
-
     if (hcd == NULL)
         return FALSE;
 
@@ -3720,7 +3717,7 @@ uhci_init_hcd_interface(PUHCI_DEV uhci)
 }
 
 
-NTSTATUS
+NTSTATUS NTAPI
 generic_dispatch_irp(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 {
     PDEVEXT_HEADER dev_ext;
@@ -3736,7 +3733,7 @@ generic_dispatch_irp(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 }
 
 
-VOID
+VOID NTAPI
 generic_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 {
     PDEVEXT_HEADER dev_ext;
@@ -3751,7 +3748,7 @@ generic_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
     }
     else
     {
-        IoSetCancelRoutine(irp, NULL);
+        (void)IoSetCancelRoutine(irp, NULL);
         IoReleaseCancelSpinLock(old_irql);
     }
 
@@ -3774,8 +3771,6 @@ NTSTATUS
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
 {
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    PDEVICE_OBJECT dev_obj = NULL;
-    BOOLEAN fRes;
 
 #if DBG
     // should be done before any debug output is done.

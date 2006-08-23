@@ -1708,8 +1708,8 @@ umss_if_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle)
     LONG if_idx;
     NTSTATUS status;
     PUSB_DEV pdev;
-    PUSB_DRIVER pdrvr;
-    PDEVICE_OBJECT dev_obj;
+    PUSB_DRIVER pdrvr = NULL;
+    PDEVICE_OBJECT dev_obj = NULL;
     PUMSS_DRVR_EXTENSION pdrvr_ext;
     PUMSS_DEVICE_EXTENSION pdev_ext;
 
@@ -1754,8 +1754,8 @@ umss_if_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle)
     LONG if_idx;
     NTSTATUS status;
     PUSB_DEV pdev;
-    PUSB_DRIVER pdrvr;
-    PDEVICE_OBJECT dev_obj;
+    PUSB_DRIVER pdrvr = NULL;
+    PDEVICE_OBJECT dev_obj = NULL;
     PUMSS_DRVR_EXTENSION pdrvr_ext;
     PUMSS_DEVICE_EXTENSION pdev_ext;
 

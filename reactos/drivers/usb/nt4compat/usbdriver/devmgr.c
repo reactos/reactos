@@ -537,7 +537,7 @@ VOID
 dev_mgr_disconnect_dev(PUSB_DEV pdev)
 {
     PLIST_ENTRY pthis, pnext;
-    PHUB2_EXTENSION phub_ext;
+    PHUB2_EXTENSION phub_ext = NULL;
     PUSB_CONFIGURATION pconfig;
     PUSB_INTERFACE pif;
     PUSB_DEV_MANAGER dev_mgr;

@@ -7,6 +7,7 @@
 #define DBGLVL_MEDIUM			3		// medium verbosity
 #define DBGLVL_HIGH				4		// highest 'safe' level (without severely affecting timing )
 #define DBGLVL_MAXIMUM			5		// maximum level, may be dangerous
+#define DBGLVL_ULTRA			6		// ultra, prints hell lots of stuff from ISR/allocs/etc
 
 #ifndef DBGSTR_PREFIX
 #define DBGSTR_PREFIX "wood_uhci: " 

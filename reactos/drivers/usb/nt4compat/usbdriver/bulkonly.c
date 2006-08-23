@@ -321,7 +321,7 @@ umss_bulkonly_transfer_data(PUMSS_DEVICE_EXTENSION pdev_ext)
     PVOID data_buf;
     ULONG data_buf_length;
     NTSTATUS status;
-    UCHAR trans_dir;
+    UCHAR trans_dir = USB_DIR_IN; // FIXME: Initialize this properly!
 
     // Steps for data phase
     // 1. Get data buffer fragment (either SGD list, flat buffer, or none).
@@ -655,6 +655,11 @@ umss_get_buffer(PUMSS_DEVICE_EXTENSION pdev_ext, ULONG * buf_length)
     {
         buffer = (PVOID) pdev_ext->io_packet.sense_data;
         *buf_length = pdev_ext->io_packet.sense_data_length;
+    }
+    else
+    {
+        buffer = NULL;
+        *buf_length = 0;
     }
 
     return buffer;

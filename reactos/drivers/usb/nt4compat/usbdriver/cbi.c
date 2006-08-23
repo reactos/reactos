@@ -149,7 +149,7 @@ umss_cbi_reset_pipe(IN PVOID reference)
 VOID
 umss_cbi_transfer_data(PUMSS_DEVICE_EXTENSION pdev_ext)
 {
-    PVOID buffer;
+    PVOID buffer = NULL;
     ULONG buffer_length;
 
     // Get next data buffer element, if any.
