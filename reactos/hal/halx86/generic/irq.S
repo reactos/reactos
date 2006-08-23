@@ -404,7 +404,6 @@ DoCall:
 .endfunc
 #endif
 
-#if 0
 .globl @KfLowerIrql@4
 .func @KfLowerIrql@4
 _@KfLowerIrql@4:
@@ -444,7 +443,6 @@ DoCall3:
     popf
     ret
 .endfunc
-#endif
 
 .globl @KfRaiseIrql@4
 .func @KfRaiseIrql@4
