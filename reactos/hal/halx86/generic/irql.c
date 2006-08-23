@@ -27,27 +27,6 @@ UCHAR Table[8] =
 
 extern ULONG KiI8259MaskTable[];
 
-VOID HalpEndSystemInterrupt(KIRQL Irql)
-/*
- * FUNCTION: Enable all irqs with higher priority.
- */
-{
-  ULONG flags;
-  ULONG Mask;
-
-  /* Interrupts should be disable while enabling irqs of both pics */
-  Ki386SaveFlags(flags);
-  Ki386DisableInterrupts();
-
-  Mask = KeGetPcr()->IDR | KiI8259MaskTable[Irql];
-  WRITE_PORT_UCHAR((PUCHAR)0x21,  (UCHAR)Mask);
-  Mask >>= 8;
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, (UCHAR)Mask);
-
-  /* restore flags */
-  Ki386RestoreFlags(flags);
-}
-
 VOID STATIC
 HalpLowerIrql(KIRQL NewIrql)
 {
@@ -136,7 +115,6 @@ VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
 {
     //DPRINT1("ENDING: %lx %lx\n", Irql, Unknown2);
   HalpLowerIrql(Irql);
-  HalpEndSystemInterrupt(Irql);
 }
 
 /* EOF */
