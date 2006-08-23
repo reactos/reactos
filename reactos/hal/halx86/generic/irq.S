@@ -537,7 +537,7 @@ _HalpApcInterrupt:
     push eax
 
     /* Enter interrupt */
-    INT_PROLOG(hapc)
+    INT_PROLOG hapc, DoPushFakeErrorCode
 .endfunc
 
 .globl _HalpApcInterrupt2ndEntry
@@ -584,7 +584,7 @@ _HalpDispatchInterrupt:
     push eax
 
     /* Enter interrupt */
-    INT_PROLOG(hapc)
+    INT_PROLOG hapc, DoPushFakeErrorCode
 .endfunc
 
 .globl _HalpDispatchInterrupt2ndEntry

@@ -1309,7 +1309,7 @@ _KiEndUnexpected:
 _KiUnexpectedInterruptTail:
 
     /* Enter interrupt trap */
-    INT_PROLOG(kui)
+    INT_PROLOG kui, DoNotPushFakeErrorCode
 
     /* Increase interrupt count */
     inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]

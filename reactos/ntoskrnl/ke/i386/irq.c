@@ -292,6 +292,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 #ifndef CONFIG_SMP
    if (VECTOR2IRQ(vector) == 0)
    {
+       DPRINT1("Tick\n");
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
       KeUpdateSystemTime(&KernelTrapFrame, old_level);
    }

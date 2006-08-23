@@ -16,11 +16,13 @@
 #define DoRestoreEverything         1
 #define DoRestoreSegments           1
 #define DoRestoreVolatiles          1
+#define DoPushFakeErrorCode         1
 #define NotFromSystemCall           0
 #define DoNotRestorePreviousMode    0
 #define DoNotRestoreEverything      0
 #define DoNotRestoreSegments        0
 #define DoNotRestoreVolatiles       0
+#define DoNotPushFakeErrorCode      0
 
 // Arguments for idt
 #define INT_32_DPL0                 0x8E00
@@ -332,9 +334,12 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark For software interrupts, make sure that a fake INT stack is created.
 //
-.macro INT_PROLOG Label
+.macro INT_PROLOG Label FakeErrorCode
+
+.if \FakeErrorCode
     /* Save fake error code */
     push esp
+.endif
 
     /* Save the non-volatiles */
     push ebp
@@ -388,6 +393,14 @@ _KiUnexpectedInterrupt&Number:
     /* Save the previous exception list */
     mov [esp+KTRAP_FRAME_EXCEPTION_LIST], ebx
 
+.ifeq \FakeErrorCode
+    /* Setup the 16-bit stack */
+    lea eax, [esp+KTRAP_FRAME_ERROR_CODE]
+    lea ecx, [esp+KTRAP_FRAME_EIP]
+    mov ebx, ss:[eax]
+    mov ss:[eax], ecx
+.endif
+
     /* Check if this is the ABIOS stack */
     /* cmp esp, 0x10000*/
     /* jb Abios_Label*/
@@ -404,6 +417,11 @@ _KiUnexpectedInterrupt&Number:
 
     /* Check if the thread was being debugged */
     test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
+
+.ifeq \FakeErrorCode
+    /* Push parameter */
+    push ebx
+.endif
 
     /* Save DR registers if needed */
     //jnz Dr_&Label

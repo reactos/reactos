@@ -21,4 +21,5 @@
 .func HalpClockInterrupt@0
 _HalpClockInterrupt@0:
 
+    jmp $
 .endfunc
