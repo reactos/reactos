@@ -188,27 +188,6 @@ KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
    TrapFrame->EFlags = IrqTrapFrame->Eflags;
 }
 
-STATIC VOID
-KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
-                          PKIRQ_TRAPFRAME IrqTrapFrame)
-{
-   IrqTrapFrame->Gs     = TrapFrame->SegGs;
-   IrqTrapFrame->Fs     = TrapFrame->SegFs;
-   IrqTrapFrame->Es     = TrapFrame->SegEs;
-   IrqTrapFrame->Ds     = TrapFrame->SegDs;
-   IrqTrapFrame->Eax    = TrapFrame->Eax;
-   IrqTrapFrame->Ecx    = TrapFrame->Ecx;
-   IrqTrapFrame->Edx    = TrapFrame->Edx;
-   IrqTrapFrame->Ebx    = TrapFrame->Ebx;
-   IrqTrapFrame->Esp    = TrapFrame->HardwareEsp;
-   IrqTrapFrame->Ebp    = TrapFrame->Ebp;
-   IrqTrapFrame->Esi    = TrapFrame->Esi;
-   IrqTrapFrame->Edi    = TrapFrame->Edi;
-   IrqTrapFrame->Eip    = TrapFrame->Eip;
-   IrqTrapFrame->Cs     = TrapFrame->SegCs;
-   IrqTrapFrame->Eflags = TrapFrame->EFlags;
-}
-
 VOID STDCALL
 KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
 /*
@@ -261,8 +240,6 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 {
    KIRQL old_level;
    KTRAP_FRAME KernelTrapFrame;
-   PKTHREAD CurrentThread;
-   PKTRAP_FRAME OldTrapFrame=NULL;
 
    /*
     * At this point we have interrupts disabled, nothing has been done to
@@ -292,7 +269,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 #ifndef CONFIG_SMP
    if (VECTOR2IRQ(vector) == 0)
    {
-       DPRINT1("Tick\n");
+       //DPRINT1("Tick\n");
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
       KeUpdateSystemTime(&KernelTrapFrame, old_level);
    }
@@ -309,81 +286,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     * End the system interrupt.
     */
    Ke386DisableInterrupts();
-
-   if (old_level==PASSIVE_LEVEL && Trapframe->Cs != KGDT_R0_CODE)
-     {
-       HalEndSystemInterrupt (APC_LEVEL, 0);
-
-       CurrentThread = KeGetCurrentThread();
-       if (CurrentThread!=NULL && CurrentThread->ApcState.UserApcPending)
-         {
-           DPRINT("PID: %d, TID: %d CS %04x/%04x\n",
-                  ((PETHREAD)CurrentThread)->ThreadsProcess->UniqueProcessId,
-                  ((PETHREAD)CurrentThread)->Cid.UniqueThread,
-                  Trapframe->Cs,
-                  CurrentThread->TrapFrame ? CurrentThread->TrapFrame->Cs : 0);
-           if (CurrentThread->TrapFrame == NULL)
-             {
-               OldTrapFrame = CurrentThread->TrapFrame;
-               KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-               CurrentThread->TrapFrame = &KernelTrapFrame;
-             }
-
-           Ke386EnableInterrupts();
-           KiDeliverApc(UserMode, NULL, NULL);
-           Ke386DisableInterrupts();
-
-           ASSERT(KeGetCurrentThread() == CurrentThread);
-           if (CurrentThread->TrapFrame == &KernelTrapFrame)
-             {
-               KeTrapFrameToIRQTrapFrame(&KernelTrapFrame, Trapframe);
-               CurrentThread->TrapFrame = OldTrapFrame;
-             }
-         }
-       KeLowerIrql(PASSIVE_LEVEL);
-     }
-   else
-     {
-       HalEndSystemInterrupt (old_level, 0);
-     }
-
-}
-
-static VOID
-KeDumpIrqList(VOID)
-{
-   PKINTERRUPT current;
-   PLIST_ENTRY current_entry;
-   LONG i, j;
-   KIRQL oldlvl;
-   BOOLEAN printed;
-
-   for (i=0;i<NR_IRQS;i++)
-     {
-        printed = FALSE;
-        KeRaiseIrql(VECTOR2IRQL(i + IRQ_BASE),&oldlvl);
-
-        for (j=0; j < KeNumberProcessors; j++)
-          {
-            KiAcquireSpinLock(&IsrTable[i][j].Lock);
-
-            current_entry = IsrTable[i][j].ListHead.Flink;
-            current = CONTAINING_RECORD(current_entry,KINTERRUPT,InterruptListEntry);
-            while (current_entry!=&(IsrTable[i][j].ListHead))
-              {
-                if (printed == FALSE)
-                  {
-                    printed = TRUE;
-                    DPRINT("For irq %x:\n",i);
-                  }
-                DPRINT("   Isr %x\n",current);
-                current_entry = current_entry->Flink;
-                current = CONTAINING_RECORD(current_entry,KINTERRUPT,InterruptListEntry);
-              }
-            KiReleaseSpinLock(&IsrTable[i][j].Lock);
-          }
-        KeLowerIrql(oldlvl);
-     }
+   HalEndSystemInterrupt (old_level, 0);
 }
 
 /*
@@ -451,8 +354,6 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
     */
    KiReleaseSpinLock(&CurrentIsr->Lock);
    KeLowerIrql(oldlvl);
-
-   KeDumpIrqList();
 
    KeRevertToUserAffinityThread();
 
@@ -565,23 +466,6 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
     
     /* Disconnect it at first */
     Interrupt->Connected = FALSE;
-}
-
-VOID KePrintInterruptStatistic(VOID)
-{
-   LONG i, j;
-
-   for (j = 0; j < KeNumberProcessors; j++)
-   {
-      DPRINT1("CPU%d:\n", j);
-      for (i = 0; i < NR_IRQS; i++)
-      {
-         if (IsrTable[i][j].Count)
-         {
-             DPRINT1("  Irq %x(%d): %d\n", i, VECTOR2IRQ(i + IRQ_BASE), IsrTable[i][j].Count);
-         }
-      }
-   }
 }
 
 /* EOF */
