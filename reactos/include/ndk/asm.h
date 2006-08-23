@@ -372,6 +372,11 @@ Author:
 #endif
 
 //
+// DR7 Values
+//
+#define DR7_RESERVED_MASK                       0xDC00
+
+//
 // Usermode callout frame definitions
 //
 #define CBSTACK_STACK                           0x0

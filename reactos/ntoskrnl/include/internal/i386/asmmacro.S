@@ -352,7 +352,7 @@ _KiUnexpectedInterrupt&Number:
     mov [esp+KTRAP_FRAME_EAX], eax
     mov [esp+KTRAP_FRAME_ECX], ecx
     mov [esp+KTRAP_FRAME_EDX], edx
-    mov dword ptr [esp+KTRAP_FRAME_EXCEPTION_LIST], -1
+    mov dword ptr [esp+KTRAP_FRAME_PREVIOUS_MODE], -1
 
     /* Check if this was from V86 Mode */
     /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK */
@@ -366,22 +366,27 @@ _KiUnexpectedInterrupt&Number:
     mov word ptr [esp+KTRAP_FRAME_FS], fs
     mov word ptr [esp+KTRAP_FRAME_DS], ds
     mov word ptr [esp+KTRAP_FRAME_ES], es
-    mov word ptr [esp+KTRAP_FRAME_GS], gs
+    mov [esp+KTRAP_FRAME_GS], gs
 
-    /* Load the segment registers */
+    /* Load the segment registers (use OVERRIDE (0x66)) */
     mov ebx, KGDT_R0_PCR
     mov eax, KGDT_R3_DATA | RPL_MASK
+    .byte 0x66
     mov fs, bx
+    .byte 0x66
     mov ds, ax
+    .byte 0x66
     mov es, ax
 
 1: 
-    /* Save the previous exception list */
+    /* Get the previous exception list */
     mov ebx, [fs:KPCR_EXCEPTION_LIST]
-    mov [esp+KTRAP_FRAME_EXCEPTION_LIST], ebx
 
     /* Set the exception handler chain terminator */
     mov dword ptr [fs:KPCR_EXCEPTION_LIST], -1
+
+    /* Save the previous exception list */
+    mov [esp+KTRAP_FRAME_EXCEPTION_LIST], ebx
 
     /* Check if this is the ABIOS stack */
     /* cmp esp, 0x10000*/
@@ -534,16 +539,16 @@ _KiUnexpectedInterrupt&Number:
     pushfd
     pop edx
     test edx, EFLAGS_INTERRUPT_MASK
-    jnz 1f
+    jnz 6f
 
     /* Assert the stack */
     cmp esp, ebp
-    jnz 1f
+    jnz 6f
 
     /* Assert the trap frame */
-0:
-    //sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    //jnz 2f
+5:
+    sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    //jnz 0f // FIXME: ROS IS BROKEN
 
     /* Assert FS */
     mov bx, fs
@@ -552,24 +557,23 @@ _KiUnexpectedInterrupt&Number:
 
     /* Assert exception list */
     cmp dword ptr fs:[KPCR_EXCEPTION_LIST], 0
-    jnz 4f
-2:
-    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    jnz 2f
+
 1:
-    int 3
-    jmp 0b
-4:
+    push -1
+    call _KeBugCheck@4
 #endif
 
+2:
     /* Get exception list */
     mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
 
 #ifdef DBG
     /* Assert the saved exception list */
     or edx, edx
-    jnz 5f
+    jnz 1f
     int 3
-5:
+1:
 #endif
 
     /* Restore it */
@@ -582,17 +586,32 @@ _KiUnexpectedInterrupt&Number:
 #ifdef DBG
     /* Assert the saved previous mode */
     cmp ecx, -1
-    jnz 6f
+    jnz 1f
     int 3
-6:
+1:
 #endif
 
     /* Restore the previous mode */
     mov esi, [fs:KPCR_CURRENT_THREAD]
     mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
+.else
+
+#ifdef DBG
+    /* Assert the saved previous mode */
+    mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
+    cmp ecx, -1
+    jz 1f
+    int 3
+1:
+#endif
 .endif
 
+    /* Check for debug registers */
+    test dword ptr [esp+KTRAP_FRAME_DR7], ~DR7_RESERVED_MASK
+    jnz 2f
+
     /* Check for V86 */
+4:
     test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz V86_Exit
 
@@ -600,7 +619,7 @@ _KiUnexpectedInterrupt&Number:
     test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
     jz 7f
 
-.ifeq \RestoreAllRegs
+.if \RestoreAllRegs
     /* Check the old mode */
     cmp word ptr [esp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
     bt word ptr [esp+KTRAP_FRAME_CS], 0
@@ -692,6 +711,7 @@ FastExit:
     sysexit
 .endif
 
+.if \RestoreAllRegs
 8:
     /* Restore EAX */
     mov eax, [esp+KTRAP_FRAME_EAX]
@@ -708,6 +728,49 @@ FastExit:
 
     /* Jump back to mainline code */
     jmp 3b
+.endif
+
+0:
+    /* Fix up the mask */
+    add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+6:
+    int 3
+    jmp 5b
+
+2:
+    /* Check if this was V86 mode */
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz 1f
+
+    /* Check if it was user mode */
+    test word ptr [esp+KTRAP_FRAME_CS], MODE_MASK
+    jz 4b
+
+1:
+    /* Clear DR7 */
+    xor ebx, ebx
+    mov dr7, ebx
+
+    /* Get DR0, 1, 2 */
+    mov esi, [ebp+KTRAP_FRAME_DR0]
+    mov edi, [ebp+KTRAP_FRAME_DR1]
+    mov ebx, [ebp+KTRAP_FRAME_DR2]
+
+    /* Set them */
+    mov dr0, esi
+    mov dr1, edi
+    mov dr2, ebx
+
+    /* Get DR3, 6, 7 */
+    mov esi, [ebp+KTRAP_FRAME_DR3]
+    mov edi, [ebp+KTRAP_FRAME_DR6]
+    mov ebx, [ebp+KTRAP_FRAME_DR7]
+
+    /* Set them */
+    mov dr3, esi
+    mov dr6, edi
+    mov dr7, ebx
+    jz 4b
 
 7:
     /* Restore real CS value */

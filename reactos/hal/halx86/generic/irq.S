@@ -180,7 +180,6 @@ _@HalRequestSoftwareInterrupt@4:
     jbe AfterCall
 
     /* Call the pending interrupt */
-    jmp $
     call _SoftIntHandlerTable[edx*4]
 
 AfterCall:
@@ -403,8 +402,9 @@ DoCall:
     add esp, 8
     jmp SoftIntHandlerTable2[eax*4]
 .endfunc
+#endif
 
-
+#if 0
 .globl @KfLowerIrql@4
 .func @KfLowerIrql@4
 _@KfLowerIrql@4:
@@ -430,21 +430,15 @@ SkipMask:
 
     /* Set the new IRQL and check if there's a pending software interrupt */
     mov [fs:KPCR_IRQL], cl
-    mov eax, [fs:KPCR_IDR]
+    mov eax, [fs:KPCR_IRR]
     mov al, _SoftIntByteTable[eax]
     cmp al, cl
-    ja DoCall3
-
-    /* Restore interrupts and return */
-    popf
-    ret
-    .align 4
-
-DoCall3:
+    jbe DoCall3
 
     /* There is, call it */
     call _SoftIntHandlerTable[eax*4]
-    jmp $
+
+DoCall3:
 
     /* Restore interrupts and return */
     popf
