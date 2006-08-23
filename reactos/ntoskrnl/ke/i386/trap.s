@@ -56,6 +56,10 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 .globl _NtRaiseException@12
 .globl _NtContinue@8
 
+/* Interrupt template entrypoints                                           */
+.globl _KiInterruptTemplate
+.globl _KiInterruptTemplateObject
+
 /* We implement the following trap exit points:                             */
 .globl _KiServiceExit               /* Exit from syscall                    */
 .globl _KiServiceExit2              /* Exit from syscall with complete frame*/
@@ -1295,7 +1299,7 @@ _KiSystemFatalException:
     ret
 .endfunc
 
-/* INTERRUPT HANDLERS ********************************************************/
+/* UNEXPECTED INTERRUPT HANDLERS **********************************************/
 
 .globl _KiStartUnexpected
 _KiStartUnexpected:
@@ -1346,3 +1350,20 @@ _KiUnexpectedInterrupt:
     /* Bugcheck with invalid interrupt code */
     push 0x12
     call _KeBugCheck@4
+
+/* INTERRUPT HANDLERS ********************************************************/
+
+.func KiInterruptTemplate
+_KiInterruptTemplate:
+
+    /* Enter interrupt trap */
+    INT_PROLOG kit, DoPushFakeErrorCode
+.endfunc
+
+_KiInterruptTemplate2ndDispatch:
+    /* Dummy code, will be replaced by the address of the KINTERRUPT */
+    mov edi, 0
+
+_KiInterruptTemplateObject:
+    /* Dummy jump, will be replaced by the actual jump */
+    jmp _KeSynchronizeExecution@12

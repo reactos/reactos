@@ -24,6 +24,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
+extern PULONG KiInterruptTemplateObject;
+
 /* GLOBALS *****************************************************************/
 
 /* Interrupt handler list */
@@ -245,7 +248,6 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     * At this point we have interrupts disabled, nothing has been done to
     * the PIC.
     */
-
    KeGetCurrentPrcb()->InterruptCount++;
 
    /*
@@ -302,9 +304,9 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    PISR_TABLE CurrentIsr;
    BOOLEAN Result;
 
-   DPRINT("KeConnectInterrupt()\n");
 
    Vector = InterruptObject->Vector;
+   DPRINT1("KeConnectInterrupt(): %lx\n", Vector);
 
    if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
       return FALSE;
@@ -437,10 +439,13 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
                       CHAR ProcessorNumber,
                       BOOLEAN FloatingSave)
 {
+    ULONG i;
+    PULONG DispatchCode = &Interrupt->DispatchCode[0], Patch = DispatchCode;
+
     /* Set the Interrupt Header */
     Interrupt->Type = InterruptObject;
     Interrupt->Size = sizeof(KINTERRUPT);
-    
+
     /* Check if we got a spinlock */
     if (SpinLock)
     {
@@ -452,7 +457,7 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
         KeInitializeSpinLock(&Interrupt->SpinLock);
         Interrupt->ActualLock = &Interrupt->SpinLock;
     }
-    
+
     /* Set the other settings */
     Interrupt->ServiceRoutine = ServiceRoutine;
     Interrupt->ServiceContext = ServiceContext;
@@ -463,7 +468,22 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
     Interrupt->ShareVector = ShareVector;
     Interrupt->Number = ProcessorNumber;
     Interrupt->FloatingSave = FloatingSave;
-    
+
+    /* Loop the template in memory */
+    for (i = 0; i < KINTERRUPT_DISPATCH_CODES; i++)
+    {
+        /* Copy the dispatch code */
+        *DispatchCode++ = KiInterruptTemplate[i];
+    }
+
+    /* Jump to the last 4 bytes */
+    Patch = (PULONG)((ULONG_PTR)Patch +
+                     ((ULONG_PTR)&KiInterruptTemplateObject -
+                      (ULONG_PTR)KiInterruptTemplate) - 4);
+
+    /* Apply the patch */
+    *Patch = PtrToUlong(Interrupt);
+
     /* Disconnect it at first */
     Interrupt->Connected = FALSE;
 }
