@@ -134,7 +134,7 @@ InitLoop:
     jmp $+2
 
     /* Mask all interrupts */
-    mov al, 0xFA // FIXME: Should be 0xFF
+    mov al, 0xFF
     out dx, al
 
     /* Check if we're done, otherwise initialize next PIC */
