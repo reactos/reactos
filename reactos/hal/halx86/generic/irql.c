@@ -23,6 +23,8 @@ UCHAR Table[8] =
     2, 2, 2, 2
 };
 
+VOID HalpDispatchInterrupt(VOID);
+
 /* FUNCTIONS ****************************************************************/
 
 extern ULONG KiI8259MaskTable[];
@@ -55,8 +57,7 @@ HalpLowerIrql(KIRQL NewIrql)
     {
         if (Table[KeGetPcr()->IRR] == DISPATCH_LEVEL)
         {
-            KeGetPcr()->IRR &= ~4;
-            KiDispatchInterrupt();
+            HalpDispatchInterrupt();
         }
     }
   KeGetPcr()->Irql = APC_LEVEL;

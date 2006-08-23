@@ -626,14 +626,15 @@ _HalpEndSoftwareInterrupt@4:
 SoftwareInt:
     /* Check if there are pending software interrupts */
     mov [fs:KPCR_IRQL], cl
+#if 0
     mov eax, [fs:KPCR_IDR]
     mov al, SoftIntByteTable[eax]
     cmp al, cl
     ja DoCall2
+#endif
     ret 4
 
 DoCall2:
-
     /* There are pending softwate interrupts, call their handlers */
     add esp, 8
     jmp SoftIntHandlerTable2[eax*4]
