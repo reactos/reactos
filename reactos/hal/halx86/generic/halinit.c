@@ -20,6 +20,8 @@
 PVOID HalpZeroPageMapping = NULL;
 HALP_HOOKS HalpHooks;
 
+VOID NTAPI HalpClockInterrupt(VOID);
+
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS
@@ -33,7 +35,7 @@ DriverEntry(
 
 BOOLEAN STDCALL
 HalInitSystem (ULONG BootPhase,
-               PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+               PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   if (BootPhase == 0)
     {
@@ -42,6 +44,15 @@ HalInitSystem (ULONG BootPhase,
     }
   else if (BootPhase == 1)
     {
+#if 0
+      /* Enable the clock interrupt */
+      ((PKIPCR)KeGetPcr())->IDT[IRQ2VECTOR(0)].ExtendedOffset =
+          (USHORT)(((ULONG_PTR)HalpClockInterrupt >> 16) & 0xFFFF);
+      ((PKIPCR)KeGetPcr())->IDT[IRQ2VECTOR(0)].Offset =
+          (USHORT)HalpClockInterrupt;
+      HalEnableSystemInterrupt(IRQ2VECTOR(0), CLOCK2_LEVEL, Latched);
+#endif
+
       /* Initialize display and make the screen black */
       HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
       HalpInitBusHandlers();

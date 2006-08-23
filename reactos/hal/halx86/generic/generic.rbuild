@@ -35,6 +35,7 @@
 	<file>processor.c</file>
 	<file>resource.c</file>
 	<file>spinlock.c</file>
+    <file>systimer.S</file>
 </module>
 <module name="hal_generic_pc" type="objectlibrary">
 	<include base="hal_generic_pc">../include</include>
