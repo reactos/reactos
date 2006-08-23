@@ -24,6 +24,7 @@ UCHAR Table[8] =
 };
 
 VOID HalpDispatchInterrupt(VOID);
+VOID HalpApcInterrupt(VOID);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -69,8 +70,7 @@ HalpLowerIrql(KIRQL NewIrql)
     {
         if (Table[KeGetPcr()->IRR] == APC_LEVEL)
         {
-        KeGetPcr()->IRR &= ~2;
-      KiDeliverApc(KernelMode, NULL, NULL);
+            HalpApcInterrupt();
         }
     }
   KeGetPcr()->Irql = PASSIVE_LEVEL;
