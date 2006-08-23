@@ -367,7 +367,6 @@ DoneBegin:
     ret 12
 .endfunc
 
-#if 0
 .globl _HalEndSystemInterrupt@8
 .func HalEndSystemInterrupt@8
 _HalEndSystemInterrupt@8:
@@ -389,7 +388,7 @@ SkipMask2:
     /* Set IRQL and check if there are pending software interrupts */
     mov [fs:KPCR_IRQL], cl
 #if 0
-    mov eax, [fs:KPCR_IDR]
+    mov eax, [fs:KPCR_IRR]
     mov al, _SoftIntByteTable[eax]
     cmp al, cl
     ja DoCall
@@ -402,7 +401,6 @@ DoCall:
     add esp, 8
     jmp SoftIntHandlerTable2[eax*4]
 .endfunc
-#endif
 
 .globl @KfLowerIrql@4
 .func @KfLowerIrql@4
