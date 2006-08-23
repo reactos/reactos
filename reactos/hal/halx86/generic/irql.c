@@ -23,8 +23,8 @@ UCHAR Table[8] =
     2, 2, 2, 2
 };
 
-VOID HalpDispatchInterrupt(VOID);
-VOID HalpApcInterrupt(VOID);
+typedef VOID (*PSW_HANDLER)(VOID);
+extern PSW_HANDLER SoftIntHandlerTable[];
 
 /* FUNCTIONS ****************************************************************/
 
@@ -34,6 +34,10 @@ VOID STATIC
 HalpLowerIrql(KIRQL NewIrql)
 {
     ULONG Mask;
+    ULONG Flags;
+
+    Ki386SaveFlags(Flags);
+    Ki386DisableInterrupts();
 
     if (KeGetPcr()->Irql > DISPATCH_LEVEL)
     {
@@ -46,34 +50,21 @@ HalpLowerIrql(KIRQL NewIrql)
   if (NewIrql >= PROFILE_LEVEL)
     {
       KeGetPcr()->Irql = NewIrql;
+      Ki386RestoreFlags(Flags);
       return;
     }
   if (NewIrql >= DISPATCH_LEVEL)
     {
       KeGetPcr()->Irql = NewIrql;
+      Ki386RestoreFlags(Flags);
       return;
     }
-  KeGetPcr()->Irql = DISPATCH_LEVEL;
-  if (Table[KeGetPcr()->IRR] >= NewIrql)
+  KeGetPcr()->Irql = NewIrql;
+  if (Table[KeGetPcr()->IRR] > NewIrql)
     {
-        if (Table[KeGetPcr()->IRR] == DISPATCH_LEVEL)
-        {
-            HalpDispatchInterrupt();
-        }
+              SoftIntHandlerTable[Table[KeGetPcr()->IRR]]();
     }
-  KeGetPcr()->Irql = APC_LEVEL;
-  if (NewIrql == APC_LEVEL)
-    {
-      return;
-    }
-  if (Table[KeGetPcr()->IRR] >= NewIrql)
-    {
-        if (Table[KeGetPcr()->IRR] == APC_LEVEL)
-        {
-            HalpApcInterrupt();
-        }
-    }
-  KeGetPcr()->Irql = PASSIVE_LEVEL;
+  Ki386RestoreFlags(Flags);
 }
 
 /**********************************************************************

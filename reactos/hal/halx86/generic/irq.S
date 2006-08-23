@@ -93,7 +93,8 @@ SoftIntByteTable:
     .byte DISPATCH_LEVEL                /* IRR 6 */
     .byte DISPATCH_LEVEL                /* IRR 7 */
 
-SoftIntHandlerTable:
+.globl _SoftIntHandlerTable
+_SoftIntHandlerTable:
     .long _KiUnexpectedInterrupt        /* PASSIVE_LEVEL */
     .long _HalpApcInterrupt             /* APC_LEVEL */
     .long _HalpDispatchInterrupt        /* DISPATCH_LEVEL */
@@ -179,7 +180,7 @@ _@HalRequestSoftwareInterrupt@4:
 
     /* Call the pending interrupt */
     jmp $
-    call SoftIntHandlerTable[edx*4]
+    call _SoftIntHandlerTable[edx*4]
 
 AfterCall:
 
