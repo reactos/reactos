@@ -83,7 +83,8 @@ HalpSysIntHandler:
     .long GenericIRQ                    /* IRQ 16-35 */
 .endr
 
-SoftIntByteTable:
+.globl _SoftIntByteTable
+_SoftIntByteTable:
     .byte PASSIVE_LEVEL                 /* IRR 0 */
     .byte PASSIVE_LEVEL                 /* IRR 1 */
     .byte APC_LEVEL                     /* IRR 2 */
@@ -174,7 +175,7 @@ _@HalRequestSoftwareInterrupt@4:
 
     /* Get highest pending software interrupt and check if it's higher */
     xor edx, edx
-    mov dl, SoftIntByteTable[eax]
+    mov dl, _SoftIntByteTable[eax]
     cmp dl, cl
     jbe AfterCall
 
@@ -388,10 +389,12 @@ SkipMask2:
 
     /* Set IRQL and check if there are pending software interrupts */
     mov [fs:KPCR_IRQL], cl
+#if 0
     mov eax, [fs:KPCR_IDR]
-    mov al, SoftIntByteTable[eax]
+    mov al, _SoftIntByteTable[eax]
     cmp al, cl
     ja DoCall
+#endif
     ret 8
 
 DoCall:
@@ -400,6 +403,7 @@ DoCall:
     add esp, 8
     jmp SoftIntHandlerTable2[eax*4]
 .endfunc
+
 
 .globl @KfLowerIrql@4
 .func @KfLowerIrql@4
@@ -427,14 +431,20 @@ SkipMask:
     /* Set the new IRQL and check if there's a pending software interrupt */
     mov [fs:KPCR_IRQL], cl
     mov eax, [fs:KPCR_IDR]
-    mov al, SoftIntByteTable[eax]
+    mov al, _SoftIntByteTable[eax]
     cmp al, cl
-    jbe AfterCall2
+    ja DoCall3
+
+    /* Restore interrupts and return */
+    popf
+    ret
+    .align 4
+
+DoCall3:
 
     /* There is, call it */
-    call SoftIntHandlerTable[eax*4]
-
-AfterCall2:
+    call _SoftIntHandlerTable[eax*4]
+    jmp $
 
     /* Restore interrupts and return */
     popf
@@ -629,7 +639,7 @@ SoftwareInt:
     mov [fs:KPCR_IRQL], cl
 #if 0
     mov eax, [fs:KPCR_IDR]
-    mov al, SoftIntByteTable[eax]
+    mov al, _SoftIntByteTable[eax]
     cmp al, cl
     ja DoCall2
 #endif
