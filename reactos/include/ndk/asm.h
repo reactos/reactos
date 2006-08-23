@@ -445,7 +445,7 @@ Author:
 //
 // Generic Definitions
 //
-#define PRIMARY_VECTOR_BASE                     0x40 // FIXME: HACK
+#define PRIMARY_VECTOR_BASE                     0x30 // FIXME: HACK
 #define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
 

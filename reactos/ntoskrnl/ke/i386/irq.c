@@ -88,7 +88,7 @@ void irq_handler_13(void);
 void irq_handler_14(void);
 void irq_handler_15(void);
 
-static unsigned int irq_handler[NR_IRQS]=
+unsigned int irq_handler[NR_IRQS]=
 {
    (int)&irq_handler_0,
    (int)&irq_handler_1,

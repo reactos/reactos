@@ -23,7 +23,7 @@
 
 #else
 
-#define IRQ_BASE		(0x40)
+#define IRQ_BASE		(0x30)
 #define	NR_IRQS			(16)
 
 #define VECTOR2IRQ(vector)	((vector) - IRQ_BASE)

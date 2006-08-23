@@ -21,14 +21,14 @@ PICInitTable:
     /* Master PIC */
     .short 0x20                         /* Port */
     .byte 0x11                          /* Edge,, cascade, CAI 8, ICW4 */
-    .byte 0x40                          /* Base */
+    .byte PRIMARY_VECTOR_BASE           /* Base */
     .byte 4                             /* IRQ 4 connected to slave */
     .byte 1                             /* Non buffered, not nested, 8086 */
 
     /* Slave PIC */
     .short 0xA0                         /* Port */
     .byte 0x11                          /* Edge, cascade, CAI 8, ICW4 */
-    .byte 0x48                          /* Base */
+    .byte PRIMARY_VECTOR_BASE + 8       /* Base */
     .byte 2                             /* Slave ID: Slave 2 */
     .byte 1                             /* Non buffered, not nested, 8086 */
 
