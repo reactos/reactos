@@ -21,6 +21,7 @@ typedef struct
 typedef struct TAGConsoleInfo
 {
   TCHAR szProcessName[MAX_PATH];
+  BOOLEAN AppliedConfig;
   DWORD CursorSize;
   DWORD NumberOfHistoryBuffers;
   DWORD HistoryBufferSize;
@@ -28,22 +29,19 @@ typedef struct TAGConsoleInfo
   DWORD FullScreen;
   DWORD QuickEdit;
   DWORD InsertMode;
-
   DWORD ScreenBuffer;
   DWORD WindowSize;
   DWORD WindowPosition;
-  
-
-
   DWORD ActiveStaticControl;
   COLORREF ScreenText;
   COLORREF ScreenBackground;
   COLORREF PopupText;
   COLORREF PopupBackground;
-
 } ConsoleInfo, *PConsoleInfo;
 
 BOOL WriteConsoleOptions(PConsoleInfo pConInfo);
+void ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo);
+
 
 //globals
 extern HINSTANCE hApplet;

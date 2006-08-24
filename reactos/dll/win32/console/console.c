@@ -10,6 +10,8 @@
 #include "console.h"
 
 #define NUM_APPLETS	(1)
+#define WM_SETCONSOLE (WM_USER+10)
+
 
 LONG APIENTRY InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam);
 INT_PTR CALLBACK OptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -64,8 +66,6 @@ InitConsoleInfo()
 	pConInfo->ScreenBuffer = MAKELONG(80, 300);
 
 	GetModuleFileName(NULL, pConInfo->szProcessName, MAX_PATH);
-	//MessageBox(hwnd, pConInfo->szProcessName, _T("GetModuleFileName"), MB_OK);
-
 	GetStartupInfo(&StartupInfo);
 
 
@@ -134,13 +134,17 @@ ApplyProc(
 		}
 		case WM_COMMAND:
 		{
-			if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+			if (LOWORD(wParam) == IDOK)
 			{
 				hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_APPLY_CURRENT);
 				if ( SendMessage(hDlgCtrl, BM_GETCHECK, 0, 0) == BST_CHECKED )
 					EndDialog(hwndDlg, IDC_RADIO_APPLY_CURRENT);
 				else
 					EndDialog(hwndDlg, IDC_RADIO_APPLY_ALL);
+			}
+			else if (LOWORD(wParam) == IDCANCEL)
+			{
+				EndDialog(hwndDlg, IDCANCEL);
 			}
 			break;
 		}
@@ -154,65 +158,31 @@ ApplyProc(
 void
 ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo)
 {
-	INT_PTR res;
+	INT_PTR res = 0;
 
 	res = DialogBox(hApplet, MAKEINTRESOURCE(IDD_APPLYOPTIONS), hwndDlg, ApplyProc);
 
-	if ( res == IDC_RADIO_APPLY_ALL )
+	if (res == IDCANCEL)
 	{
+		/* dont destroy when user presses cancel */
+		SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+	}
+	else if ( res == IDC_RADIO_APPLY_ALL )
+	{
+		/* apply options */
 		WriteConsoleOptions(pConInfo);
+		pConInfo->AppliedConfig = TRUE;
+		SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
 	}
 	else if ( res == IDC_RADIO_APPLY_CURRENT )
 	{
 		/*
-		 * TODO: check if szProcessName != _T("Console")
-		 *  in that case notify win32csr that the changes are local
+		 * TODO:
+		 * exchange info in some private way with win32csr
 		 */
+		pConInfo->AppliedConfig = TRUE;
+		SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
 	}
-}
-
-/* Property Sheet Callback */
-int CALLBACK
-PropSheetProc(
-	HWND hwndDlg,
-	UINT uMsg,
-	LPARAM lParam
-)
-{
-	PConsoleInfo pConInfo = (PConsoleInfo) GetWindowLongPtr(GetParent(hwndDlg), DWLP_USER);
-
-	switch(uMsg)
-	{
-		case PSCB_BUTTONPRESSED:
-		{
-			switch(lParam)
-			{
-				case PSBTN_OK: /* OK */
-				{
-					if ( pConInfo )
-					{
-						ApplyConsoleInfo(hwndDlg, pConInfo);
-					}
-					break;
-				}
-				case PSBTN_CANCEL: /* Cancel */
-				{
-					break;
-				}
-				case PSBTN_FINISH: /* Close */
-				{
-					break;
-				}
-				default:
-					return FALSE;
-			}
-			break;
-		}
-
-		default:
-			break;
-	}
-	return TRUE;
 }
 
 /* First Applet */
@@ -233,7 +203,7 @@ InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
-	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW | PSH_PROPTITLE | PSH_USECALLBACK;
+	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_NOAPPLYNOW;
 	psh.hwndParent = NULL;
 	psh.hInstance = hApplet;
 	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
@@ -241,7 +211,7 @@ InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 	psh.nPages = 4;
 	psh.nStartPage = 0;
 	psh.ppsp = psp;
-	psh.pfnCallback = PropSheetProc;
+	psh.pszCaption = pConInfo->szProcessName;
   
 	InitPropSheetPage(&psp[i++], IDD_PROPPAGEOPTIONS, (DLGPROC) OptionsProc, (LPARAM)pConInfo);
 	InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT, (DLGPROC) FontProc, (LPARAM)pConInfo);

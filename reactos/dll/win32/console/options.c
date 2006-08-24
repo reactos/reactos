@@ -57,7 +57,26 @@ OptionsProc(
 
 				hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_NUM_BUFFER);
 				pConInfo->NumberOfHistoryBuffers = LOWORD(SendMessage(hDlgCtrl, UDM_GETPOS, 0, 0));
-				//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+			}
+			//else if (lppsn->hdr.code == PSN_KILLACTIVE)
+			//{
+			//	SetWindowLong(hwndDlg, DWL_MSGRESULT, FALSE);
+			//	return FALSE;
+			//}
+			else if (lppsn->hdr.code == PSN_APPLY)
+			{
+				if (!pConInfo->AppliedConfig)
+				{
+					ApplyConsoleInfo(hwndDlg, pConInfo);
+				}
+				else
+				{
+					/* options have already been applied */
+					SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+					return TRUE;
+				}
+				return TRUE;
 			}
 			break;
 		}
@@ -72,31 +91,31 @@ OptionsProc(
 				case IDC_RADIO_SMALL_CURSOR:
 				{
 					pConInfo->CursorSize = 0x0;
-					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
 				}
 				case IDC_RADIO_MEDIUM_CURSOR:
 				{
 					pConInfo->CursorSize = 0x32;
-					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
 				}
 				case IDC_RADIO_LARGE_CURSOR:
 				{				
 					pConInfo->CursorSize = 0x64;
-					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
 				}
 				case IDC_RADIO_DISPLAY_WINDOW:
 				{
 					pConInfo->FullScreen = FALSE;
-					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
 				}
 				case IDC_RADIO_DISPLAY_FULL:
 				{
 					pConInfo->FullScreen = TRUE;
-					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
 				}
 				case IDC_CHECK_QUICK_EDIT:
@@ -112,7 +131,7 @@ OptionsProc(
 						pConInfo->QuickEdit = TRUE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
-					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
 				}
 				case IDC_CHECK_INSERT_MODE:
@@ -128,7 +147,7 @@ OptionsProc(
 						pConInfo->InsertMode = TRUE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
-					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
 				}
 				case IDC_CHECK_DISCARD_DUPLICATES:
@@ -144,7 +163,7 @@ OptionsProc(
 						pConInfo->HistoryNoDup = TRUE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
                     }
-					//PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
 				}
 				default:

@@ -100,6 +100,10 @@ ColorsProc(
 {
 	PConsoleInfo pConInfo;
 	LPNMUPDOWN lpnmud;
+    LPPSHNOTIFY lppsn;
+	DWORD red = -1;
+	DWORD green = -1;
+	DWORD blue = -1;
 
 	pConInfo = (PConsoleInfo) GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -124,11 +128,23 @@ ColorsProc(
 		}
 		case WM_NOTIFY:
 		{
-			DWORD red = -1;
-			DWORD green = -1;
-			DWORD blue = -1;
-
 			lpnmud = (LPNMUPDOWN) lParam;
+			lppsn = (LPPSHNOTIFY) lParam; 
+
+			if (lppsn->hdr.code == PSN_APPLY)
+			{
+				if (!pConInfo->AppliedConfig)
+				{
+					ApplyConsoleInfo(hwndDlg, pConInfo);
+				}
+				else
+				{
+					/* options have already been applied */
+					SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+					return TRUE;
+				}
+				return TRUE;
+			}			
 
 			if (lpnmud->hdr.idFrom == IDC_UPDOWN_COLOR_RED)
 			{
@@ -141,6 +157,10 @@ ColorsProc(
 			else if (lpnmud->hdr.idFrom == IDC_UPDOWN_COLOR_BLUE)
 			{
 				blue = lpnmud->iPos;
+			}
+			else
+			{
+				break;
 			}
 
 			if (red == -1)
