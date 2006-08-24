@@ -109,6 +109,9 @@ Author:
 #define KTHREAD_CALLBACK_STACK                  0x114
 #define KTHREAD_APC_STATE_INDEX                 0x11C
 #define KTHREAD_STACK_BASE                      0x158
+#define KTHREAD_QUANTUM                         0x15D
+#define KTHREAD_KERNEL_TIME                     0x160
+#define KTHREAD_USER_TIME                       0x18C
 
 //
 // KPROCESS Offsets
@@ -145,6 +148,7 @@ Author:
 #define KPCR_SET_MEMBER                         0x48
 #define KPCR_NUMBER                             0x51
 #define KPCR_CURRENT_THREAD                     0x124
+#define KPCR_PRCB_IDLE_THREAD                   0x12C
 #define KPCR_PROCESSOR_NUMBER                   0x130
 #define KPCR_PRCB_SET_MEMBER                    0x134
 #define KPCR_PRCB_CPU_TYPE                      0x138
@@ -152,8 +156,21 @@ Author:
 #define KPCR_DR6                                0x428
 #define KPCR_DR7                                0x42C
 #define KPCR_PRCB_INTERRUPT_COUNT               0x644
+#define KPCR_PRCB_KERNEL_TIME                   0x648
+#define KPCR_PRCB_USER_TIME                     0x64C
+#define KPCR_PRCB_DPC_TIME                      0x650
+#define KPCR_PRCB_DEBUG_DPC_TIME                0x654
+#define KPCR_PRCB_INTERRUPT_TIME                0x658
+#define KPCR_PRCB_ADJUST_DPC_THRESHOLD          0x65C
 #define KPCR_SYSTEM_CALLS                       0x6B8
-#define KPCR_PRCB_DPC_ROUTINE_ACTIVE            0x994
+#define KPCR_PRCB_DPC_QUEUE_DEPTH               0xA4C
+#define KPCR_PRCB_DPC_COUNT                     0xA50
+#define KPCR_PRCB_MAXIMUM_DPC_QUEUE_DEPTH       0xA6C
+#define KPCR_PRCB_DPC_REQUEST_RATE              0xA70
+#define KPCR_PRCB_DPC_INTERRUPT_REQUESTED       0xA78
+#define KPCR_PRCB_DPC_ROUTINE_ACTIVE            0xA7A
+#define KPCR_PRCB_DPC_LAST_COUNT                0xA80
+#define KPCR_PRCB_QUANTUM_END                   0xAA1
 
 //
 // KINTERRUPT Offsets
@@ -432,6 +449,11 @@ Author:
 #define DISPATCH_LEVEL                          0x2
 #define CLOCK2_LEVEL                            0x1C
 #define HIGH_LEVEL                              0x1F
+
+//
+// Quantum Decrements
+//
+#define CLOCK_QUANTUM_DECREMENT                 0x3
 #endif
 
 //

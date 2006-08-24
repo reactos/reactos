@@ -407,7 +407,6 @@ typedef struct _KPRCB
 #endif
     ULONG SpareCounter0;
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
-    ULONG KeContextSwitches;
     ULONG KeDcacheFlushCount;
     ULONG KeExceptionDispatchCount;
     ULONG KeFirstLevelTbFills;
