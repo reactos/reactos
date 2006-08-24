@@ -140,6 +140,8 @@ elem_list_init_elem_list(PEHCI_ELEM_LIST plist, LONG init_flags, PVOID context, 
     PEHCI_FSTN pfstn;
     PINIT_ELEM_LIST_CONTEXT pinit_ctx;
 
+    UNREFERENCED_PARAMETER(count);
+
     if (plist == NULL || context == NULL)
         return FALSE;
 
@@ -465,7 +467,7 @@ elem_pool_is_empty(PEHCI_ELEM_POOL pool)
     if (pool == NULL)
         return TRUE;
     pel = pool->elem_lists[0];
-    return (pool->list_count == 1 && pool->free_count == pel->get_total_count(pel));
+    return (BOOLEAN) (pool->list_count == 1 && pool->free_count == pel->get_total_count(pel));
 }
 
 LONG

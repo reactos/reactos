@@ -317,8 +317,9 @@ dev_mgr_thread(PVOID context)
             continue;
         }
 
-        // usb_dbg_print( DBGLVL_MAXIMUM, ( "dev_mgr_thread(): current element in event list is 0x%x\n", \
-        //                      dbg_count_list( &dev_mgr->event_list ) ) );
+		/*
+         usb_dbg_print( DBGLVL_MAXIMUM, ( "dev_mgr_thread(): current element in event list is 0x%x\n", \
+                              dbg_count_list( &dev_mgr->event_list ) ) ); */
 
         dev_mgr_inited = TRUE;  //since we have post one event, if this statement is executed, dev_mgr_event_init must be called sometime later or earlier
 

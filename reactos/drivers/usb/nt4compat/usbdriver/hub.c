@@ -182,6 +182,10 @@ destroy_event_pool(PUSB_EVENT_POOL pool)
 VOID
 event_list_default_process_event(PUSB_DEV pdev, ULONG event, ULONG context, ULONG param)
 {
+    UNREFERENCED_PARAMETER(param);
+    UNREFERENCED_PARAMETER(context);
+    UNREFERENCED_PARAMETER(event);
+    UNREFERENCED_PARAMETER(pdev);
 }
 
 //----------------------------------------------------------
@@ -341,6 +345,8 @@ psq_push(PPORT_STATUS_QUEUE psq, ULONG status)
 BOOLEAN
 hub_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
+    UNREFERENCED_PARAMETER(dev_mgr);
+
     //init driver structure, no PNP table functions
     pdriver->driver_desc.flags = USB_DRIVER_FLAG_DEV_CAPABLE;
     pdriver->driver_desc.vendor_id = 0xffff;       // USB Vendor ID
@@ -376,6 +382,8 @@ hub_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 BOOLEAN
 hub_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
+    UNREFERENCED_PARAMETER(dev_mgr);
+
     pdriver->driver_ext = NULL;
     return TRUE;
 }
@@ -388,6 +396,8 @@ hub_reset_pipe_completion(PURB purb,    //only for reference, can not be release
     PUSB_ENDPOINT pendp;
 
     USE_BASIC_NON_PENDING_IRQL;
+
+    UNREFERENCED_PARAMETER(context);
 
     if (purb == NULL)
     {
@@ -744,7 +754,7 @@ hub_clear_port_feature_completion(PURB purb, PVOID context)
     lock_dev(pdev, TRUE);
     dev_mgr = dev_mgr_from_dev(pdev);
     hcd = pdev->hcd;
-    brh = (dev_class(pdev) == USB_DEV_CLASS_ROOT_HUB);
+    brh = (BOOLEAN) (dev_class(pdev) == USB_DEV_CLASS_ROOT_HUB);
 
     if (usb_error(purb->status))
     {
@@ -1003,6 +1013,8 @@ hub_event_examine_status_que(PUSB_DEV pdev,
 
     USE_NON_PENDING_IRQL;
 
+    UNREFERENCED_PARAMETER(event);
+
     if (pdev == NULL || context == 0 || param == 0)
         return;
 
@@ -1190,6 +1202,8 @@ hub_event_dev_stable(PUSB_DEV pdev,
     PUSB_CTRL_SETUP_PACKET psetup;
 
     USE_NON_PENDING_IRQL;
+
+    UNREFERENCED_PARAMETER(event);
 
     if (pdev == NULL || context == 0 || param == 0)
         return;
@@ -1430,6 +1444,8 @@ hub_disable_port_completion(PURB purb, PVOID pcontext)
     UCHAR port_idx;
     PUSB_ENDPOINT pendp;
     PUSB_CTRL_SETUP_PACKET psetup;
+
+    UNREFERENCED_PARAMETER(pcontext);
 
     if (purb == NULL)
         return;
@@ -2482,6 +2498,8 @@ dev_mgr_score_driver_for_dev(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver, PUSB
 {
     LONG credit = 0;
 
+    UNREFERENCED_PARAMETER(dev_mgr);
+
     //assume supports all the sub_class are supported if sub_class is zero
     if (pdriver->driver_desc.dev_class == pdev_desc->bDeviceClass)
     {
@@ -3108,6 +3126,8 @@ LBL_OUT:
 BOOLEAN
 hub_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
+    UNREFERENCED_PARAMETER(dev_mgr);
+    UNREFERENCED_PARAMETER(dev_handle);
     return TRUE;
 }
 
@@ -3309,6 +3329,7 @@ hub_event_clear_tt_buffer(PUSB_DEV pdev,        //always null. we do not use thi
                           ULONG context,
                           ULONG param)
 {
+    UNREFERENCED_PARAMETER(event);
     hub_clear_tt_buffer(pdev, *((PURB_HS_PIPE_CONTENT) & context), (UCHAR) param);
     return;
 }

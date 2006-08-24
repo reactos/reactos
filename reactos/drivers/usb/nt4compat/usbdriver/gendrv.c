@@ -288,6 +288,9 @@ gendrv_event_select_driver(PUSB_DEV pdev,       //always null. we do not use thi
 
     USE_BASIC_NON_PENDING_IRQL;
 
+    UNREFERENCED_PARAMETER(context);
+    UNREFERENCED_PARAMETER(event);
+
     if (pdev == NULL)
         return FALSE;
 
@@ -1350,7 +1353,7 @@ gendrv_delete_device(PUSB_DEV_MANAGER dev_mgr, PDEVICE_OBJECT dev_obj)
     pdev_ext = (PGENDRV_DEVICE_EXTENSION) dev_obj->DeviceExtension;
     pdrvr = pdev_ext->pdriver;
     pdrvr_ext = (PGENDRV_DRVR_EXTENSION) pdrvr->driver_ext;
-    is_if = if_dev(dev_obj);
+    is_if = (BOOLEAN) if_dev(dev_obj);
     if (is_if == FALSE)
         sprintf(dev_name, "\\DosDevices\\gendev%d", (int)pdev_ext->dev_id);
     else

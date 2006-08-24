@@ -66,6 +66,8 @@ compdev_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 BOOLEAN
 compdev_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
+    UNREFERENCED_PARAMETER(dev_mgr);
+    UNREFERENCED_PARAMETER(pdriver);
     return TRUE;
 }
 
@@ -195,6 +197,10 @@ compdev_event_select_if_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG 
 {
     PUSB_DEV_MANAGER dev_mgr;
     DEV_HANDLE dev_handle;
+
+    UNREFERENCED_PARAMETER(param);
+    UNREFERENCED_PARAMETER(context);
+    UNREFERENCED_PARAMETER(event);
 
     if (pdev == NULL)
         return;

@@ -794,6 +794,8 @@ usb_config_dev_completion(PURB purb, PVOID context)
 
     USE_BASIC_NON_PENDING_IRQL;
 
+    UNREFERENCED_PARAMETER(context);
+
     if (purb == NULL)
     {
         return;
@@ -1259,6 +1261,8 @@ usb_set_interface_completion(PURB purb, PVOID context)
     PLIST_ENTRY pthis, pnext;
 
     USE_BASIC_NON_PENDING_IRQL;
+
+    UNREFERENCED_PARAMETER(context);
 
     if (purb == NULL)
         return;

@@ -630,6 +630,8 @@ umss_start_create_device(IN PVOID Parameter)
 BOOLEAN
 umss_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
+    UNREFERENCED_PARAMETER(dev_handle);
+    UNREFERENCED_PARAMETER(dev_mgr);
     return TRUE;
 }
 
@@ -1766,6 +1768,8 @@ umss_load_class_driver(PVOID context)
     NTSTATUS status;
     UNICODE_STRING unicode_string;
 
+    UNREFERENCED_PARAMETER(context);
+
     //
     // let's load the class driver
     //
@@ -1852,6 +1856,8 @@ umss_get_if_driver_info(PUSB_DEV_MANAGER dev_mgr, PUSB_DEV pdev, DEV_HANDLE if_h
     PUMSS_DRVR_EXTENSION drvr_ext;
     ULONG if_idx;
     USE_BASIC_NON_PENDING_IRQL;
+
+    UNREFERENCED_PARAMETER(dev_mgr);
 
     if_idx = if_idx_from_handle(if_handle);
     if (if_idx >= 4)            // max interfaces per config supports. defined in td.h

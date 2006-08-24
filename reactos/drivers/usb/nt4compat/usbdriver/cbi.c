@@ -38,6 +38,8 @@ umss_class_specific_request(IN PUMSS_DEVICE_EXTENSION pdev_ext,
     PURB purb;
     NTSTATUS status;
 
+    UNREFERENCED_PARAMETER(dir);
+
     purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
     // Build URB for the ADSC command
     UsbBuildVendorRequest(purb,
