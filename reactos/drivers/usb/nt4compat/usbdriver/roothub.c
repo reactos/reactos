@@ -23,7 +23,7 @@
 
 //----------------------------------------------------------
 
-BOOL
+BOOLEAN
 rh_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     LONG i;
@@ -42,7 +42,7 @@ rh_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 rh_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
 
@@ -54,8 +54,6 @@ rh_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     PUSB_INTERFACE pif;
     PUSB_ENDPOINT pendp;
     PHUB2_EXTENSION phub_ext;
-    PTIMER_SVC ptimer;
-    PURB purb;
     NTSTATUS status;
     PHCD hcd;
     LONG i;
@@ -248,11 +246,10 @@ rh_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 
 //to be the reverse of what init does, we assume that the timer is now killed
 //int is disconnected and the hub thread will not process event anymore
-BOOL
+BOOLEAN
 rh_destroy(PUSB_DEV pdev)
 {
     PUSB_DEV rh;
-    PLIST_ENTRY pthis, pnext;
     PUSB_DEV_MANAGER dev_mgr;
 
     if (pdev == NULL)
@@ -275,11 +272,9 @@ rh_destroy(PUSB_DEV pdev)
 VOID
 rh_timer_svc_int_completion(PUSB_DEV pdev, PVOID context)
 {
-    PUSB_EVENT pevent;
     PURB purb;
-    ULONG status, i;
     PHCD hcd;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL || context == NULL)
         return;
@@ -332,13 +327,12 @@ rh_timer_svc_reset_port_completion(PUSB_DEV pdev, PVOID context)
 {
     PURB purb;
     ULONG i;
-    USHORT port_num;
     PHUB2_EXTENSION hub_ext;
     PLIST_ENTRY pthis, pnext;
     PUSB_DEV_MANAGER dev_mgr;
     PUSB_CTRL_SETUP_PACKET psetup;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL || context == NULL)
         return;

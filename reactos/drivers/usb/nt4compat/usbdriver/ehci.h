@@ -101,25 +101,25 @@ typedef struct _EHCI_ELEM_LIST
 
 } EHCI_ELEM_LIST, *PEHCI_ELEM_LIST;
 
-BOOL elem_pool_init_pool( struct _EHCI_ELEM_POOL* pool, LONG flags, PVOID context);
+BOOLEAN elem_pool_init_pool( struct _EHCI_ELEM_POOL* pool, LONG flags, PVOID context);
 VOID elem_pool_destroy_pool ( struct _EHCI_ELEM_POOL* pool );
 PEHCI_ELEM_LINKS elem_pool_alloc_elem ( struct _EHCI_ELEM_POOL* pool );
 VOID elem_pool_free_elem ( PEHCI_ELEM_LINKS elem_link );
 LONG elem_pool_get_total_count ( struct _EHCI_ELEM_POOL* pool );
-BOOL elem_pool_is_empty ( struct _EHCI_ELEM_POOL* pool );
+BOOLEAN elem_pool_is_empty ( struct _EHCI_ELEM_POOL* pool );
 LONG elem_pool_get_free_count ( struct _EHCI_ELEM_POOL* pool );
 LONG elem_pool_get_link_offset ( struct _EHCI_ELEM_POOL* pool );
 PEHCI_ELEM_LINKS elem_pool_alloc_elems ( struct _EHCI_ELEM_POOL* pool, LONG count );
-BOOL elem_pool_free_elems( PEHCI_ELEM_LINKS elem_chains );
+BOOLEAN elem_pool_free_elems( PEHCI_ELEM_LINKS elem_chains );
 LONG elem_pool_get_type( struct _EHCI_ELEM_POOL* pool );
 
 // the following are private functions
-BOOL elem_pool_expand_pool( struct _EHCI_ELEM_POOL* pool, LONG elem_count );
-BOOL elem_pool_collect_garbage( struct _EHCI_ELEM_POOL* pool );
+BOOLEAN elem_pool_expand_pool( struct _EHCI_ELEM_POOL* pool, LONG elem_count );
+BOOLEAN elem_pool_collect_garbage( struct _EHCI_ELEM_POOL* pool );
 
 // lock operations
-BOOL elem_pool_lock( struct _EHCI_ELEM_POOL* pool, BOOL at_dpc );
-BOOL elem_pool_unlock( struct _EHCI_ELEM_POOL* pool, BOOL at_dpc );
+BOOLEAN elem_pool_lock( struct _EHCI_ELEM_POOL* pool, BOOLEAN at_dpc );
+BOOLEAN elem_pool_unlock( struct _EHCI_ELEM_POOL* pool, BOOLEAN at_dpc );
 
 // helper
 LONG get_elem_phys_part_size( ULONG type );
@@ -737,7 +737,7 @@ typedef struct _EHCI_DEV
 	EHCI_CAPS			ehci_caps;
 
 	PHYSICAL_ADDRESS   	ehci_reg_base;						// io space
-	BOOL				port_mapped;
+	BOOLEAN				port_mapped;
 	PBYTE				port_base;							// note: added by ehci_caps.length, operational regs base addr, not the actural base
 
 	ULONG				frame_count;

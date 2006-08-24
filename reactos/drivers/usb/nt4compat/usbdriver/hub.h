@@ -141,7 +141,7 @@ psq_init(
 PPORT_STATUS_QUEUE psq
 );
 
-BOOL
+BOOLEAN
 psq_enqueue(
 PPORT_STATUS_QUEUE psq,
 ULONG status
@@ -151,7 +151,7 @@ psq_outqueue(
 PPORT_STATUS_QUEUE psq
 );			//return 0xffffffff if no element
 
-BOOL
+BOOLEAN
 psq_push(
 PPORT_STATUS_QUEUE psq,
 ULONG status
@@ -238,19 +238,19 @@ ULONG param
 
 #define RH_INTERVAL   ( USB_HUB_INTERVAL / DEV_MGR_TIMER_INTERVAL_MS )
 
-BOOL
+BOOLEAN
 rh_driver_destroy(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 rh_driver_init(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 rh_destroy(
 PUSB_DEV pdev
 );
@@ -261,30 +261,30 @@ PUSB_DEV dev,
 PVOID context
 );
 
-BOOL
+BOOLEAN
 rh_submit_urb(
 PUSB_DEV pdev,
 PURB urb
 );
 
-BOOL
+BOOLEAN
 hub_init(
 PUSB_DEV pdev
 );
 
-BOOL
+BOOLEAN
 hub_destroy(
 PUSB_DEV pdev
 );
 
-BOOL
+BOOLEAN
 hub_lock_tt(
 PUSB_DEV pdev,
 UCHAR port_idx,
 UCHAR type   // transfer type
 );
 
-BOOL
+BOOLEAN
 hub_unlock_tt(
 PUSB_DEV pdev,
 UCHAR port_idx,
@@ -299,46 +299,47 @@ BYTE port_idx,
 ULONG pipe
 );
 
-BOOL
+BOOLEAN
 compdev_driver_init(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 compdev_driver_destroy(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 gendrv_driver_init(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 gendrv_driver_destroy(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 gendrv_if_driver_init(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 gendrv_if_driver_destroy(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL hub_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
-BOOL hub_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
-BOOL hub_remove_reset_event(PUSB_DEV pdev, ULONG port_idx, BOOL from_dpc);
-BOOL hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOL from_dpc);
+BOOLEAN hub_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
+BOOLEAN hub_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
+BOOLEAN hub_remove_reset_event(PUSB_DEV pdev, ULONG port_idx, BOOLEAN from_dpc);
+BOOLEAN hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOLEAN from_dpc);
+NTSTATUS hub_start_int_request(PUSB_DEV pdev);
 
 #endif
 

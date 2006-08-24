@@ -10,6 +10,10 @@
 #define __struct_bcount(x)
 #define __inexpressible_readableTo(x)
 #define __deref_volatile
+#ifndef __field_ecount
+#    define __field_ecount(x)
+#endif
+
 
 #include <ntddk.h>
 #include <stdio.h>

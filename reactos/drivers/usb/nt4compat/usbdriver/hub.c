@@ -63,9 +63,9 @@
 
 extern ULONG cpu_clock_freq;
 
-BOOL hub_check_reset_port_status(PUSB_DEV pdev, LONG port_idx);
+BOOLEAN hub_check_reset_port_status(PUSB_DEV pdev, LONG port_idx);
 
-VOID hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOL from_dpc);
+VOID hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOLEAN from_dpc);
 
 void hub_int_completion(PURB purb, PVOID pcontext);
 
@@ -95,17 +95,17 @@ void hub_get_hub_desc_completion(PURB purb, PVOID pcontext);
 
 NTSTATUS hub_start_int_request(PUSB_DEV pdev);
 
-BOOL hub_connect(PCONNECT_DATA init_param, DEV_HANDLE dev_handle);
+BOOLEAN hub_connect(PCONNECT_DATA init_param, DEV_HANDLE dev_handle);
 
-BOOL hub_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN hub_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
-BOOL hub_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN hub_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
 NTSTATUS hub_disable_port_request(PUSB_DEV pdev, UCHAR port_idx);
 
 VOID hub_start_reset_port_completion(PURB purb, PVOID context);
 
-BOOL
+BOOLEAN
 init_event_pool(PUSB_EVENT_POOL pool)
 {
     int i;
@@ -129,7 +129,7 @@ init_event_pool(PUSB_EVENT_POOL pool)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 free_event(PUSB_EVENT_POOL pool, PUSB_EVENT pevent)
 {
     if (pool == NULL || pevent == NULL)
@@ -165,7 +165,7 @@ alloc_event(PUSB_EVENT_POOL pool, LONG count)
     return NewEvent;
 }
 
-BOOL
+BOOLEAN
 destroy_event_pool(PUSB_EVENT_POOL pool)
 {
     if (pool == NULL)
@@ -187,7 +187,7 @@ event_list_default_process_event(PUSB_DEV pdev, ULONG event, ULONG context, ULON
 //----------------------------------------------------------
 //timer_svc pool routines
 
-BOOL
+BOOLEAN
 init_timer_svc_pool(PTIMER_SVC_POOL pool)
 {
     int i;
@@ -209,7 +209,7 @@ init_timer_svc_pool(PTIMER_SVC_POOL pool)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 free_timer_svc(PTIMER_SVC_POOL pool, PTIMER_SVC ptimer)
 {
     if (pool == NULL || ptimer == NULL)
@@ -240,7 +240,7 @@ alloc_timer_svc(PTIMER_SVC_POOL pool, LONG count)
 
 }
 
-BOOL
+BOOLEAN
 destroy_timer_svc_pool(PTIMER_SVC_POOL pool)
 {
     if (pool == NULL)
@@ -271,7 +271,7 @@ event_list_default_process_queue(PLIST_HEAD event_list,
     return;
 }
 
-BOOL
+BOOLEAN
 psq_enqueue(PPORT_STATUS_QUEUE psq, ULONG status)
 {
     if (psq == NULL)
@@ -319,7 +319,7 @@ psq_outqueue(PPORT_STATUS_QUEUE psq)
     return status;
 }
 
-BOOL
+BOOLEAN
 psq_push(PPORT_STATUS_QUEUE psq, ULONG status)
 {
     if (psq == NULL)
@@ -338,7 +338,7 @@ psq_push(PPORT_STATUS_QUEUE psq, ULONG status)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 hub_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     //init driver structure, no PNP table functions
@@ -373,7 +373,7 @@ hub_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 hub_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     pdriver->driver_ext = NULL;
@@ -715,7 +715,7 @@ hub_clear_port_feature_completion(PURB purb, PVOID context)
 {
     BYTE port_idx;
     LONG i;
-    BOOL event_post, brh;
+    BOOLEAN event_post, brh;
     ULONG pc;
     PHCD hcd;
     NTSTATUS status;
@@ -1182,7 +1182,7 @@ hub_event_dev_stable(PUSB_DEV pdev,
     PHUB2_EXTENSION hub_ext;
     PUSB_EVENT pevent, pevent1;
     PLIST_ENTRY pthis, pnext;
-    BOOL que_exist;
+    BOOLEAN que_exist;
     PHCD hcd;
     PUSB_DEV_MANAGER dev_mgr;
     NTSTATUS status;
@@ -1520,13 +1520,13 @@ hub_disable_port_request(PUSB_DEV pdev, UCHAR port_idx)
 }
 
 
-BOOL
-hub_remove_reset_event(PUSB_DEV pdev, ULONG port_idx, BOOL from_dpc)
+BOOLEAN
+hub_remove_reset_event(PUSB_DEV pdev, ULONG port_idx, BOOLEAN from_dpc)
 {
     PUSB_DEV_MANAGER dev_mgr;
     PLIST_ENTRY pthis, pnext;
     PUSB_EVENT pevent, pnext_event;
-    BOOL found;
+    BOOLEAN found;
 
     KIRQL old_irql = 0;
 
@@ -1576,16 +1576,16 @@ hub_remove_reset_event(PUSB_DEV pdev, ULONG port_idx, BOOL from_dpc)
     return found;
 }
 
-BOOL
-hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOL from_dpc)
+BOOLEAN
+hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOLEAN from_dpc)
 {
     PLIST_ENTRY pthis, pnext;
     PUSB_EVENT pevent, pnext_event;
     PUSB_DEV pdev = NULL;
     PHUB2_EXTENSION hub_ext;
-    BOOL bret;
+    BOOLEAN bret;
     PURB purb = NULL;
-    BOOL processed;
+    BOOLEAN processed;
     PUSB_CTRL_SETUP_PACKET psetup;
     PHCD hcd = NULL;
 
@@ -1722,12 +1722,12 @@ hub_post_esq_event(PUSB_DEV pdev, BYTE port_idx, PROCESS_EVENT pe)
 }
 
 // called only in hub_clear_port_feature_completion
-BOOL
+BOOLEAN
 hub_check_reset_port_status(PUSB_DEV pdev, LONG port_idx)
 {
     PUSB_DEV_MANAGER dev_mgr;
     PHUB2_EXTENSION hub_ext;
-    BOOL bReset;
+    BOOLEAN bReset;
     USB_PORT_STATUS port_status;
     PUSB_DEV pdev2;
     PURB purb2;
@@ -1864,7 +1864,7 @@ LBL_RESET_FAIL:
 }
 
 VOID
-hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOL from_dpc)
+hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOLEAN from_dpc)
 {
 
     PHUB2_EXTENSION hub_ext;
@@ -1908,7 +1908,7 @@ hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOL from_dpc)
 }
 
 //called in hub_set_address_completion
-BOOL
+BOOLEAN
 dev_mgr_start_config_dev(PUSB_DEV pdev)
 {
     PBYTE data_buf;
@@ -2167,12 +2167,12 @@ LBL_OUT:
     return;
 }
 
-BOOL
+BOOLEAN
 dev_mgr_start_select_driver(PUSB_DEV pdev)
 {
     PUSB_DEV_MANAGER dev_mgr;
     PUSB_EVENT pevent;
-    BOOL bret;
+    BOOLEAN bret;
 
     USE_BASIC_NON_PENDING_IRQL;;
 
@@ -2214,7 +2214,7 @@ LBL_OUT:
     return bret;
 }
 
-BOOL
+BOOLEAN
 dev_mgr_connect_to_dev(PVOID Parameter)
 {
     PUSB_DEV pdev;
@@ -2315,7 +2315,7 @@ dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG par
     return;
 }
 
-BOOL
+BOOLEAN
 dev_mgr_build_usb_endp(PUSB_INTERFACE pif, PUSB_ENDPOINT pendp, PUSB_ENDPOINT_DESC pendp_desc)
 {
     if (pendp == NULL || pif == NULL || pendp_desc == NULL)
@@ -2328,8 +2328,8 @@ dev_mgr_build_usb_endp(PUSB_INTERFACE pif, PUSB_ENDPOINT pendp, PUSB_ENDPOINT_DE
     return TRUE;
 }
 
-BOOL
-dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE_DESC pif_desc, BOOL alt_if)
+BOOLEAN
+dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE_DESC pif_desc, BOOLEAN alt_if)
 {
     LONG i;
     PUSB_ENDPOINT_DESC pendp_desc;
@@ -2566,7 +2566,7 @@ dev_mgr_register_hcd(PUSB_DEV_MANAGER dev_mgr, PHCD hcd)
     return dev_mgr->hcd_count - 1;
 }
 
-BOOL
+BOOLEAN
 dev_mgr_register_irp(PUSB_DEV_MANAGER dev_mgr, PIRP pirp, PURB purb)
 {
     if (dev_mgr == NULL)
@@ -2657,7 +2657,7 @@ dev_mgr_start_hcd(PUSB_DEV_MANAGER dev_mgr)
     return;
 }
 
-BOOL
+BOOLEAN
 hub_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     URB urb, *purb;
@@ -2779,7 +2779,7 @@ hub_set_cfg_completion(PURB purb, PVOID pcontext)
     UCHAR if_idx = 0;
     PUSB_DEV pdev;
     PUSB_INTERFACE pif;
-    BOOL high_speed, multiple_tt;
+    BOOLEAN high_speed, multiple_tt;
     NTSTATUS status;
     USE_BASIC_NON_PENDING_IRQL;;
 
@@ -3105,13 +3105,13 @@ LBL_OUT:
     return;
 }
 
-BOOL
+BOOLEAN
 hub_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 hub_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     PUSB_DEV pdev;
@@ -3130,8 +3130,8 @@ hub_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
     return TRUE;
 }
 
-static BOOL
-hub_lock_unlock_tt(PUSB_DEV pdev, UCHAR port_idx, UCHAR type, BOOL lock)
+static BOOLEAN
+hub_lock_unlock_tt(PUSB_DEV pdev, UCHAR port_idx, UCHAR type, BOOLEAN lock)
 {
     PHUB2_EXTENSION dev_ext;
     PULONG pmap = NULL;
@@ -3181,7 +3181,7 @@ hub_lock_unlock_tt(PUSB_DEV pdev, UCHAR port_idx, UCHAR type, BOOL lock)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 hub_lock_tt(PUSB_DEV pdev,
             UCHAR port_idx,
             UCHAR type   // transfer type
@@ -3190,7 +3190,7 @@ hub_lock_tt(PUSB_DEV pdev,
     return hub_lock_unlock_tt(pdev, port_idx, type, TRUE);
 }
 
-BOOL
+BOOLEAN
 hub_unlock_tt(PUSB_DEV pdev, UCHAR port_idx, UCHAR type)
 {
     return hub_lock_unlock_tt(pdev, port_idx, type, FALSE);
@@ -3223,7 +3223,7 @@ hub_clear_tt_buffer_completion(PURB purb, PVOID context)
 }
 
 // send CLEAR_TT_BUFFER to the hub
-BOOL
+BOOLEAN
 hub_clear_tt_buffer(PUSB_DEV pdev, URB_HS_PIPE_CONTENT pipe_content, UCHAR port_idx)
 {
     PURB purb;
@@ -3356,7 +3356,7 @@ hub_post_clear_tt_event(PUSB_DEV pdev, BYTE port_idx, ULONG pipe)
     return;
 }
 
-BOOL
+BOOLEAN
 init_irp_list(PIRP_LIST irp_list)
 {
     LONG i;
@@ -3389,7 +3389,7 @@ destroy_irp_list(PIRP_LIST irp_list)
     return;
 }
 
-BOOL
+BOOLEAN
 add_irp_to_list(PIRP_LIST irp_list, PIRP pirp, PURB purb)
 {
     KIRQL old_irql;
@@ -3509,22 +3509,22 @@ remove_irp_from_list(PIRP_LIST irp_list,
     return purb;
 }
 
-BOOL
+BOOLEAN
 irp_list_empty(PIRP_LIST irp_list)
 {
     KIRQL old_irql;
-    BOOL ret;
+    BOOLEAN ret;
     KeAcquireSpinLock(&irp_list->irp_list_lock, &old_irql);
     ret = (irp_list->irp_free_list_count == MAX_IRP_LIST_SIZE);
     KeReleaseSpinLock(&irp_list->irp_list_lock, old_irql);
     return ret;
 }
 
-BOOL
+BOOLEAN
 irp_list_full(PIRP_LIST irp_list)
 {
     KIRQL old_irql;
-    BOOL ret;
+    BOOLEAN ret;
     KeAcquireSpinLock(&irp_list->irp_list_lock, &old_irql);
     ret = (irp_list->irp_free_list_count == 0);
     KeReleaseSpinLock(&irp_list->irp_list_lock, old_irql);

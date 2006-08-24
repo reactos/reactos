@@ -108,15 +108,15 @@ typedef struct
 PDEVICE_OBJECT
 uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PUSB_DEV_MANAGER dev_mgr);
 
-BOOL uhci_init_schedule(PUHCI_DEV uhci, PADAPTER_OBJECT padapter);
+BOOLEAN uhci_init_schedule(PUHCI_DEV uhci, PADAPTER_OBJECT padapter);
 
-BOOL uhci_release(PDEVICE_OBJECT pdev);
+BOOLEAN uhci_release(PDEVICE_OBJECT pdev);
 
 static VOID uhci_stop(PUHCI_DEV uhci);
 
-BOOL uhci_destroy_schedule(PUHCI_DEV uhci);
+BOOLEAN uhci_destroy_schedule(PUHCI_DEV uhci);
 
-BOOL NTAPI uhci_sync_insert_urb_schedule(PVOID context);
+BOOLEAN NTAPI uhci_sync_insert_urb_schedule(PVOID context);
 
 VOID uhci_init_hcd_interface(PUHCI_DEV uhci);
 
@@ -148,7 +148,7 @@ uhci_wait_ms(PUHCI_DEV uhci, LONG ms)
     return;
 }
 
-BOOL
+BOOLEAN
 init_pending_endp_pool(PUHCI_PENDING_ENDP_POOL pool)
 {
     int i;
@@ -171,7 +171,7 @@ init_pending_endp_pool(PUHCI_PENDING_ENDP_POOL pool)
 
 }
 
-BOOL
+BOOLEAN
 free_pending_endp(PUHCI_PENDING_ENDP_POOL pool, PUHCI_PENDING_ENDP pending_endp)
 {
     if (pool == NULL || pending_endp == NULL)
@@ -201,7 +201,7 @@ alloc_pending_endp(PUHCI_PENDING_ENDP_POOL pool, LONG count)
     return new;
 }
 
-BOOL
+BOOLEAN
 destroy_pending_endp_pool(PUHCI_PENDING_ENDP_POOL pool)
 {
     if (pool == NULL)
@@ -227,7 +227,7 @@ uhci_fill_td(PUHCI_TD td, ULONG status, ULONG info, ULONG buffer)
     td->buffer = buffer;
 }
 
-BOOL
+BOOLEAN
 uhci_insert_td_fl(PUHCI_TD prev_td, PUHCI_TD ptd)
 {
     PLIST_ENTRY temp_entry;
@@ -244,7 +244,7 @@ uhci_insert_td_fl(PUHCI_TD prev_td, PUHCI_TD ptd)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 uhci_remove_td_fl(PUHCI_TD ptd)
 {
     PUHCI_TD prev_td;
@@ -261,7 +261,7 @@ uhci_remove_td_fl(PUHCI_TD ptd)
     return FALSE;
 }
 
-BOOL
+BOOLEAN
 uhci_insert_qh_fl(PVOID prev_item, PUHCI_QH pqh)
 {
     //only horizontal link allowed
@@ -295,7 +295,7 @@ uhci_insert_qh_fl(PVOID prev_item, PUHCI_QH pqh)
     return FALSE;
 }
 
-BOOL
+BOOLEAN
 uhci_remove_qh_fl(PUHCI_QH pqh)
 {
     PVOID prev_item;
@@ -326,7 +326,7 @@ uhci_remove_qh_fl(PUHCI_QH pqh)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 uhci_init_frame_list(PUHCI_DEV uhci, PADAPTER_OBJECT padapter)
 {
     int i;
@@ -373,7 +373,7 @@ uhci_init_frame_list(PUHCI_DEV uhci, PADAPTER_OBJECT padapter)
 
 }
 
-BOOL
+BOOLEAN
 uhci_destroy_frame_list(PUHCI_DEV uhci)
 {
     if (uhci == NULL)
@@ -472,7 +472,7 @@ uhci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
     return pdev;
 }
 
-BOOL
+BOOLEAN
 uhci_delete_device(PDEVICE_OBJECT pdev)
 {
     STRING string;
@@ -864,7 +864,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     return pdev;
 }
 
-BOOL
+BOOLEAN
 uhci_release(PDEVICE_OBJECT pdev)
 {
     PDEVICE_EXTENSION pdev_ext;
@@ -909,7 +909,7 @@ uhci_release(PDEVICE_OBJECT pdev)
 
 // send cmds to start the uhc
 // shamelessly copied from linux's uhci.c
-BOOL
+BOOLEAN
 uhci_start(PHCD hcd)
 {
     PUHCI_DEV uhci;
@@ -1007,7 +1007,7 @@ uhci_wakeup(PUHCI_DEV uhci)
 
 }
 
-BOOL
+BOOLEAN
 uhci_init_schedule(PUHCI_DEV uhci, PADAPTER_OBJECT padapter)
 {
     int i, irq;
@@ -1112,10 +1112,10 @@ uhci_init_schedule(PUHCI_DEV uhci, PADAPTER_OBJECT padapter)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 uhci_destroy_schedule(PUHCI_DEV uhci)
 {
-    BOOL ret;
+    BOOLEAN ret;
 
     ret = uhci_destroy_frame_list(uhci);
     ret = destroy_qh_pool(&uhci->qh_pool);
@@ -1155,7 +1155,7 @@ uhci_cancel_pending_endp_urb(IN PVOID Parameter)
     return;
 }
 
-BOOL
+BOOLEAN
 uhci_process_pending_endp(PUHCI_DEV uhci)
 {
     PUSB_DEV pdev;
@@ -1163,7 +1163,7 @@ uhci_process_pending_endp(PUHCI_DEV uhci)
     PLIST_ENTRY pthis;
     PURB purb;
     PUSB_ENDPOINT pendp;
-    BOOL can_submit = FALSE;
+    NTSTATUS can_submit = STATUS_UNSUCCESSFUL;
     PWORK_QUEUE_ITEM pwork_item;
     PLIST_ENTRY cancel_list;
     USE_IRQL;
@@ -1519,7 +1519,7 @@ uhci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     PUSB_DEV pdev;
     PUSB_ENDPOINT pendp;
 
-    BOOL finished;
+    BOOLEAN finished;
     LONG i, j;
     ULONG uhci_status, urb_status, toggle = 0;
 
@@ -1731,7 +1731,7 @@ uhci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     return;
 }
 
-BOOL
+BOOLEAN
 uhci_add_device(PUHCI_DEV uhci, PUSB_DEV dev)
 {
     if (dev == NULL || uhci == NULL)
@@ -1777,7 +1777,7 @@ uhci_sync_cancel_urbs_dev(PVOID context)
     return (UCHAR) (sync_param->ret = TRUE);
 }
 
-BOOL
+BOOLEAN
 uhci_remove_device(PUHCI_DEV uhci, PUSB_DEV dev)
 {
     PUHCI_PENDING_ENDP ppending_endp;
@@ -1892,7 +1892,7 @@ uhci_internal_submit_bulk(PUHCI_DEV uhci, PURB urb)
     PUHCI_TD ptd;
     PUHCI_QH pqh;
     LIST_ENTRY td_list, *pthis, *pnext;
-    BOOL old_toggle, toggle, ret;
+    BOOLEAN old_toggle, toggle, ret;
     UCHAR pid;
 
     if (uhci == NULL || urb == NULL)
@@ -2043,7 +2043,7 @@ uhci_internal_submit_ctrl(PUHCI_DEV uhci, PURB urb)
     PUHCI_QH pqh;
     ULONG dev_addr;
     PUSB_DEV pdev;
-    BOOL ret;
+    BOOLEAN ret;
 
     if (uhci == NULL || urb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -2216,7 +2216,7 @@ uhci_internal_submit_int(PUHCI_DEV uhci, PURB urb)
     LONG toggle = 0;
     LONG max_packet_size;
     PUHCI_TD ptd;
-    BOOL ret;
+    BOOLEAN ret;
 
     if (uhci == NULL || urb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -2312,7 +2312,7 @@ uhci_internal_submit_iso(PUHCI_DEV uhci, PURB urb)
     PUHCI_TD ptd;
     LIST_ENTRY td_list, *pthis, *pnext;
     int i;
-    BOOL toggle, ret;
+    BOOLEAN toggle, ret;
 
     if (uhci == NULL || urb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -2406,12 +2406,12 @@ uhci_internal_submit_iso(PUHCI_DEV uhci, PURB urb)
 }
 
 // runs in uhci_isr
-BOOL
+BOOLEAN
 uhci_is_xfer_finished(PURB urb)
 {
     PLIST_ENTRY pthis, pnext;
     PUHCI_TD ptd;
-    BOOL ret = TRUE;
+    BOOLEAN ret = TRUE;
     PTD_EXTENSION ptde;
 
     if (urb->last_finished_td == NULL)
@@ -2472,10 +2472,10 @@ uhci_is_xfer_finished(PURB urb)
 // never try to acquire any spin-lock
 // remove the bulk urb from schedule, and mark it not in
 // the schedule
-BOOL
+BOOLEAN
 uhci_remove_urb_from_schedule(PUHCI_DEV uhci, PURB urb)
 {
-    BOOL ret = FALSE;
+    BOOLEAN ret = FALSE;
     {
         switch (urb->pipe & USB_ENDPOINT_XFERTYPE_MASK)
         {
@@ -2508,7 +2508,7 @@ uhci_remove_urb_from_schedule(PUHCI_DEV uhci, PURB urb)
 // never try to acquire any spin-lock
 // remove the bulk urb from schedule, and mark it not in
 // the schedule
-BOOL
+BOOLEAN
 uhci_remove_bulk_from_schedule(PUHCI_DEV uhci, PURB urb)
 {
 
@@ -2559,7 +2559,7 @@ uhci_remove_bulk_from_schedule(PUHCI_DEV uhci, PURB urb)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 uhci_remove_iso_from_schedule(PUHCI_DEV uhci, PURB urb)
 {
     PUHCI_TD ptd, pprev_td;
@@ -2600,7 +2600,7 @@ uhci_remove_iso_from_schedule(PUHCI_DEV uhci, PURB urb)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 uhci_remove_int_from_schedule(PUHCI_DEV uhci, PURB urb)
 {
     PUHCI_TD ptd, pnext_td, pprev_td;
@@ -2649,7 +2649,7 @@ uhci_remove_int_from_schedule(PUHCI_DEV uhci, PURB urb)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 uhci_insert_tds_qh(PUHCI_QH pqh, PUHCI_TD td_chain)
 {
     if (pqh == NULL || td_chain == NULL)
@@ -2660,7 +2660,7 @@ uhci_insert_tds_qh(PUHCI_QH pqh, PUHCI_TD td_chain)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 uhci_insert_qh_urb(PURB urb, PUHCI_QH qh_chain)
 {
     if (urb == NULL || qh_chain == NULL)
@@ -2672,7 +2672,7 @@ uhci_insert_qh_urb(PURB urb, PUHCI_QH qh_chain)
 }
 
 // must have dev_lock and frame_list_lock acquired
-BOOL
+BOOLEAN
 uhci_insert_urb_schedule(PUHCI_DEV uhci, PURB urb)
 {
     PUHCI_QH pqh, pskel_qh, pnext_qh;
@@ -2811,7 +2811,7 @@ uhci_insert_urb_schedule(PUHCI_DEV uhci, PURB urb)
 }
 
 //this function used as the KeSynchronizeExecution param to delegate control to uhci_insert_urb_schedule
-BOOL NTAPI
+BOOLEAN NTAPI
 uhci_sync_insert_urb_schedule(PVOID context)
 {
     PSYNC_PARAM sync_param;
@@ -2832,15 +2832,15 @@ uhci_sync_insert_urb_schedule(PVOID context)
 }
 
 // be sure pending_endp_list_lock acquired
-BOOL
+BOOLEAN
 uhci_claim_bandwidth(PUHCI_DEV uhci,
                      PURB urb,
-                     BOOL claim_bw    //true to claim bandwidth, false to free bandwidth
+                     BOOLEAN claim_bw    //true to claim bandwidth, false to free bandwidth
                      )
 {
 
     UCHAR type;
-    BOOL ls, can_alloc;
+    BOOLEAN ls, can_alloc;
     LONG bus_time, us;
     LONG i, idx, j, start_frame, interval;
 
@@ -2962,7 +2962,7 @@ uhci_sync_cancel_urb(PVOID context)
     PSYNC_PARAM sync_param;
     PURB purb2, dest_urb;
     PLIST_ENTRY pthis, pnext;
-    BOOL found = FALSE;
+    BOOLEAN found = FALSE;
 
     if (context == NULL)
         return FALSE;
@@ -2998,7 +2998,7 @@ NTSTATUS
 uhci_cancel_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 {
     PLIST_ENTRY pthis, pnext;
-    BOOL found;
+    BOOLEAN found;
     PURB purb2;
 
     SYNC_PARAM sync_param;
@@ -3415,7 +3415,7 @@ uhci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
 }
 
 //must have rh dev_lock acquired
-BOOL
+BOOLEAN
 uhci_rh_reset_port(PHCD hcd, UCHAR port_idx)
 {
     LONG i;
@@ -3602,7 +3602,7 @@ uhci_set_root_hub(struct _HCD * hcd, PUSB_DEV root_hub)
     return;
 }
 
-BOOL
+BOOLEAN
 uhci_remove_device2(struct _HCD * hcd, PUSB_DEV pdev)
 {
     if (hcd == NULL || pdev == NULL)
@@ -3611,7 +3611,7 @@ uhci_remove_device2(struct _HCD * hcd, PUSB_DEV pdev)
     return uhci_remove_device(uhci_from_hcd(hcd), pdev);
 }
 
-BOOL
+BOOLEAN
 uhci_hcd_release(struct _HCD * hcd)
 {
     PUHCI_DEV uhci;
@@ -3638,7 +3638,7 @@ uhci_cancel_urb2(struct _HCD * hcd, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB pur
     return uhci_cancel_urb(uhci, pdev, pendp, purb);
 }
 
-BOOL
+BOOLEAN
 uhci_rh_get_dev_change(PHCD hcd, PBYTE buf)
 {
     PUHCI_DEV uhci;

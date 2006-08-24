@@ -5,7 +5,6 @@
 #ifndef __UHCI_H__
 #define __UHCI_H__
 
-#define BOOL                        ULONG
 #define LIST_HEAD                   LIST_ENTRY
 #define PLIST_HEAD                  PLIST_ENTRY
 #define BYTE                        UCHAR
@@ -230,12 +229,12 @@ typedef struct _UHCI_TD_POOL
 
 } UHCI_TD_POOL, *PUHCI_TD_POOL;
 
-BOOL	
+BOOLEAN	
 init_td_pool(	
 PUHCI_TD_POOL pool
 );
 
-BOOL
+BOOLEAN
 free_td_to_pool(
 PUHCI_TD_POOL pool,
 PUHCI_TD ptd
@@ -246,17 +245,17 @@ alloc_td_from_pool(
 PUHCI_TD_POOL ptd_pool
 );   //null if failed]
 
-BOOL
+BOOLEAN
 is_pool_free(
 PUHCI_TD_POOL pool
 );	//test whether the pool is all free
 
-BOOL
+BOOLEAN
 is_pool_full(
 PUHCI_TD_POOL pool
 );
 
-BOOL
+BOOLEAN
 destroy_td_pool(
 PUHCI_TD_POOL pool
 );
@@ -272,44 +271,44 @@ typedef struct _UHCI_TD_POOL_LIST
 
 } UHCI_TD_POOL_LIST, *PUHCI_TD_POOL_LIST;
 
-BOOL
+BOOLEAN
 init_td_pool_list(
 PUHCI_TD_POOL_LIST pool_list,
 PADAPTER_OBJECT padapter
 );
 
-BOOL
+BOOLEAN
 destroy_td_pool_list(
 PUHCI_TD_POOL_LIST pool_list
 );
 
-BOOL
+BOOLEAN
 expand_pool_list(
 PUHCI_TD_POOL_LIST pool_list,
 LONG pool_count
 );      	//private
 
-BOOL
+BOOLEAN
 collect_garbage(
 PUHCI_TD_POOL_LIST pool_list
 );
 
-static LONG
+LONG
 get_free_tds(
 PUHCI_TD_POOL_LIST pool_list
 );			//private
 
-static LONG
+LONG
 get_max_free_tds(
 PUHCI_TD_POOL_LIST pool_list
 );		//private
 
-BOOL
+BOOLEAN
 can_transfer(
 PUHCI_TD_POOL_LIST pool_list,
 LONG td_count);
 
-BOOL
+BOOLEAN
 free_td(
 PUHCI_TD_POOL_LIST pool_list,
 PUHCI_TD ptd
@@ -323,13 +322,13 @@ PUHCI_TD_POOL_LIST pool_list
 VOID
 lock_td_pool(
 PUHCI_TD_POOL_LIST pool_list,
-BOOL at_dpc
+BOOLEAN at_dpc
 );
 
 VOID
 unlock_td_pool(
 PUHCI_TD_POOL_LIST pool_list,
-BOOL at_dpc
+BOOLEAN at_dpc
 );
 
 typedef struct _UHCI_QH
@@ -371,13 +370,13 @@ typedef struct _UHCI_QH_POOL
 } UHCI_QH_POOL, *PUHCI_QH_POOL;
 
 
-BOOL
+BOOLEAN
 init_qh_pool(
 PUHCI_QH_POOL pool,
 PADAPTER_OBJECT padapter
 );
 
-BOOL
+BOOLEAN
 free_qh(
 PUHCI_QH_POOL pool,
 PUHCI_QH ptd
@@ -388,7 +387,7 @@ alloc_qh(
 PUHCI_QH_POOL pool
 );  //null if failed
 
-BOOL
+BOOLEAN
 destroy_qh_pool(
 PUHCI_QH_POOL pool
 );
@@ -396,13 +395,13 @@ PUHCI_QH_POOL pool
 VOID
 lock_qh_pool(
 PUHCI_QH_POOL pool,
-BOOL at_dpc
+BOOLEAN at_dpc
 );
 
 VOID
 unlock_qh_pool(
 PUHCI_QH_POOL pool,
-BOOL at_dpc
+BOOLEAN at_dpc
 );
 
 /* 
@@ -421,6 +420,7 @@ BOOL at_dpc
  * and we should meet that frequency when requested to do so.
  * This will require some change(s) to the UHCI skeleton.
  */
+#if 0
 static int __interval_to_skel(int interval)
 {
     if (interval < 16) {
@@ -442,6 +442,7 @@ static int __interval_to_skel(int interval)
         return 6;           /* int64 for 64-127 ms */
     return 7;               /* int128 for 128-255 ms (Max.) */
 }
+#endif
 
 #define USB_ENDP_FLAG_BUSY_MASK         0x0000ff00
 #define USB_ENDP_FLAG_STAT_MASK         0xff
@@ -615,12 +616,12 @@ typedef struct _UHCI_PENDING_ENDP_POOL
 
 } UHCI_PENDING_ENDP_POOL, *PUHCI_PENDING_ENDP_POOL;
 
-BOOL
+BOOLEAN
 init_pending_endp_pool(
 PUHCI_PENDING_ENDP_POOL pool
 );
 
-BOOL
+BOOLEAN
 free_pending_endp(
 PUHCI_PENDING_ENDP_POOL pool,
 PUHCI_PENDING_ENDP pending_endp
@@ -632,7 +633,7 @@ PUHCI_PENDING_ENDP_POOL pool,
 LONG count
 );
 
-BOOL
+BOOLEAN
 destroy_pending_endp_pool(
 PUHCI_PENDING_ENDP_POOL pool
 );
@@ -662,7 +663,7 @@ typedef struct _FRAME_LIST_CPU_ENTRY
 typedef struct _UHCI
 {
 	PHYSICAL_ADDRESS   	uhci_reg_base;					// io space
-	BOOL				port_mapped;
+	BOOLEAN				port_mapped;
 	PBYTE				port_base;
 
 	PHYSICAL_ADDRESS	io_buf_logic_addr;
@@ -836,25 +837,25 @@ PUHCI_TD_POOL_LIST pool_list,
 PUHCI_TD  ptd
 );
 
-BOOL
+BOOLEAN
 uhci_init(
 PUHCI_DEV uhci,
 PADAPTER_OBJECT padapter
 );
 
-BOOL
+BOOLEAN
 uhci_destroy(
 PUHCI_DEV uhci
 );
 
 // funcitons exported to dev-manager
-BOOL
+BOOLEAN
 uhci_add_device(
 PUHCI_DEV uhci,
 PUSB_DEV dev
 );
 
-BOOL
+BOOLEAN
 uhci_remove_device( 
 PUHCI_DEV uhci,
 PUSB_DEV dev
@@ -869,6 +870,7 @@ PVOID sysarg1,
 PVOID sysarg2
 );
 
+#if 0
 static VOID
 uhci_flush_adapter_buf()
 {
@@ -876,6 +878,7 @@ uhci_flush_adapter_buf()
 	__asm invd;
 #endif
 }
+#endif
 
 NTSTATUS
 uhci_submit_urb(
@@ -886,31 +889,31 @@ struct _URB *urb
 );
 
 //must have dev_lock acquired
-static NTSTATUS
+NTSTATUS
 uhci_internal_submit_bulk(
 PUHCI_DEV uhci,
 struct _URB *urb
 );
 
-static NTSTATUS
+NTSTATUS
 uhci_internal_submit_iso(
 PUHCI_DEV uhci,
 struct _URB *urb
 );
 
-static NTSTATUS
+NTSTATUS
 uhci_internal_submit_ctrl(
 PUHCI_DEV uhci,
 struct _URB *urb
 );
 
-static NTSTATUS
+NTSTATUS
 uhci_internal_submit_int(
 PUHCI_DEV uhci,
 struct _URB *urb
 );
 
-static BOOL
+BOOLEAN
 uhci_remove_bulk_from_schedule(
 PUHCI_DEV uhci,
 struct _URB *urb
@@ -918,61 +921,61 @@ struct _URB *urb
 
 #define uhci_remove_ctrl_from_schedule uhci_remove_bulk_from_schedule
 
-static BOOL
+BOOLEAN
 uhci_remove_iso_from_schedule(
 PUHCI_DEV uhci,
 struct _URB *urb
 );
 
-static BOOL
+BOOLEAN
 uhci_remove_int_from_schedule(
 PUHCI_DEV uhci,
 struct _URB *urb
 );
 
-static BOOL
+BOOLEAN
 uhci_remove_urb_from_schedule(
 PUHCI_DEV uhci,
 struct _URB *urb
 );
 
-static BOOL
+BOOLEAN
 uhci_is_xfer_finished(  //will set urb error code here
 struct _URB *urb
 );
 
-static NTSTATUS
+NTSTATUS
 uhci_set_error_code(
 struct _URB *urb,
 ULONG raw_status
 );
 
-static BOOL
+BOOLEAN
 uhci_insert_tds_qh(
 PUHCI_QH pqh,
 PUHCI_TD td_chain
 );
 
-static BOOL
+BOOLEAN
 uhci_insert_qh_urb(
 struct _URB *urb,
 PUHCI_QH qh_chain
 );
 
-static BOOL
+BOOLEAN
 uhci_insert_urb_schedule(
 PUHCI_DEV uhci,
 struct _URB *urb
 );
 
-static BOOL
+BOOLEAN
 uhci_claim_bandwidth(
 PUHCI_DEV uhci,
 struct _URB *urb,
-BOOL claim_bw
+BOOLEAN claim_bw
 );
 
-static BOOL
+BOOLEAN
 uhci_process_pending_endp(
 PUHCI_DEV uhci
 );

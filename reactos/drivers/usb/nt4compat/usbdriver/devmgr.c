@@ -28,7 +28,7 @@ USB_DEV_MANAGER g_dev_mgr;
 
 
 //----------------------------------------------------------
-BOOL
+BOOLEAN
 dev_mgr_set_if_driver(PUSB_DEV_MANAGER dev_mgr,
                       DEV_HANDLE if_handle,
                       PUSB_DRIVER pdriver,
@@ -65,7 +65,7 @@ dev_mgr_set_if_driver(PUSB_DEV_MANAGER dev_mgr,
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 dev_mgr_set_driver(PUSB_DEV_MANAGER dev_mgr,
                    DEV_HANDLE dev_handle,
                    PUSB_DRIVER pdriver,
@@ -101,7 +101,7 @@ dev_mgr_set_driver(PUSB_DEV_MANAGER dev_mgr,
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 dev_mgr_post_event(PUSB_DEV_MANAGER dev_mgr, PUSB_EVENT event)
 {
     KIRQL old_irql;
@@ -143,7 +143,7 @@ dev_mgr_driver_entry_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr)
     pdrvr[GEN_IF_DRIVER_IDX].driver_destroy = gendrv_if_driver_destroy;
 }
 
-BOOL
+BOOLEAN
 dev_mgr_strobe(PUSB_DEV_MANAGER dev_mgr)
 {
     PUSB_EVENT pevent;
@@ -174,7 +174,7 @@ dev_mgr_strobe(PUSB_DEV_MANAGER dev_mgr)
     pevent->event = USB_EVENT_INIT_DEV_MGR;
 
     pevent->process_queue = event_list_default_process_queue;
-    pevent->process_event = dev_mgr_event_init;
+    pevent->process_event = (PROCESS_EVENT)dev_mgr_event_init;
 
     pevent->context = (ULONG) dev_mgr;
 
@@ -196,7 +196,7 @@ dev_mgr_strobe(PUSB_DEV_MANAGER dev_mgr)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 dev_mgr_event_init(PUSB_DEV pdev,       //always null. we do not use this param
                    ULONG event, ULONG context, ULONG param)
 {
@@ -285,6 +285,7 @@ dev_mgr_destroy(PUSB_DEV_MANAGER dev_mgr)
 }
 
 VOID
+NTAPI
 dev_mgr_thread(PVOID context)
 {
     PUSB_DEV_MANAGER dev_mgr;
@@ -293,7 +294,7 @@ dev_mgr_thread(PVOID context)
     USB_EVENT usb_event;
     LARGE_INTEGER time_out;
     NTSTATUS status;
-    BOOL dev_mgr_inited;
+    BOOLEAN dev_mgr_inited;
     KIRQL old_irql;
     LONG i;
 
@@ -372,6 +373,7 @@ dev_mgr_thread(PVOID context)
 }
 
 VOID
+NTAPI
 dev_mgr_timer_dpc_callback(PKDPC Dpc, PVOID context, PVOID SystemArgument1, PVOID SystemArgument2)
 {
     PUSB_DEV_MANAGER dev_mgr;
@@ -421,7 +423,7 @@ dev_mgr_timer_dpc_callback(PKDPC Dpc, PVOID context, PVOID SystemArgument1, PVOI
 
 }
 
-BOOL
+BOOLEAN
 dev_mgr_request_timer_svc(PUSB_DEV_MANAGER dev_mgr,
                           PUSB_DEV pdev, ULONG context, ULONG due_time, TIMER_SVC_HANDLER handler)
 {
@@ -458,7 +460,7 @@ dev_mgr_alloc_addr(PUSB_DEV_MANAGER dev_mgr, PHCD hcd)
     return hcd->hcd_alloc_addr(hcd);
 }
 
-BOOL
+BOOLEAN
 dev_mgr_free_addr(PUSB_DEV_MANAGER dev_mgr, PUSB_DEV pdev, BYTE addr)
 {
     PHCD hcd;
@@ -539,10 +541,9 @@ dev_mgr_disconnect_dev(PUSB_DEV pdev)
     PLIST_ENTRY pthis, pnext;
     PHUB2_EXTENSION phub_ext = NULL;
     PUSB_CONFIGURATION pconfig;
-    PUSB_INTERFACE pif;
     PUSB_DEV_MANAGER dev_mgr;
     PHCD hcd;
-    BOOL is_hub, found;
+    BOOLEAN is_hub, found;
     ULONG dev_id;
     int i;
 
@@ -623,7 +624,7 @@ dev_mgr_disconnect_dev(PUSB_DEV pdev)
             if ((((PUSB_EVENT) pthis)->flags & USB_EVENT_FLAG_QUE_TYPE) != USB_EVENT_FLAG_NOQUE)
             {
                 //has a queue, re-insert the queue
-                if (p1 = (PLIST_ENTRY) ((PUSB_EVENT) pthis)->pnext)
+                if ((p1 = (PLIST_ENTRY) ((PUSB_EVENT) pthis)->pnext))
                 {
                     InsertHeadList(&dev_mgr->event_list, p1);
                     free_event(&dev_mgr->event_pool, struct_ptr(pthis, USB_EVENT, event_link));

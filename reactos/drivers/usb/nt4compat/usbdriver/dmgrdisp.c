@@ -24,7 +24,6 @@
 VOID
 disp_urb_completion(PURB purb, PVOID context)
 {
-    PUSB_CTRL_SETUP_PACKET psetup;
     PUSB_DEV_MANAGER dev_mgr;
     ULONG ctrl_code;
     NTSTATUS status;
@@ -141,7 +140,7 @@ dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
     PIO_STACK_LOCATION irp_stack;
     NTSTATUS status;
     ULONG ctrl_code;
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;
 
     if (dev_mgr == NULL || irp == NULL)
     {
@@ -261,7 +260,6 @@ dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
                 {
                     GET_DEV_DESC_REQ gddr;
                     PUSB_DESC_HEADER pusb_desc_header;
-                    KIRQL old_irql;
                     PUSB_DEV pdev;
                     LONG buf_size;
 
@@ -357,16 +355,12 @@ dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
             case IOCTL_SUBMIT_URB_WR:
             case IOCTL_SUBMIT_URB_NOIO:
                 {
-                    LONG buf_size;
                     PURB purb;
-                    KIRQL old_irql;
                     ULONG endp_idx, if_idx, user_buffer_length = 0;
                     PUCHAR user_buffer = NULL;
                     PUSB_DEV pdev;
                     DEV_HANDLE endp_handle;
                     PUSB_ENDPOINT pendp;
-
-                    PUSB_CTRL_SETUP_PACKET psetup;
 
                     if (irp_stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(URB))
                     {

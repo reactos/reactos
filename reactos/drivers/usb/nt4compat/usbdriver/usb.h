@@ -4,10 +4,6 @@
  * Some USB bandwidth allocation constants.
  */
 
-#ifndef BOOL
-#define BOOL ULONG
-#endif
-
 typedef unsigned long ULONG_PTR, *PULONG_PTR;
 
 #define USB2_HOST_DELAY	5			/* nsec, guess */
@@ -43,7 +39,7 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #define endp_from_handle( pDEV, hanDLE, peNDP ) \
 {\
     LONG if_idx, endp_idx;\
-	BOOL def_endp; \
+	BOOLEAN def_endp; \
     endp_idx = endp_idx_from_handle( hanDLE );\
     if_idx = if_idx_from_handle( hanDLE );\
     def_endp = ( ( hanDLE & 0xffff ) == 0xffff ); \
@@ -1020,12 +1016,12 @@ LONG idx,
 LONG cfg_count
 );
 
-ULONG
+BOOLEAN
 usb_skip_if_and_altif(
 PUCHAR* pdesc_BUF
 );
 
-ULONG
+BOOLEAN
 usb_skip_one_config(
 PUCHAR* pconfig_desc_BUF
 ); 
@@ -1040,7 +1036,7 @@ usb_wait_us_dpc(
 ULONG us
 );
 
-ULONG
+BOOLEAN
 usb_query_clicks(
 PLARGE_INTEGER	clicks 
 );
@@ -1061,7 +1057,7 @@ usb_call_ctrl_completion(
 PURB purb
 );
 
-BOOL
+BOOLEAN
 is_header_match(
 PUCHAR pbuf,
 ULONG type

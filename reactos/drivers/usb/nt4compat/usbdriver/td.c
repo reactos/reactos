@@ -23,17 +23,16 @@
 
 #define UHCI_MIN_TD_POOLS 4
 
-BOOL free_td_to_pool(PUHCI_TD_POOL ptd_pool, PUHCI_TD ptd);     //add tds till pnext == NULL
+BOOLEAN free_td_to_pool(PUHCI_TD_POOL ptd_pool, PUHCI_TD ptd);     //add tds till pnext == NULL
 
 
 PUHCI_QH alloc_qh(PUHCI_QH_POOL pqh_pool);      //null if failed
 
-BOOL
+BOOLEAN
 init_td_pool(PUHCI_TD_POOL ptd_pool)
 {
     int i, pages;
     PTD_EXTENSION ptde;
-    PHYSICAL_ADDRESS phys_addr;
 
     if (ptd_pool == NULL)
         return FALSE;
@@ -109,7 +108,7 @@ failed:
 }
 
 //add tds till pnext == NULL
-BOOL
+BOOLEAN
 free_td_to_pool(PUHCI_TD_POOL ptd_pool, PUHCI_TD ptd)
 {
     if (ptd_pool == NULL || ptd == NULL)
@@ -159,7 +158,7 @@ alloc_td_from_pool(PUHCI_TD_POOL ptd_pool)
 }
 
 //test whether the pool is all free
-BOOL
+BOOLEAN
 is_pool_free(PUHCI_TD_POOL pool)
 {
     if (pool == NULL)
@@ -171,7 +170,7 @@ is_pool_free(PUHCI_TD_POOL pool)
     return FALSE;
 }
 
-BOOL
+BOOLEAN
 is_pool_empty(PUHCI_TD_POOL pool)
 {
     if (pool == NULL)
@@ -180,7 +179,7 @@ is_pool_empty(PUHCI_TD_POOL pool)
     return (pool->free_count == 0);
 }
 
-BOOL
+BOOLEAN
 destroy_td_pool(PUHCI_TD_POOL ptd_pool)
 {
     int i, pages;
@@ -213,7 +212,7 @@ destroy_td_pool(PUHCI_TD_POOL ptd_pool)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 init_td_pool_list(PUHCI_TD_POOL_LIST pool_list, PADAPTER_OBJECT padapter)
 {
     int i;
@@ -234,7 +233,7 @@ init_td_pool_list(PUHCI_TD_POOL_LIST pool_list, PADAPTER_OBJECT padapter)
     return expand_pool_list(pool_list, UHCI_MIN_TD_POOLS);
 }
 
-BOOL
+BOOLEAN
 destroy_td_pool_list(PUHCI_TD_POOL_LIST pool_list)
 {
     PUHCI_TD_POOL pool;
@@ -248,7 +247,7 @@ destroy_td_pool_list(PUHCI_TD_POOL_LIST pool_list)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 expand_pool_list(PUHCI_TD_POOL_LIST pool_list, LONG pool_count) //private
 {
     PUHCI_TD_POOL pool;
@@ -279,7 +278,7 @@ expand_pool_list(PUHCI_TD_POOL_LIST pool_list, LONG pool_count) //private
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 collect_garbage(PUHCI_TD_POOL_LIST pool_list)
 {
     PLIST_ENTRY prev, next;
@@ -329,7 +328,7 @@ get_max_free_tds(PUHCI_TD_POOL_LIST pool_list)
 }
 
 //add tds till pnext == NULL
-BOOL
+BOOLEAN
 free_td(PUHCI_TD_POOL_LIST pool_list, PUHCI_TD ptd)
 {
     if (pool_list == NULL || ptd == NULL)
@@ -443,7 +442,7 @@ free_tds(PUHCI_TD_POOL_LIST pool_list, PUHCI_TD ptd)
 
 
 
-BOOL
+BOOLEAN
 can_transfer(PUHCI_TD_POOL_LIST pool_list, LONG td_count)
 {
     if (td_count > get_max_free_tds(pool_list))
@@ -453,7 +452,7 @@ can_transfer(PUHCI_TD_POOL_LIST pool_list, LONG td_count)
 }
 
 VOID
-lock_td_pool(PUHCI_TD_POOL_LIST pool_list, BOOL at_dpc)
+lock_td_pool(PUHCI_TD_POOL_LIST pool_list, BOOLEAN at_dpc)
 {
     //if( !at_dpc )
     //        KeAcquireSpinLock( &pool_list->pool_lock );
@@ -462,7 +461,7 @@ lock_td_pool(PUHCI_TD_POOL_LIST pool_list, BOOL at_dpc)
 }
 
 VOID
-unlock_td_pool(PUHCI_TD_POOL_LIST pool_list, BOOL at_dpc)
+unlock_td_pool(PUHCI_TD_POOL_LIST pool_list, BOOLEAN at_dpc)
 {
     //if( !at_dpc )
     //    KeReleaseSpinLock( &pool_list->pool_lock );
@@ -470,7 +469,7 @@ unlock_td_pool(PUHCI_TD_POOL_LIST pool_list, BOOL at_dpc)
     //        KeReleaseSpinLockFromDpcLevel( &pool_list->pool_lock );
 }
 
-BOOL
+BOOLEAN
 init_qh_pool(PUHCI_QH_POOL pqh_pool, PADAPTER_OBJECT padapter)
 {
     PQH_EXTENSION pqhe;
@@ -526,7 +525,7 @@ init_qh_pool(PUHCI_QH_POOL pqh_pool, PADAPTER_OBJECT padapter)
 }
 
 //add qhs till pnext == NULL
-BOOL
+BOOLEAN
 free_qh(PUHCI_QH_POOL pqh_pool, PUHCI_QH pqh)
 {
     if (pqh_pool == NULL || pqh == NULL)
@@ -564,11 +563,9 @@ alloc_qh(PUHCI_QH_POOL pqh_pool)
 
 }
 
-BOOL
+BOOLEAN
 destroy_qh_pool(PUHCI_QH_POOL pqh_pool)
 {
-    int i;
-
     if (pqh_pool)
     {
         usb_free_mem(pqh_pool->qhe_array);
@@ -587,7 +584,7 @@ destroy_qh_pool(PUHCI_QH_POOL pqh_pool)
 }
 
 VOID
-lock_qh_pool(PUHCI_QH_POOL pool, BOOL at_dpc)
+lock_qh_pool(PUHCI_QH_POOL pool, BOOLEAN at_dpc)
 {
     //if( !at_dpc )
     //        KeAcquireSpinLock( &pool->pool_lock );
@@ -596,7 +593,7 @@ lock_qh_pool(PUHCI_QH_POOL pool, BOOL at_dpc)
 }
 
 VOID
-unlock_qh_pool(PUHCI_QH_POOL pool, BOOL at_dpc)
+unlock_qh_pool(PUHCI_QH_POOL pool, BOOLEAN at_dpc)
 {
     //if( !at_dpc )
     //        KeReleaseSpinLock( &pool->pool_lock );

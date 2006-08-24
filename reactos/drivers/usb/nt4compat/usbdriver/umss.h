@@ -234,7 +234,7 @@ typedef struct _UMSS_DEVICE_EXTENSION
 	KEVENT					sync_event; //for umss_sync_submit_urb
 	KSPIN_LOCK				dev_lock;
 	IO_PACKET				io_packet;
-	BOOL					retry;
+	BOOLEAN					retry;
 
 	PUSB_DRIVER				pdriver;	//used by umss_delete_device
 	NTSTATUS				reset_pipe_status;
@@ -263,19 +263,19 @@ typedef struct _UMSS_WORKER_PACKET
 
 } UMSS_WORKER_PACKET, *PUMSS_WORKER_PACKET;
     
-BOOL
+BOOLEAN
 umss_driver_init(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 umss_if_driver_init(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
 );
 
-BOOL
+BOOLEAN
 umss_driver_destroy(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
@@ -283,7 +283,7 @@ PUSB_DRIVER pdriver
 
 #define umss_if_driver_destroy umss_driver_destroy
 
-BOOL
+BOOLEAN
 umss_if_driver_destroy(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DRIVER pdriver
@@ -316,7 +316,7 @@ IN ULONG buf_length,
 IN PURBCOMPLETION completion 
 );
 
-BOOL
+BOOLEAN
 umss_schedule_workitem(
 PVOID context,
 UMSS_WORKER_ROUTINE completion,

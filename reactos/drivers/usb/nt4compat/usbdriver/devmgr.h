@@ -9,9 +9,9 @@ typedef struct _CONNECT_DATA
 
 } CONNECT_DATA, *PCONNECT_DATA;
 
-typedef BOOL ( *PDEV_CONNECT_EX )( PCONNECT_DATA init_param, DEV_HANDLE dev_handle );
-typedef BOOL ( *PDEV_CONNECT )( struct _USB_DEV_MANAGER *dev_mgr, DEV_HANDLE dev_handle );
-typedef BOOL ( *PDRVR_INIT )( struct _USB_DEV_MANAGER *dev_mgr, struct _USB_DRIVER *pdriver );
+typedef BOOLEAN ( *PDEV_CONNECT_EX )( PCONNECT_DATA init_param, DEV_HANDLE dev_handle );
+typedef BOOLEAN ( *PDEV_CONNECT )( struct _USB_DEV_MANAGER *dev_mgr, DEV_HANDLE dev_handle );
+typedef BOOLEAN ( *PDRVR_INIT )( struct _USB_DEV_MANAGER *dev_mgr, struct _USB_DRIVER *pdriver );
 
 typedef struct _PNP_DISPATCH
 {
@@ -88,7 +88,7 @@ typedef struct _USB_DEV_MANAGER
 	//PDEVICE_EXTENSION 	pdev_ext;
 	
 	PVOID				pthread;	
-	BOOL    			term_flag;
+	BOOLEAN    			term_flag;
 	KEVENT       		wake_up_event;
 
     KSPIN_LOCK          event_list_lock;
@@ -115,13 +115,13 @@ typedef struct _USB_DEV_MANAGER
 
 } USB_DEV_MANAGER, *PUSB_DEV_MANAGER;
 
-BOOL
+BOOLEAN
 dev_mgr_post_event(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_EVENT event
 );
 
-BOOL
+BOOLEAN
 dev_mgr_init(
 PUSB_DEV dev,		//always null. we do not use this param
 ULONG event,
@@ -133,12 +133,12 @@ dev_mgr_destroy(
 PUSB_DEV_MANAGER dev_mgr
 );
 
-VOID
+VOID NTAPI
 dev_mgr_thread(
 PVOID dev_mgr
 );
 
-VOID
+VOID NTAPI
 dev_mgr_timer_dpc_callback(
 PKDPC Dpc,
 PVOID DeferredContext,
@@ -146,7 +146,7 @@ PVOID SystemArgument1,
 PVOID SystemArgument2
 );
 
-BOOL
+BOOLEAN
 dev_mgr_request_timer_svc(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DEV pdev,
@@ -161,7 +161,7 @@ PUSB_DEV_MANAGER dev_mgr,
 PHCD hcd
 );
 
-BOOL
+BOOLEAN
 dev_mgr_free_addr(
 PUSB_DEV_MANAGER dev_mgr,
 PUSB_DEV pdev,
@@ -185,7 +185,7 @@ dev_mgr_disconnect_dev(
 PUSB_DEV pdev
 );
 
-BOOL
+BOOLEAN
 dev_mgr_strobe(
 PUSB_DEV_MANAGER dev_mgr
 );
@@ -210,7 +210,7 @@ IN PUSB_DEV_MANAGER dev_mgr,
 IN PIRP           	irp
 );
 
-BOOL
+BOOLEAN
 dev_mgr_register_irp(
 PUSB_DEV_MANAGER dev_mgr,
 PIRP pirp,
@@ -230,7 +230,7 @@ PUSB_DRIVER pdriver,
 PUSB_INTERFACE_DESC pif_desc
 );
 
-BOOL
+BOOLEAN
 dev_mgr_set_driver(
 PUSB_DEV_MANAGER dev_mgr,
 DEV_HANDLE dev_handle,
@@ -238,7 +238,7 @@ PUSB_DRIVER pdriver,
 PUSB_DEV pdev	//if pdev != NULL, we use pdev instead if_handle
 );
 
-BOOL
+BOOLEAN
 dev_mgr_set_if_driver(
 PUSB_DEV_MANAGER dev_mgr,
 DEV_HANDLE if_handle,
@@ -256,8 +256,8 @@ dev_mgr_start_hcd(
 PUSB_DEV_MANAGER dev_mgr
 );
 
-BOOL dev_mgr_start_config_dev(PUSB_DEV pdev);
-BOOL dev_mgr_event_init(PUSB_DEV dev,   //always null. we do not use this param
+BOOLEAN dev_mgr_start_config_dev(PUSB_DEV pdev);
+BOOLEAN dev_mgr_event_init(PUSB_DEV dev,   //always null. we do not use this param
                         ULONG event,
                         ULONG context,
                         ULONG param);
@@ -265,7 +265,7 @@ VOID dev_mgr_get_desc_completion(PURB purb, PVOID context);
 VOID dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG param);
 LONG dev_mgr_score_driver_for_dev(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver, PUSB_DEVICE_DESC pdev_desc);
 NTSTATUS dev_mgr_destroy_usb_config(PUSB_CONFIGURATION pcfg);
-BOOL dev_mgr_start_select_driver(PUSB_DEV pdev);
+BOOLEAN dev_mgr_start_select_driver(PUSB_DEV pdev);
 VOID dev_mgr_cancel_irp(PDEVICE_OBJECT pdev_obj, PIRP pirp);
 
 #endif

@@ -116,7 +116,7 @@ usb_query_and_lock_dev(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle, PUSB_DEV
     int i;
     PLIST_ENTRY pthis, pnext;
     PUSB_DEV pdev = NULL;
-    BOOL valid_dev;
+    BOOLEAN valid_dev;
 
     USE_NON_PENDING_IRQL;
 
@@ -357,10 +357,10 @@ usb_reset_pipe_from_dispatch_completion(PURB purb, PVOID param)
 }
 
 //used to check descriptor validity
-BOOL
-is_header_match(PBYTE pbuf, ULONG type)
+BOOLEAN
+is_header_match(PUCHAR pbuf, ULONG type)
 {
-    BOOL ret;
+    BOOLEAN ret;
     PUSB_DESC_HEADER phdr;
     phdr = (PUSB_DESC_HEADER) pbuf;
 
@@ -392,7 +392,7 @@ is_header_match(PBYTE pbuf, ULONG type)
     return ret;
 }
 
-BOOL
+BOOLEAN
 usb_skip_endp_desc(PBYTE * pbUF, LONG n)
 {
     if (is_header_match(*pbUF, USB_DT_ENDPOINT))
@@ -403,10 +403,10 @@ usb_skip_endp_desc(PBYTE * pbUF, LONG n)
     return FALSE;
 }
 
-BOOL
+BOOLEAN
 usb_skip_if_desc(PBYTE * pBUF)
 {
-    BOOL ret;
+    BOOLEAN ret;
     PUSB_INTERFACE_DESC pif_desc = (PUSB_INTERFACE_DESC) * pBUF;
     LONG endp_count;
     ret = is_header_match((PBYTE) * pBUF, USB_DT_INTERFACE);
@@ -426,10 +426,10 @@ usb_skip_if_desc(PBYTE * pBUF)
     return ret;
 }
 
-BOOL
+BOOLEAN
 usb_skip_if_and_altif(PUCHAR * pdesc_BUF)
 {
-    BOOL ret;
+    BOOLEAN ret;
     PUSB_INTERFACE_DESC pif_desc1 = (PUSB_INTERFACE_DESC) * pdesc_BUF;
     ret = is_header_match(*pdesc_BUF, USB_DT_INTERFACE);
     if (ret == TRUE)
@@ -449,11 +449,11 @@ usb_skip_if_and_altif(PUCHAR * pdesc_BUF)
     return ret;
 }
 
-BOOL
+BOOLEAN
 usb_skip_one_config(PUCHAR *pconfig_desc_BUF)
 {
     LONG if_count, i;
-    BOOL ret;
+    BOOLEAN ret;
     PUSB_CONFIGURATION_DESC pcfg_DESC = (PUSB_CONFIGURATION_DESC) * pconfig_desc_BUF;
     PUSB_INTERFACE_DESC pif_desc2 = (PUSB_INTERFACE_DESC) & pcfg_DESC[1];
 
@@ -487,7 +487,7 @@ PUSB_CONFIGURATION_DESC
 usb_find_config_desc_by_idx(PUCHAR pbuf, LONG idx, LONG cfg_count)
 {
     LONG i;
-    BOOL ret;
+    BOOLEAN ret;
     PUSB_CONFIGURATION_DESC pcfg_desc = (PUSB_CONFIGURATION_DESC) pbuf;
     if (pcfg_desc == NULL)
         return NULL;
@@ -514,7 +514,7 @@ PUSB_CONFIGURATION_DESC
 usb_find_config_desc_by_val(PBYTE pbuf, LONG val, LONG cfg_count)
 {
     LONG i;
-    BOOL ret;
+    BOOLEAN ret;
     PUSB_CONFIGURATION_DESC pcfg_desc = (PUSB_CONFIGURATION_DESC) pbuf;
     if (pcfg_desc == NULL)
         return NULL;
@@ -733,7 +733,7 @@ usb_submit_urb(PUSB_DEV_MANAGER dev_mgr, PURB purb)
         else if (psetup->bmRequestType == 0x02 && psetup->bRequest == USB_REQ_CLEAR_FEATURE && psetup->wValue == 0)     //reset pipe
         {
             ULONG endp_addr;
-            BOOL found;
+            BOOLEAN found;
             endp_addr = psetup->wIndex;
             if ((endp_addr & 0xf) == 0)
             {
@@ -978,10 +978,10 @@ usb_count_list(PLIST_HEAD list_head)
 }
 
 // checks if processor supports Time Stamp Counter
-__inline BOOL
+__inline BOOLEAN
 usb_query_clicks(PLARGE_INTEGER clicks)
 {
-    BOOL ret_val;
+    BOOLEAN ret_val;
     //so we have to use intel's cpu???
     ret_val = FALSE;
 

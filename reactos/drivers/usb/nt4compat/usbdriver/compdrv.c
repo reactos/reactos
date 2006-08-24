@@ -24,11 +24,11 @@
 
 VOID compdev_set_cfg_completion(PURB purb, PVOID context);
 VOID compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
-BOOL compdev_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle);
-BOOL compdev_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
-BOOL compdev_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN compdev_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle);
+BOOLEAN compdev_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN compdev_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
-BOOL
+BOOLEAN
 compdev_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     if (dev_mgr == NULL || pdriver == NULL)
@@ -63,20 +63,20 @@ compdev_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 compdev_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 compdev_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     PURB purb;
     PUSB_CTRL_SETUP_PACKET psetup;
     NTSTATUS status;
     PUCHAR buf;
-    LONG credit, i, j, match;
+    LONG credit, i, j;
     PUSB_CONFIGURATION_DESC pconfig_desc;
     PUSB_INTERFACE_DESC pif_desc;
     PUSB_DEV_MANAGER dev_mgr;
@@ -195,7 +195,6 @@ compdev_event_select_if_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG 
 {
     PUSB_DEV_MANAGER dev_mgr;
     DEV_HANDLE dev_handle;
-    PUMSS_CREATE_DATA cd;
 
     if (pdev == NULL)
         return;
@@ -209,14 +208,13 @@ compdev_event_select_if_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG 
     return;
 }
 
-BOOL
+BOOLEAN
 compdev_post_event_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     PUSB_EVENT pevent;
-    BOOL bret;
+    BOOLEAN bret;
     PUSB_DEV pdev;
-
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (dev_mgr == NULL || dev_handle == 0)
         return FALSE;
@@ -265,12 +263,10 @@ compdev_set_cfg_completion(PURB purb, PVOID context)
 {
     DEV_HANDLE dev_handle;
     PUSB_DEV_MANAGER dev_mgr;
-    PWORK_QUEUE_ITEM pwork_item;
     PUSB_DRIVER pdriver;
     NTSTATUS status;
     PUSB_DEV pdev;
-
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL || context == NULL)
         return;
@@ -337,8 +333,6 @@ compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
     PUSB_INTERFACE_DESC pif_desc;
     PUSB_CONFIGURATION_DESC pconfig_desc;
     PUSB_DEV pdev;
-
-    USE_IRQL;
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("compdev_select_driver(): entering...\n"));
 
@@ -425,7 +419,7 @@ compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
     return;
 }
 
-BOOL
+BOOLEAN
 compdev_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     PUSB_DEV pdev;
@@ -446,7 +440,7 @@ compdev_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
         {
             for(i = 0; i < pdev->usb_config->if_count; i++)
             {
-                if (pdrv = pdev->usb_config->interf[i].pif_drv)
+                if ((pdrv = pdev->usb_config->interf[i].pif_drv))
                 {
                     pdrv->disp_tbl.dev_stop(dev_mgr, usb_make_handle(dev_id, i, 0));
                 }
@@ -460,7 +454,7 @@ compdev_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 compdev_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     PUSB_DEV pdev;
@@ -481,7 +475,7 @@ compdev_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
         {
             for(i = 0; i < pdev->usb_config->if_count; i++)
             {
-                if (pdrv = pdev->usb_config->interf[i].pif_drv)
+                if ((pdrv = pdev->usb_config->interf[i].pif_drv))
                 {
                     pdrv->disp_tbl.dev_disconnect(dev_mgr, usb_make_handle(dev_id, i, 0));
                 }

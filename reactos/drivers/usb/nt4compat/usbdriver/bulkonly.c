@@ -25,7 +25,7 @@
 #define OLYMPUS_CSW( pdev_EXT, staTUS ) \
 ( ( ( pdev_EXT )->flags & UMSS_DEV_FLAG_OLYMPUS_DEV ) ? ( ( staTUS ) == CSW_OLYMPUS_SIGNATURE ) : FALSE )
 
-BOOL umss_clear_pass_through_length(PIO_PACKET io_packet);
+BOOLEAN umss_clear_pass_through_length(PIO_PACKET io_packet);
 
 NTSTATUS umss_bulkonly_send_sense_req(PUMSS_DEVICE_EXTENSION pdev_ext);
 
@@ -665,7 +665,7 @@ umss_get_buffer(PUMSS_DEVICE_EXTENSION pdev_ext, ULONG * buf_length)
     return buffer;
 }
 
-BOOL
+BOOLEAN
 umss_bulkonly_build_sense_cdb(PUMSS_DEVICE_EXTENSION pdev_ext, PCOMMAND_BLOCK_WRAPPER cbw)
 {
     UCHAR sub_class;
@@ -744,14 +744,14 @@ umss_bulkonly_send_sense_req(PUMSS_DEVICE_EXTENSION pdev_ext)
     return status;
 }
 
-BOOL
+BOOLEAN
 umss_clear_pass_through_length(PIO_PACKET io_packet)
 {
     //
     // clear the respective data length to meet request of scsi pass through requirement.
     //
 
-    BOOL sense_stage;
+    BOOLEAN sense_stage;
     ULONG ctrl_code;
     PIO_STACK_LOCATION cur_stack;
     PSCSI_PASS_THROUGH pass_through;

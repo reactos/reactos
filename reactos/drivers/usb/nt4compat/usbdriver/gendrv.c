@@ -71,19 +71,19 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                    IN ACCESS_MASK DesiredAccess OPTIONAL,
                    IN OUT PVOID ParseContext OPTIONAL, OUT PHANDLE Handle);
 
-BOOL gendrv_if_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
+BOOLEAN gendrv_if_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
 
 VOID gendrv_set_cfg_completion(PURB purb, PVOID context);
 
-BOOL gendrv_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle);
+BOOLEAN gendrv_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle);
 
-BOOL gendrv_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN gendrv_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
-BOOL gendrv_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN gendrv_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
 VOID gendrv_startio(IN PDEVICE_OBJECT dev_obj, IN PIRP irp);
 
-VOID gendrv_cancel_queued_irp(PDEVICE_OBJECT pdev_obj, PIRP pirp);
+VOID NTAPI gendrv_cancel_queued_irp(PDEVICE_OBJECT pdev_obj, PIRP pirp);
 
 VOID gendrv_release_ext_drvr_entry(PGENDRV_DRVR_EXTENSION pdrvr_ext, PGENDRV_EXT_DRVR_ENTRY pentry);
 
@@ -101,13 +101,13 @@ gendrv_open_reg_key(OUT PHANDLE handle,
                     IN HANDLE base_handle OPTIONAL,
                     IN PUNICODE_STRING keyname, IN ACCESS_MASK desired_access, IN BOOLEAN create);
 
-BOOL gendrv_do_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle, BOOL is_if);
+BOOLEAN gendrv_do_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle, BOOLEAN is_if);
 
-BOOL gendrv_do_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle, BOOL is_if);
+BOOLEAN gendrv_do_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle, BOOLEAN is_if);
 
 NTSTATUS gendrv_send_pnp_msg(ULONG msg, PDEVICE_OBJECT pdev_obj, PVOID pctx);
 
-BOOL gendrv_delete_device(PUSB_DEV_MANAGER dev_mgr, PDEVICE_OBJECT dev_obj);
+BOOLEAN gendrv_delete_device(PUSB_DEV_MANAGER dev_mgr, PDEVICE_OBJECT dev_obj);
 
 PDEVICE_OBJECT gendrv_create_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER gen_drvr, DEV_HANDLE dev_handle);
 
@@ -117,7 +117,7 @@ PDRIVER_OBJECT gendrv_find_drvr_by_key(PGENDRV_DRVR_EXTENSION pdrvr_ext, ULONG k
 
 ULONG gendrv_make_key(PUSB_DESC_HEADER pdesc);
 
-BOOL
+BOOLEAN
 gendrv_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     PGENDRV_DRVR_EXTENSION pdrvr_ext;
@@ -161,13 +161,13 @@ gendrv_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 gendrv_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     return gendrv_if_driver_destroy(dev_mgr, pdriver);
 }
 
-BOOL
+BOOLEAN
 gendrv_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     PURB purb;
@@ -265,7 +265,7 @@ gendrv_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 gendrv_event_select_driver(PUSB_DEV pdev,       //always null. we do not use this param
                            ULONG event, ULONG context, ULONG param)
 {
@@ -456,7 +456,7 @@ gendrv_set_cfg_completion(PURB purb, PVOID context)
 }
 
 
-BOOL
+BOOLEAN
 gendrv_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     if (dev_mgr == NULL)
@@ -464,7 +464,7 @@ gendrv_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
     return gendrv_do_stop(dev_mgr, dev_handle, FALSE);
 }
 
-BOOL
+BOOLEAN
 gendrv_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     if (dev_mgr == NULL)
@@ -472,7 +472,7 @@ gendrv_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
     return gendrv_do_disconnect(dev_mgr, dev_handle, FALSE);
 }
 
-BOOL
+BOOLEAN
 gendrv_build_reg_string(PUSB_DESC_HEADER pdesc, PUNICODE_STRING pus)
 {
 
@@ -712,7 +712,7 @@ gendrv_send_pnp_msg(ULONG msg, PDEVICE_OBJECT pdev_obj, PVOID pctx)
 }
 
 
-BOOL
+BOOLEAN
 gendrv_if_connect(PCONNECT_DATA params, DEV_HANDLE if_handle)
 {
     //
@@ -845,8 +845,8 @@ gendrv_if_connect(PCONNECT_DATA params, DEV_HANDLE if_handle)
     return FALSE;
 }
 
-BOOL
-gendrv_do_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle, BOOL is_if)
+BOOLEAN
+gendrv_do_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle, BOOLEAN is_if)
 {
     PUSB_DEV pdev;
     PDEVICE_OBJECT pdev_obj;
@@ -875,7 +875,7 @@ gendrv_do_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle, BOOL is_if)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 gendrv_if_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     if (dev_mgr == NULL)
@@ -884,8 +884,8 @@ gendrv_if_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
     return gendrv_do_stop(dev_mgr, dev_handle, TRUE);
 }
 
-BOOL
-gendrv_do_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle, BOOL is_if)
+BOOLEAN
+gendrv_do_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle, BOOLEAN is_if)
 {
     PUSB_DEV pdev;
     PDEVICE_OBJECT dev_obj = NULL;
@@ -938,13 +938,13 @@ gendrv_do_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle, BOOL is_if)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 gendrv_if_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle)
 {
     return gendrv_do_disconnect(dev_mgr, if_handle, TRUE);
 }
 
-BOOL
+BOOLEAN
 gendrv_if_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     PGENDRV_DRVR_EXTENSION pdrvr_ext;
@@ -989,7 +989,7 @@ gendrv_if_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 gendrv_if_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     PGENDRV_DRVR_EXTENSION pdrvr_ext;
@@ -1068,7 +1068,7 @@ gendrv_open_ext_driver(PUNICODE_STRING unicode_string)
     return pdrvr;
 }
 
-BOOL
+BOOLEAN
 gendrv_close_ext_driver(PDRIVER_OBJECT pdrvr)
 {
     if (pdrvr == NULL)
@@ -1206,7 +1206,7 @@ gendrv_dispatch(PDEVICE_OBJECT dev_obj, PIRP irp)
     return STATUS_NOT_SUPPORTED;
 }
 
-BOOL
+BOOLEAN
 gendrv_init_dev_ext_hdr(PDEVICE_OBJECT dev_obj, PUSB_DEV_MANAGER dev_mgr)
 {
     PDEVEXT_HEADER dev_hdr = NULL;
@@ -1223,7 +1223,7 @@ gendrv_init_dev_ext_hdr(PDEVICE_OBJECT dev_obj, PUSB_DEV_MANAGER dev_mgr)
 PDEVICE_OBJECT
 gendrv_create_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER gen_drvr, DEV_HANDLE dev_handle)
 {
-    BOOL is_if;
+    BOOLEAN is_if;
     PDEVICE_OBJECT pdev;
     PGENDRV_DEVICE_EXTENSION pdev_ext;
     ULONG dev_id;
@@ -1333,10 +1333,10 @@ gendrv_deferred_delete_device(PVOID context)
     return;
 }
 
-BOOL
+BOOLEAN
 gendrv_delete_device(PUSB_DEV_MANAGER dev_mgr, PDEVICE_OBJECT dev_obj)
 {
-    BOOL is_if;
+    BOOLEAN is_if;
     PUSB_DRIVER pdrvr;
     PGENDRV_DEVICE_EXTENSION pdev_ext;
     UCHAR dev_name[64];
@@ -1784,6 +1784,7 @@ gendrv_clean_up_queued_irps(PDEVICE_OBJECT dev_obj)
 }
 
 VOID
+NTAPI
 gendrv_cancel_queued_irp(PDEVICE_OBJECT dev_obj, PIRP pirp)
 {
     // cancel routine for irps queued in the device queue

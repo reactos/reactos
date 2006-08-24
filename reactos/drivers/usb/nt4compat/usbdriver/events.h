@@ -56,12 +56,12 @@ typedef struct _USB_EVENT_POOL
 
 } USB_EVENT_POOL, *PUSB_EVENT_POOL;
 
-BOOL
+BOOLEAN
 init_event_pool(
 PUSB_EVENT_POOL pool
 );
 
-BOOL
+BOOLEAN
 free_event(
 PUSB_EVENT_POOL pool,
 PUSB_EVENT pevent
@@ -73,7 +73,7 @@ PUSB_EVENT_POOL pool,
 LONG count
 );  //null if failed
 
-BOOL
+BOOLEAN
 destroy_event_pool(
 PUSB_EVENT_POOL pool
 );
@@ -114,11 +114,11 @@ typedef struct _TIMER_SVC_POOL
 
 } TIMER_SVC_POOL, *PTIMER_SVC_POOL;
 
-BOOL
+BOOLEAN
 init_timer_svc_pool(
 PTIMER_SVC_POOL pool
 );
-BOOL
+BOOLEAN
 free_timer_svc(
 PTIMER_SVC_POOL pool,
 PTIMER_SVC ptimer
@@ -130,7 +130,7 @@ PTIMER_SVC_POOL pool,
 LONG count
 );  //null if failed
 
-BOOL
+BOOLEAN
 destroy_timer_svc_pool(
 PTIMER_SVC_POOL pool
 );

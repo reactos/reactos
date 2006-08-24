@@ -21,7 +21,7 @@ typedef struct _IRP_LIST
 
 } IRP_LIST, *PIRP_LIST;
 
-BOOL
+BOOLEAN
 init_irp_list( 
 PIRP_LIST irp_list
 );
@@ -31,7 +31,7 @@ destroy_irp_list(
 PIRP_LIST irp_list
 );
 
-BOOL
+BOOLEAN
 add_irp_to_list(
 PIRP_LIST irp_list,
 PIRP pirp,
@@ -45,12 +45,12 @@ PIRP pirp,
 struct _USB_DEV_MANAGER *dev_mgr
 );
 
-BOOL
+BOOLEAN
 irp_list_empty(
 PIRP_LIST irp_list
 );
 
-BOOL
+BOOLEAN
 irp_list_full(
 PIRP_LIST irp_list
 );

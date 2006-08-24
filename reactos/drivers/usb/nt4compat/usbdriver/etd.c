@@ -83,8 +83,8 @@ LONG elem_list_release_ref(PEHCI_ELEM_LIST plist);
 
 LONG elem_list_get_ref(PEHCI_ELEM_LIST plist);
 
-BOOL
-elem_pool_lock(PEHCI_ELEM_POOL pool, BOOL at_dpc)
+BOOLEAN
+elem_pool_lock(PEHCI_ELEM_POOL pool, BOOLEAN at_dpc)
 {
     UNREFERENCED_PARAMETER(pool);
     UNREFERENCED_PARAMETER(at_dpc);
@@ -92,8 +92,8 @@ elem_pool_lock(PEHCI_ELEM_POOL pool, BOOL at_dpc)
     return TRUE;
 }
 
-BOOL
-elem_pool_unlock(PEHCI_ELEM_POOL pool, BOOL at_dpc)
+BOOLEAN
+elem_pool_unlock(PEHCI_ELEM_POOL pool, BOOLEAN at_dpc)
 {
     UNREFERENCED_PARAMETER(pool);
     UNREFERENCED_PARAMETER(at_dpc);
@@ -129,7 +129,7 @@ get_elem_phys_part_size(ULONG type)
     return size;
 }
 
-BOOL
+BOOLEAN
 elem_list_init_elem_list(PEHCI_ELEM_LIST plist, LONG init_flags, PVOID context, LONG count)
 {
     LONG pages, i, j, elms_per_page;
@@ -342,10 +342,9 @@ elem_list_get_ref(PEHCI_ELEM_LIST plist)
 // pool methods
 //
 
-BOOL
+BOOLEAN
 elem_pool_init_pool(PEHCI_ELEM_POOL pool, LONG flags, PVOID context)
 {
-    PADAPTER_OBJECT padapter;
     INIT_ELEM_LIST_CONTEXT init_ctx;
 
     if (pool == NULL || context == NULL)
@@ -458,7 +457,7 @@ elem_pool_free_elem(PEHCI_ELEM_LINKS elem_link)
     return;
 }
 
-BOOL
+BOOLEAN
 elem_pool_is_empty(PEHCI_ELEM_POOL pool)
 {
     PEHCI_ELEM_LIST pel;
@@ -522,7 +521,7 @@ elem_pool_alloc_elems(PEHCI_ELEM_POOL pool, LONG count)
     return elnk;
 }
 
-BOOL
+BOOLEAN
 elem_pool_free_elems(PEHCI_ELEM_LINKS elem_chains)
 {
     // note: no list head exists.
@@ -546,7 +545,7 @@ elem_pool_get_type(PEHCI_ELEM_POOL pool)
     return (pool->flags & 0xf);
 }
 
-BOOL
+BOOLEAN
 elem_pool_expand_pool(PEHCI_ELEM_POOL pool, LONG elem_count)
 {
     LONG elem_cnt_list, list_count, i, j;
@@ -590,7 +589,7 @@ elem_pool_expand_pool(PEHCI_ELEM_POOL pool, LONG elem_count)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 elem_pool_collect_garbage(PEHCI_ELEM_POOL pool)
 {
     LONG i, j, k, fl;
@@ -626,7 +625,7 @@ elem_pool_collect_garbage(PEHCI_ELEM_POOL pool)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 elem_pool_can_transfer(PEHCI_ELEM_POOL pool, LONG td_count)
 {
     LONG i;

@@ -11,10 +11,6 @@
 
 #define	HCD_ID_MASK		0xf
 
-#ifndef BOOL
-#define BOOL ULONG
-#endif
-
 #define HCD_DISP_READ_PORT_COUNT	1		// the param is a pointer to UCHAR
 #define HCD_DISP_READ_RH_DEV_CHANGE	2		// the param is a buffer to hold conn change on all the port 
 											// must have the rh dev_lock acquired
@@ -36,11 +32,11 @@ typedef NTSTATUS ( *PHCD_SUBMIT_URB )( struct _HCD* hcd, struct _USB_DEV *pdev, 
 typedef VOID ( *PHCD_GENERIC_URB_COMPLETION )(  struct _URB *purb, PVOID context ); //we can get te hcd from purb
 typedef struct _USB_DEV* ( *PHCD_GET_ROOT_HUB )(  struct _HCD* hcd );
 typedef VOID ( *PHCD_SET_ROOT_HUB )(  struct _HCD* hcd, struct _USB_DEV *root_hub );
-typedef BOOL ( *PHCD_REMOVE_DEVICE )( struct _HCD* hcd, struct _USB_DEV *pdev );
-typedef BOOL ( *PHCD_RH_RESET_PORT )( struct _HCD* hcd, UCHAR port_idx );   //must have the rh dev_lock acquired
-typedef BOOL ( *PHCD_RELEASE )( struct _HCD* hcd );   //must have the rh dev_lock acquired
+typedef BOOLEAN ( *PHCD_REMOVE_DEVICE )( struct _HCD* hcd, struct _USB_DEV *pdev );
+typedef BOOLEAN ( *PHCD_RH_RESET_PORT )( struct _HCD* hcd, UCHAR port_idx );   //must have the rh dev_lock acquired
+typedef BOOLEAN ( *PHCD_RELEASE )( struct _HCD* hcd );   //must have the rh dev_lock acquired
 typedef NTSTATUS( *PHCD_CANCEL_URB)( struct _HCD* hcd, struct _USB_DEV *pdev, struct _USB_ENDPOINT* pendp, struct _URB *purb );
-typedef BOOL ( *PHCD_START )( struct _HCD* hcd );   //must have the rh dev_lock acquired
+typedef BOOLEAN ( *PHCD_START )( struct _HCD* hcd );   //must have the rh dev_lock acquired
 typedef NTSTATUS ( *PHCD_DISPATCH )( struct _HCD* hcd, LONG disp_code, PVOID param ); // locking depends on type of code
 
 typedef struct _HCD

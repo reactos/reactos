@@ -21,12 +21,6 @@
 
 #include "usbdriver.h"
 
-// Hack for __field_ecount for a new WDK
-//FIXME: Move to a header file later
-#ifndef __field_ecount
-#    define __field_ecount(x)
-#endif
-
 #include <srb.h>
 #include <ntddscsi.h>
 #include <scsi.h>
@@ -69,32 +63,19 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
                    IN ACCESS_MASK DesiredAccess OPTIONAL,
                    IN OUT PVOID ParseContext OPTIONAL, OUT PHANDLE Handle);
 
-VOID umss_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp);
-
+VOID NTAPI umss_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp);
 NTSTATUS umss_port_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp);
-
-BOOL umss_connect(PCONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
-
-BOOL umss_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
-
-BOOL umss_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
-
+BOOLEAN umss_connect(PCONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN umss_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN umss_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 NTSTATUS umss_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp);
-
 VOID umss_set_cfg_completion(PURB purb, PVOID pcontext);
-
-VOID umss_start_create_device(IN PVOID Parameter);
-
-BOOL umss_delete_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr, PDEVICE_OBJECT dev_obj, BOOL is_if);
-
-BOOL umss_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
-
+VOID NTAPI umss_start_create_device(IN PVOID Parameter);
+BOOLEAN umss_delete_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr, PDEVICE_OBJECT dev_obj, BOOLEAN is_if);
+BOOLEAN umss_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 NTSTATUS umss_process_srb(PDEVICE_OBJECT dev_obj, PIRP irp);
-
 VOID umss_load_class_driver(PVOID context);
-
-BOOL umss_tsc_to_sff(PIO_PACKET io_packet);
-
+BOOLEAN umss_tsc_to_sff(PIO_PACKET io_packet);
 VOID umss_fix_sff_result(PIO_PACKET io_packet, SCSI_REQUEST_BLOCK * srb);
 
 PDEVICE_OBJECT
@@ -152,7 +133,7 @@ umss_create_port_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     return pdev;
 }
 
-BOOL
+BOOLEAN
 umss_delete_port_device(PDEVICE_OBJECT dev_obj)
 {
     UCHAR dev_name[64];
@@ -184,14 +165,11 @@ umss_delete_port_device(PDEVICE_OBJECT dev_obj)
 NTSTATUS
 umss_port_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp)
 {
-    KIRQL irql;
     ULONG ctrl_code;
     NTSTATUS status;
     PIO_STACK_LOCATION irp_stack;
     PUMSS_PORT_DEV_EXT pdev_ext;
     PUMSS_DRVR_EXTENSION pdrvr_ext;
-
-    USE_IRQL;
 
     if (pdev_obj == NULL || irp == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -246,12 +224,10 @@ umss_port_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp)
     EXIT_DISPATCH(STATUS_INVALID_DEVICE_REQUEST, irp);
 }
 
-BOOL
+BOOLEAN
 umss_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     PUMSS_DRVR_EXTENSION pdrvr_ext;
-    UNICODE_STRING unicode_string;
-    NTSTATUS status;
 
     if (dev_mgr == NULL || pdriver == NULL)
         return FALSE;
@@ -306,7 +282,7 @@ umss_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 umss_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     PUMSS_DRVR_EXTENSION pdrvr_ext;
@@ -326,7 +302,7 @@ umss_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 }
 
 PDEVICE_OBJECT
-umss_create_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER umss_drvr, DEV_HANDLE dev_handle, BOOL is_if)
+umss_create_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER umss_drvr, DEV_HANDLE dev_handle, BOOLEAN is_if)
 {
 
     UCHAR dev_name[64], dev_id;
@@ -407,7 +383,7 @@ umss_create_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER umss_drvr, DEV_HANDLE d
     return pdev;
 }
 
-BOOL
+BOOLEAN
 umss_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     PURB purb;
@@ -529,7 +505,7 @@ umss_set_cfg_completion(PURB purb, PVOID pcontext)
     ExQueueWorkItem(pwork_item, DelayedWorkQueue);
 }
 
-VOID
+VOID NTAPI
 umss_start_create_device(IN PVOID Parameter)
 {
     LONG i;
@@ -546,7 +522,7 @@ umss_start_create_device(IN PVOID Parameter)
     PUMSS_DEVICE_EXTENSION pdev_ext;
     PUSB_CONFIGURATION_DESC pconfig_desc;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (Parameter == NULL)
         return;
@@ -651,13 +627,13 @@ umss_start_create_device(IN PVOID Parameter)
     return;
 }
 
-BOOL
+BOOLEAN
 umss_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 umss_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
     PDEVICE_OBJECT dev_obj;
@@ -727,14 +703,12 @@ umss_deferred_delete_device(PVOID context)
     return;
 }
 
-BOOL
-umss_delete_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr, PDEVICE_OBJECT dev_obj, BOOL is_if)
+BOOLEAN
+umss_delete_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr, PDEVICE_OBJECT dev_obj, BOOLEAN is_if)
 {
     UCHAR dev_name[64];
     STRING string;
     UNICODE_STRING symb_link;
-
-    NTSTATUS status;
     PUMSS_DEVICE_EXTENSION pdev_ext;
     PUMSS_DRVR_EXTENSION pdrvr_ext;
 
@@ -827,17 +801,15 @@ umss_submit_io_packet(PDEVICE_OBJECT dev_obj, PIO_PACKET io_packet)
 }
 
 VOID
+NTAPI
 umss_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 {
-    KIRQL irql;
     ULONG ctrl_code;
     NTSTATUS status;
     PIO_STACK_LOCATION irp_stack;
     PUMSS_DEVICE_EXTENSION pdev_ext;
     IO_PACKET io_packet;
     PUSER_IO_PACKET user_io_packet;
-
-    USE_IRQL;
 
     if (dev_obj == NULL || irp == NULL)
         return;
@@ -865,8 +837,6 @@ umss_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
         case IOCTL_UMSS_SUBMIT_CDB_OUT:
         case IOCTL_UMSS_SUBMIT_CDB:
         {
-            PUSB_DEV pdev;
-
             if (irp_stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(USER_IO_PACKET))
             {
                 UMSS_COMPLETE_START_IO(dev_obj, STATUS_INVALID_PARAMETER, irp);
@@ -1012,13 +982,11 @@ umss_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 NTSTATUS
 umss_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp)
 {
-    KIRQL irql;
     ULONG ctrl_code;
     NTSTATUS status;
     PIO_STACK_LOCATION irp_stack;
     PUMSS_DEVICE_EXTENSION pdev_ext;
-
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev_obj == NULL || irp == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1049,7 +1017,6 @@ umss_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp)
                 {
                     PDEVICE_OBJECT fdo;
                     PUSB_DEV pdev;
-                    USE_IRQL;
 
                     if (irp_stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(PDEVICE_OBJECT))
                     {
@@ -1125,8 +1092,6 @@ umss_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp)
                 }
                 case IOCTL_GET_DEV_HANDLE:
                 {
-                    PUCHAR user_buffer;
-                    ULONG user_buffer_length;
                     if (irp_stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(LONG))
                         EXIT_DISPATCH(STATUS_INVALID_PARAMETER, irp);
 
@@ -1285,7 +1250,6 @@ umss_reset_pipe(PUMSS_DEVICE_EXTENSION pdev_ext, DEV_HANDLE endp_handle)
 {
     NTSTATUS status;
     PUSB_DEV pdev;
-    PUSB_ENDPOINT pendp;
 
     if (pdev_ext == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1306,7 +1270,7 @@ umss_reset_pipe(PUMSS_DEVICE_EXTENSION pdev_ext, DEV_HANDLE endp_handle)
     return status;
 }
 
-BOOL
+BOOLEAN
 umss_gen_result_srb(PIO_PACKET io_packet, PSCSI_REQUEST_BLOCK srb, NTSTATUS status)
 {
 
@@ -1395,7 +1359,7 @@ umss_gen_result_srb(PIO_PACKET io_packet, PSCSI_REQUEST_BLOCK srb, NTSTATUS stat
     return TRUE;
 }
 
-BOOL
+BOOLEAN
 umss_gen_result_ctrl(PDEVICE_OBJECT dev_obj, PIRP irp, NTSTATUS status)
 {
     PIO_STACK_LOCATION irp_stack;
@@ -1508,7 +1472,7 @@ umss_complete_request(PUMSS_DEVICE_EXTENSION pdev_ext, NTSTATUS status)
     return;
 }
 
-BOOL
+BOOLEAN
 umss_if_connect(PCONNECT_DATA params, DEV_HANDLE if_handle)
 {
     PURB purb;
@@ -1524,9 +1488,9 @@ umss_if_connect(PCONNECT_DATA params, DEV_HANDLE if_handle)
     PUSB_DEV_MANAGER dev_mgr;
     PUSB_ENDPOINT_DESC pendp_desc;
     PUMSS_DRVR_EXTENSION pdrvr_ext;
-
     PDEVICE_OBJECT pdev_obj;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
+
     //configuration is already set
     purb = NULL;
     desc_buf = NULL;
@@ -1702,7 +1666,7 @@ ERROR_OUT:
     return FALSE;
 }
 
-BOOL
+BOOLEAN
 umss_if_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle)
 {
     LONG if_idx;
@@ -1748,7 +1712,7 @@ umss_if_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle)
     return umss_delete_device(dev_mgr, pdrvr, dev_obj, TRUE);
 }
 
-BOOL
+BOOLEAN
 umss_if_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle)
 {
     LONG if_idx;
@@ -1758,8 +1722,7 @@ umss_if_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle)
     PDEVICE_OBJECT dev_obj = NULL;
     PUMSS_DRVR_EXTENSION pdrvr_ext;
     PUMSS_DEVICE_EXTENSION pdev_ext;
-
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (dev_mgr == NULL || if_handle == 0)
         return FALSE;
@@ -1813,12 +1776,10 @@ umss_load_class_driver(PVOID context)
                   ("umss_load_class_driver(): try to load class driver, status=0x%x\n", status));
 }
 
-BOOL
+BOOLEAN
 umss_if_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 {
     PUMSS_DRVR_EXTENSION pdrvr_ext;
-    UNICODE_STRING unicode_string;
-    NTSTATUS status;
 
     if (dev_mgr == NULL || pdriver == NULL)
         return FALSE;
@@ -1890,7 +1851,7 @@ umss_get_if_driver_info(PUSB_DEV_MANAGER dev_mgr, PUSB_DEV pdev, DEV_HANDLE if_h
 {
     PUMSS_DRVR_EXTENSION drvr_ext;
     ULONG if_idx;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if_idx = if_idx_from_handle(if_handle);
     if (if_idx >= 4)            // max interfaces per config supports. defined in td.h
@@ -1923,7 +1884,7 @@ umss_get_if_driver_info(PUSB_DEV_MANAGER dev_mgr, PUSB_DEV pdev, DEV_HANDLE if_h
     return &drvr_ext->class_driver_info;
 }
 
-VOID
+VOID NTAPI
 umss_worker(IN PVOID reference)
 {
     PUMSS_WORKER_PACKET worker_packet;
@@ -1962,11 +1923,11 @@ Return Value:
     FALSE if work item not queued
 
 --*/
-BOOL
+BOOLEAN
 umss_schedule_workitem(PVOID context,
                        UMSS_WORKER_ROUTINE completion, PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 {
-    BOOL ret_val = TRUE;
+    BOOLEAN ret_val = TRUE;
     PWORK_QUEUE_ITEM workitem;
     PUMSS_WORKER_PACKET worker_packet;
 
@@ -2205,7 +2166,7 @@ ERROR_OUT:
     return status;
 }
 
-BOOL
+BOOLEAN
 umss_tsc_to_sff(PIO_PACKET io_packet)
 {
     if (io_packet == NULL)

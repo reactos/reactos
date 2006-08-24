@@ -83,11 +83,8 @@ VOID
 umss_cbi_send_adsc_complete(PURB purb, PVOID context)
 {
     NTSTATUS status;
-    PIO_STACK_LOCATION irpStack;
     PUMSS_DEVICE_EXTENSION pdev_ext;
     PIO_PACKET io_packet;
-    ULONG bytes_to_transfer;
-    PUCHAR buf;
 
     pdev_ext = (PUMSS_DEVICE_EXTENSION) context;
     io_packet = &pdev_ext->io_packet;
