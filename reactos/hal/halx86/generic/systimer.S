@@ -38,7 +38,8 @@ _HalpClockInterrupt@0:
     jz Spurious
 
     /* Do a tick */
-    //jmp _KeUpdateSystemTime@0
+    mov eax, 100000
+    jmp _KeUpdateSystemTime@0
 
 Spurious:
 

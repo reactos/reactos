@@ -83,29 +83,6 @@ KeInitInterrupts (VOID)
                             I486_INTERRUPT_GATE;
 }
 
-STATIC VOID
-KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
-                          PKTRAP_FRAME TrapFrame)
-{
-   TrapFrame->SegGs     = (USHORT)IrqTrapFrame->Gs;
-   TrapFrame->SegFs     = (USHORT)IrqTrapFrame->Fs;
-   TrapFrame->SegEs     = (USHORT)IrqTrapFrame->Es;
-   TrapFrame->SegDs     = (USHORT)IrqTrapFrame->Ds;
-   TrapFrame->Eax    = IrqTrapFrame->Eax;
-   TrapFrame->Ecx    = IrqTrapFrame->Ecx;
-   TrapFrame->Edx    = IrqTrapFrame->Edx;
-   TrapFrame->Ebx    = IrqTrapFrame->Ebx;
-   TrapFrame->HardwareEsp    = IrqTrapFrame->Esp;
-   TrapFrame->Ebp    = IrqTrapFrame->Ebp;
-   TrapFrame->Esi    = IrqTrapFrame->Esi;
-   TrapFrame->Edi    = IrqTrapFrame->Edi;
-   TrapFrame->Eip    = IrqTrapFrame->Eip;
-   TrapFrame->SegCs     = IrqTrapFrame->Cs;
-   TrapFrame->EFlags = IrqTrapFrame->Eflags;
-}
-
-extern BOOLEAN KiClockSetupComplete;
-
 VOID
 KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 /*
@@ -115,23 +92,6 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
  */
 {
    KIRQL old_level;
-   KTRAP_FRAME KernelTrapFrame;
-   ASSERT(vector == 0x30);
-#if 0
-   PULONG Frame;
-   DPRINT1("Received Interrupt: %lx\n", vector);
-   DPRINT1("My trap frame: %p\n", Trapframe);
-   DPRINT1("Stack trace\n");
-   __asm__("mov %%ebp, %0" : "=r" (Frame) : );
-   DPRINT1("Stack trace: %p %p %p %p\n", Frame, *Frame, Frame[1], *(PULONG)Frame[1]);
-   DPRINT1("Clock setup: %lx\n", KiClockSetupComplete);
-      if (KiClockSetupComplete) while(TRUE);
-#endif
-
-   /*
-    * At this point we have interrupts disabled, nothing has been done to
-    * the PIC.
-    */
    KeGetCurrentPrcb()->InterruptCount++;
 
    /*
@@ -145,23 +105,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
        return;
      }
 
-
-   /*
-    * Enable interrupts
-    * NOTE: Only higher priority interrupts will get through
-    */
    Ke386EnableInterrupts();
-
-       //DPRINT1("Tick\n");
-   if (KiClockSetupComplete)
-   {
-      KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-      return KeUpdateSystemTime(&KernelTrapFrame, old_level, 100000);
-   }
-
-   /*
-    * End the system interrupt.
-    */
    Ke386DisableInterrupts();
    HalEndSystemInterrupt (old_level, 0);
 }

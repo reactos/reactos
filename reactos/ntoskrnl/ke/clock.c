@@ -36,13 +36,9 @@ LARGE_INTEGER SystemBootTime = { 0 };
 #endif
 
 CHAR KiTimerSystemAuditing = 0;
-static KDPC KiExpireTimerDpc;
+KDPC KiExpireTimerDpc;
 BOOLEAN KiClockSetupComplete = FALSE;
 
-extern ULONG KiMaximumDpcQueueDepth;
-extern ULONG KiMinimumDpcRate;
-extern ULONG KiAdjustDpcThreshold;
-extern ULONG KiIdealDpcRate;
 
 /*
  * Number of timer interrupts since initialisation
@@ -82,7 +78,7 @@ KiInitializeSystemClock(VOID)
 {
     TIME_FIELDS TimeFields;
 
-    DPRINT("KiInitializeSystemClock()\n");
+    DPRINT1("KiInitializeSystemClock()\n");
     InitializeListHead(&KiTimerListHead);
     KeInitializeDpc(&KiExpireTimerDpc, (PKDEFERRED_ROUTINE)KiExpireTimers, 0);
 
@@ -101,7 +97,7 @@ KiInitializeSystemClock(VOID)
     SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
 
     KiClockSetupComplete = TRUE;
-    DPRINT("Finished KiInitializeSystemClock()\n");
+    DPRINT1("Finished KiInitializeSystemClock()\n");
 }
 
 VOID
@@ -232,192 +228,6 @@ KeSetTimeUpdateNotifyRoutine(
     )
 {
     UNIMPLEMENTED;
-}
-
-/*
- * NOTE: On Windows this function takes exactly one parameter and EBP is
- *       guaranteed to point to KTRAP_FRAME. The function is used only
- *       by HAL, so there's no point in keeping that prototype.
- *
- * @implemented
- */
-VOID
-STDCALL
-KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
-                IN KIRQL  Irql)
-{
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    PKTHREAD CurrentThread = Prcb->CurrentThread;
-    PKPROCESS CurrentProcess = CurrentThread->ApcState.Process;
-
-    /* Increase interrupt count */
-    Prcb->InterruptCount++;
-
-    /* Check if we came from user mode */
-    if ((TrapFrame->EFlags & EFLAGS_V86_MASK) ||
-        (TrapFrame->SegCs & MODE_MASK))
-    {
-        /* Update user times */
-        CurrentThread->UserTime++;
-        InterlockedIncrement((PLONG)&CurrentProcess->UserTime);
-        Prcb->UserTime++;
-    }
-    else
-    {
-        /* Update CPU kernel time in all cases */
-        Prcb->KernelTime++;
-
-        /* Check IRQ */
-        if (Irql > DISPATCH_LEVEL)
-        {
-            /* This was an interrupt */
-            Prcb->InterruptTime++;
-        }
-        else if ((Irql < DISPATCH_LEVEL) || !(Prcb->DpcRoutineActive))
-        {
-            /* This was normal kernel time */
-            CurrentThread->KernelTime++;
-            InterlockedIncrement((PLONG)&CurrentProcess->KernelTime);
-        }
-        else if (Irql == DISPATCH_LEVEL)
-        {
-            /* This was DPC time */
-            Prcb->DpcTime++;
-        }
-   }
-
-    /* Set the last DPC Count and request rate */
-    Prcb->DpcLastCount = Prcb->DpcData[0].DpcCount;
-    Prcb->DpcRequestRate = ((Prcb->DpcData[0].DpcCount - Prcb->DpcLastCount) +
-                             Prcb->DpcRequestRate) / 2;
-
-    /* Check if we should request a DPC */
-    if ((Prcb->DpcData[0].DpcQueueDepth) &&
-        !(Prcb->DpcRoutineActive) &&
-        !(Prcb->DpcInterruptRequested))
-    {
-        /* Request one */
-        HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-
-        /* Update the depth if needed */
-        if ((Prcb->DpcRequestRate < KiIdealDpcRate) &&
-            (Prcb->MaximumDpcQueueDepth > 1))
-        {
-            /* Decrease the maximum depth by one */
-            Prcb->MaximumDpcQueueDepth--;
-        }
-    }
-    else
-    {
-        /* Decrease the adjustment threshold */
-        if (!(--Prcb->AdjustDpcThreshold))
-        {
-            /* We've hit 0, reset it */
-            Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
-
-            /* Check if we've hit queue maximum */
-            if (KiMaximumDpcQueueDepth != Prcb->MaximumDpcQueueDepth)
-            {
-                /* Increase maximum by one */
-                Prcb->MaximumDpcQueueDepth++;
-            }
-        }
-    }
-
-   /*
-    * If we're at end of quantum request software interrupt. The rest
-    * is handled in KiDispatchInterrupt.
-    *
-    * NOTE: If one stays at DISPATCH_LEVEL for a long time the DPC routine
-    * which checks for quantum end will not be executed and decrementing
-    * the quantum here can result in overflow. This is not a problem since
-    * we don't care about the quantum value anymore after the QuantumEnd
-    * flag is set.
-    */
-    if (((CurrentThread->Quantum -= 3) <= 0) &&
-        (Prcb->IdleThread != CurrentThread))
-    {
-        Prcb->QuantumEnd = TRUE;
-        HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-    }
-}
-
-
-/*
- * NOTE: On Windows this function takes exactly zero parameters and EBP is
- *       guaranteed to point to KTRAP_FRAME. Also [esp+0] contains an IRQL.
- *       The function is used only by HAL, so there's no point in keeping
- *       that prototype.
- *
- * @implemented
- */
-VOID
-STDCALL
-KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
-                   IN KIRQL Irql,
-                   IN ULONG Increment)
-{
-    LONG OldOffset;
-    LARGE_INTEGER Time;
-    ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
-
-    /* Update interrupt time */
-    Time.LowPart = SharedUserData->InterruptTime.LowPart;
-    Time.HighPart = SharedUserData->InterruptTime.High1Time;
-    Time.QuadPart += Increment;
-    SharedUserData->InterruptTime.High2Time = Time.u.HighPart;
-    SharedUserData->InterruptTime.LowPart = Time.u.LowPart;
-    SharedUserData->InterruptTime.High1Time = Time.u.HighPart;
-
-    /* Increase the tick offset */
-    KiTickOffset -= Increment;
-    OldOffset = KiTickOffset;
-
-    /* Check if this isn't a tick yet */
-    if (KiTickOffset > 0)
-    {
-        /* Expire timers */
-        KeInsertQueueDpc(&KiExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
-    }
-    else
-    {
-        /* Setup time structure for system time */
-        Time.LowPart = SharedUserData->SystemTime.LowPart;
-        Time.HighPart = SharedUserData->SystemTime.High1Time;
-        Time.QuadPart += KeTimeAdjustment;
-        SharedUserData->SystemTime.High2Time = Time.HighPart;
-        SharedUserData->SystemTime.LowPart = Time.LowPart;
-        SharedUserData->SystemTime.High1Time = Time.HighPart;
-
-        /* Setup time structure for tick time */
-        Time.LowPart = KeTickCount.LowPart;
-        Time.HighPart = KeTickCount.High1Time;
-        Time.QuadPart += 1;
-        KeTickCount.High2Time = Time.HighPart;
-        KeTickCount.LowPart = Time.LowPart;
-        KeTickCount.High1Time = Time.HighPart;
-        SharedUserData->TickCount.High2Time = Time.HighPart;
-        SharedUserData->TickCount.LowPart = Time.LowPart;
-        SharedUserData->TickCount.High1Time = Time.HighPart;
-
-        /* Update tick count in shared user data as well */
-        SharedUserData->TickCountLowDeprecated++;
-
-        /* Queue a DPC that will expire timers */
-        KeInsertQueueDpc(&KiExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
-    }
-
-    /* Update process and thread times */
-    if (OldOffset <= 0)
-    {
-        /* This was a tick, calculate the next one */
-        KiTickOffset += KeMaximumIncrement;
-        KeUpdateRunTime(TrapFrame, Irql);
-    }
-
-    /* Return from the interrupt */
-    Ke386DisableInterrupts();
-    HalEndSystemInterrupt(Irql, 0);
 }
 
 /*

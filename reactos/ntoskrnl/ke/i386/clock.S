@@ -17,12 +17,13 @@
 .extern _KiTickOffset
 .extern _KeTickCount
 .extern _KeMaximumIncrement
+.extern _KiExpireTimerDpc
 
 /* FUNCTIONS ******************************************************************/
 
-.globl _KeUpdateRunTime2@0
-.func KeUpdateRunTime2@0
-_KeUpdateRunTime2@0:
+.globl _KeUpdateRunTime@4
+.func KeUpdateRunTime@4
+_KeUpdateRunTime@4:
 
     /* Get KPCR */
     mov eax, [fs:KPCR_SELF]
@@ -155,9 +156,9 @@ QuantumNotEmpty:
     ret 4
 .endfunc
 
-.globl _KeUpdateSystemTime2@0
-.func KeUpdateSystemTime2@0
-_KeUpdateSystemTime2@0:
+.globl _KeUpdateSystemTime@0
+.func KeUpdateSystemTime@0
+_KeUpdateSystemTime@0:
 
     /* Get shared data in ECX */
     mov ecx, USER_SHARED_DATA
@@ -185,8 +186,8 @@ _KeUpdateSystemTime2@0:
     mov ebx, USER_SHARED_DATA
 
     /* Get system time */
-    mov edi, [ebx+USER_SHARED_DATA_SYSTEM_TIME]
-    mov esi, [ebx+USER_SHARED_DATA_SYSTEM_TIME+4]
+    mov ecx, [ebx+USER_SHARED_DATA_SYSTEM_TIME]
+    mov edx, [ebx+USER_SHARED_DATA_SYSTEM_TIME+4]
 
     /* Add the increment and get the carry */
     add ecx, _KeTimeAdjustment
@@ -218,9 +219,16 @@ _KeUpdateSystemTime2@0:
     mov [USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT], ecx
     mov [USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT+4], edx
 
+    /* FIXME: HACK */
+    mov [USER_SHARED_DATA], ecx
+
 IncompleteTick:
 
-    /* Queue DPC to handle registered timers */
+    /* FIXME: NASTY Queue DPC to handle registered timers */
+    push 0
+    push [esp+KTRAP_FRAME_EIP]
+    push offset _KiExpireTimerDpc
+    call _KeInsertQueueDpc@12
 
     /* Check if this was a full tick */
     cmp dword ptr _KiTickOffset, 0
@@ -231,8 +239,8 @@ IncompleteTick:
     add _KiTickOffset, eax
 
     /* Update system run time */
-    push esp
-    call _KeUpdateRunTime@8
+    push [esp]
+    call _KeUpdateRunTime@4
     jmp Done
 
 IncompleteTick2:
