@@ -24,116 +24,52 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+typedef enum _CONNECT_TYPE
+{
+    NoConnect,
+    NormalConnect,
+    ChainConnect,
+    UnknownConnect
+} CONNECT_TYPE, *PCONNECT_TYPE;
+
+typedef struct _DISPATCH_INFO
+{
+    CONNECT_TYPE Type;
+    PKINTERRUPT Interrupt;
+    PKINTERRUPT_ROUTINE NoDispatch;
+    PKINTERRUPT_ROUTINE InterruptDispatch;
+    PKINTERRUPT_ROUTINE FloatingDispatch;
+    PKINTERRUPT_ROUTINE ChainedDispatch;
+    PKINTERRUPT_ROUTINE *FlatDispatch;
+} DISPATCH_INFO, *PDISPATCH_INFO;
+
 extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
 extern PULONG KiInterruptTemplateObject;
+extern PULONG KiInterruptTemplateDispatch;
+extern PULONG KiInterruptTemplate2ndDispatch;
+extern ULONG KiUnexpectedEntrySize;
+
+VOID
+NTAPI
+KiStartUnexpectedRange(VOID);
+
+VOID
+NTAPI
+KiEndUnexpectedRange(VOID);
+
+VOID
+NTAPI
+KiInterruptDispatch3(VOID);
+
+VOID
+NTAPI
+KiChainedDispatch(VOID);
+
 
 /* GLOBALS *****************************************************************/
 
-/* Interrupt handler list */
-
-#ifdef CONFIG_SMP
-
-#define INT_NAME2(intnum) KiUnexpectedInterrupt##intnum
-
-#define BUILD_INTERRUPT_HANDLER(intnum) \
-VOID INT_NAME2(intnum)(VOID);
-
-#define D(x,y) \
-  BUILD_INTERRUPT_HANDLER(x##y)
-
-#define D16(x) \
-  D(x,0) D(x,1) D(x,2) D(x,3) \
-  D(x,4) D(x,5) D(x,6) D(x,7) \
-  D(x,8) D(x,9) D(x,A) D(x,B) \
-  D(x,C) D(x,D) D(x,E) D(x,F)
-
-D16(3) D16(4) D16(5) D16(6)
-D16(7) D16(8) D16(9) D16(A)
-D16(B) D16(C) D16(D) D16(E)
-D16(F)
-
-#define L(x,y) \
-  (ULONG)& INT_NAME2(x##y)
-
-#define L16(x) \
-        L(x,0), L(x,1), L(x,2), L(x,3), \
-        L(x,4), L(x,5), L(x,6), L(x,7), \
-        L(x,8), L(x,9), L(x,A), L(x,B), \
-        L(x,C), L(x,D), L(x,E), L(x,F)
-
-static ULONG irq_handler[ROUND_UP(NR_IRQS, 16)] = {
-  L16(3), L16(4), L16(5), L16(6),
-  L16(7), L16(8), L16(9), L16(A),
-  L16(B), L16(C), L16(D), L16(E)
-};
-
-#undef L
-#undef L16
-#undef D
-#undef D16
-
-#else /* CONFIG_SMP */
-
 void irq_handler_0(void);
-void irq_handler_1(void);
-void irq_handler_2(void);
-void irq_handler_3(void);
-void irq_handler_4(void);
-void irq_handler_5(void);
-void irq_handler_6(void);
-void irq_handler_7(void);
-void irq_handler_8(void);
-void irq_handler_9(void);
-void irq_handler_10(void);
-void irq_handler_11(void);
-void irq_handler_12(void);
-void irq_handler_13(void);
-void irq_handler_14(void);
-void irq_handler_15(void);
 
-unsigned int irq_handler[NR_IRQS]=
-{
-   (int)&irq_handler_0,
-   (int)&irq_handler_1,
-   (int)&irq_handler_2,
-   (int)&irq_handler_3,
-   (int)&irq_handler_4,
-   (int)&irq_handler_5,
-   (int)&irq_handler_6,
-   (int)&irq_handler_7,
-   (int)&irq_handler_8,
-   (int)&irq_handler_9,
-   (int)&irq_handler_10,
-   (int)&irq_handler_11,
-   (int)&irq_handler_12,
-   (int)&irq_handler_13,
-   (int)&irq_handler_14,
-   (int)&irq_handler_15,
-};
-
-#endif /* CONFIG_SMP */
-
-/*
- * PURPOSE: Object describing each isr
- * NOTE: The data in this table is only modified at passsive level but can
- * be accessed at any irq level.
- */
-
-typedef struct
-{
-   LIST_ENTRY ListHead;
-   KSPIN_LOCK Lock;
-   ULONG Count;
-}
-ISR_TABLE, *PISR_TABLE;
-
-#ifdef CONFIG_SMP
-static ISR_TABLE IsrTable[NR_IRQS][MAXIMUM_PROCESSORS];
-#else
-static ISR_TABLE IsrTable[NR_IRQS][1];
-#endif
-
-#define TAG_ISR_LOCK     TAG('I', 'S', 'R', 'L')
 extern IDT_DESCRIPTOR KiIdt[256];
 
 /* FUNCTIONS ****************************************************************/
@@ -146,28 +82,10 @@ INIT_FUNCTION
 NTAPI
 KeInitInterrupts (VOID)
 {
-   int i, j;
 
-
-   /*
-    * Setup the IDT entries to point to the interrupt handlers
-    */
-   for (i=0;i<NR_IRQS;i++)
-     {
-        KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KGDT_R0_CODE<<16);
-        KiIdt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
+        KiIdt[IRQ_BASE].a=((ULONG)irq_handler_0&0xffff)+(KGDT_R0_CODE<<16);
+        KiIdt[IRQ_BASE].b=((ULONG)irq_handler_0&0xffff0000)+PRESENT+
                             I486_INTERRUPT_GATE;
-#ifdef CONFIG_SMP
-        for (j = 0; j < MAXIMUM_PROCESSORS; j++)
-#else
-        j = 0;
-#endif
-          {
-            InitializeListHead(&IsrTable[i][j].ListHead);
-            KeInitializeSpinLock(&IsrTable[i][j].Lock);
-            IsrTable[i][j].Count = 0;
-          }
-     }
 }
 
 STATIC VOID
@@ -191,47 +109,7 @@ KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
    TrapFrame->EFlags = IrqTrapFrame->Eflags;
 }
 
-VOID STDCALL
-KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
-/*
- * FUNCTION: Calls all the interrupt handlers for a given irq.
- * ARGUMENTS:
- *        vector - The number of the vector to call handlers for.
- *        old_level - The irql of the processor when the irq took place.
- * NOTES: Must be called at DIRQL.
- */
-{
-  PKINTERRUPT isr;
-  PLIST_ENTRY current;
-  KIRQL oldlvl;
-  PISR_TABLE CurrentIsr;
-
-  DPRINT("I(0x%.08x, 0x%.08x)\n", vector, old_level);
-
-  /*
-   * Iterate the list until one of the isr tells us its device interrupted
-   */
-  CurrentIsr = &IsrTable[vector - IRQ_BASE][(ULONG)KeGetCurrentProcessorNumber()];
-
-  KiAcquireSpinLock(&CurrentIsr->Lock);
-
-  CurrentIsr->Count++;
-  current = CurrentIsr->ListHead.Flink;
-
-  while (current != &CurrentIsr->ListHead)
-    {
-      isr = CONTAINING_RECORD(current,KINTERRUPT,InterruptListEntry);
-      oldlvl = KeAcquireInterruptSpinLock(isr);
-      if (isr->ServiceRoutine(isr, isr->ServiceContext))
-        {
-          KeReleaseInterruptSpinLock(isr, oldlvl);
-          break;
-        }
-      KeReleaseInterruptSpinLock(isr, oldlvl);
-      current = current->Flink;
-    }
-  KiReleaseSpinLock(&CurrentIsr->Lock);
-}
+extern BOOLEAN KiClockSetupComplete;
 
 VOID
 KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
@@ -243,6 +121,17 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 {
    KIRQL old_level;
    KTRAP_FRAME KernelTrapFrame;
+   ASSERT(vector == 0x30);
+#if 0
+   PULONG Frame;
+   DPRINT1("Received Interrupt: %lx\n", vector);
+   DPRINT1("My trap frame: %p\n", Trapframe);
+   DPRINT1("Stack trace\n");
+   __asm__("mov %%ebp, %0" : "=r" (Frame) : );
+   DPRINT1("Stack trace: %p %p %p %p\n", Frame, *Frame, Frame[1], *(PULONG)Frame[1]);
+   DPRINT1("Clock setup: %lx\n", KiClockSetupComplete);
+      if (KiClockSetupComplete) while(TRUE);
+#endif
 
    /*
     * At this point we have interrupts disabled, nothing has been done to
@@ -268,21 +157,9 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
     */
    Ke386EnableInterrupts();
 
-#ifndef CONFIG_SMP
-   if (VECTOR2IRQ(vector) == 0)
-   {
        //DPRINT1("Tick\n");
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
       KeUpdateSystemTime(&KernelTrapFrame, old_level);
-   }
-   else
-#endif
-   {
-     /*
-      * Actually call the ISR.
-      */
-     KiInterruptDispatch2(vector, old_level);
-   }
 
    /*
     * End the system interrupt.
@@ -291,135 +168,111 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
    HalEndSystemInterrupt (old_level, 0);
 }
 
-/*
- * @implemented
- */
-BOOLEAN 
-STDCALL
-KeConnectInterrupt(PKINTERRUPT InterruptObject)
+VOID
+NTAPI
+KiGetVectorDispatch(IN ULONG Vector,
+                    IN PDISPATCH_INFO Dispatch)
 {
-   KIRQL oldlvl,synch_oldlvl;
-   PKINTERRUPT ListHead;
-   ULONG Vector;
-   PISR_TABLE CurrentIsr;
-   BOOLEAN Result;
+    PKINTERRUPT_ROUTINE Handler;
+    ULONG Current;
 
+    /* Setup the unhandled dispatch */
+    Dispatch->NoDispatch = (PVOID)(((ULONG_PTR)&KiStartUnexpectedRange) +
+                                   (Vector - PRIMARY_VECTOR_BASE) *
+                                   KiUnexpectedEntrySize);
 
-   Vector = InterruptObject->Vector;
-   DPRINT1("KeConnectInterrupt(): %lx\n", Vector);
+    /* Setup the handlers */
+    Dispatch->InterruptDispatch = KiInterruptDispatch3;
+    Dispatch->FloatingDispatch = NULL; // Floating Interrupts are not supported
+    Dispatch->ChainedDispatch = KiChainedDispatch;
+    Dispatch->FlatDispatch = NULL;
 
-   if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
-      return FALSE;
+    /* Get the current handler */
+    Current = ((((PKIPCR)KeGetPcr())->IDT[Vector].ExtendedOffset << 16)
+               & 0xFFFF0000) |
+              (((PKIPCR)KeGetPcr())->IDT[Vector].Offset & 0xFFFF);
 
-   Vector -= IRQ_BASE;
+    /* Set the interrupt */
+    Dispatch->Interrupt = CONTAINING_RECORD(Current,
+                                            KINTERRUPT,
+                                            DispatchCode);
 
-   ASSERT (InterruptObject->Number < KeNumberProcessors);
-
-   KeSetSystemAffinityThread(1 << InterruptObject->Number);
-
-   CurrentIsr = &IsrTable[Vector][(ULONG)InterruptObject->Number];
-
-   KeRaiseIrql(VECTOR2IRQL(Vector + IRQ_BASE),&oldlvl);
-   KiAcquireSpinLock(&CurrentIsr->Lock);
-
-   /*
-    * Check if the vector is already in use that we can share it
-    */
-   if (!IsListEmpty(&CurrentIsr->ListHead))
-   {
-      ListHead = CONTAINING_RECORD(CurrentIsr->ListHead.Flink,KINTERRUPT,InterruptListEntry);
-      if (InterruptObject->ShareVector == FALSE || ListHead->ShareVector==FALSE)
-      {
-         KiReleaseSpinLock(&CurrentIsr->Lock);
-         KeLowerIrql(oldlvl);
-         KeRevertToUserAffinityThread();
-         return FALSE;
-      }
-   }
-
-   synch_oldlvl = KeAcquireInterruptSpinLock(InterruptObject);
-
-   DPRINT("%x %x\n",CurrentIsr->ListHead.Flink, CurrentIsr->ListHead.Blink);
-
-   Result = HalEnableSystemInterrupt(Vector + IRQ_BASE, InterruptObject->Irql, InterruptObject->Mode);
-   if (Result)
-   {
-      InsertTailList(&CurrentIsr->ListHead,&InterruptObject->InterruptListEntry);
-      DPRINT("%x %x\n",InterruptObject->InterruptListEntry.Flink, InterruptObject->InterruptListEntry.Blink);
-   }
-
-   InterruptObject->Connected = TRUE;
-   KeReleaseInterruptSpinLock(InterruptObject, synch_oldlvl);
-
-   /*
-    * Release the table spinlock
-    */
-   KiReleaseSpinLock(&CurrentIsr->Lock);
-   KeLowerIrql(oldlvl);
-
-   KeRevertToUserAffinityThread();
-
-   return Result;
+    /* Check what this interrupt is connected to */
+    if ((PKINTERRUPT_ROUTINE)Current == Dispatch->NoDispatch)
+    {
+        /* Not connected */
+        Dispatch->Type = NoConnect;
+    }
+    else
+    {
+        /* Get the handler */
+        Handler = Dispatch->Interrupt->DispatchAddress;
+        if (Handler == Dispatch->ChainedDispatch)
+        {
+            /* It's a chained interrupt */
+            Dispatch->Type = ChainConnect;
+        }
+        else if ((Handler == Dispatch->InterruptDispatch) ||
+                 (Handler == Dispatch->FloatingDispatch))
+        {
+            /* It's unchained */
+            Dispatch->Type = NormalConnect;
+        }
+        else
+        {
+            /* Unknown */
+            Dispatch->Type = UnknownConnect;
+        }
+    }
 }
 
-/*
- * @implemented
- *
- * FUNCTION: Releases a drivers isr
- * ARGUMENTS:
- *        InterruptObject = isr to release
- */
-BOOLEAN 
-STDCALL
-KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
+VOID
+NTAPI
+KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
+                           IN CONNECT_TYPE Type)
 {
-    KIRQL oldlvl,synch_oldlvl;
-    PISR_TABLE CurrentIsr;
-    BOOLEAN State;
+    DISPATCH_INFO Dispatch;
+    PKINTERRUPT_ROUTINE Handler;
+    PULONG Patch = &Interrupt->DispatchCode[0];
 
-    DPRINT1("KeDisconnectInterrupt\n");
-    ASSERT (InterruptObject->Number < KeNumberProcessors);
+    /* Get vector data */
+    KiGetVectorDispatch(Interrupt->Vector, &Dispatch);
 
-    /* Set the affinity */
-    KeSetSystemAffinityThread(1 << InterruptObject->Number);
-
-    /* Get the ISR Tabe */
-    CurrentIsr = &IsrTable[InterruptObject->Vector - IRQ_BASE]
-                          [(ULONG)InterruptObject->Number];
-
-    /* Raise IRQL to required level and lock table */
-    KeRaiseIrql(VECTOR2IRQL(InterruptObject->Vector),&oldlvl);
-    KiAcquireSpinLock(&CurrentIsr->Lock);
-
-    /* Check if it's actually connected */
-    if ((State = InterruptObject->Connected))
+    /* Check if we're only disconnecting */
+    if (Type == NoConnect)
     {
-        /* Lock the Interrupt */
-        synch_oldlvl = KeAcquireInterruptSpinLock(InterruptObject);
-
-        /* Remove this one, and check if all are gone */
-        RemoveEntryList(&InterruptObject->InterruptListEntry);
-        if (IsListEmpty(&CurrentIsr->ListHead))
-        {
-            /* Completely Disable the Interrupt */
-            HalDisableSystemInterrupt(InterruptObject->Vector, InterruptObject->Irql);
-        }
-        
-        /* Disconnect it */
-        InterruptObject->Connected = FALSE;
-    
-        /* Release the interrupt lock */
-        KeReleaseInterruptSpinLock(InterruptObject, synch_oldlvl);
+        /* Set the handler to NoDispatch */
+        Handler = Dispatch.NoDispatch;
     }
-    /* Release the table spinlock */
-    KiReleaseSpinLock(&CurrentIsr->Lock);
-    KeLowerIrql(oldlvl);
+    else
+    {
+        /* Get the right handler */
+        Handler = (Type == NormalConnect) ?
+                  Dispatch.InterruptDispatch:
+                  Dispatch.ChainedDispatch;
+        ASSERT(Interrupt->FloatingSave == FALSE);
 
-    /* Go back to default affinity */
-    KeRevertToUserAffinityThread();
-    
-    /* Return Old Interrupt State */
-    return State;
+        /* Set the handler */
+        Interrupt->DispatchAddress = Handler;
+
+        /* Jump to the last 4 bytes */
+        Patch = (PULONG)((ULONG_PTR)Patch +
+                         ((ULONG_PTR)&KiInterruptTemplateDispatch -
+                          (ULONG_PTR)KiInterruptTemplate) - 4);
+
+        /* Apply the patch */
+        *Patch = (ULONG)((ULONG_PTR)Handler - ((ULONG_PTR)Patch + 4));
+
+        /* Now set the final handler address */
+        ASSERT(Dispatch.FlatDispatch == NULL);
+        Handler = (PVOID)&Interrupt->DispatchCode;
+    }
+
+    /* Set the pointer in the IDT */
+    ((PKIPCR)KeGetPcr())->IDT[Interrupt->Vector].ExtendedOffset =
+        (USHORT)(((ULONG_PTR)Handler >> 16) & 0xFFFF);
+    ((PKIPCR)KeGetPcr())->IDT[Interrupt->Vector].Offset =
+        (USHORT)PtrToUlong(Handler);
 }
 
 /*
@@ -486,6 +339,156 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
 
     /* Disconnect it at first */
     Interrupt->Connected = FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeConnectInterrupt(IN PKINTERRUPT Interrupt)
+{
+    BOOLEAN Connected, Error, Status;
+    KIRQL Irql, OldIrql;
+    UCHAR Number;
+    ULONG Vector;
+    DISPATCH_INFO Dispatch;
+
+    /* Get data from interrupt */
+    Number = Interrupt->Number;
+    Vector = Interrupt->Vector;
+    Irql = Interrupt->Irql;
+
+    /* Validate the settings */
+    if ((Irql > HIGH_LEVEL) ||
+        (Number >= KeNumberProcessors) ||
+        (Interrupt->SynchronizeIrql < Irql) ||
+        (Interrupt->FloatingSave))
+    {
+        DPRINT1("Invalid interrupt object\n");
+        return FALSE;
+    }
+
+    /* Set defaults */
+    Connected = FALSE;
+    Error = FALSE;
+
+    /* Set the system affinity and acquire the dispatcher lock */
+    KeSetSystemAffinityThread(1 << Number);
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Check if it's already been connected */
+    if (!Interrupt->Connected)
+    {
+        /* Get vector dispatching information */
+        KiGetVectorDispatch(Vector, &Dispatch);
+
+        /* Check if the vector is already connected */
+        if (Dispatch.Type == NoConnect)
+        {
+            /* Do the connection */
+            Interrupt->Connected = Connected = TRUE;
+
+            /* Initialize the list */
+            InitializeListHead(&Interrupt->InterruptListEntry);
+
+            /* Connect and enable the interrupt */
+            KiConnectVectorToInterrupt(Interrupt, NormalConnect);
+            Status = HalEnableSystemInterrupt(Vector, Irql, Interrupt->Mode);
+            if (!Status) Error = TRUE;
+        }
+        else if ((Dispatch.Type != UnknownConnect) &&
+                (Interrupt->ShareVector) &&
+                (Dispatch.Interrupt->ShareVector) &&
+                (Dispatch.Interrupt->Mode == Interrupt->Mode))
+        {
+            /* The vector is shared and the interrupts are compatible */
+            ASSERT(FALSE); // FIXME: NOT YET SUPPORTED/TESTED
+            Interrupt->Connected = Connected = TRUE;
+            ASSERT(Irql <= SYNCH_LEVEL);
+
+            /* Check if this is the first chain */
+            if (Dispatch.Type != ChainConnect)
+            {
+                /* Setup the chainned handler */
+                KiConnectVectorToInterrupt(Dispatch.Interrupt, ChainConnect);
+            }
+
+            /* Insert into the interrupt list */
+            InsertTailList(&Dispatch.Interrupt->InterruptListEntry,
+                           &Interrupt->InterruptListEntry);
+        }
+    }
+
+    /* Unlock the dispatcher and revert affinity */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KeRevertToUserAffinityThread();
+
+    /* Return to caller */
+    return Connected;
+}
+
+/*
+ * @implemented
+ *
+ * FUNCTION: Releases a drivers isr
+ * ARGUMENTS:
+ *        InterruptObject = isr to release
+ */
+BOOLEAN 
+STDCALL
+KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
+{
+#if 0
+    KIRQL oldlvl,synch_oldlvl;
+    PISR_TABLE CurrentIsr;
+    BOOLEAN State;
+
+    DPRINT1("KeDisconnectInterrupt\n");
+    ASSERT (InterruptObject->Number < KeNumberProcessors);
+
+    /* Set the affinity */
+    KeSetSystemAffinityThread(1 << InterruptObject->Number);
+
+    /* Get the ISR Tabe */
+    CurrentIsr = &IsrTable[InterruptObject->Vector - IRQ_BASE]
+                          [(ULONG)InterruptObject->Number];
+
+    /* Raise IRQL to required level and lock table */
+    KeRaiseIrql(VECTOR2IRQL(InterruptObject->Vector),&oldlvl);
+    KiAcquireSpinLock(&CurrentIsr->Lock);
+
+    /* Check if it's actually connected */
+    if ((State = InterruptObject->Connected))
+    {
+        /* Lock the Interrupt */
+        synch_oldlvl = KeAcquireInterruptSpinLock(InterruptObject);
+
+        /* Remove this one, and check if all are gone */
+        RemoveEntryList(&InterruptObject->InterruptListEntry);
+        if (IsListEmpty(&CurrentIsr->ListHead))
+        {
+            /* Completely Disable the Interrupt */
+            HalDisableSystemInterrupt(InterruptObject->Vector, InterruptObject->Irql);
+        }
+        
+        /* Disconnect it */
+        InterruptObject->Connected = FALSE;
+    
+        /* Release the interrupt lock */
+        KeReleaseInterruptSpinLock(InterruptObject, synch_oldlvl);
+    }
+    /* Release the table spinlock */
+    KiReleaseSpinLock(&CurrentIsr->Lock);
+    KeLowerIrql(oldlvl);
+
+    /* Go back to default affinity */
+    KeRevertToUserAffinityThread();
+    
+    /* Return Old Interrupt State */
+    return State;
+#endif
+    return 0;
 }
 
 /* EOF */

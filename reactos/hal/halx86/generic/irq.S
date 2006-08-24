@@ -291,7 +291,7 @@ Invalid:
 .func HalBeginSystemInterrupt@12
 _HalBeginSystemInterrupt@12:
 
-    /* Convert to vector and call the handler */
+    /* Convert to IRQ and call the handler */
     mov edx, [esp+8]
     sub edx, PRIMARY_VECTOR_BASE
     jmp HalpSysIntHandler[edx*4]
