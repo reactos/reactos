@@ -861,7 +861,7 @@ PUSB_DEV dev
 );
 
 //helpers
-static VOID
+VOID NTAPI
 uhci_dpc_callback(
 PKDPC dpc,
 PVOID context,
@@ -877,7 +877,7 @@ uhci_flush_adapter_buf()
 #endif
 }
 
-BOOL
+NTSTATUS
 uhci_submit_urb(
 PUHCI_DEV uhci,
 PUSB_DEV pdev,
