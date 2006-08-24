@@ -818,7 +818,7 @@ MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    MpsIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
    if (KeGetCurrentProcessorNumber() == 0)
    {
-      KeUpdateSystemTime(&KernelTrapFrame, oldIrql);
+      KeUpdateSystemTime(&KernelTrapFrame, oldIrql, 100000); // FIXME: CLOCK_INCREMENT?
    }
    else
    {
