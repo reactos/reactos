@@ -153,8 +153,11 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
    Ke386EnableInterrupts();
 
        //DPRINT1("Tick\n");
+   if (KiClockSetupComplete)
+   {
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-      KeUpdateSystemTime(&KernelTrapFrame, old_level);
+      KeUpdateSystemTime(&KernelTrapFrame, old_level, 100000);
+   }
 
    /*
     * End the system interrupt.

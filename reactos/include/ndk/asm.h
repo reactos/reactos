@@ -246,6 +246,16 @@ Author:
 //
 // KUSER_SHARED_DATA Offsets
 //
+#ifdef __ASM__
+#define USER_SHARED_DATA                        0xFFDF0000
+#endif
+#define USER_SHARED_DATA_INTERRUPT_TIME         0x8
+#define USER_SHARED_DATA_SYSTEM_TIME            0x14
+#define USER_SHARED_DATA_TICK_COUNT             0x320
+
+//
+// KUSER_SHARED_DATA Offsets (this stuff is trash)
+//
 #define KERNEL_USER_SHARED_DATA                 0x7FFE0000
 #define KUSER_SHARED_PROCESSOR_FEATURES         KERNEL_USER_SHARED_DATA + 0x274
 #define KUSER_SHARED_SYSCALL                    KERNEL_USER_SHARED_DATA + 0x300

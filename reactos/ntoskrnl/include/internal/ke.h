@@ -260,13 +260,6 @@ KiRosPrintAddress(PVOID Address);
 
 VOID
 STDCALL
-KeUpdateSystemTime(
-    PKTRAP_FRAME TrapFrame,
-    KIRQL Irql
-);
-
-VOID
-STDCALL
 KeUpdateRunTime(
     PKTRAP_FRAME TrapFrame,
     KIRQL Irql

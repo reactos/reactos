@@ -648,7 +648,7 @@ KeTerminateThread@4
 KeTickCount DATA
 @KeTryToAcquireGuardedMutex@4
 KeUpdateRunTime@8
-KeUpdateSystemTime@8
+KeUpdateSystemTime@12
 KeUnstackDetachProcess@4
 KeUserModeCallback@20
 KeWaitForMultipleObjects@32

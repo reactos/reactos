@@ -63,6 +63,7 @@ extern LIST_ENTRY KiTimerListHead;
 
 ULONG KeMaximumIncrement = 100000;
 ULONG KeMinimumIncrement = 100000;
+ULONG KeTimeAdjustment   = 100000;
 
 #define MICROSECONDS_PER_TICK (10000)
 #define TICKS_TO_CALIBRATE (1)
@@ -353,23 +354,23 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
 VOID
 STDCALL
 KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
-                   IN KIRQL Irql)
+                   IN KIRQL Irql,
+                   IN ULONG Increment)
 {
     LONG OldOffset;
     LARGE_INTEGER Time;
     ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
-    if (!KiClockSetupComplete) return;
 
     /* Update interrupt time */
     Time.LowPart = SharedUserData->InterruptTime.LowPart;
     Time.HighPart = SharedUserData->InterruptTime.High1Time;
-    Time.QuadPart += CLOCK_INCREMENT;
+    Time.QuadPart += Increment;
     SharedUserData->InterruptTime.High2Time = Time.u.HighPart;
     SharedUserData->InterruptTime.LowPart = Time.u.LowPart;
     SharedUserData->InterruptTime.High1Time = Time.u.HighPart;
 
     /* Increase the tick offset */
-    KiTickOffset -= CLOCK_INCREMENT;
+    KiTickOffset -= Increment;
     OldOffset = KiTickOffset;
 
     /* Check if this isn't a tick yet */
@@ -380,28 +381,39 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     }
     else
     {
-        /* This was a tick, calculate the next one */
-        KiTickOffset += CLOCK_INCREMENT;
-
         /* Setup time structure for system time */
         Time.LowPart = SharedUserData->SystemTime.LowPart;
         Time.HighPart = SharedUserData->SystemTime.High1Time;
-        Time.QuadPart += CLOCK_INCREMENT;
+        Time.QuadPart += KeTimeAdjustment;
         SharedUserData->SystemTime.High2Time = Time.HighPart;
         SharedUserData->SystemTime.LowPart = Time.LowPart;
         SharedUserData->SystemTime.High1Time = Time.HighPart;
 
-        /* Update tick count */
-        (*(PULONGLONG)&KeTickCount)++;
+        /* Setup time structure for tick time */
+        Time.LowPart = KeTickCount.LowPart;
+        Time.HighPart = KeTickCount.High1Time;
+        Time.QuadPart += 1;
+        KeTickCount.High2Time = Time.HighPart;
+        KeTickCount.LowPart = Time.LowPart;
+        KeTickCount.High1Time = Time.HighPart;
+        SharedUserData->TickCount.High2Time = Time.HighPart;
+        SharedUserData->TickCount.LowPart = Time.LowPart;
+        SharedUserData->TickCount.High1Time = Time.HighPart;
+
+        /* Update tick count in shared user data as well */
         SharedUserData->TickCountLowDeprecated++;
-        KiRawTicks++;
 
         /* Queue a DPC that will expire timers */
         KeInsertQueueDpc(&KiExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
     }
 
     /* Update process and thread times */
-    if (OldOffset <= 0) KeUpdateRunTime(TrapFrame, Irql);
+    if (OldOffset <= 0)
+    {
+        /* This was a tick, calculate the next one */
+        KiTickOffset += KeMaximumIncrement;
+        KeUpdateRunTime(TrapFrame, Irql);
+    }
 }
 
 /*
