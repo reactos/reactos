@@ -156,7 +156,7 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
    if (KiClockSetupComplete)
    {
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-      KeUpdateSystemTime(&KernelTrapFrame, old_level, 100000);
+      return KeUpdateSystemTime(&KernelTrapFrame, old_level, 100000);
    }
 
    /*

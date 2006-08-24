@@ -29,6 +29,7 @@
 				<file first="true">main_asm.S</file>
 				<file>cpu.S</file>
 				<file>ctxswitch.S</file>
+                <file>clock.S</file>
 				<file>exp.c</file>
 				<file>fpu.c</file>
 				<file>gdt.c</file>

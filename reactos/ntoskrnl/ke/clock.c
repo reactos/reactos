@@ -247,18 +247,15 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
                 IN KIRQL  Irql)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
-    PKTHREAD CurrentThread;
-    PKPROCESS CurrentProcess;
+    PKTHREAD CurrentThread = Prcb->CurrentThread;
+    PKPROCESS CurrentProcess = CurrentThread->ApcState.Process;
 
-    /* Make sure we don't go further if we're in early boot phase. */
-    if (!(Prcb) || !(Prcb->CurrentThread)) return;
-
-    /* Get the current thread and process */
-    CurrentThread = Prcb->CurrentThread;
-    CurrentProcess = CurrentThread->ApcState.Process;
+    /* Increase interrupt count */
+    Prcb->InterruptCount++;
 
     /* Check if we came from user mode */
-    if (TrapFrame->PreviousPreviousMode != KernelMode)
+    if ((TrapFrame->EFlags & EFLAGS_V86_MASK) ||
+        (TrapFrame->SegCs & MODE_MASK))
     {
         /* Update user times */
         CurrentThread->UserTime++;
@@ -267,6 +264,9 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
     }
     else
     {
+        /* Update CPU kernel time in all cases */
+        Prcb->KernelTime++;
+
         /* Check IRQ */
         if (Irql > DISPATCH_LEVEL)
         {
@@ -284,9 +284,6 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
             /* This was DPC time */
             Prcb->DpcTime++;
         }
-
-        /* Update CPU kernel time in all cases */
-        Prcb->KernelTime++;
    }
 
     /* Set the last DPC Count and request rate */
@@ -295,7 +292,9 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
                              Prcb->DpcRequestRate) / 2;
 
     /* Check if we should request a DPC */
-    if ((Prcb->DpcData[0].DpcQueueDepth) && !(Prcb->DpcRoutineActive))
+    if ((Prcb->DpcData[0].DpcQueueDepth) &&
+        !(Prcb->DpcRoutineActive) &&
+        !(Prcb->DpcInterruptRequested))
     {
         /* Request one */
         HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
@@ -335,7 +334,8 @@ KeUpdateRunTime(IN PKTRAP_FRAME  TrapFrame,
     * we don't care about the quantum value anymore after the QuantumEnd
     * flag is set.
     */
-    if ((CurrentThread->Quantum -= 3) <= 0)
+    if (((CurrentThread->Quantum -= 3) <= 0) &&
+        (Prcb->IdleThread != CurrentThread))
     {
         Prcb->QuantumEnd = TRUE;
         HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
@@ -414,6 +414,10 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
         KiTickOffset += KeMaximumIncrement;
         KeUpdateRunTime(TrapFrame, Irql);
     }
+
+    /* Return from the interrupt */
+    Ke386DisableInterrupts();
+    HalEndSystemInterrupt(Irql, 0);
 }
 
 /*
