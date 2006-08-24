@@ -566,7 +566,9 @@ _KiUnexpectedInterrupt&Number:
     jnz 6f
 
     /* Assert the trap frame */
+#endif
 5:
+#ifdef DBG
     sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
     //jnz 0f // FIXME: ROS IS BROKEN
 

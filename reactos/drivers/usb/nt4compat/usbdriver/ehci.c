@@ -6059,7 +6059,10 @@ ehci_isr(PKINTERRUPT interrupt, PVOID context)
 {
 
     PEHCI_DEV ehci;
-    ULONG status, urb_count;
+    ULONG status;
+#ifdef DBG
+    ULONG urb_count;
+#endif
     PLIST_ENTRY pthis, pnext;
     PURB purb;
     BOOLEAN door_bell_rings;

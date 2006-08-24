@@ -3771,9 +3771,9 @@ generic_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
 NTSTATUS
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
 {
+#if DBG
     NTSTATUS ntStatus = STATUS_SUCCESS;
 
-#if DBG
     // should be done before any debug output is done.
     // read our debug verbosity level from the registry
     //NetacOD_GetRegistryDword( NetacOD_REGISTRY_PARAMETERS_PATH, //absolute registry path
