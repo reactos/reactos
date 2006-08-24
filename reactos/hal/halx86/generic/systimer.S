@@ -12,8 +12,7 @@
 .intel_syntax noprefix
 
 .extern _Kei386EoiHelper@0
-
-/* GLOBALS *******************************************************************/
+.extern _KeUpdateSystemTime@0
 
 /* FUNCTIONS *****************************************************************/
 
@@ -21,6 +20,31 @@
 .func HalpClockInterrupt@0
 _HalpClockInterrupt@0:
 
-    jmp $
+    /* Enter trap */
+    INT_PROLOG Hci, DoPushFakeErrorCode
+
+    /* Push vector and make stack for IRQL */
+    push 0x30
+    sub esp, 4
+
+    /* Begin the interrupt */
+    push esp
+    push 0x30
+    push CLOCK2_LEVEL
+    call _HalBeginSystemInterrupt@12
+
+    /* Check if it's spurious */
+    or al, al
+    jz Spurious
+
+    /* Do a tick */
+    //jmp _KeUpdateSystemTime@0
+
+Spurious:
+
+    /* Exit the interrupt */
+    add esp, 8
+    mov esi, $
+    jmp _Kei386EoiHelper@0
 .endfunc
 

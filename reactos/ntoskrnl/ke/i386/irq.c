@@ -65,15 +65,10 @@ VOID
 NTAPI
 KiChainedDispatch(VOID);
 
-
-/* GLOBALS *****************************************************************/
+/* DEPRECATED FUNCTIONS ******************************************************/
 
 void irq_handler_0(void);
-
 extern IDT_DESCRIPTOR KiIdt[256];
-
-/* FUNCTIONS ****************************************************************/
-
 #define PRESENT (0x8000)
 #define I486_INTERRUPT_GATE (0xe00)
 
@@ -167,6 +162,8 @@ KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
    Ke386DisableInterrupts();
    HalEndSystemInterrupt (old_level, 0);
 }
+
+/* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
 NTAPI
@@ -274,6 +271,8 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
     ((PKIPCR)KeGetPcr())->IDT[Interrupt->Vector].Offset =
         (USHORT)PtrToUlong(Handler);
 }
+
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
@@ -430,65 +429,84 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
 
 /*
  * @implemented
- *
- * FUNCTION: Releases a drivers isr
- * ARGUMENTS:
- *        InterruptObject = isr to release
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
-KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
+KeDisconnectInterrupt(PKINTERRUPT Interrupt)
 {
-#if 0
-    KIRQL oldlvl,synch_oldlvl;
-    PISR_TABLE CurrentIsr;
+    KIRQL OldIrql, Irql;
+    ULONG Vector;
+    DISPATCH_INFO Dispatch;
+    PKINTERRUPT NextInterrupt;
     BOOLEAN State;
 
-    DPRINT1("KeDisconnectInterrupt\n");
-    ASSERT (InterruptObject->Number < KeNumberProcessors);
-
     /* Set the affinity */
-    KeSetSystemAffinityThread(1 << InterruptObject->Number);
+    KeSetSystemAffinityThread(1 << Interrupt->Number);
 
-    /* Get the ISR Tabe */
-    CurrentIsr = &IsrTable[InterruptObject->Vector - IRQ_BASE]
-                          [(ULONG)InterruptObject->Number];
-
-    /* Raise IRQL to required level and lock table */
-    KeRaiseIrql(VECTOR2IRQL(InterruptObject->Vector),&oldlvl);
-    KiAcquireSpinLock(&CurrentIsr->Lock);
+    /* Lock the dispatcher */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
 
     /* Check if it's actually connected */
-    if ((State = InterruptObject->Connected))
+    State = Interrupt->Connected;
+    if (State)
     {
-        /* Lock the Interrupt */
-        synch_oldlvl = KeAcquireInterruptSpinLock(InterruptObject);
+        /* Get the vector and IRQL */
+        Irql = Interrupt->Irql;
+        Vector = Interrupt->Vector;
 
-        /* Remove this one, and check if all are gone */
-        RemoveEntryList(&InterruptObject->InterruptListEntry);
-        if (IsListEmpty(&CurrentIsr->ListHead))
+        /* Get vector dispatch data */
+        KiGetVectorDispatch(Vector, &Dispatch);
+
+        /* Check if it was chained */
+        if (Dispatch.Type == ChainConnect)
         {
-            /* Completely Disable the Interrupt */
-            HalDisableSystemInterrupt(InterruptObject->Vector, InterruptObject->Irql);
-        }
-        
-        /* Disconnect it */
-        InterruptObject->Connected = FALSE;
-    
-        /* Release the interrupt lock */
-        KeReleaseInterruptSpinLock(InterruptObject, synch_oldlvl);
-    }
-    /* Release the table spinlock */
-    KiReleaseSpinLock(&CurrentIsr->Lock);
-    KeLowerIrql(oldlvl);
+            /* Check if the top-level interrupt is being removed */
+            ASSERT(Irql <= SYNCH_LEVEL);
+            if (Interrupt == Dispatch.Interrupt)
+            {
+                /* Get the next one */
+                Dispatch.Interrupt = CONTAINING_RECORD(Dispatch.Interrupt->
+                                                       InterruptListEntry.Flink,
+                                                       KINTERRUPT,
+                                                       InterruptListEntry);
 
-    /* Go back to default affinity */
+                /* Reconnect it */
+                KiConnectVectorToInterrupt(Dispatch.Interrupt, ChainConnect);
+            }
+
+            /* Remove it */
+            RemoveEntryList(&Interrupt->InterruptListEntry);
+
+            /* Get the next one */
+            NextInterrupt = CONTAINING_RECORD(Dispatch.Interrupt->
+                                              InterruptListEntry.Flink,
+                                              KINTERRUPT,
+                                              InterruptListEntry);
+
+            /* Check if this is the only one left */
+            if (Dispatch.Interrupt == NextInterrupt)
+            {
+                /* Connect it in non-chained mode */
+                KiConnectVectorToInterrupt(Dispatch.Interrupt, NormalConnect);
+            }
+        }
+        else
+        {
+            /* Only one left, disable and remove it */
+            HalDisableSystemInterrupt(Interrupt->Vector, Irql);
+            KiConnectVectorToInterrupt(Interrupt, NoConnect);
+        }
+
+        /* Disconnect it */
+        Interrupt->Connected = FALSE;
+    }
+
+    /* Unlock the dispatcher and revert affinity */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
     KeRevertToUserAffinityThread();
-    
-    /* Return Old Interrupt State */
+
+    /* Return to caller */
     return State;
-#endif
-    return 0;
 }
 
 /* EOF */

@@ -81,6 +81,9 @@ _KiIdtDescriptor:
 _KiUnexpectedEntrySize:
     .long _KiUnexpectedInterrupt1 - _KiUnexpectedInterrupt0
 
+_UnexpectedMsg:
+    .asciz "\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n"
+
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 
 _KiGetTickCount:
@@ -1348,7 +1351,15 @@ _KiUnexpectedInterruptTail:
     jmp _Kei386EoiHelper2ndEntry
 
 Handled:
-    /* Unexpected, exit the interrupt */
+    /* Unexpected interrupt, print a message on debug builds */
+#if DBG
+    push [esp+4]
+    push offset _UnexpectedMsg
+    call _DbgPrint
+    add esp, 8
+#endif
+
+    /* Exit the interrupt */
     mov esi, $
     cli
     call _HalEndSystemInterrupt@8

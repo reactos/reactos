@@ -37,7 +37,7 @@ LARGE_INTEGER SystemBootTime = { 0 };
 
 CHAR KiTimerSystemAuditing = 0;
 static KDPC KiExpireTimerDpc;
-static BOOLEAN KiClockSetupComplete = FALSE;
+BOOLEAN KiClockSetupComplete = FALSE;
 
 extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
