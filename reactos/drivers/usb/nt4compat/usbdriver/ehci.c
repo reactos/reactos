@@ -483,7 +483,7 @@ ehci_process_pending_endp(PEHCI_DEV ehci)
     UCHAR port_idx = 0;
     BOOLEAN tt_needed;
     UCHAR hub_addr = 0;
-    USE_IRQL;
+    USE_BASIC_IRQL;
 
     if (ehci == NULL)
         return FALSE;
@@ -688,7 +688,7 @@ ehci_submit_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     int i;
     PUHCI_PENDING_ENDP pending_endp;
     NTSTATUS status;
-    USE_IRQL;
+    USE_BASIC_IRQL;
 
     if (ehci == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -946,7 +946,7 @@ ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
 
     SYNC_PARAM sync_param;
     UCHAR ep_type;
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     ehci = (PEHCI_DEV) context;
     if (ehci == NULL)
@@ -1264,7 +1264,7 @@ ehci_remove_device(PEHCI_DEV ehci, PUSB_DEV dev)
     int i, j, k;
     SYNC_PARAM sync_param;
 
-    USE_IRQL;
+    USE_BASIC_IRQL;
 
     if (ehci == NULL || dev == NULL)
         return FALSE;
@@ -2764,7 +2764,7 @@ ehci_cancel_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 
     SYNC_PARAM sync_param;
 
-    USE_IRQL;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (ehci == NULL || purb == NULL || pdev == NULL || pendp == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -2839,7 +2839,7 @@ ehci_generic_urb_completion(PURB purb, PVOID context)
 {
     PUSB_DEV pdev;
     BOOLEAN is_ctrl = FALSE;
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;
 
     old_irql = KeGetCurrentIrql();
     if (old_irql > DISPATCH_LEVEL)
@@ -2933,7 +2933,7 @@ ehci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
     LONG i;
     UCHAR port_count;
 
-    USE_IRQL;
+    USE_NON_PENDING_IRQL;
     if (pdev == NULL || purb == NULL)
         return STATUS_INVALID_PARAMETER;
 

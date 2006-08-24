@@ -297,7 +297,8 @@ gendrv_event_select_driver(PUSB_DEV pdev,       //always null. we do not use thi
     usb_dbg_print(DBGLVL_MAXIMUM, ("gendrv_event_select_driver(): entering...\n"));
 
     pdrvr = (PUSB_DRIVER) param;
-    pconfig_desc = (PUSB_CONFIGURATION_DESC) pdev->desc_buf[sizeof(USB_DEVICE_DESC)];
+    //original code: pconfig_desc = (PUSB_CONFIGURATION_DESC) pdev->desc_buf[sizeof(USB_DEVICE_DESC)];
+    pconfig_desc = (PUSB_CONFIGURATION_DESC) &pdev->desc_buf[sizeof(USB_DEVICE_DESC)];
     pdrvr_ext = (PGENDRV_DRVR_EXTENSION) pdrvr->driver_ext;
 
     //
@@ -1105,9 +1106,9 @@ gendrv_dispatch(PDEVICE_OBJECT dev_obj, PIRP irp)
         case IRP_MJ_INTERNAL_DEVICE_CONTROL:
         {
             status = STATUS_NOT_SUPPORTED;
-            if (irpstack->MinorFunction == IOCTL_SUBMIT_URB_RD ||
-                irpstack->MinorFunction == IOCTL_SUBMIT_URB_WR ||
-                irpstack->MinorFunction == IOCTL_SUBMIT_URB_NOIO)
+            if (irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SUBMIT_URB_RD ||
+                irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SUBMIT_URB_WR ||
+                irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SUBMIT_URB_NOIO)
             {
                 PURB purb;
                 DEV_HANDLE endp_handle;
@@ -1123,7 +1124,7 @@ gendrv_dispatch(PDEVICE_OBJECT dev_obj, PIRP irp)
                 endp_handle = purb->endp_handle;
                 if (purb->data_buffer == NULL || purb->data_length == 0)
                 {
-                    if (irpstack->MinorFunction != IOCTL_SUBMIT_URB_NOIO)
+                    if (irpstack->Parameters.DeviceIoControl.IoControlCode != IOCTL_SUBMIT_URB_NOIO)
                     {
                         GENDRV_EXIT_DISPATCH(dev_obj, STATUS_INVALID_PARAMETER, irp);
                     }
@@ -1137,12 +1138,12 @@ gendrv_dispatch(PDEVICE_OBJECT dev_obj, PIRP irp)
 
                 GENDRV_EXIT_DISPATCH(dev_obj, STATUS_PENDING, irp);
             }
-            else if (irpstack->MinorFunction == IOCTL_GET_DEV_DESC)
+            else if (irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_GET_DEV_DESC)
             {
                 // this is a synchronous call, route to dev_mgr_dispatch
                 return dev_mgr_dispatch(dev_mgr, irp);
             }
-            else if (irpstack->MinorFunction == IOCTL_GET_DEV_HANDLE)
+            else if (irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_GET_DEV_HANDLE)
             {
                 PGENDRV_DEVICE_EXTENSION pdev_ext;
                 pdev_ext = dev_obj->DeviceExtension;
@@ -1158,9 +1159,9 @@ gendrv_dispatch(PDEVICE_OBJECT dev_obj, PIRP irp)
         case IRP_MJ_DEVICE_CONTROL:
         {
             status = STATUS_NOT_SUPPORTED;
-            if (irpstack->MinorFunction == IOCTL_SUBMIT_URB_RD ||
-                irpstack->MinorFunction == IOCTL_SUBMIT_URB_WR ||
-                irpstack->MinorFunction == IOCTL_SUBMIT_URB_NOIO)
+            if (irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SUBMIT_URB_RD ||
+                irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SUBMIT_URB_WR ||
+                irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_SUBMIT_URB_NOIO)
             {
                 PURB purb;
                 DEV_HANDLE endp_handle;
@@ -1183,12 +1184,12 @@ gendrv_dispatch(PDEVICE_OBJECT dev_obj, PIRP irp)
 
                 GENDRV_EXIT_DISPATCH(dev_obj, STATUS_PENDING, irp);
             }
-            else if (irpstack->MinorFunction == IOCTL_GET_DEV_DESC)
+            else if (irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_GET_DEV_DESC)
             {
                 // this is a synchronous call, route to dev_mgr_dispatch
                 return dev_mgr_dispatch(dev_mgr, irp);
             }
-            else if (irpstack->MinorFunction == IOCTL_GET_DEV_HANDLE)
+            else if (irpstack->Parameters.DeviceIoControl.IoControlCode == IOCTL_GET_DEV_HANDLE)
             {
                 PGENDRV_DEVICE_EXTENSION pdev_ext;
                 pdev_ext = dev_obj->DeviceExtension;

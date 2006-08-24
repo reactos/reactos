@@ -3278,7 +3278,7 @@ hub_clear_tt_buffer(PUSB_DEV pdev, URB_HS_PIPE_CONTENT pipe_content, UCHAR port_
     if (purb == NULL)
     {
         unlock_dev(pdev, FALSE);
-        return STATUS_NO_MEMORY;
+        return FALSE;
     }
 
     purb->flags = 0;

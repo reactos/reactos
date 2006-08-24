@@ -1,4 +1,4 @@
-<module name="usbdriver" type="kernelmodedriver" installbase="system32/drivers" installname="usbdriver.sys" allowwarnings="true">
+<module name="usbdriver" type="kernelmodedriver" installbase="system32/drivers" installname="usbdriver.sys">
 	<define name="INCLUDE_EHCI" />
 	<include base="usbdriver">.</include>
 	<library>ntoskrnl</library>

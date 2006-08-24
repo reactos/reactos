@@ -507,6 +507,9 @@ typedef struct _USB_CONFIGURATION
 #define USE_IRQL \
 KIRQL _pending_endp_lock_old_irql=0, _pending_endp_list_lock_old_irql=0, _dev_lock_old_irql=0, old_irql=0;
 
+#define USE_BASIC_IRQL \
+KIRQL _pending_endp_list_lock_old_irql=0, _dev_lock_old_irql=0;
+
 #define USE_NON_PENDING_IRQL \
 KIRQL _dev_lock_old_irql=0, old_irql=0;
 

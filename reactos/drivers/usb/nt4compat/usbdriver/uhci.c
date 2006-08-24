@@ -1166,7 +1166,7 @@ uhci_process_pending_endp(PUHCI_DEV uhci)
     NTSTATUS can_submit = STATUS_UNSUCCESSFUL;
     PWORK_QUEUE_ITEM pwork_item;
     PLIST_ENTRY cancel_list;
-    USE_IRQL;
+    USE_BASIC_IRQL;
 
     if (uhci == NULL)
         return FALSE;
@@ -1313,7 +1313,7 @@ uhci_submit_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     int i;
     PUHCI_PENDING_ENDP pending_endp;
     NTSTATUS status;
-    USE_IRQL;
+    USE_BASIC_IRQL;
 
     if (uhci == NULL || pdev == NULL || pendp == NULL || purb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1787,7 +1787,7 @@ uhci_remove_device(PUHCI_DEV uhci, PUSB_DEV dev)
     int i, j, k;
     SYNC_PARAM sync_param;
 
-    USE_IRQL;
+    USE_BASIC_IRQL;
 
     if (uhci == NULL || dev == NULL)
         return FALSE;
