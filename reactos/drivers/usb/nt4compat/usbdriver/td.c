@@ -176,7 +176,7 @@ is_pool_empty(PUHCI_TD_POOL pool)
     if (pool == NULL)
         return FALSE;
 
-    return (pool->free_count == 0);
+    return (BOOLEAN) (pool->free_count == 0);
 }
 
 BOOLEAN

@@ -29,6 +29,8 @@ disp_urb_completion(PURB purb, PVOID context)
     NTSTATUS status;
     PDEVEXT_HEADER dev_hdr;
 
+    UNREFERENCED_PARAMETER(context);
+
     if (purb == NULL)
         return;
 

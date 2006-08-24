@@ -1527,6 +1527,7 @@ uhci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     USE_BASIC_NON_PENDING_IRQL;
 
     UNREFERENCED_PARAMETER(dpc);
+    UNREFERENCED_PARAMETER(sysarg2);
 
     uhci = (PUHCI_DEV) context;
     if (uhci == NULL)
@@ -3065,7 +3066,7 @@ uhci_cancel_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 
     KeSynchronizeExecution(uhci->pdev_ext->uhci_int, uhci_sync_cancel_urb, &sync_param);
 
-    found = sync_param.ret;
+    found = (BOOLEAN) sync_param.ret;
 
     if (found)
         return USB_STATUS_CANCELING;

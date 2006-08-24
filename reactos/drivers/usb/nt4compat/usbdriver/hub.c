@@ -2272,6 +2272,9 @@ dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG par
 
     USE_BASIC_NON_PENDING_IRQL;
 
+    UNREFERENCED_PARAMETER(param);
+    UNREFERENCED_PARAMETER(context);
+
     usb_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_event_select_driver(): pdev=%p event=0x%x\n", pdev, event));
 
     if (pdev == NULL)
@@ -3536,7 +3539,7 @@ irp_list_empty(PIRP_LIST irp_list)
     KIRQL old_irql;
     BOOLEAN ret;
     KeAcquireSpinLock(&irp_list->irp_list_lock, &old_irql);
-    ret = (irp_list->irp_free_list_count == MAX_IRP_LIST_SIZE);
+    ret = (BOOLEAN) (irp_list->irp_free_list_count == MAX_IRP_LIST_SIZE);
     KeReleaseSpinLock(&irp_list->irp_list_lock, old_irql);
     return ret;
 }
@@ -3547,7 +3550,7 @@ irp_list_full(PIRP_LIST irp_list)
     KIRQL old_irql;
     BOOLEAN ret;
     KeAcquireSpinLock(&irp_list->irp_list_lock, &old_irql);
-    ret = (irp_list->irp_free_list_count == 0);
+    ret = (BOOLEAN) (irp_list->irp_free_list_count == 0);
     KeReleaseSpinLock(&irp_list->irp_list_lock, old_irql);
     return ret;
 }
