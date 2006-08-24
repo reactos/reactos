@@ -489,6 +489,7 @@ INIT_FUNCTION
 NTAPI
 KeInit2(VOID)
 {
+   ULONG Protect;
    PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
 
    KiInitializeBugCheck();
@@ -548,6 +549,10 @@ KeInit2(VOID)
    {
       DPRINT("Ke386L2CacheSize: %dkB\n", Pcr->SecondLevelCacheSize);
    }
+
+   /* Set IDT to writable */
+   Protect = MmGetPageProtect(NULL, (PVOID)KiIdt);
+   MmSetPageProtect(NULL, (PVOID)KiIdt, Protect | PAGE_IS_WRITABLE);
 }
 
 VOID INIT_FUNCTION

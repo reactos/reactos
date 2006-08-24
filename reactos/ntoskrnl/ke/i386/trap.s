@@ -59,6 +59,12 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 /* Interrupt template entrypoints                                           */
 .globl _KiInterruptTemplate
 .globl _KiInterruptTemplateObject
+.globl _KiInterruptTemplateDispatch
+
+/* Chained and Normal generic interrupt handlers for 1st and 2nd level entry*/
+.globl _KiChainedDispatch2ndLvl@0
+.globl _KiInterruptDispatch3@0
+.globl _KiChainedDispatch@0
 
 /* We implement the following trap exit points:                             */
 .globl _KiServiceExit               /* Exit from syscall                    */
@@ -70,6 +76,10 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 _KiIdtDescriptor:
     .short 0x800
     .long _KiIdt
+
+.globl _KiUnexpectedEntrySize
+_KiUnexpectedEntrySize:
+    .long _KiUnexpectedInterrupt1 - _KiUnexpectedInterrupt0
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 
@@ -1301,12 +1311,13 @@ _KiSystemFatalException:
 
 /* UNEXPECTED INTERRUPT HANDLERS **********************************************/
 
-.globl _KiStartUnexpected
-_KiStartUnexpected:
+.globl _KiStartUnexpectedRange@0
+_KiStartUnexpectedRange@0:
 
 GENERATE_INT_HANDLERS
 
-_KiEndUnexpected:
+.globl _KiEndUnexpectedRange@0
+_KiEndUnexpectedRange@0:
     jmp _KiUnexpectedInterruptTail
 
 .func KiUnexpectedInterruptTail
@@ -1367,3 +1378,113 @@ _KiInterruptTemplate2ndDispatch:
 _KiInterruptTemplateObject:
     /* Dummy jump, will be replaced by the actual jump */
     jmp _KeSynchronizeExecution@12
+
+_KiInterruptTemplateDispatch:
+    /* Marks the end of the template so that the jump above can be edited */
+
+.func KiChainedDispatch2ndLvl@0
+_KiChainedDispatch2ndLvl@0:
+
+    /* Not yet supported */
+    int 3
+.endfunc
+
+.func KiChainedDispatch@0
+_KiChainedDispatch@0:
+
+    /* Increase interrupt count */
+    inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]
+
+    /* Save trap frame */
+    mov ebp, esp
+
+    /* Save vector and IRQL */
+    mov eax, [edi+KINTERRUPT_VECTOR]
+    mov ecx, [edi+KINTERRUPT_IRQL]
+
+    /* Save old irql */
+    push eax
+    sub esp, 4
+
+    /* Begin interrupt */
+    push eax
+    push ecx
+    call _HalBeginSystemInterrupt@12
+
+    /* Check if it was handled */
+    or eax, eax
+    jz SpuriousInt
+    sub esp, 12
+
+    /* Call the 2nd-level handler */
+    call _KiChainedDispatch2ndLvl@0
+
+    /* Exit the interrupt */
+    mov esi, $
+    cli
+    call _HalEndSystemInterrupt@8
+    jmp _Kei386EoiHelper@0
+.endfunc
+
+.func KiInterruptDispatch3@0
+_KiInterruptDispatch3@0:
+
+    /* Increase interrupt count */
+    inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]
+
+    /* Save trap frame */
+    mov ebp, esp
+
+    /* Save vector and IRQL */
+    mov eax, [edi+KINTERRUPT_VECTOR]
+    mov ecx, [edi+KINTERRUPT_SYNCHRONIZE_IRQL]
+
+    /* Save old irql */
+    push eax
+    sub esp, 4
+    push esp
+
+    /* Begin interrupt */
+    push eax
+    push ecx
+    call _HalBeginSystemInterrupt@12
+
+    /* Check if it was handled */
+    or eax, eax
+    jz SpuriousInt
+    sub esp, 12
+
+    /* Acquire the lock */
+GetIntLock:
+    mov esi, [edi+KINTERRUPT_ACTUAL_LOCK]
+    ACQUIRE_SPINLOCK(esi, IntSpin)
+
+    /* Call the ISR */
+    mov eax, [edi+KINTERRUPT_SERVICE_CONTEXT]
+    push eax
+    push edi
+    call [edi+KINTERRUPT_SERVICE_ROUTINE]
+
+    /* Release the lock */
+    RELEASE_SPINLOCK(esi)
+
+    /* Clean up the stack */
+    add esp, 12
+
+    /* Exit the interrupt */
+    mov esi, $
+    cli
+    call _HalEndSystemInterrupt@8
+    jmp _Kei386EoiHelper@0
+
+SpuriousInt:
+    /* Exit the interrupt */
+    add esp, 8
+    mov esi, $
+    jmp _Kei386EoiHelper@0
+
+#ifdef CONFIG_SMP
+IntSpin:
+    SPIN_ON_LOCK esi, GetIntLock
+#endif
+.endfunc

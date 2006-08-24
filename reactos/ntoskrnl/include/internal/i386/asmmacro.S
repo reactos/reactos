@@ -125,9 +125,11 @@ idt _KiUnexpectedInterrupt&Number, INT_32_DPL0
 // @remark None.
 //
 .macro GENERATE_INT_HANDLER Number
+.func KiUnexpectedInterrupt&Number
 _KiUnexpectedInterrupt&Number:
     push PRIMARY_VECTOR_BASE + Number
-    jmp _KiEndUnexpected
+    jmp _KiEndUnexpectedRange@0
+.endfunc
 .endm
 
 //

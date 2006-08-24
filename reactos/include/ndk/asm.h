@@ -156,6 +156,16 @@ Author:
 #define KPCR_PRCB_DPC_ROUTINE_ACTIVE            0x994
 
 //
+// KINTERRUPT Offsets
+//
+#define KINTERRUPT_SERVICE_ROUTINE              0x0C
+#define KINTERRUPT_SERVICE_CONTEXT              0x10
+#define KINTERRUPT_ACTUAL_LOCK                  0x1C
+#define KINTERRUPT_IRQL                         0x20
+#define KINTERRUPT_VECTOR                       0x24
+#define KINTERRUPT_SYNCHRONIZE_IRQL             0x29
+
+//
 // KGDTENTRY Offsets
 //
 #define KGDT_BASE_LOW                           0x2
