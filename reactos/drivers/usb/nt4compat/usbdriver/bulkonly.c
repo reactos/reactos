@@ -605,7 +605,7 @@ CHAR
 umss_bulkonly_get_maxlun(IN PUMSS_DEVICE_EXTENSION pdev_ext)
 {
     PURB purb = NULL;
-    CHAR max_lun;
+    UCHAR max_lun;
     NTSTATUS status;
 
     purb = usb_alloc_mem(NonPagedPool, sizeof(URB));

@@ -1343,7 +1343,7 @@ gendrv_delete_device(PUSB_DEV_MANAGER dev_mgr, PDEVICE_OBJECT dev_obj)
     BOOLEAN is_if;
     PUSB_DRIVER pdrvr;
     PGENDRV_DEVICE_EXTENSION pdev_ext;
-    UCHAR dev_name[64];
+    CHAR dev_name[64];
     STRING string;
     UNICODE_STRING symb_link;
     PGENDRV_DRVR_EXTENSION pdrvr_ext;
@@ -1579,7 +1579,7 @@ gendrv_startio(IN PDEVICE_OBJECT dev_obj, IN PIRP irp)
     }
     else
     {
-        IoSetCancelRoutine(irp, NULL);
+        (void)IoSetCancelRoutine(irp, NULL);
     }
     IoReleaseCancelSpinLock(old_irql);
 

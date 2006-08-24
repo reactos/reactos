@@ -42,7 +42,7 @@ typedef struct _USB_DRIVER_DESCRIPTION
 	BYTE if_protocol;							// Interface Protocol
 	
 	// Driver Info	
-	PBYTE driver_name;							// Driver name for Name Registry
+	const char *driver_name;					// Driver name for Name Registry
 	BYTE dev_class;								// Device Class (from SampleStorageDeviceID.h)
 	BYTE dev_sub_class;							// Device Subclass
 	BYTE dev_protocol;							// Protocol Info.

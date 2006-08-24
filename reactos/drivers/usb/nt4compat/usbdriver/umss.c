@@ -86,7 +86,7 @@ umss_create_port_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     // and upper driver use this to register itself
     // with umss driver for future notification of
     // pnp event. 2004-03-22 23:12:41
-    UCHAR dev_name[64];
+    CHAR dev_name[64];
     STRING string;
     NTSTATUS status;
     PDEVICE_OBJECT pdev;
@@ -136,7 +136,7 @@ umss_create_port_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 BOOLEAN
 umss_delete_port_device(PDEVICE_OBJECT dev_obj)
 {
-    UCHAR dev_name[64];
+    CHAR dev_name[64];
     STRING string;
     UNICODE_STRING symb_link;
 
@@ -305,7 +305,7 @@ PDEVICE_OBJECT
 umss_create_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER umss_drvr, DEV_HANDLE dev_handle, BOOLEAN is_if)
 {
 
-    UCHAR dev_name[64], dev_id;
+    CHAR dev_name[64], dev_id;
     STRING string;
     NTSTATUS status;
     PDEVICE_OBJECT pdev;
@@ -708,7 +708,7 @@ umss_deferred_delete_device(PVOID context)
 BOOLEAN
 umss_delete_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr, PDEVICE_OBJECT dev_obj, BOOLEAN is_if)
 {
-    UCHAR dev_name[64];
+    CHAR dev_name[64];
     STRING string;
     UNICODE_STRING symb_link;
     PUMSS_DEVICE_EXTENSION pdev_ext;
