@@ -1,89 +1,55 @@
+/*
+ * FILE:            ntoskrnl/ke/i386/clock.S
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PURPOSE:         System Clock Management
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ */
+
+/* INCLUDES ******************************************************************/
+
+#include <asm.h>
+#include <internal/i386/asmmacro.S>
+.intel_syntax noprefix
+
+/* GLOBALS *******************************************************************/
+
 #include <ndk/asm.h>
 #include <../hal/halx86/include/halirq.h>
 
-_KiCommonInterrupt:
-	cld
-	pushl 	%ds
-	pushl 	%es
-	pushl 	%fs
-	pushl 	%gs
-	pushl	$0xceafbeef
-	movl	$KGDT_R0_DATA,%eax
-	movl	%eax,%ds
-	movl	%eax,%es
-	movl 	%eax,%gs
-	movl	$KGDT_R0_PCR,%eax
-	movl	%eax,%fs
-	pushl 	%esp
-	pushl 	%ebx
-	call	_KiInterruptDispatch
-	addl	$0xC, %esp
-	popl	%gs
-	popl	%fs
-	popl	%es
-	popl	%ds
-	popa
-	iret
+.global _irq_handler_0
+_irq_handler_0:
+    pusha
+    cld
+    push ds
+    push es
+    push fs
+    push gs
+    push 0xCEAFBEEF
+    mov eax, KGDT_R0_DATA
+    mov ds, eax
+    mov es, eax
+    mov gs, eax
+    mov eax, KGDT_R0_PCR
+    mov fs, eax
 
+    /* Increase interrupt count */
+    inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]
 
-#ifdef CONFIG_SMP
+    /* Put vector in EBX and make space for KIRQL */
+    sub esp, 4
 
-#define BUILD_INTERRUPT_HANDLER(intnum) \
-  .global _KiUnexpectedInterrupt##intnum; \
-  _KiUnexpectedInterrupt##intnum:; \
-  pusha; \
-  movl $0x##intnum, %ebx; \
-  jmp _KiCommonInterrupt;
+    /* Begin interrupt */
+    push esp
+    push 0x30
+    push HIGH_LEVEL
+    call _HalBeginSystemInterrupt@12
 
-/* Interrupt handlers and declarations */
+    cli
+    call _HalEndSystemInterrupt@8
 
-#define B(x,y) \
-  BUILD_INTERRUPT_HANDLER(x##y)
-
-#define B16(x) \
-  B(x,0) B(x,1) B(x,2) B(x,3) \
-  B(x,4) B(x,5) B(x,6) B(x,7) \
-  B(x,8) B(x,9) B(x,A) B(x,B) \
-  B(x,C) B(x,D) B(x,E) B(x,F)
-
-B16(3) B16(4) B16(5) B16(6)
-B16(7) B16(8) B16(9) B16(A)
-B16(B) B16(C) B16(D) B16(E)
-B16(F)
-
-#undef B
-#undef B16
-#undef BUILD_INTERRUPT_HANDLER
-
-#else /* CONFIG_SMP */
-
-#define BUILD_INTERRUPT_HANDLER(intnum) \
-  .global _irq_handler_##intnum; \
-  _irq_handler_##intnum:; \
-  pusha; \
-  movl $(##intnum + IRQ_BASE), %ebx; \
-  jmp _KiCommonInterrupt;
-
-/* Interrupt handlers and declarations */
-
-#define B(x) \
-  BUILD_INTERRUPT_HANDLER(x)
-
-B(0) B(1) B(2) B(3)
-B(4) B(5) B(6) B(7)
-B(8) B(9) B(10) B(11)
-B(12) B(13) B(14) B(15)
-
-#undef B
-#undef BUILD_INTERRUPT_HANDLER
-
-#endif /* CONFIG_SMP */
-
-.intel_syntax noprefix
-.globl _KiUnexpectedInterrupt@0
-_KiUnexpectedInterrupt@0:
-
-    /* Bugcheck with invalid interrupt code */
-    push 0x12
-    call _KeBugCheck@4
-
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+    iret

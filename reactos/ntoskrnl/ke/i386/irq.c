@@ -1,113 +1,33 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/i386/irq.c
- * PURPOSE:         IRQ handling
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
- */
-
 /*
- * NOTE: In general the PIC interrupt priority facilities are used to
- * preserve the NT IRQL semantics, global interrupt disables are only used
- * to keep the PIC in a consistent state
- *
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/ke/i386/irq.c
+ * PURPOSE:         Manages the Kernel's IRQ support for external drivers,
+ *                  for the purpopses of connecting, disconnecting and setting
+ *                  up ISRs for drivers. The backend behind the Io* Interrupt
+ *                  routines.
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
-#include <../hal/halx86/include/halirq.h>
-#include <../hal/halx86/include/mps.h>
-
 #define NDEBUG
-#include <internal/debug.h>
-
-typedef enum _CONNECT_TYPE
-{
-    NoConnect,
-    NormalConnect,
-    ChainConnect,
-    UnknownConnect
-} CONNECT_TYPE, *PCONNECT_TYPE;
-
-typedef struct _DISPATCH_INFO
-{
-    CONNECT_TYPE Type;
-    PKINTERRUPT Interrupt;
-    PKINTERRUPT_ROUTINE NoDispatch;
-    PKINTERRUPT_ROUTINE InterruptDispatch;
-    PKINTERRUPT_ROUTINE FloatingDispatch;
-    PKINTERRUPT_ROUTINE ChainedDispatch;
-    PKINTERRUPT_ROUTINE *FlatDispatch;
-} DISPATCH_INFO, *PDISPATCH_INFO;
-
-extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
-extern PULONG KiInterruptTemplateObject;
-extern PULONG KiInterruptTemplateDispatch;
-extern PULONG KiInterruptTemplate2ndDispatch;
-extern ULONG KiUnexpectedEntrySize;
-
-VOID
-NTAPI
-KiStartUnexpectedRange(VOID);
-
-VOID
-NTAPI
-KiEndUnexpectedRange(VOID);
-
-VOID
-NTAPI
-KiInterruptDispatch3(VOID);
-
-VOID
-NTAPI
-KiChainedDispatch(VOID);
+#include <debug.h>
 
 /* DEPRECATED FUNCTIONS ******************************************************/
 
 void irq_handler_0(void);
 extern IDT_DESCRIPTOR KiIdt[256];
-#define PRESENT (0x8000)
-#define I486_INTERRUPT_GATE (0xe00)
 
 VOID
 INIT_FUNCTION
 NTAPI
 KeInitInterrupts (VOID)
 {
-
-        KiIdt[IRQ_BASE].a=((ULONG)irq_handler_0&0xffff)+(KGDT_R0_CODE<<16);
-        KiIdt[IRQ_BASE].b=((ULONG)irq_handler_0&0xffff0000)+PRESENT+
-                            I486_INTERRUPT_GATE;
-}
-
-VOID
-KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
-/*
- * FUNCTION: Calls the irq specific handler for an irq
- * ARGUMENTS:
- *         irq = IRQ that has interrupted
- */
-{
-   KIRQL old_level;
-   KeGetCurrentPrcb()->InterruptCount++;
-
-   /*
-    * Notify the rest of the kernel of the raised irq level. For the
-    * default HAL this will send an EOI to the PIC and alter the IRQL.
-    */
-   if (!HalBeginSystemInterrupt (VECTOR2IRQL(vector),
-                                 vector,
-                                 &old_level))
-     {
-       return;
-     }
-
-   Ke386EnableInterrupts();
-   Ke386DisableInterrupts();
-   HalEndSystemInterrupt (old_level, 0);
+    KiIdt[0x30].a=((ULONG)irq_handler_0&0xffff)+(KGDT_R0_CODE<<16);
+    KiIdt[0x30].b=((ULONG)irq_handler_0&0xffff0000)+0x8000+
+                        0xe00;
 }
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -126,7 +46,7 @@ KiGetVectorDispatch(IN ULONG Vector,
                                    KiUnexpectedEntrySize);
 
     /* Setup the handlers */
-    Dispatch->InterruptDispatch = KiInterruptDispatch3;
+    Dispatch->InterruptDispatch = KiInterruptDispatch;
     Dispatch->FloatingDispatch = NULL; // Floating Interrupts are not supported
     Dispatch->ChainedDispatch = KiChainedDispatch;
     Dispatch->FlatDispatch = NULL;
@@ -225,18 +145,18 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
  * @implemented
  */
 VOID
-STDCALL
-KeInitializeInterrupt(PKINTERRUPT Interrupt,
-                      PKSERVICE_ROUTINE ServiceRoutine,
-                      PVOID ServiceContext,
-                      PKSPIN_LOCK SpinLock,
-                      ULONG Vector,
-                      KIRQL Irql,
-                      KIRQL SynchronizeIrql,
-                      KINTERRUPT_MODE InterruptMode,
-                      BOOLEAN ShareVector,
-                      CHAR ProcessorNumber,
-                      BOOLEAN FloatingSave)
+NTAPI
+KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
+                      IN PKSERVICE_ROUTINE ServiceRoutine,
+                      IN PVOID ServiceContext,
+                      IN PKSPIN_LOCK SpinLock,
+                      IN ULONG Vector,
+                      IN KIRQL Irql,
+                      IN KIRQL SynchronizeIrql,
+                      IN KINTERRUPT_MODE InterruptMode,
+                      IN BOOLEAN ShareVector,
+                      IN CHAR ProcessorNumber,
+                      IN BOOLEAN FloatingSave)
 {
     ULONG i;
     PULONG DispatchCode = &Interrupt->DispatchCode[0], Patch = DispatchCode;
@@ -378,8 +298,8 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
  * @implemented
  */
 BOOLEAN
-STDCALL
-KeDisconnectInterrupt(PKINTERRUPT Interrupt)
+NTAPI
+KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
 {
     KIRQL OldIrql, Irql;
     ULONG Vector;

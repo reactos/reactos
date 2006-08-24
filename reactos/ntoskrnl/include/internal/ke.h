@@ -30,6 +30,25 @@ typedef enum _CACHED_MODULE_TYPE
 } CACHED_MODULE_TYPE, *PCACHED_MODULE_TYPE;
 extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
+typedef enum _CONNECT_TYPE
+{
+    NoConnect,
+    NormalConnect,
+    ChainConnect,
+    UnknownConnect
+} CONNECT_TYPE, *PCONNECT_TYPE;
+
+typedef struct _DISPATCH_INFO
+{
+    CONNECT_TYPE Type;
+    PKINTERRUPT Interrupt;
+    PKINTERRUPT_ROUTINE NoDispatch;
+    PKINTERRUPT_ROUTINE InterruptDispatch;
+    PKINTERRUPT_ROUTINE FloatingDispatch;
+    PKINTERRUPT_ROUTINE ChainedDispatch;
+    PKINTERRUPT_ROUTINE *FlatDispatch;
+} DISPATCH_INFO, *PDISPATCH_INFO;
+
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KPRCB;
@@ -47,6 +66,11 @@ extern ULONG KeI386FxsrPresent;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
 extern UCHAR KeProcessNodeSeed;
+extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
+extern PULONG KiInterruptTemplateObject;
+extern PULONG KiInterruptTemplateDispatch;
+extern PULONG KiInterruptTemplate2ndDispatch;
+extern ULONG KiUnexpectedEntrySize;
 
 /* MACROS *************************************************************************/
 
@@ -683,6 +707,30 @@ KeV86Exception(
     ULONG ExceptionNr,
     PKTRAP_FRAME Tf,
     ULONG address
+);
+
+VOID
+NTAPI
+KiStartUnexpectedRange(
+    VOID
+);
+
+VOID
+NTAPI
+KiEndUnexpectedRange(
+    VOID
+);
+
+VOID
+NTAPI
+KiInterruptDispatch(
+    VOID
+);
+
+VOID
+NTAPI
+KiChainedDispatch(
+    VOID
 );
 
 #include "ke_x.h"

@@ -63,7 +63,7 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
 /* Chained and Normal generic interrupt handlers for 1st and 2nd level entry*/
 .globl _KiChainedDispatch2ndLvl@0
-.globl _KiInterruptDispatch3@0
+.globl _KiInterruptDispatch@0
 .globl _KiChainedDispatch@0
 
 /* We implement the following trap exit points:                             */
@@ -1437,8 +1437,8 @@ _KiChainedDispatch@0:
     jmp _Kei386EoiHelper@0
 .endfunc
 
-.func KiInterruptDispatch3@0
-_KiInterruptDispatch3@0:
+.func KiInterruptDispatch@0
+_KiInterruptDispatch@0:
 
     /* Increase interrupt count */
     inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]
