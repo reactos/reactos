@@ -5,4 +5,7 @@
 <directory name="more">
     <xi:include href="more/more.rbuild" />
 </directory>
+<directory name="uptime">
+    <xi:include href="uptime/uptime.rbuild" />
+</directory>
 </group>
