@@ -17,7 +17,7 @@ SerialClose(
 {
 	PSERIAL_DEVICE_EXTENSION pDeviceExtension;
 
-	DPRINT("Serial: IRP_MJ_CLOSE\n");
+	DPRINT("IRP_MJ_CLOSE\n");
 	pDeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	pDeviceExtension->IsOpened = FALSE;
 

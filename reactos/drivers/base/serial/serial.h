@@ -81,10 +81,12 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	PKINTERRUPT Interrupt;
 	KDPC ReceivedByteDpc;
 	KDPC SendByteDpc;
+	KDPC CompleteIrpDpc;
 
 	SERIAL_LINE_CONTROL SerialLineControl;
 	UART_TYPE UartType;
 	ULONG WaitMask;
+	PIRP WaitOnMaskIrp;
 
 	ULONG BreakInterruptErrorCount;
 	SERIALPERF_STATS SerialPerfStats;
@@ -204,6 +206,10 @@ BOOLEAN
 IsCircularBufferEmpty(
 	IN PCIRCULAR_BUFFER pBuffer);
 
+ULONG
+GetNumberOfElementsInCircularBuffer(
+	IN PCIRCULAR_BUFFER pBuffer);
+
 NTSTATUS
 PushCircularBufferEntry(
 	IN PCIRCULAR_BUFFER pBuffer,
@@ -286,8 +292,8 @@ VOID NTAPI
 SerialReceiveByte(
 	IN PKDPC Dpc,
 	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
-	IN PVOID pByte,            // real type UCHAR
-	IN PVOID Unused);
+	IN PVOID Unused1,
+	IN PVOID Unused2);
 
 VOID NTAPI
 SerialSendByte(
@@ -295,6 +301,13 @@ SerialSendByte(
 	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
 	IN PVOID Unused1,
 	IN PVOID Unused2);
+
+VOID NTAPI
+SerialCompleteIrp(
+	IN PKDPC Dpc,
+	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
+	IN PVOID pIrp, // real type PIRP
+	IN PVOID Unused);
 
 BOOLEAN NTAPI
 SerialInterruptService(

@@ -28,7 +28,7 @@ SerialAddDeviceInternal(
 	static ULONG DeviceNumber = 0;
 	static ULONG ComPortNumber = 1;
 
-	DPRINT("Serial: SerialAddDeviceInternal called\n");
+	DPRINT("SerialAddDeviceInternal()\n");
 
 	ASSERT(DriverObject);
 	ASSERT(Pdo);
@@ -45,7 +45,7 @@ SerialAddDeviceInternal(
 	                        &Fdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Serial: IoCreateDevice() failed with status 0x%08x\n", Status);
+		DPRINT("IoCreateDevice() failed with status 0x%08x\n", Status);
 		Fdo = NULL;
 		goto ByeBye;
 	}
@@ -56,7 +56,7 @@ SerialAddDeviceInternal(
 	Status = IoRegisterDeviceInterface(Pdo, &GUID_DEVINTERFACE_COMPORT, NULL, &DeviceExtension->SerialInterfaceName);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Serial: IoRegisterDeviceInterface() failed with status 0x%08x\n", Status);
+		DPRINT("IoRegisterDeviceInterface() failed with status 0x%08x\n", Status);
 		goto ByeBye;
 	}
 
@@ -78,11 +78,12 @@ SerialAddDeviceInternal(
 	KeInitializeEvent(&DeviceExtension->InputBufferNotEmpty, NotificationEvent, FALSE);
 	KeInitializeDpc(&DeviceExtension->ReceivedByteDpc, SerialReceiveByte, DeviceExtension);
 	KeInitializeDpc(&DeviceExtension->SendByteDpc, SerialSendByte, DeviceExtension);
+	KeInitializeDpc(&DeviceExtension->CompleteIrpDpc, SerialCompleteIrp, DeviceExtension);
 	Fdo->Flags |= DO_POWER_PAGABLE;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Serial: IoAttachDeviceToDeviceStackSafe() failed with status 0x%08x\n", Status);
+		DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08x\n", Status);
 		goto ByeBye;
 	}
 	Fdo->Flags |= DO_BUFFERED_IO;
@@ -185,7 +186,7 @@ SerialPnpStartDevice(
 			}
 		}
 	}
-	DPRINT("Serial: New COM port. Base = 0x%lx, Irql = %u\n",
+	DPRINT("New COM port. Base = 0x%lx, Irql = %u\n",
 		DeviceExtension->BaseAddress, Dirql);
 	if (!DeviceExtension->BaseAddress)
 		return STATUS_INSUFFICIENT_RESOURCES;
@@ -212,7 +213,7 @@ SerialPnpStartDevice(
 	Status = SerialSetBaudRate(DeviceExtension, DeviceExtension->BaudRate);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Serial: SerialSetBaudRate() failed with status 0x%08x\n", Status);
+		DPRINT("SerialSetBaudRate() failed with status 0x%08x\n", Status);
 		return Status;
 	}
 
@@ -223,7 +224,7 @@ SerialPnpStartDevice(
 	Status = SerialSetLineControl(DeviceExtension, &DeviceExtension->SerialLineControl);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Serial: SerialSetLineControl() failed with status 0x%08x\n", Status);
+		DPRINT("SerialSetLineControl() failed with status 0x%08x\n", Status);
 		return Status;
 	}
 
@@ -245,7 +246,7 @@ SerialPnpStartDevice(
 	Status = IoCreateSymbolicLink(&LinkName, &DeviceName);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Serial: IoCreateSymbolicLink() failed with status 0x%08x\n", Status);
+		DPRINT("IoCreateSymbolicLink() failed with status 0x%08x\n", Status);
 		return Status;
 	}
 
@@ -258,7 +259,7 @@ SerialPnpStartDevice(
 		Affinity, FALSE);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Serial: IoConnectInterrupt() failed with status 0x%08x\n", Status);
+		DPRINT("IoConnectInterrupt() failed with status 0x%08x\n", Status);
 		IoSetDeviceInterfaceState(&DeviceExtension->SerialInterfaceName, FALSE);
 		IoDeleteSymbolicLink(&LinkName);
 		return Status;
@@ -313,7 +314,7 @@ SerialPnp(
 		IRP_MN_QUERY_REMOVE_DEVICE 0x1
 		IRP_MN_REMOVE_DEVICE 0x2
 		{
-			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
+			DPRINT("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
 			IoAcquireRemoveLock
 			IoReleaseRemoveLockAndWait
 			pass request to DeviceExtension-LowerDriver
@@ -336,7 +337,7 @@ SerialPnp(
 		*/
 		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
-			DPRINT("Serial: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+			DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 
 			ASSERT(((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState == dsStopped);
 
@@ -345,7 +346,7 @@ SerialPnp(
 			 */
 			if (Stack->Parameters.StartDevice.AllocatedResources == NULL)
 			{
-				DPRINT1("Serial: no allocated resources. Can't start COM%lu\n",
+				DPRINT1("No allocated resources. Can't start COM%lu\n",
 					((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ComPort);
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 				break;
@@ -366,16 +367,16 @@ SerialPnp(
 			{
 				case BusRelations:
 				{
-					DPRINT("Serial: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+					DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 					return ForwardIrpAndForget(DeviceObject, Irp);
 				}
 				case RemovalRelations:
 				{
-					DPRINT("Serial: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
+					DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
 					return ForwardIrpAndForget(DeviceObject, Irp);
 				}
 				default:
-					DPRINT1("Serial: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+					DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						Stack->Parameters.QueryDeviceRelations.Type);
 					return ForwardIrpAndForget(DeviceObject, Irp);
 			}
@@ -383,7 +384,7 @@ SerialPnp(
 		}
 		default:
 		{
-			DPRINT1("Serial: unknown minor function 0x%x\n", MinorFunction);
+			DPRINT1("Unknown minor function 0x%x\n", MinorFunction);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}
