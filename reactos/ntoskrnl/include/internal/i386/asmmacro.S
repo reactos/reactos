@@ -570,7 +570,7 @@ _KiUnexpectedInterrupt&Number:
 5:
 #ifdef DBG
     sub dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
-    //jnz 0f // FIXME: ROS IS BROKEN
+    jnz 0f
 
     /* Assert FS */
     mov bx, fs
@@ -752,12 +752,26 @@ FastExit:
     jmp 3b
 .endif
 
+#if DBG
 0:
+#if 0
+    /* Print a message */
+    mov esi, [esp+KTRAP_FRAME_DEBUGARGMARK]
+    mov edi, [esp+KTRAP_FRAME_DEBUGARGMARK-4]
+    push edi
+    push esi
+    push offset Broken
+    call _DbgPrint
+    add esp, 12
+#endif
+    jmp 2b // ros hack
+
     /* Fix up the mask */
     add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
 6:
     int 3
     jmp 5b
+#endif
 
 2:
     /* Check if this was V86 mode */
