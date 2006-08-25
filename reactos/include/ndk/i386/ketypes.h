@@ -96,6 +96,11 @@ Author:
 #define IPI_SYNCH_REQUEST       16
 
 //
+// HAL Variables
+//
+#define INITIAL_STALL_COUNT     0x64
+
+//
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
 //
 #define KSEG0_BASE              0x80000000

@@ -380,7 +380,6 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    InitializeListHead(&KPCR->PrcbData.WaitListHead);
 
    KeInitExceptions ();
-   KeInitInterrupts ();
 
    KeActiveProcessors |= 1 << 0;
 

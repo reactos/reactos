@@ -34,7 +34,6 @@
 				<file>fpu.c</file>
 				<file>gdt.c</file>
 				<file>irq.c</file>
-				<file>irqhand.s</file>
 				<file>kernel.c</file>
 				<file>ldt.c</file>
 				<file>thread.c</file>

@@ -15,21 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* DEPRECATED FUNCTIONS ******************************************************/
-
-void irq_handler_0(void);
-extern IDT_DESCRIPTOR KiIdt[256];
-
-VOID
-INIT_FUNCTION
-NTAPI
-KeInitInterrupts (VOID)
-{
-    KiIdt[0x30].a=((ULONG)irq_handler_0&0xffff)+(KGDT_R0_CODE<<16);
-    KiIdt[0x30].b=((ULONG)irq_handler_0&0xffff0000)+0x8000+
-                        0xe00;
-}
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
