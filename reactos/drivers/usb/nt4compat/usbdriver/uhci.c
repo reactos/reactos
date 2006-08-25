@@ -908,12 +908,14 @@ uhci_release(PDEVICE_OBJECT pdev)
 }
 
 // send cmds to start the uhc
-// shamelessly copied from linux's uhci.c
+// shamelessly copied from linux's uhci.c (reset_hc(), configure_hc() routines)
 BOOLEAN
 uhci_start(PHCD hcd)
 {
     PUHCI_DEV uhci;
     PBYTE io_addr;
+    USHORT pirq;
+    PCI_SLOT_NUMBER SlotNum;
     int timeout = 10000;
 
     uhci = uhci_from_hcd(hcd);
@@ -946,6 +948,18 @@ uhci_start(PHCD hcd)
     WRITE_PORT_USHORT((PUSHORT) (io_addr + USBCMD), USBCMD_RS | USBCMD_CF | USBCMD_MAXP);
 
     DbgPrint("uhci_start(): current uhci status=0x%x\n", uhci_status(uhci));
+
+    /* Enable PIRQ */
+    pirq = USBLEGSUP_DEFAULT;
+    SlotNum.u.AsULONG = 0;
+    SlotNum.u.bits.DeviceNumber = ((uhci->pdev_ext->pci_addr & 0xff) >> 3);
+    SlotNum.u.bits.FunctionNumber = (uhci->pdev_ext->pci_addr & 0x07);
+
+    DbgPrint("uhci_start(): set bus %d data at slot 0x%x\n", (uhci->pdev_ext->pci_addr >> 8),
+        SlotNum.u.AsULONG);
+
+    HalSetBusDataByOffset(PCIConfiguration, (uhci->pdev_ext->pci_addr >> 8), SlotNum.u.AsULONG,
+        &pirq, USBLEGSUP, sizeof(pirq));
 
     return TRUE;
 }

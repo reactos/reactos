@@ -1,5 +1,6 @@
 <module name="usbdriver" type="kernelmodedriver" installbase="system32/drivers" installname="usbdriver.sys">
 	<define name="INCLUDE_EHCI" />
+	<define name="_X86" />
 	<include base="usbdriver">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

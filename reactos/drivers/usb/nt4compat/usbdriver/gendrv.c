@@ -405,7 +405,7 @@ gendrv_set_cfg_completion(PURB purb, PVOID context)
     purb = NULL;
 
     // set the dev state
-    status = usb_query_and_lock_dev(dev_mgr, purb->endp_handle, &pdev);
+    status = usb_query_and_lock_dev(dev_mgr, dev_handle, &pdev);
     if (status != STATUS_SUCCESS)
     {
         usb_unlock_dev(pdev);
