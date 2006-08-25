@@ -9,7 +9,6 @@
 
 #include "console.h"
 
-
 static COLORREF s_Colors[] =
 {
 	RGB(0, 0, 0),
@@ -30,7 +29,6 @@ static COLORREF s_Colors[] =
 	RGB(255, 255, 255)
 };
 
-static TCHAR szText[1024];
 
 
 static
@@ -39,43 +37,6 @@ PaintStaticControls(HWND hwndDlg, PConsoleInfo pConInfo, LPDRAWITEMSTRUCT drawIt
 {
 	HBRUSH hBrush;
 	DWORD index;
-
-	if (drawItem->CtlID < IDC_STATIC_COLOR1 || drawItem->CtlID > IDC_STATIC_COLOR16)
-	{
-		COLORREF pbkColor, ptColor;
-		COLORREF nbkColor, ntColor;
-		/* draw static controls */
-		if (drawItem->CtlID == IDC_STATIC_SCREEN_COLOR)
-		{
-			nbkColor = pConInfo->ScreenBackground;
-			hBrush = CreateSolidBrush(nbkColor);
-			ntColor = pConInfo->ScreenText;
-		}
-		else
-		{
-			nbkColor = pConInfo->PopupBackground;
-			hBrush = CreateSolidBrush(nbkColor);
-			ntColor = pConInfo->PopupText;
-		}
-
-		if (!hBrush)
-		{
-			return FALSE;
-		}
-
-		FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
-		DeleteObject((HGDIOBJ)hBrush);
-		ptColor = SetTextColor(drawItem->hDC, ntColor);
-		pbkColor = SetBkColor(drawItem->hDC, nbkColor);
-		if (ntColor != nbkColor)
-		{
-			/* hide text when it has same background color as text color */
-			DrawText(drawItem->hDC, szText, _tcslen(szText), &drawItem->rcItem, 0);
-		}
-		SetTextColor(drawItem->hDC, ptColor);
-		SetBkColor(drawItem->hDC, pbkColor);
-		return TRUE;
-	}
 
 	index = drawItem->CtlID - IDC_STATIC_COLOR1;
 	hBrush = CreateSolidBrush(s_Colors[index]);
@@ -101,6 +62,7 @@ ColorsProc(
 	PConsoleInfo pConInfo;
 	LPNMUPDOWN lpnmud;
     LPPSHNOTIFY lppsn;
+	LPDRAWITEMSTRUCT drawItem;
 	DWORD red = -1;
 	DWORD green = -1;
 	DWORD blue = -1;
@@ -113,8 +75,6 @@ ColorsProc(
 		{
 			pConInfo = (PConsoleInfo) ((LPPROPSHEETPAGE)lParam)->lParam;
 			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
-			ZeroMemory(szText, sizeof(szText));
-			LoadString(hApplet, IDS_SCREEN_TEXT, szText, sizeof(szText) / sizeof(TCHAR));
 			SendMessage(GetDlgItem(hwndDlg, IDC_RADIO_SCREEN_BACKGROUND), BM_SETCHECK, BST_CHECKED, 0);
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_RED), UDM_SETRANGE, 0, (LPARAM)MAKELONG(255, 0));
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_GREEN), UDM_SETRANGE, 0, (LPARAM)MAKELONG(255, 0));
@@ -124,7 +84,16 @@ ColorsProc(
 		}
 		case WM_DRAWITEM:
 		{
-			return PaintStaticControls(hwndDlg, pConInfo, (LPDRAWITEMSTRUCT) lParam);
+			drawItem = (LPDRAWITEMSTRUCT)lParam;
+			if (drawItem->CtlID >= IDC_STATIC_COLOR1 && drawItem->CtlID <= IDC_STATIC_COLOR16)
+			{
+				return PaintStaticControls(hwndDlg, pConInfo, drawItem);
+			}
+			else if (drawItem->CtlID == IDC_STATIC_SCREEN_COLOR || drawItem->CtlID == IDC_STATIC_POPUP_COLOR)
+			{
+				PaintText(drawItem, pConInfo);
+				return TRUE;
+			}
 		}
 		case WM_NOTIFY:
 		{

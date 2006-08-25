@@ -41,6 +41,8 @@ typedef struct TAGConsoleInfo
 
 BOOL WriteConsoleOptions(PConsoleInfo pConInfo);
 void ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo);
+void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo);
+void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo);
 
 
 //globals

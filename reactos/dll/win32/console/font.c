@@ -19,6 +19,9 @@ FontProc(
   LPARAM lParam
 )
 {
+	LPDRAWITEMSTRUCT drawItem;
+	PConsoleInfo pConInfo = (PConsoleInfo)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
 	UNREFERENCED_PARAMETER(hwndDlg);
 	UNREFERENCED_PARAMETER(wParam);
 
@@ -26,10 +29,28 @@ FontProc(
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
+		{
+			pConInfo = (PConsoleInfo) ((LPPROPSHEETPAGE)lParam)->lParam;
+			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
 			return TRUE;
-
+		}
+		case WM_DRAWITEM:
+		{
+			drawItem = (LPDRAWITEMSTRUCT)lParam;
+			if (drawItem->CtlID == IDC_STATIC_FONT_WINDOW_PREVIEW)
+			{
+				PaintConsole(drawItem, pConInfo);
+			}
+			else if (drawItem->CtlID == IDC_STATIC_SELECT_FONT_PREVIEW)
+			{
+				PaintText(drawItem, pConInfo);
+			}
+			return TRUE;
+		}
 		default:
+		{
 			break;
+		}
 	}
 
 	return FALSE;

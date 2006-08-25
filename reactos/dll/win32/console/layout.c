@@ -9,6 +9,69 @@
 
 #include "console.h"
 
+
+
+void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
+{
+	COLORREF bkColor;
+	HBRUSH hBrush;
+
+	bkColor = GetSysColor(COLOR_BACKGROUND);
+	hBrush = CreateSolidBrush(bkColor);
+
+	FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
+	//TODO draw console image
+	//MoveToEx(drawItem->hDC, 0, 0, NULL);
+	//LineTo(drawItem->hDC, 10, 10);
+	//MoveToEx(drawItem->hDC, 30, 30, NULL);
+	//LineTo(drawItem->hDC, 40, 40);
+
+	DeleteObject((HGDIOBJ)hBrush);
+}
+
+void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
+{
+	COLORREF pbkColor, ptColor;
+	COLORREF nbkColor, ntColor;
+	HBRUSH hBrush;
+	TCHAR szText[1024];
+	
+	ZeroMemory(szText, sizeof(szText));
+	LoadString(hApplet, IDS_SCREEN_TEXT, szText, sizeof(szText) / sizeof(TCHAR));
+
+	if (drawItem->CtlID == IDC_STATIC_SCREEN_COLOR)
+	{
+		nbkColor = pConInfo->ScreenBackground;
+		hBrush = CreateSolidBrush(nbkColor);
+		ntColor = pConInfo->ScreenText;
+	}
+	else
+	{
+		nbkColor = pConInfo->PopupBackground;
+		hBrush = CreateSolidBrush(nbkColor);
+		ntColor = pConInfo->PopupText;
+	}
+
+	if (!hBrush)
+	{
+		return;
+	}
+
+	FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
+	DeleteObject((HGDIOBJ)hBrush);
+	ptColor = SetTextColor(drawItem->hDC, ntColor);
+	pbkColor = SetBkColor(drawItem->hDC, nbkColor);
+	if (ntColor != nbkColor)
+	{
+		/* hide text when it has same background color as text color */
+		DrawText(drawItem->hDC, szText, _tcslen(szText), &drawItem->rcItem, 0);
+	}
+	SetTextColor(drawItem->hDC, ptColor);
+	SetBkColor(drawItem->hDC, pbkColor);
+}
+
+
+
 INT_PTR 
 CALLBACK
 LayoutProc(
@@ -67,22 +130,7 @@ LayoutProc(
 		}
 		case WM_DRAWITEM:
 		{
-			COLORREF bkColor;
-			HBRUSH hBrush;
-			LPDRAWITEMSTRUCT drawItem;
-
-			bkColor = GetSysColor(COLOR_BACKGROUND);
-			hBrush = CreateSolidBrush(bkColor);
-			drawItem = (LPDRAWITEMSTRUCT) lParam;
-
-			FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
-			//TODO draw console image
-//			MoveToEx(drawItem->hDC, 0, 0, NULL);
-//			LineTo(drawItem->hDC, 10, 10);
-//			MoveToEx(drawItem->hDC, 30, 30, NULL);
-//			LineTo(drawItem->hDC, 40, 40);
-
-			DeleteObject((HGDIOBJ)hBrush);
+			PaintConsole((LPDRAWITEMSTRUCT)lParam, pConInfo);
 			return TRUE;
 		}
 		case WM_COMMAND:
