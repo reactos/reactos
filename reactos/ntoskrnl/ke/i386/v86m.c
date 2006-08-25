@@ -50,6 +50,7 @@ KeV86GPF(PKV86M_TRAP_FRAME VTf, PKTRAP_FRAME Tf)
 
   while (!Exit)
     {
+        //DPRINT1("ip: %lx\n", ip[i]);
       switch (ip[i])
 	{
 	  /* 32-bit data prefix */
@@ -688,127 +689,26 @@ ULONG
 NTAPI
 KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
 {
-  PUCHAR Ip;
-  PKV86M_TRAP_FRAME VTf;
+    PUCHAR Ip;
+    PKV86M_TRAP_FRAME VTf;
 
-  ASSERT (ExceptionNr != 14);
+    VTf = (PKV86M_TRAP_FRAME)Tf;
 
-  VTf = (PKV86M_TRAP_FRAME)Tf;
+    /*
+    * Check if we have reached the recovery instruction
+    */
+    Ip = (PUCHAR)((Tf->SegCs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
 
-  /* FIXME: This should use ->VdmObjects */
-  if(KeGetCurrentProcess()->Unused)
-  {
-    VTf->regs->PStatus = (PNTSTATUS) ExceptionNr;
-    return 1;
-  }
-
-  /*
-   * Check if we have reached the recovery instruction
-   */
-  Ip = (PUCHAR)((Tf->SegCs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
-  
-  DPRINT("ExceptionNr %d Ip[0] %x Ip[1] %x Ip[2] %x Ip[3] %x Tf->SegCs %x "
-	 "Tf->Eip %x\n", ExceptionNr, Ip[0], Ip[1], Ip[2], Ip[3], Tf->SegCs,
-	 Tf->Eip);
-  DPRINT("VTf %x VTf->regs %x\n", VTf, VTf->regs);
-
-  if (ExceptionNr == 6 &&
-      memcmp(Ip, VTf->regs->RecoveryInstruction, 4) == 0 &&
-      (Tf->SegCs * 16 + Tf->Eip) == VTf->regs->RecoveryAddress)
+    if (ExceptionNr == 6 &&
+        memcmp(Ip, VTf->regs->RecoveryInstruction, 4) == 0 &&
+        (Tf->SegCs * 16 + Tf->Eip) == VTf->regs->RecoveryAddress)
     {
-      *VTf->regs->PStatus = STATUS_SUCCESS;
-      return(1);
+        *VTf->regs->PStatus = STATUS_SUCCESS;
+        return(1);
     }
 
-  /*
-   * Handle the exceptions
-   */
-  switch (ExceptionNr)
-    {
-      /* Divide error */
-    case 0:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Single step */
-    case 1:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* NMI */
-    case 2:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Breakpoint */
-    case 3:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Overflow */
-    case 4:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Array bounds check */
-    case 5:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Invalid opcode */
-    case 6:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Device not available */
-    case 7:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Double fault */
-    case 8:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Intel reserved */
-    case 9:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Invalid TSS */
-    case 10:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Segment not present */
-    case 11:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Stack fault */
-    case 12:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* General protection fault */
-    case 13:
-      return(KeV86GPF(VTf, Tf));
-
-      /* Intel reserved */
-    case 15:
-    case 16:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-      /* Alignment check */
-    case 17:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-
-    default:
-      *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-      return(1);
-    }
+    ASSERT(ExceptionNr == 13);
+    return(KeV86GPF(VTf, Tf));
 }
 
 NTSTATUS STDCALL
