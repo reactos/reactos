@@ -392,7 +392,6 @@ DoCall:
     /* There are pending software interrupts, call their handlers */
     add esp, 12
     jmp SoftIntHandlerTable2[eax*4]
-    ret 8
 .endfunc
 
 .globl @KfLowerIrql@4
@@ -443,7 +442,6 @@ _@KfRaiseIrql@4:
     /* Get the IRQL and check if it's Software level only */
     xor eax, eax
     mov al, [fs:KPCR_IRQL]
-
     movzx ecx, cl
     cmp cl, DISPATCH_LEVEL
     jbe SetIrql
@@ -508,7 +506,7 @@ _KeRaiseIrqlToSynchLevel@0:
     cli
 
     /* Mask out interrupts */
-    mov eax, KiI8259MaskTable + DISPATCH_LEVEL * 2
+    mov eax, KiI8259MaskTable[DISPATCH_LEVEL*4]
     or eax, [fs:KPCR_IDR]
     out 0x21, al
     shr eax, 8
