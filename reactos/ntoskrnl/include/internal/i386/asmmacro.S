@@ -630,7 +630,7 @@ _KiUnexpectedInterrupt&Number:
 
     /* Check for debug registers */
     test dword ptr [esp+KTRAP_FRAME_DR7], ~DR7_RESERVED_MASK
-    jnz 2f
+    //jnz 2f
 
     /* Check for V86 */
 4:
