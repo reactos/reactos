@@ -11,14 +11,6 @@
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
 
-/* GLOBALS *******************************************************************/
-
-.extern _KeTimeAdjustment
-.extern _KiTickOffset
-.extern _KeTickCount
-.extern _KeMaximumIncrement
-.extern _KiExpireTimerDpc
-
 /* FUNCTIONS ******************************************************************/
 
 .globl _KeUpdateRunTime@4

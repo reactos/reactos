@@ -11,9 +11,6 @@
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
 
-.extern _Kei386EoiHelper@0
-.extern _KeUpdateSystemTime@0
-
 /* FUNCTIONS *****************************************************************/
 
 .globl _HalpClockInterrupt@0

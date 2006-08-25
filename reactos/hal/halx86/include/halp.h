@@ -48,6 +48,8 @@ PVOID HalpMapPhysMemory(ULONG PhysAddr, ULONG Size);
 
 /* Non-generic initialization */
 VOID HalpInitPhase0 (PROS_LOADER_PARAMETER_BLOCK LoaderBlock);
+VOID HalpInitPhase1(VOID);
+VOID NTAPI HalpClockInterrupt(VOID);
 
 /* sysinfo.c */
 NTSTATUS STDCALL

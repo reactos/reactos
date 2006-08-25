@@ -11,9 +11,6 @@
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
 
-.extern _Kei386EoiHelper@0
-.extern _KiUnexpectedInterrupt
-
 /* GLOBALS *******************************************************************/
 
 PICInitTable:
@@ -393,10 +390,8 @@ SkipMask2:
 DoCall:
 
     /* There are pending software interrupts, call their handlers */
-    /* FIXME: Because ROS IRQs don't setup a nice trap frame yet, we can't optimize a 2nd entry */
-    //add esp, 12
-    //jmp SoftIntHandlerTable2[eax*4]
-    call SoftIntHandlerTable[eax*4]
+    add esp, 12
+    jmp SoftIntHandlerTable2[eax*4]
     ret 8
 .endfunc
 

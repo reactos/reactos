@@ -25,7 +25,6 @@
 //  - Use Object Type Mutex/Lock.
 //
 // Ke:
-//  - Make sure IRQ trap code is synchronized with current trap code.
 //  - Reimplement the V86 support using a mode that will be compatible with
 //    VDM and the future and use ABIOS gates.
 //  - Implement Invalid Opcode and GPD handlers for V86-mode.
