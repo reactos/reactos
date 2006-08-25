@@ -158,6 +158,9 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
    ULONG DestRedMask = 0, DestGreenMask = 0, DestBlueMask = 0;
    ULONG i;
 
+   ASSERT(SourcePalType || PaletteSource);
+   ASSERT(DestPalType || PaletteDest);
+
    XlateGDI = EngAllocMem(0, sizeof(XLATEGDI), TAG_XLATEOBJ);
    if (XlateGDI == NULL)
    {
