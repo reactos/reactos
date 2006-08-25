@@ -13,6 +13,9 @@
 <directory name="ipconfig">
     <xi:include href="ipconfig/ipconfig.rbuild" />
 </directory>
+<directory name="net">
+    <xi:include href="net/net.rbuild" />
+</directory>
 <directory name="netstat">
     <xi:include href="netstat/netstat.rbuild" />
 </directory>
