@@ -44,6 +44,8 @@
 
 #define FRAME_EDITED        0xFFF8
 
+#define WE_DO_NOT_SPEAK_ABOUT_THE_V86_HACK 1
+
 #ifndef __ASM__
 
 extern ULONG Ke386CacheAlignment;
