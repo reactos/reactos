@@ -94,6 +94,7 @@ KiInitializeSystemClock(VOID)
     SharedUserData->SystemTime.High2Time = SystemBootTime.u.HighPart;
     SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
     SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
+    KiClockSetupComplete = TRUE;
 }
 
 VOID

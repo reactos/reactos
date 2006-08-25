@@ -33,7 +33,7 @@
 				<file>exp.c</file>
 				<file>fpu.c</file>
 				<file>gdt.c</file>
-				<file>irq.c</file>
+                <!-- <file>irq.c</file> -->
 				<file>kernel.c</file>
 				<file>ldt.c</file>
 				<file>thread.c</file>
@@ -68,6 +68,10 @@
 			<file>usercall.c</file>
 			<file>wait.c</file>
 	</directory>
+    <directory name="deprecated">
+        <file>irqhand.S</file>
+        <file>irq.c</file>
+    </directory>
 	<directory name="cc">
 			<file>cacheman.c</file>
 			<file>copy.c</file>

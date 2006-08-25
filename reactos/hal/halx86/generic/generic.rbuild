@@ -31,7 +31,7 @@
 	<define name="_NTHAL_" />
 	<define name="__USE_W32API" />
 	<file>ipi.c</file>
-    <file>irq.S</file>
+    <file>irql.c</file>
 	<file>processor.c</file>
 	<file>resource.c</file>
 	<file>spinlock.c</file>

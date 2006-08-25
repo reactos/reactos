@@ -43,7 +43,7 @@ HalInitSystem (ULONG BootPhase,
   else if (BootPhase == 1)
     {
       /* Initialize the clock interrupt */
-      HalpInitPhase1();
+      //HalpInitPhase1();
 
       /* Initialize display and make the screen black */
       HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
