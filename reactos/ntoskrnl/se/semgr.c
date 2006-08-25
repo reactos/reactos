@@ -426,7 +426,13 @@ SeCaptureSubjectContextEx(IN PETHREAD Thread,
     PAGED_CODE();
 
     /* ROS HACK */
-    if (!Process) return;
+    if (!Process)
+    {
+        SubjectContext->PrimaryToken = NULL;
+        SubjectContext->ProcessAuditId  = 0;
+        SubjectContext->ClientToken = NULL;
+        return;
+    }
 
     /* Save the unique ID */
     SubjectContext->ProcessAuditId = Process->UniqueProcessId;
