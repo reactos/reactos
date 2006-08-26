@@ -150,9 +150,6 @@ PspWriteTebImpersonationInfo(IN PETHREAD Thread,
             Teb->IsImpersonating = 0;
         }
 
-        /* Set new flag */
-        Thread->ActiveImpersonationInfo = TRUE;
-
         /* Check if we're in a different thread */
         if (Thread != CurrentThread)
         {
@@ -638,6 +635,7 @@ PsImpersonateClient(IN PETHREAD Thread,
         Impersonation->CopyOnOpen = CopyOnOpen;
         Impersonation->EffectiveOnly = EffectiveOnly;
         Impersonation->Token = Token;
+        ObReferenceObject(Token);
 
         /* Unlock the thread */
         PspUnlockThreadSecurityExclusive(Thread);
