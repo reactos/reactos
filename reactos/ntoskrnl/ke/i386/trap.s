@@ -1446,7 +1446,6 @@ _KiInterruptDispatch@0:
     /* Check if it was handled */
     or eax, eax
     jz SpuriousInt
-    sub esp, 12
 
     /* Acquire the lock */
 GetIntLock:
@@ -1461,9 +1460,6 @@ GetIntLock:
 
     /* Release the lock */
     RELEASE_SPINLOCK(esi)
-
-    /* Clean up the stack */
-    add esp, 12
 
     /* Exit the interrupt */
     mov esi, $
