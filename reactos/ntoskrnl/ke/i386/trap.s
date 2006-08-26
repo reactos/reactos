@@ -722,6 +722,7 @@ MaskMode:
     call _KiDispatchException@20
 
     /* End the trap */
+    mov esp, ebp
     jmp _Kei386EoiHelper@0
 .endfunc
 
