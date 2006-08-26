@@ -7,6 +7,7 @@
 	<!--<node name="mPlayer" file="mplayer.xml"/>--> <!-- ToDo: Choose a good one from all the installers and frondends -->
 	<!--<node name="OpenOffice 1" file="openoffice.xml"/>--> <!-- Needs Zip support -->
 	<node name="Putty" file="putty.xml"/>
+	<node name="Samba-TNG" file="samba-tng.xml"/>
 	<node name="TuxPaint" file="tuxpaint.xml"/>
 	<!--<node name="Tiny Webserver" file="tiny.xml"/>--> <!-- Needs Zip support -->
 </tree>
