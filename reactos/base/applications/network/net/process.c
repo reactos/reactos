@@ -117,8 +117,10 @@ LONG ReadPipeSize(HANDLE hStdoutWr, HANDLE hStdoutRd)
 LONG ReadPipe(HANDLE hStdoutWr, HANDLE hStdoutRd, CHAR *srvlst, LONG size) 
 {   
   CHAR chBuf[2]; 
-  long pos=0;
-    
+  LONG pos;
+
+  pos=0;
+
   if (!CloseHandle(hStdoutWr)) 
   {    
       return 0; /* fail */
@@ -126,8 +128,8 @@ LONG ReadPipe(HANDLE hStdoutWr, HANDLE hStdoutRd, CHAR *srvlst, LONG size)
   
    for (;;) 
    { 
-	  long dwRead;
-      if( !ReadFile( hStdoutRd, chBuf, 1, &dwRead, NULL) || dwRead == 0)
+	  LONG dwRead;
+      if( !ReadFile( hStdoutRd, chBuf, 1, (LONG *)&dwRead, NULL) || dwRead == 0)
 	  {
 		 break; 
 	  }
