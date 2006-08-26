@@ -67,6 +67,9 @@
 <directory name="taskmgr">
 	<xi:include href="taskmgr/taskmgr.rbuild" />
 </directory>
+<directory name="testsets">
+	<xi:include href="testsets/testsets.rbuild" />
+</directory>
 <directory name="winefile">
 	<xi:include href="winefile/winefile.rbuild" />
 </directory>
