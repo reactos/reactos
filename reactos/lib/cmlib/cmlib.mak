@@ -28,7 +28,9 @@ CMLIB_HOST_OBJECTS = \
 	$(subst $(CMLIB_BASE), $(CMLIB_INT), $(CMLIB_HOST_SOURCES:.c=.o))
 
 CMLIB_HOST_CFLAGS = -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
-  -DCMLIB_HOST -D_M_IX86 -I$(CMLIB_BASE) -Iinclude/reactos -DDBG
+  -D_X86_ -D__i386__ -D_REACTOS_ \
+  -DCMLIB_HOST -D_M_IX86 -I$(CMLIB_BASE) -Iinclude/reactos -Iinclude/psdk -Iinclude/ddk \
+  -D__NO_CTYPE_INLINES
 
 $(CMLIB_HOST_TARGET): $(CMLIB_HOST_OBJECTS) | $(CMLIB_OUT)
 	$(ECHO_AR)

@@ -143,7 +143,7 @@ HvpAddFree(
    ASSERT(FreeBlock != NULL);
 
    Storage = (FreeIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;
-   Index = HvpComputeFreeListIndex(FreeBlock->Size);
+   Index = HvpComputeFreeListIndex((ULONG)FreeBlock->Size);
 
    FreeBlockData = (PHCELL_INDEX)(FreeBlock + 1);
    *FreeBlockData = RegistryHive->Storage[Storage].FreeDisplay[Index];
@@ -168,7 +168,7 @@ HvpRemoveFree(
    ASSERT(RegistryHive->ReadOnly == FALSE);
 
    Storage = (CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;
-   Index = HvpComputeFreeListIndex(CellBlock->Size);
+   Index = HvpComputeFreeListIndex((ULONG)CellBlock->Size);
 
    pFreeCellOffset = &RegistryHive->Storage[Storage].FreeDisplay[Index];
    while (*pFreeCellOffset != HCELL_NULL)
