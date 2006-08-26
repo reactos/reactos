@@ -1401,6 +1401,7 @@ _KiChainedDispatch@0:
     sub esp, 4
 
     /* Begin interrupt */
+    push esp
     push eax
     push ecx
     call _HalBeginSystemInterrupt@12
@@ -1408,7 +1409,6 @@ _KiChainedDispatch@0:
     /* Check if it was handled */
     or eax, eax
     jz SpuriousInt
-    sub esp, 12
 
     /* Call the 2nd-level handler */
     call _KiChainedDispatch2ndLvl@0
@@ -1436,9 +1436,9 @@ _KiInterruptDispatch@0:
     /* Save old irql */
     push eax
     sub esp, 4
-    push esp
 
     /* Begin interrupt */
+    push esp
     push eax
     push ecx
     call _HalBeginSystemInterrupt@12
