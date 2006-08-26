@@ -1326,7 +1326,7 @@ _KiUnexpectedInterruptTail:
     call _HalBeginSystemInterrupt@12
 
     /* Check if it was spurious or not */
-    or eax, eax
+    or al, al
     jnz Handled
 
     /* Spurious, ignore it */
@@ -1407,7 +1407,7 @@ _KiChainedDispatch@0:
     call _HalBeginSystemInterrupt@12
 
     /* Check if it was handled */
-    or eax, eax
+    or al, al
     jz SpuriousInt
 
     /* Call the 2nd-level handler */
@@ -1444,7 +1444,7 @@ _KiInterruptDispatch@0:
     call _HalBeginSystemInterrupt@12
 
     /* Check if it was handled */
-    or eax, eax
+    or al, al
     jz SpuriousInt
 
     /* Acquire the lock */
