@@ -41,53 +41,6 @@ DIB_32BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
   return (ULONG)(*addr);
 }
 
-#if defined(_M_IX86) && !defined(_MSC_VER)
-VOID
-DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
-{      
-  LONG cx  = (x2 - x1) ;  
-   PBYTE byteaddr = (PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta;
-   PDWORD addr = (PDWORD)byteaddr + x1;
-
-    __asm__ __volatile__ (
-"  cld\n"
-"  mov  %0, %%eax\n"
-"  mov  %2, %%edi\n"
-"  test $0x03, %%edi\n" /* Align to fullword boundary */
-"  jnz   0f\n"
-"  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
-"  rep stosl\n"         /* The actual fill */
-"  jmp   1f\n"
-"0:\n"
-"  stosw\n"
-"  ror  $0x10,%%eax\n"
-"  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
-"  dec  %%ecx\n"
-"  rep stosl\n"         /* The actual fill */
-"  shr $0x10,%%eax\n"
-"  stosw\n"
-"1:\n"
-  : /* no output */
-  : "m"(c), "r"(cx), "m"(addr)
-  : "%eax", "%ecx", "%edi");
-
-  
-}
-#else
-VOID
-DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
-{
-  PBYTE byteaddr = (ULONG_PTR)SurfObj->pvScan0 + y * SurfObj->lDelta;  
-  PDWORD addr = (PDWORD)byteaddr + x1;		
-  LONG cx = x1;
-  while(cx < x2) 
-  {
-    *addr = (DWORD)c;
-    ++addr;
-    ++cx;
-   }	  
-}
-#endif
 
 VOID
 DIB_32BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
@@ -324,19 +277,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   return TRUE;
 }
 
-BOOLEAN 
-DIB_32BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
-{			 
-  ULONG DestY;	
 
-	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
-  {
-    DIB_32BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
-  }
-
-
-	return TRUE;
-}
 /*
 =======================================
  Stretching functions goes below

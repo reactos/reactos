@@ -12,6 +12,7 @@
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_WIN32K_" />
 	<pch>w32k.h</pch>
+
 	<directory name="dib">
 		<file>dib1bpp.c</file>
 		<file>dib4bpp.c</file>
@@ -23,7 +24,23 @@
 		<file>dib32bpp.c</file>
 		<file>dib32gen.c</file>
 		<file>dib.c</file>
+
+            <if property="ARCH" value="i386">
+                      <directory name="i386">
+                            <file>dib32bpp_hline.s</file>
+                            <file>dib32bpp_colorfill.s</file>
+                      </directory>
+            </if>
+
+            <ifnot property="ARCH" value="i386">                      
+                      <file>dib32bppc.c</file>
+            </ifnot> 
+
 	</directory>
+
+      
+
+
 	<directory name="eng">
 		<compilationunit name="eng.c">
 			<file>bitblt.c</file>
