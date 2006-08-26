@@ -36,9 +36,6 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    
    ASSERT(ExceptionNr == 14);
    
-   /* Store the exception number in an unused field in the trap frame. */
-   Tf->DbgArgMark = 14;
-
    /* get the faulting address */
    cr2 = Ke386GetCr2();
    Tf->DbgArgPointer = cr2;

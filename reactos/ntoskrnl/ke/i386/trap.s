@@ -187,23 +187,6 @@ _KiFastCallEntry:
     /* Set the trap frame debug header */
     SET_TF_DEBUG_HEADER
 
-#ifdef DBG // FIXME: Is this for GDB? Can it be moved in the stub?
-    /*
-     * We want to know the address from where the syscall stub was called.
-     * If PrevMode is KernelMode, that address is stored in our own (kernel)
-     * stack, at location KTRAP_FRAME_ESP.
-     * If we're coming from UserMode, we load the usermode stack pointer
-     * and go back two frames (first frame is the syscall stub, second call
-     * is the caller of the stub).
-     */
-    mov edi, [ebp+KTRAP_FRAME_ESP]
-    test byte ptr [esi+KTHREAD_PREVIOUS_MODE], 0x01
-    jz PrevWasKernelMode
-    mov edi, [edi+4]
-PrevWasKernelMode:
-    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
-#endif
-
     /* Enable interrupts */
     sti
 
@@ -229,9 +212,6 @@ SharedCode:
     /* Invalid ID, try to load Win32K Table */
     jnb KiBBTUnexpectedRange
 
-#if 0 // <== Disabled for two reasons: We don't save TEB in 0x18, but KPCR.
-      // <== We don't have a KeGdiFlushUserBatch callback yet (needs to be
-      //     sent through the PsInitializeWin32Callouts structure)
     /* Check if this was Win32K */
     cmp ecx, SERVICE_TABLE_TEST
     jnz NotWin32K
@@ -242,15 +222,14 @@ SharedCode:
     /* Check if we should flush the User Batch */
     xor ebx, ebx
     or ebx, [ecx+TEB_GDI_BATCH_COUNT]
-    jz NoWin32K
+    jz NotWin32K
 
     /* Flush it */
     push edx
     push eax
-    call [_KeGdiFlushUserBatch]
+    //call [_KeGdiFlushUserBatch]
     pop eax
     pop edx
-#endif
 
 NotWin32K:
     /* Increase total syscall count */

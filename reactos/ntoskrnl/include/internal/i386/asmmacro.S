@@ -266,63 +266,64 @@ _KiUnexpectedInterrupt&Number:
 //              /* Handle trap */
 //              <Your Trap Code Here>
 //
-#define TRAP_PROLOG(Label) \
-    /* Just to be safe, clear out the HIWORD, since it's reserved */ \
-    mov word ptr [esp+2], 0; \
-\
-    /* Save the non-volatiles */ \
-    push ebp; \
-    push ebx; \
-    push esi; \
-    push edi; \
-\
-    /* Save FS and set it to PCR */ \
-    push fs; \
-    mov ebx, KGDT_R0_PCR; \
-    mov fs, bx; \
-\
-    /* Save exception list and bogus previous mode */ \
-    push fs:[KPCR_EXCEPTION_LIST]; \
-    push -1; \
-\
-    /* Save volatiles and segment registers */ \
-    push eax; \
-    push ecx; \
-    push edx; \
-    push ds; \
-    push es; \
-    push gs; \
-\
-    /* Set the R3 data segment */ \
-    mov ax, KGDT_R3_DATA + RPL_MASK; \
-\
-    /* Skip debug registers and debug stuff */ \
-    sub esp, 0x30; \
-\
-    /* Load the segment registers */ \
-    mov ds, ax; \
-    mov es, ax; \
-\
-    /* Set up frame */ \
-    mov ebp, esp; \
-\
-    /* Check if this was from V86 Mode */ \
-    /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK; */ \
-    /* jnz V86_Label; */ \
-\
-    /* Get current thread */ \
-    mov ecx, [fs:KPCR_CURRENT_THREAD]; \
-    cld; \
-\
-    /* Flush DR7 */ \
-    and dword ptr [ebp+KTRAP_FRAME_DR7], 0; \
-\
-    /* Check if the thread was being debugged */ \
-    /* test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF; */ \
-    /* jnz Dr_Label; */ \
-\
-    /* Set the Trap Frame Debug Header */ \
+.macro TRAP_PROLOG Label
+    /* Just to be safe, clear out the HIWORD, since it's reserved */
+    mov word ptr [esp+2], 0
+
+    /* Save the non-volatiles */
+    push ebp
+    push ebx
+    push esi
+    push edi
+
+    /* Save FS and set it to PCR */
+    push fs
+    mov ebx, KGDT_R0_PCR
+    mov fs, bx
+
+    /* Save exception list and bogus previous mode */
+    push fs:[KPCR_EXCEPTION_LIST]
+    push -1
+
+    /* Save volatiles and segment registers */
+    push eax
+    push ecx
+    push edx
+    push ds
+    push es
+    push gs
+
+    /* Set the R3 data segment */
+    mov ax, KGDT_R3_DATA + RPL_MASK
+
+    /* Skip debug registers and debug stuff */
+    sub esp, 0x30
+
+    /* Load the segment registers */
+    mov ds, ax
+    mov es, ax
+
+    /* Set up frame */
+    mov ebp, esp
+
+    /* Check if this was from V86 Mode */
+    /* test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK; */
+    /* jnz V86_Label; */
+
+    /* Get current thread */
+    mov ecx, [fs:KPCR_CURRENT_THREAD]
+    cld
+
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    /* test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF; */
+    /* jnz Dr_Label; */
+
+    /* Set the Trap Frame Debug Header */
     SET_TF_DEBUG_HEADER
+.endm
 
 //
 // @name INT_PROLOG
@@ -506,23 +507,6 @@ _KiUnexpectedInterrupt&Number:
 
     /* Set the trap frame debug header */
     SET_TF_DEBUG_HEADER
-
-#ifdef DBG // FIXME: Is this for GDB? Can it be moved in the stub?
-    /*
-     * We want to know the address from where the syscall stub was called.
-     * If PrevMode is KernelMode, that address is stored in our own (kernel)
-     * stack, at location KTRAP_FRAME_ESP.
-     * If we're coming from UserMode, we load the usermode stack pointer
-     * and go back two frames (first frame is the syscall stub, second call
-     * is the caller of the stub).
-     */
-    mov edi, [ebp+KTRAP_FRAME_ESP]
-    test byte ptr [esi+KTHREAD_PREVIOUS_MODE], 0x01
-    jz 0f
-    mov edi, [edi+4]
-0:
-    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
-#endif
 
     /* Enable interrupts */
     sti
@@ -754,20 +738,9 @@ FastExit:
 
 #if DBG
 0:
-#if 0
-    /* Print a message */
-    mov esi, [esp+KTRAP_FRAME_DEBUGARGMARK]
-    mov edi, [esp+KTRAP_FRAME_DEBUGARGMARK-4]
-    push edi
-    push esi
-    push offset Broken
-    call _DbgPrint
-    add esp, 12
-#endif
-    jmp 2b // ros hack
-
     /* Fix up the mask */
     add dword ptr [esp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+
 6:
     int 3
     jmp 5b
