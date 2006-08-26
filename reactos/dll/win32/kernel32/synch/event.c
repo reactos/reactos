@@ -8,6 +8,10 @@
 
 /* INCLUDES *****************************************************************/
 
+/* File contains Vista Semantics */
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+
 #include <k32.h>
 
 #define NDEBUG
@@ -17,10 +21,10 @@
 
 HANDLE
 WINAPI
-CreateEventA(IN LPSECURITY_ATTRIBUTES lpEventAttributes OPTIONAL,
-             IN BOOL bManualReset,
-             IN BOOL bInitialState,
-             IN LPCSTR lpName OPTIONAL)
+CreateEventExA(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
+               IN LPCSTR lpName  OPTIONAL,
+               IN DWORD dwFlags,
+               IN DWORD dwDesiredAccess)
 {
     NTSTATUS Status;
     ANSI_STRING AnsiName;
@@ -48,27 +52,39 @@ CreateEventA(IN LPSECURITY_ATTRIBUTES lpEventAttributes OPTIONAL,
     }
 
     /* Call the Unicode API */
-    return CreateEventW(lpEventAttributes,
-                        bManualReset,
-                        bInitialState,
-                        UnicodeName);
+    return CreateEventExW(lpEventAttributes,
+                          UnicodeName,
+                          dwFlags,
+                          dwDesiredAccess);
+
 }
 
 HANDLE
 WINAPI
-CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes OPTIONAL,
-             IN BOOL bManualReset,
-             IN BOOL bInitialState,
-             IN LPCWSTR lpName OPTIONAL)
+CreateEventExW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
+               IN LPCWSTR lpName  OPTIONAL,
+               IN DWORD dwFlags,
+               IN DWORD dwDesiredAccess)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES LocalAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE Handle;
     UNICODE_STRING ObjectName;
+    BOOLEAN InitialState;
+    EVENT_TYPE EventType;
 
     /* Now check if we got a name */
     if (lpName) RtlInitUnicodeString(&ObjectName, lpName);
+
+    if (dwFlags & ~(CREATE_EVENT_INITIAL_SET | CREATE_EVENT_MANUAL_RESET))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    InitialState = (dwFlags & CREATE_EVENT_INITIAL_SET) != 0;
+    EventType = (dwFlags & CREATE_EVENT_MANUAL_RESET) ? NotificationEvent : SynchronizationEvent;
 
     /* Now convert the object attributes */
     ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
@@ -77,11 +93,10 @@ CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes OPTIONAL,
 
     /* Create the event */
     Status = NtCreateEvent(&Handle,
-                           EVENT_ALL_ACCESS,
+                           (ACCESS_MASK)dwDesiredAccess,
                            ObjectAttributes,
-                           bManualReset ?
-                           NotificationEvent : SynchronizationEvent,
-                           (BOOLEAN)bInitialState);
+                           EventType,
+                           InitialState);
     if (NT_SUCCESS(Status))
     {
         /* Check if the object already existed */
@@ -105,6 +120,49 @@ CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes OPTIONAL,
         SetLastErrorByStatus(Status);
         return NULL;
     }
+
+}
+
+HANDLE
+WINAPI
+CreateEventA(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
+             IN BOOL bManualReset,
+             IN BOOL bInitialState,
+             IN LPCSTR lpName  OPTIONAL)
+{
+    DWORD dwFlags = 0;
+
+    if (bManualReset)
+        dwFlags |= CREATE_EVENT_MANUAL_RESET;
+
+    if (bInitialState)
+        dwFlags |= CREATE_EVENT_INITIAL_SET;
+
+    return CreateEventExA(lpEventAttributes,
+                          lpName,
+                          dwFlags,
+                          EVENT_ALL_ACCESS);
+}
+
+HANDLE
+WINAPI
+CreateEventW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
+             IN BOOL bManualReset,
+             IN BOOL bInitialState,
+             IN LPCWSTR lpName  OPTIONAL)
+{
+    DWORD dwFlags = 0;
+
+    if (bManualReset)
+        dwFlags |= CREATE_EVENT_MANUAL_RESET;
+
+    if (bInitialState)
+        dwFlags |= CREATE_EVENT_INITIAL_SET;
+
+    return CreateEventExW(lpEventAttributes,
+                          lpName,
+                          dwFlags,
+                          EVENT_ALL_ACCESS);
 }
 
 HANDLE

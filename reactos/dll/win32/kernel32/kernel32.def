@@ -109,6 +109,8 @@ CreateDirectoryExW@12
 CreateDirectoryW@8
 CreateEventA@16
 CreateEventW@16
+CreateEventExA@16
+CreateEventExW@16
 CreateFiber@12
 CreateFiberEx@20
 CreateFileA@28
@@ -126,6 +128,8 @@ CreateMailslotW@16
 CreateMemoryResourceNotification@4
 CreateMutexA@12
 CreateMutexW@12
+CreateMutexExA@16
+CreateMutexExW@16
 CreateNamedPipeA@32
 CreateNamedPipeW@32
 CreateNlsSecurityDescriptor@12
@@ -137,6 +141,8 @@ CreateProcessW@40
 CreateRemoteThread@28
 CreateSemaphoreA@16
 CreateSemaphoreW@16
+CreateSemaphoreExA@24
+CreateSemaphoreExW@24
 CreateSocketHandle@0
 CreateSymbolicLinkA@12
 CreateSymbolicLinkW@12
@@ -148,6 +154,8 @@ CreateToolhelp32Snapshot@8
 CreateVirtualBuffer@12
 CreateWaitableTimerA@12
 CreateWaitableTimerW@12
+CreateWaitableTimerExA@16
+CreateWaitableTimerExW@16
 DeactivateActCtx@8
 DebugActiveProcess@4
 DebugActiveProcessStop@4

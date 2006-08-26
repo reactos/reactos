@@ -8,6 +8,10 @@
 
 /* INCLUDES *****************************************************************/
 
+/* File contains Vista Semantics */
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+
 #include <k32.h>
 
 #define NDEBUG
@@ -20,63 +24,10 @@
  */
 HANDLE
 WINAPI
-CreateWaitableTimerW(IN LPSECURITY_ATTRIBUTES lpTimerAttributes OPTIONAL,
-                     IN BOOL bManualReset,
-                     IN LPCWSTR lpTimerName OPTIONAL)
-{
-    NTSTATUS Status;
-    OBJECT_ATTRIBUTES LocalAttributes;
-    POBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE Handle;
-    UNICODE_STRING ObjectName;
-
-    /* Now check if we got a name */
-    if (lpTimerName) RtlInitUnicodeString(&ObjectName, lpTimerName);
-
-    /* Now convert the object attributes */
-    ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
-                                                    lpTimerAttributes,
-                                                    lpTimerName ? &ObjectName : NULL);
-
-    /* Create the timer */
-    Status = NtCreateTimer(&Handle,
-                           TIMER_ALL_ACCESS,
-                           ObjectAttributes,
-                           bManualReset ?
-                           NotificationTimer : SynchronizationTimer);
-    if (NT_SUCCESS(Status))
-    {
-        /* Check if the object already existed */
-        if (Status == STATUS_OBJECT_NAME_EXISTS)
-        {
-            /* Set distinguished Win32 error code */
-            SetLastError(ERROR_ALREADY_EXISTS);
-        }
-        else
-        {
-            /* Otherwise, set success */
-            SetLastError(ERROR_SUCCESS);
-        }
-
-        /* Return the handle */
-        return Handle;
-    }
-    else
-    {
-        /* Convert the NT Status and fail */
-        SetLastErrorByStatus(Status);
-        return NULL;
-    }
-}
-
-/*
- * @implemented
- */
-HANDLE
-WINAPI
-CreateWaitableTimerA(IN LPSECURITY_ATTRIBUTES lpTimerAttributes OPTIONAL,
-                     IN BOOL bManualReset,
-                     IN LPCSTR lpTimerName OPTIONAL)
+CreateWaitableTimerExA(IN LPSECURITY_ATTRIBUTES lpTimerAttributes  OPTIONAL,
+                       IN LPCSTR lpTimerName  OPTIONAL,
+                       IN DWORD dwFlags,
+                       IN DWORD dwDesiredAccess)
 {
     NTSTATUS Status;
     ANSI_STRING AnsiName;
@@ -104,9 +55,114 @@ CreateWaitableTimerA(IN LPSECURITY_ATTRIBUTES lpTimerAttributes OPTIONAL,
     }
 
     /* Call the Unicode API */
-    return CreateWaitableTimerW(lpTimerAttributes,
-                                bManualReset,
-                                UnicodeName);
+    return CreateWaitableTimerExW(lpTimerAttributes,
+                                  UnicodeName,
+                                  dwFlags,
+                                  dwDesiredAccess);
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+CreateWaitableTimerExW(IN LPSECURITY_ATTRIBUTES lpTimerAttributes  OPTIONAL,
+                       IN LPCWSTR lpTimerName  OPTIONAL,
+                       IN DWORD dwFlags,
+                       IN DWORD dwDesiredAccess)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES LocalAttributes;
+    POBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE Handle;
+    UNICODE_STRING ObjectName;
+    TIMER_TYPE TimerType;
+
+    /* Now check if we got a name */
+    if (lpTimerName) RtlInitUnicodeString(&ObjectName, lpTimerName);
+
+    if (dwFlags & ~(CREATE_WAITABLE_TIMER_MANUAL_RESET))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    TimerType = (dwFlags & CREATE_WAITABLE_TIMER_MANUAL_RESET) ? NotificationTimer : SynchronizationTimer;
+
+    /* Now convert the object attributes */
+    ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
+                                                    lpTimerAttributes,
+                                                    lpTimerName ? &ObjectName : NULL);
+
+    /* Create the timer */
+    Status = NtCreateTimer(&Handle,
+                           (ACCESS_MASK)dwDesiredAccess,
+                           ObjectAttributes,
+                           TimerType);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if the object already existed */
+        if (Status == STATUS_OBJECT_NAME_EXISTS)
+        {
+            /* Set distinguished Win32 error code */
+            SetLastError(ERROR_ALREADY_EXISTS);
+        }
+        else
+        {
+            /* Otherwise, set success */
+            SetLastError(ERROR_SUCCESS);
+        }
+
+        /* Return the handle */
+        return Handle;
+    }
+    else
+    {
+        /* Convert the NT Status and fail */
+        SetLastErrorByStatus(Status);
+        return NULL;
+    }
+
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+CreateWaitableTimerW(IN LPSECURITY_ATTRIBUTES lpTimerAttributes OPTIONAL,
+                     IN BOOL bManualReset,
+                     IN LPCWSTR lpTimerName OPTIONAL)
+{
+    DWORD dwFlags = 0;
+
+    if (bManualReset)
+        dwFlags |= CREATE_WAITABLE_TIMER_MANUAL_RESET;
+
+    return CreateWaitableTimerExW(lpTimerAttributes,
+                                  lpTimerName,
+                                  dwFlags,
+                                  TIMER_ALL_ACCESS);
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+CreateWaitableTimerA(IN LPSECURITY_ATTRIBUTES lpTimerAttributes OPTIONAL,
+                     IN BOOL bManualReset,
+                     IN LPCSTR lpTimerName OPTIONAL)
+{
+    DWORD dwFlags = 0;
+
+    if (bManualReset)
+        dwFlags |= CREATE_WAITABLE_TIMER_MANUAL_RESET;
+
+    return CreateWaitableTimerExA(lpTimerAttributes,
+                                  lpTimerName,
+                                  dwFlags,
+                                  TIMER_ALL_ACCESS);
 }
 
 /*

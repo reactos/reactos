@@ -8,6 +8,10 @@
 
 /* INCLUDES *****************************************************************/
 
+/* File contains Vista Semantics */
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+
 #include <k32.h>
 
 #define NDEBUG
@@ -20,9 +24,10 @@
  */
 HANDLE
 WINAPI
-CreateMutexA(IN LPSECURITY_ATTRIBUTES lpMutexAttributes OPTIONAL,
-             IN BOOL bInitialOwner,
-             IN LPCSTR lpName OPTIONAL)
+CreateMutexExA(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
+               IN LPCSTR lpName  OPTIONAL,
+               IN DWORD dwFlags,
+               IN DWORD dwDesiredAccess)
 {
     NTSTATUS Status;
     ANSI_STRING AnsiName;
@@ -50,9 +55,10 @@ CreateMutexA(IN LPSECURITY_ATTRIBUTES lpMutexAttributes OPTIONAL,
     }
 
     /* Call the Unicode API */
-    return CreateMutexW(lpMutexAttributes,
-                        bInitialOwner,
-                        UnicodeName);
+    return CreateMutexExW(lpMutexAttributes,
+                          UnicodeName,
+                          dwFlags,
+                          dwDesiredAccess);
 }
 
 /*
@@ -60,18 +66,28 @@ CreateMutexA(IN LPSECURITY_ATTRIBUTES lpMutexAttributes OPTIONAL,
  */
 HANDLE
 WINAPI
-CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes OPTIONAL,
-             IN BOOL bInitialOwner,
-             IN LPCWSTR lpName OPTIONAL)
+CreateMutexExW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
+               IN LPCWSTR lpName  OPTIONAL,
+               IN DWORD dwFlags,
+               IN DWORD dwDesiredAccess)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES LocalAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE Handle;
     UNICODE_STRING ObjectName;
+    BOOLEAN InitialOwner;
 
     /* Now check if we got a name */
     if (lpName) RtlInitUnicodeString(&ObjectName, lpName);
+
+    if (dwFlags & ~(CREATE_MUTEX_INITIAL_OWNER))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    InitialOwner = (dwFlags & CREATE_MUTEX_INITIAL_OWNER) != 0;
 
     /* Now convert the object attributes */
     ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
@@ -80,9 +96,9 @@ CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes OPTIONAL,
 
     /* Create the mutant */
     Status = NtCreateMutant(&Handle,
-                            MUTANT_ALL_ACCESS,
+                            (ACCESS_MASK)dwDesiredAccess,
                             ObjectAttributes,
-                            (BOOLEAN)bInitialOwner);
+                            InitialOwner);
     if (NT_SUCCESS(Status))
     {
         /* Check if the object already existed */
@@ -106,6 +122,47 @@ CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes OPTIONAL,
         SetLastErrorByStatus(Status);
         return NULL;
     }
+
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+CreateMutexA(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
+             IN BOOL bInitialOwner,
+             IN LPCSTR lpName  OPTIONAL)
+{
+    DWORD dwFlags = 0;
+
+    if (bInitialOwner)
+        dwFlags |= CREATE_MUTEX_INITIAL_OWNER;
+
+    return CreateMutexExA(lpMutexAttributes,
+                          lpName,
+                          dwFlags,
+                          MUTANT_ALL_ACCESS);
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+CreateMutexW(IN LPSECURITY_ATTRIBUTES lpMutexAttributes  OPTIONAL,
+             IN BOOL bInitialOwner,
+             IN LPCWSTR lpName  OPTIONAL)
+{
+    DWORD dwFlags = 0;
+
+    if (bInitialOwner)
+        dwFlags |= CREATE_MUTEX_INITIAL_OWNER;
+
+    return CreateMutexExW(lpMutexAttributes,
+                          lpName,
+                          dwFlags,
+                          MUTANT_ALL_ACCESS);
 }
 
 /*

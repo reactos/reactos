@@ -8,6 +8,10 @@
 
 /* INCLUDES *****************************************************************/
 
+/* File contains Vista Semantics */
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+
 #include <k32.h>
 
 #define NDEBUG
@@ -20,10 +24,12 @@
  */
 HANDLE
 WINAPI
-CreateSemaphoreA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
-                 IN LONG lInitialCount,
-                 IN LONG lMaximumCount,
-                 IN LPCSTR lpName OPTIONAL)
+CreateSemaphoreExA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
+                   IN LONG lInitialCount,
+                   IN LONG lMaximumCount,
+                   IN LPCSTR lpName  OPTIONAL,
+                   IN DWORD dwFlags,
+                   IN DWORD dwDesiredAccess)
 {
     NTSTATUS Status;
     ANSI_STRING AnsiName;
@@ -51,10 +57,12 @@ CreateSemaphoreA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
     }
 
     /* Call the Unicode API */
-    return CreateSemaphoreW(lpSemaphoreAttributes,
-                            lInitialCount,
-                            lMaximumCount,
-                            UnicodeName);
+    return CreateSemaphoreExW(lpSemaphoreAttributes,
+                              lInitialCount,
+                              lMaximumCount,
+                              UnicodeName,
+                              dwFlags,
+                              dwDesiredAccess);
 }
 
 /*
@@ -62,10 +70,12 @@ CreateSemaphoreA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
  */
 HANDLE
 WINAPI
-CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
-                 IN LONG lInitialCount,
-                 IN LONG lMaximumCount,
-                 IN LPCWSTR lpName OPTIONAL)
+CreateSemaphoreExW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
+                   IN LONG lInitialCount,
+                   IN LONG lMaximumCount,
+                   IN LPCWSTR lpName  OPTIONAL,
+                   IN DWORD dwFlags,
+                   IN DWORD dwDesiredAccess)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES LocalAttributes;
@@ -76,6 +86,12 @@ CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
     /* Now check if we got a name */
     if (lpName) RtlInitUnicodeString(&ObjectName, lpName);
 
+    if (dwFlags != 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
     /* Now convert the object attributes */
     ObjectAttributes = BasepConvertObjectAttributes(&LocalAttributes,
                                                     lpSemaphoreAttributes,
@@ -83,7 +99,7 @@ CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
 
     /* Create the semaphore */
    Status = NtCreateSemaphore(&Handle,
-                              SEMAPHORE_ALL_ACCESS,
+                              (ACCESS_MASK)dwDesiredAccess,
                               ObjectAttributes,
                               lInitialCount,
                               lMaximumCount);
@@ -110,6 +126,44 @@ CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes OPTIONAL,
         SetLastErrorByStatus(Status);
         return NULL;
     }
+
+}
+
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+CreateSemaphoreA(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
+                 IN LONG lInitialCount,
+                 IN LONG lMaximumCount,
+                 IN LPCSTR lpName  OPTIONAL)
+{
+    return CreateSemaphoreExA(lpSemaphoreAttributes,
+                              lInitialCount,
+                              lMaximumCount,
+                              lpName,
+                              0,
+                              SEMAPHORE_ALL_ACCESS);
+}
+
+/*
+ * @implemented
+ */
+HANDLE
+WINAPI
+CreateSemaphoreW(IN LPSECURITY_ATTRIBUTES lpSemaphoreAttributes  OPTIONAL,
+                 IN LONG lInitialCount,
+                 IN LONG lMaximumCount,
+                 IN LPCWSTR lpName  OPTIONAL)
+{
+    return CreateSemaphoreExW(lpSemaphoreAttributes,
+                              lInitialCount,
+                              lMaximumCount,
+                              lpName,
+                              0,
+                              SEMAPHORE_ALL_ACCESS);
 }
 
 /*
