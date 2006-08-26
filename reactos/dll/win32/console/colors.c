@@ -47,6 +47,10 @@ PaintStaticControls(HWND hwndDlg, PConsoleInfo pConInfo, LPDRAWITEMSTRUCT drawIt
 
 	FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
     DeleteObject((HGDIOBJ)hBrush);
+	if (pConInfo->ActiveStaticControl == index)
+	{
+		DrawFocusRect(drawItem->hDC, &drawItem->rcItem);
+	}
 	return TRUE;
 }
 
@@ -213,7 +217,6 @@ ColorsProc(
 			{
 				DWORD index = LOWORD(wParam) - IDC_STATIC_COLOR1;
 
-				pConInfo->ActiveStaticControl = index;
 				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(s_Colors[index]), FALSE);
 				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(s_Colors[index]), FALSE);
 				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(s_Colors[index]), FALSE);
@@ -235,8 +238,11 @@ ColorsProc(
 				{
 					pConInfo->PopupBackground = s_Colors[index];
 				}
+				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
+				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + index), NULL, TRUE);
 				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
 				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
+				pConInfo->ActiveStaticControl = index;
 				break;
 			}
 		}
