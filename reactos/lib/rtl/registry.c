@@ -9,7 +9,6 @@
 /*
  * TODO:
  *   - finish RtlQueryRegistryValues()
- *	- support RTL_QUERY_REGISTRY_DELETE
  */
 
 /* INCLUDES *****************************************************************/
@@ -784,7 +783,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	  if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
 	    {
-	      DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
+		  Status = ZwDeleteValueKey(CurrentKeyHandle, &KeyName);
 
 	    }
 
@@ -828,8 +827,9 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
 		{
 		  DPRINT("Expand REG_MULTI_SZ type\n");
+		  ULONG DataSize = 0;
 		  StringPtr = (PWSTR)ValueInfo->Data;
-		  while (*StringPtr != 0)
+		  while (DataSize < (ValueInfo->DataLength-2))
 		    {
 		      StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
 		      Status = QueryEntry->QueryRoutine(QueryEntry->Name,
@@ -841,6 +841,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      if(!NT_SUCCESS(Status))
 			break;
 		      StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
+			  DataSize += StringLen;
 		    }
 		}
 	      else if ((ValueInfo->Type == REG_EXPAND_SZ) &&
@@ -889,8 +890,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
 		{
-		  DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
-
+			Status = ZwDeleteValueKey(CurrentKeyHandle, &KeyName);
 		}
 
 	      RtlpFreeMemory(ValueInfo, TAG_RTLREGISTRY);
