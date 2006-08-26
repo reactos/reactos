@@ -922,6 +922,14 @@ gendrv_do_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE if_handle, BOOLEAN is_
             pdrvr = pdev->dev_driver;
             dev_obj = pdev->dev_obj;
         }
+
+        if (dev_obj == NULL)
+        {
+            // it means no driver was found for the device and thus no device object created
+            // we just do nothing here
+            return TRUE;
+        }
+
         pdrvr_ext = (PGENDRV_DRVR_EXTENSION) pdrvr->driver_ext;
         pdev_ext = (PGENDRV_DEVICE_EXTENSION) dev_obj->DeviceExtension;
     }
