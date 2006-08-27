@@ -35,6 +35,113 @@ StartTaskManager(
 		L"taskmgr.exe");
 }
 
+BOOL
+SetDefaultLanguage(
+	IN BOOL UserProfile)
+{
+	HKEY BaseKey;
+	LPCWSTR SubKey;
+	LPCWSTR ValueName;
+	LONG rc;
+	HKEY hKey = NULL;
+	DWORD dwType, dwSize;
+	LPWSTR Value = NULL;
+	UNICODE_STRING ValueString;
+	NTSTATUS Status;
+	LCID Lcid;
+	BOOL ret = FALSE;
+
+	if (UserProfile)
+	{
+		BaseKey = HKEY_CURRENT_USER;
+		SubKey = L"Control Panel\\International";
+		ValueName = L"Locale";
+	}
+	else
+	{
+		BaseKey = HKEY_LOCAL_MACHINE;
+		SubKey = L"System\\CurrentControlSet\\Control\\Nls\\Language";
+		ValueName = L"Default";
+	}
+
+	rc = RegOpenKeyExW(
+		BaseKey,
+		SubKey,
+		0,
+		KEY_READ,
+		&hKey);
+	if (rc != ERROR_SUCCESS)
+	{
+		TRACE("RegOpenKeyEx() failed with error %lu\n", rc);
+		goto cleanup;
+	}
+	rc = RegQueryValueExW(
+		hKey,
+		ValueName,
+		NULL,
+		&dwType,
+		NULL,
+		&dwSize);
+	if (rc != ERROR_SUCCESS)
+	{
+		TRACE("RegQueryValueEx() failed with error %lu\n", rc);
+		goto cleanup;
+	}
+	else if (dwType != REG_SZ)
+	{
+		TRACE("Wrong type for %S\\%S registry entry (got 0x%lx, expected 0x%lx)\n",
+			SubKey, ValueName, dwType, REG_SZ);
+		goto cleanup;
+	}
+
+	Value = HeapAlloc(GetProcessHeap(), 0, dwSize + sizeof(UNICODE_NULL));
+	if (!Value)
+	{
+		TRACE("HeapAlloc() failed\n");
+		goto cleanup;
+	}
+	Value[dwSize / sizeof(WCHAR)] = UNICODE_NULL;
+	rc = RegQueryValueExW(
+		hKey,
+		ValueName,
+		NULL,
+		NULL,
+		(LPBYTE)Value,
+		&dwSize);
+	if (rc != ERROR_SUCCESS)
+	{
+		TRACE("RegQueryValueEx() failed with error %lu\n", rc);
+		goto cleanup;
+	}
+
+	/* Convert Value to a Lcid */
+	RtlInitUnicodeString(&ValueString, Value);
+	Status = RtlUnicodeStringToInteger(&ValueString, 16, &Lcid);
+	if (!NT_SUCCESS(Status))
+	{
+		TRACE("RtlUnicodeStringToInteger() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	TRACE("%s language is 0x%08lx\n",
+		UserProfile ? "User" : "System", Lcid);
+	Status = NtSetDefaultLocale(UserProfile, Lcid);
+	if (!NT_SUCCESS(Status))
+	{
+		TRACE("NtSetDefaultLocale() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	ret = TRUE;
+
+cleanup:
+	if (hKey)
+		RegCloseKey(hKey);
+	if (Value)
+		HeapFree(GetProcessHeap(), 0, Value);
+	return ret;
+}
+
 static BOOL
 HandleLogon(
 	IN OUT PWLSESSION Session)
@@ -84,6 +191,10 @@ HandleLogon(
 
 	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOADINGYOURPERSONALSETTINGS);
 	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
+
+	/* Set default language */
+	if (!SetDefaultLanguage(TRUE))
+		return FALSE;
 
 	if (!Session->Gina.Functions.WlxActivateUserShell(
 		Session->Gina.Context,
@@ -329,6 +440,8 @@ DoGenericAction(
 				SwitchDesktop(Session->ApplicationDesktop);
 				Session->LogonStatus = WKSTA_IS_LOGGED_ON;
 			}
+			else
+				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
 			break;
 		case WLX_SAS_ACTION_NONE: /* 0x02 */
 			break;
@@ -681,6 +794,9 @@ InitializeSAS(
 		ERR("WL: Failed to register SAS window\n");
 		goto cleanup;
 	}
+
+	if (!SetDefaultLanguage(FALSE))
+		return FALSE;
 
 	ret = TRUE;
 
