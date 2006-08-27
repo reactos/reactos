@@ -753,6 +753,8 @@ HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFla
                  LPDDSURFACEDESC2 pDDSD, LPVOID context, LPDDENUMMODESCALLBACK2 callback) 
 {
      
+	DX_STUB_DD_OK();
+
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
     DDSURFACEDESC2 desc_callback;
     DEVMODE DevMode;   
