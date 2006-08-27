@@ -22,7 +22,9 @@ typedef struct
 } DD_SURFACE, *PDD_SURFACE;
 
 typedef struct
-{
+{	
+	DD_SURFACE Surface;
+
 	DD_DIRECTDRAW_LOCAL Local;
 	DD_DIRECTDRAW_GLOBAL Global;
 	// Drv callbacks		
