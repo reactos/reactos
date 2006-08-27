@@ -594,5 +594,16 @@ CreateRestrictedToken(
 }
 
 
+/*
+ * @unimplemented
+ */
+PSID STDCALL
+GetSiteSidFromToken(
+                IN HANDLE TokenHandle)
+{
+    FIXME("unimplemented!\n", __FUNCTION__);
+    return NULL;
+}
+
 
 /* EOF */
