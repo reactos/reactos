@@ -217,6 +217,7 @@ dll\win32\user32\user32.dll                         1
 dll\win32\userenv\userenv.dll                       1
 dll\win32\uxtheme\uxtheme.dll                       1
 dll\win32\version\version.dll                       1
+dll\win32\vdmdbg\vdmdbg.dll                         1
 dll\win32\wininet\wininet.dll                       1
 dll\win32\winmm\winmm.dll                           1
 dll\win32\winspool\winspool.drv                     1
