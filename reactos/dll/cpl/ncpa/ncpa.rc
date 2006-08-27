@@ -7,11 +7,7 @@
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Network Control Panel\0"
 #define REACTOS_STR_INTERNAL_NAME	"ncpa\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"ncpa.cpl\0"
-#ifdef _MSC_VER
-#include <../../../include/reactos/version.rc>
-#else
-#include <reactos/version.rc>
-#endif
+
 
 IDI_CPLSYSTEM ICON "resources/applet.ico"
 IDI_HORIZONTAL ICON "resources/HORIZ.ICO"
