@@ -68,10 +68,10 @@ CAPTION "Support"
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Conection Status", -1, 9, 8, 200, 88, BS_GROUPBOX
- LTEXT "Address yype:", -1, 22, 20, 80, 8
+ LTEXT "Address type:", -1, 22, 20, 80, 8
  LTEXT "IP address:", -1, 22, 34, 80, 8
  LTEXT "SubNet mask:", -1, 22, 48, 80, 8
- LTEXT "Ddefault gateway:", -1, 22, 62, 80, 8
+ LTEXT "Default gateway:", -1, 22, 62, 80, 8
  
  RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
