@@ -13,7 +13,6 @@
 
 void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 {
-	COLORREF bkColor;
 	HBRUSH hBrush;
 	RECT cRect, fRect;
 	DWORD startx, starty;
@@ -53,7 +52,7 @@ void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 
 	/* draw left box */
 	SetRect(&fRect, startx + 3, starty + 3, startx + 5, starty + 5);
-	FillRect(drawItem->hDC, &fRect, GetSysColor(COLOR_ACTIVEBORDER));
+	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVEBORDER));
 
 	/* draw window title */
 	SetRect(&fRect, startx + 7, starty + 3, cRect.right - 9, starty + 5);
@@ -61,11 +60,11 @@ void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 
 	/* draw first right box */
 	SetRect(&fRect, fRect.right + 1, starty + 3, fRect.right + 3, starty + 5);
-	FillRect(drawItem->hDC, &fRect, GetSysColor(COLOR_ACTIVEBORDER));
+	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVEBORDER));
 
 	/* draw second right box */
 	SetRect(&fRect, fRect.right + 1, starty + 3, fRect.right + 3, starty + 5);
-	FillRect(drawItem->hDC, &fRect, GetSysColor(COLOR_ACTIVEBORDER));
+	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVEBORDER));
 
 	/* draw scrollbar */
 	SetRect(&fRect, cRect.right - 5, fRect.bottom + 1, cRect.right - 3, cRect.bottom - 3);
