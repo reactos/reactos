@@ -217,24 +217,30 @@ ColorsProc(
 			{
 				DWORD index = LOWORD(wParam) - IDC_STATIC_COLOR1;
 
+				if (index == pConInfo->ActiveStaticControl)
+				{
+					/* same static control was re-clicked */
+					break;
+				}
+
 				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(s_Colors[index]), FALSE);
 				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(s_Colors[index]), FALSE);
 				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(s_Colors[index]), FALSE);
 
 				/* update global struct */
-				if (SendMessage(GetDlgItem(hwndDlg, IDC_RADIO_SCREEN_TEXT), BM_GETCHECK, 0, 0) & BST_CHECKED)
+				if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_SCREEN_TEXT))
 				{
 					pConInfo->ScreenText = s_Colors[index];
 				}
-				else if (SendMessage(GetDlgItem(hwndDlg, IDC_RADIO_SCREEN_BACKGROUND), BM_GETCHECK, 0, 0) & BST_CHECKED)					
+				else if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_SCREEN_BACKGROUND))
 				{
 					pConInfo->ScreenBackground = s_Colors[index];
 				}
-				else if (SendMessage(GetDlgItem(hwndDlg, IDC_RADIO_POPUP_TEXT), BM_GETCHECK, 0, 0) & BST_CHECKED)					
+				else if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_POPUP_TEXT))
 				{
 					pConInfo->PopupText = s_Colors[index];
 				}
-				else if (SendMessage(GetDlgItem(hwndDlg, IDC_RADIO_POPUP_BACKGROUND), BM_GETCHECK, 0, 0) & BST_CHECKED)					
+				else if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_POPUP_BACKGROUND))
 				{
 					pConInfo->PopupBackground = s_Colors[index];
 				}

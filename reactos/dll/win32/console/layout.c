@@ -15,17 +15,66 @@ void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 {
 	COLORREF bkColor;
 	HBRUSH hBrush;
+	RECT cRect, fRect;
+	DWORD startx, starty;
+	DWORD endx, endy;
+	DWORD sizex, sizey;
 
-	bkColor = GetSysColor(COLOR_BACKGROUND);
-	hBrush = CreateSolidBrush(bkColor);
+	FillRect(drawItem->hDC, &drawItem->rcItem, GetSysColorBrush(COLOR_BACKGROUND));
 
-	FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
-	//TODO draw console image
-	//MoveToEx(drawItem->hDC, 0, 0, NULL);
-	//LineTo(drawItem->hDC, 10, 10);
-	//MoveToEx(drawItem->hDC, 30, 30, NULL);
-	//LineTo(drawItem->hDC, 40, 40);
+	sizex = drawItem->rcItem.right - drawItem->rcItem.left;
+	sizey = drawItem->rcItem.bottom - drawItem->rcItem.top;
 
+	if (pConInfo->WindowPosition == UINT_MAX)
+	{
+		startx = sizex / 3;
+		starty = sizey / 3;
+	}
+	else
+	{
+		//TODO
+		// calculate pos correctly when console centered
+		startx = sizex / 3;
+		starty = sizey / 3;
+	}
+
+	//TODO
+	// strech console when bold fonts are selected
+	endx = drawItem->rcItem.right - startx + 15;
+	endy = starty + sizey / 3;
+
+	/* draw console size */
+	SetRect(&cRect, startx, starty, endx, endy);
+	FillRect(drawItem->hDC, &cRect, GetSysColorBrush(COLOR_WINDOWFRAME));
+
+	/* draw console border */
+	SetRect(&fRect, startx + 1, starty + 1, cRect.right - 1, cRect.bottom - 1);
+	FrameRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVEBORDER));
+
+	/* draw left box */
+	SetRect(&fRect, startx + 3, starty + 3, startx + 5, starty + 5);
+	FillRect(drawItem->hDC, &fRect, GetSysColor(COLOR_ACTIVEBORDER));
+
+	/* draw window title */
+	SetRect(&fRect, startx + 7, starty + 3, cRect.right - 9, starty + 5);
+	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_ACTIVECAPTION));
+
+	/* draw first right box */
+	SetRect(&fRect, fRect.right + 1, starty + 3, fRect.right + 3, starty + 5);
+	FillRect(drawItem->hDC, &fRect, GetSysColor(COLOR_ACTIVEBORDER));
+
+	/* draw second right box */
+	SetRect(&fRect, fRect.right + 1, starty + 3, fRect.right + 3, starty + 5);
+	FillRect(drawItem->hDC, &fRect, GetSysColor(COLOR_ACTIVEBORDER));
+
+	/* draw scrollbar */
+	SetRect(&fRect, cRect.right - 5, fRect.bottom + 1, cRect.right - 3, cRect.bottom - 3);
+	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_SCROLLBAR));
+
+	/* draw console background */
+	hBrush = CreateSolidBrush(pConInfo->ScreenBackground);
+	SetRect(&fRect, startx + 3, starty + 6, cRect.right - 6, cRect.bottom - 3);
+	FillRect(drawItem->hDC, &fRect, hBrush);
 	DeleteObject((HGDIOBJ)hBrush);
 }
 
@@ -33,7 +82,7 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 {
 	COLORREF pbkColor, ptColor;
 	COLORREF nbkColor, ntColor;
-	HBRUSH hBrush;
+	HBRUSH hBrush = NULL;
 	TCHAR szText[1024];
 	
 	ZeroMemory(szText, sizeof(szText));
@@ -45,7 +94,7 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 		hBrush = CreateSolidBrush(nbkColor);
 		ntColor = pConInfo->ScreenText;
 	}
-	else
+	else if (drawItem->CtlID == IDC_STATIC_POPUP_COLOR)
 	{
 		nbkColor = pConInfo->PopupBackground;
 		hBrush = CreateSolidBrush(nbkColor);
@@ -58,16 +107,18 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 	}
 
 	FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
-	DeleteObject((HGDIOBJ)hBrush);
+	if (ntColor == nbkColor)
+	{
+		/* text has same color -> invisible */
+		return;
+	}
+
 	ptColor = SetTextColor(drawItem->hDC, ntColor);
 	pbkColor = SetBkColor(drawItem->hDC, nbkColor);
-	if (ntColor != nbkColor)
-	{
-		/* hide text when it has same background color as text color */
-		DrawText(drawItem->hDC, szText, _tcslen(szText), &drawItem->rcItem, 0);
-	}
+	DrawText(drawItem->hDC, szText, _tcslen(szText), &drawItem->rcItem, 0);
 	SetTextColor(drawItem->hDC, ptColor);
 	SetBkColor(drawItem->hDC, pbkColor);
+	DeleteObject((HGDIOBJ)hBrush);
 }
 
 

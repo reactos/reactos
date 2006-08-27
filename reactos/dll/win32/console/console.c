@@ -62,8 +62,11 @@ InitConsoleInfo()
 	pConInfo->PopupText = RGB(128, 0, 128); 
 	pConInfo->PopupBackground = RGB(255, 255, 255); 
 	pConInfo->WindowSize = (DWORD)MAKELONG(80, 25);
-	pConInfo->WindowPosition = -1;
+	pConInfo->WindowPosition = UINT_MAX;
 	pConInfo->ScreenBuffer = MAKELONG(80, 300);
+	pConInfo->UseRasterFonts = TRUE;
+	pConInfo->FontSize = (DWORD)MAKELONG(8, 12);
+	pConInfo->FontWeight = FALSE;
 
 	GetModuleFileName(NULL, pConInfo->szProcessName, MAX_PATH);
 	GetStartupInfo(&StartupInfo);

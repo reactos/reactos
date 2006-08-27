@@ -91,5 +91,6 @@
 
 //string ids
 #define IDS_SCREEN_TEXT					700
+#define IDS_RASTERFONTS					701
 
 #endif

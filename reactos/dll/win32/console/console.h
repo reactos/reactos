@@ -8,6 +8,7 @@
 #include <cpl.h>
 #include <tchar.h>
 #include <stdio.h>
+#include <limits.h>
 #include "resource.h"
 
 typedef struct
@@ -22,6 +23,9 @@ typedef struct TAGConsoleInfo
 {
   TCHAR szProcessName[MAX_PATH];
   BOOLEAN AppliedConfig;
+  BOOLEAN UseRasterFonts;
+  DWORD FontSize;
+  DWORD FontWeight;
   DWORD CursorSize;
   DWORD NumberOfHistoryBuffers;
   DWORD HistoryBufferSize;
