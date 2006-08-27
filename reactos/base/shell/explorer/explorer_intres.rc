@@ -204,24 +204,26 @@ END
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST DISCARDABLE PURE "explorer.exe.manifest"
 #endif
 
-#include "explorer-en.rc"
+#include "explorer-cz.rc"
 #include "explorer-de.rc"
+#include "explorer-en.rc"
 #include "explorer-es.rc"
-#include "explorer-sv.rc"
+#include "explorer-fr.rc"
+#include "explorer-gr.rc"
+#include "explorer-hu.rc"
+#include "explorer-it.rc"
+#include "explorer-jp.rc"
+#include "explorer-nl.rc"
+#include "explorer-no.rc"
 #include "explorer-pl.rc"
 #include "explorer-pt.rc"
-#include "explorer-cz.rc"
 #include "explorer-ro.rc"
 #include "explorer-ru.rc"
-#include "explorer-jp.rc"
-#include "explorer-hu.rc"
+#include "explorer-sv.rc"
 #include "explorer-uk.rc"
-#include "explorer-it.rc"
-#include "explorer-nl.rc"
-#include "explorer-gr.rc"
-#include "explorer-no.rc"
 
 #ifndef __WINDRES__
+#include "explorer-bn.rc"
 #include "explorer-cn.rc"
 #endif
 
