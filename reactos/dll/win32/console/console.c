@@ -27,6 +27,26 @@ APPLET Applets[NUM_APPLETS] =
   {IDC_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, InitApplet}
 };
 
+static COLORREF s_Colors[] =
+{
+	RGB(0, 0, 0),
+	RGB(0, 0, 128),
+	RGB(0, 128, 0),
+	RGB(0, 128, 128),
+	RGB(128, 0, 0),
+	RGB(128, 0, 128),
+	RGB(128, 128, 0),
+	RGB(192, 192, 192),
+	RGB(128, 128, 128),
+	RGB(0, 0, 255),
+	RGB(0, 255, 0),
+	RGB(0, 255, 255),
+	RGB(255, 0, 0),
+	RGB(255, 0, 255),
+	RGB(255, 255, 0),
+	RGB(255, 255, 255)
+};
+
 static void
 InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPARAM lParam)
 {
@@ -67,6 +87,7 @@ InitConsoleInfo()
 	pConInfo->UseRasterFonts = TRUE;
 	pConInfo->FontSize = (DWORD)MAKELONG(8, 12);
 	pConInfo->FontWeight = FALSE;
+	memcpy(pConInfo->Colors, s_Colors, sizeof(s_Colors));
 
 	GetModuleFileName(NULL, pConInfo->szProcessName, MAX_PATH);
 	GetStartupInfo(&StartupInfo);

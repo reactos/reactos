@@ -41,6 +41,7 @@ typedef struct TAGConsoleInfo
   COLORREF ScreenBackground;
   COLORREF PopupText;
   COLORREF PopupBackground;
+  COLORREF Colors[16];
 } ConsoleInfo, *PConsoleInfo;
 
 BOOL WriteConsoleOptions(PConsoleInfo pConInfo);

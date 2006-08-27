@@ -9,28 +9,6 @@
 
 #include "console.h"
 
-static COLORREF s_Colors[] =
-{
-	RGB(0, 0, 0),
-	RGB(0, 0, 128),
-	RGB(0, 128, 0),
-	RGB(0, 128, 128),
-	RGB(128, 0, 0),
-	RGB(128, 0, 128),
-	RGB(128, 128, 0),
-	RGB(192, 192, 192),
-	RGB(128, 128, 128),
-	RGB(0, 0, 255),
-	RGB(0, 255, 0),
-	RGB(0, 255, 255),
-	RGB(255, 0, 0),
-	RGB(255, 0, 255),
-	RGB(255, 255, 0),
-	RGB(255, 255, 255)
-};
-
-
-
 static
 BOOL
 PaintStaticControls(HWND hwndDlg, PConsoleInfo pConInfo, LPDRAWITEMSTRUCT drawItem)
@@ -39,7 +17,7 @@ PaintStaticControls(HWND hwndDlg, PConsoleInfo pConInfo, LPDRAWITEMSTRUCT drawIt
 	DWORD index;
 
 	index = drawItem->CtlID - IDC_STATIC_COLOR1;
-	hBrush = CreateSolidBrush(s_Colors[index]);
+	hBrush = CreateSolidBrush(pConInfo->Colors[index]);
 	if (!hBrush)
 	{
 		return FALSE;
@@ -171,7 +149,7 @@ ColorsProc(
 				}
 				blue = LOBYTE(blue);
 			}
-			s_Colors[pConInfo->ActiveStaticControl] = RGB(red, green, blue);
+			pConInfo->Colors[pConInfo->ActiveStaticControl] = RGB(red, green, blue);
 			InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
 			InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
 			InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
@@ -228,26 +206,26 @@ ColorsProc(
 					break;
 				}
 
-				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(s_Colors[index]), FALSE);
-				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(s_Colors[index]), FALSE);
-				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(s_Colors[index]), FALSE);
+				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(pConInfo->Colors[index]), FALSE);
+				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->Colors[index]), FALSE);
+				SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(pConInfo->Colors[index]), FALSE);
 
 				/* update global struct */
 				if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_SCREEN_TEXT))
 				{
-					pConInfo->ScreenText = s_Colors[index];
+					pConInfo->ScreenText = pConInfo->Colors[index];
 				}
 				else if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_SCREEN_BACKGROUND))
 				{
-					pConInfo->ScreenBackground = s_Colors[index];
+					pConInfo->ScreenBackground = pConInfo->Colors[index];
 				}
 				else if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_POPUP_TEXT))
 				{
-					pConInfo->PopupText = s_Colors[index];
+					pConInfo->PopupText = pConInfo->Colors[index];
 				}
 				else if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_POPUP_BACKGROUND))
 				{
-					pConInfo->PopupBackground = s_Colors[index];
+					pConInfo->PopupBackground = pConInfo->Colors[index];
 				}
 				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + pConInfo->ActiveStaticControl), NULL, TRUE);
 				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_COLOR1 + index), NULL, TRUE);
