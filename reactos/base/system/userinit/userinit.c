@@ -25,6 +25,7 @@
  */
 #include <windows.h>
 #include <cfgmgr32.h>
+#include <shlobj.h>
 #include "resource.h"
 
 #define CMP_MAGIC  0x01234567
@@ -158,6 +159,48 @@ BOOL GetShell(WCHAR *CommandLine)
   return Ret;
 }
 
+static VOID
+StartAutoApplications(int clsid)
+{
+    WCHAR szPath[MAX_PATH] = {0};
+    HRESULT hResult;
+    HANDLE hFind;
+    WIN32_FIND_DATAW findData;
+    SHELLEXECUTEINFOW ExecInfo;
+    size_t len;
+
+    hResult = SHGetFolderPathW(NULL, clsid, NULL, SHGFP_TYPE_CURRENT, szPath);
+    len = wcslen(szPath);
+    if (hResult == E_FAIL || hResult == E_INVALIDARG || len == 0)
+    {
+      return;
+    }
+
+    wcscat(szPath, L"\\*");
+    hFind = FindFirstFileW(szPath, &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+    {
+      return;
+    }
+    szPath[len] = L'\0';
+
+    do
+    {
+      if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (findData.nFileSizeHigh || findData.nFileSizeLow))
+      {
+        memset(&ExecInfo, 0x0, sizeof(SHELLEXECUTEINFOW));
+        ExecInfo.cbSize = sizeof(ExecInfo);
+        ExecInfo.lpVerb = L"open";
+        ExecInfo.lpFile = findData.cFileName;
+        ExecInfo.lpDirectory = szPath;
+        ShellExecuteExW(&ExecInfo);
+      }
+    }while(FindNextFileW(hFind, &findData));
+    FindClose(hFind);
+}
+
+
+
 static
 void StartShell(void)
 {
@@ -186,6 +229,8 @@ void StartShell(void)
                    &si,
                    &pi))
   {
+    StartAutoApplications(CSIDL_STARTUP);
+    StartAutoApplications(CSIDL_ALTSTARTUP);
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -248,6 +293,7 @@ NotifyLogon(VOID)
         FreeLibrary(hModule);
     }
 }
+
 
 
 #ifdef _MSC_VER
