@@ -8,6 +8,9 @@
 
 /* INCLUDES ******************************************************************/
 
+#ifndef RTL_H
+#define RTL_H
+
 /* We're a core NT DLL, we don't import syscalls */
 #define WIN32_NO_STATUS
 #define _INC_SWPRINTF_INL_
@@ -24,5 +27,7 @@
 #include "rtlp.h"
 
 #include <pseh/pseh.h>
+
+#endif /* RTL_H */
 
 /* EOF */
