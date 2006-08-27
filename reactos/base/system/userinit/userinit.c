@@ -171,7 +171,7 @@ StartAutoApplications(int clsid)
 
     hResult = SHGetFolderPathW(NULL, clsid, NULL, SHGFP_TYPE_CURRENT, szPath);
     len = wcslen(szPath);
-    if (hResult == E_FAIL || hResult == E_INVALIDARG || len == 0)
+    if (!SUCCEEDED(hResult) || len == 0)
     {
       return;
     }
@@ -230,7 +230,7 @@ void StartShell(void)
                    &pi))
   {
     StartAutoApplications(CSIDL_STARTUP);
-    StartAutoApplications(CSIDL_ALTSTARTUP);
+    StartAutoApplications(CSIDL_COMMON_STARTUP);
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
