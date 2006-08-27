@@ -268,7 +268,9 @@ enum ModuleType
 	BootProgram = 19,
 	Win32SCR = 20,
     ExportDriver = 21,
-    IdlHeader = 22
+    IdlHeader = 22,
+	IsoRegTest = 23,
+	LiveIsoRegTest = 24
 };
 
 enum HostType

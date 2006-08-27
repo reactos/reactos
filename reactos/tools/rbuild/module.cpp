@@ -757,6 +757,10 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Iso;
 	if ( attribute.value == "liveiso" )
 		return LiveIso;
+	if ( attribute.value == "isoregtest" )
+		return IsoRegTest;
+	if ( attribute.value == "liveisoregtest" )
+		return LiveIsoRegTest;
 	if ( attribute.value == "test" )
 		return Test;
 	if ( attribute.value == "rpcserver" )
@@ -803,6 +807,8 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case Iso:
 		case LiveIso:
+		case IsoRegTest:
+		case LiveIsoRegTest:
 			return ".iso";
 		case Test:
 			return ".exe";
@@ -855,6 +861,8 @@ Module::GetDefaultModuleEntrypoint () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
+		case IsoRegTest:
+		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case Alias:
@@ -894,6 +902,8 @@ Module::GetDefaultModuleBaseaddress () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
+		case IsoRegTest:
+		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case Alias:
@@ -936,6 +946,8 @@ Module::IsDLL () const
 		case BootProgram:
 		case Iso:
 		case LiveIso:
+		case IsoRegTest:
+		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case Alias:
@@ -968,6 +980,8 @@ Module::GenerateInOutputTree () const
 		case BootProgram:
 		case Iso:
 		case LiveIso:
+		case IsoRegTest:
+		case LiveIsoRegTest:
 			return true;
 		case StaticLibrary:
 		case ObjectLibrary:
@@ -1435,6 +1449,8 @@ AutoRegister::IsSupportedModuleType ( ModuleType type )
 		case ObjectLibrary:
 		case Iso:
 		case LiveIso:
+		case IsoRegTest:
+		case LiveIsoRegTest:
 		case Test:
 		case RpcServer:
 		case RpcClient:

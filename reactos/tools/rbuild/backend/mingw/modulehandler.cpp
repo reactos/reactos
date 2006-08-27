@@ -241,6 +241,12 @@ MingwModuleHandler::InstanciateHandler (
 		case LiveIso:
 			handler = new MingwLiveIsoModuleHandler ( module );
 			break;
+		case IsoRegTest:
+			handler = new MingwIsoModuleHandler ( module );
+			break;
+		case LiveIsoRegTest:
+			handler = new MingwLiveIsoModuleHandler ( module );
+			break;
 		case Test:
 			handler = new MingwTestModuleHandler ( module );
 			break;
@@ -3006,9 +3012,25 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	string bootcd = PassThruCacheDirectory (
 		NormalizeFilename ( bootcdDirectory + sSep ),
 		backend->outputDirectory );
+
+	string bootloader;
+	string IsoName;
+
+	if (module.name == "bootcdregtest")
+	{
+		bootloader = "isobtrt.o";
+		IsoName = "ReactOS-RegTest.iso";
+	}
+	else
+	{
+		bootloader = "isoboot.o";
+		IsoName = "ReactOS.iso";
+	}
+
 	string isoboot = PassThruCacheDirectory (
-		NormalizeFilename ( "boot" + sSep + "freeldr" + sSep + "bootsect" + sSep + "isoboot.o" ),
+		NormalizeFilename ( "boot" + sSep + "freeldr" + sSep + "bootsect" + sSep + bootloader.c_str() ),
 		backend->outputDirectory );
+
 	string bootcdReactosNoFixup = bootcdDirectory + sSep + "reactos";
 	string bootcdReactos = PassThruCacheDirectory (
 		NormalizeFilename ( bootcdReactosNoFixup + sSep ),
@@ -3049,9 +3071,10 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	OutputCdfileCopyCommands ( bootcdDirectory );
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CDMAKE_TARGET) -v -m -b %s %s REACTOS ReactOS.iso\n",
+	          "\t$(Q)$(CDMAKE_TARGET) -v -m -b %s %s REACTOS %s\n",
 	          isoboot.c_str (),
-	          bootcd.c_str () );
+	          bootcd.c_str (),
+			  IsoName.c_str() );
 	fprintf ( fMakefile,
 	          "\n" );
 }
@@ -3175,13 +3198,29 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 void
 MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 {
-	string livecdDirectory = "livecd";
+	string livecdDirectory = module.name;
 	string livecd = PassThruCacheDirectory (
 		NormalizeFilename ( livecdDirectory + sSep ),
 		backend->outputDirectory );
+
+	string bootloader;
+	string IsoName;
+
+	if (module.name == "livecdregtest")
+	{
+		bootloader = "isobtrt.o";
+		IsoName = "ReactOS-LiveCD-RegTest.iso";
+	}
+	else
+	{
+		bootloader = "isoboot.o";
+		IsoName = "ReactOS-LiveCD.iso";
+	}
+
 	string isoboot = PassThruCacheDirectory (
-		NormalizeFilename ( "boot" + sSep + "freeldr" + sSep + "bootsect" + sSep + "isoboot.o" ),
+		NormalizeFilename ( "boot" + sSep + "freeldr" + sSep + "bootsect" + sSep + bootloader.c_str() ),
 		backend->outputDirectory );
+
 	string reactosDirectory = "reactos";
 	string livecdReactosNoFixup = livecdDirectory + sSep + reactosDirectory;
 	string livecdReactos = NormalizeFilename ( PassThruCacheDirectory (
@@ -3205,9 +3244,10 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	OutputRegistryCommands ( livecdDirectory );
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CDMAKE_TARGET) -v -m -j -b %s %s REACTOS ReactOS-LiveCD.iso\n",
+	          "\t$(Q)$(CDMAKE_TARGET) -v -m -j -b %s %s REACTOS %s\n",
 	          isoboot.c_str (),
-	          livecd.c_str () );
+	          livecd.c_str (),
+			  IsoName.c_str() );
 	fprintf ( fMakefile,
 	          "\n" );
 }
