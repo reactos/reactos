@@ -422,8 +422,7 @@ typedef struct _EX_PUSH_LOCK
 //
 // Executive Pushlock Wait Block
 //
-__ALIGNED(16)
-typedef struct _EX_PUSH_LOCK_WAIT_BLOCK
+typedef __ALIGNED(16) struct _EX_PUSH_LOCK_WAIT_BLOCK
 {
     union
     {
