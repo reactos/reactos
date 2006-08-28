@@ -947,7 +947,7 @@ Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
 {	
     DX_WINDBG_trace();
 
-	DDSCAPS2 ddscaps;
+    DDSCAPS2 ddscaps = {0};
     DWORD status = DD_FALSE;	
     IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
 	
