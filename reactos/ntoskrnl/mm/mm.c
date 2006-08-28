@@ -110,6 +110,7 @@ MmAccessFault(KPROCESSOR_MODE Mode,
        */
       if (Mode != KernelMode)
       {
+         DPRINT1("MmAccessFault(Mode %d, Address %x)\n", Mode, Address);
          DbgPrint("%s:%d\n",__FILE__,__LINE__);
          return(STATUS_UNSUCCESSFUL);
       }

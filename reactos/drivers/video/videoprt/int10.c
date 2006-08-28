@@ -145,53 +145,51 @@ IntInt10WriteMemory(
    return NO_ERROR;
 }
 
-VP_STATUS NTAPI
+VP_STATUS
+NTAPI
 IntInt10CallBios(
-   IN PVOID Context,
-   IN OUT PINT10_BIOS_ARGUMENTS BiosArguments)
+    IN PVOID Context,
+    IN OUT PINT10_BIOS_ARGUMENTS BiosArguments)
 {
-   KV86M_REGISTERS Regs;
-   NTSTATUS Status;
-   PKPROCESS CallingProcess;
-   KAPC_STATE ApcState;
+    CONTEXT BiosContext;
+    NTSTATUS Status;
+    PKPROCESS CallingProcess;
+    KAPC_STATE ApcState;
 
-   DPRINT("IntInt10CallBios\n");
+    /* Attach to CSRSS */
+    IntAttachToCSRSS(&CallingProcess, &ApcState);
 
-   IntAttachToCSRSS(&CallingProcess, &ApcState);
+    /* Clear the context */
+    RtlZeroMemory(&BiosContext, sizeof(CONTEXT));
 
-   memset(&Regs, 0, sizeof(Regs));
-   DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
-   Regs.Eax = BiosArguments->Eax;
-   DPRINT("- Input register Ebx: %x\n", BiosArguments->Ebx);
-   Regs.Ebx = BiosArguments->Ebx;
-   DPRINT("- Input register Ecx: %x\n", BiosArguments->Ecx);
-   Regs.Ecx = BiosArguments->Ecx;
-   DPRINT("- Input register Edx: %x\n", BiosArguments->Edx);
-   Regs.Edx = BiosArguments->Edx;
-   DPRINT("- Input register Esi: %x\n", BiosArguments->Esi);
-   Regs.Esi = BiosArguments->Esi;
-   DPRINT("- Input register Edi: %x\n", BiosArguments->Edi);
-   Regs.Edi = BiosArguments->Edi;
-   DPRINT("- Input register Ebp: %x\n", BiosArguments->Ebp);
-   Regs.Ebp = BiosArguments->Ebp;
-   DPRINT("- Input register SegDs: %x\n", BiosArguments->SegDs);
-   Regs.Ds = BiosArguments->SegDs;
-   DPRINT("- Input register SegEs: %x\n", BiosArguments->SegEs);
-   Regs.Es = BiosArguments->SegEs;
-   Status = Ke386CallBios(0x10, (PCONTEXT)&Regs);
-   BiosArguments->Eax = Regs.Eax;
-   BiosArguments->Ebx = Regs.Ebx;
-   BiosArguments->Ecx = Regs.Ecx;
-   BiosArguments->Edx = Regs.Edx;
-   BiosArguments->Esi = Regs.Esi;
-   BiosArguments->Edi = Regs.Edi;
-   BiosArguments->Ebp = Regs.Ebp;
-   BiosArguments->SegDs = Regs.Ds;
-   BiosArguments->SegEs = Regs.Es;
+    /* Fil out the bios arguments */
+    BiosContext.Eax = BiosArguments->Eax;
+    BiosContext.Ebx = BiosArguments->Ebx;
+    BiosContext.Ecx = BiosArguments->Ecx;
+    BiosContext.Edx = BiosArguments->Edx;
+    BiosContext.Esi = BiosArguments->Esi;
+    BiosContext.Edi = BiosArguments->Edi;
+    BiosContext.Ebp = BiosArguments->Ebp;
+    BiosContext.SegDs = BiosArguments->SegDs;
+    BiosContext.SegEs = BiosArguments->SegEs;
 
-   IntDetachFromCSRSS(&CallingProcess, &ApcState);
+    /* Do the ROM BIOS call */
+    Status = Ke386CallBios(0x10, &BiosContext);
 
-   return Status;
+    /* Return the arguments */
+    BiosArguments->Eax = BiosContext.Eax;
+    BiosArguments->Ebx = BiosContext.Ebx;
+    BiosArguments->Ecx = BiosContext.Ecx;
+    BiosArguments->Edx = BiosContext.Edx;
+    BiosArguments->Esi = BiosContext.Esi;
+    BiosArguments->Edi = BiosContext.Edi;
+    BiosArguments->Ebp = BiosContext.Ebp;
+    BiosArguments->SegDs = BiosContext.SegDs;
+    BiosArguments->SegEs = BiosContext.SegEs;
+
+    /* Detach and return status */
+    IntDetachFromCSRSS(&CallingProcess, &ApcState);
+    return Status;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

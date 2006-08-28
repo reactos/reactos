@@ -104,6 +104,11 @@ KiSystemStartup(BOOLEAN BootProcessor)
         /* Initialize the Kernel Executive */
         ExpInitializeExecutive();
 
+        /* Create the IOPM Save Area */
+        Ki386IopmSaveArea = ExAllocatePoolWithTag(NonPagedPool,
+                                                  PAGE_SIZE * 2,
+                                                  TAG('K', 'e', ' ', ' '));
+
         /* Free Initial Memory */
         MiFreeInitMemory();
 

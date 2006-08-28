@@ -587,7 +587,7 @@ Ki386SetProcessorFeatures(VOID)
    SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
        (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
-       (Pcr->PrcbData.FeatureBits & KF_RDTSC) ? TRUE : FALSE;
+       (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC) ? TRUE : FALSE;
    SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386Pae;
    SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
        (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? TRUE : FALSE;

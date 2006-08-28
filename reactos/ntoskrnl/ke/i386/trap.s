@@ -565,7 +565,7 @@ NotUserMode:
     mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
 
     /* Check if this is a VDM Process */
-    //cmp dword ptr [ebx+KPROCESS_VDM_OBJECTS], 0
+    //cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
     //jz VdmProc
 
     /* Exit through common routine */
@@ -980,18 +980,12 @@ _KiTrap6:
     /* Enter trap */
     TRAP_PROLOG(6)
 
-    /* Call the C exception handler */
-    push 6
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Not yet supported */
+    int 3
+    jmp $
 
     /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    jmp _Kei386EoiHelper@0
 .endfunc
 
 .func KiTrap7
@@ -1205,21 +1199,157 @@ _KiTrap12:
 
 .func KiTrap13
 _KiTrap13:
+
+    /* It this a V86 GPF? */
+    test dword ptr [esp+12], EFLAGS_V86_MASK
+    jz NotV86
+
+    /* Enter V86 Trap */
+    V86_TRAP_PROLOG kitd
+
+    /* Make sure that this is a V86 process */
+    mov ecx, [fs:KPCR_CURRENT_THREAD]
+    mov ecx, [ecx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ecx+EPROCESS_VDM_OBJECTS], 0
+    jnz RaiseIrql
+
+    /* Otherwise, something is very wrong, raise an exception */
+    sti
+    jmp $
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov esi, -1
+    mov eax, STATUS_ACCESS_VIOLATION
+    jmp _DispatchTwoParam
+
+RaiseIrql:
+
+    /* Go to APC level */
+    mov ecx, APC_LEVEL
+    call @KfRaiseIrql@4
+
+    /* Save old IRQL and enable interrupts */
+    push eax
+    sti
+
+    /* Handle the opcode */
+    call _Ki386HandleOpcodeV86@0
+
+    /* Check if this was VDM */
+    test al, 0xFF
+    jnz NoReflect
+
+    /* FIXME: TODO */
+    int 3
+
+NoReflect:
+
+    /* Lower IRQL and disable interrupts */
+    pop ecx
+    call @KfLowerIrql@4
+    cli
+
+    /* Check if this was a V86 trap */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jz NotV86Trap
+
+    /* Exit the V86 Trap */
+    V86_TRAP_EPILOG
+
+NotV86Trap:
+
+    /* Either this wasn't V86, or it was, but an APC interrupted us */
+    jmp _Kei386EoiHelper@0
+
+NotV86:
     /* Enter trap */
     TRAP_PROLOG(13)
 
-    /* Call the C exception handler */
-    push 13
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-    
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if this was from kernel-mode */
+    test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jnz UserModeGpf
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* FIXME: Check for GPF during GPF */
+
+    /* Get the opcode and trap frame */
+    mov eax, [ebp+KTRAP_FRAME_EIP]
+    mov eax, [eax]
+    mov edx, [ebp+KTRAP_FRAME_EBP]
+
+    /* We want to check if this was POP [DS/ES/FS/GS] */
+    add edx, KTRAP_FRAME_DS
+    cmp al, 0x1F
+    jz SegPopGpf
+    add edx, KTRAP_FRAME_ES - KTRAP_FRAME_DS
+    cmp al, 7
+    jz SegPopGpf
+    add edx, KTRAP_FRAME_FS - KTRAP_FRAME_ES
+    cmp ax, 0xA10F
+    jz SegPopGpf
+    add edx, KTRAP_FRAME_GS - KTRAP_FRAME_FS
+    cmp ax, 0xA90F
+    jz SegPopGpf
+
+    /* It isn't, was it IRETD? */
+    cmp al, 0xCF
+    jne NotIretGpf
+
+    /* Get error code */
+    lea edx, [ebp+KTRAP_FRAME_ESP]
+    mov ax, [ebp+KTRAP_FRAME_ERROR_CODE]
+    and ax, ~RPL_MASK
+
+    /* Get CS */
+    mov cx, word ptr [edx+4]
+    and cx, ~RPL_MASK
+    cmp cx, ax
+    jnz NotCsGpf
+
+    /* This should be a Ki386CallBios return */
+    mov eax, offset _Ki386BiosCallReturnAddress
+    cmp eax, [edx]
+    jne NotBiosGpf
+    mov eax, [edx+4]
+    cmp ax, KGDT_R0_CODE + RPL_MASK
+    jne NotBiosGpf
+
+    /* Jump to return address */
+    jmp _Ki386BiosCallReturnAddress
+
+NotBiosGpf:
+    /* Check if the thread was in kernel mode */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    test byte ptr [ebx+KTHREAD_PREVIOUS_MODE], 0xFF
+    jz UserModeGpf
+
+    /* Set RPL_MASK for check below */
+    or word ptr [edx+4], RPL_MASK
+
+NotCsGpf:
+    /* Check if the IRET goes to user-mode */
+    test dword ptr [edx+4], RPL_MASK
+    jz UserModeGpf
+
+    /* FIXME: Handle IRET back to user-mode */
+    int 3
+    jmp $
+
+NotIretGpf:
+
+    /* FIXME: Handle RDMSR/WRMSR and lazy load */
+    int 3
+    jmp $
+
+SegPopGpf:
+
+    /* Handle segment POP fault */
+    int 3
+    jmp $
+
+UserModeGpf:
+
+    /* FIXME: Unhandled */
+    int 3
+    jmp $
 .endfunc
 
 .func KiTrap14

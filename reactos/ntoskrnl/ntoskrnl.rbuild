@@ -40,9 +40,8 @@
 				<file>trap.s</file>
 				<file>tss.c</file>
 				<file>usercall_asm.S</file>
-				<file>v86m.c</file>
+				<file>v86vdm.c</file>
 				<file>v86m_sup.S</file>
-				<file>vdm.c</file>
 			</directory>
 		</if>
 			<file>apc.c</file>
@@ -328,6 +327,12 @@
 			<file>sid.c</file>
 			<file>token.c</file>
 	</directory>
+	<directory name="vdm">
+		<if property="ARCH" value="i386">
+            <file>vdmmain.c</file>
+            <file>vdmexec.c</file>
+		</if>
+    </directory>
     <directory name="wmi">
         <file>wmi.c</file>
     </directory>

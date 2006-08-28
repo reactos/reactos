@@ -9,14 +9,6 @@
  *                  Skywing (skywing@valhallalegends.com)
  */
 
-/*
- * FIXMES:
- *  - Clean up file (remove all stack functions and use RtlWalkFrameChain/RtlCaptureStackBacktrace)
- *  - Sanitize some context fields.
- *  - Add PSEH handler when an exception occurs in an exception (KiCopyExceptionRecord).
- *  - Forward exceptions to user-mode debugger.
- */
-
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
@@ -217,33 +209,6 @@ KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
     * Dump the stack frames
     */
    KeDumpStackFrames((PULONG)Tf->Ebp);
-}
-
-ULONG
-KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
-/*
- * FUNCTION: Called by the lowlevel execption handlers to print an amusing
- * message and halt the computer
- * ARGUMENTS:
- *        Complete CPU context
- */
-{
-   ULONG_PTR cr2;
-   ASSERT(ExceptionNr == 13 || ExceptionNr == 6);
-
-   /* Get CR2 */
-   cr2 = Ke386GetCr2();
-   Tf->DbgArgPointer = cr2;
-
-   /*
-    * If this was a V86 mode exception then handle it specially
-    */
-   if (Tf->EFlags & (1 << 17))
-     {
-       DPRINT("Tf->Eflags, %x, Tf->Eip %x, ExceptionNr: %d\n", Tf->EFlags, Tf->Eip, ExceptionNr);
-       return(KeV86Exception(ExceptionNr, Tf, cr2));
-     }
-   return 0;
 }
 
 ULONG
@@ -969,7 +934,6 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     ULONG_PTR Stack, NewStack;
     ULONG Size;
     BOOLEAN UserDispatch = FALSE;
-    DPRINT("KiDispatchException() called\n");
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;

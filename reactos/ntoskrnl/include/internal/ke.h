@@ -71,6 +71,10 @@ extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;
 extern ULONG KiUnexpectedEntrySize;
+extern PVOID Ki386IopmSaveArea;
+extern ULONG KeI386EFlagsAndMaskV86;
+extern ULONG KeI386EFlagsOrMaskV86;
+extern BOOLEAN KeI386VirtualIntExtensions;
 
 /* MACROS *************************************************************************/
 
@@ -138,6 +142,8 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
+
+#define IOPM_OFFSET FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
@@ -730,6 +736,24 @@ KiInterruptDispatch(
 VOID
 NTAPI
 KiChainedDispatch(
+    VOID
+);
+
+VOID
+NTAPI
+Ki386AdjustEsp0(
+    IN PKTRAP_FRAME TrapFrame
+);
+
+VOID
+NTAPI
+Ki386SetupAndExitToV86Mode(
+    OUT PTEB VdmTeb
+);
+
+VOID
+NTAPI
+KeI386VdmInitialize(
     VOID
 );
 

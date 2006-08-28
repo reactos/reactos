@@ -560,7 +560,7 @@ ExpInitializeExecutive(VOID)
 
     /* Initalize the Process Manager */
     PiInitProcessManager();
-    
+
     /* Break into the Debugger if requested */
     if (KdPollBreakIn()) DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
 
@@ -637,6 +637,9 @@ ExpInitializeExecutive(VOID)
 
     /* Import and Load Registry Hives */
     CmInitHives(SetupMode);
+
+    /* Initialize VDM support */
+    KeI386VdmInitialize();
 
     /* Initialize the time zone information from the registry */
     ExpInitTimeZoneInfo();

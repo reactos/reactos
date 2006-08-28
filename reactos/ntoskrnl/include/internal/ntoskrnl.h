@@ -35,6 +35,7 @@
 #include "tag.h"
 #include "test.h"
 #include "inbv.h"
+#include "vdm.h"
 
 #include <pshpack1.h>
 /*

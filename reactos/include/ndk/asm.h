@@ -472,6 +472,11 @@ Author:
 #define SERVICE_DESCRIPTOR_LENGTH               0x0010
 
 //
+// VDM State Pointer
+//
+#define FIXED_NTVDMSTATE_LINEAR_PC_AT           0x714
+
+//
 // Machine types
 //
 #ifdef __ASM__

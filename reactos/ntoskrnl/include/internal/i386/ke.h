@@ -26,7 +26,8 @@
 #define X86_CR4_OSFXSR          0x00000200 /* enable FXSAVE/FXRSTOR instructions */
 #define X86_CR4_OSXMMEXCPT      0x00000400 /* enable #XF exception */
 
-#define KF_RDTSC                0x00000002 /* time stamp counters are present */
+#define X86_FEATURE_VME         0x00000002 /* Virtual 8086 Extensions are present */
+#define X86_FEATURE_TSC         0x00000010 /* time stamp counters are present */
 #define X86_FEATURE_PAE         0x00000040 /* physical address extension is present */
 #define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
 #define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */

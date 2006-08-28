@@ -19,8 +19,7 @@ InitializeVideoAddressSpace(VOID)
    PVOID NullAddress;
    LARGE_INTEGER Offset;
    ULONG ViewSize;
-   CHAR IVT[1024];
-   CHAR BDA[256];
+   CHAR IVTAndBda[1024+256];
 
    /*
     * Open the physical memory section
@@ -93,35 +92,21 @@ InitializeVideoAddressSpace(VOID)
      }
 
    /*
-    * Get the real mode IVT from the kernel
+    * Get the real mode IVT and BDA from the kernel
     */
-   Status = NtVdmControl(0, IVT);
-   if (!NT_SUCCESS(Status))
+   Status = NtVdmControl(VdmInitialize, IVTAndBda);
+    if (!NT_SUCCESS(Status))
      {
        DbgPrint("NtVdmControl failed (status %x)\n", Status);
        return(0);
      }
 
    /*
-    * Copy the real mode IVT into the right place
+    * Copy the IVT and BDA into the right place
     */
    NullAddress = (PVOID)0x0; /* Workaround for GCC 3.4 */
-   memcpy(NullAddress, IVT, 1024);
-
-   /*
-    * Get the BDA from the kernel
-    */
-   Status = NtVdmControl(1, BDA);
-   if (!NT_SUCCESS(Status))
-     {
-       DbgPrint("NtVdmControl failed (status %x)\n", Status);
-       return(0);
-     }
-
-   /*
-    * Copy the BDA into the right place
-    */
-   memcpy((PVOID)0x400, BDA, 256);
+   memcpy(NullAddress, IVTAndBda, 1024);
+   memcpy((PVOID)0x400, &IVTAndBda[1024], 256);
 
    return(1);
 }
