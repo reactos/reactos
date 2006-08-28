@@ -67,7 +67,7 @@ STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Support"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Conection Status", -1, 9, 8, 200, 88, BS_GROUPBOX
+ GROUPBOX "Connection Status", -1, 9, 8, 200, 88, BS_GROUPBOX
  LTEXT "Address type:", -1, 22, 20, 80, 8
  LTEXT "IP address:", -1, 22, 34, 80, 8
  LTEXT "SubNet mask:", -1, 22, 48, 80, 8
