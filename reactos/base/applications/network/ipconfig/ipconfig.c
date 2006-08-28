@@ -443,7 +443,7 @@ VOID ShowInfo(BOOL bAll)
 
         if (bAll)
         {
-            _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), GetConnectionDescription(pAdapter->AdapterName)); /// here !!
+            _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), GetConnectionDescription(pAdapter->AdapterName));
             _tprintf(_T("\tPhysical Address. . . . . . . . . : %s\n"), PrintMacAddr(pAdapter->Address));
             if (pAdapter->DhcpEnabled)
                 _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));
@@ -497,6 +497,7 @@ VOID ShowInfo(BOOL bAll)
 VOID Release(LPTSTR Index)
 {
     IP_ADAPTER_INDEX_MAP AdapterInfo;
+    DWORD ret;
 
     /* if interface is not given, query GetInterfaceInfo */
     if (Index == NULL)
@@ -541,10 +542,10 @@ VOID Release(LPTSTR Index)
 
 
     /* Call IpReleaseAddress to release the IP address on the specified adapter. */
-    if (IpReleaseAddress(&AdapterInfo) != NO_ERROR)
+    if (ret = IpReleaseAddress(&AdapterInfo) != NO_ERROR)
     {
         _tprintf(_T("\nAn error occured while releasing interface %S : \n"), AdapterInfo.Name);
-        DoFormatMessage(0);
+        DoFormatMessage(ret);
     }
 
 }
