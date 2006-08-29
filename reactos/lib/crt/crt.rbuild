@@ -221,11 +221,15 @@
 		<file>lfind.c</file>
 		<file>lsearch.c</file>
 	</directory>
+      
 	<directory name="setjmp">
-		<directory name="i386">
-			<file>setjmp.s</file>
-		</directory>
+            <if property="ARCH" value="i386">                      
+		         <directory name="i386">
+			         <file>setjmp.s</file>
+		         </directory>
+            </if>
 	</directory>
+       
 	<directory name="signal">
 		<file>signal.c</file>
 		<file>xcptinfo.c</file>
