@@ -60,8 +60,8 @@ StartupPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         GetAutostartEntriesFromRegistry(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"));
         GetAutostartEntriesFromRegistry(HKEY_CURRENT_USER, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"));
-		GetDisabledAutostartEntriesFromRegistry (_T("SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\startupreg"));
-		GetDisabledAutostartEntriesFromRegistry (_T("SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\startupfolder"));
+        GetDisabledAutostartEntriesFromRegistry (_T("SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\startupreg"));
+        GetDisabledAutostartEntriesFromRegistry (_T("SOFTWARE\\Microsoft\\Shared Tools\\MSConfig\\startupfolder"));
 
         //FIXME: What about HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Userinit
         //FIXME: Common Startup (startmenu)
@@ -181,7 +181,7 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
                     item.iItem = ListView_GetItemCount(hStartupListCtrl);
                     item.lParam = 0;
                     (void)ListView_InsertItem(hStartupListCtrl, &item);
-					ListView_SetCheckState(hStartupListCtrl, item.iItem, TRUE);
+                    ListView_SetCheckState(hStartupListCtrl, item.iItem, TRUE);
 
                     if (dwType == REG_SZ)
                     {

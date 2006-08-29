@@ -18,9 +18,9 @@ void GetServices ( void );
 INT_PTR CALLBACK
 ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	LV_COLUMN   column;
-	TCHAR       szTemp[256];
-	DWORD dwStyle;
+    LV_COLUMN   column;
+    TCHAR       szTemp[256];
+    DWORD dwStyle;
 
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
@@ -35,7 +35,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         dwStyle = dwStyle | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES;
         SendMessage(hServicesListCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
 
-	    SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+        SetWindowPos(hDlg, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
 
         // Initialize the application page's controls
         column.mask = LVCF_TEXT | LVCF_WIDTH;
@@ -64,10 +64,10 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         (void)ListView_InsertColumn(hServicesListCtrl, 3, &column);
 
         GetServices();
-		return TRUE;
-	}
+        return TRUE;
+    }
 
-  return 0;
+    return 0;
 }
 
 void
@@ -106,7 +106,7 @@ GetServices ( void )
                 /* reserve memory for service info array */
                 pServiceStatus = (ENUM_SERVICE_STATUS_PROCESS *) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                 if (!pServiceStatus) 
-			        return;
+                    return;
 
                 /* fill array with service info */
                 if (EnumServicesStatusEx(ScHandle, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL, (LPBYTE)pServiceStatus, BytesNeeded, &BytesNeeded, &NumServices, &ResumeHandle, 0) == 0)
@@ -146,7 +146,7 @@ GetServices ( void )
                         {
                             pServiceFailureActions = (LPSERVICE_FAILURE_ACTIONS) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                             if (pServiceFailureActions == NULL) 
-			                    return;
+                                return;
 
                             if (!QueryServiceConfig2(hService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)pServiceFailureActions, BytesNeeded, &BytesNeeded))
                             {
@@ -170,11 +170,11 @@ GetServices ( void )
                         }
                     }
 
-					if (pServiceFailureActions != NULL)
-					{
-						HeapFree(GetProcessHeap(), 0, pServiceFailureActions);
-						pServiceFailureActions = NULL;
-					}
+                    if (pServiceFailureActions != NULL)
+                    {
+                        HeapFree(GetProcessHeap(), 0, pServiceFailureActions);
+                        pServiceFailureActions = NULL;
+                    }
 
                     /* get vendor of service binary */
                     BytesNeeded = 0;
@@ -184,7 +184,7 @@ GetServices ( void )
                         {
                             pServiceConfig = (LPQUERY_SERVICE_CONFIG) HeapAlloc(GetProcessHeap(), 0, BytesNeeded);
                             if (pServiceConfig == NULL) 
-			                    return;
+                                return;
 
                             if (!QueryServiceConfig(hService, pServiceConfig, BytesNeeded, &BytesNeeded))
                             {
@@ -208,20 +208,21 @@ GetServices ( void )
                         _tcscpy(FileName, pServiceConfig->lpBinaryPathName);
                     }
 
-					HeapFree(GetProcessHeap(), 0, pServiceConfig);
-					pServiceConfig = NULL;
+                    HeapFree(GetProcessHeap(), 0, pServiceConfig);
+                    pServiceConfig = NULL;
 
-					dwLen = GetFileVersionInfoSize(FileName, &dwHandle);
+                    dwLen = GetFileVersionInfoSize(FileName, &dwHandle);
                     if (dwLen)
                     {
                         lpData = (TCHAR*) HeapAlloc(GetProcessHeap(), 0, dwLen);
                         if (lpData == NULL) 
-			                return;
+                            return;
 
-                        if (!GetFileVersionInfo (FileName, dwHandle, dwLen, lpData)) {
-		                    HeapFree(GetProcessHeap(), 0, lpData);
-		                    return;
-	                    }
+                        if (!GetFileVersionInfo (FileName, dwHandle, dwLen, lpData))
+                        {
+                            HeapFree(GetProcessHeap(), 0, lpData);
+                            return;
+                        }
 
                         if (VerQueryValue(lpData, _T("\\VarFileInfo\\Translation"), &pvData, (PUINT) &BufLen))
                         {
@@ -230,12 +231,13 @@ GetServices ( void )
                             wsprintf(szStrFileInfo, _T("StringFileInfo\\%04X%04X\\CompanyName"), wCodePage, wLangID);
                         }
 
-                        if (VerQueryValue (lpData, szStrFileInfo, (LPVOID) &lpBuffer, (PUINT) &BufLen)) {
+                        if (VerQueryValue (lpData, szStrFileInfo, (LPVOID) &lpBuffer, (PUINT) &BufLen)) 
+                        {
                             item.pszText = lpBuffer;
                             item.iSubItem = 2;
                             SendMessage(hServicesListCtrl, LVM_SETITEMTEXT, item.iItem, (LPARAM) &item);
                         }  
-						HeapFree(GetProcessHeap(), 0, lpData);
+                        HeapFree(GetProcessHeap(), 0, lpData);
                     }
                     else
                     {
@@ -258,6 +260,5 @@ GetServices ( void )
         HeapFree(GetProcessHeap(), 0, pServiceStatus);
         CloseServiceHandle(ScHandle);
     }        
-
 
 }
