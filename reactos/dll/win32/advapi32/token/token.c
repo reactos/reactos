@@ -593,17 +593,81 @@ CreateRestrictedToken(
     return FALSE;
 }
 
-
 /*
  * @unimplemented
  */
-PSID STDCALL
-GetSiteSidFromToken(
-                IN HANDLE TokenHandle)
+PSID
+WINAPI
+GetSiteSidFromToken(IN HANDLE TokenHandle)
 {
-    FIXME("unimplemented!\n", __FUNCTION__);
-    return NULL;
+    PTOKEN_GROUPS RestrictedSids;
+    ULONG RetLen;
+    UINT i;
+    NTSTATUS Status;
+    PSID PSiteSid = NULL;
+    SID_IDENTIFIER_AUTHORITY InternetSiteAuthority = {SECURITY_INTERNETSITE_AUTHORITY};
+
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenRestrictedSids,
+                                     NULL,
+                                     0,
+                                     &RetLen);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return NULL;
+    }
+
+    RestrictedSids = (PTOKEN_GROUPS)RtlAllocateHeap(RtlGetProcessHeap(),
+                                                    0,
+                                                    RetLen);
+    if (RestrictedSids == NULL)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return NULL;
+    }
+
+    Status = NtQueryInformationToken(TokenHandle,
+                                     TokenRestrictedSids,
+                                     RestrictedSids,
+                                     RetLen,
+                                     &RetLen);
+    if (NT_SUCCESS(Status))
+    {
+        for (i = 0; i < RestrictedSids->GroupCount; i++) 
+        {
+            SID* RSSid = RestrictedSids->Groups[i].Sid;
+
+            if (RtlCompareMemory(&(RSSid->IdentifierAuthority),
+                                 &InternetSiteAuthority,
+                                 sizeof(SID_IDENTIFIER_AUTHORITY)) ==
+                                 sizeof(SID_IDENTIFIER_AUTHORITY))
+            {
+                PSiteSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           0,
+                                           RtlLengthSid((RestrictedSids->
+                                                         Groups[i]).Sid));
+                if (PSiteSid == NULL) 
+                {
+                    SetLastError(ERROR_OUTOFMEMORY);
+                }
+                else
+                {
+                    RtlCopySid(RtlLengthSid(RestrictedSids->Groups[i].Sid),
+                               PSiteSid,
+                               RestrictedSids->Groups[i].Sid);
+                }
+
+                break;
+            }
+        }
+    }
+    else
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+    }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, RestrictedSids);
+    return PSiteSid;
 }
 
-
-/* EOF */
