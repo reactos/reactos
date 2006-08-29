@@ -359,6 +359,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   Status = CmiCallRegisteredCallbacks(RegNtPreCreateKey, &PreCreateKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostCreateKeyInfo.Object = NULL;
+      PostCreateKeyInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
       goto Cleanup;
     }
     
@@ -612,11 +615,11 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   PostOperationInfo.Object = (PVOID)KeyObject;
   DeleteKeyInfo.Object = (PVOID)KeyObject;
-  Status = CmiCallRegisteredCallbacks(RegNtPreSetValueKey, &DeleteKeyInfo);
+  Status = CmiCallRegisteredCallbacks(RegNtPreDeleteKey, &DeleteKeyInfo);
   if (!NT_SUCCESS(Status))
     {
       PostOperationInfo.Status = Status;
-      CmiCallRegisteredCallbacks(RegNtDeleteKey, &PostOperationInfo);
+      CmiCallRegisteredCallbacks(RegNtPostDeleteKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -728,9 +731,11 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   EnumerateKeyInfo.Length = Length;
   EnumerateKeyInfo.ResultLength = ResultLength;
 
-  Status = CmiCallRegisteredCallbacks(RegNtEnumerateKey, &EnumerateKeyInfo);
+  Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateKey, &EnumerateKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -752,7 +757,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
       PostOperationInfo.Status = STATUS_NO_MORE_ENTRIES;
-      CmiCallRegisteredCallbacks(RegNtPostDeleteKey, &PostOperationInfo);
+      CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       DPRINT("No more volatile entries\n");
       return STATUS_NO_MORE_ENTRIES;
@@ -990,6 +995,8 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   PCM_KEY_VALUE  ValueCell;
   PVOID  DataCell;
   ULONG NameSize, DataSize;
+  REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
@@ -1017,6 +1024,23 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
       return Status;
     }
 
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  EnumerateValueKeyInfo.Object = (PVOID)KeyObject;
+  EnumerateValueKeyInfo.Index = Index;
+  EnumerateValueKeyInfo.KeyValueInformationClass = KeyValueInformationClass;
+  EnumerateValueKeyInfo.KeyValueInformation = KeyValueInformation;
+  EnumerateValueKeyInfo.Length = Length;
+  EnumerateValueKeyInfo.ResultLength = ResultLength;
+
+  Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateValueKey, &EnumerateValueKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
+      ObDereferenceObject(KeyObject);
+      return Status;
+    }
+
   /* Acquire hive lock */
   KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&CmiRegistryLock, TRUE);
@@ -1038,6 +1062,8 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
       ObDereferenceObject(KeyObject);
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
       return Status;
     }
 
@@ -1217,6 +1243,8 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
   ObDereferenceObject(KeyObject);
+  PostOperationInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostEnumerateValueKey, &PostOperationInfo);
 
   return Status;
 }
@@ -1351,6 +1379,9 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   Status = CmiCallRegisteredCallbacks(RegNtPreOpenKey, &PreOpenKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostOpenKeyInfo.Object = NULL;
+      PostOpenKeyInfo.Status = Status;
+      CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
       ObpReleaseCapturedAttributes(&ObjectCreateInfo);
       if (ObjectName.Buffer) ObpReleaseCapturedName(&ObjectName);
       return Status;
@@ -1475,9 +1506,11 @@ NtQueryKey(IN HANDLE KeyHandle,
   QueryKeyInfo.Length = Length;
   QueryKeyInfo.ResultLength = ResultLength;
   
-  Status = CmiCallRegisteredCallbacks(RegNtQueryKey, &QueryKeyInfo);
+  Status = CmiCallRegisteredCallbacks(RegNtPreQueryKey, &QueryKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostQueryKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -1704,6 +1737,8 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   Status = CmiCallRegisteredCallbacks(RegNtPreQueryValueKey, &QueryValueKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostQueryValueKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -1962,6 +1997,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
   Status = CmiCallRegisteredCallbacks(RegNtPreSetValueKey, &SetValueKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -2141,6 +2178,9 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
   Status = CmiCallRegisteredCallbacks(RegNtPreDeleteValueKey, &DeleteValueKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostOperationInfo.Object = (PVOID)KeyObject;
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostDeleteValueKey, &PostOperationInfo); 
       ReleaseCapturedUnicodeString(&CapturedValueName,
                                    PreviousMode);
 Fail:
@@ -2411,6 +2451,8 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   Status = CmiCallRegisteredCallbacks(RegNtPreQueryMultipleValueKey, &QueryMultipleValueKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostQueryMultipleValueKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -2658,9 +2700,11 @@ NtSetInformationKey (IN HANDLE KeyHandle,
   SetInformationKeyInfo.KeySetInformation = KeyInformation;
   SetInformationKeyInfo.KeySetInformationLength = KeyInformationLength;
 
-  Status = CmiCallRegisteredCallbacks(RegNtSetInformationKey, &SetInformationKeyInfo);
+  Status = CmiCallRegisteredCallbacks(RegNtPreSetInformationKey, &SetInformationKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostSetInformationKey, &PostOperationInfo);
       ObDereferenceObject (KeyObject);
       return Status;
     }
