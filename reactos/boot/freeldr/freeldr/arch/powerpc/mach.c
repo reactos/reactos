@@ -30,6 +30,7 @@ static int chosen_package, stdin_handle, part_handle = -1;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
 jmp_buf jmp;
+char *video_mem = 0;
 
 void le_swap( void *start_addr_v, 
               void *end_addr_v, 
@@ -107,24 +108,27 @@ void PpcVideoClearScreen( UCHAR Attr ) {
     ofw_print_string("ClearScreen\n");
 }
 
-VIDEODISPLAYMODE PpcVideoSetDisplayMode( char *DisplayMode, BOOLEAN Init ) {
-    printf( "DisplayMode: %s %s\n", DisplayMode, Init ? "true" : "false" );
-    return VideoGraphicsMode;
-}
-
-/* FIXME: Query */
 VOID PpcVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth ) {
-    ofw_print_string("GetDisplaySize\n");
-    *Width = 640;
-    *Height = 480;
-    *Depth = 8;
+    //ofw_print_string("GetDisplaySize\n");
+    *Width = 80;
+    *Height = 25;
+    *Depth = 16;
+    //printf("GetDisplaySize(%d,%d,%d)\n", *Width, *Height, *Depth);
 }
 
 ULONG PpcVideoGetBufferSize() {
     ULONG Width, Height, Depth;
-    ofw_print_string("PpcVideoGetBufferSize\n");
+    //ofw_print_string("PpcVideoGetBufferSize\n");
     PpcVideoGetDisplaySize( &Width, &Height, &Depth );
     return Width * Height * Depth / 8;
+}
+
+VIDEODISPLAYMODE PpcVideoSetDisplayMode( char *DisplayMode, BOOLEAN Init ) {
+    //printf( "DisplayMode: %s %s\n", DisplayMode, Init ? "true" : "false" );
+    if( Init && !video_mem ) {
+	video_mem = MmAllocateMemory( PpcVideoGetBufferSize() );
+    }
+    return VideoTextMode;
 }
 
 VOID PpcVideoSetTextCursorPosition( ULONG X, ULONG Y ) {
@@ -140,7 +144,22 @@ VOID PpcVideoPutChar( int Ch, UCHAR Attr, unsigned X, unsigned Y ) {
 }
 
 VOID PpcVideoCopyOffScreenBufferToVRAM( PVOID Buffer ) {
-    printf( "CopyOffScreenBufferToVRAM(%x)\n", Buffer );
+    int i,j;
+    ULONG w,h,d;
+    PCHAR ChBuf = Buffer;
+    int offset = 0;
+
+    PpcVideoGetDisplaySize( &w, &h, &d );
+
+    for( i = 0; i < h; i++ ) {
+	for( j = 0; j < w; j++ ) {
+	    offset = (j * 2) + (i * w * 2);
+	    if( ChBuf[offset] != video_mem[offset] ) {
+		video_mem[offset] = ChBuf[offset];
+		PpcVideoPutChar(ChBuf[offset],0,j+1,i+1);
+	    }
+	}
+    }
 }
 
 BOOLEAN PpcVideoIsPaletteFixed() {
@@ -294,7 +313,7 @@ ULONG PpcDiskGetCacheableBlockCount( ULONG DriveNumber ) {
 
 VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day, 
                                PULONG Hour, PULONG Minute, PULONG Second ) {
-    printf("RTCGeturrentDateTime\n");
+    //printf("RTCGeturrentDateTime\n");
 }
 
 VOID PpcHwDetect() {
