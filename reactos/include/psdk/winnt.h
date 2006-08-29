@@ -1028,7 +1028,7 @@ typedef enum
 #define RTL_CRITSECT_TYPE 0
 #define RTL_RESOURCE_TYPE 1
 /* Also in winddk.h */
-#define FIELD_OFFSET(t,f) ((LONG)&(((t*)0)->f))
+#define FIELD_OFFSET(t,f) ((LONG_PTR)&(((t*)0)->f))
 #ifndef CONTAINING_RECORD
 #define CONTAINING_RECORD(address, type, field) \
   ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
