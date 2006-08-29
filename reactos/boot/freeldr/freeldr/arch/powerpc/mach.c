@@ -169,11 +169,16 @@ VOID PpcVideoPrepareForReactOS() {
  */
 ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
                        ULONG MaxMemoryMapSize ) {
-    int i, memhandle, returned, total = 0, num_mem = 0;
+    int i, memhandle, mmuhandle, returned, total = 0, num_mem = 0;
     int memdata[256];
+
+    printf("PpcGetMemoryMap(%d)\n", MaxMemoryMapSize);
 
     ofw_getprop(chosen_package, "memory", 
 		(char *)&memhandle, sizeof(memhandle));
+    ofw_getprop(chosen_package, "mmu",
+		(char *)&mmuhandle, sizeof(mmuhandle));
+
     returned = ofw_getprop(memhandle, "available", 
 			   (char *)memdata, sizeof(memdata));
 
@@ -188,6 +193,10 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 	    BiosMemoryMap[num_mem].Length = TOTAL_HEAP_NEEDED;	     
 	    ofw_claim(BiosMemoryMap[num_mem].BaseAddress, 
 		      BiosMemoryMap[num_mem].Length, 0x1000); /* claim it */
+	    printf("virt2phys(%x)->%x\n",
+		   BiosMemoryMap[num_mem].BaseAddress,
+		   ofw_virt2phys
+		   (mmuhandle, BiosMemoryMap[num_mem].BaseAddress));
 	    total += BiosMemoryMap[0].Length;
 	    num_mem++;
 	}
@@ -237,7 +246,7 @@ BOOLEAN PpcDiskBootingFromFloppy(VOID) {
 }
 
 BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
-                                ULONG SectorCount, PVOID Buffer ) {
+				   ULONG SectorCount, PVOID Buffer ) {
     int rlen = 0;
 
     if( part_handle == -1 ) {
@@ -254,11 +263,13 @@ BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
 	return FALSE;
     }
 
-    if( ofw_seek( part_handle, SectorNumber * 512 ) ) {
-	printf("Seek to %x failed\n", SectorNumber * 512);
+    if( ofw_seek( part_handle, 
+		   (ULONG)(SectorNumber >> 25), 
+		   (ULONG)((SectorNumber * 512) & 0xffffffff) ) ) {
+	printf("Seek to %x failed\n", (ULONG)(SectorNumber * 512));
 	return FALSE;
     }
-    rlen = ofw_read( part_handle, Buffer, SectorCount * 512 );
+    rlen = ofw_read( part_handle, Buffer, (ULONG)(SectorCount * 512) );
     return rlen > 0;
 }
 
@@ -293,15 +304,25 @@ VOID PpcHwDetect() {
 typedef unsigned int uint32_t;
 
 void PpcInit( of_proxy the_ofproxy ) {
-    int len;
+    int len, stdin_handle_chosen;
     ofproxy = the_ofproxy;
 
-    ofw_print_string("Made it into freeldr LE code ... bootstrap complete\n");
+    ofw_print_string("Freeldr PowerPC Init\n");
 
     chosen_package = ofw_finddevice( "/chosen" );
 
+    ofw_print_string("Freeldr: chosen_package is ");
+    ofw_print_number(chosen_package);
+    ofw_print_string("\n");
+
     ofw_getprop( chosen_package, "stdin",
-                 (char *)&stdin_handle, sizeof(stdin_handle) );
+                 (char *)&stdin_handle_chosen, sizeof(stdin_handle_chosen) );
+
+    ofw_print_string("Freeldr: stdin_handle is ");
+    ofw_print_number(stdin_handle_chosen);
+    ofw_print_string("\n");
+
+    stdin_handle = stdin_handle_chosen;
 
     /* stdin_handle = REV(stdin_handle); */
 

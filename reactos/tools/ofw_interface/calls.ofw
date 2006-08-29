@@ -8,7 +8,7 @@ read			3	1	int char*:arg2 int int
 exit			0	0	
 child			1	1	int int
 peer			1	1	int int
-seek			2	1	int int int
+seek			3	1	int int int int
 # MMU methods 
 # claim (virt size align -- base)
 claim			3	1	int int int int
