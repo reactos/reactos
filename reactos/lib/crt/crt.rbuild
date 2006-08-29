@@ -105,27 +105,38 @@
 	<directory name="math">
 		<file>acos.c</file>
 		<file>adjust.c</file>
-		<file>asin.c</file>
-		<file>atan2.c</file>
+		<file>asin.c</file>		
 		<file>cabs.c</file>
-		<file>cosh.c</file>
-		<file>exp.c</file>
-		<file>fmod.c</file>
+		<file>cosh.c</file>				
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
 		<file>j0_y0.c</file>
 		<file>j1_y1.c</file>
-		<file>jn_yn.c</file>
-		<file>ldexp.c</file>
-		<file>log10.c</file>
+		<file>jn_yn.c</file>		
             <file>modf.c</file>
 		<file>s_modf.c</file>
-		<file>pow.c</file>
 		<file>sinh.c</file>
 		<file>stubs.c</file>
 		<file>tanh.c</file>
+            <file>pow_asm.c</file>
+
+            <if property="ARCH" value="i386">                      
+                      <file>atan2.c</file>
+                      <file>exp.c</file>
+                      <file>fmod.c</file>
+ 		          <file>ldexp.c</file>
+
+                      <directory name="i386"> 	
+                            <file>atan_asm.s</file>	                                                                
+                            <file>pow_asm.s</file>
+                            <file>log10_asm.s</file>                                    
+	                </directory>
+            </if>
+            <ifnot property="ARCH" value="i386">
+            </ifnot>                       
 	</directory>
+
 	<directory name="mbstring">
 		<file>hanzen.c</file>
 		<file>ischira.c</file>
