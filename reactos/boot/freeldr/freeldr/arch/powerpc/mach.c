@@ -30,7 +30,7 @@ static int chosen_package, stdin_handle, part_handle = -1;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
 jmp_buf jmp;
-char *video_mem = 0;
+volatile char *video_mem = 0;
 
 void le_swap( void *start_addr_v, 
               void *end_addr_v, 
