@@ -41,23 +41,32 @@
 		<file>abnorter.c</file>
 		<file>exhand2.c</file>
 		<file>matherr.c</file>
-		<file>seh.s</file>
-		<file>unwind.c</file>
+            <if property="ARCH" value="i386">
+                      <directory name="i386">
+                            <file>seh.s</file> 
+                            <file>unwind.c</file>
+                      </directory>
+            </if>                 				
 		<file>xcptfil.c</file>
 	</directory>
 	<directory name="float">
-		<file>chgsign.c</file>
-		<file>clearfp.c</file>
-		<file>cntrlfp.c</file>
+		<file>chgsign.c</file>				
 		<file>copysign.c</file>
 		<file>fpclass.c</file>
 		<file>fpecode.c</file>
 		<file>fpreset.c</file>
 		<file>isnan.c</file>
-		<file>logb.c</file>
 		<file>nafter.c</file>
 		<file>scalb.c</file>
-		<file>statfp.c</file>
+		
+            <if property="ARCH" value="i386">
+                      <directory name="i386">
+                             <file>clearfp.c</file>
+                             <file>cntrlfp.c</file>
+                             <file>logb.c</file>
+                             <file>statfp.c</file>
+                      </directory>
+            </if> 
 	</directory>
 	<directory name="io">
 		<file>access.c</file>
@@ -121,13 +130,12 @@
 		<file>tanh.c</file>
             <file>pow_asm.c</file>
 
-            <if property="ARCH" value="i386">                      
-                      <file>atan2.c</file>
-                      <file>exp.c</file>
-                      <file>fmod.c</file>
- 		          <file>ldexp.c</file>
-
+            <if property="ARCH" value="i386">                                           
                       <directory name="i386"> 	
+                            <file>atan2.c</file>
+                            <file>exp.c</file>
+                            <file>fmod.c</file>
+ 		                <file>ldexp.c</file>
                             <file>atan_asm.s</file>	                                                                
                             <file>pow_asm.s</file>
                             <file>log10_asm.s</file>                                    
