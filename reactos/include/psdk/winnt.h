@@ -527,18 +527,6 @@ typedef DWORD FLONG;
 #define SECURITY_NT_NON_UNIQUE                  0x00000015L
 #define SECURITY_BUILTIN_DOMAIN_RID             0x00000020L
 
-/* S-1-6 */
-#define SECURITY_SITE_SERVER_AUTHORITY          {0,0,0,0,0,6}
-
-/* S-1-7 */
-#define SECURITY_INTERNET_SITE_AUTHORITY        {0,0,0,0,0,7}
-
-/* S-1-8 */
-#define SECURITY_EXCHANGE_AUTHORITY             {0,0,0,0,0,8}
-
-/* S-1-9 */
-#define SECURITY_RESOURCE_MANAGER_AUTHORITY     {0,0,0,0,0,9}
-
 #define SECURITY_LOGON_IDS_RID_COUNT 0x3
 #define SID_REVISION 1
 
@@ -1040,7 +1028,7 @@ typedef enum
 #define RTL_CRITSECT_TYPE 0
 #define RTL_RESOURCE_TYPE 1
 /* Also in winddk.h */
-#define FIELD_OFFSET(t,f) ((LONG_PTR)&(((t*)0)->f))
+#define FIELD_OFFSET(t,f) ((LONG)&(((t*)0)->f))
 #ifndef CONTAINING_RECORD
 #define CONTAINING_RECORD(address, type, field) \
   ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
