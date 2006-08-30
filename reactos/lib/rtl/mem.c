@@ -208,14 +208,7 @@ RtlUlongByteSwap(
    IN ULONG Source
 )
 {
-#if defined(__i386__) && defined(__GNUC__)
-   ULONG ret;
-__asm__("bswap %0" : "=r" (ret) : "0" (Source) );
-   return ret;
-#else
-
    return ((ULONG)RtlUshortByteSwap((USHORT)Source) << 16) | RtlUshortByteSwap((USHORT)(Source >> 16));
-#endif
 }
 
 
