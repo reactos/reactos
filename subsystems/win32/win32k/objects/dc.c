@@ -2974,5 +2974,14 @@ IntChangeDisplaySettings(
 
   return Ret;
 }
-
+DWORD STDCALL
+NtGdiGetLayout(HDC hdc)
+{
+    return 0; 
+}
+DWORD STDCALL
+NtGdiSetLayout(HDC hdc, LONG wox, DWORD layout)
+{
+    return 0; 
+}
 /* EOF */

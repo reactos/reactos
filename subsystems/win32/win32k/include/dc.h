@@ -115,6 +115,8 @@ typedef struct _DC
   XLATEOBJ *XlateBrush;
   XLATEOBJ *XlatePen;
 
+  DWORD  layout;
+
   INT  saveLevel;
   BOOL IsIC;
 
