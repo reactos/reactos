@@ -307,7 +307,7 @@ UINT MSI_RecordGetStringA(MSIRECORD *rec, unsigned int iField,
                              NULL, 0 , NULL, NULL);
         WideCharToMultiByte( CP_ACP, 0, rec->fields[iField].u.szwVal, -1,
                              szValue, *pcchValue, NULL, NULL);
-        if( *pcchValue && len>*pcchValue )
+        if( szValue && *pcchValue && len>*pcchValue )
             szValue[*pcchValue-1] = 0;
         if( len )
             len--;
@@ -321,7 +321,7 @@ UINT MSI_RecordGetStringA(MSIRECORD *rec, unsigned int iField,
         break;
     }
 
-    if( *pcchValue <= len )
+    if( szValue && *pcchValue <= len )
         ret = ERROR_MORE_DATA;
     *pcchValue = len;
 
@@ -383,13 +383,13 @@ UINT MSI_RecordGetStringW(MSIRECORD *rec, unsigned int iField,
         break;
     case MSIFIELD_NULL:
         len = 1;
-        if( *pcchValue > 0 )
+        if( szValue && *pcchValue > 0 )
             szValue[0] = 0;
     default:
         break;
     }
 
-    if( *pcchValue <= len )
+    if( szValue && *pcchValue <= len )
         ret = ERROR_MORE_DATA;
     *pcchValue = len;
 

@@ -79,15 +79,15 @@ static struct expr * EXPR_wildcard( void *info );
     int integer;
 }
 
-%token TK_ABORT TK_AFTER TK_AGG_FUNCTION TK_ALL TK_AND TK_AS TK_ASC
+%token TK_ABORT TK_AFTER TK_AGG_FUNCTION TK_ALL TK_ALTER TK_AND TK_AS TK_ASC
 %token TK_BEFORE TK_BEGIN TK_BETWEEN TK_BITAND TK_BITNOT TK_BITOR TK_BY
 %token TK_CASCADE TK_CASE TK_CHAR TK_CHECK TK_CLUSTER TK_COLLATE TK_COLUMN
-%token TK_COMMA TK_COMMENT TK_COMMIT TK_CONCAT TK_CONFLICT 
+%token TK_COMMA TK_COMMENT TK_COMMIT TK_CONCAT TK_CONFLICT
 %token TK_CONSTRAINT TK_COPY TK_CREATE
 %token TK_DEFAULT TK_DEFERRABLE TK_DEFERRED TK_DELETE TK_DELIMITERS TK_DESC
 %token TK_DISTINCT TK_DOT TK_DROP TK_EACH
 %token TK_ELSE TK_END TK_END_OF_FILE TK_EQ TK_EXCEPT TK_EXPLAIN
-%token TK_FAIL TK_FLOAT TK_FOR TK_FOREIGN TK_FROM TK_FUNCTION
+%token TK_FAIL TK_FLOAT TK_FOR TK_FOREIGN TK_FREE TK_FROM TK_FUNCTION
 %token TK_GE TK_GLOB TK_GROUP TK_GT
 %token TK_HAVING TK_HOLD
 %token TK_IGNORE TK_ILLEGAL TK_IMMEDIATE TK_IN TK_INDEX TK_INITIALLY
@@ -127,10 +127,10 @@ static struct expr * EXPR_wildcard( void *info );
 %type <column_list> selcollist column column_and_type column_def table_def
 %type <column_list> column_assignment update_assign_list constlist
 %type <query> query multifrom from fromtable selectfrom unorderedsel
-%type <query> oneupdate onedelete oneselect onequery onecreate oneinsert
+%type <query> oneupdate onedelete oneselect onequery onecreate oneinsert onealter
 %type <expr> expr val column_val const_val
 %type <column_type> column_type data_type data_type_l data_count
-%type <integer> number
+%type <integer> number alterop
 
 /* Reference: http://mates.ms.mff.cuni.cz/oracle/doc/ora815nt/server.815/a67779/operator.htm */
 %left TK_OR
@@ -156,6 +156,7 @@ onequery:
   | oneinsert
   | oneupdate
   | onedelete
+  | onealter
     ;
 
 oneinsert:
@@ -234,6 +235,30 @@ onedelete:
             $$ = delete;
         }
     ;
+
+onealter:
+    TK_ALTER TK_TABLE table alterop
+        {
+            SQL_input* sql = (SQL_input*) info;
+            MSIVIEW *alter = NULL;
+
+            ALTER_CreateView( sql->db, &alter, $3, $4 );
+            if( !alter )
+                YYABORT;
+            $$ = alter;
+        }
+    ;
+
+alterop:
+    TK_HOLD
+        {
+            $$ = 1;
+        }
+  | TK_FREE
+        {
+            $$ = -1;
+        }
+  ;
 
 table_def:
     column_def TK_PRIMARY TK_KEY selcollist

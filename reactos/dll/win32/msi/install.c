@@ -635,6 +635,30 @@ UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 }
 
 /***********************************************************************
+* MsiGetFeatureCostA   (MSI.@)
+*/
+UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
+                  MSICOSTTREE iCostTree, INSTALLSTATE iState, INT *piCost)
+{
+    FIXME("(%ld %s %i %i %p): stub\n", hInstall, debugstr_a(szFeature),
+          iCostTree, iState, piCost);
+    if (piCost) *piCost = 0;
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+* MsiGetFeatureCostW   (MSI.@)
+*/
+UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
+                  MSICOSTTREE iCostTree, INSTALLSTATE iState, INT *piCost)
+{
+    FIXME("(%ld %s %i %i %p): stub\n", hInstall, debugstr_w(szFeature),
+          iCostTree, iState, piCost);
+    if (piCost) *piCost = 0;
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
  * MsiSetComponentStateA (MSI.@)
  */
 UINT WINAPI MsiSetComponentStateA(MSIHANDLE hInstall, LPCSTR szComponent,

@@ -121,6 +121,8 @@ UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view,
                       LPCWSTR left, LPCWSTR right,
                       struct expr *cond );
 
+UINT ALTER_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR name, int hold );
+
 int sqliteGetToken(const WCHAR *z, int *tokenType);
 
 #endif /* __WINE_MSI_QUERY_H */

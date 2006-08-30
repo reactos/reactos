@@ -408,14 +408,15 @@ UINT WINAPI MsiSourceListAddSourceW( LPCWSTR szProduct, LPCWSTR szUserName,
     INT ret;
     LPWSTR sidstr = NULL;
     DWORD sidsize = 0;
+    DWORD domsize = 0;
 
     TRACE("%s %s %s\n", debugstr_w(szProduct), debugstr_w(szUserName), debugstr_w(szSource));
 
-    if (LookupAccountNameW(NULL, szUserName, NULL, &sidsize, NULL, NULL, NULL))
+    if (LookupAccountNameW(NULL, szUserName, NULL, &sidsize, NULL, &domsize, NULL))
     {
         PSID psid = msi_alloc(sidsize);
 
-        if (LookupAccountNameW(NULL, szUserName, psid, &sidsize, NULL, NULL, NULL))
+        if (LookupAccountNameW(NULL, szUserName, psid, &sidsize, NULL, &domsize, NULL))
             ConvertSidToStringSidW(psid, &sidstr);
 
         msi_free(psid);

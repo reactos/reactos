@@ -1123,7 +1123,6 @@ static UINT load_component( MSIRECORD *row, LPVOID param )
     switch (comp->Attributes)
     {
     case msidbComponentAttributesLocalOnly:
-    case msidbComponentAttributesOptional:
         comp->Action = INSTALLSTATE_LOCAL;
         comp->ActionRequest = INSTALLSTATE_LOCAL;
         break;
@@ -1131,9 +1130,13 @@ static UINT load_component( MSIRECORD *row, LPVOID param )
         comp->Action = INSTALLSTATE_SOURCE;
         comp->ActionRequest = INSTALLSTATE_SOURCE;
         break;
+    case msidbComponentAttributesOptional:
+        comp->Action = INSTALLSTATE_DEFAULT;
+        comp->ActionRequest = INSTALLSTATE_DEFAULT;
+        break;
     default:
-        comp->Action = INSTALLSTATE_UNKNOWN;
-        comp->ActionRequest = INSTALLSTATE_UNKNOWN;
+        comp->Action = INSTALLSTATE_LOCAL;
+        comp->ActionRequest = INSTALLSTATE_LOCAL;
     }
 
     return ERROR_SUCCESS;
@@ -1323,6 +1326,29 @@ static UINT load_file(MSIRECORD *row, LPVOID param)
     file->Sequence = MSI_RecordGetInteger( row, 8 );
 
     file->state = msifs_invalid;
+
+    /* if the compressed bits are not set in the file attributes,
+     * then read the information from the package word count property
+     */
+    if (file->Attributes & msidbFileAttributesCompressed)
+    {
+        file->IsCompressed = TRUE;
+    }
+    else if (file->Attributes & msidbFileAttributesNoncompressed)
+    {
+        file->IsCompressed = FALSE;
+    }
+    else
+    {
+        file->IsCompressed = package->WordCount & MSIWORDCOUNT_COMPRESSED;
+    }
+
+    if (file->IsCompressed)
+    {
+        file->Component->ForceLocalState = TRUE;
+        file->Component->Action = INSTALLSTATE_LOCAL;
+        file->Component->ActionRequest = INSTALLSTATE_LOCAL;
+    }
 
     TRACE("File Loaded (%s)\n",debugstr_w(file->File));  
 
@@ -1708,16 +1734,20 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
             }
             else
             {
-                if (feature->Action == INSTALLSTATE_LOCAL)
+                if (feature->Attributes == msidbFeatureAttributesFavorLocal)
                 {
-                    component->Action = INSTALLSTATE_LOCAL;
-                    component->ActionRequest = INSTALLSTATE_LOCAL;
+                    if (!(component->Attributes & msidbComponentAttributesSourceOnly))
+                    {
+                        component->Action = INSTALLSTATE_LOCAL;
+                        component->ActionRequest = INSTALLSTATE_LOCAL;
+                    }
                 }
-                else if (feature->ActionRequest == INSTALLSTATE_SOURCE)
+                else if (feature->Attributes == msidbFeatureAttributesFavorSource)
                 {
                     if ((component->Action == INSTALLSTATE_UNKNOWN) ||
                         (component->Action == INSTALLSTATE_ABSENT) ||
-                        (component->Action == INSTALLSTATE_ADVERTISED))
+                        (component->Action == INSTALLSTATE_ADVERTISED) ||
+                        (component->Action == INSTALLSTATE_DEFAULT))
                            
                     {
                         component->Action = INSTALLSTATE_SOURCE;
@@ -1742,6 +1772,12 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
                         component->ActionRequest = INSTALLSTATE_ABSENT;
                     }
                 }
+            }
+
+            if (component->ForceLocalState)
+            {
+                feature->Action = INSTALLSTATE_LOCAL;
+                feature->ActionRequest = INSTALLSTATE_LOCAL;
             }
         }
     } 
@@ -2915,6 +2951,10 @@ static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
         Path = build_icon_path(package,buffer);
         index = MSI_RecordGetInteger(row,10);
 
+        /* no value means 0 */
+        if (index == MSI_NULL_INTEGER)
+            index = 0;
+
         IShellLinkW_SetIconLocation(sl,Path,index);
         msi_free(Path);
     }
@@ -2927,7 +2967,8 @@ static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
         LPWSTR Path;
         buffer = MSI_RecordGetString(row,12);
         Path = resolve_folder(package, buffer, FALSE, FALSE, NULL);
-        IShellLinkW_SetWorkingDirectory(sl,Path);
+        if (Path)
+            IShellLinkW_SetWorkingDirectory(sl,Path);
         msi_free(Path);
     }
 
@@ -3106,6 +3147,10 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package)
     /* FIXME: Need to write more keys to the user registry */
   
     hDb= alloc_msihandle( &package->db->hdr );
+    if (!hDb) {
+        rc = ERROR_NOT_ENOUGH_MEMORY;
+        goto end;
+    }
     rc = MsiGetSummaryInformationW(hDb, NULL, 0, &hSumInfo); 
     MsiCloseHandle(hDb);
     if (rc == ERROR_SUCCESS)

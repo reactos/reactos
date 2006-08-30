@@ -93,8 +93,10 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         r = StgOpenStorage( szDBPath, NULL,
               STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
     }
-    else if( szPersist == MSIDBOPEN_CREATE )
+    else if( szPersist == MSIDBOPEN_CREATE || szPersist == MSIDBOPEN_CREATEDIRECT )
     {
+        /* FIXME: MSIDBOPEN_CREATE should case STGM_TRANSACTED flag to be
+         * used here: */
         r = StgCreateDocfile( szDBPath, 
               STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, &stg);
         if( r == ERROR_SUCCESS )
@@ -104,6 +106,13 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         }
     }
     else if( szPersist == MSIDBOPEN_TRANSACT )
+    {
+        /* FIXME: MSIDBOPEN_TRANSACT should case STGM_TRANSACTED flag to be
+         * used here: */
+        r = StgOpenStorage( szDBPath, NULL,
+              STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, NULL, 0, &stg);
+    }
+    else if( szPersist == MSIDBOPEN_DIRECT )
     {
         r = StgOpenStorage( szDBPath, NULL,
               STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, NULL, 0, &stg);
@@ -181,6 +190,8 @@ UINT WINAPI MsiOpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIHANDLE *phD
     if( ret == ERROR_SUCCESS )
     {
         *phDB = alloc_msihandle( &db->hdr );
+        if (! *phDB)
+            ret = ERROR_NOT_ENOUGH_MEMORY;
         msiobj_release( &db->hdr );
     }
 

@@ -468,6 +468,8 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
         *pHandle = alloc_msihandle( &si->hdr );
         if( *pHandle )
             ret = ERROR_SUCCESS;
+        else
+            ret = ERROR_NOT_ENOUGH_MEMORY;
         msiobj_release( &si->hdr );
     }
 

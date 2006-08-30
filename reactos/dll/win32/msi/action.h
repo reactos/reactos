@@ -59,6 +59,7 @@ typedef struct tagMSICOMPONENT
     INSTALLSTATE ActionRequest;
     INSTALLSTATE Action;
 
+    BOOL ForceLocalState;
     BOOL Enabled;
     INT  Cost;
     INT  RefCount;
@@ -119,6 +120,7 @@ typedef struct tagMSIFILE
     msi_file_state state;
     LPWSTR  SourcePath;
     LPWSTR  TargetPath;
+    BOOL IsCompressed;
 } MSIFILE;
 
 typedef struct tagMSITEMPFILE

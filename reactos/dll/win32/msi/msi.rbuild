@@ -4,29 +4,29 @@
 	<include base="msi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__REACTOS__" />
-	<define name="__USE_W32API" />
 	<define name="__WINESRC__" />
+	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
 	<library>wine</library>
-	<library>uuid</library>
-	<library>ntdll</library>
-	<library>kernel32</library>
+	<library>urlmon</library>
+	<library>wininet</library>
+	<library>comctl32</library>
+	<library>shell32</library>
+	<library>shlwapi</library>
+	<library>cabinet</library>
+	<library>oleaut32</library>
+	<library>ole32</library>
+	<library>version</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>shell32</library>
-	<library>shlwapi</library>
-	<library>winmm</library>
-	<library>cabinet</library>
-	<library>comctl32</library>
-	<library>ole32</library>
-	<library>oleaut32</library>
-	<library>version</library>
-	<library>wininet</library>
-	<library>urlmon</library>
+	<library>kernel32</library>
+	<library>uuid</library>
+	<library>ntdll</library>
 	<file>action.c</file>
+	<file>alter.c</file>
 	<file>appsearch.c</file>
 	<file>classes.c</file>
 	<file>cond.tab.c</file>
@@ -63,6 +63,6 @@
 	<file>update.c</file>
 	<file>upgrade.c</file>
 	<file>where.c</file>
-	<file>msi.spec</file>
 	<file>msi.rc</file>
+	<file>msi.spec</file>
 </module>

@@ -255,6 +255,8 @@ UINT WINAPI MsiDatabaseOpenViewW(MSIHANDLE hdb,
     if( ret == ERROR_SUCCESS )
     {
         *phView = alloc_msihandle( &query->hdr );
+        if (! *phView)
+           ret = ERROR_NOT_ENOUGH_MEMORY;
         msiobj_release( &query->hdr );
     }
     msiobj_release( &db->hdr );
@@ -366,6 +368,8 @@ UINT WINAPI MsiViewFetch(MSIHANDLE hView, MSIHANDLE *record)
     if( ret == ERROR_SUCCESS )
     {
         *record = alloc_msihandle( &rec->hdr );
+        if (! *record)
+           ret = ERROR_NOT_ENOUGH_MEMORY;
         msiobj_release( &rec->hdr );
     }
     msiobj_release( &query->hdr );
@@ -533,6 +537,8 @@ UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hR
     }
 
     *hRec = alloc_msihandle( &rec->hdr );
+    if (! *hRec)
+       r = ERROR_NOT_ENOUGH_MEMORY;
 
 out:
     msiobj_release( &query->hdr );
@@ -831,6 +837,8 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysW( MSIHANDLE hdb,
     if( r == ERROR_SUCCESS )
     {
         *phRec = alloc_msihandle( &rec->hdr );
+        if (! *phRec)
+           r = ERROR_NOT_ENOUGH_MEMORY;
         msiobj_release( &rec->hdr );
     }
     msiobj_release( &db->hdr );

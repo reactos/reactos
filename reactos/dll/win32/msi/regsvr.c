@@ -72,10 +72,14 @@ struct regsvr_coclass {
     LPCSTR ips;			/* can be NULL to omit */
     LPCSTR ips32;		/* can be NULL to omit */
     LPCSTR ips32_tmodel;	/* can be NULL to omit, if apartment, iph32 must be set */
+    DWORD flags;
     LPCSTR progid;		/* can be NULL to omit */
     LPCSTR viprogid;		/* can be NULL to omit */
     LPCSTR progid_extra;	/* can be NULL to omit */
 };
+
+/* flags for regsvr_coclass.flags */
+#define PROGID_CLSID                  0x00000010
 
 static HRESULT register_coclasses(struct regsvr_coclass const *list);
 static HRESULT unregister_coclasses(struct regsvr_coclass const *list);
@@ -296,7 +300,8 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list) {
 					 list->progid);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
-	    res = register_progid(buf, list->progid, NULL,
+	    res = register_progid(list->flags & PROGID_CLSID ? buf : NULL,
+                                  list->progid, NULL,
 				  list->name, list->progid_extra);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	}
@@ -306,7 +311,8 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list) {
 					 list->viprogid);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 
-	    res = register_progid(buf, list->viprogid, list->progid,
+	    res = register_progid(list->flags & PROGID_CLSID ? buf : NULL,
+                                  list->viprogid, list->progid,
 				  list->name, list->progid_extra);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	}
@@ -526,7 +532,8 @@ static struct regsvr_coclass const coclass_list[] = {
 	NULL,
 	"msi.dll",
 	"Apartment",
-	"WindowsInstaller.Installer",
+        PROGID_CLSID,
+	"IMsiServer",
 	NULL
     },    
     {     
@@ -536,6 +543,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	NULL,
 	"msi.dll",
 	NULL,
+        PROGID_CLSID,
 	"WindowsInstaller.Message",
 	NULL
     },
@@ -546,6 +554,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	NULL,
 	"msi.dll",
 	"Apartment",
+        0,
 	"WindowsInstaller.Installer",
 	NULL
     },
@@ -556,6 +565,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	NULL,
 	"msi.dll",
 	"Apartment",
+        PROGID_CLSID,
 	"WindowsInstaller.Installer",
 	NULL
     },
@@ -566,6 +576,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	NULL,
 	"msi.dll",
 	"Apartment",
+        0,
 	"WindowsInstaller.Installer",
         NULL
     },

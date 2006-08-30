@@ -379,6 +379,12 @@ static UINT ControlEvent_SetInstallLevel(MSIPACKAGE* package, LPCWSTR argument,
     return MSI_SetInstallLevel( package, iInstallLevel );
 }
 
+static UINT ControlEvent_DirectoryListUp(MSIPACKAGE *package, LPCWSTR argument,
+                                         msi_dialog *dialog)
+{
+    return msi_dialog_directorylist_up( dialog );
+}
+
 static const struct _events Events[] = {
     { "EndDialog",ControlEvent_EndDialog },
     { "NewDialog",ControlEvent_NewDialog },
@@ -391,6 +397,7 @@ static const struct _events Events[] = {
     { "SetTargetPath",ControlEvent_SetTargetPath },
     { "Reset",ControlEvent_Reset },
     { "SetInstallLevel",ControlEvent_SetInstallLevel },
+    { "DirectoryListUp",ControlEvent_DirectoryListUp },
     { NULL,NULL },
 };
 

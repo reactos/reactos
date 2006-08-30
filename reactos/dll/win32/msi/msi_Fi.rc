@@ -22,6 +22,7 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
 	5 "Polkua %s ei löydy."
 	9 "Anna levy %s"
 	10 "Virheelliset parametrit."

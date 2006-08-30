@@ -22,6 +22,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
 	5 "Le chemin %s est introuvable"
 	9 "insérez le disque %s"
 	10 "mauvais paramètres"

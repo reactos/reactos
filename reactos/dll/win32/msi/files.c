@@ -42,6 +42,8 @@
 #include "msvcrt/fcntl.h"
 #include "msipriv.h"
 #include "winuser.h"
+#include "winreg.h"
+#include "shlwapi.h"
 #include "wine/unicode.h"
 #include "action.h"
 
@@ -56,6 +58,7 @@ extern const WCHAR szRemoveFiles[];
 
 static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
 
+extern LPCWSTR msi_download_file( LPCWSTR szUrl, LPWSTR filename );
 
 /*
  * This is a helper function for handling embedded cabinet media
@@ -218,7 +221,7 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
 
         if (!f)
         {
-            ERR("Unknown File in Cabinet (%s)\n",debugstr_a(pfdin->psz1));
+            WARN("unknown file in cabinet (%s)\n",debugstr_a(pfdin->psz1));
             return 0;
         }
 
@@ -280,6 +283,7 @@ static BOOL extract_cabinet_file(MSIPACKAGE* package, LPCWSTR source,
     BOOL ret;
     char *cabinet;
     char *cab_path;
+    static CHAR empty[] = "";
     CabData data;
 
     TRACE("Extracting %s to %s\n",debugstr_w(source), debugstr_w(path));
@@ -314,7 +318,7 @@ static BOOL extract_cabinet_file(MSIPACKAGE* package, LPCWSTR source,
     data.package = package;
     data.cab_path = cab_path;
 
-    ret = FDICopy(hfdi, cabinet, "", 0, cabinet_notify, NULL, &data);
+    ret = FDICopy(hfdi, cabinet, empty, 0, cabinet_notify, NULL, &data);
 
     if (!ret)
         ERR("FDICopy failed\n");
@@ -330,7 +334,7 @@ static BOOL extract_cabinet_file(MSIPACKAGE* package, LPCWSTR source,
 static VOID set_file_source(MSIPACKAGE* package, MSIFILE* file, MSICOMPONENT*
         comp, LPCWSTR path)
 {
-    if (file->Attributes & msidbFileAttributesNoncompressed)
+    if (!file->IsCompressed)
     {
         LPWSTR p, path;
         p = resolve_folder(package, comp->Directory, TRUE, FALSE, NULL);
@@ -378,6 +382,52 @@ static void free_media_info( struct media_info *mi )
     msi_free( mi );
 }
 
+/* downloads a remote cabinet and extracts it if it exists */
+static UINT msi_extract_remote_cabinet( MSIPACKAGE *package, struct media_info *mi )
+{
+    FDICABINETINFO cabinfo;
+    WCHAR temppath[MAX_PATH];
+    WCHAR src[MAX_PATH];
+    LPSTR cabpath;
+    LPCWSTR file;
+    LPWSTR ptr;
+    HFDI hfdi;
+    ERF erf;
+    int hf;
+
+    /* the URL is the path prefix of the package URL and the filename
+     * of the file to download
+     */
+    ptr = strrchrW(package->PackagePath, '/');
+    lstrcpynW(src, package->PackagePath, ptr - package->PackagePath + 2);
+    ptr = strrchrW(mi->source, '\\');
+    lstrcatW(src, ptr + 1);
+
+    file = msi_download_file( src, temppath );
+    lstrcpyW(mi->source, file);
+
+    /* check if the remote cabinet still exists, ignore if it doesn't */
+    hfdi = FDICreate(cabinet_alloc, cabinet_free, cabinet_open, cabinet_read,
+                     cabinet_write, cabinet_close, cabinet_seek, 0, &erf);
+    if (!hfdi)
+    {
+        ERR("FDICreate failed\n");
+        return ERROR_FUNCTION_FAILED;
+    }
+
+    cabpath = strdupWtoA(mi->source);
+    hf = cabinet_open(cabpath, _O_RDONLY, 0);
+    if (!FDIIsCabinet(hfdi, hf, &cabinfo))
+    {
+        WARN("Remote cabinet %s does not exist.\n", debugstr_w(mi->source));
+        msi_free(cabpath);
+        return ERROR_SUCCESS;
+    }
+
+    msi_free(cabpath);
+    return !extract_cabinet_file(package, mi->source, mi->last_path);
+}
+
 static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
                                   MSIFILE *file )
 {
@@ -410,16 +460,13 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
         return ERROR_FUNCTION_FAILED;
     }
 
-    seq = MSI_RecordGetInteger(row,2);
-    mi->last_sequence = seq;
-
     volume = MSI_RecordGetString(row, 5);
     prompt = MSI_RecordGetString(row, 3);
 
     msi_free(mi->last_path);
     mi->last_path = NULL;
 
-    if (file->Attributes & msidbFileAttributesNoncompressed)
+    if (!file->IsCompressed)
     {
         mi->last_path = resolve_folder(package, comp->Directory, TRUE, FALSE, NULL);
         set_file_source(package,file,comp,mi->last_path);
@@ -435,6 +482,9 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
         msiobj_release(&row->hdr);
         return rc;
     }
+
+    seq = MSI_RecordGetInteger(row,2);
+    mi->last_sequence = seq;
 
     cab = MSI_RecordGetString(row,4);
     if (cab)
@@ -488,7 +538,17 @@ static UINT ready_media_for_file( MSIPACKAGE *package, struct media_info *mi,
                     GetTempPathW(MAX_PATH,mi->last_path);
             }
         }
-        rc = !extract_cabinet_file(package, mi->source, mi->last_path);
+
+        /* only download the remote cabinet file if a local copy does not exist */
+        if (GetFileAttributesW(mi->source) == INVALID_FILE_ATTRIBUTES &&
+            UrlIsW(package->PackagePath, URLIS_URL))
+        {
+            rc = msi_extract_remote_cabinet(package, mi);
+        }
+        else
+        {
+            rc = !extract_cabinet_file(package, mi->source, mi->last_path);
+        }
     }
     else
     {
@@ -605,7 +665,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
             continue;
 
         /* compressed files are extracted in ready_media_for_file */
-        if (~file->Attributes & msidbFileAttributesNoncompressed)
+        if (file->IsCompressed)
         {
             if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW(file->TargetPath))
                 ERR("compressed file wasn't extracted (%s)\n",
@@ -764,6 +824,24 @@ UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
     return rc;
 }
 
+/* compares the version of a file read from the filesystem and
+ * the version specified in the File table
+ */
+static int msi_compare_file_version( MSIFILE *file )
+{
+    WCHAR version[MAX_PATH];
+    DWORD size;
+    UINT r;
+
+    size = MAX_PATH;
+    version[0] = '\0';
+    r = MsiGetFileVersionW( file->TargetPath, version, &size, NULL, NULL );
+    if ( r != ERROR_SUCCESS )
+        return 0;
+
+    return lstrcmpW( version, file->Version );
+}
+
 UINT ACTION_RemoveFiles( MSIPACKAGE *package )
 {
     MSIFILE *file;
@@ -782,6 +860,12 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
             ERR("removing installed file %s\n", debugstr_w(file->TargetPath));
 
         if ( file->state != msifs_present )
+            continue;
+
+        /* only remove a file if the version to be installed
+         * is strictly newer than the old file
+         */
+        if ( msi_compare_file_version( file ) >= 0 )
             continue;
 
         TRACE("removing %s\n", debugstr_w(file->File) );

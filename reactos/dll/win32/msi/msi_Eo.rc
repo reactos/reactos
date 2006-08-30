@@ -22,6 +22,7 @@ LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
 	5 "Mi ne trovis la vojon %s"
 	9 "enþovu la diskon %s"
 	10 "nekorektaj parametroj"

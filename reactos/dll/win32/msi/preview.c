@@ -76,6 +76,8 @@ UINT WINAPI MsiEnableUIPreview( MSIHANDLE hdb, MSIHANDLE* phPreview )
         *phPreview = alloc_msihandle( &preview->hdr );
         msiobj_release( &preview->hdr );
         r = ERROR_SUCCESS;
+        if (! *phPreview)
+            r = ERROR_NOT_ENOUGH_MEMORY;
     }
     msiobj_release( &db->hdr );
 

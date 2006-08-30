@@ -22,6 +22,7 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
+        4 " 지정한 설치 패키지를 열 수 없습니다. 파일 경로를 확인하고 다시 시도하십시오."
 	5 "%s  경로를 찾을수 없습니다"
 	9 "디스크 %s 삽입"
 	10 "절못된 매개변수"

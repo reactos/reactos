@@ -919,6 +919,7 @@ UINT WINAPI MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
         if (val_sz > val_max)
         {
             val_max = val_sz + sizeof (WCHAR);
+            msi_free( val );
             val = msi_alloc( val_max * sizeof (WCHAR) );
             if (!val)
                 goto end;

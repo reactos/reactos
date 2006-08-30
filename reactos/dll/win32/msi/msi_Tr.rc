@@ -22,6 +22,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
 	5 "%s yolu bulunamadý"
 	9 "%s nolu diski yerleþtirin"
 	10 "bozuk parametreler"

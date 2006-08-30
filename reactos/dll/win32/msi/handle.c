@@ -57,7 +57,15 @@ typedef struct msi_handle_info_t
     DWORD dwThreadId;
 } msi_handle_info;
 
-static msi_handle_info msihandletable[MSIMAXHANDLES];
+static msi_handle_info *msihandletable = NULL;
+static int msihandletable_size = 0;
+
+void msi_free_handle_table(void)
+{
+    msi_free( msihandletable );
+    msihandletable = NULL;
+    msihandletable_size = 0;
+}
 
 MSIHANDLE alloc_msihandle( MSIOBJECTHDR *obj )
 {
@@ -67,11 +75,29 @@ MSIHANDLE alloc_msihandle( MSIOBJECTHDR *obj )
     EnterCriticalSection( &MSI_handle_cs );
 
     /* find a slot */
-    for(i=0; i<MSIMAXHANDLES; i++)
+    for(i=0; i<msihandletable_size; i++)
         if( !msihandletable[i].obj )
             break;
-    if( (i>=MSIMAXHANDLES) || msihandletable[i].obj )
-        goto out;
+    if( i==msihandletable_size )
+    {
+        msi_handle_info *p;
+        int newsize;
+        if (msihandletable_size == 0)
+        {
+            newsize = 256;
+            p = msi_alloc_zero(newsize*sizeof(msi_handle_info));
+        }
+        else
+        {
+            newsize = msihandletable_size * 2;
+            p = msi_realloc_zero(msihandletable,
+                            newsize*sizeof(msi_handle_info));
+        }
+        if (!p)
+            goto out;
+        msihandletable = p;
+        msihandletable_size = newsize;
+    }
 
     msiobj_addref( obj );
     msihandletable[i].obj = obj;
@@ -92,7 +118,7 @@ void *msihandle2msiinfo(MSIHANDLE handle, UINT type)
     handle--;
     if( handle<0 )
         goto out;
-    if( handle>=MSIMAXHANDLES )
+    if( handle>=msihandletable_size )
         goto out;
     if( !msihandletable[handle].obj )
         goto out;
@@ -230,14 +256,18 @@ UINT WINAPI MsiCloseAllHandles(void)
 
     TRACE("\n");
 
-    for(i=0; i<MSIMAXHANDLES; i++)
+    EnterCriticalSection( &MSI_handle_cs );
+    for(i=0; i<msihandletable_size; i++)
     {
         if(msihandletable[i].dwThreadId == GetCurrentThreadId())
         {
+            LeaveCriticalSection( &MSI_handle_cs );
             MsiCloseHandle( i+1 );
+            EnterCriticalSection( &MSI_handle_cs );
             n++;
         }
     }
+    LeaveCriticalSection( &MSI_handle_cs );
 
     return n;
 }

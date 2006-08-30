@@ -125,6 +125,8 @@ UINT WINAPI MsiOpenProductW( LPCWSTR szProduct, MSIHANDLE *phProduct )
    if( r == ERROR_SUCCESS )
    {
        *phProduct = alloc_msihandle( &package->hdr );
+       if (! *phProduct)
+           r = ERROR_NOT_ENOUGH_MEMORY;
        msiobj_release( &package->hdr );
    }
    return r;
@@ -1092,7 +1094,7 @@ end:
  *   INSTALLSTATE_LOCAL        Feature is installed and useable
  *   INSTALLSTATE_ABSENT       Feature is absent
  *   INSTALLSTATE_ADVERTISED   Feature should be installed on demand
- *   INSTALLSTATE_UNKNOWN      An error occured
+ *   INSTALLSTATE_UNKNOWN      An error occurred
  *   INSTALLSTATE_INVALIDARG   One of the GUIDs was invalid
  *
  */
@@ -1441,6 +1443,7 @@ UINT WINAPI MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
     else
         rc = MSI_GetComponentPath(szProduct, component, lpPathBuf, pcchPathBuf);
 
+    msi_free( info );
 
     if (rc != INSTALLSTATE_LOCAL)
         return ERROR_FILE_NOT_FOUND;

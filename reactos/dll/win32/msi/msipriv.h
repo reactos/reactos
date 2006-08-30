@@ -39,6 +39,12 @@
 #define MSITYPE_NULLABLE 0x1000
 #define MSITYPE_KEY      0x2000
 
+/* Word Count masks */
+#define MSIWORDCOUNT_SHORTFILENAMES     0x0001
+#define MSIWORDCOUNT_COMPRESSED         0x0002
+#define MSIWORDCOUNT_ADMINISTRATIVE     0x0004
+#define MSIWORDCOUNT_PRIVILEGES         0x0008
+
 #define MSITYPE_IS_BINARY(type) (((type) & ~MSITYPE_NULLABLE) == (MSITYPE_STRING|MSITYPE_VALID))
 
 struct tagMSITABLE;
@@ -195,6 +201,8 @@ struct tagMSIVIEW
 struct msi_dialog_tag;
 typedef struct msi_dialog_tag msi_dialog;
 
+#define PROPERTY_HASH_SIZE 67
+
 typedef struct tagMSIPACKAGE
 {
     MSIOBJECTHDR hdr;
@@ -212,7 +220,7 @@ typedef struct tagMSIPACKAGE
     struct list progids;
     struct list mimes;
     struct list appids;
-    
+
     struct tagMSISCRIPT *script;
 
     struct list RunningActions;
@@ -223,7 +231,11 @@ typedef struct tagMSIPACKAGE
     UINT CurrentInstallState;
     msi_dialog *dialog;
     LPWSTR next_dialog;
-    
+
+    UINT WordCount;
+
+    struct list props[PROPERTY_HASH_SIZE];
+
     struct list subscriptions;
 } MSIPACKAGE;
 
@@ -252,14 +264,13 @@ typedef struct tagMSISUMMARYINFO
 #define MSIHANDLETYPE_PACKAGE 5
 #define MSIHANDLETYPE_PREVIEW 6
 
-#define MSI_MAJORVERSION 2
-#define MSI_MINORVERSION 0
-#define MSI_BUILDNUMBER 2600
+#define MSI_MAJORVERSION 3
+#define MSI_MINORVERSION 1
+#define MSI_BUILDNUMBER 4000
 
 #define GUID_SIZE 39
 
 #define MSIHANDLE_MAGIC 0x4d434923
-#define MSIMAXHANDLES 0xf0
 
 DEFINE_GUID(CLSID_IMsiServer,   0x000C101C,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 DEFINE_GUID(CLSID_IMsiServerX1, 0x000C103E,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
@@ -295,6 +306,7 @@ extern void msiobj_addref(MSIOBJECTHDR *);
 extern int msiobj_release(MSIOBJECTHDR *);
 extern void msiobj_lock(MSIOBJECTHDR *);
 extern void msiobj_unlock(MSIOBJECTHDR *);
+extern void msi_free_handle_table(void);
 
 extern void free_cached_tables( MSIDATABASE *db );
 extern void msi_free_transforms( MSIDATABASE *db );
@@ -316,7 +328,7 @@ extern string_table *msi_init_stringtable( int entries, UINT codepage );
 extern VOID msi_destroy_stringtable( string_table *st );
 extern UINT msi_string_count( string_table *st );
 extern UINT msi_id_refcount( string_table *st, UINT i );
-extern UINT msi_string_totalsize( string_table *st, UINT *last );
+extern UINT msi_string_totalsize( string_table *st, UINT *datasize, UINT *poolsize );
 extern UINT msi_strcmp( string_table *st, UINT lval, UINT rval, UINT *res );
 extern const WCHAR *msi_string_lookup_id( string_table *st, UINT id );
 extern UINT msi_string_get_codepage( string_table *st );
@@ -442,6 +454,7 @@ extern BOOL msi_dialog_register_class( void );
 extern void msi_dialog_unregister_class( void );
 extern void msi_dialog_handle_event( msi_dialog*, LPCWSTR, LPCWSTR, MSIRECORD * );
 extern UINT msi_dialog_reset( msi_dialog *dialog );
+extern UINT msi_dialog_directorylist_up( msi_dialog *dialog );
 
 /* preview */
 extern MSIPREVIEW *MSI_EnableUIPreview( MSIDATABASE * );

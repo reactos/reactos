@@ -435,13 +435,17 @@ UINT msi_id_refcount( string_table *st, UINT i )
     return st->strings[i].refcount;
 }
 
-UINT msi_string_totalsize( string_table *st, UINT *total )
+UINT msi_string_totalsize( string_table *st, UINT *datasize, UINT *poolsize )
 {
-    UINT size = 0, i, len;
+    UINT i, len, max, holesize;
 
     if( st->strings[0].str || st->strings[0].refcount )
         ERR("oops. element 0 has a string\n");
-    *total = 0;
+
+    *poolsize = 4;
+    *datasize = 0;
+    max = 1;
+    holesize = 0;
     for( i=1; i<st->maxcount; i++ )
     {
         if( st->strings[i].str )
@@ -451,12 +455,18 @@ UINT msi_string_totalsize( string_table *st, UINT *total )
                      st->strings[i].str, -1, NULL, 0, NULL, NULL);
             if( len )
                 len--;
-            size += len;
-            *total = (i+1);
+            (*datasize) += len;
+            if (len>0xffff)
+                (*poolsize) += 4;
+            max = i + 1;
+            (*poolsize) += holesize + 4;
+            holesize = 0;
         }
+        else
+            holesize += 4;
     }
-    TRACE("%u/%u strings %u bytes codepage %x\n", *total, st->maxcount, size, st->codepage );
-    return size;
+    TRACE("data %u pool %u codepage %x\n", *datasize, *poolsize, st->codepage );
+    return max;
 }
 
 UINT msi_string_get_codepage( string_table *st )

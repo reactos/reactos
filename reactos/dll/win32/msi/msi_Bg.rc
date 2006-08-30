@@ -22,6 +22,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
 	5 "пътят %s не е намерен"
 	9 "поставете диск %s"
 	10 "некоректни параметри"

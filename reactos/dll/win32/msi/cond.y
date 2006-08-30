@@ -396,8 +396,61 @@ static WCHAR *strstriW( const WCHAR *str, const WCHAR *sub )
     return r;
 }
 
+static BOOL str_is_number( LPCWSTR str )
+{
+    int i;
+
+    for (i = 0; i < lstrlenW( str ); i++)
+        if (!isdigitW(str[i]))
+            return FALSE;
+
+    return TRUE;
+}
+
+static INT compare_substring( LPCWSTR a, INT operator, LPCWSTR b )
+{
+    int lhs, rhs;
+
+    /* substring operators return 0 if LHS is missing */
+    if (!a || !*a)
+        return 0;
+
+    /* substring operators return 1 if RHS is missing */
+    if (!b || !*b)
+        return 1;
+
+    /* if both strings contain only numbers, use integer comparison */
+    lhs = atoiW(a);
+    rhs = atoiW(b);
+    if (str_is_number(a) && str_is_number(b))
+        return compare_int( lhs, operator, rhs );
+
+    switch (operator)
+    {
+    case COND_SS:
+        return strstrW( a, b ) ? 1 : 0;
+    case COND_ISS:
+        return strstriW( a, b ) ? 1 : 0;
+    case COND_LHS:
+    	return 0 == strncmpW( a, b, lstrlenW( b ) );
+    case COND_RHS:
+    	return 0 == lstrcmpW( a + (lstrlenW( a ) - lstrlenW( b )), b );
+    case COND_ILHS:
+    	return 0 == strncmpiW( a, b, lstrlenW( b ) );
+    case COND_IRHS:
+        return 0 == lstrcmpiW( a + (lstrlenW( a ) - lstrlenW( b )), b );
+    default:
+    	ERR("invalid substring operator\n");
+        return 0;
+    }
+    return 0;
+}
+
 static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b )
 {
+    if (operator >= COND_SS && operator <= COND_RHS)
+        return compare_substring( a, operator, b );
+	
     /* null and empty string are equivalent */
     if (!a) a = szEmpty;
     if (!b) b = szEmpty;
@@ -417,8 +470,6 @@ static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b )
         return -1 != lstrcmpW( a, b );
     case COND_LE:
         return  1 != lstrcmpW( a, b );
-    case COND_SS: /* substring */
-        return strstrW( a, b ) ? 1 : 0;
     case COND_ILT:
         return -1 == lstrcmpiW( a, b );
     case COND_IGT:
@@ -431,16 +482,8 @@ static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b )
         return -1 != lstrcmpiW( a, b );
     case COND_ILE:
         return  1 != lstrcmpiW( a, b );
-    case COND_ISS:
-        return strstriW( a, b ) ? 1 : 0;
-    case COND_LHS:
-    case COND_RHS:
-    case COND_ILHS:
-    case COND_IRHS:
-        ERR("unimplemented string comparison\n");
-        break;
     default:
-        ERR("invalid integer operator\n");
+        ERR("invalid string operator\n");
         return 0;
     }
     return 0;
@@ -508,10 +551,10 @@ static int COND_GetOperator( COND_input *cond )
         { {'>','=',0},     COND_GE  },
         { {'>','<',0},     COND_SS  },
         { {'<','<',0},     COND_LHS },
-        { {'>',0},         COND_GT  },
         { {'<','>',0},     COND_NE  },
         { {'<','=',0},     COND_LE  },
         { {'>','>',0},     COND_RHS },
+        { {'>',0},         COND_GT  },
         { {'<',0},         COND_LT  },
         { {0},             0        }
     };

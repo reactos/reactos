@@ -326,6 +326,8 @@ static UINT JOIN_delete( struct tagMSIVIEW *view )
     msi_free( jv->pairs );
     jv->pairs = NULL;
 
+    msi_free( jv );
+
     return ERROR_SUCCESS;
 }
 

@@ -22,6 +22,7 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
 	5 "%s útvonal nem található"
 	9 "helyezze be a lemezt: %s"
 	10 "rossz paraméterek"

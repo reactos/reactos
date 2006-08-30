@@ -22,6 +22,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 STRINGTABLE DISCARDABLE
 {
+	4 "The specified installation package could not be opened.  Please check the file path and try again."
 	5 "Fant ikke stien '%s'."
 	9 "Sett i disk '%s'"
 	10 "Gale parametere."
