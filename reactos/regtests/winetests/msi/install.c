@@ -317,7 +317,7 @@ static int fci_delete(char *pszFile, int *err, void *pv)
     return 0;
 }
 
-static BOOL check_record(MSIHANDLE rec, UINT field, LPSTR val)
+static BOOL check_record(MSIHANDLE rec, UINT field, LPCSTR val)
 {
     CHAR buffer[0x20];
     UINT r;
@@ -404,6 +404,8 @@ static void create_cab_file(const CHAR *name)
     CCAB cabParams;
     HFCI hfci;
     ERF erf;
+    static CHAR four_txt[] = "four.txt",
+                five_txt[] = "five.txt";
     BOOL res;
 
     set_cab_parameters(&cabParams, name);
@@ -414,8 +416,8 @@ static void create_cab_file(const CHAR *name)
 
     ok(hfci != NULL, "Failed to create an FCI context\n");
 
-    add_file(hfci, "four.txt");
-    add_file(hfci, "five.txt");
+    add_file(hfci, four_txt);
+    add_file(hfci, five_txt);
 
     res = FCIFlushCabinet(hfci, FALSE, get_next_cabinet, progress);
     ok(res, "Failed to flush the cabinet\n");
@@ -695,7 +697,7 @@ static void test_packagecoltypes(void)
 {
     MSIHANDLE hdb, view, rec;
     char path[MAX_PATH];
-    LPSTR query;
+    LPCSTR query;
     UINT r, count;
 
     CoInitialize(NULL);

@@ -1361,9 +1361,35 @@ static void test_formatrecord_package(void)
     DeleteFile( filename );
 }
 
+static void test_processmessage(void)
+{
+    static const CHAR filename[] = "winetest.msi";
+    MSIHANDLE hrec;
+    MSIHANDLE package;
+    int r;
+
+    package = helper_createpackage( filename );
+    ok(package!=0, "Unable to create package\n");
+
+    hrec = MsiCreateRecord(3);
+    ok( hrec, "failed to create record\n");
+
+    r = MsiRecordSetString(hrec, 1, "");
+    ok( r == ERROR_SUCCESS, "set string failed\n");
+
+    r = MsiProcessMessage(package, INSTALLMESSAGE_ACTIONSTART, hrec);
+    ok( r == IDOK, "expected IDOK, got %i\n", r);
+
+    MsiCloseHandle(hrec);
+    MsiCloseHandle(package);
+
+    DeleteFile(filename);
+}
+
 START_TEST(format)
 {
     test_createpackage();
     test_formatrecord();
     test_formatrecord_package();
+    test_processmessage();
 }

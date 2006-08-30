@@ -99,7 +99,56 @@ static UINT create_file_table( MSIHANDLE hdb )
             "PRIMARY KEY `File`)" );
 }
 
-static UINT add_component_entry( MSIHANDLE hdb, char *values )
+static UINT create_remove_file_table( MSIHANDLE hdb )
+{
+    return run_query( hdb,
+            "CREATE TABLE `RemoveFile` ("
+            "`FileKey` CHAR(72) NOT NULL, "
+            "`Component_` CHAR(72) NOT NULL, "
+            "`FileName` CHAR(255) LOCALIZABLE, "
+            "`DirProperty` CHAR(72) NOT NULL, "
+            "`InstallMode` SHORT NOT NULL "
+            "PRIMARY KEY `FileKey`)" );
+}
+
+static UINT create_appsearch_table( MSIHANDLE hdb )
+{
+    return run_query( hdb,
+            "CREATE TABLE `AppSearch` ("
+            "`Property` CHAR(72) NOT NULL, "
+            "`Signature_` CHAR(72) NOT NULL "
+            "PRIMARY KEY `Property`, `Signature_`)" );
+}
+
+static UINT create_reglocator_table( MSIHANDLE hdb )
+{
+    return run_query( hdb,
+            "CREATE TABLE `RegLocator` ("
+            "`Signature_` CHAR(72) NOT NULL, "
+            "`Root` SHORT NOT NULL, "
+            "`Key` CHAR(255) NOT NULL, "
+            "`Name` CHAR(255), "
+            "`Type` SHORT "
+            "PRIMARY KEY `Signature_`)" );
+}
+
+static UINT create_signature_table( MSIHANDLE hdb )
+{
+    return run_query( hdb,
+            "CREATE TABLE `Signature` ("
+            "`Signature` CHAR(72) NOT NULL, "
+            "`FileName` CHAR(255) NOT NULL, "
+            "`MinVersion` CHAR(20), "
+            "`MaxVersion` CHAR(20), "
+            "`MinSize` LONG, "
+            "`MaxSize` LONG, "
+            "`MinDate` LONG, "
+            "`MaxDate` LONG, "
+            "`Languages` CHAR(255) "
+            "PRIMARY KEY `Signature`)" );
+}
+
+static UINT add_component_entry( MSIHANDLE hdb, const char *values )
 {
     char insert[] = "INSERT INTO `Component`  "
             "(`Component`, `ComponentId`, `Directory_`, `Attributes`, `Condition`, `KeyPath`) "
@@ -115,10 +164,10 @@ static UINT add_component_entry( MSIHANDLE hdb, char *values )
     return r;
 }
 
-static UINT add_feature_entry( MSIHANDLE hdb, char *values )
+static UINT add_feature_entry( MSIHANDLE hdb, const char *values )
 {
     char insert[] = "INSERT INTO `Feature` (`Feature`, `Feature_Parent`, "
-                    "`Display`, `Level`, `Attributes`) VALUES( %s )";
+                    "`Title`, `Description`, `Display`, `Level`, `Directory_`, `Attributes`) VALUES( %s )";
     char *query;
     UINT sz, r;
 
@@ -130,7 +179,7 @@ static UINT add_feature_entry( MSIHANDLE hdb, char *values )
     return r;
 }
 
-static UINT add_feature_components_entry( MSIHANDLE hdb, char *values )
+static UINT add_feature_components_entry( MSIHANDLE hdb, const char *values )
 {
     char insert[] = "INSERT INTO `FeatureComponents` "
             "(`Feature_`, `Component_`) "
@@ -146,10 +195,59 @@ static UINT add_feature_components_entry( MSIHANDLE hdb, char *values )
     return r;
 }
 
-static UINT add_file_entry( MSIHANDLE hdb, char *values )
+static UINT add_file_entry( MSIHANDLE hdb, const char *values )
 {
     char insert[] = "INSERT INTO `File` "
             "(`File`, `Component_`, `FileName`, `FileSize`, `Version`, `Language`, `Attributes`, `Sequence`) "
+            "VALUES( %s )";
+    char *query;
+    UINT sz, r;
+
+    sz = strlen(values) + sizeof insert;
+    query = HeapAlloc(GetProcessHeap(),0,sz);
+    sprintf(query,insert,values);
+    r = run_query( hdb, query );
+    HeapFree(GetProcessHeap(), 0, query);
+    return r;
+}
+
+static UINT add_appsearch_entry( MSIHANDLE hdb, const char *values )
+{
+    char insert[] = "INSERT INTO `AppSearch` "
+            "(`Property`, `Signature_`) "
+            "VALUES( %s )";
+    char *query;
+    UINT sz, r;
+
+    sz = strlen(values) + sizeof insert;
+    query = HeapAlloc(GetProcessHeap(),0,sz);
+    sprintf(query,insert,values);
+    r = run_query( hdb, query );
+    HeapFree(GetProcessHeap(), 0, query);
+    return r;
+}
+
+static UINT add_reglocator_entry( MSIHANDLE hdb, const char *values )
+{
+    char insert[] = "INSERT INTO `RegLocator` "
+            "(`Signature_`, `Root`, `Key`, `Name`, `Type`) "
+            "VALUES( %s )";
+    char *query;
+    UINT sz, r;
+
+    sz = strlen(values) + sizeof insert;
+    query = HeapAlloc(GetProcessHeap(),0,sz);
+    sprintf(query,insert,values);
+    r = run_query( hdb, query );
+    HeapFree(GetProcessHeap(), 0, query);
+    return r;
+}
+
+static UINT add_signature_entry( MSIHANDLE hdb, const char *values )
+{
+    char insert[] = "INSERT INTO `Signature` "
+            "(`Signature`, `FileName`, `MinVersion`, `MaxVersion`,"
+            " `MinSize`, `MaxSize`, `MinDate`, `MaxDate`, `Languages`) "
             "VALUES( %s )";
     char *query;
     UINT sz, r;
@@ -252,6 +350,18 @@ MSIHANDLE package_from_db(MSIHANDLE hdb)
     return hPackage;
 }
 
+static void create_test_file(const CHAR *name)
+{
+    HANDLE file;
+    DWORD written;
+
+    file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "Failure to open file %s\n", name);
+    WriteFile(file, name, strlen(name), &written, NULL);
+    WriteFile(file, "\n", strlen("\n"), &written, NULL);
+    CloseHandle(file);
+}
+
 static void test_createpackage(void)
 {
     MSIHANDLE hPackage = 0;
@@ -292,7 +402,7 @@ static void test_getsourcepath_bad( void )
     ok( r == ERROR_INVALID_HANDLE, "return value wrong\n");
 }
 
-static UINT add_directory_entry( MSIHANDLE hdb, char *values )
+static UINT add_directory_entry( MSIHANDLE hdb, const char *values )
 {
     char insert[] = "INSERT INTO `Directory` (`Directory`,`Directory_Parent`,`DefaultDir`) VALUES( %s )";
     char *query;
@@ -335,7 +445,7 @@ static void test_getsourcepath( void )
     /* another test but try create a directory this time */
     hdb = create_package_db();
     ok( hdb, "failed to create database\n");
-    
+
     r = add_directory_entry( hdb, "'TARGETDIR', '', 'SourceDir'");
     ok( r == S_OK, "failed\n");
 
@@ -471,7 +581,7 @@ static void test_settargetpath(void)
     MSIHANDLE hpkg;
     UINT r;
     MSIHANDLE hdb;
-    
+
     hdb = create_package_db();
     ok ( hdb, "failed to create package database\n" );
 
@@ -982,11 +1092,151 @@ static void test_condition(void)
     r = MsiEvaluateCondition(hpkg, "bandalmael<>0");
     ok( r == MSICONDITION_TRUE, "wrong return val\n");
 
+    MsiSetProperty(hpkg, "one", "hi");
+    MsiSetProperty(hpkg, "two", "hithere");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hithere");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hello");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hellohithere");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hi");
+    MsiSetProperty(hpkg, "two", "");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "");
+    MsiSetProperty(hpkg, "two", "");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "1234");
+    MsiSetProperty(hpkg, "two", "1");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "one 1234");
+    MsiSetProperty(hpkg, "two", "1");
+    r = MsiEvaluateCondition(hpkg, "one >< two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hithere");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hi");
+    MsiSetProperty(hpkg, "two", "hithere");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hi");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "abcdhithere");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hithere");
+    MsiSetProperty(hpkg, "two", "");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "");
+    MsiSetProperty(hpkg, "two", "");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "1234");
+    MsiSetProperty(hpkg, "two", "1");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "1234 one");
+    MsiSetProperty(hpkg, "two", "1");
+    r = MsiEvaluateCondition(hpkg, "one << two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hithere");
+    MsiSetProperty(hpkg, "two", "there");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "hithere");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "there");
+    MsiSetProperty(hpkg, "two", "hithere");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "there");
+    MsiSetProperty(hpkg, "two", "there");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "abcdhithere");
+    MsiSetProperty(hpkg, "two", "hi");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "");
+    MsiSetProperty(hpkg, "two", "there");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "there");
+    MsiSetProperty(hpkg, "two", "");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "");
+    MsiSetProperty(hpkg, "two", "");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "1234");
+    MsiSetProperty(hpkg, "two", "4");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_FALSE, "wrong return val\n");
+
+    MsiSetProperty(hpkg, "one", "one 1234");
+    MsiSetProperty(hpkg, "two", "4");
+    r = MsiEvaluateCondition(hpkg, "one >> two");
+    ok( r == MSICONDITION_TRUE, "wrong return val\n");
+
     MsiCloseHandle( hpkg );
     DeleteFile(msifile);
 }
 
-static BOOL check_prop_empty( MSIHANDLE hpkg, char * prop)
+static BOOL check_prop_empty( MSIHANDLE hpkg, const char * prop)
 {
     UINT r;
     DWORD sz;
@@ -1295,7 +1545,7 @@ static void test_states(void)
     ok( r == ERROR_SUCCESS, "cannot create Component table: %d\n", r );
 
     /* msidbFeatureAttributesFavorLocal */
-    r = add_feature_entry( hdb, "'one', '', 2, 1, 0" );
+    r = add_feature_entry( hdb, "'one', '', '', '', 2, 1, '', 0" );
     ok( r == ERROR_SUCCESS, "cannot add feature: %d\n", r );
 
     /* msidbFeatureAttributesFavorLocal:msidbComponentAttributesLocalOnly */
@@ -1310,8 +1560,12 @@ static void test_states(void)
     r = add_component_entry( hdb, "'gamma', '{C271E2A4-DE2E-4F70-86D1-6984AF7DE2CA}', 'TARGETDIR', 2, '', 'gamma_file'" );
     ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
 
+    /* msidbFeatureAttributesFavorLocal:msidbComponentAttributesSharedDllRefCount */
+    r = add_component_entry( hdb, "'theta', '{4EB3129D-81A8-48D5-9801-75600FED3DD9}', 'TARGETDIR', 8, '', 'theta_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
     /* msidbFeatureAttributesFavorSource */
-    r = add_feature_entry( hdb, "'two', '', 2, 1, 1" );
+    r = add_feature_entry( hdb, "'two', '', '', '', 2, 1, '', 1" );
     ok( r == ERROR_SUCCESS, "cannot add feature: %d\n", r );
 
     /* msidbFeatureAttributesFavorSource:msidbComponentAttributesLocalOnly */
@@ -1326,8 +1580,12 @@ static void test_states(void)
     r = add_component_entry( hdb, "'zeta', '{377D33AB-2FAA-42B9-A629-0C0DAE9B9C7A}', 'TARGETDIR', 2, '', 'zeta_file'" );
     ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
 
+    /* msidbFeatureAttributesFavorSource:msidbComponentAttributesSharedDllRefCount */
+    r = add_component_entry( hdb, "'iota', '{5D36F871-B5ED-4801-9E0F-C46B9E5C9669}', 'TARGETDIR', 8, '', 'iota_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
     /* msidbFeatureAttributesFavorSource */
-    r = add_feature_entry( hdb, "'three', '', 2, 1, 1" );
+    r = add_feature_entry( hdb, "'three', '', '', '', 2, 1, '', 1" );
     ok( r == ERROR_SUCCESS, "cannot add feature: %d\n", r );
 
     /* msidbFeatureAttributesFavorSource:msidbComponentAttributesSourceOnly */
@@ -1346,6 +1604,9 @@ static void test_states(void)
     r = add_feature_components_entry( hdb, "'one', 'gamma'" );
     ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
 
+    r = add_feature_components_entry( hdb, "'one', 'theta'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
     r = add_feature_components_entry( hdb, "'two', 'delta'" );
     ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
 
@@ -1353,6 +1614,9 @@ static void test_states(void)
     ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
 
     r = add_feature_components_entry( hdb, "'two', 'zeta'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
+    r = add_feature_components_entry( hdb, "'two', 'iota'" );
     ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
 
     r = add_feature_components_entry( hdb, "'three', 'eta'" );
@@ -1370,6 +1634,9 @@ static void test_states(void)
     r = add_file_entry( hdb, "'gamma_file', 'gamma', 'gamma.txt', 0, '', '1033', 8192, 1" );
     ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
 
+    r = add_file_entry( hdb, "'theta_file', 'theta', 'theta.txt', 0, '', '1033', 8192, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
     r = add_file_entry( hdb, "'delta_file', 'delta', 'delta.txt', 0, '', '1033', 8192, 1" );
     ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
 
@@ -1379,6 +1646,9 @@ static void test_states(void)
     r = add_file_entry( hdb, "'zeta_file', 'zeta', 'zeta.txt', 0, '', '1033', 8192, 1" );
     ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
 
+    r = add_file_entry( hdb, "'iota_file', 'iota', 'iota.txt', 0, '', '1033', 8192, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
     /* compressed file */
     r = add_file_entry( hdb, "'eta_file', 'eta', 'eta.txt', 0, '', '1033', 16384, 1" );
     ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
@@ -1386,81 +1656,95 @@ static void test_states(void)
     hpkg = package_from_db( hdb );
     ok( hpkg, "failed to create package\n");
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "one", &state, &action);
     ok( r == ERROR_UNKNOWN_FEATURE, "Expected ERROR_UNKNOWN_FEATURE, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "two", &state, &action);
     ok( r == ERROR_UNKNOWN_FEATURE, "Expected ERROR_UNKNOWN_FEATURE, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "three", &state, &action);
     ok( r == ERROR_UNKNOWN_FEATURE, "Expected ERROR_UNKNOWN_FEATURE, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "alpha", &state, &action);
     ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "beta", &state, &action);
     ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "gamma", &state, &action);
     ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
+    r = MsiGetComponentState(hpkg, "theta", &state, &action);
+    ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
+
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "delta", &state, &action);
     ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "epsilon", &state, &action);
     ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "zeta", &state, &action);
     ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
+    r = MsiGetComponentState(hpkg, "iota", &state, &action);
+    ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
+
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "eta", &state, &action);
     ok( r == ERROR_UNKNOWN_COMPONENT, "Expected ERROR_UNKNOWN_COMPONENT, got %d\n", r );
-    ok( state == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", state);
-    ok( action == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", action);
+    ok( state == 0xdeadbee, "Expected 0xdeadbee, got %d\n", state);
+    ok( action == 0xdeadbee, "Expected 0xdeadbee, got %d\n", action);
 
     r = MsiDoAction( hpkg, "CostInitialize");
     ok( r == ERROR_SUCCESS, "cost init failed\n");
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "one", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1469,8 +1753,8 @@ static void test_states(void)
     }
     ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "two", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1479,8 +1763,8 @@ static void test_states(void)
     }
     ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "three", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1489,8 +1773,8 @@ static void test_states(void)
     }
     ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "alpha", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1499,8 +1783,8 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "beta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1509,8 +1793,8 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "gamma", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1519,8 +1803,18 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
+    r = MsiGetComponentState(hpkg, "theta", &state, &action);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+    todo_wine
+    {
+        ok( state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+        ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
+    }
+
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "delta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1529,8 +1823,8 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "epsilon", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1539,8 +1833,8 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "zeta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1549,8 +1843,18 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
+    r = MsiGetComponentState(hpkg, "iota", &state, &action);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+    todo_wine
+    {
+        ok( state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+        ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
+    }
+
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "eta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1562,8 +1866,8 @@ static void test_states(void)
     r = MsiDoAction( hpkg, "FileCost");
     ok( r == ERROR_SUCCESS, "file cost failed\n");
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "one", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1572,8 +1876,8 @@ static void test_states(void)
     }
     ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "two", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1582,8 +1886,8 @@ static void test_states(void)
     }
     ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "three", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1592,8 +1896,8 @@ static void test_states(void)
     }
     ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "alpha", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1602,8 +1906,8 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "beta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1612,8 +1916,8 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "gamma", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1622,8 +1926,18 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
+    r = MsiGetComponentState(hpkg, "theta", &state, &action);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+    todo_wine
+    {
+        ok( state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+        ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
+    }
+
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "delta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1632,8 +1946,8 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "epsilon", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1642,8 +1956,8 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "zeta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1652,8 +1966,18 @@ static void test_states(void)
         ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
     }
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
+    r = MsiGetComponentState(hpkg, "iota", &state, &action);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+    todo_wine
+    {
+        ok( state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+        ok( action == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", action);
+    }
+
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "eta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     todo_wine
@@ -1665,92 +1989,326 @@ static void test_states(void)
     r = MsiDoAction( hpkg, "CostFinalize");
     ok( r == ERROR_SUCCESS, "cost finalize failed: %d\n", r);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "one", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
-    todo_wine
-    {
-        ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
-    }
+    ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "two", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
-    todo_wine
-    {
-        ok( action == INSTALLSTATE_SOURCE, "Expected INSTALLSTATE_SOURCE, got %d\n", action);
-    }
+    ok( action == INSTALLSTATE_SOURCE, "Expected INSTALLSTATE_SOURCE, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetFeatureState(hpkg, "three", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
-    todo_wine
-    {
-        ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
-    }
+    ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "alpha", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "beta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok( action == INSTALLSTATE_SOURCE, "Expected INSTALLSTATE_SOURCE, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "gamma", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
+    r = MsiGetComponentState(hpkg, "theta", &state, &action);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+    ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
+
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "delta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "epsilon", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok( action == INSTALLSTATE_SOURCE, "Expected INSTALLSTATE_SOURCE, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "zeta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
-    todo_wine
-    {
-        ok( action == INSTALLSTATE_SOURCE, "Expected INSTALLSTATE_SOURCE, got %d\n", action);
-    }
+    ok( action == INSTALLSTATE_SOURCE, "Expected INSTALLSTATE_SOURCE, got %d\n", action);
 
-    state = 0xdeadbeef;
-    action = 0xdeadbeef;
+    state = 0xdeadbee;
+    action = 0xdeadbee;
+    r = MsiGetComponentState(hpkg, "iota", &state, &action);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
+    ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
+
+    state = 0xdeadbee;
+    action = 0xdeadbee;
     r = MsiGetComponentState(hpkg, "eta", &state, &action);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
-    todo_wine
-    {
-        ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
-    }
+    ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
     
     MsiCloseHandle( hpkg );
+}
+
+static void test_getproperty(void)
+{
+    MSIHANDLE hPackage = 0;
+    char prop[100];
+    static CHAR empty[] = "";
+    DWORD size;
+    UINT r;
+
+    hPackage = package_from_db(create_package_db());
+    ok( hPackage != 0, " Failed to create package\n");
+
+    /* set the property */
+    r = MsiSetProperty(hPackage, "Name", "Value");
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    /* retrieve the size, NULL pointer */
+    size = 0;
+    r = MsiGetProperty(hPackage, "Name", NULL, &size);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok( size == 5, "Expected 5, got %ld\n", size);
+
+    /* retrieve the size, empty string */
+    size = 0;
+    r = MsiGetProperty(hPackage, "Name", empty, &size);
+    ok( r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
+    ok( size == 5, "Expected 5, got %ld\n", size);
+
+    /* don't change size */
+    r = MsiGetProperty(hPackage, "Name", prop, &size);
+    ok( r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
+    ok( size == 5, "Expected 5, got %ld\n", size);
+    ok( !lstrcmp(prop, "Valu"), "Expected Valu, got %s\n", prop);
+
+    /* increase the size by 1 */
+    size++;
+    r = MsiGetProperty(hPackage, "Name", prop, &size);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok( size == 5, "Expected 5, got %ld\n", size);
+    ok( !lstrcmp(prop, "Value"), "Expected Value, got %s\n", prop);
+
+    r = MsiCloseHandle( hPackage);
+    ok( r == ERROR_SUCCESS , "Failed to close package\n" );
+    DeleteFile(msifile);
+}
+
+static void test_removefiles(void)
+{
+    MSIHANDLE hpkg;
+    UINT r;
+    MSIHANDLE hdb;
+    char CURR_DIR[MAX_PATH];
+
+    GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
+
+    hdb = create_package_db();
+    ok ( hdb, "failed to create package database\n" );
+
+    r = add_directory_entry( hdb, "'TARGETDIR', '', 'SourceDir'");
+    ok( r == ERROR_SUCCESS, "cannot add directory: %d\n", r );
+
+    r = create_feature_table( hdb );
+    ok( r == ERROR_SUCCESS, "cannot create Feature table: %d\n", r );
+
+    r = create_component_table( hdb );
+    ok( r == ERROR_SUCCESS, "cannot create Component table: %d\n", r );
+
+    r = add_feature_entry( hdb, "'one', '', '', '', 2, 1, '', 0" );
+    ok( r == ERROR_SUCCESS, "cannot add feature: %d\n", r );
+
+    r = add_component_entry( hdb, "'hydrogen', '', 'TARGETDIR', 0, '', 'hydrogen_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
+    r = add_component_entry( hdb, "'helium', '', 'TARGETDIR', 0, '', 'helium_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
+    r = add_component_entry( hdb, "'lithium', '', 'TARGETDIR', 0, '', 'lithium_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
+    r = add_component_entry( hdb, "'beryllium', '', 'TARGETDIR', 0, '', 'beryllium_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
+    r = add_component_entry( hdb, "'boron', '', 'TARGETDIR', 0, '', 'boron_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
+    r = add_component_entry( hdb, "'carbon', '', 'TARGETDIR', 0, '', 'carbon_file'" );
+    ok( r == ERROR_SUCCESS, "cannot add component: %d\n", r );
+
+    r = create_feature_components_table( hdb );
+    ok( r == ERROR_SUCCESS, "cannot create FeatureComponents table: %d\n", r );
+
+    r = add_feature_components_entry( hdb, "'one', 'hydrogen'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
+    r = add_feature_components_entry( hdb, "'one', 'helium'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
+    r = add_feature_components_entry( hdb, "'one', 'lithium'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
+    r = add_feature_components_entry( hdb, "'one', 'beryllium'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
+    r = add_feature_components_entry( hdb, "'one', 'boron'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
+    r = add_feature_components_entry( hdb, "'one', 'carbon'" );
+    ok( r == ERROR_SUCCESS, "cannot add feature components: %d\n", r );
+
+    r = create_file_table( hdb );
+    ok( r == ERROR_SUCCESS, "cannot create File table: %d\n", r );
+
+    r = add_file_entry( hdb, "'hydrogen_file', 'hydrogen', 'hydrogen.txt', 0, '', '1033', 8192, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
+    r = add_file_entry( hdb, "'helium_file', 'helium', 'helium.txt', 0, '', '1033', 8192, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
+    r = add_file_entry( hdb, "'lithium_file', 'lithium', 'lithium.txt', 0, '', '1033', 8192, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
+    r = add_file_entry( hdb, "'beryllium_file', 'beryllium', 'beryllium.txt', 0, '', '1033', 16384, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
+    r = add_file_entry( hdb, "'boron_file', 'boron', 'boron.txt', 0, '', '1033', 16384, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
+    r = add_file_entry( hdb, "'carbon_file', 'carbon', 'carbon.txt', 0, '', '1033', 16384, 1" );
+    ok( r == ERROR_SUCCESS, "cannot add file: %d\n", r);
+
+    r = create_remove_file_table( hdb );
+    ok( r == ERROR_SUCCESS, "cannot create Remove File table: %d\n", r);
+
+    hpkg = package_from_db( hdb );
+    ok( hpkg, "failed to create package\n");
+
+    create_test_file( "hydrogen.txt" );
+    create_test_file( "helium.txt" );
+    create_test_file( "lithium.txt" );
+    create_test_file( "beryllium.txt" );
+    create_test_file( "boron.txt" );
+    create_test_file( "carbon.txt" );
+
+    r = MsiSetProperty( hpkg, "TARGETDIR", CURR_DIR );
+    ok( r == ERROR_SUCCESS, "set property failed\n");
+
+    r = MsiDoAction( hpkg, "CostInitialize");
+    ok( r == ERROR_SUCCESS, "cost init failed\n");
+
+    r = MsiDoAction( hpkg, "FileCost");
+    ok( r == ERROR_SUCCESS, "cost finalize failed\n");
+
+    r = MsiDoAction( hpkg, "CostFinalize");
+    ok( r == ERROR_SUCCESS, "cost finalize failed\n");
+
+    r = MsiDoAction( hpkg, "InstallValidate");
+    ok( r == ERROR_SUCCESS, "cost finalize failed\n");
+
+    r = MsiSetComponentState( hpkg, "hydrogen", INSTALLSTATE_ABSENT );
+    ok( r == ERROR_SUCCESS, "failed to set component state: %d\n", r);
+
+    r = MsiSetComponentState( hpkg, "helium", INSTALLSTATE_LOCAL );
+    ok( r == ERROR_SUCCESS, "failed to set component state: %d\n", r);
+
+    r = MsiSetComponentState( hpkg, "lithium", INSTALLSTATE_SOURCE );
+    ok( r == ERROR_SUCCESS, "failed to set component state: %d\n", r);
+
+    r = MsiSetComponentState( hpkg, "beryllium", INSTALLSTATE_ABSENT );
+    ok( r == ERROR_SUCCESS, "failed to set component state: %d\n", r);
+
+    r = MsiSetComponentState( hpkg, "boron", INSTALLSTATE_LOCAL );
+    ok( r == ERROR_SUCCESS, "failed to set component state: %d\n", r);
+
+    r = MsiSetComponentState( hpkg, "carbon", INSTALLSTATE_SOURCE );
+    ok( r == ERROR_SUCCESS, "failed to set component state: %d\n", r);
+
+    r = MsiDoAction( hpkg, "RemoveFiles");
+    ok( r == ERROR_SUCCESS, "remove files failed\n");
+
+    ok(DeleteFileA("hydrogen.txt"), "Expected hydrogen.txt to exist\n");
+    ok(DeleteFileA("lithium.txt"), "Expected lithium.txt to exist\n");    
+    ok(DeleteFileA("beryllium.txt"), "Expected beryllium.txt to exist\n");
+    ok(DeleteFileA("carbon.txt"), "Expected carbon.txt to exist\n");
+    ok(DeleteFileA("helium.txt"), "Expected helium.txt to exist\n");
+    ok(DeleteFileA("boron.txt"), "Expected boron.txt to exist\n");
+
+    MsiCloseHandle( hpkg );
+    DeleteFileA(msifile);
+}
+
+static void test_appsearch(void)
+{
+    MSIHANDLE hpkg;
+    UINT r;
+    MSIHANDLE hdb;
+    CHAR prop[MAX_PATH];
+    DWORD size = MAX_PATH;
+
+    hdb = create_package_db();
+    ok ( hdb, "failed to create package database\n" );
+
+    r = create_appsearch_table( hdb );
+    ok( r == ERROR_SUCCESS, "cannot create AppSearch table: %d\n", r );
+
+    r = add_appsearch_entry( hdb, "'WEBBROWSERPROG', 'NewSignature1'" );
+    ok( r == ERROR_SUCCESS, "cannot add entry: %d\n", r );
+
+    r = create_reglocator_table( hdb );
+    ok( r == ERROR_SUCCESS, "cannot create RegLocator table: %d\n", r );
+
+    r = add_reglocator_entry( hdb, "'NewSignature1', 0, 'htmlfile\\shell\\open\\command', '', 1" );
+    ok( r == ERROR_SUCCESS, "cannot create RegLocator table: %d\n", r );
+
+    r = create_signature_table( hdb );
+    ok( r == ERROR_SUCCESS, "cannot create Signature table: %d\n", r );
+
+    r = add_signature_entry( hdb, "'NewSignature1', 'FileName', '', '', '', '', '', '', ''" );
+    ok( r == ERROR_SUCCESS, "cannot create Signature table: %d\n", r );
+
+    hpkg = package_from_db( hdb );
+    ok( hpkg, "failed to create package\n");
+
+    r = MsiDoAction( hpkg, "AppSearch" );
+    ok( r == ERROR_SUCCESS, "AppSearch failed: %d\n", r);
+
+    r = MsiGetPropertyA( hpkg, "WEBBROWSERPROG", prop, &size );
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    todo_wine
+    {
+        ok( lstrlenA(prop) != 0, "Expected non-zero length\n");
+    }
+
+    MsiCloseHandle( hpkg );
+    DeleteFileA(msifile);
 }
 
 START_TEST(package)
@@ -1766,4 +2324,7 @@ START_TEST(package)
     test_msipackage();
     test_formatrecord2();
     test_states();
+    test_getproperty();
+    test_removefiles();
+    test_appsearch();
 }
