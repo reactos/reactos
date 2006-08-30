@@ -25,14 +25,14 @@
 //  - Use Object Type Mutex/Lock.
 //
 // Ke:
-//  - Sanitize some context fields during conversions
 //  - Add PSEH handler when an exception occurs in an exception (KiCopyExceptionRecord).
+//  - Get rid of KiRosPrintAddress and use KiDumpParameterImages instead.
 //  - Forward exceptions to user-mode debugger.
+//  - Sanitize some context fields during conversions.
 //  - Implement stack fault and segment fault handlers.
 //  - Implement kernel-mode GPF handler, possibly fixing below:
 //  - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
 //    and only when called from user-mode, and returning to user-mode.
-//  - Figure out what the DEBUGEIP hack is for and how it can be moved away.
 //  - Add DR macro/save and VM macro/save.
 //  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
 //
