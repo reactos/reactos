@@ -72,12 +72,14 @@ static void test_comboboxex(void) {
     HWND myHwnd = 0;
     LONG res = -1;
     COMBOBOXEXITEM cbexItem;
-
-#define FIRST_ITEM       "First Item"
-#define SECOND_ITEM      "Second Item"
-#define THIRD_ITEM       "Third Item"
-#define MIDDLE_ITEM      "Between First and Second Items"
-#define REPLACEMENT_ITEM "Between First and Second Items"
+    static TCHAR first_item[]        = {'F','i','r','s','t',' ','I','t','e','m',0},
+                 second_item[]       = {'S','e','c','o','n','d',' ','I','t','e','m',0},
+                 third_item[]        = {'T','h','i','r','d',' ','I','t','e','m',0},
+                 middle_item[]       = {'B','e','t','w','e','e','n',' ','F','i','r','s','t',' ','a','n','d',' ',
+                                        'S','e','c','o','n','d',' ','I','t','e','m','s',0},
+                 replacement_item[]  = {'B','e','t','w','e','e','n',' ','F','i','r','s','t',' ','a','n','d',' ',
+                                        'S','e','c','o','n','d',' ','I','t','e','m','s',0},
+                 out_of_range_item[] = {'O','u','t',' ','o','f',' ','R','a','n','g','e',' ','I','t','e','m',0};
 
     /* Allocate space for result */
     textBuffer = malloc(MAX_CHARS);
@@ -86,19 +88,19 @@ static void test_comboboxex(void) {
     myHwnd = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
 
     /* Add items onto the end of the combobox */
-    res = addItem(myHwnd, -1, FIRST_ITEM);
+    res = addItem(myHwnd, -1, first_item);
     ok(res == 0, "Adding simple item failed (%ld)\n", res);
-    res = addItem(myHwnd, -1, SECOND_ITEM);
+    res = addItem(myHwnd, -1, second_item);
     ok(res == 1, "Adding simple item failed (%ld)\n", res);
-    res = addItem(myHwnd, 2, THIRD_ITEM);
+    res = addItem(myHwnd, 2, third_item);
     ok(res == 2, "Adding simple item failed (%ld)\n", res);
-    res = addItem(myHwnd, 1, MIDDLE_ITEM);
+    res = addItem(myHwnd, 1, middle_item);
     ok(res == 1, "Inserting simple item failed (%ld)\n", res);
 
     /* Add an item completely out of range */
-    res = addItem(myHwnd, 99, "Out Of Range Item");
+    res = addItem(myHwnd, 99, out_of_range_item);
     ok(res == -1, "Adding using out of range index worked unexpectedly (%ld)\n", res);
-    res = addItem(myHwnd, 5, "Out Of Range Item");
+    res = addItem(myHwnd, 5, out_of_range_item);
     ok(res == -1, "Adding using out of range index worked unexpectedly (%ld)\n", res);
     /* Removed: Causes traps on Windows XP
        res = addItem(myHwnd, -2, "Out Of Range Item");
@@ -116,32 +118,32 @@ static void test_comboboxex(void) {
     /* Get an item in range */ 
     res = getItem(myHwnd, 0, &cbexItem); 
     ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
-    ok(strcmp(FIRST_ITEM, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
+    ok(strcmp(first_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
     res = getItem(myHwnd, 1, &cbexItem); 
     ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
-    ok(strcmp(MIDDLE_ITEM, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
+    ok(strcmp(middle_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
     res = getItem(myHwnd, 2, &cbexItem); 
     ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
-    ok(strcmp(SECOND_ITEM, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
+    ok(strcmp(second_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
     res = getItem(myHwnd, 3, &cbexItem); 
     ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
-    ok(strcmp(THIRD_ITEM, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
+    ok(strcmp(third_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
     /* Set an item completely out of range */ 
-    res = setItem(myHwnd, 99, REPLACEMENT_ITEM); 
+    res = setItem(myHwnd, 99, replacement_item); 
     ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
-    res = setItem(myHwnd, 4, REPLACEMENT_ITEM); 
+    res = setItem(myHwnd, 4, replacement_item); 
     ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
-    res = setItem(myHwnd, -2, REPLACEMENT_ITEM); 
+    res = setItem(myHwnd, -2, replacement_item); 
     ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
 
     /* Set an item in range */ 
-    res = setItem(myHwnd, 0, REPLACEMENT_ITEM);
+    res = setItem(myHwnd, 0, replacement_item);
     ok(res != 0, "Setting first item failed (%ld)\n", res);
-    res = setItem(myHwnd, 3, REPLACEMENT_ITEM);
+    res = setItem(myHwnd, 3, replacement_item);
     ok(res != 0, "Setting last item failed (%ld)\n", res);
 
     /* Remove items completely out of range (4 items in control at this point) */

@@ -56,7 +56,7 @@ static void dont_expect_notify(INT iCode)
     unexpectedNotify[nUnexpectedNotify++] = iCode;
 }
 
-static BOOL notifies_received()
+static BOOL notifies_received(void)
 {
     BOOL fRet = (nExpectedNotify == nReceivedNotify);
     nExpectedNotify = nReceivedNotify = 0;
@@ -323,7 +323,7 @@ static void check_auto_fields(void)
     /* field from comctl >4.0 not tested as the system probably won't touch them */
 }
 
-static void check_mask()
+static void check_mask(void)
 {
     HDITEMA hdi;
     static CHAR text[] = "ABC";
