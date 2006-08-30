@@ -51,7 +51,7 @@ reactos/dll/win32/imagehlp        # Patches for BindImage need review and submis
 reactos/dll/win32/lz32            # Autosync
 reactos/dll/win32/mapi32          # Autosync
 reactos/dll/win32/msvcrt20        # Out of sync
-reactos/dll/win32/mpr             # Synced to Wine-0_9_5
+reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm           # Out of sync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
