@@ -20,6 +20,14 @@ DbgkCopyProcessDebugPort(
     IN PEPROCESS Parent
 );
 
+BOOLEAN
+NTAPI
+DbgkForwardException(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN BOOLEAN DebugPort,
+    IN BOOLEAN SecondChance
+);
+
 extern POBJECT_TYPE DbgkDebugObjectType;
 #endif
 

@@ -25,6 +25,17 @@ DbgkCopyProcessDebugPort(IN PEPROCESS Process,
     /* FIXME: Implement */
 }
 
+BOOLEAN
+NTAPI
+DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
+                     IN BOOLEAN DebugPort,
+                     IN BOOLEAN SecondChance)
+{
+    /* FIXME: Implement */
+    return FALSE;
+}
+
+
 NTSTATUS
 NTAPI
 NtCreateDebugObject(OUT PHANDLE DebugHandle,

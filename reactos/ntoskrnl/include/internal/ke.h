@@ -691,13 +691,6 @@ KeRosDumpStackFrames(
     ULONG FrameCount
 );
 
-ULONG
-STDCALL
-KeRosGetStackFrames(
-    PULONG Frames,
-    ULONG FrameCount
-);
-
 VOID
 NTAPI
 KiSetSystemTime(PLARGE_INTEGER NewSystemTime);

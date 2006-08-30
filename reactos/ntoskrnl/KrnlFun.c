@@ -25,9 +25,7 @@
 //  - Use Object Type Mutex/Lock.
 //
 // Ke:
-//  - Add PSEH handler when an exception occurs in an exception (KiCopyExceptionRecord).
 //  - Get rid of KiRosPrintAddress and use KiDumpParameterImages instead.
-//  - Forward exceptions to user-mode debugger.
 //  - Sanitize some context fields during conversions.
 //  - Implement stack fault and segment fault handlers.
 //  - Implement kernel-mode GPF handler, possibly fixing below:

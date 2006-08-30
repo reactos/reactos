@@ -16,6 +16,22 @@
 
 /* FUNCTIONS *****************************************************************/
 
+_SEH_DEFINE_LOCALS(KiCopyInfo)
+{
+    volatile EXCEPTION_RECORD SehExceptRecord;
+};
+
+_SEH_FILTER(KiCopyInformation)
+{
+    _SEH_ACCESS_LOCALS(KiCopyInfo);
+
+    /* Copy the exception records and return to the handler */
+    RtlMoveMemory((PVOID)&_SEH_VAR(SehExceptRecord),
+                  _SEH_GetExceptionPointers()->ExceptionRecord,
+                  sizeof(EXCEPTION_RECORD));
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -588,7 +604,8 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     KD_CONTINUE_TYPE Action;
     ULONG_PTR Stack, NewStack;
     ULONG Size;
-    BOOLEAN UserDispatch = FALSE;
+    EXCEPTION_RECORD LocalExceptRecord;
+    _SEH_DECLARE_LOCALS(KiCopyInfo);
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
@@ -596,16 +613,32 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
 
-    /* Check if User Mode */
-    if (PreviousMode == UserMode)
+    /* Check if User Mode or if the debugger isenabled */
+    if ((PreviousMode == UserMode) || (KdDebuggerEnabled))
     {
         /* Add the FPU Flag */
         Context.ContextFlags |= CONTEXT_FLOATING_POINT;
-        if (KeI386FxsrPresent) Context.ContextFlags |= CONTEXT_EXTENDED_REGISTERS;
+
+        /* Check for NPX Support */
+        if (KeI386FxsrPresent)
+        {
+            /* Save those too */
+            Context.ContextFlags |= CONTEXT_EXTENDED_REGISTERS;
+        }
     }
 
     /* Get a Context */
     KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
+
+    /* Fix up EIP */
+    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
+    {
+        /* Decrement EIP by one */
+        Context.Eip--;
+    }
+
+    ASSERT(!((PreviousMode == KernelMode) &&
+             (Context.EFlags & EFLAGS_V86_MASK)));
 
     /* Handle kernel-mode first, it's simpler */
     if (PreviousMode == KernelMode)
@@ -625,11 +658,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             if (Action == kdContinue) goto Handled;
 
             /* If the Debugger couldn't handle it, dispatch the exception */
-            if (RtlDispatchException(ExceptionRecord, &Context))
-            {
-                /* It was handled by an exception handler, continue */
-                goto Handled;
-            }
+            if (RtlDispatchException(ExceptionRecord, &Context)) goto Handled;
         }
 
         /* This is a second-chance exception, only for the debugger */
@@ -644,12 +673,11 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
         if (Action == kdContinue) goto Handled;
 
         /* Third strike; you're out */
-        KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED,
-                         ExceptionRecord->ExceptionCode,
-                         (ULONG_PTR)ExceptionRecord->ExceptionAddress,
-                         ExceptionRecord->ExceptionInformation[0],
-                         ExceptionRecord->ExceptionInformation[1],
-                         TrapFrame);
+        KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
+                     ExceptionRecord->ExceptionCode,
+                     (ULONG_PTR)ExceptionRecord->ExceptionAddress,
+                     ExceptionRecord->ExceptionInformation[0],
+                     ExceptionRecord->ExceptionInformation[1]);
     }
     else
     {
@@ -668,27 +696,39 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             if (Action == kdContinue) goto Handled;
 
             /* FIXME: Forward exception to user mode debugger */
+            if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) goto Exit;
 
             /* Set up the user-stack */
+DispatchToUser:
             _SEH_TRY
             {
+                /* Make sure we have a valid SS and that this isn't V86 mode */
+                if ((TrapFrame->HardwareSegSs != (KGDT_R3_DATA | RPL_MASK)) ||
+                    (TrapFrame->EFlags & EFLAGS_V86_MASK))
+                {
+                    /* Raise an exception instead */
+                    LocalExceptRecord.ExceptionCode = STATUS_ACCESS_VIOLATION;
+                    LocalExceptRecord.ExceptionFlags = 0;
+                    LocalExceptRecord.NumberParameters = 0;
+                    RtlRaiseException(&LocalExceptRecord);
+                }
+
                 /* Align context size and get stack pointer */
                 Size = (sizeof(CONTEXT) + 3) & ~3;
                 Stack = (Context.Esp & ~3) - Size;
-                DPRINT("Stack: %lx\n", Stack);
 
                 /* Probe stack and copy Context */
                 ProbeForWrite((PVOID)Stack, Size, sizeof(ULONG));
                 RtlCopyMemory((PVOID)Stack, &Context, sizeof(CONTEXT));
 
                 /* Align exception record size and get stack pointer */
-                Size = (sizeof(EXCEPTION_RECORD) - 
-                        (EXCEPTION_MAXIMUM_PARAMETERS - ExceptionRecord->NumberParameters) *
-                        sizeof(ULONG) + 3) & ~3;
+                Size = (sizeof(EXCEPTION_RECORD) -
+                       (EXCEPTION_MAXIMUM_PARAMETERS -
+                        ExceptionRecord->NumberParameters) *
+                       sizeof(ULONG) + 3) & ~3;
                 NewStack = Stack - Size;
-                DPRINT("NewStack: %lx\n", NewStack);
 
-                /* Probe stack and copy exception record. Don't forget to add the two params */
+                /* Probe stack and copy exception record */
                 ProbeForWrite((PVOID)(NewStack - 2 * sizeof(ULONG_PTR)),
                               Size +  2 * sizeof(ULONG_PTR),
                               sizeof(ULONG));
@@ -699,34 +739,59 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 *(PULONG_PTR)(NewStack - 2 * sizeof(ULONG_PTR)) = NewStack;
 
                 /* Set new Stack Pointer */
+                KiSsToTrapFrame(TrapFrame, KGDT_R3_DATA);
                 KiEspToTrapFrame(TrapFrame, NewStack - 2 * sizeof(ULONG_PTR));
+
+                /* Force correct segments */
+                TrapFrame->SegCs = KGDT_R3_CODE | RPL_MASK;
+                TrapFrame->SegDs = KGDT_R3_DATA | RPL_MASK;
+                TrapFrame->SegEs = KGDT_R3_DATA | RPL_MASK;
+                TrapFrame->SegFs = KGDT_R3_TEB | RPL_MASK;
+                TrapFrame->SegGs = 0;
 
                 /* Set EIP to the User-mode Dispathcer */
                 TrapFrame->Eip = (ULONG)KeUserExceptionDispatcher;
-                UserDispatch = TRUE;
                 _SEH_LEAVE;
             }
-            _SEH_HANDLE
+            _SEH_EXCEPT(KiCopyInformation)
             {
-                /* Do second-chance */
+                /* Check if we got a stack overflow and raise that instead */
+                if (_SEH_VAR(SehExceptRecord).ExceptionCode ==
+                    STATUS_STACK_OVERFLOW)
+                {
+                    /* Copy the exception address and record */
+                    _SEH_VAR(SehExceptRecord).ExceptionAddress =
+                        ExceptionRecord->ExceptionAddress;
+                    RtlMoveMemory(ExceptionRecord,
+                                  (PVOID)&_SEH_VAR(SehExceptRecord),
+                                  sizeof(EXCEPTION_RECORD));
+
+                    /* Do the exception again */
+                    goto DispatchToUser;
+                }
             }
             _SEH_END;
         }
 
-        /* If we dispatch to user, return now */
-        if (UserDispatch) return;
+        /* Try second chance */
+        if (DbgkForwardException(ExceptionRecord, TRUE, FALSE))
+        {
+            /* Handled, get out */
+            goto Exit;
+        }
+        else if (DbgkForwardException(ExceptionRecord, FALSE, TRUE))
+        {
+            /* Handled, get out */
+            goto Exit;
+        }
 
-        /* FIXME: Forward the exception to the debugger for 2nd chance */
-
-        /* 3rd strike, kill the thread */
-        DPRINT1("Unhandled UserMode exception, terminating thread\n");
-        ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
-        KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED,
-                         ExceptionRecord->ExceptionCode,
-                         (ULONG_PTR)ExceptionRecord->ExceptionAddress,
-                         ExceptionRecord->ExceptionInformation[0],
-                         ExceptionRecord->ExceptionInformation[1],
-                         TrapFrame);
+        /* 3rd strike, kill the process */
+        ZwTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
+        KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
+                     ExceptionRecord->ExceptionCode,
+                     (ULONG_PTR)ExceptionRecord->ExceptionAddress,
+                     ExceptionRecord->ExceptionInformation[0],
+                     ExceptionRecord->ExceptionInformation[1]);
     }
 
 Handled:
@@ -736,6 +801,7 @@ Handled:
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);
+Exit:
     return;
 }
 
