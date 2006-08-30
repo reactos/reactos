@@ -543,7 +543,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
     /* Save the IRQL and set hardware trigger */
     Prcb->DebuggerSavedIRQL = KeGetCurrentIrql();
-    InterlockedIncrement(&KiHardwareTrigger);
+    InterlockedIncrement((PLONG)&KiHardwareTrigger);
 
     /* Capture the CPU Context */
     RtlCaptureContext(&Prcb->ProcessorState.ContextFrame);
@@ -857,7 +857,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     }
 
     /* Avoid recursion */
-    if (!InterlockedDecrement(&KeBugCheckCount))
+    if (!InterlockedDecrement((PLONG)&KeBugCheckCount))
     {
         /* Set CPU that is bug checking now */
         KeBugCheckOwner = Prcb->Number;

@@ -212,12 +212,12 @@ VdmpStartExecution(VOID)
     if (VdmTib->VdmContext.EFlags & EFLAGS_INTERRUPT_MASK)
     {
         /* Enable them as well */
-        InterlockedOr(VdmState, EFLAGS_INTERRUPT_MASK);
+        InterlockedOr((PLONG)VdmState, EFLAGS_INTERRUPT_MASK);
     }
     else
     {
         /* Disable them */
-        InterlockedAnd(VdmState, ~EFLAGS_INTERRUPT_MASK);
+        InterlockedAnd((PLONG)VdmState, ~EFLAGS_INTERRUPT_MASK);
     }
 
     /* Enable the interrupt flag */
