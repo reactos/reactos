@@ -295,6 +295,8 @@ RtlAbsoluteToSelfRelativeSD@12
 RtlAcquirePebLock@0
 RtlAcquireResourceExclusive@8
 RtlAcquireResourceShared@8
+RtlAcquireSRWLockExclusive@4
+RtlAcquireSRWLockShared@4
 RtlAddAccessAllowedAce@16
 RtlAddAccessAllowedAceEx@20
 RtlAddAccessAllowedObjectAce@28
@@ -513,6 +515,7 @@ RtlInitializeRangeList@4
 RtlInitializeResource@4
 ;RtlInitializeRXact
 RtlInitializeSid@12
+RtlInitializeSRWLock@4
 RtlInsertElementGenericTable@16
 RtlInsertElementGenericTableAvl@16
 RtlInsertElementGenericTableFull@24
@@ -612,6 +615,8 @@ RtlRealSuccessor@4
 RtlReleasePebLock@0
 RtlReleaseRelativeName@4
 RtlReleaseResource@4
+RtlReleaseSRWLockExclusive@4
+RtlReleaseSRWLockShared@4
 ;RtlRemoteCall
 RtlRemoveVectoredExceptionHandler@4
 RtlResetRtlTranslations@4

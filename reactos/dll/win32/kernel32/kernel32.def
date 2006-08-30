@@ -30,6 +30,8 @@
 ;
 LIBRARY KERNEL32.DLL
 EXPORTS
+AcquireSRWLockExclusive@4=NTDLL.RtlAcquireSRWLockExclusive
+AcquireSRWLockShared@4=NTDLL.RtlAcquireSRWLockShared
 ActivateActCtx@8
 AddAtomA@4
 AddAtomW@4
@@ -587,6 +589,7 @@ InitAtomTable@4
 InitializeCriticalSection@4
 InitializeCriticalSectionAndSpinCount@8
 InitializeSListHead@4=NTDLL.RtlInitializeSListHead
+InitializeSRWLock@4=NTDLL.RtlInitializeSRWLock
 InterlockedCompareExchange@12
 InterlockedDecrement@4
 InterlockedExchange@8
@@ -749,6 +752,8 @@ RegisterWowExec@4
 ReleaseActCtx@4
 ReleaseMutex@4
 ReleaseSemaphore@12
+ReleaseSRWLockExclusive@4=NTDLL.RtlReleaseSRWLockExclusive
+ReleaseSRWLockShared@4=NTDLL.RtlReleaseSRWLockShared
 RemoveDirectoryA@4
 RemoveDirectoryW@4
 ;RemoveLocalAlternateComputerNameA
