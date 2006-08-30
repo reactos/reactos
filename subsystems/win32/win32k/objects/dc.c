@@ -2974,14 +2974,44 @@ IntChangeDisplaySettings(
 
   return Ret;
 }
+
 DWORD STDCALL
 NtGdiGetLayout(HDC hdc)
 {
-    return 0; 
+    PDC dc;
+    DWORD ret = GDI_ERROR;
+
+    if ((dc = DC_LockDc(hdc)))
+    {
+        ret = dc->layout;
+        DC_UnlockDc(dc);
+    }
+    else
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+    }
+    
+    return ret; 
 }
+
 DWORD STDCALL
 NtGdiSetLayout(HDC hdc, LONG wox, DWORD layout)
 {
-    return 0; 
+    PDC dc;
+    DWORD ret = GDI_ERROR;
+
+    if ((dc = DC_LockDc(hdc)))
+    {
+        ret = dc->layout;
+        dc->layout = layout;
+        DC_UnlockDc(dc);
+    }
+    else
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+    }
+
+    return ret;
 }
+
 /* EOF */
