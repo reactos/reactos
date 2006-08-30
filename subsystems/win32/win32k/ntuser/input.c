@@ -54,6 +54,8 @@ static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
 
+static LARGE_INTEGER lastInputInfoTicks;
+
 /* FUNCTIONS *****************************************************************/
 ULONG FASTCALL
 IntSystemParametersInfo(UINT uiAction, UINT uiParam,PVOID pvParam, UINT fWinIni);
@@ -326,6 +328,8 @@ MouseThreadMain(PVOID StartContext)
             return; //(Status);
          }
          DPRINT("MouseEvent\n");
+         
+         KeQueryTickCount(&lastInputInfoTicks);
 
          KeQuerySystemTime(&MouseInputCurrentTime);
 
@@ -636,6 +640,8 @@ KeyboardThreadMain(PVOID StartContext)
             DPRINT1("Win32K: Failed to read from keyboard.\n");
             return; //(Status);
          }
+         
+         KeQueryTickCount(&lastInputInfoTicks);
 
          KeQuerySystemTime(&KeyboardInputCurrentTime);
 
@@ -1358,6 +1364,39 @@ CLEANUP:
    DPRINT("Leave NtUserSendInput, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
+}
+
+BOOL
+STDCALL
+NtUserGetLastInputInfo(PLASTINPUTINFO plii)
+{
+    BOOL ret = TRUE;
+    
+    UserEnterShared();
+    
+    _SEH_TRY
+    {
+        if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
+        {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            ret = FALSE;
+            _SEH_LEAVE; 
+        }
+
+        ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
+        
+        plii->dwTime = lastInputInfoTicks.u.LowPart;
+    }
+    _SEH_HANDLE
+    {
+        SetLastNtError(_SEH_GetExceptionCode());
+        ret = FALSE;
+    }
+    _SEH_END;
+   
+    UserLeave(); 
+    
+    return ret;
 }
 
 /* EOF */
