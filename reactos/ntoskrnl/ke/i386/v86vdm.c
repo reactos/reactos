@@ -86,7 +86,8 @@ Ke386CallBios(IN ULONG Int,
     KeSetSystemAffinityThread(1);
 
     /* Make sure there's space for two IOPMs, then copy & clear the current */
-    //ASSERT(((PKGDTENTRY)&KeGetPcr()->GDT[KGDT_TSS / 8])->LimitLow >= (0x2000 + IOPM_OFFSET - 1));
+    //ASSERT(((PKGDTENTRY)&KeGetPcr()->GDT[KGDT_TSS / 8])->LimitLow >=
+    //        (0x2000 + IOPM_OFFSET - 1));
     RtlMoveMemory(Ki386IopmSaveArea, &Tss->IoMaps[0].IoMap, PAGE_SIZE * 2);
     RtlZeroMemory(&Tss->IoMaps[0].IoMap, PAGE_SIZE * 2);
 

@@ -1,214 +1,40 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/i386/exp.c
- * PURPOSE:         Exception Support Code
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PURPOSE:         Exception Dispatching and Context<->Trap Frame Conversion
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gregor Anich
- *                  David Welch (welch@cwcom.net)
  *                  Skywing (skywing@valhallalegends.com)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, KeInitExceptions)
-#endif
-
-#define SIZE_OF_FX_REGISTERS 32
+/* FUNCTIONS *****************************************************************/
 
 VOID
+INIT_FUNCTION
 NTAPI
-Ki386AdjustEsp0(
-    IN PKTRAP_FRAME TrapFrame
-);
-
-VOID
-NTAPI
-KiFlushNPXState(
-    IN FLOATING_SAVE_AREA *SaveArea
-);
-
-extern KIDTENTRY KiIdt[];
-
-/* GLOBALS *****************************************************************/
-
-#define FLAG_IF (1<<9)
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-#ifndef ARRAY_SIZE
-# define ARRAY_SIZE(x) (sizeof (x) / sizeof (x[0]))
-#endif
-
-extern ULONG init_stack;
-extern ULONG init_stack_top;
-
-extern BOOLEAN Ke386NoExecute;
-
-static char *ExceptionTypeStrings[] =
-  {
-    "Divide Error",
-    "Debug Trap",
-    "NMI",
-    "Breakpoint",
-    "Overflow",
-    "BOUND range exceeded",
-    "Invalid Opcode",
-    "No Math Coprocessor",
-    "Double Fault",
-    "Unknown(9)",
-    "Invalid TSS",
-    "Segment Not Present",
-    "Stack Segment Fault",
-    "General Protection",
-    "Page Fault",
-    "Reserved(15)",
-    "Math Fault",
-    "Alignment Check",
-    "Machine Check",
-    "SIMD Fault"
-  };
-
-NTSTATUS ExceptionToNtStatus[] =
-  {
-    STATUS_INTEGER_DIVIDE_BY_ZERO,
-    STATUS_SINGLE_STEP,
-    STATUS_ACCESS_VIOLATION,
-    STATUS_BREAKPOINT,
-    STATUS_INTEGER_OVERFLOW,
-    STATUS_ARRAY_BOUNDS_EXCEEDED,
-    STATUS_ILLEGAL_INSTRUCTION,
-    STATUS_FLOAT_INVALID_OPERATION,
-    STATUS_ACCESS_VIOLATION,
-    STATUS_ACCESS_VIOLATION,
-    STATUS_ACCESS_VIOLATION,
-    STATUS_ACCESS_VIOLATION,
-    STATUS_STACK_OVERFLOW,
-    STATUS_ACCESS_VIOLATION,
-    STATUS_ACCESS_VIOLATION,
-    STATUS_ACCESS_VIOLATION, /* RESERVED */
-    STATUS_FLOAT_INVALID_OPERATION, /* Should not be used, the FPU can give more specific info */
-    STATUS_DATATYPE_MISALIGNMENT,
-    STATUS_ACCESS_VIOLATION,
-    STATUS_FLOAT_MULTIPLE_TRAPS,
-  };
-
-/* FUNCTIONS ****************************************************************/
-
-BOOLEAN STDCALL
-KiRosPrintAddress(PVOID address)
+KeInitExceptions(VOID)
 {
-   PLIST_ENTRY current_entry;
-   PLDR_DATA_TABLE_ENTRY current;
-   extern LIST_ENTRY ModuleListHead;
-   ULONG_PTR RelativeAddress;
-   ULONG i = 0;
+    ULONG i;
+    USHORT FlippedSelector;
+    extern KIDTENTRY KiIdt[];
 
-   do
-   {
-     current_entry = ModuleListHead.Flink;
+    /* Loop the IDT */
+    for (i = 0; i <= MAXIMUM_IDTVECTOR; i ++)
+    {
+        /* Save the current Selector */
+        FlippedSelector = KiIdt[i].Selector;
 
-     while (current_entry != &ModuleListHead)
-       {
-          current =
-            CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-          if (address >= (PVOID)current->DllBase &&
-              address < (PVOID)((ULONG_PTR)current->DllBase + current->SizeOfImage))
-            {
-              RelativeAddress = (ULONG_PTR) address - (ULONG_PTR) current->DllBase;
-              DbgPrint("<%wZ: %x>", &current->FullDllName, RelativeAddress);
-              return(TRUE);
-            }
-          current_entry = current_entry->Flink;
-       }
-
-     address = (PVOID)((ULONG_PTR)address & ~(ULONG_PTR)MmSystemRangeStart);
-   } while(++i <= 1);
-
-   return(FALSE);
-}
-
-VOID
-NTAPI
-KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
-{
-  ULONG cr3_;
-  ULONG StackLimit;
-  ULONG Esp0;
-  ULONG ExceptionNr = (ULONG)Tf->DbgArgMark;
-  ULONG cr2 = (ULONG)Tf->DbgArgPointer;
-
-  Esp0 = (ULONG)Tf;
-
-   /*
-    * Print out the CPU registers
-    */
-   if (ExceptionNr < ARRAY_SIZE(ExceptionTypeStrings))
-     {
-	DbgPrint("%s Exception: %d(%x)\n", ExceptionTypeStrings[ExceptionNr],
-		 ExceptionNr, Tf->ErrCode&0xffff);
-     }
-   else
-     {
-	DbgPrint("Exception: %d(%x)\n", ExceptionNr, Tf->ErrCode&0xffff);
-     }
-   DbgPrint("Processor: %d CS:EIP %x:%x ", KeGetCurrentProcessorNumber(),
-	    Tf->SegCs&0xffff, Tf->Eip);
-   KeRosPrintAddress((PVOID)Tf->Eip);
-   DbgPrint("\n");
-   Ke386GetPageTableDirectory(cr3_);
-   DbgPrint("cr2 %x cr3 %x ", cr2, cr3_);
-   DbgPrint("Proc: %x ",PsGetCurrentProcess());
-   if (PsGetCurrentProcess() != NULL)
-     {
-	DbgPrint("Pid: %x <", PsGetCurrentProcess()->UniqueProcessId);
-	DbgPrint("%.16s> ", PsGetCurrentProcess()->ImageFileName);
-     }
-   if (PsGetCurrentThread() != NULL)
-     {
-	DbgPrint("Thrd: %x Tid: %x",
-		 PsGetCurrentThread(),
-		 PsGetCurrentThread()->Cid.UniqueThread);
-     }
-   DbgPrint("\n");
-   DbgPrint("DS %x ES %x FS %x GS %x\n", Tf->SegDs&0xffff, Tf->SegEs&0xffff,
-	    Tf->SegFs&0xffff, Tf->SegGs&0xfff);
-   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", Tf->Eax, Tf->Ebx, Tf->Ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", Tf->Edx,
-	    Tf->Ebp, Tf->Esi, Esp0);
-   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", Tf->Edi, Tf->EFlags);
-   if ((Tf->SegCs&0xffff) == KGDT_R0_CODE)
-     {
-	DbgPrint("kESP %.8x ", Esp0);
-	if (PsGetCurrentThread() != NULL)
-	  {
-	     DbgPrint("kernel stack base %x\n",
-		      PsGetCurrentThread()->Tcb.StackLimit);
-
-	  }
-     }
-
-   if (PsGetCurrentThread() != NULL)
-     {
-       StackLimit = (ULONG)PsGetCurrentThread()->Tcb.StackBase;
-     }
-   else
-     {
-       StackLimit = (ULONG)init_stack_top;
-     }
-
-   /*
-    * Dump the stack frames
-    */
-   KeDumpStackFrames((PULONG)Tf->Ebp);
+        /* Flip Selector and Extended Offset */
+        KiIdt[i].Selector = KiIdt[i].ExtendedOffset;
+        KiIdt[i].ExtendedOffset = FlippedSelector;
+    }
 }
 
 ULONG
@@ -752,177 +578,6 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 NTAPI
-KeDumpStackFrames(PULONG Frame)
-{
-	PULONG StackBase, StackEnd;
-	MEMORY_BASIC_INFORMATION mbi;
-	ULONG ResultLength = sizeof(mbi);
-	NTSTATUS Status;
-
-	DbgPrint("Frames:\n");
-	_SEH_TRY
-	{
-		Status = MiQueryVirtualMemory (
-			(HANDLE)-1,
-			Frame,
-			MemoryBasicInformation,
-			&mbi,
-			sizeof(mbi),
-			&ResultLength );
-		if ( !NT_SUCCESS(Status) )
-		{
-			DPRINT1("Can't dump stack frames: MiQueryVirtualMemory() failed: %x\n", Status );
-			return;
-		}
-
-		StackBase = Frame;
-		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
-
-		while ( Frame >= StackBase && Frame < StackEnd )
-		{
-			ULONG Addr = Frame[1];
-			if (!KeRosPrintAddress((PVOID)Addr))
-				DbgPrint("<%X>", Addr);
-			if ( Addr == 0 || Addr == 0xDEADBEEF )
-				break;
-			StackBase = Frame;
-			Frame = (PULONG)Frame[0];
-			DbgPrint("\n");
-		}
-	}
-	_SEH_HANDLE
-	{
-	}
-	_SEH_END;
-	DbgPrint("\n");
-}
-
-VOID STDCALL
-KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
-{
-	ULONG i=0;
-	PULONG StackBase, StackEnd;
-	MEMORY_BASIC_INFORMATION mbi;
-	ULONG ResultLength = sizeof(mbi);
-	NTSTATUS Status;
-
-	DbgPrint("Frames: ");
-	_SEH_TRY
-	{
-		if ( !Frame )
-		{
-#if defined __GNUC__
-			__asm__("mov %%ebp, %0" : "=r" (Frame) : );
-#elif defined(_MSC_VER)
-			__asm mov [Frame], ebp
-#endif
-			//Frame = (PULONG)Frame[0]; // step out of KeRosDumpStackFrames
-		}
-
-		Status = MiQueryVirtualMemory (
-			(HANDLE)-1,
-			Frame,
-			MemoryBasicInformation,
-			&mbi,
-			sizeof(mbi),
-			&ResultLength );
-		if ( !NT_SUCCESS(Status) )
-		{
-			DPRINT1("Can't dump stack frames: MiQueryVirtualMemory() failed: %x\n", Status );
-			return;
-		}
-
-		StackBase = Frame;
-		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
-
-		while ( Frame >= StackBase && Frame < StackEnd && i++ < FrameCount )
-		{
-			ULONG Addr = Frame[1];
-			if (!KeRosPrintAddress((PVOID)Addr))
-				DbgPrint("<%X>", Addr);
-			if ( Addr == 0 || Addr == 0xDEADBEEF )
-				break;
-			StackBase = Frame;
-			Frame = (PULONG)Frame[0];
-			DbgPrint(" ");
-		}
-	}
-	_SEH_HANDLE
-	{
-	}
-	_SEH_END;
-	DbgPrint("\n");
-}
-
-ULONG STDCALL
-KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
-{
-	ULONG Count = 0;
-	PULONG StackBase, StackEnd, Frame;
-	MEMORY_BASIC_INFORMATION mbi;
-	ULONG ResultLength = sizeof(mbi);
-	NTSTATUS Status;
-
-	_SEH_TRY
-	{
-#if defined __GNUC__
-		__asm__("mov %%ebp, %0" : "=r" (Frame) : );
-#elif defined(_MSC_VER)
-		__asm mov [Frame], ebp
-#endif
-
-		Status = MiQueryVirtualMemory (
-			(HANDLE)-1,
-			Frame,
-			MemoryBasicInformation,
-			&mbi,
-			sizeof(mbi),
-			&ResultLength );
-		if ( !NT_SUCCESS(Status) )
-		{
-			DPRINT1("Can't get stack frames: MiQueryVirtualMemory() failed: %x\n", Status );
-			return 0;
-		}
-
-		StackBase = Frame;
-		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
-
-		while ( Count < FrameCount && Frame >= StackBase && Frame < StackEnd )
-		{
-			Frames[Count++] = Frame[1];
-			StackBase = Frame;
-			Frame = (PULONG)Frame[0];
-		}
-	}
-	_SEH_HANDLE
-	{
-	}
-	_SEH_END;
-	return Count;
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-KeInitExceptions(VOID)
-{
-    ULONG i;
-    USHORT FlippedSelector;
-
-    /* Loop the IDT */
-    for (i = 0; i <= MAXIMUM_IDTVECTOR; i ++)
-    {
-        /* Save the current Selector */
-        FlippedSelector = KiIdt[i].Selector;
-
-        /* Flip Selector and Extended Offset */
-        KiIdt[i].Selector = KiIdt[i].ExtendedOffset;
-        KiIdt[i].ExtendedOffset = FlippedSelector;
-    }
-}
-
-VOID
-NTAPI
 KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                     PKEXCEPTION_FRAME ExceptionFrame,
                     PKTRAP_FRAME TrapFrame,
@@ -1091,10 +746,10 @@ NTSTATUS
 NTAPI
 KeRaiseUserException(IN NTSTATUS ExceptionCode)
 {
-   ULONG OldEip;
-   PKTHREAD Thread = KeGetCurrentThread();
+    ULONG OldEip;
+    PKTHREAD Thread = KeGetCurrentThread();
 
-   /* Make sure we can access the TEB */
+    /* Make sure we can access the TEB */
     _SEH_TRY
     {
         Thread->Teb->ExceptionCode = ExceptionCode;

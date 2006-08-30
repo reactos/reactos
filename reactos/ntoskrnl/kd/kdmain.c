@@ -105,8 +105,8 @@ KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                           BOOLEAN FirstChance,
                           BOOLEAN Gdb)
 {
-    /* Get out of here if the Debugger isn't enabled */
-    if (!KdDebuggerEnabled) return kdHandleException;
+    /* Get out of here if the Debugger isn't connected */
+    if (KdDebuggerNotPresent) return kdHandleException;
 
     /* FIXME:
      * Right now, the GDB wrapper seems to handle exceptions differntly

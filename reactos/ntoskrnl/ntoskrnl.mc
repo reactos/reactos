@@ -21,6 +21,58 @@ LanguageNames=(English=0x409:MSG00409)
 ;
 ; message definitions
 ;
+MessageId=0x7F
+Severity=Warning
+Facility=System
+SymbolicName=BUGCHECK_MESSAGE_INTRO
+Language=English
+A problem has been detected and ReactOS has been shut down to prevent damage
+to your computer.
+.
+
+MessageId=0x80
+Severity=Warning
+Facility=System
+SymbolicName=BUGCODE_ID_DRIVER
+Language=English
+The problem seems to be caused by the following file:
+
+.
+
+MessageId=0x81
+Severity=Warning
+Facility=System
+SymbolicName=PSS_MESSAGE_INTRO
+Language=English
+If this is the first time you've seen this Stop error screen,
+restart your computer. If this screen appears again, follow
+these steps:
+
+.
+
+MessageId=0x82
+Severity=Warning
+Facility=System
+SymbolicName=BUGCODE_PSS_MESSAGE
+Language=English
+Check to make sure any new hardware or software is properly installed.
+If this is a new installation, ask your hardware or software manufacturer
+for any ReactOS updates you might need.
+
+If problems continue, disable or remove any newly installed hardware
+or software. Disable BIOS memory options such as caching or shadowing.
+If you need to use Safe Mode to remove or disable components, restart
+your computer, press F8 to select Advanced Startup Options, and then
+select Safe Mode.
+.
+
+MessageId=0x83
+Severity=Warning
+Facility=System
+SymbolicName=BUGCHECK_TECH_INFO
+Language=English
+Technical information:
+.
 
 MessageId=0x0
 Severity=Success
@@ -267,7 +319,16 @@ Severity=Success
 Facility=System
 SymbolicName=KMODE_EXCEPTION_NOT_HANDLED
 Language=English
-KMODE_EXCEPTION_NOT_HANDLED
+Check to be sure you have adequate disk space. If a driver is
+identified in the Stop message, disable the driver or check
+with the manufacturer for driver updates. Try changing video
+adapters.
+
+Check with your hardware vendor for any BIOS updates. Disable
+BIOS memory options such as caching or shadowing. If you need
+to use Safe Mode to remove or disable components, restart your
+computer, press F8 to select Advanced Startup Options, and then
+select Safe Mode.
 .
 
 MessageId=0x1F
@@ -307,7 +368,10 @@ Severity=Success
 Facility=System
 SymbolicName=FAT_FILE_SYSTEM
 Language=English
-FAT_FILE_SYSTEM
+Disable or uninstall any anti-virus, disk defragmentation
+or backup utilities. Check your hard drive configuration,
+and check for any updated drivers. Run CHKDSK /F to check
+for hard drive corruption, and then restart your computer.
 .
 
 MessageId=0x24
@@ -395,7 +459,15 @@ Severity=Success
 Facility=System
 SymbolicName=DATA_BUS_ERROR
 Language=English
-DATA_BUS_ERROR
+Run system diagnostics supplied by your hardware manufacturer.
+In particular, run a memory check, and check for faulty or
+mismatched memory. Try changing video adapters.
+
+Check with your hardware vendor for any BIOS updates. Disable
+BIOS memory options such as caching or shadowing. If you need
+to use Safe Mode to remove or disable components, restart your
+computer, press F8 to select Advanced Startup Options, and then
+select Safe Mode.
 .
 
 MessageId=0x2F
@@ -502,7 +574,12 @@ Severity=Success
 Facility=System
 SymbolicName=NO_MORE_SYSTEM_PTES
 Language=English
-NO_MORE_SYSTEM_PTES
+Remove any recently installed software including backup
+utilities or disk-intensive applications.
+
+If you need to use Safe Mode to remove or disable components,
+restart your computer, press F8 to select Advanced Startup
+Options, and then select Safe Mode.
 .
 
 MessageId=0x40
@@ -581,7 +658,13 @@ Language=English
 STREAMS_INTERNAL_ERROR
 .
 
-
+MessageId=0x4C
+Severity=Success
+Facility=System
+SymbolicName=FATAL_UNHANDLED_HARD_ERROR
+Language=English
+FATAL_UNHANDLED_HARD_ERROR
+.
 
 MessageId=0x4D
 Severity=Success
@@ -942,7 +1025,11 @@ Severity=Success
 Facility=System
 SymbolicName=INACCESSIBLE_BOOT_DEVICE
 Language=English
-INACCESSIBLE_BOOT_DEVICE
+Check for viruses on your computer. Remove any newly installed
+hard drives or hard drive controllers. Check your hard drive
+to make sure it is properly configured and terminated.
+Run CHKDSK /F to check for hard drive corruption, and then
+restart your computer.
 .
 
 
@@ -960,7 +1047,14 @@ Severity=Success
 Facility=System
 SymbolicName=UNEXPECTED_KERNEL_MODE_TRAP
 Language=English
-UNEXPECTED_KERNEL_MODE_TRAP
+Run a system diagnostic utility supplied by your hardware manufacturer.
+In particular, run a memory check, and check for faulty or mismatched
+memory. Try changing video adapters.
+ 
+Disable or remove any newly installed hardware and drivers. Disable or
+remove any newly installed software. If you need to use Safe Mode to
+remove or disable components, restart your computer, press F8 to select
+Advanced Startup Options, and then select Safe Mode.
 .
 
 MessageId=0x7F
@@ -972,6 +1066,14 @@ Hardware malfunction
 .
 
 MessageId=0x80
+Severity=Success
+Facility=System
+SymbolicName=KERNEL_MODE_EXCEPTION_NOT_HANDLED
+Language=English
+KERNEL_MODE_EXCEPTION_NOT_HANDLED
+.
+
+MessageId=0x8E
 Severity=Success
 Facility=System
 SymbolicName=SPIN_LOCK_INIT_FAILURE
@@ -995,12 +1097,132 @@ Language=English
 INVALID_WORK_QUEUE_ITEM
 .
 
+MessageId=0xA5
+Severity=Success
+Facility=System
+SymbolicName=ACPI_BIOS_ERROR
+Language=English
+The BIOS in this system is not fully ACPI compliant.  Please contact your
+system vendor for an updated BIOS.
+.
+
+MessageId=0xBE
+Severity=Success
+Facility=System
+SymbolicName=ATTEMPTED_WRITE_TO_READONLY_MEMORY
+Language=English
+ATTEMPTED_WRITE_TO_READONLY_MEMORY
+
 MessageId=0xC2
 Severity=Success
 Facility=System
 SymbolicName=BAD_POOL_CALLER
 Language=English
 BAD_POOL_CALLER
+.
+
+MessageId=0xC3
+Severity=Success
+Facility=System
+SymbolicName=BUGCODE_PSS_MESSAGE_SIGNATURE
+Language=English
+A system file that is owned by ReactOS was replaced by an application
+running on your system.  The operating system detected this and tried to
+verify the validity of the file's signature.  The operating system found that
+the file signature is not valid and put the original, correct file back
+so that your operating system will continue to function properly.
+.
+
+MessageId=0xC5
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_CORRUPTED_EXPOOL
+Language=English
+A device driver has pool.
+ 
+Check to make sure any new hardware or software is properly installed.
+If this is a new installation, ask your hardware or software manufacturer
+for any ReactOS updates you might need.
+
+Run the driver verifier against any new (or suspect) drivers.
+If that doesn't reveal the corrupting driver, try enabling special pool.
+Both of these features are intended to catch the corruption at an earlier
+point where the offending driver can be identified.
+
+If you need to use Safe Mode to remove or disable components,
+restart your computer, press F8 to select Advanced Startup Options,
+and then select Safe Mode.
+.
+
+MessageId=0xCB
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS
+Language=English
+DRIVER_LEFT_LOCKED_PAGES_IN_PROCESS
+.
+
+MessageId=0xCE
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_UNLOADED_WITHOUT_CANCELLING_PENDING_OPERATIONS
+Language=English
+DRIVER_UNLOADED_WITHOUT_CANCELLING_PENDING_OPERATIONS
+.
+
+MessageId=0xD0
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_CORRUPTED_MMPOOL
+Language=English
+DRIVER_CORRUPTED_MMPOOL
+.
+
+MessageId=0xD1
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_IRQL_NOT_LESS_OR_EQUAL
+Language=English
+DRIVER_IRQL_NOT_LESS_OR_EQUAL
+.
+
+MessageId=0xD3
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_PORTION_MUST_BE_NONPAGED
+Language=English
+DRIVER_PORTION_MUST_BE_NONPAGED
+.
+
+MessageId=0xD8
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_USED_EXCESSIVE_PTES
+Language=English
+DRIVER_USED_EXCESSIVE_PTES
+.
+
+MessageId=0xD4
+Severity=Success
+Facility=System
+SymbolicName=SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
+Language=English
+SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
+.
+
+MessageId=0xE0
+Severity=Success
+Facility=System
+SymbolicName=ACPI_BIOS_FATAL_ERROR
+Language=English
+
+Your computer (BIOS) has reported that a component in your system is faulty and
+has prevented ReactOS from operating.  You can determine which component is
+faulty by running the diagnostic disk or tool that came with your computer.
+
+If you do not have this tool, you must contact your system vendor and report
+this error message to them.  They will be able to assist you in correcting this
+hardware problem thereby allowing ReactOS to operate.
 .
 
 MessageId=0xE1
@@ -1033,6 +1255,14 @@ Facility=System
 SymbolicName=WORKER_INVALID
 Language=English
 WORKER_INVALID
+.
+
+MessageId=0xE5
+Severity=Success
+Facility=System
+SymbolicName=POWER_FAILURE_SIMULATE
+Language=English
+POWER_FAILURE_SIMULATE
 .
 
 MessageId=0xFA
@@ -1099,6 +1329,19 @@ Facility=System
 SymbolicName=ACTIVE_EX_WORKER_THREAD_TERMINATION
 Language=English
 ACTIVE_EX_WORKER_THREAD_TERMINATION
+.
+
+MessageId=0xEA
+Severity=Success
+Facility=System
+SymbolicName=THREAD_STUCK_IN_DEVICE_DRIVER
+Language=English
+
+The device driver got stuck in an infinite loop. This usually indicates
+problem with the device itself or with the device driver programming the
+hardware incorrectly.
+
+Please check with your hardware device vendor for any driver updates.
 .
 
 MessageId=0xEF

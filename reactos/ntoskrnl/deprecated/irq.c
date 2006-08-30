@@ -142,7 +142,6 @@ static ISR_TABLE IsrTable[NR_IRQS][1];
 #endif
 
 #define TAG_ISR_LOCK     TAG('I', 'S', 'R', 'L')
-extern IDT_DESCRIPTOR KiIdt[256];
 
 /* FUNCTIONS ****************************************************************/
 
@@ -162,8 +161,8 @@ KeInitInterrupts (VOID)
     */
    for (i=0;i<NR_IRQS;i++)
      {
-        KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KGDT_R0_CODE<<16);
-        KiIdt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
+        ((IDT_DESCRIPTOR*)&KiIdt[IRQ_BASE+i])->a=(irq_handler[i]&0xffff)+(KGDT_R0_CODE<<16);
+        ((IDT_DESCRIPTOR*)&KiIdt[IRQ_BASE+i])->b=(irq_handler[i]&0xffff0000)+PRESENT+
                             I486_INTERRUPT_GATE;
 #ifdef CONFIG_SMP
         for (j = 0; j < MAXIMUM_PROCESSORS; j++)

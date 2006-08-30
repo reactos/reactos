@@ -75,6 +75,7 @@ extern PVOID Ki386IopmSaveArea;
 extern ULONG KeI386EFlagsAndMaskV86;
 extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
+extern KIDTENTRY KiIdt[];
 
 /* MACROS *************************************************************************/
 
@@ -144,6 +145,8 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 #define TIMER_WAIT_BLOCK 0x3L
 
 #define IOPM_OFFSET FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
+
+#define SIZE_OF_FX_REGISTERS 32
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
@@ -679,14 +682,6 @@ KeBugCheckWithTf(
 
 VOID
 STDCALL
-KiDumpTrapFrame(
-    PKTRAP_FRAME Tf,
-    ULONG ExceptionNr,
-    ULONG cr2
-);
-
-VOID
-STDCALL
 KeFlushCurrentTb(VOID);
 
 VOID
@@ -755,6 +750,12 @@ VOID
 NTAPI
 KeI386VdmInitialize(
     VOID
+);
+
+VOID
+NTAPI
+KiFlushNPXState(
+    IN FLOATING_SAVE_AREA *SaveArea
 );
 
 #include "ke_x.h"
