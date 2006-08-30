@@ -429,9 +429,7 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
             ProbeForWritePointer(ApcContext);
 
             /* Probe the I/O Status Block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
             if (Timeout)
             {
                 /* Probe and capture the timeout */

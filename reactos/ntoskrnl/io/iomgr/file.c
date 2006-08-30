@@ -1271,9 +1271,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
         _SEH_TRY
         {
             ProbeForWriteHandle(FileHandle);
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
             if (AllocationSize)
             {
                 SafeAllocationSize = ProbeForReadLargeInteger(AllocationSize);
@@ -2150,9 +2148,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O Status Block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
         }
         _SEH_HANDLE
         {

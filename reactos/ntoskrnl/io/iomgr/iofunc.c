@@ -218,9 +218,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         _SEH_TRY
         {
             /* Probe the status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Check if this is buffered I/O */
             if (AccessType == METHOD_BUFFERED)
@@ -826,9 +824,7 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O Status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
         }
         _SEH_HANDLE
         {
@@ -960,9 +956,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O STatus block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the buffer */
             if (BufferSize) ProbeForWrite(Buffer, BufferSize, sizeof(ULONG));
@@ -1104,9 +1098,7 @@ NtLockFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O STatus block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe and capture the large integers */
             CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
@@ -1263,9 +1255,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O Status Block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the file information */
             ProbeForWrite(FileInformation, Length, sizeof(ULONG));
@@ -1502,9 +1492,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O Status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the information */
             if (Length) ProbeForWrite(FileInformation, Length, 1);
@@ -1783,9 +1771,7 @@ NtReadFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the read buffer */
             ProbeForWrite(Buffer, Length, 1);
@@ -2046,9 +2032,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O Status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the information */
             if (Length) ProbeForRead(FileInformation, Length, 1);
@@ -2407,9 +2391,7 @@ NtUnlockFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O Status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe and capture the large integers */
             CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
@@ -2597,9 +2579,7 @@ NtWriteFile(IN HANDLE FileHandle,
             }
 
             /* Probe the status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the read buffer */
             ProbeForRead(Buffer, Length, 1);
@@ -2839,9 +2819,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O Status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the information */
             if (Length) ProbeForWrite(FsInformation, Length, 1);
@@ -2989,9 +2967,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Probe the I/O Status block */
-            ProbeForWrite(IoStatusBlock,
-                          sizeof(IO_STATUS_BLOCK),
-                          sizeof(ULONG));
+            ProbeForWriteIoStatusBlock(IoStatusBlock);
 
             /* Probe the information */
             if (Length) ProbeForRead(FsInformation, Length, 1);
