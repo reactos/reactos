@@ -2079,6 +2079,21 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
       continue;
     }
   }
+
+  /* Invalidate the header area */
+  if ( (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) &&
+       (psInfo->ppshheader.dwFlags & PSH_HEADER) )
+  {
+    HWND hwndLineHeader = GetDlgItem(hwndDlg, IDC_SUNKEN_LINEHEADER);
+    RECT r;
+
+    GetClientRect(hwndLineHeader, &r);
+    MapWindowPoints(hwndLineHeader, hwndDlg, (LPPOINT) &r, 2);
+    SetRect(&r, 0, 0, r.right + 1, r.top - 1);
+
+    InvalidateRect(hwndDlg, &r, TRUE);
+  }
+
   /*
    * Display the new page.
    */
@@ -3254,15 +3269,16 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
  	}
  	else
  	{
+            int margin;
  	    hbr = GetSysColorBrush(COLOR_WINDOW);
  	    FillRect(hdc, &rzone, hbr);
 
  	    /* Draw the header bitmap. It's always centered like a
  	     * common 49 x 49 bitmap. */
- 	    BitBlt(hdc, rzone.right - 49 - ((rzone.bottom - 49) / 2),
- 	           (rzone.bottom - 49) / 2,
- 	           bm.bmWidth, bm.bmHeight,
- 	           hdcSrc, 0, 0, SRCCOPY);
+            margin = (rzone.bottom - 49) / 2;
+ 	    BitBlt(hdc, rzone.right - 49 - margin, margin,
+                   min(bm.bmWidth, 49), min(bm.bmHeight, 49),
+                   hdcSrc, 0, 0, SRCCOPY);
 
  	    /* NOTE: Native COMCTL32 draws a white stripe over the bitmap
  	     * if its height is smaller than 49 pixels. Because the reason
@@ -3276,22 +3292,14 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	if (ppshpage->dwFlags & PSP_USEHEADERTITLE) {
 	    SetRect(&r, 20, 10, 0, 0);
 	    if (HIWORD(ppshpage->pszHeaderTitle))
-	    {
-		if (psInfo->unicode)
-		    DrawTextW(hdc, (LPWSTR)ppshpage->pszHeaderTitle,
-			      -1, &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);
-		else
-		    DrawTextA(hdc, (LPCSTR)ppshpage->pszHeaderTitle,
-			      -1, &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);
-	    }
+                DrawTextW(hdc, ppshpage->pszHeaderTitle, -1, &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);
 	    else
 	    {
 		nLength = LoadStringW(ppshpage->hInstance, (UINT_PTR)ppshpage->pszHeaderTitle,
 				      szBuffer, 256);
 		if (nLength != 0)
 		{
-		    DrawTextW(hdc, szBuffer, nLength,
-			      &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);
+		    DrawTextW(hdc, szBuffer, nLength, &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);
 		}
 	    }
 	}
@@ -3300,22 +3308,14 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	    SelectObject(hdc, psInfo->hFont);
 	    SetRect(&r, 40, 25, rzone.right - 69, rzone.bottom);
 	    if (HIWORD(ppshpage->pszHeaderTitle))
-	    {
-		if (psInfo->unicode)
-		    DrawTextW(hdc, (LPWSTR)ppshpage->pszHeaderSubTitle,
-			      -1, &r, DT_LEFT | DT_SINGLELINE);
-		else
-		    DrawTextA(hdc, (LPCSTR)ppshpage->pszHeaderSubTitle,
-			      -1, &r, DT_LEFT | DT_SINGLELINE);
-	    }
+                DrawTextW(hdc, ppshpage->pszHeaderSubTitle, -1, &r, DT_LEFT | DT_WORDBREAK);
 	    else
 	    {
 		nLength = LoadStringW(ppshpage->hInstance, (UINT_PTR)ppshpage->pszHeaderSubTitle,
 				      szBuffer, 256);
 		if (nLength != 0)
 		{
-		    DrawTextW(hdc, szBuffer, nLength,
-			      &r, DT_LEFT | DT_SINGLELINE);
+		    DrawTextW(hdc, szBuffer, nLength, &r, DT_LEFT | DT_WORDBREAK);
 		}
 	    }
 	}
@@ -3348,6 +3348,8 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	GetObjectW(psInfo->ppshheader.u4.hbmWatermark, sizeof(BITMAP), (LPVOID)&bm);
 	hbmp = SelectObject(hdcSrc, psInfo->ppshheader.u4.hbmWatermark);
 
+        /* The watermark is truncated to a width of 164 pixels */
+        r.right = min(r.right, 164);
 	BitBlt(hdc, 0, offsety, min(bm.bmWidth, r.right),
 	       min(bm.bmHeight, r.bottom), hdcSrc, 0, 0, SRCCOPY);
 

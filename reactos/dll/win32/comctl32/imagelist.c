@@ -2158,6 +2158,7 @@ ImageList_Replace (HIMAGELIST himl, INT i, HBITMAP hbmImage,
 {
     HDC hdcImage;
     BITMAP bmp;
+    HBITMAP hOldBitmap;
 
     TRACE("%p %d %p %p\n", himl, i, hbmImage, hbmMask);
 
@@ -2175,29 +2176,34 @@ ImageList_Replace (HIMAGELIST himl, INT i, HBITMAP hbmImage,
     GetObjectA (hbmImage, sizeof(BITMAP), (LPVOID)&bmp);
 
     /* Replace Image */
-    SelectObject (hdcImage, hbmImage);
+    hOldBitmap = SelectObject (hdcImage, hbmImage);
 
     StretchBlt (himl->hdcImage, i * himl->cx, 0, himl->cx, himl->cy,
                   hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
 
     if (himl->hbmMask)
     {
-        /* Replace Mask */
-        SelectObject (hdcImage, hbmMask);
+        HDC hdcTemp;
+        HBITMAP hOldBitmapTemp;
+
+        hdcTemp   = CreateCompatibleDC(0);
+        hOldBitmapTemp = SelectObject(hdcTemp, hbmMask);
 
         StretchBlt (himl->hdcMask, i * himl->cx, 0, himl->cx, himl->cy,
-                      hdcImage, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
-
+                      hdcTemp, 0, 0, bmp.bmWidth, bmp.bmHeight, SRCCOPY);
+        SelectObject(hdcTemp, hOldBitmapTemp);
+        DeleteDC(hdcTemp);
 
         /* Remove the background from the image
         */
-        StretchBlt (himl->hdcImage,
-            i*himl->cx, 0, himl->cx, himl->cy,
-            hdcImage,
-            0, 0, bmp.bmWidth, bmp.bmHeight,
+        BitBlt (himl->hdcImage,
+            i*himl->cx, 0, bmp.bmWidth, bmp.bmHeight,
+            himl->hdcMask,
+            i*himl->cx, 0,
             0x220326); /* NOTSRCAND */
     }
 
+    SelectObject (hdcImage, hOldBitmap);
     DeleteDC (hdcImage);
 
     return TRUE;
