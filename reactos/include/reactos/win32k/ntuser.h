@@ -118,11 +118,6 @@ NtUserDrawMenuBarTemp(
 
 UINT
 NTAPI
-NtUserEnumClipboardFormats(
-  UINT format);
-
-UINT
-NTAPI
 NtUserEnableMenuItem(
   HMENU hMenu,
   UINT uIDEnableItem,
@@ -1451,16 +1446,6 @@ NtUserRegisterHotKey(HWND hWnd,
 		     int id,
 		     UINT fsModifiers,
 		     UINT vk);
-		     
-UINT
-NTAPI
-NtUserRegisterClipboardFormat(
-    PUNICODE_STRING format);
-
-BOOL
-NTAPI
-NtUserGetLastInputInfo(
-    PLASTINPUTINFO plii);
 
 DWORD
 NTAPI
