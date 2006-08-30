@@ -478,65 +478,6 @@ static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists)
 	return GetLastError();
 }
 
-DWORD SHNotifyMoveFileA(LPCSTR src, LPCSTR dest)
-{
-	BOOL ret;
-	LPWSTR destW;
-	
-	ret = MoveFileA(src, dest);
-	if (!ret)
-	{
-	  DWORD dwAttr;
-
-	  SHELL32_AnsiToUnicodeBuf(dest, &destW, 0);
-	  dwAttr = SHFindAttrW(destW, FALSE);
-	  SHELL32_FreeUnicodeBuf(destW);
-	  if (INVALID_FILE_ATTRIBUTES == dwAttr)
-	  {
-	    /* Source file may be write protected or a system file */
-	    dwAttr = GetFileAttributesA(src);
-	    if (IsAttrib(dwAttr, FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM))
-	      if (SetFileAttributesA(src, dwAttr & ~(FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM)))
-	        ret = MoveFileA(src, dest);
-	  }
-	}
-	if (ret)
-	{
-	  //SHChangeNotify(SHCNE_RENAMEITEM, SHCNF_PATHA, src, dest);
-	  SHChangeNotify(SHCNE_CREATE, SHCNF_PATHA, dest, NULL);
-	  SHChangeNotify(SHCNE_DELETE, SHCNF_PATHA, src, NULL);
-	  return ERROR_SUCCESS;
-	}
-	return GetLastError();
-}
-
-/************************************************************************
- * SHNotifyCopyFile          [internal]
- *
- * Copies a file. Also triggers a change notify if one exists.
- *
- * PARAMS
- *  src           [I]   path to source file to move
- *  dest          [I]   path to target file to move to
- *  bFailIfExists [I]   if TRUE, the target file will not be overwritten if
- *                      a file with this name already exists
- *
- * RETURNS
- *  ERROR_SUCCESS if successful
- */
-DWORD SHNotifyCopyFileA(LPCSTR src, LPCSTR dest, BOOL bFailIfExists)
-{
-	BOOL ret;
-
-	ret = CopyFileA(src, dest, bFailIfExists);
-	if (ret)
-	{
-	  SHChangeNotify(SHCNE_CREATE, SHCNF_PATHA, dest, NULL);
-	  return ERROR_SUCCESS;
-	}
-	return GetLastError();
-}
-
 /*************************************************************************
  * SHCreateDirectory         [SHELL32.165]
  *
@@ -708,29 +649,7 @@ static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly)
 	}
 	return dwAttr;
 }
-/*
-DWORD SHFindAttrA(LPSTR pName, BOOL fileOnly)
-{
-	WIN32_FIND_DATAA wfd;
-	BOOL b_FileMask = fileOnly && (NULL != StrPBrkA(pName, wWildcardChars));
-	DWORD dwAttr = INVALID_FILE_ATTRIBUTES;
-	HANDLE hFind = FindFirstFileA(pName, &wfd);
 
-	if (INVALID_HANDLE_VALUE != hFind)
-	{
-	  do
-	  {
-	    if (b_FileMask && IsAttribDir(wfd.dwFileAttributes))
-	       continue;
-	    dwAttr = wfd.dwFileAttributes;
-	    break;
-	  }
-	  while (FindNextFileA(hFind, &wfd));
-	  FindClose(hFind);
-	}
-	return dwAttr;
-}
-*/
 /*************************************************************************
  *
  * SHFileStrICmp HelperFunction for SHFileOperationW

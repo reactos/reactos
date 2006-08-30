@@ -38,8 +38,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-extern BOOL fileMoving;
-
 /**************************************************************************
 *  IContextMenu Implementation
 */
@@ -217,198 +215,6 @@ static void DoNewFolder(
 	}
 }
 
-/***************************************************************************/
-static BOOL DoLink(LPCSTR pSrcFile, LPCSTR pDstFile)
-{
-	IShellLinkA *psl = NULL;
-	IPersistFile *pPf = NULL;
-	HRESULT hres;
-	WCHAR widelink[MAX_PATH];
-    BOOL ret = FALSE;   
-    
-	CoInitialize(0);
-	
-	hres = CoCreateInstance( &CLSID_ShellLink,
-				 NULL,
-				 CLSCTX_INPROC_SERVER,
-				 &IID_IShellLinkA,
-				 (LPVOID )&psl);
-				 
-    if(SUCCEEDED(hres)) {
-
-	    hres = IShellLinkA_QueryInterface(psl, &IID_IPersistFile,
-					     (LPVOID *)&pPf);
-	    if(FAILED(hres))
-	    {
-    		ERR("failed QueryInterface for IPersistFile %08lx\n", hres);
-    		goto fail;
-	    }
-
-        DPRINT1("shortcut point to %s\n", pSrcFile);
-        
-		hres = IShellLinkA_SetPath(psl, pSrcFile);
-
-	    if(FAILED(hres)) 
-	    {
-    		ERR("failed Set{IDList|Path} %08lx\n", hres);
-    		goto fail;
-	    }
-        
-	    MultiByteToWideChar(CP_ACP, 0, pDstFile, -1,
-				widelink, MAX_PATH);
-	    
-	    /* create the short cut */
-	    hres = IPersistFile_Save(pPf, widelink, TRUE);
-	    
-	    if(FAILED(hres)) 
-	    {
-    		ERR("failed IPersistFile::Save %08lx\n", hres);
-    		IPersistFile_Release(pPf);
-    		IShellLinkA_Release(psl);
-    		goto fail;
-	    }
-
-	    hres = IPersistFile_SaveCompleted(pPf, widelink);
-	    IPersistFile_Release(pPf);
-	    IShellLinkA_Release(psl);
-	    DPRINT1("shortcut %s has been created, result=%08lx\n",
-		  pDstFile, hres);
-		ret = TRUE;
-	}
-	else {
-	    DPRINT1("CoCreateInstance failed, hres=%08lx\n", hres);
-	}
-
- fail:
-    CoUninitialize();
-    return ret;
-}
-
-static BOOL MakeLink(
-    IContextMenu2 *iface)
-{
-	BgCmImpl *This = (BgCmImpl *)iface;
-	BOOL bSuccess = FALSE;
-	IDataObject * pda;
-
-	TRACE("\n");
-	
-	if(SUCCEEDED(OleGetClipboard(&pda)))
-	{
-	  STGMEDIUM medium;
-	  FORMATETC formatetc;
-
-	  TRACE("pda=%p\n", pda);
-
-	  /* Set the FORMATETC structure*/
-	  InitFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-        
-	  /* Get the pidls from IDataObject */
-	  if(SUCCEEDED(IDataObject_GetData(pda, &formatetc, &medium)))
-      {
-	    LPITEMIDLIST * apidl;
-	    LPITEMIDLIST pidl;
-	    IShellFolder *psfFrom = NULL, *psfDesktop;
-
-	    LPIDA lpcida = GlobalLock(medium.u.hGlobal);
-	    TRACE("cida=%p\n", lpcida);
-
-	    apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
-        
-	    /* bind to the source shellfolder */
-	    SHGetDesktopFolder(&psfDesktop);
-	    if(psfDesktop)
-	    {
-	      IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfFrom);
-	      IShellFolder_Release(psfDesktop);
-	    }
-
-	    if (psfFrom)
-	    {
-	      /* get source and destination shellfolder */
-	      IPersistFolder2 *ppfdst = NULL; 
-	      IPersistFolder2 *ppfsrc = NULL;
-	      IShellFolder_QueryInterface(This->pSFParent, &IID_IPersistFolder2, (LPVOID*)&ppfdst);
-	      IShellFolder_QueryInterface(psfFrom, &IID_IPersistFolder2, (LPVOID*)&ppfsrc);
-	      
-	      
-	      DPRINT1("[%p,%p]\n",ppfdst,ppfsrc);
-          
-	      /* do the link/s */
-	      /* hack to get desktop path */
-	      if ( (ppfdst && ppfsrc) || (This->bDesktop && ppfsrc) ) 
-	      {
-	        
-            int i;
-            char szSrcPath[MAX_PATH];
-            char szDstPath[MAX_PATH];	        
-            BOOL ret = FALSE;
-            LPITEMIDLIST pidl2;
-            char filename[MAX_PATH];
-            char linkFilename[MAX_PATH];
-            char srcFilename[MAX_PATH];
-            
-            DbgPrint("&&&");
-	        IPersistFolder2_GetCurFolder(ppfsrc, &pidl2);
-	        SHGetPathFromIDListA (pidl2, szSrcPath);
-	        
-    	      if (This->bDesktop)
-    	      {
-    	         SHGetSpecialFolderLocation(0, CSIDL_DESKTOPDIRECTORY, &pidl2);
-    	         SHGetPathFromIDListA (pidl2, szDstPath);
-    	      }
-    	      else
-    	      {
-    	        IPersistFolder2_GetCurFolder(ppfdst, &pidl2);
-    	        SHGetPathFromIDListA (pidl2, szDstPath);
-              }
-	        
-	        
-	        for (i = 0; i < lpcida->cidl; i++) 
-	        {
-                _ILSimpleGetText (apidl[i], filename, MAX_PATH);
-                
-                DbgPrint("filename %s\n", filename);
-                
-	            lstrcpyA(linkFilename, szDstPath);
-	            PathAddBackslashA(linkFilename);
-	            //lstrcatA(linkFilename, "Shortcut to ");
-                lstrcatA(linkFilename, filename);
-                lstrcatA(linkFilename, ".lnk");
-                
-                DbgPrint("linkFilename %s\n", linkFilename);
-                
-                lstrcpyA(srcFilename, szSrcPath);
-                PathAddBackslashA(srcFilename);
-	            lstrcatA(srcFilename, filename);
-	            
-	            DbgPrint("srcFilename %s\n", srcFilename);
-	            
-	            ret = DoLink(srcFilename, linkFilename);
-    	        
-    	        if (ret)
-    	        {
-                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHA, linkFilename, NULL);	            
-    	        }
-	        }
-	        
-	      }
-	      if(ppfdst) IPersistFolder2_Release(ppfdst);
-	      if(ppfsrc) IPersistFolder2_Release(ppfsrc);
-	      IShellFolder_Release(psfFrom);
-	    }
-
-	    _ILFreeaPidl(apidl, lpcida->cidl);
-	    SHFree(pidl);
-
-	    /* release the medium*/
-	    ReleaseStgMedium(&medium);
-	  }
-	  IDataObject_Release(pda);
-	}
-	return bSuccess;
-
-}
 /**************************************************************************
 * DoPaste
 */
@@ -420,19 +226,19 @@ static BOOL DoPaste(
 	IDataObject * pda;
 
 	TRACE("\n");
-	
+
 	if(SUCCEEDED(OleGetClipboard(&pda)))
 	{
 	  STGMEDIUM medium;
 	  FORMATETC formatetc;
 
 	  TRACE("pda=%p\n", pda);
-	  
+
 	  /* Set the FORMATETC structure*/
 	  InitFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
 
 	  /* Get the pidls from IDataObject */
-	  if(SUCCEEDED(IDataObject_GetData(pda, &formatetc, &medium)))
+	  if(SUCCEEDED(IDataObject_GetData(pda,&formatetc,&medium)))
           {
 	    LPITEMIDLIST * apidl;
 	    LPITEMIDLIST pidl;
@@ -442,7 +248,7 @@ static BOOL DoPaste(
 	    TRACE("cida=%p\n", lpcida);
 
 	    apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
-	    
+
 	    /* bind to the source shellfolder */
 	    SHGetDesktopFolder(&psfDesktop);
 	    if(psfDesktop)
@@ -455,28 +261,17 @@ static BOOL DoPaste(
 	    {
 	      /* get source and destination shellfolder */
 	      ISFHelper *psfhlpdst, *psfhlpsrc;
-	      if (This->bDesktop)
-	      {
-	        /* unimplemented*/
-	        SHGetDesktopFolder(&psfDesktop);
-	        IFSFolder_Constructor(psfDesktop, &IID_ISFHelper, (LPVOID*)&psfhlpdst);
-	        IShellFolder_QueryInterface(psfhlpdst, &IID_ISFHelper, (LPVOID*)&psfhlpdst);
-	      }
-	      else
-	      {
-	        IShellFolder_QueryInterface(This->pSFParent, &IID_ISFHelper, (LPVOID*)&psfhlpdst);
-	      }
-	      
+	      IShellFolder_QueryInterface(This->pSFParent, &IID_ISFHelper, (LPVOID*)&psfhlpdst);
 	      IShellFolder_QueryInterface(psfFrom, &IID_ISFHelper, (LPVOID*)&psfhlpsrc);
-            
-            DPRINT1("[%p,%p]\n",psfhlpdst,psfhlpsrc);
-            
+
 	      /* do the copy/move */
 	      if (psfhlpdst && psfhlpsrc)
 	      {
 	        ISFHelper_CopyItems(psfhlpdst, psfFrom, lpcida->cidl, (LPCITEMIDLIST*)apidl);
+		/* FIXME handle move
+		ISFHelper_DeleteItems(psfhlpsrc, lpcida->cidl, apidl);
+		*/
 	      }
-	      
 	      if(psfhlpdst) ISFHelper_Release(psfhlpdst);
 	      if(psfhlpsrc) ISFHelper_Release(psfhlpsrc);
 	      IShellFolder_Release(psfFrom);
@@ -490,7 +285,30 @@ static BOOL DoPaste(
 	  }
 	  IDataObject_Release(pda);
 	}
+#if 0
+	HGLOBAL  hMem;
 
+	OpenClipboard(NULL);
+	hMem = GetClipboardData(CF_HDROP);
+
+	if(hMem)
+	{
+	  char * pDropFiles = (char *)GlobalLock(hMem);
+	  if(pDropFiles)
+	  {
+	    int len, offset = sizeof(DROPFILESTRUCT);
+
+	    while( pDropFiles[offset] != 0)
+	    {
+	      len = strlen(pDropFiles + offset);
+	      TRACE("%s\n", pDropFiles + offset);
+	      offset += len+1;
+	    }
+	  }
+	  GlobalUnlock(hMem);
+	}
+	CloseClipboard();
+#endif
 	return bSuccess;
 }
 
@@ -517,6 +335,7 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 	    IShellView_GetWindow(lpSV, &hWndSV);
 	  }
 	}
+
 	  if(HIWORD(lpcmi->lpVerb))
 	  {
 	    TRACE("%s\n",lpcmi->lpVerb);
@@ -552,10 +371,6 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 
 	      case FCIDM_SHVIEW_INSERT:
 	        DoPaste(iface);
-	        break;
-
-	      case FCIDM_SHVIEW_INSERTLINK:
-	        MakeLink(iface);
 	        break;
 
 	      case FCIDM_SHVIEW_PROPERTIES:

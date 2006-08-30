@@ -1154,8 +1154,6 @@ ISFHelper_fnAddFolder (ISFHelper * iface, HWND hwnd, LPCSTR lpName,
     return hres;
 }
 
-extern BOOL fileMoving;
-
 /****************************************************************************
  * ISFHelper_fnDeleteItems
  *
@@ -1170,7 +1168,7 @@ ISFHelper_fnDeleteItems (ISFHelper * iface, UINT cidl, LPCITEMIDLIST * apidl)
     BOOL bConfirm = TRUE;
 
     TRACE ("(%p)(%u %p)\n", This, cidl, apidl);
-    
+
     /* deleting multiple items so give a slightly different warning */
     if (cidl != 1) {
         char tmp[8];
@@ -1180,7 +1178,7 @@ ISFHelper_fnDeleteItems (ISFHelper * iface, UINT cidl, LPCITEMIDLIST * apidl)
             return E_FAIL;
         bConfirm = FALSE;
     }
-    
+
     for (i = 0; i < cidl; i++) {
         strcpy (szPath, This->sPathTarget);
         PathAddBackslashA (szPath);
@@ -1238,8 +1236,7 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
         LPITEMIDLIST pidl;
 
         if (SUCCEEDED (IPersistFolder2_GetCurFolder (ppf2, &pidl))) {
-            for (i = 0; i < cidl; i++) 
-            {
+            for (i = 0; i < cidl; i++) {
                 SHGetPathFromIDListA (pidl, szSrcPath);
                 PathAddBackslashA (szSrcPath);
                 _ILSimpleGetText (apidl[i], szSrcPath + strlen (szSrcPath),
@@ -1247,43 +1244,9 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
 
                 strcpy (szDstPath, This->sPathTarget);
                 PathAddBackslashA (szDstPath);
-                _ILSimpleGetText (apidl[i], szDstPath + strlen (szDstPath), MAX_PATH);
-                DPRINT1 ("copy %s to %s\n", szSrcPath, szDstPath);
-                
-                if (fileMoving)
-                {
-                    fileMoving = FALSE;
-                    SHNotifyMoveFileA(szSrcPath, szDstPath);
-                }
-                else
-                {
-                    SHNotifyCopyFileA(szSrcPath, szDstPath, TRUE);
-                }
-               
-                /*
-                SHFILEOPSTRUCTA op;
-                
-                if (fileMoving)
-                {
-                    op.wFunc = FO_MOVE;
-                    fileMoving = FALSE;
-                }
-                else
-                {
-                    op.wFunc = FO_COPY;
-                }
-                
-                op.pTo = szDstPath;
-                op.pFrom = szSrcPath;
-                op.fFlags = FOF_SIMPLEPROGRESS;                
-                op.hwnd = NULL;
-                op.hNameMappings = NULL;
-                op.lpszProgressTitle = NULL;
-                
-                UINT bRes = SHFileOperationA(&op);
-                DbgPrint("CopyItems SHFileOperationA 0x%08x\n", bRes);
-                */
-                
+                _ILSimpleGetText (apidl[i], szDstPath + strlen (szDstPath),
+                 MAX_PATH);
+                MESSAGE ("would copy %s to %s\n", szSrcPath, szDstPath);
             }
             SHFree (pidl);
         }
@@ -1595,11 +1558,9 @@ static HRESULT WINAPI
 ISFDropTarget_Drop (IDropTarget * iface, IDataObject * pDataObject,
                     DWORD dwKeyState, POINTL pt, DWORD * pdwEffect)
 {
-    DWORD dwEffect = *pdwEffect;
-    
     IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
-    FIXME ("(%p) object dropped(%d)\n", This, dwKeyState);
+    FIXME ("(%p) object dropped\n", This);
 
     return E_NOTIMPL;
 }
