@@ -812,27 +812,32 @@ NTSTATUS
 NTAPI
 KeRaiseUserException(IN NTSTATUS ExceptionCode)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
     ULONG OldEip;
-    PKTHREAD Thread = KeGetCurrentThread();
+    PTEB Teb = KeGetCurrentThread()->Teb;
+    PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
 
     /* Make sure we can access the TEB */
     _SEH_TRY
     {
-        Thread->Teb->ExceptionCode = ExceptionCode;
+        /* Set the exception code */
+        Teb->ExceptionCode = ExceptionCode;
     }
     _SEH_HANDLE
     {
-        return(ExceptionCode);
+        /* Save exception code */
+        Status = ExceptionCode;
     }
     _SEH_END;
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the old EIP */
-    OldEip = Thread->TrapFrame->Eip;
+    OldEip = TrapFrame->Eip;
 
     /* Change it to the user-mode dispatcher */
-    Thread->TrapFrame->Eip = (ULONG_PTR)KeRaiseUserExceptionDispatcher;
+    TrapFrame->Eip = (ULONG_PTR)KeRaiseUserExceptionDispatcher;
 
     /* Return the old EIP */
-    return((NTSTATUS)OldEip);
+    return (NTSTATUS)OldEip;
 }
 
