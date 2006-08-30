@@ -72,6 +72,8 @@ VOID INIT_FUNCTION _main(ULONG MultiBootMagic, PROS_LOADER_PARAMETER_BLOCK _Load
 #pragma alloc_text(INIT, _main)
 #endif
 
+extern LDR_DATA_TABLE_ENTRY HalModuleObject;
+
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -239,6 +241,17 @@ _main(ULONG MultiBootMagic,
                             (PVOID)DriverBase,
                             (PVOID)KERNEL_BASE,
                             &DriverSize);
+
+    //
+    //
+    // HACK HACK HACK WHEN WILL YOU PEOPLE FIX FREELDR?!?!?!
+    // FREELDR SENDS US AN ***INVALID*** HAL PE HEADER!!!
+    // WE READ IT IN LdrInitModuleManagement ABOVE!!!
+    // WE SET .SizeOfImage TO A *GARBAGE* VALUE!!!
+    //
+    // This dirty hack fixes it, and should make symbol lookup work too.
+    //
+    HalModuleObject.SizeOfImage =  RtlImageNtHeader((PVOID)HalModuleObject.DllBase)->OptionalHeader.SizeOfImage;
 
     /* Increase the last kernel address with the size of HAL */
     LastKernelAddress += PAGE_ROUND_UP(DriverSize);
