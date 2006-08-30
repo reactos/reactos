@@ -24,12 +24,10 @@ HalReleaseDisplayOwnership(
     VOID
 );
 
-extern FAST_MUTEX KernelAddressSpaceLock;
-
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY BugcheckCallbackListHead = {NULL,NULL};
-LIST_ENTRY BugcheckReasonCallbackListHead = {NULL,NULL};
+LIST_ENTRY BugcheckCallbackListHead;
+LIST_ENTRY BugcheckReasonCallbackListHead;
 ULONG KeBugCheckActive, KeBugCheckOwner;
 LONG KeBugCheckOwnerRecursionCount;
 PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
@@ -37,13 +35,6 @@ ULONG KeBugCheckCount = 1;
 ULONG KiHardwareTrigger;
 PUNICODE_STRING KiBugCheckDriver;
 ULONG_PTR KiBugCheckData[5];
-
-typedef PCHAR
-(NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
-    IN PUNICODE_STRING Unicode,
-    IN PCHAR Ansi,
-    IN ULONG Length
-);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

@@ -49,6 +49,13 @@ typedef struct _DISPATCH_INFO
     PKINTERRUPT_ROUTINE *FlatDispatch;
 } DISPATCH_INFO, *PDISPATCH_INFO;
 
+typedef PCHAR
+(NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
+    IN PUNICODE_STRING Unicode,
+    IN PCHAR Ansi,
+    IN ULONG Length
+);
+
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KPRCB;
@@ -76,6 +83,7 @@ extern ULONG KeI386EFlagsAndMaskV86;
 extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
 extern KIDTENTRY KiIdt[];
+extern FAST_MUTEX KernelAddressSpaceLock;
 
 /* MACROS *************************************************************************/
 

@@ -299,11 +299,6 @@ BadThread:
     /* Save the Exception list */
     push [ebx+KPCR_EXCEPTION_LIST]
 
-#if WE_DO_NOT_SPEAK_ABOUT_THE_V86_HACK // V86 HACK
-    mov ecx, [ebx+KPCR_TSS]
-    push [ecx+KTSS_ESP0]
-#endif
-
     /* DPC shouldn't be active */
     cmp byte ptr [ebx+KPCR_PRCB_DPC_ROUTINE_ACTIVE], 0
     jnz BugCheckDpc
@@ -397,11 +392,6 @@ SameProcess:
     /* Increase context switches */
     inc dword ptr [esi+KTHREAD_CONTEXT_SWITCHES]
     //inc dword ptr [esi+KPRC_PRCB_CONTEXT_SWITCHES]
-
-#if WE_DO_NOT_SPEAK_ABOUT_THE_V86_HACK
-    mov ebp, [ebx+KPCR_TSS]
-    pop [ebp+KTSS_ESP0]
-#endif
 
     /* Restore exception list */
     pop [ebx+KPCR_EXCEPTION_LIST]

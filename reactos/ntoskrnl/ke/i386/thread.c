@@ -14,9 +14,6 @@
 
 typedef struct _KSHARED_CTXSWITCH_FRAME
 {
-#if WE_DO_NOT_SPEAK_ABOUT_THE_V86_HACK // V86 HACK
-    ULONG_PTR Esp0;
-#endif
     PVOID ExceptionList;
     KIRQL WaitIrql;
     PVOID RetEip;
@@ -236,11 +233,6 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
     CtxSwitchFrame->RetEip = KiThreadStartup;
     CtxSwitchFrame->WaitIrql = APC_LEVEL;
     CtxSwitchFrame->ExceptionList = (PVOID)0xFFFFFFFF;
-#if WE_DO_NOT_SPEAK_ABOUT_THE_V86_HACK // V86 HACK
-    CtxSwitchFrame->Esp0 = (ULONG_PTR)Thread->InitialStack -
-                                      sizeof(FX_SAVE_AREA) -
-                                      0x10;
-#endif
 
     /* Save back the new value of the kernel stack. */
     DPRINT("Final Kernel Stack: %x \n", CtxSwitchFrame);
