@@ -290,13 +290,12 @@ return (int)NtUserCallOneParam((DWORD) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDT
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetLastInputInfo(PLASTINPUTINFO plii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserGetLastInputInfo(plii);
 }
 
 
