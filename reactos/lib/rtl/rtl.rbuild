@@ -35,6 +35,10 @@
 			<file>ftol_asm.s</file>
 			<file>log_asm.s</file>
 			<file>random_asm.S</file>
+                  <file>memgeni386.c</file>
+                  <file>rtlushortbyteswap.s</file>
+                  <file>rtlulongbyteswap.s</file>
+                  <file>rtlulonglongbyteswap.s</file>
 			<file>pow_asm.s</file>
 			<file>prefetchmemory_asm.s</file>
 			<file>res_asm.s</file>
@@ -42,8 +46,13 @@
 			<file>sqrt_asm.s</file>
 			<file>tan_asm.s</file>			
 			<file>zeromemory_asm.s</file>
-		</directory>
+		</directory>           
 	</if>
+
+      <ifnot property="ARCH" value="i386">
+             <file>memgen.c</file>
+      </ifnot>
+
 	<file>access.c</file>
 	<file>acl.c</file>
 	<file>atom.c</file>
