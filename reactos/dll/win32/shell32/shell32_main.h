@@ -148,6 +148,8 @@ void FreeChangeNotifications(void);
 BOOL SHELL_DeleteDirectoryA(LPCSTR pszDir, BOOL bShowUI);
 BOOL SHELL_DeleteFileA(LPCSTR pszFile, BOOL bShowUI);
 BOOL SHELL_ConfirmDialog(int nKindOfDialog, LPCSTR szDir);
+DWORD SHNotifyMoveFileA(LPCSTR src, LPCSTR dest);
+DWORD SHNotifyCopyFileA(LPCSTR src, LPCSTR dest, BOOL bFailIfExists);
 
 /* 16-bit functions */
 void        WINAPI DragAcceptFiles16(HWND16 hWnd, BOOL16 b);

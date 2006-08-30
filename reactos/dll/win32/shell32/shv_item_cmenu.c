@@ -39,6 +39,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/* ugly hack for cut&psate files */
+BOOL fileMoving = FALSE;
+
+
 /**************************************************************************
 *  IContextMenu Implementation
 */
@@ -98,7 +102,7 @@ IContextMenu2 *ISvItemCm_Constructor(LPSHELLFOLDER pSFParent, LPCITEMIDLIST pidl
 	{
 	  cm->bAllValues &= (_ILIsValue(apidl[u]) ? 1 : 0);
 	}
-
+    
 	TRACE("(%p)->()\n",cm);
 
 	return (IContextMenu2*)cm;
@@ -374,9 +378,10 @@ static BOOL DoCopyOrCut(
 	LPDATAOBJECT    lpDo;
 
 	TRACE("(%p)->(wnd=%p,bCut=0x%08x)\n",This, hwnd, bCut);
-
+    fileMoving = bCut;
+    
 	/* get the active IShellView */
-	if ((lpSB = (LPSHELLBROWSER)SendMessageA(hwnd, CWM_GETISHELLBROWSER,0,0)))
+	if ((lpSB = (LPSHELLBROWSER)SendMessageA(hwnd, CWM_GETISHELLBROWSER, 0, 0)))
 	{
 	  if (SUCCEEDED(IShellBrowser_QueryActiveShellView(lpSB, &lpSV)))
 	  {
