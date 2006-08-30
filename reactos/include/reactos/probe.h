@@ -8,6 +8,7 @@
 static const UNICODE_STRING __emptyUnicodeString = {0};
 static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
 static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
+static const IO_STATUS_BLOCK __emptyIoStatusBlock = {{0}, 0};
 
 #if defined(_WIN32K_)
 /*
@@ -40,20 +41,20 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #define ProbeForWriteInt(Ptr) ProbeForWriteGenericType(Ptr, INT)
 #define ProbeForWriteUlonglong(Ptr) ProbeForWriteGenericType(Ptr, ULONGLONG)
 #define ProbeForWriteLonglong(Ptr) ProbeForWriteGenericType(Ptr, LONGLONG)
-#define ProbeForWriteLonglong(Ptr) ProbeForWriteGenericType(Ptr, LONGLONG)
 #define ProbeForWritePointer(Ptr) ProbeForWriteGenericType(Ptr, PVOID)
 #define ProbeForWriteHandle(Ptr) ProbeForWriteGenericType(Ptr, HANDLE)
 #define ProbeForWriteLangid(Ptr) ProbeForWriteGenericType(Ptr, LANGID)
 #define ProbeForWriteSize_t(Ptr) ProbeForWriteGenericType(Ptr, SIZE_T)
-#define ProbeForWriteLargeInteger(Ptr) ProbeForWriteGenericType(&(Ptr)->QuadPart, LONGLONG)
-#define ProbeForWriteUlargeInteger(Ptr) ProbeForWriteGenericType(&(Ptr)->QuadPart, ULONGLONG)
-#define ProbeForWriteUnicodeString(Ptr) ProbeForWriteGenericType(Ptr, UNICODE_STRING)
+#define ProbeForWriteLargeInteger(Ptr) ProbeForWriteGenericType(&((PLARGE_INTEGER)Ptr)->QuadPart, LONGLONG)
+#define ProbeForWriteUlargeInteger(Ptr) ProbeForWriteGenericType(&((PULARGE_INTEGER)Ptr)->QuadPart, ULONGLONG)
+#define ProbeForWriteUnicodeString(Ptr) ProbeForWriteGenericType((PUNICODE_STRING)Ptr, UNICODE_STRING)
+#define ProbeForWriteIoStatusBlock(Ptr) ProbeForWriteGenericType((PIO_STATUS_BLOCK)Ptr, IO_STATUS_BLOCK)
 
 #define ProbeForReadGenericType(Ptr, Type, Default)                            \
     (((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||                \
 	 (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?   \
 	     ExRaiseStatus (STATUS_ACCESS_VIOLATION), Default :                    \
-	     *(Type *)(Ptr))
+	     *(const volatile Type *)(Ptr))
 
 #define ProbeForReadBoolean(Ptr) ProbeForReadGenericType(Ptr, BOOLEAN, FALSE)
 #define ProbeForReadUchar(Ptr) ProbeForReadGenericType(Ptr, UCHAR, 0)
@@ -70,9 +71,10 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 #define ProbeForReadHandle(Ptr) ProbeForReadGenericType(Ptr, HANDLE, NULL)
 #define ProbeForReadLangid(Ptr) ProbeForReadGenericType(Ptr, LANGID, 0)
 #define ProbeForReadSize_t(Ptr) ProbeForReadGenericType(Ptr, SIZE_T, 0)
-#define ProbeForReadLargeInteger(Ptr) ProbeForReadGenericType(Ptr, LARGE_INTEGER, __emptyLargeInteger)
-#define ProbeForReadUlargeInteger(Ptr) ProbeForReadGenericType(Ptr, ULARGE_INTEGER, __emptyULargeInteger)
-#define ProbeForReadUnicodeString(Ptr) ProbeForReadGenericType(Ptr, UNICODE_STRING, __emptyUnicodeString)
+#define ProbeForReadLargeInteger(Ptr) ProbeForReadGenericType((const LARGE_INTEGER *)(Ptr), LARGE_INTEGER, __emptyLargeInteger)
+#define ProbeForReadUlargeInteger(Ptr) ProbeForReadGenericType((const ULARGE_INTEGER *)(Ptr), ULARGE_INTEGER, __emptyULargeInteger)
+#define ProbeForReadUnicodeString(Ptr) ProbeForReadGenericType((const UNICODE_STRING *)(Ptr), UNICODE_STRING, __emptyUnicodeString)
+#define ProbeForReadIoStatusBlock(Ptr) ProbeForReadGenericType((const IO_STATUS_BLOCK *)(Ptr), IO_STATUS_BLOCK, __emptyIoStatusBlock)
 
 #define ProbeAndZeroHandle(Ptr) \
     do {                                                                       \
@@ -86,12 +88,61 @@ VOID NTAPI W32kRaiseStatus(NTSTATUS Status);
 /*
  * Inlined Probing Macros
  */
+
+#if defined(_WIN32K_)
+static __inline
+VOID
+NTAPI
+ProbeArrayForRead(IN const VOID *ArrayPtr,
+                  IN ULONG ItemSize,
+                  IN ULONG ItemCount,
+                  IN ULONG Alignment)
+{
+    ULONG ArraySize;
+
+    /* Check for integer overflow */
+    ArraySize = ItemSize * ItemCount;
+    if (ArraySize / ItemSize != ItemCount)
+    {
+        RtlRaiseStatus (STATUS_INVALID_PARAMETER);
+    }
+
+    /* Probe the array */
+    ProbeForRead(ArrayPtr,
+                 ArraySize,
+                 Alignment);
+}
+
+static __inline
+VOID
+NTAPI
+ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
+                   IN ULONG ItemSize,
+                   IN ULONG ItemCount,
+                   IN ULONG Alignment)
+{
+    ULONG ArraySize;
+
+    /* Check for integer overflow */
+    ArraySize = ItemSize * ItemCount;
+    if (ArraySize / ItemSize != ItemCount)
+    {
+        RtlRaiseStatus (STATUS_INVALID_PARAMETER);
+    }
+
+    /* Probe the array */
+    ProbeForWrite(ArrayPtr,
+                  ArraySize,
+                  Alignment);
+}
+#endif /* _WIN32K_ */
+
 static __inline
 NTSTATUS
 NTAPI
 ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                              IN KPROCESSOR_MODE CurrentMode,
-                             IN PUNICODE_STRING UnsafeSrc)
+                             IN const UNICODE_STRING *UnsafeSrc)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     WCHAR *Buffer = NULL;
