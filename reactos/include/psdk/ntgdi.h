@@ -3620,4 +3620,11 @@ NtGdiMakeObjectUnXferable(
     IN HANDLE h
 );
 
+W32KAPI
+DWORD
+APIENTRY
+NtGdiGetLayout(
+    IN HDC hdc
+);
+
 #endif
