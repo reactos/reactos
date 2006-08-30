@@ -580,7 +580,7 @@ UINT WINAPI MsiSetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 /***********************************************************************
 * MsiGetFeatureStateA   (MSI.@)
 */
-UINT WINAPI MsiGetFeatureStateA(MSIHANDLE hInstall, LPSTR szFeature,
+UINT WINAPI MsiGetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
                   INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
 {
     LPWSTR szwFeature = NULL;
@@ -595,7 +595,7 @@ UINT WINAPI MsiGetFeatureStateA(MSIHANDLE hInstall, LPSTR szFeature,
     return rc;
 }
 
-UINT MSI_GetFeatureStateW(MSIPACKAGE *package, LPWSTR szFeature,
+UINT MSI_GetFeatureStateW(MSIPACKAGE *package, LPCWSTR szFeature,
                   INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
 {
     MSIFEATURE *feature;
@@ -618,7 +618,7 @@ UINT MSI_GetFeatureStateW(MSIPACKAGE *package, LPWSTR szFeature,
 /***********************************************************************
 * MsiGetFeatureStateW   (MSI.@)
 */
-UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPWSTR szFeature,
+UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
                   INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
 {
     MSIPACKAGE* package;
@@ -653,7 +653,7 @@ UINT WINAPI MsiSetComponentStateA(MSIHANDLE hInstall, LPCSTR szComponent,
 /***********************************************************************
  * MsiGetComponentStateA (MSI.@)
  */
-UINT WINAPI MsiGetComponentStateA(MSIHANDLE hInstall, LPSTR szComponent,
+UINT WINAPI MsiGetComponentStateA(MSIHANDLE hInstall, LPCSTR szComponent,
                   INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
 {
     LPWSTR szwComponent= NULL;
@@ -684,7 +684,7 @@ static UINT MSI_SetComponentStateW(MSIPACKAGE *package, LPCWSTR szComponent,
     return ERROR_SUCCESS;
 }
 
-UINT MSI_GetComponentStateW(MSIPACKAGE *package, LPWSTR szComponent,
+UINT MSI_GetComponentStateW(MSIPACKAGE *package, LPCWSTR szComponent,
                   INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
 {
     MSICOMPONENT *comp;
@@ -727,7 +727,7 @@ UINT WINAPI MsiSetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
 /***********************************************************************
  * MsiGetComponentStateW (MSI.@)
  */
-UINT WINAPI MsiGetComponentStateW(MSIHANDLE hInstall, LPWSTR szComponent,
+UINT WINAPI MsiGetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
                   INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
 {
     MSIPACKAGE* package;
