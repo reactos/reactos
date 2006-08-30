@@ -25,7 +25,6 @@
 //  - Use Object Type Mutex/Lock.
 //
 // Ke:
-//  - Clean up exp.c (remove all stack functions and use RtlWalkFrameChain/RtlCaptureStackBacktrace)
 //  - Sanitize some context fields during conversions
 //  - Add PSEH handler when an exception occurs in an exception (KiCopyExceptionRecord).
 //  - Forward exceptions to user-mode debugger.

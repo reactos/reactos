@@ -173,6 +173,18 @@ RtlpCheckLogException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Exception logging is not done in user-mode */
 }
 
+BOOLEAN
+NTAPI
+RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
+                       IN ULONG_PTR *StackBegin,
+                       IN ULONG_PTR *StackEnd)
+{
+    /* FIXME: Verify */
+    *StackBegin = (ULONG_PTR)NtCurrentTeb()->Tib.StackLimit;
+    *StackEnd = (ULONG_PTR)NtCurrentTeb()->Tib.StackBase;
+    return TRUE;
+}
+
 /* RTL Atom Tables ************************************************************/
 
 typedef struct _RTL_ATOM_HANDLE

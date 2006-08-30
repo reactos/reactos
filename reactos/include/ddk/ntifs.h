@@ -3676,6 +3676,16 @@ RtlAllocateHeap (
 );
 
 NTSYSAPI
+USHORT
+NTAPI
+RtlCaptureStackBackTrace (
+    IN ULONG FramesToSkip,
+    IN ULONG FramesToCapture,
+    OUT PVOID *BackTrace,
+    OUT PULONG BackTraceHash OPTIONAL
+);
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCompressBuffer (

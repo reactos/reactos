@@ -83,83 +83,22 @@ KiRosPrintAddress(PVOID address)
     return(FALSE);
 }
 
-ULONG
-NTAPI
-KeRosGetStackFrames(PULONG Frames,
-                    ULONG FrameCount)
-{
-    ULONG Count = 0;
-    PULONG StackBase, StackEnd, Frame;
-    MEMORY_BASIC_INFORMATION mbi;
-    ULONG ResultLength = sizeof(mbi);
-    NTSTATUS Status;
-
-    _SEH_TRY
-    {
-#if defined __GNUC__
-        __asm__("mov %%ebp, %0" : "=r" (Frame) : );
-#elif defined(_MSC_VER)
-        __asm mov [Frame], ebp
-#endif
-
-            Status = MiQueryVirtualMemory (
-            (HANDLE)-1,
-            Frame,
-            MemoryBasicInformation,
-            &mbi,
-            sizeof(mbi),
-            &ResultLength );
-        if ( !NT_SUCCESS(Status) )
-        {
-            DPRINT1("Can't get stack frames: MiQueryVirtualMemory() failed: %x\n", Status );
-            return 0;
-        }
-
-        StackBase = Frame;
-        StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
-
-        while ( Count < FrameCount && Frame >= StackBase && Frame < StackEnd )
-        {
-            Frames[Count++] = Frame[1];
-            StackBase = Frame;
-            Frame = (PULONG)Frame[0];
-        }
-    }
-    _SEH_HANDLE
-    {
-    }
-    _SEH_END;
-    return Count;
-}
-
-VOID
-NTAPI
-KeDumpStackFrames(PULONG Frame)
-{
-    /* Just call the extended version */
-    KeRosDumpStackFrames(Frame, 0);
-}
-
 VOID
 NTAPI
 KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
                      IN ULONG FrameCount OPTIONAL)
 {
     ULONG Frames[32];
-    ULONG Count, i, Addr;
-
-    /* Don't let anyone ask more then 32 frames */
-    if (FrameCount > 32) return;
+    ULONG i, Addr;
 
     /* If the caller didn't ask, assume 32 frames */
     if (!FrameCount) FrameCount = 32;
 
-    /* Get the current frames, and make sure caller didn't ask too many */
-    Count = KeRosGetStackFrames(Frames, FrameCount); // <= should be replaced with Rtl
-    if (FrameCount > Count) FrameCount = Count;
+    /* Get the current frames */
+    FrameCount = RtlCaptureStackBackTrace(2, FrameCount, (PVOID*)Frames, NULL);
 
     /* Now loop them (skip the two. One for the dumper, one for the caller) */
-    for (i = 2; i < FrameCount; i++)
+    for (i = 0; i < FrameCount; i++)
     {
         /* Get the EIP */
         Addr = Frames[i];
@@ -177,9 +116,6 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
 
         /* Print it out */
         if (!KeRosPrintAddress((PVOID)Addr)) DbgPrint("<%X>", Addr);
-
-        /* Break out of invalid addresses */
-        if (Addr == 0 || Addr == 0xDEADBEEF) break;
 
         /* Go to the next frame */
         DbgPrint("\n");

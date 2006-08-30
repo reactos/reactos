@@ -33,6 +33,14 @@ KPROCESSOR_MODE
 NTAPI
 RtlpGetMode(VOID);
 
+BOOLEAN
+NTAPI
+RtlpCaptureStackLimits(
+    IN ULONG_PTR Ebp,
+    IN ULONG_PTR *StackBegin,
+    IN ULONG_PTR *StackEnd
+);
+
 NTSTATUS
 NTAPI
 RtlDeleteHeapLock(PRTL_CRITICAL_SECTION CriticalSection);

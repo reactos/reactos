@@ -977,7 +977,6 @@ READ_REGISTER_BUFFER_ULONG@12
 READ_REGISTER_BUFFER_USHORT@12
 KiRosPrintAddress@4
 KeRosDumpStackFrames@8
-KeRosGetStackFrames@8
 RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce@16
 RtlAddAce@20
