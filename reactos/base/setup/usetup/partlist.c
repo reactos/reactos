@@ -1083,7 +1083,7 @@ PrintPartitionData (PPARTLIST List,
   USHORT Width;
   USHORT Height;
 
-  ULONGLONG PartSize;
+  LARGE_INTEGER PartSize;
   PCHAR Unit;
   UCHAR Attribute;
   PCHAR PartType;
@@ -1100,25 +1100,25 @@ PrintPartitionData (PPARTLIST List,
 #if 0
       if (PartEntry->UnpartitionledLength >= 0x280000000ULL) /* 10 GB */
 	{
-	  PartSize = (PartEntry->UnpartitionedLength + (1 << 29)) >> 30;
+	  PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 29)) >> 30;
 	  Unit = "GB";
 	}
       else
 #endif
       if (PartEntry->UnpartitionedLength >= 0xA00000ULL) /* 10 MB */
 	{
-	  PartSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;
+	  PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;
 	  Unit = "MB";
 	}
       else
 	{
-	  PartSize = (PartEntry->UnpartitionedLength + (1 << 9)) >> 10;
+	  PartSize.QuadPart = (PartEntry->UnpartitionedLength + (1 << 9)) >> 10;
 	  Unit = "KB";
 	}
 
       sprintf (LineBuffer,
-	       "    Unpartitioned space              %6I64u %s",
-	       PartSize,
+	       "    Unpartitioned space              %6lu %s",
+	       PartSize.u.LowPart,
 	       Unit);
     }
   else
@@ -1152,40 +1152,40 @@ PrintPartitionData (PPARTLIST List,
 #if 0
       if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0x280000000LL) /* 10 GB */
 	{
-	  PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
+	  PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 29)) >> 30;
 	  Unit = "GB";
 	}
       else
 #endif
       if (PartEntry->PartInfo[0].PartitionLength.QuadPart >= 0xA00000LL) /* 10 MB */
 	{
-	  PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
+	  PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 19)) >> 20;
 	  Unit = "MB";
 	}
       else
 	{
-	  PartSize = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 9)) >> 10;
+	  PartSize.QuadPart = (PartEntry->PartInfo[0].PartitionLength.QuadPart + (1 << 9)) >> 10;
 	  Unit = "KB";
 	}
 
       if (PartType == NULL)
 	{
 	  sprintf (LineBuffer,
-		   "%c%c  Type %-3u                         %6I64u %s",
+		   "%c%c  Type %-3u                         %6lu %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
 		   PartEntry->PartInfo[0].PartitionType,
-		   PartSize,
+		   PartSize.u.LowPart,
 		   Unit);
 	}
       else
 	{
 	  sprintf (LineBuffer,
-		   "%c%c  %-24s         %6I64u %s",
+		   "%c%c  %-24s         %6lu %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
 		   PartType,
-		   PartSize,
+		   PartSize.u.LowPart,
 		   Unit);
 	}
     }
