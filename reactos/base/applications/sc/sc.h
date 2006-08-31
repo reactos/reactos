@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <tchar.h>
 
-#define SCDBG
+//#define SCDBG
 
 VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS pStatus);
 VOID PrintServiceEx(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus);

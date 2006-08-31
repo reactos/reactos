@@ -56,7 +56,7 @@ Control(DWORD Control,
             break;
 
         case SERVICE_CONTROL_SHUTDOWN:
-            dwDesiredAccess = -1;
+            dwDesiredAccess = 0;
             break;
 
     }
