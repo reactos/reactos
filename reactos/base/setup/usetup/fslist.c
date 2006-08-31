@@ -81,24 +81,26 @@ DrawFileSystemList (PFILE_SYSTEM_LIST List)
 
   coPos.X = List->Left;
   coPos.Y = List->Top + Index;
-  FillConsoleOutputAttribute (0x17,
+  FillConsoleOutputAttribute (StdOutput,
+			      FOREGROUND_WHITE | BACKGROUND_BLUE,
 			      50,
 			      coPos,
 			      &Written);
-  FillConsoleOutputCharacter (' ',
+  FillConsoleOutputCharacterA (StdOutput,
+			      ' ',
 			      50,
 			      coPos,
 			      &Written);
 
   if (List->CurrentFileSystem == FsFat)
     {
-      SetInvertedTextXY (List->Left,
+      CONSOLE_SetInvertedTextXY (List->Left,
 			 List->Top + Index,
 			 " Format partition as FAT file system ");
     }
   else
     {
-      SetTextXY (List->Left,
+      CONSOLE_SetTextXY (List->Left,
 		 List->Top + Index,
 		 " Format partition as FAT file system ");
     }
@@ -108,24 +110,26 @@ DrawFileSystemList (PFILE_SYSTEM_LIST List)
     {
       coPos.X = List->Left;
       coPos.Y = List->Top + Index;
-      FillConsoleOutputAttribute (0x17,
+      FillConsoleOutputAttribute (StdOutput,
+				  FOREGROUND_WHITE | BACKGROUND_BLUE,
 				  50,
 				  coPos,
 				  &Written);
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+				  ' ',
 				  50,
 				  coPos,
 				  &Written);
 
       if (List->CurrentFileSystem == FsKeep)
 	{
-	  SetInvertedTextXY (List->Left,
+	  CONSOLE_SetInvertedTextXY (List->Left,
 			     List->Top + Index,
 			     " Keep current file system (no changes) ");
 	}
       else
 	{
-	  SetTextXY (List->Left,
+	  CONSOLE_SetTextXY (List->Left,
 		     List->Top + Index,
 		     " Keep current file system (no changes) ");
 	}

@@ -196,7 +196,7 @@ PopupError(PCHAR Text,
 	MaxLength = Length;
     }
 
-  GetScreenSize(&xScreen, &yScreen);
+  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   Width = MaxLength + 4;
   Height = Lines + 2;
@@ -211,7 +211,8 @@ PopupError(PCHAR Text,
   coPos.X = xLeft;
   for (coPos.Y = yTop; coPos.Y < yTop + Height; coPos.Y++)
     {
-      FillConsoleOutputAttribute(0x74,
+      FillConsoleOutputAttribute(StdOutput,
+				 FOREGROUND_RED | BACKGROUND_WHITE,
 				 Width,
 				 coPos,
 				 &Written);
@@ -220,7 +221,8 @@ PopupError(PCHAR Text,
   /* draw upper left corner */
   coPos.X = xLeft;
   coPos.Y = yTop;
-  FillConsoleOutputCharacter(0xDA, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xDA, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -228,7 +230,8 @@ PopupError(PCHAR Text,
   /* draw upper edge */
   coPos.X = xLeft + 1;
   coPos.Y = yTop;
-  FillConsoleOutputCharacter(0xC4, // '-',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC4, // '-',
 			     Width - 2,
 			     coPos,
 			     &Written);
@@ -236,7 +239,8 @@ PopupError(PCHAR Text,
   /* draw upper right corner */
   coPos.X = xLeft + Width - 1;
   coPos.Y = yTop;
-  FillConsoleOutputCharacter(0xBF, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xBF, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -245,19 +249,22 @@ PopupError(PCHAR Text,
   for (coPos.Y = yTop + 1; coPos.Y < yTop + Height - 1; coPos.Y++)
     {
       coPos.X = xLeft;
-      FillConsoleOutputCharacter(0xB3, // '|',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xB3, // '|',
 				 1,
 				 coPos,
 				 &Written);
 
       coPos.X = xLeft + 1;
-      FillConsoleOutputCharacter(' ',
+      FillConsoleOutputCharacterA(StdOutput,
+				 ' ',
 				 Width - 2,
 				 coPos,
 				 &Written);
 
       coPos.X = xLeft + Width - 1;
-      FillConsoleOutputCharacter(0xB3, // '|',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xB3, // '|',
 				 1,
 				 coPos,
 				 &Written);
@@ -266,7 +273,8 @@ PopupError(PCHAR Text,
   /* draw lower left corner */
   coPos.X = xLeft;
   coPos.Y = yTop + Height - 1;
-  FillConsoleOutputCharacter(0xC0, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC0, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -274,7 +282,8 @@ PopupError(PCHAR Text,
   /* draw lower edge */
   coPos.X = xLeft + 1;
   coPos.Y = yTop + Height - 1;
-  FillConsoleOutputCharacter(0xC4, // '-',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC4, // '-',
 			     Width - 2,
 			     coPos,
 			     &Written);
@@ -282,7 +291,8 @@ PopupError(PCHAR Text,
   /* draw lower right corner */
   coPos.X = xLeft + Width - 1;
   coPos.Y = yTop + Height - 1;
-  FillConsoleOutputCharacter(0xD9, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xD9, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -307,9 +317,11 @@ PopupError(PCHAR Text,
       if (Length != 0)
 	{
 	  coPos.X = xLeft + 2;
-	  WriteConsoleOutputCharacters(pnext,
+	  WriteConsoleOutputCharacterA(StdOutput,
+				       pnext,
 				       Length,
-				       coPos);
+				       coPos,
+				       &Written);
 	}
 
       if (LastLine == TRUE)
@@ -324,28 +336,33 @@ PopupError(PCHAR Text,
     {
       coPos.Y = yTop + Height - 3;
       coPos.X = xLeft;
-      FillConsoleOutputCharacter(0xC3, // '+',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xC3, // '+',
 				 1,
 				 coPos,
 				 &Written);
 
       coPos.X = xLeft + 1;
-      FillConsoleOutputCharacter(0xC4, // '-',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xC4, // '-',
 				 Width - 2,
 				 coPos,
 				 &Written);
 
       coPos.X = xLeft + Width - 1;
-      FillConsoleOutputCharacter(0xB4, // '+',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xB4, // '+',
 				 1,
 				 coPos,
 				 &Written);
 
       coPos.Y++;
       coPos.X = xLeft + 2;
-      WriteConsoleOutputCharacters(Status,
+      WriteConsoleOutputCharacterA(StdOutput,
+				   Status,
 				   min(strlen(Status), (SIZE_T)Width - 4),
-				   coPos);
+				   coPos,
+				   &Written);
     }
 }
 
@@ -371,7 +388,7 @@ ConfirmQuit(PINPUT_RECORD Ir)
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))	/* F3 */
@@ -551,7 +568,7 @@ SetupStartPage(PINPUT_RECORD Ir)
   ULONG ErrorLine;
   ULONG ReturnSize;
 
-  SetStatusText("   Please wait...");
+  CONSOLE_SetStatusText("   Please wait...");
 
 
   /* Check whether a harddisk is available */
@@ -561,12 +578,12 @@ SetupStartPage(PINPUT_RECORD Ir)
 				     &ReturnSize);
   if (!NT_SUCCESS (Status))
     {
-      PrintTextXY(6, 15, "NtQuerySystemInformation() failed (Status 0x%08lx)", Status);
+      CONSOLE_PrintTextXY(6, 15, "NtQuerySystemInformation() failed (Status 0x%08lx)", Status);
       PopupError("Setup could not retrieve system drive information.\n",
 		 "ENTER = Reboot computer");
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -581,7 +598,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 		 "ENTER = Reboot computer");
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -595,12 +612,12 @@ SetupStartPage(PINPUT_RECORD Ir)
 			  &SourceRootPath);
   if (!NT_SUCCESS(Status))
     {
-      PrintTextXY(6, 15, "GetSourcePath() failed (Status 0x%08lx)", Status);
+      CONSOLE_PrintTextXY(6, 15, "GetSourcePath() failed (Status 0x%08lx)", Status);
       PopupError("Setup could not find its source drive.\n",
 		 "ENTER = Reboot computer");
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -632,7 +649,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -649,7 +666,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -668,7 +685,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -686,7 +703,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -710,20 +727,20 @@ SetupStartPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 IntroPage(PINPUT_RECORD Ir)
 {
-  SetHighlightedTextXY(6, 8, "Welcome to ReactOS Setup");
+  CONSOLE_SetHighlightedTextXY(6, 8, "Welcome to ReactOS Setup");
 
-  SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
-  SetTextXY(6, 12, "computer and prepares the second part of the setup.");
+  CONSOLE_SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
+  CONSOLE_SetTextXY(6, 12, "computer and prepares the second part of the setup.");
 
-  SetTextXY(8, 15, "\x07  Press ENTER to install ReactOS.");
-  SetTextXY(8, 17, "\x07  Press R to repair ReactOS.");
-  SetTextXY(8, 19, "\x07  Press L to view the ReactOS Licensing Terms and Conditions");
-  SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
+  CONSOLE_SetTextXY(8, 15, "\x07  Press ENTER to install ReactOS.");
+  CONSOLE_SetTextXY(8, 17, "\x07  Press R to repair ReactOS.");
+  CONSOLE_SetTextXY(8, 19, "\x07  Press L to view the ReactOS Licensing Terms and Conditions");
+  CONSOLE_SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
 
-  SetTextXY(6, 23, "For more information on ReactOS, please visit:");
-  SetHighlightedTextXY(6, 24, "http://www.reactos.org");
+  CONSOLE_SetTextXY(6, 23, "For more information on ReactOS, please visit:");
+  CONSOLE_SetHighlightedTextXY(6, 24, "http://www.reactos.org");
 
-  SetStatusText("   ENTER = Continue  R = Repair F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue  R = Repair F3 = Quit");
 
   if (IsUnattendedSetup)
     {
@@ -738,7 +755,7 @@ IntroPage(PINPUT_RECORD Ir)
 
   while (TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -775,34 +792,34 @@ IntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 LicensePage(PINPUT_RECORD Ir)
 {
-  SetHighlightedTextXY(6, 6, "Licensing:");
+  CONSOLE_SetHighlightedTextXY(6, 6, "Licensing:");
 
-  SetTextXY(8, 8, "The ReactOS System is licensed under the terms of the");
-  SetTextXY(8, 9, "GNU GPL with parts containing code from other compatible");
-  SetTextXY(8, 10, "licenses such as the X11 or BSD and GNU LGPL licenses.");
-  SetTextXY(8, 11, "All software that is part of the ReactOS system is");
-  SetTextXY(8, 12, "therefore released under the GNU GPL as well as maintaining");
-  SetTextXY(8, 13, "the original license.");
+  CONSOLE_SetTextXY(8, 8, "The ReactOS System is licensed under the terms of the");
+  CONSOLE_SetTextXY(8, 9, "GNU GPL with parts containing code from other compatible");
+  CONSOLE_SetTextXY(8, 10, "licenses such as the X11 or BSD and GNU LGPL licenses.");
+  CONSOLE_SetTextXY(8, 11, "All software that is part of the ReactOS system is");
+  CONSOLE_SetTextXY(8, 12, "therefore released under the GNU GPL as well as maintaining");
+  CONSOLE_SetTextXY(8, 13, "the original license.");
 
-  SetTextXY(8, 15, "This software comes with NO WARRANTY or restrictions on usage");
-  SetTextXY(8, 16, "save applicable local and international law. The licensing of");
-  SetTextXY(8, 17, "ReactOS only covers distribution to third parties.");
+  CONSOLE_SetTextXY(8, 15, "This software comes with NO WARRANTY or restrictions on usage");
+  CONSOLE_SetTextXY(8, 16, "save applicable local and international law. The licensing of");
+  CONSOLE_SetTextXY(8, 17, "ReactOS only covers distribution to third parties.");
 
-  SetTextXY(8, 18, "If for some reason you did not receive a copy of the");
-  SetTextXY(8, 19, "GNU General Public License with ReactOS please visit");
-  SetHighlightedTextXY(8, 20, "http://www.gnu.org/licenses/licenses.html");
+  CONSOLE_SetTextXY(8, 18, "If for some reason you did not receive a copy of the");
+  CONSOLE_SetTextXY(8, 19, "GNU General Public License with ReactOS please visit");
+  CONSOLE_SetHighlightedTextXY(8, 20, "http://www.gnu.org/licenses/licenses.html");
 
-  SetHighlightedTextXY(6, 22, "Warranty:");
+  CONSOLE_SetHighlightedTextXY(6, 22, "Warranty:");
 
-  SetTextXY(8, 24, "This is free software; see the source for copying conditions.");
-  SetTextXY(8, 25, "There is NO warranty; not even for MERCHANTABILITY or");
-  SetTextXY(8, 26, "FITNESS FOR A PARTICULAR PURPOSE");
+  CONSOLE_SetTextXY(8, 24, "This is free software; see the source for copying conditions.");
+  CONSOLE_SetTextXY(8, 25, "There is NO warranty; not even for MERCHANTABILITY or");
+  CONSOLE_SetTextXY(8, 26, "FITNESS FOR A PARTICULAR PURPOSE");
 
-  SetStatusText("   ENTER = Return");
+  CONSOLE_SetStatusText("   ENTER = Return");
 
   while (TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
       {
@@ -817,22 +834,22 @@ LicensePage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 RepairIntroPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
-  SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
+  CONSOLE_SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
+  CONSOLE_SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
 
-  SetTextXY(6, 12, "The repair functions are not implemented yet.");
+  CONSOLE_SetTextXY(6, 12, "The repair functions are not implemented yet.");
 
-  SetTextXY(8, 15, "\x07  Press R for the Recovery Console.");
+  CONSOLE_SetTextXY(8, 15, "\x07  Press R for the Recovery Console.");
   
-  SetTextXY(8, 17, "\x07  Press ESC to return to the main page.");
+  CONSOLE_SetTextXY(8, 17, "\x07  Press ESC to return to the main page.");
 
-  SetTextXY(8, 19, "\x07  Press ENTER to reboot your computer.");
+  CONSOLE_SetTextXY(8, 19, "\x07  Press ENTER to reboot your computer.");
 
-  SetStatusText("   ESC = Main page  ENTER = Reboot");
+  CONSOLE_SetStatusText("   ESC = Main page  ENTER = Reboot");
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
@@ -856,27 +873,27 @@ RepairIntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 InstallIntroPage(PINPUT_RECORD Ir)
 {
-  SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
+  CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
 
-  SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
-  SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
+  CONSOLE_SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
+  CONSOLE_SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
 
-  SetTextXY(6, 12, "The following limitations apply:");
-  SetTextXY(8, 13, "- Setup can not handle more than one primary partition per disk.");
-  SetTextXY(8, 14, "- Setup can not delete a primary partition from a disk");
-  SetTextXY(8, 15, "  as long as extended partitions exist on this disk.");
-  SetTextXY(8, 16, "- Setup can not delete the first extended partition from a disk");
-  SetTextXY(8, 17, "  as long as other extended partitions exist on this disk.");
-  SetTextXY(8, 18, "- Setup supports FAT file systems only.");
-  SetTextXY(8, 19, "- File system checks are not implemented yet.");
-
-
-  SetTextXY(8, 23, "\x07  Press ENTER to install ReactOS.");
-
-  SetTextXY(8, 25, "\x07  Press F3 to quit without installing ReactOS.");
+  CONSOLE_SetTextXY(6, 12, "The following limitations apply:");
+  CONSOLE_SetTextXY(8, 13, "- Setup can not handle more than one primary partition per disk.");
+  CONSOLE_SetTextXY(8, 14, "- Setup can not delete a primary partition from a disk");
+  CONSOLE_SetTextXY(8, 15, "  as long as extended partitions exist on this disk.");
+  CONSOLE_SetTextXY(8, 16, "- Setup can not delete the first extended partition from a disk");
+  CONSOLE_SetTextXY(8, 17, "  as long as other extended partitions exist on this disk.");
+  CONSOLE_SetTextXY(8, 18, "- Setup supports FAT file systems only.");
+  CONSOLE_SetTextXY(8, 19, "- File system checks are not implemented yet.");
 
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  CONSOLE_SetTextXY(8, 23, "\x07  Press ENTER to install ReactOS.");
+
+  CONSOLE_SetTextXY(8, 25, "\x07  Press F3 to quit without installing ReactOS.");
+
+
+  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
   if (IsUnattendedSetup)
     {
@@ -885,7 +902,7 @@ InstallIntroPage(PINPUT_RECORD Ir)
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -988,7 +1005,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 
 	  while (TRUE)
 	    {
-	      ConInKey(Ir);
+	      CONSOLE_ConInKey(Ir);
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		{
@@ -998,60 +1015,60 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 	}
     }
 
-  SetTextXY(6, 8, "The list below shows the current device settings.");
+  CONSOLE_SetTextXY(6, 8, "The list below shows the current device settings.");
 
-  SetTextXY(8, 11, "       Computer:");
-  SetTextXY(8, 12, "        Display:");
-  SetTextXY(8, 13, "       Keyboard:");
-  SetTextXY(8, 14, "Keyboard layout:");
+  CONSOLE_SetTextXY(8, 11, "       Computer:");
+  CONSOLE_SetTextXY(8, 12, "        Display:");
+  CONSOLE_SetTextXY(8, 13, "       Keyboard:");
+  CONSOLE_SetTextXY(8, 14, "Keyboard layout:");
 
-  SetTextXY(8, 16, "         Accept:");
+  CONSOLE_SetTextXY(8, 16, "         Accept:");
 
-  SetTextXY(25, 11, GetGenericListEntry(ComputerList)->Text);
-  SetTextXY(25, 12, GetGenericListEntry(DisplayList)->Text);
-  SetTextXY(25, 13, GetGenericListEntry(KeyboardList)->Text);
-  SetTextXY(25, 14, GetGenericListEntry(LayoutList)->Text);
+  CONSOLE_SetTextXY(25, 11, GetGenericListEntry(ComputerList)->Text);
+  CONSOLE_SetTextXY(25, 12, GetGenericListEntry(DisplayList)->Text);
+  CONSOLE_SetTextXY(25, 13, GetGenericListEntry(KeyboardList)->Text);
+  CONSOLE_SetTextXY(25, 14, GetGenericListEntry(LayoutList)->Text);
 
-  SetTextXY(25, 16, "Accept these device settings");
-  InvertTextXY (24, Line, 48, 1);
+  CONSOLE_SetTextXY(25, 16, "Accept these device settings");
+  CONSOLE_InvertTextXY (24, Line, 48, 1);
 
 
-  SetTextXY(6, 19, "You can change the hardware settings by pressing the UP or DOWN keys");
-  SetTextXY(6, 20, "to select an entry. Then press the ENTER key to select alternative");
-  SetTextXY(6, 21, "settings.");
+  CONSOLE_SetTextXY(6, 19, "You can change the hardware settings by pressing the UP or DOWN keys");
+  CONSOLE_SetTextXY(6, 20, "to select an entry. Then press the ENTER key to select alternative");
+  CONSOLE_SetTextXY(6, 21, "settings.");
 
-  SetTextXY(6, 23, "When all settings are correct, select \"Accept these device settings\"");
-  SetTextXY(6, 24, "and press ENTER.");
+  CONSOLE_SetTextXY(6, 23, "When all settings are correct, select \"Accept these device settings\"");
+  CONSOLE_SetTextXY(6, 24, "and press ENTER.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
-	  NormalTextXY (24, Line, 48, 1);
+	  CONSOLE_NormalTextXY (24, Line, 48, 1);
 	  if (Line == 14)
 	    Line = 16;
 	  else if (Line == 16)
 	    Line = 11;
 	  else
 	    Line++;
-	  InvertTextXY (24, Line, 48, 1);
+	  CONSOLE_InvertTextXY (24, Line, 48, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
-	  NormalTextXY (24, Line, 48, 1);
+	  CONSOLE_NormalTextXY (24, Line, 48, 1);
 	  if (Line == 11)
 	    Line = 16;
 	  else if (Line == 16)
 	    Line = 14;
 	  else
 	    Line--;
-	  InvertTextXY (24, Line, 48, 1);
+	  CONSOLE_InvertTextXY (24, Line, 48, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -1085,15 +1102,15 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
   SHORT xScreen;
   SHORT yScreen;
 
-  SetTextXY(6, 8, "You want to change the type of computer to be installed.");
+  CONSOLE_SetTextXY(6, 8, "You want to change the type of computer to be installed.");
 
-  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired computer type.");
-  SetTextXY(8, 11, "   Then press ENTER.");
+  CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired computer type.");
+  CONSOLE_SetTextXY(8, 11, "   Then press ENTER.");
 
-  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  SetTextXY(8, 14, "   the computer type.");
+  CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  CONSOLE_SetTextXY(8, 14, "   the computer type.");
 
-  GetScreenSize(&xScreen, &yScreen);
+  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   DrawGenericList(ComputerList,
 		  2,
@@ -1101,13 +1118,13 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 		  xScreen - 3,
 		  yScreen - 3);
 
-  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   SaveGenericListState(ComputerList);
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
@@ -1148,15 +1165,15 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
   SHORT xScreen;
   SHORT yScreen;
 
-  SetTextXY(6, 8, "You want to change the type of display to be installed.");
+  CONSOLE_SetTextXY(6, 8, "You want to change the type of display to be installed.");
 
-  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired display type.");
-  SetTextXY(8, 11, "   Then press ENTER.");
+  CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired display type.");
+  CONSOLE_SetTextXY(8, 11, "   Then press ENTER.");
 
-  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  SetTextXY(8, 14, "   the display type.");
+  CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  CONSOLE_SetTextXY(8, 14, "   the display type.");
 
-  GetScreenSize(&xScreen, &yScreen);
+  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   DrawGenericList(DisplayList,
 		  2,
@@ -1164,13 +1181,13 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 		  xScreen - 3,
 		  yScreen - 3);
 
-  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   SaveGenericListState(DisplayList);
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
@@ -1213,15 +1230,15 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
   SHORT xScreen;
   SHORT yScreen;
 
-  SetTextXY(6, 8, "You want to change the type of keyboard to be installed.");
+  CONSOLE_SetTextXY(6, 8, "You want to change the type of keyboard to be installed.");
 
-  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard type.");
-  SetTextXY(8, 11, "   Then press ENTER.");
+  CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard type.");
+  CONSOLE_SetTextXY(8, 11, "   Then press ENTER.");
 
-  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  SetTextXY(8, 14, "   the keyboard type.");
+  CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  CONSOLE_SetTextXY(8, 14, "   the keyboard type.");
 
-  GetScreenSize(&xScreen, &yScreen);
+  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   DrawGenericList(KeyboardList,
 		  2,
@@ -1229,13 +1246,13 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 		  xScreen - 3,
 		  yScreen - 3);
 
-  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   SaveGenericListState(KeyboardList);
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
@@ -1276,15 +1293,15 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
   SHORT xScreen;
   SHORT yScreen;
 
-  SetTextXY(6, 8, "You want to change the keyboard layout to be installed.");
+  CONSOLE_SetTextXY(6, 8, "You want to change the keyboard layout to be installed.");
 
-  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard");
-  SetTextXY(8, 11, "    layout. Then press ENTER.");
+  CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard");
+  CONSOLE_SetTextXY(8, 11, "    layout. Then press ENTER.");
 
-  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  SetTextXY(8, 14, "   the keyboard layout.");
+  CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  CONSOLE_SetTextXY(8, 14, "   the keyboard layout.");
 
-  GetScreenSize(&xScreen, &yScreen);
+  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   DrawGenericList(LayoutList,
 		  2,
@@ -1292,13 +1309,13 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 		  xScreen - 3,
 		  yScreen - 3);
 
-  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   SaveGenericListState(LayoutList);
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
@@ -1339,17 +1356,17 @@ SelectPartitionPage(PINPUT_RECORD Ir)
   SHORT xScreen;
   SHORT yScreen;
 
-  SetTextXY(6, 8, "The list below shows existing partitions and unused disk");
-  SetTextXY(6, 9, "space for new partitions.");
+  CONSOLE_SetTextXY(6, 8, "The list below shows existing partitions and unused disk");
+  CONSOLE_SetTextXY(6, 9, "space for new partitions.");
 
-  SetTextXY(8, 11, "\x07  Press UP or DOWN to select a list entry.");
-  SetTextXY(8, 13, "\x07  Press ENTER to install ReactOS onto the selected partition.");
-  SetTextXY(8, 15, "\x07  Press C to create a new partition.");
-  SetTextXY(8, 17, "\x07  Press D to delete an existing partition.");
+  CONSOLE_SetTextXY(8, 11, "\x07  Press UP or DOWN to select a list entry.");
+  CONSOLE_SetTextXY(8, 13, "\x07  Press ENTER to install ReactOS onto the selected partition.");
+  CONSOLE_SetTextXY(8, 15, "\x07  Press C to create a new partition.");
+  CONSOLE_SetTextXY(8, 17, "\x07  Press D to delete an existing partition.");
 
-  SetStatusText("   Please wait...");
+  CONSOLE_SetStatusText("   Please wait...");
 
-  GetScreenSize(&xScreen, &yScreen);
+  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   if (PartitionList == NULL)
     {
@@ -1382,7 +1399,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 		  "F3= Quit  ENTER = Continue");
       while (TRUE)
 	{
-	  ConInKey (Ir);
+	  CONSOLE_ConInKey (Ir);
 
 	  if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	      (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -1411,14 +1428,14 @@ SelectPartitionPage(PINPUT_RECORD Ir)
       if (PartitionList->CurrentPartition == NULL ||
 	  PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	{
-	  SetStatusText ("   ENTER = Install   C = Create Partition   F3 = Quit");
+	  CONSOLE_SetStatusText ("   ENTER = Install   C = Create Partition   F3 = Quit");
 	}
       else
 	{
-	  SetStatusText ("   ENTER = Install   D = Delete Partition   F3 = Quit");
+	  CONSOLE_SetStatusText ("   ENTER = Install   D = Delete Partition   F3 = Quit");
 	}
 
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -1462,7 +1479,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 			  "\n"
 			  "  * Press any key to continue.",
 			  NULL);
-	      ConInKey (Ir);
+	      CONSOLE_ConInKey (Ir);
 
 	      return SELECT_PARTITION_PAGE;
 	    }
@@ -1477,7 +1494,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 			  "\n"
 			  "  * Press any key to continue.",
 			  NULL);
-	      ConInKey (Ir);
+	      CONSOLE_ConInKey (Ir);
 
 	      return SELECT_PARTITION_PAGE;
 	    }
@@ -1498,6 +1515,7 @@ DrawInputField(ULONG FieldLength,
 {
   CHAR buf[100];
   COORD coPos;
+  ULONG Written;
 
   coPos.X = Left;
   coPos.Y = Top;
@@ -1505,9 +1523,11 @@ DrawInputField(ULONG FieldLength,
   buf[FieldLength - strlen(FieldContent)] = 0;
   strcat(buf, FieldContent);
 
-  WriteConsoleOutputCharacters (buf,
+  WriteConsoleOutputCharacterA (StdOutput,
+			        buf,
 			        strlen (buf),
-			        coPos);
+			        coPos,
+			        &Written);
 }
 
 
@@ -1542,7 +1562,8 @@ ShowPartitionSizeInputBox(SHORT Left,
   /* draw upper left corner */
   coPos.X = Left;
   coPos.Y = Top;
-  FillConsoleOutputCharacter(0xDA, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xDA, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -1550,7 +1571,8 @@ ShowPartitionSizeInputBox(SHORT Left,
   /* draw upper edge */
   coPos.X = Left + 1;
   coPos.Y = Top;
-  FillConsoleOutputCharacter(0xC4, // '-',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC4, // '-',
 			     Right - Left - 1,
 			     coPos,
 			     &Written);
@@ -1558,7 +1580,8 @@ ShowPartitionSizeInputBox(SHORT Left,
   /* draw upper right corner */
   coPos.X = Right;
   coPos.Y = Top;
-  FillConsoleOutputCharacter(0xBF, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xBF, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -1568,13 +1591,15 @@ ShowPartitionSizeInputBox(SHORT Left,
     {
       coPos.X = Left;
       coPos.Y = i;
-      FillConsoleOutputCharacter(0xB3, // '|',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xB3, // '|',
 				 1,
 				 coPos,
 				 &Written);
 
       coPos.X = Right;
-      FillConsoleOutputCharacter(0xB3, //'|',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xB3, //'|',
 				 1,
 				 coPos,
 				 &Written);
@@ -1583,7 +1608,8 @@ ShowPartitionSizeInputBox(SHORT Left,
   /* draw lower left corner */
   coPos.X = Left;
   coPos.Y = Bottom;
-  FillConsoleOutputCharacter(0xC0, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC0, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -1591,7 +1617,8 @@ ShowPartitionSizeInputBox(SHORT Left,
   /* draw lower edge */
   coPos.X = Left + 1;
   coPos.Y = Bottom;
-  FillConsoleOutputCharacter(0xC4, // '-',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC4, // '-',
 			     Right - Left - 1,
 			     coPos,
 			     &Written);
@@ -1599,7 +1626,8 @@ ShowPartitionSizeInputBox(SHORT Left,
   /* draw lower right corner */
   coPos.X = Right;
   coPos.Y = Bottom;
-  FillConsoleOutputCharacter(0xD9, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xD9, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -1610,16 +1638,20 @@ ShowPartitionSizeInputBox(SHORT Left,
   strcpy (Buffer, "Size of new partition:");
   iLeft = coPos.X + strlen (Buffer) + 1;
   iTop = coPos.Y;
-  WriteConsoleOutputCharacters (Buffer,
+  WriteConsoleOutputCharacterA (StdOutput,
+				 Buffer,
 				 strlen (Buffer),
-				 coPos);
+				 coPos,
+				 &Written);
 
   sprintf (Buffer, "MB (max. %lu MB)", MaxSize);
   coPos.X = iLeft + PARTITION_SIZE_INPUT_FIELD_LENGTH + 1;
   coPos.Y = iTop;
-  WriteConsoleOutputCharacters (Buffer,
+  WriteConsoleOutputCharacterA (StdOutput,
+				Buffer,
 				strlen (Buffer),
-				coPos);
+				coPos,
+				&Written);
 
   sprintf(Buffer, "%lu", MaxSize);
   Index = strlen(Buffer);
@@ -1630,7 +1662,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 
   while (TRUE)
     {
-      ConInKey (&Ir);
+      CONSOLE_ConInKey (&Ir);
 
       if ((Ir.Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir.Event.KeyEvent.wVirtualKeyCode == VK_F3))	/* F3 */
@@ -1709,11 +1741,11 @@ CreatePartitionPage (PINPUT_RECORD Ir)
   DiskEntry = PartitionList->CurrentDisk;
   PartEntry = PartitionList->CurrentPartition;
 
-  SetStatusText ("   Please wait...");
+  CONSOLE_SetStatusText ("   Please wait...");
 
-  GetScreenSize (&xScreen, &yScreen);
+  CONSOLE_GetScreenSize (&xScreen, &yScreen);
 
-  SetTextXY (6, 8, "You have chosen to create a new partition on");
+  CONSOLE_SetTextXY (6, 8, "You have chosen to create a new partition on");
 
 #if 0
   if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
@@ -1732,7 +1764,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
 
   if (DiskEntry->DriverName.Length > 0)
     {
-      PrintTextXY (6, 10,
+      CONSOLE_PrintTextXY (6, 10,
 		   "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ.",
 		   DiskSize,
 		   Unit,
@@ -1744,7 +1776,7 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     }
   else
     {
-      PrintTextXY (6, 10,
+      CONSOLE_PrintTextXY (6, 10,
 		   "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu).",
 		   DiskSize,
 		   Unit,
@@ -1755,14 +1787,14 @@ CreatePartitionPage (PINPUT_RECORD Ir)
     }
 
 
-  SetTextXY (6, 12, "Please enter the size of the new partition in megabytes.");
+  CONSOLE_SetTextXY (6, 12, "Please enter the size of the new partition in megabytes.");
 
 #if 0
-  PrintTextXY (8, 10, "Maximum size of the new partition is %I64u MB",
+  CONSOLE_PrintTextXY (8, 10, "Maximum size of the new partition is %I64u MB",
 	       PartitionList->CurrentPartition->UnpartitionedLength / (1024*1024));
 #endif
 
-  SetStatusText ("   ENTER = Create Partition   ESC = Cancel   F3 = Quit");
+  CONSOLE_SetStatusText ("   ENTER = Create Partition   ESC = Cancel   F3 = Quit");
 
   PartEntry = PartitionList->CurrentPartition;
   while (TRUE)
@@ -1848,7 +1880,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
   DiskEntry = PartitionList->CurrentDisk;
   PartEntry = PartitionList->CurrentPartition;
 
-  SetTextXY (6, 8, "You have chosen to delete the partition");
+  CONSOLE_SetTextXY (6, 8, "You have chosen to delete the partition");
 
   /* Determine partition type */
   PartType = NULL;
@@ -1897,7 +1929,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 
   if (PartType == NULL)
     {
-      PrintTextXY (6, 10,
+      CONSOLE_PrintTextXY (6, 10,
 		   "   %c%c  Type %lu    %I64u %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
@@ -1907,7 +1939,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     }
   else
     {
-      PrintTextXY (6, 10,
+      CONSOLE_PrintTextXY (6, 10,
 		   "   %c%c  %s    %I64u %s",
 		   (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		   (PartEntry->DriveLetter == 0) ? '-' : ':',
@@ -1933,7 +1965,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 
   if (DiskEntry->DriverName.Length > 0)
     {
-      PrintTextXY (6, 12,
+      CONSOLE_PrintTextXY (6, 12,
 		   "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ.",
 		   DiskSize,
 		   Unit,
@@ -1945,7 +1977,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
     }
   else
     {
-      PrintTextXY (6, 12,
+      CONSOLE_PrintTextXY (6, 12,
 		   "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu).",
 		   DiskSize,
 		   Unit,
@@ -1955,16 +1987,16 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 		   DiskEntry->Id);
     }
 
-  SetTextXY (8, 18, "\x07  Press D to delete the partition.");
-  SetTextXY (11, 19, "WARNING: All data on this partition will be lost!");
+  CONSOLE_SetTextXY (8, 18, "\x07  Press D to delete the partition.");
+  CONSOLE_SetTextXY (11, 19, "WARNING: All data on this partition will be lost!");
 
-  SetTextXY (8, 21, "\x07  Press ESC to cancel.");
+  CONSOLE_SetTextXY (8, 21, "\x07  Press ESC to cancel.");
 
-  SetStatusText ("   D = Delete Partition   ESC = Cancel   F3 = Quit");
+  CONSOLE_SetStatusText ("   D = Delete Partition   ESC = Cancel   F3 = Quit");
 
   while (TRUE)
     {
-      ConInKey (Ir);
+      CONSOLE_ConInKey (Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -2065,17 +2097,17 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 
   if (PartEntry->AutoCreate == TRUE)
     {
-      SetTextXY(6, 8, "Setup created a new partition on");
+      CONSOLE_SetTextXY(6, 8, "Setup created a new partition on");
 
 #if 0
-  PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s of",
+  CONSOLE_PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s of",
 	      PartEntry->PartInfo[0].PartitionNumber,
 	      PartSize,
 	      PartUnit,
 	      PartType);
 #endif
 
-  PrintTextXY(8, 10, "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
+  CONSOLE_PrintTextXY(8, 10, "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
 	      DiskEntry->DiskNumber,
 	      DiskSize,
 	      DiskUnit,
@@ -2084,23 +2116,23 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 	      DiskEntry->Id,
 	      &DiskEntry->DriverName);
 
-      SetTextXY(6, 12, "This Partition will be formatted next.");
+      CONSOLE_SetTextXY(6, 12, "This Partition will be formatted next.");
 
 
       PartEntry->AutoCreate = FALSE;
     }
   else if (PartEntry->New == TRUE)
     {
-      SetTextXY(6, 8, "You chose to install ReactOS on a new or unformatted Partition.");
-      SetTextXY(6, 10, "This Partition will be formatted next.");
+      CONSOLE_SetTextXY(6, 8, "You chose to install ReactOS on a new or unformatted Partition.");
+      CONSOLE_SetTextXY(6, 10, "This Partition will be formatted next.");
     }
   else
     {
-      SetTextXY(6, 8, "Setup install ReactOS onto Partition");
+      CONSOLE_SetTextXY(6, 8, "Setup install ReactOS onto Partition");
 
       if (PartType == NULL)
 	{
-	  PrintTextXY (8, 10,
+	  CONSOLE_PrintTextXY (8, 10,
 		       "%c%c  Type %lu    %I64u %s",
 		       (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		       (PartEntry->DriveLetter == 0) ? '-' : ':',
@@ -2110,7 +2142,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 	}
       else
 	{
-	  PrintTextXY (8, 10,
+	  CONSOLE_PrintTextXY (8, 10,
 		       "%c%c  %s    %I64u %s",
 		       (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
 		       (PartEntry->DriveLetter == 0) ? '-' : ':',
@@ -2119,7 +2151,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 		       PartUnit);
 	}
 
-      PrintTextXY(6, 12, "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
+      CONSOLE_PrintTextXY(6, 12, "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ).",
 		  DiskEntry->DiskNumber,
 		  DiskSize,
 		  DiskUnit,
@@ -2130,11 +2162,11 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
     }
 
 
-  SetTextXY(6, 17, "Select a file system from the list below.");
+  CONSOLE_SetTextXY(6, 17, "Select a file system from the list below.");
 
-  SetTextXY(8, 19, "\x07  Press UP or DOWN to select a file system.");
-  SetTextXY(8, 21, "\x07  Press ENTER to format the partition.");
-  SetTextXY(8, 23, "\x07  Press ESC to select another partition.");
+  CONSOLE_SetTextXY(8, 19, "\x07  Press UP or DOWN to select a file system.");
+  CONSOLE_SetTextXY(8, 21, "\x07  Press ENTER to format the partition.");
+  CONSOLE_SetTextXY(8, 23, "\x07  Press ESC to select another partition.");
 
   if (FileSystemList == NULL)
     {
@@ -2149,7 +2181,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
     }
   DrawFileSystemList (FileSystemList);
 
-  SetStatusText ("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+  CONSOLE_SetStatusText ("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   if (IsUnattendedSetup)
     {
@@ -2158,7 +2190,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 
   while (TRUE)
     {
-      ConInKey (Ir);
+      CONSOLE_ConInKey (Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -2216,11 +2248,11 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 #endif
 
 
-  SetTextXY(6, 8, "Format partition");
+  CONSOLE_SetTextXY(6, 8, "Format partition");
 
-  SetTextXY(6, 10, "Setup will now format the partition. Press ENTER to continue.");
+  CONSOLE_SetTextXY(6, 10, "Setup will now format the partition. Press ENTER to continue.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
 
   if (PartitionList == NULL ||
@@ -2236,7 +2268,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -2249,7 +2281,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
-	  SetStatusText ("   Please wait ...");
+	  CONSOLE_SetStatusText ("   Please wait ...");
 
 	  if (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
 	    {
@@ -2309,7 +2341,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	  CheckActiveBootPartition (PartitionList);
 
 #ifndef NDEBUG
-	  PrintTextXY (6, 12,
+	  CONSOLE_PrintTextXY (6, 12,
 		       "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
 		       DiskEntry->DiskSize,
 		       DiskEntry->CylinderSize,
@@ -2327,7 +2359,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 
 		  for (i = 0; i < 4; i++)
 		    {
-		      PrintTextXY (6, Line,
+		      CONSOLE_PrintTextXY (6, Line,
 				   "%2u:  %2u  %c  %12I64u  %12I64u  %2u  %c",
 				   i,
 				   PartEntry->PartInfo[i].PartitionNumber,
@@ -2359,7 +2391,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 
 	      while (TRUE)
 		{
-		  ConInKey (Ir);
+		  CONSOLE_ConInKey (Ir);
 
 		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 		    {
@@ -2454,8 +2486,8 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	    }
 
 #ifndef NDEBUG
-	  SetStatusText ("   Done.  Press any key ...");
-	  ConInKey(Ir);
+	  CONSOLE_SetStatusText ("   Done.  Press any key ...");
+	  CONSOLE_ConInKey(Ir);
 #endif
 
 	  return INSTALL_DIRECTORY_PAGE;
@@ -2471,14 +2503,14 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 {
   WCHAR PathBuffer[MAX_PATH];
 
-  SetTextXY(6, 8, "Check file system");
+  CONSOLE_SetTextXY(6, 8, "Check file system");
 
-  SetTextXY(6, 10, "At present, ReactOS can not check file systems.");
+  CONSOLE_SetTextXY(6, 10, "At present, ReactOS can not check file systems.");
 
-  SetStatusText("   Please wait ...");
+  CONSOLE_SetStatusText("   Please wait ...");
 
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
 
   /* Set DestinationRootPath */
@@ -2509,7 +2541,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -2596,7 +2628,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
       while (TRUE)
 	{
-	  ConInKey (Ir);
+	  CONSOLE_ConInKey (Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -2617,16 +2649,16 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
   InfFreeContext(Context);
   Length = wcslen(InstallDir);
 
-  SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
-  SetTextXY(6, 9, "directory where you want ReactOS to be installed:");
+  CONSOLE_SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
+  CONSOLE_SetTextXY(6, 9, "directory where you want ReactOS to be installed:");
 
-  SetInputTextXY(8, 11, 51, InstallDir);
+  CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
 
-  SetTextXY(6, 14, "To change the suggested directory, press BACKSPACE to delete");
-  SetTextXY(6, 15, "characters and then type the directory where you want ReactOS to");
-  SetTextXY(6, 16, "be installed.");
+  CONSOLE_SetTextXY(6, 14, "To change the suggested directory, press BACKSPACE to delete");
+  CONSOLE_SetTextXY(6, 15, "characters and then type the directory where you want ReactOS to");
+  CONSOLE_SetTextXY(6, 16, "be installed.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
   if (IsUnattendedSetup)
     {
@@ -2635,7 +2667,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -2654,7 +2686,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	    {
 	      Length--;
 	      InstallDir[Length] = 0;
-	      SetInputTextXY(8, 11, 51, InstallDir);
+	      CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
 	    }
 	}
       else if (isprint(Ir->Event.KeyEvent.uChar.AsciiChar))
@@ -2664,7 +2696,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	      InstallDir[Length] = (WCHAR)Ir->Event.KeyEvent.uChar.AsciiChar;
 	      Length++;
 	      InstallDir[Length] = 0;
-	      SetInputTextXY(8, 11, 51, InstallDir);
+	      CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
 	    }
 	}
     }
@@ -2695,7 +2727,7 @@ AddSectionToCopyQueue(HINF InfFile,
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -2815,7 +2847,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -2841,7 +2873,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -2886,7 +2918,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 
 	      while (TRUE)
 		{
-		  ConInKey(Ir);
+		  CONSOLE_ConInKey(Ir);
 
 		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		    {
@@ -2916,9 +2948,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   ULONG ErrorLine;
   PVOID InfFileData;
 
-  SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
+  CONSOLE_SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
 
-  SetStatusText("   Building the file copy list...");
+  CONSOLE_SetStatusText("   Building the file copy list...");
 
   /* Create the file queue */
   SetupFileQueue = SetupOpenFileQueue();
@@ -2929,7 +2961,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -2978,7 +3010,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 	      while(TRUE)
 		{
-		  ConInKey(Ir);
+		  CONSOLE_ConInKey(Ir);
 
 		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		    {
@@ -2996,7 +3028,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 	  while(TRUE)
 	    {
-	      ConInKey(Ir);
+	      CONSOLE_ConInKey(Ir);
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		{
@@ -3016,7 +3048,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 
 	  while(TRUE)
 	    {
-	      ConInKey(Ir);
+	      CONSOLE_ConInKey(Ir);
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		{
@@ -3060,7 +3092,7 @@ FileCopyCallback(PVOID Context,
 
       case SPFILENOTIFY_STARTCOPY:
 	/* Display copy message */
-    SetStatusText("                                                   \xB3 Copying file: %S", (PWSTR)Param1);
+    CONSOLE_SetStatusText("                                                   \xB3 Copying file: %S", (PWSTR)Param1);
 	break;
 
       case SPFILENOTIFY_ENDCOPY:
@@ -3080,13 +3112,13 @@ FileCopyPage(PINPUT_RECORD Ir)
   SHORT xScreen;
   SHORT yScreen;
 
-  SetStatusText("                                                           \xB3 Please wait...    ");
+  CONSOLE_SetStatusText("                                                           \xB3 Please wait...    ");
 
-  SetTextXY(11, 12, "Please wait while ReactOS Setup copies files to your ReactOS");
-  SetTextXY(30, 13, "installation folder.");
-  SetTextXY(20, 14, "This may take several minutes to complete.");
+  CONSOLE_SetTextXY(11, 12, "Please wait while ReactOS Setup copies files to your ReactOS");
+  CONSOLE_SetTextXY(30, 13, "installation folder.");
+  CONSOLE_SetTextXY(20, 14, "This may take several minutes to complete.");
 
-  GetScreenSize(&xScreen, &yScreen);  
+  CONSOLE_GetScreenSize(&xScreen, &yScreen);  
   CopyContext.TotalOperations = 0;
   CopyContext.CompletedOperations = 0;
   CopyContext.ProgressBar = CreateProgressBar(13,
@@ -3119,9 +3151,9 @@ RegistryPage(PINPUT_RECORD Ir)
   BOOLEAN Delete;
   NTSTATUS Status;
 
-  SetTextXY(6, 8, "Setup is updating the system configuration");
+  CONSOLE_SetTextXY(6, 8, "Setup is updating the system configuration");
 
-  SetStatusText("   Creating registry hives...");
+  CONSOLE_SetStatusText("   Creating registry hives...");
 
   if (!SetInstallPathValue(&DestinationPath))
     {
@@ -3131,7 +3163,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -3150,7 +3182,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -3160,7 +3192,7 @@ RegistryPage(PINPUT_RECORD Ir)
     }
 
   /* Update registry */
-  SetStatusText("   Updating registry hives...");
+  CONSOLE_SetStatusText("   Updating registry hives...");
 
   if (!InfFindFirstLine(SetupInf, L"HiveInfs.Install", NULL, &InfContext))
     {
@@ -3170,7 +3202,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -3200,7 +3232,7 @@ RegistryPage(PINPUT_RECORD Ir)
 	  continue;
 	}
 
-      SetStatusText("   Importing %S...", File);
+      CONSOLE_SetStatusText("   Importing %S...", File);
 
       if (!ImportRegistryFile(File, Section, Delete))
 	{
@@ -3211,7 +3243,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
 	  while(TRUE)
 	    {
-	      ConInKey(Ir);
+	      CONSOLE_ConInKey(Ir);
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		{
@@ -3225,7 +3257,7 @@ RegistryPage(PINPUT_RECORD Ir)
   InfFreeContext(InfContext);
 
   /* Update display registry settings */
-  SetStatusText("   Updating display registry settings...");
+  CONSOLE_SetStatusText("   Updating display registry settings...");
   if (!ProcessDisplayRegistry(SetupInf, DisplayList))
     {
       PopupError("Setup failed to update display registry settings.",
@@ -3233,7 +3265,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -3243,7 +3275,7 @@ RegistryPage(PINPUT_RECORD Ir)
     }
 
   /* Update keyboard layout settings */
-  SetStatusText("   Updating keyboard layout settings...");
+  CONSOLE_SetStatusText("   Updating keyboard layout settings...");
   if (!ProcessKeyboardLayoutRegistry(LayoutList))
     {
       PopupError("Setup failed to update keyboard layout settings.",
@@ -3251,7 +3283,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -3263,7 +3295,7 @@ RegistryPage(PINPUT_RECORD Ir)
   /* Update the mounted devices list */
   SetMountedDeviceValues(PartitionList);
 
-  SetStatusText("   Done...");
+  CONSOLE_SetStatusText("   Done...");
 
   return BOOT_LOADER_PAGE;
 }
@@ -3276,7 +3308,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
   BOOLEAN InstallOnFloppy;
   USHORT Line = 12;
 
-  SetStatusText("   Please wait...");
+  CONSOLE_SetStatusText("   Please wait...");
 
   PartitionType = PartitionList->ActiveBootPartition->PartInfo[0].PartitionType;
 
@@ -3341,23 +3373,23 @@ BootLoaderPage(PINPUT_RECORD Ir)
         }
     }
 
-  SetTextXY(6, 8, "Setup is installing the boot loader");
+  CONSOLE_SetTextXY(6, 8, "Setup is installing the boot loader");
 
-  SetTextXY(8, 12, "Install bootloader on the harddisk (MBR).");
-  SetTextXY(8, 13, "Install bootloader on a floppy disk.");
-  SetTextXY(8, 14, "Skip install bootloader.");
-  InvertTextXY (8, Line, 48, 1);
+  CONSOLE_SetTextXY(8, 12, "Install bootloader on the harddisk (MBR).");
+  CONSOLE_SetTextXY(8, 13, "Install bootloader on a floppy disk.");
+  CONSOLE_SetTextXY(8, 14, "Skip install bootloader.");
+  CONSOLE_InvertTextXY (8, Line, 48, 1);
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
-	  NormalTextXY (8, Line, 48, 1);
+	  CONSOLE_NormalTextXY (8, Line, 48, 1);
 	  
 	  Line++;
       if (Line<12) Line=14;
@@ -3365,19 +3397,19 @@ BootLoaderPage(PINPUT_RECORD Ir)
       	 
        
 
-	  InvertTextXY (8, Line, 48, 1);
+	  CONSOLE_InvertTextXY (8, Line, 48, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
-	  NormalTextXY (8, Line, 48, 1);
+	  CONSOLE_NormalTextXY (8, Line, 48, 1);
 	  
 	  Line--;
       if (Line<12) Line=14;
       if (Line>14) Line=12;
 
 
-	  InvertTextXY (8, Line, 48, 1);
+	  CONSOLE_InvertTextXY (8, Line, 48, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -3415,19 +3447,19 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 {
   NTSTATUS Status;
 
-  SetTextXY(6, 8, "Setup cannot install the bootloader on your computers");
-  SetTextXY(6, 9, "harddisk");
+  CONSOLE_SetTextXY(6, 8, "Setup cannot install the bootloader on your computers");
+  CONSOLE_SetTextXY(6, 9, "harddisk");
 
-  SetTextXY(6, 13, "Please insert a formatted floppy disk in drive A: and");
-  SetTextXY(6, 14, "press ENTER.");
+  CONSOLE_SetTextXY(6, 13, "Please insert a formatted floppy disk in drive A: and");
+  CONSOLE_SetTextXY(6, 14, "press ENTER.");
 
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 //  SetStatusText("   Please wait...");
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
@@ -3444,7 +3476,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 			 "ENTER = Continue");
 	      while(TRUE)
 		{
-		  ConInKey(Ir);
+		  CONSOLE_ConInKey(Ir);
 
 		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		    break;
@@ -3494,7 +3526,7 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
 
 	  while(TRUE)
 	    {
-	      ConInKey(Ir);
+	      CONSOLE_ConInKey(Ir);
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 		{
@@ -3512,7 +3544,7 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
 
       while(TRUE)
 	{
-	  ConInKey(Ir);
+	  CONSOLE_ConInKey(Ir);
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
@@ -3528,14 +3560,14 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 QuitPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(10, 6, "ReactOS is not completely installed");
+  CONSOLE_SetTextXY(10, 6, "ReactOS is not completely installed");
 
-  SetTextXY(10, 8, "Remove floppy disk from Drive A: and");
-  SetTextXY(10, 9, "all CD-ROMs from CD-Drives.");
+  CONSOLE_SetTextXY(10, 8, "Remove floppy disk from Drive A: and");
+  CONSOLE_SetTextXY(10, 9, "all CD-ROMs from CD-Drives.");
 
-  SetTextXY(10, 11, "Press ENTER to reboot your computer.");
+  CONSOLE_SetTextXY(10, 11, "Press ENTER to reboot your computer.");
 
-  SetStatusText("   Please wait ...");
+  CONSOLE_SetStatusText("   Please wait ...");
 
   /* Destroy partition list */
   if (PartitionList != NULL)
@@ -3579,11 +3611,11 @@ QuitPage(PINPUT_RECORD Ir)
       LayoutList = NULL;
     }
 
-  SetStatusText("   ENTER = Reboot computer");
+  CONSOLE_SetStatusText("   ENTER = Reboot computer");
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
@@ -3596,14 +3628,14 @@ QuitPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SuccessPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(10, 6, "The basic components of ReactOS have been installed successfully.");
+  CONSOLE_SetTextXY(10, 6, "The basic components of ReactOS have been installed successfully.");
 
-  SetTextXY(10, 8, "Remove floppy disk from Drive A: and");
-  SetTextXY(10, 9, "all CD-ROMs from CD-Drive.");
+  CONSOLE_SetTextXY(10, 8, "Remove floppy disk from Drive A: and");
+  CONSOLE_SetTextXY(10, 9, "all CD-ROMs from CD-Drive.");
 
-  SetTextXY(10, 11, "Press ENTER to reboot your computer.");
+  CONSOLE_SetTextXY(10, 11, "Press ENTER to reboot your computer.");
 
-  SetStatusText("   ENTER = Reboot computer");
+  CONSOLE_SetStatusText("   ENTER = Reboot computer");
 
   if (IsUnattendedSetup)
     {
@@ -3612,7 +3644,7 @@ SuccessPage(PINPUT_RECORD Ir)
 
   while(TRUE)
     {
-      ConInKey(Ir);
+      CONSOLE_ConInKey(Ir);
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
@@ -3625,12 +3657,12 @@ SuccessPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 FlushPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(10, 6, "The system is now making sure all data is stored on your disk");
+  CONSOLE_SetTextXY(10, 6, "The system is now making sure all data is stored on your disk");
 
-  SetTextXY(10, 8, "This may take a minute");
-  SetTextXY(10, 9, "When finished, your computer will reboot automatically");
+  CONSOLE_SetTextXY(10, 8, "This may take a minute");
+  CONSOLE_SetTextXY(10, 9, "When finished, your computer will reboot automatically");
 
-  SetStatusText("   Flushing cache");
+  CONSOLE_SetStatusText("   Flushing cache");
 
   return REBOOT_PAGE;
 }
@@ -3675,9 +3707,9 @@ SignalInitEvent()
 VOID NTAPI
 NtProcessStartup(PPEB Peb)
 {
-  NTSTATUS Status;
   INPUT_RECORD Ir;
   PAGE_NUMBER Page;
+  BOOL ret;
 
   RtlNormalizeProcessParams(Peb->ProcessParameters);
 
@@ -3686,10 +3718,10 @@ NtProcessStartup(PPEB Peb)
 
   SignalInitEvent();
 
-  Status = AllocConsole();
-  if (!NT_SUCCESS(Status))
+  ret = AllocConsole(0);
+  if (!ret)
     {
-      PrintString("Unable to open the console (Status = 0x%08lx)\n\n", Status);
+      PrintString("Unable to open the console\n\n");
       PrintString("The most common cause of this is using an USB keyboard\n");
       PrintString("USB keyboards are not fully supported yet\n");
 
@@ -3709,14 +3741,14 @@ NtProcessStartup(PPEB Peb)
   RtlInitUnicodeString(&SystemRootPath, NULL);
 
   /* Hide the cursor */
-  SetCursorType(TRUE, FALSE);
+  CONSOLE_SetCursorType(TRUE, FALSE);
 
   Page = START_PAGE;
   while (Page != REBOOT_PAGE)
     {
-      ClearScreen();
+      CONSOLE_ClearScreen();
 
-      SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
+      CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
 
       switch (Page)
 	{

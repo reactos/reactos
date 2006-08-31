@@ -95,7 +95,7 @@ FormatPartition (PUNICODE_STRING DriveRoot)
   SHORT xScreen;
   SHORT yScreen;
 
-  GetScreenSize(&xScreen, &yScreen);
+  CONSOLE_GetScreenSize(&xScreen, &yScreen);
 
   ProgressBar = CreateProgressBar (6,
 				   yScreen - 14,

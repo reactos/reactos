@@ -27,127 +27,165 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 
-#define AllocConsole ConAllocConsole
-#define FreeConsole ConFreeConsole
-#define ReadConsoleOutputCharacters ConReadConsoleOutputCharacters
-#define ReadConsoleOutputAttributes ConReadConsoleOutputAttributes
-#define WriteConsoleOutputCharacters ConWriteConsoleOutputCharacters
-#define WriteConsoleOutputAttributes ConWriteConsoleOutputAttributes
-#define FillConsoleOutputAttribute ConFillConsoleOutputAttribute
+#undef WriteConsole
+#undef ReadConsoleInput
 #undef FillConsoleOutputCharacter
-#define FillConsoleOutputCharacter ConFillConsoleOutputCharacter
 
-NTSTATUS
-ConAllocConsole(VOID);
+#define AllocConsole ConAllocConsole
+#define FillConsoleOutputAttribute ConFillConsoleOutputAttribute
+#define FillConsoleOutputCharacterA ConFillConsoleOutputCharacterA
+#define FreeConsole ConFreeConsole
+#define GetConsoleScreenBufferInfo ConGetConsoleScreenBufferInfo
+#define ReadConsoleInput ConReadConsoleInput
+#define SetConsoleCursorInfo ConSetConsoleCursorInfo
+#define SetConsoleCursorPosition ConSetConsoleCursorPosition
+#define SetConsoleTextAttribute ConSetConsoleTextAttribute
+#define WriteConsole ConWriteConsole
+#define WriteConsoleOutputCharacterA ConWriteConsoleOutputCharacterA
+#define WriteConsoleOutputCharacterW ConWriteConsoleOutputCharacterW
 
-VOID
+#define FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
+#define FOREGROUND_YELLOW (FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN)
+#define BACKGROUND_WHITE (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
+
+BOOL WINAPI
+ConAllocConsole(
+	IN DWORD dwProcessId);
+
+BOOL WINAPI
+ConFillConsoleOutputAttribute(
+	IN HANDLE hConsoleOutput,
+	IN WORD wAttribute,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfAttrsWritten);
+
+BOOL WINAPI
+ConFillConsoleOutputCharacterA(
+	IN HANDLE hConsoleOutput,
+	IN CHAR cCharacter,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfCharsWritten);
+
+BOOL WINAPI
 ConFreeConsole(VOID);
 
+BOOL WINAPI
+ConGetConsoleScreenBufferInfo(
+	IN HANDLE hConsoleOutput,
+	OUT PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo);
 
-NTSTATUS
-ConReadConsoleOutputCharacters(LPSTR lpCharacter,
-			       ULONG nLength,
-			       COORD dwReadCoord,
-			       PULONG lpNumberOfCharsRead);
+BOOL WINAPI
+ConReadConsoleInput(
+	IN HANDLE hConsoleInput,
+	OUT PINPUT_RECORD lpBuffer,
+	IN DWORD nLength,
+	OUT LPDWORD lpNumberOfEventsRead);
 
-NTSTATUS
-ConReadConsoleOutputAttributes(PUSHORT lpAttribute,
-			       ULONG nLength,
-			       COORD dwReadCoord,
-			       PULONG lpNumberOfAttrsRead);
+BOOL WINAPI
+ConSetConsoleCursorInfo(
+	IN HANDLE hConsoleOutput,
+	IN const CONSOLE_CURSOR_INFO* lpConsoleCursorInfo);
 
-NTSTATUS
-ConWriteConsoleOutputCharacters(LPCSTR lpCharacter,
-			        ULONG nLength,
-			        COORD dwWriteCoord);
+BOOL WINAPI
+ConSetConsoleCursorPosition(
+	IN HANDLE hConsoleOutput,
+	IN COORD dwCursorPosition);
 
-NTSTATUS
-ConWriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
-			        ULONG nLength,
-			        COORD dwWriteCoord,
-			        PULONG lpNumberOfAttrsWritten);
+BOOL WINAPI
+ConSetConsoleTextAttribute(
+	IN HANDLE hConsoleOutput,
+	IN WORD wAttributes);
 
-NTSTATUS
-ConFillConsoleOutputAttribute(USHORT wAttribute,
-			      ULONG nLength,
-			      COORD dwWriteCoord,
-			      PULONG lpNumberOfAttrsWritten);
-NTSTATUS
-ConFillConsoleOutputCharacter(CHAR Character,
-			      ULONG Length,
-			      COORD WriteCoord,
-			      PULONG NumberOfCharsWritten);
+BOOL WINAPI
+ConWriteConsole(
+	IN HANDLE hConsoleOutput,
+	IN const VOID* lpBuffer,
+	IN DWORD nNumberOfCharsToWrite,
+	OUT LPDWORD lpNumberOfCharsWritten,
+	IN LPVOID lpReserved);
 
-#if 0
-NTSTATUS
-SetConsoleMode(HANDLE hConsoleHandle,
-	       ULONG dwMode);
-#endif
+BOOL WINAPI
+ConWriteConsoleOutputCharacterA(
+	HANDLE hConsoleOutput,
+	IN LPCSTR lpCharacter,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfCharsWritten);
+
+BOOL WINAPI
+ConWriteConsoleOutputCharacterA(
+	HANDLE hConsoleOutput,
+	IN LPCSTR lpCharacter,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfCharsWritten);
+
+
 
 VOID
-ConInKey(PINPUT_RECORD Buffer);
+CONSOLE_ConInKey(PINPUT_RECORD Buffer);
 
 VOID
-ConOutChar(CHAR c);
+CONSOLE_ConOutChar(CHAR c);
 
 VOID
-ConOutPuts(LPSTR szText);
+CONSOLE_ConOutPuts(LPSTR szText);
 
 VOID
-ConOutPrintf(LPSTR szFormat, ...);
+CONSOLE_ConOutPrintf(LPSTR szFormat, ...);
 
 SHORT
-GetCursorX(VOID);
+CONSOLE_GetCursorX(VOID);
 
 SHORT
-GetCursorY(VOID);
+CONSOLE_GetCursorY(VOID);
 
 VOID
-GetScreenSize(SHORT *maxx,
+CONSOLE_GetScreenSize(SHORT *maxx,
 	      SHORT *maxy);
 
-
 VOID
-SetCursorType(BOOL bInsert,
+CONSOLE_SetCursorType(BOOL bInsert,
 	      BOOL bVisible);
 
 VOID
-SetCursorXY(SHORT x,
+CONSOLE_SetCursorXY(SHORT x,
 	    SHORT y);
 
+VOID
+CONSOLE_ClearScreen(VOID);
 
 VOID
-ClearScreen(VOID);
+CONSOLE_SetStatusText(char* fmt, ...);
 
 VOID
-SetStatusText(char* fmt, ...);
+CONSOLE_InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row);
 
 VOID
-InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row);
+CONSOLE_NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row);
 
 VOID
-NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row);
+CONSOLE_SetTextXY(SHORT x, SHORT y, PCHAR Text);
 
 VOID
-SetTextXY(SHORT x, SHORT y, PCHAR Text);
+CONSOLE_SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text);
 
 VOID
-SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text);
+CONSOLE_SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text);
 
 VOID
-SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text);
+CONSOLE_SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text);
 
 VOID
-SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text);
+CONSOLE_SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text);
 
 VOID
-SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text);
+CONSOLE_PrintTextXY(SHORT x, SHORT y, char* fmt, ...);
 
 VOID
-PrintTextXY(SHORT x, SHORT y, char* fmt, ...);
-
-VOID
-PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...);
+CONSOLE_PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...);
 
 #endif /* __CONSOLE_H__*/
 

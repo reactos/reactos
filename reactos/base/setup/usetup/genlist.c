@@ -122,7 +122,8 @@ DrawListFrame(PGENERIC_LIST GenericList)
   /* Draw upper left corner */
   coPos.X = GenericList->Left;
   coPos.Y = GenericList->Top;
-  FillConsoleOutputCharacter (0xDA, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xDA, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -130,7 +131,8 @@ DrawListFrame(PGENERIC_LIST GenericList)
   /* Draw upper edge */
   coPos.X = GenericList->Left + 1;
   coPos.Y = GenericList->Top;
-  FillConsoleOutputCharacter (0xC4, // '-',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xC4, // '-',
 			      GenericList->Right - GenericList->Left - 1,
 			      coPos,
 			      &Written);
@@ -138,7 +140,8 @@ DrawListFrame(PGENERIC_LIST GenericList)
   /* Draw upper right corner */
   coPos.X = GenericList->Right;
   coPos.Y = GenericList->Top;
-  FillConsoleOutputCharacter (0xBF, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xBF, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -148,13 +151,15 @@ DrawListFrame(PGENERIC_LIST GenericList)
     {
       coPos.X = GenericList->Left;
       coPos.Y = i;
-      FillConsoleOutputCharacter (0xB3, // '|',
+      FillConsoleOutputCharacterA (StdOutput,
+				  0xB3, // '|',
 				  1,
 				  coPos,
 				  &Written);
 
       coPos.X = GenericList->Right;
-      FillConsoleOutputCharacter (0xB3, //'|',
+      FillConsoleOutputCharacterA (StdOutput,
+				  0xB3, //'|',
 				  1,
 				  coPos,
 				  &Written);
@@ -163,7 +168,8 @@ DrawListFrame(PGENERIC_LIST GenericList)
   /* Draw lower left corner */
   coPos.X = GenericList->Left;
   coPos.Y = GenericList->Bottom;
-  FillConsoleOutputCharacter (0xC0, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xC0, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -171,7 +177,8 @@ DrawListFrame(PGENERIC_LIST GenericList)
   /* Draw lower edge */
   coPos.X = GenericList->Left + 1;
   coPos.Y = GenericList->Bottom;
-  FillConsoleOutputCharacter (0xC4, // '-',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xC4, // '-',
 			      GenericList->Right - GenericList->Left - 1,
 			      coPos,
 			      &Written);
@@ -179,7 +186,8 @@ DrawListFrame(PGENERIC_LIST GenericList)
   /* Draw lower right corner */
   coPos.X = GenericList->Right;
   coPos.Y = GenericList->Bottom;
-  FillConsoleOutputCharacter (0xD9, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xD9, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -207,20 +215,26 @@ DrawListEntries(PGENERIC_LIST GenericList)
       if (coPos.Y == GenericList->Bottom)
 	break;
 
-      FillConsoleOutputAttribute ((GenericList->CurrentEntry == ListEntry) ? 0x71 : 0x17,
+      FillConsoleOutputAttribute (StdOutput,
+				  (GenericList->CurrentEntry == ListEntry) ?
+				      FOREGROUND_BLUE | BACKGROUND_WHITE :
+				      FOREGROUND_WHITE | BACKGROUND_BLUE,
 				  Width,
 				  coPos,
 				  &Written);
 
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+				  ' ',
 				  Width,
 				  coPos,
 				  &Written);
 
       coPos.X++;
-      WriteConsoleOutputCharacters (ListEntry->Text,
+      WriteConsoleOutputCharacterA (StdOutput,
+				    ListEntry->Text,
 				    min (strlen(ListEntry->Text), (SIZE_T)Width - 2),
-				    coPos);
+				    coPos,
+				    &Written);
       coPos.X--;
 
       coPos.Y++;
@@ -229,12 +243,14 @@ DrawListEntries(PGENERIC_LIST GenericList)
 
   while (coPos.Y < GenericList->Bottom)
     {
-      FillConsoleOutputAttribute (0x17,
+      FillConsoleOutputAttribute (StdOutput,
+				  FOREGROUND_WHITE | BACKGROUND_BLUE,
 				  Width,
 				  coPos,
 				  &Written);
 
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+				' ',
 				  Width,
 				  coPos,
 				  &Written);

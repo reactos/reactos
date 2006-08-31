@@ -1056,12 +1056,14 @@ PrintEmptyLine (PPARTLIST List)
 
   if (List->Line >= 0 && List->Line <= Height)
     {
-      FillConsoleOutputAttribute (0x17,
+      FillConsoleOutputAttribute (StdOutput,
+			          FOREGROUND_WHITE | BACKGROUND_BLUE,
 			          Width,
 			          coPos,
 			          &Written);
 
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+			          ' ',
 			          Width,
 			          coPos,
 			          &Written);
@@ -1189,11 +1191,14 @@ PrintPartitionData (PPARTLIST List,
     }
 
   Attribute = (List->CurrentDisk == DiskEntry &&
-	       List->CurrentPartition == PartEntry) ? 0x71 : 0x17;
+	       List->CurrentPartition == PartEntry) ?
+	           FOREGROUND_BLUE | BACKGROUND_WHITE :
+	           FOREGROUND_WHITE | BACKGROUND_BLUE;
 
   if (List->Line >= 0 && List->Line <= Height)
     {
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+			          ' ',
 			          Width,
 			          coPos,
 			          &Written);
@@ -1202,7 +1207,8 @@ PrintPartitionData (PPARTLIST List,
   Width -= 8;
   if (List->Line >= 0 && List->Line <= Height)
     {
-      FillConsoleOutputAttribute (Attribute,
+      FillConsoleOutputAttribute (StdOutput,
+			          Attribute,
 			          Width,
 			          coPos,
 			          &Written);
@@ -1211,9 +1217,11 @@ PrintPartitionData (PPARTLIST List,
   Width -= 2;
   if (List->Line >= 0 && List->Line <= Height)
     {
-      WriteConsoleOutputCharacters (LineBuffer,
+      WriteConsoleOutputCharacterA (StdOutput,
+				    LineBuffer,
 				    min (strlen (LineBuffer), Width),
-				    coPos);
+				    coPos,
+				    &Written);
     }
   List->Line++;
 }
@@ -1279,12 +1287,14 @@ PrintDiskData (PPARTLIST List,
     }
   if (List->Line >= 0 && List->Line <= Height)
     {
-      FillConsoleOutputAttribute (0x17,
+      FillConsoleOutputAttribute (StdOutput,
+			          FOREGROUND_WHITE | BACKGROUND_BLUE,
 			          Width,
 			          coPos,
 			          &Written);
 
-      FillConsoleOutputCharacter (' ',
+      FillConsoleOutputCharacterA (StdOutput,
+			          ' ',
 			          Width,
 			          coPos,
 			          &Written);
@@ -1293,9 +1303,11 @@ PrintDiskData (PPARTLIST List,
   coPos.X++;
   if (List->Line >= 0 && List->Line <= Height)
     {
-      WriteConsoleOutputCharacters (LineBuffer,
+      WriteConsoleOutputCharacterA (StdOutput,
+				    LineBuffer,
 				    min (strlen (LineBuffer), Width - 2),
-				    coPos);
+				    coPos,
+				    &Written);
     }
   List->Line++;
 
@@ -1397,7 +1409,8 @@ DrawPartitionList (PPARTLIST List)
   /* draw upper left corner */
   coPos.X = List->Left;
   coPos.Y = List->Top;
-  FillConsoleOutputCharacter (0xDA, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xDA, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -1407,23 +1420,28 @@ DrawPartitionList (PPARTLIST List)
   coPos.Y = List->Top;
   if (List->Offset == 0)
     {
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          List->Right - List->Left - 1,
 			          coPos,
 			          &Written);
     }
   else
     {
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          List->Right - List->Left - 5,
 			          coPos,
 			          &Written);
       coPos.X = List->Right - 5;
-      WriteConsoleOutputCharacters ("(\x18)", // "(up)"
+      WriteConsoleOutputCharacterA (StdOutput,
+			            "(\x18)", // "(up)"
 			            3,
-			            coPos);
+			            coPos,
+			            &Written);
       coPos.X = List->Right - 2;
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          2,
 			          coPos,
 			          &Written);
@@ -1432,7 +1450,8 @@ DrawPartitionList (PPARTLIST List)
   /* draw upper right corner */
   coPos.X = List->Right;
   coPos.Y = List->Top;
-  FillConsoleOutputCharacter (0xBF, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xBF, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -1442,13 +1461,15 @@ DrawPartitionList (PPARTLIST List)
     {
       coPos.X = List->Left;
       coPos.Y = i;
-      FillConsoleOutputCharacter (0xB3, // '|',
+      FillConsoleOutputCharacterA (StdOutput,
+				  0xB3, // '|',
 				  1,
 				  coPos,
 				  &Written);
 
       coPos.X = List->Right;
-      FillConsoleOutputCharacter (0xB3, //'|',
+      FillConsoleOutputCharacterA (StdOutput,
+				  0xB3, //'|',
 				  1,
 				  coPos,
 				  &Written);
@@ -1457,7 +1478,8 @@ DrawPartitionList (PPARTLIST List)
   /* draw lower left corner */
   coPos.X = List->Left;
   coPos.Y = List->Bottom;
-  FillConsoleOutputCharacter (0xC0, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xC0, // '+',
 			      1,
 			      coPos,
 			      &Written);
@@ -1467,23 +1489,28 @@ DrawPartitionList (PPARTLIST List)
   coPos.Y = List->Bottom;
   if (LastLine - List->Offset <= List->Bottom - List->Top - 2)
     {
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          List->Right - List->Left - 1,
 			          coPos,
 			          &Written);
     }
   else
     {
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          List->Right - List->Left - 5,
 			          coPos,
 			          &Written);
       coPos.X = List->Right - 5;
-      WriteConsoleOutputCharacters ("(\x19)", // "(down)"
+      WriteConsoleOutputCharacterA (StdOutput,
+			            "(\x19)", // "(down)"
 			            3,
-			            coPos);
+			            coPos,
+			            &Written);
       coPos.X = List->Right - 2;
-      FillConsoleOutputCharacter (0xC4, // '-',
+      FillConsoleOutputCharacterA (StdOutput,
+			          0xC4, // '-',
 			          2,
 			          coPos,
 			          &Written);
@@ -1492,7 +1519,8 @@ DrawPartitionList (PPARTLIST List)
   /* draw lower right corner */
   coPos.X = List->Right;
   coPos.Y = List->Bottom;
-  FillConsoleOutputCharacter (0xD9, // '+',
+  FillConsoleOutputCharacterA (StdOutput,
+			      0xD9, // '+',
 			      1,
 			      coPos,
 			      &Written);

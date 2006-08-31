@@ -19,7 +19,8 @@ DrawBorder(PPROGRESSBAR Bar)
   /* draw upper left corner */
   coPos.X = Bar->Left;
   coPos.Y = Bar->Top + 1;
-  FillConsoleOutputCharacter(0xDA, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xDA, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -27,7 +28,8 @@ DrawBorder(PPROGRESSBAR Bar)
   /* draw upper edge */
   coPos.X = Bar->Left + 1;
   coPos.Y = Bar->Top + 1;
-  FillConsoleOutputCharacter(0xC4, // '-',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC4, // '-',
 			     Bar->Right - Bar->Left - 1,
 			     coPos,
 			     &Written);
@@ -35,7 +37,8 @@ DrawBorder(PPROGRESSBAR Bar)
   /* draw upper right corner */
   coPos.X = Bar->Right;
   coPos.Y = Bar->Top + 1;
-  FillConsoleOutputCharacter(0xBF, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xBF, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -45,13 +48,15 @@ DrawBorder(PPROGRESSBAR Bar)
     {
       coPos.X = Bar->Left;
       coPos.Y = i;
-      FillConsoleOutputCharacter(0xB3, // '|',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xB3, // '|',
 				 1,
 				 coPos,
 				 &Written);
 
       coPos.X = Bar->Right;
-      FillConsoleOutputCharacter(0xB3, //'|',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xB3, //'|',
 				 1,
 				 coPos,
 				 &Written);
@@ -60,7 +65,8 @@ DrawBorder(PPROGRESSBAR Bar)
   /* draw lower left corner */
   coPos.X = Bar->Left;
   coPos.Y = Bar->Bottom;
-  FillConsoleOutputCharacter(0xC0, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC0, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -68,7 +74,8 @@ DrawBorder(PPROGRESSBAR Bar)
   /* draw lower edge */
   coPos.X = Bar->Left + 1;
   coPos.Y = Bar->Bottom;
-  FillConsoleOutputCharacter(0xC4, // '-',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC4, // '-',
 			     Bar->Right - Bar->Left - 1,
 			     coPos,
 			     &Written);
@@ -76,7 +83,8 @@ DrawBorder(PPROGRESSBAR Bar)
   /* draw lower right corner */
   coPos.X = Bar->Right;
   coPos.Y = Bar->Bottom;
-  FillConsoleOutputCharacter(0xD9, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xD9, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -92,7 +100,8 @@ DrawThickBorder(PPROGRESSBAR Bar)
   /* draw upper left corner */
   coPos.X = Bar->Left;
   coPos.Y = Bar->Top + 1;
-  FillConsoleOutputCharacter(0xC9, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC9, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -100,7 +109,8 @@ DrawThickBorder(PPROGRESSBAR Bar)
   /* draw upper edge */
   coPos.X = Bar->Left + 1;
   coPos.Y = Bar->Top + 1;
-  FillConsoleOutputCharacter(0xCD, // '-',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xCD, // '-',
 			     Bar->Right - Bar->Left - 1,
 			     coPos,
 			     &Written);
@@ -108,7 +118,8 @@ DrawThickBorder(PPROGRESSBAR Bar)
   /* draw upper right corner */
   coPos.X = Bar->Right;
   coPos.Y = Bar->Top + 1;
-  FillConsoleOutputCharacter(0xBB, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xBB, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -118,13 +129,15 @@ DrawThickBorder(PPROGRESSBAR Bar)
     {
       coPos.X = Bar->Left;
       coPos.Y = i;
-      FillConsoleOutputCharacter(0xBA, // '|',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xBA, // '|',
 				 1,
 				 coPos,
 				 &Written);
 
       coPos.X = Bar->Right;
-      FillConsoleOutputCharacter(0xBA, //'|',
+      FillConsoleOutputCharacterA(StdOutput,
+				 0xBA, //'|',
 				 1,
 				 coPos,
 				 &Written);
@@ -133,7 +146,8 @@ DrawThickBorder(PPROGRESSBAR Bar)
   /* draw lower left corner */
   coPos.X = Bar->Left;
   coPos.Y = Bar->Bottom;
-  FillConsoleOutputCharacter(0xC8, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xC8, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -141,7 +155,8 @@ DrawThickBorder(PPROGRESSBAR Bar)
   /* draw lower edge */
   coPos.X = Bar->Left + 1;
   coPos.Y = Bar->Bottom;
-  FillConsoleOutputCharacter(0xCD, // '-',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xCD, // '-',
 			     Bar->Right - Bar->Left - 1,
 			     coPos,
 			     &Written);
@@ -149,7 +164,8 @@ DrawThickBorder(PPROGRESSBAR Bar)
   /* draw lower right corner */
   coPos.X = Bar->Right;
   coPos.Y = Bar->Bottom;
-  FillConsoleOutputCharacter(0xBC, // '+',
+  FillConsoleOutputCharacterA(StdOutput,
+			     0xBC, // '+',
 			     1,
 			     coPos,
 			     &Written);
@@ -168,15 +184,17 @@ DrawProgressBar(PPROGRESSBAR Bar)
 
   coPos.X = Bar->Left + (Bar->Width - 2) / 2;
   coPos.Y = Bar->Top;
-  WriteConsoleOutputCharacters(TextBuffer,
+  WriteConsoleOutputCharacterA(StdOutput,
+			       TextBuffer,
 			       4,
-			       coPos);
+			       coPos,
+			       &Written);
 
   /* Draw the progress bar border */
   DrawBorder(Bar);
   
   /* Write Text Associated with Bar */
-  SetTextXY(10, 24, Bar->Text);
+  CONSOLE_SetTextXY(10, 24, Bar->Text);
   
   /* Draw the progress bar "border" border */
   BarBorder.Top -= 5;
@@ -189,12 +207,14 @@ DrawProgressBar(PPROGRESSBAR Bar)
   coPos.X = Bar->Left + 1;
   for (coPos.Y = Bar->Top + 2; coPos.Y <= Bar->Bottom - 1; coPos.Y++)
     {
-      FillConsoleOutputAttribute(0x1E, /* Yellow on blue */
+      FillConsoleOutputAttribute(StdOutput,
+				 FOREGROUND_YELLOW | BACKGROUND_BLUE,
 				 Bar->Width - 2,
 				 coPos,
 				 &Written);
 
-      FillConsoleOutputCharacter(' ',
+      FillConsoleOutputCharacterA(StdOutput,
+				 ' ',
 				 Bar->Width - 2,
 				 coPos,
 				 &Written);
@@ -285,9 +305,11 @@ ProgressNextStep(PPROGRESSBAR Bar)
 
       coPos.X = Bar->Left + (Bar->Width - 2) / 2;
       coPos.Y = Bar->Top;
-      WriteConsoleOutputCharacters(TextBuffer,
+      WriteConsoleOutputCharacterA(StdOutput,
+				   TextBuffer,
 				   4,
-				   coPos);
+				   coPos,
+				   &Written);
     }
 
   /* Calculate bar position */
@@ -301,7 +323,8 @@ ProgressNextStep(PPROGRESSBAR Bar)
       for (coPos.Y = Bar->Top + 2; coPos.Y <= Bar->Bottom - 1; coPos.Y++)
 	{
 	  coPos.X = Bar->Left + 1;
-	  FillConsoleOutputCharacter(0xDB,
+	  FillConsoleOutputCharacterA(StdOutput,
+				     0xDB,
 				     Bar->Pos / 2,
 				     coPos,
 				     &Written);
@@ -309,7 +332,8 @@ ProgressNextStep(PPROGRESSBAR Bar)
 
 	  if (NewPos & 1)
 	    {
-	      FillConsoleOutputCharacter(0xDD,
+	      FillConsoleOutputCharacterA(StdOutput,
+					 0xDD,
 					 1,
 					 coPos,
 					 &Written);
@@ -318,7 +342,8 @@ ProgressNextStep(PPROGRESSBAR Bar)
 
 	  if (coPos.X <= Bar->Right - 1)
 	    {
-	      FillConsoleOutputCharacter(' ',
+	      FillConsoleOutputCharacterA(StdOutput,
+					 ' ',
 					 Bar->Right - coPos.X,
 					 coPos,
 					 &Written);
@@ -355,9 +380,11 @@ ProgressSetStep (PPROGRESSBAR Bar,
 
       coPos.X = Bar->Left + (Bar->Width - 2) / 2;
       coPos.Y = Bar->Top;
-      WriteConsoleOutputCharacters(TextBuffer,
+      WriteConsoleOutputCharacterA(StdOutput,
+				   TextBuffer,
 				   4,
-				   coPos);
+				   coPos,
+				   &Written);
     }
 
   /* Calculate bar position */
@@ -371,7 +398,8 @@ ProgressSetStep (PPROGRESSBAR Bar,
       for (coPos.Y = Bar->Top + 2; coPos.Y <= Bar->Bottom - 1; coPos.Y++)
 	{
 	  coPos.X = Bar->Left + 1;
-	  FillConsoleOutputCharacter(0xDB,
+	  FillConsoleOutputCharacterA(StdOutput,
+				     0xDB,
 				     Bar->Pos / 2,
 				     coPos,
 				     &Written);
@@ -379,7 +407,8 @@ ProgressSetStep (PPROGRESSBAR Bar,
 
 	  if (NewPos & 1)
 	    {
-	      FillConsoleOutputCharacter(0xDD,
+	      FillConsoleOutputCharacterA(StdOutput,
+					 0xDD,
 					 1,
 					 coPos,
 					 &Written);
@@ -388,7 +417,8 @@ ProgressSetStep (PPROGRESSBAR Bar,
 
 	  if (coPos.X <= Bar->Right - 1)
 	    {
-	      FillConsoleOutputCharacter(' ',
+	      FillConsoleOutputCharacterA(StdOutput,
+					 ' ',
 					 Bar->Right - coPos.X,
 					 coPos,
 					 &Written);

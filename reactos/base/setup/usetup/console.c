@@ -31,7 +31,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* GLOBALS ******************************************************************/
 
 static HANDLE StdInput  = INVALID_HANDLE_VALUE;
@@ -40,618 +39,414 @@ static HANDLE StdOutput = INVALID_HANDLE_VALUE;
 static SHORT xScreen = 0;
 static SHORT yScreen = 0;
 
-
-NTSTATUS
-ConGetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo);
-
-
 /* FUNCTIONS *****************************************************************/
 
-
-
-NTSTATUS
-ConAllocConsole(VOID)
+BOOL WINAPI
+ConAllocConsole(
+	IN DWORD dwProcessId)
 {
-  UNICODE_STRING ScreenName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
-  UNICODE_STRING KeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
-  CONSOLE_SCREEN_BUFFER_INFO csbi;
+	UNICODE_STRING ScreenName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
+	UNICODE_STRING KeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-  /* Open the screen */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &ScreenName,
-			     0,
-			     NULL,
-			     NULL);
-  Status = NtOpenFile (&StdOutput,
-		       FILE_ALL_ACCESS,
-		       &ObjectAttributes,
-		       &IoStatusBlock,
-		       0,
-		       FILE_SYNCHRONOUS_IO_ALERT);
-  if (!NT_SUCCESS(Status))
-    return(Status);
+	/* Open the screen */
+	InitializeObjectAttributes(
+		&ObjectAttributes,
+		&ScreenName,
+		0,
+		NULL,
+		NULL);
+	Status = NtOpenFile(
+		&StdOutput,
+		FILE_ALL_ACCESS,
+		&ObjectAttributes,
+		&IoStatusBlock,
+		0,
+		FILE_SYNCHRONOUS_IO_ALERT);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
 
-  /* Open the keyboard */
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyboardName,
-			     0,
-			     NULL,
-			     NULL);
-  Status = NtOpenFile (&StdInput,
-		       FILE_ALL_ACCESS,
-		       &ObjectAttributes,
-		       &IoStatusBlock,
-		       0,
-		       FILE_SYNCHRONOUS_IO_ALERT);
-  if (!NT_SUCCESS(Status))
-    return(Status);
+	/* Open the keyboard */
+	InitializeObjectAttributes(
+		&ObjectAttributes,
+		&KeyboardName,
+		0,
+		NULL,
+		NULL);
+	Status = NtOpenFile(
+		&StdInput,
+		FILE_ALL_ACCESS,
+		&ObjectAttributes,
+		&IoStatusBlock,
+		0,
+		FILE_SYNCHRONOUS_IO_ALERT);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
 
-  ConGetConsoleScreenBufferInfo(&csbi);
+	if (!GetConsoleScreenBufferInfo(StdOutput, &csbi))
+		return FALSE;
 
-  xScreen = csbi.dwSize.X;
-  yScreen = csbi.dwSize.Y;
+	xScreen = csbi.dwSize.X;
+	yScreen = csbi.dwSize.Y;
 
-  return(Status);
+	return TRUE;
 }
 
-
-VOID
+BOOL WINAPI
 ConFreeConsole(VOID)
 {
-  DPRINT("FreeConsole() called\n");
+	DPRINT("FreeConsole() called\n");
 
-  if (StdInput != INVALID_HANDLE_VALUE)
-    NtClose(StdInput);
+	if (StdInput != INVALID_HANDLE_VALUE)
+		NtClose(StdInput);
 
-  if (StdOutput != INVALID_HANDLE_VALUE)
-    NtClose(StdOutput);
+	if (StdOutput != INVALID_HANDLE_VALUE)
+		NtClose(StdOutput);
 
-  DPRINT("FreeConsole() done\n");
+	DPRINT("FreeConsole() done\n");
+	return TRUE;
 }
 
-
-
-
-NTSTATUS
-ConWriteConsole(PCHAR Buffer,
-	        ULONG NumberOfCharsToWrite,
-	        PULONG NumberOfCharsWritten)
+BOOL WINAPI
+ConWriteConsole(
+	IN HANDLE hConsoleOutput,
+	IN const VOID* lpBuffer,
+	IN DWORD nNumberOfCharsToWrite,
+	OUT LPDWORD lpNumberOfCharsWritten,
+	IN LPVOID lpReserved)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status = STATUS_SUCCESS;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
 
-  Status = NtWriteFile(StdOutput,
-		       NULL,
-		       NULL,
-		       NULL,
-		       &IoStatusBlock,
-		       Buffer,
-		       NumberOfCharsToWrite,
-		       NULL,
-		       NULL);
+	Status = NtWriteFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		(PVOID)lpBuffer,
+		nNumberOfCharsToWrite,
+		NULL,
+		NULL);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
 
-  if (NT_SUCCESS(Status) && NumberOfCharsWritten != NULL)
-    {
-      *NumberOfCharsWritten = IoStatusBlock.Information;
-    }
-
-  return(Status);
+	*lpNumberOfCharsWritten = IoStatusBlock.Information;
+	return TRUE;
 }
 
-
-#if 0
-/*--------------------------------------------------------------
- *	ReadConsoleA
- */
-BOOL
-NTAPI
-ReadConsoleA(HANDLE hConsoleInput,
-			     LPVOID lpBuffer,
-			     DWORD nNumberOfCharsToRead,
-			     LPDWORD lpNumberOfCharsRead,
-			     LPVOID lpReserved)
+BOOL WINAPI
+ConReadConsoleInput(
+	IN HANDLE hConsoleInput,
+	OUT PINPUT_RECORD lpBuffer,
+	IN DWORD nLength,
+	OUT LPDWORD lpNumberOfEventsRead)
 {
-  KEY_EVENT_RECORD KeyEventRecord;
-  BOOL  stat = TRUE;
-  PCHAR Buffer = (PCHAR)lpBuffer;
-  DWORD Result;
-  int   i;
+	IO_STATUS_BLOCK IoStatusBlock;
+	KEYBOARD_INPUT_DATA InputData;
+	NTSTATUS Status;
 
-  for (i=0; (stat && i<nNumberOfCharsToRead);)
-    {
-      stat = ReadFile(hConsoleInput,
-		      &KeyEventRecord,
-		      sizeof(KEY_EVENT_RECORD),
-		      &Result,
-		      NULL);
-      if (stat && KeyEventRecord.bKeyDown && KeyEventRecord.uChar.AsciiChar != 0)
-	{
-	  Buffer[i] = KeyEventRecord.uChar.AsciiChar;
-	  i++;
-	}
-    }
-  if (lpNumberOfCharsRead != NULL)
-    {
-      *lpNumberOfCharsRead = i;
-    }
-  return(stat);
-}
-#endif
+	lpBuffer->EventType = KEY_EVENT;
+	Status = NtReadFile(
+		hConsoleInput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		&InputData,
+		sizeof(KEYBOARD_INPUT_DATA),
+		NULL,
+		0);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
 
+	Status = IntTranslateKey(&InputData, &lpBuffer->Event.KeyEvent);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
 
-NTSTATUS
-ConReadConsoleInput(PINPUT_RECORD Buffer)
-{
-  IO_STATUS_BLOCK Iosb;
-  NTSTATUS Status;
-  KEYBOARD_INPUT_DATA InputData;
-
-  Buffer->EventType = KEY_EVENT;
-  Status = NtReadFile(StdInput,
-		      NULL,
-		      NULL,
-		      NULL,
-		      &Iosb,
-                      &InputData,
-                      sizeof(KEYBOARD_INPUT_DATA),
-		      NULL,
-		      0);
-
-  if (NT_SUCCESS(Status))
-    {
-      Status = IntTranslateKey(&InputData, &Buffer->Event.KeyEvent);
-    }
-
-  return(Status);
+	*lpNumberOfEventsRead = 1;
+	return TRUE;
 }
 
-
-NTSTATUS
-ConReadConsoleOutputCharacters(LPSTR lpCharacter,
-			       ULONG nLength,
-			       COORD dwReadCoord,
-			       PULONG lpNumberOfCharsRead)
+BOOL WINAPI
+ConWriteConsoleOutputCharacterA(
+	HANDLE hConsoleOutput,
+	IN LPCSTR lpCharacter,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfCharsWritten)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  OUTPUT_CHARACTER Buffer;
-  NTSTATUS Status;
+	IO_STATUS_BLOCK IoStatusBlock;
+	PCHAR Buffer;
+	COORD *pCoord;
+	PCHAR pText;
+	NTSTATUS Status;
 
-  Buffer.dwCoord    = dwReadCoord;
+	Buffer = RtlAllocateHeap(
+		ProcessHeap,
+		0,
+		nLength + sizeof(COORD));
+	pCoord = (COORD *)Buffer;
+	pText = (PCHAR)(pCoord + 1);
 
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_READ_OUTPUT_CHARACTER,
-				 &Buffer,
-				 sizeof(OUTPUT_CHARACTER),
-				 (PVOID)lpCharacter,
-				 nLength);
+	*pCoord = dwWriteCoord;
+	memcpy(pText, lpCharacter, nLength);
 
-  if (NT_SUCCESS(Status) && lpNumberOfCharsRead != NULL)
-    {
-      *lpNumberOfCharsRead = Buffer.dwTransfered;
-    }
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+		NULL,
+		0,
+		Buffer,
+		nLength + sizeof(COORD));
 
-  return(Status);
+	RtlFreeHeap(
+		ProcessHeap,
+		0,
+		Buffer);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
+
+	*lpNumberOfCharsWritten = IoStatusBlock.Information;
+	return TRUE;
 }
 
-
-NTSTATUS
-ConReadConsoleOutputAttributes(PUSHORT lpAttribute,
-			       ULONG nLength,
-			       COORD dwReadCoord,
-			       PULONG lpNumberOfAttrsRead)
+BOOL WINAPI
+ConWriteConsoleOutputCharacterW(
+	HANDLE hConsoleOutput,
+	IN LPCWSTR lpCharacter,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfCharsWritten)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  OUTPUT_ATTRIBUTE Buffer;
-  NTSTATUS Status;
+	IO_STATUS_BLOCK IoStatusBlock;
+	PCHAR Buffer;
+	COORD *pCoord;
+	PCHAR pText;
+	NTSTATUS Status;
+	ULONG i;
 
-  Buffer.dwCoord = dwReadCoord;
+	Buffer = RtlAllocateHeap(
+		ProcessHeap,
+		0,
+		nLength + sizeof(COORD));
+	pCoord = (COORD *)Buffer;
+	pText = (PCHAR)(pCoord + 1);
 
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_READ_OUTPUT_ATTRIBUTE,
-				 &Buffer,
-				 sizeof(OUTPUT_ATTRIBUTE),
-				 (PVOID)lpAttribute,
-				 nLength);
+	*pCoord = dwWriteCoord;
 
-  if (NT_SUCCESS(Status) && lpNumberOfAttrsRead != NULL)
-    {
-      *lpNumberOfAttrsRead = Buffer.dwTransfered;
-    }
+	/* FIXME: use real unicode->oem conversion */
+	for (i = 0; i < nLength; i++)
+		pText[i] = (CHAR)lpCharacter[i];
+	pText[i] = 0;
 
-  return(Status);
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+		NULL,
+		0,
+		Buffer,
+		nLength + sizeof(COORD));
+
+	RtlFreeHeap(
+		ProcessHeap,
+		0,
+		Buffer);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
+
+	*lpNumberOfCharsWritten = IoStatusBlock.Information;
+	return TRUE;
 }
 
-
-NTSTATUS
-ConWriteConsoleOutputCharacters(LPCSTR lpCharacter,
-			        ULONG nLength,
-			        COORD dwWriteCoord)
+BOOL WINAPI
+ConFillConsoleOutputAttribute(
+	IN HANDLE hConsoleOutput,
+	IN WORD wAttribute,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfAttrsWritten)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  PCHAR Buffer;
-  COORD *pCoord;
-  PCHAR pText;
-  NTSTATUS Status;
+	IO_STATUS_BLOCK IoStatusBlock;
+	OUTPUT_ATTRIBUTE Buffer;
+	NTSTATUS Status;
 
-  Buffer = RtlAllocateHeap(ProcessHeap,
-			   0,
-			   nLength + sizeof(COORD));
-  pCoord = (COORD *)Buffer;
-  pText = (PCHAR)(pCoord + 1);
+	Buffer.wAttribute = wAttribute;
+	Buffer.nLength    = nLength;
+	Buffer.dwCoord    = dwWriteCoord;
 
-  *pCoord = dwWriteCoord;
-  memcpy(pText, lpCharacter, nLength);
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE,
+		&Buffer,
+		sizeof(OUTPUT_ATTRIBUTE),
+		&Buffer,
+		sizeof(OUTPUT_ATTRIBUTE));
 
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				 NULL,
-				 0,
-				 Buffer,
-				 nLength + sizeof(COORD));
+	if (!NT_SUCCESS(Status))
+		return FALSE;
 
-  RtlFreeHeap(ProcessHeap,
-	      0,
-	      Buffer);
-
-  return(Status);
+	*lpNumberOfAttrsWritten = Buffer.dwTransfered;
+	return TRUE;
 }
 
-
-NTSTATUS
-ConWriteConsoleOutputCharactersW(LPCWSTR lpCharacter,
-			         ULONG nLength,
-			         COORD dwWriteCoord)
+BOOL WINAPI
+ConFillConsoleOutputCharacterA(
+	IN HANDLE hConsoleOutput,
+	IN CHAR cCharacter,
+	IN DWORD nLength,
+	IN COORD dwWriteCoord,
+	OUT LPDWORD lpNumberOfCharsWritten)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  PCHAR Buffer;
-  COORD *pCoord;
-  PCHAR pText;
-  NTSTATUS Status;
-  ULONG i;
+	IO_STATUS_BLOCK IoStatusBlock;
+	OUTPUT_CHARACTER Buffer;
+	NTSTATUS Status;
 
-  Buffer = RtlAllocateHeap(ProcessHeap,
-			   0,
-			   nLength + sizeof(COORD));
-  pCoord = (COORD *)Buffer;
-  pText = (PCHAR)(pCoord + 1);
+	Buffer.cCharacter = cCharacter;
+	Buffer.nLength = nLength;
+	Buffer.dwCoord = dwWriteCoord;
 
-  *pCoord = dwWriteCoord;
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER,
+		&Buffer,
+		sizeof(OUTPUT_CHARACTER),
+		&Buffer,
+		sizeof(OUTPUT_CHARACTER));
+	if (!NT_SUCCESS(Status))
+		return FALSE;
 
-  /* FIXME: use real unicode->oem conversion */
-  for (i = 0; i < nLength; i++)
-    pText[i] = (CHAR)lpCharacter[i];
-  pText[i] = 0;
-
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-				 NULL,
-				 0,
-				 Buffer,
-				 nLength + sizeof(COORD));
-
-  RtlFreeHeap(ProcessHeap,
-	      0,
-	      Buffer);
-
-  return(Status);
+	*lpNumberOfCharsWritten = Buffer.dwTransfered;
+	return TRUE;
 }
 
-
-NTSTATUS
-ConWriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
-			        ULONG nLength,
-			        COORD dwWriteCoord,
-			        PULONG lpNumberOfAttrsWritten)
+BOOL WINAPI
+ConGetConsoleScreenBufferInfo(
+	IN HANDLE hConsoleOutput,
+	OUT PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  PUSHORT Buffer;
-  COORD *pCoord;
-  PUSHORT pAttrib;
-  NTSTATUS Status;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
 
-  Buffer = RtlAllocateHeap(ProcessHeap,
-			   0,
-			   nLength * sizeof(USHORT) + sizeof(COORD));
-  pCoord = (COORD *)Buffer;
-  pAttrib = (PUSHORT)(pCoord + 1);
-
-  *pCoord = dwWriteCoord;
-  memcpy(pAttrib, lpAttribute, nLength * sizeof(USHORT));
-
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_WRITE_OUTPUT_ATTRIBUTE,
-				 NULL,
-				 0,
-				 Buffer,
-				 nLength * sizeof(USHORT) + sizeof(COORD));
-
-  RtlFreeHeap(ProcessHeap,
-	      0,
-	      Buffer);
-
-  return(Status);
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
+		NULL,
+		0,
+		lpConsoleScreenBufferInfo,
+		sizeof(CONSOLE_SCREEN_BUFFER_INFO));
+	return NT_SUCCESS(Status);
 }
 
-
-NTSTATUS
-ConFillConsoleOutputAttribute(USHORT wAttribute,
-			      ULONG nLength,
-			      COORD dwWriteCoord,
-			      PULONG lpNumberOfAttrsWritten)
+BOOL WINAPI
+ConSetConsoleCursorInfo(
+	IN HANDLE hConsoleOutput,
+	IN const CONSOLE_CURSOR_INFO* lpConsoleCursorInfo)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  OUTPUT_ATTRIBUTE Buffer;
-  NTSTATUS Status;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
 
-  Buffer.wAttribute = wAttribute;
-  Buffer.nLength    = nLength;
-  Buffer.dwCoord    = dwWriteCoord;
-
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_FILL_OUTPUT_ATTRIBUTE,
-				 &Buffer,
-				 sizeof(OUTPUT_ATTRIBUTE),
-				 &Buffer,
-				 sizeof(OUTPUT_ATTRIBUTE));
-
-  if (NT_SUCCESS(Status))
-    {
-      *lpNumberOfAttrsWritten = Buffer.dwTransfered;
-    }
-
-  return(Status);
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_SET_CURSOR_INFO,
+		(PCONSOLE_CURSOR_INFO)lpConsoleCursorInfo,
+		sizeof(CONSOLE_CURSOR_INFO),
+		NULL,
+		0);
+	return NT_SUCCESS(Status);
 }
 
-
-NTSTATUS
-ConFillConsoleOutputCharacter(CHAR Character,
-			      ULONG Length,
-			      COORD WriteCoord,
-			      PULONG NumberOfCharsWritten)
+BOOL WINAPI
+ConSetConsoleCursorPosition(
+	IN HANDLE hConsoleOutput,
+	IN COORD dwCursorPosition)
 {
-  IO_STATUS_BLOCK IoStatusBlock;
-  OUTPUT_CHARACTER Buffer;
-  NTSTATUS Status;
+	CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
 
-  Buffer.cCharacter = Character;
-  Buffer.nLength = Length;
-  Buffer.dwCoord = WriteCoord;
+	Status = GetConsoleScreenBufferInfo(hConsoleOutput, &ConsoleScreenBufferInfo);
+	if (!NT_SUCCESS(Status))
+		return FALSE;
 
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_FILL_OUTPUT_CHARACTER,
-				 &Buffer,
-				 sizeof(OUTPUT_CHARACTER),
-				 &Buffer,
-				 sizeof(OUTPUT_CHARACTER));
+	ConsoleScreenBufferInfo.dwCursorPosition.X = dwCursorPosition.X;
+	ConsoleScreenBufferInfo.dwCursorPosition.Y = dwCursorPosition.Y;
 
-  if (NT_SUCCESS(Status))
-    {
-      *NumberOfCharsWritten = Buffer.dwTransfered;
-    }
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
+		&ConsoleScreenBufferInfo,
+		sizeof(CONSOLE_SCREEN_BUFFER_INFO),
+		NULL,
+		0);
 
-  return(Status);
+	return NT_SUCCESS(Status);
 }
 
-
-#if 0
-/*--------------------------------------------------------------
- * 	GetConsoleMode
- */
-WINBASEAPI
-BOOL
-WINAPI
-GetConsoleMode(
-	HANDLE		hConsoleHandle,
-	LPDWORD		lpMode
-	)
+BOOL WINAPI
+ConSetConsoleTextAttribute(
+	IN HANDLE hConsoleOutput,
+	IN WORD wAttributes)
 {
-    CONSOLE_MODE Buffer;
-    DWORD   dwBytesReturned;
+	IO_STATUS_BLOCK IoStatusBlock;
+	NTSTATUS Status;
 
-    if (DeviceIoControl (hConsoleHandle,
-                         IOCTL_CONSOLE_GET_MODE,
-                         NULL,
-                         0,
-                         &Buffer,
-                         sizeof(CONSOLE_MODE),
-                         &dwBytesReturned,
-                         NULL))
-    {
-        *lpMode = Buffer.dwMode;
-        SetLastError (ERROR_SUCCESS);
-        return TRUE;
-    }
-
-    SetLastError(0); /* FIXME: What error code? */
-    return FALSE;
-}
-
-
-/*--------------------------------------------------------------
- *	GetConsoleCursorInfo
- */
-WINBASEAPI
-BOOL
-WINAPI
-GetConsoleCursorInfo(
-	HANDLE			hConsoleOutput,
-	PCONSOLE_CURSOR_INFO	lpConsoleCursorInfo
-	)
-{
-    DWORD   dwBytesReturned;
-
-    if (DeviceIoControl (hConsoleOutput,
-                         IOCTL_CONSOLE_GET_CURSOR_INFO,
-                         NULL,
-                         0,
-                         lpConsoleCursorInfo,
-                         sizeof(CONSOLE_CURSOR_INFO),
-                         &dwBytesReturned,
-                         NULL))
-        return TRUE;
-
-    return FALSE;
-}
-
-
-NTSTATUS
-SetConsoleMode(HANDLE hConsoleHandle,
-	       ULONG dwMode)
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
-  CONSOLE_MODE Buffer;
-
-  Buffer.dwMode = dwMode;
-
-  Status = NtDeviceIoControlFile(hConsoleHandle,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_SET_MODE,
-				 &Buffer,
-				 sizeof(CONSOLE_MODE),
-				 NULL,
-				 0);
-
-  return(Status);
-}
-#endif
-
-
-NTSTATUS
-ConGetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo)
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
-
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
-				 NULL,
-				 0,
-				 ConsoleScreenBufferInfo,
-				 sizeof(CONSOLE_SCREEN_BUFFER_INFO));
-
-  return(Status);
-}
-
-
-NTSTATUS
-ConSetConsoleCursorInfo(PCONSOLE_CURSOR_INFO lpConsoleCursorInfo)
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
-
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_SET_CURSOR_INFO,
-				 (PCONSOLE_CURSOR_INFO)lpConsoleCursorInfo,
-				 sizeof(CONSOLE_CURSOR_INFO),
-				 NULL,
-				 0);
-
-  return(Status);
-}
-
-
-NTSTATUS
-ConSetConsoleCursorPosition(COORD dwCursorPosition)
-{
-  CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
-
-  Status = ConGetConsoleScreenBufferInfo(&ConsoleScreenBufferInfo);
-  if (!NT_SUCCESS(Status))
-    return(Status);
-
-  ConsoleScreenBufferInfo.dwCursorPosition.X = dwCursorPosition.X;
-  ConsoleScreenBufferInfo.dwCursorPosition.Y = dwCursorPosition.Y;
-
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
-				 &ConsoleScreenBufferInfo,
-				 sizeof(CONSOLE_SCREEN_BUFFER_INFO),
-				 NULL,
-				 0);
-
-  return(Status);
-}
-
-
-NTSTATUS
-ConSetConsoleTextAttribute(USHORT wAttributes)
-{
-  IO_STATUS_BLOCK IoStatusBlock;
-  NTSTATUS Status;
-
-  Status = NtDeviceIoControlFile(StdOutput,
-				 NULL,
-				 NULL,
-				 NULL,
-				 &IoStatusBlock,
-				 IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
-				 &wAttributes,
-				 sizeof(USHORT),
-				 NULL,
-				 0);
-
-  return(Status);
+	Status = NtDeviceIoControlFile(
+		hConsoleOutput,
+		NULL,
+		NULL,
+		NULL,
+		&IoStatusBlock,
+		IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
+		&wAttributes,
+		sizeof(USHORT),
+		NULL,
+		0);
+	return NT_SUCCESS(Status);
 }
 
 
 
 
 VOID
-ConInKey(PINPUT_RECORD Buffer)
+CONSOLE_ConInKey(PINPUT_RECORD Buffer)
 {
+	ULONG Read;
 
   while (TRUE)
     {
-      ConReadConsoleInput(Buffer);
+      ReadConsoleInput(StdInput, Buffer, 1, &Read);
 
       if ((Buffer->EventType == KEY_EVENT) &&
 	  (Buffer->Event.KeyEvent.bKeyDown == TRUE))
@@ -661,32 +456,38 @@ ConInKey(PINPUT_RECORD Buffer)
 
 
 VOID
-ConOutChar(CHAR c)
+CONSOLE_ConOutChar(CHAR c)
 {
   ULONG Written;
 
-  ConWriteConsole(&c,
+  WriteConsole(StdOutput,
+	          &c,
 	          1,
-	          &Written);
+	          &Written,
+	          NULL);
 }
 
 
 VOID
-ConOutPuts(LPSTR szText)
+CONSOLE_ConOutPuts(LPSTR szText)
 {
   ULONG Written;
 
-  ConWriteConsole(szText,
+  WriteConsole(StdOutput,
+	          szText,
 	          strlen(szText),
-	          &Written);
-  ConWriteConsole("\n",
+	          &Written,
+	          NULL);
+  WriteConsole(StdOutput,
+	          "\n",
 	          1,
-	          &Written);
+	          &Written,
+	          NULL);
 }
 
 
 VOID
-ConOutPrintf(LPSTR szFormat, ...)
+CONSOLE_ConOutPrintf(LPSTR szFormat, ...)
 {
   CHAR szOut[256];
   DWORD dwWritten;
@@ -696,9 +497,11 @@ ConOutPrintf(LPSTR szFormat, ...)
   vsprintf(szOut, szFormat, arg_ptr);
   va_end(arg_ptr);
 
-  ConWriteConsole(szOut,
+  WriteConsole(StdOutput,
+	          szOut,
 	          strlen(szOut),
-	          &dwWritten);
+	          &dwWritten,
+	          NULL);
 }
 
 
@@ -706,34 +509,34 @@ ConOutPrintf(LPSTR szFormat, ...)
 
 
 SHORT
-GetCursorX(VOID)
+CONSOLE_GetCursorX(VOID)
 {
   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-  ConGetConsoleScreenBufferInfo(&csbi);
+  GetConsoleScreenBufferInfo(StdOutput, &csbi);
 
   return(csbi.dwCursorPosition.X);
 }
 
 
 SHORT
-GetCursorY(VOID)
+CONSOLE_GetCursorY(VOID)
 {
   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-  ConGetConsoleScreenBufferInfo(&csbi);
+  GetConsoleScreenBufferInfo(StdOutput, &csbi);
 
   return(csbi.dwCursorPosition.Y);
 }
 
 
 VOID
-GetScreenSize(SHORT *maxx,
+CONSOLE_GetScreenSize(SHORT *maxx,
 	      SHORT *maxy)
 {
   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-  ConGetConsoleScreenBufferInfo(&csbi);
+  GetConsoleScreenBufferInfo(StdOutput, &csbi);
 
   if (maxx)
     *maxx = csbi.dwSize.X;
@@ -744,7 +547,7 @@ GetScreenSize(SHORT *maxx,
 
 
 VOID
-SetCursorType(BOOL bInsert,
+CONSOLE_SetCursorType(BOOL bInsert,
 	      BOOL bVisible)
 {
   CONSOLE_CURSOR_INFO cci;
@@ -752,45 +555,48 @@ SetCursorType(BOOL bInsert,
   cci.dwSize = bInsert ? 10 : 99;
   cci.bVisible = bVisible;
 
-  ConSetConsoleCursorInfo(&cci);
+  SetConsoleCursorInfo(StdOutput, &cci);
 }
 
 
 VOID
-SetCursorXY(SHORT x,
+CONSOLE_SetCursorXY(SHORT x,
 	    SHORT y)
 {
   COORD coPos;
 
   coPos.X = x;
   coPos.Y = y;
-  ConSetConsoleCursorPosition(coPos);
+  SetConsoleCursorPosition(StdOutput, coPos);
 }
 
-
 VOID
-ClearScreen(VOID)
+CONSOLE_ClearScreen(VOID)
 {
-  COORD coPos;
-  ULONG Written;
+	COORD coPos;
+	ULONG Written;
 
-  coPos.X = 0;
-  coPos.Y = 0;
+	coPos.X = 0;
+	coPos.Y = 0;
 
-  FillConsoleOutputAttribute(0x17,
-			     xScreen * yScreen,
-			     coPos,
-			     &Written);
+	FillConsoleOutputAttribute(
+		StdOutput,
+		FOREGROUND_WHITE | BACKGROUND_BLUE,
+		xScreen * yScreen,
+		coPos,
+		&Written);
 
-  FillConsoleOutputCharacter(' ',
-			     xScreen * yScreen,
-			     coPos,
-			     &Written);
+	FillConsoleOutputCharacterA(
+		StdOutput,
+		' ',
+		xScreen * yScreen,
+		coPos,
+		&Written);
 }
 
 
 VOID
-SetStatusText(char* fmt, ...)
+CONSOLE_SetStatusText(char* fmt, ...)
 {
   char Buffer[128];
   va_list ap;
@@ -804,24 +610,28 @@ SetStatusText(char* fmt, ...)
   coPos.X = 0;
   coPos.Y = yScreen - 1;
 
-  FillConsoleOutputAttribute(0x70,
+  FillConsoleOutputAttribute(StdOutput,
+			     BACKGROUND_WHITE,
 			     xScreen,
 			     coPos,
 			     &Written);
 
-  FillConsoleOutputCharacter(' ',
+  FillConsoleOutputCharacterA(StdOutput,
+			     ' ',
 			     xScreen,
 			     coPos,
 			     &Written);
 
-  WriteConsoleOutputCharacters(Buffer,
+  WriteConsoleOutputCharacterA(StdOutput,
+			       Buffer,
 			       strlen(Buffer),
-			       coPos);
+			       coPos,
+			       &Written);
 }
 
 
 VOID
-InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
+CONSOLE_InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
 {
   COORD coPos;
   ULONG Written;
@@ -830,7 +640,8 @@ InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
     {
       coPos.X = x;
 
-      FillConsoleOutputAttribute(0x71,
+      FillConsoleOutputAttribute(StdOutput,
+				 FOREGROUND_BLUE | BACKGROUND_WHITE,
 				 col,
 				 coPos,
 				 &Written);
@@ -839,7 +650,7 @@ InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
 
 
 VOID
-NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
+CONSOLE_NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
 {
   COORD coPos;
   ULONG Written;
@@ -848,7 +659,8 @@ NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
     {
       coPos.X = x;
 
-      FillConsoleOutputAttribute(0x17,
+      FillConsoleOutputAttribute(StdOutput,
+				 FOREGROUND_BLUE | BACKGROUND_WHITE,
 				 col,
 				 coPos,
 				 &Written);
@@ -857,21 +669,24 @@ NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row)
 
 
 VOID
-SetTextXY(SHORT x, SHORT y, PCHAR Text)
+CONSOLE_SetTextXY(SHORT x, SHORT y, PCHAR Text)
 {
   COORD coPos;
+  ULONG Written;
 
   coPos.X = x;
   coPos.Y = y;
 
-  WriteConsoleOutputCharacters(Text,
+  WriteConsoleOutputCharacterA(StdOutput,
+			       Text,
 			       strlen(Text),
-			       coPos);
+			       coPos,
+			       &Written);
 }
 
 
 VOID
-SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
+CONSOLE_SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
 {
   COORD coPos;
   ULONG Length;
@@ -886,17 +701,21 @@ SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
       Length = len - 1;
     }
 
-  ConFillConsoleOutputAttribute(0x70,
+  FillConsoleOutputAttribute(StdOutput,
+			        BACKGROUND_WHITE,
 			        len,
 			        coPos,
 			        &Written);
 
-  ConWriteConsoleOutputCharactersW(Text,
+  WriteConsoleOutputCharacterW(StdOutput,
+				   Text,
 				   Length,
-				   coPos);
+				   coPos,
+				   &Written);
 
   coPos.X += Length;
-  ConFillConsoleOutputCharacter('_',
+  FillConsoleOutputCharacterA(StdOutput,
+			        '_',
 			        1,
 			        coPos,
 			        &Written);
@@ -904,7 +723,8 @@ SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
   if ((ULONG)len > Length + 1)
     {
       coPos.X++;
-      ConFillConsoleOutputCharacter(' ',
+      FillConsoleOutputCharacterA(StdOutput,
+				    ' ',
 				    len - Length - 1,
 				    coPos,
 				    &Written);
@@ -913,7 +733,7 @@ SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
 
 
 VOID
-SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text)
+CONSOLE_SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text)
 {
   COORD coPos;
   ULONG Length;
@@ -924,12 +744,15 @@ SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text)
 
   Length = strlen(Text);
 
-  ConWriteConsoleOutputCharacters(Text,
+  WriteConsoleOutputCharacterA(StdOutput,
+			          Text,
 			          Length,
-			          coPos);
+			          coPos,
+			          &Written);
 
   coPos.Y++;
-  ConFillConsoleOutputCharacter(0xCD,
+  FillConsoleOutputCharacterA(StdOutput,
+			        0xCD,
 			        Length,
 			        coPos,
 			        &Written);
@@ -937,7 +760,7 @@ SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text)
 
 
 VOID
-SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text)
+CONSOLE_SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text)
 {
   COORD coPos;
   ULONG Length;
@@ -948,19 +771,22 @@ SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text)
 
   Length = strlen(Text);
 
-  ConFillConsoleOutputAttribute(0x71,
+  FillConsoleOutputAttribute(StdOutput,
+			        FOREGROUND_BLUE | BACKGROUND_WHITE,
 			        Length,
 			        coPos,
 			        &Written);
 
-  ConWriteConsoleOutputCharacters(Text,
+  WriteConsoleOutputCharacterA(StdOutput,
+			          Text,
 			          Length,
-			          coPos);
+			          coPos,
+			          &Written);
 }
 
 
 VOID
-SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text)
+CONSOLE_SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text)
 {
   COORD coPos;
   ULONG Length;
@@ -971,23 +797,27 @@ SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text)
 
   Length = strlen(Text);
 
-  ConFillConsoleOutputAttribute(0x1F,
+  FillConsoleOutputAttribute(StdOutput,
+			        FOREGROUND_WHITE | FOREGROUND_INTENSITY | BACKGROUND_BLUE,
 			        Length,
 			        coPos,
 			        &Written);
 
-  ConWriteConsoleOutputCharacters(Text,
+  WriteConsoleOutputCharacterA(StdOutput,
+			          Text,
 			          Length,
-			          coPos);
+			          coPos,
+			          &Written);
 }
 
 
 VOID
-PrintTextXY(SHORT x, SHORT y, char* fmt, ...)
+CONSOLE_PrintTextXY(SHORT x, SHORT y, char* fmt, ...)
 {
   char buffer[512];
   va_list ap;
   COORD coPos;
+  ULONG Written;
 
   va_start(ap, fmt);
   vsprintf(buffer, fmt, ap);
@@ -996,14 +826,16 @@ PrintTextXY(SHORT x, SHORT y, char* fmt, ...)
   coPos.X = x;
   coPos.Y = y;
 
-  ConWriteConsoleOutputCharacters(buffer,
+  WriteConsoleOutputCharacterA(StdOutput,
+			          buffer,
 			          strlen(buffer),
-			          coPos);
+			          coPos,
+			          &Written);
 }
 
 
 VOID
-PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...)
+CONSOLE_PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...)
 {
   char buffer[512];
   va_list ap;
@@ -1024,20 +856,22 @@ PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...)
       Length = len - 1;
     }
 
-  ConWriteConsoleOutputCharacters(buffer,
+  WriteConsoleOutputCharacterA(StdOutput,
+			          buffer,
 			          Length,
-			          coPos);
+			          coPos,
+			          &Written);
 
   coPos.X += Length;
 
   if ((ULONG)len > Length)
     {
-      ConFillConsoleOutputCharacter(' ',
+      FillConsoleOutputCharacterA(StdOutput,
+				    ' ',
 				    len - Length,
 				    coPos,
 				    &Written);
     }
 }
-
 
 /* EOF */
