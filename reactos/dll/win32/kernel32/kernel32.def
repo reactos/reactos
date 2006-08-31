@@ -586,6 +586,7 @@ HeapUsage@20
 HeapValidate@12
 HeapWalk@8
 InitAtomTable@4
+InitializeConditionVariable@4=NTDLL.RtlInitializeConditionVariable
 InitializeCriticalSection@4
 InitializeCriticalSectionAndSpinCount@8
 InitializeSListHead@4=NTDLL.RtlInitializeSListHead
@@ -900,6 +901,8 @@ ShowConsoleCursor@8
 SignalObjectAndWait@16
 SizeofResource@8
 Sleep@4
+SleepConditionVariableCS@12
+SleepConditionVariableSRW@16
 SleepEx@8
 SuspendThread@4
 SwitchToFiber@4
@@ -954,6 +957,8 @@ VirtualProtectEx@20
 VirtualQuery@12
 VirtualQueryEx@16
 VirtualUnlock@8
+WakeAllConditionVariable@4=NTDLL.RtlWakeAllConditionVariable
+WakeConditionVariable@4=NTDLL.RtlWakeConditionVariable
 WaitCommEvent@12
 WaitForDebugEvent@8
 WaitForMultipleObjects@16

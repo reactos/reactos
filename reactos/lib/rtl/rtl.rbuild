@@ -47,6 +47,7 @@
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
 	<file>compress.c</file>
+	<file>condvar.c</file>
 	<file>crc32.c</file>
 	<file>critical.c</file>
 	<file>dbgbuffer.c</file>

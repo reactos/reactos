@@ -505,6 +505,7 @@ RtlInitUnicodeString@8
 RtlInitUnicodeStringEx@8
 ;RtlInitializeAtomPackage
 RtlInitializeBitMap@12
+RtlInitializeConditionVariable@4
 RtlInitializeContext@20
 RtlInitializeCriticalSection@4
 RtlInitializeCriticalSectionAndSpinCount@8
@@ -650,6 +651,8 @@ RtlSetTimeZoneInformation@4
 ;RtlSetUserFlagsHeap
 RtlSetUserValueHeap@16
 RtlSizeHeap@12
+RtlSleepConditionVariableCS@12
+RtlSleepConditionVariableSRW@16
 RtlSplay@4
 ;RtlStartRXact
 RtlStringFromGUID@8
@@ -703,6 +706,8 @@ RtlValidateProcessHeaps@0
 RtlValidateUnicodeString@8
 RtlVerifyVersionInfo@16
 ;RtlWalkHeap
+RtlWakeAllConditionVariable@4
+RtlWakeConditionVariable@4
 RtlWriteRegistryValue@24
 ;RtlZeroHeap
 RtlZeroMemory@8

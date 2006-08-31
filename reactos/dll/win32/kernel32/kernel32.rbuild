@@ -94,6 +94,7 @@
 		<file>lstring.c</file>
 	</directory>
 	<directory name="synch">
+		<file>condvar.c</file>
 		<file>critical.c</file>
 		<file>event.c</file>
 		<file>mutex.c</file>
