@@ -25,7 +25,7 @@
 extern void BootMain( char * );
 extern char *GetFreeLoaderVersionString();
 of_proxy ofproxy;
-void *PageDirectoryStart, *PageDirectoryEnd;
+void *PageDirectoryStart, *PageDirectoryEnd, *mem_base = 0;
 static int chosen_package, stdin_handle, part_handle = -1;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
@@ -95,7 +95,7 @@ int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
 }
 
 BOOLEAN PpcConsKbHit() {
-    return TRUE;
+    return FALSE;
 }
 
 int PpcConsGetCh() {
@@ -193,6 +193,14 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 
     printf("PpcGetMemoryMap(%d)\n", MaxMemoryMapSize);
 
+    if( mem_base ) {
+	BiosMemoryMap[0].Type = MEMTYPE_USABLE;
+	BiosMemoryMap[0].BaseAddress = (ULONG)mem_base;
+	BiosMemoryMap[0].Length = TOTAL_HEAP_NEEDED;
+	printf("[cached] returning 1 element\n");
+	return 1;
+    }
+
     ofw_getprop(chosen_package, "memory", 
 		(char *)&memhandle, sizeof(memhandle));
     ofw_getprop(chosen_package, "mmu",
@@ -207,8 +215,10 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     for( i = 0; i < returned / sizeof(int) && !num_mem; i += 2 ) {
 	BiosMemoryMap[num_mem].Type = MEMTYPE_USABLE;
 	BiosMemoryMap[num_mem].BaseAddress = memdata[i];
+	mem_base = (void *)memdata[i];
 	BiosMemoryMap[num_mem].Length = memdata[i+1];
-	if( BiosMemoryMap[num_mem].Length >= TOTAL_HEAP_NEEDED ) {
+	if( BiosMemoryMap[num_mem].Length >= TOTAL_HEAP_NEEDED && 
+	    total < TOTAL_HEAP_NEEDED ) {
 	    BiosMemoryMap[num_mem].Length = TOTAL_HEAP_NEEDED;	     
 	    ofw_claim(BiosMemoryMap[num_mem].BaseAddress, 
 		      BiosMemoryMap[num_mem].Length, 0x1000); /* claim it */
@@ -248,7 +258,14 @@ BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
                              PULONGLONG StartSector, 
                              PULONGLONG SectorCount, 
                              int *FsType ) {
-    return FALSE;
+    char *remain = strchr(SystemPath, '\\');
+    if( remain ) {
+	strcpy( RemainingPath, remain+1 );
+    } else {
+	RemainingPath[0] = 0;
+    }
+    *Device = 0;
+    return PpcDiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
 }
 
 BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
@@ -320,6 +337,44 @@ VOID PpcHwDetect() {
     printf("PpcHwDetect\n");
 }
 
+BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
+	CHAR BootPath[256];
+	ULONG PartitionNumber;
+	ULONG DriveNumber;
+	PARTITION_TABLE_ENTRY PartEntry;
+	char *p;
+
+	if (!DissectArcPath(SystemPath, BootPath, &DriveNumber, &PartitionNumber))
+	{
+		return FALSE;
+	}
+
+	if (0 != PartitionNumber)
+	{
+		return TRUE;
+	}
+
+	if (! DiskGetActivePartitionEntry(DriveNumber,
+	                                  &PartEntry,
+	                                  &PartitionNumber) ||
+	    PartitionNumber < 1 || 9 < PartitionNumber)
+	{
+		return FALSE;
+	}
+
+	p = SystemPath;
+	while ('\0' != *p && 0 != _strnicmp(p, "partition(", 10)) {
+		p++;
+	}
+	p = strchr(p, ')');
+	if (NULL == p || '0' != *(p - 1)) {
+		return FALSE;
+	}
+	*(p - 1) = '0' + PartitionNumber;
+
+	return TRUE;
+}
+
 typedef unsigned int uint32_t;
 
 void PpcInit( of_proxy the_ofproxy ) {
@@ -368,6 +423,7 @@ void PpcInit( of_proxy the_ofproxy ) {
 
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
+    MachVtbl.DiskNormalizeSystemPath = PpcDiskNormalizeSystemPath;
     MachVtbl.DiskGetBootVolume = PpcDiskGetBootVolume;
     MachVtbl.DiskGetSystemVolume = PpcDiskGetSystemVolume;
     MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
