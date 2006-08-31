@@ -513,9 +513,6 @@ KdPollBreakIn@0
 KdPowerTransition@4
 KdpServiceDispatcher@12
 Ke386CallBios@8
-Ke386IoSetAccessProcess@8
-Ke386QueryIoAccessMap@8
-Ke386SetIoAccessMap@8
 @KeAcquireGuardedMutex@4
 @KeAcquireGuardedMutexUnsafe@4
 KeAcquireSpinLockAtDpcLevel@4

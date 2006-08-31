@@ -64,7 +64,7 @@ _NtProcessStartup:
      * Call the application processor initialization code
      */
     pushl $0
-    call  _KiSystemStartup
+    call  _KiSystemStartup@4
     
 .m1:     
     /* Load the initial kernel stack */

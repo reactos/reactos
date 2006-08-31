@@ -41,8 +41,6 @@ static VOID INIT_FUNCTION Ki386GetCpuId(VOID);
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, Ki386GetCpuId)
-#pragma alloc_text(INIT, KeCreateApplicationProcessorIdleThread)
-#pragma alloc_text(INIT, KePrepareForApplicationProcessorInit)
 #pragma alloc_text(INIT, KeInit1)
 #pragma alloc_text(INIT, KeInit2)
 #pragma alloc_text(INIT, Ki386SetProcessorFeatures)
@@ -188,148 +186,6 @@ Ki386GetCpuId(VOID)
 }
 
 VOID
-KeApplicationProcessorInitDispatcher(VOID)
-{
-   KIRQL oldIrql;
-   oldIrql = KeAcquireDispatcherDatabaseLock();
-   IdleProcessorMask |= (1 << KeGetCurrentProcessorNumber());
-   KeReleaseDispatcherDatabaseLock(oldIrql);
-}
-
-VOID
-INIT_FUNCTION
-KeCreateApplicationProcessorIdleThread(ULONG Id)
-{
-  PETHREAD IdleThread;
-  PKPRCB Prcb = ((PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE))->Prcb;
-
-  PsInitializeIdleOrFirstThread(PsIdleProcess,
-		     &IdleThread,
-		     NULL,
-		     KernelMode,
-             FALSE);
-  IdleThread->Tcb.State = Running;
-  IdleThread->Tcb.FreezeCount = 0;
-  IdleThread->Tcb.Affinity = 1 << Id;
-  IdleThread->Tcb.UserAffinity = 1 << Id;
-  IdleThread->Tcb.Priority = LOW_PRIORITY;
-  IdleThread->Tcb.BasePriority = LOW_PRIORITY;
-  Prcb->IdleThread = &IdleThread->Tcb;
-  Prcb->CurrentThread = &IdleThread->Tcb;
-
-  Ki386InitialStackArray[Id] = (PVOID)IdleThread->Tcb.StackLimit;
-
-  DPRINT("IdleThread for Processor %d has PID %d\n",
-	   Id, IdleThread->Cid.UniqueThread);
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-KePrepareForApplicationProcessorInit(ULONG Id)
-{
-  PFN_TYPE PrcPfn;
-  PKIPCR Pcr;
-  PKIPCR BootPcr;
-
-  DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
-
-  BootPcr = (PKIPCR)KPCR_BASE;
-  Pcr = (PKIPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
-
-  MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PrcPfn);
-  MmCreateVirtualMappingForKernel((PVOID)Pcr,
-				  PAGE_READWRITE,
-				  &PrcPfn,
-				  1);
-  /*
-   * Create a PCR for this processor
-   */
-  memset(Pcr, 0, PAGE_SIZE);
-  Pcr->Number = Id;
-  Pcr->SetMember = 1 << Id;
-  Pcr->NtTib.Self = &Pcr->NtTib;
-  Pcr->Self = (PKPCR)Pcr;
-  Pcr->Prcb = &Pcr->PrcbData;
-  Pcr->Irql = SYNCH_LEVEL;
-
-  Pcr->PrcbData.SetMember = 1 << Id;
-  Pcr->PrcbData.MHz = BootPcr->PrcbData.MHz;
-  Pcr->StallScaleFactor = BootPcr->StallScaleFactor;
-
-  /* Mark the end of the exception handler list */
-  Pcr->NtTib.ExceptionList = (PVOID)-1;
-
-  KiGdtPrepareForApplicationProcessorInit(Id);
-
-  KeActiveProcessors |= 1 << Id;
-}
-
-VOID
-NTAPI
-KeApplicationProcessorInit(VOID)
-{
-  ULONG Offset;
-  PKIPCR Pcr;
-
-  DPRINT("KeApplicationProcessorInit()\n");
-
-  if (Ke386GlobalPagesEnabled)
-  {
-     /* Enable global pages */
-     Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
-  }
-
-
-  Offset = InterlockedIncrementUL(&PcrsAllocated) - 1;
-  Pcr = (PKIPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
-
-  /*
-   * Initialize the GDT
-   */
-  KiInitializeGdt((PKPCR)Pcr);
-
-  /* Get processor information. */
-  Ki386GetCpuId();
-
-  /* Check FPU/MMX/SSE support. */
-  KiCheckFPU();
-
-  KeInitDpc(Pcr->Prcb);
-  InitializeListHead(&Pcr->PrcbData.WaitListHead);
-
-  if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
-  {
-     extern void KiFastCallEntry(void);
-
-     /* CS Selector of the target segment. */
-     Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
-     /* Target ESP. */
-     Ke386Wrmsr(0x175, 0, 0);
-     /* Target EIP. */
-     Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
-  }
-
-  /*
-   * It is now safe to process interrupts
-   */
-  KeLowerIrql(DISPATCH_LEVEL);
-
-  /*
-   * Initialize the TSS
-   */
-  Ki386ApplicationProcessorInitializeTSS();
-
-  /*
-   * Initialize a default LDT
-   */
-  Ki386InitializeLdt();
-
-  /* Now we can enable interrupts. */
-  Ke386EnableInterrupts();
-}
-
-VOID
 INIT_FUNCTION
 NTAPI
 KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
@@ -423,42 +279,8 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       }
       p1 = p2;
    }
-#if 0
-   /*
-    * FIXME:
-    *   Make the detection of the noexecute feature more portable.
-    */
-   if(KPCR->PrcbData.CpuType == 0xf &&
-      RtlCompareMemory("AuthenticAMD", KPCR->PrcbData.VendorString, 12) == 12)
-   {
-      if (NoExecute)
-      {
-         ULONG Flags, l, h;
-         Ke386SaveFlags(Flags);
-         Ke386DisableInterrupts();
-
-	 Ke386Rdmsr(0xc0000080, l, h);
-	 l |= (1 << 11);
-	 Ke386Wrmsr(0xc0000080, l, h);
-	 Ke386NoExecute = TRUE;
-         Ke386RestoreFlags(Flags);
-      }
-   }
-   else
-   {
-      NoExecute=FALSE;
-   }
-#endif
 
    Ke386Pae = Ke386GetCr4() & X86_CR4_PAE ? TRUE : FALSE;
-#if 0
-   /* Enable PAE mode */
-   if ((Pae && (KPCR->PrcbData.FeatureBits & X86_FEATURE_PAE)) || NoExecute)
-   {
-      MiEnablePAE((PVOID*)LastKernelAddress);
-      Ke386PaeEnabled = TRUE;
-   }
-#endif
    if (KPCR->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
    {
       extern void KiFastCallEntry(void);

@@ -66,8 +66,6 @@ PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 extern unsigned int _image_base__;
 ULONG_PTR KERNEL_BASE = (ULONG_PTR)&_image_base__;
 
-VOID INIT_FUNCTION _main(ULONG MultiBootMagic, PROS_LOADER_PARAMETER_BLOCK _LoaderBlock);
-
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, _main)
 #endif
@@ -87,55 +85,39 @@ KeGetRecommendedSharedDataAlignment(VOID)
 }
 
 VOID
-#ifdef __GNUC__
-__attribute((noinline))
-#endif
+NTAPI
 KiSystemStartup(BOOLEAN BootProcessor)
 {
     DPRINT("KiSystemStartup(%d)\n", BootProcessor);
 
-    /* Initialize the Application Processor */
-    if (!BootProcessor) KeApplicationProcessorInit();
-
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(KeNumberProcessors, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
-    /* Load the Kernel if this is the Boot CPU, else inialize the App CPU only */
-    if (BootProcessor) {
+    /* Initialize the Kernel Executive */
+    ExpInitializeExecutive();
 
-        /* Initialize the Kernel Executive */
-        ExpInitializeExecutive();
+    /* Create the IOPM Save Area */
+    Ki386IopmSaveArea = ExAllocatePoolWithTag(NonPagedPool,
+                                              PAGE_SIZE * 2,
+                                              TAG('K', 'e', ' ', ' '));
 
-        /* Create the IOPM Save Area */
-        Ki386IopmSaveArea = ExAllocatePoolWithTag(NonPagedPool,
-                                                  PAGE_SIZE * 2,
-                                                  TAG('K', 'e', ' ', ' '));
-
-        /* Free Initial Memory */
-        MiFreeInitMemory();
+    /* Free Initial Memory */
+    MiFreeInitMemory();
 
         /* Never returns */
 #if 0
-	/* FIXME:
-         *   The initial thread isn't a real ETHREAD object, we cannot call PspExitThread.
-	 */
-	PspExitThread(STATUS_SUCCESS);
+    /* FIXME:
+     *   The initial thread isn't a real ETHREAD object, we cannot call PspExitThread.
+     */
+    PspExitThread(STATUS_SUCCESS);
 #else
-	while (1) {
-	   LARGE_INTEGER Timeout;
-	   Timeout.QuadPart = 0x7fffffffffffffffLL;
-	   KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
-	}
-#endif
-    } else {
-
-        /* Do application processor initialization */
-        KeApplicationProcessorInitDispatcher();
-
-        /* Lower IRQL and go to Idle Thread */
-        KeLowerIrql(PASSIVE_LEVEL);
-        PsIdleThreadMain(NULL);
+    while (1)
+    {
+        LARGE_INTEGER Timeout;
+        Timeout.QuadPart = 0x7fffffffffffffffLL;
+        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
     }
+#endif
 
     /* Bug Check and loop forever if anything failed */
     KEBUGCHECK(0);

@@ -50,12 +50,6 @@ static KSPIN_LOCK GdtLock;
 /* FUNCTIONS *****************************************************************/
 
 VOID
-KiGdtPrepareForApplicationProcessorInit(ULONG Id)
-{
-  KiGdtArray[Id] = ExAllocatePool(NonPagedPool, sizeof(USHORT) * 4 * 11);
-}
-
-VOID
 KiInitializeGdt(PKPCR Pcr)
 {
   PUSHORT Gdt;
@@ -245,38 +239,6 @@ KeSetGdtSelector(ULONG Entry,
 	   Gdt[Entry + 1]);
 
    KeReleaseSpinLock(&GdtLock, oldIrql);
-}
-
-VOID
-KeDumpGdtSelector(ULONG Entry)
-{
-   USHORT a, b, c, d;
-   ULONG RawLimit;
-
-   a = KiBootGdt[Entry*4];
-   b = KiBootGdt[Entry*4 + 1];
-   c = KiBootGdt[Entry*4 + 2];
-   d = KiBootGdt[Entry*4 + 3];
-
-   DbgPrint("Base: %x\n", b + ((c & 0xff) * (1 << 16)) +
-	    ((d & 0xff00) * (1 << 16)));
-   RawLimit = a + ((d & 0xf) * (1 << 16));
-   if (d & 0x80)
-     {
-	DbgPrint("Limit: %x\n", RawLimit * 4096);
-     }
-   else
-     {
-	DbgPrint("Limit: %x\n", RawLimit);
-     }
-   DbgPrint("Accessed: %d\n", (c & 0x100) >> 8);
-   DbgPrint("Type: %x\n", (c & 0xe00) >> 9);
-   DbgPrint("System: %d\n", (c & 0x1000) >> 12);
-   DbgPrint("DPL: %d\n", (c & 0x6000) >> 13);
-   DbgPrint("Present: %d\n", (c & 0x8000) >> 15);
-   DbgPrint("AVL: %x\n", (d & 0x10) >> 4);
-   DbgPrint("D: %d\n", (d & 0x40) >> 6);
-   DbgPrint("G: %d\n", (d & 0x80) >> 7);
 }
 
 /* EOF */

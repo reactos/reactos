@@ -565,21 +565,7 @@ ExpInitializeExecutive(VOID)
     if (KdPollBreakIn()) DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
 
     /* Initialize all processors */
-    while (!HalAllProcessorsStarted()) {
-
-        PVOID ProcessorStack;
-
-        /* Set up the Kernel and Process Manager for this CPU */
-        KePrepareForApplicationProcessorInit(KeNumberProcessors);
-        KeCreateApplicationProcessorIdleThread(KeNumberProcessors);
-
-        /* Allocate a stack for use when booting the processor */
-        ProcessorStack = RVA(Ki386InitialStackArray[((int)KeNumberProcessors)], KERNEL_STACK_SIZE);
-
-        /* Tell HAL a new CPU is being started */
-        HalStartNextProcessor(0, (ULONG)ProcessorStack - 2*sizeof(FX_SAVE_AREA));
-        KeNumberProcessors++;
-    }
+    HalAllProcessorsStarted();
 
     /* Do Phase 1 HAL Initalization */
     HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
