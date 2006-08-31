@@ -32,13 +32,13 @@
 			<file>log_asm.s</file>
 			<file>random_asm.S</file>
 			<file>rtlswap.S</file>
-			<file>rtlmem.S</file>
+			<file>rtlmem.s</file>
 			<file>pow_asm.s</file>
 			<file>res_asm.s</file>
 			<file>sin_asm.s</file>
 			<file>sqrt_asm.s</file>
-			<file>tan_asm.s</file>			
-		</directory>           
+			<file>tan_asm.s</file>
+		</directory>
 	</if>
 	<file>access.c</file>
 	<file>acl.c</file>
