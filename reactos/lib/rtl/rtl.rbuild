@@ -22,37 +22,24 @@
 			<file>aullshr_asm.s</file>
 			<file>ceil_asm.s</file>
 			<file>chkstk_asm.s</file>
-			<file>comparememory_asm.s</file>
-			<file>comparememory_ulong_asm.s</file>
 			<file>cos_asm.s</file>
 			<file>debug_asm.S</file>
 			<file>except_asm.s</file>
 			<file>exception.c</file>
 			<file>fabs_asm.s</file>
-			<file>fillmemory_asm.s</file>
-			<file>fillmemory_ulong_asm.s</file>
 			<file>floor_asm.s</file>
 			<file>ftol_asm.s</file>
 			<file>log_asm.s</file>
 			<file>random_asm.S</file>
-                  <file>memgeni386.c</file>
-                  <file>rtlushortbyteswap.s</file>
-                  <file>rtlulongbyteswap.s</file>
-                  <file>rtlulonglongbyteswap.s</file>
+			<file>rtlswap.S</file>
+			<file>rtlmem.S</file>
 			<file>pow_asm.s</file>
-			<file>prefetchmemory_asm.s</file>
 			<file>res_asm.s</file>
 			<file>sin_asm.s</file>
 			<file>sqrt_asm.s</file>
 			<file>tan_asm.s</file>			
-			<file>zeromemory_asm.s</file>
 		</directory>           
 	</if>
-
-      <ifnot property="ARCH" value="i386">
-             <file>memgen.c</file>
-      </ifnot>
-
 	<file>access.c</file>
 	<file>acl.c</file>
 	<file>atom.c</file>
@@ -73,7 +60,6 @@
 	<file>handle.c</file>
 	<file>heap.c</file>
 	<file>image.c</file>
-	<file>mem.c</file>
 	<file>message.c</file>
 	<file>largeint.c</file>
 	<file>luid.c</file>
