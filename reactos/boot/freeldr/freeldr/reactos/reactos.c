@@ -870,10 +870,33 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 
 #undef DbgPrint
 ULONG
-DbgPrint(const char *Fmt, ...)
+DbgPrint(const char *Format, ...)
 {
-  UiMessageBox(Fmt);
-  return 0;
+	va_list ap;
+	CHAR Buffer[512];
+	ULONG Length;
+
+	va_start(ap, Format);
+
+	/* Construct a string */
+	Length = _vsnprintf(Buffer, 512, Format, ap);
+
+	/* Check if we went past the buffer */
+	if (Length == -1)
+	{
+		/* Terminate it if we went over-board */
+		Buffer[sizeof(Buffer) - 1] = '\n';
+
+		/* Put maximum */
+		Length = sizeof(Buffer);
+	}
+
+	/* Show it as a message box */
+	UiMessageBox(Buffer);
+
+	/* Cleanup and exit */
+	va_end(ap);
+	return 0;
 }
 
 /* EOF */
