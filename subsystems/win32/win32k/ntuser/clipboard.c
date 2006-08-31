@@ -12,8 +12,6 @@
 #define DEBUG
 #include <debug.h>
 
-#define CF_DIBV5 17
-
 #define DATA_DELAYED_RENDER  0
 #define DATA_SYNTHESIZED_RENDER -1
 
