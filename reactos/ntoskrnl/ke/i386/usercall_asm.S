@@ -127,9 +127,7 @@ StackOk:
     mov [ebx+KTHREAD_CALLBACK_STACK], esp
 
     /* Align stack on 16-byte boundary */
-.att_syntax /* Older binutils versions don't support ~ for intel_syntax */
-    and $~15,%esp
-.intel_syntax noprefix
+    and esp, ~15
     mov edi, esp
 
     /* Set destination and origin NPX Areas */
@@ -178,13 +176,16 @@ DontBias:
     lea esi, [edx+KTRAP_FRAME_FS]
     rep movsd
 
-    /* VMWARE Hack because ES/DS sometimes gets smashed when returning to User-Mode. Investigate! */
-    mov dword ptr [esp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
-    mov dword ptr [esp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
+    /* Copy DR7 */
+    mov edi, [edx+KTRAP_FRAME_DR7]
+    test edi, ~DR7_RESERVED_MASK
+    mov [esp+KTRAP_FRAME_DR7], edi
 
-    /* FIXME: Copy debug registers if needed */
+    /* Check if we need to save debug registers */
+    jnz SaveDebug
 
     /* Get user-mode dispatcher address and set it as EIP */
+SetEip:
     mov eax, _KeUserCallbackDispatcher
     mov [esp+KTRAP_FRAME_EIP], eax
 
@@ -204,6 +205,15 @@ DontBias:
 
     /* Exit to user-mode */
     jmp _KiServiceExit
+
+SaveDebug:
+
+    /* Copy all 5 DRs */
+    mov ecx, 5
+    lea edi, [esp+KTRAP_FRAME_DR0]
+    lea esi, [edx+KTRAP_FRAME_DR0]
+    rep movsd
+    jmp SetEip
 
 GrowFailed:
     /* Restore registers */
@@ -294,11 +304,19 @@ _NtCallbackReturn@12:
     mov edx, [esi+FN_CR0_NPX_STATE]
     mov [ebx+FN_CR0_NPX_STATE], edx
 
-    /* Get saved trap frame and clear DR7 */
+    /* Check if we failed in user mode */
+    cmp ebp, STATUS_CALLBACK_POP_STACK
     mov edi, [ecx+CBSTACK_TRAP_FRAME]
+    jz UserFault
+
+CheckDebug:
+
+    /* Clear DR7 */
     and dword ptr [edi+KTRAP_FRAME_DR7], 0
 
-    /* FIXME: Restore debug regs */
+    /* Check if debugging was active */
+    test byte ptr [eax+KTHREAD_DEBUG_ACTIVE], 0xFF
+    jnz RestoreDebug
 
     /* Get TSS */
     mov edx, fs:[KPCR_TSS]
@@ -336,12 +354,41 @@ V86Ret:
     add esp, 8
     jmp edx
 
+UserFault:
+    /* Set size to copy */
+    mov ecx, (KTRAP_FRAME_V86_ES - KTRAP_FRAME_FS) / 4
+
+    /* Check if this was V86 mode */
+    mov esi, [eax+KTHREAD_TRAP_FRAME]
+    test dword ptr [esi+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+
+    /* Save EDI and load destination */
+    mov edx, edi
+    lea edi, [edi+KTRAP_FRAME_FS]
+    jz NotV86
+    add ecx, 16 / 4
+
+NotV86:
+    /* Set source and copy */
+    lea esi, [esi+KTRAP_FRAME_FS]
+    rep movsd
+
+    /* Restore ECX and ECX */
+    mov ecx, [eax+KTHREAD_CALLBACK_STACK]
+    mov edi, edx
+    jmp CheckDebug
+
+RestoreDebug:
+
+    /* Not yet supported */
+    int 3
+    jmp $
+
 NoStack:
 
     /* Return failure */
     mov eax, STATUS_NO_CALLBACK_ACTIVE
     ret 12
-
 .endfunc
 
 /*++
@@ -450,5 +497,4 @@ V86Switch:
     pop edi
     pop esi
     ret 8
-
 .endfunc
