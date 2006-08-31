@@ -111,8 +111,8 @@ _KiFastCallEntry:
     mov ecx, KGDT_R0_PCR
     mov fs, cx
 
-    /* Set DS/ES to Kernel Selector */
-    mov ecx, KGDT_R0_DATA
+    /* Set DS/ES to User Selector */
+    mov ecx, KGDT_R3_DATA | RPL_MASK
     mov ds, cx
     mov es, cx
 
@@ -157,10 +157,6 @@ _KiFastCallEntry:
 
     /* Skip the other registers */
     sub esp, 0x48
-
-    /* Hack: it seems that on VMWare someone damages ES/DS on exit. Investigate! */
-    mov dword ptr [esp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
-    mov dword ptr [esp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
 
     /* Make space for us on the stack */
     sub ebp, 0x29C
@@ -334,10 +330,6 @@ _KiServiceExit:
 
     /* Check for, and deliver, User-Mode APCs if needed */
     CHECK_FOR_APC_DELIVER 1
-
-    /* Hack for VMWare: Sometimes ES/DS seem to be invalid when returning to user-mode. Investigate! */
-    mov es, [ebp+KTRAP_FRAME_ES]
-    mov ds, [ebp+KTRAP_FRAME_DS]
 
     /* Exit and cleanup */
     TRAP_EPILOG FromSystemCall, DoRestorePreviousMode, DoNotRestoreSegments, DoNotRestoreVolatiles, DoRestoreEverything

@@ -8,10 +8,20 @@ _KiCommonInterrupt:
 	pushl 	%fs
 	pushl 	%gs
 	pushl	$0xceafbeef
-	movl	$KGDT_R0_DATA,%eax
-	movl	%eax,%ds
-	movl	%eax,%es
-	movl 	%eax,%gs
+
+    /* Load DS/ES (with override) */
+    .intel_syntax noprefix
+    mov eax, KGDT_R3_DATA + RPL_MASK
+    .byte 0x66
+    mov ds, ax
+    .byte 0x66
+    mov es, ax
+
+    /* Clear gs */
+    xor eax, eax
+    .byte 0x66
+    mov gs, ax
+    .att_syntax
 	movl	$KGDT_R0_PCR,%eax
 	movl	%eax,%fs
 	pushl 	%esp

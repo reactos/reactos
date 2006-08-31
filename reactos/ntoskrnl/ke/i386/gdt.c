@@ -115,9 +115,10 @@ KiInitializeGdt(PKPCR Pcr)
   __asm__ ("movl %0, %%ds\n\t"
 	   "movl %0, %%es\n\t"
 	   "movl %1, %%fs\n\t"
-	   "movl %0, %%gs\n\t"
+       	   "xor %%ax, %%ax\n\t"
+	   "movw %%ax, %%gs\n\t"
 	   : /* no output */
-	   : "a" (KGDT_R0_DATA), "d" (KGDT_R0_PCR));
+  : "a" (KGDT_R3_DATA | RPL_MASK), "d" (KGDT_R0_PCR));
   __asm__ ("pushl %0\n\t"
 	   "pushl $.l4\n\t"
 	   "lret\n\t"
@@ -128,11 +129,12 @@ KiInitializeGdt(PKPCR Pcr)
   __asm
   {
     lgdt Descriptor;
-    mov ax, KGDT_R0_DATA;
+    mov ax, KGDT_R3_DATA | RPL_MASK;
     mov dx, KGDT_R0_PCR;
     mov ds, ax;
     mov es, ax;
     mov fs, dx;
+    xor ax, ax
     mov gs, ax;
     push KGDT_R0_CODE;
     push offset l4 ;

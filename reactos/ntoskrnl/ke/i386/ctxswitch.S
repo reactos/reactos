@@ -291,7 +291,7 @@ BadThread:
 @KiSwapContextInternal@0:
 
     /* Set the Thread to running */
-    mov byte ptr [esi+KTHREAD_STATE], Running
+    mov byte ptr es:[esi+KTHREAD_STATE], Running
 
     /* Save the IRQL */
     push ecx

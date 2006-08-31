@@ -28,8 +28,6 @@
 //  - Get rid of KiRosPrintAddress and use KiDumpParameterImages instead.
 //  - Sanitize some context fields during conversions.
 //  - Implement stack fault and segment fault handlers.
-//  - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
-//    and only when called from user-mode, and returning to user-mode.
 //  - Add DR macro/save and VM macro/save.
 //  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
 //

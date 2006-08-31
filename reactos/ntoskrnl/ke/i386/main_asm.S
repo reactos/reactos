@@ -39,7 +39,16 @@ _NtProcessStartup:
     /* Load the PCR selector */
     movl $KGDT_R0_PCR, %eax
     movl %eax, %fs
-    
+
+    /* Load DS/ES (with override) */
+    .intel_syntax noprefix
+    mov eax, KGDT_R3_DATA + RPL_MASK
+    .byte 0x66
+    mov ds, ax
+    .byte 0x66
+    mov es, ax
+    .att_syntax
+
     cmpl $AP_MAGIC, %ecx
     jne  .m1
      
