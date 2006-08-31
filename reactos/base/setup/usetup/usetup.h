@@ -54,11 +54,10 @@
 /* ReactOS Version */
 #include <reactos/buildno.h>
 
-#include <infros.h>
-
 /* Internal Headers */
 #include "console.h"
 #include "partlist.h"
+#include "inffile.h"
 #include "inicache.h"
 #include "filequeue.h"
 #include "progress.h"

@@ -1,4 +1,4 @@
-<module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" allowwarnings="true">
+<module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" allowwarnings="false">
 	<bootstrap base="reactos/system32" nameoncd="smss.exe" />
 	<include base="usetup">.</include>
 	<include base="zlib">.</include>
@@ -13,7 +13,7 @@
 	<library>inflib</library>
 	<library>vfatlib</library>
 	<library>ntdll</library>
-	<pch>usetup.h</pch>
+	<!--pch>usetup.h</pch-->
 	<compilationunit name="unit.c">
 		<file>bootsup.c</file>
 		<file>cabinet.c</file>
@@ -24,6 +24,7 @@
 		<file>format.c</file>
 		<file>fslist.c</file>
 		<file>genlist.c</file>
+		<file>inffile.c</file>
 		<file>inicache.c</file>
 		<file>keytrans.c</file>
 		<file>partlist.c</file>

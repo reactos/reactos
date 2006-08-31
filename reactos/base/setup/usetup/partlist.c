@@ -25,7 +25,7 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#include <usetup.h>
+#include "usetup.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -1237,7 +1237,7 @@ PrintDiskData (PPARTLIST List,
   ULONG Written;
   USHORT Width;
   USHORT Height;
-  ULONGLONG DiskSize;
+  ULARGE_INTEGER DiskSize;
   PCHAR Unit;
 
   Width = List->Right - List->Left - 1;
@@ -1250,35 +1250,35 @@ PrintDiskData (PPARTLIST List,
 #if 0
   if (DiskEntry->DiskSize >= 0x280000000ULL) /* 10 GB */
     {
-      DiskSize = (DiskEntry->DiskSize + (1 << 29)) >> 30;
+      DiskSize.QuadPart = (DiskEntry->DiskSize + (1 << 29)) >> 30;
       Unit = "GB";
     }
   else
 #endif
     {
-      DiskSize = (DiskEntry->DiskSize + (1 << 19)) >> 20;
-      if (DiskSize == 0)
-	DiskSize = 1;
+      DiskSize.QuadPart = (DiskEntry->DiskSize + (1 << 19)) >> 20;
+      if (DiskSize.QuadPart == 0)
+	DiskSize.QuadPart = 1;
       Unit = "MB";
     }
 
   if (DiskEntry->DriverName.Length > 0)
     {
       sprintf (LineBuffer,
-	       "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
-	       DiskSize,
+	       "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S",
+	       DiskSize.u.LowPart,
 	       Unit,
 	       DiskEntry->DiskNumber,
 	       DiskEntry->Port,
 	       DiskEntry->Bus,
 	       DiskEntry->Id,
-	       &DiskEntry->DriverName);
+	       DiskEntry->DriverName.Buffer);
     }
   else
     {
       sprintf (LineBuffer,
-	       "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
-	       DiskSize,
+	       "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+	       DiskSize.u.LowPart,
 	       Unit,
 	       DiskEntry->DiskNumber,
 	       DiskEntry->Port,

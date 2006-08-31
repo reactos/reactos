@@ -48,6 +48,8 @@
 #define FOREGROUND_YELLOW (FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN)
 #define BACKGROUND_WHITE (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
 
+extern HANDLE StdInput, StdOutput;
+
 BOOL WINAPI
 ConAllocConsole(
 	IN DWORD dwProcessId);
@@ -123,18 +125,24 @@ ConWriteConsoleOutputCharacterA(
 	OUT LPDWORD lpNumberOfCharsWritten);
 
 
+VOID
+CONSOLE_ClearScreen(VOID);
 
 VOID
-CONSOLE_ConInKey(PINPUT_RECORD Buffer);
+CONSOLE_ConInKey(
+	OUT PINPUT_RECORD Buffer);
 
 VOID
-CONSOLE_ConOutChar(CHAR c);
+CONSOLE_ConOutChar(
+	IN CHAR c);
 
 VOID
-CONSOLE_ConOutPuts(LPSTR szText);
+CONSOLE_ConOutPrintf(
+	IN LPCSTR szFormat, ...);
 
 VOID
-CONSOLE_ConOutPrintf(LPSTR szFormat, ...);
+CONSOLE_ConOutPuts(
+	IN LPCSTR szText);
 
 SHORT
 CONSOLE_GetCursorX(VOID);
@@ -143,49 +151,93 @@ SHORT
 CONSOLE_GetCursorY(VOID);
 
 VOID
-CONSOLE_GetScreenSize(SHORT *maxx,
-	      SHORT *maxy);
+CONSOLE_GetScreenSize(
+	OUT SHORT *maxx,
+	OUT SHORT *maxy);
 
 VOID
-CONSOLE_SetCursorType(BOOL bInsert,
-	      BOOL bVisible);
+CONSOLE_InvertTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN SHORT col,
+	IN SHORT row);
 
 VOID
-CONSOLE_SetCursorXY(SHORT x,
-	    SHORT y);
+CONSOLE_NormalTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN SHORT col,
+	IN SHORT row);
 
 VOID
-CONSOLE_ClearScreen(VOID);
+CONSOLE_PrintTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN LPCSTR fmt, ...);
 
 VOID
-CONSOLE_SetStatusText(char* fmt, ...);
+CONSOLE_PrintTextXYN(
+	IN SHORT x,
+	IN SHORT y,
+	IN SHORT len,
+	IN LPCSTR fmt, ...);
 
 VOID
-CONSOLE_InvertTextXY(SHORT x, SHORT y, SHORT col, SHORT row);
+CONSOLE_SetCursorType(
+	IN BOOL bInsert,
+	IN BOOL bVisible);
 
 VOID
-CONSOLE_NormalTextXY(SHORT x, SHORT y, SHORT col, SHORT row);
+CONSOLE_SetCursorXY(
+	IN SHORT x,
+	IN SHORT y);
 
 VOID
-CONSOLE_SetTextXY(SHORT x, SHORT y, PCHAR Text);
+CONSOLE_SetCursorXY(
+	IN SHORT x,
+	IN SHORT y);
 
 VOID
-CONSOLE_SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text);
+CONSOLE_SetHighlightedTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN LPCSTR Text);
 
 VOID
-CONSOLE_SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text);
+CONSOLE_SetInputTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN SHORT len,
+	IN LPCWSTR Text);
 
 VOID
-CONSOLE_SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text);
+CONSOLE_SetInputTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN SHORT len,
+	IN LPCWSTR Text);
 
 VOID
-CONSOLE_SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text);
+CONSOLE_SetInvertedTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN LPCSTR Text);
 
 VOID
-CONSOLE_PrintTextXY(SHORT x, SHORT y, char* fmt, ...);
+CONSOLE_SetStatusText(
+	IN LPCSTR fmt, ...);
 
 VOID
-CONSOLE_PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...);
+CONSOLE_SetTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN LPCSTR Text);
+
+VOID
+CONSOLE_SetUnderlinedTextXY(
+	IN SHORT x,
+	IN SHORT y,
+	IN LPCSTR Text);
 
 #endif /* __CONSOLE_H__*/
 
