@@ -141,9 +141,15 @@ PrintString(char* fmt,...)
 }
 
 
+#define POPUP_WAIT_NONE    0
+#define POPUP_WAIT_ANY_KEY 1
+#define POPUP_WAIT_ENTER   2
+
 static VOID
 PopupError(PCHAR Text,
-	   PCHAR Status)
+	   PCHAR Status,
+	   PINPUT_RECORD Ir,
+	   ULONG WaitEvent)
 {
   SHORT xScreen;
   SHORT yScreen;
@@ -364,6 +370,20 @@ PopupError(PCHAR Text,
 				   coPos,
 				   &Written);
     }
+
+  if (WaitEvent == POPUP_WAIT_NONE)
+    return;
+
+  while (TRUE)
+    {
+      CONSOLE_ConInKey(Ir);
+
+      if (WaitEvent == POPUP_WAIT_ANY_KEY
+       || Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)
+        {
+	      return;
+	    }
+	}
 }
 
 
@@ -384,7 +404,8 @@ ConfirmQuit(PINPUT_RECORD Ir)
 	     "\n"
 	     "  \x07  Press ENTER to continue Setup.\n"
 	     "  \x07  Press F3 to quit Setup.",
-	     "F3= Quit  ENTER = Continue");
+	     "F3= Quit  ENTER = Continue",
+	     NULL, POPUP_WAIT_NONE);
 
   while(TRUE)
     {
@@ -560,31 +581,17 @@ SetupStartPage(PINPUT_RECORD Ir)
     {
       CONSOLE_PrintTextXY(6, 15, "NtQuerySystemInformation() failed (Status 0x%08lx)", Status);
       PopupError("Setup could not retrieve system drive information.\n",
-		 "ENTER = Reboot computer");
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   if (Sdi.NumberOfDisks == 0)
     {
       PopupError("Setup could not find a harddisk.\n",
-		 "ENTER = Reboot computer");
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   /* Get the source path and source root path */
@@ -592,24 +599,17 @@ SetupStartPage(PINPUT_RECORD Ir)
 			  &SourceRootPath);
   if (!NT_SUCCESS(Status))
     {
-      CONSOLE_PrintTextXY(6, 15, "GetSourcePath() failed (Status 0x%08lx)", Status);
+      CONSOLE_PrintTextXY(6, 15, "GetSourcePaths() failed (Status 0x%08lx)", Status);
       PopupError("Setup could not find its source drive.\n",
-		 "ENTER = Reboot computer");
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 #if 0
   else
     {
-      PrintTextXY(6, 15, "SourcePath: '%wZ'", &SourcePath);
-      PrintTextXY(6, 16, "SourceRootPath: '%wZ'", &SourceRootPath);
+      CONSOLE_PrintTextXY(6, 15, "SourcePath: '%wZ'", &SourcePath);
+      CONSOLE_PrintTextXY(6, 16, "SourceRootPath: '%wZ'", &SourceRootPath);
     }
 #endif
 
@@ -624,34 +624,18 @@ SetupStartPage(PINPUT_RECORD Ir)
   if (SetupInf == INVALID_HANDLE_VALUE)
     {
       PopupError("Setup failed to load the file TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   /* Open 'Version' section */
   if (!SetupFindFirstLineW (SetupInf, L"Version", L"Signature", &Context))
     {
       PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
 
@@ -659,34 +643,18 @@ SetupStartPage(PINPUT_RECORD Ir)
   if (!INF_GetData (&Context, NULL, &Value))
     {
       PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   /* Check 'Signature' string */
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
       PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   CheckUnattendedSetup();
@@ -977,17 +945,9 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 	{
 	  /* FIXME: report error */
 	  PopupError("Setup failed to load the keyboard layout list.\n",
-		     "ENTER = Reboot computer");
-
-	  while (TRUE)
-	    {
-	      CONSOLE_ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		{
-		  return QUIT_PAGE;
-		}
-	    }
+		     "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
+	  return QUIT_PAGE;
 	}
     }
 
@@ -1372,7 +1332,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 		  "\n"
 		  "  \x07  Press F3 to quit Setup."
 		  "  \x07  Press ENTER to continue.",
-		  "F3= Quit  ENTER = Continue");
+		  "F3= Quit  ENTER = Continue",
+		  NULL, POPUP_WAIT_NONE);
       while (TRUE)
 	{
 	  CONSOLE_ConInKey (Ir);
@@ -1454,8 +1415,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 			  "of an already existing Partition!\n"
 			  "\n"
 			  "  * Press any key to continue.",
-			  NULL);
-	      CONSOLE_ConInKey (Ir);
+			  NULL,
+			  Ir, POPUP_WAIT_ANY_KEY);
 
 	      return SELECT_PARTITION_PAGE;
 	    }
@@ -1469,8 +1430,8 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	      PopupError ("You can not delete unpartitioned disk space!\n"
 			  "\n"
 			  "  * Press any key to continue.",
-			  NULL);
-	      CONSOLE_ConInKey (Ir);
+			  NULL,
+			  Ir, POPUP_WAIT_ANY_KEY);
 
 	      return SELECT_PARTITION_PAGE;
 	    }
@@ -2363,17 +2324,9 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	      DPRINT ("WritePartitionsToDisk() failed\n");
 
 	      PopupError ("Setup failed to write partition tables.\n",
-			  "ENTER = Reboot computer");
-
-	      while (TRUE)
-		{
-		  CONSOLE_ConInKey (Ir);
-
-		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-		    {
-		      return QUIT_PAGE;
-		    }
-		}
+			  "ENTER = Reboot computer",
+			  Ir, POPUP_WAIT_ENTER);
+	      return QUIT_PAGE;
 	    }
 
 	  /* Set DestinationRootPath */
@@ -2600,17 +2553,9 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     {
       PopupError("Setup failed to find the 'SetupData' section\n"
 		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer");
-
-      while (TRUE)
-	{
-	  CONSOLE_ConInKey (Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   /* Read the 'DefaultPath' data */
@@ -2698,17 +2643,8 @@ AddSectionToCopyQueue(HINF InfFile,
     {
       char Buffer[128];
       sprintf(Buffer, "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n", SectionName);
-      PopupError(Buffer, "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(FALSE);
-	    }
-	}
+      PopupError(Buffer, "ENTER = Reboot computer", Ir, POPUP_WAIT_ENTER);
+      return(FALSE);
     }
 
   /*
@@ -2814,17 +2750,9 @@ PrepareCopyPageInfFile(HINF InfFile,
     {
       DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
       PopupError("Setup could not create the install directory.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(FALSE);
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return(FALSE);
     }
 
 
@@ -2834,23 +2762,16 @@ PrepareCopyPageInfFile(HINF InfFile,
       if (SourceCabinet)
 	{
 	  PopupError("Setup failed to find the 'Directories' section\n"
-		     "in the cabinet.\n", "ENTER = Reboot computer");
+		     "in the cabinet.\n", "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
 	}
       else
 	{
 	  PopupError("Setup failed to find the 'Directories' section\n"
-		     "in TXTSETUP.SIF.\n", "ENTER = Reboot computer");
+		     "in TXTSETUP.SIF.\n", "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
         }
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(FALSE);
-	    }
-	}
+      return(FALSE);
     }
 
   /* Enumerate the directory values and create the subdirectories */
@@ -2885,17 +2806,9 @@ PrepareCopyPageInfFile(HINF InfFile,
 	    {
 	      DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
 	      PopupError("Setup could not create install directories.",
-			 "ENTER = Reboot computer");
-
-	      while (TRUE)
-		{
-		  CONSOLE_ConInKey(Ir);
-
-		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		    {
-		      return(FALSE);
-		    }
-		}
+			 "ENTER = Reboot computer",
+			 Ir, POPUP_WAIT_ENTER);
+	      return(FALSE);
 	    }
 	}
     }
@@ -2925,17 +2838,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   if (SetupFileQueue == NULL)
     {
       PopupError("Setup failed to open the copy file queue.\n",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return(QUIT_PAGE);
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return(QUIT_PAGE);
     }
 
   if (!PrepareCopyPageInfFile(SetupInf, NULL, Ir))
@@ -2974,17 +2879,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	  if (InfFileData == NULL)
 	    {
 	      PopupError("Cabinet has no setup script.\n",
-			 "ENTER = Reboot computer");
-
-	      while(TRUE)
-		{
-		  CONSOLE_ConInKey(Ir);
-
-		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		    {
-		      return QUIT_PAGE;
-		    }
-		}
+			 "ENTER = Reboot computer",
+			 Ir, POPUP_WAIT_ENTER);
+	      return QUIT_PAGE;
 	    }
 	}
       else
@@ -2992,17 +2889,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	  DPRINT("Cannot open cabinet: %S.\n", CabinetGetCabinetName());
 
 	  PopupError("Cabinet not found.\n",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	    {
-	      CONSOLE_ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		{
-		  return QUIT_PAGE;
-		}
-	    }
+		     "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
+	  return QUIT_PAGE;
 	}
 
       InfHandle = INF_OpenBufferedFileA(InfFileData,
@@ -3013,17 +2902,9 @@ PrepareCopyPage(PINPUT_RECORD Ir)
       if (InfHandle == INVALID_HANDLE_VALUE)
 	{
 	  PopupError("Cabinet has no valid inf file.\n",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	    {
-	      CONSOLE_ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		{
-		  return QUIT_PAGE;
-		}
-	    }
+		     "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
+	  return QUIT_PAGE;
 	}
 
       CabinetCleanup();
@@ -3126,17 +3007,9 @@ RegistryPage(PINPUT_RECORD Ir)
     {
       DPRINT("SetInstallPathValue() failed\n");
       PopupError("Setup failed to set the initialize the registry.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   /* Create the default hives */
@@ -3145,17 +3018,9 @@ RegistryPage(PINPUT_RECORD Ir)
     {
       DPRINT("NtInitializeRegistry() failed (Status %lx)\n", Status);
       PopupError("Setup failed to create the registry hives.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   /* Update registry */
@@ -3165,17 +3030,9 @@ RegistryPage(PINPUT_RECORD Ir)
     {
       DPRINT1("SetupFindFirstLine() failed\n");
       PopupError("Setup failed to find the registry data files.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   do
@@ -3206,17 +3063,9 @@ RegistryPage(PINPUT_RECORD Ir)
 	  DPRINT("Importing %S failed\n", File);
 
 	  PopupError("Setup failed to import a hive file.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	    {
-	      CONSOLE_ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		{
-		  return QUIT_PAGE;
-		}
-	    }
+		     "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
+	  return QUIT_PAGE;
 	}
     }
   while (SetupFindNextLine (&InfContext, &InfContext));
@@ -3226,17 +3075,9 @@ RegistryPage(PINPUT_RECORD Ir)
   if (!ProcessDisplayRegistry(SetupInf, DisplayList))
     {
       PopupError("Setup failed to update display registry settings.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   /* Update keyboard layout settings */
@@ -3244,17 +3085,9 @@ RegistryPage(PINPUT_RECORD Ir)
   if (!ProcessKeyboardLayoutRegistry(LayoutList))
     {
       PopupError("Setup failed to update keyboard layout settings.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   /* Update the mounted devices list */
@@ -3438,15 +3271,8 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 	  if (DoesFileExist(L"\\Device\\Floppy0", L"\\") == FALSE)
 	    {
 	      PopupError("No disk in drive A:.",
-			 "ENTER = Continue");
-	      while(TRUE)
-		{
-		  CONSOLE_ConInKey(Ir);
-
-		  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		    break;
-		}
-
+			 "ENTER = Continue",
+			 Ir, POPUP_WAIT_ENTER);
 	      return BOOT_LOADER_FLOPPY_PAGE;
 	    }
 
@@ -3487,17 +3313,9 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
       if (!NT_SUCCESS(Status))
 	{
 	  PopupError("Setup failed to install the FAT bootcode on the system partition.",
-		     "ENTER = Reboot computer");
-
-	  while(TRUE)
-	    {
-	      CONSOLE_ConInKey(Ir);
-
-	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-		{
-		  return QUIT_PAGE;
-		}
-	    }
+		     "ENTER = Reboot computer",
+		     Ir, POPUP_WAIT_ENTER);
+	  return QUIT_PAGE;
 	}
 
       return SUCCESS_PAGE;
@@ -3505,17 +3323,9 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
   else
     {
       PopupError("failed to install FAT bootcode on the system partition.",
-		 "ENTER = Reboot computer");
-
-      while(TRUE)
-	{
-	  CONSOLE_ConInKey(Ir);
-
-	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-	    {
-	      return QUIT_PAGE;
-	    }
-	}
+		 "ENTER = Reboot computer",
+		 Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
     }
 
   return BOOT_LOADER_HARDDISK_PAGE;
@@ -3669,22 +3479,24 @@ SignalInitEvent()
 }
 
 
-VOID NTAPI
-NtProcessStartup(PPEB Peb)
+static VOID
+RunUSetup(VOID)
 {
   INPUT_RECORD Ir;
   PAGE_NUMBER Page;
   BOOL ret;
 
-  RtlNormalizeProcessParams(Peb->ProcessParameters);
-
-  ProcessHeap = Peb->ProcessHeap;
-  INF_SetHeap(ProcessHeap);
-
   SignalInitEvent();
 
-  ret = AllocConsole(0);
-  if (!ret)
+  ret = AllocConsole();
+  if (ret)
+    ret = AttachConsole(ATTACH_PARENT_PROCESS);
+
+  if (!ret
+#ifdef WIN32_USETUP
+   && GetLastError() != ERROR_ACCESS_DENIED
+#endif
+     )
     {
       PrintString("Unable to open the console\n\n");
       PrintString("The most common cause of this is using an USB keyboard\n");
@@ -3693,6 +3505,16 @@ NtProcessStartup(PPEB Peb)
       /* Raise a hard error (crash the system/BSOD) */
       NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
 		       0,0,0,0,0);
+    }
+  else
+    {
+      CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+      StdInput = GetStdHandle(STD_INPUT_HANDLE);
+      StdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+      GetConsoleScreenBufferInfo(StdOutput, &csbi);
+      xScreen = csbi.dwSize.X;
+      yScreen = csbi.dwSize.Y;
     }
 
 
@@ -3849,5 +3671,28 @@ NtProcessStartup(PPEB Peb)
   NtShutdownSystem(ShutdownReboot);
   NtTerminateProcess(NtCurrentProcess(), 0);
 }
+
+
+#ifdef WIN32_USETUP
+int
+main(void)
+{
+  ProcessHeap = GetProcessHeap();
+  RunUSetup();
+  return 0;
+}
+
+#else
+
+VOID NTAPI
+NtProcessStartup(PPEB Peb)
+{
+  RtlNormalizeProcessParams(Peb->ProcessParameters);
+
+  ProcessHeap = Peb->ProcessHeap;
+  INF_SetHeap(ProcessHeap);
+  RunUSetup();
+}
+#endif /* !WIN32_USETUP */
 
 /* EOF */

@@ -36,21 +36,21 @@
 HANDLE StdInput  = INVALID_HANDLE_VALUE;
 HANDLE StdOutput = INVALID_HANDLE_VALUE;
 
-static SHORT xScreen = 0;
-static SHORT yScreen = 0;
+SHORT xScreen = 0;
+SHORT yScreen = 0;
 
 /* FUNCTIONS *****************************************************************/
 
+#ifndef WIN32_USETUP
+
 BOOL WINAPI
-ConAllocConsole(
-	IN DWORD dwProcessId)
+ConAllocConsole(VOID)
 {
 	UNICODE_STRING ScreenName = RTL_CONSTANT_STRING(L"\\??\\BlueScreen");
 	UNICODE_STRING KeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	IO_STATUS_BLOCK IoStatusBlock;
 	NTSTATUS Status;
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 	/* Open the screen */
 	InitializeObjectAttributes(
@@ -86,13 +86,14 @@ ConAllocConsole(
 	if (!NT_SUCCESS(Status))
 		return FALSE;
 
-	if (!GetConsoleScreenBufferInfo(StdOutput, &csbi))
-		return FALSE;
-
-	xScreen = csbi.dwSize.X;
-	yScreen = csbi.dwSize.Y;
-
 	return TRUE;
+}
+
+BOOL WINAPI
+ConAttachConsole(
+	IN DWORD dwProcessId)
+{
+	return FALSE;
 }
 
 BOOL WINAPI
@@ -136,6 +137,21 @@ ConWriteConsole(
 
 	*lpNumberOfCharsWritten = IoStatusBlock.Information;
 	return TRUE;
+}
+
+HANDLE WINAPI
+ConGetStdHandle(
+	IN DWORD nStdHandle)
+{
+	switch (nStdHandle)
+	{
+		case STD_INPUT_HANDLE:
+			return StdInput;
+		case STD_OUTPUT_HANDLE:
+			return StdOutput;
+		default:
+			return INVALID_HANDLE_VALUE;
+	}
 }
 
 BOOL WINAPI
@@ -435,6 +451,8 @@ ConSetConsoleTextAttribute(
 		0);
 	return NT_SUCCESS(Status);
 }
+
+#endif /* !WIN32_USETUP */
 
 VOID
 CONSOLE_ConInKey(

@@ -27,15 +27,31 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 
+#define FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
+#define FOREGROUND_YELLOW (FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN)
+#define BACKGROUND_WHITE (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
+
+extern HANDLE StdInput, StdOutput;
+extern SHORT xScreen, yScreen;
+
+#ifdef WIN32_USETUP
+
+#define NtDisplayString(str) printf("%S", (str)->Buffer)
+#define NtRaiseHardError(status, a, b, c, d, e) exit(1)
+
+#else /* WIN32_USETUP */
+
 #undef WriteConsole
 #undef ReadConsoleInput
 #undef FillConsoleOutputCharacter
 
 #define AllocConsole ConAllocConsole
+#define AttachConsole ConAttachConsole
 #define FillConsoleOutputAttribute ConFillConsoleOutputAttribute
 #define FillConsoleOutputCharacterA ConFillConsoleOutputCharacterA
 #define FreeConsole ConFreeConsole
 #define GetConsoleScreenBufferInfo ConGetConsoleScreenBufferInfo
+#define GetStdHandle ConGetStdHandle
 #define ReadConsoleInput ConReadConsoleInput
 #define SetConsoleCursorInfo ConSetConsoleCursorInfo
 #define SetConsoleCursorPosition ConSetConsoleCursorPosition
@@ -44,15 +60,8 @@
 #define WriteConsoleOutputCharacterA ConWriteConsoleOutputCharacterA
 #define WriteConsoleOutputCharacterW ConWriteConsoleOutputCharacterW
 
-#define FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
-#define FOREGROUND_YELLOW (FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN)
-#define BACKGROUND_WHITE (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
-
-extern HANDLE StdInput, StdOutput;
-
 BOOL WINAPI
-ConAllocConsole(
-	IN DWORD dwProcessId);
+ConAllocConsole(VOID);
 
 BOOL WINAPI
 ConFillConsoleOutputAttribute(
@@ -77,6 +86,10 @@ BOOL WINAPI
 ConGetConsoleScreenBufferInfo(
 	IN HANDLE hConsoleOutput,
 	OUT PCONSOLE_SCREEN_BUFFER_INFO lpConsoleScreenBufferInfo);
+
+HANDLE WINAPI
+ConGetStdHandle(
+	IN DWORD nStdHandle);
 
 BOOL WINAPI
 ConReadConsoleInput(
@@ -124,6 +137,7 @@ ConWriteConsoleOutputCharacterA(
 	IN COORD dwWriteCoord,
 	OUT LPDWORD lpNumberOfCharsWritten);
 
+#endif /* !WIN32_USETUP */
 
 VOID
 CONSOLE_ClearScreen(VOID);
