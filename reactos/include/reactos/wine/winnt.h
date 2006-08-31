@@ -38,6 +38,8 @@
 #define LANG_RHAETO_ROMANCE 0x17
 #define LANG_SAAMI          0x3b
 #define LANG_SORBIAN        0x2e
+#define LANG_LOWER_SORBIAN  0x2e
+#define LANG_UPPER_SORBIAN  0x2e
 #define LANG_SUTU           0x30
 #define LANG_TSONGA         0x31
 #define LANG_TSWANA         0x32

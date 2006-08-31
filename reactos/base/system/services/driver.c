@@ -11,12 +11,13 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
+DWORD
 ScmLoadDriver(PSERVICE lpService)
 {
     WCHAR szDriverPath[MAX_PATH];
     UNICODE_STRING DriverPath;
     NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
 
     /* Build the driver path */
     wcscpy(szDriverPath,
@@ -34,7 +35,12 @@ ScmLoadDriver(PSERVICE lpService)
 
     /* FIXME: Release privilege */
 
-    return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        dwError = RtlNtStatusToDosError(Status);
+    }
+
+    return dwError;
 }
 
 

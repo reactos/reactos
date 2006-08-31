@@ -1755,7 +1755,6 @@ ScmrStartServiceW(handle_t BindingHandle,
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
-    NTSTATUS Status;
 
     DPRINT1("ScmrStartServiceW() called\n");
 
@@ -1790,12 +1789,7 @@ ScmrStartServiceW(handle_t BindingHandle,
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
     /* Start the service */
-    Status = ScmStartService(lpService);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("ScmStartService failed!\n");
-        return RtlNtStatusToDosError(Status);
-    }
+    dwError = ScmStartService(lpService, (LPWSTR)lpServiceArgBuffer);
 
     return dwError;
 }
@@ -2099,7 +2093,6 @@ ScmrStartServiceA(handle_t BindingHandle,
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
-    NTSTATUS Status;
 
     DPRINT1("ScmrStartServiceA() called\n");
 
@@ -2136,9 +2129,9 @@ ScmrStartServiceA(handle_t BindingHandle,
     /* FIXME: Convert argument vector to Unicode */
 
     /* Start the service */
-    Status = ScmStartService(lpService);
-    if (!NT_SUCCESS(Status))
-        return RtlNtStatusToDosError(Status);
+    dwError = ScmStartService(lpService, NULL);
+
+    /* FIXME: Free argument vector */
 
     return dwError;
 }

@@ -90,17 +90,24 @@ ScServiceMainStub(LPVOID Context)
   PACTIVE_SERVICE lpService;
   DWORD dwArgCount = 0;
   DWORD dwLength = 0;
+  DWORD dwLen;
+  LPWSTR lpPtr;
 
   lpService = (PACTIVE_SERVICE)Context;
 
   DPRINT("ScServiceMainStub() called\n");
 
   /* Count arguments */
-  while (lpService->Arguments[dwLength])
+  lpPtr = lpService->Arguments;
+  while (*lpPtr)
     {
-      dwLength += wcslen(&lpService->Arguments[dwLength]) + 1;
+      DPRINT("arg: %S\n", *lpPtr);
+      dwLen = wcslen(lpPtr) + 1;
       dwArgCount++;
+      dwLength += dwLen;
+      lpPtr += dwLen;
     }
+  DPRINT("dwArgCount: %ld\ndwLength: %ld\n", dwArgCount, dwLength);
 
   /* Build the argument vector and call the main service routine */
   if (lpService->bUnicode)
@@ -241,6 +248,7 @@ ScStartService(PSCM_START_PACKET StartPacket)
   PACTIVE_SERVICE lpService;
   HANDLE ThreadHandle;
 
+  DPRINT("ScStartService() called\n");
   DPRINT("Size: %lu\n", StartPacket->Size);
   DPRINT("Service: %S\n", &StartPacket->Arguments[0]);
 
