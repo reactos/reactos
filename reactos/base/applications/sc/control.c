@@ -1,61 +1,95 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS SC utility
- * FILE:        subsys/system/sc/control.c
- * PURPOSE:     control ReactOS services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *           Ged Murphy 20/10/05 Created
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/sc/control.c
+ * PURPOSE:     Stops, pauses and resumes a service
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
 #include "sc.h"
 
-/*
- * handles the following commands:
- * control, continue, interrogate, pause, stop
- */
-
-BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args)
+BOOL
+Control(DWORD Control,
+        LPCTSTR ServiceName,
+        LPCTSTR *Args,
+        INT ArgCount)
 {
-    SC_HANDLE hSc;
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hSc = NULL;
     SERVICE_STATUS Status;
+    DWORD dwDesiredAccess = 0;
 
-#ifdef SCDBG    
-    /* testing */
-    _tprintf(_T("service to control - %s\n\n"), ServiceName);
-    _tprintf(_T("command - %lu\n\n"), Control);
-    _tprintf(_T("Arguments :\n"));
-    while (*Args)
+#ifdef SCDBG
+{
+    LPCTSTR *TmpArgs = Args;
+    INT TmpCnt = ArgCount;
+    _tprintf(_T("service to control - %s\n"), ServiceName);
+    _tprintf(_T("command - %lu\n"), Control);
+    _tprintf(_T("Arguments:\n"));
+    while (TmpCnt)
     {
-        printf("%s\n", *Args);
-        Args++;
+        _tprintf(_T("  %s\n"), *TmpArgs);
+        TmpArgs++;
+        TmpCnt--;
     }
+    _tprintf(_T("\n"));
+}
 #endif /* SCDBG */
 
-    hSc = OpenService(hSCManager, ServiceName,
-                      SERVICE_INTERROGATE | SERVICE_PAUSE_CONTINUE |
-                      SERVICE_STOP | SERVICE_USER_DEFINED_CONTROL |
-                      SERVICE_QUERY_STATUS);
-
-    if (hSc == NULL)
+    switch (Control)
     {
-        _tprintf(_T("openService failed\n"));
-        ReportLastError();
-        return FALSE;
+        case SERVICE_CONTROL_STOP:
+            dwDesiredAccess = SERVICE_STOP;
+            break;
+
+        case SERVICE_CONTROL_PAUSE:
+            dwDesiredAccess = SERVICE_PAUSE_CONTINUE;
+            break;
+
+        case SERVICE_CONTROL_CONTINUE:
+            dwDesiredAccess = SERVICE_PAUSE_CONTINUE;
+            break;
+
+        case SERVICE_CONTROL_INTERROGATE:
+            dwDesiredAccess = SERVICE_INTERROGATE;
+            break;
+
+        case SERVICE_CONTROL_SHUTDOWN:
+            dwDesiredAccess = -1;
+            break;
+
     }
 
-    if (! ControlService(hSc, Control, &Status))
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_CONNECT);
+    if (hSCManager != NULL)
     {
-		_tprintf(_T("[SC] controlService FAILED %lu:\n\n"), GetLastError());
-        ReportLastError();
-        return FALSE;
+        hSc = OpenService(hSCManager,
+                          ServiceName,
+                          dwDesiredAccess);
+        if (hSc != NULL)
+        {
+            if (ControlService(hSc,
+                               Control,
+                               &Status))
+            {
+                PrintService(ServiceName,
+                             &Status);
+
+                CloseServiceHandle(hSc);
+                CloseServiceHandle(hSCManager);
+
+                return TRUE;
+            }
+        }
+        else
+            _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
     }
 
-    CloseServiceHandle(hSc);
-    
-    /* print the status information */
-    
-    return TRUE;
-
+    ReportLastError();
+    if (hSc) CloseServiceHandle(hSc);
+    if (hSCManager) CloseServiceHandle(hSCManager);
+    return FALSE;
 }

@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS SC utility
- * FILE:        subsys/system/sc/sc.c
- * PURPOSE:     control ReactOS services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *           Ged Murphy 20/10/05 Created
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/sc/sc.c
+ * PURPOSE:     parse command line
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -13,13 +11,14 @@
 
 SC_HANDLE hSCManager;
 
-DWORD ReportLastError(VOID)
+VOID
+ReportLastError(VOID)
 {
     LPVOID lpMsgBuf;
     DWORD RetVal;
 
     DWORD ErrorCode = GetLastError();
-    if (ErrorCode != ERROR_SUCCESS) 
+    if (ErrorCode != ERROR_SUCCESS)
     {
         RetVal = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                                FORMAT_MESSAGE_FROM_SYSTEM |
@@ -34,106 +33,133 @@ DWORD ReportLastError(VOID)
         if (RetVal != 0)
         {
             _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
-
             LocalFree(lpMsgBuf);
-            /* return number of TCHAR's stored in output buffer
-             * excluding '\0' - as FormatMessage does*/
-            return RetVal;
         }
     }
-    return 0;
 }
 
 
-INT ScControl(LPTSTR MachineName,   // remote machine name
-              LPCTSTR Command,      // sc command
-              LPCTSTR ServiceName,  // name of service
-              LPCTSTR *ServiceArgs, // any options
-              DWORD ArgCount)       // argument counter
+static INT
+ScControl(LPCTSTR Server,       // remote machine name
+          LPCTSTR Command,      // sc command
+          LPCTSTR ServiceName,  // name of service
+          LPCTSTR *ServiceArgs, // any options
+          DWORD ArgCount)       // argument counter
 {
-    /* count trailing arguments */
-    ArgCount -= 3;
-
-    if (MachineName)
+    if (Server)
     {
         _tprintf(_T("Remote service control is not yet implemented\n"));
         return 2;
     }
-    
-    /* if we are emurating the services, we don't need administrator access */
-    if ( (_tcsicmp(Command, _T("query")) == 0) || (_tcsicmp(Command, _T("queryex")) == 0) )
-        hSCManager = OpenSCManager(MachineName, NULL, SC_MANAGER_ENUMERATE_SERVICE);
-    else
-        hSCManager = OpenSCManager(MachineName, NULL, SC_MANAGER_ALL_ACCESS);
-    if (hSCManager == NULL)
-    {
-        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
-        ReportLastError();
-        return -1;
-    }
 
-    /* emurate command */
-    if (_tcsicmp(Command, _T("query")) == 0)
-        Query(ServiceName, ServiceArgs, FALSE);
-        
-    else if (_tcsicmp(Command, _T("queryex")) == 0)
-        Query(ServiceName, ServiceArgs, TRUE);
-        
-    else if (_tcsicmp(Command, _T("start")) == 0)
+    if (!lstrcmpi(Command, _T("query")))
+    {
+        Query(ServiceName,
+              ServiceArgs,
+              FALSE);
+    }
+    else if (!lstrcmpi(Command, _T("queryex")))
+    {
+        Query(ServiceName,
+              ServiceArgs,
+              TRUE);
+    }
+    else if (!lstrcmpi(Command, _T("start")))
     {
         if (ServiceName)
-            Start(ServiceName, ServiceArgs, ArgCount);
+        {
+            Start(ServiceName,
+                  ServiceArgs,
+                  ArgCount);
+        }
         else
             StartUsage();
     }
-    else if (_tcsicmp(Command, _T("pause")) == 0)
+    else if (!lstrcmpi(Command, _T("pause")))
     {
         if (ServiceName)
-            Control(SERVICE_CONTROL_PAUSE, ServiceName, ServiceArgs);
+        {
+            Control(SERVICE_CONTROL_PAUSE,
+                    ServiceName,
+                    ServiceArgs,
+                    ArgCount);
+        }
         else
             PauseUsage();
     }
-    else if (_tcsicmp(Command, _T("interrogate")) == 0)
+    else if (!lstrcmpi(Command, _T("interrogate")))
     {
         if (ServiceName)
-            Control(SERVICE_CONTROL_INTERROGATE, ServiceName, ServiceArgs);
+        {
+            Control(SERVICE_CONTROL_INTERROGATE,
+                    ServiceName,
+                    ServiceArgs,
+                    ArgCount);
+        }
         else
             InterrogateUsage();
     }
-    else if (_tcsicmp(Command, _T("stop")) == 0)
+    else if (!lstrcmpi(Command, _T("stop")))
     {
         if (ServiceName)
-            Control(SERVICE_CONTROL_STOP, ServiceName, ServiceArgs);
+        {
+            Control(SERVICE_CONTROL_STOP,
+                    ServiceName,
+                    ServiceArgs,
+                    ArgCount);
+        }
         else
             StopUsage();
     }
-    else if (_tcsicmp(Command, _T("continue")) == 0)
+    else if (!lstrcmpi(Command, _T("continue")))
     {
         if (ServiceName)
-            Control(SERVICE_CONTROL_CONTINUE, ServiceName, ServiceArgs);
+        {
+            Control(SERVICE_CONTROL_CONTINUE,
+                    ServiceName,
+                    ServiceArgs,
+                    ArgCount);
+        }
         else
             ContinueUsage();
     }
-    else if (_tcsicmp(Command, _T("delete")) == 0)
+    else if (!lstrcmpi(Command, _T("delete")))
     {
         if (ServiceName)
             Delete(ServiceName);
         else
             DeleteUsage();
     }
-    else if (_tcsicmp(Command, _T("create")) == 0)
+    else if (!lstrcmpi(Command, _T("create")))
     {
         if (*ServiceArgs)
-            Create(ServiceName, ServiceArgs);
+            Create(ServiceName,
+                   ServiceArgs);
         else
             CreateUsage();
     }
-    else if (_tcsicmp(Command, _T("control")) == 0)
+    else if (!lstrcmpi(Command, _T("control")))
     {
+        INT CtlValue;
+
+        CtlValue = _ttoi(ServiceArgs[0]);
+        ServiceArgs++;
+        ArgCount--;
+
         if (ServiceName)
-            Control(0, ServiceName, ServiceArgs);
-        else
-            ContinueUsage();
+        {
+            if ((CtlValue >=128) && CtlValue <= 255)
+            {
+                Control(CtlValue,
+                        ServiceName,
+                        ServiceArgs,
+                        ArgCount);
+
+                return 0;
+            }
+        }
+
+        ContinueUsage();
     }
     return 0;
 }
@@ -144,31 +170,47 @@ static
 
 int _tmain(int argc, LPCTSTR argv[])
 {
-	LPTSTR MachineName = NULL;   // remote machine
-    LPCTSTR Command = NULL;      // sc command
-    LPCTSTR ServiceName = NULL;  // Name of service
+	LPCTSTR Server = NULL;      // remote machine
+    LPCTSTR Command = NULL;     // sc command
+    LPCTSTR ServiceName = NULL; // name of service
 
     if (argc < 2)
-        return MainUsage();
+    {
+        MainUsage();
+        return -1;
+    }
 
     /* get server name */
     if ((argv[1][0] == '\\') && (argv[1][1] == '\\'))
     {
         if (argc < 3)
-            return MainUsage();
+        {
+            MainUsage();
+            return -1;
+        }
 
-        _tcscpy(MachineName, argv[1]);
+        Server = argv[1];
         Command = argv[2];
         if (argc > 3)
             ServiceName = argv[3];
-        return ScControl(MachineName, Command, ServiceName,  &argv[4], argc);
+
+        return ScControl(Server,
+                         Command,
+                         ServiceName,
+                         &argv[4],
+                         argc-4);
     }
     else
     {
         Command = argv[1];
         if (argc > 2)
             ServiceName = argv[2];
-        return ScControl(MachineName, Command, ServiceName, &argv[3], argc);
+
+        return ScControl(Server,
+                         Command,
+                         ServiceName,
+                         &argv[3],
+                         argc-3);
     }
 }
 
@@ -191,13 +233,13 @@ int main( int argc, char **argv )
             }
             swprintf(argvW[i], L"%hs", argv[i]);
         }
-        
+
         if (j == 0)
         {
             /* no error converting the parameters, call wmain() */
             Ret = wmain(argc, (LPCTSTR *)argvW);
         }
-        
+
         /* free the arguments */
         for (i = 0; i < argc; i++)
         {
@@ -206,7 +248,7 @@ int main( int argc, char **argv )
         }
         free(argvW);
     }
-    
+
     return Ret;
 }
 #endif

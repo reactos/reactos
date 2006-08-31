@@ -17,7 +17,7 @@
 #include "sc.h"
 
 /* local function decs */
-VOID PrintService(BOOL bExtended);
+VOID PrintService2(BOOL bExtended);
 BOOL EnumServices(DWORD ServiceType, DWORD ServiceState);
 BOOL QueryService(LPCTSTR ServiceName, BOOL bExtended);
 
@@ -33,14 +33,14 @@ Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
     {
         /* get default values */
         EnumServices(SERVICE_WIN32, SERVICE_ACTIVE);
-        
+
         /* print default values */
-        PrintService(bExtended);
+        PrintService2(bExtended);
     }
     else if (_tcsicmp(ServiceName, _T("type=")) == 0)
     {
         LPCTSTR Type = *ServiceArgs;
-        
+
         if (_tcsicmp(Type, _T("driver")) == 0)
             EnumServices(SERVICE_DRIVER, SERVICE_ACTIVE);
         else if (_tcsicmp(Type, _T("service")) == 0)
@@ -52,8 +52,8 @@ Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
             _tprintf(_T("\nERROR following \"type=\"!\n"));
             _tprintf(_T("Must be \"driver\" or \"service\" or \"all\"\n"));
         }
-        
-        PrintService(bExtended);
+
+        PrintService2(bExtended);
     }
     else if(_tcsicmp(ServiceName, _T("state=")) == 0)
     {
@@ -68,8 +68,8 @@ Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
             _tprintf(_T("\nERROR following \"state=\"!\n"));
             _tprintf(_T("Must be \"active\" or \"inactive\" or \"all\"\n"));
         }
-            
-        PrintService(bExtended);
+
+        PrintService2(bExtended);
     }
 /*
     else if(_tcsicmp(ServiceName, _T("bufsize=")))
@@ -82,7 +82,7 @@ Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
     {
         QueryService(ServiceName, bExtended);
     }
-    
+
     return TRUE;
 }
 
@@ -90,11 +90,21 @@ Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
 BOOL
 QueryService(LPCTSTR ServiceName, BOOL bExtended)
 {
+    SC_HANDLE hSCManager;
     SERVICE_STATUS_PROCESS *pServiceInfo = NULL;
     SC_HANDLE hSc;
     DWORD BufSiz = 0;
     DWORD BytesNeeded = 0;
     DWORD Ret;
+
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_CONNECT);
+    if (hSCManager == NULL)
+    {
+        ReportLastError();
+        return FALSE;
+    }
 
     hSc = OpenService(hSCManager, ServiceName, SERVICE_QUERY_STATUS);
 
@@ -143,7 +153,7 @@ QueryService(LPCTSTR ServiceName, BOOL bExtended)
         }
     }
 
-    
+
     _tprintf(_T("SERVICE_NAME: %s\n"), ServiceName);
 
     _tprintf(_T("\tTYPE               : %x  "),
@@ -193,7 +203,7 @@ QueryService(LPCTSTR ServiceName, BOOL bExtended)
         _tprintf(_T("\tFLAGS              : %lu\n"),
             pServiceInfo->dwServiceFlags);
     }
-    
+
     HeapFree(GetProcessHeap(), 0, pServiceInfo);
 
     return TRUE;
@@ -203,10 +213,20 @@ QueryService(LPCTSTR ServiceName, BOOL bExtended)
 BOOL
 EnumServices(DWORD ServiceType, DWORD ServiceState)
 {
+    SC_HANDLE hSCManager;
     DWORD BufSize = 0;
     DWORD BytesNeeded = 0;
     DWORD ResumeHandle = 0;
     DWORD Ret;
+
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_ENUMERATE_SERVICE);
+    if (hSCManager == NULL)
+    {
+        ReportLastError();
+        return FALSE;
+    }
 
     /* determine required buffer size */
     Ret = EnumServicesStatusEx(hSCManager,
@@ -262,10 +282,10 @@ EnumServices(DWORD ServiceType, DWORD ServiceState)
 
 
 VOID
-PrintService(BOOL bExtended)
+PrintService2(BOOL bExtended)
 {
     DWORD i;
-    
+
     for (i=0; i < NumServices; i++)
     {
 
@@ -322,6 +342,6 @@ PrintService(BOOL bExtended)
 
             _tprintf(_T("\n"));
     }
-    
+
     _tprintf(_T("number : %lu\n"), NumServices);
 }

@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS SC utility
- * FILE:        subsys/system/sc/create.c
- * PURPOSE:     control ReactOS services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *           Ged Murphy 20/10/05 Created
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/sc/create.c
+ * PURPOSE:     Create a service
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -13,46 +11,81 @@
 
 BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
 {
+    SC_HANDLE hSCManager;
     SC_HANDLE hSc;
-    LPCTSTR BinaryPathName = *++ServiceArgs;
-//    LPCTSTR *Options = ++ServiceArgs;
-    
-    if ((! ServiceName) || (! BinaryPathName))
-        return CreateUsage();
+    BOOL bRet = FALSE;
 
-#ifdef SCDBG  
-    /* testing */
-    printf("service to create - %s\n", ServiceName);
-    printf("Binary path - %s\n", BinaryPathName);
-    printf("Arguments :\n");
-    while (*Options)
+    DWORD dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    DWORD dwStartType = SERVICE_DEMAND_START;
+    DWORD dwErrorControl = SERVICE_ERROR_NORMAL;
+    LPCTSTR lpBinaryPathName = NULL;
+    LPCTSTR lpLoadOrderGroup = NULL;
+    LPDWORD lpdwTagId = NULL;
+    LPCTSTR lpDependencies = NULL;
+    LPCTSTR lpServiceStartName = NULL;
+    LPCTSTR lpPassword = NULL;
+
+    /* quick hack to get it working */
+    lpBinaryPathName = *ServiceArgs;
+
+#ifdef SCDBG
+{
+    _tprintf(_T("service name - %s\n"), ServiceName);
+    _tprintf(_T("display name - %s\n"), ServiceName);
+    _tprintf(_T("service type - %lu\n"), dwServiceType);
+    _tprintf(_T("start type - %lu\n"), dwStartType);
+    _tprintf(_T("error control - %lu\n"), dwErrorControl);
+    _tprintf(_T("Binary path - %s\n"), lpBinaryPathName);
+    _tprintf(_T("load order group - %s\n"), lpLoadOrderGroup);
+    _tprintf(_T("tag - %lu\n"), lpdwTagId);
+    _tprintf(_T("dependincies - %s\n"), lpDependencies);
+    _tprintf(_T("account start name - %s\n"), lpServiceStartName);
+    _tprintf(_T("account password - %s\n"), lpPassword);
+}
+#endif
+
+    if (!ServiceName)
     {
-        printf("%s\n", *Options);
-        Options++;
+        CreateUsage();
+        return FALSE;
     }
-#endif 
-    hSc = CreateService(hSCManager,
-                        ServiceName,
-                        ServiceName,
-                        SERVICE_ALL_ACCESS,
-                        SERVICE_WIN32_OWN_PROCESS,
-                        SERVICE_DEMAND_START,
-                        SERVICE_ERROR_NORMAL,
-                        BinaryPathName,
-                        NULL,
-                        NULL,
-                        NULL,
-                        NULL,
-                        NULL);
 
-    if (hSc == NULL)
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_CREATE_SERVICE);
+    if (hSCManager == NULL)
     {
-        _tprintf(_T("CreateService failed\n"));
         ReportLastError();
         return FALSE;
     }
 
-	_tprintf(_T("[SC] CreateService SUCCESS\n"));
-    CloseServiceHandle(hSc);
-    return TRUE;
+    hSc = CreateService(hSCManager,
+                        ServiceName,
+                        ServiceName,
+                        SERVICE_ALL_ACCESS,
+                        dwServiceType,
+                        dwStartType,
+                        dwErrorControl,
+                        lpBinaryPathName,
+                        lpLoadOrderGroup,
+                        lpdwTagId,
+                        lpDependencies,
+                        lpServiceStartName,
+                        lpPassword);
+
+    if (hSc == NULL)
+    {
+        ReportLastError();
+        CloseServiceHandle(hSCManager);
+    }
+    else
+    {
+        _tprintf(_T("[SC] CreateService SUCCESS\n"));
+
+        CloseServiceHandle(hSc);
+        CloseServiceHandle(hSCManager);
+        bRet = TRUE;
+    }
+
+    return bRet;
 }

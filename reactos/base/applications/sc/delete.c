@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS SC utility
- * FILE:        subsys/system/sc/delete.c
- * PURPOSE:     control ReactOS services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *           Ged Murphy 20/10/05 Created
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/sc/delete.c
+ * PURPOSE:     Delete a service
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
@@ -13,30 +11,39 @@
 
 BOOL Delete(LPCTSTR ServiceName)
 {
-    SC_HANDLE hSc;
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hSc = NULL;
 
-#ifdef SCDBG  
-    /* testing */
-    printf("service to delete - %s\n\n", ServiceName);
+#ifdef SCDBG
+{
+    _tprintf(_T("service to delete - %s\n\n"), ServiceName);
+}
 #endif
 
-    hSc = OpenService(hSCManager, ServiceName, DELETE);
-
-    if (hSc == NULL)
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_CONNECT);
+    if (hSCManager != NULL)
     {
-        _tprintf(_T("openService failed\n"));
-        ReportLastError();
-        return FALSE;
+        hSc = OpenService(hSCManager, ServiceName, DELETE);
+        if (hSc != NULL)
+        {
+            if (DeleteService(hSc))
+            {
+                _tprintf(_T("[SC] DeleteService SUCCESS\n"));
+
+                CloseServiceHandle(hSc);
+                CloseServiceHandle(hSCManager);
+
+                return TRUE;
+            }
+        }
     }
 
-    if (! DeleteService(hSc))
-    {
-        _tprintf(_T("DeleteService failed\n"));
-        ReportLastError();
-        return FALSE;
-    }
+    ReportLastError();
 
-	_tprintf(_T("[SC] DeleteService SUCCESS\n"));
-    CloseServiceHandle(hSc);
-    return TRUE;
+    if (hSc) CloseServiceHandle(hSc);
+    if (hSCManager) CloseServiceHandle(hSCManager);
+
+    return FALSE;
 }

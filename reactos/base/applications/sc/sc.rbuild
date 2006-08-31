@@ -7,12 +7,13 @@
 	<define name="_UNICODE" />
 	<library>kernel32</library>
 	<library>advapi32</library>
-	<file>sc.c</file>
-	<file>start.c</file>
-	<file>query.c</file>
 	<file>control.c</file>
 	<file>create.c</file>
 	<file>delete.c</file>
+	<file>print.c</file>
+	<file>query.c</file>
+	<file>sc.c</file>
+	<file>start.c</file>	
 	<file>usage.c</file>
 	<file>sc.rc</file>
 	<pch>sc.h</pch>
