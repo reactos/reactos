@@ -1215,7 +1215,6 @@ _KiTrap13:
 
     /* Otherwise, something is very wrong, raise an exception */
     sti
-    jmp $
     mov ebx, [ebp+KTRAP_FRAME_EIP]
     mov esi, -1
     mov eax, STATUS_ACCESS_VIOLATION
@@ -1329,21 +1328,77 @@ NotCsGpf:
     test dword ptr [edx+4], RPL_MASK
     jz UserModeGpf
 
-    /* FIXME: Handle IRET back to user-mode */
+    /* Setup trap frame to copy */
+    mov ecx, (KTRAP_FRAME_LENGTH - 12) / 4
+    lea edx, [ebp+KTRAP_FRAME_ERROR_CODE]
+
+TrapCopy:
+
+    /* Copy each field */
+    mov eax, [edx]
+    mov [edx+12], eax
+    sub edx, 4
+    loop TrapCopy
+
+    /* Enable interrupts and adjust stack */
+    sti
+    add esp, 12
+    add ebp, 12
+
+    /* Setup exception record */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov esi, [ebp+KTRAP_FRAME_ERROR_CODE]
+    and esi, 0xFFFF
+    mov eax, STATUS_ACCESS_VIOLATION
+    jmp _DispatchTwoParam
+
+MsrCheck:
+
+    /* FIXME: Handle RDMSR/WRMSR */
     int 3
     jmp $
 
 NotIretGpf:
 
-    /* FIXME: Handle RDMSR/WRMSR and lazy load */
-    int 3
-    jmp $
+    /* Check if this was an MSR opcode */
+    cmp al, 0xF
+    jz MsrCheck
+
+    /* Check if DS is Ring 3 */
+    cmp word ptr [ebp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
+    jz CheckEs
+
+    /* Otherwise, fix it up */
+    mov dword ptr [ebp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
+    jmp ExitGpfTrap
+
+CheckEs:
+
+    /* Check if ES is Ring 3 */
+    cmp word ptr [ebp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
+    jz UserModeGpf
+
+    /* Otherwise, fix it up */
+    mov dword ptr [ebp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
+    jmp ExitGpfTrap
 
 SegPopGpf:
 
-    /* Handle segment POP fault */
+    /* Sanity check */
+    lea eax, [ebp+KTRAP_FRAME_ESP]
+    cmp edx, eax
+    jz HandleSegPop
     int 3
-    jmp $
+
+    /* Handle segment POP fault by setting it to 0 */
+HandleSegPop:
+    xor eax, eax
+    mov dword ptr [edx], eax
+
+ExitGpfTrap:
+
+    /* Do a trap exit */
+    TRAP_EPILOG NotFromSystemCall, DoNotRestorePreviousMode, DoNotRestoreSegments, DoRestoreVolatiles, DoRestoreEverything
 
 UserModeGpf:
 
