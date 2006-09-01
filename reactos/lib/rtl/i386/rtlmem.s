@@ -122,7 +122,7 @@ _RtlFillMemory@12:
 
     /* Do the fill */
     rep stosd
-    or ecx, ecx
+    or ecx, edx
     jnz ByteFill
 
     /* Return */
@@ -200,7 +200,7 @@ _RtlZeroMemory@8:
 
     /* Do the fill */
     rep stosd
-    or ecx, ecx
+    or ecx, edx
     jnz ByteZero
 
     /* Return */
@@ -239,7 +239,7 @@ DoMove:
 
     /* Do the move */
     rep movsd
-    or ecx, ecx
+    or ecx, edx
     jnz ByteMove
 
     /* Return */
