@@ -312,10 +312,22 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     
 	if (uFormat == CF_BITMAP)
 	{
-	    /*FIXME: check if hMem is GDI handle
-	    GlobalLock(hMem) fails && GetObject(hMem, 0, NULL) > 0
-	    */
-	    return NtUserSetClipboardData(uFormat, hMem, 0); 
+	    pMem = GlobalLock(hMem);
+	    if (pMem)
+	    {
+	        /* not a  GDI handle */
+	        GlobalUnlock(hMem);
+	        return ret;
+	    }
+	    else
+	    {
+	        /* check if this GDI handle is a HBITMAP */
+	        /* GetObject for HBITMAP not implemented in ReactOS */
+    	    //if (GetObject(hMem, 0, NULL) == sifeof(BITMAP))
+    	    //{
+    	        return NtUserSetClipboardData(CF_BITMAP, hMem, 0); 
+    	    //}
+    	}
 	}
 
     size = GlobalSize(hMem);
@@ -323,15 +335,14 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
 	
 	if ((pMem) && (size)) 
 	{
-    	DPRINT1("[1]");
     	size = GlobalSize(hMem);
     	ret = NtUserSetClipboardData(uFormat, pMem, size); 
-        //sholud i unlock hMmem?
+        //sholud i unlock hMem?
         GlobalUnlock(hMem);
     }
     else
     {
-        DPRINT1("SetClipboardData fail\n");
+        DPRINT1("SetClipboardData failed\n");
     }
             
     return ret;
