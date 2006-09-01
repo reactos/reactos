@@ -149,12 +149,14 @@ KiInitSpinLocks(IN PKPRCB Prcb,
 
 VOID
 NTAPI
-KeInit1(VOID)
+KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
+                IN ULONG DriverBase) // FIXME: hackhack
 {
     PKIPCR KPCR;
     PKPRCB Prcb;
     BOOLEAN NpxPresent;
     ULONG FeatureBits;
+    ULONG DriverSize;
     extern USHORT KiBootGdt[];
     extern KTSS KiBootTss;
 
@@ -186,6 +188,12 @@ KeInit1(VOID)
     Ki386InitializeLdt();
     KeInitExceptions();
     KeInitInterrupts();
+
+    /* Load the Kernel with the PE Loader */
+    LdrSafePEProcessModule((PVOID)KERNEL_BASE,
+                           (PVOID)KERNEL_BASE,
+                           (PVOID)DriverBase,
+                           &DriverSize);
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -246,40 +254,79 @@ KeInit1(VOID)
         }
     }
 
-   if (KeFeatureBits & KF_GLOBAL_PAGE)
-   {
-      ULONG Flags;
-      /* Enable global pages */
-      Ke386GlobalPagesEnabled = TRUE;
-      Ke386SaveFlags(Flags);
-      Ke386DisableInterrupts();
-      Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
-      Ke386RestoreFlags(Flags);
-   }
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+    {
+        ULONG Flags;
+        /* Enable global pages */
+        Ke386GlobalPagesEnabled = TRUE;
+        Ke386SaveFlags(Flags);
+        Ke386DisableInterrupts();
+        Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
+        Ke386RestoreFlags(Flags);
+    }
 
-   if (KeFeatureBits & KF_FAST_SYSCALL)
-   {
-      extern void KiFastCallEntry(void);
+    if (KeFeatureBits & KF_FAST_SYSCALL)
+    {
+        extern void KiFastCallEntry(void);
 
-      /* CS Selector of the target segment. */
-      Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
-      /* Target ESP. */
-      Ke386Wrmsr(0x175, 0, 0);
-      /* Target EIP. */
-      Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
-   }
+        /* CS Selector of the target segment. */
+        Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
+        /* Target ESP. */
+        Ke386Wrmsr(0x175, 0, 0);
+        /* Target EIP. */
+        Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
+    }
 
-   /* Does the CPU Support 'prefetchnta' (SSE)  */
-   if(KeFeatureBits & KF_XMMI)
-   {
-       ULONG Protect;
+    /* Does the CPU Support 'prefetchnta' (SSE)  */
+    if(KeFeatureBits & KF_XMMI)
+    {
+        ULONG Protect;
 
-       Protect = MmGetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal);
-       MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect | PAGE_IS_WRITABLE);
-       /* Replace the ret by a nop */
-       *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
-       MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect);
-   }
+        Protect = MmGetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal);
+        MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect | PAGE_IS_WRITABLE);
+        /* Replace the ret by a nop */
+        *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+        MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect);
+    }
+
+    /* Initialize the Debugger */
+    KdInitSystem (0, &KeLoaderBlock);
+
+    /* Initialize HAL */
+    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
+    /* Initialize the Processor with HAL */
+    HalInitializeProcessor(KeNumberProcessors, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
+    /* Initialize the Kernel Executive */
+    ExpInitializeExecutive();
+
+    /* Create the IOPM Save Area */
+    Ki386IopmSaveArea = ExAllocatePoolWithTag(NonPagedPool,
+                                              PAGE_SIZE * 2,
+                                              TAG('K', 'e', ' ', ' '));
+
+    /* Free Initial Memory */
+    MiFreeInitMemory();
+
+        /* Never returns */
+#if 0
+    /* FIXME:
+     *   The initial thread isn't a real ETHREAD object, we cannot call PspExitThread.
+     */
+    PspExitThread(STATUS_SUCCESS);
+#else
+    while (1)
+    {
+        LARGE_INTEGER Timeout;
+        Timeout.QuadPart = 0x7fffffffffffffffLL;
+        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+    }
+#endif
+
+    /* Bug Check and loop forever if anything failed */
+    KEBUGCHECK(0);
+    for(;;);
 }
 
 VOID
@@ -287,41 +334,13 @@ INIT_FUNCTION
 NTAPI
 KeInit2(VOID)
 {
-   ULONG Protect;
-   PKIPCR Pcr = (PKIPCR)KeGetPcr();
-   PKPRCB Prcb = Pcr->Prcb;
+    ULONG Protect;
 
-   KiInitializeBugCheck();
-   KeInitializeDispatcher();
-   KiInitializeSystemClock();
+    KiInitializeBugCheck();
+    KeInitializeDispatcher();
+    KiInitializeSystemClock();
 
-   DPRINT1("CPU Detection Complete.\n"
-           "CPUID: %lx\n"
-           "Step : %lx\n"
-           "Type : %lx\n"
-           "ID   : %s\n"
-           "FPU  : %lx\n"
-           "XMMI : %lx\n"
-           "Fxsr : %lx\n"
-           "Feat : %lx\n"
-           "Ftrs : %lx\n"
-           "Cache: %lx\n"
-           "CR0  : %lx\n"
-           "CR4  : %lx\n",
-           Prcb->CpuID,
-           Prcb->CpuStep,
-           Prcb->CpuType,
-           Prcb->VendorString,
-           KeI386NpxPresent,
-           KeI386XMMIPresent,
-           KeI386FxsrPresent,
-           Prcb->FeatureBits,
-           KeFeatureBits,
-           Pcr->SecondLevelCacheSize,
-           Ke386GetCr0(),
-           Ke386GetCr4());
-
-   /* Set IDT to writable */
-   Protect = MmGetPageProtect(NULL, (PVOID)KiIdt);
-   MmSetPageProtect(NULL, (PVOID)KiIdt, Protect | PAGE_IS_WRITABLE);
+    /* Set IDT to writable */
+    Protect = MmGetPageProtect(NULL, (PVOID)KiIdt);
+    MmSetPageProtect(NULL, (PVOID)KiIdt, Protect | PAGE_IS_WRITABLE);
 }

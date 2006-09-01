@@ -49,29 +49,11 @@ _NtProcessStartup:
     mov es, ax
     .att_syntax
 
-    cmpl $AP_MAGIC, %ecx
-    jne  .m1
-     
-    pushl $0
-    popfl
-	
-    /*
-     *  Reserve space for the floating point save area.
-     */
-    subl  $SIZEOF_FX_SAVE_AREA, %esp
-
-    /*
-     * Call the application processor initialization code
-     */
-    pushl $0
-    call  _KiSystemStartup@4
-    
-.m1:     
     /* Load the initial kernel stack */
     lea _kernel_stack_top, %eax
     sub $(SIZEOF_FX_SAVE_AREA), %eax
     movl %eax, %esp
-    
+
     /* Call the main kernel initialization */
     pushl %edx
     call _KiRosPrepareForSystemStartup@4

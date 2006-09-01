@@ -611,8 +611,9 @@ Phase1Initialization(PVOID Context);
 
 VOID
 NTAPI
-KeInit1(
-    VOID
+KiSystemStartup(
+    IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
+    IN ULONG DriverBase // FIXME: hackhack
 );
 
 VOID

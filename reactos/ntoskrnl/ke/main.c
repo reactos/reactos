@@ -86,53 +86,7 @@ KeGetRecommendedSharedDataAlignment(VOID)
 
 VOID
 NTAPI
-KiSystemStartup(BOOLEAN BootProcessor)
-{
-    DPRINT("KiSystemStartup(%d)\n", BootProcessor);
-
-    /* Initialize the Debugger */
-    KdInitSystem (0, &KeLoaderBlock);
-
-    /* Initialize HAL */
-    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-
-    /* Initialize the Processor with HAL */
-    HalInitializeProcessor(KeNumberProcessors, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-
-    /* Initialize the Kernel Executive */
-    ExpInitializeExecutive();
-
-    /* Create the IOPM Save Area */
-    Ki386IopmSaveArea = ExAllocatePoolWithTag(NonPagedPool,
-                                              PAGE_SIZE * 2,
-                                              TAG('K', 'e', ' ', ' '));
-
-    /* Free Initial Memory */
-    MiFreeInitMemory();
-
-        /* Never returns */
-#if 0
-    /* FIXME:
-     *   The initial thread isn't a real ETHREAD object, we cannot call PspExitThread.
-     */
-    PspExitThread(STATUS_SUCCESS);
-#else
-    while (1)
-    {
-        LARGE_INTEGER Timeout;
-        Timeout.QuadPart = 0x7fffffffffffffffLL;
-        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
-    }
-#endif
-
-    /* Bug Check and loop forever if anything failed */
-    KEBUGCHECK(0);
-    for(;;);
-}
-
-VOID
-NTAPI
-KiRosPrepareForSystemStartup(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG i;
     ULONG size;
@@ -266,21 +220,12 @@ KiRosPrepareForSystemStartup(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     /* Increase the last kernel address with the size of HAL */
     LastKernelAddress += PAGE_ROUND_UP(DriverSize);
 
-    /* FIXME: We need to do this in KiSystemStartup! */
-    KeInit1();
-
-    /* Load the Kernel with the PE Loader */
-    LdrSafePEProcessModule((PVOID)KERNEL_BASE,
-                           (PVOID)KERNEL_BASE,
-                           (PVOID)DriverBase,
-                           &DriverSize);
-
     /* Now select the final beginning and ending Kernel Addresses */
     FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - KERNEL_BASE + 0x200000;
     LastKrnlPhysAddr = LastKernelAddress - KERNEL_BASE + 0x200000;
 
     /* Do general System Startup */
-    KiSystemStartup(1);
+    KiSystemStartup(LoaderBlock, DriverBase);
 }
 
 /* EOF */
