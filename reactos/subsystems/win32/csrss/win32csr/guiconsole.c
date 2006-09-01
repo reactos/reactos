@@ -53,7 +53,103 @@ typedef struct GUI_CONSOLE_DATA_TAG
 static BOOL ConsInitialized = FALSE;
 static HWND NotifyWnd;
 
+typedef struct _GUICONSOLE_MENUITEM
+{
+    UINT uID;
+    const struct _GUICONSOLE_MENUITEM *SubMenu;
+    WORD wCmdID;
+} GUICONSOLE_MENUITEM, *PGUICONSOLE_MENUITEM;
+
+static const GUICONSOLE_MENUITEM GuiConsoleEditMenuItems[] =
+{
+    { IDS_MARK, NULL, ID_SYSTEM_EDIT_MARK },
+    { IDS_COPY, NULL, ID_SYSTEM_EDIT_COPY },
+    { IDS_PASTE, NULL, ID_SYSTEM_EDIT_PASTE },
+    { IDS_SELECTALL, NULL, ID_SYSTEM_EDIT_SELECTALL },
+    { IDS_SCROLL, NULL, ID_SYSTEM_EDIT_SCROLL },
+    { IDS_FIND, NULL, ID_SYSTEM_EDIT_FIND },
+
+    { 0, NULL, 0 } /* End of list */
+};
+
+static const GUICONSOLE_MENUITEM GuiConsoleMainMenuItems[] =
+{
+    { (UINT)-1, NULL, 0 }, /* Separator */
+    { IDS_EDIT, GuiConsoleEditMenuItems, 0 },
+    { IDS_DEFAULTS, NULL, ID_SYSTEM_DEFAULTS },
+    { IDS_PROPERTIES, NULL, ID_SYSTEM_PROPERTIES },
+
+    { 0, NULL, 0 } /* End of list */
+};
+
 /* FUNCTIONS *****************************************************************/
+
+static VOID FASTCALL
+GuiConsoleAppendMenuItems(HMENU hMenu,
+                          const GUICONSOLE_MENUITEM *Items)
+{
+    UINT i;
+    WCHAR szMenuString[255];
+    HMENU hSubMenu;
+
+    for (i = 0; Items[i].uID != 0; i++)
+    {
+        if (Items[i].uID != (UINT)-1)
+        {
+            if (LoadStringW(Win32CsrDllHandle,
+                            Items[i].uID,
+                            szMenuString,
+                            sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
+            {
+                if (Items[i].SubMenu != NULL)
+                {
+                    hSubMenu = CreatePopupMenu();
+                    if (hSubMenu != NULL)
+                    {
+                        GuiConsoleAppendMenuItems(hSubMenu,
+                                                  Items[i].SubMenu);
+
+                        if (!AppendMenuW(hMenu,
+                                         MF_STRING | MF_POPUP,
+                                         (UINT_PTR)hSubMenu,
+                                         szMenuString))
+                        {
+                            DestroyMenu(hSubMenu);
+                        }
+                    }
+                }
+                else
+                {
+                    AppendMenuW(hMenu,
+                                MF_STRING,
+                                Items[i].wCmdID,
+                                szMenuString);
+                }
+            }
+        }
+        else
+        {
+            AppendMenuW(hMenu,
+                        MF_SEPARATOR,
+                        0,
+                        NULL);
+        }
+    }
+}
+
+static VOID FASTCALL
+GuiConsoleCreateSysMenu(PCSRSS_CONSOLE Console)
+{
+    HMENU hMenu;
+
+    hMenu = GetSystemMenu(Console->hWindow,
+                          FALSE);
+    if (hMenu != NULL)
+    {
+        GuiConsoleAppendMenuItems(hMenu,
+                                  GuiConsoleMainMenuItems);
+    }
+}
 
 static VOID FASTCALL
 GuiConsoleGetDataPointers(HWND hWnd, PCSRSS_CONSOLE *Console, PGUI_CONSOLE_DATA *GuiData)
@@ -338,6 +434,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   PCSRSS_PROCESS_DATA ProcessData;
   HKEY hKey;
 
+  Console->hWindow = hWnd;
+
   if (NULL == GuiData)
     {
       DPRINT1("GuiConsoleNcCreate: HeapAlloc failed\n");
@@ -431,6 +529,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 
   SetTimer(hWnd, 1, CURSOR_BLINK_TIME, NULL);
   SetEvent(GuiData->hGuiInitEvent);
+
+  GuiConsoleCreateSysMenu(Console);
 
   return (BOOL) DefWindowProcW(hWnd, WM_NCCREATE, 0, (LPARAM) Create);
 }
@@ -1137,97 +1237,35 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults)
   // then exchange this info with console.dll in
   // some private way
 }
-static LRESULT FASTCALL
-GuiConsoleHandleSysMenuCommand(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+static BOOL FASTCALL
+GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam)
 {
-  DPRINT1("GuiConsoleHandleSysMenuCommand entered %d\n", wParam);
+    BOOL Ret = TRUE;
 
-  switch(wParam)
+    switch(wParam)
     {
-      case IDS_MARK:
-      case IDS_COPY:
-      case IDS_PASTE:
-      case IDS_SELECTALL:
-      case IDS_SCROLL:
-      case IDS_FIND:
-        break;
+        case ID_SYSTEM_EDIT_MARK:
+        case ID_SYSTEM_EDIT_COPY:
+        case ID_SYSTEM_EDIT_PASTE:
+        case ID_SYSTEM_EDIT_SELECTALL:
+        case ID_SYSTEM_EDIT_SCROLL:
+        case ID_SYSTEM_EDIT_FIND:
+            break;
 
-      case IDS_DEFAULTS:
-        GuiConsoleShowConsoleProperties(hWnd, TRUE);
-        break;
-      case IDS_PROPERTIES:
-        GuiConsoleShowConsoleProperties(hWnd, FALSE);
-        break;
-      default:
-        return DefWindowProcW(hWnd, Msg, wParam, lParam);
-   }
+        case ID_SYSTEM_DEFAULTS:
+            GuiConsoleShowConsoleProperties(hWnd, TRUE);
+            break;
 
-  return 0;
-}
-static BOOLEAN FASTCALL
-InsertItem(HMENU hMenu, INT fType, INT fMask, INT fState, HMENU hSubMenu, INT ResourceId)
-{
-  MENUITEMINFO MenuItemInfo;
-  TCHAR szBuffer[MAX_PATH];
+        case ID_SYSTEM_PROPERTIES:
+            GuiConsoleShowConsoleProperties(hWnd, FALSE);
+            break;
 
-  memset(&MenuItemInfo, 0x0, sizeof(MENUITEMINFO));
-  MenuItemInfo.cbSize = sizeof (MENUITEMINFO);
-  MenuItemInfo.fMask = fMask;
-  MenuItemInfo.fType = fType;
-  MenuItemInfo.fState = fState;
-  MenuItemInfo.hSubMenu = hSubMenu;
-  MenuItemInfo.wID = ResourceId;
-
-  if (fType != MFT_SEPARATOR)
-    {
-      MenuItemInfo.cch = LoadString(Win32CsrDllHandle, ResourceId, szBuffer, MAX_PATH);
-      if (!MenuItemInfo.cch)
-        {
-          DPRINT("LoadString failed ResourceId %d Error %x\n", ResourceId, GetLastError());
-          return FALSE;
-        }
-        MenuItemInfo.dwTypeData = szBuffer;
+        default:
+            Ret = FALSE;
+            break;
     }
 
-  if (InsertMenuItem(hMenu, ResourceId, FALSE, &MenuItemInfo))
-    return TRUE;
-
-  DPRINT("InsertMenuItem failed Last error %x\n", GetLastError());
-  return FALSE;
-}
-
-
-
-static VOID FASTCALL
-GuiConsoleCreateSysMenu(HWND hWnd)
-{
-  HMENU hMenu;
-  HMENU hSubMenu;
-
-
-  hMenu = GetSystemMenu(hWnd, FALSE);
-  if (hMenu == NULL)
-    {
-      DPRINT("GetSysMenu failed\n");
-      return;
-    }
-  /* insert seperator */
-  InsertItem(hMenu, MFT_SEPARATOR, MIIM_FTYPE, 0, NULL, -1);
-
-    /* create submenu */
-  hSubMenu = CreatePopupMenu();
-  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_MARK);
-  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING | MIIM_STATE, MFS_GRAYED, NULL, IDS_COPY);
-  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_PASTE);
-  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SELECTALL);
-  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLL);
-  InsertItem(hSubMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_FIND);
-  InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING | MIIM_SUBMENU, 0, hSubMenu, IDS_EDIT);
-
-  /* create default/properties item */
-  InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_DEFAULTS);
-  InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_PROPERTIES);
-  DrawMenuBar(hWnd);
+    return Ret;
 }
 
 static LRESULT CALLBACK
@@ -1272,7 +1310,9 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           GuiConsoleMouseMove(hWnd, wParam, lParam);
         break;
 	  case WM_SYSCOMMAND:
-          return GuiConsoleHandleSysMenuCommand(hWnd, msg, wParam, lParam);		
+          if (!GuiConsoleHandleSysMenuCommand(hWnd, wParam))
+              Result = DefWindowProcW(hWnd, msg, wParam, lParam);
+          break;
       default:
         Result = DefWindowProcW(hWnd, msg, wParam, lParam);
         break;
@@ -1325,10 +1365,8 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           {
             HeapFree(Win32CsrApiHeap, 0, Buffer);
           }
-        Console->hWindow = NewWindow;
         if (NULL != NewWindow)
           {
-            GuiConsoleCreateSysMenu(NewWindow);
             //ShowScrollBar(NewWindow, SB_VERT, FALSE);
             //ShowScrollBar(NewWindow, SB_HORZ, FALSE);
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
