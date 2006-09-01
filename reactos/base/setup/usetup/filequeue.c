@@ -312,15 +312,6 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
 }
 
 
-typedef struct _COPYCONTEXT
-{
-  LPCWSTR DestinationRootPath; /* Not owned by this structure */
-  LPCWSTR InstallPath; /* Not owned by this structure */
-  ULONG TotalOperations;
-  ULONG CompletedOperations;
-  PPROGRESSBAR ProgressBar;
-} COPYCONTEXT, *PCOPYCONTEXT;
-
 BOOL WINAPI
 SetupCommitFileQueueW(HWND Owner,
 		     HSPFILEQ QueueHandle,
@@ -336,11 +327,8 @@ SetupCommitFileQueueW(HWND Owner,
   WCHAR FileSrcPath[MAX_PATH];
   WCHAR FileDstPath[MAX_PATH];
 
-  DPRINT1("Context %p\n", Context);
   TargetRootPath = ((PCOPYCONTEXT)Context)->DestinationRootPath;
-  DPRINT1("TargetRootPath %S\n", TargetRootPath);
   TargetPath = ((PCOPYCONTEXT)Context)->InstallPath;
-  DPRINT1("TargetPath %S\n", TargetPath);
 
   if (QueueHandle == NULL)
     return(FALSE);

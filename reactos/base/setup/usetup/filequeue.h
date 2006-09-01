@@ -58,6 +58,14 @@ typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(PVOID Context,
 				   UINT_PTR Param1,
 				   UINT_PTR Param2);
 
+typedef struct _COPYCONTEXT
+{
+  LPCWSTR DestinationRootPath; /* Not owned by this structure */
+  LPCWSTR InstallPath; /* Not owned by this structure */
+  ULONG TotalOperations;
+  ULONG CompletedOperations;
+  PPROGRESSBAR ProgressBar;
+} COPYCONTEXT, *PCOPYCONTEXT;
 
 /* FUNCTIONS ****************************************************************/
 

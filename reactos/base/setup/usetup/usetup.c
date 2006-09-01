@@ -69,16 +69,6 @@ typedef enum _PAGE_NUMBER
   REBOOT_PAGE,			/* virtual page */
 } PAGE_NUMBER, *PPAGE_NUMBER;
 
-typedef struct _COPYCONTEXT
-{
-  LPCWSTR DestinationRootPath; /* Not owned by this structure */
-  LPCWSTR InstallPath; /* Not owned by this structure */
-  ULONG TotalOperations;
-  ULONG CompletedOperations;
-  PPROGRESSBAR ProgressBar;
-} COPYCONTEXT, *PCOPYCONTEXT;
-
-
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
