@@ -27,7 +27,7 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file first="true">main_asm.S</file>
-				<file>cpu.S</file>
+				<file>cpu.c</file>
 				<file>ctxswitch.S</file>
                 <file>clock.S</file>
 				<file>exp.c</file>

@@ -74,6 +74,4 @@ _NtProcessStartup:
     
     /* Call the main kernel initialization */
     pushl %edx
-    pushl %ecx
-    call __main
-
+    call _KiRosPrepareForSystemStartup@4

@@ -90,6 +90,12 @@ KiSystemStartup(BOOLEAN BootProcessor)
 {
     DPRINT("KiSystemStartup(%d)\n", BootProcessor);
 
+    /* Initialize the Debugger */
+    KdInitSystem (0, &KeLoaderBlock);
+
+    /* Initialize HAL */
+    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(KeNumberProcessors, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
@@ -124,18 +130,9 @@ KiSystemStartup(BOOLEAN BootProcessor)
     for(;;);
 }
 
-/*
- * FUNCTION: Called by the boot loader to start the kernel
- * ARGUMENTS:
- *          LoaderBlock = Pointer to boot parameters initialized by the boot
- *                        loader
- * NOTE: The boot parameters are stored in low memory which will become
- * invalid after the memory managment is initialized so we make a local copy.
- */
 VOID
-INIT_FUNCTION
-_main(ULONG MultiBootMagic,
-      PROS_LOADER_PARAMETER_BLOCK _LoaderBlock)
+NTAPI
+KiRosPrepareForSystemStartup(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG i;
     ULONG size;
@@ -147,18 +144,52 @@ _main(ULONG MultiBootMagic,
     CHAR* s;
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
-    memcpy(&KeLoaderBlock, _LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
+    memcpy(&KeLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
     memcpy(&KeLoaderModules[1],
            (PVOID)KeLoaderBlock.ModsAddr,
            sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
     KeLoaderBlock.ModsCount++;
     KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
 
+    /* Check for BIOS memory map */
+    KeMemoryMapRangeCount = 0;
+    if (KeLoaderBlock.Flags & MB_FLAGS_MMAP_INFO)
+    {
+        /* We have a memory map from the nice BIOS */
+        size = *((PULONG)(KeLoaderBlock.MmapAddr - sizeof(ULONG)));
+        i = 0;
+
+        /* Map it until we run out of size */
+        while (i < KeLoaderBlock.MmapLength)
+        {
+            /* Copy into the Kernel Memory Map */
+            memcpy (&KeMemoryMap[KeMemoryMapRangeCount],
+                    (PVOID)(KeLoaderBlock.MmapAddr + i),
+                    sizeof(ADDRESS_RANGE));
+
+            /* Increase Memory Map Count */
+            KeMemoryMapRangeCount++;
+
+            /* Increase Size */
+            i += size;
+        }
+
+        /* Save data */
+        KeLoaderBlock.MmapLength = KeMemoryMapRangeCount * sizeof(ADDRESS_RANGE);
+        KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
+    }
+    else
+    {
+        /* Nothing from BIOS */
+        KeLoaderBlock.MmapLength = 0;
+        KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
+    }
+
     /* Save the Base Address */
     MmSystemRangeStart = (PVOID)KeLoaderBlock.KernelBase;
 
     /* Set the Command Line */
-    strcpy(KeLoaderCommandLine, (PCHAR)_LoaderBlock->CommandLine);
+    strcpy(KeLoaderCommandLine, (PCHAR)LoaderBlock->CommandLine);
     KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
 
     /* Write the first Module (the Kernel) */
@@ -174,15 +205,15 @@ _main(ULONG MultiBootMagic,
     KeLoaderModules[0].ModEnd = KeLoaderModules[0].ModStart + PAGE_ROUND_UP((ULONG)OptHead->SizeOfImage);
 
     /* Create a block for each module */
-    for (i = 1; i < KeLoaderBlock.ModsCount; i++) {
-
+    for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
         /* Check if we have to copy the path or not */
-        if ((s = strrchr((PCHAR)KeLoaderModules[i].String, '/')) != 0) {
-
+        if ((s = strrchr((PCHAR)KeLoaderModules[i].String, '/')) != 0)
+        {
             strcpy(KeLoaderModuleStrings[i], s + 1);
-
-        } else {
-
+        }
+        else
+        {
             strcpy(KeLoaderModuleStrings[i], (PCHAR)KeLoaderModules[i].String);
         }
 
@@ -204,9 +235,6 @@ _main(ULONG MultiBootMagic,
 
     /* Choose last module address as the final kernel address */
     LastKernelAddress = PAGE_ROUND_UP(KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd);
-
-    /* Low level architecture specific initialization */
-    KeInit1((PCHAR)KeLoaderBlock.CommandLine, &LastKernelAddress);
 
     /* Select the HAL Base */
     HalBase = KeLoaderModules[1].ModStart;
@@ -238,6 +266,9 @@ _main(ULONG MultiBootMagic,
     /* Increase the last kernel address with the size of HAL */
     LastKernelAddress += PAGE_ROUND_UP(DriverSize);
 
+    /* FIXME: We need to do this in KiSystemStartup! */
+    KeInit1();
+
     /* Load the Kernel with the PE Loader */
     LdrSafePEProcessModule((PVOID)KERNEL_BASE,
                            (PVOID)KERNEL_BASE,
@@ -247,45 +278,6 @@ _main(ULONG MultiBootMagic,
     /* Now select the final beginning and ending Kernel Addresses */
     FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - KERNEL_BASE + 0x200000;
     LastKrnlPhysAddr = LastKernelAddress - KERNEL_BASE + 0x200000;
-
-    KeMemoryMapRangeCount = 0;
-    if (KeLoaderBlock.Flags & MB_FLAGS_MMAP_INFO) {
-
-        /* We have a memory map from the nice BIOS */
-        size = *((PULONG)(KeLoaderBlock.MmapAddr - sizeof(ULONG)));
-        i = 0;
-
-        /* Map it until we run out of size */
-        while (i < KeLoaderBlock.MmapLength) {
-
-            /* Copy into the Kernel Memory Map */
-            memcpy (&KeMemoryMap[KeMemoryMapRangeCount],
-                    (PVOID)(KeLoaderBlock.MmapAddr + i),
-                    sizeof(ADDRESS_RANGE));
-
-            /* Increase Memory Map Count */
-            KeMemoryMapRangeCount++;
-
-            /* Increase Size */
-            i += size;
-        }
-
-        /* Save data */
-        KeLoaderBlock.MmapLength = KeMemoryMapRangeCount * sizeof(ADDRESS_RANGE);
-        KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
-
-    } else {
-
-        /* Nothing from BIOS */
-        KeLoaderBlock.MmapLength = 0;
-        KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
-    }
-
-    /* Initialize the Debugger */
-    KdInitSystem (0, &KeLoaderBlock);
-
-    /* Initialize HAL */
-    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Do general System Startup */
     KiSystemStartup(1);

@@ -12,10 +12,20 @@ PoInit(
 
 NTSTATUS
 NTAPI
-PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState);
+PopSetSystemPowerState(
+    SYSTEM_POWER_STATE PowerState
+);
 
 VOID
 NTAPI
-PopCleanupPowerState(IN PPOWER_STATE PowerState);
+PopCleanupPowerState(
+    IN PPOWER_STATE PowerState
+);
+
+VOID
+NTAPI
+PoInitializePrcb(
+    IN PKPRCB Prcb
+);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_PO_H */

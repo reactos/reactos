@@ -37,28 +37,6 @@ ULONG KiIdealDpcRate = 20;
 /* FUNCTIONS ****************************************************************/
 
 /*
- * FUNCTION: Initialize DPC handling
- */
-VOID
-INIT_FUNCTION
-NTAPI
-KeInitDpc(PKPRCB Prcb)
-{
-   InitializeListHead(&Prcb->DpcData[0].DpcListHead);
-#if 0
-   /*
-    * FIXME:
-    *   Prcb->DpcEvent is a NULL pointer.
-    */
-   KeInitializeEvent(Prcb->DpcEvent, 0, 0);
-#endif
-   KeInitializeSpinLock(&Prcb->DpcData[0].DpcLock);
-   Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
-   Prcb->MinimumDpcRate = KiMinimumDpcRate;
-   Prcb->DpcData[0].DpcQueueDepth = 0;
-}
-
-/*
  * @implemented
  */
 VOID

@@ -76,7 +76,7 @@ KeI386VdmInitialize(VOID)
     if (!NT_SUCCESS(Status))
     {
         /* Not present, so check if the CPU supports VME */
-        if (KeGetPcr()->Prcb->FeatureBits & X86_FEATURE_VME)
+        if (KeGetPcr()->Prcb->FeatureBits & KF_V86_VIS)
         {
             /* Enable them. FIXME: Use IPI */
             Ki386VdmEnablePentiumExtentions();

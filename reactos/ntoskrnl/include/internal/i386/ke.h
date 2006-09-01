@@ -26,21 +26,6 @@
 #define X86_CR4_OSFXSR          0x00000200 /* enable FXSAVE/FXRSTOR instructions */
 #define X86_CR4_OSXMMEXCPT      0x00000400 /* enable #XF exception */
 
-#define X86_FEATURE_VME         0x00000002 /* Virtual 8086 Extensions are present */
-#define X86_FEATURE_TSC         0x00000010 /* time stamp counters are present */
-#define X86_FEATURE_PAE         0x00000040 /* physical address extension is present */
-#define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
-#define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
-#define X86_FEATURE_PGE         0x00002000 /* Page Global Enable */
-#define X86_FEATURE_MMX         0x00800000 /* MMX extension present */
-#define X86_FEATURE_FXSR        0x01000000 /* FXSAVE/FXRSTOR instructions present */
-#define X86_FEATURE_SSE         0x02000000 /* SSE extension present */
-#define X86_FEATURE_SSE2        0x04000000 /* SSE2 extension present */
-#define X86_FEATURE_HT          0x10000000 /* Hyper-Threading present */
-
-#define X86_EXT_FEATURE_SSE3    0x00000001 /* SSE3 extension present */
-#define X86_EXT_FEATURE_3DNOW   0x40000000 /* 3DNOW! extension present */
-
 #define DR7_ACTIVE              0x00000055  /* If any of these bits are set, a Dr is active */
 
 #define FRAME_EDITED        0xFFF8
@@ -64,6 +49,29 @@ VOID
 Ki386InitializeLdt(VOID);
 VOID
 Ki386SetProcessorFeatures(VOID);
+
+VOID
+NTAPI
+KiSetCR0Bits(VOID);
+
+VOID
+NTAPI
+KiGetCacheInformation(VOID);
+
+BOOLEAN
+NTAPI
+KiIsNpxPresent(
+    VOID
+);
+
+VOID
+NTAPI
+KiSetProcessorType(VOID);
+
+ULONG
+NTAPI
+KiGetFeatureBits(VOID);
+
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 VOID

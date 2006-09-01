@@ -25,11 +25,18 @@
 //  - Use Object Type Mutex/Lock.
 //
 // Ke:
-//  - Get rid of KiRosPrintAddress and use KiDumpParameterImages instead.
-//  - Sanitize some context fields during conversions.
-//  - Implement stack fault and segment fault handlers.
-//  - Add DR macro/save and VM macro/save.
-//  - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
+//
+//  - FIXES:
+//      * Get rid of KiRosPrintAddress and use KiDumpParameterImages instead.
+//      * Sanitize some context fields during conversions.
+//      * Implement stack fault and segment fault handlers.
+//      * Add DR macro/save and VM macro/save.
+//      * Make boot process more NT-like.
+//  - FEATURES:
+//      * Use Queued Spinlocks for scheduling and dispatching.
+//      * New optimized table-based tick-hashed timer implementation.
+//      * New Thread Scheduler based on XP.
+//      * Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
 //
 // Ex:
 //  - Use pushlocks for handle implementation.

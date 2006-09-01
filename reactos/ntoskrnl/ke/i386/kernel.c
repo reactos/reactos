@@ -21,54 +21,214 @@ PKNODE KeNodeBlock[1];
 UCHAR KeNumberNodes = 1;
 UCHAR KeProcessNodeSeed;
 ULONG KiPcrInitDone = 0;
-static ULONG PcrsAllocated = 0;
-static ULONG Ke386CpuidFlags2, Ke386CpuidExFlags, Ke386CpuidExMisc;
-ULONG Ke386CacheAlignment;
-CHAR Ke386CpuidModel[49] = {0,};
-ULONG Ke386L1CacheSize;
-BOOLEAN Ke386NoExecute = FALSE;
-BOOLEAN Ke386Pae = FALSE;
-BOOLEAN Ke386GlobalPagesEnabled = FALSE;
-ULONG KiFastSystemCallDisable = 1;
-ULONG KeI386NpxPresent = 0;
-ULONG MxcsrFeatureMask = 0;
-ULONG KeI386XMMIPresent = 0;
-ULONG KeI386FxsrPresent = 0;
-extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
-extern ULONG IdleProcessorMask;
-extern KIDTENTRY KiIdt[256];
-static VOID INIT_FUNCTION Ki386GetCpuId(VOID);
+extern ULONG Ke386GlobalPagesEnabled;
+
+/* System-defined Spinlocks */
+KSPIN_LOCK KiDispatcherLock;
+KSPIN_LOCK MmPfnLock;
+KSPIN_LOCK MmSystemSpaceLock;
+KSPIN_LOCK CcBcbSpinLock;
+KSPIN_LOCK CcMasterSpinLock;
+KSPIN_LOCK CcVacbSpinLock;
+KSPIN_LOCK CcWorkQueueSpinLock;
+KSPIN_LOCK NonPagedPoolLock;
+KSPIN_LOCK MmNonPagedPoolLock;
+KSPIN_LOCK IopCancelSpinLock;
+KSPIN_LOCK IopVpbSpinLock;
+KSPIN_LOCK IopDatabaseLock;
+KSPIN_LOCK IopCompletionLock;
+KSPIN_LOCK NtfsStructLock;
+KSPIN_LOCK AfdWorkQueueSpinLock;
+KSPIN_LOCK KiTimerTableLock[16];
+KSPIN_LOCK KiReverseStallIpiLock;
 
 #if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, Ki386GetCpuId)
 #pragma alloc_text(INIT, KeInit1)
 #pragma alloc_text(INIT, KeInit2)
-#pragma alloc_text(INIT, Ki386SetProcessorFeatures)
 #endif
-
-BOOLEAN
-NTAPI
-KiIsNpxPresent(
-    VOID
-);
 
 /* FUNCTIONS *****************************************************************/
 
 VOID
-INIT_FUNCTION
 NTAPI
-KiCheckFPU(VOID)
+KiInitSpinLocks(IN PKPRCB Prcb,
+                IN CCHAR Number)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
+    ULONG i;
 
-    /* Check for a math co-processor (NPX) */
-    KeI386NpxPresent = KiIsNpxPresent();
+    /* Initialize Dispatcher Fields */
+    Prcb->QueueIndex = 1;
+    Prcb->ReadySummary = 0;
+    Prcb->DeferredReadyListHead.Next = NULL;
+    for (i = 0; i < 32; i++)
+    {
+        /* Initialize the ready list */
+        InitializeListHead(&Prcb->DispatcherReadyListHead[i]);
+    }
 
-    /* Check for and enable MMX/SSE support if possible */
-    KeI386FxsrPresent = Prcb->FeatureBits & X86_FEATURE_FXSR ? TRUE : FALSE;
+    /* Initialize DPC Fields */
+    InitializeListHead(&Prcb->DpcData[0].DpcListHead);
+    KeInitializeSpinLock(&Prcb->DpcData[0].DpcLock);
+    Prcb->DpcData[0].DpcQueueDepth = 0;
+    Prcb->DpcData[0].DpcCount = 0;
+    Prcb->DpcRoutineActive = FALSE;
+    Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
+    Prcb->MinimumDpcRate = KiMinimumDpcRate;
+    Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
+    KeInitializeDpc(&Prcb->CallDpc, NULL, NULL);
+    //KeSetTargetProcessorDpc(&Prcb->CallDpc, Number);
+    KeSetImportanceDpc(&Prcb->CallDpc, HighImportance);
 
-    /* Check for SSE (2 and 3 should have this set too) */
-    KeI386XMMIPresent = Prcb->FeatureBits & X86_FEATURE_SSE ? TRUE : FALSE;
+    /* Initialize the Wait List Head */
+    InitializeListHead(&Prcb->WaitListHead);
+
+    /* Initialize Queued Spinlocks */
+    Prcb->LockQueue[LockQueueDispatcherLock].Next = NULL;
+    Prcb->LockQueue[LockQueueDispatcherLock].Lock = &KiDispatcherLock;
+    Prcb->LockQueue[LockQueueExpansionLock].Next = NULL;
+    Prcb->LockQueue[LockQueueExpansionLock].Lock = NULL;
+    Prcb->LockQueue[LockQueuePfnLock].Next = NULL;
+    Prcb->LockQueue[LockQueuePfnLock].Lock = &MmPfnLock;
+    Prcb->LockQueue[LockQueueSystemSpaceLock].Next = NULL;
+    Prcb->LockQueue[LockQueueSystemSpaceLock].Lock = &MmSystemSpaceLock;
+    Prcb->LockQueue[LockQueueBcbLock].Next = NULL;
+    Prcb->LockQueue[LockQueueBcbLock].Lock = &CcBcbSpinLock;
+    Prcb->LockQueue[LockQueueMasterLock].Next = NULL;
+    Prcb->LockQueue[LockQueueMasterLock].Lock = &CcMasterSpinLock;
+    Prcb->LockQueue[LockQueueVacbLock].Next = NULL;
+    Prcb->LockQueue[LockQueueVacbLock].Lock = &CcVacbSpinLock;
+    Prcb->LockQueue[LockQueueWorkQueueLock].Next = NULL;
+    Prcb->LockQueue[LockQueueWorkQueueLock].Lock = &CcWorkQueueSpinLock;
+    Prcb->LockQueue[LockQueueNonPagedPoolLock].Next = NULL;
+    Prcb->LockQueue[LockQueueNonPagedPoolLock].Lock = &NonPagedPoolLock;
+    Prcb->LockQueue[LockQueueMmNonPagedPoolLock].Next = NULL;
+    Prcb->LockQueue[LockQueueMmNonPagedPoolLock].Lock = &MmNonPagedPoolLock;
+    Prcb->LockQueue[LockQueueIoCancelLock].Next = NULL;
+    Prcb->LockQueue[LockQueueIoCancelLock].Lock = &IopCancelSpinLock;
+    Prcb->LockQueue[LockQueueIoVpbLock].Next = NULL;
+    Prcb->LockQueue[LockQueueIoVpbLock].Lock = &IopVpbSpinLock;
+    Prcb->LockQueue[LockQueueIoDatabaseLock].Next = NULL;
+    Prcb->LockQueue[LockQueueIoDatabaseLock].Lock = &IopDatabaseLock;
+    Prcb->LockQueue[LockQueueIoCompletionLock].Next = NULL;
+    Prcb->LockQueue[LockQueueIoCompletionLock].Lock = &IopCompletionLock;
+    Prcb->LockQueue[LockQueueNtfsStructLock].Next = NULL;
+    Prcb->LockQueue[LockQueueNtfsStructLock].Lock = &NtfsStructLock;
+    Prcb->LockQueue[LockQueueAfdWorkQueueLock].Next = NULL;
+    Prcb->LockQueue[LockQueueAfdWorkQueueLock].Lock = &AfdWorkQueueSpinLock;
+    Prcb->LockQueue[LockQueueUnusedSpare16].Next = NULL;
+    Prcb->LockQueue[LockQueueUnusedSpare16].Lock = NULL;
+    for (i = LockQueueTimerTableLock; i < LockQueueMaximumLock; i++)
+    {
+        KeInitializeSpinLock(&KiTimerTableLock[i - 16]);
+        Prcb->LockQueue[i].Next = NULL;
+        Prcb->LockQueue[i].Lock = &KiTimerTableLock[i - 16];
+    }
+
+    /* Check if this is the boot CPU */
+    if (!Number)
+    {
+        /* Initialize the lock themselves */
+        KeInitializeSpinLock(&KiDispatcherLock);
+        KeInitializeSpinLock(&KiReverseStallIpiLock);
+        KeInitializeSpinLock(&MmPfnLock);
+        KeInitializeSpinLock(&MmSystemSpaceLock);
+        KeInitializeSpinLock(&CcBcbSpinLock);
+        KeInitializeSpinLock(&CcMasterSpinLock);
+        KeInitializeSpinLock(&CcVacbSpinLock);
+        KeInitializeSpinLock(&CcWorkQueueSpinLock);
+        KeInitializeSpinLock(&IopCancelSpinLock);
+        KeInitializeSpinLock(&IopCompletionLock);
+        KeInitializeSpinLock(&IopDatabaseLock);
+        KeInitializeSpinLock(&IopVpbSpinLock);
+        KeInitializeSpinLock(&NonPagedPoolLock);
+        KeInitializeSpinLock(&MmNonPagedPoolLock);
+        KeInitializeSpinLock(&NtfsStructLock);
+        KeInitializeSpinLock(&AfdWorkQueueSpinLock);
+    }
+}
+
+VOID
+NTAPI
+KeInit1(VOID)
+{
+    PKIPCR KPCR;
+    PKPRCB Prcb;
+    BOOLEAN NpxPresent;
+    ULONG FeatureBits;
+    extern USHORT KiBootGdt[];
+    extern KTSS KiBootTss;
+
+    /* Initialize the PCR */
+    KPCR = (PKIPCR)KPCR_BASE;
+    Prcb = &KPCR->PrcbData;
+    memset(KPCR, 0, PAGE_SIZE);
+    KPCR->Self = (PKPCR)KPCR;
+    KPCR->Prcb = &KPCR->PrcbData;
+    KPCR->Irql = SYNCH_LEVEL;
+    KPCR->NtTib.Self = &KPCR->NtTib;
+    KPCR->NtTib.ExceptionList = (PVOID)-1;
+    KPCR->GDT = KiBootGdt;
+    KPCR->IDT = KiIdt;
+    KPCR->TSS = &KiBootTss;
+    KPCR->Number = 0;
+    KPCR->SetMember = 1 << 0;
+    KeActiveProcessors = 1 << 0;
+    KPCR->PrcbData.SetMember = 1 << 0;
+    KiPcrInitDone = 1;
+
+    /*
+     * Low-level GDT, TSS and LDT Setup, most of which Freeldr should have done
+     * instead, and we should only add some extra information. This would be
+     * required for future NTLDR compatibility.
+     */
+    KiInitializeGdt(NULL);
+    Ki386BootInitializeTSS();
+    Ki386InitializeLdt();
+    KeInitExceptions();
+    KeInitInterrupts();
+
+    /* Detect and set the CPU Type */
+    KiSetProcessorType();
+
+    /* Set CR0 features based on detected CPU */
+    KiSetCR0Bits();
+
+    /* Check if an FPU is present */
+    NpxPresent = KiIsNpxPresent();
+
+    /* Initialize the Power Management Support for this PRCB */
+    PoInitializePrcb(Prcb);
+
+    /* Bugcheck if this is a 386 CPU */
+    if (Prcb->CpuType == 3) KeBugCheckEx(0x5D, 0x386, 0, 0, 0);
+
+    /* Get the processor features for the CPU */
+    FeatureBits = KiGetFeatureBits();
+
+    /* Save feature bits */
+    Prcb->FeatureBits = FeatureBits;
+
+    /* Get cache line information for this CPU */
+    KiGetCacheInformation();
+
+    /* Initialize spinlocks and DPC data */
+    KiInitSpinLocks(Prcb, 0);
+
+    /* Set Node Data */
+    KeNodeBlock[0] = &KiNode0;
+    Prcb->ParentNode = KeNodeBlock[0];
+    KeNodeBlock[0]->ProcessorMask = Prcb->SetMember;
+
+    /* Set boot-level flags */
+    KeI386NpxPresent = NpxPresent;
+    KeI386CpuType = Prcb->CpuType;
+    KeI386CpuStep = Prcb->CpuStep;
+    KeProcessorArchitecture = 0;
+    KeProcessorLevel = (USHORT)Prcb->CpuType;
+    if (Prcb->CpuID) KeProcessorRevision = Prcb->CpuStep;
+    KeFeatureBits = FeatureBits;
+    KeI386FxsrPresent = (KeFeatureBits & KF_FXSR) ? TRUE : FALSE;
+    KeI386XMMIPresent = (KeFeatureBits & KF_XMMI) ? TRUE : FALSE;
 
     /* Check if Fxsr was found */
     if (KeI386FxsrPresent)
@@ -85,167 +245,8 @@ KiCheckFPU(VOID)
             /* FIXME: Implement and enable XMM Page Zeroing for Mm */
         }
     }
-}
 
-static VOID INIT_FUNCTION
-Ki386GetCpuId(VOID)
-{
-   ULONG OrigFlags, Flags, FinalFlags;
-   ULONG MaxCpuidLevel;
-   ULONG Dummy, Eax, Ecx, Edx;
-   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
-
-   Ke386CpuidFlags2 =  Ke386CpuidExFlags = 0;
-   Ke386CacheAlignment = 32;
-
-   /* Try to toggle the id bit in eflags. */
-   Ke386SaveFlags(OrigFlags);
-   Flags = OrigFlags ^ X86_EFLAGS_ID;
-   Ke386RestoreFlags(Flags);
-   Ke386SaveFlags(FinalFlags);
-
-   Pcr->PrcbData.LogicalProcessorsPerPhysicalProcessor = 1;
-   Pcr->PrcbData.InitialApicId = 0xff;
-
-   if ((OrigFlags & X86_EFLAGS_ID) == (FinalFlags & X86_EFLAGS_ID))
-   {
-      /* No cpuid supported. */
-      Pcr->PrcbData.CpuID = FALSE;
-      Pcr->PrcbData.CpuType = 3;
-      return;
-   }
-   Pcr->PrcbData.CpuID = TRUE;
-
-   /* Get the vendor name and the maximum cpuid level supported. */
-   Ki386Cpuid(0, &MaxCpuidLevel, (PULONG)&Pcr->PrcbData.VendorString[0], (PULONG)&Pcr->PrcbData.VendorString[8], (PULONG)&Pcr->PrcbData.VendorString[4]);
-   if (MaxCpuidLevel > 0)
-   {
-      /* Get the feature flags. */
-      Ki386Cpuid(1, &Eax, &Ke386CpuidExMisc, &Ke386CpuidFlags2, &Pcr->PrcbData.FeatureBits);
-
-      DPRINT ("Model:  %x\n", (Eax & 0xf00) == 0xf00 ? ((Eax >> 4) & 0xf) | ((Eax >> 12) & 0xf0) : (Eax >> 4) & 0xf);
-      DPRINT ("Family: %x\n", (Eax & 0xf00) == 0xf00 ? ((Eax >> 8) & 0xf) + ((Eax >> 20) & 0xff) : (Eax >> 8) & 0xf);
-
-      /* Get the cache alignment, if it is available */
-      if (Pcr->PrcbData.FeatureBits & (1<<19))
-      {
-         Ke386CacheAlignment = ((Ke386CpuidExMisc >> 8) & 0xff) * 8;
-      }
-      Pcr->PrcbData.CpuType = (Eax >> 8) & 0xf;
-      Pcr->PrcbData.CpuStep = (Eax & 0xf) | ((Eax << 4) & 0xf00);
-
-      Pcr->PrcbData.InitialApicId = (Ke386CpuidExMisc >> 24) & 0xff;
-
-      /* detect Hyper-Threading on Pentium 4 CPUs or later */
-      if ((Pcr->PrcbData.CpuType == 0xf || (Eax & 0x0f00000)) &&
-          !strncmp(Pcr->PrcbData.VendorString, "GenuineIntel", 12) &&
-          Pcr->PrcbData.FeatureBits & X86_FEATURE_HT)
-      {
-        Pcr->PrcbData.LogicalProcessorsPerPhysicalProcessor = (Ke386CpuidExMisc >> 16) & 0xff;
-      }
-   }
-   else
-   {
-      Pcr->PrcbData.CpuType = 4;
-   }
-
-   /* Get the maximum extended cpuid level supported. */
-   Ki386Cpuid(0x80000000, &MaxCpuidLevel, &Dummy, &Dummy, &Dummy);
-   if (MaxCpuidLevel > 0)
-   {
-      /* Get the extended feature flags. */
-      Ki386Cpuid(0x80000001, &Dummy, &Dummy, &Dummy, &Ke386CpuidExFlags);
-   }
-
-   /* Get the model name. */
-   if (MaxCpuidLevel >= 0x80000004)
-   {
-      PULONG v = (PULONG)Ke386CpuidModel;
-      Ki386Cpuid(0x80000002, v, v + 1, v + 2, v + 3);
-      Ki386Cpuid(0x80000003, v + 4, v + 5, v + 6, v + 7);
-      Ki386Cpuid(0x80000004, v + 8, v + 9, v + 10, v + 11);
-   }
-
-   /* Get the L1 cache size */
-   if (MaxCpuidLevel >= 0x80000005)
-   {
-      Ki386Cpuid(0x80000005, &Dummy, &Dummy, &Ecx, &Edx);
-      Ke386L1CacheSize = (Ecx >> 24)+(Edx >> 24);
-      if ((Ecx & 0xff) > 0)
-      {
-         Ke386CacheAlignment = Ecx & 0xff;
-      }
-   }
-
-   /* Get the L2 cache size */
-   if (MaxCpuidLevel >= 0x80000006)
-   {
-      Ki386Cpuid(0x80000006, &Dummy, &Dummy, &Ecx, &Dummy);
-      Pcr->SecondLevelCacheSize = Ecx >> 16;
-   }
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
-{
-   PKIPCR KPCR;
-   BOOLEAN Pae = FALSE;
-   BOOLEAN NoExecute = FALSE;
-   PCHAR p1, p2;
-   extern USHORT KiBootGdt[];
-   extern KTSS KiBootTss;
-
-   /*
-    * Initialize the initial PCR region. We can't allocate a page
-    * with MmAllocPage() here because MmInit1() has not yet been
-    * called, so we use a predefined page in low memory
-    */
-
-   KPCR = (PKIPCR)KPCR_BASE;
-   memset(KPCR, 0, PAGE_SIZE);
-   KPCR->Self = (PKPCR)KPCR;
-   KPCR->Prcb = &KPCR->PrcbData;
-   KPCR->Irql = SYNCH_LEVEL;
-   KPCR->NtTib.Self = &KPCR->NtTib;
-   KPCR->GDT = KiBootGdt;
-   KPCR->IDT = KiIdt;
-   KPCR->TSS = &KiBootTss;
-   KPCR->Number = 0;
-   KPCR->SetMember = 1 << 0;
-   KeActiveProcessors = 1 << 0;
-   KPCR->PrcbData.SetMember = 1 << 0;
-   KiPcrInitDone = 1;
-   PcrsAllocated++;
-
-   KiInitializeGdt (NULL);
-   Ki386BootInitializeTSS();
-   Ki386InitializeLdt();
-
-   /* Get processor information. */
-   Ki386GetCpuId();
-
-   /* Check FPU/MMX/SSE support. */
-   KiCheckFPU();
-
-   /* Mark the end of the exception handler list */
-   KPCR->NtTib.ExceptionList = (PVOID)-1;
-
-   KeInitDpc(KPCR->Prcb);
-   InitializeListHead(&KPCR->PrcbData.WaitListHead);
-
-   KeInitExceptions ();
-   KeInitInterrupts ();
-
-   KeActiveProcessors |= 1 << 0;
-
-    /* Set Node Data */
-    KeNodeBlock[0] = &KiNode0;
-    KPCR->PrcbData.ParentNode = KeNodeBlock[0];
-    KeNodeBlock[0]->ProcessorMask = KPCR->PrcbData.SetMember;
-
-   if (KPCR->PrcbData.FeatureBits & X86_FEATURE_PGE)
+   if (KeFeatureBits & KF_GLOBAL_PAGE)
    {
       ULONG Flags;
       /* Enable global pages */
@@ -256,32 +257,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       Ke386RestoreFlags(Flags);
    }
 
-   /* Search for pae and noexecute */
-   p1 = (PCHAR)KeLoaderBlock.CommandLine;
-   while(*p1 && (p2 = strchr(p1, '/')))
-   {
-      p2++;
-      if (!_strnicmp(p2, "PAE", 3))
-      {
-	 if (p2[3] == ' ' || p2[3] == 0)
-	 {
-	    p2 += 3;
-	    Pae = TRUE;
-	 }
-      }
-      else if (!_strnicmp(p2, "NOEXECUTE", 9))
-      {
-         if (p2[9] == ' ' || p2[9] == '=' || p2[9] == 0)
-	 {
-	    p2 += 9;
-	    NoExecute = TRUE;
-	 }
-      }
-      p1 = p2;
-   }
-
-   Ke386Pae = Ke386GetCr4() & X86_CR4_PAE ? TRUE : FALSE;
-   if (KPCR->PrcbData.FeatureBits & X86_FEATURE_SYSCALL)
+   if (KeFeatureBits & KF_FAST_SYSCALL)
    {
       extern void KiFastCallEntry(void);
 
@@ -294,7 +270,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    }
 
    /* Does the CPU Support 'prefetchnta' (SSE)  */
-   if(KPCR->PrcbData.FeatureBits & X86_FEATURE_SSE)
+   if(KeFeatureBits & KF_XMMI)
    {
        ULONG Protect;
 
@@ -312,164 +288,40 @@ NTAPI
 KeInit2(VOID)
 {
    ULONG Protect;
-   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetPcr();
+   PKPRCB Prcb = Pcr->Prcb;
 
    KiInitializeBugCheck();
    KeInitializeDispatcher();
    KiInitializeSystemClock();
 
-   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_PAE)
-   {
-      DPRINT("CPU supports PAE mode\n");
-      if (Ke386Pae)
-      {
-         DPRINT("CPU runs in PAE mode\n");
-         if (Ke386NoExecute)
-         {
-            DPRINT("NoExecute is enabled\n");
-         }
-      }
-      else
-      {
-         DPRINT("CPU doesn't run in PAE mode\n");
-      }
-   }
-   if ((Pcr->PrcbData.FeatureBits & (X86_FEATURE_FXSR | X86_FEATURE_MMX | X86_FEATURE_SSE | X86_FEATURE_SSE2)) ||
-       (Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3))
-      {
-         DPRINT("CPU supports" "%s%s%s%s%s" ".\n",
-                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_FXSR) ? " FXSR" : ""),
-                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX) ? " MMX" : ""),
-                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE) ? " SSE" : ""),
-                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? " SSE2" : ""),
-                ((Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3) ? " SSE3" : ""));
-      }
-   if (Ke386GetCr4() & X86_CR4_OSFXSR)
-      {
-         DPRINT("SSE enabled.\n");
-      }
-   if (Ke386GetCr4() & X86_CR4_OSXMMEXCPT)
-      {
-         DPRINT("Unmasked SIMD exceptions enabled.\n");
-      }
-   if (Pcr->PrcbData.VendorString[0])
-   {
-      DPRINT("CPU Vendor: %s\n", Pcr->PrcbData.VendorString);
-   }
-   if (Ke386CpuidModel[0])
-   {
-      DPRINT("CPU Model:  %s\n", Ke386CpuidModel);
-   }
-
-   DPRINT("Ke386CacheAlignment: %d\n", Ke386CacheAlignment);
-   if (Ke386L1CacheSize)
-   {
-
-      DPRINT("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
-   }
-   if (Pcr->SecondLevelCacheSize)
-   {
-      DPRINT("Ke386L2CacheSize: %dkB\n", Pcr->SecondLevelCacheSize);
-   }
+   DPRINT1("CPU Detection Complete.\n"
+           "CPUID: %lx\n"
+           "Step : %lx\n"
+           "Type : %lx\n"
+           "ID   : %s\n"
+           "FPU  : %lx\n"
+           "XMMI : %lx\n"
+           "Fxsr : %lx\n"
+           "Feat : %lx\n"
+           "Ftrs : %lx\n"
+           "Cache: %lx\n"
+           "CR0  : %lx\n"
+           "CR4  : %lx\n",
+           Prcb->CpuID,
+           Prcb->CpuStep,
+           Prcb->CpuType,
+           Prcb->VendorString,
+           KeI386NpxPresent,
+           KeI386XMMIPresent,
+           KeI386FxsrPresent,
+           Prcb->FeatureBits,
+           KeFeatureBits,
+           Pcr->SecondLevelCacheSize,
+           Ke386GetCr0(),
+           Ke386GetCr4());
 
    /* Set IDT to writable */
    Protect = MmGetPageProtect(NULL, (PVOID)KiIdt);
    MmSetPageProtect(NULL, (PVOID)KiIdt, Protect | PAGE_IS_WRITABLE);
-}
-
-VOID INIT_FUNCTION
-Ki386SetProcessorFeatures(VOID)
-{
-   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING KeyName =
-   RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Kernel");
-   UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"FastSystemCallDisable");
-   HANDLE KeyHandle;
-   ULONG ResultLength;
-   struct
-   {
-       KEY_VALUE_PARTIAL_INFORMATION Info;
-       UCHAR Buffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
-                                 Data[0]) + sizeof(ULONG)];
-   } ValueData;
-   NTSTATUS Status;
-   ULONG FastSystemCallDisable = 0;
-   
-   SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_PRECISION_ERRATA] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_FLOATING_POINT_EMULATED] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_COMPARE_EXCHANGE_DOUBLE] =
-       (Pcr->PrcbData.FeatureBits & X86_FEATURE_CX8) ? TRUE : FALSE;
-   SharedUserData->ProcessorFeatures[PF_MMX_INSTRUCTIONS_AVAILABLE] =
-       (Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX) ? TRUE : FALSE;
-   SharedUserData->ProcessorFeatures[PF_PPC_MOVEMEM_64BIT_OK] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_ALPHA_BYTE_INSTRUCTIONS] = FALSE;
-   SharedUserData->ProcessorFeatures[PF_XMMI_INSTRUCTIONS_AVAILABLE] =
-       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE) ? TRUE : FALSE;
-   SharedUserData->ProcessorFeatures[PF_3DNOW_INSTRUCTIONS_AVAILABLE] =
-       (Ke386CpuidExFlags & X86_EXT_FEATURE_3DNOW) ? TRUE : FALSE;
-   SharedUserData->ProcessorFeatures[PF_RDTSC_INSTRUCTION_AVAILABLE] =
-       (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC) ? TRUE : FALSE;
-   SharedUserData->ProcessorFeatures[PF_PAE_ENABLED] = Ke386Pae;
-   SharedUserData->ProcessorFeatures[PF_XMMI64_INSTRUCTIONS_AVAILABLE] =
-       (Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? TRUE : FALSE;
-
-   /* Does the CPU Support Fast System Call? */   
-   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_SYSCALL) {
-
-        /* FIXME: Check for Family == 6, Model < 3 and Stepping < 3 and disable */
-
-        /* Make sure it's not disabled in registry */
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status = ZwOpenKey(&KeyHandle,
-                           KEY_QUERY_VALUE,
-                           &ObjectAttributes);
-
-        if (NT_SUCCESS(Status)) {
-
-            /* Read the Value then Close the Key */
-            Status = ZwQueryValueKey(KeyHandle,
-                                     &ValueName,
-                                     KeyValuePartialInformation,
-                                     &ValueData,
-                                     sizeof(ValueData),
-                                     &ResultLength);
-            if (NT_SUCCESS(Status))
-            {
-                if (ResultLength == sizeof(ValueData) &&
-                    ValueData.Info.Type == REG_DWORD)
-                {
-                    FastSystemCallDisable = *(PULONG)ValueData.Info.Data != 0;
-                }
-
-                ZwClose(KeyHandle);
-            }
-        }
-
-    } else {
-
-        /* Disable SYSENTER/SYSEXIT, because the CPU doesn't support it */
-        FastSystemCallDisable = 1;
-
-    }
-
-    if (FastSystemCallDisable) {
-        /* Use INT2E */
-        const unsigned char Entry[7] = {0x8D, 0x54, 0x24, 0x08,     /* lea    0x8(%esp),%edx    */
-                                        0xCD, 0x2E,                 /* int    0x2e              */
-                                        0xC3};                      /* ret                      */
-        memcpy(&SharedUserData->SystemCall, Entry, sizeof(Entry));
-    } else {
-        /* Use SYSENTER */
-        const unsigned char Entry[5] = {0x8B, 0xD4,                 /* movl    %esp,%edx        */ 
-                                        0x0F, 0x34,                 /* sysenter                 */
-                                        0xC3};                      /* ret                      */    
-        memcpy(&SharedUserData->SystemCall, Entry, sizeof(Entry));
-        /* Enable SYSENTER/SYSEXIT */
-        KiFastSystemCallDisable = 0;
-    }
 }

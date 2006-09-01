@@ -70,6 +70,12 @@ extern ULONG_PTR KERNEL_BASE;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
+extern ULONG KeI386CpuType;
+extern ULONG KeI386CpuStep;
+extern ULONG KeProcessorArchitecture;
+extern ULONG KeProcessorLevel;
+extern ULONG KeProcessorRevision;
+extern ULONG KeFeatureBits;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
 extern UCHAR KeProcessNodeSeed;
@@ -84,6 +90,10 @@ extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
 extern KIDTENTRY KiIdt[];
 extern FAST_MUTEX KernelAddressSpaceLock;
+extern ULONG KiMaximumDpcQueueDepth;
+extern ULONG KiMinimumDpcRate;
+extern ULONG KiAdjustDpcThreshold;
+extern ULONG KiIdealDpcRate;
 
 /* MACROS *************************************************************************/
 
@@ -585,10 +595,6 @@ KeInitTimer(VOID);
 
 VOID
 NTAPI
-KeInitDpc(struct _KPRCB* Prcb);
-
-VOID
-NTAPI
 KeInitDispatcher(VOID);
 
 VOID
@@ -606,8 +612,7 @@ Phase1Initialization(PVOID Context);
 VOID
 NTAPI
 KeInit1(
-    PCHAR CommandLine,
-    PULONG LastKernelAddress
+    VOID
 );
 
 VOID
@@ -689,7 +694,7 @@ KeBugCheckWithTf(
 );
 
 VOID
-STDCALL
+NTAPI
 KeFlushCurrentTb(VOID);
 
 VOID
