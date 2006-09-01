@@ -213,7 +213,7 @@ Query(LPCTSTR *ServiceArgs,
                 bServiceName = FALSE;
             }
         }
-        *TmpArgs++;
+        TmpArgs++;
     }
 
 
