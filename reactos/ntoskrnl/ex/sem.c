@@ -342,7 +342,6 @@ NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
                                                 IO_NO_INCREMENT,
                                                 ReleaseCount,
                                                 FALSE);
-            ObDereferenceObject(Semaphore);
 
             /* Return the old count if requested */
             if(PreviousCount) *PreviousCount = PrevCount;
@@ -352,6 +351,8 @@ NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
+
+        ObDereferenceObject(Semaphore);
     }
 
     /* Return Status */
