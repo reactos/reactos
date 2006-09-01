@@ -9,7 +9,7 @@
 
 #include <w32k.h>
 
-#define DEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define DATA_DELAYED_RENDER  0
@@ -472,7 +472,7 @@ NtUserCloseClipboard(VOID)
     if (sendDrawClipboardMsg && WindowsChain)
     {
         /* only send message to the first window in the chain, then they'll do the chain */
-        /* commented because it makes a crash in co_MsqSendMessage
+        /* commented because it makes a crash in co_MsqSendMessage 
         ASSERT(WindowsChain->window);
         ASSERT(WindowsChain->window->hSelf);
         DPRINT1("Clipboard: sending WM_DRAWCLIPBOARD to %p\n", WindowsChain->window->hSelf);

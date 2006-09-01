@@ -122,7 +122,12 @@ NtUserEnableMenuItem(
   HMENU hMenu,
   UINT uIDEnableItem,
   UINT uEnable);
-  
+
+UINT
+NTAPI
+NtUserEnumClipboardFormats(
+  UINT format);
+
 DWORD
 NTAPI
 NtUserInsertMenuItem(
@@ -1439,6 +1444,11 @@ NtUserRegisterClassEx(
    WNDPROC wpExtra,
    DWORD Flags,
    HMENU hMenu);
+   
+UINT
+NTAPI
+NtUserRegisterClipboardFormat(
+    PUNICODE_STRING format);
 
 BOOL
 NTAPI
