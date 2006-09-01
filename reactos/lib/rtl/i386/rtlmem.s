@@ -67,7 +67,7 @@ NotEqual2:
 
     /* Remember how many mathced */
     dec esi
-    sub esi, [esp+20]
+    sub esi, [esp+12]
 
     /* Return count */
     mov eax, esi
@@ -89,7 +89,7 @@ _RtlCompareMemoryUlong@12:
     /* Do the compare and check result */
     repe scasd
     jz Done
-    sub esi, 4
+    sub edi, 4
 
     /* Return count */
 Done:
