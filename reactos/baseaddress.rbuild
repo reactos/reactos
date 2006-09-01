@@ -108,6 +108,7 @@
   <property name="BASEADDRESS_CRTDLL" value="0x77630000" />
   <property name="BASEADDRESS_AUTHZ" value="0x77690000" />
   <property name="BASEADDRESS_CFGMGR32" value="0x77700000" />
+  <property name="BASEADDRESS_SENSAPI" value="0x77700000" />
   <property name="BASEADDRESS_PACKET" value="0x77780000" />
   <property name="BASEADDRESS_MSAFD" value="0x77780000" />
   <property name="BASEADDRESS_WINSPOOL" value="0x77800000" />

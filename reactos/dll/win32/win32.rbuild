@@ -190,6 +190,9 @@
 <directory name="security">
 	<xi:include href="security/security.rbuild" />
 </directory>
+<directory name="sensapi">
+	<xi:include href="sensapi/sensapi.rbuild" />
+</directory>
 <directory name="serialui">
 	<xi:include href="serialui/serialui.rbuild" />
 </directory>
