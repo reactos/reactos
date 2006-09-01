@@ -53,19 +53,32 @@
 
 typedef PVOID HSPFILEQ;
 
-typedef ULONG (*PSP_FILE_CALLBACK)(PVOID Context,
-				   ULONG Notification,
-				   PVOID Param1,
-				   PVOID Param2);
+typedef UINT (CALLBACK* PSP_FILE_CALLBACK_W)(PVOID Context,
+				   UINT Notification,
+				   UINT_PTR Param1,
+				   UINT_PTR Param2);
 
 
 /* FUNCTIONS ****************************************************************/
 
-HSPFILEQ
+HSPFILEQ WINAPI
 SetupOpenFileQueue(VOID);
 
-BOOL
-SetupCloseFileQueue(HSPFILEQ QueueHandle);
+VOID WINAPI
+SetupCloseFileQueue(
+	IN HSPFILEQ QueueHandle);
+
+BOOL WINAPI
+SetupQueueCopyWNew(
+	IN HSPFILEQ QueueHandle,
+	IN PCWSTR SourceRootPath,
+	IN PCWSTR SourcePath,
+	IN PCWSTR SourceFileName,
+	IN PCWSTR SourceDescription,
+	IN PCWSTR SourceTagFile,
+	IN PCWSTR TargetDirectory,
+	IN PCWSTR TargetFileName,
+	IN DWORD CopyStyle);
 
 BOOL
 SetupQueueCopy(HSPFILEQ QueueHandle,
@@ -76,11 +89,10 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
 	       PCWSTR TargetDirectory,
 	       PCWSTR TargetFilename);
 
-BOOL
-SetupCommitFileQueue(HSPFILEQ QueueHandle,
-		     PCWSTR TargetRootPath,
-		     PCWSTR TargetPath,
-		     PSP_FILE_CALLBACK MsgHandler,
+BOOL WINAPI
+SetupCommitFileQueueW(HWND Owner,
+		     HSPFILEQ QueueHandle,
+		     PSP_FILE_CALLBACK_W MsgHandler,
 		     PVOID Context);
 
 #endif /* __FILEQUEUE_H__ */

@@ -684,7 +684,7 @@ CONSOLE_NormalTextXY(
 
 		FillConsoleOutputAttribute(
 			StdOutput,
-			FOREGROUND_BLUE | BACKGROUND_WHITE,
+			FOREGROUND_WHITE | BACKGROUND_BLUE,
 			col,
 			coPos,
 			&Written);

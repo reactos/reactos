@@ -64,6 +64,10 @@ BOOL WINAPI
 ConAllocConsole(VOID);
 
 BOOL WINAPI
+ConAttachConsole(
+	IN DWORD dwProcessId);
+
+BOOL WINAPI
 ConFillConsoleOutputAttribute(
 	IN HANDLE hConsoleOutput,
 	IN WORD wAttribute,

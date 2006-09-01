@@ -71,6 +71,8 @@ typedef enum _PAGE_NUMBER
 
 typedef struct _COPYCONTEXT
 {
+  LPCWSTR DestinationRootPath; /* Not owned by this structure */
+  LPCWSTR InstallPath; /* Not owned by this structure */
   ULONG TotalOperations;
   ULONG CompletedOperations;
   PPROGRESSBAR ProgressBar;
@@ -2920,11 +2922,11 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 }
 
 
-static ULONG
+static UINT CALLBACK
 FileCopyCallback(PVOID Context,
-		 ULONG Notification,
-		 PVOID Param1,
-		 PVOID Param2)
+		 UINT Notification,
+		 UINT_PTR Param1,
+		 UINT_PTR Param2)
 {
   PCOPYCONTEXT CopyContext;
 
@@ -2967,6 +2969,8 @@ FileCopyPage(PINPUT_RECORD Ir)
   CONSOLE_SetTextXY(20, 14, "This may take several minutes to complete.");
 
   CONSOLE_GetScreenSize(&xScreen, &yScreen);  
+  CopyContext.DestinationRootPath = DestinationRootPath.Buffer;
+  CopyContext.InstallPath = InstallPath.Buffer;
   CopyContext.TotalOperations = 0;
   CopyContext.CompletedOperations = 0;
   CopyContext.ProgressBar = CreateProgressBar(13,
@@ -2975,10 +2979,9 @@ FileCopyPage(PINPUT_RECORD Ir)
 					      yScreen - 20,
                           "Setup is copying files...");
 
-  SetupCommitFileQueue(SetupFileQueue,
-		       DestinationRootPath.Buffer,
-		       InstallPath.Buffer,
-		       (PSP_FILE_CALLBACK)FileCopyCallback,
+  SetupCommitFileQueueW(NULL,
+		       SetupFileQueue,
+		       FileCopyCallback,
 		       &CopyContext);
 
   SetupCloseFileQueue(SetupFileQueue);
@@ -3489,7 +3492,7 @@ RunUSetup(VOID)
   SignalInitEvent();
 
   ret = AllocConsole();
-  if (ret)
+  if (!ret)
     ret = AttachConsole(ATTACH_PARENT_PROCESS);
 
   if (!ret

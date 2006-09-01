@@ -60,7 +60,7 @@ typedef struct _FILEQUEUEHEADER
 
 /* FUNCTIONS ****************************************************************/
 
-HSPFILEQ
+HSPFILEQ WINAPI
 SetupOpenFileQueue(VOID)
 {
   PFILEQUEUEHEADER QueueHeader;
@@ -81,14 +81,14 @@ SetupOpenFileQueue(VOID)
 }
 
 
-BOOL
+VOID WINAPI
 SetupCloseFileQueue(HSPFILEQ QueueHandle)
 {
   PFILEQUEUEHEADER QueueHeader;
   PQUEUEENTRY Entry;
 
   if (QueueHandle == NULL)
-    return(FALSE);
+    return;
 
   QueueHeader = (PFILEQUEUEHEADER)QueueHandle;
 
@@ -133,8 +133,6 @@ SetupCloseFileQueue(HSPFILEQ QueueHandle)
   RtlFreeHeap(ProcessHeap,
 	      0,
 	      QueueHeader);
-
-  return(TRUE);
 }
 
 
@@ -314,20 +312,35 @@ SetupQueueCopy(HSPFILEQ QueueHandle,
 }
 
 
-BOOL
-SetupCommitFileQueue(HSPFILEQ QueueHandle,
-		     PCWSTR TargetRootPath,
-		     PCWSTR TargetPath,
-		     PSP_FILE_CALLBACK MsgHandler,
+typedef struct _COPYCONTEXT
+{
+  LPCWSTR DestinationRootPath; /* Not owned by this structure */
+  LPCWSTR InstallPath; /* Not owned by this structure */
+  ULONG TotalOperations;
+  ULONG CompletedOperations;
+  PPROGRESSBAR ProgressBar;
+} COPYCONTEXT, *PCOPYCONTEXT;
+
+BOOL WINAPI
+SetupCommitFileQueueW(HWND Owner,
+		     HSPFILEQ QueueHandle,
+		     PSP_FILE_CALLBACK_W MsgHandler,
 		     PVOID Context)
 {
   WCHAR CabinetName[MAX_PATH];
   PFILEQUEUEHEADER QueueHeader;
   PQUEUEENTRY Entry;
   NTSTATUS Status;
+  PCWSTR TargetRootPath, TargetPath;
 
   WCHAR FileSrcPath[MAX_PATH];
   WCHAR FileDstPath[MAX_PATH];
+
+  DPRINT1("Context %p\n", Context);
+  TargetRootPath = ((PCOPYCONTEXT)Context)->DestinationRootPath;
+  DPRINT1("TargetRootPath %S\n", TargetRootPath);
+  TargetPath = ((PCOPYCONTEXT)Context)->InstallPath;
+  DPRINT1("TargetPath %S\n", TargetPath);
 
   if (QueueHandle == NULL)
     return(FALSE);
@@ -336,13 +349,13 @@ SetupCommitFileQueue(HSPFILEQ QueueHandle,
 
   MsgHandler(Context,
 	     SPFILENOTIFY_STARTQUEUE,
-	     NULL,
-	     NULL);
+	     0,
+	     0);
 
   MsgHandler(Context,
 	     SPFILENOTIFY_STARTSUBQUEUE,
-	     (PVOID)FILEOP_COPY,
-	     (PVOID)QueueHeader->CopyCount);
+	     FILEOP_COPY,
+	     QueueHeader->CopyCount);
 
   /* Commit copy queue */
   Entry = QueueHeader->CopyHead;
@@ -389,8 +402,8 @@ SetupCommitFileQueue(HSPFILEQ QueueHandle,
 
     MsgHandler(Context,
 	       SPFILENOTIFY_STARTCOPY,
-	       (PVOID)Entry->SourceFilename,
-	       (PVOID)FILEOP_COPY);
+	       (UINT_PTR)Entry->SourceFilename,
+	       FILEOP_COPY);
 
     if (Entry->SourceCabinet != NULL)
       {
@@ -411,16 +424,16 @@ SetupCommitFileQueue(HSPFILEQ QueueHandle,
     {
       MsgHandler(Context,
 		 SPFILENOTIFY_COPYERROR,
-		 (PVOID)Entry->SourceFilename,
-		 (PVOID)FILEOP_COPY);
+		 (UINT_PTR)Entry->SourceFilename,
+		 FILEOP_COPY);
 
     }
     else
     {
       MsgHandler(Context,
 		 SPFILENOTIFY_ENDCOPY,
-		 (PVOID)Entry->SourceFilename,
-		 (PVOID)FILEOP_COPY);
+		 (UINT_PTR)Entry->SourceFilename,
+		 FILEOP_COPY);
     }
 
     Entry = Entry->Next;
@@ -428,13 +441,13 @@ SetupCommitFileQueue(HSPFILEQ QueueHandle,
 
   MsgHandler(Context,
 	     SPFILENOTIFY_ENDSUBQUEUE,
-	     (PVOID)FILEOP_COPY,
-	     NULL);
+	     FILEOP_COPY,
+	     0);
 
   MsgHandler(Context,
 	     SPFILENOTIFY_ENDQUEUE,
-	     NULL,
-	     NULL);
+	     0,
+	     0);
 
   return(TRUE);
 }
