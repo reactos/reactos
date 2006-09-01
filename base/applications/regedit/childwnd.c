@@ -431,8 +431,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			        TCHAR szBuffer[MAX_PATH];			
 			    	_sntprintf(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), _T("My Computer\\%s\\%s"), rootName, keyPath);
 
-			    	if (RegOpenKey(HKEY_CURRENT_USER,
-			        	_T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit"),
+			    	if (RegCreateKey(HKEY_CURRENT_USER,
+			        	g_szGeneralRegKey,
 			    	    &hKey) == ERROR_SUCCESS)
 			    	{
 			    	    RegSetValueEx(hKey, _T("LastKey"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) _tcslen(szBuffer) * sizeof(szBuffer[0]));
