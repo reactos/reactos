@@ -384,6 +384,20 @@ int GetMSR() {
     return res;
 }
 
+int GetPhys( int addr ) {
+    register int res asm ("r3");
+    __asm__("mfmsr 5\n\t"
+	    "mr    4,5\n\t"
+	    "xor   1,1,1\n\t"
+	    "addi  1,1,-1\n\t"
+	    "xori  1,1,0x10\n\t"
+	    "and   5,1,5\n\t"
+	    "mtmsr 5\n\t"
+	    "lwz   3,0(3)\n\t"
+	    "mtmsr 4");
+    return res;
+}
+
 int GetSR(int n) {
     register int res asm ("r3");
     switch( n ) {
@@ -484,6 +498,75 @@ void GetBat( int bat, int inst, int *batHi, int *batLo ) {
     *batLo = bl;
 }
 
+int GetSDR1() {
+    register int res asm("r3");
+    __asm__("mfsdr1 3");
+    return res;
+}
+
+int BatHit( int bath, int batl, int virt ) {
+    return (virt & 0xfffc0000) == (bath & 0xfffc0000);
+}
+
+int BatTranslate( int bath, int batl, int virt ) {
+    return (virt & 0x3ffff) | (batl & 0xfffc0000);
+}
+
+/* translate address */
+int virt2phys( int virt, int inst ) {
+    int msr = GetMSR();
+    int txmask = inst ? 0x20 : 0x10;
+    if( msr & txmask ) {
+	int i, bath, batl, sr, sdr1, physbase, vahi, valo;
+	int npteg, hash, ptegaddr, hashmask, ptehi, ptelo;
+	int vsid, pteh;
+	for( i = 0; i < 4; i++ ) {
+	    GetBat( i, inst, &bath, &batl );
+	    if( BatHit( bath, batl, virt ) ) {
+		return BatTranslate( bath, batl, virt );
+	    }
+	}
+
+	sr = GetSR( virt >> 28 );
+	vsid = sr & 0xfffffff;
+	valo = (vsid << 28) | (virt & 0xfffffff);
+	if( sr & 0x80000000 )
+	    return valo;
+
+	sdr1 = GetSDR1();
+
+	physbase = sdr1 & ~0xffff;
+	vahi = vsid >> 4;
+	npteg = ((sdr1 & 0x1ff) << 10);
+	hash = (vsid & 0x7ffff) ^ ((valo >> 12) & 0xffff);
+
+	hashmask = ((sdr1 & 0xffff) << 12) | 0x3ff;
+
+	for( pteh = 0; pteh < 0xff; pteh += 64, hash ^= ~0 ) {
+	    ptegaddr = ((hashmask & hash) * 64) + physbase;
+
+	    for( i = 0; i < 8; i++ ) {
+		int ptevsid, pteapi;
+		
+		ptehi = GetPhys( ptegaddr + (i * 8) );
+		ptelo = GetPhys( ptegaddr + (i * 8) + 4 );
+		ptevsid = (ptehi >> 8) & 0x7fffff;
+		pteapi = ptehi & 0x3f;
+
+		//printf("pte[%d] @ %x = %x:%x\n", 
+		//i, ptegaddr + (i * 8), ptehi, ptelo);
+		
+		if( (ptehi & 64) != pteh ) continue;
+		if( ptevsid != (vsid & 0x7fffff) ) continue;
+		if( pteapi != ((virt >> 22) & 0x3f) ) continue;
+		
+		return (ptelo & 0xfffff000) | (virt & 0xfff);
+	    }
+	}
+	return -1;
+    } else return virt;
+}
+
 void PpcInit( of_proxy the_ofproxy ) {
     int i, len, stdin_handle_chosen, bathi, batlo;
     ofproxy = the_ofproxy;
@@ -528,6 +611,9 @@ void PpcInit( of_proxy the_ofproxy ) {
 	GetBat( i, 1, &bathi, &batlo );
 	printf("IBAT%d %x:%x\n", i, bathi, batlo);
     }
+
+    printf("virt2phys (0x8000,I) -> %x\n", virt2phys(0x8000,1));
+    printf("virt2phys (0xe00000,D) -> %x\n", virt2phys(0x60000000,0));
 
     MachVtbl.VideoClearScreen = PpcVideoClearScreen;
     MachVtbl.VideoSetDisplayMode = PpcVideoSetDisplayMode;
