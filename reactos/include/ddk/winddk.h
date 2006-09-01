@@ -154,7 +154,7 @@ typedef ULONG LOGICAL;
 /*
 ** Routines specific to this DDK
 */
-#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
+#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
 
 /*
 ** Simple structures
@@ -197,11 +197,11 @@ typedef struct _PEB *PPEB;
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 
 /* Constants */
-#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )  
-#define ZwCurrentProcess() NtCurrentProcess()         
-#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
-#define ZwCurrentThread() NtCurrentThread()     
-#ifdef _REACTOS_ 
+#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
+#define ZwCurrentProcess() NtCurrentProcess()
+#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
+#define ZwCurrentThread() NtCurrentThread()
+#ifdef _REACTOS_
 #define KIP0PCRADDRESS                      0xff000000
 #else
 #define KIP0PCRADDRESS                      0xffdff000
@@ -410,14 +410,14 @@ extern NTSYSAPI CCHAR KeNumberProcessors; //FIXME: Note to Alex: I won't fix thi
 #define PROCESSOR_FEATURE_MAX 64
 #define MAX_WOW64_SHARED_ENTRIES 16
 
-typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE 
+typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
 {
     StandardDesign,
     NEC98x86,
     EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
-typedef struct _KSYSTEM_TIME 
+typedef struct _KSYSTEM_TIME
 {
     ULONG LowPart;
     LONG High1Time;
@@ -426,7 +426,7 @@ typedef struct _KSYSTEM_TIME
 
 extern volatile KSYSTEM_TIME KeTickCount;
 
-typedef struct _KUSER_SHARED_DATA 
+typedef struct _KUSER_SHARED_DATA
 {
     ULONG TickCountLowDeprecated;
     ULONG TickCountMultiplier;
@@ -1723,7 +1723,7 @@ typedef struct _CM_SERIAL_DEVICE_DATA {
   ULONG  BaudClock;
 } CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
 
-typedef struct _VM_COUNTERS 
+typedef struct _VM_COUNTERS
 {
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
@@ -1738,7 +1738,7 @@ typedef struct _VM_COUNTERS
     SIZE_T PeakPagefileUsage;
 } VM_COUNTERS, *PVM_COUNTERS;
 
-typedef struct _VM_COUNTERS_EX 
+typedef struct _VM_COUNTERS_EX
 {
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
@@ -2643,7 +2643,7 @@ typedef NTSTATUS
 typedef NTSTATUS
 (DDKAPI *pHalInitPnpDriver)(
   VOID);
- 
+
 typedef NTSTATUS
 (DDKAPI *pHalInitPowerManagement)(
   IN PPM_DISPATCH_TABLE  PmDriverDispatchTable,
@@ -2654,7 +2654,7 @@ typedef struct _DMA_ADAPTER*
   IN PVOID  Context,
   IN struct _DEVICE_DESCRIPTION  *DeviceDescriptor,
   OUT PULONG  NumberOfMapRegisters);
-		     
+
 typedef NTSTATUS
 (DDKAPI *pHalGetInterruptTranslator)(
   IN INTERFACE_TYPE  ParentInterfaceType,
@@ -2821,7 +2821,7 @@ ULONG
 typedef BOOLEAN
 (DDKAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
   ULONG Columns, ULONG Rows);
-           
+
 typedef struct {
   ULONG  Version;
   pHalQuerySystemInformation  HalQuerySystemInformation;
@@ -3469,7 +3469,7 @@ typedef struct _IO_SECURITY_CONTEXT {
 #define IO_TYPE_TIMER                   9
 #define IO_TYPE_VPB                     10
 #define IO_TYPE_ERROR_LOG               11
-#define IO_TYPE_ERROR_MESSAGE	        12
+#define IO_TYPE_ERROR_MESSAGE           12
 #define IO_TYPE_DEVICE_OBJECT_EXTENSION 13
 
 #define IO_TYPE_CSQ_IRP_CONTEXT 1
@@ -4884,7 +4884,7 @@ typedef struct _REG_SET_VALUE_KEY_INFORMATION
     ULONG DataSize;
 } REG_SET_VALUE_KEY_INFORMATION, *PREG_SET_VALUE_KEY_INFORMATION;
 
-typedef struct _REG_DELETE_VALUE_KEY_INFORMATION 
+typedef struct _REG_DELETE_VALUE_KEY_INFORMATION
 {
     PVOID Object;
     PUNICODE_STRING ValueName;
@@ -4908,7 +4908,7 @@ typedef struct _REG_ENUMERATE_KEY_INFORMATION
     PULONG ResultLength;
 } REG_ENUMERATE_KEY_INFORMATION, *PREG_ENUMERATE_KEY_INFORMATION;
 
-typedef struct _REG_ENUMERATE_VALUE_KEY_INFORMATION 
+typedef struct _REG_ENUMERATE_VALUE_KEY_INFORMATION
 {
     PVOID Object;
     ULONG Index;
@@ -4927,7 +4927,7 @@ typedef struct _REG_QUERY_KEY_INFORMATION
     PULONG ResultLength;
 } REG_QUERY_KEY_INFORMATION, *PREG_QUERY_KEY_INFORMATION;
 
-typedef struct _REG_QUERY_VALUE_KEY_INFORMATION 
+typedef struct _REG_QUERY_VALUE_KEY_INFORMATION
 {
     PVOID Object;
     PUNICODE_STRING ValueName;
@@ -4947,31 +4947,31 @@ typedef struct _REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION
     PULONG RequiredBufferLength;
 } REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION, *PREG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION;
 
-typedef struct _REG_PRE_CREATE_KEY_INFORMATION 
+typedef struct _REG_PRE_CREATE_KEY_INFORMATION
 {
     PUNICODE_STRING CompleteName;
 } REG_PRE_CREATE_KEY_INFORMATION, *PREG_PRE_CREATE_KEY_INFORMATION;
 
-typedef struct _REG_POST_CREATE_KEY_INFORMATION 
+typedef struct _REG_POST_CREATE_KEY_INFORMATION
 {
     PUNICODE_STRING CompleteName;
     PVOID Object;
     NTSTATUS Status;
 } REG_POST_CREATE_KEY_INFORMATION, *PREG_POST_CREATE_KEY_INFORMATION;
 
-typedef struct _REG_PRE_OPEN_KEY_INFORMATION 
+typedef struct _REG_PRE_OPEN_KEY_INFORMATION
 {
     PUNICODE_STRING  CompleteName;
 } REG_PRE_OPEN_KEY_INFORMATION, *PREG_PRE_OPEN_KEY_INFORMATION;
 
-typedef struct _REG_POST_OPEN_KEY_INFORMATION 
+typedef struct _REG_POST_OPEN_KEY_INFORMATION
 {
     PUNICODE_STRING CompleteName;
     PVOID Object;
     NTSTATUS Status;
 } REG_POST_OPEN_KEY_INFORMATION, *PREG_POST_OPEN_KEY_INFORMATION;
 
-typedef struct _REG_POST_OPERATION_INFORMATION 
+typedef struct _REG_POST_OPERATION_INFORMATION
 {
     PVOID Object;
     NTSTATUS Status;
@@ -6075,7 +6075,7 @@ RtlQueryRegistryValues(
   IN PVOID  Context,
   IN PVOID  Environment  OPTIONAL);
 
-  
+
 #define LONG_SIZE (sizeof(LONG))
 #define LONG_MASK (LONG_SIZE - 1)
 
@@ -8993,7 +8993,7 @@ KIRQL
 DDKAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
-  
+
 NTHALAPI
 KIRQL
 DDKAPI
