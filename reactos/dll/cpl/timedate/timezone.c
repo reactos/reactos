@@ -414,17 +414,17 @@ TimeZonePageProc(HWND hwndDlg,
             lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
             if(lpDrawItem->CtlID == IDC_WORLD_BACKGROUND)
             {
-                PAINTSTRUCT ps;
-                HDC hdc, hdcMem;
-                hdc = BeginPaint(hwndDlg, &ps);
-                hdcMem = CreateCompatibleDC(hdc);
-                SelectObject(hdcMem, hBitmap);
-                StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top,
-                           lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
-                           lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
-                           hdcMem, 0, 0, cxSource, cySource, SRCCOPY);
-                DeleteDC(hdcMem);
-                EndPaint(hwndDlg, &ps);
+                HDC hdcMem;
+                hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
+                if (hdcMem != NULL)
+                {
+                    SelectObject(hdcMem, hBitmap);
+                    StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top,
+                               lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
+                               lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
+                               hdcMem, 0, 0, cxSource, cySource, SRCCOPY);
+                    DeleteDC(hdcMem);
+                }
             }
         }
         break;
