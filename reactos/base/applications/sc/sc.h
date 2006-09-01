@@ -3,19 +3,19 @@
 #include <stdio.h>
 #include <tchar.h>
 
-//#define SCDBG
-
-VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS pStatus);
-VOID PrintServiceEx(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus);
+#define SCDBG
 
 /* control functions */
-BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended);
 BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount);
 BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs);
 BOOL Delete(LPCTSTR ServiceName);
 BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args, INT ArgCount);
+BOOL Query(LPCTSTR *ServiceArgs, DWORD ArgCount, BOOL bExtended);
+
+LPSERVICE_STATUS_PROCESS QueryService(LPCTSTR ServiceName);
 
 /* print and error functions */
+VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus, BOOL bExtended);
 VOID ReportLastError(VOID);
 
 /* usage functions */

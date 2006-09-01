@@ -29,7 +29,6 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
     lpBinaryPathName = *ServiceArgs;
 
 #ifdef SCDBG
-{
     _tprintf(_T("service name - %s\n"), ServiceName);
     _tprintf(_T("display name - %s\n"), ServiceName);
     _tprintf(_T("service type - %lu\n"), dwServiceType);
@@ -41,7 +40,6 @@ BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
     _tprintf(_T("dependincies - %s\n"), lpDependencies);
     _tprintf(_T("account start name - %s\n"), lpServiceStartName);
     _tprintf(_T("account password - %s\n"), lpPassword);
-}
 #endif
 
     if (!ServiceName)

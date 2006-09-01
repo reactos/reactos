@@ -1,28 +1,19 @@
+/*
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/sc/print.c
+ * PURPOSE:     print service info
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
+ *
+ */
+
 #include "sc.h"
 
 
 VOID
-PrintServiceEx(LPCTSTR lpServiceName,
-               LPSERVICE_STATUS_PROCESS pStatusEx)
-{
-    SERVICE_STATUS Status;
-
-    /*FIXME: quick hack, assign values 1 by 1 */
-    CopyMemory(&Status, pStatusEx, sizeof(SERVICE_STATUS));
-
-    PrintService(lpServiceName,
-                 &Status);
-
-    _tprintf(_T("\tPID                : %lu\n"),
-        pStatusEx->dwProcessId);
-    _tprintf(_T("\tFLAGS              : %lu\n"),
-        pStatusEx->dwServiceFlags);
-}
-
-
-VOID
 PrintService(LPCTSTR lpServiceName,
-             LPSERVICE_STATUS pStatus)
+             LPSERVICE_STATUS_PROCESS pStatus,
+             BOOL bExtended)
 {
     _tprintf(_T("SERVICE_NAME: %s\n"), lpServiceName);
 
@@ -30,10 +21,30 @@ PrintService(LPCTSTR lpServiceName,
         (unsigned int)pStatus->dwServiceType);
     switch (pStatus->dwServiceType)
     {
-        case 1 : _tprintf(_T("KERNEL_DRIVER\n")); break;
-        case 2 : _tprintf(_T("FILE_SYSTEM_DRIVER\n")); break;
-        case 16 : _tprintf(_T("WIN32_OWN_PROCESS\n")); break;
-        case 32 : _tprintf(_T("WIN32_SHARE_PROCESS\n")); break;
+        case SERVICE_KERNEL_DRIVER:
+            _tprintf(_T("KERNEL_DRIVER\n"));
+            break;
+
+        case SERVICE_FILE_SYSTEM_DRIVER:
+            _tprintf(_T("FILE_SYSTEM_DRIVER\n"));
+            break;
+
+        case SERVICE_WIN32_OWN_PROCESS:
+            _tprintf(_T("WIN32_OWN_PROCESS\n"));
+            break;
+
+        case SERVICE_WIN32_SHARE_PROCESS:
+            _tprintf(_T("WIN32_SHARE_PROCESS\n"));
+            break;
+
+        case SERVICE_WIN32_OWN_PROCESS + SERVICE_INTERACTIVE_PROCESS:
+            _tprintf(_T("WIN32_OWN_PROCESS (interactive)\n"));
+            break;
+
+        case SERVICE_WIN32_SHARE_PROCESS + SERVICE_INTERACTIVE_PROCESS:
+            _tprintf(_T("WIN32_SHARE_PROCESS (interactive)\n"));
+            break;
+
         default : _tprintf(_T("\n")); break;
     }
 
@@ -65,7 +76,7 @@ PrintService(LPCTSTR lpServiceName,
         _tprintf(_T("NOT_PAUSABLE,"));
 
     if (pStatus->dwControlsAccepted & SERVICE_ACCEPT_SHUTDOWN)
-        _tprintf(_T("???"));
+        _tprintf(_T("ACCEPTS_SHUTDOWN"));
     else
         _tprintf(_T("IGNORES_SHUTDOWN"));
 
@@ -81,4 +92,14 @@ PrintService(LPCTSTR lpServiceName,
         (unsigned int)pStatus->dwCheckPoint);
     _tprintf(_T("\tWAIT_HINT          : 0x%x\n"),
         (unsigned int)pStatus->dwWaitHint);
+
+    if (bExtended)
+    {
+        _tprintf(_T("\tPID                : %lu\n"),
+            pStatus->dwProcessId);
+        _tprintf(_T("\tFLAGS              : %lu\n"),
+            pStatus->dwServiceFlags);
+    }
+
+    _tprintf(_T("\n"));
 }

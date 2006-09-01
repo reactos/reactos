@@ -42,10 +42,11 @@ ReportLastError(VOID)
 static INT
 ScControl(LPCTSTR Server,       // remote machine name
           LPCTSTR Command,      // sc command
-          LPCTSTR ServiceName,  // name of service
           LPCTSTR *ServiceArgs, // any options
           DWORD ArgCount)       // argument counter
 {
+    LPCTSTR ServiceName = NULL;
+
     if (Server)
     {
         _tprintf(_T("Remote service control is not yet implemented\n"));
@@ -54,18 +55,21 @@ ScControl(LPCTSTR Server,       // remote machine name
 
     if (!lstrcmpi(Command, _T("query")))
     {
-        Query(ServiceName,
-              ServiceArgs,
+        Query(ServiceArgs,
+              ArgCount,
               FALSE);
     }
     else if (!lstrcmpi(Command, _T("queryex")))
     {
-        Query(ServiceName,
-              ServiceArgs,
+        Query(ServiceArgs,
+              ArgCount,
               TRUE);
     }
     else if (!lstrcmpi(Command, _T("start")))
     {
+        ServiceName = *ServiceArgs++;
+        ArgCount--;
+
         if (ServiceName)
         {
             Start(ServiceName,
@@ -77,6 +81,9 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("pause")))
     {
+        ServiceName = *ServiceArgs++;
+        ArgCount--;
+
         if (ServiceName)
         {
             Control(SERVICE_CONTROL_PAUSE,
@@ -89,6 +96,9 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("interrogate")))
     {
+        ServiceName = *ServiceArgs++;
+        ArgCount--;
+
         if (ServiceName)
         {
             Control(SERVICE_CONTROL_INTERROGATE,
@@ -101,6 +111,9 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("stop")))
     {
+        ServiceName = *ServiceArgs++;
+        ArgCount--;
+
         if (ServiceName)
         {
             Control(SERVICE_CONTROL_STOP,
@@ -113,6 +126,9 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("continue")))
     {
+        ServiceName = *ServiceArgs++;
+        ArgCount--;
+
         if (ServiceName)
         {
             Control(SERVICE_CONTROL_CONTINUE,
@@ -125,6 +141,9 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("delete")))
     {
+        ServiceName = *ServiceArgs++;
+        ArgCount--;
+
         if (ServiceName)
             Delete(ServiceName);
         else
@@ -132,6 +151,9 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("create")))
     {
+        ServiceName = *ServiceArgs++;
+        ArgCount--;
+
         if (*ServiceArgs)
             Create(ServiceName,
                    ServiceArgs);
@@ -141,6 +163,9 @@ ScControl(LPCTSTR Server,       // remote machine name
     else if (!lstrcmpi(Command, _T("control")))
     {
         INT CtlValue;
+
+        ServiceName = *ServiceArgs++;
+        ArgCount--;
 
         CtlValue = _ttoi(ServiceArgs[0]);
         ServiceArgs++;
@@ -170,9 +195,9 @@ static
 
 int _tmain(int argc, LPCTSTR argv[])
 {
-	LPCTSTR Server = NULL;      // remote machine
-    LPCTSTR Command = NULL;     // sc command
-    LPCTSTR ServiceName = NULL; // name of service
+    LPCTSTR Server = NULL;   // remote machine
+    LPCTSTR Command = NULL;  // sc command
+    LPCTSTR *Args = NULL;    // Any remaining args
 
     if (argc < 2)
     {
@@ -192,25 +217,23 @@ int _tmain(int argc, LPCTSTR argv[])
         Server = argv[1];
         Command = argv[2];
         if (argc > 3)
-            ServiceName = argv[3];
+            Args = &argv[3];
 
         return ScControl(Server,
                          Command,
-                         ServiceName,
-                         &argv[4],
-                         argc-4);
+                         Args,
+                         argc-3);
     }
     else
     {
         Command = argv[1];
         if (argc > 2)
-            ServiceName = argv[2];
+            Args = &argv[2];
 
         return ScControl(Server,
                          Command,
-                         ServiceName,
-                         &argv[3],
-                         argc-3);
+                         Args,
+                         argc-2);
     }
 }
 

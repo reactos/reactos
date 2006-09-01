@@ -11,15 +11,11 @@
 
 BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
 {
-    SC_HANDLE hSCManager = NULL;
-    SC_HANDLE hSc = NULL;
+    SC_HANDLE hSCManager;
+    SC_HANDLE hSc;
     LPSERVICE_STATUS_PROCESS pServiceInfo = NULL;
-    DWORD BufSiz = 0;
-    DWORD BytesNeeded = 0;
-    DWORD Ret;
 
 #ifdef SCDBG
-{
     LPCTSTR *TmpArgs = ServiceArgs;
     INT TmpCnt = ArgCount;
     _tprintf(_T("service to control - %s\n"), ServiceName);
@@ -31,24 +27,23 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
         TmpCnt--;
     }
     _tprintf(_T("\n"));
-}
 #endif /* SCDBG */
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
                                SC_MANAGER_CONNECT);
     if (hSCManager == NULL)
-        goto fail;
+    {
+        ReportLastError();
+        return FALSE;
+    }
 
     hSc = OpenService(hSCManager,
                       ServiceName,
                       SERVICE_START | SERVICE_QUERY_STATUS);
 
     if (hSc == NULL)
-    {
-        _tprintf(_T("openService failed\n"));
         goto fail;
-    }
 
     if (! StartService(hSc,
                        ArgCount,
@@ -58,32 +53,13 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
         goto fail;
     }
 
-    Ret = QueryServiceStatusEx(hSc,
-                               SC_STATUS_PROCESS_INFO,
-                               NULL,
-                               BufSiz,
-                               &BytesNeeded);
-    if ((Ret != 0) || (GetLastError() != ERROR_INSUFFICIENT_BUFFER)) //FIXME: check this
-        goto fail;
-
-
-    pServiceInfo = (LPSERVICE_STATUS_PROCESS)HeapAlloc(GetProcessHeap(),
-                                                       0,
-                                                       BytesNeeded);
-    if (pServiceInfo == NULL)
-        goto fail;
-
-    if (!QueryServiceStatusEx(hSc,
-                              SC_STATUS_PROCESS_INFO,
-                              (LPBYTE)pServiceInfo,
-                              BytesNeeded,
-                              &BytesNeeded))
+    pServiceInfo = QueryService(ServiceName);
+    if (pServiceInfo != NULL)
     {
-        goto fail;
+        PrintService(ServiceName,
+                     pServiceInfo,
+                     TRUE);
     }
-
-    PrintServiceEx(ServiceName,
-                   pServiceInfo);
 
     HeapFree(GetProcessHeap(), 0, pServiceInfo);
     CloseServiceHandle(hSc);

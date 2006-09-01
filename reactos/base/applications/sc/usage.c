@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS SC utility
- * FILE:        subsys/system/sc/usage.c
- * PURPOSE:     control ReactOS services
- * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *           Ged Murphy 20/10/05 Created
+ * PROJECT:     ReactOS Services
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/system/sc/usage.c
+ * PURPOSE:     display usage info
+ * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 #include "sc.h"
@@ -26,7 +24,7 @@ VOID MainUsage(VOID)
     _T("\t  query          : Queries the status for a service, or\n")
     _T("\t                   enumerates the status for types of services.\n")
     _T("\t  queryex        : Queries the extended status for a service, or\n")
-//    _T("\t                   enumerates the status for types of services.\n"
+    _T("\t                   enumerates the status for types of services.\n")
     _T("\t  start          : Starts a service.\n")
     _T("\t  pause          : Sends a PAUSE control request to a service.\n")
     _T("\t  interrogate    : Sends a INTERROGATE control request to a service.\n")
@@ -63,7 +61,7 @@ VOID MainUsage(VOID)
         _T("        for that service is returned.  Further options do not apply in\n")
         _T("        this case.  If the query command is followed by nothing or one of\n")
         _T("        the options listed below, the services are enumerated.\n")
-        _T("    type=    Type of services to enumerate (driver, service, all)\n")
+        _T("    type=    Type of services to enumerate (driver, service, interact, all)\n")
         _T("             (default = service)\n")
         _T("    state=   State of services to enumerate (inactive, all)\n")
         _T("             (default = active)\n")
@@ -85,8 +83,8 @@ VOID MainUsage(VOID)
 //        _T("sc query bufsize= 50    - Enumerates with a 50 byte buffer.\n")
 //        _T("sc query ri= 14         - Enumerates with resume index = 14\n")
 //        _T("sc queryex group= ""    - Enumerates active services not in a group\n")
-        _T("sc query type= service type= interact - Enumerates all interactive services\n"));
-//        _T("sc query type= driver group= NDIS     - Enumerates all NDIS drivers\n"));
+        _T("sc query type= service type= interact - Enumerates all interactive services\n")
+        _T("sc query type= driver group= NDIS     - Enumerates all NDIS drivers\n"));
     }
 }
 

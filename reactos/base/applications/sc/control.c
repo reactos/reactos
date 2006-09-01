@@ -21,7 +21,6 @@ Control(DWORD Control,
     DWORD dwDesiredAccess = 0;
 
 #ifdef SCDBG
-{
     LPCTSTR *TmpArgs = Args;
     INT TmpCnt = ArgCount;
     _tprintf(_T("service to control - %s\n"), ServiceName);
@@ -34,7 +33,6 @@ Control(DWORD Control,
         TmpCnt--;
     }
     _tprintf(_T("\n"));
-}
 #endif /* SCDBG */
 
     switch (Control)
@@ -75,8 +73,16 @@ Control(DWORD Control,
                                Control,
                                &Status))
             {
+                SERVICE_STATUS_PROCESS StatusEx;
+
+                /* FIXME: lazy hack ;) */
+                CopyMemory(&StatusEx, &Status, sizeof(Status));
+                StatusEx.dwProcessId = 0;
+                StatusEx.dwServiceFlags = 0;
+
                 PrintService(ServiceName,
-                             &Status);
+                             &StatusEx,
+                             FALSE);
 
                 CloseServiceHandle(hSc);
                 CloseServiceHandle(hSCManager);
