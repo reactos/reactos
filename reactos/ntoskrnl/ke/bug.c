@@ -763,7 +763,8 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
             /* Driver base is in parameter 1 */
             DriverBase = (PVOID)BugCheckParameter1;
-            KiBugCheckDriver = &LdrEntry->BaseDllName;
+            /* FIXME: LdrEntry is uninitialized for god's sake!!!
+               KiBugCheckDriver = &LdrEntry->BaseDllName; */
             break;
 
         /* Check if the driver has a stuck thread */
