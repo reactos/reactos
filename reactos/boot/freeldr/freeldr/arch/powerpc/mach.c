@@ -35,7 +35,8 @@ volatile char *video_mem = 0;
 void le_swap( void *start_addr_v, 
               void *end_addr_v, 
               void *target_addr_v ) {
-    long *start_addr = (long *)ROUND_DOWN((long)start_addr_v,8), 
+    long 
+	*start_addr = (long *)ROUND_DOWN((long)start_addr_v,8), 
         *end_addr = (long *)ROUND_UP((long)end_addr_v,8), 
         *target_addr = (long *)ROUND_DOWN((long)target_addr_v,8);
     long tmp;
@@ -377,8 +378,114 @@ BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
 
 typedef unsigned int uint32_t;
 
+int GetMSR() {
+    register int res asm ("r3");
+    __asm__("mfmsr 3");
+    return res;
+}
+
+int GetSR(int n) {
+    register int res asm ("r3");
+    switch( n ) {
+    case 0:
+	__asm__("mfsr 3,0");
+	break;
+    case 1:
+	__asm__("mfsr 3,1");
+	break;
+    case 2:
+	__asm__("mfsr 3,2");
+	break;
+    case 3:
+	__asm__("mfsr 3,3");
+	break;
+    case 4:
+	__asm__("mfsr 3,4");
+	break;
+    case 5:
+	__asm__("mfsr 3,5");
+	break;
+    case 6:
+	__asm__("mfsr 3,6");
+	break;
+    case 7:
+	__asm__("mfsr 3,7");
+	break;
+    case 8:
+	__asm__("mfsr 3,8");
+	break;
+    case 9:
+	__asm__("mfsr 3,9");
+	break;
+    case 10:
+	__asm__("mfsr 3,10");
+	break;
+    case 11:
+	__asm__("mfsr 3,11");
+	break;
+    case 12:
+	__asm__("mfsr 3,12");
+	break;
+    case 13:
+	__asm__("mfsr 3,13");
+	break;
+    case 14:
+	__asm__("mfsr 3,14");
+	break;
+    case 15:
+	__asm__("mfsr 3,15");
+	break;
+    }
+    return res;
+}
+
+void GetBat( int bat, int inst, int *batHi, int *batLo ) {
+    register int bh asm("r3"), bl asm("r4");
+    if( inst ) {
+	switch( bat ) {
+	case 0:
+	    __asm__("mfibatu 3,0");
+	    __asm__("mfibatl 4,0");
+	    break;
+	case 1:
+	    __asm__("mfibatu 3,1");
+	    __asm__("mfibatl 4,1");
+	    break;
+	case 2:
+	    __asm__("mfibatu 3,2");
+	    __asm__("mfibatl 4,2");
+	    break;
+	case 3:
+	    __asm__("mfibatu 3,3");
+	    __asm__("mfibatl 4,3");
+	    break;
+	}
+    } else {
+	switch( bat ) {
+	case 0:
+	    __asm__("mfdbatu 3,0");
+	    __asm__("mfdbatl 4,0");
+	    break;
+	case 1:
+	    __asm__("mfdbatu 3,1");
+	    __asm__("mfdbatl 4,1");
+	    break;
+	case 2:
+	    __asm__("mfdbatu 3,2");
+	    __asm__("mfdbatl 4,2");
+	    break;
+	case 3:
+	    __asm__("mfdbatu 3,3");
+	    __asm__("mfdbatl 4,3");
+	    break;
+	}
+    }
+    *batHi = bh;
+    *batLo = bl;
+}
+
 void PpcInit( of_proxy the_ofproxy ) {
-    int len, stdin_handle_chosen;
+    int i, len, stdin_handle_chosen, bathi, batlo;
     ofproxy = the_ofproxy;
 
     ofw_print_string("Freeldr PowerPC Init\n");
@@ -405,6 +512,22 @@ void PpcInit( of_proxy the_ofproxy ) {
     MachVtbl.ConsGetCh   = PpcConsGetCh;
 
     printf( "stdin_handle is %x\n", stdin_handle );
+    /* List MMU Status */
+    printf("MSR %x\n", GetMSR());
+
+    for( i = 0; i < 16; i++ ) {
+	printf("SR%d %x\n", i, GetSR(i));
+    }
+
+    for( i = 0; i < 4; i++ ) {
+	GetBat( i, 0, &bathi, &batlo );
+	printf("DBAT%d %x:%x\n", i, bathi, batlo);
+    }
+
+    for( i = 0; i < 4; i++ ) {
+	GetBat( i, 1, &bathi, &batlo );
+	printf("IBAT%d %x:%x\n", i, bathi, batlo);
+    }
 
     MachVtbl.VideoClearScreen = PpcVideoClearScreen;
     MachVtbl.VideoSetDisplayMode = PpcVideoSetDisplayMode;
