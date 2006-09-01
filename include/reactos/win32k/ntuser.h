@@ -1043,6 +1043,11 @@ NTAPI
 NtUserGetKeyState(
   DWORD Unknown0);
 
+BOOL
+NTAPI
+NtUserGetLastInputInfo(
+    PLASTINPUTINFO plii);
+
 DWORD
 NTAPI
 NtUserGetListBoxInfo(
