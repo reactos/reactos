@@ -396,10 +396,19 @@ NtGdiGetDIBits(HDC hDC,
    }
 
    if (Bits == NULL)
-   {
-      if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER) ||
-          Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
-      {
+   {  
+      if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+	  {		        
+		  BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
+          coreheader->bcWidth =BitmapObj->SurfObj.sizlBitmap.cx;
+          coreheader->bcHeight = BitmapObj->SurfObj.sizlBitmap.cy;
+          coreheader->bcPlanes = 1;
+          coreheader->bcBitCount =  BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);	 
+		  Result = BitmapObj->SurfObj.sizlBitmap.cy;
+	  }
+
+      if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))		  
+      {		  
          Info->bmiHeader.biWidth = BitmapObj->SurfObj.sizlBitmap.cx;
          Info->bmiHeader.biHeight = BitmapObj->SurfObj.sizlBitmap.cy;
          /* Report negtive height for top-down bitmaps. */
@@ -440,7 +449,7 @@ NtGdiGetDIBits(HDC hDC,
    else
    {
       if (StartScan > BitmapObj->SurfObj.sizlBitmap.cy)
-      {
+      {		 
          Result = 0;
       }
       else
@@ -671,15 +680,20 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
                   UINT coloruse)
 {
   HBITMAP handle;
-  BOOL fColor;
-  DWORD width;
-  int height;
+ 
+  LONG width;
+  LONG height;
+  WORD planes; 
   WORD bpp;
-  WORD compr;
+  DWORD compr;
+  DWORD  dibsize;        
+  BOOL fColor;
   SIZEL size;
 
-  if (DIB_GetBitmapInfo( header, &width, &height, &bpp, &compr ) == -1) return 0;
 
+  if (DIB_GetBitmapInfo( header, &width, &height, &planes, &bpp, &compr, &dibsize ) == -1) return 0;  
+
+    
   // Check if we should create a monochrome or color bitmap. We create a monochrome bitmap only if it has exactly 2
   // colors, which are black followed by white, nothing else. In all other cases, we create a color bitmap.
 
@@ -1068,28 +1082,67 @@ INT FASTCALL DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse)
   }
 }
 
-INT STDCALL DIB_GetBitmapInfo (const BITMAPINFOHEADER *header,
-			       PDWORD width,
-			       PINT height,
-			       PWORD bpp,
-			       PWORD compr)
-{
-  if (header->biSize == sizeof(BITMAPINFOHEADER))
-  {
-    *width  = header->biWidth;
-    *height = header->biHeight;
-    *bpp    = header->biBitCount;
-    *compr  = header->biCompression;
-    return 1;
-  }
+/*
+ * DIB_GetBitmapInfo is complete copy of wine cvs 2/9-2006 
+ * from file dib.c from gdi32.dll or orginal version
+ * did not calc the info right for some headers.  
+ */
+
+INT STDCALL 
+DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, 
+				  PLONG width, 
+				  PLONG height, 
+				  PWORD planes, 
+				  PWORD bpp, 
+				  PLONG compr, 
+				  PLONG size )
+{  
+
   if (header->biSize == sizeof(BITMAPCOREHEADER))
   {
-    BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)header;
-    *width  = core->bcWidth;
-    *height = core->bcHeight;
-    *bpp    = core->bcBitCount;
-    *compr  = 0;
-    return 0;
+     BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)header;
+     *width  = core->bcWidth;
+     *height = core->bcHeight;
+     *planes = core->bcPlanes;
+     *bpp    = core->bcBitCount;
+     *compr  = 0;
+     *size   = 0;
+     return 0;
+  }
+
+  if (header->biSize == sizeof(BITMAPINFOHEADER))
+  {
+     *width  = header->biWidth;
+     *height = header->biHeight;
+     *planes = header->biPlanes;
+     *bpp    = header->biBitCount;
+     *compr  = header->biCompression;
+     *size   = header->biSizeImage;
+     return 1;
+  }
+
+  if (header->biSize == sizeof(BITMAPV4HEADER))
+  {
+      BITMAPV4HEADER *v4hdr = (BITMAPV4HEADER *)header;
+      *width  = v4hdr->bV4Width;
+      *height = v4hdr->bV4Height;
+      *planes = v4hdr->bV4Planes;
+      *bpp    = v4hdr->bV4BitCount;
+      *compr  = v4hdr->bV4V4Compression;
+      *size   = v4hdr->bV4SizeImage;
+      return 4;
+  }
+
+  if (header->biSize == sizeof(BITMAPV5HEADER))
+  {
+      BITMAPV5HEADER *v5hdr = (BITMAPV5HEADER *)header;
+      *width  = v5hdr->bV5Width;
+      *height = v5hdr->bV5Height;
+      *planes = v5hdr->bV5Planes;
+      *bpp    = v5hdr->bV5BitCount;
+      *compr  = v5hdr->bV5Compression;
+      *size   = v5hdr->bV5SizeImage;
+      return 5;
   }
   DPRINT("(%ld): wrong size for header\n", header->biSize );
   return -1;
