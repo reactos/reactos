@@ -401,10 +401,14 @@ NtGdiGetDIBits(HDC hDC,
 	  {		        
 		  BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
           coreheader->bcWidth =BitmapObj->SurfObj.sizlBitmap.cx;
-          coreheader->bcHeight = BitmapObj->SurfObj.sizlBitmap.cy;
           coreheader->bcPlanes = 1;
           coreheader->bcBitCount =  BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);	 
-		  Result = BitmapObj->SurfObj.sizlBitmap.cy;
+
+		  coreheader->bcHeight = BitmapObj->SurfObj.sizlBitmap.cy;
+		  if (BitmapObj->SurfObj.lDelta > 0)
+           coreheader->bcHeight = -coreheader->bcHeight;
+		  		  
+		  Result = BitmapObj->SurfObj.sizlBitmap.cy;		 		 
 	  }
 
       if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))		  
@@ -457,12 +461,28 @@ NtGdiGetDIBits(HDC hDC,
          ScanLines = min(ScanLines, BitmapObj->SurfObj.sizlBitmap.cy - StartScan);
          DestSize.cx = BitmapObj->SurfObj.sizlBitmap.cx;
          DestSize.cy = ScanLines;
-         DestBitmap = EngCreateBitmap(
-            DestSize, DIB_GetDIBWidthBytes(DestSize.cx,
-                                           Info->bmiHeader.biBitCount),
-            BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
-            0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
-            Bits);
+
+		 DestBitmap = NULL;
+		 if (Info->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))		
+		 {
+            DestBitmap = EngCreateBitmap( DestSize, 
+				                          DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount),
+                                          BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
+                                          0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
+                                          Bits);
+		 }
+
+		 if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+	     {		        
+		    BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
+
+			DestBitmap = EngCreateBitmap( DestSize, 
+				                          DIB_GetDIBWidthBytes(DestSize.cx, coreheader->bcBitCount),
+                                          BitmapFormat(coreheader->bcBitCount, BI_RGB),
+                                           0 < coreheader->bcHeight ? 0 : BMF_TOPDOWN,
+                                          Bits);
+		 }
+
          
          if(DestBitmap == NULL)
          {
@@ -504,7 +524,7 @@ NtGdiGetDIBits(HDC hDC,
             }
             if (Usage == DIB_PAL_COLORS)
             {
-               DbgPrint("GetDIBits with DIB_PAL_COLORS isn't implemented yet.");
+               DPRINT1("GetDIBits with DIB_PAL_COLORS isn't implemented yet.");
             }
          }
 
