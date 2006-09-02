@@ -27,6 +27,9 @@ EPROCESS KiInitialProcess;
 
 extern LIST_ENTRY KiProcessListHead;
 extern ULONG Ke386GlobalPagesEnabled;
+extern KGDTENTRY KiBootGdt[];
+extern PVOID trap_stack, init_stack;
+extern KTSS KiBootTss;
 
 /* System-defined Spinlocks */
 KSPIN_LOCK KiDispatcherLock;
@@ -269,6 +272,7 @@ KiInitSpinLocks(IN PKPRCB Prcb,
         KeInitializeSpinLock(&MmNonPagedPoolLock);
         KeInitializeSpinLock(&NtfsStructLock);
         KeInitializeSpinLock(&AfdWorkQueueSpinLock);
+        KeInitializeDispatcher(); // ROS OLD DISPATCHER
     }
 }
 
@@ -408,57 +412,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         DPRINT1("SMP Boot support not yet present\n");
     }
 
-    /* Check if Fxsr was found */
-    if (KeI386FxsrPresent)
-    {
-        /* Enable it. FIXME: Send an IPI */
-        Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSFXSR);
-
-        /* Check if XMM was found too */
-        if (KeI386XMMIPresent)
-        {
-            /* Enable it: FIXME: Send an IPI. */
-            Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSXMMEXCPT);
-
-            /* FIXME: Implement and enable XMM Page Zeroing for Mm */
-        }
-    }
-
-    if (KeFeatureBits & KF_GLOBAL_PAGE)
-    {
-        ULONG Flags;
-        /* Enable global pages */
-        Ke386GlobalPagesEnabled = TRUE;
-        Ke386SaveFlags(Flags);
-        Ke386DisableInterrupts();
-        Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
-        Ke386RestoreFlags(Flags);
-    }
-
-    if (KeFeatureBits & KF_FAST_SYSCALL)
-    {
-        extern void KiFastCallEntry(void);
-
-        /* CS Selector of the target segment. */
-        Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
-        /* Target ESP. */
-        Ke386Wrmsr(0x175, 0, 0);
-        /* Target EIP. */
-        Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
-    }
-
-    /* Does the CPU Support 'prefetchnta' (SSE)  */
-    if(KeFeatureBits & KF_XMMI)
-    {
-        ULONG Protect;
-
-        Protect = MmGetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal);
-        MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect | PAGE_IS_WRITABLE);
-        /* Replace the ret by a nop */
-        *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
-        MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect);
-    }
-
 #if 0
     /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,
@@ -534,17 +487,12 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
 VOID
 NTAPI
-KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
-                IN ULONG DriverBase) // FIXME: hackhack
+KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Currently hacked for CPU 0 only */
     ULONG Cpu = 0;
     PKIPCR Pcr = (PKIPCR)KPCR_BASE;
     PKPRCB Prcb;
-    ULONG DriverSize;
-    extern KGDTENTRY KiBootGdt[];
-    extern PVOID trap_stack, init_stack;
-    extern KTSS KiBootTss;
 
     /* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);
@@ -572,14 +520,6 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
     KiInitializeGdt(NULL);
     Ki386BootInitializeTSS();
     Ki386InitializeLdt();
-    KeInitExceptions();
-    KeInitInterrupts();
-
-    /* Load the Kernel with the PE Loader */
-    LdrSafePEProcessModule((PVOID)KERNEL_BASE,
-                           (PVOID)KERNEL_BASE,
-                           (PVOID)DriverBase,
-                           &DriverSize);
 
     /* Setup CPU-related fields */
     Pcr->Number = Cpu;
@@ -613,9 +553,54 @@ KeInit2(VOID)
 {
     ULONG Protect;
 
-    KiInitializeBugCheck();
-    KeInitializeDispatcher();
-    KiInitializeSystemClock();
+    /* Check if Fxsr was found */
+    if (KeI386FxsrPresent)
+    {
+        /* Enable it. FIXME: Send an IPI */
+        Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSFXSR);
+
+        /* Check if XMM was found too */
+        if (KeI386XMMIPresent)
+        {
+            /* Enable it: FIXME: Send an IPI. */
+            Ke386SetCr4(Ke386GetCr4() | X86_CR4_OSXMMEXCPT);
+
+            /* FIXME: Implement and enable XMM Page Zeroing for Mm */
+        }
+    }
+
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+    {
+        ULONG Flags;
+        /* Enable global pages */
+        Ke386GlobalPagesEnabled = TRUE;
+        Ke386SaveFlags(Flags);
+        Ke386DisableInterrupts();
+        Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
+        Ke386RestoreFlags(Flags);
+    }
+
+    if (KeFeatureBits & KF_FAST_SYSCALL)
+    {
+        extern void KiFastCallEntry(void);
+
+        /* CS Selector of the target segment. */
+        Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
+        /* Target ESP. */
+        Ke386Wrmsr(0x175, 0, 0);
+        /* Target EIP. */
+        Ke386Wrmsr(0x176, (ULONG_PTR)KiFastCallEntry, 0);
+    }
+
+    /* Does the CPU Support 'prefetchnta' (SSE)  */
+    if(KeFeatureBits & KF_XMMI)
+    {
+        Protect = MmGetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal);
+        MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect | PAGE_IS_WRITABLE);
+        /* Replace the ret by a nop */
+        *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
+        MmSetPageProtect(NULL, (PVOID)RtlPrefetchMemoryNonTemporal, Protect);
+    }
 
     /* Set IDT to writable */
     Protect = MmGetPageProtect(NULL, (PVOID)KiIdt);

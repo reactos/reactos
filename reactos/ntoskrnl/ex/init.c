@@ -506,6 +506,9 @@ ExpInitializeExecutive(VOID)
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
     LdrInit1();
 
+    /* Setup bugcheck messages */
+    KiInitializeBugCheck();
+
     /* Lower the IRQL to Dispatch Level */
     KeLowerIrql(DISPATCH_LEVEL);
 
@@ -526,7 +529,10 @@ ExpInitializeExecutive(VOID)
     /* Parse the Loaded Modules (by FreeLoader) and cache the ones we'll need */
     ParseAndCacheLoadedModules();
 
-    /* Initialize the Dispatcher, Clock and Bug Check Mechanisms. */
+    /* Setup system time */
+    KiInitializeSystemClock();
+
+    /* Initialize the second stage of the kernel */
     KeInit2();
 
     /* Bring back the IRQL to Passive */

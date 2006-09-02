@@ -224,8 +224,18 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     FirstKrnlPhysAddr = KeLoaderModules[0].ModStart - KERNEL_BASE + 0x200000;
     LastKrnlPhysAddr = LastKernelAddress - KERNEL_BASE + 0x200000;
 
+    /* Setup the IDT */
+    KeInitExceptions(); // ONCE HACK BELOW IS GONE, MOVE TO KISYSTEMSTARTUP!
+    KeInitInterrupts(); // ROS HACK DEPRECATED SOON BY NEW HAL
+
+    /* Load the Kernel with the PE Loader */
+    LdrSafePEProcessModule((PVOID)KERNEL_BASE,
+                           (PVOID)KERNEL_BASE,
+                           (PVOID)DriverBase,
+                           &DriverSize);
+
     /* Do general System Startup */
-    KiSystemStartup(LoaderBlock, DriverBase);
+    KiSystemStartup(LoaderBlock);
 }
 
 /* EOF */

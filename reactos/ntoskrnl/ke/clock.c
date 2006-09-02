@@ -83,11 +83,6 @@ KiInitializeSystemClock(VOID)
     RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
 
     /* Set up the Used Shared Data */
-    SharedUserData->TickCountLowDeprecated = 0;
-    SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
-    SharedUserData->InterruptTime.High2Time = 0;
-    SharedUserData->InterruptTime.LowPart = 0;
-    SharedUserData->InterruptTime.High1Time = 0;
     SharedUserData->SystemTime.High2Time = SystemBootTime.u.HighPart;
     SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
     SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
