@@ -78,9 +78,6 @@ KiInitializeSystemClock(VOID)
 {
     TIME_FIELDS TimeFields;
 
-    InitializeListHead(&KiTimerListHead);
-    KeInitializeDpc(&KiExpireTimerDpc, (PKDEFERRED_ROUTINE)KiExpireTimers, 0);
-
     /* Calculate the starting time for the system clock */
     HalQueryRealTimeClock(&TimeFields);
     RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);

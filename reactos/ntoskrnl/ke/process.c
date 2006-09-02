@@ -10,26 +10,18 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/napi.h>
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS   *****************************************************************/
 
-KSERVICE_TABLE_DESCRIPTOR
-__declspec(dllexport)
-KeServiceDescriptorTable[SSDT_MAX_ENTRIES] =
-{
-    { MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
-    { NULL,     NULL,   0,   NULL   },
-};
+LIST_ENTRY KiProcessListHead;
+LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
+LIST_ENTRY KiStackInSwapListHead;
+KEVENT KiSwapEvent;
 
-KSERVICE_TABLE_DESCRIPTOR
-KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES] =
-{
-    { MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
-    { NULL,     NULL,   0,   NULL   },
-};
+KSERVICE_TABLE_DESCRIPTOR KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
+KSERVICE_TABLE_DESCRIPTOR KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
 
 /* FUNCTIONS *****************************************************************/
 

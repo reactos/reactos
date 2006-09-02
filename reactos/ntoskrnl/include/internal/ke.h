@@ -49,6 +49,12 @@ typedef struct _DISPATCH_INFO
     PKINTERRUPT_ROUTINE *FlatDispatch;
 } DISPATCH_INFO, *PDISPATCH_INFO;
 
+typedef struct _KTIMER_TABLE_ENTRY
+{
+    LIST_ENTRY Entry;
+    ULARGE_INTEGER Time;
+} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
+
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
     IN PUNICODE_STRING Unicode,
@@ -94,6 +100,19 @@ extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
 extern ULONG KiAdjustDpcThreshold;
 extern ULONG KiIdealDpcRate;
+extern LARGE_INTEGER KiTimeIncrementReciprocal;
+extern UCHAR KiTimeIncrementShiftCount;
+extern LIST_ENTRY BugcheckCallbackListHead, BugcheckReasonCallbackListHead;
+extern KSPIN_LOCK BugCheckCallbackLock;
+extern KDPC KiExpireTimerDpc;
+extern KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
+extern LIST_ENTRY KiTimerListHead;
+extern KMUTEX KiGenericCallDpcMutex;
+extern LIST_ENTRY KiProfileListHead, KiProfileSourceListHead;
+extern KSPIN_LOCK KiProfileLock;
+extern LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
+extern LIST_ENTRY KiStackInSwapListHead;
+extern KEVENT KiSwapEvent;
 
 /* MACROS *************************************************************************/
 

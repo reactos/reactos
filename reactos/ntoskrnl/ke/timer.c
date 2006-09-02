@@ -15,7 +15,10 @@
 
 /* GLOBALS ****************************************************************/
 
+LARGE_INTEGER KiTimeIncrementReciprocal;
+UCHAR KiTimeIncrementShiftCount;
 LIST_ENTRY KiTimerListHead;
+KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 #define SYSTEM_TIME_UNITS_PER_MSEC (10000)
 
 /* PRIVATE FUNCTIONS ******************************************************/

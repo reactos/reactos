@@ -25,9 +25,6 @@ extern ULONG_PTR LastKrnlPhysAddr;
 extern ULONG_PTR LastKernelAddress;
 extern LOADER_MODULE KeLoaderModules[64];
 extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
-extern LIST_ENTRY KiProfileListHead;
-extern LIST_ENTRY KiProfileSourceListHead;
-extern KSPIN_LOCK KiProfileLock;
 BOOLEAN SetupMode = TRUE;
 BOOLEAN NoGuiBoot = FALSE;
 
@@ -503,6 +500,9 @@ ExpInitializeExecutive(VOID)
     /* Check if the structures match the ASM offset constants */
     ExecuteRuntimeAsserts();
 
+    /* Initialize HAL */
+    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
     LdrInit1();
 
@@ -531,11 +531,6 @@ ExpInitializeExecutive(VOID)
 
     /* Bring back the IRQL to Passive */
     KeLowerIrql(PASSIVE_LEVEL);
-
-    /* Initialize Profiling */
-    InitializeListHead(&KiProfileListHead);
-    InitializeListHead(&KiProfileSourceListHead);
-    KeInitializeSpinLock(&KiProfileLock);
 
     /* Initialize resources */
     ExpResourceInitialization();

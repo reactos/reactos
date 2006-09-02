@@ -28,6 +28,7 @@ HalReleaseDisplayOwnership(
 
 LIST_ENTRY BugcheckCallbackListHead;
 LIST_ENTRY BugcheckReasonCallbackListHead;
+KSPIN_LOCK BugCheckCallbackLock;
 ULONG KeBugCheckActive, KeBugCheckOwner;
 LONG KeBugCheckOwnerRecursionCount;
 PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
@@ -125,10 +126,6 @@ KiInitializeBugCheck(VOID)
     LDR_RESOURCE_INFO ResourceInfo;
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
     NTSTATUS Status;
-
-    /* Initialize Callbadk Listhead and State */
-    InitializeListHead(&BugcheckCallbackListHead);
-    InitializeListHead(&BugcheckReasonCallbackListHead);
 
     /* Cache the Bugcheck Message Strings. Prepare the Lookup Data */
     ResourceInfo.Type = 11;
