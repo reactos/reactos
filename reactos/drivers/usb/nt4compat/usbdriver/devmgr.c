@@ -21,6 +21,23 @@
 
 #include "usbdriver.h"
 
+#define realloc_buf( pdEV, puRB ) \
+{\
+	PBYTE data_buf;\
+	int i;\
+	data_buf = usb_alloc_mem( NonPagedPool, ( pdEV )->desc_buf_size += 1024 );\
+	RtlZeroMemory( data_buf, ( pdEV )->desc_buf_size );\
+	for( i = 0; i < ( LONG )( puRB )->context; i++ )\
+	{\
+		data_buf[ i ] = ( pdEV )->desc_buf[ i ];\
+	}\
+	usb_free_mem( ( pdEV )->desc_buf );\
+	( pdEV )->desc_buf = data_buf;\
+	( pdEV )->pusb_dev_desc = ( PUSB_DEVICE_DESC )( pdEV )->desc_buf;\
+	( puRB )->data_buffer = &data_buf[ ( LONG ) ( puRB )->context ];\
+}
+
+
 //----------------------------------------------------------
 
 USB_DRIVER g_driver_list[DEVMGR_MAX_DRIVERS];
@@ -740,5 +757,760 @@ dev_mgr_disconnect_dev(PUSB_DEV pdev)
         //destroy it in dev_mgr_destroy
     }
 
+    return;
+}
+
+//called in hub_set_address_completion
+BOOLEAN
+dev_mgr_start_config_dev(PUSB_DEV pdev)
+{
+    PBYTE data_buf;
+    PUSB_CTRL_SETUP_PACKET psetup;
+    PURB purb;
+    PHCD hcd;
+    USE_BASIC_NON_PENDING_IRQL;
+
+    hcd_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_start_config_dev: pdev=%p\n", pdev));
+
+    if (pdev == NULL)
+        return FALSE;
+
+    lock_dev(pdev, TRUE);
+    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+    {
+        unlock_dev(pdev, TRUE);
+        return FALSE;
+    }
+
+    hcd = pdev->hcd;
+
+    //first, get device descriptor
+    purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
+    data_buf = usb_alloc_mem(NonPagedPool, 512);
+    if (purb == NULL)
+    {
+        unlock_dev(pdev, TRUE);
+        return FALSE;
+    }
+
+    RtlZeroMemory(purb, sizeof(URB));
+    RtlZeroMemory(data_buf, 512);
+
+    psetup = (PUSB_CTRL_SETUP_PACKET) purb->setup_packet;
+
+    purb->data_buffer = data_buf;       // user data
+    purb->data_length = 8;      // get partial desc
+
+    pdev->desc_buf = data_buf;
+    pdev->desc_buf_size = 512;
+
+    purb->pdev = pdev;
+    purb->pendp = &pdev->default_endp;  //pipe for current transfer
+
+    purb->completion = dev_mgr_get_desc_completion;
+    purb->reference = 0;
+
+    InitializeListHead(&purb->trasac_list);
+
+    psetup->bmRequestType = 0x80;
+    psetup->bRequest = USB_REQ_GET_DESCRIPTOR;
+    psetup->wValue = (USB_DT_DEVICE << 8) | 0;
+    psetup->wIndex = 0;
+    psetup->wLength = 8;        //sizeof( USB_DEVICE_DESC );
+    unlock_dev(pdev, TRUE);
+
+    if (hcd->hcd_submit_urb(hcd, pdev, purb->pendp, purb) != STATUS_PENDING)
+    {
+        usb_free_mem(purb);
+        usb_free_mem(data_buf);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+VOID
+dev_mgr_get_desc_completion(PURB purb, PVOID context)
+{
+    PUSB_DEV pdev;
+    PUSB_CONFIGURATION_DESC pconfig_desc;
+    PUSB_ENDPOINT pendp;
+    PUSB_DEV_MANAGER dev_mgr;
+    NTSTATUS status;
+    PUSB_CTRL_SETUP_PACKET psetup;
+    PHCD hcd;
+
+    USE_BASIC_NON_PENDING_IRQL;;
+
+    if (purb == NULL)
+        return;
+
+    hcd_dbg_print(DBGLVL_MAXIMUM,
+        ("dev_mgr_get_desc_completion: purb->reference=%d\n", purb->reference));
+
+    pdev = purb->pdev;
+    pendp = purb->pendp;
+
+    if (pdev == NULL || pendp == NULL)
+    {
+        usb_free_mem(purb);
+        purb = NULL;
+        return;
+    }
+
+    lock_dev(pdev, TRUE);
+    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+    {
+        unlock_dev(pdev, TRUE);
+        goto LBL_OUT;
+    }
+
+    pendp = &pdev->default_endp;
+    dev_mgr = dev_mgr_from_dev(pdev);
+    hcd = pdev->hcd;
+    psetup = (PUSB_CTRL_SETUP_PACKET) purb->setup_packet;
+
+    if (usb_error(purb->status))
+    {
+        unlock_dev(pdev, TRUE);
+        hcd_dbg_print(DBGLVL_MAXIMUM,
+                      ("dev_mgr_get_desc_completion: can not get dev desc ref=0x%x, status=0x%x\n",
+                       purb->reference, purb->status));
+        goto LBL_OUT;
+    }
+
+    switch (purb->reference)
+    {
+        case 0:
+        {
+            //only partial dev_desc
+            //enable the dev specific default endp maxpacketsize
+            pdev->pusb_dev_desc = (PUSB_DEVICE_DESC) purb->data_buffer;
+
+            psetup = (PUSB_CTRL_SETUP_PACKET) purb->setup_packet;
+            psetup->wLength = sizeof(USB_DEVICE_DESC);
+
+            //get the complete dev_desc
+            purb->reference = 1;
+            purb->status = 0;
+            purb->data_length = sizeof(USB_DEVICE_DESC);
+
+            unlock_dev(pdev, TRUE);
+
+            status = hcd->hcd_submit_urb(hcd, pdev, pendp, purb);
+            if (status != STATUS_PENDING)
+            {
+                goto LBL_OUT;
+            }
+            return;
+        }
+        case 1:
+        {
+            //let's begin to get config descriptors.
+            if (pdev->pusb_dev_desc->bNumConfigurations == 0)
+            {
+                unlock_dev(pdev, TRUE);
+                goto LBL_OUT;
+            }
+
+            purb->data_buffer += sizeof(USB_DEVICE_DESC);
+            purb->data_length = 8;
+            purb->reference++;
+            purb->context = (PVOID) sizeof(USB_DEVICE_DESC);
+            purb->status = 0;
+
+            psetup->wValue = (USB_DT_CONFIG << 8) | 0;
+            psetup->wLength = 8;
+            unlock_dev(pdev, TRUE);
+
+            status = hcd->hcd_submit_urb(hcd, pdev, pendp, purb);
+
+            if (status != STATUS_PENDING)
+            {
+                goto LBL_OUT;
+            }
+            return;
+        }
+        default:
+        {
+            LONG config_idx;
+            config_idx = (purb->reference >> 1) - 1;
+            if ((purb->reference & 1) == 0)
+            {
+                //partial config desc is obtained.
+                pconfig_desc = (PUSB_CONFIGURATION_DESC) purb->data_buffer;
+                if (pconfig_desc->wTotalLength >= 1024)
+                {
+                    //treat as an error
+                    unlock_dev(pdev, TRUE);
+                    goto LBL_OUT;
+
+                }
+
+                if (pconfig_desc->wTotalLength > (USHORT) (pdev->desc_buf_size - (LONG) purb->context))
+                {
+                    //rewind the 8-byte hdr
+                    *((PULONG) & context) -= 8;
+                    realloc_buf(pdev, purb);
+                }
+                purb->data_length = pconfig_desc->wTotalLength;
+                psetup->wLength = pconfig_desc->wTotalLength;
+                purb->reference++;
+                unlock_dev(pdev, TRUE);
+                status = hcd->hcd_submit_urb(hcd, pdev, pendp, purb);
+                if (status != STATUS_PENDING)
+                    goto LBL_OUT;
+
+            }
+            else
+            {
+                //complete desc is returned.
+                if (config_idx + 1 < pdev->pusb_dev_desc->bNumConfigurations)
+                {
+                    //still have configurations left
+                    *((PULONG) & context) += psetup->wLength;
+                    purb->data_buffer = &pdev->desc_buf[(LONG) context];
+                    purb->data_length = 8;
+                    psetup->wLength = 8;
+                    psetup->wValue = (((USB_DT_CONFIG) << 8) | (config_idx + 1));
+                    purb->reference++;
+                    purb->context = context;
+
+                    if (((LONG) context) + 8 > pdev->desc_buf_size)
+                        realloc_buf(pdev, purb);
+
+                    purb->status = 0;
+                    unlock_dev(pdev, TRUE);
+                    status = hcd->hcd_submit_urb(hcd, pdev, pendp, purb);
+                    if (status != STATUS_PENDING)
+                        goto LBL_OUT;
+                }
+                else
+                {
+                    //config descriptors have all been fetched
+                    unlock_dev(pdev, TRUE);
+                    usb_free_mem(purb);
+                    purb = NULL;
+
+                    // load driver for the device
+                    dev_mgr_start_select_driver(pdev);
+                }
+            }
+            return;
+        }
+    }
+
+LBL_OUT:
+    usb_free_mem(purb);
+    purb = NULL;
+
+    lock_dev(pdev, TRUE);
+    if (dev_state(pdev) != USB_DEV_STATE_ZOMB)
+    {
+        if (pdev->desc_buf)
+        {
+            usb_free_mem(pdev->desc_buf);
+            pdev->desc_buf_size = 0;
+            pdev->desc_buf = NULL;
+            pdev->pusb_dev_desc = NULL;
+            pdev->usb_config = NULL;
+        }
+    }
+    unlock_dev(pdev, TRUE);
+
+    return;
+}
+
+BOOLEAN
+dev_mgr_start_select_driver(PUSB_DEV pdev)
+{
+    PUSB_DEV_MANAGER dev_mgr;
+    PUSB_EVENT pevent;
+    BOOLEAN bret;
+
+    USE_BASIC_NON_PENDING_IRQL;;
+
+    if (pdev == NULL)
+        return FALSE;
+
+    dev_mgr = dev_mgr_from_dev(pdev);
+    KeAcquireSpinLockAtDpcLevel(&dev_mgr->event_list_lock);
+    lock_dev(pdev, TRUE);
+
+    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+    {
+        bret = FALSE;
+        goto LBL_OUT;
+    }
+
+    pevent = alloc_event(&dev_mgr->event_pool, 1);
+    if (pevent == NULL)
+    {
+        bret = FALSE;
+        goto LBL_OUT;
+    }
+    pevent->flags = USB_EVENT_FLAG_ACTIVE;
+    pevent->event = USB_EVENT_DEFAULT;
+    pevent->pdev = pdev;
+    pevent->context = 0;
+    pevent->param = 0;
+    pevent->pnext = 0;          //vertical queue for serialized operation
+    pevent->process_event = dev_mgr_event_select_driver;
+    pevent->process_queue = event_list_default_process_queue;
+
+    InsertTailList(&dev_mgr->event_list, &pevent->event_link);
+    KeSetEvent(&dev_mgr->wake_up_event, 0, FALSE);
+    bret = TRUE;
+
+LBL_OUT:
+    unlock_dev(pdev, TRUE);
+    KeReleaseSpinLockFromDpcLevel(&dev_mgr->event_list_lock);
+    return bret;
+}
+
+BOOLEAN
+dev_mgr_connect_to_dev(PVOID Parameter)
+{
+    PUSB_DEV pdev;
+    DEV_HANDLE dev_handle;
+    NTSTATUS status;
+    PUSB_DRIVER pdriver;
+    PCONNECT_DATA pcd = (PCONNECT_DATA) Parameter;
+    PUSB_DEV_MANAGER dev_mgr;
+    CONNECT_DATA param;
+
+    if (pcd == NULL)
+        return FALSE;
+    dev_handle = pcd->dev_handle;
+    pdriver = pcd->pdriver;
+    dev_mgr = pcd->dev_mgr;
+
+    param.dev_mgr = dev_mgr;
+    param.pdriver = pdriver;
+    param.dev_handle = 0;       //not used
+
+    status = usb_query_and_lock_dev(dev_mgr, dev_handle, &pdev);
+    if (status != STATUS_SUCCESS)
+        return FALSE;
+
+    usb_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_connect_to_dev(): about to call driver's dev_connect\n"));
+    status = pdriver->disp_tbl.dev_connect(&param, dev_handle);
+    usb_unlock_dev(pdev);
+    return status;
+}
+
+VOID
+dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG param)
+{
+    PUSB_DEV_MANAGER dev_mgr;
+    PUSB_DRIVER pdriver, pcand;
+    LONG credit, match, i;
+    DEV_HANDLE handle = 0;
+    CONNECT_DATA cd;
+
+    USE_BASIC_NON_PENDING_IRQL;
+
+    UNREFERENCED_PARAMETER(param);
+    UNREFERENCED_PARAMETER(context);
+
+    usb_dbg_print(DBGLVL_MAXIMUM, ("dev_mgr_event_select_driver(): pdev=%p event=0x%x\n", pdev, event));
+
+    if (pdev == NULL)
+        return;
+
+    lock_dev(pdev, FALSE);
+    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+    {
+        unlock_dev(pdev, FALSE);
+        return;
+    }
+    dev_mgr = dev_mgr_from_dev(pdev);
+
+    pcand = NULL;
+    match = 0;
+    for(i = HUB_DRIVER_IDX; i < DEVMGR_MAX_DRIVERS; i++)
+    {
+        //bypass root-hub driver with idx zero
+        pdriver = (PUSB_DRIVER) & dev_mgr->driver_list[i];
+
+        if (pdriver->driver_desc.flags & USB_DRIVER_FLAG_DEV_CAPABLE)
+            credit = dev_mgr_score_driver_for_dev(dev_mgr, pdriver, pdev->pusb_dev_desc);
+        else
+        {
+            continue;
+        }
+        if (credit > match)
+            pcand = pdriver, match = credit;
+
+    }
+
+    if (match)
+    {
+        // we set class driver here
+        // pdev->dev_driver = pcand;
+        handle = usb_make_handle(pdev->dev_id, 0, 0);
+    }
+    unlock_dev(pdev, FALSE);
+
+    if (match)
+    {
+
+        cd.dev_handle = handle;
+        cd.pdriver = pcand;
+        cd.dev_mgr = dev_mgr;
+
+        if (dev_mgr_connect_to_dev(&cd))
+            return;
+
+        // ExInitializeWorkItem( pwork_item, dev_mgr_connect_to_dev, ( PVOID )pcd );
+        // ExQueueWorkItem( pwork_item, DelayedWorkQueue );
+    }
+    cd.dev_handle = handle;
+    cd.pdriver = &dev_mgr->driver_list[GEN_DRIVER_IDX];
+    cd.dev_mgr = dev_mgr;
+    dev_mgr_connect_to_dev(&cd);
+    return;
+}
+
+BOOLEAN
+dev_mgr_build_usb_endp(PUSB_INTERFACE pif, PUSB_ENDPOINT pendp, PUSB_ENDPOINT_DESC pendp_desc)
+{
+    if (pendp == NULL || pif == NULL || pendp_desc == NULL)
+        return FALSE;
+
+    pendp->flags = 0;
+    InitializeListHead(&pendp->urb_list);       //pending urb queue
+    pendp->pusb_if = pif;
+    pendp->pusb_endp_desc = pendp_desc;
+    return TRUE;
+}
+
+BOOLEAN
+dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE_DESC pif_desc, BOOLEAN alt_if)
+{
+    LONG i;
+    PUSB_ENDPOINT_DESC pendp_desc;
+
+    if (pcfg == NULL || pif == NULL || pif_desc == NULL)
+        return FALSE;
+
+    if (alt_if == FALSE)
+    {
+        pif->endp_count = pif_desc->bNumEndpoints > MAX_ENDPS_PER_IF
+            ? MAX_ENDPS_PER_IF : pif_desc->bNumEndpoints;
+
+        pif->pif_drv = NULL;
+        pif->pusb_config = pcfg;
+        pif->pusb_if_desc = pif_desc;
+        pif->if_ext_size = 0;
+        pif->if_ext = NULL;
+
+        InitializeListHead(&pif->altif_list);
+        pif->altif_count = 0;
+
+        pendp_desc = (PUSB_ENDPOINT_DESC) (&((PBYTE) pif_desc)[sizeof(USB_INTERFACE_DESC)]);
+
+        for(i = 0; i < pif->endp_count; i++, pendp_desc++)
+        {
+            dev_mgr_build_usb_endp(pif, &pif->endp[i], pendp_desc);
+        }
+    }
+    else
+    {
+        PUSB_INTERFACE paltif;
+        PLIST_ENTRY pthis, pnext;
+
+        pif->altif_count++;
+        paltif = usb_alloc_mem(NonPagedPool, sizeof(USB_INTERFACE));
+        RtlZeroMemory(paltif, sizeof(USB_INTERFACE));
+        InsertTailList(&pif->altif_list, &paltif->altif_list);
+        paltif->pif_drv = NULL;
+        paltif->pusb_config = pcfg;
+        paltif->pusb_if_desc = pif_desc;
+        paltif->if_ext_size = 0;
+        paltif->if_ext = NULL;
+        paltif->endp_count = pif_desc->bNumEndpoints > MAX_ENDPS_PER_IF
+            ? MAX_ENDPS_PER_IF : pif_desc->bNumEndpoints;
+
+        ListFirst(&pif->altif_list, pthis);
+
+        while (pthis)
+        {
+            //synchronize the altif_count;
+            PUSB_INTERFACE pthis_if;
+            pthis_if = (PUSB_INTERFACE) (((PBYTE) pthis) - offsetof(USB_INTERFACE, altif_list));
+            pthis_if->altif_count = pif->altif_count;
+            ListNext(&pif->altif_list, pthis, pnext);
+        }
+
+    }
+    return TRUE;
+}
+
+NTSTATUS
+dev_mgr_build_usb_config(PUSB_DEV pdev, PBYTE pbuf, ULONG config_val, LONG config_count)
+{
+    PUSB_CONFIGURATION pcfg;
+    PUSB_INTERFACE_DESC pif_desc;
+    PUSB_INTERFACE pif;
+    int i;
+    LONG if_count;
+
+    if (pdev == NULL || pbuf == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+
+    pdev->usb_config = usb_alloc_mem(NonPagedPool, sizeof(USB_CONFIGURATION));
+    pcfg = pdev->usb_config;
+
+    if (pdev->usb_config == NULL)
+        return STATUS_NO_MEMORY;
+
+    RtlZeroMemory(pcfg, sizeof(USB_CONFIGURATION));
+    pcfg->pusb_config_desc = usb_find_config_desc_by_val(pbuf, config_val, config_count);
+
+    if (pcfg->pusb_config_desc == NULL)
+    {
+        usb_free_mem(pcfg);
+        pdev->usb_config = NULL;
+        return STATUS_UNSUCCESSFUL;
+    }
+    pcfg->if_count = pcfg->pusb_config_desc->bNumInterfaces;
+    pcfg->pusb_dev = pdev;
+    pif_desc = (PUSB_INTERFACE_DESC) & ((PBYTE) pcfg->pusb_config_desc)[sizeof(USB_CONFIGURATION_DESC)];
+    if_count = pcfg->if_count;
+
+    for(i = 0; i < if_count; i++, pif_desc++)
+    {
+        if (pif_desc->bAlternateSetting == 0)
+        {
+            dev_mgr_build_usb_if(pcfg, &pcfg->interf[i], pif_desc, FALSE);
+        }
+        else
+        {
+            i--;
+            pif = &pcfg->interf[i];
+            dev_mgr_build_usb_if(pcfg, pif, pif_desc, TRUE);
+        }
+    }
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+dev_mgr_destroy_usb_config(PUSB_CONFIGURATION pcfg)
+{
+    long i;
+    PLIST_ENTRY pthis;
+    PUSB_INTERFACE pif;
+
+    if (pcfg == NULL)
+        return FALSE;
+
+    for(i = 0; i < pcfg->if_count; i++)
+    {
+        pif = &pcfg->interf[i];
+
+        if (pif->altif_count)
+        {
+            ListFirst(&pif->altif_list, pthis);
+            while (pthis)
+            {
+                PUSB_INTERFACE pthis_if;
+                pthis_if = (PUSB_INTERFACE) (((PBYTE) pthis) - offsetof(USB_INTERFACE, altif_list));
+                RemoveEntryList(pthis);
+                usb_free_mem(pthis_if);
+                if (IsListEmpty(&pif->altif_list) == TRUE)
+                    break;
+
+                ListFirst(&pif->altif_list, pthis);
+            }
+        }
+    }
+    usb_free_mem(pcfg);
+    return TRUE;
+}
+
+#define is_dev_product_match( pdriVER, pdev_DESC ) \
+( ( pdriVER )->driver_desc.vendor_id == ( pdev_DESC )->idVendor \
+  && ( pdriVER )->driver_desc.product_id == ( pdev_DESC )->idProduct )
+
+LONG
+dev_mgr_score_driver_for_dev(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver, PUSB_DEVICE_DESC pdev_desc)
+{
+    LONG credit = 0;
+
+    UNREFERENCED_PARAMETER(dev_mgr);
+
+    //assume supports all the sub_class are supported if sub_class is zero
+    if (pdriver->driver_desc.dev_class == pdev_desc->bDeviceClass)
+    {
+        if (pdriver->driver_desc.dev_sub_class == 0 && pdriver->driver_desc.dev_protocol == 0)
+            credit = 3;
+        else if (pdriver->driver_desc.dev_sub_class == pdev_desc->bDeviceSubClass)
+        {
+            if (pdriver->driver_desc.dev_protocol == 0)
+                credit = 6;
+            else if (pdriver->driver_desc.dev_protocol == pdev_desc->bDeviceProtocol)
+                credit = 9;
+        }
+    }
+
+    if (is_dev_product_match(pdriver, pdev_desc))
+        credit += 20;
+
+    return credit;
+}
+
+LONG
+dev_mgr_score_driver_for_if(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver, PUSB_INTERFACE_DESC pif_desc)
+{
+    LONG credit;
+
+    if (pdriver == NULL
+        || !(pdriver->driver_desc.flags & USB_DRIVER_FLAG_IF_CAPABLE) || pif_desc == NULL || dev_mgr == NULL)
+        return 0;
+
+    if (is_header_match((PBYTE) pif_desc, USB_DT_INTERFACE) == FALSE)
+    {
+        return 0;
+    }
+
+    credit = 0;
+    if ((pdriver->driver_desc.if_class == pif_desc->bInterfaceClass))
+    {
+        if (pdriver->driver_desc.if_sub_class == 0 && pdriver->driver_desc.if_protocol == 0)
+            credit = 2;
+        if (pdriver->driver_desc.if_sub_class == pif_desc->bInterfaceSubClass)
+        {
+            if (pdriver->driver_desc.if_protocol == 0)
+                credit = 4;
+            if (pdriver->driver_desc.if_protocol == pif_desc->bInterfaceProtocol)
+                credit = 6;
+        }
+    }
+    else
+        credit = 1;
+
+    return credit;
+}
+
+#define is_equal_driver( pd1, pd2, ret ) \
+{\
+    int i;\
+    ret = TRUE;\
+    PUSB_DRIVER pdr1, pdr2;\
+    pdr1 = ( PUSB_DRIVER )( pd1 );\
+    pdr2 = ( PUSB_DRIVER ) ( pd2 );\
+    for( i = 0; i < 16; i++ )\
+    {\
+        if( pdr1->driver_name[ i ] != pdr2->driver_name[ i ] )\
+        {\
+            ret = FALSE;\
+            break;\
+        }\
+    }\
+}
+
+//return value is the hcd id
+UCHAR
+dev_mgr_register_hcd(PUSB_DEV_MANAGER dev_mgr, PHCD hcd)
+{
+    if (dev_mgr == NULL || hcd == NULL)
+        return 0xff;
+
+    if (dev_mgr->hcd_count >= MAX_HCDS)
+        return 0xff;
+
+    dev_mgr->hcd_array[dev_mgr->hcd_count++] = hcd;
+    return dev_mgr->hcd_count - 1;
+}
+
+BOOLEAN
+dev_mgr_register_irp(PUSB_DEV_MANAGER dev_mgr, PIRP pirp, PURB purb)
+{
+    if (dev_mgr == NULL)
+        return FALSE;
+
+    if (add_irp_to_list(&dev_mgr->irp_list, pirp, purb))
+    {
+        return TRUE;
+    }
+    TRAP();
+    return FALSE;
+}
+
+//caller must guarantee that when this func is called,
+//the urb associated must exist.
+PURB
+dev_mgr_remove_irp(PUSB_DEV_MANAGER dev_mgr, PIRP pirp)
+{
+    PURB purb;
+    if (dev_mgr == NULL)
+        return NULL;
+
+    purb = remove_irp_from_list(&dev_mgr->irp_list, pirp, NULL);
+    return purb;
+}
+
+VOID
+dev_mgr_cancel_irp(PDEVICE_OBJECT dev_obj, PIRP pirp)
+{
+    PUSB_DEV_MANAGER dev_mgr;
+    PDEVEXT_HEADER pdev_ext_hdr;
+
+    pdev_ext_hdr = (PDEVEXT_HEADER) dev_obj->DeviceExtension;
+    dev_mgr = pdev_ext_hdr->dev_mgr;
+
+    if (dev_obj->CurrentIrp == pirp)
+    {
+        IoReleaseCancelSpinLock(pirp->CancelIrql);
+        // we did not IoStartNextPacket, leave it for the urb completion
+    }
+    else
+    {
+        KeRemoveEntryDeviceQueue(&dev_obj->DeviceQueue, &pirp->Tail.Overlay.DeviceQueueEntry);
+        IoReleaseCancelSpinLock(pirp->CancelIrql);
+
+        pirp->IoStatus.Information = 0;
+        pirp->IoStatus.Status = STATUS_CANCELLED;
+        IoCompleteRequest(pirp, IO_NO_INCREMENT);
+        // the device queue is moved on, no need to call IoStartNextPacket
+        return;
+    }
+
+    //
+    // remove the irp and call the dev_mgr_cancel_irp
+    // the completion will be done in urb completion
+    //
+    remove_irp_from_list(&dev_mgr->irp_list, pirp, dev_mgr);
+    return;
+
+}
+
+// release the hcd
+VOID
+dev_mgr_release_hcd(PUSB_DEV_MANAGER dev_mgr)
+{
+    LONG i;
+    PHCD hcd;
+    for(i = 0; i < dev_mgr->hcd_count; i++)
+    {
+        hcd = dev_mgr->hcd_array[i];
+        hcd->hcd_release(hcd);
+        dev_mgr->hcd_array[i] = 0;
+    }
+    dev_mgr->hcd_count = 0;
+    return;
+}
+
+VOID
+dev_mgr_start_hcd(PUSB_DEV_MANAGER dev_mgr)
+{
+    LONG i;
+    PHCD hcd;
+    for(i = 0; i < dev_mgr->hcd_count; i++)
+    {
+        hcd = dev_mgr->hcd_array[i];
+        hcd->hcd_start(hcd);
+    }
     return;
 }
