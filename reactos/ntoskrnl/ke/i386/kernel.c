@@ -17,11 +17,11 @@
 
 /* GLOBALS *******************************************************************/
 
+PKPRCB KiProcessorBlock[MAXIMUM_PROCESSORS];
 KNODE KiNode0;
 PKNODE KeNodeBlock[1];
 UCHAR KeNumberNodes = 1;
 UCHAR KeProcessNodeSeed;
-PKPRCB KiProcessorBlock[MAXIMUM_PROCESSORS];
 ETHREAD KiInitialThread;
 EPROCESS KiInitialProcess;
 
@@ -195,10 +195,10 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     }
 
     /* Initialize DPC Fields */
-    InitializeListHead(&Prcb->DpcData[0].DpcListHead);
-    KeInitializeSpinLock(&Prcb->DpcData[0].DpcLock);
-    Prcb->DpcData[0].DpcQueueDepth = 0;
-    Prcb->DpcData[0].DpcCount = 0;
+    InitializeListHead(&Prcb->DpcData[DPC_NORMAL].DpcListHead);
+    KeInitializeSpinLock(&Prcb->DpcData[DPC_NORMAL].DpcLock);
+    Prcb->DpcData[DPC_NORMAL].DpcQueueDepth = 0;
+    Prcb->DpcData[DPC_NORMAL].DpcCount = 0;
     Prcb->DpcRoutineActive = FALSE;
     Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
     Prcb->MinimumDpcRate = KiMinimumDpcRate;
@@ -245,11 +245,14 @@ KiInitSpinLocks(IN PKPRCB Prcb,
     Prcb->LockQueue[LockQueueAfdWorkQueueLock].Lock = &AfdWorkQueueSpinLock;
     Prcb->LockQueue[LockQueueUnusedSpare16].Next = NULL;
     Prcb->LockQueue[LockQueueUnusedSpare16].Lock = NULL;
-    for (i = LockQueueTimerTableLock; i < LockQueueMaximumLock; i++)
+
+    /* Loop timer locks */
+    for (i = 0; i < LOCK_QUEUE_TIMER_TABLE_LOCKS; i++)
     {
-        KeInitializeSpinLock(&KiTimerTableLock[i - 16]);
+        /* Initialize the lock and setup the Queued Spinlock */
+        KeInitializeSpinLock(&KiTimerTableLock[i]);
         Prcb->LockQueue[i].Next = NULL;
-        Prcb->LockQueue[i].Lock = &KiTimerTableLock[i - 16];
+        Prcb->LockQueue[i].Lock = &KiTimerTableLock[i];
     }
 
     /* Check if this is the boot CPU */
@@ -297,7 +300,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 
     /* Set pointers to ourselves */
     Pcr->Self = (PKPCR)Pcr;
-    Pcr->Prcb = &(Pcr->PrcbData);
+    Pcr->Prcb = &Pcr->PrcbData;
 
     /* Set the PCR Version */
     Pcr->MajorVersion = PCR_MAJOR_VERSION;

@@ -1079,16 +1079,25 @@ typedef struct _KLOCK_QUEUE_HANDLE {
   KIRQL  OldIrql;
 } KLOCK_QUEUE_HANDLE, *PKLOCK_QUEUE_HANDLE;
 
-typedef struct _KDPC {
-  CSHORT  Type;
-  UCHAR  Number;
-  UCHAR  Importance;
-  LIST_ENTRY  DpcListEntry;
-  PKDEFERRED_ROUTINE  DeferredRoutine;
-  PVOID  DeferredContext;
-  PVOID  SystemArgument1;
-  PVOID  SystemArgument2;
-  PVOID  DpcData;
+#define DPC_NORMAL 0
+#define DPC_THREADED 1
+
+#define ASSERT_DPC(Object)                                                   \
+    ASSERT(((Object)->Type == 0) ||                                          \
+           ((Object)->Type == DpcObject) ||                                  \
+           ((Object)->Type == ThreadedDpcObject))
+
+typedef struct _KDPC
+{
+    UCHAR Type;
+    UCHAR Importance;
+    USHORT Number;
+    LIST_ENTRY DpcListEntry;
+    PKDEFERRED_ROUTINE DeferredRoutine;
+    PVOID DeferredContext;
+    PVOID SystemArgument1;
+    PVOID SystemArgument2;
+    volatile PVOID  DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
 typedef PVOID PKIPI_CONTEXT;

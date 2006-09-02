@@ -487,7 +487,7 @@ typedef struct _KDPC_DATA
 {
     LIST_ENTRY DpcListHead;
     ULONG DpcLock;
-    ULONG DpcQueueDepth;
+    volatile ULONG DpcQueueDepth;
     ULONG DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
 
@@ -676,13 +676,13 @@ typedef struct _KTHREAD
             UCHAR ApcQueueable;
         };
     };
-    UCHAR NextProcessor;
-    UCHAR DeferredProcessor;
+    volatile UCHAR NextProcessor;
+    volatile UCHAR DeferredProcessor;
     UCHAR AdjustReason;
     UCHAR AdjustIncrement;
     KSPIN_LOCK ApcQueueLock;
     ULONG ContextSwitches;
-    UCHAR State;
+    volatile UCHAR State;
     UCHAR NpxState;
     UCHAR WaitIrql;
     UCHAR WaitMode;
@@ -697,7 +697,7 @@ typedef struct _KTHREAD
     UCHAR WaitReason;
     UCHAR Priority;
     UCHAR EnableStackSwap;
-    UCHAR SwapBusy;
+    volatile UCHAR SwapBusy;
     UCHAR Alerted[2];
     union
     {
@@ -903,7 +903,7 @@ typedef struct _KPROCESS
     UCHAR Iopl;
     UCHAR Unused;
 #endif
-    ULONG ActiveProcessors;
+    volatile ULONG ActiveProcessors;
     ULONG KernelTime;
     ULONG UserTime;
     LIST_ENTRY ReadyListHead;

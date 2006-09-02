@@ -113,6 +113,9 @@ extern KSPIN_LOCK KiProfileLock;
 extern LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
 extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
+extern PKPRCB KiProcessorBlock[];
+extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
+extern ULONG IdleProcessorMask;
 
 /* MACROS *************************************************************************/
 

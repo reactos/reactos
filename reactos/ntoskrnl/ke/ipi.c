@@ -33,7 +33,7 @@ KiIpiSendRequest(KAFFINITY TargetSet, ULONG IpiRequest)
       if (TargetSet & Current)
       {
          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-	 Ke386TestAndSetBit(IpiRequest, &Pcr->Prcb->IpiFrozen);
+	 Ke386TestAndSetBit(IpiRequest, (PLONG)&Pcr->Prcb->IpiFrozen);
 	 HalRequestIpi(i);
       }
    }
@@ -59,18 +59,18 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
    Prcb = KeGetCurrentPrcb();
 
-   if (Ke386TestAndClearBit(IPI_APC, &Prcb->IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_APC, (PLONG)&Prcb->IpiFrozen))
    {
       HalRequestSoftwareInterrupt(APC_LEVEL);
    }
 
-   if (Ke386TestAndClearBit(IPI_DPC, &Prcb->IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_DPC, (PLONG)&Prcb->IpiFrozen))
    {
       Prcb->DpcInterruptRequested = TRUE;
       HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
    }
 
-   if (Ke386TestAndClearBit(IPI_SYNCH_REQUEST, &Prcb->IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_SYNCH_REQUEST, (PLONG)&Prcb->IpiFrozen))
    {
       (void)InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
@@ -91,7 +91,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
          }
       }
       ((VOID (STDCALL*)(PVOID))(Prcb->SignalDone->WorkerRoutine))(Prcb->SignalDone->CurrentPacket[0]);
-      Ke386TestAndClearBit(KeGetCurrentProcessorNumber(), &Prcb->SignalDone->TargetSet);
+      Ke386TestAndClearBit(KeGetCurrentProcessorNumber(), (PLONG)&Prcb->SignalDone->TargetSet);
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
       {
 #ifdef DBG
@@ -140,7 +140,7 @@ KiIpiSendPacket(KAFFINITY TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID 
        {
 	  Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
 	  while(0 != InterlockedCompareExchangeUL(&Prcb->SignalDone, (LONG)CurrentPrcb, 0));
-	  Ke386TestAndSetBit(IPI_SYNCH_REQUEST, &Prcb->IpiFrozen);
+	  Ke386TestAndSetBit(IPI_SYNCH_REQUEST, (PLONG)&Prcb->IpiFrozen);
 	  if (Processor != CurrentPrcb->SetMember)
 	  {
 	     HalRequestIpi(i);
