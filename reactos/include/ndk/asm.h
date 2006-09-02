@@ -148,6 +148,7 @@ Author:
 #define KPCR_SET_MEMBER                         0x48
 #define KPCR_NUMBER                             0x51
 #define KPCR_CURRENT_THREAD                     0x124
+#define KPCR_PRCB_NEXT_THREAD                   0x128
 #define KPCR_PRCB_IDLE_THREAD                   0x12C
 #define KPCR_PROCESSOR_NUMBER                   0x130
 #define KPCR_PRCB_SET_MEMBER                    0x134
@@ -165,12 +166,15 @@ Author:
 #define KPCR_SYSTEM_CALLS                       0x6B8
 #define KPCR_PRCB_DPC_QUEUE_DEPTH               0xA4C
 #define KPCR_PRCB_DPC_COUNT                     0xA50
+#define KPCR_PRCB_DPC_STACK                     0xA68
 #define KPCR_PRCB_MAXIMUM_DPC_QUEUE_DEPTH       0xA6C
 #define KPCR_PRCB_DPC_REQUEST_RATE              0xA70
 #define KPCR_PRCB_DPC_INTERRUPT_REQUESTED       0xA78
 #define KPCR_PRCB_DPC_ROUTINE_ACTIVE            0xA7A
 #define KPCR_PRCB_DPC_LAST_COUNT                0xA80
+#define KPCR_PRCB_TIMER_REQUEST                 0xA88
 #define KPCR_PRCB_QUANTUM_END                   0xAA1
+#define KPCR_PRCB_DEFERRED_READY_LIST_HEAD      0xC10
 
 //
 // KINTERRUPT Offsets

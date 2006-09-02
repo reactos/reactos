@@ -56,6 +56,7 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 .globl _NtRaiseException@12
 .globl _NtContinue@8
 .globl _KiCoprocessorError@0
+.globl _KiDispatchInterrupt@0
 
 /* Interrupt template entrypoints                                           */
 .globl _KiInterruptTemplate
@@ -1557,6 +1558,65 @@ _KiUnexpectedInterrupt:
     call _KeBugCheck@4
 
 /* INTERRUPT HANDLERS ********************************************************/
+
+.func KiDispatchInterrupt@0
+_KiDispatchInterrupt@0:
+
+    /* Get the PCR  and disable interrupts */
+    mov ebx, [fs:KPCR_SELF]
+    cli
+
+    /* Check if we have to deliver DPCs, timers, or deferred threads */
+    mov eax, [ebx+KPCR_PRCB_DPC_QUEUE_DEPTH]
+    or eax, [ebx+KPCR_PRCB_TIMER_REQUEST]
+    or eax, [ebx+KPCR_PRCB_DEFERRED_READY_LIST_HEAD]
+    jz CheckQuantum
+
+    /* Save stack pointer and exception list, then clear it */
+    push ebp
+    push dword ptr [ebx+KPCR_EXCEPTION_LIST]
+    mov dword ptr [ebx+KPCR_EXCEPTION_LIST], -1
+
+    /* Save the stack and switch to the DPC Stack */
+    mov edx, esp
+    //mov esp, [ebx+KPCR_PRCB_DPC_STACK]
+    push edx
+
+    /* Deliver DPCs */
+    mov ecx, [ebx+KPCR_PRCB]
+    call @KiRetireDpcList@4
+
+    /* Restore stack and exception list */
+    pop esp
+    pop dword ptr [ebx]
+    pop ebp
+
+CheckQuantum:
+
+    /* Re-enable interrupts */
+    sti
+
+    /* Check if we have quantum end */
+    cmp byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
+    jnz QuantumEnd
+
+    /* Check if we have a thread to swap to */
+    cmp byte ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+    jz Return
+
+    /* FIXME: Schedule new thread */
+    int 3
+
+Return:
+    /* All done */
+    ret
+
+QuantumEnd:
+    /* Disable quantum end and process it */
+    mov byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
+    call _KiQuantumEnd@0
+    ret
+.endfunc
 
 .func KiInterruptTemplate
 _KiInterruptTemplate:

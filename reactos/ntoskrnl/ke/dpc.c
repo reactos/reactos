@@ -441,9 +441,22 @@ KeFlushQueuedDpcs(VOID)
 {
     PAGED_CODE();
 
-    /* Request an interrupt if needed */
-    DPRINT1("%s - FIXME!!!\n", __FUNCTION__);
-    if (KeGetCurrentPrcb()->DpcData[0].DpcQueueDepth) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+    /* Check if this is an UP machine */
+    if (KeActiveProcessors == 1)
+    {
+        /* Check if there are DPCs on either queues */
+        if ((KeGetCurrentPrcb()->DpcData[DPC_NORMAL].DpcQueueDepth) ||
+            (KeGetCurrentPrcb()->DpcData[DPC_THREADED].DpcQueueDepth))
+        {
+            /* Request an interrupt */
+            HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+        }
+    }
+    else
+    {
+        /* FIXME: SMP support required */
+        ASSERT(FALSE);
+    }
 }
 
 /*
@@ -481,55 +494,6 @@ KeSetTargetProcessorDpc(IN PKDPC Dpc,
     /* Set a target CPU */
     ASSERT_DPC(Dpc);
     Dpc->Number = Number + MAXIMUM_PROCESSORS;
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KiDispatchInterrupt(VOID)
-{
-    PKIPCR Pcr = (PKIPCR)KeGetPcr();
-    PVOID ExceptionList;
-
-    /* Disable interrupts */
-    Ke386DisableInterrupts();
-
-    /* Check if we have to deliver DPCs, timers, or deferred threads */
-    if ((Pcr->PrcbData.DpcData[DPC_NORMAL].DpcQueueDepth) ||
-        (Pcr->PrcbData.TimerRequest) ||
-        (Pcr->PrcbData.DeferredReadyListHead.Next))
-    {
-        /* Save the exception list and clear it */
-        ExceptionList = Pcr->NtTib.ExceptionList;
-        Pcr->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
-
-        /* FIXME: Switch to DPC Stack */
-
-        /* Deliver DPCs */
-        KiRetireDpcList(Pcr->Prcb);
-
-        /* FIXME: Restore stack */
-
-        /* Restore exception list */
-        Pcr->NtTib.ExceptionList = ExceptionList;
-    }
-
-    /* Re-enable interrupts */
-    Ke386EnableInterrupts();
-
-    /* Check if we have quantum end */
-    if (Pcr->PrcbData.QuantumEnd)
-    {
-        /* Process it */
-        Pcr->PrcbData.QuantumEnd = FALSE;
-        KiQuantumEnd();
-    }
-    else if (Pcr->PrcbData.NextThread)
-    {
-        /* FIXME: Schedule new thread */
-    }
 }
 
 /* EOF */
