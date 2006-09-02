@@ -24,7 +24,7 @@ ULONG NtMinorVersion = 0;
 ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
 ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG NtGlobalFlag = 0;
-CHAR  KeNumberProcessors;
+CHAR KeNumberProcessors;
 KAFFINITY KeActiveProcessors = 1;
 ROS_LOADER_PARAMETER_BLOCK KeLoaderBlock;
 ULONG KeDcacheFlushCount = 0;

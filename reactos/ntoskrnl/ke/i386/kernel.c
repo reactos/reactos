@@ -20,7 +20,9 @@ KNODE KiNode0;
 PKNODE KeNodeBlock[1];
 UCHAR KeNumberNodes = 1;
 UCHAR KeProcessNodeSeed;
-ULONG KiPcrInitDone = 0;
+PKPRCB KiProcessorBlock[MAXIMUM_PROCESSORS];
+ETHREAD KiInitialThread;
+EPROCESS KiInitialProcess;
 extern ULONG Ke386GlobalPagesEnabled;
 
 /* System-defined Spinlocks */
@@ -149,34 +151,88 @@ KiInitSpinLocks(IN PKPRCB Prcb,
 
 VOID
 NTAPI
+KiInitializePcr(IN ULONG ProcessorNumber,
+                IN PKIPCR Pcr,
+                IN PKIDTENTRY Idt,
+                IN PKGDTENTRY Gdt,
+                IN PKTSS Tss,
+                IN PKTHREAD IdleThread,
+                IN PVOID DpcStack)
+{
+    /* Setup the TIB */
+    Pcr->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
+    Pcr->NtTib.StackBase = 0;
+    Pcr->NtTib.StackLimit = 0;
+    Pcr->NtTib.Self = 0;
+
+    /* Set the Current Thread */
+    //Pcr->PrcbData.CurrentThread = IdleThread;
+
+    /* Set pointers to ourselves */
+    Pcr->Self = (PKPCR)Pcr;
+    Pcr->Prcb = &(Pcr->PrcbData);
+
+    /* Set the PCR Version */
+    Pcr->MajorVersion = PCR_MAJOR_VERSION;
+    Pcr->MinorVersion = PCR_MINOR_VERSION;
+
+    /* Set the PCRB Version */
+    Pcr->PrcbData.MajorVersion = 1;
+    Pcr->PrcbData.MinorVersion = 1;
+
+    /* Set the Build Type */
+    Pcr->PrcbData.BuildType = 0;
+
+    /* Set the Processor Number and current Processor Mask */
+    Pcr->PrcbData.Number = (UCHAR)ProcessorNumber;
+    Pcr->PrcbData.SetMember = 1 << ProcessorNumber;
+
+    /* Set the PRCB for this Processor */
+    KiProcessorBlock[ProcessorNumber] = Pcr->Prcb;
+
+    /* Start us out at PASSIVE_LEVEL */
+    Pcr->Irql = PASSIVE_LEVEL;
+
+    /* Set the GDI, IDT, TSS and DPC Stack */
+    Pcr->GDT = (PVOID)Gdt;
+    Pcr->IDT = Idt;
+    Pcr->TSS = Tss;
+    Pcr->PrcbData.DpcStack = DpcStack;
+}
+
+VOID
+NTAPI
 KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
                 IN ULONG DriverBase) // FIXME: hackhack
 {
-    PKIPCR KPCR;
+    /* Currently hacked for CPU 0 only */
+    ULONG Cpu = 0;
+    PKIPCR Pcr = (PKIPCR)KPCR_BASE;
     PKPRCB Prcb;
     BOOLEAN NpxPresent;
     ULONG FeatureBits;
     ULONG DriverSize;
-    extern USHORT KiBootGdt[];
+    extern KGDTENTRY KiBootGdt[];
+    extern PVOID trap_stack;
     extern KTSS KiBootTss;
 
     /* Initialize the PCR */
-    KPCR = (PKIPCR)KPCR_BASE;
-    Prcb = &KPCR->PrcbData;
-    memset(KPCR, 0, PAGE_SIZE);
-    KPCR->Self = (PKPCR)KPCR;
-    KPCR->Prcb = &KPCR->PrcbData;
-    KPCR->Irql = SYNCH_LEVEL;
-    KPCR->NtTib.Self = &KPCR->NtTib;
-    KPCR->NtTib.ExceptionList = (PVOID)-1;
-    KPCR->GDT = KiBootGdt;
-    KPCR->IDT = KiIdt;
-    KPCR->TSS = &KiBootTss;
-    KPCR->Number = 0;
-    KPCR->SetMember = 1 << 0;
-    KeActiveProcessors = 1 << 0;
-    KPCR->PrcbData.SetMember = 1 << 0;
-    KiPcrInitDone = 1;
+    RtlZeroMemory(Pcr, PAGE_SIZE);
+    KiInitializePcr(Cpu,
+                    Pcr,
+                    KiIdt,
+                    KiBootGdt,
+                    &KiBootTss,
+                    &KiInitialThread.Tcb,
+                    trap_stack);
+    Prcb = Pcr->Prcb;
+
+    /* Set us as the current process */
+    KiInitialThread.Tcb.ApcState.Process = &KiInitialProcess.Pcb;
+
+    /* Clear DR6/7 to cleanup bootloader debugging */
+    Pcr->PrcbData.ProcessorState.SpecialRegisters.KernelDr6 = 0;
+    Pcr->PrcbData.ProcessorState.SpecialRegisters.KernelDr7 = 0;
 
     /*
      * Low-level GDT, TSS and LDT Setup, most of which Freeldr should have done
@@ -194,6 +250,22 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
                            (PVOID)KERNEL_BASE,
                            (PVOID)DriverBase,
                            &DriverSize);
+
+    /* Setup CPU-related fields */
+    Pcr->Number = Cpu;
+    Pcr->SetMember = 1 << Cpu;
+    Pcr->SetMemberCopy = 1 << Cpu;
+    Prcb->SetMember = 1 << Cpu;
+
+    /* Initialize the Processor with HAL */
+    HalInitializeProcessor(Cpu, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+
+    /* Set active processors */
+    KeActiveProcessors |= Pcr->SetMember;
+    KeNumberProcessors++;
+
+    /* Raise to HIGH_LEVEL */
+    KfRaiseIrql(HIGH_LEVEL);
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -294,9 +366,6 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* Initialize HAL */
     HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
-
-    /* Initialize the Processor with HAL */
-    HalInitializeProcessor(KeNumberProcessors, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Initialize the Kernel Executive */
     ExpInitializeExecutive();

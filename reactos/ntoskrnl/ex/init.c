@@ -503,9 +503,6 @@ ExpInitializeExecutive(VOID)
     /* Check if the structures match the ASM offset constants */
     ExecuteRuntimeAsserts();
 
-    /* Set 1 CPU for now, we'll increment this later */
-    KeNumberProcessors = 1;
-
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
     LdrInit1();
 
