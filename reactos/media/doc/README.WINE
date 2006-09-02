@@ -37,6 +37,7 @@ reactos/tools/widl                # Synced to Wine-20060729
 
 The following libraries are shared with Wine.
 
+reactos/dll/win32/advpack         # Autosync
 reactos/dll/win32/avifil32        # Autosync
 reactos/dll/win32/cabinet         # Autosync
 reactos/dll/win32/comctl32        # Autosync

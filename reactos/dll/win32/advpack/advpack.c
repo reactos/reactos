@@ -1,6 +1,8 @@
 /*
- * ReactOS Advpack User Library
- * Copyright (C) 2004 ReactOS Team
+ * Advpack main
+ *
+ * Copyright 2004 Huw D M Davies
+ * Copyright 2005 Sami Aario
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,626 +16,964 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/*
- *  See reference ie6_lib/include/advpub.h from msdn. 
- *  Query "internet explorer headers libraries".
- *
- *  Used wine/debug.h, if someone wanted to, they could port advpack over
- *  to the Wine project.
- */
+#include <stdarg.h>
 
-
-#include <windows.h>
-#include "advpack.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winreg.h"
+#include "winver.h"
+#include "winternl.h"
+#include "winnls.h"
+#include "setupapi.h"
+#include "advpub.h"
+#include "wine/unicode.h"
 #include "wine/debug.h"
+#include "advpack_private.h"
 
-/*
- * @unimplemented
+WINE_DEFAULT_DEBUG_CHANNEL(advpack);
+
+typedef HRESULT (WINAPI *DLLREGISTER) (void);
+
+#define MAX_FIELD_LENGTH    512
+#define PREFIX_LEN          5
+
+/* registry path of the Installed Components key for per-user stubs */
+static const WCHAR setup_key[] = {
+    'S','O','F','T','W','A','R','E','\\',
+    'M','i','c','r','o','s','o','f','t','\\',
+    'A','c','t','i','v','e',' ','S','e','t','u','p','\\',
+    'I','n','s','t','a','l','l','e','d',' ',
+    'C','o','m','p','o','n','e','n','t','s',0
+};
+
+/* parses the destination directory parameters from pszSection
+ * the parameters are of the form: root,key,value,unknown,fallback
+ * we first read the reg value root\\key\\value and if that fails,
+ * use fallback as the destination directory
  */
-BOOL WINAPI
-DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+static void get_dest_dir(HINF hInf, PCWSTR pszSection, PWSTR pszBuffer, DWORD dwSize)
 {
-  return TRUE;
-}
+    INFCONTEXT context;
+    WCHAR key[MAX_PATH], value[MAX_PATH];
+    WCHAR prefix[PREFIX_LEN];
+    HKEY root, subkey;
+    DWORD size;
 
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-AddDelBackupEntry( LPCSTR FileList, 
-                   LPCSTR BackupDir,
-                   LPCSTR BaseName, 
-                   DWORD  Flags )
-{
-  FIXME("AddDelBackupEntry not implemented\n");
+    static const WCHAR hklm[] = {'H','K','L','M',0};
+    static const WCHAR hkcu[] = {'H','K','C','U',0};
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    /* load the destination parameters */
+    SetupFindFirstLineW(hInf, pszSection, NULL, &context);
+    SetupGetStringFieldW(&context, 1, prefix, PREFIX_LEN, &size);
+    SetupGetStringFieldW(&context, 2, key, MAX_PATH, &size);
+    SetupGetStringFieldW(&context, 3, value, MAX_PATH, &size);
 
-  return E_FAIL;
-}
+    if (!lstrcmpW(prefix, hklm))
+        root = HKEY_LOCAL_MACHINE;
+    else if (!lstrcmpW(prefix, hkcu))
+        root = HKEY_CURRENT_USER;
+    else
+        root = NULL;
 
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-AdvInstallFile( HWND hwnd,
-                LPCSTR SourceDir,
-                LPCSTR SourceFile,
-                LPCSTR DestDir,
-                LPCSTR DestFile,
-                DWORD Flags,
-                DWORD Reserved)
-{
-  FIXME("AdvInstallFile not implemented\n");
+    size = dwSize * sizeof(WCHAR);
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-CloseINFEngine( HINF hinf )
-{
-  FIXME("CloseINFEngine not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-DelNode( LPCSTR FileOrDirName,
-         DWORD Flags )
-{
-  FIXME("DelNode not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-DelNodeRunDLL32( HWND hwnd,
-                 HINSTANCE Inst,
-                 PSTR Params,
-                 INT Index )
-{
-  FIXME("DelNodeRunDLL32 not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-ExecuteCab( HWND hwnd,
-            PCABINFO Cab,
-            LPVOID Reserved )
-{
-  FIXME("ExecuteCab not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-ExtractFiles( LPCSTR CabName,
-              LPCSTR ExpandDir,
-              DWORD Flags,
-              LPCSTR FileList,
-              LPVOID LReserved,
-              DWORD Reserved )
-{
-  FIXME("ExtractFiles not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-FileSaveMarkNotExist( LPSTR FileList,
-                      LPSTR PathDir,
-                      LPSTR BackupBaseName )
-{
-  FIXME("FileSaveMarkNotExist not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-FileSaveRestore( HWND hwnd,
-                 LPSTR FileList,
-                 LPSTR PathDir,
-                 LPSTR BackupBaseName,
-                 DWORD Flags )
-{
-  FIXME("FileSaveRestore not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-                 
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-FileSaveRestoreOnINF( HWND hwnd,
-                      PCSTR Title,
-                      PCSTR InfFilename,
-                      PCSTR Section,
-                      HKEY BackupKey,
-                      HKEY NBackupKey,
-                      DWORD Flags )
-{
-  FIXME("FileSaveRestoreOnINF not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-                      
-
-/*
- * @implemented
- */
-HRESULT WINAPI
-GetVersionFromFile( LPSTR Filename,
-                    LPDWORD MajorVer,
-                    LPDWORD MinorVer,
-                    BOOL  Version )
-{
-  return (GetVersionFromFileEx(Filename, MajorVer, MinorVer, Version));
-}
-
-/*
- * @implemented
- */
-HRESULT WINAPI
-GetVersionFromFileEx( LPSTR Filename,
-                      LPDWORD MajorVer,
-                      LPDWORD MinorVer,
-                      BOOL  Version )
-{
-  DWORD Size, Reserved, Param;
-  UINT Length;
-  LPVOID Buffer;
-  
-  if (Version)
+    /* fallback to the default destination dir if reg fails */
+    if (RegOpenKeyW(root, key, &subkey) ||
+        RegQueryValueExW(subkey, value, NULL, NULL, (LPBYTE)pszBuffer, &size))
     {
-       Size = GetFileVersionInfoSizeA(Filename, &Reserved);
-  
-       Buffer = LocalAlloc ( GMEM_ZEROINIT, Size );
-  
-       GetFileVersionInfoA( Filename, 0, Size, Buffer); 
-
-       VerQueryValueA( Buffer,
-                       "\\StringFileInfo\\040904b0\\FileVersion",
-                       (LPVOID) &Param,
-                       &Length );
-
-       MajorVer = (LPDWORD) (DWORD) HIWORD(Param);
-       MinorVer = (LPDWORD) (DWORD) LOWORD(Param);
-
-       LocalFree( Buffer );
-    } 
-  else
-    {
-       /* Language ID */
-       MajorVer = (LPDWORD) LANG_ENGLISH;
-       /*  I guess EnumResourceLanguages is used with a call back.
-        *  Return PRIMARYLANGID(wIDLanguage) from the call back.
-        */
-       
-       /* Codepage ID */
-       MinorVer = (LPDWORD) GetACP();
-       /* Here again, another guess. */
+        SetupGetStringFieldW(&context, 5, pszBuffer, dwSize, NULL);
     }
 
-  return S_OK;
+    RegCloseKey(subkey);
 }
 
-
-/*
- * @implemented
- */
-BOOL WINAPI
-IsNTAdmin( DWORD Reserved,
-           PDWORD PReserved )
+/* loads the LDIDs specified in the install section of an INF */
+void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
 {
-  HANDLE Process, Token;
-  UINT i;
-  BOOL Good = FALSE;
-  DWORD Buffer[4096];
-  DWORD Size;
-  PTOKEN_GROUPS TokenGrp = (PTOKEN_GROUPS) Buffer;
-  SID_IDENTIFIER_AUTHORITY AuthSid = {SECURITY_NT_AUTHORITY};
-  PSID psid = NULL;
-  
-  Process = GetCurrentProcess();
+    WCHAR field[MAX_FIELD_LENGTH];
+    WCHAR line[MAX_FIELD_LENGTH];
+    WCHAR dest[MAX_PATH];
+    INFCONTEXT context;
+    DWORD size;
+    int ldid;
 
-  if (OpenProcessToken(Process, TOKEN_QUERY, &Token) == FALSE)
+    static const WCHAR source_dir[] = {'S','o','u','r','c','e','D','i','r',0};
+
+    static const WCHAR custDestW[] = {
+        'C','u','s','t','o','m','D','e','s','t','i','n','a','t','i','o','n',0
+    };
+
+    if (!SetupGetLineTextW(NULL, hInf, pszInstallSection, custDestW,
+                           field, MAX_FIELD_LENGTH, &size))
+        return;
+
+    if (!SetupFindFirstLineW(hInf, field, NULL, &context))
+        return;
+
+    do
     {
-       CloseHandle(Process);
-       return FALSE;
-    }
-  
-  if ( GetTokenInformation( Token, TokenGroups, Buffer, 4096, &Size) == FALSE)
-    {
-       CloseHandle(Process);
-       CloseHandle(Token);
-       return FALSE;
-    }
+        LPWSTR value, ptr, key, key_copy = NULL;
 
-  CloseHandle(Process);
-  CloseHandle(Token);
+        SetupGetLineTextW(&context, NULL, NULL, NULL,
+                          line, MAX_FIELD_LENGTH, &size);
 
-  if ( AllocateAndInitializeSid( &AuthSid,
-                                  2,
-                                  SECURITY_BUILTIN_DOMAIN_RID,
-                                  DOMAIN_ALIAS_RID_ADMINS,
-                                  0, 0, 0, 0, 0, 0,
-                                 &psid) == FALSE)
-    {
-       return FALSE;
-    }
+        /* SetupGetLineTextW returns the value if there is only one key, but
+         * returns the whole line if there is more than one key
+         */
+        if (!(value = strchrW(line, '=')))
+        {
+            SetupGetStringFieldW(&context, 0, NULL, 0, &size);
+            key = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
+            key_copy = key;
+            SetupGetStringFieldW(&context, 0, key, size, &size);
+            value = line;
+        }
+        else
+        {
+            key = line;
+            *(value++) = '\0';
+        }
 
-  for ( i = 0; i < TokenGrp->GroupCount; i++ )
-     {
-        if ( EqualSid( psid , TokenGrp->Groups[i].Sid) != FALSE )
-          {
-             Good = TRUE;
-             break;
-          }
-     }
-  
-  FreeSid( psid);
-  
-  return(Good);
+        /* remove leading whitespace from the value */
+        while (*value == ' ')
+            value++;
+
+        /* FIXME: need to check the query option */
+        ptr = strchrW(value, ',');
+        if (ptr)
+            *ptr = '\0';
+
+        /* set dest to pszWorkingDir if key is SourceDir */
+        if (pszWorkingDir && !lstrcmpiW(value, source_dir))
+            lstrcpynW(dest, pszWorkingDir, MAX_PATH);
+        else
+            get_dest_dir(hInf, value, dest, MAX_PATH);
+
+        /* set all ldids to dest */
+        while ((ptr = get_parameter(&key, ',')))
+        {
+            ldid = atolW(ptr);
+            SetupSetDirectoryIdW(hInf, ldid, dest);
+        }
+        HeapFree(GetProcessHeap(), 0, key_copy);
+    } while (SetupFindNextLine(&context, &context));
 }
 
-
-/*
- * @unimplemented
- */
-INT WINAPI
-LaunchINFSection( HWND hwnd,
-                  HINSTANCE Inst,
-                  PSTR Params,
-                  INT Index )
-{
-  FIXME("LaunchINFSection not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-LaunchINFSectionEx( HWND hwnd,
-                    HINSTANCE Inst,
-                    PSTR Params,
-                    INT Index )
-{
-  FIXME("LaunchINFSectionEx not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-NeedReboot( DWORD RebootCheck )
-{
-  FIXME("NeedReboot not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return FALSE;
-}
-
-
-
-/*
- * @unimplemented
- */
-DWORD WINAPI
-NeedRebootInit( VOID )
-{
-  FIXME("NeedRebootInit not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-OpenINFEngine( PCSTR InfFilename,
-               PCSTR InstallSection,
-               DWORD Flags,
-               HINF hinf,
-               PVOID Reserved )
-{
-  FIXME("OpenINFEngine not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-RebootCheckOnInstall( HWND hwnd,
-                      PCSTR InfFilename,
-                      PCSTR InfSection,
-                      DWORD Reserved )
-{
-  FIXME("RebootCheckOnInstall not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-
-/*
- * @unimplemented
- */
-HRESULT WINAPI
-RegInstall( HMODULE hm,
-            LPCSTR InfSectionExec,
-            LPCSTRTABLE TabStringSub )
-{
-  FIXME("RegInstall not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
-}
-
-
-/*
- * I found this on the net,
- * O4 - HKLM\..\RunOnce: [mcagntps.dll] rundll32.exe advpack.dll,
- *                RegisterOCX c:\PROGRA~1\mcafee.com\agent\mcagntps.dll
+/***********************************************************************
+ *           CloseINFEngine (ADVPACK.@)
  *
- * Not sure if this implementation is correct. I guess it's ActiveX stuff.
+ * Closes a handle to an INF file opened with OpenINFEngine.
+ *
+ * PARAMS
+ *   hInf [I] Handle to the INF file to close.
+ *
+ * RETURNS
+ *   Success: S_OK.
+ *   Failure: E_FAIL.
  */
-/*
- * @implemented
- */
-HRESULT WINAPI
-RegisterOCX(LPCTSTR Filename)
+HRESULT WINAPI CloseINFEngine(HINF hInf)
 {
-  FARPROC DllEntryPoint;
-  LPCTSTR DllName = Filename;
-  HINSTANCE hlib = LoadLibrary(DllName);
+    TRACE("(%p)\n", hInf);
 
-  FIXME("RegisterOCX not implemented\n");
+    if (!hInf)
+        return E_INVALIDARG;
 
-  if (hlib < (HINSTANCE)HINSTANCE_ERROR)
-       return E_FAIL; 
-  DllEntryPoint = GetProcAddress( hlib, "DllRegisterServer");
-  if (DllEntryPoint != NULL)
+    SetupCloseInfFile(hInf);
+    return S_OK;
+}
+
+/***********************************************************************
+ *           DllMain (ADVPACK.@)
+ */
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    TRACE("(%p, %ld, %p)\n", hinstDLL, fdwReason, lpvReserved);
+
+    if (fdwReason == DLL_PROCESS_ATTACH)
+        DisableThreadLibraryCalls(hinstDLL);
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *              IsNTAdmin	(ADVPACK.@)
+ *
+ * Checks if the user has admin privileges.
+ *
+ * PARAMS
+ *   reserved  [I] Reserved.  Must be 0.
+ *   pReserved [I] Reserved.  Must be NULL.
+ *
+ * RETURNS
+ *   TRUE if user has admin rights, FALSE otherwise.
+ */
+BOOL WINAPI IsNTAdmin(DWORD reserved, LPDWORD pReserved)
+{
+    SID_IDENTIFIER_AUTHORITY SidAuthority = {SECURITY_NT_AUTHORITY};
+    PTOKEN_GROUPS pTokenGroups;
+    BOOL bSidFound = FALSE;
+    DWORD dwSize, i;
+    HANDLE hToken;
+    PSID pSid;
+
+    TRACE("(%ld, %p)\n", reserved, pReserved);
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        return FALSE;
+
+    if (!GetTokenInformation(hToken, TokenGroups, NULL, 0, &dwSize))
     {
-       if (FAILED((*DllEntryPoint)()))
-         {
-            FreeLibrary(hlib);
-            return E_FAIL;
-         }
-       return S_OK;
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            CloseHandle(hToken);
+            return FALSE;
+        }
     }
-  else
-       return E_FAIL;
+
+    pTokenGroups = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (!pTokenGroups)
+    {
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    if (!GetTokenInformation(hToken, TokenGroups, pTokenGroups, dwSize, &dwSize))
+    {
+        HeapFree(GetProcessHeap(), 0, pTokenGroups);
+        CloseHandle(hToken);
+        return FALSE;
+    }
+
+    CloseHandle(hToken);
+
+    if (!AllocateAndInitializeSid(&SidAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                  DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &pSid))
+    {
+        HeapFree(GetProcessHeap(), 0, pTokenGroups);
+        return FALSE;
+    }
+
+    for (i = 0; i < pTokenGroups->GroupCount; i++)
+    {
+        if (EqualSid(pSid, pTokenGroups->Groups[i].Sid))
+        {
+            bSidFound = TRUE;
+            break;
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, pTokenGroups);
+    FreeSid(pSid);
+
+    return bSidFound;
 }
 
-
-/*
- * @unimplemented
+/***********************************************************************
+ *             NeedRebootInit  (ADVPACK.@)
+ *
+ * Sets up conditions for reboot checking.
+ *
+ * RETURNS
+ *   Value required by NeedReboot.
  */
-HRESULT WINAPI
-RegRestoreAll( HWND hwnd,
-               PCSTR TitleString,
-               HKEY BackupKey )
+DWORD WINAPI NeedRebootInit(VOID)
 {
-  FIXME("RegRestoreAll not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
+    FIXME("(VOID): stub\n");
+    return 0;
 }
 
-
-/*
- * @unimplemented
+/***********************************************************************
+ *             NeedReboot      (ADVPACK.@)
+ *
+ * Determines whether a reboot is required.
+ *
+ * PARAMS
+ *   dwRebootCheck [I] Value from NeedRebootInit.
+ *
+ * RETURNS
+ *   TRUE if a reboot is needed, FALSE otherwise.
+ *
+ * BUGS
+ *   Unimplemented.
  */
-HRESULT WINAPI
-RegSaveRestore( HWND hwnd,
-                PCSTR TitleString,
-                HKEY BackupKey,
-                PCSTR RootKey,
-                PCSTR SubKey,
-                PCSTR ValueName,
-                DWORD Flags )
+BOOL WINAPI NeedReboot(DWORD dwRebootCheck)
 {
-  FIXME("RegSaveRestore not implemented\n");
-
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
+    FIXME("(%ld): stub\n", dwRebootCheck);
+    return FALSE;
 }
 
-
-/*
- * @unimplemented
+/***********************************************************************
+ *             OpenINFEngineA   (ADVPACK.@)
+ *
+ * See OpenINFEngineW.
  */
-HRESULT WINAPI
-RegSaveRestoreOnINF( HWND hwnd,
-                     PCSTR Title,
-                     PCSTR InfFilename,
-                     PCSTR Section,
-                     HKEY BackupKey,
-                     HKEY NBackupKey,
-                     DWORD Flags )
+HRESULT WINAPI OpenINFEngineA(LPCSTR pszInfFilename, LPCSTR pszInstallSection,
+                              DWORD dwFlags, HINF *phInf, PVOID pvReserved)
 {
-  FIXME("RegSaveRestoreOnINF not implemented\n");
+    UNICODE_STRING filenameW, installW;
+    HRESULT res;
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    TRACE("(%s, %s, %ld, %p, %p)\n", debugstr_a(pszInfFilename),
+          debugstr_a(pszInstallSection), dwFlags, phInf, pvReserved);
 
-  return E_FAIL;
+    if (!pszInfFilename || !phInf)
+        return E_INVALIDARG;
+
+    RtlCreateUnicodeStringFromAsciiz(&filenameW, pszInfFilename);
+    RtlCreateUnicodeStringFromAsciiz(&installW, pszInstallSection);
+
+    res = OpenINFEngineW(filenameW.Buffer, installW.Buffer,
+                         dwFlags, phInf, pvReserved);
+
+    RtlFreeUnicodeString(&filenameW);
+    RtlFreeUnicodeString(&installW);
+
+    return res;
 }
 
-
-/*
- * @unimplemented
+/***********************************************************************
+ *             OpenINFEngineW   (ADVPACK.@)
+ *
+ * Opens and returns a handle to an INF file to be used by
+ * TranslateInfStringEx to continuously translate the INF file.
+ *
+ * PARAMS
+ *   pszInfFilename    [I] Filename of the INF to open.
+ *   pszInstallSection [I] Name of the Install section in the INF.
+ *   dwFlags           [I] See advpub.h.
+ *   phInf             [O] Handle to the loaded INF file.
+ *   pvReserved        [I] Reserved.  Must be NULL.
+ *
+ * RETURNS
+ *   Success: S_OK.
+ *   Failure: E_FAIL.
  */
-HRESULT WINAPI
-RunSetupCommand( HWND hwnd, 
-                 LPCSTR ExeFilename,
-                 LPCSTR InfSection,
-                 LPCSTR PathExtractedFile,
-                 LPCSTR DialogTitle,
-                 PHANDLE HExeWait,
-                 DWORD Flags,
-                 LPVOID Reserved)
+HRESULT WINAPI OpenINFEngineW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSection,
+                              DWORD dwFlags, HINF *phInf, PVOID pvReserved)
 {
-  FIXME("RunSetupCommand not implemented\n");
+    TRACE("(%s, %s, %ld, %p, %p)\n", debugstr_w(pszInfFilename),
+          debugstr_w(pszInstallSection), dwFlags, phInf, pvReserved);
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    if (!pszInfFilename || !phInf)
+        return E_INVALIDARG;
 
-  return E_FAIL;
+    *phInf = SetupOpenInfFileW(pszInfFilename, NULL, INF_STYLE_WIN4, NULL);
+    if (*phInf == INVALID_HANDLE_VALUE)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    set_ldids(*phInf, pszInstallSection, NULL);
+    
+    return S_OK;
 }
 
-
-/*
- * @unimplemented
+/***********************************************************************
+ *             RebootCheckOnInstallA   (ADVPACK.@)
+ *
+ * See RebootCheckOnInstallW.
  */
-HRESULT WINAPI
-SetPerUserSecValues( PPERUSERSECTION PerUser )
+HRESULT WINAPI RebootCheckOnInstallA(HWND hWnd, LPCSTR pszINF,
+                                     LPSTR pszSec, DWORD dwReserved)
 {
-  FIXME("SetPerUserSecValues not implemented\n");
+    UNICODE_STRING infW, secW;
+    HRESULT res;
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    TRACE("(%p, %s, %s, %ld)\n", hWnd, debugstr_a(pszINF),
+          debugstr_a(pszSec), dwReserved);
 
-  return E_FAIL;
+    if (!pszINF || !pszSec)
+        return E_INVALIDARG;
+
+    RtlCreateUnicodeStringFromAsciiz(&infW, pszINF);
+    RtlCreateUnicodeStringFromAsciiz(&secW, pszSec);
+
+    res = RebootCheckOnInstallW(hWnd, infW.Buffer, secW.Buffer, dwReserved);
+
+    RtlFreeUnicodeString(&infW);
+    RtlFreeUnicodeString(&secW);
+
+    return res;
 }
 
-/*
- * @unimplemented
+/***********************************************************************
+ *             RebootCheckOnInstallW   (ADVPACK.@)
+ *
+ * Checks if a reboot is required for an installed INF section.
+ *
+ * PARAMS
+ *   hWnd       [I] Handle to the window used for messages.
+ *   pszINF     [I] Filename of the INF file.
+ *   pszSec     [I] INF section to check.
+ *   dwReserved [I] Reserved.  Must be 0.
+ *
+ * RETURNS
+ *   Success: S_OK - Reboot is needed if the INF section is installed.
+ *            S_FALSE - Reboot is not needed.
+ *   Failure: HRESULT of GetLastError().
+ *
+ * NOTES
+ *   if pszSec is NULL, RebootCheckOnInstall checks the DefaultInstall
+ *   or DefaultInstall.NT section.
+ *
+ * BUGS
+ *   Unimplemented.
  */
-HRESULT WINAPI
-TranslateInfString( PCSTR InfFilename,
-                    PCSTR InstallSection,
-                    PCSTR TranslateSection,
-                    PCSTR TranslateKey,
-                    PSTR  BufferToKey,
-                    DWORD BufferSize,
-                    PVOID Reserved )
+HRESULT WINAPI RebootCheckOnInstallW(HWND hWnd, LPCWSTR pszINF,
+                                     LPWSTR pszSec, DWORD dwReserved)
 {
-  FIXME("TranslateInfString not implemented\n");
+    FIXME("(%p, %s, %s, %ld): stub\n", hWnd, debugstr_w(pszINF),
+          debugstr_w(pszSec), dwReserved);
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-  return E_FAIL;
+    return E_FAIL;
 }
 
+/* registers the OCX if do_reg is TRUE, unregisters it otherwise */
+HRESULT do_ocx_reg(HMODULE hocx, BOOL do_reg)
+{
+    DLLREGISTER reg_func;
 
-/*
- * @unimplemented
+    if (do_reg)
+        reg_func = (DLLREGISTER)GetProcAddress(hocx, "DllRegisterServer");
+    else
+        reg_func = (DLLREGISTER)GetProcAddress(hocx, "DllUnregisterServer");
+
+    if (!reg_func)
+        return E_FAIL;
+
+    reg_func();
+    return S_OK;
+}
+
+/***********************************************************************
+ *             RegisterOCX    (ADVPACK.@)
+ *
+ * Registers an OCX.
+ *
+ * PARAMS
+ *   hWnd    [I] Handle to the window used for the display.
+ *   hInst   [I] Instance of the process.
+ *   cmdline [I] Contains parameters in the order OCX,flags,param.
+ *   show    [I] How the window should be shown.
+ *
+ * RETURNS
+ *   Success: S_OK.
+ *   Failure: E_FAIL.
+ *
+ * NOTES
+ *   OCX - Filename of the OCX to register.
+ *   flags - Controls the operation of RegisterOCX.
+ *    'I' Call DllRegisterServer and DllInstall.
+ *    'N' Only call DllInstall.
+ *   param - Command line passed to DllInstall.
  */
-HRESULT WINAPI
-TranslateInfStringEx( HINF hinf,
-                      PCSTR InfFilename,
-                      PCSTR InstallSection,
-                      PCSTR TranslateSection,
-                      PCSTR TranslateKey,
-                      PSTR  BufferToKey,
-                      DWORD BufferSize,
-                      PVOID Reserved )
+HRESULT WINAPI RegisterOCX(HWND hWnd, HINSTANCE hInst, LPCSTR cmdline, INT show)
 {
-  FIXME("TranslateInfStringEx not implemented\n");
+    LPWSTR ocx_filename, str_flags, param;
+    LPWSTR cmdline_copy, cmdline_ptr;
+    UNICODE_STRING cmdlineW;
+    HRESULT hr = E_FAIL;
+    HMODULE hm = NULL;
+    DWORD size;
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    TRACE("(%s)\n", debugstr_a(cmdline));
 
-  return E_FAIL;
+    RtlCreateUnicodeStringFromAsciiz(&cmdlineW, cmdline);
+
+    size = (lstrlenW(cmdlineW.Buffer) + 1) * sizeof(WCHAR);
+    cmdline_copy = HeapAlloc(GetProcessHeap(), 0, size);
+    cmdline_ptr = cmdline_copy;
+    lstrcpyW(cmdline_copy, cmdlineW.Buffer);
+
+    ocx_filename = get_parameter(&cmdline_ptr, ',');
+    if (!ocx_filename || !*ocx_filename)
+        goto done;
+
+    str_flags = get_parameter(&cmdline_ptr, ',');
+    param = get_parameter(&cmdline_ptr, ',');
+
+    hm = LoadLibraryExW(ocx_filename, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    if (!hm)
+        goto done;
+
+    hr = do_ocx_reg(hm, TRUE);
+
+done:
+    FreeLibrary(hm);
+    HeapFree(GetProcessHeap(), 0, cmdline_copy);
+    RtlFreeUnicodeString(&cmdlineW);
+
+    return hr;
 }
 
-/*
- * @unimplemented
+/***********************************************************************
+ *             SetPerUserSecValuesA   (ADVPACK.@)
+ *
+ * See SetPerUserSecValuesW.
  */
-HRESULT WINAPI
-UserInstStubWrapper( HWND hwnd,
-                     HINSTANCE Inst,
-                     PSTR Params,
-                     INT Index )
+HRESULT WINAPI SetPerUserSecValuesA(PERUSERSECTIONA* pPerUser)
 {
-  FIXME("UserInstStubWrapper not implemented\n");
+    PERUSERSECTIONW perUserW;
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    TRACE("(%p)\n", pPerUser);
 
-  return E_FAIL;
+    if (!pPerUser)
+        return E_INVALIDARG;
+
+    MultiByteToWideChar(CP_ACP, 0, pPerUser->szGUID, -1, perUserW.szGUID,
+                        sizeof(perUserW.szGUID) / sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, pPerUser->szDispName, -1, perUserW.szDispName,
+                        sizeof(perUserW.szDispName) / sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, pPerUser->szLocale, -1, perUserW.szLocale,
+                        sizeof(perUserW.szLocale) / sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, pPerUser->szStub, -1, perUserW.szStub,
+                        sizeof(perUserW.szStub) / sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, pPerUser->szVersion, -1, perUserW.szVersion,
+                        sizeof(perUserW.szVersion) / sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, pPerUser->szCompID, -1, perUserW.szCompID,
+                        sizeof(perUserW.szCompID) / sizeof(WCHAR));
+    perUserW.dwIsInstalled = pPerUser->dwIsInstalled;
+    perUserW.bRollback = pPerUser->bRollback;
+
+    return SetPerUserSecValuesW(&perUserW);
 }
 
-/*
- * @unimplemented
+/***********************************************************************
+ *             SetPerUserSecValuesW   (ADVPACK.@)
+ *
+ * Prepares the per-user stub values under IsInstalled\{GUID} that
+ * control the per-user installation.
+ *
+ * PARAMS
+ *   pPerUser [I] Per-user stub values.
+ *
+ * RETURNS
+ *   Success: S_OK.
+ *   Failure: E_FAIL.
  */
-HRESULT WINAPI
-UserUnInstStubWrapper( HWND hwnd,
-                       HINSTANCE Inst,
-                       PSTR Params,
-                       INT Index )
+HRESULT WINAPI SetPerUserSecValuesW(PERUSERSECTIONW* pPerUser)
 {
-  FIXME("UserUnInstStubWrapper not implemented\n");
+    HKEY setup, guid;
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    static const WCHAR stub_path[] = {'S','t','u','b','P','a','t','h',0};
+    static const WCHAR version[] = {'V','e','r','s','i','o','n',0};
+    static const WCHAR locale[] = {'L','o','c','a','l','e',0};
+    static const WCHAR compid[] = {'C','o','m','p','o','n','e','n','t','I','D',0};
+    static const WCHAR isinstalled[] = {'I','s','I','n','s','t','a','l','l','e','d',0};
 
-  return E_FAIL;
+    TRACE("(%p)\n", pPerUser);
+
+    if (!pPerUser || !*pPerUser->szGUID)
+        return S_OK;
+
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, setup_key, 0, NULL, 0, KEY_WRITE,
+                        NULL, &setup, NULL))
+    {
+        return E_FAIL;
+    }
+
+    if (RegCreateKeyExW(setup, pPerUser->szGUID, 0, NULL, 0, KEY_ALL_ACCESS,
+                        NULL, &guid, NULL))
+    {
+        RegCloseKey(setup);
+        return E_FAIL;
+    }
+
+    if (*pPerUser->szStub)
+    {
+        RegSetValueExW(guid, stub_path, 0, REG_SZ, (LPBYTE)pPerUser->szStub,
+                       (lstrlenW(pPerUser->szStub) + 1) * sizeof(WCHAR));
+    }
+
+    if (*pPerUser->szVersion)
+    {
+        RegSetValueExW(guid, version, 0, REG_SZ, (LPBYTE)pPerUser->szVersion,
+                       (lstrlenW(pPerUser->szVersion) + 1) * sizeof(WCHAR));
+    }
+
+    if (*pPerUser->szLocale)
+    {
+        RegSetValueExW(guid, locale, 0, REG_SZ, (LPBYTE)pPerUser->szLocale,
+                       (lstrlenW(pPerUser->szLocale) + 1) * sizeof(WCHAR));
+    }
+
+    if (*pPerUser->szCompID)
+    {
+        RegSetValueExW(guid, compid, 0, REG_SZ, (LPBYTE)pPerUser->szCompID,
+                       (lstrlenW(pPerUser->szCompID) + 1) * sizeof(WCHAR));
+    }
+
+    if (*pPerUser->szDispName)
+    {
+        RegSetValueExW(guid, NULL, 0, REG_SZ, (LPBYTE)pPerUser->szDispName,
+                       (lstrlenW(pPerUser->szDispName) + 1) * sizeof(WCHAR));
+    }
+
+    RegSetValueExW(guid, isinstalled, 0, REG_DWORD,
+                   (LPBYTE)&pPerUser->dwIsInstalled, sizeof(DWORD));
+
+    RegCloseKey(guid);
+    RegCloseKey(setup);
+
+    return S_OK;
 }
 
+/***********************************************************************
+ *             TranslateInfStringA   (ADVPACK.@)
+ *
+ * See TranslateInfStringW.
+ */
+HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSection,
+                LPCSTR pszTranslateSection, LPCSTR pszTranslateKey, LPSTR pszBuffer,
+                DWORD dwBufferSize, PDWORD pdwRequiredSize, PVOID pvReserved)
+{
+    UNICODE_STRING filenameW, installW;
+    UNICODE_STRING translateW, keyW;
+    LPWSTR bufferW;
+    HRESULT res;
+    DWORD len = 0;
 
-/* EOF */
+    TRACE("(%s, %s, %s, %s, %p, %ld, %p, %p)\n",
+          debugstr_a(pszInfFilename), debugstr_a(pszInstallSection),
+          debugstr_a(pszTranslateSection), debugstr_a(pszTranslateKey),
+          pszBuffer, dwBufferSize,pdwRequiredSize, pvReserved);
+
+    if (!pszInfFilename || !pszTranslateSection ||
+        !pszTranslateKey || !pdwRequiredSize)
+        return E_INVALIDARG;
+
+    RtlCreateUnicodeStringFromAsciiz(&filenameW, pszInfFilename);
+    RtlCreateUnicodeStringFromAsciiz(&installW, pszInstallSection);
+    RtlCreateUnicodeStringFromAsciiz(&translateW, pszTranslateSection);
+    RtlCreateUnicodeStringFromAsciiz(&keyW, pszTranslateKey);
+
+    res = TranslateInfStringW(filenameW.Buffer, installW.Buffer,
+                              translateW.Buffer, keyW.Buffer, NULL,
+                              dwBufferSize, &len, NULL);
+
+    if (res == S_OK)
+    {
+        bufferW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+
+        res = TranslateInfStringW(filenameW.Buffer, installW.Buffer,
+                                  translateW.Buffer, keyW.Buffer, bufferW,
+                                  len, &len, NULL);
+        if (res == S_OK)
+        {
+            *pdwRequiredSize = WideCharToMultiByte(CP_ACP, 0, bufferW, -1,
+                                                   NULL, 0, NULL, NULL);
+
+            if (dwBufferSize >= *pdwRequiredSize)
+            {
+                WideCharToMultiByte(CP_ACP, 0, bufferW, -1, pszBuffer,
+                                    dwBufferSize, NULL, NULL);
+            }
+            else
+                res = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        }
+        
+        HeapFree(GetProcessHeap(), 0, bufferW);
+    }
+
+    RtlFreeUnicodeString(&filenameW);
+    RtlFreeUnicodeString(&installW);
+    RtlFreeUnicodeString(&translateW);
+    RtlFreeUnicodeString(&keyW);
+
+    return res;
+}
+
+/***********************************************************************
+ *             TranslateInfStringW   (ADVPACK.@)
+ *
+ * Translates the value of a specified key in an inf file into the
+ * current locale by expanding string macros.
+ *
+ * PARAMS
+ *   pszInfFilename      [I] Filename of the inf file.
+ *   pszInstallSection   [I]
+ *   pszTranslateSection [I] Inf section where the key exists.
+ *   pszTranslateKey     [I] Key to translate.
+ *   pszBuffer           [O] Contains the translated string on exit.
+ *   dwBufferSize        [I] Size on input of pszBuffer.
+ *   pdwRequiredSize     [O] Length of the translated key.
+ *   pvReserved          [I] Reserved, must be NULL.
+ *
+ * RETURNS
+ *   Success: S_OK.
+ *   Failure: An hresult error code.
+ */
+HRESULT WINAPI TranslateInfStringW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSection,
+                LPCWSTR pszTranslateSection, LPCWSTR pszTranslateKey, LPWSTR pszBuffer,
+                DWORD dwBufferSize, PDWORD pdwRequiredSize, PVOID pvReserved)
+{
+    HINF hInf;
+
+    TRACE("(%s, %s, %s, %s, %p, %ld, %p, %p)\n",
+          debugstr_w(pszInfFilename), debugstr_w(pszInstallSection),
+          debugstr_w(pszTranslateSection), debugstr_w(pszTranslateKey),
+          pszBuffer, dwBufferSize,pdwRequiredSize, pvReserved);
+
+    if (!pszInfFilename || !pszTranslateSection ||
+        !pszTranslateKey || !pdwRequiredSize)
+        return E_INVALIDARG;
+
+    hInf = SetupOpenInfFileW(pszInfFilename, NULL, INF_STYLE_WIN4, NULL);
+    if (hInf == INVALID_HANDLE_VALUE)
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+    set_ldids(hInf, pszInstallSection, NULL);
+
+    if (!SetupGetLineTextW(NULL, hInf, pszTranslateSection, pszTranslateKey,
+                           pszBuffer, dwBufferSize, pdwRequiredSize))
+    {
+        if (dwBufferSize < *pdwRequiredSize)
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+
+        return SPAPI_E_LINE_NOT_FOUND;
+    }
+
+    SetupCloseInfFile(hInf);
+    return S_OK;
+}
+
+/***********************************************************************
+ *             TranslateInfStringExA   (ADVPACK.@)
+ *
+ * See TranslateInfStringExW.
+ */
+HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
+                                    LPCSTR pszTranslateSection, LPCSTR pszTranslateKey,
+                                    LPSTR pszBuffer, DWORD dwBufferSize,
+                                    PDWORD pdwRequiredSize, PVOID pvReserved)
+{
+    UNICODE_STRING filenameW, sectionW, keyW;
+    LPWSTR bufferW;
+    HRESULT res;
+    DWORD len = 0;
+
+    TRACE("(%p, %s, %s, %s, %s, %ld, %p, %p)\n", hInf, debugstr_a(pszInfFilename),
+          debugstr_a(pszTranslateSection), debugstr_a(pszTranslateKey),
+          debugstr_a(pszBuffer), dwBufferSize, pdwRequiredSize, pvReserved);
+
+    if (!pszInfFilename || !pszTranslateSection ||
+        !pszTranslateKey || !pdwRequiredSize)
+        return E_INVALIDARG;
+
+    RtlCreateUnicodeStringFromAsciiz(&filenameW, pszInfFilename);
+    RtlCreateUnicodeStringFromAsciiz(&sectionW, pszTranslateSection);
+    RtlCreateUnicodeStringFromAsciiz(&keyW, pszTranslateKey);
+
+    res = TranslateInfStringExW(hInf, filenameW.Buffer, sectionW.Buffer,
+                                keyW.Buffer, NULL, 0, &len, NULL);
+
+    if (res == S_OK)
+    {
+        bufferW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+
+        res = TranslateInfStringExW(hInf, filenameW.Buffer, sectionW.Buffer,
+                                keyW.Buffer, bufferW, len, &len, NULL);
+
+        if (res == S_OK)
+        {
+            *pdwRequiredSize = WideCharToMultiByte(CP_ACP, 0, bufferW, -1,
+                                                   NULL, 0, NULL, NULL);
+
+            if (dwBufferSize >= *pdwRequiredSize)
+            {
+                WideCharToMultiByte(CP_ACP, 0, bufferW, -1, pszBuffer,
+                                    dwBufferSize, NULL, NULL);
+            }
+            else
+                res = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        }
+        
+        HeapFree(GetProcessHeap(), 0, bufferW);
+    }
+
+    RtlFreeUnicodeString(&filenameW);
+    RtlFreeUnicodeString(&sectionW);
+    RtlFreeUnicodeString(&keyW);
+
+    return res;
+}
+
+/***********************************************************************
+ *             TranslateInfStringExW   (ADVPACK.@)
+ *
+ * Using a handle to an INF file opened with OpenINFEngine, translates
+ * the value of a specified key in an inf file into the current locale
+ * by expanding string macros.
+ *
+ * PARAMS
+ *   hInf                [I] Handle to the INF file.
+ *   pszInfFilename      [I] Filename of the INF file.
+ *   pszTranslateSection [I] Inf section where the key exists.
+ *   pszTranslateKey     [I] Key to translate.
+ *   pszBuffer           [O] Contains the translated string on exit.
+ *   dwBufferSize        [I] Size on input of pszBuffer.
+ *   pdwRequiredSize     [O] Length of the translated key.
+ *   pvReserved          [I] Reserved.  Must be NULL.
+ *
+ * RETURNS
+ *   Success: S_OK.
+ *   Failure: E_FAIL.
+ *
+ * NOTES
+ *   To use TranslateInfStringEx to translate an INF file continuously,
+ *   open the INF file with OpenINFEngine, call TranslateInfStringEx as
+ *   many times as needed, then release the handle with CloseINFEngine.
+ *   When translating more than one keys, this method is more efficient
+ *   than calling TranslateInfString, because the INF file is only
+ *   opened once.
+ */
+HRESULT WINAPI TranslateInfStringExW(HINF hInf, LPCWSTR pszInfFilename,
+                                     LPCWSTR pszTranslateSection, LPCWSTR pszTranslateKey,
+                                     LPWSTR pszBuffer, DWORD dwBufferSize,
+                                     PDWORD pdwRequiredSize, PVOID pvReserved)
+{
+    TRACE("(%p, %s, %s, %s, %s, %ld, %p, %p)\n", hInf, debugstr_w(pszInfFilename),
+          debugstr_w(pszTranslateSection), debugstr_w(pszTranslateKey),
+          debugstr_w(pszBuffer), dwBufferSize, pdwRequiredSize, pvReserved);
+
+    if (!hInf || !pszInfFilename || !pszTranslateSection || !pszTranslateKey)
+        return E_INVALIDARG;
+
+    if (!SetupGetLineTextW(NULL, hInf, pszTranslateSection, pszTranslateKey,
+                           pszBuffer, dwBufferSize, pdwRequiredSize))
+    {
+        if (dwBufferSize < *pdwRequiredSize)
+            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+
+        return SPAPI_E_LINE_NOT_FOUND;
+    }
+
+    return S_OK;   
+}
+
+/***********************************************************************
+ *             UserInstStubWrapperA   (ADVPACK.@)
+ *
+ * See UserInstStubWrapperW.
+ */
+HRESULT WINAPI UserInstStubWrapperA(HWND hWnd, HINSTANCE hInstance,
+                                   LPSTR pszParms, INT nShow)
+{
+    UNICODE_STRING parmsW;
+    HRESULT res;
+
+    TRACE("(%p, %p, %s, %i)\n", hWnd, hInstance, debugstr_a(pszParms), nShow);
+
+    if (!pszParms)
+        return E_INVALIDARG;
+
+    RtlCreateUnicodeStringFromAsciiz(&parmsW, pszParms);
+
+    res = UserInstStubWrapperW(hWnd, hInstance, parmsW.Buffer, nShow);
+
+    RtlFreeUnicodeString(&parmsW);
+
+    return res;
+}
+
+/***********************************************************************
+ *             UserInstStubWrapperW   (ADVPACK.@)
+ *
+ * Launches the user stub wrapper specified by the RealStubPath
+ * registry value under Installed Components\szParms.
+ *
+ * PARAMS
+ *   hWnd      [I] Handle to the window used for the display.
+ *   hInstance [I] Instance of the process.
+ *   szParms   [I] The GUID of the installation.
+ *   show      [I] How the window should be shown.
+ *
+ * RETURNS
+ *   Success: S_OK.
+ *   Failure: E_FAIL.
+ *
+ * TODO
+ *   If the type of the StubRealPath value is REG_EXPAND_SZ, then
+ *   we should call ExpandEnvironmentStrings on the value and
+ *   launch the result.
+ */
+HRESULT WINAPI UserInstStubWrapperW(HWND hWnd, HINSTANCE hInstance,
+                                    LPWSTR pszParms, INT nShow)
+{
+    HKEY setup, guid;
+    WCHAR stub[MAX_PATH];
+    DWORD size = MAX_PATH;
+    HRESULT hr = S_OK;
+    BOOL res;
+
+    static const WCHAR real_stub_path[] = {
+        'R','e','a','l','S','t','u','b','P','a','t','h',0
+    };
+
+    TRACE("(%p, %p, %s, %i)\n", hWnd, hInstance, debugstr_w(pszParms), nShow);
+
+    if (!pszParms || !*pszParms)
+        return E_INVALIDARG;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, setup_key, 0, KEY_READ, &setup))
+    {
+        return E_FAIL;
+    }
+
+    if (RegOpenKeyExW(setup, pszParms, 0, KEY_READ, &guid))
+    {
+        RegCloseKey(setup);
+        return E_FAIL;
+    }
+
+    res = RegQueryValueExW(guid, real_stub_path, NULL, NULL, (LPBYTE)stub, &size);
+    if (res || !*stub)
+        goto done;
+
+    /* launch the user stub wrapper */
+    hr = launch_exe(stub, NULL, NULL);
+
+done:
+    RegCloseKey(setup);
+    RegCloseKey(guid);
+
+    return hr;
+}
+
+/***********************************************************************
+ *             UserUnInstStubWrapperA   (ADVPACK.@)
+ *
+ * See UserUnInstStubWrapperW.
+ */
+HRESULT WINAPI UserUnInstStubWrapperA(HWND hWnd, HINSTANCE hInstance,
+                                      LPSTR pszParms, INT nShow)
+{
+    UNICODE_STRING parmsW;
+    HRESULT res;
+
+    TRACE("(%p, %p, %s, %i)\n", hWnd, hInstance, debugstr_a(pszParms), nShow);
+
+    if (!pszParms)
+        return E_INVALIDARG;
+
+    RtlCreateUnicodeStringFromAsciiz(&parmsW, pszParms);
+
+    res = UserUnInstStubWrapperW(hWnd, hInstance, parmsW.Buffer, nShow);
+
+    RtlFreeUnicodeString(&parmsW);
+
+    return res;
+}
+
+/***********************************************************************
+ *             UserUnInstStubWrapperW   (ADVPACK.@)
+ */
+HRESULT WINAPI UserUnInstStubWrapperW(HWND hWnd, HINSTANCE hInstance,
+                                      LPWSTR pszParms, INT nShow)
+{
+    FIXME("(%p, %p, %s, %i): stub\n", hWnd, hInstance, debugstr_w(pszParms), nShow);
+
+    return E_FAIL;
+}

@@ -1,6 +1,7 @@
 /*
- * ReactOS Advpack Stub Library
- * Copyright (C) 2004 ReactOS Team
+ * Advpack private header
+ *
+ * Copyright 2006 James Hawkins
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,22 +15,17 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
-#include "advpack.h"
-#include "wine/debug.h"
+#ifndef __ADVPACK_PRIVATE_H
+#define __ADVPACK_PRIVATE_H
 
-HRESULT WINAPI
-DoInfInstall(DWORD Unknown)
-{
-  FIXME("DoInfInstall not implemented\n");
+HRESULT do_ocx_reg(HMODULE hocx, BOOL do_reg);
+LPWSTR get_parameter(LPWSTR *params, WCHAR separator);
+void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir);
 
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+HRESULT launch_exe(LPCWSTR cmd, LPCWSTR dir, HANDLE *phEXE);
+HRESULT do_ocx_reg(HMODULE hocx, BOOL do_reg);
 
-  return E_FAIL;
-}
-
-
-/* EOF */
+#endif /* __ADVPACK_PRIVATE_H */
