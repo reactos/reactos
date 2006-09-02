@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -25,6 +25,7 @@
 #include "winerror.h"
 #include "guiddef.h"
 #include "wintrust.h"
+#include "softpub.h"
 #include "mscat.h"
 #include "objbase.h"
 
@@ -32,8 +33,37 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 
+
+/***********************************************************************
+ *		DllMain  (WINTRUST.@)
+ */
+BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
+{
+    switch(reason)
+    {
+    case DLL_WINE_PREATTACH:
+        return FALSE;  /* prefer native version */
+    case DLL_PROCESS_ATTACH:
+        DisableThreadLibraryCalls( inst );
+        break;
+    }
+    return TRUE;
+}
+
 /***********************************************************************
  *		CryptCATAdminAcquireContext (WINTRUST.@)
+ *
+ * Get a catalog administrator context handle.
+ *
+ * PARAMS
+ *   catAdmin  [O] Pointer to the context handle.
+ *   sysSystem [I] Pointer to a GUID for the needed subsystem.
+ *   dwFlags   [I] Reserved.
+ *
+ * RETURNS
+ *   Success: TRUE. catAdmin contains the context handle.
+ *   Failure: FAIL.
+ *
  */
 BOOL WINAPI CryptCATAdminAcquireContext(HCATADMIN* catAdmin,
 					const GUID *sysSystem, DWORD dwFlags )
@@ -55,7 +85,32 @@ BOOL WINAPI CryptCATAdminCalcHashFromFileHandle(HANDLE hFile, DWORD* pcbHash,
 }
 
 /***********************************************************************
+ *             CryptCATAdminEnumCatalogFromHash (WINTRUST.@)
+ */
+HCATINFO WINAPI CryptCATAdminEnumCatalogFromHash(HCATADMIN hCatAdmin,
+                                                 BYTE* pbHash,
+                                                 DWORD cbHash,
+                                                 DWORD dwFlags,
+                                                 HCATINFO* phPrevCatInfo )
+{
+    FIXME("%p %p %ld %ld %p\n", hCatAdmin, pbHash, cbHash, dwFlags, phPrevCatInfo);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return NULL;
+}
+
+/***********************************************************************
  *		CryptCATAdminReleaseContext (WINTRUST.@)
+ *
+ * Release a catalog administrator context handle.
+ *
+ * PARAMS
+ *   catAdmin  [I] Pointer to the context handle.
+ *   dwFlags   [I] Reserved.
+ *
+ * RETURNS
+ *   Success: TRUE.
+ *   Failure: FAIL.
+ *
  */
 BOOL WINAPI CryptCATAdminReleaseContext(HCATADMIN hCatAdmin, DWORD dwFlags )
 {
@@ -65,12 +120,39 @@ BOOL WINAPI CryptCATAdminReleaseContext(HCATADMIN hCatAdmin, DWORD dwFlags )
 }
 
 /***********************************************************************
+ *		TrustIsCertificateSelfSigned (WINTRUST.@)
+ */
+BOOL WINAPI TrustIsCertificateSelfSigned( PCCERT_CONTEXT cert )
+{
+    BOOL ret;
+
+    TRACE("%p\n", cert);
+    ret = CertCompareCertificateName(cert->dwCertEncodingType,
+     &cert->pCertInfo->Subject, &cert->pCertInfo->Issuer);
+    return ret;
+}
+
+/***********************************************************************
  *		WinVerifyTrust (WINTRUST.@)
+ *
+ * Verifies an object by calling the specified trust provider.
+ *
+ * PARAMS
+ *   hwnd       [I] Handle to a caller window.
+ *   ActionID   [I] Pointer to a GUID that identifies the action to perform.
+ *   ActionData [I] Information used by the trust provider to verify the object.
+ *
+ * RETURNS
+ *   Success: Zero.
+ *   Failure: A TRUST_E_* error code.
+ *
+ * NOTES
+ *   Trust providers can be found at:
+ *   HKLM\SOFTWARE\Microsoft\Cryptography\Providers\Trust\
  */
 LONG WINAPI WinVerifyTrust( HWND hwnd, GUID *ActionID,  WINTRUST_DATA* ActionData )
 {
-    static const GUID WINTRUST_ACTION_GENERIC_VERIFY_V2 = { 0xaac56b, 0xcd44, 0x11d0,
-                                                          { 0x8c,0xc2,0x00,0xc0,0x4f,0xc2,0x95,0xee }};
+    static const GUID gen_verify_v2 = WINTRUST_ACTION_GENERIC_VERIFY_V2;
 
     FIXME("%p %s %p\n", hwnd, debugstr_guid(ActionID), ActionData);
 
@@ -87,7 +169,7 @@ LONG WINAPI WinVerifyTrust( HWND hwnd, GUID *ActionID,  WINTRUST_DATA* ActionDat
      *
      */
 
-    if (IsEqualCLSID(ActionID, &WINTRUST_ACTION_GENERIC_VERIFY_V2))
+    if (IsEqualCLSID(ActionID, &gen_verify_v2))
         return TRUST_E_PROVIDER_UNKNOWN;
 
     return ERROR_SUCCESS;
@@ -125,12 +207,12 @@ CRYPT_PROVIDER_DATA * WINAPI WTHelperProvDataFromStateData(HANDLE hStateData)
 }
 
 /***********************************************************************
- *		WintrustAddActionID (WINTRUST.@)
+ *              WintrustLoadFunctionPointers (WINTRUST.@)
  */
-BOOL WINAPI WintrustAddActionID( GUID* pgActionID, DWORD fdwFlags,
-                                 CRYPT_REGISTER_ACTIONID* psProvInfo)
+BOOL WINAPI WintrustLoadFunctionPointers( GUID* pgActionID,
+                                          CRYPT_PROVIDER_FUNCTIONS* pPfns )
 {
-    FIXME("%p %lx %p\n", pgActionID, fdwFlags, psProvInfo);
+    FIXME("%s %p\n", debugstr_guid(pgActionID), pPfns);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
@@ -151,22 +233,4 @@ BOOL WINAPI WintrustSetRegPolicyFlags( DWORD dwPolicyFlags)
 {
     FIXME("stub: %lx\n", dwPolicyFlags);
     return TRUE;
-}
-
-/***********************************************************************
-  *             DllRegisterServer (WINTRUST.@)
-  */
-HRESULT WINAPI DllRegisterServer(void)
-{
-     FIXME("stub\n");
-     return S_OK;
-}
-
-/***********************************************************************
-  *             DllUnregisterServer (WINTRUST.@)
-  */
-HRESULT WINAPI DllUnregisterServer(void)
-{
-     FIXME("stub\n");
-     return S_OK;
 }

@@ -3,7 +3,7 @@
 @ stdcall CryptCATAdminAcquireContext(long ptr long)
 @ stub CryptCATAdminAddCatalog
 @ stdcall CryptCATAdminCalcHashFromFileHandle(long ptr ptr long)
-@ stub CryptCATAdminEnumCatalogFromHash
+@ stdcall CryptCATAdminEnumCatalogFromHash(long ptr long long ptr)
 @ stub CryptCATAdminPauseServiceForBackup
 @ stub CryptCATAdminReleaseCatalogContext
 @ stdcall CryptCATAdminReleaseContext(long long)
@@ -60,8 +60,8 @@
 @ stub SoftpubCheckCert
 @ stub SoftpubCleanup
 @ stub SoftpubDefCertInit
-@ stub SoftpubDllRegisterServer
-@ stub SoftpubDllUnregisterServer
+@ stdcall SoftpubDllRegisterServer()
+@ stdcall SoftpubDllUnregisterServer()
 @ stub SoftpubDumpStructure
 @ stub SoftpubFreeDefUsageCallData
 @ stub SoftpubInitialize
@@ -71,7 +71,7 @@
 @ stub TrustDecode
 @ stub TrustFindIssuerCertificate
 @ stub TrustFreeDecode
-@ stub TrustIsCertificateSelfSigned
+@ stdcall TrustIsCertificateSelfSigned(ptr)
 @ stub TrustOpenStores
 @ stub WTHelperCertFindIssuerCertificate
 @ stub WTHelperCertIsSelfSigned
@@ -115,10 +115,10 @@
 @ stub WintrustCertificateTrust
 @ stub WintrustGetDefaultForUsage
 @ stdcall WintrustGetRegPolicyFlags(ptr)
-@ stub WintrustLoadFunctionPointers
-@ stub WintrustRemoveActionID
+@ stdcall WintrustLoadFunctionPointers(ptr ptr)
+@ stdcall WintrustRemoveActionID(ptr)
 @ stdcall WintrustSetRegPolicyFlags(long)
-@ stub mscat32DllRegisterServer
-@ stub mscat32DllUnregisterServer
-@ stub mssip32DllRegisterServer
-@ stub mssip32DllUnregisterServer
+@ stdcall mscat32DllRegisterServer()
+@ stdcall mscat32DllUnregisterServer()
+@ stdcall mssip32DllRegisterServer()
+@ stdcall mssip32DllUnregisterServer()
