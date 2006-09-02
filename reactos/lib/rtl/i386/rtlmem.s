@@ -110,7 +110,7 @@ _RtlFillMemory@12:
     /* Get pattern */
     mov al, [esp+16]
     mov ah, al
-    shr eax, 16
+    shl eax, 16
     mov al, [esp+16]
     mov ah, al
 
@@ -227,7 +227,7 @@ _RtlMoveMemory@12:
     mov ecx, [esp+20]
     cld
 
-    /* Check for overlap */
+    /* Check if the destination is higher (or equal) */
     cmp esi, edi
     jbe Overlap
 
@@ -252,15 +252,16 @@ ByteMove:
     rep stosb
 
 DoneMove:
+    /* Restore volatiles */
     pop edi
     pop esi
     ret 12
 
 Overlap:
-    /* Avoid full overlap */
+    /* Don't copy if they're equal */
     jz DoneMove
 
-    /* Remove overlap */
+    /* Compare pointer distance with given length and check for overlap */
     mov eax, edi
     sub eax, esi
     cmp ecx, eax
@@ -269,7 +270,7 @@ Overlap:
     /* Set direction flag for backward move */
     std
 
-    /* Can only move some bytes, calculate how many */
+    /* Copy byte-by-byte the non-overlapping distance */
     add esi, ecx
     add edi, ecx
     dec esi
