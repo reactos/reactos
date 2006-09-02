@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/i386/cpu.c
+ * FILE:            ntoskrnl/ke/dpc.c
  * PURPOSE:         Routines for CPU-level support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Philip Susi (phreak@iag.net)
@@ -25,6 +25,177 @@ ULONG KiIdealDpcRate = 20;
 KMUTEX KiGenericCallDpcMutex;
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+KiQuantumEnd(VOID)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+    KIRQL OldIrql;
+    PKPROCESS Process;
+    KPRIORITY OldPriority;
+    KPRIORITY NewPriority;
+
+    /* Check if a DPC Event was requested to be signaled */
+    if (InterlockedExchange(&Prcb->DpcSetEventRequest, 0))
+    {
+        /* Signal it */
+        KeSetEvent(&Prcb->DpcEvent, 0, 0);
+    }
+
+    /* Lock dispatcher */
+    OldIrql = KeRaiseIrqlToSynchLevel();
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Get the Thread's Process */
+    Process = CurrentThread->ApcState.Process;
+
+    /* Check if Quantum expired */
+    if (CurrentThread->Quantum <= 0)
+    {
+        /* Reset the new Quantum */
+        CurrentThread->Quantum = CurrentThread->QuantumReset;
+
+        /* Calculate new priority */
+        OldPriority = CurrentThread->Priority;
+        if (OldPriority < LOW_REALTIME_PRIORITY)
+        {
+            /* Set the New Priority and add the Priority Decrement */
+            NewPriority = OldPriority - CurrentThread->PriorityDecrement - 1;
+
+            /* Don't go out of bounds */
+            if (NewPriority < CurrentThread->BasePriority)
+            {
+                NewPriority = CurrentThread->BasePriority;
+            }
+
+            /* Reset the priority decrement */
+            CurrentThread->PriorityDecrement = 0;
+
+            /* Set a new priority if needed */
+            if (OldPriority != NewPriority)
+            {
+                /* Set new Priority */
+                BOOLEAN Dummy; /* <- This is a hack anyways... */
+                KiSetPriorityThread(CurrentThread, NewPriority, &Dummy);
+            }
+            else
+            {
+                /* Queue new thread if none is already */
+                if (!Prcb->NextThread)
+                {
+                    /* FIXME: Schedule a New Thread, when ROS will have NT Scheduler */
+                }
+                else
+                {
+                    /* Make the current thread non-premeptive if a new thread is queued */
+                    CurrentThread->Preempted = FALSE;
+                }
+            }
+        }
+        else
+        {
+            /* Set the Quantum back to Maximum */
+            //if (CurrentThread->DisableQuantum) {
+            //    CurrentThread->Quantum = MAX_QUANTUM;
+            //}
+        }
+    }
+
+    /* Dispatch the Thread */
+    KeLowerIrql(DISPATCH_LEVEL);
+    KiDispatchThread(Ready);
+}
+
+VOID
+FASTCALL
+KiRetireDpcList(IN PKPRCB Prcb)
+{
+    PKDPC_DATA DpcData = Prcb->DpcData;
+    PLIST_ENTRY DpcEntry;
+    PKDPC Dpc;
+    PKDEFERRED_ROUTINE DeferredRoutine;
+    PVOID DeferredContext, SystemArgument1, SystemArgument2;
+
+    /* Main outer loop */
+    do
+    {
+        /* Set us as active */
+        Prcb->DpcRoutineActive = TRUE;
+
+        /* Check if this is a timer expiration request */
+        if (Prcb->TimerRequest)
+        {
+            /* FIXME: Not yet implemented */
+            ASSERT(FALSE);
+        }
+
+        /* Loop while we have entries in the queue */
+        while (DpcData->DpcQueueDepth)
+        {
+            /* Lock the DPC data */
+            KefAcquireSpinLockAtDpcLevel(&DpcData->DpcLock);
+
+            /* Make sure we have an entry */
+            if (!IsListEmpty(&DpcData->DpcListHead))
+            {
+                /* Remove the DPC from the list */
+                DpcEntry = RemoveHeadList(&DpcData->DpcListHead);
+                Dpc = CONTAINING_RECORD(DpcEntry, KDPC, DpcListEntry);
+
+                /* Clear its DPC data and save its parameters */
+                Dpc->DpcData = NULL;
+                DeferredRoutine = Dpc->DeferredRoutine;
+                DeferredContext = Dpc->DeferredContext;
+                SystemArgument1 = Dpc->SystemArgument1;
+                SystemArgument2 = Dpc->SystemArgument2;
+
+                /* Decrease the queue depth */
+                DpcData->DpcQueueDepth--;
+
+                /* Clear DPC Time */
+                Prcb->DebugDpcTime = 0;
+
+                /* Release the lock */
+                KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
+
+                /* Re-enable interrupts */
+                Ke386EnableInterrupts();
+
+                /* Call the DPC */
+                DeferredRoutine(Dpc,
+                                DeferredContext,
+                                SystemArgument1,
+                                SystemArgument2);
+                ASSERT_IRQL(DISPATCH_LEVEL);
+
+                /* Disable interrupts and keep looping */
+                Ke386DisableInterrupts();
+            }
+            else
+            {
+                /* The queue should be flushed now */
+                ASSERT(DpcData->DpcQueueDepth == 0);
+
+                /* Release DPC Lock */
+                KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
+                break;
+            }
+        }
+
+        /* Clear DPC Flags */
+        Prcb->DpcRoutineActive = FALSE;
+        Prcb->DpcInterruptRequested = FALSE;
+
+        /* Check if we have deferred threads */
+        if (Prcb->DeferredReadyListHead.Next)
+        {
+            /* FIXME: 2K3-style scheduling not implemeted */
+            ASSERT(FALSE);
+        }
+    } while (DpcData->DpcQueueDepth);
+}
 
 VOID
 NTAPI
@@ -313,181 +484,51 @@ KeSetTargetProcessorDpc(IN PKDPC Dpc,
 }
 
 /*
- * FUNCTION:
- *          Called when a quantum end occurs to check if priority should be changed
- *          and wether a new thread should be dispatched.
- * NOTES:
- *          Called when deleting a Driver.
- */
-VOID
-STDCALL
-KiQuantumEnd(VOID)
-{
-    PKPRCB Prcb;
-    PKTHREAD CurrentThread;
-    KIRQL OldIrql;
-    PKPROCESS Process;
-    KPRIORITY OldPriority;
-    KPRIORITY NewPriority;
-
-    /* Lock dispatcher, get current thread */
-    Prcb = KeGetCurrentPrcb();
-    CurrentThread = KeGetCurrentThread();
-    OldIrql = KeRaiseIrqlToSynchLevel();
-
-    /* Get the Thread's Process */
-    Process = CurrentThread->ApcState.Process;
-
-    /* Set DPC Event if requested */
-    if (Prcb->DpcSetEventRequest)
-    {
-        KeSetEvent(&Prcb->DpcEvent, 0, 0);
-    }
-
-    /* Check if Quantum expired */
-    if (CurrentThread->Quantum <= 0) {
-
-        /* Reset the new Quantum */
-        CurrentThread->Quantum = CurrentThread->QuantumReset;
-
-        /* Calculate new priority */
-        OldPriority = CurrentThread->Priority;
-        if (OldPriority < LOW_REALTIME_PRIORITY) {
-
-            /* Set the New Priority and add the Priority Decrement */
-            NewPriority = OldPriority - CurrentThread->PriorityDecrement - 1;
-
-            /* Don't go out of bounds */
-            if (NewPriority < CurrentThread->BasePriority) NewPriority = CurrentThread->BasePriority;
-
-            /* Reset the priority decrement */
-            CurrentThread->PriorityDecrement = 0;
-
-            /* Set a new priority if needed */
-            if (OldPriority != NewPriority) {
-
-                /* Set new Priority */
-                BOOLEAN Dummy; /* <- This is a hack anyways... */
-                KiSetPriorityThread(CurrentThread, NewPriority, &Dummy);
-
-            } else {
-
-                /* Queue new thread if none is already */
-                if (Prcb->NextThread == NULL) {
-
-                    /* FIXME: Schedule a New Thread, when ROS will have NT Scheduler */
-
-                } else {
-
-                    /* Make the current thread non-premeptive if a new thread is queued */
-                    CurrentThread->Preempted = FALSE;
-                }
-            }
-
-
-        } else {
-            /* Set the Quantum back to Maximum */
-            //if (CurrentThread->DisableQuantum) {
-            //    CurrentThread->Quantum = MAX_QUANTUM;
-            //}
-        }
-    }
-
-    /* Dispatch the Thread */
-    KeLowerIrql(DISPATCH_LEVEL);
-    KiDispatchThread(Ready);
-}
-
-/*
  * @implemented
- *
- * FUNCTION:
- *          Called whenever a system interrupt is generated at DISPATCH_LEVEL.
- *          It delivers queued DPCs and dispatches a new thread if need be.
  */
 VOID
-STDCALL
+NTAPI
 KiDispatchInterrupt(VOID)
 {
-    PLIST_ENTRY DpcEntry;
-    PKDPC Dpc;
-    KIRQL OldIrql;
-    PKPRCB Prcb;
+    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PVOID ExceptionList;
 
-    DPRINT("Dispatching Interrupts\n");
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    /* Disable interrupts */
+    Ke386DisableInterrupts();
 
-    /* Set DPC Deliver to Active */
-    Prcb = KeGetCurrentPrcb();
+    /* Check if we have to deliver DPCs, timers, or deferred threads */
+    if ((Pcr->PrcbData.DpcData[DPC_NORMAL].DpcQueueDepth) ||
+        (Pcr->PrcbData.TimerRequest) ||
+        (Pcr->PrcbData.DeferredReadyListHead.Next))
+    {
+        /* Save the exception list and clear it */
+        ExceptionList = Pcr->NtTib.ExceptionList;
+        Pcr->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
 
-    if (Prcb->DpcData[0].DpcQueueDepth > 0) {
-        /* Raise IRQL */
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-#ifdef CONFIG_SMP
-        KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
-#endif
-            Prcb->DpcRoutineActive = TRUE;
+        /* FIXME: Switch to DPC Stack */
 
-        DPRINT("&Prcb->DpcData[0].DpcListHead: %x\n", &Prcb->DpcData[0].DpcListHead);
-        /* Loop while we have entries */
-        while (!IsListEmpty(&Prcb->DpcData[0].DpcListHead)) {
+        /* Deliver DPCs */
+        KiRetireDpcList(Pcr->Prcb);
 
-            ASSERT(Prcb->DpcData[0].DpcQueueDepth > 0);
-            DPRINT("Queue Depth: %x\n", Prcb->DpcData[0].DpcQueueDepth);
+        /* FIXME: Restore stack */
 
-            /* Get the DPC call it */
-            DpcEntry = RemoveHeadList(&Prcb->DpcData[0].DpcListHead);
-            Dpc = CONTAINING_RECORD(DpcEntry, KDPC, DpcListEntry);
-            DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
-            Dpc->DpcData = NULL;
-            Prcb->DpcData[0].DpcQueueDepth--;
-#ifdef CONFIG_SMP
-            KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
-#endif
-            /* Disable/Enabled Interrupts and Call the DPC */
-            KeLowerIrql(OldIrql);
-            DPRINT("Calling DPC: %x\n", Dpc);
-            Dpc->DeferredRoutine(Dpc,
-                         Dpc->DeferredContext,
-                         Dpc->SystemArgument1,
-                         Dpc->SystemArgument2);
-            KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-#ifdef CONFIG_SMP
-            KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
-            /*
-             * If the dpc routine drops the irql below DISPATCH_LEVEL,
-             * a thread switch can occur and after the next thread switch
-             * the execution may start on an other processor.
-             */
-            if (Prcb != KeGetCurrentPrcb()) {
-
-                Prcb->DpcRoutineActive = FALSE;
-                KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
-                Prcb = KeGetCurrentPrcb();
-                KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
-                Prcb->DpcRoutineActive = TRUE;
-            }
-#endif
-        }
-        /* Clear DPC Flags */
-        Prcb->DpcRoutineActive = FALSE;
-        Prcb->DpcInterruptRequested = FALSE;
-#ifdef CONFIG_SMP
-        KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
-#endif
-
-        /* DPC Dispatching Ended, re-enable interrupts */
-        KeLowerIrql(OldIrql);
+        /* Restore exception list */
+        Pcr->NtTib.ExceptionList = ExceptionList;
     }
 
-    DPRINT("Checking for Quantum End\n");
+    /* Re-enable interrupts */
+    Ke386EnableInterrupts();
 
-    /* If we have Quantum End, call the function */
-    if (Prcb->QuantumEnd) {
-
-        Prcb->QuantumEnd = FALSE;
+    /* Check if we have quantum end */
+    if (Pcr->PrcbData.QuantumEnd)
+    {
+        /* Process it */
+        Pcr->PrcbData.QuantumEnd = FALSE;
         KiQuantumEnd();
+    }
+    else if (Pcr->PrcbData.NextThread)
+    {
+        /* FIXME: Schedule new thread */
     }
 }
 
