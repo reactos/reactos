@@ -19,8 +19,8 @@
  */
 
 #include <freeldr.h>
-
 #include <of_call.h>
+#include "mmu.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -37,7 +37,7 @@ static PVOID KernelMemory = 0;
 
 /* Converts a Relative Address read from the Kernel into a Physical Address */
 ULONG RaToPa(ULONG p) {
-    return ofw_virt2phys((ULONG)(p + KernelMemory), 1);
+    return PpcVirt2phys((ULONG)(KernelMemory) + p, 0);
 }
 
 /* Converts a Phsyical Address Pointer into a Page Frame Number */
@@ -284,12 +284,6 @@ FrLdrMapKernel(FILE *KernelImage)
     KernelBase = NtHeader->OptionalHeader.ImageBase;
     FrLdrGetKernelBase();
 
-    printf("About to do RaToPa(%x)\n", 
-	   NtHeader->OptionalHeader.AddressOfEntryPoint);
-    /* Save Entrypoint */
-    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
-    printf("RaToPa -> %x\n", KernelEntry);
-
     /* Save the Image Size */
     ImageSize = NtHeader->OptionalHeader.SizeOfImage;
 
@@ -301,6 +295,13 @@ FrLdrMapKernel(FILE *KernelImage)
 
     /* Allocate kernel memory */
     KernelMemory = MmAllocateMemory(ImageSize);
+
+    /* Save Entrypoint */
+    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
+    printf("RaToPa(%x + %x) -> %x\n", 
+	   KernelMemory,
+	   NtHeader->OptionalHeader.AddressOfEntryPoint, 
+	   KernelEntry);
 
     /* Load the file image */
     FsReadFile(KernelImage, ImageSize, NULL, KernelMemory);

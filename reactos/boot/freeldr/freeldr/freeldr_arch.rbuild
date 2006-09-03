@@ -66,6 +66,7 @@
 				<compilerflag>-meabi</compilerflag>
 				<file>boot.s</file>
 				<file>ofw.c</file>
+				<file>mmu.c</file>
 				<file>mach.c</file>
 				<file>mboot.c</file>
 			</module>

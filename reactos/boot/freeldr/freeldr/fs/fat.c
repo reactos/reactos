@@ -431,7 +431,11 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 		//
 		if (DirEntry->FileName[0] == '\0')
 		{
-			return FALSE;
+		        /* A workaround for something I see ... there are 
+			 * zero entries in the middle of the dir.  This is
+			 * probably a bug in the way the fat fs was made.
+			 */
+			continue; //return FALSE;
 		}
 
 		//

@@ -28,6 +28,19 @@ _begin:
 
 	/* Claim enough bytes to place freeldr at 0x8000 */
 	lis	%r3,0x8000@ha
+	li	%r3,0x8000@l
+		
+	lis	%r4,_binary_freeldr_tmp_end@ha
+	addi	%r4,%r4,_binary_freeldr_tmp_end@l
+	lis	%r5,_binary_freeldr_tmp_start@ha
+	addi	%r5,%r5,_binary_freeldr_tmp_start@l
+	sub	%r4,%r4,%r5
+	li	%r5,0x1000
+	
+	bl	ofw_claim
+
+	/* Now copy freeldr */	
+	lis	%r3,0x8000@ha
 	addi	%r3,%r3,0x8000@l
 
 	lis	%r4,_binary_freeldr_tmp_end@ha

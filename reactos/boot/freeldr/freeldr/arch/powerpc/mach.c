@@ -19,6 +19,7 @@
 #include "freeldr.h"
 #include "machine.h"
 #include "of.h"
+#include "mmu.h"
 
 #define TOTAL_HEAP_NEEDED (16 * 1024 * 1024) /* 16 megs */
 
@@ -223,10 +224,6 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 	    BiosMemoryMap[num_mem].Length = TOTAL_HEAP_NEEDED;	     
 	    ofw_claim(BiosMemoryMap[num_mem].BaseAddress, 
 		      BiosMemoryMap[num_mem].Length, 0x1000); /* claim it */
-	    printf("virt2phys(%x)->%x\n",
-		   BiosMemoryMap[num_mem].BaseAddress,
-		   ofw_virt2phys
-		   (mmuhandle, BiosMemoryMap[num_mem].BaseAddress));
 	    total += BiosMemoryMap[0].Length;
 	    num_mem++;
 	}
@@ -378,197 +375,8 @@ BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
 
 typedef unsigned int uint32_t;
 
-int GetMSR() {
-    register int res asm ("r3");
-    __asm__("mfmsr 3");
-    return res;
-}
-
-int GetPhys( int addr ) {
-    register int res asm ("r3");
-    __asm__("mfmsr 5\n\t"
-	    "mr    4,5\n\t"
-	    "xor   1,1,1\n\t"
-	    "addi  1,1,-1\n\t"
-	    "xori  1,1,0x10\n\t"
-	    "and   5,1,5\n\t"
-	    "mtmsr 5\n\t"
-	    "lwz   3,0(3)\n\t"
-	    "mtmsr 4");
-    return res;
-}
-
-int GetSR(int n) {
-    register int res asm ("r3");
-    switch( n ) {
-    case 0:
-	__asm__("mfsr 3,0");
-	break;
-    case 1:
-	__asm__("mfsr 3,1");
-	break;
-    case 2:
-	__asm__("mfsr 3,2");
-	break;
-    case 3:
-	__asm__("mfsr 3,3");
-	break;
-    case 4:
-	__asm__("mfsr 3,4");
-	break;
-    case 5:
-	__asm__("mfsr 3,5");
-	break;
-    case 6:
-	__asm__("mfsr 3,6");
-	break;
-    case 7:
-	__asm__("mfsr 3,7");
-	break;
-    case 8:
-	__asm__("mfsr 3,8");
-	break;
-    case 9:
-	__asm__("mfsr 3,9");
-	break;
-    case 10:
-	__asm__("mfsr 3,10");
-	break;
-    case 11:
-	__asm__("mfsr 3,11");
-	break;
-    case 12:
-	__asm__("mfsr 3,12");
-	break;
-    case 13:
-	__asm__("mfsr 3,13");
-	break;
-    case 14:
-	__asm__("mfsr 3,14");
-	break;
-    case 15:
-	__asm__("mfsr 3,15");
-	break;
-    }
-    return res;
-}
-
-void GetBat( int bat, int inst, int *batHi, int *batLo ) {
-    register int bh asm("r3"), bl asm("r4");
-    if( inst ) {
-	switch( bat ) {
-	case 0:
-	    __asm__("mfibatu 3,0");
-	    __asm__("mfibatl 4,0");
-	    break;
-	case 1:
-	    __asm__("mfibatu 3,1");
-	    __asm__("mfibatl 4,1");
-	    break;
-	case 2:
-	    __asm__("mfibatu 3,2");
-	    __asm__("mfibatl 4,2");
-	    break;
-	case 3:
-	    __asm__("mfibatu 3,3");
-	    __asm__("mfibatl 4,3");
-	    break;
-	}
-    } else {
-	switch( bat ) {
-	case 0:
-	    __asm__("mfdbatu 3,0");
-	    __asm__("mfdbatl 4,0");
-	    break;
-	case 1:
-	    __asm__("mfdbatu 3,1");
-	    __asm__("mfdbatl 4,1");
-	    break;
-	case 2:
-	    __asm__("mfdbatu 3,2");
-	    __asm__("mfdbatl 4,2");
-	    break;
-	case 3:
-	    __asm__("mfdbatu 3,3");
-	    __asm__("mfdbatl 4,3");
-	    break;
-	}
-    }
-    *batHi = bh;
-    *batLo = bl;
-}
-
-int GetSDR1() {
-    register int res asm("r3");
-    __asm__("mfsdr1 3");
-    return res;
-}
-
-int BatHit( int bath, int batl, int virt ) {
-    return (virt & 0xfffc0000) == (bath & 0xfffc0000);
-}
-
-int BatTranslate( int bath, int batl, int virt ) {
-    return (virt & 0x3ffff) | (batl & 0xfffc0000);
-}
-
-/* translate address */
-int virt2phys( int virt, int inst ) {
-    int msr = GetMSR();
-    int txmask = inst ? 0x20 : 0x10;
-    if( msr & txmask ) {
-	int i, bath, batl, sr, sdr1, physbase, vahi, valo;
-	int npteg, hash, ptegaddr, hashmask, ptehi, ptelo;
-	int vsid, pteh;
-	for( i = 0; i < 4; i++ ) {
-	    GetBat( i, inst, &bath, &batl );
-	    if( BatHit( bath, batl, virt ) ) {
-		return BatTranslate( bath, batl, virt );
-	    }
-	}
-
-	sr = GetSR( virt >> 28 );
-	vsid = sr & 0xfffffff;
-	valo = (vsid << 28) | (virt & 0xfffffff);
-	if( sr & 0x80000000 )
-	    return valo;
-
-	sdr1 = GetSDR1();
-
-	physbase = sdr1 & ~0xffff;
-	vahi = vsid >> 4;
-	npteg = ((sdr1 & 0x1ff) << 10);
-	hash = (vsid & 0x7ffff) ^ ((valo >> 12) & 0xffff);
-
-	hashmask = ((sdr1 & 0xffff) << 12) | 0x3ff;
-
-	for( pteh = 0; pteh < 0xff; pteh += 64, hash ^= ~0 ) {
-	    ptegaddr = ((hashmask & hash) * 64) + physbase;
-
-	    for( i = 0; i < 8; i++ ) {
-		int ptevsid, pteapi;
-		
-		ptehi = GetPhys( ptegaddr + (i * 8) );
-		ptelo = GetPhys( ptegaddr + (i * 8) + 4 );
-		ptevsid = (ptehi >> 8) & 0x7fffff;
-		pteapi = ptehi & 0x3f;
-
-		//printf("pte[%d] @ %x = %x:%x\n", 
-		//i, ptegaddr + (i * 8), ptehi, ptelo);
-		
-		if( (ptehi & 64) != pteh ) continue;
-		if( ptevsid != (vsid & 0x7fffff) ) continue;
-		if( pteapi != ((virt >> 22) & 0x3f) ) continue;
-		
-		return (ptelo & 0xfffff000) | (virt & 0xfff);
-	    }
-	}
-	return -1;
-    } else return virt;
-}
-
 void PpcInit( of_proxy the_ofproxy ) {
-    int i, len, stdin_handle_chosen, bathi, batlo;
+    int len, stdin_handle_chosen;
     ofproxy = the_ofproxy;
 
     ofw_print_string("Freeldr PowerPC Init\n");
@@ -595,25 +403,8 @@ void PpcInit( of_proxy the_ofproxy ) {
     MachVtbl.ConsGetCh   = PpcConsGetCh;
 
     printf( "stdin_handle is %x\n", stdin_handle );
-    /* List MMU Status */
-    printf("MSR %x\n", GetMSR());
-
-    for( i = 0; i < 16; i++ ) {
-	printf("SR%d %x\n", i, GetSR(i));
-    }
-
-    for( i = 0; i < 4; i++ ) {
-	GetBat( i, 0, &bathi, &batlo );
-	printf("DBAT%d %x:%x\n", i, bathi, batlo);
-    }
-
-    for( i = 0; i < 4; i++ ) {
-	GetBat( i, 1, &bathi, &batlo );
-	printf("IBAT%d %x:%x\n", i, bathi, batlo);
-    }
-
-    printf("virt2phys (0x8000,I) -> %x\n", virt2phys(0x8000,1));
-    printf("virt2phys (0xe00000,D) -> %x\n", virt2phys(0x60000000,0));
+    printf("virt2phys (0xe00000,D) -> %x\n", PpcVirt2phys(0xe00000,0));
+    printf("virt2phys (0xe01000,D) -> %x\n", PpcVirt2phys(0xe01000,0));
 
     MachVtbl.VideoClearScreen = PpcVideoClearScreen;
     MachVtbl.VideoSetDisplayMode = PpcVideoSetDisplayMode;
