@@ -15,6 +15,17 @@
 
 /* DATA **********************************************************************/
 
+#define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
+
+/* NT Version Info */
+ULONG NtMajorVersion = 5;
+ULONG NtMinorVersion = 0;
+ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
+ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
+ULONG NtGlobalFlag = 0;
+
+ULONG InitSafeBootMode = 0; /* KB83764 */
+
 extern ULONG MmCoreDumpType;
 extern CHAR KiTimerSystemAuditing;
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];

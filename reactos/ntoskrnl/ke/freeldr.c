@@ -1,76 +1,41 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/main.c
- * PURPOSE:         Initalizes the kernel
- *
- * PROGRAMMERS:     Alex Ionescu (cleaned up code, moved Executiv stuff to ex/init.c)
- *                  David Welch (welch@cwcom.net)
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/ke/freeldr.c
+ * PURPOSE:         FreeLDR Bootstrap Support
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
-#define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
-
-
-ULONG NtMajorVersion = 5;
-ULONG NtMinorVersion = 0;
-ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
-ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
-ULONG NtGlobalFlag = 0;
-CHAR KeNumberProcessors;
-KAFFINITY KeActiveProcessors = 1;
-ROS_LOADER_PARAMETER_BLOCK KeLoaderBlock;
-ULONG KeDcacheFlushCount = 0;
-ULONG KeIcacheFlushCount = 0;
-ULONG KiDmaIoCoherency = 0; /* RISC Architectures only */
-ULONG InitSafeBootMode = 0; /* KB83764 */
-
+/* FreeLDR Module Data */
 LOADER_MODULE KeLoaderModules[64];
 static CHAR KeLoaderModuleStrings[64][256];
-static CHAR KeLoaderCommandLine[256];
+PLOADER_MODULE CachedModules[MaximumCachedModuleType];
+
+/* FreeLDR Memory Data */
 ADDRESS_RANGE KeMemoryMap[64];
 ULONG KeMemoryMapRangeCount;
 ULONG_PTR FirstKrnlPhysAddr;
 ULONG_PTR LastKrnlPhysAddr;
 ULONG_PTR LastKernelAddress;
 
-PVOID KeUserApcDispatcher = NULL;
-PVOID KeUserCallbackDispatcher = NULL;
-PVOID KeUserExceptionDispatcher = NULL;
-PVOID KeRaiseUserExceptionDispatcher = NULL;
+/* FreeLDR Loader Data */
+ROS_LOADER_PARAMETER_BLOCK KeLoaderBlock;
+static CHAR KeLoaderCommandLine[256];
 
-ULONG KeLargestCacheLine = 0x40; /* FIXME: Arch-specific */
-
-/* Cached modules from the loader block */
-PLOADER_MODULE CachedModules[MaximumCachedModuleType];
-
+/* FreeLDR PE Hack Data */
 extern unsigned int _image_base__;
 ULONG_PTR KERNEL_BASE = (ULONG_PTR)&_image_base__;
-
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, _main)
-#endif
-
 extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 
-/* FUNCTIONS ****************************************************************/
-
-/*
- * @implemented
- */
-ULONG
-STDCALL
-KeGetRecommendedSharedDataAlignment(VOID)
-{
-    return KeLargestCacheLine;
-}
+/* FUNCTIONS *****************************************************************/
 
 VOID
 NTAPI
@@ -121,7 +86,8 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Save data */
-        KeLoaderBlock.MmapLength = KeMemoryMapRangeCount * sizeof(ADDRESS_RANGE);
+        KeLoaderBlock.MmapLength = KeMemoryMapRangeCount *
+                                   sizeof(ADDRESS_RANGE);
         KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
     }
     else
@@ -148,7 +114,8 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     OptHead = &NtHeader->OptionalHeader;
 
     /* Set Kernel Ending */
-    KeLoaderModules[0].ModEnd = KeLoaderModules[0].ModStart + PAGE_ROUND_UP((ULONG)OptHead->SizeOfImage);
+    KeLoaderModules[0].ModEnd = KeLoaderModules[0].ModStart +
+                                PAGE_ROUND_UP((ULONG)OptHead->SizeOfImage);
 
     /* Create a block for each module */
     for (i = 1; i < KeLoaderBlock.ModsCount; i++)
@@ -180,7 +147,8 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Choose last module address as the final kernel address */
-    LastKernelAddress = PAGE_ROUND_UP(KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd);
+    LastKernelAddress = PAGE_ROUND_UP(KeLoaderModules[KeLoaderBlock.
+                                                      ModsCount - 1].ModEnd);
 
     /* Select the HAL Base */
     HalBase = KeLoaderModules[1].ModStart;
@@ -207,7 +175,9 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     //
     // This dirty hack fixes it, and should make symbol lookup work too.
     //
-    HalModuleObject.SizeOfImage =  RtlImageNtHeader((PVOID)HalModuleObject.DllBase)->OptionalHeader.SizeOfImage;
+    HalModuleObject.SizeOfImage =  RtlImageNtHeader((PVOID)HalModuleObject.
+                                                    DllBase)->
+                                                    OptionalHeader.SizeOfImage;
 
     /* Increase the last kernel address with the size of HAL */
     LastKernelAddress += PAGE_ROUND_UP(DriverSize);

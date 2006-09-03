@@ -1,5 +1,5 @@
 /*
- * FILE:            ntoskrnl/ke/i386/main_asm.S
+ * FILE:            ntoskrnl/ke/i386/boot.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         Kernel Bootstrap Code
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

@@ -82,9 +82,13 @@ extern ULONG KeProcessorArchitecture;
 extern ULONG KeProcessorLevel;
 extern ULONG KeProcessorRevision;
 extern ULONG KeFeatureBits;
+extern ULONG Ke386GlobalPagesEnabled;
+extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
 extern UCHAR KeProcessNodeSeed;
+extern ETHREAD KiInitialThread;
+extern EPROCESS KiInitialProcess;
 extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
 extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
@@ -799,6 +803,26 @@ VOID
 NTAPI
 KiFlushNPXState(
     IN FLOATING_SAVE_AREA *SaveArea
+);
+
+VOID
+NTAPI
+KiInitSpinLocks(
+    IN PKPRCB Prcb,
+    IN CCHAR Number
+);
+
+LARGE_INTEGER
+NTAPI
+KiComputeReciprocal(
+    IN LONG Divisor,
+    OUT PUCHAR Shift
+);
+
+VOID
+NTAPI
+KiInitSystem(
+    VOID
 );
 
 #include "ke_x.h"

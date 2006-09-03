@@ -7,13 +7,13 @@
  *                  Gregor Anich
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ********(*********************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS   *****************************************************************/
+/* GLOBALS *******************************************************************/
 
 LIST_ENTRY KiProcessListHead;
 LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
@@ -22,6 +22,11 @@ KEVENT KiSwapEvent;
 
 KSERVICE_TABLE_DESCRIPTOR KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
 KSERVICE_TABLE_DESCRIPTOR KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
+
+PVOID KeUserApcDispatcher;
+PVOID KeUserCallbackDispatcher;
+PVOID KeUserExceptionDispatcher;
+PVOID KeRaiseUserExceptionDispatcher;
 
 /* FUNCTIONS *****************************************************************/
 

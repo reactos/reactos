@@ -65,6 +65,12 @@ ULONG Ke386Pae = FALSE;
 ULONG Ke386GlobalPagesEnabled = FALSE;
 ULONG Ke386NoExecute = FALSE;
 BOOLEAN KiI386PentiumLockErrataPresent;
+ULONG KeLargestCacheLine = 0x40;
+ULONG KeDcacheFlushCount = 0;
+ULONG KeIcacheFlushCount = 0;
+ULONG KiDmaIoCoherency = 0;
+CHAR KeNumberProcessors;
+KAFFINITY KeActiveProcessors = 1;
 
 /* CPU Signatures */
 CHAR CmpIntelID[]       = "GenuineIntel";
@@ -769,3 +775,12 @@ KeFlushCurrentTb(VOID)
     _Ke386SetCr(3, _Ke386GetCr(3));
 }
 
+/*
+ * @implemented
+ */
+ULONG
+STDCALL
+KeGetRecommendedSharedDataAlignment(VOID)
+{
+    return KeLargestCacheLine;
+}

@@ -27,11 +27,10 @@
 // Ke:
 //
 //  - FIXES:
+//      * Implement invalid opcode handler (fixes some apps from crashing).
 //      * Get rid of KiRosPrintAddress and use KiDumpParameterImages instead.
 //      * Sanitize some context fields during conversions.
-//      * Implement stack fault and segment fault handlers.
 //      * Add DR macro/save and VM macro/save.
-//      * Make boot process more NT-like.
 //  - FEATURES:
 //      * Use Queued Spinlocks for scheduling and dispatching.
 //      * New optimized table-based tick-hashed timer implementation.
