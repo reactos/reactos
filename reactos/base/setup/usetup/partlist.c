@@ -214,8 +214,8 @@ AddPartitionToList (ULONG DiskNumber,
     {
       for (j = 0; j < 4; j++)
 	{
-	  if (LayoutBuffer->PartitionEntry[j].PartitionType != PARTITION_ENTRY_UNUSED ||
-	      LayoutBuffer->PartitionEntry[j].PartitionLength.QuadPart != 0ULL)
+	  if (LayoutBuffer->PartitionEntry[i+j].PartitionType != PARTITION_ENTRY_UNUSED ||
+	      LayoutBuffer->PartitionEntry[i+j].PartitionLength.QuadPart != 0ULL)
 	    {
 	      break;
 	    }
