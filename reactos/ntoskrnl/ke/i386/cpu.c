@@ -26,6 +26,27 @@ KTSS KiBootTss;
 /* The TSS to use for Double Fault Traps (INT 0x9) */
 UCHAR KiDoubleFaultTSS[KTSS_IO_MAPS];
 
+/* The Boot GDT (FIXME: should have more entries */
+KGDTENTRY KiBootGdt[12] =
+{
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_NULL */
+    {0xffff, 0x0000, {{0x00, 0x9a, 0xcf, 0x00}}},       /* KGDT_R0_CODE */
+    {0xffff, 0x0000, {{0x00, 0x92, 0xcf, 0x00}}},       /* KGDT_R0_DATA */
+    {0xffff, 0x0000, {{0x00, 0xfa, 0xcf, 0x00}}},       /* KGDT_R3_CODE */
+    {0xffff, 0x0000, {{0x00, 0xf2, 0xcf, 0x00}}},       /* KGDT_R3_DATA*/
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_TSS */
+    {0x0fff, 0x0000, {{0x00, 0x92, 0x00, 0xff}}},       /* KGDT_R0_PCR */
+    {0x0fff, 0x0000, {{0x00, 0xf2, 0x00, 0x00}}},       /* KGDT_R3_TEB */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_UNUSED */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_LDT */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_DF_TSS */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}}        /* KGDT_NMI_TSS */
+};
+
+/* GDT Descriptor */
+KDESCRIPTOR KiGdtDescriptor = {sizeof(KiBootGdt), (ULONG)KiBootGdt};
+
+/* CPU Features and Flags */
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
 ULONG KeProcessorArchitecture;
@@ -42,6 +63,7 @@ ULONG Ke386GlobalPagesEnabled = FALSE;
 ULONG Ke386NoExecute = FALSE;
 BOOLEAN KiI386PentiumLockErrataPresent;
 
+/* CPU Signatures */
 CHAR CmpIntelID[]       = "GenuineIntel";
 CHAR CmpAmdID[]         = "AuthenticAMD";
 CHAR CmpCyrixID[]       = "CyrixInstead";
@@ -576,7 +598,45 @@ Ki386InitializeTss(VOID)
     TssEntry->LimitLow = KTSS_IO_MAPS;
 }
 
-VOID INIT_FUNCTION
+/* This is a rather naive implementation of Ke(Save/Restore)FloatingPointState
+   which will not work for WDM drivers. Please feel free to improve */
+NTSTATUS
+NTAPI
+KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+{
+    PFNSAVE_FORMAT FpState;
+    ASSERT_IRQL(DISPATCH_LEVEL);
+
+    /* check if we are doing software emulation */
+    if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
+
+    FpState = ExAllocatePool(NonPagedPool, sizeof (FNSAVE_FORMAT));
+    if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
+
+    *((PVOID *) Save) = FpState;
+    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
+
+    KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+{
+    PFNSAVE_FORMAT FpState = *((PVOID *) Save);
+
+    ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
+
+    asm volatile("fnclex\n\t");
+    asm volatile("frstor %0\n\t" : "=m" (*FpState));
+
+    ExFreePool(FpState);
+    return STATUS_SUCCESS;
+}
+
+VOID
+INIT_FUNCTION
 Ki386SetProcessorFeatures(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -666,7 +726,6 @@ Ki386SetProcessorFeatures(VOID)
         KiFastSystemCallDisable = 0;
     }
 }
-
 
 VOID
 NTAPI

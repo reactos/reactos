@@ -17,11 +17,69 @@
 /* GLOBALS *******************************************************************/
 
 static KSPIN_LOCK LdtLock;
+static KSPIN_LOCK GdtLock;
 
 /* FUNCTIONS *****************************************************************/
 
-/* gdt.c */
-extern VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
+VOID
+KeSetBaseGdtSelector(ULONG Entry,
+		     PVOID Base)
+{
+   KIRQL oldIrql;
+   PUSHORT Gdt;
+
+   DPRINT("KeSetBaseGdtSelector(Entry %x, Base %x)\n",
+	   Entry, Base);
+
+   KeAcquireSpinLock(&GdtLock, &oldIrql);
+
+   Gdt = KeGetCurrentKPCR()->GDT;
+   Entry = (Entry & (~0x3)) / 2;
+
+   Gdt[Entry + 1] = (USHORT)(((ULONG)Base) & 0xffff);
+
+   Gdt[Entry + 2] = Gdt[Entry + 2] & ~(0xff);
+   Gdt[Entry + 2] = (USHORT)(Gdt[Entry + 2] |
+     ((((ULONG)Base) & 0xff0000) >> 16));
+
+   Gdt[Entry + 3] = Gdt[Entry + 3] & ~(0xff00);
+   Gdt[Entry + 3] = (USHORT)(Gdt[Entry + 3] |
+     ((((ULONG)Base) & 0xff000000) >> 16));
+
+   DPRINT("%x %x %x %x\n",
+	   Gdt[Entry + 0],
+	   Gdt[Entry + 1],
+	   Gdt[Entry + 2],
+	   Gdt[Entry + 3]);
+
+   KeReleaseSpinLock(&GdtLock, oldIrql);
+}
+
+VOID
+KeSetGdtSelector(ULONG Entry,
+                 ULONG Value1,
+                 ULONG Value2)
+{
+   KIRQL oldIrql;
+   PULONG Gdt;
+
+   DPRINT("KeSetGdtSelector(Entry %x, Value1 %x, Value2 %x)\n",
+	   Entry, Value1, Value2);
+
+   KeAcquireSpinLock(&GdtLock, &oldIrql);
+
+   Gdt = (PULONG) KeGetCurrentKPCR()->GDT;
+   Entry = (Entry & (~0x3)) / 4;
+
+   Gdt[Entry] = Value1;
+   Gdt[Entry + 1] = Value2;
+
+   DPRINT("%x %x\n",
+	   Gdt[Entry + 0],
+	   Gdt[Entry + 1]);
+
+   KeReleaseSpinLock(&GdtLock, oldIrql);
+}
 
 BOOL PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
 {
@@ -172,20 +230,3 @@ NtSetLdtEntries (ULONG Selector1,
   return STATUS_SUCCESS;
 }
 
-VOID
-Ki386InitializeLdt(VOID)
-{
-  PUSHORT Gdt = KeGetCurrentKPCR()->GDT;
-  unsigned int base, length;
-
-  /*
-   * Set up an a descriptor for the LDT
-   */
-  base = length = 0;
-
-  Gdt[(KGDT_LDT / 2) + 0] = (length & 0xFFFF);
-  Gdt[(KGDT_LDT / 2) + 1] = (base & 0xFFFF);
-  Gdt[(KGDT_LDT / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
-  Gdt[(KGDT_LDT / 2) + 3] = ((length & 0xF0000) >> 16) |
-    ((base & 0xFF000000) >> 16);
-}

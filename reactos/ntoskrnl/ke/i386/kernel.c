@@ -25,11 +25,8 @@ UCHAR KeProcessNodeSeed;
 ETHREAD KiInitialThread;
 EPROCESS KiInitialProcess;
 
-extern LIST_ENTRY KiProcessListHead;
 extern ULONG Ke386GlobalPagesEnabled;
-extern KGDTENTRY KiBootGdt[];
 extern PVOID trap_stack, init_stack;
-extern KTSS KiBootTss;
 
 /* System-defined Spinlocks */
 KSPIN_LOCK KiDispatcherLock;
@@ -517,9 +514,6 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Setup the boot (Freeldr should've done), double fault and NMI TSS */
     Ki386InitializeTss();
-
-    /* Setup the LDT */
-    Ki386InitializeLdt();
 
     /* Setup CPU-related fields */
     Pcr->Number = Cpu;

@@ -27,12 +27,11 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file first="true">main_asm.S</file>
+				<file>abios.c</file>
 				<file>cpu.c</file>
 				<file>ctxswitch.S</file>
                 <file>clock.S</file>
 				<file>exp.c</file>
-				<file>fpu.c</file>
-				<file>gdt.c</file>
                 <!-- <file>irq.c</file> -->
 				<file>kernel.c</file>
 				<file>ldt.c</file>
