@@ -795,7 +795,8 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hDc, const BITMAPINFOHEADER *Header,
   
  
   if (NULL == hDc)
-  {            
+  {     
+	   BITMAPINFOHEADER *change_Header = (BITMAPINFOHEADER *)Header;
        hDc =  IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
        if (hDc == NULL)
        {         
@@ -810,6 +811,9 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hDc, const BITMAPINFOHEADER *Header,
           return NULL;
       }
       
+	  change_Header->biBitCount = 1;
+	  change_Header->biPlanes = 1;
+
       Bmp = IntCreateDIBitmap(Dc, Header, Init, Bits, Data, ColorUse);                      
       DC_UnlockDc(Dc);
       NtGdiDeleteObjectApp(hDc);  
