@@ -515,13 +515,10 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     Pcr->PrcbData.ProcessorState.SpecialRegisters.KernelDr6 = 0;
     Pcr->PrcbData.ProcessorState.SpecialRegisters.KernelDr7 = 0;
 
-    /*
-     * Low-level GDT, TSS and LDT Setup, most of which Freeldr should have done
-     * instead, and we should only add some extra information. This would be
-     * required for future NTLDR compatibility.
-     */
-    KiInitializeGdt(NULL);
-    Ki386BootInitializeTSS();
+    /* Setup the boot (Freeldr should've done), double fault and NMI TSS */
+    Ki386InitializeTss();
+
+    /* Setup the LDT */
     Ki386InitializeLdt();
 
     /* Setup CPU-related fields */

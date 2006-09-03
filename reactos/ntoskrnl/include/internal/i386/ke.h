@@ -57,7 +57,8 @@ KiInitializeGdt(struct _KPCR* Pcr);
 VOID
 Ki386ApplicationProcessorInitializeTSS(VOID);
 VOID
-Ki386BootInitializeTSS(VOID);
+NTAPI
+Ki386InitializeTss(VOID);
 VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
 VOID
@@ -151,6 +152,12 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
 
+#define _Ke386GetSeg(N)           ({ \
+                                     unsigned int __d; \
+                                     __asm__("movl %%" #N ",%0\n\t" :"=r" (__d)); \
+                                     __d; \
+                                 })
+
 #define _Ke386GetCr(N)           ({ \
                                      unsigned int __d; \
                                      __asm__("movl %%cr" #N ",%0\n\t" :"=r" (__d)); \
@@ -164,6 +171,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386SetCr2(X)           _Ke386SetCr(2,X)
 #define Ke386GetCr4()            _Ke386GetCr(4)
 #define Ke386SetCr4(X)           _Ke386SetCr(4,X)
+#define Ke386GetSs()             _Ke386GetSeg(ss)
 
 static inline LONG Ke386TestAndClearBit(ULONG BitPos, volatile PULONG Addr)
 {

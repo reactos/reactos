@@ -95,6 +95,7 @@ extern ULONG KeI386EFlagsAndMaskV86;
 extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
 extern KIDTENTRY KiIdt[];
+extern KGDTENTRY KiBootGdt[];
 extern FAST_MUTEX KernelAddressSpaceLock;
 extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
@@ -116,6 +117,8 @@ extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG IdleProcessorMask;
+extern ULONG trap_stack_top;
+extern VOID KiTrap8(VOID);
 
 /* MACROS *************************************************************************/
 
@@ -184,7 +187,13 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
 
+/* IOPM Definitions */
+#define IO_ACCESS_MAP_NONE 0
 #define IOPM_OFFSET FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
+#define KiComputeIopmOffset(MapNumber)              \
+    (MapNumber == IO_ACCESS_MAP_NONE) ?             \
+        (USHORT)(sizeof(KTSS)) :                    \
+        (USHORT)(FIELD_OFFSET(KTSS, IoMaps[MapNumber-1].IoMap))
 
 #define SIZE_OF_FX_REGISTERS 32
 

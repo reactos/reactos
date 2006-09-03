@@ -647,7 +647,6 @@ typedef struct _KiIoAccessMap
     UCHAR IoMap[8196];
 } KIIO_ACCESS_MAP;
 
-#include <pshpack1.h>
 typedef struct _KTSS
 {
     USHORT Backlink;
@@ -658,7 +657,15 @@ typedef struct _KTSS
     ULONG NotUsed1[4];
     ULONG CR3;
     ULONG Eip;
-    ULONG NotUsed2[9];
+    ULONG EFlags;
+    ULONG Eax;
+    ULONG Ecx;
+    ULONG Edx;
+    ULONG Ebx;
+    ULONG Esp;
+    ULONG Ebp;
+    ULONG Esi;
+    ULONG Edi;
     USHORT Es;
     USHORT Reserved2;
     USHORT Cs;
@@ -678,7 +685,6 @@ typedef struct _KTSS
     KIIO_ACCESS_MAP IoMaps[1];
     UCHAR IntDirectionMap[32];
 } KTSS, *PKTSS;
-#include <poppack.h>
 
 //
 // i386 CPUs don't have exception frames

@@ -20,6 +20,12 @@
 
 /* GLOBALS *******************************************************************/
 
+/* The Boot TSS */
+KTSS KiBootTss;
+
+/* The TSS to use for Double Fault Traps (INT 0x9) */
+UCHAR KiDoubleFaultTSS[KTSS_IO_MAPS];
+
 ULONG KeI386CpuType;
 ULONG KeI386CpuStep;
 ULONG KeProcessorArchitecture;
@@ -457,6 +463,117 @@ KiSetCR0Bits(VOID)
 
     /* Set new Cr0 */
     Ke386SetCr0(Cr0);
+}
+
+VOID
+NTAPI
+KiInitializeTSS2(IN PKTSS Tss,
+                 IN PKGDTENTRY TssEntry OPTIONAL)
+{
+    PUCHAR p;
+
+    /* Make sure the GDT Entry is valid */
+    if (TssEntry)
+    {
+        /* Set the Limit */
+        TssEntry->LimitLow = sizeof(KTSS) - 1;
+        TssEntry->HighWord.Bits.LimitHi &= 0xF0;
+    }
+
+    /* Now clear the I/O Map */
+    RtlFillMemory(Tss->IoMaps[0].IoMap, 8096, -1);
+
+    /* Initialize Interrupt Direction Maps */
+    p = (PUCHAR)(Tss->IoMaps[0].DirectionMap);
+    RtlZeroMemory(p, 32);
+
+    /* Add DPMI support for interrupts */
+    p[0] = 4;
+    p[3] = 0x18;
+    p[4] = 0x18;
+
+    /* Initialize the default Interrupt Direction Map */
+    p = Tss->IntDirectionMap;
+    RtlZeroMemory(Tss->IntDirectionMap, 32);
+
+    /* Add DPMI support */
+    p[0] = 4;
+    p[3] = 0x18;
+    p[4] = 0x18;
+}
+
+VOID
+NTAPI
+KiInitializeTSS(IN PKTSS Tss)
+{
+    /* Set an invalid map base */
+    Tss->IoMapBase = KiComputeIopmOffset(IO_ACCESS_MAP_NONE);
+
+    /* Disable traps during Task Switches */
+    Tss->Flags = 0;
+
+    /* Set LDT and Ring 0 SS */
+    Tss->LDT = 0;
+    Tss->Ss0 = KGDT_R0_DATA;
+}
+
+VOID
+NTAPI
+Ki386InitializeTss(VOID)
+{
+    PKTSS Tss;
+    PKGDTENTRY TssEntry;
+    PKIDTENTRY TaskGateEntry;
+    PKIDT_ACCESS TaskGateAccess;
+
+    /* Initialize the boot TSS. */
+    Tss = &KiBootTss;
+    TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
+    KiInitializeTSS2(Tss, TssEntry);
+    KiInitializeTSS(Tss);
+
+    /* Initialize a descriptor for the TSS */
+    TssEntry->HighWord.Bits.Type = I386_TSS;
+    TssEntry->HighWord.Bits.Pres = 1;
+    TssEntry->HighWord.Bits.Dpl = 0;
+    TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
+    TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
+    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+
+    /* Load the task register */
+    __asm__("ltr %%ax":: "a" (KGDT_TSS));
+
+    /* Setup the Task Gate for Double Fault Traps */
+    TaskGateEntry = &KiIdt[8];
+    TaskGateAccess = (PKIDT_ACCESS)&TaskGateEntry->Access;
+#if 0
+    TaskGateAccess->SegmentType = I386_TASK_GATE;
+    TaskGateAccess->Present = 1;
+    TaskGateAccess->Dpl = 0;
+    TaskGateEntry->Selector = KGDT_DF_TSS;
+#endif
+
+    /* Initialize the TSS used for handling double faults. */
+    Tss = (PKTSS)KiDoubleFaultTSS;
+    KiInitializeTSS(Tss);
+    Tss->CR3 = _Ke386GetCr(3);
+    Tss->Esp0 = trap_stack_top;
+    Tss->Eip = PtrToUlong(KiTrap8);
+    Tss->Cs = KGDT_R0_CODE;
+    Tss->Fs = KGDT_R0_PCR;
+    Tss->Ss = Ke386GetSs();
+    Tss->Es = KGDT_R3_DATA | RPL_MASK;
+    Tss->Ds = KGDT_R3_DATA | RPL_MASK;
+
+    /* Setup the Double Trap TSS entry in the GDT */
+    TssEntry = &KiBootGdt[KGDT_DF_TSS / sizeof(KGDTENTRY)];
+    TssEntry->HighWord.Bits.Type = I386_TSS;
+    TssEntry->HighWord.Bits.Pres = 1;
+    TssEntry->HighWord.Bits.Dpl = 0;
+    TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
+    TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
+    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+    TssEntry->LimitLow = KTSS_IO_MAPS;
 }
 
 VOID INIT_FUNCTION

@@ -38,7 +38,6 @@
 				<file>ldt.c</file>
 				<file>thread.c</file>
 				<file>trap.s</file>
-				<file>tss.c</file>
 				<file>usercall_asm.S</file>
 				<file>v86vdm.c</file>
 				<file>v86m_sup.S</file>
