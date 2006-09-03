@@ -485,14 +485,16 @@ BITMAP_Cleanup(PVOID ObjectBody)
 	{
 		if (pBmp->dib == NULL)
 		{
-			ExFreePool(pBmp->SurfObj.pvBits);
+			if (pBmp->SurfObj.pvBits != NULL)
+			    ExFreePool(pBmp->SurfObj.pvBits);
 		}
 		else
 		{
-			EngFreeUserMem(pBmp->SurfObj.pvBits);
+			if (pBmp->SurfObj.pvBits != NULL)
+				EngFreeUserMem(pBmp->SurfObj.pvBits);
 		}
-		if (pBmp->hDIBPalette)
-		{
+		if (pBmp->hDIBPalette != NULL)
+		{			
 			NtGdiDeleteObject(pBmp->hDIBPalette);
 		}
 	}
@@ -1066,11 +1068,27 @@ NtGdiSetPixel(
 	INT  Y,
 	COLORREF  Color)
 {
+   
+	DPRINT1("0 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);	
+	
+    if (((Color>>24) & 0xff)<0x10) 
+    {
+        Color = ((Color>>16) & 0x0000ff) | ((Color<<16) & 0xff0000) | (Color & 0x00ff00);
+    }
+	
+	DPRINT1("0 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
+
 	if (NtGdiSetPixelV(hDC,X,Y,Color))
 	{
-		return NtGdiGetPixel(hDC,X,Y);
+		Color = NtGdiGetPixel(hDC,X,Y);
+		DPRINT1("1 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
+		return Color;
+
 	}
-	return ((COLORREF) -1);
+
+	Color = ((COLORREF) -1);
+	DPRINT1("2 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
+	return Color;
 }
 
 BOOL STDCALL
