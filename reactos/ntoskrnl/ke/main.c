@@ -48,18 +48,6 @@ PVOID KeRaiseUserExceptionDispatcher = NULL;
 
 ULONG KeLargestCacheLine = 0x40; /* FIXME: Arch-specific */
 
-/* the initial stacks are declared in main_asm.S */
-extern ULONG kernel_stack;
-extern ULONG kernel_stack_top;
-extern ULONG kernel_trap_stack;
-extern ULONG kernel_trap_stack_top;
-
-/* These point to the aligned 3 pages */
-ULONG init_stack = (ULONG)&kernel_stack;
-ULONG init_stack_top = (ULONG)&kernel_stack_top;
-ULONG trap_stack = (ULONG)&kernel_trap_stack;
-ULONG trap_stack_top = (ULONG)&kernel_trap_stack_top;
-
 /* Cached modules from the loader block */
 PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
@@ -96,6 +84,10 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_OPTIONAL_HEADER OptHead;
     CHAR* s;
+
+    /* Load the GDT and IDT */
+    Ke386SetGlobalDescriptorTable(KiGdtDescriptor);
+    Ke386SetInterruptDescriptorTable(KiIdtDescriptor);
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
     memcpy(&KeLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));

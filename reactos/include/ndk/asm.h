@@ -493,6 +493,11 @@ Author:
 // Kernel Feature Bits
 //
 #define KF_RDTSC                                0x00000002
+
+//
+// Kernel Stack Size
+//
+#define KERNEL_STACK_SIZE                       0x3000
 #endif
 
 //

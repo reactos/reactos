@@ -86,9 +86,6 @@ _KiUnexpectedEntrySize:
 _UnexpectedMsg:
     .asciz "\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n"
 
-Broken:
-    .asciz "\n\x7\x7!!! Broken TrapFrame. Magic: %08lx MagicB: %08lx!!!\n"
-
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 
 _KiGetTickCount:

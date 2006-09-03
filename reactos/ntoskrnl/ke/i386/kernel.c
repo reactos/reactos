@@ -26,7 +26,7 @@ ETHREAD KiInitialThread;
 EPROCESS KiInitialProcess;
 
 extern ULONG Ke386GlobalPagesEnabled;
-extern PVOID trap_stack, init_stack;
+extern PVOID trap_stack;
 
 /* System-defined Spinlocks */
 KSPIN_LOCK KiDispatcherLock;
@@ -514,7 +514,7 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
                     KiBootGdt,
                     &KiBootTss,
                     &KiInitialThread.Tcb,
-                    trap_stack);
+                    KiDoubleFaultStack);
 
     /* Set us as the current process */
     KiInitialThread.Tcb.ApcState.Process = &KiInitialProcess.Pcb;
@@ -554,7 +554,7 @@ AppCpuInit:
     /* Call main kernel intialization */
     KiInitializeKernel(&KiInitialProcess.Pcb,
                        &KiInitialThread.Tcb,
-                       init_stack,
+                       P0BootStack,
                        Prcb,
                        Cpu,
                        LoaderBlock);

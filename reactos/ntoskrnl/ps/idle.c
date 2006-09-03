@@ -59,19 +59,19 @@ PsInitializeIdleOrFirstThread(PEPROCESS Process,
                               BOOLEAN First)
 {
     PETHREAD Thread;
-    ULONG_PTR KernelStack;
-    extern unsigned int init_stack_top;
+    PVOID KernelStack;
 
     Thread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
     RtlZeroMemory(Thread, sizeof(ETHREAD));
     Thread->ThreadsProcess = Process;
     if (First)
     {
-        KernelStack = init_stack_top;
+        KernelStack = P0BootStack;
     }
     else
     {
-        KernelStack = (ULONG_PTR)MmCreateKernelStack(FALSE) + KERNEL_STACK_SIZE;
+        KernelStack = (PVOID)((ULONG_PTR)MmCreateKernelStack(FALSE) +
+                              KERNEL_STACK_SIZE);
     }
     KeInitializeThread(&Process->Pcb,
                        &Thread->Tcb,
@@ -80,7 +80,7 @@ PsInitializeIdleOrFirstThread(PEPROCESS Process,
                        NULL,
                        NULL,
                        NULL,
-                       (PVOID)KernelStack);
+                       KernelStack);
     InitializeListHead(&Thread->IrpList);
     *ThreadPtr = Thread;
     return STATUS_SUCCESS;

@@ -36,10 +36,6 @@ PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 
-extern ULONG init_stack;
-extern ULONG init_stack_top;
-extern ULONG trap_stack;
-
 VOID INIT_FUNCTION NTAPI MmInitVirtualMemory(ULONG_PTR LastKernelAddress, ULONG KernelLength);
 
 #if defined (ALLOC_PRAGMA)
@@ -393,10 +389,6 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
                        BIOSMemoryMap,
                        AddressRangeCount);
    kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
-
-   /* Unmap the guard pages from the initial stacks */
-   MmDeleteVirtualMapping(NULL, (PVOID)(init_stack - PAGE_SIZE), FALSE, NULL, NULL);
-   MmDeleteVirtualMapping(NULL, (PVOID)(trap_stack - PAGE_SIZE), FALSE, NULL, NULL);
 
    /*
     * Unmap low memory

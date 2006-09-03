@@ -1,46 +1,45 @@
-#include <roscfg.h>
-#include <ndk/asm.h>
+/*
+ * FILE:            ntoskrnl/ke/i386/main_asm.S
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PURPOSE:         Kernel Bootstrap Code
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ */
 
-#define AP_MAGIC (0x12481020)
+/* INCLUDES ******************************************************************/
 
-.global _kernel_stack
-.global _kernel_stack_top
-.global _kernel_trap_stack
-.global _kernel_trap_stack_top
+#include <asm.h>
+.intel_syntax noprefix
 
-.globl _NtProcessStartup
+/* GLOBALS *******************************************************************/
 
 .bss
-.align 4096
+.align 16
 
+/* Kernel Boot Stack */
+.globl _P0BootStack
+.space KERNEL_STACK_SIZE
+_P0BootStack:
 
-/* guard page for the kernel stack */
-.fill 4096, 1, 0
+/* Kernel Double-Fault and Temporary DPC Stack */
+.globl _KiDoubleFaultStack
+.space KERNEL_STACK_SIZE
+_KiDoubleFaultStack:
 
-_kernel_stack:
-.fill 3*4096, 1, 0
-_kernel_stack_top:
+/* FUNCTIONS *****************************************************************/
 
-/* guard page for the trap stack */
-.fill 4096, 1, 0
-
-_kernel_trap_stack:
-.fill 3*4096, 1, 0
-_kernel_trap_stack_top:
-	
 .text
-
+.func NtProcessStartup
 _NtProcessStartup:
 
-    /* FIXME: Application processors should have their own GDT/IDT */
-    lgdt _KiGdtDescriptor
-    lidt _KiIdtDescriptor
-
     /* Load the initial kernel stack */
-    lea _kernel_stack_top, %eax
-    sub $(SIZEOF_FX_SAVE_AREA), %eax
-    movl %eax, %esp
+    lea eax, _P0BootStack
+    sub eax, (NPX_FRAME_LENGTH + KTRAP_FRAME_LENGTH + KTRAP_FRAME_ALIGN)
+    mov esp, eax
+
+    /* Save initial CR0 state */
+    push CR0_EM + CR0_TS + CR0_MP
 
     /* Call the main kernel initialization */
-    pushl %edx
+    push edx
     call _KiRosPrepareForSystemStartup@4
+.endfunc

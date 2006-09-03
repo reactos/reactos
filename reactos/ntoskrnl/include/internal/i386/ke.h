@@ -145,6 +145,10 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                                  __asm__("lldt %0\n\t" \
                                      : /* no outputs */ \
                                      : "m" (X));
+#define Ke386SetInterruptDescriptorTable(X) \
+                                 __asm__("lidt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
 #define Ke386SetGlobalDescriptorTable(X) \
                                  __asm__("lgdt %0\n\t" \
                                      : /* no outputs */ \
