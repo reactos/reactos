@@ -368,6 +368,10 @@ typedef struct IAVIEditStream *PAVIEDITSTREAM;
 #ifndef aviTWOCC
 #define aviTWOCC(ch0,ch1) ((WORD)(BYTE)(ch0)|((WORD)(BYTE)(ch1)<<8))
 #endif
+#ifndef comptypeDIB
+#define comptypeDIB  mmioFOURCC('D','I','B',' ')
+#endif
+
 
 #ifndef RC_INVOKED
 DECLARE_HANDLE(HIC);
