@@ -826,6 +826,7 @@ V86Int1:
     int 3
 .endfunc
 
+.globl _KiTrap2
 .func KiTrap2
 _KiTrap2:
 

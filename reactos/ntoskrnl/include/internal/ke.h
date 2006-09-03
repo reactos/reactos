@@ -121,6 +121,7 @@ extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG IdleProcessorMask;
 extern ULONG trap_stack_top;
 extern VOID KiTrap8(VOID);
+extern VOID KiTrap2(VOID);
 
 /* MACROS *************************************************************************/
 

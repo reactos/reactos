@@ -26,6 +26,9 @@ KTSS KiBootTss;
 /* The TSS to use for Double Fault Traps (INT 0x9) */
 UCHAR KiDoubleFaultTSS[KTSS_IO_MAPS];
 
+/* The TSS to use for NMI Fault Traps (INT 0x2) */
+UCHAR KiNMITSS[KTSS_IO_MAPS];
+
 /* The Boot GDT (FIXME: should have more entries */
 KGDTENTRY KiBootGdt[12] =
 {
@@ -563,7 +566,7 @@ Ki386InitializeTss(VOID)
     TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
 
     /* Load the task register */
-    __asm__("ltr %%ax":: "a" (KGDT_TSS));
+    Ke386SetTr(KGDT_TSS);
 
     /* Setup the Task Gate for Double Fault Traps */
     TaskGateEntry = &KiIdt[8];
@@ -589,6 +592,37 @@ Ki386InitializeTss(VOID)
 
     /* Setup the Double Trap TSS entry in the GDT */
     TssEntry = &KiBootGdt[KGDT_DF_TSS / sizeof(KGDTENTRY)];
+    TssEntry->HighWord.Bits.Type = I386_TSS;
+    TssEntry->HighWord.Bits.Pres = 1;
+    TssEntry->HighWord.Bits.Dpl = 0;
+    TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
+    TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
+    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+    TssEntry->LimitLow = KTSS_IO_MAPS;
+
+    /* Now setup the NMI Task Gate */
+    TaskGateEntry = &KiIdt[2];
+    TaskGateAccess = (PKIDT_ACCESS)&TaskGateEntry->Access;
+#if 0
+    TaskGateAccess->SegmentType = I386_TASK_GATE;
+    TaskGateAccess->Present = 1;
+    TaskGateEntry->Selector = KGDT_NMI_TSS;
+#endif
+
+    /* Initialize the actual TSS */
+    Tss = (PKTSS)KiNMITSS;
+    KiInitializeTSS(Tss);
+    Tss->CR3 = _Ke386GetCr(3);
+    Tss->Esp0 = trap_stack_top;
+    Tss->Eip = PtrToUlong(KiTrap2);
+    Tss->Cs = KGDT_R0_CODE;
+    Tss->Fs = KGDT_R0_PCR;
+    Tss->Ss = Ke386GetSs();
+    Tss->Es = KGDT_R3_DATA | RPL_MASK;
+    Tss->Ds = KGDT_R3_DATA | RPL_MASK;
+
+    /* And its associated TSS Entry */
+    TssEntry = &KiBootGdt[KGDT_NMI_TSS / sizeof(KGDTENTRY)];
     TssEntry->HighWord.Bits.Type = I386_TSS;
     TssEntry->HighWord.Bits.Pres = 1;
     TssEntry->HighWord.Bits.Dpl = 0;

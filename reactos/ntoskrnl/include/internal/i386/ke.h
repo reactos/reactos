@@ -164,6 +164,9 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                                      __d; \
                                  })
 #define _Ke386SetCr(N,X)         __asm__ __volatile__("movl %0,%%cr" #N : :"r" (X));
+#define Ke386SetTr(X)         __asm__ __volatile__("ltr %%ax" : :"a" (X));
+
+#define _Ke386SetSeg(N,X)         __asm__ __volatile__("movl %0,%%" #N : :"r" (X));
 
 #define Ke386GetCr0()            _Ke386GetCr(0)
 #define Ke386SetCr0(X)           _Ke386SetCr(0,X)
@@ -172,6 +175,9 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386GetCr4()            _Ke386GetCr(4)
 #define Ke386SetCr4(X)           _Ke386SetCr(4,X)
 #define Ke386GetSs()             _Ke386GetSeg(ss)
+#define Ke386SetFs(X)            _Ke386SetSeg(fs, X)
+#define Ke386SetDs(X)            _Ke386SetSeg(ds, X)
+#define Ke386SetEs(X)            _Ke386SetSeg(es, X)
 
 static inline LONG Ke386TestAndClearBit(ULONG BitPos, volatile PULONG Addr)
 {

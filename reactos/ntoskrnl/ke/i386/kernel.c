@@ -435,9 +435,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     Prcb->NextThread = NULL;
     //Prcb->IdleThread = InitThread;
 
-    /* Initialize the Debugger */
-    KdInitSystem (0, &KeLoaderBlock);
-
     /* Initialize the Kernel Executive */
     ExpInitializeExecutive();
 
@@ -489,10 +486,25 @@ VOID
 NTAPI
 KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* Currently hacked for CPU 0 only */
-    ULONG Cpu = 0;
+    ULONG Cpu;
     PKIPCR Pcr = (PKIPCR)KPCR_BASE;
     PKPRCB Prcb;
+
+    /* Save the loader block and get the current CPU */
+    //KeLoaderBlock = LoaderBlock;
+    Cpu = KeNumberProcessors;
+    if (!Cpu)
+    {
+        /* If this is the boot CPU, set FS and the CPU Number*/
+        Ke386SetFs(KGDT_R0_PCR);
+        KeGetPcr()->Number = Cpu;
+    }
+
+    /* Skip initial setup if this isn't the Boot CPU */
+    if (Cpu) goto AppCpuInit;
+
+    /* Setup the boot (Freeldr should've done), double fault and NMI TSS */
+    Ki386InitializeTss();
 
     /* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);
@@ -503,7 +515,6 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
                     &KiBootTss,
                     &KiInitialThread.Tcb,
                     trap_stack);
-    Prcb = Pcr->Prcb;
 
     /* Set us as the current process */
     KiInitialThread.Tcb.ApcState.Process = &KiInitialProcess.Pcb;
@@ -512,10 +523,13 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     Pcr->PrcbData.ProcessorState.SpecialRegisters.KernelDr6 = 0;
     Pcr->PrcbData.ProcessorState.SpecialRegisters.KernelDr7 = 0;
 
-    /* Setup the boot (Freeldr should've done), double fault and NMI TSS */
-    Ki386InitializeTss();
+    /* Load Ring 3 selectors for DS/ES */
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
 
     /* Setup CPU-related fields */
+AppCpuInit:
+    Prcb = Pcr->Prcb;
     Pcr->Number = Cpu;
     Pcr->SetMember = 1 << Cpu;
     Pcr->SetMemberCopy = 1 << Cpu;
@@ -527,6 +541,12 @@ KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     /* Set active processors */
     KeActiveProcessors |= Pcr->SetMember;
     KeNumberProcessors++;
+
+    /* Initialize the Debugger for the Boot CPU */
+    if (!Cpu) KdInitSystem (0, &KeLoaderBlock);
+
+    /* Check for break-in */
+    if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
