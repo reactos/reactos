@@ -192,14 +192,14 @@ InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 	else
 	{
 		/* use current info */
-		PConsoleInfo pSharedInfo = MapViewOfFile((HANDLE)wParam,
-                                                 FILE_MAP_ALL_ACCESS,
-                                                 0,
-                                                 0,
-                                                 sizeof(ConsoleInfo));
+		PConsoleInfo pSharedInfo = (PConsoleInfo)wParam;
 
-		/* copy options */
-		if (pSharedInfo)
+		if (IsBadReadPtr((const void *)pSharedInfo, sizeof(ConsoleInfo)))
+		{
+			/* use defaults */
+			InitConsoleDefaults(pConInfo);			
+		}
+		else
 		{
 			pConInfo->InsertMode = pSharedInfo->InsertMode;
 			pConInfo->HistoryBufferSize = pSharedInfo->HistoryBufferSize;
@@ -255,8 +255,6 @@ CPlApplet(
 	LPARAM lParam1,
 	LPARAM lParam2)
 {
-  int i = (int)lParam1;
-
   switch(uMsg)
   {
     case CPL_INIT:
@@ -270,14 +268,14 @@ CPlApplet(
     case CPL_INQUIRE:
     {
       CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-      CPlInfo->idIcon = Applets[i].idIcon;
-      CPlInfo->idName = Applets[i].idName;
-      CPlInfo->idInfo = Applets[i].idDescription;
+      CPlInfo->idIcon = Applets[0].idIcon;
+      CPlInfo->idName = Applets[0].idName;
+      CPlInfo->idInfo = Applets[0].idDescription;
       break;
     }
     case CPL_DBLCLK:
     {
-      Applets[i].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+      Applets[0].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
       break;
     }
   }

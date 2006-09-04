@@ -25,7 +25,7 @@ typedef struct TAGConsoleInfo
   HWND hConsoleWindow;
   TCHAR szProcessName[MAX_PATH];
   BOOLEAN AppliedConfig;
-  BOOLEAN UseRasterFonts;
+  DWORD UseRasterFonts;
   DWORD FontSize;
   DWORD FontWeight;
   FONTSIGNATURE FontSignature;
