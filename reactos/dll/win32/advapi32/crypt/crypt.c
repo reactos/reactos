@@ -1607,24 +1607,33 @@ BOOL WINAPI CryptImportKey (HCRYPTPROV hProv, BYTE *pbData, DWORD dwDataLen,
 BOOL WINAPI CryptSignHashA (HCRYPTHASH hHash, DWORD dwKeySpec, LPCSTR sDescription,
 		DWORD dwFlags, BYTE *pbSignature, DWORD *pdwSigLen)
 {
+	/* Since sDescription is ignored we dont need to convert it, we just pass null */
+	return CryptSignHashW(hHash, dwKeySpec, NULL, dwFlags, pbSignature, pdwSigLen);
+}
+
+BOOL WINAPI CryptSignHashW (HCRYPTHASH hHash, DWORD dwKeySpec, LPCWSTR sDescription,
+		DWORD dwFlags, BYTE *pbSignature, DWORD *pdwSigLen)
+{
 	PCRYPTHASH hash = (PCRYPTHASH)hHash;
 	PCRYPTPROV prov;
 
 	DPRINT("(0x%lx, %ld, %08ld, %p, %p)\n", hHash, dwKeySpec, dwFlags, pbSignature, pdwSigLen);
 	if (sDescription)
 	{
+		/* http://msdn.microsoft.com/library/default.asp?url=/library/en-us/seccrypto/security/cryptsignhash.asp */
 		DPRINT("The sDescription parameter is not supported (and no longer used).  Ignoring.\n");
 	}
 
 	if (!hash)
 		CRYPT_ReturnLastError(ERROR_INVALID_HANDLE);
-	if (!pdwSigLen)
+	if (!pdwSigLen || !hash->pProvider)
 		CRYPT_ReturnLastError(ERROR_INVALID_PARAMETER);
 
 	prov = hash->pProvider;
 	return prov->pFuncs->pCPSignHash(prov->hPrivate, hash->hPrivate, dwKeySpec, NULL,
 		dwFlags, pbSignature, pdwSigLen);
 }
+
 
 /******************************************************************************
  * CryptSetHashParam (ADVAPI32.@)
