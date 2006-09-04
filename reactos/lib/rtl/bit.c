@@ -13,45 +13,4 @@
 
 /* FUNCTIONS ****************************************************************/
 
-/*
- * @implemented
- */
-CCHAR NTAPI
-RtlFindLeastSignificantBit(IN ULONGLONG Set)
-{
-  int i;
-
-  if (Set == 0ULL)
-    return -1;
-
-  for (i = 0; i < 64; i++)
-  {
-    if (Set & (1 << i))
-      return (CCHAR)i;
-  }
-
-  return -1;
-}
-
-
-/*
- * @implemented
- */
-CCHAR NTAPI
-RtlFindMostSignificantBit(IN ULONGLONG Set)
-{
-  int i;
-
-  if (Set == 0ULL)
-    return -1;
-
-  for (i = 63; i >= 0; i--)
-  {
-    if (Set & (1 << i))
-      return (CCHAR)i;
-  }
-
-  return -1;
-}
-
 /* EOF */
