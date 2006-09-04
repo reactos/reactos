@@ -21,11 +21,14 @@ typedef struct
 
 typedef struct TAGConsoleInfo
 {
+  HANDLE hFile;
+  HWND hConsoleWindow;
   TCHAR szProcessName[MAX_PATH];
   BOOLEAN AppliedConfig;
   BOOLEAN UseRasterFonts;
   DWORD FontSize;
   DWORD FontWeight;
+  FONTSIGNATURE FontSignature;
   DWORD CursorSize;
   DWORD NumberOfHistoryBuffers;
   DWORD HistoryBufferSize;
@@ -44,10 +47,11 @@ typedef struct TAGConsoleInfo
   COLORREF Colors[16];
 } ConsoleInfo, *PConsoleInfo;
 
-BOOL WriteConsoleOptions(PConsoleInfo pConInfo);
 void ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo);
 void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo);
 void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo);
+
+#define PM_APPLY_CONSOLE_INFO (WM_APP + 100)
 
 
 //globals

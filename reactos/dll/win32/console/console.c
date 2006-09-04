@@ -60,19 +60,18 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc, LPARAM lParam
 }
 
 PConsoleInfo
-InitConsoleInfo()
+AllocConsoleInfo()
 {
 	PConsoleInfo pConInfo;
-	STARTUPINFO StartupInfo;
-	TCHAR * ptr;
-	SIZE_T length;
 
 	pConInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ConsoleInfo));
-	if (!pConInfo)
-	{
-		return NULL;
-	}
+	
+	return pConInfo;
+}
 
+void 
+InitConsoleDefaults(PConsoleInfo pConInfo)
+{
 	/* initialize struct */
 	pConInfo->InsertMode = TRUE;
 	pConInfo->HistoryBufferSize = 50;
@@ -88,49 +87,9 @@ InitConsoleInfo()
 	pConInfo->FontSize = (DWORD)MAKELONG(8, 12);
 	pConInfo->FontWeight = FALSE;
 	memcpy(pConInfo->Colors, s_Colors, sizeof(s_Colors));
-
-	GetModuleFileName(NULL, pConInfo->szProcessName, MAX_PATH);
-	GetStartupInfo(&StartupInfo);
-
-
-
-	if ( StartupInfo.lpTitle )
-	{
-		if ( _tcslen(StartupInfo.lpTitle) )
-		{
-			if ( !GetWindowsDirectory(pConInfo->szProcessName, MAX_PATH) )
-			{
-				HeapFree(GetProcessHeap(), 0, pConInfo);
-				return FALSE;
-			}
-			length = _tcslen(pConInfo->szProcessName);
-			if ( !_tcsncmp(pConInfo->szProcessName, StartupInfo.lpTitle, length) )
-			{
-				// Windows XP SP2 uses unexpanded environment vars to get path
-				// i.e. c:\windows\system32\cmd.exe
-				// becomes
-				// %SystemRoot%_system32_cmd.exe		
-
-				_tcscpy(pConInfo->szProcessName, _T("%SystemRoot%"));
-				_tcsncpy(&pConInfo->szProcessName[12], &StartupInfo.lpTitle[length], _tcslen(StartupInfo.lpTitle) - length + 1);
-			
-				ptr = &pConInfo->szProcessName[12];
-				while( (ptr = _tcsstr(ptr, _T("\\"))) )
-					ptr[0] = _T('_');
-			}
-		}
-		else
-		{
-			_tcscpy(pConInfo->szProcessName, _T("Console"));
-		}
-	}
-	else
-	{
-		_tcscpy(pConInfo->szProcessName, _T("Console"));
-	}
-	return pConInfo;
 }
 
+	
 INT_PTR 
 CALLBACK
 ApplyProc(
@@ -148,11 +107,7 @@ ApplyProc(
 	{
 		case WM_INITDIALOG:
 		{
-#if 0
 			hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_APPLY_CURRENT);
-#else
-			hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_APPLY_ALL);
-#endif
 			SendMessage(hDlgCtrl, BM_SETCHECK, BST_CHECKED, 0);
 			return TRUE;
 		}
@@ -193,19 +148,15 @@ ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo)
 	}
 	else if ( res == IDC_RADIO_APPLY_ALL )
 	{
-		/* apply options */
-		WriteConsoleOptions(pConInfo);
 		pConInfo->AppliedConfig = TRUE;
 		SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+		SendMessage(pConInfo->hConsoleWindow, PM_APPLY_CONSOLE_INFO, (WPARAM)pConInfo, (LPARAM)TRUE);
 	}
 	else if ( res == IDC_RADIO_APPLY_CURRENT )
 	{
-		/*
-		 * TODO:
-		 * exchange info in some private way with win32csr
-		 */
 		pConInfo->AppliedConfig = TRUE;
 		SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+		SendMessage(pConInfo->hConsoleWindow, PM_APPLY_CONSOLE_INFO, (WPARAM)pConInfo, (LPARAM)TRUE);
 	}
 }
 
@@ -218,16 +169,68 @@ InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 	INT i=0;
 	PConsoleInfo pConInfo;
 
-	UNREFERENCED_PARAMETER(hwnd);
 	UNREFERENCED_PARAMETER(uMsg);
-	UNREFERENCED_PARAMETER(wParam);
-	UNREFERENCED_PARAMETER(lParam);
 
-	pConInfo = InitConsoleInfo();
+	/*
+	 * console.dll shares information with win32csr with wParam, lParam
+	 *
+	 * wParam is a file handle to an unamed file object which contains the ConsoleInfo struct
+	 * lParam is a boolean parameter which specifies wheter defaults should be shown
+	 */
+
+	pConInfo = AllocConsoleInfo();
+	if (!pConInfo)
+	{
+		return 0;
+	}
+	
+	if (lParam) 
+	{
+		/* use defaults */
+		InitConsoleDefaults(pConInfo);
+	}
+	else
+	{
+		/* use current info */
+		PConsoleInfo pSharedInfo = MapViewOfFile((HANDLE)wParam,
+                                                 FILE_MAP_ALL_ACCESS,
+                                                 0,
+                                                 0,
+                                                 sizeof(ConsoleInfo));
+
+		/* copy options */
+		if (pSharedInfo)
+		{
+			pConInfo->InsertMode = pSharedInfo->InsertMode;
+			pConInfo->HistoryBufferSize = pSharedInfo->HistoryBufferSize;
+			pConInfo->NumberOfHistoryBuffers = pSharedInfo->NumberOfHistoryBuffers;
+			pConInfo->ScreenText = pSharedInfo->ScreenText;
+			pConInfo->ScreenBackground =  pSharedInfo->ScreenBackground;
+			pConInfo->PopupText = pSharedInfo->PopupText;
+			pConInfo->PopupBackground = pSharedInfo->PopupBackground;
+			pConInfo->WindowSize = pSharedInfo->WindowSize;
+			pConInfo->WindowPosition = pSharedInfo->WindowPosition;
+			pConInfo->ScreenBuffer = pSharedInfo->ScreenBuffer;
+			pConInfo->UseRasterFonts = pSharedInfo->UseRasterFonts;
+			pConInfo->FontSize = pSharedInfo->FontSize;
+			pConInfo->FontWeight = pSharedInfo->FontWeight;
+			memcpy(pConInfo->Colors, pSharedInfo->Colors, sizeof(s_Colors));
+		}
+	}
+
+	/* console window -> is notified on a property change event */
+	pConInfo->hConsoleWindow = hwnd;
 
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
-	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_NOAPPLYNOW;
+	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW;
+
+	if(_tcslen(pConInfo->szProcessName))
+	{
+		psh.dwFlags |= PSH_PROPTITLE;
+		psh.pszCaption = pConInfo->szProcessName;
+  	}
+
 	psh.hwndParent = NULL;
 	psh.hInstance = hApplet;
 	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
@@ -235,8 +238,7 @@ InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 	psh.nPages = 4;
 	psh.nStartPage = 0;
 	psh.ppsp = psp;
-	psh.pszCaption = pConInfo->szProcessName;
-  
+
 	InitPropSheetPage(&psp[i++], IDD_PROPPAGEOPTIONS, (DLGPROC) OptionsProc, (LPARAM)pConInfo);
 	InitPropSheetPage(&psp[i++], IDD_PROPPAGEFONT, (DLGPROC) FontProc, (LPARAM)pConInfo);
 	InitPropSheetPage(&psp[i++], IDD_PROPPAGELAYOUT, (DLGPROC) LayoutProc, (LPARAM)pConInfo);

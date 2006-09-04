@@ -13,10 +13,6 @@ static
 void 
 UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo);
 
-static
-BOOL
-InitializeOptionsFromReg(TCHAR * Path, PConsoleInfo pConInfo);
-
 INT_PTR 
 CALLBACK
 OptionsProc(
@@ -39,7 +35,6 @@ OptionsProc(
 		{
 			pConInfo = (PConsoleInfo) ((LPPROPSHEETPAGE)lParam)->lParam;
 			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
-			InitializeOptionsFromReg(pConInfo->szProcessName, pConInfo);
 			UpdateDialogElements(hwndDlg, pConInfo);
 			return TRUE;
 		}
@@ -59,11 +54,6 @@ OptionsProc(
 				pConInfo->NumberOfHistoryBuffers = LOWORD(SendMessage(hDlgCtrl, UDM_GETPOS, 0, 0));
 				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 			}
-			//else if (lppsn->hdr.code == PSN_KILLACTIVE)
-			//{
-			//	SetWindowLong(hwndDlg, DWL_MSGRESULT, FALSE);
-			//	return FALSE;
-			//}
 			else if (lppsn->hdr.code == PSN_APPLY)
 			{
 				if (!pConInfo->AppliedConfig)
@@ -179,91 +169,6 @@ OptionsProc(
 }
 
 static
-BOOL InitializeOptionsFromReg(TCHAR * Path, PConsoleInfo pConInfo)
-{
-  HKEY hKey;
-  HKEY hSubKey;
-  DWORD dwNumSubKeys = 0;
-  DWORD dwIndex;
-  DWORD dwValueName;
-  DWORD dwValue;
-  DWORD dwType;
-  TCHAR szValueName[MAX_PATH];
-  TCHAR szValue[MAX_PATH];
-  DWORD Value;
-
-  if ( RegOpenCurrentUser(KEY_READ, &hKey) != ERROR_SUCCESS )
-	 return FALSE;
-
-
-  if ( RegOpenKeyEx(hKey, Path, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
-  {
-		RegCloseKey(hKey);
-		return FALSE;
-  }
-
-  RegQueryInfoKey(hSubKey, NULL, NULL, NULL, &dwNumSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL );
-
-  for (dwIndex = 0; dwIndex < dwNumSubKeys; dwIndex++)
-  {
-	 dwValue = sizeof(Value);
-	 dwValueName = MAX_PATH;
-
-      if ( RegEnumValue(hSubKey, dwIndex, szValueName, &dwValueName, NULL, &dwType, (BYTE*)&Value, &dwValue) != ERROR_SUCCESS)
-        {
-          if (dwType == REG_SZ)
-            {
-              /*
-			   * retry in case of string value
-			   */
-              dwValue = sizeof(szValue);
-              dwValueName = MAX_PATH;
-              if (RegEnumValue(hSubKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (BYTE*)szValue, &dwValue) != ERROR_SUCCESS)
-                break;
-            }
-		  else
-            break;
-	    }
-
-    if ( !_tcscmp(szValueName, _T("CursorSize")) )
-	{
-        if ( Value == 0x32)
-            pConInfo->CursorSize = Value;
-        else if ( Value == 0x64 )
-            pConInfo->CursorSize = Value;
-    }
-    else if ( !_tcscmp(szValueName, _T("NumberOfHistoryBuffers")) )
-    {
-        pConInfo->NumberOfHistoryBuffers = Value;
-	}
-	else if ( !_tcscmp(szValueName, _T("HistoryBufferSize")) )
-	{
-		pConInfo->HistoryBufferSize = Value;
-	}
-	else if ( !_tcscmp(szValueName, _T("HistoryNoDup")) )
-	{
-		pConInfo->HistoryNoDup = Value;
-	}
-	else if ( !_tcscmp(szValueName, _T("FullScreen")) )
-	{
-		pConInfo->FullScreen = Value;
-	}
-	else if ( !_tcscmp(szValueName, _T("QuickEdit")) )
-	{
-		pConInfo->QuickEdit = Value;
-	}
-	else if ( !_tcscmp(szValueName, _T("InsertMode")) )
-	{
-		pConInfo->InsertMode = Value;
-	}
-  }
-
-  RegCloseKey(hKey);
-  RegCloseKey(hSubKey);
-  return TRUE;
-}
-
-static
 void 
 UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 {
@@ -360,69 +265,3 @@ UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 }
 
 
-BOOLEAN InitializeOptionsDialog(HWND hwndDlg)
-{
-	PConsoleInfo pConInfo = (PConsoleInfo) GetWindowLongPtr(GetParent(hwndDlg), DWLP_USER);
-
-	if (!pConInfo)
-		return FALSE;
-
-
-	return TRUE;
-}
-
-BOOL WriteConsoleOptions(PConsoleInfo pConInfo)
-{
-	HKEY hKey;
-	HKEY hSubKey;
-
-	if ( RegOpenCurrentUser(KEY_READ | KEY_SET_VALUE, &hKey) != ERROR_SUCCESS )
-	 return FALSE;
-
-
-	if ( RegOpenKeyEx(hKey, pConInfo->szProcessName, 0, KEY_READ | KEY_SET_VALUE, &hSubKey) != ERROR_SUCCESS)
-	{
-		RegCloseKey(hKey);
-		return FALSE;
-	}
-
-	if ( pConInfo->CursorSize  == 0x0)
-		RegDeleteKey(hSubKey, _T("CursorSize"));
-	else
-		RegSetValueEx(hSubKey, _T("CursorSize"), 0, REG_DWORD, (const BYTE *)&pConInfo->CursorSize, sizeof(DWORD));
-
-	if ( pConInfo->NumberOfHistoryBuffers == 0x5 )
-		RegDeleteKey(hSubKey, _T("NumberOfHistoryBuffers"));
-	else
-		RegSetValueEx(hSubKey, _T("NumberOfHistoryBuffers"), 0, REG_DWORD, (const BYTE *)&pConInfo->NumberOfHistoryBuffers, sizeof(DWORD));
-
-	if ( pConInfo->HistoryBufferSize == 50 )
-		RegDeleteKey(hSubKey, _T("HistoryBufferSize"));
-	else
-		RegSetValueEx(hSubKey, _T("HistoryBufferSize"), 0, REG_DWORD, (const BYTE *)&pConInfo->HistoryBufferSize, sizeof(DWORD));
-
-	if ( pConInfo->FullScreen == FALSE )
-		RegDeleteKey(hSubKey, _T("FullScreen"));
-	else
-		RegSetValueEx(hSubKey, _T("FullScreen"), 0, REG_DWORD, (const BYTE *)&pConInfo->FullScreen, sizeof(DWORD));
-
-	if ( pConInfo->QuickEdit == FALSE)
-		RegDeleteKey(hSubKey, _T("QuickEdit"));
-	else
-		RegSetValueEx(hSubKey, _T("QuickEdit"), 0, REG_DWORD, (const BYTE *)&pConInfo->QuickEdit, sizeof(DWORD));
-
-	if ( pConInfo->InsertMode == TRUE )
-		RegDeleteKey(hSubKey, _T("InsertMode"));
-	else
-		RegSetValueEx(hSubKey, _T("InsertMode"), 0, REG_DWORD, (const BYTE *)&pConInfo->InsertMode, sizeof(DWORD));
-
-	if ( pConInfo->HistoryNoDup == FALSE )
-		RegDeleteKey(hSubKey, _T("HistoryNoDup"));
-	else
-		RegSetValueEx(hSubKey, _T("HistoryNoDup"), 0, REG_DWORD, (const BYTE *)&pConInfo->HistoryNoDup, sizeof(DWORD));
-
-	RegCloseKey(hKey);
-	RegCloseKey(hSubKey);
-
-	return TRUE;
-}
