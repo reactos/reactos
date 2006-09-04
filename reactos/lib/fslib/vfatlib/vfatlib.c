@@ -12,18 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS
-VfatInitialize(VOID)
-{
-  DPRINT("VfatInitialize()\n");
-
-  return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
+NTSTATUS NTAPI
 VfatFormat (PUNICODE_STRING DriveRoot,
-	    ULONG MediaFlag,
+	    FMIFS_MEDIA_FLAG MediaFlag,
 	    PUNICODE_STRING Label,
 	    BOOLEAN QuickFormat,
 	    ULONG ClusterSize,
@@ -191,15 +182,6 @@ VfatFormat (PUNICODE_STRING DriveRoot,
   DPRINT("VfatFormat() done. Status 0x%.08x\n", Status);
 
   return Status;
-}
-
-
-NTSTATUS
-VfatCleanup(VOID)
-{
-  DPRINT("VfatCleanup()\n");
-
-  return STATUS_SUCCESS;
 }
 
 

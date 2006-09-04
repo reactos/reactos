@@ -12,19 +12,12 @@
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS
-VfatxInitialize(VOID)
-{
-  DPRINT("VfatxInitialize()\n");
-
-  return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
+NTSTATUS NTAPI
 VfatxFormat (PUNICODE_STRING DriveRoot,
-	    ULONG MediaFlag,
+	    FMIFS_MEDIA_FLAG MediaFlag,
+	    PUNICODE_STRING Label,
 	    BOOLEAN QuickFormat,
+	    ULONG ClusterSize,
 	    PFMIFSCALLBACK Callback)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -160,15 +153,6 @@ VfatxFormat (PUNICODE_STRING DriveRoot,
   DPRINT("VfatxFormat() done. Status 0x%.08x\n", Status);
 
   return Status;
-}
-
-
-NTSTATUS
-VfatxCleanup(VOID)
-{
-  DPRINT("VfatxCleanup()\n");
-
-  return STATUS_SUCCESS;
 }
 
 

@@ -9,15 +9,9 @@
 
 #include <fmifs/fmifs.h>
 
-NTSTATUS
-VfatInitialize (VOID);
-
-NTSTATUS
-VfatCleanup (VOID);
-
-NTSTATUS
+NTSTATUS NTAPI
 VfatFormat (PUNICODE_STRING DriveRoot,
-	    ULONG MediaFlag,
+	    FMIFS_MEDIA_FLAG MediaFlag,
 	    PUNICODE_STRING Label,
 	    BOOLEAN QuickFormat,
 	    ULONG ClusterSize,

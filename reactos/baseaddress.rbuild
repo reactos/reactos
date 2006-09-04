@@ -67,6 +67,7 @@
   <property name="BASEADDRESS_LZ32" value="0x73d80000" />
   <property name="BASEADDRESS_COREDLL" value="0x73d80000" />
   <property name="BASEADDRESS_ICMP" value="0x741f0000" />
+  <property name="BASEADDRESS_UFAT" value="0x741f0000" />
   <property name="BASEADDRESS_USERENV" value="0x74850000" />
   <property name="BASEADDRESS_WS2_32" value="0x74aa0000" />
   <property name="BASEADDRESS_SYSSETUP" value="0x74a30000" />

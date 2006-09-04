@@ -5,17 +5,93 @@
  * PURPOSE:         Initialisation
  *
  * PROGRAMMERS:     Emanuele Aliberti
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
 
 static BOOLEAN FmIfsInitialized = FALSE;
+LIST_ENTRY ProviderListHead;
 
-static BOOLEAN NTAPI
+PIFS_PROVIDER
+GetProvider(
+	IN PWCHAR FileSystem)
+{
+	PLIST_ENTRY ListEntry;
+	PIFS_PROVIDER Provider;
+
+	ListEntry = ProviderListHead.Flink;
+	while (ListEntry != ProviderListHead.Flink)
+	{
+		Provider = CONTAINING_RECORD(ListEntry, IFS_PROVIDER, ListEntry);
+		if (wcscmp(Provider->Name, FileSystem) == 0)
+			return Provider;
+		ListEntry = ListEntry->Flink;
+	}
+
+	/* Provider not found */
+	return NULL;
+}
+
+static BOOLEAN
+AddProvider(
+	IN PWCHAR FileSystem,
+	IN PWCHAR DllFile)
+{
+	PIFS_PROVIDER Provider = NULL;
+	ULONG RequiredSize;
+	HMODULE hMod = NULL;
+	BOOLEAN ret = FALSE;
+
+	hMod = LoadLibraryW(DllFile);
+	if (!hMod)
+		goto cleanup;
+
+	RequiredSize = FIELD_OFFSET(IFS_PROVIDER, Name)
+		+ wcslen(FileSystem) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+	Provider = (PIFS_PROVIDER)RtlAllocateHeap(
+		RtlGetProcessHeap(),
+		0,
+		RequiredSize);
+	if (!Provider)
+		goto cleanup;
+	RtlZeroMemory(Provider, RequiredSize);
+
+	/* Get function pointers */
+	//Provider->Chkdsk = (CHKDSK)GetProcAddress(hMod, "Chkdsk");
+	//Provider->ChkdskEx = (CHKDSKEX)GetProcAddress(hMod, "ChkdskEx");
+	//Provider->Extend = (EXTEND)GetProcAddress(hMod, "Extend");
+	//Provider->Format = (FORMAT)GetProcAddress(hMod, "Format");
+	Provider->FormatEx = (FORMATEX)GetProcAddress(hMod, "FormatEx");
+	//Provider->Recover = (RECOVER)GetProcAddress(hMod, "Recover");
+
+	wcscpy(Provider->Name, FileSystem);
+
+	InsertTailList(&ProviderListHead, &Provider->ListEntry);
+	ret = TRUE;
+
+cleanup:
+	if (!ret)
+	{
+		if (hMod)
+			FreeLibrary(hMod);
+		if (Provider)
+			RtlFreeHeap(RtlGetProcessHeap(), 0, Provider);
+	}
+	return ret;
+}
+
+static BOOLEAN
 InitializeFmIfsOnce(void)
 {
+	InitializeListHead(&ProviderListHead);
+
+	/* Add default providers */
+	AddProvider(L"FAT", L"ufat");
+	AddProvider(L"FAT32", L"ufat");
+
 	/* TODO: Check how many IFS are installed in the system */
-	/* TOSO: and register a descriptor for each one */
+	/* TODO: and register a descriptor for each one */
 	return TRUE;
 }
 

@@ -105,16 +105,12 @@ FormatPartition (PUNICODE_STRING DriveRoot)
 
   ProgressSetStepCount (ProgressBar, 100);
 
-  VfatInitialize ();
-
   Status = VfatFormat (DriveRoot,
 		       0,               /* MediaFlag */
 		       NULL,            /* Label */
 		       TRUE,            /* QuickFormat */
 		       0,               /* ClusterSize */
 		       (PFMIFSCALLBACK)FormatCallback); /* Callback */
-
-  VfatCleanup ();
 
   DestroyProgressBar (ProgressBar);
   ProgressBar = NULL;

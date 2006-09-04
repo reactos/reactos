@@ -5,6 +5,7 @@
  * PURPOSE:         Volume format
  *
  * PROGRAMMERS:     Emanuele Aliberti
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #include "precomp.h"
@@ -14,7 +15,7 @@
 
 /* FMIFS.6 */
 VOID NTAPI
-Format(void)
+Format(VOID)
 {
 }
 
@@ -29,13 +30,15 @@ FormatEx(
 	IN ULONG ClusterSize,
 	IN PFMIFSCALLBACK Callback)
 {
+	PIFS_PROVIDER Provider;
 	UNICODE_STRING usDriveRoot;
 	UNICODE_STRING usLabel;
 	BOOLEAN Argument = FALSE;
 	WCHAR VolumeName[MAX_PATH];
 	CURDIR CurDir;
 
-	if (_wcsnicmp(Format, L"FAT", 3) != 0)
+	Provider = GetProvider(Format);
+	if (!Provider)
 	{
 		/* Unknown file system */
 		Callback(
@@ -58,16 +61,14 @@ FormatEx(
 
 	RtlInitUnicodeString(&usLabel, Label);
 
-	DPRINT1("FormatEx - FAT\n");
-	VfatInitialize();
-	VfatFormat(
+	DPRINT1("FormatEx - %S\n", Format);
+	Provider->FormatEx(
 		&usDriveRoot,
 		MediaFlag,
 		&usLabel,
 		QuickFormat,
 		ClusterSize,
 		Callback);
-	VfatCleanup();
 	RtlFreeUnicodeString(&usDriveRoot);
 }
 
