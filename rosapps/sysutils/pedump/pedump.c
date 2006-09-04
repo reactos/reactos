@@ -1956,7 +1956,8 @@ TranslateFunctionName (
 
 
   int i, /*j,*/ n;
-  char c, cc;
+  char c = 0;
+  char cc;
 
   static char buff[512];	// result of translation
 
