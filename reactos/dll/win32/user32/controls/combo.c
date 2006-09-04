@@ -909,34 +909,6 @@ static HBRUSH COMBO_PrepareColors(
   return hBkgBrush;
 }
 
-/***********************************************************************
- *           COMBO_EraseBackground
- */
-static LRESULT COMBO_EraseBackground(
-  HWND        hwnd,
-  LPHEADCOMBO lphc,
-  HDC         hParamDC)
-{
-  HBRUSH  hBkgBrush;
-  HDC 	  hDC;
-
-  if(lphc->wState & CBF_EDIT)
-      return TRUE;
-
-  hDC = (hParamDC) ? hParamDC
-		   : GetDC(hwnd);
-  /*
-   * Retrieve the background brush
-   */
-  hBkgBrush = COMBO_PrepareColors(lphc, hDC);
-
-  FillRect(hDC, &lphc->textRect, hBkgBrush);
-
-  if (!hParamDC)
-    ReleaseDC(hwnd, hDC);
-
-  return TRUE;
-}
 
 /***********************************************************************
  *           COMBO_Paint
@@ -962,6 +934,8 @@ static LRESULT COMBO_Paint(LPHEADCOMBO lphc, HDC hParamDC)
       hBkgBrush = COMBO_PrepareColors(lphc, hDC);
 
       hPrevBrush = SelectObject( hDC, hBkgBrush );
+      if (!(lphc->wState & CBF_EDIT))
+        FillRect(hDC, &lphc->textRect, hBkgBrush);
 
       /*
        * In non 3.1 look, there is a sunken border on the combobox
@@ -1603,7 +1577,7 @@ static void CBResetPos(
 /***********************************************************************
  *           COMBO_Size
  */
-static void COMBO_Size( LPHEADCOMBO lphc )
+static void COMBO_Size( LPHEADCOMBO lphc, BOOL bRedraw )
   {
   CBCalcPlacement(lphc->self,
 		  lphc,
@@ -1611,7 +1585,7 @@ static void COMBO_Size( LPHEADCOMBO lphc )
 		  &lphc->buttonRect,
 		  &lphc->droppedRect);
 
-  CBResetPos( lphc, &lphc->textRect, &lphc->droppedRect, TRUE );
+  CBResetPos( lphc, &lphc->textRect, &lphc->droppedRect, bRedraw );
 }
 
 
@@ -1904,15 +1878,15 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 	}
 
         case WM_PRINTCLIENT:
-	        if (lParam & PRF_ERASEBKGND)
-		  COMBO_EraseBackground(hwnd, lphc, (HDC)wParam);
-
 		/* Fallthrough */
      	case WM_PAINT:
 		/* wParam may contain a valid HDC! */
 		return  COMBO_Paint(lphc, (HDC)wParam);
+
 	case WM_ERASEBKGND:
-		return  COMBO_EraseBackground(hwnd, lphc, (HDC)wParam);
+                /* do all painting in WM_PAINT like Windows does */
+                return 1;
+
 	case WM_GETDLGCODE:
 	{
 		LRESULT result = DLGC_WANTARROWS | DLGC_WANTCHARS;
@@ -1933,10 +1907,13 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
          * get a WM_SIZE. Since we still want to update the Listbox, we have to
          * do it here.
          */
+        /* we should not force repainting on WM_WINDOWPOSCHANGED, it breaks
+         * Z-order based painting.
+         */
         /* fall through */
 	case WM_SIZE:
 	        if( lphc->hWndLBox &&
-		  !(lphc->wState & CBF_NORESIZE) ) COMBO_Size( lphc );
+                  !(lphc->wState & CBF_NORESIZE) ) COMBO_Size( lphc, message == WM_SIZE );
 		return  TRUE;
 	case WM_SETFONT:
 		COMBO_Font( lphc, (HFONT)wParam, (BOOL)lParam );
