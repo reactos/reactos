@@ -22,7 +22,7 @@
 
 #define ASM
 #include <arch.h>
-#include <version.h>
+#include <ver.h>
 
 #define SCREEN_ATTR 0x1f			/* Bright white on blue background */
 

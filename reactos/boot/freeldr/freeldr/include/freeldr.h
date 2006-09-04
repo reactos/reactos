@@ -64,7 +64,7 @@
 #endif
 /* misc files */
 #include <keycodes.h>
-#include <version.h>
+#include <ver.h>
 #include <cmdline.h>
 /* Needed by boot manager */
 #include <bootmgr.h>
