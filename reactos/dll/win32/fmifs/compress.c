@@ -14,7 +14,7 @@
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOLEAN STDCALL
 EnableVolumeCompression (PWCHAR DriveRoot,
 			 USHORT Compression)
 {

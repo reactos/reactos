@@ -31,11 +31,4 @@ Chkdsk (PWCHAR		DriveRoot,
 	    &Argument);	/* Argument */
 }
 
-
-/* FMIFS.2 (SP4 only?) */
-VOID STDCALL
-ChkdskEx (VOID)
-{
-}
-
 /* EOF */
