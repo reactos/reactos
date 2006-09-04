@@ -35,7 +35,7 @@ FormatEx(
 	UNICODE_STRING usLabel;
 	BOOLEAN Argument = FALSE;
 	WCHAR VolumeName[MAX_PATH];
-	CURDIR CurDir;
+	//CURDIR CurDir;
 
 	Provider = GetProvider(Format);
 	if (!Provider)
@@ -48,6 +48,12 @@ FormatEx(
 		return;
 	}
 
+#if 1
+	DPRINT1("Warning: use GetVolumeNameForVolumeMountPointW() instead!\n");
+	swprintf(VolumeName, L"\\\\.\\%c:", DriveRoot[0]);
+	RtlCreateUnicodeString(&usDriveRoot, VolumeName);
+	/* Code disabled as long as our storage stack doesn't understand IOCTL_MOUNTDEV_QUERY_DEVICE_NAME */
+#else
 	if (!GetVolumeNameForVolumeMountPointW(DriveRoot, VolumeName, MAX_PATH)
 	 || !RtlDosPathNameToNtPathName_U(VolumeName, &usDriveRoot, NULL, &CurDir))
 	{
@@ -58,10 +64,11 @@ FormatEx(
 			&Argument); /* Argument */
 		return;
 	}
+#endif
 
 	RtlInitUnicodeString(&usLabel, Label);
 
-	DPRINT1("FormatEx - %S\n", Format);
+	DPRINT("FormatEx - %S\n", Format);
 	Provider->FormatEx(
 		&usDriveRoot,
 		MediaFlag,
