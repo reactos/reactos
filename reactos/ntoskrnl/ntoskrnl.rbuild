@@ -78,11 +78,6 @@
                 <file>irq.c</file>
             </directory>
         </if>
-	<if property="ARCH" value="powerpc">
-	    <directory name="powerpc">
-		<file>ppc_irq.c</file>
-	    </directory>
-	</if>
 	<directory name="cc">
 			<file>cacheman.c</file>
 			<file>copy.c</file>
