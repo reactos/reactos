@@ -34,7 +34,7 @@
 #define R_PRINT_ADDRESS(addr) KeRosPrintAddress(addr)
 #define R_PANIC() KeBugCheck(0)
 #define R_DEBUG DbgPrint
-#define R_GET_STACK_FRAMES(ptr,cnt) KeRosGetStackFrames(ptr,cnt)
+#define R_GET_STACK_FRAMES(ptr,cnt) RtlWalkFrameChain((PVOID*)ptr,cnt, 0)
 
 #include "rpoolmgr.h"
 

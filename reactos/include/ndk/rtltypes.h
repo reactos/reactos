@@ -385,6 +385,14 @@ typedef LONG
     PEXCEPTION_POINTERS ExceptionPointers
 );
 
+//
+// Worker Thread Callback for Rtl
+//
+typedef VOID
+(NTAPI *WORKERCALLBACKFUNC)(
+    IN PVOID Context
+);
+
 #else
 
 //

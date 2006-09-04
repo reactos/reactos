@@ -33,6 +33,17 @@ Author:
 #include <lpctypes.h>
 
 //
+// GCC compatibility
+//
+#if defined(__GNUC__)
+#define __ALIGNED(n)    __attribute__((aligned (n)))
+#elif defined(_MSC_VER)
+#define __ALIGNED(n)    __declspec(align(n))
+#else
+#error __ALIGNED not defined for your compiler!
+#endif
+
+//
 // Atom and Language IDs
 //
 typedef USHORT LANGID, *PLANGID;
@@ -361,8 +372,8 @@ typedef struct _EX_FAST_REF
     union
     {
         PVOID Object;
-        ULONG RefCnt:3;
-        ULONG Value;
+        ULONG_PTR RefCnt:3;
+        ULONG_PTR Value;
     };
 } EX_FAST_REF, *PEX_FAST_REF;
 
@@ -411,10 +422,7 @@ typedef struct _EX_PUSH_LOCK
 //
 // Executive Pushlock Wait Block
 //
-#ifndef __GNUC__ // WARNING! PUSHLOCKS WILL NOT WORK IN GCC FOR NOW!!!
-__declspec(align(16))
-#endif
-typedef struct _EX_PUSH_LOCK_WAIT_BLOCK
+typedef __ALIGNED(16) struct _EX_PUSH_LOCK_WAIT_BLOCK
 {
     union
     {

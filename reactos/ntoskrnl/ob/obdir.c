@@ -220,9 +220,6 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         /* Save the found object */
         FoundObject = CurrentEntry->Object;
         if (!FoundObject) goto Quickie;
-
-        /* Add a reference to the object */
-        ObReferenceObject(FoundObject);
     }
 
     /* Check if the directory was unlocked (which means we locked it) */
@@ -415,6 +412,16 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG SkipEntries = 0;
     NTSTATUS Status = STATUS_SUCCESS;
+    PVOID LocalBuffer;
+    POBJECT_DIRECTORY_INFORMATION DirectoryInfo;
+    ULONG Length, TotalLength;
+    ULONG Count, CurrentEntry;
+    ULONG Hash;
+    POBJECT_DIRECTORY_ENTRY Entry;
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_HEADER_NAME_INFO ObjectNameInfo;
+    UNICODE_STRING Name;
+    PWSTR p;
     PAGED_CODE();
 
     /* Check if we need to do any probing */
@@ -448,6 +455,14 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
         SkipEntries = *Context;
     }
 
+    /* Allocate a buffer */
+    LocalBuffer = ExAllocatePoolWithTag(PagedPool,
+                                        sizeof(OBJECT_DIRECTORY_INFORMATION) +
+                                        BufferLength,
+                                        OB_NAME_TAG);
+    if (!LocalBuffer) return STATUS_INSUFFICIENT_RESOURCES;
+    RtlZeroMemory(LocalBuffer, BufferLength);
+
     /* Get a reference to directory */
     Status = ObReferenceObjectByHandle(DirectoryHandle,
                                        DIRECTORY_QUERY,
@@ -455,11 +470,168 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
                                        PreviousMode,
                                        (PVOID*)&Directory,
                                        NULL);
-    if(NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        /* FIXME: TODO. UNIMPLEMENTED */
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        /* Free the buffer and fail */
+        ExFreePool(LocalBuffer);
+        return Status;
     }
+
+    /* Start at position 0 */
+    DirectoryInfo = (POBJECT_DIRECTORY_INFORMATION)LocalBuffer;
+    TotalLength = sizeof(OBJECT_DIRECTORY_INFORMATION);
+
+    /* Start with 0 entries */
+    Count = 0;
+    CurrentEntry = 0;
+
+    /* Set default status and start looping */
+    Status = STATUS_NO_MORE_ENTRIES;
+    for (Hash = 0; Hash < 37; Hash++)
+    {
+        /* Get this entry and loop all of them */
+        Entry = Directory->HashBuckets[Hash];
+        while (Entry)
+        {
+            /* Check if we should process this entry */
+            if (SkipEntries == CurrentEntry++)
+            {
+                /* Get the header data */
+                ObjectHeader = OBJECT_TO_OBJECT_HEADER(Entry->Object);
+                ObjectNameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+
+                /* Get the object name */
+                if (ObjectNameInfo)
+                {
+                    /* Use the one we have */
+                    Name = ObjectNameInfo->Name;
+                }
+                else
+                {
+                    /* Otherwise, use an empty one */
+                    RtlInitEmptyUnicodeString(&Name, NULL, 0);
+                }
+
+                /* Calculate the length for this entry */
+                Length = sizeof(OBJECT_DIRECTORY_INFORMATION) +
+                         Name.Length + sizeof(UNICODE_NULL) +
+                         ObjectHeader->Type->Name.Length + sizeof(UNICODE_NULL);
+
+                /* Make sure this entry won't overflow */
+                if ((TotalLength + Length) > BufferLength)
+                {
+                    /* Check if the caller wanted only an entry */
+                    if (ReturnSingleEntry)
+                    {
+                        /* Then we'll fail and ask for more buffer */
+                        TotalLength += Length;
+                        Status = STATUS_BUFFER_TOO_SMALL;
+                    }
+                    else
+                    {
+                        /* Otherwise, we'll say we're done for now */
+                        Status = STATUS_MORE_ENTRIES;
+                    }
+
+                    /* Decrease the entry since we didn't process */
+                    CurrentEntry--;
+                    goto Quickie;
+                }
+
+                /* Now fill in the buffer */
+                DirectoryInfo->Name.Length = Name.Length;
+                DirectoryInfo->Name.MaximumLength = Name.Length +
+                                                    sizeof(UNICODE_NULL);
+                DirectoryInfo->Name.Buffer = Name.Buffer;
+                DirectoryInfo->TypeName.Length = ObjectHeader->
+                                                 Type->Name.Length;
+                DirectoryInfo->TypeName.MaximumLength = ObjectHeader->
+                                                        Type->Name.Length +
+                                                        sizeof(UNICODE_NULL);
+                DirectoryInfo->TypeName.Buffer = ObjectHeader->
+                                                 Type->Name.Buffer;
+
+                /* Set success */
+                Status = STATUS_SUCCESS;
+
+                /* Increase statistics */
+                TotalLength += Length;
+                DirectoryInfo++;
+                Count++;
+
+                /* If the caller only wanted an entry, bail out */
+                if (ReturnSingleEntry) goto Quickie;
+
+                /* Increase the key by one */
+                SkipEntries++;
+            }
+
+            /* Move to the next directory */
+            Entry = Entry->ChainLink;
+        }
+    }
+
+Quickie:
+    /* Make sure we got success */
+    if (NT_SUCCESS(Status))
+    {
+        /* Clear the current pointer and set it */
+        RtlZeroMemory(DirectoryInfo, sizeof(OBJECT_DIRECTORY_INFORMATION));
+        DirectoryInfo++;
+
+        /* Set the buffer here now and loop entries */
+        p = (PWSTR)DirectoryInfo;
+        DirectoryInfo = LocalBuffer;
+        while (Count--)
+        {
+            /* Copy the name buffer */
+            RtlMoveMemory(p,
+                          DirectoryInfo->Name.Buffer,
+                          DirectoryInfo->Name.Length);
+
+            /* Now fixup the pointers */
+            DirectoryInfo->Name.Buffer = (PVOID)((ULONG_PTR)Buffer +
+                                                 ((ULONG_PTR)p -
+                                                  (ULONG_PTR)LocalBuffer));
+
+            /* Advance in buffer and NULL-terminate */
+            p = (PVOID)((ULONG_PTR)p + DirectoryInfo->Name.Length);
+            *p++ = UNICODE_NULL;
+
+            /* Now copy the type name buffer */
+            RtlMoveMemory(p,
+                          DirectoryInfo->TypeName.Buffer,
+                          DirectoryInfo->TypeName.Length);
+
+            /* Now fixup the pointers */
+            DirectoryInfo->TypeName.Buffer = (PVOID)((ULONG_PTR)Buffer +
+                                                     ((ULONG_PTR)p -
+                                                     (ULONG_PTR)LocalBuffer));
+
+            /* Advance in buffer and NULL-terminate */
+            p = (PVOID)((ULONG_PTR)p + DirectoryInfo->TypeName.Length);
+            *p++ = UNICODE_NULL;
+
+            /* Move to the next entry */
+            DirectoryInfo++;
+        }
+
+        /* Set the key */
+        *Context = CurrentEntry;
+    }
+
+    /* Copy the buffer */
+    RtlMoveMemory(Buffer,
+                  LocalBuffer,
+                  (TotalLength <= BufferLength) ?
+                  TotalLength : BufferLength);
+
+    /* Check if the caller requested the return length and return it*/
+    if (ReturnLength) *ReturnLength = TotalLength;
+
+    /* Dereference the directory and free our buffer */
+    ObDereferenceObject(Directory);
+    ExFreePool(LocalBuffer);
 
     /* Return status to caller */
     return Status;

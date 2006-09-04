@@ -183,6 +183,13 @@ PoSetDeviceBusy(
 {
 }
 
+VOID
+NTAPI
+PopCleanupPowerState(IN PPOWER_STATE PowerState)
+{
+    /* FIXME */
+}
+
 /*
  * @unimplemented
  */
@@ -311,6 +318,48 @@ PoInit(PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
       /* Otherwise check the LoaderBlock's Flag */
       PopAcpiPresent = (LoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
     }
+}
+
+VOID
+NTAPI
+PopPerfIdle(PPROCESSOR_POWER_STATE PowerState)
+{
+    DPRINT1("PerfIdle function: %p\n", PowerState);
+}
+
+VOID
+NTAPI
+PopPerfIdleDpc(IN PKDPC Dpc,
+               IN PVOID DeferredContext,
+               IN PVOID SystemArgument1,
+               IN PVOID SystemArgument2)
+{
+    /* Call the Perf Idle function */
+    PopPerfIdle(&((PKPRCB)DeferredContext)->PowerState);
+}
+
+VOID
+FASTCALL
+PopIdle0(IN PKPRCB Prcb)
+{
+    DPRINT1("Idle function: %p\n", Prcb);
+}
+
+VOID
+NTAPI
+PoInitializePrcb(IN PKPRCB Prcb)
+{
+    /* Initialize the Power State */
+    RtlZeroMemory(&Prcb->PowerState, sizeof(Prcb->PowerState));
+    Prcb->PowerState.Idle0KernelTimeLimit = 0xFFFFFFFF;
+    Prcb->PowerState.CurrentThrottle = 100;
+    Prcb->PowerState.CurrentThrottleIndex = 0;
+    Prcb->PowerState.IdleFunction = PopIdle0;
+
+    /* Initialize the Perf DPC and Timer */
+    KeInitializeDpc(&Prcb->PowerState.PerfDpc, PopPerfIdleDpc, Prcb);
+    //KeSetTargetProcessorDpc(&Prcb->PowerState.PerfDpc, Prcb->Number);
+    KeInitializeTimerEx(&Prcb->PowerState.PerfTimer, SynchronizationTimer);
 }
 
 /*

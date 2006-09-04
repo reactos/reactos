@@ -525,7 +525,7 @@ static int init_finish(adns_state ads) {
   struct protoent *proto;
   int r;
   
-  if (!ads->nservers) {
+  if (!ads->nservers && !(ads->iflags & adns_if_noserver)) {
     if (ads->diagfile && ads->iflags & adns_if_debug)
       fprintf(ads->diagfile,"adns: no nameservers, using localhost\n");
     ia.s_addr= htonl(INADDR_LOOPBACK);
@@ -589,33 +589,35 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   ccf_options(ads,"ADNS_RES_OPTIONS",-1,adns_res_options);
 
 #ifdef ADNS_JGAA_WIN32
-  GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
-  strcat(PathBuf,"\\resolv.conf");
-  readconfig(ads,PathBuf,1);
-  GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
-  strcat(PathBuf,"\\resolv-adns.conf");
-  readconfig(ads,PathBuf,0);
-  GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
-  strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv.conf");
-  readconfig(ads,PathBuf,1);
-  GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
-  strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv-adns.conf");
-  readconfig(ads,PathBuf,0);
-  network_info_result = GetNetworkParams(network_info, &network_info_blen);
-  if (network_info_result != ERROR_SUCCESS){
-    switch(network_info_result) {
-    case ERROR_BUFFER_OVERFLOW: network_err_str = "ERROR_BUFFER_OVERFLOW"; break;
-    case ERROR_INVALID_PARAMETER: network_err_str = "ERROR_INVALID_PARAMETER"; break;
-    case ERROR_NO_DATA: network_err_str = "ERROR_NO_DATA"; break;
-    case ERROR_NOT_SUPPORTED: network_err_str = "ERROR_NOT_SUPPORTED"; break;}
-    adns__diag(ads,-1,0,"GetNetworkParams() failed with error [%d] %s",
-      network_info_result,network_err_str);
+  if (!(flags & adns_if_noserver)) {
+    GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
+    strcat(PathBuf,"\\resolv.conf");
+    readconfig(ads,PathBuf,1);
+    GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
+    strcat(PathBuf,"\\resolv-adns.conf");
+    readconfig(ads,PathBuf,0);
+    GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
+    strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv.conf");
+    readconfig(ads,PathBuf,1);
+    GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
+    strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv-adns.conf");
+    readconfig(ads,PathBuf,0);
+    network_info_result = GetNetworkParams(network_info, &network_info_blen);
+    if (network_info_result != ERROR_SUCCESS){
+      switch(network_info_result) {
+      case ERROR_BUFFER_OVERFLOW: network_err_str = "ERROR_BUFFER_OVERFLOW"; break;
+      case ERROR_INVALID_PARAMETER: network_err_str = "ERROR_INVALID_PARAMETER"; break;
+      case ERROR_NO_DATA: network_err_str = "ERROR_NO_DATA"; break;
+      case ERROR_NOT_SUPPORTED: network_err_str = "ERROR_NOT_SUPPORTED"; break;}
+      adns__diag(ads,-1,0,"GetNetworkParams() failed with error [%d] %s",
+		 network_info_result,network_err_str);
     }
-  else {
-    for(pip = &(network_info->DnsServerList); pip; pip = pip->Next) {
-      addr.s_addr = inet_addr(pip->IpAddress.String);
-      if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
-        addserver(ads, addr); 
+    else {
+      for(pip = &(network_info->DnsServerList); pip; pip = pip->Next) {
+	addr.s_addr = inet_addr(pip->IpAddress.String);
+	if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
+	  addserver(ads, addr); 
+      }
     }
   }
 #else
@@ -729,4 +731,9 @@ adns_query adns_forallqueries_next(adns_state ads, void **context_r) {
   ads->forallnext= nqu;
   if (context_r) *context_r= qu->ctx.ext;
   return qu;
+}
+
+/* ReactOS addition */
+void adns_addserver(adns_state ads, struct in_addr addr) {
+    addserver(ads, addr);
 }

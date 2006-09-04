@@ -1267,11 +1267,6 @@ typedef struct _GET_RETRIEVAL_DESCRIPTOR {
     MAPPING_PAIR    Pair[1];
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
 
-typedef struct _IO_CLIENT_EXTENSION {
-    struct _IO_CLIENT_EXTENSION *NextExtension;
-    PVOID                       ClientIdentificationAddress;
-} IO_CLIENT_EXTENSION, *PIO_CLIENT_EXTENSION;
-
 typedef struct _IO_COMPLETION_BASIC_INFORMATION {
     LONG Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
@@ -1283,6 +1278,8 @@ typedef struct _KQUEUE {
     ULONG               MaximumCount;
     LIST_ENTRY          ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
+
+#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
 
 typedef struct _MBCB {
     CSHORT          NodeTypeCode;
@@ -3676,6 +3673,16 @@ RtlAllocateHeap (
     IN HANDLE  HeapHandle,
     IN ULONG   Flags,
     IN ULONG   Size
+);
+
+NTSYSAPI
+USHORT
+NTAPI
+RtlCaptureStackBackTrace (
+    IN ULONG FramesToSkip,
+    IN ULONG FramesToCapture,
+    OUT PVOID *BackTrace,
+    OUT PULONG BackTraceHash OPTIONAL
 );
 
 NTSYSAPI

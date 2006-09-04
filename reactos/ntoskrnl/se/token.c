@@ -321,8 +321,81 @@ SepDuplicateToken(PTOKEN Token,
       return(STATUS_SUCCESS);
     }
 
-  ObDereferenceObject(AccessToken);
   return(Status);
+}
+
+NTSTATUS
+NTAPI
+SeSubProcessToken(IN PTOKEN ParentToken,
+                  OUT PTOKEN *Token,
+                  IN BOOLEAN InUse,
+                  IN ULONG SessionId)
+{
+    PTOKEN NewToken;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+
+    /* Initialize the attributes and duplicate it */
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    Status = SepDuplicateToken(ParentToken,
+                               &ObjectAttributes,
+                               FALSE,
+                               TokenPrimary,
+                               ParentToken->ImpersonationLevel,
+                               KernelMode,
+                               &NewToken);
+    if (NT_SUCCESS(Status))
+    {
+        /* Insert it */
+        Status = ObInsertObject(NewToken,
+                                NULL,
+                                0,
+                                1,
+                                NULL,
+                                NULL);
+        if (NT_SUCCESS(Status))
+        {
+            /* Set the session ID */
+            NewToken->SessionId = SessionId;
+            NewToken->TokenInUse = InUse;
+
+            /* Return the token */
+            *Token = NewToken;
+        }
+    }
+
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SeIsTokenChild(IN PTOKEN Token,
+               OUT PBOOLEAN IsChild)
+{
+    PTOKEN ProcessToken;
+    LUID ProcessLuid, CallerLuid;
+
+    /* Assume failure */
+    *IsChild = FALSE;
+
+    /* Reference the process token */
+    ProcessToken = PsReferencePrimaryToken(PsGetCurrentProcess());
+
+    /* Get the ID */
+    ProcessLuid = ProcessToken->TokenId;
+
+    /* Dereference the token */
+    ObFastDereferenceObject(&PsGetCurrentProcess()->Token, ProcessToken);
+
+    /* Get our LUID */
+    CallerLuid = Token->TokenId;
+
+    /* Compare the LUIDs */
+    if (RtlEqualLuid(&CallerLuid, &ProcessLuid)) *IsChild = TRUE;
+
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -2472,6 +2545,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
       PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
       Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
+      KEBUGCHECK(0);
       ObfDereferenceObject(PrimaryToken);
       ObfDereferenceObject(Thread);
       if (!NT_SUCCESS(Status))

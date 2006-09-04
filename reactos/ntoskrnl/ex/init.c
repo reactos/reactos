@@ -15,6 +15,17 @@
 
 /* DATA **********************************************************************/
 
+#define BUILD_OSCSDVERSION(major, minor) (((major & 0xFF) << 8) | (minor & 0xFF))
+
+/* NT Version Info */
+ULONG NtMajorVersion = 5;
+ULONG NtMinorVersion = 0;
+ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
+ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
+ULONG NtGlobalFlag = 0;
+
+ULONG InitSafeBootMode = 0; /* KB83764 */
+
 extern ULONG MmCoreDumpType;
 extern CHAR KiTimerSystemAuditing;
 extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
@@ -25,9 +36,6 @@ extern ULONG_PTR LastKrnlPhysAddr;
 extern ULONG_PTR LastKernelAddress;
 extern LOADER_MODULE KeLoaderModules[64];
 extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
-extern LIST_ENTRY KiProfileListHead;
-extern LIST_ENTRY KiProfileSourceListHead;
-extern KSPIN_LOCK KiProfileLock;
 BOOLEAN SetupMode = TRUE;
 BOOLEAN NoGuiBoot = FALSE;
 
@@ -263,6 +271,10 @@ ExecuteRuntimeAsserts(VOID)
     ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
     ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
     ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+    ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
+    ASSERT(KeGetPcr()->IRR == 0);
+    ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
+    ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
     ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
     ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
     ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
@@ -503,11 +515,14 @@ ExpInitializeExecutive(VOID)
     /* Check if the structures match the ASM offset constants */
     ExecuteRuntimeAsserts();
 
-    /* Set 1 CPU for now, we'll increment this later */
-    KeNumberProcessors = 1;
+    /* Initialize HAL */
+    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
     LdrInit1();
+
+    /* Setup bugcheck messages */
+    KiInitializeBugCheck();
 
     /* Lower the IRQL to Dispatch Level */
     KeLowerIrql(DISPATCH_LEVEL);
@@ -529,16 +544,14 @@ ExpInitializeExecutive(VOID)
     /* Parse the Loaded Modules (by FreeLoader) and cache the ones we'll need */
     ParseAndCacheLoadedModules();
 
-    /* Initialize the Dispatcher, Clock and Bug Check Mechanisms. */
+    /* Setup system time */
+    KiInitializeSystemClock();
+
+    /* Initialize the second stage of the kernel */
     KeInit2();
 
     /* Bring back the IRQL to Passive */
     KeLowerIrql(PASSIVE_LEVEL);
-
-    /* Initialize Profiling */
-    InitializeListHead(&KiProfileListHead);
-    InitializeListHead(&KiProfileSourceListHead);
-    KeInitializeSpinLock(&KiProfileLock);
 
     /* Initialize resources */
     ExpResourceInitialization();
@@ -560,26 +573,12 @@ ExpInitializeExecutive(VOID)
 
     /* Initalize the Process Manager */
     PiInitProcessManager();
-    
+
     /* Break into the Debugger if requested */
     if (KdPollBreakIn()) DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
 
     /* Initialize all processors */
-    while (!HalAllProcessorsStarted()) {
-
-        PVOID ProcessorStack;
-
-        /* Set up the Kernel and Process Manager for this CPU */
-        KePrepareForApplicationProcessorInit(KeNumberProcessors);
-        KeCreateApplicationProcessorIdleThread(KeNumberProcessors);
-
-        /* Allocate a stack for use when booting the processor */
-        ProcessorStack = RVA(Ki386InitialStackArray[((int)KeNumberProcessors)], KERNEL_STACK_SIZE);
-
-        /* Tell HAL a new CPU is being started */
-        HalStartNextProcessor(0, (ULONG)ProcessorStack - 2*sizeof(FX_SAVE_AREA));
-        KeNumberProcessors++;
-    }
+    HalAllProcessorsStarted();
 
     /* Do Phase 1 HAL Initalization */
     HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
@@ -638,6 +637,9 @@ ExpInitializeExecutive(VOID)
     /* Import and Load Registry Hives */
     CmInitHives(SetupMode);
 
+    /* Initialize VDM support */
+    KeI386VdmInitialize();
+
     /* Initialize the time zone information from the registry */
     ExpInitTimeZoneInfo();
 
@@ -656,9 +658,6 @@ ExpInitializeExecutive(VOID)
 
     /* Load the System DLL and its Entrypoints */
     PsLocateSystemDll();
-
-    /* Initialize the Default Locale */
-    PiInitDefaultLocale();
 
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
     InitSystemSharedUserPage ((PCHAR)KeLoaderBlock.CommandLine);

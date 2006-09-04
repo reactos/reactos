@@ -36,15 +36,16 @@ LARGE_INTEGER SystemBootTime = { 0 };
 #endif
 
 CHAR KiTimerSystemAuditing = 0;
-static KDPC KiExpireTimerDpc;
-static BOOLEAN KiClockSetupComplete = FALSE;
+KDPC KiExpireTimerDpc;
+BOOLEAN KiClockSetupComplete = FALSE;
+
 
 /*
  * Number of timer interrupts since initialisation
  */
 volatile KSYSTEM_TIME KeTickCount = {0};
 volatile ULONG KiRawTicks = 0;
-
+LONG KiTickOffset = 0;
 extern LIST_ENTRY KiTimerListHead;
 
 /*
@@ -58,6 +59,7 @@ extern LIST_ENTRY KiTimerListHead;
 
 ULONG KeMaximumIncrement = 100000;
 ULONG KeMinimumIncrement = 100000;
+ULONG KeTimeAdjustment   = 100000;
 
 #define MICROSECONDS_PER_TICK (10000)
 #define TICKS_TO_CALIBRATE (1)
@@ -76,26 +78,15 @@ KiInitializeSystemClock(VOID)
 {
     TIME_FIELDS TimeFields;
 
-    DPRINT("KiInitializeSystemClock()\n");
-    InitializeListHead(&KiTimerListHead);
-    KeInitializeDpc(&KiExpireTimerDpc, (PKDEFERRED_ROUTINE)KiExpireTimers, 0);
-
     /* Calculate the starting time for the system clock */
     HalQueryRealTimeClock(&TimeFields);
     RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
 
     /* Set up the Used Shared Data */
-    SharedUserData->TickCountLowDeprecated = 0;
-    SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
-    SharedUserData->InterruptTime.High2Time = 0;
-    SharedUserData->InterruptTime.LowPart = 0;
-    SharedUserData->InterruptTime.High1Time = 0;
     SharedUserData->SystemTime.High2Time = SystemBootTime.u.HighPart;
     SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
     SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
-
     KiClockSetupComplete = TRUE;
-    DPRINT("Finished KiInitializeSystemClock()\n");
 }
 
 VOID
@@ -226,162 +217,6 @@ KeSetTimeUpdateNotifyRoutine(
     )
 {
     UNIMPLEMENTED;
-}
-
-/*
- * NOTE: On Windows this function takes exactly one parameter and EBP is
- *       guaranteed to point to KTRAP_FRAME. The function is used only
- *       by HAL, so there's no point in keeping that prototype.
- *
- * @implemented
- */
-VOID
-STDCALL
-KeUpdateRunTime(
-    IN PKTRAP_FRAME  TrapFrame,
-    IN KIRQL  Irql
-    )
-{
-   PKPRCB Prcb;
-   PKTHREAD CurrentThread;
-   PKPROCESS CurrentProcess;
-#if 0
-   ULONG DpcLastCount;
-#endif
-
-   Prcb = KeGetCurrentPrcb();
-
-   /* Make sure we don't go further if we're in early boot phase. */
-   if (Prcb == NULL || Prcb->CurrentThread == NULL)
-      return;
-
-   DPRINT("KernelTime  %u, UserTime %u \n", Prcb->KernelTime, Prcb->UserTime);
-
-   CurrentThread = Prcb->CurrentThread;
-   CurrentProcess = CurrentThread->ApcState.Process;
-
-#ifdef _M_IX86
-   /*
-    * Cs bit 0 is always set for user mode if we are in protected mode.
-    * V86 mode is counted as user time.
-    */
-   if (TrapFrame->SegCs & MODE_MASK ||
-       TrapFrame->EFlags & X86_EFLAGS_VM)
-   {
-      (void)InterlockedIncrementUL(&CurrentThread->UserTime);
-      (void)InterlockedIncrementUL(&CurrentProcess->UserTime);
-      Prcb->UserTime++;
-   }
-   else
-   {
-      if (Irql > DISPATCH_LEVEL)
-      {
-         Prcb->InterruptTime++;
-      }
-      else if (Irql == DISPATCH_LEVEL)
-      {
-         Prcb->DpcTime++;
-      }
-      else
-      {
-         (void)InterlockedIncrementUL(&CurrentThread->KernelTime);
-         (void)InterlockedIncrementUL(&CurrentProcess->KernelTime);
-         Prcb->KernelTime++;
-      }
-   }
-#endif
-
-#if 0
-   DpcLastCount = Prcb->DpcLastCount;
-   Prcb->DpcLastCount = Prcb->DpcCount;
-   Prcb->DpcRequestRate = ((Prcb->DpcCount - DpcLastCount) +
-                                   Prcb->DpcRequestRate) / 2;
-#endif
-
-   if (Prcb->DpcData[0].DpcQueueDepth > 0 &&
-       Prcb->DpcRoutineActive == FALSE &&
-       Prcb->DpcInterruptRequested == FALSE)
-   {
-      HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-   }
-
-   /* FIXME: Do DPC rate adjustments */
-
-   /*
-    * If we're at end of quantum request software interrupt. The rest
-    * is handled in KiDispatchInterrupt.
-    *
-    * NOTE: If one stays at DISPATCH_LEVEL for a long time the DPC routine
-    * which checks for quantum end will not be executed and decrementing
-    * the quantum here can result in overflow. This is not a problem since
-    * we don't care about the quantum value anymore after the QuantumEnd
-    * flag is set.
-    */
-   if ((CurrentThread->Quantum -= 3) <= 0)
-   {
-      Prcb->QuantumEnd = TRUE;
-      HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-   }
-}
-
-
-/*
- * NOTE: On Windows this function takes exactly zero parameters and EBP is
- *       guaranteed to point to KTRAP_FRAME. Also [esp+0] contains an IRQL.
- *       The function is used only by HAL, so there's no point in keeping
- *       that prototype.
- *
- * @implemented
- */
-VOID
-STDCALL
-KeUpdateSystemTime(
-    IN PKTRAP_FRAME  TrapFrame,
-    IN KIRQL  Irql
-    )
-/*
- * FUNCTION: Handles a timer interrupt
- */
-{
-#ifdef _M_IX86
-   LARGE_INTEGER Time;
-
-   ASSERT(KeGetCurrentIrql() == PROFILE_LEVEL);
-
-   KiRawTicks++;
-
-   if (KiClockSetupComplete == FALSE) return;
-
-   /*
-    * Increment the number of timers ticks
-    */
-   (*(PULONGLONG)&KeTickCount)++;
-   SharedUserData->TickCountLowDeprecated++;
-
-   Time.u.LowPart = SharedUserData->InterruptTime.LowPart;
-   Time.u.HighPart = SharedUserData->InterruptTime.High1Time;
-   Time.QuadPart += CLOCK_INCREMENT;
-   SharedUserData->InterruptTime.High2Time = Time.u.HighPart;
-   SharedUserData->InterruptTime.LowPart = Time.u.LowPart;
-   SharedUserData->InterruptTime.High1Time = Time.u.HighPart;
-
-   Time.u.LowPart = SharedUserData->SystemTime.LowPart;
-   Time.u.HighPart = SharedUserData->SystemTime.High1Time;
-   Time.QuadPart += CLOCK_INCREMENT;
-   SharedUserData->SystemTime.High2Time = Time.u.HighPart;
-   SharedUserData->SystemTime.LowPart = Time.u.LowPart;
-   SharedUserData->SystemTime.High1Time = Time.u.HighPart;
-
-   /* FIXME: Here we should check for remote debugger break-ins */
-
-   /* Update process and thread times */
-   KeUpdateRunTime(TrapFrame, Irql);
-
-   /*
-    * Queue a DPC that will expire timers
-    */
-   KeInsertQueueDpc(&KiExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
-#endif
 }
 
 /*

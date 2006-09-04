@@ -1,54 +1,70 @@
 /* $Id$
  *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/fs/unc.c
- * PURPOSE:         No purpose listed.
+ * PURPOSE:         Functions to work with UNC providers
  *
  * PROGRAMMERS:     Emanuele Aliberti
  *                  Eric Kohl
  */
 
+/* INCLUDES *****************************************************************/
+
 #include <ntoskrnl.h>
 
+#define NDEBUG
+#include <internal/debug.h>
 
-/**********************************************************************
- * NAME                             EXPORTED
- *  FsRtlDeregisterUncProvider@4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
+/* FUNCTIONS *****************************************************************/
+
+/*++
+ * @name FsRtlDeregisterUncProvider
  * @unimplemented
- */
+ *
+ * FILLME
+ *
+ * @param Handle
+ *        FILLME
+ *
+ * @return None
+ *
+ * @remarks None
+ *
+ *--*/
 VOID
 NTAPI
 FsRtlDeregisterUncProvider(IN HANDLE Handle)
 {
+    UNIMPLEMENTED;
 }
 
-
-/**********************************************************************
- * NAME                             EXPORTED
- *  FsRtlRegisterUncProvider@12
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
+/*++
+ * @name FsRtlRegisterUncProvider
  * @unimplemented
- */
+ *
+ * FILLME
+ *
+ * @param Handle
+ *        FILLME
+ *
+ * @param RedirectorDeviceName
+ *        FILLME
+ *
+ * @param MailslotsSupported
+ *
+ * @return None
+ *
+ * @remarks None
+ *
+ *--*/
 NTSTATUS
 NTAPI
 FsRtlRegisterUncProvider(IN OUT PHANDLE Handle,
                          IN PUNICODE_STRING RedirectorDeviceName,
                          IN BOOLEAN MailslotsSupported)
 {
+    UNIMPLEMENTED;
     return(STATUS_NOT_IMPLEMENTED);
 }
 

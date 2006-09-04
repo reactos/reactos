@@ -188,6 +188,34 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
     return FALSE;
 }
 
+BOOLEAN
+NTAPI
+RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
+                       IN ULONG_PTR *StackBegin,
+                       IN ULONG_PTR *StackEnd)
+{
+    PKTHREAD Thread = KeGetCurrentThread();
+
+    /* FIXME: Super native implementation */
+
+    /* FIXME: ROS HACK */
+    if (!Thread) return FALSE;
+
+    /* Start with defaults */
+    *StackBegin = Thread->StackLimit;
+    *StackEnd = (ULONG_PTR)Thread->StackBase;
+
+    /* Check if we seem to be on the DPC stack */
+    if ((*StackBegin > Ebp) || (Ebp > *StackEnd))
+    {
+        /* FIXME: TODO */
+        ASSERT(FALSE);
+    }
+
+    /* Return success */
+    return TRUE;
+}
+
 /* RTL Atom Tables ************************************************************/
 
 NTSTATUS

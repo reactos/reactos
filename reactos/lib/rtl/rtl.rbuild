@@ -22,26 +22,22 @@
 			<file>aullshr_asm.s</file>
 			<file>ceil_asm.s</file>
 			<file>chkstk_asm.s</file>
-			<file>comparememory_asm.s</file>
-			<file>comparememory_ulong_asm.s</file>
 			<file>cos_asm.s</file>
 			<file>debug_asm.S</file>
 			<file>except_asm.s</file>
 			<file>exception.c</file>
 			<file>fabs_asm.s</file>
-			<file>fillmemory_asm.s</file>
-			<file>fillmemory_ulong_asm.s</file>
 			<file>floor_asm.s</file>
 			<file>ftol_asm.s</file>
 			<file>log_asm.s</file>
 			<file>random_asm.S</file>
+			<file>rtlswap.S</file>
+			<file>rtlmem.s</file>
 			<file>pow_asm.s</file>
-			<file>prefetchmemory_asm.s</file>
 			<file>res_asm.s</file>
 			<file>sin_asm.s</file>
 			<file>sqrt_asm.s</file>
-			<file>tan_asm.s</file>			
-			<file>zeromemory_asm.s</file>
+			<file>tan_asm.s</file>
 		</directory>
 	</if>
 	<file>access.c</file>
@@ -51,6 +47,7 @@
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
 	<file>compress.c</file>
+	<file>condvar.c</file>
 	<file>crc32.c</file>
 	<file>critical.c</file>
 	<file>dbgbuffer.c</file>
@@ -64,7 +61,6 @@
 	<file>handle.c</file>
 	<file>heap.c</file>
 	<file>image.c</file>
-	<file>mem.c</file>
 	<file>message.c</file>
 	<file>largeint.c</file>
 	<file>luid.c</file>
@@ -84,6 +80,7 @@
 	<file>security.c</file>
 	<file>sid.c</file>
 	<file>sprintf.c</file>
+	<file>srw.c</file>
 	<file>swprintf.c</file>
 	<file>splaytree.c</file>
 	<file>thread.c</file>
@@ -94,5 +91,6 @@
 	<file>unicodeprefix.c</file>
 	<file>vectoreh.c</file>
 	<file>version.c</file>
+	<file>workitem.c</file>
 	<pch>rtl.h</pch>
 </module>

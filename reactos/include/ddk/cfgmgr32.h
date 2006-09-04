@@ -619,6 +619,15 @@ CMP_Report_LogOn(
 /* FIXME: Missing CMP_WaitServicesAvailable */
 
 /* CM_Add_Empty_Log_Conf.ulFlags constants */
+#define BASIC_LOG_CONF                    0x00000000
+#define FILTERED_LOG_CONF                 0x00000001
+#define ALLOC_LOG_CONF                    0x00000002
+#define BOOT_LOG_CONF                     0x00000003
+#define FORCED_LOG_CONF                   0x00000004
+#define OVERRIDE_LOG_CONF                 0x00000005
+#define NUM_LOG_CONF                      0x00000006
+#define LOG_CONF_BITS                     0x00000007
+
 #define PRIORITY_EQUAL_FIRST              0x00000008
 #define PRIORITY_EQUAL_LAST               0x00000000
 #define PRIORITY_BIT                      0x00000008
@@ -1804,8 +1813,31 @@ CM_Open_Class_Key_ExW(
 #define CM_Open_Class_Key_Ex CM_Open_Class_Key_ExA
 #endif /* UNICODE */
 
-/* FIXME: Obsolete CM_Open_DevNode_Key */
-/* FIXME: Obsolete CM_Open_DevNode_Key_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Open_DevNode_Key(
+  IN DEVINST  dnDevNode,
+  IN REGSAM  samDesired,
+  IN ULONG  ulHardwareProfile,
+  IN REGDISPOSITION  Disposition,
+  OUT PHKEY  phkDevice,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Open_DevNode_Key_Ex(
+  IN DEVINST  dnDevNode,
+  IN REGSAM  samDesired,
+  IN ULONG  ulHardwareProfile,
+  IN REGDISPOSITION  Disposition,
+  OUT PHKEY  phkDevice,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#define CM_Open_DevInst_Key CM_Open_DevNode_Key
+#define CM_Open_DevInst_Key_Ex CM_Open_DevNode_Key_Ex
 
 /* CM_Query_And_Remove_SubTree.ulFlags constants */
 #define CM_REMOVE_UI_OK             			0x00000000
@@ -2072,13 +2104,99 @@ CM_Set_DevNode_Registry_Property_ExW(
 
 /* FIXME: Obsolete CM_Set_HW_Prof */
 /* FIXME: Obsolete CM_Set_HW_Prof_Ex */
-/* FIXME: Obsolete CM_Set_HW_Prof_Flags */
-/* FIXME: Obsolete CM_Set_HW_Prof_Flags_Ex */
-/* FIXME: Obsolete CM_Setup_DevNode */
-/* FIXME: Obsolete CM_Setup_DevNode_Ex */
+
+/* CM_Set_HW_Prof_Flags[_Ex].ulFlags constants */
+#define CM_SET_HW_PROF_FLAGS_UI_NOT_OK  (0x00000001)
+#define CM_SET_HW_PROF_FLAGS_BITS       (0x00000001)
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_FlagsA(
+  IN DEVINSTID_A  szDevInstName,
+  IN ULONG  ulConfig,
+  IN ULONG  ulValue,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_FlagsW(
+  IN DEVINSTID_W  szDevInstName,
+  IN ULONG  ulConfig,
+  IN ULONG  ulValue,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_Flags_ExA(
+  IN DEVINSTID_A  szDevInstName,
+  IN ULONG  ulConfig,
+  IN ULONG  ulValue,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_Flags_ExW(
+  IN DEVINSTID_W  szDevInstName,
+  IN ULONG  ulConfig,
+  IN ULONG  ulValue,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#ifdef UNICODE
+#define CM_Set_HW_Prof_Flags CM_Set_HW_Prof_FlagsW
+#define CM_Set_HW_Prof_Flags_Ex CM_Set_HW_Prof_Flags_ExW
+#else
+#define CM_Set_HW_Prof_Flags CM_Set_HW_Prof_FlagsA
+#define CM_Set_HW_Prof_Flags_Ex CM_Set_HW_Prof_Flags_ExA
+#endif /* UNICODE */
+
+/* CM_Setup_DevInst[_Ex].ulFlags constants */
+#define CM_SETUP_DEVNODE_READY   (0x00000000)
+#define CM_SETUP_DEVINST_READY   CM_SETUP_DEVNODE_READY
+#define CM_SETUP_DOWNLOAD        (0x00000001)
+#define CM_SETUP_WRITE_LOG_CONFS (0x00000002)
+#define CM_SETUP_PROP_CHANGE     (0x00000003)
+#define CM_SETUP_DEVNODE_RESET   (0x00000004)
+#define CM_SETUP_DEVINST_RESET   CM_SETUP_DEVNODE_RESET
+#define CM_SETUP_BITS            (0x00000007)
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Setup_DevNode(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Setup_DevNode_Ex(
+  IN DEVINST  dnDevInst,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Test_Range_Available */
-/* FIXME: Obsolete CM_Uninstall_DevNode */
-/* FIXME: Obsolete CM_Uninstall_DevNode_Ex */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Uninstall_DevNode(
+  IN DEVINST  dnPhantom,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Uninstall_DevNode_Ex(
+  IN DEVINST  dnPhantom,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Unregister_Device_Interface */
 /* FIXME: Obsolete CM_Unregister_Device_Interface_Ex */
 

@@ -231,7 +231,8 @@ VOID
 NTAPI
 KeUpdateSystemTime(
     PKTRAP_FRAME TrapFrame,
-    KIRQL Irql
+    KIRQL Irql,
+    ULONG Increment
 );
 
 VOID

@@ -7,29 +7,26 @@
  *                  Gregor Anich
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ********(*********************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/napi.h>
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS   *****************************************************************/
+/* GLOBALS *******************************************************************/
 
-KSERVICE_TABLE_DESCRIPTOR
-__declspec(dllexport)
-KeServiceDescriptorTable[SSDT_MAX_ENTRIES] =
-{
-    { MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
-    { NULL,     NULL,   0,   NULL   },
-};
+LIST_ENTRY KiProcessListHead;
+LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
+LIST_ENTRY KiStackInSwapListHead;
+KEVENT KiSwapEvent;
 
-KSERVICE_TABLE_DESCRIPTOR
-KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES] =
-{
-    { MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
-    { NULL,     NULL,   0,   NULL   },
-};
+KSERVICE_TABLE_DESCRIPTOR KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
+KSERVICE_TABLE_DESCRIPTOR KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
+
+PVOID KeUserApcDispatcher;
+PVOID KeUserCallbackDispatcher;
+PVOID KeUserExceptionDispatcher;
+PVOID KeRaiseUserExceptionDispatcher;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -113,13 +110,14 @@ KiAttachProcess(PKTHREAD Thread,
 
 VOID
 NTAPI
-KeInitializeProcess(PKPROCESS Process,
-                    KPRIORITY Priority,
-                    KAFFINITY Affinity,
-                    LARGE_INTEGER DirectoryTableBase)
+KeInitializeProcess(IN OUT PKPROCESS Process,
+                    IN KPRIORITY Priority,
+                    IN KAFFINITY Affinity,
+                    IN LARGE_INTEGER DirectoryTableBase)
 {
-    DPRINT("KeInitializeProcess. Process: %x, DirectoryTableBase: %x\n",
-            Process, DirectoryTableBase);
+    ULONG i = 0;
+    UCHAR IdealNode = 0;
+    PKNODE Node;
 
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Process->Header,
@@ -127,27 +125,67 @@ KeInitializeProcess(PKPROCESS Process,
                                  sizeof(KPROCESS),
                                  FALSE);
 
-    /* Initialize Scheduler Data, Disable Alignment Faults and Set the PDE */
+    /* Initialize Scheduler Data, Alignment Faults and Set the PDE */
     Process->Affinity = Affinity;
-    Process->BasePriority = Priority;
+    Process->BasePriority = (CHAR)Priority;
     Process->QuantumReset = 6;
     Process->DirectoryTableBase = DirectoryTableBase;
     Process->AutoAlignment = TRUE;
 #ifdef _M_IX86
     Process->IopmOffset = 0xFFFF;
 #endif
+
+    /* Initialize the lists */
+    InitializeListHead(&Process->ThreadListHead);
+    InitializeListHead(&Process->ProfileListHead);
+    InitializeListHead(&Process->ReadyListHead);
+
+    /* Initialize the current State */
     Process->State = ProcessInMemory;
 
-    /* Initialize the Thread List */
-    InitializeListHead(&Process->ThreadListHead);
-    KeInitializeSpinLock(&Process->ProcessLock);
-    DPRINT("The Process has now been initalized with the Kernel\n");
+    /* Check how many Nodes there are on the system */
+    if (KeNumberNodes > 1)
+    {
+        /* Set the new seed */
+        KeProcessNodeSeed = (KeProcessNodeSeed + 1) / KeNumberNodes;
+        IdealNode = KeProcessNodeSeed;
+
+        /* Loop every node */
+        do
+        {
+            /* Check if the affinity matches */
+            if (KeNodeBlock[IdealNode]->ProcessorMask != Affinity) break;
+
+            /* No match, try next Ideal Node and increase node loop index */
+            IdealNode++;
+            i++;
+
+            /* Check if the Ideal Node is beyond the total number of nodes */
+            if (IdealNode >= KeNumberNodes)
+            {
+                /* Normalize the Ideal Node */
+                IdealNode -= KeNumberNodes;
+            }
+        } while (i < KeNumberNodes);
+    }
+
+    /* Set the ideal node and get the ideal node block */
+    Process->IdealNode = IdealNode;
+    Node = KeNodeBlock[IdealNode];
+    ASSERT(Node->ProcessorMask & Affinity);
+
+    /* Find the matching affinity set to calculate the thread seed */
+    Affinity &= Node->ProcessorMask;
+    Process->ThreadSeed = KeFindNextRightSetAffinity(Node->Seed,
+                                                     (ULONG)Affinity);
+    Node->Seed = Process->ThreadSeed;
 }
 
 ULONG
 NTAPI
 KeSetProcess(PKPROCESS Process,
-             KPRIORITY Increment)
+             KPRIORITY Increment,
+             BOOLEAN InWait)
 {
     KIRQL OldIrql;
     ULONG OldState;
@@ -182,6 +220,204 @@ KiSwapProcess(PKPROCESS NewProcess,
     DPRINT("Switching CR3 to: %x\n", NewProcess->DirectoryTableBase.u.LowPart);
     Ke386SetPageTableDirectory(NewProcess->DirectoryTableBase.u.LowPart);
 #endif
+}
+
+VOID
+NTAPI
+KeSetQuantumProcess(IN PKPROCESS Process,
+                    IN UCHAR Quantum)
+{
+    KIRQL OldIrql;
+    PLIST_ENTRY NextEntry, ListHead;
+    PKTHREAD Thread;
+    ASSERT_PROCESS(Process);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock Dispatcher */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Set new quantum */
+    Process->QuantumReset = Quantum;
+
+    /* Loop all child threads */
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
+    {
+        /* Get the thread */
+        Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+        /* Set quantum */
+        Thread->QuantumReset = Quantum;
+
+        /* Go to the next one */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release Dispatcher Database */
+    KeReleaseDispatcherDatabaseLock(OldIrql);
+}
+
+KPRIORITY
+NTAPI
+KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
+                               IN KPRIORITY Priority,
+                               IN UCHAR Quantum OPTIONAL)
+{
+    KPRIORITY Delta;
+    PLIST_ENTRY NextEntry, ListHead;
+    KPRIORITY NewPriority, OldPriority;
+    KIRQL OldIrql;
+    PKTHREAD Thread;
+    BOOLEAN Released;
+    ASSERT_PROCESS(Process);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Check if the process already has this priority */
+    if (Process->BasePriority == Priority)
+    {
+        /* Don't change anything */
+        return Process->BasePriority;
+    }
+
+    /* If the caller gave priority 0, normalize to 1 */
+    if (!Priority) Priority = 1;
+
+    /* Lock Dispatcher */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
+
+    /* Check if we are modifying the quantum too */
+    if (Quantum) Process->QuantumReset = Quantum;
+
+    /* Save the current base priority and update it */
+    OldPriority = Process->BasePriority;
+    Process->BasePriority = Priority;
+
+    /* Calculate the priority delta */
+    Delta = Priority - OldPriority;
+
+    /* Set the list head and list entry */
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+
+    /* Check if this is a real-time priority */
+    if (Priority >= LOW_REALTIME_PRIORITY)
+    {
+        /* Loop the thread list */
+        while (NextEntry != ListHead)
+        {
+            /* Get the thread */
+            Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+            /* Update the quantum if we had one */
+            if (Quantum) Thread->QuantumReset = Quantum;
+
+            /* Calculate the new priority */
+            NewPriority = Thread->BasePriority + Delta;
+            if (NewPriority < LOW_REALTIME_PRIORITY)
+            {
+                /* We're in real-time range, don't let it go below */
+                NewPriority = LOW_REALTIME_PRIORITY;
+            }
+            else if (NewPriority > HIGH_PRIORITY)
+            {
+                /* We're going beyond the maximum priority, normalize */
+                NewPriority = HIGH_PRIORITY;
+            }
+
+            /*
+             * If priority saturation occured or the old priority was still in
+             * the real-time range, don't do anything.
+             */
+            if (!(Thread->Saturation) || (OldPriority < LOW_REALTIME_PRIORITY))
+            {
+                /* Check if we had priority saturation */
+                if (Thread->Saturation > 0)
+                {
+                    /* Boost priority to maximum */
+                    NewPriority = HIGH_PRIORITY;
+                }
+                else if (Thread->Saturation < 0)
+                {
+                    /* If we had negative saturation, set minimum priority */
+                    NewPriority = LOW_REALTIME_PRIORITY;
+                }
+
+                /* Update priority and quantum */
+                Thread->BasePriority = NewPriority;
+                Thread->Quantum = Thread->QuantumReset;
+
+                /* Disable decrements and update priority */
+                Thread->PriorityDecrement = 0;
+                KiSetPriorityThread(Thread, NewPriority, &Released);
+            }
+
+            /* Go to the next thread */
+            NextEntry = NextEntry->Flink;
+        }
+    }
+    else
+    {
+        /* Loop the thread list */
+        while (NextEntry != ListHead)
+        {
+            /* Get the thread */
+            Thread = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+            /* Update the quantum if we had one */
+            if (Quantum) Thread->QuantumReset = Quantum;
+
+            /* Calculate the new priority */
+            NewPriority = Thread->BasePriority + Delta;
+            if (NewPriority >= LOW_REALTIME_PRIORITY)
+            {
+                /* We're not real-time range, don't let it enter RT range */
+                NewPriority = LOW_REALTIME_PRIORITY - 1;
+            }
+            else if (NewPriority <= LOW_PRIORITY)
+            {
+                /* We're going below the minimum priority, normalize */
+                NewPriority = 1;
+            }
+
+            /*
+             * If priority saturation occured or the old priority was still in
+             * the real-time range, don't do anything.
+             */
+            if (!(Thread->Saturation) ||
+                (OldPriority >= LOW_REALTIME_PRIORITY))
+            {
+                /* Check if we had priority saturation */
+                if (Thread->Saturation > 0)
+                {
+                    /* Boost priority to maximum */
+                    NewPriority = LOW_REALTIME_PRIORITY - 1;
+                }
+                else if (Thread->Saturation < 0)
+                {
+                    /* If we had negative saturation, set minimum priority */
+                    NewPriority = 1;
+                }
+
+                /* Update priority and quantum */
+                Thread->BasePriority = NewPriority;
+                Thread->Quantum = Thread->QuantumReset;
+
+                /* Disable decrements and update priority */
+                Thread->PriorityDecrement = 0;
+                KiSetPriorityThread(Thread, NewPriority, &Released);
+            }
+
+            /* Go to the next thread */
+            NextEntry = NextEntry->Flink;
+        }
+    }
+
+    /* Release Dispatcher Database */
+    if (!Released) KeReleaseDispatcherDatabaseLock(OldIrql);
+
+    /* Return previous priority */
+    return OldPriority;
 }
 
 /*

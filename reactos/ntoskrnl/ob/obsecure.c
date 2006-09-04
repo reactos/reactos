@@ -15,7 +15,107 @@
 
 #define TAG_SEC_QUERY   TAG('O', 'b', 'S', 'q')
 
-/* FUNCTIONS ***************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
+
+/*++
+* @name ObCheckObjectAccess
+*
+*     The ObAssignSecurity routine <FILLMEIN>
+*
+* @param Object
+*        <FILLMEIN>
+*
+* @param AccessState
+*        <FILLMEIN>
+*
+* @param Unknown
+*        <FILLMEIN>
+*
+* @param AccessMode
+*        <FILLMEIN>
+*
+* @param ReturnedStatus
+*        <FILLMEIN>
+*
+* @return TRUE if access was granted, FALSE otherwise.
+*
+* @remarks None.
+*
+*--*/
+BOOLEAN
+NTAPI
+ObCheckObjectAccess(IN PVOID Object,
+                    IN OUT PACCESS_STATE AccessState,
+                    IN BOOLEAN Unknown,
+                    IN KPROCESSOR_MODE AccessMode,
+                    OUT PNTSTATUS ReturnedStatus)
+{
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_TYPE ObjectType;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+    BOOLEAN SdAllocated;
+    NTSTATUS Status;
+    BOOLEAN Result;
+    ACCESS_MASK GrantedAccess;
+    PPRIVILEGE_SET Privileges = NULL;
+    PAGED_CODE();
+
+    /* Get the object header and type */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+    ObjectType = ObjectHeader->Type;
+
+    /* Get security information */
+    Status = ObGetObjectSecurity(Object, &SecurityDescriptor, &SdAllocated);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Return failure */
+        *ReturnedStatus = Status;
+        return FALSE;
+    }
+    else if (!SecurityDescriptor)
+    {
+        /* Otherwise, if we don't actually have an SD, return success */
+        *ReturnedStatus = Status;
+        return TRUE;
+    }
+
+    /* Lock the security context */
+    SeLockSubjectContext(&AccessState->SubjectSecurityContext);
+
+    /* Now do the entire access check */
+    Result = SeAccessCheck(SecurityDescriptor,
+                           &AccessState->SubjectSecurityContext,
+                           TRUE,
+                           AccessState->RemainingDesiredAccess,
+                           AccessState->PreviouslyGrantedAccess,
+                           &Privileges,
+                           &ObjectType->TypeInfo.GenericMapping,
+                           AccessMode,
+                           &GrantedAccess,
+                           ReturnedStatus);
+    if (Privileges)
+    {
+        /* We got privileges, append them to teh access state and free them */
+        Status = SeAppendPrivileges(AccessState, Privileges);
+        SeFreePrivileges(Privileges);
+    }
+
+    /* Check if access was granted */
+    if (Result)
+    {
+        /* Update the access state */
+        AccessState->RemainingDesiredAccess &= ~(GrantedAccess |
+                                                 MAXIMUM_ALLOWED);
+        AccessState->PreviouslyGrantedAccess |= GrantedAccess;
+    }
+
+    /* We're done, unlock the context and release security */
+    SeUnlockSubjectContext(&AccessState->SubjectSecurityContext);
+    ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+    return Result;
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
 * @name ObAssignSecurity

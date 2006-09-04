@@ -1,7 +1,9 @@
 <module name="freeldr_base" type="objectlibrary">
+	<include base="ReactOS">include/psdk</include>
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>
 	<include base="ntoskrnl">include</include>
+	<include base="cmlib">.</include>
 	<define name="__USE_W32API" />
 <!--	
 	<define name="DEBUG" />
@@ -45,8 +47,8 @@
 	</directory>
 	<directory name="reactos">
 		<file>registry.c</file>
-		<file>arcname.c</file>
 		<file>binhive.c</file>
+		<file>arcname.c</file>
 		<file>reactos.c</file>
 	</directory>
 	<directory name="rtl">

@@ -25,6 +25,9 @@ HalInitializeProcessor(ULONG ProcessorNumber,
                        PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   DPRINT("HalInitializeProcessor(%lu %p)\n", ProcessorNumber, LoaderBlock);
+    /* Set default IDR */
+    KeGetPcr()->IDR = 0xFFFFFFFB;
+    KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 }
 
 BOOLEAN STDCALL

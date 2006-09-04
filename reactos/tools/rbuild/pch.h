@@ -32,6 +32,8 @@
 #ifndef MAX_PATH
 #define MAX_PATH _MAX_PATH
 #endif//MAX_PATH
+#else
+#include <unistd.h>
 #endif//WIN32
 
 #include <stdarg.h>

@@ -120,7 +120,7 @@ __asm__ __volatile__("mfmsr 0\n\t" \
 
 #define KePPCEnableInterrupts() \
  __asm__ __volatile__("mfmsr 0\n\t" \
-                      "li    8,0x8000\n\t" \
+                      "lis    8,0x8000@ha\n\t" \
                       "or    0,8,0\n\t" \
                       "mtmsr 0\n\t")
 
@@ -160,6 +160,8 @@ VOID
 STDCALL
 KeCreateApplicationProcessorIdleThread(
   ULONG Id);
+
+VOID KePPCHaltProcessor();
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID

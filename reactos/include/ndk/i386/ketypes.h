@@ -83,6 +83,7 @@ Author:
 #define EFLAGS_ALIGN_CHECK      0x40000
 #define EFLAGS_VIF              0x80000
 #define EFLAGS_VIP              0x100000
+#define EFLAGS_USER_SANITIZE    0x3F4DD7
 #define EFLAG_SIGN              0x8000
 #define EFLAG_ZERO              0x4000
 
@@ -94,6 +95,11 @@ Author:
 #define IPI_FREEZE              4
 #define IPI_PACKET_READY        8
 #define IPI_SYNCH_REQUEST       16
+
+//
+// HAL Variables
+//
+#define INITIAL_STALL_COUNT     0x64
 
 //
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
@@ -407,7 +413,6 @@ typedef struct _KPRCB
 #endif
     ULONG SpareCounter0;
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
-    ULONG KeContextSwitches;
     ULONG KeDcacheFlushCount;
     ULONG KeExceptionDispatchCount;
     ULONG KeFirstLevelTbFills;
@@ -416,9 +421,9 @@ typedef struct _KPRCB
     ULONG KeSecondLevelTbFills;
     ULONG KeSystemCalls;
 #endif
-    ULONG IoReadOperationCount;
-    ULONG IoWriteOperationCount;
-    ULONG IoOtherOperationCount;
+    volatile ULONG IoReadOperationCount;
+    volatile ULONG IoWriteOperationCount;
+    volatile ULONG IoOtherOperationCount;
     LARGE_INTEGER IoReadTransferCount;
     LARGE_INTEGER IoWriteTransferCount;
     LARGE_INTEGER IoOtherTransferCount;
@@ -459,37 +464,37 @@ typedef struct _KPRCB
     PP_LOOKASIDE_LIST PPLookasideList[16];
     PP_LOOKASIDE_LIST PPNPagedLookasideList[32];
     PP_LOOKASIDE_LIST PPPagedLookasideList[32];
-    ULONG PacketBarrier;
-    ULONG ReverseStall;
+    volatile ULONG PacketBarrier;
+    volatile ULONG ReverseStall;
     PVOID IpiFrame;
     UCHAR PrcbPad2[52];
-    PVOID CurrentPacket[3];
-    ULONG TargetSet;
-    PKIPI_WORKER WorkerRoutine;
-    ULONG IpiFrozen;
+    volatile PVOID CurrentPacket[3];
+    volatile ULONG TargetSet;
+    volatile PKIPI_WORKER WorkerRoutine;
+    volatile ULONG IpiFrozen;
     UCHAR PrcbPad3[40];
-    ULONG RequestSummary;
-    struct _KPRCB *SignalDone;
+    volatile ULONG RequestSummary;
+    volatile struct _KPRCB *SignalDone;
     UCHAR PrcbPad4[56];
     struct _KDPC_DATA DpcData[2];
     PVOID DpcStack;
     ULONG MaximumDpcQueueDepth;
     ULONG DpcRequestRate;
     ULONG MinimumDpcRate;
-    UCHAR DpcInterruptRequested;
-    UCHAR DpcThreadRequested;
-    UCHAR DpcRoutineActive;
-    UCHAR DpcThreadActive;
+    volatile UCHAR DpcInterruptRequested;
+    volatile UCHAR DpcThreadRequested;
+    volatile UCHAR DpcRoutineActive;
+    volatile UCHAR DpcThreadActive;
     ULONG PrcbLock;
     ULONG DpcLastCount;
-    ULONG TimerHand;
-    ULONG TimerRequest;
+    volatile ULONG TimerHand;
+    volatile ULONG TimerRequest;
     PVOID DpcThread;
     KEVENT DpcEvent;
     UCHAR ThreadDpcEnable;
-    BOOLEAN QuantumEnd;
+    volatile BOOLEAN QuantumEnd;
     UCHAR PrcbPad50;
-    UCHAR IdleSchedule;
+    volatile UCHAR IdleSchedule;
     LONG DpcSetEventRequest;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     LONG Sleeping;
@@ -530,19 +535,19 @@ typedef struct _KPRCB
 #endif
     PVOID ChainedInterruptList;
     LONG LookasideIrpFloat;
-    LONG MmPageFaultCount;
-    LONG MmCopyOnWriteCount;
-    LONG MmTransitionCount;
-    LONG MmCacheTransitionCount;
-    LONG MmDemandZeroCount;
-    LONG MmPageReadCount;
-    LONG MmPageReadIoCount;
-    LONG MmCacheReadCount;
-    LONG MmCacheIoCount;
-    LONG MmDirtyPagesWriteCount;
-    LONG MmDirtyWriteIoCount;
-    LONG MmMappedPagesWriteCount;
-    LONG MmMappedWriteIoCount;
+    volatile LONG MmPageFaultCount;
+    volatile LONG MmCopyOnWriteCount;
+    volatile LONG MmTransitionCount;
+    volatile LONG MmCacheTransitionCount;
+    volatile LONG MmDemandZeroCount;
+    volatile LONG MmPageReadCount;
+    volatile LONG MmPageReadIoCount;
+    volatile LONG MmCacheReadCount;
+    volatile LONG MmCacheIoCount;
+    volatile LONG MmDirtyPagesWriteCount;
+    volatile LONG MmDirtyWriteIoCount;
+    volatile LONG MmMappedPagesWriteCount;
+    volatile LONG MmMappedWriteIoCount;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONG CachedCommit;
     ULONG CachedResidentAvailable;
@@ -558,7 +563,7 @@ typedef struct _KPRCB
     ULONG MHz;
     ULONG FeatureBits;
     LARGE_INTEGER UpdateSignature;
-    LARGE_INTEGER IsrTime;
+    volatile LARGE_INTEGER IsrTime;
     LARGE_INTEGER SpareField1;
     FX_SAVE_AREA NpxSaveArea;
     PROCESSOR_POWER_STATE PowerState;
@@ -642,7 +647,6 @@ typedef struct _KiIoAccessMap
     UCHAR IoMap[8196];
 } KIIO_ACCESS_MAP;
 
-#include <pshpack1.h>
 typedef struct _KTSS
 {
     USHORT Backlink;
@@ -653,7 +657,15 @@ typedef struct _KTSS
     ULONG NotUsed1[4];
     ULONG CR3;
     ULONG Eip;
-    ULONG NotUsed2[9];
+    ULONG EFlags;
+    ULONG Eax;
+    ULONG Ecx;
+    ULONG Edx;
+    ULONG Ebx;
+    ULONG Esp;
+    ULONG Ebp;
+    ULONG Esi;
+    ULONG Edi;
     USHORT Es;
     USHORT Reserved2;
     USHORT Cs;
@@ -673,7 +685,6 @@ typedef struct _KTSS
     KIIO_ACCESS_MAP IoMaps[1];
     UCHAR IntDirectionMap[32];
 } KTSS, *PKTSS;
-#include <poppack.h>
 
 //
 // i386 CPUs don't have exception frames

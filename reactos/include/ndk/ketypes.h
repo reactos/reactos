@@ -40,6 +40,11 @@ Author:
 #define SSDT_MAX_ENTRIES                2
 
 //
+// Object Type Mask for Kernel Dispatcher Objects
+//
+#define KOBJECT_TYPE_MASK               0x7F
+
+//
 // Dispatcher Priority increments
 //
 #define THREAD_ALERT_INCREMENT          2
@@ -57,7 +62,22 @@ Author:
 //
 // Kernel Feature Bits
 //
+#define KF_V86_VIS                      0x00000001
 #define KF_RDTSC                        0x00000002
+#define KF_CR4                          0x00000004
+#define KF_CMOV                         0x00000008
+#define KF_GLOBAL_PAGE                  0x00000010
+#define KF_LARGE_PAGE                   0x00000020
+#define KF_MTRR                         0x00000040
+#define KF_CMPXCHG8B                    0x00000080
+#define KF_MMX                          0x00000100
+#define KF_WORKING_PTE                  0x00000200
+#define KF_PAT                          0x00000400
+#define KF_FXSR                         0x00000800
+#define KF_FAST_SYSCALL                 0x00001000
+#define KF_XMMI                         0x00002000
+#define KF_3DNOW                        0x00004000
+#define KF_AMDK6MTRR                    0x00008000
 
 //
 // KPCR Access for non-IA64 builds
@@ -240,7 +260,7 @@ typedef enum _KTHREAD_STATE
     Waiting,
     Transition,
     DeferredReady,
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+#if (NTDDI_VERSION >= NTDDI_WS03)
     GateWait,
 #endif
 } KTHREAD_STATE, *PKTHREAD_STATE;
@@ -467,7 +487,7 @@ typedef struct _KDPC_DATA
 {
     LIST_ENTRY DpcListHead;
     ULONG DpcLock;
-    ULONG DpcQueueDepth;
+    volatile ULONG DpcQueueDepth;
     ULONG DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
 
@@ -656,13 +676,13 @@ typedef struct _KTHREAD
             UCHAR ApcQueueable;
         };
     };
-    UCHAR NextProcessor;
-    UCHAR DeferredProcessor;
+    volatile UCHAR NextProcessor;
+    volatile UCHAR DeferredProcessor;
     UCHAR AdjustReason;
     UCHAR AdjustIncrement;
     KSPIN_LOCK ApcQueueLock;
     ULONG ContextSwitches;
-    UCHAR State;
+    volatile UCHAR State;
     UCHAR NpxState;
     UCHAR WaitIrql;
     UCHAR WaitMode;
@@ -677,7 +697,7 @@ typedef struct _KTHREAD
     UCHAR WaitReason;
     UCHAR Priority;
     UCHAR EnableStackSwap;
-    UCHAR SwapBusy;
+    volatile UCHAR SwapBusy;
     UCHAR Alerted[2];
     union
     {
@@ -690,8 +710,8 @@ typedef struct _KTHREAD
     {
         struct
         {
-            USHORT KernelApcDisable;
-            USHORT SpecialApcDisable;
+            SHORT KernelApcDisable;
+            SHORT SpecialApcDisable;
         };
         ULONG CombinedApcDisable;
     };
@@ -883,7 +903,7 @@ typedef struct _KPROCESS
     UCHAR Iopl;
     UCHAR Unused;
 #endif
-    ULONG ActiveProcessors;
+    volatile ULONG ActiveProcessors;
     ULONG KernelTime;
     ULONG UserTime;
     LIST_ENTRY ReadyListHead;
@@ -924,6 +944,9 @@ typedef struct _KPROCESS
 #endif
 } KPROCESS, *PKPROCESS;
 
+#define ASSERT_PROCESS(object) \
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == ProcessObject))
+
 //
 // System Service Table Descriptor
 //
@@ -951,7 +974,16 @@ extern struct _ROS_LOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
 // Exported Hardware Data
 //
 extern KAFFINITY NTSYSAPI KeActiveProcessors;
-extern CHAR NTSYSAPI KeNumberProcessors;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+extern volatile CCHAR NTSYSAPI KeNumberProcessors;
+#else
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+extern CCHAR NTSYSAPI KeNumberProcessors;
+#else
+//extern PCCHAR KeNumberProcessors;
+extern NTSYSAPI CCHAR KeNumberProcessors; //FIXME: Note to Alex: I won't fix this atm, since I prefer to discuss this with you first.
+#endif
+#endif
 extern ULONG NTSYSAPI KiDmaIoCoherency;
 extern ULONG NTSYSAPI KeMaximumIncrement;
 extern ULONG NTSYSAPI KeMinimumIncrement;

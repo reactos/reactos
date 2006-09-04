@@ -7,7 +7,9 @@
 
 	<!--	__MINGW_IMPORT needs to be defined differently because it's defined
 		as dllimport by default, which is invalid from GCC 4.1.0 on!	-->
-	<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
+	<if property="ARCH" value="i386">
+		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
+	</if>
 
 	<if property="ARCH" value="i386">
 		<directory name="i386">

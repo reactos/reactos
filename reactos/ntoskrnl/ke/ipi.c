@@ -33,9 +33,7 @@ KiIpiSendRequest(KAFFINITY TargetSet, ULONG IpiRequest)
       if (TargetSet & Current)
       {
          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-#ifdef _M_IX86
-	 Ke386TestAndSetBit(IpiRequest, &Pcr->Prcb->IpiFrozen);
-#endif
+	 InterlockedBitTestAndSet((PLONG)&Pcr->Prcb->IpiFrozen, IpiRequest);
 	 HalRequestIpi(i);
       }
    }
@@ -50,10 +48,8 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
                     IN PVOID ExceptionFrame)
 {
 #ifdef DBG
-#ifdef _M_IX86
    LARGE_INTEGER StartTime, CurrentTime, Frequency;
    ULONG Count = 5;
-#endif
 #endif
    PKPRCB Prcb;
 
@@ -63,19 +59,18 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
    Prcb = KeGetCurrentPrcb();
 
-#ifdef _M_IX86
-   if (Ke386TestAndClearBit(IPI_APC, &Prcb->IpiFrozen))
+   if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_APC))
    {
       HalRequestSoftwareInterrupt(APC_LEVEL);
    }
 
-   if (Ke386TestAndClearBit(IPI_DPC, &Prcb->IpiFrozen))
+   if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_DPC))
    {
       Prcb->DpcInterruptRequested = TRUE;
       HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
    }
 
-   if (Ke386TestAndClearBit(IPI_SYNCH_REQUEST, &Prcb->IpiFrozen))
+   if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST))
    {
       (void)InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
@@ -96,7 +91,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
          }
       }
       ((VOID (STDCALL*)(PVOID))(Prcb->SignalDone->WorkerRoutine))(Prcb->SignalDone->CurrentPacket[0]);
-      Ke386TestAndClearBit(KeGetCurrentProcessorNumber(), &Prcb->SignalDone->TargetSet);
+      InterlockedBitTestAndReset((PLONG)&Prcb->SignalDone->TargetSet, KeGetCurrentProcessorNumber());
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
       {
 #ifdef DBG
@@ -116,7 +111,6 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
       }
       (void)InterlockedExchangePointer(&Prcb->SignalDone, NULL);
    }
-#endif
    DPRINT("KiIpiServiceRoutine done\n");
    return TRUE;
 }
@@ -146,13 +140,11 @@ KiIpiSendPacket(KAFFINITY TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID 
        {
 	  Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
 	  while(0 != InterlockedCompareExchangeUL(&Prcb->SignalDone, (LONG)CurrentPrcb, 0));
-#ifdef _M_IX86
-	  Ke386TestAndSetBit(IPI_SYNCH_REQUEST, &Prcb->IpiFrozen);
+	  InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST);
 	  if (Processor != CurrentPrcb->SetMember)
 	  {
 	     HalRequestIpi(i);
 	  }
-#endif
        }
     }
     if (TargetSet & CurrentPrcb->SetMember)

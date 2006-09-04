@@ -29,7 +29,7 @@ PADAPTER_OBJECT STDCALL HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN
 VOID HalpInitBusHandlers (VOID);
 
 /* irql.c */
-VOID HalpInitPICs(VOID);
+VOID NTAPI HalpInitPICs(VOID);
 
 /* udelay.c */
 VOID HalpCalibrateStallExecution(VOID);
@@ -48,6 +48,8 @@ PVOID HalpMapPhysMemory(ULONG PhysAddr, ULONG Size);
 
 /* Non-generic initialization */
 VOID HalpInitPhase0 (PROS_LOADER_PARAMETER_BLOCK LoaderBlock);
+VOID HalpInitPhase1(VOID);
+VOID NTAPI HalpClockInterrupt(VOID);
 
 /* sysinfo.c */
 NTSTATUS STDCALL

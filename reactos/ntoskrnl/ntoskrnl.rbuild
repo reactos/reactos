@@ -8,12 +8,14 @@
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="__USE_W32API" />
 	<include base="kjs">include</include>
+	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>csq</library>
 	<library>hal</library>
 	<library>kjs</library>
 	<library>pseh</library>
+	<library>cmlib</library>
 	<library>rtl</library>
 	<library>rossym</library>
 	<library>string</library>
@@ -24,30 +26,26 @@
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file first="true">main_asm.S</file>
-				<file>bios.c</file>
-				<file>cpu.S</file>
+				<file first="true">boot.S</file>
+				<file>abios.c</file>
+				<file>cpu.c</file>
 				<file>ctxswitch.S</file>
+                <file>clock.S</file>
 				<file>exp.c</file>
-				<file>fpu.c</file>
-				<file>gdt.c</file>
-				<file>irq.c</file>
-				<file>irqhand.s</file>
-				<file>kernel.c</file>
+                <!-- <file>irq.c</file> -->
+				<file>kiinit.c</file>
 				<file>ldt.c</file>
 				<file>thread.c</file>
 				<file>trap.s</file>
-				<file>tss.c</file>
 				<file>usercall_asm.S</file>
-				<file>usertrap.c</file>
-				<file>v86m.c</file>
+				<file>v86vdm.c</file>
 				<file>v86m_sup.S</file>
-				<file>vdm.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file first="true">main_asm.S</file>
+				<file>ppc_irq.c</file>
 			</directory>
 		</if>
 			<file>apc.c</file>
@@ -57,12 +55,13 @@
 			<file>dpc.c</file>
 			<file>event.c</file>
 			<file>exception.c</file>
+			<file>freeldr.c</file>
 			<file>gate.c</file>
 			<file>gmutex.c</file>
 			<file>ipi.c</file>
 			<file>kqueue.c</file>
+			<file>krnlinit.c</file>
 			<file>kthread.c</file>
-			<file>main.c</file>
 			<file>mutex.c</file>
 			<file>process.c</file>
 			<file>profile.c</file>
@@ -73,6 +72,17 @@
 			<file>usercall.c</file>
 			<file>wait.c</file>
 	</directory>
+        <if property="ARCH" value="i386">
+            <directory name="deprecated">
+                <file>irqhand.S</file>
+                <file>irq.c</file>
+            </directory>
+        </if>
+	<if property="ARCH" value="powerpc">
+	    <directory name="powerpc">
+		<file>ppc_irq.c</file>
+	    </directory>
+	</if>
 	<directory name="cc">
 			<file>cacheman.c</file>
 			<file>copy.c</file>
@@ -128,11 +138,13 @@
 			<file>callback.c</file>
 			<file>dbgctrl.c</file>
 			<file>error.c</file>
+            <file>efi.c</file>
 			<file>event.c</file>
 			<file>evtpair.c</file>
 			<file>fmutex.c</file>
 			<file>handle.c</file>
 			<file>init.c</file>
+			<file>locale.c</file>
 			<file>lookas.c</file>
 			<file>mutant.c</file>
 			<file>power.c</file>
@@ -167,6 +179,7 @@
 		<file>inbv.c</file>
 	</directory>
 	<directory name="io">
+        <directory name="iomgr">
 			<file>adapter.c</file>
 			<file>arcname.c</file>
 			<file>bootlog.c</file>
@@ -175,32 +188,34 @@
 			<file>deviface.c</file>
 			<file>disk.c</file>
 			<file>driver.c</file>
-			<file>efi.c</file>
+			<file>drvrlist.c</file>
 			<file>error.c</file>
 			<file>event.c</file>
-			<file>fs.c</file>
-			<file>iocomp.c</file>
-			<file>iomgr.c</file>
-			<file>iowork.c</file>
-			<file>irp.c</file>
-			<file>irq.c</file>
-			<file>mdl.c</file>
-			<file>plugplay.c</file>
-			<file>pnpdma.c</file>
-			<file>pnpmgr.c</file>
-			<file>pnpnotify.c</file>
-			<file>pnpreport.c</file>
-			<file>pnproot.c</file>
-			<file>rawfs.c</file>
-			<file>remlock.c</file>
-			<file>resource.c</file>
-			<file>share.c</file>
-			<file>symlink.c</file>
-			<file>timer.c</file>
-			<file>vpb.c</file>
-			<file>wmi.c</file>
-		<file>file.c</file>
-	</directory>
+            <file>file.c</file>
+            <file>iocomp.c</file>
+            <file>iofunc.c</file>
+            <file>iomgr.c</file>
+            <file>iowork.c</file>
+            <file>irp.c</file>
+            <file>irq.c</file>
+            <file>mdl.c</file>
+            <file>rawfs.c</file>
+            <file>remlock.c</file>
+            <file>resource.c</file>
+            <file>util.c</file>
+            <file>symlink.c</file>
+            <file>timer.c</file>
+            <file>volume.c</file>
+        </directory>
+        <directory name="pnpmgr">
+            <file>plugplay.c</file>
+            <file>pnpdma.c</file>
+            <file>pnpmgr.c</file>
+            <file>pnpnotify.c</file>
+            <file>pnpreport.c</file>
+            <file>pnproot.c</file>
+        </directory>
+    </directory>
 	<directory name="kd">
 			<directory name="wrappers">
 				<file>bochs.c</file>
@@ -289,14 +304,13 @@
 			<file>idle.c</file>
 			<file>job.c</file>
 			<file>kill.c</file>
-			<file>locale.c</file>
 			<file>notify.c</file>
 			<file>process.c</file>
 			<file>psmgr.c</file>
 			<file>query.c</file>
 			<file>quota.c</file>
 			<file>security.c</file>
-			<file>suspend.c</file>
+			<file>state.c</file>
 			<file>thread.c</file>
 			<file>win32.c</file>
 	</directory>
@@ -325,6 +339,15 @@
 			<file>sid.c</file>
 			<file>token.c</file>
 	</directory>
+	<directory name="vdm">
+		<if property="ARCH" value="i386">
+            <file>vdmmain.c</file>
+            <file>vdmexec.c</file>
+		</if>
+    </directory>
+    <directory name="wmi">
+        <file>wmi.c</file>
+    </directory>
 	<file>ntoskrnl.rc</file>
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>

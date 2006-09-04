@@ -33,6 +33,14 @@ KPROCESSOR_MODE
 NTAPI
 RtlpGetMode(VOID);
 
+BOOLEAN
+NTAPI
+RtlpCaptureStackLimits(
+    IN ULONG_PTR Ebp,
+    IN ULONG_PTR *StackBegin,
+    IN ULONG_PTR *StackEnd
+);
+
 NTSTATUS
 NTAPI
 RtlDeleteHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
@@ -113,5 +121,12 @@ DebugService(IN ULONG Service,
 #define TAG_USTR        TAG('U', 'S', 'T', 'R')
 #define TAG_ASTR        TAG('A', 'S', 'T', 'R')
 #define TAG_OSTR        TAG('O', 'S', 'T', 'R')
+
+/* Timer Queue */
+
+extern HANDLE TimerThreadHandle;
+
+NTSTATUS
+RtlpInitializeTimerThread(VOID);
 
 /* EOF */

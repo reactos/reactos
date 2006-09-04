@@ -510,54 +510,48 @@ RtlInitUnicodeStringEx(OUT PUNICODE_STRING DestinationString,
  *  Str is nullterminated when length allowes it.
  *  When str fits exactly in length characters the nullterm is ommitted.
  */
-NTSTATUS
-NTAPI
-RtlIntegerToChar(
-   IN ULONG Value,
-   IN ULONG Base,
-   IN ULONG Length,
-   IN OUT PCHAR String)
+NTSTATUS NTAPI RtlIntegerToChar(
+    ULONG value,   /* [I] Value to be converted */
+    ULONG base,    /* [I] Number base for conversion (allowed 0, 2, 8, 10 or 16) */
+    ULONG length,  /* [I] Length of the str buffer in bytes */
+    PCHAR str)     /* [O] Destination for the converted value */
 {
-   ULONG Radix;
-   CHAR  temp[33];
-   ULONG v = Value;
-   ULONG i;
-   PCHAR tp;
-   PCHAR sp;
+    CHAR buffer[33];
+    PCHAR pos;
+    CHAR digit;
+    ULONG len;
 
-   Radix = Base;
-   if (Radix == 0)
-      Radix = 10;
+    if (base == 0) {
+	base = 10;
+    } else if (base != 2 && base != 8 && base != 10 && base != 16) {
+	return STATUS_INVALID_PARAMETER;
+    } /* if */
 
-   if ((Radix != 2) && (Radix != 8) &&
-       (Radix != 10) && (Radix != 16))
-   {
-      return STATUS_INVALID_PARAMETER;
-   }
+    pos = &buffer[32];
+    *pos = '\0';
 
-   tp = temp;
-   while (v || tp == temp)
-   {
-      i = v % Radix;
-      v = v / Radix;
-      if (i < 10)
-         *tp = i + '0';
-      else
-         *tp = i + 'a' - 10;
-      tp++;
-   }
+    do {
+	pos--;
+	digit = value % base;
+	value = value / base;
+	if (digit < 10) {
+	    *pos = '0' + digit;
+	} else {
+	    *pos = 'A' + digit - 10;
+	} /* if */
+    } while (value != 0L);
 
-   if ((ULONG)((ULONG_PTR)tp - (ULONG_PTR)temp) >= Length)
-   {
-      return STATUS_BUFFER_TOO_SMALL;
-   }
-
-   sp = String;
-   while (tp > temp)
-      *sp++ = *--tp;
-   *sp = 0;
-
-   return STATUS_SUCCESS;
+    len = &buffer[32] - pos;
+    if (len > length) {
+	return STATUS_BUFFER_OVERFLOW;
+    } else if (str == NULL) {
+	return STATUS_ACCESS_VIOLATION;
+    } else if (len == length) {
+	memcpy(str, pos, len);
+    } else {
+	memcpy(str, pos, len + 1);
+    } /* if */
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -765,87 +759,57 @@ RtlPrefixUnicodeString(
    }
    return FALSE;
 }
-
-/**************************************************************************
- *      RtlUnicodeStringToInteger (NTDLL.@)
+/*
  * @implemented
- * Converts an unicode string into its integer equivalent.
- *
- * RETURNS
- *  Success: STATUS_SUCCESS. value contains the converted number
- *  Failure: STATUS_INVALID_PARAMETER, if base is not 0, 2, 8, 10 or 16.
- *           STATUS_ACCESS_VIOLATION, if value is NULL.
- *
- * NOTES
- *  For base 0 it uses 10 as base and the string should be in the format
- *      "{whitespace} [+|-] [0[x|o|b]] {digits}".
- *  For other bases the string should be in the format
- *      "{whitespace} [+|-] {digits}".
- *  No check is made for value overflow, only the lower 32 bits are assigned.
- *  If str is NULL it crashes, as the native function does.
- *
- *  Note that regardless of success or failure status, we should leave the
- *  partial value in Value.  An error is never returned based on the chars
- *  in the string.
- *
- * DIFFERENCES
- *  This function does not read garbage on string length 0 as the native
- *  version does.
  */
 NTSTATUS
 NTAPI
-RtlUnicodeStringToInteger(
-    PCUNICODE_STRING str, /* [I] Unicode string to be converted */
+RtlUnicodeStringToInteger(const UNICODE_STRING *str, /* [I] Unicode string to be converted */
     ULONG base,                /* [I] Number base for conversion (allowed 0, 2, 8, 10 or 16) */
-    PULONG value)              /* [O] Destination for the converted value */
+    ULONG *value)              /* [O] Destination for the converted value */
 {
     LPWSTR lpwstr = str->Buffer;
     USHORT CharsRemaining = str->Length / sizeof(WCHAR);
     WCHAR wchCurrent;
     int digit;
-    ULONG newbase = 0;
     ULONG RunningTotal = 0;
     char bMinus = 0;
 
-    while (CharsRemaining >= 1 && *lpwstr <= L' ') {
+    while (CharsRemaining >= 1 && *lpwstr <= ' ') {
 	lpwstr++;
 	CharsRemaining--;
     } /* while */
 
     if (CharsRemaining >= 1) {
-	if (*lpwstr == L'+') {
+	if (*lpwstr == '+') {
 	    lpwstr++;
 	    CharsRemaining--;
-	} else if (*lpwstr == L'-') {
+	} else if (*lpwstr == '-') {
 	    bMinus = 1;
 	    lpwstr++;
 	    CharsRemaining--;
 	} /* if */
     } /* if */
 
-    if (CharsRemaining >= 2 && lpwstr[0] == L'0') {
-        if (lpwstr[1] == L'b' || lpwstr[1] == L'B') {
-	    lpwstr += 2;
-	    CharsRemaining -= 2;
-	    newbase = 2;
-	} else if (lpwstr[1] == L'o' || lpwstr[1] == L'O') {
-	    lpwstr += 2;
-	    CharsRemaining -= 2;
-	    newbase = 8;
-        } else if (lpwstr[1] == L'x' || lpwstr[1] == L'X') {
-    	    lpwstr += 2;
-	    CharsRemaining -= 2;
-	    newbase = 16;
+    if (base == 0) {
+	base = 10;
+	if (CharsRemaining >= 2 && lpwstr[0] == '0') {
+	    if (lpwstr[1] == 'b') {
+		lpwstr += 2;
+		CharsRemaining -= 2;
+		base = 2;
+	    } else if (lpwstr[1] == 'o') {
+		lpwstr += 2;
+		CharsRemaining -= 2;
+		base = 8;
+	    } else if (lpwstr[1] == 'x') {
+		lpwstr += 2;
+		CharsRemaining -= 2;
+		base = 16;
+	    } /* if */
 	} /* if */
-    }
-    if (base == 0 && newbase == 0) {
-        base = 10;
-    } else if (base == 0 && newbase != 0) {
-        base = newbase;
-    } else if ((newbase != 0 && base != newbase) ||
-               (base != 2 && base != 8 && base != 10 && base != 16)) {
+    } else if (base != 2 && base != 8 && base != 10 && base != 16) {
 	return STATUS_INVALID_PARAMETER;
-
     } /* if */
 
     if (value == NULL) {
@@ -854,16 +818,16 @@ RtlUnicodeStringToInteger(
 
     while (CharsRemaining >= 1) {
 	wchCurrent = *lpwstr;
-	if (wchCurrent >= L'0' && wchCurrent <= L'9') {
-	    digit = wchCurrent - L'0';
-	} else if (wchCurrent >= L'A' && wchCurrent <= L'Z') {
-	    digit = wchCurrent - L'A' + 10;
-	} else if (wchCurrent >= L'a' && wchCurrent <= L'z') {
-	    digit = wchCurrent - L'a' + 10;
+	if (wchCurrent >= '0' && wchCurrent <= '9') {
+	    digit = wchCurrent - '0';
+	} else if (wchCurrent >= 'A' && wchCurrent <= 'Z') {
+	    digit = wchCurrent - 'A' + 10;
+	} else if (wchCurrent >= 'a' && wchCurrent <= 'z') {
+	    digit = wchCurrent - 'a' + 10;
 	} else {
 	    digit = -1;
 	} /* if */
-	if (digit < 0 || digit >= (int)base) {
+	if (digit < 0 || digit >= base) {
 	    *value = bMinus ? -RunningTotal : RunningTotal;
 	    return STATUS_SUCCESS;
 	} /* if */
@@ -1267,7 +1231,7 @@ RtlGUIDFromString(
    /* Convert string: {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
     * to memory:       DWORD... WORD WORD BYTES............
     */
-   while (i < 37)
+   while (i <= 37)
    {
       switch (i)
       {
@@ -1774,36 +1738,28 @@ NTAPI
 RtlStringFromGUID (IN REFGUID Guid,
                    OUT PUNICODE_STRING GuidString)
 {
-   static CONST PWCHAR Hex = L"0123456789ABCDEF";
-   WCHAR Buffer[40];
-   PWCHAR BufferPtr;
-   ULONG i;
+    /* Setup the string */
+    GuidString->Length = 38 * sizeof(WCHAR);
+    GuidString->MaximumLength = GuidString->Length + sizeof(UNICODE_NULL);
+    GuidString->Buffer = RtlpAllocateStringMemory(GuidString->MaximumLength,
+                                                  TAG_USTR);
+    if (!GuidString->Buffer) return STATUS_NO_MEMORY;
 
-   if (Guid == NULL)
-   {
-      return STATUS_INVALID_PARAMETER;
-   }
-
-   swprintf (Buffer,
-             L"{%08lX-%04X-%04X-%02X%02X-",
+    /* Now format the GUID */
+    swprintf(GuidString->Buffer,
+             L"{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
              Guid->Data1,
              Guid->Data2,
              Guid->Data3,
              Guid->Data4[0],
-             Guid->Data4[1]);
-   BufferPtr = Buffer + 25;
-
-   /* 6 hex bytes */
-   for (i = 2; i < 8; i++)
-   {
-      *BufferPtr++ = Hex[Guid->Data4[i] >> 4];
-      *BufferPtr++ = Hex[Guid->Data4[i] & 0xf];
-   }
-
-   *BufferPtr++ = L'}';
-   *BufferPtr++ = L'\0';
-
-   return RtlCreateUnicodeString (GuidString, Buffer);
+             Guid->Data4[1],
+             Guid->Data4[2],
+             Guid->Data4[3],
+             Guid->Data4[4],
+             Guid->Data4[5],
+             Guid->Data4[6],
+             Guid->Data4[7]);
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -2119,7 +2075,7 @@ RtlUpperString(PSTRING DestinationString,
     PCHAR Src, Dest;
 
     Length = min(SourceString->Length,
-                 DestinationString->MaximumLength - 1);
+                 DestinationString->MaximumLength);
 
     Src = SourceString->Buffer;
     Dest = DestinationString->Buffer;
@@ -2146,8 +2102,12 @@ RtlDuplicateUnicodeString(
 {
    PAGED_CODE_RTL();
 
-   if (SourceString == NULL || DestinationString == NULL)
-      return STATUS_INVALID_PARAMETER;
+    if (SourceString == NULL || DestinationString == NULL ||
+        SourceString->Length > SourceString->MaximumLength ||
+        (SourceString->Length == 0 && SourceString->MaximumLength > 0 && SourceString->Buffer == NULL) ||
+        Flags == RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING || Flags >= 4 || Flags < 0) {
+        return STATUS_INVALID_PARAMETER;
+    }
 
 
    if ((SourceString->Length == 0) && 

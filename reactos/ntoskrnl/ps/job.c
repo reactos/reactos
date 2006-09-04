@@ -4,23 +4,19 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/job.c
  * PURPOSE:         Job Native Functions
- *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) (stubs)
  *                  Thomas Weidenmueller <w3seek@reactos.com>
  */
 
-/* Note: Jobs are only supported on Win2K+ */
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <internal/debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, PsInitJobManagment)
 #endif
-
-
 
 /* GLOBALS *******************************************************************/
 
@@ -28,6 +24,22 @@ POBJECT_TYPE PsJobType = NULL;
 
 LIST_ENTRY PsJobListHead;
 static FAST_MUTEX PsJobListLock;
+
+BOOLEAN PspUseJobSchedulingClasses;
+
+CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES] =
+{
+    1 * 6,
+    2 * 6,
+    3 * 6,
+    4 * 6,
+    5 * 6,
+    6 * 6,
+    7 * 6,
+    8 * 6,
+    9 * 6,
+    10 * 6
+};
 
 static GENERIC_MAPPING PiJobMapping =
 {
@@ -39,7 +51,8 @@ static GENERIC_MAPPING PiJobMapping =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
+VOID
+NTAPI
 PiDeleteJob ( PVOID ObjectBody )
 {
     PEJOB Job = (PEJOB)ObjectBody;
@@ -89,8 +102,7 @@ PsInitJobManagment ( VOID )
 
 NTSTATUS
 NTAPI
-PspAssignProcessToJob (
-    PEPROCESS Process,
+PspAssignProcessToJob(PEPROCESS Process,
     PEJOB Job)
 {
     DPRINT("PspAssignProcessToJob() is unimplemented!\n");
@@ -99,8 +111,7 @@ PspAssignProcessToJob (
 
 NTSTATUS
 NTAPI
-PspTerminateJobObject (
-    PEJOB Job,
+PspTerminateJobObject(PEJOB Job,
     KPROCESSOR_MODE AccessMode,
     NTSTATUS ExitStatus )
 {
@@ -108,6 +119,21 @@ PspTerminateJobObject (
     return STATUS_NOT_IMPLEMENTED;
 }
 
+VOID
+NTAPI
+PspRemoveProcessFromJob(IN PEPROCESS Process,
+                        IN PEJOB Job)
+{
+    /* FIXME */
+}
+
+VOID
+NTAPI
+PspExitProcessFromJob(IN PEJOB Job,
+                      IN PEPROCESS Process)
+{
+    /* FIXME */
+}
 
 /*
  * @unimplemented
@@ -157,7 +183,7 @@ NtAssignProcessToJobObject (
                 /* lock the process so we can safely assign the process. Note that in the
                 meanwhile another thread could have assigned this process to a job! */
 
-                Status = PsLockProcess(Process, FALSE);
+                ExAcquireRundownProtection(&Process->RundownProtect);
                 if(NT_SUCCESS(Status))
                 {
                     if(Process->Job == NULL && Process->Session == Job->SessionId)
@@ -173,7 +199,7 @@ NtAssignProcessToJobObject (
                         /* process is already assigned to a job or session id differs! */
                         Status = STATUS_ACCESS_DENIED;
                     }
-                    PsUnlockProcess(Process);
+                    ExReleaseRundownProtection(&Process->RundownProtect);
 
                     if(NT_SUCCESS(Status))
                     {
@@ -547,8 +573,7 @@ PsGetJobUIRestrictionsClass ( PEJOB Job )
  */
 VOID
 STDCALL
-PsSetJobUIRestrictionsClass (
-    PEJOB Job,
+PsSetJobUIRestrictionsClass(PEJOB Job,
     ULONG UIRestrictionsClass)
 {
     ASSERT(Job);

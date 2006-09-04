@@ -88,7 +88,7 @@ LpcSendTerminationPort(
     LARGE_INTEGER CreationTime
 );
 
-/* Code in ntoskrnl/lpc/close.h */
+/* Code in ntoskrnl/lpc/close.c */
 
 VOID 
 STDCALL
@@ -103,6 +103,10 @@ LpcpClosePort(
 VOID
 STDCALL
 LpcpDeletePort(IN PVOID ObjectBody);
+
+VOID
+NTAPI
+LpcExitThread(IN PETHREAD Thread);
 
 /* Code in ntoskrnl/lpc/queue.c */
 

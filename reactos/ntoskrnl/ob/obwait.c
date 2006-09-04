@@ -151,9 +151,10 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         }
 
         /* Get a pointer to it */
-        if (!(HandleEntry = ExMapHandleToPointer(HandleTable, Handles[i])))
+        HandleEntry = ExMapHandleToPointer(HandleTable, Handles[i]);
+        if (!HandleEntry)
         {
-            DPRINT1("Invalid handle\n");
+            /* Fail, handle is invalid */
             Status = STATUS_INVALID_HANDLE;
             goto Quickie;
         }
@@ -476,6 +477,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
             !(HandleInfo.GrantedAccess & EVENT_MODIFY_STATE))
         {
             /* Fail: lack of rights */
+            Status = STATUS_ACCESS_DENIED;
             goto Quickie;
         }
 
@@ -504,6 +506,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
             !(HandleInfo.GrantedAccess & SEMAPHORE_MODIFY_STATE))
         {
             /* Fail: lack of rights */
+            Status = STATUS_ACCESS_DENIED;
             goto Quickie;
         }
 

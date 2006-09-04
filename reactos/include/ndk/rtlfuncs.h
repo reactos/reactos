@@ -331,10 +331,10 @@ NTSYSAPI
 VOID
 NTAPI
 RtlAssert(
-    PVOID FailedAssertion,
-    PVOID FileName,
-    ULONG LineNumber,
-    PCHAR Message
+    IN PVOID FailedAssertion,
+    IN PVOID FileName,
+    IN ULONG LineNumber,
+    IN PCHAR Message
 );
 
 NTSYSAPI
@@ -347,27 +347,37 @@ RtlSetUnhandledExceptionFilter(
 NTSYSAPI
 VOID
 NTAPI
-RtlCaptureContext(OUT PCONTEXT ContextRecord);
+RtlCaptureContext(
+    OUT PCONTEXT ContextRecord
+);
 
 NTSYSAPI
 PVOID
 NTAPI
-RtlEncodePointer(IN PVOID Pointer);
+RtlEncodePointer(
+    IN PVOID Pointer
+);
 
 NTSYSAPI
 PVOID
 NTAPI
-RtlDecodePointer(IN PVOID Pointer);
+RtlDecodePointer(
+    IN PVOID Pointer
+);
 
 NTSYSAPI
 PVOID
 NTAPI
-RtlEncodeSystemPointer(IN PVOID Pointer);
+RtlEncodeSystemPointer(
+    IN PVOID Pointer
+);
 
 NTSYSAPI
 PVOID
 NTAPI
-RtlDecodeSystemPointer(IN PVOID Pointer);
+RtlDecodeSystemPointer(
+    IN PVOID Pointer
+);
 
 NTSYSAPI
 BOOLEAN
@@ -380,22 +390,37 @@ RtlDispatchException(
 NTSYSAPI
 ULONG
 NTAPI
-RtlNtStatusToDosError(IN NTSTATUS Status);
+RtlNtStatusToDosError(
+    IN NTSTATUS Status
+);
 
 NTSYSAPI
 VOID
 NTAPI
-RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord);
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus(
+    IN NTSTATUS Status
+);
 
 NTSYSAPI
 VOID
 NTAPI
-RtlRaiseStatus(NTSTATUS Status);
+RtlRaiseException(
+    IN PEXCEPTION_RECORD ExceptionRecord
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlRaiseStatus(
+    IN NTSTATUS Status
+);
 
 NTSYSAPI
 LONG
 NTAPI
-RtlUnhandledExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo);
+RtlUnhandledExceptionFilter(
+    IN struct _EXCEPTION_POINTERS* ExceptionInfo
+);
 
 NTSYSAPI
 VOID
@@ -413,7 +438,9 @@ RtlUnwind(
 NTSYSAPI
 USHORT
 NTAPI
-RtlLogStackBackTrace(VOID);
+RtlLogStackBackTrace(
+    VOID
+);
 
 //
 // Heap Functions
@@ -466,13 +493,6 @@ RtlDebugCreateHeap(
     IN SIZE_T SizeToCommit OPTIONAL,
     IN PVOID Lock OPTIONAL,
     IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL
-);
-
-NTSYSAPI
-HANDLE
-NTAPI
-RtlDestroyHeap(
-    IN HANDLE Heap
 );
 
 NTSYSAPI
@@ -1906,6 +1926,18 @@ RtlSetProcessIsCritical(
 #define NtCurrentPeb() (NtCurrentTeb()->ProcessEnvironmentBlock)
 
 //
+// Thread Pool Functions
+//
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlQueueWorkItem(
+    IN WORKERCALLBACKFUNC Function,
+    IN PVOID Context OPTIONAL,
+    IN ULONG Flags
+);
+
+//
 // Environment/Path Functions
 //
 NTSYSAPI
@@ -2302,12 +2334,28 @@ RtlFindClearBitsAndSet(
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlFindNextForwardRunClear(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG FromIndex,
+    IN PULONG StartingRunIndex
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlInitializeBitMap(
     IN PRTL_BITMAP BitMapHeader,
     IN PULONG BitMapBuffer,
     IN ULONG SizeOfBitMap
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberOfSetBits(
+    IN PRTL_BITMAP BitMapHeader
 );
 
 NTSYSAPI
@@ -2406,7 +2454,7 @@ RtlFreeRangeList(IN PRTL_RANGE_LIST RangeList);
 ULONG
 __cdecl
 DbgPrint(
-    IN PCH  Format,
+    IN PCCH  Format,
     IN ...
 );
 
@@ -2416,7 +2464,7 @@ __cdecl
 DbgPrintEx(
     IN ULONG ComponentId,
     IN ULONG Level,
-    IN PCH Format,
+    IN PCCH Format,
     IN ...
 );
 

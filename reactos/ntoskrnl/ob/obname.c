@@ -11,6 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#define NTDDI_VERSION NTDDI_WINXP
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
@@ -19,6 +20,49 @@ POBJECT_DIRECTORY NameSpaceRoot = NULL;
 POBJECT_DIRECTORY ObpTypeDirectoryObject = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+ObDereferenceDeviceMap(IN PEPROCESS Process)
+{
+    //KIRQL OldIrql;
+    PDEVICE_MAP DeviceMap = Process->DeviceMap;
+
+    /* FIXME: We don't use Process Devicemaps yet */
+    if (DeviceMap)
+    {
+        /* FIXME: Acquire the DeviceMap Spinlock */
+        // KeAcquireSpinLock(DeviceMap->Lock, &OldIrql);
+
+        /* Delete the device map link and dereference it */
+        Process->DeviceMap = NULL;
+        if (--DeviceMap->ReferenceCount)
+        {
+            /* Nobody is referencing it anymore, unlink the DOS directory */
+            DeviceMap->DosDevicesDirectory->DeviceMap = NULL;
+
+            /* FIXME: Release the DeviceMap Spinlock */
+            // KeReleasepinLock(DeviceMap->Lock, OldIrql);
+
+            /* Dereference the DOS Devices Directory and free the Device Map */
+            ObDereferenceObject(DeviceMap->DosDevicesDirectory);
+            ExFreePool(DeviceMap);
+        }
+        else
+        {
+            /* FIXME: Release the DeviceMap Spinlock */
+            // KeReleasepinLock(DeviceMap->Lock, OldIrql);
+        }
+    }
+}
+
+VOID
+NTAPI
+ObInheritDeviceMap(IN PEPROCESS Parent,
+                   IN PEPROCESS Process)
+{
+    /* FIXME: Devicemap Support */
+}
 
 /*++
 * @name ObpDeleteNameCheck
@@ -102,6 +146,7 @@ ObpDeleteNameCheck(IN PVOID Object)
         /* Check if we were inserted in a directory */
         if (Directory)
         {
+            /* We were, so dereference the directory and the object as well */
             ObDereferenceObject(Directory);
             ObDereferenceObject(Object);
         }
@@ -575,7 +620,7 @@ ObQueryNameString(IN  PVOID Object,
     }
 
     /* Check if the object doesn't even have a name */
-    if (!LocalInfo || !LocalInfo->Name.Buffer)
+    if (!(LocalInfo) || !(LocalInfo->Name.Buffer))
     {
         /* We're returning the name structure */
         *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);

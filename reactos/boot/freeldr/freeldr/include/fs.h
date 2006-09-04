@@ -34,7 +34,7 @@
 
 VOID	FileSystemError(PCSTR ErrorString);
 BOOLEAN	FsOpenBootVolume();
-BOOLEAN	FsOpenSystemVolume(PCHAR SystemPath, PCHAR RemainingPath, PULONG BootDevice);
+BOOLEAN	FsOpenSystemVolume(char *SystemPath, char *RemainingPath, PULONG BootDevice);
 PFILE	FsOpenFile(PCSTR FileName);
 VOID	FsCloseFile(PFILE FileHandle);
 BOOLEAN	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);

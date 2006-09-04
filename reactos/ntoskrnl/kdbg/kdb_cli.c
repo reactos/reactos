@@ -53,9 +53,8 @@
                    ((type) == KdbAccessReadWrite ? "rdwr" : "exec")))
 
 #define NPX_STATE_TO_STRING(state)                                        \
-                   ((state) == NPX_STATE_INVALID ? "Invalid" :            \
-                   ((state) == NPX_STATE_VALID ? "Valid" :                \
-                   ((state) == NPX_STATE_DIRTY ? "Dirty" : "Unknown")))
+                   ((state) == NPX_STATE_LOADED ? "Loaded" :              \
+                   ((state) == NPX_STATE_NOT_LOADED ? "Not loaded" : "Unknown"))
 
 /* PROTOTYPES ****************************************************************/
 

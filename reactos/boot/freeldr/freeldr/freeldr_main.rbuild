@@ -1,4 +1,5 @@
 <module name="freeldr_main" type="objectlibrary">
+	<include base="ReactOS">include/psdk</include>
 	<include base="freeldr_main">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="__USE_W32API" />

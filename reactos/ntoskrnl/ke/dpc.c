@@ -1,491 +1,101 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/dpc.c
- * PURPOSE:         Handle DPCs (Delayed Procedure Calls)
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PURPOSE:         Routines for CPU-level support
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Philip Susi (phreak@iag.net)
  *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
- *                  Alex Ionescu (alex@relsoft.net)
  */
 
-/*
- * NOTE: See also the higher level support routines in ntoskrnl/io/dpc.c
- */
+/* INCLUDES ******************************************************************/
 
-/* INCLUDES ***************************************************************/
+#define NTDDI_VERSION NTDDI_WS03
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, KeInitDpc)
-#endif
+/* GLOBALS *******************************************************************/
 
+ULONG KiMaximumDpcQueueDepth = 4;
+ULONG KiMinimumDpcRate = 3;
+ULONG KiAdjustDpcThreshold = 20;
+ULONG KiIdealDpcRate = 20;
+KMUTEX KiGenericCallDpcMutex;
 
-/* TYPES *******************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
-#define MAX_QUANTUM 0x7F
-
-/* FUNCTIONS ****************************************************************/
-
-/*
- * FUNCTION: Initialize DPC handling
- */
 VOID
-INIT_FUNCTION
 NTAPI
-KeInitDpc(PKPRCB Prcb)
-{
-   InitializeListHead(&Prcb->DpcData[0].DpcListHead);
-#if 0
-   /*
-    * FIXME:
-    *   Prcb->DpcEvent is a NULL pointer.
-    */
-   KeInitializeEvent(Prcb->DpcEvent, 0, 0);
-#endif
-   KeInitializeSpinLock(&Prcb->DpcData[0].DpcLock);
-   Prcb->MaximumDpcQueueDepth = 4;
-   Prcb->MinimumDpcRate = 3;
-   Prcb->DpcData[0].DpcQueueDepth = 0;
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-KeInitializeThreadedDpc(PKDPC Dpc,
-                        PKDEFERRED_ROUTINE DeferredRoutine,
-                        PVOID DeferredContext)
-/*
- * FUNCTION:
- *          Initalizes a Threaded DPC and registers the DeferredRoutine for it.
- * ARGUMENTS:
- *          Dpc = Pointer to a caller supplied DPC to be initialized. The caller must allocate this memory.
- *          DeferredRoutine = Pointer to associated DPC callback routine.
- *          DeferredContext = Parameter to be passed to the callback routine.
- * NOTE: Callers can be running at any IRQL.
- */
-{
-    DPRINT("Threaded DPC Initializing: %x with Routine: %x\n", Dpc, DeferredRoutine);
-    Dpc->Type = ThreadedDpcObject;
-    Dpc->Number= 0;
-    Dpc->Importance= MediumImportance;
-    Dpc->DeferredRoutine = DeferredRoutine;
-    Dpc->DeferredContext = DeferredContext;
-    Dpc->DpcData = NULL;
-}
-
-/*
- * @implemented
- *
- * FUNCTION:
- *          Initalizes a DPC and registers the DeferredRoutine for it.
- * ARGUMENTS:
- *          Dpc = Pointer to a caller supplied DPC to be initialized. The caller must allocate this memory.
- *          DeferredRoutine = Pointer to associated DPC callback routine.
- *          DeferredContext = Parameter to be passed to the callback routine.
- * NOTE: Callers can be running at any IRQL.
- */
-VOID
-STDCALL
-KeInitializeDpc(PKDPC Dpc,
-                PKDEFERRED_ROUTINE DeferredRoutine,
-                PVOID DeferredContext)
-{
-    DPRINT("DPC Initializing: %x with Routine: %x\n", Dpc, DeferredRoutine);
-    Dpc->Type = DpcObject;
-    Dpc->Number= 0;
-    Dpc->Importance= MediumImportance;
-    Dpc->DeferredRoutine = DeferredRoutine;
-    Dpc->DeferredContext = DeferredContext;
-    Dpc->DpcData = NULL;
-}
-
-/*
- * @implemented
- *
- * FUNCTION:
- *          Queues a DPC for execution when the IRQL of a processor
- *          drops below DISPATCH_LEVEL
- * ARGUMENTS:
- *          Dpc = Pointed to a DPC Object Initalized by KeInitializeDpc.
- *          SystemArgument1 = Driver Determined context data
- *          SystemArgument2 = Driver Determined context data
- * RETURNS:
- *          TRUE if the DPC object wasn't already in the queue
- *          FALSE otherwise
- * NOTES:
- *          If there is currently a DPC active on the target processor, or a DPC
- * interrupt has already been requested on the target processor when a
- * DPC is queued, then no further action is necessary. The DPC will be
- * executed on the target processor when its queue entry is processed.
- *
- *          If there is not a DPC active on the target processor and a DPC interrupt
- * has not been requested on the target processor, then the exact treatment
- * of the DPC is dependent on whether the host system is a UP system or an
- * MP system.
- *
- * UP system.
- * ----------
- *          If the DPC is of medium or high importance, the current DPC queue depth
- * is greater than the maximum target depth, or current DPC request rate is
- * less the minimum target rate, then a DPC interrupt is requested on the
- * host processor and the DPC will be processed when the interrupt occurs.
- * Otherwise, no DPC interupt is requested and the DPC execution will be
- * delayed until the DPC queue depth is greater that the target depth or the
- * minimum DPC rate is less than the target rate.
- *
- * MP system.
- * ----------
- *          If the DPC is being queued to another processor and the depth of the DPC
- * queue on the target processor is greater than the maximum target depth or
- * the DPC is of high importance, then a DPC interrupt is requested on the
- * target processor and the DPC will be processed when the interrupt occurs.
- * Otherwise, the DPC execution will be delayed on the target processor until
- * the DPC queue depth on the target processor is greater that the maximum
- * target depth or the minimum DPC rate on the target processor is less than
- * the target mimimum rate.
- *
- *          If the DPC is being queued to the current processor and the DPC is not of
- * low importance, the current DPC queue depth is greater than the maximum
- * target depth, or the minimum DPC rate is less than the minimum target rate,
- * then a DPC interrupt is request on the current processor and the DPV will
- * be processed whne the interrupt occurs. Otherwise, no DPC interupt is
- * requested and the DPC execution will be delayed until the DPC queue depth
- * is greater that the target depth or the minimum DPC rate is less than the
- * target rate.
- */
-BOOLEAN
-STDCALL
-KeInsertQueueDpc(PKDPC Dpc,
-                 PVOID SystemArgument1,
-                 PVOID SystemArgument2)
-{
-    KIRQL OldIrql;
-    PKPRCB Prcb;
-
-    DPRINT("KeInsertQueueDpc(DPC %x, SystemArgument1 %x, SystemArgument2 %x)\n",
-        Dpc, SystemArgument1, SystemArgument2);
-
-    /* Check IRQL and Raise it to HIGH_LEVEL */
-    ASSERT(KeGetCurrentIrql()>=DISPATCH_LEVEL);
-    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-    /* Check if this is a Thread DPC, which we don't support (yet) */
-    if (Dpc->Type == ThreadedDpcObject) {
-        KeLowerIrql(OldIrql);
-        return FALSE;
-    }
-
-#ifdef CONFIG_SMP
-    /* Get the right PCR for this CPU */
-    if (Dpc->Number >= MAXIMUM_PROCESSORS) {
-
-        ASSERT (Dpc->Number - MAXIMUM_PROCESSORS < KeNumberProcessors);
-        Prcb = ((PKPCR)((ULONG_PTR)KPCR_BASE + ((Dpc->Number - MAXIMUM_PROCESSORS) * PAGE_SIZE)))->Prcb;
-
-    } else {
-
-        ASSERT (Dpc->Number < KeNumberProcessors);
-        Prcb = KeGetCurrentPrcb();
-        Dpc->Number = KeGetCurrentProcessorNumber();
-    }
-
-    KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
-#else
-    Prcb = ((PKPCR)KPCR_BASE)->Prcb;
-#endif
-
-    /* Get the DPC Data */
-    if (InterlockedCompareExchangeUL(&Dpc->DpcData, &Prcb->DpcData[0].DpcLock, 0)) {
-
-        DPRINT("DPC Already Inserted\n");
-#ifdef CONFIG_SMP
-        KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
-#endif
-        KeLowerIrql(OldIrql);
-        return(FALSE);
-    }
-
-    /* Make sure the lists are free if the Queue is 0 */
-    if (Prcb->DpcData[0].DpcQueueDepth == 0) {
-
-        ASSERT(IsListEmpty(&Prcb->DpcData[0].DpcListHead));
-    } else {
-
-        ASSERT(!IsListEmpty(&Prcb->DpcData[0].DpcListHead));
-    }
-
-    /* Now we can play with the DPC safely */
-    Dpc->SystemArgument1=SystemArgument1;
-    Dpc->SystemArgument2=SystemArgument2;
-    Prcb->DpcData[0].DpcQueueDepth++;
-    Prcb->DpcData[0].DpcCount++;
-
-    /* Insert the DPC into the list. HighImportance DPCs go at the beginning  */
-    if (Dpc->Importance == HighImportance) {
-
-        InsertHeadList(&Prcb->DpcData[0].DpcListHead, &Dpc->DpcListEntry);
-    } else {
-
-        InsertTailList(&Prcb->DpcData[0].DpcListHead, &Dpc->DpcListEntry);
-    }
-    DPRINT("New DPC Added. Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
-
-    /* Make sure a DPC isn't executing already and respect rules outlined above. */
-    if ((!Prcb->DpcRoutineActive) && (!Prcb->DpcInterruptRequested)) {
-
-#ifdef CONFIG_SMP
-        /* Check if this is the same CPU */
-        if (Prcb != KeGetCurrentPrcb()) {
-
-            /* Send IPI if High Importance */
-            if ((Dpc->Importance == HighImportance) ||
-                (Prcb->DpcData[0].DpcQueueDepth >= Prcb->MaximumDpcQueueDepth)) {
-
-                if (Dpc->Number >= MAXIMUM_PROCESSORS) {
-
-                    KiIpiSendRequest(1 << (Dpc->Number - MAXIMUM_PROCESSORS), IPI_DPC);
-                } else {
-
-                    KiIpiSendRequest(1 << Dpc->Number, IPI_DPC);
-                }
-
-            }
-        } else {
-
-            /* Request an Interrupt only if the DPC isn't low priority */
-            if ((Dpc->Importance != LowImportance) ||
-                 (Prcb->DpcData[0].DpcQueueDepth >= Prcb->MaximumDpcQueueDepth) ||
-                (Prcb->DpcRequestRate < Prcb->MinimumDpcRate)) {
-
-                /* Request Interrupt */
-                HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-                Prcb->DpcInterruptRequested = TRUE;
-            }
-        }
-#else
-        DPRINT("Requesting Interrupt. Importance: %x. QueueDepth: %x. MaxQueue: %x . RequestRate: %x. MinRate:%x \n", Dpc->Importance, Prcb->DpcData[0].DpcQueueDepth, Prcb->MaximumDpcQueueDepth, Prcb->DpcRequestRate, Prcb->MinimumDpcRate);
-
-        /* Request an Interrupt only if the DPC isn't low priority */
-        if ((Dpc->Importance != LowImportance) ||
-            (Prcb->DpcData[0].DpcQueueDepth >= Prcb->MaximumDpcQueueDepth) ||
-            (Prcb->DpcRequestRate < Prcb->MinimumDpcRate)) {
-
-            /* Request Interrupt */
-            DPRINT("Requesting Interrupt\n");
-            HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-            Prcb->DpcInterruptRequested = TRUE;
-        }
-#endif
-    }
-#ifdef CONFIG_SMP
-    KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
-#endif
-    /* Lower IRQL */
-    KeLowerIrql(OldIrql);
-    return(TRUE);
-}
-
-/*
- * @implemented
- *
- * FUNCTION:
- *          Removes DPC object from the system dpc queue
- * ARGUMENTS:
- *          Dpc = Pointer to DPC to remove from the queue.
- * RETURNS:
- *          TRUE if the DPC was in the queue
- *          FALSE otherwise
- */
-BOOLEAN
-STDCALL
-KeRemoveQueueDpc(PKDPC Dpc)
-{
-    BOOLEAN WasInQueue;
-    KIRQL OldIrql;
-
-    /* Raise IRQL */
-    DPRINT("Removing DPC: %x\n", Dpc);
-    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-#ifdef CONFIG_SMP
-    KiAcquireSpinLock(&((PKDPC_DATA)Dpc->DpcData)->DpcLock);
-#endif
-
-    /* First make sure the DPC lock isn't being held */
-    WasInQueue = Dpc->DpcData ? TRUE : FALSE;
-    if (Dpc->DpcData) {
-
-        /* Remove the DPC */
-        ((PKDPC_DATA)Dpc->DpcData)->DpcQueueDepth--;
-        RemoveEntryList(&Dpc->DpcListEntry);
-
-    }
-#ifdef CONFIG_SMP
-        KiReleaseSpinLock(&((PKDPC_DATA)Dpc->DpcData)->DpcLock);
-#endif
-
-    /* Return if the DPC was in the queue or not */
-    KeLowerIrql(OldIrql);
-    return WasInQueue;
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-KeFlushQueuedDpcs(VOID)
-/*
- * FUNCTION:
- *          Called to Deliver DPCs if any are pending.
- * NOTES:
- *          Called when deleting a Driver.
- */
-{
-    /* Request an interrupt if needed */
-    if (KeGetCurrentPrcb()->DpcData[0].DpcQueueDepth) HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
-}
-
-/*
- * @implemented
- */
-BOOLEAN
-STDCALL
-KeIsExecutingDpc(
-    VOID
-)
-{
-    /* Return if the Dpc Routine is active */
-    return KeGetCurrentPrcb()->DpcRoutineActive;
-}
-
-/*
- * FUNCTION: Specifies the DPCs importance
- * ARGUMENTS:
- *          Dpc = Initalizes DPC
- *          Importance = DPC importance
- * RETURNS: None
- *
- * @implemented
- */
-VOID
-STDCALL
-KeSetImportanceDpc (IN PKDPC Dpc,
-            IN KDPC_IMPORTANCE Importance)
-{
-    /* Set the DPC Importance */
-    Dpc->Importance = Importance;
-}
-
-/*
- * @implemented
- *
- * FUNCTION: Specifies on which processor the DPC will run
- * ARGUMENTS:
- *          Dpc = Initalizes DPC
- *          Number = Processor number
- * RETURNS: None
- */
-VOID
-STDCALL
-KeSetTargetProcessorDpc(IN PKDPC Dpc,
-                        IN CCHAR Number)
-{
-    /* Check how many CPUs are on the system */
-    if (Number >= MAXIMUM_PROCESSORS) {
-
-        /* No CPU Number */
-        Dpc->Number = 0;
-
-    } else {
-
-        /* Set the Number Specified */
-        ASSERT(Number < KeNumberProcessors);
-        Dpc->Number = Number + MAXIMUM_PROCESSORS;
-    }
-}
-
-/*
- * FUNCTION:
- *          Called when a quantum end occurs to check if priority should be changed
- *          and wether a new thread should be dispatched.
- * NOTES:
- *          Called when deleting a Driver.
- */
-VOID
-STDCALL
 KiQuantumEnd(VOID)
 {
-    PKPRCB Prcb;
-    PKTHREAD CurrentThread;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKTHREAD CurrentThread = KeGetCurrentThread();
     KIRQL OldIrql;
     PKPROCESS Process;
     KPRIORITY OldPriority;
     KPRIORITY NewPriority;
 
-    /* Lock dispatcher, get current thread */
-    Prcb = KeGetCurrentPrcb();
-    CurrentThread = KeGetCurrentThread();
+    /* Check if a DPC Event was requested to be signaled */
+    if (InterlockedExchange(&Prcb->DpcSetEventRequest, 0))
+    {
+        /* Signal it */
+        KeSetEvent((PVOID)&Prcb->DpcEvent, 0, 0);
+    }
+
+    /* Lock dispatcher */
     OldIrql = KeRaiseIrqlToSynchLevel();
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
     /* Get the Thread's Process */
     Process = CurrentThread->ApcState.Process;
 
-    /* Set DPC Event if requested */
-    if (Prcb->DpcSetEventRequest)
-    {
-        KeSetEvent((void *)&Prcb->DpcEvent, 0, 0);
-    }
-
     /* Check if Quantum expired */
-    if (CurrentThread->Quantum <= 0) {
-
+    if (CurrentThread->Quantum <= 0)
+    {
         /* Reset the new Quantum */
         CurrentThread->Quantum = CurrentThread->QuantumReset;
 
         /* Calculate new priority */
         OldPriority = CurrentThread->Priority;
-        if (OldPriority < LOW_REALTIME_PRIORITY) {
-
+        if (OldPriority < LOW_REALTIME_PRIORITY)
+        {
             /* Set the New Priority and add the Priority Decrement */
             NewPriority = OldPriority - CurrentThread->PriorityDecrement - 1;
 
             /* Don't go out of bounds */
-            if (NewPriority < CurrentThread->BasePriority) NewPriority = CurrentThread->BasePriority;
+            if (NewPriority < CurrentThread->BasePriority)
+            {
+                NewPriority = CurrentThread->BasePriority;
+            }
 
             /* Reset the priority decrement */
             CurrentThread->PriorityDecrement = 0;
 
             /* Set a new priority if needed */
-            if (OldPriority != NewPriority) {
-
+            if (OldPriority != NewPriority)
+            {
                 /* Set new Priority */
                 BOOLEAN Dummy; /* <- This is a hack anyways... */
                 KiSetPriorityThread(CurrentThread, NewPriority, &Dummy);
-
-            } else {
-
+            }
+            else
+            {
                 /* Queue new thread if none is already */
-                if (Prcb->NextThread == NULL) {
-
+                if (!Prcb->NextThread)
+                {
                     /* FIXME: Schedule a New Thread, when ROS will have NT Scheduler */
-
-                } else {
-
+                }
+                else
+                {
                     /* Make the current thread non-premeptive if a new thread is queued */
                     CurrentThread->Preempted = FALSE;
                 }
             }
-
-
-        } else {
+        }
+        else
+        {
             /* Set the Quantum back to Maximum */
             //if (CurrentThread->DisableQuantum) {
             //    CurrentThread->Quantum = MAX_QUANTUM;
@@ -498,97 +108,396 @@ KiQuantumEnd(VOID)
     KiDispatchThread(Ready);
 }
 
-/*
- * @implemented
- *
- * FUNCTION:
- *          Called whenever a system interrupt is generated at DISPATCH_LEVEL.
- *          It delivers queued DPCs and dispatches a new thread if need be.
- */
 VOID
-STDCALL
-KiDispatchInterrupt(VOID)
+FASTCALL
+KiRetireDpcList(IN PKPRCB Prcb)
 {
+    PKDPC_DATA DpcData = Prcb->DpcData;
     PLIST_ENTRY DpcEntry;
     PKDPC Dpc;
-    KIRQL OldIrql;
-    PKPRCB Prcb;
+    PKDEFERRED_ROUTINE DeferredRoutine;
+    PVOID DeferredContext, SystemArgument1, SystemArgument2;
 
-    DPRINT("Dispatching Interrupts\n");
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    /* Main outer loop */
+    do
+    {
+        /* Set us as active */
+        Prcb->DpcRoutineActive = TRUE;
 
-    /* Set DPC Deliver to Active */
-    Prcb = KeGetCurrentPrcb();
-
-    if (Prcb->DpcData[0].DpcQueueDepth > 0) {
-        /* Raise IRQL */
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-#ifdef CONFIG_SMP
-        KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
-#endif
-            Prcb->DpcRoutineActive = TRUE;
-
-        DPRINT("&Prcb->DpcData[0].DpcListHead: %x\n", &Prcb->DpcData[0].DpcListHead);
-        /* Loop while we have entries */
-        while (!IsListEmpty(&Prcb->DpcData[0].DpcListHead)) {
-
-            ASSERT(Prcb->DpcData[0].DpcQueueDepth > 0);
-            DPRINT("Queue Depth: %x\n", Prcb->DpcData[0].DpcQueueDepth);
-
-            /* Get the DPC call it */
-            DpcEntry = RemoveHeadList(&Prcb->DpcData[0].DpcListHead);
-            Dpc = CONTAINING_RECORD(DpcEntry, KDPC, DpcListEntry);
-            DPRINT("Dpc->DpcListEntry.Flink %x\n", Dpc->DpcListEntry.Flink);
-            Dpc->DpcData = NULL;
-            Prcb->DpcData[0].DpcQueueDepth--;
-#ifdef CONFIG_SMP
-            KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
-#endif
-            /* Disable/Enabled Interrupts and Call the DPC */
-            KeLowerIrql(OldIrql);
-            DPRINT("Calling DPC: %x\n", Dpc);
-            Dpc->DeferredRoutine(Dpc,
-                         Dpc->DeferredContext,
-                         Dpc->SystemArgument1,
-                         Dpc->SystemArgument2);
-            KeRaiseIrql(HIGH_LEVEL, &OldIrql);
-
-#ifdef CONFIG_SMP
-            KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
-            /*
-             * If the dpc routine drops the irql below DISPATCH_LEVEL,
-             * a thread switch can occur and after the next thread switch
-             * the execution may start on an other processor.
-             */
-            if (Prcb != KeGetCurrentPrcb()) {
-
-                Prcb->DpcRoutineActive = FALSE;
-                KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
-                Prcb = KeGetCurrentPrcb();
-                KiAcquireSpinLock(&Prcb->DpcData[0].DpcLock);
-                Prcb->DpcRoutineActive = TRUE;
-            }
-#endif
+        /* Check if this is a timer expiration request */
+        if (Prcb->TimerRequest)
+        {
+            /* FIXME: Not yet implemented */
+            ASSERT(FALSE);
         }
+
+        /* Loop while we have entries in the queue */
+        while (DpcData->DpcQueueDepth)
+        {
+            /* Lock the DPC data */
+            KefAcquireSpinLockAtDpcLevel(&DpcData->DpcLock);
+
+            /* Make sure we have an entry */
+            if (!IsListEmpty(&DpcData->DpcListHead))
+            {
+                /* Remove the DPC from the list */
+                DpcEntry = RemoveHeadList(&DpcData->DpcListHead);
+                Dpc = CONTAINING_RECORD(DpcEntry, KDPC, DpcListEntry);
+
+                /* Clear its DPC data and save its parameters */
+                Dpc->DpcData = NULL;
+                DeferredRoutine = Dpc->DeferredRoutine;
+                DeferredContext = Dpc->DeferredContext;
+                SystemArgument1 = Dpc->SystemArgument1;
+                SystemArgument2 = Dpc->SystemArgument2;
+
+                /* Decrease the queue depth */
+                DpcData->DpcQueueDepth--;
+
+                /* Clear DPC Time */
+                Prcb->DebugDpcTime = 0;
+
+                /* Release the lock */
+                KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
+
+                /* Re-enable interrupts */
+                KeEnableInterrupts();
+
+                /* Call the DPC */
+                DeferredRoutine(Dpc,
+                                DeferredContext,
+                                SystemArgument1,
+                                SystemArgument2);
+                ASSERT_IRQL(DISPATCH_LEVEL);
+
+                /* Disable interrupts and keep looping */
+                KeDisableInterrupts();
+            }
+            else
+            {
+                /* The queue should be flushed now */
+                ASSERT(DpcData->DpcQueueDepth == 0);
+
+                /* Release DPC Lock */
+                KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
+                break;
+            }
+        }
+
         /* Clear DPC Flags */
         Prcb->DpcRoutineActive = FALSE;
         Prcb->DpcInterruptRequested = FALSE;
-#ifdef CONFIG_SMP
-        KiReleaseSpinLock(&Prcb->DpcData[0].DpcLock);
+
+        /* Check if we have deferred threads */
+        if (Prcb->DeferredReadyListHead.Next)
+        {
+            /* FIXME: 2K3-style scheduling not implemeted */
+            ASSERT(FALSE);
+        }
+    } while (DpcData->DpcQueueDepth);
+}
+
+VOID
+NTAPI
+KiInitializeDpc(IN PKDPC Dpc,
+                IN PKDEFERRED_ROUTINE DeferredRoutine,
+                IN PVOID DeferredContext,
+                IN KOBJECTS Type)
+{
+    /* Setup the DPC Object */
+    Dpc->Type = Type;
+    Dpc->Number= 0;
+    Dpc->Importance= MediumImportance;
+    Dpc->DeferredRoutine = DeferredRoutine;
+    Dpc->DeferredContext = DeferredContext;
+    Dpc->DpcData = NULL;
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeInitializeThreadedDpc(IN PKDPC Dpc,
+                        IN PKDEFERRED_ROUTINE DeferredRoutine,
+                        IN PVOID DeferredContext)
+{
+    /* Call the internal routine */
+    KiInitializeDpc(Dpc, DeferredRoutine, DeferredContext, ThreadedDpcObject);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeInitializeDpc(IN PKDPC Dpc,
+                IN PKDEFERRED_ROUTINE DeferredRoutine,
+                IN PVOID DeferredContext)
+{
+    /* Call the internal routine */
+    KiInitializeDpc(Dpc, DeferredRoutine, DeferredContext, DpcObject);
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeInsertQueueDpc(IN PKDPC Dpc,
+                 IN PVOID SystemArgument1,
+                 IN PVOID SystemArgument2)
+{
+    KIRQL OldIrql;
+    PKPRCB Prcb, CurrentPrcb = KeGetCurrentPrcb();
+    ULONG Cpu;
+    PKDPC_DATA DpcData;
+    BOOLEAN DpcConfigured = FALSE, DpcInserted = FALSE;
+    ASSERT_DPC(Dpc);
+
+    /* Check IRQL and Raise it to HIGH_LEVEL */
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+
+    /* Check if the DPC has more then the maximum number of CPUs */
+    if (Dpc->Number >= MAXIMUM_PROCESSORS)
+    {
+        /* Then substract the maximum and get that PRCB. */
+        Cpu = Dpc->Number - MAXIMUM_PROCESSORS;
+        Prcb = KiProcessorBlock[Cpu];
+    }
+    else
+    {
+        /* Use the current one */
+        Prcb = CurrentPrcb;
+        Cpu = Prcb->Number;
+    }
+
+    /* Check if this is a threaded DPC and threaded DPCs are enabled */
+    if ((Dpc->Type = ThreadedDpcObject) && (Prcb->ThreadDpcEnable))
+    {
+        /* Then use the threaded data */
+        DpcData = &Prcb->DpcData[DPC_THREADED];
+    }
+    else
+    {
+        /* Otherwise, use the regular data */
+        DpcData = &Prcb->DpcData[DPC_NORMAL];
+    }
+
+    /* Acquire the DPC lock */
+    KiAcquireSpinLock(&DpcData->DpcLock);
+
+    /* Get the DPC Data */
+    if (!InterlockedCompareExchangePointer(&Dpc->DpcData, DpcData, NULL))
+    {
+        /* Now we can play with the DPC safely */
+        Dpc->SystemArgument1 = SystemArgument1;
+        Dpc->SystemArgument2 = SystemArgument2;
+        DpcData->DpcQueueDepth++;
+        DpcData->DpcCount++;
+        DpcConfigured = TRUE;
+
+        /* Check if this is a high importance DPC */
+        if (Dpc->Importance == HighImportance)
+        {
+            /* Pre-empty other DPCs */
+            InsertHeadList(&DpcData->DpcListHead, &Dpc->DpcListEntry);
+        }
+        else
+        {
+            /* Add it at the end */
+            InsertTailList(&DpcData->DpcListHead, &Dpc->DpcListEntry);
+        }
+
+        /* Check if this is the DPC on the threaded list */
+        if (&Prcb->DpcData[DPC_THREADED].DpcListHead == &DpcData->DpcListHead)
+        {
+            /* Make sure a threaded DPC isn't already active */
+            if (!(Prcb->DpcThreadActive) && (!Prcb->DpcThreadRequested))
+            {
+                /* FIXME: Setup Threaded DPC */
+                ASSERT(FALSE);
+            }
+        }
+        else
+        {
+            /* Make sure a DPC isn't executing already */
+            if ((!Prcb->DpcRoutineActive) && (!Prcb->DpcInterruptRequested))
+            {
+                /* Check if this is the same CPU */
+                if (Prcb != CurrentPrcb)
+                {
+                    /*
+                     * Check if the DPC is of high importance or above the
+                     * maximum depth. If it is, then make sure that the CPU
+                     * isn't idle, or that it's sleeping.
+                     */
+                    if (((Dpc->Importance == HighImportance) ||
+                        (DpcData->DpcQueueDepth >=
+                         Prcb->MaximumDpcQueueDepth))
+#ifndef _M_PPC
+				    &&
+                        (!(AFFINITY_MASK(Cpu) & IdleProcessorMask) ||
+                         (Prcb->Sleeping))
 #endif
+		       )
+                    {
+                        /* Set interrupt requested */
+                        Prcb->DpcInterruptRequested = TRUE;
 
-        /* DPC Dispatching Ended, re-enable interrupts */
-        KeLowerIrql(OldIrql);
+                        /* Set DPC inserted */
+                        DpcInserted = TRUE;
+                    }
+                }
+                else
+                {
+                    /* Check if the DPC is of anything but low importance */
+                    if ((Dpc->Importance != LowImportance) ||
+                        (DpcData->DpcQueueDepth >=
+                         Prcb->MaximumDpcQueueDepth) ||
+                        (Prcb->DpcRequestRate < Prcb->MinimumDpcRate))
+                    {
+                        /* Set interrupt requested */
+                        Prcb->DpcInterruptRequested = TRUE;
+
+                        /* Set DPC inserted */
+                        DpcInserted = TRUE;
+                    }
+                }
+            }
+        }
     }
 
-    DPRINT("Checking for Quantum End\n");
+    /* Release the lock */
+    KiReleaseSpinLock(&DpcData->DpcLock);
 
-    /* If we have Quantum End, call the function */
-    if (Prcb->QuantumEnd) {
-
-        Prcb->QuantumEnd = FALSE;
-        KiQuantumEnd();
+    /* Check if the DPC was inserted */
+    if (DpcInserted)
+    {
+        /* Check if this was SMP */
+        if (Prcb != CurrentPrcb)
+        {
+            /* It was, request and IPI */
+            KiIpiSendRequest(AFFINITY_MASK(Cpu), IPI_DPC);
+        }
+        else
+        {
+            /* It wasn't, request an interrupt from HAL */
+            HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+        }
     }
+
+    /* Lower IRQL */
+    KeLowerIrql(OldIrql);
+    return DpcConfigured;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeRemoveQueueDpc(IN PKDPC Dpc)
+{
+    PKDPC_DATA DpcData;
+    UCHAR DpcType;
+    ASSERT_DPC(Dpc);
+
+    /* Disable interrupts */
+    KeDisableInterrupts();
+
+    /* Get DPC data and type */
+    DpcType = Dpc->Type;
+    DpcData = Dpc->DpcData;
+    if (DpcData)
+    {
+        /* Acquire the DPC lock */
+        KiAcquireSpinLock(&DpcData->DpcLock);
+
+        /* Make sure that the data didn't change */
+        if (DpcData == Dpc->DpcData)
+        {
+            /* Remove the DPC */
+            DpcData->DpcQueueDepth--;
+            RemoveEntryList(&Dpc->DpcListEntry);
+            Dpc->DpcData = NULL;
+        }
+
+        /* Release the lock */
+        KiReleaseSpinLock(&DpcData->DpcLock);
+    }
+
+    /* Re-enable interrupts */
+    KeEnableInterrupts();
+
+    /* Return if the DPC was in the queue or not */
+    return DpcData ? TRUE : FALSE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeFlushQueuedDpcs(VOID)
+{
+    PAGED_CODE();
+
+    /* Check if this is an UP machine */
+    if (KeActiveProcessors == 1)
+    {
+        /* Check if there are DPCs on either queues */
+        if ((KeGetCurrentPrcb()->DpcData[DPC_NORMAL].DpcQueueDepth) ||
+            (KeGetCurrentPrcb()->DpcData[DPC_THREADED].DpcQueueDepth))
+        {
+            /* Request an interrupt */
+            HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+        }
+    }
+    else
+    {
+        /* FIXME: SMP support required */
+        ASSERT(FALSE);
+    }
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeIsExecutingDpc(VOID)
+{
+    /* Return if the Dpc Routine is active */
+    return KeGetCurrentPrcb()->DpcRoutineActive;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeSetImportanceDpc (IN PKDPC Dpc,
+                    IN KDPC_IMPORTANCE Importance)
+{
+    /* Set the DPC Importance */
+    ASSERT_DPC(Dpc);
+    Dpc->Importance = Importance;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeSetTargetProcessorDpc(IN PKDPC Dpc,
+                        IN CCHAR Number)
+{
+    /* Set a target CPU */
+    ASSERT_DPC(Dpc);
+    Dpc->Number = Number + MAXIMUM_PROCESSORS;
 }
 
 /* EOF */

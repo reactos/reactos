@@ -121,6 +121,48 @@ NTAPI
 SeDeassignPrimaryToken(struct _EPROCESS *Process);
 
 NTSTATUS
+NTAPI
+SeSubProcessToken(
+    IN PTOKEN Parent,
+    OUT PTOKEN *Token,
+    IN BOOLEAN InUse,
+    IN ULONG SessionId
+);
+
+NTSTATUS
+NTAPI
+SeInitializeProcessAuditName(
+    IN PFILE_OBJECT FileObject,
+    IN BOOLEAN DoAudit,
+    OUT POBJECT_NAME_INFORMATION *AuditInfo
+);
+
+NTSTATUS
+NTAPI
+SeLocateProcessImageName(
+    IN PEPROCESS Process,
+    OUT PUNICODE_STRING *ProcessImageName
+);
+
+NTSTATUS
+NTAPI
+SeCreateAccessStateEx(
+    IN PETHREAD Thread,
+    IN PEPROCESS Process,
+    IN OUT PACCESS_STATE AccessState,
+    IN PAUX_DATA AuxData,
+    IN ACCESS_MASK Access,
+    IN PGENERIC_MAPPING GenericMapping
+);
+
+NTSTATUS
+NTAPI
+SeIsTokenChild(
+    IN PTOKEN Token,
+    OUT PBOOLEAN IsChild
+);
+
+NTSTATUS
 STDCALL
 SepCreateImpersonationTokenDacl(
     PTOKEN Token,
@@ -136,12 +178,32 @@ PTOKEN
 STDCALL
 SepCreateSystemProcessToken(VOID);
 
+BOOLEAN
+NTAPI
+SeDetailedAuditingWithToken(IN PTOKEN Token);
+
+VOID
+NTAPI
+SeAuditProcessExit(IN PEPROCESS Process);
+
+VOID
+NTAPI
+SeAuditProcessCreate(IN PEPROCESS Process);
+
 NTSTATUS
 NTAPI
 SeExchangePrimaryToken(
     struct _EPROCESS* Process,
     PACCESS_TOKEN NewToken,
     PACCESS_TOKEN* OldTokenP
+);
+
+VOID
+NTAPI
+SeCaptureSubjectContextEx(
+    IN PETHREAD Thread,
+    IN PEPROCESS Process,
+    OUT PSECURITY_SUBJECT_CONTEXT SubjectContext
 );
 
 NTSTATUS
@@ -254,6 +316,14 @@ SeDefaultObjectMethod(
     PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
     POOL_TYPE PoolType,
     PGENERIC_MAPPING GenericMapping
+);
+
+NTSTATUS
+NTAPI
+SeSetWorldSecurityDescriptor(
+    SECURITY_INFORMATION SecurityInformation,
+    PISECURITY_DESCRIPTOR SecurityDescriptor,
+    PULONG BufferLength
 );
 
 #define SepAcquireTokenLockExclusive(Token)                                    \

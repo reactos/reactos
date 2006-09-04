@@ -815,14 +815,15 @@ MpsTimerHandler(ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
    Count[CPU]++;
 #endif
 
+   /* FIXME: SMP is totally broken */
    MpsIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
    if (KeGetCurrentProcessorNumber() == 0)
    {
-      KeUpdateSystemTime(&KernelTrapFrame, oldIrql);
+      //KeUpdateSystemTime(&KernelTrapFrame, oldIrql);
    }
    else
    {
-      KeUpdateRunTime(&KernelTrapFrame, oldIrql);
+      //KeUpdateRunTime(&KernelTrapFrame, oldIrql);
    }
 
    Ki386DisableInterrupts();

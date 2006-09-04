@@ -74,6 +74,7 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
 #ifdef KDBG
     /* Get the KDBG Settings and enable it */
     KdDebuggerEnabled = TRUE;
+    KdDebuggerNotPresent = FALSE;
     KdpDebugMode.Gdb = TRUE;
     KdbpGetCommandLineSettings((PCHAR)LoaderBlock->CommandLine);
 #endif
@@ -183,6 +184,7 @@ KdInitSystem(ULONG BootPhase,
                 p2 += 10;
                 p2 = KdpGetDebugMode(p2);
                 p2 = KdpGetWrapperDebugMode(p2, LoaderBlock);
+                KdDebuggerEnabled = TRUE;
             }
             /* Check for early breakpoint */
             else if (!_strnicmp(p2, "BREAK", 5))

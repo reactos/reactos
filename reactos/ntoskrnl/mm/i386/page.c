@@ -70,7 +70,6 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
 
 extern BOOLEAN Ke386Pae;
 extern BOOLEAN Ke386NoExecute;
-extern BOOLEAN Ke386GlobalPagesEnabled;
 
 /* FUNCTIONS ***************************************************************/
 

@@ -65,15 +65,6 @@ NTSTATUS STDCALL INIT_FUNCTION PspLookupKernelUserEntryPoints(VOID);
 /* FUNCTIONS ***************************************************************/
 
 VOID
-NTAPI
-PiShutdownProcessManager(VOID)
-{
-   DPRINT("PiShutdownProcessManager()\n");
-
-   PspKillMostProcesses();
-}
-
-VOID
 INIT_FUNCTION
 NTAPI
 PiInitProcessManager(VOID)
@@ -147,7 +138,7 @@ PsInitProcessManagment(VOID)
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
 
    ShortPsLockDelay.QuadPart = -100LL;
-   PsLockTimeout.QuadPart = -10000000LL; /* one second */
+
    /*
     * Register the process object type
     */
@@ -166,7 +157,10 @@ PsInitProcessManagment(VOID)
    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
 
    InitializeListHead(&PsActiveProcessHead);
-   ExInitializeFastMutex(&PspActiveProcessMutex);
+   KeInitializeGuardedMutex(&PspActiveProcessMutex);
+
+   /* Setup the quantum table */
+   PsChangeQuantumTable(FALSE, PsRawPrioritySeparation);
 
    /*
     * Initialize the default quota block.
@@ -207,6 +201,7 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsIdleProcess->Pcb.ThreadListHead);
    InitializeListHead(&PsIdleProcess->ThreadListHead);
    InitializeListHead(&PsIdleProcess->ActiveProcessLinks);
+   ObInitializeFastReference(&PsIdleProcess->Token, NULL);
    KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.Header,
 				ProcessObject,
 				sizeof(EPROCESS) / sizeof(LONG),
@@ -291,8 +286,7 @@ PsInitProcessManagment(VOID)
     /* No parent, this is the Initial System Process. Assign Boot Token */
     BootToken = SepCreateSystemProcessToken();
     BootToken->TokenInUse = TRUE;
-    PsInitialSystemProcess->Token.Object = BootToken; /* FIXME */
-    ObReferenceObject(BootToken);
+    ObInitializeFastReference(&PsInitialSystemProcess->Token, BootToken);
 	}
 #endif
 }

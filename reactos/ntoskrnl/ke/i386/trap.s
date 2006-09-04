@@ -12,16 +12,7 @@
 #include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
 
-/*
-  * FIXMEs:
-  *         - Figure out why ES/DS gets messed up in VMWare, when doing KiServiceExit only,
-  *           and only when called from user-mode, and returning to user-mode.
-  *         - Figure out what the DEBUGEIP hack is for and how it can be moved away.
-  *         - Add DR macro/save and VM macro/save.
-  *         - Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
-  */
-
-/* GLOBALS ******************************************************************/
+/* GLOBALS *******************************************************************/
 
 .globl _KiIdt
 _KiIdt:
@@ -41,7 +32,7 @@ idt _KiTrap11,         INT_32_DPL0  /* INT 0B: Segment Not Present (#NP)    */
 idt _KiTrap12,         INT_32_DPL0  /* INT 0C: Stack Fault Exception (#SS)  */
 idt _KiTrap13,         INT_32_DPL0  /* INT 0D: General Protection (#GP)     */
 idt _KiTrap14,         INT_32_DPL0  /* INT 0E: Page-Fault Exception (#PF)   */
-idt _KiTrap15,         INT_32_DPL0  /* INT 0F: RESERVED [FIXME: HBIRR HACK] */
+idt _KiTrap0F,         INT_32_DPL0  /* INT 0F: RESERVED                     */
 idt _KiTrap16,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
 idt _KiTrap17,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
@@ -55,9 +46,7 @@ idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
 idt _KiDebugService,   INT_32_DPL3  /* INT 2D: Debug Service Handler        */
 idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
-.rept 220
-idt _KiTrap0F,         INT_32_DPL0  /* INT 30-FF: UNDEFINED INTERRUPTS      */
-.endr
+GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
 /* System call entrypoints:                                                 */
 .globl _KiFastCallEntry
@@ -66,18 +55,38 @@ idt _KiTrap0F,         INT_32_DPL0  /* INT 30-FF: UNDEFINED INTERRUPTS      */
 /* And special system-defined software traps:                               */
 .globl _NtRaiseException@12
 .globl _NtContinue@8
+.globl _KiCoprocessorError@0
+.globl _KiDispatchInterrupt@0
+
+/* Interrupt template entrypoints                                           */
+.globl _KiInterruptTemplate
+.globl _KiInterruptTemplateObject
+.globl _KiInterruptTemplateDispatch
+
+/* Chained and Normal generic interrupt handlers for 1st and 2nd level entry*/
+.globl _KiChainedDispatch2ndLvl@0
+.globl _KiInterruptDispatch@0
+.globl _KiChainedDispatch@0
 
 /* We implement the following trap exit points:                             */
 .globl _KiServiceExit               /* Exit from syscall                    */
 .globl _KiServiceExit2              /* Exit from syscall with complete frame*/
 .globl _Kei386EoiHelper@0           /* Exit from interrupt or H/W trap      */
+.globl _Kei386EoiHelper2ndEntry     /* Exit from unexpected interrupt       */
 
 .globl _KiIdtDescriptor
 _KiIdtDescriptor:
     .short 0x800
     .long _KiIdt
 
-/* FUNCTIONS ****************************************************************/
+.globl _KiUnexpectedEntrySize
+_KiUnexpectedEntrySize:
+    .long _KiUnexpectedInterrupt1 - _KiUnexpectedInterrupt0
+
+_UnexpectedMsg:
+    .asciz "\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n"
+
+/* SOFTWARE INTERRUPT SERVICES ***********************************************/
 
 _KiGetTickCount:
 _KiCallbackReturn:
@@ -101,8 +110,8 @@ _KiFastCallEntry:
     mov ecx, KGDT_R0_PCR
     mov fs, cx
 
-    /* Set DS/ES to Kernel Selector */
-    mov ecx, KGDT_R0_DATA
+    /* Set DS/ES to User Selector */
+    mov ecx, KGDT_R3_DATA | RPL_MASK
     mov ds, cx
     mov es, cx
 
@@ -148,10 +157,6 @@ _KiFastCallEntry:
     /* Skip the other registers */
     sub esp, 0x48
 
-    /* Hack: it seems that on VMWare someone damages ES/DS on exit. Investigate! */
-    mov dword ptr [esp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
-    mov dword ptr [esp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
-
     /* Make space for us on the stack */
     sub ebp, 0x29C
 
@@ -176,23 +181,6 @@ _KiFastCallEntry:
 
     /* Set the trap frame debug header */
     SET_TF_DEBUG_HEADER
-
-#ifdef DBG // FIXME: Is this for GDB? Can it be moved in the stub?
-    /*
-     * We want to know the address from where the syscall stub was called.
-     * If PrevMode is KernelMode, that address is stored in our own (kernel)
-     * stack, at location KTRAP_FRAME_ESP.
-     * If we're coming from UserMode, we load the usermode stack pointer
-     * and go back two frames (first frame is the syscall stub, second call
-     * is the caller of the stub).
-     */
-    mov edi, [ebp+KTRAP_FRAME_ESP]
-    test byte ptr [esi+KTHREAD_PREVIOUS_MODE], 0x01
-    jz PrevWasKernelMode
-    mov edi, [edi+4]
-PrevWasKernelMode:
-    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
-#endif
 
     /* Enable interrupts */
     sti
@@ -219,9 +207,6 @@ SharedCode:
     /* Invalid ID, try to load Win32K Table */
     jnb KiBBTUnexpectedRange
 
-#if 0 // <== Disabled for two reasons: We don't save TEB in 0x18, but KPCR.
-      // <== We don't have a KeGdiFlushUserBatch callback yet (needs to be
-      //     sent through the PsInitializeWin32Callouts structure)
     /* Check if this was Win32K */
     cmp ecx, SERVICE_TABLE_TEST
     jnz NotWin32K
@@ -232,15 +217,14 @@ SharedCode:
     /* Check if we should flush the User Batch */
     xor ebx, ebx
     or ebx, [ecx+TEB_GDI_BATCH_COUNT]
-    jz NoWin32K
+    jz NotWin32K
 
     /* Flush it */
     push edx
     push eax
-    call [_KeGdiFlushUserBatch]
+    //call [_KeGdiFlushUserBatch]
     pop eax
     pop edx
-#endif
 
 NotWin32K:
     /* Increase total syscall count */
@@ -345,10 +329,6 @@ _KiServiceExit:
 
     /* Check for, and deliver, User-Mode APCs if needed */
     CHECK_FOR_APC_DELIVER 1
-
-    /* Hack for VMWare: Sometimes ES/DS seem to be invalid when returning to user-mode. Investigate! */
-    mov es, [ebp+KTRAP_FRAME_ES]
-    mov ds, [ebp+KTRAP_FRAME_DS]
 
     /* Exit and cleanup */
     TRAP_EPILOG FromSystemCall, DoRestorePreviousMode, DoNotRestoreSegments, DoNotRestoreVolatiles, DoRestoreEverything
@@ -499,6 +479,7 @@ _Kei386EoiHelper@0:
     CHECK_FOR_APC_DELIVER 0
 
     /* Exit and cleanup */
+_Kei386EoiHelper2ndEntry:
     TRAP_EPILOG NotFromSystemCall, DoNotRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
 .endfunc
 
@@ -575,7 +556,7 @@ NotUserMode:
     mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
 
     /* Check if this is a VDM Process */
-    //cmp dword ptr [ebx+KPROCESS_VDM_OBJECTS], 0
+    //cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
     //jz VdmProc
 
     /* Exit through common routine */
@@ -679,6 +660,89 @@ Error:
     jmp _KiServiceExit
 .endfunc
 
+/* EXCEPTION DISPATCHERS *****************************************************/
+
+.func CommonDispatchException
+_CommonDispatchException:
+
+    /* Make space for an exception record */
+    sub esp, EXCEPTION_RECORD_LENGTH
+
+    /* Set it up */
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_CODE], eax
+    xor eax, eax
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_FLAGS], eax
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_RECORD], eax
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_ADDRESS], ebx
+    mov [esp+EXCEPTION_RECORD_NUMBER_PARAMETERS], ecx
+
+    /* Check parameter count */
+    cmp eax, 0
+    jz NoParams
+
+    /* Get information */
+    lea ebx, [esp+SIZEOF_EXCEPTION_RECORD]
+    mov [ebx], edx
+    mov [ebx+4], esi
+    mov [ebx+8], edi
+
+NoParams:
+
+    /* Set the record in ECX and check if this was V86 */
+    mov ecx, esp
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jz SetPreviousMode
+
+    /* Set V86 mode */
+    mov eax, 0xFFFF
+    jmp MaskMode
+
+SetPreviousMode:
+
+    /* Calculate the previous mode */
+    mov eax, [ebp+KTRAP_FRAME_CS]
+MaskMode:
+    and eax, MODE_MASK
+
+    /* Dispatch the exception */
+    push 1
+    push eax
+    push ebp
+    push 0
+    push ecx
+    call _KiDispatchException@20
+
+    /* End the trap */
+    mov esp, ebp
+    jmp _Kei386EoiHelper@0
+.endfunc
+
+.func DispatchNoParam
+_DispatchNoParam:
+    /* Call the common dispatcher */
+    xor ecx, ecx
+    call _CommonDispatchException
+.endfunc
+
+.func DispatchOneParam
+_DispatchOneParam:
+    /* Call the common dispatcher */
+    xor edx, edx
+    mov ecx, 1
+    call _CommonDispatchException
+.endfunc
+
+.func DispatchTwoParam
+_DispatchTwoParam:
+    /* Call the common dispatcher */
+    xor edx, edx
+    mov ecx, 2
+    call _CommonDispatchException
+.endfunc
+
+/* HARDWARE TRAP HANDLERS ****************************************************/
+
+.func KiTrap0
 _KiTrap0:
     /* Push error code */
     push 0
@@ -686,19 +750,38 @@ _KiTrap0:
     /* Enter trap */
     TRAP_PROLOG(0)
 
-    /* Call the C exception handler */
-    push 0
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int0
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz SendException
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Check the old mode */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne VdmCheck
 
+SendException:
+    /* Re-enable interrupts for user-mode and send the exception */
+    sti
+    mov eax, STATUS_INTEGER_DIVIDE_BY_ZERO
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    jmp _DispatchNoParam
+
+VdmCheck:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz SendException
+
+    /* We don't support this yet! */
+V86Int0:
+    int 3
+.endfunc
+
+.func KiTrap1
 _KiTrap1:
     /* Push error code */
     push 0
@@ -706,39 +789,50 @@ _KiTrap1:
     /* Enter trap */
     TRAP_PROLOG(1)
 
-    /* Call the C exception handler */
-    push 1
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int1
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz PrepInt1
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Check the old mode */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne V86Int1
 
+EnableInterrupts:
+    /* Enable interrupts for user-mode */
+    sti
+
+PrepInt1:
+    /* Prepare the exception */
+    and dword ptr [ebp+KTRAP_FRAME_EFLAGS], ~EFLAGS_TF
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov eax, STATUS_SINGLE_STEP
+    jmp _DispatchNoParam
+
+V86Int1:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz EnableInterrupts
+
+    /* We don't support VDM! */
+    int 3
+.endfunc
+
+.globl _KiTrap2
+.func KiTrap2
 _KiTrap2:
-    /* Push error code */
-    push 0
 
-    /* Enter trap */
-    TRAP_PROLOG(2)
+    /* FIXME: This is an NMI, nothing like a normal exception */
+    mov eax, 2
+    jmp _KiSystemFatalException
+.endfunc
 
-    /* Call the C exception handler */
-    push 2
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
+.func KiTrap3
 _KiTrap3:
     /* Push error code */
     push 0
@@ -746,19 +840,47 @@ _KiTrap3:
     /* Enter trap */
     TRAP_PROLOG(3)
 
-    /* Call the C exception handler */
-    push 3
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int3
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz PrepInt3
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Check the old mode */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne V86Int3
 
+EnableInterrupts3:
+    /* Enable interrupts for user-mode */
+    sti
+
+PrepInt3:
+    /* Prepare the exception */
+    mov esi, ecx
+    mov edi, edx
+    mov edx, eax
+
+    /* Setup EIP, NTSTATUS and parameter count, then dispatch */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    dec ebx
+    mov eax, STATUS_BREAKPOINT
+    mov ecx, 3
+    call _CommonDispatchException
+
+V86Int3:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz EnableInterrupts3
+
+    /* We don't support VDM! */
+    int 3
+.endfunc
+
+.func KiTrap4
 _KiTrap4:
     /* Push error code */
     push 0
@@ -766,19 +888,39 @@ _KiTrap4:
     /* Enter trap */
     TRAP_PROLOG(4)
 
-    /* Call the C exception handler */
-    push 4
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int4
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz SendException4
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* Check the old mode */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne VdmCheck4
 
+SendException4:
+    /* Re-enable interrupts for user-mode and send the exception */
+    sti
+    mov eax, STATUS_INTEGER_OVERFLOW
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    dec ebx
+    jmp _DispatchNoParam
+
+VdmCheck4:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz SendException4
+
+    /* We don't support this yet! */
+V86Int4:
+    int 3
+.endfunc
+
+.func KiTrap5
 _KiTrap5:
     /* Push error code */
     push 0
@@ -786,19 +928,43 @@ _KiTrap5:
     /* Enter trap */
     TRAP_PROLOG(5)
 
-    /* Call the C exception handler */
-    push 5
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Int5
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jnz CheckMode
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* It did, and this should never happen */
+    mov eax, 5
+    jmp _KiSystemFatalException
 
+    /* Check the old mode */
+CheckMode:
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne VdmCheck5
+
+    /* Re-enable interrupts for user-mode and send the exception */
+SendException5:
+    sti
+    mov eax, STATUS_ARRAY_BOUNDS_EXCEEDED
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    jmp _DispatchNoParam
+
+VdmCheck5:
+    /* Check if this is a VDM process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz SendException5
+
+    /* We don't support this yet! */
+V86Int5:
+    int 3
+.endfunc
+
+.func KiTrap6
 _KiTrap6:
     /* Push error code */
     push 0
@@ -806,19 +972,15 @@ _KiTrap6:
     /* Enter trap */
     TRAP_PROLOG(6)
 
-    /* Call the C exception handler */
-    push 6
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Not yet supported */
+    int 3
+    jmp $
 
     /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    jmp _Kei386EoiHelper@0
+.endfunc
 
+.func KiTrap7
 _KiTrap7:
     /* Push error code */
     push 0
@@ -826,24 +988,145 @@ _KiTrap7:
     /* Enter trap */
     TRAP_PROLOG(7)
 
-    /* Call the C exception handler */
-    push 7
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Get the current thread and stack */
+StartTrapHandle:
+    mov eax, [fs:KPCR_CURRENT_THREAD]
+    mov ecx, [eax+KTHREAD_INITIAL_STACK]
+    sub ecx, NPX_FRAME_LENGTH
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if emulation is enabled */
+    test dword ptr [ecx+FN_CR0_NPX_STATE], CR0_EM
+    jnz EmulationEnabled
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+CheckState:
+    /* Check if the NPX state is loaded */
+    cmp byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_LOADED
+    mov ebx, cr0
+    jz IsLoaded
+
+    /* Remove flags */
+    and ebx, ~(CR0_MP + CR0_TS + CR0_EM)
+    mov cr0, ebx
+
+    /* Check the NPX thread */
+    mov edx, [fs:KPCR_NPX_THREAD]
+    or edx, edx
+    jz NoNpxThread
+
+    /* Get the NPX Stack */
+    mov esi, [edx+KTHREAD_INITIAL_STACK]
+    sub esi, NPX_FRAME_LENGTH
+
+    /* Check if we have FXSR and check which operand to use */
+    test byte ptr _KeI386FxsrPresent, 1
+    jz FnSave
+    fxsave [esi]
+    jmp AfterSave
+
+FnSave:
+    fnsave [esi]
+
+AfterSave:
+    /* Set the thread's state to dirty */
+    mov byte ptr [edx+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+
+NoNpxThread:
+    /* Check if we have FXSR and choose which operand to use */
+    test byte ptr _KeI386FxsrPresent, 1
+    jz FrRestore
+    fxrstor [ecx]
+    jmp AfterRestore
+
+FrRestore:
+    frstor [esi]
+
+AfterRestore:
+    /* Set state loaded */
+    mov byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_LOADED
+    mov [fs:KPCR_NPX_THREAD], eax
+
+    /* Enable interrupts to happen now */
+    sti
+    nop
+
+    /* Check if CR0 needs to be reloaded due to a context switch */
+    cmp dword ptr [ecx+FN_CR0_NPX_STATE], 0
+    jz _Kei386EoiHelper@0
+
+    /* We have to reload CR0... disable interrupts */
+    cli
+
+    /* Get CR0 and update it */
+    mov ebx, cr0
+    or ebx, [ecx+FN_CR0_NPX_STATE]
+    mov cr0, ebx
+
+    /* Restore interrupts and check if TS is back on */
+    sti
+    test bl, CR0_TS
+    jz _Kei386EoiHelper@0
+
+    /* Clear TS, and loop handling again */
+    clts
+    cli
+    jmp StartTrapHandle
+
+IsLoaded:
+    /* Check if TS is set */
+    test bl, CR0_TS
+    jnz TsSetOnLoadedState
+
+    /* Check if the trap came from user-mode */
+    int 3
+
+EmulationEnabled:
+    /* Did this come from kernel-mode? */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
+    jz CheckState
+
+    /* It came from user-mode, so this would only be valid inside a VDM */
+    /* Since we don't actually have VDMs in ROS, bugcheck. */
+    jmp BogusTrap2
+
+TsSetOnLoadedState:
+    /* TS shouldn't be set, unless this we don't have a Math Processor */
+    test bl, CR0_MP
+    jnz BogusTrap
+
+    /* Strange that we got a trap at all, but ignore and continue */
+    clts
+    jmp _Kei386EoiHelper@0
+
+BogusTrap2:
+    /* Cause a bugcheck */
+    sti
+    push 0
+    push 0
+    push eax
+    push 1
+    push TRAP_CAUSE_UNKNOWN
+    call _KeBugCheckEx@20
+
+BogusTrap:
+    /* Cause a bugcheck */
+    push 0
+    push 0
+    push ebx
+    push 2
+    push TRAP_CAUSE_UNKNOWN
+    call _KeBugCheckEx@20
+.endfunc
 
 .globl _KiTrap8
+.func KiTrap8
 _KiTrap8:
-    call _KiDoubleFaultHandler
-    iret
 
+    /* Can't really do too much */
+    mov eax, 8
+    jmp _KiSystemFatalException
+.endfunc
+
+.func KiTrap9
 _KiTrap9:
     /* Push error code */
     push 0
@@ -851,87 +1134,272 @@ _KiTrap9:
     /* Enter trap */
     TRAP_PROLOG(9)
 
-    /* Call the C exception handler */
-    push 9
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Enable interrupts and bugcheck */
+    sti
+    mov eax, 9
+    jmp _KiSystemFatalException
+.endfunc
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
+.func KiTrap10
 _KiTrap10:
     /* Enter trap */
     TRAP_PROLOG(10)
 
-    /* Call the C exception handler */
-    push 10
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* Check for V86 */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86IntA
 
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if the frame was from kernelmode */
+    test word ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz Fatal
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+V86IntA:
+    /* Check if OF was set during iretd */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAG_ZERO
+    sti
+    jz Fatal
 
+    /* It was, just mask it out */
+    and dword ptr [ebp+KTRAP_FRAME_EFLAGS], ~EFLAG_ZERO
+    jmp _Kei386EoiHelper@0
+
+Fatal:
+    /* TSS failure for some other reason: crash */
+    mov eax, 10
+    jmp _KiSystemFatalException
+.endfunc
+
+.func KiTrap11
 _KiTrap11:
     /* Enter trap */
     TRAP_PROLOG(11)
 
-    /* Call the C exception handler */
-    push 11
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* FIXME: ROS Doesn't handle segment faults yet */
+    mov eax, 11
+    jmp _KiSystemFatalException
+.endfunc
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
+.func KiTrap12
 _KiTrap12:
     /* Enter trap */
     TRAP_PROLOG(12)
 
-    /* Call the C exception handler */
-    push 12
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
+    /* FIXME: ROS Doesn't handle stack faults yet */
+    mov eax, 12
+    jmp _KiSystemFatalException
+.endfunc
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
+.func KiTrap13
 _KiTrap13:
+
+    /* It this a V86 GPF? */
+    test dword ptr [esp+12], EFLAGS_V86_MASK
+    jz NotV86
+
+    /* Enter V86 Trap */
+    V86_TRAP_PROLOG kitd
+
+    /* Make sure that this is a V86 process */
+    mov ecx, [fs:KPCR_CURRENT_THREAD]
+    mov ecx, [ecx+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ecx+EPROCESS_VDM_OBJECTS], 0
+    jnz RaiseIrql
+
+    /* Otherwise, something is very wrong, raise an exception */
+    sti
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov esi, -1
+    mov eax, STATUS_ACCESS_VIOLATION
+    jmp _DispatchTwoParam
+
+RaiseIrql:
+
+    /* Go to APC level */
+    mov ecx, APC_LEVEL
+    call @KfRaiseIrql@4
+
+    /* Save old IRQL and enable interrupts */
+    push eax
+    sti
+
+    /* Handle the opcode */
+    call _Ki386HandleOpcodeV86@0
+
+    /* Check if this was VDM */
+    test al, 0xFF
+    jnz NoReflect
+
+    /* FIXME: TODO */
+    int 3
+
+NoReflect:
+
+    /* Lower IRQL and disable interrupts */
+    pop ecx
+    call @KfLowerIrql@4
+    cli
+
+    /* Check if this was a V86 trap */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jz NotV86Trap
+
+    /* Exit the V86 Trap */
+    V86_TRAP_EPILOG
+
+NotV86Trap:
+
+    /* Either this wasn't V86, or it was, but an APC interrupted us */
+    jmp _Kei386EoiHelper@0
+
+NotV86:
     /* Enter trap */
     TRAP_PROLOG(13)
 
-    /* Call the C exception handler */
-    push 13
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-    
-    /* Check for v86 recovery */
-    cmp eax, 1
+    /* Check if this was from kernel-mode */
+    test dword ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jnz UserModeGpf
 
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    /* FIXME: Check for GPF during GPF */
 
+    /* Get the opcode and trap frame */
+    mov eax, [ebp+KTRAP_FRAME_EIP]
+    mov eax, [eax]
+    mov edx, [ebp+KTRAP_FRAME_EBP]
+
+    /* We want to check if this was POP [DS/ES/FS/GS] */
+    add edx, KTRAP_FRAME_DS
+    cmp al, 0x1F
+    jz SegPopGpf
+    add edx, KTRAP_FRAME_ES - KTRAP_FRAME_DS
+    cmp al, 7
+    jz SegPopGpf
+    add edx, KTRAP_FRAME_FS - KTRAP_FRAME_ES
+    cmp ax, 0xA10F
+    jz SegPopGpf
+    add edx, KTRAP_FRAME_GS - KTRAP_FRAME_FS
+    cmp ax, 0xA90F
+    jz SegPopGpf
+
+    /* It isn't, was it IRETD? */
+    cmp al, 0xCF
+    jne NotIretGpf
+
+    /* Get error code */
+    lea edx, [ebp+KTRAP_FRAME_ESP]
+    mov ax, [ebp+KTRAP_FRAME_ERROR_CODE]
+    and ax, ~RPL_MASK
+
+    /* Get CS */
+    mov cx, word ptr [edx+4]
+    and cx, ~RPL_MASK
+    cmp cx, ax
+    jnz NotCsGpf
+
+    /* This should be a Ki386CallBios return */
+    mov eax, offset _Ki386BiosCallReturnAddress
+    cmp eax, [edx]
+    jne NotBiosGpf
+    mov eax, [edx+4]
+    cmp ax, KGDT_R0_CODE + RPL_MASK
+    jne NotBiosGpf
+
+    /* Jump to return address */
+    jmp _Ki386BiosCallReturnAddress
+
+NotBiosGpf:
+    /* Check if the thread was in kernel mode */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    test byte ptr [ebx+KTHREAD_PREVIOUS_MODE], 0xFF
+    jz UserModeGpf
+
+    /* Set RPL_MASK for check below */
+    or word ptr [edx+4], RPL_MASK
+
+NotCsGpf:
+    /* Check if the IRET goes to user-mode */
+    test dword ptr [edx+4], RPL_MASK
+    jz UserModeGpf
+
+    /* Setup trap frame to copy */
+    mov ecx, (KTRAP_FRAME_LENGTH - 12) / 4
+    lea edx, [ebp+KTRAP_FRAME_ERROR_CODE]
+
+TrapCopy:
+
+    /* Copy each field */
+    mov eax, [edx]
+    mov [edx+12], eax
+    sub edx, 4
+    loop TrapCopy
+
+    /* Enable interrupts and adjust stack */
+    sti
+    add esp, 12
+    add ebp, 12
+
+    /* Setup exception record */
+    mov ebx, [ebp+KTRAP_FRAME_EIP]
+    mov esi, [ebp+KTRAP_FRAME_ERROR_CODE]
+    and esi, 0xFFFF
+    mov eax, STATUS_ACCESS_VIOLATION
+    jmp _DispatchTwoParam
+
+MsrCheck:
+
+    /* FIXME: Handle RDMSR/WRMSR */
+    int 3
+    jmp $
+
+NotIretGpf:
+
+    /* Check if this was an MSR opcode */
+    cmp al, 0xF
+    jz MsrCheck
+
+    /* Check if DS is Ring 3 */
+    cmp word ptr [ebp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
+    jz CheckEs
+
+    /* Otherwise, fix it up */
+    mov dword ptr [ebp+KTRAP_FRAME_DS], KGDT_R3_DATA + RPL_MASK
+    jmp ExitGpfTrap
+
+CheckEs:
+
+    /* Check if ES is Ring 3 */
+    cmp word ptr [ebp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
+    jz UserModeGpf
+
+    /* Otherwise, fix it up */
+    mov dword ptr [ebp+KTRAP_FRAME_ES], KGDT_R3_DATA + RPL_MASK
+    jmp ExitGpfTrap
+
+SegPopGpf:
+
+    /* Sanity check */
+    lea eax, [ebp+KTRAP_FRAME_ESP]
+    cmp edx, eax
+    jz HandleSegPop
+    int 3
+
+    /* Handle segment POP fault by setting it to 0 */
+HandleSegPop:
+    xor eax, eax
+    mov dword ptr [edx], eax
+
+ExitGpfTrap:
+
+    /* Do a trap exit */
+    TRAP_EPILOG NotFromSystemCall, DoNotRestorePreviousMode, DoNotRestoreSegments, DoRestoreVolatiles, DoRestoreEverything
+
+UserModeGpf:
+
+    /* FIXME: Unhandled */
+    int 3
+    jmp $
+.endfunc
+
+.func KiTrap14
 _KiTrap14:
     /* Enter trap */
     TRAP_PROLOG(14)
@@ -942,73 +1410,11 @@ _KiTrap14:
     call _KiPageFaultHandler
     add esp, 8
 
-    /* Check for v86 recovery */
-    cmp eax, 1
-
     /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
+    jmp _Kei386EoiHelper@0
+.endfunc
 
-_KiTrap15:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG(15)
-
-    /* Call the C exception handler */
-    push 15
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
-_KiTrap16:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG(16)
-
-    /* Call the C exception handler */
-    push 16
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
-_KiTrap17:
-    /* Push error code */
-    push 0
-
-    /* Enter trap */
-    TRAP_PROLOG(17)
-
-    /* Call the C exception handler */
-    push 17
-    push ebp
-    call _KiTrapHandler
-    add esp, 8
-
-    /* Check for v86 recovery */
-    cmp eax, 1
-
-    /* Return to caller */
-    jne _Kei386EoiHelper@0
-    jmp _KiV86Complete
-
+.func KiTrap0F
 _KiTrap0F:
     /* Push error code */
     push 0
@@ -1020,6 +1426,33 @@ _KiTrap0F:
     /* Raise a fatal exception */
     mov eax, 15
     jmp _KiSystemFatalException
+.endfunc
+
+.func KiTrap16
+_KiTrap16:
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(16)
+
+    /* FIXME: ROS Doesn't handle FPU faults yet */
+    mov eax, 16
+    jmp _KiSystemFatalException
+.endfunc
+
+.func KiTrap17
+_KiTrap17:
+    /* Push error code */
+    push 0
+
+    /* Enter trap */
+    TRAP_PROLOG(17)
+
+    /* FIXME: ROS Doesn't handle alignment faults yet */
+    mov eax, 17
+    jmp _KiSystemFatalException
+.endfunc
 
 .func KiSystemFatalException
 _KiSystemFatalException:
@@ -1039,4 +1472,267 @@ _KiSystemFatalException:
     ret
 .endfunc
 
+.func KiCoprocessorError@0
+_KiCoprocessorError@0:
 
+    /* Get the NPX Thread's Initial stack */
+    mov eax, [fs:KPCR_NPX_THREAD]
+    mov eax, [eax+KTHREAD_INITIAL_STACK]
+
+    /* Make space for the FPU Save area */
+    sub eax, SIZEOF_FX_SAVE_AREA
+
+    /* Set the CR0 State */
+    mov dword ptr [eax+FN_CR0_NPX_STATE], 8
+
+    /* Update it */
+    mov eax, cr0
+    or eax, 8
+    mov cr0, eax
+
+    /* Return to caller */
+    ret
+.endfunc
+
+/* UNEXPECTED INTERRUPT HANDLERS **********************************************/
+
+.globl _KiStartUnexpectedRange@0
+_KiStartUnexpectedRange@0:
+
+GENERATE_INT_HANDLERS
+
+.globl _KiEndUnexpectedRange@0
+_KiEndUnexpectedRange@0:
+    jmp _KiUnexpectedInterruptTail
+
+.func KiUnexpectedInterruptTail
+_KiUnexpectedInterruptTail:
+
+    /* Enter interrupt trap */
+    INT_PROLOG kui, DoNotPushFakeErrorCode
+
+    /* Increase interrupt count */
+    inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]
+
+    /* Put vector in EBX and make space for KIRQL */
+    mov ebx, [esp]
+    sub esp, 4
+
+    /* Begin interrupt */
+    push esp
+    push ebx
+    push HIGH_LEVEL
+    call _HalBeginSystemInterrupt@12
+
+    /* Check if it was spurious or not */
+    or al, al
+    jnz Handled
+
+    /* Spurious, ignore it */
+    add esp, 8
+    jmp _Kei386EoiHelper2ndEntry
+
+Handled:
+    /* Unexpected interrupt, print a message on debug builds */
+#if DBG
+    push [esp+4]
+    push offset _UnexpectedMsg
+    call _DbgPrint
+    add esp, 8
+#endif
+
+    /* Exit the interrupt */
+    mov esi, $
+    cli
+    call _HalEndSystemInterrupt@8
+    jmp _Kei386EoiHelper@0
+.endfunc
+
+.globl _KiUnexpectedInterrupt
+_KiUnexpectedInterrupt:
+
+    /* Bugcheck with invalid interrupt code */
+    push 0x12
+    call _KeBugCheck@4
+
+/* INTERRUPT HANDLERS ********************************************************/
+
+.func KiDispatchInterrupt@0
+_KiDispatchInterrupt@0:
+
+    /* Get the PCR  and disable interrupts */
+    mov ebx, [fs:KPCR_SELF]
+    cli
+
+    /* Check if we have to deliver DPCs, timers, or deferred threads */
+    mov eax, [ebx+KPCR_PRCB_DPC_QUEUE_DEPTH]
+    or eax, [ebx+KPCR_PRCB_TIMER_REQUEST]
+    or eax, [ebx+KPCR_PRCB_DEFERRED_READY_LIST_HEAD]
+    jz CheckQuantum
+
+    /* Save stack pointer and exception list, then clear it */
+    push ebp
+    push dword ptr [ebx+KPCR_EXCEPTION_LIST]
+    mov dword ptr [ebx+KPCR_EXCEPTION_LIST], -1
+
+    /* Save the stack and switch to the DPC Stack */
+    mov edx, esp
+    //mov esp, [ebx+KPCR_PRCB_DPC_STACK]
+    push edx
+
+    /* Deliver DPCs */
+    mov ecx, [ebx+KPCR_PRCB]
+    call @KiRetireDpcList@4
+
+    /* Restore stack and exception list */
+    pop esp
+    pop dword ptr [ebx]
+    pop ebp
+
+CheckQuantum:
+
+    /* Re-enable interrupts */
+    sti
+
+    /* Check if we have quantum end */
+    cmp byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
+    jnz QuantumEnd
+
+    /* Check if we have a thread to swap to */
+    cmp byte ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+    jz Return
+
+    /* FIXME: Schedule new thread */
+    int 3
+
+Return:
+    /* All done */
+    ret
+
+QuantumEnd:
+    /* Disable quantum end and process it */
+    mov byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
+    call _KiQuantumEnd@0
+    ret
+.endfunc
+
+.func KiInterruptTemplate
+_KiInterruptTemplate:
+
+    /* Enter interrupt trap */
+    INT_PROLOG kit, DoPushFakeErrorCode
+.endfunc
+
+_KiInterruptTemplate2ndDispatch:
+    /* Dummy code, will be replaced by the address of the KINTERRUPT */
+    mov edi, 0
+
+_KiInterruptTemplateObject:
+    /* Dummy jump, will be replaced by the actual jump */
+    jmp _KeSynchronizeExecution@12
+
+_KiInterruptTemplateDispatch:
+    /* Marks the end of the template so that the jump above can be edited */
+
+.func KiChainedDispatch2ndLvl@0
+_KiChainedDispatch2ndLvl@0:
+
+    /* Not yet supported */
+    int 3
+.endfunc
+
+.func KiChainedDispatch@0
+_KiChainedDispatch@0:
+
+    /* Increase interrupt count */
+    inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]
+
+    /* Save trap frame */
+    mov ebp, esp
+
+    /* Save vector and IRQL */
+    mov eax, [edi+KINTERRUPT_VECTOR]
+    mov ecx, [edi+KINTERRUPT_IRQL]
+
+    /* Save old irql */
+    push eax
+    sub esp, 4
+
+    /* Begin interrupt */
+    push esp
+    push eax
+    push ecx
+    call _HalBeginSystemInterrupt@12
+
+    /* Check if it was handled */
+    or al, al
+    jz SpuriousInt
+
+    /* Call the 2nd-level handler */
+    call _KiChainedDispatch2ndLvl@0
+
+    /* Exit the interrupt */
+    mov esi, $
+    cli
+    call _HalEndSystemInterrupt@8
+    jmp _Kei386EoiHelper@0
+.endfunc
+
+.func KiInterruptDispatch@0
+_KiInterruptDispatch@0:
+
+    /* Increase interrupt count */
+    inc dword ptr [fs:KPCR_PRCB_INTERRUPT_COUNT]
+
+    /* Save trap frame */
+    mov ebp, esp
+
+    /* Save vector and IRQL */
+    mov eax, [edi+KINTERRUPT_VECTOR]
+    mov ecx, [edi+KINTERRUPT_SYNCHRONIZE_IRQL]
+
+    /* Save old irql */
+    push eax
+    sub esp, 4
+
+    /* Begin interrupt */
+    push esp
+    push eax
+    push ecx
+    call _HalBeginSystemInterrupt@12
+
+    /* Check if it was handled */
+    or al, al
+    jz SpuriousInt
+
+    /* Acquire the lock */
+GetIntLock:
+    mov esi, [edi+KINTERRUPT_ACTUAL_LOCK]
+    ACQUIRE_SPINLOCK(esi, IntSpin)
+
+    /* Call the ISR */
+    mov eax, [edi+KINTERRUPT_SERVICE_CONTEXT]
+    push eax
+    push edi
+    call [edi+KINTERRUPT_SERVICE_ROUTINE]
+
+    /* Release the lock */
+    RELEASE_SPINLOCK(esi)
+
+    /* Exit the interrupt */
+    mov esi, $
+    cli
+    call _HalEndSystemInterrupt@8
+    jmp _Kei386EoiHelper@0
+
+SpuriousInt:
+    /* Exit the interrupt */
+    add esp, 8
+    mov esi, $
+    jmp _Kei386EoiHelper@0
+
+#ifdef CONFIG_SMP
+IntSpin:
+    SPIN_ON_LOCK esi, GetIntLock
+#endif
+.endfunc

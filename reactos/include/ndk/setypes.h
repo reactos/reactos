@@ -24,8 +24,12 @@ Author:
 //
 #include <umtypes.h>
 
-#ifdef NTOS_MODE_USER
+//
+// Well Known SIDs
+//
+#define SECURITY_INTERNETSITE_AUTHORITY     {0,0,0,0,0,7}
 
+#ifdef NTOS_MODE_USER
 //
 // Privilege constants
 //

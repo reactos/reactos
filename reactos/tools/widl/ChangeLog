@@ -1,5 +1,13 @@
 ChangeLog
 
+2006-07-30 ekohl
+
+- Synchronized with WINE widl 20060729.
+
+  The only difference is one call to wpp_find_include in parser.l.
+  We'll need to fix this issue!
+
+
 2006-02-27 ekohl
 
    tools/widl/client.c

@@ -154,7 +154,7 @@ typedef ULONG LOGICAL;
 /*
 ** Routines specific to this DDK
 */
-#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
+#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
 
 /*
 ** Simple structures
@@ -197,11 +197,11 @@ typedef struct _PEB *PPEB;
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 
 /* Constants */
-#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )  
-#define ZwCurrentProcess() NtCurrentProcess()         
-#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
-#define ZwCurrentThread() NtCurrentThread()     
-#ifdef _REACTOS_ 
+#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
+#define ZwCurrentProcess() NtCurrentProcess()
+#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
+#define ZwCurrentThread() NtCurrentThread()
+#ifdef _REACTOS_
 #define KIP0PCRADDRESS                      0xff000000
 #else
 #define KIP0PCRADDRESS                      0xffdff000
@@ -396,19 +396,28 @@ extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
 extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 
-extern NTOSAPI CCHAR KeNumberProcessors;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+extern volatile CCHAR NTSYSAPI KeNumberProcessors;
+#else
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+extern CCHAR NTSYSAPI KeNumberProcessors;
+#else
+//extern PCCHAR KeNumberProcessors;
+extern NTSYSAPI CCHAR KeNumberProcessors; //FIXME: Note to Alex: I won't fix this atm, since I prefer to discuss this with you first.
+#endif
+#endif
 
 #define PROCESSOR_FEATURE_MAX 64
 #define MAX_WOW64_SHARED_ENTRIES 16
 
-typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE 
+typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
 {
     StandardDesign,
     NEC98x86,
     EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
-typedef struct _KSYSTEM_TIME 
+typedef struct _KSYSTEM_TIME
 {
     ULONG LowPart;
     LONG High1Time;
@@ -417,7 +426,7 @@ typedef struct _KSYSTEM_TIME
 
 extern volatile KSYSTEM_TIME KeTickCount;
 
-typedef struct _KUSER_SHARED_DATA 
+typedef struct _KUSER_SHARED_DATA
 {
     ULONG TickCountLowDeprecated;
     ULONG TickCountMultiplier;
@@ -1037,26 +1046,27 @@ typedef struct _KDEVICE_QUEUE_ENTRY {
 #define LOCK_QUEUE_TIMER_LOCK_SHIFT       4
 #define LOCK_QUEUE_TIMER_TABLE_LOCKS (1 << (8 - LOCK_QUEUE_TIMER_LOCK_SHIFT))
 
-typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
-  LockQueueDispatcherLock,
-  LockQueueContextSwapLock,
-  LockQueuePfnLock,
-  LockQueueSystemSpaceLock,
-  LockQueueVacbLock,
-  LockQueueMasterLock,
-  LockQueueNonPagedPoolLock,
-  LockQueueIoCancelLock,
-  LockQueueWorkQueueLock,
-  LockQueueIoVpbLock,
-  LockQueueIoDatabaseLock,
-  LockQueueIoCompletionLock,
-  LockQueueNtfsStructLock,
-  LockQueueAfdWorkQueueLock,
-  LockQueueBcbLock,
-  LockQueueMmNonPagedPoolLock,
-  LockQueueUnusedSpare16,
-  LockQueueTimerTableLock,
-  LockQueueMaximumLock = LockQueueTimerTableLock + LOCK_QUEUE_TIMER_TABLE_LOCKS
+typedef enum _KSPIN_LOCK_QUEUE_NUMBER
+{
+    LockQueueDispatcherLock,
+    LockQueueExpansionLock,
+    LockQueuePfnLock,
+    LockQueueSystemSpaceLock,
+    LockQueueVacbLock,
+    LockQueueMasterLock,
+    LockQueueNonPagedPoolLock,
+    LockQueueIoCancelLock,
+    LockQueueWorkQueueLock,
+    LockQueueIoVpbLock,
+    LockQueueIoDatabaseLock,
+    LockQueueIoCompletionLock,
+    LockQueueNtfsStructLock,
+    LockQueueAfdWorkQueueLock,
+    LockQueueBcbLock,
+    LockQueueMmNonPagedPoolLock,
+    LockQueueUnusedSpare16,
+    LockQueueTimerTableLock,
+    LockQueueMaximumLock = LockQueueTimerTableLock + LOCK_QUEUE_TIMER_TABLE_LOCKS
 } KSPIN_LOCK_QUEUE_NUMBER, *PKSPIN_LOCK_QUEUE_NUMBER;
 
 typedef struct _KSPIN_LOCK_QUEUE {
@@ -1069,16 +1079,25 @@ typedef struct _KLOCK_QUEUE_HANDLE {
   KIRQL  OldIrql;
 } KLOCK_QUEUE_HANDLE, *PKLOCK_QUEUE_HANDLE;
 
-typedef struct _KDPC {
-  CSHORT  Type;
-  UCHAR  Number;
-  UCHAR  Importance;
-  LIST_ENTRY  DpcListEntry;
-  PKDEFERRED_ROUTINE  DeferredRoutine;
-  PVOID  DeferredContext;
-  PVOID  SystemArgument1;
-  PVOID  SystemArgument2;
-  PVOID  DpcData;
+#define DPC_NORMAL 0
+#define DPC_THREADED 1
+
+#define ASSERT_DPC(Object)                                                   \
+    ASSERT(((Object)->Type == 0) ||                                          \
+           ((Object)->Type == DpcObject) ||                                  \
+           ((Object)->Type == ThreadedDpcObject))
+
+typedef struct _KDPC
+{
+    UCHAR Type;
+    UCHAR Importance;
+    USHORT Number;
+    LIST_ENTRY DpcListEntry;
+    PKDEFERRED_ROUTINE DeferredRoutine;
+    PVOID DeferredContext;
+    PVOID SystemArgument1;
+    PVOID SystemArgument2;
+    volatile PVOID  DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
 typedef PVOID PKIPI_CONTEXT;
@@ -1158,25 +1177,39 @@ typedef struct _EX_RUNDOWN_REF
     };
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
+#define ASSERT_GATE(object) \
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
+          (((object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
+
 typedef struct _KGATE
 {
     DISPATCHER_HEADER Header;
 } KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
 
+#define GM_LOCK_BIT          0x1
+#define GM_LOCK_BIT_V        0x0
+#define GM_LOCK_WAITER_WOKEN 0x2
+#define GM_LOCK_WAITER_INC   0x4
+
 typedef struct _KGUARDED_MUTEX
 {
-    LONG Count;
-    struct _KTHREAD* Owner;
+    volatile LONG Count;
+    PKTHREAD Owner;
     ULONG Contention;
     KGATE Gate;
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             SHORT KernelApcDisable;
             SHORT SpecialApcDisable;
         };
         ULONG CombinedApcDisable;
     };
-} KGUARDED_MUTEX, *PKGUARDED_MUTEX, *RESTRICTED_POINTER PRKGUARDED_MUTEX;
+} KGUARDED_MUTEX, *PKGUARDED_MUTEX;
+
+#define TIMER_TABLE_SIZE 512
+#define TIMER_TABLE_SHIFT 9
 
 typedef struct _KTIMER {
   DISPATCHER_HEADER  Header;
@@ -1185,6 +1218,10 @@ typedef struct _KTIMER {
   struct _KDPC  *Dpc;
   LONG  Period;
 } KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
+
+#define ASSERT_TIMER(E) \
+    ASSERT(((E)->Header.Type == TimerNotificationObject) || \
+           ((E)->Header.Type == TimerSynchronizationObject))
 
 typedef struct _KMUTANT {
   DISPATCHER_HEADER  Header;
@@ -1695,7 +1732,7 @@ typedef struct _CM_SERIAL_DEVICE_DATA {
   ULONG  BaudClock;
 } CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
 
-typedef struct _VM_COUNTERS 
+typedef struct _VM_COUNTERS
 {
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
@@ -1710,7 +1747,7 @@ typedef struct _VM_COUNTERS
     SIZE_T PeakPagefileUsage;
 } VM_COUNTERS, *PVM_COUNTERS;
 
-typedef struct _VM_COUNTERS_EX 
+typedef struct _VM_COUNTERS_EX
 {
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
@@ -1849,6 +1886,14 @@ typedef struct _IO_ERROR_LOG_MESSAGE {
 #define IO_ERROR_LOG_MESSAGE_HEADER_LENGTH (sizeof(IO_ERROR_LOG_MESSAGE) - \
                                             sizeof(IO_ERROR_LOG_PACKET) + \
                                             (sizeof(WCHAR) * 40))
+#define ERROR_LOG_MESSAGE_LIMIT_SIZE                                          \
+    (ERROR_LOG_LIMIT_SIZE + IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
+#define IO_ERROR_LOG_MESSAGE_LENGTH                                           \
+    ((PORT_MAXIMUM_MESSAGE_LENGTH > ERROR_LOG_MESSAGE_LIMIT_SIZE) ?           \
+        ERROR_LOG_MESSAGE_LIMIT_SIZE :                                        \
+        PORT_MAXIMUM_MESSAGE_LENGTH)
+#define ERROR_LOG_MAXIMUM_SIZE (IO_ERROR_LOG_MESSAGE_LENGTH -                 \
+                                IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
 
 typedef struct _CONTROLLER_OBJECT {
   CSHORT  Type;
@@ -2607,7 +2652,7 @@ typedef NTSTATUS
 typedef NTSTATUS
 (DDKAPI *pHalInitPnpDriver)(
   VOID);
- 
+
 typedef NTSTATUS
 (DDKAPI *pHalInitPowerManagement)(
   IN PPM_DISPATCH_TABLE  PmDriverDispatchTable,
@@ -2618,7 +2663,7 @@ typedef struct _DMA_ADAPTER*
   IN PVOID  Context,
   IN struct _DEVICE_DESCRIPTION  *DeviceDescriptor,
   OUT PULONG  NumberOfMapRegisters);
-		     
+
 typedef NTSTATUS
 (DDKAPI *pHalGetInterruptTranslator)(
   IN INTERFACE_TYPE  ParentInterfaceType,
@@ -2785,7 +2830,7 @@ ULONG
 typedef BOOLEAN
 (DDKAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
   ULONG Columns, ULONG Rows);
-           
+
 typedef struct {
   ULONG  Version;
   pHalQuerySystemInformation  HalQuerySystemInformation;
@@ -3433,7 +3478,7 @@ typedef struct _IO_SECURITY_CONTEXT {
 #define IO_TYPE_TIMER                   9
 #define IO_TYPE_VPB                     10
 #define IO_TYPE_ERROR_LOG               11
-#define IO_TYPE_ERROR_MESSAGE	        12
+#define IO_TYPE_ERROR_MESSAGE           12
 #define IO_TYPE_DEVICE_OBJECT_EXTENSION 13
 
 #define IO_TYPE_CSQ_IRP_CONTEXT 1
@@ -4848,7 +4893,7 @@ typedef struct _REG_SET_VALUE_KEY_INFORMATION
     ULONG DataSize;
 } REG_SET_VALUE_KEY_INFORMATION, *PREG_SET_VALUE_KEY_INFORMATION;
 
-typedef struct _REG_DELETE_VALUE_KEY_INFORMATION 
+typedef struct _REG_DELETE_VALUE_KEY_INFORMATION
 {
     PVOID Object;
     PUNICODE_STRING ValueName;
@@ -4872,7 +4917,7 @@ typedef struct _REG_ENUMERATE_KEY_INFORMATION
     PULONG ResultLength;
 } REG_ENUMERATE_KEY_INFORMATION, *PREG_ENUMERATE_KEY_INFORMATION;
 
-typedef struct _REG_ENUMERATE_VALUE_KEY_INFORMATION 
+typedef struct _REG_ENUMERATE_VALUE_KEY_INFORMATION
 {
     PVOID Object;
     ULONG Index;
@@ -4891,7 +4936,7 @@ typedef struct _REG_QUERY_KEY_INFORMATION
     PULONG ResultLength;
 } REG_QUERY_KEY_INFORMATION, *PREG_QUERY_KEY_INFORMATION;
 
-typedef struct _REG_QUERY_VALUE_KEY_INFORMATION 
+typedef struct _REG_QUERY_VALUE_KEY_INFORMATION
 {
     PVOID Object;
     PUNICODE_STRING ValueName;
@@ -4911,31 +4956,31 @@ typedef struct _REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION
     PULONG RequiredBufferLength;
 } REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION, *PREG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION;
 
-typedef struct _REG_PRE_CREATE_KEY_INFORMATION 
+typedef struct _REG_PRE_CREATE_KEY_INFORMATION
 {
     PUNICODE_STRING CompleteName;
 } REG_PRE_CREATE_KEY_INFORMATION, *PREG_PRE_CREATE_KEY_INFORMATION;
 
-typedef struct _REG_POST_CREATE_KEY_INFORMATION 
+typedef struct _REG_POST_CREATE_KEY_INFORMATION
 {
     PUNICODE_STRING CompleteName;
     PVOID Object;
     NTSTATUS Status;
 } REG_POST_CREATE_KEY_INFORMATION, *PREG_POST_CREATE_KEY_INFORMATION;
 
-typedef struct _REG_PRE_OPEN_KEY_INFORMATION 
+typedef struct _REG_PRE_OPEN_KEY_INFORMATION
 {
     PUNICODE_STRING  CompleteName;
 } REG_PRE_OPEN_KEY_INFORMATION, *PREG_PRE_OPEN_KEY_INFORMATION;
 
-typedef struct _REG_POST_OPEN_KEY_INFORMATION 
+typedef struct _REG_POST_OPEN_KEY_INFORMATION
 {
     PUNICODE_STRING CompleteName;
     PVOID Object;
     NTSTATUS Status;
 } REG_POST_OPEN_KEY_INFORMATION, *PREG_POST_OPEN_KEY_INFORMATION;
 
-typedef struct _REG_POST_OPERATION_INFORMATION 
+typedef struct _REG_POST_OPERATION_INFORMATION
 {
     PVOID Object;
     NTSTATUS Status;
@@ -5183,19 +5228,19 @@ NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedIncrement(
-  IN PLONG  VOLATILE  Addend);
+  IN OUT LONG volatile *Addend);
 
 NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedDecrement(
-  IN PLONG  VOLATILE  Addend);
+  IN OUT LONG volatile *Addend);
 
 NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedCompareExchange(
-  IN OUT PLONG  VOLATILE  Destination,
+  IN OUT LONG volatile *Destination,
   IN LONG  Exchange,
   IN LONG  Comparand);
 
@@ -5203,14 +5248,14 @@ NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedExchange(
-  IN OUT PLONG  VOLATILE  Target,
+  IN OUT LONG volatile *Destination,
   IN LONG Value);
 
 NTOSAPI
 LONG
 DDKFASTAPI
 InterlockedExchangeAdd(
-  IN OUT PLONG VOLATILE  Addend,
+  IN OUT LONG volatile *Addend,
   IN LONG  Value);
 
 /*
@@ -5231,6 +5276,10 @@ InterlockedExchangeAdd(
  */
 #define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
   ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
+
+#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
+#define InterlockedIncrementSizeT(a) InterlockedIncrement((LONG *)a)
+#define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
 
 #endif /* !__INTERLOCKED_DECLARED */
 
@@ -5396,6 +5445,7 @@ InterlockedExchangeAdd(
  */
 #define InterlockedCompareExchangePointer(Destination, Exchange, Comparand) \
   ((PVOID) InterlockedCompareExchange((PLONG) Destination, (LONG) Exchange, (LONG) Comparand))
+#define InterlockedDecrementSizeT(a) InterlockedDecrement((LONG *)a)
 
 #endif /* !__INTERLOCKED_DECLARED */
 
@@ -6215,7 +6265,7 @@ RtlQueryRegistryValues(
   IN PVOID  Context,
   IN PVOID  Environment  OPTIONAL);
 
-  
+
 #define LONG_SIZE (sizeof(LONG))
 #define LONG_MASK (LONG_SIZE - 1)
 
@@ -6479,48 +6529,52 @@ RtlxUnicodeStringToAnsiSize(
 
 /* Guarded Mutex routines */
 
-VOID 
+VOID
 FASTCALL
 KeAcquireGuardedMutex(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
 VOID
 FASTCALL
 KeAcquireGuardedMutexUnsafe(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
-
-VOID 
-STDCALL
-KeEnterGuardedRegion(VOID);
 
 VOID
-STDCALL
-KeLeaveGuardedRegion(VOID);
+NTAPI
+KeEnterGuardedRegion(
+    VOID
+);
 
-VOID 
+VOID
+NTAPI
+KeLeaveGuardedRegion(
+    VOID
+);
+
+VOID
 FASTCALL
 KeInitializeGuardedMutex(
-    PKGUARDED_MUTEX GuardedMutex
+    OUT PKGUARDED_MUTEX GuardedMutex
 );
 
-VOID 
+VOID
 FASTCALL
 KeReleaseGuardedMutexUnsafe(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
-VOID 
+VOID
 FASTCALL
 KeReleaseGuardedMutex(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
-BOOL 
+BOOLEAN
 FASTCALL
 KeTryToAcquireGuardedMutex(
-    PKGUARDED_MUTEX GuardedMutex
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
 /* Fast Mutex */
@@ -9138,7 +9192,7 @@ KIRQL
 DDKAPI
 KeRaiseIrqlToDpcLevel(
   VOID);
-  
+
 NTHALAPI
 KIRQL
 DDKAPI
@@ -10626,7 +10680,7 @@ DbgBreakPointWithStatus(
 ULONG
 __cdecl
 DbgPrint(
-  IN PCH  Format,
+  IN PCCH  Format,
   IN ...);
 
 ULONG
@@ -10634,7 +10688,7 @@ __cdecl
 DbgPrintEx(
   IN ULONG  ComponentId,
   IN ULONG  Level,
-  IN PCH  Format,
+  IN PCCH  Format,
   IN ...);
 
 NTOSAPI

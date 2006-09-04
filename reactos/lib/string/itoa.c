@@ -83,6 +83,8 @@ _itoa(int value, char *string, int radix)
   return _ltoa(value, string, radix);
 }
 
+extern void ofw_print_string( const char *str );
+extern void ofw_print_number( int x );
 
 /*
  * @implemented

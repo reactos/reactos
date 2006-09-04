@@ -21,10 +21,11 @@
 #include "of.h"
 #include "mmu.h"
 
-#define TOTAL_HEAP_NEEDED (16 * 1024 * 1024) /* 16 megs */
+#define TOTAL_HEAP_NEEDED (32 * 1024 * 1024) /* 32 megs */
 
-extern void BootMain( char * );
-extern char *GetFreeLoaderVersionString();
+extern void BootMain( LPSTR CmdLine );
+extern PCHAR GetFreeLoaderVersionString();
+extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd, *mem_base = 0;
 static int chosen_package, stdin_handle, part_handle = -1;

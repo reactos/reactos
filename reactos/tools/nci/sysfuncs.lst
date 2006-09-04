@@ -42,6 +42,7 @@ NtCreateThread 8
 NtCreateTimer 4
 NtCreateToken 13
 NtCreateWaitablePort 5
+NtDebugActiveProcess 2
 NtDebugContinue 3
 NtDelayExecution 2
 NtDeleteAtom 1
@@ -162,6 +163,7 @@ NtRegisterThreadTerminatePort 1
 NtReleaseMutant 2
 NtReleaseSemaphore 3
 NtRemoveIoCompletion 5
+NtRemoveProcessDebug 2
 NtReplaceKey 3
 NtReplyPort 2
 NtReplyWaitReceivePort 4
@@ -188,6 +190,7 @@ NtSetEaFile 4
 NtSetEvent 2
 NtSetHighEventPair 1
 NtSetHighWaitLowEventPair 1
+NtSetInformationDebugObject 5
 NtSetInformationFile 5
 NtSetInformationKey 4
 NtSetInformationJobObject 4

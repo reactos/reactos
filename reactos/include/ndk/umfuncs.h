@@ -89,6 +89,12 @@ CsrFreeCaptureBuffer(
     struct _CSR_CAPTURE_BUFFER *CaptureBuffer
 );
 
+HANDLE
+NTAPI
+CsrGetProcessId(
+    VOID
+);
+
 NTSTATUS
 NTAPI
 CsrNewThread(VOID);
@@ -141,6 +147,18 @@ DbgUiContinue(
 
 NTSTATUS
 NTAPI
+DbgUiDebugActiveProcess(
+    IN HANDLE Process
+);
+
+NTSTATUS
+NTAPI
+DbgUiStopDebugging(
+    IN HANDLE Process
+);
+
+NTSTATUS
+NTAPI
 DbgUiWaitStateChange(
     IN PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
     IN PLARGE_INTEGER TimeOut
@@ -156,6 +174,12 @@ NTSTATUS
 NTAPI
 DbgUiIssueRemoteBreakin(
     IN HANDLE Process
+);
+
+HANDLE
+NTAPI
+DbgUiGetThreadDebugObject(
+    VOID
 );
 
 //

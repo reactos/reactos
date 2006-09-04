@@ -17,11 +17,62 @@ extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
 extern ULONG NtOSCSDVersion;
 extern ULONG NtGlobalFlag;
+extern MM_SYSTEM_SIZE MmSystemSize;
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 
 /* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+NTAPI
+MmSetMemoryPriorityProcess(IN PEPROCESS Process,
+                           IN UCHAR MemoryPriority)
+{
+    UCHAR OldPriority;
+
+    /* Check if we have less then 16MB of Physical Memory */
+    if ((MmSystemSize == MmSmallSystem) &&
+        (MmStats.NrTotalPages < ((15 * 1024 * 1024) / PAGE_SIZE)))
+    {
+        /* Always use background priority */
+        MemoryPriority = 0;
+    }
+
+    /* Save the old priority and update it */
+    OldPriority = Process->Vm.Flags.MemoryPriority;
+    Process->Vm.Flags.MemoryPriority = MemoryPriority;
+
+    /* Return the old priority */
+    return OldPriority;
+}
+
+LCID
+NTAPI
+MmGetSessionLocaleId(VOID)
+{
+    PEPROCESS Process;
+    PAGED_CODE();
+
+    /* Get the current process */
+    Process = PsGetCurrentProcess();
+
+    /* Check if it's the Session Leader */
+    if (Process->Vm.Flags.SessionLeader)
+    {
+        /* Make sure it has a valid Session */
+        if (Process->Session)
+        {
+            /* Get the Locale ID */
+#if ROS_HAS_SESSIONS
+            return ((PMM_SESSION_SPACE)Process->Session)->LocaleId;
+#endif
+        }
+    }
+
+    /* Not a session leader, return the default */
+    return PsDefaultThreadLocaleId;
+}
 
 PVOID
 STDCALL
@@ -421,7 +472,8 @@ MmCreateTeb(PEPROCESS Process,
 NTSTATUS
 STDCALL
 MmCreateProcessAddressSpace(IN PEPROCESS Process,
-                            IN PROS_SECTION_OBJECT Section OPTIONAL)
+                            IN PROS_SECTION_OBJECT Section OPTIONAL,
+                            IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
 {
     NTSTATUS Status;
     PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
@@ -489,6 +541,9 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         goto exit;
      }
 
+    /* The process now has an address space */
+    Process->HasAddressSpace = TRUE;
+
     /* Check if there's a Section Object */
     if (Section)
     {
@@ -525,27 +580,37 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         /* Determine the image file name and save it to EPROCESS */
         DPRINT("Getting Image name\n");
         FileName = Section->FileObject->FileName;
-        szSrc = (PWCHAR)(FileName.Buffer + (FileName.Length / sizeof(WCHAR)) - 1);
-
-        while(szSrc >= FileName.Buffer)
+        szSrc = (PWCHAR)(FileName.Buffer + FileName.Length);
+        while (szSrc >= FileName.Buffer)
         {
-            if(*szSrc == L'\\')
+            /* Make sure this isn't a backslash */
+            if (*--szSrc == OBJ_NAME_PATH_SEPARATOR)
             {
+                /* If so, stop it here */
                 szSrc++;
                 break;
             }
             else
             {
-                szSrc--;
+                /* Otherwise, keep going */
                 lnFName++;
             }
         }
 
         /* Copy the to the process and truncate it to 15 characters if necessary */
-        DPRINT("Copying and truncating\n");
         szDest = Process->ImageFileName;
         lnFName = min(lnFName, sizeof(Process->ImageFileName) - 1);
-        while(lnFName-- > 0) *(szDest++) = (UCHAR)*(szSrc++);
+        while (lnFName--) *szDest++ = (UCHAR)*szSrc++;
+        *szDest = UNICODE_NULL;
+
+        /* Check if caller wants an audit name */
+        if (AuditName)
+        {
+            /* Setup the audit name */
+            SeInitializeProcessAuditName(Section->FileObject,
+                                         FALSE,
+                                         AuditName);
+        }
 
         /* Return status to caller */
         return Status;
@@ -558,4 +623,65 @@ exit:
 
     /* Return status to caller */
     return Status;
+}
+
+VOID
+NTAPI
+MmCleanProcessAddressSpace(IN PEPROCESS Process)
+{
+    /* FIXME: Add part of MmDeleteProcessAddressSpace here */
+}
+
+NTSTATUS 
+NTAPI
+MmDeleteProcessAddressSpace(PEPROCESS Process)
+{
+   PVOID Address;
+   PMEMORY_AREA MemoryArea;
+
+   DPRINT("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
+          Process->ImageFileName);
+
+   MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+
+   while ((MemoryArea = ((PMADDRESS_SPACE)&Process->VadRoot)->MemoryAreaRoot) != NULL)
+   {
+      switch (MemoryArea->Type)
+      {
+         case MEMORY_AREA_SECTION_VIEW:
+             Address = (PVOID)MemoryArea->StartingAddress;
+             MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+             MmUnmapViewOfSection(Process, Address);
+             MmLockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+             break;
+
+         case MEMORY_AREA_VIRTUAL_MEMORY:
+         case MEMORY_AREA_PEB_OR_TEB:
+             MmFreeVirtualMemory(Process, MemoryArea);
+             break;
+
+         case MEMORY_AREA_SHARED_DATA:
+         case MEMORY_AREA_NO_ACCESS:
+             MmFreeMemoryArea((PMADDRESS_SPACE)&Process->VadRoot,
+                              MemoryArea,
+                              NULL,
+                              NULL);
+             break;
+
+         case MEMORY_AREA_MDL_MAPPING:
+            KEBUGCHECK(PROCESS_HAS_LOCKED_PAGES);
+            break;
+
+         default:
+            KEBUGCHECK(0);
+      }
+   }
+
+   Mmi386ReleaseMmInfo(Process);
+
+   MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+   MmDestroyAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
+
+   DPRINT("Finished MmReleaseMmInfo()\n");
+   return(STATUS_SUCCESS);
 }

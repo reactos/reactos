@@ -77,7 +77,6 @@ PCACHE_BLOCK CacheInternalFindBlock(PCACHE_DRIVE CacheDrive, ULONG BlockNumber)
 				// Increment the blocks access count
 				//
 				CacheBlock->AccessCount++;
-
 				return CacheBlock;
 			}
 
@@ -164,6 +163,7 @@ BOOLEAN CacheInternalFreeBlock(PCACHE_DRIVE CacheDrive)
 	// so just return
 	if (CacheBlockToFree == NULL)
 	{
+	        printf("[cached] all cache blocks locked\n");
 		return FALSE;
 	}
 
@@ -207,6 +207,7 @@ VOID CacheInternalCheckCacheSizeLimits(PCACHE_DRIVE CacheDrive)
 
 VOID CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive)
 {
+#if 0
 	PCACHE_BLOCK	CacheBlock;
 
 	DbgPrint((DPRINT_CACHE, "Dumping block list for BIOS drive 0x%x.\n", CacheDrive->DriveNumber));
@@ -233,6 +234,7 @@ VOID CacheInternalDumpBlockList(PCACHE_DRIVE CacheDrive)
 
 		CacheBlock = (PCACHE_BLOCK)RtlListGetNext((PLIST_ITEM)CacheBlock);
 	}
+#endif
 }
 
 VOID CacheInternalOptimizeBlockList(PCACHE_DRIVE CacheDrive, PCACHE_BLOCK CacheBlock)

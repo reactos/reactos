@@ -97,9 +97,9 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PS_INHERIT_HANDLES                      4
 #define PS_UNKNOWN_VALUE                        8
 #define PS_ALL_FLAGS                            (PS_REQUEST_BREAKAWAY | \
-                                                 PS_NO_DEBUG_INHERIT |  \
-                                                 PS_INHERIT_HANDLES |   \
-                                                 PS_UNKNOWN_VALUE)      
+                                                 PS_NO_DEBUG_INHERIT  | \
+                                                 PS_INHERIT_HANDLES   | \
+                                                 PS_UNKNOWN_VALUE)
 
 //
 // Process base priorities
@@ -107,6 +107,12 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PROCESS_PRIORITY_IDLE                   3
 #define PROCESS_PRIORITY_NORMAL                 8
 #define PROCESS_PRIORITY_NORMAL_FOREGROUND      9
+
+//
+// Process Priority Separation Values (OR)
+//
+#define PSP_VARIABLE_QUANTUMS                   4
+#define PSP_LONG_QUANTUMS                       16
 
 //
 // Number of TLS expansion slots
@@ -139,7 +145,6 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
                                                  0xFFF)
 #endif
 
-
 //
 // Job Access Types
 //
@@ -151,7 +156,66 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define JOB_OBJECT_ALL_ACCESS                   (STANDARD_RIGHTS_REQUIRED | \
                                                  SYNCHRONIZE | \
                                                  31)
+
+//
+// Cross Thread Flags
+//
+#define CT_TERMINATED_BIT                       0x1
+#define CT_DEAD_THREAD_BIT                      0x2
+#define CT_HIDE_FROM_DEBUGGER_BIT               0x4
+#define CT_ACTIVE_IMPERSONATION_INFO_BIT        0x8
+#define CT_SYSTEM_THREAD_BIT                    0x10
+#define CT_HARD_ERRORS_ARE_DISABLED_BIT         0x20
+#define CT_BREAK_ON_TERMINATION_BIT             0x40
+#define CT_SKIP_CREATION_MSG_BIT                0x80
+#define CT_SKIP_TERMINATION_MSG_BIT             0x100
+
+//
+// Same Thread Passive Flags
+//
+#define STP_ACTIVE_EX_WORKER_BIT                0x1
+#define STP_EX_WORKER_CAN_WAIT_USER_BIT         0x2
+#define STP_MEMORY_MAKER_BIT                    0x4
+#define STP_KEYED_EVENT_IN_USE_BIT              0x8
+
+//
+// Same Thread APC Flags
+//
+#define STA_LPC_RECEIVED_MSG_ID_VALID_BIT       0x1
+#define STA_LPC_EXIT_THREAD_CALLED_BIT          0x2
+#define STA_ADDRESS_SPACE_OWNER_BIT             0x4
 #endif
+
+//
+// Process Flags
+//
+#define PSF_CREATE_REPORTED_BIT                 0x1
+#define PSF_NO_DEBUG_INHERIT_BIT                0x2
+#define PSF_PROCESS_EXITING_BIT                 0x4
+#define PSF_PROCESS_DELETE_BIT                  0x8
+#define PSF_WOW64_SPLIT_PAGES_BIT               0x10
+#define PSF_VM_DELETED_BIT                      0x20
+#define PSF_OUTSWAP_ENABLED_BIT                 0x40
+#define PSF_OUTSWAPPED_BIT                      0x80
+#define PSF_FORK_FAILED_BIT                     0x100
+#define PSF_WOW64_VA_SPACE_4GB_BIT              0x200
+#define PSF_ADDRESS_SPACE_INITIALIZED_BIT       0x400
+#define PSF_SET_TIMER_RESOLUTION_BIT            0x1000
+#define PSF_BREAK_ON_TERMINATION_BIT            0x2000
+#define PSF_SESSION_CREATION_UNDERWAY_BIT       0x4000
+#define PSF_WRITE_WATCH_BIT                     0x8000
+#define PSF_PROCESS_IN_SESSION_BIT              0x10000
+#define PSF_OVERRIDE_ADDRESS_SPACE_BIT          0x20000
+#define PSF_HAS_ADDRESS_SPACE_BIT               0x40000
+#define PSF_LAUNCH_PREFETCHED_BIT               0x80000
+#define PSF_INJECT_INPAGE_ERRORS_BIT            0x100000
+#define PSF_VM_TOP_DOWN_BIT                     0x200000
+#define PSF_IMAGE_NOTIFY_DONE_BIT               0x400000
+#define PSF_PDE_UPDATE_NEEDED_BIT               0x800000
+#define PSF_VDM_ALLOWED_BIT                     0x1000000
+#define PSF_SWAP_ALLOWED_BIT                    0x2000000
+#define PSF_CREATE_FAILED_BIT                   0x4000000
+#define PSF_DEFAULT_IO_PRIORITY_BIT             0x8000000
 
 #ifdef NTOS_MODE_USER
 //
@@ -245,6 +309,13 @@ typedef enum _THREADINFOCLASS
 } THREADINFOCLASS;
 
 #else
+
+typedef enum _PSPROCESSPRIORITYMODE
+{
+    PsProcessPriorityForeground,
+    PsProcessPriorityBackground,
+    PsProcessPrioritySpinning
+} PSPROCESSPRIORITYMODE;
 
 typedef enum _JOBOBJECTINFOCLASS
 {
@@ -422,6 +493,15 @@ NTSTATUS
     struct _EPROCESS *Process,
     PVOID Callback,
     PVOID Context
+);
+
+//
+// Lego Callback
+//
+typedef
+VOID
+(NTAPI *PLEGO_NOTIFY_ROUTINE)(
+    IN PKTHREAD Thread
 );
 
 #endif
@@ -700,7 +780,7 @@ typedef struct _TEB
     ULONG SoftPatchPtr1;
     ULONG SoftPatchPtr2;
     PVOID *TlsExpansionSlots;
-    ULONG ImpersionationLocale;
+    ULONG ImpersonationLocale;
     ULONG IsImpersonating;
     PVOID NlsCache;
     PVOID pShimData;

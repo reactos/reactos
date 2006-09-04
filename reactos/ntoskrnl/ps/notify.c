@@ -1,42 +1,36 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ps/notify.c
- * PURPOSE:         Notifications
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ * PURPOSE:         Process Manager: Callbacks to Registered Clients (Drivers)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Thomas Weidenmueller (w3seek@reactos.org)
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBAL *******************************************************************/
+/* GLOBALS *******************************************************************/
 
-#define MAX_THREAD_NOTIFY_ROUTINE_COUNT    8
+ULONG PspThreadNotifyRoutineCount;
+PCREATE_THREAD_NOTIFY_ROUTINE
+PspThreadNotifyRoutine[PSP_MAX_CREATE_THREAD_NOTIFY];
+PCREATE_PROCESS_NOTIFY_ROUTINE
+PspProcessNotifyRoutine[PSP_MAX_CREATE_PROCESS_NOTIFY];
+PLOAD_IMAGE_NOTIFY_ROUTINE
+PspLoadImageNotifyRoutine[PSP_MAX_LOAD_IMAGE_NOTIFY];
+PLEGO_NOTIFY_ROUTINE PspLegoNotifyRoutine;
 
-static ULONG PspThreadNotifyRoutineCount = 0;
-static PCREATE_THREAD_NOTIFY_ROUTINE
-PspThreadNotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
-
-static PCREATE_PROCESS_NOTIFY_ROUTINE
-PspProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
-
-static PLOAD_IMAGE_NOTIFY_ROUTINE
-PspLoadImageNotifyRoutine[MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT];
-
-typedef VOID (STDCALL *PLEGO_NOTIFY_ROUTINE)(IN PKTHREAD Thread);
-static PLEGO_NOTIFY_ROUTINE PspLegoNotifyRoutine;
-
-/* FUNCTIONS ***************************************************************/
+/* PUBLIC FUNCTIONS **********************************************************/
 
 /*
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
                                 IN BOOLEAN Remove)
 {
@@ -46,24 +40,24 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
     if (Remove)
     {
         /* Loop the routines */
-        for(i=0;i<MAX_PROCESS_NOTIFY_ROUTINE_COUNT;i++)
+        for(i = 0; i < PSP_MAX_CREATE_PROCESS_NOTIFY; i++)
         {
             /* Check for a match */
-            if ((PVOID)PspProcessNotifyRoutine[i] == (PVOID)NotifyRoutine)
+            if (PspProcessNotifyRoutine[i] == NotifyRoutine)
             {
                 /* Remove and return */
                 PspProcessNotifyRoutine[i] = NULL;
-                return(STATUS_SUCCESS);
+                return STATUS_SUCCESS;
             }
         }
     }
     else
     {
         /* Loop the routines */
-        for(i=0;i<MAX_PROCESS_NOTIFY_ROUTINE_COUNT;i++)
+        for(i = 0; i < PSP_MAX_CREATE_PROCESS_NOTIFY; i++)
         {
             /* Find an empty one */
-            if (PspProcessNotifyRoutine[i] == NULL)
+            if (!PspProcessNotifyRoutine[i])
             {
                 /* Add it */
                 PspProcessNotifyRoutine[i] = NotifyRoutine;
@@ -73,14 +67,14 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
     }
 
     /* Nothing found */
-    return STATUS_INVALID_PARAMETER;
+    return Remove ? STATUS_PROCEDURE_NOT_FOUND : STATUS_INVALID_PARAMETER;
 }
 
 /*
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 PsSetLegoNotifyRoutine(PVOID LegoNotifyRoutine)
 {
     /* Set the System-Wide Lego Routine */
@@ -94,20 +88,20 @@ PsSetLegoNotifyRoutine(PVOID LegoNotifyRoutine)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 PsRemoveLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
 {
     ULONG i;
 
     /* Loop the routines */
-    for(i=0;i<MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT;i++)
+    for(i = 0; i < PSP_MAX_LOAD_IMAGE_NOTIFY; i++)
     {
         /* Check for a match */
-        if ((PVOID)PspLoadImageNotifyRoutine[i] == (PVOID)NotifyRoutine)
+        if (PspLoadImageNotifyRoutine[i] == NotifyRoutine)
         {
             /* Remove and return */
             PspLoadImageNotifyRoutine[i] = NULL;
-            return(STATUS_SUCCESS);
+            return STATUS_SUCCESS;
         }
     }
 
@@ -119,16 +113,16 @@ PsRemoveLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 PsSetLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
 {
     ULONG i;
 
     /* Loop the routines */
-    for (i = 0; i < MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT; i++)
+    for (i = 0; i < PSP_MAX_LOAD_IMAGE_NOTIFY; i++)
     {
         /* Find an empty one */
-        if (PspLoadImageNotifyRoutine[i] == NULL)
+        if (!PspLoadImageNotifyRoutine[i])
         {
             /* Add it */
             PspLoadImageNotifyRoutine[i] = NotifyRoutine;
@@ -144,20 +138,20 @@ PsSetLoadImageNotifyRoutine(IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 PsRemoveCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {
     ULONG i;
 
     /* Loop the routines */
-    for(i=0;i<MAX_THREAD_NOTIFY_ROUTINE_COUNT;i++)
+    for(i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
     {
         /* Check for a match */
-        if ((PVOID)PspThreadNotifyRoutine[i] == (PVOID)NotifyRoutine)
+        if (PspThreadNotifyRoutine[i] == NotifyRoutine)
         {
             /* Remove and return */
             PspThreadNotifyRoutine[i] = NULL;
-            return(STATUS_SUCCESS);
+            return STATUS_SUCCESS;
         }
     }
 
@@ -169,75 +163,19 @@ PsRemoveCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {
-    if (PspThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
+    /* Make sure we didn't register too many */
+    if (PspThreadNotifyRoutineCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
     {
-        return(STATUS_INSUFFICIENT_RESOURCES);
+        /* Fail */
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    PspThreadNotifyRoutine[PspThreadNotifyRoutineCount] = NotifyRoutine;
-    PspThreadNotifyRoutineCount++;
-
-    return(STATUS_SUCCESS);
-}
-
-VOID
-STDCALL
-PspRunCreateThreadNotifyRoutines(PETHREAD CurrentThread,
-                                 BOOLEAN Create)
-{
-    ULONG i;
-    CLIENT_ID Cid = CurrentThread->Cid;
-
-    for (i = 0; i < PspThreadNotifyRoutineCount; i++)
-    {
-        PspThreadNotifyRoutine[i](Cid.UniqueProcess, Cid.UniqueThread, Create);
-    }
-}
-
-VOID
-STDCALL
-PspRunCreateProcessNotifyRoutines(PEPROCESS CurrentProcess,
-                                  BOOLEAN Create)
-{
-    ULONG i;
-    HANDLE ProcessId = (HANDLE)CurrentProcess->UniqueProcessId;
-    HANDLE ParentId = CurrentProcess->InheritedFromUniqueProcessId;
-
-    for(i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++i)
-    {
-        if(PspProcessNotifyRoutine[i])
-        {
-            PspProcessNotifyRoutine[i](ParentId, ProcessId, Create);
-        }
-    }
-}
-
-VOID
-STDCALL
-PspRunLoadImageNotifyRoutines(PUNICODE_STRING FullImageName,
-                              HANDLE ProcessId,
-                              PIMAGE_INFO ImageInfo)
-{
-    ULONG i;
-
-    for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++ i)
-    {
-        if (PspLoadImageNotifyRoutine[i])
-        {
-            PspLoadImageNotifyRoutine[i](FullImageName, ProcessId, ImageInfo);
-        }
-    }
-}
-
-VOID
-STDCALL
-PspRunLegoRoutine(IN PKTHREAD Thread)
-{
-    /* Call it */
-    if (PspLegoNotifyRoutine) (PspLegoNotifyRoutine)(Thread);
+    /* Register this one */
+    PspThreadNotifyRoutine[PspThreadNotifyRoutineCount++] = NotifyRoutine;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

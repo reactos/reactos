@@ -150,6 +150,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			if ( !strncmp(incs[i]->directory.c_str(), "include\\ddk", 11 ) ||
 			     !strncmp(incs[i]->directory.c_str(), "include\\crt", 11 ) ||
 			     !strncmp(incs[i]->directory.c_str(), "include\\GL", 10 ) ||
+				 !strncmp(incs[i]->directory.c_str(), "include\\ddk", 11 ) ||
+				 !strncmp(incs[i]->directory.c_str(), "include\\psdk", 12 ) ||
 			     !strncmp(incs[i]->directory.c_str(), "include\\reactos\\wine", 20 ) )
 			{
 				includes_wine.push_back ( path );
@@ -241,6 +243,14 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", exe ? 1 : dll ? 2 : lib ? 4 : -1 );
 		fprintf ( OUT, "\t\t\tCharacterSet=\"2\">\r\n" );
 
+		if ( module_type == ".cpl" && configuration.VSProjectVersion == "8.00")
+		{
+			fprintf ( OUT, "\t\t\t<DebugSettings\r\n" );
+			fprintf ( OUT, "\t\t\t\tCommand=\"rundll32.exe\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tCommandArguments=\" shell32, Control_RunDLL $(TargetPath),@\"\r\n" );
+			fprintf ( OUT, "\t\t\t/>" );
+		}
+
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tOptimization=\"%d\"\r\n", release ? 2 : 0 );
@@ -321,7 +331,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
 		fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"%s\"\r\n", sys ? 0 : (debug ? "3" : "0") );
-		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"%d\"\r\n", debug? 1: 5 );	// 1=/MTd 5=/MT
+		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"%d\"\r\n", debug ? 1 : 5 );	// 1=/MTd 5=/MT
 		fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"%s\"\r\n", sys ? "FALSE" : (debug ? "TRUE" : "FALSE" ));
 		fprintf ( OUT, "\t\t\t\tEnableFunctionLevelLinking=\"%s\"\r\n", debug ? "TRUE" : "FALSE" );
 		
@@ -369,7 +379,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			fprintf ( OUT, "\t\t\t<Tool\r\n" );
 			fprintf ( OUT, "\t\t\t\tName=\"VCLinkerTool\"\r\n" );
+			if (module.GetEntryPoint(false) == "0")
+				fprintf ( OUT, "AdditionalOptions=\"/noentry\"" );
 
+			if (module.importLibrary != NULL)
+				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", module.importLibrary->definition.c_str());
 			fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
 			for ( i = 0; i < libraries.size(); i++ )
 			{
@@ -440,7 +454,17 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 			else if ( dll )
 			{
-				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false) == "" ? "DllMain" : module.GetEntryPoint(false).c_str ());
+				if (module.GetEntryPoint(false) == "0")
+					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
+				else
+				{	
+					// get rid of DllMain@12 because MSVC needs to link to _DllMainCRTStartup@12
+					// when using CRT
+					if (module.GetEntryPoint(false) == "DllMain@12") 
+						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
+					else
+						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false).c_str ());
+				}
 				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
 			}
 			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
@@ -477,6 +501,12 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCMIDLTool\"/>\r\n" );
+		fprintf ( OUT, "\t\t\t<Tool\r\n" );
+		if (configuration.VSProjectVersion == "8.00")
+		{
+			fprintf ( OUT, "\t\t\t\tName=\"VCManifestTool\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tEmbedManifest=\"false\"/>\r\n" );
+		}
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCPostBuildEventTool\"/>\r\n" );
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );

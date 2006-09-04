@@ -17,37 +17,212 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+BOOLEAN
+FASTCALL
+ObReferenceObjectSafe(IN PVOID Object)
+{
+    POBJECT_HEADER ObjectHeader;
+    LONG OldValue, NewValue;
+
+    /* Get the object header */
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+    /* Get the current reference count and fail if it's zero */
+    OldValue = ObjectHeader->PointerCount;
+    if (!OldValue) return FALSE;
+
+    /* Start reference loop */
+    do
+    {
+        /* Increase the reference count */
+        NewValue = InterlockedCompareExchange(&ObjectHeader->PointerCount,
+                                              OldValue + 1,
+                                              OldValue);
+        if (OldValue == NewValue) return TRUE;
+
+        /* Keep looping */
+        OldValue = NewValue;
+    } while (OldValue);
+
+    /* If we got here, then the reference count is now 0 */
+    return FALSE;
+}
+
+VOID
+NTAPI
+ObpDeferObjectDeletion(IN PVOID Object)
+{
+    POBJECT_HEADER Header = OBJECT_TO_OBJECT_HEADER(Object);
+
+    /* Add us to the list */
+    do
+    {
+        Header->NextToFree = ObpReaperList;
+    } while (InterlockedCompareExchangePointer(&ObpReaperList,
+                                               Header,
+                                               Header->NextToFree) !=
+             Header->NextToFree);
+
+    /* Queue the work item */
+    ExQueueWorkItem(&ObpReaperWorkItem, DelayedWorkQueue);
+}
+
+LONG
+FASTCALL
+ObReferenceObjectEx(IN PVOID Object,
+                    IN ULONG Count)
+{
+    /* Increment the reference count and return the count now */
+    return InterlockedExchangeAdd(&OBJECT_TO_OBJECT_HEADER(Object)->
+                                  PointerCount,
+                                  Count);
+}
+
+LONG
+FASTCALL
+ObDereferenceObjectEx(IN PVOID Object,
+                      IN ULONG Count)
+{
+    POBJECT_HEADER Header;
+    ULONG NewCount;
+
+    /* Extract the object header */
+    Header = OBJECT_TO_OBJECT_HEADER(Object);
+
+    /* Check whether the object can now be deleted. */
+    NewCount = InterlockedExchangeAdd(&Header->PointerCount, -Count);
+    if (!Count)
+    {
+        /* Add us to the deferred deletion list */
+        ObpDeferObjectDeletion(Object);
+    }
+
+    /* Return the current count */
+    return NewCount;
+}
+
 VOID
 FASTCALL
 ObInitializeFastReference(IN PEX_FAST_REF FastRef,
-                          PVOID Object)
+                          IN PVOID Object OPTIONAL)
 {
-    /* FIXME: Fast Referencing is Unimplemented */
-    FastRef->Object = Object;
+    /* Check if we were given an object and reference it 7 times */
+    if (Object) ObReferenceObjectEx(Object, MAX_FAST_REFS);
+
+    /* Sanity check */
+    ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
+
+    /* Check if the caller gave us an object */
+    if (Object)
+    {
+        /* He did, so write the biased pointer */
+        FastRef->Object = (PVOID)((ULONG_PTR)Object | MAX_FAST_REFS);
+    }
+    else
+    {
+        /* Otherwise, clear the current object */
+        FastRef->Object = NULL;
+    }
+}
+
+PVOID
+FASTCALL
+ObFastReferenceObjectLocked(IN PEX_FAST_REF FastRef)
+{
+    PVOID Object;
+
+    /* Get the object and reference it slowly */
+    Object = (PVOID)((ULONG_PTR)FastRef->Object & MAX_FAST_REFS);
+    if (Object) ObReferenceObject(Object);
+    return Object;
 }
 
 PVOID
 FASTCALL
 ObFastReferenceObject(IN PEX_FAST_REF FastRef)
 {
-    /* FIXME: Fast Referencing is Unimplemented */
+    ULONG_PTR Value, NewValue;
+    ULONG_PTR Count;
+    PVOID Object;
 
-    /* Do a normal Reference */
-    ObReferenceObject(FastRef->Object);
+    /* Start reference loop */
+    for (;;)
+    {
+        /* Get the current count */
+        Value = FastRef->Value;
+        if (!(Value & MAX_FAST_REFS)) break;
+
+        /* Increase the reference count */
+        NewValue = Value - 1;
+        if (ExpChangeRundown(FastRef, NewValue, Value) == Value) break;
+    }
+
+    /* Get the object and count */
+    Object = (PVOID)(Value &~ MAX_FAST_REFS);
+    Count = Value & MAX_FAST_REFS;
+
+    /* Check if the reference count is over 1 */
+    if (Count > 1) return Object;
+
+    /* Check if the reference count has reached 0 */
+    if (!Count) return NULL;
+
+    /* Otherwise, reference the object 7 times */
+    ObReferenceObjectEx(Object, MAX_FAST_REFS);
+    ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
+
+    for (;;)
+    {
+        /* Check if the current count is too high */
+        Value = FastRef->Value;
+        if (((FastRef->RefCnt + MAX_FAST_REFS) > MAX_FAST_REFS) ||
+            ((PVOID)((ULONG_PTR)FastRef->Object &~ MAX_FAST_REFS) != Object))
+        {
+            /* Completely dereference the object */
+            ObDereferenceObjectEx(Object, MAX_FAST_REFS);
+            break;
+        }
+        else
+        {
+            /* Increase the reference count */
+            NewValue = Value + MAX_FAST_REFS;
+            if (ExpChangeRundown(FastRef, NewValue, Value) == Value) break;
+        }
+    }
 
     /* Return the Object */
-    return FastRef->Object;
+    return Object;
 }
 
 VOID
 FASTCALL
 ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
-                        PVOID Object)
+                        IN PVOID Object)
 {
-    /* FIXME: Fast Referencing is Unimplemented */
+    ULONG_PTR Value, NewValue;
 
-    /* Do a normal Dereference */
-    ObDereferenceObject(FastRef->Object);
+    /* Sanity checks */
+    ASSERT(Object);
+    ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
+
+    /* Start dereference loop */
+    for (;;)
+    {
+        /* Get the current count */
+        Value = FastRef->Value;
+        if ((Value ^ (ULONG_PTR)Object) < MAX_FAST_REFS)
+        {
+            /* Decrease the reference count */
+            NewValue = Value + 1;
+            if (ExpChangeRundown(FastRef, NewValue, Value) == Value) return;
+        }
+        else
+        {
+            /* Do a normal Dereference */
+            ObDereferenceObject(Object);
+            return;
+        }
+    }
 }
 
 PVOID
@@ -55,15 +230,38 @@ FASTCALL
 ObFastReplaceObject(IN PEX_FAST_REF FastRef,
                     PVOID Object)
 {
-    PVOID OldObject = FastRef->Object;
+    ULONG_PTR NewValue;
+    EX_FAST_REF OldRef;
+    PVOID OldObject;
 
-    /* FIXME: Fast Referencing is Unimplemented */
-    FastRef->Object = Object;
+    /* Check if we were given an object and reference it 7 times */
+    if (Object) ObReferenceObjectEx(Object, MAX_FAST_REFS);
 
-    /* Do a normal Dereference */
-    ObDereferenceObject(OldObject);
+    /* Sanity check */
+    ASSERT(!(((ULONG_PTR)Object) & MAX_FAST_REFS));
 
-    /* Return old Object*/
+    /* Check if the caller gave us an object */
+    if (Object)
+    {
+        /* He did, so bias the pointer */
+        NewValue = (ULONG_PTR)Object | MAX_FAST_REFS;
+    }
+    else
+    {
+        /* No object, we're clearing */
+        NewValue = 0;
+    }
+
+    /* Switch objects */
+    OldRef.Value = InterlockedExchange((PLONG)&FastRef->Value, NewValue);
+    OldObject = (PVOID)((ULONG_PTR)OldRef.Object &~ MAX_FAST_REFS);
+    if ((OldObject) && (OldRef.RefCnt))
+    {
+        /* Dereference the old object */
+        ObDereferenceObjectEx(OldObject, OldRef.RefCnt);
+    }
+
+    /* Return the old object */
     return OldObject;
 }
 
@@ -88,12 +286,21 @@ ObfDereferenceObject(IN PVOID Object)
     /* Extract the object header */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
 
+    if (Header->PointerCount < Header->HandleCount)
+    {
+        DPRINT("Misbehaving object: %wZ\n", &Header->Type->Name);
+        return;
+    }
+
     /* Check whether the object can now be deleted. */
-    if (!(InterlockedDecrement(&Header->PointerCount)) &&
-        !(Header->Flags & OB_FLAG_PERMANENT))
+    if (!(InterlockedDecrement(&Header->PointerCount)))
     {
         /* Sanity check */
-        ASSERT(!Header->HandleCount);
+        if (Header->HandleCount)
+        {
+            DPRINT("Misbehaving object: %wZ\n", &Header->Type->Name);
+            return;
+        }
 
         /* Check if we're at PASSIVE */
         if (KeGetCurrentIrql() == PASSIVE_LEVEL)
@@ -103,26 +310,25 @@ ObfDereferenceObject(IN PVOID Object)
         }
         else
         {
-            /* Add us to the list */
-            do
-            {
-                Header->NextToFree = ObpReaperList;
-            } while (InterlockedCompareExchangePointer(&ObpReaperList,
-                                                       Header,
-                                                       Header->NextToFree) !=
-                     Header->NextToFree);
-
-            /* Queue the work item */
-            KeBugCheck(0);
-            ExQueueWorkItem(&ObpReaperWorkItem, DelayedWorkQueue);
+            /* Add us to the deferred deletion list */
+            ObpDeferObjectDeletion(Object);
         }
     }
 }
 
-#ifdef ObDereferenceObject
-#undef ObDereferenceObject
-#endif
+VOID
+NTAPI
+ObDereferenceObjectDeferDelete(IN PVOID Object)
+{
+    /* Check whether the object can now be deleted. */
+    if (!(InterlockedDecrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount)))
+    {
+        /* Add us to the deferred deletion list */
+        ObpDeferObjectDeletion(Object);
+    }
+}
 
+#undef ObDereferenceObject
 VOID
 NTAPI
 ObDereferenceObject(IN PVOID Object)

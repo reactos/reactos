@@ -5,6 +5,7 @@
 	<library>freeldr_base</library>
 	<library>freeldr_arch</library>
 	<library>freeldr_main</library>
+	<library>cmlib</library>
 	<library>rossym</library>
 	<library>string</library>
 	<library>rtl</library>

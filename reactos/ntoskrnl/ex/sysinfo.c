@@ -24,6 +24,16 @@ VOID MmPrintMemoryStatistic(VOID);
 /* FUNCTIONS *****************************************************************/
 
 /*
+ * @implemented
+ */
+KPROCESSOR_MODE
+NTAPI
+ExGetPreviousMode (VOID)
+{
+    return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
+}
+
+/*
  * @unimplemented
  */
 VOID
@@ -1044,7 +1054,7 @@ QSI_DEF(SystemInterruptInformation)
   Prcb = ((PKPCR)KPCR_BASE)->Prcb;
   for (i = 0; i < KeNumberProcessors; i++)
   {
-    sii->ContextSwitches = Prcb->KeContextSwitches;
+    //sii->ContextSwitches = Prcb->KeContextSwitches;
     sii->DpcCount = 0; /* FIXME */
     sii->DpcRate = 0; /* FIXME */
     sii->TimeIncrement = ti;

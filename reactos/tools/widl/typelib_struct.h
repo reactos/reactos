@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #ifndef _WIDL_TYPELIB_STRUCT_H
 #define _WIDL_TYPELIB_STRUCT_H
@@ -33,6 +33,8 @@
  * have the signature "SLTG" as their first four bytes, while those created
  * with ICreateTypeLib2 have "MSFT".
  */
+
+#define MSFT_MAGIC 0x5446534d
 
 /*****************************************************
  *                MSFT typelibs
@@ -76,7 +78,7 @@ typedef struct tagMSFT_Header {
         INT   res44;            /* unknown always: 0x20 (guid hash size?) */
         INT   res48;            /* unknown always: 0x80 (name hash size?) */
         INT   dispatchpos;      /* HREFTYPE to IDispatch, or -1 if no IDispatch */
-/*0x50*/INT   res50;            /* is zero becomes one when an interface is derived */
+/*0x50*/INT   nimpinfos;        /* number of impinfos */
 } MSFT_Header;
 
 /* segments in the type lib file have a structure like this: */
@@ -153,17 +155,19 @@ typedef struct tagMSFT_TypeInfoBase {
                                 /*                 loword is num of inherited interfaces */
         INT     res18;          /* always? 0 */
 /*060*/ INT     res19;          /* always? -1 */
-    } MSFT_TypeInfoBase;
+} MSFT_TypeInfoBase;
 
 /* layout of an entry with information on imported types */
 typedef struct tagMSFT_ImpInfo {
-    INT     res0;           /* bits 0 - 15:  count */
+    INT     flags;          /* bits 0 - 15:  count */
                             /* bit  16:      if set oGuid is an offset to Guid */
                             /*               if clear oGuid is a typeinfo index in the specified typelib */
                             /* bits 24 - 31: TKIND of reference */
     INT     oImpFile;       /* offset in the Import File table */
-    INT     oGuid;          /* offset in Guid table or typeinfo index (see bit 16 of res0) */
-    } MSFT_ImpInfo;
+    INT     oGuid;          /* offset in Guid table or typeinfo index (see bit 16 of flags) */
+} MSFT_ImpInfo;
+
+#define MSFT_IMPINFO_OFFSET_IS_GUID 0x00010000
 
 /* function description data */
 typedef struct {

@@ -30,6 +30,38 @@ typedef enum _CACHED_MODULE_TYPE
 } CACHED_MODULE_TYPE, *PCACHED_MODULE_TYPE;
 extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
+typedef enum _CONNECT_TYPE
+{
+    NoConnect,
+    NormalConnect,
+    ChainConnect,
+    UnknownConnect
+} CONNECT_TYPE, *PCONNECT_TYPE;
+
+typedef struct _DISPATCH_INFO
+{
+    CONNECT_TYPE Type;
+    PKINTERRUPT Interrupt;
+    PKINTERRUPT_ROUTINE NoDispatch;
+    PKINTERRUPT_ROUTINE InterruptDispatch;
+    PKINTERRUPT_ROUTINE FloatingDispatch;
+    PKINTERRUPT_ROUTINE ChainedDispatch;
+    PKINTERRUPT_ROUTINE *FlatDispatch;
+} DISPATCH_INFO, *PDISPATCH_INFO;
+
+typedef struct _KTIMER_TABLE_ENTRY
+{
+    LIST_ENTRY Entry;
+    ULARGE_INTEGER Time;
+} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
+
+typedef PCHAR
+(NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
+    IN PUNICODE_STRING Unicode,
+    IN PCHAR Ansi,
+    IN ULONG Length
+);
+
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KPRCB;
@@ -44,6 +76,59 @@ extern ULONG_PTR KERNEL_BASE;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
+extern ULONG KeI386CpuType;
+extern ULONG KeI386CpuStep;
+extern ULONG KeProcessorArchitecture;
+extern ULONG KeProcessorLevel;
+extern ULONG KeProcessorRevision;
+extern ULONG KeFeatureBits;
+extern ULONG Ke386GlobalPagesEnabled;
+extern KNODE KiNode0;
+extern PKNODE KeNodeBlock[1];
+extern UCHAR KeNumberNodes;
+extern UCHAR KeProcessNodeSeed;
+extern ETHREAD KiInitialThread;
+extern EPROCESS KiInitialProcess;
+extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
+extern PULONG KiInterruptTemplateObject;
+extern PULONG KiInterruptTemplateDispatch;
+extern PULONG KiInterruptTemplate2ndDispatch;
+extern ULONG KiUnexpectedEntrySize;
+extern PVOID Ki386IopmSaveArea;
+extern ULONG KeI386EFlagsAndMaskV86;
+extern ULONG KeI386EFlagsOrMaskV86;
+extern BOOLEAN KeI386VirtualIntExtensions;
+extern KIDTENTRY KiIdt[];
+extern KGDTENTRY KiBootGdt[];
+extern KDESCRIPTOR KiGdtDescriptor;
+extern KDESCRIPTOR KiIdtDescriptor;
+extern KTSS KiBootTss;
+extern UCHAR P0BootStack[];
+extern UCHAR KiDoubleFaultStack[];
+extern FAST_MUTEX KernelAddressSpaceLock;
+extern ULONG KiMaximumDpcQueueDepth;
+extern ULONG KiMinimumDpcRate;
+extern ULONG KiAdjustDpcThreshold;
+extern ULONG KiIdealDpcRate;
+extern LARGE_INTEGER KiTimeIncrementReciprocal;
+extern UCHAR KiTimeIncrementShiftCount;
+extern LIST_ENTRY BugcheckCallbackListHead, BugcheckReasonCallbackListHead;
+extern KSPIN_LOCK BugCheckCallbackLock;
+extern KDPC KiExpireTimerDpc;
+extern KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
+extern LIST_ENTRY KiTimerListHead;
+extern KMUTEX KiGenericCallDpcMutex;
+extern LIST_ENTRY KiProfileListHead, KiProfileSourceListHead;
+extern KSPIN_LOCK KiProfileLock;
+extern LIST_ENTRY KiProcessListHead;
+extern LIST_ENTRY KiProcessInSwapListHead, KiProcessOutSwapListHead;
+extern LIST_ENTRY KiStackInSwapListHead;
+extern KEVENT KiSwapEvent;
+extern PKPRCB KiProcessorBlock[];
+extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
+extern ULONG IdleProcessorMask;
+extern VOID KiTrap8(VOID);
+extern VOID KiTrap2(VOID);
 
 /* MACROS *************************************************************************/
 
@@ -68,6 +153,8 @@ extern ULONG KeI386FxsrPresent;
 #define KeReleaseDispatcherDatabaseLockFromDpcLevel()
 #endif
 
+#define AFFINITY_MASK(Id) KiMask32Array[Id]
+
 /* The following macro initializes a dispatcher object's header */
 #define KeInitializeDispatcherHeader(Header, t, s, State)                   \
 {                                                                           \
@@ -77,99 +164,6 @@ extern ULONG KeI386FxsrPresent;
     (Header)->Size = s;                                                     \
     (Header)->SignalState = State;                                          \
     InitializeListHead(&((Header)->WaitListHead));                          \
-}
-
-/* The following macro satisfies the wait of any dispatcher object */
-#define KiSatisfyObjectWait(Object, Thread)                                 \
-{                                                                           \
-    /* Special case for Mutants */                                          \
-    if ((Object)->Header.Type == MutantObject)                              \
-    {                                                                       \
-        /* Decrease the Signal State */                                     \
-        (Object)->Header.SignalState--;                                     \
-                                                                            \
-        /* Check if it's now non-signaled */                                \
-        if (!(Object)->Header.SignalState)                                  \
-        {                                                                   \
-            /* Set the Owner Thread */                                      \
-            (Object)->OwnerThread = Thread;                                 \
-                                                                            \
-            /* Disable APCs if needed */                                    \
-            Thread->KernelApcDisable -= (Object)->ApcDisable;               \
-                                                                            \
-            /* Check if it's abandoned */                                   \
-            if ((Object)->Abandoned)                                        \
-            {                                                               \
-                /* Unabandon it */                                          \
-                (Object)->Abandoned = FALSE;                                \
-                                                                            \
-                /* Return Status */                                         \
-                Thread->WaitStatus = STATUS_ABANDONED;                      \
-            }                                                               \
-                                                                            \
-            /* Insert it into the Mutant List */                            \
-            InsertHeadList(&Thread->MutantListHead,                         \
-                           &(Object)->MutantListEntry);                     \
-        }                                                                   \
-    }                                                                       \
-    else if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==               \
-             EventSynchronizationObject)                                    \
-    {                                                                       \
-        /* Synchronization Timers and Events just get un-signaled */        \
-        (Object)->Header.SignalState = 0;                                   \
-    }                                                                       \
-    else if ((Object)->Header.Type == SemaphoreObject)                      \
-    {                                                                       \
-        /* These ones can have multiple states, so we only decrease it */   \
-        (Object)->Header.SignalState--;                                     \
-    }                                                                       \
-}
-
-/* The following macro satisfies the wait of a mutant dispatcher object */
-#define KiSatisfyMutantWait(Object, Thread)                                 \
-{                                                                           \
-    /* Decrease the Signal State */                                         \
-    (Object)->Header.SignalState--;                                         \
-                                                                            \
-    /* Check if it's now non-signaled */                                    \
-    if (!(Object)->Header.SignalState)                                      \
-    {                                                                       \
-        /* Set the Owner Thread */                                          \
-        (Object)->OwnerThread = Thread;                                     \
-                                                                            \
-        /* Disable APCs if needed */                                        \
-        Thread->KernelApcDisable -= (Object)->ApcDisable;                   \
-                                                                            \
-        /* Check if it's abandoned */                                       \
-        if ((Object)->Abandoned)                                            \
-        {                                                                   \
-            /* Unabandon it */                                              \
-            (Object)->Abandoned = FALSE;                                    \
-                                                                            \
-            /* Return Status */                                             \
-            Thread->WaitStatus = STATUS_ABANDONED;                          \
-        }                                                                   \
-                                                                            \
-        /* Insert it into the Mutant List */                                \
-        InsertHeadList(&Thread->MutantListHead,                             \
-                       &(Object)->MutantListEntry);                         \
-    }                                                                       \
-}
-
-/* The following macro satisfies the wait of any nonmutant dispatcher object */
-#define KiSatisfyNonMutantWait(Object, Thread)                              \
-{                                                                           \
-    if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==                    \
-             EventSynchronizationObject)                                    \
-    {                                                                       \
-        /* Synchronization Timers and Events just get un-signaled */        \
-        (Object)->Header.SignalState = 0;                                   \
-    }                                                                       \
-    else if ((Object)->Header.Type == SemaphoreObject)                      \
-    {                                                                       \
-        /* These ones can have multiple states, so we only decrease it */   \
-        (Object)->Header.SignalState--;                                     \
-    }                                                                       \
 }
 
 extern KSPIN_LOCK DispatcherDatabaseLock;
@@ -203,6 +197,16 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
 
+/* IOPM Definitions */
+#define IO_ACCESS_MAP_NONE 0
+#define IOPM_OFFSET FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
+#define KiComputeIopmOffset(MapNumber)              \
+    (MapNumber == IO_ACCESS_MAP_NONE) ?             \
+        (USHORT)(sizeof(KTSS)) :                    \
+        (USHORT)(FIELD_OFFSET(KTSS, IoMaps[MapNumber-1].IoMap))
+
+#define SIZE_OF_FX_REGISTERS 32
+
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 /* threadsch.c ********************************************************************/
@@ -210,7 +214,7 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 /* Thread Scheduler Functions */
 
 /* Readies a Thread for Execution. */
-VOID
+BOOLEAN
 STDCALL
 KiDispatchThreadNoLock(ULONG NewThreadStatus);
 
@@ -226,14 +230,9 @@ KiSwapThread(
     VOID
 );
 
-/* Removes a thread out of a block state. */
 VOID
-STDCALL
-KiUnblockThread(
-    PKTHREAD Thread,
-    PNTSTATUS WaitStatus,
-    KPRIORITY Increment
-);
+NTAPI
+KiReadyThread(IN PKTHREAD Thread);
 
 NTSTATUS
 STDCALL
@@ -241,7 +240,10 @@ KeSuspendThread(PKTHREAD Thread);
 
 NTSTATUS
 FASTCALL
-KiSwapContext(PKTHREAD NewThread);
+KiSwapContext(
+    IN PKTHREAD CurrentThread,
+    IN PKTHREAD NewThread
+);
 
 VOID
 STDCALL
@@ -285,6 +287,13 @@ KiIpiSendRequest(
 );
 
 /* next file ***************************************************************/
+
+UCHAR
+NTAPI
+KeFindNextRightSetAffinity(
+    IN UCHAR Number,
+    IN ULONG Set
+);
 
 VOID 
 STDCALL
@@ -343,13 +352,6 @@ KiRosPrintAddress(PVOID Address);
 
 VOID
 STDCALL
-KeUpdateSystemTime(
-    PKTRAP_FRAME TrapFrame,
-    KIRQL Irql
-);
-
-VOID
-STDCALL
 KeUpdateRunTime(
     PKTRAP_FRAME TrapFrame,
     KIRQL Irql
@@ -365,16 +367,67 @@ KiExpireTimers(
 );
 
 VOID
-STDCALL
+NTAPI
 KeInitializeThread(
-    struct _KPROCESS* Process,
-    PKTHREAD Thread,
-    PKSYSTEM_ROUTINE SystemRoutine,
-    PKSTART_ROUTINE StartRoutine,
-    PVOID StartContext,
-    PCONTEXT Context,
-    PVOID Teb,
-    PVOID KernelStack
+    IN PKPROCESS Process,
+    IN OUT PKTHREAD Thread,
+    IN PKSYSTEM_ROUTINE SystemRoutine,
+    IN PKSTART_ROUTINE StartRoutine,
+    IN PVOID StartContext,
+    IN PCONTEXT Context,
+    IN PVOID Teb,
+    IN PVOID KernelStack
+);
+
+VOID
+NTAPI
+KeUninitThread(
+    IN PKTHREAD Thread
+);
+
+NTSTATUS
+NTAPI
+KeInitThread(
+    IN OUT PKTHREAD Thread,
+    IN PVOID KernelStack,
+    IN PKSYSTEM_ROUTINE SystemRoutine,
+    IN PKSTART_ROUTINE StartRoutine,
+    IN PVOID StartContext,
+    IN PCONTEXT Context,
+    IN PVOID Teb,
+    IN PKPROCESS Process
+);
+
+VOID
+NTAPI
+KeStartThread(
+    IN OUT PKTHREAD Thread
+);
+
+BOOLEAN
+NTAPI
+KeAlertThread(
+    IN PKTHREAD Thread,
+    IN KPROCESSOR_MODE AlertMode
+);
+
+ULONG
+NTAPI
+KeAlertResumeThread(
+    IN PKTHREAD Thread
+);
+
+ULONG
+NTAPI
+KeResumeThread(
+    IN PKTHREAD Thread
+);
+
+PVOID
+NTAPI
+KeSwitchKernelStack(
+    IN PVOID StackBase,
+    IN PVOID StackLimit
 );
 
 VOID
@@ -424,9 +477,9 @@ KiTestAlert(VOID);
 VOID
 FASTCALL
 KiAbortWaitThread(
-    PKTHREAD Thread,
-    NTSTATUS WaitStatus,
-    KPRIORITY Increment
+    IN PKTHREAD Thread,
+    IN NTSTATUS WaitStatus,
+    IN KPRIORITY Increment
 );
 
 VOID
@@ -436,6 +489,21 @@ KeInitializeProcess(
     KPRIORITY Priority,
     KAFFINITY Affinity,
     LARGE_INTEGER DirectoryTableBase
+);
+
+VOID
+NTAPI
+KeSetQuantumProcess(
+    IN PKPROCESS Process,
+    IN UCHAR Quantum
+);
+
+KPRIORITY
+NTAPI
+KeSetPriorityAndQuantumProcess(
+    IN PKPROCESS Process,
+    IN KPRIORITY Priority,
+    IN UCHAR Quantum OPTIONAL
 );
 
 ULONG
@@ -498,7 +566,8 @@ ULONG
 STDCALL
 KeSetProcess(
     struct _KPROCESS* Process,
-    KPRIORITY Increment
+    KPRIORITY Increment,
+    BOOLEAN InWait
 );
 
 VOID
@@ -567,10 +636,6 @@ KeInitTimer(VOID);
 
 VOID
 NTAPI
-KeInitDpc(struct _KPRCB* Prcb);
-
-VOID
-NTAPI
 KeInitDispatcher(VOID);
 
 VOID
@@ -587,9 +652,8 @@ Phase1Initialization(PVOID Context);
 
 VOID
 NTAPI
-KeInit1(
-    PCHAR CommandLine,
-    PULONG LastKernelAddress
+KiSystemStartup(
+    IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock
 );
 
 VOID
@@ -671,28 +735,13 @@ KeBugCheckWithTf(
 );
 
 VOID
-STDCALL
-KiDumpTrapFrame(
-    PKTRAP_FRAME Tf,
-    ULONG ExceptionNr,
-    ULONG cr2
-);
-
-VOID
-STDCALL
+NTAPI
 KeFlushCurrentTb(VOID);
 
 VOID
 STDCALL
 KeRosDumpStackFrames(
     PULONG Frame,
-    ULONG FrameCount
-);
-
-ULONG
-STDCALL
-KeRosGetStackFrames(
-    PULONG Frames,
     ULONG FrameCount
 );
 
@@ -707,5 +756,85 @@ KeV86Exception(
     PKTRAP_FRAME Tf,
     ULONG address
 );
+
+VOID
+NTAPI
+KiStartUnexpectedRange(
+    VOID
+);
+
+VOID
+NTAPI
+KiEndUnexpectedRange(
+    VOID
+);
+
+VOID
+NTAPI
+KiInterruptDispatch(
+    VOID
+);
+
+VOID
+NTAPI
+KiChainedDispatch(
+    VOID
+);
+
+VOID
+NTAPI
+Ki386AdjustEsp0(
+    IN PKTRAP_FRAME TrapFrame
+);
+
+VOID
+NTAPI
+Ki386SetupAndExitToV86Mode(
+    OUT PTEB VdmTeb
+);
+
+VOID
+NTAPI
+KeI386VdmInitialize(
+    VOID
+);
+
+VOID
+NTAPI
+KiFlushNPXState(
+    IN FLOATING_SAVE_AREA *SaveArea
+);
+
+VOID
+NTAPI
+KiInitSpinLocks(
+    IN PKPRCB Prcb,
+    IN CCHAR Number
+);
+
+LARGE_INTEGER
+NTAPI
+KiComputeReciprocal(
+    IN LONG Divisor,
+    OUT PUCHAR Shift
+);
+
+VOID
+NTAPI
+KiInitSystem(
+    VOID
+);
+
+#ifdef _M_IX86
+#define KeHaltProcessor Ke386HaltProcessor
+#define KeEnableInterrupts Ke386EnableInterrupts
+#define KeDisableInterrupts Ke386DisableInterrupts
+#elif defined(_M_PPC)
+#define KeHaltProcessor KePPCHaltProcessor
+#define KeEnableInterrupts KePPCEnableInterrupts
+#define KeDisableInterrupts KePPCDisableInterrupts
+#endif
+
+#include "ke_x.h"
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

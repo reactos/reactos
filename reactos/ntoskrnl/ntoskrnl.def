@@ -513,9 +513,6 @@ KdPollBreakIn@0
 KdPowerTransition@4
 KdpServiceDispatcher@12
 Ke386CallBios@8
-Ke386IoSetAccessProcess@8
-Ke386QueryIoAccessMap@8
-Ke386SetIoAccessMap@8
 @KeAcquireGuardedMutex@4
 @KeAcquireGuardedMutexUnsafe@4
 KeAcquireSpinLockAtDpcLevel@4
@@ -647,8 +644,8 @@ KeSynchronizeExecution@12
 KeTerminateThread@4
 KeTickCount DATA
 @KeTryToAcquireGuardedMutex@4
-KeUpdateRunTime@8
-KeUpdateSystemTime@8
+KeUpdateRunTime@4
+KeUpdateSystemTime@0
 KeUnstackDetachProcess@4
 KeUserModeCallback@20
 KeWaitForMultipleObjects@32
@@ -656,18 +653,18 @@ KeWaitForMutexObject@20=KeWaitForSingleObject@20
 KeWaitForSingleObject@20
 @KefAcquireSpinLockAtDpcLevel@4
 @KefReleaseSpinLockFromDpcLevel@4
-;Kei386EoiHelper
+Kei386EoiHelper@0
 @KiAcquireSpinLock@4
 ;KiBugCheckData DATA
 KiCoprocessorError@0
 KiCheckForKernelApcDelivery@0
 KiDeliverApc@12
 KiDispatchInterrupt@0
-KiEnableTimerWatchdog
 KiInterruptDispatch2@8
+KiEnableTimerWatchdog
 KiIpiServiceRoutine@8
 @KiReleaseSpinLock@4
-KiUnexpectedInterrupt@0
+KiUnexpectedInterrupt
 ;Kii386SpinOnSpinLock
 KiRawTicks DATA
 LdrAccessResource@16
@@ -841,12 +838,14 @@ ObCloseHandle@8
 ObCreateObject@36
 ObCreateObjectType@16
 ObDereferenceObject@4
+ObDereferenceObjectDeferDelete@4
 ObDereferenceSecurityDescriptor@8
 @ObfDereferenceObject@4
 ObFindHandleForObject@20
 @ObfReferenceObject@4
 ObGetObjectSecurity@12
 ObInsertObject@24
+ObIsKernelHandle@4
 ObLogSecurityDescriptor@12
 ObMakeTemporaryObject@4
 ObOpenObjectByName@28
@@ -892,12 +891,15 @@ PsDereferenceImpersonationToken@4=PsDereferencePrimaryToken@4
 PsDereferencePrimaryToken@4
 PsDisableImpersonation@8
 PsEstablishWin32Callouts@4
+PsGetContextThread@12
 PsGetCurrentProcess@0=KeGetCurrentProcess@0
 PsGetCurrentProcessId@0
+PsGetCurrentProcessWin32Process@0
 PsGetCurrentProcessSessionId@0
 PsGetCurrentThread@0=KeGetCurrentThread@0
 PsGetCurrentThreadId@0
 PsGetCurrentThreadPreviousMode@0
+PsGetCurrentThreadWin32Thread@0
 PsGetCurrentThreadStackBase@0
 PsGetCurrentThreadStackLimit@0
 PsGetJobLock@4
@@ -928,8 +930,6 @@ PsGetThreadSessionId@4
 PsGetThreadTeb@4
 PsGetThreadWin32Thread@4
 PsGetVersion@16
-PsGetWin32Thread@0
-PsGetWin32Process@0
 PsImpersonateClient@20
 PsInitialSystemProcess DATA
 PsIsProcessBeingDebugged@4
@@ -951,6 +951,7 @@ PsReturnProcessNonPagedPoolQuota@8
 PsReturnProcessPagedPoolQuota@8
 PsRevertToSelf@0
 PsRevertThreadToSelf@4
+PsSetContextThread@12
 PsSetCreateProcessNotifyRoutine@8
 PsSetCreateThreadNotifyRoutine@4
 PsSetJobUIRestrictionsClass@8
@@ -973,7 +974,6 @@ READ_REGISTER_BUFFER_ULONG@12
 READ_REGISTER_BUFFER_USHORT@12
 KiRosPrintAddress@4
 KeRosDumpStackFrames@8
-KeRosGetStackFrames@8
 RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce@16
 RtlAddAce@20

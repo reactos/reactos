@@ -86,7 +86,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-#include <internal/ps.h>
 
 /************************************************************************/
 /* BUFMAX defines the maximum number of characters in inbound/outbound buffers*/

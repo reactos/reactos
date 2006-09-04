@@ -32,6 +32,14 @@ Author:
 NTKERNELAPI
 NTSTATUS
 NTAPI
+ObCloseHandle(
+    IN HANDLE Handle,
+    IN KPROCESSOR_MODE AccessMode
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
 ObCreateObject(
     IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     IN POBJECT_TYPE ObjectType,

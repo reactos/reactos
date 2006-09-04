@@ -10,23 +10,35 @@
 
 /* GLOBALS ****************************************************************/
 
-.globl  _DbgBreakPoint@0
-.globl  _DbgBreakPointWithStatus@4
-.globl  _DbgUserBreakPoint@0
-.globl  _DebugService@20
+.globl _DbgBreakPoint@0
+.globl _DbgBreakPointWithStatus@4
+.globl _DbgUserBreakPoint@0
+.globl _DebugService@20
+.globl _DbgBreakPointNoBugCheck@0
 
 /* FUNCTIONS ***************************************************************/
 
+.func DbgBreakPointNoBugCheck@0
+_DbgBreakPointNoBugCheck@0:
+    int 3
+    ret
+.endfunc
+
+.func DbgBreakPoint@0
 _DbgBreakPoint@0:
 _DbgUserBreakPoint@0:
     int 3
     ret
- 
+.endfunc
+
+.func DbgBreakPointWithStatus@4
 _DbgBreakPointWithStatus@4:
     mov eax, [esp+4]
     int 3
     ret 4
+.endfunc
 
+.func DebugService@20
 _DebugService@20:
 
     /* Setup the stack */
@@ -58,4 +70,4 @@ _DebugService@20:
     /* Return */
     leave
     ret 20
-
+.endfunc

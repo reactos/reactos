@@ -14,24 +14,19 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define GENERIC_ACCESS (GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE | \
-                        GENERIC_ALL)
-
 /* FUNCTIONS ***************************************************************/
 
-/*
- * @implemented
- */
 NTSTATUS
-STDCALL
-SeCreateAccessState(PACCESS_STATE AccessState,
-                    PAUX_DATA AuxData,
-                    ACCESS_MASK Access,
-                    PGENERIC_MAPPING GenericMapping)
+NTAPI
+SeCreateAccessStateEx(IN PETHREAD Thread,
+                      IN PEPROCESS Process,
+                      IN OUT PACCESS_STATE AccessState,
+                      IN PAUX_DATA AuxData,
+                      IN ACCESS_MASK Access,
+                      IN PGENERIC_MAPPING GenericMapping)
 {
     ACCESS_MASK AccessMask = Access;
     PTOKEN Token;
-    
     PAGED_CODE();
 
     /* Map the Generic Acess to Specific Access if we have a Mapping */
@@ -44,8 +39,10 @@ SeCreateAccessState(PACCESS_STATE AccessState,
     RtlZeroMemory(AccessState, sizeof(ACCESS_STATE));
 
     /* Capture the Subject Context */
-    SeCaptureSubjectContext(&AccessState->SubjectSecurityContext);
-    
+    SeCaptureSubjectContextEx(Thread,
+                              Process,
+                              &AccessState->SubjectSecurityContext);
+
     /* Set Access State Data */
     AccessState->AuxData = AuxData;
     AccessState->RemainingDesiredAccess  = AccessMask;
@@ -56,7 +53,7 @@ SeCreateAccessState(PACCESS_STATE AccessState,
     Token =  AccessState->SubjectSecurityContext.ClientToken ?
              (PTOKEN)&AccessState->SubjectSecurityContext.ClientToken :
              (PTOKEN)&AccessState->SubjectSecurityContext.PrimaryToken;
-             
+
     /* Check for Travers Privilege */
     if (Token->TokenFlags & TOKEN_HAS_TRAVERSE_PRIVILEGE)
     {
@@ -67,11 +64,32 @@ SeCreateAccessState(PACCESS_STATE AccessState,
     /* Set the Auxiliary Data */
     AuxData->PrivilegeSet = (PPRIVILEGE_SET)((ULONG_PTR)AccessState +
                                              FIELD_OFFSET(ACCESS_STATE,
-                                                          Privileges));    
+                                                          Privileges));
     if (GenericMapping) AuxData->GenericMapping = *GenericMapping;
 
     /* Return Sucess */
     return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+SeCreateAccessState(IN OUT PACCESS_STATE AccessState,
+                    IN PAUX_DATA AuxData,
+                    IN ACCESS_MASK Access,
+                    IN PGENERIC_MAPPING GenericMapping)
+{
+    PAGED_CODE();
+
+    /* Call the internal API */
+    return SeCreateAccessStateEx(PsGetCurrentThread(),
+                                 PsGetCurrentProcess(),
+                                 AccessState,
+                                 AuxData,
+                                 Access,
+                                 GenericMapping);
 }
 
 /*
@@ -89,7 +107,7 @@ SeDeleteAccessState(IN PACCESS_STATE AccessState)
 
     /* Deallocate Privileges */
     if (AccessState->PrivilegesAllocated) ExFreePool(AuxData->PrivilegeSet);
-    
+
     /* Deallocate Name and Type Name */
     if (AccessState->ObjectName.Buffer)
     {

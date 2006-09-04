@@ -9,6 +9,9 @@ _tcslen:
  push  %edi
  mov   0x8(%esp), %edi
  xor   %eax, %eax
+ test  %edi,%edi
+ jz   _tcslen_end
+
  mov   $-1, %ecx
  cld
 
@@ -18,6 +21,8 @@ _tcslen:
  dec   %ecx
 
  mov   %ecx, %eax
+
+_tcslen_end:
  pop   %edi
  ret
 

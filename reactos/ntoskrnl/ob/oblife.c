@@ -73,7 +73,7 @@ ObpDeallocateObject(IN PVOID Object)
     }
 
     /* Check if a handle database was active */
-    if ((HandleInfo) && (Header->Flags & OB_FLAG_SINGLE_PROCESS))
+    if ((HandleInfo) && !(Header->Flags & OB_FLAG_SINGLE_PROCESS))
     {
         /* Free it */
         ExFreePool(HandleInfo->HandleCountDatabase);
@@ -163,7 +163,7 @@ ObpReapObject(IN PVOID Parameter)
     PVOID NextObject;
 
     /* Start reaping */
-    while((ReapObject = InterlockedExchangePointer(&ObpReaperList, NULL)))
+    while ((ReapObject = InterlockedExchangePointer(&ObpReaperList, NULL)))
     {
         /* Start deletion loop */
         do
@@ -176,7 +176,7 @@ ObpReapObject(IN PVOID Parameter)
 
             /* Move to the next one */
             ReapObject = NextObject;
-        } while(NextObject != NULL);
+        } while (NextObject);
     }
 }
 
@@ -266,7 +266,6 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                 (StringLength == (MAXUSHORT - sizeof(UNICODE_NULL) + 1)))
             {
                 /* PS: Please keep the checks above expanded for clarity */
-                DPRINT1("Invalid String Length\n");
                 Status = STATUS_OBJECT_NAME_INVALID;
             }
             else
@@ -305,7 +304,6 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
                 else
                 {
                     /* Fail */
-                    DPRINT1("Out of Memory!\n");
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                 }
             }
@@ -523,7 +521,7 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     }
 
     /* Initialize the Object Name Info */
-    if (HasNameInfo) 
+    if (HasNameInfo)
     {
         NameInfo = (POBJECT_HEADER_NAME_INFO)Header;
         NameInfo->Name = *ObjectName;
@@ -690,16 +688,84 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     NTSTATUS Status;
     CHAR Tag[4];
     OBP_LOOKUP_CONTEXT Context;
+    PWCHAR p;
+    ULONG i;
+    UNICODE_STRING ObjectName;
+
+    /* Verify parameters */
+    if (!(TypeName) ||
+        !(TypeName->Length) ||
+        !(ObjectTypeInitializer) ||
+        (ObjectTypeInitializer->Length != sizeof(*ObjectTypeInitializer)) ||
+        (ObjectTypeInitializer->InvalidAttributes & ~OBJ_VALID_ATTRIBUTES) ||
+        (ObjectTypeInitializer->MaintainHandleCount &&
+         (!(ObjectTypeInitializer->OpenProcedure) &&
+          !ObjectTypeInitializer->CloseProcedure)) ||
+        ((!ObjectTypeInitializer->UseDefaultObject) &&
+         (ObjectTypeInitializer->PoolType != NonPagedPool)))
+    {
+        /* Fail */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Make sure the name doesn't have a separator */
+    p = TypeName->Buffer;
+    i = TypeName->Length / sizeof(WCHAR);
+    while (i--)
+    {
+        /* Check for one and fail */
+        if (*p++ == OBJ_NAME_PATH_SEPARATOR) return STATUS_OBJECT_NAME_INVALID;
+    }
+
+    /* Check if we've already created the directory of types */
+    if (ObpTypeDirectoryObject)
+    {
+        /* Then scan it to figure out if we've already created this type */
+        Context.Directory = ObpTypeDirectoryObject;
+        Context.DirectoryLocked = TRUE;
+        if (ObpLookupEntryDirectory(ObpTypeDirectoryObject,
+                                    TypeName,
+                                    OBJ_CASE_INSENSITIVE,
+                                    FALSE,
+                                    &Context))
+        {
+            /* We have already created it, so fail */
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+    }
+
+    /* Now make a copy of the object name */
+    ObjectName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                              TypeName->MaximumLength,
+                                              OB_NAME_TAG);
+    if (!ObjectName.Buffer)
+    {
+        /* Out of memory, fail */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Set the length and copy the name */
+    ObjectName.MaximumLength = TypeName->MaximumLength;
+    RtlCopyUnicodeString(&ObjectName, TypeName);
 
     /* Allocate the Object */
     Status = ObpAllocateObject(NULL,
-                               TypeName,
+                               &ObjectName,
                                ObTypeObjectType,
                                sizeof(OBJECT_TYPE) + sizeof(OBJECT_HEADER),
                                KernelMode,
                                (POBJECT_HEADER*)&Header);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        /* Free the name and fail */
+        ExFreePool(ObjectName.Buffer);
+        return Status;
+    }
+
+    /* Setup the flags and name */
     LocalObjectType = (POBJECT_TYPE)&Header->Body;
+    LocalObjectType->Name = ObjectName;
+    Header->Flags |= OB_FLAG_KERNEL_MODE | OB_FLAG_PERMANENT;
 
     /* Check if this is the first Object Type */
     if (!ObTypeObjectType)
@@ -719,13 +785,9 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
         LocalObjectType->Key = *(PULONG)Tag;
     }
 
-    /* Set it up */
+    /* Set up the type information */
     LocalObjectType->TypeInfo = *ObjectTypeInitializer;
-    LocalObjectType->Name = *TypeName;
     LocalObjectType->TypeInfo.PoolType = ObjectTypeInitializer->PoolType;
-
-    /* These two flags need to be manually set up */
-    Header->Flags |= OB_FLAG_KERNEL_MODE | OB_FLAG_PERMANENT;
 
     /* Check if we have to maintain a type list */
     if (NtGlobalFlag & FLG_MAINTAIN_OBJECT_TYPELIST)
@@ -788,13 +850,6 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     if (ObpTypeDirectoryObject)
     {
         /* Insert it into the Object Directory */
-        Context.Directory = ObpTypeDirectoryObject;
-        Context.DirectoryLocked = TRUE;
-        ObpLookupEntryDirectory(ObpTypeDirectoryObject,
-                                TypeName,
-                                OBJ_CASE_INSENSITIVE,
-                                FALSE,
-                                &Context);
         ObpInsertEntryDirectory(ObpTypeDirectoryObject, &Context, Header);
         ObReferenceObject(ObpTypeDirectoryObject);
     }
@@ -946,10 +1001,32 @@ NtQueryObject(IN HANDLE ObjectHandle,
     POBJECT_BASIC_INFORMATION BasicInfo;
     ULONG InfoLength;
     PVOID Object = NULL;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
 
-    /* FIXME: Needs SEH */
+    /* Check if the caller is from user mode */
+    if (PreviousMode != KernelMode)
+    {
+        /* Protect validation with SEH */
+        _SEH_TRY
+        {
+            /* Probe the input structure */
+            ProbeForWrite(ObjectInformation, Length, sizeof(UCHAR));
+
+            /* If we have a result length, probe it too */
+            if (ResultLength) ProbeForWriteUlong(ResultLength);
+        }
+        _SEH_HANDLE
+        {
+            /* Get the exception code */
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        /* Fail if we raised an exception */
+        if (!NT_SUCCESS(Status)) return Status;
+    }
 
     /*
      * Make sure this isn't a generic type query, since the caller doesn't
@@ -1082,16 +1159,33 @@ NtQueryObject(IN HANDLE ObjectHandle,
 
         /* Anything else */
         default:
+
             /* Fail it */
             Status = STATUS_INVALID_INFO_CLASS;
             break;
     }
 
-    /* Derefernece the object if we had referenced it */
+    /* Dereference the object if we had referenced it */
     if (Object) ObDereferenceObject (Object);
 
-    /* Return the length and status */
-    if (ResultLength) *ResultLength = InfoLength;
+    /* Check if the caller wanted the return length */
+    if (ResultLength)
+    {
+        /* Protect the write to user mode */
+        _SEH_TRY
+        {
+            /* Write the length */
+            *ResultLength = Length;
+        }
+        _SEH_HANDLE
+        {
+            /* Otherwise, get the exception code */
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+
+    /* Return status */
     return Status;
 }
 

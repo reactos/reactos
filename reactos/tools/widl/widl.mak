@@ -42,11 +42,12 @@ WIDL_SOURCES = $(addprefix $(WIDL_BASE_), \
 	lex.yy.c \
 	proxy.c \
 	server.c \
+	typegen.c \
 	typelib.c \
 	utils.c \
 	widl.c \
 	write_msft.c \
-	y.tab.c \
+	parser.tab.c \
 	port$(SEP)mkstemps.c \
 	)
 
@@ -56,7 +57,7 @@ WIDL_OBJECTS = \
 WIDL_HOST_CFLAGS = $(TOOLS_CFLAGS) \
 	-DINT16=SHORT -D__USE_W32API -DYYDEBUG=1 \
 	-I$(WIDL_BASE) -I$(WPP_BASE) \
-	-Iinclude/reactos/wine -Iinclude/reactos -Iinclude
+	-Iinclude/reactos/wine -Iinclude/reactos -Iinclude -Iinclude/psdk
 
 WIDL_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
@@ -93,6 +94,10 @@ $(WIDL_INT_)server.o: $(WIDL_BASE_)server.c | $(WIDL_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
 
+$(WIDL_INT_)typegen.o: $(WIDL_BASE_)typegen.c | $(WIDL_INT)
+	$(ECHO_CC)
+	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
+
 $(WIDL_INT_)typelib.o: $(WIDL_BASE_)typelib.c | $(WIDL_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
@@ -109,7 +114,7 @@ $(WIDL_INT_)write_msft.o: $(WIDL_BASE_)write_msft.c | $(WIDL_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
 
-$(WIDL_INT_)y.tab.o: $(WIDL_BASE_)y.tab.c | $(WIDL_INT)
+$(WIDL_INT_)parser.tab.o: $(WIDL_BASE_)parser.tab.c | $(WIDL_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WIDL_HOST_CFLAGS) -c $< -o $@
 

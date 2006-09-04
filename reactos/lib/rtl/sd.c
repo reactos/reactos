@@ -837,7 +837,7 @@ RtlSelfRelativeToAbsoluteSD2(IN OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
     {
         if (((ULONG_PTR)pSacl < (ULONG_PTR)DataStart) || DataStart == NULL)
             DataStart = pSacl;
-        if (((ULONG_PTR)pSacl + DaclLength > (ULONG_PTR)DataEnd) || DataEnd == NULL)
+        if (((ULONG_PTR)pSacl + SaclLength > (ULONG_PTR)DataEnd) || DataEnd == NULL)
             DataEnd = (PVOID)((ULONG_PTR)pSacl + SaclLength);
     }
 

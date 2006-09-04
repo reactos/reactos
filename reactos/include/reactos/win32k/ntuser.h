@@ -8,6 +8,8 @@ typedef struct _DESKTOP
 {
     HANDLE hKernelHeap;
     WCHAR szDesktopName[1];
+    HWND hTaskManWindow;
+    HWND hProgmanWindow;
 } DESKTOP, *PDESKTOP;
 
 typedef struct _CALLPROC
@@ -687,12 +689,11 @@ NtUserDragDetect(
 DWORD
 NTAPI
 NtUserDragObject(
-	   HWND    hwnd1,
-	   HWND    hwnd2,
-	   UINT    u1,
-	   DWORD   dw1,
-	   HCURSOR hc1
-	   );
+   HWND    hwnd1,
+   HWND    hwnd2,
+   UINT    u1,
+   DWORD   dw1,
+   HCURSOR hc1);
 
 DWORD
 NTAPI
@@ -702,24 +703,24 @@ NtUserDrawAnimatedRects(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+BOOL
 NTAPI
 NtUserDrawCaption(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+   HWND hWnd,
+   HDC hDc,
+   LPCRECT lpRc,
+   UINT uFlags);
 
 DWORD
-NTAPI
+STDCALL
 NtUserDrawCaptionTemp(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6);
+   DWORD Unknown0,
+   DWORD Unknown1,
+   DWORD Unknown2,
+   DWORD Unknown3,
+   DWORD Unknown4,
+   DWORD Unknown5,
+   DWORD Unknown6);
 
 BOOL
 NTAPI
@@ -1117,6 +1118,8 @@ NtUserGetThreadDesktop(
 #define THREADSTATE_GETTHREADINFO   (0)
 #define THREADSTATE_FOCUSWINDOW (1)
 #define THREADSTATE_INSENDMESSAGE       (2)
+#define THREADSTATE_PROGMANWINDOW (3)
+#define THREADSTATE_TASKMANWINDOW (4)
 DWORD
 NTAPI
 NtUserGetThreadState(

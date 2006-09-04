@@ -14,7 +14,27 @@
 #include <internal/debug.h>
 
 POBJECT_TYPE DbgkDebugObjectType;
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+DbgkCopyProcessDebugPort(IN PEPROCESS Process,
+                         IN PEPROCESS Parent)
+{
+    /* FIXME: Implement */
+}
+
+BOOLEAN
+NTAPI
+DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
+                     IN BOOLEAN DebugPort,
+                     IN BOOLEAN SecondChance)
+{
+    /* FIXME: Implement */
+    return FALSE;
+}
+
 
 NTSTATUS
 NTAPI

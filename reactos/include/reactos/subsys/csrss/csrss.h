@@ -410,6 +410,12 @@ typedef struct
   HANDLE InputWaitHandle;
 } CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
 
+typedef struct
+{
+  BOOL Start;
+} CSRSS_START_SCREEN_SAVER, *PCSRSS_START_SCREEN_SAVER;
+
+
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
@@ -477,6 +483,7 @@ typedef struct
 #define SET_CONSOLE_OUTPUT_CP         (0x34)
 #define GET_INPUT_WAIT_HANDLE	      (0x35)
 #define GET_PROCESS_LIST              (0x36)
+#define START_SCREEN_SAVER            (0x37)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -542,6 +549,7 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage;
         CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
         CSRSS_GET_PROCESS_LIST GetProcessListRequest;
+        CSRSS_START_SCREEN_SAVER StartScreenSaver;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 

@@ -148,7 +148,7 @@ ExfReInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
     ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
 
     /* Reset the count */
-    InterlockedExchange((PLONG)&RunRef->Count, 0);
+    ExpSetRundown(&RunRef->Count, 0);
 }
 
 /*++
@@ -176,7 +176,7 @@ ExfRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
     ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);
 
     /* Mark the counter as active */
-    InterlockedExchange((PLONG)&RunRef->Count, EX_RUNDOWN_ACTIVE);
+    ExpSetRundown(&RunRef->Count, EX_RUNDOWN_ACTIVE);
 }
 
 /*++
@@ -227,7 +227,7 @@ ExfReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
     ASSERT((WaitBlock->Count > 0) || (KeNumberProcessors > 1));
 
     /* Remove the one count */
-    if (InterlockedExchangeAddSizeT(&WaitBlock->Count, -1))
+    if (!InterlockedDecrementSizeT(&WaitBlock->Count))
     {
         /* We're down to 0 now, so signal the event */
         KeSetEvent(&WaitBlock->WakeEvent, IO_NO_INCREMENT, FALSE);
@@ -286,7 +286,7 @@ ExfReleaseRundownProtectionEx(IN PEX_RUNDOWN_REF RunRef,
     ASSERT((WaitBlock->Count >= Count) || (KeNumberProcessors > 1));
 
     /* Remove the count */
-    if (InterlockedExchangeAddSizeT(WaitBlock->Count, -(LONG)Count) ==
+    if (InterlockedExchangeAddSizeT(&WaitBlock->Count, -(LONG)Count) ==
         (LONG)Count)
     {
         /* We're down to 0 now, so signal the event */

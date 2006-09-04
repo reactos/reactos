@@ -2,13 +2,9 @@
  * Local Security Authority interface definition
  */
 
-#define BYTE unsigned char
-#define DWORD unsigned int
-#define BOOL unsigned long
-#define LPBYTE unsigned char*
-#define LPDWORD unsigned long*
+#include "include/reactos/idl/wtypes.idl"
+
 #define LSA_HANDLE unsigned long
-#define NTSTATUS unsigned int
 
 [
   uuid(12345778-1234-abcd-ef00-0123456789ab),

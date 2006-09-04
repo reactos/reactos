@@ -83,6 +83,7 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	{
 		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
+		while(1);
 		return NULL;
 	}
 

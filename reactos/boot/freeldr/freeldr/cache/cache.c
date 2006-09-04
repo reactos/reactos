@@ -90,11 +90,12 @@ BOOLEAN CacheInitializeDrive(ULONG DriveNumber)
 	CacheManagerDrive.BlockSize = MachDiskGetCacheableBlockCount(DriveNumber);
 
 	CacheBlockCount = 0;
-	CacheSizeLimit = GetSystemMemorySize() / 8;
+	//CacheSizeLimit = GetSystemMemorySize() / 8;
+	CacheSizeLimit = 16 * 1024;
 	CacheSizeCurrent = 0;
-	if (CacheSizeLimit < (64 * 1024))
+	if (CacheSizeLimit < (16 * 1024))
 	{
-		CacheSizeLimit = (64 * 1024);
+		CacheSizeLimit = (16 * 1024);
 	}
 
 	CacheManagerInitialized = TRUE;
@@ -284,7 +285,7 @@ BOOLEAN CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULON
 		//
 		// Lock the sectors into the cache
 		//
-		CacheBlock->LockedInCache = TRUE;
+		//CacheBlock->LockedInCache = TRUE;
 	}
 
 	return TRUE;

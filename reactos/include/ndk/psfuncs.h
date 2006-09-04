@@ -32,13 +32,13 @@ Author:
 //
 struct _W32THREAD*
 NTAPI
-PsGetWin32Thread(
+PsGetCurrentThreadWin32Thread(
     VOID
 );
 
 struct _W32PROCESS*
 NTAPI
-PsGetWin32Process(
+PsGetCurrentProcessWin32Process(
     VOID
 );
 

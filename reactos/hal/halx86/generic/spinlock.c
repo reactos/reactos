@@ -14,8 +14,33 @@
 
 #undef KeAcquireSpinLock
 #undef KeReleaseSpinLock
+#undef KeLowerIrql
+#undef KeRaiseIrql
 
 /* FUNCTIONS ***************************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeLowerIrql(KIRQL NewIrql)
+{
+    /* Call the fastcall function */
+    KfLowerIrql(NewIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeRaiseIrql(KIRQL NewIrql,
+            PKIRQL OldIrql)
+{
+    /* Call the fastcall function */
+    *OldIrql = KfRaiseIrql(NewIrql);
+}
 
 /*
  * @implemented

@@ -128,6 +128,49 @@ typedef struct _KTRAP_FRAME
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 //
+// GDT Entry Definition
+//
+typedef struct _KGDTENTRY
+{
+    USHORT LimitLow;
+    USHORT BaseLow;
+    union
+    {
+        struct
+        {
+            UCHAR BaseMid;
+            UCHAR Flags1;
+            UCHAR Flags2;
+            UCHAR BaseHi;
+        } Bytes;
+        struct
+        {
+            ULONG BaseMid:8;
+            ULONG Type:5;
+            ULONG Dpl:2;
+            ULONG Pres:1;
+            ULONG LimitHi:4;
+            ULONG Sys:1;
+            ULONG Reserved_0:1;
+            ULONG Default_Big:1;
+            ULONG Granularity:1;
+            ULONG BaseHi:8;
+        } Bits;
+    } HighWord;
+} KGDTENTRY, *PKGDTENTRY;
+
+//
+// IDT Entry Definition
+//
+typedef struct _KIDTENTRY
+{
+    USHORT Offset;
+    USHORT Selector;
+    USHORT Access;
+    USHORT ExtendedOffset;
+} KIDTENTRY, *PKIDTENTRY;
+
+//
 // Page Table Entry Definition
 //
 typedef struct _HARDWARE_PTE_PPC
@@ -210,9 +253,9 @@ typedef struct _KSPECIAL_REGISTERS
 #pragma pack(push,4)
 typedef struct _KPROCESSOR_STATE
 {
-    PCONTEXT ContextFrame;
+    CONTEXT ContextFrame;
     KSPECIAL_REGISTERS SpecialRegisters;
-} KPROCESSOR_STATE;
+} KPROCESSOR_STATE, *PKPROCESSOR_STATE;
 
 //
 // Processor Region Control Block
@@ -234,8 +277,13 @@ typedef struct _KPRCB
     KPROCESSOR_STATE ProcessorState;
     ULONG KernelReserved[16];
     ULONG HalReserved[16];
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG CFlushSize;
+    UCHAR PrcbPad0[88];
+#else
     UCHAR PrcbPad0[92];
-    PVOID LockQueue[33]; // Used for Queued Spinlocks
+#endif
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
     struct _KTHREAD *NpxThread;
     ULONG InterruptCount;
     ULONG KernelTime;
@@ -247,19 +295,41 @@ typedef struct _KPRCB
     ULONG PageColor;
     UCHAR SkipTick;
     UCHAR DebuggerSavedIRQL;
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    UCHAR NodeColor;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    UCHAR PollSlot;
+#else
+    UCHAR Spare1;
+#endif
+    ULONG NodeShiftedColor;
+#else
     UCHAR Spare1[6];
+#endif
     struct _KNODE *ParentNode;
     ULONG MultiThreadProcessorSet;
     struct _KPRCB *MultiThreadSetMaster;
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    ULONG SecondaryColorMask;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG DpcTimeLimit;
+#else
+    LONG Sleeping;
+#endif
+#else
     ULONG ThreadStartCount[2];
+#endif
     ULONG CcFastReadNoWait;
     ULONG CcFastReadWait;
     ULONG CcFastReadNotPossible;
     ULONG CcCopyReadNoWait;
     ULONG CcCopyReadWait;
     ULONG CcCopyReadNoWaitMiss;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONG KeAlignmentFixupCount;
-    ULONG KeContextSwitches;
+#endif
+    ULONG SpareCounter0;
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     ULONG KeDcacheFlushCount;
     ULONG KeExceptionDispatchCount;
     ULONG KeFirstLevelTbFills;
@@ -267,84 +337,170 @@ typedef struct _KPRCB
     ULONG KeIcacheFlushCount;
     ULONG KeSecondLevelTbFills;
     ULONG KeSystemCalls;
-    ULONG IoReadOperationCount;
-    ULONG IoWriteOperationCount;
-    ULONG IoOtherOperationCount;
+#endif
+    volatile ULONG IoReadOperationCount;
+    volatile ULONG IoWriteOperationCount;
+    volatile ULONG IoOtherOperationCount;
     LARGE_INTEGER IoReadTransferCount;
     LARGE_INTEGER IoWriteTransferCount;
     LARGE_INTEGER IoOtherTransferCount;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG CcFastMdlReadNoWait;
+    ULONG CcFastMdlReadWait;
+    ULONG CcFastMdlReadNotPossible;
+    ULONG CcMapDataNoWait;
+    ULONG CcMapDataWait;
+    ULONG CcPinMappedDataCount;
+    ULONG CcPinReadNoWait;
+    ULONG CcPinReadWait;
+    ULONG CcMdlReadNoWait;
+    ULONG CcMdlReadWait;
+    ULONG CcLazyWriteHotSpots;
+    ULONG CcLazyWriteIos;
+    ULONG CcLazyWritePages;
+    ULONG CcDataFlushes;
+    ULONG CcDataPages;
+    ULONG CcLostDelayedWrites;
+    ULONG CcFastReadResourceMiss;
+    ULONG CcCopyReadWaitMiss;
+    ULONG CcFastMdlReadResourceMiss;
+    ULONG CcMapDataNoWaitMiss;
+    ULONG CcMapDataWaitMiss;
+    ULONG CcPinReadNoWaitMiss;
+    ULONG CcPinReadWaitMiss;
+    ULONG CcMdlReadNoWaitMiss;
+    ULONG CcMdlReadWaitMiss;
+    ULONG CcReadAheadIos;
+    ULONG KeAlignmentFixupCount;
+    ULONG KeExceptionDispatchCount;
+    ULONG KeSystemCalls;
+    ULONG PrcbPad1[3];
+#else
     ULONG SpareCounter1[8];
+#endif
     PP_LOOKASIDE_LIST PPLookasideList[16];
     PP_LOOKASIDE_LIST PPNPagedLookasideList[32];
     PP_LOOKASIDE_LIST PPPagedLookasideList[32];
-    ULONG PacketBarrier;
-    ULONG ReverseStall;
+    volatile ULONG PacketBarrier;
+    volatile ULONG ReverseStall;
     PVOID IpiFrame;
     UCHAR PrcbPad2[52];
-    PVOID CurrentPacket[3];
-    ULONG TargetSet;
-    ULONG_PTR WorkerRoutine;
-    ULONG IpiFrozen;
+    volatile PVOID CurrentPacket[3];
+    volatile ULONG TargetSet;
+    volatile PKIPI_WORKER WorkerRoutine;
+    volatile ULONG IpiFrozen;
     UCHAR PrcbPad3[40];
-    ULONG RequestSummary;
-    struct _KPRCB *SignalDone;
+    volatile ULONG RequestSummary;
+    volatile struct _KPRCB *SignalDone;
     UCHAR PrcbPad4[56];
     struct _KDPC_DATA DpcData[2];
     PVOID DpcStack;
     ULONG MaximumDpcQueueDepth;
     ULONG DpcRequestRate;
     ULONG MinimumDpcRate;
-    UCHAR DpcInterruptRequested;
-    UCHAR DpcThreadRequested;
-    UCHAR DpcRoutineActive;
-    UCHAR DpcThreadActive;
+    volatile UCHAR DpcInterruptRequested;
+    volatile UCHAR DpcThreadRequested;
+    volatile UCHAR DpcRoutineActive;
+    volatile UCHAR DpcThreadActive;
     ULONG PrcbLock;
     ULONG DpcLastCount;
-    ULONG TimerHand;
-    ULONG TimerRequest;
+    volatile ULONG TimerHand;
+    volatile ULONG TimerRequest;
     PVOID DpcThread;
-    struct _KEVENT *DpcEvent;
+    KEVENT DpcEvent;
     UCHAR ThreadDpcEnable;
-    BOOLEAN QuantumEnd;
+    volatile BOOLEAN QuantumEnd;
     UCHAR PrcbPad50;
-    UCHAR IdleSchedule;
-    ULONG DpcSetEventRequest;
+    volatile UCHAR IdleSchedule;
+    LONG DpcSetEventRequest;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LONG Sleeping;
+    ULONG PeriodicCount;
+    ULONG PeriodicBias;
+    UCHAR PrcbPad5[6];
+#else
     UCHAR PrcbPad5[18];
+#endif
     LONG TickOffset;
-    struct _KDPC* CallDpc;
+    KDPC CallDpc;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    LONG ClockKeepAlive;
+    UCHAR ClockCheckSlot;
+    UCHAR ClockPollCycle;
+    UCHAR PrcbPad6[2];
+    LONG DpcWatchdogPeriod;
+    LONG DpcWatchDogCount;
+    LONG ThreadWatchdogPeriod;
+    LONG ThreadWatchDogCount;
+    ULONG PrcbPad70[2];
+#else
     ULONG PrcbPad7[8];
+#endif
     LIST_ENTRY WaitListHead;
     ULONG ReadySummary;
-    ULONG SelectNextLast;
+    ULONG QueueIndex;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    SINGLE_LIST_ENTRY DeferredReadyListHead;
+    ULONGLONG StartCycles;
+    ULONGLONG CycleTime;
+    ULONGLONG PrcbPad71[3];
+    LIST_ENTRY DispatcherReadyListHead[32];
+#else
     LIST_ENTRY DispatcherReadyListHead[32];
     SINGLE_LIST_ENTRY DeferredReadyListHead;
     ULONG PrcbPad72[11];
+#endif
     PVOID ChainedInterruptList;
     LONG LookasideIrpFloat;
-    LONG MmPageFaultCount;
-    LONG MmCopyOnWriteCount;
-    LONG MmTransitionCount;
-    LONG MmCacheTransitionCount;
-    LONG MmDemandZeroCount;
-    LONG MmPageReadCount;
-    LONG MmPageReadIoCount;
-    LONG MmCacheReadCount;
-    LONG MmCacheIoCount;
-    LONG MmDirtyPagesWriteCount;
-    LONG MmDirtyWriteIoCount;
-    LONG MmMappedPagesWriteCount;
-    LONG MmMappedWriteIoCount;
+    volatile LONG MmPageFaultCount;
+    volatile LONG MmCopyOnWriteCount;
+    volatile LONG MmTransitionCount;
+    volatile LONG MmCacheTransitionCount;
+    volatile LONG MmDemandZeroCount;
+    volatile LONG MmPageReadCount;
+    volatile LONG MmPageReadIoCount;
+    volatile LONG MmCacheReadCount;
+    volatile LONG MmCacheIoCount;
+    volatile LONG MmDirtyPagesWriteCount;
+    volatile LONG MmDirtyWriteIoCount;
+    volatile LONG MmMappedPagesWriteCount;
+    volatile LONG MmMappedWriteIoCount;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG CachedCommit;
+    ULONG CachedResidentAvailable;
+    PVOID HyperPte;
+    UCHAR CpuVendor;
+    UCHAR PrcbPad9[3];
+#else
     ULONG SpareFields0[1];
+#endif
     CHAR VendorString[13];
     UCHAR InitialApicId;
     UCHAR LogicalProcessorsPerPhysicalProcessor;
     ULONG MHz;
     ULONG FeatureBits;
     LARGE_INTEGER UpdateSignature;
-    LARGE_INTEGER IsrTime;
+    volatile LARGE_INTEGER IsrTime;
     LARGE_INTEGER SpareField1;
     FX_SAVE_AREA NpxSaveArea;
     PROCESSOR_POWER_STATE PowerState;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    KDPC DpcWatchdogDoc;
+    KTIMER DpcWatchdogTimer;
+    PVOID WheaInfo;
+    PVOID EtwSupport;
+    SLIST_HEADER InterruptObjectPool;
+    LARGE_INTEGER HyperCallPagePhysical;
+    LARGE_INTEGER HyperCallPageVirtual;
+    PVOID RateControl;
+    CACHE_DESCRIPTOR Cache[5];
+    ULONG CacheCount;
+    ULONG CacheProcessorMask[5];
+    UCHAR LogicalProcessorsPerCore;
+    UCHAR PrcbPad8[3];
+    ULONG PackageProcessorSet;
+    ULONG CoreProcessorSet;
+#endif
 } KPRCB, *PKPRCB;
 
 //

@@ -41,23 +41,32 @@
 		<file>abnorter.c</file>
 		<file>exhand2.c</file>
 		<file>matherr.c</file>
-		<file>seh.s</file>
-		<file>unwind.c</file>
+            <if property="ARCH" value="i386">
+                      <directory name="i386">
+                            <file>seh.s</file> 
+                            <file>unwind.c</file>
+                      </directory>
+            </if>                 				
 		<file>xcptfil.c</file>
 	</directory>
 	<directory name="float">
-		<file>chgsign.c</file>
-		<file>clearfp.c</file>
-		<file>cntrlfp.c</file>
+		<file>chgsign.c</file>				
 		<file>copysign.c</file>
 		<file>fpclass.c</file>
 		<file>fpecode.c</file>
 		<file>fpreset.c</file>
 		<file>isnan.c</file>
-		<file>logb.c</file>
 		<file>nafter.c</file>
 		<file>scalb.c</file>
-		<file>statfp.c</file>
+		
+            <if property="ARCH" value="i386">
+                      <directory name="i386">
+                             <file>clearfp.c</file>
+                             <file>cntrlfp.c</file>
+                             <file>logb.c</file>
+                             <file>statfp.c</file>
+                      </directory>
+            </if> 
 	</directory>
 	<directory name="io">
 		<file>access.c</file>
@@ -105,27 +114,37 @@
 	<directory name="math">
 		<file>acos.c</file>
 		<file>adjust.c</file>
-		<file>asin.c</file>
-		<file>atan2.c</file>
+		<file>asin.c</file>		
 		<file>cabs.c</file>
-		<file>cosh.c</file>
-		<file>exp.c</file>
-		<file>fmod.c</file>
+		<file>cosh.c</file>				
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
 		<file>j0_y0.c</file>
 		<file>j1_y1.c</file>
-		<file>jn_yn.c</file>
-		<file>ldexp.c</file>
-		<file>log10.c</file>
+		<file>jn_yn.c</file>		
             <file>modf.c</file>
 		<file>s_modf.c</file>
-		<file>pow.c</file>
 		<file>sinh.c</file>
 		<file>stubs.c</file>
 		<file>tanh.c</file>
+            <file>pow_asm.c</file>
+
+            <if property="ARCH" value="i386">                                           
+                      <directory name="i386"> 	
+                            <file>atan2.c</file>
+                            <file>exp.c</file>
+                            <file>fmod.c</file>
+ 		                <file>ldexp.c</file>
+                            <file>atan_asm.s</file>	                                                                
+                            <file>pow_asm.s</file>
+                            <file>log10_asm.s</file>                                    
+	                </directory>
+            </if>
+            <ifnot property="ARCH" value="i386">
+            </ifnot>                       
 	</directory>
+
 	<directory name="mbstring">
 		<file>hanzen.c</file>
 		<file>ischira.c</file>
@@ -210,11 +229,15 @@
 		<file>lfind.c</file>
 		<file>lsearch.c</file>
 	</directory>
+      
 	<directory name="setjmp">
-		<directory name="i386">
-			<file>setjmp.s</file>
-		</directory>
+            <if property="ARCH" value="i386">                      
+		         <directory name="i386">
+			         <file>setjmp.s</file>
+		         </directory>
+            </if>
 	</directory>
+       
 	<directory name="signal">
 		<file>signal.c</file>
 		<file>xcptinfo.c</file>

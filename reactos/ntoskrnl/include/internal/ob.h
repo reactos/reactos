@@ -5,7 +5,6 @@
 * PURPOSE:         Internal header for the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
-#include "ob_x.h"
 
 //
 // Define this if you want debugging support
@@ -194,10 +193,41 @@ ObpDeleteObject(
     IN PVOID Object
 );
 
+LONG
+FASTCALL
+ObDereferenceObjectEx(
+    IN PVOID Object,
+    IN ULONG Count
+);
+
+LONG
+FASTCALL
+ObReferenceObjectEx(
+    IN PVOID Object,
+    IN ULONG Count
+);
+
+BOOLEAN
+FASTCALL
+ObReferenceObjectSafe(
+    IN PVOID Object
+);
+
 VOID
 NTAPI
 ObpReapObject(
     IN PVOID Unused
+);
+
+VOID
+NTAPI
+ObDereferenceDeviceMap(IN PEPROCESS Process);
+
+VOID
+NTAPI
+ObInheritDeviceMap(
+    IN PEPROCESS Parent,
+    IN PEPROCESS Process
 );
 
 VOID
@@ -213,9 +243,12 @@ ObpDeleteNameCheck(
     IN PVOID Object
 );
 
-//
-// Security descriptor cache functions
-//
+VOID
+NTAPI
+ObClearProcessHandleTable(IN PEPROCESS Process);
+
+/* Security descriptor cache functions */
+
 NTSTATUS
 NTAPI
 ObpInitSdCache(
@@ -247,6 +280,16 @@ ObpDereferenceCachedSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
+BOOLEAN
+NTAPI
+ObCheckObjectAccess(
+    IN PVOID Object,
+    IN OUT PACCESS_STATE AccessState,
+    IN BOOLEAN Unknown,
+    IN KPROCESSOR_MODE AccessMode,
+    OUT PNTSTATUS ReturnedStatus
+);
+
 //
 // Executive Fast Referencing Functions
 //
@@ -267,6 +310,12 @@ ObFastReplaceObject(
 PVOID
 FASTCALL
 ObFastReferenceObject(
+    IN PEX_FAST_REF FastRef
+);
+
+PVOID
+FASTCALL
+ObFastReferenceObjectLocked(
     IN PEX_FAST_REF FastRef
 );
 
@@ -313,3 +362,9 @@ extern PHANDLE_TABLE ObpKernelHandleTable;
 extern WORK_QUEUE_ITEM ObpReaperWorkItem;
 extern volatile PVOID ObpReaperList;
 extern NPAGED_LOOKASIDE_LIST ObpNmLookasideList, ObpCiLookasideList;
+extern BOOLEAN IoCountOperations;
+
+//
+// Inlined Functions
+//
+#include "ob_x.h"

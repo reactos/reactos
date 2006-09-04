@@ -52,4 +52,9 @@ HalpInitPhase0(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 
 }
 
+VOID
+HalpInitPhase1(VOID)
+{
+}
+
 /* EOF */

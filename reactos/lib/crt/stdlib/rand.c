@@ -11,7 +11,7 @@ rand(void)
 {
   PTHREADDATA ThreadData = GetThreadData();
 
-  ThreadData->tnext = ThreadData->tnext * 0x5deece66dLL + 11;
+  ThreadData->tnext = ThreadData->tnext * 0x5deece66dLL + 2531011;
   return (int)((ThreadData->tnext >> 16) & RAND_MAX);
 }
 

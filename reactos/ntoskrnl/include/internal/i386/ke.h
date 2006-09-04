@@ -26,7 +26,8 @@
 #define X86_CR4_OSFXSR          0x00000200 /* enable FXSAVE/FXRSTOR instructions */
 #define X86_CR4_OSXMMEXCPT      0x00000400 /* enable #XF exception */
 
-#define KF_RDTSC                0x00000002 /* time stamp counters are present */
+#define X86_FEATURE_VME         0x00000002 /* Virtual 8086 Extensions are present */
+#define X86_FEATURE_TSC         0x00000010 /* time stamp counters are present */
 #define X86_FEATURE_PAE         0x00000040 /* physical address extension is present */
 #define X86_FEATURE_CX8         0x00000100 /* CMPXCHG8B instruction present */
 #define X86_FEATURE_SYSCALL     0x00000800 /* SYSCALL/SYSRET support present */
@@ -42,12 +43,9 @@
 
 #define DR7_ACTIVE              0x00000055  /* If any of these bits are set, a Dr is active */
 
-/* Possible values for KTHREAD's NpxState */
-#define NPX_STATE_INVALID   0x01
-#define NPX_STATE_VALID     0x02
-#define NPX_STATE_DIRTY     0x04
-
 #define FRAME_EDITED        0xFFF8
+
+#define WE_DO_NOT_SPEAK_ABOUT_THE_V86_HACK 1
 
 #ifndef __ASM__
 
@@ -59,13 +57,37 @@ KiInitializeGdt(struct _KPCR* Pcr);
 VOID
 Ki386ApplicationProcessorInitializeTSS(VOID);
 VOID
-Ki386BootInitializeTSS(VOID);
+NTAPI
+Ki386InitializeTss(VOID);
 VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
 VOID
 Ki386InitializeLdt(VOID);
 VOID
 Ki386SetProcessorFeatures(VOID);
+
+VOID
+NTAPI
+KiSetCR0Bits(VOID);
+
+VOID
+NTAPI
+KiGetCacheInformation(VOID);
+
+BOOLEAN
+NTAPI
+KiIsNpxPresent(
+    VOID
+);
+
+VOID
+NTAPI
+KiSetProcessorType(VOID);
+
+ULONG
+NTAPI
+KiGetFeatureBits(VOID);
+
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
 VOID
@@ -123,6 +145,10 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                                  __asm__("lldt %0\n\t" \
                                      : /* no outputs */ \
                                      : "m" (X));
+#define Ke386SetInterruptDescriptorTable(X) \
+                                 __asm__("lidt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
 #define Ke386SetGlobalDescriptorTable(X) \
                                  __asm__("lgdt %0\n\t" \
                                      : /* no outputs */ \
@@ -130,12 +156,21 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
 
+#define _Ke386GetSeg(N)           ({ \
+                                     unsigned int __d; \
+                                     __asm__("movl %%" #N ",%0\n\t" :"=r" (__d)); \
+                                     __d; \
+                                 })
+
 #define _Ke386GetCr(N)           ({ \
                                      unsigned int __d; \
                                      __asm__("movl %%cr" #N ",%0\n\t" :"=r" (__d)); \
                                      __d; \
                                  })
 #define _Ke386SetCr(N,X)         __asm__ __volatile__("movl %0,%%cr" #N : :"r" (X));
+#define Ke386SetTr(X)         __asm__ __volatile__("ltr %%ax" : :"a" (X));
+
+#define _Ke386SetSeg(N,X)         __asm__ __volatile__("movl %0,%%" #N : :"r" (X));
 
 #define Ke386GetCr0()            _Ke386GetCr(0)
 #define Ke386SetCr0(X)           _Ke386SetCr(0,X)
@@ -143,6 +178,10 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386SetCr2(X)           _Ke386SetCr(2,X)
 #define Ke386GetCr4()            _Ke386GetCr(4)
 #define Ke386SetCr4(X)           _Ke386SetCr(4,X)
+#define Ke386GetSs()             _Ke386GetSeg(ss)
+#define Ke386SetFs(X)            _Ke386SetSeg(fs, X)
+#define Ke386SetDs(X)            _Ke386SetSeg(ds, X)
+#define Ke386SetEs(X)            _Ke386SetSeg(es, X)
 
 static inline LONG Ke386TestAndClearBit(ULONG BitPos, volatile PULONG Addr)
 {

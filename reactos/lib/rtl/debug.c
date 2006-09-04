@@ -206,7 +206,7 @@ vDbgPrintEx(IN ULONG ComponentId,
  */
 ULONG
 __cdecl
-DbgPrint(PCH Format,
+DbgPrint(PCCH Format,
          ...)
 {
     va_list ap;
@@ -229,7 +229,7 @@ ULONG
 __cdecl
 DbgPrintEx(IN ULONG ComponentId,
            IN ULONG Level,
-           IN PCH Format,
+           IN PCCH Format,
            ...)
 {
     va_list ap;

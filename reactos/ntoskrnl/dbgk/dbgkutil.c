@@ -54,4 +54,18 @@ DbgkCreateThread(PVOID StartAddress)
 #endif
 }
 
+VOID
+NTAPI
+DbgkExitProcess(IN NTSTATUS ExitStatus)
+{
+    /* FIXME */
+}
+
+VOID
+NTAPI
+DbgkExitThread(IN NTSTATUS ExitStatus)
+{
+    /* FIXME */
+}
+
 /* EOF */

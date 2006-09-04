@@ -1,6 +1,6 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ex/atom.c
  * PURPOSE:         Executive Atom Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
@@ -28,6 +28,17 @@ PRTL_ATOM_TABLE GlobalAtomTable;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+/*++
+ * @name ExpGetGlobalAtomTable
+ *
+ * Gets pointer to a global atom table, creates it if not already created
+ *
+ * @return Pointer to the RTL_ATOM_TABLE, or NULL if it's impossible
+ *         to create atom table
+ *
+ * @remarks Internal function
+ *
+ *--*/
 PRTL_ATOM_TABLE
 NTAPI
 ExpGetGlobalAtomTable(VOID)
@@ -49,9 +60,29 @@ ExpGetGlobalAtomTable(VOID)
 
 /* FUNCTIONS ****************************************************************/
 
-/*
+/*++
+ * @name NtAddAtom
  * @implemented
- */
+ *
+ * Function NtAddAtom creates new Atom in Global Atom Table. If Atom
+ * with the same name already exist, internal Atom counter is incremented.
+ * See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Atoms/NtAddAtom.html
+ *
+ * @param AtomName
+ *        Atom name in Unicode
+ *
+ * @param AtomNameLength
+ *        Length of the atom name
+ *
+ * @param Atom
+ *        Pointer to RTL_ATOM
+ *
+ * @return STATUS_SUCCESS in case of success, proper error code
+ *         othwerwise.
+ *
+ * @remarks None
+ *
+ *--*/
 NTSTATUS
 NTAPI
 NtAddAtom(IN PWSTR AtomName,
@@ -151,9 +182,24 @@ NtAddAtom(IN PWSTR AtomName,
     return Status;
 }
 
-/*
+/*++
+ * @name NtDeleteAtom
  * @implemented
- */
+ *
+ * Removes Atom from Global Atom Table. If Atom's reference counter
+ * is greater then 1, function decrements this counter, but Atom
+ * stayed in Global Atom Table.
+ * See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Atoms/NtDeleteAtom.html
+ *
+ * @param Atom
+ *        Atom identifier
+ *
+ * @return STATUS_SUCCESS in case of success, proper error code
+ *         othwerwise.
+ *
+ * @remarks None
+ *
+ *--*/
 NTSTATUS
 NTAPI
 NtDeleteAtom(IN RTL_ATOM Atom)
@@ -168,9 +214,29 @@ NtDeleteAtom(IN RTL_ATOM Atom)
     return RtlDeleteAtomFromAtomTable(AtomTable, Atom);
 }
 
-/*
+/*++
+ * @name NtFindAtom
  * @implemented
- */
+ *
+ * Retrieves existing Atom's identifier without incrementing Atom's
+ * internal counter
+ * See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Atoms/NtFindAtom.html
+ *
+ * @param AtomName
+ *        Atom name in Unicode
+ *
+ * @param AtomNameLength
+ *        Length of the atom name
+ *
+ * @param Atom
+ *        Pointer to RTL_ATOM
+ *
+ * @return STATUS_SUCCESS in case of success, proper error code
+ *         othwerwise.
+ *
+ * @remarks None
+ *
+ *--*/
 NTSTATUS
 NTAPI
 NtFindAtom(IN PWSTR AtomName,
@@ -270,9 +336,36 @@ NtFindAtom(IN PWSTR AtomName,
     return Status;
 }
 
-/*
+/*++
+ * @name NtQueryInformationAtom
  * @implemented
- */
+ *
+ * Gets single Atom properties or reads Global Atom Table
+ * See: http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Atoms/NtQueryInformationAtom.html
+ *
+ * @param Atom
+ *        Atom to query. If AtomInformationClass parameter is
+ *        AtomTableInformation, Atom parameter is not used.
+ *
+ * @param AtomInformationClass
+ *        See ATOM_INFORMATION_CLASS enumeration type for details
+ *
+ * @param AtomInformation
+ *        Result of call - pointer to user's allocated buffer for data
+ *
+ * @param AtomInformationLength
+ *        Size of AtomInformation buffer, in bytes
+ *
+ * @param ReturnLength
+ *        Pointer to ULONG value containing required AtomInformation
+ *        buffer size
+ *
+ * @return STATUS_SUCCESS in case of success, proper error code
+ *         othwerwise.
+ *
+ * @remarks None
+ *
+ *--*/
 NTSTATUS
 NTAPI
 NtQueryInformationAtom(RTL_ATOM Atom,

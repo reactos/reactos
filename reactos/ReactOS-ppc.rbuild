@@ -18,7 +18,6 @@
   <define name="_PPC_" />
   <define name="__PowerPC__" />
   <define name="_REACTOS_" />
-  <define name="__MINGW_IMPORT">extern</define>
   <define name="stdcall" empty="true" />	
   <define name="__stdcall__" empty="true" />
   <define name="fastcall" empty="true" />
@@ -26,6 +25,7 @@
   <define name="__cdecl__" empty="true" />
   <define name="dllimport" empty="true" />
   <define name="WORDS_BIGENDIAN" empty="true" />
+  <compilerflag>-fsigned-char</compilerflag>
   <if property="MP" value="1">
     <define name="CONFIG_SMP" value="1" />
   </if>
@@ -48,6 +48,7 @@
   <include>include/ddk</include>
   <include>include/GL</include>
   <include>include/ndk</include>
+  <include>include/psdk</include>
   <include>include/reactos</include>
   <include>include/reactos/libs</include>
 

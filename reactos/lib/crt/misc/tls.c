@@ -14,6 +14,8 @@ static void InitThreadData(PTHREADDATA ThreadData)
 
    ThreadData->fpecode = 0;
 
+   ThreadData->tnext = 1;
+
    /* FIXME: init more thread local data */
 
 }

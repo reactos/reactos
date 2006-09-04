@@ -83,16 +83,26 @@ RtlRandom (IN OUT PULONG Seed)
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 ULONG
 NTAPI
-RtlRandomEx(
-	PULONG Seed
+RtlRandomEx( IN OUT PULONG Seed
 	)
 {
-	UNIMPLEMENTED;
-	return 0;
+   ULONG Rand;
+   int Pos;
+   ULONG Result;
+
+   PAGED_CODE_RTL();
+
+   Rand = (*Seed * 0x7fffffed + 0x7fffffc3) % 0x7fffffff;
+   *Seed = (Rand * 0x7fffffed + 0x7fffffc3) % 0x7fffffff;
+   Pos = *Seed & 0x7f;
+   Result = SavedValue[Pos];
+   SavedValue[Pos] = Rand;
+
+   return Result;
 }
 
 

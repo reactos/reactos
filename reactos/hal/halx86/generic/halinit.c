@@ -33,7 +33,7 @@ DriverEntry(
 
 BOOLEAN STDCALL
 HalInitSystem (ULONG BootPhase,
-               PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+               PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   if (BootPhase == 0)
     {
@@ -42,6 +42,9 @@ HalInitSystem (ULONG BootPhase,
     }
   else if (BootPhase == 1)
     {
+      /* Initialize the clock interrupt */
+      //HalpInitPhase1();
+
       /* Initialize display and make the screen black */
       HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
       HalpInitBusHandlers();

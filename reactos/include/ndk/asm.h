@@ -90,22 +90,28 @@ Author:
 #define KTHREAD_STACK_LIMIT                     0x1C
 #define KTHREAD_TEB                             0x74
 #define KTHREAD_KERNEL_STACK                    0x20
-#define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_STATE                           0x4C
+#define KTHREAD_NPX_STATE                       0x4D
 #define KTHREAD_ALERTED                         0x5E
 #define KTHREAD_APCSTATE_PROCESS                0x28 + 0x10
 #define KTHREAD_PENDING_USER_APC                0x28 + 0x16
 #define KTHREAD_PENDING_KERNEL_APC              0x28 + 0x15
 #define KTHREAD_CONTEXT_SWITCHES                0x48
 #define KTHREAD_WAIT_IRQL                       0x4E
+#define KTHREAD_NEXT_PROCESSOR                  0x40
+#define KTHREAD_SWAP_BUSY                       0x5D
 #define KTHREAD_SERVICE_TABLE                   0x118
 #define KTHREAD_PREVIOUS_MODE                   0xD7
 #define KTHREAD_COMBINED_APC_DISABLE            0x70
+#define KTHREAD_SPECIAL_APC_DISABLE             0x72
 #define KTHREAD_LARGE_STACK                     0x107
 #define KTHREAD_TRAP_FRAME                      0x110
 #define KTHREAD_CALLBACK_STACK                  0x114
 #define KTHREAD_APC_STATE_INDEX                 0x11C
 #define KTHREAD_STACK_BASE                      0x158
+#define KTHREAD_QUANTUM                         0x15D
+#define KTHREAD_KERNEL_TIME                     0x160
+#define KTHREAD_USER_TIME                       0x18C
 
 //
 // KPROCESS Offsets
@@ -113,7 +119,11 @@ Author:
 #define KPROCESS_DIRECTORY_TABLE_BASE           0x18
 #define KPROCESS_LDT_DESCRIPTOR0                0x20
 #define KPROCESS_LDT_DESCRIPTOR1                0x24
+#define KPROCESS_INT21_DESCRIPTOR0              0x28
+#define KPROCESS_INT21_DESCRIPTOR1              0x2C
 #define KPROCESS_IOPM_OFFSET                    0x30
+#define KPROCESS_ACTIVE_PROCESSORS              0x34
+#define EPROCESS_VDM_OBJECTS                    0x144
 
 //
 // KPCR Offsets
@@ -121,23 +131,60 @@ Author:
 #define KPCR_EXCEPTION_LIST                     0x0
 #define KPCR_INITIAL_STACK                      0x4
 #define KPCR_STACK_LIMIT                        0x8
+#define KPCR_PERF_GLOBAL_GROUP_MASK             0x8
+#define KPCR_CONTEXT_SWITCHES                   0x10
 #define KPCR_SET_MEMBER_COPY                    0x14
 #define KPCR_TEB                                0x18
 #define KPCR_SELF                               0x1C
 #define KPCR_PRCB                               0x20
 #define KPCR_IRQL                               0x24
+#define KPCR_IRR                                0x28
+#define KPCR_IRR_ACTIVE                         0x2C
+#define KPCR_IDR                                0x30
 #define KPCR_KD_VERSION_BLOCK                   0x34
+#define KPCR_IDT                                0x38
 #define KPCR_GDT                                0x3C
 #define KPCR_TSS                                0x40
 #define KPCR_SET_MEMBER                         0x48
 #define KPCR_NUMBER                             0x51
 #define KPCR_CURRENT_THREAD                     0x124
+#define KPCR_PRCB_NEXT_THREAD                   0x128
+#define KPCR_PRCB_IDLE_THREAD                   0x12C
 #define KPCR_PROCESSOR_NUMBER                   0x130
 #define KPCR_PRCB_SET_MEMBER                    0x134
+#define KPCR_PRCB_CPU_TYPE                      0x138
 #define KPCR_NPX_THREAD                         0x640
 #define KPCR_DR6                                0x428
 #define KPCR_DR7                                0x42C
+#define KPCR_PRCB_INTERRUPT_COUNT               0x644
+#define KPCR_PRCB_KERNEL_TIME                   0x648
+#define KPCR_PRCB_USER_TIME                     0x64C
+#define KPCR_PRCB_DPC_TIME                      0x650
+#define KPCR_PRCB_DEBUG_DPC_TIME                0x654
+#define KPCR_PRCB_INTERRUPT_TIME                0x658
+#define KPCR_PRCB_ADJUST_DPC_THRESHOLD          0x65C
 #define KPCR_SYSTEM_CALLS                       0x6B8
+#define KPCR_PRCB_DPC_QUEUE_DEPTH               0xA4C
+#define KPCR_PRCB_DPC_COUNT                     0xA50
+#define KPCR_PRCB_DPC_STACK                     0xA68
+#define KPCR_PRCB_MAXIMUM_DPC_QUEUE_DEPTH       0xA6C
+#define KPCR_PRCB_DPC_REQUEST_RATE              0xA70
+#define KPCR_PRCB_DPC_INTERRUPT_REQUESTED       0xA78
+#define KPCR_PRCB_DPC_ROUTINE_ACTIVE            0xA7A
+#define KPCR_PRCB_DPC_LAST_COUNT                0xA80
+#define KPCR_PRCB_TIMER_REQUEST                 0xA88
+#define KPCR_PRCB_QUANTUM_END                   0xAA1
+#define KPCR_PRCB_DEFERRED_READY_LIST_HEAD      0xC10
+
+//
+// KINTERRUPT Offsets
+//
+#define KINTERRUPT_SERVICE_ROUTINE              0x0C
+#define KINTERRUPT_SERVICE_CONTEXT              0x10
+#define KINTERRUPT_ACTUAL_LOCK                  0x1C
+#define KINTERRUPT_IRQL                         0x20
+#define KINTERRUPT_VECTOR                       0x24
+#define KINTERRUPT_SYNCHRONIZE_IRQL             0x29
 
 //
 // KGDTENTRY Offsets
@@ -220,6 +267,16 @@ Author:
 //
 // KUSER_SHARED_DATA Offsets
 //
+#ifdef __ASM__
+#define USER_SHARED_DATA                        0xFFDF0000
+#endif
+#define USER_SHARED_DATA_INTERRUPT_TIME         0x8
+#define USER_SHARED_DATA_SYSTEM_TIME            0x14
+#define USER_SHARED_DATA_TICK_COUNT             0x320
+
+//
+// KUSER_SHARED_DATA Offsets (this stuff is trash)
+//
 #define KERNEL_USER_SHARED_DATA                 0x7FFE0000
 #define KUSER_SHARED_PROCESSOR_FEATURES         KERNEL_USER_SHARED_DATA + 0x274
 #define KUSER_SHARED_SYSCALL                    KERNEL_USER_SHARED_DATA + 0x300
@@ -261,6 +318,7 @@ Author:
 #define EXCEPTION_RECORD_EXCEPTION_ADDRESS      0xC
 #define EXCEPTION_RECORD_NUMBER_PARAMETERS      0x10
 #define SIZEOF_EXCEPTION_RECORD                 0x14
+#define EXCEPTION_RECORD_LENGTH                 0x50
 
 //
 // TEB Offsets
@@ -273,6 +331,7 @@ Author:
 #define TEB_EXCEPTION_CODE                      0x1A4
 #define TEB_ACTIVATION_CONTEXT_STACK_POINTER    0x1A8
 #define TEB_DEALLOCATION_STACK                  0xE0C
+#define TEB_GDI_BATCH_COUNT                     0xF70
 #define TEB_GUARANTEED_STACK_BYTES              0xF78
 #define TEB_FLS_DATA                            0xFB4
 
@@ -355,6 +414,11 @@ Author:
 #endif
 
 //
+// DR7 Values
+//
+#define DR7_RESERVED_MASK                       0xDC00
+
+//
 // Usermode callout frame definitions
 //
 #define CBSTACK_STACK                           0x0
@@ -370,9 +434,32 @@ Author:
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
 #define STATUS_INVALID_SYSTEM_SERVICE           0xC000001C
 #define STATUS_NO_CALLBACK_ACTIVE               0xC0000258
+#define STATUS_CALLBACK_POP_STACK               0xC0000423
+#define STATUS_ARRAY_BOUNDS_EXCEEDED            0xC000008C
+#define STATUS_ILLEGAL_INSTRUCTION              0xC000001D
+#define STATUS_BREAKPOINT                       0x80000003
+#define STATUS_SINGLE_STEP                      0x80000004
+#define STATUS_INTEGER_DIVIDE_BY_ZERO           0xC0000094
+#define STATUS_INTEGER_OVERFLOW                 0xC0000095
 #define APC_INDEX_MISMATCH                      0x01
+#define TRAP_CAUSE_UNKNOWN                      0x12
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
+#define ATTEMPTED_SWITCH_FROM_DPC               0xB8
+
+//
+// IRQL Levels
+//
+#define PASSIVE_LEVEL                           0x0
+#define APC_LEVEL                               0x1
+#define DISPATCH_LEVEL                          0x2
+#define CLOCK2_LEVEL                            0x1C
+#define HIGH_LEVEL                              0x1F
+
+//
+// Quantum Decrements
+//
+#define CLOCK_QUANTUM_DECREMENT                 0x3
 #endif
 
 //
@@ -390,6 +477,11 @@ Author:
 #define SERVICE_DESCRIPTOR_LENGTH               0x0010
 
 //
+// VDM State Pointer
+//
+#define FIXED_NTVDMSTATE_LINEAR_PC_AT           0x714
+
+//
 // Machine types
 //
 #ifdef __ASM__
@@ -402,9 +494,11 @@ Author:
 //
 #define KF_RDTSC                                0x00000002
 #endif
+
 //
 // Generic Definitions
 //
+#define PRIMARY_VECTOR_BASE                     0x30 // FIXME: HACK
 #define MAXIMUM_IDTVECTOR                       0xFF
 #endif // !_ASM_H
 

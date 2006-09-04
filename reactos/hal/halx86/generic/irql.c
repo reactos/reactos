@@ -70,7 +70,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
   return(KeGetPcr()->Irql);
 }
 
-VOID HalpInitPICs(VOID)
+VOID NTAPI HalpInitPICs(VOID)
 {
   memset(HalpPendingInterruptCount, 0, sizeof(HalpPendingInterruptCount));
 
@@ -218,30 +218,6 @@ KfLowerIrql (KIRQL	NewIrql)
   HalpLowerIrql(NewIrql);
 }
 
-
-/**********************************************************************
- * NAME							EXPORTED
- *	KeLowerIrql
- *
- * DESCRIPTION
- *	Restores the irq level on the current processor
- *
- * ARGUMENTS
- *	NewIrql = Irql to lower to
- *
- * RETURN VALUE
- *	None
- *
- * NOTES
- */
-#undef KeLowerIrql
-VOID STDCALL
-KeLowerIrql (KIRQL NewIrql)
-{
-  KfLowerIrql (NewIrql);
-}
-
-
 /**********************************************************************
  * NAME							EXPORTED
  *	KfRaiseIrql
@@ -278,33 +254,6 @@ KfRaiseIrql (KIRQL	NewIrql)
   KeGetPcr()->Irql = NewIrql;
   return OldIrql;
 }
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	KeRaiseIrql
- *
- * DESCRIPTION
- *	Raises the hardware priority (irql)
- *
- * ARGUMENTS
- *	NewIrql = Irql to raise to
- *	OldIrql (OUT) = Caller supplied storage for the previous irql
- *
- * RETURN VALUE
- *	None
- *
- * NOTES
- *	Calls KfRaiseIrql
- */
-#undef KeRaiseIrql
-VOID STDCALL
-KeRaiseIrql (KIRQL	NewIrql,
-	     PKIRQL	OldIrql)
-{
-  *OldIrql = KfRaiseIrql (NewIrql);
-}
-
 
 /**********************************************************************
  * NAME							EXPORTED

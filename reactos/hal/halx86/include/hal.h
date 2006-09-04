@@ -17,6 +17,7 @@
 #include <arc/arc.h>
 #include <iotypes.h>
 #include <kefuncs.h>
+#include <halfuncs.h>
 #include <rosldr.h>
 
 #define KPCR_BASE 0xFF000000 // HACK!

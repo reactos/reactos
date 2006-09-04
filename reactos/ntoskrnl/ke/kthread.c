@@ -22,9 +22,38 @@ extern EX_WORK_QUEUE ExWorkerQueue[MaximumWorkQueue];
 LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static ULONG PriorityListMask = 0;
 ULONG IdleProcessorMask = 0;
-extern PETHREAD PspReaperList;
+extern LIST_ENTRY PspReaperListHead;
+
+ULONG KiMask32Array[MAXIMUM_PRIORITY] =
+{
+    0x1,        0x2,       0x4,       0x8,       0x10,       0x20,
+    0x40,       0x80,      0x100,     0x200,     0x4000,     0x800,
+    0x1000,     0x2000,    0x4000,    0x8000,    0x10000,    0x20000,
+    0x40000,    0x80000,   0x100000,  0x200000,  0x400000,   0x800000,
+    0x1000000,  0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000,
+    0x40000000, 0x80000000
+};
 
 /* FUNCTIONS *****************************************************************/
+
+UCHAR
+NTAPI
+KeFindNextRightSetAffinity(IN UCHAR Number,
+                           IN ULONG Set)
+{
+    ULONG Bit, Result;
+    ASSERT(Set != 0);
+
+    /* Calculate the mask */
+    Bit = (AFFINITY_MASK(Number) - 1) & Set;
+
+    /* If it's 0, use the one we got */
+    if (!Bit) Bit = Set;
+
+    /* Now find the right set and return it */
+    BitScanReverse(&Result, Bit);
+    return (UCHAR)Result;
+}
 
 STATIC
 VOID
@@ -83,7 +112,7 @@ KiScanThreadList(KPRIORITY Priority,
 
             if (current->State != Ready) {
 
-                DPRINT1("%d/%d\n", &current, current->State);
+                DPRINT1("%p/%d\n", current, current->State);
             }
 
             ASSERT(current->State == Ready);
@@ -99,7 +128,7 @@ KiScanThreadList(KPRIORITY Priority,
     return(NULL);
 }
 
-VOID
+BOOLEAN
 STDCALL
 KiDispatchThreadNoLock(ULONG NewThreadStatus)
 {
@@ -107,6 +136,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
     PKTHREAD Candidate;
     ULONG Affinity;
     PKTHREAD CurrentThread = KeGetCurrentThread();
+    BOOLEAN ApcState;
 
     DPRINT("KiDispatchThreadNoLock() %d/%d/%d/%d\n", KeGetCurrentProcessorNumber(),
             CurrentThread, NewThreadStatus, CurrentThread->State);
@@ -129,7 +159,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
             Candidate->State = Running;
             KeReleaseDispatcherDatabaseLockFromDpcLevel();
-            return;
+            return FALSE;
         }
 
         if (Candidate != NULL) {
@@ -157,15 +187,16 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
             MmUpdatePageDir((PEPROCESS)PsGetCurrentProcess(),((PETHREAD)CurrentThread)->ThreadsProcess, sizeof(EPROCESS));
 
             /* Special note for Filip: This will release the Dispatcher DB Lock ;-) -- Alex */
-            DPRINT("You are : %x, swapping to: %x\n", OldThread, CurrentThread);
-            KiArchContextSwitch(CurrentThread);
+            DPRINT("You are : %x, swapping to: %x.\n", OldThread, CurrentThread);
+            ApcState = KiSwapContext(OldThread, CurrentThread);
             DPRINT("You are : %x, swapped from: %x\n", OldThread, CurrentThread);
-            return;
+            return ApcState;
         }
     }
 
     DPRINT1("CRITICAL: No threads are ready (CPU%d)\n", KeGetCurrentProcessorNumber());
     KEBUGCHECK(0);
+    return FALSE;
 }
 
 NTSTATUS
@@ -173,13 +204,24 @@ NTAPI
 KiSwapThread(VOID)
 {
     PKTHREAD CurrentThread = KeGetCurrentThread();
+    BOOLEAN ApcState;
 
     /* Find a new thread to run */
     DPRINT("Dispatching Thread as blocked\n");
-    KiDispatchThreadNoLock(Waiting);
+    ApcState = KiDispatchThreadNoLock(Waiting);
 
-    /* Lower IRQL back */
-    DPRINT("Lowering IRQL \n");
+    /* Check if we need to deliver APCs */
+    if (ApcState)
+    {
+        /* Lower to APC_LEVEL */
+        KeLowerIrql(APC_LEVEL);
+
+        /* Deliver APCs */
+        KiDeliverApc(KernelMode, NULL, NULL);
+        ASSERT(CurrentThread->WaitIrql == 0);
+    }
+
+    /* Lower IRQL back to what it was */
     KfLowerIrql(CurrentThread->WaitIrql);
 
     /* Return the wait status */
@@ -202,84 +244,12 @@ KiDispatchThread(ULONG NewThreadStatus)
 }
 
 VOID
-STDCALL
-KiUnblockThread(PKTHREAD Thread,
-                PNTSTATUS WaitStatus,
-                KPRIORITY Increment)
+NTAPI
+KiReadyThread(IN PKTHREAD Thread)
 {
-    if (Terminated == Thread->State) {
-
-        DPRINT("Can't unblock thread 0x%x because it's terminating\n",
-               Thread);
-
-    } else if (Ready == Thread->State ||
-               Running == Thread->State) {
-
-        DPRINT("Can't unblock thread 0x%x because it's %s\n",
-               Thread, (Thread->State == Ready ? "ready" : "running"));
-
-    } else {
-
-        LONG Processor;
-        KAFFINITY Affinity;
-
-        /* FIXME: This propably isn't the right way to do it... */
-        /* No it's not... i'll fix it later-- Alex */
-        if (Thread->Priority < LOW_REALTIME_PRIORITY &&
-            Thread->BasePriority < LOW_REALTIME_PRIORITY - 2) {
-
-            if (!Thread->PriorityDecrement && !Thread->DisableBoost) {
-
-                Thread->Priority = Thread->BasePriority + Increment;
-                Thread->PriorityDecrement = Increment;
-            }
-
-            /* Also decrease quantum */
-            Thread->Quantum--;
-
-        } else {
-
-            Thread->Quantum = Thread->QuantumReset;
-        }
-
-        if (WaitStatus != NULL) {
-
-            Thread->WaitStatus = *WaitStatus;
-        }
-
-        Thread->State = Ready;
-        KiInsertIntoThreadList(Thread->Priority, Thread);
-        Processor = KeGetCurrentProcessorNumber();
-        Affinity = Thread->Affinity;
-
-        if (!(IdleProcessorMask & (1 << Processor) & Affinity) &&
-             (IdleProcessorMask & ~(1 << Processor) & Affinity)) {
-
-            LONG i;
-
-            for (i = 0; i < KeNumberProcessors - 1; i++) {
-
-                Processor++;
-
-                if (Processor >= KeNumberProcessors) {
-
-                    Processor = 0;
-                }
-
-                if (IdleProcessorMask & (1 << Processor) & Affinity) {
-#if 0
-                    /* FIXME:
-                     *   Reschedule the threads on an other processor
-                     */
-                    KeReleaseDispatcherDatabaseLockFromDpcLevel();
-                    KiRequestReschedule(Processor);
-                    KeAcquireDispatcherDatabaseLockAtDpcLevel();
-#endif
-                    break;
-                }
-            }
-        }
-    }
+    /* Makes a thread ready */
+    Thread->State = Ready;
+    KiInsertIntoThreadList(Thread->Priority, Thread);
 }
 
 VOID
@@ -486,8 +456,8 @@ KeRundownThread(VOID)
 }
 
 ULONG
-STDCALL
-KeResumeThread(PKTHREAD Thread)
+NTAPI
+KeResumeThread(IN PKTHREAD Thread)
 {
     ULONG PreviousCount;
     KIRQL OldIrql;
@@ -667,7 +637,7 @@ KeForceResumeThread(IN PKTHREAD Thread)
 }
 
 ULONG
-STDCALL
+NTAPI
 KeAlertResumeThread(IN PKTHREAD Thread)
 {
     ULONG PreviousCount;
@@ -717,9 +687,9 @@ KeAlertResumeThread(IN PKTHREAD Thread)
 }
 
 BOOLEAN
-STDCALL
-KeAlertThread(PKTHREAD Thread,
-              KPROCESSOR_MODE AlertMode)
+NTAPI
+KeAlertThread(IN PKTHREAD Thread,
+              IN KPROCESSOR_MODE AlertMode)
 {
     KIRQL OldIrql;
     BOOLEAN PreviousState;
@@ -771,34 +741,37 @@ KeCapturePersistentThreadState(IN PVOID CurrentThread,
     UNIMPLEMENTED;
 }
 
-/*
- * FUNCTION: Initialize the microkernel state of the thread
- */
 VOID
-STDCALL
-KeInitializeThread(PKPROCESS Process,
-                   PKTHREAD Thread,
-                   PKSYSTEM_ROUTINE SystemRoutine,
-                   PKSTART_ROUTINE StartRoutine,
-                   PVOID StartContext,
-                   PCONTEXT Context,
-                   PVOID Teb,
-                   PVOID KernelStack)
+NTAPI
+KeUninitThread(IN PKTHREAD Thread)
 {
+    /* Delete the stack */
+    MmDeleteKernelStack(Thread->StackBase, FALSE);
+    Thread->InitialStack = NULL;
+}
+
+NTSTATUS
+NTAPI
+KeInitThread(IN OUT PKTHREAD Thread,
+             IN PVOID KernelStack,
+             IN PKSYSTEM_ROUTINE SystemRoutine,
+             IN PKSTART_ROUTINE StartRoutine,
+             IN PVOID StartContext,
+             IN PCONTEXT Context,
+             IN PVOID Teb,
+             IN PKPROCESS Process)
+{
+    BOOLEAN AllocatedStack = FALSE;
     ULONG i;
     PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER Timer;
+    NTSTATUS Status;
 
     /* Initalize the Dispatcher Header */
-    DPRINT("Initializing Dispatcher Header for New Thread: %x in Process: %x\n", Thread, Process);
     KeInitializeDispatcherHeader(&Thread->DispatcherHeader,
                                  ThreadObject,
                                  sizeof(KTHREAD) / sizeof(LONG),
                                  FALSE);
-
-    DPRINT("Thread Header Created. SystemRoutine: %x, StartRoutine: %x with Context: %x\n",
-            SystemRoutine, StartRoutine, StartContext);
-    DPRINT("UserMode Information. Context: %x, Teb: %x\n", Context, Teb);
 
     /* Initialize the Mutant List */
     InitializeListHead(&Thread->MutantListHead);
@@ -809,6 +782,15 @@ KeInitializeThread(PKPROCESS Process,
         /* Put our pointer */
         Thread->WaitBlock[i].Thread = Thread;
     }
+
+    /* Set swap settings */
+    Thread->EnableStackSwap = FALSE;//TRUE;
+    Thread->IdealProcessor = 1;
+    Thread->SwapBusy = FALSE;
+    Thread->AdjustReason = 0;
+
+    /* Initialize the lock */
+    KeInitializeSpinLock(&Thread->ThreadLock);
 
     /* Setup the Service Descriptor Table for Native Calls */
     Thread->ServiceTable = KeServiceDescriptorTable;
@@ -834,9 +816,9 @@ KeInitializeThread(PKPROCESS Process,
                     NULL);
 
     /* Initialize the Suspend Semaphore */
-    KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);
+    KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 2);
 
-    /* FIXME OPTIMIZATION OF DOOM. DO NOT ENABLE FIXME */
+    /* Setup the timer */
     Timer = &Thread->Timer;
     KeInitializeTimer(Timer);
     TimerWaitBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
@@ -852,55 +834,152 @@ KeInitializeThread(PKPROCESS Process,
     /* Set the TEB */
     Thread->Teb = Teb;
 
+    /* Check if we have a kernel stack */
+    if (!KernelStack)
+    {
+        /* We don't, allocate one */
+        KernelStack = (PVOID)((ULONG_PTR)MmCreateKernelStack(FALSE) +
+                              KERNEL_STACK_SIZE);
+        if (!KernelStack) return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Remember for later */
+        AllocatedStack = TRUE;
+    }
+
     /* Set the Thread Stacks */
     Thread->InitialStack = (PCHAR)KernelStack;
     Thread->StackBase = (PCHAR)KernelStack;
     Thread->StackLimit = (ULONG_PTR)KernelStack - KERNEL_STACK_SIZE;
     Thread->KernelStackResident = TRUE;
 
-    /*
-     * Establish the pde's for the new stack and the thread structure within the
-     * address space of the new process. They are accessed while taskswitching or
-     * while handling page faults. At this point it isn't possible to call the
-     * page fault handler for the missing pde's.
-     */
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, KERNEL_STACK_SIZE);
+    /* ROS Mm HACK */
+    MmUpdatePageDir((PEPROCESS)Process,
+                    (PVOID)Thread->StackLimit,
+                    KERNEL_STACK_SIZE);
     MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
 
-    /* Initalize the Thread Context */
-    DPRINT("Initializing the Context for the thread: %x\n", Thread);
-    KiArchInitThreadWithContext(Thread,
-                                SystemRoutine,
-                                StartRoutine,
-                                StartContext,
-                                Context);
-
-    /* Setup scheduler Fields based on Parent */
-    DPRINT("Thread context created, setting Scheduler Data\n");
-    Thread->BasePriority = Process->BasePriority;
-    Thread->Quantum = Process->QuantumReset;
-    Thread->QuantumReset = Process->QuantumReset;
-    Thread->Affinity = Process->Affinity;
-    Thread->Priority = Process->BasePriority;
-    Thread->UserAffinity = Process->Affinity;
-    Thread->DisableBoost = Process->DisableBoost;
-    Thread->AutoAlignment = Process->AutoAlignment;
+    /* Enter SEH to avoid crashes due to user mode */
+    Status = STATUS_SUCCESS;
+    _SEH_TRY
+    {
 #ifdef _M_IX86
-    Thread->Iopl = Process->Iopl;
+        /* Initalize the Thread Context */
+        Ke386InitThreadWithContext(Thread,
+                                   SystemRoutine,
+                                   StartRoutine,
+                                   StartContext,
+                                   Context);
 #endif
+    }
+    _SEH_HANDLE
+    {
+        /* Set failure status */
+        Status = STATUS_UNSUCCESSFUL;
+
+        /* Check if a stack was allocated */
+        if (AllocatedStack)
+        {
+            /* Delete the stack */
+            MmDeleteKernelStack(Thread->StackBase, FALSE);
+            Thread->InitialStack = NULL;
+        }
+    }
+    _SEH_END;
 
     /* Set the Thread to initalized */
     Thread->State = Initialized;
-
-    /*
-     * Insert the Thread into the Process's Thread List
-     * Note, this is the KTHREAD Thread List. It is removed in
-     * ke/kthread.c!KeTerminateThread.
-     */
-    InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
-    DPRINT("Thread initalized\n");
+    return Status;
 }
 
+VOID
+NTAPI
+KeStartThread(IN OUT PKTHREAD Thread)
+{
+    KIRQL OldIrql;
+    PKPROCESS Process = Thread->ApcState.Process;
+    PKNODE Node;
+    PKPRCB NodePrcb;
+    ULONG Set, Mask;
+    UCHAR IdealProcessor;
+
+    /* Setup static fields from parent */
+#ifdef _M_IX86
+    Thread->Iopl = Process->Iopl;
+#endif
+    Thread->Quantum = Process->QuantumReset;
+    Thread->QuantumReset = Process->QuantumReset;
+    Thread->SystemAffinityActive = FALSE;
+
+    /* Lock the process */
+    KeAcquireSpinLock(&Process->ProcessLock, &OldIrql);
+
+    /* Setup volatile data */
+    Thread->Priority = Process->BasePriority;
+    Thread->BasePriority = Process->BasePriority;
+    Thread->Affinity = Process->Affinity;
+    Thread->UserAffinity = Process->Affinity;
+
+    /* Get the KNODE and its PRCB */
+    Node = KeNodeBlock[Process->IdealNode];
+    NodePrcb = (PKPRCB)(KPCR_BASE + (Process->ThreadSeed * PAGE_SIZE));
+
+    /* Calculate affinity mask */
+    Set = ~NodePrcb->MultiThreadProcessorSet;
+    Mask = (ULONG)(Node->ProcessorMask & Process->Affinity);
+    Set &= Mask;
+    if (Set) Mask = Set;
+
+    /* Get the new thread seed */
+    IdealProcessor = KeFindNextRightSetAffinity(Process->ThreadSeed, Mask);
+    Process->ThreadSeed = IdealProcessor;
+
+    /* Sanity check */
+    ASSERT((Thread->UserAffinity & AFFINITY_MASK(IdealProcessor)));
+
+    /* Set the Ideal Processor */
+    Thread->IdealProcessor = IdealProcessor;
+    Thread->UserIdealProcessor = IdealProcessor;
+
+    /* Lock the Dispatcher Database */
+    KeAcquireDispatcherDatabaseLockAtDpcLevel();
+
+    /* Insert the thread into the process list */
+    InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
+
+    /* Increase the stack count */
+    ASSERT(Process->StackCount != MAXULONG_PTR);
+    Process->StackCount++;
+
+    /* Release locks and return */
+    KeReleaseDispatcherDatabaseLockFromDpcLevel();
+    KeReleaseSpinLock(&Process->ProcessLock, OldIrql);
+}
+
+VOID
+NTAPI
+KeInitializeThread(IN PKPROCESS Process,
+                   IN OUT PKTHREAD Thread,
+                   IN PKSYSTEM_ROUTINE SystemRoutine,
+                   IN PKSTART_ROUTINE StartRoutine,
+                   IN PVOID StartContext,
+                   IN PCONTEXT Context,
+                   IN PVOID Teb,
+                   IN PVOID KernelStack)
+{
+    /* Initailize and start the thread on success */
+    if (NT_SUCCESS(KeInitThread(Thread,
+                                KernelStack,
+                                SystemRoutine,
+                                StartRoutine,
+                                StartContext,
+                                Context,
+                                Teb,
+                                Process)))
+    {
+        /* Start it */
+        KeStartThread(Thread);
+    }
+}
 
 /*
  * @implemented
@@ -1385,34 +1464,56 @@ KeTerminateThread(IN KPRIORITY Increment)
 {
     KIRQL OldIrql;
     PKTHREAD Thread = KeGetCurrentThread();
+    PKPROCESS Process = Thread->ApcState.Process;
+    PLIST_ENTRY *ListHead;
+    PETHREAD Entry, SavedEntry;
+    PETHREAD *ThreadAddr;
+    DPRINT("Terminating\n");
 
     /* Lock the Dispatcher Database and the APC Queue */
-    DPRINT("Terminating\n");
+    ASSERT_IRQL(DISPATCH_LEVEL);
     OldIrql = KeAcquireDispatcherDatabaseLock();
+    ASSERT(Thread->SwapBusy == FALSE);
 
-    /* Remove the thread from the list */
-    RemoveEntryList(&Thread->ThreadListEntry);
+    /* Make sure we won't get Swapped */
+    Thread->SwapBusy = TRUE;
 
-    /* Insert into the Reaper List */
-    DPRINT("List: %p\n", PspReaperList);
-    ((PETHREAD)Thread)->ReaperLink = PspReaperList;
-    PspReaperList = (PETHREAD)Thread;
-    DPRINT("List: %p\n", PspReaperList);
+    /* Save the Kernel and User Times */
+    Process->KernelTime += Thread->KernelTime;
+    Process->UserTime += Thread->UserTime;
 
-    /* Check if it's active */
-    if (PspReaping == FALSE) {
+    /* Get the current entry and our Port */
+    Entry = (PETHREAD)PspReaperListHead.Flink;
+    ThreadAddr = &((PETHREAD)Thread)->ReaperLink;
 
-        /* Activate it. We use the internal function for speed, and use the Hyper Critical Queue */
-        PspReaping = TRUE;
-        DPRINT("Terminating\n");
+    /* Add it to the reaper's list */
+    do
+    {
+        /* Get the list head */
+        ListHead = &PspReaperListHead.Flink;
+
+        /* Link ourselves */
+        *ThreadAddr = Entry;
+        SavedEntry = Entry;
+
+        /* Now try to do the exchange */
+        Entry = InterlockedCompareExchangePointer(ListHead, ThreadAddr, Entry);
+
+        /* Break out if the change was succesful */
+    } while (Entry != SavedEntry);
+
+    /* Check if the reaper wasn't active */
+    if (!Entry)
+    {
+        /* Activate it as a work item, directly through its Queue */
         KiInsertQueue(&ExWorkerQueue[HyperCriticalWorkQueue].WorkerQueue,
                       &PspReaperWorkItem.List,
                       FALSE);
     }
 
     /* Handle Kernel Queues */
-    if (Thread->Queue) {
-
+    if (Thread->Queue)
+    {
         DPRINT("Waking Queue\n");
         RemoveEntryList(&Thread->QueueListEntry);
         KiWakeQueue(Thread->Queue);
@@ -1420,11 +1521,18 @@ KeTerminateThread(IN KPRIORITY Increment)
 
     /* Signal the thread */
     Thread->DispatcherHeader.SignalState = TRUE;
-    if (IsListEmpty(&Thread->DispatcherHeader.WaitListHead) != TRUE) {
-
+    if (IsListEmpty(&Thread->DispatcherHeader.WaitListHead) != TRUE)
+    {
         /* Satisfy waits */
         KiWaitTest((PVOID)Thread, Increment);
     }
+
+    /* Remove the thread from the list */
+    RemoveEntryList(&Thread->ThreadListEntry);
+
+    /* Set us as terminated, decrease the Process's stack count */
+    Thread->State = Terminated;
+    Process->StackCount--;
 
     /* Find a new Thread */
     KiDispatchThreadNoLock(Terminated);
@@ -1466,109 +1574,6 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
     KiReleaseSpinLock(&Thread->ApcQueueLock);
     KeReleaseDispatcherDatabaseLock(OldIrql);
     return OldState;
-}
-
-/*
- *
- * NOT EXPORTED
- */
-NTSTATUS
-STDCALL
-NtAlertResumeThread(IN  HANDLE ThreadHandle,
-                    OUT PULONG SuspendCount)
-{
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PETHREAD Thread;
-    NTSTATUS Status;
-    ULONG PreviousState;
-
-    /* Check if parameters are valid */
-    if(PreviousMode != KernelMode) {
-
-        _SEH_TRY {
-
-            ProbeForWriteUlong(SuspendCount);
-
-        } _SEH_HANDLE {
-
-            Status = _SEH_GetExceptionCode();
-
-        } _SEH_END;
-    }
-
-    /* Reference the Object */
-    Status = ObReferenceObjectByHandle(ThreadHandle,
-                                       THREAD_SUSPEND_RESUME,
-                                       PsThreadType,
-                                       PreviousMode,
-                                       (PVOID*)&Thread,
-                                       NULL);
-
-    /* Check for Success */
-    if (NT_SUCCESS(Status)) {
-
-        /* Call the Kernel Function */
-        PreviousState = KeAlertResumeThread(&Thread->Tcb);
-
-        /* Dereference Object */
-        ObDereferenceObject(Thread);
-
-        if (SuspendCount) {
-
-            _SEH_TRY {
-
-                *SuspendCount = PreviousState;
-
-            } _SEH_HANDLE {
-
-                Status = _SEH_GetExceptionCode();
-
-            } _SEH_END;
-        }
-    }
-
-    /* Return status */
-    return Status;
-}
-
-/*
- * @implemented
- *
- * EXPORTED
- */
-NTSTATUS
-STDCALL
-NtAlertThread (IN HANDLE ThreadHandle)
-{
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PETHREAD Thread;
-    NTSTATUS Status;
-
-    /* Reference the Object */
-    Status = ObReferenceObjectByHandle(ThreadHandle,
-                                       THREAD_SUSPEND_RESUME,
-                                       PsThreadType,
-                                       PreviousMode,
-                                       (PVOID*)&Thread,
-                                       NULL);
-
-    /* Check for Success */
-    if (NT_SUCCESS(Status)) {
-
-        /*
-         * Do an alert depending on the processor mode. If some kmode code wants to
-         * enforce a umode alert it should call KeAlertThread() directly. If kmode
-         * code wants to do a kmode alert it's sufficient to call it with Zw or just
-         * use KeAlertThread() directly
-         */
-        KeAlertThread(&Thread->Tcb, PreviousMode);
-
-        /* Dereference Object */
-        ObDereferenceObject(Thread);
-    }
-
-    /* Return status */
-    return Status;
 }
 
 NTSTATUS

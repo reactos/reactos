@@ -48,6 +48,7 @@
 	<directory name="powerpc">
 		<if property="ARCH" value="powerpc">
 			<module name="freeldr_arch" type="objectlibrary">
+				<include base="ReactOS">include/psdk</include>
 				<include base="freeldr_base">include</include>
 				<include base="freeldr_base">cache</include>
 				<include base="ntoskrnl">include</include>
