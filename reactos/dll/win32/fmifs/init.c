@@ -1,58 +1,56 @@
-/* $Id$
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         File Management IFS Utility functions
+ * FILE:            reactos/dll/win32/fmifs/init.c
+ * PURPOSE:         Initialisation
  *
- * COPYING:	See the top level directory
- * PROJECT:	ReactOS 
- * FILE:	reactos/lib/fmifs/init.c
- * DESCRIPTION:	File management IFS utility functions
- * PROGRAMMER:	Emanuele Aliberti
- * UPDATED
- * 	1999-02-16 (Emanuele Aliberti)
- * 		Entry points added.
+ * PROGRAMMERS:     Emanuele Aliberti
  */
+
 #include "precomp.h"
 
-static BOOL FmIfsInitialized = FALSE;
+static BOOLEAN FmIfsInitialized = FALSE;
 
-static BOOL STDCALL
-InitializeFmIfsOnce (VOID)
+static BOOLEAN NTAPI
+InitializeFmIfsOnce(void)
 {
 	/* TODO: Check how many IFS are installed in the system */
 	/* TOSO: and register a descriptor for each one */
 	return TRUE;
 }
 
-
 /* FMIFS.8 */
-BOOL STDCALL
-InitializeFmIfs (PVOID hinstDll,
-		 DWORD dwReason,
-		 PVOID reserved)
+BOOLEAN NTAPI
+InitializeFmIfs(
+	IN PVOID hinstDll,
+	IN DWORD dwReason,
+	IN PVOID reserved)
 {
-  switch (dwReason)
-  {
-    case DLL_PROCESS_ATTACH:
-      if (FALSE == FmIfsInitialized)
-      {
-	if (FALSE == InitializeFmIfsOnce())
+	switch (dwReason)
 	{
-	  return FALSE;
+		case DLL_PROCESS_ATTACH:
+			if (FALSE == FmIfsInitialized)
+			{
+				if (FALSE == InitializeFmIfsOnce())
+				{
+						return FALSE;
+				}
+
+				FmIfsInitialized = TRUE;
+			}
+			break;
+
+		case DLL_THREAD_ATTACH:
+			break;
+
+		case DLL_THREAD_DETACH:
+			break;
+
+		case DLL_PROCESS_DETACH:
+			break;
 	}
 
-	FmIfsInitialized = TRUE;
-      }
-      break;
-
-    case DLL_THREAD_ATTACH:
-      break;
-
-    case DLL_THREAD_DETACH:
-      break;
-
-    case DLL_PROCESS_DETACH:
-      break;
-  }
-
-  return TRUE;
+	return TRUE;
 }
 
 /* EOF */

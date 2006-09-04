@@ -1,21 +1,18 @@
-/* $Id$
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         File Management IFS Utility functions
+ * FILE:            reactos/dll/win32/fmifs/diskcopy.c
+ * PURPOSE:         Disk copy
  *
- * COPYING:	See the top level directory
- * PROJECT:	ReactOS 
- * FILE:	reactos/lib/fmifs/diskcopy.c
- * DESCRIPTION:	File management IFS utility functions
- * PROGRAMMER:	Emanuele Aliberti
- * UPDATED
- * 	1999-02-16 (Emanuele Aliberti)
- * 		Entry points added.
+ * PROGRAMMERS:     (none)
  */
+
 #include "precomp.h"
 
 /* FMIFS.3 */
-VOID STDCALL
-DiskCopy (VOID)
+VOID NTAPI
+DiskCopy(void)
 {
 }
-
 
 /* EOF */

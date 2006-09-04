@@ -1,21 +1,18 @@
-/* $Id$
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         File Management IFS Utility functions
+ * FILE:            reactos/dll/win32/fmifs/extend.c
+ * PURPOSE:         Volume extension
  *
- * COPYING:	See the top level directory
- * PROJECT:	ReactOS 
- * FILE:	reactos/lib/fmifs/extend.c
- * DESCRIPTION:	File management IFS utility functions
- * PROGRAMMER:	Emanuele Aliberti
- * UPDATED
- * 	1999-02-16 (Emanuele Aliberti)
- * 		Entry points added.
+ * PROGRAMMERS:     (none)
  */
+
 #include "precomp.h"
 
 /* FMIFS.5 */
-VOID STDCALL
+VOID NTAPI
 Extend (VOID)
 {
 }
-
 
 /* EOF */

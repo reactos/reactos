@@ -1,19 +1,17 @@
-/* $Id$
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         File Management IFS Utility functions
+ * FILE:            reactos/dll/win32/fmifs/media.c
+ * PURPOSE:         Media
  *
- * COPYING:	See the top level directory
- * PROJECT:	ReactOS 
- * FILE:	reactos/lib/fmifs/media.c
- * DESCRIPTION:	fmifs.dll
- * PROGRAMMER:	Emanuele Aliberti
- * UPDATED
- * 	1999-02-16 (Emanuele Aliberti)
- * 		Entry points added.
+ * PROGRAMMERS:     (none)
  */
+
 #include "precomp.h"
 
 /* FMIFS.9 */
-VOID STDCALL
-QuerySupportedMedia (VOID)
+VOID NTAPI
+QuerySupportedMedia(VOID)
 {
 }
 

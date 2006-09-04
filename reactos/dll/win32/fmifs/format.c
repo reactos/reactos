@@ -1,78 +1,74 @@
-/* $Id$
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         File Management IFS Utility functions
+ * FILE:            reactos/dll/win32/fmifs/format.c
+ * PURPOSE:         Volume format
  *
- * COPYING:	See the top level directory
- * PROJECT:	ReactOS 
- * FILE:	reactos/lib/fmifs/format.c
- * DESCRIPTION:	File management IFS utility functions
- * PROGRAMMER:	Emanuele Aliberti
- * UPDATED
- * 	1999-02-16 (Emanuele Aliberti)
- * 		Entry points added.
+ * PROGRAMMERS:     Emanuele Aliberti
  */
+
 #include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
 
-
 /* FMIFS.6 */
-VOID STDCALL
-Format (VOID)
+VOID NTAPI
+Format(void)
 {
 }
 
-
 /* FMIFS.7 */
-VOID STDCALL
-FormatEx (PWCHAR DriveRoot,
-	  ULONG MediaFlag,
-	  PWCHAR Format,
-	  PWCHAR Label,
-	  BOOLEAN QuickFormat,
-	  ULONG ClusterSize,
-	  PFMIFSCALLBACK Callback)
+VOID NTAPI
+FormatEx(
+	IN PWCHAR DriveRoot,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
+	IN PWCHAR Format,
+	IN PWCHAR Label,
+	IN BOOLEAN QuickFormat,
+	IN ULONG ClusterSize,
+	IN PFMIFSCALLBACK Callback)
 {
-  UNICODE_STRING usDriveRoot;
-  UNICODE_STRING usLabel;
-  BOOLEAN Argument = FALSE;
-  WCHAR VolumeName[MAX_PATH];
-  CURDIR CurDir;
+	UNICODE_STRING usDriveRoot;
+	UNICODE_STRING usLabel;
+	BOOLEAN Argument = FALSE;
+	WCHAR VolumeName[MAX_PATH];
+	CURDIR CurDir;
 
-  if (_wcsnicmp(Format, L"FAT", 3) != 0)
-    {
-      /* Unknown file system */
-      Callback (DONE,        /* Command */
-		0,           /* DWORD Modifier */
-		&Argument);  /* Argument */
-    }
+	if (_wcsnicmp(Format, L"FAT", 3) != 0)
+	{
+		/* Unknown file system */
+		Callback(
+			DONE, /* Command */
+			0, /* DWORD Modifier */
+			&Argument); /* Argument */
+		return;
+	}
 
-  if (!GetVolumeNameForVolumeMountPointW(DriveRoot, VolumeName, MAX_PATH) ||
-      !RtlDosPathNameToNtPathName_U(VolumeName, &usDriveRoot, NULL, &CurDir))
-    {
-      /* Report an error. */
-      Callback (DONE,        /* Command */
-		0,           /* DWORD Modifier */
-		&Argument);  /* Argument */
+	if (!GetVolumeNameForVolumeMountPointW(DriveRoot, VolumeName, MAX_PATH)
+	 || !RtlDosPathNameToNtPathName_U(VolumeName, &usDriveRoot, NULL, &CurDir))
+	{
+		/* Report an error. */
+		Callback(
+			DONE, /* Command */
+			0, /* DWORD Modifier */
+			&Argument); /* Argument */
+		return;
+	}
 
-      return;
-    }
+	RtlInitUnicodeString(&usLabel, Label);
 
-  RtlInitUnicodeString(&usLabel, Label);
-
-  if (_wcsnicmp(Format, L"FAT", 3) == 0)
-    {
-      DPRINT1("FormatEx - FAT\n");
-
-      VfatInitialize ();
-      VfatFormat (&usDriveRoot,
-		  MediaFlag,
-		  &usLabel,
-		  QuickFormat,
-		  ClusterSize,
-		  Callback);
-      VfatCleanup ();
-      RtlFreeUnicodeString(&usDriveRoot);
-    }
+	DPRINT1("FormatEx - FAT\n");
+	VfatInitialize();
+	VfatFormat(
+		&usDriveRoot,
+		MediaFlag,
+		&usLabel,
+		QuickFormat,
+		ClusterSize,
+		Callback);
+	VfatCleanup();
+	RtlFreeUnicodeString(&usDriveRoot);
 }
 
 /* EOF */

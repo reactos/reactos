@@ -1,49 +1,51 @@
-/* $Id$
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         File Management IFS Utility functions
+ * FILE:            reactos/dll/win32/fmifs/compress.c
+ * PURPOSE:         Volume compression
  *
- * COPYING:	See the top level directory
- * PROJECT:	ReactOS 
- * FILE:	reactos/lib/fmifs/compress.c
- * DESCRIPTION:	File management IFS utility functions
- * PROGRAMMER:	Emanuele Aliberti
- * UPDATED
- * 	1999-02-16 (Emanuele Aliberti)
- * 		Entry points added.
+ * PROGRAMMERS:     Emanuele Aliberti
  */
+
 #include "precomp.h"
 
 /*
  * @implemented
  */
-BOOLEAN STDCALL
-EnableVolumeCompression (PWCHAR DriveRoot,
-			 USHORT Compression)
+BOOLEAN NTAPI
+EnableVolumeCompression(
+	IN PWCHAR DriveRoot,
+	IN USHORT Compression)
 {
-  HANDLE hFile = CreateFileW(DriveRoot,
-                             FILE_READ_DATA | FILE_WRITE_DATA,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE,
-                             NULL,
-                             OPEN_EXISTING,
-                             FILE_FLAG_BACKUP_SEMANTICS,
-                             NULL);
-  
-  if(hFile != INVALID_HANDLE_VALUE)
-  {
-    DWORD RetBytes;
-    BOOL Ret = DeviceIoControl(hFile,
-                               FSCTL_SET_COMPRESSION,
-                               &Compression,
-                               sizeof(USHORT),
-                               NULL,
-                               0,
-                               &RetBytes,
-                               NULL);
+	HANDLE hFile;
+	DWORD RetBytes;
+	BOOL Ret;
 
-    CloseHandle(hFile);
+	hFile = CreateFileW(
+		DriveRoot,
+		FILE_READ_DATA | FILE_WRITE_DATA,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL,
+		OPEN_EXISTING,
+		FILE_FLAG_BACKUP_SEMANTICS,
+		NULL);
 
-    return (Ret != 0);
-  }
-  
-  return FALSE;
+	if (hFile == INVALID_HANDLE_VALUE)
+		return FALSE;
+
+	Ret = DeviceIoControl(
+		hFile,
+		FSCTL_SET_COMPRESSION,
+		&Compression,
+		sizeof(USHORT),
+		NULL,
+		0,
+		&RetBytes,
+		NULL);
+
+	CloseHandle(hFile);
+
+	return (Ret != 0);
 }
 
 /* EOF */

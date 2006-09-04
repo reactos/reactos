@@ -1,34 +1,34 @@
-/* $Id$
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         File Management IFS Utility functions
+ * FILE:            reactos/dll/win32/fmifs/chkdsk.c
+ * PURPOSE:         Chkdsk
  *
- * COPYING:	See the top level directory
- * PROJECT:	ReactOS 
- * FILE:	reactos/lib/fmifs/chkdsk.c
- * DESCRIPTION:	File management IFS utility functions
- * PROGRAMMER:	Emanuele Aliberti
- * UPDATED
- * 	1999-02-16 (Emanuele Aliberti)
- * 		Entry points added.
+ * PROGRAMMERS:     (none)
  */
+
 #include "precomp.h"
 
 /* FMIFS.1 */
-VOID STDCALL
-Chkdsk (PWCHAR		DriveRoot,
-	PWCHAR		Format,
-	BOOLEAN		CorrectErrors,
-	BOOLEAN		Verbose,
-	BOOLEAN		CheckOnlyIfDirty,
-	BOOLEAN		ScanDrive,
-	PVOID		Unused2,
-	PVOID		Unused3,
-	PFMIFSCALLBACK	Callback)
+VOID NTAPI
+Chkdsk(
+	IN PWCHAR DriveRoot,
+	IN PWCHAR Format,
+	IN BOOLEAN CorrectErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PVOID Unused2,
+	IN PVOID Unused3,
+	IN PFMIFSCALLBACK Callback)
 {
-  BOOLEAN	Argument = FALSE;
+	BOOLEAN Argument = FALSE;
 
-  /* FAIL immediately */
-  Callback (DONE,	/* Command */
-	    0,		/* DWORD Modifier */
-	    &Argument);	/* Argument */
+	/* FAIL immediately */
+	Callback(
+		DONE, /* Command */
+		0, /* DWORD Modifier */
+		&Argument);/* Argument */
 }
 
 /* EOF */

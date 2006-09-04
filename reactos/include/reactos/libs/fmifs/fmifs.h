@@ -130,7 +130,7 @@ EnableVolumeCompression(
 VOID NTAPI
 FormatEx(
 	IN PWCHAR DriveRoot,
-	IN ULONG MediaFlag,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
 	IN PWCHAR Format,
 	IN PWCHAR Label,
 	IN BOOLEAN QuickFormat,
