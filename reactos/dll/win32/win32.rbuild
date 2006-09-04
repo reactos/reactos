@@ -226,6 +226,9 @@
 <directory name="twain_32">
 	<xi:include href="twain_32/twain_32.rbuild" />
 </directory>
+<directory name="ufat">
+	<xi:include href="ufat/ufat.rbuild" />
+</directory>
 <directory name="urlmon">
 	<xi:include href="urlmon/urlmon.rbuild" />
 </directory>

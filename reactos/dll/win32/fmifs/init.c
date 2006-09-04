@@ -21,10 +21,10 @@ GetProvider(
 	PIFS_PROVIDER Provider;
 
 	ListEntry = ProviderListHead.Flink;
-	while (ListEntry != ProviderListHead.Flink)
+	while (ListEntry != &ProviderListHead)
 	{
 		Provider = CONTAINING_RECORD(ListEntry, IFS_PROVIDER, ListEntry);
-		if (wcscmp(Provider->Name, FileSystem) == 0)
+		if (_wcsicmp(Provider->Name, FileSystem) == 0)
 			return Provider;
 		ListEntry = ListEntry->Flink;
 	}

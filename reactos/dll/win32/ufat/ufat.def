@@ -1,0 +1,3 @@
+LIBRARY UFAT.DLL
+EXPORTS
+FormatEx=VfatFormat@24
