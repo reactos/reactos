@@ -307,6 +307,7 @@ void OnColorButton()
     /* Load custom colors from Registry */
     HKEY hKey = NULL;
     LONG res = ERROR_SUCCESS;
+    CHOOSECOLOR cc;
     res = RegCreateKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance"), 0, NULL, 0,
         KEY_ALL_ACCESS, NULL, &hKey, NULL );
     /* Now the key is either created or opened existing, if res == ERROR_SUCCESS */
@@ -322,7 +323,7 @@ void OnColorButton()
     }
 	
     /* Launch ChooseColor() dialog */
-    CHOOSECOLOR cc;
+
     cc.lStructSize = sizeof(CHOOSECOLOR);
     cc.hwndOwner = g_hBackgroundPage;
     cc.hInstance = NULL;
@@ -361,10 +362,11 @@ BOOL CheckListViewFilenameExists(HWND hWndList, LPCTSTR tszFileName)
     /* ListView_FindItem() Macro: Searches for a list-view item with the specified   *
      * characteristics. Returns the index of the item if successful, or -1 otherwise */
     LVFINDINFO lvfi;
+    int retVal;
     lvfi.flags = LVFI_STRING; /* search item by EXACT string */
     lvfi.psz   = tszFileName; /* string to search */
     /* other items of this structure are not valid, besacuse flags are not set. */
-    int retVal = ListView_FindItem( hWndList, -1, &lvfi );
+    retVal = ListView_FindItem( hWndList, -1, &lvfi );
     if( retVal != -1 ) return TRUE; /* item found! */
     return FALSE; /* item not found. */
 }
@@ -603,12 +605,17 @@ void SetDesktopBackColor()
 {
     /* Change system color */
     INT iElement = COLOR_BACKGROUND;
+	HKEY hKey;
+	LONG result;
+    TCHAR clText[16];
+	DWORD red, green, blue;
+
     if( !SetSysColors( 1, &iElement, &g_backgroundDesktopColor ) )
         MessageBox( g_hBackgroundPage, TEXT("SetSysColor() failed!"), /* these error texts can need internationalization? */
             TEXT("Error!"), MB_ICONSTOP );
     /* Write color to registry key: HKEY_CURRENT_USER\Control Panel\Colors\Background */
-    HKEY hKey = NULL;
-    LONG result = ERROR_SUCCESS;
+    hKey = NULL;
+    result = ERROR_SUCCESS;
     result = RegOpenKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Colors"), 0, KEY_WRITE, &hKey );
     if( result != ERROR_SUCCESS )
     {
@@ -619,11 +626,10 @@ void SetDesktopBackColor()
         /* On error result will not contain ERROR_SUCCESS. I don't know how to handle */
         /* this case :( */
     }
-    TCHAR clText[16] = {0};
-    DWORD red   = GetRValue( g_backgroundDesktopColor );
-    DWORD green = GetGValue( g_backgroundDesktopColor );
-    DWORD blue  = GetBValue( g_backgroundDesktopColor );
-    wsprintf( clText, TEXT("%d %d %d"), red, green, blue ); /* format string to be set to registry */
+    red   = GetRValue( g_backgroundDesktopColor );
+    green = GetGValue( g_backgroundDesktopColor );
+    blue  = GetBValue( g_backgroundDesktopColor );
+    _stprintf( clText, TEXT("%d %d %d"), red, green, blue ); /* format string to be set to registry */
     RegSetValueEx( hKey, TEXT("Background"), 0, REG_SZ, (BYTE *)clText, lstrlen( clText )*sizeof(TCHAR) + sizeof(TCHAR) );
     RegCloseKey( hKey );
 }
