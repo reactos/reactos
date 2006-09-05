@@ -410,7 +410,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
          CurrentRect.top += GetSystemMetrics(SM_CYCAPTION);
       }
 
-      DrawCaption(hWnd, hDC, &TempRect, CaptionFlags);
+      NtUserDrawCaption(hWnd, hDC, &TempRect, CaptionFlags);
 
       /* Draw buttons */
       if (Style & WS_SYSMENU)
