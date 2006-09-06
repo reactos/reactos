@@ -705,8 +705,8 @@ IntCreateDIBitmap(PDC Dc, const BITMAPINFOHEADER *header,
   LONG height;
   WORD planes; 
   WORD bpp;
-  DWORD compr;
-  DWORD  dibsize;        
+  LONG compr;
+  LONG dibsize;        
   BOOL fColor;
   SIZEL size;
 
