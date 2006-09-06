@@ -1,0 +1,156 @@
+SAWinSta
+--------
+I write a GUI appication, and the user may run it in task schedule. Since
+windows 2000/XP treat schedule task as a service, the schedule service can
+not be associated with interactive desktop object in the in 2 states
+1) No user log on
+2) Log on with another account.
+I write a test program, and find when the schedule service starts, the
+station/desktop will be "SAWinSta\Desktop" in both cases
+
+Is there any way to let schedule service associated with interactive desktop
+in these 2 cases?
+
+thanks 
+-------------------------------------------
+
+Service-0x0-3e7$
+----------------
+By default Win32 services associated with non-visible windows station (for 
+services which run in the local system account it is Service-0x0-3e7$) and they 
+can't (without using special flag MB_SERVICE_NOTIFICATION or 
+MB_DEFAULT_DESKTOP_ONLY in the MessageBox function) interact with user.  
+However, you may configure a service to have GUI capabilities. Just set Type 
+field of the registry service entry equal SERVICE_INTERACTIVE_PROCESS. When 
+this key is specified SCM will connect the service with WinSta0 instead 
+Service-0x0-3e7$ and it will alow to display windows and dialog boxes.
+
+-------------------------------------------------
+
+WinSta0
+-------
+
+-The one-and-only interactive WinSta. 
+-No other winsta can be visible/active.
+-Only WinSta0 can recieve input. 
+-All other WinSta's are invisible/non-interactive WinStas.
+
+What good is a invisible WinSta? Its used for running services in thus services cant
+interact with the user. 
+
+There are limits to what u can do in a invisible WinSta. 
+-Bitblt wont work for instance, since nothing is really displayed in a invisible WinSta (to save resources).
+ No point in using GDI resources for stuff noone can see.
+-SendInput wont work
+
+
+
+---------------------------------------------------
+ MORE INFORMATION
+
+A Window station can either be interactive or noninteractive. (At the moment on Windows NT 3.51 and 4.0, only "Winsta0" can be an interactive Window station.) Any Desktops created on the interactive Window station will have the ability to become active. An active Desktop encompasses the ability for user objects (such as windows and dialog boxes) created on the Desktop to be visible to the interactively logged-on user (that is, the user who logs on the system via CTRL-ALT-DELETE) and receive user input.
+
+When the interactively logged-on user launches any processes, these processes are associated with the "default" Desktop in the "Winsta0" Window station. The "default" Desktop is considered the active Desktop. A process on the active Desktop could switch Desktops such that another Desktop becomes the active Desktop such as the "Winlogon" Desktop. Only one Desktop can be the active Desktop at any one time.
+
+Desktops associated with a noninteractive Window station can create user objects. These objects will never be visible to the interactively logged-on user and will never receive any user input. If you have a noninteractive Service running in the LocalSystem account, any user objects created by the service will not be visible to the interactively logged-on user. In addition, any processes launched by the service will also not be visible. 
+If our desktop has the same name as the active one, we are running on the
+active (input) desktop. This is true because desktops have exactly one
+name each, and within a window station, desktop names must be unique
+----------------------------------------------------------------
+
+Process closing window station with CloseWindowStation can't be assigned to the window station
+ it is closing.
+
+
+The reason is that each session has its own CSRSS, as well as instanced
+win32k.sys data.  So in each session, you basically have a complete copy of
+Windows that doesn't know about the existance of any other copy.  You're not
+just on a different desktop/windowstation when you're in a different
+session.
+
+
+Lawrence, you are wrong. HWNDs are valid throughout the whole
+windowstation, not only the creating process. That's because they
+are pointers, but not in your address space...
+
+
+The CreateDesktop function creates a new desktop on the window station associated with the calling process.
+
+PROCESS:
+-every w32 process is associated with a WindowStation
+-can move between window stations (well, with strict limitations i would guess eg. what if
+ windows have been created and is using the winsta heap? or can multiple winsta heaps be mapped into
+ one process?? )
+
+THREADS:
+-can only enumerate windows on its desktop (but u can easely switch to a different desk)
+-every w32 thread is associated with a Desktop
+-Threads can switch between desktops, and windows are created on the thread's current desktop
+ (a thread can have windows on multiple desktops? IS THIS REALLY TRUE?)
+
+DESKTOP:
+-owns windows
+-Only one desktop at a time can interact with the user, and that desktop must necessarily 
+be associated with Winsta0
+-Only one desktop is visible to the user and only one can receives input at any time
+-contain a logical display surface
+-contin windows (or a pointer to the desktop window)
+-contain menus
+-contain hooks
+-holds UI objects, such as windows, menus, and hooks
+-Once a window is created it cannot move between desktops
+
+SESSION:
+-session = win32k instance
+-Every session contains one or more windows stations
+-A given login session has only one window station with access to user interactions
+(term server has multiple login sessions)
+-each logon session is associated with a window station
+
+WINDOW STATION:
+-only Winsta0 has access to the display
+-Only one window station, called Winsta0, can interact with the user display, keyboard, mouse
+-is a secure object 
+-Only the interactive window station WinSta0, can display
+  output or receive input. Other window stations are used by "services"
+ (but cant u switch winsta?? so a noninteractive winsta becomes active?)
+-contains a set of global atoms
+-contains a clipboard
+-contains a set of desktop objects
+-contains handle table(s) (handles are valid throughout the whole windowstation, not only the creating process)
+-contain heaps (pointer(s) to the section heap(s) shared between user32/gdi32/win32k)
+-A Windows 2000 session will have several windows stations, one assigned to the logon session 
+ of the interactive user, and others assigned to the Winlogon process, the secure screen saver
+ process, and any service that runs in a security context other than that of the interactive user.
+
+ The interactive window station assigned to the logon session of the interactive user also contains
+ the keyboard, mouse, and display device. The interactive window station is visible to the user and
+ can receive input from the user. All other window stations are noninteractive, which means that 
+ they cannot be made visible to the user, and cannot receive user input.
+
+WINDOWS
+-is owned by a desktop
+-windows are tied to the window station where they started
+-u cant move windows between desktops either
+
+The system associates a desktop with a thread when that thread is created
+The desktop associated with a thread must be on the window station associated with the thread's process.
+A thread can use the SetThreadDesktop function to change its desktop.
+The GetThreadDesktop function retrieves a handle to the desktop associated with a specified thread.
+
+The calling process must have an associated window station, either assigned by the system at process creation time or set by SetProcessWindowStation. A desktop is a secure object contained within a window station object. 
+
+
+There can be several window stations in the system but only one of them can
+be the interactive window station. That is the only windowstation whose
+processes can communicate with the user (it has a visible desktop and can
+receive mouse and keyboard input). A desktop lives inside a windowstation
+and provides a display to the user. Only one desktop can be the active
+desktop for a particular windowstation at any time. Furthermore only a
+desktop that lives inside the interactive windowstation and is the currently
+active desktop for that windowstation is visible to the user. On your
+average Windows NT system there are at least 3 desktops inside the
+interactive windowstation: the 'shell', winlogon and the screensaver. Each
+process that runs on your system (and hence services as well) run inside a
+windowstation and each thread in that process runs in the same windowstation
+but can run in a different desktop.
