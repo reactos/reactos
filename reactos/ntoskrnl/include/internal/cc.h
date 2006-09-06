@@ -62,14 +62,14 @@ typedef struct _INTERNAL_BCB
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 VOID
-STDCALL
+NTAPI
 CcMdlReadCompleteDev(
     IN PMDL MdlChain,
     IN PFILE_OBJECT FileObject
 );
 
 VOID
-STDCALL
+NTAPI
 CcMdlWriteCompleteDev(
     IN PLARGE_INTEGER FileOffset,
     IN PMDL MdlChain,
@@ -179,7 +179,7 @@ CcRosReleaseCacheSegment(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 CcRosRequestCacheSegment(
     BCB *Bcb,
     ULONG FileOffset,

@@ -5,9 +5,15 @@
  * Use these to place a function in a specific section of the executable
  */
 #define PLACE_IN_SECTION(s)	__attribute__((section (s)))
+#ifdef _GNUC_
 #define INIT_FUNCTION		PLACE_IN_SECTION("init")
 #define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
 #define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
+#else
+#define INIT_FUNCTION
+#define PAGE_LOCKED_FUNCTION	
+#define PAGE_UNLOCKED_FUNCTION	
+#endif
 
 #ifdef _NTOSKRNL_
 
@@ -56,11 +62,11 @@ typedef struct __DESCRIPTOR
 VOID MmInitSystem(ULONG Phase, PROS_LOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
 VOID IoInit(VOID);
 VOID IoInit2(BOOLEAN BootLog);
-VOID STDCALL IoInit3(VOID);
+VOID NTAPI IoInit3(VOID);
 VOID ObInit(VOID);
 VOID PsInit(VOID);
 VOID CmInitializeRegistry(VOID);
-VOID STDCALL CmInitHives(BOOLEAN SetupBoot);
+VOID NTAPI CmInitHives(BOOLEAN SetupBoot);
 VOID CmInit2(PCHAR CommandLine);
 VOID CmShutdownRegistry(VOID);
 BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
@@ -82,6 +88,7 @@ RtlpLogException(IN PEXCEPTION_RECORD ExceptionRecord,
                  IN ULONG Size);
 
 /* FIXME: Interlocked functions that need to be made into a public header */
+#ifdef __GNUC__
 FORCEINLINE
 LONG
 InterlockedAnd(IN OUT LONG volatile *Target,
@@ -121,6 +128,7 @@ InterlockedOr(IN OUT LONG volatile *Target,
 
     return j;
 }
+#endif
 
 /*
  * generic information class probing code
@@ -156,10 +164,11 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
 
-static __inline NTSTATUS
-DefaultSetInfoBufferCheck(UINT Class,
+FORCEINLINE
+NTSTATUS
+DefaultSetInfoBufferCheck(ULONG Class,
                           const INFORMATION_CLASS_INFO *ClassList,
-                          UINT ClassListEntries,
+                          ULONG ClassListEntries,
                           PVOID Buffer,
                           ULONG BufferLength,
                           KPROCESSOR_MODE PreviousMode)
@@ -205,10 +214,11 @@ DefaultSetInfoBufferCheck(UINT Class,
     return Status;
 }
 
-static __inline NTSTATUS
-DefaultQueryInfoBufferCheck(UINT Class,
+FORCEINLINE
+NTSTATUS
+DefaultQueryInfoBufferCheck(ULONG Class,
                             const INFORMATION_CLASS_INFO *ClassList,
-                            UINT ClassListEntries,
+                            ULONG ClassListEntries,
                             PVOID Buffer,
                             ULONG BufferLength,
                             PULONG ReturnLength,

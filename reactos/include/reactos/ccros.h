@@ -1,16 +1,16 @@
 #ifndef __INCLUDE_DDK_NTIFS_H
 #define __INCLUDE_DDK_NTIFS_H
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
 		          ULONG		CacheSegmentSize);
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
 
 struct _BCB;
 
 VOID
-STDCALL
+NTAPI
 CcRosTraceCacheMap (
 	struct _BCB* Bcb,
 	BOOLEAN Trace );

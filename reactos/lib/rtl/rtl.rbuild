@@ -43,7 +43,6 @@
 	<file>access.c</file>
 	<file>acl.c</file>
 	<file>atom.c</file>
-	<file>bit.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
 	<file>compress.c</file>

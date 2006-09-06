@@ -4373,6 +4373,14 @@ SeTokenIsRestricted (
     IN PACCESS_TOKEN Token
 );
 
+
+NTSTATUS
+NTAPI
+SeLocateProcessImageName(
+    IN PEPROCESS Process,
+    OUT PUNICODE_STRING *pImageFileName
+);
+
 #endif /* (VER_PRODUCTBUILD >= 2195) */
 
 NTKERNELAPI

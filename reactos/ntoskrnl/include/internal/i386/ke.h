@@ -99,11 +99,11 @@ KeCreateApplicationProcessorIdleThread(ULONG Id);
 
 typedef
 VOID
-(STDCALL*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
+(NTAPI*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
                     PVOID StartContext);
 
 VOID
-STDCALL
+NTAPI
 Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSYSTEM_ROUTINE SystemRoutine,
                            PKSTART_ROUTINE StartRoutine,
@@ -112,7 +112,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
-STDCALL
+NTAPI
 KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 PKSTART_ROUTINE StartRoutine,
                 PVOID StartContext,
@@ -239,8 +239,9 @@ static __forceinline void Ke386SetPageTableDirectory(ULONG X)
 #error Unknown compiler for inline assembler
 #endif
 
-static __inline struct _KPCR * KeGetCurrentKPCR(
-  VOID)
+FORCEINLINE
+struct _KPCR *
+KeGetCurrentKPCR(VOID)
 {
   ULONG Value;
 #if defined(__GNUC__)
@@ -255,8 +256,10 @@ static __inline struct _KPCR * KeGetCurrentKPCR(
   return (struct _KPCR *) Value;
 }
 
-static __inline struct _KPRCB * KeGetCurrentPrcb(
-  VOID)
+#ifdef __GNUC__
+FORCEINLINE
+struct _KPRCB *
+KeGetCurrentPrcb(VOID)
 {
   ULONG Value;
 #if defined(__GNUC__)
@@ -270,6 +273,7 @@ static __inline struct _KPRCB * KeGetCurrentPrcb(
 #endif
   return (struct _KPRCB *) Value;
 }
+#endif
 
 #endif
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */

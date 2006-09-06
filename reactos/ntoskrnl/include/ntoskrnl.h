@@ -13,7 +13,9 @@
 #define _NTSYSTEM_
 
 /* DDK/IFS/NDK Headers */
+#ifdef __GNUC__
 #include <ntddk.h>
+#endif
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <arc/arc.h>

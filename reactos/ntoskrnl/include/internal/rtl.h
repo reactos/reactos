@@ -11,7 +11,7 @@ extern PUSHORT NlsUnicodeUpcaseTable;
 extern PUSHORT NlsUnicodeLowercaseTable;
 
 VOID
-STDCALL
+NTAPI
 RtlpInitNls(VOID);
 
 VOID

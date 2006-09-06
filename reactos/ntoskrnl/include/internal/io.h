@@ -730,7 +730,7 @@ IopSaveBootLogToFile(
 // I/O Cancellation Routines
 //
 VOID
-STDCALL
+NTAPI
 IoCancelThreadIo(
     IN PETHREAD Thread
 );
@@ -777,7 +777,7 @@ RawFsIsRawFileSystemDeviceObject(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RawFsDriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -787,7 +787,7 @@ RawFsDriverEntry(
 // PnP Root MiniDriver
 //
 NTSTATUS
-STDCALL
+NTAPI
 PnpRootDriverEntry(
    IN PDRIVER_OBJECT DriverObject,
    IN PUNICODE_STRING RegistryPath
@@ -908,13 +908,13 @@ IopParseFile(
 );
 
 VOID
-STDCALL
+NTAPI
 IopDeleteFile(
     IN PVOID ObjectBody
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 IopSecurityFile(
     IN PVOID ObjectBody,
     IN SECURITY_OPERATION_CODE OperationCode,
@@ -927,7 +927,7 @@ IopSecurityFile(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 IopQueryNameFile(
     IN PVOID ObjectBody,
     IN BOOLEAN HasName,
@@ -938,7 +938,7 @@ IopQueryNameFile(
 );
 
 VOID
-STDCALL
+NTAPI
 IopCloseFile(
     IN PEPROCESS Process OPTIONAL,
     IN PVOID Object,
@@ -957,7 +957,7 @@ IopInitTimerImplementation(
 );
 
 VOID
-STDCALL
+NTAPI
 IopRemoveTimerFromTimerList(
     IN PIO_TIMER Timer
 );
@@ -979,16 +979,6 @@ FASTCALL
 xHalQueryDriveLayout(
     IN PUNICODE_STRING DeviceName,
     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo
-);
-
-#undef HalExamineMBR
-VOID 
-FASTCALL
-HalExamineMBR(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SectorSize,
-    IN ULONG MBRTypeIdentifier,
-    OUT PVOID *Buffer
 );
 
 VOID

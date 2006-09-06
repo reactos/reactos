@@ -215,12 +215,12 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 
 /* Readies a Thread for Execution. */
 BOOLEAN
-STDCALL
+NTAPI
 KiDispatchThreadNoLock(ULONG NewThreadStatus);
 
 /* Readies a Thread for Execution. */
 VOID
-STDCALL
+NTAPI
 KiDispatchThread(ULONG NewThreadStatus);
 
 /* Finds a new thread to run */
@@ -235,7 +235,7 @@ NTAPI
 KiReadyThread(IN PKTHREAD Thread);
 
 NTSTATUS
-STDCALL
+NTAPI
 KeSuspendThread(PKTHREAD Thread);
 
 NTSTATUS
@@ -246,7 +246,7 @@ KiSwapContext(
 );
 
 VOID
-STDCALL
+NTAPI
 KiAdjustQuantumThread(IN PKTHREAD Thread);
 
 VOID
@@ -296,11 +296,11 @@ KeFindNextRightSetAffinity(
 );
 
 VOID 
-STDCALL
+NTAPI
 DbgBreakPointNoBugCheck(VOID);
 
 VOID
-STDCALL
+NTAPI
 KeInitializeProfile(
     struct _KPROFILE* Profile,
     struct _KPROCESS* Process,
@@ -312,53 +312,53 @@ KeInitializeProfile(
 );
 
 VOID
-STDCALL
+NTAPI
 KeStartProfile(
     struct _KPROFILE* Profile,
     PVOID Buffer
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KeStopProfile(struct _KPROFILE* Profile);
 
 ULONG
-STDCALL
+NTAPI
 KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource);
 
 VOID
-STDCALL
+NTAPI
 KeSetIntervalProfile(
     KPROFILE_SOURCE ProfileSource,
     ULONG Interval
 );
 
 VOID
-STDCALL
+NTAPI
 KeProfileInterrupt(
     PKTRAP_FRAME TrapFrame
 );
 
 VOID
-STDCALL
+NTAPI
 KeProfileInterruptWithSource(
     IN PKTRAP_FRAME TrapFrame,
     IN KPROFILE_SOURCE Source
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KiRosPrintAddress(PVOID Address);
 
 VOID
-STDCALL
+NTAPI
 KeUpdateRunTime(
     PKTRAP_FRAME TrapFrame,
     KIRQL Irql
 );
 
 VOID
-STDCALL
+NTAPI
 KiExpireTimers(
     PKDPC Dpc,
     PVOID DeferredContext,
@@ -431,7 +431,7 @@ KeSwitchKernelStack(
 );
 
 VOID
-STDCALL
+NTAPI
 KeRundownThread(VOID);
 
 NTSTATUS
@@ -439,11 +439,11 @@ NTAPI
 KeReleaseThread(PKTHREAD Thread);
 
 LONG
-STDCALL
+NTAPI
 KeQueryBasePriorityThread(IN PKTHREAD Thread);
 
 VOID
-STDCALL
+NTAPI
 KiSetPriorityThread(
     PKTHREAD Thread,
     KPRIORITY Priority,
@@ -458,7 +458,7 @@ KiDispatcherObjectWake(
 );
 
 VOID
-STDCALL
+NTAPI
 KeExpireTimers(
     PKDPC Apc,
     PVOID Arg1,
@@ -483,7 +483,7 @@ KiAbortWaitThread(
 );
 
 VOID
-STDCALL
+NTAPI
 KeInitializeProcess(
     struct _KPROCESS *Process,
     KPRIORITY Priority,
@@ -507,15 +507,15 @@ KeSetPriorityAndQuantumProcess(
 );
 
 ULONG
-STDCALL
+NTAPI
 KeForceResumeThread(IN PKTHREAD Thread);
 
 BOOLEAN
-STDCALL
+NTAPI
 KeDisableThreadApcQueueing(IN PKTHREAD Thread);
 
 BOOLEAN
-STDCALL
+NTAPI
 KiInsertTimer(
     PKTIMER Timer,
     LARGE_INTEGER DueTime
@@ -533,7 +533,7 @@ NTAPI
 KeGetStackTopThread(struct _ETHREAD* Thread);
 
 VOID
-STDCALL
+NTAPI
 KeContextToTrapFrame(
     PCONTEXT Context,
     PKEXCEPTION_FRAME ExeptionFrame,
@@ -543,7 +543,7 @@ KeContextToTrapFrame(
 );
 
 VOID
-STDCALL
+NTAPI
 KiDeliverApc(
     KPROCESSOR_MODE PreviousMode,
     PVOID Reserved,
@@ -551,11 +551,11 @@ KiDeliverApc(
 );
 
 VOID
-STDCALL
+NTAPI
 KiCheckForKernelApcDelivery(VOID);
 
 LONG
-STDCALL
+NTAPI
 KiInsertQueue(
     IN PKQUEUE Queue,
     IN PLIST_ENTRY Entry,
@@ -563,7 +563,7 @@ KiInsertQueue(
 );
 
 ULONG
-STDCALL
+NTAPI
 KeSetProcess(
     struct _KPROCESS* Process,
     KPRIORITY Increment,
@@ -571,11 +571,11 @@ KeSetProcess(
 );
 
 VOID
-STDCALL
+NTAPI
 KeInitializeEventPair(PKEVENT_PAIR EventPair);
 
 VOID
-STDCALL
+NTAPI
 KiInitializeUserApc(
     IN PKEXCEPTION_FRAME Reserved,
     IN PKTRAP_FRAME TrapFrame,
@@ -586,14 +586,14 @@ KiInitializeUserApc(
 );
 
 PLIST_ENTRY
-STDCALL
+NTAPI
 KeFlushQueueApc(
     IN PKTHREAD Thread,
     IN KPROCESSOR_MODE PreviousMode
 );
 
 VOID
-STDCALL
+NTAPI
 KiAttachProcess(
     struct _KTHREAD *Thread,
     struct _KPROCESS *Process,
@@ -602,18 +602,18 @@ KiAttachProcess(
 );
 
 VOID
-STDCALL
+NTAPI
 KiSwapProcess(
     struct _KPROCESS *NewProcess,
     struct _KPROCESS *OldProcess
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KeTestAlertThread(IN KPROCESSOR_MODE AlertMode);
 
 BOOLEAN
-STDCALL
+NTAPI
 KeRemoveQueueApc(PKAPC Apc);
 
 VOID
@@ -665,7 +665,7 @@ NTAPI
 KiDeliverUserApc(PKTRAP_FRAME TrapFrame);
 
 VOID
-STDCALL
+NTAPI
 KiMoveApcState(
     PKAPC_STATE OldState,
     PKAPC_STATE NewState
@@ -713,18 +713,18 @@ KiUserTrapHandler(
 );
 
 VOID
-STDCALL
+NTAPI
 KePushAndStackSwitchAndSysRet(
     ULONG Push,
     PVOID NewStack
 );
 
 VOID
-STDCALL
+NTAPI
 KeStackSwitchAndRet(PVOID NewStack);
 
 VOID
-STDCALL
+NTAPI
 KeBugCheckWithTf(
     ULONG BugCheckCode,
     ULONG BugCheckParameter1,
@@ -739,7 +739,7 @@ NTAPI
 KeFlushCurrentTb(VOID);
 
 VOID
-STDCALL
+NTAPI
 KeRosDumpStackFrames(
     PULONG Frame,
     ULONG FrameCount

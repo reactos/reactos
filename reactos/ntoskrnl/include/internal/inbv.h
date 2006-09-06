@@ -8,7 +8,7 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-STDCALL
+NTAPI
 InbvDisplayString(IN PCHAR String);
 
 #endif /* NTOSKRNL_INBV_H */

@@ -139,13 +139,6 @@ SeInitializeProcessAuditName(
 
 NTSTATUS
 NTAPI
-SeLocateProcessImageName(
-    IN PEPROCESS Process,
-    OUT PUNICODE_STRING *ProcessImageName
-);
-
-NTSTATUS
-NTAPI
 SeCreateAccessStateEx(
     IN PETHREAD Thread,
     IN PEPROCESS Process,
@@ -163,7 +156,7 @@ SeIsTokenChild(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 SepCreateImpersonationTokenDacl(
     PTOKEN Token,
     PTOKEN PrimaryToken,
@@ -175,7 +168,7 @@ NTAPI
 SepInitializeTokenImplementation(VOID);
 
 PTOKEN
-STDCALL
+NTAPI
 SepCreateSystemProcessToken(VOID);
 
 BOOLEAN
@@ -239,7 +232,7 @@ SepPrivilegeCheck(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 SepDuplicateToken(
     PTOKEN Token,
     POBJECT_ATTRIBUTES ObjectAttributes,
@@ -306,7 +299,7 @@ SepReleaseAcl(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 SeDefaultObjectMethod(
     PVOID Object,
     SECURITY_OPERATION_CODE OperationType,
@@ -344,11 +337,11 @@ SeSetWorldSecurityDescriptor(
     KeLeaveCriticalRegion();                                                   \
   while(0)
 
-VOID STDCALL
+VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess);
 
-VOID STDCALL
+VOID NTAPI
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess);
 

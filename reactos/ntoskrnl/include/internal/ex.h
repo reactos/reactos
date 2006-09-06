@@ -32,63 +32,63 @@ extern POBJECT_TYPE ExEventPairObjectType;
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
-STDCALL
+NTAPI
 ExpWin32kInit(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExInit2(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitTimeZoneInfo(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeWorkerThreads(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitLookasideLists(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeCallbacks(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitUuids(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeExecutive(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeEventImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeEventImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeEventPairImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeSemaphoreImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeMutantImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeTimerImplementation(VOID);
 
 VOID
-STDCALL
+NTAPI
 ExpInitializeProfileImplementation(VOID);
 
 VOID
@@ -161,19 +161,19 @@ ExfWaitForRundownProtectionRelease(
                                    EX_HANDLE_ENTRY_INHERITABLE |               \
                                    EX_HANDLE_ENTRY_AUDITONCLOSE)
 
-typedef VOID (STDCALL PEX_SWEEP_HANDLE_CALLBACK)(
+typedef VOID (NTAPI PEX_SWEEP_HANDLE_CALLBACK)(
     PHANDLE_TABLE_ENTRY HandleTableEntry,
     HANDLE Handle,  
     PVOID Context
 );
 
-typedef BOOLEAN (STDCALL PEX_DUPLICATE_HANDLE_CALLBACK)(
+typedef BOOLEAN (NTAPI PEX_DUPLICATE_HANDLE_CALLBACK)(
     PHANDLE_TABLE HandleTable, 
     PHANDLE_TABLE_ENTRY HandleTableEntry, 
     PVOID Context
 );
 
-typedef BOOLEAN (STDCALL PEX_CHANGE_HANDLE_CALLBACK)(
+typedef BOOLEAN (NTAPI PEX_CHANGE_HANDLE_CALLBACK)(
     PHANDLE_TABLE HandleTable, 
     PHANDLE_TABLE_ENTRY HandleTableEntry, 
     PVOID Context
@@ -253,7 +253,7 @@ ExChangeHandle(
 /* PSEH EXCEPTION HANDLING **************************************************/
 
 LONG
-STDCALL
+NTAPI
 ExSystemExceptionFilter(VOID);
 
 static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
@@ -698,7 +698,7 @@ NTAPI
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
 
 VOID
-STDCALL
+NTAPI
 ExTimerRundown(VOID);
 
 #define InterlockedDecrementUL(Addend) \

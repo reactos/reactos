@@ -584,6 +584,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PWSTR ValueName;
   UNICODE_STRING EnvValue;
   UNICODE_STRING EnvExpandedValue;
+  ULONG DataSize = 0;
 
   PAGED_CODE_RTL();
 
@@ -827,7 +828,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
 		{
 		  DPRINT("Expand REG_MULTI_SZ type\n");
-		  ULONG DataSize = 0;
 		  StringPtr = (PWSTR)ValueInfo->Data;
 		  while (DataSize < (ValueInfo->DataLength-2))
 		    {

@@ -374,7 +374,7 @@ NTAPI
 MmInitMemoryAreas(VOID);
 
 NTSTATUS
-STDCALL
+NTAPI
 MmCreateMemoryArea(
     PMADDRESS_SPACE AddressSpace,
     ULONG Type,
@@ -388,21 +388,21 @@ MmCreateMemoryArea(
 );
 
 PMEMORY_AREA
-STDCALL
+NTAPI
 MmLocateMemoryAreaByAddress(
     PMADDRESS_SPACE AddressSpace,
     PVOID Address
 );
 
 ULONG_PTR
-STDCALL
+NTAPI
 MmFindGapAtAddress(
     PMADDRESS_SPACE AddressSpace,
     PVOID Address
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 MmFreeMemoryArea(
     PMADDRESS_SPACE AddressSpace,
     PMEMORY_AREA MemoryArea,
@@ -411,7 +411,7 @@ MmFreeMemoryArea(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 MmFreeMemoryAreaByPtr(
     PMADDRESS_SPACE AddressSpace,
     PVOID BaseAddress,
@@ -420,11 +420,11 @@ MmFreeMemoryAreaByPtr(
 );
 
 VOID
-STDCALL
+NTAPI
 MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace);
 
 PMEMORY_AREA
-STDCALL
+NTAPI
 MmLocateMemoryAreaByRegion(
     PMADDRESS_SPACE AddressSpace,
     PVOID Address,
@@ -432,7 +432,7 @@ MmLocateMemoryAreaByRegion(
 );
 
 PVOID
-STDCALL
+NTAPI
 MmFindGap(
     PMADDRESS_SPACE AddressSpace,
     ULONG_PTR Length,
@@ -441,7 +441,7 @@ MmFindGap(
 );
 
 VOID
-STDCALL
+NTAPI
 MmReleaseMemoryAreaIfDecommitted(
     struct _EPROCESS *Process,
     PMADDRESS_SPACE AddressSpace,
@@ -472,7 +472,7 @@ MmGetMdlPageAddress(
 /* pool.c *******************************************************************/
 
 PVOID
-STDCALL
+NTAPI
 ExAllocateNonPagedPoolWithTag(
     POOL_TYPE type,
     ULONG size,
@@ -481,7 +481,7 @@ ExAllocateNonPagedPoolWithTag(
 );
 
 PVOID
-STDCALL
+NTAPI
 ExAllocatePagedPoolWithTag(
     POOL_TYPE Type,
     ULONG size,
@@ -489,11 +489,11 @@ ExAllocatePagedPoolWithTag(
 );
 
 VOID
-STDCALL
+NTAPI
 ExFreeNonPagedPool(PVOID block);
 
 VOID 
-STDCALL
+NTAPI
 ExFreePagedPool(IN PVOID Block);
 
 VOID 
@@ -501,7 +501,7 @@ NTAPI
 MmInitializePagedPool(VOID);
 
 PVOID
-STDCALL
+NTAPI
 MiAllocateSpecialPool(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes,
@@ -510,7 +510,7 @@ MiAllocateSpecialPool(
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 MiRaisePoolQuota(
     IN POOL_TYPE PoolType,
     IN ULONG CurrentMaxQuota,
@@ -596,7 +596,7 @@ MmWriteToSwapPage(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 MmDumpToPagingFile(
     ULONG BugCode,
     ULONG BugCodeParameter1,
@@ -617,7 +617,7 @@ MmShowOutOfSpaceMessagePagingFile(VOID);
 /* process.c ****************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 MmCreateProcessAddressSpace(
     IN PEPROCESS Process,
     IN PROS_SECTION_OBJECT Section OPTIONAL,
@@ -625,11 +625,11 @@ MmCreateProcessAddressSpace(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 MmCreatePeb(struct _EPROCESS *Process);
 
 PTEB
-STDCALL
+NTAPI
 MmCreateTeb(
     struct _EPROCESS *Process,
     PCLIENT_ID ClientId,
@@ -637,7 +637,7 @@ MmCreateTeb(
 );
 
 VOID
-STDCALL
+NTAPI
 MmDeleteTeb(
     struct _EPROCESS *Process,
     PTEB Teb
@@ -713,7 +713,7 @@ MmPageOutVirtualMemory(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 MmQueryAnonMem(
     PMEMORY_AREA MemoryArea,
     PVOID Address,
@@ -814,11 +814,11 @@ MmInitializePageOp(VOID);
 /* process.c *****************************************************************/
 
 PVOID
-STDCALL
+NTAPI
 MmCreateKernelStack(BOOLEAN GuiStack);
 
 VOID
-STDCALL
+NTAPI
 MmDeleteKernelStack(PVOID Stack,
                     BOOLEAN GuiStack);
 
@@ -1201,7 +1201,7 @@ MmGetPfnForProcess(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 MmCopyMmInfo(
     struct _EPROCESS *Src,
     struct _EPROCESS *Dest,
@@ -1308,14 +1308,14 @@ MmGetFileObjectForSection(
 );
 
 PVOID 
-STDCALL
+NTAPI
 MmAllocateSection(
     IN ULONG Length,
     PVOID BaseAddress
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 MmQuerySectionView(
     PMEMORY_AREA MemoryArea,
     PVOID Address,

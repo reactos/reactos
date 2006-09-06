@@ -75,14 +75,14 @@ typedef struct _QUEUEDMESSAGE
 } QUEUEDMESSAGE, *PQUEUEDMESSAGE;
 
 NTSTATUS
-STDCALL
+NTAPI
 LpcRequestPort(
     PEPORT Port,
     PPORT_MESSAGE LpcMessage
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 LpcSendTerminationPort(
     PEPORT Port,
     LARGE_INTEGER CreationTime
@@ -91,7 +91,7 @@ LpcSendTerminationPort(
 /* Code in ntoskrnl/lpc/close.c */
 
 VOID 
-STDCALL
+NTAPI
 LpcpClosePort(
     IN PEPROCESS Process OPTIONAL,
     IN PVOID Object,
@@ -101,7 +101,7 @@ LpcpClosePort(
 );
 
 VOID
-STDCALL
+NTAPI
 LpcpDeletePort(IN PVOID ObjectBody);
 
 VOID
@@ -111,38 +111,38 @@ LpcExitThread(IN PETHREAD Thread);
 /* Code in ntoskrnl/lpc/queue.c */
 
 VOID
-STDCALL
+NTAPI
 EiEnqueueConnectMessagePort(
     IN OUT PEPORT Port,
     IN PQUEUEDMESSAGE Message
 );
 
 VOID
-STDCALL
+NTAPI
 EiEnqueueMessagePort(
     IN OUT PEPORT Port,
     IN PQUEUEDMESSAGE Message
 );
 
 VOID
-STDCALL
+NTAPI
 EiEnqueueMessageAtHeadPort(
     IN OUT PEPORT Port,
     IN PQUEUEDMESSAGE Message
 );
 
 PQUEUEDMESSAGE
-STDCALL
+NTAPI
 EiDequeueConnectMessagePort(IN OUT PEPORT Port);
 
 PQUEUEDMESSAGE
-STDCALL
+NTAPI
 EiDequeueMessagePort(IN OUT PEPORT Port);
 
 /* Code in ntoskrnl/lpc/port.c */
 
 NTSTATUS
-STDCALL
+NTAPI
 LpcpInitializePort(
     IN OUT PEPORT Port,
     IN USHORT Type,
@@ -156,7 +156,7 @@ LpcpInitSystem (VOID);
 /* Code in ntoskrnl/lpc/reply.c */
 
 NTSTATUS
-STDCALL
+NTAPI
 EiReplyOrRequestPort(
     IN PEPORT Port,
     IN PPORT_MESSAGE LpcReply,

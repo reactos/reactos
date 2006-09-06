@@ -7,7 +7,7 @@
 */
 
 VOID
-static __inline
+FORCEINLINE
 ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 {
     /* Check if we have a security descriptor */
@@ -22,12 +22,12 @@ ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
 }
 
 PVOID
-static __inline
+FORCEINLINE
 ObpAllocateCapturedAttributes(IN PP_NPAGED_LOOKASIDE_NUMBER Type)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
     PVOID Buffer;
     PNPAGED_LOOKASIDE_LIST List;
+    PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* Get the P list first */
     List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[Type].P;
@@ -63,8 +63,8 @@ static __inline
 ObpFreeCapturedAttributes(IN PVOID Buffer,
                           IN PP_NPAGED_LOOKASIDE_NUMBER Type)
 {
-    PKPRCB Prcb = KeGetCurrentPrcb();
     PNPAGED_LOOKASIDE_LIST List;
+    PKPRCB Prcb = KeGetCurrentPrcb();
 
     /* Use the P List */
     List = (PNPAGED_LOOKASIDE_LIST)Prcb->PPLookasideList[Type].P;
