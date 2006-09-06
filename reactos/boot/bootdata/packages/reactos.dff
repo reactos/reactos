@@ -150,6 +150,7 @@ dll\win32\avifil32\avifil32.dll                     1
 dll\win32\cabinet\cabinet.dll                       1
 dll\win32\cards\cards.dll                           1
 dll\win32\cfgmgr32\cfgmgr32.dll                     1
+dll\win32\console\console.dll                       1
 dll\win32\comctl32\comctl32.dll                     1
 dll\win32\comdlg32\comdlg32.dll                     1
 dll\win32\crtdll\crtdll.dll                         1
@@ -391,6 +392,7 @@ media\inf\usbport.inf                               6
 media\inf\usb.inf                                   6
 media\inf\usbstor.inf                               6
 media\inf\xboxdisp.inf                              6
+;boot\bootdata\unattend.inf                         6   optional
 
 
 ; Subsystems
