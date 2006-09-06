@@ -17,9 +17,15 @@
 #include <io.h>
 #include <process.h>
 #include <float.h>
+#include <math.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <signal.h>
+
+/* This prototype is needed for me, even though it's present in float.h
+ * Not sure what's blocking it.
+ */
+void __cdecl _fpreset();
 
 /* NOTE: The code for initializing the _argv, _argc, and environ variables
  *       has been moved to a separate .c file which is included in both
