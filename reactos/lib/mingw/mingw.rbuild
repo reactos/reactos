@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
+<group>
+<module name="mingw_common" type="staticlibrary" isstartuplib="true">
+	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
+	<file>cpu_features.c</file>
+	<file>CRTfmode.c</file>
+	<file>CRTglob.c</file>
+	<file>CRTinit.c</file>
+	<file>gccmain.c</file>
+	<file>getopt.c</file>
+	<file>isascii.c</file>
+	<file>iscsym.c</file>
+	<file>iscsymf.c</file>
+	<file>pseudo-reloc.c</file>
+	<file>strcasecmp.c</file>
+	<file>strncasecmp.c</file>
+	<file>toascii.c</file>
+	<file>wcscmpi.c</file>
+	<file>_wgetopt.c</file>
+</module>
+<module name="mingw_main" type="staticlibrary" isstartuplib="true">
+	<file>binmode.c</file>
+	<file>crt1.c</file>
+	<file>main.c</file>
+</module>
+<module name="mingw_wmain" type="staticlibrary" isstartuplib="true">
+	<file>wbinmode.c</file>
+	<file>wcrt1.c</file>
+	<file>wmain.c</file>
+</module>
+<module name="mingw_dllmain" type="staticlibrary" isstartuplib="true">
+	<file>dllcrt1.c</file>
+</module>
+</group>
+

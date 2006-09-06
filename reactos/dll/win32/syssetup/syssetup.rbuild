@@ -7,6 +7,7 @@
 	<define name="_WIN32_IE">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="_SETUPAPI_VER">0x0501</define>
+	<library>pseh</library>
 	<library>uuid</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
@@ -20,7 +21,6 @@
 	<library>ole32</library>
 	<library>shell32</library>
 	<library>shlwapi</library>
-	<library>pseh</library>
 	<file>classinst.c</file>
 	<file>dllmain.c</file>
 	<file>install.c</file>

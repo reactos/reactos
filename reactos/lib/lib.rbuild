@@ -34,6 +34,9 @@
 <directory name="libwine">
 	<xi:include href="libwine/libwine.rbuild" />
 </directory>
+<directory name="mingw">
+	<xi:include href="mingw/mingw.rbuild" />
+</directory>
 <directory name="nt">
 	<xi:include href="nt/nt.rbuild" />
 </directory>

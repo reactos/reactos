@@ -6,6 +6,7 @@
 	<library>smdll</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
+	<library>user32</library>
 	<file>sm.c</file>
 	<file>win32err.c</file>
 	<file>sm.rc</file>

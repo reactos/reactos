@@ -1,4 +1,4 @@
-<module name="glu32" type="win32dll" baseaddress="${BASEADDRESS_GLU32}" installbase="system32" installname="glu32.dll" allowwarnings="true">
+<module name="glu32" type="win32dll" baseaddress="${BASEADDRESS_GLU32}" installbase="system32" installname="glu32.dll" allowwarnings="true" stdlib="host">
 	<importlibrary definition="glu32.def" />
 	<include base="glu32">include</include>
 	<include base="glu32">libnurbs/internals</include>
@@ -10,12 +10,11 @@
 	<define name="RESOLVE_3D_TEXTURE_SUPPORT" />
 	<define name="BUILD_GL32" />
 	<define name="LIBRARYBUILD" />
-	<linkerflag>-lopengl32</linkerflag>
 	<library>ntdll</library>
+	<library>opengl32</library>
 	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>msvcrt</library>
-	<library>opengl32</library>
 	<directory name="libnurbs">
 		<directory name="interface">
  			<file>bezierEval.cc</file>

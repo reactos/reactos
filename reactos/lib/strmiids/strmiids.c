@@ -9,13 +9,9 @@
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 */
-
-#if defined(__LCC__) || defined(__GNUC__)
-#define INITGUID 1
-#include <windows.h>
-#else
+#define INITGUID
 #include <basetyps.h>
-#endif 
+#include <guiddef.h>
 
 DEFINE_GUID(CLSID_AMAudioData,0xf2468580,0xaf8a,0x11d0,0x82,0x12,0x00,0xc0,0x4f,0xc3,0x2c,0x45);
 DEFINE_GUID(CLSID_AMAudioStream,0x8496e040,0xaf4c,0x11d0,0x82,0x12,0x00,0xc0,0x4f,0xc3,0x2c,0x45);

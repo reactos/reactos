@@ -147,6 +147,7 @@ MingwBackend::ProcessModules ()
 		MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
 			module,
 			this );
+        h->AddImplicitLibraries ( module );
 		if ( use_pch && CanEnablePreCompiledHeaderSupportForModule ( module ) )
 			h->EnablePreCompiledHeaderSupport ();
 		if ( module.host == HostDefault )

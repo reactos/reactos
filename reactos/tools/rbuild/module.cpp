@@ -307,11 +307,46 @@ Module::Module ( const Project& project,
 	else
 		isUnicode = false;
 
+	att = moduleNode.GetAttribute ( "stdlib", false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "host" ) )
+			useHostStdlib = true;
+		else if ( !stricmp ( p, "default" ) )
+			useHostStdlib = false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				"stdlib",
+				att->value );
+		}
+	}
+	else
+		useHostStdlib = false;
+
+	if (isUnicode)
+	{
+		// Always define UNICODE and _UNICODE
+		Define* pDefine = new Define ( project, this, "UNICODE" );
+		non_if_data.defines.push_back ( pDefine );
+
+		pDefine = new Define ( project, this, "_UNICODE" );
+		non_if_data.defines.push_back ( pDefine );
+	}
+
 	att = moduleNode.GetAttribute ( "entrypoint", false );
 	if ( att != NULL )
+	{
 		entrypoint = att->value;
+		isDefaultEntryPoint = false;
+	}
 	else
+	{
 		entrypoint = GetDefaultModuleEntrypoint ();
+		isDefaultEntryPoint = true;
+	}
 
 	att = moduleNode.GetAttribute ( "baseaddress", false );
 	if ( att != NULL )
@@ -354,6 +389,25 @@ Module::Module ( const Project& project,
 				att->value );
 		}
 	}
+
+	att = moduleNode.GetAttribute ( "isstartuplib", false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+			isStartupLib = true;
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			isStartupLib = false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				"host",
+				att->value );
+		}
+	}
+	else
+		isStartupLib = false;
 
 	att = moduleNode.GetAttribute ( "prefix", false );
 	if ( att != NULL )
@@ -918,7 +972,7 @@ Module::GetDefaultModuleBaseaddress () const
 bool
 Module::HasImportLibrary () const
 {
-	return importLibrary != NULL;
+	return importLibrary != NULL && type != StaticLibrary;
 }
 
 bool
@@ -1118,7 +1172,7 @@ File::ProcessXML()
 Library::Library ( const XMLElement& _node,
                    const Module& _module,
                    const string& _name )
-	: node(_node),
+	: node(&_node),
 	  module(_module),
 	  name(_name),
 	  importedModule(_module.project.LocateModule(_name))
@@ -1126,27 +1180,36 @@ Library::Library ( const XMLElement& _node,
 	if ( module.name == name )
 	{
 		throw XMLInvalidBuildFileException (
-			node.location,
+			node->location,
 			"module '%s' cannot link against itself",
 			name.c_str() );
 	}
 	if ( !importedModule )
 	{
 		throw XMLInvalidBuildFileException (
-			node.location,
+			node->location,
 			"module '%s' trying to import non-existant module '%s'",
 			module.name.c_str(),
 			name.c_str() );
 	}
 }
 
+Library::Library ( const Module& _module,
+                   const string& _name )
+	: node(NULL),
+	  module(_module),
+	  name(_name),
+	  importedModule(_module.project.LocateModule(_name))
+{
+}
+
 void
 Library::ProcessXML()
 {
-	if ( !module.project.LocateModule ( name ) )
+	if ( node && !module.project.LocateModule ( name ) )
 	{
 		throw XMLInvalidBuildFileException (
-			node.location,
+			node->location,
 			"module '%s' is trying to link against non-existant module '%s'",
 			module.name.c_str(),
 			name.c_str() );
@@ -1340,6 +1403,21 @@ ImportLibrary::ImportLibrary ( const XMLElement& _node,
 		basename = att->value;
 	else
 		basename = module.name;
+
+	att = _node.GetAttribute ( "dllname", false );
+	if (att != NULL)
+		dllname = att->value;
+	else
+	{
+		if ( _module.type == StaticLibrary )
+		{
+			throw XMLInvalidBuildFileException (
+			    node.location,
+			    "<importlibrary> dllname attribute required." );
+		}
+
+		dllname = "";
+	}
 
 	att = _node.GetAttribute ( "definition", true );
 	assert (att);

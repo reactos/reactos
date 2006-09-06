@@ -2,6 +2,7 @@
     <include base="advapi32_winetest">.</include>
     <define name="__USE_W32API" />
     <library>advapi32</library>
+    <library>kernel32</library>
     <library>ntdll</library>
     <file>registry.c</file>
     <file>security.c</file>

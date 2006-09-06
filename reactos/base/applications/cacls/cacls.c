@@ -507,18 +507,8 @@ PrintSpecialAccess:
 }
 
 
-#ifdef _UNICODE
-int __cdecl main(void)
-#else
-int __cdecl _main (int argc, char *argv[])
-#endif
+int __cdecl _tmain(int argc, const TCHAR *argv[])
 {
-#ifdef _UNICODE
-    PWCHAR *argv;
-    int argc = 0;
-    argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-#endif
-
     if (argc < 2)
     {
         PrintHelp();

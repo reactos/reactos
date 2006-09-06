@@ -5,4 +5,6 @@
 	<library>ntdll</library>
 	<library>rpcrt4</library>
 	<library>setupapi</library>
+	<library>kernel32</library>
+	<library>advapi32</library>
 </module>

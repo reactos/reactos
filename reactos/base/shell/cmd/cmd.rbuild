@@ -67,8 +67,10 @@
 	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
 	<define name="_WIN32_WINNT">0x0501</define>
-	<library>kernel32</library>
 	<library>cmd_base</library>
+	<library>kernel32</library>
+	<library>advapi32</library>
+	<library>user32</library>
 	<file>main.c</file>
 	<file>cmd.rc</file>
 </module>

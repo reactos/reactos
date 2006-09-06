@@ -19,7 +19,7 @@
 	<library>ole32</library>
 	<library>winmm</library>
 	<library>dxguid</library>
-      <file>version.rc</file>
+	<file>version.rc</file>
 	<file>data_formats.c</file>
 	<file>device.c</file>
 	<file>dinput_main.c</file>

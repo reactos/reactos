@@ -7,6 +7,7 @@
 	<define name="_UNICODE" />
 	<define name="__USE_W32API" />
 	<library>ntdll</library>
+	<library>kernel32</library>
 	<library>lsasrv</library>
 	<file>lsass.c</file>
 	<file>lsass.rc</file>

@@ -382,8 +382,8 @@ GetDllDirectoryA@8
 GetDllDirectoryW@8
 GetDriveTypeA@4
 GetDriveTypeW@4
-GetEnvironmentStrings=GetEnvironmentStringsA@0
-GetEnvironmentStringsA@0
+GetEnvironmentStrings@0
+GetEnvironmentStringsA=GetEnvironmentStrings@0
 GetEnvironmentStringsW@0
 GetEnvironmentVariableA@12
 GetEnvironmentVariableW@12

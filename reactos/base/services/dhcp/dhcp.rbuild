@@ -8,7 +8,8 @@
 	<library>kernel32</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
-    <pch>include/rosdhcp.h</pch>
+	<library>advapi32</library>
+	<pch>include/rosdhcp.h</pch>
 	<file>adapter.c</file>
 	<file>alloc.c</file>
 	<file>api.c</file>

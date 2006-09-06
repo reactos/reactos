@@ -542,7 +542,7 @@ VOID Release(LPTSTR Index)
 
 
     /* Call IpReleaseAddress to release the IP address on the specified adapter. */
-    if (ret = IpReleaseAddress(&AdapterInfo) != NO_ERROR)
+    if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
     {
         _tprintf(_T("\nAn error occured while releasing interface %S : \n"), AdapterInfo.Name);
         DoFormatMessage(ret);

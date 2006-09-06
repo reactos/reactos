@@ -10,12 +10,9 @@
 
 */
 
-#if defined(__LCC__) || defined(__GNUC__)
-#define INITGUID 1
-#include <windows.h>
-#else
+#define INITGUID
 #include <basetyps.h>
-#endif 
+#include <guiddef.h>
 
 // wine own or ?
 // but it keep dsound happy

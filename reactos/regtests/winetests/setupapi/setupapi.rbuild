@@ -2,6 +2,8 @@
     <include base="setupapi_winetest">.</include>
     <define name="__USE_W32API" />
     <library>ntdll</library>
+    <library>kernel32</library>
+    <library>advapi32</library>
     <library>setupapi</library>
     <file>devclass.c</file>
     <file>install.c</file>

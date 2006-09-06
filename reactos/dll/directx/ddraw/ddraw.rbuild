@@ -12,7 +12,8 @@
 	<library>d3d8thk</library>
 	<library>dxguid</library>
 	<library>ole32</library>
-      <library>user32</library>
+	<library>user32</library>
+	<library>advapi32</library>
 
 	<file>ddraw.rc</file>
 	<file>main.c</file>
@@ -20,7 +21,7 @@
 	<file>startup.c</file>
 	<file>cleanup.c</file>
 
-      <file>clipper.c</file>
+	<file>clipper.c</file>
 	<file>color.c</file>
 	<file>gamma.c</file>
 	<file>palette.c</file>

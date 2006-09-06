@@ -20,7 +20,7 @@ typedef struct _CITEM
    ICompatibilityPage
  ******************************************************************************/
 
-DEFINE_GUID(CLSID_ICompatibilityPage, 0x513D916F, 0x2A8E, 0x4F51, 0x00AE, 0xAB,0x0C,0xBC,0x76,0xFB,0x1A,0xF9); /* F8 on XP! */
+static const GUID CLSID_ICompatibilityPage = {0x513D916F,0x2A8E,0x4F51,{0xAE,0xAB,0x0C,0xBC,0x76,0xFB,0x1A,0xF9}}; /* F8 on XP! */
 
 typedef struct ICompatibilityPage *LPCOMPATIBILITYPAGE;
 

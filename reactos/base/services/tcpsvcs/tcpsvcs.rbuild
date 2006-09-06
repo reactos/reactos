@@ -7,6 +7,8 @@
     <library>iphlpapi</library>
     <library>ws2_32</library>
     <library>shlwapi</library>
+    <library>advapi32</library>
+    <library>user32</library>
     <file>tcpsvcs.c</file>
     <file>skelserver.c</file>
     <file>echo.c</file>

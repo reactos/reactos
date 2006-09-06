@@ -5,6 +5,7 @@
 	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>kernel32</library>
+	<library>user32</library>
 	<library>fmifs</library>
 	<file>format.rc</file>
 	<file>format.c</file>

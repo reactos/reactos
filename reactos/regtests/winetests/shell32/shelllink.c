@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include "windef.h"
 #include "winbase.h"
+#include "basetyps.h"
 #include "shlguid.h"
 //#include "wine/shobjidl.h"
 #include "shlobj.h"
@@ -44,6 +45,7 @@ extern void WINAPI ILFree(LPITEMIDLIST pidl);
 static const WCHAR lnkfile[]= { 'C',':','\\','t','e','s','t','.','l','n','k',0 };
 static const WCHAR notafile[]= { 'C',':','\\','n','o','n','e','x','i','s','t','e','n','t','\\','f','i','l','e',0 };
 
+const GUID IID_IPersistFile = { 0x0000010b, 0x0000, 0x0000, { 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46 } };
 
 /* For some reason SHILCreateFromPath does not work on Win98 and
  * SHSimpleIDListFromPathA does not work on NT4. But if we call both we

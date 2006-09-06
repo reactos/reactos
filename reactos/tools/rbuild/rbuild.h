@@ -296,6 +296,7 @@ public:
 	ImportLibrary* importLibrary;
 	bool mangledSymbols;
 	bool isUnicode;
+    bool isDefaultEntryPoint;
 	Bootstrap* bootstrap;
 	AutoRegister* autoRegister;
 	IfableData non_if_data;
@@ -315,6 +316,8 @@ public:
 	bool useWRC;
 	bool allowWarnings;
 	bool enabled;
+	bool useHostStdlib;
+    bool isStartupLib;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -379,7 +382,7 @@ class Define
 public:
 	const Project& project;
 	const Module* module;
-	const XMLElement& node;
+    const XMLElement* node;
 	std::string name;
 	std::string value;
 
@@ -388,6 +391,9 @@ public:
 	Define ( const Project& project,
 	         const Module* module,
 	         const XMLElement& defineNode );
+	Define ( const Project& project,
+	         const Module* module,
+	         const std::string name_ );
 	~Define();
 	void ProcessXML();
 private:
@@ -414,14 +420,16 @@ public:
 
 class Library
 {
+	const XMLElement *node;
 public:
-	const XMLElement& node;
 	const Module& module;
 	std::string name;
 	const Module* importedModule;
 
 	Library ( const XMLElement& _node,
 	          const Module& _module,
+	          const std::string& _name );
+	Library ( const Module& _module,
 	          const std::string& _name );
 
 	void ProcessXML();
@@ -485,6 +493,7 @@ public:
 	const Module& module;
 	std::string basename;
 	std::string definition;
+	std::string dllname;
 
 	ImportLibrary ( const XMLElement& _node,
 	                const Module& module );

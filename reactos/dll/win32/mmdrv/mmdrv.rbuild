@@ -6,6 +6,7 @@
 	<define name="_UNICODE" />
 	<library>ntdll</library>
 	<library>kernel32</library>
+	<library>user32</library>
 	<library>winmm</library>
 	<file>auxil.c</file>
 	<file>entry.c</file>

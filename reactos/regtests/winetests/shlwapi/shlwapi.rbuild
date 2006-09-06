@@ -5,6 +5,8 @@
     <library>shlwapi</library>
     <library>ole32</library>
     <library>oleaut32</library>
+    <library>kernel32</library>
+    <library>advapi32</library>
     <file>clist.c</file>
     <file>ordinal.c</file>
     <file>shreg.c</file>

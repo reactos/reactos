@@ -1025,9 +1025,12 @@ AccFreeIndexArray(PINHERITED_FROMW pInheritArray,
                   USHORT AceCnt,
                   PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL)
 {
+    PINHERITED_FROMW pLast;
+
     UNREFERENCED_PARAMETER(pfnArray);
 
-    while (AceCnt != 0)
+    pLast = pInheritArray + AceCnt;
+    while (pInheritArray != pLast)
     {
         if (pInheritArray->AncestorName != NULL)
         {
@@ -1036,7 +1039,6 @@ AccFreeIndexArray(PINHERITED_FROMW pInheritArray,
         }
 
         pInheritArray++;
-        AceCnt--;
     }
 
     return ERROR_SUCCESS;

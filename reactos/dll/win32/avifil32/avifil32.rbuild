@@ -5,6 +5,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x501</define>
+	<library>wine</library>
 	<library>uuid</library>
 	<library>ntdll</library>
 	<library>winmm</library>
@@ -12,7 +13,8 @@
 	<library>msvfw32</library>
 	<library>msacm32</library>
 	<library>kernel32</library>
-	<library>wine</library>
+	<library>advapi32</library>
+	<library>user32</library>
 	<file>acmstream.c</file>
 	<file>api.c</file>
 	<file>avifile.c</file>

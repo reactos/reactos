@@ -39,6 +39,8 @@ typedef enum tagSTRRET_TYPE {
     STRRET_CSTR = 2
 } STRRET_TYPE;
 
+#define PCUITEMID_CHILD LPCITEMIDLIST
+
 #pragma pack(pop)
 #ifdef __cplusplus
 }

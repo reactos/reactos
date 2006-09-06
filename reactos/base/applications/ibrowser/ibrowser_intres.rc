@@ -35,9 +35,8 @@ IDB_TOOLBAR             BITMAP  DISCARDABLE     "res/toolbar.bmp"
 
 IDA_IBROWSER ACCELERATORS DISCARDABLE 
 BEGIN
-    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
-                                                    NOINVERT
+    120,            ID_FILE_EXIT,           ASCII, ALT // "X"
+    115,            ID_VIEW_FULLSCREEN,     ASCII, SHIFT, CONTROL // "S"
 END
 
 

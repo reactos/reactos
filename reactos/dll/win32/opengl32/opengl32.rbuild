@@ -7,6 +7,8 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>gdi32</library>
+	<library>user32</library>
+	<library>advapi32</library>
 	<file>gl.c</file>
 	<file>opengl32.c</file>
 	<file>wgl.c</file>

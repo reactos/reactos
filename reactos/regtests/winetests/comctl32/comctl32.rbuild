@@ -6,6 +6,9 @@
     <library>comctl32</library>
     <library>ntdll</library>
     <library>gdi32</library>
+    <library>user32</library>
+    <library>kernel32</library>
+    <library>advapi32</library>
     <file>comboex.c</file>
     <file>dpa.c</file>
     <file>header.c</file>

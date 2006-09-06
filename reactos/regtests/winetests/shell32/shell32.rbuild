@@ -3,9 +3,10 @@
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <library>shell32</library>
+    <library>kernel32</library>
+    <library>advapi32</library>
     <library>shlwapi</library>
     <library>ole32</library>
-    <library>uuid</library>
     <file>shelllink.c</file>
     <file>shellpath.c</file>
     <file>shlexec.c</file>

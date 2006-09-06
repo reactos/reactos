@@ -16,6 +16,7 @@
 	<library>ole32</library>
 	<library>oleaut32</library>
 	<library>uxtheme</library>
+	<library>advapi32</library>
 	<file>aclui.c</file>
 	<file>checklist.c</file>
 	<file>guid.c</file>

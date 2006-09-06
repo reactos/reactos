@@ -8,10 +8,10 @@
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>
 	<library>wine</library>
+	<library>pseh</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>psapi</library>
-	<library>pseh</library>
 	<file>coff.c</file>
 	<file>dbghelp.c</file>
 	<file>elf_module.c</file>

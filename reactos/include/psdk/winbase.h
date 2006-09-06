@@ -1443,7 +1443,6 @@ DWORD WINAPI GetDllDirectoryW(DWORD,LPWSTR);
 UINT WINAPI GetDriveTypeA(LPCSTR);
 UINT WINAPI GetDriveTypeW(LPCWSTR);
 LPSTR WINAPI GetEnvironmentStrings(void);
-LPSTR WINAPI GetEnvironmentStringsA(void);
 LPWSTR WINAPI GetEnvironmentStringsW(void);
 DWORD WINAPI GetEnvironmentVariableA(LPCSTR,LPSTR,DWORD);
 DWORD WINAPI GetEnvironmentVariableW(LPCWSTR,LPWSTR,DWORD);
@@ -2360,6 +2359,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define GetDllDirectory GetDllDirectoryA
 #endif
 #define GetDriveType GetDriveTypeA
+#define GetEnvironmentStringsA GetEnvironmentStrings
 #define GetEnvironmentVariable GetEnvironmentVariableA
 #define GetFileAttributes GetFileAttributesA
 #define GetFileAttributesEx GetFileAttributesExA

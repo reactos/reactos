@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-  <module name="ibrowser" type="win32gui" installbase="system32" installname="ibrowser.exe" allowwarnings="true">
+  <module name="ibrowser" type="win32gui" installbase="system32" installname="ibrowser.exe" allowwarnings="true" stdlib="host">
     <linkerflag>-fexceptions</linkerflag>
     <include base="ibrowser">.</include>
     <define name="__USE_W32API" />

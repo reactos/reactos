@@ -9,6 +9,7 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>advapi32</library>
 	<file>devmgr.c</file>
 	<efile>devmgr.rc</efile>
 </module>

@@ -1556,12 +1556,13 @@ MingwModuleHandler::GenerateLinkerCommand (
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 	string targetName ( module.GetTargetName () );
 
+	string killAt = module.mangledSymbols ? "" : "--kill-at";
+
 	if ( module.IsDLL () )
 	{
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
 		
-		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s\n",
 		          targetName.c_str (),
@@ -1733,6 +1734,18 @@ MingwModuleHandler::GenerateArchiveTarget ( const string& ar,
 	          archiveFilename.c_str (),
 	          objs_macro.c_str (),
 	          GetDirectory(archiveFilename).c_str() );
+
+	if ( module.type == StaticLibrary && module.importLibrary )
+	{
+		string archiveFilename ( GetModuleArchiveFilename () );
+		string definitionFilename ( GetDefinitionFilename () );
+
+		fprintf ( fMakefile,
+		          "\t${dlltool} --dllname %s --def %s --output-lib $@ %s -U\n",
+		          module.importLibrary->dllname.c_str (),
+		          definitionFilename.c_str (),
+		          module.mangledSymbols ? "" : "--kill-at" );
+	}
 
 	fprintf ( fMakefile, "\t$(ECHO_AR)\n" );
 
@@ -1948,6 +1961,13 @@ MingwModuleHandler::GenerateOtherMacros ()
 		          "%s += %s\n\n",
 		          linkerflagsMacro.c_str (),
 		          linkerflags.c_str () );
+	}
+
+	if ( module.type == StaticLibrary && module.isStartupLib )
+	{
+		fprintf ( fMakefile,
+		          "%s += -Wno-main\n\n",
+		          cflagsMacro.c_str () );
 	}
 
 	fprintf ( fMakefile, "\n\n" );
@@ -2564,6 +2584,42 @@ MingwWin32DLLModuleHandler::MingwWin32DLLModuleHandler (
 {
 }
 
+static void
+MingwAddImplicitLibraries( Module &module )
+{
+	Library* pLibrary;
+
+	if ( !module.isDefaultEntryPoint )
+		return;
+
+	if ( module.IsDLL () )
+	{
+		//pLibrary = new Library ( module, "__mingw_dllmain" );
+		//module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+	}
+	else
+	{
+		pLibrary = new Library ( module, module.isUnicode ? "mingw_wmain" : "mingw_main" );
+		module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin(), pLibrary );
+	}
+
+	pLibrary = new Library ( module, "mingw_common" );
+	module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() + 1, pLibrary );
+
+	if ( module.name != "msvcrt" )
+	{
+		// always link in msvcrt to get the basic routines
+		pLibrary = new Library ( module, "msvcrt" );
+		module.non_if_data.libraries.push_back ( pLibrary );
+	}
+}
+
+void
+MingwWin32DLLModuleHandler::AddImplicitLibraries ( Module& module )
+{
+	MingwAddImplicitLibraries ( module );
+}
+
 void
 MingwWin32DLLModuleHandler::Process ()
 {
@@ -2618,6 +2674,12 @@ MingwWin32CUIModuleHandler::MingwWin32CUIModuleHandler (
 }
 
 void
+MingwWin32CUIModuleHandler::AddImplicitLibraries ( Module& module )
+{
+	MingwAddImplicitLibraries ( module );
+}
+
+void
 MingwWin32CUIModuleHandler::Process ()
 {
 	GenerateWin32CUIModuleTarget ();
@@ -2668,6 +2730,12 @@ MingwWin32GUIModuleHandler::MingwWin32GUIModuleHandler (
 
 	: MingwModuleHandler ( module_ )
 {
+}
+
+void
+MingwWin32GUIModuleHandler::AddImplicitLibraries ( Module& module )
+{
+	MingwAddImplicitLibraries ( module );
 }
 
 void

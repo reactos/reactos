@@ -26,29 +26,27 @@
 
 /* GUIDs defined in uuids.lib */
 
-DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
-
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
 
 #include "objbase.h"
-#include "servprov.h"
+#include "wine/servprov.h"
 
 #include "oleauto.h"
 #include "oleidl.h"
-#include "objidl.h"
+#include "wine/oleidl.h"
 #include "olectl.h"
 
-#include "ocidl.h"
+#include "wine/ocidl.h"
 
 #include "mshtmhst.h"
 #include "docobj.h"
-#include "exdisp.h"
+#include "wine/exdisp.h"
 
 #include "hlink.h"
-#include "shlguid.h"
+#include "wine/shlguid.h"
 #include "shlobj.h"
 #include "shldisp.h"
 #include "comcat.h"
@@ -94,3 +92,5 @@ DEFINE_GUID(CLSID_StdFont,0x0be35203,0x8f91,0x11ce,0x9d,0xe3,0x00,0xaa,0x00,0x4b
 DEFINE_GUID(CLSID_StdPicture,0x0be35204,0x8f91,0x11ce,0x9d,0xe3,0x00,0xaa,0x00,0x4b,0xb8,0x51);
 
 DEFINE_GUID(CLSID_HTMLDocument, 0x25336920, 0x03f9, 0x11cf, 0x8f,0xd0, 0x00,0xaa,0x00,0x68,0x6f,0x13);
+
+DEFINE_GUID(GUID_NULL, 0L, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);

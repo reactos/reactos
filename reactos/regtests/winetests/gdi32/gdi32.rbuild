@@ -3,6 +3,9 @@
     <define name="__USE_W32API" />
     <library>ntdll</library>
     <library>gdi32</library>
+    <library>kernel32</library>
+    <library>user32</library>
+    <library>advapi32</library>
     <file>bitmap.c</file>
     <file>brush.c</file>
     <file>gdiobj.c</file>

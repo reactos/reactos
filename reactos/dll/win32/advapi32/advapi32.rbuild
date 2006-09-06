@@ -10,9 +10,9 @@
 	<library>scm_client</library>
 	<library>lsa_client</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>rpcrt4</library>
 	<library>wine</library>
+	<library>kernel32</library>
 	<pch>advapi32.h</pch>
 	<directory name="crypt">
 		<compilationunit name="crypt_unit.c">

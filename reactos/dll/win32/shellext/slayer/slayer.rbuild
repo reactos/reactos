@@ -12,6 +12,7 @@
 	<library>advapi32</library>
 	<library>ole32</library>
 	<library>shell32</library>
+	<library>uuid</library>
 	<file>slayer.c</file>
 	<file>slayer.rc</file>
 	<pch>precomp.h</pch>

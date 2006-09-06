@@ -27,7 +27,7 @@ Define::Define ( const Project& project,
                  const XMLElement& defineNode )
 	: project(project),
 	  module(NULL),
-	  node(defineNode)
+	  node(&defineNode)
 {
 	Initialize();
 }
@@ -37,9 +37,20 @@ Define::Define ( const Project& project,
                  const XMLElement& defineNode )
 	: project(project),
 	  module(module),
-	  node(defineNode)
+	  node(&defineNode)
 {
 	Initialize();
+}
+
+Define::Define ( const Project& project,
+	             const Module* module,
+	             const std::string name_ )
+	: project(project),
+	  module(module),
+	  node(NULL)
+{
+	name = name_;
+	value = "";
 }
 
 Define::~Define ()
@@ -49,11 +60,11 @@ Define::~Define ()
 void
 Define::Initialize()
 {
-	const XMLAttribute* att = node.GetAttribute ( "name", true );
-	const XMLAttribute* empty = node.GetAttribute ( "empty", false );
+	const XMLAttribute* att = node->GetAttribute ( "name", true );
+	const XMLAttribute* empty = node->GetAttribute ( "empty", false );
 	assert(att);
 	name = att->value;
-	value = node.value;
+	value = node->value;
 	if( empty ) value = " ";
 }
 

@@ -1,6 +1,7 @@
 <module name="msvcrt_winetest" type="win32cui" installbase="bin" installname="msvcrt_winetest.exe" allowwarnings="true">
     <include base="msvcrt_winetest">.</include>
     <define name="__USE_W32API" />
+    <library>kernel32</library>
     <library>ntdll</library>
     <file>cpp.c</file>
     <file>dir.c</file>

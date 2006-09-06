@@ -14,12 +14,14 @@
 	<library>uuid</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
+	<library>advapi32</library>
 	<library>ole32</library>
 	<library>oleaut32</library>
 	<library>winmm</library>
 	<library>dxguid</library>
 	<library>strmiids</library>
-      <file>devenum.rc</file>
+	<library>user32</library>
+	<file>devenum.rc</file>
 	<file>createdevenum.c</file>
 	<file>devenum_main.c</file>
 	<file>factory.c</file>
