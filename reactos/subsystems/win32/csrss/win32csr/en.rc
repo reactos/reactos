@@ -38,4 +38,11 @@ BEGIN
   IDS_FIND "Find..."
   IDS_DEFAULTS "Defaults"
   IDS_PROPERTIES "Properties"
+  IDS_SCROLLHERE "Scroll Here"
+  IDS_SCROLLTOP "Scroll Top"
+  IDS_SCROLLBOTTOM "Scroll Bottom"
+  IDS_SCROLLPAGE_UP "Page Up"
+  IDS_SCROLLPAGE_DOWN "Page Down"
+  IDS_SCROLLUP "Scroll Up"
+  IDS_SCROLLDOWN "Scroll Down"
 END

@@ -48,7 +48,7 @@ TuiInit(VOID)
 static VOID STDCALL
 TuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
 {
-  Buffer->DefaultAttrib = 0x17;
+  Buffer->DefaultAttrib = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_BLUE;
 }
 
 static void FASTCALL

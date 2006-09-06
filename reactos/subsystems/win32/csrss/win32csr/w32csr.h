@@ -27,4 +27,6 @@
 
 #include "resource.h"
 
+/* shared header with console.dll */
+#include "console.h"
 /* EOF */

@@ -126,8 +126,6 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
     {
       ClearLineBuffer(Buffer);
     }
-  Buffer->CursorInfo.bVisible = TRUE;
-  Buffer->CursorInfo.dwSize = 5;
   Buffer->Mode = ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
   Buffer->CurrentX = 0;
   Buffer->CurrentY = 0;
@@ -158,8 +156,6 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->EarlyReturn = FALSE;
   Console->ActiveBuffer = NULL;
   InitializeListHead(&Console->InputEvents);
-  InitializeListHead(&Console->ProcessList);
-
   Console->CodePage = GetOEMCP();
   Console->OutputCodePage = GetOEMCP();
 
@@ -180,6 +176,9 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
 
   /* allocate console screen buffer */
   NewBuffer = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_SCREEN_BUFFER));
+  /* init screen buffer with defaults */
+  NewBuffer->CursorInfo.bVisible = TRUE;
+  NewBuffer->CursorInfo.dwSize = 5;
   /* make console active, and insert into console list */
   Console->ActiveBuffer = (PCSRSS_SCREEN_BUFFER) NewBuffer;
   /* add a reference count because the buffer is tied to the console */
@@ -275,14 +274,17 @@ CSR_API(CsrAllocConsole)
     {
         /* Allocate a console structure */
         NewConsole = TRUE;
-        Console = HeapAlloc(Win32CsrApiHeap, 0, sizeof(CSRSS_CONSOLE));
+        Console = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_CONSOLE));
         if (NULL == Console)
         {
             DPRINT1("Not enough memory for console\n");
             Request->Status = STATUS_NO_MEMORY;
             return STATUS_NO_MEMORY;
         }
-
+        /* initialize list head */
+        InitializeListHead(&Console->ProcessList);
+        /* insert process data required for GUI initialization */
+        InsertHeadList(&Console->ProcessList, &ProcessData->ProcessEntry);
         /* Initialize the Console */
         Request->Status = CsrInitConsole(Console);
         if (!NT_SUCCESS(Request->Status))
@@ -361,10 +363,12 @@ CSR_API(CsrAllocConsole)
     ProcessData->CtrlDispatcher = Request->Data.AllocConsoleRequest.CtrlDispatcher;
     DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
 
-    /* Insert into the list */
-////////////////////////////
-    InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
-///////////////////////////
+    if (!NewConsole)
+    {
+        /* Insert into the list if it has not been added */
+        InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -372,7 +376,6 @@ CSR_API(CsrFreeConsole)
 {
   PCSRSS_CONSOLE Console;
 
-  DPRINT("CsrFreeConsole\n");
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
@@ -388,7 +391,6 @@ CSR_API(CsrFreeConsole)
     {
       ConioDeleteConsole((Object_t *) Console);
     }
-
   return STATUS_SUCCESS;
 }
 
@@ -1999,7 +2001,8 @@ CSR_API(CsrGetCursorInfo)
     {
       return Request->Status = Status;
     }
-  Request->Data.GetCursorInfoRequest.Info = Buff->CursorInfo;
+  Request->Data.GetCursorInfoRequest.Info.bVisible = Buff->CursorInfo.bVisible;
+  Request->Data.GetCursorInfoRequest.Info.dwSize = Buff->CursorInfo.dwSize;
   ConioUnlockScreenBuffer(Buff);
 
   return Request->Status = STATUS_SUCCESS;
@@ -2220,13 +2223,24 @@ CSR_API(CsrCreateScreenBuffer)
         {
           Buff->MaxX = Console->ActiveBuffer->MaxX;
           Buff->MaxY = Console->ActiveBuffer->MaxY;
+          Buff->CursorInfo.bVisible = Console->ActiveBuffer->CursorInfo.bVisible;
+          Buff->CursorInfo.dwSize = Console->ActiveBuffer->CursorInfo.dwSize;
+        }
+      else
+        {
+          Buff->CursorInfo.bVisible = TRUE;
+          Buff->CursorInfo.dwSize = 5;
         }
 
       if (Buff->MaxX == 0)
-        Buff->MaxX = 80;
+        {
+          Buff->MaxX = 80;
+        }
 
       if (Buff->MaxY == 0)
-        Buff->MaxY = 25;
+        {
+          Buff->MaxY = 25;
+        }
 
       Status = CsrInitConsoleScreenBuffer(Console, Buff);
       if(! NT_SUCCESS(Status))
@@ -3308,7 +3322,7 @@ CSR_API(CsrGetProcessList)
       current_entry = current_entry->Flink)
   {
     current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
-    if(nItems++ < Request->Data.GetProcessListRequest.nMaxIds)
+    if(++nItems < Request->Data.GetProcessListRequest.nMaxIds)
     {
       *(Buffer++) = current->ProcessId;
       nCopied++;

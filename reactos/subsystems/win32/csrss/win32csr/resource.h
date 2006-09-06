@@ -36,6 +36,15 @@
 #define IDS_DEFAULTS  211
 #define IDS_PROPERTIES 212
 
+//scrollbar resource ids
+#define IDS_SCROLLHERE   304
+#define IDS_SCROLLTOP    305
+#define IDS_SCROLLBOTTOM 306
+#define IDS_SCROLLPAGE_UP 307
+#define IDS_SCROLLPAGE_DOWN 308
+#define IDS_SCROLLUP 309
+#define IDS_SCROLLDOWN 310
+
 
 
 #endif /* WIN32CSR_RESOURCE_H_INCLUDED */

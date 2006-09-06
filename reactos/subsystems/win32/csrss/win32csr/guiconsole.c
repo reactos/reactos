@@ -32,14 +32,26 @@ typedef struct GUI_CONSOLE_DATA_TAG
   BOOL MouseDown;
   HMODULE ConsoleLibrary;
   HANDLE hGuiInitEvent;
+  HWND hVScrollBar;
+  HWND hHScrollBar;
   WCHAR FontName[LF_FACESIZE];
   DWORD FontSize;
   DWORD FontWeight;
-  DWORD CursorSize;
   DWORD HistoryNoDup;
   DWORD FullScreen;
   DWORD QuickEdit;
   DWORD InsertMode;
+  DWORD NumberOfHistoryBuffers;
+  DWORD HistoryBufferSize;
+  DWORD WindowPosition;
+  DWORD ScreenBufferSize;
+  DWORD UseRasterFonts;
+  COLORREF ScreenText;
+  COLORREF ScreenBackground;
+  COLORREF PopupBackground;
+  COLORREF PopupText;
+  COLORREF Colors[16];
+  WCHAR szProcessName[MAX_PATH];
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
 #ifndef WM_APP
@@ -49,6 +61,7 @@ typedef struct GUI_CONSOLE_DATA_TAG
 #define PM_DESTROY_CONSOLE (WM_APP + 2)
 
 #define CURSOR_BLINK_TIME 500
+#define DEFAULT_ATTRIB (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY)
 
 static BOOL ConsInitialized = FALSE;
 static HWND NotifyWnd;
@@ -80,6 +93,26 @@ static const GUICONSOLE_MENUITEM GuiConsoleMainMenuItems[] =
     { IDS_PROPERTIES, NULL, ID_SYSTEM_PROPERTIES },
 
     { 0, NULL, 0 } /* End of list */
+};
+
+static const COLORREF s_Colors[] =
+{
+    RGB(0, 0, 0),
+    RGB(0, 0, 128),
+    RGB(0, 128, 0),
+    RGB(0, 128, 128),
+    RGB(128, 0, 0),
+    RGB(128, 0, 128),
+    RGB(128, 128, 0),
+    RGB(192, 192, 192),
+    RGB(128, 128, 128),
+    RGB(0, 0, 255),
+    RGB(0, 255, 0),
+    RGB(0, 255, 255),
+    RGB(255, 0, 0),
+    RGB(255, 0, 255),
+    RGB(255, 255, 0),
+    RGB(255, 255, 255)
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -215,7 +248,7 @@ GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle,
 }
 
 static BOOL FASTCALL
-GuiConsoleOpenUserSettings(HWND hWnd, DWORD ProcessId, PHKEY hSubKey, REGSAM samDesired)
+GuiConsoleOpenUserSettings(PGUI_CONSOLE_DATA GuiData, DWORD ProcessId, PHKEY hSubKey, REGSAM samDesired, BOOL bCreate)
 {
   WCHAR szProcessName[MAX_PATH];
   WCHAR szBuffer[MAX_PATH];
@@ -224,9 +257,7 @@ GuiConsoleOpenUserSettings(HWND hWnd, DWORD ProcessId, PHKEY hSubKey, REGSAM sam
   WCHAR CurDrive[] = { 'A',':', 0 };
   HANDLE hProcess;
   HKEY hKey;
-  WCHAR * ptr, *res;
-  static const WCHAR szSystemRoot[] = { '%','S','y','s','t','e','m','R','o','o','t','%', 0 };
-  
+  WCHAR * ptr;
 
   /*
    * console properties are stored under
@@ -243,21 +274,42 @@ GuiConsoleOpenUserSettings(HWND hWnd, DWORD ProcessId, PHKEY hSubKey, REGSAM sam
    *     i.e. %SystemRoot%_system32_cmd.exe
    */
   
-  if (!GuiConsoleOpenUserRegistryPathPerProcessId(ProcessId, &hProcess, &hKey, samDesired))
-    return FALSE;
+  DPRINT("GuiConsoleOpenUserSettings entered\n");
 
-  fLength = GetProcessImageFileNameW(hProcess, szProcessName, MAX_PATH);
+  if (!GuiConsoleOpenUserRegistryPathPerProcessId(ProcessId, &hProcess, &hKey, samDesired))
+    {
+      DPRINT("GuiConsoleOpenUserRegistryPathPerProcessId failed\n"); 
+      return FALSE;
+    }
+
+  fLength = GetProcessImageFileNameW(hProcess, szProcessName, sizeof(GuiData->szProcessName) / sizeof(WCHAR));
   CloseHandle(hProcess);
 
   if (!fLength)
     {
-	  DPRINT1("GetProcessImageFileNameW failed(0x%x)ProcessId %d\n", GetLastError(),hProcess);
-	  return FALSE;
+      DPRINT("GetProcessImageFileNameW failed(0x%x)ProcessId %d\n", GetLastError(),hProcess);
+      return FALSE;
     }
-
+  /*
+   * try the process name as path
+   */
     
   ptr = wcsrchr(szProcessName, L'\\');
+  wcscpy(GuiData->szProcessName, ptr);
+
   swprintf(szBuffer, L"Console%s",ptr);
+  DPRINT("#1 Path : %S\n", szBuffer);
+
+  if (bCreate)
+    {
+      if (RegCreateKeyW(hKey, szBuffer, hSubKey) == ERROR_SUCCESS)
+        {
+          RegCloseKey(hKey);
+          return TRUE;
+        }
+      RegCloseKey(hKey);
+      return FALSE;
+  }
 
   if (RegOpenKeyExW(hKey, szBuffer, 0, samDesired, hSubKey) == ERROR_SUCCESS)
     {
@@ -265,50 +317,179 @@ GuiConsoleOpenUserSettings(HWND hWnd, DWORD ProcessId, PHKEY hSubKey, REGSAM sam
       return TRUE;
     }
 
-  dwBitmask = GetLogicalDrives();
-  while(dwBitmask)
-    {
-      if (dwBitmask & 0x1)
-        {
-          dwLength = QueryDosDeviceW(CurDrive, szBuffer, MAX_PATH);
-          if (dwLength)
-            {
-              if (!memcmp(szBuffer, szProcessName, (dwLength-2)*sizeof(WCHAR)))
-                {
-                  wcscpy(szBuffer, CurDrive);
-                  wcscat(&szBuffer[(sizeof(CurDrive)/sizeof(WCHAR))-1], &szProcessName[dwLength-2]);
-                  break;
-                }
-            }
-        }
-      dwBitmask = (dwBitmask >> 1);
-      CurDrive[0]++;
-  }
-  
-  wLength = GetWindowsDirectoryW(szProcessName, MAX_PATH);
+  /*
+   * try the "Shortcut to processname" as path
+   * FIXME: detect wheter the process was started as a shortcut
+   */
 
-  if (!wcsncmp(szProcessName, szBuffer, wLength))
+  swprintf(szBuffer, L"Console\\Shortcut to %S", ptr);
+  DPRINT("#2 Path : %S\n", szBuffer);
+  if (RegOpenKeyExW(hKey, szBuffer, 0, samDesired, hSubKey) == ERROR_SUCCESS)
     {
-      wcscpy(szProcessName, szSystemRoot);
-      wcscpy(&szProcessName[(sizeof(szSystemRoot) / sizeof(WCHAR))-1], &szBuffer[wLength]);
-      ptr = res = szProcessName;
-    }
-  else
-    {
-      ptr = res = szBuffer;
-    }
-
-  while((ptr = wcschr(szProcessName, L'\\')))
-    ptr[0] = L'_';
-
-  if (RegOpenKeyExW(hKey, res, 0, samDesired, hSubKey) == ERROR_SUCCESS)
-    {
+      swprintf(GuiData->szProcessName, L"Shortcut to %S", ptr);
       RegCloseKey(hKey);
       return TRUE;
+    }
+
+  /*
+   * if the path contains \\Device\\HarddiskVolume1\... remove it
+   */
+
+  if (szProcessName[0] == L'\\')
+    {
+      dwBitmask = GetLogicalDrives();
+      while(dwBitmask)
+        {
+          if (dwBitmask & 0x1)
+            {
+              dwLength = QueryDosDeviceW(CurDrive, szBuffer, MAX_PATH);
+              if (dwLength)
+                {
+                  if (!memcmp(szBuffer, szProcessName, (dwLength-2)*sizeof(WCHAR)))
+                    {
+                      wcscpy(szProcessName, CurDrive);
+                      RtlMoveMemory(&szProcessName[2], &szProcessName[dwLength-1], fLength - dwLength -1);
+                      break;
+                    }
+                }
+            }
+          dwBitmask = (dwBitmask >> 1);
+          CurDrive[0]++;
+        }
+    }
+
+  /*
+   * last attempt: check whether the file is under %SystemRoot%
+   * and use path like Console\%SystemRoot%_dir_dir2_file.exe
+   */
+
+  wLength = GetWindowsDirectoryW(szBuffer, MAX_PATH);
+  if (wLength)
+    {
+      if (!wcsncmp(szProcessName, szBuffer, wLength))
+        {
+          /* replace slashes by underscores */
+          while((ptr = wcschr(szProcessName, L'\\')))
+            ptr[0] = L'_';
+          
+          swprintf(szBuffer, L"Console\\\%SystemRoot\%%S", &szProcessName[wLength]);
+          DPRINT("#3 Path : %S\n", szBuffer);
+          if (RegOpenKeyExW(hKey, szBuffer, 0, samDesired, hSubKey) == ERROR_SUCCESS)
+            {
+              swprintf(GuiData->szProcessName, L"\%SystemRoot\%%S", &szProcessName[wLength]);
+              RegCloseKey(hKey);
+              return TRUE;
+            }
+        }
     }
   RegCloseKey(hKey);
   return FALSE;
 }
+
+static VOID
+GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
+{
+    HKEY hKey;
+    PCSRSS_PROCESS_DATA ProcessData;
+
+    if (Console->ProcessList.Flink == &Console->ProcessList)
+      {
+        DPRINT("GuiConsoleWriteUserSettings: No Process!!!\n");
+        return;
+      }
+    ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
+    if (!GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->ProcessId), &hKey, KEY_READ | KEY_WRITE, TRUE))
+      {
+        return;
+      }
+
+  if (Console->ActiveBuffer->CursorInfo.dwSize <= 1)
+    {
+      RegDeleteKeyW(hKey, L"CursorSize");
+    }
+  else
+    {
+      RegSetValueExW(hKey, L"CursorSize", 0, REG_DWORD, (const BYTE *)&Console->ActiveBuffer->CursorInfo.dwSize, sizeof(DWORD));
+    }
+
+  if (GuiData->NumberOfHistoryBuffers == 5)
+    {
+      RegDeleteKeyW(hKey, L"NumberOfHistoryBuffers");
+    }
+  else
+    {
+      RegSetValueExW(hKey, L"NumberOfHistoryBuffers", 0, REG_DWORD, (const BYTE *)&GuiData->NumberOfHistoryBuffers, sizeof(DWORD));
+    }
+
+  if (GuiData->HistoryBufferSize == 50)
+    {
+      RegDeleteKeyW(hKey, L"HistoryBufferSize");
+    }
+  else
+    {
+      RegSetValueExW(hKey, L"HistoryBufferSize", 0, REG_DWORD, (const BYTE *)&GuiData->HistoryBufferSize, sizeof(DWORD));
+    }
+
+  if (GuiData->FullScreen == FALSE)
+    {
+      RegDeleteKeyW(hKey, L"FullScreen");
+    }
+  else
+    {
+      RegSetValueExW(hKey, L"FullScreen", 0, REG_DWORD, (const BYTE *)&GuiData->FullScreen, sizeof(DWORD));
+    }
+
+  if ( GuiData->QuickEdit == FALSE)
+    {
+      RegDeleteKeyW(hKey, L"QuickEdit");
+    }
+    else
+    {
+      RegSetValueExW(hKey, L"QuickEdit", 0, REG_DWORD, (const BYTE *)&GuiData->QuickEdit, sizeof(DWORD));
+    }
+
+  if (GuiData->InsertMode == TRUE)
+    {
+      RegDeleteKeyW(hKey, L"InsertMode");
+    }
+  else
+    {
+      RegSetValueExW(hKey, L"InsertMode", 0, REG_DWORD, (const BYTE *)&GuiData->InsertMode, sizeof(DWORD));
+    }
+
+  if (GuiData->HistoryNoDup == FALSE)
+    {
+      RegDeleteKeyW(hKey, L"HistoryNoDup");
+    }
+  else
+    {
+      RegSetValueExW(hKey, L"HistoryNoDup", 0, REG_DWORD, (const BYTE *)&GuiData->HistoryNoDup, sizeof(DWORD));
+    }
+
+  if (GuiData->ScreenText == RGB(192, 192, 192))
+    {
+      /*
+       * MS uses console attributes instead of real color
+       */
+       RegDeleteKeyW(hKey, L"ScreenText");
+    }
+  else
+    {
+       RegSetValueExW(hKey, L"ScreenText", 0, REG_DWORD, (const BYTE *)&GuiData->ScreenText, sizeof(COLORREF));
+    }
+
+  if (GuiData->ScreenBackground == RGB(0, 0, 0))
+    {
+       RegDeleteKeyW(hKey, L"ScreenBackground");
+    }
+  else
+    {
+       RegSetValueExW(hKey, L"ScreenBackground", 0, REG_DWORD, (const BYTE *)&GuiData->ScreenBackground, sizeof(COLORREF));
+    }
+
+  RegCloseKey(hKey);
+}
+
 static void FASTCALL
 GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_SCREEN_BUFFER Buffer)
 {
@@ -321,7 +502,13 @@ GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA 
   WCHAR szValue[MAX_PATH];
   DWORD Value;
 
-  RegQueryInfoKey(hKey, NULL, NULL, NULL, &dwNumSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL );
+  if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &dwNumSubKeys, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+    {
+       DPRINT("GuiConsoleReadUserSettings: RegQueryInfoKey failed\n");
+       return;
+    }
+
+  DPRINT("GuiConsoleReadUserSettings entered dwNumSubKeys %d\n", dwNumSubKeys);
 
   for (dwIndex = 0; dwIndex < dwNumSubKeys; dwIndex++)
     {
@@ -343,13 +530,24 @@ GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA 
           else
             break;
         }
-
       if (!wcscmp(szValueName, L"CursorSize"))
         {
           if (Value == 0x32)
-            GuiData->CursorSize = Value;
+            {
+              Buffer->CursorInfo.dwSize = Value;
+            }
           else if (Value == 0x64)
-              GuiData->CursorSize = Value;
+            {
+              Buffer->CursorInfo.dwSize = Value;
+            }
+        }
+      else if (!wcscmp(szValueName, L"ScreenText"))
+        {
+          GuiData->ScreenText = Value;
+        }
+      else if (!wcscmp(szValueName, L"ScreenBackground"))
+        {
+          GuiData->ScreenBackground = Value;
         }
       else if (!wcscmp(szValueName, L"FaceName"))
         {
@@ -374,11 +572,11 @@ GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA 
         }
       else if (!wcscmp(szValueName, L"ScreenBufferSize"))
         {
-			if( Buffer)
-			{
-			Buffer->MaxX = LOWORD(Value);
-			Buffer->MaxY = HIWORD(Value);
-			}
+            if(Buffer)
+              {
+                Buffer->MaxX = LOWORD(Value);
+                Buffer->MaxY = HIWORD(Value);
+              }
         }
       else if (!wcscmp(szValueName, L"FullScreen"))
         {
@@ -404,20 +602,31 @@ GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_
   wcscpy(GuiData->FontName, L"Bitstream Vera Sans Mono");
   GuiData->FontSize = 0x0008000C; // font is 8x12
   GuiData->FontWeight = FW_NORMAL;
-  GuiData->CursorSize = 0;
   GuiData->HistoryNoDup = FALSE;
   GuiData->FullScreen = FALSE;
   GuiData->QuickEdit = FALSE;
   GuiData->InsertMode = TRUE;
+  GuiData->HistoryBufferSize = 50;
+  GuiData->NumberOfHistoryBuffers = 5;
+  GuiData->ScreenText = RGB(192, 192, 192);
+  GuiData->ScreenBackground = RGB(0, 0, 0); 
+  GuiData->PopupText = RGB(128, 0, 128); 
+  GuiData->PopupBackground = RGB(255, 255, 255); 
+  GuiData->WindowPosition = UINT_MAX;
+  GuiData->ScreenBufferSize = MAKELONG(80, 300); //FIXME
+  GuiData->UseRasterFonts = TRUE;
+  memcpy(GuiData->Colors, s_Colors, sizeof(s_Colors));
 
   Console->Size.X = 80;
   Console->Size.Y = 25;
 
   if (Buffer)
-  {
-    Buffer->MaxX = 80;
-    Buffer->MaxY = 25;
-  }
+    {
+      Buffer->MaxX = 80;
+      Buffer->MaxY = 25;
+      Buffer->CursorInfo.bVisible = TRUE;
+      Buffer->CursorInfo.dwSize = 5;
+    }
 }
 
 
@@ -446,7 +655,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   if (Console->ProcessList.Flink != &Console->ProcessList)
     {
       ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSRSS_PROCESS_DATA, ProcessEntry);
-      if (GuiConsoleOpenUserSettings(hWnd, PtrToUlong(ProcessData->ProcessId), &hKey, KEY_READ))
+      if (GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->ProcessId), &hKey, KEY_READ, FALSE))
         {
           GuiConsoleReadUserSettings(hKey, Console, GuiData, Console->ActiveBuffer);
           RegCloseKey(hKey);
@@ -528,9 +737,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
              Rect.bottom - Rect.top, FALSE);
 
   SetTimer(hWnd, 1, CURSOR_BLINK_TIME, NULL);
-  SetEvent(GuiData->hGuiInitEvent);
-
   GuiConsoleCreateSysMenu(Console);
+  SetEvent(GuiData->hGuiInitEvent);
 
   return (BOOL) DefWindowProcW(hWnd, WM_NCCREATE, 0, (LPARAM) Create);
 }
@@ -546,10 +754,18 @@ GuiConsoleRGBFromAttribute(BYTE Attribute)
 }
 
 static VOID FASTCALL
-GuiConsoleSetTextColors(HDC Dc, BYTE Attribute)
+GuiConsoleSetTextColors(HDC Dc, BYTE Attribute, PCSRSS_SCREEN_BUFFER Buff, COLORREF TextColor, COLORREF BkColor)
 {
-  SetTextColor(Dc, GuiConsoleRGBFromAttribute(Attribute & 0x0f));
-  SetBkColor(Dc, GuiConsoleRGBFromAttribute((Attribute & 0xf0) >> 4));
+  if (Attribute != Buff->DefaultAttrib)
+    {
+      SetTextColor(Dc, GuiConsoleRGBFromAttribute(Attribute & 0x0f));
+      SetBkColor(Dc, GuiConsoleRGBFromAttribute((Attribute & 0xf0) >> 4));
+    }
+  else
+    {
+      SetTextColor(Dc, TextColor);
+      SetBkColor(Dc, BkColor);
+    }
 }
 
 static VOID FASTCALL
@@ -656,7 +872,10 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
     LastAttribute = Buff->Buffer[(TopLine * Buff->MaxX + LeftChar) * 2 + 1];
 
     GuiConsoleSetTextColors(hDC,
-                            LastAttribute);
+                            LastAttribute,
+                            Buff,
+                            GuiData->ScreenText,
+                            GuiData->ScreenBackground);
 
     EnterCriticalSection(&Buff->Header.Lock);
 
@@ -692,7 +911,10 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
                 if (Attribute != LastAttribute)
                 {
                     GuiConsoleSetTextColors(hDC,
-                                            Attribute);
+                                            Attribute,
+                                            Buff,
+                                            GuiData->ScreenText,
+                                            GuiData->ScreenBackground);
                     LastAttribute = Attribute;
                 }
             }
@@ -729,7 +951,16 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
                 CursorHeight = 1;
             }
             From = Buff->Buffer + (Buff->CurrentY * Buff->MaxX + Buff->CurrentX) * 2 + 1;
-            CursorBrush = CreateSolidBrush(GuiConsoleRGBFromAttribute(*From));
+
+            if (*From != DEFAULT_ATTRIB)
+            {
+                CursorBrush = CreateSolidBrush(GuiConsoleRGBFromAttribute(*From));
+            }
+            else
+            {
+                CursorBrush = CreateSolidBrush(GuiData->ScreenText);
+            }
+
             OldBrush = SelectObject(hDC,
                                     CursorBrush);
             PatBlt(hDC,
@@ -1026,6 +1257,7 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
 
+
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   KillTimer(hWnd, 1);
   Console->PrivateData = NULL;
@@ -1176,25 +1408,29 @@ GuiConsoleRightMouseDown(HWND hWnd)
 
 }
 
+
 static VOID
-GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults)
+GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiData)
 {
   PCSRSS_CONSOLE Console;
-  PGUI_CONSOLE_DATA GuiData;
   APPLET_PROC CPLFunc;
   TCHAR szBuffer[MAX_PATH];
+  ConsoleInfo SharedInfo;
+
+  DPRINT("GuiConsoleShowConsoleProperties entered\n");
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
   if (GuiData == NULL)
-  {
-    DPRINT1("GuiConsoleGetDataPointers failed\n");
-    return;
-  }
+    {
+      DPRINT("GuiConsoleGetDataPointers failed\n");
+      return;
+    }
+
   if (GuiData->ConsoleLibrary == NULL)
     {
-		GetWindowsDirectory(szBuffer,MAX_PATH);
-		_tcscat(szBuffer, _T("\\system32\\console.dll"));
+      GetWindowsDirectory(szBuffer,MAX_PATH);
+      _tcscat(szBuffer, _T("\\system32\\console.dll"));
       GuiData->ConsoleLibrary = LoadLibrary(szBuffer);
 
       if (GuiData->ConsoleLibrary == NULL)
@@ -1206,39 +1442,47 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults)
 
   CPLFunc = (APPLET_PROC) GetProcAddress(GuiData->ConsoleLibrary, _T("CPlApplet"));
   if (!CPLFunc)
-  {
-    DPRINT("Error: Console.dll misses CPlApplet export\n");
-    return;
-  }
+    {
+      DPRINT("Error: Console.dll misses CPlApplet export\n");
+      return;
+    }
 
+  /* setup struct */
+  SharedInfo.InsertMode = GuiData->InsertMode;
+  SharedInfo.HistoryBufferSize = GuiData->HistoryBufferSize;
+  SharedInfo.NumberOfHistoryBuffers = GuiData->NumberOfHistoryBuffers;
+  SharedInfo.ScreenText = GuiData->ScreenText; 
+  SharedInfo.ScreenBackground = GuiData->ScreenBackground; 
+  SharedInfo.PopupText = GuiData->PopupText; 
+  SharedInfo.PopupBackground = GuiData->PopupBackground; 
+  SharedInfo.WindowSize = (DWORD)MAKELONG(Console->Size.X, Console->Size.Y);
+  SharedInfo.WindowPosition = GuiData->WindowPosition;
+  SharedInfo.ScreenBuffer = GuiData->ScreenBufferSize;
+  SharedInfo.UseRasterFonts = GuiData->UseRasterFonts;
+  SharedInfo.FontSize = (DWORD)GuiData->FontSize;
+  SharedInfo.FontWeight = GuiData->FontWeight;
+  SharedInfo.CursorSize = Console->ActiveBuffer->CursorInfo.dwSize;
+  SharedInfo.HistoryNoDup = GuiData->HistoryNoDup;
+  SharedInfo.FullScreen = GuiData->FullScreen;
+  SharedInfo.QuickEdit = GuiData->QuickEdit;
+  memcpy(&SharedInfo.Colors[0], GuiData->Colors, sizeof(s_Colors));
+ 
   if (!CPLFunc(hWnd, CPL_INIT, 0, 0))
-  {
-    DPRINT("Error: failed to initialize console.dll\n");
-    return;
-  }
+    {
+      DPRINT("Error: failed to initialize console.dll\n");
+      return;
+    }
 
   if (CPLFunc(hWnd, CPL_GETCOUNT, 0, 0) != 1)
-  {
-    DPRINT("Error: console.dll returned unexpected CPL count\n");
-    return;
-  }
+    {
+      DPRINT("Error: console.dll returned unexpected CPL count\n");
+      return;
+    }
 
-  CPLFunc(hWnd, CPL_DBLCLK, 0, Defaults);
-
-  // TODO
-  //
-  // read back the changes from console.dll
-  //
-  // if the changes are system-wide then 
-  // console.dll should have written it to
-  // registry
-  //
-  // if the changes only apply to this session
-  // then exchange this info with console.dll in
-  // some private way
+  CPLFunc(hWnd, CPL_DBLCLK, (LPARAM)&SharedInfo, Defaults);
 }
 static BOOL FASTCALL
-GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam)
+GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, PGUI_CONSOLE_DATA GuiData)
 {
     BOOL Ret = TRUE;
 
@@ -1253,11 +1497,11 @@ GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam)
             break;
 
         case ID_SYSTEM_DEFAULTS:
-            GuiConsoleShowConsoleProperties(hWnd, TRUE);
+            GuiConsoleShowConsoleProperties(hWnd, TRUE, GuiData);
             break;
 
         case ID_SYSTEM_PROPERTIES:
-            GuiConsoleShowConsoleProperties(hWnd, FALSE);
+            GuiConsoleShowConsoleProperties(hWnd, FALSE, GuiData);
             break;
 
         default:
@@ -1268,10 +1512,161 @@ GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam)
     return Ret;
 }
 
+static VOID FASTCALL
+GuiConsoleResize(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+  PCSRSS_CONSOLE Console;
+  PGUI_CONSOLE_DATA GuiData;
+
+  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
+  if (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED)
+  {
+      DPRINT1("GuiConsoleResize X %d Y %d\n", LOWORD(lParam), HIWORD(lParam));
+  }
+}
+
+VOID FASTCALL
+GuiConsoleCreateScrollBar(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, HWND NewWindow)
+{
+  HMENU hMenu;
+  HWND hVScrollBar;
+  HWND hHScrollBar;
+  SCROLLINFO sInfo;
+
+  hMenu = CreatePopupMenu();
+  if (hMenu == NULL)
+    {
+      DPRINT("CreatePopupMenu failed\n");
+      return;
+    }
+
+  //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLHERE);
+  //InsertItem(hMenu, MFT_SEPARATOR, MIIM_FTYPE, 0, NULL, -1);
+  //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLTOP);
+  //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLBOTTOM);
+  //InsertItem(hMenu, MFT_SEPARATOR, MIIM_FTYPE, 0, NULL, -1);
+  //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLPAGE_UP);
+  //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLPAGE_DOWN);
+  //InsertItem(hMenu, MFT_SEPARATOR, MIIM_FTYPE, 0, NULL, -1);
+  //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLUP);
+  //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLDOWN);
+  
+  hVScrollBar = CreateWindowExW(0L,
+                                L"ScrollBar",
+                                (LPWSTR)NULL,
+                                WS_CHILD | WS_VSCROLL,
+                                0,
+                                0,
+                                200,
+                                50,
+                                NewWindow,
+                                NULL, //hMenu,
+                                GetModuleHandleW(NULL),
+                                (LPVOID)GuiData);
+
+  if (hVScrollBar)
+    {
+
+      /* set scrollbar sizes */
+      sInfo.cbSize = sizeof(SCROLLINFO);
+      sInfo.fMask = SIF_RANGE | SIF_POS;
+      sInfo.nMin = 0;
+      sInfo.nMax = Console->ActiveBuffer->MaxY;
+	  sInfo.nPos = 0;
+      SetScrollInfo(hVScrollBar, SB_CTL, &sInfo, TRUE);
+      ShowScrollBar(NewWindow, SB_CTL, TRUE);
+	  GuiData->hVScrollBar = hVScrollBar;
+    }
+ 
+  if (Console->ActiveBuffer->MaxX > Console->Size.X)
+    {
+      hHScrollBar = CreateWindowExW(0L,
+                                    L"ScrollBar",
+                                    (LPWSTR)NULL,
+                                    WS_CHILD | WS_HSCROLL,
+                                    0,
+                                    0,
+                                    200,
+                                    CW_USEDEFAULT,
+                                    NewWindow,
+                                    hMenu,
+                                    GetModuleHandleW(NULL),
+                                   (LPVOID)GuiData);
+      if (hHScrollBar)
+        {
+          sInfo.nMax = Console->ActiveBuffer->MaxX;
+          SetScrollInfo(hHScrollBar, SB_CTL, &sInfo, TRUE);
+          GuiData->hHScrollBar = hHScrollBar;
+        }
+    }
+}
+
+static VOID FASTCALL
+GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsoleInfo pConInfo)
+{
+  DWORD windx, windy;
+  RECT rect;
+    
+  /* apply text / background color */
+  GuiData->ScreenText = pConInfo->ScreenText;
+  GuiData->ScreenBackground = pConInfo->ScreenBackground;
+
+  /* apply cursor size */
+  Console->ActiveBuffer->CursorInfo.dwSize = max(min(pConInfo->CursorSize, 1), 100);
+
+  windx = LOWORD(pConInfo->ScreenBuffer);
+  windy = HIWORD(pConInfo->ScreenBuffer);
+
+  if (windx != Console->ActiveBuffer->MaxX || windy != Console->ActiveBuffer->MaxY)
+  {
+    //
+    // TODO
+    // resize screen buffer
+
+
+    // Console->ActiveBuffer->MaxX = windx;
+    // Console->ActiveBuffer->MaxY = windy;
+  }
+
+  windx = LOWORD(pConInfo->WindowSize);
+  windy = HIWORD(pConInfo->WindowSize);
+
+  if (windx != Console->Size.X || windy != Console->Size.Y)
+  {
+      /* resize window */
+      Console->Size.X = windx;
+      Console->Size.Y = windy;
+
+      GetWindowRect(pConInfo->hConsoleWindow, &rect);
+
+      rect.right = rect.left + Console->Size.X * GuiData->CharWidth + 2 * GetSystemMetrics(SM_CXFIXEDFRAME);
+      rect.bottom = rect.top + Console->Size.Y * GuiData->CharHeight + 2 * GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CYCAPTION);
+
+      MoveWindow(pConInfo->hConsoleWindow, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, FALSE);
+
+      if (Console->Size.X < Console->ActiveBuffer->MaxX)
+      {
+          /* show scrollbar when window becomes smaller than active screen buffer */
+          //ShowScrollBar(GuiData->hHScrollBar, SB_CTL, TRUE);
+      }
+      else
+      {
+          /* hide scrollbar */
+          //ShowScrollBar(GuiData->hHScrollBar, SB_CTL, FALSE);
+      }
+  }
+  /* repaint window */
+  InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
+}
+
 static LRESULT CALLBACK
 GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   LRESULT Result = 0;
+  PGUI_CONSOLE_DATA GuiData = NULL;
+  PCSRSS_CONSOLE Console = NULL;
+
+  GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
   switch(msg)
     {
@@ -1309,9 +1704,19 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_MOUSEMOVE:
           GuiConsoleMouseMove(hWnd, wParam, lParam);
         break;
-	  case WM_SYSCOMMAND:
-          if (!GuiConsoleHandleSysMenuCommand(hWnd, wParam))
+      case WM_SYSCOMMAND:
+          if (!GuiConsoleHandleSysMenuCommand(hWnd, wParam, GuiData))
               Result = DefWindowProcW(hWnd, msg, wParam, lParam);
+          break;
+      case WM_SIZE:
+          GuiConsoleResize(hWnd, wParam, lParam);
+          break;
+      case PM_APPLY_CONSOLE_INFO:
+          GuiApplyUserSettings(Console, GuiData, (PConsoleInfo)wParam);
+          if (lParam)
+            {
+              GuiConsoleWriteUserSettings(Console, GuiData);
+            }
           break;
       default:
         Result = DefWindowProcW(hWnd, msg, wParam, lParam);
@@ -1352,7 +1757,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
         NewWindow = CreateWindowW(L"ConsoleWindowClass",
                                   Title,
-                                  WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // | WS_HSCROLL | WS_VSCROLL,
+                                  WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, //WS_OVERLAPPEDWINDOW
                                   CW_USEDEFAULT,
                                   CW_USEDEFAULT,
                                   CW_USEDEFAULT,
@@ -1367,8 +1772,8 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
         if (NULL != NewWindow)
           {
-            //ShowScrollBar(NewWindow, SB_VERT, FALSE);
-            //ShowScrollBar(NewWindow, SB_HORZ, FALSE);
+            // scrollbar support
+            //GuiConsoleCreateScrollBar(Console, (PGUI_CONSOLE_DATA)Console->PrivateData, NewWindow);
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
             ShowWindow(NewWindow, SW_SHOW);
           }
@@ -1489,7 +1894,7 @@ GuiInit(VOID)
 static VOID STDCALL
 GuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
 {
-  Buffer->DefaultAttrib = 0x0f;
+  Buffer->DefaultAttrib = DEFAULT_ATTRIB;
 }
 
 static BOOL STDCALL
