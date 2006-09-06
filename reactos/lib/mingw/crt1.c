@@ -21,6 +21,8 @@
 #include <windows.h>
 #include <signal.h>
 
+void __cdecl _fpreset();
+
 /* NOTE: The code for initializing the _argv, _argc, and environ variables
  *       has been moved to a separate .c file which is included in both
  *       crt1.c and dllcrt1.c. This means changes in the code don't have to
