@@ -1,6 +1,8 @@
-<module name="regexpl" type="win32cui" installbase="system32" installname="regexpl.exe">
+<module name="regexpl" type="win32cui" installbase="system32" installname="regexpl.exe" stdlib="host">
 	<include base="regexpl">.</include>
 	<define name="__USE_W32API" />
+	<library>kernel32</library>
+	<library>user32</library>
 
 	<file>ArgumentParser.cpp</file>
 	<file>Console.cpp</file>
