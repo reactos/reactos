@@ -401,23 +401,23 @@ BOOLEAN CMAPI
 CmpFileRead(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength);
+   SIZE_T BufferLength);
 
 BOOLEAN CMAPI
 CmpFileWrite(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength);
+   SIZE_T BufferLength);
 
 BOOLEAN CMAPI
 CmpFileSetSize(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileSize);
+   ULONGLONG FileSize);
 
 BOOLEAN CMAPI
 CmpFileFlush(
