@@ -4,6 +4,7 @@
 	<define name="__USE_W32API" />
 	<include base="popupmenu">.</include>
 	<library>kernel32</library>
+	<library>user32</library>
 	<library>gdi32</library>
 	<file>popupmenu.c</file>
 	<file>popupmenu.rc</file>
