@@ -32,14 +32,49 @@
 
 /* FUNCTIONS ****************************************************************/
 
+static VOID
+AddProvider(
+    IN OUT PFILE_SYSTEM_LIST List,
+    IN LPCSTR FileSystem,
+    IN FORMATEX FormatFunc,
+    IN CHKDSKEX ChkdskFunc)
+{
+    PFILE_SYSTEM_ITEM Item;
+
+    Item = (PFILE_SYSTEM_ITEM)RtlAllocateHeap(ProcessHeap, 0, sizeof(FILE_SYSTEM_ITEM));
+    if (!Item)
+        return;
+
+    Item->FileSystem = FileSystem;
+    Item->FormatFunc = FormatFunc;
+    Item->ChkdskFunc = ChkdskFunc;
+    Item->QuickFormat = FALSE;
+    InsertTailList(&List->ListHead, &Item->ListEntry);
+
+    if (!FormatFunc)
+        return;
+
+    Item = (PFILE_SYSTEM_ITEM)RtlAllocateHeap(ProcessHeap, 0, sizeof(FILE_SYSTEM_ITEM));
+    if (!Item)
+        return;
+
+    Item->FileSystem = FileSystem;
+    Item->FormatFunc = FormatFunc;
+    Item->ChkdskFunc = ChkdskFunc;
+    Item->QuickFormat = TRUE;
+    InsertTailList(&List->ListHead, &Item->ListEntry);
+}
+
 PFILE_SYSTEM_LIST
 CreateFileSystemList(
     IN SHORT Left,
     IN SHORT Top,
     IN BOOLEAN ForceFormat,
-    IN FILE_SYSTEM ForceFileSystem)
+    IN LPCSTR ForceFileSystem)
 {
     PFILE_SYSTEM_LIST List;
+    PFILE_SYSTEM_ITEM Item;
+    PLIST_ENTRY ListEntry;
 
     List = (PFILE_SYSTEM_LIST)RtlAllocateHeap(ProcessHeap, 0, sizeof(FILE_SYSTEM_LIST));
     if (List == NULL)
@@ -47,18 +82,30 @@ CreateFileSystemList(
 
     List->Left = Left;
     List->Top = Top;
+    List->Selected = NULL;
+    InitializeListHead(&List->ListHead);
 
-    List->ForceFormat = ForceFormat;
-    List->FileSystemCount = 1;
-    if (ForceFormat)
+    AddProvider(List, "FAT", VfatFormat, NULL);
+    if (!ForceFormat)
     {
-        List->CurrentFileSystem = ForceFileSystem;
+        /* Add 'Keep' provider */
+       AddProvider(List, NULL, NULL, NULL);
     }
-    else
+
+    /* Search for ForceFileSystem in list */
+    ListEntry = List->ListHead.Flink;
+    while (ListEntry != &List->ListHead)
     {
-        List->FileSystemCount++;
-        List->CurrentFileSystem = FsKeep;
+        Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
+        if (Item->FileSystem && strcmp(ForceFileSystem, Item->FileSystem) == 0)
+        {
+            List->Selected = Item;
+            break;
+        }
+        ListEntry = ListEntry->Flink;
     }
+    if (!List->Selected)
+        List->Selected = CONTAINING_RECORD(List->ListHead.Flink, FILE_SYSTEM_ITEM, ListEntry);
 
     return List;
 }
@@ -67,6 +114,19 @@ VOID
 DestroyFileSystemList(
     IN PFILE_SYSTEM_LIST List)
 {
+    PLIST_ENTRY ListEntry = List->ListHead.Flink;
+    PFILE_SYSTEM_ITEM Item;
+    PLIST_ENTRY Next;
+
+    while (ListEntry != &List->ListHead)
+    {
+        Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
+        Next = ListEntry->Flink;
+
+        RtlFreeHeap(ProcessHeap, 0, Item);
+
+        ListEntry = Next;
+    }
     RtlFreeHeap(ProcessHeap, 0, List);
 }
 
@@ -74,66 +134,51 @@ VOID
 DrawFileSystemList(
     IN PFILE_SYSTEM_LIST List)
 {
+    PLIST_ENTRY ListEntry;
+    PFILE_SYSTEM_ITEM Item;
     COORD coPos;
     ULONG Written;
-    ULONG Index;
+    ULONG Index = 0;
+    CHAR Buffer[70];
 
-    Index = 0;
-
-    coPos.X = List->Left;
-    coPos.Y = List->Top + Index;
-    FillConsoleOutputAttribute(StdOutput,
-                               FOREGROUND_WHITE | BACKGROUND_BLUE,
-                               50,
-                               coPos,
-                               &Written);
-    FillConsoleOutputCharacterA(StdOutput,
-                                ' ',
-                                50,
-                                coPos,
-                                &Written);
-
-    if (List->CurrentFileSystem == FsFat)
+    ListEntry = List->ListHead.Flink;
+    while (ListEntry != &List->ListHead)
     {
-        CONSOLE_SetInvertedTextXY(List->Left,
-                                  List->Top + Index,
-                                  " Format partition as FAT file system ");
-    }
-    else
-    {
-        CONSOLE_SetTextXY(List->Left,
-                          List->Top + Index,
-                          " Format partition as FAT file system ");
-    }
-    Index++;
+        Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
 
-    if (List->ForceFormat == FALSE)
-    {
         coPos.X = List->Left;
         coPos.Y = List->Top + Index;
         FillConsoleOutputAttribute(StdOutput,
                                    FOREGROUND_WHITE | BACKGROUND_BLUE,
-                                   50,
+                                   sizeof(Buffer),
                                    coPos,
                                    &Written);
         FillConsoleOutputCharacterA(StdOutput,
                                     ' ',
-                                    50,
+                                    sizeof(Buffer),
                                     coPos,
                                     &Written);
 
-        if (List->CurrentFileSystem == FsKeep)
+        if (Item->FileSystem)
         {
-            CONSOLE_SetInvertedTextXY(List->Left,
-                                     List->Top + Index,
-                                     " Keep current file system (no changes) ");
+            if (Item->QuickFormat)
+                sprintf(Buffer, " Format partition as %s file system (quick format) ", Item->FileSystem);
+            else
+                sprintf(Buffer, " Format partition as %s file system ", Item->FileSystem);
         }
         else
-        {
+            sprintf(Buffer, " Keep current file system (no changes) ");
+
+        if (ListEntry == &List->Selected->ListEntry)
+            CONSOLE_SetInvertedTextXY(List->Left,
+                                      List->Top + Index,
+                                      Buffer);
+        else
             CONSOLE_SetTextXY(List->Left,
                               List->Top + Index,
-                              " Keep current file system (no changes) ");
-        }
+                              Buffer);
+        Index++;
+        ListEntry = ListEntry->Flink;
     }
 }
 
@@ -141,9 +186,9 @@ VOID
 ScrollDownFileSystemList(
     IN PFILE_SYSTEM_LIST List)
 {
-    if ((ULONG)List->CurrentFileSystem < List->FileSystemCount - 1)
+    if (List->Selected->ListEntry.Flink != &List->ListHead)
     {
-        List->CurrentFileSystem++;
+        List->Selected = CONTAINING_RECORD(List->Selected->ListEntry.Flink, FILE_SYSTEM_ITEM, ListEntry);
         DrawFileSystemList(List);
     }
 }
@@ -152,9 +197,9 @@ VOID
 ScrollUpFileSystemList(
     IN PFILE_SYSTEM_LIST List)
 {
-    if ((ULONG)List->CurrentFileSystem > 0)
+    if (List->Selected->ListEntry.Blink != &List->ListHead)
     {
-        List->CurrentFileSystem--;
+        List->Selected = CONTAINING_RECORD(List->Selected->ListEntry.Blink, FILE_SYSTEM_ITEM, ListEntry);
         DrawFileSystemList(List);
     }
 }

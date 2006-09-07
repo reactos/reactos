@@ -2099,7 +2099,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 
   if (FileSystemList == NULL)
     {
-      FileSystemList = CreateFileSystemList (6, 26, PartEntry->New, FsFat);
+      FileSystemList = CreateFileSystemList (6, 26, PartEntry->New, "FAT");
       if (FileSystemList == NULL)
 	{
 	  /* FIXME: show an error dialog */
@@ -2147,7 +2147,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
-	  if (FileSystemList->CurrentFileSystem == FsKeep)
+	  if (!FileSystemList->Selected->FormatFunc)
 	    {
 	      return CHECK_FILE_SYSTEM_PAGE;
 	    }
@@ -2212,60 +2212,55 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	{
 	  CONSOLE_SetStatusText ("   Please wait ...");
 
-	  if (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
-	    {
-	      switch (FileSystemList->CurrentFileSystem)
-	        {
-		  case FsFat:
-		    if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (4200LL * 1024LL))
-		      {
-			/* FAT12 CHS partition (disk is smaller than 4.1MB) */
-			PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_12;
-		      }
-		    else if (PartEntry->PartInfo[0].StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
-		      {
-			/* Partition starts below the 8.4GB boundary ==> CHS partition */
+        if (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
+        {
+            if (strcmp(FileSystemList->Selected->FileSystem, "FAT") == 0)
+            {
+                if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (4200LL * 1024LL))
+                {
+                    /* FAT12 CHS partition (disk is smaller than 4.1MB) */
+                    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_12;
+                }
+                else if (PartEntry->PartInfo[0].StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
+                {
+                    /* Partition starts below the 8.4GB boundary ==> CHS partition */
 
-			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
-			  {
-			    /* FAT16 CHS partition (partiton size < 32MB) */
-			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
-			  }
-			else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
-			  {
-			    /* FAT16 CHS partition (partition size < 512MB) */
-			    PartEntry->PartInfo[0].PartitionType = PARTITION_HUGE;
-			  }
-			else
-			  {
-			    /* FAT32 CHS partition (partition size >= 512MB) */
-			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32;
-			  }
-		      }
-		    else
-		      {
-			/* Partition starts above the 8.4GB boundary ==> LBA partition */
+                    if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
+                    {
+                        /* FAT16 CHS partition (partiton size < 32MB) */
+                        PartEntry->PartInfo[0].PartitionType = PARTITION_FAT_16;
+                    }
+                    else if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+                    {
+                        /* FAT16 CHS partition (partition size < 512MB) */
+                        PartEntry->PartInfo[0].PartitionType = PARTITION_HUGE;
+                    }
+                    else
+                    {
+                        /* FAT32 CHS partition (partition size >= 512MB) */
+                        PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32;
+                    }
+                }
+                else
+                {
+                    /* Partition starts above the 8.4GB boundary ==> LBA partition */
 
-			if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
-			  {
-			    /* FAT16 LBA partition (partition size < 512MB) */
-			    PartEntry->PartInfo[0].PartitionType = PARTITION_XINT13;
-			  }
-			else
-			  {
-			    /* FAT32 LBA partition (partition size >= 512MB) */
-			    PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
-			  }
-		      }
-		    break;
-
-		  case FsKeep:
-		    break;
-
-		  default:
-		    return QUIT_PAGE;
-		}
-	    }
+                    if (PartEntry->PartInfo[0].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+                    {
+                        /* FAT16 LBA partition (partition size < 512MB) */
+                        PartEntry->PartInfo[0].PartitionType = PARTITION_XINT13;
+                    }
+                    else
+                    {
+                        /* FAT32 LBA partition (partition size >= 512MB) */
+                        PartEntry->PartInfo[0].PartitionType = PARTITION_FAT32_XINT13;
+                    }
+                }
+                break;
+            }
+            else if (FileSystemList->Selected->FormatFunc)
+                return QUIT_PAGE;
+        }
 
 	  CheckActiveBootPartition (PartitionList);
 
@@ -2343,79 +2338,81 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	  DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
 
 
-	  switch (FileSystemList->CurrentFileSystem)
-	    {
-	      case FsFat:
-		Status = FormatPartition (&DestinationRootPath);
-		if (!NT_SUCCESS (Status))
-		  {
-		    DPRINT1 ("FormatPartition() failed with status 0x%.08x\n", Status);
-		    /* FIXME: show an error dialog */
-		    return QUIT_PAGE;
-		  }
+            if (FileSystemList->Selected->FormatFunc)
+            {
+                Status = FormatPartition(&DestinationRootPath, FileSystemList->Selected);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("FormatPartition() failed with status 0x%08lx\n", Status);
+                    /* FIXME: show an error dialog */
+                    return QUIT_PAGE;
+                }
 
-		PartEntry->New = FALSE;
-		if (FileSystemList != NULL)
-		  {
-		    DestroyFileSystemList (FileSystemList);
-		    FileSystemList = NULL;
-		  }
+                PartEntry->New = FALSE;
 
-		CheckActiveBootPartition (PartitionList);
+                CheckActiveBootPartition(PartitionList);
+            }
 
-		/* FIXME: Install boot code. This is a hack! */
-		if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13) ||
-		    (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32))
-		  {
-		    wcscpy (PathBuffer, SourceRootPath.Buffer);
-		    wcscat (PathBuffer, L"\\loader\\fat32.bin");
+            if (strcmp(FileSystemList->Selected->FileSystem, "FAT") == 0)
+            {
+                /* FIXME: Install boot code. This is a hack! */
+                if ((PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13)
+                 || (PartEntry->PartInfo[0].PartitionType == PARTITION_FAT32))
+                {
+                    wcscpy(PathBuffer, SourceRootPath.Buffer);
+                    wcscat(PathBuffer, L"\\loader\\fat32.bin");
 
-		    DPRINT ("Install FAT32 bootcode: %S ==> %S\n", PathBuffer,
-			    DestinationRootPath.Buffer);
-		    Status = InstallFat32BootCodeToDisk (PathBuffer,
-						         DestinationRootPath.Buffer);
-		    if (!NT_SUCCESS (Status))
-		      {
-		        DPRINT1 ("InstallFat32BootCodeToDisk() failed with status 0x%.08x\n", Status);
-		        /* FIXME: show an error dialog */
-		        return QUIT_PAGE;
-		      }
-		  }
-		else
-		  {
-		    wcscpy (PathBuffer, SourceRootPath.Buffer);
-		    wcscat (PathBuffer, L"\\loader\\fat.bin");
+                    DPRINT("Install FAT32 bootcode: %S ==> %S\n", PathBuffer,
+                        DestinationRootPath.Buffer);
+                    Status = InstallFat32BootCodeToDisk(PathBuffer,
+                        DestinationRootPath.Buffer);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("InstallFat32BootCodeToDisk() failed with status 0x%08lx\n", Status);
+                        /* FIXME: show an error dialog */
+                        DestroyFileSystemList(FileSystemList);
+                        FileSystemList = NULL;
+                        return QUIT_PAGE;
+                    }
+                }
+                else
+                {
+                    wcscpy(PathBuffer, SourceRootPath.Buffer);
+                    wcscat(PathBuffer, L"\\loader\\fat.bin");
 
-		    DPRINT ("Install FAT bootcode: %S ==> %S\n", PathBuffer,
-			    DestinationRootPath.Buffer);
-		    Status = InstallFat16BootCodeToDisk (PathBuffer,
-						         DestinationRootPath.Buffer);
-		    if (!NT_SUCCESS (Status))
-		      {
-		        DPRINT1 ("InstallFat16BootCodeToDisk() failed with status 0x%.08x\n", Status);
-		        /* FIXME: show an error dialog */
-		        return QUIT_PAGE;
-		      }
-		  }
-		break;
-
-	      case FsKeep:
-		break;
-
-	      default:
-		return QUIT_PAGE;
-	    }
+                    DPRINT("Install FAT bootcode: %S ==> %S\n", PathBuffer,
+                        DestinationRootPath.Buffer);
+                    Status = InstallFat16BootCodeToDisk(PathBuffer,
+                        DestinationRootPath.Buffer);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("InstallFat16BootCodeToDisk() failed with status 0x%.08x\n", Status);
+                        /* FIXME: show an error dialog */
+                        DestroyFileSystemList(FileSystemList);
+                        FileSystemList = NULL;
+                        return QUIT_PAGE;
+                    }
+                }
+            }
+            else if (FileSystemList->Selected->FormatFunc)
+            {
+                DestroyFileSystemList(FileSystemList);
+                FileSystemList = NULL;
+                return QUIT_PAGE;
+            }
 
 #ifndef NDEBUG
-	  CONSOLE_SetStatusText ("   Done.  Press any key ...");
-	  CONSOLE_ConInKey(Ir);
+            CONSOLE_SetStatusText ("   Done.  Press any key ...");
+            CONSOLE_ConInKey(Ir);
 #endif
 
-	  return INSTALL_DIRECTORY_PAGE;
-	}
+            DestroyFileSystemList(FileSystemList);
+            FileSystemList = NULL;
+            return INSTALL_DIRECTORY_PAGE;
+        }
     }
 
-  return FORMAT_PARTITION_PAGE;
+    return FORMAT_PARTITION_PAGE;
 }
 
 

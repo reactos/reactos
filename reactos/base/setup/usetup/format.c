@@ -84,7 +84,8 @@ FormatCallback(
 
 NTSTATUS
 FormatPartition(
-    IN PUNICODE_STRING DriveRoot)
+    IN PUNICODE_STRING DriveRoot,
+    IN PFILE_SYSTEM_ITEM FileSystem)
 {
     NTSTATUS Status;
 
@@ -96,12 +97,12 @@ FormatPartition(
 
     ProgressSetStepCount(ProgressBar, 100);
 
-    Status = VfatFormat(DriveRoot,
-                        FMIFS_HARDDISK,  /* MediaFlag */
-                        NULL,            /* Label */
-                        TRUE,            /* QuickFormat */
-                        0,               /* ClusterSize */
-                        FormatCallback); /* Callback */
+    Status = FileSystem->FormatFunc(DriveRoot,
+                                    FMIFS_HARDDISK,          /* MediaFlag */
+                                    NULL,                    /* Label */
+                                    FileSystem->QuickFormat, /* QuickFormat */
+                                    0,                       /* ClusterSize */
+                                    FormatCallback);         /* Callback */
 
     DestroyProgressBar(ProgressBar);
     ProgressBar = NULL;
