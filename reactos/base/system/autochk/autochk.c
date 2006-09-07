@@ -1,10 +1,10 @@
-/* $Id$
- * PROJECT:         ReactOS Kernel
+/* PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/autochk/autochk.c
  * PURPOSE:         Filesystem checker
  * PROGRAMMERS:     Aleksey Bragin
  *                  Eric Kohl
+ *                  Hervé Poussineau
  */
 
 /* INCLUDES *****************************************************************/
@@ -28,30 +28,8 @@
 //
 // FMIFS function
 //
-typedef
-VOID
-(STDCALL *PCHKDSK)(PWCHAR           DriveRoot,
-                   PWCHAR           Format,
-                   BOOLEAN          CorrectErrors,
-                   BOOLEAN          Verbose,
-                   BOOLEAN          CheckOnlyIfDirty,
-                   BOOLEAN          ScanDrive,
-                   PVOID            Unused2,
-                   PVOID            Unused3,
-                   PFMIFSCALLBACK   Callback);
 
-PCHKDSK     ChkdskFunc = NULL;
-
-void
-DisplayString(LPCWSTR lpwString)
-{
-    UNICODE_STRING us;
-
-    RtlInitUnicodeString(&us, lpwString);
-    NtDisplayString(&us);
-}
-
-void
+static VOID
 PrintString(char* fmt,...)
 {
     char buffer[512];
@@ -72,9 +50,10 @@ PrintString(char* fmt,...)
 }
 
 // this func is taken from kernel32/file/volume.c
-HANDLE
-OpenDirectory(LPCWSTR DirName,
-              BOOLEAN Write)
+static HANDLE
+OpenDirectory(
+    IN LPCWSTR DirName,
+    IN BOOLEAN Write)
 {
     UNICODE_STRING NtPathU;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -121,10 +100,11 @@ OpenDirectory(LPCWSTR DirName,
     return hFile;
 }
 
-NTSTATUS
-GetFileSystem(LPCWSTR Drive,
-              LPWSTR FileSystemName,
-              ULONG FileSystemNameSize)
+static NTSTATUS
+GetFileSystem(
+    IN LPCWSTR Drive,
+    IN OUT LPWSTR FileSystemName,
+    IN SIZE_T FileSystemNameSize)
 {
     HANDLE FileHandle;
     NTSTATUS Status;
@@ -149,9 +129,9 @@ GetFileSystem(LPCWSTR Drive,
     {
         if (FileSystemNameSize * sizeof(WCHAR) >= FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
         {
-            memcpy(FileSystemName,
-                   FileFsAttribute->FileSystemName,
-                   FileFsAttribute->FileSystemNameLength);
+            CopyMemory(FileSystemName,
+                       FileFsAttribute->FileSystemName,
+                       FileFsAttribute->FileSystemNameLength);
             FileSystemName[FileFsAttribute->FileSystemNameLength / sizeof(WCHAR)] = 0;
         }
         else
@@ -164,11 +144,11 @@ GetFileSystem(LPCWSTR Drive,
 }
 
 // This is based on SysInternal's ChkDsk app
-BOOLEAN
-STDCALL
-ChkdskCallback(CALLBACKCOMMAND Command,
-               DWORD Modifier,
-               PVOID Argument)
+static BOOLEAN CALLBACK
+ChkdskCallback(
+    IN CALLBACKCOMMAND Command,
+    IN DWORD Modifier,
+    IN PVOID Argument)
 {
     PDWORD      Percent;
     PBOOLEAN    Status;
@@ -254,6 +234,86 @@ ChkdskCallback(CALLBACKCOMMAND Command,
     return TRUE;
 }
 
+/* Load the provider associated with this file system */
+static PVOID
+LoadProvider(
+    IN PWCHAR FileSystem)
+{
+    UNICODE_STRING ProviderDll = RTL_CONSTANT_STRING(L"ufat.dll");
+    PVOID BaseAddress;
+    NTSTATUS Status;
+
+    /* FIXME: add more providers here */
+
+    if (wcscmp(FileSystem, L"FAT") != 0
+     && wcscmp(FileSystem, L"FAT32") != 0)
+    {
+        return NULL;
+    }
+
+    Status = LdrLoadDll(NULL, NULL, &ProviderDll, &BaseAddress);
+    if (!NT_SUCCESS(Status))
+        return NULL;
+    return BaseAddress;
+}
+
+static NTSTATUS
+CheckVolume(
+    IN PWCHAR DrivePath)
+{
+    WCHAR FileSystem[128];
+    ANSI_STRING ChkdskFunctionName = RTL_CONSTANT_STRING("ChkdskEx");
+    PVOID Provider;
+    CHKDSKEX ChkdskFunc;
+    UNICODE_STRING DrivePathU;
+    NTSTATUS Status;
+
+    /* Get the file system */
+    Status = GetFileSystem(DrivePath,
+                           FileSystem,
+                           sizeof(FileSystem) / sizeof(FileSystem[0]));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("GetFileSystem() failed with status 0x%08lx\n", Status);
+        PrintString("  Unable to get file system of %S\n", DrivePath);
+        return Status;
+    }
+
+    /* Load the provider which will do the chkdsk */
+    Provider = LoadProvider(FileSystem);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LoadProvider() failed\n");
+        PrintString("  Unable to verify a %S volume\n", FileSystem);
+        return STATUS_DLL_NOT_FOUND;
+    }
+
+    /* Get the Chkdsk function address */
+    Status = LdrGetProcedureAddress(Provider,
+                                    &ChkdskFunctionName,
+                                    0,
+                                    (PVOID*)&ChkdskFunc);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LdrGetProcedureAddress() failed with status 0x%08lx\n", Status);
+        PrintString("  Unable to verify a %S volume\n", FileSystem);
+        LdrUnloadDll(Provider);
+        return Status;
+    }
+
+    /* Call provider */
+    PrintString("  Verifying volume %S\n", DrivePath);
+    RtlInitUnicodeString(&DrivePathU, DrivePath);
+    Status = ChkdskFunc(&DrivePathU,
+                        TRUE, // FixErrors
+                        TRUE, // Verbose
+                        FALSE, // CheckOnlyIfDirty
+                        FALSE,// ScanDrive
+                        ChkdskCallback);
+
+    LdrUnloadDll(Provider);
+    return Status;
+}
 
 /* Native image's entry point */
 int
@@ -266,10 +326,7 @@ _main(int argc,
     PROCESS_DEVICEMAP_INFORMATION DeviceMap;
     ULONG i;
     NTSTATUS Status;
-    WCHAR FileSystem[128];
     WCHAR DrivePath[128];
-
-    PrintString("Autochk 0.0.2\n");
 
     // Win2003 passes the only param - "*". Probably means to check all drives
     /*
@@ -278,61 +335,33 @@ _main(int argc,
         DPRINT("Param %d: %s\n", i, argv[i]);
     */
 
+    /* FIXME: We should probably use here the mount manager to be
+     * able to check volumes which don't have a drive letter.
+     */
+
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessDeviceMap,
                                        &DeviceMap.Query,
                                        sizeof(DeviceMap.Query),
                                        NULL);
-
-    if(NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        for (i = 0; i < 26; i++)
-        {
-            if ((DeviceMap.Query.DriveMap & (1 << i)) &&
-                (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
-            {
-                swprintf(DrivePath, L"%c:\\", 'A'+i);
-                Status = GetFileSystem(DrivePath,
-                                       FileSystem,
-                                       sizeof(FileSystem));
-                PrintString("  Checking drive %c: \n", 'A'+i);
-
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("Error getting FS information, Status=0x%08X\n",
-                        Status);
-                    // skip to the next volume
-                    continue;
-                }
-
-                // FS type known, show it to user and then call chkdsk routine
-                PrintString("   Filesystem type ");
-                DisplayString(FileSystem);
-                PrintString("\n");
-
-                /*ChkdskFunc(DrivePath,
-                       FileSystem,
-                       TRUE, // FixErrors
-                       TRUE, // Verbose
-                       FALSE, // SkipClean
-                       FALSE,// ScanSectors
-                       NULL,
-                       NULL,
-                       ChkdskCallback);*/
-
-                PrintString("      OK\n");
-            }
-        }
-        PrintString("\n");
-        return 0;
-    }
-    else
-    {
-        DPRINT1("NtQueryInformationProcess() failed with status=0x%08X\n",
+        DPRINT1("NtQueryInformationProcess() failed with status 0x%08lx\n",
             Status);
+        return 1;
     }
 
-    return 1;
+    for (i = 0; i < 26; i++)
+    {
+        if ((DeviceMap.Query.DriveMap & (1 << i))
+         && (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
+        {
+            swprintf(DrivePath, L"%c:\\", 'A'+i);
+            CheckVolume(DrivePath);
+        }
+    }
+    PrintString("  Done\n\n");
+    return 0;
 }
 
 /* EOF */
