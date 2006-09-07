@@ -443,21 +443,6 @@ NtUserInitTask(
 
 DWORD
 STDCALL
-NtUserLoadKeyboardLayoutEx(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4,
-   DWORD Unknown5)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-STDCALL
 NtUserLockWorkStation(VOID)
 {
    UNIMPLEMENTED

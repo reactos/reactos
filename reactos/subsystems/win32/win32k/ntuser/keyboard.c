@@ -1284,7 +1284,8 @@ UserGetKeyboardLayout(
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return 0;
       }
-      W32Thread = Thread->Tcb.Win32Thread;
+      W32Thread = Thread->Tcb.Win32Thread; /* Wrong, but returning the pointer to
+                                              the table. */
    }
    layout = W32Thread->KeyboardLayout;
    if(!layout)
@@ -1330,22 +1331,20 @@ UserGetKeyboardType(
    }
 }
 
+
 DWORD
 STDCALL
-NtUserGetKeyboardType(
-   DWORD TypeFlag)
+NtUserLoadKeyboardLayoutEx(
+   DWORD Unknown0,
+   DWORD Unknown1,
+   DWORD Unknown2,
+   DWORD Unknown3,
+   DWORD Unknown4,
+   DWORD Unknown5)
 {
-   DECLARE_RETURN(DWORD);
-   
-   DPRINT("Enter NtUserGetKeyboardType\n");
-   UserEnterShared();
-   
-   RETURN( UserGetKeyboardType(TypeFlag));
-   
-CLEANUP:
-   DPRINT("Leave NtUserGetKeyboardType, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
+   UNIMPLEMENTED
+
+   return 0;
 }
 
 
