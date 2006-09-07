@@ -130,8 +130,7 @@ void SLang_reset_tty (void)
 \*----------------------------------------------------------------------*/
 int SLsys_input_pending (int tsecs)
 {
-   INPUT_RECORD record;
-   long one = 1;
+   INPUT_RECORD record;   
    DWORD bytesRead;
 
    while (1)
@@ -193,9 +192,8 @@ int SLsys_input_pending (int tsecs)
  *	extended keys are prefixed by a null character
 \*----------------------------------------------------------------------*/
 unsigned int SLsys_getkey (void)
-{
-  unsigned int scan, ch, shift;
-  long key;
+{  
+  // long key;
   DWORD bytesRead;
   INPUT_RECORD record;
 

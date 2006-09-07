@@ -9,6 +9,7 @@
 	<define name="HAVE_CONFIG_H" />
 	<library>kernel32</library>
 	<library>user32</library>
+      <library>advapi32</library>
 
 	<directory name="src">
 		<file>terms.c</file>

@@ -379,7 +379,10 @@ try_to_select (WPanel *panel, char *name)
 void
 cd_try_to_select (WPanel *panel)
 {
+#ifdef USE_VFS
     char *p, *q;
+#endif
+
     int i, j = 4;
 
     if (strlen (panel->lwd) > strlen (panel->cwd)

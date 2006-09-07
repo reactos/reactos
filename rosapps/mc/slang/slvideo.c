@@ -1253,11 +1253,12 @@ void SLtt_putchar (char ch)
 #  else	/* GO32_VIDEO */
 	pp = mkScreenPointer (Cursor_Row, Cursor_Col);
 	p = (Attribute_Byte << 8) | (unsigned char) ch;
+	*pp = p;
 
 #   ifdef USE_ASM
 	SNOW_CHECK;
 #   endif
-	*pp = p;
+	
 #  endif	/* GO32_VIDEO */
 # endif	/* __os2__ */
 #endif	/* EMX_VIDEO */

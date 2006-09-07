@@ -721,8 +721,7 @@ void reselect_vfs (void)
 
 static int compare_files (char *name1, char *name2, long size)
 {
-    int file1, file2;
-    char *data1, *data2;
+    int file1, file2;    
     int result = -1;		/* Different by default */
 
     file1 = open (name1, O_RDONLY);
