@@ -141,7 +141,7 @@ dll\keyboard\kbdur\kbdur.dll                        1
 dll\keyboard\kbdus\kbdus.dll                        1
 dll\keyboard\kbdpo\kbdpo.dll                        1
 
-dll\ntdll\ntdll.dll                                 1    
+dll\ntdll\ntdll.dll                                 1
 
 dll\win32\advapi32\advapi32.dll                     1
 dll\win32\advpack\advpack.dll                       1
@@ -213,6 +213,8 @@ dll\win32\shlwapi\shlwapi.dll                       1
 dll\win32\smdll\smdll.dll                           1
 dll\win32\syssetup\syssetup.dll                     1
 dll\win32\twain_32\twain_32.dll                     1
+dll\win32\ufat\ufat.dll                             1
+dll\win32\ufatx\ufatx.dll                           1   optional
 dll\win32\urlmon\urlmon.dll                         1
 dll\win32\user32\user32.dll                         1
 dll\win32\userenv\userenv.dll                       1
@@ -274,8 +276,8 @@ drivers\video\videoprt\videoprt.sys                 2
 
 ; Media
 media\fonts\DejaVuSans.ttf                          3
-media\fonts\DejaVuSans-Bold.ttf                     3    
-media\fonts\DejaVuSans-BoldOblique.ttf              3  
+media\fonts\DejaVuSans-Bold.ttf                     3
+media\fonts\DejaVuSans-BoldOblique.ttf              3
 media\fonts\DejaVuSansCondensed.ttf                 3
 media\fonts\DejaVuSansCondensed-Bold.ttf            3
 media\fonts\DejaVuSansCondensed-Oblique.ttf         3
@@ -284,14 +286,14 @@ media\fonts\DejaVuSansMono.ttf                      3
 media\fonts\DejaVuSansMono-Bold.ttf                 3
 media\fonts\DejaVuSansMono-BoldOblique.ttf          3
 media\fonts\DejaVuSansMono-Oblique.ttf              3
-media\fonts\DejaVuSans-Oblique.ttf                  3  
+media\fonts\DejaVuSans-Oblique.ttf                  3
 media\fonts\DejaVuSerif.ttf                         3
 media\fonts\DejaVuSerif-Bold.ttf                    3
 media\fonts\DejaVuSerif-BoldOblique.ttf             3
 media\fonts\DejaVuSerifCondensed.ttf                3
 media\fonts\DejaVuSerifCondensed-Bold.ttf           3
-media\fonts\DejaVuSerifCondensed-BoldOblique.ttf    3 
-media\fonts\DejaVuSerifCondensed-Oblique.ttf        3 
+media\fonts\DejaVuSerifCondensed-BoldOblique.ttf    3
+media\fonts\DejaVuSerifCondensed-Oblique.ttf        3
 media\fonts\DejaVuSerif-Oblique.ttf                 3
 media\fonts\c0419bt_.ttf                            3
 media\fonts\c0582bt_.ttf                            3
