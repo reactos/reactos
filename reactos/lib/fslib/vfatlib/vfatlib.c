@@ -203,4 +203,17 @@ UpdateProgress (PFORMAT_CONTEXT Context,
     }
 }
 
+NTSTATUS WINAPI
+VfatChkdsk(
+	IN PUNICODE_STRING DriveRoot,
+	IN BOOLEAN FixErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PFMIFSCALLBACK Callback)
+{
+	DPRINT1("VfatChkdsk() unimplemented!\n");
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */
