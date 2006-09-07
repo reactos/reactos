@@ -727,7 +727,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
  */
 NTSTATUS NTAPI
 LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
-            IN PULONG LoadFlags,
+            IN PULONG LoadFlags OPTIONAL,
             IN PUNICODE_STRING Name,
             OUT PVOID *BaseAddress OPTIONAL)
 {
@@ -741,19 +741,22 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
 
   if (Name == NULL)
     {
-      *BaseAddress = NtCurrentPeb()->ImageBaseAddress;
+      if (BaseAddress)
+        *BaseAddress = NtCurrentPeb()->ImageBaseAddress;
       return STATUS_SUCCESS;
     }
 
-  *BaseAddress = NULL;
+  if (BaseAddress)
+    *BaseAddress = NULL;
 
-  Status = LdrpLoadModule(SearchPath, *LoadFlags, Name, &Module, BaseAddress);
-  if (NT_SUCCESS(Status) && 0 == (*LoadFlags & LOAD_LIBRARY_AS_DATAFILE))
+  Status = LdrpLoadModule(SearchPath, LoadFlags ? *LoadFlags : 0, Name, &Module, BaseAddress);
+  if (NT_SUCCESS(Status)
+  && (!LoadFlags || 0 == (*LoadFlags & LOAD_LIBRARY_AS_DATAFILE)))
     {
       RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
       Status = LdrpAttachProcess();
       RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
-      if (NT_SUCCESS(Status))
+      if (NT_SUCCESS(Status) && BaseAddress)
         {
           *BaseAddress = Module->DllBase;
         }
