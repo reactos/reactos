@@ -19,9 +19,12 @@ CMLIB_HOST_TARGET = \
 	$(CMLIB_OUT)$(SEP)cmlib.a
 
 CMLIB_HOST_SOURCES = $(addprefix $(CMLIB_BASE_), \
+	cminit.c \
 	hivebin.c \
 	hivecell.c \
 	hiveinit.c \
+	hivesum.c \
+	hivewrt.c \
 	)
 
 CMLIB_HOST_OBJECTS = \
@@ -36,6 +39,10 @@ $(CMLIB_HOST_TARGET): $(CMLIB_HOST_OBJECTS) | $(CMLIB_OUT)
 	$(ECHO_AR)
 	$(host_ar) -r $@ $(CMLIB_HOST_OBJECTS)
 
+$(CMLIB_INT_)cminit.o: $(CMLIB_BASE_)cminit.c | $(CMLIB_INT)
+	$(ECHO_CC)
+	${host_gcc} $(CMLIB_HOST_CFLAGS) -c $< -o $@
+
 $(CMLIB_INT_)hivebin.o: $(CMLIB_BASE_)hivebin.c | $(CMLIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(CMLIB_HOST_CFLAGS) -c $< -o $@
@@ -45,6 +52,14 @@ $(CMLIB_INT_)hivecell.o: $(CMLIB_BASE_)hivecell.c | $(CMLIB_INT)
 	${host_gcc} $(CMLIB_HOST_CFLAGS) -c $< -o $@
 
 $(CMLIB_INT_)hiveinit.o: $(CMLIB_BASE_)hiveinit.c | $(CMLIB_INT)
+	$(ECHO_CC)
+	${host_gcc} $(CMLIB_HOST_CFLAGS) -c $< -o $@
+
+$(CMLIB_INT_)hivesum.o: $(CMLIB_BASE_)hivesum.c | $(CMLIB_INT)
+	$(ECHO_CC)
+	${host_gcc} $(CMLIB_HOST_CFLAGS) -c $< -o $@
+
+$(CMLIB_INT_)hivewrt.o: $(CMLIB_BASE_)hivewrt.c | $(CMLIB_INT)
 	$(ECHO_CC)
 	${host_gcc} $(CMLIB_HOST_CFLAGS) -c $< -o $@
 

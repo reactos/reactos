@@ -151,7 +151,7 @@ HvpInitializeMemoryHive(
    //
    ChunkSize = ((PHBASE_BLOCK)ChunkBase)->Length;
    ((PHBASE_BLOCK)ChunkBase)->Length = HV_BLOCK_SIZE;
-   DPRINT1("ChunkSize: %lx\n", ChunkSize);
+   DPRINT("ChunkSize: %lx\n", ChunkSize);
 
    if (ChunkSize < sizeof(HBASE_BLOCK) ||
        !HvpVerifyHiveHeader((PHBASE_BLOCK)ChunkBase))
@@ -173,7 +173,7 @@ HvpInitializeMemoryHive(
     * we go.
     */
    
-   Hive->Storage[HvStable].Length = (ChunkSize / HV_BLOCK_SIZE) - 1;
+   Hive->Storage[HvStable].Length = (ULONG)(ChunkSize / HV_BLOCK_SIZE) - 1;
    Hive->Storage[HvStable].BlockList =
       Hive->Allocate(Hive->Storage[HvStable].Length *
                      sizeof(HMAP_ENTRY), FALSE);

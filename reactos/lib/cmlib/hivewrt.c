@@ -13,9 +13,9 @@ static BOOLEAN CMAPI
 HvpWriteLog(
    PHHIVE RegistryHive)
 {
-   ULONG FileOffset;
-   ULONG BufferSize;
-   ULONG BitmapSize;
+   ULONGLONG FileOffset;
+   SIZE_T BufferSize;
+   SIZE_T BitmapSize;
    PUCHAR Buffer;
    PUCHAR Ptr;
    ULONG BlockIndex;
@@ -138,7 +138,7 @@ HvpWriteHive(
    PHHIVE RegistryHive,
    BOOLEAN OnlyDirty)
 {
-   ULONG FileOffset;
+   ULONGLONG FileOffset;
    ULONG BlockIndex;
    ULONG LastIndex;
    PVOID BlockPtr;

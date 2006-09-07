@@ -14,7 +14,7 @@ CmCreateRootNode(
 {
    PCM_KEY_NODE KeyCell;
    HCELL_INDEX RootCellIndex;
-   ULONG NameSize;
+   SIZE_T NameSize;
 
    NameSize = wcslen(Name) * sizeof(WCHAR);
    RootCellIndex = HvAllocateCell(Hive, sizeof(CM_KEY_NODE) + NameSize, HvStable);
@@ -37,7 +37,7 @@ CmCreateRootNode(
    KeyCell->ValueList.List = HCELL_NULL;
    KeyCell->SecurityKeyOffset = HCELL_NULL;
    KeyCell->ClassNameOffset = HCELL_NULL; 
-   KeyCell->NameSize = NameSize;
+   KeyCell->NameSize = (USHORT)NameSize;
    KeyCell->ClassSize = 0;
    memcpy(KeyCell->Name, Name, NameSize);
 

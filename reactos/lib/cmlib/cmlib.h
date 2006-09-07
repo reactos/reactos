@@ -8,6 +8,7 @@
 #ifndef CMLIB_H
 #define CMLIB_H
 
+#define WIN32_NO_STATUS
 #include <ntddk.h>
 #include "hivedata.h"
 #include "cmdata.h"
@@ -30,7 +31,7 @@ typedef VOID (CMAPI *PRELEASE_CELL_ROUTINE)(
    HCELL_INDEX Cell);
 
 typedef PVOID (CMAPI *PALLOCATE_ROUTINE)(
-   ULONG Size,
+   SIZE_T Size,
    BOOLEAN Paged);
 
 typedef VOID (CMAPI *PFREE_ROUTINE)(
@@ -39,21 +40,21 @@ typedef VOID (CMAPI *PFREE_ROUTINE)(
 typedef BOOLEAN (CMAPI *PFILE_READ_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength);
+   SIZE_T BufferLength);
 
 typedef BOOLEAN (CMAPI *PFILE_WRITE_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength);
+   SIZE_T BufferLength);
 
 typedef BOOLEAN (CMAPI *PFILE_SET_SIZE_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONG FileSize);
+   ULONGLONG FileSize);
 
 typedef BOOLEAN (CMAPI *PFILE_FLUSH_ROUTINE)(
    struct _HHIVE *RegistryHive,
@@ -168,7 +169,7 @@ HvGetCellSize(
 HCELL_INDEX CMAPI
 HvAllocateCell(
    PHHIVE RegistryHive,
-   ULONG Size,
+   SIZE_T Size,
    HV_STORAGE_TYPE Storage);
 
 HCELL_INDEX CMAPI

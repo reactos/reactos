@@ -46,9 +46,9 @@ BOOLEAN CMAPI
 CmpFileRead(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength)
+   SIZE_T BufferLength)
 {
    PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
    HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
@@ -67,9 +67,9 @@ BOOLEAN CMAPI
 CmpFileWrite(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileOffset,
+   ULONGLONG FileOffset,
    PVOID Buffer,
-   ULONG BufferLength)
+   SIZE_T BufferLength)
 {
    PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
    HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
@@ -88,7 +88,7 @@ BOOLEAN CMAPI
 CmpFileSetSize(
    PHHIVE RegistryHive,
    ULONG FileType,
-   ULONG FileSize)
+   ULONGLONG FileSize)
 {
    PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
    HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;

@@ -351,7 +351,7 @@ HvReallocateCell(
          return HCELL_NULL;
 
       NewCell = HvGetCell(RegistryHive, NewCellIndex);
-      RtlCopyMemory(NewCell, OldCell, -OldCellSize);
+      RtlCopyMemory(NewCell, OldCell, (SIZE_T)-OldCellSize);
       
       HvFreeCell(RegistryHive, CellIndex);
 
