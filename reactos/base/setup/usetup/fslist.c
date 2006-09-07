@@ -33,128 +33,129 @@
 /* FUNCTIONS ****************************************************************/
 
 PFILE_SYSTEM_LIST
-CreateFileSystemList (SHORT Left,
-		      SHORT Top,
-		      BOOLEAN ForceFormat,
-		      FILE_SYSTEM ForceFileSystem)
+CreateFileSystemList(
+    IN SHORT Left,
+    IN SHORT Top,
+    IN BOOLEAN ForceFormat,
+    IN FILE_SYSTEM ForceFileSystem)
 {
-  PFILE_SYSTEM_LIST List;
+    PFILE_SYSTEM_LIST List;
 
-  List = (PFILE_SYSTEM_LIST)RtlAllocateHeap (ProcessHeap, 0, sizeof(FILE_SYSTEM_LIST));
-  if (List == NULL)
-    return NULL;
+    List = (PFILE_SYSTEM_LIST)RtlAllocateHeap(ProcessHeap, 0, sizeof(FILE_SYSTEM_LIST));
+    if (List == NULL)
+        return NULL;
 
-  List->Left = Left;
-  List->Top = Top;
+    List->Left = Left;
+    List->Top = Top;
 
-  List->ForceFormat = ForceFormat;
-  List->FileSystemCount = 1;
-  if (ForceFormat)
+    List->ForceFormat = ForceFormat;
+    List->FileSystemCount = 1;
+    if (ForceFormat)
     {
-      List->CurrentFileSystem = ForceFileSystem;
+        List->CurrentFileSystem = ForceFileSystem;
     }
-  else
+    else
     {
-      List->FileSystemCount++;
-      List->CurrentFileSystem = FsKeep;
+        List->FileSystemCount++;
+        List->CurrentFileSystem = FsKeep;
     }
 
-  return List;
+    return List;
 }
 
-
 VOID
-DestroyFileSystemList (PFILE_SYSTEM_LIST List)
+DestroyFileSystemList(
+    IN PFILE_SYSTEM_LIST List)
 {
-  RtlFreeHeap (ProcessHeap, 0, List);
+    RtlFreeHeap(ProcessHeap, 0, List);
 }
 
-
 VOID
-DrawFileSystemList (PFILE_SYSTEM_LIST List)
+DrawFileSystemList(
+    IN PFILE_SYSTEM_LIST List)
 {
-  COORD coPos;
-  ULONG Written;
-  ULONG Index;
+    COORD coPos;
+    ULONG Written;
+    ULONG Index;
 
-  Index = 0;
+    Index = 0;
 
-  coPos.X = List->Left;
-  coPos.Y = List->Top + Index;
-  FillConsoleOutputAttribute (StdOutput,
-			      FOREGROUND_WHITE | BACKGROUND_BLUE,
-			      50,
-			      coPos,
-			      &Written);
-  FillConsoleOutputCharacterA (StdOutput,
-			      ' ',
-			      50,
-			      coPos,
-			      &Written);
+    coPos.X = List->Left;
+    coPos.Y = List->Top + Index;
+    FillConsoleOutputAttribute(StdOutput,
+                               FOREGROUND_WHITE | BACKGROUND_BLUE,
+                               50,
+                               coPos,
+                               &Written);
+    FillConsoleOutputCharacterA(StdOutput,
+                                ' ',
+                                50,
+                                coPos,
+                                &Written);
 
-  if (List->CurrentFileSystem == FsFat)
+    if (List->CurrentFileSystem == FsFat)
     {
-      CONSOLE_SetInvertedTextXY (List->Left,
-			 List->Top + Index,
-			 " Format partition as FAT file system ");
+        CONSOLE_SetInvertedTextXY(List->Left,
+                                  List->Top + Index,
+                                  " Format partition as FAT file system ");
     }
-  else
+    else
     {
-      CONSOLE_SetTextXY (List->Left,
-		 List->Top + Index,
-		 " Format partition as FAT file system ");
+        CONSOLE_SetTextXY(List->Left,
+                          List->Top + Index,
+                          " Format partition as FAT file system ");
     }
-  Index++;
+    Index++;
 
-  if (List->ForceFormat == FALSE)
+    if (List->ForceFormat == FALSE)
     {
-      coPos.X = List->Left;
-      coPos.Y = List->Top + Index;
-      FillConsoleOutputAttribute (StdOutput,
-				  FOREGROUND_WHITE | BACKGROUND_BLUE,
-				  50,
-				  coPos,
-				  &Written);
-      FillConsoleOutputCharacterA (StdOutput,
-				  ' ',
-				  50,
-				  coPos,
-				  &Written);
+        coPos.X = List->Left;
+        coPos.Y = List->Top + Index;
+        FillConsoleOutputAttribute(StdOutput,
+                                   FOREGROUND_WHITE | BACKGROUND_BLUE,
+                                   50,
+                                   coPos,
+                                   &Written);
+        FillConsoleOutputCharacterA(StdOutput,
+                                    ' ',
+                                    50,
+                                    coPos,
+                                    &Written);
 
-      if (List->CurrentFileSystem == FsKeep)
-	{
-	  CONSOLE_SetInvertedTextXY (List->Left,
-			     List->Top + Index,
-			     " Keep current file system (no changes) ");
-	}
-      else
-	{
-	  CONSOLE_SetTextXY (List->Left,
-		     List->Top + Index,
-		     " Keep current file system (no changes) ");
-	}
-    }
-}
-
-
-VOID
-ScrollDownFileSystemList (PFILE_SYSTEM_LIST List)
-{
-  if ((ULONG) List->CurrentFileSystem < List->FileSystemCount - 1)
-    {
-      List->CurrentFileSystem++;
-      DrawFileSystemList (List);
+        if (List->CurrentFileSystem == FsKeep)
+        {
+            CONSOLE_SetInvertedTextXY(List->Left,
+                                     List->Top + Index,
+                                     " Keep current file system (no changes) ");
+        }
+        else
+        {
+            CONSOLE_SetTextXY(List->Left,
+                              List->Top + Index,
+                              " Keep current file system (no changes) ");
+        }
     }
 }
 
+VOID
+ScrollDownFileSystemList(
+    IN PFILE_SYSTEM_LIST List)
+{
+    if ((ULONG)List->CurrentFileSystem < List->FileSystemCount - 1)
+    {
+        List->CurrentFileSystem++;
+        DrawFileSystemList(List);
+    }
+}
 
 VOID
-ScrollUpFileSystemList (PFILE_SYSTEM_LIST List)
+ScrollUpFileSystemList(
+    IN PFILE_SYSTEM_LIST List)
 {
-  if ((ULONG) List->CurrentFileSystem > 0)
+    if ((ULONG)List->CurrentFileSystem > 0)
     {
-      List->CurrentFileSystem--;
-      DrawFileSystemList (List);
+        List->CurrentFileSystem--;
+        DrawFileSystemList(List);
     }
 }
 

@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/format.c
  * PURPOSE:         Filesystem format support functions
@@ -35,89 +34,81 @@ PPROGRESSBAR ProgressBar = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-
-BOOLEAN NTAPI
-FormatCallback (CALLBACKCOMMAND Command,
-		ULONG Modifier,
-		PVOID Argument)
+static BOOLEAN NTAPI
+FormatCallback(
+    IN CALLBACKCOMMAND Command,
+    IN ULONG Modifier,
+    IN PVOID Argument)
 {
-//  DPRINT1 ("FormatCallback() called\n");
-
-  switch (Command)
+    switch (Command)
     {
-      case PROGRESS:
-	{
-	  PULONG Percent;
+        case PROGRESS:
+        {
+            PULONG Percent;
 
-	  Percent = (PULONG)Argument;
-	  DPRINT ("%lu percent completed\n", *Percent);
+            Percent = (PULONG)Argument;
+            DPRINT("%lu percent completed\n", *Percent);
 
-	  ProgressSetStep (ProgressBar, *Percent);
-	}
-	break;
+            ProgressSetStep(ProgressBar, *Percent);
+            break;
+        }
 
-//      case OUTPUT:
-//	{
-//	  PTEXTOUTPUT Output;
-//		output = (PTEXTOUTPUT) Argument;
-//		fprintf(stdout, "%s", output->Output);
-//	}
-//	break;
+        /*case OUTPUT:
+        {
+            PTEXTOUTPUT Output;
+            output = (PTEXTOUTPUT) Argument;
+            DPRINT("%s\n", output->Output);
+            break;
+        }*/
 
-      case DONE:
-	{
-	  DPRINT ("Done\n");
-//	  PBOOLEAN Success;
-//		status = (PBOOLEAN) Argument;
-//		if ( *status == FALSE )
-//		{
-//			wprintf(L"FormatEx was unable to complete successfully.\n\n");
-//			Error = TRUE;
-//		}
-	}
-	break;
+        case DONE:
+        {
+            /*PBOOLEAN Success;*/
+            DPRINT("Done\n");
 
-      default:
-	DPRINT ("Unknown callback %lu\n", (ULONG)Command);
-	break;
+            /*Success = (PBOOLEAN)Argument;
+            if (*Success == FALSE)
+            {
+                DPRINT("FormatEx was unable to complete successfully.\n\n");
+            }*/
+            break;
+        }
+
+        default:
+            DPRINT("Unknown callback %lu\n", (ULONG)Command);
+            break;
     }
 
-//  DPRINT1 ("FormatCallback() done\n");
-
-  return TRUE;
+    return TRUE;
 }
 
-
 NTSTATUS
-FormatPartition (PUNICODE_STRING DriveRoot)
+FormatPartition(
+    IN PUNICODE_STRING DriveRoot)
 {
-  NTSTATUS Status;
-  SHORT xScreen;
-  SHORT yScreen;
+    NTSTATUS Status;
 
-  CONSOLE_GetScreenSize(&xScreen, &yScreen);
+    ProgressBar = CreateProgressBar(6,
+                                    yScreen - 14,
+                                    xScreen - 7,
+                                    yScreen - 10,
+                                    "Setup is formatting your disk");
 
-  ProgressBar = CreateProgressBar (6,
-				   yScreen - 14,
-				   xScreen - 7,
-				   yScreen - 10,
-                   "Setup is formatting your disk");
+    ProgressSetStepCount(ProgressBar, 100);
 
-  ProgressSetStepCount (ProgressBar, 100);
+    Status = VfatFormat(DriveRoot,
+                        FMIFS_HARDDISK,  /* MediaFlag */
+                        NULL,            /* Label */
+                        TRUE,            /* QuickFormat */
+                        0,               /* ClusterSize */
+                        FormatCallback); /* Callback */
 
-  Status = VfatFormat (DriveRoot,
-		       0,               /* MediaFlag */
-		       NULL,            /* Label */
-		       TRUE,            /* QuickFormat */
-		       0,               /* ClusterSize */
-		       (PFMIFSCALLBACK)FormatCallback); /* Callback */
+    DestroyProgressBar(ProgressBar);
+    ProgressBar = NULL;
 
-  DestroyProgressBar (ProgressBar);
-  ProgressBar = NULL;
+    DPRINT("FormatEx() finished with status 0x%08lx\n", Status);
 
-  DPRINT ("VfatFormat() status 0x%.08x\n", Status);
-
-  return Status;
+    return Status;
 }
 
 /* EOF */

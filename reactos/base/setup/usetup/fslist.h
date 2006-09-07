@@ -45,22 +45,27 @@ typedef struct _FILE_SYSTEM_LIST
 
 
 PFILE_SYSTEM_LIST
-CreateFileSystemList (SHORT Left,
-		      SHORT Top,
-		      BOOLEAN ForceFormat,
-		      FILE_SYSTEM ForceFileSystem);
+CreateFileSystemList(
+    IN SHORT Left,
+    IN SHORT Top,
+    IN BOOLEAN ForceFormat,
+    IN FILE_SYSTEM ForceFileSystem);
 
 VOID
-DestroyFileSystemList (PFILE_SYSTEM_LIST List);
+DestroyFileSystemList(
+    IN PFILE_SYSTEM_LIST List);
 
 VOID
-DrawFileSystemList (PFILE_SYSTEM_LIST List);
+DrawFileSystemList(
+    IN PFILE_SYSTEM_LIST List);
 
 VOID
-ScrollDownFileSystemList (PFILE_SYSTEM_LIST List);
+ScrollDownFileSystemList(
+    IN PFILE_SYSTEM_LIST List);
 
 VOID
-ScrollUpFileSystemList (PFILE_SYSTEM_LIST List);
+ScrollUpFileSystemList(
+    IN PFILE_SYSTEM_LIST List);
 
 #endif /* __FSLIST_H__ */
 

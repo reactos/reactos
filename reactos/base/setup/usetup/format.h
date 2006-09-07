@@ -28,7 +28,8 @@
 #define __FORMAT_H__
 
 NTSTATUS
-FormatPartition(PUNICODE_STRING DriveRoot);
+FormatPartition(
+    IN PUNICODE_STRING DriveRoot);
 
 #endif /* __FILESUP_H__ */
 
