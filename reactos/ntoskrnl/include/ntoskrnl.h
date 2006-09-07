@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-/* We are the Kernel */
-#define _NTSYSTEM_
+/* Tells the WDK that we don't want to import */
+#define NTKERNELAPI
 
 /* DDK/IFS/NDK Headers */
 #include <ntifs.h>
@@ -53,3 +53,25 @@
 /* Internal Headers */
 #include "internal/ntoskrnl.h"
 #include "config.h"
+
+//
+// Define the internal versions of external and public global data
+//
+#define IoFileObjectType                _IoFileObjectType
+#define PsThreadType                    _PsThreadType
+#define KdDebuggerEnabled               _KdDebuggerEnabled
+#define KdDebuggerNotPresent            _KdDebuggerNotPresent
+#define FsRtlLegalAnsiCharacterArray    _FsRtlLegalAnsiCharacterArray
+#undef LEGAL_ANSI_CHARACTER_ARRAY
+#undef NLS_MB_CODE_PAGE_TAG
+#undef NLS_OEM_LEAD_BYTE_INFO
+#define LEGAL_ANSI_CHARACTER_ARRAY      FsRtlLegalAnsiCharacterArray
+#define NLS_MB_CODE_PAGE_TAG            NlsMbOemCodePageTag
+#define NLS_OEM_LEAD_BYTE_INFO          NlsOemLeadByteInfo
+#undef KD_DEBUGGER_ENABLED
+#undef KD_DEBUGGER_NOT_PRESENT
+#define KD_DEBUGGER_ENABLED             KdDebuggerEnabled
+#define KD_DEBUGGER_NOT_PRESENT         KdDebuggerNotPresent
+#define HalDispatchTable                _HalDispatchTable
+#undef HALDISPATCH
+#define HALDISPATCH                     (&HalDispatchTable)

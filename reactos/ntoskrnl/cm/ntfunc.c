@@ -257,7 +257,7 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
       ExReleaseFastMutex(&CmiCallbackLock);
 
       Status = CurrentCallback->Function(CurrentCallback->Context,
-                                         Argument1,
+                                         (PVOID)Argument1,
                                          Argument2);
 
       ExAcquireFastMutex(&CmiCallbackLock);

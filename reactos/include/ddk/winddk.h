@@ -4876,10 +4876,11 @@ typedef enum _REG_NOTIFY_CLASS
 } REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
 
 typedef NTSTATUS
-(DDKAPI *PEX_CALLBACK_FUNCTION)(
-  IN PVOID  CallbackContext,
-  IN REG_NOTIFY_CLASS  Argument1,
-  IN PVOID  Argument2);
+(NTAPI *PEX_CALLBACK_FUNCTION)(
+    IN PVOID CallbackContext,
+    IN PVOID Argument1,
+    IN PVOID Argument2
+);
 
 typedef struct _REG_DELETE_KEY_INFORMATION
 {
@@ -10451,13 +10452,13 @@ WmiTraceMessageVa(
 /** Kernel debugger routines **/
 
 NTOSAPI
-VOID
+NTSTATUS
 DDKAPI
 KdDisableDebugger(
   VOID);
 
 NTOSAPI
-VOID
+NTSTATUS
 DDKAPI
 KdEnableDebugger(
   VOID);

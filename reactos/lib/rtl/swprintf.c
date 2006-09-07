@@ -383,7 +383,7 @@ stringw(wchar_t* buf, wchar_t* end, const wchar_t* sw, int len, int field_width,
 /*
  * @implemented
  */
-int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
+int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 {
 	int len;
 	unsigned long long num;
@@ -726,7 +726,7 @@ int swprintf(wchar_t *buf, const wchar_t *fmt, ...)
 /*
  * @implemented
  */
-int _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...)
+int __cdecl _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...)
 {
 	va_list args;
 	int i;
@@ -741,7 +741,7 @@ int _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...)
 /*
  * @implemented
  */
-int vswprintf(wchar_t *buf, const wchar_t *fmt, va_list args)
+int __cdecl vswprintf(wchar_t *buf, const wchar_t *fmt, va_list args)
 {
 	return _vsnwprintf(buf,MAXLONG,fmt,args);
 }

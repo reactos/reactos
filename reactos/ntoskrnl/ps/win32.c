@@ -9,6 +9,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
+#include <winerror.h>
 #define NDEBUG
 #include <internal/debug.h>
 

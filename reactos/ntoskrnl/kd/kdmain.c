@@ -136,7 +136,7 @@ KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 /*
  * @implemented
  */
-VOID
+NTSTATUS
 STDCALL
 KdDisableDebugger(VOID)
 {
@@ -152,12 +152,15 @@ KdDisableDebugger(VOID)
 
     /* Lower the IRQL */
     KeLowerIrql(OldIrql);
+
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 /*
  * @implemented
  */
-VOID
+NTSTATUS
 STDCALL
 KdEnableDebugger(VOID)
 {
@@ -173,6 +176,9 @@ KdEnableDebugger(VOID)
 
     /* Lower the IRQL */
     KeLowerIrql(OldIrql);
+
+    /* Return success */
+    return STATUS_SUCCESS;
 }
 
 /*

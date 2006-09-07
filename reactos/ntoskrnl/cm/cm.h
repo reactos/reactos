@@ -116,12 +116,6 @@ extern ERESOURCE CmiRegistryLock;
 
 
 /* Registry Callback Function */
-typedef NTSTATUS (STDCALL *PEX_CALLBACK_FUNCTION ) (
-    IN PVOID CallbackContext,
-    IN REG_NOTIFY_CLASS Argument1,
-    IN PVOID Argument2
-    );
-
 typedef struct _REGISTRY_CALLBACK
 {
     LIST_ENTRY ListEntry;

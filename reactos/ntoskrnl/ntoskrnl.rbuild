@@ -5,6 +5,7 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
+	<define name="_NTSYSTEM_" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="__USE_W32API" />
 	<define name="WIN9X_COMPAT_SPINLOCK" />

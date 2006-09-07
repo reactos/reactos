@@ -229,7 +229,7 @@ FsRtlIsNameInExpression@16
 FsRtlIsNtstatusExpected@4
 FsRtlIsPagingFile@4
 FsRtlIsTotalDeviceFailure@4
-FsRtlLegalAnsiCharacterArray DATA
+FsRtlLegalAnsiCharacterArray=_FsRtlLegalAnsiCharacterArray
 FsRtlLookupLargeMcbEntry@32
 FsRtlLookupLastLargeMcbEntry@12
 FsRtlLookupLastLargeMcbEntryAndIndex@16
@@ -280,7 +280,7 @@ FsRtlUninitializeFileLock@4
 FsRtlUninitializeLargeMcb@4
 FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
-HalDispatchTable DATA
+HalDispatchTable=_HalDispatchTable
 HalPrivateDispatchTable DATA
 @HalExamineMBR@16
 InbvAcquireDisplayOwnership@0
@@ -368,7 +368,7 @@ IoDriverObjectType DATA
 IoEnqueueIrp@4
 IoEnumerateDeviceObjectList@16
 IoFastQueryNetworkAttributes@20
-IoFileObjectType DATA
+IoFileObjectType=_IoFileObjectType
 IoForwardAndCatchIrp@8=IoForwardIrpSynchronously@8
 IoForwardIrpSynchronously@8
 IoFreeController@4
@@ -504,8 +504,8 @@ IoWriteTransferCount DATA
 @IofCompleteRequest@8
 IoIsWdmVersionAvailable@8
 KdComPortInUse DATA
-KdDebuggerEnabled DATA
-KdDebuggerNotPresent DATA
+KdDebuggerEnabled=_KdDebuggerEnabled
+KdDebuggerNotPresent=_KdDebuggerNotPresent
 KdDisableDebugger@0
 KdEnableDebugger@0
 KdEnteredDebugger
@@ -964,7 +964,7 @@ PsSetThreadHardErrorsAreDisabled@8
 PsSetThreadWin32Thread@8
 PsSetLoadImageNotifyRoutine@4
 PsTerminateSystemThread@4
-PsThreadType DATA
+PsThreadType=_PsThreadType
 READ_REGISTER_UCHAR@4
 READ_REGISTER_ULONG@4
 READ_REGISTER_USHORT@4
