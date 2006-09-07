@@ -142,7 +142,7 @@ ExSystemExceptionFilter(VOID)
  *        Optional string parameter (can be only one per error code)
  *
  * @param Parameters
- *        Array of DWORD parameters for use in error message string
+ *        Array of ULONG parameters for use in error message string
  *
  * @param ValidResponseOptions
  *        See HARDERROR_RESPONSE_OPTION for possible values description
@@ -193,7 +193,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
  *        Optional string parameter (can be only one per error code)
  *
  * @param Parameters
- *        Array of DWORD parameters for use in error message string
+ *        Array of ULONG parameters for use in error message string
  *
  * @param ValidResponseOptions
  *        See HARDERROR_RESPONSE_OPTION for possible values description

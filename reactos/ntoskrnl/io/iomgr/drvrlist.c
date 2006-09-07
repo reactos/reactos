@@ -67,22 +67,22 @@ IopGetGroupOrderList(PWSTR ValueName,
 
   if (ValueType == REG_BINARY &&
       ValueData != NULL &&
-      ValueLength >= sizeof(DWORD) &&
-      ValueLength >= (*(PULONG)ValueData + 1) * sizeof(DWORD))
+      ValueLength >= sizeof(ULONG) &&
+      ValueLength >= (*(PULONG)ValueData + 1) * sizeof(ULONG))
     {
       Group = (PSERVICE_GROUP)Context;
       Group->TagCount = ((PULONG)ValueData)[0];
       if (Group->TagCount > 0)
         {
-	  if (ValueLength >= (Group->TagCount + 1) * sizeof(DWORD))
+	  if (ValueLength >= (Group->TagCount + 1) * sizeof(ULONG))
             {
-              Group->TagArray = ExAllocatePool(NonPagedPool, Group->TagCount * sizeof(DWORD));
+              Group->TagArray = ExAllocatePool(NonPagedPool, Group->TagCount * sizeof(ULONG));
 	      if (Group->TagArray == NULL)
 	        {
 		  Group->TagCount = 0;
 	          return STATUS_INSUFFICIENT_RESOURCES;
 		}
-	      memcpy(Group->TagArray, (PULONG)ValueData + 1, Group->TagCount * sizeof(DWORD));
+	      memcpy(Group->TagArray, (PULONG)ValueData + 1, Group->TagCount * sizeof(ULONG));
 	    }
 	  else
 	    {

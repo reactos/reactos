@@ -55,7 +55,7 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     return (UCHAR)Result;
 }
 
-STATIC
+static
 VOID
 KiRequestReschedule(CCHAR Processor)
 {
@@ -66,7 +66,7 @@ KiRequestReschedule(CCHAR Processor)
     KiIpiSendRequest(1 << Processor, IPI_DPC);
 }
 
-STATIC
+static
 VOID
 KiInsertIntoThreadList(KPRIORITY Priority,
                        PKTHREAD Thread)
@@ -84,7 +84,7 @@ KiInsertIntoThreadList(KPRIORITY Priority,
     PriorityListMask |= (1 << Priority);
 }
 
-STATIC
+static
 VOID
 KiRemoveFromThreadList(PKTHREAD Thread)
 {
@@ -96,7 +96,7 @@ KiRemoveFromThreadList(PKTHREAD Thread)
     }
 }
 
-STATIC
+static
 PKTHREAD
 KiScanThreadList(KPRIORITY Priority,
                  KAFFINITY Affinity)

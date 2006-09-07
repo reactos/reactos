@@ -56,7 +56,7 @@ KeI386VdmInitialize(VOID)
     /* Make sure that there is a WOW key */
     RtlInitUnicodeString(&Name,
                          L"\\Registry\\Machine\\System\\CurrentControlSet\\"
-                         "Control\\Wow");
+                         L"Control\\Wow");
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
                                OBJ_CASE_INSENSITIVE,

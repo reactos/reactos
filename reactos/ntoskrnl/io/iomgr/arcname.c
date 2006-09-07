@@ -53,7 +53,7 @@ IopCheckCdromDevices(PULONG DeviceNumber);
 
 /* FUNCTIONS ****************************************************************/
 
-STATIC 
+static 
 NTSTATUS
 STDCALL
 INIT_FUNCTION
@@ -94,7 +94,7 @@ DiskQueryRoutine(PWSTR ValueName,
 
 #define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
 
-STATIC VOID INIT_FUNCTION
+static VOID INIT_FUNCTION
 IopEnumerateBiosDisks(PLIST_ENTRY ListHead)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -178,7 +178,7 @@ IopEnumerateBiosDisks(PLIST_ENTRY ListHead)
     }
 }
 
-STATIC VOID INIT_FUNCTION
+static VOID INIT_FUNCTION
 IopEnumerateDisks(PLIST_ENTRY ListHead)
 {
   ULONG i, k;
@@ -321,7 +321,7 @@ IopEnumerateDisks(PLIST_ENTRY ListHead)
     }
 }
 
-STATIC NTSTATUS INIT_FUNCTION
+static NTSTATUS INIT_FUNCTION
 IopAssignArcNamesToDisk(PDEVICE_OBJECT DeviceObject, ULONG RDisk, ULONG DiskNumber)
 {
   WCHAR DeviceNameBuffer[80];

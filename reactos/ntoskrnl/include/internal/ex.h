@@ -29,6 +29,12 @@ extern POBJECT_TYPE ExEventPairObjectType;
 #define ExReleaseResourceLock(l, i) KeReleaseSpinLock(l, i);
 #endif
 
+#define ExAcquireRundownProtection                      _ExAcquireRundownProtection
+#define ExReleaseRundownProtection                      _ExReleaseRundownProtection
+#define ExInitializeRundownProtection                   _ExInitializeRundownProtection
+#define ExWaitForRundownProtectionRelease               _ExWaitForRundownProtectionRelease
+#define ExRundownCompleted                              _ExRundownCompleted
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
@@ -290,7 +296,7 @@ static __inline _SEH_FILTER(_SEH_ExSystemExceptionFilter)
  *--*/
 BOOLEAN
 FORCEINLINE
-ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+_ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value, NewValue, OldValue;
 
@@ -331,7 +337,7 @@ ExAcquireRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+_ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value, NewValue, OldValue;
 
@@ -374,7 +380,7 @@ ExReleaseRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
+_ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
 {
     /* Set the count to zero */
     RunRef->Count = 0;
@@ -398,7 +404,7 @@ ExInitializeRundownProtection(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
+_ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
 {
     ULONG_PTR Value;
 
@@ -428,7 +434,7 @@ ExWaitForRundownProtectionRelease(IN PEX_RUNDOWN_REF RunRef)
  *--*/
 VOID
 FORCEINLINE
-ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
+_ExRundownCompleted(IN PEX_RUNDOWN_REF RunRef)
 {
     /* Sanity check */
     ASSERT((RunRef->Count & EX_RUNDOWN_ACTIVE) != 0);

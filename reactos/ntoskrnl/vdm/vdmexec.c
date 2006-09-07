@@ -22,8 +22,8 @@ NTSTATUS
 NTAPI
 VdmpGetVdmTib(OUT PVDM_TIB *VdmTib)
 {
-    PAGED_CODE();
     PVDM_TIB Tib;
+    PAGED_CODE();
 
     /* Assume vailure */
     *VdmTib = NULL;

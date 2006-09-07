@@ -803,7 +803,7 @@ NTSTATUS
 CmiRemoveKeyFromList(PKEY_OBJECT KeyToRemove)
 {
   PKEY_OBJECT ParentKey;
-  DWORD Index;
+  ULONG Index;
 
   ParentKey = KeyToRemove->ParentKey;
   /* FIXME: If list maintained in alphabetic order, use dichotomic search */

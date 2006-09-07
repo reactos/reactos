@@ -353,7 +353,7 @@ FsRtlpFastUnlockAllByKey(
    IN PFILE_LOCK           FileLock,
    IN PFILE_OBJECT         FileObject,
    IN PEPROCESS            Process,
-   IN DWORD                Key,
+   IN ULONG                Key,
    IN BOOLEAN              UseKey,
    IN PVOID                Context OPTIONAL
    )

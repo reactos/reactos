@@ -30,13 +30,13 @@ HalReleaseDisplayOwnership(VOID);
 /* DATA **********************************************************************/
 
 static HANDLE BootVidDevice = NULL;
-static BOOL BootVidDriverInstalled = FALSE;
+static BOOLEAN BootVidDriverInstalled = FALSE;
 static NTBOOTVID_FUNCTION_TABLE BootVidFunctionTable;
 
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-STATIC
+static
 InbvCheckBootVid(VOID)
 {
     IO_STATUS_BLOCK Iosb;

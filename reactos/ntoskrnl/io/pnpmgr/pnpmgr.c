@@ -2307,7 +2307,7 @@ IopInvalidateDeviceRelations(IN PDEVICE_NODE DeviceNode,
    IO_STATUS_BLOCK IoStatusBlock;
    PDEVICE_NODE ChildDeviceNode;
    IO_STACK_LOCATION Stack;
-   BOOL BootDrivers;
+   BOOLEAN BootDrivers;
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING LinkName;
    HANDLE Handle;

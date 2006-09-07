@@ -22,7 +22,7 @@ extern MM_STATS MmStats;
 
 /* FUNCTIONS ***************************************************************/
 
-STATIC PVOID STDCALL
+static PVOID STDCALL
 EiAllocatePool(POOL_TYPE PoolType,
                ULONG NumberOfBytes,
                ULONG Tag,

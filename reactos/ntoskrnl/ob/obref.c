@@ -267,21 +267,22 @@ ObFastReplaceObject(IN PEX_FAST_REF FastRef,
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
-VOID
+LONG_PTR
 FASTCALL
 ObfReferenceObject(IN PVOID Object)
 {
     ASSERT(Object);
 
     /* Get the header and increment the reference count */
-    InterlockedIncrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount);
+    return InterlockedIncrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount);
 }
 
-VOID
+LONG_PTR
 FASTCALL
 ObfDereferenceObject(IN PVOID Object)
 {
     POBJECT_HEADER Header;
+    LONG_PTR OldCount;
 
     /* Extract the object header */
     Header = OBJECT_TO_OBJECT_HEADER(Object);
@@ -289,17 +290,18 @@ ObfDereferenceObject(IN PVOID Object)
     if (Header->PointerCount < Header->HandleCount)
     {
         DPRINT("Misbehaving object: %wZ\n", &Header->Type->Name);
-        return;
+        return Header->PointerCount;
     }
 
     /* Check whether the object can now be deleted. */
-    if (!(InterlockedDecrement(&Header->PointerCount)))
+    OldCount = InterlockedDecrement(&Header->PointerCount);
+    if (!OldCount)
     {
         /* Sanity check */
         if (Header->HandleCount)
         {
             DPRINT("Misbehaving object: %wZ\n", &Header->Type->Name);
-            return;
+            return Header->PointerCount;
         }
 
         /* Check if we're at PASSIVE */
@@ -314,6 +316,9 @@ ObfDereferenceObject(IN PVOID Object)
             ObpDeferObjectDeletion(Object);
         }
     }
+
+    /* Return the old count */
+    return OldCount;
 }
 
 VOID

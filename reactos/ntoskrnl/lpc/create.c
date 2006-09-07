@@ -26,7 +26,7 @@
  *
  * RETURN VALUE
  */
-STATIC NTSTATUS STDCALL
+static NTSTATUS STDCALL
 LpcpVerifyCreateParameters (IN	PHANDLE			PortHandle,
 			    IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 			    IN	ULONG			MaxConnectInfoLength,

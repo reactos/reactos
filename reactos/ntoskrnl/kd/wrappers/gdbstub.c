@@ -120,9 +120,9 @@ enum REGISTER_NAMES
 
 typedef struct _CPU_REGISTER
 {
-  DWORD Size;
-  DWORD OffsetInTF;
-  DWORD OffsetInContext;
+  ULONG Size;
+  ULONG OffsetInTF;
+  ULONG OffsetInContext;
   BOOLEAN SetInContext;
 } CPU_REGISTER, *PCPU_REGISTER;
 
@@ -573,7 +573,7 @@ GspGetRegisters(PCHAR Address,
 {
   ULONG_PTR Value;
   PULONG p;
-  DWORD i;
+  ULONG i;
   PETHREAD Thread;
   ULONG_PTR *KernelStack;
 
@@ -670,7 +670,7 @@ GspSetRegistersInTrapFrame(PCHAR Address,
   ULONG Value;
   PCHAR Buffer;
   PULONG p;
-  DWORD i;
+  ULONG i;
 
   if (!TrapFrame)
     {

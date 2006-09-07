@@ -149,7 +149,7 @@ MmShowOutOfSpaceMessagePagingFile(VOID)
    }
 }
 
-LARGE_INTEGER STATIC
+LARGE_INTEGER static
 MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER Offset)
 {
    /* Simple binary search */
@@ -498,7 +498,7 @@ MmAllocSwapPage(VOID)
    return(0);
 }
 
-STATIC PRETRIEVEL_DESCRIPTOR_LIST FASTCALL
+static PRETRIEVEL_DESCRIPTOR_LIST FASTCALL
 MmAllocRetrievelDescriptorList(ULONG Pairs)
 {
    ULONG Size;
@@ -551,7 +551,7 @@ MmDumpToPagingFile(ULONG BugCode,
       if (!(TrapFrame->EFlags & (1 << 17)))
       {
          memcpy(&Headers->TrapFrame, TrapFrame,
-                sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));
+                sizeof(KTRAP_FRAME) - (4 * sizeof(ULONG)));
       }
       else
       {

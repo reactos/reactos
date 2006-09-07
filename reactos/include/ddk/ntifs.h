@@ -28,6 +28,8 @@
 #pragma GCC system_header
 #endif
 
+#define NTKERNELAPI
+
 #include "ntddk.h"
 
 #define _NTIFS_INCLUDED_
@@ -41,14 +43,6 @@ extern "C" {
 
 #ifndef NTSYSAPI
 #define NTSYSAPI
-#endif
-
-#ifndef NTKERNELAPI
-#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined (_NTIFS_) || defined(_NTHAL_)
-#define NTKERNELAPI DECLSPEC_IMPORT
-#else
-#define NTKERNELAPI
-#endif
 #endif
 
 #include "csq.h"
@@ -1220,6 +1214,13 @@ typedef struct _FSRTL_PER_STREAM_CONTEXT {
     PFREE_FUNCTION FreeCallback;
 } FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
 
+typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT
+{
+    LIST_ENTRY Links;
+    PVOID OwnerId;
+    PVOID InstanceId;
+} FSRTL_PER_FILEOBJECT_CONTEXT, *PFSRTL_PER_FILEOBJECT_CONTEXT;
+
 #endif /* (VER_PRODUCTBUILD >= 2600) */
 
 typedef struct _BASE_MCB
@@ -2298,10 +2299,10 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlAreNamesEqual (
-    IN PUNICODE_STRING  Name1,
-    IN PUNICODE_STRING  Name2,
+    IN PCUNICODE_STRING  Name1,
+    IN PCUNICODE_STRING  Name2,
     IN BOOLEAN          IgnoreCase,
-    IN PWCHAR           UpcaseTable OPTIONAL
+    IN PCWCH           UpcaseTable OPTIONAL
 );
 
 #define FsRtlAreThereCurrentFileLocks(FL) ( \

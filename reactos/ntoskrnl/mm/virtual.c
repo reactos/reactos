@@ -104,7 +104,7 @@ NtLockVirtualMemory(HANDLE ProcessHandle,
     NumberOfBytesLocked,
     ObReferenceObjectByHandle,
     MmCreateMdl,
-    ObfDereferenceObject,
+    (PVOID)ObfDereferenceObject,
     MmProbeAndLockPages,
     ExFreePool);
 }

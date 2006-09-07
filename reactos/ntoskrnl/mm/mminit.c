@@ -467,7 +467,7 @@ MmInit3(VOID)
    /* FIXME: Read parameters from memory */
 }
 
-VOID STATIC
+VOID static
 MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)

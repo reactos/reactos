@@ -42,7 +42,7 @@ RtlpGetMode()
 
 PVOID
 STDCALL
-RtlpAllocateMemory(UINT Bytes,
+RtlpAllocateMemory(ULONG Bytes,
                    ULONG Tag)
 {
     return ExAllocatePoolWithTag(PagedPool,
@@ -399,7 +399,7 @@ IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( IMAGE_RESOURCE_DIRECTORY *dir,
                                               LPCWSTR name, void *root,
                                               int want_dir );
 IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( IMAGE_RESOURCE_DIRECTORY *dir,
-                                            WORD id, void *root, int want_dir );
+                                            USHORT id, void *root, int want_dir );
 IMAGE_RESOURCE_DIRECTORY *find_first_entry( IMAGE_RESOURCE_DIRECTORY *dir,
                                             void *root, int want_dir );
 

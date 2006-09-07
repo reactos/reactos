@@ -40,11 +40,8 @@ extern "C" {
 #define DDKCDECLAPI __cdecl
 
 /* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */
-#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined (_NTIFS_) || defined(_NTHAL_)
-#define NTKERNELAPI DECLSPEC_IMPORT
-#else
 #define NTKERNELAPI
-#endif
+
 #ifndef NTOSAPI
 #define NTOSAPI NTKERNELAPI
 #endif
@@ -8983,6 +8980,20 @@ KeWaitForSingleObject(
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  Timeout  OPTIONAL);
 
+typedef
+ULONG_PTR
+(*NTAPI PKIPI_BROADCAST_WORKER)(
+    IN ULONG_PTR Argument
+);
+
+NTKERNELAPI
+ULONG_PTR
+NTAPI
+KeIpiGenericCall(
+    IN PKIPI_BROADCAST_WORKER BroadcastFunction,
+    IN ULONG_PTR Context
+);
+
 #if defined(_X86_)
 
 NTHALAPI
@@ -9378,7 +9389,7 @@ MmMapLockedPages(
   IN KPROCESSOR_MODE  AccessMode);
 
 NTOSAPI
-VOID
+PVOID
 DDKAPI
 MmPageEntireDriver(
   IN PVOID  AddressWithinSection);
@@ -9536,7 +9547,7 @@ ObDereferenceSecurityDescriptor(
   ULONG  Count);
 
 NTOSAPI
-VOID
+LONG_PTR
 DDKFASTAPI
 ObfDereferenceObject(
   IN PVOID  Object);
@@ -9568,7 +9579,7 @@ ObInsertObject(
   OUT PHANDLE  Handle);
 
 NTOSAPI
-VOID
+LONG_PTR
 DDKFASTAPI
 ObfReferenceObject(
   IN PVOID  Object);

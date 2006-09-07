@@ -49,7 +49,7 @@ STDCALL
 KdpBochsInit(PKD_DISPATCH_TABLE DispatchTable,
              ULONG BootPhase)
 {
-    BYTE Value;
+    UCHAR Value;
     if (!KdpDebugMode.Bochs) return;
 
     if (BootPhase == 0)

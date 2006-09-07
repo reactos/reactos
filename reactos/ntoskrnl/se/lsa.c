@@ -17,13 +17,13 @@
  * @unimplemented
  */
 NTSTATUS STDCALL LsaCallAuthenticationPackage (
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3,
-    DWORD Unknown4,
-    DWORD Unknown5,
-    DWORD Unknown6
+    ULONG Unknown0,
+    ULONG Unknown1,
+    ULONG Unknown2,
+    ULONG Unknown3,
+    ULONG Unknown4,
+    ULONG Unknown5,
+    ULONG Unknown6
     )
 {
     return STATUS_NOT_IMPLEMENTED;
@@ -34,8 +34,8 @@ NTSTATUS STDCALL LsaCallAuthenticationPackage (
  * @unimplemented
  */
 NTSTATUS STDCALL LsaDeregisterLogonProcess (
-    DWORD Unknown0,
-    DWORD Unknown1
+    ULONG Unknown0,
+    ULONG Unknown1
     )
 {
     return STATUS_NOT_IMPLEMENTED;
@@ -62,20 +62,20 @@ NTSTATUS STDCALL LsaFreeReturnBuffer (PVOID Buffer)
  * @unimplemented
  */
 NTSTATUS STDCALL LsaLogonUser (
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3,
-    DWORD Unknown4,
-    DWORD Unknown5,
-    DWORD Unknown6,
-    DWORD Unknown7,
-    DWORD Unknown8,
-    DWORD Unknown9,
-    DWORD Unknown10,
-    DWORD Unknown11,
-    DWORD Unknown12,
-    DWORD Unknown13
+    ULONG Unknown0,
+    ULONG Unknown1,
+    ULONG Unknown2,
+    ULONG Unknown3,
+    ULONG Unknown4,
+    ULONG Unknown5,
+    ULONG Unknown6,
+    ULONG Unknown7,
+    ULONG Unknown8,
+    ULONG Unknown9,
+    ULONG Unknown10,
+    ULONG Unknown11,
+    ULONG Unknown12,
+    ULONG Unknown13
     )
 {
     return STATUS_NOT_IMPLEMENTED;
@@ -86,9 +86,9 @@ NTSTATUS STDCALL LsaLogonUser (
  * @unimplemented
  */
 NTSTATUS STDCALL LsaLookupAuthenticationPackage (
-    DWORD	Unknown0,
-    DWORD	Unknown1,
-    DWORD	Unknown2
+    ULONG	Unknown0,
+    ULONG	Unknown1,
+    ULONG	Unknown2
     )
 {
     return STATUS_NOT_IMPLEMENTED;
@@ -99,9 +99,9 @@ NTSTATUS STDCALL LsaLookupAuthenticationPackage (
  * @unimplemented
  */
 NTSTATUS STDCALL LsaRegisterLogonProcess (
-    DWORD	Unknown0,
-    DWORD	Unknown1,
-    DWORD	Unknown2
+    ULONG	Unknown0,
+    ULONG	Unknown1,
+    ULONG	Unknown2
     )
 {
     return STATUS_NOT_IMPLEMENTED;

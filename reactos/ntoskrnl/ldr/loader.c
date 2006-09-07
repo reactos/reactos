@@ -79,7 +79,7 @@ static PVOID
 LdrPEGetExportByName (
     PVOID BaseAddress,
     PUCHAR SymbolName,
-    WORD Hint );
+    USHORT Hint );
 
 static PVOID
 LdrPEFixupForward ( PCHAR ForwardName );
@@ -682,7 +682,7 @@ LdrPEProcessModule(
     PLDR_DATA_TABLE_ENTRY *ModuleObject )
 {
     unsigned int DriverSize, Idx;
-    DWORD CurrentSize;
+    ULONG CurrentSize;
     PVOID DriverBase;
     PIMAGE_DOS_HEADER PEDosHeader;
     PIMAGE_NT_HEADERS PENtHeaders;
@@ -1279,11 +1279,11 @@ static PVOID
 LdrPEGetExportByName (
     PVOID BaseAddress,
     PUCHAR SymbolName,
-    WORD Hint )
+    USHORT Hint )
 {
     PIMAGE_EXPORT_DIRECTORY ExportDir;
-    PDWORD * ExFunctions;
-    PDWORD * ExNames;
+    PULONG * ExFunctions;
+    PULONG * ExNames;
     USHORT * ExOrdinals;
     PVOID ExName;
     ULONG Ordinal;
@@ -1314,9 +1314,9 @@ LdrPEGetExportByName (
     /*
     * Get header pointers
     */
-    ExNames = (PDWORD *)RVA(BaseAddress, ExportDir->AddressOfNames);
+    ExNames = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
     ExOrdinals = (USHORT *)RVA(BaseAddress, ExportDir->AddressOfNameOrdinals);
-    ExFunctions = (PDWORD *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
+    ExFunctions = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
 
     /*
     * Check the hint first
@@ -1399,7 +1399,7 @@ LdrPEGetExportByOrdinal (
 {
     PIMAGE_EXPORT_DIRECTORY ExportDir;
     ULONG ExportDirSize;
-    PDWORD * ExFunctions;
+    PULONG * ExFunctions;
     PVOID Function;
 
     ExportDir = (PIMAGE_EXPORT_DIRECTORY)RtlImageDirectoryEntryToData (
@@ -1408,7 +1408,7 @@ LdrPEGetExportByOrdinal (
         IMAGE_DIRECTORY_ENTRY_EXPORT,
         &ExportDirSize);
 
-    ExFunctions = (PDWORD *)RVA(BaseAddress,
+    ExFunctions = (PULONG *)RVA(BaseAddress,
         ExportDir->AddressOfFunctions);
     DPRINT("LdrPEGetExportByOrdinal(Ordinal %d) = %x\n",
         Ordinal,

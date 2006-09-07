@@ -107,6 +107,7 @@ FsRtlAllocatePoolWithQuota(IN POOL_TYPE PoolType,
  * @remarks None
  *
  *--*/
+#undef FsRtlAllocatePoolWithQuotaTag
 PVOID
 NTAPI
 FsRtlAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
@@ -147,6 +148,7 @@ FsRtlAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
  * @remarks None
  *
  *--*/
+#undef FsRtlAllocatePoolWithTag
 PVOID
 NTAPI
 FsRtlAllocatePoolWithTag(IN POOL_TYPE   PoolType,

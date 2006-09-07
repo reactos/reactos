@@ -21,7 +21,7 @@ PMmProbeAndLockPages(
     LOCK_OPERATION Operation
 );
 
-typedef VOID
+typedef LONG_PTR
 FASTCALL
 PObDereferenceObject(PVOID Object);
 

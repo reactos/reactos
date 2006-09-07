@@ -117,7 +117,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 STDCALL
-KiIpiSendPacket(KAFFINITY TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
+KiIpiSendPacket(KAFFINITY TargetSet, PKIPI_BROADCAST_WORKER WorkerRoutine, ULONG_PTR Argument, ULONG Count, BOOLEAN Synchronize)
 {
     KAFFINITY Processor;
     LONG i;
@@ -155,9 +155,9 @@ KiIpiSendPacket(KAFFINITY TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID 
     }
 }
 
-VOID
+ULONG_PTR
 NTAPI
-KeIpiGenericCall(VOID (STDCALL *Function)(PVOID), PVOID Argument)
+KeIpiGenericCall(PKIPI_BROADCAST_WORKER Function, ULONG_PTR Argument)
 {
    KIRQL oldIrql;
    KAFFINITY TargetSet;
@@ -177,6 +177,7 @@ KeIpiGenericCall(VOID (STDCALL *Function)(PVOID), PVOID Argument)
    KeLowerIrql(oldIrql);
 
    DPRINT("KeIpiGenericCall on CPU%d done\n", KeGetCurrentProcessorNumber());
+   return 0; // FIXME
 }
 
 

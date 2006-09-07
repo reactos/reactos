@@ -168,7 +168,7 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
       RtlCopyMemory((PVOID)Current,
                     SeWorldSid,
                     SidSize);
-      SdRel->Owner = (DWORD)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
+      SdRel->Owner = (ULONG)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
       Current += SidSize;
     }
 
@@ -177,7 +177,7 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
       RtlCopyMemory((PVOID)Current,
                     SeWorldSid,
                     SidSize);
-      SdRel->Group = (DWORD)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
+      SdRel->Group = (ULONG)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
       Current += SidSize;
     }
 
@@ -199,7 +199,7 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
       if (!NT_SUCCESS(Status))
           return Status;
 
-      SdRel->Dacl = (DWORD)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
+      SdRel->Dacl = (ULONG)((ULONG_PTR)Current - (ULONG_PTR)SdRel);
     }
 
   if (SecurityInformation & SACL_SECURITY_INFORMATION)

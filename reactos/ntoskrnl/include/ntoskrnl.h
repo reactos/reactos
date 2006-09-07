@@ -9,17 +9,13 @@
 /* INCLUDES ******************************************************************/
 
 /* We are the Kernel */
-#define NTKERNELAPI
 #define _NTSYSTEM_
 
 /* DDK/IFS/NDK Headers */
-#ifdef __GNUC__
-#include <ntddk.h>
-#endif
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <arc/arc.h>
-#include <ndk/ntndk.h>
+#include <ntndk.h>
 #undef TEXT
 #define TEXT(s) L##s
 #include <regstr.h>

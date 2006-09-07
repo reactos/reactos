@@ -81,7 +81,7 @@ KeSetGdtSelector(ULONG Entry,
    KeReleaseSpinLock(&GdtLock, oldIrql);
 }
 
-BOOL PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
+BOOLEAN PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
 {
   ULONG Base, SegLimit;
   /*

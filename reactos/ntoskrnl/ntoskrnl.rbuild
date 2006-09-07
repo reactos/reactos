@@ -7,6 +7,7 @@
 	<define name="_NTOSKRNL_" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="__USE_W32API" />
+	<define name="WIN9X_COMPAT_SPINLOCK" />
 	<include base="kjs">include</include>
 	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>

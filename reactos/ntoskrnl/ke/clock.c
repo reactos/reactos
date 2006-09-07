@@ -147,6 +147,7 @@ KeQueryTimeIncrement(VOID)
 /*
  * @implemented
  */
+#undef KeQueryTickCount
 VOID
 STDCALL
 KeQueryTickCount(PLARGE_INTEGER TickCount)

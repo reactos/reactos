@@ -198,7 +198,7 @@ CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
  */
 #define KEBUGCHECKCC \
     KEBUGCHECKEX(CACHE_MANAGER, \
-    (*(DWORD*)(__FILE__ + sizeof(__FILE__) - 4) << 16) | \
+    (*(ULONG*)(__FILE__ + sizeof(__FILE__) - 4) << 16) | \
     (__LINE__ & 0xFFFF), 0, 0, 0)
 
 #endif

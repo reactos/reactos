@@ -50,7 +50,7 @@ IopQueueTargetDeviceEvent(const GUID *Guid,
                           PUNICODE_STRING DeviceIds)
 {
     PPNP_EVENT_ENTRY EventEntry;
-    DWORD TotalSize;
+    ULONG TotalSize;
 
     TotalSize =
         FIELD_OFFSET(PLUGPLAY_EVENT_BLOCK, TargetDevice.DeviceIds) +

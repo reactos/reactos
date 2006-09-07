@@ -16,7 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-char* strtok(char *s, const char *delim)
+char* __cdecl strtok(char *s, const char *delim)
 {
   const char *spanp;
   int c, sc;

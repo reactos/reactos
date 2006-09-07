@@ -117,7 +117,7 @@ FsRtlIsNtstatusExpected(IN NTSTATUS NtStatus)
  * @remarks None.
  *
  *--*/
-BOOLEAN
+LOGICAL
 NTAPI
 FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
 {
@@ -293,9 +293,9 @@ FsRtlPostStackOverflow(IN PVOID Context,
  *--*/
 NTSTATUS
 NTAPI
-FsRtlSyncVolumes(DWORD Unknown0,
-                 DWORD Unknown1,
-                 DWORD Unknown2)
+FsRtlSyncVolumes(ULONG Unknown0,
+                 ULONG Unknown1,
+                 ULONG Unknown2)
 {
     return STATUS_SUCCESS;
 }
