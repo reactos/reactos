@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <winternl.h>
 #include <fmifs/fmifs.h>
 #include <tchar.h>
 #include "resource.h"
