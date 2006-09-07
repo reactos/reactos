@@ -23,7 +23,7 @@
 #include "i386/v86m.h"
 #include "ob.h"
 #include "mm.h"
-#include "ex2.h"
+#include "ex.h"
 #include "ps.h"
 #include "cc.h"
 #include "io.h"
