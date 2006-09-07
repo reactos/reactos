@@ -25,26 +25,15 @@
 /* VFATLIB Public Header */
 #include <fslib/vfatlib.h>
 
-typedef NTSTATUS (NTAPI *FORMATEX)(
-	IN PUNICODE_STRING DriveRoot,
-	IN FMIFS_MEDIA_FLAG MediaFlag,
-	IN PUNICODE_STRING Label,
-	IN BOOLEAN QuickFormat,
-	IN ULONG ClusterSize,
-	IN PFMIFSCALLBACK Callback);
-
 extern LIST_ENTRY ProviderListHead;
 
 typedef struct _IFS_PROVIDER
 {
 	LIST_ENTRY ListEntry;
 
-	PVOID Chkdsk;
-	PVOID ChkdskEx;
+	CHKDSKEX ChkdskEx;
 	PVOID Extend;
-	PVOID Format;
 	FORMATEX FormatEx;
-	PVOID Recover;
 
 	WCHAR Name[1];
 } IFS_PROVIDER, *PIFS_PROVIDER;

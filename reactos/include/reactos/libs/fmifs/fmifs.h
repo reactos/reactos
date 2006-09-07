@@ -164,4 +164,24 @@ QuerySupportedMedia(
 	ULONG Unknown3,
 	ULONG Unknown4);*/
 
+/* Functions provided by u*.dll */
+
+typedef NTSTATUS
+(NTAPI *FORMATEX)(
+	IN PUNICODE_STRING DriveRoot,
+	IN FMIFS_MEDIA_FLAG MediaFlag,
+	IN PUNICODE_STRING Label,
+	IN BOOLEAN QuickFormat,
+	IN ULONG ClusterSize,
+	IN PFMIFSCALLBACK Callback);
+
+typedef NTSTATUS
+(NTAPI *CHKDSKEX)(
+	IN PUNICODE_STRING DriveRoot,
+	IN BOOLEAN FixErrors,
+	IN BOOLEAN Verbose,
+	IN BOOLEAN CheckOnlyIfDirty,
+	IN BOOLEAN ScanDrive,
+	IN PFMIFSCALLBACK Callback);
+
 #endif /* ndef _FMIFS_H */

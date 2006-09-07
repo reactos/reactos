@@ -58,12 +58,9 @@ AddProvider(
 	RtlZeroMemory(Provider, RequiredSize);
 
 	/* Get function pointers */
-	//Provider->Chkdsk = (CHKDSK)GetProcAddress(hMod, "Chkdsk");
-	//Provider->ChkdskEx = (CHKDSKEX)GetProcAddress(hMod, "ChkdskEx");
+	Provider->ChkdskEx = (CHKDSKEX)GetProcAddress(hMod, "ChkdskEx");
 	//Provider->Extend = (EXTEND)GetProcAddress(hMod, "Extend");
-	//Provider->Format = (FORMAT)GetProcAddress(hMod, "Format");
 	Provider->FormatEx = (FORMATEX)GetProcAddress(hMod, "FormatEx");
-	//Provider->Recover = (RECOVER)GetProcAddress(hMod, "Recover");
 
 	wcscpy(Provider->Name, FileSystem);
 
