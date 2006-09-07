@@ -5,7 +5,7 @@
  * Use these to place a function in a specific section of the executable
  */
 #define PLACE_IN_SECTION(s)	__attribute__((section (s)))
-#ifdef _GNUC_
+#ifdef __GNUC__
 #define INIT_FUNCTION		PLACE_IN_SECTION("init")
 #define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
 #define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
