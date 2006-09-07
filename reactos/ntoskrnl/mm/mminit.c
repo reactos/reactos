@@ -29,7 +29,7 @@ extern unsigned int _bss_end__;
 
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
-MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
+MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
 
 PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 
@@ -58,7 +58,7 @@ BOOLEAN STDCALL MmIsThisAnNtAsSystem(VOID)
 /*
  * @implemented
  */
-MM_SYSTEM_SIZE STDCALL MmQuerySystemSize(VOID)
+MM_SYSTEMSIZE STDCALL MmQuerySystemSize(VOID)
 {
    return(MmSystemSize);
 }

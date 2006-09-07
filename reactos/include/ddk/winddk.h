@@ -397,7 +397,6 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
 extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
-extern POBJECT_TYPE NTSYSAPI MmSectionObjectType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -4627,7 +4626,7 @@ typedef enum _MM_SYSTEM_SIZE {
   MmSmallSystem,
   MmMediumSystem,
   MmLargeSystem
-} MM_SYSTEM_SIZE;
+} MM_SYSTEMSIZE;
 
 typedef struct _OBJECT_HANDLE_INFORMATION {
   ULONG HandleAttributes;
@@ -5114,7 +5113,6 @@ typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 #define CLOCK1_LEVEL                      28
 #define CLOCK2_LEVEL                      28
 #define IPI_LEVEL                         29
-#define SYNCH_LEVEL			 (IPI_LEVEL-1)
 #define POWER_LEVEL                       30
 #define HIGH_LEVEL                        31
 
@@ -9466,7 +9464,7 @@ MmProbeAndLockPages(
   IN LOCK_OPERATION  Operation);
 
 NTOSAPI
-MM_SYSTEM_SIZE
+MM_SYSTEMSIZE
 DDKAPI
 MmQuerySystemSize(
   VOID);
@@ -10246,7 +10244,6 @@ ZwSetValueKey(
 
 /* [Nt|Zw]MapViewOfSection.InheritDisposition constants */
 #define AT_EXTENDABLE_FILE                0x00002000
-#define SEC_NO_CHANGE                     0x00400000
 #define AT_RESERVED                       0x20000000
 #define AT_ROUND_TO_PAGE                  0x40000000
 

@@ -272,11 +272,7 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 #define IO_ATTACH_DEVICE                0x0400
 
 #define IO_ATTACH_DEVICE_API            0x80000000
-/* also in winnt.h */
-#define IO_COMPLETION_QUERY_STATE       0x0001
-#define IO_COMPLETION_MODIFY_STATE      0x0002
-#define IO_COMPLETION_ALL_ACCESS        (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3)
-/* end winnt.h */
+
 #define IO_FILE_OBJECT_NON_PAGED_POOL_CHARGE    64
 #define IO_FILE_OBJECT_PAGED_POOL_CHARGE        1024
 
@@ -297,9 +293,7 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 #define MAP_PROCESS                     1L
 #define MAP_SYSTEM                      2L
 #define MEM_DOS_LIM                     0x40000000
-/* also in winnt.h */
-#define MEM_IMAGE                       SEC_IMAGE
-/* end winnt.h */
+
 #define OB_TYPE_TYPE                    1
 #define OB_TYPE_DIRECTORY               2
 #define OB_TYPE_SYMBOLIC_LINK           3
@@ -332,15 +326,7 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 #define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
 #define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
 
-/* also in winnt.h */
 #define SEC_BASED	0x00200000
-#define SEC_NO_CHANGE	0x00400000
-#define SEC_FILE	0x00800000
-#define SEC_IMAGE	0x01000000
-#define SEC_VLM		0x02000000
-#define SEC_RESERVE	0x04000000
-#define SEC_COMMIT	0x08000000
-#define SEC_NOCACHE	0x10000000
 
 #define SECURITY_WORLD_SID_AUTHORITY    {0,0,0,0,0,1}
 #define SECURITY_WORLD_RID              (0x00000000L)
@@ -921,14 +907,15 @@ typedef struct _FILE_LINK_INFORMATION {
     WCHAR   FileName[1];
 } FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
 
-typedef struct _FILE_LOCK_INFO {
-    LARGE_INTEGER   StartingByte;
-    LARGE_INTEGER   Length;
-    BOOLEAN         ExclusiveLock;
-    ULONG           Key;
-    PFILE_OBJECT    FileObject;
-    PEPROCESS       Process;
-    LARGE_INTEGER   EndingByte;
+typedef struct _FILE_LOCK_INFO
+{
+    LARGE_INTEGER StartingByte;
+    LARGE_INTEGER Length;
+    BOOLEAN ExclusiveLock;
+    ULONG Key;
+    PFILE_OBJECT FileObject;
+    PVOID ProcessId;
+    LARGE_INTEGER EndingByte;
 } FILE_LOCK_INFO, *PFILE_LOCK_INFO;
 
 /* raw internal file lock struct returned from FsRtlGetNextFileLock */
@@ -1227,25 +1214,21 @@ typedef struct _BASE_MCB
 {
     ULONG MaximumPairCount;
     ULONG PairCount;
-    POOL_TYPE PoolType;
+    USHORT PoolType;
+    USHORT Flags;
     PVOID Mapping;
-} BASE_MCB;
-typedef BASE_MCB *PBASE_MCB;
+} BASE_MCB, *PBASE_MCB;
 
-typedef struct _LARGE_MCB {
-    PFAST_MUTEX FastMutex;
-    ULONG MaximumPairCount;
-    ULONG PairCount;
-    POOL_TYPE PoolType;
-    PVOID Mapping;
-} LARGE_MCB;
-typedef LARGE_MCB *PLARGE_MCB;
+typedef struct _LARGE_MCB
+{
+    PKGUARDED_MUTEX GuardedMutex;
+    BASE_MCB BaseMcb;
+} LARGE_MCB, *PLARGE_MCB;
 
-typedef struct _MCB 
+typedef struct _MCB
 {
     LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
-} MCB;
-typedef MCB *PMCB;
+} MCB, *PMCB;
 
 typedef struct _GENERATE_NAME_CONTEXT {
     USHORT  Checksum;
@@ -1267,10 +1250,6 @@ typedef struct _GET_RETRIEVAL_DESCRIPTOR {
     ULONGLONG       StartVcn;
     MAPPING_PAIR    Pair[1];
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
-
-typedef struct _IO_COMPLETION_BASIC_INFORMATION {
-    LONG Depth;
-} IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
 typedef struct _KQUEUE {
     DISPATCHER_HEADER   Header;

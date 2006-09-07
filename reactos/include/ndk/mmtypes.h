@@ -28,27 +28,50 @@ Author:
 //
 // Page-Rounding Macros
 //
-#define PAGE_ROUND_DOWN(x) (((ULONG_PTR)x)&(~(PAGE_SIZE-1)))
-#define PAGE_ROUND_UP(x)    \
-    ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
+#define PAGE_ROUND_DOWN(x)                                  \
+    (((ULONG_PTR)x)&(~(PAGE_SIZE-1)))
+#define PAGE_ROUND_UP(x)                                    \
+    ( (((ULONG_PTR)x)%PAGE_SIZE) ?                          \
+    ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) :         \
+    ((ULONG_PTR)x) )
 #ifdef NTOS_MODE_USER
-#define ROUND_TO_PAGES(Size)  (((ULONG_PTR)(Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+#define ROUND_TO_PAGES(Size)                                \
+    (((ULONG_PTR)(Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
 #endif
-#define ROUND_TO_ALLOCATION_GRANULARITY(Size)  (((ULONG_PTR)(Size) + MM_ALLOCATION_GRANULARITY - 1) \
+#define ROUND_TO_ALLOCATION_GRANULARITY(Size)               \
+    (((ULONG_PTR)(Size) + MM_ALLOCATION_GRANULARITY - 1)    \
     & ~(MM_ALLOCATION_GRANULARITY - 1))
 
 //
 // Macro for generating pool tags
 //
-#define TAG(A, B, C, D)     (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#define TAG(A, B, C, D)                                     \
+    (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
-#ifdef NTOS_MODE_USER
+#ifndef NTOS_MODE_USER
+
+//
+// Virtual Memory Flags
+//
+#define MEM_WRITE_WATCH                                     0x200000
+#define MEM_PHYSICAL                                        0x400000
+#define MEM_ROTATE                                          0x800000
+#define MEM_IMAGE                                           SEC_IMAGE
 
 //
 // Section Flags for NtCreateSection
 //
-#define SEC_BASED           0x00200000
-#define SEC_NO_CHANGE       0x00400000
+#define SEC_NO_CHANGE                                       0x400000
+#define SEC_FILE                                            0x800000
+#define SEC_IMAGE                                           0x1000000
+#define SEC_PROTECTED_IMAGE                                 0x2000000
+#define SEC_RESERVE                                         0x4000000
+#define SEC_COMMIT                                          0x8000000
+#define SEC_NOCACHE                                         0x10000000
+#define SEC_WRITECOMBINE                                    0x40000000
+#define SEC_LARGE_PAGES                                     0x80000000
+#else
+#define SEC_BASED                                           0x200000
 
 //
 // Section Inherit Flags for NtCreateSection
@@ -583,11 +606,6 @@ typedef struct _MEMORY_BASIC_INFORMATION
     ULONG Type;
 } MEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
 
-
-//
-// Mm Global Variables
-//
-
 //
 // Default heap size values.  For user mode, these values are copied to a new
 // process's PEB by the kernel in MmCreatePeb.  In kernel mode, RtlCreateHeap
@@ -600,6 +618,11 @@ extern SIZE_T MmHeapSegmentReserve;
 extern SIZE_T MmHeapSegmentCommit;
 extern SIZE_T MmHeapDeCommitTotalFreeThreshold;
 extern SIZE_T MmHeapDeCommitFreeBlockThreshold;
+
+//
+// Section Object Type
+//
+extern POBJECT_TYPE MmSectionObjectType;
 
 #endif // !NTOS_MODE_USER
 

@@ -3994,7 +3994,10 @@ MmUnmapViewOfSection(PEPROCESS Process,
        * and calculate the image base address */
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+          //
+          // This field is RESERVED and not respected by Windows
+          //
+         //if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             if (Segment == &SectionSegments[i])
             {
@@ -4010,7 +4013,10 @@ MmUnmapViewOfSection(PEPROCESS Process,
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+         //
+         // This field is RESERVED and not respected by Windows
+         //
+         //if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBaseAddress + (ULONG_PTR)SectionSegments[i].VirtualAddress);
@@ -4476,7 +4482,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
       ImageSize = 0;
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+         //
+         // This field is RESERVED and not respected by Windows
+         //
+         //if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             ULONG_PTR MaxExtent;
             MaxExtent = (ULONG_PTR)SectionSegments[i].VirtualAddress +
@@ -4506,7 +4515,10 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
       for (i = 0; i < NrSegments; i++)
       {
-         if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+         //
+         // This field is RESERVED and not respected by Windows
+         //
+         //if (!(SectionSegments[i].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
          {
             PVOID SBaseAddress = (PVOID)
                                  ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].VirtualAddress);

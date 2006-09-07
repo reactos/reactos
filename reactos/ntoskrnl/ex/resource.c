@@ -57,7 +57,7 @@ BOOLEAN ExResourceStrict = FALSE; /* FIXME */
  *--*/
 VOID
 NTAPI
-ExpVerifyResource(IN PERESOURCE Resource)
+ExpVerifyResource(IN PERESOURCE_XP Resource)
 {
     /* Verify the resource data */
     ASSERT((((ULONG_PTR)Resource) & (sizeof(ULONG_PTR) - 1)) == 0);
@@ -94,7 +94,7 @@ ExpVerifyResource(IN PERESOURCE Resource)
 VOID
 NTAPI
 ExpCheckForApcsDisabled(IN BOOLEAN BreakIfTrue,
-                        IN PERESOURCE Resource,
+                        IN PERESOURCE_XP Resource,
                         IN PETHREAD Thread)
 {
     /* Check if we should care and check if we should break */
@@ -156,7 +156,7 @@ ExpResourceInitialization(VOID)
  *--*/
 VOID
 NTAPI
-ExpAllocateExclusiveWaiterEvent(IN PERESOURCE Resource,
+ExpAllocateExclusiveWaiterEvent(IN PERESOURCE_XP Resource,
                                 IN PKIRQL OldIrql)
 {
     PKEVENT Event;
@@ -205,7 +205,7 @@ ExpAllocateExclusiveWaiterEvent(IN PERESOURCE Resource,
  *--*/
 VOID
 NTAPI
-ExpAllocateSharedWaiterSemaphore(IN PERESOURCE Resource,
+ExpAllocateSharedWaiterSemaphore(IN PERESOURCE_XP Resource,
                                  IN PKIRQL OldIrql)
 {
     PKSEMAPHORE Semaphore;
@@ -254,7 +254,7 @@ ExpAllocateSharedWaiterSemaphore(IN PERESOURCE Resource,
  *--*/
 VOID
 NTAPI
-ExpExpandResourceOwnerTable(IN PERESOURCE Resource,
+ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
                             IN PKIRQL OldIrql)
 {
     POWNER_ENTRY Owner, Table;
@@ -354,7 +354,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE Resource,
  *--*/
 POWNER_ENTRY
 FASTCALL
-ExpFindFreeEntry(IN PERESOURCE Resource,
+ExpFindFreeEntry(IN PERESOURCE_XP Resource,
                  IN PKIRQL OldIrql)
 {
     POWNER_ENTRY Owner, Limit;
@@ -440,7 +440,7 @@ ExpFindFreeEntry(IN PERESOURCE Resource,
  *--*/
 POWNER_ENTRY
 FASTCALL
-ExpFindEntryForThread(IN PERESOURCE Resource,
+ExpFindEntryForThread(IN PERESOURCE_XP Resource,
                       IN ERESOURCE_THREAD Thread,
                       IN PKIRQL OldIrql)
 {
@@ -598,7 +598,7 @@ ExpBoostOwnerThread(IN PKTHREAD Thread,
  *--*/
 VOID
 FASTCALL
-ExpWaitForResource(IN PERESOURCE Resource,
+ExpWaitForResource(IN PERESOURCE_XP Resource,
                    IN PVOID Object)
 {
 #if DBG
@@ -767,12 +767,13 @@ ExpWaitForResource(IN PERESOURCE Resource,
  *--*/
 BOOLEAN
 NTAPI
-ExAcquireResourceExclusiveLite(PERESOURCE Resource,
+ExAcquireResourceExclusiveLite(PERESOURCE resource,
                                BOOLEAN Wait)
 {
     KIRQL OldIrql = PASSIVE_LEVEL;
     ERESOURCE_THREAD Thread;
     BOOLEAN Success;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity check */
     ASSERT((Resource->Flag & ResourceNeverExclusive) == 0);
@@ -883,12 +884,13 @@ TryAcquire:
  *--*/
 BOOLEAN
 NTAPI
-ExAcquireResourceSharedLite(PERESOURCE Resource,
+ExAcquireResourceSharedLite(PERESOURCE resource,
                             BOOLEAN Wait)
 {
     KIRQL OldIrql;
     ERESOURCE_THREAD Thread;
     POWNER_ENTRY Owner;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Get the thread */
     Thread = ExGetCurrentResourceThread();
@@ -1044,12 +1046,13 @@ TryAcquire:
  *--*/
 BOOLEAN
 NTAPI
-ExAcquireSharedStarveExclusive(PERESOURCE Resource,
+ExAcquireSharedStarveExclusive(PERESOURCE resource,
                                BOOLEAN Wait)
 {
     KIRQL OldIrql;
     ERESOURCE_THREAD Thread;
     POWNER_ENTRY Owner;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Get the thread */
     Thread = ExGetCurrentResourceThread();
@@ -1191,12 +1194,13 @@ TryAcquire:
  *--*/
 BOOLEAN
 NTAPI
-ExAcquireSharedWaitForExclusive(PERESOURCE Resource,
+ExAcquireSharedWaitForExclusive(PERESOURCE resource,
                                 BOOLEAN Wait)
 {
     KIRQL OldIrql;
     ERESOURCE_THREAD Thread;
     POWNER_ENTRY Owner;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Get the thread */
     Thread = ExGetCurrentResourceThread();
@@ -1363,10 +1367,11 @@ TryAcquire:
  *--*/
 VOID
 NTAPI
-ExConvertExclusiveToSharedLite(PERESOURCE Resource)
+ExConvertExclusiveToSharedLite(PERESOURCE resource)
 {
     ULONG OldWaiters;
     KIRQL OldIrql;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
     DPRINT("ExConvertExclusiveToSharedLite(Resource 0x%p)\n", Resource);
 
     /* Lock the resource */
@@ -1418,9 +1423,10 @@ ExConvertExclusiveToSharedLite(PERESOURCE Resource)
  *--*/
 NTSTATUS
 NTAPI
-ExDeleteResourceLite(PERESOURCE Resource)
+ExDeleteResourceLite(PERESOURCE resource)
 {
     KIRQL OldIrql;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
     DPRINT("ExDeleteResourceLite(Resource 0x%p)\n", Resource);
 
     /* Sanity checks */
@@ -1464,9 +1470,10 @@ ExDeleteResourceLite(PERESOURCE Resource)
  *--*/
 VOID
 NTAPI
-ExDisableResourceBoostLite(PERESOURCE Resource)
+ExDisableResourceBoostLite(PERESOURCE resource)
 {
     KIRQL OldIrql;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity check */
     ExpVerifyResource(Resource);
@@ -1498,8 +1505,10 @@ ExDisableResourceBoostLite(PERESOURCE Resource)
  *--*/
 ULONG
 NTAPI
-ExGetExclusiveWaiterCount(PERESOURCE Resource)
+ExGetExclusiveWaiterCount(PERESOURCE resource)
 {
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
+
     /* Return the count */
     return Resource->NumberOfExclusiveWaiters;
 }
@@ -1521,8 +1530,10 @@ ExGetExclusiveWaiterCount(PERESOURCE Resource)
  *--*/
 ULONG
 NTAPI
-ExGetSharedWaiterCount(PERESOURCE Resource)
+ExGetSharedWaiterCount(PERESOURCE resource)
 {
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
+
     /* Return the count */
     return Resource->NumberOfSharedWaiters;
 }
@@ -1545,12 +1556,13 @@ ExGetSharedWaiterCount(PERESOURCE Resource)
  *--*/
 NTSTATUS
 NTAPI
-ExInitializeResourceLite(PERESOURCE Resource)
+ExInitializeResourceLite(PERESOURCE resource)
 {
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
     DPRINT("ExInitializeResourceLite(Resource 0x%p)\n", Resource);
 
     /* Clear the structure */
-    RtlZeroMemory(Resource, sizeof(ERESOURCE));
+    RtlZeroMemory(Resource, sizeof(ERESOURCE_XP));
 
     /* Initialize the lock */
     KeInitializeSpinLock(&Resource->SpinLock);
@@ -1582,10 +1594,11 @@ ExInitializeResourceLite(PERESOURCE Resource)
  *--*/
 BOOLEAN
 NTAPI
-ExIsResourceAcquiredExclusiveLite(PERESOURCE Resource)
+ExIsResourceAcquiredExclusiveLite(PERESOURCE resource)
 {
     ERESOURCE_THREAD Thread = ExGetCurrentResourceThread();
     BOOLEAN IsAcquired = FALSE;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity check */
     ExpVerifyResource(Resource);
@@ -1622,13 +1635,14 @@ ExIsResourceAcquiredExclusiveLite(PERESOURCE Resource)
  *--*/
 ULONG
 NTAPI
-ExIsResourceAcquiredSharedLite(IN PERESOURCE Resource)
+ExIsResourceAcquiredSharedLite(IN PERESOURCE resource)
 {
     ERESOURCE_THREAD Thread;
     ULONG i, Size;
     ULONG Count = 0;
     KIRQL OldIrql;
     POWNER_ENTRY Owner;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity check */
     ExpVerifyResource(Resource);
@@ -1719,12 +1733,13 @@ ExIsResourceAcquiredSharedLite(IN PERESOURCE Resource)
  *--*/
 NTSTATUS
 NTAPI
-ExReinitializeResourceLite(PERESOURCE Resource)
+ExReinitializeResourceLite(PERESOURCE resource)
 {
     PKEVENT Event;
     PKSEMAPHORE Semaphore;
     ULONG i, Size;
     POWNER_ENTRY Owner;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Get the owner table */
     Owner = Resource->OwnerTable;
@@ -1784,12 +1799,13 @@ ExReinitializeResourceLite(PERESOURCE Resource)
  *--*/
 VOID
 FASTCALL
-ExReleaseResourceLite(PERESOURCE Resource)
+ExReleaseResourceLite(PERESOURCE resource)
 {
     ERESOURCE_THREAD Thread;
     ULONG Count, i;
     KIRQL OldIrql;
     POWNER_ENTRY Owner, Limit;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
     DPRINT("ExReleaseResourceLite: %p\n", Resource);
 
     /* Sanity check */
@@ -1973,13 +1989,14 @@ ExReleaseResourceLite(PERESOURCE Resource)
  *--*/
 VOID
 NTAPI
-ExReleaseResourceForThreadLite(PERESOURCE Resource,
+ExReleaseResourceForThreadLite(PERESOURCE resource,
                                ERESOURCE_THREAD Thread)
 {
     ULONG i;
     ULONG Count;
     KIRQL OldIrql;
     POWNER_ENTRY Owner;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
     ASSERT(Thread != 0);
     DPRINT("ExReleaseResourceForThreadLite: %p\n", Resource);
 
@@ -2164,12 +2181,13 @@ ExReleaseResourceForThreadLite(PERESOURCE Resource,
  *--*/
 VOID
 NTAPI
-ExSetResourceOwnerPointer(IN PERESOURCE Resource,
+ExSetResourceOwnerPointer(IN PERESOURCE resource,
                           IN PVOID OwnerPointer)
 {
     ERESOURCE_THREAD Thread;
     KIRQL OldIrql;
     POWNER_ENTRY Owner, ThisOwner;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
 
     /* Sanity check */
     ASSERT((OwnerPointer != 0) && (((ULONG_PTR)OwnerPointer & 3) == 3));
@@ -2242,11 +2260,12 @@ ExSetResourceOwnerPointer(IN PERESOURCE Resource,
  *--*/
 BOOLEAN
 NTAPI
-ExTryToAcquireResourceExclusiveLite(PERESOURCE Resource)
+ExTryToAcquireResourceExclusiveLite(PERESOURCE resource)
 {
     ERESOURCE_THREAD Thread;
     KIRQL OldIrql;
     BOOLEAN Acquired = FALSE;
+    PERESOURCE_XP Resource = (PERESOURCE_XP)resource;
     DPRINT("ExTryToAcquireResourceExclusiveLite: %p\n", Resource);
 
     /* Sanity check */

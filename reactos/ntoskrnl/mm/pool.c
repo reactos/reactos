@@ -213,6 +213,7 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
 /*
  * @implemented
  */
+#undef ExFreePool
 VOID STDCALL
 ExFreePool(IN PVOID Block)
 {

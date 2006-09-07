@@ -225,7 +225,7 @@ InbvInitVGAMode(VOID)
 }
 
 
-static BOOL STDCALL
+static BOOLEAN STDCALL
 VidResetDisplay(VOID)
 {
    /*

@@ -639,7 +639,10 @@ LdrLookupPageProtection (
     for (Idx = 0; Idx < PEFileHeader->NumberOfSections && (!Write || !Execute); Idx++)
     {
         Characteristics = PESectionHeaders[Idx].Characteristics;
-        if (!(Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+        //
+        // This field is RESERVED and not respected by Windows
+        //
+        //if (!(Characteristics & IMAGE_SCN_TYPE_NOLOAD))
         {
             Length = max(PESectionHeaders[Idx].Misc.VirtualSize, PESectionHeaders[Idx].SizeOfRawData);
             BaseAddress = PESectionHeaders[Idx].VirtualAddress + (char*)DriverBase;
@@ -736,7 +739,10 @@ LdrPEProcessModule(
     DriverSize = 0;
     for (Idx = 0; Idx < PENtHeaders->FileHeader.NumberOfSections; Idx++)
     {
-        if (!(PESectionHeaders[Idx].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
+        //
+        // This field is RESERVED and not respected by Windows
+        //
+        //if (!(PESectionHeaders[Idx].Characteristics & IMAGE_SCN_TYPE_NOLOAD))
         {
             CurrentSize = PESectionHeaders[Idx].VirtualAddress + PESectionHeaders[Idx].Misc.VirtualSize;
             DriverSize = max(DriverSize, CurrentSize);

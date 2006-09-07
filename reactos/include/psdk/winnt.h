@@ -424,9 +424,12 @@ typedef DWORD FLONG;
 #define FILE_SUPPORTS_ENCRYPTION        0x00020000
 #define FILE_NAMED_STREAMS              0x00040000
 
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 #define IO_COMPLETION_QUERY_STATE       0x0001
 #define IO_COMPLETION_MODIFY_STATE      0x0002
 #define IO_COMPLETION_ALL_ACCESS        (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3)
+#endif
 /* end ntifs.h */
 
 /* also in ddk/winddk.h */
@@ -457,10 +460,13 @@ typedef DWORD FLONG;
 #define THREAD_GET_CONTEXT	8
 #define THREAD_SET_CONTEXT	16
 #define THREAD_SET_INFORMATION	32
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 #define THREAD_QUERY_INFORMATION	64
 #define THREAD_SET_THREAD_TOKEN	128
 #define THREAD_IMPERSONATE	256
 #define THREAD_DIRECT_IMPERSONATION	0x200
+#endif
 #define THREAD_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x3FF)
 #define THREAD_BASE_PRIORITY_LOWRT	15
 #define THREAD_BASE_PRIORITY_MAX	2
@@ -468,8 +474,11 @@ typedef DWORD FLONG;
 #define THREAD_BASE_PRIORITY_IDLE	(-15)
 #define EXCEPTION_NONCONTINUABLE	1
 #define EXCEPTION_MAXIMUM_PARAMETERS 15
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 #define MUTANT_QUERY_STATE	0x0001
 #define MUTANT_ALL_ACCESS	(STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|MUTANT_QUERY_STATE)
+#endif
 #define TIMER_QUERY_STATE	0x0001
 #define TIMER_MODIFY_STATE	0x0002
 #define TIMER_ALL_ACCESS	(STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|TIMER_QUERY_STATE|TIMER_MODIFY_STATE)
@@ -654,6 +663,8 @@ typedef enum
 #define SE_CHANGE_NOTIFY_NAME	TEXT("SeChangeNotifyPrivilege")
 #define SE_REMOTE_SHUTDOWN_NAME	TEXT("SeRemoteShutdownPrivilege")
 #define SE_CREATE_GLOBAL_NAME TEXT("SeCreateGlobalPrivilege")
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 #define SE_GROUP_MANDATORY 1
 #define SE_GROUP_ENABLED_BY_DEFAULT 2
 #define SE_GROUP_ENABLED 4
@@ -661,6 +672,7 @@ typedef enum
 #define SE_GROUP_USE_FOR_DENY_ONLY 16
 #define SE_GROUP_LOGON_ID 3221225472U
 #define SE_GROUP_RESOURCE 536870912
+#endif
 #define LANG_NEUTRAL	0x00
 #define LANG_ARABIC 	0x01
 #define LANG_BULGARIAN 	0x02
@@ -1005,9 +1017,9 @@ typedef enum
 #define MEM_WRITE_WATCH	   0x200000 /* 98/Me */
 #define MEM_PHYSICAL	   0x400000
 #define MEM_4MB_PAGES    0x80000000
-/* also in ddk/ntifs.h */
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 #define MEM_IMAGE        SEC_IMAGE
-#define SEC_BASED	0x00200000
 #define SEC_NO_CHANGE	0x00400000
 #define SEC_FILE	0x00800000
 #define SEC_IMAGE	0x01000000
@@ -1015,7 +1027,7 @@ typedef enum
 #define SEC_RESERVE	0x04000000
 #define SEC_COMMIT	0x08000000
 #define SEC_NOCACHE	0x10000000
-/* end ntifs.h */
+#endif
 #define SECTION_EXTEND_SIZE 16
 #define SECTION_MAP_READ 4
 #define SECTION_MAP_WRITE 2
@@ -3772,6 +3784,8 @@ static __inline__ PVOID GetCurrentFiber(void)
     return ret;
 }
 
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 static __inline__ struct _TEB * NtCurrentTeb(void)
 {
     struct _TEB *ret;
@@ -3784,6 +3798,7 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
 
     return ret;
 }
+#endif
 
 #elif defined(__WATCOMC__)
 

@@ -119,10 +119,19 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 //
 #define TLS_EXPANSION_SLOTS                     64
 
+#ifndef NTOS_MODE_USER
+
+//
+// Thread Access Types
+//
+#define THREAD_QUERY_INFORMATION                0x0040
+#define THREAD_SET_THREAD_TOKEN                 0x0080
+#define THREAD_IMPERSONATE                      0x0100
+#define THREAD_DIRECT_IMPERSONATION             0x0200
+
 //
 // Process Access Types
 //
-#ifndef NTOS_MODE_USER
 #define PROCESS_TERMINATE                       0x0001
 #define PROCESS_CREATE_THREAD                   0x0002
 #define PROCESS_SET_SESSIONID                   0x0004

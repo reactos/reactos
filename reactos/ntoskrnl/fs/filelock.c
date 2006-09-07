@@ -190,7 +190,7 @@ FsRtlpCheckLockForReadOrWriteAccess(
          //No write conflict if exclusive lock AND our lock
          if ((Read && !Granted->Lock.ExclusiveLock) ||
             (Granted->Lock.ExclusiveLock &&
-            Granted->Lock.Process == Process &&
+            Granted->Lock.ProcessId == Process &&
             Granted->Lock.FileObject == FileObject &&
             Granted->Lock.Key == Key ) )
          {
@@ -382,7 +382,7 @@ FsRtlpFastUnlockAllByKey(
    LIST_FOR_EACH_SAFE(Granted, tmp, &LockToc->GrantedListHead, FILE_LOCK_GRANTED, ListEntry)
    {
 
-      if (Granted->Lock.Process == Process &&
+      if (Granted->Lock.ProcessId == Process &&
          Granted->Lock.FileObject == FileObject &&
          (!UseKey || (UseKey && Granted->Lock.Key == Key)) )
       {
@@ -548,7 +548,7 @@ FsRtlpAddLock(
    Granted->Lock.ExclusiveLock = ExclusiveLock;
    Granted->Lock.Key = Key;
    Granted->Lock.FileObject = FileObject;
-   Granted->Lock.Process = Process;
+   Granted->Lock.ProcessId = Process;
    //ending offset
    Granted->Lock.EndingByte = EndOffset;
    Granted->UnlockContext = Context;
@@ -693,7 +693,7 @@ FsRtlpUnlockSingle(
       //must be exact match
       if (FileOffset->QuadPart == Granted->Lock.StartingByte.QuadPart &&
          Length->QuadPart == Granted->Lock.Length.QuadPart &&
-         Granted->Lock.Process == Process &&
+         Granted->Lock.ProcessId == Process &&
          Granted->Lock.FileObject == FileObject &&
          Granted->Lock.Key == Key)
       {
@@ -799,7 +799,7 @@ FsRtlpDumpFileLocks(
          Granted->Lock.Length.QuadPart,
          Granted->Lock.EndingByte.QuadPart,
          Granted->Lock.Key,
-         Granted->Lock.Process,
+         Granted->Lock.ProcessId,
          Granted->Lock.FileObject
          );
 

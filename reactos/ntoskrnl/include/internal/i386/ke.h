@@ -224,8 +224,8 @@ static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULO
 
 #elif defined(_MSC_VER)
 
-#define Ke386DisableInterrupts() __asm cli
-#define Ke386EnableInterrupts()  __asm sti
+#define Ke386DisableInterrupts() _cli()
+#define Ke386EnableInterrupts()  _sti()
 #define Ke386HaltProcessor()     __asm hlt
 #define Ke386GetPageTableDirectory(X) \
                                 __asm mov eax, cr3; \

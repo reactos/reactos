@@ -59,7 +59,32 @@ Author:
 #define SE_CHANGE_NOTIFY_PRIVILEGE        (23L)
 #define SE_REMOTE_SHUTDOWN_PRIVILEGE      (24L)
 #define SE_MAX_WELL_KNOWN_PRIVILEGE       (SE_REMOTE_SHUTDOWN_PRIVILEGE)
+
 #else
+
+//
+// User and Group-related SID Attributes
+//
+#define SE_GROUP_MANDATORY                                  0x00000001
+#define SE_GROUP_ENABLED_BY_DEFAULT                         0x00000002
+#define SE_GROUP_ENABLED                                    0x00000004
+#define SE_GROUP_OWNER                                      0x00000008
+#define SE_GROUP_USE_FOR_DENY_ONLY                          0x00000010
+#define SE_GROUP_INTEGRITY                                  0x00000020
+#define SE_GROUP_INTEGRITY_ENABLED                          0x00000040
+#define SE_GROUP_RESOURCE                                   0x20000000
+#define SE_GROUP_LOGON_ID                                   0xC0000000
+
+#define SE_GROUP_VALID_ATTRIBUTES                           \
+    (SE_GROUP_MANDATORY                                 |   \
+     SE_GROUP_ENABLED_BY_DEFAULT                        |   \
+     SE_GROUP_ENABLED                                   |   \
+     SE_GROUP_OWNER                                     |   \
+     SE_GROUP_USE_FOR_DENY_ONLY                         |   \
+     SE_GROUP_LOGON_ID                                  |   \
+     SE_GROUP_RESOURCE                                  |   \
+     SE_GROUP_INTEGRITY                                 |   \
+     SE_GROUP_INTEGRITY_ENABLED)
 
 //
 // Audit and Policy Structures
@@ -141,6 +166,12 @@ typedef struct _AUX_DATA
     GENERIC_MAPPING GenericMapping;
     ULONG Reserved;
 } AUX_DATA, *PAUX_DATA;
+
+//
+// External SRM Data
+//
+extern PACL SePublicDefaultDacl;
+extern PACL SeSystemDefaultDacl;
 
 #endif
 #endif

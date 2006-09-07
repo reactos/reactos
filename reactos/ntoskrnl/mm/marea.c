@@ -947,9 +947,9 @@ MmCreateMemoryArea(PMADDRESS_SPACE AddressSpace,
    PMEMORY_AREA MemoryArea;
 
    DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %p, "
-          "*BaseAddress %p, Length %p, Attributes %x, TopDown: %x, "
+          "*BaseAddress %p, Length %p, AllocationFlags %x, "
           "FixedAddress %x, Result %p)\n",
-          Type, BaseAddress, *BaseAddress, Length, Attributes, TopDown,
+          Type, BaseAddress, *BaseAddress, Length, AllocationFlags,
           FixedAddress, Result);
 
    MmVerifyMemoryAreas(AddressSpace);

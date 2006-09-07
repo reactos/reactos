@@ -654,7 +654,14 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
 
     *((PVOID *) Save) = FpState;
+#ifdef __GNUC__
     asm volatile("fnsave %0\n\t" : "=m" (*FpState));
+#else
+    __asm
+    {
+        fnsave [FpState]
+    };
+#endif
 
     KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
     return STATUS_SUCCESS;
@@ -668,8 +675,16 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 
     ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
 
+#ifdef __GNUC__
     asm volatile("fnclex\n\t");
     asm volatile("frstor %0\n\t" : "=m" (*FpState));
+#else
+    __asm
+    {
+        fnclex
+        frstor [FpState]
+    };
+#endif
 
     ExFreePool(FpState);
     return STATUS_SUCCESS;
@@ -688,8 +703,7 @@ Ki386SetProcessorFeatures(VOID)
    struct
    {
        KEY_VALUE_PARTIAL_INFORMATION Info;
-       UCHAR Buffer[FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
-                                 Data[0]) + sizeof(ULONG)];
+       UCHAR Buffer[20];
    } ValueData;
    NTSTATUS Status;
    ULONG FastSystemCallDisable = 0;

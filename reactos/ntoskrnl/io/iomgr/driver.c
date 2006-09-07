@@ -43,9 +43,6 @@ LdrProcessModule(
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IopInitDriverImplementation)
-#pragma alloc_text(INIT, IopDisplayLoadingMessage)
-#pragma alloc_text(INIT, MiFreeBootDriverMemory)
-#pragma alloc_text(INIT, IopInitializeBuiltinDriver)
 #endif
 
 

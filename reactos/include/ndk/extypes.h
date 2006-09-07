@@ -92,9 +92,18 @@ extern ULONG NTSYSAPI NtBuildNumber;
 #define EVENT_QUERY_STATE                   0x0001
 
 //
-// Semaphore Object Acess Masks
+// Semaphore Object Access Masks
 //
 #define SEMAPHORE_QUERY_STATE               0x0001
+#else
+
+//
+// Mutant Object Access Masks
+//
+#define MUTANT_QUERY_STATE                  0x0001
+#define MUTANT_ALL_ACCESS                   (STANDARD_RIGHTS_REQUIRED | \
+                                             SYNCHRONIZE | \
+                                             MUTANT_QUERY_STATE)
 #endif
 
 //
@@ -344,6 +353,29 @@ NTSTATUS
 #else
 
 //
+// Compatibility with Windows XP Drivers using ERESOURCE
+//
+typedef struct _ERESOURCE_XP
+{
+    LIST_ENTRY SystemResourcesList;
+    POWNER_ENTRY OwnerTable;
+    SHORT ActiveCount;
+    USHORT Flag;
+    PKSEMAPHORE SharedWaiters;
+    PKEVENT ExclusiveWaiters;
+    OWNER_ENTRY OwnerThreads[2];
+    ULONG ContentionCount;
+    USHORT NumberOfSharedWaiters;
+    USHORT NumberOfExclusiveWaiters;
+    union
+    {
+        PVOID Address;
+        ULONG_PTR CreatorBackTraceIndex;
+    };
+    KSPIN_LOCK SpinLock;
+} ERESOURCE_XP, *PERESOURCE_XP;
+
+//
 // Executive Work Queue Structures
 //
 typedef struct _EX_QUEUE_WORKER_INFO
@@ -518,6 +550,14 @@ typedef struct _HANDLE_TABLE_ENTRY
         LONG NextFreeTableEntry;
     };
 } HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
+
+//
+// FIXME
+//
+#ifdef _REACTOS_
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WIN2K
+#endif
 
 typedef struct _HANDLE_TABLE
 {

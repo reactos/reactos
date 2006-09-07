@@ -209,18 +209,6 @@ KeSetTimeIncrement(
 }
 
 /*
- * @unimplemented
- */
-VOID
-FASTCALL
-KeSetTimeUpdateNotifyRoutine(
-    IN PTIME_UPDATE_NOTIFY_ROUTINE NotifyRoutine
-    )
-{
-    UNIMPLEMENTED;
-}
-
-/*
  * @implemented
  */
 ULONG

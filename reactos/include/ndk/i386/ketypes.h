@@ -107,6 +107,15 @@ Author:
 #define KSEG0_BASE              0x80000000
 
 //
+// Synchronization-level IRQL
+//
+#if defined(NT_UP)
+#define SYNCH_LEVEL             DISPATCH_LEVEL
+#else
+#define SYNCH_LEVEL             (IPI_LEVEL - 1)
+#endif
+
+//
 // Macro to get current KPRCB
 //
 #ifndef __GNUC__ // fixme
