@@ -14,9 +14,9 @@
 #define CMIC_MASK_ASYNCOK        SEE_MASK_ASYNCOK
 
 /*****************************************************************************
- * IDropTargetHelper interface
+ * IDropTargetHelper interface  define in shlguid.h
  */
-DEFINE_GUID(IID_IDropTargetHelper, 0x4657278b, 0x411b, 0x11d2, 0x83,0x9a, 0x00,0xc0,0x4f,0xd9,0x18,0xd0);
+// DEFINE_GUID(IID_IDropTargetHelper, 0x4657278b, 0x411b, 0x11d2, 0x83,0x9a, 0x00,0xc0,0x4f,0xd9,0x18,0xd0);
 
 /*****************************************************************************
  * IPersistFolder2 interface
