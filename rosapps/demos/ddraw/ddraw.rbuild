@@ -8,6 +8,8 @@
 	<library>ddraw</library>
 	<library>dxguid</library>
 	<library>string</library>
+      <library>user32</library>
+
 
 	<file>main.cpp</file>
 </module>
