@@ -40,7 +40,14 @@ extern "C" {
 #define DDKCDECLAPI __cdecl
 
 /* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */
-#define NTKERNELAPI
+//#define NTKERNELAPI
+
+#ifdef _NTOSKRNL_
+#define NTKERNELAPI 
+#else
+#define NTKERNELAPI DECLSPEC_IMPORT
+#endif
+
 
 #ifndef NTOSAPI
 #define NTOSAPI NTKERNELAPI
