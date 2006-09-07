@@ -46,6 +46,7 @@
 #include "wine/exdisp.h"
 
 #include "hlink.h"
+#include "shlguid.h"
 #include "wine/shlguid.h"
 #include "shlobj.h"
 #include "shldisp.h"
