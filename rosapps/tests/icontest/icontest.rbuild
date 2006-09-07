@@ -4,6 +4,7 @@
 	<define name="__USE_W32API" />
 	<include base="icontest">.</include>
 	<library>kernel32</library>
+	<library>user32</library>
 	<library>gdi32</library>
 	<library>ntdll</library>
 	<file>icontest.c</file>

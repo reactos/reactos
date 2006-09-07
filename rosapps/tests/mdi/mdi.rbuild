@@ -4,6 +4,7 @@
 	<define name="__USE_W32API" />
 	<include base="mdi">.</include>
 	<library>kernel32</library>
+	<library>user32</library>
 	<library>gdi32</library>
 	<library>comctl32</library>
 	<library>comdlg32</library>
