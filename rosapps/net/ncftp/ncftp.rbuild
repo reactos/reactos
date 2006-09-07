@@ -10,6 +10,8 @@
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>kernel32</library>
+	<library>user32</library>
+	<library>advapi32</library>
 	<library>ws2_32</library> 
 
 	<directory name="sio">
