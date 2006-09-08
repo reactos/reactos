@@ -621,7 +621,7 @@ static const cab_UWORD Zipmask[17] = {                                          
 struct ExtractFileList {
         LPSTR  filename;
         struct ExtractFileList *next;
-        BOOL   unknown;  /* always 1L */
+        BOOL   flag;
 } ;
 
 /* the first parameter of the function extract */
@@ -631,8 +631,10 @@ typedef struct {
         struct ExtractFileList *filelist; /* 0x010 */
         long  filecount;        /* 0x014 */
         DWORD flags;            /* 0x018 */
-        char  directory[0x104]; /* 0x01c */
-        char  lastfile[0x20c];  /* 0x120 */
+        char  directory[MAX_PATH]; /* 0x01c */
+        char  lastfile[MAX_PATH];  /* 0x120 */
+        char  unknown2[MAX_PATH];  /* 0x224 */
+        struct ExtractFileList *filterlist; /* 0x328 */
 } EXTRACTdest;
 
 

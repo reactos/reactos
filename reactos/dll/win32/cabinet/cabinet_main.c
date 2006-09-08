@@ -157,7 +157,7 @@ static long fdi_seek(INT_PTR hf, long dist, int seektype)
 static void fill_file_node(struct ExtractFileList *pNode, LPSTR szFilename)
 {
     pNode->next = NULL;
-    pNode->unknown = TRUE;
+    pNode->flag = FALSE;
 
     pNode->filename = HeapAlloc(GetProcessHeap(), 0, strlen(szFilename) + 1);
     lstrcpyA(pNode->filename, szFilename);
@@ -216,7 +216,8 @@ static INT_PTR fdi_notify_extract(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pf
                 pDestination->filecount++;
             }
 
-            if (pDestination->flags & EXTRACT_EXTRACTFILES)
+            if ((pDestination->flags & EXTRACT_EXTRACTFILES) ||
+                file_in_list(pDestination->filterlist, pfdin->psz1))
             {
                 /* skip this file it it's not in the file list */
                 if (!file_in_list(pDestination->filelist, pfdin->psz1))
@@ -303,6 +304,7 @@ HRESULT WINAPI Extract(EXTRACTdest *dest, LPCSTR szCabName)
     HRESULT res = S_OK;
     HFDI hfdi;
     ERF erf;
+    char *str, *path, *name;
 
     TRACE("(%p, %s)\n", dest, szCabName);
 
@@ -322,9 +324,31 @@ HRESULT WINAPI Extract(EXTRACTdest *dest, LPCSTR szCabName)
     if (GetFileAttributesA(dest->directory) == INVALID_FILE_ATTRIBUTES)
         return S_OK;
 
-    if (!FDICopy(hfdi, (LPSTR)szCabName, "", 0,
+    /* split the cabinet name into path + name */
+    str = HeapAlloc(GetProcessHeap(), 0, lstrlenA(szCabName)+1);
+    if (!str)
+    {
+        res = E_OUTOFMEMORY;
+        goto end;
+    }
+    lstrcpyA(str, szCabName);
+
+    path = str;
+    name = strrchr(path, '\\');
+    if (name)
+        *name++ = 0;
+    else
+    {
+        name = path;
+        path = NULL;
+    }
+
+    if (!FDICopy(hfdi, name, path, 0,
          fdi_notify_extract, NULL, dest))
         res = E_FAIL;
+
+    HeapFree(GetProcessHeap(), 0, str);
+end:
 
     FDIDestroy(hfdi);
 
