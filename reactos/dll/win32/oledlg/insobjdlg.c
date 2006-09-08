@@ -73,7 +73,7 @@ static void UIINSERTOBJECTDLG_AddControl(InsertObjectDlgInfo* pdlgInfo);
 typedef HRESULT (*DLLREGISTER)          (void);
 
 extern HINSTANCE OLEDLG_hInstance;
-const char *OleUIInsertObjectInfoStr = "OleUIInsertObjectInfoStr";
+static const char OleUIInsertObjectInfoStr[] = "OleUIInsertObjectInfoStr";
 
 /***********************************************************************
  *           OleUIInsertObjectA (OLEDLG.3)

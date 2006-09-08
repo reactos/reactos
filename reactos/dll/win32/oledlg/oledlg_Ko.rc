@@ -51,5 +51,5 @@ STRINGTABLE DISCARDABLE
   IDS_RESULTFILEOBJDESC	"작성한 풀그림을 사용하여 활성화시킬수 있는 객체를 문서파일 내용으로 삽입하시오."
   IDS_BROWSE            "찾기"
   IDS_NOTOLEMOD         "이 파일은 올바른 OLE모듈이 아닌거로 보입니다. OLE컨트롤을 등록할수 없습니다."
-  IDS_NOTOLEMODCAPTION  "콘트롤 추가"
+  IDS_NOTOLEMODCAPTION  "컨트롤 더하기"
 }
