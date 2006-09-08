@@ -128,7 +128,7 @@ extern VOID rh_timer_svc_reset_port_completion(PUSB_DEV dev, PVOID context);
 
 extern VOID rh_timer_svc_int_completion(PUSB_DEV dev, PVOID context);
 
-ULONG debug_level = DBGLVL_ULTRA;//DBGLVL_MAXIMUM;
+ULONG debug_level = DBGLVL_MAXIMUM;
 PDRIVER_OBJECT usb_driver_obj = NULL;
 extern USB_DEV_MANAGER g_dev_mgr;
 
@@ -1284,6 +1284,8 @@ uhci_process_pending_endp(PUHCI_DEV uhci)
             {
                 //abort these URBs
                 InsertTailList(&abort_list, (LIST_ENTRY *) purb);
+                uhci_dbg_print(DBGLVL_MEDIUM, ("uhci_process_pending_endp(): unable to submit urb 0x%x, "
+                    "with status=0x%x\n", purb, can_submit));
                 purb->status = can_submit;
             }
 
@@ -1330,7 +1332,12 @@ uhci_submit_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     USE_BASIC_IRQL;
 
     if (uhci == NULL || pdev == NULL || pendp == NULL || purb == NULL)
+    {
+        uhci_dbg_print(DBGLVL_MEDIUM,
+                   ("uhci_submit_urb(): uhci=0x%x, pdev=0x%x, pendp=0x%x, purb=0x%x "
+                   "called with invalid param!\n", uhci, pdev, pendp, purb));
         return STATUS_INVALID_PARAMETER;
+    }
 
     lock_pending_endp_list(&uhci->pending_endp_list_lock);
     lock_dev(pdev, TRUE);
@@ -1356,6 +1363,10 @@ uhci_submit_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 
     if (dev_from_endp(purb->pendp) != pdev)
     {
+        uhci_dbg_print(DBGLVL_MEDIUM,
+                   ("uhci_submit_urb(): dev_from_endp=0x%x\n, pdev=0x%x, pendp=0x%x "
+                   "devices mismatch!\n", dev_from_endp(purb->pendp), pdev, pendp));
+
         status = purb->status = STATUS_INVALID_PARAMETER;
         goto LBL_OUT;
     }
@@ -2234,13 +2245,21 @@ uhci_internal_submit_int(PUHCI_DEV uhci, PURB urb)
     BOOLEAN ret;
 
     if (uhci == NULL || urb == NULL)
+    {
+        uhci_dbg_print(DBGLVL_MEDIUM,
+                   ("uhci_internal_submit_int(): uhci=0x%x, urb=0x%x "
+                    "returning STATUS_INVALID_PARAMETER!\n", uhci, urb));
         return STATUS_INVALID_PARAMETER;
+    }
 
     toggle = (urb->pendp->flags & USB_ENDP_FLAG_DATATOGGLE) ? TRUE : FALSE;
     max_packet_size = endp_max_packet_size(urb->pendp);
 
     if (max_packet_size < urb->data_length || max_packet_size == 0 || max_packet_size > 64)
     {
+        uhci_dbg_print(DBGLVL_MEDIUM,
+                   ("uhci_internal_submit_int(): max_packet_size=%d, urb->data_length=%d "
+                    "returning STATUS_INVALID_PARAMETER!\n", max_packet_size, urb->data_length));
         return STATUS_INVALID_PARAMETER;
     }
 
