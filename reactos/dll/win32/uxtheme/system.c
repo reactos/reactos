@@ -25,8 +25,8 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "winuser.h"
 #include "wingdi.h"
+#include "winuser.h"
 #include "winreg.h"
 #include "uxtheme.h"
 #include "tmschema.h"
@@ -57,17 +57,17 @@ static const WCHAR szDllName[] = {'D','l','l','N','a','m','e','\0'};
 static const WCHAR szIniDocumentation[] = {'d','o','c','u','m','e','n','t','a','t','i','o','n','\0'};
 
 HINSTANCE hDllInst;
-
-DWORD dwThemeAppProperties = STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS;
-ATOM atWindowTheme;
-ATOM atSubAppName;
-ATOM atSubIdList;
 ATOM atDialogThemeEnabled;
 
-BOOL bThemeActive = FALSE;
-WCHAR szCurrentTheme[MAX_PATH];
-WCHAR szCurrentColor[64];
-WCHAR szCurrentSize[64];
+static DWORD dwThemeAppProperties = STAP_ALLOW_NONCLIENT | STAP_ALLOW_CONTROLS;
+static ATOM atWindowTheme;
+static ATOM atSubAppName;
+static ATOM atSubIdList;
+
+static BOOL bThemeActive = FALSE;
+static WCHAR szCurrentTheme[MAX_PATH];
+static WCHAR szCurrentColor[64];
+static WCHAR szCurrentSize[64];
 
 /***********************************************************************/
 
@@ -249,6 +249,12 @@ static const WCHAR strColorKey[] =
     { 'C','o','n','t','r','o','l',' ','P','a','n','e','l','\\',
       'C','o','l','o','r','s',0 };
 static const WCHAR keyFlatMenus[] = { 'F','l','a','t','M','e','n','u', 0};
+static const WCHAR keyGradientCaption[] = { 'G','r','a','d','i','e','n','t',
+                                            'C','a','p','t','i','o','n', 0 };
+static const WCHAR keyNonClientMetrics[] = { 'N','o','n','C','l','i','e','n','t',
+                                             'M','e','t','r','i','c','s',0 };
+static const WCHAR keyIconTitleFont[] = { 'I','c','o','n','T','i','t','l','e',
+					  'F','o','n','t',0 };
 
 static const struct BackupSysParam
 {
@@ -257,6 +263,7 @@ static const struct BackupSysParam
 } backupSysParams[] = 
 {
     {SPI_GETFLATMENU, SPI_SETFLATMENU, keyFlatMenus},
+    {SPI_GETGRADIENTCAPTIONS, SPI_SETGRADIENTCAPTIONS, keyGradientCaption},
     {-1, -1, 0}
 };
 
@@ -298,8 +305,13 @@ static void UXTHEME_BackupSystemMetrics(void)
                          0, 0, 0, KEY_ALL_ACCESS,
                          0, &hKey, 0) == ERROR_SUCCESS)
     {
+        NONCLIENTMETRICSW ncm;
+        LOGFONTW iconTitleFont;
+        
+        /* back up colors */
         save_sys_colors (hKey);
     
+        /* back up "other" settings */
         while (bsp->spiGet >= 0)
         {
             DWORD value;
@@ -310,6 +322,18 @@ static void UXTHEME_BackupSystemMetrics(void)
         
             bsp++;
         }
+        
+	/* back up non-client metrics */
+        memset (&ncm, 0, sizeof (ncm));
+        ncm.cbSize = sizeof (ncm);
+        SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, sizeof (ncm), &ncm, 0);
+        RegSetValueExW (hKey, keyNonClientMetrics, 0, REG_BINARY, (LPBYTE)&ncm,
+            sizeof (ncm));
+	memset (&iconTitleFont, 0, sizeof (iconTitleFont));
+	SystemParametersInfoW (SPI_GETICONTITLELOGFONT, sizeof (iconTitleFont),
+	    &iconTitleFont, 0);
+	RegSetValueExW (hKey, keyIconTitleFont, 0, REG_BINARY, 
+	    (LPBYTE)&iconTitleFont, sizeof (iconTitleFont));
     
         RegCloseKey (hKey);
     }
@@ -375,16 +399,43 @@ static void UXTHEME_RestoreSystemMetrics(void)
             bsp++;
         }
     
+        /* read backed-up non-client metrics */
+        {
+            NONCLIENTMETRICSW ncm;
+            LOGFONTW iconTitleFont;
+            DWORD count = sizeof(ncm);
+            DWORD type;
+            
+	    if (RegQueryValueExW (hKey, keyNonClientMetrics, 0,
+		&type, (LPBYTE)&ncm, &count) == ERROR_SUCCESS)
+	    {
+		SystemParametersInfoW (SPI_SETNONCLIENTMETRICS, 
+		    count, (LPVOID)&ncm, SPIF_UPDATEINIFILE);
+	    }
+	    
+            count = sizeof(iconTitleFont);
+            
+	    if (RegQueryValueExW (hKey, keyIconTitleFont, 0,
+		&type, (LPBYTE)&iconTitleFont, &count) == ERROR_SUCCESS)
+	    {
+		SystemParametersInfoW (SPI_SETICONTITLELOGFONT, 
+		    count, (LPVOID)&iconTitleFont, SPIF_UPDATEINIFILE);
+	    }
+	}
       
         RegCloseKey (hKey);
     }
 }
 
 /* Make system settings persistent, so they're in effect even w/o uxtheme 
- * loaded */
+ * loaded.
+ * For efficiency reasons, only the last SystemParametersInfoW sets
+ * SPIF_SENDWININICHANGE */
 static void UXTHEME_SaveSystemMetrics(void)
 {
     const struct BackupSysParam* bsp = backupSysParams;
+    NONCLIENTMETRICSW ncm;
+    LOGFONTW iconTitleFont;
 
     save_sys_colors (HKEY_CURRENT_USER);
 
@@ -398,7 +449,20 @@ static void UXTHEME_SaveSystemMetrics(void)
     
         bsp++;
     }
+    
+    memset (&ncm, 0, sizeof (ncm));
+    ncm.cbSize = sizeof (ncm);
+    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, 
+	sizeof (ncm), (LPVOID)&ncm, 0);
+    SystemParametersInfoW (SPI_SETNONCLIENTMETRICS, 
+	sizeof (ncm), (LPVOID)&ncm, SPIF_UPDATEINIFILE);
 
+    memset (&iconTitleFont, 0, sizeof (iconTitleFont));
+    SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 
+	sizeof (iconTitleFont), (LPVOID)&iconTitleFont, 0);
+    SystemParametersInfoW (SPI_SETICONTITLELOGFONT, 
+	sizeof (iconTitleFont), (LPVOID)&iconTitleFont, 
+	SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 }
 
 /***********************************************************************
@@ -412,7 +476,7 @@ HRESULT UXTHEME_SetActiveTheme(PTHEME_FILE tf)
     WCHAR tmp[2];
     HRESULT hr;
 
-    if(tf) UXTHEME_BackupSystemMetrics();
+    if(tf && !bThemeActive) UXTHEME_BackupSystemMetrics();
     hr = MSSTYLES_SetActiveTheme(tf, TRUE);
     if(FAILED(hr))
         return hr;
