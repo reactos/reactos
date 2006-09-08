@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -210,4 +210,72 @@ LPVOID WINAPI NPSNotifyGetContextA( NOTIFYCALLBACK pfNotifyCallBack )
 {
     FIXME( "(%p): stub\n", pfNotifyCallBack );
     return NULL;
+}
+
+/*****************************************************************
+ *  PwdGetPasswordStatusA [MPR.@]
+ */
+DWORD WINAPI PwdGetPasswordStatusA( LPCSTR lpProvider, DWORD dwIndex, LPDWORD status )
+{
+    FIXME("%s %ld %p\n", debugstr_a(lpProvider), dwIndex, status );
+    *status = 0;
+    return WN_SUCCESS;
+}
+
+/*****************************************************************
+ *  PwdGetPasswordStatusA [MPR.@]
+ */
+DWORD WINAPI PwdGetPasswordStatusW( LPCWSTR lpProvider, DWORD dwIndex, LPDWORD status )
+{
+    FIXME("%s %ld %p\n", debugstr_w(lpProvider), dwIndex, status );
+    *status = 0;
+    return WN_SUCCESS;
+}
+
+/*****************************************************************
+ *  PwdSetPasswordStatusA [MPR.@]
+ */
+DWORD WINAPI PwdSetPasswordStatusA( LPCSTR lpProvider, DWORD dwIndex, DWORD status )
+{
+    FIXME("%s %ld %ld\n", debugstr_a(lpProvider), dwIndex, status );
+    return WN_SUCCESS;
+}
+
+/*****************************************************************
+ *  PwdSetPasswordStatusW [MPR.@]
+ */
+DWORD WINAPI PwdSetPasswordStatusW( LPCWSTR lpProvider, DWORD dwIndex, DWORD status )
+{
+    FIXME("%s %ld %ld\n", debugstr_w(lpProvider), dwIndex, status );
+    return WN_SUCCESS;
+}
+
+typedef struct _CHANGEPWDINFOA {
+    LPSTR lpUsername;
+    LPSTR lpPassword;
+    DWORD cbPassword;
+} CHANGEPWDINFOA, *LPCHANGEPWDINFOA;
+
+typedef struct _CHANGEPWDINFOW {
+    LPWSTR lpUsername;
+    LPWSTR lpPassword;
+    DWORD cbPassword;
+} CHANGEPWDINFOW, *LPCHANGEPWDINFOW;
+
+/*****************************************************************
+ *  PwdChangePasswordA [MPR.@]
+ */
+DWORD WINAPI PwdChangePasswordA( LPCSTR lpProvider, HWND hWnd, DWORD flags, LPCHANGEPWDINFOA info )
+{
+    FIXME("%s %p %lx %p\n", debugstr_a(lpProvider), hWnd, flags, info );
+    return WN_SUCCESS;
+}
+
+/*****************************************************************
+ *  PwdChangePasswordA [MPR.@]
+ */
+DWORD WINAPI PwdChangePasswordW( LPCWSTR lpProvider, HWND hWnd, DWORD flags, LPCHANGEPWDINFOW info )
+{
+    FIXME("%s %p %lx %p\n", debugstr_w(lpProvider), hWnd, flags, info );
+    return WN_SUCCESS;
 }

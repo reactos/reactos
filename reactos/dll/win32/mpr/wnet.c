@@ -16,13 +16,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
-#include "winuser.h"
 #include "winnls.h"
 #include "winnetwk.h"
 #include "npapi.h"
@@ -654,7 +653,7 @@ DWORD WINAPI WNetOpenEnumA( DWORD dwScope, DWORD dwType, DWORD dwUsage,
             if (ret == WN_SUCCESS)
                 ret = WNetOpenEnumW(dwScope, dwType, dwUsage, lpNetWide,
                  lphEnum);
-            if (allocated && lpNetWide)
+            if (allocated)
                 HeapFree(GetProcessHeap(), 0, lpNetWide);
         }
         else
@@ -1712,11 +1711,36 @@ DWORD WINAPI WNetGetUniversalNameA ( LPCSTR lpLocalPath, DWORD dwInfoLevel,
 DWORD WINAPI WNetGetUniversalNameW ( LPCWSTR lpLocalPath, DWORD dwInfoLevel,
                                      LPVOID lpBuffer, LPDWORD lpBufferSize )
 {
+    LPUNIVERSAL_NAME_INFOW uniw;
+    DWORD err, len;
+
     FIXME( "(%s, 0x%08lX, %p, %p): stub\n",
            debugstr_w(lpLocalPath), dwInfoLevel, lpBuffer, lpBufferSize);
 
-    SetLastError(WN_NO_NETWORK);
-    return WN_NO_NETWORK;
+    switch (dwInfoLevel)
+    {
+    case UNIVERSAL_NAME_INFO_LEVEL:
+        err = WN_MORE_DATA;
+        len = sizeof (*uniw) + lstrlenW(lpLocalPath);
+        if (*lpBufferSize <= len)
+            break;
+        uniw = lpBuffer;
+        uniw->lpUniversalName = (LPWSTR) &uniw[1];
+        lstrcpyW(uniw->lpUniversalName, lpLocalPath);
+        *lpBufferSize = len;
+        err = WN_NO_ERROR;
+        break;
+
+    case REMOTE_NAME_INFO_LEVEL:
+        err = WN_NO_NETWORK;
+        break;
+
+    default:
+        err = WN_BAD_VALUE;
+    }
+
+    SetLastError(err);
+    return err;
 }
 
 
