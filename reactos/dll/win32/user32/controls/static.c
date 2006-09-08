@@ -746,14 +746,12 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
             iconRect.top = (rc.bottom - rc.top) / 2 - bm.bmHeight / 2;
             iconRect.right = iconRect.left + bm.bmWidth;
             iconRect.bottom = iconRect.top + bm.bmHeight;
-            FillRect( hdc, &iconRect, hbrush ); /* Wine source has &rc */
         }
         else
-        {
-            FillRect( hdc, &rc, hbrush );
-            DrawIconEx( hdc, rc.left, rc.top, hIcon, rc.right - rc.left,
-                        rc.bottom - rc.top, 0, NULL, DI_NORMAL );
-        }
+            iconRect = rc;
+        FillRect( hdc, &rc, hbrush );
+        DrawIconEx( hdc, iconRect.left, iconRect.top, hIcon, iconRect.right - iconRect.left,
+                    iconRect.bottom - iconRect.top, 0, NULL, DI_NORMAL );
     }
 }
 
