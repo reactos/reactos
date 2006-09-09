@@ -200,9 +200,7 @@ int SetIcon (int id, int icon)
 	item.iSelectedImage = icon;
 	item.mask = TVIF_IMAGE | TVIF_SELECTEDIMAGE;
 
-	TreeView_SetItem(hTree, &item);
-
-    return 1;
+	return (int)TreeView_SetItem(hTree, &item);
 }
 
 // Set the Icons
@@ -320,9 +318,9 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 				if(item != NULL)
 				{
-					// mark the one as seleacted
+					// mark the one as selected
 					SendMessage (hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)item);
-					TreeView_EnsureVisible (hTree, item);
+					(BOOL)TreeView_EnsureVisible (hTree, item);
 				}
 
 				// create the context menu

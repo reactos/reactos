@@ -90,10 +90,10 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
                               RUpdate.right, RUpdate.bottom);
 
             // fill the client area with the background brush
-            //HBRUSH HBrush =
-               //reinterpret_cast<HBRUSH>
+            /*HBRUSH HBrush =
+               reinterpret_cast<HBRUSH>
                   (HBRUSH)(GetClassLong(HWnd, GCL_HBRBACKGROUND)
-                  );
+                  );*/
             FillRect(Hdc, &RClient, NULL);
 
             // render the persistent text
