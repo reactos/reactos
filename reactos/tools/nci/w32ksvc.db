@@ -390,6 +390,7 @@ NtUserGetKeyboardLayoutName             1
 NtUserGetKeyboardState                  1
 NtUserGetKeyNameText                    3
 NtUserGetKeyState                       1
+NtUserGetLastInputInfo                  1
 NtUserGetListBoxInfo                    1
 NtUserGetMenuBarInfo                    4
 NtUserGetMenuIndex                      2
