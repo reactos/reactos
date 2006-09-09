@@ -9,7 +9,7 @@ namespace TechBot.Library
 		
 		private const string SpecialHexCharacters = "ABCDEF";
 
-		private bool IsSpecialHexCharacter(char ch)
+		private static bool IsSpecialHexCharacter(char ch)
 		{
 			foreach (char specialChar in SpecialHexCharacters)
 			{
@@ -19,7 +19,7 @@ namespace TechBot.Library
 			return false;
 		}
 
-		private bool HasSpecialHexCharacters(string s)
+		private static bool HasSpecialHexCharacters(string s)
 		{
 			foreach (char ch in s)
 			{
@@ -35,7 +35,7 @@ namespace TechBot.Library
 			{
 				Error = false;
 				bool useHex = false;
-				if (s.StartsWith("0x"))
+				if (s.StartsWith("0x", StringComparison.InvariantCultureIgnoreCase))
 				{
 					s = s.Substring(2);
 					useHex = true;

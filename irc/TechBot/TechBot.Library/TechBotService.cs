@@ -49,9 +49,9 @@ namespace TechBot.Library
 		{
 			commands.Add(new HelpCommand(serviceOutput,
 			                             commands));
-			commands.Add(new ApiCommand(serviceOutput,
+			/*commands.Add(new ApiCommand(serviceOutput,
 			                            chmPath,
-			                            mainChm));
+			                            mainChm));*/
 			commands.Add(new NtStatusCommand(serviceOutput,
 			                                 ntstatusXml));
 			commands.Add(new WinerrorCommand(serviceOutput,

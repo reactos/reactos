@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" ?>
 <HresultList>
+	<Hresult text="S_OK" value="00000000" />
+	<Hresult text="S_FALSE" value="00000001" />
 	<Hresult text="STG_S_CONVERTED" value="00030200" />
 	<Hresult text="STG_S_BLOCK" value="00030201" />
 	<Hresult text="STG_S_RETRYNOW" value="00030202" />

@@ -6,14 +6,12 @@ namespace TechBot.Library
 	public class HresultCommand : BaseCommand, ICommand
 	{
 		private IServiceOutput serviceOutput;
-		private string hresultXml;
 		private XmlDocument hresultXmlDocument;
 
 		public HresultCommand(IServiceOutput serviceOutput,
 		                      string hresultXml)
 		{
 			this.serviceOutput = serviceOutput;
-			this.hresultXml = hresultXml;
 			hresultXmlDocument = new XmlDocument();
 			hresultXmlDocument.Load(hresultXml);
 		}

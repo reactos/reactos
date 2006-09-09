@@ -2,8 +2,69 @@
 <NtstatusList>
 	<Ntstatus text="STATUS_SUCCESS" value="00000000"></Ntstatus>
 	<Ntstatus text="STATUS_WAIT_0" value="00000000"></Ntstatus>
-	<Ntstatus text="STATUS_WAIT_1" value="00000001"></Ntstatus>
-	<Ntstatus text="STATUS_WAIT_63" value="0000003F"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 1" value="00000001"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 2" value="00000002"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 3" value="00000003"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 4" value="00000004"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 5" value="00000005"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 6" value="00000006"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 7" value="00000007"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 8" value="00000008"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 9" value="00000009"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 10" value="0000000A"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 11" value="0000000B"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 12" value="0000000C"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 13" value="0000000D"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 14" value="0000000E"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 15" value="0000000F"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 16" value="00000010"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 17" value="00000011"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 18" value="00000012"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 19" value="00000013"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 20" value="00000014"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 21" value="00000015"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 22" value="00000016"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 23" value="00000017"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 24" value="00000018"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 25" value="00000019"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 26" value="0000001A"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 27" value="0000001B"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 28" value="0000001C"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 29" value="0000001D"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 30" value="0000001E"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 31" value="0000001F"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 32" value="00000020"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 33" value="00000021"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 34" value="00000022"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 35" value="00000023"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 36" value="00000024"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 37" value="00000025"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 38" value="00000026"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 39" value="00000027"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 40" value="00000028"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 41" value="00000029"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 42" value="0000002A"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 43" value="0000002B"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 44" value="0000002C"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 45" value="0000002D"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 46" value="0000002E"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 47" value="0000002F"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 48" value="00000030"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 49" value="00000031"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 50" value="00000032"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 51" value="00000033"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 52" value="00000034"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 53" value="00000035"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 54" value="00000036"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 55" value="00000037"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 56" value="00000038"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 57" value="00000039"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 58" value="0000003A"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 59" value="0000003B"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 60" value="0000003C"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 61" value="0000003D"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 62" value="0000003E"></Ntstatus>
+	<Ntstatus text="STATUS_WAIT_0 + 63" value="0000003F"></Ntstatus>
 	<Ntstatus text="STATUS_ABANDONED" value="00000080"></Ntstatus>
 	<Ntstatus text="STATUS_ABANDONED_WAIT_0" value="00000080"></Ntstatus>
 	<Ntstatus text="STATUS_ABANDONED_WAIT_63" value="000000BF"></Ntstatus>
