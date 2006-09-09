@@ -33,13 +33,13 @@ TUIDisplayStatusMessage(
 	TRACE("TUIDisplayStatusMessage(%ws)\n", pMessage);
 
 	return
-		WriteConsole(
+		WriteConsoleW(
 			GetStdHandle(STD_OUTPUT_HANDLE),
 			pMessage,
 			wcslen(pMessage),
 			&result,
 			NULL) &&
-		WriteConsole(
+		WriteConsoleW(
 			GetStdHandle(STD_OUTPUT_HANDLE),
 			newLine,
 			wcslen(newLine),
@@ -66,7 +66,7 @@ DisplayResourceText(
 
 	if (!LoadStringW(hDllInstance, uIdResourceText, Prompt, 256))
 		return FALSE;
-	if (!WriteConsole(
+	if (!WriteConsoleW(
 		GetStdHandle(STD_OUTPUT_HANDLE),
 		Prompt, wcslen(Prompt),
 		&count, NULL))
@@ -122,27 +122,64 @@ ReadString(
 	IN BOOL ShowString)
 {
 	DWORD count, i;
+	WCHAR charToDisplay[] = { 0, UNICODE_NULL };
 
-	if (!SetConsoleMode(
-		GetStdHandle(STD_INPUT_HANDLE),
-		ShowString ? ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT: ENABLE_LINE_INPUT))
-	{
+	if (!SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), 0))
 		return FALSE;
-	}
+
+	if (!FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE)))
+		return FALSE;
 
 	if (!DisplayResourceText(uIdResourcePrompt, FALSE))
 		return FALSE;
 
 	i = 0;
-	do
+	for (;;)
 	{
-		if (!ReadConsole(GetStdHandle(STD_INPUT_HANDLE), &Buffer[i], 1, &count, NULL))
+		WCHAR readChar;
+		if (!ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE), &readChar, 1, &count, NULL))
 			return FALSE;
-		i++;
+		if (readChar == '\r' || readChar == '\n')
+		{
+			/* End of string */
+			charToDisplay[0] = L'\n';
+			WriteConsoleW(
+				GetStdHandle(STD_OUTPUT_HANDLE),
+				charToDisplay,
+				wcslen(charToDisplay),
+				&count,
+				NULL);
+			break;
+		}
+		if (ShowString)
+		{
+			/* Display the char */
+			charToDisplay[0] = readChar;
+			WriteConsoleW(
+				GetStdHandle(STD_OUTPUT_HANDLE),
+				charToDisplay,
+				wcslen(charToDisplay),
+				&count,
+				NULL);
+		}
+		Buffer[i++] = readChar;
 		/* FIXME: buffer overflow if the user writes too many chars! */
 		/* FIXME: handle backspace */
-	} while (Buffer[i - 1] != '\n');
-	Buffer[i - 1] = 0;
+	}
+	Buffer[i] = UNICODE_NULL;
+
+	if (!ShowString)
+	{
+		/* Still display the \n */
+		static LPCWSTR newLine = L"\n";
+		DWORD result;
+		WriteConsoleW(
+			GetStdHandle(STD_OUTPUT_HANDLE),
+			newLine,
+			wcslen(newLine),
+			&result,
+			NULL);
+	}
 	return TRUE;
 }
 
