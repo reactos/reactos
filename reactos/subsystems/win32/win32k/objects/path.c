@@ -189,13 +189,63 @@ NtGdiGetMiterLimit(
 
 INT
 STDCALL
-NtGdiGetPath(HDC  hDC,
-                 LPPOINT  Points,
-                 LPBYTE  Types,
-                 INT  nSize)
+NtGdiGetPath(
+   HDC hDC,
+   LPPOINT Points,
+   LPBYTE Types,
+   INT nSize)
 {
-  UNIMPLEMENTED;
-  return 0;
+   INT ret = -1;
+   GdiPath *pPath;
+   
+   DPRINT("Enter NtGdiGetPath\n");
+  
+   DC *dc = DC_LockDc(hDC);
+   if(!dc)
+   {
+      DPRINT1("Can't lock dc!\n");
+      return -1;
+   }
+
+   pPath = &dc->w.path;
+
+   if(pPath->state != PATH_Closed)
+   {
+      SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+      goto done;
+   }
+ 
+   if(nSize==0)
+   {
+      ret = pPath->numEntriesUsed;
+   }
+   else if(nSize<pPath->numEntriesUsed)
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      goto done;
+   }
+   else
+   {
+      _SEH_TRY
+      {
+         RtlCopyMemory(Points, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
+         RtlCopyMemory(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
+ 
+         /* Convert the points to logical coordinates */
+         IntDPtoLP(dc, Points, pPath->numEntriesUsed);
+         
+         ret = pPath->numEntriesUsed;
+      }
+      _SEH_HANDLE
+      {
+         SetLastNtError(_SEH_GetExceptionCode());
+      }
+      _SEH_END
+   }
+ 
+done:   
+   DC_UnlockDc(dc);
+   return ret;
 }
 
 HRGN
