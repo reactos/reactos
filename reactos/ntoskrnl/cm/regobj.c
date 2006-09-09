@@ -482,6 +482,9 @@ CmiObjectDelete(PVOID DeletedObject)
 {
   PKEY_OBJECT ParentKeyObject;
   PKEY_OBJECT KeyObject;
+  REG_KEY_HANDLE_CLOSE_INFORMATION KeyHandleCloseInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
+  NTSTATUS Status;
 
   DPRINT("Delete key object (%p)\n", DeletedObject);
 
@@ -489,6 +492,17 @@ CmiObjectDelete(PVOID DeletedObject)
   ParentKeyObject = KeyObject->ParentKey;
 
   ObReferenceObject (ParentKeyObject);
+
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  KeyHandleCloseInfo.Object = (PVOID)KeyObject;
+  Status = CmiCallRegisteredCallbacks(RegNtPreKeyHandleClose, &KeyHandleCloseInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostKeyHandleClose, &PostOperationInfo);
+      ObDereferenceObject (ParentKeyObject);
+      return;
+    }
 
   /* Acquire hive lock */
   KeEnterCriticalRegion();
@@ -535,6 +549,8 @@ CmiObjectDelete(PVOID DeletedObject)
 
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
+  PostOperationInfo.Status = STATUS_SUCCESS;
+  CmiCallRegisteredCallbacks(RegNtPostKeyHandleClose, &PostOperationInfo);
 }
 
 
