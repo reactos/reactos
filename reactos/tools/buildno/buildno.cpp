@@ -3,6 +3,7 @@
  * buildno - Generate the build number for ReactOS
  *
  * Copyright (c) 1999,2000 Emanuele Aliberti
+ * Copyright (c) 2006 Christoph von Wittich
  *
  * The build number is the day on which the build took
  * place, as YYYYMMDD
@@ -16,6 +17,8 @@
  *
  * REVISIONS
  * ---------
+ * 2006-09-09 (cwittich)
+ *  read binary entries files from SVN 1.4.x
  * 2000-01-22 (ea)
  * 	Fixed bugs: tm_year is (current_year - 1900),
  * 	tm_month is 0-11 not 1-12 and code ignored TZ.
@@ -175,6 +178,32 @@ GetRev(void)
 {
   static char Unknown[] = "UNKNOWN";
   static char Revision[10]; /* 999999999 revisions should be enough for everyone... */
+
+  /* SVN 1.4.x */
+  FILE	*fp = NULL;
+  char ch;
+  size_t count = 0, chars = 0;
+  fp = fopen(".svn/entries", "r");
+  if (fp != NULL)
+  {
+    if (fgetc(fp) == 56) /* some kind of header? */
+    {
+      while((ch=fgetc(fp)) != EOF)
+      {
+        if (ch == 10) count++; /* seems to used as a seperator */
+        if (count > 3)
+          break;
+        if ((count == 3) && (chars < sizeof(Revision)))
+        {
+          if (chars != 0)
+            Revision[chars - 1] = ch;
+          chars++;
+        }
+      }
+      fclose(fp);
+      return Revision;
+    }
+  }
 
   try
     {
