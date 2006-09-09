@@ -1380,7 +1380,7 @@ BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxW
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 
 BOOL
-IntDrawSysMenuButton(
+UserDrawSysMenuButton(
    PWINDOW_OBJECT pWnd, 
    HDC hDc, 
    LPRECT lpRc, 
@@ -1421,7 +1421,7 @@ IntDrawSysMenuButton(
 }
 
 BOOL
-IntDrawCaptionText(HDC hDc,
+UserDrawCaptionText(HDC hDc,
    const PUNICODE_STRING Text,
    const LPRECT lpRc,
    UINT uFlags)
@@ -1672,7 +1672,7 @@ BOOL UserDrawCaption(
    {
       r.top ++;
       r.left -= --IconWidth;
-      IntDrawSysMenuButton(pWnd, hMemDc, &r, FALSE);
+      UserDrawSysMenuButton(pWnd, hMemDc, &r, FALSE);
       r.left += IconWidth;
       r.top --;
    }
@@ -1705,7 +1705,7 @@ BOOL UserDrawCaption(
          }
       }
 
-      IntDrawCaptionText(hMemDc, &pWnd->WindowName, &r, uFlags);
+      UserDrawCaptionText(hMemDc, &pWnd->WindowName, &r, uFlags);
    } 
 
    if(!NtGdiBitBlt(hDc, lpRc->left, lpRc->top, 
@@ -1737,13 +1737,7 @@ NtUserDrawCaption(HWND hWnd,
 {
    PWINDOW_OBJECT pWnd;
    RECT SafeRect;
-   BOOL Ret;
-     
-   if(!NT_SUCCESS(MmCopyFromCaller(&SafeRect, lpRc, sizeof(RECT))))
-   {
-      DPRINT1("%s: MmCopyFromCaller failed!", __FUNCTION__); 
-      return FALSE;
-   }
+   BOOL Ret = FALSE;
    
    UserEnterExclusive();
    
@@ -1753,7 +1747,17 @@ NtUserDrawCaption(HWND hWnd,
       return FALSE;
    }
    
-   Ret = UserDrawCaption(pWnd, hDc, &SafeRect, uFlags);
+   _SEH_TRY
+   {
+      ProbeForRead(lpRc, sizeof(RECT), sizeof(ULONG));
+      RtlCopyMemory(&SafeRect, lpRc, sizeof(RECT));
+      Ret = UserDrawCaption(pWnd, hDc, &SafeRect, uFlags);
+   }
+   _SEH_HANDLE
+   {
+      SetLastNtError(_SEH_GetExceptionCode());
+   }
+   _SEH_END;
    
    UserLeave();
    return Ret;
