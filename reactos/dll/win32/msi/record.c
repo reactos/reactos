@@ -43,7 +43,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 #define MSIFIELD_NULL   0
 #define MSIFIELD_INT    1
-#define MSIFIELD_STR    2
 #define MSIFIELD_WSTR   3
 #define MSIFIELD_STREAM 4
 
@@ -152,6 +151,53 @@ static BOOL string2intW( LPCWSTR str, int *out )
     *out = x; 
 
     return TRUE;
+}
+
+UINT MSI_RecordCopyField( MSIRECORD *in_rec, unsigned int in_n,
+                          MSIRECORD *out_rec, unsigned int out_n )
+{
+    UINT r = ERROR_SUCCESS;
+
+    msiobj_lock( &in_rec->hdr );
+
+    if ( in_n > in_rec->count || out_n > out_rec->count )
+        r = ERROR_FUNCTION_FAILED;
+    else if ( in_rec != out_rec || in_n != out_n )
+    {
+        LPWSTR str;
+        MSIFIELD *in, *out;
+
+        in = &in_rec->fields[in_n];
+        out = &out_rec->fields[out_n];
+
+        switch ( in->type )
+        {
+        case MSIFIELD_NULL:
+            break;
+        case MSIFIELD_INT:
+            out->u.iVal = in->u.iVal;
+            break;
+        case MSIFIELD_WSTR:
+            str = strdupW( in->u.szwVal );
+            if ( !str )
+                r = ERROR_OUTOFMEMORY;
+            else
+                out->u.szwVal = str;
+            break;
+        case MSIFIELD_STREAM:
+            IStream_AddRef( in->u.stream );
+            out->u.stream = in->u.stream;
+            break;
+        default:
+            ERR("invalid field type %d\n", in->type);
+        }
+        if (r == ERROR_SUCCESS)
+            out->type = in->type;
+    }
+
+    msiobj_unlock( &in_rec->hdr );
+
+    return r;
 }
 
 int MSI_RecordGetInteger( MSIRECORD *rec, unsigned int iField)

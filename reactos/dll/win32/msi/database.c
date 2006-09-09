@@ -287,18 +287,144 @@ end:
     return r;
 }
 
+static UINT msi_export_record( HANDLE handle, MSIRECORD *row, UINT start )
+{
+    UINT i, count, len, r = ERROR_SUCCESS;
+    const char *sep;
+    char *buffer;
+    DWORD sz;
+
+    len = 0x100;
+    buffer = msi_alloc( len );
+    if ( !buffer )
+        return ERROR_OUTOFMEMORY;
+
+    count = MSI_RecordGetFieldCount( row );
+    for ( i=start; i<=count; i++ )
+    {
+        sz = len;
+        r = MSI_RecordGetStringA( row, i, buffer, &sz );
+        if (r == ERROR_MORE_DATA)
+        {
+            char *p = msi_realloc( buffer, sz + 1 );
+            if (!p)
+                break;
+            len = sz + 1;
+            buffer = p;
+        }
+        sz = len;
+        r = MSI_RecordGetStringA( row, i, buffer, &sz );
+        if (r != ERROR_SUCCESS)
+            break;
+
+        if (!WriteFile( handle, buffer, sz, &sz, NULL ))
+        {
+            r = ERROR_FUNCTION_FAILED;
+            break;
+        }
+
+        sep = (i < count) ? "\t" : "\r\n";
+        if (!WriteFile( handle, sep, strlen(sep), &sz, NULL ))
+        {
+            r = ERROR_FUNCTION_FAILED;
+            break;
+        }
+    }
+    msi_free( buffer );
+    return r;
+}
+
+static UINT msi_export_row( MSIRECORD *row, void *arg )
+{
+    return msi_export_record( arg, row, 1 );
+}
+
 UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
                LPCWSTR folder, LPCWSTR file )
 {
-    FIXME("%p %s %s %s\n", db, debugstr_w(table),
+    static const WCHAR query[] = {
+        's','e','l','e','c','t',' ','*',' ','f','r','o','m',' ','%','s',0 };
+    static const WCHAR szbs[] = { '\\', 0 };
+    MSIRECORD *rec = NULL;
+    MSIQUERY *view = NULL;
+    LPWSTR filename;
+    HANDLE handle;
+    UINT len, r;
+
+    TRACE("%p %s %s %s\n", db, debugstr_w(table),
           debugstr_w(folder), debugstr_w(file) );
 
     if( folder == NULL || file == NULL )
         return ERROR_INVALID_PARAMETER;
-   
-    return ERROR_CALL_NOT_IMPLEMENTED;
+
+    len = lstrlenW(folder) + lstrlenW(file) + 2;
+    filename = msi_alloc(len * sizeof (WCHAR));
+    if (!filename)
+        return ERROR_OUTOFMEMORY;
+
+    lstrcpyW( filename, folder );
+    lstrcatW( filename, szbs );
+    lstrcatW( filename, file );
+
+    handle = CreateFileW( filename, GENERIC_READ | GENERIC_WRITE, 0,
+                          NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+    msi_free( filename );
+    if (handle == INVALID_HANDLE_VALUE)
+        return ERROR_FUNCTION_FAILED;
+
+    r = MSI_OpenQuery( db, &view, query, table );
+    if (r == ERROR_SUCCESS)
+    {
+        /* write out row 1, the column names */
+        r = MSI_ViewGetColumnInfo(view, MSICOLINFO_NAMES, &rec);
+        if (r == ERROR_SUCCESS)
+        {
+            msi_export_record( handle, rec, 1 );
+            msiobj_release( &rec->hdr );
+        }
+
+        /* write out row 2, the column types */
+        r = MSI_ViewGetColumnInfo(view, MSICOLINFO_TYPES, &rec);
+        if (r == ERROR_SUCCESS)
+        {
+            msi_export_record( handle, rec, 1 );
+            msiobj_release( &rec->hdr );
+        }
+
+        /* write out row 3, the table name + keys */
+        r = MSI_DatabaseGetPrimaryKeys( db, table, &rec );
+        if (r == ERROR_SUCCESS)
+        {
+            MSI_RecordSetStringW( rec, 0, table );
+            msi_export_record( handle, rec, 0 );
+            msiobj_release( &rec->hdr );
+        }
+
+        /* write out row 4 onwards, the data */
+        r = MSI_IterateRecords( view, 0, msi_export_row, handle );
+        msiobj_release( &view->hdr );
+    }
+
+    CloseHandle( handle );
+
+    return r;
 }
 
+/***********************************************************************
+ * MsiExportDatabaseW        [MSI.@]
+ *
+ * Writes a file containing the table data as tab separated ASCII.
+ *
+ * The format is as follows:
+ *
+ * row1 : colname1 <tab> colname2 <tab> .... colnameN <cr> <lf>
+ * row2 : coltype1 <tab> coltype2 <tab> .... coltypeN <cr> <lf>
+ * row3 : tablename <tab> key1 <tab> key2 <tab> ... keyM <cr> <lf>
+ *
+ * Followed by the data, starting at row 1 with one row per line
+ *
+ * row4 : data <tab> data <tab> data <tab> ... data <cr> <lf>
+ */
 UINT WINAPI MsiDatabaseExportW( MSIHANDLE handle, LPCWSTR szTable,
                LPCWSTR szFolder, LPCWSTR szFilename )
 {

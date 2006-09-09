@@ -66,7 +66,6 @@ static MSIRECORD *INSERT_merge_record( UINT fields, column_info *vl, MSIRECORD *
 {
     MSIRECORD *merged;
     DWORD wildcard_count = 1, i;
-    const WCHAR *str;
 
     merged = MSI_CreateRecord( fields );
     for( i=1; i <= fields; i++ )
@@ -88,10 +87,7 @@ static MSIRECORD *INSERT_merge_record( UINT fields, column_info *vl, MSIRECORD *
         case EXPR_WILDCARD:
             if( !rec )
                 goto err;
-            if( MSI_RecordIsNull( rec, wildcard_count ) )
-                goto err;
-            str = MSI_RecordGetString( rec, wildcard_count );
-            MSI_RecordSetStringW( merged, i, str );
+            MSI_RecordCopyField( rec, wildcard_count, merged, i );
             wildcard_count++;
             break;
         default:
@@ -238,6 +234,14 @@ static const MSIVIEWOPS insert_ops =
     INSERT_find_matching_rows
 };
 
+static UINT count_column_info( column_info *ci )
+{
+    UINT n = 0;
+    for ( ; ci; ci = ci->next )
+        n++;
+    return n;
+}
+
 UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
                         column_info *columns, column_info *values, BOOL temp )
 {
@@ -246,6 +250,10 @@ UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     MSIVIEW *tv = NULL, *sv = NULL;
 
     TRACE("%p\n", iv );
+
+    /* there should be one value for each column */
+    if ( count_column_info( columns ) != count_column_info(values) )
+        return ERROR_BAD_QUERY_SYNTAX;
 
     r = TABLE_CreateView( db, table, &tv );
     if( r != ERROR_SUCCESS )
@@ -258,7 +266,7 @@ UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
             tv->ops->delete( tv );
         return r;
     }
-    
+
     iv = msi_alloc_zero( sizeof *iv );
     if( !iv )
         return ERROR_FUNCTION_FAILED;

@@ -37,7 +37,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
-#define HASH_SIZE 67
+#define HASH_SIZE 0x101
 
 typedef struct _msistring
 {

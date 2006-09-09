@@ -3488,32 +3488,25 @@ end:
     return rc;
 }
 
-static UINT msi_make_package_local( MSIPACKAGE *package, HKEY hkey )
+static UINT msi_get_local_package_name( LPWSTR path )
 {
-    static const WCHAR installerPathFmt[] = {
-        '%','s','\\','I','n','s','t','a','l','l','e','r','\\',0};
-    static const WCHAR fmt[] = {
-        '%','s','\\',
-        'I','n','s','t','a','l','l','e','r','\\',
-        '%','x','.','m','s','i',0};
-    static const WCHAR szOriginalDatabase[] =
-        {'O','r','i','g','i','n','a','l','D','a','t','a','b','a','s','e',0};
-    WCHAR windir[MAX_PATH], path[MAX_PATH], packagefile[MAX_PATH];
-    INT num, start;
-    LPWSTR msiFilePath;
-    BOOL r;
+    static const WCHAR szInstaller[] = {
+        '\\','I','n','s','t','a','l','l','e','r','\\',0};
+    static const WCHAR fmt[] = { '%','x','.','m','s','i',0};
+    DWORD time, len, i;
+    HANDLE handle;
 
-    /* copy the package locally */
-    num = GetTickCount() & 0xffff;
-    if (!num) 
-        num = 1;
-    start = num;
-    GetWindowsDirectoryW( windir, MAX_PATH );
-    snprintfW( packagefile, MAX_PATH, fmt, windir, num );
-    do 
+    time = GetTickCount();
+    GetWindowsDirectoryW( path, MAX_PATH );
+    lstrcatW( path, szInstaller );
+    CreateDirectoryW( path, NULL );
+
+    len = lstrlenW(path);
+    for (i=0; i<0x10000; i++)
     {
-        HANDLE handle = CreateFileW(packagefile,GENERIC_WRITE, 0, NULL,
-                                  CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
+        snprintfW( &path[len], MAX_PATH - len, fmt, (time+i)&0xffff );
+        handle = CreateFileW( path, GENERIC_WRITE, 0, NULL,
+                              CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
         if (handle != INVALID_HANDLE_VALUE)
         {
             CloseHandle(handle);
@@ -3521,13 +3514,23 @@ static UINT msi_make_package_local( MSIPACKAGE *package, HKEY hkey )
         }
         if (GetLastError() != ERROR_FILE_EXISTS &&
             GetLastError() != ERROR_SHARING_VIOLATION)
-            break;
-        if (!(++num & 0xffff)) num = 1;
-        sprintfW(packagefile,fmt,num);
-    } while (num != start);
+            return ERROR_FUNCTION_FAILED;
+    }
 
-    snprintfW( path, MAX_PATH, installerPathFmt, windir );
-    create_full_pathW(path);
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_make_package_local( MSIPACKAGE *package, HKEY hkey )
+{
+    static const WCHAR szOriginalDatabase[] =
+        {'O','r','i','g','i','n','a','l','D','a','t','a','b','a','s','e',0};
+    WCHAR packagefile[MAX_PATH];
+    LPWSTR msiFilePath;
+    UINT r;
+
+    r = msi_get_local_package_name( packagefile );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     TRACE("Copying to local package %s\n",debugstr_w(packagefile));
 

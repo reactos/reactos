@@ -117,6 +117,31 @@ static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR acti
     return TRUE;
 }
 
+/* stores the CustomActionData before the action:
+ *     [CustomActionData]Action
+ */
+LPWSTR msi_get_deferred_action(LPCWSTR action, LPWSTR actiondata)
+{
+    LPWSTR deferred;
+    DWORD len;
+
+    static const WCHAR begin[] = {'[',0};
+    static const WCHAR end[] = {']',0};
+
+    if (!actiondata)
+        return strdupW(action);
+
+    len = lstrlenW(action) + lstrlenW(actiondata) + 3;
+    deferred = msi_alloc(len * sizeof(WCHAR));
+
+    lstrcpyW(deferred, begin);
+    lstrcatW(deferred, actiondata);
+    lstrcatW(deferred, end);
+    lstrcatW(deferred, action);
+
+    return deferred;
+}
+
 UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
 {
     UINT rc = ERROR_SUCCESS;
@@ -128,7 +153,17 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
      '=',' ','\'','%','s','\'',0};
     UINT type;
     LPCWSTR source, target;
+    LPWSTR ptr, deferred_data = NULL;
+    LPWSTR action_copy = strdupW(action);
     WCHAR *deformated=NULL;
+
+    /* deferred action: [CustomActionData]Action */
+    if ((ptr = strchrW(action_copy, ']')))
+    {
+        deferred_data = action_copy + 1;
+        *ptr = '\0';
+        action = ptr + 1;
+    }
 
     row = MSI_QueryGetRecord( package->db, ExecSeqQuery, action );
     if (!row)
@@ -160,18 +195,22 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
         }
         if (!execute)
         {
+            LPWSTR actiondata = msi_dup_property(package, action);
+            LPWSTR deferred = msi_get_deferred_action(action, actiondata);
+
             if (type & msidbCustomActionTypeCommit)
             {
                 TRACE("Deferring Commit Action!\n");
-                schedule_action(package, COMMIT_SCRIPT, action);
+                schedule_action(package, COMMIT_SCRIPT, deferred);
             }
             else
             {
                 TRACE("Deferring Action!\n");
-                schedule_action(package, INSTALL_SCRIPT, action);
+                schedule_action(package, INSTALL_SCRIPT, deferred);
             }
 
             rc = ERROR_SUCCESS;
+            msi_free(deferred);
             goto end;
         }
         else
@@ -182,7 +221,9 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
             'C','u','s','t','o','m','A','c','t','i','o','n','D','a','t','a',0};
             static const WCHAR szBlank[] = {0};
             LPWSTR actiondata = msi_dup_property( package, action );
-            if (actiondata)
+            if (deferred_data)
+                MSI_SetPropertyW(package,szActionData,deferred_data);
+            else if (actiondata)
                 MSI_SetPropertyW(package,szActionData,actiondata);
             else
                 MSI_SetPropertyW(package,szActionData,szBlank);
@@ -235,6 +276,7 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
     }
 
 end:
+    msi_free(action_copy);
     msiobj_release(&row->hdr);
     return rc;
 }

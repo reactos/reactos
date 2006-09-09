@@ -364,7 +364,7 @@ static const MSIVIEWOPS join_ops =
  */
 static UINT join_check_condition(MSIJOINVIEW *jv, struct expr *cond)
 {
-    UINT r, type = 0;
+    UINT r;
 
     /* assume that we have  `KeyColumn` = `SubkeyColumn` */
     if ( cond->type != EXPR_COMPLEX )
@@ -386,21 +386,6 @@ static UINT join_check_condition(MSIJOINVIEW *jv, struct expr *cond)
 
     r = VIEW_find_column( jv->right, cond->u.expr.right->u.column, &jv->right_key );
     if (r != ERROR_SUCCESS)
-        return ERROR_FUNCTION_FAILED;
-
-    /* make sure both columns are keys */
-    r = jv->left->ops->get_column_info( jv->left, jv->left_key, NULL, &type );
-    if (r != ERROR_SUCCESS)
-        return ERROR_FUNCTION_FAILED;
-
-    if (!(type & MSITYPE_KEY))
-        return ERROR_FUNCTION_FAILED;
-
-    r = jv->right->ops->get_column_info( jv->right, jv->right_key, NULL, &type );
-    if (r != ERROR_SUCCESS)
-        return ERROR_FUNCTION_FAILED;
-
-    if (!(type & MSITYPE_KEY))
         return ERROR_FUNCTION_FAILED;
 
     TRACE("left %s (%u) right %s (%u)\n",

@@ -63,6 +63,7 @@ struct msi_control_tag
     HBITMAP hBitmap;
     HICON hIcon;
     LPWSTR tabnext;
+    LPWSTR type;
     HMODULE hDll;
     float progress_current;
     float progress_max;
@@ -85,6 +86,7 @@ struct msi_dialog_tag
     BOOL finished;
     INT scale;
     DWORD attributes;
+    SIZE size;
     HWND hwnd;
     LPWSTR default_font;
     msi_font *font_list;
@@ -173,6 +175,18 @@ static msi_control *msi_dialog_find_control( msi_dialog *dialog, LPCWSTR name )
         return NULL;
     LIST_FOR_EACH_ENTRY( control, &dialog->controls, msi_control, entry )
         if( !strcmpW( control->name, name ) ) /* FIXME: case sensitive? */
+            return control;
+    return NULL;
+}
+
+static msi_control *msi_dialog_find_control_by_type( msi_dialog *dialog, LPCWSTR type )
+{
+    msi_control *control;
+
+    if( !type )
+        return NULL;
+    LIST_FOR_EACH_ENTRY( control, &dialog->controls, msi_control, entry )
+        if( !strcmpW( control->type, type ) ) /* FIXME: case sensitive? */
             return control;
     return NULL;
 }
@@ -359,6 +373,7 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
     control->hIcon = NULL;
     control->hDll = NULL;
     control->tabnext = strdupW( MSI_RecordGetString( rec, 11) );
+    control->type = strdupW( MSI_RecordGetString( rec, 3 ) );
     control->progress_current = 0;
     control->progress_max = 100;
 
@@ -391,6 +406,24 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
     msi_free( font );
 
     return control;
+}
+
+static LPWSTR msi_dialog_get_uitext( msi_dialog *dialog, LPCWSTR key )
+{
+    MSIRECORD *rec;
+    LPWSTR text;
+
+    static const WCHAR query[] = {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ','`','U','I','T','e','x','t','`',' ',
+        'w','h','e','r','e',' ','`','K','e','y','`',' ','=',' ','\'','%','s','\'',0
+    };
+
+    rec = MSI_QueryGetRecord( dialog->package->db, query, key );
+    if (!rec) return NULL;
+    text = strdupW( MSI_RecordGetString( rec, 2 ) );
+    msiobj_release( &rec->hdr );
+    return text;
 }
 
 static MSIRECORD *msi_get_binary_record( MSIDATABASE *db, LPCWSTR name )
@@ -1374,6 +1407,13 @@ static UINT msi_dialog_progress_bar( msi_dialog *dialog, MSIRECORD *rec )
 
 /******************** Path Edit ********************************************/
 
+struct msi_pathedit_info
+{
+    msi_dialog *dialog;
+    msi_control *control;
+    WNDPROC oldproc;
+};
+
 static LPWSTR msi_get_window_text( HWND hwnd )
 {
     UINT sz, r;
@@ -1393,38 +1433,14 @@ static LPWSTR msi_get_window_text( HWND hwnd )
     return buf;
 }
 
-static UINT msi_dialog_pathedit_handler( msi_dialog *dialog,
-                msi_control *control, WPARAM param )
+static void msi_dialog_update_pathedit( msi_dialog *dialog, msi_control *control )
 {
-    LPWSTR buf, prop;
-    BOOL indirect;
-
-    if( HIWORD(param) != EN_KILLFOCUS )
-        return ERROR_SUCCESS;
-
-    indirect = control->attributes & msidbControlAttributesIndirect;
-    prop = msi_dialog_dup_property( dialog, control->property, indirect );
-
-    /* FIXME: verify the new path */
-    buf = msi_get_window_text( control->hwnd );
-    MSI_SetPropertyW( dialog->package, prop, buf );
-
-    TRACE("edit %s contents changed, set %s\n", debugstr_w(control->name),
-          debugstr_w(prop));
-
-    msi_free( buf );
-    msi_free( prop );
-
-    return ERROR_SUCCESS;
-}
-
-static void msi_dialog_update_pathedit( msi_dialog *dialog )
-{
-    msi_control *control;
     LPWSTR prop, path;
     BOOL indirect;
 
-    control = msi_dialog_find_control( dialog, szPathEdit );
+    if (!control && !(control = msi_dialog_find_control_by_type( dialog, szPathEdit )))
+       return;
+
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
 
@@ -1436,19 +1452,102 @@ static void msi_dialog_update_pathedit( msi_dialog *dialog )
     msi_free( prop );
 }
 
+/* FIXME: test when this should fail */
+static BOOL msi_dialog_verify_path( LPWSTR path )
+{
+    if ( !lstrlenW( path ) )
+        return FALSE;
+
+    if ( PathIsRelativeW( path ) )
+        return FALSE;
+
+    return TRUE;
+}
+
+/* returns TRUE if the path is valid, FALSE otherwise */
+static BOOL msi_dialog_onkillfocus( msi_dialog *dialog, msi_control *control )
+{
+    LPWSTR buf, prop;
+    BOOL indirect;
+    BOOL valid;
+
+    indirect = control->attributes & msidbControlAttributesIndirect;
+    prop = msi_dialog_dup_property( dialog, control->property, indirect );
+
+    buf = msi_get_window_text( control->hwnd );
+
+    if ( !msi_dialog_verify_path( buf ) )
+    {
+        /* FIXME: display an error message box */
+        ERR("Invalid path %s\n", debugstr_w( buf ));
+        valid = FALSE;
+        SetFocus( control->hwnd );
+    }
+    else
+    {
+        valid = TRUE;
+        MSI_SetPropertyW( dialog->package, prop, buf );
+    }
+
+    msi_dialog_update_pathedit( dialog, control );
+
+    TRACE("edit %s contents changed, set %s\n", debugstr_w(control->name),
+          debugstr_w(prop));
+
+    msi_free( buf );
+    msi_free( prop );
+
+    return valid;
+}
+
+static LRESULT WINAPI MSIPathEdit_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    struct msi_pathedit_info *info = GetPropW(hWnd, szButtonData);
+    LRESULT r = 0;
+
+    TRACE("%p %04x %08x %08lx\n", hWnd, msg, wParam, lParam);
+
+    if ( msg == WM_KILLFOCUS )
+    {
+        /* if the path is invalid, don't handle this message */
+        if ( !msi_dialog_onkillfocus( info->dialog, info->control ) )
+            return 0;
+    }
+
+    r = CallWindowProcW(info->oldproc, hWnd, msg, wParam, lParam);
+
+    if ( msg == WM_NCDESTROY )
+    {
+        msi_free( info );
+        RemovePropW( hWnd, szButtonData );
+    }
+
+    return r;
+}
+
 static UINT msi_dialog_pathedit_control( msi_dialog *dialog, MSIRECORD *rec )
 {
+    struct msi_pathedit_info *info;
     msi_control *control;
     LPCWSTR prop;
 
+    info = msi_alloc( sizeof *info );
+    if (!info)
+        return ERROR_FUNCTION_FAILED;
+
     control = msi_dialog_add_control( dialog, rec, szEdit,
                                       WS_BORDER | WS_TABSTOP );
-    control->handler = msi_dialog_pathedit_handler;
     control->attributes = MSI_RecordGetInteger( rec, 8 );
     prop = MSI_RecordGetString( rec, 9 );
     control->property = msi_dialog_dup_property( dialog, prop, FALSE );
 
-    msi_dialog_update_pathedit( dialog );
+    info->dialog = dialog;
+    info->control = control;
+    info->oldproc = (WNDPROC) SetWindowLongPtrW( control->hwnd, GWLP_WNDPROC,
+                                                 (LONG_PTR)MSIPathEdit_WndProc );
+    SetPropW( control->hwnd, szButtonData, info );
+
+    msi_dialog_update_pathedit( dialog, control );
 
     return ERROR_SUCCESS;
 }
@@ -1961,13 +2060,14 @@ static UINT msi_dialog_list_box( msi_dialog *dialog, MSIRECORD *rec )
 
 /******************** Directory Combo ***************************************/
 
-static void msi_dialog_update_directory_combo( msi_dialog *dialog )
+static void msi_dialog_update_directory_combo( msi_dialog *dialog, msi_control *control )
 {
-    msi_control *control;
     LPWSTR prop, path;
     BOOL indirect;
 
-    control = msi_dialog_find_control( dialog, szDirectoryCombo );
+    if (!control && !(control = msi_dialog_find_control_by_type( dialog, szDirectoryCombo )))
+        return;
+
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
     path = msi_dup_property( dialog->package, prop );
@@ -1999,12 +2099,64 @@ static UINT msi_dialog_directory_combo( msi_dialog *dialog, MSIRECORD *rec )
     prop = MSI_RecordGetString( rec, 9 );
     control->property = msi_dialog_dup_property( dialog, prop, FALSE );
 
-    msi_dialog_update_directory_combo( dialog );
+    msi_dialog_update_directory_combo( dialog, control );
 
     return ERROR_SUCCESS;
 }
 
 /******************** Directory List ***************************************/
+
+static void msi_dialog_update_directory_list( msi_dialog *dialog, msi_control *control )
+{
+    WCHAR dir_spec[MAX_PATH];
+    WIN32_FIND_DATAW wfd;
+    LPWSTR prop, path;
+    BOOL indirect;
+    LVITEMW item;
+    HANDLE file;
+
+    static const WCHAR asterisk[] = {'*',0};
+    static const WCHAR dot[] = {'.',0};
+    static const WCHAR dotdot[] = {'.','.',0};
+
+    if (!control && !(control = msi_dialog_find_control_by_type( dialog, szDirectoryList )))
+        return;
+
+    /* clear the list-view */
+    SendMessageW( control->hwnd, LVM_DELETEALLITEMS, 0, 0 );
+
+    indirect = control->attributes & msidbControlAttributesIndirect;
+    prop = msi_dialog_dup_property( dialog, control->property, indirect );
+    path = msi_dup_property( dialog->package, prop );
+
+    lstrcpyW( dir_spec, path );
+    lstrcatW( dir_spec, asterisk );
+
+    file = FindFirstFileW( dir_spec, &wfd );
+    if ( file == INVALID_HANDLE_VALUE )
+        return;
+
+    do
+    {
+        if ( wfd.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY )
+            continue;
+
+        if ( !lstrcmpW( wfd.cFileName, dot ) || !lstrcmpW( wfd.cFileName, dotdot ) )
+            continue;
+
+        item.mask = LVIF_TEXT;
+        item.cchTextMax = MAX_PATH;
+        item.iItem = 0;
+        item.iSubItem = 0;
+        item.pszText = wfd.cFileName;
+
+        SendMessageW( control->hwnd, LVM_INSERTITEMW, 0, (LPARAM)&item );
+    } while ( FindNextFileW( file, &wfd ) );
+
+    msi_free( prop );
+    msi_free( path );
+    FindClose( file );
+}
 
 UINT msi_dialog_directorylist_up( msi_dialog *dialog )
 {
@@ -2012,7 +2164,7 @@ UINT msi_dialog_directorylist_up( msi_dialog *dialog )
     LPWSTR prop, path, ptr;
     BOOL indirect;
 
-    control = msi_dialog_find_control( dialog, szDirectoryList );
+    control = msi_dialog_find_control_by_type( dialog, szDirectoryList );
     indirect = control->attributes & msidbControlAttributesIndirect;
     prop = msi_dialog_dup_property( dialog, control->property, indirect );
 
@@ -2025,12 +2177,60 @@ UINT msi_dialog_directorylist_up( msi_dialog *dialog )
 
     MSI_SetPropertyW( dialog->package, prop, path );
 
-    msi_dialog_update_directory_combo( dialog );
-    msi_dialog_update_pathedit( dialog );
+    msi_dialog_update_directory_list( dialog, NULL );
+    msi_dialog_update_directory_combo( dialog, NULL );
+    msi_dialog_update_pathedit( dialog, NULL );
 
     msi_free( path );
     msi_free( prop );
 
+    return ERROR_SUCCESS;
+}
+
+static UINT msi_dialog_dirlist_handler( msi_dialog *dialog,
+                                        msi_control *control, WPARAM param )
+{
+    LPNMHDR nmhdr = (LPNMHDR)param;
+    WCHAR new_path[MAX_PATH];
+    WCHAR text[MAX_PATH];
+    LPWSTR path, prop;
+    BOOL indirect;
+    LVITEMW item;
+    int index;
+
+    static const WCHAR backslash[] = {'\\',0};
+
+    if (nmhdr->code != LVN_ITEMACTIVATE)
+        return ERROR_SUCCESS;
+
+    index = SendMessageW( control->hwnd, LVM_GETNEXTITEM, -1, LVNI_SELECTED );
+    if ( index < 0 )
+    {
+        ERR("No list-view item selected!\n");
+        return ERROR_FUNCTION_FAILED;
+    }
+
+    item.iSubItem = 0;
+    item.pszText = text;
+    item.cchTextMax = MAX_PATH;
+    SendMessageW( control->hwnd, LVM_GETITEMTEXTW, index, (LPARAM)&item );
+
+    indirect = control->attributes & msidbControlAttributesIndirect;
+    prop = msi_dialog_dup_property( dialog, control->property, indirect );
+    path = msi_dup_property( dialog->package, prop );
+
+    lstrcpyW( new_path, path );
+    lstrcatW( new_path, text );
+    lstrcatW( new_path, backslash );
+
+    MSI_SetPropertyW( dialog->package, prop, new_path );
+
+    msi_dialog_update_directory_list( dialog, NULL );
+    msi_dialog_update_directory_combo( dialog, NULL );
+    msi_dialog_update_pathedit( dialog, NULL );
+
+    msi_free( prop );
+    msi_free( path );
     return ERROR_SUCCESS;
 }
 
@@ -2040,7 +2240,7 @@ static UINT msi_dialog_directory_list( msi_dialog *dialog, MSIRECORD *rec )
     LPCWSTR prop;
     DWORD style;
 
-    style = LVS_LIST | LVS_EDITLABELS | WS_VSCROLL | LVS_SHAREIMAGELISTS |
+    style = LVS_LIST | WS_VSCROLL | LVS_SHAREIMAGELISTS |
             LVS_AUTOARRANGE | LVS_SINGLESEL | WS_BORDER |
             LVS_SORTASCENDING | WS_CHILD | WS_GROUP | WS_TABSTOP;
     control = msi_dialog_add_control( dialog, rec, WC_LISTVIEWW, style );
@@ -2048,13 +2248,85 @@ static UINT msi_dialog_directory_list( msi_dialog *dialog, MSIRECORD *rec )
         return ERROR_FUNCTION_FAILED;
 
     control->attributes = MSI_RecordGetInteger( rec, 8 );
+    control->handler = msi_dialog_dirlist_handler;
     prop = MSI_RecordGetString( rec, 9 );
     control->property = msi_dialog_dup_property( dialog, prop, FALSE );
+
+    /* double click to activate an item in the list */
+    SendMessageW( control->hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE,
+                  0, LVS_EX_TWOCLICKACTIVATE );
+
+    msi_dialog_update_directory_list( dialog, control );
 
     return ERROR_SUCCESS;
 }
 
 /******************** VolumeCost List ***************************************/
+
+static BOOL str_is_number( LPCWSTR str )
+{
+    int i;
+
+    for (i = 0; i < lstrlenW( str ); i++)
+        if (!isdigitW(str[i]))
+            return FALSE;
+
+    return TRUE;
+}
+
+WCHAR column_keys[][80] =
+{
+    {'V','o','l','u','m','e','C','o','s','t','V','o','l','u','m','e',0},
+    {'V','o','l','u','m','e','C','o','s','t','S','i','z','e',0},
+    {'V','o','l','u','m','e','C','o','s','t','A','v','a','i','l','a','b','l','e',0},
+    {'V','o','l','u','m','e','C','o','s','t','R','e','q','u','i','r','e','d',0},
+    {'V','o','l','u','m','e','C','o','s','t','D','i','f','f','e','r','e','n','c','e',0}
+};
+
+static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control, MSIRECORD *rec )
+{
+    LPCWSTR text = MSI_RecordGetString( rec, 10 );
+    LPCWSTR begin = text, end;
+    WCHAR num[10];
+    LVCOLUMNW lvc;
+    DWORD count = 0;
+    LRESULT r;
+
+    static const WCHAR zero[] = {'0',0};
+    static const WCHAR negative[] = {'-',0};
+
+    while ((begin = strchrW( begin, '{' )) && count < 5)
+    {
+        if (!(end = strchrW( begin, '}' )))
+            return;
+
+        lstrcpynW( num, begin + 1, end - begin );
+        begin += end - begin + 1;
+
+        /* empty braces or '0' hides the column */ 
+        if ( !num[0] || !lstrcmpW( num, zero ) )
+        {
+            count++;
+            continue;
+        }
+
+        /* the width must be a positive number
+         * if a width is invalid, all remaining columns are hidden
+         */
+        if ( !strncmpW( num, negative, 1 ) || !str_is_number( num ) )
+            return;
+
+        lvc.mask = LVCF_FMT | LVCF_ORDER | LVCF_WIDTH | LVCF_TEXT;
+        lvc.iOrder = count; 
+        lvc.pszText = msi_dialog_get_uitext( dialog, column_keys[count++] );
+        lvc.cx = atolW( num );
+        lvc.fmt = LVCFMT_LEFT;
+
+        r = SendMessageW( control->hwnd,  LVM_INSERTCOLUMNW, 0, (LPARAM)&lvc );
+        msi_free( lvc.pszText );
+        if ( r ) return;
+    }
+}
 
 static UINT msi_dialog_volumecost_list( msi_dialog *dialog, MSIRECORD *rec )
 {
@@ -2067,6 +2339,8 @@ static UINT msi_dialog_volumecost_list( msi_dialog *dialog, MSIRECORD *rec )
     control = msi_dialog_add_control( dialog, rec, WC_LISTVIEWW, style );
     if (!control)
         return ERROR_FUNCTION_FAILED;
+
+    msi_dialog_vcl_add_columns( dialog, control, rec );
 
     return ERROR_SUCCESS;
 }
@@ -2292,10 +2566,27 @@ static void msi_dialog_adjust_dialog_pos( msi_dialog *dialog, MSIRECORD *rec, LP
     center.y = MulDiv( center.y, yres, 100 );
 
     /* turn the client pos into the window rectangle */
-    pos->left = center.x - sz.cx/2;
-    pos->right = pos->left + sz.cx;
-    pos->top = center.y - sz.cy/2;
-    pos->bottom = pos->top + sz.cy;
+    if (dialog->package->center_x && dialog->package->center_y)
+    {
+        pos->left = dialog->package->center_x - sz.cx / 2.0;
+        pos->right = pos->left + sz.cx;
+        pos->top = dialog->package->center_y - sz.cy / 2.0;
+        pos->bottom = pos->top + sz.cy;
+    }
+    else
+    {
+        pos->left = center.x - sz.cx/2;
+        pos->right = pos->left + sz.cx;
+        pos->top = center.y - sz.cy/2;
+        pos->bottom = pos->top + sz.cy;
+
+        /* save the center */
+        dialog->package->center_x = center.x;
+        dialog->package->center_y = center.y;
+    }
+
+    dialog->size.cx = sz.cx;
+    dialog->size.cy = sz.cy;
 
     TRACE("%lu %lu %lu %lu\n", pos->left, pos->top, pos->right, pos->bottom);
 
@@ -2609,6 +2900,19 @@ static LRESULT msi_dialog_oncommand( msi_dialog *dialog, WPARAM param, HWND hwnd
     return 0;
 }
 
+static LRESULT msi_dialog_onnotify( msi_dialog *dialog, LPARAM param )
+{
+    LPNMHDR nmhdr = (LPNMHDR) param;
+    msi_control *control = msi_dialog_find_control_by_hwnd( dialog, nmhdr->hwndFrom );
+
+    TRACE("%p %p", dialog, nmhdr->hwndFrom);
+
+    if ( control && control->handler )
+        control->handler( dialog, control, param );
+
+    return 0;
+}
+
 static void msi_dialog_setfocus( msi_dialog *dialog )
 {
     HWND hwnd = dialog->hWndFocus;
@@ -2628,6 +2932,11 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
 
     switch (msg)
     {
+    case WM_MOVE:
+        dialog->package->center_x = LOWORD(lParam) + dialog->size.cx / 2.0;
+        dialog->package->center_y = HIWORD(lParam) + dialog->size.cy / 2.0;
+        break;
+        
     case WM_CREATE:
         return msi_dialog_oncreate( hwnd, (LPCREATESTRUCTW)lParam );
 
@@ -2652,6 +2961,8 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
     case WM_DESTROY:
         dialog->hwnd = NULL;
         return 0;
+    case WM_NOTIFY:
+        return msi_dialog_onnotify( dialog, lParam );
     }
     return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
@@ -2861,6 +3172,7 @@ void msi_dialog_destroy( msi_dialog *dialog )
         if( t->hIcon )
             DestroyIcon( t->hIcon );
         msi_free( t->tabnext );
+        msi_free( t->type );
         msi_free( t );
         if (t->hDll)
             FreeLibrary( t->hDll );

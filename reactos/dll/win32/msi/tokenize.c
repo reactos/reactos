@@ -39,6 +39,8 @@ struct Keyword {
   int tokenType;           /* The token value for this keyword */
 };
 
+#define MAX_TOKEN_LEN 11
+
 static const WCHAR ABORT_W[] = { 'A','B','O','R','T',0 };
 static const WCHAR AFTER_W[] = { 'A','F','T','E','R',0 };
 static const WCHAR ALTER_W[] = { 'A','L','T','E','R',0 };
@@ -245,8 +247,7 @@ static const Keyword aKeywordTable[] = {
   { SHORT_W, TK_SHORT },
   { STATEMENT_W, TK_STATEMENT },
   { TABLE_W, TK_TABLE },
-  { TEMP_W, TK_TEMP },
-  { TEMPORARY_W, TK_TEMP },
+  /*{ TEMPORARY_W, TK_TEMPORARY },*/
   { THEN_W, TK_THEN },
   { TRANSACTION_W, TK_TRANSACTION },
   { TRIGGER_W, TK_TRIGGER },
@@ -264,20 +265,33 @@ static const Keyword aKeywordTable[] = {
 #define KEYWORD_COUNT ( sizeof aKeywordTable/sizeof (Keyword) )
 
 /*
+** Comparison function for binary search.
+*/
+static int compKeyword(const void *m1, const void *m2){
+  const Keyword *k1 = m1, *k2 = m2;
+
+  return strcmpiW( k1->zName, k2->zName );
+}
+
+/*
 ** This function looks up an identifier to determine if it is a
 ** keyword.  If it is a keyword, the token code of that keyword is 
 ** returned.  If the input is not a keyword, TK_ID is returned.
 */
 static int sqliteKeywordCode(const WCHAR *z, int n){
-  UINT i;
+  WCHAR str[MAX_TOKEN_LEN+1];
+  Keyword key, *r;
 
-  for(i=0; i<KEYWORD_COUNT; i++)
-  {
-      if(strncmpiW(z, aKeywordTable[i].zName, n))
-          continue;
-      if(lstrlenW(aKeywordTable[i].zName) == n )
-          return aKeywordTable[i].tokenType;
-  }
+  if( n>MAX_TOKEN_LEN )
+    return TK_ID;
+
+  memcpy( str, z, n*sizeof (WCHAR) );
+  str[n] = 0;
+  key.tokenType = 0;
+  key.zName = str;
+  r = bsearch( &key, aKeywordTable, KEYWORD_COUNT, sizeof (Keyword), compKeyword );
+  if( r )
+    return r->tokenType;
   return TK_ID;
 }
 

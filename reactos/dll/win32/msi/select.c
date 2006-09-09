@@ -102,13 +102,34 @@ static UINT SELECT_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT va
 static UINT SELECT_insert_row( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
+    UINT i, table_cols, r;
+    MSIRECORD *outrec;
 
     TRACE("%p %p\n", sv, record );
 
-    if( !sv->table )
-         return ERROR_FUNCTION_FAILED;
+    if ( !sv->table )
+        return ERROR_FUNCTION_FAILED;
 
-    return sv->table->ops->insert_row( sv->table, record );
+    /* rearrange the record to suit the table */
+    r = sv->table->ops->get_dimensions( sv->table, NULL, &table_cols );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    outrec = MSI_CreateRecord( table_cols + 1 );
+
+    for (i=0; i<sv->num_cols; i++)
+    {
+        r = MSI_RecordCopyField( record, i+1, outrec, sv->cols[i] );
+        if (r != ERROR_SUCCESS)
+            goto fail;
+    }
+
+    r = sv->table->ops->insert_row( sv->table, outrec );
+
+fail:
+    msiobj_release( &outrec->hdr );
+
+    return r;
 }
 
 static UINT SELECT_execute( struct tagMSIVIEW *view, MSIRECORD *record )

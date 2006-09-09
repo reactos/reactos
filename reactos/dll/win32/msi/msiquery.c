@@ -480,48 +480,28 @@ static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field, UINT type )
     return MSI_RecordSetStringW( rec, field, szType );
 }
 
-UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hRec)
+UINT MSI_ViewGetColumnInfo( MSIQUERY *query, MSICOLINFO info, MSIRECORD **prec )
 {
-    MSIVIEW *view = NULL;
-    MSIQUERY *query = NULL;
-    MSIRECORD *rec = NULL;
     UINT r = ERROR_FUNCTION_FAILED, i, count = 0, type;
+    MSIRECORD *rec;
+    MSIVIEW *view = query->view;
     LPWSTR name;
 
-    TRACE("%ld %d %p\n", hView, info, hRec);
-
-    if( !hRec )
-        return ERROR_INVALID_PARAMETER;
-
-    if( info != MSICOLINFO_NAMES && info != MSICOLINFO_TYPES )
-        return ERROR_INVALID_PARAMETER;
-
-    query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
-    if( !query )
-        return ERROR_INVALID_HANDLE;
-
-    view = query->view;
     if( !view )
-        goto out;
+        return ERROR_FUNCTION_FAILED;
 
     if( !view->ops->get_dimensions )
-        goto out;
+        return ERROR_FUNCTION_FAILED;
 
     r = view->ops->get_dimensions( view, NULL, &count );
-    if( r )
-        goto out;
+    if( r != ERROR_SUCCESS )
+        return r;
     if( !count )
-    {
-        r = ERROR_INVALID_PARAMETER;
-        goto out;
-    }
+        return ERROR_INVALID_PARAMETER;
 
     rec = MSI_CreateRecord( count );
     if( !rec )
-    {
-        r = ERROR_FUNCTION_FAILED;
-        goto out;
-    }
+        return ERROR_FUNCTION_FAILED;
 
     for( i=0; i<count; i++ )
     {
@@ -536,14 +516,38 @@ UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hR
         msi_free( name );
     }
 
-    *hRec = alloc_msihandle( &rec->hdr );
-    if (! *hRec)
-       r = ERROR_NOT_ENOUGH_MEMORY;
+    *prec = rec;
+    return ERROR_SUCCESS;
+}
 
-out:
-    msiobj_release( &query->hdr );
-    if( rec )
+UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hRec)
+{
+    MSIQUERY *query = NULL;
+    MSIRECORD *rec = NULL;
+    UINT r;
+
+    TRACE("%ld %d %p\n", hView, info, hRec);
+
+    if( !hRec )
+        return ERROR_INVALID_PARAMETER;
+
+    if( info != MSICOLINFO_NAMES && info != MSICOLINFO_TYPES )
+        return ERROR_INVALID_PARAMETER;
+
+    query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
+    if( !query )
+        return ERROR_INVALID_HANDLE;
+
+    r = MSI_ViewGetColumnInfo( query, info, &rec );
+    if ( r == ERROR_SUCCESS )
+    {
+        *hRec = alloc_msihandle( &rec->hdr );
+        if ( !*hRec )
+            r = ERROR_NOT_ENOUGH_MEMORY;
         msiobj_release( &rec->hdr );
+    }
+
+    msiobj_release( &query->hdr );
 
     return r;
 }

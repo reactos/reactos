@@ -231,6 +231,8 @@ typedef struct tagMSIPACKAGE
     UINT CurrentInstallState;
     msi_dialog *dialog;
     LPWSTR next_dialog;
+    float center_x;
+    float center_y;
 
     UINT WordCount;
 
@@ -334,8 +336,6 @@ extern const WCHAR *msi_string_lookup_id( string_table *st, UINT id );
 extern UINT msi_string_get_codepage( string_table *st );
 
 
-extern UINT VIEW_find_column( MSIVIEW *view, LPCWSTR name, UINT *n );
-
 extern BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name );
 
 extern UINT read_raw_stream_data( MSIDATABASE*, LPCWSTR stname,
@@ -371,6 +371,7 @@ extern UINT MSI_RecordSetStreamW( MSIRECORD *, unsigned int, LPCWSTR );
 extern UINT MSI_RecordSetStreamA( MSIRECORD *, unsigned int, LPCSTR );
 extern UINT MSI_RecordDataSize( MSIRECORD *, unsigned int );
 extern UINT MSI_RecordStreamToFile( MSIRECORD *, unsigned int, LPCWSTR );
+extern UINT MSI_RecordCopyField( MSIRECORD *, unsigned int, MSIRECORD *, unsigned int );
 
 /* stream internals */
 extern UINT get_raw_stream( MSIHANDLE hdb, LPCWSTR stname, IStream **stm );
@@ -392,6 +393,9 @@ extern UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *, LPCWSTR, MSIRECORD ** );
 extern UINT MSI_ViewExecute( MSIQUERY*, MSIRECORD * );
 extern UINT MSI_ViewFetch( MSIQUERY*, MSIRECORD ** );
 extern UINT MSI_ViewClose( MSIQUERY* );
+extern UINT MSI_ViewGetColumnInfo(MSIQUERY *, MSICOLINFO, MSIRECORD **);
+extern UINT VIEW_find_column( MSIVIEW *, LPCWSTR, UINT * );
+
 
 /* install internals */
 extern UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel );

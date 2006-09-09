@@ -221,17 +221,35 @@ static const MSIVIEWOPS create_ops =
     CREATE_delete
 };
 
+static UINT check_columns( column_info *col_info )
+{
+    column_info *c1, *c2;
+
+    /* check for two columns with the same name */
+    for( c1 = col_info; c1; c1 = c1->next )
+        for( c2 = c1->next; c2; c2 = c2->next )
+            if (!lstrcmpW(c1->column, c2->column))
+                return ERROR_BAD_QUERY_SYNTAX;
+
+    return ERROR_SUCCESS;
+}
+
 UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
                         column_info *col_info, BOOL temp )
 {
     MSICREATEVIEW *cv = NULL;
+    UINT r;
 
     TRACE("%p\n", cv );
+
+    r = check_columns( col_info );
+    if( r != ERROR_SUCCESS )
+        return r;
 
     cv = msi_alloc_zero( sizeof *cv );
     if( !cv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     cv->view.ops = &create_ops;
     msiobj_addref( &db->hdr );

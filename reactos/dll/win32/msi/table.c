@@ -926,20 +926,7 @@ static void msi_free_colinfo( MSICOLUMNINFO *colinfo, UINT count )
 
 LPWSTR MSI_makestring( MSIDATABASE *db, UINT stringid)
 {
-    UINT sz=0, r;
-    LPWSTR str;
-
-    r = msi_id2stringW( db->strings, stringid, NULL, &sz );
-    if( r != ERROR_SUCCESS )
-        return NULL;
-    str = msi_alloc( sz*sizeof (WCHAR) );
-    if( !str )
-        return str;
-    r = msi_id2stringW( db->strings, stringid, str, &sz );
-    if( r == ERROR_SUCCESS )
-        return str;
-    msi_free( str );
-    return NULL;
+    return strdupW(msi_string_lookup_id( db->strings, stringid ));
 }
 
 static UINT get_tablecolumns( MSIDATABASE *db, 
@@ -1116,7 +1103,7 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     UINT ival = 0, refcol = 0, r;
-    LPWSTR sval;
+    LPCWSTR sval;
     LPWSTR full_name;
     DWORD len;
     static const WCHAR szDot[] = { '.', 0 };
@@ -1140,7 +1127,7 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
         return r;
 
     /* lookup the string value from the string table */
-    sval = MSI_makestring( tv->db, refcol );
+    sval = msi_string_lookup_id( tv->db->strings, refcol );
     if( !sval )
         return ERROR_INVALID_PARAMETER;
 
@@ -1154,7 +1141,6 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     if( r )
         ERR("fetching stream %s, error = %d\n",debugstr_w(full_name), r);
     msi_free( full_name );
-    msi_free( sval );
 
     return r;
 }
@@ -1302,12 +1288,38 @@ static UINT msi_table_find_row( MSITABLEVIEW *tv, MSIRECORD *rec, UINT *row );
 
 static UINT table_validate_new( MSITABLEVIEW *tv, MSIRECORD *rec )
 {
-    UINT r, row;
+    UINT r, row, i;
 
+    /* check there's no null values where they're not allowed */
+    for( i = 0; i < tv->num_cols; i++ )
+    {
+        if ( tv->columns[i].type & MSITYPE_NULLABLE )
+            continue;
+
+        if ( tv->columns[i].type & MSITYPE_STRING )
+        {
+            LPCWSTR str;
+
+            str = MSI_RecordGetString( rec, i+1 );
+            if (str == NULL || str[0] == 0)
+                return ERROR_INVALID_DATA;
+        }
+        else
+        {
+            UINT n;
+
+            n = MSI_RecordGetInteger( rec, i+1 );
+            if (n == MSI_NULL_INTEGER)
+                return ERROR_INVALID_DATA;
+        }
+    }
+
+    /* check there's no duplicate keys */
     r = msi_table_find_row( tv, rec, &row );
-    if (r != ERROR_SUCCESS)
-        return ERROR_SUCCESS;
-    return ERROR_INVALID_DATA;
+    if (r == ERROR_SUCCESS)
+        return ERROR_INVALID_DATA;
+
+    return ERROR_SUCCESS;
 }
 
 static UINT msi_table_modify_row( MSITABLEVIEW *tv, MSIRECORD *rec,
@@ -1351,6 +1363,11 @@ static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec )
     UINT r, row = -1;
 
     TRACE("%p %p\n", tv, rec );
+
+    /* check that the key is unique - can we find a matching row? */
+    r = table_validate_new( tv, rec );
+    if( r != ERROR_SUCCESS )
+        return ERROR_FUNCTION_FAILED;
 
     r = table_create_new_row( view, &row );
     TRACE("insert_row returned %08x\n", r);

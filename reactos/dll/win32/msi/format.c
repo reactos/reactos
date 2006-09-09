@@ -50,19 +50,53 @@ static LPWSTR build_default_format(MSIRECORD* record)
 {
     int i;  
     int count;
-    LPWSTR rc;
-    static const WCHAR fmt[] = {'%','i',':',' ','[','%','i',']',' ',0};
-    WCHAR buf[11];
+    LPWSTR rc, buf;
+    static const WCHAR fmt[] = {'%','i',':',' ','%','s',' ',0};
+    static const WCHAR fmt_null[] = {'%','i',':',' ',' ',0};
+    static const WCHAR fmt_index[] = {'%','i',0};
+    LPCWSTR str;
+    WCHAR index[10];
+    DWORD size, max_len, len;
 
     count = MSI_RecordGetFieldCount(record);
 
-    rc = msi_alloc((11*count)*sizeof(WCHAR));
-    rc[0] = 0;
+    max_len = MAX_PATH;
+    buf = msi_alloc((max_len + 1) * sizeof(WCHAR));
+
+    rc = NULL;
+    size = 1;
     for (i = 1; i <= count; i++)
     {
-        sprintfW(buf,fmt,i,i); 
-        strcatW(rc,buf);
+        sprintfW(index,fmt_index,i);
+        str = MSI_RecordGetString(record, i);
+        len = (str) ? lstrlenW(str) : 0;
+        len += (sizeof(fmt_null) - 3) + lstrlenW(index);
+        size += len;
+
+        if (len > max_len)
+        {
+            max_len = len;
+            buf = msi_realloc(buf, (max_len + 1) * sizeof(WCHAR));
+            if (!buf) return NULL;
+        }
+
+        if (str)
+            sprintfW(buf,fmt,i,str);
+        else
+            sprintfW(buf,fmt_null,i);
+
+        if (!rc)
+        {
+            rc = msi_alloc(size * sizeof(WCHAR));
+            lstrcpyW(rc, buf);
+        }
+        else
+        {
+            rc = msi_realloc(rc, size * sizeof(WCHAR));
+            lstrcatW(rc, buf);
+        }
     }
+    msi_free(buf);
     return rc;
 }
 
@@ -131,8 +165,8 @@ static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz,
             {
                 ERR("Unable to get ShortPath size (%s)\n",
                     debugstr_w( file->TargetPath) );
-                value = NULL;
-                *sz = 0;
+                value = strdupW( file->TargetPath );
+                *sz = (lstrlenW(value)) * sizeof(WCHAR);
             }
         }
     }

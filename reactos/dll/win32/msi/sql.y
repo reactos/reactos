@@ -108,7 +108,7 @@ static struct expr * EXPR_wildcard( void *info );
 %token TK_ROW TK_RP TK_RSHIFT
 %token TK_SELECT TK_SEMI TK_SET TK_SHORT TK_SLASH TK_SPACE TK_STAR TK_STATEMENT 
 %token <str> TK_STRING
-%token TK_TABLE TK_TEMP TK_THEN TK_TRANSACTION TK_TRIGGER
+%token TK_TABLE TK_TEMPORARY TK_THEN TK_TRANSACTION TK_TRIGGER
 %token TK_UMINUS TK_UNCLOSED_STRING TK_UNION TK_UNIQUE
 %token TK_UPDATE TK_UPLUS TK_USING
 %token TK_VACUUM TK_VALUES TK_VIEW
@@ -171,7 +171,7 @@ oneinsert:
                 YYABORT;
             $$ = insert;
         }
-  | TK_INSERT TK_INTO table TK_LP selcollist TK_RP TK_VALUES TK_LP constlist TK_RP TK_TEMP
+  | TK_INSERT TK_INTO table TK_LP selcollist TK_RP TK_VALUES TK_LP constlist TK_RP TK_TEMPORARY
         {
             SQL_input *sql = (SQL_input*) info;
             MSIVIEW *insert = NULL; 
@@ -303,6 +303,10 @@ column_type:
   | data_type_l TK_LOCALIZABLE
         {
             $$ = $1 | MSITYPE_LOCALIZABLE;
+        }
+  | data_type_l TK_TEMPORARY
+        {
+            FIXME("temporary column\n");
         }
     ;
 
