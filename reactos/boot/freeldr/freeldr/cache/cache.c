@@ -138,7 +138,7 @@ BOOLEAN CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCo
 	SectorOffsetInStartBlock = StartSector % CacheManagerDrive.BlockSize;
 	CopyLengthInStartBlock = (SectorCount > (CacheManagerDrive.BlockSize - SectorOffsetInStartBlock)) ? (CacheManagerDrive.BlockSize - SectorOffsetInStartBlock) : SectorCount;
 	EndBlock = (StartSector + (SectorCount - 1)) / CacheManagerDrive.BlockSize;
-	SectorOffsetInEndBlock = (StartSector + SectorCount) % CacheManagerDrive.BlockSize;
+	SectorOffsetInEndBlock = 1 + (StartSector + (SectorCount - 1)) % CacheManagerDrive.BlockSize;
 	BlockCount = (EndBlock - StartBlock) + 1;
 	DbgPrint((DPRINT_CACHE, "StartBlock: %d SectorOffsetInStartBlock: %d CopyLengthInStartBlock: %d EndBlock: %d SectorOffsetInEndBlock: %d BlockCount: %d\n", StartBlock, SectorOffsetInStartBlock, CopyLengthInStartBlock, EndBlock, SectorOffsetInEndBlock, BlockCount));
 
