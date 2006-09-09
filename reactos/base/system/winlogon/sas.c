@@ -94,13 +94,12 @@ SetDefaultLanguage(
 		goto cleanup;
 	}
 
-	Value = HeapAlloc(GetProcessHeap(), 0, dwSize + sizeof(UNICODE_NULL));
+	Value = HeapAlloc(GetProcessHeap(), 0, dwSize);
 	if (!Value)
 	{
 		TRACE("HeapAlloc() failed\n");
 		goto cleanup;
 	}
-	Value[dwSize / sizeof(WCHAR)] = UNICODE_NULL;
 	rc = RegQueryValueExW(
 		hKey,
 		ValueName,
@@ -115,7 +114,8 @@ SetDefaultLanguage(
 	}
 
 	/* Convert Value to a Lcid */
-	RtlInitUnicodeString(&ValueString, Value);
+	ValueString.Length = ValueString.MaximumLength = dwSize;
+	ValueString.Buffer = Value;
 	Status = RtlUnicodeStringToInteger(&ValueString, 16, &Lcid);
 	if (!NT_SUCCESS(Status))
 	{

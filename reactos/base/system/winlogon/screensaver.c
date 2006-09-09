@@ -11,6 +11,7 @@
 #define YDEBUG
 #include <wine/debug.h>
 
+#ifndef USE_GETLASTINPUTINFO
 static LRESULT CALLBACK
 KeyboardActivityProc(
 	IN INT nCode,
@@ -30,6 +31,7 @@ MouseActivityProc(
 	InterlockedExchange((LONG*)&WLSession->LastActivity, ((PMSLLHOOKSTRUCT)lParam)->time);
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
+#endif
 
 static VOID
 LoadScreenSaverParameters(
@@ -65,7 +67,12 @@ ScreenSaverThreadMain(
 {
 	PWLSESSION Session = (PWLSESSION)lpParameter;
 	HANDLE HandleArray[3];
-	DWORD LastActivity, TimeToWait;
+#ifdef USE_GETLASTINPUTINFO
+	LASTINPUTINFO lastInputInfo;
+#else
+	DWORD LastActivity;
+#endif
+	DWORD TimeToWait;
 	DWORD Timeout; /* Timeout before screen saver starts, in milliseconds */
 	DWORD ret;
 
@@ -88,12 +95,26 @@ ScreenSaverThreadMain(
 
 	LoadScreenSaverParameters(&Timeout);
 
+#ifndef USE_GETLASTINPUTINFO
 	InterlockedExchange((LONG*)&Session->LastActivity, GetTickCount());
+#else
+	lastInputInfo.cbSize = sizeof(LASTINPUTINFO);
+#endif
 	for (;;)
 	{
 		/* See the time of last activity and calculate a timeout */
+#ifndef USE_GETLASTINPUTINFO
 		LastActivity = InterlockedCompareExchange((LONG*)&Session->LastActivity, 0, 0);
 		TimeToWait = Timeout - (GetTickCount() - LastActivity);
+#else
+		if (GetLastInputInfo(&lastInputInfo))
+			TimeToWait = Timeout - (GetTickCount() - lastInputInfo.dwTime);
+		else
+		{
+			WARN("GetLastInputInfo() failed with error %lu\n", GetLastError());
+			TimeToWait = 10; /* Try again in 10 ms */
+		}
+#endif
 		if (TimeToWait > Timeout)
 		{
 			/* GetTickCount() got back to 0 */
@@ -108,9 +129,19 @@ ScreenSaverThreadMain(
 			LoadScreenSaverParameters(&Timeout);
 
 		/* Check if we didn't had recent activity */
+#ifndef USE_GETLASTINPUTINFO
 		LastActivity = InterlockedCompareExchange((LONG*)&Session->LastActivity, 0, 0);
 		if (LastActivity + Timeout > GetTickCount())
 			continue;
+#else
+		if (!GetLastInputInfo(&lastInputInfo))
+		{
+			WARN("GetLastInputInfo() failed with error %lu\n", GetLastError());
+			continue;
+		}
+		if (lastInputInfo.dwTime + Timeout > GetTickCount())
+			continue;
+#endif
 
 		/* Run screen saver */
 		PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_SCRNSVR_TIMEOUT, 0);
@@ -129,10 +160,12 @@ cleanup:
 	RevertToSelf();
 	if (Session->hUserActivity)
 		CloseHandle(Session->hUserActivity);
+#ifndef USE_GETLASTINPUTINFO
 	if (Session->KeyboardHook)
 		UnhookWindowsHookEx(Session->KeyboardHook);
 	if (Session->MouseHook)
 		UnhookWindowsHookEx(Session->MouseHook);
+#endif
 	CloseHandle(Session->hEndOfScreenSaverThread);
 	CloseHandle(Session->hScreenSaverParametersChanged);
 	return 0;
@@ -147,6 +180,7 @@ InitializeScreenSaver(
 	FIXME("Disabling screen saver due to numerous bugs in ReactOS (see r23540)!\n");
 	return TRUE;
 
+#ifndef USE_GETLASTINPUTINFO
 	/* Register hooks to detect keyboard and mouse activity */
 	Session->KeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardActivityProc, hAppInstance, 0);
 	if (!Session->KeyboardHook)
@@ -160,6 +194,7 @@ InitializeScreenSaver(
 		ERR("WL: Unable to register mouse hook\n");
 		return FALSE;
 	}
+#endif
 
 	if (!(Session->hScreenSaverParametersChanged = CreateEventW(NULL, FALSE, FALSE, NULL)))
 	{
@@ -264,6 +299,8 @@ cleanup:
 	else
 	{
 		PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_SCRNSVR_ACTIVITY, 0);
+#ifndef USE_GETLASTINPUTINFO
 		InterlockedExchange((LONG*)&Session->LastActivity, GetTickCount());
+#endif
 	}
 }

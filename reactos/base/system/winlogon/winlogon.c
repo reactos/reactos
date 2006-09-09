@@ -406,6 +406,9 @@ WinMain(
 	{
 		TRACE("WL: Setup mode detected\n");
 
+		/* Set locale */
+		SetDefaultLanguage(FALSE);
+
 		/* Run setup and reboot when done */
 		SwitchDesktop(WLSession->ApplicationDesktop);
 		RunSetup();

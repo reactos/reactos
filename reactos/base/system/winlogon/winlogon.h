@@ -27,6 +27,8 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
+//#define USE_GETLASTINPUTINFO
+
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <userenv.h>
@@ -137,12 +139,16 @@ typedef struct _WLSESSION
   DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
 
   /* Screen-saver informations */
+#ifndef USE_GETLASTINPUTINFO
   HHOOK KeyboardHook;
   HHOOK MouseHook;
+#endif
   HANDLE hEndOfScreenSaverThread;
   HANDLE hScreenSaverParametersChanged;
   HANDLE hUserActivity;
+#ifndef USE_GETLASTINPUTINFO
   DWORD LastActivity;
+#endif
 
   /* Logon informations */
   DWORD Options;
@@ -171,6 +177,10 @@ UpdatePerUserSystemParameters(DWORD dwUnknown,
                               DWORD dwReserved);
 
 /* sas.c */
+BOOL
+SetDefaultLanguage(
+	IN BOOL UserProfile);
+
 BOOL
 InitializeSAS(
 	IN OUT PWLSESSION Session);
