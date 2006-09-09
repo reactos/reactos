@@ -90,12 +90,11 @@ BOOLEAN CacheInitializeDrive(ULONG DriveNumber)
 	CacheManagerDrive.BlockSize = MachDiskGetCacheableBlockCount(DriveNumber);
 
 	CacheBlockCount = 0;
-	//CacheSizeLimit = GetSystemMemorySize() / 8;
-	CacheSizeLimit = 16 * 1024;
+	CacheSizeLimit = GetSystemMemorySize() / 8;
 	CacheSizeCurrent = 0;
-	if (CacheSizeLimit < (16 * 1024))
+	if (CacheSizeLimit < (64 * 1024))
 	{
-		CacheSizeLimit = (16 * 1024);
+		CacheSizeLimit = (64 * 1024);
 	}
 
 	CacheManagerInitialized = TRUE;
@@ -139,7 +138,7 @@ BOOLEAN CacheReadDiskSectors(ULONG DiskNumber, ULONG StartSector, ULONG SectorCo
 	SectorOffsetInStartBlock = StartSector % CacheManagerDrive.BlockSize;
 	CopyLengthInStartBlock = (SectorCount > (CacheManagerDrive.BlockSize - SectorOffsetInStartBlock)) ? (CacheManagerDrive.BlockSize - SectorOffsetInStartBlock) : SectorCount;
 	EndBlock = (StartSector + (SectorCount - 1)) / CacheManagerDrive.BlockSize;
-	SectorOffsetInEndBlock = (StartSector + SectorCount) % CacheManagerDrive.BlockSize;
+	SectorOffsetInEndBlock = 1 + (StartSector + (SectorCount - 1)) % CacheManagerDrive.BlockSize;
 	BlockCount = (EndBlock - StartBlock) + 1;
 	DbgPrint((DPRINT_CACHE, "StartBlock: %d SectorOffsetInStartBlock: %d CopyLengthInStartBlock: %d EndBlock: %d SectorOffsetInEndBlock: %d BlockCount: %d\n", StartBlock, SectorOffsetInStartBlock, CopyLengthInStartBlock, EndBlock, SectorOffsetInEndBlock, BlockCount));
 
@@ -285,7 +284,7 @@ BOOLEAN CacheForceDiskSectorsIntoCache(ULONG DiskNumber, ULONG StartSector, ULON
 		//
 		// Lock the sectors into the cache
 		//
-		//CacheBlock->LockedInCache = TRUE;
+		CacheBlock->LockedInCache = TRUE;
 	}
 
 	return TRUE;
