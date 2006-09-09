@@ -85,7 +85,7 @@ CreateFileSystemList(
     List->Selected = NULL;
     InitializeListHead(&List->ListHead);
 
-    AddProvider(List, "FAT", VfatFormat, NULL);
+    AddProvider(List, "FAT", VfatFormat, VfatChkdsk);
     if (!ForceFormat)
     {
         /* Add 'Keep' provider */

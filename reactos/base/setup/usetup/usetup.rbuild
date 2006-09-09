@@ -13,10 +13,11 @@
 	<library>inflib</library>
 	<library>vfatlib</library>
 	<library>ntdll</library>
-	<!--pch>usetup.h</pch-->
+	<pch>usetup.h</pch>
 	<compilationunit name="unit.c">
 		<file>bootsup.c</file>
 		<file>cabinet.c</file>
+		<file>chkdsk.c</file>
 		<file>console.c</file>
 		<file>drivesup.c</file>
 		<file>filequeue.c</file>

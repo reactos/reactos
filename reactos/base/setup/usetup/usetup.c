@@ -2419,62 +2419,84 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 static ULONG
 CheckFileSystemPage(PINPUT_RECORD Ir)
 {
+  PFILE_SYSTEM_ITEM CurrentFileSystem;
   WCHAR PathBuffer[MAX_PATH];
+  CHAR Buffer[MAX_PATH];
+  NTSTATUS Status;
 
-  CONSOLE_SetTextXY(6, 8, "Check file system");
-
-  CONSOLE_SetTextXY(6, 10, "At present, ReactOS can not check file systems.");
-
-  CONSOLE_SetStatusText("   Please wait ...");
-
-
-  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
-
-
+  /* FIXME: code duplicated in FormatPartitionPage */
   /* Set DestinationRootPath */
-  RtlFreeUnicodeString (&DestinationRootPath);
-  swprintf (PathBuffer,
-	    L"\\Device\\Harddisk%lu\\Partition%lu",
-	    PartitionList->CurrentDisk->DiskNumber,
-	    PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
-  RtlCreateUnicodeString (&DestinationRootPath,
-			  PathBuffer);
-  DPRINT ("DestinationRootPath: %wZ\n", &DestinationRootPath);
+  RtlFreeUnicodeString(&DestinationRootPath);
+  swprintf(PathBuffer,
+    L"\\Device\\Harddisk%lu\\Partition%lu",
+    PartitionList->CurrentDisk->DiskNumber,
+    PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
+  RtlCreateUnicodeString(&DestinationRootPath, PathBuffer);
+  DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
 
   /* Set SystemRootPath */
-  RtlFreeUnicodeString (&SystemRootPath);
-  swprintf (PathBuffer,
-	    L"\\Device\\Harddisk%lu\\Partition%lu",
-	    PartitionList->ActiveBootDisk->DiskNumber,
-	    PartitionList->ActiveBootPartition->PartInfo[0].PartitionNumber);
-  RtlCreateUnicodeString (&SystemRootPath,
-			  PathBuffer);
-  DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
+  RtlFreeUnicodeString(&SystemRootPath);
+  swprintf(PathBuffer,
+    L"\\Device\\Harddisk%lu\\Partition%lu",
+    PartitionList->ActiveBootDisk->DiskNumber,
+    PartitionList->ActiveBootPartition->PartInfo[0].PartitionNumber);
+  RtlCreateUnicodeString(&SystemRootPath, PathBuffer);
+  DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
 
+  CONSOLE_SetTextXY(6, 8, "Setup is now checking the selected partition.");
 
-  if (IsUnattendedSetup)
-    {
-      return(INSTALL_DIRECTORY_PAGE);
-    }
+  CONSOLE_SetStatusText("   Please wait...");
 
-  while(TRUE)
+  /* WRONG: first filesystem is not necesseraly the one of the current partition! */
+  CurrentFileSystem = CONTAINING_RECORD(FileSystemList->ListHead.Flink, FILE_SYSTEM_ITEM, ListEntry);
+
+  if (!CurrentFileSystem->ChkdskFunc)
+  {
+    sprintf(Buffer,
+      "Setup is currently unable to check a partition formatted in %s.\n"
+      "\n"
+      "  \x07  Press ENTER to continue Setup.\n"
+      "  \x07  Press F3 to quit Setup.",
+      CurrentFileSystem->FileSystem);
+    PopupError(
+      Buffer,
+      "F3= Quit  ENTER = Continue",
+      NULL, POPUP_WAIT_NONE);
+
+    while(TRUE)
     {
       CONSOLE_ConInKey(Ir);
 
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
-	{
-	  if (ConfirmQuit(Ir) == TRUE)
-	    return(QUIT_PAGE);
-	  break;
-	}
-      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-	{
-	  return(INSTALL_DIRECTORY_PAGE);
-	}
+      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x00
+       && Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3) /* F3 */
+      {
+        if (ConfirmQuit(Ir))
+          return QUIT_PAGE;
+        else
+          return CHECK_FILE_SYSTEM_PAGE;
+      }
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
+      {
+        return INSTALL_DIRECTORY_PAGE;
+      }
+    }
+  }
+  else
+  {
+    Status = ChkdskPartition(&DestinationRootPath, CurrentFileSystem);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ChkdskPartition() failed with status 0x%08lx\n", Status);
+        sprintf(Buffer, "Setup failed to verify the selected partition.\n"
+          "(Status 0x%08lx).\n", Status);
+        PopupError(Buffer,
+          "ENTER = Reboot computer",
+          Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
     }
 
-  return(CHECK_FILE_SYSTEM_PAGE);
+    return INSTALL_DIRECTORY_PAGE;
+  }
 }
 
 

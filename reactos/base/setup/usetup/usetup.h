@@ -65,6 +65,7 @@
 #include "keytrans.h"
 #include "registry.h"
 #include "fslist.h"
+#include "chkdsk.h"
 #include "format.h"
 #include "cabinet.h"
 #include "filesup.h"

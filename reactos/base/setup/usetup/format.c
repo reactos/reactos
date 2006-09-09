@@ -30,7 +30,7 @@
 #define NDEBUG
 #include <debug.h>
 
-PPROGRESSBAR ProgressBar = NULL;
+static PPROGRESSBAR FormatProgressBar = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -49,7 +49,7 @@ FormatCallback(
             Percent = (PULONG)Argument;
             DPRINT("%lu percent completed\n", *Percent);
 
-            ProgressSetStep(ProgressBar, *Percent);
+            ProgressSetStep(FormatProgressBar, *Percent);
             break;
         }
 
@@ -89,13 +89,16 @@ FormatPartition(
 {
     NTSTATUS Status;
 
-    ProgressBar = CreateProgressBar(6,
-                                    yScreen - 14,
-                                    xScreen - 7,
-                                    yScreen - 10,
-                                    "Setup is formatting your disk");
+    if (!FileSystem->FormatFunc)
+        return STATUS_NOT_SUPPORTED;
 
-    ProgressSetStepCount(ProgressBar, 100);
+    FormatProgressBar = CreateProgressBar(6,
+                                          yScreen - 14,
+                                          xScreen - 7,
+                                          yScreen - 10,
+                                          "Setup is formatting your disk");
+
+    ProgressSetStepCount(FormatProgressBar, 100);
 
     Status = FileSystem->FormatFunc(DriveRoot,
                                     FMIFS_HARDDISK,          /* MediaFlag */
@@ -104,10 +107,10 @@ FormatPartition(
                                     0,                       /* ClusterSize */
                                     FormatCallback);         /* Callback */
 
-    DestroyProgressBar(ProgressBar);
-    ProgressBar = NULL;
+    DestroyProgressBar(FormatProgressBar);
+    FormatProgressBar = NULL;
 
-    DPRINT("FormatEx() finished with status 0x%08lx\n", Status);
+    DPRINT("FormatPartition() finished with status 0x%08lx\n", Status);
 
     return Status;
 }
