@@ -2422,13 +2422,7 @@ Index: msi.rbuild
 ===================================================================
 --- msi.rbuild	(revision 23808)
 +++ msi.rbuild	(working copy)
-@@ -1,4 +1,5 @@
- <module name="msi" type="win32dll" baseaddress="${BASEADDRESS_MSI}" installbase="system32" installname="msi.dll" allowwarnings="true">
-+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
- 	<importlibrary definition="msi.spec.def" />
- 	<include base="msi">.</include>
- 	<include base="ReactOS">include/reactos/wine</include>
-@@ -28,6 +29,7 @@
+@@ -29,6 +29,7 @@
  	<file>alter.c</file>
  	<file>appsearch.c</file>
  	<file>classes.c</file>
@@ -2436,7 +2430,7 @@ Index: msi.rbuild
  	<file>create.c</file>
  	<file>custom.c</file>
  	<file>database.c</file>
-@@ -53,6 +55,7 @@
+@@ -54,6 +55,7 @@
  	<file>regsvr.c</file>
  	<file>select.c</file>
  	<file>source.c</file>
@@ -5341,7 +5335,7 @@ Index: tokenize.c
 ===================================================================
 --- tokenize.c	(revision 23808)
 +++ tokenize.c	(working copy)
-@@ -154,7 +154,7 @@
+@@ -156,7 +156,7 @@
  static const Keyword aKeywordTable[] = {
    { ABORT_W, TK_ABORT },
    { AFTER_W, TK_AFTER },

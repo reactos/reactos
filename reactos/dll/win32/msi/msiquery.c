@@ -867,7 +867,7 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysA(MSIHANDLE hdb,
 }
 
 MSICONDITION WINAPI MsiDatabaseIsTablePersistentA(
-              MSIHANDLE hDatabase, LPSTR szTableName)
+              MSIHANDLE hDatabase, LPCSTR szTableName)
 {
     LPWSTR szwTableName = NULL;
     MSICONDITION r;
@@ -887,7 +887,7 @@ MSICONDITION WINAPI MsiDatabaseIsTablePersistentA(
 }
 
 MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(
-              MSIHANDLE hDatabase, LPWSTR szTableName)
+              MSIHANDLE hDatabase, LPCWSTR szTableName)
 {
     FIXME("%lx %s\n", hDatabase, debugstr_w(szTableName));
     return MSICONDITION_FALSE;
