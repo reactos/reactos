@@ -18,7 +18,6 @@ typedef struct _DESKTOP_OBJECT
     RECT WorkArea;
     /* Handle of the desktop window. */
     HANDLE DesktopWindow;
-    HANDLE PrevActiveWindow;
     /* Thread blocking input */
     PVOID BlockInputThread;
 
