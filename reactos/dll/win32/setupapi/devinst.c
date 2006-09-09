@@ -83,7 +83,7 @@ SetupDiCreateDeviceInfoList(
     IN CONST GUID *ClassGuid OPTIONAL,
     IN HWND hwndParent OPTIONAL)
 {
-  return SetupDiCreateDeviceInfoListExW(ClassGuid, hwndParent, NULL, NULL);
+    return SetupDiCreateDeviceInfoListExW(ClassGuid, hwndParent, NULL, NULL);
 }
 
 /***********************************************************************
@@ -112,8 +112,7 @@ SetupDiCreateDeviceInfoListExA(
     hDevInfo = SetupDiCreateDeviceInfoListExW(ClassGuid, hwndParent,
                                               MachineNameW, Reserved);
 
-    if (MachineNameW)
-        MyFree(MachineNameW);
+    MyFree(MachineNameW);
 
     return hDevInfo;
 }
@@ -148,6 +147,20 @@ GetErrorCodeFromCrCode(const IN CONFIGRET cr)
 
 /***********************************************************************
  *		SetupDiCreateDeviceInfoListExW (SETUPAPI.@)
+ *
+ * Create an empty DeviceInfoSet list.
+ *
+ * PARAMS
+ *   ClassGuid [I] if not NULL only devices with GUID ClcassGuid are associated
+ *                 with this list.
+ *   hwndParent [I] hwnd needed for interface related actions.
+ *   MachineName [I] name of machine to create emtpy DeviceInfoSet list, if NULL
+ *                   local regestry will be used.
+ *   Reserved [I] must be NULL
+ *
+ * RETURNS
+ *   Success: empty list.
+ *   Failure: INVALID_HANDLE_VALUE.
  */
 HDEVINFO WINAPI
 SetupDiCreateDeviceInfoListExW(
@@ -175,7 +188,7 @@ SetupDiCreateDeviceInfoListExW(
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
     }
-    memset(list, 0, sizeof(struct DeviceInfoSet));
+    ZeroMemory(list, sizeof(struct DeviceInfoSet));
 
     list->magic = SETUP_DEV_INFO_SET_MAGIC;
     memcpy(
@@ -805,7 +818,7 @@ CreateDeviceInfoElement(
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
-    memset(deviceInfo, 0, size);
+    ZeroMemory(deviceInfo, size);
 
     cr = CM_Locate_DevNode_ExW(&deviceInfo->dnDevInst, (DEVINSTID_W)InstancePath, CM_LOCATE_DEVNODE_PHANTOM, list->hMachine);
     if (cr != CR_SUCCESS)
@@ -1510,7 +1523,7 @@ SetupDiCallClassInstaller(
                                     coinstaller = HeapAlloc(GetProcessHeap(), 0, sizeof(struct CoInstallerElement));
                                     if (!coinstaller)
                                         continue;
-                                    memset(coinstaller, 0, sizeof(struct CoInstallerElement));
+                                    ZeroMemory(coinstaller, sizeof(struct CoInstallerElement));
                                     if (GetFunctionPointer(ptr, &coinstaller->Module, (PVOID*)&coinstaller->Function) == ERROR_SUCCESS)
                                         InsertTailList(&DeviceCoInstallersListHead, &coinstaller->ListEntry);
                                     else
@@ -1554,7 +1567,7 @@ SetupDiCallClassInstaller(
                                         coinstaller = HeapAlloc(GetProcessHeap(), 0, sizeof(struct CoInstallerElement));
                                         if (!coinstaller)
                                             continue;
-                                        memset(coinstaller, 0, sizeof(struct CoInstallerElement));
+                                        ZeroMemory(coinstaller, sizeof(struct CoInstallerElement));
                                         if (GetFunctionPointer(ptr, &coinstaller->Module, (PVOID*)&coinstaller->Function) == ERROR_SUCCESS)
                                             InsertTailList(&ClassCoInstallersListHead, &coinstaller->ListEntry);
                                         else

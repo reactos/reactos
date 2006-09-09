@@ -129,6 +129,9 @@ SetupDiBuildClassInfoList(
 /***********************************************************************
  *              SetupDiBuildClassInfoListExA  (SETUPAPI.@)
  *
+ * Returns a list of setup class GUIDs that identify the classes
+ * that are installed on a local or remote macine.
+ *
  * PARAMS
  *   Flags [I] control exclusion of classes from the list.
  *   ClassGuidList [O] pointer to a GUID-typed array that receives a list of setup class GUIDs.
@@ -906,10 +909,10 @@ cleanup:
  *		SETUP_CreateDevicesListFromEnumerator
  *
  * PARAMS
- *   list [I] Device info set to fill with discovered devices.
+ *   list [IO] Device info set to fill with discovered devices.
  *   pClassGuid [I] If specified, only devices which belong to this class will be added.
  *   Enumerator [I] Location to search devices to add.
- *   hEnumeratorKey [O] Registry key corresponding to Enumerator key. Must have KEY_ENUMERATE_SUB_KEYS right.
+ *   hEnumeratorKey [I] Registry key corresponding to Enumerator key. Must have KEY_ENUMERATE_SUB_KEYS right.
  *
  * RETURNS
  *   Success: ERROR_SUCCESS.
@@ -1169,45 +1172,58 @@ SetupDiGetClassDevsExW(
     if (Flags & DIGCF_PROFILE)
         FIXME(": flag DIGCF_PROFILE ignored\n");
 
-    /* FIXME: list->ClassGuid is never used! */
-    if (Flags & DIGCF_ALLCLASSES)
-        pClassGuid = NULL;
-    else if (ClassGuid)
-        pClassGuid = ClassGuid;
-    else
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        goto cleanup;
-    }
-
     if (Flags & DIGCF_DEVICEINTERFACE)
-    {
         rc = SETUP_CreateInterfaceList(list, MachineName, ClassGuid, Enumerator, Flags & DIGCF_PRESENT);
-        if (rc != ERROR_SUCCESS)
-        {
-            SetLastError(rc);
-            goto cleanup;
-        }
-        ret = hDeviceInfo;
-    }
     else
     {
+        /* Determine which class(es) should be included in the deviceset */
         if (Flags & DIGCF_ALLCLASSES)
-            rc = SETUP_CreateDevicesList(list, MachineName, NULL, Enumerator);
+        {
+            /* The caller wants all classes. Check if
+             * the deviceset limits us to one class */
+            if (IsEqualIID(&list->ClassGuid, &GUID_NULL))
+                pClassGuid = NULL;
+            else
+                pClassGuid = &list->ClassGuid;
+        }
         else if (ClassGuid)
-            rc = SETUP_CreateDevicesList(list, MachineName, pClassGuid, Enumerator);
+        {
+            /* The caller wants one class. Check if it matches deviceset class */
+            if (IsEqualIID(&list->ClassGuid, ClassGuid)
+             || IsEqualIID(&list->ClassGuid, &GUID_NULL))
+            {
+                pClassGuid = ClassGuid;
+            }
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                goto cleanup;
+            }
+        }
+        else if (!IsEqualIID(&list->ClassGuid, &GUID_NULL))
+        {
+            /* No class specified. Try to use the one of the deviceset */
+            if (IsEqualIID(&list->ClassGuid, &GUID_NULL))
+                pClassGuid = &list->ClassGuid;
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                goto cleanup;
+            }
+        }
         else
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             goto cleanup;
         }
-        if (rc != ERROR_SUCCESS)
-        {
-            SetLastError(rc);
-            goto cleanup;
-        }
-        ret = hDeviceInfo;
+        rc = SETUP_CreateDevicesList(list, MachineName, pClassGuid, Enumerator);
     }
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    }
+    ret = hDeviceInfo;
 
 cleanup:
     if (!DeviceInfoSet && hDeviceInfo != INVALID_HANDLE_VALUE && hDeviceInfo != ret)
