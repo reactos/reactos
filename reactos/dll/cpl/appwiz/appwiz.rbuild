@@ -1,4 +1,4 @@
-<module name="appwiz" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_APPWIZ}"  installbase="system32" installname="appwiz.cpl">
+<module name="appwiz" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_APPWIZ}"  installbase="system32" installname="appwiz.cpl">
 	<importlibrary definition="appwiz.def" />
 	<include base="appwiz">.</include>
 	<define name="UNICODE" />
@@ -11,6 +11,7 @@
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>msvcrt</library>
 	<file>appwiz.c</file>
 	<file>appwiz.rc</file>
 </module>

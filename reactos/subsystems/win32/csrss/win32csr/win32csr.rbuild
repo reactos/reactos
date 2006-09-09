@@ -1,4 +1,4 @@
-<module name="win32csr" type="win32dll" installbase="system32" installname="win32csr.dll">
+<module name="win32csr" type="win32dll" entrypoint="0" installbase="system32" installname="win32csr.dll">
 	<importlibrary definition="win32csr.def" />
 	<include base="win32csr">.</include>
 	<include base="csrss">include</include>
@@ -14,6 +14,7 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>psapi</library>
+	<library>msvcrt</library>
 	<pch>w32csr.h</pch>
 	<file>conio.c</file>
 	<file>desktopbg.c</file>

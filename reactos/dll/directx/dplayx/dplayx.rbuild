@@ -1,4 +1,4 @@
-<module name="dplayx" type="win32dll" baseaddress="${BASEADDRESS_DPLAYX}" installbase="system32" installname="dplayx.dll" allowwarnings ="true">
+<module name="dplayx" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DPLAYX}" installbase="system32" installname="dplayx.dll" allowwarnings ="true">
 	<!-- Won't load correctly in ReactOS yet autoregister infsection="OleControlDlls" type="DllRegisterServer" -->
 	<importlibrary definition="dplayx.spec.def" />
 	<include base="dplayx">.</include>

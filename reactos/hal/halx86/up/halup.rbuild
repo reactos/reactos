@@ -1,4 +1,4 @@
-<module name="halup" type="kernelmodedll">
+<module name="halup" type="kernelmodedll" entrypoint="0">
 	<importlibrary definition="../../hal/hal.def" />
 	<bootstrap base="reactos" nameoncd="hal.dll" />
 	<include base="hal_generic">../include</include>

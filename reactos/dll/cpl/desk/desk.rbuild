@@ -1,4 +1,4 @@
-<module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl">
+<module name="desk" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl">
 	<importlibrary definition="desk.def" />
 	<include base="desk">.</include>
 	<define name="UNICODE" />
@@ -19,6 +19,7 @@
 	<library>shell32</library>
 	<library>ntdll</library>
 	<library>msimg32</library>
+	<library>msvcrt</library>
 	<file>classinst.c</file>
 	<file>desk.c</file>
 	<file>background.c</file>

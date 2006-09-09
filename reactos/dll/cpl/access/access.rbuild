@@ -1,4 +1,4 @@
-<module name="access" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_ACCESS}"  installbase="system32" installname="access.cpl">
+<module name="access" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_ACCESS}"  installbase="system32" installname="access.cpl">
 	<importlibrary definition="access.def" />
 	<include base="access">.</include>
 	<define name="UNICODE" />

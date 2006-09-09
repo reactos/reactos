@@ -1,4 +1,4 @@
-<module name="halmp" type="kernelmodedll">
+<module name="halmp" type="kernelmodedll" entrypoint="0">
 	<importlibrary definition="../../hal/hal.def" />
 	<bootstrap base="reactos" />
 	<include base="hal_generic">../include</include>

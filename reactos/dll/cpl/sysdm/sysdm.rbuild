@@ -1,4 +1,4 @@
-<module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" usewrc="false">
+<module name="sysdm" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" usewrc="false">
 	<importlibrary definition="sysdm.def" />
 	<include base="sysdm">.</include>
 	<define name="UNICODE" />
@@ -13,6 +13,7 @@
 	<library>comctl32</library>
 	<library>netapi32</library>
 	<library>ntdll</library>
+	<library>msvcrt</library>
 	<file>advanced.c</file>
 	<file>computer.c</file>
 	<file>environment.c</file>

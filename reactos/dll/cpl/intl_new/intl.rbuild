@@ -1,4 +1,4 @@
-<module name="intl_new" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl_new.cpl" usewrc="false">
+<module name="intl_new" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl_new.cpl" usewrc="false">
 	<importlibrary definition="intl.def" />
 	<include base="intl">.</include>
 	<define name="UNICODE" />
@@ -11,6 +11,7 @@
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>advapi32</library>
+	<library>msvcrt</library>
 	<file>intl.c</file>
 	<file>locale.c</file>
 	<file>extra.c</file>

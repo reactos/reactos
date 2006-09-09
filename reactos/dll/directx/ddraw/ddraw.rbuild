@@ -1,4 +1,4 @@
-<module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll">
+<module name="ddraw" type="win32dll" entrypoint="0" installbase="system32" installname="ddraw.dll">
   <importlibrary definition="ddraw.def" />
 	<include base="ddraw">.</include>	
 	<define name="UNICODE" />

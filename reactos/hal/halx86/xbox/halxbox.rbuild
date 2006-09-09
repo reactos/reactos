@@ -1,4 +1,4 @@
-<module name="halxbox" type="kernelmodedll" allowwarnings="true">
+<module name="halxbox" type="kernelmodedll" entrypoint="0" allowwarnings="true">
 	<importlibrary definition="../../hal/hal.def" />
 	<include base="hal_generic">../include</include>
 	<include base="halxbox">.</include>

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <rbuild xmlns:xi="http://www.w3.org/2001/XInclude">
-  <module name="notifyhook" type="win32dll" baseaddress="${BASEADDRESS_NOTIFYHOOK}" installbase="system32" installname="notifyhook.dll">
+  <module name="notifyhook" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_NOTIFYHOOK}" installbase="system32" installname="notifyhook.dll">
     <importlibrary definition="notifyhook.def" />
     <include base="notifyhook">.</include>
     <define name="__USE_W32API" />

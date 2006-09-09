@@ -1,4 +1,4 @@
-<module name="timedate" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_TIMEDATE}" installbase="system32" installname="timedate.cpl">
+<module name="timedate" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_TIMEDATE}" installbase="system32" installname="timedate.cpl">
 	<importlibrary definition="timedate.def" />
 	<include base="timedate">.</include>
 	<define name="UNICODE" />
@@ -14,6 +14,7 @@
 	<library>comctl32</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
+	<library>msvcrt</library>
 	<file>clock.c</file>
 	<file>dateandtime.c</file>
 	<file>internettime.c</file>

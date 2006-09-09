@@ -1,4 +1,4 @@
-<module name="dxdiagn" type="win32dll" baseaddress="${BASEADDRESS_DXDIAGN}" installbase="system32" installname="dxdiagn.dll" allowwarnings="true">
+<module name="dxdiagn" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DXDIAGN}" installbase="system32" installname="dxdiagn.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dxdiagn.spec.def" />
 	<include base="dxdiagn">.</include>

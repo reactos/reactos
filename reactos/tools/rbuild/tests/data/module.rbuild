@@ -7,7 +7,7 @@
 		</module>
 	</directory>
 	<directory name="dir2">
-		<module name="module2" type="kernelmodedll" installbase="reactos" installname="module2.ext">
+		<module name="module2" type="kernelmodedll" entrypoint="0" installbase="reactos" installname="module2.ext">
 			<dependency>module1</dependency>
 			<library>module1</library>
 			<file>file3.c</file>

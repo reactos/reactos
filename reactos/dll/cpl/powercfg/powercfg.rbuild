@@ -1,4 +1,4 @@
-<module name="powercfg" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_PWRCFG}" installbase="system32" installname="powercfg.cpl" allowwarnings="true">
+<module name="powercfg" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_PWRCFG}" installbase="system32" installname="powercfg.cpl" allowwarnings="true">
 	<importlibrary definition="powercfg.def" />
 	<include base="powercfg">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
@@ -12,6 +12,7 @@
 	<library>user32</library>
 	<library>powrprof</library>
 	<library>comctl32</library>
+	<library>msvcrt</library>
 	<file>powercfg.c</file>
 	<file>powershemes.c</file>
 	<file>alarms.c</file>

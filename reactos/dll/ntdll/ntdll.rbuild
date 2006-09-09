@@ -1,4 +1,4 @@
-<module name="ntdll" type="win32dll" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll">
+<module name="ntdll" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll">
 	<bootstrap base="reactos/system32" />
 	<importlibrary definition="def/ntdll.def" />
 	<include base="ntdll">inc</include>

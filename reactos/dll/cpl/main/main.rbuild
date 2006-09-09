@@ -1,4 +1,4 @@
-<module name="main" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MAIN}" installbase="system32" installname="main.cpl">
+<module name="main" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_MAIN}" installbase="system32" installname="main.cpl">
 	<importlibrary definition="main.def" />
 	<include base="main">.</include>
 	<define name="UNICODE" />
@@ -14,6 +14,7 @@
 	<library>devmgr</library>
 	<library>comdlg32</library>
 	<library>gdi32</library>
+	<library>msvcrt</library>
 	<file>keyboard.c</file>
 	<file>main.c</file>
 	<file>mouse.c</file>

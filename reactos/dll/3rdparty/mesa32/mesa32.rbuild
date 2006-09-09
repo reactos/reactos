@@ -1,5 +1,5 @@
 <!-- Autogeneratd by Makefile.ReactOS -->
-<module name="mesa32" type="win32dll" baseaddress="${BASEADDRESS_MESA32}" installbase="system32" installname="mesa32.dll" allowwarnings="true">
+<module name="mesa32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MESA32}" installbase="system32" installname="mesa32.dll" allowwarnings="true">
  	<importlibrary definition="src/drivers/windows/icd/mesa.def" />
  	<linkerflag>-Wl,--enable-stdcall-fixup</linkerflag>
  	<library>ntdll</library>

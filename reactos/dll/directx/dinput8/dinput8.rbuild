@@ -1,4 +1,4 @@
-<module name="dinput8" type="win32dll" baseaddress="${BASEADDRESS_DINPUT8}" installbase="system32" installname="dinput8.dll">
+<module name="dinput8" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DINPUT8}" installbase="system32" installname="dinput8.dll">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput8.spec.def" />
 	<include base="dinput8">.</include>

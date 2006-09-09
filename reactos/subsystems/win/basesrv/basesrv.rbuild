@@ -1,4 +1,4 @@
-<module name="basesrv" type="win32dll">
+<module name="basesrv" type="win32dll" entrypoint="0">
 	<importlibrary definition="basesrv.def" />
 	<include base="basesrv">.</include>
 	<include base="csr">include</include>

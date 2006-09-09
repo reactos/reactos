@@ -1,4 +1,4 @@
-<module name="dsound" type="win32dll" baseaddress="${BASEADDRESS_DSOUND}" installbase="system32" installname="dsound.dll" allowwarnings ="true">
+<module name="dsound" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DSOUND}" installbase="system32" installname="dsound.dll" allowwarnings ="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dsound.spec.def" />
 	<include base="dsound">.</include>
@@ -17,20 +17,21 @@
 	<library>ole32</library>
 	<library>winmm</library>
 	<library>dxguid</library>
-      <file>version.rc</file>
+	<library>msvcrt</library>
+	<file>version.rc</file>
 	<file>buffer.c</file>	
-      <file>capture.c</file>
-      <file>dsound.c</file>
-      <file>dsound_main.c</file>
-      <file>duplex.c</file>
-      <file>mixer.c</file>
-      <file>primary.c</file>
-      <file>propset.c</file>
-      <file>regsvr.c</file>
-      <file>sound3d.c</file>
-      <file>dxroslayer/dxrosdrv_querydsounddesc.c</file>
-      <file>dxroslayer/dxrosdrv_querydsoundiface.c</file>
-      <file>dxroslayer/dxroslayer.c</file>
-      <file>dxroslayer/getguidfromstring.c</file>
+	<file>capture.c</file>
+	<file>dsound.c</file>
+	<file>dsound_main.c</file>
+	<file>duplex.c</file>
+	<file>mixer.c</file>
+	<file>primary.c</file>
+	<file>propset.c</file>
+	<file>regsvr.c</file>
+	<file>sound3d.c</file>
+	<file>dxroslayer/dxrosdrv_querydsounddesc.c</file>
+	<file>dxroslayer/dxrosdrv_querydsoundiface.c</file>
+	<file>dxroslayer/dxroslayer.c</file>
+	<file>dxroslayer/getguidfromstring.c</file>
 	<file>dsound.spec</file>
 </module>
