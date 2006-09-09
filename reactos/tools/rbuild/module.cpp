@@ -1110,6 +1110,8 @@ string
 Module::GetEntryPoint(bool leadingUnderscore) const
 {
 	string result = "";
+	if (entrypoint == "0" || entrypoint == "0x0")
+		return "0";
 	if (leadingUnderscore)
 		result = "_";
 
