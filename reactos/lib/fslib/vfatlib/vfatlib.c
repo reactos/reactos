@@ -213,7 +213,7 @@ VfatChkdsk(
 	IN PFMIFSCALLBACK Callback)
 {
 	DPRINT1("VfatChkdsk() unimplemented!\n");
-	return STATUS_NOT_IMPLEMENTED;
+	return STATUS_SUCCESS;
 }
 
 /* EOF */
