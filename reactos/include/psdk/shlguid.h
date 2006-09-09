@@ -10,6 +10,8 @@ extern "C" {
 
 #define DEFINE_SHLGUID(name, l, w1, w2) DEFINE_OLEGUID(name,l,w1,w2)
 
+DEFINE_GUID(IID_IShellFolderViewCB, 0x2047E320L, 0xF2A9, 0x11CE, 0xAE, 0x65, 0x08, 0x00, 0x2B, 0x2E, 0x12, 0x62);
+
 DEFINE_SHLGUID(CLSID_ShellDesktop,      0x00021400L, 0, 0);
 DEFINE_SHLGUID(CLSID_ShellLink,         0x00021401L, 0, 0);
 

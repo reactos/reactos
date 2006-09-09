@@ -1728,6 +1728,19 @@ DECLARE_INTERFACE_(IDropTargetHelper, IUnknown)
 #undef INTERFACE
 #endif /* _WIN32_IE >= 0x0500 */
 
+#if defined(COBJMACROS)
+/*** IUnknown methods ***/
+#define IDropTargetHelper_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDropTargetHelper_AddRef(p)             (p)->lpVtbl->AddRef(p)
+#define IDropTargetHelper_Release(p)            (p)->lpVtbl->Release(p)
+/*** IDropTargetHelper methods ***/
+#define IDropTargetHelper_DragEnter(p,a,b,c,d)  (p)->lpVtbl->DragEnter(p,a,b,c,d)
+#define IDropTargetHelper_DragLeave(p)          (p)->lpVtbl->DragLeave(p)
+#define IDropTargetHelper_DragOver(p,a,b)       (p)->lpVtbl->DragOver(p,a,b)
+#define IDropTargetHelper_Drop(p,a,b,c)         (p)->lpVtbl->Drop(p,a,b,c)
+#define IDropTargetHelper_Show(p,a)             (p)->lpVtbl->Show(p,a)
+#endif
+
 #define INTERFACE IInputObject
 DECLARE_INTERFACE_(IInputObject,IUnknown)
 {
@@ -1792,8 +1805,48 @@ typedef struct _CSFV
   FOLDERVIEWMODE   fvm;
 } CSFV, *LPCSFV;
 
-/* FIXME: Add the IShellFolderViewCB interface! */
-#define IShellFolderViewCB void
+#define INTERFACE IShellFolderViewCB
+DECLARE_INTERFACE_(IShellFolderViewCB,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    /*** IShellFolderViewCB methods ***/
+    STDMETHOD(MessageSFVCB)(THIS_ UINT uMsg, WPARAM wParam, LPARAM lParam) PURE;
+};
+#undef INTERFACE
+
+#define SFVM_MERGEMENU	1
+#define SFVM_INVOKECOMMAND	2
+#define SFVM_GETHELPTEXT	3
+#define SFVM_GETTOOLTIPTEXT	4
+#define SFVM_GETBUTTONINFO	5
+#define SFVM_GETBUTTONS	6
+#define SFVM_INITMENUPOPUP	7
+#define SFVM_FSNOTIFY	14
+#define SFVM_WINDOWCREATED	15
+#define SFVM_GETDETAILSOF	23
+#define SFVM_COLUMNCLICK	24
+#define SFVM_QUERYFSNOTIFY	25
+#define SFVM_DEFITEMCOUNT	26
+#define SFVM_DEFVIEWMODE	27
+#define SFVM_UNMERGEMENU	28
+#define SFVM_UPDATESTATUSBAR	31
+#define SFVM_BACKGROUNDENUM	32
+#define SFVM_DIDDRAGDROP	36
+#define SFVM_SETISFV	39
+#define SFVM_THISIDLIST	41
+#define SFVM_ADDPROPERTYPAGES	47
+#define SFVM_BACKGROUNDENUMDONE	48
+#define SFVM_GETNOTIFY	49
+#define SFVM_GETSORTDEFAULTS	53
+#define SFVM_SIZE	57
+#define SFVM_GETZONE	58
+#define SFVM_GETPANE	59
+#define SFVM_GETHELPTOPIC	63
+#define SFVM_GETANIMATION	68
+
 typedef struct _SFV_CREATE
 {
     UINT cbSize;
