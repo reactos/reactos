@@ -1,4 +1,4 @@
-<module name="midimap" type="win32dll" baseaddress="${BASEADDRESS_MIDIMAP}" installbase="system32" installname="midimap.dll" allowwarnings="true">
+<module name="midimap" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MIDIMAP}" installbase="system32" installname="midimap.dll" allowwarnings="true">
 	<importlibrary definition="midimap.spec.def" />
 	<include base="midimap">.</include>
 	<include base="ReactOS">include/wine</include>
@@ -16,6 +16,7 @@
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>winmm</library>
+	<library>msvcrt</library>
 	<file>midimap.c</file>
 	<file>midimap.rc</file>
 	<file>midimap.spec</file>

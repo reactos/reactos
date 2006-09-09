@@ -1,4 +1,4 @@
-<module name="security" type="win32dll" baseaddress="${BASEADDRESS_SECUR32}" installbase="system32" installname="security.dll">
+<module name="security" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_SECUR32}" installbase="system32" installname="security.dll">
 	<importlibrary definition="security.def" />
 	<include base="security">.</include>
 	<define name="__SECURITY__" />

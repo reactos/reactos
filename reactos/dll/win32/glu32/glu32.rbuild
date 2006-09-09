@@ -1,4 +1,4 @@
-<module name="glu32" type="win32dll" baseaddress="${BASEADDRESS_GLU32}" installbase="system32" installname="glu32.dll" allowwarnings="true" stdlib="host">
+<module name="glu32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_GLU32}" installbase="system32" installname="glu32.dll" allowwarnings="true" stdlib="host">
 	<importlibrary definition="glu32.def" />
 	<include base="glu32">include</include>
 	<include base="glu32">libnurbs/internals</include>

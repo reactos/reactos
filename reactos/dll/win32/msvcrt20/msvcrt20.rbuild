@@ -1,4 +1,4 @@
-<module name="msvcrt20" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT20}" mangledsymbols="yes" installbase="system32" installname="msvcrt20.dll">
+<module name="msvcrt20" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MSVCRT20}" mangledsymbols="yes" installbase="system32" installname="msvcrt20.dll">
 	<importlibrary definition="msvcrt20.def" />
 	<include base="msvcrt20">.</include>
 	<define name="_DISABLE_TIDENTS" />
@@ -12,6 +12,7 @@
 	<library>string</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
+	<library>msvcrt</library>
 	<file>msvcrt20.c</file>
 	<file>msvcrt20.rc</file>
 </module>

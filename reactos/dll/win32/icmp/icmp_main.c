@@ -231,7 +231,7 @@ DWORD WINAPI IcmpSendEcho(
     /* check the request size against SO_MAX_MSG_SIZE using getsockopt */
 
     /* Prepare the request */
-    id=getpid() & 0xFFFF;
+    id=_getpid() & 0xFFFF;
     seq=InterlockedIncrement(&icmp_sequence) & 0xFFFF;
 
     reqsize=ICMP_MINLEN+RequestSize;

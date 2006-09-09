@@ -1,4 +1,4 @@
-<module name="netcfgx" type="win32dll" installbase="system32" installname="netcfgx.dll">
+<module name="netcfgx" type="win32dll" entrypoint="0" installbase="system32" installname="netcfgx.dll">
 	<importlibrary definition="netcfgx.def" />
 	<define name="__REACTOS__" />
 	<file>netcfgx.c</file>

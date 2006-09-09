@@ -1,4 +1,4 @@
-<module name="samsrv" type="win32dll" baseaddress="${BASEADDRESS_SAMSRV}" entrypoint="0" installbase="system32" installname="samsrv.dll">
+<module name="samsrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_SAMSRV}" entrypoint="0" installbase="system32" installname="samsrv.dll">
 	<importlibrary definition="samsrv.def" />
 	<include base="samsrv">.</include>
 	<define name="UNICODE" />
