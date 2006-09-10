@@ -66,6 +66,9 @@
 		<file>pixel.c</file>
 		<file>video.c</file>
 	</directory>
+	<directory name="windows">
+		<file>winldr.c</file>
+	</directory>
 	<file>freeldr.c</file>
 	<file>debug.c</file>
 	<file>version.c</file>

@@ -45,6 +45,7 @@
 #include <portio.h>
 #include <reactos.h>
 #include <registry.h>
+#include <winldr.h>
 #include <fsrec.h>
 /* file system headers */
 #include <fs/ext2.h>
