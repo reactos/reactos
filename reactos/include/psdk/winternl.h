@@ -1663,6 +1663,9 @@ extern LPSTR _strupr(LPSTR str); /* FIXME: Doesn't belong here */
 #if defined(__i386__) && defined(__GNUC__)
 static inline void WINAPI DbgBreakPoint(void) { __asm__ __volatile__("int3"); }
 static inline void WINAPI DbgUserBreakPoint(void) { __asm__ __volatile__("int3"); }
+#elif defined(__PowerPC__) && defined(__GNUC__)
+static inline void WINAPI DbgBreakPoint(void) { __asm__ __volatile__("ti 0,7,0"); }
+static inline void WINAPI DbgUserBreakPoint(void) { __asm__ __volatile__("ti 0,7,0"); }
 #else  /* __i386__ && __GNUC__ */
 void WINAPI DbgBreakPoint(void);
 void WINAPI DbgUserBreakPoint(void);

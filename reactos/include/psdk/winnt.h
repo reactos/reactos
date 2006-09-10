@@ -81,7 +81,7 @@ extern "C" {
 #ifndef VOID
 #define VOID void
 #endif
-typedef signed char CHAR;
+typedef char CHAR;
 typedef short SHORT;
 #ifndef LONG_DEFINED
 #define LONG_DEFINED
