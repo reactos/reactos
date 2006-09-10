@@ -692,7 +692,7 @@ KiSelectReadyThread(IN KPRIORITY Priority,
     if (!PrioritySet) return NULL;
 
     /*  Get the highest priority possible */
-    BitScanReverse(&HighPriority, PrioritySet);
+    BitScanReverse((PULONG)&HighPriority, PrioritySet);
     ASSERT((PrioritySet & PRIORITY_MASK(HighPriority)) != 0);
     HighPriority += PriorityMask;
 
