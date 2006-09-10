@@ -826,105 +826,177 @@ KeQueryPriorityThread(IN PKTHREAD Thread)
     return Thread->Priority;
 }
 
-
-// re-org
 /*
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeRevertToUserAffinityThread(VOID)
 {
-    PKTHREAD CurrentThread = KeGetCurrentThread();
     KIRQL OldIrql;
-
+    PKPRCB Prcb;
+    PKTHREAD NextThread, CurrentThread = KeGetCurrentThread();
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     ASSERT(CurrentThread->SystemAffinityActive != FALSE);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
-    /* Return to User Affinity */
+    /* Set the user affinity and processor and disable system affinity */
     CurrentThread->Affinity = CurrentThread->UserAffinity;
-
-    /* Disable System Affinity */
+    CurrentThread->IdealProcessor = CurrentThread->UserIdealProcessor;
     CurrentThread->SystemAffinityActive = FALSE;
 
-    /* Check if we need to Dispatch a New thread */
-    if (CurrentThread->Affinity & (1 << KeGetCurrentProcessorNumber())) {
+    /* Get the current PRCB and check if it doesn't match this affinity */
+    Prcb = KeGetCurrentPrcb();
+    if (!(Prcb->SetMember & CurrentThread->Affinity))
+    {
+        /* Lock the PRCB */
+        KiAcquirePrcbLock(Prcb);
 
-        /* No, just release */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-
-    } else {
-
+#ifdef NEW_SCHEDULER
+        /* Check if there's no next thread scheduled */
+        if (!Prcb->NextThread)
+        {
+            /* Select a new thread and set it on standby */
+            NextThread = KiSelectNextThread(Prcb);
+            NextThread->State = Standby;
+            Prcb->NextThread = NextThread;
+        }
+#else
         /* We need to dispatch a new thread */
+        NextThread = NULL;
         CurrentThread->WaitIrql = OldIrql;
         KiDispatchThreadNoLock(Ready);
         KeLowerIrql(OldIrql);
+        return;
+#endif
+
+        /* Release the PRCB lock */
+        KiReleasePrcbLock(Prcb);
     }
+
+    /* Unlock dispatcher database */
+    KiReleaseDispatcherLock(OldIrql);
 }
 
 /*
  * @implemented
  */
 UCHAR
-STDCALL
+NTAPI
 KeSetIdealProcessorThread(IN PKTHREAD Thread,
                           IN UCHAR Processor)
 {
-    CCHAR PreviousIdealProcessor;
+    CCHAR OldIdealProcessor;
     KIRQL OldIrql;
+    ASSERT(Processor <= MAXIMUM_PROCESSORS);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save Old Ideal Processor */
-    PreviousIdealProcessor = Thread->IdealProcessor;
+    OldIdealProcessor = Thread->UserIdealProcessor;
 
-    /* Set New Ideal Processor */
-    Thread->IdealProcessor = Processor;
+    /* Make sure a valid CPU was given */
+    if (Processor < MAXIMUM_PROCESSORS)
+    {
+        /* Check if the user ideal CPU is in the affinity */
+        if (Thread->UserIdealProcessor & AFFINITY_MASK(Processor))
+        {
+            /* Set the ideal processor */
+            Thread->IdealProcessor = Processor;
 
-    /* Release Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+            /* Check if system affinity is used */
+            if (!Thread->SystemAffinityActive)
+            {
+                /* It's not, so update the user CPU too */
+                Thread->UserIdealProcessor = Processor;
+            }
+        }
+    }
 
-    /* Return Old Ideal Processor */
-    return PreviousIdealProcessor;
+    /* Release dispatcher lock and return the old ideal CPU */
+    KiReleaseDispatcherLock(OldIrql);
+    return OldIdealProcessor;
 }
 
 /*
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 {
-    PKTHREAD CurrentThread = KeGetCurrentThread();
     KIRQL OldIrql;
-
-    ASSERT(Affinity & ((1 << KeNumberProcessors) - 1));
+    PKPRCB Prcb;
+#ifdef CONFIG_SMP
+    ULONG AffinitySet, NodeMask;
+#endif
+    PKTHREAD NextThread, CurrentThread = KeGetCurrentThread();
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    ASSERT((Affinity & KeActiveProcessors) != 0);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
-    /* Set the System Affinity Specified */
+    /* Restore the affinity and enable system affinity */
     CurrentThread->Affinity = Affinity;
-
-    /* Enable System Affinity */
     CurrentThread->SystemAffinityActive = TRUE;
 
-    /* Check if we need to Dispatch a New thread */
-    if (Affinity & (1 << KeGetCurrentProcessorNumber())) {
+    /* Check if the ideal processor is part of the affinity */
+#ifdef CONFIG_SMP
+    if (!(Affinity & AFFINITY_MASK(CurrentThread->IdealProcessor)))
+    {
+        /* It's not! Get the PRCB */
+        Prcb = KiProcessorBlock[CurrentThread->IdealProcessor];
 
-        /* No, just release */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        /* Calculate the affinity set */
+        AffinitySet = KeActiveProcessors & Affinity;
+        NodeMask = Prcb->ParentNode->ProcessorMask & AffinitySet;
+        if (NodeMask)
+        {
+            /* Use the Node set instead */
+            AffinitySet = NodeMask;
+        }
 
-    } else {
+        /* Calculate the ideal CPU from the affinity set */
+        BitScanReverse(&NodeMask, AffinitySet);
+        CurrentThread->IdealProcessor = (UCHAR)NodeMask;
+    }
+#endif
 
+    /* Get the current PRCB and check if it doesn't match this affinity */
+    Prcb = KeGetCurrentPrcb();
+    if (!(Prcb->SetMember & CurrentThread->Affinity))
+    {
+        /* Lock the PRCB */
+        KiAcquirePrcbLock(Prcb);
+
+#ifdef NEW_SCHEDULER
+        /* Check if there's no next thread scheduled */
+        if (!Prcb->NextThread)
+        {
+            /* Select a new thread and set it on standby */
+            NextThread = KiSelectNextThread(Prcb);
+            NextThread->State = Standby;
+            Prcb->NextThread = NextThread;
+        }
+#else
         /* We need to dispatch a new thread */
+        NextThread = NULL;
         CurrentThread->WaitIrql = OldIrql;
         KiDispatchThreadNoLock(Ready);
         KeLowerIrql(OldIrql);
+        return;
+#endif
+
+        /* Release the PRCB lock */
+        KiReleasePrcbLock(Prcb);
     }
+
+    /* Unlock dispatcher database */
+    KiReleaseDispatcherLock(OldIrql);
 }
 
 LONG
