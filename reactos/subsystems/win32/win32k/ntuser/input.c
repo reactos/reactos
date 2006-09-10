@@ -76,7 +76,7 @@ DWORD IntLastInputTick(BOOL LastInputTickSetGet)
 	{
 		LARGE_INTEGER TickCount;
         KeQueryTickCount(&TickCount);
-        LastInputTick = TickCount.u.LowPart;	
+        LastInputTick = TickCount.u.LowPart * (KeQueryTimeIncrement() / 10000);
 	}
     return LastInputTick;
 }
