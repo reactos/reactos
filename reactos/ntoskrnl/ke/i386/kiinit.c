@@ -147,7 +147,8 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         KeInitializeProcess(InitProcess,
                             0,
                             0xFFFFFFFF,
-                            PageDirectory);
+                            &PageDirectory,
+                            FALSE);
         InitProcess->QuantumReset = MAXCHAR;
     }
     else

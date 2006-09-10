@@ -905,7 +905,7 @@ typedef struct _KPROCESS
 {
     DISPATCHER_HEADER Header;
     LIST_ENTRY ProfileListHead;
-    PHYSICAL_ADDRESS DirectoryTableBase;
+    LARGE_INTEGER DirectoryTableBase;
 #if defined(_M_IX86)
     KGDTENTRY LdtDescriptor;
     KIDTENTRY Int21Descriptor;
@@ -926,12 +926,12 @@ typedef struct _KPROCESS
     {
         struct
         {
-            ULONG AutoAlignment:1;
-            ULONG DisableBoost:1;
-            ULONG DisableQuantum:1;
-            ULONG ReservedFlags:29;
+            LONG AutoAlignment:1;
+            LONG DisableBoost:1;
+            LONG DisableQuantum:1;
+            LONG ReservedFlags:29;
         };
-        ULONG ProcessFlags;
+        LONG ProcessFlags;
     };
     SCHAR BasePriority;
     SCHAR QuantumReset;
@@ -943,9 +943,7 @@ typedef struct _KPROCESS
     union
     {
         KEXECUTE_OPTIONS Flags;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
         UCHAR ExecuteOptions;
-#endif
     };
     ULONG StackCount;
     LIST_ENTRY ProcessListEntry;

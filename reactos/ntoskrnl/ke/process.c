@@ -52,10 +52,10 @@ UpdatePageDirs(IN PKTHREAD Thread,
 
 VOID
 NTAPI
-KiAttachProcess(PKTHREAD Thread,
-                PKPROCESS Process,
-                PKLOCK_QUEUE_HANDLE ApcLock,
-                PRKAPC_STATE SavedApcState)
+KiAttachProcess(IN PKTHREAD Thread,
+                IN PKPROCESS Process,
+                IN PKLOCK_QUEUE_HANDLE ApcLock,
+                IN PRKAPC_STATE SavedApcState)
 {
     ASSERT(Process != Thread->ApcState.Process);
 
@@ -109,11 +109,14 @@ NTAPI
 KeInitializeProcess(IN OUT PKPROCESS Process,
                     IN KPRIORITY Priority,
                     IN KAFFINITY Affinity,
-                    IN LARGE_INTEGER DirectoryTableBase)
+                    IN PLARGE_INTEGER DirectoryTableBase,
+                    IN BOOLEAN Enable)
 {
+#ifdef CONFIG_SMP
     ULONG i = 0;
     UCHAR IdealNode = 0;
     PKNODE Node;
+#endif
 
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Process->Header,
@@ -125,9 +128,9 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     Process->Affinity = Affinity;
     Process->BasePriority = (CHAR)Priority;
     Process->QuantumReset = 6;
-    Process->DirectoryTableBase = DirectoryTableBase;
-    Process->AutoAlignment = TRUE;
-    Process->IopmOffset = 0xFFFF;
+    Process->DirectoryTableBase = *DirectoryTableBase;
+    Process->AutoAlignment = Enable;
+    Process->IopmOffset = KiComputeIopmOffset(IO_ACCESS_MAP_NONE);
 
     /* Initialize the lists */
     InitializeListHead(&Process->ThreadListHead);
@@ -138,6 +141,7 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     Process->State = ProcessInMemory;
 
     /* Check how many Nodes there are on the system */
+#ifdef CONFIG_SMP
     if (KeNumberNodes > 1)
     {
         /* Set the new seed */
@@ -173,13 +177,14 @@ KeInitializeProcess(IN OUT PKPROCESS Process,
     Process->ThreadSeed = KeFindNextRightSetAffinity(Node->Seed,
                                                      (ULONG)Affinity);
     Node->Seed = Process->ThreadSeed;
+#endif
 }
 
 ULONG
 NTAPI
-KeSetProcess(PKPROCESS Process,
-             KPRIORITY Increment,
-             BOOLEAN InWait)
+KeSetProcess(IN PKPROCESS Process,
+             IN KPRIORITY Increment,
+             IN BOOLEAN InWait)
 {
     KIRQL OldIrql;
     ULONG OldState;

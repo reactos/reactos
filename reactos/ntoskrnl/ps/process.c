@@ -582,7 +582,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     KeInitializeProcess(&Process->Pcb,
                         PROCESS_PRIORITY_NORMAL,
                         Affinity,
-                        DirectoryTableBase);
+                        &DirectoryTableBase,
+                        Process->DefaultHardErrorProcessing & 4);
 
     /* Duplicate Parent Token */
     Status = PspInitializeProcessSecurity(Process, Parent);
