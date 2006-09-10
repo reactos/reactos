@@ -139,6 +139,18 @@ KeAcquireInStackQueuedSpinLock(IN PKSPIN_LOCK SpinLock,
  */
 VOID
 FASTCALL
+KeAcquireInStackQueuedSpinLockRaiseToSynch(IN PKSPIN_LOCK SpinLock,
+                                           IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    /* Simply raise to synch */
+    LockHandle->OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+}
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
 KeReleaseQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle,
                         IN KIRQL OldIrql)
 {

@@ -46,33 +46,6 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     return (UCHAR)Result;
 }
 
-VOID
-STDCALL
-KiSuspendThreadKernelRoutine(PKAPC Apc,
-                             PKNORMAL_ROUTINE* NormalRoutine,
-                             PVOID* NormalContext,
-                             PVOID* SystemArgument1,
-                             PVOID* SystemArguemnt2)
-{
-}
-
-VOID
-STDCALL
-KiSuspendThreadNormalRoutine(PVOID NormalContext,
-                             PVOID SystemArgument1,
-                             PVOID SystemArgument2)
-{
-    PKTHREAD CurrentThread = KeGetCurrentThread();
-
-    /* Non-alertable kernel-mode suspended wait */
-    DPRINT("Waiting...\n");
-    KeWaitForSingleObject(&CurrentThread->SuspendSemaphore,
-                          Suspended,
-                          KernelMode,
-                          FALSE,
-                          NULL);
-    DPRINT("Done Waiting\n");
-}
 
 #ifdef KeGetCurrentThread
 #undef KeGetCurrentThread
@@ -202,41 +175,6 @@ KeRundownThread(VOID)
     KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
-ULONG
-NTAPI
-KeResumeThread(IN PKTHREAD Thread)
-{
-    ULONG PreviousCount;
-    KIRQL OldIrql;
-
-    DPRINT("KeResumeThread (Thread %p called). %x, %x\n", Thread,
-            Thread->SuspendCount, Thread->FreezeCount);
-
-    /* Lock the Dispatcher */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Save the Old Count */
-    PreviousCount = Thread->SuspendCount;
-
-    /* Check if it existed */
-    if (PreviousCount) {
-
-        Thread->SuspendCount--;
-
-        /* Decrease the current Suspend Count and Check Freeze Count */
-        if ((!Thread->SuspendCount) && (!Thread->FreezeCount)) {
-
-            /* Signal the Suspend Semaphore */
-            Thread->SuspendSemaphore.Header.SignalState++;
-            KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
-        }
-    }
-
-    /* Release Lock and return the Old State */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
-    return PreviousCount;
-}
-
 /*
  * Used by the debugging code to freeze all the process's threads
  * while the debugger is examining their state.
@@ -296,17 +234,99 @@ KeFreezeAllThreads(PKPROCESS Process)
     KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
+ULONG
+NTAPI
+KeResumeThread(IN PKTHREAD Thread)
+{
+    KLOCK_QUEUE_HANDLE ApcLock;
+    ULONG PreviousCount;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    DPRINT1("Resuming Thread: %p\n", Thread);
+
+    /* Lock the APC Queue */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    /* Save the Old Count */
+    PreviousCount = Thread->SuspendCount;
+
+    /* Check if it existed */
+    if (PreviousCount)
+    {
+        /* Decrease the suspend count */
+        Thread->SuspendCount--;
+
+        /* Check if the thrad is still suspended or not */
+        if ((!Thread->SuspendCount) && (!Thread->FreezeCount))
+        {
+            /* Acquire the dispatcher lock */
+            KiAcquireDispatcherLockAtDpcLevel();
+
+            /* Signal the Suspend Semaphore */
+            Thread->SuspendSemaphore.Header.SignalState++;
+            KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
+
+            /* Release the dispatcher lock */
+            KiReleaseDispatcherLockFromDpcLevel();
+        }
+    }
+
+    /* Release APC Queue lock and return the Old State */
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
+    return PreviousCount;
+}
+
+VOID
+NTAPI
+KiSuspendRundown(IN PKAPC Apc)
+{
+    /* Does nothing */
+    UNREFERENCED_PARAMETER(Apc);
+}
+
+VOID
+NTAPI
+KiSuspendNop(IN PKAPC Apc,
+             IN PKNORMAL_ROUTINE *NormalRoutine,
+             IN PVOID *NormalContext,
+             IN PVOID *SystemArgument1,
+             IN PVOID *SystemArgument2)
+{
+    /* Does nothing */
+    UNREFERENCED_PARAMETER(Apc);
+    UNREFERENCED_PARAMETER(NormalRoutine);
+    UNREFERENCED_PARAMETER(NormalContext);
+    UNREFERENCED_PARAMETER(SystemArgument1);
+    UNREFERENCED_PARAMETER(SystemArgument2);
+}
+
+VOID
+NTAPI
+KiSuspendThread(IN PVOID NormalContext,
+                IN PVOID SystemArgument1,
+                IN PVOID SystemArgument2)
+{
+    /* Non-alertable kernel-mode suspended wait */
+    KeWaitForSingleObject(&KeGetCurrentThread()->SuspendSemaphore,
+                          Suspended,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+}
+
 NTSTATUS
-STDCALL
+NTAPI
 KeSuspendThread(PKTHREAD Thread)
 {
+    KLOCK_QUEUE_HANDLE ApcLock;
     ULONG PreviousCount;
-    KIRQL OldIrql;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    DPRINT1("Suspending Thread: %p\n", Thread);
 
-    DPRINT("KeSuspendThread (Thread %p called). %x, %x\n", Thread, Thread->SuspendCount, Thread->FreezeCount);
-
-    /* Lock the Dispatcher */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    /* Lock the APC Queue */
+    KiAcquireApcLock(Thread, &ApcLock);
 
     /* Save the Old Count */
     PreviousCount = Thread->SuspendCount;
@@ -315,7 +335,7 @@ KeSuspendThread(PKTHREAD Thread)
     if (PreviousCount == MAXIMUM_SUSPEND_COUNT)
     {
         /* Raise an exception */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KiReleaseApcLock(&ApcLock);
         RtlRaiseStatus(STATUS_SUSPEND_COUNT_EXCEEDED);
     }
 
@@ -326,7 +346,7 @@ KeSuspendThread(PKTHREAD Thread)
         Thread->SuspendCount++;
 
         /* Check if we should suspend it */
-        if (!PreviousCount && !Thread->FreezeCount)
+        if (!(PreviousCount) && !(Thread->FreezeCount))
         {
             /* Is the APC already inserted? */
             if (!Thread->SuspendApc.Inserted)
@@ -337,44 +357,61 @@ KeSuspendThread(PKTHREAD Thread)
             }
             else
             {
-                /* Unsignal the Semaphore, the APC already got inserted */
+                /* Lock the dispatcher */
+                KiAcquireDispatcherLockAtDpcLevel();
+
+                /* Unsignal the semaphore, the APC was already inserted */
                 Thread->SuspendSemaphore.Header.SignalState--;
+
+                /* Release the dispatcher */
+                KiReleaseDispatcherLockFromDpcLevel();
             }
         }
     }
 
     /* Release Lock and return the Old State */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
     return PreviousCount;
 }
 
 ULONG
-STDCALL
+NTAPI
 KeForceResumeThread(IN PKTHREAD Thread)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE ApcLock;
     ULONG PreviousCount;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    DPRINT1("Force-Resuming Thread: %p\n", Thread);
 
-    /* Lock the Dispatcher Database and the APC Queue */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    /* Lock the APC Queue */
+    KiAcquireApcLock(Thread, &ApcLock);
 
     /* Save the old Suspend Count */
     PreviousCount = Thread->SuspendCount + Thread->FreezeCount;
 
     /* If the thread is suspended, wake it up!!! */
-    if (PreviousCount) {
-
+    if (PreviousCount)
+    {
         /* Unwait it completely */
         Thread->SuspendCount = 0;
         Thread->FreezeCount = 0;
 
+        /* Lock the dispatcher */
+        KiAcquireDispatcherLockAtDpcLevel();
+
         /* Signal and satisfy */
         Thread->SuspendSemaphore.Header.SignalState++;
         KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
+
+        /* Release the dispatcher */
+        KiReleaseDispatcherLockFromDpcLevel();
     }
 
     /* Release Lock and return the Old State */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
     return PreviousCount;
 }
 
@@ -383,25 +420,26 @@ NTAPI
 KeAlertResumeThread(IN PKTHREAD Thread)
 {
     ULONG PreviousCount;
-    KIRQL OldIrql;
-
+    KLOCK_QUEUE_HANDLE ApcLock;
+    ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    DPRINT1("Alert-Resuming Thread: %p\n", Thread);
 
     /* Lock the Dispatcher Database and the APC Queue */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-    KiAcquireSpinLock(&Thread->ApcQueueLock);
+    KiAcquireApcLock(Thread, &ApcLock);
+    KiAcquireDispatcherLockAtDpcLevel();
 
     /* Return if Thread is already alerted. */
-    if (Thread->Alerted[KernelMode] == FALSE) {
-
+    if (!Thread->Alerted[KernelMode])
+    {
         /* If it's Blocked, unblock if it we should */
-        if (Thread->State == Waiting &&  Thread->Alertable) {
-
-            DPRINT("Aborting Wait\n");
+        if ((Thread->State == Waiting) && (Thread->Alertable))
+        {
+            /* Abort the wait */
             KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
-
-        } else {
-
+        }
+        else
+        {
             /* If not, simply Alert it */
             Thread->Alerted[KernelMode] = TRUE;
         }
@@ -411,11 +449,11 @@ KeAlertResumeThread(IN PKTHREAD Thread)
     PreviousCount = Thread->SuspendCount;
 
     /* If the thread is suspended, decrease one of the suspend counts */
-    if (PreviousCount) {
-
+    if (PreviousCount)
+    {
         /* Decrease count. If we are now zero, unwait it completely */
-        if (--Thread->SuspendCount) {
-
+        if (--Thread->SuspendCount)
+        {
             /* Signal and satisfy */
             Thread->SuspendSemaphore.Header.SignalState++;
             KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
@@ -423,8 +461,9 @@ KeAlertResumeThread(IN PKTHREAD Thread)
     }
 
     /* Release Locks and return the Old State */
-    KiReleaseSpinLock(&Thread->ApcQueueLock);
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
     return PreviousCount;
 }
 
@@ -433,38 +472,86 @@ NTAPI
 KeAlertThread(IN PKTHREAD Thread,
               IN KPROCESSOR_MODE AlertMode)
 {
-    KIRQL OldIrql;
     BOOLEAN PreviousState;
+    KLOCK_QUEUE_HANDLE ApcLock;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    DPRINT1("Alerting Thread: %p\n", Thread);
 
-    /* Acquire the Dispatcher Database Lock */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    /* Lock the Dispatcher Database and the APC Queue */
+    KiAcquireApcLock(Thread, &ApcLock);
+    KiAcquireDispatcherLockAtDpcLevel();
 
     /* Save the Previous State */
     PreviousState = Thread->Alerted[AlertMode];
 
-    /* Return if Thread is already alerted. */
-    if (PreviousState == FALSE) {
-
-        /* If it's Blocked, unblock if it we should */
-        if (Thread->State == Waiting &&
-            (AlertMode == KernelMode || Thread->WaitMode == AlertMode) &&
-            Thread->Alertable) {
-
-            DPRINT("Aborting Wait\n");
+    /* Check if it's already alerted */
+    if (!PreviousState)
+    {
+        /* Check if the thread is alertable, and blocked in the given mode */
+        if ((Thread->State == Waiting) &&
+            ((AlertMode == KernelMode) || (Thread->WaitMode == AlertMode)) &&
+            (Thread->Alertable))
+        {
+            /* Abort the wait to alert the thread */
             KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
-
-        } else {
-
-            /* If not, simply Alert it */
+        }
+        else
+        {
+            /* Otherwise, merely set the alerted state */
             Thread->Alerted[AlertMode] = TRUE;
         }
     }
 
     /* Release the Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
 
     /* Return the old state */
     return PreviousState;
+}
+
+/*
+ * FUNCTION: Tests whether there are any pending APCs for the current thread
+ * and if so the APCs will be delivered on exit from kernel mode
+ */
+BOOLEAN
+STDCALL
+KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
+{
+    PKTHREAD Thread = KeGetCurrentThread();
+    BOOLEAN OldState;
+    KLOCK_QUEUE_HANDLE ApcLock;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    DPRINT1("Test-Alerting Thread: %p\n", Thread);
+
+    /* Lock the Dispatcher Database and the APC Queue */
+    KiAcquireApcLock(Thread, &ApcLock);
+    KiAcquireDispatcherLockAtDpcLevel();
+
+    /* Save the old State */
+    OldState = Thread->Alerted[AlertMode];
+
+    /* Check the Thread is alerted */
+    if (OldState)
+    {
+        /* Disable alert for this mode */
+        Thread->Alerted[AlertMode] = FALSE;
+    }
+    else if ((AlertMode != KernelMode) &&
+             (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
+    {
+        /* If the mode is User and the Queue isn't empty, set Pending */
+        Thread->ApcState.UserApcPending = TRUE;
+    }
+
+    /* Release Locks and return the Old State */
+    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
+    return OldState;
 }
 
 /*
@@ -551,9 +638,9 @@ KeInitThread(IN OUT PKTHREAD Thread,
     KeInitializeApc(&Thread->SuspendApc,
                     Thread,
                     OriginalApcEnvironment,
-                    KiSuspendThreadKernelRoutine,
-                    NULL,
-                    KiSuspendThreadNormalRoutine,
+                    KiSuspendNop,
+                    KiSuspendRundown,
+                    KiSuspendThread,
                     KernelMode,
                     NULL);
 
@@ -1157,42 +1244,3 @@ KeTerminateThread(IN KPRIORITY Increment)
     /* Find a new Thread */
     KiDispatchThreadNoLock(Terminated);
 }
-
-/*
- * FUNCTION: Tests whether there are any pending APCs for the current thread
- * and if so the APCs will be delivered on exit from kernel mode
- */
-BOOLEAN
-STDCALL
-KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
-{
-    KIRQL OldIrql;
-    PKTHREAD Thread = KeGetCurrentThread();
-    BOOLEAN OldState;
-
-    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-
-    /* Lock the Dispatcher Database and the APC Queue */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-    KiAcquireSpinLock(&Thread->ApcQueueLock);
-
-    /* Save the old State */
-    OldState = Thread->Alerted[AlertMode];
-
-    /* If the Thread is Alerted, Clear it */
-    if (OldState) {
-
-        Thread->Alerted[AlertMode] = FALSE;
-
-    } else if ((AlertMode != KernelMode) && (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]))) {
-
-        /* If the mode is User and the Queue isn't empty, set Pending */
-        Thread->ApcState.UserApcPending = TRUE;
-    }
-
-    /* Release Locks and return the Old State */
-    KiReleaseSpinLock(&Thread->ApcQueueLock);
-    KeReleaseDispatcherDatabaseLock(OldIrql);
-    return OldState;
-}
-

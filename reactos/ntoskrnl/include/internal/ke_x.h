@@ -553,6 +553,40 @@ KiCheckDeferredReadyList(IN PKPRCB Prcb)
 
 #endif
 
+FORCEINLINE
+VOID
+KiAcquireApcLock(IN PKTHREAD Thread,
+                 IN PKLOCK_QUEUE_HANDLE Handle)
+{
+    /* Acquire the lock and raise to synchronization level */
+    KeAcquireInStackQueuedSpinLockRaiseToSynch(&Thread->ApcQueueLock, Handle);
+}
+
+FORCEINLINE
+VOID
+KiAcquireApcLockAtDpcLevel(IN PKTHREAD Thread,
+                           IN PKLOCK_QUEUE_HANDLE Handle)
+{
+    /* Acquire the lock */
+    KeAcquireInStackQueuedSpinLockAtDpcLevel(&Thread->ApcQueueLock, Handle);
+}
+
+FORCEINLINE
+VOID
+KiReleaseApcLock(IN PKLOCK_QUEUE_HANDLE Handle)
+{
+    /* Release the lock */
+    KeReleaseInStackQueuedSpinLock(Handle);
+}
+
+FORCEINLINE
+VOID
+KiReleaseApcLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE Handle)
+{
+    /* Release the lock */
+    KeReleaseInStackQueuedSpinLockFromDpcLevel(Handle);
+}
+
 //
 // This routine queues a thread that is ready on the PRCB's ready lists.
 // If this thread cannot currently run on this CPU, then the thread is

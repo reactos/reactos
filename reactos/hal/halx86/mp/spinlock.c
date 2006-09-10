@@ -117,6 +117,19 @@ KeAcquireInStackQueuedSpinLock(
    UNIMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLockRaiseToSynch(
+    IN PKSPIN_LOCK SpinLock,
+    IN PKLOCK_QUEUE_HANDLE LockHandle
+    )
+{
+   UNIMPLEMENTED;
+}
+
 
 /*
  * @unimplemented

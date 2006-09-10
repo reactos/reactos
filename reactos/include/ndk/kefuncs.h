@@ -117,7 +117,7 @@ KeAcquireQueuedSpinLockRaiseToSynch(
     IN KSPIN_LOCK_QUEUE_NUMBER LockNumber
 );
 
-KIRQL
+VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLockRaiseToSynch(
     IN PKSPIN_LOCK SpinLock,

@@ -109,7 +109,7 @@ Author:
 //
 // Synchronization-level IRQL
 //
-#if defined(NT_UP)
+#ifndef CONFIG_SMP
 #define SYNCH_LEVEL             DISPATCH_LEVEL
 #else
 #define SYNCH_LEVEL             (IPI_LEVEL - 1)

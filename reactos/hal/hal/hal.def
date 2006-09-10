@@ -71,6 +71,7 @@ KdPortDisableInterrupts@0
 KdPortEnableInterrupts@0
 KeAcquireSpinLock@8
 @KeAcquireInStackQueuedSpinLock@8
+@KeAcquireInStackQueuedSpinLockRaiseToSynch@8
 @KeAcquireSpinLockRaiseToSynch@4
 @KeAcquireQueuedSpinLock@4
 KeGetCurrentIrql@0

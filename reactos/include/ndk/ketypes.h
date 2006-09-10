@@ -896,7 +896,7 @@ typedef struct _KTHREAD
 #include <poppack.h>
 
 #define ASSERT_THREAD(object) \
-    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == ThreadObject))
+    ASSERT((((object)->DispatcherHeader.Type & KOBJECT_TYPE_MASK) == ThreadObject))
 
 //
 // Kernel Process (KPROCESS)
