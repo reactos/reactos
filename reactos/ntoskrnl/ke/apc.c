@@ -482,39 +482,34 @@ KeInsertQueueApc(PKAPC Apc,
                  PVOID SystemArgument2,
                  KPRIORITY PriorityBoost)
 {
-    KIRQL OldIrql;
-    PKTHREAD Thread;
+    PKTHREAD Thread = Apc->Thread;
+    KLOCK_QUEUE_HANDLE ApcLock;
+    BOOLEAN State = TRUE;
 
-    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT("KeInsertQueueApc(Apc %x, SystemArgument1 %x, "
-           "SystemArgument2 %x)\n",Apc,SystemArgument1,
-            SystemArgument2);
-
-    /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Get the Thread specified in the APC */
-    Thread = Apc->Thread;
+    /* Get the APC lock */
+    KiAcquireApcLock(Thread, &ApcLock);
 
     /* Make sure we can Queue APCs and that this one isn't already inserted */
     if ((Thread->ApcQueueable == FALSE) && (Apc->Inserted == TRUE))
     {
-        DPRINT("Can't queue the APC\n");
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-        return FALSE;
+        /* Fail */
+        State = FALSE;
+    }
+    else
+    {
+        /* Set the System Arguments and set it as inserted */
+        Apc->SystemArgument1 = SystemArgument1;
+        Apc->SystemArgument2 = SystemArgument2;
+        Apc->Inserted = TRUE;
+
+        /* Call the Internal Function */
+        KiInsertQueueApc(Apc, PriorityBoost);
     }
 
-    /* Set the System Arguments and set it as inserted */
-    Apc->SystemArgument1 = SystemArgument1;
-    Apc->SystemArgument2 = SystemArgument2;
-    Apc->Inserted = TRUE;
-
-    /* Call the Internal Function */
-    KiInsertQueueApc(Apc, PriorityBoost);
-
-    /* Return Sucess if we are here */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
-    return TRUE;
+    /* Release the APC lock and return success */
+    KiReleaseApcLock(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
+    return State;
 }
 
 /*++
@@ -542,13 +537,12 @@ STDCALL
 KeFlushQueueApc(IN PKTHREAD Thread,
                 IN KPROCESSOR_MODE PreviousMode)
 {
-    KIRQL OldIrql;
     PKAPC Apc;
     PLIST_ENTRY FirstEntry, CurrentEntry;
+    KLOCK_QUEUE_HANDLE ApcLock;
 
-    /* Lock the Dispatcher Database and APC Queue */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
+    /* Get the APC lock */
+    KiAcquireApcLock(Thread, &ApcLock);
 
     if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode])) {
         FirstEntry = NULL;
@@ -563,9 +557,8 @@ KeFlushQueueApc(IN PKTHREAD Thread,
         } while (CurrentEntry != FirstEntry);
     }
 
-    /* Release the locks */
-    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Release the lock */
+    KiReleaseApcLock(&ApcLock);
 
     /* Return the first entry */
     return FirstEntry;
@@ -596,16 +589,13 @@ BOOLEAN
 STDCALL
 KeRemoveQueueApc(PKAPC Apc)
 {
-    KIRQL OldIrql;
     PKTHREAD Thread = Apc->Thread;
     PKAPC_STATE ApcState;
     BOOLEAN Inserted;
-    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT("KeRemoveQueueApc called for APC: %x \n", Apc);
+    KLOCK_QUEUE_HANDLE ApcLock;
 
-    /* Acquire locks */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
+    /* Get the APC lock */
+    KiAcquireApcLock(Thread, &ApcLock);
 
     /* Check if it's inserted */
     if ((Inserted = Apc->Inserted))
@@ -630,9 +620,8 @@ KeRemoveQueueApc(PKAPC Apc)
         }
     }
 
-    /* Restore IRQL and Return */
-    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Release the lock and return */
+    KiReleaseApcLock(&ApcLock);
     return Inserted;
 }
 

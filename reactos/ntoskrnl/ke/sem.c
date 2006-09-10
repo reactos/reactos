@@ -87,7 +87,7 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
             Wait);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save the Old State and get new one */
     InitialState = Semaphore->Header.SignalState;
@@ -97,7 +97,7 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
     if ((Semaphore->Limit < State) || (InitialState > State))
     {
         /* Raise an error if it was exceeded */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KiReleaseDispatcherLock(OldIrql);
         ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
     }
 
@@ -115,7 +115,7 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
     if (Wait == FALSE)
     {
         /* Release the Lock */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KiReleaseDispatcherLock(OldIrql);
     }
     else
     {

@@ -252,7 +252,7 @@ KiExitDispatcher(IN KIRQL OldIrql)
     else
     {
         /* Otherwise just release the lock */
-        KeReleaseDispatcherDatabaseLockFromDpcLevel();
+        KiReleaseDispatcherLockFromDpcLevel();
     }
 
     /* Lower irql back */
@@ -287,7 +287,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
     else
     {
         /* Lock not held, acquire it */
-        CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
+        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
     }
 
     /* Use built-in Wait block */
@@ -302,7 +302,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
             (CurrentThread->WaitIrql < APC_LEVEL))
         {
             /* Unlock the dispatcher */
-            KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+            KiReleaseDispatcherLock(CurrentThread->WaitIrql);
         }
         else
         {
@@ -372,11 +372,11 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
         }
 
         /* Acquire again the lock */
-        CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
+        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
     } while (TRUE);
 
     /* Release the Lock, we are done */
-    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    KiReleaseDispatcherLock(CurrentThread->WaitIrql);
     return WaitStatus;
 }
 
@@ -410,7 +410,7 @@ KeWaitForSingleObject(IN PVOID Object,
     else
     {
         /* Lock not held, acquire it */
-        CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
+        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
     }
 
     /* Start the actual Loop */
@@ -423,7 +423,7 @@ KeWaitForSingleObject(IN PVOID Object,
             (CurrentThread->WaitIrql < APC_LEVEL))
         {
             /* Unlock the dispatcher */
-            KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+            KiReleaseDispatcherLock(CurrentThread->WaitIrql);
         }
         else
         {
@@ -451,7 +451,7 @@ KeWaitForSingleObject(IN PVOID Object,
                     else
                     {
                         /* Raise an exception (see wasm.ru) */
-                        KeReleaseDispatcherDatabaseLock(CurrentThread->
+                        KiReleaseDispatcherLock(CurrentThread->
                                                         WaitIrql);
                         ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
                    }
@@ -557,11 +557,11 @@ KeWaitForSingleObject(IN PVOID Object,
         }
 
         /* Acquire again the lock */
-        CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
+        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
     } while (TRUE);
 
     /* Release the Lock, we are done */
-    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    KiReleaseDispatcherLock(CurrentThread->WaitIrql);
     return WaitStatus;
 
 DontWait:
@@ -569,7 +569,7 @@ DontWait:
     KiAdjustQuantumThread(CurrentThread);
 
     /* Release & Return */
-    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    KiReleaseDispatcherLock(CurrentThread->WaitIrql);
     return WaitStatus;
 }
 
@@ -611,7 +611,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
     else
     {
         /* Lock not held, acquire it */
-        CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
+        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
     }
 
     /* Make sure the Wait Count is valid */
@@ -646,7 +646,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
             (CurrentThread->WaitIrql < APC_LEVEL))
         {
             /* Unlock the dispatcher */
-            KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+            KiReleaseDispatcherLock(CurrentThread->WaitIrql);
         }
         else
         {
@@ -689,7 +689,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
                             else
                             {
                                 /* Raise an exception (see wasm.ru) */
-                                KeReleaseDispatcherDatabaseLock(CurrentThread->
+                                KiReleaseDispatcherLock(CurrentThread->
                                                                 WaitIrql);
                                 ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
                             }
@@ -713,7 +713,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
                             (CurrentObject->Header.SignalState == MINLONG))
                         {
                             /* Raise an exception */
-                            KeReleaseDispatcherDatabaseLock(CurrentThread->
+                            KiReleaseDispatcherLock(CurrentThread->
                                                             WaitIrql);
                             ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
                         }
@@ -844,12 +844,12 @@ KeWaitForMultipleObjects(IN ULONG Count,
             }
 
             /* Acquire again the lock */
-            CurrentThread->WaitIrql = KeAcquireDispatcherDatabaseLock();
+            CurrentThread->WaitIrql = KiAcquireDispatcherLock();
         }
     } while (TRUE);
 
     /* Release the Lock, we are done */
-    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    KiReleaseDispatcherLock(CurrentThread->WaitIrql);
     return WaitStatus;
 
 DontWait:
@@ -857,7 +857,7 @@ DontWait:
     KiAdjustQuantumThread(CurrentThread);
 
     /* Release & Return */
-    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    KiReleaseDispatcherLock(CurrentThread->WaitIrql);
     return WaitStatus;
 }
 

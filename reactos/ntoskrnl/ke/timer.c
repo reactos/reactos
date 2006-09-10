@@ -142,7 +142,7 @@ KiExpireTimers(IN PKDPC Dpc,
     InitializeListHead(&ExpiredTimerList);
 
     /* Lock the Database and Raise IRQL */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Query Interrupt Times */
     InterruptTime = KeQueryInterruptTime();
@@ -185,7 +185,7 @@ KiExpireTimers(IN PKDPC Dpc,
     }
 
     /* Release Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -203,7 +203,7 @@ KeCancelTimer(IN OUT PKTIMER Timer)
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Database and Raise IRQL */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Check if it's inserted, and remove it if it is */
     Inserted = Timer->Header.Inserted;
@@ -218,7 +218,7 @@ KeCancelTimer(IN OUT PKTIMER Timer)
     }
 
     /* Release Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
     return Inserted;
 }
 
@@ -293,7 +293,7 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Database and Raise IRQL */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Check if it's inserted, and remove it if it is */
     Inserted = Timer->Header.Inserted;
@@ -341,7 +341,7 @@ KeSetTimerEx(IN OUT PKTIMER Timer,
     }
 
     /* Release Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Return old state */
     return Inserted;

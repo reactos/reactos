@@ -61,7 +61,7 @@ VOID
 NTAPI
 KiAttachProcess(PKTHREAD Thread,
                 PKPROCESS Process,
-                KIRQL OldIrql,
+                PKLOCK_QUEUE_HANDLE ApcLock,
                 PRKAPC_STATE SavedApcState)
 {
     ASSERT(Process != Thread->ApcState.Process);
@@ -95,11 +95,14 @@ KiAttachProcess(PKTHREAD Thread,
     {
         /* FIXME: Scan the Ready Thread List once new scheduler is in */
 
-        /* Swap the Processes */
+        /* Release lock */
+        KiReleaseApcLockFromDpcLevel(ApcLock);
+
+        /* Swap Processes */
         KiSwapProcess(Process, SavedApcState->Process);
 
-        /* Return to old IRQL*/
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        /* Exit the dispatcher */
+        KiExitDispatcher(ApcLock->OldIrql);
     }
     else
     {
@@ -189,7 +192,7 @@ KeSetProcess(PKPROCESS Process,
     ULONG OldState;
 
     /* Lock Dispatcher */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Get Old State */
     OldState = Process->Header.SignalState;
@@ -203,7 +206,7 @@ KeSetProcess(PKPROCESS Process,
     }
 
     /* Release Dispatcher Database */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Return the previous State */
     return OldState;
@@ -223,14 +226,14 @@ NTAPI
 KeSetQuantumProcess(IN PKPROCESS Process,
                     IN UCHAR Quantum)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE ProcessLock;
     PLIST_ENTRY NextEntry, ListHead;
     PKTHREAD Thread;
     ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Lock Dispatcher */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &ProcessLock);
 
     /* Set new quantum */
     Process->QuantumReset = Quantum;
@@ -250,8 +253,8 @@ KeSetQuantumProcess(IN PKPROCESS Process,
         NextEntry = NextEntry->Flink;
     }
 
-    /* Release Dispatcher Database */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Release lock */
+    KiReleaseProcessLock(&ProcessLock);
 }
 
 KPRIORITY
@@ -280,7 +283,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     if (!Priority) Priority = 1;
 
     /* Lock Dispatcher */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Check if we are modifying the quantum too */
     if (Quantum) Process->QuantumReset = Quantum;
@@ -410,7 +413,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     }
 
     /* Release Dispatcher Database */
-    if (!Released) KeReleaseDispatcherDatabaseLock(OldIrql);
+    if (!Released) KiReleaseDispatcherLock(OldIrql);
 
     /* Return previous priority */
     return OldPriority;
@@ -423,7 +426,7 @@ VOID
 NTAPI
 KeAttachProcess(PKPROCESS Process)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE ApcLock;
     PKTHREAD Thread;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     DPRINT("KeAttachProcess: %x\n", Process);
@@ -432,19 +435,17 @@ KeAttachProcess(PKPROCESS Process)
     Thread = KeGetCurrentThread();
     UpdatePageDirs(Thread, Process);
 
-    /* Lock Dispatcher */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
     /* Check if we're already in that process */
-    if (Thread->ApcState.Process == Process)
+    if (Thread->ApcState.Process == Process) return;
+
+    /* Acquire APC Lock */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    /* Check if a DPC is executing or if we're already attached */
+    if ((Thread->ApcStateIndex != OriginalApcEnvironment) ||
+        (KeIsExecutingDpc()))
     {
-        /* Unlock the dispatcher, nothing to do */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-    }
-    else if ((Thread->ApcStateIndex != OriginalApcEnvironment) ||
-             (KeIsExecutingDpc()))
-    {
-        /* Executing a DPC or already attached, crash! */
+        /* Invalid attempt */
         KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
                      (ULONG_PTR)Process,
                      (ULONG_PTR)Thread->ApcState.Process,
@@ -454,7 +455,7 @@ KeAttachProcess(PKPROCESS Process)
     else
     {
         /* Legit attach attempt: do it! */
-        KiAttachProcess(Thread, Process, OldIrql, &Thread->SavedApcState);
+        KiAttachProcess(Thread, Process, &ApcLock, &Thread->SavedApcState);
     }
 }
 
@@ -465,45 +466,46 @@ VOID
 NTAPI
 KeDetachProcess (VOID)
 {
-    PKTHREAD Thread;
-    KIRQL OldIrql;
+    PKTHREAD Thread = KeGetCurrentThread();
+    KLOCK_QUEUE_HANDLE ApcLock;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     DPRINT("KeDetachProcess()\n");
 
-    /* Get Current Thread and lock the dispatcher */
-    Thread = KeGetCurrentThread();
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
     /* Check if it's attached */
-    if (Thread->ApcStateIndex != OriginalApcEnvironment)
+    if (Thread->ApcStateIndex == OriginalApcEnvironment) return;
+
+    /* Acquire APC Lock */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    /* It is, decrease Stack Count */
+    if(!(--Thread->ApcState.Process->StackCount))
     {
-        /* It is, decrease Stack Count */
-        if(!(--Thread->ApcState.Process->StackCount))
-        {
-            /* FIXME: Swap the process out */
-        }
-
-        /* Restore the APC State */
-        KiMoveApcState(&Thread->SavedApcState, &Thread->ApcState);
-        Thread->SavedApcState.Process = NULL;
-        Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
-        Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
-        Thread->ApcStateIndex = OriginalApcEnvironment;
-
-        /* Check if we have pending APCs */
-        if (IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]))
-        {
-            /* What do you know, we do! Request them to be delivered */
-            Thread->ApcState.KernelApcPending = TRUE;
-            HalRequestSoftwareInterrupt(APC_LEVEL);
-        }
-
-        /* Swap Processes */
-        KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
+        /* FIXME: Swap the process out */
     }
 
-    /* Unlock Dispatcher */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Restore the APC State */
+    KiMoveApcState(&Thread->SavedApcState, &Thread->ApcState);
+    Thread->SavedApcState.Process = NULL;
+    Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
+    Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
+    Thread->ApcStateIndex = OriginalApcEnvironment;
+
+    /* Release lock */
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+
+    /* Swap Processes */
+    KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
+
+    /* Exit the dispatcher */
+    KiExitDispatcher(ApcLock.OldIrql);
+
+    /* Check if we have pending APCs */
+    if (IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]))
+    {
+        /* What do you know, we do! Request them to be delivered */
+        Thread->ApcState.KernelApcPending = TRUE;
+        HalRequestSoftwareInterrupt(APC_LEVEL);
+    }
 }
 
 /*
@@ -525,16 +527,12 @@ NTAPI
 KeStackAttachProcess(IN PKPROCESS Process,
                      OUT PRKAPC_STATE ApcState)
 {
-    KIRQL OldIrql;
-    PKTHREAD Thread;
+    KLOCK_QUEUE_HANDLE ApcLock;
+    PKTHREAD Thread = KeGetCurrentThread();
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Make sure that we are in the right page directory */
-    Thread = KeGetCurrentThread();
     UpdatePageDirs(Thread, Process);
-
-    /* Acquire the dispatcher lock */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
 
     /* Crash system if DPC is being executed! */
     if (KeIsExecutingDpc())
@@ -550,26 +548,25 @@ KeStackAttachProcess(IN PKPROCESS Process,
     /* Check if we are already in the target process */
     if (Thread->ApcState.Process == Process)
     {
-        /* Unlock the dispatcher database */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-
         /* Set magic value so we don't crash later when detaching */
         ApcState->Process = (PKPROCESS)1;
+        return;
+    }
+
+    /* Acquire APC Lock */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    /* Check if the Current Thread is already attached */
+    if (Thread->ApcStateIndex != OriginalApcEnvironment)
+    {
+        /* We're already attached, so save the APC State into what we got */
+        KiAttachProcess(Thread, Process, &ApcLock, ApcState);
     }
     else
     {
-        /* Check if the Current Thread is already attached */
-        if (Thread->ApcStateIndex != OriginalApcEnvironment)
-        {
-            /* We're already attached, so save the APC State into what we got */
-            KiAttachProcess(Thread, Process, OldIrql, ApcState);
-        }
-        else
-        {
-            /* We're not attached, so save the APC State into SavedApcState */
-            KiAttachProcess(Thread, Process, OldIrql, &Thread->SavedApcState);
-            ApcState->Process = NULL;
-        }
+        /* We're not attached, so save the APC State into SavedApcState */
+        KiAttachProcess(Thread, Process, &ApcLock, &Thread->SavedApcState);
+        ApcState->Process = NULL;
     }
 }
 
@@ -580,64 +577,65 @@ VOID
 NTAPI
 KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
 {
-    KIRQL OldIrql;
-    PKTHREAD Thread;
+    KLOCK_QUEUE_HANDLE ApcLock;
+    PKTHREAD Thread = KeGetCurrentThread();
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Get the current thread and acquire the dispatcher lock */
-    Thread = KeGetCurrentThread();
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
     /* Check for magic value meaning we were already in the same process */
-    if (ApcState->Process != (PKPROCESS)1)
+    if (ApcState->Process == (PKPROCESS)1) return;
+
+    /* Acquire APC Lock */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    /*
+     * Check if the process isn't attacked, or has a Kernel APC in progress
+     * or has pending APC of any kind.
+     */
+    if ((Thread->ApcStateIndex == OriginalApcEnvironment) ||
+        (Thread->ApcState.KernelApcInProgress) ||
+        (!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) ||
+        (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
     {
-        /*
-         * Check if the process isn't attacked, or has a Kernel APC in progress
-         * or has pending APC of any kind.
-         */
-        if ((Thread->ApcStateIndex == OriginalApcEnvironment) ||
-            (Thread->ApcState.KernelApcInProgress) ||
-            (!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) ||
-            (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
-        {
-            KEBUGCHECK(INVALID_PROCESS_DETACH_ATTEMPT);
-        }
-
-        /* Decrease Stack Count */
-        if(!(--Thread->ApcState.Process->StackCount))
-        {
-            /* FIXME: Swap the process out */
-        }
-
-        if (ApcState->Process != NULL)
-        {
-            /* Restore the APC State */
-            KiMoveApcState(ApcState, &Thread->ApcState);
-        }
-        else
-        {
-            /* The ApcState parameter is useless, so use the saved data and reset it */
-            KiMoveApcState(&Thread->SavedApcState, &Thread->ApcState);
-            Thread->SavedApcState.Process = NULL;
-            Thread->ApcStateIndex = OriginalApcEnvironment;
-            Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
-            Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
-        }
-
-        /* Check if we have pending APCs */
-        if (IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]))
-        {
-            /* What do you know, we do! Request them to be delivered */
-            Thread->ApcState.KernelApcPending = TRUE;
-            HalRequestSoftwareInterrupt(APC_LEVEL);
-        }
-
-        /* Swap Processes */
-        KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
+        KEBUGCHECK(INVALID_PROCESS_DETACH_ATTEMPT);
     }
 
-    /* Return to old IRQL*/
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Decrease Stack Count */
+    if(!(--Thread->ApcState.Process->StackCount))
+    {
+        /* FIXME: Swap the process out */
+    }
+
+    if (ApcState->Process != NULL)
+    {
+        /* Restore the APC State */
+        KiMoveApcState(ApcState, &Thread->ApcState);
+    }
+    else
+    {
+        /* The ApcState parameter is useless, so use the saved data and reset it */
+        KiMoveApcState(&Thread->SavedApcState, &Thread->ApcState);
+        Thread->SavedApcState.Process = NULL;
+        Thread->ApcStateIndex = OriginalApcEnvironment;
+        Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
+        Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
+    }
+
+    /* Release lock */
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+
+    /* Swap Processes */
+    KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
+
+    /* Exit the dispatcher */
+    KiExitDispatcher(ApcLock.OldIrql);
+
+    /* Check if we have pending APCs */
+    if (IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]))
+    {
+        /* What do you know, we do! Request them to be delivered */
+        Thread->ApcState.KernelApcPending = TRUE;
+        HalRequestSoftwareInterrupt(APC_LEVEL);
+    }
 }
 
 /*

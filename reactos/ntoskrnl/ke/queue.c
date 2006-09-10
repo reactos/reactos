@@ -180,13 +180,13 @@ KeInsertHeadQueue(IN PKQUEUE Queue,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Insert the Queue */
     PreviousState = KiInsertQueue(Queue, Entry, TRUE);
 
     /* Release the Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Return previous State */
     return PreviousState;
@@ -206,13 +206,13 @@ KeInsertQueue(IN PKQUEUE Queue,
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Insert the Queue */
     PreviousState = KiInsertQueue(Queue, Entry, FALSE);
 
     /* Release the Dispatcher Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Return previous State */
     return PreviousState;
@@ -263,7 +263,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
     else
     {
         /* Lock the Dispatcher Database */
-        OldIrql = KeAcquireDispatcherDatabaseLock();
+        OldIrql = KiAcquireDispatcherLock();
         Thread->WaitIrql = OldIrql;
     }
 
@@ -335,7 +335,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             {
                 /* Increment the count and unlock the dispatcher */
                 Queue->CurrentCount++;
-                KeReleaseDispatcherDatabaseLock(Thread->WaitIrql);
+                KiReleaseDispatcherLock(Thread->WaitIrql);
             }
             else
             {
@@ -449,7 +449,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             }
 
             /* Reacquire the lock */
-            OldIrql = KeAcquireDispatcherDatabaseLock();
+            OldIrql = KiAcquireDispatcherLock();
 
             /* Save the new IRQL and decrease number of waiting threads */
             Thread->WaitIrql = OldIrql;
@@ -458,7 +458,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
     }
 
     /* Unlock Database and return */
-    KeReleaseDispatcherDatabaseLock(Thread->WaitIrql);
+    KiReleaseDispatcherLock(Thread->WaitIrql);
     return QueueEntry;
 }
 
@@ -478,7 +478,7 @@ KeRundownQueue(IN PKQUEUE Queue)
     ASSERT(IsListEmpty(&Queue->Header.WaitListHead));
 
     /* Get the Dispatcher Lock */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Make sure the list is not empty */
     if (!IsListEmpty(&Queue->EntryListHead))
@@ -501,7 +501,7 @@ KeRundownQueue(IN PKQUEUE Queue)
     }
 
     /* Release the lock and return */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
     return FirstEntry;
 }
 

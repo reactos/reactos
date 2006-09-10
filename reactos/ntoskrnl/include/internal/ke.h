@@ -187,12 +187,6 @@ extern VOID KiTrap2(VOID);
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
-#define KeInitializeDispatcher()
-#define KeAcquireDispatcherDatabaseLock() KeRaiseIrqlToDpcLevel();
-#define KeReleaseDispatcherDatabaseLock(OldIrql) KiExitDispatcher(OldIrql);
-#define KeAcquireDispatcherDatabaseLockAtDpcLevel()
-#define KeReleaseDispatcherDatabaseLockFromDpcLevel()
-
 /* Readies a Thread for Execution. */
 BOOLEAN
 NTAPI
@@ -620,7 +614,7 @@ NTAPI
 KiAttachProcess(
     struct _KTHREAD *Thread,
     struct _KPROCESS *Process,
-    KIRQL ApcLock,
+    PKLOCK_QUEUE_HANDLE ApcLock,
     struct _KAPC_STATE *SavedApcState
 );
 

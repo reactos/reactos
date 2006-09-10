@@ -39,14 +39,14 @@ KeInitializeMutant(IN PKMUTANT Mutant,
         Mutant->OwnerThread = CurrentThread;
 
         /* We're about to touch the Thread, so lock the Dispatcher */
-        OldIrql = KeAcquireDispatcherDatabaseLock();
+        OldIrql = KiAcquireDispatcherLock();
 
         /* And insert it into its list */
         InsertTailList(&CurrentThread->MutantListHead,
                        &Mutant->MutantListEntry);
 
         /* Release Dispatcher Lock */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KiReleaseDispatcherLock(OldIrql);
         DPRINT("Mutant with Initial Owner\n");
     }
     else
@@ -115,7 +115,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
     DPRINT("KeReleaseMutant: %x\n", Mutant);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save the Previous State */
     PreviousState = Mutant->Header.SignalState;
@@ -129,7 +129,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
             DPRINT1("Trying to touch a Mutant that the caller doesn't own!\n");
 
             /* Release the lock */
-            KeReleaseDispatcherDatabaseLock(OldIrql);
+            KiReleaseDispatcherLock(OldIrql);
 
             /* Raise an exception */
             ExRaiseStatus(Mutant->Abandoned ? STATUS_ABANDONED :
@@ -194,7 +194,7 @@ KeReleaseMutant(IN PKMUTANT Mutant,
     if (Wait == FALSE)
     {
         /* Release the Lock */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KiReleaseDispatcherLock(OldIrql);
     }
     else
     {

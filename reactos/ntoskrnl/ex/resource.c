@@ -307,7 +307,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
                       OldSize * sizeof(OWNER_ENTRY));
 
         /* Acquire dispatcher lock to prevent thread boosting */
-        KeAcquireDispatcherDatabaseLockAtDpcLevel();
+        KiAcquireDispatcherLockAtDpcLevel();
 
         /* Set the new table data */
         Table->TableSize = NewSize;
@@ -317,7 +317,7 @@ ExpExpandResourceOwnerTable(IN PERESOURCE_XP Resource,
         ExpVerifyResource(Resource);
 
         /* Release locks */
-        KeReleaseDispatcherDatabaseLockFromDpcLevel();
+        KiReleaseDispatcherLockFromDpcLevel();
         ExReleaseResourceLock(&Resource->SpinLock, *OldIrql);
 
         /* Free the old table */
@@ -571,7 +571,7 @@ ExpBoostOwnerThread(IN PKTHREAD Thread,
             KiSetPriorityThread(OwnerThread, 14, &Released);
 
             /* Reacquire lock if it got releases */
-            if (Released) KeAcquireDispatcherDatabaseLockFromDpcLevel();
+            if (Released) KiAcquireDispatcherLockFromDpcLevel();
 
             /* Make sure we're still at dispatch */
             ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
@@ -691,7 +691,7 @@ ExpWaitForResource(IN PERESOURCE_XP Resource,
 
             /* Get the current kernel thread and lock the dispatcher */
             Thread = KeGetCurrentThread();
-            Thread->WaitIrql = KeAcquireDispatcherDatabaseLock();
+            Thread->WaitIrql = KiAcquireDispatcherLock();
             Thread->WaitNext = TRUE;
 
             /* Get the owner thread and boost it */

@@ -99,7 +99,7 @@ KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
 
   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
-  OldIrql = KeAcquireDispatcherDatabaseLock();
+  OldIrql = KiAcquireDispatcherLock();
 
   do
     {
@@ -122,7 +122,7 @@ KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
   /* Update absolute timers */
   DPRINT1("FIXME: TIMER UPDATE NOT DONE!!!\n");
 
-  KeReleaseDispatcherDatabaseLock(OldIrql);
+  KiReleaseDispatcherLock(OldIrql);
 
   /*
    * NOTE: Expired timers will be processed at the next clock tick!

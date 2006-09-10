@@ -397,9 +397,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         if (CreateSuspended) KeResumeThread(&Thread->Tcb);
 
         /* Dispatch thread */
-        OldIrql = KeAcquireDispatcherDatabaseLock ();
+        OldIrql = KiAcquireDispatcherLock ();
         KiReadyThread(&Thread->Tcb);
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KiReleaseDispatcherLock(OldIrql);
 
         /* Dereference completely to kill it */
         ObDereferenceObjectEx(Thread, 2);
@@ -439,9 +439,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
 
             /* Dispatch thread */
-            OldIrql = KeAcquireDispatcherDatabaseLock ();
+            OldIrql = KiAcquireDispatcherLock ();
             KiReadyThread(&Thread->Tcb);
-            KeReleaseDispatcherDatabaseLock(OldIrql);
+            KiReleaseDispatcherLock(OldIrql);
 
             /* Dereference it, leaving only the keep-alive */
             ObDereferenceObject(Thread);
@@ -482,9 +482,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             if (CreateSuspended) KeResumeThread(&Thread->Tcb);
 
             /* Dispatch thread */
-            OldIrql = KeAcquireDispatcherDatabaseLock ();
+            OldIrql = KiAcquireDispatcherLock ();
             KiReadyThread(&Thread->Tcb);
-            KeReleaseDispatcherDatabaseLock(OldIrql);
+            KiReleaseDispatcherLock(OldIrql);
 
             /* Dereference it, leaving only the keep-alive */
             ObDereferenceObject(Thread);
@@ -533,9 +533,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
     /* Dispatch thread */
     PSREFTRACE(Thread);
-    OldIrql = KeAcquireDispatcherDatabaseLock ();
+    OldIrql = KiAcquireDispatcherLock ();
     KiReadyThread(&Thread->Tcb);
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 
     /* Dereference it, leaving only the keep-alive */
     ObDereferenceObject(Thread);

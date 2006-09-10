@@ -124,7 +124,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
         if (Candidate == CurrentThread) {
 
             Candidate->State = Running;
-            KeReleaseDispatcherDatabaseLockFromDpcLevel();
+            KiReleaseDispatcherLockFromDpcLevel();
             return FALSE;
         }
 
@@ -204,7 +204,7 @@ KiDispatchThread(ULONG NewThreadStatus)
         return;
     }
 
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
     KiDispatchThreadNoLock(NewThreadStatus);
     KeLowerIrql(OldIrql);
 }
@@ -328,7 +328,7 @@ KiSetPriorityThread(PKTHREAD Thread,
                             /* Reschedule if the new one is already on a CPU */
                             if (Pcr->Prcb->CurrentThread == Thread)
                             {
-                                KeReleaseDispatcherDatabaseLockFromDpcLevel();
+                                KiReleaseDispatcherLockFromDpcLevel();
                                 KiRequestReschedule(i);
                                 *Released = TRUE;
                                 return;
@@ -393,7 +393,7 @@ KiSetAffinityThread(IN PKTHREAD Thread,
 
                         if (!(Affinity & ProcessorMask)) {
 
-                            KeReleaseDispatcherDatabaseLockFromDpcLevel();
+                            KiReleaseDispatcherLockFromDpcLevel();
                             KiRequestReschedule(i);
                             *Released = TRUE;
                             return OldAffinity;

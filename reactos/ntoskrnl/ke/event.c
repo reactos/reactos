@@ -80,7 +80,7 @@ KePulseEvent(IN PKEVENT Event,
     DPRINT("KePulseEvent(Event %x, Wait %x)\n",Event,Wait);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save the Old State */
     PreviousState = Event->Header.SignalState;
@@ -102,7 +102,7 @@ KePulseEvent(IN PKEVENT Event,
     if (Wait == FALSE) {
 
         /* Wait not requested, release Dispatcher Database and return */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KiReleaseDispatcherLock(OldIrql);
 
     } else {
 
@@ -140,7 +140,7 @@ KeResetEvent(PKEVENT Event)
     DPRINT("KeResetEvent(Event %x)\n",Event);
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save the Previous State */
     PreviousState = Event->Header.SignalState;
@@ -149,7 +149,7 @@ KeResetEvent(PKEVENT Event)
     Event->Header.SignalState = 0;
 
     /* Release Dispatcher Database and return previous state */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
     return PreviousState;
 }
 
@@ -169,7 +169,7 @@ KeSetEvent(PKEVENT Event,
     DPRINT("KeSetEvent(Event %x, Wait %x)\n",Event,Wait);
 
     /* Lock the Dispathcer Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* Save the Previous State */
     PreviousState = Event->Header.SignalState;
@@ -212,7 +212,7 @@ KeSetEvent(PKEVENT Event,
     if (Wait == FALSE) {
 
         /* Wait not requested, release Dispatcher Database and return */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        KiReleaseDispatcherLock(OldIrql);
 
     } else {
 
@@ -241,7 +241,7 @@ KeSetEventBoostPriority(IN PKEVENT Event,
     DPRINT("KeSetEventBoostPriority(Event %x, Thread %x)\n",Event,Thread);
 
     /* Acquire Dispatcher Database Lock */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
 
     /* If our wait list is empty, then signal the event and return */
     if (IsListEmpty(&Event->Header.WaitListHead)) {
@@ -264,7 +264,7 @@ KeSetEventBoostPriority(IN PKEVENT Event,
     }
 
     /* Release the Dispatcher Database Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    KiReleaseDispatcherLock(OldIrql);
 }
 
 /* EOF */

@@ -32,7 +32,7 @@ KeWaitForGate(IN PKGATE Gate,
               IN KWAIT_REASON WaitReason,
               IN KPROCESSOR_MODE WaitMode)
 {
-    KIRQL OldIrql;
+    KLOCK_QUEUE_HANDLE ApcLock;
     PKTHREAD CurrentThread = KeGetCurrentThread();
     PKWAIT_BLOCK GateWaitBlock;
     NTSTATUS Status;
@@ -42,15 +42,16 @@ KeWaitForGate(IN PKGATE Gate,
     /* Start wait loop */
     do
     {
-        /* Lock the dispatcher */
-        OldIrql = KeAcquireDispatcherDatabaseLock();
+        /* Acquire the APC lock */
+        KiAcquireApcLock(CurrentThread, &ApcLock);
 
         /* Check if a kernel APC is pending and we're below APC_LEVEL */
         if ((CurrentThread->ApcState.KernelApcPending) &&
-            !(CurrentThread->SpecialApcDisable) && (OldIrql < APC_LEVEL))
+            !(CurrentThread->SpecialApcDisable) &&
+            (ApcLock.OldIrql < APC_LEVEL))
         {
-            /* Unlock the dispatcher, this will fire the APC */
-            KeReleaseDispatcherDatabaseLock(OldIrql);
+            /* Release the lock, this will fire the APC */
+            KiReleaseApcLock(&ApcLock);
         }
         else
         {
@@ -60,8 +61,8 @@ KeWaitForGate(IN PKGATE Gate,
                 /* Unsignal it */
                 Gate->Header.SignalState = 0;
 
-                /* Unlock the Queue and return */
-                KeReleaseDispatcherDatabaseLock(OldIrql);
+                /* Release the APC lock and return */
+                KiReleaseApcLock(&ApcLock);
                 return;
             }
 
@@ -73,7 +74,7 @@ KeWaitForGate(IN PKGATE Gate,
             /* Set the Thread Wait Data */
             CurrentThread->WaitMode = WaitMode;
             CurrentThread->WaitReason = WaitReason;
-            CurrentThread->WaitIrql = OldIrql;
+            CurrentThread->WaitIrql = ApcLock.OldIrql;
             CurrentThread->State = GateWait;
             CurrentThread->GateObject = Gate;
 
@@ -83,6 +84,9 @@ KeWaitForGate(IN PKGATE Gate,
 
             /* Handle Kernel Queues */
             if (CurrentThread->Queue) KiWakeQueue(CurrentThread->Queue);
+
+            /* Release the APC lock but stay at DPC level */
+            KiReleaseApcLockFromDpcLevel(&ApcLock);
 
             /* Find a new thread to run */
             Status = KiSwapThread(CurrentThread, KeGetCurrentPrcb());
@@ -104,11 +108,16 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
     ASSERT_GATE(Gate);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Acquire Dispatcher Database Lock */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    /* Raise to synch level */
+    OldIrql = KeRaiseIrqlToSynchLevel();
 
     /* Make sure we're not already signaled or that the list is empty */
-    if (Gate->Header.SignalState) goto quit;
+    if (Gate->Header.SignalState)
+    {
+        /* Lower IRQL and quit */
+        KeLowerIrql(OldIrql);
+        return;
+    }
 
     /* Check if our wait list is empty */
     if (IsListEmpty(&Gate->Header.WaitListHead))
@@ -136,9 +145,8 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
         KiAbortWaitThread(WaitThread, WaitStatus, EVENT_INCREMENT);
     }
 
-quit:
-    /* Release the Dispatcher Database Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Exit the dispatcher */
+    KiExitDispatcher(OldIrql);
 }
 
 /* EOF */

@@ -105,9 +105,9 @@ PsInitIdleThread(VOID)
                                   KernelMode,
                                   FALSE);
 
-    oldIrql = KeAcquireDispatcherDatabaseLock ();
+    oldIrql = KiAcquireDispatcherLock ();
     KiReadyThread(&IdleThread->Tcb);
-    KeReleaseDispatcherDatabaseLock(oldIrql);
+    KiReleaseDispatcherLock(oldIrql);
 
     KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;
     KeSetPriorityThread(&IdleThread->Tcb, LOW_PRIORITY);

@@ -264,7 +264,6 @@ KiInitSpinLocks(IN PKPRCB Prcb,
         KeInitializeSpinLock(&MmNonPagedPoolLock);
         KeInitializeSpinLock(&NtfsStructLock);
         KeInitializeSpinLock(&AfdWorkQueueSpinLock);
-        KeInitializeDispatcher(); // ROS OLD DISPATCHER
     }
 }
 
