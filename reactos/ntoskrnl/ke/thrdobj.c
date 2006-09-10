@@ -46,6 +46,40 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     return (UCHAR)Result;
 }
 
+KPRIORITY
+NTAPI
+KeQueryBasePriorityThread(IN PKTHREAD Thread)
+{
+    LONG BaseIncrement;
+    KIRQL OldIrql;
+    PKPROCESS Process;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Raise IRQL to synch level */
+    OldIrql = KeRaiseIrqlToSynchLevel();
+
+    /* Lock the thread */
+    KiAcquireThreadLock(Thread);
+
+    /* Get the Process */
+    Process = Thread->ApcStatePointer[0]->Process;
+
+    /* Calculate the base increment */
+    BaseIncrement = Thread->BasePriority - Process->BasePriority;
+
+    /* If saturation occured, return the saturation increment instead */
+    if (Thread->Saturation) BaseIncrement = (HIGH_PRIORITY + 1) / 2 *
+                                            Thread->Saturation;
+
+    /* Release thread lock */
+    KiReleaseThreadLock(Thread);
+
+    /* Lower IRQl and return Increment */
+    KeLowerIrql(OldIrql);
+    return BaseIncrement;
+}
+
 ULONG
 NTAPI
 KeAlertResumeThread(IN PKTHREAD Thread)
@@ -930,9 +964,6 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 {
     KIRQL OldIrql;
     PKPRCB Prcb;
-#ifdef CONFIG_SMP
-    ULONG AffinitySet, NodeMask;
-#endif
     PKTHREAD NextThread, CurrentThread = KeGetCurrentThread();
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
     ASSERT((Affinity & KeActiveProcessors) != 0);
@@ -948,6 +979,8 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 #ifdef CONFIG_SMP
     if (!(Affinity & AFFINITY_MASK(CurrentThread->IdealProcessor)))
     {
+        ULONG AffinitySet, NodeMask;
+
         /* It's not! Get the PRCB */
         Prcb = KiProcessorBlock[CurrentThread->IdealProcessor];
 
@@ -997,34 +1030,6 @@ KeSetSystemAffinityThread(IN KAFFINITY Affinity)
 
     /* Unlock dispatcher database */
     KiReleaseDispatcherLock(OldIrql);
-}
-
-LONG
-STDCALL
-KeQueryBasePriorityThread(IN PKTHREAD Thread)
-{
-    LONG BasePriorityIncrement;
-    KIRQL OldIrql;
-    PKPROCESS Process;
-
-    /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Get the Process */
-    Process = Thread->ApcStatePointer[0]->Process;
-
-    /* Calculate the BPI */
-    BasePriorityIncrement = Thread->BasePriority - Process->BasePriority;
-
-    /* If saturation occured, return the SI instead */
-    if (Thread->Saturation) BasePriorityIncrement = (HIGH_PRIORITY + 1) / 2 *
-                                                    Thread->Saturation;
-
-    /* Release Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
-
-    /* Return Increment */
-    return BasePriorityIncrement;
 }
 
 /*
@@ -1133,74 +1138,91 @@ KeSetBasePriorityThread(PKTHREAD Thread,
 /*
  * @implemented
  */
-KPRIORITY
-STDCALL
-KeSetPriorityThread(PKTHREAD Thread,
-                    KPRIORITY Priority)
+KAFFINITY
+NTAPI
+KeSetAffinityThread(IN PKTHREAD Thread,
+                    IN KAFFINITY Affinity)
 {
-    KPRIORITY OldPriority;
-    BOOLEAN Released = FALSE;
     KIRQL OldIrql;
+    KAFFINITY OldAffinity;
+    BOOLEAN Released;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock the dispatcher database */
+    OldIrql = KiAcquireDispatcherLock();
+
+    /* Call the internal function */
+    OldAffinity = KiSetAffinityThread(Thread, Affinity, &Released);
+
+    /* Check if lock was released */
+    if (!Released)
+    {
+        /* Release the dispatcher database */
+        KiReleaseDispatcherLock(OldIrql);
+    }
+    else
+    {
+        /* Lower IRQL only */
+        KeLowerIrql(OldIrql);
+    }
+
+    /* Return old affinity */
+    return OldAffinity;
+}
+
+/*
+ * @implemented
+ */
+KPRIORITY
+NTAPI
+KeSetPriorityThread(IN PKTHREAD Thread,
+                    IN KPRIORITY Priority)
+{
+    KIRQL OldIrql;
+    KPRIORITY OldPriority;
+    BOOLEAN Released;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    ASSERT((Priority <= HIGH_PRIORITY) && (Priority >= LOW_PRIORITY));
 
     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    OldIrql = KiAcquireDispatcherLock();
+
+    /* Lock the thread */
+    KiAcquireThreadLock(Thread);
 
     /* Save the old Priority */
     OldPriority = Thread->Priority;
 
-    /* Reset the Quantum and Decrements */
-    Thread->Quantum = Thread->QuantumReset;
-    Thread->PriorityDecrement = 0;
+    /* Make sure that an actual change is being done */
+    if (OldPriority != Priority)
+    {
+        /* Reset the Quantum and Decrements */
+        Thread->Quantum = Thread->QuantumReset;
+        Thread->PriorityDecrement = 0;
 
-    /* Set the new Priority */
-    KiSetPriorityThread(Thread, Priority, &Released);
+        /* Set the new Priority */
+        KiSetPriorityThread(Thread, Priority, &Released);
+    }
 
-    /* Release Lock if needed */
+    /* Release thread lock */
+    KiReleaseThreadLock(Thread);
+
+    /* Check if lock was released */
     if (!Released)
     {
-        KeReleaseDispatcherDatabaseLock(OldIrql);
+        /* Release the dispatcher database */
+        KiReleaseDispatcherLock(OldIrql);
     }
     else
     {
+        /* Lower IRQL only */
         KeLowerIrql(OldIrql);
     }
 
     /* Return Old Priority */
     return OldPriority;
-}
-
-/*
- * @implemented
- *
- * Sets thread's affinity
- */
-KAFFINITY
-STDCALL
-KeSetAffinityThread(PKTHREAD Thread,
-                    KAFFINITY Affinity)
-{
-    KIRQL OldIrql;
-    KAFFINITY OldAffinity;
-    BOOLEAN Released;
-
-    DPRINT("KeSetAffinityThread(Thread %x, Affinity %x)\n", Thread, Affinity);
-
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Call the internal function */
-    OldAffinity = KiSetAffinityThread(Thread, Affinity, &Released);
-
-    /* Release Lock if needed */
-    if (!Released)
-    {
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-    }
-    else
-    {
-        KeLowerIrql(OldIrql);
-    }
-
-    return OldAffinity;
 }
 
 /*
