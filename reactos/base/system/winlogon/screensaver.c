@@ -89,9 +89,16 @@ ScreenSaverThreadMain(
 		goto cleanup;
 	}
 
+	Session->hEndOfScreenSaver = CreateEventW(NULL, FALSE, FALSE, NULL);
+	if (!Session->hEndOfScreenSaver)
+	{
+		ERR("WL: Unable to create event (error %lu)\n", GetLastError());
+		goto cleanup;
+	}
+
 	HandleArray[0] = Session->hEndOfScreenSaverThread;
 	HandleArray[1] = Session->hScreenSaverParametersChanged;
-	HandleArray[2] = Session->hUserActivity;
+	HandleArray[2] = Session->hEndOfScreenSaver;
 
 	LoadScreenSaverParameters(&Timeout);
 
@@ -160,6 +167,8 @@ cleanup:
 	RevertToSelf();
 	if (Session->hUserActivity)
 		CloseHandle(Session->hUserActivity);
+	if (Session->hEndOfScreenSaver)
+		CloseHandle(Session->hEndOfScreenSaver);
 #ifndef USE_GETLASTINPUTINFO
 	if (Session->KeyboardHook)
 		UnhookWindowsHookEx(Session->KeyboardHook);
@@ -176,9 +185,6 @@ InitializeScreenSaver(
 	IN OUT PWLSESSION Session)
 {
 	HANDLE ScreenSaverThread;
-
-	FIXME("Disabling screen saver due to numerous bugs in ReactOS (see r23540)!\n");
-	return TRUE;
 
 #ifndef USE_GETLASTINPUTINFO
 	/* Register hooks to detect keyboard and mouse activity */
@@ -234,7 +240,9 @@ StartScreenSaver(
 	DWORD dwType;
 	STARTUPINFOW StartupInfo;
 	PROCESS_INFORMATION ProcessInformation;
+	HANDLE HandleArray[2];
 	LONG rc;
+	NTSTATUS Status;
 	BOOL ret = FALSE;
 
 	if (!ImpersonateLoggedOnUser(Session->UserToken))
@@ -286,17 +294,29 @@ StartScreenSaver(
 		WARN("WL: Unable to start %S, error %lu\n", szApplicationName, GetLastError());
 		goto cleanup;
 	}
+	CloseHandle(ProcessInformation.hThread);
+
+	SystemParametersInfoW(SPI_SETSCREENSAVERRUNNING, TRUE, NULL, 0);
+
+	/* Wait the end of the process or some other activity */
+	ResetEvent(Session->hUserActivity);
+	HandleArray[0] = ProcessInformation.hProcess;
+	HandleArray[1] = Session->hUserActivity;
+	Status = WaitForMultipleObjects(2, HandleArray, FALSE, INFINITE);
+	if (Status == WAIT_OBJECT_0 + 1)
+	{
+		/* Kill the screen saver */
+		TerminateProcess(ProcessInformation.hProcess, 0);
+	}
+	SetEvent(Session->hEndOfScreenSaver);
 
 	CloseHandle(ProcessInformation.hProcess);
-	CloseHandle(ProcessInformation.hThread);
 
 cleanup:
 	RevertToSelf();
 	if (hKey)
 		RegCloseKey(hKey);
-	if (ret)
-		SystemParametersInfoW(SPI_SETSCREENSAVERRUNNING, TRUE, NULL, 0);
-	else
+	if (!ret)
 	{
 		PostMessageW(Session->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_SCRNSVR_ACTIVITY, 0);
 #ifndef USE_GETLASTINPUTINFO

@@ -545,7 +545,7 @@ DispatchSAS(
 		if (!Session->Gina.Functions.WlxScreenSaverNotify(Session->Gina.Context, &bSecure))
 		{
 			/* Skip start of screen saver */
-			SetEvent(Session->hUserActivity);
+			SetEvent(Session->hEndOfScreenSaver);
 		}
 		else
 		{

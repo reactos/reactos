@@ -27,7 +27,7 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
-//#define USE_GETLASTINPUTINFO
+#define USE_GETLASTINPUTINFO
 
 #define WIN32_NO_STATUS
 #include <windows.h>
@@ -146,6 +146,7 @@ typedef struct _WLSESSION
   HANDLE hEndOfScreenSaverThread;
   HANDLE hScreenSaverParametersChanged;
   HANDLE hUserActivity;
+  HANDLE hEndOfScreenSaver;
 #ifndef USE_GETLASTINPUTINFO
   DWORD LastActivity;
 #endif
