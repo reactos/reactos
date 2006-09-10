@@ -46,8 +46,9 @@ UpdatePageDirs(IN PKTHREAD Thread,
      * To prevent this, make sure the page directory of the process we're
      * attaching to is up-to-date.
      */
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, KERNEL_STACK_SIZE);
-    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
+    MmUpdatePageDir((PEPROCESS)Process,
+                    (PVOID)Thread->StackLimit,
+                    KERNEL_STACK_SIZE);
 }
 
 VOID
@@ -87,6 +88,9 @@ KiAttachProcess(IN PKTHREAD Thread,
     if (Process->State == ProcessInMemory)
     {
         /* FIXME: Scan the Ready Thread List once new scheduler is in */
+
+        /* Release dispatcher lock */
+        KiReleaseDispatcherLockFromDpcLevel();
 
         /* Release lock */
         KiReleaseApcLockFromDpcLevel(ApcLock);
@@ -420,12 +424,12 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
  */
 VOID
 NTAPI
-KeAttachProcess(PKPROCESS Process)
+KeAttachProcess(IN PKPROCESS Process)
 {
     KLOCK_QUEUE_HANDLE ApcLock;
     PKTHREAD Thread;
+    ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT("KeAttachProcess: %x\n", Process);
 
     /* Make sure that we are in the right page directory */
     Thread = KeGetCurrentThread();
@@ -433,9 +437,6 @@ KeAttachProcess(PKPROCESS Process)
 
     /* Check if we're already in that process */
     if (Thread->ApcState.Process == Process) return;
-
-    /* Acquire APC Lock */
-    KiAcquireApcLock(Thread, &ApcLock);
 
     /* Check if a DPC is executing or if we're already attached */
     if ((Thread->ApcStateIndex != OriginalApcEnvironment) ||
@@ -450,6 +451,12 @@ KeAttachProcess(PKPROCESS Process)
     }
     else
     {
+        /* Acquire APC Lock */
+        KiAcquireApcLock(Thread, &ApcLock);
+
+        /* Acquire the dispatcher lock */
+        KiAcquireDispatcherLockAtDpcLevel();
+
         /* Legit attach attempt: do it! */
         KiAttachProcess(Thread, Process, &ApcLock, &Thread->SavedApcState);
     }
@@ -576,6 +583,9 @@ KeStackAttachProcess(IN PKPROCESS Process,
     /* Acquire APC Lock */
     KiAcquireApcLock(Thread, &ApcLock);
 
+    /* Acquire dispatcher lock */
+    KiAcquireDispatcherLockAtDpcLevel();
+
     /* Check if the Current Thread is already attached */
     if (Thread->ApcStateIndex != OriginalApcEnvironment)
     {
@@ -605,8 +615,27 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
     /* Check for magic value meaning we were already in the same process */
     if (ApcState->Process == (PKPROCESS)1) return;
 
-    /* Acquire APC Lock */
-    KiAcquireApcLock(Thread, &ApcLock);
+    /* Loop to make sure no APCs are pending  */
+    for (;;)
+    {
+        /* Acquire APC Lock */
+        KiAcquireApcLock(Thread, &ApcLock);
+
+        /* Check if a kernel APC is pending */
+        if (Thread->ApcState.KernelApcPending)
+        {
+            /* Check if kernel APC should be delivered */
+            if (!(Thread->KernelApcDisable) && (ApcLock.OldIrql <= APC_LEVEL))
+            {
+                /* Release the APC lock so that the APC can be delivered */
+                KiReleaseApcLock(&ApcLock);
+                continue;
+            }
+        }
+
+        /* Otherwise, break out */
+        break;
+    }
 
     /*
      * Check if the process isn't attacked, or has a Kernel APC in progress
@@ -680,17 +709,20 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
  */
 BOOLEAN
 NTAPI
-KeAddSystemServiceTable(PULONG_PTR Base,
-                        PULONG Count OPTIONAL,
-                        ULONG Limit,
-                        PUCHAR Number,
-                        ULONG Index)
+KeAddSystemServiceTable(IN PULONG_PTR Base,
+                        IN PULONG Count OPTIONAL,
+                        IN ULONG Limit,
+                        IN PUCHAR Number,
+                        IN ULONG Index)
 {
+    PAGED_CODE();
+
     /* Check if descriptor table entry is free */
     if ((Index > SSDT_MAX_ENTRIES - 1) ||
         (KeServiceDescriptorTable[Index].Base) ||
         (KeServiceDescriptorTableShadow[Index].Base))
     {
+        /* It's not, fail */
         return FALSE;
     }
 
@@ -699,7 +731,6 @@ KeAddSystemServiceTable(PULONG_PTR Base,
     KeServiceDescriptorTableShadow[Index].Limit = Limit;
     KeServiceDescriptorTableShadow[Index].Number = Number;
     KeServiceDescriptorTableShadow[Index].Count = Count;
-
     return TRUE;
 }
 
@@ -710,8 +741,10 @@ BOOLEAN
 NTAPI
 KeRemoveSystemServiceTable(IN ULONG Index)
 {
+    PAGED_CODE();
+
     /* Make sure the Index is valid */
-    if (Index > SSDT_MAX_ENTRIES - 1) return FALSE;
+    if (Index > (SSDT_MAX_ENTRIES - 1)) return FALSE;
 
     /* Is there a Normal Descriptor Table? */
     if (!KeServiceDescriptorTable[Index].Base)
@@ -735,6 +768,7 @@ KeRemoveSystemServiceTable(IN ULONG Index)
         KeServiceDescriptorTable[Index].Count = NULL;
     }
 
+    /* Return success */
     return TRUE;
 }
 /* EOF */
