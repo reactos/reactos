@@ -587,6 +587,23 @@ KiReleaseApcLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE Handle)
     KeReleaseInStackQueuedSpinLockFromDpcLevel(Handle);
 }
 
+FORCEINLINE
+VOID
+KiAcquireProcessLock(IN PKPROCESS Process,
+                     IN PKLOCK_QUEUE_HANDLE Handle)
+{
+    /* Acquire the lock and raise to synchronization level */
+    KeAcquireInStackQueuedSpinLockRaiseToSynch(&Process->ProcessLock, Handle);
+}
+
+FORCEINLINE
+VOID
+KiReleaseProcessLock(IN PKLOCK_QUEUE_HANDLE Handle)
+{
+    /* Release the lock */
+    KeReleaseInStackQueuedSpinLock(Handle);
+}
+
 //
 // This routine queues a thread that is ready on the PRCB's ready lists.
 // If this thread cannot currently run on this CPU, then the thread is

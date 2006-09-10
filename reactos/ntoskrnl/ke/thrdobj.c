@@ -180,58 +180,81 @@ KeRundownThread(VOID)
  * while the debugger is examining their state.
  */
 VOID
-STDCALL
-KeFreezeAllThreads(PKPROCESS Process)
+NTAPI
+KeFreezeAllThreads(IN PKPROCESS Process)
 {
-    KIRQL OldIrql;
-    PKTHREAD Current;
-    PKTHREAD CurrentThread = KeGetCurrentThread();
+    KLOCK_QUEUE_HANDLE LockHandle, ApcLock;
+    PKTHREAD Current, CurrentThread = KeGetCurrentThread();
+    PLIST_ENTRY ListHead, NextEntry;
+    LONG OldCount;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Acquire Lock */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &LockHandle);
 
     /* If someone is already trying to free us, try again */
     while (CurrentThread->FreezeCount)
     {
-        /* Release and re-acquire the lock so the APC will go through */
-        KeReleaseDispatcherDatabaseLock(OldIrql);
-        OldIrql = KeAcquireDispatcherDatabaseLock();
+        /* Release and re-acquire the process lock so the APC will go through */
+        KiReleaseProcessLock(&LockHandle);
+        KiAcquireProcessLock(Process, &LockHandle);
     }
 
     /* Enter a critical region */
     KeEnterCriticalRegion();
 
     /* Loop the Process's Threads */
-    LIST_FOR_EACH(Current, &Process->ThreadListHead, KTHREAD, ThreadListEntry)
+    ListHead = &Process->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
     {
-        /* Make sure it's not ours */
-        if (Current != CurrentThread)
+        /* Get the current thread */
+        Current = CONTAINING_RECORD(NextEntry, KTHREAD, ThreadListEntry);
+
+        /* Lock it */
+        KiAcquireApcLockAtDpcLevel(Current, &ApcLock);
+
+        /* Make sure it's not ours, and check if APCs are enabled */
+        if ((Current != CurrentThread) && (Current->ApcQueueable))
         {
-            /* Should be bother inserting the APC? */
-            if (Current->ApcQueueable)
+            /* Sanity check */
+            OldCount = Current->SuspendCount;
+            ASSERT(OldCount != MAXIMUM_SUSPEND_COUNT);
+
+            /* Increase the freeze count */
+            Current->FreezeCount++;
+
+            /* Make sure it wasn't already suspended */
+            if (!(OldCount) && !(Current->SuspendCount))
             {
-                /* Make sure it wasn't already frozen, and that it's not suspended */
-                if (!(++Current->FreezeCount) && !(Current->SuspendCount))
+                /* Did we already insert it? */
+                if (!Current->SuspendApc.Inserted)
                 {
-                    /* Did we already insert it? */
-                    if (!Current->SuspendApc.Inserted)
-                    {
-                        /* Insert the APC */
-                        Current->SuspendApc.Inserted = TRUE;
-                        KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT);
-                    }
-                    else
-                    {
-                        /* Unsignal the Semaphore, the APC already got inserted */
-                        Current->SuspendSemaphore.Header.SignalState--;
-                    }
+                    /* Insert the APC */
+                    Current->SuspendApc.Inserted = TRUE;
+                    KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT);
+                }
+                else
+                {
+                    /* Lock the dispatcher */
+                    KiAcquireDispatcherLockAtDpcLevel();
+
+                    /* Unsignal the semaphore, the APC was already inserted */
+                    Current->SuspendSemaphore.Header.SignalState--;
+
+                    /* Release the dispatcher */
+                    KiReleaseDispatcherLockFromDpcLevel();
                 }
             }
         }
+
+        /* Release the APC lock */
+        KiReleaseApcLockFromDpcLevel(&ApcLock);
     }
 
-    /* Release the lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Release the process lock and exit the dispatcher */
+    KiReleaseProcessLock(&LockHandle);
+    KiExitDispatcher(LockHandle.OldIrql);
 }
 
 ULONG
@@ -242,7 +265,6 @@ KeResumeThread(IN PKTHREAD Thread)
     ULONG PreviousCount;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT1("Resuming Thread: %p\n", Thread);
 
     /* Lock the APC Queue */
     KiAcquireApcLock(Thread, &ApcLock);
@@ -323,7 +345,6 @@ KeSuspendThread(PKTHREAD Thread)
     ULONG PreviousCount;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT1("Suspending Thread: %p\n", Thread);
 
     /* Lock the APC Queue */
     KiAcquireApcLock(Thread, &ApcLock);
@@ -383,7 +404,6 @@ KeForceResumeThread(IN PKTHREAD Thread)
     ULONG PreviousCount;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT1("Force-Resuming Thread: %p\n", Thread);
 
     /* Lock the APC Queue */
     KiAcquireApcLock(Thread, &ApcLock);
@@ -423,7 +443,6 @@ KeAlertResumeThread(IN PKTHREAD Thread)
     KLOCK_QUEUE_HANDLE ApcLock;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT1("Alert-Resuming Thread: %p\n", Thread);
 
     /* Lock the Dispatcher Database and the APC Queue */
     KiAcquireApcLock(Thread, &ApcLock);
@@ -476,7 +495,6 @@ KeAlertThread(IN PKTHREAD Thread,
     KLOCK_QUEUE_HANDLE ApcLock;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT1("Alerting Thread: %p\n", Thread);
 
     /* Lock the Dispatcher Database and the APC Queue */
     KiAcquireApcLock(Thread, &ApcLock);
@@ -512,12 +530,8 @@ KeAlertThread(IN PKTHREAD Thread,
     return PreviousState;
 }
 
-/*
- * FUNCTION: Tests whether there are any pending APCs for the current thread
- * and if so the APCs will be delivered on exit from kernel mode
- */
 BOOLEAN
-STDCALL
+NTAPI
 KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
 {
     PKTHREAD Thread = KeGetCurrentThread();
@@ -525,7 +539,6 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
     KLOCK_QUEUE_HANDLE ApcLock;
     ASSERT_THREAD(Thread);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT1("Test-Alerting Thread: %p\n", Thread);
 
     /* Lock the Dispatcher Database and the APC Queue */
     KiAcquireApcLock(Thread, &ApcLock);
@@ -720,68 +733,6 @@ KeInitThread(IN OUT PKTHREAD Thread,
 
 VOID
 NTAPI
-KeStartThread(IN OUT PKTHREAD Thread)
-{
-    KIRQL OldIrql;
-    PKPROCESS Process = Thread->ApcState.Process;
-    PKNODE Node;
-    PKPRCB NodePrcb;
-    ULONG Set, Mask;
-    UCHAR IdealProcessor;
-
-    /* Setup static fields from parent */
-    Thread->Iopl = Process->Iopl;
-    Thread->Quantum = Process->QuantumReset;
-    Thread->QuantumReset = Process->QuantumReset;
-    Thread->SystemAffinityActive = FALSE;
-
-    /* Lock the process */
-    KeAcquireSpinLock(&Process->ProcessLock, &OldIrql);
-
-    /* Setup volatile data */
-    Thread->Priority = Process->BasePriority;
-    Thread->BasePriority = Process->BasePriority;
-    Thread->Affinity = Process->Affinity;
-    Thread->UserAffinity = Process->Affinity;
-
-    /* Get the KNODE and its PRCB */
-    Node = KeNodeBlock[Process->IdealNode];
-    NodePrcb = (PKPRCB)(KPCR_BASE + (Process->ThreadSeed * PAGE_SIZE));
-
-    /* Calculate affinity mask */
-    Set = ~NodePrcb->MultiThreadProcessorSet;
-    Mask = (ULONG)(Node->ProcessorMask & Process->Affinity);
-    Set &= Mask;
-    if (Set) Mask = Set;
-
-    /* Get the new thread seed */
-    IdealProcessor = KeFindNextRightSetAffinity(Process->ThreadSeed, Mask);
-    Process->ThreadSeed = IdealProcessor;
-
-    /* Sanity check */
-    ASSERT((Thread->UserAffinity & AFFINITY_MASK(IdealProcessor)));
-
-    /* Set the Ideal Processor */
-    Thread->IdealProcessor = IdealProcessor;
-    Thread->UserIdealProcessor = IdealProcessor;
-
-    /* Lock the Dispatcher Database */
-    KeAcquireDispatcherDatabaseLockAtDpcLevel();
-
-    /* Insert the thread into the process list */
-    InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
-
-    /* Increase the stack count */
-    ASSERT(Process->StackCount != MAXULONG_PTR);
-    Process->StackCount++;
-
-    /* Release locks and return */
-    KeReleaseDispatcherDatabaseLockFromDpcLevel();
-    KeReleaseSpinLock(&Process->ProcessLock, OldIrql);
-}
-
-VOID
-NTAPI
 KeInitializeThread(IN PKPROCESS Process,
                    IN OUT PKTHREAD Thread,
                    IN PKSYSTEM_ROUTINE SystemRoutine,
@@ -804,6 +755,72 @@ KeInitializeThread(IN PKPROCESS Process,
         /* Start it */
         KeStartThread(Thread);
     }
+}
+
+VOID
+NTAPI
+KeStartThread(IN OUT PKTHREAD Thread)
+{
+    KLOCK_QUEUE_HANDLE LockHandle;
+#ifdef CONFIG_SMP
+    PKNODE Node;
+    PKPRCB NodePrcb;
+    ULONG Set, Mask;
+#endif
+    UCHAR IdealProcessor = 0;
+    PKPROCESS Process = Thread->ApcState.Process;
+
+    /* Setup static fields from parent */
+    Thread->Iopl = Process->Iopl;
+    Thread->Quantum = Process->QuantumReset;
+    Thread->QuantumReset = Process->QuantumReset;
+    Thread->SystemAffinityActive = FALSE;
+
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &LockHandle);
+
+    /* Setup volatile data */
+    Thread->Priority = Process->BasePriority;
+    Thread->BasePriority = Process->BasePriority;
+    Thread->Affinity = Process->Affinity;
+    Thread->UserAffinity = Process->Affinity;
+
+#ifdef CONFIG_SMP
+    /* Get the KNODE and its PRCB */
+    Node = KeNodeBlock[Process->IdealNode];
+    NodePrcb = (PKPRCB)(KPCR_BASE + (Process->ThreadSeed * PAGE_SIZE));
+
+    /* Calculate affinity mask */
+    Set = ~NodePrcb->MultiThreadProcessorSet;
+    Mask = (ULONG)(Node->ProcessorMask & Process->Affinity);
+    Set &= Mask;
+    if (Set) Mask = Set;
+
+    /* Get the new thread seed */
+    IdealProcessor = KeFindNextRightSetAffinity(Process->ThreadSeed, Mask);
+    Process->ThreadSeed = IdealProcessor;
+
+    /* Sanity check */
+    ASSERT((Thread->UserAffinity & AFFINITY_MASK(IdealProcessor)));
+#endif
+
+    /* Set the Ideal Processor */
+    Thread->IdealProcessor = IdealProcessor;
+    Thread->UserIdealProcessor = IdealProcessor;
+
+    /* Lock the Dispatcher Database */
+    KiAcquireDispatcherLockAtDpcLevel();
+
+    /* Insert the thread into the process list */
+    InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
+
+    /* Increase the stack count */
+    ASSERT(Process->StackCount != MAXULONG_PTR);
+    Process->StackCount++;
+
+    /* Release locks and return */
+    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseProcessLock(&LockHandle);
 }
 
 /*
@@ -1164,26 +1181,23 @@ KeSetAffinityThread(PKTHREAD Thread,
 /*
  * @implemented
  */
- /* The Increment Argument seems to be ignored by NT and always 0 when called */
 VOID
-STDCALL
+NTAPI
 KeTerminateThread(IN KPRIORITY Increment)
 {
-    KIRQL OldIrql;
-    PKTHREAD Thread = KeGetCurrentThread();
-    PKPROCESS Process = Thread->ApcState.Process;
     PLIST_ENTRY *ListHead;
     PETHREAD Entry, SavedEntry;
     PETHREAD *ThreadAddr;
-    DPRINT("Terminating\n");
+    KLOCK_QUEUE_HANDLE LockHandle;
+    PKTHREAD Thread = KeGetCurrentThread();
+    PKPROCESS Process = Thread->ApcState.Process;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Lock the Dispatcher Database and the APC Queue */
-    ASSERT_IRQL(DISPATCH_LEVEL);
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-    ASSERT(Thread->SwapBusy == FALSE);
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &LockHandle);
 
     /* Make sure we won't get Swapped */
-    Thread->SwapBusy = TRUE;
+    KiSetThreadSwapBusy(Thread);
 
     /* Save the Kernel and User Times */
     Process->KernelTime += Thread->KernelTime;
@@ -1209,6 +1223,9 @@ KeTerminateThread(IN KPRIORITY Increment)
         /* Break out if the change was succesful */
     } while (Entry != SavedEntry);
 
+    /* Acquire the dispatcher lock */
+    KiAcquireDispatcherLockAtDpcLevel();
+
     /* Check if the reaper wasn't active */
     if (!Entry)
     {
@@ -1218,10 +1235,10 @@ KeTerminateThread(IN KPRIORITY Increment)
                       FALSE);
     }
 
-    /* Handle Kernel Queues */
+    /* Check the thread has an associated queue */
     if (Thread->Queue)
     {
-        DPRINT("Waking Queue\n");
+        /* Remove it from the list, and handle the queue */
         RemoveEntryList(&Thread->QueueListEntry);
         KiWakeQueue(Thread->Queue);
     }
@@ -1237,10 +1254,25 @@ KeTerminateThread(IN KPRIORITY Increment)
     /* Remove the thread from the list */
     RemoveEntryList(&Thread->ThreadListEntry);
 
+    /* Release the process lock */
+    KiReleaseProcessLock(&LockHandle);
+
     /* Set us as terminated, decrease the Process's stack count */
     Thread->State = Terminated;
-    Process->StackCount--;
 
-    /* Find a new Thread */
-    KiDispatchThreadNoLock(Terminated);
+    /* Decrease stack count */
+    ASSERT(Process->StackCount != 0);
+    ASSERT(Process->State == ProcessInMemory);
+    Process->StackCount--;
+    if (!Process->StackCount)
+    {
+        /* FIXME: Swap stacks */
+    }
+
+    /* Rundown arch-specific parts */
+    KiRundownThread(Thread);
+
+    /* Swap to a new thread */
+    KiReleaseDispatcherLockFromDpcLevel();
+    KiSwapThread(Thread, KeGetCurrentPrcb());
 }
