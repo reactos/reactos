@@ -86,46 +86,6 @@ co_CsrNotify(PCSR_API_MESSAGE Request)
 }
 
 
-NTSTATUS FASTCALL
-co_CsrNotifyScreenSaver(PCSR_API_MESSAGE Request)
-{
-   NTSTATUS Status;
-   PEPROCESS OldProcess;
-
-   if (NULL == CsrProcess)
-   {
-      return STATUS_INVALID_PORT_HANDLE;
-   }
-
-   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-
-   /* Switch to the process in which the WindowsApiPort handle is valid */
-   OldProcess = PsGetCurrentProcess();
-   if (CsrProcess != OldProcess)
-   {
-      KeAttachProcess(&CsrProcess->Pcb);
-   }
-
-   Status = ZwRequestWaitReplyPort(WindowsApiPort,
-                                   &Request->Header,
-                                   &Request->Header);
-
-
-   if (CsrProcess != OldProcess)
-   {
-      KeDetachProcess();
-   }
-
-   if (NT_SUCCESS(Status))
-   {
-      Status = Request->Status;
-   }
-
-   return Status;
-}
-
-
 NTSTATUS
 STDCALL
 CsrInsertObject(HANDLE ObjectHandle,

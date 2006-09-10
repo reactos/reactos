@@ -14,7 +14,6 @@ extern PEPROCESS CsrProcess;
 
 NTSTATUS FASTCALL CsrInit(void);
 NTSTATUS FASTCALL co_CsrNotify(PCSR_API_MESSAGE Request);
-NTSTATUS FASTCALL co_CsrNotifyScreenSaver(PCSR_API_MESSAGE Request);
 NTSTATUS FASTCALL CsrCloseHandle(HANDLE Handle);
 NTSTATUS WINAPI CsrInsertObject(HANDLE ObjectHandle,
                                  ACCESS_MASK DesiredAccess,
