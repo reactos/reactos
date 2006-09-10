@@ -88,7 +88,11 @@ CdfsCreateFCB(PCWSTR FileName)
         }
     }
 
+  ExInitializeResourceLite(&Fcb->PagingIoResource);
   ExInitializeResourceLite(&Fcb->MainResource);
+  Fcb->RFCB.PagingIoResource = &Fcb->PagingIoResource;
+  Fcb->RFCB.Resource = &Fcb->MainResource;
+  Fcb->RFCB.IsFastIoPossible = FastIoIsNotPossible;
 
   return(Fcb);
 }
@@ -97,6 +101,7 @@ CdfsCreateFCB(PCWSTR FileName)
 VOID
 CdfsDestroyFCB(PFCB Fcb)
 {
+  ExDeleteResourceLite(&Fcb->PagingIoResource);
   ExDeleteResourceLite(&Fcb->MainResource);
 
   ExFreePool(Fcb);
