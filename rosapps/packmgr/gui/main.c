@@ -320,7 +320,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					// mark the one as selected
 					SendMessage (hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)item);
-					(BOOL)TreeView_EnsureVisible (hTree, item);
+					(void)TreeView_EnsureVisible (hTree, item);
 				}
 
 				// create the context menu
