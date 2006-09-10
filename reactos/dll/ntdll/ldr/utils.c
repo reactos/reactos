@@ -1198,126 +1198,89 @@ LdrGetExportByName(PVOID BaseAddress,
    return (PVOID)NULL;
 }
 
-
-/**********************************************************************
- * NAME                                                         LOCAL
- *      LdrPerformRelocations
- *
- * DESCRIPTION
- *      Relocate a DLL's memory image.
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- *
- * REVISIONS
- *
- * NOTE
- *
- */
-static NTSTATUS
-LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
-                      PVOID ImageBase)
+/*++
+* @name LdrpSetProtection
+*
+*     Local routine, used to set or reset pages protection.
+*     Used during PE relocation process.
+*
+* @param BaseAddress
+*        Base address of the image.
+*
+* @param Protection
+*        FALSE to disable protection, TRUE to enable it
+*
+* @return Usual NTSTATUS.
+*
+* @remarks None.
+*
+*--*/
+NTSTATUS
+LdrpSetProtection(IN PVOID BaseAddress,
+                  IN BOOLEAN Protection)
 {
-  PIMAGE_DATA_DIRECTORY RelocationDDir;
-  PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
-  ULONG Count, ProtectSize, OldProtect, OldProtect2;
-  PVOID Page, ProtectPage, ProtectPage2;
-  PUSHORT TypeOffset;
-  ULONG_PTR Delta;
-  NTSTATUS Status;
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_SECTION_HEADER SectionHeader;
+    ULONG i;
+    PVOID Address;
+    SIZE_T Size;
+    NTSTATUS Status;
+    ULONG NewAccess, OldAccess;
 
-  if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
+    NtHeaders = RtlImageNtHeader(BaseAddress);
+
+    /* Ensure image is valid */
+    if (NtHeaders == NULL)
+        return STATUS_INVALID_IMAGE_FORMAT;
+
+    /* Get the first section header */
+    SectionHeader = IMAGE_FIRST_SECTION(NtHeaders);
+
+    /* Loop through every section */
+    for (i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++, SectionHeader++)
     {
-      return STATUS_UNSUCCESSFUL;
-    }
+        /* If section has no data - just skip to the next section */
+        if (SectionHeader->SizeOfRawData == 0)
+            continue;
 
-  RelocationDDir =
-    &NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
-
-  if (RelocationDDir->VirtualAddress == 0 || RelocationDDir->Size == 0)
-    {
-      return STATUS_SUCCESS;
-    }
-
-  ProtectSize = PAGE_SIZE;
-  Delta = (ULONG_PTR)ImageBase - NTHeaders->OptionalHeader.ImageBase;
-  RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)ImageBase +
-                  RelocationDDir->VirtualAddress);
-  RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)ImageBase +
-                  RelocationDDir->VirtualAddress + RelocationDDir->Size);
-
-  while (RelocationDir < RelocationEnd &&
-         RelocationDir->SizeOfBlock > 0)
-    {
-      Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) /
-              sizeof(USHORT);
-      Page = (PVOID)((ULONG_PTR)ImageBase + (ULONG_PTR)RelocationDir->VirtualAddress);
-      TypeOffset = (PUSHORT)(RelocationDir + 1);
-
-      /* Unprotect the page(s) we're about to relocate. */
-      ProtectPage = Page;
-      Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                      &ProtectPage,
-                                      &ProtectSize,
-                                      PAGE_READWRITE,
-                                      &OldProtect);
-      if (!NT_SUCCESS(Status))
+        /* We need to act only if section isn't RW */
+        if (!(SectionHeader->Characteristics & IMAGE_SCN_MEM_WRITE))
         {
-          DPRINT1("Failed to unprotect relocation target.\n");
-          return Status;
-        }
-
-      if (RelocationDir->VirtualAddress + PAGE_SIZE <
-          NTHeaders->OptionalHeader.SizeOfImage)
-        {
-          ProtectPage2 = (PVOID)((ULONG_PTR)ProtectPage + PAGE_SIZE);
-          Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                          &ProtectPage2,
-                                          &ProtectSize,
-                                          PAGE_READWRITE,
-                                          &OldProtect2);
-          if (!NT_SUCCESS(Status))
+            if (Protection)
             {
-              DPRINT1("Failed to unprotect relocation target (2).\n");
-              NtProtectVirtualMemory(NtCurrentProcess(),
-                                     &ProtectPage,
-                                     &ProtectSize,
-                                     OldProtect,
-                                     &OldProtect);
-              return Status;
+                /* Check if the section was also executable, then we should
+                   give it PAGE_EXECUTE, otherwise just PAGE_READONLY */
+                NewAccess = (SectionHeader->Characteristics & IMAGE_SCN_MEM_EXECUTE) ? PAGE_EXECUTE : PAGE_READONLY;
+
+                /* Also check caching */
+                NewAccess |= (SectionHeader->Characteristics & IMAGE_SCN_MEM_NOT_CACHED) ? PAGE_NOCACHE : 0;
             }
-        }
-      else
-        {
-          ProtectPage2 = NULL;
-        }
+            else
+            {
+                /* Set access to RW */
+                NewAccess = PAGE_READWRITE;
+            }
 
-      RelocationDir = LdrProcessRelocationBlock((ULONG_PTR)Page,
-                                                Count,
-                                                TypeOffset,
-                                                Delta);
-      if (RelocationDir == NULL)
-        return STATUS_UNSUCCESSFUL;
+            /* Get the address and size of the section, and set protectin accordingly */
+            Address = (PVOID)((ULONG_PTR)BaseAddress + SectionHeader->VirtualAddress);
+            Size = SectionHeader->SizeOfRawData;
 
-      /* Restore old page protection. */
-      NtProtectVirtualMemory(NtCurrentProcess(),
-                             &ProtectPage,
-                             &ProtectSize,
-                             OldProtect,
-                             &OldProtect);
+            Status = NtProtectVirtualMemory(NtCurrentProcess(),
+                &Address,
+                &Size,
+                NewAccess,
+                &OldAccess);
 
-      if (ProtectPage2 != NULL)
-        {
-          NtProtectVirtualMemory(NtCurrentProcess(),
-                                 &ProtectPage2,
-                                 &ProtectSize,
-                                 OldProtect2,
-                                 &OldProtect2);
+            if (!NT_SUCCESS(Status))
+                return Status;
         }
     }
 
-  return STATUS_SUCCESS;
+    /* Instruction cache should be flushed if we enabled protection */
+    if (Protection)
+        NtFlushInstructionCache(NtCurrentProcess(), NULL, 0);
+
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS
@@ -1898,12 +1861,32 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
    if (ImageBase != (PVOID) NTHeaders->OptionalHeader.ImageBase)
      {
        DPRINT("LDR: Performing relocations\n");
-       Status = LdrPerformRelocations(NTHeaders, ImageBase);
+
+       /* Remove protection */
+       Status = LdrpSetProtection(ImageBase, FALSE);
        if (!NT_SUCCESS(Status))
          {
-           DPRINT1("LdrPerformRelocations() failed\n");
+           DPRINT1("LdrpSetProtection() failed with Status=0x%08X\n", Status);
            return NULL;
          }
+
+       /* Relocate */
+       Status = LdrRelocateImageWithBias(ImageBase, 0, "", STATUS_SUCCESS,
+           STATUS_CONFLICTING_ADDRESSES, STATUS_INVALID_IMAGE_FORMAT);
+       if (!NT_SUCCESS(Status))
+         {
+           DPRINT1("LdrRelocateImageWithBias() failed with Status=0x%08X\n", Status);
+           return NULL;
+         }
+
+       /* Set protection back */
+       Status = LdrpSetProtection(ImageBase, TRUE);
+       if (!NT_SUCCESS(Status))
+         {
+           DPRINT1("LdrpSetProtection() failed with Status=0x%08X\n", Status);
+           return NULL;
+         }
+
      }
 
    if (Module != NULL)
@@ -2078,10 +2061,13 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
           {
             DPRINT1("Relocating (%lx -> %p) %wZ\n",
               NtHeaders->OptionalHeader.ImageBase, ImageBase, &FullDosName);
-            Status = LdrPerformRelocations(NtHeaders, ImageBase);
+
+            Status = LdrRelocateImageWithBias(ImageBase, 0, "", STATUS_SUCCESS,
+                STATUS_CONFLICTING_ADDRESSES, STATUS_INVALID_IMAGE_FORMAT);
+
             if (!NT_SUCCESS(Status))
               {
-                DPRINT1("LdrPerformRelocations() failed\n");
+                DPRINT1("LdrRelocateImageWithBias() failed\n");
                 NtUnmapViewOfSection (NtCurrentProcess (), ImageBase);
                 NtClose (SectionHandle);
                 RtlFreeUnicodeString(&FullDosName);
