@@ -2,7 +2,9 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/image.c
  * PURPOSE:         Image handling functions
- * PROGRAMMER:      Eric Kohl
+ *                  Relocate functions were previously located in
+ *                  ntoskrnl/ldr/loader.c
+ * PROGRAMMER:      Eric Kohl + original authors from loader.c file
  */
 
 /* INCLUDES *****************************************************************/
@@ -147,4 +149,109 @@ RtlImageRvaToVa (
 	               (ULONG_PTR)Section->VirtualAddress);
 }
 
+ULONG
+NTAPI
+LdrRelocateImageWithBias(
+    IN PVOID BaseAddress,
+    IN LONGLONG AdditionalBias,
+    IN PUCHAR LoaderName,
+    IN ULONG Success,
+    IN ULONG Conflict,
+    IN ULONG Invalid
+    )
+{
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_DATA_DIRECTORY RelocationDDir;
+    PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
+    ULONG Count, i;
+    PVOID Address;//, MaxAddress;
+    PUSHORT TypeOffset;
+    ULONG_PTR Delta;
+    SHORT Offset;
+    USHORT Type;
+    PUSHORT ShortPtr;
+    PULONG LongPtr;
+
+    NtHeaders = RtlImageNtHeader(BaseAddress);
+
+    if (NtHeaders == NULL)
+        return Invalid;
+
+    if (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
+    {
+        return Conflict;
+    }
+
+    RelocationDDir = &NtHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
+
+    if (RelocationDDir->VirtualAddress == 0 || RelocationDDir->Size == 0)
+    {
+        return Success;
+    }
+
+    Delta = (ULONG_PTR)BaseAddress - NtHeaders->OptionalHeader.ImageBase + AdditionalBias;
+    RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)BaseAddress + RelocationDDir->VirtualAddress);
+    RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
+    //MaxAddress = RVA(BaseAddress, DriverSize);
+
+    while (RelocationDir < RelocationEnd &&
+        RelocationDir->SizeOfBlock > 0)
+    {
+        Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
+        Address = RVA(BaseAddress, RelocationDir->VirtualAddress);
+        TypeOffset = (PUSHORT)(RelocationDir + 1);
+
+        for (i = 0; i < Count; i++)
+        {
+            Offset = *TypeOffset & 0xFFF;
+            Type = *TypeOffset >> 12;
+            ShortPtr = (PUSHORT)(RVA(Address, Offset));
+
+            /* Don't relocate after the end of the loaded driver */
+            /*if ((PVOID)ShortPtr >= MaxAddress)
+            {
+                break;
+            }*/
+
+            /*
+            * Don't relocate within the relocation section itself.
+            * GCC/LD generates sometimes relocation records for the relocation section.
+            * This is a bug in GCC/LD.
+            */
+            if ((ULONG_PTR)ShortPtr < (ULONG_PTR)RelocationDir ||
+                (ULONG_PTR)ShortPtr >= (ULONG_PTR)RelocationEnd)
+            {
+                switch (Type)
+                {
+                case IMAGE_REL_BASED_ABSOLUTE:
+                    break;
+
+                case IMAGE_REL_BASED_HIGH:
+                    *ShortPtr += HIWORD(Delta);
+                    break;
+
+                case IMAGE_REL_BASED_LOW:
+                    *ShortPtr += LOWORD(Delta);
+                    break;
+
+                case IMAGE_REL_BASED_HIGHLOW:
+                    LongPtr = (PULONG)ShortPtr;
+                    *LongPtr += Delta;
+                    break;
+
+                case IMAGE_REL_BASED_HIGHADJ:
+                case IMAGE_REL_BASED_MIPS_JMPADDR:
+                default:
+                    DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
+                    DPRINT1("Address %x, Current %d, Count %d, *TypeOffset %x\n", Address, i, Count, *TypeOffset);
+                    return Invalid;
+                }
+            }
+            TypeOffset++;
+        }
+        RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDir->SizeOfBlock);
+    }
+
+    return Success;
+}
 /* EOF */
