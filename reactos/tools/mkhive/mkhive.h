@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
+ *  Copyright (C) 2003, 2006 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,43 +16,33 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.h
  * PURPOSE:         Hive maker
  * PROGRAMMER:      Eric Kohl
+ *                  Hervé Poussineau
  */
 
 #ifndef __MKHIVE_H__
 #define __MKHIVE_H__
 
+#include <stdio.h>
 
-#define VOID void
-typedef void *PVOID;
-typedef char CHAR, *PCHAR;
-typedef short WCHAR, *PWCHAR;
-typedef unsigned char UCHAR, *PUCHAR;
-typedef short SHORT, *PSHORT;
-typedef unsigned short USHORT, *PUSHORT;
-typedef long LONG, *PLONG;
-typedef unsigned long ULONG, *PULONG;
+#define NTOS_MODE_USER
+#define WIN32_NO_STATUS
+#include <ntddk.h>
+#include <cmlib.h>
+#include <infhost.h>
+#include "reginf.h"
+#include "cmi.h"
+#include "registry.h"
+#include "binhive.h"
 
-typedef unsigned long ULONG_PTR;
-
-typedef int BOOL, *PBOOL;
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
-
+#define HIVE_NO_FILE 2
+#define VERIFY_REGISTRY_HIVE(hive)
+extern LIST_ENTRY CmiHiveListHead;
+#define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
 
 #ifndef max
 #define max(a, b)  (((a) > (b)) ? (a) : (b))
@@ -88,7 +78,7 @@ static void DPRINT ( const char* fmt, ... )
 
 #ifdef WIN32
 #define strncasecmp strnicmp
-#define strcasecmp stricmp
+#define strcasecmp _stricmp
 #endif//WIN32
 
 #ifdef _MSC_VER

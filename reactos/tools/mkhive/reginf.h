@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
+ *  Copyright (C) 2006 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,21 +16,18 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
  * PURPOSE:         Inf file import code
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:      Hervé Poussineau
  */
 
 #ifndef __REGINF_H__
 #define __REGINF_H__
 
 BOOL
-ImportRegistryFile(PCHAR Filename,
-		   PCHAR Section,
-		   BOOL Delete);
+ImportRegistryFile(PCHAR Filename);
 
 #endif /* __REGINF_H__ */
 

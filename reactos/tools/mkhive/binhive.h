@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
+ *  Copyright (C) 2006 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,20 +16,20 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/binhive.h
  * PURPOSE:         Binary hive export code
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:      Hervé Poussineau
  */
 
 #ifndef __BINHIVE_H__
 #define __BINHIVE_H__
 
 BOOL
-ExportBinaryHive (PCHAR FileName,
-		  PCHAR KeyName);
+ExportBinaryHive(
+	IN PCSTR FileName,
+	IN PEREGISTRY_HIVE Hive);
 
 #endif /* __BINHIVE_H__ */
 

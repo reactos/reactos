@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
+ *  Copyright (C) 2003, 2006 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,12 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.c
  * PURPOSE:         Hive maker
  * PROGRAMMER:      Eric Kohl
+ *                  Hervé Poussineau
  */
 
 #include <limits.h>
@@ -29,9 +29,6 @@
 #include <stdio.h>
 
 #include "mkhive.h"
-#include "registry.h"
-#include "reginf.h"
-#include "binhive.h"
 
 #ifdef _MSC_VER
 #include <stdlib.h>
@@ -105,41 +102,33 @@ int main (int argc, char *argv[])
   convert_path (FileName, argv[1]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "hivesys.inf");
-  ImportRegistryFile (FileName, "AddReg", FALSE);
+  ImportRegistryFile (FileName);
 
   convert_path (FileName, argv[1]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "hivecls.inf");
-  ImportRegistryFile (FileName, "AddReg", FALSE);
+  ImportRegistryFile (FileName);
 
   convert_path (FileName, argv[1]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "hivesft.inf");
-  ImportRegistryFile (FileName, "AddReg", FALSE);
+  ImportRegistryFile (FileName);
 
   convert_path (FileName, argv[1]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "hivedef.inf");
-  ImportRegistryFile (FileName, "AddReg", FALSE);
+  ImportRegistryFile (FileName);
 
   for (Param = 3; Param < argc; Param++)
   {
     convert_path (FileName, argv[Param]);
-    ImportRegistryFile (FileName, "AddReg", FALSE);
+    ImportRegistryFile (FileName);
   }
 
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
-  strcat (FileName, "system");
-  if (!ExportBinaryHive (FileName, "\\Registry\\Machine\\SYSTEM"))
-  {
-     return 1;
-  }
-
-  convert_path (FileName, argv[2]);
-  strcat (FileName, DIR_SEPARATOR_STRING);
-  strcat (FileName, "software");
-  if (!ExportBinaryHive (FileName, "\\Registry\\Machine\\SOFTWARE"))
+  strcat (FileName, "default");
+  if (!ExportBinaryHive (FileName, &DefaultHive))
   {
      return 1;
   }
@@ -147,7 +136,7 @@ int main (int argc, char *argv[])
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "sam");
-  if (!ExportBinaryHive (FileName, "\\Registry\\Machine\\SAM"))
+  if (!ExportBinaryHive (FileName, &SamHive))
   {
      return 1;
   }
@@ -155,15 +144,23 @@ int main (int argc, char *argv[])
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
   strcat (FileName, "security");
-  if (!ExportBinaryHive (FileName, "\\Registry\\Machine\\SECURITY"))
+  if (!ExportBinaryHive (FileName, &SecurityHive))
   {
      return 1;
   }
 
   convert_path (FileName, argv[2]);
   strcat (FileName, DIR_SEPARATOR_STRING);
-  strcat (FileName, "default");
-  if (!ExportBinaryHive (FileName, "\\Registry\\User\\.DEFAULT"))
+  strcat (FileName, "software");
+  if (!ExportBinaryHive (FileName, &SoftwareHive))
+  {
+     return 1;
+  }
+
+  convert_path (FileName, argv[2]);
+  strcat (FileName, DIR_SEPARATOR_STRING);
+  strcat (FileName, "system");
+  if (!ExportBinaryHive (FileName, &SystemHive))
   {
      return 1;
   }

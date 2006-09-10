@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
+ *  Copyright (C) 2003, 2006 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,12 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
  * PURPOSE:         Inf file import code
  * PROGRAMMER:      Eric Kohl
+ *                  Hervé Poussineau
  */
 
 /* INCLUDES *****************************************************************/
@@ -30,11 +30,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define NDEBUG
 #include "mkhive.h"
-#include "registry.h"
-#include <infhost.h>
-
-
 
 #define FLG_ADDREG_BINVALUETYPE           0x00000001
 #define FLG_ADDREG_NOCLOBBER              0x00000002
@@ -98,18 +95,19 @@ static VOID
 AppendMultiSzValue (HKEY KeyHandle,
 		    PCHAR ValueName,
 		    PCHAR Strings,
-		    ULONG StringSize)
+		    SIZE_T StringSize)
 {
-  ULONG Size;
+  SIZE_T Size;
   ULONG Type;
-  ULONG Total;
+  size_t Total;
   PCHAR Buffer;
   PCHAR p;
-  int len;
+  size_t len;
   LONG Error;
 
-  Error = RegQueryValue (KeyHandle,
+  Error = RegQueryValueExA (KeyHandle,
 			 ValueName,
+			 NULL,
 			 &Type,
 			 NULL,
 			 &Size);
@@ -121,10 +119,11 @@ AppendMultiSzValue (HKEY KeyHandle,
   if (Buffer == NULL)
      return;
 
-  Error = RegQueryValue (KeyHandle,
+  Error = RegQueryValueExA (KeyHandle,
 			 ValueName,
 			 NULL,
-			 (PCHAR)Buffer,
+			 NULL,
+			 (PUCHAR)Buffer,
 			 &Size);
   if (Error != ERROR_SUCCESS)
      goto done;
@@ -151,11 +150,12 @@ AppendMultiSzValue (HKEY KeyHandle,
   if (Total != Size)
     {
       DPRINT ("setting value %s to %s\n", ValueName, Buffer);
-      RegSetValue (KeyHandle,
+      RegSetValueExA (KeyHandle,
 		   ValueName,
+		   0,
 		   REG_MULTI_SZ,
 		   (PCHAR)Buffer,
-		   Total);
+		   (ULONG)Total);
     }
 
 done:
@@ -176,19 +176,19 @@ do_reg_operation(HKEY KeyHandle,
 {
   CHAR EmptyStr = (CHAR)0;
   ULONG Type;
-  ULONG Size;
+  SIZE_T Size;
   LONG Error;
 
   if (Flags & FLG_ADDREG_DELVAL)  /* deletion */
     {
       if (ValueName)
 	{
-	  RegDeleteValue (KeyHandle,
+	  RegDeleteValueA (KeyHandle,
 			  ValueName);
 	}
       else
 	{
-	  RegDeleteKey (KeyHandle,
+	  RegDeleteKeyA (KeyHandle,
 			NULL);
 	}
 
@@ -200,8 +200,9 @@ do_reg_operation(HKEY KeyHandle,
 
   if (Flags & (FLG_ADDREG_NOCLOBBER | FLG_ADDREG_OVERWRITEONLY))
     {
-      Error = RegQueryValue (KeyHandle,
+      Error = RegQueryValueExA (KeyHandle,
 			     ValueName,
+			     NULL,
 			     NULL,
 			     NULL,
 			     NULL);
@@ -300,10 +301,11 @@ do_reg_operation(HKEY KeyHandle,
 
 	  DPRINT("setting dword %s to %lx\n", ValueName, dw);
 
-	  RegSetValue (KeyHandle,
+	  RegSetValueExA (KeyHandle,
 		       ValueName,
+			   0,
 		       Type,
-		       (PVOID)&dw,
+		       (const PUCHAR)&dw,
 		       sizeof(ULONG));
 	}
       else
@@ -312,19 +314,21 @@ do_reg_operation(HKEY KeyHandle,
 
 	  if (Str)
 	    {
-	      RegSetValue (KeyHandle,
+	      RegSetValueExA (KeyHandle,
 			   ValueName,
+			   0,
 			   Type,
 			   (PVOID)Str,
-			   Size);
+			   (ULONG)Size);
 	    }
 	  else
 	    {
-	      RegSetValue (KeyHandle,
+	      RegSetValueExA (KeyHandle,
 			   ValueName,
+			   0,
 			   Type,
 			   (PVOID)&EmptyStr,
-			   sizeof(CHAR));
+			   (ULONG)sizeof(CHAR));
 	    }
 	}
       free (Str);
@@ -346,11 +350,12 @@ do_reg_operation(HKEY KeyHandle,
 	  InfHostGetBinaryField (Context, 5, Data, Size, NULL);
 	}
 
-      RegSetValue (KeyHandle,
+      RegSetValueExA (KeyHandle,
 		   ValueName,
+		   0,
 		   Type,
 		   (PVOID)Data,
-		   Size);
+		   (ULONG)Size);
 
       free (Data);
     }
@@ -370,7 +375,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
   CHAR Buffer[MAX_INF_STRING_LENGTH];
   PCHAR ValuePtr;
   ULONG Flags;
-  ULONG Length;
+  size_t Length;
 
   PINFCONTEXT Context = NULL;
   HKEY KeyHandle;
@@ -411,7 +416,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 
       if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
 	{
-	  if (RegOpenKey (NULL, Buffer, &KeyHandle) != ERROR_SUCCESS)
+	  if (RegOpenKeyA (NULL, Buffer, &KeyHandle) != ERROR_SUCCESS)
 	    {
 	      DPRINT("RegOpenKey(%s) failed\n", Buffer);
 	      continue;  /* ignore if it doesn't exist */
@@ -419,7 +424,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 	}
       else
 	{
-	  if (RegCreateKey (NULL, Buffer, &KeyHandle) != ERROR_SUCCESS)
+	  if (RegCreateKeyA (NULL, Buffer, &KeyHandle) != ERROR_SUCCESS)
 	    {
 	      DPRINT("RegCreateKey(%s) failed\n", Buffer);
 	      continue;
@@ -450,9 +455,7 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 
 
 BOOL
-ImportRegistryFile(PCHAR FileName,
-		   PCHAR Section,
-		   BOOL Delete)
+ImportRegistryFile(PCHAR FileName)
 {
   HINF hInf;
   ULONG ErrorLine;

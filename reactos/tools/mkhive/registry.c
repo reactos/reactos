@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
+ *  Copyright (C) 2006 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,230 +16,230 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
  * PURPOSE:         Registry code
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:      Hervé Poussineau
  */
 
 /*
  * TODO:
- *	- Implement RegDeleteKey().
- *	- Fix RegEnumValue().
+ *	- Implement RegDeleteKey()
+ *	- Implement RegEnumValue()
+ *	- Implement RegQueryValueExA()
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
+#define NDEBUG
 #include "mkhive.h"
-#include "registry.h"
 
+static EREGISTRY_HIVE RootHive;
+static MEMKEY RootKey;
+EREGISTRY_HIVE DefaultHive;  /* \Registry\User\.DEFAULT */
+EREGISTRY_HIVE SamHive;      /* \Registry\Machine\SAM */
+EREGISTRY_HIVE SecurityHive; /* \Registry\Machine\SECURITY */
+EREGISTRY_HIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
+EREGISTRY_HIVE SystemHive;   /* \Registry\Machine\SYSTEM */
 
-static HKEY RootKey;
-
-
-VOID
-RegInitializeRegistry(VOID)
+static MEMKEY
+CreateInMemoryStructure(
+	IN PEREGISTRY_HIVE RegistryHive,
+	IN HCELL_INDEX KeyCellOffset,
+	IN PCUNICODE_STRING KeyName)
 {
-  HKEY ControlSetKey;
-  HKEY LinkKey;
+	MEMKEY Key;
 
-  /* Create root key */
-  RootKey = (HKEY)malloc(sizeof(KEY));
+	Key = (MEMKEY) malloc (sizeof(KEY));
+	if (!Key)
+		return NULL;
 
-  InitializeListHead(&RootKey->SubKeyList);
-  InitializeListHead(&RootKey->ValueList);
-  InitializeListHead(&RootKey->KeyList);
+	InitializeListHead (&Key->SubKeyList);
+	InitializeListHead (&Key->ValueList);
+	InitializeListHead (&Key->KeyList);
 
-  RootKey->SubKeyCount = 0;
-  RootKey->ValueCount = 0;
+	Key->SubKeyCount = 0;
+	Key->ValueCount = 0;
 
-  RootKey->NameSize = 2;
-  RootKey->Name = (PCHAR)malloc(2);
-  strcpy(RootKey->Name, "\\");
+	Key->NameSize = KeyName->Length;
+	Key->Name = malloc (Key->NameSize);
+	if (!Key->Name)
+		return NULL;
+	memcpy(Key->Name, KeyName->Buffer, KeyName->Length);
 
-  RootKey->DataType = 0;
-  RootKey->DataSize = 0;
-  RootKey->Data = NULL;
+	Key->DataType = 0;
+	Key->DataSize = 0;
+	Key->Data = NULL;
 
-  /* Create SYSTEM key */
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\SYSTEM",
-	       NULL);
-
-  /* Create link 'CurrentControlSet' --> 'ControlSet001' */
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\SYSTEM\\ControlSet001",
-	       &ControlSetKey);
-
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\SYSTEM\\CurrentControlSet",
-	       &LinkKey);
-
-  RegSetValue(LinkKey,
-	      NULL,
-	      REG_LINK,
-	      (PCHAR)&ControlSetKey,
-	      sizeof(PVOID));
-
-  /* Create HARDWARE key */
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\HARDWARE",
-	       NULL);
-
-  /* Create SAM key */
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\SAM",
-	       NULL);
-
-  /* Create SECURITY key */
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\SECURITY",
-	       NULL);
-
-  /* Create SOFTWARE key */
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\SOFTWARE",
-	       NULL);
-
-  /* Create DEFAULT key */
-  RegCreateKey(RootKey,
-	       "Registry\\User\\.DEFAULT",
-	       NULL);
+	Key->RegistryHive = RegistryHive;
+	Key->KeyCellOffset = KeyCellOffset;
+	Key->KeyCell = HvGetCell (&RegistryHive->Hive, Key->KeyCellOffset);
+	if (!Key->KeyCell)
+	{
+		free(Key);
+		return NULL;
+	}
+	Key->LinkedKey = NULL;
+	return Key;
 }
 
-
-LONG
-RegCreateKey(HKEY ParentKey,
-	     PCHAR KeyName,
-	     PHKEY Key)
+static LONG
+RegpOpenOrCreateKey(
+	IN HKEY hParentKey,
+	IN PCWSTR KeyName,
+	IN BOOL AllowCreation,
+	OUT PHKEY Key)
 {
-  PLIST_ENTRY Ptr;
-  HKEY SearchKey = INVALID_HANDLE_VALUE;
-  HKEY CurrentKey;
-  HKEY NewKey;
-  PCHAR p;
-  PCHAR name;
-  int subkeyLength;
-  int stringLength;
+	PWSTR LocalKeyName;
+	PWSTR End;
+	UNICODE_STRING KeyString;
+	NTSTATUS Status;
+	MEMKEY ParentKey;
+	MEMKEY CurrentKey;
+	PLIST_ENTRY Ptr;
+	PCM_KEY_NODE SubKeyCell;
+	HCELL_INDEX BlockOffset;
 
-  DPRINT ("RegCreateKey('%s')\n", KeyName);
+	DPRINT("RegpCreateOpenKey('%S')\n", KeyName);
 
-  if (*KeyName == '\\')
-    {
-      KeyName++;
-      CurrentKey = RootKey;
-    }
-  else if (ParentKey == NULL)
-    {
-      CurrentKey = RootKey;
-    }
-  else
-    {
-      CurrentKey = ParentKey;
-    }
-
-  /* Check whether current key is a link */
-  if (CurrentKey->DataType == REG_LINK)
-    {
-      CurrentKey = (HKEY)CurrentKey->Data;
-    }
-
-  while (*KeyName != 0)
-    {
-      DPRINT ("KeyName '%s'\n", KeyName);
-
-      if (*KeyName == '\\')
-	KeyName++;
-      p = strchr (KeyName, '\\');
-      if ((p != NULL) && (p != KeyName))
+	if (*KeyName == L'\\')
 	{
-	  subkeyLength = p - KeyName;
-	  stringLength = subkeyLength + 1;
-	  name = KeyName;
+		KeyName++;
+		ParentKey = RootKey;
 	}
-      else
+	else if (hParentKey == NULL)
 	{
-	  subkeyLength = strlen (KeyName);
-	  stringLength = subkeyLength;
-	  name = KeyName;
+		ParentKey = RootKey;
+	}
+	else
+	{
+		ParentKey = HKEY_TO_MEMKEY(RootKey);
 	}
 
-      Ptr = CurrentKey->SubKeyList.Flink;
-      while (Ptr != &CurrentKey->SubKeyList)
+	LocalKeyName = (PWSTR)KeyName;
+	for (;;)
 	{
-	  DPRINT ("Ptr 0x%p\n", Ptr);
+		End = wcschr(LocalKeyName, '\\');
+		if (End)
+		{
+			KeyString.Buffer = LocalKeyName;
+			KeyString.Length = KeyString.MaximumLength =
+				(USHORT)((ULONG_PTR)End - (ULONG_PTR)LocalKeyName);
+		}
+		else
+			RtlInitUnicodeString(&KeyString, LocalKeyName);
 
-	  SearchKey = CONTAINING_RECORD(Ptr,
-					KEY,
-					KeyList);
-	  DPRINT ("SearchKey 0x%p\n", SearchKey);
-	  DPRINT ("Searching '%s'\n", SearchKey->Name);
-	  if (strncasecmp (SearchKey->Name, name, subkeyLength) == 0)
-	    break;
+		/* Check subkey in memory structure */
+		Ptr = ParentKey->SubKeyList.Flink;
+		while (Ptr != &ParentKey->SubKeyList)
+		{
+			CurrentKey = CONTAINING_RECORD(Ptr, KEY, KeyList);
+			if (CurrentKey->NameSize == KeyString.Length
+			 && memcmp(CurrentKey->Name, KeyString.Buffer, KeyString.Length) == 0)
+			{
+				goto nextsubkey;
+			}
 
-	  Ptr = Ptr->Flink;
+			Ptr = Ptr->Flink;
+		}
+
+		Status = CmiScanForSubKey(
+			ParentKey->RegistryHive,
+			ParentKey->KeyCell,
+			&KeyString,
+			0,
+			&SubKeyCell,
+			&BlockOffset);
+		if (AllowCreation && Status == STATUS_OBJECT_NAME_NOT_FOUND)
+		{
+			Status = CmiAddSubKey(
+				ParentKey->RegistryHive,
+				ParentKey->KeyCell,
+				ParentKey->KeyCellOffset,
+				&KeyString,
+				0,
+				&SubKeyCell,
+				&BlockOffset);
+		}
+		if (!NT_SUCCESS(Status))
+			return ERROR_UNSUCCESSFUL;
+
+		/* Now, SubKeyCell/BlockOffset are valid */
+		CurrentKey = CreateInMemoryStructure(
+			ParentKey->RegistryHive,
+			BlockOffset,
+			&KeyString);
+		if (!CurrentKey)
+			return ERROR_OUTOFMEMORY;
+
+		/* Add CurrentKey in ParentKey */
+		InsertTailList(&ParentKey->SubKeyList, &CurrentKey->KeyList);
+		ParentKey->SubKeyCount++;
+
+nextsubkey:
+		/* Follow registry links */
+		while (CurrentKey->LinkedKey)
+			CurrentKey = CurrentKey->LinkedKey;
+		ParentKey = CurrentKey;
+		if (End)
+			LocalKeyName = End + 1;
+		else
+			break;
 	}
 
-      if (Ptr == &CurrentKey->SubKeyList)
-	{
-	  /* no key found -> create new subkey */
-	  NewKey = (HKEY)malloc (sizeof(KEY));
-	  if (NewKey == NULL)
-	   return ERROR_OUTOFMEMORY;
+	*Key = MEMKEY_TO_HKEY(ParentKey);
 
-	  InitializeListHead (&NewKey->SubKeyList);
-	  InitializeListHead (&NewKey->ValueList);
-
-	  NewKey->SubKeyCount = 0;
-	  NewKey->ValueCount = 0;
-
-	  NewKey->DataType = 0;
-	  NewKey->DataSize = 0;
-	  NewKey->Data = NULL;
-
-	  InsertTailList (&CurrentKey->SubKeyList, &NewKey->KeyList);
-	  CurrentKey->SubKeyCount++;
-
-	  NewKey->NameSize = subkeyLength + 1;
-	  NewKey->Name = (PCHAR)malloc (NewKey->NameSize);
-	  if (NewKey->Name == NULL)
-	   return(ERROR_OUTOFMEMORY);
-	  memcpy(NewKey->Name, name, subkeyLength);
-	  NewKey->Name[subkeyLength] = 0;
-
-	  DPRINT ("NewKey 0x%p\n", NewKey);
-	  DPRINT ("NewKey '%s'  Length %ld\n", NewKey->Name, NewKey->NameSize);
-
-	  CurrentKey = NewKey;
-	}
-      else
-	{
-	  CurrentKey = SearchKey;
-
-	  /* Check whether current key is a link */
-	  if (CurrentKey->DataType == REG_LINK)
-	    {
-	      CurrentKey = (HKEY)CurrentKey->Data;
-	    }
-	}
-
-      KeyName = KeyName + stringLength;
-    }
-
-  if (Key != NULL)
-    *Key = CurrentKey;
-
-  return ERROR_SUCCESS;
+	return ERROR_SUCCESS;
 }
 
+LONG WINAPI
+RegCreateKeyW(
+	IN HKEY hKey,
+	IN LPCWSTR lpSubKey,
+	OUT PHKEY phkResult)
+{
+	return RegpOpenOrCreateKey(hKey, lpSubKey, TRUE, phkResult);
+}
 
-LONG
-RegDeleteKey(HKEY Key,
-	     PCHAR Name)
+static PWSTR
+MultiByteToWideChar(
+	IN PCSTR MultiByteString)
+{
+	ANSI_STRING Source;
+	UNICODE_STRING Destination;
+	NTSTATUS Status;
+
+	RtlInitAnsiString(&Source, MultiByteString);
+	Status = RtlAnsiStringToUnicodeString(&Destination, &Source, TRUE);
+	if (!NT_SUCCESS(Status))
+		return NULL;
+	return Destination.Buffer;
+}
+
+LONG WINAPI
+RegCreateKeyA(
+	IN HKEY hKey,
+	IN LPCSTR lpSubKey,
+	OUT PHKEY phkResult)
+{
+	PWSTR lpSubKeyW;
+	LONG rc;
+
+	lpSubKeyW = MultiByteToWideChar(lpSubKey);
+	if (!lpSubKeyW)
+		return ERROR_OUTOFMEMORY;
+
+	rc = RegCreateKeyW(hKey, lpSubKeyW, phkResult);
+	free(lpSubKeyW);
+	return rc;
+}
+
+LONG WINAPI
+RegDeleteKeyA(HKEY Key,
+	     LPCSTR Name)
 {
   if (Name != NULL && strchr(Name, '\\') != NULL)
     return(ERROR_INVALID_PARAMETER);
@@ -249,458 +249,432 @@ RegDeleteKey(HKEY Key,
   return(ERROR_SUCCESS);
 }
 
-
-LONG
-RegEnumKey(HKEY Key,
-	   ULONG Index,
-	   PCHAR Name,
-	   PULONG NameSize)
+LONG WINAPI
+RegOpenKeyW(
+	IN HKEY hKey,
+	IN LPCWSTR lpSubKey,
+	OUT PHKEY phkResult)
 {
-  PLIST_ENTRY Ptr;
-  HKEY SearchKey;
-  ULONG Count = 0;
-  ULONG Size;
-
-  Ptr = Key->SubKeyList.Flink;
-  while (Ptr != &Key->SubKeyList)
-    {
-      if (Index == Count)
-	break;
-
-      Count++;
-      Ptr = Ptr->Flink;
-    }
-
-  if (Ptr == &Key->SubKeyList)
-    return(ERROR_NO_MORE_ITEMS);
-
-  SearchKey = CONTAINING_RECORD(Ptr,
-				KEY,
-				KeyList);
-
-  DPRINT ("Name '%s'  Length %ld\n", SearchKey->Name, SearchKey->NameSize);
-
-  Size = min(SearchKey->NameSize, *NameSize);
-  *NameSize = Size;
-  memcpy(Name, SearchKey->Name, Size);
-
-  return(ERROR_SUCCESS);
+	return RegpOpenOrCreateKey(hKey, lpSubKey, FALSE, phkResult);
 }
 
-
-LONG
-RegOpenKey(HKEY ParentKey,
-	   PCHAR KeyName,
-	   PHKEY Key)
+LONG WINAPI
+RegOpenKeyA(
+	IN HKEY hKey,
+	IN LPCSTR lpSubKey,
+	OUT PHKEY phkResult)
 {
-  PLIST_ENTRY Ptr;
-  HKEY SearchKey = INVALID_HANDLE_VALUE;
-  HKEY CurrentKey;
-  PCHAR p;
-  PCHAR name;
-  int subkeyLength;
-  int stringLength;
+	PWSTR lpSubKeyW;
+	LONG rc;
 
-  DPRINT("KeyName '%s'\n", KeyName);
+	lpSubKeyW = MultiByteToWideChar(lpSubKey);
+	if (!lpSubKeyW)
+		return ERROR_OUTOFMEMORY;
 
-  *Key = NULL;
-
-  if (*KeyName == '\\')
-    {
-      KeyName++;
-      CurrentKey = RootKey;
-    }
-  else if (ParentKey == NULL)
-    {
-      CurrentKey = RootKey;
-    }
-  else
-    {
-      CurrentKey = ParentKey;
-    }
-
-  /* Check whether current key is a link */
-  if (CurrentKey->DataType == REG_LINK)
-    {
-      CurrentKey = (HKEY)CurrentKey->Data;
-    }
-
-  while (*KeyName != 0)
-    {
-      DPRINT ("KeyName '%s'\n", KeyName);
-
-      if (*KeyName == '\\')
-	KeyName++;
-      p = strchr(KeyName, '\\');
-      if ((p != NULL) && (p != KeyName))
-	{
-	  subkeyLength = p - KeyName;
-	  stringLength = subkeyLength + 1;
-	  name = KeyName;
-	}
-      else
-	{
-	  subkeyLength = strlen(KeyName);
-	  stringLength = subkeyLength;
-	  name = KeyName;
-	}
-
-      Ptr = CurrentKey->SubKeyList.Flink;
-      while (Ptr != &CurrentKey->SubKeyList)
-	{
-	  DPRINT ("Ptr 0x%p\n", Ptr);
-
-	  SearchKey = CONTAINING_RECORD(Ptr,
-					KEY,
-					KeyList);
-
-	  DPRINT ("SearchKey 0x%p\n", SearchKey);
-	  DPRINT ("Searching '%s'\n", SearchKey->Name);
-
-	  if (strncasecmp(SearchKey->Name, name, subkeyLength) == 0)
-	    break;
-
-	  Ptr = Ptr->Flink;
-	}
-
-      if (Ptr == &CurrentKey->SubKeyList)
-	{
-	  return(ERROR_PATH_NOT_FOUND);
-	}
-      else
-	{
-	  CurrentKey = SearchKey;
-
-	  /* Check whether current key is a link */
-	  if (CurrentKey->DataType == REG_LINK)
-	    {
-	      CurrentKey = (HKEY)CurrentKey->Data;
-	    }
-	}
-
-      KeyName = KeyName + stringLength;
-    }
-
-  if (Key != NULL)
-    *Key = CurrentKey;
-
-  return(ERROR_SUCCESS);
+	rc = RegOpenKeyW(hKey, lpSubKeyW, phkResult);
+	free(lpSubKeyW);
+	return rc;
 }
 
-
-LONG
-RegSetValue(HKEY Key,
-	    PCHAR ValueName,
-	    ULONG Type,
-	    PCHAR Data,
-	    ULONG DataSize)
+static NTSTATUS
+RegpOpenOrCreateValue(
+	IN HKEY hKey,
+	IN LPCWSTR ValueName,
+	IN BOOL AllowCreation,
+	OUT PCM_KEY_VALUE *ValueCell,
+	OUT PHCELL_INDEX ValueCellOffset)
 {
-  PLIST_ENTRY Ptr;
-  PVALUE Value = NULL;
+	MEMKEY ParentKey;
+	UNICODE_STRING ValueString;
+	NTSTATUS Status;
 
-  DPRINT ("Key 0x%x, ValueName '%s', Type %d, Data 0x%x, DataSize %d\n",
-	  (int)Key, ValueName, (int)Type, (int)Data, (int)DataSize);
+	ParentKey = HKEY_TO_MEMKEY(hKey);
+	RtlInitUnicodeString(&ValueString, ValueName);
 
-  if ((ValueName == NULL) || (*ValueName == 0))
-    {
-      /* set default value */
-      if ((Key->Data != NULL) && (Key->DataSize > sizeof(PCHAR)))
+	Status = CmiScanForValueKey(
+		ParentKey->RegistryHive,
+		ParentKey->KeyCell,
+		&ValueString,
+		ValueCell,
+		ValueCellOffset);
+	if (AllowCreation && Status == STATUS_OBJECT_NAME_NOT_FOUND)
 	{
-	  free(Key->Data);
+		Status = CmiAddValueKey(
+			ParentKey->RegistryHive,
+			ParentKey->KeyCell,
+			ParentKey->KeyCellOffset,
+			&ValueString,
+			ValueCell,
+			ValueCellOffset);
 	}
-
-      if (DataSize <= sizeof(PCHAR))
-	{
-	  Key->DataSize = DataSize;
-	  Key->DataType = Type;
-	  memcpy(&Key->Data, Data, DataSize);
-	}
-      else
-	{
-	  Key->Data = (PCHAR)malloc(DataSize);
-	  Key->DataSize = DataSize;
-	  Key->DataType = Type;
-	  memcpy(Key->Data, Data, DataSize);
-	}
-    }
-  else
-    {
-      /* set non-default value */
-      Ptr = Key->ValueList.Flink;
-      while (Ptr != &Key->ValueList)
-	{
-	  Value = CONTAINING_RECORD(Ptr,
-				    VALUE,
-				    ValueList);
-
-	  DPRINT ("Value->Name '%s'\n", Value->Name);
-
-	  if (strcasecmp(Value->Name, ValueName) == 0)
-	    break;
-
-	  Ptr = Ptr->Flink;
-	}
-
-      if (Ptr == &Key->ValueList)
-	{
-	  /* add new value */
-	  DPRINT("No value found - adding new value\n");
-
-	  Value = (PVALUE)malloc(sizeof(VALUE));
-	  if (Value == NULL)
-	    return(ERROR_OUTOFMEMORY);
-	  InsertTailList(&Key->ValueList, &Value->ValueList);
-	  Key->ValueCount++;
-	  Value->NameSize = strlen(ValueName)+1;
-	  Value->Name = (PCHAR)malloc(Value->NameSize);
-	  if (Value->Name == NULL)
-	    return(ERROR_OUTOFMEMORY);
-	  strcpy(Value->Name, ValueName);
-	  Value->DataType = REG_NONE;
-	  Value->DataSize = 0;
-	  Value->Data = NULL;
-	}
-
-      /* set new value */
-      if ((Value->Data != NULL) && (Value->DataSize > sizeof(PCHAR)))
-	{
-	  free(Value->Data);
-	}
-
-      if (DataSize <= sizeof(PCHAR))
-	{
-	  Value->DataSize = DataSize;
-	  Value->DataType = Type;
-	  memcpy(&Value->Data, Data, DataSize);
-	}
-      else
-	{
-	  Value->Data = (PCHAR)malloc(DataSize);
-	  if (Value->Data == NULL)
-	    return(ERROR_OUTOFMEMORY);
-	  Value->DataType = Type;
-	  Value->DataSize = DataSize;
-	  memcpy(Value->Data, Data, DataSize);
-	}
-    }
-  return(ERROR_SUCCESS);
+	if (!NT_SUCCESS(Status))
+		return Status;
+	return STATUS_SUCCESS;
 }
 
-
-LONG
-RegQueryValue(HKEY Key,
-	      PCHAR ValueName,
-	      PULONG Type,
-	      PCHAR Data,
-	      PULONG DataSize)
+LONG WINAPI
+RegSetValueExW(
+	IN HKEY hKey,
+	IN LPCWSTR lpValueName OPTIONAL,
+	IN ULONG Reserved,
+	IN ULONG dwType,
+	IN const PUCHAR lpData,
+	IN USHORT cbData)
 {
-  ULONG Size;
-  PLIST_ENTRY Ptr;
-  PVALUE Value = NULL;
+	MEMKEY Key, DestKey;
+	PHKEY phKey;
+	PCM_KEY_VALUE ValueCell;
+	HCELL_INDEX ValueCellOffset;
+	PVOID DataCell;
+	LONG DataCellSize;
+	NTSTATUS Status;
 
-  if ((ValueName == NULL) || (*ValueName == 0))
-    {
-      /* query default value */
-      if (Key->Data == NULL)
-	return(ERROR_INVALID_PARAMETER);
-
-      if (Type != NULL)
-	*Type = Key->DataType;
-      if ((Data != NULL) && (DataSize != NULL))
+	if (dwType == REG_LINK)
 	{
-	  if (Key->DataSize <= sizeof(PCHAR))
-	    {
-	      Size = min(Key->DataSize, *DataSize);
-	      memcpy(Data, &Key->Data, Size);
-	      *DataSize = Size;
-	    }
-	  else
-	    {
-	      Size = min(Key->DataSize, *DataSize);
-	      memcpy(Data, Key->Data, Size);
-	      *DataSize = Size;
-	    }
-	}
-      else if ((Data == NULL) && (DataSize != NULL))
-	{
-	  *DataSize = Key->DataSize;
-	}
-    }
-  else
-    {
-      /* query non-default value */
-      Ptr = Key->ValueList.Flink;
-      while (Ptr != &Key->ValueList)
-	{
-	  Value = CONTAINING_RECORD(Ptr,
-				    VALUE,
-				    ValueList);
+		/* Special handling of registry links */
+		if (cbData != sizeof(PVOID))
+			return STATUS_INVALID_PARAMETER;
+		phKey = (PHKEY)lpData;
+		Key = HKEY_TO_MEMKEY(hKey);
+		DestKey = HKEY_TO_MEMKEY(*phKey);
 
-	  DPRINT("Searching for '%s'. Value name '%s'\n", ValueName, Value->Name);
+		/* Create the link in memory */
+		Key->LinkedKey = DestKey;
 
-	  if (strcasecmp(Value->Name, ValueName) == 0)
-	    break;
-
-	  Ptr = Ptr->Flink;
+		/* Create the link in registry hive (if applicable) */
+		if (Key->RegistryHive != DestKey->RegistryHive)
+			return STATUS_SUCCESS;
+		DPRINT1("Save link to registry\n");
+		return STATUS_NOT_IMPLEMENTED;
 	}
 
-      if (Ptr == &Key->ValueList)
-	return(ERROR_INVALID_PARAMETER);
+	if ((cbData & REG_DATA_SIZE_MASK) != cbData)
+		return STATUS_UNSUCCESSFUL;
 
-      if (Type != NULL)
-	*Type = Value->DataType;
-      if ((Data != NULL) && (DataSize != NULL))
-	{
-	  if (Value->DataSize <= sizeof(PCHAR))
-	    {
-	      Size = min(Value->DataSize, *DataSize);
-	      memcpy(Data, &Value->Data, Size);
-	      *DataSize = Size;
-	    }
-	  else
-	    {
-	      Size = min(Value->DataSize, *DataSize);
-	      memcpy(Data, Value->Data, Size);
-	      *DataSize = Size;
-	    }
-	}
-      else if ((Data == NULL) && (DataSize != NULL))
-	{
-	  *DataSize = Value->DataSize;
-	}
-    }
+	Key = HKEY_TO_MEMKEY(hKey);
 
-  return(ERROR_SUCCESS);
+	Status = RegpOpenOrCreateValue(hKey, lpValueName, TRUE, &ValueCell, &ValueCellOffset);
+	if (!NT_SUCCESS(Status))
+		return ERROR_UNSUCCESSFUL;
+
+	/* Get size of the allocated cellule (if any) */
+	if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
+		(ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
+	{
+		DataCell = HvGetCell(&Key->RegistryHive->Hive, ValueCell->DataOffset);
+		if (!DataCell)
+			return ERROR_UNSUCCESSFUL;
+		DataCellSize = -HvGetCellSize(&Key->RegistryHive->Hive, DataCell);
+	}
+	else
+	{
+		DataCell = NULL;
+		DataCellSize = 0;
+	}
+
+	if (cbData <= sizeof(HCELL_INDEX))
+	{
+		/* If data size <= sizeof(HCELL_INDEX) then store data in the data offset */
+		DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
+		if (DataCell)
+			HvFreeCell(&Key->RegistryHive->Hive, ValueCell->DataOffset);
+
+		RtlCopyMemory(&ValueCell->DataOffset, lpData, cbData);
+		ValueCell->DataSize = (ULONG)(cbData | REG_DATA_IN_OFFSET);
+		ValueCell->DataType = dwType;
+		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset);
+	}
+	else
+	{
+		if (cbData > (SIZE_T)DataCellSize)
+		{
+			/* New data size is larger than the current, destroy current
+			 * data block and allocate a new one. */
+			HCELL_INDEX NewOffset;
+
+			DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
+
+			NewOffset = HvAllocateCell(&Key->RegistryHive->Hive, cbData, HvStable);
+			if (NewOffset == HCELL_NULL)
+			{
+				DPRINT("HvAllocateCell() failed with status 0x%08lx\n", Status);
+				return ERROR_UNSUCCESSFUL;
+			}
+
+			if (DataCell)
+				HvFreeCell(&Key->RegistryHive->Hive, ValueCell->DataOffset);
+
+			ValueCell->DataOffset = NewOffset;
+			DataCell = HvGetCell(&Key->RegistryHive->Hive, NewOffset);
+		}
+
+		/* Copy new contents to cellule */
+		RtlCopyMemory(DataCell, lpData, cbData);
+		ValueCell->DataSize = (ULONG)(cbData & REG_DATA_SIZE_MASK);
+		ValueCell->DataType = dwType;
+		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCell->DataOffset);
+		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset);
+	}
+
+	HvMarkCellDirty(&Key->RegistryHive->Hive, Key->KeyCellOffset);
+
+	DPRINT("Return status 0x%08lx\n", Status);
+	return Status;
 }
 
-
-LONG
-RegDeleteValue(HKEY Key,
-	       PCHAR ValueName)
+LONG WINAPI
+RegSetValueExA(
+	IN HKEY hKey,
+	IN LPCSTR lpValueName OPTIONAL,
+	IN ULONG Reserved,
+	IN ULONG dwType,
+	IN const PUCHAR lpData,
+	IN ULONG cbData)
 {
-  PLIST_ENTRY Ptr;
-  PVALUE Value = NULL;
+	LPWSTR lpValueNameW = NULL;
+	PUCHAR lpDataW;
+	USHORT cbDataW;
+	LONG rc = ERROR_SUCCESS;
 
-  if ((ValueName == NULL) || (*ValueName == 0))
-    {
-      /* delete default value */
-      if (Key->Data != NULL)
-	free(Key->Data);
-      Key->Data = NULL;
-      Key->DataSize = 0;
-      Key->DataType = 0;
-    }
-  else
-    {
-      /* delete non-default value */
-      Ptr = Key->ValueList.Flink;
-      while (Ptr != &Key->ValueList)
+	DPRINT("RegSetValueA(%s)\n", lpValueName);
+	if (lpValueName)
 	{
-	  Value = CONTAINING_RECORD(Ptr,
-				    VALUE,
-				    ValueList);
-	  if (strcasecmp(Value->Name, ValueName) == 0)
-	    break;
-
-	  Ptr = Ptr->Flink;
+		lpValueNameW = MultiByteToWideChar(lpValueName);
+		if (!lpValueNameW)
+			return ERROR_OUTOFMEMORY;
 	}
 
-      if (Ptr == &Key->ValueList)
-	return(ERROR_INVALID_PARAMETER);
-
-      /* delete value */
-      Key->ValueCount--;
-      if (Value->Name != NULL)
-	free(Value->Name);
-      Value->Name = NULL;
-      Value->NameSize = 0;
-
-      if (Value->DataSize > sizeof(PCHAR))
+	if ((dwType == REG_SZ || dwType == REG_EXPAND_SZ || dwType == REG_MULTI_SZ)
+	 && cbData != 0)
 	{
-	  if (Value->Data != NULL)
-	    free(Value->Data);
-	}
-      Value->Data = NULL;
-      Value->DataSize = 0;
-      Value->DataType = 0;
+		ANSI_STRING AnsiString;
+		UNICODE_STRING Data;
 
-      RemoveEntryList(&Value->ValueList);
-      free(Value);
-    }
-  return(ERROR_SUCCESS);
+		if (lpData[cbData - 1] != '\0')
+			cbData++;
+		RtlInitAnsiString(&AnsiString, NULL);
+		AnsiString.Buffer = (PSTR)lpData;
+		AnsiString.Length = (USHORT)cbData - 1;
+		AnsiString.MaximumLength = (USHORT)cbData;
+		RtlAnsiStringToUnicodeString (&Data, &AnsiString, TRUE);
+		lpDataW = (const PUCHAR)Data.Buffer;
+		cbDataW = Data.MaximumLength;
+	}
+	else
+	{
+		lpDataW = lpData;
+		cbDataW = (USHORT)cbData;
+	}
+
+	if (rc == ERROR_SUCCESS)
+		rc = RegSetValueExW(hKey, lpValueNameW, 0, dwType, lpDataW, cbDataW);
+	if (lpValueNameW)
+		free(lpValueNameW);
+	if (lpData != lpDataW)
+		free(lpDataW);
+	return rc;
 }
 
-
-LONG
-RegEnumValue(HKEY Key,
-	     ULONG Index,
-	     PCHAR ValueName,
-	     PULONG NameSize,
-	     PULONG Type,
-	     PCHAR Data,
-	     PULONG DataSize)
+LONG WINAPI
+RegQueryValueExW(
+	IN HKEY hKey,
+	IN LPCWSTR lpValueName,
+	IN PULONG lpReserved,
+	OUT PULONG lpType,
+	OUT PUCHAR lpData,
+	OUT PSIZE_T lpcbData)
 {
-  PLIST_ENTRY Ptr;
-  PVALUE Value;
-  ULONG Count = 0;
+	//ParentKey = HKEY_TO_MEMKEY(RootKey);
+	PCM_KEY_VALUE ValueCell;
+	HCELL_INDEX ValueCellOffset;
+	NTSTATUS Status;
 
-  if (Key->Data != NULL)
-    {
-      if (Index > 0)
-	{
-	  Index--;
-	}
-      else
-	{
-	  /* enumerate default value */
-	  if (ValueName != NULL)
-	    *ValueName = 0;
-	  if (Type != NULL)
-	    *Type = Key->DataType;
-	  if (DataSize != NULL)
-	    *DataSize = Key->DataSize;
+	Status = RegpOpenOrCreateValue(
+			hKey,
+			lpValueName,
+			FALSE,
+			&ValueCell,
+			&ValueCellOffset);
 
-	  /* FIXME: return more values */
-	}
-    }
-
-  Ptr = Key->ValueList.Flink;
-  while (Ptr != &Key->ValueList)
-    {
-      if (Index == Count)
-	break;
-
-      Count++;
-      Ptr = Ptr->Flink;
-    }
-
-  if (Ptr == &Key->ValueList)
-    return(ERROR_NO_MORE_ITEMS);
-
-  Value = CONTAINING_RECORD(Ptr,
-			    VALUE,
-			    ValueList);
-
-  /* FIXME: return values */
-
-  return(ERROR_SUCCESS);
+	//Status = CmiScanForValueKey(
+	//	x
+	return ERROR_UNSUCCESSFUL;
 }
 
-
-USHORT
-RegGetSubKeyCount (HKEY Key)
+LONG WINAPI
+RegQueryValueExA(
+	IN HKEY hKey,
+	IN LPCSTR lpValueName,
+	IN PULONG lpReserved,
+	OUT PULONG lpType,
+	OUT PUCHAR lpData,
+	OUT PSIZE_T lpcbData)
 {
-  return Key->SubKeyCount;
+	LPWSTR lpValueNameW = NULL;
+	LONG rc;
+
+	DPRINT1("RegQueryValueExA(%s) not implemented\n", lpValueName);
+	if (lpValueName)
+	{
+		lpValueNameW = MultiByteToWideChar(lpValueName);
+		if (!lpValueNameW)
+			return ERROR_OUTOFMEMORY;
+	}
+
+	rc = RegQueryValueExW(hKey, lpValueNameW, lpReserved, lpType, lpData, lpcbData);
+	if (lpValueNameW)
+		free(lpValueNameW);
+	return ERROR_UNSUCCESSFUL;
 }
 
-
-ULONG
-RegGetValueCount (HKEY Key)
+LONG WINAPI
+RegDeleteValueW(
+	IN HKEY hKey,
+	IN LPCWSTR lpValueName OPTIONAL)
 {
-  if (Key->DataSize != 0)
-    return Key->ValueCount + 1;
+	DPRINT1("RegDeleteValueW() unimplemented\n");
+	return ERROR_UNSUCCESSFUL;
+}
 
-  return Key->ValueCount;
+LONG WINAPI
+RegDeleteValueA(
+	IN HKEY hKey,
+	IN LPCSTR lpValueName OPTIONAL)
+{
+	LPWSTR lpValueNameW;
+	LONG rc;
+
+	if (lpValueName)
+	{
+		lpValueNameW = MultiByteToWideChar(lpValueName);
+		if (!lpValueNameW)
+			return ERROR_OUTOFMEMORY;
+		rc = RegDeleteValueW(hKey, lpValueNameW);
+		free(lpValueNameW);
+	}
+	else
+		rc = RegDeleteValueW(hKey, NULL);
+	return rc;
+}
+
+static BOOL
+ConnectRegistry(
+	IN HKEY RootKey,
+	IN PEREGISTRY_HIVE HiveToConnect,
+	IN LPCWSTR Path)
+{
+	NTSTATUS Status;
+	MEMKEY NewKey;
+	LONG rc;
+
+	Status = CmiInitializeTempHive(HiveToConnect);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("CmiInitializeTempHive() failed with status 0x%08lx\n", Status);
+		return FALSE;
+	}
+
+	/* Create key */
+	rc = RegCreateKeyW(
+		RootKey,
+		Path,
+		(PHKEY)&NewKey);
+	if (rc != ERROR_SUCCESS)
+		return FALSE;
+
+	NewKey->RegistryHive = HiveToConnect;
+	NewKey->KeyCellOffset = HiveToConnect->Hive.HiveHeader->RootCell;
+	NewKey->KeyCell = HvGetCell (&HiveToConnect->Hive, NewKey->KeyCellOffset);
+	return TRUE;
+}
+
+static BOOL
+MyExportBinaryHive (PCHAR FileName,
+		  PEREGISTRY_HIVE RootHive)
+{
+	FILE *File;
+	BOOL ret;
+
+	/* Create new hive file */
+	File = fopen (FileName, "w+b");
+	if (File == NULL)
+	{
+		printf("    Error creating/opening file\n");
+		return FALSE;
+	}
+
+	fseek (File, 0, SEEK_SET);
+
+	RootHive->HiveHandle = (HANDLE)File;
+	ret = HvWriteHive(&RootHive->Hive);
+	fclose (File);
+	return ret;
+}
+
+LIST_ENTRY CmiHiveListHead;
+
+VOID
+RegInitializeRegistry(VOID)
+{
+	UNICODE_STRING RootKeyName = RTL_CONSTANT_STRING(L"\\");
+	NTSTATUS Status;
+	HKEY ControlSetKey, LinkKey;
+
+	InitializeListHead(&CmiHiveListHead);
+
+	Status = CmiInitializeTempHive(&RootHive);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("CmiInitializeTempHive() failed with status 0x%08lx\n", Status);
+		return;
+	}
+
+	RootKey = CreateInMemoryStructure(
+		&RootHive,
+		RootHive.Hive.HiveHeader->RootCell,
+		&RootKeyName);
+
+	/* Create DEFAULT key */
+	ConnectRegistry(
+		NULL,
+		&DefaultHive,
+		L"Registry\\User\\.DEFAULT");
+
+	/* Create SAM key */
+	ConnectRegistry(
+		NULL,
+		&SamHive,
+		L"Registry\\Machine\\SAM");
+
+	/* Create SECURITY key */
+	ConnectRegistry(
+		NULL,
+		&SecurityHive,
+		L"Registry\\Machine\\SECURITY");
+
+	/* Create SOFTWARE key */
+	ConnectRegistry(
+		NULL,
+		&SoftwareHive,
+		L"Registry\\Machine\\SOFTWARE");
+
+	/* Create SYSTEM key */
+	ConnectRegistry(
+		NULL,
+		&SystemHive,
+		L"Registry\\Machine\\SYSTEM");
+
+	/* Create link 'CurrentControlSet' --> 'ControlSet001' */
+	RegCreateKeyW(
+		NULL,
+		L"Registry\\Machine\\SYSTEM\\ControlSet001",
+		&ControlSetKey);
+	RegCreateKeyW(
+		NULL,
+		L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
+		&LinkKey);
+	printf("ControlSetKey %p\n", ControlSetKey);
+	RegSetValueExW(LinkKey, NULL, 0, REG_LINK, (PCHAR)&ControlSetKey, sizeof(PVOID));
 }
 
 /* EOF */

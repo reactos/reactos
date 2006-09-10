@@ -1,60 +1,11 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.h
  * PURPOSE:         Registry code
- * PROGRAMMER:      Eric Kohl
  */
 
 #ifndef __REGISTRY_H__
 #define __REGISTRY_H__
-
-
-#define INVALID_HANDLE_VALUE  NULL
-
-typedef struct _LIST_ENTRY
-{
-  struct _LIST_ENTRY *Flink;
-  struct _LIST_ENTRY *Blink;
-} LIST_ENTRY, *PLIST_ENTRY;
-
-
-typedef struct _REG_KEY
-{
-  LIST_ENTRY KeyList;
-  LIST_ENTRY SubKeyList;
-  LIST_ENTRY ValueList;
-
-  USHORT SubKeyCount;
-  ULONG ValueCount;
-
-  USHORT NameSize;
-  PCHAR Name;
-
-  /* default data */
-  ULONG DataType;
-  ULONG DataSize;
-  PCHAR Data;
-} KEY, *HKEY, **PHKEY;
-
 
 typedef struct _REG_VALUE
 {
@@ -70,9 +21,43 @@ typedef struct _REG_VALUE
   PCHAR Data;
 } VALUE, *PVALUE;
 
+typedef struct _REG_KEY
+{
+  LIST_ENTRY KeyList;
+  LIST_ENTRY SubKeyList;
+  LIST_ENTRY ValueList;
+
+  ULONG SubKeyCount;
+  ULONG ValueCount;
+
+  ULONG NameSize;
+  PWCHAR Name;
+
+  /* default data */
+  ULONG DataType;
+  ULONG DataSize;
+  PCHAR Data;
+
+  /* Information on hard disk structure */
+  HCELL_INDEX KeyCellOffset;
+  PCM_KEY_NODE KeyCell;
+  PEREGISTRY_HIVE RegistryHive;
+
+  /* Used when linking to another key */
+  struct _REG_KEY* LinkedKey;
+} KEY, *FRLDRHKEY, **PFRLDRHKEY, *MEMKEY, **PMEMKEY;
+
+#define HKEY_TO_MEMKEY(hKey) ((MEMKEY)(hKey))
+#define MEMKEY_TO_HKEY(memKey) ((HKEY)(memKey))
+
+extern EREGISTRY_HIVE DefaultHive;  /* \Registry\User\.DEFAULT */
+extern EREGISTRY_HIVE SamHive;      /* \Registry\Machine\SAM */
+extern EREGISTRY_HIVE SecurityHive; /* \Registry\Machine\SECURITY */
+extern EREGISTRY_HIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
+extern EREGISTRY_HIVE SystemHive;   /* \Registry\Machine\SYSTEM */
 
 #define ERROR_SUCCESS                    0L
-#define ERROR_PATH_NOT_FOUND             2L
+#define ERROR_UNSUCCESSFUL               1L
 #define ERROR_OUTOFMEMORY                14L
 #define ERROR_INVALID_PARAMETER          87L
 #define ERROR_MORE_DATA                  234L
@@ -156,22 +141,6 @@ typedef struct _REG_VALUE
 }
 
 /*
- * BOOLEAN
- * IsListEmpty (
- *	PLIST_ENTRY	ListHead
- *	);
- *
- * FUNCTION:
- *	Checks if a double linked list is empty
- *
- * ARGUMENTS:
- *	ListHead = Head of the list
-*/
-#define IsListEmpty(ListHead) \
-	((ListHead)->Flink == (ListHead))
-
-
-/*
  *VOID
  *RemoveEntryList (
  *	PLIST_ENTRY	Entry
@@ -201,11 +170,6 @@ typedef struct _REG_VALUE
 }
 
 /*
- * PURPOSE: Returns the byte offset of a field within a structure
- */
-#define FIELD_OFFSET(Type,Field) (LONG)(&(((Type *)(0))->Field))
-
-/*
  * PURPOSE: Returns the base address structure if the caller knows the 
  * address of a field within the structure
  * ARGUMENTS:
@@ -230,58 +194,42 @@ typedef struct _REG_VALUE
 #define REG_FULL_RESOURCE_DESCRIPTOR 9
 #define REG_RESOURCE_REQUIREMENTS_LIST 10
 
+LONG WINAPI
+RegCreateKeyA(
+	IN HKEY hKey,
+	IN LPCSTR lpSubKey,
+	OUT PHKEY phkResult);
 
+LONG WINAPI
+RegOpenKeyA(
+	IN HKEY hKey,
+	IN LPCSTR lpSubKey,
+	OUT PHKEY phkResult);
 
-VOID
-RegInitializeRegistry(VOID);
-
-LONG
-RegCreateKey(HKEY ParentKey,
-	     PCHAR KeyName,
-	     PHKEY Key);
-
-LONG
-RegDeleteKey(HKEY Key,
-	     PCHAR Name);
-
-LONG
-RegEnumKey(HKEY Key,
-	   ULONG Index,
-	   PCHAR Name,
-	   PULONG NameSize);
-
-LONG
-RegOpenKey(HKEY ParentKey,
-	   PCHAR KeyName,
-	   PHKEY Key);
-
-
-LONG
-RegSetValue(HKEY Key,
-	    PCHAR ValueName,
-	    ULONG Type,
-	    PCHAR Data,
-	    ULONG DataSize);
-
-LONG
-RegQueryValue(HKEY Key,
-	      PCHAR ValueName,
+LONG WINAPI
+RegQueryValueExA(HKEY Key,
+	      LPCSTR ValueName,
+	      PULONG Reserved,
 	      PULONG Type,
-	      PCHAR Data,
-	      PULONG DataSize);
+	      PUCHAR Data,
+	      PSIZE_T DataSize);
 
-LONG
-RegDeleteValue(HKEY Key,
-	       PCHAR ValueName);
+LONG WINAPI
+RegSetValueExA(
+	IN HKEY hKey,
+	IN LPCSTR lpValueName OPTIONAL,
+	ULONG Reserved,
+	IN ULONG dwType,
+	IN const PUCHAR lpData,
+	IN ULONG cbData);
 
-LONG
-RegEnumValue(HKEY Key,
-	     ULONG Index,
-	     PCHAR ValueName,
-	     PULONG NameSize,
-	     PULONG Type,
-	     PCHAR Data,
-	     PULONG DataSize);
+LONG WINAPI
+RegDeleteValueA(HKEY Key,
+	       LPCSTR ValueName);
+
+LONG WINAPI
+RegDeleteKeyA(HKEY Key,
+	     LPCSTR Name);
 
 USHORT
 RegGetSubKeyCount (HKEY Key);
@@ -289,16 +237,8 @@ RegGetSubKeyCount (HKEY Key);
 ULONG
 RegGetValueCount (HKEY Key);
 
-
-#if 0
-BOOL
-RegImportTextHive(PCHAR ChunkBase,
-		  U32 ChunkSize);
-
-BOOL
-RegImportBinaryHive(PCHAR ChunkBase,
-		    U32 ChunkSize);
-#endif
+VOID
+RegInitializeRegistry(VOID);
 
 #endif /* __REGISTRY_H__ */
 
