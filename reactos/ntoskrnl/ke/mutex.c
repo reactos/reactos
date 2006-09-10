@@ -1,14 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/mutex.c
- * PURPOSE:         Implements Mutexes and Mutants (that silly davec...)
- *
- * PROGRAMMERS:
- *                  Alex Ionescu (alex@relsoft.net) - Reorganized/commented some of the code.
- *                                                    Simplified some functions, fixed some return values and
- *                                                    corrected some minor bugs, added debug output.
- *                  David Welch (welch@mcmail.com)
+ * PURPOSE:         Implements the Mutant Dispatcher Object
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -23,16 +18,15 @@
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeInitializeMutant(IN PKMUTANT Mutant,
                    IN BOOLEAN InitialOwner)
 {
     PKTHREAD CurrentThread;
     KIRQL OldIrql;
-    DPRINT("KeInitializeMutant: %x\n", Mutant);
 
     /* Check if we have an initial owner */
-    if (InitialOwner == TRUE)
+    if (InitialOwner)
     {
         /* We also need to associate a thread */
         CurrentThread = KeGetCurrentThread();
@@ -47,7 +41,6 @@ KeInitializeMutant(IN PKMUTANT Mutant,
 
         /* Release Dispatcher Lock */
         KiReleaseDispatcherLock(OldIrql);
-        DPRINT("Mutant with Initial Owner\n");
     }
     else
     {
@@ -70,12 +63,10 @@ KeInitializeMutant(IN PKMUTANT Mutant,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeInitializeMutex(IN PKMUTEX Mutex,
                   IN ULONG Level)
 {
-    DPRINT("KeInitializeMutex: %x\n", Mutex);
-
     /* Set up the Dispatcher Header */
     KeInitializeDispatcherHeader(&Mutex->Header,
                                  MutantObject,
@@ -92,18 +83,18 @@ KeInitializeMutex(IN PKMUTEX Mutex,
  * @implemented
  */
 LONG
-STDCALL
+NTAPI
 KeReadStateMutant(IN PKMUTANT Mutant)
 {
     /* Return the Signal State */
-    return(Mutant->Header.SignalState);
+    return Mutant->Header.SignalState;
 }
 
 /*
  * @implemented
  */
 LONG
-STDCALL
+NTAPI
 KeReleaseMutant(IN PKMUTANT Mutant,
                 IN KPRIORITY Increment,
                 IN BOOLEAN Abandon,
@@ -112,7 +103,9 @@ KeReleaseMutant(IN PKMUTANT Mutant,
     KIRQL OldIrql;
     LONG PreviousState;
     PKTHREAD CurrentThread = KeGetCurrentThread();
-    DPRINT("KeReleaseMutant: %x\n", Mutant);
+    BOOLEAN EnableApc = FALSE;
+    ASSERT_MUTANT(Mutant);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Dispatcher Database */
     OldIrql = KiAcquireDispatcherLock();
@@ -126,8 +119,6 @@ KeReleaseMutant(IN PKMUTANT Mutant,
         /* Make sure that the Owner Thread is the current Thread */
         if (Mutant->OwnerThread != CurrentThread)
         {
-            DPRINT1("Trying to touch a Mutant that the caller doesn't own!\n");
-
             /* Release the lock */
             KiReleaseDispatcherLock(OldIrql);
 
@@ -142,7 +133,6 @@ KeReleaseMutant(IN PKMUTANT Mutant,
     else
     {
         /* It's going to be abandonned */
-        DPRINT("Abandonning the Mutant\n");
         Mutant->Header.SignalState = 1;
         Mutant->Abandoned = TRUE;
     }
@@ -154,43 +144,24 @@ KeReleaseMutant(IN PKMUTANT Mutant,
         if (PreviousState <= 0)
         {
             /* Remove the mutant from the list */
-            DPRINT("Removing Mutant %p\n", Mutant);
             RemoveEntryList(&Mutant->MutantListEntry);
 
-            /* Reenable APCs */
-            DPRINT("Re-enabling APCs\n");
-            CurrentThread->KernelApcDisable += Mutant->ApcDisable;
-
-            /* Check if the thread has APCs enabled */
-            if (!CurrentThread->KernelApcDisable)
-            {
-                /* Check if any are pending */
-                if (!IsListEmpty(&CurrentThread->ApcState.ApcListHead[KernelMode]))
-                {
-                    /* Set Kernel APC Pending */
-                    CurrentThread->ApcState.KernelApcPending = TRUE;
-
-                    /* Request the Interrupt */
-                    DPRINT("Requesting APC Interupt\n");
-                    HalRequestSoftwareInterrupt(APC_LEVEL);
-                }
-            }
+            /* Save if we need to re-enable APCs */
+            EnableApc = Mutant->ApcDisable;
         }
 
         /* Remove the Owning Thread and wake it */
         Mutant->OwnerThread = NULL;
 
         /* Check if the Wait List isn't empty */
-        DPRINT("Checking whether to wake the Mutant\n");
         if (!IsListEmpty(&Mutant->Header.WaitListHead))
         {
             /* Wake the Mutant */
-            DPRINT("Waking the Mutant\n");
             KiWaitTest(&Mutant->Header, Increment);
         }
     }
 
-    /* If the Wait is true, then return with a Wait and don't unlock the Dispatcher Database */
+    /* Check if the caller wants to wait after this release */
     if (Wait == FALSE)
     {
         /* Release the Lock */
@@ -203,6 +174,9 @@ KeReleaseMutant(IN PKMUTANT Mutant,
         CurrentThread->WaitIrql = OldIrql;
     }
 
+    /* Check if we need to re-enable APCs */
+    if (EnableApc) KeLeaveCriticalRegion();
+
     /* Return the previous state */
     return PreviousState;
 }
@@ -211,10 +185,12 @@ KeReleaseMutant(IN PKMUTANT Mutant,
  * @implemented
  */
 LONG
-STDCALL
+NTAPI
 KeReleaseMutex(IN PKMUTEX Mutex,
                IN BOOLEAN Wait)
 {
+    ASSERT_MUTANT(Mutex);
+
     /* There's no difference at this level between the two */
     return KeReleaseMutant(Mutex, 1, FALSE, Wait);
 }

@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/sem.c
- * PURPOSE:         Implements kernel semaphores
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  David Welch (welch@mcmail.com)
+ * PURPOSE:         Implements the Semaphore Dispatcher Object
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -19,13 +18,11 @@
  * @implemented
  */
 VOID
-STDCALL
-KeInitializeSemaphore(PKSEMAPHORE Semaphore,
-                      LONG Count,
-                      LONG Limit)
+NTAPI
+KeInitializeSemaphore(IN PKSEMAPHORE Semaphore,
+                      IN LONG Count,
+                      IN LONG Limit)
 {
-    DPRINT("KeInitializeSemaphore Sem: %x\n", Semaphore);
-
     /* Simply Initialize the Header */
     KeInitializeDispatcherHeader(&Semaphore->Header,
                                  SemaphoreObject,
@@ -40,51 +37,30 @@ KeInitializeSemaphore(PKSEMAPHORE Semaphore,
  * @implemented
  */
 LONG
-STDCALL
-KeReadStateSemaphore(PKSEMAPHORE Semaphore)
+NTAPI
+KeReadStateSemaphore(IN PKSEMAPHORE Semaphore)
 {
+    ASSERT_SEMAPHORE(Semaphore);
+
     /* Just return the Signal State */
     return Semaphore->Header.SignalState;
 }
 
 /*
  * @implemented
- *
- * FUNCTION: KeReleaseSemaphore releases a given semaphore object. This
- * routine supplies a runtime priority boost for waiting threads. If this
- * call sets the semaphore to the Signaled state, the semaphore count is
- * augmented by the given value. The caller can also specify whether it
- * will call one of the KeWaitXXX routines as soon as KeReleaseSemaphore
- * returns control.
- * ARGUMENTS:
- *       Semaphore = Points to an initialized semaphore object for which the
- *                   caller provides the storage.
- *       Increment = Specifies the priority increment to be applied if
- *                   releasing the semaphore causes a wait to be
- *                   satisfied.
- *       Adjustment = Specifies a value to be added to the current semaphore
- *                    count. This value must be positive
- *       Wait = Specifies whether the call to KeReleaseSemaphore is to be
- *              followed immediately by a call to one of the KeWaitXXX.
- * RETURNS: If the return value is zero, the previous state of the semaphore
- *          object is Not-Signaled.
  */
 LONG
-STDCALL
-KeReleaseSemaphore(PKSEMAPHORE Semaphore,
-                   KPRIORITY Increment,
-                   LONG Adjustment,
-                   BOOLEAN Wait)
+NTAPI
+KeReleaseSemaphore(IN PKSEMAPHORE Semaphore,
+                   IN KPRIORITY Increment,
+                   IN LONG Adjustment,
+                   IN BOOLEAN Wait)
 {
     LONG InitialState, State;
     KIRQL OldIrql;
     PKTHREAD CurrentThread;
-
-    DPRINT("KeReleaseSemaphore(Semaphore %x, Increment %d, Adjustment %d, Wait %d)\n",
-            Semaphore,
-            Increment,
-            Adjustment,
-            Wait);
+    ASSERT_SEMAPHORE(Semaphore);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock the Dispatcher Database */
     OldIrql = KiAcquireDispatcherLock();
@@ -111,7 +87,7 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
         KiWaitTest(&Semaphore->Header, Increment);
     }
 
-    /* If the Wait is true, then return with a Wait and don't unlock the Dispatcher Database */
+    /* Check if the caller wants to wait after this release */
     if (Wait == FALSE)
     {
         /* Release the Lock */
