@@ -25,6 +25,7 @@
   <define name="__cdecl__" empty="true" />
   <define name="dllimport" empty="true" />
   <define name="WORDS_BIGENDIAN" empty="true" />
+  <compilerflag>-fshort-wchar</compilerflag>
   <compilerflag>-fsigned-char</compilerflag>
   <if property="MP" value="1">
     <define name="CONFIG_SMP" value="1" />
