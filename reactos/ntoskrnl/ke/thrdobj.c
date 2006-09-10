@@ -46,70 +46,6 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     return (UCHAR)Result;
 }
 
-
-#ifdef KeGetCurrentThread
-#undef KeGetCurrentThread
-#endif
-/*
- * @implemented
- */
-PKTHREAD
-STDCALL
-KeGetCurrentThread(VOID)
-{
-#ifdef CONFIG_SMP
-    ULONG Flags;
-    PKTHREAD Thread;
-    Ke386SaveFlags(Flags);
-    Ke386DisableInterrupts();
-    Thread = KeGetCurrentPrcb()->CurrentThread;
-    Ke386RestoreFlags(Flags);
-    return Thread;
-#else
-    return(KeGetCurrentPrcb()->CurrentThread);
-#endif
-}
-
-VOID
-STDCALL
-KeSetPreviousMode(ULONG Mode)
-{
-    PsGetCurrentThread()->Tcb.PreviousMode = (UCHAR)Mode;
-}
-
-/*
- * @implemented
- */
-KPROCESSOR_MODE
-STDCALL
-KeGetPreviousMode(VOID)
-{
-    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
-}
-
-BOOLEAN
-STDCALL
-KeDisableThreadApcQueueing(IN PKTHREAD Thread)
-{
-    KIRQL OldIrql;
-    BOOLEAN PreviousState;
-
-    /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Save old state */
-    PreviousState = Thread->ApcQueueable;
-
-    /* Disable it now */
-    Thread->ApcQueueable = FALSE;
-
-    /* Release the Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
-
-    /* Return old state */
-    return PreviousState;
-}
-
 VOID
 STDCALL
 KeRundownThread(VOID)
@@ -567,22 +503,6 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
     return OldState;
 }
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-KeCapturePersistentThreadState(IN PVOID CurrentThread,
-                               IN ULONG Setting1,
-                               IN ULONG Setting2,
-                               IN ULONG Setting3,
-                               IN ULONG Setting4,
-                               IN ULONG Setting5,
-                               IN PVOID ThreadState)
-{
-    UNIMPLEMENTED;
-}
-
 VOID
 NTAPI
 KeUninitThread(IN PKTHREAD Thread)
@@ -821,58 +741,6 @@ KeStartThread(IN OUT PKTHREAD Thread)
     /* Release locks and return */
     KiReleaseDispatcherLockFromDpcLevel();
     KiReleaseProcessLock(&LockHandle);
-}
-
-/*
- * @implemented
- */
-KPRIORITY
-STDCALL
-KeQueryPriorityThread (IN PKTHREAD Thread)
-{
-    return Thread->Priority;
-}
-
-/*
- * @implemented
- */
-ULONG
-STDCALL
-KeQueryRuntimeThread(IN PKTHREAD Thread,
-                     OUT PULONG UserTime)
-{
-    /* Return the User Time */
-    *UserTime = Thread->UserTime;
-
-    /* Return the Kernel Time */
-    return Thread->KernelTime;
-}
-
-/*
- * @implemented
- */
-BOOLEAN
-STDCALL
-KeSetKernelStackSwapEnable(IN BOOLEAN Enable)
-{
-    PKTHREAD Thread = KeGetCurrentThread();
-    BOOLEAN PreviousState;
-    KIRQL OldIrql;
-
-     /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Save Old State */
-    PreviousState = Thread->EnableStackSwap;
-
-    /* Set New State */
-    Thread->EnableStackSwap = Enable;
-
-    /* No, Release Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
-
-    /* Return Old State */
-    return PreviousState;
 }
 
 /*
@@ -1276,3 +1144,95 @@ KeTerminateThread(IN KPRIORITY Increment)
     KiReleaseDispatcherLockFromDpcLevel();
     KiSwapThread(Thread, KeGetCurrentPrcb());
 }
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+KeCapturePersistentThreadState(IN PVOID CurrentThread,
+                               IN ULONG Setting1,
+                               IN ULONG Setting2,
+                               IN ULONG Setting3,
+                               IN ULONG Setting4,
+                               IN ULONG Setting5,
+                               IN PVOID ThreadState)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+#undef KeGetCurrentThread
+PKTHREAD
+NTAPI
+KeGetCurrentThread(VOID)
+{
+    /* Return the current thread on this PCR */
+    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+}
+
+/*
+ * @implemented
+ */
+KPROCESSOR_MODE
+NTAPI
+KeGetPreviousMode(VOID)
+{
+    /* Return the previous mode of this thread */
+    return KeGetCurrentThread()->PreviousMode;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+KeQueryRuntimeThread(IN PKTHREAD Thread,
+                     OUT PULONG UserTime)
+{
+    ASSERT_THREAD(Thread);
+
+    /* Return the User Time */
+    *UserTime = Thread->UserTime;
+
+    /* Return the Kernel Time */
+    return Thread->KernelTime;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeSetKernelStackSwapEnable(IN BOOLEAN Enable)
+{
+    BOOLEAN PreviousState;
+    PKTHREAD Thread = KeGetCurrentThread();
+
+    /* Save Old State */
+    PreviousState = Thread->EnableStackSwap;
+
+    /* Set New State */
+    Thread->EnableStackSwap = Enable;
+
+    /* Return Old State */
+    return PreviousState;
+}
+
+/*
+ * @implemented
+ */
+KPRIORITY
+NTAPI
+KeQueryPriorityThread(IN PKTHREAD Thread)
+{
+    ASSERT_THREAD(Thread);
+
+    /* Return the current priority */
+    return Thread->Priority;
+}
+
