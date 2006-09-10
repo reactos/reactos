@@ -10,6 +10,7 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>msvcrt</library>
 	<library>devmgr</library>
 	<file>mmsys.c</file>
 	<file>mmsys.rc</file>

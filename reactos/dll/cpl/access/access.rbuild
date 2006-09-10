@@ -10,6 +10,7 @@
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
+	<library>msvcrt</library>
 	<file>access.c</file>
 	<file>display.c</file>
 	<file>general.c</file>

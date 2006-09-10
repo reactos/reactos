@@ -235,7 +235,7 @@ ButtonProc(IN HWND hwndDlg,
                 SendMessage(hDlgCtrl, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(0, 14));
                 pos = ((float)g_DoubleClickSpeed / MAX_DOUBLE_CLICK_SPEED);
                 pos /= (1.0f/11.0f);
-                SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(INT)rintf(pos));
+                SendMessage(hDlgCtrl, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)(INT)ceil(pos));
 
 
             }
