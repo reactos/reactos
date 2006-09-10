@@ -46,69 +46,138 @@ KeFindNextRightSetAffinity(IN UCHAR Number,
     return (UCHAR)Result;
 }
 
-VOID
-STDCALL
-KeRundownThread(VOID)
+ULONG
+NTAPI
+KeAlertResumeThread(IN PKTHREAD Thread)
 {
-    KIRQL OldIrql;
-    PKTHREAD Thread = KeGetCurrentThread();
-    PLIST_ENTRY NextEntry, ListHead;
-    PKMUTANT Mutant;
-    DPRINT("KeRundownThread: %x\n", Thread);
+    ULONG PreviousCount;
+    KLOCK_QUEUE_HANDLE ApcLock;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Optimized path if nothing is on the list at the moment */
-    if (IsListEmpty(&Thread->MutantListHead)) return;
+    /* Lock the Dispatcher Database and the APC Queue */
+    KiAcquireApcLock(Thread, &ApcLock);
+    KiAcquireDispatcherLockAtDpcLevel();
 
-    /* Lock the Dispatcher Database */
-    OldIrql = KeAcquireDispatcherDatabaseLock();
-
-    /* Get the List Pointers */
-    ListHead = &Thread->MutantListHead;
-    NextEntry = ListHead->Flink;
-    while (NextEntry != ListHead)
+    /* Return if Thread is already alerted. */
+    if (!Thread->Alerted[KernelMode])
     {
-        /* Get the Mutant */
-        Mutant = CONTAINING_RECORD(NextEntry, KMUTANT, MutantListEntry);
-        DPRINT1("Mutant: %p. Type, Size %x %x\n",
-                 Mutant,
-                 Mutant->Header.Type,
-                 Mutant->Header.Size);
-
-        /* Make sure it's not terminating with APCs off */
-        if (Mutant->ApcDisable)
+        /* If it's Blocked, unblock if it we should */
+        if ((Thread->State == Waiting) && (Thread->Alertable))
         {
-            /* Bugcheck the system */
-            KEBUGCHECKEX(0,//THREAD_TERMINATE_HELD_MUTEX,
-                         (ULONG_PTR)Thread,
-                         (ULONG_PTR)Mutant,
-                         0,
-                         0);
+            /* Abort the wait */
+            KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
         }
-
-        /* Now we can remove it */
-        RemoveEntryList(&Mutant->MutantListEntry);
-
-        /* Unconditionally abandon it */
-        DPRINT("Abandonning the Mutant\n");
-        Mutant->Header.SignalState = 1;
-        Mutant->Abandoned = TRUE;
-        Mutant->OwnerThread = NULL;
-
-        /* Check if the Wait List isn't empty */
-        DPRINT("Checking whether to wake the Mutant\n");
-        if (!IsListEmpty(&Mutant->Header.WaitListHead))
+        else
         {
-            /* Wake the Mutant */
-            DPRINT("Waking the Mutant\n");
-            KiWaitTest(&Mutant->Header, MUTANT_INCREMENT);
+            /* If not, simply Alert it */
+            Thread->Alerted[KernelMode] = TRUE;
         }
-
-        /* Move on */
-        NextEntry = NextEntry->Flink;
     }
 
-    /* Release the Lock */
-    KeReleaseDispatcherDatabaseLock(OldIrql);
+    /* Save the old Suspend Count */
+    PreviousCount = Thread->SuspendCount;
+
+    /* If the thread is suspended, decrease one of the suspend counts */
+    if (PreviousCount)
+    {
+        /* Decrease count. If we are now zero, unwait it completely */
+        if (--Thread->SuspendCount)
+        {
+            /* Signal and satisfy */
+            Thread->SuspendSemaphore.Header.SignalState++;
+            KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
+        }
+    }
+
+    /* Release Locks and return the Old State */
+    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
+    return PreviousCount;
+}
+
+BOOLEAN
+NTAPI
+KeAlertThread(IN PKTHREAD Thread,
+              IN KPROCESSOR_MODE AlertMode)
+{
+    BOOLEAN PreviousState;
+    KLOCK_QUEUE_HANDLE ApcLock;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock the Dispatcher Database and the APC Queue */
+    KiAcquireApcLock(Thread, &ApcLock);
+    KiAcquireDispatcherLockAtDpcLevel();
+
+    /* Save the Previous State */
+    PreviousState = Thread->Alerted[AlertMode];
+
+    /* Check if it's already alerted */
+    if (!PreviousState)
+    {
+        /* Check if the thread is alertable, and blocked in the given mode */
+        if ((Thread->State == Waiting) &&
+            ((AlertMode == KernelMode) || (Thread->WaitMode == AlertMode)) &&
+            (Thread->Alertable))
+        {
+            /* Abort the wait to alert the thread */
+            KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
+        }
+        else
+        {
+            /* Otherwise, merely set the alerted state */
+            Thread->Alerted[AlertMode] = TRUE;
+        }
+    }
+
+    /* Release the Dispatcher Lock */
+    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
+
+    /* Return the old state */
+    return PreviousState;
+}
+
+ULONG
+NTAPI
+KeForceResumeThread(IN PKTHREAD Thread)
+{
+    KLOCK_QUEUE_HANDLE ApcLock;
+    ULONG PreviousCount;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock the APC Queue */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    /* Save the old Suspend Count */
+    PreviousCount = Thread->SuspendCount + Thread->FreezeCount;
+
+    /* If the thread is suspended, wake it up!!! */
+    if (PreviousCount)
+    {
+        /* Unwait it completely */
+        Thread->SuspendCount = 0;
+        Thread->FreezeCount = 0;
+
+        /* Lock the dispatcher */
+        KiAcquireDispatcherLockAtDpcLevel();
+
+        /* Signal and satisfy */
+        Thread->SuspendSemaphore.Header.SignalState++;
+        KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
+
+        /* Release the dispatcher */
+        KiReleaseDispatcherLockFromDpcLevel();
+    }
+
+    /* Release Lock and return the Old State */
+    KiReleaseApcLockFromDpcLevel(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
+    return PreviousCount;
 }
 
 /*
@@ -237,6 +306,129 @@ KeResumeThread(IN PKTHREAD Thread)
 
 VOID
 NTAPI
+KeRundownThread(VOID)
+{
+    KIRQL OldIrql;
+    PKTHREAD Thread = KeGetCurrentThread();
+    PLIST_ENTRY NextEntry, ListHead;
+    PKMUTANT Mutant;
+
+    /* Optimized path if nothing is on the list at the moment */
+    if (IsListEmpty(&Thread->MutantListHead)) return;
+
+    /* Lock the Dispatcher Database */
+    OldIrql = KiAcquireDispatcherLock();
+
+    /* Get the List Pointers */
+    ListHead = &Thread->MutantListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the Mutant */
+        Mutant = CONTAINING_RECORD(NextEntry, KMUTANT, MutantListEntry);
+
+        /* Make sure it's not terminating with APCs off */
+        if (Mutant->ApcDisable)
+        {
+            /* Bugcheck the system */
+            KEBUGCHECKEX(0, //THREAD_TERMINATE_HELD_MUTEX,
+                         (ULONG_PTR)Thread,
+                         (ULONG_PTR)Mutant,
+                         0,
+                         0);
+        }
+
+        /* Now we can remove it */
+        RemoveEntryList(&Mutant->MutantListEntry);
+
+        /* Unconditionally abandon it */
+        Mutant->Header.SignalState = 1;
+        Mutant->Abandoned = TRUE;
+        Mutant->OwnerThread = NULL;
+
+        /* Check if the Wait List isn't empty */
+        if (!IsListEmpty(&Mutant->Header.WaitListHead))
+        {
+            /* Wake the Mutant */
+            KiWaitTest(&Mutant->Header, MUTANT_INCREMENT);
+        }
+
+        /* Move on */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Release the Lock */
+    KiReleaseDispatcherLock(OldIrql);
+}
+
+VOID
+NTAPI
+KeStartThread(IN OUT PKTHREAD Thread)
+{
+    KLOCK_QUEUE_HANDLE LockHandle;
+#ifdef CONFIG_SMP
+    PKNODE Node;
+    PKPRCB NodePrcb;
+    ULONG Set, Mask;
+#endif
+    UCHAR IdealProcessor = 0;
+    PKPROCESS Process = Thread->ApcState.Process;
+
+    /* Setup static fields from parent */
+    Thread->Iopl = Process->Iopl;
+    Thread->Quantum = Process->QuantumReset;
+    Thread->QuantumReset = Process->QuantumReset;
+    Thread->SystemAffinityActive = FALSE;
+
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &LockHandle);
+
+    /* Setup volatile data */
+    Thread->Priority = Process->BasePriority;
+    Thread->BasePriority = Process->BasePriority;
+    Thread->Affinity = Process->Affinity;
+    Thread->UserAffinity = Process->Affinity;
+
+#ifdef CONFIG_SMP
+    /* Get the KNODE and its PRCB */
+    Node = KeNodeBlock[Process->IdealNode];
+    NodePrcb = (PKPRCB)(KPCR_BASE + (Process->ThreadSeed * PAGE_SIZE));
+
+    /* Calculate affinity mask */
+    Set = ~NodePrcb->MultiThreadProcessorSet;
+    Mask = (ULONG)(Node->ProcessorMask & Process->Affinity);
+    Set &= Mask;
+    if (Set) Mask = Set;
+
+    /* Get the new thread seed */
+    IdealProcessor = KeFindNextRightSetAffinity(Process->ThreadSeed, Mask);
+    Process->ThreadSeed = IdealProcessor;
+
+    /* Sanity check */
+    ASSERT((Thread->UserAffinity & AFFINITY_MASK(IdealProcessor)));
+#endif
+
+    /* Set the Ideal Processor */
+    Thread->IdealProcessor = IdealProcessor;
+    Thread->UserIdealProcessor = IdealProcessor;
+
+    /* Lock the Dispatcher Database */
+    KiAcquireDispatcherLockAtDpcLevel();
+
+    /* Insert the thread into the process list */
+    InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
+
+    /* Increase the stack count */
+    ASSERT(Process->StackCount != MAXULONG_PTR);
+    Process->StackCount++;
+
+    /* Release locks and return */
+    KiReleaseDispatcherLockFromDpcLevel();
+    KiReleaseProcessLock(&LockHandle);
+}
+
+VOID
+NTAPI
 KiSuspendRundown(IN PKAPC Apc)
 {
     /* Does nothing */
@@ -332,140 +524,6 @@ KeSuspendThread(PKTHREAD Thread)
     return PreviousCount;
 }
 
-ULONG
-NTAPI
-KeForceResumeThread(IN PKTHREAD Thread)
-{
-    KLOCK_QUEUE_HANDLE ApcLock;
-    ULONG PreviousCount;
-    ASSERT_THREAD(Thread);
-    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-
-    /* Lock the APC Queue */
-    KiAcquireApcLock(Thread, &ApcLock);
-
-    /* Save the old Suspend Count */
-    PreviousCount = Thread->SuspendCount + Thread->FreezeCount;
-
-    /* If the thread is suspended, wake it up!!! */
-    if (PreviousCount)
-    {
-        /* Unwait it completely */
-        Thread->SuspendCount = 0;
-        Thread->FreezeCount = 0;
-
-        /* Lock the dispatcher */
-        KiAcquireDispatcherLockAtDpcLevel();
-
-        /* Signal and satisfy */
-        Thread->SuspendSemaphore.Header.SignalState++;
-        KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
-
-        /* Release the dispatcher */
-        KiReleaseDispatcherLockFromDpcLevel();
-    }
-
-    /* Release Lock and return the Old State */
-    KiReleaseApcLockFromDpcLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
-    return PreviousCount;
-}
-
-ULONG
-NTAPI
-KeAlertResumeThread(IN PKTHREAD Thread)
-{
-    ULONG PreviousCount;
-    KLOCK_QUEUE_HANDLE ApcLock;
-    ASSERT_THREAD(Thread);
-    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-
-    /* Lock the Dispatcher Database and the APC Queue */
-    KiAcquireApcLock(Thread, &ApcLock);
-    KiAcquireDispatcherLockAtDpcLevel();
-
-    /* Return if Thread is already alerted. */
-    if (!Thread->Alerted[KernelMode])
-    {
-        /* If it's Blocked, unblock if it we should */
-        if ((Thread->State == Waiting) && (Thread->Alertable))
-        {
-            /* Abort the wait */
-            KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
-        }
-        else
-        {
-            /* If not, simply Alert it */
-            Thread->Alerted[KernelMode] = TRUE;
-        }
-    }
-
-    /* Save the old Suspend Count */
-    PreviousCount = Thread->SuspendCount;
-
-    /* If the thread is suspended, decrease one of the suspend counts */
-    if (PreviousCount)
-    {
-        /* Decrease count. If we are now zero, unwait it completely */
-        if (--Thread->SuspendCount)
-        {
-            /* Signal and satisfy */
-            Thread->SuspendSemaphore.Header.SignalState++;
-            KiWaitTest(&Thread->SuspendSemaphore.Header, IO_NO_INCREMENT);
-        }
-    }
-
-    /* Release Locks and return the Old State */
-    KiReleaseDispatcherLockFromDpcLevel();
-    KiReleaseApcLockFromDpcLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
-    return PreviousCount;
-}
-
-BOOLEAN
-NTAPI
-KeAlertThread(IN PKTHREAD Thread,
-              IN KPROCESSOR_MODE AlertMode)
-{
-    BOOLEAN PreviousState;
-    KLOCK_QUEUE_HANDLE ApcLock;
-    ASSERT_THREAD(Thread);
-    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-
-    /* Lock the Dispatcher Database and the APC Queue */
-    KiAcquireApcLock(Thread, &ApcLock);
-    KiAcquireDispatcherLockAtDpcLevel();
-
-    /* Save the Previous State */
-    PreviousState = Thread->Alerted[AlertMode];
-
-    /* Check if it's already alerted */
-    if (!PreviousState)
-    {
-        /* Check if the thread is alertable, and blocked in the given mode */
-        if ((Thread->State == Waiting) &&
-            ((AlertMode == KernelMode) || (Thread->WaitMode == AlertMode)) &&
-            (Thread->Alertable))
-        {
-            /* Abort the wait to alert the thread */
-            KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
-        }
-        else
-        {
-            /* Otherwise, merely set the alerted state */
-            Thread->Alerted[AlertMode] = TRUE;
-        }
-    }
-
-    /* Release the Dispatcher Lock */
-    KiReleaseDispatcherLockFromDpcLevel();
-    KiReleaseApcLockFromDpcLevel(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
-
-    /* Return the old state */
-    return PreviousState;
-}
-
 BOOLEAN
 NTAPI
 KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
@@ -501,15 +559,6 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
     KiReleaseApcLockFromDpcLevel(&ApcLock);
     KiExitDispatcher(ApcLock.OldIrql);
     return OldState;
-}
-
-VOID
-NTAPI
-KeUninitThread(IN PKTHREAD Thread)
-{
-    /* Delete the stack */
-    MmDeleteKernelStack(Thread->StackBase, FALSE);
-    Thread->InitialStack = NULL;
 }
 
 NTSTATUS
@@ -679,70 +728,106 @@ KeInitializeThread(IN PKPROCESS Process,
 
 VOID
 NTAPI
-KeStartThread(IN OUT PKTHREAD Thread)
+KeUninitThread(IN PKTHREAD Thread)
 {
-    KLOCK_QUEUE_HANDLE LockHandle;
-#ifdef CONFIG_SMP
-    PKNODE Node;
-    PKPRCB NodePrcb;
-    ULONG Set, Mask;
-#endif
-    UCHAR IdealProcessor = 0;
-    PKPROCESS Process = Thread->ApcState.Process;
-
-    /* Setup static fields from parent */
-    Thread->Iopl = Process->Iopl;
-    Thread->Quantum = Process->QuantumReset;
-    Thread->QuantumReset = Process->QuantumReset;
-    Thread->SystemAffinityActive = FALSE;
-
-    /* Lock the process */
-    KiAcquireProcessLock(Process, &LockHandle);
-
-    /* Setup volatile data */
-    Thread->Priority = Process->BasePriority;
-    Thread->BasePriority = Process->BasePriority;
-    Thread->Affinity = Process->Affinity;
-    Thread->UserAffinity = Process->Affinity;
-
-#ifdef CONFIG_SMP
-    /* Get the KNODE and its PRCB */
-    Node = KeNodeBlock[Process->IdealNode];
-    NodePrcb = (PKPRCB)(KPCR_BASE + (Process->ThreadSeed * PAGE_SIZE));
-
-    /* Calculate affinity mask */
-    Set = ~NodePrcb->MultiThreadProcessorSet;
-    Mask = (ULONG)(Node->ProcessorMask & Process->Affinity);
-    Set &= Mask;
-    if (Set) Mask = Set;
-
-    /* Get the new thread seed */
-    IdealProcessor = KeFindNextRightSetAffinity(Process->ThreadSeed, Mask);
-    Process->ThreadSeed = IdealProcessor;
-
-    /* Sanity check */
-    ASSERT((Thread->UserAffinity & AFFINITY_MASK(IdealProcessor)));
-#endif
-
-    /* Set the Ideal Processor */
-    Thread->IdealProcessor = IdealProcessor;
-    Thread->UserIdealProcessor = IdealProcessor;
-
-    /* Lock the Dispatcher Database */
-    KiAcquireDispatcherLockAtDpcLevel();
-
-    /* Insert the thread into the process list */
-    InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
-
-    /* Increase the stack count */
-    ASSERT(Process->StackCount != MAXULONG_PTR);
-    Process->StackCount++;
-
-    /* Release locks and return */
-    KiReleaseDispatcherLockFromDpcLevel();
-    KiReleaseProcessLock(&LockHandle);
+    /* Delete the stack */
+    MmDeleteKernelStack(Thread->StackBase, FALSE);
+    Thread->InitialStack = NULL;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+KeCapturePersistentThreadState(IN PVOID CurrentThread,
+                               IN ULONG Setting1,
+                               IN ULONG Setting2,
+                               IN ULONG Setting3,
+                               IN ULONG Setting4,
+                               IN ULONG Setting5,
+                               IN PVOID ThreadState)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+#undef KeGetCurrentThread
+PKTHREAD
+NTAPI
+KeGetCurrentThread(VOID)
+{
+    /* Return the current thread on this PCR */
+    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+}
+
+/*
+ * @implemented
+ */
+KPROCESSOR_MODE
+NTAPI
+KeGetPreviousMode(VOID)
+{
+    /* Return the previous mode of this thread */
+    return KeGetCurrentThread()->PreviousMode;
+}
+
+/*
+ * @implemented
+ */
+ULONG
+NTAPI
+KeQueryRuntimeThread(IN PKTHREAD Thread,
+                     OUT PULONG UserTime)
+{
+    ASSERT_THREAD(Thread);
+
+    /* Return the User Time */
+    *UserTime = Thread->UserTime;
+
+    /* Return the Kernel Time */
+    return Thread->KernelTime;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeSetKernelStackSwapEnable(IN BOOLEAN Enable)
+{
+    BOOLEAN PreviousState;
+    PKTHREAD Thread = KeGetCurrentThread();
+
+    /* Save Old State */
+    PreviousState = Thread->EnableStackSwap;
+
+    /* Set New State */
+    Thread->EnableStackSwap = Enable;
+
+    /* Return Old State */
+    return PreviousState;
+}
+
+/*
+ * @implemented
+ */
+KPRIORITY
+NTAPI
+KeQueryPriorityThread(IN PKTHREAD Thread)
+{
+    ASSERT_THREAD(Thread);
+
+    /* Return the current priority */
+    return Thread->Priority;
+}
+
+
+// re-org
 /*
  * @implemented
  */
@@ -1144,95 +1229,3 @@ KeTerminateThread(IN KPRIORITY Increment)
     KiReleaseDispatcherLockFromDpcLevel();
     KiSwapThread(Thread, KeGetCurrentPrcb());
 }
-
-/* PUBLIC FUNCTIONS **********************************************************/
-
-/*
- * @unimplemented
- */
-VOID
-NTAPI
-KeCapturePersistentThreadState(IN PVOID CurrentThread,
-                               IN ULONG Setting1,
-                               IN ULONG Setting2,
-                               IN ULONG Setting3,
-                               IN ULONG Setting4,
-                               IN ULONG Setting5,
-                               IN PVOID ThreadState)
-{
-    UNIMPLEMENTED;
-}
-
-/*
- * @implemented
- */
-#undef KeGetCurrentThread
-PKTHREAD
-NTAPI
-KeGetCurrentThread(VOID)
-{
-    /* Return the current thread on this PCR */
-    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
-}
-
-/*
- * @implemented
- */
-KPROCESSOR_MODE
-NTAPI
-KeGetPreviousMode(VOID)
-{
-    /* Return the previous mode of this thread */
-    return KeGetCurrentThread()->PreviousMode;
-}
-
-/*
- * @implemented
- */
-ULONG
-NTAPI
-KeQueryRuntimeThread(IN PKTHREAD Thread,
-                     OUT PULONG UserTime)
-{
-    ASSERT_THREAD(Thread);
-
-    /* Return the User Time */
-    *UserTime = Thread->UserTime;
-
-    /* Return the Kernel Time */
-    return Thread->KernelTime;
-}
-
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-KeSetKernelStackSwapEnable(IN BOOLEAN Enable)
-{
-    BOOLEAN PreviousState;
-    PKTHREAD Thread = KeGetCurrentThread();
-
-    /* Save Old State */
-    PreviousState = Thread->EnableStackSwap;
-
-    /* Set New State */
-    Thread->EnableStackSwap = Enable;
-
-    /* Return Old State */
-    return PreviousState;
-}
-
-/*
- * @implemented
- */
-KPRIORITY
-NTAPI
-KeQueryPriorityThread(IN PKTHREAD Thread)
-{
-    ASSERT_THREAD(Thread);
-
-    /* Return the current priority */
-    return Thread->Priority;
-}
-
