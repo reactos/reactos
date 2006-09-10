@@ -220,7 +220,7 @@ NTAPI
 LdrRelocateImageWithBias(
     IN PVOID BaseAddress,
     IN LONGLONG AdditionalBias,
-    IN PUCHAR LoaderName,
+    IN PCCH LoaderName,
     IN ULONG Success,
     IN ULONG Conflict,
     IN ULONG Invalid
