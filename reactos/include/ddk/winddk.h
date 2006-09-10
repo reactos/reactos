@@ -1232,6 +1232,10 @@ typedef struct _KTIMER {
 #define ASSERT_SEMAPHORE(E) \
     ASSERT((E)->Header.Type == SemaphoreObject)
 
+#define ASSERT_EVENT(E) \
+    ASSERT(((E)->Header.Type == NotificationEvent) || \
+           ((E)->Header.Type == SynchronizationEvent))
+
 typedef struct _KMUTANT {
   DISPATCHER_HEADER  Header;
   LIST_ENTRY  MutantListEntry;
