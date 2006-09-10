@@ -202,7 +202,7 @@ HvpFindFree(
       while (*pFreeCellOffset != HCELL_NULL)
       {
          FreeCellData = (PHCELL_INDEX)HvGetCell(RegistryHive, *pFreeCellOffset);
-         if (HvpGetCellFullSize(RegistryHive, FreeCellData) >= Size)
+         if ((ULONG)HvpGetCellFullSize(RegistryHive, FreeCellData) >= Size)
          {
             FreeCellOffset = *pFreeCellOffset;
             *pFreeCellOffset = *FreeCellData;
@@ -299,7 +299,7 @@ HvAllocateCell(
 
    /* Split the block in two parts */
    /* FIXME: There is some minimal cell size that we must respect. */
-   if (FreeCell->Size > Size + sizeof(HCELL_INDEX))
+   if ((ULONG)FreeCell->Size > Size + sizeof(HCELL_INDEX))
    {
       NewCell = (PHCELL)((ULONG_PTR)FreeCell + Size);
       NewCell->Size = FreeCell->Size - Size;
@@ -344,7 +344,7 @@ HvReallocateCell(
     * FIXME: Merge with adjacent free cell if possible.
     * FIXME: Implement shrinking.
     */
-   if (Size > -OldCellSize)
+   if (Size > (ULONG)-OldCellSize)
    {
       NewCellIndex = HvAllocateCell(RegistryHive, Size, Storage);
       if (NewCellIndex == HCELL_NULL)
@@ -393,8 +393,8 @@ HvFreeCell(
       if (Neighbor->Size > 0)
       {
          HvpRemoveFree(RegistryHive, Neighbor,
-                       ((HCELL_INDEX)Neighbor - (HCELL_INDEX)Bin +
-                       Bin->FileOffset) | (CellIndex & HCELL_TYPE_MASK));
+                       ((HCELL_INDEX)((ULONG_PTR)Neighbor - (ULONG_PTR)Bin +
+                       Bin->FileOffset)) | (CellIndex & HCELL_TYPE_MASK));
          Free->Size += Neighbor->Size;
       }
    }
@@ -409,8 +409,8 @@ HvFreeCell(
             Neighbor->Size += Free->Size;
             if (CellType == HvStable)
                HvMarkCellDirty(RegistryHive,
-                               (HCELL_INDEX)Neighbor - (HCELL_INDEX)Bin +
-                               Bin->FileOffset);
+                               (HCELL_INDEX)((ULONG_PTR)Neighbor - (ULONG_PTR)Bin +
+                               Bin->FileOffset));
             return;
          }
          Neighbor = (PHCELL)((ULONG_PTR)Neighbor + Neighbor->Size);

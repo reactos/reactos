@@ -24,17 +24,17 @@ HvpAddBin(
    PHCELL Block;
 
    BinSize = ROUND_UP(Size + sizeof(HBIN), HV_BLOCK_SIZE);
-   BlockCount = BinSize / HV_BLOCK_SIZE;
+   BlockCount = (ULONG)(BinSize / HV_BLOCK_SIZE);
 
    Bin = RegistryHive->Allocate(BinSize, TRUE);
    if (Bin == NULL)
       return NULL;
-   RtlZeroMemory(Bin, sizeof(HBIN));
+   RtlZeroMemory(Bin, BinSize);
 
    Bin->Signature = HV_BIN_SIGNATURE;
    Bin->FileOffset = RegistryHive->Storage[Storage].Length *
                     HV_BLOCK_SIZE;
-   Bin->Size = BinSize;
+   Bin->Size = (ULONG)BinSize;
 
    /* Allocate new block list */
    OldBlockListSize = RegistryHive->Storage[Storage].Length;
@@ -65,7 +65,7 @@ HvpAddBin(
 
    /* Initialize a free block in this heap. */
    Block = (PHCELL)(Bin + 1);
-   Block->Size = BinSize - sizeof(HBIN);
+   Block->Size = (LONG)(BinSize - sizeof(HBIN));
 
    if (Storage == HvStable)
    {
