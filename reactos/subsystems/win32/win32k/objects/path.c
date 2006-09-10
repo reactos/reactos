@@ -252,8 +252,31 @@ HRGN
 STDCALL
 NtGdiPathToRegion(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return 0;
+   GdiPath *pPath;
+   HRGN  hrgnRval = 0;
+   DC *pDc;
+   
+   DPRINT("Enter %s\n", __FUNCTION__);
+   
+   pDc = DC_LockDc(hDC);
+   if(!pDc) return NULL;
+
+   pPath = &pDc->w.path;
+
+   if(pPath->state!=PATH_Closed) 
+   {
+      //FIXME: check that setlasterror is being called correctly
+      SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+   }
+   else
+   {
+      /* FIXME: Should we empty the path even if conversion failed? */
+      if(PATH_PathToRegion(pPath, pDc->w.polyFillMode, &hrgnRval))
+           PATH_EmptyPath(pPath);
+   }
+   
+   DC_UnlockDc(pDc);
+   return hrgnRval;
 }
 
 BOOL
