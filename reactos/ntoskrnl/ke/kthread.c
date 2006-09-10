@@ -200,10 +200,10 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 }
 
 NTSTATUS
-NTAPI
-KiSwapThread(VOID)
+FASTCALL
+KiSwapThread(IN PKTHREAD CurrentThread,
+             IN PKPRCB Prcb)
 {
-    PKTHREAD CurrentThread = KeGetCurrentThread();
     BOOLEAN ApcState;
 
     /* Find a new thread to run */
@@ -1068,10 +1068,10 @@ KeRevertToUserAffinityThread(VOID)
 /*
  * @implemented
  */
-CCHAR
+UCHAR
 STDCALL
 KeSetIdealProcessorThread(IN PKTHREAD Thread,
-                          IN CCHAR Processor)
+                          IN UCHAR Processor)
 {
     CCHAR PreviousIdealProcessor;
     KIRQL OldIrql;

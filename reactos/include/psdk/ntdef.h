@@ -64,6 +64,8 @@ typedef STRING CANSI_STRING;
 typedef PSTRING PCANSI_STRING;
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 typedef CONST CHAR *LPCCH, *PCCH;
+typedef signed char SCHAR;
+typedef SCHAR *PSCHAR;
 typedef enum _SECTION_INHERIT {
   ViewShare = 1,
   ViewUnmap = 2

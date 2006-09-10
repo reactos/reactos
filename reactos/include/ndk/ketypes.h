@@ -60,6 +60,13 @@ Author:
 #define KI_USER_SHARED_DATA_PHYSICAL    0x41000
 
 //
+// Quantum values and decrements
+//
+#define MAX_QUANTUM                     0x7F
+#define WAIT_QUANTUM_DECREMENT          1
+#define CLOCK_QUANTUM_DECREMENT         3
+
+//
 // Kernel Feature Bits
 //
 #define KF_V86_VIS                      0x00000001
@@ -679,13 +686,13 @@ typedef struct _KTHREAD
     volatile UCHAR NextProcessor;
     volatile UCHAR DeferredProcessor;
     UCHAR AdjustReason;
-    UCHAR AdjustIncrement;
+    SCHAR AdjustIncrement;
     KSPIN_LOCK ApcQueueLock;
     ULONG ContextSwitches;
     volatile UCHAR State;
     UCHAR NpxState;
     UCHAR WaitIrql;
-    UCHAR WaitMode;
+    SCHAR WaitMode;
     LONG WaitStatus;
     union
     {
@@ -695,7 +702,7 @@ typedef struct _KTHREAD
     UCHAR Alertable;
     UCHAR WaitNext;
     UCHAR WaitReason;
-    UCHAR Priority;
+    SCHAR Priority;
     UCHAR EnableStackSwap;
     volatile UCHAR SwapBusy;
     UCHAR Alerted[2];
@@ -752,7 +759,7 @@ typedef struct _KTHREAD
             struct
             {
                 UCHAR WaitBlockFill1[47];
-                UCHAR PreviousMode;
+                SCHAR PreviousMode;
             };
             struct
             {
@@ -810,10 +817,10 @@ typedef struct _KTHREAD
         union
         {
             UCHAR SavedApcStateFill[23];
-            CHAR FreezeCount;
+            SCHAR FreezeCount;
         };
     };
-    CHAR SuspendCount;
+    SCHAR SuspendCount;
     UCHAR UserIdealProcessor;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     union
@@ -838,7 +845,7 @@ typedef struct _KTHREAD
         struct
         {
             UCHAR SuspendApcFill0[1];
-            CHAR Quantum;
+            SCHAR Quantum;
         };
         struct
         {
@@ -888,6 +895,9 @@ typedef struct _KTHREAD
 } KTHREAD;
 #include <poppack.h>
 
+#define ASSERT_THREAD(object) \
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == ThreadObject))
+
 //
 // Kernel Process (KPROCESS)
 //
@@ -923,8 +933,8 @@ typedef struct _KPROCESS
         };
         ULONG ProcessFlags;
     };
-    CHAR BasePriority;
-    CHAR QuantumReset;
+    SCHAR BasePriority;
+    SCHAR QuantumReset;
     UCHAR State;
     UCHAR ThreadSeed;
     UCHAR PowerState;

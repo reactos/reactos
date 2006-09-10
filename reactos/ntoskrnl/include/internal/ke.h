@@ -132,28 +132,8 @@ extern VOID KiTrap2(VOID);
 
 /* MACROS *************************************************************************/
 
-/*
- * On UP machines, we don't actually have a spinlock, we merely raise
- * IRQL to DPC level.
- */
-#ifdef CONFIG_SMP
-#define KeInitializeDispatcher() KeInitializeSpinLock(&DispatcherDatabaseLock);
-#define KeAcquireDispatcherDatabaseLock() KfAcquireSpinLock(&DispatcherDatabaseLock);
-#define KeAcquireDispatcherDatabaseLockAtDpcLevel() \
-    KeAcquireSpinLockAtDpcLevel (&DispatcherDatabaseLock);
-#define KeReleaseDispatcherDatabaseLockFromDpcLevel() \
-    KeReleaseSpinLockFromDpcLevel(&DispatcherDatabaseLock);
-#define KeReleaseDispatcherDatabaseLock(OldIrql) \
-    KiExitDispatcher(OldIrql);
-#else
-#define KeInitializeDispatcher()
-#define KeAcquireDispatcherDatabaseLock() KeRaiseIrqlToDpcLevel();
-#define KeReleaseDispatcherDatabaseLock(OldIrql) KiExitDispatcher(OldIrql);
-#define KeAcquireDispatcherDatabaseLockAtDpcLevel()
-#define KeReleaseDispatcherDatabaseLockFromDpcLevel()
-#endif
-
 #define AFFINITY_MASK(Id) KiMask32Array[Id]
+#define PRIORITY_MASK(Id) KiMask32Array[Id]
 
 /* The following macro initializes a dispatcher object's header */
 #define KeInitializeDispatcherHeader(Header, t, s, State)                   \
@@ -165,8 +145,6 @@ extern VOID KiTrap2(VOID);
     (Header)->SignalState = State;                                          \
     InitializeListHead(&((Header)->WaitListHead));                          \
 }
-
-extern KSPIN_LOCK DispatcherDatabaseLock;
 
 #define KeEnterCriticalRegion()                                             \
 {                                                                           \
@@ -209,9 +187,11 @@ extern KSPIN_LOCK DispatcherDatabaseLock;
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
-/* threadsch.c ********************************************************************/
-
-/* Thread Scheduler Functions */
+#define KeInitializeDispatcher()
+#define KeAcquireDispatcherDatabaseLock() KeRaiseIrqlToDpcLevel();
+#define KeReleaseDispatcherDatabaseLock(OldIrql) KiExitDispatcher(OldIrql);
+#define KeAcquireDispatcherDatabaseLockAtDpcLevel()
+#define KeReleaseDispatcherDatabaseLockFromDpcLevel()
 
 /* Readies a Thread for Execution. */
 BOOLEAN
@@ -225,9 +205,10 @@ KiDispatchThread(ULONG NewThreadStatus);
 
 /* Finds a new thread to run */
 NTSTATUS
-NTAPI
+FASTCALL
 KiSwapThread(
-    VOID
+    IN PKTHREAD Thread,
+    IN PKPRCB Prcb
 );
 
 VOID
@@ -238,7 +219,7 @@ NTSTATUS
 NTAPI
 KeSuspendThread(PKTHREAD Thread);
 
-NTSTATUS
+BOOLEAN
 FASTCALL
 KiSwapContext(
     IN PKTHREAD CurrentThread,
@@ -252,6 +233,23 @@ KiAdjustQuantumThread(IN PKTHREAD Thread);
 VOID
 FASTCALL
 KiExitDispatcher(KIRQL OldIrql);
+
+VOID
+NTAPI
+KiDeferredReadyThread(IN PKTHREAD Thread);
+
+KAFFINITY
+NTAPI
+KiSetAffinityThread(
+    IN PKTHREAD Thread,
+    IN KAFFINITY Affinity
+);
+
+PKTHREAD
+NTAPI
+KiSelectNextThread(
+    IN PKPRCB Prcb
+);
 
 /* gmutex.c ********************************************************************/
 
@@ -438,6 +436,30 @@ NTSTATUS
 NTAPI
 KeReleaseThread(PKTHREAD Thread);
 
+VOID
+NTAPI
+KiSuspendRundown(
+    IN PKAPC Apc
+);
+
+VOID
+NTAPI
+KiSuspendNop(
+    IN PKAPC Apc,
+    IN PKNORMAL_ROUTINE *NormalRoutine,
+    IN PVOID *NormalContext,
+    IN PVOID *SystemArgument1,
+    IN PVOID *SystemArgument2
+);
+
+VOID
+NTAPI
+KiSuspendThread(
+    IN PVOID NormalContext,
+    IN PVOID SystemArgument1,
+    IN PVOID SystemArgument2
+);
+
 LONG
 NTAPI
 KeQueryBasePriorityThread(IN PKTHREAD Thread);
@@ -445,9 +467,9 @@ KeQueryBasePriorityThread(IN PKTHREAD Thread);
 VOID
 NTAPI
 KiSetPriorityThread(
-    PKTHREAD Thread,
-    KPRIORITY Priority,
-    PBOOLEAN Released
+    IN PKTHREAD Thread,
+    IN KPRIORITY Priority,
+    IN PBOOLEAN Released // hack
 );
 
 BOOLEAN
@@ -823,6 +845,13 @@ VOID
 NTAPI
 KiInitSystem(
     VOID
+);
+
+VOID
+FASTCALL
+KiInsertQueueApc(
+    IN PKAPC Apc,
+    IN KPRIORITY PriorityBoost
 );
 
 #include "ke_x.h"

@@ -426,7 +426,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
 
                 /* Find a new thread to run */
                 KiAddThreadToWaitList(Thread, Swappable);
-                Status = KiSwapThread();
+                Status = KiSwapThread(Thread, KeGetCurrentPrcb());
 
                 /* Reset the wait reason */
                 Thread->WaitReason = 0;

@@ -85,7 +85,7 @@ KeWaitForGate(IN PKGATE Gate,
             if (CurrentThread->Queue) KiWakeQueue(CurrentThread->Queue);
 
             /* Find a new thread to run */
-            Status = KiSwapThread();
+            Status = KiSwapThread(CurrentThread, KeGetCurrentPrcb());
 
             /* Check if we were executing an APC */
             if (Status != STATUS_KERNEL_APC) return;

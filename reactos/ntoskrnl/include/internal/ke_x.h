@@ -248,3 +248,464 @@ KiRecalculateDueTime(IN PLARGE_INTEGER OriginalDueTime,
         break;                                                              \
     }                                                                       \
 }
+
+//
+// Thread Scheduling Routines
+//
+#ifndef _CONFIG_SMP
+KIRQL
+FORCEINLINE
+KiAcquireDispatcherLock(VOID)
+{
+    /* Raise to DPC level */
+    return KeRaiseIrqlToDpcLevel();
+}
+
+VOID
+FORCEINLINE
+KiReleaseDispatcherLock(IN KIRQL OldIrql)
+{
+    /* Just exit the dispatcher */
+    KiExitDispatcher(OldIrql);
+}
+
+VOID
+FORCEINLINE
+KiAcquireDispatcherLockAtDpcLevel(VOID)
+{
+    /* This is a no-op at DPC Level for UP systems */
+    return;
+}
+
+VOID
+FORCEINLINE
+KiReleaseDispatcherLockFromDpcLevel(VOID)
+{
+    /* This is a no-op at DPC Level for UP systems */
+    return;
+}
+
+//
+// This routine makes the thread deferred ready on the boot CPU.
+//
+FORCEINLINE
+VOID
+KiInsertDeferredReadyList(IN PKTHREAD Thread)
+{
+    /* Set the thread to deferred state and boot CPU */
+    Thread->State = DeferredReady;
+    Thread->DeferredProcessor = 0;
+
+    /* Make the thread ready immediately */
+    KiDeferredReadyThread(Thread);
+}
+
+FORCEINLINE
+VOID
+KiRescheduleThread(IN BOOLEAN NewThread,
+                   IN ULONG Cpu)
+{
+    /* This is meaningless on UP systems */
+    UNREFERENCED_PARAMETER(NewThread);
+    UNREFERENCED_PARAMETER(Cpu);
+}
+
+//
+// This routine protects against multiple CPU acquires, it's meaningless on UP.
+//
+FORCEINLINE
+VOID
+KiSetThreadSwapBusy(IN PKTHREAD Thread)
+{
+    UNREFERENCED_PARAMETER(Thread);
+}
+
+//
+// This routine protects against multiple CPU acquires, it's meaningless on UP.
+//
+FORCEINLINE
+VOID
+KiAcquirePrcbLock(IN PKPRCB Prcb)
+{
+    UNREFERENCED_PARAMETER(Prcb);
+}
+
+//
+// This routine protects against multiple CPU acquires, it's meaningless on UP.
+//
+FORCEINLINE
+VOID
+KiReleasePrcbLock(IN PKPRCB Prcb)
+{
+    UNREFERENCED_PARAMETER(Prcb);
+}
+
+//
+// This routine protects against multiple CPU acquires, it's meaningless on UP.
+//
+FORCEINLINE
+VOID
+KiAcquireThreadLock(IN PKTHREAD Thread)
+{
+    UNREFERENCED_PARAMETER(Thread);
+}
+
+//
+// This routine protects against multiple CPU acquires, it's meaningless on UP.
+//
+FORCEINLINE
+VOID
+KiReleaseThreadLock(IN PKTHREAD Thread)
+{
+    UNREFERENCED_PARAMETER(Thread);
+}
+
+FORCEINLINE
+VOID
+KiCheckDeferredReadyList(IN PKPRCB Prcb)
+{
+    /* There are no deferred ready lists on UP systems */
+    UNREFERENCED_PARAMETER(Prcb);
+}
+
+FORCEINLINE
+VOID
+KiRundownThread(IN PKTHREAD Thread)
+{
+    /* Check if this is the NPX Thread */
+    if (KeGetCurrentPrcb()->NpxThread == Thread)
+    {
+        /* Clear it */
+        KeGetCurrentPrcb()->NpxThread = NULL;
+#ifdef __GNUC__
+        __asm__("fninit\n\t");
+#else
+        __asm fninit;
+#endif
+    }
+}
+
+#else
+
+KIRQL
+FORCEINLINE
+KiAcquireDispatcherLock(VOID)
+{
+    /* Raise to synchronization level and acquire the dispatcher lock */
+    return KeAcquireQueuedSpinLockRaiseToSynch(LockQueueDispatcherLock);
+}
+
+VOID
+FORCEINLINE
+KiReleaseDispatcherLock(IN KIRQL OldIrql)
+{
+    /* First release the lock */
+    KeReleaseQueuedSpinLockFromDpcLevel(&KeGetCurrentPrcb()->
+                                        LockQueue[LockQueueDispatcherLock]);
+
+    /* Then exit the dispatcher */
+    KiExitDispatcher(OldIrql);
+}
+
+//
+// This routine inserts a thread into the deferred ready list of the given CPU
+//
+FORCEINLINE
+VOID
+KiInsertDeferredReadyList(IN PKTHREAD Thread)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Set the thread to deferred state and CPU */
+    Thread->State = DeferredReady;
+    Thread->DeferredProcessor = Prcb->Number;
+
+    /* Add it on the list */
+    PushEntryList(&Prcb->DeferredReadyListHead, &Thread->SwapListEntry);
+}
+
+FORCEINLINE
+VOID
+KiRescheduleThread(IN BOOLEAN NewThread,
+                   IN ULONG Cpu)
+{
+    /* Check if a new thread needs to be scheduled on a different CPU */
+    if ((NewThread) && !(KeGetPcr()->Number == Cpu))
+    {
+        /* Send an IPI to request delivery */
+        KiIpiSendRequest(AFFINITY_MASK(Cpu), IPI_DPC);
+    }
+}
+
+//
+// This routine sets the current thread in a swap busy state, which ensure that
+// nobody else tries to swap it concurrently.
+//
+FORCEINLINE
+VOID
+KiSetThreadSwapBusy(IN PKTHREAD Thread)
+{
+    /* Make sure nobody already set it */
+    ASSERT(Thread->SwapBusy == FALSE);
+
+    /* Set it ourselves */
+    Thread->SwapBusy = TRUE;
+}
+
+//
+// This routine acquires the PRCB lock so that only one caller can touch
+// volatile PRCB data.
+//
+// Since this is a simple optimized spin-lock, it must be be only acquired
+// at dispatcher level or higher!
+//
+FORCEINLINE
+VOID
+KiAcquirePrcbLock(IN PKPRCB Prcb)
+{
+    /* Make sure we're at a safe level to touch the PRCB lock */
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Start acquire loop */
+    for (;;)
+    {
+        /* Acquire the lock and break out if we acquired it first */
+        if (!InterlockedExchange(&Prcb->PrcbLock, 1)) break;
+
+        /* Loop until the other CPU releases it */
+        do
+        {
+            /* Let the CPU know that this is a loop */
+            YieldProcessor();
+        } while (Prcb->PrcbLock);
+    }
+}
+
+//
+// This routine releases the PRCB lock so that other callers can touch
+// volatile PRCB data.
+//
+// Since this is a simple optimized spin-lock, it must be be only acquired
+// at dispatcher level or higher!
+//
+FORCEINLINE
+VOID
+KiReleasePrcbLock(IN PKPRCB Prcb)
+{
+    /* Make sure it's acquired! */
+    ASSERT(Prcb->PrcbLock != 0);
+
+    /* Release it */
+    InterlockedAnd(&Prcb->PrcbLock, 0);
+}
+
+//
+// This routine acquires the thread lock so that only one caller can touch
+// volatile thread data.
+//
+// Since this is a simple optimized spin-lock, it must be be only acquired
+// at dispatcher level or higher!
+//
+FORCEINLINE
+VOID
+KiAcquireThreadLock(IN PKTHREAD Thread)
+{
+    /* Make sure we're at a safe level to touch the thread lock */
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Start acquire loop */
+    for (;;)
+    {
+        /* Acquire the lock and break out if we acquired it first */
+        if (!InterlockedExchange(&Thread->ThreadLock, 1)) break;
+
+        /* Loop until the other CPU releases it */
+        do
+        {
+            /* Let the CPU know that this is a loop */
+            YieldProcessor();
+        } while (Thread->ThreadLock);
+    }
+}
+
+//
+// This routine releases the thread lock so that other callers can touch
+// volatile thread data.
+//
+// Since this is a simple optimized spin-lock, it must be be only acquired
+// at dispatcher level or higher!
+//
+FORCEINLINE
+VOID
+KiReleaseThreadLock(IN PKTHREAD Thread)
+{
+    /* Release it */
+    InterlockedAnd(&Thread->ThreadLock, 0);
+}
+
+FORCEINLINE
+VOID
+KiCheckDeferredReadyList(IN PKPRCB Prcb)
+{
+    /* Scan the deferred ready lists if required */
+    if (Prcb->DeferredReadyListHead.Next) KiProcessDeferredReadyList(Prcb);
+}
+
+#endif
+
+//
+// This routine queues a thread that is ready on the PRCB's ready lists.
+// If this thread cannot currently run on this CPU, then the thread is
+// added to the deferred ready list instead.
+//
+// This routine must be entered with the PRCB lock held and it will exit
+// with the PRCB lock released!
+//
+FORCEINLINE
+VOID
+KxQueueReadyThread(IN PKTHREAD Thread,
+                   IN PKPRCB Prcb)
+{
+    BOOLEAN Preempted;
+    KPRIORITY Priority;
+
+    /* Sanity checks */
+    ASSERT(Prcb == KeGetCurrentPrcb());
+    ASSERT(Thread->State == Running);
+    ASSERT(Thread->NextProcessor == Prcb->Number);
+
+    /* Check if this thread is allowed to run in this CPU */
+#ifdef _CONFIG_SMP
+    if ((Thread->Affinity) & (Prcb->SetMember))
+#else
+    if (TRUE)
+#endif
+    {
+        /* Set thread ready for execution */
+        Thread->State = Ready;
+
+        /* Save current priority and if someone had pre-empted it */
+        Priority = Thread->Priority;
+        Preempted = Thread->Preempted;
+
+        /* We're not pre-empting now, and set the wait time */
+        Thread->Preempted = FALSE;
+        Thread->WaitTime = KeTickCount.LowPart;
+
+        /* Sanity check */
+        ASSERT((Priority >= 0) && (Priority <= HIGH_PRIORITY));
+
+        /* Insert this thread in the appropriate order */
+        Preempted ? InsertHeadList(&Prcb->DispatcherReadyListHead[Priority],
+                                   &Thread->WaitListEntry) :
+                    InsertTailList(&Prcb->DispatcherReadyListHead[Priority],
+                                   &Thread->WaitListEntry);
+
+        /* Update the ready summary */
+        Prcb->ReadySummary |= PRIORITY_MASK(Priority);
+
+        /* Sanity check */
+        ASSERT(Priority == Thread->Priority);
+
+        /* Release the PRCB lock */
+        KiReleasePrcbLock(Prcb);
+    }
+    else
+    {
+        /* Otherwise, prepare this thread to be deferred */
+        Thread->State = DeferredReady;
+        Thread->DeferredProcessor = Prcb->Number;
+
+        /* Release the lock and defer scheduling */
+        KiReleasePrcbLock(Prcb);
+        KiDeferredReadyThread(Thread);
+    }
+}
+
+//
+// This routine scans for an appropriate ready thread to select at the
+// given priority and for the given CPU.
+//
+FORCEINLINE
+PKTHREAD
+KiSelectReadyThread(IN KPRIORITY Priority,
+                    IN PKPRCB Prcb)
+{
+    LONG PriorityMask, PrioritySet, HighPriority;
+    PLIST_ENTRY ListEntry;
+    PKTHREAD Thread;
+
+    /* Save the current mask and get the priority set for the CPU */
+    PriorityMask = Priority;
+    PrioritySet = Prcb->ReadySummary >> (UCHAR)Priority;
+    if (!PrioritySet) return NULL;
+
+    /*  Get the highest priority possible */
+    BitScanReverse(&HighPriority, PrioritySet);
+    ASSERT((PrioritySet & PRIORITY_MASK(HighPriority)) != 0);
+    HighPriority += PriorityMask;
+
+    /* Make sure the list isn't at highest priority */
+    ASSERT(IsListEmpty(&Prcb->DispatcherReadyListHead[HighPriority]) == FALSE);
+
+    /* Get the first thread on the list */
+    ListEntry = &Prcb->DispatcherReadyListHead[HighPriority];
+    Thread = CONTAINING_RECORD(ListEntry, KTHREAD, WaitListEntry);
+
+    /* Make sure this thread is here for a reason */
+    ASSERT(HighPriority == Thread->Priority);
+    ASSERT(Thread->Affinity & AFFINITY_MASK(Prcb->Number));
+    ASSERT(Thread->NextProcessor == Prcb->Number);
+
+    /* Remove it from the list */
+    RemoveEntryList(&Thread->WaitListEntry);
+    if (IsListEmpty(&Thread->WaitListEntry))
+    {
+        /* The list is empty now, reset the ready summary */
+        Prcb->ReadySummary ^= PRIORITY_MASK(HighPriority);
+    }
+
+    /* Sanity check and return the thread */
+    ASSERT((Thread == NULL) ||
+           (Thread->BasePriority == 0) ||
+           (Thread->Priority != 0));
+    return Thread;
+}
+
+//
+// This routine computes the new priority for a thread. It is only valid for
+// threads with priorities in the dynamic priority range.
+//
+SCHAR
+FORCEINLINE
+KiComputeNewPriority(IN PKTHREAD Thread)
+{
+    SCHAR Priority;
+
+    /* Priority sanity checks */
+    ASSERT((Thread->PriorityDecrement >= 0) &&
+           (Thread->PriorityDecrement <= Thread->Priority));
+    ASSERT((Thread->Priority < LOW_REALTIME_PRIORITY) ?
+            TRUE : (Thread->PriorityDecrement == 0));
+
+    /* Get the current priority */
+    Priority = Thread->Priority;
+    if (Priority < LOW_REALTIME_PRIORITY)
+    {
+        /* Set the New Priority and add the Priority Decrement */
+        Priority += (Priority - Thread->PriorityDecrement - 1);
+
+        /* Don't go out of bounds */
+        if (Priority < Thread->BasePriority) Priority = Thread->BasePriority;
+
+        /* Reset the priority decrement */
+        Thread->PriorityDecrement = 0;
+    }
+
+    /* Sanity check */
+    ASSERT((Thread->BasePriority == 0) || (Priority != 0));
+
+    /* Return the new priority */
+    return Priority;
+}
+

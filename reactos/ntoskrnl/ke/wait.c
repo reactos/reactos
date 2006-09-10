@@ -352,7 +352,7 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
 
             /* Find a new thread to run */
             KiAddThreadToWaitList(CurrentThread, Swappable);
-            WaitStatus = KiSwapThread();
+            WaitStatus = KiSwapThread(CurrentThread, KeGetCurrentPrcb());
             ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
             /* Check if we were executing an APC or if we timed out */
@@ -540,7 +540,7 @@ KeWaitForSingleObject(IN PVOID Object,
 
             /* Find a new thread to run */
             KiAddThreadToWaitList(CurrentThread, Swappable);
-            WaitStatus = KiSwapThread();
+            WaitStatus = KiSwapThread(CurrentThread, KeGetCurrentPrcb());
             ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
             /* Check if we were executing an APC */
@@ -828,7 +828,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
 
             /* Find a new thread to run */
             KiAddThreadToWaitList(CurrentThread, Swappable);
-            WaitStatus = KiSwapThread();
+            WaitStatus = KiSwapThread(CurrentThread, KeGetCurrentPrcb());
             ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
             /* Check if we were executing an APC */
