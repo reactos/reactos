@@ -18,7 +18,7 @@ int note( char *format, ... ) {
     va_list arg_begin;
     va_start( arg_begin, format );
 
-    ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
+    ret = _vsnprintf( buf, sizeof(buf), format, arg_begin );
 
     DPRINT("NOTE: %s\n", buf);
 
@@ -31,7 +31,7 @@ int debug( char *format, ... ) {
     va_list arg_begin;
     va_start( arg_begin, format );
 
-    ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
+    ret = _vsnprintf( buf, sizeof(buf), format, arg_begin );
 
     DPRINT("DEBUG: %s\n", buf);
 
@@ -44,7 +44,7 @@ int warn( char *format, ... ) {
     va_list arg_begin;
     va_start( arg_begin, format );
 
-    ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
+    ret = _vsnprintf( buf, sizeof(buf), format, arg_begin );
 
     DPRINT("WARN: %s\n", buf);
 
@@ -57,7 +57,7 @@ int warning( char *format, ... ) {
     va_list arg_begin;
     va_start( arg_begin, format );
 
-    ret = vsnprintf( buf, sizeof(buf), format, arg_begin );
+    ret = _vsnprintf( buf, sizeof(buf), format, arg_begin );
 
     DPRINT("WARNING: %s\n", buf);
 
@@ -69,7 +69,7 @@ void error( char *format, ... ) {
     va_list arg_begin;
     va_start( arg_begin, format );
 
-    vsnprintf( buf, sizeof(buf), format, arg_begin );
+    _vsnprintf( buf, sizeof(buf), format, arg_begin );
 
     DPRINT1("ERROR: %s\n", buf);
 }
