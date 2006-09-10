@@ -891,7 +891,7 @@ PsDereferencePrimaryToken@4
 PsDisableImpersonation@8
 PsEstablishWin32Callouts@4
 PsGetContextThread@12
-PsGetCurrentProcess@0=KeGetCurrentProcess@0
+PsGetCurrentProcess@0=IoGetCurrentProcess@0
 PsGetCurrentProcessId@0
 PsGetCurrentProcessWin32Process@0
 PsGetCurrentProcessSessionId@0

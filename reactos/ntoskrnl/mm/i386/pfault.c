@@ -79,7 +79,7 @@ ULONG KiPageFaultHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
       if (!NT_SUCCESS(Status))
       {
          /* FIXME: This should use ->VdmObjects */
-         if(!KeGetCurrentProcess()->Unused)
+         if(!PsGetCurrentProcess()->Pcb.Unused)
          {
             *((PKV86M_TRAP_FRAME)Tf)->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
 	 }

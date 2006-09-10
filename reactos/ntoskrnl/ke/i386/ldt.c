@@ -157,7 +157,7 @@ NtSetLdtEntries (ULONG Selector1,
 
   KeAcquireSpinLock(&LdtLock, &oldIrql);
 
-  LdtDescriptor = (PUSHORT) &KeGetCurrentProcess()->LdtDescriptor;
+  LdtDescriptor = (PUSHORT) &PsGetCurrentProcess()->Pcb.LdtDescriptor;
   LdtBase = LdtDescriptor[1] |
                   ((LdtDescriptor[2] & 0xff) << 16) |
                   ((LdtDescriptor[3] & ~0xff) << 16);

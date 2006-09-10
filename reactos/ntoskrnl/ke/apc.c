@@ -658,7 +658,7 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
              PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread = KeGetCurrentThread();
-    PKPROCESS Process = KeGetCurrentProcess();
+    PKPROCESS Process = Thread->ApcState.Process;
     PKTRAP_FRAME OldTrapFrame;
     PLIST_ENTRY ApcListEntry;
     PKAPC Apc;

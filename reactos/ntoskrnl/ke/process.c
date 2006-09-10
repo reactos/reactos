@@ -1,13 +1,13 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/process.c
  * PURPOSE:         Kernel Process Management and System Call Tables
  * PROGRAMMERS:     Alex Ionescu
  *                  Gregor Anich
  */
 
-/* INCLUDES ********(*********************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
@@ -28,16 +28,9 @@ PVOID KeUserCallbackDispatcher;
 PVOID KeUserExceptionDispatcher;
 PVOID KeRaiseUserExceptionDispatcher;
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
-PKPROCESS
-STDCALL
-KeGetCurrentProcess(VOID)
-{
-    return(&(PsGetCurrentProcess()->Pcb));
-}
-
-static __inline
+FORCEINLINE
 VOID
 NTAPI
 UpdatePageDirs(IN PKTHREAD Thread,
@@ -65,10 +58,9 @@ KiAttachProcess(PKTHREAD Thread,
                 PRKAPC_STATE SavedApcState)
 {
     ASSERT(Process != Thread->ApcState.Process);
-    DPRINT("KiAttachProcess(Thread: %x, Process: %x, SavedApcState: %x\n",
-            Thread, Process, SavedApcState);
 
     /* Increase Stack Count */
+    ASSERT(Process->StackCount != MAXULONG_PTR);
     Process->StackCount++;
 
     /* Swap the APC Environment */
@@ -85,7 +77,8 @@ KiAttachProcess(PKTHREAD Thread,
     /* Update Environment Pointers if needed*/
     if (SavedApcState == &Thread->SavedApcState)
     {
-        Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->SavedApcState;
+        Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->
+                                                          SavedApcState;
         Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->ApcState;
         Thread->ApcStateIndex = AttachedApcEnvironment;
     }
@@ -107,7 +100,7 @@ KiAttachProcess(PKTHREAD Thread,
     else
     {
         DPRINT1("Errr. ReactOS doesn't support paging out processes yet...\n");
-        DbgBreakPoint();
+        ASSERT(FALSE);
     }
 }
 
@@ -190,6 +183,8 @@ KeSetProcess(PKPROCESS Process,
 {
     KIRQL OldIrql;
     ULONG OldState;
+    ASSERT_PROCESS(Process);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Lock Dispatcher */
     OldIrql = KiAcquireDispatcherLock();
@@ -199,7 +194,10 @@ KeSetProcess(PKPROCESS Process,
 
     /* Signal the Process */
     Process->Header.SignalState = TRUE;
-    if ((OldState == 0) && IsListEmpty(&Process->Header.WaitListHead) != TRUE)
+
+    /* Check if was unsignaled and has waiters */
+    if (!(OldState) &&
+        !(IsListEmpty(&Process->Header.WaitListHead)))
     {
         /* Satisfy waits */
         KiWaitTest((PVOID)Process, Increment);
@@ -210,15 +208,6 @@ KeSetProcess(PKPROCESS Process,
 
     /* Return the previous State */
     return OldState;
-}
-
-VOID
-NTAPI
-KiSwapProcess(PKPROCESS NewProcess,
-              PKPROCESS OldProcess)
-{
-    DPRINT("Switching CR3 to: %x\n", NewProcess->DirectoryTableBase.u.LowPart);
-    Ke386SetPageTableDirectory(NewProcess->DirectoryTableBase.u.LowPart);
 }
 
 VOID
@@ -419,6 +408,8 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     return OldPriority;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
+
 /*
  * @implemented
  */
@@ -464,12 +455,12 @@ KeAttachProcess(PKPROCESS Process)
  */
 VOID
 NTAPI
-KeDetachProcess (VOID)
+KeDetachProcess(VOID)
 {
     PKTHREAD Thread = KeGetCurrentThread();
     KLOCK_QUEUE_HANDLE ApcLock;
+    PKPROCESS Process;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-    DPRINT("KeDetachProcess()\n");
 
     /* Check if it's attached */
     if (Thread->ApcStateIndex == OriginalApcEnvironment) return;
@@ -477,11 +468,34 @@ KeDetachProcess (VOID)
     /* Acquire APC Lock */
     KiAcquireApcLock(Thread, &ApcLock);
 
-    /* It is, decrease Stack Count */
-    if(!(--Thread->ApcState.Process->StackCount))
+    /* Check for invalid attach attempts */
+    if ((Thread->ApcState.KernelApcInProgress) ||
+        !(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) ||
+        !(IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
+    {
+        /* Crash the system */
+        KeBugCheck(INVALID_PROCESS_DETACH_ATTEMPT);
+    }
+
+    /* Get the process */
+    Process = Thread->ApcState.Process;
+
+    /* Acquire dispatcher lock */
+    KiAcquireDispatcherLockAtDpcLevel();
+
+    /* Decrease the stack count */
+    ASSERT(Process->StackCount != 0);
+    ASSERT(Process->State == ProcessInMemory);
+    Process->StackCount--;
+
+    /* Check if we can swap the process out */
+    if (!Process->StackCount)
     {
         /* FIXME: Swap the process out */
     }
+
+    /* Release dispatcher lock */
+    KiReleaseDispatcherLockFromDpcLevel();
 
     /* Restore the APC State */
     KiMoveApcState(&Thread->SavedApcState, &Thread->ApcState);
@@ -529,6 +543,7 @@ KeStackAttachProcess(IN PKPROCESS Process,
 {
     KLOCK_QUEUE_HANDLE ApcLock;
     PKTHREAD Thread = KeGetCurrentThread();
+    ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Make sure that we are in the right page directory */
@@ -579,6 +594,7 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
 {
     KLOCK_QUEUE_HANDLE ApcLock;
     PKTHREAD Thread = KeGetCurrentThread();
+    PKPROCESS Process;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Check for magic value meaning we were already in the same process */
@@ -596,16 +612,32 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
         (!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) ||
         (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
     {
+        /* Bugcheck the system */
         KEBUGCHECK(INVALID_PROCESS_DETACH_ATTEMPT);
     }
 
-    /* Decrease Stack Count */
-    if(!(--Thread->ApcState.Process->StackCount))
+    /* Get the process */
+    Process = Thread->ApcState.Process;
+
+    /* Acquire dispatcher lock */
+    KiAcquireDispatcherLockAtDpcLevel();
+
+    /* Decrease the stack count */
+    ASSERT(Process->StackCount != 0);
+    ASSERT(Process->State == ProcessInMemory);
+    Process->StackCount--;
+
+    /* Check if we can swap the process out */
+    if (!Process->StackCount)
     {
         /* FIXME: Swap the process out */
     }
 
-    if (ApcState->Process != NULL)
+    /* Release dispatcher lock */
+    KiReleaseDispatcherLockFromDpcLevel();
+
+    /* Check if there's an APC state to restore */
+    if (ApcState->Process)
     {
         /* Restore the APC State */
         KiMoveApcState(ApcState, &Thread->ApcState);

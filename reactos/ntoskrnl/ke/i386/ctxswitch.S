@@ -546,3 +546,61 @@ _Ki386AdjustEsp0@4:
     popf
     ret 4
 .endfunc
+
+.globl _KiSwapProcess@8
+.func KiSwapProcess@8
+_KiSwapProcess@8:
+
+    /* Get process pointers */
+    mov edx, [esp+4]
+    mov eax, [esp+8]
+
+#ifdef CONFIG_SMP
+    /* Update active processors */
+    mov ecx, fs:[KPCR_SET_MEMBER]
+    lock xor [edx+KPROCESS_ACTIVE_PROCESSORS], ecx
+    lock xor [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
+
+    /* Sanity check */
+#ifdef DBG
+    test dword ptr [edx+KPROCESS_ACTIVE_PROCESSORS], 0
+    jz WrongCpu1
+    test dword ptr [eax+KPROCESS_ACTIVE_PROCESSORS], 0
+    jnz WrongCpu2
+#endif
+#endif
+
+    /* Check if their LDTs changed */
+    mov ecx, [edx+KPROCESS_LDT_DESCRIPTOR0]
+    or ecx, [eax+KPROCESS_LDT_DESCRIPTOR0]
+    jnz NewLdt
+
+    /* Update CR3 */
+    mov eax, [edx+KPROCESS_DIRECTORY_TABLE_BASE]
+    mov cr3, eax
+
+    /* Get the KTSS */
+    mov ecx, fs:[KPCR_TSS]
+
+    /* Clear GS on process swap */
+    xor eax, eax
+    mov gs, ax
+
+    /* Update IOPM offset */
+    mov ax, [edx+KPROCESS_IOPM_OFFSET]
+    mov [ecx+KTSS_IOMAPBASE], ax
+
+    /* Return */
+    ret 8
+
+NewLdt:
+    /* FIXME: TODO */
+    int 3
+
+#ifdef DBG
+WrongCpu1:
+    int 3
+WrongCpu2:
+    int 3
+#endif
+.endfunc
