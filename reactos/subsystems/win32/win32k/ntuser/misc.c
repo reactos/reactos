@@ -994,6 +994,7 @@ IntSystemParametersInfo(
 	  case SPI_GETSCREENSAVERRUNNING:
 	  case SPI_GETSCREENSAVETIMEOUT:
 	  case SPI_SETSCREENSAVETIMEOUT:
+	  case SPI_GETSCREENSAVEACTIVE:
 	  case SPI_GETFLATMENU:
       case SPI_SETFLATMENU:
          {
@@ -1032,6 +1033,11 @@ IntSystemParametersInfo(
 			   case SPI_SETSCREENSAVERRUNNING:				  
 				   if (pvParam != NULL) *((BOOL*)pvParam) = WinStaObject->ScreenSaverRunning;
                    WinStaObject->ScreenSaverRunning = uiParam;				                     
+				  break;
+			   case SPI_GETSCREENSAVEACTIVE:
+					/* FIXME: how to disable the screensaver? */
+					if (pvParam != NULL) *((BOOL*)pvParam) = TRUE;
+				  return TRUE;
 				  break;
 			   case SPI_GETWHEELSCROLLLINES:
 				    CurInfo = IntGetSysCursorInfo(WinStaObject);
@@ -1409,6 +1415,7 @@ UserSystemParametersInfo(
 	  case SPI_SETSCREENSAVERRUNNING:
 	  case SPI_GETSCREENSAVETIMEOUT:
 	  case SPI_SETSCREENSAVETIMEOUT:
+	  case SPI_GETSCREENSAVEACTIVE:
 	  case SPI_GETFLATMENU:
       case SPI_SETFLATMENU:
          {
