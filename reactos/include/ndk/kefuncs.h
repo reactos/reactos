@@ -73,7 +73,7 @@ KeSetEventBoostPriority(
     IN PKTHREAD *Thread OPTIONAL
 );
 
-NTSTATUS
+KAFFINITY
 NTAPI
 KeSetAffinityThread(
     PKTHREAD Thread,

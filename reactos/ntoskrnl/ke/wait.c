@@ -861,4 +861,41 @@ DontWait:
     return WaitStatus;
 }
 
+NTSTATUS
+NTAPI
+NtDelayExecution(IN BOOLEAN Alertable,
+                 IN PLARGE_INTEGER DelayInterval)
+{
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    LARGE_INTEGER SafeInterval;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Check if parameters are valid */
+    if(PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            /* make a copy on the kernel stack and let DelayInterval point to it so
+               we don't need to wrap KeDelayExecutionThread in SEH! */
+            SafeInterval = ProbeForReadLargeInteger(DelayInterval);
+            DelayInterval = &SafeInterval;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status)) return Status;
+   }
+
+   /* Call the Kernel Function */
+   Status = KeDelayExecutionThread(PreviousMode,
+                                   Alertable,
+                                   DelayInterval);
+
+   /* Return Status */
+   return Status;
+}
+
 /* EOF */

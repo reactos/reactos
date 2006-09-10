@@ -57,13 +57,14 @@
 			<file>ipi.c</file>
 			<file>kqueue.c</file>
 			<file>krnlinit.c</file>
-			<file>kthread.c</file>
 			<file>mutex.c</file>
 			<file>process.c</file>
 			<file>profile.c</file>
 			<file>queue.c</file>
 			<file>sem.c</file>
 			<file>spinlock.c</file>
+			<file>thrdschd.c</file>
+			<file>thrdobj.c</file>
 			<file>timer.c</file>
 			<file>usercall.c</file>
 			<file>wait.c</file>

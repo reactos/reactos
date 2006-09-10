@@ -1077,15 +1077,4 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     return Status;
 }
 
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-NtYieldExecution(VOID)
-{
-    KiDispatchThread(Ready);
-    return STATUS_SUCCESS;
-}
-
 /* EOF */

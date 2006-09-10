@@ -337,7 +337,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
                     if (((Dpc->Importance == HighImportance) ||
                         (DpcData->DpcQueueDepth >=
                          Prcb->MaximumDpcQueueDepth)) &&
-                        (!(AFFINITY_MASK(Cpu) & IdleProcessorMask) ||
+                        (!(AFFINITY_MASK(Cpu) & KiIdleSummary) ||
                          (Prcb->Sleeping)))
                     {
                         /* Set interrupt requested */

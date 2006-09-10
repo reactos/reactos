@@ -126,7 +126,7 @@ extern LIST_ENTRY KiStackInSwapListHead;
 extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
-extern ULONG IdleProcessorMask;
+extern ULONG KiIdleSummary;
 extern VOID KiTrap8(VOID);
 extern VOID KiTrap2(VOID);
 
@@ -242,7 +242,8 @@ KAFFINITY
 NTAPI
 KiSetAffinityThread(
     IN PKTHREAD Thread,
-    IN KAFFINITY Affinity
+    IN KAFFINITY Affinity,
+    IN PBOOLEAN Released // hack
 );
 
 PKTHREAD
