@@ -21,7 +21,7 @@
 #include "of.h"
 #include "mmu.h"
 
-#define TOTAL_HEAP_NEEDED (32 * 1024 * 1024) /* 32 megs */
+#define TOTAL_HEAP_NEEDED (48 * 1024 * 1024) /* 48 megs */
 
 extern void BootMain( LPSTR CmdLine );
 extern PCHAR GetFreeLoaderVersionString();

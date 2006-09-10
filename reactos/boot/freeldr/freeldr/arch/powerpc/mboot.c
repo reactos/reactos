@@ -37,7 +37,7 @@ static PVOID KernelMemory = 0;
 
 /* Converts a Relative Address read from the Kernel into a Physical Address */
 ULONG RaToPa(ULONG p) {
-    return PpcVirt2phys((ULONG)(KernelMemory) + p, 0);
+    return (ULONG)(KernelMemory) + p;
 }
 
 /* Converts a Phsyical Address Pointer into a Page Frame Number */
@@ -67,6 +67,8 @@ ULONG RaToPa(ULONG p) {
 #define ApicPageTableIndexPae       (APIC_BASE >> 21)
 
 
+#define BAT_GRANULARITY             (64 * 1024)
+#define KernelMemorySize            (16 * 1024 * 1024)
 #define KernelEntryPoint            (KernelEntry - KERNEL_BASE_PHYS) + KernelBase
 
 /* Load Address of Next Module */
@@ -102,10 +104,30 @@ ULONG_PTR KernelEntry;
  *     None.
  *
  *--*/
+
+typedef void (*KernelEntryFn)( void * );
+
 VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
 {
+    KernelEntryFn KernelEntryAddress = 
+	(KernelEntryFn)(KernelEntry + KernelBase);
+    ULONG_PTR PhysAddr, i;
+
+    for( i = 0; i < KernelMemorySize; i+=1<<PFN_SHIFT ) 
+    {
+	PhysAddr = PpcVirt2phys((ULONG)KernelMemory + i,0);
+
+	if( !InsertPageEntry(KernelBase + i,PhysAddr) ) 
+	{
+	    printf("Foo: couldn't find a page slot for %x\n", i);
+	    while(1);
+	}
+    }
+
+    KernelEntryAddress( (void*)Magic );
+    while(1);
 }
 
 /*++
@@ -294,14 +316,12 @@ FrLdrMapKernel(FILE *KernelImage)
     FsSetFilePointer(KernelImage, 0);
 
     /* Allocate kernel memory */
-    KernelMemory = MmAllocateMemory(ImageSize);
+    KernelMemory = MmAllocateMemory(KernelMemorySize);
+
+    printf("Kernel Memory @%x\n", (int)KernelMemory);
 
     /* Save Entrypoint */
-    KernelEntry = RaToPa(NtHeader->OptionalHeader.AddressOfEntryPoint);
-    printf("RaToPa(%x + %x) -> %x\n", 
-	   KernelMemory,
-	   NtHeader->OptionalHeader.AddressOfEntryPoint, 
-	   KernelEntry);
+    KernelEntry = NtHeader->OptionalHeader.AddressOfEntryPoint;
 
     /* Load the file image */
     FsReadFile(KernelImage, ImageSize, NULL, KernelMemory);

@@ -23,6 +23,23 @@ __asm__("\t.globl GetPhys\n"
 	"blr"
     );
 
+__asm__("\t.globl SetPhys\n"
+	"SetPhys:\t\n"
+	"mflr  0\n\t"
+	"stwu  0,-16(1)\n\t"
+	"mfmsr 5\n\t"
+	"xori  3,3,4\n\t"     /* Undo effects of LE without swapping */
+	"andi. 6,5,0xffef\n\t"/* turn off MSR[DR] */
+	"mtmsr 6\n\t"
+	"stw   4,0(3)\n\t"    /* Get actual value at phys addr r3 */
+	"mtmsr 5\n\t"
+	"mr    3,4\n\t"
+	"lwz   0,0(1)\n\t"
+	"addi  1,1,16\n\t"
+	"mtlr  0\n\t"
+	"blr"
+    );
+
 inline int GetSR(int n) {
     register int res asm ("r3");
     switch( n ) {
@@ -123,6 +140,51 @@ inline void GetBat( int bat, int inst, int *batHi, int *batLo ) {
     *batLo = bl;
 }
 
+inline void SetBat( int bat, int inst, int batHi, int batLo ) {
+    register int bh asm("r3"), bl asm("r4");
+    bh = batHi;
+    bl = batLo;
+    if( inst ) {
+	switch( bat ) {
+	case 0:
+	    __asm__("mtibatu 0,3");
+	    __asm__("mtibatl 0,4");
+	    break;
+	case 1:
+	    __asm__("mtibatu 1,3");
+	    __asm__("mtibatl 1,4");
+	    break;
+	case 2:
+	    __asm__("mtibatu 2,3");
+	    __asm__("mtibatl 2,4");
+	    break;
+	case 3:
+	    __asm__("mtibatu 3,3");
+	    __asm__("mtibatl 3,4");
+	    break;
+	}
+    } else {
+	switch( bat ) {
+	case 0:
+	    __asm__("mtdbatu 0,3");
+	    __asm__("mtdbatl 0,4");
+	    break;
+	case 1:
+	    __asm__("mtdbatu 1,3");
+	    __asm__("mtdbatl 1,4");
+	    break;
+	case 2:
+	    __asm__("mtdbatu 2,3");
+	    __asm__("mtdbatl 2,4");
+	    break;
+	case 3:
+	    __asm__("mtdbatu 3,3");
+	    __asm__("mtdbatl 3,4");
+	    break;
+	}
+    }
+}
+
 inline int GetSDR1() {
     register int res asm("r3");
     __asm__("mfsdr1 3");
@@ -190,4 +252,33 @@ int PpcVirt2phys( int virt, int inst ) {
     } else {
 	return virt;
     }
+}
+
+/* Add a new page table entry for the indicated mapping */
+BOOLEAN InsertPageEntry( int virt, int phys ) {
+    int i, ptehi, ptelo;
+    int sdr1 = GetSDR1();
+    int sr = GetSR( (virt >> 28) & 0xf );
+    int vsid = sr & 0xfffffff;
+    int physbase = sdr1 & ~0xffff;
+    int hashmask = ((sdr1 & 0x1ff) << 10) | 0x3ff;
+    int valo = (vsid << 28) | (virt & 0xfffffff);
+    int hash = (vsid & 0x7ffff) ^ ((valo >> 12) & 0xffff);
+    int ptegaddr = ((hashmask & hash) * 64) + physbase;
+	
+    for( i = 0; i < 8; i++ ) {
+	ptehi = GetPhys( ptegaddr + (i * 8) );
+	
+	if( ptehi & 0x80000000 ) continue;
+
+	ptehi = (1 << 31) | (vsid << 7) | ((virt >> 22) & 0x3f);
+	ptelo = phys & ~0xfff;
+
+	SetPhys( ptegaddr + (i * 8), ptehi );
+	SetPhys( ptegaddr + (i * 8) + 4, ptelo );
+
+	return TRUE;
+    }
+
+    return FALSE;
 }
