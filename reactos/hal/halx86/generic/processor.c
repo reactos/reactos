@@ -47,4 +47,12 @@ HalStartNextProcessor(ULONG Unknown1,
   return TRUE;
 }
 
+VOID
+NTAPI
+HalProcessorIdle(VOID)
+{
+    Ki386EnableInterrupts();
+    Ki386HaltProcessor();
+}
+
 /* EOF */

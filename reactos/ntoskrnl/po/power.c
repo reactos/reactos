@@ -340,9 +340,10 @@ PopPerfIdleDpc(IN PKDPC Dpc,
 
 VOID
 FASTCALL
-PopIdle0(IN PKPRCB Prcb)
+PopIdle0(IN PPROCESSOR_POWER_STATE PowerState)
 {
-    DPRINT1("Idle function: %p\n", Prcb);
+    /* FIXME: Extremly naive implementation */
+    HalProcessorIdle();
 }
 
 VOID
@@ -358,7 +359,7 @@ PoInitializePrcb(IN PKPRCB Prcb)
 
     /* Initialize the Perf DPC and Timer */
     KeInitializeDpc(&Prcb->PowerState.PerfDpc, PopPerfIdleDpc, Prcb);
-    //KeSetTargetProcessorDpc(&Prcb->PowerState.PerfDpc, Prcb->Number);
+    KeSetTargetProcessorDpc(&Prcb->PowerState.PerfDpc, Prcb->Number);
     KeInitializeTimerEx(&Prcb->PowerState.PerfTimer, SynchronizationTimer);
 }
 

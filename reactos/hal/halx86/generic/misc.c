@@ -45,18 +45,6 @@ HalHandleNMI(PVOID NmiInfo)
   KeEnterKernelDebugger ();
 }
 
-
-VOID STDCALL
-HalProcessorIdle(VOID)
-{
-#if 1
-  Ki386EnableInterrupts();
-  Ki386HaltProcessor();
-#else
-
-#endif
-}
-
 ULONG FASTCALL
 HalSystemVectorDispatchEntry (
 	ULONG	Unknown1,

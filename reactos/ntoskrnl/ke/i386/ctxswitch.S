@@ -518,18 +518,16 @@ BugCheckDpc:
 .func @KiIdleLoop@0, @KiIdleLoop@0
 @KiIdleLoop@0:
 
+    /* Set EBX */
+    mov ebx, fs:[KPCR_SELF]
+
     /* Jump into mainline code */
     jmp MainLoop
 
 CpuIdle:
     /* Call the CPU's idle function */
-#if 0
     lea ecx, [ebx+KPCR_PRCB_POWER_STATE_IDLE_FUNCTION]
     call [ecx]
-#else
-    sti
-    hlt
-#endif
 
 MainLoop:
     /* Cycle interrupts for 1 cycle */
