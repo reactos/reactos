@@ -534,7 +534,7 @@ KeDeregisterBugCheckCallback@4
 KeDeregisterBugCheckReasonCallback@4
 KeDetachProcess@0
 KeDisconnectInterrupt@4
-KeEnterCriticalRegion@=_KeEnterCriticalRegion@0
+KeEnterCriticalRegion@0=_KeEnterCriticalRegion@0
 KeEnterGuardedRegion@0
 KeEnterKernelDebugger@0
 KeFindConfigurationEntry@16
