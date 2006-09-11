@@ -648,6 +648,15 @@ KiAcquireApcLockAtDpcLevel(IN PKTHREAD Thread,
 
 FORCEINLINE
 VOID
+KiAcquireApcLockAtApcLevel(IN PKTHREAD Thread,
+                           IN PKLOCK_QUEUE_HANDLE Handle)
+{
+    /* Acquire the lock */
+    KeAcquireInStackQueuedSpinLock(&Thread->ApcQueueLock, Handle);
+}
+
+FORCEINLINE
+VOID
 KiReleaseApcLock(IN PKLOCK_QUEUE_HANDLE Handle)
 {
     /* Release the lock */

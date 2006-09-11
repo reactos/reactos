@@ -543,14 +543,6 @@ KeContextToTrapFrame(
 
 VOID
 NTAPI
-KiDeliverApc(
-    KPROCESSOR_MODE PreviousMode,
-    PVOID Reserved,
-    PKTRAP_FRAME TrapFrame
-);
-
-VOID
-NTAPI
 KiCheckForKernelApcDelivery(VOID);
 
 LONG
