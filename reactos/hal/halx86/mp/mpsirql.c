@@ -397,3 +397,10 @@ HalRequestSoftwareInterrupt(IN KIRQL Request)
       KEBUGCHECK(0);
   }
 }
+
+VOID FASTCALL
+HalClearSoftwareInterrupt(
+  IN KIRQL Request)
+{
+  UNIMPLEMENTED;
+}

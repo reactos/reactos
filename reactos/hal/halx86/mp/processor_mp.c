@@ -115,4 +115,12 @@ HalStartNextProcessor(ULONG Unknown1,
 
    return TRUE;
 }
+
+VOID
+NTAPI
+HalProcessorIdle(VOID)
+{
+    UNIMPLEMENTED;
+}
+
 /* EOF */
