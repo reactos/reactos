@@ -339,6 +339,7 @@ KiSetPriorityThread(PKTHREAD Thread,
     }
 
     /* Return to caller */
+    *Released = FALSE;
     return;
 }
 

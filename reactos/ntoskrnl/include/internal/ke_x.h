@@ -827,8 +827,8 @@ KiComputeNewPriority(IN PKTHREAD Thread)
     Priority = Thread->Priority;
     if (Priority < LOW_REALTIME_PRIORITY)
     {
-        /* Set the New Priority and add the Priority Decrement */
-        Priority += (Priority - Thread->PriorityDecrement - 1);
+        /* Decrease priority by the priority decrement */
+        Priority -= (Thread->PriorityDecrement + 1);
 
         /* Don't go out of bounds */
         if (Priority < Thread->BasePriority) Priority = Thread->BasePriority;
