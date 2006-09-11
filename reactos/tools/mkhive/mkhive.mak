@@ -32,7 +32,7 @@ MKHIVE_OBJECTS = \
 
 MKHIVE_HOST_CFLAGS = $(xTOOLS_CFLAGS) -I$(INFLIB_BASE) -I$(CMLIB_BASE) \
   -D_NTOSKRNL_ \
-  -Iinclude/reactos -Iinclude/ddk -Iinclude/ndk -Iinclude/psdk -Iinclude -g3
+  -Iinclude/reactos -Iinclude/ddk -Iinclude/ndk -Iinclude/psdk -Iinclude -Iinclude/crt -g3
 
 MKHIVE_HOST_LFLAGS = $(xTOOLS_LFLAGS) -g3
 

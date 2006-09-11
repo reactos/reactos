@@ -398,7 +398,7 @@ CmiCompareHashI(
 	Buffer[2] = (KeyName->Length >= 6) ? (CHAR)KeyName->Buffer[2] : 0;
 	Buffer[3] = (KeyName->Length >= 8) ? (CHAR)KeyName->Buffer[3] : 0;
 
-	return (_strnicmp(Buffer, HashString, 4) == 0);
+	return (strncasecmp(Buffer, HashString, 4) == 0);
 }
 
 static BOOLEAN

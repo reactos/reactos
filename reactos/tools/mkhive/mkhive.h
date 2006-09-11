@@ -76,10 +76,12 @@ static void DPRINT ( const char* fmt, ... )
 
 #define CHECKPOINT
 
-#ifdef WIN32
-#define strncasecmp strnicmp
+#ifdef _WIN32
+#define strncasecmp _strnicmp
 #define strcasecmp _stricmp
-#endif//WIN32
+#else
+#include <string.h>
+#endif//_WIN32
 
 #ifdef _MSC_VER
 #define GCC_PACKED

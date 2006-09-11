@@ -220,7 +220,7 @@ RegSetValueExA(
 	IN LPCSTR lpValueName OPTIONAL,
 	ULONG Reserved,
 	IN ULONG dwType,
-	IN const PUCHAR lpData,
+	IN const UCHAR* lpData,
 	IN ULONG cbData);
 
 LONG WINAPI

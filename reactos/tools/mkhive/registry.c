@@ -132,6 +132,9 @@ RegpOpenOrCreateKey(
 		else
 			RtlInitUnicodeString(&KeyString, LocalKeyName);
 
+		while (ParentKey->DataType == REG_LINK)
+			ParentKey = ParentKey->LinkedKey;
+
 		/* Check subkey in memory structure */
 		Ptr = ParentKey->SubKeyList.Flink;
 		while (Ptr != &ParentKey->SubKeyList)
@@ -180,9 +183,6 @@ RegpOpenOrCreateKey(
 		ParentKey->SubKeyCount++;
 
 nextsubkey:
-		/* Follow registry links */
-		while (CurrentKey->LinkedKey)
-			CurrentKey = CurrentKey->LinkedKey;
 		ParentKey = CurrentKey;
 		if (End)
 			LocalKeyName = End + 1;
@@ -276,7 +276,7 @@ RegOpenKeyA(
 	return rc;
 }
 
-static NTSTATUS
+static LONG
 RegpOpenOrCreateValue(
 	IN HKEY hKey,
 	IN LPCWSTR ValueName,
@@ -308,8 +308,8 @@ RegpOpenOrCreateValue(
 			ValueCellOffset);
 	}
 	if (!NT_SUCCESS(Status))
-		return Status;
-	return STATUS_SUCCESS;
+		return ERROR_UNSUCCESSFUL;
+	return ERROR_SUCCESS;
 }
 
 LONG WINAPI
@@ -318,7 +318,7 @@ RegSetValueExW(
 	IN LPCWSTR lpValueName OPTIONAL,
 	IN ULONG Reserved,
 	IN ULONG dwType,
-	IN const PUCHAR lpData,
+	IN const UCHAR* lpData,
 	IN USHORT cbData)
 {
 	MEMKEY Key, DestKey;
@@ -339,13 +339,14 @@ RegSetValueExW(
 		DestKey = HKEY_TO_MEMKEY(*phKey);
 
 		/* Create the link in memory */
+		Key->DataType = REG_LINK;
 		Key->LinkedKey = DestKey;
 
 		/* Create the link in registry hive (if applicable) */
 		if (Key->RegistryHive != DestKey->RegistryHive)
 			return STATUS_SUCCESS;
-		DPRINT1("Save link to registry\n");
-		return STATUS_NOT_IMPLEMENTED;
+		lpData = (PUCHAR)&DestKey->KeyCellOffset;
+		cbData = sizeof(HCELL_INDEX);
 	}
 
 	if ((cbData & REG_DATA_SIZE_MASK) != cbData)
@@ -428,11 +429,11 @@ RegSetValueExA(
 	IN LPCSTR lpValueName OPTIONAL,
 	IN ULONG Reserved,
 	IN ULONG dwType,
-	IN const PUCHAR lpData,
+	IN const UCHAR* lpData,
 	IN ULONG cbData)
 {
 	LPWSTR lpValueNameW = NULL;
-	PUCHAR lpDataW;
+	const UCHAR* lpDataW;
 	USHORT cbDataW;
 	LONG rc = ERROR_SUCCESS;
 
@@ -457,7 +458,7 @@ RegSetValueExA(
 		AnsiString.Length = (USHORT)cbData - 1;
 		AnsiString.MaximumLength = (USHORT)cbData;
 		RtlAnsiStringToUnicodeString (&Data, &AnsiString, TRUE);
-		lpDataW = (const PUCHAR)Data.Buffer;
+		lpDataW = (const UCHAR*)Data.Buffer;
 		cbDataW = Data.MaximumLength;
 	}
 	else
@@ -471,7 +472,7 @@ RegSetValueExA(
 	if (lpValueNameW)
 		free(lpValueNameW);
 	if (lpData != lpDataW)
-		free(lpDataW);
+		free((PVOID)lpDataW);
 	return rc;
 }
 
@@ -487,17 +488,20 @@ RegQueryValueExW(
 	//ParentKey = HKEY_TO_MEMKEY(RootKey);
 	PCM_KEY_VALUE ValueCell;
 	HCELL_INDEX ValueCellOffset;
-	NTSTATUS Status;
+	LONG rc;
 
-	Status = RegpOpenOrCreateValue(
+	rc = RegpOpenOrCreateValue(
 			hKey,
 			lpValueName,
 			FALSE,
 			&ValueCell,
 			&ValueCellOffset);
+	if (rc != ERROR_SUCCESS)
+		return rc;
 
-	//Status = CmiScanForValueKey(
-	//	x
+	DPRINT1("RegQueryValueExW(%S) not implemented\n", lpValueName);
+	/* ValueCell and ValueCellOffset are valid */
+
 	return ERROR_UNSUCCESSFUL;
 }
 
@@ -513,7 +517,6 @@ RegQueryValueExA(
 	LPWSTR lpValueNameW = NULL;
 	LONG rc;
 
-	DPRINT1("RegQueryValueExA(%s) not implemented\n", lpValueName);
 	if (lpValueName)
 	{
 		lpValueNameW = MultiByteToWideChar(lpValueName);
@@ -673,7 +676,6 @@ RegInitializeRegistry(VOID)
 		NULL,
 		L"Registry\\Machine\\SYSTEM\\CurrentControlSet",
 		&LinkKey);
-	printf("ControlSetKey %p\n", ControlSetKey);
 	RegSetValueExW(LinkKey, NULL, 0, REG_LINK, (PCHAR)&ControlSetKey, sizeof(PVOID));
 }
 
