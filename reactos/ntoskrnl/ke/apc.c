@@ -472,27 +472,30 @@ Quickie:
     return;
 }
 
-static __inline
-VOID RepairList(PLIST_ENTRY Original,
-                PLIST_ENTRY Copy,
-                KPROCESSOR_MODE Mode)
+FORCEINLINE
+VOID
+RepairList(IN PLIST_ENTRY Original,
+           IN PLIST_ENTRY Copy,
+           IN KPROCESSOR_MODE Mode)
 {
-    /* Copy Source to Desination */
-    if (IsListEmpty(&Original[(int)Mode])) {
-
-        InitializeListHead(&Copy[(int)Mode]);
-
-    } else {
-
-        Copy[(int)Mode].Flink = Original[(int)Mode].Flink;
-        Copy[(int)Mode].Blink = Original[(int)Mode].Blink;
-        Original[(int)Mode].Flink->Blink = &Copy[(int)Mode];
-        Original[(int)Mode].Blink->Flink = &Copy[(int)Mode];
+    /* Check if the list for this mode is empty */
+    if (IsListEmpty(&Original[Mode]))
+    {
+        /* It is, all we need to do is initialize it */
+        InitializeListHead(&Copy[Mode]);
+    }
+    else
+    {
+        /* Copy the lists */
+        Copy[Mode].Flink = Original[Mode].Flink;
+        Copy[Mode].Blink = Original[Mode].Blink;
+        Original[Mode].Flink->Blink = &Copy[Mode];
+        Original[Mode].Blink->Flink = &Copy[Mode];
     }
 }
 
 VOID
-STDCALL
+NTAPI
 KiMoveApcState(PKAPC_STATE OldState,
                PKAPC_STATE NewState)
 {
@@ -832,33 +835,62 @@ KeRemoveQueueApc(PKAPC Apc)
 }
 
 /*++
- * KeAreApcsDisabled
+ * @name KeAreApcsDisabled
  * @implemented NT4
  *
- *     Prepares the Context for a User-Mode APC called through NTDLL.DLL
+ *     The KeAreApcsDisabled routine returns whether kernel APC delivery is
+ *     disabled for the current thread.
  *
- * Params:
- *     None.
+ * @param None.
  *
- * Returns:
- *     KeAreApcsDisabled returns TRUE if the thread is within a critical region
- *     or a guarded region, and FALSE otherwise.
+ * @return KeAreApcsDisabled returns TRUE if the thread is within a critical
+ *         region or a guarded region, and FALSE otherwise.
  *
- * Remarks:
- *     A thread running at IRQL = PASSIVE_LEVEL can use KeAreApcsDisabled to
- *     determine if normal kernel APCs are disabled. A thread that is inside a
- *     critical region has both user APCs and normal kernel APCs disabled, but
- *     not special kernel APCs. A thread that is inside a guarded region has
- *     all APCs disabled, including special kernel APCs.
+ * @remarks A thread running at IRQL = PASSIVE_LEVEL can use KeAreApcsDisabled
+ *          determine if normal kernel APCs are disabled.
  *
- *     Callers of this routine must be running at IRQL <= APC_LEVEL.
+ *          A thread that is inside critical region has both user APCs and
+ *          normal kernel APCs disabled, but not special kernel APCs.
+ *
+ *          A thread that is inside a guarded region has all APCs disabled,
+ *          including special kernel APCs.
+ *
+ *          Callers of this routine must be running at IRQL <= DISPATCH_LEVEL.
  *
  *--*/
 BOOLEAN
-STDCALL
+NTAPI
 KeAreApcsDisabled(VOID)
 {
     /* Return the Kernel APC State */
     return KeGetCurrentThread()->CombinedApcDisable ? TRUE : FALSE;
+}
+
+/*++
+ * @name KeAreAllApcsDisabled
+ * @implemented NT5.1
+ *
+ *    The KeAreAllApcsDisabled routine returns whether the calling thread is
+ *    inside a guarded region or running at IRQL = APC_LEVEL, which disables
+ *    all APC delivery.
+ *
+ * @param None.
+ *
+ * @return KeAreAllApcsDisabled returns TRUE if the thread is within a guarded
+ *         guarded region or running at IRQL >= APC_LEVEL, and FALSE otherwise.
+ *
+ * @remarks A thread running at IRQL = PASSIVE_LEVEL can use this routine to
+ *          determine if all APCs delivery is disabled.
+ *
+ *          Callers of this routine must be running at IRQL <= DISPATCH_LEVEL.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+KeAreAllApcsDisabled(VOID)
+{
+    /* Return the Special APC State */
+    return ((KeGetCurrentThread()->SpecialApcDisable) ||
+            (KeGetCurrentIrql() >= APC_LEVEL)) ? TRUE : FALSE;
 }
 
