@@ -31,27 +31,28 @@ _SEH_FILTER(KiCopyInformation2)
 }
 
 /*++
- * KiInitializeUserApc
+ * @name KiInitializeUserApc
  *
  *     Prepares the Context for a User-Mode APC called through NTDLL.DLL
  *
- * Params:
- *     Reserved - Pointer to the Exception Frame on non-i386 builds.
+ * @param Reserved
+ *        Pointer to the Exception Frame on non-i386 builds.
  *
- *     TrapFrame - Pointer to the Trap Frame.
+ * @param TrapFrame
+ *        Pointer to the Trap Frame.
  *
- *     NormalRoutine - Pointer to the NormalRoutine to call.
+ * @param NormalRoutine
+ *        Pointer to the NormalRoutine to call.
  *
- *     NormalContext - Pointer to the context to send to the Normal Routine.
+ * @param NormalContext
+ *        Pointer to the context to send to the Normal Routine.
  *
- *     SystemArgument[1-2] - Pointer to a set of two parameters that contain
- *                           untyped data.
+ * @param SystemArgument[1-2]
+ *        Pointer to a set of two parameters that contain untyped data.
  *
- * Returns:
- *     None.
+ * @return None.
  *
- * Remarks:
- *     None.
+ * @remarks None.
  *
  *--*/
 VOID

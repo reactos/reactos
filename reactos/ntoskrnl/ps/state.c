@@ -15,6 +15,18 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+VOID
+NTAPI
+PspQueueApcSpecialApc(IN PKAPC Apc,
+                      IN OUT PKNORMAL_ROUTINE* NormalRoutine,
+                      IN OUT PVOID* NormalContext,
+                      IN OUT PVOID* SystemArgument1,
+                      IN OUT PVOID* SystemArgument2)
+{
+    /* Free the APC and do nothing else */
+    ExFreePool(Apc);
+}
+
 NTSTATUS
 NTAPI
 PsResumeThread(IN PETHREAD Thread,
@@ -446,6 +458,101 @@ NtTestAlert(VOID)
     /* Check and Alert Thread if needed */
     return KeTestAlertThread(ExGetPreviousMode()) ?
            STATUS_ALERTED : STATUS_SUCCESS;
+}
+
+/*++
+ * @name NtQueueApcThread
+ * NT4
+ *
+ *    This routine is used to queue an APC from user-mode for the specified
+ *    thread.
+ *
+ * @param ThreadHandle
+ *        Handle to the Thread.
+ *        This handle must have THREAD_SET_CONTEXT privileges.
+ *
+ * @param ApcRoutine
+ *        Pointer to the APC Routine to call when the APC executes.
+ *
+ * @param NormalContext
+ *        Pointer to the context to send to the Normal Routine.
+ *
+ * @param SystemArgument[1-2] 
+ *        Pointer to a set of two parameters that contain untyped data.
+ *
+ * @return STATUS_SUCCESS or failure cute from associated calls.
+ *
+ * @remarks The thread must enter an alertable wait before the APC will be
+ *          delivered.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+NtQueueApcThread(IN HANDLE ThreadHandle,
+                 IN PKNORMAL_ROUTINE ApcRoutine,
+                 IN PVOID NormalContext,
+                 IN PVOID SystemArgument1,
+                 IN PVOID SystemArgument2)
+{
+    PKAPC Apc;
+    PETHREAD Thread;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
+
+    /* Get ETHREAD from Handle */
+    Status = ObReferenceObjectByHandle(ThreadHandle,
+                                       THREAD_SET_CONTEXT,
+                                       PsThreadType,
+                                       ExGetPreviousMode(),
+                                       (PVOID)&Thread,
+                                       NULL);
+    if (NT_SUCCESS(Status)) return Status;
+
+    /* Check if this is a System Thread */
+    if (Thread->SystemThread)
+    {
+        /* Fail */
+        Status = STATUS_INVALID_HANDLE;
+        goto Quit;
+    }
+
+    /* Allocate an APC */
+    Apc = ExAllocatePoolWithTag(NonPagedPool |
+                                POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                sizeof(KAPC),
+                                TAG_PS_APC);
+    if (!Apc)
+    {
+        /* Fail */
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+
+    /* Initialize the APC */
+    KeInitializeApc(Apc,
+                    &Thread->Tcb,
+                    OriginalApcEnvironment,
+                    PspQueueApcSpecialApc,
+                    NULL,
+                    ApcRoutine,
+                    UserMode,
+                    NormalContext);
+
+    /* Queue it */
+    if (!KeInsertQueueApc(Apc,
+                          SystemArgument1,
+                          SystemArgument2,
+                          IO_NO_INCREMENT))
+    {
+        /* We failed, free it */
+        ExFreePool(Apc);
+        Status = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Dereference Thread and Return */
+Quit:
+    ObDereferenceObject(Thread);
+    return Status;
 }
 
 /* EOF */

@@ -18,8 +18,8 @@
  * @name KiCheckForKernelApcDelivery
  * @implemented NT 5.2
  *
- *     The KiCheckForKernelApcDelivery routine is called whenever APCs have just
- *     been re-enabled in Kernel Mode, such as after leaving a Critical or
+ *     The KiCheckForKernelApcDelivery routine is called whenever APCs have
+ *     just been re-enabled in Kernel Mode, such as after leaving a Critical or
  *     Guarded Region. It delivers APCs if the environment is right.
  *
  * @param None.
@@ -55,32 +55,6 @@ KiCheckForKernelApcDelivery(VOID)
         KeGetCurrentThread()->ApcState.KernelApcPending = TRUE;
         HalRequestSoftwareInterrupt(APC_LEVEL);
     }
-}
-
-static
-__inline
-VOID
-KiRequestApcInterrupt(IN PKTHREAD Thread)
-{
-#ifdef CONFIG_SMP
-    PKPRCB Prcb, CurrentPrcb;
-    LONG i;
-
-    CurrentPrcb = KeGetCurrentPrcb();
-    for (i = 0; i < KeNumberProcessors; i++)
-    {
-        Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
-        if (Prcb->CurrentThread == Thread)
-        {
-            ASSERT (CurrentPrcb != Prcb);
-            KiIpiSendRequest(Prcb->SetMember, IPI_APC);
-            break;
-        }
-    }
-    ASSERT (i < KeNumberProcessors);
-#else
-    HalRequestSoftwareInterrupt(APC_LEVEL);
-#endif
 }
 
 /*++
@@ -236,7 +210,7 @@ KiInsertQueueApc(PKAPC Apc,
                 if (Thread->State == Running)
                 {
                     /* The thread is running, so send an APC request */
-                    KiRequestApcInterrupt(Thread);
+                    KiRequestApcInterrupt(Thread->NextProcessor);
                 }
                 else
                 {
@@ -496,18 +470,6 @@ Quickie:
     /* Restore the trap frame */
     Thread->TrapFrame = OldTrapFrame;
     return;
-}
-
-VOID
-STDCALL
-KiFreeApcRoutine(PKAPC Apc,
-                 PKNORMAL_ROUTINE* NormalRoutine,
-                 PVOID* NormalContext,
-                 PVOID* SystemArgument1,
-                 PVOID* SystemArgument2)
-{
-    /* Free the APC and do nothing else */
-    ExFreePool(Apc);
 }
 
 static __inline
@@ -898,96 +860,5 @@ KeAreApcsDisabled(VOID)
 {
     /* Return the Kernel APC State */
     return KeGetCurrentThread()->CombinedApcDisable ? TRUE : FALSE;
-}
-
-/*++
- * NtQueueApcThread
- * NT4
- *
- *    This routine is used to queue an APC from user-mode for the specified
- *    thread.
- *
- * Params:
- *     Thread Handle - Handle to the Thread. This handle must have THREAD_SET_CONTEXT privileges.
- *
- *     ApcRoutine - Pointer to the APC Routine to call when the APC executes.
- *
- *     NormalContext - Pointer to the context to send to the Normal Routine.
- *
- *     SystemArgument[1-2] - Pointer to a set of two parameters that contain
- *                           untyped data.
- *
- * Returns:
- *     STATUS_SUCCESS or failure cute from associated calls.
- *
- * Remarks:
- *      The thread must enter an alertable wait before the APC will be
- *      delivered.
- *
- *--*/
-NTSTATUS
-STDCALL
-NtQueueApcThread(HANDLE ThreadHandle,
-         PKNORMAL_ROUTINE ApcRoutine,
-         PVOID NormalContext,
-         PVOID SystemArgument1,
-         PVOID SystemArgument2)
-{
-    PKAPC Apc;
-    PETHREAD Thread;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status;
-
-    /* Get ETHREAD from Handle */
-    Status = ObReferenceObjectByHandle(ThreadHandle,
-                       THREAD_SET_CONTEXT,
-                       PsThreadType,
-                       PreviousMode,
-                       (PVOID)&Thread,
-                       NULL);
-
-    /* Fail if the Handle is invalid for some reason */
-    if (!NT_SUCCESS(Status)) {
-
-        return(Status);
-    }
-
-    /* If this is a Kernel or System Thread, then fail */
-    if (Thread->Tcb.Teb == NULL) {
-
-        ObDereferenceObject(Thread);
-        return STATUS_INVALID_HANDLE;
-    }
-
-    /* Allocate an APC */
-    Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG('P', 's', 'a', 'p'));
-    if (Apc == NULL) {
-
-        ObDereferenceObject(Thread);
-        return(STATUS_NO_MEMORY);
-    }
-
-    /* Initialize and Queue a user mode apc (always!) */
-    KeInitializeApc(Apc,
-                    &Thread->Tcb,
-                    OriginalApcEnvironment,
-                    KiFreeApcRoutine,
-                    NULL,
-                    ApcRoutine,
-                    UserMode,
-                    NormalContext);
-
-    if (!KeInsertQueueApc(Apc, SystemArgument1, SystemArgument2, IO_NO_INCREMENT)) {
-
-        Status = STATUS_UNSUCCESSFUL;
-
-    } else {
-
-        Status = STATUS_SUCCESS;
-    }
-
-    /* Dereference Thread and Return */
-    ObDereferenceObject(Thread);
-    return Status;
 }
 

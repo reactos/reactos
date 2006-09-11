@@ -4108,6 +4108,11 @@ typedef enum _POOL_TYPE {
 	NonPagedPoolCacheAlignedMustSSession
 } POOL_TYPE;
 
+#define POOL_COLD_ALLOCATION                256
+#define POOL_QUOTA_FAIL_INSTEAD_OF_RAISE    8
+#define POOL_RAISE_IF_ALLOCATION_FAILURE    16
+
+
 typedef enum _EX_POOL_PRIORITY {
   LowPoolPriority,
   LowPoolPrioritySpecialPoolOverrun = 8,

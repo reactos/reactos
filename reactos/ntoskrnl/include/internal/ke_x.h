@@ -428,6 +428,14 @@ KiRundownThread(IN PKTHREAD Thread)
     }
 }
 
+FORCEINLINE
+VOID
+KiRequestApcInterrupt(IN UCHAR Processor)
+{
+    /* Request a software interrupt */
+    HalRequestSoftwareInterrupt(APC_LEVEL);
+}
+
 #else
 
 KIRQL
@@ -592,6 +600,22 @@ KiCheckDeferredReadyList(IN PKPRCB Prcb)
 {
     /* Scan the deferred ready lists if required */
     if (Prcb->DeferredReadyListHead.Next) KiProcessDeferredReadyList(Prcb);
+}
+
+FORCEINLINE
+VOID
+KiRequestApcInterrupt(IN UCHAR Processor)
+{
+    /* Check if we're on the same CPU */
+    if (KeGetCurrentPrcb()->Number == Processor)
+    {
+        /* Request a software interrupt */
+        HalRequestSoftwareInterrupt(APC_LEVEL);
+    }
+    else
+    {
+        KiIpiSendRequest(KeGetCurrentPrcb()->SetMember, IPI_APC);
+    }
 }
 
 #endif
