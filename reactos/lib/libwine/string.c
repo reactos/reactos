@@ -3,7 +3,11 @@
 #include "wine/port.h"
 
 #ifndef HAVE_STRCASECMP
-# ifndef HAVE__STRICMP
+
+#ifdef strcasecmp
+# undef strcasecmp
+#endif
+
 int strcasecmp( const char *str1, const char *str2 )
 {
     const unsigned char *ustr1 = (const unsigned char *)str1;
@@ -15,5 +19,4 @@ int strcasecmp( const char *str1, const char *str2 )
     }
     return toupper(*ustr1) - toupper(*ustr2);
 }
-#endif
 #endif
