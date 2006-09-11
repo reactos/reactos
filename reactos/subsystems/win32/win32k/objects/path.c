@@ -94,28 +94,48 @@ NtGdiBeginPath( HDC  hDC )
   return ret;
 }
 
-BOOL
+VOID
 FASTCALL
-IntCloseFigure ( PDC dc )
+IntGdiCloseFigure(PDC pDc)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+   ASSERT(pDc);
+   ASSERT(pDc->w.path.state == PATH_Open);
+
+   // FIXME: Shouldn't we draw a line to the beginning of the figure?
+   // Set PT_CLOSEFIGURE on the last entry and start a new stroke
+   if(pDc->w.path.numEntriesUsed)
+   {
+      pDc->w.path.pFlags[pDc->w.path.numEntriesUsed-1]|=PT_CLOSEFIGURE;
+      pDc->w.path.newStroke=TRUE;
+   }
 }
 
 BOOL
 STDCALL
-NtGdiCloseFigure ( HDC hDC )
+NtGdiCloseFigure(HDC hDC)
 {
-  PDC dc = DC_LockDc ( hDC );
-  BOOL ret = FALSE; // default to failure
+   BOOL Ret = FALSE; // default to failure
+   PDC pDc;
+   
+   DPRINT("Enter %s\n", __FUNCTION__);
+    
+   pDc = DC_LockDc(hDC);
+   if(!pDc) return FALSE;
+  
+   if(pDc->w.path.state==PATH_Open)
+   {
+      IntGdiCloseFigure(pDc);
+      Ret = TRUE;
+   }
+   else
+   {
+      // FIXME: check if lasterror is set correctly
+      SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+   }
+   
+   DC_UnlockDc(pDc);
 
-  if ( dc )
-  {
-    ret = IntCloseFigure ( dc );
-    DC_UnlockDc ( dc );
-  }
-
-  return ret;
+   return Ret;
 }
 
 BOOL
@@ -617,12 +637,7 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
   }
 
   /* Close any previous figure */
-  if ( !IntCloseFigure ( dc ) )
-  {
-    /* The NtGdiCloseFigure call shouldn't have failed */
-    assert(FALSE);
-    return FALSE;
-  }
+  IntGdiCloseFigure(dc);
 
   /* Add four points to the path */
   pointTemp.x=corners[1].x;
@@ -639,13 +654,8 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
     return FALSE;
 
   /* Close the rectangle figure */
-  if ( !IntCloseFigure ( dc ) )
-  {
-    /* The IntCloseFigure call shouldn't have failed */
-    assert(FALSE);
-    return FALSE;
-  }
-
+  IntGdiCloseFigure(dc) ;
+  
   return TRUE;
 }
 
