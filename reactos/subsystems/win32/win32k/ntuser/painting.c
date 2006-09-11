@@ -1531,7 +1531,8 @@ BOOL UserDrawCaption(
    VCenter = (lpRc->bottom - lpRc->top) / 2;
    Padding = VCenter - (Height / 2);
    HasIcon = (uFlags & DC_ICON) && (pWnd->Style & WS_SYSMENU) 
-      && !(uFlags & DC_SMALLCAP);
+      && !(uFlags & DC_SMALLCAP) && !(pWnd->ExStyle & WS_EX_DLGMODALFRAME) 
+      && !(pWnd->ExStyle & WS_EX_TOOLWINDOW);
    IconWidth = UserGetSystemMetrics(SM_CXSIZE) + Padding;
 
    r.left = Padding;
