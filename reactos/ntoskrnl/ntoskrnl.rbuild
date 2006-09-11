@@ -40,6 +40,7 @@
 				<file>thread.c</file>
 				<file>trap.s</file>
 				<file>usercall_asm.S</file>
+                <file>userapc.c</file>
 				<file>v86vdm.c</file>
 				<file>v86m_sup.S</file>
 			</directory>

@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
 /*++
  * @name KiCheckForKernelApcDelivery
@@ -54,154 +54,6 @@ KiCheckForKernelApcDelivery(VOID)
          */
         KeGetCurrentThread()->ApcState.KernelApcPending = TRUE;
         HalRequestSoftwareInterrupt(APC_LEVEL);
-    }
-}
-
-/*++
- * @name KeEnterCriticalRegion
- * @implemented NT4
- *
- *     The KeEnterCriticalRegion routine temporarily disables the delivery of
- *     normal kernel APCs; special kernel-mode APCs are still delivered.
- *
- * @param None.
- *
- * @return None.
- *
- * @remarks Highest-level drivers can call this routine while running in the
- *          context of the thread that requested the current I/O operation.
- *          Any caller of this routine should call KeLeaveCriticalRegion as
- *          quickly as possible.
- *
- *          Callers of KeEnterCriticalRegion must be running at IRQL <=
- *          APC_LEVEL.
- *
- *--*/
-VOID
-NTAPI
-_KeEnterCriticalRegion(VOID)
-{
-    /* Use inlined function */
-    KeEnterCriticalRegion();
-}
-
-/*++
- * KeLeaveCriticalRegion
- * @implemented NT4
- *
- *     The KeLeaveCriticalRegion routine reenables the delivery of normal
- *     kernel-mode APCs that were disabled by a call to KeEnterCriticalRegion.
- *
- * @param None.
- *
- * @return None.
- *
- * @remarks Highest-level drivers can call this routine while running in the
- *          context of the thread that requested the current I/O operation.
- *
- *          Callers of KeLeaveCriticalRegion must be running at IRQL <=
- *          DISPATCH_LEVEL.
- *
- *--*/
-VOID
-NTAPI
-_KeLeaveCriticalRegion(VOID)
-{
-    /* Use inlined version */
-    KeLeaveCriticalRegion();
-}
-
-/*++
- * KeInitializeApc
- * @implemented NT4
- *
- *     The The KeInitializeApc routine initializes an APC object, and registers
- *     the Kernel, Rundown and Normal routines for that object.
- *
- * Params:
- *     Apc - Pointer to a KAPC structure that represents the APC object to
- *           initialize. The caller must allocate storage for the structure
- *           from resident memory.
- *
- *     Thread - Thread to which to deliver the APC.
- *
- *     TargetEnvironment - APC Environment to be used.
- *
- *     KernelRoutine - Points to the KernelRoutine to associate with the APC.
- *                     This routine is executed for all APCs.
- *
- *     RundownRoutine - Points to the RundownRoutine to associate with the APC.
- *                      This routine is executed when the Thread exists with
- *                      the APC executing.
- *
- *     NormalRoutine - Points to the NormalRoutine to associate with the APC.
- *                     This routine is executed at PASSIVE_LEVEL. If this is
- *                     not specifed, the APC becomes a Special APC and the
- *                     Mode and Context parameters are ignored.
- *
- *     Mode - Specifies the processor mode at which to run the Normal Routine.
- *
- *     Context - Specifices the value to pass as Context parameter to the
- *               registered routines.
- *
- * Returns:
- *     None.
- *
- * Remarks:
- *     The caller can queue an initialized APC with KeInsertQueueApc.
- *
- *     Storage for the APC object must be resident, such as nonpaged pool
- *     allocated by the caller.
- *
- *     Callers of this routine must be running at IRQL = PASSIVE_LEVEL.
- *
- *--*/
-VOID
-STDCALL
-KeInitializeApc(IN PKAPC Apc,
-                IN PKTHREAD Thread,
-                IN KAPC_ENVIRONMENT TargetEnvironment,
-                IN PKKERNEL_ROUTINE KernelRoutine,
-                IN PKRUNDOWN_ROUTINE RundownRoutine OPTIONAL,
-                IN PKNORMAL_ROUTINE NormalRoutine,
-                IN KPROCESSOR_MODE Mode,
-                IN PVOID Context)
-{
-    DPRINT("KeInitializeApc(Apc %x, Thread %x, Environment %d, "
-           "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
-           "Context %x)\n",Apc,Thread,TargetEnvironment,KernelRoutine,RundownRoutine,
-            NormalRoutine,Mode,Context);
-
-    /* Set up the basic APC Structure Data */
-    RtlZeroMemory(Apc, sizeof(KAPC));
-    Apc->Type = ApcObject;
-    Apc->Size = sizeof(KAPC);
-
-    /* Set the Environment */
-    if (TargetEnvironment == CurrentApcEnvironment) {
-
-        Apc->ApcStateIndex = Thread->ApcStateIndex;
-
-    } else {
-
-        Apc->ApcStateIndex = TargetEnvironment;
-    }
-
-    /* Set the Thread and Routines */
-    Apc->Thread = Thread;
-    Apc->KernelRoutine = KernelRoutine;
-    Apc->RundownRoutine = RundownRoutine;
-    Apc->NormalRoutine = NormalRoutine;
-
-    /* Check if this is a Special APC, in which case we use KernelMode and no Context */
-    if (ARGUMENT_PRESENT(NormalRoutine)) {
-
-        Apc->ApcMode = Mode;
-        Apc->NormalContext = Context;
-
-    } else {
-
-        Apc->ApcMode = KernelMode;
     }
 }
 
@@ -424,183 +276,6 @@ Unwait:
     /* Return to caller */
     KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
     return;
-}
-
-/*++
- * KeInsertQueueApc
- * @implemented NT4
- *
- *     The KeInsertQueueApc routine queues a APC for execution when the right
- *     scheduler environment exists.
- *
- * Params:
- *     Apc - Pointer to an initialized control object of type DPC for which the
- *           caller provides the storage.
- *
- *     SystemArgument[1,2] - Pointer to a set of two parameters that contain
- *                           untyped data.
- *
- *     PriorityBoost - Priority Boost to apply to the Thread.
- *
- * Returns:
- *     If the APC is already inserted or APC queueing is disabled, FALSE.
- *     Otherwise, TRUE.
- *
- * Remarks:
- *     The APC will execute at APC_LEVEL for the KernelRoutine registered, and
- *     at PASSIVE_LEVEL for the NormalRoutine registered.
- *
- *     Callers of this routine must be running at IRQL = PASSIVE_LEVEL.
- *
- *--*/
-BOOLEAN
-STDCALL
-KeInsertQueueApc(PKAPC Apc,
-                 PVOID SystemArgument1,
-                 PVOID SystemArgument2,
-                 KPRIORITY PriorityBoost)
-{
-    PKTHREAD Thread = Apc->Thread;
-    KLOCK_QUEUE_HANDLE ApcLock;
-    BOOLEAN State = TRUE;
-
-    /* Get the APC lock */
-    KiAcquireApcLock(Thread, &ApcLock);
-
-    /* Make sure we can Queue APCs and that this one isn't already inserted */
-    if ((Thread->ApcQueueable == FALSE) && (Apc->Inserted == TRUE))
-    {
-        /* Fail */
-        State = FALSE;
-    }
-    else
-    {
-        /* Set the System Arguments and set it as inserted */
-        Apc->SystemArgument1 = SystemArgument1;
-        Apc->SystemArgument2 = SystemArgument2;
-        Apc->Inserted = TRUE;
-
-        /* Call the Internal Function */
-        KiInsertQueueApc(Apc, PriorityBoost);
-    }
-
-    /* Release the APC lock and return success */
-    KiReleaseApcLock(&ApcLock);
-    KiExitDispatcher(ApcLock.OldIrql);
-    return State;
-}
-
-/*++
- * KeFlushQueueApc
- *
- *     The KeFlushQueueApc routine flushes all APCs of the given processor mode
- *     from the specified Thread's APC queue.
- *
- * Params:
- *     Thread - Pointer to the thread whose APC queue will be flushed.
- *
- *     PreviousMode - Specifies which APC Queue to flush.
- *
- * Returns:
- *     A pointer to the first entry in the flushed APC queue.
- *
- * Remarks:
- *     If the routine returns NULL, it means that no APCs were to be flushed.
- *
- *     Callers of KeFlushQueueApc must be running at DISPATCH_LEVEL or lower.
- *
- *--*/
-PLIST_ENTRY
-STDCALL
-KeFlushQueueApc(IN PKTHREAD Thread,
-                IN KPROCESSOR_MODE PreviousMode)
-{
-    PKAPC Apc;
-    PLIST_ENTRY FirstEntry, CurrentEntry;
-    KLOCK_QUEUE_HANDLE ApcLock;
-
-    /* Get the APC lock */
-    KiAcquireApcLock(Thread, &ApcLock);
-
-    if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode])) {
-        FirstEntry = NULL;
-    } else {
-        FirstEntry = Thread->ApcState.ApcListHead[PreviousMode].Flink;
-        RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
-        CurrentEntry = FirstEntry;
-        do {
-            Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
-            Apc->Inserted = FALSE;
-            CurrentEntry = CurrentEntry->Flink;
-        } while (CurrentEntry != FirstEntry);
-    }
-
-    /* Release the lock */
-    KiReleaseApcLock(&ApcLock);
-
-    /* Return the first entry */
-    return FirstEntry;
-}
-
-/*++
- * KeRemoveQueueApc
- *
- *     The KeRemoveQueueApc routine removes a given APC object from the system
- *     APC queue.
- *
- * Params:
- *     APC - Pointer to an initialized APC object that was queued by calling
- *           KeInsertQueueApc.
- *
- * Returns:
- *     TRUE if the APC Object is in the APC Queue. If it isn't, no operation is
- *     performed and FALSE is returned.
- *
- * Remarks:
- *     If the given APC Object is currently queued, it is removed from the queue
- *     and any calls to the registered routines are cancelled.
- *
- *     Callers of KeLeaveCriticalRegion can be running at any IRQL.
- *
- *--*/
-BOOLEAN
-STDCALL
-KeRemoveQueueApc(PKAPC Apc)
-{
-    PKTHREAD Thread = Apc->Thread;
-    PKAPC_STATE ApcState;
-    BOOLEAN Inserted;
-    KLOCK_QUEUE_HANDLE ApcLock;
-
-    /* Get the APC lock */
-    KiAcquireApcLock(Thread, &ApcLock);
-
-    /* Check if it's inserted */
-    if ((Inserted = Apc->Inserted))
-    {
-        /* Remove it from the Queue*/
-        Apc->Inserted = FALSE;
-        ApcState = Thread->ApcStatePointer[(int)Apc->ApcStateIndex];
-        RemoveEntryList(&Apc->ApcListEntry);
-
-        /* If the Queue is completely empty, then no more APCs are pending */
-        if (IsListEmpty(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode]))
-        {
-            /* Set the correct State based on the Apc Mode */
-            if (Apc->ApcMode == KernelMode)
-            {
-                ApcState->KernelApcPending = FALSE;
-            }
-            else
-            {
-                ApcState->UserApcPending = FALSE;
-            }
-        }
-    }
-
-    /* Release the lock and return */
-    KiReleaseApcLock(&ApcLock);
-    return Inserted;
 }
 
 /*++
@@ -835,81 +510,363 @@ KiFreeApcRoutine(PKAPC Apc,
     ExFreePool(Apc);
 }
 
+static __inline
+VOID RepairList(PLIST_ENTRY Original,
+                PLIST_ENTRY Copy,
+                KPROCESSOR_MODE Mode)
+{
+    /* Copy Source to Desination */
+    if (IsListEmpty(&Original[(int)Mode])) {
+
+        InitializeListHead(&Copy[(int)Mode]);
+
+    } else {
+
+        Copy[(int)Mode].Flink = Original[(int)Mode].Flink;
+        Copy[(int)Mode].Blink = Original[(int)Mode].Blink;
+        Original[(int)Mode].Flink->Blink = &Copy[(int)Mode];
+        Original[(int)Mode].Blink->Flink = &Copy[(int)Mode];
+    }
+}
+
+VOID
+STDCALL
+KiMoveApcState(PKAPC_STATE OldState,
+               PKAPC_STATE NewState)
+{
+    /* Restore backup of Original Environment */
+    *NewState = *OldState;
+
+    /* Repair Lists */
+    RepairList(NewState->ApcListHead, OldState->ApcListHead, KernelMode);
+    RepairList(NewState->ApcListHead, OldState->ApcListHead, UserMode);
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
 /*++
- * KiInitializeUserApc
+ * @name KeEnterCriticalRegion
+ * @implemented NT4
  *
- *     Prepares the Context for a User-Mode APC called through NTDLL.DLL
+ *     The KeEnterCriticalRegion routine temporarily disables the delivery of
+ *     normal kernel APCs; special kernel-mode APCs are still delivered.
+ *
+ * @param None.
+ *
+ * @return None.
+ *
+ * @remarks Highest-level drivers can call this routine while running in the
+ *          context of the thread that requested the current I/O operation.
+ *          Any caller of this routine should call KeLeaveCriticalRegion as
+ *          quickly as possible.
+ *
+ *          Callers of KeEnterCriticalRegion must be running at IRQL <=
+ *          APC_LEVEL.
+ *
+ *--*/
+VOID
+NTAPI
+_KeEnterCriticalRegion(VOID)
+{
+    /* Use inlined function */
+    KeEnterCriticalRegion();
+}
+
+/*++
+ * KeLeaveCriticalRegion
+ * @implemented NT4
+ *
+ *     The KeLeaveCriticalRegion routine reenables the delivery of normal
+ *     kernel-mode APCs that were disabled by a call to KeEnterCriticalRegion.
+ *
+ * @param None.
+ *
+ * @return None.
+ *
+ * @remarks Highest-level drivers can call this routine while running in the
+ *          context of the thread that requested the current I/O operation.
+ *
+ *          Callers of KeLeaveCriticalRegion must be running at IRQL <=
+ *          DISPATCH_LEVEL.
+ *
+ *--*/
+VOID
+NTAPI
+_KeLeaveCriticalRegion(VOID)
+{
+    /* Use inlined version */
+    KeLeaveCriticalRegion();
+}
+
+/*++
+ * KeInitializeApc
+ * @implemented NT4
+ *
+ *     The The KeInitializeApc routine initializes an APC object, and registers
+ *     the Kernel, Rundown and Normal routines for that object.
  *
  * Params:
- *     Reserved - Pointer to the Exception Frame on non-i386 builds.
+ *     Apc - Pointer to a KAPC structure that represents the APC object to
+ *           initialize. The caller must allocate storage for the structure
+ *           from resident memory.
  *
- *     TrapFrame - Pointer to the Trap Frame.
+ *     Thread - Thread to which to deliver the APC.
  *
- *     NormalRoutine - Pointer to the NormalRoutine to call.
+ *     TargetEnvironment - APC Environment to be used.
  *
- *     NormalContext - Pointer to the context to send to the Normal Routine.
+ *     KernelRoutine - Points to the KernelRoutine to associate with the APC.
+ *                     This routine is executed for all APCs.
  *
- *     SystemArgument[1-2] - Pointer to a set of two parameters that contain
- *                           untyped data.
+ *     RundownRoutine - Points to the RundownRoutine to associate with the APC.
+ *                      This routine is executed when the Thread exists with
+ *                      the APC executing.
+ *
+ *     NormalRoutine - Points to the NormalRoutine to associate with the APC.
+ *                     This routine is executed at PASSIVE_LEVEL. If this is
+ *                     not specifed, the APC becomes a Special APC and the
+ *                     Mode and Context parameters are ignored.
+ *
+ *     Mode - Specifies the processor mode at which to run the Normal Routine.
+ *
+ *     Context - Specifices the value to pass as Context parameter to the
+ *               registered routines.
  *
  * Returns:
  *     None.
  *
  * Remarks:
- *     None.
+ *     The caller can queue an initialized APC with KeInsertQueueApc.
+ *
+ *     Storage for the APC object must be resident, such as nonpaged pool
+ *     allocated by the caller.
+ *
+ *     Callers of this routine must be running at IRQL = PASSIVE_LEVEL.
  *
  *--*/
 VOID
 STDCALL
-KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
-                    IN PKTRAP_FRAME TrapFrame,
-                    IN PKNORMAL_ROUTINE NormalRoutine,
-                    IN PVOID NormalContext,
-                    IN PVOID SystemArgument1,
-                    IN PVOID SystemArgument2)
+KeInitializeApc(IN PKAPC Apc,
+                IN PKTHREAD Thread,
+                IN KAPC_ENVIRONMENT TargetEnvironment,
+                IN PKKERNEL_ROUTINE KernelRoutine,
+                IN PKRUNDOWN_ROUTINE RundownRoutine OPTIONAL,
+                IN PKNORMAL_ROUTINE NormalRoutine,
+                IN KPROCESSOR_MODE Mode,
+                IN PVOID Context)
 {
-    CONTEXT Context;
-    ULONG_PTR Stack;
-    ULONG Size;
+    DPRINT("KeInitializeApc(Apc %x, Thread %x, Environment %d, "
+           "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
+           "Context %x)\n",Apc,Thread,TargetEnvironment,KernelRoutine,RundownRoutine,
+            NormalRoutine,Mode,Context);
 
-    DPRINT("KiInitializeUserApc(TrapFrame %x/%x)\n", TrapFrame,
-            KeGetCurrentThread()->TrapFrame);
+    /* Set up the basic APC Structure Data */
+    RtlZeroMemory(Apc, sizeof(KAPC));
+    Apc->Type = ApcObject;
+    Apc->Size = sizeof(KAPC);
 
-    /* Don't deliver APCs in V86 mode */
-    if (TrapFrame->EFlags & X86_EFLAGS_VM) return;
+    /* Set the Environment */
+    if (TargetEnvironment == CurrentApcEnvironment) {
 
-    /* Save the full context */
-    Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
-    KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
+        Apc->ApcStateIndex = Thread->ApcStateIndex;
 
-    /* Protect with SEH */
-    _SEH_TRY
-    {
-        /* Get the aligned size */
-        Size = ((sizeof(CONTEXT) + 3) & ~3) + 4 * sizeof(ULONG_PTR);
-        Stack = (Context.Esp & ~3) - Size;
+    } else {
 
-        /* Probe and copy */
-        ProbeForWrite((PVOID)Stack, Size, 4);
-        RtlMoveMemory((PVOID)(Stack + 4 * sizeof(ULONG_PTR)),
-                      &Context,
-                      sizeof(CONTEXT));
-
-        /* Run at APC dispatcher */
-        TrapFrame->Eip = (ULONG)KeUserApcDispatcher;
-        TrapFrame->HardwareEsp = Stack;
-
-        /* Setup the stack */
-        *(PULONG_PTR)(Stack + 0 * sizeof(ULONG_PTR)) = (ULONG_PTR)NormalRoutine;
-        *(PULONG_PTR)(Stack + 1 * sizeof(ULONG_PTR)) = (ULONG_PTR)NormalContext;
-        *(PULONG_PTR)(Stack + 2 * sizeof(ULONG_PTR)) = (ULONG_PTR)SystemArgument1;
-        *(PULONG_PTR)(Stack + 3 * sizeof(ULONG_PTR)) = (ULONG_PTR)SystemArgument2;
+        Apc->ApcStateIndex = TargetEnvironment;
     }
-    _SEH_HANDLE
-    {
-        /* FIXME: Get the record and raise an exception */
+
+    /* Set the Thread and Routines */
+    Apc->Thread = Thread;
+    Apc->KernelRoutine = KernelRoutine;
+    Apc->RundownRoutine = RundownRoutine;
+    Apc->NormalRoutine = NormalRoutine;
+
+    /* Check if this is a Special APC, in which case we use KernelMode and no Context */
+    if (ARGUMENT_PRESENT(NormalRoutine)) {
+
+        Apc->ApcMode = Mode;
+        Apc->NormalContext = Context;
+
+    } else {
+
+        Apc->ApcMode = KernelMode;
     }
-    _SEH_END;
+}
+
+/*++
+ * KeInsertQueueApc
+ * @implemented NT4
+ *
+ *     The KeInsertQueueApc routine queues a APC for execution when the right
+ *     scheduler environment exists.
+ *
+ * Params:
+ *     Apc - Pointer to an initialized control object of type DPC for which the
+ *           caller provides the storage.
+ *
+ *     SystemArgument[1,2] - Pointer to a set of two parameters that contain
+ *                           untyped data.
+ *
+ *     PriorityBoost - Priority Boost to apply to the Thread.
+ *
+ * Returns:
+ *     If the APC is already inserted or APC queueing is disabled, FALSE.
+ *     Otherwise, TRUE.
+ *
+ * Remarks:
+ *     The APC will execute at APC_LEVEL for the KernelRoutine registered, and
+ *     at PASSIVE_LEVEL for the NormalRoutine registered.
+ *
+ *     Callers of this routine must be running at IRQL = PASSIVE_LEVEL.
+ *
+ *--*/
+BOOLEAN
+STDCALL
+KeInsertQueueApc(PKAPC Apc,
+                 PVOID SystemArgument1,
+                 PVOID SystemArgument2,
+                 KPRIORITY PriorityBoost)
+{
+    PKTHREAD Thread = Apc->Thread;
+    KLOCK_QUEUE_HANDLE ApcLock;
+    BOOLEAN State = TRUE;
+
+    /* Get the APC lock */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    /* Make sure we can Queue APCs and that this one isn't already inserted */
+    if ((Thread->ApcQueueable == FALSE) && (Apc->Inserted == TRUE))
+    {
+        /* Fail */
+        State = FALSE;
+    }
+    else
+    {
+        /* Set the System Arguments and set it as inserted */
+        Apc->SystemArgument1 = SystemArgument1;
+        Apc->SystemArgument2 = SystemArgument2;
+        Apc->Inserted = TRUE;
+
+        /* Call the Internal Function */
+        KiInsertQueueApc(Apc, PriorityBoost);
+    }
+
+    /* Release the APC lock and return success */
+    KiReleaseApcLock(&ApcLock);
+    KiExitDispatcher(ApcLock.OldIrql);
+    return State;
+}
+
+/*++
+ * KeFlushQueueApc
+ *
+ *     The KeFlushQueueApc routine flushes all APCs of the given processor mode
+ *     from the specified Thread's APC queue.
+ *
+ * Params:
+ *     Thread - Pointer to the thread whose APC queue will be flushed.
+ *
+ *     PreviousMode - Specifies which APC Queue to flush.
+ *
+ * Returns:
+ *     A pointer to the first entry in the flushed APC queue.
+ *
+ * Remarks:
+ *     If the routine returns NULL, it means that no APCs were to be flushed.
+ *
+ *     Callers of KeFlushQueueApc must be running at DISPATCH_LEVEL or lower.
+ *
+ *--*/
+PLIST_ENTRY
+STDCALL
+KeFlushQueueApc(IN PKTHREAD Thread,
+                IN KPROCESSOR_MODE PreviousMode)
+{
+    PKAPC Apc;
+    PLIST_ENTRY FirstEntry, CurrentEntry;
+    KLOCK_QUEUE_HANDLE ApcLock;
+
+    /* Get the APC lock */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode])) {
+        FirstEntry = NULL;
+    } else {
+        FirstEntry = Thread->ApcState.ApcListHead[PreviousMode].Flink;
+        RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
+        CurrentEntry = FirstEntry;
+        do {
+            Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
+            Apc->Inserted = FALSE;
+            CurrentEntry = CurrentEntry->Flink;
+        } while (CurrentEntry != FirstEntry);
+    }
+
+    /* Release the lock */
+    KiReleaseApcLock(&ApcLock);
+
+    /* Return the first entry */
+    return FirstEntry;
+}
+
+/*++
+ * KeRemoveQueueApc
+ *
+ *     The KeRemoveQueueApc routine removes a given APC object from the system
+ *     APC queue.
+ *
+ * Params:
+ *     APC - Pointer to an initialized APC object that was queued by calling
+ *           KeInsertQueueApc.
+ *
+ * Returns:
+ *     TRUE if the APC Object is in the APC Queue. If it isn't, no operation is
+ *     performed and FALSE is returned.
+ *
+ * Remarks:
+ *     If the given APC Object is currently queued, it is removed from the queue
+ *     and any calls to the registered routines are cancelled.
+ *
+ *     Callers of KeLeaveCriticalRegion can be running at any IRQL.
+ *
+ *--*/
+BOOLEAN
+STDCALL
+KeRemoveQueueApc(PKAPC Apc)
+{
+    PKTHREAD Thread = Apc->Thread;
+    PKAPC_STATE ApcState;
+    BOOLEAN Inserted;
+    KLOCK_QUEUE_HANDLE ApcLock;
+
+    /* Get the APC lock */
+    KiAcquireApcLock(Thread, &ApcLock);
+
+    /* Check if it's inserted */
+    if ((Inserted = Apc->Inserted))
+    {
+        /* Remove it from the Queue*/
+        Apc->Inserted = FALSE;
+        ApcState = Thread->ApcStatePointer[(int)Apc->ApcStateIndex];
+        RemoveEntryList(&Apc->ApcListEntry);
+
+        /* If the Queue is completely empty, then no more APCs are pending */
+        if (IsListEmpty(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode]))
+        {
+            /* Set the correct State based on the Apc Mode */
+            if (Apc->ApcMode == KernelMode)
+            {
+                ApcState->KernelApcPending = FALSE;
+            }
+            else
+            {
+                ApcState->UserApcPending = FALSE;
+            }
+        }
+    }
+
+    /* Release the lock and return */
+    KiReleaseApcLock(&ApcLock);
+    return Inserted;
 }
 
 /*++
@@ -1032,37 +989,5 @@ NtQueueApcThread(HANDLE ThreadHandle,
     /* Dereference Thread and Return */
     ObDereferenceObject(Thread);
     return Status;
-}
-
-static __inline
-VOID RepairList(PLIST_ENTRY Original,
-                PLIST_ENTRY Copy,
-                KPROCESSOR_MODE Mode)
-{
-    /* Copy Source to Desination */
-    if (IsListEmpty(&Original[(int)Mode])) {
-
-        InitializeListHead(&Copy[(int)Mode]);
-
-    } else {
-
-        Copy[(int)Mode].Flink = Original[(int)Mode].Flink;
-        Copy[(int)Mode].Blink = Original[(int)Mode].Blink;
-        Original[(int)Mode].Flink->Blink = &Copy[(int)Mode];
-        Original[(int)Mode].Blink->Flink = &Copy[(int)Mode];
-    }
-}
-
-VOID
-STDCALL
-KiMoveApcState(PKAPC_STATE OldState,
-               PKAPC_STATE NewState)
-{
-    /* Restore backup of Original Environment */
-    *NewState = *OldState;
-
-    /* Repair Lists */
-    RepairList(NewState->ApcListHead, OldState->ApcListHead, KernelMode);
-    RepairList(NewState->ApcListHead, OldState->ApcListHead, UserMode);
 }
 

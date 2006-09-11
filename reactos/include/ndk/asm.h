@@ -381,6 +381,7 @@ Author:
 #define EFLAG_ZERO                              0x4000
 #define EFLAG_SELECT                            (EFLAG_SIGN + EFLAG_ZERO)
 #endif
+#define EFLAGS_USER_SANITIZE                    0x3F4DD7
 
 //
 // CR0
