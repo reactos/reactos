@@ -658,48 +658,49 @@ KeInitializeApc(IN PKAPC Apc,
 }
 
 /*++
- * KeInsertQueueApc
+ * @name KeInsertQueueApc
  * @implemented NT4
  *
  *     The KeInsertQueueApc routine queues a APC for execution when the right
  *     scheduler environment exists.
  *
- * Params:
- *     Apc - Pointer to an initialized control object of type DPC for which the
- *           caller provides the storage.
+ * @param Apc
+ *        Pointer to an initialized control object of type DPC for which the
+ *        caller provides the storage.
  *
- *     SystemArgument[1,2] - Pointer to a set of two parameters that contain
- *                           untyped data.
+ * @param SystemArgument[1,2]
+ *        Pointer to a set of two parameters that contain untyped data.
  *
- *     PriorityBoost - Priority Boost to apply to the Thread.
+ * @param PriorityBoost
+ *        Priority Boost to apply to the Thread.
  *
- * Returns:
- *     If the APC is already inserted or APC queueing is disabled, FALSE.
- *     Otherwise, TRUE.
+ * @return If the APC is already inserted or APC queueing is disabled, FALSE.
+ *         Otherwise, TRUE.
  *
- * Remarks:
- *     The APC will execute at APC_LEVEL for the KernelRoutine registered, and
- *     at PASSIVE_LEVEL for the NormalRoutine registered.
+ * @remarks The APC will execute at APC_LEVEL for the KernelRoutine registered,
+ *          and at PASSIVE_LEVEL for the NormalRoutine registered.
  *
- *     Callers of this routine must be running at IRQL = PASSIVE_LEVEL.
+ *          Callers of this routine must be running at IRQL <= DISPATCH_LEVEL.
  *
  *--*/
 BOOLEAN
-STDCALL
-KeInsertQueueApc(PKAPC Apc,
-                 PVOID SystemArgument1,
-                 PVOID SystemArgument2,
-                 KPRIORITY PriorityBoost)
+NTAPI
+KeInsertQueueApc(IN PKAPC Apc,
+                 IN PVOID SystemArgument1,
+                 IN PVOID SystemArgument2,
+                 IN KPRIORITY PriorityBoost)
 {
     PKTHREAD Thread = Apc->Thread;
     KLOCK_QUEUE_HANDLE ApcLock;
     BOOLEAN State = TRUE;
+    ASSERT_APC(Apc);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Get the APC lock */
     KiAcquireApcLock(Thread, &ApcLock);
 
     /* Make sure we can Queue APCs and that this one isn't already inserted */
-    if ((Thread->ApcQueueable == FALSE) && (Apc->Inserted == TRUE))
+    if (!(Thread->ApcQueueable) && (Apc->Inserted))
     {
         /* Fail */
         State = FALSE;
@@ -722,23 +723,22 @@ KeInsertQueueApc(PKAPC Apc,
 }
 
 /*++
- * KeFlushQueueApc
+ * @name KeFlushQueueApc
+ * @implemented NT4
  *
  *     The KeFlushQueueApc routine flushes all APCs of the given processor mode
  *     from the specified Thread's APC queue.
  *
- * Params:
- *     Thread - Pointer to the thread whose APC queue will be flushed.
+ * @param Thread
+ *        Pointer to the thread whose APC queue will be flushed.
  *
- *     PreviousMode - Specifies which APC Queue to flush.
+ * @paramt PreviousMode
+ *         Specifies which APC Queue to flush.
  *
- * Returns:
- *     A pointer to the first entry in the flushed APC queue.
+ * @return A pointer to the first entry in the flushed APC queue.
  *
- * Remarks:
- *     If the routine returns NULL, it means that no APCs were to be flushed.
- *
- *     Callers of KeFlushQueueApc must be running at DISPATCH_LEVEL or lower.
+ * @remarks If the routine returns NULL, it means that no APCs were flushed.
+ *          Callers of this routine must be running at DISPATCH_LEVEL or lower.
  *
  *--*/
 PLIST_ENTRY
