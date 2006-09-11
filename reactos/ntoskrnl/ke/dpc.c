@@ -71,7 +71,6 @@ KiQuantumEnd(VOID)
             if (!Prcb->NextThread)
             {
                 /* FIXME: TODO. Add code from new scheduler */
-                NextThread = NULL;
             }
             else
             {
@@ -102,6 +101,32 @@ KiQuantumEnd(VOID)
     /* This shouldn't happen on ROS yet */
     DPRINT1("The impossible happened - Tell Alex\n");
     ASSERT(FALSE);
+
+    /* Get the next thread now */
+    NextThread = Prcb->NextThread;
+
+    /* Set current thread's swap busy to true */
+    KiSetThreadSwapBusy(Thread);
+
+    /* Switch threads in PRCB */
+    Prcb->NextThread = NULL;
+    Prcb->CurrentThread = NextThread;
+
+    /* Set thread to running and the switch reason to Quantum End */
+    NextThread->State = Running;
+    Thread->WaitReason = WrQuantumEnd;
+
+    /* Queue it on the ready lists */
+    KxQueueReadyThread(Thread, Prcb);
+
+    /* Set wait IRQL to APC_LEVEL */
+    Thread->WaitIrql = APC_LEVEL;
+
+    /* Swap threads */
+    KiSwapContext(Thread, NextThread);
+
+    /* Lower IRQL back to DISPATCH_LEVEL */
+    KeLowerIrql(DISPATCH_LEVEL);
 }
 
 VOID

@@ -236,26 +236,85 @@ KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
                           NULL);
 }
 
+//
+// This routine exits the dispatcher after a compatible operation and
+// swaps the context to the next scheduled thread on the current CPU if
+// one is available.
+//
+// It does NOT attempt to scan for a new thread to schedule.
+//
 VOID
 FASTCALL
 KiExitDispatcher(IN KIRQL OldIrql)
 {
-    /* Check if it's the idle thread */
-    if (!(KeIsExecutingDpc()) &&
-        (OldIrql < DISPATCH_LEVEL) &&
-        (KeGetCurrentThread()) &&
-        (KeGetCurrentThread() == KeGetCurrentPrcb()->IdleThread))
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKTHREAD Thread, NextThread;
+    BOOLEAN PendingApc;
+
+    /* Make sure we're at synchronization level */
+    ASSERT_IRQL(SYNCH_LEVEL);
+
+    /* Check if we have deferred threads */
+    KiCheckDeferredReadyList(Prcb);
+
+    /* Check if we were called at dispatcher level or higher */
+    if (OldIrql >= DISPATCH_LEVEL)
     {
-        /* Dispatch a new thread */
-        KiDispatchThreadNoLock(Ready);
-    }
-    else
-    {
-        /* Otherwise just release the lock */
-        KiReleaseDispatcherLockFromDpcLevel();
+        /* Check if we have a thread to schedule, and that no DPC is active */
+        if ((Prcb->NextThread) && !(Prcb->DpcRoutineActive))
+        {
+            /* Request DPC interrupt */
+            HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+        }
+
+        /* Lower IRQL and exit */
+        goto Quickie;
     }
 
-    /* Lower irql back */
+    /* Make sure there's a new thread scheduled */
+    if (!Prcb->NextThread) goto Quickie;
+
+    /* This shouldn't happen on ROS yet */
+    DPRINT1("The impossible happened - Tell Alex\n");
+    ASSERT(FALSE);
+
+    /* Lock the PRCB */
+    KiAcquirePrcbLock(Prcb);
+
+    /* Get the next and current threads now */
+    NextThread = Prcb->NextThread;
+    Thread = Prcb->CurrentThread;
+
+    /* Set current thread's swap busy to true */
+    KiSetThreadSwapBusy(Thread);
+
+    /* Switch threads in PRCB */
+    Prcb->NextThread = NULL;
+    Prcb->CurrentThread = NextThread;
+
+    /* Set thread to running */
+    NextThread->State = Running;
+
+    /* Queue it on the ready lists */
+    KxQueueReadyThread(Thread, Prcb);
+
+    /* Set wait IRQL */
+    Thread->WaitIrql = OldIrql;
+
+    /* Swap threads and check if APCs were pending */
+    PendingApc = KiSwapContext(Thread, NextThread);
+    if (PendingApc)
+    {
+        /* Lower only to APC */
+        KeLowerIrql(APC_LEVEL);
+
+        /* Deliver APCs */
+        KiDeliverApc(KernelMode, NULL, NULL);
+        ASSERT(OldIrql == PASSIVE_LEVEL);
+    }
+
+    /* Lower IRQl back */
+Quickie:
     KeLowerIrql(OldIrql);
 }
 
