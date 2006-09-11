@@ -430,10 +430,12 @@ KiRundownThread(IN PKTHREAD Thread)
 
 FORCEINLINE
 VOID
-KiRequestApcInterrupt(IN UCHAR Processor)
+KiRequestApcInterrupt(IN BOOLEAN NeedApc,
+                      IN UCHAR Processor)
 {
-    /* Request a software interrupt */
-    HalRequestSoftwareInterrupt(APC_LEVEL);
+    /* We deliver instantly on UP */
+    UNREFERENCED_PARAMETER(NeedApc);
+    UNREFERENCED_PARAMETER(Processor);
 }
 
 #else
@@ -604,17 +606,23 @@ KiCheckDeferredReadyList(IN PKPRCB Prcb)
 
 FORCEINLINE
 VOID
-KiRequestApcInterrupt(IN UCHAR Processor)
+KiRequestApcInterrupt(IN BOOLEAN NeedApc,
+                      IN UCHAR Processor)
 {
-    /* Check if we're on the same CPU */
-    if (KeGetCurrentPrcb()->Number == Processor)
+    /* Check if we need to request APC delivery */
+    if (NeedApc)
     {
-        /* Request a software interrupt */
-        HalRequestSoftwareInterrupt(APC_LEVEL);
-    }
-    else
-    {
-        KiIpiSendRequest(KeGetCurrentPrcb()->SetMember, IPI_APC);
+        /* Check if it's on another CPU */
+        if (KeGetPcr()->Number != Cpu)
+        {
+            /* Send an IPI to request delivery */
+            KiIpiSendRequest(AFFINITY_MASK(Cpu), IPI_DPC);
+        }
+        else
+        {
+            /* Request a software interrupt */
+            HalRequestSoftwareInterrupt(APC_LEVEL);
+        }
     }
 }
 

@@ -81,8 +81,8 @@ KiCheckForKernelApcDelivery(VOID)
  *--*/
 VOID
 FASTCALL
-KiInsertQueueApc(PKAPC Apc,
-                 KPRIORITY PriorityBoost)
+KiInsertQueueApc(IN PKAPC Apc,
+                 IN KPRIORITY PriorityBoost)
 {
     PKTHREAD Thread = Apc->Thread;
     PKAPC_STATE ApcState;
@@ -90,22 +90,24 @@ KiInsertQueueApc(PKAPC Apc,
     PLIST_ENTRY ListHead, NextEntry;
     PKAPC QueuedApc;
     NTSTATUS Status;
+    BOOLEAN RequestInterrupt;
 
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-
-    /* Acquire the lock (only needed on MP) */
-    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
-
-    /* Little undocumented feature: Special Apc State Index */
-    if (Apc->ApcStateIndex == 3)
+    /*
+     * Check if the caller wanted this APC to use the thread's environment at
+     * insertion time.
+     */
+    if (Apc->ApcStateIndex == InsertApcEnvironment)
     {
-        /* This tells us to use the thread's */
+        /* Copy it over */
         Apc->ApcStateIndex = Thread->ApcStateIndex;
     }
 
     /* Get the APC State for this Index, and the mode too */
-    ApcState = Thread->ApcStatePointer[(int)Apc->ApcStateIndex];
+    ApcState = Thread->ApcStatePointer[(UCHAR)Apc->ApcStateIndex];
     ApcMode = Apc->ApcMode;
+
+    /* The APC must be "inserted" already */
+    ASSERT(Apc->Inserted == TRUE);
 
     /* Three scenarios:
      * 1) Kernel APC with Normal Routine or User APC = Put it at the end of the List
@@ -115,26 +117,21 @@ KiInsertQueueApc(PKAPC Apc,
     if (Apc->NormalRoutine)
     {
         /* Normal APC; is it the Thread Termination APC? */
-        if ((ApcMode != KernelMode) && (Apc->KernelRoutine == PsExitSpecialApc))
+        if ((ApcMode != KernelMode) &&
+            (Apc->KernelRoutine == PsExitSpecialApc))
         {
             /* Set User APC pending to true */
             Thread->ApcState.UserApcPending = TRUE;
 
             /* Insert it at the top of the list */
-            InsertHeadList(&ApcState->ApcListHead[ApcMode], &Apc->ApcListEntry);
-
-            /* Display debug message */
-            DPRINT("Inserted the Thread Exit APC for '%.16s' into the Queue\n",
-                   ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
+            InsertHeadList(&ApcState->ApcListHead[ApcMode],
+                           &Apc->ApcListEntry);
         }
         else
         {
             /* Regular user or kernel Normal APC */
-            InsertTailList(&ApcState->ApcListHead[ApcMode], &Apc->ApcListEntry);
-
-            /* Display debug message */
-            DPRINT("Inserted Normal APC for '%.16s' into the Queue\n",
-                   ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
+            InsertTailList(&ApcState->ApcListHead[ApcMode],
+                           &Apc->ApcListEntry);
         }
     }
     else
@@ -159,8 +156,6 @@ KiInsertQueueApc(PKAPC Apc,
 
         /* Insert us here */
         InsertHeadList(NextEntry, &Apc->ApcListEntry);
-        DPRINT("Inserted Special APC for '%.16s' into the Queue\n",
-               ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
     }
 
     /* Now check if the Apc State Indexes match */
@@ -169,6 +164,9 @@ KiInsertQueueApc(PKAPC Apc,
         /* Check that if the thread matches */
         if (Thread == KeGetCurrentThread())
         {
+            /* Sanity check */
+            ASSERT(Thread->State == Running);
+
             /* Check if this is kernel mode */
             if (ApcMode == KernelMode)
             {
@@ -176,7 +174,7 @@ KiInsertQueueApc(PKAPC Apc,
                 Thread->ApcState.KernelApcPending = TRUE;
 
                 /* Check if Special APCs are disabled */
-                if (Thread->SpecialApcDisable == 0)
+                if (!Thread->SpecialApcDisable)
                 {
                     /* They're not, so request the interrupt */
                     HalRequestSoftwareInterrupt(APC_LEVEL);
@@ -185,20 +183,23 @@ KiInsertQueueApc(PKAPC Apc,
         }
         else
         {
+            /* Acquire the dispatcher lock */
+            KiAcquireDispatcherLock();
+
             /* Check if this is a non-kernel mode APC */
             if (ApcMode != KernelMode)
             {
-                /* Not a Kernel-Mode APC. Are we waiting in user-mode? */
-                if ((Thread->State == Waiting) && (Thread->WaitMode == UserMode))
+                /*
+                 * Not a Kernel-Mode APC. Are we waiting in user-mode?
+                 * If so, then are we alertable or already have an APC pending?
+                 */
+                if (((Thread->State == Waiting) && (Thread->WaitMode == UserMode)) &&
+                    ((Thread->Alertable) || (Thread->ApcState.UserApcPending)))
                 {
-                    /* The thread is waiting. Are we alertable, or is an APC pending */
-                    if ((Thread->Alertable) || (Thread->ApcState.UserApcPending))
-                    {
-                        /* Set user-mode APC pending */
-                        Thread->ApcState.UserApcPending = TRUE;
-                        Status = STATUS_USER_APC;
-                        goto Unwait;
-                    }
+                    /* Set user-mode APC pending */
+                    Thread->ApcState.UserApcPending = TRUE;
+                    Status = STATUS_USER_APC;
+                    goto Unwait;
                 }
             }
             else
@@ -209,8 +210,12 @@ KiInsertQueueApc(PKAPC Apc,
                 /* Are we currently running? */
                 if (Thread->State == Running)
                 {
-                    /* The thread is running, so send an APC request */
-                    KiRequestApcInterrupt(Thread->NextProcessor);
+                    /* The thread is running, so remember to send a request */
+                    RequestInterrupt = TRUE;
+#ifndef CONFIG_SMP
+                    /* On UP systems, request it immediately */
+                    HalRequestSoftwareInterrupt(APC_LEVEL);
+#endif
                 }
                 else
                 {
@@ -225,31 +230,36 @@ KiInsertQueueApc(PKAPC Apc,
                      */
                     if ((Thread->State == Waiting) &&
                         (Thread->WaitIrql == PASSIVE_LEVEL) &&
-                        (!Thread->SpecialApcDisable) && 
-                        ((!Apc->NormalRoutine) ||
-                         ((!Thread->KernelApcDisable) &&
-                         (!Thread->ApcState.KernelApcInProgress))))
+                        !(Thread->SpecialApcDisable) &&
+                        (!(Apc->NormalRoutine) ||
+                         (!(Thread->KernelApcDisable) &&
+                          !(Thread->ApcState.KernelApcInProgress))))
                     {
                         /* We'll unwait with this status */
                         Status = STATUS_KERNEL_APC;
 
                         /* Wake up the thread */
 Unwait:
-                        DPRINT("Waking up Thread for %lx Delivery \n", Status);
                         KiAbortWaitThread(Thread, Status, PriorityBoost);
                     }
                     else
                     {
-                        /* FIXME: Handle deferred ready sometime far far in the future */
+                        /* Check if the thread is in a deferred ready state */
+                        if (Thread->State == DeferredReady)
+                        {
+                            /* FIXME: TODO in new scheduler */
+                        }
                     }
                 }
             }
+
+            /* Release dispatcher lock */
+            KiReleaseDispatcherLockFromDpcLevel();
+
+            /* Check if an interrupt was requested */
+            KiRequestApcInterrupt(RequestInterrupt, Thread->NextProcessor);
         }
     }
-
-    /* Return to caller */
-    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
-    return;
 }
 
 /*++
@@ -862,7 +872,7 @@ KeRemoveQueueApc(IN PKAPC Apc)
     {
         /* Set it as non-inserted and get the APC state */
         Apc->Inserted = FALSE;
-        ApcState = Thread->ApcStatePointer[(SCHAR)Apc->ApcStateIndex];
+        ApcState = Thread->ApcStatePointer[(UCHAR)Apc->ApcStateIndex];
 
         /* Acquire the dispatcher lock and remove it from the list */
         KiAcquireDispatcherLockAtDpcLevel();
