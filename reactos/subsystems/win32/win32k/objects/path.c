@@ -172,8 +172,19 @@ BOOL
 STDCALL
 NtGdiFlattenPath(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    BOOL Ret = FALSE;
+    DC *pDc;
+    
+    DPRINT("Enter %s\n", __FUNCTION__);
+    
+    pDc = DC_LockDc(hDC);
+    if(!pDc) return FALSE;
+
+    if(pDc->w.path.state == PATH_Open)
+	    Ret = PATH_FlattenPath(&pDc->w.path);
+
+    DC_UnlockDc(pDc);
+    return Ret;
 }
 
 
