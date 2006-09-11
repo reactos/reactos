@@ -147,6 +147,7 @@ Author:
 #define KPCR_TSS                                0x40
 #define KPCR_SET_MEMBER                         0x48
 #define KPCR_NUMBER                             0x51
+#define KPCR_PRCB_DATA                          0x120
 #define KPCR_CURRENT_THREAD                     0x124
 #define KPCR_PRCB_NEXT_THREAD                   0x128
 #define KPCR_PRCB_IDLE_THREAD                   0x12C

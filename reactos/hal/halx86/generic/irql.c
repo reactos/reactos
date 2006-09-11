@@ -422,4 +422,23 @@ HalRequestSoftwareInterrupt(
   }
 }
 
+VOID FASTCALL
+HalClearSoftwareInterrupt(
+  IN KIRQL Request)
+{
+  switch (Request)
+  {
+    case APC_LEVEL:
+      ((PKIPCR)KeGetPcr())->HalReserved[HAL_APC_REQUEST] = FALSE;
+      break;
+
+    case DISPATCH_LEVEL:
+      ((PKIPCR)KeGetPcr())->HalReserved[HAL_DPC_REQUEST] = FALSE;
+      break;
+      
+    default:
+      KEBUGCHECK(0);
+  }
+}
+
 /* EOF */

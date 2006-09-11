@@ -15,7 +15,7 @@ HalAllocateCrashDumpRegisters@8
 HalAssignSlotResources@32
 HalBeginSystemInterrupt@12
 HalCalibratePerformanceCounter@4
-;@HalClearSoftwareInterrupt@4
+@HalClearSoftwareInterrupt@4
 HalDisableSystemInterrupt@8
 HalDisplayString@4
 HalEnableSystemInterrupt@12

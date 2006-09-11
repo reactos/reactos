@@ -446,6 +446,13 @@ HalRequestSoftwareInterrupt(
   UNIMPLEMENTED;
 }
 
+VOID FASTCALL
+HalClearSoftwareInterrupt(
+  IN KIRQL Request)
+{
+  UNIMPLEMENTED;
+}
+
 
 VOID
 NTAPI

@@ -292,7 +292,6 @@
 	</directory>
 	<directory name="ps">
 			<file>debug.c</file>
-			<file>idle.c</file>
 			<file>job.c</file>
 			<file>kill.c</file>
 			<file>notify.c</file>

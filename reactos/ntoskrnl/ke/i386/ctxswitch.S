@@ -472,6 +472,7 @@ BugCheckDpc:
  *
  *--*/
 .globl @KiSwapContext@8
+.func  @KiSwapContext@8, @KiSwapContext@8
 @KiSwapContext@8:
     /* Note, we CANNOT touch ebp */
 
@@ -511,6 +512,130 @@ BugCheckDpc:
     /* Clean stack */
     add esp, 4 * 4
     ret
+.endfunc
+
+.globl @KiIdleLoop@0
+.func @KiIdleLoop@0, @KiIdleLoop@0
+@KiIdleLoop@0:
+
+    /* Jump into mainline code */
+    jmp MainLoop
+
+CpuIdle:
+    /* Call the CPU's idle function */
+#if 0
+    lea ecx, [ebx+KPCR_PRCB_POWER_STATE_IDLE_FUNCTION]
+    call [ecx]
+#else
+    sti
+    hlt
+#endif
+
+MainLoop:
+    /* Cycle interrupts for 1 cycle */
+    sti
+    nop
+    nop
+    cli
+
+    /* Check if we have to deliver DPCs, timers, or deferred threads */
+    mov eax, [ebx+KPCR_PRCB_DPC_QUEUE_DEPTH]
+    or eax, [ebx+KPCR_PRCB_TIMER_REQUEST]
+#ifdef CONFIG_SMP
+    or eax, [ebx+KPCR_PRCB_DEFERRED_READY_LIST_HEAD]
+#endif
+    jz CheckSchedule
+
+    /* Handle the above */
+    lea ecx, [ebx+KPCR_PRCB_DATA]
+    call @KiRetireDpcList@4
+
+CheckSchedule:
+    /* Check if a next thread is queued */
+    cmp dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+#ifdef CONFIG_SMP
+    jz NoNextThread
+#else
+    jz CpuIdle
+#endif
+
+#ifdef CONFIG_SMP
+    /* There is, raise IRQL to synch level */
+    mov ecx, SYNCH_LEVEL
+    call @KfRaiseIrql@4
+#endif
+    sti
+
+    /* Set the current thread to ready */
+    mov edi, [ebx+KPCR_CURRENT_THREAD]
+#ifdef CONFIG_SMP
+    mov [edi+KTHREAD_STATE], Ready
+
+    /* Acquire the PRCB Lock */
+    lock bts [ebx+KPCR_PRCB_PRCB_LOCK], 0
+    jnb CheckNext
+    lea ecx, [ebx+KPCR_PRCB_PRCB_LOCK]
+    call @KefAcquireSpinLockAtDpcLevel@4
+#endif
+
+CheckNext:
+    /* Check if the next thread is the current */
+    mov esi, [ebx+KPCR_PRCB_NEXT_THREAD]
+#ifdef CONFIG_SMP
+    cmp esi, edi
+    jz SameThread
+#endif
+
+    /* Clear the next thread and set this one instead */
+    and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+    mov [ebx+KPCR_CURRENT_THREAD], esi
+
+    /* Set the thread as running */
+    mov byte ptr [esi+KTHREAD_STATE], Running
+
+#ifdef CONFIG_SMP
+    /* Disable the idle scheduler and release the PRCB lock */
+    and byte ptr [ebx+KPCR_PRCB_IDLE_SCHEDULE], 0
+    and [ebx+KPCR_PRCB_PRCB_LOCK], 0
+#endif
+
+SwapContext:
+    /* Swap context at APC_LEVEL */
+    mov ecx, APC_LEVEL
+    call @KiSwapContextInternal@0
+
+#ifdef CONFIG_SMP
+    /* Lower to DPC level */
+    mov ecx, DISPATCH_LEVEL
+    call @KfLowerIrql@4
+#endif
+    jmp MainLoop
+
+#ifdef CONFIG_SMP
+SameThread:
+    /* Clear the next thread, and put the thready as ready after lock release */
+    and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+    and dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
+    and byte ptr [edi+KTHREAD_STATE], Ready
+    jmp MainLoop
+
+NoNextThread:
+    /* Check if the idle scheduler is enabled */
+    cmp byte ptr [ebx+KPCR_PRCB_IDLE_SCHEDULE], 0
+    jz CpuIdle
+
+    /* It is, so call the scheduler */
+    lea ecx, [ebx+KPCR_PRCBDATA]
+    call @KiIdleSchedule@4
+    test eax, eax
+
+    /* Get new thread pointers and either swap or idle loop again */
+    mov esi, eax
+    mov edi, [ebx+KPCR_PRCB_IDLE_THREAD]
+    jnz SwapContext
+    jmp MainLoop
+#endif
+.endfunc
 
 .globl _Ki386AdjustEsp0@4
 .func Ki386AdjustEsp0@4
