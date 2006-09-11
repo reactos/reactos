@@ -35,7 +35,7 @@
 #define PATH_MAX _MAX_PATH
 #endif//_MSC_VER
 
-#ifndef WIN32
+#ifndef WINDOWS_HOST
 #ifndef PATH_MAX
 #define PATH_MAX 260
 #endif
@@ -62,7 +62,7 @@ void convert_path(char *dst, char *src)
   i = 0;
   while (src[i] != 0)
     {
-#ifdef WIN32
+#ifdef WINDOWS_HOST
       if (src[i] == '/')
 	{
 	  dst[i] = '\\';

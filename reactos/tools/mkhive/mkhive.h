@@ -29,6 +29,11 @@
 
 #include <stdio.h>
 
+/* We have to do this because psdk/windef.h will _always_ define _WIN32... */
+#if defined(_WIN32) || defined(_WIN64)
+#define WINDOWS_HOST
+#endif
+
 #define NTOS_MODE_USER
 #define WIN32_NO_STATUS
 #include <ntddk.h>
@@ -76,7 +81,7 @@ static void DPRINT ( const char* fmt, ... )
 
 #define CHECKPOINT
 
-#ifdef _WIN32
+#ifdef WINDOWS_HOST
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 #else
