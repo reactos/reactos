@@ -4,4 +4,7 @@
 <directory name="drawcaption">
 	<xi:include href="drawcaption/drawcaption.rbuild" />
 </directory>
+<directory name="sysicon">
+	<xi:include href="sysicon/sysicon.rbuild" />
+</directory>
 </group>
