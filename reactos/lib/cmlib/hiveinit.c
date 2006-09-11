@@ -21,7 +21,7 @@ HvpVerifyHiveHeader(
 {
    if (HiveHeader->Signature != HV_SIGNATURE ||
        HiveHeader->Major != HV_MAJOR_VER ||
-       HiveHeader->Minor > HV_MINOR_VER ||
+       HiveHeader->Minor < HV_MINOR_VER ||
        HiveHeader->Type != HV_TYPE_PRIMARY ||
        HiveHeader->Format != HV_FORMAT_MEMORY ||
        HiveHeader->Cluster != 1 ||
@@ -31,7 +31,7 @@ HvpVerifyHiveHeader(
       DPRINT1("Verify Hive Header failed: \n");
       DPRINT1("    Signature: 0x%x and not 0x%x, Major: 0x%x and not 0x%x\n",
           HiveHeader->Signature, HV_SIGNATURE, HiveHeader->Major, HV_MAJOR_VER);
-      DPRINT1("    Minor: 0x%x is not > 0x%x, Type: 0x%x and not 0x%x\n",
+      DPRINT1("    Minor: 0x%x is not >= 0x%x, Type: 0x%x and not 0x%x\n",
           HiveHeader->Minor, HV_MINOR_VER, HiveHeader->Type, HV_TYPE_PRIMARY);
       DPRINT1("    Format: 0x%x and not 0x%x, Cluster: 0x%x and not 1\n",
           HiveHeader->Format, HV_FORMAT_MEMORY, HiveHeader->Cluster);
