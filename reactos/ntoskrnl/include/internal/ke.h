@@ -146,25 +146,6 @@ extern VOID KiTrap2(VOID);
     InitializeListHead(&((Header)->WaitListHead));                          \
 }
 
-#define KeEnterCriticalRegion()                                             \
-{                                                                           \
-    PKTHREAD _Thread = KeGetCurrentThread();                                \
-    if (_Thread) _Thread->KernelApcDisable--;                               \
-}
-
-#define KeLeaveCriticalRegion()                                             \
-{                                                                           \
-    PKTHREAD _Thread = KeGetCurrentThread();                                \
-    if((_Thread) && (++_Thread->KernelApcDisable == 0))                     \
-    {                                                                       \
-        if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode]) &&     \
-            (_Thread->SpecialApcDisable == 0))                              \
-        {                                                                   \
-            KiCheckForKernelApcDelivery();                                  \
-        }                                                                   \
-    }                                                                       \
-}
-
 #define KEBUGCHECKWITHTF(a,b,c,d,e,f) \
     DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), \
              KeBugCheckWithTf(a,b,c,d,e,f)

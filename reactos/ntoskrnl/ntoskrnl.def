@@ -534,7 +534,7 @@ KeDeregisterBugCheckCallback@4
 KeDeregisterBugCheckReasonCallback@4
 KeDetachProcess@0
 KeDisconnectInterrupt@4
-KeEnterCriticalRegion@0
+KeEnterCriticalRegion@=_KeEnterCriticalRegion@0
 KeEnterGuardedRegion@0
 KeEnterKernelDebugger@0
 KeFindConfigurationEntry@16
@@ -576,7 +576,7 @@ KeInsertQueueApc@16
 KeInsertQueueDpc@12
 KeIsAttachedProcess@0
 KeIsExecutingDpc@0
-KeLeaveCriticalRegion@0
+KeLeaveCriticalRegion@0=_KeLeaveCriticalRegion@0
 KeLeaveGuardedRegion@0
 KeLoaderBlock DATA
 KeNumberProcessors DATA

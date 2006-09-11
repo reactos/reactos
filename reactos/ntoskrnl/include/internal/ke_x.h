@@ -7,7 +7,7 @@
 */
 
 //
-// Enters a Critical Region
+// Enters a Guarded Region
 //
 #define KeEnterGuardedRegion()                      \
 {                                                   \
@@ -24,7 +24,7 @@
 }
 
 //
-// Leaves a Critical Region
+// Leaves a Guarded Region
 //
 #define KeLeaveGuardedRegion()                      \
 {                                                   \
@@ -53,8 +53,51 @@
 //
 
 //
-// TODO: Critical Region Routines
+// Enters a Critical Region
 //
+#define KeEnterCriticalRegion()                                             \
+{                                                                           \
+    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    if (Thread)                                                             \
+    {                                                                       \
+    /* Sanity checks */                                                     \
+    ASSERT(Thread == KeGetCurrentThread());                                 \
+    ASSERT((Thread->KernelApcDisable <= 0) &&                               \
+           (Thread->KernelApcDisable != -32768));                           \
+                                                                            \
+    /* Disable Kernel APCs */                                               \
+    Thread->KernelApcDisable--;                                             \
+    }                                                                       \
+}
+
+//
+// Leaves a Critical Region
+//
+#define KeLeaveCriticalRegion()                                             \
+{                                                                           \
+    PKTHREAD Thread = KeGetCurrentThread();                                 \
+    if (Thread)                                                             \
+    {                                                                       \
+    /* Sanity checks */                                                     \
+    ASSERT(Thread == KeGetCurrentThread());                                 \
+    ASSERT(Thread->KernelApcDisable < 0);                                   \
+                                                                            \
+    /* Enable Kernel APCs */                                                \
+    Thread->KernelApcDisable++;                                             \
+                                                                            \
+    /* Check if Kernel APCs are now enabled */                              \
+    if (!(Thread->KernelApcDisable))                                        \
+    {                                                                       \
+        /* Check if we need to request an APC Delivery */                   \
+        if (!(IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) &&    \
+            !(Thread->KernelApcDisable))                                    \
+        {                                                                   \
+            /* Check for the right environment */                           \
+            KiCheckForKernelApcDelivery();                                  \
+        }                                                                   \
+    }                                                                       \
+    }                                                                       \
+}
 
 //
 // Satisfies the wait of any dispatcher object

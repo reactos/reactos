@@ -1,11 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/apc.c
- * PURPOSE:         NT Implementation of APCs
- *
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
- *                  Phillip Susi
+ * PURPOSE:         Implements the Asyncronous Procedure Call mechanism
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,27 +15,24 @@
 /* FUNCTIONS *****************************************************************/
 
 /*++
- * KiCheckForKernelApcDelivery
+ * @name KiCheckForKernelApcDelivery
  * @implemented NT 5.2
  *
  *     The KiCheckForKernelApcDelivery routine is called whenever APCs have just
  *     been re-enabled in Kernel Mode, such as after leaving a Critical or
  *     Guarded Region. It delivers APCs if the environment is right.
  *
- * Params:
- *     None.
+ * @param None.
  *
- * Returns:
- *     None.
+ * @return None.
  *
- * Remarks:
- *     This routine allows KeLeave/EnterCritical/GuardedRegion to be used as a
- *     macro from inside WIN32K or other Drivers, which will then only have to
- *     do an Import API call in the case where APCs are enabled again.
+ * @remarks This routine allows KeLeave/EnterCritical/GuardedRegion to be used
+ *          as macro from inside WIN32K or other Drivers, which will then only
+ *          have do an Import API call in the case where APCs are enabled again.
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 KiCheckForKernelApcDelivery(VOID)
 {
     /* We should only deliver at passive */
@@ -63,34 +58,31 @@ KiCheckForKernelApcDelivery(VOID)
 }
 
 /*++
- * KeEnterCriticalRegion
+ * @name KeEnterCriticalRegion
  * @implemented NT4
  *
  *     The KeEnterCriticalRegion routine temporarily disables the delivery of
  *     normal kernel APCs; special kernel-mode APCs are still delivered.
  *
- * Params:
- *     None.
+ * @param None.
  *
- * Returns:
- *     None.
+ * @return None.
  *
- * Remarks:
- *     Highest-level drivers can call this routine while running in the context
- *     of the thread that requested the current I/O operation. Any caller of
- *     this routine should call KeLeaveCriticalRegion as quickly as possible.
+ * @remarks Highest-level drivers can call this routine while running in the
+ *          context of the thread that requested the current I/O operation.
+ *          Any caller of this routine should call KeLeaveCriticalRegion as
+ *          quickly as possible.
  *
- *     Callers of KeEnterCriticalRegion must be running at IRQL <= APC_LEVEL.
+ *          Callers of KeEnterCriticalRegion must be running at IRQL <=
+ *          APC_LEVEL.
  *
  *--*/
-#undef KeEnterCriticalRegion
 VOID
-STDCALL
-KeEnterCriticalRegion(VOID)
+NTAPI
+_KeEnterCriticalRegion(VOID)
 {
-    /* Disable Kernel APCs */
-    PKTHREAD Thread = KeGetCurrentThread();
-    if (Thread) Thread->KernelApcDisable--;
+    /* Use inlined function */
+    KeEnterCriticalRegion();
 }
 
 /*++
@@ -100,37 +92,23 @@ KeEnterCriticalRegion(VOID)
  *     The KeLeaveCriticalRegion routine reenables the delivery of normal
  *     kernel-mode APCs that were disabled by a call to KeEnterCriticalRegion.
  *
- * Params:
- *     None.
+ * @param None.
  *
- * Returns:
- *     None.
+ * @return None.
  *
- * Remarks:
- *     Highest-level drivers can call this routine while running in the context
- *     of the thread that requested the current I/O operation.
+ * @remarks Highest-level drivers can call this routine while running in the
+ *          context of the thread that requested the current I/O operation.
  *
- *     Callers of KeLeaveCriticalRegion must be running at IRQL <= DISPATCH_LEVEL.
+ *          Callers of KeLeaveCriticalRegion must be running at IRQL <=
+ *          DISPATCH_LEVEL.
  *
  *--*/
-#undef KeLeaveCriticalRegion
 VOID
-STDCALL
-KeLeaveCriticalRegion (VOID)
+NTAPI
+_KeLeaveCriticalRegion(VOID)
 {
-    PKTHREAD Thread = KeGetCurrentThread();
-
-    /* Check if Kernel APCs are now enabled */
-    if((Thread) && (++Thread->KernelApcDisable == 0))
-    {
-        /* Check if we need to request an APC Delivery */
-        if ((!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode])) &&
-            (Thread->SpecialApcDisable == 0))
-        {
-            /* Check for the right environment */
-            KiCheckForKernelApcDelivery();
-        }
-    }
+    /* Use inlined version */
+    KeLeaveCriticalRegion();
 }
 
 /*++

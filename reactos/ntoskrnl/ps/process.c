@@ -583,7 +583,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                         PROCESS_PRIORITY_NORMAL,
                         Affinity,
                         &DirectoryTableBase,
-                        Process->DefaultHardErrorProcessing & 4);
+                        (BOOLEAN)(Process->DefaultHardErrorProcessing & 4));
 
     /* Duplicate Parent Token */
     Status = PspInitializeProcessSecurity(Process, Parent);
