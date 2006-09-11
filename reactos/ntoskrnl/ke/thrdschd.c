@@ -169,9 +169,9 @@ KiSwapThread(IN PKTHREAD CurrentThread,
              IN PKPRCB Prcb)
 {
     BOOLEAN ApcState;
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
     /* Find a new thread to run */
-    DPRINT("Dispatching Thread as blocked\n");
     ApcState = KiDispatchThreadNoLock(Waiting);
 
     /* Check if we need to deliver APCs */

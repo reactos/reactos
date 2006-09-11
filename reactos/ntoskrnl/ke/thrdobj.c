@@ -1315,7 +1315,7 @@ KeTerminateThread(IN KPRIORITY Increment)
     RemoveEntryList(&Thread->ThreadListEntry);
 
     /* Release the process lock */
-    KiReleaseProcessLock(&LockHandle);
+    KiReleaseProcessLockFromDpcLevel(&LockHandle);
 
     /* Set us as terminated, decrease the Process's stack count */
     Thread->State = Terminated;
