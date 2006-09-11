@@ -774,59 +774,69 @@ KeFlushQueueApc(IN PKTHREAD Thread,
 }
 
 /*++
- * KeRemoveQueueApc
+ * @name KeRemoveQueueApc
+ * @implemented NT4
  *
  *     The KeRemoveQueueApc routine removes a given APC object from the system
  *     APC queue.
  *
- * Params:
- *     APC - Pointer to an initialized APC object that was queued by calling
- *           KeInsertQueueApc.
+ * @params Apc
+ *         Pointer to an initialized APC object that was queued by calling
+ *         KeInsertQueueApc.
  *
- * Returns:
- *     TRUE if the APC Object is in the APC Queue. If it isn't, no operation is
- *     performed and FALSE is returned.
+ * @return TRUE if the APC Object is in the APC Queue. Otherwise, no operation
+ *         is performed and FALSE is returned.
  *
- * Remarks:
- *     If the given APC Object is currently queued, it is removed from the queue
- *     and any calls to the registered routines are cancelled.
+ * @remarks If the given APC Object is currently queued, it is removed from the
+ *          queue and any calls to the registered routines are cancelled.
  *
- *     Callers of KeLeaveCriticalRegion can be running at any IRQL.
+ *          Callers of this routine must be running at IRQL <= DISPATCH_LEVEL.
  *
  *--*/
 BOOLEAN
-STDCALL
-KeRemoveQueueApc(PKAPC Apc)
+NTAPI
+KeRemoveQueueApc(IN PKAPC Apc)
 {
     PKTHREAD Thread = Apc->Thread;
     PKAPC_STATE ApcState;
     BOOLEAN Inserted;
     KLOCK_QUEUE_HANDLE ApcLock;
+    ASSERT_APC(Apc);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Get the APC lock */
     KiAcquireApcLock(Thread, &ApcLock);
 
     /* Check if it's inserted */
-    if ((Inserted = Apc->Inserted))
+    Inserted = Apc->Inserted;
+    if (Inserted)
     {
-        /* Remove it from the Queue*/
+        /* Set it as non-inserted and get the APC state */
         Apc->Inserted = FALSE;
-        ApcState = Thread->ApcStatePointer[(int)Apc->ApcStateIndex];
+        ApcState = Thread->ApcStatePointer[(SCHAR)Apc->ApcStateIndex];
+
+        /* Acquire the dispatcher lock and remove it from the list */
+        KiAcquireDispatcherLockAtDpcLevel();
         RemoveEntryList(&Apc->ApcListEntry);
 
         /* If the Queue is completely empty, then no more APCs are pending */
-        if (IsListEmpty(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode]))
+        if (IsListEmpty(&ApcState->ApcListHead[Apc->ApcMode]))
         {
-            /* Set the correct State based on the Apc Mode */
+            /* Set the correct state based on the APC Mode */
             if (Apc->ApcMode == KernelMode)
             {
+                /* No more pending kernel APCs */
                 ApcState->KernelApcPending = FALSE;
             }
             else
             {
+                /* No more pending user APCs */
                 ApcState->UserApcPending = FALSE;
             }
         }
+
+        /* Release dispatcher lock */
+        KiReleaseDispatcherLockFromDpcLevel();
     }
 
     /* Release the lock and return */

@@ -1085,9 +1085,12 @@ typedef struct _KLOCK_QUEUE_HANDLE {
 #define DPC_NORMAL 0
 #define DPC_THREADED 1
 
-#define ASSERT_DPC(Object)                                                   \
-    ASSERT(((Object)->Type == 0) ||                                          \
-           ((Object)->Type == DpcObject) ||                                  \
+#define ASSERT_APC(Object) \
+    ASSERT((Object)->Type == ApcObject)
+
+#define ASSERT_DPC(Object) \
+    ASSERT(((Object)->Type == 0) || \
+           ((Object)->Type == DpcObject) || \
            ((Object)->Type == ThreadedDpcObject))
 
 typedef struct _KDPC
