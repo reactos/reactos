@@ -570,46 +570,45 @@ _KeLeaveCriticalRegion(VOID)
  *     The The KeInitializeApc routine initializes an APC object, and registers
  *     the Kernel, Rundown and Normal routines for that object.
  *
- * Params:
- *     Apc - Pointer to a KAPC structure that represents the APC object to
- *           initialize. The caller must allocate storage for the structure
- *           from resident memory.
+ * @param Apc
+ *        Pointer to a KAPC structure that represents the APC object to
+ *        initialize. The caller must allocate storage for the structure
+ *        from resident memory.
  *
- *     Thread - Thread to which to deliver the APC.
+ * @param Thread
+ *        Thread to which to deliver the APC.
  *
- *     TargetEnvironment - APC Environment to be used.
+ * @param TargetEnvironment
+ *        APC Environment to be used.
  *
- *     KernelRoutine - Points to the KernelRoutine to associate with the APC.
- *                     This routine is executed for all APCs.
+ * @param KernelRoutine
+ *        Points to the KernelRoutine to associate with the APC.
+ *        This routine is executed for all APCs.
  *
- *     RundownRoutine - Points to the RundownRoutine to associate with the APC.
- *                      This routine is executed when the Thread exists with
- *                      the APC executing.
+ * @param RundownRoutine
+ *        Points to the RundownRoutine to associate with the APC.
+ *        This routine is executed when the Thread exists during APC execution.
  *
- *     NormalRoutine - Points to the NormalRoutine to associate with the APC.
- *                     This routine is executed at PASSIVE_LEVEL. If this is
- *                     not specifed, the APC becomes a Special APC and the
- *                     Mode and Context parameters are ignored.
+ * @param NormalRoutine
+ *        Points to the NormalRoutine to associate with the APC.
+ *        This routine is executed at PASSIVE_LEVEL. If this is not specifed,
+ *        the APC becomes a Special APC and the Mode and Context parameters are
+ *        ignored.
  *
- *     Mode - Specifies the processor mode at which to run the Normal Routine.
+ * @param Mode
+ *        Specifies the processor mode at which to run the Normal Routine.
  *
- *     Context - Specifices the value to pass as Context parameter to the
- *               registered routines.
+ * @param Context
+ *        Specifices the value to pass as Context parameter to the registered
+ *        routines.
  *
- * Returns:
- *     None.
+ * @return None.
  *
- * Remarks:
- *     The caller can queue an initialized APC with KeInsertQueueApc.
- *
- *     Storage for the APC object must be resident, such as nonpaged pool
- *     allocated by the caller.
- *
- *     Callers of this routine must be running at IRQL = PASSIVE_LEVEL.
+ * @remarks The caller can queue an initialized APC with KeInsertQueueApc.
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 KeInitializeApc(IN PKAPC Apc,
                 IN PKTHREAD Thread,
                 IN KAPC_ENVIRONMENT TargetEnvironment,
@@ -619,23 +618,26 @@ KeInitializeApc(IN PKAPC Apc,
                 IN KPROCESSOR_MODE Mode,
                 IN PVOID Context)
 {
-    DPRINT("KeInitializeApc(Apc %x, Thread %x, Environment %d, "
-           "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
-           "Context %x)\n",Apc,Thread,TargetEnvironment,KernelRoutine,RundownRoutine,
-            NormalRoutine,Mode,Context);
+    /* Sanity check */
+    ASSERT(TargetEnvironment <= InsertApcEnvironment);
 
     /* Set up the basic APC Structure Data */
-    RtlZeroMemory(Apc, sizeof(KAPC));
     Apc->Type = ApcObject;
     Apc->Size = sizeof(KAPC);
 
     /* Set the Environment */
-    if (TargetEnvironment == CurrentApcEnvironment) {
-
+    if (TargetEnvironment == CurrentApcEnvironment)
+    {
+        /* Use the current one for the thread */
         Apc->ApcStateIndex = Thread->ApcStateIndex;
+    }
+    else
+    {
+        /* Sanity check */
+        ASSERT((TargetEnvironment <= Thread->ApcStateIndex) ||
+               (TargetEnvironment == InsertApcEnvironment));
 
-    } else {
-
+        /* Use the one that was given */
         Apc->ApcStateIndex = TargetEnvironment;
     }
 
@@ -645,16 +647,22 @@ KeInitializeApc(IN PKAPC Apc,
     Apc->RundownRoutine = RundownRoutine;
     Apc->NormalRoutine = NormalRoutine;
 
-    /* Check if this is a Special APC, in which case we use KernelMode and no Context */
-    if (ARGUMENT_PRESENT(NormalRoutine)) {
-
+    /* Check if this is a special APC */
+    if (NormalRoutine)
+    {
+        /* It's a normal one. Set the context and mode */
         Apc->ApcMode = Mode;
         Apc->NormalContext = Context;
-
-    } else {
-
-        Apc->ApcMode = KernelMode;
     }
+    else
+    {
+        /* It's a special APC, which can only be kernel mode */
+        Apc->ApcMode = KernelMode;
+        Apc->NormalContext = NULL;
+    }
+
+    /* The APC is not inserted*/
+    Apc->Inserted = FALSE;
 }
 
 /*++
