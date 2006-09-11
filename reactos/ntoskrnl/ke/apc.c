@@ -742,31 +742,72 @@ KeInsertQueueApc(PKAPC Apc,
  *
  *--*/
 PLIST_ENTRY
-STDCALL
+NTAPI
 KeFlushQueueApc(IN PKTHREAD Thread,
                 IN KPROCESSOR_MODE PreviousMode)
 {
     PKAPC Apc;
     PLIST_ENTRY FirstEntry, CurrentEntry;
     KLOCK_QUEUE_HANDLE ApcLock;
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    /* Get the APC lock */
-    KiAcquireApcLock(Thread, &ApcLock);
+    /* Check if this was user mode */
+    if (PreviousMode == UserMode)
+    {
+        /* Get the APC lock */
+        KiAcquireApcLock(Thread, &ApcLock);
 
-    if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode])) {
+        /* Select user list and check if it's empty */
+        if (IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]))
+        {
+            /* Don't return anything */
+            FirstEntry = NULL;
+            goto FlushDone;
+        }
+    }
+    else
+    {
+        /* Select kernel list and check if it's empty */
+        if (IsListEmpty( &Thread->ApcState.ApcListHead[KernelMode]))
+        {
+            /* Don't return anything */
+            return NULL;
+        }
+
+        /* Otherwise, acquire the APC lock */
+        KiAcquireApcLock(Thread, &ApcLock);
+    }
+
+    /* Get the first entry and check if the list is empty now */
+    FirstEntry = Thread->ApcState.ApcListHead[PreviousMode].Flink;
+    if (FirstEntry == &Thread->ApcState.ApcListHead[PreviousMode])
+    {
+        /* It is, clear the returned entry */
         FirstEntry = NULL;
-    } else {
-        FirstEntry = Thread->ApcState.ApcListHead[PreviousMode].Flink;
+    }
+    else
+    {
+        /* It's not, remove the first entry */
         RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
+
+        /* Loop all the entries */
         CurrentEntry = FirstEntry;
-        do {
+        do
+        {
+            /* Get the APC and make it un-inserted */
             Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
             Apc->Inserted = FALSE;
+
+            /* Get the next entry */
             CurrentEntry = CurrentEntry->Flink;
         } while (CurrentEntry != FirstEntry);
+
+        /* Re-initialize the list */
+        InitializeListHead(&Thread->ApcState.ApcListHead[PreviousMode]);
     }
 
     /* Release the lock */
+FlushDone:
     KiReleaseApcLock(&ApcLock);
 
     /* Return the first entry */
