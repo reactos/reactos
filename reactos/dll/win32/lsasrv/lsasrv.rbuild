@@ -1,4 +1,4 @@
-<module name="lsasrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LSASRV}" entrypoint="0" installbase="system32" installname="lsasrv.dll">
+<module name="lsasrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LSASRV}" installbase="system32" installname="lsasrv.dll">
 	<importlibrary definition="lsasrv.def" />
 	<include base="lsasrv">.</include>
 	<include base="lsa_server">.</include>

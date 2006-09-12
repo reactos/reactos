@@ -1,4 +1,4 @@
-<module name="freetype" type="kernelmodedll" entrypoint="0" baseaddress="${BASEADDRESS_FREETYPE}" installbase="system32" installname="freetype.dll" entrypoint="0" allowwarnings="true">
+<module name="freetype" type="kernelmodedll" entrypoint="0" baseaddress="${BASEADDRESS_FREETYPE}" installbase="system32" installname="freetype.dll" allowwarnings="true">
 	<importlibrary definition="freetype.def" />
 	<include base="freetype">include</include>
 	<define name="_DISABLE_TIDENTS" />
