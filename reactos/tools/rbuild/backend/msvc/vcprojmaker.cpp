@@ -243,14 +243,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", exe ? 1 : dll ? 2 : lib ? 4 : -1 );
 		fprintf ( OUT, "\t\t\tCharacterSet=\"2\">\r\n" );
 
-		if ( module_type == ".cpl" && configuration.VSProjectVersion == "8.00")
-		{
-			fprintf ( OUT, "\t\t\t<DebugSettings\r\n" );
-			fprintf ( OUT, "\t\t\t\tCommand=\"rundll32.exe\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tCommandArguments=\" shell32, Control_RunDLL $(TargetPath),@\"\r\n" );
-			fprintf ( OUT, "\t\t\t/>" );
-		}
-
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tOptimization=\"%d\"\r\n", release ? 2 : 0 );
