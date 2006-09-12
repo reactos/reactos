@@ -37,7 +37,7 @@
 #define sprintfW swprintf
 #define vsprintfW vswprintf
 #define snprintfW _snwprintf
-#define vsnprintfW vsnwprintf
+#define vsnprintfW _vsnwprintf
 
 #ifndef WINE_UNICODE_API
 #define WINE_UNICODE_API __attribute__((dllimport))

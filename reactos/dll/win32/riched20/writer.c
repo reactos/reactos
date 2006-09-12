@@ -116,7 +116,7 @@ ME_StreamOutPrint(ME_TextEditor *editor, const char *format, ...)
   va_list valist;
 
   va_start(valist, format);
-  len = vsnprintf(string, sizeof(string), format, valist);
+  len = _vsnprintf(string, sizeof(string), format, valist);
   va_end(valist);
   
   return ME_StreamOutMove(editor, string, len);
