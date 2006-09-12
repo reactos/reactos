@@ -308,6 +308,8 @@ NTAPI
 PoInit(PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
        BOOLEAN ForceAcpiDisable)
 {
+  PVOID NotificationEntry;
+
   if (ForceAcpiDisable)
     {
       /* Set the ACPI State to False if it's been forced that way */
@@ -318,6 +320,15 @@ PoInit(PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
       /* Otherwise check the LoaderBlock's Flag */
       PopAcpiPresent = (LoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
     }
+
+  IoRegisterPlugPlayNotification(
+    EventCategoryDeviceInterfaceChange,
+    0, /* The registry has not been initialized yet */
+    (PVOID)&GUID_DEVICE_SYS_BUTTON,
+    IopRootDeviceNode->PhysicalDeviceObject->DriverObject,
+    PopAddRemoveSysCapsCallback,
+    NULL,
+    &NotificationEntry);
 }
 
 VOID

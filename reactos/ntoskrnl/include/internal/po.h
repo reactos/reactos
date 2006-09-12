@@ -6,6 +6,8 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
+#include <poclass.h>
+
 //
 // Define this if you want debugging support
 //
@@ -59,6 +61,13 @@ VOID
 NTAPI
 PopCleanupPowerState(
     IN PPOWER_STATE PowerState
+);
+
+NTSTATUS
+CALLBACK
+PopAddRemoveSysCapsCallback(
+    IN PVOID NotificationStructure,
+    IN PVOID Context
 );
 
 //

@@ -32,15 +32,15 @@
 				<file>abios.c</file>
 				<file>cpu.c</file>
 				<file>ctxswitch.S</file>
-                <file>clock.S</file>
+				<file>clock.S</file>
 				<file>exp.c</file>
-                <!-- <file>irq.c</file> -->
+				<!-- <file>irq.c</file> -->
 				<file>kiinit.c</file>
 				<file>ldt.c</file>
 				<file>thread.c</file>
 				<file>trap.s</file>
 				<file>usercall_asm.S</file>
-                <file>userapc.c</file>
+				<file>userapc.c</file>
 				<file>v86vdm.c</file>
 				<file>v86m_sup.S</file>
 			</directory>
@@ -70,10 +70,10 @@
 			<file>usercall.c</file>
 			<file>wait.c</file>
 	</directory>
-    <directory name="deprecated">
-        <file>irqhand.S</file>
-        <file>irq.c</file>
-    </directory>
+	<directory name="deprecated">
+		<file>irqhand.S</file>
+		<file>irq.c</file>
+	</directory>
 	<directory name="cc">
 			<file>cacheman.c</file>
 			<file>copy.c</file>
@@ -129,7 +129,7 @@
 			<file>callback.c</file>
 			<file>dbgctrl.c</file>
 			<file>error.c</file>
-            <file>efi.c</file>
+			<file>efi.c</file>
 			<file>event.c</file>
 			<file>evtpair.c</file>
 			<file>fmutex.c</file>
@@ -170,7 +170,7 @@
 		<file>inbv.c</file>
 	</directory>
 	<directory name="io">
-        <directory name="iomgr">
+		<directory name="iomgr">
 			<file>adapter.c</file>
 			<file>arcname.c</file>
 			<file>bootlog.c</file>
@@ -182,31 +182,31 @@
 			<file>drvrlist.c</file>
 			<file>error.c</file>
 			<file>event.c</file>
-            <file>file.c</file>
-            <file>iocomp.c</file>
-            <file>iofunc.c</file>
-            <file>iomgr.c</file>
-            <file>iowork.c</file>
-            <file>irp.c</file>
-            <file>irq.c</file>
-            <file>mdl.c</file>
-            <file>rawfs.c</file>
-            <file>remlock.c</file>
-            <file>resource.c</file>
-            <file>util.c</file>
-            <file>symlink.c</file>
-            <file>timer.c</file>
-            <file>volume.c</file>
-        </directory>
-        <directory name="pnpmgr">
-            <file>plugplay.c</file>
-            <file>pnpdma.c</file>
-            <file>pnpmgr.c</file>
-            <file>pnpnotify.c</file>
-            <file>pnpreport.c</file>
-            <file>pnproot.c</file>
-        </directory>
-    </directory>
+			<file>file.c</file>
+			<file>iocomp.c</file>
+			<file>iofunc.c</file>
+			<file>iomgr.c</file>
+			<file>iowork.c</file>
+			<file>irp.c</file>
+			<file>irq.c</file>
+			<file>mdl.c</file>
+			<file>rawfs.c</file>
+			<file>remlock.c</file>
+			<file>resource.c</file>
+			<file>util.c</file>
+			<file>symlink.c</file>
+			<file>timer.c</file>
+			<file>volume.c</file>
+		</directory>
+		<directory name="pnpmgr">
+			<file>plugplay.c</file>
+			<file>pnpdma.c</file>
+			<file>pnpmgr.c</file>
+			<file>pnpnotify.c</file>
+			<file>pnpreport.c</file>
+			<file>pnproot.c</file>
+		</directory>
+	</directory>
 	<directory name="kd">
 			<directory name="wrappers">
 				<file>bochs.c</file>
@@ -289,6 +289,7 @@
 	</directory>
 	<directory name="po">
 		<file>power.c</file>
+		<file>events.c</file>
 	</directory>
 	<directory name="ps">
 			<file>debug.c</file>
@@ -331,13 +332,13 @@
 	</directory>
 	<directory name="vdm">
 		<if property="ARCH" value="i386">
-            <file>vdmmain.c</file>
-            <file>vdmexec.c</file>
+			<file>vdmmain.c</file>
+			<file>vdmexec.c</file>
 		</if>
-    </directory>
-    <directory name="wmi">
-        <file>wmi.c</file>
-    </directory>
+	</directory>
+	<directory name="wmi">
+		<file>wmi.c</file>
+	</directory>
 	<file>ntoskrnl.rc</file>
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
