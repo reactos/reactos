@@ -697,6 +697,12 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->StackLimit = (ULONG_PTR)KernelStack - KERNEL_STACK_SIZE;
     Thread->KernelStackResident = TRUE;
 
+    /* ROS Mm HACK */
+    MmUpdatePageDir((PEPROCESS)Process,
+                    (PVOID)Thread->StackLimit,
+                    KERNEL_STACK_SIZE);
+    MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
+
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;
     _SEH_TRY

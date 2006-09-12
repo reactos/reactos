@@ -3,10 +3,8 @@
  * FILE:            lib/rtl/image.c
  * PURPOSE:         Image handling functions
  *                  Relocate functions were previously located in
- *                  ntoskrnl/ldr/loader.c and
- *                  dll/ntdll/ldr/utils.c files
- * PROGRAMMER:      Eric Kohl + original authors from loader.c and utils.c file
- *                  Aleksey Bragin
+ *                  ntoskrnl/ldr/loader.c
+ * PROGRAMMER:      Eric Kohl + original authors from loader.c file
  */
 
 /* INCLUDES *****************************************************************/
@@ -151,76 +149,12 @@ RtlImageRvaToVa (
 	               (ULONG_PTR)Section->VirtualAddress);
 }
 
-PIMAGE_BASE_RELOCATION
-LdrProcessRelocationBlockLongLong(
-    IN ULONG_PTR Address,
-    IN ULONG Count,
-    IN PUSHORT TypeOffset,
-    IN LONGLONG Delta
-    )
-{
-    SHORT Offset;
-    USHORT Type;
-    USHORT i;
-    PUSHORT ShortPtr;
-    PULONG LongPtr;
-
-    for (i = 0; i < Count; i++)
-    {
-        Offset = *TypeOffset & 0xFFF;
-        Type = *TypeOffset >> 12;
-        ShortPtr = (PUSHORT)(RVA(Address, Offset));
-
-        /*
-        * Don't relocate within the relocation section itself.
-        * GCC/LD generates sometimes relocation records for the relocation section.
-        * This is a bug in GCC/LD.
-        * Fix for it disabled, since it was only in ntoskrnl and not in ntdll
-        */
-        /*
-        if ((ULONG_PTR)ShortPtr < (ULONG_PTR)RelocationDir ||
-        (ULONG_PTR)ShortPtr >= (ULONG_PTR)RelocationEnd)
-        {*/
-        switch (Type)
-        {
-        /* case IMAGE_REL_BASED_SECTION : */
-        /* case IMAGE_REL_BASED_REL32 : */
-        case IMAGE_REL_BASED_ABSOLUTE:
-            break;
-
-        case IMAGE_REL_BASED_HIGH:
-            *ShortPtr += HIWORD(Delta);
-            break;
-
-        case IMAGE_REL_BASED_LOW:
-            *ShortPtr += LOWORD(Delta);
-            break;
-
-        case IMAGE_REL_BASED_HIGHLOW:
-            LongPtr = (PULONG)RVA(Address, Offset);
-            *LongPtr += Delta;
-            break;
-
-        case IMAGE_REL_BASED_HIGHADJ:
-        case IMAGE_REL_BASED_MIPS_JMPADDR:
-        default:
-            DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
-            DPRINT1("Address %x, Current %d, Count %d, *TypeOffset %x\n", Address, i, Count, *TypeOffset);
-            return (PIMAGE_BASE_RELOCATION)NULL;
-        }
-
-        TypeOffset++;
-    }
-
-    return (PIMAGE_BASE_RELOCATION)TypeOffset;
-}
-
 ULONG
 NTAPI
 LdrRelocateImageWithBias(
     IN PVOID BaseAddress,
     IN LONGLONG AdditionalBias,
-    IN PCCH LoaderName,
+    IN PCCH  LoaderName,
     IN ULONG Success,
     IN ULONG Conflict,
     IN ULONG Invalid
@@ -229,10 +163,14 @@ LdrRelocateImageWithBias(
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_DATA_DIRECTORY RelocationDDir;
     PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
-    ULONG Count;
-    ULONG_PTR Address;
+    ULONG Count, i;
+    PVOID Address;//, MaxAddress;
     PUSHORT TypeOffset;
-    LONGLONG Delta;
+    ULONG_PTR Delta;
+    SHORT Offset;
+    USHORT Type;
+    PUSHORT ShortPtr;
+    PULONG LongPtr;
 
     NtHeaders = RtlImageNtHeader(BaseAddress);
 
@@ -254,24 +192,64 @@ LdrRelocateImageWithBias(
     Delta = (ULONG_PTR)BaseAddress - NtHeaders->OptionalHeader.ImageBase + AdditionalBias;
     RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)BaseAddress + RelocationDDir->VirtualAddress);
     RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDDir->Size);
+    //MaxAddress = RVA(BaseAddress, DriverSize);
 
     while (RelocationDir < RelocationEnd &&
         RelocationDir->SizeOfBlock > 0)
     {
         Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
-        Address = (ULONG_PTR)RVA(BaseAddress, RelocationDir->VirtualAddress);
+        Address = RVA(BaseAddress, RelocationDir->VirtualAddress);
         TypeOffset = (PUSHORT)(RelocationDir + 1);
 
-        RelocationDir = LdrProcessRelocationBlockLongLong(Address,
-                                                          Count,
-                                                          TypeOffset,
-                                                          Delta);
-
-        if (RelocationDir == NULL)
+        for (i = 0; i < Count; i++)
         {
-            DPRINT1("Error during call to LdrProcessRelocationBlockLongLong()!\n");
-            return Invalid;
+            Offset = *TypeOffset & 0xFFF;
+            Type = *TypeOffset >> 12;
+            ShortPtr = (PUSHORT)(RVA(Address, Offset));
+
+            /* Don't relocate after the end of the loaded driver */
+            /*if ((PVOID)ShortPtr >= MaxAddress)
+            {
+                break;
+            }*/
+
+            /*
+            * Don't relocate within the relocation section itself.
+            * GCC/LD generates sometimes relocation records for the relocation section.
+            * This is a bug in GCC/LD.
+            */
+            if ((ULONG_PTR)ShortPtr < (ULONG_PTR)RelocationDir ||
+                (ULONG_PTR)ShortPtr >= (ULONG_PTR)RelocationEnd)
+            {
+                switch (Type)
+                {
+                case IMAGE_REL_BASED_ABSOLUTE:
+                    break;
+
+                case IMAGE_REL_BASED_HIGH:
+                    *ShortPtr += HIWORD(Delta);
+                    break;
+
+                case IMAGE_REL_BASED_LOW:
+                    *ShortPtr += LOWORD(Delta);
+                    break;
+
+                case IMAGE_REL_BASED_HIGHLOW:
+                    LongPtr = (PULONG)ShortPtr;
+                    *LongPtr += Delta;
+                    break;
+
+                case IMAGE_REL_BASED_HIGHADJ:
+                case IMAGE_REL_BASED_MIPS_JMPADDR:
+                default:
+                    DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
+                    DPRINT1("Address %x, Current %d, Count %d, *TypeOffset %x\n", Address, i, Count, *TypeOffset);
+                    return Invalid;
+                }
+            }
+            TypeOffset++;
         }
+        RelocationDir = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + RelocationDir->SizeOfBlock);
     }
 
     return Success;

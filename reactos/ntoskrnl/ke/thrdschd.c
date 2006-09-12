@@ -150,6 +150,8 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
                 KiIdleSummary |= Affinity;
             }
 
+            MmUpdatePageDir((PEPROCESS)PsGetCurrentProcess(),((PETHREAD)CurrentThread)->ThreadsProcess, sizeof(EPROCESS));
+
             /* Special note for Filip: This will release the Dispatcher DB Lock ;-) -- Alex */
             DPRINT("You are : %x, swapping to: %x.\n", OldThread, CurrentThread);
             ApcState = KiSwapContext(OldThread, CurrentThread);
