@@ -65,74 +65,6 @@ NTSTATUS STDCALL INIT_FUNCTION PspLookupKernelUserEntryPoints(VOID);
 /* FUNCTIONS ***************************************************************/
 
 VOID
-FASTCALL
-KiIdleLoop(VOID);
-
-/* FUNCTIONS *****************************************************************/
-
-/*
- * HACK-O-RAMA
- * Antique vestigial code left alive for the sole purpose of First/Idle Thread
- * creation until I can merge my fix for properly creating them.
- */
-VOID
-INIT_FUNCTION
-NTAPI
-PsInitHackThread(VOID)
-{
-    PETHREAD IdleThread;
-    KIRQL oldIrql;
-
-    IdleThread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
-    RtlZeroMemory(IdleThread, sizeof(ETHREAD));
-    IdleThread->ThreadsProcess = PsIdleProcess;
-    KeInitializeThread(&PsIdleProcess->Pcb,
-                       &IdleThread->Tcb,
-                       PspSystemThreadStartup,
-                       (PVOID)KiIdleLoop,
-                       NULL,
-                       NULL,
-                       NULL,
-                       P0BootStack);
-    InitializeListHead(&IdleThread->IrpList);
-
-    oldIrql = KiAcquireDispatcherLock ();
-    KiReadyThread(&IdleThread->Tcb);
-    KiReleaseDispatcherLock(oldIrql);
-
-    KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;
-    KeSetPriorityThread(&IdleThread->Tcb, LOW_PRIORITY);
-    KeSetAffinityThread(&IdleThread->Tcb, 1 << 0);
-}
-
-/*
- * HACK-O-RAMA
- * Antique vestigial code left alive for the sole purpose of First/Idle Thread
- * creation until I can merge my fix for properly creating them.
- */
-VOID
-INIT_FUNCTION
-NTAPI
-PsInitHackThread2(IN PETHREAD *Hack)
-{
-    PETHREAD IdleThread;
-
-    IdleThread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
-    RtlZeroMemory(IdleThread, sizeof(ETHREAD));
-    IdleThread->ThreadsProcess = PsInitialSystemProcess;
-    KeInitializeThread(&PsInitialSystemProcess->Pcb,
-                       &IdleThread->Tcb,
-                       PspSystemThreadStartup,
-                       NULL,
-                       NULL,
-                       NULL,
-                       NULL,
-                       P0BootStack);
-    InitializeListHead(&IdleThread->IrpList);
-    *Hack = IdleThread;
-}
-
-VOID
 INIT_FUNCTION
 NTAPI
 PiInitProcessManager(VOID)
@@ -140,7 +72,7 @@ PiInitProcessManager(VOID)
    PsInitJobManagment();
    PsInitProcessManagment();
    PsInitThreadManagment();
-   PsInitHackThread();
+   PsInitIdleThread();
 }
 
 VOID
@@ -183,7 +115,7 @@ PsInitThreadManagment(VOID)
     ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
 
-   PsInitHackThread2(&FirstThread);
+   PsInitializeIdleOrFirstThread(PsInitialSystemProcess, &FirstThread, NULL, KernelMode, TRUE);
    FirstThread->Tcb.State = Running;
    FirstThread->Tcb.FreezeCount = 0;
    FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
