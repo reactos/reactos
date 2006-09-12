@@ -10,13 +10,13 @@ RSYM_TARGET = \
 	$(EXEPREFIX)$(RSYM_OUT_)rsym$(EXEPOSTFIX)
 
 RSYM_SOURCES = \
-	$(RSYM_BASE_)rsym.c \
-	$(RSYM_BASE_)rsym_common.c
+	$(RSYM_BASE_)rsym.cpp \
+	$(RSYM_BASE_)rsym_common.cpp
 
 RSYM_OBJECTS = \
-	$(addprefix $(INTERMEDIATE_), $(RSYM_SOURCES:.c=.o))
+	$(addprefix $(INTERMEDIATE_), $(RSYM_SOURCES:.cpp=.o))
 
-RSYM_HOST_CFLAGS = $(TOOLS_CFLAGS)
+RSYM_HOST_CFLAGS = $(TOOLS_CFLAGS) -g -xc++
 
 RSYM_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
@@ -25,15 +25,15 @@ rsym: $(RSYM_TARGET)
 
 $(RSYM_TARGET): $(RSYM_OBJECTS) | $(RSYM_OUT)
 	$(ECHO_LD)
-	${host_gcc} $(RSYM_OBJECTS) $(RSYM_HOST_LFLAGS) -o $@
+	${host_gpp} $(RSYM_OBJECTS) $(RSYM_HOST_LFLAGS) -o $@
 
-$(RSYM_INT_)rsym.o: $(RSYM_BASE_)rsym.c | $(RSYM_INT)
+$(RSYM_INT_)rsym.o: $(RSYM_BASE_)rsym.cpp | $(RSYM_INT)
 	$(ECHO_CC)
-	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(RSYM_HOST_CFLAGS) -c $< -o $@
 
-$(RSYM_INT_)rsym_common.o: $(RSYM_BASE_)rsym_common.c | $(RSYM_INT)
+$(RSYM_INT_)rsym_common.o: $(RSYM_BASE_)rsym_common.cpp | $(RSYM_INT)
 	$(ECHO_CC)
-	${host_gcc} $(RSYM_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} $(RSYM_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: rsym_clean
 rsym_clean:

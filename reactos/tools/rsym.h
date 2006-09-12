@@ -33,27 +33,31 @@ typedef  unsigned long ULONG_PTR;
 #endif
 #endif
 
+#include "bytesex.h"
+
+using namespace ReactosBytesex;
+
 #pragma pack(2)
 typedef struct _IMAGE_DOS_HEADER {
-  WORD e_magic;
-  WORD e_cblp;
-  WORD e_cp;
-  WORD e_crlc;
-  WORD e_cparhdr;
-  WORD e_minalloc;
-  WORD e_maxalloc;
-  WORD e_ss;
-  WORD e_sp;
-  WORD e_csum;
-  WORD e_ip;
-  WORD e_cs;
-  WORD e_lfarlc;
-  WORD e_ovno;
-  WORD e_res[4];
-  WORD e_oemid;
-  WORD e_oeminfo;
-  WORD e_res2[10];
-  LONG e_lfanew;
+  LEWord e_magic;
+  LEWord e_cblp;
+  LEWord e_cp;
+  LEWord e_crlc;
+  LEWord e_cparhdr;
+  LEWord e_minalloc;
+  LEWord e_maxalloc;
+  LEWord e_ss;
+  LEWord e_sp;
+  LEWord e_csum;
+  LEWord e_ip;
+  LEWord e_cs;
+  LEWord e_lfarlc;
+  LEWord e_ovno;
+  LEWord e_res[4];
+  LEWord e_oemid;
+  LEWord e_oeminfo;
+  LEWord e_res2[10];
+  LEDWord e_lfanew;
 } IMAGE_DOS_HEADER,*PIMAGE_DOS_HEADER;
 #pragma pack(4)
 
@@ -63,53 +67,53 @@ typedef struct _IMAGE_DOS_HEADER {
 
 #pragma pack(4)
 typedef struct _IMAGE_FILE_HEADER {
-  WORD Machine;
-  WORD NumberOfSections;
-  DWORD TimeDateStamp;
-  DWORD PointerToSymbolTable;
-  DWORD NumberOfSymbols;
-  WORD SizeOfOptionalHeader;
-  WORD Characteristics;
+  LEWord Machine;
+  LEWord NumberOfSections;
+  LEDWord TimeDateStamp;
+  LEDWord PointerToSymbolTable;
+  LEDWord NumberOfSymbols;
+  LEWord SizeOfOptionalHeader;
+  LEWord Characteristics;
 } IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER;
 
 typedef struct _IMAGE_DATA_DIRECTORY {
-  DWORD VirtualAddress;
-  DWORD Size;
+  LEDWord VirtualAddress;
+  LEDWord Size;
 } IMAGE_DATA_DIRECTORY,*PIMAGE_DATA_DIRECTORY;
 
 #define IMAGE_DIRECTORY_ENTRY_BASERELOC	5
 
 typedef struct _IMAGE_OPTIONAL_HEADER {
-  WORD Magic;
+  LEWord Magic;
   BYTE MajorLinkerVersion;
   BYTE MinorLinkerVersion;
-  DWORD SizeOfCode;
-  DWORD SizeOfInitializedData;
-  DWORD SizeOfUninitializedData;
-  DWORD AddressOfEntryPoint;
-  DWORD BaseOfCode;
-  DWORD BaseOfData;
-  DWORD ImageBase;
-  DWORD SectionAlignment;
-  DWORD FileAlignment;
-  WORD MajorOperatingSystemVersion;
-  WORD MinorOperatingSystemVersion;
-  WORD MajorImageVersion;
-  WORD MinorImageVersion;
-  WORD MajorSubsystemVersion;
-  WORD MinorSubsystemVersion;
-  DWORD Reserved1;
-  DWORD SizeOfImage;
-  DWORD SizeOfHeaders;
-  DWORD CheckSum;
-  WORD Subsystem;
-  WORD DllCharacteristics;
-  DWORD SizeOfStackReserve;
-  DWORD SizeOfStackCommit;
-  DWORD SizeOfHeapReserve;
-  DWORD SizeOfHeapCommit;
-  DWORD LoaderFlags;
-  DWORD NumberOfRvaAndSizes;
+  LEDWord SizeOfCode;
+  LEDWord SizeOfInitializedData;
+  LEDWord SizeOfUninitializedData;
+  LEDWord AddressOfEntryPoint;
+  LEDWord BaseOfCode;
+  LEDWord BaseOfData;
+  LEDWord ImageBase;
+  LEDWord SectionAlignment;
+  LEDWord FileAlignment;
+  LEWord MajorOperatingSystemVersion;
+  LEWord MinorOperatingSystemVersion;
+  LEWord MajorImageVersion;
+  LEWord MinorImageVersion;
+  LEWord MajorSubsystemVersion;
+  LEWord MinorSubsystemVersion;
+  LEDWord Reserved1;
+  LEDWord SizeOfImage;
+  LEDWord SizeOfHeaders;
+  LEDWord CheckSum;
+  LEWord Subsystem;
+  LEWord DllCharacteristics;
+  LEDWord SizeOfStackReserve;
+  LEDWord SizeOfStackCommit;
+  LEDWord SizeOfHeapReserve;
+  LEDWord SizeOfHeapCommit;
+  LEDWord LoaderFlags;
+  LEDWord NumberOfRvaAndSizes;
   IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 } IMAGE_OPTIONAL_HEADER,*PIMAGE_OPTIONAL_HEADER;
 
@@ -121,62 +125,62 @@ typedef struct _IMAGE_OPTIONAL_HEADER {
 typedef struct _IMAGE_SECTION_HEADER {
   BYTE Name[IMAGE_SIZEOF_SHORT_NAME];
   union {
-    DWORD PhysicalAddress;
-    DWORD VirtualSize;
+    LEDWord PhysicalAddress;
+    LEDWord VirtualSize;
   } Misc;
-  DWORD VirtualAddress;
-  DWORD SizeOfRawData;
-  DWORD PointerToRawData;
-  DWORD PointerToRelocations;
-  DWORD PointerToLinenumbers;
-  WORD NumberOfRelocations;
-  WORD NumberOfLinenumbers;
-  DWORD Characteristics;
+  LEDWord VirtualAddress;
+  LEDWord SizeOfRawData;
+  LEDWord PointerToRawData;
+  LEDWord PointerToRelocations;
+  LEDWord PointerToLinenumbers;
+  LEWord NumberOfRelocations;
+  LEWord NumberOfLinenumbers;
+  LEDWord Characteristics;
 } IMAGE_SECTION_HEADER,*PIMAGE_SECTION_HEADER;
 
 typedef struct _IMAGE_BASE_RELOCATION {
-	DWORD VirtualAddress;
-	DWORD SizeOfBlock;
+	LEDWord VirtualAddress;
+	LEDWord SizeOfBlock;
 } IMAGE_BASE_RELOCATION,*PIMAGE_BASE_RELOCATION;
 
 
 typedef struct {
-  USHORT f_magic;         /* magic number             */
-  USHORT f_nscns;         /* number of sections       */
-  ULONG  f_timdat;        /* time & date stamp        */
-  ULONG  f_symptr;        /* file pointer to symtab   */
-  ULONG  f_nsyms;         /* number of symtab entries */
-  USHORT f_opthdr;        /* sizeof(optional hdr)     */
-  USHORT f_flags;         /* flags                    */
+  LEWord f_magic;         /* magic number             */
+  LEWord f_nscns;         /* number of sections       */
+  LEDWord  f_timdat;        /* time & date stamp        */
+  LEDWord  f_symptr;        /* file pointer to symtab   */
+  LEDWord  f_nsyms;         /* number of symtab entries */
+  LEWord f_opthdr;        /* sizeof(optional hdr)     */
+  LEWord f_flags;         /* flags                    */
 } FILHDR;
 
 typedef struct {
   char           s_name[8];  /* section name                     */
-  ULONG  s_paddr;    /* physical address, aliased s_nlib */
-  ULONG  s_vaddr;    /* virtual address                  */
-  ULONG  s_size;     /* section size                     */
-  ULONG  s_scnptr;   /* file ptr to raw data for section */
-  ULONG  s_relptr;   /* file ptr to relocation           */
-  ULONG  s_lnnoptr;  /* file ptr to line numbers         */
-  USHORT s_nreloc;   /* number of relocation entries     */
-  USHORT s_nlnno;    /* number of line number entries    */
-  ULONG  s_flags;    /* flags                            */
+  LEDWord  s_paddr;    /* physical address, aliased s_nlib */
+  LEDWord  s_vaddr;    /* virtual address                  */
+  LEDWord  s_size;     /* section size                     */
+  LEDWord  s_scnptr;   /* file ptr to raw data for section */
+  LEDWord  s_relptr;   /* file ptr to relocation           */
+  LEDWord  s_lnnoptr;  /* file ptr to line numbers         */
+  LEWord s_nreloc;   /* number of relocation entries     */
+  LEWord s_nlnno;    /* number of line number entries    */
+  LEDWord  s_flags;    /* flags                            */
 } SCNHDR;
 #pragma pack(4)
 
 typedef struct _SYMBOLFILE_HEADER {
-  ULONG SymbolsOffset;
-  ULONG SymbolsLength;
-  ULONG StringsOffset;
-  ULONG StringsLength;
+  LEDWord SymbolsOffset;
+  LEDWord SymbolsLength;
+  LEDWord StringsOffset;
+  LEDWord StringsLength;
 } SYMBOLFILE_HEADER, *PSYMBOLFILE_HEADER;
 
 typedef struct _STAB_ENTRY {
-  ULONG n_strx;         /* index into string table of name */
+  LEDWord n_strx;         /* index into string table of name */
   UCHAR n_type;         /* type of symbol */
   UCHAR n_other;        /* misc info (usually empty) */
-  USHORT n_desc;        /* description field */
-  ULONG n_value;        /* value of symbol */
+  LEWord n_desc;        /* description field */
+  LEDWord n_value;        /* value of symbol */
 } STAB_ENTRY, *PSTAB_ENTRY;
 
 /* http://www.math.utah.edu/docs/info/stabs_12.html */
@@ -279,25 +283,25 @@ typedef struct _COFF_SYMENT
       char e_name[E_SYMNMLEN];
       struct
         {
-          ULONG e_zeroes;
-          ULONG e_offset;
+          LEDWord e_zeroes;
+          LEDWord e_offset;
         }
       e;
     }
   e;
-  ULONG e_value;
-  short e_scnum;
-  USHORT e_type;
+  LEDWord e_value;
+  LEWord e_scnum;
+  LEWord e_type;
   UCHAR e_sclass;
   UCHAR e_numaux;
 } COFF_SYMENT, *PCOFF_SYMENT;
 #pragma pack(4)
 
 typedef struct _ROSSYM_ENTRY {
-  ULONG_PTR Address;
-  ULONG FunctionOffset;
-  ULONG FileOffset;
-  ULONG SourceLine;
+  LEDWord Address;
+  LEDWord FunctionOffset;
+  LEDWord FileOffset;
+  LEDWord SourceLine;
 } ROSSYM_ENTRY, *PROSSYM_ENTRY;
 
 #define ROUND_UP(N, S) (((N) + (S) - 1) & ~((S) - 1))

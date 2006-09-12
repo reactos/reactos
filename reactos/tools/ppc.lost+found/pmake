@@ -4,6 +4,7 @@ export PATH=$PATH:/usr/local/pkg/reactos-powerpc/bin
 make \
 	ARCH=powerpc \
 	HOST=mingw32-linux \
+	PREFIX=reactos-powerpc \
 	ROS_INTERMEDIATE=obj-ppc \
 	ROS_OUTPUT=output-ppc \
 	ROS_PREFIX=reactos-powerpc \
