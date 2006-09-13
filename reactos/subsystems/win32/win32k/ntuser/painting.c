@@ -1375,9 +1375,6 @@ CLEANUP:
 /* Don't know where to put this */
 BOOL FASTCALL IntGdiGradientFill(DC *dc, PTRIVERTEX pVertex, ULONG uVertex, PVOID pMesh, ULONG uMesh, ULONG ulMode);
 ULONG FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
-BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxWidth, 
-   INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
-PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 
 BOOL
 UserDrawSysMenuButton(
