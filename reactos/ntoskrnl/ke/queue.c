@@ -69,7 +69,7 @@ LONG
 NTAPI
 KiInsertQueue(IN PKQUEUE Queue,
               IN PLIST_ENTRY Entry,
-              BOOLEAN Head)
+              IN BOOLEAN Head)
 {
     ULONG InitialState;
     PKTHREAD Thread = KeGetCurrentThread();
@@ -103,10 +103,10 @@ KiInsertQueue(IN PKQUEUE Queue,
         /* Remove the queue from the thread's wait list */
         Thread->WaitStatus = (NTSTATUS)Entry;
         if (Thread->WaitListEntry.Flink) RemoveEntryList(&Thread->WaitListEntry);
-        Thread->WaitReason = 0;
 
-        /* Increase the active threads and set the status*/
+        /* Increase the active threads and remove any wait reason */
         Queue->CurrentCount++;
+        Thread->WaitReason = 0;
 
         /* Check if there's a Thread Timer */
         if (Thread->Timer.Header.Inserted)

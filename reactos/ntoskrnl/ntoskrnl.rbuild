@@ -49,14 +49,14 @@
             <file>bug.c</file>
             <file>clock.c</file>
             <file>config.c</file>
+            <file>devqueue.c</file>
             <file>dpc.c</file>
             <file>event.c</file>
-            <file>exception.c</file>
+            <file>except.c</file>
             <file>freeldr.c</file>
             <file>gate.c</file>
             <file>gmutex.c</file>
             <file>ipi.c</file>
-            <file>kqueue.c</file>
             <file>krnlinit.c</file>
             <file>mutex.c</file>
             <file>process.c</file>

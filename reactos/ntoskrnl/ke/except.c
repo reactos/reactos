@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/exception.c
+ * FILE:            ntoskrnl/ke/except.c
  * PURPOSE:         Platform independent exception handling
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

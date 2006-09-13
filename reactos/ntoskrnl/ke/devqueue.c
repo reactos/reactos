@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/kqueue.c
+ * FILE:            ntoskrnl/ke/devqueue.c
  * PURPOSE:         Implement device queues
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

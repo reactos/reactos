@@ -261,27 +261,23 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
                                IN KPRIORITY Priority,
                                IN UCHAR Quantum OPTIONAL)
 {
+    KLOCK_QUEUE_HANDLE ProcessLock;
     KPRIORITY Delta;
     PLIST_ENTRY NextEntry, ListHead;
     KPRIORITY NewPriority, OldPriority;
-    KIRQL OldIrql;
     PKTHREAD Thread;
     BOOLEAN Released;
     ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Check if the process already has this priority */
-    if (Process->BasePriority == Priority)
-    {
-        /* Don't change anything */
-        return Process->BasePriority;
-    }
+    if (Process->BasePriority == Priority) return Process->BasePriority;
 
     /* If the caller gave priority 0, normalize to 1 */
-    if (!Priority) Priority = 1;
+    if (!LOW_PRIORITY) Priority = LOW_PRIORITY + 1;
 
-    /* Lock Dispatcher */
-    OldIrql = KiAcquireDispatcherLock();
+    /* Lock the process */
+    KiAcquireProcessLock(Process, &ProcessLock);
 
     /* Check if we are modifying the quantum too */
     if (Quantum) Process->QuantumReset = Quantum;
@@ -308,6 +304,9 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
 
             /* Update the quantum if we had one */
             if (Quantum) Thread->QuantumReset = Quantum;
+
+            /* Acquire the thread lock */
+            KiAcquireThreadLock(Thread);
 
             /* Calculate the new priority */
             NewPriority = Thread->BasePriority + Delta;
@@ -349,6 +348,9 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
                 KiSetPriorityThread(Thread, NewPriority, &Released);
             }
 
+            /* Release the thread lock */
+            KiReleaseThreadLock(Thread);
+
             /* Go to the next thread */
             NextEntry = NextEntry->Flink;
         }
@@ -363,6 +365,9 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
 
             /* Update the quantum if we had one */
             if (Quantum) Thread->QuantumReset = Quantum;
+
+            /* Lock the thread */
+            KiAcquireThreadLock(Thread);
 
             /* Calculate the new priority */
             NewPriority = Thread->BasePriority + Delta;
@@ -405,13 +410,20 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
                 KiSetPriorityThread(Thread, NewPriority, &Released);
             }
 
+            /* Release the thread lock */
+            KiReleaseThreadLock(Thread);
+
             /* Go to the next thread */
             NextEntry = NextEntry->Flink;
         }
     }
 
     /* Release Dispatcher Database */
-    if (!Released) KiReleaseDispatcherLock(OldIrql);
+    if (!Released) KiReleaseDispatcherLockFromDpcLevel();
+
+    /* Release the process lock */
+    KiReleaseProcessLockFromDpcLevel(&ProcessLock);
+    KiExitDispatcher(ProcessLock.OldIrql);
 
     /* Return previous priority */
     return OldPriority;
