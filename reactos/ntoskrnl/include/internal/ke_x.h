@@ -9,43 +9,43 @@
 //
 // Enters a Guarded Region
 //
-#define KeEnterGuardedRegion()                      \
-{                                                   \
-    PKTHREAD Thread = KeGetCurrentThread();         \
-                                                    \
-    /* Sanity checks */                             \
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);           \
-    ASSERT(Thread == KeGetCurrentThread());         \
-    ASSERT((Thread->SpecialApcDisable <= 0) &&      \
-           (Thread->SpecialApcDisable != -32768));  \
-                                                    \
-    /* Disable Special APCs */                      \
-    Thread->SpecialApcDisable--;                    \
+#define KeEnterGuardedRegion()                                              \
+{                                                                           \
+    PKTHREAD Thread = KeGetCurrentThread();                                 \
+                                                                            \
+    /* Sanity checks */                                                     \
+    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);                                   \
+    ASSERT(Thread == KeGetCurrentThread());                                 \
+    ASSERT((Thread->SpecialApcDisable <= 0) &&                              \
+           (Thread->SpecialApcDisable != -32768));                          \
+                                                                            \
+    /* Disable Special APCs */                                              \
+    Thread->SpecialApcDisable--;                                            \
 }
 
 //
 // Leaves a Guarded Region
 //
-#define KeLeaveGuardedRegion()                      \
-{                                                   \
-    PKTHREAD Thread = KeGetCurrentThread();         \
-                                                    \
-    /* Sanity checks */                             \
-    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);           \
-    ASSERT(Thread == KeGetCurrentThread());         \
-    ASSERT(Thread->SpecialApcDisable < 0);          \
-                                                    \
-    /* Leave region and check if APCs are OK now */ \
-    if (!(++Thread->SpecialApcDisable))             \
-    {                                               \
-        /* Check for Kernel APCs on the list */     \
-        if (!IsListEmpty(&Thread->ApcState.         \
-                         ApcListHead[KernelMode]))  \
-        {                                           \
-            /* Check for APC Delivery */            \
-            KiCheckForKernelApcDelivery();          \
-        }                                           \
-    }                                               \
+#define KeLeaveGuardedRegion()                                              \
+{                                                                           \
+    PKTHREAD Thread = KeGetCurrentThread();                                 \
+                                                                            \
+    /* Sanity checks */                                                     \
+    ASSERT_IRQL_LESS_OR_EQUAL(APC_LEVEL);                                   \
+    ASSERT(Thread == KeGetCurrentThread());                                 \
+    ASSERT(Thread->SpecialApcDisable < 0);                                  \
+                                                                            \
+    /* Leave region and check if APCs are OK now */                         \
+    if (!(++Thread->SpecialApcDisable))                                     \
+    {                                                                       \
+        /* Check for Kernel APCs on the list */                             \
+        if (!IsListEmpty(&Thread->ApcState.                                 \
+                         ApcListHead[KernelMode]))                          \
+        {                                                                   \
+            /* Check for APC Delivery */                                    \
+            KiCheckForKernelApcDelivery();                                  \
+        }                                                                   \
+    }                                                                       \
 }
 
 //
