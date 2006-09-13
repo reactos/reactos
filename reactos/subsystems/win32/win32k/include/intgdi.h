@@ -115,6 +115,11 @@ IntGdiPolyPolygon(DC      *dc,
                   LPINT   PolyCounts,
                   int     Count);
 
+BOOL FASTCALL IntGdiGradientFill(DC *dc,
+    PTRIVERTEX pVertex, 
+    ULONG uVertex, 
+    PVOID pMesh, ULONG uMesh, ULONG ulMode);
+
 /* Rgn functions */
 
 int FASTCALL

@@ -1372,9 +1372,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-/* Don't know where to put this */
-BOOL FASTCALL IntGdiGradientFill(DC *dc, PTRIVERTEX pVertex, ULONG uVertex, PVOID pMesh, ULONG uMesh, ULONG ulMode);
-ULONG FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
 
 BOOL
 UserDrawSysMenuButton(
