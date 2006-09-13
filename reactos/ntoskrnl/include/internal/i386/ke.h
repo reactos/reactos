@@ -124,7 +124,6 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define LOCK "lock ; "
 #else
 #define LOCK ""
-#define KeGetCurrentIrql() (((PKPCR)KPCR_BASE)->Irql)
 #endif
 
 #if defined(__GNUC__)

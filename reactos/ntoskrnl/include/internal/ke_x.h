@@ -696,6 +696,44 @@ KiReleaseProcessLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE Handle)
     KeReleaseInStackQueuedSpinLockFromDpcLevel(Handle);
 }
 
+FORCEINLINE
+VOID
+KiAcquireDeviceQueueLock(IN PKDEVICE_QUEUE DeviceQueue,
+                         IN PKLOCK_QUEUE_HANDLE DeviceLock)
+{
+    /* Check if we were called from a threaded DPC */
+    if (KeGetCurrentPrcb()->DpcThreadActive)
+    {
+        /* Lock the Queue, we're not at DPC level */
+        KeAcquireInStackQueuedSpinLock(&DeviceQueue->Lock, DeviceLock);
+    }
+    else
+    {
+        /* We must be at DPC level, acquire the lock safely */
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+        KeAcquireInStackQueuedSpinLockAtDpcLevel(&DeviceQueue->Lock,
+                                                 DeviceLock);
+    }
+}
+
+FORCEINLINE
+VOID
+KiReleaseDeviceQueueLock(IN PKLOCK_QUEUE_HANDLE DeviceLock)
+{
+    /* Check if we were called from a threaded DPC */
+    if (KeGetCurrentPrcb()->DpcThreadActive)
+    {
+        /* Unlock the Queue, we're not at DPC level */
+        KeReleaseInStackQueuedSpinLock(DeviceLock);
+    }
+    else
+    {
+        /* We must be at DPC level, release the lock safely */
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+        KeReleaseInStackQueuedSpinLockFromDpcLevel(DeviceLock);
+    }
+}
+
 //
 // This routine queues a thread that is ready on the PRCB's ready lists.
 // If this thread cannot currently run on this CPU, then the thread is

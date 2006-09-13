@@ -1093,6 +1093,9 @@ typedef struct _KLOCK_QUEUE_HANDLE {
            ((Object)->Type == DpcObject) || \
            ((Object)->Type == ThreadedDpcObject))
 
+#define ASSERT_DEVICE_QUEUE(Object) \
+    ASSERT((Object)->Type == DeviceQueueObject)
+
 typedef struct _KDPC
 {
     UCHAR Type;

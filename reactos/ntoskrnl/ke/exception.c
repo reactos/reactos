@@ -1,18 +1,18 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ke/exception.c
  * PURPOSE:         Platform independent exception handling
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS ****************************************************************/
+/* INCLUDES ******************************************************************/
 
 VOID
 NTAPI
@@ -46,11 +46,7 @@ KiContinue(IN PCONTEXT Context,
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
 
     /* Raise to APC_LEVEL, only if needed */
-    if (KeGetCurrentIrql() < APC_LEVEL)
-    {
-        /* Raise to APC_LEVEL */
-        KeRaiseIrql(APC_LEVEL, &OldIrql);
-    }
+    if (KeGetCurrentIrql() < APC_LEVEL) KeRaiseIrql(APC_LEVEL, &OldIrql);
 
     /* Set up SEH to validate the context */
     _SEH_TRY
@@ -75,6 +71,7 @@ KiContinue(IN PCONTEXT Context,
     }
     _SEH_HANDLE
     {
+        /* Save the exception code */
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
@@ -88,18 +85,17 @@ KiContinue(IN PCONTEXT Context,
 
 NTSTATUS
 NTAPI
-KiRaiseException(PEXCEPTION_RECORD ExceptionRecord,
-                 PCONTEXT Context,
-                 PKEXCEPTION_FRAME ExceptionFrame,
-                 PKTRAP_FRAME TrapFrame,
-                 BOOLEAN SearchFrames)
+KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
+                 IN PCONTEXT Context,
+                 IN PKEXCEPTION_FRAME ExceptionFrame,
+                 IN PKTRAP_FRAME TrapFrame,
+                 IN BOOLEAN SearchFrames)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     CONTEXT LocalContext;
     EXCEPTION_RECORD LocalExceptionRecord;
     ULONG ParameterCount, Size;
     NTSTATUS Status = STATUS_SUCCESS;
-    DPRINT1("KiRaiseException\n");
 
     /* Set up SEH */
     _SEH_TRY
@@ -143,10 +139,12 @@ KiRaiseException(PEXCEPTION_RECORD ExceptionRecord,
     }
     _SEH_HANDLE
     {
+        /* Get the exception code */
         Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
 
+    /* Make sure we didn't crash in SEH */
     if (NT_SUCCESS(Status))
     {
         /* Convert the context record */
