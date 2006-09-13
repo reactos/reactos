@@ -247,7 +247,7 @@ KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
                            IN KIRQL OldIrql)
 {
     /* Release lock on MP */
-    KefReleaseSpinLock(Interrupt->ActualLock);
+    KefReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
 
     /* Lower IRQL */
     KeLowerIrql(OldIrql);
