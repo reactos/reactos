@@ -32,9 +32,10 @@
 //      * Sanitize some context fields during conversions.
 //      * Add DR macro/save and VM macro/save.
 //  - FEATURES:
-//      * Use Queued Spinlocks for scheduling and dispatching.
 //      * New optimized table-based tick-hashed timer implementation.
-//      * New Thread Scheduler based on XP.
+//      * New optimized dispatching logic/branching.
+//      * New Thread Scheduler based on 2003.
+//      * Proper Idle/Initial Thread setup and 2nd stage boot.
 //      * Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
 //
 // Ex:

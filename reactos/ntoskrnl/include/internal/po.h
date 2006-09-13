@@ -64,7 +64,7 @@ PopCleanupPowerState(
 );
 
 NTSTATUS
-CALLBACK
+NTAPI
 PopAddRemoveSysCapsCallback(
     IN PVOID NotificationStructure,
     IN PVOID Context
