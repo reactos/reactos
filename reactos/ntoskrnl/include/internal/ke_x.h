@@ -293,6 +293,71 @@ KiRecalculateDueTime(IN PLARGE_INTEGER OriginalDueTime,
 }
 
 //
+// Spinlock Acquisition at IRQL >= DISPATCH_LEVEL
+//
+FORCEINLINE
+VOID
+KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+#ifdef CONFIG_SMP
+    for (;;)
+    {
+        /* Try to acquire it */
+        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
+        {
+            /* Value changed... wait until it's locked */
+            while (*(volatile KSPIN_LOCK *)SpinLock == 1)
+            {
+#ifdef DBG
+                /* On debug builds, we use a much slower but useful routine */
+                Kii386SpinOnSpinLock(SpinLock, 5);
+#else
+                /* Otherwise, just yield and keep looping */
+                YieldProcessor();
+#endif
+            }
+        }
+        else
+        {
+#ifdef DBG
+            /* On debug builds, we OR in the KTHREAD */
+            *SpinLock = KeGetCurrentThread() | 1;
+#endif
+            /* All is well, break out */
+            break;
+        }
+    }
+#else
+    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
+    UNREFERENCED_PARAMETER(SpinLock);
+#endif
+}
+
+//
+// Spinlock Release at IRQL >= DISPATCH_LEVEL
+//
+FORCEINLINE
+VOID
+KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+#ifdef CONFIG_SMP
+#ifdef DBG
+    /* Make sure that the threads match */
+    if ((KeGetCurrentThread() | 1) != *SpinLock)
+    {
+        /* They don't, bugcheck */
+        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, SpinLock, 0, 0, 0);
+    }
+#endif
+    /* Clear the lock */
+    InterlockedAnd(SpinLock, 0);
+#else
+    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
+    UNREFERENCED_PARAMETER(SpinLock);
+#endif
+}
+
+//
 // Thread Scheduling Routines
 //
 #ifndef _CONFIG_SMP
