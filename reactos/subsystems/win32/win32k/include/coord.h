@@ -21,4 +21,10 @@ VOID
 FASTCALL
 IntLPtoDP ( PDC dc, LPPOINT Points, INT Count );
 
+BOOL
+FASTCALL
+IntGdiModifyWorldTransform(PDC pDc,
+                           CONST LPXFORM lpXForm,
+                           DWORD Mode);
+
 #endif

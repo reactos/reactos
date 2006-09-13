@@ -258,6 +258,43 @@ IntGetGraphicsMode ( PDC dc )
   return dc->w.GraphicsMode;
 }
 
+BOOL
+FASTCALL
+IntGdiModifyWorldTransform(PDC pDc,
+                           CONST LPXFORM lpXForm,
+                           DWORD Mode)
+{
+   ASSERT(pDc && lpXForm);
+
+   switch(Mode)
+   {
+     case MWT_IDENTITY:
+       pDc->w.xformWorld2Wnd.eM11 = 1.0f;
+       pDc->w.xformWorld2Wnd.eM12 = 0.0f;
+       pDc->w.xformWorld2Wnd.eM21 = 0.0f;
+       pDc->w.xformWorld2Wnd.eM22 = 1.0f;
+       pDc->w.xformWorld2Wnd.eDx  = 0.0f;
+       pDc->w.xformWorld2Wnd.eDy  = 0.0f;
+       break;
+
+     case MWT_LEFTMULTIPLY:
+       IntGdiCombineTransform(&pDc->w.xformWorld2Wnd, lpXForm, &pDc->w.xformWorld2Wnd );
+       break;
+
+     case MWT_RIGHTMULTIPLY:
+       IntGdiCombineTransform(&pDc->w.xformWorld2Wnd, &pDc->w.xformWorld2Wnd, lpXForm);
+       break;
+
+     default:
+       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       return FALSE;
+  }
+
+  DC_UpdateXforms(pDc);
+  DC_UnlockDc(pDc);
+  return TRUE;
+}
+
 int
 STDCALL
 NtGdiGetGraphicsMode ( HDC hDC )
@@ -438,14 +475,20 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 
 BOOL
 STDCALL
-NtGdiModifyWorldTransform(HDC            hDC,
+NtGdiModifyWorldTransform(HDC hDC,
                           CONST LPXFORM  UnsafeXForm,
-                          DWORD          Mode)
+                          DWORD Mode)
 {
    PDC dc;
-   XFORM SafeXForm = {0};
-   NTSTATUS Status = STATUS_SUCCESS;
+   XFORM SafeXForm;
+   BOOL Ret = FALSE;
 
+   if (!UnsafeXForm)
+   {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+   }
+   
    dc = DC_LockDc(hDC);
    if (!dc)
    {
@@ -453,61 +496,21 @@ NtGdiModifyWorldTransform(HDC            hDC,
      return FALSE;
    }
 
-   if (!UnsafeXForm)
-   {
-     DC_UnlockDc(dc);
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-     return FALSE;
-   }
-
    _SEH_TRY
    {
-      ProbeForRead(UnsafeXForm,
-                   sizeof(XFORM),
-                   1);
-      SafeXForm = *UnsafeXForm;
+      ProbeForRead(UnsafeXForm, sizeof(XFORM), 1);
+      RtlCopyMemory(&SafeXForm, UnsafeXForm, sizeof(XFORM));
+      
+      Ret = IntGdiModifyWorldTransform(dc, &SafeXForm, Mode);
    }
    _SEH_HANDLE
    {
-      Status = _SEH_GetExceptionCode();
+      SetLastNtError(_SEH_GetExceptionCode());
    }
    _SEH_END;
 
-   if(!NT_SUCCESS(Status))
-   {
-     DC_UnlockDc(dc);
-     SetLastNtError(Status);
-     return FALSE;
-   }
-
-   switch(Mode)
-   {
-     case MWT_IDENTITY:
-       dc->w.xformWorld2Wnd.eM11 = 1.0f;
-       dc->w.xformWorld2Wnd.eM12 = 0.0f;
-       dc->w.xformWorld2Wnd.eM21 = 0.0f;
-       dc->w.xformWorld2Wnd.eM22 = 1.0f;
-       dc->w.xformWorld2Wnd.eDx  = 0.0f;
-       dc->w.xformWorld2Wnd.eDy  = 0.0f;
-       break;
-
-     case MWT_LEFTMULTIPLY:
-       IntGdiCombineTransform(&dc->w.xformWorld2Wnd, &SafeXForm, &dc->w.xformWorld2Wnd );
-       break;
-
-     case MWT_RIGHTMULTIPLY:
-       IntGdiCombineTransform(&dc->w.xformWorld2Wnd, &dc->w.xformWorld2Wnd, &SafeXForm);
-       break;
-
-     default:
-       DC_UnlockDc(dc);
-       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-       return FALSE;
-  }
-
-  DC_UpdateXforms(dc);
-  DC_UnlockDc(dc);
-  return TRUE;
+   DC_UnlockDc(dc);
+   return Ret;
 }
 
 BOOL
