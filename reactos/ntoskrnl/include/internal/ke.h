@@ -823,6 +823,19 @@ KiInsertQueueApc(
     IN KPRIORITY PriorityBoost
 );
 
+NTSTATUS
+NTAPI
+KiCallUserMode(
+    IN PVOID *OutputBuffer,
+    IN PULONG OutputLength
+);
+
+PULONG
+NTAPI
+KiGetUserModeStackAddress(
+    VOID
+);
+
 #include "ke_x.h"
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

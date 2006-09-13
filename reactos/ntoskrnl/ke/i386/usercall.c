@@ -1,16 +1,16 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/i386/userapc.c
- * PURPOSE:         Implements User-Mode APC Initialization
+ * FILE:            ntoskrnl/ke/i386/usercall.c
+ * PURPOSE:         User-mode Callout Mechanisms (APC and Win32K Callbacks)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <debug.h>
+#include <internal/debug.h>
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -56,7 +56,7 @@ _SEH_FILTER(KiCopyInformation2)
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
                     IN PKTRAP_FRAME TrapFrame,
                     IN PKNORMAL_ROUTINE NormalRoutine,
@@ -134,3 +134,93 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
     _SEH_END;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KeUserModeCallback(IN ULONG RoutineIndex,
+                   IN PVOID Argument,
+                   IN ULONG ArgumentLength,
+                   OUT PVOID *Result,
+                   OUT PULONG ResultLength)
+{
+    ULONG_PTR NewStack, OldStack;
+    PULONG UserEsp;
+    NTSTATUS CallbackStatus = STATUS_SUCCESS;
+    PEXCEPTION_REGISTRATION_RECORD ExceptionList;
+    PTEB Teb;
+    ULONG GdiBatchCount = 0;
+    ASSERT(KeGetCurrentThread()->ApcState.KernelApcInProgress == FALSE);
+    ASSERT(KeGetPreviousMode() == UserMode);
+
+    /* Get the current user-mode stack */
+    UserEsp = KiGetUserModeStackAddress();
+    OldStack = *UserEsp;
+
+    /* Enter a SEH Block */
+    _SEH_TRY
+    {
+        /* Calculate and align the stack size */
+        NewStack = (OldStack - ArgumentLength) & ~3;
+
+        /* Make sure it's writable */
+        ProbeForWrite((PVOID)(NewStack - 6 * sizeof(ULONG_PTR)),
+                      ArgumentLength + 6 * sizeof(ULONG_PTR),
+                      sizeof(CHAR));
+
+        /* Copy the buffer into the stack */
+        RtlCopyMemory((PVOID)NewStack, Argument, ArgumentLength);
+
+        /* Write the arguments */
+        NewStack -= 24;
+        *(PULONG)NewStack = 0;
+        *(PULONG)(NewStack + 4) = RoutineIndex;
+        *(PULONG)(NewStack + 8) = (NewStack + 24);
+        *(PULONG)(NewStack + 12) = ArgumentLength;
+
+        /* Save the exception list */
+        Teb = KeGetCurrentThread()->Teb;
+        ExceptionList = Teb->Tib.ExceptionList;
+
+        /* Jump to user mode */
+        *UserEsp = NewStack;
+        CallbackStatus = KiCallUserMode(Result, ResultLength);
+        if (CallbackStatus != STATUS_CALLBACK_POP_STACK)
+        {
+            /* Only restore the exception list if we didn't crash in ring 3 */
+            Teb->Tib.ExceptionList = ExceptionList;
+            CallbackStatus = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Otherwise, pop the stack */
+            OldStack = *UserEsp;
+        }
+
+        /* Read the GDI Batch count */
+        GdiBatchCount = Teb->GdiBatchCount;
+    }
+    _SEH_HANDLE
+    {
+        /* Get the SEH exception */
+        CallbackStatus = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if (!NT_SUCCESS(CallbackStatus)) return CallbackStatus;
+
+    /* Check if we have GDI Batch operations */
+    if (GdiBatchCount)
+    {
+        /* Shouldn't happen in ROS yet */
+        ASSERT(FALSE);
+    }
+
+    /* Restore stack and return */
+    *UserEsp = OldStack;
+    return CallbackStatus;
+}
+
+/* EOF */
