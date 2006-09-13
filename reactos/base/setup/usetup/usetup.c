@@ -73,7 +73,7 @@ typedef enum _PAGE_NUMBER
 
 HANDLE ProcessHeap;
 UNICODE_STRING SourceRootPath;
-BOOLEAN IsUnattendedSetup;
+BOOLEAN IsUnattendedSetup = FALSE;
 LONG UnattendDestinationDiskNumber;
 LONG UnattendDestinationPartitionNumber;
 LONG UnattendMBRInstallType = -1;
@@ -433,7 +433,6 @@ CheckUnattendedSetup(VOID)
   if (DoesFileExist(SourcePath.Buffer, L"unattend.inf") == FALSE)
     {
       DPRINT("Does not exist: %S\\%S\n", SourcePath.Buffer, L"unattend.inf");
-      IsUnattendedSetup = FALSE;
       return;
     }
 
@@ -471,6 +470,26 @@ CheckUnattendedSetup(VOID)
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
       DPRINT("Signature not $ReactOS$\n");
+      SetupCloseInfFile(&UnattendInf);
+      return;
+    }
+
+  /* Check if Unattend setup is enabled */
+  if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"UnattendSetupEnabled", &Context))
+    {
+      DPRINT("Can't find key 'UnattendSetupEnabled'\n");
+      SetupCloseInfFile(&UnattendInf);
+      return;
+    }
+  if (!INF_GetData(&Context, NULL, &Value))
+    {
+      DPRINT("Can't read key 'UnattendSetupEnabled'\n");
+      SetupCloseInfFile(&UnattendInf);
+      return;
+    }
+  if (_wcsicmp(Value, L"yes") != 0)
+    {
+      DPRINT("Unattend setup is disabled by 'UnattendSetupEnabled' key!\n");
       SetupCloseInfFile(&UnattendInf);
       return;
     }

@@ -1911,13 +1911,39 @@ ProcessUnattendInf(HINF hUnattendedInf)
 
   if (!SetupFindFirstLine(hUnattendedInf,
               _T("Unattend"),
+              _T("UnattendSetupEnabled"),
+              &InfContext))
+    {
+      DPRINT1("Error: Cant find UnattendSetupEnabled Key! %d\n", GetLastError());
+      return FALSE;
+    }
+    
+   if (!SetupGetStringField(&InfContext,
+               1,
+               szValue,
+               sizeof(szValue) / sizeof(TCHAR),
+               &LineLength))
+    {
+      DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
+      return FALSE;
+    }
+    
+  if (_tcscmp(szValue, _T("yes")) != 0)
+    {
+      DPRINT("Unattend setup was disabled by UnattendSetupEnabled key.\n");
+      return FALSE;
+    }    
+      
+  if (!SetupFindFirstLine(hUnattendedInf,
+              _T("Unattend"),
               NULL,
               &InfContext))
     {
       DPRINT1("Error: SetupFindFirstLine failed %d\n", GetLastError());
       return FALSE;
     }
-
+    
+      
   do
   {	
     if (!SetupGetStringField(&InfContext,
@@ -1994,7 +2020,7 @@ InstallWizard(VOID)
 
   /* Clear setup data */
   ZeroMemory(&SetupData, sizeof(SETUPDATA));
-
+   
   hUnattendedInf = SetupOpenInfFileW(L"unattend.inf",
                            NULL,
                            INF_STYLE_OLDNT,
