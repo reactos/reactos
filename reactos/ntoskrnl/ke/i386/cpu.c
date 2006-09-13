@@ -638,58 +638,6 @@ Ki386InitializeTss(VOID)
     TssEntry->LimitLow = KTSS_IO_MAPS;
 }
 
-/* This is a rather naive implementation of Ke(Save/Restore)FloatingPointState
-   which will not work for WDM drivers. Please feel free to improve */
-NTSTATUS
-NTAPI
-KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
-{
-    PFNSAVE_FORMAT FpState;
-    ASSERT_IRQL(DISPATCH_LEVEL);
-
-    /* check if we are doing software emulation */
-    if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
-
-    FpState = ExAllocatePool(NonPagedPool, sizeof (FNSAVE_FORMAT));
-    if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
-
-    *((PVOID *) Save) = FpState;
-#ifdef __GNUC__
-    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
-#else
-    __asm
-    {
-        fnsave [FpState]
-    };
-#endif
-
-    KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
-{
-    PFNSAVE_FORMAT FpState = *((PVOID *) Save);
-
-    ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
-
-#ifdef __GNUC__
-    asm volatile("fnclex\n\t");
-    asm volatile("frstor %0\n\t" : "=m" (*FpState));
-#else
-    __asm
-    {
-        fnclex
-        frstor [FpState]
-    };
-#endif
-
-    ExFreePool(FpState);
-    return STATUS_SUCCESS;
-}
-
 VOID
 INIT_FUNCTION
 Ki386SetProcessorFeatures(VOID)
@@ -789,12 +737,161 @@ KeFlushCurrentTb(VOID)
     _Ke386SetCr(3, _Ke386GetCr(3));
 }
 
+VOID
+NTAPI
+KiSaveProcessorControlState(IN PKPROCESSOR_STATE ProcessorState)
+{
+    /* Save the CR registers */
+    ProcessorState->SpecialRegisters.Cr0 = _Ke386GetCr(0);
+    ProcessorState->SpecialRegisters.Cr2 = _Ke386GetCr(2);
+    ProcessorState->SpecialRegisters.Cr3 = _Ke386GetCr(3);
+    ProcessorState->SpecialRegisters.Cr4 = _Ke386GetCr(4);
+
+    /* Save the DR registers */
+    ProcessorState->SpecialRegisters.KernelDr0 = _Ke386GetDr(0);
+    ProcessorState->SpecialRegisters.KernelDr1 = _Ke386GetDr(1);
+    ProcessorState->SpecialRegisters.KernelDr2 = _Ke386GetDr(2);
+    ProcessorState->SpecialRegisters.KernelDr3 = _Ke386GetDr(3);
+    ProcessorState->SpecialRegisters.KernelDr6 = _Ke386GetDr(6);
+    ProcessorState->SpecialRegisters.KernelDr7 = _Ke386GetDr(7);
+    _Ke386SetDr(7, 0);
+
+    /* Save GDT, IDT, LDT and TSS */
+    Ke386GetGlobalDescriptorTable(ProcessorState->SpecialRegisters.Gdtr);
+    Ke386GetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr);
+    Ke386GetTr(ProcessorState->SpecialRegisters.Tr);
+    Ke386GetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
+}
+
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+{
+    PFNSAVE_FORMAT FpState;
+    ASSERT_IRQL(DISPATCH_LEVEL);
+    DPRINT1("%s is not really implemented\n", __FUNCTION__);
+
+    /* check if we are doing software emulation */
+    if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
+
+    FpState = ExAllocatePool(NonPagedPool, sizeof (FNSAVE_FORMAT));
+    if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
+
+    *((PVOID *) Save) = FpState;
+#ifdef __GNUC__
+    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
+#else
+    __asm
+    {
+        fnsave [FpState]
+    };
+#endif
+
+    KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+{
+    PFNSAVE_FORMAT FpState = *((PVOID *) Save);
+    ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
+    DPRINT1("%s is not really implemented\n", __FUNCTION__);
+
+#ifdef __GNUC__
+    asm volatile("fnclex\n\t");
+    asm volatile("frstor %0\n\t" : "=m" (*FpState));
+#else
+    __asm
+    {
+        fnclex
+        frstor [FpState]
+    };
+#endif
+
+    ExFreePool(FpState);
+    return STATUS_SUCCESS;
+}
+
 /*
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 KeGetRecommendedSharedDataAlignment(VOID)
 {
+    /* Return the global variable */
     return KeLargestCacheLine;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeFlushEntireTb(IN BOOLEAN Invalid,
+                IN BOOLEAN AllProcessors)
+{
+    KIRQL OldIrql;
+
+    /* Raise the IRQL for the TB Flush */
+    OldIrql = KeRaiseIrqlToSynchLevel();
+
+#ifdef CONFIG_SMP
+    /* FIXME: Support IPI Flush */
+#error Not yet implemented!
+#endif
+
+    /* Flush the TB for the Current CPU */
+    KeFlushCurrentTb();
+
+    /* Return to Original IRQL */
+    KeLowerIrql(OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeSetDmaIoCoherency(IN ULONG Coherency)
+{
+    /* Save the coherency globally */
+    KiDmaIoCoherency = Coherency;
+}
+
+/*
+ * @implemented
+ */
+KAFFINITY
+NTAPI
+KeQueryActiveProcessors(VOID)
+{
+    PAGED_CODE();
+
+    /* Simply return the number of active processors */
+    return KeActiveProcessors;
+}
+
+/*
+ * @implemented
+ */
+VOID
+__cdecl
+KeSaveStateForHibernate(IN PKPROCESSOR_STATE State)
+{
+    /* Capture the context */
+    RtlCaptureContext(&State->ContextFrame);
+
+    /* Capture the control state */
+    KiSaveProcessorControlState(State);
 }

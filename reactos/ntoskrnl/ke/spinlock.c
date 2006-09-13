@@ -242,7 +242,7 @@ KeSynchronizeExecution(IN PKINTERRUPT Interrupt,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
                            IN KIRQL OldIrql)
 {

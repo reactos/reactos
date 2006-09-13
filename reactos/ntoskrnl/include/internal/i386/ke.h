@@ -152,6 +152,22 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                                  __asm__("lgdt %0\n\t" \
                                      : /* no outputs */ \
                                      : "m" (X));
+
+#define Ke386GetInterruptDescriptorTable(X) \
+                                 __asm__("sidt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
+
+#define Ke386GetGlobalDescriptorTable(X) \
+                                 __asm__("sgdt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
+
+#define Ke386GetLocalDescriptorTable(X) \
+                                 __asm__("lldt %0\n\t" \
+                                     : /* no outputs */ \
+                                     : "m" (X));
+
 #define Ke386SaveFlags(x)        __asm__ __volatile__("pushfl ; popl %0":"=g" (x): /* no input */)
 #define Ke386RestoreFlags(x)     __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"g" (x):"memory")
 
@@ -166,8 +182,17 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                                      __asm__("movl %%cr" #N ",%0\n\t" :"=r" (__d)); \
                                      __d; \
                                  })
+
+#define _Ke386GetDr(N)           ({ \
+                                     unsigned int __d; \
+                                     __asm__("movl %%dr" #N ",%0\n\t" :"=r" (__d)); \
+                                     __d; \
+                                 })
 #define _Ke386SetCr(N,X)         __asm__ __volatile__("movl %0,%%cr" #N : :"r" (X));
+#define _Ke386SetDr(N,X)         __asm__ __volatile__("movl %0,%%dr" #N : :"r" (X));
 #define Ke386SetTr(X)         __asm__ __volatile__("ltr %%ax" : :"a" (X));
+
+#define Ke386GetTr(X)         __asm__ __volatile__("str %%ax" : :"a" (X));
 
 #define _Ke386SetSeg(N,X)         __asm__ __volatile__("movl %0,%%" #N : :"r" (X));
 

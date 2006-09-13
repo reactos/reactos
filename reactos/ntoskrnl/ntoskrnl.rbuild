@@ -48,7 +48,7 @@
             <file>apc.c</file>
             <file>bug.c</file>
             <file>clock.c</file>
-            <file>device.c</file>
+            <file>config.c</file>
             <file>dpc.c</file>
             <file>event.c</file>
             <file>exception.c</file>
