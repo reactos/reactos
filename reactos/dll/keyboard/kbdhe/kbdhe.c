@@ -2,7 +2,7 @@
  * ReactOS Greek ASCII Keyboard layout
  * Copyright (C) 2005 ReactOS
  * License: LGPL, see: LGPL.txt
- * author: Apostolos Alexiadis (Dj Apal®) 
+ * author: Apostolos Alexiadis (Dj Apal®)
  *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
@@ -36,7 +36,7 @@
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
   /* - 00 - */
-  /* 1 ...         2 ...         3 ...         4 ... */     
+  /* 1 ...         2 ...         3 ...         4 ... */
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
@@ -45,14 +45,14 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
   'R',          'T',          'Y',          'U',
-  'I',          'O',          'P',          
+  'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
   /* Second Letters Row */
-  VK_LCONTROL,  
+  VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3, 
+  'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3,
   VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
   /* Third letters row */
@@ -62,15 +62,15 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 37 - */
   /* Bottom Row */
   VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
-  
+
   /* - 3b - */
   /* F-Keys */
-  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, 
+  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6,
   VK_F7, VK_F8, VK_F9, VK_F10,
   /* - 45 - */
   /* Locks */
-  VK_NUMLOCK | KMEXT,   
-  VK_SCROLL | KMULTI,    
+  VK_NUMLOCK | KMEXT,
+  VK_SCROLL | KMULTI,
   /* - 47 - */
   /* Number-Pad */
   VK_HOME | KNUMS,      VK_UP | KNUMS,         VK_PRIOR | KNUMS, VK_SUBTRACT,
@@ -86,11 +86,11 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 59 - */
   VK_CLEAR,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* EREOF */
   VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* ZOOM */
-  VK_HELP,      
+  VK_HELP,
   /* - 64 - */
   /* Even more F-Keys (for example, NCR keyboards from the early 90's) */
   VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F20,
-  VK_F21, VK_F22, VK_F23, 
+  VK_F21, VK_F22, VK_F23,
   /* - 6f - */
   /* Not sure who uses these codes */
   VK_EMPTY, VK_EMPTY, VK_EMPTY,
@@ -179,32 +179,32 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
 
   /* The alphabet */
-  { 'A',         CAPS,   {'á', 'Á', 0x01, 0x01} },
-  { 'B',         CAPS,   {'â', 'Â', 0x02, 0x02} },
-  { 'C',         CAPS,   {'ø', 'Ø', 0x03, 0x03} },
-  { 'D',         CAPS,   {'ä', 'Ä', 0x04, 0x04} },
-  { 'E',         CAPS,   {'å', 'Å', 0x05, 0x05} },
-  { 'F',         CAPS,   {'ö', 'Ö', 0x06, 0x06} },
-  { 'G',         CAPS,   {'ã', 'Ã', 0x07, 0x07} },
-  { 'H',         CAPS,   {'ç', 'Ç', 0x08, 0x08} },
-  { 'I',         CAPS,   {'é', 'É', 0x09, 0x09} },
-  { 'J',         CAPS,   {'î', 'Î', 0x0a, 0x0a} },
-  { 'K',         CAPS,   {'ê', 'Ê', 0x0b, 0x0b} },
-  { 'L',         CAPS,   {'ë', 'Ë', 0x0c, 0x0c} },
-  { 'M',         CAPS,   {'ì', 'Ì', 0x0d, 0x0d} },
-  { 'N',         CAPS,   {'í', 'Í', 0x0e, 0x0e} },
-  { 'O',         CAPS,   {'ï', 'Ï', 0x0f, 0x0f} },
-  { 'P',         CAPS,   {'ð', 'Ð', 0x10, 0x10} },
-  { 'Q',         CAPS,   {';', ';', 0x11, 0x11} },
-  { 'R',         CAPS,   {'ñ', 'Ñ', 0x12, 0x12} },
-  { 'S',         CAPS,   {'ó', 'Ó', 0x13, 0x13} },
-  { 'T',         CAPS,   {'ô', 'Ô', 0x14, 0x14} },
-  { 'U',         CAPS,   {'è', 'È', 0x15, 0x15} },
-  { 'V',         CAPS,   {'ù', 'Ù', 0x16, 0x16} },
-  { 'W',         CAPS,   {'ò', 'ò', 0x17, 0x17} },
-  { 'X',         CAPS,   {'÷', '×', 0x18, 0x18} },
-  { 'Y',         CAPS,   {'õ', 'Õ', 0x19, 0x19} },
-  { 'Z',         CAPS,   {'æ', 'Æ', 0x1a, 0x1a} },
+  { 'A',         CAPS,   {0x3B1, 0x391} },
+  { 'B',         CAPS,   {0x3B2, 0x392}  },
+  { 'C',         CAPS,   {0x3C8, 0x3A8}  },
+  { 'D',         CAPS,   {0x3B4, 0x394}  },
+  { 'E',         CAPS,   {0x3B5, 0x395}  },
+  { 'F',         CAPS,   {0x3C6, 0x3A6}  },
+  { 'G',         CAPS,   {0x3B3, 0x393} },
+  { 'H',         CAPS,   {0x3B7, 0x397}  },
+  { 'I',         CAPS,   {0x3B9, 0x399}  },
+  { 'J',         CAPS,   {0x3BE, 0x39E}  },
+  { 'K',         CAPS,   {0x3BA, 0x39A} },
+  { 'L',         CAPS,   {0x3BB, 0x39B} },
+  { 'M',         CAPS,   {0x3BC, 0x39C}  },
+  { 'N',         CAPS,   {0x3BD, 0x39D}  },
+  { 'O',         CAPS,   {0x3BF, 0x39F}  },
+  { 'P',         CAPS,   {0x3C0, 0x3A0} },
+  { 'Q',         CAPS,   {';',';'} },
+  { 'R',         CAPS,   {0x3C1, 0x3A1}  },
+  { 'S',         CAPS,   {0x3C3, 0x3A3}  },
+  { 'T',         CAPS,   {0x3C4, 0x3A4}  },
+  { 'U',         CAPS,   {0x3B8, 0x398} },
+  { 'V',         CAPS,   {0x3C9, 0x3A9}  },
+  { 'W',         CAPS,   {0x3C2, 0x3C2} },
+  { 'X',         CAPS,   {0x3C7, 0x3A7}  },
+  { 'Y',         CAPS,   {0x3C5, 0x3A5}  },
+  { 'Z',         CAPS,   {0x3B6, 0x396} },
 
   /* Legacy Ascii generators */
   { '2', NOCAPS, {'2', '@', WCH_NONE, 0} },
@@ -238,6 +238,15 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
   vk_master(4,key_to_chars_4mod),
   { 0,0,0 }
 };
+
+#define DEADTRANS(ch, accent, comp, flags) MAKELONG(ch, accent), comp, flags
+ROSDATA DEADKEY  deadkey[] =
+{
+	{ DEADTRANS(0x03B1, 0x037E, 0x03AC, 0x0000) },
+	{ DEADTRANS(0x037E, 0x03B5, 0x03AD, 0x0000) },
+	{ 0, 0, 0}
+};
+
 
 ROSDATA VSC_LPWSTR key_names[] = {
   { 0x00, L"" },
@@ -325,13 +334,13 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 ROSDATA KBDTABLES keyboard_layout_table = {
   /* modifier assignments */
   &modifier_bits,
-  
+
   /* character from vk tables */
   vk_to_wchar_master_table,
-  
+
   /* diacritical marks -- currently implemented by wine code */
   /* English doesn't have any, anyway */
-  NULL,
+   deadkey,
 
   /* Key names */
   (VSC_LPWSTR *)key_names,
