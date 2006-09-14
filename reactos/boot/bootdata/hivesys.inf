@@ -648,11 +648,6 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000\LogConf","BasicConfigVect
 01,00,00,00,01,00,01,00,01,00,00,00, \
 00,06,00,00,00,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
-; ACPI bus
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","HardwareID",0x00010000,"*PNP0C08"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","DeviceDesc",0x00000000,"ACPI bus"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0C08\0000","Service",0x00000000,"acpi"
-
 ; NetLogon
 HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
