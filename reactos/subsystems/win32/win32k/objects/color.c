@@ -383,8 +383,32 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   systemPalette = NtGdiGetStockObject((INT)DEFAULT_PALETTE);
   palGDI = PALETTE_LockPalette(dc->w.hPalette);
   palPtr = (PALOBJ*) palGDI;
-  /* FIXME - Handle palGDI == NULL!!!! */
 
+  if (palGDI == NULL)
+  {
+	 /* FIXME - Handle palGDI == NULL!!!! 
+	    we should not unlock dc and return 0 ??
+		shall we create the palate ??
+	 */	
+     DC_UnlockDc(dc);
+	 return 0;
+  }
+
+  sysGDI = PALETTE_LockPalette(systemPalette);
+  sysPtr = (PALOBJ*) sysGDI;
+  
+  if (palGDI == NULL)
+  {
+	 /* FIXME - Handle sysGDI == NULL!!!!! 
+	    we should not unlock dc and return 0 ??
+		shall we create the palate ??
+	 */
+     PALETTE_UnlockPalette(palGDI);
+     DC_UnlockDc(dc);
+	 return 0;
+  }
+
+  
   // Step 1: Create mapping of system palette\DC palette
 #ifndef NO_MAPPING
   realized = PALETTE_SetMapping(palPtr, 0, palGDI->NumColors,
@@ -394,9 +418,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   realized = 0;
 #endif
 
-  sysGDI = PALETTE_LockPalette(systemPalette);
-  sysPtr = (PALOBJ*) sysGDI;
-  /* FIXME - Handle sysGDI == NULL!!!!! */
+  
 
   // Step 2:
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
@@ -404,8 +426,11 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   // context is a display DC, the physical palette for that device is modified.
   if(dc->w.flags == DC_MEMORY)
   {
-    // Memory managed DC
-    DbgPrint("win32k: realizepalette unimplemented step 2 for DC_MEMORY");
+    // Memory managed DC    
+	ASSERT(sysGDI->NumColors <= 256);
+	success = ((GDIDEVICE *)dc->GDIDevice)->DriverFunctions.SetPalette(
+		dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
+
   } else {
     if( ((GDIDEVICE *)dc->GDIDevice)->DriverFunctions.SetPalette)
     {
