@@ -25,10 +25,8 @@
  * UPDATE HISTORY:
  *      03-04-2004  Created
  */
-#include <windows.h>
-#include <stdlib.h>
-#include "resource.h"
-#include "sysdm.h"
+
+#include "precomp.h"
 
 /* Property page dialog callback */
 INT_PTR CALLBACK

@@ -25,12 +25,8 @@
  * UPDATE HISTORY:
  *      03-04-2004  Created
  */
-#include <windows.h>
-#include <tchar.h>
-#include <stdlib.h>
 
-#include "resource.h"
-#include "sysdm.h"
+#include "precomp.h"
 
 void
 ShowLastWin32Error(HWND hWndOwner)

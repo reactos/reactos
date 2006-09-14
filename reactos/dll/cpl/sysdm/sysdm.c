@@ -25,14 +25,8 @@
  * UPDATE HISTORY:
  *      03-04-2004  Created
  */
-#include <windows.h>
-#include <commctrl.h>
-#include <prsht.h>
-#include <cpl.h>
-#include <stdlib.h>
 
-#include "resource.h"
-#include "sysdm.h"
+#include "precomp.h"
 
 #define NUM_APPLETS	(1)
 

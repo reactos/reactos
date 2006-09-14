@@ -24,13 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <stdlib.h>
-#include <tchar.h>
-
-#include "resource.h"
-#include "sysdm.h"
+#include "precomp.h"
 
 
 typedef struct _VARIABLE_DATA

@@ -25,12 +25,8 @@
  * UPDATE HISTORY:
  *      03-04-2004  Created
  */
-#include <windows.h>
-#include <stdlib.h>
-#include <tchar.h>
 
-#include "resource.h"
-#include "sysdm.h"
+#include "precomp.h"
 
 typedef BOOL (STDCALL *PDEVMGREXEC)(HWND hWndParent, HINSTANCE hInst, PVOID Unknown, int nCmdShow);
 BOOL LaunchDeviceManager(HWND hWndParent)
