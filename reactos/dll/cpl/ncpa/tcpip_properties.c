@@ -357,7 +357,7 @@ TCPIPPropertyPageProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     DlgData = (PTCPIP_PROPERTIES_DATA) GetWindowLongPtrW(Dlg, GWL_USERDATA);
     switch(uMsg) {
-    case WM_INITDIALOG:	
+    case WM_INITDIALOG:
         Page = (LPPROPSHEETPAGEW) lParam;
         DlgData = (PTCPIP_PROPERTIES_DATA) Page->lParam;
         SetWindowLongPtrW(Dlg, GWL_USERDATA, Page->lParam);
@@ -390,7 +390,12 @@ TCPIPPropertyPageProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                                    ntohl(DlgData->OldDns2));
             }
         }
-        ManualDNS(Dlg, INADDR_NONE != DlgData->OldDns1, 0);
+
+        if (DlgData->OldDhcpEnabled)
+        {
+            ManualDNS(Dlg, INADDR_NONE != DlgData->OldDns1, 0);
+        }
+
         break;
 
     case WM_COMMAND:
