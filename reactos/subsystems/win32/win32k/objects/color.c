@@ -36,7 +36,7 @@ static HPALETTE hPrimaryPalette = 0; // used for WM_PALETTECHANGED
 //static HPALETTE hLastRealizedPalette = 0; // UnrealizeObject() needs it
 
 
-static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the palate and restore it */
+static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the pallete and restore it */
 
 const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
 {
@@ -388,7 +388,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   {
 	 /* FIXME - Handle palGDI == NULL!!!! 
 	    we should not unlock dc and return 0 ??
-		shall we create the palate ??
+		shall we create the pallete ??
 	 */	
      DC_UnlockDc(dc);
 	 return 0;
@@ -401,7 +401,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   {
 	 /* FIXME - Handle sysGDI == NULL!!!!! 
 	    we should not unlock dc and return 0 ??
-		shall we create the palate ??
+		shall we create the pallete ??
 	 */
      PALETTE_UnlockPalette(palGDI);
      DC_UnlockDc(dc);
