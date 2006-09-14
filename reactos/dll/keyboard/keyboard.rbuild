@@ -50,4 +50,7 @@
 	<directory name="kbdpo">
 		<xi:include href="kbdpo/kbdpo.rbuild" />
 	</directory>
+	<directory name="kbdja">
+		<xi:include href="kbdja/kbdja.rbuild" />
+	</directory>
 </group>
