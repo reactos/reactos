@@ -4,7 +4,7 @@
  * Hungarian version is Copyright 2005 - Peter Nagy <nagylakas@gmail.com>
  */
 
-LANGUAGE LANG_HUNGARIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {
 
