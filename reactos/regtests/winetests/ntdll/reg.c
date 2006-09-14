@@ -191,7 +191,7 @@ static NTSTATUS WINAPI QueryRoutine (IN PCWSTR ValueName, IN ULONG ValueType, IN
 
             case REG_BINARY:
                 trace("ValueType: REG_BINARY\n");
-                trace("ValueData: %d\n", (int)ValueData);
+                trace("ValueData: %d\n", *(unsigned int *)ValueData);
                 break;
 
             case REG_SZ:
@@ -211,7 +211,7 @@ static NTSTATUS WINAPI QueryRoutine (IN PCWSTR ValueName, IN ULONG ValueType, IN
 
             case REG_DWORD:
                 trace("ValueType: REG_DWORD\n");
-                trace("ValueData: %d\n", (int)ValueData);
+                trace("ValueData: %d\n", *(unsigned int *)ValueData);
                 break;
     };
     trace("ValueLength: %d\n", (int)ValueLength);
