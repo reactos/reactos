@@ -90,11 +90,7 @@
 #define IDC_MINIMUM                     912
 #define IDC_RECOMMENDED                 913
 #define IDC_CURRENT                     914
-#define IDS_DRIVE                       920
-#define IDS_SPACE                       921
-#define IDS_MIN                         922
-#define IDS_REC                         923
-#define IDS_CUR                         924
+
 
 /* licence */
 #define IDD_LICENCE                     1000

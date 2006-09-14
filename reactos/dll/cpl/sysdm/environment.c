@@ -243,12 +243,12 @@ SetListViewColumns(HWND hwndListView)
   memset(&column, 0x00, sizeof(column));
   column.mask=LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_TEXT;
   column.fmt=LVCFMT_LEFT;
-  column.cx = (rect.right - rect.left) / 3;
+  column.cx = (INT)((rect.right - rect.left) * 0.32);
   column.iSubItem = 0;
   column.pszText = _T("Variable");
   (void)ListView_InsertColumn(hwndListView, 0, &column);
 
-  column.cx = (rect.right - rect.left) - ((rect.right - rect.left) / 3) - 1;
+  column.cx = (INT)((rect.right - rect.left) * 0.63);
   column.iSubItem = 1;
   column.pszText = _T("Value");
   (void)ListView_InsertColumn(hwndListView, 1, &column);

@@ -14,7 +14,7 @@ BEGIN
     LTEXT       "", IDC_PROCESSOR, 130, 153, 118, 9
     LTEXT       "", IDC_PROCESSORSPEED, 130, 162, 118, 9
     LTEXT       "", IDC_SYSTEMMEMORY, 130, 171, 118, 9
-    PUSHBUTTON  "View licence...", IDC_LICENCE, 78, 199, 78, 13
+    PUSHBUTTON  "View licence...", IDC_LICENCE, 90, 199, 78, 13
 END
 
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
@@ -111,26 +111,32 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Virtual Memory"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    LTEXT       "Drive  [Volume Label]        Paging File Size (MB)", -1, 12, 5, 96, 9
+    LTEXT       "Drive  [Volume Label]", IDC_STATIC, 12, 5, 96, 9
+    LTEXT       "Paging File Size (MB)", IDC_STATIC, 115, 5, 96, 9
     CONTROL     "", IDC_PAGEFILELIST, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP,
                       10, 16, 204, 52, WS_EX_CLIENTEDGE
 
     GROUPBOX    "Paging file size for selected drive", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT       "", IDC_DRIVE, 20, 244, 100, 9
-    LTEXT       "", IDC_SPACEAVAIL, 20, 94, 112, 8
-    LTEXT       "Initial size (MB):", -1, 22, 118, 54, 9
-    LTEXT       "Maximum size (MB):", -1, 22, 131, 64, 9
-    CONTROL     "Custom size", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 54, 9
-    CONTROL     "System managed size", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 88, 9
-    CONTROL     "No paging file", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 78,9
+    LTEXT       "Drive:", IDC_STATIC, 20, 80, 20, 8 
+    LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT       "Space available:", IDC_STATIC, 20, 92, 56, 9 
+    LTEXT       "", IDC_SPACEAVAIL, 84, 92, 104, 9
+    LTEXT       "&Initial size (MB):", -1, 22, 118, 54, 9
+    LTEXT       "Ma&ximum size (MB):", -1, 22, 131, 64, 9
+    CONTROL     "&Custom size", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 54, 9
+    CONTROL     "S&ystem managed size", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 88, 9
+    CONTROL     "&No paging file", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 78,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Set", IDC_SET, 158, 155, 50, 13
 
-    GROUPBOX    "Total paging file size for all drives", IDC_TOTALGROUP, 10, 179, 204, 46
-    LTEXT       "", IDC_MINIMUM, 18, 200, 100, 9
-    LTEXT       "", IDC_RECOMMENDED, 18, 200, 100, 9
-    LTEXT       "", IDC_CURRENT, 18, 200, 100, 9
+    GROUPBOX    "Total paging file size for all drives", IDC_TOTALGROUP, 10, 177, 204, 46
+    LTEXT       "Minimum allowed:", IDC_STATIC, 18, 188, 58, 9 
+    LTEXT       "", IDC_MINIMUM, 86, 186, 100, 9
+    LTEXT       "Recommended:", IDC_STATIC, 18, 199, 52, 9
+    LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
+    LTEXT       "Currently allocated:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
 
     PUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
     PUSHBUTTON  "Cancel", IDCANCEL, 168, 232, 48, 13
@@ -143,18 +149,18 @@ CAPTION "Environment Variables"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX    "User variables", IDC_STATIC, 7, 12, 238, 100
-    LTEXT       "&Variables:", IDC_STATIC, 14, 24, 224, 8
+
     CONTROL     "", IDC_USER_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
-                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 35, 224, 48, WS_EX_CLIENTEDGE
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON  "&New...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON  "&Edit...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON  "&Delete", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
     GROUPBOX    "System variables", IDC_STATIC, 7, 116, 238, 100
-    LTEXT       "V&ariables:", IDC_STATIC, 14, 128, 224, 8
+
     CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
-                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 139, 224, 48, WS_EX_CLIENTEDGE
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Ne&w...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
     PUSHBUTTON  "Ed&it...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
     PUSHBUTTON  "De&lete", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
@@ -190,9 +196,4 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "System"
     IDS_CPLSYSTEMDESCRIPTION "See information about your computer and change various system and hardware settings."
-    IDS_DRIVE "Drive:			%s"
-    IDS_SPACE "Space available:		%s"
-    IDS_MIN "Minimum allowed:	%s"
-    IDS_REC "Recommended:		%s"
-    IDS_CUR "Currently allocated: %s"
 END
