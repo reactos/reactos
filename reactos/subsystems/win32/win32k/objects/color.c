@@ -397,7 +397,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   sysGDI = PALETTE_LockPalette(systemPalette);
   sysPtr = (PALOBJ*) sysGDI;
   
-  if (palGDI == NULL)
+  if (sysGDI == NULL)
   {
 	 /* FIXME - Handle sysGDI == NULL!!!!! 
 	    we should not unlock dc and return 0 ??
