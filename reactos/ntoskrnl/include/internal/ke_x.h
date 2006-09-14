@@ -384,45 +384,16 @@ KxUnwaitThreadForEvent(IN PKEVENT Event,
     } while (WaitEntry != WaitList);
 }
 
+#ifndef _CONFIG_SMP
 //
-// Spinlock Acquisition at IRQL >= DISPATCH_LEVEL
+// Spinlock Acquire at IRQL >= DISPATCH_LEVEL
 //
 FORCEINLINE
 VOID
 KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 {
-#ifdef CONFIG_SMP
-    for (;;)
-    {
-        /* Try to acquire it */
-        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
-        {
-            /* Value changed... wait until it's locked */
-            while (*(volatile KSPIN_LOCK *)SpinLock == 1)
-            {
-#ifdef DBG
-                /* On debug builds, we use a much slower but useful routine */
-                Kii386SpinOnSpinLock(SpinLock, 5);
-#else
-                /* Otherwise, just yield and keep looping */
-                YieldProcessor();
-#endif
-            }
-        }
-        else
-        {
-#ifdef DBG
-            /* On debug builds, we OR in the KTHREAD */
-            *SpinLock = KeGetCurrentThread() | 1;
-#endif
-            /* All is well, break out */
-            break;
-        }
-    }
-#else
     /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
     UNREFERENCED_PARAMETER(SpinLock);
-#endif
 }
 
 //
@@ -432,27 +403,30 @@ FORCEINLINE
 VOID
 KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 {
-#ifdef CONFIG_SMP
-#ifdef DBG
-    /* Make sure that the threads match */
-    if ((KeGetCurrentThread() | 1) != *SpinLock)
-    {
-        /* They don't, bugcheck */
-        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, SpinLock, 0, 0, 0);
-    }
-#endif
-    /* Clear the lock */
-    InterlockedAnd(SpinLock, 0);
-#else
     /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
     UNREFERENCED_PARAMETER(SpinLock);
-#endif
 }
 
 //
-// Thread Scheduling Routines
+// This routine protects against multiple CPU acquires, it's meaningless on UP.
 //
-#ifndef _CONFIG_SMP
+VOID
+FORCEINLINE
+KiAcquireDispatcherObject(IN DISPATCHER_HEADER* Object)
+{
+    UNREFERENCED_PARAMETER(Object);
+}
+
+//
+// This routine protects against multiple CPU acquires, it's meaningless on UP.
+//
+VOID
+FORCEINLINE
+KiReleaseDispatcherObject(IN DISPATCHER_HEADER* Object)
+{
+    UNREFERENCED_PARAMETER(Object);
+}
+
 KIRQL
 FORCEINLINE
 KiAcquireDispatcherLock(VOID)
@@ -560,6 +534,17 @@ KiReleaseThreadLock(IN PKTHREAD Thread)
     UNREFERENCED_PARAMETER(Thread);
 }
 
+//
+// This routine protects against multiple CPU acquires, it's meaningless on UP.
+//
+FORCEINLINE
+BOOLEAN
+KiTryThreadLock(IN PKTHREAD Thread)
+{
+    UNREFERENCED_PARAMETER(Thread);
+    return FALSE;
+}
+
 FORCEINLINE
 VOID
 KiCheckDeferredReadyList(IN PKPRCB Prcb)
@@ -596,6 +581,98 @@ KiRequestApcInterrupt(IN BOOLEAN NeedApc,
 }
 
 #else
+
+//
+// Spinlock Acquisition at IRQL >= DISPATCH_LEVEL
+//
+FORCEINLINE
+VOID
+KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+    for (;;)
+    {
+        /* Try to acquire it */
+        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
+        {
+            /* Value changed... wait until it's locked */
+            while (*(volatile KSPIN_LOCK *)SpinLock == 1)
+            {
+#ifdef DBG
+                /* On debug builds, we use a much slower but useful routine */
+                Kii386SpinOnSpinLock(SpinLock, 5);
+#else
+                /* Otherwise, just yield and keep looping */
+                YieldProcessor();
+#endif
+            }
+        }
+        else
+        {
+#ifdef DBG
+            /* On debug builds, we OR in the KTHREAD */
+            *SpinLock = KeGetCurrentThread() | 1;
+#endif
+            /* All is well, break out */
+            break;
+        }
+    }
+}
+
+//
+// Spinlock Release at IRQL >= DISPATCH_LEVEL
+//
+FORCEINLINE
+VOID
+KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+#ifdef DBG
+    /* Make sure that the threads match */
+    if ((KeGetCurrentThread() | 1) != *SpinLock)
+    {
+        /* They don't, bugcheck */
+        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, SpinLock, 0, 0, 0);
+    }
+#endif
+    /* Clear the lock */
+    InterlockedAnd(SpinLock, 0);
+}
+
+KIRQL
+FORCEINLINE
+KiAcquireDispatcherObject(IN DISPATCHER_HEADER* Object)
+{
+    LONG OldValue, NewValue;
+
+    /* Make sure we're at a safe level to touch the lock */
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Start acquire loop */
+    do
+    {
+        /* Loop until the other CPU releases it */
+        while ((UCHAR)Object->Lock & KOBJECT_LOCK_BIT)
+        {
+            /* Let the CPU know that this is a loop */
+            YieldProcessor();
+        };
+
+        /* Try acquiring the lock now */
+        NewValue = InterlockedCompareExchange(&Object->Lock,
+                                              OldValue | KOBJECT_LOCK_BIT,
+                                              OldValue);
+    } while (NewValue != OldValue);
+}
+
+KIRQL
+FORCEINLINE
+KiReleaseDispatcherObject(IN DISPATCHER_HEADER* Object)
+{
+    /* Make sure we're at a safe level to touch the lock */
+    ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
+
+    /* Release it */
+    InterlockedAnd(&Object->Lock, ~KOBJECT_LOCK_BIT);
+}
 
 KIRQL
 FORCEINLINE
@@ -751,6 +828,23 @@ KiReleaseThreadLock(IN PKTHREAD Thread)
 {
     /* Release it */
     InterlockedAnd(&Thread->ThreadLock, 0);
+}
+
+FORCEINLINE
+BOOLEAN
+KiTryThreadLock(IN PKTHREAD Thread)
+{
+    LONG Value;
+
+    /* If the lock isn't acquired, return false */
+    if (!Thread->ThreadLock) return FALSE;
+
+    /* Otherwise, try to acquire it and check the result */
+    Value = 1;
+    Value = InterlockedExchange(&Thread->ThreadLock, &Value);
+
+    /* Return the lock state */
+    return (Value == TRUE);
 }
 
 FORCEINLINE

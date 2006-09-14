@@ -43,6 +43,7 @@ Author:
 // Object Type Mask for Kernel Dispatcher Objects
 //
 #define KOBJECT_TYPE_MASK               0x7F
+#define KOBJECT_LOCK_BIT                0x80
 
 //
 // Dispatcher Priority increments
