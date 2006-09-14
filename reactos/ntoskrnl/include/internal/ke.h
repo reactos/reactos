@@ -188,6 +188,12 @@ KiSwapThread(
 
 VOID
 NTAPI
+KeReadyThread(
+    IN PKTHREAD Thread
+);
+
+VOID
+NTAPI
 KiReadyThread(IN PKTHREAD Thread);
 
 NTSTATUS

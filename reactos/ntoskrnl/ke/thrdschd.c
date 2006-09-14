@@ -213,9 +213,38 @@ VOID
 NTAPI
 KiReadyThread(IN PKTHREAD Thread)
 {
-    /* Makes a thread ready */
-    Thread->State = Ready;
-    KiInsertIntoThreadList(Thread->Priority, Thread);
+    IN PKPROCESS Process = Thread->ApcState.Process;
+
+    /* Check if the process is paged out */
+    if (Process->State != ProcessInMemory)
+    {
+        /* We don't page out processes in ROS */
+        ASSERT(FALSE);
+    }
+    else if (!Thread->KernelStackResident)
+    {
+        /* Increase the stack count */
+        ASSERT(Process->StackCount != MAXULONG_PTR);
+        Process->StackCount++;
+
+        /* Set the thread to transition */
+        ASSERT(Thread->State != Transition);
+        Thread->State = Transition;
+
+        /* The stack is always resident in ROS */
+        ASSERT(FALSE);
+    }
+    else
+    {
+        /* Insert the thread on the deferred ready list */
+#if 0
+        KiInsertDeferredReadyList(Thread);
+#else
+        /* Insert the thread into the thread list */
+        Thread->State = Ready;
+        KiInsertIntoThreadList(Thread->Priority, Thread);
+#endif
+    }
 }
 
 VOID

@@ -81,7 +81,6 @@ NTAPI
 PsInitHackThread(VOID)
 {
     PETHREAD IdleThread;
-    KIRQL oldIrql;
 
     IdleThread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
     RtlZeroMemory(IdleThread, sizeof(ETHREAD));
@@ -97,9 +96,7 @@ PsInitHackThread(VOID)
                               KERNEL_STACK_SIZE));
     InitializeListHead(&IdleThread->IrpList);
 
-    oldIrql = KiAcquireDispatcherLock ();
-    KiReadyThread(&IdleThread->Tcb);
-    KiReleaseDispatcherLock(oldIrql);
+    KeReadyThread(&IdleThread->Tcb);
 
     KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;
     KeSetPriorityThread(&IdleThread->Tcb, LOW_PRIORITY);

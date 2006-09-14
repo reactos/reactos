@@ -80,6 +80,24 @@ KeQueryBasePriorityThread(IN PKTHREAD Thread)
     return BaseIncrement;
 }
 
+VOID
+NTAPI
+KeReadyThread(IN PKTHREAD Thread)
+{
+    KIRQL OldIrql;
+    ASSERT_THREAD(Thread);
+    ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+
+    /* Lock the Dispatcher Database */
+    OldIrql = KiAcquireDispatcherLock();
+
+    /* Make the thread ready */
+    KiReadyThread(Thread);
+
+    /* Unlock dispatcher database */
+    KiReleaseDispatcherLock(OldIrql);
+}
+
 ULONG
 NTAPI
 KeAlertResumeThread(IN PKTHREAD Thread)

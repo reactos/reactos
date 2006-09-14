@@ -58,6 +58,8 @@ KiAttachProcess(IN PKTHREAD Thread,
                 IN PKLOCK_QUEUE_HANDLE ApcLock,
                 IN PRKAPC_STATE SavedApcState)
 {
+    PLIST_ENTRY ListHead, NextEntry;
+    PKTHREAD CurrentThread;
     ASSERT(Process != Thread->ApcState.Process);
 
     /* Increase Stack Count */
@@ -87,7 +89,24 @@ KiAttachProcess(IN PKTHREAD Thread,
     /* Check if the process is paged in */
     if (Process->State == ProcessInMemory)
     {
-        /* FIXME: Scan the Ready Thread List once new scheduler is in */
+        /* Scan the ready list */
+        ListHead = &Process->ReadyListHead;
+        NextEntry = ListHead->Flink;
+        while (NextEntry != ListHead)
+        {
+            /* Get the thread */
+            CurrentThread = CONTAINING_RECORD(NextEntry, KTHREAD, WaitListEntry);
+
+            /* Remove it */
+            RemoveEntryList(NextEntry);
+            CurrentThread->ProcessReadyQueue = FALSE;
+
+            /* Mark it ready */
+            KiReadyThread(CurrentThread);
+
+            /* Go to the next one */
+            NextEntry = ListHead->Flink;
+        }
 
         /* Release dispatcher lock */
         KiReleaseDispatcherLockFromDpcLevel();
