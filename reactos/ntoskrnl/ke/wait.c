@@ -280,113 +280,88 @@ KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
                        IN BOOLEAN Alertable,
                        IN PLARGE_INTEGER Interval OPTIONAL)
 {
-    PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER ThreadTimer;
-    PKTHREAD CurrentThread = KeGetCurrentThread();
-    NTSTATUS WaitStatus = STATUS_SUCCESS;
+    PKTHREAD Thread = KeGetCurrentThread();
+    NTSTATUS WaitStatus;
     BOOLEAN Swappable;
     PLARGE_INTEGER OriginalDueTime = Interval;
     LARGE_INTEGER DueTime, NewDueTime;
 
     /* Check if the lock is already held */
-    if (CurrentThread->WaitNext)
+    if (Thread->WaitNext)
     {
         /* Lock is held, disable Wait Next */
-        CurrentThread->WaitNext = FALSE;
+        Thread->WaitNext = FALSE;
+        Swappable = KxDelayThreadWait(Thread, Alertable, WaitMode);
     }
     else
     {
         /* Lock not held, acquire it */
-        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
+WaitStart:
+        Thread->WaitIrql = KiAcquireDispatcherLock();
+        Swappable = KxDelayThreadWait(Thread, Alertable, WaitMode);
     }
 
-    /* Use built-in Wait block */
-    TimerWaitBlock = &CurrentThread->WaitBlock[TIMER_WAIT_BLOCK];
-
-    /* Start Wait Loop */
-    do
+    /* Check if a kernel APC is pending and we're below APC_LEVEL */
+    if ((Thread->ApcState.KernelApcPending) && !(Thread->SpecialApcDisable) &&
+        (Thread->WaitIrql < APC_LEVEL))
     {
-        /* Check if a kernel APC is pending and we're below APC_LEVEL */
-        if ((CurrentThread->ApcState.KernelApcPending) &&
-            !(CurrentThread->SpecialApcDisable) &&
-            (CurrentThread->WaitIrql < APC_LEVEL))
-        {
-            /* Unlock the dispatcher */
-            KiReleaseDispatcherLock(CurrentThread->WaitIrql);
-        }
-        else
-        {
-            /* Check if we can do an alertable wait, if requested */
-            KiCheckAlertability();
+        /* Unlock the dispatcher */
+        KiReleaseDispatcherLock(Thread->WaitIrql);
+        goto WaitStart;
+    }
 
-            /* Check if we can swap the thread's stack */
-            CurrentThread->WaitListEntry.Flink = NULL;
-            KiCheckThreadStackSwap(WaitMode, CurrentThread, Swappable);
+    /* Check if we have to bail out due to an alerted state */
+    WaitStatus = KiCheckAlertability(Thread, Alertable, WaitMode);
+    if (WaitStatus != STATUS_WAIT_0)
+    {
+        /* Unlock the dispatcher and return */
+        KiReleaseDispatcherLock(Thread->WaitIrql);
+        return WaitStatus;
+    }
 
-            /* Set status */
-            CurrentThread->WaitStatus = STATUS_WAIT_0;
+    /* Set Timer */
+    ThreadTimer = &Thread->Timer;
 
-            /* Set Timer */
-            ThreadTimer = &CurrentThread->Timer;
+    /* Insert the Timer into the Timer Lists and enable it */
+    if (!KiInsertTimer(ThreadTimer, *Interval))
+    {
+        /* FIXME: We should find a new ready thread */
+        KiReleaseDispatcherLock(Thread->WaitIrql);
+        return STATUS_WAIT_0;
+    }
 
-            /* Setup the Wait Block */
-            CurrentThread->WaitBlockList = TimerWaitBlock;
-            TimerWaitBlock->NextWaitBlock = TimerWaitBlock;
+    /* Save due time */
+    DueTime.QuadPart = ThreadTimer->DueTime.QuadPart;
 
-            /* Link the timer to this Wait Block */
-            ThreadTimer->Header.WaitListHead.Flink =
-                &TimerWaitBlock->WaitListEntry;
-            ThreadTimer->Header.WaitListHead.Blink =
-                &TimerWaitBlock->WaitListEntry;
+    /* Handle Kernel Queues */
+    if (Thread->Queue) KiActivateWaiterQueue(Thread->Queue);
 
-            /* Insert the Timer into the Timer Lists and enable it */
-            if (!KiInsertTimer(ThreadTimer, *Interval))
-            {
-                /* FIXME: We should find a new ready thread */
-                WaitStatus = STATUS_SUCCESS;
-                break;
-            }
+    /* Setup the wait information */
+    Thread->State = Waiting;
 
-            /* Save due time */
-            DueTime.QuadPart = ThreadTimer->DueTime.QuadPart;
+    /* Add the thread to the wait list */
+    KiAddThreadToWaitList(Thread, Swappable);
 
-            /* Handle Kernel Queues */
-            if (CurrentThread->Queue) KiWakeQueue(CurrentThread->Queue);
+    /* Swap the thread */
+    ASSERT(Thread->WaitIrql <= DISPATCH_LEVEL);
+    KiSetThreadSwapBusy(Thread);
+    WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
 
-            /* Setup the wait information */
-            CurrentThread->Alertable = Alertable;
-            CurrentThread->WaitMode = WaitMode;
-            CurrentThread->WaitReason = DelayExecution;
-            CurrentThread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
-            CurrentThread->State = Waiting;
+    /* Check if we were executing an APC or if we timed out */
+    if (WaitStatus == STATUS_KERNEL_APC)
+    {
+        /* Recalculate due times */
+        Interval = KiRecalculateDueTime(OriginalDueTime,
+                                        &DueTime,
+                                        &NewDueTime);
+        goto WaitStart;
+    }
 
-            /* Find a new thread to run */
-            KiAddThreadToWaitList(CurrentThread, Swappable);
-            WaitStatus = KiSwapThread(CurrentThread, KeGetCurrentPrcb());
-            ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
+    /* This is a good thing */
+    if (WaitStatus == STATUS_TIMEOUT) WaitStatus = STATUS_SUCCESS;
 
-            /* Check if we were executing an APC or if we timed out */
-            if (WaitStatus != STATUS_KERNEL_APC)
-            {
-                /* This is a good thing */
-                if (WaitStatus == STATUS_TIMEOUT) WaitStatus = STATUS_SUCCESS;
-
-                /* Return Status */
-                return WaitStatus;
-            }
-
-            /* Recalculate due times */
-            Interval = KiRecalculateDueTime(OriginalDueTime,
-                                            &DueTime,
-                                            &NewDueTime);
-        }
-
-        /* Acquire again the lock */
-        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
-    } while (TRUE);
-
-    /* Release the Lock, we are done */
-    KiReleaseDispatcherLock(CurrentThread->WaitIrql);
+    /* Return Status */
     return WaitStatus;
 }
 
@@ -403,183 +378,163 @@ KeWaitForSingleObject(IN PVOID Object,
 {
     PKMUTANT CurrentObject;
     PKWAIT_BLOCK WaitBlock;
-    PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER ThreadTimer;
-    PKTHREAD CurrentThread = KeGetCurrentThread();
-    NTSTATUS WaitStatus = STATUS_SUCCESS;
+    PKTHREAD Thread = KeGetCurrentThread();
+    NTSTATUS WaitStatus;
     BOOLEAN Swappable;
     LARGE_INTEGER DueTime, NewDueTime;
     PLARGE_INTEGER OriginalDueTime = Timeout;
 
+    /* Get wait block */
+    WaitBlock = &Thread->WaitBlock[0];
+
     /* Check if the lock is already held */
-    if (CurrentThread->WaitNext)
+    if (Thread->WaitNext)
     {
         /* Lock is held, disable Wait Next */
-        CurrentThread->WaitNext = FALSE;
+        Thread->WaitNext = FALSE;
+        Swappable = KxSingleThreadWait(Thread,
+                                       WaitBlock,
+                                       Object,
+                                       Timeout,
+                                       Alertable,
+                                       WaitReason,
+                                       WaitMode);
     }
     else
     {
+StartWait:
         /* Lock not held, acquire it */
-        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
+        Thread->WaitIrql = KiAcquireDispatcherLock();
+        Swappable = KxSingleThreadWait(Thread,
+                                       WaitBlock,
+                                       Object,
+                                       Timeout,
+                                       WaitReason,
+                                       WaitMode,
+                                       Alertable);
     }
 
-    /* Start the actual Loop */
-    WaitBlock = &CurrentThread->WaitBlock[0];
-    do
+    /* Check if a kernel APC is pending and we're below APC_LEVEL */
+    if ((Thread->ApcState.KernelApcPending) && !(Thread->SpecialApcDisable) &&
+        (Thread->WaitIrql < APC_LEVEL))
     {
-        /* Check if a kernel APC is pending and we're below APC_LEVEL */
-        if ((CurrentThread->ApcState.KernelApcPending) &&
-            !(CurrentThread->SpecialApcDisable) &&
-            (CurrentThread->WaitIrql < APC_LEVEL))
-        {
-            /* Unlock the dispatcher */
-            KiReleaseDispatcherLock(CurrentThread->WaitIrql);
-        }
-        else
-        {
-            /* Set default status */
-            CurrentThread->WaitStatus = STATUS_WAIT_0;
+        /* Unlock the dispatcher and wait again */
+        KiReleaseDispatcherLock(Thread->WaitIrql);
+        goto StartWait;
+    }
 
-            /* Get the Current Object */
-            CurrentObject = (PKMUTANT)Object;
+    /* Get the Current Object */
+    CurrentObject = (PKMUTANT)Object;
+    ASSERT(CurrentObject->Header.Type != QueueObject);
 
-            /* Check if it's a mutant */
-            if (CurrentObject->Header.Type == MutantObject)
+    /* Check if it's a mutant */
+    if (CurrentObject->Header.Type == MutantObject)
+    {
+        /* Check its signal state or if we own it */
+        if ((CurrentObject->Header.SignalState > 0) ||
+            (Thread == CurrentObject->OwnerThread))
+        {
+            /* Just unwait this guy and exit */
+            if (CurrentObject->Header.SignalState != (LONG)MINLONG)
             {
-                /* Check its signal state or if we own it */
-                if ((CurrentObject->Header.SignalState > 0) ||
-                    (CurrentThread == CurrentObject->OwnerThread))
-                {
-                    /* Just unwait this guy and exit */
-                    if (CurrentObject->Header.SignalState != (LONG)MINLONG)
-                    {
-                        /* It has a normal signal state. Unwait and return */
-                        KiSatisfyMutantWait(CurrentObject, CurrentThread);
-                        WaitStatus = CurrentThread->WaitStatus;
-                        goto DontWait;
-                    }
-                    else
-                    {
-                        /* Raise an exception (see wasm.ru) */
-                        KiReleaseDispatcherLock(CurrentThread->
-                                                        WaitIrql);
-                        ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
-                   }
-                }
-            }
-            else if (CurrentObject->Header.SignalState > 0)
-            {
-                /* Another satisfied object */
-                KiSatisfyNonMutantWait(CurrentObject, CurrentThread);
-                WaitStatus = STATUS_WAIT_0;
+                /* It has a normal signal state. Unwait and return */
+                KiSatisfyMutantWait(CurrentObject, Thread);
+                WaitStatus = Thread->WaitStatus;
                 goto DontWait;
-            }
-
-            /* Append wait block to the KTHREAD wait block list */
-            CurrentThread->WaitBlockList = WaitBlock;
-
-            /* Set up the Wait Block */
-            WaitBlock->Object = CurrentObject;
-            WaitBlock->WaitKey = (USHORT)(STATUS_SUCCESS);
-            WaitBlock->WaitType = WaitAny;
-
-            /* Make sure we can satisfy the Alertable request */
-            KiCheckAlertability();
-
-            /* Check if we can swap the thread's stack */
-            CurrentThread->WaitListEntry.Flink = NULL;
-            KiCheckThreadStackSwap(WaitMode, CurrentThread, Swappable);
-
-            /* Enable the Timeout Timer if there was any specified */
-            if (Timeout)
-            {
-                /* Fail if the timeout interval is actually 0 */
-                if (!Timeout->QuadPart)
-                {
-                    /* Return a timeout */
-                    WaitStatus = STATUS_TIMEOUT;
-                    goto DontWait;
-                }
-
-                /* Point to Timer Wait Block and Thread Timer */
-                TimerWaitBlock = &CurrentThread->WaitBlock[TIMER_WAIT_BLOCK];
-                ThreadTimer = &CurrentThread->Timer;
-
-                /* Connect the Timer Wait Block */
-                WaitBlock->NextWaitBlock = TimerWaitBlock;
-
-                /* Set up the Timer Wait Block */
-                TimerWaitBlock->NextWaitBlock = WaitBlock;
-
-                /* Link the timer to this Wait Block */
-                ThreadTimer->Header.WaitListHead.Flink =
-                    &TimerWaitBlock->WaitListEntry;
-                ThreadTimer->Header.WaitListHead.Blink =
-                    &TimerWaitBlock->WaitListEntry;
-
-                /* Insert the Timer into the Timer Lists and enable it */
-                if (!KiInsertTimer(ThreadTimer, *Timeout))
-                {
-                    /* Return a timeout if we couldn't insert the timer */
-                    WaitStatus = STATUS_TIMEOUT;
-                    goto DontWait;
-                }
-
-                /* Set the current due time */
-                DueTime.QuadPart = ThreadTimer->DueTime.QuadPart;
             }
             else
             {
-                /* No timer block, so just set our wait block as next */
-                WaitBlock->NextWaitBlock = WaitBlock;
-            }
+                /* Raise an exception */
+                KiReleaseDispatcherLock(Thread->WaitIrql);
+                ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
+           }
+        }
+    }
+    else if (CurrentObject->Header.SignalState > 0)
+    {
+        /* Another satisfied object */
+        KiSatisfyNonMutantWait(CurrentObject, Thread);
+        WaitStatus = STATUS_WAIT_0;
+        goto DontWait;
+    }
 
-            /* Link the Object to this Wait Block */
-            InsertTailList(&CurrentObject->Header.WaitListHead,
-                           &WaitBlock->WaitListEntry);
+    /* Make sure we can satisfy the Alertable request */
+    WaitStatus = KiCheckAlertability(Thread, Alertable, WaitMode);
+    if (WaitStatus != STATUS_WAIT_0)
+    {
+        /* Unlock the dispatcher and return */
+        KiReleaseDispatcherLock(Thread->WaitIrql);
+        return WaitStatus;
+    }
 
-            /* Handle Kernel Queues */
-            if (CurrentThread->Queue) KiWakeQueue(CurrentThread->Queue);
-
-            /* Setup the wait information */
-            CurrentThread->Alertable = Alertable;
-            CurrentThread->WaitMode = WaitMode;
-            CurrentThread->WaitReason = WaitReason;
-            CurrentThread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
-            CurrentThread->State = Waiting;
-
-            /* Find a new thread to run */
-            KiAddThreadToWaitList(CurrentThread, Swappable);
-            WaitStatus = KiSwapThread(CurrentThread, KeGetCurrentPrcb());
-            ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-
-            /* Check if we were executing an APC */
-            if (WaitStatus != STATUS_KERNEL_APC) return WaitStatus;
-
-            /* Check if we had a timeout */
-            if (Timeout)
-            {
-                /* Recalculate due times */
-                Timeout = KiRecalculateDueTime(OriginalDueTime,
-                                               &DueTime,
-                                               &NewDueTime);
-            }
+    /* Enable the Timeout Timer if there was any specified */
+    if (Timeout)
+    {
+        /* Fail if the timeout interval is actually 0 */
+        if (!Timeout->QuadPart)
+        {
+            /* Return a timeout */
+            WaitStatus = STATUS_TIMEOUT;
+            goto DontWait;
         }
 
-        /* Acquire again the lock */
-        CurrentThread->WaitIrql = KiAcquireDispatcherLock();
-    } while (TRUE);
+        /* Insert the Timer into the Timer Lists and enable it */
+        ThreadTimer = &Thread->Timer;
+        if (!KiInsertTimer(ThreadTimer, *Timeout))
+        {
+            /* Return a timeout if we couldn't insert the timer */
+            WaitStatus = STATUS_TIMEOUT;
+            goto DontWait;
+        }
 
-    /* Release the Lock, we are done */
-    KiReleaseDispatcherLock(CurrentThread->WaitIrql);
+        /* Set the current due time */
+        DueTime.QuadPart = ThreadTimer->DueTime.QuadPart;
+    }
+
+    /* Link the Object to this Wait Block */
+    InsertTailList(&CurrentObject->Header.WaitListHead,
+                   &WaitBlock->WaitListEntry);
+
+    /* Handle Kernel Queues */
+    if (Thread->Queue) KiActivateWaiterQueue(Thread->Queue);
+
+    /* Setup the wait information */
+    Thread->State = Waiting;
+
+    /* Add the thread to the wait list */
+    KiAddThreadToWaitList(Thread, Swappable);
+
+    /* Swap the thread */
+    ASSERT(Thread->WaitIrql <= DISPATCH_LEVEL);
+    KiSetThreadSwapBusy(Thread);
+    WaitStatus = KiSwapThread(Thread, KeGetCurrentPrcb());
+
+    /* Check if we were executing an APC */
+    if (WaitStatus == STATUS_KERNEL_APC)
+    {
+        /* Check if we had a timeout */
+        if (Timeout)
+        {
+            /* Recalculate due times */
+            Timeout = KiRecalculateDueTime(OriginalDueTime,
+                                           &DueTime,
+                                           &NewDueTime);
+        }
+
+        /* Wait again */
+        goto StartWait;
+    }
+
+    /* Wait complete */
     return WaitStatus;
 
 DontWait:
     /* Adjust the Quantum */
-    KiAdjustQuantumThread(CurrentThread);
+    KiAdjustQuantumThread(Thread);
 
     /* Release & Return */
-    KiReleaseDispatcherLock(CurrentThread->WaitIrql);
+    KiReleaseDispatcherLock(Thread->WaitIrql);
     return WaitStatus;
 }
 
@@ -769,11 +724,11 @@ KeWaitForMultipleObjects(IN ULONG Count,
             }
 
             /* Make sure we can satisfy the Alertable request */
-            KiCheckAlertability();
+            WaitStatus = KiCheckAlertability(CurrentThread, Alertable, WaitMode);
 
             /* Check if we can swap the thread's stack */
             CurrentThread->WaitListEntry.Flink = NULL;
-            KiCheckThreadStackSwap(WaitMode, CurrentThread, Swappable);
+            Swappable = KiCheckThreadStackSwap(CurrentThread, WaitMode);
 
             /* Enable the Timeout Timer if there was any specified */
             if (Timeout)
@@ -827,7 +782,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
             } while (WaitBlock != WaitBlockArray);
 
             /* Handle Kernel Queues */
-            if (CurrentThread->Queue) KiWakeQueue(CurrentThread->Queue);
+            if (CurrentThread->Queue) KiActivateWaiterQueue(CurrentThread->Queue);
 
             /* Setup the wait information */
             CurrentThread->Alertable = Alertable;
@@ -880,22 +835,22 @@ NtDelayExecution(IN BOOLEAN Alertable,
     LARGE_INTEGER SafeInterval;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Check if parameters are valid */
+    /* Check the previous mode */
     if(PreviousMode != KernelMode)
     {
+        /* Enter SEH for probing */
         _SEH_TRY
         {
-            /* make a copy on the kernel stack and let DelayInterval point to it so
-               we don't need to wrap KeDelayExecutionThread in SEH! */
+            /* Probe and capture the time out */
             SafeInterval = ProbeForReadLargeInteger(DelayInterval);
             DelayInterval = &SafeInterval;
         }
         _SEH_HANDLE
         {
+            /* Get SEH exception */
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
         if (!NT_SUCCESS(Status)) return Status;
    }
 

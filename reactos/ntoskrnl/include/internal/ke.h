@@ -622,7 +622,7 @@ KeRemoveQueueApc(PKAPC Apc);
 
 VOID
 FASTCALL
-KiWakeQueue(IN PKQUEUE Queue);
+KiActivateWaiterQueue(IN PKQUEUE Queue);
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

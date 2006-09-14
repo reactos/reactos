@@ -219,21 +219,24 @@ KiRecalculateDueTime(IN PLARGE_INTEGER OriginalDueTime,
 //
 // Determines wether a thread should be added to the wait list
 //
-#define KiCheckThreadStackSwap(WaitMode, Thread, Swappable)                 \
-{                                                                           \
-    /* Check the required conditions */                                     \
-    if ((WaitMode != KernelMode) &&                                         \
-        (Thread->EnableStackSwap) &&                                        \
-        (Thread->Priority >= (LOW_REALTIME_PRIORITY + 9)))                  \
-    {                                                                       \
-        /* We are go for swap */                                            \
-        Swappable = TRUE;                                                   \
-    }                                                                       \
-    else                                                                    \
-    {                                                                       \
-        /* Don't swap the thread */                                         \
-        Swappable = FALSE;                                                  \
-    }                                                                       \
+FORCEINLINE
+BOOLEAN
+KiCheckThreadStackSwap(IN PKTHREAD Thread,
+                       IN KPROCESSOR_MODE WaitMode)
+{
+    /* Check the required conditions */
+    if ((WaitMode != KernelMode) &&
+        (Thread->EnableStackSwap) &&
+        (Thread->Priority >= (LOW_REALTIME_PRIORITY + 9)))
+    {
+        /* We are go for swap */
+        return TRUE;
+    }
+    else
+    {
+        /* Don't swap the thread */
+        return FALSE;
+    }
 }
 
 //
@@ -251,45 +254,134 @@ KiRecalculateDueTime(IN PLARGE_INTEGER OriginalDueTime,
 }
 
 //
-// Rules for checking alertability:
-//  - For Alertable waits ONLY:
-//      * We don't wait and return STATUS_ALERTED if the thread is alerted
-//        in EITHER the specified wait mode OR in Kernel Mode.
-//  - For BOTH Alertable AND Non-Alertable waits:
-//      * We don't want and return STATUS_USER_APC if the User Mode APC list
-//        is not empty AND the wait mode is User Mode.
+// Checks if a wait in progress should be interrupted by APCs or an alertable
+// state.
 //
-#define KiCheckAlertability()                                               \
-{                                                                           \
-    if (Alertable)                                                          \
-    {                                                                       \
-        if (CurrentThread->Alerted[(int)WaitMode])                          \
-        {                                                                   \
-            CurrentThread->Alerted[(int)WaitMode] = FALSE;                  \
-            WaitStatus = STATUS_ALERTED;                                    \
-            break;                                                          \
-        }                                                                   \
-        else if ((WaitMode != KernelMode) &&                                \
-                (!IsListEmpty(&CurrentThread->                              \
-                              ApcState.ApcListHead[UserMode])))             \
-        {                                                                   \
-            CurrentThread->ApcState.UserApcPending = TRUE;                  \
-            WaitStatus = STATUS_USER_APC;                                   \
-            break;                                                          \
-        }                                                                   \
-        else if (CurrentThread->Alerted[KernelMode])                        \
-        {                                                                   \
-            CurrentThread->Alerted[KernelMode] = FALSE;                     \
-            WaitStatus = STATUS_ALERTED;                                    \
-            break;                                                          \
-        }                                                                   \
-    }                                                                       \
-    else if ((WaitMode != KernelMode) &&                                    \
-             (CurrentThread->ApcState.UserApcPending))                      \
-    {                                                                       \
-        WaitStatus = STATUS_USER_APC;                                       \
-        break;                                                              \
-    }                                                                       \
+FORCEINLINE
+NTSTATUS
+KiCheckAlertability(IN PKTHREAD Thread,
+                    IN BOOLEAN Alertable,
+                    IN KPROCESSOR_MODE WaitMode)
+{
+    /* Check if the wait is alertable */
+    if (Alertable)
+    {
+        /* It is, first check if the thread is alerted in this mode */
+        if (Thread->Alerted[WaitMode])
+        {
+            /* It is, so bail out of the wait */
+            Thread->Alerted[WaitMode] = FALSE;
+            return STATUS_ALERTED;
+        }
+        else if ((WaitMode != KernelMode) &&
+                (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])))
+        {
+            /* It's isn't, but this is a user wait with queued user APCs */
+            Thread->ApcState.UserApcPending = TRUE;
+            return STATUS_USER_APC;
+        }
+        else if (Thread->Alerted[KernelMode])
+        {
+            /* It isn't that either, but we're alered in kernel mode */
+            Thread->Alerted[KernelMode] = FALSE;
+            return STATUS_ALERTED;
+        }
+    }
+    else if ((WaitMode != KernelMode) && (Thread->ApcState.UserApcPending))
+    {
+        /* Not alertable, but this is a user wait with pending user APCs */
+        return STATUS_USER_APC;
+    }
+
+    /* Otherwise, we're fine */
+    return STATUS_WAIT_0;
+}
+
+FORCEINLINE
+BOOLEAN
+KxDelayThreadWait(IN PKTHREAD Thread,
+                   IN BOOLEAN Alertable,
+                   IN KPROCESSOR_MODE WaitMode)
+{
+    BOOLEAN Swappable;
+    PKWAIT_BLOCK TimerBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
+
+    /* Setup the Wait Block */
+    Thread->WaitBlockList = TimerBlock;
+    TimerBlock->NextWaitBlock = TimerBlock;
+
+    /* Link the timer to this Wait Block */
+    Thread->Timer.Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;
+    Thread->Timer.Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;
+
+    /* Clear wait status */
+    Thread->WaitStatus = STATUS_WAIT_0;
+
+    /* Setup wait fields */
+    Thread->Alertable = Alertable;
+    Thread->WaitReason = DelayExecution;
+    Thread->WaitMode = WaitMode;
+
+    /* Check if we can swap the thread's stack */
+    Thread->WaitListEntry.Flink = NULL;
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
+
+    /* Set the wait time */
+    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
+    return Swappable;
+}
+
+FORCEINLINE
+BOOLEAN
+KxSingleThreadWait(IN PKTHREAD Thread,
+                   IN PKWAIT_BLOCK WaitBlock,
+                   IN PVOID Object,
+                   IN PLARGE_INTEGER Timeout,
+                   IN BOOLEAN Alertable,
+                   IN KWAIT_REASON WaitReason,
+                   IN KPROCESSOR_MODE WaitMode)
+{
+    BOOLEAN Swappable;
+    PKWAIT_BLOCK TimerBlock = &Thread->WaitBlock[TIMER_WAIT_BLOCK];
+
+    /* Setup the Wait Block */
+    Thread->WaitBlockList = WaitBlock;
+    WaitBlock->WaitKey = STATUS_WAIT_0;
+    WaitBlock->Object = Object;
+    WaitBlock->WaitType = WaitAny;
+
+    /* Clear wait status */
+    Thread->WaitStatus = STATUS_WAIT_0;
+
+    /* Check if we have a timer */
+    if (Timeout)
+    {
+        /* Pointer to timer block */
+        WaitBlock->NextWaitBlock = TimerBlock;
+        TimerBlock->NextWaitBlock = WaitBlock;
+
+        /* Link the timer to this Wait Block */
+        Thread->Timer.Header.WaitListHead.Flink = &TimerBlock->WaitListEntry;
+        Thread->Timer.Header.WaitListHead.Blink = &TimerBlock->WaitListEntry;
+    }
+    else
+    {
+        /* No timer block, just ourselves */
+        WaitBlock->NextWaitBlock = WaitBlock;
+    }
+
+    /* Setup wait fields */
+    Thread->Alertable = Alertable;
+    Thread->WaitReason = WaitReason;
+    Thread->WaitMode = WaitMode;
+
+    /* Check if we can swap the thread's stack */
+    Thread->WaitListEntry.Flink = NULL;
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
+
+    /* Set the wait time */
+    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
+    return Swappable;
 }
 
 //

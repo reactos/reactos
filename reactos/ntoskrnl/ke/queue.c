@@ -21,7 +21,7 @@
  */
 VOID
 FASTCALL
-KiWakeQueue(IN PKQUEUE Queue)
+KiActivateWaiterQueue(IN PKQUEUE Queue)
 {
     PLIST_ENTRY QueueEntry;
     PLIST_ENTRY WaitEntry;
@@ -285,7 +285,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             RemoveEntryList(QueueEntry);
 
             /* Wake the queue */
-            KiWakeQueue(PreviousQueue);
+            KiActivateWaiterQueue(PreviousQueue);
         }
 
         /* Insert in this new Queue */
@@ -359,7 +359,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
 
                 /* Check if we can swap the thread's stack */
                 Thread->WaitListEntry.Flink = NULL;
-                KiCheckThreadStackSwap(WaitMode, Thread, Swappable);
+                Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
 
                 /* We need to wait for the object... check for a timeout */
                 if (Timeout)

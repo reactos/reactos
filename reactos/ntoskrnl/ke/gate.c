@@ -111,7 +111,7 @@ KeWaitForGate(IN PKGATE Gate,
             if (Queue)
             {
                 /* Wake it up */
-                KiWakeQueue(Queue);
+                KiActivateWaiterQueue(Queue);
 
                 /* Release the dispatcher lock */
                 KiReleaseDispatcherLockFromDpcLevel();

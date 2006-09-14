@@ -1324,7 +1324,7 @@ KeTerminateThread(IN KPRIORITY Increment)
     {
         /* Remove it from the list, and handle the queue */
         RemoveEntryList(&Thread->QueueListEntry);
-        KiWakeQueue(Thread->Queue);
+        KiActivateWaiterQueue(Thread->Queue);
     }
 
     /* Signal the thread */
