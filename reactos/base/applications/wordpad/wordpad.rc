@@ -7,8 +7,6 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "wordpad.exe\0"
 //#include <reactos/version.rc>
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
 1 24 DISCARDABLE "manifest.xml"
 
 STRINGTABLE DISCARDABLE
@@ -22,5 +20,7 @@ IDI_ICON ICON "res/wordpad.ico"
 /* main toolbar icons */
 IDB_TEXTTOOLBAR BITMAP DISCARDABLE "res/toolbar.bmp"
 
-#include "En.rc"
-/* please do not add any other languages whilst this is being developed */
+#include "rsrc.rc"
+
+
+
