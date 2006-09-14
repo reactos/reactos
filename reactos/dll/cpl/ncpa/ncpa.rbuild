@@ -1,4 +1,4 @@
-<module name="ncpa" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_NCPA}" installbase="system32" installname="ncpa.cpl">
+<module name="ncpa" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_NCPA}" installbase="system32" installname="ncpa.cpl">
 	<importlibrary definition="ncpa.def" />
 	<include base="ncpa">.</include>
 	<define name="UNICODE" />

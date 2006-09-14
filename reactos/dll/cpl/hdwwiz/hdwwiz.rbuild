@@ -1,4 +1,4 @@
-<module name="hdwwiz" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_HDWWIZ}" installbase="system32" installname="hdwwiz.cpl">
+<module name="hdwwiz" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_HDWWIZ}" installbase="system32" installname="hdwwiz.cpl">
 	<importlibrary definition="hdwwiz.def" />
 	<include base="hdwwiz">.</include>
 	<define name="UNICODE" />

@@ -1,4 +1,4 @@
-<module name="sysdm" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" usewrc="false">
+<module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" usewrc="false">
 	<importlibrary definition="sysdm.def" />
 	<include base="sysdm">.</include>
 	<define name="UNICODE" />

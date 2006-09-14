@@ -1,4 +1,4 @@
-<module name="main" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_MAIN}" installbase="system32" installname="main.cpl">
+<module name="main" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MAIN}" installbase="system32" installname="main.cpl">
 	<importlibrary definition="main.def" />
 	<include base="main">.</include>
 	<define name="UNICODE" />

@@ -1,4 +1,4 @@
-<module name="mmsys" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_MMSYS}" installbase="system32" installname="mmsys.cpl">
+<module name="mmsys" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MMSYS}" installbase="system32" installname="mmsys.cpl">
 	<importlibrary definition="mmsys.def" />
 	<include base="mmsys">.</include>
 	<define name="UNICODE" />

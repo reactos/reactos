@@ -1,4 +1,4 @@
-<module name="intl" type="win32dll" entrypoint="0" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl.cpl" usewrc="false">
+<module name="intl" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl.cpl" usewrc="false">
 	<importlibrary definition="intl.def" />
 	<include base="intl">.</include>
 	<define name="UNICODE" />
