@@ -32,6 +32,8 @@ IopSetRootDeviceInstanceData(PDEVICE_NODE DeviceNode);
 #pragma alloc_text(INIT, IopSetRootDeviceInstanceData)
 #pragma alloc_text(INIT, PnpInit)
 #pragma alloc_text(INIT, PnpInit2)
+#pragma alloc_text(INIT, IopUpdateRootKey)
+#pragma alloc_text(INIT, IopEnumerateDetectedDevices)
 #endif
 
 
@@ -175,6 +177,25 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                             &Stack);
 }
 
+typedef struct _INVALIDATE_DEVICE_RELATION_DATA
+{
+    DEVICE_RELATION_TYPE Type;
+    PIO_WORKITEM WorkItem;
+} INVALIDATE_DEVICE_RELATION_DATA, *PINVALIDATE_DEVICE_RELATION_DATA;
+
+static VOID
+NTAPI
+IoInvalidateDeviceRelationsWorker(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID Context)
+{
+    PINVALIDATE_DEVICE_RELATION_DATA Data = Context;
+
+    IopInvalidateDeviceRelations(IopGetDeviceNode(DeviceObject), Data->Type);
+    IoFreeWorkItem(Data->WorkItem);
+    ExFreePool(Data);
+}
+
 /*
  * @implemented
  */
@@ -183,7 +204,27 @@ STDCALL
 IoInvalidateDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                             IN DEVICE_RELATION_TYPE Type)
 {
-   IopInvalidateDeviceRelations(IopGetDeviceNode(DeviceObject), Type);
+    PIO_WORKITEM WorkItem;
+    PINVALIDATE_DEVICE_RELATION_DATA Data;
+
+    Data = ExAllocatePool(PagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
+    if (!Data)
+        return;
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!WorkItem)
+    {
+        ExFreePool(Data);
+        return;
+    }
+
+    Data->Type = Type;
+    Data->WorkItem = WorkItem;
+
+    IoQueueWorkItem(
+        WorkItem,
+        IoInvalidateDeviceRelationsWorker,
+        DelayedWorkQueue,
+        Data);
 }
 
 /*
@@ -2549,11 +2590,317 @@ PnpInit(VOID)
       IopRootDeviceNode->PhysicalDeviceObject);
 }
 
+static NTSTATUS INIT_FUNCTION
+IopEnumerateDetectedDevices(
+   IN HANDLE hBaseKey,
+   IN PUNICODE_STRING RelativePath,
+   IN HANDLE hRootKey,
+   IN BOOLEAN EnumerateSubKeys)
+{
+   UNICODE_STRING IdentifierU = RTL_CONSTANT_STRING(L"Identifier");
+   UNICODE_STRING DeviceDescU = RTL_CONSTANT_STRING(L"DeviceDesc");
+   UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE hDevicesKey = NULL;
+   HANDLE hDeviceKey = NULL;
+   HANDLE hLevel1Key, hLevel2Key = NULL;
+   UNICODE_STRING Level2NameU;
+   WCHAR Level2Name[5];
+   ULONG IndexDevice = 0;
+   ULONG IndexSubKey;
+   PKEY_BASIC_INFORMATION pDeviceInformation = NULL;
+   ULONG DeviceInfoLength = sizeof(KEY_BASIC_INFORMATION) + 50 * sizeof(WCHAR);
+   PKEY_VALUE_PARTIAL_INFORMATION pValueInformation = NULL;
+   ULONG ValueInfoLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 50 * sizeof(WCHAR);
+   UNICODE_STRING DeviceName, ValueName;
+   ULONG RequiredSize;
+   NTSTATUS Status;
+
+   const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI BIOS");
+   UNICODE_STRING HardwareIdPci = RTL_CONSTANT_STRING(L"*PNP0A03");
+   static ULONG DeviceIndexPci = 0;
+   const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
+   UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501");
+   static ULONG DeviceIndexSerial = 0;
+   const UNICODE_STRING IdentifierKeyboard = RTL_CONSTANT_STRING(L"KeyboardPeripheral");
+   UNICODE_STRING HardwareIdKeyboard = RTL_CONSTANT_STRING(L"*PNP0303");
+   static ULONG DeviceIndexKeyboard = 0;
+   const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerPeripheral");
+   UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*PNP0F13");
+   static ULONG DeviceIndexMouse = 0;
+   PUNICODE_STRING pHardwareId;
+   ULONG DeviceIndex = 0;
+
+   InitializeObjectAttributes(&ObjectAttributes, RelativePath, OBJ_KERNEL_HANDLE, hBaseKey, NULL);
+   Status = ZwOpenKey(&hDevicesKey, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+      goto cleanup;
+   }
+
+   pDeviceInformation = ExAllocatePool(PagedPool, DeviceInfoLength);
+   if (!pDeviceInformation)
+   {
+      DPRINT("ExAllocatePool() failed\n");
+      Status = STATUS_NO_MEMORY;
+      goto cleanup;
+   }
+
+   pValueInformation = ExAllocatePool(PagedPool, ValueInfoLength);
+   if (!pValueInformation)
+   {
+      DPRINT("ExAllocatePool() failed\n");
+      Status = STATUS_NO_MEMORY;
+      goto cleanup;
+   }
+
+   while (TRUE)
+   {
+      Status = ZwEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
+      if (Status == STATUS_NO_MORE_ENTRIES)
+         break;
+      else if (Status == STATUS_BUFFER_OVERFLOW)
+      {
+         ExFreePool(pDeviceInformation);
+         DeviceInfoLength = RequiredSize;
+         pDeviceInformation = ExAllocatePool(PagedPool, DeviceInfoLength);
+         if (!pDeviceInformation)
+         {
+            DPRINT("ExAllocatePool() failed\n");
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+         }
+         Status = ZwEnumerateKey(hDevicesKey, IndexDevice, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
+      }
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("ZwEnumerateKey() failed with status 0x%08lx\n", Status);
+         goto cleanup;
+      }
+      IndexDevice++;
+
+      /* Open device key */
+      DeviceName.Length = DeviceName.MaximumLength = pDeviceInformation->NameLength;
+      DeviceName.Buffer = pDeviceInformation->Name;
+      InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_KERNEL_HANDLE, hDevicesKey, NULL);
+      Status = ZwOpenKey(
+         &hDeviceKey,
+         KEY_QUERY_VALUE + EnumerateSubKeys ? KEY_ENUMERATE_SUB_KEYS : 0,
+         &ObjectAttributes);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+         goto cleanup;
+      }
+
+      if (EnumerateSubKeys)
+      {
+         IndexSubKey = 0;
+         while (TRUE)
+         {
+            Status = ZwEnumerateKey(hDeviceKey, IndexSubKey, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
+            if (Status == STATUS_NO_MORE_ENTRIES)
+               break;
+            else if (Status == STATUS_BUFFER_OVERFLOW)
+            {
+               ExFreePool(pDeviceInformation);
+               DeviceInfoLength = RequiredSize;
+               pDeviceInformation = ExAllocatePool(PagedPool, DeviceInfoLength);
+               if (!pDeviceInformation)
+               {
+                  DPRINT("ExAllocatePool() failed\n");
+                  Status = STATUS_NO_MEMORY;
+                  goto cleanup;
+               }
+               Status = ZwEnumerateKey(hDeviceKey, IndexSubKey, KeyBasicInformation, pDeviceInformation, DeviceInfoLength, &RequiredSize);
+            }
+            if (!NT_SUCCESS(Status))
+            {
+               DPRINT("ZwEnumerateKey() failed with status 0x%08lx\n", Status);
+               goto cleanup;
+            }
+            IndexSubKey++;
+            DeviceName.Length = DeviceName.MaximumLength = pDeviceInformation->NameLength;
+            DeviceName.Buffer = pDeviceInformation->Name;
+
+            Status = IopEnumerateDetectedDevices(hDeviceKey, &DeviceName, hRootKey, TRUE);
+            if (!NT_SUCCESS(Status))
+               goto cleanup;
+         }
+      }
+
+      /* Read identifier */
+      Status = ZwQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
+      if (Status == STATUS_BUFFER_OVERFLOW)
+      {
+         ExFreePool(pValueInformation);
+         ValueInfoLength = RequiredSize;
+         pValueInformation = ExAllocatePool(PagedPool, ValueInfoLength);
+         if (!pValueInformation)
+         {
+            DPRINT("ExAllocatePool() failed\n");
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+         }
+         Status = ZwQueryValueKey(hDeviceKey, &IdentifierU, KeyValuePartialInformation, pValueInformation, ValueInfoLength, &RequiredSize);
+      }
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("ZwQueryValueKey() failed with status 0x%08lx\n", Status);
+         goto nextdevice;
+      }
+      else if (pValueInformation->Type != REG_SZ)
+      {
+         DPRINT("Wrong registry type: got 0x%lx, expected 0x%lx\n", pValueInformation->Type, REG_SZ);
+         goto nextdevice;
+      }
+
+      /* Assign hardware id to this device */
+      ValueName.Length = ValueName.MaximumLength = pValueInformation->DataLength;
+      ValueName.Buffer = (PWCHAR)pValueInformation->Data;
+      if (ValueName.Length >= sizeof(WCHAR) && ValueName.Buffer[ValueName.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+         ValueName.Length -= sizeof(WCHAR);
+      if (RtlCompareUnicodeString(&ValueName, &IdentifierPci, FALSE) == 0)
+      {
+         pHardwareId = &HardwareIdPci;
+         DeviceIndex = DeviceIndexPci++;
+      }
+      else if (RtlCompareUnicodeString(RelativePath, &IdentifierSerial, FALSE) == 0)
+      {
+         pHardwareId = &HardwareIdSerial;
+         DeviceIndex = DeviceIndexSerial++;
+      }
+      else if (RtlCompareUnicodeString(RelativePath, &IdentifierKeyboard, FALSE) == 0)
+      {
+         pHardwareId = &HardwareIdKeyboard;
+         DeviceIndex = DeviceIndexKeyboard++;
+      }
+      else if (RtlCompareUnicodeString(RelativePath, &IdentifierMouse, FALSE) == 0)
+      {
+         pHardwareId = &HardwareIdMouse;
+         DeviceIndex = DeviceIndexMouse++;
+      }
+      else
+      {
+         /* Unknown device */
+         DPRINT("Unknown device %wZ in %wZ\n", &ValueName, RelativePath);
+         goto nextdevice;
+      }
+
+      /* Add the detected device to Root key */
+      InitializeObjectAttributes(&ObjectAttributes, pHardwareId, OBJ_KERNEL_HANDLE, hRootKey, NULL);
+      Status = ZwCreateKey(
+         &hLevel1Key,
+         KEY_CREATE_SUB_KEY,
+         &ObjectAttributes,
+         0,
+         NULL,
+         REG_OPTION_VOLATILE,
+         NULL);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+         goto nextdevice;
+      }
+      swprintf(Level2Name, L"%04lu", DeviceIndex);
+      RtlInitUnicodeString(&Level2NameU, Level2Name);
+      InitializeObjectAttributes(&ObjectAttributes, &Level2NameU, OBJ_KERNEL_HANDLE, hLevel1Key, NULL);
+      Status = ZwCreateKey(
+         &hLevel2Key,
+         KEY_SET_VALUE,
+         &ObjectAttributes,
+         0,
+         NULL,
+         REG_OPTION_VOLATILE,
+         NULL);
+      ZwClose(hLevel1Key);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+         goto nextdevice;
+      }
+      DPRINT("Found %wZ #%lu (%wZ)\n", &ValueName, DeviceIndex, pHardwareId);
+      Status = ZwSetValueKey(hLevel2Key, &DeviceDescU, 0, REG_SZ, ValueName.Buffer, ValueName.MaximumLength);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+         ZwDeleteKey(hLevel2Key);
+         goto nextdevice;
+      }
+      Status = ZwSetValueKey(hLevel2Key, &HardwareIDU, 0, REG_SZ, pHardwareId->Buffer, pHardwareId->MaximumLength);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+         ZwDeleteKey(hLevel2Key);
+         goto nextdevice;
+      }
+
+nextdevice:
+      if (hLevel2Key)
+      {
+         ZwClose(hLevel2Key);
+         hLevel2Key = NULL;
+      }
+      if (hDeviceKey)
+      {
+         ZwClose(hDeviceKey);
+         hDeviceKey = NULL;
+      }
+   }
+
+   Status = STATUS_SUCCESS;
+
+cleanup:
+   if (hDevicesKey)
+      ZwClose(hDevicesKey);
+   if (hDeviceKey)
+      ZwClose(hDeviceKey);
+   if (pDeviceInformation)
+      ExFreePool(pDeviceInformation);
+   if (pValueInformation)
+      ExFreePool(pValueInformation);
+   return Status;
+}
+
+static NTSTATUS INIT_FUNCTION
+IopUpdateRootKey(VOID)
+{
+   UNICODE_STRING RootPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum\\Root");
+   UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE hRoot;
+   NTSTATUS Status;
+
+   InitializeObjectAttributes(&ObjectAttributes, &RootPathU, OBJ_KERNEL_HANDLE, NULL, NULL);
+   Status = ZwOpenKey(&hRoot, KEY_CREATE_SUB_KEY, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+      return Status;
+   }
+   Status = IopEnumerateDetectedDevices(
+      NULL,
+      &MultiKeyPathU,
+      hRoot,
+      TRUE);
+   ZwClose(hRoot);
+   return Status;
+}
 
 VOID INIT_FUNCTION
 PnpInit2(VOID)
 {
    NTSTATUS Status;
+
+   /* Move information about devices detected by Freeloader to SYSTEM\CurrentControlSet\Root\ */
+   /* FIXME: this should be done only when ACPI is disabled or not present! */
+   Status = IopUpdateRootKey();
+   if (!NT_SUCCESS(Status))
+   {
+      CPRINT("IopUpdateRootKey() failed\n");
+      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+   }
 
    /* Set root device instance data */
    Status = IopSetRootDeviceInstanceData(IopRootDeviceNode);
