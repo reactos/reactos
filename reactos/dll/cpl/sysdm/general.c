@@ -1,132 +1,152 @@
 /*
- *  ReactOS
- *  Copyright (C) 2004 ReactOS Team
+ * PROJECT:     ReactOS System Control Panel Applet
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/cpl/sysdm/general.c
+ * PURPOSE:     General System Information
+ * COPYRIGHT:   Copyright Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS System Control Panel
- * FILE:            lib/cpl/system/general.c
- * PURPOSE:         General System Information
- * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * UPDATE HISTORY:
- *      03-04-2004  Created
  */
 
+
 #include "precomp.h"
+
+typedef struct _IMGINFO
+{
+    HBITMAP hBitmap;
+    INT cxSource;
+    INT cySource;
+} IMGINFO, *PIMGINFO;
+
 
 void
 ShowLastWin32Error(HWND hWndOwner)
 {
   LPTSTR lpMsg;
   DWORD LastError;
-  
+
   LastError = GetLastError();
-  
-  if((LastError == 0) || !FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                    FORMAT_MESSAGE_FROM_SYSTEM, NULL, LastError, 
-                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),(LPTSTR)&lpMsg, 0, 
-                    NULL))
+
+  if((LastError == 0) ||
+      !FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_FROM_SYSTEM,
+                     NULL,
+                     LastError,
+                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                     (LPTSTR)&lpMsg,
+                     0,
+                     NULL))
   {
     return;
   }
-  
+
   MessageBox(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
-  
+
   LocalFree((LPVOID)lpMsg);
 }
 
-typedef struct
+
+static VOID
+InitImageInfo(PIMGINFO ImgInfo)
 {
-  HWND hDlg;
-} OSITINFO, *POSITINFO;
+    BITMAP bitmap;
+
+    ZeroMemory(ImgInfo, sizeof(*ImgInfo));
+
+    ImgInfo->hBitmap = LoadImage(hApplet,
+                                 MAKEINTRESOURCE(IDB_ROSBMP),
+                                 IMAGE_BITMAP,
+                                 0,
+                                 0,
+                                 LR_DEFAULTCOLOR);
+
+    if (ImgInfo->hBitmap != NULL)
+    {
+        GetObject(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
+
+        ImgInfo->cxSource = bitmap.bmWidth;
+        ImgInfo->cySource = bitmap.bmHeight;
+    }
+}
+
 
 DWORD WINAPI
-ObtainSystemInformationThread(POSITINFO posit)
+GetSystemInformation(HWND hwnd)
 {
-  HRSRC hResInfo;
-  HGLOBAL hResMem;
-  WCHAR *LicenseText;
-  
-  /* wait a bit */
-  Sleep(100);
-  
-  /* load license from resource */
-  if(!(hResInfo = FindResource(hApplet, MAKEINTRESOURCE(RC_LICENSE), 
-                               MAKEINTRESOURCE(RTDATA))) ||
-     !(hResMem = LoadResource(hApplet, hResInfo)) ||
-     !(LicenseText = LockResource(hResMem)))
-  {
-    ShowLastWin32Error(posit->hDlg);
-    goto LoadSystemInfo;
-  }
-  /* insert the license into the edit control (unicode!) */
-  SetDlgItemText(posit->hDlg, IDC_LICENSEMEMO, LicenseText);
-  SendDlgItemMessage(posit->hDlg, IDC_LICENSEMEMO, EM_SETSEL, 0, 0);
-  
-  LoadSystemInfo:
-  /* FIXME */
-  /*free:*/
-  HeapFree(GetProcessHeap(), 0, posit);
-  
+    UNREFERENCED_PARAMETER(hwnd);
+
   return 0;
 }
 
+
 /* Property page dialog callback */
 INT_PTR CALLBACK
-GeneralPageProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+GeneralPageProc(HWND hwndDlg,
+                UINT uMsg,
+                WPARAM wParam,
+                LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(wParam);
+    static IMGINFO ImgInfo;
 
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+
+    switch(uMsg)
     {
-      HANDLE Thread;
-      DWORD ThreadId;
-      POSITINFO posit;
-      
-      posit = (POSITINFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(OSITINFO));
-      if(!posit)
-      {
-        ShowLastWin32Error(hwndDlg);
-        return FALSE;
-      }
-      posit->hDlg = hwndDlg;
-      Thread = CreateThread(NULL,
-                            0,
-                            (LPTHREAD_START_ROUTINE)ObtainSystemInformationThread,
-                            (PVOID)posit,
-                            0,
-                            &ThreadId);
-      if(Thread)
-      {
-        CloseHandle(Thread);
-        return FALSE;
-      }
-      
-      break;
+        case WM_INITDIALOG:
+        {
+            InitImageInfo(&ImgInfo);
+            GetSystemInformation(hwndDlg);
+        }
+        break;
+
+        case WM_COMMAND:
+        {
+            if (LOWORD(wParam) == IDC_LICENCE)
+            {
+                DialogBox(hApplet,
+                          MAKEINTRESOURCE(IDD_LICENCE),
+                          hwndDlg,
+                          LicenceDialogProc);
+
+                return TRUE;
+            }
+        }
+        break;
+
+        case WM_DRAWITEM:
+        {
+            LPDRAWITEMSTRUCT lpDrawItem;
+            lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+            if(lpDrawItem->CtlID == IDC_ROSIMG)
+            {
+                HDC hdcMem;
+                LONG left;
+
+                /* position image in centre of dialog */
+                left = (lpDrawItem->rcItem.right - ImgInfo.cxSource) / 2;
+
+                hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
+                if (hdcMem != NULL)
+                {
+                    SelectObject(hdcMem, ImgInfo.hBitmap);
+                    BitBlt(lpDrawItem->hDC, 
+                           left, 
+                           lpDrawItem->rcItem.top,
+                           lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
+                           lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
+                           hdcMem, 
+                           0, 
+                           0, 
+                           SRCCOPY);
+                    DeleteDC(hdcMem);
+                }
+            }
+            return TRUE;
+        }
+        
     }
-  }
-  return FALSE;
+
+    return FALSE;
 }
 

@@ -1,40 +1,19 @@
 /*
- *  ReactOS
- *  Copyright (C) 2004 ReactOS Team
+ * PROJECT:     ReactOS System Control Panel Applet
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/cpl/sysdm/sysdm.c
+ * PURPOSE:     dll entry file
+ * COPYRIGHT:   Copyright Thomas Weidenmueller <w3seek@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS System Control Panel
- * FILE:            lib/cpl/system/sysdm.c
- * PURPOSE:         ReactOS System Control Panel
- * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * UPDATE HISTORY:
- *      03-04-2004  Created
  */
 
 #include "precomp.h"
-
-#define NUM_APPLETS	(1)
 
 LONG CALLBACK SystemApplet(VOID);
 HINSTANCE hApplet = 0;
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] = 
+APPLET Applets[NUM_APPLETS] =
 {
   {IDI_CPLSYSTEM, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
 };
@@ -76,7 +55,7 @@ PropSheetProc(
           return FALSE;
       }
       break;
-      
+
     case PSCB_INITIALIZED:
       break;
   }
@@ -88,12 +67,12 @@ PropSheetProc(
 LONG CALLBACK
 SystemApplet(VOID)
 {
-  PROPSHEETPAGE psp[5];
+  PROPSHEETPAGE psp[4];
   PROPSHEETHEADER psh;
   TCHAR Caption[1024];
-  
+
   LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
-  
+
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
   psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE; /* | PSH_USECALLBACK */
@@ -105,13 +84,12 @@ SystemApplet(VOID)
   psh.nStartPage = 0;
   psh.ppsp = psp;
   psh.pfnCallback = NULL; /* PropSheetProc; */
-  
+
   InitPropSheetPage(&psp[0], IDD_PROPPAGEGENERAL, (DLGPROC) GeneralPageProc);
   InitPropSheetPage(&psp[1], IDD_PROPPAGECOMPUTER, (DLGPROC) ComputerPageProc);
   InitPropSheetPage(&psp[2], IDD_PROPPAGEHARDWARE, (DLGPROC) HardwarePageProc);
-  InitPropSheetPage(&psp[3], IDD_PROPPAGEUSERPROFILE, (DLGPROC) UserProfilePageProc);
-  InitPropSheetPage(&psp[4], IDD_PROPPAGEADVANCED, (DLGPROC) AdvancedPageProc);
-  
+  InitPropSheetPage(&psp[3], IDD_PROPPAGEADVANCED, (DLGPROC) AdvancedPageProc);
+
   return (LONG)(PropertySheet(&psh) != -1);
 }
 

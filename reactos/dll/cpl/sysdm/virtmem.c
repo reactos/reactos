@@ -138,7 +138,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
             Item.mask = LVIF_TEXT;
             Item.iItem = ListView_GetItemCount(pVirtMem->hListView);
             Item.pszText = szDrive;
-            Item.iItem = ListView_InsertItem(pVirtMem->hListView, &Item);
+            ListView_InsertItem(pVirtMem->hListView, &Item);
 
             /* set a volume label if there is one */
             if (GetVolumeInformation(DrivePtr,
@@ -366,6 +366,8 @@ OnSelChange(PVIRTMEM pVirtMem,
 {
     TCHAR szCustVals[255];
     INT Index;
+
+    UNREFERENCED_PARAMETER(pnmv);
 
     Index = (INT)SendDlgItemMessage(pVirtMem->hSelf,
                                     IDC_PAGEFILELIST,

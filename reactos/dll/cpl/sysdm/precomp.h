@@ -24,14 +24,17 @@ extern HINSTANCE hApplet;
 
 void ShowLastWin32Error(HWND hWndOwner);
 
+/* prop sheet pages */
 INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ComputerPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK HardwarePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK UserProfilePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+/* dialogs */
+INT_PTR CALLBACK UserProfileDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK EnvironmentDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK VirtMemDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK LicenceDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 typedef struct _PAGEFILE
 {

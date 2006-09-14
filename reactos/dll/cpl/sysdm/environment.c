@@ -1,27 +1,10 @@
 /*
- *  ReactOS
- *  Copyright (C) 2004 ReactOS Team
+ * PROJECT:     ReactOS System Control Panel Applet
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/cpl/sysdm/environment.c
+ * PURPOSE:     Environment variable settings
+ * COPYRIGHT:   Copyright Eric Kohl
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:         ReactOS System Control Panel
- * FILE:            lib/cpl/sysdm/environment.c
- * PURPOSE:         Environment variable settings
- * PROGRAMMER:      Eric Kohl
  */
 
 #include "precomp.h"
@@ -38,9 +21,9 @@ typedef struct _VARIABLE_DATA
 
 INT_PTR CALLBACK
 EditVariableDlgProc(HWND hwndDlg,
-		    UINT uMsg,
-		    WPARAM wParam,
-		    LPARAM lParam)
+                    UINT uMsg,
+                    WPARAM wParam,
+                    LPARAM lParam)
 {
   PVARIABLE_DATA VarData;
   DWORD dwNameLength;
@@ -51,7 +34,7 @@ EditVariableDlgProc(HWND hwndDlg,
   switch (uMsg)
   {
     case WM_INITDIALOG:
-      SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)lParam);
+      SetWindowLongPtr(hwndDlg, GWL_USERDATA, (LONG_PTR)lParam);
       VarData = (PVARIABLE_DATA)lParam;
 
       if (VarData->lpName != NULL)
@@ -489,15 +472,15 @@ SetAllVars(HWND hwndDlg,
    lvi.iItem = iItem;
 
    /* Open or create the key */
-   if (RegCreateKeyEx((iDlgItem == IDC_SYSTEM_VARIABLE_LIST ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER), 
-       (iDlgItem == IDC_SYSTEM_VARIABLE_LIST ? _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment") : _T("Environment")), 
-       0, 
-       NULL, 
+   if (RegCreateKeyEx((iDlgItem == IDC_SYSTEM_VARIABLE_LIST ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER),
+       (iDlgItem == IDC_SYSTEM_VARIABLE_LIST ? _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment") : _T("Environment")),
+       0,
+       NULL,
        REG_OPTION_NON_VOLATILE,
-       KEY_WRITE | KEY_READ, 
-       NULL, 
-       &hk, 
-       NULL)) 
+       KEY_WRITE | KEY_READ,
+       NULL,
+       &hk,
+       NULL))
    {
       return;
    }
@@ -518,9 +501,9 @@ SetAllVars(HWND hwndDlg,
              0,
              Type,
              (LPBYTE) VarData->lpRawValue,
-             (DWORD) (_tcsclen(VarData->lpRawValue)* sizeof(TCHAR))+1))
+             (DWORD) (_tcslen(VarData->lpRawValue)* sizeof(TCHAR))+1))  // was _tcsclen. lstrlen?
          {
-            RegCloseKey(hk); 
+            RegCloseKey(hk);
             return;
          }
       }
@@ -596,7 +579,7 @@ EnvironmentDlgProc(HWND hwndDlg,
                 if (phdr->idFrom == IDC_USER_VARIABLE_LIST ||
                     phdr->idFrom == IDC_SYSTEM_VARIABLE_LIST)
                 {
-                  OnEditVariable(hwndDlg, phdr->idFrom);
+                  OnEditVariable(hwndDlg, (INT)phdr->idFrom);
                   return TRUE;
                 }
               }

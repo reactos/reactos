@@ -1,93 +1,106 @@
 #ifndef __CPL_RESOURCE_H
 #define __CPL_RESOURCE_H
 
-/* metrics */
-#define PROPSHEETWIDTH   256
-#define PROPSHEETHEIGHT  218
-#define PROPSHEETPADDING(x)  (x+x+x+x+x+x)
-#define SYSTEM_COLUMN   PROPSHEETPADDING(18)
-#define LABELLINE(x)  (x+x+x+2+x+x+x+x+x+x)
-#define ICONSIZE         16
+#define IDC_STATIC  -1
 
-/* ids */
-#define RC_LICENSE                      101
-#define RTDATA                          300
+#define IDI_CPLSYSTEM                   50
+#define IDI_DEVMGR                      51
+#define IDC_ICON1                       52
+#define IDB_ROSBMP                      53
 
-#define IDI_CPLSYSTEM                   100
-#define IDI_DEVMGR                      101
+#define IDS_CPLSYSTEMNAME               60
+#define IDS_CPLSYSTEMDESCRIPTION        61
 
+
+/* propsheet - general */
 #define IDD_PROPPAGEGENERAL             100
-#define IDD_PROPPAGECOMPUTER            101
-#define IDD_PROPPAGEHARDWARE            102
-#define IDD_PROPPAGEUSERPROFILE         103
-#define IDD_PROPPAGEADVANCED            104
+#define IDC_PROCESSORMANUFACTURER       101
+#define IDC_PROCESSOR                   102
+#define IDC_PROCESSORSPEED              103
+#define IDC_SYSTEMMEMORY                104
+#define IDC_LICENCE             	    105
+#define IDC_ROSIMG                      106
 
-#define IDS_CPLSYSTEMNAME              1001
-#define IDS_CPLSYSTEMDESCRIPTION       2001
-#define IDS_DRIVE                      3000
-#define IDS_SPACE                      3001
-#define IDS_MIN                        3002
-#define IDS_REC                        3003
-#define IDS_CUR                        3004
 
-/* controls */
-#define IDC_LICENSEMEMO                 101
-#define IDC_PROCESSORMANUFACTURER       102
-#define IDC_PROCESSOR                   103
-#define IDC_PROCESSORSPEED              104
-#define IDC_SYSTEMMEMORY                105
-#define IDC_DEVMGR                      106
-#define IDC_ENVVAR                      107
-#define IDC_STAREC                      108
-#define IDC_PERFOR                      109
-#define IDC_ICON1                       201
-
+/* propsheet - computer name */
+#define IDD_PROPPAGECOMPUTER            200
+#define IDC_COMPDESC                    201
 #define IDC_COMPUTERNAME                202
 #define IDC_WORKGROUPDOMAIN_NAME        203
 #define IDC_WORKGROUPDOMAIN	            204
 #define IDC_NETWORK_ID                  205
 #define IDC_NETWORK_PROPERTY            206
+
+
+/* propsheet - hardware */
+#define IDD_PROPPAGEHARDWARE            300
 #define IDC_HARDWARE_WIZARD	            207
-#define IDC_HARDWARE_PROFILE            210
-#define IDC_HARDWARE_DRIVER_SIGN        211
-#define IDC_HARDWARE_DEVICE_MANAGER	    212
+#define IDC_HARDWARE_PROFILE            209
+#define IDC_HARDWARE_DRIVER_SIGN        210
+#define IDC_HARDWARE_DEVICE_MANAGER	    211
 
-#define IDC_USERPROFILE_LIST            213
-#define IDC_USERPROFILE_DELETE          214
-#define IDC_USERPROFILE_CHANGE          215
-#define IDC_USERPROFILE_COPY            216
 
-#define IDD_ENVIRONMENT_VARIABLES       105
-#define IDC_USER_VARIABLE_LIST          220
-#define IDC_USER_VARIABLE_NEW           221
-#define IDC_USER_VARIABLE_EDIT          222
-#define IDC_USER_VARIABLE_DELETE        223
-#define IDC_SYSTEM_VARIABLE_LIST        224
-#define IDC_SYSTEM_VARIABLE_NEW         225
-#define IDC_SYSTEM_VARIABLE_EDIT        226
-#define IDC_SYSTEM_VARIABLE_DELETE      227
+/* propsheet - advanced */
+#define IDD_PROPPAGEADVANCED            400
+#define IDC_ENVVAR                      401
+#define IDC_STAREC                      402
+#define IDC_PERFOR                      403
+#define IDC_USERPROFILE                 404
+#define IDC_ERRORREPORT                 405
 
-#define IDD_EDIT_VARIABLE               106
-#define IDC_VARIABLE_NAME               230
-#define IDC_VARIABLE_VALUE              231
+
+/* user profiles */
+#define IDD_USERPROFILE                 500
+#define IDC_USERPROFILE_LIST            501
+#define IDC_USERPROFILE_CHANGE          503
+#define IDC_CUST_LINK                   504
+
+
+/* environment variables */
+#define IDD_ENVIRONMENT_VARIABLES       600
+#define IDC_USER_VARIABLE_LIST          601
+#define IDC_USER_VARIABLE_NEW           602
+#define IDC_USER_VARIABLE_EDIT          603
+#define IDC_USER_VARIABLE_DELETE        604
+#define IDC_SYSTEM_VARIABLE_LIST        605
+#define IDC_SYSTEM_VARIABLE_NEW         606
+#define IDC_SYSTEM_VARIABLE_EDIT        607
+#define IDC_SYSTEM_VARIABLE_DELETE      608
+
+
+/* edit environment variables */
+#define IDD_EDIT_VARIABLE               700
+#define IDC_VARIABLE_NAME               701
+#define IDC_VARIABLE_VALUE              702
+
 
 /* Virtual memory */
-#define IDD_VIRTMEM                     107
-#define IDC_PAGEFILELIST                240
-#define IDC_DRIVEGROUP                  241
-#define IDC_DRIVE                       242
-#define IDC_SPACEAVAIL                  243
-#define IDC_CUSTOM                      244
-#define IDC_INITIALSIZE                 245
-#define IDC_MAXSIZE                     246
-#define IDC_SYSMANSIZE                  247
-#define IDC_NOPAGEFILE                  248
-#define IDC_SET                         249
-#define IDC_TOTALGROUP                  250
-#define IDC_MINIMUM                     251
-#define IDC_RECOMMENDED                 252
-#define IDC_CURRENT                     253
+#define IDD_VIRTMEM                     900
+#define IDC_PAGEFILELIST                901
+#define IDC_DRIVEGROUP                  902
+#define IDC_DRIVE                       903
+#define IDC_SPACEAVAIL                  904
+#define IDC_CUSTOM                      905
+#define IDC_INITIALSIZE                 906
+#define IDC_MAXSIZE                     907
+#define IDC_SYSMANSIZE                  908
+#define IDC_NOPAGEFILE                  909
+#define IDC_SET                         910
+#define IDC_TOTALGROUP                  911
+#define IDC_MINIMUM                     912
+#define IDC_RECOMMENDED                 913
+#define IDC_CURRENT                     914
+#define IDS_DRIVE                       920
+#define IDS_SPACE                       921
+#define IDS_MIN                         922
+#define IDS_REC                         923
+#define IDS_CUR                         924
+
+/* licence */
+#define IDD_LICENCE                     1000
+#define IDC_LICENCEEDIT                 1001
+#define RC_LICENSE                      1002
+#define RTDATA                          1003
+
 
 #endif /* __CPL_RESOURCE_H */
-
-/* EOF */
