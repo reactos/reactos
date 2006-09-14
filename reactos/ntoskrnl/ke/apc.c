@@ -239,7 +239,7 @@ KiInsertQueueApc(IN PKAPC Apc,
 
                         /* Wake up the thread */
 Unwait:
-                        KiAbortWaitThread(Thread, Status, PriorityBoost);
+                        KiUnwaitThread(Thread, Status, PriorityBoost);
                     }
                     else
                     {
@@ -977,4 +977,5 @@ KeAreAllApcsDisabled(VOID)
     return ((KeGetCurrentThread()->SpecialApcDisable) ||
             (KeGetCurrentIrql() >= APC_LEVEL)) ? TRUE : FALSE;
 }
+
 

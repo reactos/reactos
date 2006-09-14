@@ -142,7 +142,7 @@ KeSignalGateBoostPriority(IN PKGATE Gate)
         if (WaitThread->Queue) WaitThread->Queue->CurrentCount++;
 
         /* FIXME: This isn't really correct!!! */
-        KiAbortWaitThread(WaitThread, WaitStatus, EVENT_INCREMENT);
+        KiUnwaitThread(WaitThread, WaitStatus, EVENT_INCREMENT);
     }
 
     /* Exit the dispatcher */

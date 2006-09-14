@@ -208,8 +208,8 @@ KeSetProcess(IN PKPROCESS Process,
     if (!(OldState) &&
         !(IsListEmpty(&Process->Header.WaitListHead)))
     {
-        /* Satisfy waits */
-        KiWaitTest((PVOID)Process, Increment);
+        /* Unwait the threads */
+        KxUnwaitThread(&Process->Header, Increment);
     }
 
     /* Release Dispatcher Database */

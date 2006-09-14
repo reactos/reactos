@@ -100,7 +100,7 @@ KeAlertResumeThread(IN PKTHREAD Thread)
         if ((Thread->State == Waiting) && (Thread->Alertable))
         {
             /* Abort the wait */
-            KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
+            KiUnwaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
         }
         else
         {
@@ -157,7 +157,7 @@ KeAlertThread(IN PKTHREAD Thread,
             (Thread->Alertable))
         {
             /* Abort the wait to alert the thread */
-            KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
+            KiUnwaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
         }
         else
         {
@@ -1311,10 +1311,10 @@ KeTerminateThread(IN KPRIORITY Increment)
 
     /* Signal the thread */
     Thread->DispatcherHeader.SignalState = TRUE;
-    if (IsListEmpty(&Thread->DispatcherHeader.WaitListHead) != TRUE)
+    if (!IsListEmpty(&Thread->DispatcherHeader.WaitListHead))
     {
-        /* Satisfy waits */
-        KiWaitTest((PVOID)Thread, Increment);
+        /* Unwait the threads */
+        KxUnwaitThread(&Thread->DispatcherHeader, Increment);
     }
 
     /* Remove the thread from the list */

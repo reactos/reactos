@@ -57,7 +57,7 @@ KiWakeQueue(IN PKQUEUE Queue)
                                           KWAIT_BLOCK,
                                           WaitListEntry);
             Thread = WaitBlock->Thread;
-            KiAbortWaitThread(Thread, (NTSTATUS)QueueEntry, IO_NO_INCREMENT);
+            KiUnwaitThread(Thread, (NTSTATUS)QueueEntry, IO_NO_INCREMENT);
         }
     }
 }
@@ -401,7 +401,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
                     if (!KiInsertTimer(Timer, *Timeout))
                     {
                         /* FIXME */
-                        DPRINT1("If you see thie message contact Alex ASAP\n");
+                        DPRINT1("If you see this message contact Alex ASAP\n");
                         KEBUGCHECK(0);
                     }
 
@@ -469,7 +469,7 @@ PLIST_ENTRY
 NTAPI
 KeRundownQueue(IN PKQUEUE Queue)
 {
-    PLIST_ENTRY EnumEntry;
+    PLIST_ENTRY ListHead, NextEntry;
     PLIST_ENTRY FirstEntry = NULL;
     PKTHREAD Thread;
     KIRQL OldIrql;
@@ -488,16 +488,21 @@ KeRundownQueue(IN PKQUEUE Queue)
     }
 
     /* Unlink threads and clear their Thread->Queue */
-    while (!IsListEmpty(&Queue->ThreadListHead))
+    ListHead = &Queue->ThreadListHead;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
     {
-        /* Get the Entry and Remove it */
-        EnumEntry = RemoveHeadList(&Queue->ThreadListHead);
-
         /* Get the Entry's Thread */
-        Thread = CONTAINING_RECORD(EnumEntry, KTHREAD, QueueListEntry);
+        Thread = CONTAINING_RECORD(NextEntry, KTHREAD, QueueListEntry);
 
         /* Kill its Queue */
         Thread->Queue = NULL;
+
+        /* Remove this entry */
+        RemoveEntryList(NextEntry);
+
+        /* Get the next entry */
+        NextEntry = NextEntry->Flink;
     }
 
     /* Release the lock and return */

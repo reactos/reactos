@@ -456,6 +456,13 @@ KiDispatcherObjectWake(
 );
 
 VOID
+FASTCALL
+KiUnlinkThread(
+    IN PKTHREAD Thread,
+    IN NTSTATUS WaitStatus
+);
+
+VOID
 NTAPI
 KeExpireTimers(
     PKDPC Apc,
@@ -474,7 +481,7 @@ KiTestAlert(VOID);
 
 VOID
 FASTCALL
-KiAbortWaitThread(
+KiUnwaitThread(
     IN PKTHREAD Thread,
     IN NTSTATUS WaitStatus,
     IN KPRIORITY Increment

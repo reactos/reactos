@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS ******************************************************************/
-
-KSPIN_LOCK DispatcherDatabaseLock;
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -110,7 +106,7 @@ KiWaitTest(IN PVOID ObjectPointer,
         }
 
         /* All waits satisfied, unwait the thread */
-        KiAbortWaitThread(WaitThread, CurrentWaitBlock->WaitKey, Increment);
+        KiUnwaitThread(WaitThread, CurrentWaitBlock->WaitKey, Increment);
 
 SkipUnwait:
         /* Next entry */
@@ -118,16 +114,13 @@ SkipUnwait:
     }
 }
 
-/* Must be called with the dispatcher lock held */
 VOID
 FASTCALL
-KiAbortWaitThread(IN PKTHREAD Thread,
-                  IN NTSTATUS WaitStatus,
-                  IN KPRIORITY Increment)
+KiUnlinkThread(IN PKTHREAD Thread,
+               IN NTSTATUS WaitStatus)
 {
     PKWAIT_BLOCK WaitBlock;
     PKTIMER Timer;
-    LONG NewPriority;
 
     /* Update wait status */
     Thread->WaitStatus |= WaitStatus;
@@ -158,64 +151,22 @@ KiAbortWaitThread(IN PKTHREAD Thread,
 
     /* Increment the Queue's active threads */
     if (Thread->Queue) Thread->Queue->CurrentCount++;
+}
 
-    /* Check if this is a non-RT thread */
-    if (Thread->Priority < LOW_REALTIME_PRIORITY)
-    {
-        /* Check if boosting is enabled and we can boost */
-        if (!(Thread->DisableBoost) && !(Thread->PriorityDecrement))
-        {
-            /* We can boost, so calculate the new priority */
-            NewPriority = Thread->BasePriority + Increment;
-            if (NewPriority > Thread->Priority)
-            {
-                /* Make sure the new priority wouldn't push the thread to RT */
-                if (NewPriority >= LOW_REALTIME_PRIORITY)
-                {
-                    /* Set it just before the RT zone */
-                    Thread->Priority = LOW_REALTIME_PRIORITY - 1;
-                }
-                else
-                {
-                    /* Otherwise, set our calculated priority */
-                    Thread->Priority = NewPriority;
-                }
-            }
-        }
+/* Must be called with the dispatcher lock held */
+VOID
+FASTCALL
+KiUnwaitThread(IN PKTHREAD Thread,
+               IN NTSTATUS WaitStatus,
+               IN KPRIORITY Increment)
+{
+    /* Unlink the thread */
+    KiUnlinkThread(Thread, WaitStatus);
 
-        /* Check if this is a high-priority thread */
-        if (Thread->BasePriority >= 14)
-        {
-            /* It is, simply reset the quantum */
-            Thread->Quantum = Thread->QuantumReset;
-        }
-        else
-        {
-            /* Otherwise, decrease quantum */
-            Thread->Quantum--;
-            if (Thread->Quantum <= 0)
-            {
-                /* We've went below 0, reset it */
-                Thread->Quantum = Thread->QuantumReset;
-
-                /* Apply per-quantum priority decrement */
-                Thread->Priority -= (Thread->PriorityDecrement + 1);
-                if (Thread->Priority < Thread->BasePriority)
-                {
-                    /* We've went too low, reset it */
-                    Thread->Priority = Thread->BasePriority;
-                }
-
-                /* Delete per-quantum decrement */
-                Thread->PriorityDecrement = 0;
-            }
-        }
-    }
-    else
-    {
-        /* For real time threads, just reset the quantum */
-        Thread->Quantum = Thread->QuantumReset;
-    }
+    /* Tell the scheduler do to the increment when it readies the thread */
+    ASSERT(Increment >= 0);
+    Thread->AdjustIncrement = (SCHAR)Increment;
+    Thread->AdjustReason = 1;
 
     /* Reschedule the Thread */
     KiReadyThread(Thread);
@@ -794,7 +745,7 @@ KeWaitForMultipleObjects(IN ULONG Count,
                 WaitBlock->Object = CurrentObject;
                 WaitBlock->Thread = CurrentThread;
                 WaitBlock->WaitKey = (USHORT)WaitIndex;
-                WaitBlock->WaitType = (USHORT)WaitType;
+                WaitBlock->WaitType = (UCHAR)WaitType;
                 WaitBlock->NextWaitBlock = WaitBlock + 1;
 
                 /* Move to the next Wait Block */
