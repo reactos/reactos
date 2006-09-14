@@ -98,16 +98,17 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00010409 = "English (USA-Dvorak)"
 0000040C = "French (France)"
 00000407 = "German (Germany)"
-0000040E = "Hungarian" 
-00000419 = "Russian"
-0000040A = "Spanish (traditional short)"
-0000041D = "Swedish (Sweden)"
 00000807 = "German (Swiss)"
 00000408 = "Greek"
-00000422 = "Ukrainian"
 00010408 = "Greek 220"
-0000041B = "Slovak (QWERTZ)"
+0000040E = "Hungarian" 
+00000411 = "Japanese"
 00000816 = "Portuguese (Portugal)"
+00000419 = "Russian"
+0000041B = "Slovak (QWERTZ)"
+0000040A = "Spanish (traditional short)"
+0000041D = "Swedish (Sweden)"
+00000422 = "Ukrainian"
 
 [Files.KeyboardLayout]
 00000406 = kbdda.dll
@@ -127,6 +128,7 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00010408 = kbdhe.dll
 0000041B = kbdsk.dll
 00000816 = kbdpo.dll
+00000411 = kbdja.dll
 
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
