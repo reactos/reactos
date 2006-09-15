@@ -370,6 +370,14 @@ FdoStartDevice(
     DPRINT("No allocated resources sent to driver\n");
     return STATUS_INSUFFICIENT_RESOURCES;
   }
+  /* HACK due to a bug in ACPI driver, which doesn't report the bus number */
+  if (AllocatedResources->Count == 0)
+  {
+    DPRINT1("No bus number resource found (bug in acpi.sys?), assuming bus number #0\n");
+    DeviceExtension->BusNumber = 0;
+    goto next;
+  }
+  /* END HACK */
   if (AllocatedResources->Count < 1)
   {
     DPRINT("Not enough allocated resources sent to driver\n");
@@ -405,6 +413,7 @@ FdoStartDevice(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
+next:
   InitializeListHead(&DeviceExtension->DeviceListHead);
   KeInitializeSpinLock(&DeviceExtension->DeviceListLock);
   DeviceExtension->DeviceListCount = 0;
