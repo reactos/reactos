@@ -194,23 +194,33 @@ CreateEnhMetaFileA(
   LPWSTR lpFileNameW, lpDescriptionW;
   HDC rc = 0;
 
-  Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      Status = HEAP_strdupA2W ( &lpDescriptionW, lpDescription );
-      if (!NT_SUCCESS (Status))
-	SetLastError (RtlNtStatusToDosError(Status));
-      else
-      {
-	rc = NtGdiCreateEnhMetaFile (
-	  hdcRef, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
+  lpFileNameW = NULL;
+  if (lpFileName != NULL)
+  {
+	 Status = HEAP_strdupA2W ( &lpFileNameW, lpFileName );
+     if (!NT_SUCCESS (Status))
+         SetLastError (RtlNtStatusToDosError(Status));
 
-	HEAP_free ( lpDescriptionW );
-      }
-      HEAP_free ( lpFileNameW );
-    }
+	 return rc;
+  }
+  
+  lpDescriptionW = NULL;
+  if (lpDescription != NULL)
+  {
+     Status = HEAP_strdupA2W ( &lpDescriptionW, lpDescription );
+      if (!NT_SUCCESS (Status))
+	      SetLastError (RtlNtStatusToDosError(Status));
+
+	  return rc;
+  }
+     
+  rc = NtGdiCreateEnhMetaFile (hdcRef, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
+
+  if (lpDescriptionW != NULL)
+      HEAP_free ( lpDescriptionW );
+  
+  if (lpFileNameW != NULL)
+       HEAP_free ( lpFileNameW );
 
   return rc;
 }
