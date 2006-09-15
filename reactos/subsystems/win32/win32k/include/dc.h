@@ -121,6 +121,10 @@ typedef struct _DC
   HPALETTE PalIndexed;
 
   WIN_DC_INFO  w;
+
+  HANDLE hFile; 
+  LPENHMETAHEADER emh;
+
 } DC, *PDC;
 
 typedef struct _GDIPOINTER /* should stay private to ENG */
