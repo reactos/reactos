@@ -356,15 +356,8 @@ Fat16Format (HANDLE FileHandle,
   DPRINT("BootSector.FATSectors = %hu\n", BootSector.FATSectors);
 
   /* Init context data */
-  if (QuickFormat)
-    {
-      Context->TotalSectorCount =
-	1 + (BootSector.FATSectors * 2) + RootDirSectors;
-    }
-  else
-    {
-      Context->TotalSectorCount = SectorCount;
-    }
+  Context->TotalSectorCount =
+    1 + (BootSector.FATSectors * 2) + RootDirSectors;
 
   Status = Fat16WriteBootSector (FileHandle,
 				 &BootSector,

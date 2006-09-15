@@ -429,15 +429,8 @@ Fat32Format (HANDLE FileHandle,
   DPRINT("FATSectors32 = %lu\n", BootSector.FATSectors32);
 
   /* Init context data */
-  if (QuickFormat)
-    {
-      Context->TotalSectorCount =
-	2 + (BootSector.FATSectors32 * BootSector.FATCount) + BootSector.SectorsPerCluster;
-    }
-  else
-    {
-      Context->TotalSectorCount = BootSector.SectorsHuge;
-    }
+  Context->TotalSectorCount =
+    2 + (BootSector.FATSectors32 * BootSector.FATCount) + BootSector.SectorsPerCluster;
 
   Status = Fat32WriteBootSector (FileHandle,
 				 &BootSector,
