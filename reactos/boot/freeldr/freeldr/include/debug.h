@@ -41,9 +41,7 @@
 	VOID	DebugPrint1(char *format, ...);
 	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
 
-
-        #define DbgPrint(_x_)                                   _DbgPrint _x_ ;
-        #define _DbgPrint(_m_,_x_...)                           { DebugPrint(_m_, "(%s:%d)", __FILE__, __LINE__); DebugPrint(_m_,_x_);}while(0)
+	#define DbgPrint(_x_)					DebugPrint _x_ ;
 	#define DPRINT1						DebugPrint1
 	#define BugCheck(_x_)					{ DebugPrint(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DebugPrint _x_ ; for (;;); }
 	#define DbgDumpBuffer(_x_, _y_, _z_)	DebugDumpBuffer(_x_, _y_, _z_)
