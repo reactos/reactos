@@ -11,10 +11,10 @@
 
 
 INT_PTR CALLBACK
-LicenceDialogProc(HWND hDlg,
-                  UINT message,
-                  WPARAM wParam,
-                  LPARAM lParam)
+LicenceDlgProc(HWND hDlg,
+               UINT message,
+               WPARAM wParam,
+               LPARAM lParam)
 {
     HRSRC hResInfo;
     HGLOBAL hResMem;

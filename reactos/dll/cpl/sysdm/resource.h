@@ -5,8 +5,11 @@
 
 #define IDI_CPLSYSTEM                   50
 #define IDI_DEVMGR                      51
-#define IDC_ICON1                       52
-#define IDB_ROSBMP                      53
+#define IDI_COMPNAME                    52
+#define IDI_HARDPROF                    53
+#define IDI_USERPROF                    54
+
+#define IDB_ROSBMP                      55
 
 #define IDS_CPLSYSTEMNAME               60
 #define IDS_CPLSYSTEMDESCRIPTION        61
@@ -92,11 +95,49 @@
 #define IDC_CURRENT                     914
 
 
+/* startup and recovery */
+#define IDD_STARTUPRECOVERY             1000
+#define IDC_STRECOSCOMBO                1001
+#define IDC_STRECLIST                   1002
+#define IDC_STRRECLISTEDIT              1003
+#define IDC_STRRECLISTUPDWN             1004
+#define IDC_STRRECREC                   1005
+#define IDC_STRRECRECEDIT               1006
+#define IDC_STRRECRECUPDWN              1007
+#define IDC_STRRECEDIT                  1008
+#define IDC_STRRECWRITEEVENT            1009
+#define IDC_STRRECSENDALERT             1010
+#define IDC_STRRECRESTART               1011
+#define IDC_STRRECDEBUGCOMBO            1012
+#define IDC_STRRECDUMPFILE              1013
+#define IDC_STRRECOVERWRITE             1014
+
+
+/* hardware profiles */
+#define IDD_HARDWAREPROFILES            1100
+#define IDC_HRDPROFLSTBOX               1102
+#define IDC_HRDPROFUP                   1103
+#define IDC_HRDPROFDWN                  1104
+#define IDC_HRDPROFPROP                 1105
+#define IDC_HRDPROFCOPY                 1106
+#define IDC_HRDPROFRENAME               1107
+#define IDC_HRDPROFDEL                  1108
+#define IDC_HRDPROFWAIT                 1109
+#define IDC_HRDPROFSELECT               1110
+#define IDC_HRDPROFEDIT                 1111
+#define IDC_HRDPROFUPDWN                1112
+
+
+/* rename profile */
+#define IDD_RENAMEPROFILE               1200
+#define IDC_RENPROFEDITFROM             1201
+#define IDC_RENPROFEDITTO               1202
+
 /* licence */
-#define IDD_LICENCE                     1000
-#define IDC_LICENCEEDIT                 1001
-#define RC_LICENSE                      1002
-#define RTDATA                          1003
+#define IDD_LICENCE                     1500
+#define IDC_LICENCEEDIT                 1501
+#define RC_LICENSE                      1502
+#define RTDATA                          1503
 
 
 #endif /* __CPL_RESOURCE_H */

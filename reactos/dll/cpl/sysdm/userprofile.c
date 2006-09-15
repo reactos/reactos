@@ -12,10 +12,10 @@
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-UserProfileDialogProc(HWND hwndDlg,
-                      UINT uMsg,
-                      WPARAM wParam,
-                      LPARAM lParam)
+UserProfileDlgProc(HWND hwndDlg,
+                   UINT uMsg,
+                   WPARAM wParam,
+                   LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
@@ -24,8 +24,9 @@ UserProfileDialogProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
+            MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
         }
-        break; //GetUserName
+        break;
 
         case WM_COMMAND:
         {

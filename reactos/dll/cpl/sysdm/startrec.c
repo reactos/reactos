@@ -1,0 +1,42 @@
+/*
+ * PROJECT:     ReactOS System Control Panel Applet
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/cpl/sysdm/startrec.c
+ * PURPOSE:     Computer settings for startup and recovery
+ * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
+ *
+ */
+
+#include "precomp.h"
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+StartRecDlgProc(HWND hwndDlg,
+                UINT uMsg,
+                WPARAM wParam,
+                LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+    UNREFERENCED_PARAMETER(hwndDlg);
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
+        }
+        break;
+
+        case WM_COMMAND:
+        {
+            if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
+            {
+                EndDialog(hwndDlg,
+                          LOWORD(wParam));
+                return TRUE;
+            }
+        }
+        break;
+  }
+  return FALSE;
+}

@@ -44,7 +44,16 @@ AdvancedPageProc(HWND hwndDlg,
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_USERPROFILE),
                               hwndDlg,
-                              (DLGPROC)UserProfileDialogProc);
+                              (DLGPROC)UserProfileDlgProc);
+                }
+                break;
+
+                case IDC_STAREC:
+                {
+                    DialogBox(hApplet,
+                              MAKEINTRESOURCE(IDD_STARTUPRECOVERY),
+                              hwndDlg,
+                              (DLGPROC)StartRecDlgProc);
                 }
                 break;
 

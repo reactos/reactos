@@ -4,59 +4,79 @@
  * FILE:        dll/cpl/sysdm/hardware.c
  * PURPOSE:     Hardware devices
  * COPYRIGHT:   Copyright Thomas Weidenmueller <w3seek@reactos.org>
+ *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *
  */
 
 #include "precomp.h"
 
 typedef BOOL (STDCALL *PDEVMGREXEC)(HWND hWndParent, HINSTANCE hInst, PVOID Unknown, int nCmdShow);
+
 BOOL LaunchDeviceManager(HWND hWndParent)
 {
-  HMODULE hDll;
-  PDEVMGREXEC DevMgrExec;
-  BOOL Ret;
+    HMODULE hDll;
+    PDEVMGREXEC DevMgrExec;
+    BOOL Ret;
 
-  hDll = LoadLibrary(_TEXT("devmgr.dll"));
-  if(!hDll)
-    return FALSE;
-  DevMgrExec = (PDEVMGREXEC)GetProcAddress(hDll, "DeviceManager_ExecuteW");
-  if(!DevMgrExec)
-  {
+    hDll = LoadLibrary(_TEXT("devmgr.dll"));
+    if(!hDll)
+        return FALSE;
+
+    DevMgrExec = (PDEVMGREXEC)GetProcAddress(hDll, "DeviceManager_ExecuteW");
+    if(!DevMgrExec)
+    {
+        FreeLibrary(hDll);
+        return FALSE;
+    }
+
+    /* run the Device Manager */
+    Ret = DevMgrExec(hWndParent, hApplet, NULL /* ??? */, SW_SHOW);
     FreeLibrary(hDll);
-    return FALSE;
-  }
-  /* run the Device Manager */
-  Ret = DevMgrExec(hWndParent, hApplet, NULL /* ??? */, SW_SHOW);
-  FreeLibrary(hDll);
-  return Ret;
+    return Ret;
 }
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-HardwarePageProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+HardwarePageProc(HWND hwndDlg,
+                 UINT uMsg,
+                 WPARAM wParam,
+                 LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-      break;
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDC_HARDWARE_DEVICE_MANAGER:
-          if(!LaunchDeviceManager(hwndDlg))
-          {
-            /* FIXME */
-          }
-          break;
-      }
-      break;
-  }
-  return FALSE;
+    UNREFERENCED_PARAMETER(lParam);
+
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+        break;
+
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDC_HARDWARE_DEVICE_MANAGER:
+                {
+                    if(!LaunchDeviceManager(hwndDlg))
+                    {
+                        /* FIXME */
+                    }
+
+                    return TRUE;
+                }
+
+                case IDC_HARDWARE_PROFILE:
+                {
+                    DialogBox(hApplet,
+                              MAKEINTRESOURCE(IDD_HARDWAREPROFILES),
+                              hwndDlg,
+                              (DLGPROC)HardProfDlgProc);
+
+                    return TRUE;
+                }
+            }
+        }
+        break;
+    }
+
+    return FALSE;
 }
 

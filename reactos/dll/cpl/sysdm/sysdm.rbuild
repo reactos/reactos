@@ -22,8 +22,10 @@
 	<file>computer.c</file>
 	<file>environment.c</file>
 	<file>general.c</file>
+	<file>hardprof.c</file>
 	<file>hardware.c</file>
 	<file>licence.c</file>
+	<file>startrec.c</file>
 	<file>sysdm.c</file>
 	<file>userprofile.c</file>
 	<file>virtmem.c</file>
