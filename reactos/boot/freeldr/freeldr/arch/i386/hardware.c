@@ -1270,6 +1270,8 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
       FullResourceDescriptor.InterfaceType = Isa;
       FullResourceDescriptor.BusNumber = 0;
       FullResourceDescriptor.PartialResourceList.Count = 0;
+      FullResourceDescriptor.PartialResourceList.Version = 1;
+      FullResourceDescriptor.PartialResourceList.Revision = 1;
 
       Error = RegSetValue(PeripheralKey,
 			  L"Configuration Data",
@@ -1688,8 +1690,8 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
     PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_KEYBOARD_DEVICE_DATA);
 
     KeyboardData = (PVOID)(((ULONG_PTR)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
-    KeyboardData->Version = 0;
-    KeyboardData->Revision = 0;
+    KeyboardData->Version = 1;
+    KeyboardData->Revision = 1;
     KeyboardData->Type = 4;
     KeyboardData->Subtype = 0;
     KeyboardData->KeyboardFlags = 0x20;

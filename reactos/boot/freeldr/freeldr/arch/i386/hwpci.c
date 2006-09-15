@@ -277,8 +277,7 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 	}
 
       /* Set 'Configuration Data' value */
-      Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
-	     sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+      Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
       FullResourceDescriptor = MmAllocateMemory(Size);
       if (FullResourceDescriptor == NULL)
 	{
@@ -291,7 +290,13 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
       memset(FullResourceDescriptor, 0, Size);
       FullResourceDescriptor->InterfaceType = PCIBus;
       FullResourceDescriptor->BusNumber = 0;
-      FullResourceDescriptor->PartialResourceList.Count = 0;
+      FullResourceDescriptor->PartialResourceList.Version = 1;
+      FullResourceDescriptor->PartialResourceList.Revision = 1;
+      FullResourceDescriptor->PartialResourceList.Count = 1;
+      FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type = CmResourceTypeBusNumber;
+      FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition = CmResourceShareDeviceExclusive;
+      FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.BusNumber.Start = 0;
+      FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.BusNumber.Length = 1;
 
       /* Set 'Configuration Data' value */
       Error = RegSetValue(BiosKey,
