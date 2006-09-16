@@ -440,12 +440,14 @@ Author:
 #define STATUS_CALLBACK_POP_STACK               0xC0000423
 #define STATUS_ARRAY_BOUNDS_EXCEEDED            0xC000008C
 #define STATUS_ILLEGAL_INSTRUCTION              0xC000001D
+#define STATUS_INVALID_LOCK_SEQUENCE            0xC000001E
 #define STATUS_BREAKPOINT                       0x80000003
 #define STATUS_SINGLE_STEP                      0x80000004
 #define STATUS_INTEGER_DIVIDE_BY_ZERO           0xC0000094
 #define STATUS_INTEGER_OVERFLOW                 0xC0000095
 #define APC_INDEX_MISMATCH                      0x01
 #define TRAP_CAUSE_UNKNOWN                      0x12
+#define KMODE_EXCEPTION_NOT_HANDLED             0x13
 #define IRQL_GT_ZERO_AT_SYSTEM_SERVICE          0x4A
 #define UNEXPECTED_KERNEL_MODE_TRAP             0x7F
 #define ATTEMPTED_SWITCH_FROM_DPC               0xB8

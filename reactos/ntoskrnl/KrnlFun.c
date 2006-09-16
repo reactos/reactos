@@ -27,7 +27,6 @@
 // Ke:
 //
 //  - FIXES:
-//      * Implement invalid opcode handler (fixes some apps from crashing).
 //      * Get rid of KiRosPrintAddress and use KiDumpParameterImages instead.
 //      * Sanitize some context fields during conversions.
 //      * Add DR macro/save and VM macro/save.
