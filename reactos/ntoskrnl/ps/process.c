@@ -15,12 +15,9 @@
 
 /* GLOBALS *******************************************************************/
 
-PEPROCESS PsInitialSystemProcess = NULL;
-PEPROCESS PsIdleProcess = NULL;
-POBJECT_TYPE PsProcessType = NULL;
+extern ULONG PsMinimumWorkingSet, PsMaximumWorkingSet;
 
-EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
-ULONG PsMinimumWorkingSet, PsMaximumWorkingSet;
+POBJECT_TYPE PsProcessType = NULL;
 
 LIST_ENTRY PsActiveProcessHead;
 KGUARDED_MUTEX PspActiveProcessMutex;
@@ -384,13 +381,13 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     PAGED_CODE();
     PSTRACE(PS_PROCESS_DEBUG,
-            "ProcessHandle: %p Parent: %p\n", ProcessHandle, Parent);
+            "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
 
     /* Validate flags */
     if (Flags & ~PS_ALL_FLAGS) return STATUS_INVALID_PARAMETER;
 
     /* Check for parent */
-    if(ParentProcess)
+    if (ParentProcess)
     {
         /* Reference it */
         Status = ObReferenceObjectByHandle(ParentProcess,
@@ -417,14 +414,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* We have no parent */
         Parent = NULL;
-#ifdef CONFIG_SMP
-        /*
-         * FIXME: Only the boot cpu is initialized in the early boot phase.
-    */
-        Affinity = 0xffffffff;
-#else
         Affinity = KeActiveProcessors;
-#endif
     }
 
     /* Save working set data */
@@ -488,6 +478,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     }
     else
     {
+        /* Assume no section object */
+        SectionObject = NULL;
+
         /* Is the parent the initial process? */
         if (Parent != PsInitialSystemProcess)
         {

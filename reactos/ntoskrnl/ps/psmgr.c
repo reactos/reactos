@@ -14,28 +14,28 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define LockEvent Spare0[0]
-#define LockCount Spare0[1]
-#define LockOwner Spare0[2]
-
-extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
+extern LARGE_INTEGER ShortPsLockDelay;
 extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 
-static GENERIC_MAPPING PiProcessMapping = {
+GENERIC_MAPPING PspProcessMapping =
+{
     STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
     STANDARD_RIGHTS_WRITE   | PROCESS_CREATE_PROCESS    | PROCESS_CREATE_THREAD   |
     PROCESS_VM_OPERATION    | PROCESS_VM_WRITE          | PROCESS_DUP_HANDLE      |
     PROCESS_TERMINATE       | PROCESS_SET_QUOTA         | PROCESS_SET_INFORMATION |
     PROCESS_SUSPEND_RESUME,
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
-    PROCESS_ALL_ACCESS};
+    PROCESS_ALL_ACCESS
+};
 
-static GENERIC_MAPPING PiThreadMapping = {
+GENERIC_MAPPING PspThreadMapping =
+{
     STANDARD_RIGHTS_READ    | THREAD_GET_CONTEXT      | THREAD_QUERY_INFORMATION,
     STANDARD_RIGHTS_WRITE   | THREAD_TERMINATE        | THREAD_SUSPEND_RESUME    |
     THREAD_ALERT            | THREAD_SET_INFORMATION  | THREAD_SET_CONTEXT,
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
-    THREAD_ALL_ACCESS};
+    THREAD_ALL_ACCESS
+};
 
 extern ULONG NtBuildNumber;
 extern ULONG NtMajorVersion;
@@ -45,336 +45,264 @@ extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 
-PVOID PspSystemDllBase = NULL;
-PVOID PspSystemDllSection = NULL;
-PVOID PspSystemDllEntryPoint = NULL;
-PHANDLE_TABLE PspCidTable = NULL;
-VOID STDCALL PspKillMostProcesses();
-VOID INIT_FUNCTION NTAPI PsInitClientIDManagment(VOID);
-NTSTATUS STDCALL INIT_FUNCTION PspLookupKernelUserEntryPoints(VOID);
+PVOID PspSystemDllBase;
+PVOID PspSystemDllSection;
+PVOID PspSystemDllEntryPoint;
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, PiInitProcessManager)
-#pragma alloc_text(INIT, PsInitClientIDManagment)
-#pragma alloc_text(INIT, PsInitThreadManagment)
-#pragma alloc_text(INIT, PsInitProcessManagment)
-#pragma alloc_text(INIT, PspLookupKernelUserEntryPoints)
-#pragma alloc_text(INIT, PsLocateSystemDll)
-#endif
+PHANDLE_TABLE PspCidTable;
+
+PEPROCESS PsInitialSystemProcess = NULL;
+PEPROCESS PsIdleProcess = NULL;
+HANDLE PspInitialSystemProcessHandle;
+
+ULONG PsMinimumWorkingSet, PsMaximumWorkingSet;
+struct
+{
+    LIST_ENTRY List;
+    KGUARDED_MUTEX Lock;
+} PspWorkingSetChangeHead;
+ULONG PspDefaultPagedLimit, PspDefaultNonPagedLimit, PspDefaultPagefileLimit;
+BOOLEAN PspDoingGiveBacks;
+
+extern PTOKEN PspBootAccessToken;
+
+extern GENERIC_MAPPING PspJobMapping;
+extern POBJECT_TYPE PsJobType;
+
+VOID
+NTAPI
+PspInitializeJobStructures(VOID);
+
+VOID
+NTAPI
+PspDeleteJob(IN PVOID ObjectBody);
 
 /* FUNCTIONS ***************************************************************/
 
-VOID
-FASTCALL
-KiIdleLoop(VOID);
+NTSTATUS
+NTAPI
+PspCreateProcess(OUT PHANDLE ProcessHandle,
+                 IN ACCESS_MASK DesiredAccess,
+                 IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+                 IN HANDLE ParentProcess OPTIONAL,
+                 IN ULONG Flags,
+                 IN HANDLE SectionHandle OPTIONAL,
+                 IN HANDLE DebugPort OPTIONAL,
+                 IN HANDLE ExceptionPort OPTIONAL,
+                 IN BOOLEAN InJob);
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * HACK-O-RAMA
- * Antique vestigial code left alive for the sole purpose of First/Idle Thread
- * creation until I can merge my fix for properly creating them.
- */
 VOID
-INIT_FUNCTION
 NTAPI
-PsInitHackThread(VOID)
-{
-    PETHREAD IdleThread;
+ExPhase2Init(
+    IN PVOID Context
+);
 
-    IdleThread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
-    RtlZeroMemory(IdleThread, sizeof(ETHREAD));
-    IdleThread->ThreadsProcess = PsIdleProcess;
-    KeInitializeThread(&PsIdleProcess->Pcb,
-                       &IdleThread->Tcb,
-                       PspSystemThreadStartup,
-                       (PVOID)KiIdleLoop,
-                       NULL,
-                       NULL,
-                       NULL,
-                       (PVOID)((ULONG_PTR)MmCreateKernelStack(FALSE) +
-                              KERNEL_STACK_SIZE));
-    InitializeListHead(&IdleThread->IrpList);
-
-    KeReadyThread(&IdleThread->Tcb);
-
-    KeGetCurrentPrcb()->IdleThread = &IdleThread->Tcb;
-    KeSetPriorityThread(&IdleThread->Tcb, LOW_PRIORITY);
-    KeSetAffinityThread(&IdleThread->Tcb, 1 << 0);
-}
-
-/*
- * HACK-O-RAMA
- * Antique vestigial code left alive for the sole purpose of First/Idle Thread
- * creation until I can merge my fix for properly creating them.
- */
-VOID
-INIT_FUNCTION
+BOOLEAN
 NTAPI
-PsInitHackThread2(IN PETHREAD *Hack)
+PspInitPhase0(VOID)
 {
-    PETHREAD IdleThread;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE SysThreadHandle;
+    PETHREAD SysThread;
+    MM_SYSTEMSIZE SystemSize;
+    UNICODE_STRING Name;
+    ULONG i;
+    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
 
-    IdleThread = ExAllocatePool(NonPagedPool, sizeof(ETHREAD));
-    RtlZeroMemory(IdleThread, sizeof(ETHREAD));
-    IdleThread->ThreadsProcess = PsInitialSystemProcess;
-    KeInitializeThread(&PsInitialSystemProcess->Pcb,
-                       &IdleThread->Tcb,
-                       PspSystemThreadStartup,
-                       NULL,
-                       NULL,
-                       NULL,
-                       NULL,
-                       P0BootStack);
-    InitializeListHead(&IdleThread->IrpList);
-    *Hack = IdleThread;
-}
+    /* FIXME: Initialize Lock Data do it STATIC */
+    ShortPsLockDelay.QuadPart = -100LL;
 
-VOID
-INIT_FUNCTION
-NTAPI
-PiInitProcessManager(VOID)
-{
-   PsInitJobManagment();
-   PsInitProcessManagment();
-   PsInitThreadManagment();
-   PsInitHackThread();
-}
+    /* Get the system size */
+    SystemSize = MmQuerySystemSize();
 
-VOID
-INIT_FUNCTION
-NTAPI
-PsInitClientIDManagment(VOID)
-{
-  PspCidTable = ExCreateHandleTable(NULL);
-  ASSERT(PspCidTable);
-}
+    /* Setup some memory options */
+    PspDefaultPagefileLimit = -1;
+    switch (SystemSize)
+    {
+        /* Medimum systems */
+        case MmMediumSystem:
 
-VOID
-INIT_FUNCTION
-NTAPI
-PsInitThreadManagment(VOID)
-/*
- * FUNCTION: Initialize thread managment
- */
-{
-   UNICODE_STRING Name;
-   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-   PETHREAD FirstThread;
-   ULONG i;
+            /* Increase the WS sizes a bit */
+            PsMinimumWorkingSet += 10;
+            PsMaximumWorkingSet += 100;
 
-   for (i=0; i < MAXIMUM_PRIORITY; i++)
-     {
-	InitializeListHead(&PriorityListHead[i]);
-     }
+        /* Large systems */
+        case MmLargeSystem:
 
-    DPRINT("Creating Thread Object Type\n");
-  
+            /* Increase the WS sizes a bit more */
+            PsMinimumWorkingSet += 30;
+            PsMaximumWorkingSet += 300;
+
+        /* Small and other systems */
+        default:
+            break;
+    }
+
+    /* Setup the quantum table */
+    PsChangeQuantumTable(FALSE, PsRawPrioritySeparation);
+
+    /* Setup callbacks when we implement Generic Callbacks */
+
+    /* Set quota settings */
+    if (!PspDefaultPagedLimit) PspDefaultPagedLimit = 0;
+    if (!PspDefaultNonPagedLimit) PspDefaultNonPagedLimit = 0;
+    if (!(PspDefaultNonPagedLimit) && !(PspDefaultPagedLimit))
+    {
+        /* Enable give-backs */
+        PspDoingGiveBacks = TRUE;
+    }
+    else
+    {
+        /* Disable them */
+        PspDoingGiveBacks = FALSE;
+    }
+
+    /* Now multiply limits by 1MB */
+    PspDefaultPagedLimit <<= 20;
+    PspDefaultNonPagedLimit <<= 20;
+    if (PspDefaultPagefileLimit != -1) PspDefaultPagefileLimit <<= 20;
+
+    /* Initialize the Active Process List */
+    InitializeListHead(&PsActiveProcessHead);
+    KeInitializeGuardedMutex(&PspActiveProcessMutex);
+
+    /* Get the idle process */
+    PsIdleProcess = PsGetCurrentProcess();
+
+    /* Setup the locks */
+    PsIdleProcess->ProcessLock.Value = 0;
+    ExInitializeRundownProtection(&PsIdleProcess->RundownProtect);
+
+    /* Initialize the thread list */
+    InitializeListHead(&PsIdleProcess->ThreadListHead);
+
+    /* Clear kernel time */
+    PsIdleProcess->Pcb.KernelTime = 0;
+
+    /* Initialize the Process type */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Process");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
+    ObjectTypeInitializer.GenericMapping = PspProcessMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
+    ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
+
+    /* Setup ROS Scheduler lists (HACK!) */
+    for (i = 0; i < MAXIMUM_PRIORITY; i++)
+    {
+        InitializeListHead(&PriorityListHead[i]);
+    }
+
     /*  Initialize the Thread type  */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Thread");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(ETHREAD);
-    ObjectTypeInitializer.GenericMapping = PiThreadMapping;
+    ObjectTypeInitializer.GenericMapping = PspThreadMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = THREAD_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteThread;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsThreadType);
 
-   PsInitHackThread2(&FirstThread);
-   FirstThread->Tcb.State = Running;
-   FirstThread->Tcb.FreezeCount = 0;
-   FirstThread->Tcb.UserAffinity = (1 << 0);   /* Set the affinity of the first thread to the boot processor */
-   FirstThread->Tcb.Affinity = (1 << 0);
-   KeGetCurrentPrcb()->CurrentThread = (PVOID)FirstThread;
+    /*  Initialize the Job type  */
+    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
+    RtlInitUnicodeString(&Name, L"Job");
+    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EJOB);
+    ObjectTypeInitializer.GenericMapping = PspJobMapping;
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.DeleteProcedure = PspDeleteJob;
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);
 
-   DPRINT("FirstThread %x\n",FirstThread);
+    /* Initialize job structures external to this file */
+    PspInitializeJobStructures();
 
-   ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
-}
+    /* Initialize the Working Set data */
+    InitializeListHead(&PspWorkingSetChangeHead.List);
+    KeInitializeGuardedMutex(&PspWorkingSetChangeHead.Lock);
 
-VOID
-INIT_FUNCTION
-NTAPI
-PsInitProcessManagment(VOID)
-{
-   PKPROCESS KProcess;
-   NTSTATUS Status;
-   UNICODE_STRING Name;
-   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
+    /* Create the CID Handle table */
+    PspCidTable = ExCreateHandleTable(NULL);
 
-   ShortPsLockDelay.QuadPart = -100LL;
+    /* FIXME: Initialize LDT/VDM support */
 
-   /*
-    * Register the process object type
-    */
+    /* Setup the reaper */
+    ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
 
-    DPRINT("Creating Process Object Type\n");
-  
-   /*  Initialize the Process type */
-   RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
-   RtlInitUnicodeString(&Name, L"Process");
-   ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EPROCESS);
-   ObjectTypeInitializer.GenericMapping = PiProcessMapping;
-   ObjectTypeInitializer.PoolType = NonPagedPool;
-   ObjectTypeInitializer.ValidAccessMask = PROCESS_ALL_ACCESS;
-   ObjectTypeInitializer.DeleteProcedure = PspDeleteProcess;
-   ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsProcessType);
+    /* Set the boot access token */
+    PspBootAccessToken = (PTOKEN)(PsIdleProcess->Token.Value & ~MAX_FAST_REFS);
 
-   InitializeListHead(&PsActiveProcessHead);
-   KeInitializeGuardedMutex(&PspActiveProcessMutex);
+    /* Setup default object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
 
-   /* Setup the quantum table */
-   PsChangeQuantumTable(FALSE, PsRawPrioritySeparation);
+    /* Create the Initial System Process */
+    Status = PspCreateProcess(&PspInitialSystemProcessHandle,
+                              PROCESS_ALL_ACCESS,
+                              &ObjectAttributes,
+                              0,
+                              FALSE,
+                              0,
+                              0,
+                              0,
+                              FALSE);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-   /*
-    * Initialize the default quota block.
-    */
+    /* Get a reference to it */
+    ObReferenceObjectByHandle(PspInitialSystemProcessHandle,
+                              0,
+                              PsProcessType,
+                              KernelMode,
+                              (PVOID*)&PsInitialSystemProcess,
+                              NULL);
 
-   RtlZeroMemory(&PspDefaultQuotaBlock, sizeof(PspDefaultQuotaBlock));
-   PspDefaultQuotaBlock.QuotaEntry[PagedPool].Limit = (SIZE_T)-1;
-   PspDefaultQuotaBlock.QuotaEntry[NonPagedPool].Limit = (SIZE_T)-1;
-   PspDefaultQuotaBlock.QuotaEntry[2].Limit = (SIZE_T)-1; /* Page file */
+    /* The PD we gave it is invalid at this point, do what old ROS did */
+    PsInitialSystemProcess->Pcb.DirectoryTableBase = (LARGE_INTEGER)
+                                                     (LONGLONG)
+                                                     (ULONG)MmGetPageDirectory();
+    PsIdleProcess->Pcb.DirectoryTableBase = PsInitialSystemProcess->Pcb.DirectoryTableBase;
 
-   /*
-    * Initialize the idle process
-    */
-   Status = ObCreateObject(KernelMode,
-			   PsProcessType,
-			   NULL,
-			   KernelMode,
-			   NULL,
-			   sizeof(EPROCESS),
-			   0,
-			   0,
-			   (PVOID*)&PsIdleProcess);
-   if (!NT_SUCCESS(Status))
-     {
-        DPRINT1("Failed to create the idle process object, Status: 0x%x\n", Status);
-        KEBUGCHECK(0);
-        return;
-     }
+    /* Copy the process names */
+    strcpy(PsIdleProcess->ImageFileName, "Idle");
+    strcpy(PsInitialSystemProcess->ImageFileName, "System");
 
-   RtlZeroMemory(PsIdleProcess, sizeof(EPROCESS));
+    /* Allocate a structure for the audit name */
+    PsIdleProcess->SeAuditProcessCreationInfo.ImageFileName =
+        ExAllocatePoolWithTag(PagedPool, sizeof(UNICODE_STRING), TAG_SEPA);
+    if (!PsIdleProcess->SeAuditProcessCreationInfo.ImageFileName) KEBUGCHECK(0);
 
-   PsIdleProcess->Pcb.Affinity = 0xFFFFFFFF;
-   PsIdleProcess->Pcb.IopmOffset = 0xffff;
-   PsIdleProcess->Pcb.BasePriority = PROCESS_PRIORITY_IDLE;
-   PsIdleProcess->Pcb.QuantumReset = 6;
-   InitializeListHead(&PsIdleProcess->Pcb.ThreadListHead);
-   InitializeListHead(&PsIdleProcess->ThreadListHead);
-   InitializeListHead(&PsIdleProcess->ActiveProcessLinks);
-   ObInitializeFastReference(&PsIdleProcess->Token, NULL);
-   KeInitializeDispatcherHeader(&PsIdleProcess->Pcb.Header,
-				ProcessObject,
-				sizeof(EPROCESS) / sizeof(LONG),
-				FALSE);
-   PsIdleProcess->Pcb.DirectoryTableBase.QuadPart = (ULONG_PTR)MmGetPageDirectory();
-   strcpy(PsIdleProcess->ImageFileName, "Idle");
-   PspInheritQuota(PsIdleProcess, NULL);
+    /* Setup the system initailization thread */
+    Status = PsCreateSystemThread(&SysThreadHandle,
+                                  THREAD_ALL_ACCESS,
+                                  &ObjectAttributes,
+                                  0,
+                                  NULL,
+                                  ExPhase2Init,
+                                  NULL);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-   /*
-    * Initialize the system process
-    */
-   Status = ObCreateObject(KernelMode,
-			   PsProcessType,
-			   NULL,
-			   KernelMode,
-			   NULL,
-			   sizeof(EPROCESS),
-			   0,
-			   0,
-			   (PVOID*)&PsInitialSystemProcess);
-   if (!NT_SUCCESS(Status))
-     {
-        DPRINT1("Failed to create the system process object, Status: 0x%x\n", Status);
-        KEBUGCHECK(0);
-        return;
-     }
+    /* Create a handle to it */
+    ObReferenceObjectByHandle(SysThreadHandle,
+                              0,
+                              PsThreadType,
+                              KernelMode,
+                              (PVOID*)&SysThread,
+                              NULL);
+    ZwClose(SysThreadHandle);
 
-   /* System threads may run on any processor. */
-   RtlZeroMemory(PsInitialSystemProcess, sizeof(EPROCESS));
-#ifdef CONFIG_SMP   
-   /* FIXME:
-    *   Only the boot cpu is initialized. Threads of the 
-    *   system process should be able to run on all cpus.
-    */
-   PsInitialSystemProcess->Pcb.Affinity = 0xffffffff;
-#else
-   PsInitialSystemProcess->Pcb.Affinity = KeActiveProcessors;
-#endif   
-   PsInitialSystemProcess->Pcb.IopmOffset = 0xffff;
-   PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIORITY_NORMAL;
-   PsInitialSystemProcess->Pcb.QuantumReset = 6;
-   InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);
-   KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.Header,
-				ProcessObject,
-				sizeof(EPROCESS) / sizeof(LONG),
-				FALSE);
-   KProcess = &PsInitialSystemProcess->Pcb;
-   PspInheritQuota(PsInitialSystemProcess, NULL);
-
-   MmInitializeAddressSpace(PsInitialSystemProcess,
-			    (PMADDRESS_SPACE)&(PsInitialSystemProcess)->VadRoot);
-
-   (PsInitialSystemProcess)->LockEvent = 
-       ExAllocatePoolWithTag(PagedPool, sizeof(KEVENT), TAG('P', 's', 'L', 'k'));
-   KeInitializeEvent((PsInitialSystemProcess)->LockEvent, SynchronizationEvent, FALSE);
-
-#if defined(__GNUC__)
-   KProcess->DirectoryTableBase =
-     (LARGE_INTEGER)(LONGLONG)(ULONG)MmGetPageDirectory();
-#else
-   {
-     LARGE_INTEGER dummy;
-     dummy.QuadPart = (LONGLONG)(ULONG)MmGetPageDirectory();
-     KProcess->DirectoryTableBase = dummy;
-   }
-#endif
-
-   strcpy(PsInitialSystemProcess->ImageFileName, "System");
-
-   PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
-
-   InsertHeadList(&PsActiveProcessHead,
-		  &PsInitialSystemProcess->ActiveProcessLinks);
-   InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
-
-#ifndef SCHED_REWRITE
-    {
-    PTOKEN BootToken;
-
-    /* No parent, this is the Initial System Process. Assign Boot Token */
-    BootToken = SepCreateSystemProcessToken();
-    BootToken->TokenInUse = TRUE;
-    ObInitializeFastReference(&PsInitialSystemProcess->Token, BootToken);
-	}
-#endif
-}
-
-VOID
-PspPostInitSystemProcess(VOID)
-{
-  HANDLE_TABLE_ENTRY CidEntry;
-
-  /* this routine is called directly after the exectuive handle tables were
-     initialized. We'll set up the Client ID handle table and assign the system
-     process a PID */
-  PsInitClientIDManagment();
-
-  ObpCreateHandleTable(NULL, PsInitialSystemProcess);
-  ObpKernelHandleTable = PsInitialSystemProcess->ObjectTable;
-
-  CidEntry.Object = PsInitialSystemProcess;
-  CidEntry.GrantedAccess = 0;
-  PsInitialSystemProcess->UniqueProcessId = ExCreateHandle(PspCidTable, &CidEntry);
-
-  if(!PsInitialSystemProcess->UniqueProcessId)
-  {
-    DPRINT1("Failed to create CID handle (unique process id) for the system process!\n");
-    KEBUGCHECK(0);
-  }
+    /* Return success */
+    return TRUE;
 }
 
 NTSTATUS

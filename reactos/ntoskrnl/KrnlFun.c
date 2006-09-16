@@ -33,10 +33,10 @@
 //  - FEATURES:
 //      * New optimized table-based tick-hashed timer implementation.
 //      * New Thread Scheduler based on 2003.
-//      * Proper Idle/Initial Thread setup and 2nd stage boot.
 //      * Implement KiCallbackReturn, KiGetTickCount, KiRaiseAssertion.
 //
 // Ex:
+//  - Implement Generic Callback mechanism.
 //  - Use pushlocks for handle implementation.
 //
 ///////////////////////////////////////////////////////////////////////////////

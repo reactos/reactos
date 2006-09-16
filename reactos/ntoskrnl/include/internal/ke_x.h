@@ -58,8 +58,7 @@
 #define KeEnterCriticalRegion()                                             \
 {                                                                           \
     PKTHREAD Thread = KeGetCurrentThread();                                 \
-    if (Thread)                                                             \
-    {                                                                       \
+                                                                            \
     /* Sanity checks */                                                     \
     ASSERT(Thread == KeGetCurrentThread());                                 \
     ASSERT((Thread->KernelApcDisable <= 0) &&                               \
@@ -67,7 +66,6 @@
                                                                             \
     /* Disable Kernel APCs */                                               \
     Thread->KernelApcDisable--;                                             \
-    }                                                                       \
 }
 
 //
@@ -76,8 +74,7 @@
 #define KeLeaveCriticalRegion()                                             \
 {                                                                           \
     PKTHREAD Thread = KeGetCurrentThread();                                 \
-    if (Thread)                                                             \
-    {                                                                       \
+                                                                            \
     /* Sanity checks */                                                     \
     ASSERT(Thread == KeGetCurrentThread());                                 \
     ASSERT(Thread->KernelApcDisable < 0);                                   \
@@ -95,7 +92,6 @@
             /* Check for the right environment */                           \
             KiCheckForKernelApcDelivery();                                  \
         }                                                                   \
-    }                                                                       \
     }                                                                       \
 }
 

@@ -40,6 +40,10 @@ GENERIC_MAPPING ObpDirectoryMapping =
 PDEVICE_MAP ObSystemDeviceMap = NULL;
 ULONG ObpTraceLevel = OB_HANDLE_DEBUG | OB_REFERENCE_DEBUG;
 
+VOID
+NTAPI
+PsInitializeQuotaSystem(VOID);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -147,6 +151,13 @@ ObInit(VOID)
 
     /* Initialize lookaside lists */
     ObInit2();
+
+    /* Initialize default Quota block */
+    PsInitializeQuotaSystem();
+
+    /* Create kernel handle table */
+    PsGetCurrentProcess()->ObjectTable = ExCreateHandleTable(NULL);
+    ObpKernelHandleTable = PsGetCurrentProcess()->ObjectTable;
 
     /* Create the Type Type */
     DPRINT("Creating Type Type\n");

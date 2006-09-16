@@ -14,6 +14,10 @@
 
 /* GLOBALS *******************************************************************/
 
+VOID
+FASTCALL
+KiIdleLoop(VOID);
+
 /* Spinlocks used only on X86 */
 KSPIN_LOCK KiFreezeExecutionLock;
 KSPIN_LOCK Ki486CompatibilityLock;
@@ -134,6 +138,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         /* Set the current MP Master KPRCB to the Boot PRCB */
         Prcb->MultiThreadSetMaster = Prcb;
 
+        /* Lower to APC_LEVEL */
+        KfLowerIrql(APC_LEVEL);
+
         /* Initialize some spinlocks */
         KeInitializeSpinLock(&KiFreezeExecutionLock);
         KeInitializeSpinLock(&Ki486CompatibilityLock);
@@ -157,7 +164,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         DPRINT1("SMP Boot support not yet present\n");
     }
 
-#if 0
     /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,
                        InitThread,
@@ -167,7 +173,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                        NULL,
                        NULL,
                        IdleStack);
-#endif
     InitThread->NextProcessor = Number;
     InitThread->Priority = HIGH_PRIORITY;
     InitThread->State = Running;
@@ -175,10 +180,13 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitThread->WaitIrql = DISPATCH_LEVEL;
     InitProcess->ActiveProcessors = 1 << Number;
 
+    /* HACK for MmUpdatePageDir */
+    ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
+
     /* Set up the thread-related fields in the PRCB */
-    //Prcb->CurrentThread = InitThread;
+    Prcb->CurrentThread = InitThread;
     Prcb->NextThread = NULL;
-    //Prcb->IdleThread = InitThread;
+    Prcb->IdleThread = InitThread;
 
     /* Initialize the Kernel Executive */
     ExpInitializeExecutive();
@@ -212,19 +220,11 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         }
     }
 
-    /* Free Initial Memory */
-    MiFreeInitMemory();
+    /* Raise to Dispatch */
+    KfRaiseIrql(DISPATCH_LEVEL);
 
-    while (1)
-    {
-        LARGE_INTEGER Timeout;
-        Timeout.QuadPart = 0x7fffffffffffffffLL;
-        KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
-    }
-
-    /* Bug Check and loop forever if anything failed */
-    KEBUGCHECK(0);
-    for(;;);
+    /* Set the Idle Priority to 0. This will jump into Phase 1 */
+    KeSetPriorityThread(InitThread, 0);
 }
 
 VOID
@@ -303,5 +303,14 @@ AppCpuInit:
                        Prcb,
                        Cpu,
                        LoaderBlock);
+
+    /* Lower IRQL back to DISPATCH_LEVEL */
+    KfLowerIrql(DISPATCH_LEVEL);
+
+    /* Set the priority of this thread to 0 */
+    KeGetCurrentThread()->Priority = 0;
+
+    /* Jump into the idle loop */
+    KiIdleLoop();
 }
 

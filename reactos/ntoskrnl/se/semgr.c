@@ -67,9 +67,18 @@ INIT_FUNCTION
 NTAPI
 SeInit2(VOID)
 {
-  SepInitializeTokenImplementation();
+    /* Initialize token objects */
+    SepInitializeTokenImplementation();
 
-  return TRUE;
+    /* Clear impersonation info for the idle thread */
+    PsGetCurrentThread()->ImpersonationInfo = NULL;
+    PspClearCrossThreadFlag(PsGetCurrentThread(), CT_ACTIVE_IMPERSONATION_INFO_BIT);
+
+    /* Initailize the boot token */
+    ObInitializeFastReference(&PsGetCurrentProcess()->Token, NULL);
+    ObInitializeFastReference(&PsGetCurrentProcess()->Token,
+                              SepCreateSystemProcessToken());
+    return TRUE;
 }
 
 
@@ -424,15 +433,6 @@ SeCaptureSubjectContextEx(IN PETHREAD Thread,
 {
     BOOLEAN CopyOnOpen, EffectiveOnly;
     PAGED_CODE();
-
-    /* ROS HACK */
-    if (!Process)
-    {
-        SubjectContext->PrimaryToken = NULL;
-        SubjectContext->ProcessAuditId  = 0;
-        SubjectContext->ClientToken = NULL;
-        return;
-    }
 
     /* Save the unique ID */
     SubjectContext->ProcessAuditId = Process->UniqueProcessId;

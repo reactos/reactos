@@ -36,14 +36,12 @@ extern ULONG_PTR LastKrnlPhysAddr;
 extern ULONG_PTR LastKernelAddress;
 extern LOADER_MODULE KeLoaderModules[64];
 extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
-BOOLEAN SetupMode = TRUE;
+
 BOOLEAN NoGuiBoot = FALSE;
-
-VOID PspPostInitSystemProcess(VOID);
-
-static VOID INIT_FUNCTION InitSystemSharedUserPage (PCSZ ParameterLine);
-VOID INIT_FUNCTION ExpDisplayNotice(VOID);
-INIT_FUNCTION NTSTATUS ExpLoadInitialProcess(PHANDLE ProcessHandle, PHANDLE ThreadHandle);
+static BOOLEAN BootLog = FALSE;
+static ULONG MaxMem = 0;
+BOOLEAN SetupMode = TRUE;
+static BOOLEAN ForceAcpiDisable = FALSE;
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, InitSystemSharedUserPage)
@@ -52,6 +50,12 @@ INIT_FUNCTION NTSTATUS ExpLoadInitialProcess(PHANDLE ProcessHandle, PHANDLE Thre
 #pragma alloc_text(INIT, ExpInitializeExecutive)
 #pragma alloc_text(INIT, ExInit2)
 #endif
+
+BOOLEAN
+NTAPI
+PspInitPhase0(
+    VOID
+);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -493,21 +497,32 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
 }
 
 VOID
-INIT_FUNCTION
-STDCALL
+NTAPI
+ExInit2(VOID)
+{
+    ExpInitLookasideLists();
+    ExpInitializeHandleTables();
+}
+
+VOID
+NTAPI
+ExInit3(VOID)
+{
+    ExpInitializeEventImplementation();
+    ExpInitializeEventPairImplementation();
+    ExpInitializeMutantImplementation();
+    ExpInitializeSemaphoreImplementation();
+    ExpInitializeTimerImplementation();
+    LpcpInitSystem();
+    ExpInitializeProfileImplementation();
+    ExpWin32kInit();
+    ExpInitUuids();
+}
+
+VOID
+NTAPI
 ExpInitializeExecutive(VOID)
 {
-    UNICODE_STRING EventName;
-    HANDLE InitDoneEventHandle;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    BOOLEAN BootLog = FALSE;
-    ULONG MaxMem = 0;
-    BOOLEAN ForceAcpiDisable = FALSE;
-    LARGE_INTEGER Timeout;
-    HANDLE ProcessHandle;
-    HANDLE ThreadHandle;
-    NTSTATUS Status;
-
     /* Check if the structures match the ASM offset constants */
     ExecuteRuntimeAsserts();
 
@@ -519,9 +534,6 @@ ExpInitializeExecutive(VOID)
 
     /* Setup bugcheck messages */
     KiInitializeBugCheck();
-
-    /* Lower the IRQL to Dispatch Level */
-    KeLowerIrql(DISPATCH_LEVEL);
 
     /* Sets up the VDM Data */
     NtEarlyInitVdm();
@@ -546,17 +558,14 @@ ExpInitializeExecutive(VOID)
     /* Initialize the second stage of the kernel */
     KeInit2();
 
-    /* Bring back the IRQL to Passive */
-    KeLowerIrql(PASSIVE_LEVEL);
-
     /* Initialize resources */
     ExpResourceInitialization();
 
     /* Load basic Security for other Managers */
     if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
-    /* Initialize Lookaside Lists */
-    ExpInitLookasideLists();
+    /* Initialize Lookaside Lists and Handle Table */
+    ExInit2();
 
     /* Create the Basic Object Manager Types to allow new Object Types */
     ObInit();
@@ -568,7 +577,7 @@ ExpInitializeExecutive(VOID)
     if (!SeInit2()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
 
     /* Initalize the Process Manager */
-    PiInitProcessManager();
+    PspInitPhase0();
 
     /* Break into the Debugger if requested */
     if (KdPollBreakIn()) DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
@@ -578,15 +587,25 @@ ExpInitializeExecutive(VOID)
 
     /* Do Phase 1 HAL Initalization */
     HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+}
+
+VOID
+NTAPI
+ExPhase2Init(PVOID Context)
+{
+    UNICODE_STRING EventName;
+    HANDLE InitDoneEventHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    LARGE_INTEGER Timeout;
+    HANDLE ProcessHandle;
+    HANDLE ThreadHandle;
+    NTSTATUS Status;
+
+    /* Set us at maximum priority */
+    KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
     /* Initialize Basic System Objects and Worker Threads */
-    ExInit2();
-
-    /* Create the system handle table, assign it to the system process, create
-       the client id table and assign a PID for the system process. This needs
-       to be done before the worker threads are initialized so the system
-       process gets the first PID (4) */
-    PspPostInitSystemProcess();
+    ExInit3();
 
     /* initialize the worker threads */
     ExpInitializeWorkerThreads();
@@ -747,23 +766,25 @@ ExpInitializeExecutive(VOID)
     KiTimerSystemAuditing = 1;
     ZwClose(ThreadHandle);
     ZwClose(ProcessHandle);
-}
 
-VOID
-STDCALL
-INIT_FUNCTION
-ExInit2(VOID)
-{
-    ExpInitializeEventImplementation();
-    ExpInitializeEventPairImplementation();
-    ExpInitializeMutantImplementation();
-    ExpInitializeSemaphoreImplementation();
-    ExpInitializeTimerImplementation();
-    LpcpInitSystem();
-    ExpInitializeProfileImplementation();
-    ExpWin32kInit();
-    ExpInitUuids();
-    ExpInitializeHandleTables();
+    DPRINT1("System initialization complete\n");
+    {
+        /* FIXME: We should instead jump to zero-page thread */
+        /* Free initial kernel memory */
+        MiFreeInitMemory();
+
+        /* Set our priority to 0 */
+        KeGetCurrentThread()->BasePriority = 0;
+        KeSetPriorityThread(KeGetCurrentThread(), 0);
+
+        /* Wait ad-infinitum */
+        for (;;)
+        {
+            LARGE_INTEGER Timeout;
+            Timeout.QuadPart = 0x7fffffffffffffffLL;
+            KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
+        }
+    }
 }
 
 /* EOF */

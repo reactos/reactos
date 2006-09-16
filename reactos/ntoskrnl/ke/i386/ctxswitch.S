@@ -558,6 +558,9 @@ MainLoop:
     call @KfLowerIrql@4
 
 CheckSchedule:
+    /* FIXME: ROS HACK */
+    call _NtYieldExecution@0
+
     /* Check if a next thread is queued */
     cmp dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
 #ifdef CONFIG_SMP

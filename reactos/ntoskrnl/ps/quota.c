@@ -13,7 +13,20 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
+
 /* FUNCTIONS ***************************************************************/
+
+VOID
+NTAPI
+PsInitializeQuotaSystem(VOID)
+{
+    RtlZeroMemory(&PspDefaultQuotaBlock, sizeof(PspDefaultQuotaBlock));
+    PspDefaultQuotaBlock.QuotaEntry[PagedPool].Limit = (SIZE_T)-1;
+    PspDefaultQuotaBlock.QuotaEntry[NonPagedPool].Limit = (SIZE_T)-1;
+    PspDefaultQuotaBlock.QuotaEntry[2].Limit = (SIZE_T)-1; /* Page file */
+    PsGetCurrentProcess()->QuotaBlock = &PspDefaultQuotaBlock;
+}
 
 VOID
 STDCALL

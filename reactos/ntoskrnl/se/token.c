@@ -1896,6 +1896,26 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
   return Status;
 }
 
+VOID
+NTAPI
+SeAssignPrimaryToken(IN PEPROCESS Process,
+                     IN PTOKEN Token)
+{
+    PAGED_CODE();
+
+    /* Sanity checks */
+    ASSERT(Token->TokenType == TokenPrimary);
+    ASSERT(!Token->TokenInUse);
+
+    /* Clean any previous token */
+    if (Process->Token.Object) SeDeassignPrimaryToken(Process);
+
+    /* Set the new token */
+    ObReferenceObject(Token);
+    Token->TokenInUse = TRUE;
+    ObInitializeFastReference(&Process->Token, Token);
+}
+
 PTOKEN
 STDCALL
 SepCreateSystemProcessToken(VOID)
@@ -1933,12 +1953,6 @@ SepCreateSystemProcessToken(VOID)
     {
       return NULL;
     }
-  Status = ObInsertObject(AccessToken,
-                          NULL,
-                          TOKEN_ALL_ACCESS,
-                          0,
-                          NULL,
-                          NULL);
 
   Status = ExpAllocateLocallyUniqueId(&AccessToken->TokenId);
   if (!NT_SUCCESS(Status))
