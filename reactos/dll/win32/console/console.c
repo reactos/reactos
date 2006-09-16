@@ -85,7 +85,7 @@ InitConsoleDefaults(PConsoleInfo pConInfo)
 	pConInfo->ScreenBuffer = MAKELONG(80, 300);
 	pConInfo->UseRasterFonts = TRUE;
 	pConInfo->FontSize = (DWORD)MAKELONG(8, 12);
-	pConInfo->FontWeight = FALSE;
+	pConInfo->FontWeight = FW_NORMAL;
 	memcpy(pConInfo->Colors, s_Colors, sizeof(s_Colors));
 }
 
@@ -162,19 +162,20 @@ ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo)
 
 /* First Applet */
 LONG APIENTRY
-InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)	
+InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)	
 {
 	PROPSHEETPAGE psp[4];
 	PROPSHEETHEADER psh;
 	INT i=0;
 	PConsoleInfo pConInfo;
+	PConsoleInfo pSharedInfo = (PConsoleInfo)wParam;
 
 	UNREFERENCED_PARAMETER(uMsg);
 
 	/*
 	 * console.dll shares information with win32csr with wParam, lParam
 	 *
-	 * wParam is a file handle to an unamed file object which contains the ConsoleInfo struct
+	 * wParam is a pointer to an ConsoleInfo struct
 	 * lParam is a boolean parameter which specifies wheter defaults should be shown
 	 */
 
@@ -191,9 +192,6 @@ InitApplet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 	}
 	else
 	{
-		/* use current info */
-		PConsoleInfo pSharedInfo = (PConsoleInfo)wParam;
-
 		if (IsBadReadPtr((const void *)pSharedInfo, sizeof(ConsoleInfo)))
 		{
 			/* use defaults */
@@ -275,7 +273,7 @@ CPlApplet(
     }
     case CPL_DBLCLK:
     {
-      Applets[0].AppletProc(hwndCPl, uMsg, lParam1, lParam2);
+      InitApplet(hwndCPl, uMsg, lParam1, lParam2);
       break;
     }
   }

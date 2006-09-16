@@ -176,7 +176,7 @@ UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
   TCHAR szBuffer[MAX_PATH];
 
 	/* update cursor size */
-	if ( pConInfo->CursorSize == 0 )
+	if ( pConInfo->CursorSize == 0)
 	{
 		/* small cursor */
 		hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_SMALL_CURSOR);

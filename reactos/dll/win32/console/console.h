@@ -21,9 +21,8 @@ typedef struct
 
 typedef struct TAGConsoleInfo
 {
-  HANDLE hFile;
   HWND hConsoleWindow;
-  TCHAR szProcessName[MAX_PATH];
+  WCHAR szProcessName[MAX_PATH];
   BOOLEAN AppliedConfig;
   DWORD UseRasterFonts;
   DWORD FontSize;
