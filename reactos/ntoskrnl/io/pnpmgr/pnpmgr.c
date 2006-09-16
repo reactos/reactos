@@ -25,11 +25,7 @@ KSPIN_LOCK IopDeviceTreeLock;
 PDRIVER_OBJECT IopRootDriverObject;
 PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList = NULL;
 
-static NTSTATUS INIT_FUNCTION
-IopSetRootDeviceInstanceData(PDEVICE_NODE DeviceNode);
-
 #if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, IopSetRootDeviceInstanceData)
 #pragma alloc_text(INIT, PnpInit)
 #pragma alloc_text(INIT, PnpInit2)
 #pragma alloc_text(INIT, IopUpdateRootKey)
@@ -37,6 +33,18 @@ IopSetRootDeviceInstanceData(PDEVICE_NODE DeviceNode);
 #pragma alloc_text(INIT, IopIsAcpiComputer)
 #endif
 
+typedef struct _INVALIDATE_DEVICE_RELATION_DATA
+{
+    DEVICE_RELATION_TYPE Type;
+    PIO_WORKITEM WorkItem;
+    PKEVENT Event;
+    NTSTATUS Status;
+} INVALIDATE_DEVICE_RELATION_DATA, *PINVALIDATE_DEVICE_RELATION_DATA;
+
+static VOID CALLBACK
+IopInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID InvalidateContext);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -66,7 +74,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
          DriverObject->DriverExtension->AddDevice);
 
-      IsPnpDriver = (DeviceNode->PhysicalDeviceObject != NULL);
+      IsPnpDriver = !IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER);
       Status = DriverObject->DriverExtension->AddDevice(
          DriverObject, IsPnpDriver ? DeviceNode->PhysicalDeviceObject : NULL);
 
@@ -139,8 +147,8 @@ IopStartDevice(
 	  if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
       {
          DPRINT("Device needs enumeration, invalidating bus relations\n");
-         Status = IopInvalidateDeviceRelations(DeviceNode, BusRelations);
-		 IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
+         IoInvalidateDeviceRelations(DeviceNode->PhysicalDeviceObject, BusRelations);
+         IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
       }
    }
 
@@ -178,32 +186,14 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                             &Stack);
 }
 
-typedef struct _INVALIDATE_DEVICE_RELATION_DATA
-{
-    DEVICE_RELATION_TYPE Type;
-    PIO_WORKITEM WorkItem;
-} INVALIDATE_DEVICE_RELATION_DATA, *PINVALIDATE_DEVICE_RELATION_DATA;
-
-static VOID
-NTAPI
-IoInvalidateDeviceRelationsWorker(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID Context)
-{
-    PINVALIDATE_DEVICE_RELATION_DATA Data = Context;
-
-    IopInvalidateDeviceRelations(IopGetDeviceNode(DeviceObject), Data->Type);
-    IoFreeWorkItem(Data->WorkItem);
-    ExFreePool(Data);
-}
-
 /*
  * @implemented
  */
 VOID
-STDCALL
-IoInvalidateDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
-                            IN DEVICE_RELATION_TYPE Type)
+NTAPI
+IoInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type)
 {
     PIO_WORKITEM WorkItem;
     PINVALIDATE_DEVICE_RELATION_DATA Data;
@@ -220,23 +210,51 @@ IoInvalidateDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
 
     Data->Type = Type;
     Data->WorkItem = WorkItem;
+    Data->Event = NULL;
 
     IoQueueWorkItem(
         WorkItem,
-        IoInvalidateDeviceRelationsWorker,
+        IopInvalidateDeviceRelations,
         DelayedWorkQueue,
         Data);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
-STDCALL
-IoSynchronousInvalidateDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
-                                       IN DEVICE_RELATION_TYPE Type)
+NTAPI
+IoSynchronousInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type)
 {
-    UNIMPLEMENTED;
+    PIO_WORKITEM WorkItem;
+    PINVALIDATE_DEVICE_RELATION_DATA Data;
+    KEVENT Event;
+
+    Data = ExAllocatePool(PagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
+    if (!Data)
+        return;
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!WorkItem)
+    {
+        ExFreePool(Data);
+        return;
+    }
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+    Data->Type = Type;
+    Data->WorkItem = WorkItem;
+    Data->Event = &Event;
+
+    IoQueueWorkItem(
+        WorkItem,
+        IopInvalidateDeviceRelations,
+        DelayedWorkQueue,
+        Data);
+
+    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+    ExFreePool(Data);
 }
 
 /*
@@ -2346,190 +2364,166 @@ IopInitializePnpServices(IN PDEVICE_NODE DeviceNode,
    return IopTraverseDeviceTree(&Context);
 }
 
-
-NTSTATUS
-IopInvalidateDeviceRelations(IN PDEVICE_NODE DeviceNode,
-                             IN DEVICE_RELATION_TYPE Type)
+/* Invalidate device list enumerated by a device node.
+ * The call can be make synchronous by defining the Event field
+ * of the INVALIDATE_DEVICE_RELATION_DATA structure
+ */
+static VOID CALLBACK
+IopInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID InvalidateContext) /* PINVALIDATE_DEVICE_RELATION_DATA */
 {
-   DEVICETREE_TRAVERSE_CONTEXT Context;
-   PDEVICE_RELATIONS DeviceRelations;
-   IO_STATUS_BLOCK IoStatusBlock;
-   PDEVICE_NODE ChildDeviceNode;
-   IO_STACK_LOCATION Stack;
-   BOOLEAN BootDrivers;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING LinkName;
-   HANDLE Handle;
-   NTSTATUS Status;
-   ULONG i;
-
-   DPRINT("DeviceNode 0x%p, Type %d\n", DeviceNode, Type);
-
-   DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
-
-   Stack.Parameters.QueryDeviceRelations.Type = Type/*BusRelations*/;
-
-   Status = IopInitiatePnpIrp(
-      DeviceNode->PhysicalDeviceObject,
-      &IoStatusBlock,
-      IRP_MN_QUERY_DEVICE_RELATIONS,
-      &Stack);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopInitiatePnpIrp() failed\n");
-      return Status;
-   }
-
-   DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
-
-   if ((!DeviceRelations) || (DeviceRelations->Count <= 0))
-   {
-      DPRINT("No PDOs\n");
-      if (DeviceRelations)
-      {
-         ExFreePool(DeviceRelations);
-      }
-      return STATUS_SUCCESS;
-   }
-
-   DPRINT("Got %d PDOs\n", DeviceRelations->Count);
-
-   /*
-    * Create device nodes for all discovered devices
-    */
-
-   for (i = 0; i < DeviceRelations->Count; i++)
-   {
-      Status = IopCreateDeviceNode(
-         DeviceNode,
-         DeviceRelations->Objects[i],
-         &ChildDeviceNode);
-      DeviceNode->Flags |= DNF_ENUMERATED;
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("No resources\n");
-         for (i = 0; i < DeviceRelations->Count; i++)
-            ObDereferenceObject(DeviceRelations->Objects[i]);
-         ExFreePool(DeviceRelations);
-         return STATUS_INSUFFICIENT_RESOURCES;
-      }
-   }
-   ExFreePool(DeviceRelations);
-
-   /*
-    * Retrieve information about all discovered children from the bus driver
-    */
-
-   IopInitDeviceTreeTraverseContext(
-      &Context,
-      DeviceNode,
-      IopActionInterrogateDeviceStack,
-      DeviceNode);
-
-   Status = IopTraverseDeviceTree(&Context);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopTraverseDeviceTree() failed with status (%x)\n", Status);
-      return Status;
-   }
-
-   /*
-    * Retrieve configuration from the registry for discovered children
-    */
-
-   IopInitDeviceTreeTraverseContext(
-      &Context,
-      DeviceNode,
-      IopActionConfigureChildServices,
-      DeviceNode);
-
-   Status = IopTraverseDeviceTree(&Context);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopTraverseDeviceTree() failed with status (%x)\n", Status);
-      return Status;
-   }
-
-   /*
-    * Get the state of the system boot. If the \\SystemRoot link isn't
-    * created yet, we will assume that it's possible to load only boot
-    * drivers.
-    */
-
-   RtlInitUnicodeString(&LinkName, L"\\SystemRoot");
-
-   InitializeObjectAttributes(
-      &ObjectAttributes,
-      &LinkName,
-      0,
-      NULL,
-      NULL);
-
-   Status = ZwOpenFile(
-      &Handle,
-      FILE_ALL_ACCESS,
-      &ObjectAttributes,
-      &IoStatusBlock,
-      0,
-      0);
-   if(NT_SUCCESS(Status))
-   {
-     BootDrivers = FALSE;
-     ZwClose(Handle);
-   }
-   else
-     BootDrivers = TRUE;
-
-   /*
-    * Initialize services for discovered children. Only boot drivers will
-    * be loaded from boot driver!
-    */
-
-   Status = IopInitializePnpServices(DeviceNode, BootDrivers);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopInitializePnpServices() failed with status (%x)\n", Status);
-      return Status;
-   }
-
-   DPRINT("IopInvalidateDeviceRelations() finished\n");
-   return STATUS_SUCCESS;
-}
-
-
-static
-NTSTATUS
-INIT_FUNCTION
-IopSetRootDeviceInstanceData(PDEVICE_NODE DeviceNode)
-{
-#if 0
-    PWSTR KeyBuffer;
-    HANDLE InstanceKey = NULL;
+    PINVALIDATE_DEVICE_RELATION_DATA Data = InvalidateContext;
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+    PKEVENT Event = Data->Event;
+    DEVICETREE_TRAVERSE_CONTEXT Context;
+    PDEVICE_RELATIONS DeviceRelations;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_NODE ChildDeviceNode;
+    IO_STACK_LOCATION Stack;
+    BOOLEAN BootDrivers;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\SystemRoot");
+    HANDLE Handle;
     NTSTATUS Status;
+    ULONG i;
 
-    /* Create registry key for the instance id, if it doesn't exist yet */
-    KeyBuffer = ExAllocatePool(PagedPool,
-                               (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
-    wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-    wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
-    Status = IopCreateDeviceKeyPath(KeyBuffer,
-                                    &InstanceKey);
-    ExFreePool(KeyBuffer);
+    DPRINT("DeviceObject 0x%p, Type %d\n", DeviceObject, Type);
+
+    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
+
+    Stack.Parameters.QueryDeviceRelations.Type = Data->Type;
+
+    Status = IopInitiatePnpIrp(
+        DeviceObject,
+        &IoStatusBlock,
+        IRP_MN_QUERY_DEVICE_RELATIONS,
+        &Stack);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
-        return Status;
+        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
+        goto cleanup;
     }
 
-    /* FIXME: Set 'ConfigFlags' value */
+    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
 
-    ZwClose(InstanceKey);
+    if (!DeviceRelations || DeviceRelations->Count <= 0)
+    {
+        DPRINT("No PDOs\n");
+        if (DeviceRelations)
+        {
+            ExFreePool(DeviceRelations);
+        }
+        Status = STATUS_SUCCESS;
+        goto cleanup;
+    }
 
-    return Status;
-#endif
-    return STATUS_SUCCESS;
+    DPRINT("Got %d PDOs\n", DeviceRelations->Count);
+
+    /*
+     * Create device nodes for all discovered devices
+     */
+    for (i = 0; i < DeviceRelations->Count; i++)
+    {
+        Status = IopCreateDeviceNode(
+            DeviceNode,
+            DeviceRelations->Objects[i],
+            &ChildDeviceNode);
+        DeviceNode->Flags |= DNF_ENUMERATED;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("No resources\n");
+            for (i = 0; i < DeviceRelations->Count; i++)
+                ObDereferenceObject(DeviceRelations->Objects[i]);
+            ExFreePool(DeviceRelations);
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+        }
+    }
+    ExFreePool(DeviceRelations);
+
+    /*
+     * Retrieve information about all discovered children from the bus driver
+     */
+    IopInitDeviceTreeTraverseContext(
+        &Context,
+        DeviceNode,
+        IopActionInterrogateDeviceStack,
+        DeviceNode);
+
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
+        goto cleanup;
+    }
+
+    /*
+     * Retrieve configuration from the registry for discovered children
+     */
+    IopInitDeviceTreeTraverseContext(
+        &Context,
+        DeviceNode,
+        IopActionConfigureChildServices,
+        DeviceNode);
+
+    Status = IopTraverseDeviceTree(&Context);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
+        goto cleanup;
+    }
+
+    /*
+     * Get the state of the system boot. If the \\SystemRoot link isn't
+     * created yet, we will assume that it's possible to load only boot
+     * drivers.
+     */
+    InitializeObjectAttributes(
+        &ObjectAttributes,
+        &LinkName,
+        0,
+        NULL,
+        NULL);
+    Status = ZwOpenFile(
+        &Handle,
+        FILE_ALL_ACCESS,
+        &ObjectAttributes,
+        &IoStatusBlock,
+        0,
+        0);
+     if (NT_SUCCESS(Status))
+     {
+         BootDrivers = FALSE;
+         ZwClose(Handle);
+     }
+     else
+         BootDrivers = TRUE;
+
+    /*
+     * Initialize services for discovered children. Only boot drivers will
+     * be loaded from boot driver!
+     */
+    Status = IopInitializePnpServices(DeviceNode, BootDrivers);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);
+        goto cleanup;
+    }
+
+    DPRINT("IopInvalidateDeviceRelations() finished\n");
+    Status = STATUS_SUCCESS;
+
+cleanup:
+    IoFreeWorkItem(Data->WorkItem);
+    if (Event)
+    {
+        Data->Status = Status;
+        KeSetEvent(Event, 0, FALSE);
+    }
+    else
+        ExFreePool(Data);
 }
-
 
 VOID INIT_FUNCTION
 PnpInit(VOID)
@@ -2584,7 +2578,7 @@ PnpInit(VOID)
        L"HTREE\\ROOT\\0"))
    {
      CPRINT("Failed to create the instance path!\n");
-     KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, STATUS_UNSUCCESSFUL, 0, 0, 0);
+     KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
    }
 
    /* Report the device to the user-mode pnp manager */
@@ -3139,14 +3133,6 @@ PnpInit2(VOID)
    if (!NT_SUCCESS(Status))
    {
       CPRINT("IopUpdateRootKey() failed\n");
-      KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-   }
-
-   /* Set root device instance data */
-   Status = IopSetRootDeviceInstanceData(IopRootDeviceNode);
-   if (!NT_SUCCESS(Status))
-   {
-      CPRINT("Failed to set instance data\n");
       KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
    }
 }

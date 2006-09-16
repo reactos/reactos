@@ -558,12 +558,6 @@ IopInitializePnpServices(
     IN BOOLEAN BootDrivers)
 ;
 
-NTSTATUS
-IopInvalidateDeviceRelations(
-    IN PDEVICE_NODE DeviceNode,
-    IN DEVICE_RELATION_TYPE Type
-);
-
 //
 // Initialization Routines
 //

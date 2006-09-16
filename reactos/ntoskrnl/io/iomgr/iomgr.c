@@ -448,8 +448,8 @@ IoInit2(BOOLEAN BootLog)
   /*
    * Initialize PnP root releations
    */
-  IopInvalidateDeviceRelations(
-    IopRootDeviceNode,
+  IoInvalidateDeviceRelations(
+    IopRootDeviceNode->PhysicalDeviceObject,
     BusRelations);
 
      /* Start boot logging */
