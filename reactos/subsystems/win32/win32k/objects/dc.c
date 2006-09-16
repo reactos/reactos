@@ -1110,6 +1110,12 @@ NtGdiDeleteObjectApp(HANDLE  DCHandle)
 #if 0 /* FIXME */
   PATH_DestroyGdiPath (&DCToDelete->w.path);
 #endif
+
+  if (DCToDelete->emh)
+  {
+	 EngFreeMem(DCToDelete->emh);
+  }
+
   DC_UnlockDc( DCToDelete );
   DC_FreeDC ( DCHandle );
 
