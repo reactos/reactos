@@ -104,11 +104,12 @@ GeneralPageProc(HWND hwndDlg,
         {
             if (LOWORD(wParam) == IDC_LICENCE)
             {
+#ifdef LICENSE_FIXME_I_CANT_FIND_LICENSE_DIALOG_PROC_ANYWHERE
                 DialogBox(hApplet,
                           MAKEINTRESOURCE(IDD_LICENCE),
                           hwndDlg,
-                          LicenceDialogProc);
-
+                          LicenseDialogProc);
+#endif
                 return TRUE;
             }
         }
