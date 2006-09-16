@@ -20,6 +20,7 @@ CFG=notifyhook - Win32
 !MESSAGE "notifyhook - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "notifyhook - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "notifyhook - Win32" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "notifyhook - Win32 Debug Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -113,6 +114,35 @@ LINK32=link.exe
 # ADD BASE LINK32 user32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 user32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
 
+!ELSEIF  "$(CFG)" == "notifyhook - Win32 Debug Release"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "DRelease"
+# PROP BASE Intermediate_Dir "DRelease"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "DRelease"
+# PROP Intermediate_Dir "DRelease"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_NOTIFYHOOK_IMPL" /FD /c
+# SUBTRACT BASE CPP /YX
+# ADD CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_NOTIFYHOOK_IMPL" /FD /c
+# SUBTRACT CPP /YX
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x407 /d "NDEBUG"
+# ADD RSC /l 0x407 /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 user32.lib /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 user32.lib /nologo /subsystem:windows /dll /machine:I386
+
 !ENDIF 
 
 # Begin Target
@@ -120,6 +150,7 @@ LINK32=link.exe
 # Name "notifyhook - Win32 Release"
 # Name "notifyhook - Win32 Debug"
 # Name "notifyhook - Win32"
+# Name "notifyhook - Win32 Debug Release"
 # Begin Source File
 
 SOURCE=.\notifyhook.c
