@@ -58,8 +58,10 @@ KiAttachProcess(IN PKTHREAD Thread,
                 IN PKLOCK_QUEUE_HANDLE ApcLock,
                 IN PRKAPC_STATE SavedApcState)
 {
+#if 0
     PLIST_ENTRY ListHead, NextEntry;
     PKTHREAD CurrentThread;
+#endif
     ASSERT(Process != Thread->ApcState.Process);
 
     /* Increase Stack Count */
