@@ -90,6 +90,7 @@ KiAttachProcess(IN PKTHREAD Thread,
     if (Process->State == ProcessInMemory)
     {
         /* Scan the ready list */
+#if 0
         ListHead = &Process->ReadyListHead;
         NextEntry = ListHead->Flink;
         while (NextEntry != ListHead)
@@ -107,6 +108,7 @@ KiAttachProcess(IN PKTHREAD Thread,
             /* Go to the next one */
             NextEntry = ListHead->Flink;
         }
+#endif
 
         /* Release dispatcher lock */
         KiReleaseDispatcherLockFromDpcLevel();
