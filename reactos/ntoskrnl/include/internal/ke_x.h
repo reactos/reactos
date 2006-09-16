@@ -333,6 +333,40 @@ KxDelayThreadWait(IN PKTHREAD Thread,
 
 FORCEINLINE
 BOOLEAN
+KxMultiThreadWait(IN PKTHREAD Thread,
+                  IN PKWAIT_BLOCK WaitBlock,
+                  IN BOOLEAN Alertable,
+                  IN KWAIT_REASON WaitReason,
+                  IN KPROCESSOR_MODE WaitMode)
+{
+    BOOLEAN Swappable;
+    PKTIMER ThreadTimer = &Thread->Timer;
+
+    /* Set default wait status */
+    Thread->WaitStatus = STATUS_WAIT_0;
+
+    /* Link wait block array to the thread */
+    Thread->WaitBlockList = WaitBlock;
+
+    /* Initialize the timer list */
+    InitializeListHead(&ThreadTimer->Header.WaitListHead);
+
+    /* Set wait settings */
+    Thread->Alertable = Alertable;
+    Thread->WaitMode = WaitMode;
+    Thread->WaitReason = WaitReason;
+
+    /* Check if we can swap the thread's stack */
+    Thread->WaitListEntry.Flink = NULL;
+    Swappable = KiCheckThreadStackSwap(Thread, WaitMode);
+
+    /* Set the wait time */
+    Thread->WaitTime = ((PLARGE_INTEGER)&KeTickCount)->LowPart;
+    return Swappable;
+}
+
+FORCEINLINE
+BOOLEAN
 KxSingleThreadWait(IN PKTHREAD Thread,
                    IN PKWAIT_BLOCK WaitBlock,
                    IN PVOID Object,
