@@ -94,10 +94,10 @@ struct Pane : public SubclassedWindow
 
 	int		insert_entries(Entry* dir, int idx=-1);
 	BOOL	command(UINT cmd);
-	int		Notify(int id, NMHDR* pnmh);
+	virtual int Notify(int id, NMHDR* pnmh);
 
 protected:
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	virtual LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	void	calc_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str);
 	void	calc_tabbed_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str);

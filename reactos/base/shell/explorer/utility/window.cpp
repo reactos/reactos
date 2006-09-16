@@ -129,7 +129,9 @@ Window* Window::create_mdi_child(const ChildWndInfo& info, const MDICREATESTRUCT
 
 	HWND hwnd = (HWND) SendMessage(info._hmdiclient, WM_MDICREATE, 0, (LPARAM)&mcs);
 
-	UnhookWindowsHookEx(s_hcbtHook);
+	 // end hook in case it's not already done
+	if (s_hcbtHook)
+		UnhookWindowsHookEx(s_hcbtHook);
 
 	Window* child = get_window(hwnd);
 	s_new_info = NULL;
@@ -143,6 +145,9 @@ Window* Window::create_mdi_child(const ChildWndInfo& info, const MDICREATESTRUCT
 LRESULT CALLBACK Window::MDICBTHookProc(int code, WPARAM wparam, LPARAM lparam)
 {
 	if (code == HCBT_CREATEWND) {
+		UnhookWindowsHookEx(s_hcbtHook);	// use the hook only for the first created window
+		s_hcbtHook = 0;
+
 		HWND hwnd = (HWND)wparam;
 
 		 // create Window controller and associate it with the window handle
