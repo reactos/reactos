@@ -135,8 +135,6 @@ PciAddDevice(
   NTSTATUS Status;
 
   DPRINT("Called\n");
-  if (PhysicalDeviceObject == NULL)
-    return STATUS_SUCCESS;
 
   Status = IoCreateDevice(DriverObject, sizeof(FDO_DEVICE_EXTENSION),
     NULL, FILE_DEVICE_BUS_EXTENDER, FILE_DEVICE_SECURE_OPEN, TRUE, &Fdo);

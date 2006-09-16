@@ -66,7 +66,7 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
       DPRINT("Calling driver AddDevice entrypoint at %08lx\n",
          DriverObject->DriverExtension->AddDevice);
 
-      IsPnpDriver = !IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER);
+      IsPnpDriver = (DeviceNode->PhysicalDeviceObject != NULL);
       Status = DriverObject->DriverExtension->AddDevice(
          DriverObject, IsPnpDriver ? DeviceNode->PhysicalDeviceObject : NULL);
 
@@ -1214,6 +1214,13 @@ IopAssignDeviceResources(PDEVICE_NODE DeviceNode)
    ULONG NumberOfResources = 0;
    ULONG i;
    NTSTATUS Status;
+
+   if (DeviceNode->BootResources)
+   {
+      /* FIXME: Not sure of this! */
+      DeviceNode->ResourceList = DeviceNode->ResourceListTranslated = DeviceNode->BootResources;
+      return STATUS_SUCCESS;
+   }
 
    /* Fill DeviceNode->ResourceList and DeviceNode->ResourceListTranslated;
     * by using DeviceNode->ResourceRequirements */
