@@ -470,14 +470,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Tag",0x00010001,0x00000020
 
-; ACPI driver
-HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Group",0x00000000,"Boot Bus Extender"
-HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","ImagePath",0x00020000,"system32\drivers\acpi.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Tag",0x00010001,0x00000001
-
 ; Beep device driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Group",0x00000000,"Base"
