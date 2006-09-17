@@ -154,6 +154,7 @@ KiDispatchThreadNoLock(ULONG NewThreadStatus)
 
             /* Special note for Filip: This will release the Dispatcher DB Lock ;-) -- Alex */
             DPRINT("You are : %x, swapping to: %x.\n", OldThread, CurrentThread);
+            KeGetCurrentPrcb()->CurrentThread = CurrentThread;
             ApcState = KiSwapContext(OldThread, CurrentThread);
             DPRINT("You are : %x, swapped from: %x\n", OldThread, CurrentThread);
             return ApcState;

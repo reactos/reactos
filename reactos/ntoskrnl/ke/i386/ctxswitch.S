@@ -229,6 +229,7 @@ Return:
  *     If a return from a system thread is detected, a bug check will occur.
  *
  *--*/
+ .func KiThreadStartup@156
 .globl _KiThreadStartup@156
 _KiThreadStartup@156:
 
@@ -268,6 +269,7 @@ BadThread:
 
     /* A system thread returned...this is very bad! */
     int 3
+.endfunc
 
 /*++
  * KiSwapContextInternal 
@@ -287,22 +289,32 @@ BadThread:
  *     Absolutely all registers except ESP can be trampled here for maximum code flexibility.
  *
  *--*/
-.globl @KiSwapContextInternal@0
+.func @KiSwapContextInternal@0, @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
-
-    /* Set the Thread to running */
-    mov byte ptr es:[esi+KTHREAD_STATE], Running
 
     /* Save the IRQL */
     push ecx
 
+#ifdef CONFIG_SMP
+GetSwapLock:
+    /* Acquire the swap lock */
+    cmp [esi+KTHREAD_SWAP_BUSY], 0
+    jz NotBusy
+    pause
+    jmp GetSwapLock
+#endif
+
+    /* Increase context switches (use ES for lazy load) */
+    //inc dword ptr es:[ebx+KPCR_CONTEXT_SWITCHES]
+
     /* Save the Exception list */
     push [ebx+KPCR_EXCEPTION_LIST]
 
-    /* DPC shouldn't be active */
-    cmp byte ptr [ebx+KPCR_PRCB_DPC_ROUTINE_ACTIVE], 0
-    jnz BugCheckDpc
+    /* Check for WMI */
+    //cmp dword ptr [ebx+KPCR_PERF_GLOBAL_GROUP_MASK], 0
+    //jnz WmiTrace
 
+AfterTrace:
     /* Switching, disable interrupts now */
     cli
 
@@ -391,13 +403,16 @@ SameProcess:
 
     /* Increase context switches */
     inc dword ptr [esi+KTHREAD_CONTEXT_SWITCHES]
-    //inc dword ptr [esi+KPRC_PRCB_CONTEXT_SWITCHES]
 
     /* Restore exception list */
     pop [ebx+KPCR_EXCEPTION_LIST]
 
     /* Restore IRQL */
     pop ecx
+
+    /* DPC shouldn't be active */
+    cmp byte ptr [ebx+KPCR_PRCB_DPC_ROUTINE_ACTIVE], 0
+    jnz BugCheckDpc
 
     /* Check if kernel APCs are pending */
     cmp byte ptr [esi+KTHREAD_PENDING_KERNEL_APC], 0
@@ -446,9 +461,18 @@ LdtStuff:
     mov eax, KGDT_LDT
     jmp LoadLdt
 
+WmiTrace:
+
+    /* No WMI support yet */
+    int 3
+
+    /* Jump back */
+    jmp AfterTrace
+
 BugCheckDpc:
     push ATTEMPTED_SWITCH_FROM_DPC
     call _KeBugCheck@4
+.endfunc
 
 /*++
  * KiSwapContext 
@@ -460,7 +484,7 @@ BugCheckDpc:
  *                    switch to.
  *
  * Returns:
- *     The WaitStatus of the Target Thread. NOT YET SUPPORTED.
+ *     The WaitStatus of the Target Thread.
  *
  * Remarks:
  *     This is a wrapper around KiSwapContextInternal which will save all the
@@ -472,7 +496,7 @@ BugCheckDpc:
  *
  *--*/
 .globl @KiSwapContext@8
-.func  @KiSwapContext@8, @KiSwapContext@8
+.func @KiSwapContext@8, @KiSwapContext@8
 @KiSwapContext@8:
     /* Note, we CANNOT touch ebp */
 
@@ -493,9 +517,6 @@ BugCheckDpc:
 
     /* Get the New Thread */
     mov esi, edx
-
-    /* Save it as Current thread */
-    mov fs:[KPCR_CURRENT_THREAD], esi
 
     /* Get the wait IRQL */
     movzx ecx, byte ptr [edi+KTHREAD_WAIT_IRQL]
