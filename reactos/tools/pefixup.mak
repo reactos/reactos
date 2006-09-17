@@ -10,10 +10,10 @@ PEFIXUP_TARGET = \
 	$(EXEPREFIX)$(PEFIXUP_OUT_)pefixup$(EXEPOSTFIX)
 
 PEFIXUP_SOURCES = \
-	$(PEFIXUP_BASE_)pefixup.c
+	$(PEFIXUP_BASE_)pefixup.cpp
 
 PEFIXUP_OBJECTS = \
-	$(addprefix $(INTERMEDIATE_), $(PEFIXUP_SOURCES:.c=.o))
+	$(addprefix $(INTERMEDIATE_), $(PEFIXUP_SOURCES:.cpp=.o))
 
 PEFIXUP_HOST_CFLAGS = $(TOOLS_CFLAGS)
 
@@ -24,11 +24,11 @@ pefixup: $(PEFIXUP_TARGET)
 
 $(PEFIXUP_TARGET): $(PEFIXUP_OBJECTS) | $(PEFIXUP_OUT)
 	$(ECHO_LD)
-	${host_gcc} -g $(PEFIXUP_OBJECTS) $(PEFIXUP_HOST_LFLAGS) -o $@
+	${host_gpp} -g $(PEFIXUP_OBJECTS) $(PEFIXUP_HOST_LFLAGS) -o $@
 
-$(PEFIXUP_INT_)pefixup.o: $(PEFIXUP_BASE_)pefixup.c | $(PEFIXUP_INT)
+$(PEFIXUP_INT_)pefixup.o: $(PEFIXUP_BASE_)pefixup.cpp | $(PEFIXUP_INT)
 	$(ECHO_CC)
-	${host_gcc} -g $(PEFIXUP_HOST_CFLAGS) -c $< -o $@
+	${host_gpp} -g $(PEFIXUP_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: pefixup_clean
 pefixup_clean:

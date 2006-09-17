@@ -710,6 +710,13 @@ CreateOutputFile(FILE *OutFile, void *InData,
         {
           Data = (void *) ((char *) InData + OutSectionHeaders[Section].PointerToRawData);
         }
+#if 0
+      printf("Section %d (%s), location %x, size %x\n", 
+	     (DWORD)Section, 
+	     OutSectionHeaders[Section].Name,
+	     (DWORD)OutSectionHeaders[Section].PointerToRawData, 
+	     (DWORD)OutSectionHeaders[Section].SizeOfRawData);
+#endif
       for (i = 0; i < OutSectionHeaders[Section].SizeOfRawData / 2; i++)
         {
           CheckSum += ((unsigned short*) Data)[i];
