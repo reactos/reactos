@@ -202,6 +202,7 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
 
   Dc->emh = NULL;  /* So it won't be deleted */
   DC_UnlockDc(Dc);
+  NtGdiDeleteObjectApp(hDC);   
   return hmf;
 }
 
