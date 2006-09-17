@@ -41,7 +41,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->NtTib.Self = 0;
 
     /* Set the Current Thread */
-    //Pcr->PrcbData.CurrentThread = IdleThread;
+    Pcr->PrcbData.CurrentThread = IdleThread;
 
     /* Set pointers to ourselves */
     Pcr->Self = (PKPCR)Pcr;

@@ -96,17 +96,45 @@ KdpServiceDispatcher(ULONG Service,
     return Result;
 }
 
-KD_CONTINUE_TYPE
-STDCALL
-KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-                          KPROCESSOR_MODE PreviousMode,
-                          PCONTEXT Context,
-                          PKTRAP_FRAME TrapFrame,
-                          BOOLEAN FirstChance,
-                          BOOLEAN Gdb)
+BOOLEAN
+NTAPI
+KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
+                          IN PKEXCEPTION_FRAME ExceptionFrame,
+                          IN PEXCEPTION_RECORD ExceptionRecord,
+                          IN PCONTEXT Context,
+                          IN KPROCESSOR_MODE PreviousMode,
+                          IN BOOLEAN SecondChance)
 {
+    KD_CONTINUE_TYPE Return;
+
+    /* HACK (just like all this routine */
+    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) Context->Eip++;
+
     /* Get out of here if the Debugger isn't connected */
-    if (KdDebuggerNotPresent) return kdHandleException;
+    if (KdDebuggerNotPresent) return FALSE;
+
+    /* Call KDBG if available */
+    Return = KdbEnterDebuggerException(ExceptionRecord,
+                                       PreviousMode,
+                                       Context,
+                                       TrapFrame,
+                                       !SecondChance);
+
+    /* Convert return to BOOLEAN */
+    if (Return == kdContinue) return TRUE;
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+KdpCallGdb(IN PKTRAP_FRAME TrapFrame,
+           IN PEXCEPTION_RECORD ExceptionRecord,
+           IN PCONTEXT Context)
+{
+    KD_CONTINUE_TYPE Return = kdDoNotHandleException;
+
+    /* Get out of here if the Debugger isn't connected */
+    if (KdDebuggerNotPresent) return FALSE;
 
     /* FIXME:
      * Right now, the GDB wrapper seems to handle exceptions differntly
@@ -114,21 +142,16 @@ KdpEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
      * one is only called once and that's it. I don't really have the knowledge
      * to fix the GDB stub, so until then, we'll be using this hack
      */
-    if (Gdb)
+    if (WrapperInitRoutine)
     {
-        /* Call the registered wrapper */
-        if (WrapperInitRoutine) return WrapperTable.
-                                       KdpExceptionRoutine(ExceptionRecord,
-                                                           Context,
-                                                           TrapFrame);
+        Return = WrapperTable.KdpExceptionRoutine(ExceptionRecord,
+                                                  Context,
+                                                  TrapFrame);
     }
 
-    /* Call KDBG if available */
-    return KdbEnterDebuggerException(ExceptionRecord,
-                                     PreviousMode,
-                                     Context,
-                                     TrapFrame,
-                                     FirstChance);
+    /* Convert return to BOOLEAN */
+    if (Return == kdContinue) return TRUE;
+    return FALSE;
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/
@@ -267,5 +290,7 @@ NtSetDebugFilterState(IN ULONG ComponentId,
 		KdComponentTable[i].Level &= ~Level;
 	return STATUS_SUCCESS;
 }
+
+PKDEBUG_ROUTINE KiDebugRoutine = KdpEnterDebuggerException;
 
  /* EOF */
