@@ -594,11 +594,11 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 NTAPI
-KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
-                    PKEXCEPTION_FRAME ExceptionFrame,
-                    PKTRAP_FRAME TrapFrame,
-                    KPROCESSOR_MODE PreviousMode,
-                    BOOLEAN FirstChance)
+KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
+                    IN PKEXCEPTION_FRAME ExceptionFrame,
+                    IN PKTRAP_FRAME TrapFrame,
+                    IN KPROCESSOR_MODE PreviousMode,
+                    IN BOOLEAN FirstChance)
 {
     CONTEXT Context;
     ULONG_PTR Stack, NewStack;
@@ -636,6 +636,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
         Context.Eip--;
     }
 
+    /* Sanity check */
     ASSERT(!((PreviousMode == KernelMode) &&
              (Context.EFlags & EFLAGS_V86_MASK)));
 
@@ -784,6 +785,9 @@ DispatchToUser:
                 }
             }
             _SEH_END;
+
+            /* Dispatch exception to user-mode */
+            return;
         }
 
         /* Try second chance */
