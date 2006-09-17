@@ -2808,7 +2808,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         REG_OPTION_VOLATILE,
+         REG_OPTION_NON_VOLATILE,
          NULL);
       if (!NT_SUCCESS(Status))
       {
@@ -2824,7 +2824,7 @@ IopEnumerateDetectedDevices(
          &ObjectAttributes,
          0,
          NULL,
-         REG_OPTION_VOLATILE,
+         REG_OPTION_NON_VOLATILE,
          NULL);
       ZwClose(hLevel1Key);
       if (!NT_SUCCESS(Status))
