@@ -2305,17 +2305,17 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 #else
 
 #define NdisMoveMappedMemory(Destination, Source, Length) \
-{
-  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length;
-  while (_Dest < _End)
-    *_Dest++ = _Src++;
+{ \
+  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length; \
+  while (_Dest < _End) \
+    *_Dest++ = _Src++; \
 }
 
 #define NdisZeroMappedMemory(Destination, Length) \
-{
-  PUCHAR _Dest = Destination, _End = _Dest + Length;
-  while (_Dest < _End)
-    *_Dest++ = 0;
+{ \
+  PUCHAR _Dest = Destination, _End = _Dest + Length; \
+  while (_Dest < _End) \
+    *_Dest++ = 0; \
 }
 
 #endif /* _M_IX86 or _M_AMD64 */
