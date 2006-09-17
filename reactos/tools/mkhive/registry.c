@@ -345,8 +345,8 @@ RegSetValueExW(
 		/* Create the link in registry hive (if applicable) */
 		if (Key->RegistryHive != DestKey->RegistryHive)
 			return STATUS_SUCCESS;
-		lpData = (PUCHAR)&DestKey->KeyCellOffset;
-		cbData = sizeof(HCELL_INDEX);
+		DPRINT1("Save link to registry\n");
+		return STATUS_NOT_IMPLEMENTED;
 	}
 
 	if ((cbData & REG_DATA_SIZE_MASK) != cbData)
