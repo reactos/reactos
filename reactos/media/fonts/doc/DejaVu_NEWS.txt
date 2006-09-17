@@ -1,3 +1,46 @@
+Changes from 2.9 to 2.10:
+- added U+0242, U+024A-U+024B, U+024E-U+024F, U+037C-U+037D, U+0E3F, 
+  U+1D2C-U+1D2E, U+1D30-U+1D42, U+1D5D-U+1D6A, U+1D78, U+1DB8, 
+  U+2090-U+2094, U+20D0-U+20D1, U+2C60-U+2C66, U+2C6B-U+2C6C, U+2C74 and 
+  U+FB29 to Sans (by Gee Fung Sit)
+- added Lao glyphs : U+0E81-0E82, U+E084, U+0E87-0E88, U+0E8A, U+0E8D, 
+  U+0E94-0E97, U+0E99-0E9F, U+0EA1-0EA3, U+0EA5, U+0EA7, U+0EAA-0EAB, 
+  U+0EAD-0EB9, U+0EBB-0EBD, U+0EC0-0EC4, U+0EC6, U+0EC8-0ECD, U+0EDC-0EDD 
+  (by Rémy Oudompheng)
+- fixed U+0193 not showing in Windows (bug #7897) (by Ben Laenen)
+- changes to U+222B-222D in Sans Mono (by Rémy Oudompheng)
+- ported the three remaining currency symbols from Arev (U+20B0, 
+  U+20B2-U+20B3), and replaced one (U+20AF) in Sans (by Lars Naesbye 
+  Christensen)
+- corrected U+20A5 in Sans (by Gee Fung Sit)
+- merged Double-Struck Letters from Arev: U+2102, U+210D, U+2115, 
+  U+2119-U+211A, U+2124, U+213C-U+2140 (by Gee Fung Sit)
+- added U+2308-U+230B and U+2329-U+232A to Sans Mono and Serif faces, 
+  fixed incorrect direction of U+2329 in Sans faces, and improved 
+  U+2308-U+230B in Sans faces per Ben Laenen's suggestions (by David 
+  Lawrence Ramsey)
+- added U+06D5 and final form of it (needed for Kurdish) (by Ben Laenen)
+- added two special glyphs U+F000 and U+F001 in Sans Book that show the 
+  current ppem size (horizontal and vertical) (by Ben Laenen)
+- added U+2318 and U+2325 to Sans Mono faces, based on the Sans versions 
+  (by David Lawrence Ramsey)
+- added U+2B14-U+2B1A to all faces except Sans ExtraLight (by David 
+  Lawrence Ramsey)
+- respaced all Geometric Shapes characters in Serif faces to match those 
+  in Sans faces again, respaced U+23CF in Sans, Sans ExtraLight, and 
+  Serif faces to match U+25A0 (or Sans in Sans ExtraLight's case) again, 
+  and respaced U+2B12-U+2B13 in Sans and Serif faces to match U+25A1 
+  again (by David Lawrence Ramsey)
+- corrected width of Modifier Small Letters U+1D43-1D5B in Sans Oblique 
+  and U+1D9B-U+1DBF in Sans Oblique and Sans Bold Oblique (by Gee Fung Sit)
+- added a bunch of glyphs to Sans ExtraLight (see SVN for details) (by 
+  Gee Fung Sit)
+- adjusted Cyrillic descenders in Sans ExtraLight to sync with Sans (by 
+  Gee Fung Sit)
+- added U+0242, U+0245 to Serif (by Gee Fung Sit)
+- replaced the SHPIX routines which gave them bad spacing at certain 
+  sizes in FreeType for A, V, Z, v and z in Sans Bold (by Ben Laenen) 
+
 Changes from 2.8 to 2.9:
 
 - DejaVuSansExtraLight.sfd: changed family name from "DejaVu Sans" to
