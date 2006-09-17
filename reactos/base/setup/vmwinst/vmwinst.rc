@@ -1,5 +1,3 @@
-/* $Id$ */
-
 #include <windows.h>
 #include "vmwinst.h"
 
@@ -15,10 +13,6 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 /* Bitmaps */
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
-
-/* The vmware.inf file */
-IDR_VMWARE_INF RT_INF "vmware.inf"
-
 
 /*
  * Everything specific to any language goes in one of the specific
