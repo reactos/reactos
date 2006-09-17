@@ -129,6 +129,10 @@ extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG KiIdleSummary;
 extern VOID KiTrap8(VOID);
 extern VOID KiTrap2(VOID);
+extern PVOID KeUserApcDispatcher;
+extern PVOID KeUserCallbackDispatcher;
+extern PVOID KeUserExceptionDispatcher;
+extern PVOID KeRaiseUserExceptionDispatcher;
 
 /* MACROS *************************************************************************/
 

@@ -79,51 +79,6 @@ PspShutdownProcessManager(
     VOID
 );
 
-VOID
-INIT_FUNCTION
-NTAPI
-PsInitThreadManagment(
-    VOID
-);
-
-VOID
-INIT_FUNCTION
-NTAPI
-PiInitProcessManager(
-    VOID
-);
-
-VOID
-INIT_FUNCTION
-NTAPI
-PsInitProcessManagment(
-    VOID
-);
-
-VOID
-INIT_FUNCTION
-NTAPI
-PsInitIdleThread(
-    VOID
-);
-
-NTSTATUS
-NTAPI
-PsInitializeIdleOrFirstThread(
-    IN PEPROCESS Process,
-    OUT PETHREAD* ThreadPtr,
-    IN PKSTART_ROUTINE StartRoutine,
-    IN KPROCESSOR_MODE AccessMode,
-    IN BOOLEAN First
-);
-
-VOID
-NTAPI
-INIT_FUNCTION
-PsInitJobManagment(
-    VOID
-);
-
 //
 // Utility Routines
 //
@@ -171,6 +126,23 @@ NTAPI
 PsReferenceProcessFilePointer(
     IN PEPROCESS Process,
     OUT PFILE_OBJECT *FileObject
+);
+
+//
+// Process Routines
+//
+NTSTATUS
+NTAPI
+PspCreateProcess(
+    OUT PHANDLE ProcessHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN HANDLE ParentProcess OPTIONAL,
+    IN ULONG Flags,
+    IN HANDLE SectionHandle OPTIONAL,
+    IN HANDLE DebugPort OPTIONAL,
+    IN HANDLE ExceptionPort OPTIONAL,
+    IN BOOLEAN InJob
 );
 
 //
@@ -335,6 +307,18 @@ PspRemoveProcessFromJob(
     IN PEJOB Job
 );
 
+VOID
+NTAPI
+PspInitializeJobStructures(
+    VOID
+);
+
+VOID
+NTAPI
+PspDeleteJob(
+    IN PVOID ObjectBody
+);
+
 //
 // Global data inside the Process Manager
 //
@@ -367,6 +351,11 @@ extern BOOLEAN PspUseJobSchedulingClasses;
 extern CHAR PspJobSchedulingClasses[PSP_JOB_SCHEDULING_CLASSES];
 extern ULONG PsRawPrioritySeparation;
 extern POBJECT_TYPE _PsThreadType;
+extern PTOKEN PspBootAccessToken;
+extern GENERIC_MAPPING PspJobMapping;
+extern POBJECT_TYPE PsJobType;
+extern LARGE_INTEGER ShortPsLockDelay;
+extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 
 //
 // Inlined Functions

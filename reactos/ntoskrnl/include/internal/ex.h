@@ -7,6 +7,9 @@ extern TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 extern POBJECT_TYPE ExEventPairObjectType;
+extern ULONG NtBuildNumber;
+extern ULONG NtMajorVersion;
+extern ULONG NtMinorVersion;
 
 #define MAX_FAST_REFS           7
 
@@ -44,6 +47,12 @@ ExpWin32kInit(VOID);
 VOID
 NTAPI
 ExInit2(VOID);
+
+VOID
+NTAPI
+ExPhase2Init(
+    IN PVOID Context
+);
 
 VOID
 NTAPI

@@ -1,21 +1,16 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/ps/psmgr.c
- * PURPOSE:         Process management
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PURPOSE:         Process Manager: Initialization Code
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES **************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
-extern LARGE_INTEGER ShortPsLockDelay;
-extern LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 
 GENERIC_MAPPING PspProcessMapping =
 {
@@ -37,17 +32,15 @@ GENERIC_MAPPING PspThreadMapping =
     THREAD_ALL_ACCESS
 };
 
-extern ULONG NtBuildNumber;
-extern ULONG NtMajorVersion;
-extern ULONG NtMinorVersion;
-extern PVOID KeUserApcDispatcher;
-extern PVOID KeUserCallbackDispatcher;
-extern PVOID KeUserExceptionDispatcher;
-extern PVOID KeRaiseUserExceptionDispatcher;
-
 PVOID PspSystemDllBase;
 PVOID PspSystemDllSection;
 PVOID PspSystemDllEntryPoint;
+
+ANSI_STRING ThunkName = RTL_CONSTANT_STRING("LdrInitializeThunk");
+ANSI_STRING ApcName = RTL_CONSTANT_STRING("KiUserApcDispatcher");
+ANSI_STRING ExceptName = RTL_CONSTANT_STRING("KiUserExceptionDispatcher");
+ANSI_STRING CallbackName = RTL_CONSTANT_STRING("KiUserCallbackDispatcher");
+ANSI_STRING RaiseName = RTL_CONSTANT_STRING("KiRaiseUserExceptionDispatcher");
 
 PHANDLE_TABLE PspCidTable;
 
@@ -64,40 +57,141 @@ struct
 ULONG PspDefaultPagedLimit, PspDefaultNonPagedLimit, PspDefaultPagefileLimit;
 BOOLEAN PspDoingGiveBacks;
 
-extern PTOKEN PspBootAccessToken;
-
-extern GENERIC_MAPPING PspJobMapping;
-extern POBJECT_TYPE PsJobType;
-
-VOID
-NTAPI
-PspInitializeJobStructures(VOID);
-
-VOID
-NTAPI
-PspDeleteJob(IN PVOID ObjectBody);
-
-/* FUNCTIONS ***************************************************************/
+/* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS
 NTAPI
-PspCreateProcess(OUT PHANDLE ProcessHandle,
-                 IN ACCESS_MASK DesiredAccess,
-                 IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-                 IN HANDLE ParentProcess OPTIONAL,
-                 IN ULONG Flags,
-                 IN HANDLE SectionHandle OPTIONAL,
-                 IN HANDLE DebugPort OPTIONAL,
-                 IN HANDLE ExceptionPort OPTIONAL,
-                 IN BOOLEAN InJob);
+PspLookupSystemDllEntryPoint(IN PANSI_STRING Name,
+                             IN PVOID *EntryPoint)
+{
+    /* Call the LDR Routine */
+    return LdrGetProcedureAddress(PspSystemDllBase, Name, 0, EntryPoint);
+}
 
-/* FUNCTIONS *****************************************************************/
-
-VOID
+NTSTATUS
 NTAPI
-ExPhase2Init(
-    IN PVOID Context
-);
+PspLookupKernelUserEntryPoints(VOID)
+{
+    NTSTATUS Status;
+
+    /* Get user-mode startup thunk */
+    Status = PspLookupSystemDllEntryPoint(&ThunkName,
+                                          &PspSystemDllEntryPoint);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get user-mode APC trampoline */
+    Status = PspLookupSystemDllEntryPoint(&ApcName,
+                                          &KeUserApcDispatcher);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get user-mode exception dispatcher */
+    Status = PspLookupSystemDllEntryPoint(&ExceptName,
+                                          &KeUserExceptionDispatcher);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get user-mode callback dispatcher */
+    Status = PspLookupSystemDllEntryPoint(&CallbackName,
+                                          &KeUserCallbackDispatcher);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get user-mode exception raise trampoline */
+    Status = PspLookupSystemDllEntryPoint(&RaiseName,
+                                          &KeRaiseUserExceptionDispatcher);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PspMapSystemDll(IN PEPROCESS Process,
+                IN PVOID *DllBase)
+{
+    NTSTATUS Status;
+    LARGE_INTEGER Offset = {{0}};
+    SIZE_T ViewSize = 0;
+    PVOID ImageBase = 0;
+
+    /* Map the System DLL */
+    Status = MmMapViewOfSection(PspSystemDllSection,
+                                Process,
+                                (PVOID*)&ImageBase,
+                                0,
+                                0,
+                                &Offset,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READWRITE);
+
+    /* Write the image base and return status */
+    if (DllBase) *DllBase = ImageBase;
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PsLocateSystemDll(VOID)
+{
+    UNICODE_STRING DllName = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle, SectionHandle;
+    NTSTATUS Status;
+    ULONG_PTR HardErrorParameters;
+    ULONG HardErrorResponse;
+
+    /* Locate and open NTDLL to determine ImageBase and LdrStartup */
+    InitializeObjectAttributes(&ObjectAttributes, &DllName, 0, NULL, NULL);
+    Status = ZwOpenFile(&FileHandle,
+                        FILE_READ_ACCESS,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        0);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* FIXME: Check if the image is valid */
+    Status = STATUS_SUCCESS; //MmCheckSystemImage(FileHandle, TRUE);
+    if (Status == STATUS_IMAGE_CHECKSUM_MISMATCH)
+    {
+        /* Raise a hard error */
+        HardErrorParameters = (ULONG_PTR)&DllName;
+        NtRaiseHardError(Status,
+                         1,
+                         1,
+                         &HardErrorParameters,
+                         OptionOk,
+                         &HardErrorResponse);
+        return Status;
+    }
+
+    /* Create a section for NTDLL */
+    Status = ZwCreateSection(&SectionHandle,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             NULL,
+                             PAGE_EXECUTE,
+                             SEC_IMAGE,
+                             FileHandle);
+    ZwClose(FileHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Reference the Section */
+    Status = ObReferenceObjectByHandle(SectionHandle,
+                                       SECTION_ALL_ACCESS,
+                                       MmSectionObjectType,
+                                       KernelMode,
+                                       (PVOID*)&PspSystemDllSection,
+                                       NULL);
+    ZwClose(SectionHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Map it */
+    Status = PspMapSystemDll(PsGetCurrentProcess(), &PspSystemDllBase);
+
+    /* Now get the Entrypoints */
+    PspLookupKernelUserEntryPoints();
+    return STATUS_SUCCESS;
+}
 
 BOOLEAN
 NTAPI
@@ -268,9 +362,7 @@ PspInitPhase0(VOID)
                               NULL);
 
     /* The PD we gave it is invalid at this point, do what old ROS did */
-    PsInitialSystemProcess->Pcb.DirectoryTableBase = (LARGE_INTEGER)
-                                                     (LONGLONG)
-                                                     (ULONG)MmGetPageDirectory();
+    PsInitialSystemProcess->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
     PsIdleProcess->Pcb.DirectoryTableBase = PsInitialSystemProcess->Pcb.DirectoryTableBase;
 
     /* Copy the process names */
@@ -305,271 +397,21 @@ PspInitPhase0(VOID)
     return TRUE;
 }
 
-NTSTATUS
-STDCALL
-INIT_FUNCTION
-PspLookupKernelUserEntryPoints(VOID)
-{
-    ANSI_STRING ProcedureName;
-    NTSTATUS Status;
+/* PUBLIC FUNCTIONS **********************************************************/
 
-    /* Retrieve ntdll's startup address */
-    DPRINT("Getting Entrypoint: %p\n", PspSystemDllBase);
-    RtlInitAnsiString(&ProcedureName, "LdrInitializeThunk");
-    Status = LdrGetProcedureAddress((PVOID)PspSystemDllBase,
-                                    &ProcedureName,
-                                    0,
-                                    &PspSystemDllEntryPoint);
-
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-        return (Status);
-    }
-
-    /* Get User APC Dispatcher */
-    DPRINT("Getting Entrypoint\n");
-    RtlInitAnsiString(&ProcedureName, "KiUserApcDispatcher");
-    Status = LdrGetProcedureAddress((PVOID)PspSystemDllBase,
-                                    &ProcedureName,
-                                    0,
-                                    &KeUserApcDispatcher);
-
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-        return (Status);
-    }
-
-    /* Get Exception Dispatcher */
-    DPRINT("Getting Entrypoint\n");
-    RtlInitAnsiString(&ProcedureName, "KiUserExceptionDispatcher");
-    Status = LdrGetProcedureAddress((PVOID)PspSystemDllBase,
-                                    &ProcedureName,
-                                    0,
-                                    &KeUserExceptionDispatcher);
-
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-        return (Status);
-    }
-
-    /* Get Callback Dispatcher */
-    DPRINT("Getting Entrypoint\n");
-    RtlInitAnsiString(&ProcedureName, "KiUserCallbackDispatcher");
-    Status = LdrGetProcedureAddress((PVOID)PspSystemDllBase,
-                                    &ProcedureName,
-                                    0,
-                                    &KeUserCallbackDispatcher);
-
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-        return (Status);
-    }
-
-    /* Get Raise Exception Dispatcher */
-    DPRINT("Getting Entrypoint\n");
-    RtlInitAnsiString(&ProcedureName, "KiRaiseUserExceptionDispatcher");
-    Status = LdrGetProcedureAddress((PVOID)PspSystemDllBase,
-                                    &ProcedureName,
-                                    0,
-                                    &KeRaiseUserExceptionDispatcher);
-
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1 ("LdrGetProcedureAddress failed (Status %x)\n", Status);
-        return (Status);
-    }
-
-    /* Return success */
-    return(STATUS_SUCCESS);
-}
-
-NTSTATUS
-STDCALL
-PspMapSystemDll(PEPROCESS Process,
-                PVOID *DllBase)
-{
-    NTSTATUS Status;
-    SIZE_T ViewSize = 0;
-    PVOID ImageBase = 0;
-
-    /* Map the System DLL */
-    DPRINT("Mapping System DLL\n");
-    Status = MmMapViewOfSection(PspSystemDllSection,
-                                Process,
-                                (PVOID*)&ImageBase,
-                                0,
-                                0,
-                                NULL,
-                                &ViewSize,
-                                0,
-                                MEM_COMMIT,
-                                PAGE_READWRITE);
-
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1("Failed to map System DLL Into Process\n");
-    }
-
-    if (DllBase) *DllBase = ImageBase;
-
-    return Status;
-}
-
-NTSTATUS
-STDCALL
-INIT_FUNCTION
-PsLocateSystemDll(VOID)
-{
-    UNICODE_STRING DllPathname = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
-    OBJECT_ATTRIBUTES FileObjectAttributes;
-    IO_STATUS_BLOCK Iosb;
-    HANDLE FileHandle;
-    HANDLE NTDllSectionHandle;
-    NTSTATUS Status;
-    CHAR BlockBuffer[1024];
-    PIMAGE_DOS_HEADER DosHeader;
-    PIMAGE_NT_HEADERS NTHeaders;
-
-    /* Locate and open NTDLL to determine ImageBase and LdrStartup */
-    InitializeObjectAttributes(&FileObjectAttributes,
-                               &DllPathname,
-                               0,
-                               NULL,
-                               NULL);
-
-    DPRINT("Opening NTDLL\n");
-    Status = ZwOpenFile(&FileHandle,
-                        FILE_READ_ACCESS,
-                        &FileObjectAttributes,
-                        &Iosb,
-                        FILE_SHARE_READ,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-
-    if (!NT_SUCCESS(Status)) {
-        DPRINT1("NTDLL open failed (Status %x)\n", Status);
-        return Status;
-     }
-
-     /* Load NTDLL is valid */
-     DPRINT("Reading NTDLL\n");
-     Status = ZwReadFile(FileHandle,
-                         0,
-                         0,
-                         0,
-                         &Iosb,
-                         BlockBuffer,
-                         sizeof(BlockBuffer),
-                         0,
-                         0);
-    if (!NT_SUCCESS(Status) || Iosb.Information != sizeof(BlockBuffer)) {
-
-        DPRINT1("NTDLL header read failed (Status %x)\n", Status);
-        ZwClose(FileHandle);
-        return Status;
-    }
-
-    /* Check if it's valid */
-    DosHeader = (PIMAGE_DOS_HEADER)BlockBuffer;
-    NTHeaders = (PIMAGE_NT_HEADERS)(BlockBuffer + DosHeader->e_lfanew);
-
-    if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE) ||
-        (DosHeader->e_lfanew == 0L) ||
-        (*(PULONG) NTHeaders != IMAGE_NT_SIGNATURE)) {
-
-        DPRINT1("NTDLL format invalid\n");
-        ZwClose(FileHandle);
-        return(STATUS_UNSUCCESSFUL);
-    }
-
-    /* Create a section for NTDLL */
-    DPRINT("Creating section\n");
-    Status = ZwCreateSection(&NTDllSectionHandle,
-                             SECTION_ALL_ACCESS,
-                             NULL,
-                             NULL,
-                             PAGE_READONLY,
-                             SEC_IMAGE | SEC_COMMIT,
-                             FileHandle);
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1("NTDLL create section failed (Status %x)\n", Status);
-        ZwClose(FileHandle);
-        return(Status);
-    }
-    ZwClose(FileHandle);
-
-    /* Reference the Section */
-    DPRINT("ObReferenceObjectByHandle section: %d\n", NTDllSectionHandle);
-    Status = ObReferenceObjectByHandle(NTDllSectionHandle,
-                                       SECTION_ALL_ACCESS,
-                                       MmSectionObjectType,
-                                       KernelMode,
-                                       (PVOID*)&PspSystemDllSection,
-                                       NULL);
-    if (!NT_SUCCESS(Status)) {
-
-        DPRINT1("NTDLL section reference failed (Status %x)\n", Status);
-        return(Status);
-    }
-
-    /* Map it */
-    PspMapSystemDll(PsGetCurrentProcess(), &PspSystemDllBase);
-    DPRINT("LdrpSystemDllBase: %x\n", PspSystemDllBase);
-
-    /* Now get the Entrypoints */
-    PspLookupKernelUserEntryPoints();
-
-    return STATUS_SUCCESS;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- *	PsGetVersion
- *
- * DESCRIPTION
- *	Retrieves the current OS version.
- *
- * ARGUMENTS
- *	MajorVersion	Pointer to a variable that will be set to the
- *			major version of the OS. Can be NULL.
- *
- *	MinorVersion	Pointer to a variable that will be set to the
- *			minor version of the OS. Can be NULL.
- *
- *	BuildNumber	Pointer to a variable that will be set to the
- *			build number of the OS. Can be NULL.
- *
- *	CSDVersion	Pointer to a variable that will be set to the
- *			CSD string of the OS. Can be NULL.
- *
- * RETURN VALUE
- *	TRUE	OS is a checked build.
- *	FALSE	OS is a free build.
- *
- * NOTES
- *
+/*
  * @implemented
  */
 BOOLEAN
-STDCALL
-PsGetVersion(PULONG MajorVersion OPTIONAL,
-             PULONG MinorVersion OPTIONAL,
-             PULONG BuildNumber OPTIONAL,
-             PUNICODE_STRING CSDVersion OPTIONAL)
+NTAPI
+PsGetVersion(IN PULONG MajorVersion OPTIONAL,
+             IN PULONG MinorVersion OPTIONAL,
+             IN PULONG BuildNumber OPTIONAL,
+             IN PUNICODE_STRING CSDVersion OPTIONAL)
 {
-    if (MajorVersion)
-        *MajorVersion = NtMajorVersion;
-
-    if (MinorVersion)
-        *MinorVersion = NtMinorVersion;
-
-    if (BuildNumber)
-        *BuildNumber = NtBuildNumber;
+    if (MajorVersion) *MajorVersion = NtMajorVersion;
+    if (MinorVersion) *MinorVersion = NtMinorVersion;
+    if (BuildNumber) *BuildNumber = NtBuildNumber;
 
     if (CSDVersion)
     {
