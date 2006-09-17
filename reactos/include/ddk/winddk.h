@@ -10758,6 +10758,7 @@ extern BOOLEAN KdDebuggerEnabled;
 #ifdef __GNUC__
 
 /* Available as intrinsics on MSVC */
+#ifdef _X86_
 static __inline void _disable(void) {__asm__ __volatile__("cli\n");}
 static __inline void _enable(void)  {__asm__ __volatile__("sti\n");}
 
@@ -10776,7 +10777,26 @@ static __inline ULONG64 __readcr4(void)
         :"=r"(Ret));
     return (ULONG64)Ret;
 }
-
+#elif defined(_PPC_)
+static __inline void _disable(void) {
+	/* Turn off EE bit */
+	__asm__ __volatile__
+		("mfmsr 3\n\t"
+		 "xor 4,5,5\n\t"
+		 "addi 4,4,-1\n\t"
+		 "and 0,3,4\n\t"
+		 "mtmsr 0\n\t"
+		 );
+}
+static __inline void _enable(void)  {
+	/* Turn on EE bit */
+	__asm__ __volatile__
+		("mfmsr 3\n\t"
+		 "ori 0,3,0x8000\n\t"
+		 "mtmsr 0\n\t"
+		 );
+}
+#endif /*_X86_*/
 #endif
 
 #ifdef __cplusplus
