@@ -65,8 +65,8 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
                     IN PVOID SystemArgument2)
 {
     CONTEXT Context;
-    ULONG_PTR Stack;
-    ULONG Size;
+    ULONG_PTR Stack, AlignedEsp;
+    ULONG ContextLength;
     EXCEPTION_RECORD SehExceptRecord;
     _SEH_DECLARE_LOCALS(KiCopyInfo);
 
@@ -84,11 +84,15 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
         ASSERT((TrapFrame->SegCs & MODE_MASK) != KernelMode);
 
         /* Get the aligned size */
-        Size = ((sizeof(CONTEXT) + 3) & ~3) + 4 * sizeof(ULONG_PTR);
-        Stack = (Context.Esp & ~3) - Size;
+        AlignedEsp = Context.Esp & ~3;
+        ContextLength = CONTEXT_ALIGNED_SIZE + (4 * sizeof(ULONG_PTR));
+        Stack = ((AlignedEsp - 8) & ~3) - ContextLength;
 
-        /* Probe and copy */
-        ProbeForWrite((PVOID)Stack, Size, 4);
+        /* Probe the stack */
+        ProbeForWrite((PVOID)Stack, AlignedEsp - Stack, 1);
+        ASSERT(!(Stack & 3));
+
+        /* Copy data into it */
         RtlMoveMemory((PVOID)(Stack + (4 * sizeof(ULONG_PTR))),
                       &Context,
                       sizeof(CONTEXT));

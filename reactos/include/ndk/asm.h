@@ -310,6 +310,7 @@ Author:
 #define CONTEXT_FLOAT_SAVE_CONTROL_WORD         CONTEXT_FLOAT_SAVE + FN_CONTROL_WORD
 #define CONTEXT_FLOAT_SAVE_STATUS_WORD          CONTEXT_FLOAT_SAVE + FN_STATUS_WORD
 #define CONTEXT_FLOAT_SAVE_TAG_WORD             CONTEXT_FLOAT_SAVE + FN_TAG_WORD
+#define CONTEXT_ALIGNED_SIZE                    0x2CC
 
 //
 // EXCEPTION_RECORD Offsets
@@ -321,6 +322,24 @@ Author:
 #define EXCEPTION_RECORD_NUMBER_PARAMETERS      0x10
 #define SIZEOF_EXCEPTION_RECORD                 0x14
 #define EXCEPTION_RECORD_LENGTH                 0x50
+
+//
+// Exception types
+//
+#ifdef __ASM__
+#define EXCEPTION_NONCONTINUABLE                0x0001
+#define EXCEPTION_UNWINDING                     0x0002
+#define EXCEPTION_EXIT_UNWIND                   0x0004
+#define EXCEPTION_STACK_INVALID                 0x0008
+#define EXCEPTION_NESTED_CALL                   0x00010
+#define EXCEPTION_TARGET_UNWIND                 0x00020
+#define EXCEPTION_COLLIDED_UNWIND               0x00040
+#define EXCEPTION_UNWIND                        0x00066
+#define EXCEPTION_EXECUTE_HANDLER               0x00001
+#define EXCEPTION_CONTINUE_SEARCH               0x00000
+#define EXCEPTION_CONTINUE_EXECUTION            0xFFFFFFFF
+#define EXCEPTION_CHAIN_END                     0xFFFFFFFF
+#endif
 
 //
 // TEB Offsets

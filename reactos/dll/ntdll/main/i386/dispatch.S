@@ -11,17 +11,9 @@
 #include <ndk/asm.h>
 .intel_syntax noprefix
 
-#define EXCEPTION_NONCONTINUABLE    1
-#define EXCEPTION_UNWINDING         2
-#define EXCEPTION_EXIT_UNWIND       4
-#define EXCEPTION_UNWIND            (EXCEPTION_UNWINDING + EXCEPTION_EXIT_UNWIND)
-
-#define STATUS_CALLBACK_POP_STACK   0xC0000423
-
-#define ExceptionContinueSearch     1
-
 /* FUNCTIONS ****************************************************************/
 
+.func LdrInitializeThunk@16
 .globl _LdrInitializeThunk@16
 _LdrInitializeThunk@16:
 
@@ -36,44 +28,72 @@ _LdrInitializeThunk@16:
 
     /* Jump into the C initialization routine */
     jmp _LdrpInit@12
+.endfunc
 
-.globl _KiUserExceptionApcHandler@16
-_KiUserApcExceptionHandler@16:
+.func KiUserApcExceptionHandler
+_KiUserApcExceptionHandler:
 
     /* Put the exception record in ECX and check the Flags */
     mov ecx, [esp+4]
-    test dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_UNWIND
+    test dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_EXIT_UNWIND + EXCEPTION_UNWINDING
     jz .return
 
     /* Test alert the thread */
     call _NtTestAlert@0
 
 .return:
-    /* We'll continue */
-    mov eax, ExceptionContinueSearch
+    /* We'll execute handler */
+    mov eax, EXCEPTION_EXECUTE_HANDLER
     ret 16
-    
+.endfunc
+
+.func KiUserApcDispatcher@16
 .globl _KiUserApcDispatcher@16
 _KiUserApcDispatcher@16:
 
-    /* Put the Context in EDI */
-    lea edi, [esp+16]
+    /* Setup SEH stack */
+    lea eax, [esp+CONTEXT_ALIGNED_SIZE+16]
+    mov ecx, fs:[TEB_EXCEPTION_LIST]
+    mov edx, offset _KiUserApcExceptionHandler
+    mov [eax], ecx
+    mov [eax+4], edx
 
-    /* Get the ApcRoutine and call it */
+    /* Enable SEH */
+    mov fs:[TEB_EXCEPTION_LIST], eax
+
+    /* Put the Context in EDI */
     pop eax
+    lea edi, [esp+12]
+
+    /* Call the APC Routine */
     call eax
+
+    /* Restore exception list */
+    mov ecx, [edi+CONTEXT_ALIGNED_SIZE]
+    mov fs:[TEB_EXCEPTION_LIST], ecx
 
     /* Switch back to the context */
     push 1
     push edi
     call _ZwContinue@8
 
-.globl _KiUserCallbackExceptionHandler@16
-_KiUserCallbackExceptionHandler@16:
+    /* Save callback return value */
+    mov esi, eax
+
+    /* Raise status */
+StatusRaiseApc:
+    push esi
+    call _RtlRaiseStatus@4
+    jmp StatusRaiseApc
+    ret 16
+.endfunc
+
+.func KiUserCallbackExceptionHandler
+_KiUserCallbackExceptionHandler:
 
     /* Put the exception record in ECX and check the Flags */
     mov ecx, [esp+4]
-    test dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_UNWIND
+    test dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_EXIT_UNWIND + EXCEPTION_UNWINDING
     jz return
 
     /* Tell the kernel to invalidate the stack */
@@ -83,13 +103,25 @@ _KiUserCallbackExceptionHandler@16:
     call _ZwCallbackReturn@12
 
 return:
-    /* We'll continue */
-    mov eax, ExceptionContinueSearch
+    /* We'll execute the handler */
+    mov eax, EXCEPTION_EXECUTE_HANDLER
     ret 16
+.endfunc
 
+.func KiUserCallbackDispatcher@12
 .globl _KiUserCallbackDispatcher@12
 _KiUserCallbackDispatcher@12:
-    
+
+    /* Setup SEH stack */
+    mov ecx, fs:[TEB_EXCEPTION_LIST]
+    mov edx, offset _KiUserCallbackExceptionHandler
+    lea eax, [esp+16]
+    mov [esp+16], ecx
+    mov [esp+20], edx
+
+    /* Enable SEH */
+    mov fs:[TEB_EXCEPTION_LIST], eax
+
     /* Get the callback Index */
     add esp, 4
     pop edx
@@ -107,15 +139,28 @@ _KiUserCallbackDispatcher@12:
     push 0
     call _ZwCallbackReturn@12
 
+    /* Save callback return value */
+    mov esi, eax
+
+    /* Raise status */
+StatusRaise:
+    push esi
+    call _RtlRaiseStatus@4
+    jmp StatusRaise
+    ret 12
+.endfunc
+
+.func KiRaiseUserExceptionDispatcher@0
 .globl _KiRaiseUserExceptionDispatcher@0
 _KiRaiseUserExceptionDispatcher@0:
 
     /* Setup stack for EXCEPTION_RECORD */
     push ebp
     mov ebp, esp
-    sub esp, SIZEOF_EXCEPTION_RECORD
+    sub esp, EXCEPTION_RECORD_LENGTH
 
     /* Fill out the record */
+    mov [esp+EXCEPTION_RECORD_EXCEPTION_ADDRESS], eax
     mov eax, [fs:KPCR_TEB]
     mov eax, [eax+TEB_EXCEPTION_CODE]
     mov [esp+EXCEPTION_RECORD_EXCEPTION_CODE], eax
@@ -132,7 +177,9 @@ _KiRaiseUserExceptionDispatcher@0:
     mov esp, ebp
     pop ebp
     ret
+.endfunc
 
+.func KiUserExceptionDispatcher@8
 .globl _KiUserExceptionDispatcher@8
 _KiUserExceptionDispatcher@8:
 
@@ -140,17 +187,9 @@ _KiUserExceptionDispatcher@8:
     mov ecx, [esp+4]
     mov ebx, [esp]
 
-    /* Call the vectored exception handler */
+    /* Dispatch the exception */
     push ecx
     push ebx
-    call _RtlpExecuteVectoredExceptionHandlers@8
-
-    /* Check for success */
-    or al, al
-    jnz ContinueExecution
-
-    /* Dispatch the exception */
-    sub esp, 8
     call _RtlDispatchException@8
 
     /* Check for success */
@@ -195,7 +234,9 @@ Exit:
     push esp
     call _RtlRaiseException@4
     ret 8
+.endfunc
 
+.func RtlpGetStackLimits@8
 .globl _RtlpGetStackLimits@8
 _RtlpGetStackLimits@8:
 
@@ -211,4 +252,4 @@ _RtlpGetStackLimits@8:
 
     /* return */
     ret 8
-
+.endfunc

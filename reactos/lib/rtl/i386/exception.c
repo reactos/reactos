@@ -56,19 +56,17 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     EXCEPTION_DISPOSITION ReturnValue;
     ULONG_PTR StackLow, StackHigh;
     ULONG_PTR RegistrationFrameEnd;
-    DPRINT("RtlDispatchException(): %p, %p \n", ExceptionRecord, Context);
 
     /* Get the current stack limits and registration frame */
     RtlpGetStackLimits(&StackLow, &StackHigh);
     RegistrationFrame = RtlpGetExceptionList();
-    DPRINT("RegistrationFrame is 0x%p\n", RegistrationFrame);
 
     /* Now loop every frame */
     while (RegistrationFrame != EXCEPTION_CHAIN_END)
     {
         /* Find out where it ends */
         RegistrationFrameEnd = (ULONG_PTR)RegistrationFrame +
-                                sizeof(*RegistrationFrame);
+                                sizeof(EXCEPTION_REGISTRATION_RECORD);
 
         /* Make sure the registration frame is located within the stack */
         if ((RegistrationFrameEnd > StackHigh) ||
@@ -87,25 +85,24 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 
             /* Set invalid stack and return false */
             ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
-            DPRINT1("Invalid exception frame\n");
+            DPRINT1("Invalid exception frame: %p %p %p %p\n",
+                    RegistrationFrame, RegistrationFrameEnd,
+                    StackHigh, StackLow);
             return FALSE;
         }
 
         /* Check if logging is enabled */
-        DPRINT("Checking for logging\n");
         RtlpCheckLogException(ExceptionRecord,
                               Context,
                               RegistrationFrame,
                               sizeof(*RegistrationFrame));
 
         /* Call the handler */
-        DPRINT("Executing handler: %p\n", RegistrationFrame->Handler);
         ReturnValue = RtlpExecuteHandlerForException(ExceptionRecord,
                                                      RegistrationFrame,
                                                      Context,
                                                      &DispatcherContext,
                                                      RegistrationFrame->Handler);
-        DPRINT("Handler returned: %p\n", (PVOID)ReturnValue);
 
         /* Check if this is a nested frame */
         if (RegistrationFrame == NestedFrame)
@@ -128,7 +125,6 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                 ExceptionRecord2.NumberParameters = 0;
 
                 /* Raise the exception */
-                DPRINT("Non-continuable\n");
                 RtlRaiseException(&ExceptionRecord2);
             }
             else
@@ -166,7 +162,6 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
 
     /* Unhandled, return false */
-    DPRINT("FALSE\n");
     return FALSE;
 }
 
@@ -188,7 +183,6 @@ RtlUnwind(PVOID RegistrationFrame OPTIONAL,
     ULONG_PTR RegistrationFrameEnd;
     CONTEXT LocalContext;
     PCONTEXT Context;
-    DPRINT("RtlUnwind(). RegistrationFrame 0x%p\n", RegistrationFrame);
 
     /* Get the current stack limits */
     RtlpGetStackLimits(&StackLow, &StackHigh);
@@ -242,8 +236,6 @@ RtlUnwind(PVOID RegistrationFrame OPTIONAL,
     /* Now loop every frame */
     while (RegistrationFrame2 != EXCEPTION_CHAIN_END)
     {
-        DPRINT("RegistrationFrame is 0x%p\n", RegistrationFrame2);
-
         /* If this is the target */
         if (RegistrationFrame2 == RegistrationFrame)
         {
@@ -262,7 +254,6 @@ RtlUnwind(PVOID RegistrationFrame OPTIONAL,
             ExceptionRecord2.NumberParameters = 0;
 
             /* Raise the exception */
-            DPRINT1("Frame is invalid\n");
             RtlRaiseException(&ExceptionRecord2);
         }
 
@@ -298,13 +289,11 @@ RtlUnwind(PVOID RegistrationFrame OPTIONAL,
         else
         {
             /* Call the handler */
-            DPRINT("Executing unwind handler: %p\n", RegistrationFrame2->Handler);
             ReturnValue = RtlpExecuteHandlerForUnwind(ExceptionRecord,
                                                       RegistrationFrame2,
                                                       Context,
                                                       &DispatcherContext,
                                                       RegistrationFrame2->Handler);
-            DPRINT("Handler returned: %p\n", (PVOID)ReturnValue);
 
             /* Handle the dispositions */
             if (ReturnValue == ExceptionContinueSearch)
