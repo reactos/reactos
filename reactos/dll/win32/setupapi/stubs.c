@@ -130,6 +130,33 @@ BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
 
 
 /***********************************************************************
+ *      SetupCloseLog(SETUPAPI.@)
+ */
+void WINAPI SetupCloseLog()
+{
+    FIXME("() stub\n");
+}
+
+/***********************************************************************
+ *      SetupLogErrorW(SETUPAPI.@)
+ */
+BOOL WINAPI SetupLogErrorW(PCWSTR MessageString, LogSeverity Severity)
+{
+    FIXME("(%s, %ld) stub\n", debugstr_w(MessageString), Severity);
+    return TRUE;
+}
+
+/***********************************************************************
+ *      SetupOpenLog(SETUPAPI.@)
+ */
+BOOL WINAPI SetupOpenLog(BOOL Reserved)
+{
+    FIXME("(%d) stub\n", Reserved);
+    return TRUE;
+}
+
+
+/***********************************************************************
  *		SetupDiDestroyClassImageList(SETUPAPI.@)
  */
 BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListData)

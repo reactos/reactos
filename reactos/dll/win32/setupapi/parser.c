@@ -1983,6 +1983,22 @@ BOOL WINAPI SetupGetMultiSzFieldW( PINFCONTEXT context, DWORD index, PWSTR buffe
 }
 
 /***********************************************************************
+ *      pSetupGetField    (SETUPAPI.@)
+ */
+LPCWSTR WINAPI pSetupGetField( PINFCONTEXT context, DWORD index )
+{
+    struct inf_file *file = context->CurrentInf;
+    struct field *field = get_field( file, context->Section, context->Line, index );
+
+    if (!field)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return NULL;
+    }
+    return field->text;
+}
+
+/***********************************************************************
  *		SetupGetInfFileListW    (SETUPAPI.@)
  */
 BOOL WINAPI
