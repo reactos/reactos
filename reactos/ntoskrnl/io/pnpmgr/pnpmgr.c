@@ -132,6 +132,12 @@ IopStartDevice(
    Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
    Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
 
+   /* FIXME: Not sure of this! */
+   if (!Stack.Parameters.StartDevice.AllocatedResources)
+      Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->BootResources;
+   if (!Stack.Parameters.StartDevice.AllocatedResourcesTranslated)
+      Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->BootResources;
+
    Status = IopInitiatePnpIrp(
       Fdo,
       &IoStatusBlock,
@@ -1232,13 +1238,6 @@ IopAssignDeviceResources(PDEVICE_NODE DeviceNode)
    ULONG NumberOfResources = 0;
    ULONG i;
    NTSTATUS Status;
-
-   if (DeviceNode->BootResources)
-   {
-      /* FIXME: Not sure of this! */
-      DeviceNode->ResourceList = DeviceNode->ResourceListTranslated = DeviceNode->BootResources;
-      return STATUS_SUCCESS;
-   }
 
    /* Fill DeviceNode->ResourceList and DeviceNode->ResourceListTranslated;
     * by using DeviceNode->ResourceRequirements */
