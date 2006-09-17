@@ -23,6 +23,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define FILE_FLAG_POSIX_SEMANTICS	16777216
+
+
 HENHMETAFILE
 STDCALL
 NtGdiCloseEnhMetaFile(HDC  hDC)
@@ -65,8 +68,7 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
                            LPCWSTR  Description)
 {
    PDC Dc;   
-   HDC ret = NULL;
-   NTSTATUS Status;
+   HDC ret = NULL;   
    IO_STATUS_BLOCK Iosb;	   
    DWORD length = 0;
    HDC tempHDC;
@@ -166,28 +168,55 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
       memcpy((char *)Dc->emh + sizeof(ENHMETAHEADER), Description, length);
    }
 
-   ret = tempHDC;
-
-   DPRINT1("File cretae unimplement in NtGdiCreateEnhMetaFile\n");
+   ret = tempHDC;   
    if (File)  
    {
-    
+      DPRINT1("Trying Create EnhMetaFile\n");
 
-
-     /* disk based metafile */
-	   
-      /* FIXME
-      if ((Dc->hFile = CreateFileW(File, GENERIC_WRITE | GENERIC_READ, 0,
-				 NULL, CREATE_ALWAYS, 0, 0)) == INVALID_HANDLE_VALUE) 
-      {
-           DC_UnLockDc(Dc);
-           if (hDCRef == NULL)
-           {
-               NtGdiDeleteObjectApp(tempHDC);        
-           }
-           return 0;
+      /* disk based metafile */	  
+      DWORD dwDesiredAccess = GENERIC_WRITE | GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES;
+      
+      OBJECT_ATTRIBUTES ObjectAttributes;
+      IO_STATUS_BLOCK IoStatusBlock;
+      UNICODE_STRING NtPathU;
+      NTSTATUS Status;      	     
+      ULONG FileAttributes = (FILE_ATTRIBUTE_VALID_FLAGS & ~FILE_ATTRIBUTE_DIRECTORY);
+     
+	  if (!RtlDosPathNameToNtPathName_U (File, &NtPathU, NULL, NULL))
+      {        
+         DC_UnlockDc(Dc);
+         if (hDCRef == NULL)
+         {
+             NtGdiDeleteObjectApp(tempHDC);        
+         }       
+         DPRINT1("Can not Create EnhMetaFile\n");
+         SetLastWin32Error(ERROR_PATH_NOT_FOUND);
+         return NULL;
       }
-      */
+	  
+
+	  InitializeObjectAttributes(&ObjectAttributes, &NtPathU, 0, NULL, NULL);
+      
+      Status = NtCreateFile (&Dc->hFile, dwDesiredAccess, &ObjectAttributes, &IoStatusBlock,
+			                NULL, FileAttributes, 0, FILE_OVERWRITE_IF, FILE_NON_DIRECTORY_FILE,
+						    NULL, 0);
+
+      RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathU.Buffer);
+   
+      if (!NT_SUCCESS(Status))
+      {   
+	     Dc->hFile = NULL;
+		 DC_UnlockDc(Dc);
+         if (hDCRef == NULL)
+         {
+             NtGdiDeleteObjectApp(tempHDC);        
+         }  
+		 DPRINT1("Create EnhMetaFile fail\n");
+		 SetLastWin32Error(ERROR_INVALID_HANDLE);	
+         return NULL;
+      }
+
+      SetLastWin32Error(IoStatusBlock.Information == FILE_OVERWRITTEN ? ERROR_ALREADY_EXISTS : 0);
 
       Status = NtWriteFile(Dc->hFile, NULL, NULL, NULL, &Iosb, (PVOID)&Dc->emh, Dc->emh->nSize, NULL, NULL);       
       if (Status == STATUS_PENDING)
@@ -200,16 +229,14 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
       }
 
       if (NT_SUCCESS(Status))
-      {                		  
-		  //ret = Dc->hSelf;
-		  ret = tempHDC;
-		  DC_UnlockDc(Dc);
+      {                		  		  
+		  ret = tempHDC;		  
+		  DC_UnlockDc(Dc);		  
       }
       else
       {
           Dc->hFile = NULL;
-          /* FIXME use SetLastErrorByStatus */
-          //SetLastErrorByStatus(Status);
+		  DPRINT1("Write to EnhMetaFile fail\n");        
 		  SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
 		  ret = NULL;                                	     		  
 		  DC_UnlockDc(Dc);
