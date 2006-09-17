@@ -464,19 +464,7 @@ EnumMetaFile(
 }
 
 
-/*
- * @unimplemented
- */
-HENHMETAFILE
-STDCALL
-CloseEnhMetaFile(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
+
 
 
 /*

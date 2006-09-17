@@ -1,6 +1,17 @@
 #include "precomp.h"
 
 /*
+ * @unimplemented
+ */
+HENHMETAFILE
+STDCALL
+CloseEnhMetaFile(
+	HDC	hdc)
+{	
+	return NtGdiCloseEnhMetaFile(hdc);
+}
+
+/*
  * @implemented
  */
 HMETAFILE
