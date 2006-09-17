@@ -5500,6 +5500,10 @@ KeGetCurrentProcessorNumber(VOID)
 {
 	return 0; // XXX arty fixme
 }
+
+#define PAGE_SIZE                         0x1000
+#define PAGE_SHIFT                        12L
+
 #endif /* _X86_ */
 
 /*
