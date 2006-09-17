@@ -23,15 +23,165 @@
 #define NDEBUG
 #include <debug.h>
 
-#define FILE_FLAG_POSIX_SEMANTICS	16777216
-
-
 HENHMETAFILE
 STDCALL
 NtGdiCloseEnhMetaFile(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return 0;
+  LPENHMETAHEADER emh;
+  HENHMETAFILE hmf = 0;
+  HANDLE hMapping = 0;
+  EMREOF emr;
+  PDC Dc;   
+
+  IO_STATUS_BLOCK Iosb;	      
+  NTSTATUS Status;    
+
+
+   /* Todo 
+      Rewrite it to own api call IntGdiCloseEmhMetaFile
+	  Use Zw and Int direcly so we do not need todo  context swith each call
+
+	  Translate follow api to kernel api 
+	  // hMapping = CreateFileMappingW(Dc->hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+	 // Dc->emh = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
+	  // hmf = EMF_Create_HENHMETAFILE( Dc->emh, (Dc->hFile != 0) );
+      
+   */
+
+
+  Dc = DC_LockDc(hDC);
+  if (Dc == NULL)
+  {  
+      SetLastWin32Error(ERROR_INVALID_HANDLE);	 
+      return NULL;
+  }
+ 
+  emr.emr.iType = EMR_EOF;
+  emr.emr.nSize = sizeof(EMREOF);
+  emr.nPalEntries = 0;
+  emr.offPalEntries = 0;
+  emr.nSizeLast = emr.emr.nSize;
+
+  if(Dc->hFile) 
+  {    	 
+     Status = NtWriteFile(Dc->hFile, NULL, NULL, NULL, &Iosb, (PVOID)&emr, emr.emr.nSize, NULL, NULL);       
+     if (Status == STATUS_PENDING)
+      {
+          Status = NtWaitForSingleObject(Dc->hFile,FALSE,NULL);
+          if (NT_SUCCESS(Status))
+          {
+              Status = Iosb.Status;
+          }
+      }
+
+      if (NT_SUCCESS(Status))
+      {                		  		  		 	  
+		  DWORD len = Dc->emh->nBytes + emr.emr.nSize;	
+		  /* always resize the buffer */
+		  emh = EngAllocMem(FL_ZERO_MEMORY, len, 0);
+		  if (emh != NULL)
+	      {
+              memcpy(emh,Dc->emh,Dc->emh->nBytes);
+	          EngFreeMem(Dc->emh);
+	          Dc->emh = emh;
+
+			  memcpy(Dc->emh + Dc->emh->nBytes, &emr, emr.emr.nSize);
+	      }
+	      else
+	      {
+	          EngFreeMem(Dc->emh);
+	          Dc->emh=NULL;
+	      }
+
+      }
+      else
+      {
+          Dc->hFile = NULL;
+		  DPRINT1("Write to EnhMetaFile fail\n");        		   		
+      }	
+  }
+
+  Dc->emh->nBytes += emr.emr.nSize;
+  Dc->emh->nRecords++;
+
+  if(Dc->emh->rclFrame.left > Dc->emh->rclFrame.right) 
+  {
+     Dc->emh->rclFrame.left = Dc->emh->rclBounds.left * Dc->emh->szlMillimeters.cx * 100 / Dc->emh->szlDevice.cx;
+     Dc->emh->rclFrame.top = Dc->emh->rclBounds.top * Dc->emh->szlMillimeters.cy * 100 / Dc->emh->szlDevice.cy;
+     Dc->emh->rclFrame.right = Dc->emh->rclBounds.right * Dc->emh->szlMillimeters.cx * 100 / Dc->emh->szlDevice.cx;
+     Dc->emh->rclFrame.bottom = Dc->emh->rclBounds.bottom * Dc->emh->szlMillimeters.cy * 100 / Dc->emh->szlDevice.cy;
+  }
+
+  if (Dc->hFile)  /* disk based metafile */
+  {
+	  FILE_POSITION_INFORMATION FilePosition;	  
+	  LARGE_INTEGER Distance ;
+	  IO_STATUS_BLOCK IoStatusBlock;
+
+	  Distance.u.LowPart = 0;
+      Distance.u.HighPart = 0;
+	  FilePosition.CurrentByteOffset.QuadPart = Distance.QuadPart;
+
+	  Status = NtSetInformationFile(Dc->hFile, &IoStatusBlock, &FilePosition, 
+		                             sizeof(FILE_POSITION_INFORMATION), FilePositionInformation);
+
+	 if (!NT_SUCCESS(Status))
+     {
+	     /* FIXME */
+		 // SetLastErrorByStatus(errCode);
+         SetLastWin32Error(ERROR_INVALID_HANDLE);	  
+
+		 NtClose( Dc->hFile );
+		 DC_UnlockDc(Dc);
+		 NtGdiDeleteObjectApp(hDC); 
+	     return hmf;
+     }
+
+	 if (FilePosition.CurrentByteOffset.u.LowPart != 0)
+	 {
+		 /* FIXME */
+		 // SetLastErrorByStatus(errCode);
+		 SetLastWin32Error(ERROR_INVALID_HANDLE);	 
+
+		 NtClose( Dc->hFile );
+		 DC_UnlockDc(Dc);
+		 NtGdiDeleteObjectApp(hDC); 
+	     return hmf;
+	 }
+
+	 Status = NtWriteFile(Dc->hFile, NULL, NULL, NULL, &Iosb, (PVOID)&Dc->emh,  sizeof(*Dc->emh), NULL, NULL);       
+     if (Status == STATUS_PENDING)
+     {
+          Status = NtWaitForSingleObject(Dc->hFile,FALSE,NULL);
+          if (NT_SUCCESS(Status))
+          {
+              Status = Iosb.Status;
+          }
+      }
+
+      if (!NT_SUCCESS(Status))      
+      {
+         NtClose( Dc->hFile );            
+		 DC_UnlockDc(Dc);
+         NtGdiDeleteObjectApp(hDC);       
+         return hmf;
+      }
+	             	  
+	  EngFreeMem(Dc->emh);
+
+     // hMapping = CreateFileMappingW(Dc->hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+	
+	 // Dc->emh = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
+      NtClose( hMapping );
+      NtClose( Dc->hFile );
+    }
+
+
+  // hmf = EMF_Create_HENHMETAFILE( Dc->emh, (Dc->hFile != 0) );
+  Dc->emh = NULL;  /* So it won't be deleted */
+  DC_UnlockDc(Dc);
+  NtGdiDeleteObjectApp(hDC);        
+  return hmf;
 }
 
 HMETAFILE
@@ -68,8 +218,7 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
                            LPCWSTR  Description)
 {
    PDC Dc;   
-   HDC ret = NULL;   
-   IO_STATUS_BLOCK Iosb;	   
+   HDC ret = NULL;       
    DWORD length = 0;
    HDC tempHDC;
    DWORD MemSize;
@@ -174,10 +323,10 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
       DPRINT1("Trying Create EnhMetaFile\n");
 
       /* disk based metafile */	  
-      DWORD dwDesiredAccess = GENERIC_WRITE | GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES;
-      
+      DWORD dwDesiredAccess = GENERIC_WRITE | GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES;      
       OBJECT_ATTRIBUTES ObjectAttributes;
       IO_STATUS_BLOCK IoStatusBlock;
+	  IO_STATUS_BLOCK Iosb;	 
       UNICODE_STRING NtPathU;
       NTSTATUS Status;      	     
       ULONG FileAttributes = (FILE_ATTRIBUTE_VALID_FLAGS & ~FILE_ATTRIBUTE_DIRECTORY);
