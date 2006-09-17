@@ -122,7 +122,7 @@ typedef struct _DC
 
   WIN_DC_INFO  w;
 
-  HANDLE hFile; 
+  HANDLE hFile;  
   LPENHMETAHEADER emh;
 
 } DC, *PDC;
@@ -187,5 +187,13 @@ VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
 
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
+
+/* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
+typedef struct
+{
+  LPENHMETAHEADER  emh;
+  BOOL    on_disk;   /* true if metafile is on disk */
+} DD_ENHMETAFILEOBJ, *PDD_ENHMETAFILEOBJ;
+
 
 #endif

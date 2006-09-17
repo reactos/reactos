@@ -28,7 +28,8 @@ STDCALL
 NtGdiCloseEnhMetaFile(HDC  hDC)
 {
   LPENHMETAHEADER emh;
-  HENHMETAFILE hmf = 0;
+  HANDLE hmf = 0;
+  PDD_ENHMETAFILEOBJ phmf;
   HANDLE hMapping = 0;
   EMREOF emr;
   PDC Dc;   
@@ -36,16 +37,18 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
   IO_STATUS_BLOCK Iosb;	      
   NTSTATUS Status;    
 
+   DPRINT1("NtGdiCloseEnhMetaFile\n");   
 
    /* Todo 
       Rewrite it to own api call IntGdiCloseEmhMetaFile
-	  Use Zw and Int direcly so we do not need todo  context swith each call
-
+	
 	  Translate follow api to kernel api 
 	  // hMapping = CreateFileMappingW(Dc->hFile, NULL, PAGE_READONLY, 0, 0, NULL);
 	 // Dc->emh = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
 	  // hmf = EMF_Create_HENHMETAFILE( Dc->emh, (Dc->hFile != 0) );
       
+
+	  DC_SetOwnership(hdc,
    */
 
 
@@ -55,15 +58,15 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
       SetLastWin32Error(ERROR_INVALID_HANDLE);	 
       return NULL;
   }
- 
+
   emr.emr.iType = EMR_EOF;
   emr.emr.nSize = sizeof(EMREOF);
   emr.nPalEntries = 0;
   emr.offPalEntries = 0;
   emr.nSizeLast = emr.emr.nSize;
-
+  
   if(Dc->hFile) 
-  {    	 
+  {  
      Status = NtWriteFile(Dc->hFile, NULL, NULL, NULL, &Iosb, (PVOID)&emr, emr.emr.nSize, NULL, NULL);       
      if (Status == STATUS_PENDING)
       {
@@ -100,7 +103,7 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
 		  DPRINT1("Write to EnhMetaFile fail\n");        		   		
       }	
   }
-
+ 
   Dc->emh->nBytes += emr.emr.nSize;
   Dc->emh->nRecords++;
 
@@ -166,21 +169,39 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
          NtGdiDeleteObjectApp(hDC);       
          return hmf;
       }
-	             	  
+	  
 	  EngFreeMem(Dc->emh);
 
+	  /* FIXME */
      // hMapping = CreateFileMappingW(Dc->hFile, NULL, PAGE_READONLY, 0, 0, NULL);
 	
+	 /* FIXME */
 	 // Dc->emh = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
       NtClose( hMapping );
       NtClose( Dc->hFile );
     }
+ 
+  hmf = GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TYPE_ENHMETAFILE);
+  if (hmf != NULL)
+  {
+     phmf = GDIOBJ_LockObj(GdiHandleTable, hmf, GDI_OBJECT_TYPE_ENHMETAFILE);
+	 if (phmf != NULL)
+	 {
+         if (Dc->hFile != NULL)
+         {
+             phmf->on_disk = TRUE;
+	     }  
+         else
+         {
+	         phmf->on_disk = FALSE;
+         }
+		 GDIOBJ_UnlockObjByPtr(GdiHandleTable, phmf);
+		 phmf->emh = Dc->emh;
+	 }	 
+  }  
 
-
-  // hmf = EMF_Create_HENHMETAFILE( Dc->emh, (Dc->hFile != 0) );
   Dc->emh = NULL;  /* So it won't be deleted */
   DC_UnlockDc(Dc);
-  NtGdiDeleteObjectApp(hDC);        
   return hmf;
 }
 
@@ -231,9 +252,11 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
 		*/
 	   UNICODE_STRING DriverName;
 	   RtlInitUnicodeString(&DriverName, L"DISPLAY");
-	   tempHDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
+	   tempHDC = NtGdiCreateDC(&DriverName, NULL, NULL, NULL); //IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
    }
-   
+
+   GDIOBJ_SetOwnership(GdiHandleTable, tempHDC, PsGetCurrentProcess());
+   DC_SetOwnership(tempHDC, PsGetCurrentProcess());
 	  
    Dc = DC_LockDc(tempHDC);
    if (Dc == NULL)
