@@ -5390,6 +5390,12 @@ typedef struct _KPCR {
   UCHAR  Number;                /* 51 */
 } KPCR, *PKPCR;                 /* 54 */
 
+NTHALAPI
+KIRQL
+DDKAPI
+KeGetCurrentIrql(
+  VOID);
+
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
 
