@@ -23,7 +23,7 @@
 _RtlpGetExceptionList@0:
 
     /* Return the exception list */
-    mov eax, [fs:TEB_EXCEPTION_LIST]
+    mov eax, fs:[TEB_EXCEPTION_LIST]
     ret
 .endfunc
 
@@ -36,7 +36,7 @@ _RtlpSetExceptionList@4:
     mov ecx, [ecx]
 
     /* Write it */
-    mov [fs:TEB_EXCEPTION_LIST], ecx
+    mov fs:[TEB_EXCEPTION_LIST], ecx
 
     /* Return */
     ret 4
