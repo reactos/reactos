@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define COM_NO_WINDOWS_H
@@ -22,13 +22,11 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wingdi.h"
 #include "winuser.h"
+#include "wingdi.h"
 #include "winnls.h"
 #include "winerror.h"
-#include "windowsx.h"
 #include "mmsystem.h"
-#include "mmreg.h"
 #include "vfw.h"
 
 #include "avifile_private.h"
@@ -189,7 +187,7 @@ PAVIEDITSTREAM AVIFILE_CreateEditStream(PAVISTREAM pstream)
 {
   IAVIEditStreamImpl *pedit = NULL;
 
-  pedit = (IAVIEditStreamImpl*)LocalAlloc(LPTR,sizeof(IAVIEditStreamImpl));
+  pedit = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIEditStreamImpl));
   if (pedit == NULL)
     return NULL;
 
@@ -331,20 +329,19 @@ static BOOL AVIFILE_FormatsEqual(PAVISTREAM avi1, PAVISTREAM avi2)
     return FALSE;
 
   /* sizes match, now get formats and compare them */
-  fmt1 = GlobalAllocPtr(GHND, size1);
+  fmt1 = HeapAlloc(GetProcessHeap(), 0, size1);
   if (fmt1 == NULL)
     return FALSE;
   if (SUCCEEDED(AVIStreamReadFormat(avi1, start1, fmt1, &size1))) {
-    fmt2 = GlobalAllocPtr(GHND, size1);
+    fmt2 = HeapAlloc(GetProcessHeap(), 0, size1);
     if (fmt2 != NULL) {
       if (SUCCEEDED(AVIStreamReadFormat(avi2, start2, fmt2, &size1)))
         status = (memcmp(fmt1, fmt2, size1) == 0);
     }
   }
 
-  if (fmt2 != NULL)
-    GlobalFreePtr(fmt2);
-  GlobalFreePtr(fmt1);
+  HeapFree(GetProcessHeap(), 0, fmt2);
+  HeapFree(GetProcessHeap(), 0, fmt1);
 
   return status;
 }
@@ -405,10 +402,10 @@ static ULONG   WINAPI IAVIEditStream_fnRelease(IAVIEditStream*iface)
         if (This->pStreams[i].pStream != NULL)
           IAVIStream_Release(This->pStreams[i].pStream);
       }
-      GlobalFreePtr(This->pStreams);
+      HeapFree(GetProcessHeap(), 0, This->pStreams);
     }
 
-    LocalFree((HLOCAL)This);
+    HeapFree(GetProcessHeap(), 0, This);
     return 0;
   }
   return ref;
@@ -471,8 +468,8 @@ static HRESULT WINAPI IAVIEditStream_fnCut(IAVIEditStream*iface,LONG*plStart,
     } else {
       /* splitting */
       if (This->nStreams + 1 >= This->nTableSize) {
-        This->pStreams =
-          GlobalReAllocPtr(This->pStreams, (This->nTableSize + 32) * sizeof(EditStreamTable), GMEM_SHARE|GHND);
+        This->pStreams = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pStreams,
+                                     (This->nTableSize + 32) * sizeof(EditStreamTable));
         if (This->pStreams == NULL)
           return AVIERR_MEMORY;
         This->nTableSize += 32;
@@ -663,8 +660,7 @@ static HRESULT WINAPI IAVIEditStream_fnPaste(IAVIEditStream*iface,LONG*plStart,
   if (This->nStreams + nStreams + 1 > This->nTableSize) {
     n = This->nStreams + nStreams + 33;
 
-    This->pStreams =
-      GlobalReAllocPtr(This->pStreams, n * sizeof(EditStreamTable), GMEM_SHARE|GHND);
+    This->pStreams = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pStreams, n * sizeof(EditStreamTable));
     if (This->pStreams == NULL)
       return AVIERR_MEMORY;
     This->nTableSize = n;
@@ -753,7 +749,8 @@ static HRESULT WINAPI IAVIEditStream_fnClone(IAVIEditStream*iface,
   if (pEdit == NULL)
     return AVIERR_MEMORY;
   if (This->nStreams > pEdit->nTableSize) {
-    pEdit->pStreams = GlobalReAllocPtr(pEdit->pStreams, This->nStreams * sizeof(EditStreamTable),GMEM_SHARE|GHND);
+    pEdit->pStreams = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pEdit->pStreams,
+                                  This->nStreams * sizeof(EditStreamTable));
     if (pEdit->pStreams == NULL)
       return AVIERR_MEMORY;
     pEdit->nTableSize = This->nStreams;
@@ -841,8 +838,7 @@ static HRESULT WINAPI IEditAVIStream_fnCreate(IAVIStream*iface,
     return AVIERR_ERROR;
 
   if (This->pStreams == NULL) {
-    This->pStreams =
-      GlobalAllocPtr(GMEM_SHARE|GHND, 256 * sizeof(EditStreamTable));
+    This->pStreams = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 256 * sizeof(EditStreamTable));
     if (This->pStreams == NULL)
       return AVIERR_MEMORY;
     This->nTableSize = 256;

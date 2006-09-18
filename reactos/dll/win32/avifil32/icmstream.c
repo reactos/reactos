@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define COM_NO_WINDOWS_H
@@ -26,10 +26,8 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "winerror.h"
-#include "windowsx.h"
 #include "mmsystem.h"
 #include "vfw.h"
-#include "mmreg.h"
 #include "msacm.h"
 
 #include "avifile_private.h"
@@ -129,7 +127,7 @@ HRESULT AVIFILE_CreateICMStream(REFIID riid, LPVOID *ppv)
 
   *ppv = NULL;
 
-  pstream = (IAVIStreamImpl*)LocalAlloc(LPTR, sizeof(IAVIStreamImpl));
+  pstream = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIStreamImpl));
   if (pstream == NULL)
     return AVIERR_MEMORY;
 
@@ -138,7 +136,7 @@ HRESULT AVIFILE_CreateICMStream(REFIID riid, LPVOID *ppv)
 
   hr = IAVIStream_QueryInterface((IAVIStream*)pstream, riid, ppv);
   if (FAILED(hr))
-    LocalFree((HLOCAL)pstream);
+    HeapFree(GetProcessHeap(), 0, pstream);
 
   return hr;
 }
@@ -195,7 +193,7 @@ static ULONG WINAPI ICMStream_fnRelease(IAVIStream* iface)
     if (This->hic != NULL) {
       if (This->lpbiPrev != NULL) {
 	ICDecompressEnd(This->hic);
-	GlobalFreePtr(This->lpbiPrev);
+	HeapFree(GetProcessHeap(), 0, This->lpbiPrev);
 	This->lpbiPrev = NULL;
 	This->lpPrev   = NULL;
       }
@@ -203,22 +201,22 @@ static ULONG WINAPI ICMStream_fnRelease(IAVIStream* iface)
       This->hic = NULL;
     }
     if (This->lpbiCur != NULL) {
-      GlobalFreePtr(This->lpbiCur);
+      HeapFree(GetProcessHeap(), 0, This->lpbiCur);
       This->lpbiCur = NULL;
       This->lpCur   = NULL;
     }
     if (This->lpbiOutput != NULL) {
-      GlobalFreePtr(This->lpbiOutput);
+      HeapFree(GetProcessHeap(), 0, This->lpbiOutput);
       This->lpbiOutput = NULL;
       This->cbOutput   = 0;
     }
     if (This->lpbiInput != NULL) {
-      GlobalFreePtr(This->lpbiInput);
+      HeapFree(GetProcessHeap(), 0, This->lpbiInput);
       This->lpbiInput = NULL;
       This->cbInput   = 0;
     }
 
-    LocalFree((HLOCAL)This);
+    HeapFree(GetProcessHeap(), 0, This);
 
     return 0;
   }
@@ -480,7 +478,7 @@ static HRESULT WINAPI ICMStream_fnSetFormat(IAVIStream *iface, LONG pos,
     assert(This->hic != NULL);
 
     /* get memory for input format */
-    This->lpbiInput = (LPBITMAPINFOHEADER)GlobalAllocPtr(GHND, formatsize);
+    This->lpbiInput = HeapAlloc(GetProcessHeap(), 0, formatsize);
     if (This->lpbiInput == NULL)
       return AVIERR_MEMORY;
     This->cbInput = formatsize;
@@ -490,7 +488,7 @@ static HRESULT WINAPI ICMStream_fnSetFormat(IAVIStream *iface, LONG pos,
     size = ICCompressGetFormatSize(This->hic, This->lpbiInput);
     if (size < sizeof(BITMAPINFOHEADER))
       return AVIERR_COMPRESSOR;
-    This->lpbiOutput = (LPBITMAPINFOHEADER)GlobalAllocPtr(GHND, size);
+    This->lpbiOutput = HeapAlloc(GetProcessHeap(), 0, size);
     if (This->lpbiOutput == NULL)
       return AVIERR_MEMORY;
     This->cbOutput = size;
@@ -509,8 +507,7 @@ static HRESULT WINAPI ICMStream_fnSetFormat(IAVIStream *iface, LONG pos,
 
     /* allocate memory for compressed frame */
     size = ICCompressGetSize(This->hic, This->lpbiInput, This->lpbiOutput);
-    This->lpbiCur =
-      (LPBITMAPINFOHEADER)GlobalAllocPtr(GMEM_MOVEABLE, This->cbOutput + size);
+    This->lpbiCur = HeapAlloc(GetProcessHeap(), 0, This->cbOutput + size);
     if (This->lpbiCur == NULL)
       return AVIERR_MEMORY;
     memcpy(This->lpbiCur, This->lpbiOutput, This->cbOutput);
@@ -520,7 +517,7 @@ static HRESULT WINAPI ICMStream_fnSetFormat(IAVIStream *iface, LONG pos,
     if (This->lKeyFrameEvery != 1 &&
 	(This->dwICMFlags & VIDCF_FASTTEMPORALC) == 0) {
       size = ICDecompressGetFormatSize(This->hic, This->lpbiOutput);
-      This->lpbiPrev = (LPBITMAPINFOHEADER)GlobalAllocPtr(GHND, size);
+      This->lpbiPrev = HeapAlloc(GetProcessHeap(), 0, size);
       if (This->lpbiPrev == NULL)
 	return AVIERR_MEMORY;
       if (ICDecompressGetFormat(This->hic, This->lpbiOutput, This->lpbiPrev) < S_OK)
@@ -533,8 +530,7 @@ static HRESULT WINAPI ICMStream_fnSetFormat(IAVIStream *iface, LONG pos,
 
       /* get memory for format and picture */
       size += This->lpbiPrev->biSizeImage;
-      This->lpbiPrev =
-       (LPBITMAPINFOHEADER)GlobalReAllocPtr(This->lpbiPrev,size,GMEM_MOVEABLE);
+      This->lpbiPrev = HeapReAlloc(GetProcessHeap(), 0, This->lpbiPrev, size);
       if (This->lpbiPrev == NULL)
 	return AVIERR_MEMORY;
       This->lpPrev = DIBPTR(This->lpbiPrev);
@@ -917,7 +913,7 @@ static HRESULT AVIFILE_OpenGetFrame(IAVIStreamImpl *This)
   size = ICCompressGetFormatSize(This->hic, lpbi);
   if ((LONG)size < (LONG)sizeof(BITMAPINFOHEADER))
     return AVIERR_COMPRESSOR;
-  This->lpbiOutput = (LPBITMAPINFOHEADER)GlobalAllocPtr(GHND, size);
+  This->lpbiOutput = HeapAlloc(GetProcessHeap(), 0, size);
   if (This->lpbiOutput == NULL)
     return AVIERR_MEMORY;
   This->cbOutput = size;
@@ -939,7 +935,7 @@ static HRESULT AVIFILE_OpenGetFrame(IAVIStreamImpl *This)
 
   /* allocate memory for current frame */
   size += This->sInfo.dwSuggestedBufferSize;
-  This->lpbiCur = (LPBITMAPINFOHEADER)GlobalAllocPtr(GMEM_MOVEABLE, size);
+  This->lpbiCur = HeapAlloc(GetProcessHeap(), 0, size);
   if (This->lpbiCur == NULL)
     return AVIERR_MEMORY;
   memcpy(This->lpbiCur, This->lpbiOutput, This->cbOutput);
@@ -949,7 +945,7 @@ static HRESULT AVIFILE_OpenGetFrame(IAVIStreamImpl *This)
   if (This->lKeyFrameEvery != 1 &&
       (This->dwICMFlags & VIDCF_FASTTEMPORALC) == 0) {
     size = ICDecompressGetFormatSize(This->hic, This->lpbiOutput);
-    This->lpbiPrev = (LPBITMAPINFOHEADER)GlobalAllocPtr(GHND, size);
+    This->lpbiPrev = HeapAlloc(GetProcessHeap(), 0, size);
     if (This->lpbiPrev == NULL)
       return AVIERR_MEMORY;
     if (ICDecompressGetFormat(This->hic, This->lpbiOutput, This->lpbiPrev) < S_OK)
@@ -962,8 +958,7 @@ static HRESULT AVIFILE_OpenGetFrame(IAVIStreamImpl *This)
 
     /* get memory for format and picture */
     size += This->lpbiPrev->biSizeImage;
-    This->lpbiPrev =
-      (LPBITMAPINFOHEADER)GlobalReAllocPtr(This->lpbiPrev,size,GMEM_MOVEABLE);
+    This->lpbiPrev = HeapReAlloc(GetProcessHeap(), 0, This->lpbiPrev, size );
     if (This->lpbiPrev == NULL)
       return AVIERR_MEMORY;
     This->lpPrev = DIBPTR(This->lpbiPrev);

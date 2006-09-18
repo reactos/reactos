@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "windef.h"
@@ -43,6 +43,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "avifile_En.rc"
 #include "avifile_Es.rc"
 #include "avifile_Fr.rc"
+#include "avifile_Hu.rc"
 #include "avifile_It.rc"
 #include "avifile_Ja.rc"
 #include "avifile_Ko.rc"
@@ -52,3 +53,4 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "avifile_Pt.rc"
 #include "avifile_Ru.rc"
 #include "avifile_Si.rc"
+#include "avifile_Tr.rc"

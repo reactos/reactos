@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <assert.h>
@@ -30,7 +30,6 @@
 #include "winerror.h"
 
 #include "ole2.h"
-#include "mmreg.h"
 #include "vfw.h"
 
 #include "wine/debug.h"
@@ -76,7 +75,7 @@ static HRESULT AVIFILE_CreateClassFactory(const CLSID *pclsid, const IID *riid,
 
   *ppv = NULL;
 
-  pClassFactory = (IClassFactoryImpl*)LocalAlloc(LPTR, sizeof(*pClassFactory));
+  pClassFactory = HeapAlloc(GetProcessHeap(), 0, sizeof(*pClassFactory));
   if (pClassFactory == NULL)
     return E_OUTOFMEMORY;
 
@@ -86,7 +85,7 @@ static HRESULT AVIFILE_CreateClassFactory(const CLSID *pclsid, const IID *riid,
 
   hr = IClassFactory_QueryInterface((IClassFactory*)pClassFactory, riid, ppv);
   if (FAILED(hr)) {
-    LocalFree((HLOCAL)pClassFactory);
+    HeapFree(GetProcessHeap(), 0, pClassFactory);
     *ppv = NULL;
   }
 
@@ -124,6 +123,8 @@ static ULONG WINAPI IClassFactory_fnRelease(LPCLASSFACTORY iface)
   TRACE("(%p)\n", iface);
   if ((--(This->dwRef)) > 0)
     return This->dwRef;
+
+  HeapFree(GetProcessHeap(), 0, This);
 
   return 0;
 }

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define COM_NO_WINDOWS_H
@@ -26,9 +26,7 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "winerror.h"
-#include "windowsx.h"
 #include "mmsystem.h"
-#include "mmreg.h"
 #include "vfw.h"
 
 #include "avifile_private.h"
@@ -78,7 +76,7 @@ PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, PAVISTREAM *ppStreams) {
   ITmpFileImpl *tmpFile;
   int           i;
 
-  tmpFile = LocalAlloc(LPTR, sizeof(ITmpFileImpl));
+  tmpFile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ITmpFileImpl));
   if (tmpFile == NULL)
     return NULL;
 
@@ -87,9 +85,9 @@ PAVIFILE AVIFILE_CreateAVITempFile(int nStreams, PAVISTREAM *ppStreams) {
   memset(&tmpFile->fInfo, 0, sizeof(tmpFile->fInfo));
 
   tmpFile->fInfo.dwStreams = nStreams;
-  tmpFile->ppStreams = LocalAlloc(LPTR, nStreams * sizeof(PAVISTREAM));
+  tmpFile->ppStreams = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(PAVISTREAM));
   if (tmpFile->ppStreams == NULL) {
-    LocalFree((HLOCAL)tmpFile);
+    HeapFree(GetProcessHeap(), 0, tmpFile);
     return NULL;
   }
 
@@ -178,7 +176,7 @@ static ULONG   WINAPI ITmpFile_fnRelease(IAVIFile *iface)
       }
     }
 
-    LocalFree((HLOCAL)This);
+    HeapFree(GetProcessHeap(), 0, This);
     return 0;
   }
 

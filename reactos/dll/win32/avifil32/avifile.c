@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* TODO:
@@ -40,9 +40,7 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "winerror.h"
-#include "windowsx.h"
 #include "mmsystem.h"
-#include "mmreg.h"
 #include "vfw.h"
 
 #include "avifile_private.h"
@@ -241,7 +239,7 @@ HRESULT AVIFILE_CreateAVIFile(REFIID riid, LPVOID *ppv)
 
   *ppv = NULL;
 
-  pfile = (IAVIFileImpl*)LocalAlloc(LPTR, sizeof(IAVIFileImpl));
+  pfile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIFileImpl));
   if (pfile == NULL)
     return AVIERR_MEMORY;
 
@@ -252,7 +250,7 @@ HRESULT AVIFILE_CreateAVIFile(REFIID riid, LPVOID *ppv)
 
   hr = IAVIFile_QueryInterface((IAVIFile*)pfile, riid, ppv);
   if (FAILED(hr))
-    LocalFree((HLOCAL)pfile);
+    HeapFree(GetProcessHeap(), 0, pfile);
 
   return hr;
 }
@@ -311,33 +309,32 @@ static ULONG WINAPI IAVIFile_fnRelease(IAVIFile *iface)
 	       This->ppStreams[i]->ref, i, This->ppStreams[i]);
 	}
 	AVIFILE_DestructAVIStream(This->ppStreams[i]);
-	LocalFree((HLOCAL)This->ppStreams[i]);
+	HeapFree(GetProcessHeap(), 0, This->ppStreams[i]);
 	This->ppStreams[i] = NULL;
       }
     }
 
     if (This->idxRecords != NULL) {
-      GlobalFreePtr(This->idxRecords);
+      HeapFree(GetProcessHeap(), 0, This->idxRecords);
       This->idxRecords  = NULL;
       This->nIdxRecords = 0;
     }
 
     if (This->fileextra.lp != NULL) {
-      GlobalFreePtr(This->fileextra.lp);
+      HeapFree(GetProcessHeap(), 0, This->fileextra.lp);
       This->fileextra.lp = NULL;
       This->fileextra.cb = 0;
     }
 
-    if (This->szFileName != NULL) {
-      LocalFree((HLOCAL)This->szFileName);
-      This->szFileName = NULL;
-    }
+    HeapFree(GetProcessHeap(), 0, This->szFileName);
+    This->szFileName = NULL;
+
     if (This->hmmio != NULL) {
       mmioClose(This->hmmio, 0);
       This->hmmio = NULL;
     }
 
-    LocalFree((HLOCAL)This);
+    HeapFree(GetProcessHeap(), 0, This);
   }
   return ref;
 }
@@ -423,7 +420,7 @@ static HRESULT WINAPI IAVIFile_fnCreateStream(IAVIFile *iface,PAVISTREAM *avis,
 
   /* now it seems to be save to add the stream */
   assert(This->ppStreams[n] == NULL);
-  This->ppStreams[n] = (IAVIStreamImpl*)LocalAlloc(LPTR,
+  This->ppStreams[n] = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
 						   sizeof(IAVIStreamImpl));
   if (This->ppStreams[n] == NULL)
     return AVIERR_MEMORY;
@@ -540,7 +537,7 @@ static HRESULT WINAPI IAVIFile_fnDeleteStream(IAVIFile *iface, DWORD fccType,
   if (nStream < This->fInfo.dwStreams &&
       This->ppStreams[nStream] != NULL) {
     /* ... so delete it now */
-    LocalFree((HLOCAL)This->ppStreams[nStream]);
+    HeapFree(GetProcessHeap(), 0, This->ppStreams[nStream]);
 
     if (This->fInfo.dwStreams - nStream > 0)
       memcpy(This->ppStreams + nStream, This->ppStreams + nStream + 1,
@@ -631,7 +628,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile *iface,
   This->paf->uMode = dwMode;
 
   len = lstrlenW(pszFileName) + 1;
-  This->paf->szFileName = (LPWSTR)LocalAlloc(LPTR, len * sizeof(WCHAR));
+  This->paf->szFileName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
   if (This->paf->szFileName == NULL)
     return AVIERR_MEMORY;
   lstrcpyW(This->paf->szFileName, pszFileName);
@@ -645,7 +642,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile *iface,
 
     len = WideCharToMultiByte(CP_ACP, 0, This->paf->szFileName, -1,
                                NULL, 0, NULL, NULL);
-    szFileName = LocalAlloc(LPTR, len * sizeof(CHAR));
+    szFileName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(CHAR));
     if (szFileName == NULL)
       return AVIERR_MEMORY;
 
@@ -653,7 +650,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile *iface,
 			len, NULL, NULL);
 
     This->paf->hmmio = mmioOpenA(szFileName, NULL, MMIO_ALLOCBUF | dwMode);
-    LocalFree((HLOCAL)szFileName);
+    HeapFree(GetProcessHeap(), 0, szFileName);
     if (This->paf->hmmio == NULL)
       return AVIERR_FILEOPEN;
   }
@@ -705,7 +702,7 @@ static HRESULT WINAPI IPersistFile_fnGetCurFile(IPersistFile *iface,
   if (This->paf->szFileName != NULL) {
     int len = lstrlenW(This->paf->szFileName) + 1;
 
-    *ppszFileName = (LPOLESTR)GlobalAllocPtr(GHND, len * sizeof(WCHAR));
+    *ppszFileName = CoTaskMemAlloc(len * sizeof(WCHAR));
     if (*ppszFileName == NULL)
       return AVIERR_MEMORY;
 
@@ -957,7 +954,7 @@ static HRESULT WINAPI IAVIStream_fnSetFormat(IAVIStream *iface, LONG pos,
     if (This->paf->dwMoviChunkPos != 0)
       return AVIERR_ERROR; /* user has used API in wrong sequnece! */
 
-    This->lpFormat = GlobalAllocPtr(GMEM_MOVEABLE, formatsize);
+    This->lpFormat = HeapAlloc(GetProcessHeap(), 0, formatsize);
     if (This->lpFormat == NULL)
       return AVIERR_MEMORY;
     This->cbFormat = formatsize;
@@ -1008,7 +1005,7 @@ static HRESULT WINAPI IAVIStream_fnSetFormat(IAVIStream *iface, LONG pos,
     /* simply say all colors have changed */
     ck.ckid   = MAKEAVICKID(cktypePALchange, This->nStream);
     ck.cksize = 2 * sizeof(WORD) + lpbiOld->biClrUsed * sizeof(PALETTEENTRY);
-    lppc = (AVIPALCHANGE*)GlobalAllocPtr(GMEM_MOVEABLE, ck.cksize);
+    lppc = HeapAlloc(GetProcessHeap(), 0, ck.cksize);
     if (lppc == NULL)
       return AVIERR_MEMORY;
 
@@ -1032,7 +1029,7 @@ static HRESULT WINAPI IAVIStream_fnSetFormat(IAVIStream *iface, LONG pos,
       return AVIERR_FILEWRITE;
     This->paf->dwNextFramePos += ck.cksize + 2 * sizeof(DWORD);
 
-    GlobalFreePtr(lppc);
+    HeapFree(GetProcessHeap(), 0, lppc);
 
     return AVIFILE_AddFrame(This, cktypePALchange, n, ck.dwDataOffset, 0);
   }
@@ -1342,7 +1339,7 @@ static HRESULT WINAPI IAVIStream_fnWriteData(IAVIStream *iface, DWORD fcc,
       return AVIERR_UNSUPPORTED;
     }
 
-    This->lpHandlerData = GlobalAllocPtr(GMEM_MOVEABLE, size);
+    This->lpHandlerData = HeapAlloc(GetProcessHeap(), 0, size);
     if (This->lpHandlerData == NULL)
       return AVIERR_MEMORY;
     This->cbHandlerData = size;
@@ -1391,11 +1388,11 @@ static HRESULT AVIFILE_AddFrame(IAVIStreamImpl *This, DWORD ckid, DWORD size, DW
       This->nIdxFmtChanges += 16;
       if (This->idxFmtChanges == NULL)
 	This->idxFmtChanges =
-	  GlobalAllocPtr(GHND, This->nIdxFmtChanges * sizeof(AVIINDEXENTRY));
+	  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->nIdxFmtChanges * sizeof(AVIINDEXENTRY));
       else
 	This->idxFmtChanges =
-	  GlobalReAllocPtr(This->idxFmtChanges,
-			   This->nIdxFmtChanges * sizeof(AVIINDEXENTRY), GHND);
+	  HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->idxFmtChanges,
+			   This->nIdxFmtChanges * sizeof(AVIINDEXENTRY));
       if (This->idxFmtChanges == NULL)
 	return AVIERR_MEMORY;
 
@@ -1427,12 +1424,10 @@ static HRESULT AVIFILE_AddFrame(IAVIStreamImpl *This, DWORD ckid, DWORD size, DW
   if (This->idxFrames == NULL || This->lLastFrame + 1 >= This->nIdxFrames) {
     This->nIdxFrames += 512;
     if (This->idxFrames == NULL)
-      This->idxFrames =
-	GlobalAllocPtr(GHND, This->nIdxFrames * sizeof(AVIINDEXENTRY));
+      This->idxFrames = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->nIdxFrames * sizeof(AVIINDEXENTRY));
       else
-	This->idxFrames =
-	  GlobalReAllocPtr(This->idxFrames,
-			   This->nIdxFrames * sizeof(AVIINDEXENTRY), GHND);
+	This->idxFrames = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->idxFrames,
+			   This->nIdxFrames * sizeof(AVIINDEXENTRY));
     if (This->idxFrames == NULL)
       return AVIERR_MEMORY;
   }
@@ -1457,7 +1452,7 @@ static HRESULT AVIFILE_AddRecord(IAVIFileImpl *This)
 
   if (This->idxRecords == NULL || This->cbIdxRecords == 0) {
     This->cbIdxRecords += 1024 * sizeof(AVIINDEXENTRY);
-    This->idxRecords = GlobalAllocPtr(GHND, This->cbIdxRecords);
+    This->idxRecords = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->cbIdxRecords);
     if (This->idxRecords == NULL)
       return AVIERR_MEMORY;
   }
@@ -1532,14 +1527,14 @@ static void    AVIFILE_ConstructAVIStream(IAVIFileImpl *paf, DWORD nr, LPAVISTRE
     if (asi->dwLength > 0) {
       /* pre-allocate mem for frame-index structure */
       pstream->idxFrames =
-	(AVIINDEXENTRY*)GlobalAllocPtr(GHND, asi->dwLength * sizeof(AVIINDEXENTRY));
+	HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, asi->dwLength * sizeof(AVIINDEXENTRY));
       if (pstream->idxFrames != NULL)
 	pstream->nIdxFrames = asi->dwLength;
     }
     if (asi->dwFormatChangeCount > 0) {
       /* pre-allocate mem for formatchange-index structure */
       pstream->idxFmtChanges =
-	(AVIINDEXENTRY*)GlobalAllocPtr(GHND, asi->dwFormatChangeCount * sizeof(AVIINDEXENTRY));
+	HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, asi->dwFormatChangeCount * sizeof(AVIINDEXENTRY));
       if (pstream->idxFmtChanges != NULL)
 	pstream->nIdxFmtChanges = asi->dwFormatChangeCount;
     }
@@ -1565,31 +1560,29 @@ static void    AVIFILE_DestructAVIStream(IAVIStreamImpl *This)
   This->lLastFrame    = -1;
   This->paf = NULL;
   if (This->idxFrames != NULL) {
-    GlobalFreePtr(This->idxFrames);
+    HeapFree(GetProcessHeap(), 0, This->idxFrames);
     This->idxFrames  = NULL;
     This->nIdxFrames = 0;
   }
-  if (This->idxFmtChanges != NULL) {
-    GlobalFreePtr(This->idxFmtChanges);
-    This->idxFmtChanges = NULL;
-  }
+  HeapFree(GetProcessHeap(), 0, This->idxFmtChanges);
+  This->idxFmtChanges = NULL;
   if (This->lpBuffer != NULL) {
-    GlobalFreePtr(This->lpBuffer);
+    HeapFree(GetProcessHeap(), 0, This->lpBuffer);
     This->lpBuffer = NULL;
     This->cbBuffer = 0;
   }
   if (This->lpHandlerData != NULL) {
-    GlobalFreePtr(This->lpHandlerData);
+    HeapFree(GetProcessHeap(), 0, This->lpHandlerData);
     This->lpHandlerData = NULL;
     This->cbHandlerData = 0;
   }
   if (This->extra.lp != NULL) {
-    GlobalFreePtr(This->extra.lp);
+    HeapFree(GetProcessHeap(), 0, This->extra.lp);
     This->extra.lp = NULL;
     This->extra.cb = 0;
   }
   if (This->lpFormat != NULL) {
-    GlobalFreePtr(This->lpFormat);
+    HeapFree(GetProcessHeap(), 0, This->lpFormat);
     This->lpFormat = NULL;
     This->cbFormat = 0;
   }
@@ -1679,7 +1672,7 @@ static HRESULT AVIFILE_LoadFile(IAVIFileImpl *This)
     if (ckLIST2.ckid == FOURCC_LIST &&
 	ckLIST2.fccType == listtypeSTREAMHEADER) {
       pStream = This->ppStreams[nStream] =
-	(IAVIStreamImpl*)LocalAlloc(LPTR, sizeof(IAVIStreamImpl));
+	HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IAVIStreamImpl));
       if (pStream == NULL)
 	return AVIERR_MEMORY;
       AVIFILE_ConstructAVIStream(This, nStream, NULL);
@@ -1690,8 +1683,7 @@ static HRESULT AVIFILE_LoadFile(IAVIFileImpl *This)
 	case ckidSTREAMHANDLERDATA:
 	  if (pStream->lpHandlerData != NULL)
 	    return AVIERR_BADFORMAT;
-	  pStream->lpHandlerData = GlobalAllocPtr(GMEM_DDESHARE|GMEM_MOVEABLE,
-						  ck.cksize);
+	  pStream->lpHandlerData = HeapAlloc(GetProcessHeap(), 0, ck.cksize);
 	  if (pStream->lpHandlerData == NULL)
 	    return AVIERR_MEMORY;
 	  pStream->cbHandlerData = ck.cksize;
@@ -1705,8 +1697,7 @@ static HRESULT AVIFILE_LoadFile(IAVIFileImpl *This)
           if (ck.cksize == 0)
             break;
 
-	  pStream->lpFormat = GlobalAllocPtr(GMEM_DDESHARE|GMEM_MOVEABLE,
-					     ck.cksize);
+	  pStream->lpFormat = HeapAlloc(GetProcessHeap(), 0, ck.cksize);
 	  if (pStream->lpFormat == NULL)
 	    return AVIERR_MEMORY;
 	  pStream->cbFormat = ck.cksize;
@@ -1800,20 +1791,20 @@ static HRESULT AVIFILE_LoadFile(IAVIFileImpl *This)
 	  break;
 	case ckidSTREAMNAME:
 	  { /* streamname will be saved as ASCII string */
-	    LPSTR str = (LPSTR)LocalAlloc(LMEM_FIXED, ck.cksize);
+	    LPSTR str = HeapAlloc(GetProcessHeap(), 0, ck.cksize);
 	    if (str == NULL)
 	      return AVIERR_MEMORY;
 
 	    if (mmioRead(This->hmmio, (HPSTR)str, ck.cksize) != ck.cksize)
 	    {
-	      LocalFree((HLOCAL)str);
+	      HeapFree(GetProcessHeap(), 0, str);
 	      return AVIERR_FILEREAD;
 	    }
 
 	    MultiByteToWideChar(CP_ACP, 0, str, -1, pStream->sInfo.szName,
 				sizeof(pStream->sInfo.szName)/sizeof(pStream->sInfo.szName[0]));
 
-	    LocalFree((HLOCAL)str);
+	    HeapFree(GetProcessHeap(), 0, str);
 	  }
 	  break;
 	case ckidAVIPADDING:
@@ -1919,8 +1910,7 @@ static HRESULT AVIFILE_LoadIndex(IAVIFileImpl *This, DWORD size, DWORD offset)
   HRESULT        hr = AVIERR_OK;
   BOOL           bAbsolute = TRUE;
 
-  lp = (AVIINDEXENTRY*)GlobalAllocPtr(GMEM_MOVEABLE,
-				      IDX_PER_BLOCK * sizeof(AVIINDEXENTRY));
+  lp = HeapAlloc(GetProcessHeap(), 0, IDX_PER_BLOCK * sizeof(AVIINDEXENTRY));
   if (lp == NULL)
     return AVIERR_MEMORY;
 
@@ -1931,7 +1921,7 @@ static HRESULT AVIFILE_LoadIndex(IAVIFileImpl *This, DWORD size, DWORD offset)
     pStream->lLastFrame = -1;
 
     if (pStream->idxFrames != NULL) {
-      GlobalFreePtr(pStream->idxFrames);
+      HeapFree(GetProcessHeap(), 0, pStream->idxFrames);
       pStream->idxFrames  = NULL;
       pStream->nIdxFrames = 0;
     }
@@ -1947,7 +1937,7 @@ static HRESULT AVIFILE_LoadIndex(IAVIFileImpl *This, DWORD size, DWORD offset)
       pStream->nIdxFrames = pStream->sInfo.dwLength;
 
     pStream->idxFrames =
-      (AVIINDEXENTRY*)GlobalAllocPtr(GHND, pStream->nIdxFrames * sizeof(AVIINDEXENTRY));
+      HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pStream->nIdxFrames * sizeof(AVIINDEXENTRY));
     if (pStream->idxFrames == NULL && pStream->nIdxFrames > 0) {
       pStream->nIdxFrames = 0;
       return AVIERR_MEMORY;
@@ -1971,8 +1961,7 @@ static HRESULT AVIFILE_LoadIndex(IAVIFileImpl *This, DWORD size, DWORD offset)
 		       pos, &bAbsolute);
   }
 
-  if (lp != NULL)
-    GlobalFreePtr(lp);
+  HeapFree(GetProcessHeap(), 0, lp);
 
   /* checking ... */
   for (n = 0; n < This->fInfo.dwStreams; n++) {
@@ -2041,10 +2030,9 @@ static HRESULT AVIFILE_ReadBlock(IAVIStreamImpl *This, DWORD pos,
       DWORD maxSize = max(size, This->sInfo.dwSuggestedBufferSize);
 
       if (This->lpBuffer == NULL)
-	This->lpBuffer = (LPDWORD)GlobalAllocPtr(GMEM_MOVEABLE, maxSize);
+	This->lpBuffer = HeapAlloc(GetProcessHeap(), 0, maxSize);
       else
-	This->lpBuffer =
-	  (LPDWORD)GlobalReAllocPtr(This->lpBuffer, maxSize, GMEM_MOVEABLE);
+	This->lpBuffer = HeapReAlloc(GetProcessHeap(), 0, This->lpBuffer, maxSize);
       if (This->lpBuffer == NULL)
 	return AVIERR_MEMORY;
       This->cbBuffer = max(size, This->sInfo.dwSuggestedBufferSize);
@@ -2255,18 +2243,18 @@ static HRESULT AVIFILE_SaveFile(IAVIFileImpl *This)
 	return AVIERR_FILEWRITE;
 
       /* the streamname must be saved in ASCII not Unicode */
-      str = (LPSTR)LocalAlloc(LPTR, ck.cksize);
+      str = HeapAlloc(GetProcessHeap(), 0, ck.cksize);
       if (str == NULL)
 	return AVIERR_MEMORY;
       WideCharToMultiByte(CP_ACP, 0, pStream->sInfo.szName, -1, str,
 			  ck.cksize, NULL, NULL);
 
       if (mmioWrite(This->hmmio, (HPSTR)str, ck.cksize) != ck.cksize) {
-	LocalFree((HLOCAL)str);	
+	HeapFree(GetProcessHeap(), 0, str);	
 	return AVIERR_FILEWRITE;
       }
 
-      LocalFree((HLOCAL)str);
+      HeapFree(GetProcessHeap(), 0, str);
       if (mmioAscend(This->hmmio, &ck, 0) != S_OK)
 	return AVIERR_FILEWRITE;
     }

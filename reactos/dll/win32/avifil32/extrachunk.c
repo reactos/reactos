@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #define COM_NO_WINDOWS_H
@@ -23,8 +23,6 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "windowsx.h"
-#include "mmreg.h"
 #include "vfw.h"
 
 #include "wine/debug.h"
@@ -82,9 +80,9 @@ HRESULT WriteExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPVOID lpData,
   assert(size > 0);
 
   if (extra->lp)
-    lp = (LPDWORD)GlobalReAllocPtr(extra->lp, extra->cb + size + 2 * sizeof(DWORD), GHND);
+    lp = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, extra->lp, extra->cb + size + 2 * sizeof(DWORD));
   else
-    lp = (LPDWORD)GlobalAllocPtr(GHND, size + 2 * sizeof(DWORD));
+    lp = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + 2 * sizeof(DWORD));
 
   if (lp == NULL)
     return AVIERR_MEMORY;
@@ -117,10 +115,10 @@ HRESULT ReadChunkIntoExtra(LPEXTRACHUNKS extra,HMMIO hmmio,MMCKINFO *lpck)
   cb  = lpck->cksize + 2 * sizeof(DWORD);
   cb += (cb & 1);
 
-  if (extra->lp != NULL) {
-    lp = (LPDWORD)GlobalReAllocPtr(extra->lp, extra->cb + cb, GHND);
-  } else
-    lp = (LPDWORD)GlobalAllocPtr(GHND, cb);
+  if (extra->lp != NULL)
+    lp = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, extra->lp, extra->cb + cb);
+  else
+    lp = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cb);
 
   if (lp == NULL)
     return AVIERR_MEMORY;
