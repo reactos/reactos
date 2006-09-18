@@ -31,7 +31,7 @@ CmpAllocate(
 	IN SIZE_T Size,
 	IN BOOLEAN Paged)
 {
-	return malloc(Size);
+	return (PVOID) malloc(Size);
 }
 
 static VOID

@@ -122,7 +122,7 @@ RegpOpenOrCreateKey(
 	LocalKeyName = (PWSTR)KeyName;
 	for (;;)
 	{
-		End = wcschr(LocalKeyName, '\\');
+		End = (PWSTR) wcschr(LocalKeyName, '\\');
 		if (End)
 		{
 			KeyString.Buffer = LocalKeyName;

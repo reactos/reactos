@@ -84,7 +84,7 @@ RtlAnsiStringToUnicodeString(
 	if (AllocateDestinationString)
 	{
 		UniDest->MaximumLength = (USHORT)Length + sizeof(WCHAR);
-		UniDest->Buffer = malloc(UniDest->MaximumLength);
+		UniDest->Buffer = (PWSTR) malloc(UniDest->MaximumLength);
 		if (!UniDest->Buffer)
 			return STATUS_NO_MEMORY;
 	}
@@ -131,7 +131,7 @@ ExAllocatePool(
 	IN POOL_TYPE PoolType,
 	IN SIZE_T NumberOfBytes)
 {
-	return malloc(NumberOfBytes);
+	return (PVOID) malloc(NumberOfBytes);
 }
 
 VOID NTAPI
