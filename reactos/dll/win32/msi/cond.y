@@ -40,7 +40,7 @@
 #define YYLEX_PARAM info
 #define YYPARSE_PARAM info
 
-static int COND_error(const char *str);
+static int cond_error(const char *str);
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -59,7 +59,7 @@ struct cond_str {
 
 static LPWSTR COND_GetString( struct cond_str *str );
 static LPWSTR COND_GetLiteral( struct cond_str *str );
-static int COND_lex( void *COND_lval, COND_input *info);
+static int cond_lex( void *COND_lval, COND_input *info);
 static const WCHAR szEmpty[] = { 0 };
 
 static INT compare_int( INT a, INT operator, INT b );
@@ -667,7 +667,7 @@ static int COND_GetOne( struct cond_str *str, COND_input *cond )
     return rc;
 }
 
-static int COND_lex( void *COND_lval, COND_input *cond )
+static int cond_lex( void *COND_lval, COND_input *cond )
 {
     int rc;
     struct cond_str *str = COND_lval;
@@ -707,7 +707,7 @@ static LPWSTR COND_GetLiteral( struct cond_str *str )
     return ret;
 }
 
-static int COND_error(const char *str)
+static int cond_error(const char *str)
 {
     TRACE("%s\n", str );
     return 0;
@@ -728,7 +728,7 @@ MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *package, LPCWSTR szCondition )
     cond.n     = 0;
     cond.result = MSICONDITION_ERROR;
     
-    if ( !COND_parse( &cond ) )
+    if ( !cond_parse( &cond ) )
         r = cond.result;
     else
         r = MSICONDITION_ERROR;

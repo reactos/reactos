@@ -71,6 +71,7 @@ typedef struct tagMSIDATABASE
     MSIOBJECTHDR hdr;
     IStorage *storage;
     string_table *strings;
+    LPWSTR deletefile;
     LPCWSTR mode;
     struct list tables;
     struct list transforms;
@@ -337,6 +338,7 @@ extern UINT msi_string_get_codepage( string_table *st );
 
 
 extern BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name );
+extern MSICONDITION MSI_DatabaseIsTablePersistent( MSIDATABASE *db, LPCWSTR table );
 
 extern UINT read_raw_stream_data( MSIDATABASE*, LPCWSTR stname,
                               USHORT **pdata, UINT *psz );

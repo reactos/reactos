@@ -64,6 +64,11 @@ static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
     r = IStorage_Release( db->storage );
     if( r )
         ERR("database reference count was not zero (%ld)\n", r);
+    if (db->deletefile)
+    {
+        DeleteFileW( db->deletefile );
+        msi_free( db->deletefile );
+    }
 }
 
 UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
@@ -74,6 +79,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     UINT ret = ERROR_FUNCTION_FAILED;
     LPCWSTR szMode;
     STATSTG stat;
+    BOOL created = FALSE;
 
     TRACE("%s %s\n",debugstr_w(szDBPath),debugstr_w(szPersist) );
 
@@ -83,12 +89,15 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     szMode = szPersist;
     if( HIWORD( szPersist ) )
     {
-        /* UINT len = lstrlenW( szPerist ) + 1; */
-        FIXME("don't support persist files yet\b");
-        return ERROR_INVALID_PARAMETER;
-        /* szMode = msi_alloc( len * sizeof (DWORD) ); */
+        if (!CopyFileW( szDBPath, szPersist, FALSE ))
+            return ERROR_OPEN_FAILED;
+
+        szDBPath = szPersist;
+        szPersist = MSIDBOPEN_TRANSACT;
+        created = TRUE;
     }
-    else if( szPersist == MSIDBOPEN_READONLY )
+
+    if( szPersist == MSIDBOPEN_READONLY )
     {
         r = StgOpenStorage( szDBPath, NULL,
               STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
@@ -97,13 +106,14 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     {
         /* FIXME: MSIDBOPEN_CREATE should case STGM_TRANSACTED flag to be
          * used here: */
-        r = StgCreateDocfile( szDBPath, 
-              STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, &stg);
+        r = StgCreateDocfile( szDBPath,
+              STGM_CREATE|STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, &stg);
         if( r == ERROR_SUCCESS )
         {
             IStorage_SetClass( stg, &CLSID_MsiDatabase );
             r = init_string_table( stg );
         }
+        created = TRUE;
     }
     else if( szPersist == MSIDBOPEN_TRANSACT )
     {
@@ -157,6 +167,10 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
 
     db->storage = stg;
     db->mode = szMode;
+    if (created)
+        db->deletefile = strdupW( szDBPath );
+    else
+        db->deletefile = NULL;
     list_init( &db->tables );
     list_init( &db->transforms );
 

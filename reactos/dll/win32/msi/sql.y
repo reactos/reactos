@@ -36,7 +36,7 @@
 #define YYLEX_PARAM info
 #define YYPARSE_PARAM info
 
-extern int SQL_error(const char *str);
+static int sql_error(const char *str);
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
@@ -51,7 +51,7 @@ typedef struct tag_SQL_input
 
 static LPWSTR SQL_getstring( void *info, struct sql_str *str );
 static INT SQL_getint( void *info );
-static int SQL_lex( void *SQL_lval, SQL_input *info );
+static int sql_lex( void *SQL_lval, SQL_input *info );
 
 static void *parser_alloc( void *info, unsigned int sz );
 static column_info *parser_alloc_column( void *info, LPCWSTR table, LPCWSTR column );
@@ -686,7 +686,7 @@ static column_info *parser_alloc_column( void *info, LPCWSTR table, LPCWSTR colu
     return col;
 }
 
-int SQL_lex( void *SQL_lval, SQL_input *sql )
+static int sql_lex( void *SQL_lval, SQL_input *sql )
 {
     int token;
     struct sql_str * str = SQL_lval;
@@ -752,7 +752,7 @@ INT SQL_getint( void *info )
     return r;
 }
 
-int SQL_error( const char *str )
+static int sql_error( const char *str )
 {
     return 0;
 }
@@ -851,7 +851,7 @@ UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
     sql.view = phview;
     sql.mem = mem;
 
-    r = SQL_parse(&sql);
+    r = sql_parse(&sql);
 
     TRACE("Parse returned %d\n", r);
     if( r )

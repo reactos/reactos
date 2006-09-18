@@ -38,6 +38,7 @@
 	<file>distinct.c</file>
 	<file>events.c</file>
 	<file>files.c</file>
+	<file>font.c</file>
 	<file>format.c</file>
 	<file>handle.c</file>
 	<file>helpers.c</file>

@@ -845,6 +845,11 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 
         RegCreateKeyW( hkey2, cls->Context, &hkey3 );
         file = get_loaded_file( package, comp->KeyPath );
+        if (!file)
+        {
+            TRACE("COM server not provided, skipping class %s\n", debugstr_w(cls->clsid));
+            continue;
+        }
 
         /*
          * FIXME: Implement install on demand (advertised components).

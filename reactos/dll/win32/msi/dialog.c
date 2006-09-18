@@ -2328,6 +2328,38 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
     }
 }
 
+static void msi_dialog_vcl_add_drives( msi_dialog *dialog, msi_control *control )
+{
+    LPWSTR drives, ptr;
+    LVITEMW lvitem;
+    DWORD size;
+    int i = 0;
+
+    size = GetLogicalDriveStringsW( 0, NULL );
+    if ( !size ) return;
+
+    drives = msi_alloc( (size + 1) * sizeof(WCHAR) );
+    if ( !drives ) return;
+
+    GetLogicalDriveStringsW( size, drives );
+
+    ptr = drives;
+    while (*ptr)
+    {
+        lvitem.mask = LVIF_TEXT;
+        lvitem.iItem = i;
+        lvitem.iSubItem = 0;
+        lvitem.pszText = ptr;
+        lvitem.cchTextMax = lstrlenW(ptr) + 1;
+        SendMessageW( control->hwnd, LVM_INSERTITEMW, 0, (LPARAM)&lvitem );
+
+        ptr += lstrlenW(ptr) + 1;
+        i++;
+    }
+
+    msi_free( drives );
+}
+
 static UINT msi_dialog_volumecost_list( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
@@ -2341,6 +2373,7 @@ static UINT msi_dialog_volumecost_list( msi_dialog *dialog, MSIRECORD *rec )
         return ERROR_FUNCTION_FAILED;
 
     msi_dialog_vcl_add_columns( dialog, control, rec );
+    msi_dialog_vcl_add_drives( dialog, control );
 
     return ERROR_SUCCESS;
 }

@@ -1643,6 +1643,14 @@ UINT MSI_CommitTables( MSIDATABASE *db )
     return ERROR_SUCCESS;
 }
 
+MSICONDITION MSI_DatabaseIsTablePersistent( MSIDATABASE *db, LPCWSTR table )
+{
+    if (!table)
+        return MSICONDITION_ERROR;
+
+    return MSICONDITION_FALSE;
+}
+
 static MSIRECORD *msi_get_transform_record( MSITABLEVIEW *tv, string_table *st, USHORT *rawdata )
 {
     UINT i, val, ofs = 0;

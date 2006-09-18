@@ -22,12 +22,9 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "wine/debug.h"
 #include "wine/unicode.h"
 #include "query.h"
 #include "sql.tab.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 /*
 ** All the keywords of the SQL language are stored as in a hash
