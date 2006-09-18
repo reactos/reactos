@@ -1220,32 +1220,135 @@ HandleUserNpx:
     and ebx, ~(CR0_MP + CR0_EM + CR0_TS)
     mov cr0, ebx
 
-    /* FIXME: Implement the rest */
-    int 3
-    jmp $
+    /* Check if we have FX support */
+    test byte ptr _KeI386FxsrPresent, 1
+    jz FnSave2
+
+    /* Save the state */
+    fxsave [ecx]
+    jmp MakeCr0Dirty
+FnSave2:
+    fnsave [ecx]
+    wait
+
+MakeCr0Dirty:
+    /* Make CR0 state not loaded */
+    or ebx, NPX_STATE_NOT_LOADED
+    or ebx, [ecx+FN_CR0_NPX_STATE]
+    mov cr0, ebx
+
+    /* Update NPX state */
+    mov byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+    mov dword ptr fs:[KPCR_NPX_THREAD], 0
 
 NoSaveRestore:
-    /* FIXME: Implement the rest */
-    int 3
-    jmp $
+    /* Clear the TS bit and re-enable interrupts */
+    and dword ptr [ecx+FN_CR0_NPX_STATE], ~CR0_TS
+    sti
 
-EmulationEnabled:
-    /* Did this come from kernel-mode? */
-    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
-    jz CheckState
+    /* Check if we have FX support */
+    test byte ptr _KeI386FxsrPresent, 1
+    jz FnError
 
-    /* It came from user-mode, so this would only be valid inside a VDM */
-    /* Since we don't actually have VDMs in ROS, bugcheck. */
-    jmp BogusTrap2
+    /* Get error offset, control and status words */
+    mov ebx, [ecx+FX_ERROR_OFFSET]
+    movzx eax, word ptr [ecx+FX_CONTROL_WORD]
+    movzx edx, word ptr [ecx+FX_STATUS_WORD]
 
-TsSetOnLoadedState:
-    /* TS shouldn't be set, unless this we don't have a Math Processor */
-    test bl, CR0_MP
-    jnz BogusTrap
+    /* Get the faulting opcode */
+    mov esi, [ecx+FX_DATA_OFFSET]
+    jmp CheckError
 
-    /* Strange that we got a trap at all, but ignore and continue */
-    clts
-    jmp _Kei386EoiHelper@0
+FnError:
+    /* Get error offset, control and status words */
+    mov ebx, [ecx+FP_ERROR_OFFSET]
+    movzx eax, word ptr [ecx+FP_CONTROL_WORD]
+    movzx edx, word ptr [ecx+FP_STATUS_WORD]
+
+    /* Get the faulting opcode */
+    mov esi, [ecx+FP_DATA_OFFSET]
+
+CheckError:
+    /* Mask exceptions */
+    and eax, 0x3F
+    not eax
+    and eax, edx
+
+    /* Check if what's left is invalid */
+    test al, 1
+    jz ValidNpxOpcode
+
+    /* Check if it was a stack fault */
+    test al, 64
+    jnz InvalidStack
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_INVALID_OPERATION
+    jmp _DispatchOneParam
+
+InvalidStack:
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_STACK_CHECK
+    jmp _DispatchTwoParam
+
+ValidNpxOpcode:
+
+    /* Check for divide by 0 */
+    test al, 4
+    jz 1f
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_DIVIDE_BY_ZERO
+    jmp _DispatchOneParam
+
+1:
+    /* Check for denormal */
+    test al, 2
+    jz 1f
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_INVALID_OPERATION
+    jmp _DispatchOneParam
+
+1:
+    /* Check for overflow */
+    test al, 8
+    jz 1f
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_OVERFLOW
+    jmp _DispatchOneParam
+
+1:
+    /* Check for underflow */
+    test al, 16
+    jz 1f
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_UNDERFLOW
+    jmp _DispatchOneParam
+
+1:
+    /* Check for precision fault */
+    test al, 32
+    jz UnexpectedNpx
+
+    /* Raise exception */
+    mov eax, STATUS_FLOAT_INEXACT_RESULT
+    jmp _DispatchOneParam
+
+UnexpectedNpx:
+
+    /* Strange result, bugcheck the OS */
+    sti
+    push ebp
+    push 0
+    push 0
+    push eax
+    push 1
+    push TRAP_CAUSE_UNKNOWN
+    call _KeBugCheckWithTf@24
 
 V86Npx:
     /* Check if this is a VDM */
@@ -1258,15 +1361,23 @@ V86Npx:
     int 3
     jmp $
 
-BogusTrap2:
-    /* Cause a bugcheck */
-    sti
-    push 0
-    push 0
-    push eax
-    push 1
-    push TRAP_CAUSE_UNKNOWN
-    call _KeBugCheckEx@20
+EmulationEnabled:
+    /* Did this come from kernel-mode? */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R0_CODE
+    jz CheckState
+
+    /* It came from user-mode, so this would only be valid inside a VDM */
+    /* Since we don't actually have VDMs in ROS, bugcheck. */
+    jmp UnexpectedNpx
+
+TsSetOnLoadedState:
+    /* TS shouldn't be set, unless this we don't have a Math Processor */
+    test bl, CR0_MP
+    jnz BogusTrap
+
+    /* Strange that we got a trap at all, but ignore and continue */
+    clts
+    jmp _Kei386EoiHelper@0
 
 BogusTrap:
     /* Cause a bugcheck */

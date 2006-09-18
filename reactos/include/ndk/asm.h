@@ -200,13 +200,28 @@ Author:
 //
 // FPU Save Area Offsets
 //
-#define FN_CONTROL_WORD                         0x0
-#define FN_STATUS_WORD                          0x4
-#define FN_TAG_WORD                             0x8
-#define FN_DATA_SELECTOR                        0x18
+#define FP_CONTROL_WORD                         0x0
+#define FP_STATUS_WORD                          0x4
+#define FP_TAG_WORD                             0x8
+#define FP_ERROR_OFFSET                         0xC
+#define FP_ERROR_SELECTOR                       0x10
+#define FP_DATA_OFFSET                          0x14
+#define FP_DATA_SELECTOR                        0x18
 #define FN_CR0_NPX_STATE                        0x20C
 #define SIZEOF_FX_SAVE_AREA                     528
 #define NPX_FRAME_LENGTH                        0x210
+
+//
+// FX Save Area Offsets
+//
+#define FX_CONTROL_WORD                         0x0
+#define FX_STATUS_WORD                          0x2
+#define FX_TAG_WORD                             0x4
+#define FX_ERROR_OPCODE                         0x6
+#define FX_ERROR_OFFSET                         0x8
+#define FX_ERROR_SELECTOR                       0xC
+#define FX_DATA_OFFSET                          0x10
+#define FX_DATA_SELECTOR                        0x14
 
 //
 // NPX States
@@ -464,6 +479,15 @@ Author:
 #define STATUS_SINGLE_STEP                      0x80000004
 #define STATUS_INTEGER_DIVIDE_BY_ZERO           0xC0000094
 #define STATUS_INTEGER_OVERFLOW                 0xC0000095
+#define STATUS_FLOAT_DENORMAL_OPERAND           0xC000008D
+#define STATUS_FLOAT_DIVIDE_BY_ZERO             0xC000008E
+#define STATUS_FLOAT_INEXACT_RESULT             0xC000008F
+#define STATUS_FLOAT_INVALID_OPERATION          0xC0000090
+#define STATUS_FLOAT_OVERFLOW                   0xC0000091
+#define STATUS_FLOAT_STACK_CHECK                0xC0000092
+#define STATUS_FLOAT_UNDERFLOW                  0xC0000093
+#define STATUS_FLOAT_MULTIPLE_FAULTS            0xC00002B4
+#define STATUS_FLOAT_MULTIPLE_TRAPS             0xC00002B5
 #define APC_INDEX_MISMATCH                      0x01
 #define TRAP_CAUSE_UNKNOWN                      0x12
 #define KMODE_EXCEPTION_NOT_HANDLED             0x13
