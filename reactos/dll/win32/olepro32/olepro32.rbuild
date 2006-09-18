@@ -1,4 +1,5 @@
-<module name="olepro32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_OLEPRO32}" installbase="system32" installname="olepro32.dll" allowwarnings="true">
+<module name="olepro32" type="win32dll" baseaddress="${BASEADDRESS_OLEPRO32}" installbase="system32" installname="olepro32.dll" allowwarnings="true">
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="olepro32.spec.def" />
 	<include base="olepro32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
