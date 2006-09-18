@@ -315,15 +315,45 @@ GetSwapLock:
     jnz WmiTrace
 
 AfterTrace:
-    /* Update kernel stack */
+#ifdef DBG
+    /* Assert that we're on the right CPU */
+    mov cl, [esi+KTHREAD_NEXT_PROCESSOR]
+    cmp cl, [ebx+KPCR_PROCESSOR_NUMBER]
+    jnz WrongCpu
+#endif
+
+    /* Get CR0 and save it */
+    mov ebp, cr0
+    mov edx, ebp
+
+#ifdef CONFIG_SMP
+    /* Check NPX State */
+    cmp byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_LOADED
+    jz NpxLoaded
+#endif
+
+SetStack:
+    /* Set new stack */
     mov [edi+KTHREAD_KERNEL_STACK], esp
 
-    /* Switch to new stack */
-    mov esp, [esi+KTHREAD_KERNEL_STACK]
+    /* Checking NPX, disable interrupts now */
+    mov eax, [esi+KTHREAD_INITIAL_STACK]
+    cli
 
-    /* Set TEB pointer */
-    mov eax, [esi+KTHREAD_TEB]
-    mov [ebx+KPCR_TEB], eax
+    /* Get the NPX State */
+    movzx ecx, byte ptr [esi+KTHREAD_NPX_STATE]
+
+    /* Clear the other bits, merge in CR0, merge in FPU CR0 bits and compare */
+    and edx, ~(CR0_MP + CR0_EM + CR0_TS)
+    or ecx, edx
+    or ecx, [eax - (NPX_FRAME_LENGTH - FN_CR0_NPX_STATE)]
+    cmp ebp, ecx
+    jnz NewCr0
+
+StackOk:
+    /* Enable interrupts and set the current stack */
+    sti
+    mov esp, [esi+KTHREAD_KERNEL_STACK]
 
     /* Check if address space switch is needed */
     mov ebp, [esi+KTHREAD_APCSTATE_PROCESS]
@@ -348,6 +378,7 @@ SameProcess:
 
     /* Set the TEB */
     mov eax, [esi+KTHREAD_TEB]
+    mov [ebx+KPCR_TEB], eax
     mov ecx, [ebx+KPCR_GDT]
     mov [ecx+0x3A], ax
     shr eax, 16
@@ -443,6 +474,20 @@ LoadLdt:
     lldt ax
     jmp UpdateCr3
 
+NewCr0:
+
+#ifdef DBG
+    /* Assert NPX State */
+    test byte ptr [esi+KTHREAD_NPX_STATE], ~(NPX_STATE_NOT_LOADED)
+    jnz InvalidNpx
+    test dword ptr [eax - (NPX_FRAME_LENGTH - FN_CR0_NPX_STATE)], ~(CR0_MP + CR0_EM + CR0_TS)
+    jnz InvalidNpx
+#endif
+
+    /* Update CR0 */
+    mov cr0, ecx
+    jmp StackOk
+
 WmiTrace:
 
     /* No WMI support yet */
@@ -461,6 +506,15 @@ BugCheckDpc:
     push edi
     push ATTEMPTED_SWITCH_FROM_DPC
     call _KeBugCheckEx@20
+
+#ifdef DBG
+InvalidNpx:
+    int 3
+WrongActiveCpu:
+    int 3
+WrongCpu:
+    int 3
+#endif
 .endfunc
 
 /*++
