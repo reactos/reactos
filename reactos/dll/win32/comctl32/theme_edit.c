@@ -32,8 +32,6 @@
 #include "comctl32.h"
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(themingedit);
-
 /* Draw themed border */
 static void nc_paint (HTHEME theme, HWND hwnd, HRGN region)
 {

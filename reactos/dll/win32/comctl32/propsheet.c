@@ -448,7 +448,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
   else
   {
     HRSRC hResource = FindResourceA(lppsp->hInstance,
-                                    (LPSTR)lppsp->u.pszTemplate,
+                                    (LPCSTR)lppsp->u.pszTemplate,
                                     (LPSTR)RT_DIALOG);
     HGLOBAL hTemplate = LoadResource(lppsp->hInstance,
                                      hResource);
@@ -1424,7 +1424,7 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
     HANDLE hTemplate;
 
     hResource = FindResourceA(ppshpage->hInstance,
-                                    (LPSTR)ppshpage->u.pszTemplate,
+                                    (LPCSTR)ppshpage->u.pszTemplate,
                                     (LPSTR)RT_DIALOG);
     if(!hResource)
 	return FALSE;

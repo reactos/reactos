@@ -1048,8 +1048,8 @@ TRACKBAR_GetNumTics (TRACKBAR_INFO *infoPtr)
 
 static int comp_tics(const void *ap, const void *bp)
 {
-    DWORD a = *((DWORD *)ap);
-    DWORD b = *((DWORD *)bp);
+    const DWORD a = *(const DWORD *)ap;
+    const DWORD b = *(const DWORD *)bp;
 
     TRACE("(a=%ld, b=%ld)\n", a, b);
     if (a < b) return -1;
