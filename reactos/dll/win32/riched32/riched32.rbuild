@@ -14,5 +14,6 @@
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>richedit.c</file>
+	<file>version.rc</file>
 	<file>riched32.spec</file>
 </module>
