@@ -116,7 +116,7 @@ HRESULT WINAPI AddDelBackupEntryW(LPCWSTR lpcszFileList, LPCWSTR lpcszBackupDir,
                                   LPCWSTR lpcszBaseName, DWORD dwFlags)
 {
     WCHAR szIniPath[MAX_PATH];
-    LPWSTR szString = NULL;
+    LPCWSTR szString = NULL;
 
     static const WCHAR szBackupEntry[] = {
         '-','1',',','0',',','0',',','0',',','0',',','0',',','-','1',0
@@ -144,7 +144,7 @@ HRESULT WINAPI AddDelBackupEntryW(LPCWSTR lpcszFileList, LPCWSTR lpcszBackupDir,
     SetFileAttributesW(szIniPath, FILE_ATTRIBUTE_NORMAL);
 
     if (dwFlags & AADBE_ADD_ENTRY)
-        szString = (LPWSTR)szBackupEntry;
+        szString = szBackupEntry;
     else if (dwFlags & AADBE_DEL_ENTRY)
         szString = NULL;
 
@@ -249,7 +249,8 @@ HRESULT WINAPI AdvInstallFileW(HWND hwnd, LPCWSTR lpszSourceDir, LPCWSTR lpszSou
                                DWORD dwFlags, DWORD dwReserved)
 {
     PSP_FILE_CALLBACK_W pFileCallback;
-    LPWSTR szPath, szDestFilename;
+    LPWSTR szDestFilename;
+    LPCWSTR szPath;
     WCHAR szRootPath[ROOT_LENGTH];
     DWORD dwLen, dwLastError;
     HSPFILEQ fileQueue;
@@ -270,7 +271,7 @@ HRESULT WINAPI AdvInstallFileW(HWND hwnd, LPCWSTR lpszSourceDir, LPCWSTR lpszSou
     dwLastError = ERROR_SUCCESS;
 
     lstrcpynW(szRootPath, lpszSourceDir, ROOT_LENGTH);
-    szPath = (LPWSTR)lpszSourceDir + ROOT_LENGTH;
+    szPath = lpszSourceDir + ROOT_LENGTH;
 
     /* use lpszSourceFile as destination filename if lpszDestFile is NULL */
     if (lpszDestFile)
@@ -547,8 +548,8 @@ static HRESULT (WINAPI *pExtract)(EXTRACTdest*, LPCSTR);
 static LPSTR convert_file_list(LPCSTR FileList, DWORD *dwNumFiles)
 {
     DWORD dwLen;
-    char *first = (char *)FileList;
-    char *last = (char *)FileList + strlen(FileList) - 1;
+    const char *first = FileList;
+    const char *last = FileList + strlen(FileList) - 1;
     LPSTR szConvertedList, temp;
     
     /* any number of these chars before the list is OK */

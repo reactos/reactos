@@ -50,6 +50,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(advpack);
 typedef struct _ADVInfo
 {
     HINF hinf;
+    LPWSTR inf_path;
     LPWSTR inf_filename;
     LPWSTR install_sec;
     LPWSTR working_dir;
@@ -326,7 +327,7 @@ static HRESULT spapi_install(ADVInfo *info)
     SetupTermDefaultQueueCallback(context);
 
     ret = SetupInstallFromInfSectionW(NULL, info->hinf, info->install_sec,
-                                      SPINST_INIFILES | SPINST_REGISTRY,
+                                      SPINST_INIFILES | SPINST_REGISTRY | SPINST_REGSVR,
                                       HKEY_LOCAL_MACHINE, NULL, 0,
                                       NULL, NULL, NULL, NULL);
     if (!ret)
@@ -372,24 +373,80 @@ static HRESULT adv_install(ADVInfo *info)
     return hr;
 }
 
+/* determines the proper working directory for the INF file */
+static HRESULT get_working_dir(ADVInfo *info, LPCWSTR inf_filename, LPCWSTR working_dir)
+{
+    WCHAR path[MAX_PATH];
+    LPCWSTR ptr;
+    DWORD len;
+
+    static const WCHAR backslash[] = {'\\',0};
+    static const WCHAR inf_dir[] = {'\\','I','N','F',0};
+
+    if ((ptr = strrchrW(inf_filename, '\\')))
+    {
+        len = ptr - inf_filename + 1;
+        ptr = inf_filename;
+    }
+    else if (working_dir && *working_dir)
+    {
+        len = lstrlenW(working_dir) + 1;
+        ptr = working_dir;
+    }
+    else
+    {
+        GetCurrentDirectoryW(MAX_PATH, path);
+        lstrcatW(path, backslash);
+        lstrcatW(path, inf_filename);
+
+        /* check if the INF file is in the current directory */
+        if (GetFileAttributesW(path) != INVALID_FILE_ATTRIBUTES)
+        {
+            GetCurrentDirectoryW(MAX_PATH, path);
+        }
+        else
+        {
+            /* default to the windows\inf directory if all else fails */
+            GetWindowsDirectoryW(path, MAX_PATH);
+            lstrcatW(path, inf_dir);
+        }
+
+        len = lstrlenW(path) + 1;
+        ptr = path;
+    }
+
+    info->working_dir = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!info->working_dir)
+        return E_OUTOFMEMORY;
+
+    lstrcpynW(info->working_dir, ptr, len);
+
+    return S_OK;
+}
+
 /* loads the INF file and performs checks on it */
 HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
                      LPCWSTR working_dir, DWORD flags, ADVInfo *info)
 {
     DWORD len;
-    LPCWSTR ptr;
+    HRESULT hr;
+    LPCWSTR ptr, path;
 
+    static const WCHAR backslash[] = {'\\',0};
     static const WCHAR default_install[] = {
         'D','e','f','a','u','l','t','I','n','s','t','a','l','l',0
     };
 
-    len = lstrlenW(inf_filename);
+    if (!(ptr = strrchrW(inf_filename, '\\')))
+        ptr = inf_filename;
+
+    len = lstrlenW(ptr);
 
     info->inf_filename = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
     if (!info->inf_filename)
         return E_OUTOFMEMORY;
 
-    lstrcpyW(info->inf_filename, inf_filename);
+    lstrcpyW(info->inf_filename, ptr);
 
     /* FIXME: determine the proper platform to install (NTx86, etc) */
     if (!install_sec || !*install_sec)
@@ -409,26 +466,26 @@ HRESULT install_init(LPCWSTR inf_filename, LPCWSTR install_sec,
 
     lstrcpyW(info->install_sec, ptr);
 
-    /* FIXME: need to get the real working directory */
-    if (!working_dir || !*working_dir)
-    {
-        ptr = strrchrW(info->inf_filename, '\\');
-        len = ptr - info->inf_filename + 1;
-        ptr = info->inf_filename;
-    }
-    else
-    {
-        len = lstrlenW(working_dir) + 1;
-        ptr = working_dir;
-    }
+    hr = get_working_dir(info, inf_filename, working_dir);
+    if (FAILED(hr))
+        return hr;
 
-    info->working_dir = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!info->working_dir)
+    len = lstrlenW(info->working_dir) + lstrlenW(info->inf_filename) + 2;
+    info->inf_path = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!info->inf_path)
         return E_OUTOFMEMORY;
 
-    lstrcpynW(info->working_dir, ptr, len);
+    lstrcpyW(info->inf_path, info->working_dir);
+    lstrcatW(info->inf_path, backslash);
+    lstrcatW(info->inf_path, info->inf_filename);
 
-    info->hinf = SetupOpenInfFileW(info->inf_filename, NULL, INF_STYLE_WIN4, NULL);
+    /* RunSetupCommand opens unmodifed filename parameter */
+    if (flags & RSC_FLAG_INF)
+        path = inf_filename;
+    else
+        path = info->inf_path;
+
+    info->hinf = SetupOpenInfFileW(path, NULL, INF_STYLE_WIN4, NULL);
     if (info->hinf == INVALID_HANDLE_VALUE)
         return ADV_HRESULT(GetLastError());
 
@@ -448,6 +505,7 @@ void install_release(ADVInfo *info)
     if (info->hinf && info->hinf != INVALID_HANDLE_VALUE)
         SetupCloseInfFile(info->hinf);
 
+    HeapFree(GetProcessHeap(), 0, info->inf_path);
     HeapFree(GetProcessHeap(), 0, info->inf_filename);
     HeapFree(GetProcessHeap(), 0, info->install_sec);
     HeapFree(GetProcessHeap(), 0, info->working_dir);
