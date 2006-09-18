@@ -311,13 +311,10 @@ GetSwapLock:
     push [ebx+KPCR_EXCEPTION_LIST]
 
     /* Check for WMI */
-    //cmp dword ptr [ebx+KPCR_PERF_GLOBAL_GROUP_MASK], 0
+    cmp dword ptr [ebx+KPCR_PERF_GLOBAL_GROUP_MASK], 0
     //jnz WmiTrace
 
 AfterTrace:
-    /* Switching, disable interrupts now */
-    cli
-
     /* Update kernel stack */
     mov [edi+KTHREAD_KERNEL_STACK], esp
 
@@ -327,12 +324,6 @@ AfterTrace:
 
     /* Make space for the NPX Frame */
     sub eax, NPX_FRAME_LENGTH
-
-    /* Set the KPCR stack values */
-    mov [ebx+KPCR_INITIAL_STACK], eax
-    mov [ebx+KPCR_STACK_LIMIT], ecx
-
-    /* FIXME Check and update CR0 */
 
     /* Check if this isn't V86 Mode, so we can bias the Esp0 */
     test dword ptr [eax - KTRAP_FRAME_SIZE + KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
@@ -354,31 +345,20 @@ NoAdjust:
     mov eax, [esi+KTHREAD_TEB]
     mov [ebx+KPCR_TEB], eax
 
-    /* Stack is OK, safe to enable interrupts now */
-    sti
-
     /* Check if address space switch is needed */
-    mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
-    cmp eax, [edi+KTHREAD_APCSTATE_PROCESS]
+    mov ebp, [esi+KTHREAD_APCSTATE_PROCESS]
+    mov eax, [edi+KTHREAD_APCSTATE_PROCESS]
+    cmp ebp, eax
     jz SameProcess
 
-    /* Get the new Process. */
-    mov edi, [esi+KTHREAD_APCSTATE_PROCESS]
-
     /* Check if we need an LDT */
-    xor eax, eax
-    cmp [edi+KPROCESS_LDT_DESCRIPTOR0], eax
-    jnz LdtStuff
+    mov ecx, [ebp+KPROCESS_LDT_DESCRIPTOR0]
+    or ecx, [eax+KPROCESS_LDT_DESCRIPTOR0]
+    jnz LdtReload
 
-LoadLdt:
-    /* Load LDT */
-    lldt ax
-
-    /* Clear gs */
-    xor eax, eax
-    mov gs, ax
-
+UpdateCr3:
     /* Get the address space */
+    mov edi, ebp
     mov eax, [edi+KPROCESS_DIRECTORY_TABLE_BASE]
 
     /* Get the IOPM and TSS */
@@ -393,6 +373,10 @@ LoadLdt:
     mov [ebp+KTSS_IOMAPBASE], cx
 
 SameProcess:
+    /* Clear gs */
+    xor eax, eax
+    mov gs, ax
+
     /* Set the TEB */
     mov eax, [esi+KTHREAD_TEB]
     mov ecx, [ebx+KPCR_GDT]
@@ -441,11 +425,14 @@ ApcReturn:
     setz al
     ret
 
-LdtStuff:
+LdtReload:
+    /* Check if it's empty */
+    mov eax, [edi+KPROCESS_LDT_DESCRIPTOR0]
+    test eax, eax
+    jz LoadLdt
 
     /* Write the LDT Selector */
     mov ecx, [ebx+KPCR_GDT]
-    mov eax, [edi+KPROCESS_LDT_DESCRIPTOR0]
     mov [ecx+KGDT_LDT], eax
     mov eax, [edi+KPROCESS_LDT_DESCRIPTOR1]
     mov [ecx+KGDT_LDT+4], eax
@@ -459,7 +446,10 @@ LdtStuff:
 
     /* Save LDT Selector */
     mov eax, KGDT_LDT
-    jmp LoadLdt
+
+LoadLdt:
+    lldt ax
+    jmp UpdateCr3
 
 WmiTrace:
 
