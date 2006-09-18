@@ -260,8 +260,10 @@ void wnetInit(HINSTANCE hInstDll)
                     for (ptr = providers, numToAllocate = 1; ptr; )
                     {
                         ptr = strchrW(ptr, ',');
-                        if (ptr)
+                        if (ptr) {
                             numToAllocate++;
+                            ptr++;
+                        }
                     }
                     providerTable =
                      HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -287,7 +289,7 @@ void wnetInit(HINSTANCE hInstDll)
                             ptrPrev = ptr;
                             ptr = strchrW(ptr, ',');
                             if (ptr)
-                                *ptr = '\0';
+                                *ptr++ = '\0';
                             _tryLoadProvider(ptrPrev);
                         }
                     }
