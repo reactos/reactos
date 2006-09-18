@@ -21,8 +21,9 @@
 #define IDC_PROCESSOR                   102
 #define IDC_PROCESSORSPEED              103
 #define IDC_SYSTEMMEMORY                104
-#define IDC_LICENCE             	    105
+#define IDC_LICENCE                     105
 #define IDC_ROSIMG                      106
+#define IDC_ROSHOMEPAGE_LINK            107
 
 
 /* propsheet - computer name */
@@ -56,7 +57,9 @@
 #define IDD_USERPROFILE                 500
 #define IDC_USERPROFILE_LIST            501
 #define IDC_USERPROFILE_CHANGE          503
-#define IDC_CUST_LINK                   504
+#define IDC_USERPROFILE_DELETE          504
+#define IDC_USERPROFILE_COPY            505
+#define IDC_USERACCOUNT_LINK            506
 
 
 /* environment variables */

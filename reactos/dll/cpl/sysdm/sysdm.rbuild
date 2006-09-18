@@ -20,6 +20,7 @@
 	<library>shell32</library>
 	<file>advanced.c</file>
 	<file>computer.c</file>
+	<file>custclicklink.c</file>
 	<file>environment.c</file>
 	<file>general.c</file>
 	<file>hardprof.c</file>

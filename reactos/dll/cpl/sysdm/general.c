@@ -95,6 +95,12 @@ GeneralPageProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
+            HWND hLink = GetDlgItem(hwndDlg, IDC_ROSHOMEPAGE_LINK);
+
+            TextToLink(hLink, 
+                       _T("http://www.reactos.org"),
+                       NULL);
+
             InitImageInfo(&ImgInfo);
             GetSystemInformation(hwndDlg);
         }
@@ -108,6 +114,7 @@ GeneralPageProc(HWND hwndDlg,
                           MAKEINTRESOURCE(IDD_LICENCE),
                           hwndDlg,
                           LicenceDlgProc);
+
                 return TRUE;
             }
         }
@@ -129,21 +136,21 @@ GeneralPageProc(HWND hwndDlg,
                 if (hdcMem != NULL)
                 {
                     SelectObject(hdcMem, ImgInfo.hBitmap);
-                    BitBlt(lpDrawItem->hDC, 
-                           left, 
+                    BitBlt(lpDrawItem->hDC,
+                           left,
                            lpDrawItem->rcItem.top,
                            lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
                            lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
-                           hdcMem, 
-                           0, 
-                           0, 
+                           hdcMem,
+                           0,
+                           0,
                            SRCCOPY);
                     DeleteDC(hdcMem);
                 }
             }
             return TRUE;
         }
-        
+
     }
 
     return FALSE;
