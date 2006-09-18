@@ -305,14 +305,14 @@ GetSwapLock:
 #endif
 
     /* Increase context switches (use ES for lazy load) */
-    //inc dword ptr es:[ebx+KPCR_CONTEXT_SWITCHES]
+    inc dword ptr es:[ebx+KPCR_CONTEXT_SWITCHES]
 
     /* Save the Exception list */
     push [ebx+KPCR_EXCEPTION_LIST]
 
     /* Check for WMI */
     cmp dword ptr [ebx+KPCR_PERF_GLOBAL_GROUP_MASK], 0
-    //jnz WmiTrace
+    jnz WmiTrace
 
 AfterTrace:
     /* Update kernel stack */
@@ -419,14 +419,14 @@ ApcReturn:
 
 LdtReload:
     /* Check if it's empty */
-    mov eax, [edi+KPROCESS_LDT_DESCRIPTOR0]
+    mov eax, [ebp+KPROCESS_LDT_DESCRIPTOR0]
     test eax, eax
     jz LoadLdt
 
     /* Write the LDT Selector */
     mov ecx, [ebx+KPCR_GDT]
     mov [ecx+KGDT_LDT], eax
-    mov eax, [edi+KPROCESS_LDT_DESCRIPTOR1]
+    mov eax, [ebp+KPROCESS_LDT_DESCRIPTOR1]
     mov [ecx+KGDT_LDT+4], eax
 
     /* Write the INT21 handler */
@@ -452,8 +452,15 @@ WmiTrace:
     jmp AfterTrace
 
 BugCheckDpc:
+
+    /* Bugcheck the machine, printing out the threads being switched */
+    mov eax, [edi+KTHREAD_INITIAL_STACK]
+    push 0
+    push eax
+    push esi
+    push edi
     push ATTEMPTED_SWITCH_FROM_DPC
-    call _KeBugCheck@4
+    call _KeBugCheckEx@20
 .endfunc
 
 /*++
