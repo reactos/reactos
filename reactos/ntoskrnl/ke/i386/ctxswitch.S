@@ -361,6 +361,21 @@ StackOk:
     cmp ebp, eax
     jz SameProcess
 
+#ifdef CONFIG_SMP
+    /* Get the active processors and XOR with the process' */
+    mov ecx, [ebx+KPCR_SET_MEMBER_COPY]
+    lock xor [ebp+KPROCESS_ACTIVE_PROCESSORS], ecx
+    lock xor [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
+
+    /* Assert change went ok */
+#ifdef DBG
+    test [ebp+KPROCESS_ACTIVE_PROCESSORS], ecx
+    jz WrongActiveCpu
+    test [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
+    jz WrongActiveCpu
+#endif
+#endif
+
     /* Check if we need an LDT */
     mov ecx, [ebp+KPROCESS_LDT_DESCRIPTOR0]
     or ecx, [eax+KPROCESS_LDT_DESCRIPTOR0]
@@ -372,6 +387,12 @@ UpdateCr3:
     mov cr3, eax
 
 SameProcess:
+
+#ifdef CONFIG_SMP
+    /* Release swap lock */
+    and byte ptr [edi+KTHREAD_SWAP_BUSY], 0
+#endif
+
     /* Clear gs */
     xor eax, eax
     mov gs, ax
