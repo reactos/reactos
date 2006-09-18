@@ -1,4 +1,4 @@
-<module name="lz32" type="win32dll" baseaddress="${BASEADDRESS_LZ32}" installbase="system32" installname="lz32.dll" allowwarnings="true">
+<module name="lz32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LZ32}" installbase="system32" installname="lz32.dll" allowwarnings="true">
 	<importlibrary definition="lz32.spec.def" />
 	<include base="lz32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

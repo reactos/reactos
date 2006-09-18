@@ -1,4 +1,4 @@
-<module name="oleacc" type="win32dll" baseaddress="${BASEADDRESS_OLEACC}" installbase="system32" installname="oleacc.dll" allowwarnings="true">
+<module name="oleacc" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_OLEACC}" installbase="system32" installname="oleacc.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="oleacc.spec.def" />
 	<include base="oleacc">.</include>

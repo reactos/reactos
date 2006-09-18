@@ -1,4 +1,4 @@
-<module name="shfolder" type="win32dll" baseaddress="${BASEADDRESS_SHFOLDER}" installbase="system32" installname="shfolder.dll" allowwarnings="true">
+<module name="shfolder" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_SHFOLDER}" installbase="system32" installname="shfolder.dll" allowwarnings="true">
 	<importlibrary definition="shfolder.spec.def" />
 	<include base="shfolder">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
