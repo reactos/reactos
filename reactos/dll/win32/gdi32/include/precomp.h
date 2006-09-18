@@ -31,6 +31,4 @@
 /* Deprecated NTGDI calls which shouldn't exist */
 #include <win32k/ntgdibad.h>
 
-#include <win32k/ntusrtyp.h>
-#include <win32k/ntuser.h>
 /* EOF */

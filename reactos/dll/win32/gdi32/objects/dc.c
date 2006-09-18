@@ -458,13 +458,3 @@ GetObjectType(
     SetLastError(ERROR_INVALID_HANDLE);
   return Ret;
 }
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-GdiReleaseDC(HDC hdc)
-{	
-	return NtUserReleaseDC(NULL,hdc);
-}
