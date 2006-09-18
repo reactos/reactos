@@ -64,8 +64,6 @@ There is still some work to be done:
     if (B) SetLastError(B); } while(0)
 
 
-WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
-
 typedef struct {
   cab_UBYTE signature[4]; /* !CAB for unfinished cabinets else MSCF */
   cab_ULONG reserved1;

@@ -1,4 +1,4 @@
-<module name="cabinet" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_CABINET}" installbase="system32" installname="cabinet.dll" allowwarnings="true">
+<module name="cabinet" type="win32dll" baseaddress="${BASEADDRESS_CABINET}" installbase="system32" installname="cabinet.dll" allowwarnings="true">
 	<importlibrary definition="cabinet.spec.def" />
 	<include base="cabinet">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
