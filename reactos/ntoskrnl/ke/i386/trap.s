@@ -1170,13 +1170,64 @@ AfterRestore:
     cli
     jmp StartTrapHandle
 
+KernelNpx:
+
+    /* Set delayed error */
+    or dword ptr [ecx+FN_CR0_NPX_STATE], CR0_TS
+
+    /* Check if this happened during restore */
+    cmp dword ptr [ebp+KTRAP_FRAME_EIP], offset FrRestore
+    jnz UserNpx
+
+    /* Skip instruction and dispatch the exception */
+    add dword ptr [ebp+KTRAP_FRAME_EIP], 3
+    jmp _Kei386EoiHelper@0
+
 IsLoaded:
     /* Check if TS is set */
     test bl, CR0_TS
     jnz TsSetOnLoadedState
 
-    /* Check if the trap came from user-mode */
+HandleNpxFault:
+    /* Check if the trap came from V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+    jnz V86Npx
+
+    /* Check if it came from kernel mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
+    jz KernelNpx
+
+    /* Check if it came from a VDM */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KGDT_R3_CODE + RPL_MASK
+    jne V86Npx
+
+UserNpx:
+    /* Get the current thread */
+    mov eax, fs:[KPCR_CURRENT_THREAD]
+
+    /* Check NPX state */
+    cmp byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+
+    /* Get the NPX save area */
+    mov ecx, [eax+KTHREAD_INITIAL_STACK]
+    lea ecx, [ecx-NPX_FRAME_LENGTH]
+    jz NoSaveRestore
+
+HandleUserNpx:
+
+    /* Set new CR0 */
+    mov ebx, cr0
+    and ebx, ~(CR0_MP + CR0_EM + CR0_TS)
+    mov cr0, ebx
+
+    /* FIXME: Implement the rest */
     int 3
+    jmp $
+
+NoSaveRestore:
+    /* FIXME: Implement the rest */
+    int 3
+    jmp $
 
 EmulationEnabled:
     /* Did this come from kernel-mode? */
@@ -1195,6 +1246,17 @@ TsSetOnLoadedState:
     /* Strange that we got a trap at all, but ignore and continue */
     clts
     jmp _Kei386EoiHelper@0
+
+V86Npx:
+    /* Check if this is a VDM */
+    mov eax, fs:[KPCR_CURRENT_THREAD]
+    mov ebx, [eax+KTHREAD_APCSTATE_PROCESS]
+    cmp dword ptr [ebx+EPROCESS_VDM_OBJECTS], 0
+    jz HandleUserNpx
+
+    /* V86 NPX not handled */
+    int 3
+    jmp $
 
 BogusTrap2:
     /* Cause a bugcheck */
@@ -1535,9 +1597,21 @@ _KiTrap16:
     /* Enter trap */
     TRAP_PROLOG(16)
 
-    /* FIXME: ROS Doesn't handle FPU faults yet */
-    mov eax, 16
-    jmp _KiSystemFatalException
+    /* Check if this is the NPX Thread */
+    mov eax, fs:[KPCR_CURRENT_THREAD]
+    cmp eax, fs:[KPCR_NPX_THREAD]
+
+    /* Get the initial stack and NPX frame */
+    mov ecx, [eax+KTHREAD_INITIAL_STACK]
+    lea ecx, [ecx-NPX_FRAME_LENGTH]
+
+    /* If this is a valid fault, handle it */
+    jz HandleNpxFault
+
+    /* Otherwise, re-enable interrupts and set delayed error */
+    sti
+    or dword ptr [ecx+FN_CR0_NPX_STATE], CR0_TS
+    jmp _Kei386EoiHelper@0
 .endfunc
 
 .func KiTrap17
