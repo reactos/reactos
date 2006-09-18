@@ -29,10 +29,6 @@
 
 #define TMT_ENUM 200
 
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
-
 typedef struct _MSSTYLES_PROPERTY_MAP {
     WORD dwPrimitiveType;
     WORD dwPropertyID;
