@@ -318,26 +318,6 @@ AfterTrace:
     /* Update kernel stack */
     mov [edi+KTHREAD_KERNEL_STACK], esp
 
-    /* Get stack pointers */
-    mov eax, [esi+KTHREAD_INITIAL_STACK]
-    mov ecx, [esi+KTHREAD_STACK_LIMIT]
-
-    /* Make space for the NPX Frame */
-    sub eax, NPX_FRAME_LENGTH
-
-    /* Check if this isn't V86 Mode, so we can bias the Esp0 */
-    test dword ptr [eax - KTRAP_FRAME_SIZE + KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
-    jnz NoAdjust
-
-    /* Bias esp */
-    sub eax, KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
-
-NoAdjust:
-
-    /* Set new ESP0 */
-    mov ecx, [ebx+KPCR_TSS]
-    mov [ecx+KTSS_ESP0], eax
-
     /* Switch to new stack */
     mov esp, [esi+KTHREAD_KERNEL_STACK]
 
@@ -357,20 +337,9 @@ NoAdjust:
     jnz LdtReload
 
 UpdateCr3:
-    /* Get the address space */
-    mov edi, ebp
-    mov eax, [edi+KPROCESS_DIRECTORY_TABLE_BASE]
-
-    /* Get the IOPM and TSS */
-    mov ebp, [ebx+KPCR_TSS]
-    mov ecx, [edi+KPROCESS_IOPM_OFFSET]
-
     /* Switch address space */
-    mov [ebp+KTSS_CR3], eax
+    mov eax, [ebp+KPROCESS_DIRECTORY_TABLE_BASE]
     mov cr3, eax
-
-    /* Set current IOPM offset in the TSS */
-    mov [ebp+KTSS_IOMAPBASE], cx
 
 SameProcess:
     /* Clear gs */
@@ -384,6 +353,29 @@ SameProcess:
     shr eax, 16
     mov [ecx+0x3C], al
     mov [ecx+0x3F], ah
+
+    /* Get stack pointer */
+    mov eax, [esi+KTHREAD_INITIAL_STACK]
+
+    /* Make space for the NPX Frame */
+    sub eax, NPX_FRAME_LENGTH
+
+    /* Check if this isn't V86 Mode, so we can bias the Esp0 */
+    test dword ptr [eax - KTRAP_FRAME_SIZE + KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz NoAdjust
+
+    /* Bias esp */
+    sub eax, KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
+
+NoAdjust:
+
+    /* Set new ESP0 */
+    mov ecx, [ebx+KPCR_TSS]
+    mov [ecx+KTSS_ESP0], eax
+
+    /* Set current IOPM offset in the TSS */
+    mov ax, [ebp+KPROCESS_IOPM_OFFSET]
+    mov [ecx+KTSS_IOMAPBASE], ax
 
     /* Increase context switches */
     inc dword ptr [esi+KTHREAD_CONTEXT_SWITCHES]
