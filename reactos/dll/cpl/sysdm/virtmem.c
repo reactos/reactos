@@ -138,7 +138,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
             Item.mask = LVIF_TEXT;
             Item.iItem = ListView_GetItemCount(pVirtMem->hListView);
             Item.pszText = szDrive;
-            ListView_InsertItem(pVirtMem->hListView, &Item);
+            (void)ListView_InsertItem(pVirtMem->hListView, &Item);
 
             /* set a volume label if there is one */
             if (GetVolumeInformation(DrivePtr,
@@ -158,7 +158,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
 
                     Item.iSubItem = 1;
                     Item.pszText = szVol;
-                    ListView_InsertItem(pVirtMem->hListView, &Item);
+                    (void)ListView_InsertItem(pVirtMem->hListView, &Item);
                 }
             }
 
@@ -170,7 +170,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
 
                 Item.iSubItem = 2;
                 Item.pszText = szSize;
-                ListView_InsertItem(pVirtMem->hListView, &Item);
+                (void)ListView_InsertItem(pVirtMem->hListView, &Item);
             }
 
             PgCnt++;
