@@ -1,8 +1,6 @@
-<module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" usewrc="false">
+<module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" usewrc="false" unicode="yes">
 	<importlibrary definition="sysdm.def" />
 	<include base="sysdm">.</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
@@ -31,4 +29,5 @@
 	<file>userprofile.c</file>
 	<file>virtmem.c</file>
 	<file>sysdm.rc</file>
+	<pch>precomp.h</pch>
 </module>

@@ -41,6 +41,8 @@ ReadPageFileSettings(PVIRTMEM pVirtMem)
                                                         dwDataSize);
             if (pVirtMem->szPagingFiles != NULL)
             {
+                ZeroMemory(pVirtMem->szPagingFiles,
+                           dwDataSize);
                 if(RegQueryValueEx(hkey,
                                    _T("PagingFiles"),
                                    NULL,
@@ -154,7 +156,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 {
                     TCHAR szVol[MAX_PATH + 2];
 
-                    wsprintf(szVol, _T("[%s]"), szVolume);
+                    _stprintf(szVol, _T("[%s]"), szVolume);
 
                     Item.iSubItem = 1;
                     Item.pszText = szVol;
@@ -166,7 +168,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
             {
                 TCHAR szSize[64];
 
-                wsprintf(szSize, _T("%i - %i"), InitialSize, MaxSize);
+                _stprintf(szSize, _T("%i - %i"), InitialSize, MaxSize);
 
                 Item.iSubItem = 2;
                 Item.pszText = szSize;
@@ -198,10 +200,10 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
         {
             TCHAR szText[256];
 
-            wsprintf(szText, _T("%s\\pagefile.sys %i %i"),
-                     pVirtMem->Pagefile[i].szDrive,
-                     pVirtMem->Pagefile[i].InitialValue,
-                     pVirtMem->Pagefile[i].MaxValue);
+            _stprintf(szText, _T("%s\\pagefile.sys %i %i"),
+                      pVirtMem->Pagefile[i].szDrive,
+                      pVirtMem->Pagefile[i].InitialValue,
+                      pVirtMem->Pagefile[i].MaxValue);
 
             /* Add it to our overall registry string */
             lstrcat(szPagingFiles + nPos, szText);

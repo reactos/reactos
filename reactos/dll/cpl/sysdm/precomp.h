@@ -4,9 +4,10 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <tchar.h>
+#include <stdio.h>
 #include <lm.h>
 #include <cpl.h>
-#include <shellapi.h> //shellexecute
+#include <shellapi.h>
 #include "resource.h"
 
 #define NUM_APPLETS (1)
