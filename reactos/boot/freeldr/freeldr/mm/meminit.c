@@ -311,7 +311,7 @@ ULONG MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
 	return FreePageCount;
 }
 
-ULONG MmFindAvailablePagesFromEnd(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded)
+ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, BOOLEAN FromEnd)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
 	ULONG							AvailablePagesSoFar;
@@ -323,21 +323,47 @@ ULONG MmFindAvailablePagesFromEnd(PVOID PageLookupTable, ULONG TotalPageCount, U
 	}
 
 	AvailablePagesSoFar = 0;
-	for (Index=LastFreePageHint-1; Index>0; Index--)
+	if (FromEnd)
 	{
-		if (RealPageLookupTable[Index].PageAllocated != 0)
+		/* Allocate "high" (from end) pages */
+		for (Index=LastFreePageHint-1; Index>0; Index--)
 		{
-			AvailablePagesSoFar = 0;
-			continue;
-		}
-		else
-		{
-			AvailablePagesSoFar++;
-		}
+			if (RealPageLookupTable[Index].PageAllocated != 0)
+			{
+				AvailablePagesSoFar = 0;
+				continue;
+			}
+			else
+			{
+				AvailablePagesSoFar++;
+			}
 
-		if (AvailablePagesSoFar >= PagesNeeded)
+			if (AvailablePagesSoFar >= PagesNeeded)
+			{
+				return Index;
+			}
+		}
+	}
+	else
+	{
+		DbgPrint((DPRINT_MEMORY, "Alloc low memory, LastFreePageHint %d, TPC %d\n", LastFreePageHint, TotalPageCount));
+		/* Allocate "low" pages */
+		for (Index=1; Index < LastFreePageHint; Index++)
 		{
-			return Index;
+			if (RealPageLookupTable[Index].PageAllocated != 0)
+			{
+				AvailablePagesSoFar = 0;
+				continue;
+			}
+			else
+			{
+				AvailablePagesSoFar++;
+			}
+
+			if (AvailablePagesSoFar >= PagesNeeded)
+			{
+				return Index;
+			}
 		}
 	}
 
@@ -352,7 +378,7 @@ ULONG MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount
 
 	if (LastPage > TotalPageCount)
 	{
-		return MmFindAvailablePagesFromEnd(PageLookupTable, TotalPageCount, PagesNeeded);
+		return MmFindAvailablePages(PageLookupTable, TotalPageCount, PagesNeeded, TRUE);
 	}
 
 	AvailablePagesSoFar = 0;

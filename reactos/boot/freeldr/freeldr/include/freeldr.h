@@ -43,6 +43,9 @@
 #include <inffile.h>
 #include <video.h>
 #include <portio.h>
+/* NDK, needed for ReactOS/Windows loaders */
+#include <ndk/rtlfuncs.h>
+#include <ndk/ldrtypes.h>
 #include <reactos.h>
 #include <registry.h>
 #include <winldr.h>

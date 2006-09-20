@@ -52,6 +52,13 @@ VOID		MemAllocTest(VOID);
 static PVOID    SubAllocationPage = NULL;
 static unsigned SubAllocationRest = 0;
 
+BOOLEAN AllocateFromEnd = TRUE;
+
+VOID MmChangeAllocationPolicy(BOOLEAN PolicyAllocatePagesFromEnd)
+{
+	AllocateFromEnd = PolicyAllocatePagesFromEnd;
+}
+
 PVOID MmAllocateMemory(ULONG MemorySize)
 {
 	ULONG	PagesNeeded;
@@ -81,16 +88,16 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	// then return NULL
 	if (FreePagesInLookupTable < PagesNeeded)
 	{
-		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateMemory(). Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
 	}
 
-	FirstFreePageFromEnd = MmFindAvailablePagesFromEnd(PageLookupTableAddress, TotalPagesInLookupTable, PagesNeeded);
+	FirstFreePageFromEnd = MmFindAvailablePages(PageLookupTableAddress, TotalPagesInLookupTable, PagesNeeded, AllocateFromEnd);
 
-	if (FirstFreePageFromEnd == 0)
+	if (FirstFreePageFromEnd == (ULONG)-1)
 	{
-		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateMemory(). Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
 	}
@@ -142,15 +149,22 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress)
 	// then return NULL
 	if (FreePagesInLookupTable < PagesNeeded)
 	{
-		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateMemoryAtAddress(). "
+			"Not enough free memory to allocate %d bytes (requesting %d pages but have only %d). "
+			"AllocationCount: %d\n", MemorySize, PagesNeeded, FreePagesInLookupTable, AllocationCount));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
 	}
 
 	if (MmAreMemoryPagesAvailable(PageLookupTableAddress, TotalPagesInLookupTable, DesiredAddress, PagesNeeded) == FALSE)
 	{
-		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
-		UiMessageBoxCritical("Memory allocation failed: out of memory.");
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateMemoryAtAddress(). "
+			"Not enough free memory to allocate %d bytes at address %p. AllocationCount: %d\n",
+			MemorySize, DesiredAddress, AllocationCount));
+
+		// Don't tell this to user since caller should try to alloc this memory
+		// at a different address
+		//UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
 	}
 
@@ -195,7 +209,7 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 	// then return NULL
 	if (FreePagesInLookupTable < PagesNeeded)
 	{
-		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateHighestMemoryBelowAddress(). Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
 	}
@@ -204,7 +218,7 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 
 	if (FirstFreePageFromEnd == 0)
 	{
-		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed in MmAllocateHighestMemoryBelowAddress(). Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
 		UiMessageBoxCritical("Memory allocation failed: out of memory.");
 		return NULL;
 	}
