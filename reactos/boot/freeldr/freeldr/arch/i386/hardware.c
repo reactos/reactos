@@ -348,6 +348,8 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   /* Initialize resource descriptor */
   FullResourceDescriptor->InterfaceType = Internal;
   FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Version = 1;
+  FullResourceDescriptor->PartialResourceList.Revision = 1;
   FullResourceDescriptor->PartialResourceList.Count = 1;
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
     CmResourceTypeDeviceSpecific;
@@ -442,6 +444,8 @@ SetHarddiskConfigurationData(FRLDRHKEY DiskKey,
   memset(FullResourceDescriptor, 0, Size);
   FullResourceDescriptor->InterfaceType = InterfaceTypeUndefined;
   FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Version = 1;
+  FullResourceDescriptor->PartialResourceList.Revision = 1;
   FullResourceDescriptor->PartialResourceList.Count = 1;
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
     CmResourceTypeDeviceSpecific;
@@ -630,6 +634,8 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
   memset(FullResourceDescriptor, 0, Size);
   FullResourceDescriptor->InterfaceType = InterfaceTypeUndefined;
   FullResourceDescriptor->BusNumber = -1;
+  FullResourceDescriptor->PartialResourceList.Version = 1;
+  FullResourceDescriptor->PartialResourceList.Revision = 1;
   FullResourceDescriptor->PartialResourceList.Count = 1;
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
     CmResourceTypeDeviceSpecific;
@@ -798,6 +804,8 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
     memset(FullResourceDescriptor, 0, Size);
     FullResourceDescriptor->InterfaceType = Isa;
     FullResourceDescriptor->BusNumber = 0;
+    FullResourceDescriptor->PartialResourceList.Version = 1;
+    FullResourceDescriptor->PartialResourceList.Revision = 1;
     FullResourceDescriptor->PartialResourceList.Count = 1;
 
     PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
@@ -898,6 +906,8 @@ DetectBiosFloppyController(FRLDRHKEY SystemKey,
   /* Initialize resource descriptor */
   FullResourceDescriptor->InterfaceType = Isa;
   FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Version = 1;
+  FullResourceDescriptor->PartialResourceList.Revision = 1;
   FullResourceDescriptor->PartialResourceList.Count = 3;
 
   /* Set IO Port */
@@ -914,7 +924,7 @@ DetectBiosFloppyController(FRLDRHKEY SystemKey,
   PartialDescriptor->Type = CmResourceTypeInterrupt;
   PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
   PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-  PartialDescriptor->u.Interrupt.Level = 6;
+  PartialDescriptor->u.Interrupt.Level = 0;
   PartialDescriptor->u.Interrupt.Vector = 6;
   PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 
@@ -1269,9 +1279,9 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
       memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
       FullResourceDescriptor.InterfaceType = Isa;
       FullResourceDescriptor.BusNumber = 0;
-      FullResourceDescriptor.PartialResourceList.Count = 0;
       FullResourceDescriptor.PartialResourceList.Version = 1;
       FullResourceDescriptor.PartialResourceList.Revision = 1;
+      FullResourceDescriptor.PartialResourceList.Count = 0;
 
       Error = RegSetValue(PeripheralKey,
 			  L"Configuration Data",
@@ -1370,6 +1380,8 @@ DetectSerialPorts(FRLDRHKEY BusKey)
       /* Initialize resource descriptor */
       FullResourceDescriptor->InterfaceType = Isa;
       FullResourceDescriptor->BusNumber = 0;
+      FullResourceDescriptor->PartialResourceList.Version = 1;
+      FullResourceDescriptor->PartialResourceList.Revision = 1;
       FullResourceDescriptor->PartialResourceList.Count = 3;
 
       /* Set IO Port */
@@ -1386,7 +1398,7 @@ DetectSerialPorts(FRLDRHKEY BusKey)
       PartialDescriptor->Type = CmResourceTypeInterrupt;
       PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
       PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-      PartialDescriptor->u.Interrupt.Level = Irq[i];
+      PartialDescriptor->u.Interrupt.Level = 0;
       PartialDescriptor->u.Interrupt.Vector = Irq[i];
       PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 
@@ -1514,6 +1526,8 @@ DetectParallelPorts(FRLDRHKEY BusKey)
       /* Initialize resource descriptor */
       FullResourceDescriptor->InterfaceType = Isa;
       FullResourceDescriptor->BusNumber = 0;
+      FullResourceDescriptor->PartialResourceList.Version = 1;
+      FullResourceDescriptor->PartialResourceList.Revision = 1;
       FullResourceDescriptor->PartialResourceList.Count = (Irq[i] != (ULONG)-1) ? 2 : 1;
 
       /* Set IO Port */
@@ -1532,7 +1546,7 @@ DetectParallelPorts(FRLDRHKEY BusKey)
 	  PartialDescriptor->Type = CmResourceTypeInterrupt;
 	  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
 	  PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-	  PartialDescriptor->u.Interrupt.Level = Irq[i];
+	  PartialDescriptor->u.Interrupt.Level = 0;
 	  PartialDescriptor->u.Interrupt.Vector = Irq[i];
 	  PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 	}
@@ -1682,6 +1696,8 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
     memset(FullResourceDescriptor, 0, Size);
     FullResourceDescriptor->InterfaceType = Isa;
     FullResourceDescriptor->BusNumber = 0;
+    FullResourceDescriptor->PartialResourceList.Version = 1;
+    FullResourceDescriptor->PartialResourceList.Revision = 1;
     FullResourceDescriptor->PartialResourceList.Count = 1;
 
     PartialDescriptor = &FullResourceDescriptor->PartialResourceList.PartialDescriptors[0];
@@ -1689,7 +1705,7 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
     PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
     PartialDescriptor->u.DeviceSpecificData.DataSize = sizeof(CM_KEYBOARD_DEVICE_DATA);
 
-    KeyboardData = (PVOID)(((ULONG_PTR)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+    KeyboardData = (PCM_KEYBOARD_DEVICE_DATA)(PartialDescriptor + 1);
     KeyboardData->Version = 1;
     KeyboardData->Revision = 1;
     KeyboardData->Type = 4;
@@ -1767,6 +1783,8 @@ DetectKeyboardController(FRLDRHKEY BusKey)
   memset(FullResourceDescriptor, 0, Size);
   FullResourceDescriptor->InterfaceType = Isa;
   FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Version = 1;
+  FullResourceDescriptor->PartialResourceList.Revision = 1;
   FullResourceDescriptor->PartialResourceList.Count = 3;
 
   /* Set Interrupt */
@@ -1774,7 +1792,7 @@ DetectKeyboardController(FRLDRHKEY BusKey)
   PartialDescriptor->Type = CmResourceTypeInterrupt;
   PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
   PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-  PartialDescriptor->u.Interrupt.Level = 1;
+  PartialDescriptor->u.Interrupt.Level = 0;
   PartialDescriptor->u.Interrupt.Vector = 1;
   PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 
@@ -1954,13 +1972,15 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
       /* Initialize resource descriptor */
       FullResourceDescriptor.InterfaceType = Isa;
       FullResourceDescriptor.BusNumber = 0;
+      FullResourceDescriptor.PartialResourceList.Version = 1;
+      FullResourceDescriptor.PartialResourceList.Revision = 1;
       FullResourceDescriptor.PartialResourceList.Count = 1;
 
       /* Set Interrupt */
       FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].Type = CmResourceTypeInterrupt;
       FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].ShareDisposition = CmResourceShareUndetermined;
       FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Level = 12;
+      FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Level = 0;
       FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Vector = 12;
       FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
 
@@ -2004,6 +2024,8 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
 	  memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
 	  FullResourceDescriptor.InterfaceType = Isa;
 	  FullResourceDescriptor.BusNumber = 0;
+	  FullResourceDescriptor.PartialResourceList.Version = 1;
+	  FullResourceDescriptor.PartialResourceList.Revision = 1;
 	  FullResourceDescriptor.PartialResourceList.Count = 0;
 
 	  /* Set 'Configuration Data' value */
@@ -2165,6 +2187,8 @@ DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   memset(FullResourceDescriptor, 0, Size);
   FullResourceDescriptor->InterfaceType = Isa;
   FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Version = 1;
+  FullResourceDescriptor->PartialResourceList.Revision = 1;
   FullResourceDescriptor->PartialResourceList.Count = 0;
 
   /* Set 'Configuration Data' value */
