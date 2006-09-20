@@ -1,211 +1,251 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             drivers/input/i8042prt/registry.c
- * PURPOSE:          i8042 (ps/2 keyboard-mouse controller) driver
- *                   Reading the registry
- * PROGRAMMER:       Victor Kirhenshtein (sauros@iname.com)
- *                   Jason Filby (jasonfilby@yahoo.com)
- *                   Tinus
+ * PROJECT:     ReactOS i8042 (ps/2 keyboard-mouse controller) driver
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        drivers/input/i8042prt/i8042prt.c
+ * PURPOSE:     Reading the registry
+ * PROGRAMMERS: Copyright Victor Kirhenshtein (sauros@iname.com)
+                Copyright Jason Filby (jasonfilby@yahoo.com)
+                Copyright Martijn Vernooij (o112w8r02@sneakemail.com)
+                Copyright 2006 Hervé Poussineau (hpoussin@reactos.org)
  */
 
-/* INCLUDES ****************************************************************/
-
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#include <debug.h>
+/* INCLUDES ******************************************************************/
 
 #include "i8042prt.h"
 
+#define NDEBUG
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
-/*
- * Read the registry keys associated with this device. The RegistryPath
- * var is a hack. This should be more like what microsoft does, but I
- * don't know exactly what they do except that it's a hack too...
- */
-VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
-                               PDEVICE_EXTENSION DevExt)
-
+NTSTATUS
+ReadRegistryEntries(
+	IN PUNICODE_STRING RegistryPath,
+	OUT PI8042_SETTINGS Settings)
 {
-	RTL_QUERY_REGISTRY_TABLE Parameters[19];
-
+	UNICODE_STRING ParametersRegistryKey;
+	RTL_QUERY_REGISTRY_TABLE Parameters[16];
 	NTSTATUS Status;
 
-	ULONG DefaultHeadless = 0;
-	ULONG DefaultCrashScroll = 0;
-	ULONG DefaultCrashSysRq = 0;
-	ULONG DefaultReportResetErrors = 0;
-	ULONG DefaultPollStatusIterations = 1;
-	ULONG DefaultResendIterations = 3;
-	ULONG DefaultPollingIterations = 12000;
-	ULONG DefaultPollingIterationsMaximum = 12000;
-	ULONG DefaultKeyboardDataQueueSize = 100;
-	ULONG DefaultOverrideKeyboardType = 0;
-	ULONG DefaultOverrideKeyboardSubtype = 0;
-	ULONG DefaultMouseDataQueueSize = 100;
-	ULONG DefaultMouseResendStallTime = 1000;
-	ULONG DefaultMouseSynchIn100ns = 20000000;
+	ULONG DefaultKeyboardDataQueueSize = 0x64;
+	UNICODE_STRING DefaultKeyboardDeviceBaseName = RTL_CONSTANT_STRING(L"KeyboardPort");
+	ULONG DefaultMouseDataQueueSize = 0x64;
 	ULONG DefaultMouseResolution = 3;
-	ULONG DefaultSampleRate = 60;
+	ULONG DefaultMouseSynchIn100ns = 20000000;
 	ULONG DefaultNumberOfButtons = 2;
-	ULONG DefaultEnableWheelDetection = 1;
+	UNICODE_STRING DefaultPointerDeviceBaseName = RTL_CONSTANT_STRING(L"PointerPort");
+	ULONG DefaultPollStatusIterations = 1;
+	ULONG DefaultOverrideKeyboardType = 4;
+	ULONG DefaultOverrideKeyboardSubtype = 0;
+	ULONG DefaultPollingIterations = 0x400;
+	ULONG DefaultPollingIterationsMaximum = 12000;
+	ULONG DefaultResendIterations = 0x3;
+	ULONG DefaultSampleRate = 60;
+	ULONG DefaultCrashOnCtrlScroll;
+
+	/* Default value for CrashOnCtrlScroll depends if we're
+	 * running a debug build or a normal build.
+	 */
+#ifdef DBG
+	DefaultCrashOnCtrlScroll = 1;
+#else
+	DefaultCrashOnCtrlScroll = 0;
+#endif
+
+	ParametersRegistryKey.Length = 0;
+	ParametersRegistryKey.MaximumLength = RegistryPath->Length + sizeof(L"\\Parameters") + sizeof(UNICODE_NULL);
+	ParametersRegistryKey.Buffer = ExAllocatePool(PagedPool, ParametersRegistryKey.MaximumLength);
+	if (!ParametersRegistryKey.Buffer)
+	{
+		DPRINT("ExAllocatePool() failed\n");
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+	RtlCopyUnicodeString(&ParametersRegistryKey, RegistryPath);
+	RtlAppendUnicodeToString(&ParametersRegistryKey, L"\\Parameters");
+	ParametersRegistryKey.Buffer[ParametersRegistryKey.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
-	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[0].Name = L"Headless";
-	Parameters[0].EntryContext = &DevExt->Settings.Headless;
+	Parameters[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[0].Name = L"KeyboardDataQueueSize";
+	Parameters[0].EntryContext = &Settings->KeyboardDataQueueSize;
 	Parameters[0].DefaultType = REG_DWORD;
-	Parameters[0].DefaultData = &DefaultHeadless;
+	Parameters[0].DefaultData = &DefaultKeyboardDataQueueSize;
 	Parameters[0].DefaultLength = sizeof(ULONG);
 
-	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[1].Name = L"CrashOnCtrlScroll";
-	Parameters[1].EntryContext = &DevExt->Settings.CrashScroll;
-	Parameters[1].DefaultType = REG_DWORD;
-	Parameters[1].DefaultData = &DefaultCrashScroll;
-	Parameters[1].DefaultLength = sizeof(ULONG);
+	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[1].Name = L"KeyboardDeviceBaseName";
+	Parameters[1].EntryContext = &Settings->KeyboardDeviceBaseName;
+	Parameters[1].DefaultType = REG_SZ;
+	Parameters[1].DefaultData = &DefaultKeyboardDeviceBaseName;
+	Parameters[1].DefaultLength = 0;
 
-	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[2].Name = L"BreakOnSysRq";
-	Parameters[2].EntryContext = &DevExt->Settings.CrashSysRq;
+	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[2].Name = L"MouseDataQueueSize";
+	Parameters[2].EntryContext = &Settings->MouseDataQueueSize;
 	Parameters[2].DefaultType = REG_DWORD;
-	Parameters[2].DefaultData = &DefaultCrashSysRq;
+	Parameters[2].DefaultData = &DefaultMouseDataQueueSize;
 	Parameters[2].DefaultLength = sizeof(ULONG);
 
-	Parameters[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[3].Name = L"ReportResetErrors";
-	Parameters[3].EntryContext = &DevExt->Settings.ReportResetErrors;
+	Parameters[3].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[3].Name = L"MouseResolution";
+	Parameters[3].EntryContext = &Settings->MouseResolution;
 	Parameters[3].DefaultType = REG_DWORD;
-	Parameters[3].DefaultData = &DefaultReportResetErrors;
+	Parameters[3].DefaultData = &DefaultMouseResolution;
 	Parameters[3].DefaultLength = sizeof(ULONG);
 
-	Parameters[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[4].Name = L"PollStatusIterations";
-	Parameters[4].EntryContext = &DevExt->Settings.PollStatusIterations;
+	Parameters[4].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[4].Name = L"MouseSynchIn100ns";
+	Parameters[4].EntryContext = &Settings->MouseSynchIn100ns;
 	Parameters[4].DefaultType = REG_DWORD;
-	Parameters[4].DefaultData = &DefaultPollStatusIterations;
+	Parameters[4].DefaultData = &DefaultMouseSynchIn100ns;
 	Parameters[4].DefaultLength = sizeof(ULONG);
 
-	Parameters[5].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[5].Name = L"ResendIterations";
-	Parameters[5].EntryContext = &DevExt->Settings.ResendIterations;
+	Parameters[5].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[5].Name = L"NumberOfButtons";
+	Parameters[5].EntryContext = &Settings->NumberOfButtons;
 	Parameters[5].DefaultType = REG_DWORD;
-	Parameters[5].DefaultData = &DefaultResendIterations;
+	Parameters[5].DefaultData = &DefaultNumberOfButtons;
 	Parameters[5].DefaultLength = sizeof(ULONG);
 
-	Parameters[6].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[6].Name = L"PollingIterations";
-	Parameters[6].EntryContext = &DevExt->Settings.PollingIterations;
-	Parameters[6].DefaultType = REG_DWORD;
-	Parameters[6].DefaultData = &DefaultPollingIterations;
-	Parameters[6].DefaultLength = sizeof(ULONG);
+	Parameters[6].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[6].Name = L"PointerDeviceBaseName";
+	Parameters[6].EntryContext = &Settings->PointerDeviceBaseName;
+	Parameters[6].DefaultType = REG_SZ;
+	Parameters[6].DefaultData = &DefaultPointerDeviceBaseName;
+	Parameters[6].DefaultLength = 0;
 
-	Parameters[7].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[7].Name = L"PollingIterationsMaximum";
-	Parameters[7].EntryContext = &DevExt->Settings.PollingIterationsMaximum;
+	Parameters[7].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[7].Name = L"PollStatusIterations";
+	Parameters[7].EntryContext = &Settings->PollStatusIterations;
 	Parameters[7].DefaultType = REG_DWORD;
-	Parameters[7].DefaultData = &DefaultPollingIterationsMaximum;
+	Parameters[7].DefaultData = &DefaultPollStatusIterations;
 	Parameters[7].DefaultLength = sizeof(ULONG);
 
-	Parameters[8].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[8].Name = L"KeyboardDataQueueSize";
-	Parameters[8].EntryContext =
-	                       &DevExt->KeyboardAttributes.InputDataQueueLength;
+	Parameters[8].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[8].Name = L"OverrideKeyboardType";
+	Parameters[8].EntryContext = &Settings->OverrideKeyboardType;
 	Parameters[8].DefaultType = REG_DWORD;
-	Parameters[8].DefaultData = &DefaultKeyboardDataQueueSize;
+	Parameters[8].DefaultData = &DefaultOverrideKeyboardType;
 	Parameters[8].DefaultLength = sizeof(ULONG);
 
-	Parameters[9].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[9].Name = L"OverrideKeyboardType";
-	Parameters[9].EntryContext = &DevExt->Settings.OverrideKeyboardType;
+	Parameters[9].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[9].Name = L"OverrideKeyboardSubtype";
+	Parameters[9].EntryContext = &Settings->OverrideKeyboardSubtype;
 	Parameters[9].DefaultType = REG_DWORD;
-	Parameters[9].DefaultData = &DefaultOverrideKeyboardType;
+	Parameters[9].DefaultData = &DefaultOverrideKeyboardSubtype;
 	Parameters[9].DefaultLength = sizeof(ULONG);
 
-	Parameters[10].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[10].Name = L"OverrideKeyboardSubtype";
-	Parameters[10].EntryContext = &DevExt->Settings.OverrideKeyboardSubtype;
+	Parameters[10].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[10].Name = L"PollingIterations";
+	Parameters[10].EntryContext = &Settings->PollingIterations;
 	Parameters[10].DefaultType = REG_DWORD;
-	Parameters[10].DefaultData = &DefaultOverrideKeyboardSubtype;
+	Parameters[10].DefaultData = &DefaultPollingIterations;
 	Parameters[10].DefaultLength = sizeof(ULONG);
 
-	Parameters[11].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[11].Name = L"MouseDataQueueSize";
-	Parameters[11].EntryContext =
-	                      &DevExt->MouseAttributes.InputDataQueueLength;
+	Parameters[11].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[11].Name = L"PollingIterationsMaximum";
+	Parameters[11].EntryContext = &Settings->PollingIterationsMaximum;
 	Parameters[11].DefaultType = REG_DWORD;
-	Parameters[11].DefaultData = &DefaultMouseDataQueueSize;
+	Parameters[11].DefaultData = &DefaultPollingIterationsMaximum;
 	Parameters[11].DefaultLength = sizeof(ULONG);
 
-	Parameters[12].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[12].Name = L"MouseResendStallTime";
-	Parameters[12].EntryContext = &DevExt->Settings.MouseResendStallTime;
+	Parameters[12].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[12].Name = L"ResendIterations";
+	Parameters[12].EntryContext = &Settings->ResendIterations;
 	Parameters[12].DefaultType = REG_DWORD;
-	Parameters[12].DefaultData = &DefaultMouseResendStallTime;
+	Parameters[12].DefaultData = &DefaultResendIterations;
 	Parameters[12].DefaultLength = sizeof(ULONG);
 
-	Parameters[13].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[13].Name = L"MouseSynchIn100ns";
-	Parameters[13].EntryContext = &DevExt->Settings.MouseSynchIn100ns;
+	Parameters[13].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[13].Name = L"SampleRate";
+	Parameters[13].EntryContext = &Settings->SampleRate;
 	Parameters[13].DefaultType = REG_DWORD;
-	Parameters[13].DefaultData = &DefaultMouseSynchIn100ns;
+	Parameters[13].DefaultData = &DefaultSampleRate;
 	Parameters[13].DefaultLength = sizeof(ULONG);
 
-	Parameters[14].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[14].Name = L"MouseResolution";
-	Parameters[14].EntryContext = &DevExt->Settings.MouseResolution;
+	Parameters[14].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
+	Parameters[14].Name = L"CrashOnCtrlScroll";
+	Parameters[14].EntryContext = &Settings->CrashOnCtrlScroll;
 	Parameters[14].DefaultType = REG_DWORD;
-	Parameters[14].DefaultData = &DefaultMouseResolution;
+	Parameters[14].DefaultData = &DefaultCrashOnCtrlScroll;
 	Parameters[14].DefaultLength = sizeof(ULONG);
 
-	Parameters[15].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[15].Name = L"SampleRate";
-	Parameters[15].EntryContext = &DevExt->MouseAttributes.SampleRate;
-	Parameters[15].DefaultType = REG_DWORD;
-	Parameters[15].DefaultData = &DefaultSampleRate;
-	Parameters[15].DefaultLength = sizeof(ULONG);
+	Status = RtlQueryRegistryValues(
+		RTL_REGISTRY_ABSOLUTE,
+		ParametersRegistryKey.Buffer,
+		Parameters,
+		NULL,
+		NULL);
 
-	Parameters[16].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[16].Name = L"NumberOfButtons";
-	Parameters[16].EntryContext = &DevExt->Settings.NumberOfButtons;
-	Parameters[16].DefaultType = REG_DWORD;
-	Parameters[16].DefaultData = &DefaultNumberOfButtons;
-	Parameters[16].DefaultLength = sizeof(ULONG);
-
-	Parameters[17].Flags = RTL_QUERY_REGISTRY_DIRECT;
-	Parameters[17].Name = L"EnableWheelDetection";
-	Parameters[17].EntryContext = &DevExt->Settings.EnableWheelDetection;
-	Parameters[17].DefaultType = REG_DWORD;
-	Parameters[17].DefaultData = &DefaultEnableWheelDetection;
-	Parameters[17].DefaultLength = sizeof(ULONG);
-
-	Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
-	                                I8042RegistryPath.Buffer,
-	                                Parameters,
-	                                NULL,
-	                                NULL);
-
-	if (!NT_SUCCESS(Status)) {
-		/* Actually, the defaults are not set when the function
-		 * fails, as would happen during setup, so you have to
-		 * set them manually anyway...
-		 */
-		RTL_QUERY_REGISTRY_TABLE *Current = Parameters;
-		DPRINT1 ("Can't read registry: %x\n", Status);
-		while (Current->Name) {
-			*((PULONG)Current->EntryContext) =
-			                       *((PULONG)Current->DefaultData);
-			Current++;
+	if (NT_SUCCESS(Status))
+	{
+		/* Check values */
+		if (Settings->KeyboardDataQueueSize < 1)
+			Settings->KeyboardDataQueueSize = DefaultKeyboardDataQueueSize;
+		if (Settings->MouseDataQueueSize < 1)
+			Settings->MouseDataQueueSize = DefaultMouseDataQueueSize;
+		if (Settings->NumberOfButtons < 1)
+			Settings->NumberOfButtons = DefaultNumberOfButtons;
+		if (Settings->PollingIterations < 0x400)
+			Settings->PollingIterations = DefaultPollingIterations;
+		if (Settings->PollingIterationsMaximum < 0x400)
+			Settings->PollingIterationsMaximum = DefaultPollingIterationsMaximum;
+		if (Settings->ResendIterations < 1)
+			Settings->ResendIterations = DefaultResendIterations;
+	}
+	else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+	{
+		/* Registry path doesn't exist. Set defaults */
+		Settings->KeyboardDataQueueSize = DefaultKeyboardDataQueueSize;
+		Settings->MouseDataQueueSize = DefaultMouseDataQueueSize;
+		Settings->MouseResolution = DefaultMouseResolution;
+		Settings->MouseSynchIn100ns = DefaultMouseSynchIn100ns;
+		Settings->NumberOfButtons = DefaultNumberOfButtons;
+		Settings->PollStatusIterations = DefaultPollStatusIterations;
+		Settings->OverrideKeyboardType = DefaultOverrideKeyboardType;
+		Settings->OverrideKeyboardSubtype = DefaultOverrideKeyboardSubtype;
+		Settings->PollingIterations = DefaultPollingIterations;
+		Settings->PollingIterationsMaximum = DefaultPollingIterationsMaximum;
+		Settings->ResendIterations = DefaultResendIterations;
+		Settings->SampleRate = DefaultSampleRate;
+		Settings->CrashOnCtrlScroll = DefaultCrashOnCtrlScroll;
+		Status = RtlDuplicateUnicodeString(
+			RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+			&DefaultKeyboardDeviceBaseName,
+			&Settings->KeyboardDeviceBaseName);
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT("RtlDuplicateUnicodeString() failed with status 0x%08lx\n", Status);
 		}
-		DPRINT1 ("Manually set defaults\n");
-
+		else
+		{
+			Status = RtlDuplicateUnicodeString(
+				RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+				&DefaultPointerDeviceBaseName,
+				&Settings->PointerDeviceBaseName);
+			if (!NT_SUCCESS(Status))
+				DPRINT("RtlDuplicateUnicodeString() failed with status 0x%08lx\n", Status);
+		}
 	}
 
-	if (DevExt->Settings.MouseResolution > 3)
-		DevExt->Settings.MouseResolution = 3;
+	if (NT_SUCCESS(Status))
+	{
+		DPRINT("KeyboardDataQueueSize : 0x%lx\n", Settings->KeyboardDataQueueSize);
+		DPRINT("KeyboardDeviceBaseName : %wZ\n", &Settings->KeyboardDeviceBaseName);
+		DPRINT("MouseDataQueueSize : 0x%lx\n", Settings->MouseDataQueueSize);
+		DPRINT("MouseResolution : 0x%lx\n", Settings->MouseResolution);
+		DPRINT("MouseSynchIn100ns : %lu\n", Settings->MouseSynchIn100ns);
+		DPRINT("NumberOfButtons : 0x%lx\n", Settings->NumberOfButtons);
+		DPRINT("PointerDeviceBaseName : %wZ\n", &Settings->PointerDeviceBaseName);
+		DPRINT("PollStatusIterations : 0x%lx\n", Settings->PollStatusIterations);
+		DPRINT("OverrideKeyboardType : 0x%lx\n", Settings->OverrideKeyboardType);
+		DPRINT("OverrideKeyboardSubtype : 0x%lx\n", Settings->OverrideKeyboardSubtype);
+		DPRINT("PollingIterations : 0x%lx\n", Settings->PollingIterations);
+		DPRINT("PollingIterationsMaximum : %lu\n", Settings->PollingIterationsMaximum);
+		DPRINT("ResendIterations : 0x%lx\n", Settings->ResendIterations);
+		DPRINT("SampleRate : %lu\n", Settings->SampleRate);
+	}
 
-	DPRINT("Done reading registry\n");
+	return Status;
 }

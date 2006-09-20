@@ -7,18 +7,28 @@ not based on the i8042prt example driver that's included with the DDK.
 
 The directory contains these files:
 
+createclose.c: open/close devices functionnality
+
 i8042prt.c: Main controller functionality, things shared by keyboards and mice
 
 keyboard.c: keyboard functionality: detection, interrupt handling
 
+misc.c: misc things, mostly related to Irp passing
+
 mouse.c: mouse functionality: detection, interrupt handling, packet parsing for
          standard ps2 and microsoft mice
 
+pnp.c: Plug&Play functionnality
+
 ps2pp.c: logitech ps2++ mouse packat parsing (basic)
+
+readwrite.c: read/write to the i8042 controller
 
 registry.c: registry reading
 
-makefile, i8042prt.rc: obvious
+setup.c: add keyboard support during the 1st stage setup
+
+i8042prt.rc: obvious
 
 
 Some parts of the driver make little sense. This is because it implements
@@ -33,7 +43,6 @@ Things to add:
 - General robustness: reset mouse if things go wrong
 - Handling all registry settings
 - ACPI
-- Make it work more like a WDM driver
 
 Things not to add:
 
@@ -49,18 +58,6 @@ Things requiring work elsewhere:
   hardcoded cases, this should not be hard to fix.
 
 - Class drivers:
-  I wrote a keyboard class driver, which does keycode translations. It
-  should not do this, win32k should get untranslated keycodes and do
-  the translation itself.
-
-  I changed the mouse class driver (mouclass) to work like Microsofts mouclass.
-  Unfortunately this means that the original psaux driver doesn't work
-  anymore (the same holds for the other mice drivers, probably).
-
-  The keyboard class driver passes on ioctls from win32k, so it can change
-  keyboard settings. As far as I could see, the mouse class driver does not
-  do this yet.
-
   The class drivers should be able to handle reads for more than one packet
   at a time (kbdclass should, mouclass does not). Win32k should send such
   requests.
