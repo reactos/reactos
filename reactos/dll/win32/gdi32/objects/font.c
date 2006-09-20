@@ -61,7 +61,7 @@ static LPWSTR FONT_mbtowc(LPCSTR str, INT count, INT *plenW)
     lenW = MultiByteToWideChar(cp, 0, str, count, NULL, 0);
     strW = HeapAlloc(GetProcessHeap(), 0, lenW*sizeof(WCHAR));
     MultiByteToWideChar(cp, 0, str, count, strW, lenW);
-    DPRINT("mapped %s -> %s  \n", str, strW);
+    DPRINT1("mapped %s -> %s  \n", str, strW);
     if(plenW) *plenW = lenW;
     return strW;
 }
@@ -383,7 +383,7 @@ GetCharWidthA (
 	LPINT	lpBuffer
 	)
 {
-DPRINT("GCWA iFirstChar %x\n",iFirstChar);
+DPRINT1("GCWA iFirstChar %x\n",iFirstChar);
 
   return GetCharWidth32A ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
@@ -405,7 +405,7 @@ GetCharWidth32A(
     LPSTR str;
     LPWSTR wstr;
     BOOL ret = TRUE;
-DPRINT("GCW32A iFirstChar %x\n",iFirstChar);
+DPRINT1("GCW32A iFirstChar %x\n",iFirstChar);
 
     if(count <= 0) return FALSE;
 
@@ -445,7 +445,7 @@ GetCharWidthW (
 	LPINT	lpBuffer
 	)
 {
-DPRINT("GCW32w uFirstChar %x\n",iFirstChar);
+DPRINT1("GCW32w uFirstChar %x\n",iFirstChar);
 
   /* FIXME should be NtGdiGetCharWidthW */
   return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
@@ -563,7 +563,7 @@ GetCharABCWidthsA(
 	LPABC	lpabc
 	)
 {
-DPRINT("GCABCWA uFirstChar %x\n",uFirstChar);
+DPRINT1("GCABCWA uFirstChar %x\n",uFirstChar);
 
 return NtGdiGetCharABCWidths(hdc, uFirstChar, uLastChar, lpabc);
 }
@@ -581,7 +581,7 @@ GetCharABCWidthsFloatA(
 	LPABCFLOAT	lpABCF
 	)
 {
-DPRINT("GCABCWFA iFirstChar %x\n",iFirstChar);
+DPRINT1("GCABCWFA iFirstChar %x\n",iFirstChar);
 
   /* FIXME what to do with iFirstChar and iLastChar ??? */
   return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
@@ -607,7 +607,7 @@ GetGlyphOutlineA(
     LPWSTR p = NULL;
     DWORD ret;
     UINT c;
-    DPRINT("GetGlyphOutlineA  uChar %x\n", uChar);
+    DPRINT1("GetGlyphOutlineA  uChar %x\n", uChar);
     if(!(uFormat & GGO_GLYPH_INDEX)) {
         int len;
         char mbchs[2];
@@ -644,7 +644,7 @@ GetGlyphOutlineW(
 	CONST MAT2	*lpmat2
 	)
 {
-  DPRINT("GetGlyphOutlineW  uChar %x\n", uChar);
+  DPRINT1("GetGlyphOutlineW  uChar %x\n", uChar);
   return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
 
@@ -828,10 +828,13 @@ CreateFontIndirectA(
 	)
 {
   LOGFONTW tlf;
-
-  LogFontA2W(&tlf, lplf);
-
-  return NtGdiCreateFontIndirect(&tlf);
+  
+  if (lplf)
+    {
+      LogFontA2W(&tlf, lplf);
+      return NtGdiCreateFontIndirect(&tlf);
+    }
+  else return (HFONT) 0; //or call NtGdiCreateFontIndirect(NULL)?
 }
 
 
