@@ -42,6 +42,31 @@ static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
     ptmA->tmCharSet = ptmW->tmCharSet;
 }
 
+/***********************************************************************
+ *           FONT_mbtowc
+ *
+ * Returns a Unicode translation of str. If count is -1 then str is
+ * assumed to be '\0' terminated, otherwise it contains the number of
+ * bytes to convert.  If plenW is non-NULL, on return it will point to
+ * the number of WCHARs that have been written.  The caller should free
+ * the returned LPWSTR from the process heap itself.
+ */
+static LPWSTR FONT_mbtowc(LPCSTR str, INT count, INT *plenW)
+{
+    UINT cp = CP_ACP;
+    INT lenW;
+    LPWSTR strW;
+
+    if(count == -1) count = strlen(str);
+    lenW = MultiByteToWideChar(cp, 0, str, count, NULL, 0);
+    strW = HeapAlloc(GetProcessHeap(), 0, lenW*sizeof(WCHAR));
+    MultiByteToWideChar(cp, 0, str, count, strW, lenW);
+    DPRINT1("mapped %s -> %s  \n", str, strW);
+    if(plenW) *plenW = lenW;
+    return strW;
+}
+
+
 static BOOL FASTCALL
 MetricsCharConvert(WCHAR w, UCHAR *b)
   {
@@ -358,6 +383,8 @@ GetCharWidthA (
 	LPINT	lpBuffer
 	)
 {
+DPRINT1("GCWA iFirstChar %x\n",iFirstChar);
+
   return GetCharWidth32A ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
 
@@ -374,8 +401,35 @@ GetCharWidth32A(
 	LPINT	lpBuffer
 	)
 {
-   /* FIXME should be NtGdiGetCharWidthW */
-   return NtGdiGetCharWidth32(hdc, iFirstChar, iLastChar, lpBuffer);
+    INT i, wlen, count = (INT)(iLastChar - iFirstChar + 1);
+    LPSTR str;
+    LPWSTR wstr;
+    BOOL ret = TRUE;
+DPRINT1("GCW32A iFirstChar %x\n",iFirstChar);
+
+    if(count <= 0) return FALSE;
+
+    str = HeapAlloc(GetProcessHeap(), 0, count);
+    for(i = 0; i < count; i++)
+	str[i] = (BYTE)(iFirstChar + i);
+
+    wstr = FONT_mbtowc(str, count, &wlen);
+
+    for(i = 0; i < wlen; i++)
+    {
+        /* FIXME should be NtGdiGetCharWidthW */
+	if(!NtGdiGetCharWidth32 (hdc, wstr[i], wstr[i], lpBuffer))
+	{
+	    ret = FALSE;
+	    break;
+	}
+	lpBuffer++;
+    }
+
+    HeapFree(GetProcessHeap(), 0, str);
+    HeapFree(GetProcessHeap(), 0, wstr);
+
+    return ret;
 }
 
 
@@ -391,6 +445,8 @@ GetCharWidthW (
 	LPINT	lpBuffer
 	)
 {
+DPRINT1("GCW32w uFirstChar %x\n",iFirstChar);
+
   /* FIXME should be NtGdiGetCharWidthW */
   return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
 }
@@ -496,7 +552,7 @@ GetCharWidthFloatA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 APIENTRY
@@ -507,8 +563,9 @@ GetCharABCWidthsA(
 	LPABC	lpabc
 	)
 {
-  /* FIXME what to do with uFirstChar and uLastChar ??? */
-  return NtGdiGetCharABCWidths ( hdc, uFirstChar, uLastChar, lpabc );
+DPRINT1("GCABCWA uFirstChar %x\n",uFirstChar);
+
+return NtGdiGetCharABCWidths(hdc, uFirstChar, uLastChar, lpabc);
 }
 
 
@@ -524,6 +581,8 @@ GetCharABCWidthsFloatA(
 	LPABCFLOAT	lpABCF
 	)
 {
+DPRINT1("GCABCWFA iFirstChar %x\n",iFirstChar);
+
   /* FIXME what to do with iFirstChar and iLastChar ??? */
   return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
 }
@@ -544,8 +603,31 @@ GetGlyphOutlineA(
 	CONST MAT2	*lpmat2
 	)
 {
-  return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
+
+    LPWSTR p = NULL;
+    DWORD ret;
+    UINT c;
+    DPRINT1("GetGlyphOutlineA  uChar %x\n", uChar);
+    if(!(uFormat & GGO_GLYPH_INDEX)) {
+        int len;
+        char mbchs[2];
+        if(uChar > 0xff) { /* but, 2 bytes character only */
+            len = 2;
+            mbchs[0] = (uChar & 0xff00) >> 8;
+            mbchs[1] = (uChar & 0xff);
+        } else {
+            len = 1;
+            mbchs[0] = (uChar & 0xff);
+        }
+        p = FONT_mbtowc(mbchs, len, NULL);
+	c = p[0];
+    } else
+        c = uChar;
+    ret = NtGdiGetGlyphOutline(hdc, c, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
+    HeapFree(GetProcessHeap(), 0, p);
+    return ret;
 }
+
 
 /*
  * @implemented
@@ -562,6 +644,7 @@ GetGlyphOutlineW(
 	CONST MAT2	*lpmat2
 	)
 {
+  DPRINT1("GetGlyphOutlineW  uChar %x\n", uChar);
   return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
 
@@ -696,6 +779,20 @@ GetOutlineTextMetricsA(
     if(output != lpOTM) {
         memcpy(lpOTM, output, cbData);
         HeapFree(GetProcessHeap(), 0, output);
+
+        /* check if the string offsets really fit into the provided size */
+        /* FIXME: should we check string length as well? */
+        if ((UINT_PTR)lpOTM->otmpFamilyName >= lpOTM->otmSize)
+            lpOTM->otmpFamilyName = 0; /* doesn't fit */
+
+        if ((UINT_PTR)lpOTM->otmpFaceName >= lpOTM->otmSize)
+            lpOTM->otmpFaceName = 0; /* doesn't fit */
+
+        if ((UINT_PTR)lpOTM->otmpStyleName >= lpOTM->otmSize)
+            lpOTM->otmpStyleName = 0; /* doesn't fit */
+
+        if ((UINT_PTR)lpOTM->otmpFullName >= lpOTM->otmSize)
+            lpOTM->otmpFullName = 0; /* doesn't fit */
     }
 
 end:
