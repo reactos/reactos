@@ -57,6 +57,7 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
 
         /* Enable Debugging */
         KdDebuggerEnabled = TRUE;
+        KdDebuggerNotPresent = FALSE;
         WrapperInitRoutine = KdpGdbStubInit;
     }
 
@@ -69,6 +70,7 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
 
         /* Enable Debugging */
         KdDebuggerEnabled = TRUE;
+        KdDebuggerNotPresent = FALSE;
     }
 
 #ifdef KDBG
@@ -136,7 +138,7 @@ KdpCallInitRoutine(ULONG BootPhase)
 {
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
-
+    
     /* Call the registered handlers */
     CurrentEntry = KdProviders.Flink;
     while (CurrentEntry != &KdProviders)
