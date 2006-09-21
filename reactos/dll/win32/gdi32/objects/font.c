@@ -834,7 +834,7 @@ CreateFontIndirectA(
       LogFontA2W(&tlf, lplf);
       return NtGdiCreateFontIndirect(&tlf);
     }
-  else return (HFONT) 0; //or call NtGdiCreateFontIndirect(NULL)?
+  else return NtGdiCreateFontIndirect(NULL);
 }
 
 
