@@ -78,6 +78,42 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     return Status;
 }
 
+TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID *ID,
+				      PIP_INTERFACE Interface,
+				      PNDIS_BUFFER Buffer,
+				      PUINT BufferSize) {
+    NTSTATUS Status;
+    DWORD NumNeighbors = NBCopyNeighbors( Interface, NULL );
+    DWORD MemSize = NumNeighbors * sizeof(IPARP_ENTRY);
+    PIPARP_ENTRY ArpEntries = 
+	ExAllocatePoolWithTag
+	( NonPagedPool, MemSize, FOURCC('A','R','P','t') );
+
+    if( !ArpEntries ) return STATUS_NO_MEMORY;
+    NBCopyNeighbors( Interface, ArpEntries );
+
+    Status = InfoCopyOut( (PVOID)ArpEntries, MemSize, Buffer, BufferSize );
+
+    ExFreePool( ArpEntries );
+
+    return Status;
+}
+
+TDI_STATUS InfoTdiQueryGetArpCapability(TDIEntityID *ID,
+					PIP_INTERFACE Interface,
+					PNDIS_BUFFER Buffer,
+					PUINT BufferSize) {
+    NTSTATUS Status;
+    DWORD Capability = 0x280;
+
+    TI_DbgPrint(MID_TRACE,("Copying out %d bytes (AT_ENTITY capability)\n", 
+			   sizeof(Capability)));
+    Status = InfoCopyOut
+	( (PVOID)&Capability, sizeof(Capability), Buffer, BufferSize );
+
+    return Status;
+}
+
 TDI_STATUS InfoInterfaceTdiQueryEx( UINT InfoClass,
 				    UINT InfoType,
 				    UINT InfoId,
@@ -87,13 +123,22 @@ TDI_STATUS InfoInterfaceTdiQueryEx( UINT InfoClass,
 				    PUINT BufferSize ) {
     if( InfoClass == INFO_CLASS_GENERIC &&
 	InfoType == INFO_TYPE_PROVIDER &&
-	InfoId == ENTITY_TYPE_ID ) {
-	ULONG Temp = IF_MIB;
-	return InfoCopyOut( (PCHAR)&Temp, sizeof(Temp), Buffer, BufferSize );
+	InfoId == ENTITY_TYPE_ID &&
+	id->tei_entity == AT_ENTITY ) {
+	return InfoTdiQueryGetArpCapability( id, Context, Buffer, BufferSize );
     } else if( InfoClass == INFO_CLASS_PROTOCOL &&
 	       InfoType == INFO_TYPE_PROVIDER &&
 	       InfoId == IF_MIB_STATS_ID ) {
 	return InfoTdiQueryGetInterfaceMIB( id, Context, Buffer, BufferSize );
+    } else if( InfoClass == INFO_CLASS_GENERIC &&
+	       InfoType == INFO_TYPE_PROVIDER &&
+	       InfoId == ENTITY_TYPE_ID ) {
+	ULONG Temp = IF_MIB;
+	return InfoCopyOut( (PCHAR)&Temp, sizeof(Temp), Buffer, BufferSize );
+    } else if( InfoClass == INFO_CLASS_PROTOCOL &&
+	       InfoType == INFO_TYPE_PROVIDER &&
+	       InfoId == IP_MIB_ARPTABLE_ENTRY_ID ) {
+	return InfoTdiQueryGetArptableMIB( id, Context, Buffer, BufferSize );
     } else
 	return TDI_INVALID_REQUEST;
 }

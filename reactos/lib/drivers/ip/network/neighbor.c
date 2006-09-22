@@ -514,3 +514,43 @@ VOID NBRemoveNeighbor(
 
   TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 }
+
+ULONG NBCopyNeighbors
+(PIP_INTERFACE Interface,
+ PIPARP_ENTRY ArpTable)
+{
+  PNEIGHBOR_CACHE_ENTRY CurNCE;
+  KIRQL OldIrql;
+  UINT Size = 0, i;
+
+  for (i = 0; i <= NB_HASHMASK; i++) {
+      TcpipAcquireSpinLock(&NeighborCache[i].Lock, &OldIrql);
+      for( CurNCE = NeighborCache[i].Cache;
+	   CurNCE;
+	   CurNCE = CurNCE->Next ) {
+	  if( CurNCE->Interface == Interface ) {
+	      if( ArpTable ) {
+		  ArpTable[Size].Index = Interface->Index;
+		  ArpTable[Size].AddrSize = CurNCE->LinkAddressLength;
+		  RtlCopyMemory
+		      (ArpTable[Size].PhysAddr, 
+		       CurNCE->LinkAddress,
+		       CurNCE->LinkAddressLength);
+		  ArpTable[Size].LogAddr = CurNCE->Address.Address.IPv4Address;
+		  if( CurNCE->State & NUD_PERMANENT )
+		      ArpTable[Size].Type = ARP_ENTRY_STATIC;
+		  else if( CurNCE->State & NUD_CONNECTED )
+		      ArpTable[Size].Type = ARP_ENTRY_DYNAMIC;
+		  else if( !(CurNCE->State & NUD_VALID) )
+		      ArpTable[Size].Type = ARP_ENTRY_INVALID;
+		  else
+		      ArpTable[Size].Type = ARP_ENTRY_OTHER;
+	      }
+	      Size++;
+	  }
+      }
+      TcpipReleaseSpinLock(&NeighborCache[i].Lock, OldIrql);
+  }
+  
+  return Size;
+}

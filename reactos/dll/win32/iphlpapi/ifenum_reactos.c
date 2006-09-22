@@ -40,7 +40,7 @@
 #include "ifenum.h"
 #include <assert.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include "debug.h"
 
 /* Globals */
@@ -124,6 +124,7 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
                             DWORD toiType,
                             DWORD toiId,
                             DWORD teiEntity,
+			    DWORD teiInstance,
                             DWORD fixedPart,
                             DWORD entrySize,
                             PVOID *tdiEntitySet,
@@ -148,6 +149,7 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
     req.ID.toi_type                 = toiType;
     req.ID.toi_id                   = toiId;
     req.ID.toi_entity.tei_entity    = teiEntity;
+    req.ID.toi_entity.tei_instance  = teiInstance;
 
     /* There's a subtle problem here...
      * If an interface is added at this exact instant, (as if by a PCMCIA
@@ -168,7 +170,7 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
                                   &allocationSizeForEntityArray,
                                   NULL );
 
-        if(!status)
+        if(!NT_SUCCESS(status))
         {
             DPRINT("IOCTL Failed\n");
             return STATUS_UNSUCCESSFUL;
@@ -285,6 +287,7 @@ NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile,
                                          INFO_TYPE_PROVIDER,
                                          ENTITY_LIST_ID,
                                          GENERIC_ENTITY,
+					 0,
                                          0,
                                          sizeof(TDIEntityID),
                                          (PVOID *)entitySet,
@@ -303,7 +306,7 @@ NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile,
     return status;
 }
 
-static BOOL isInterface( TDIEntityID *if_maybe ) {
+BOOL isInterface( TDIEntityID *if_maybe ) {
     return 
         if_maybe->tei_entity == IF_ENTITY;
 }
@@ -346,6 +349,30 @@ NTSTATUS tdiGetEntityType( HANDLE tcpFile, TDIEntityID *ent, PULONG type ) {
     DPRINT("TdiGetEntityType() => %08x %08x\n", *type, status);
 
     return (status ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+}
+
+BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe ) {
+    TCP_REQUEST_QUERY_INFORMATION_EX req = TCP_REQUEST_QUERY_INFORMATION_INIT;
+    NTSTATUS status = STATUS_SUCCESS;
+    DWORD returnSize, type;
+
+    req.ID.toi_class                = INFO_CLASS_GENERIC;
+    req.ID.toi_type                 = INFO_TYPE_PROVIDER;
+    req.ID.toi_id                   = ENTITY_TYPE_ID;
+    req.ID.toi_entity.tei_entity    = AT_ENTITY;
+    req.ID.toi_entity.tei_instance  = arp_maybe->tei_instance;
+
+    status = DeviceIoControl( tcpFile,
+                              IOCTL_TCP_QUERY_INFORMATION_EX,
+                              &req,
+                              sizeof(req),
+                              &type,
+                              sizeof(type),
+                              &returnSize,
+                              NULL );
+
+    if( !NT_SUCCESS(status) ) return FALSE;
+    return type == AT_ENTITY;
 }
 
 static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile, 

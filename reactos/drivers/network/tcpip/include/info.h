@@ -46,6 +46,19 @@ typedef struct IPADDR_ENTRY {
 	USHORT Pad;
 } IPADDR_ENTRY, *PIPADDR_ENTRY;
 
+#define ARP_ENTRY_STATIC 4
+#define ARP_ENTRY_DYNAMIC 3
+#define ARP_ENTRY_INVALID 2
+#define ARP_ENTRY_OTHER 1
+
+typedef struct IPARP_ENTRY {
+    ULONG Index;
+    ULONG AddrSize;
+    UCHAR PhysAddr[8];
+    ULONG LogAddr;
+    ULONG Type;
+} IPARP_ENTRY, *PIPARP_ENTRY;
+
 typedef struct IPROUTE_ENTRY {
     ULONG Dest;
     ULONG Index;    //matches if_index in IFEntry and iae_index in IPAddrEntry
@@ -95,6 +108,9 @@ typedef struct IFENTRY {
 #endif
 #ifndef IP_MIB_ADDRTABLE_ENTRY_ID
 #define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
+#endif
+#ifndef IP_MIB_ARPTABLE_ENTRY_ID
+#define IP_MIB_ARPTABLE_ENTRY_ID 0x101
 #endif
 #ifndef MAX_PHYSADDR_SIZE
 #define	MAX_PHYSADDR_SIZE 8

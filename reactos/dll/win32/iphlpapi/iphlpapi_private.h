@@ -118,7 +118,8 @@ VOID closeTcpFile(HANDLE tcpFile);
 NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile, TDIEntityID **entitySet,
 			    PDWORD numEntities );
 NTSTATUS tdiGetSetOfThings( HANDLE tcpFile, DWORD toiClass, DWORD toiType,
-			    DWORD toiId, DWORD teiEntity, DWORD fixedPart,
+			    DWORD toiId, DWORD teiEntity, DWORD teiInstance,
+			    DWORD fixedPart,
 			    DWORD entrySize, PVOID *tdiEntitySet, 
 			    PDWORD numEntries );
 VOID tdiFreeThingSet( PVOID things );
@@ -134,6 +135,8 @@ PWCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n );
 void ConsumeChildKeyName( PWCHAR Name );
 PWCHAR QueryRegistryValueString( HANDLE RegHandle, PWCHAR ValueName );
 void ConsumeRegValueString( PWCHAR NameServer );
+BOOL isInterface( TDIEntityID *if_maybe );
+BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe );
 
 #include <w32api.h>
 /* This is here until we switch to version 2.5 of the mingw headers */

@@ -45,6 +45,7 @@
 
 #define IF_MIB_STATS_ID                 1
 #define IP_MIB_STATS_ID                 1
+#define IP_MIB_ARPTABLE_ENTRY_ID        0x101
 #define IP_MIB_ADDRTABLE_ENTRY_ID       0x102
 #define IP_INTFC_INFO_ID                0x103
 #define MAX_PHYSADDR_SIZE               8
