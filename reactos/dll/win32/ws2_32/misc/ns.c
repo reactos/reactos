@@ -488,7 +488,10 @@ void populate_hostent(struct hostent *he, char* name, DNS_A_DATA addr)
             name,
             MAX_HOSTNAME_LEN);
 
-    he->h_aliases = 0;
+    if( !he->h_aliases ) {
+       he->h_aliases = HeapAlloc(GlobalHeap, 0, sizeof(char *));
+       he->h_aliases[0] = 0;
+    }
     he->h_addrtype = AF_INET;
     he->h_length = sizeof(IN_ADDR); //sizeof(struct in_addr);
 
@@ -518,12 +521,20 @@ void free_hostent(struct hostent *he)
 {
     if(he)
     {
+       char *next = 0;
         HFREE(he->h_name);
-        char *next = he->h_aliases[0];
-        while(next) { HFREE(next); next++; }
-        next = he->h_addr_list[0];
-        while(next) { HFREE(next); next++; }
+        if(he->h_aliases) 
+       { 
+           next = he->h_aliases[0];
+           while(next) { HFREE(next); next++; }
+       }
+       if(he->h_addr_list)
+       {
+           next = he->h_addr_list[0];
+           while(next) { HFREE(next); next++; }
+       }
         HFREE(he->h_addr_list);
+       HFREE(he->h_aliases);
         HFREE(he);
     }
 }
