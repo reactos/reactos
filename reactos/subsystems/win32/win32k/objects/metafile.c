@@ -37,21 +37,8 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
   IO_STATUS_BLOCK Iosb;	      
   NTSTATUS Status;    
 
-   DPRINT1("NtGdiCloseEnhMetaFile\n");   
-
-   /* Todo 
-      Rewrite it to own api call IntGdiCloseEmhMetaFile
-	
-	  Translate follow api to kernel api 
-	  // hMapping = CreateFileMappingW(Dc->hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-	 // Dc->emh = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
-	  // hmf = EMF_Create_HENHMETAFILE( Dc->emh, (Dc->hFile != 0) );
-      
-
-	  DC_SetOwnership(hdc,
-   */
-
-
+  
+  
   Dc = DC_LockDc(hDC);
   if (Dc == NULL)
   {  
@@ -121,34 +108,47 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
 	  LARGE_INTEGER Distance ;
 	  IO_STATUS_BLOCK IoStatusBlock;
 
+	  POBJECT_ATTRIBUTES ObjectAttributes = NULL;
+      ACCESS_MASK DesiredAccess;
+	  PLARGE_INTEGER SectionSize = NULL;
+	  DWORD flProtect;
+	  ULONG Attributes;
+	  LARGE_INTEGER SectionOffset;
+      ULONG ViewSize;
+      ULONG Protect;
+      LPVOID ViewBase;
+
 	  Distance.u.LowPart = 0;
       Distance.u.HighPart = 0;
 	  FilePosition.CurrentByteOffset.QuadPart = Distance.QuadPart;
+
+	  DPRINT1("Trying write to metafile and map it\n"); 
 
 	  Status = NtSetInformationFile(Dc->hFile, &IoStatusBlock, &FilePosition, 
 		                             sizeof(FILE_POSITION_INFORMATION), FilePositionInformation);
 
 	 if (!NT_SUCCESS(Status))
      {
-	     /* FIXME */
-		 // SetLastErrorByStatus(errCode);
+		 // SetLastErrorByStatus(Status);
          SetLastWin32Error(ERROR_INVALID_HANDLE);	  
 
 		 NtClose( Dc->hFile );
 		 DC_UnlockDc(Dc);
 		 NtGdiDeleteObjectApp(hDC); 
+
+		 DPRINT1("NtSetInformationFile fail\n"); 
 	     return hmf;
      }
 
 	 if (FilePosition.CurrentByteOffset.u.LowPart != 0)
 	 {
-		 /* FIXME */
-		 // SetLastErrorByStatus(errCode);
+		 // SetLastErrorByStatus(Status);
 		 SetLastWin32Error(ERROR_INVALID_HANDLE);	 
 
 		 NtClose( Dc->hFile );
 		 DC_UnlockDc(Dc);
 		 NtGdiDeleteObjectApp(hDC); 
+		 DPRINT1("FilePosition.CurrentByteOffset.u.LowPart is not 0\n"); 
 	     return hmf;
 	 }
 
@@ -166,19 +166,68 @@ NtGdiCloseEnhMetaFile(HDC  hDC)
       {
          NtClose( Dc->hFile );            
 		 DC_UnlockDc(Dc);
-         NtGdiDeleteObjectApp(hDC);       
+         NtGdiDeleteObjectApp(hDC);  
+		 DPRINT1("fail to write 0\n"); 
          return hmf;
       }
 	  
 	  EngFreeMem(Dc->emh);
 
-	  /* FIXME */
-     // hMapping = CreateFileMappingW(Dc->hFile, NULL, PAGE_READONLY, 0, 0, NULL);
-	
-	 /* FIXME */
-	 // Dc->emh = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
-      NtClose( hMapping );
-      NtClose( Dc->hFile );
+      /* create maping */    
+      DesiredAccess = STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ;   
+      Attributes = (PAGE_READONLY & (SEC_FILE | SEC_IMAGE | SEC_RESERVE | SEC_NOCACHE | SEC_COMMIT));
+      flProtect = PAGE_READONLY ^ (PAGE_READONLY & (SEC_FILE | SEC_IMAGE | SEC_RESERVE | SEC_NOCACHE | SEC_COMMIT));   
+
+      if (!Attributes) Attributes = SEC_COMMIT;    
+    	       
+      if (Dc->hFile == INVALID_HANDLE_VALUE)
+      {     
+          Dc->hFile = NULL;
+          if (!SectionSize)
+          {             
+			 SetLastWin32Error(ERROR_INVALID_PARAMETER);	 
+             hMapping = NULL; 
+			 DPRINT1("fail !SectionSize \n"); 
+          }
+      }
+	  else
+	  {
+          Status = NtCreateSection(&hMapping, DesiredAccess, ObjectAttributes, SectionSize, flProtect, Attributes, Dc->hFile);
+          if (!NT_SUCCESS(Status))
+          {        
+          //SetLastErrorByStatus(Status);
+		      SetLastWin32Error(ERROR_INVALID_HANDLE);	 
+              hMapping =  NULL;
+			  DPRINT1("fail NtCreateSection \n"); 
+          }
+	  }
+
+      /* MapViewOfFile */
+      SectionOffset.LowPart = 0;
+      SectionOffset.HighPart = 0;
+      ViewBase = NULL;
+      ViewSize = 0;
+       
+      Protect = PAGE_READONLY;
+       
+      Status = ZwMapViewOfSection(&hMapping, NtCurrentProcess(), &ViewBase, 0, 
+		                          0, &SectionOffset, &ViewSize, ViewShare, 0, Protect);
+      if (!NT_SUCCESS(Status))
+      {    
+          //SetLastErrorByStatus(Status);
+		  SetLastWin32Error(ERROR_INVALID_HANDLE);	 
+          Dc->emh = NULL;
+		  DPRINT1("fail ZwMapViewOfSection \n"); 
+      }
+	  else
+      {
+          Dc->emh = ViewBase;
+	  }
+      /* Close */
+	  if (hMapping != NULL)
+          NtClose( hMapping );
+	  if (Dc->hFile != NULL)
+          NtClose( Dc->hFile );
     }
  
   hmf = GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TYPE_ENHMETAFILE);
