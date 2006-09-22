@@ -49,6 +49,19 @@ BRUSH_Cleanup(PVOID ObjectBody)
   return TRUE;
 }
 
+INT FASTCALL
+BRUSH_GetObject (PGDIBRUSHOBJ BrushObj, INT Count, BRUSHOBJ * Buffer)
+{	
+	if (Buffer)
+	{
+	    Buffer->iSolidColor = BrushObj->BrushAttr.lbColor;
+        Buffer->pvRbrush = BrushObj->ulRealization;
+        Buffer->flColorType = 0;
+	}
+	return sizeof(BRUSHOBJ);
+}
+
+
 XLATEOBJ* FASTCALL
 IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
 {

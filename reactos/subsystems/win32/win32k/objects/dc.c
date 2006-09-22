@@ -1716,6 +1716,7 @@ NtGdiGetDeviceCaps(HDC  hDC,
 DC_GET_VAL( INT, NtGdiGetMapMode, w.MapMode )
 DC_GET_VAL( INT, NtGdiGetPolyFillMode, w.polyFillMode )
 
+
 INT FASTCALL
 IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
 {
@@ -1737,10 +1738,11 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
       case GDI_OBJECT_TYPE_PEN:
         Result = PEN_GetObject((PENOBJ *) GdiObject, Count, Buffer);
         break;
-      case GDI_OBJECT_TYPE_BRUSH:
-        Result = BRUSH_GetObject((BRUSHOBJ *) GdiObject, Count, Buffer);
-        break;
 #endif
+      case GDI_OBJECT_TYPE_BRUSH:
+        Result = BRUSH_GetObject((PGDIBRUSHOBJ ) GdiObject, Count, (BRUSHOBJ *)Buffer);
+        break;
+
       case GDI_OBJECT_TYPE_BITMAP:
         Result = BITMAP_GetObject((BITMAPOBJ *) GdiObject, Count, Buffer);
         break;
