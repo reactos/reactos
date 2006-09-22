@@ -183,6 +183,7 @@ NTSTATUS tdiGetRoutesForIpEntity
                                 INFO_TYPE_PROVIDER,
                                 IP_MIB_ROUTETABLE_ENTRY_ID,
                                 ent->tei_entity,
+				0,
                                 0,
                                 sizeof(IPRouteEntry),
                                 (PVOID *)routes,
@@ -203,6 +204,7 @@ NTSTATUS tdiGetIpAddrsForIpEntity
                                 INFO_TYPE_PROVIDER,
                                 IP_MIB_ADDRTABLE_ENTRY_ID,
                                 ent->tei_entity,
+				0,
                                 0,
                                 sizeof(IPAddrEntry),
                                 (PVOID *)addrs,
@@ -507,12 +509,106 @@ RouteTable *getRouteTable(void)
 
 DWORD getNumArpEntries(void)
 {
-  return getNumWithOneHeader("/proc/net/arp");
+    DWORD numEntities;
+    TDIEntityID *entitySet = NULL;
+    HANDLE tcpFile;
+    int i, totalNumber = 0;
+    NTSTATUS status;
+    PMIB_IPNETROW IpArpTable = NULL;
+    DWORD returnSize;
+
+    TRACE("called.\n");
+
+    status = openTcpFile( &tcpFile );
+
+    if( !NT_SUCCESS(status) ) {
+        TRACE("failure: %08x\n", (int)status );
+        return 0;
+    }
+
+    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+
+    for( i = 0; i < numEntities; i++ ) {
+        if( isInterface( &entitySet[i] ) && 
+	    hasArp( tcpFile, &entitySet[i] ) ) {
+
+	    status = tdiGetSetOfThings( tcpFile,
+					INFO_CLASS_PROTOCOL,
+					INFO_TYPE_PROVIDER,
+					IP_MIB_ARPTABLE_ENTRY_ID,
+					AT_ENTITY,
+					entitySet[i].tei_instance,
+					0,
+					sizeof(MIB_IPNETROW),
+					(PVOID *)&IpArpTable,
+					&returnSize );
+
+	    if( status == STATUS_SUCCESS ) totalNumber += returnSize;
+	    if( IpArpTable ) tdiFreeThingSet( IpArpTable );
+	}
+    }
+
+    closeTcpFile( tcpFile );
+    if( IpArpTable ) tdiFreeThingSet( IpArpTable );
+    if( entitySet ) tdiFreeThingSet( entitySet );
+    return totalNumber;
 }
 
 PMIB_IPNETTABLE getArpTable(void)
 {
-    return 0;
+    DWORD numEntities, returnSize;
+    TDIEntityID *entitySet;
+    HANDLE tcpFile;
+    int i, row = 0, totalNumber;
+    NTSTATUS status;
+    PMIB_IPNETTABLE IpArpTable = NULL;
+    PMIB_IPNETROW AdapterArpTable = NULL;
+
+    TRACE("called.\n");
+
+    totalNumber = getNumArpEntries();
+
+    status = openTcpFile( &tcpFile );
+
+    if( !NT_SUCCESS(status) ) {
+        TRACE("failure: %08x\n", (int)status );
+        return 0;
+    }
+
+    IpArpTable = HeapAlloc
+	( GetProcessHeap(), 0, 
+	  sizeof(DWORD) + (sizeof(MIB_IPNETROW) * totalNumber) );
+
+    status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
+
+    for( i = 0; i < numEntities; i++ ) {
+        if( isIpEntity( tcpFile, &entitySet[i] ) && 
+	    hasArp( tcpFile, &entitySet[i] ) ) {
+
+	    status = tdiGetSetOfThings( tcpFile,
+					INFO_CLASS_PROTOCOL,
+					INFO_TYPE_PROVIDER,
+					IP_MIB_ARPTABLE_ENTRY_ID,
+					AT_ENTITY,
+					entitySet[i].tei_instance,
+					0,
+					sizeof(MIB_IPNETROW),
+					(PVOID *)&AdapterArpTable,
+					&returnSize );
+
+	    if( status == STATUS_SUCCESS ) {
+		for( row = 0; row < returnSize; row++ )
+		    IpArpTable->table[row] = AdapterArpTable[row];
+	    }
+
+	    if( AdapterArpTable ) tdiFreeThingSet( AdapterArpTable );
+	}
+    }
+
+    tdiFreeThingSet( entitySet );
+    IpArpTable->dwNumEntries = row;
+
+    return IpArpTable;
 }
 
 DWORD getNumUdpEntries(void)

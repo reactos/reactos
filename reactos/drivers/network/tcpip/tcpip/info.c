@@ -164,6 +164,35 @@ TDI_STATUS InfoTdiQueryInformationEx(
 	    Status = TDI_INVALID_PARAMETER;
         } else
 	    Status = InfoTdiQueryListEntities(Buffer, BufferSize);
+    } else if (ID->toi_entity.tei_entity == AT_ENTITY) {
+	TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
+
+	for( i = 0; i < EntityCount; i++ ) {
+	    if( EntityList[i].tei_entity == IF_ENTITY &&
+		EntityList[i].tei_instance == ID->toi_entity.tei_instance ) {
+		InfoRequest = EntityList[i].info_req;
+		context = EntityList[i].context;
+		FoundEntity = TRUE;
+		break;
+	    }
+	}
+
+	TcpipReleaseSpinLock( &EntityListLock, OldIrql );
+
+	if( FoundEntity ) {
+	    TI_DbgPrint(DEBUG_INFO,
+			("Calling AT Entity %d (%04x:%d) InfoEx (%x,%x,%x)\n",
+			 i, ID->toi_entity.tei_entity,
+			 ID->toi_entity.tei_instance,
+			 ID->toi_class, ID->toi_type, ID->toi_id));
+	    Status = InfoRequest( ID->toi_class,
+				  ID->toi_type,
+				  ID->toi_id,
+				  context,
+				  &ID->toi_entity,
+				  Buffer,
+				  BufferSize );
+	}
     } else {
 	TcpipAcquireSpinLock( &EntityListLock, &OldIrql );
 

@@ -14,6 +14,7 @@
 #include <checksum.h>
 #include <address.h>
 #include <routines.h>
+#include <info.h>
 #include <neighbor.h>
 #include <route.h>
 #include <receive.h>
@@ -29,7 +30,6 @@
 #include <tilists.h>
 #include <dispatch.h>
 #include <fileobjs.h>
-#include <info.h>
 #include <lock.h>
 #include <wait.h>
 #include <bug.h>
