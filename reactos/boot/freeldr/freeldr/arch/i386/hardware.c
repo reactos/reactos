@@ -1662,7 +1662,8 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
   ULONG Size;
   LONG Error;
 
-  if (DetectKeyboardDevice())
+  /* HACK: don't call DetectKeyboardDevice() as it fails in Qemu 0.8.2 */
+  if (TRUE || DetectKeyboardDevice())
   {
     /* Create controller key */
     Error = RegCreateKey(ControllerKey,
