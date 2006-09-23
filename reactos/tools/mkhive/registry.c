@@ -153,7 +153,7 @@ RegpOpenOrCreateKey(
 			ParentKey->RegistryHive,
 			ParentKey->KeyCell,
 			&KeyString,
-			0,
+			OBJ_CASE_INSENSITIVE,
 			&SubKeyCell,
 			&BlockOffset);
 		if (AllowCreation && Status == STATUS_OBJECT_NAME_NOT_FOUND)
