@@ -15,6 +15,15 @@
 
 ULONG IopTraceLevel = IO_IRP_DEBUG;
 
+// should go into a proper header
+VOID
+NTAPI
+IoSynchronousInvalidateDeviceRelations(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_RELATION_TYPE Type
+);
+
+
 /* DATA ********************************************************************/
 
 POBJECT_TYPE IoDeviceObjectType = NULL;
@@ -448,7 +457,7 @@ IoInit2(BOOLEAN BootLog)
   /*
    * Initialize PnP root releations
    */
-  IoInvalidateDeviceRelations(
+  IoSynchronousInvalidateDeviceRelations(
     IopRootDeviceNode->PhysicalDeviceObject,
     BusRelations);
 
