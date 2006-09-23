@@ -416,26 +416,7 @@ IntGdiCreateSolidBrush(
 
    BrushObject->flAttrs |= GDIBRUSH_IS_SOLID;
 
-   if (((Color>>24) & 0xff)==0x10) 
-   {
-	  if (Color == 0x10ff0002)
-          Color = 0xFF;
-      else if ((Color & 0xff) !=0)
-		  Color = Color & 0xFFFFFF;
-	  else if ((Color & 0xff) ==0x00)
-          Color = ((Color>>16) & 0x0000ff) | ((Color<<16) & 0xff0000) | (Color & 0x00ff00);
-	  else if ((Color & 0xff) ==0x01)
-          Color = ((Color>>16) & 0x0000ff) | ((Color<<16) & 0xff0000) | (Color & 0x00ff00);	 
-   }
-
-
-   if (((Color>>24) & 0xff)==0xff) 
-   {      
-       Color = ((Color>>16) & 0x0000ff) | ((Color<<16) & 0xff0000) | (Color & 0x00ff00);
-   }
-
-
-   BrushObject->BrushAttr.lbColor = Color & 0xFFFFFF;
+   BrushObject->BrushAttr.lbColor = Color;
    /* FIXME: Fill in the rest of fields!!! */
 
    BRUSHOBJ_UnlockBrush(BrushObject);
