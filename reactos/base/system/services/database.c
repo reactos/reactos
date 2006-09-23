@@ -279,7 +279,10 @@ CreateServiceListEntry(LPWSTR lpServiceName,
     }
 
     DPRINT("ServiceName: '%S'\n", lpService->lpServiceName);
-    DPRINT("Group: '%S'\n", lpService->lpGroup->lpGroupName);
+    if (lpService->lpGroup != NULL)
+    {
+        DPRINT("Group: '%S'\n", lpService->lpGroup->lpGroupName);
+    }
     DPRINT("Start %lx  Type %lx  Tag %lx  ErrorControl %lx\n",
            lpService->dwStartType,
            lpService->Status.dwServiceType,
