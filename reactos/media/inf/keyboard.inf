@@ -9,7 +9,10 @@ LayoutFile = layout.inf
 Class      = Keyboard
 ClassGUID  = {4D36E96B-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 04/30/2005,1.02
+DriverVer  = 09/24/2006,1.03
+
+[DestinationDirs]
+DefaultDestDir = 12
 
 [ClassInstall32.NT]
 AddReg = KeyboardClass.NT.AddReg
@@ -25,13 +28,12 @@ HKR, , UpperFilters,   0x00010000, "kbdclass"
 %StdMfg% = StdMfg
 
 [StdMfg]
-%*PNP0303.DeviceDesc%    = PS2_Inst,*PNP0303
+%*PNP0303.DeviceDesc%    = PS2_Inst.NT,*PNP0303
 
 ;------------------------------ PS/2 DRIVER -----------------------------
 
 [PS2_Inst.NT]
 CopyFiles = PS2_CopyFiles.NT, kbdclass_CopyFiles.NT
-AddReg = PS2_AddReg
 
 [PS2_CopyFiles.NT]
 i8042prt.sys
