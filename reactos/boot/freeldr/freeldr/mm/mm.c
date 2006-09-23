@@ -392,13 +392,13 @@ VOID DumpMemoryAllocMap(VOID)
 		case 1:
 			DbgPrint((DPRINT_MEMORY, "A"));
 			break;
-		case MEMTYPE_RESERVED:
+		case BiosMemoryReserved:
 			DbgPrint((DPRINT_MEMORY, "R"));
 			break;
-		case MEMTYPE_ACPI_RECLAIM:
+		case BiosMemoryAcpiReclaim:
 			DbgPrint((DPRINT_MEMORY, "M"));
 			break;
-		case MEMTYPE_ACPI_NVS:
+		case BiosMemoryAcpiNvs:
 			DbgPrint((DPRINT_MEMORY, "N"));
 			break;
 		default:

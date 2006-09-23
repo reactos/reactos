@@ -256,7 +256,7 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
                        ULONG MaxMemoryMapSize ) {
     printf("GetMemoryMap(chosen=%x)\n", chosen_package);
 
-    BiosMemoryMap[0].Type = MEMTYPE_USABLE;
+    BiosMemoryMap[0].Type = BiosMemoryUsable;
     BiosMemoryMap[0].BaseAddress = 0;
     BiosMemoryMap[0].Length = 32 * 1024 * 1024; /* Assume 32 meg for now */
 

@@ -21,11 +21,13 @@
 #ifndef __MEMORY_H
 #define __MEMORY_H
 
-
-#define	MEMTYPE_USABLE			0x01
-#define	MEMTYPE_RESERVED		0x02
-#define MEMTYPE_ACPI_RECLAIM	0x03
-#define MEMTYPE_ACPI_NVS		0x04
+typedef enum
+{
+	BiosMemoryUsable=1,
+	BiosMemoryReserved,
+	BiosMemoryAcpiReclaim,
+	BiosMemoryAcpiNvs
+} BIOS_MEMORY_TYPE;
 
 typedef struct
 {

@@ -86,7 +86,7 @@ XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       /* Available RAM block */
       BiosMemoryMap[0].BaseAddress = 0;
       BiosMemoryMap[0].Length = AvailableMemoryMb * 1024 * 1024;
-      BiosMemoryMap[0].Type = MEMTYPE_USABLE;
+      BiosMemoryMap[0].Type = BiosMemoryUsable;
       EntryCount = 1;
     }
 
@@ -95,7 +95,7 @@ XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
       /* Video memory */
       BiosMemoryMap[1].BaseAddress = AvailableMemoryMb * 1024 * 1024;
       BiosMemoryMap[1].Length = (InstalledMemoryMb - AvailableMemoryMb) * 1024 * 1024;
-      BiosMemoryMap[1].Type = MEMTYPE_RESERVED;
+      BiosMemoryMap[1].Type = BiosMemoryReserved;
       EntryCount = 2;
     }
 

@@ -325,7 +325,7 @@ VOID RunLoader(VOID)
       reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
       for (i = 0; i < (LoaderBlock.MmapLength / sizeof(memory_map_t)); i++)
         {
-          if (MEMTYPE_USABLE == reactos_memory_map[i].type &&
+          if (BiosMemoryUsable == reactos_memory_map[i].type &&
               0 == reactos_memory_map[i].base_addr_low)
             {
               LoaderBlock.MemLower = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024;
@@ -334,7 +334,7 @@ VOID RunLoader(VOID)
                   LoaderBlock.MemLower = 640;
                 }
             }
-          if (MEMTYPE_USABLE == reactos_memory_map[i].type &&
+          if (BiosMemoryUsable == reactos_memory_map[i].type &&
               reactos_memory_map[i].base_addr_low <= 1024 * 1024 &&
               1024 * 1024 <= reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low)
             {
