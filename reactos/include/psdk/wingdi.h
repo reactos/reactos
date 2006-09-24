@@ -1187,6 +1187,16 @@ extern "C" {
 #define CS_DISABLE          0x00000002
 #define CS_DELETE_TRANSFORM 0x00000003
 #endif
+
+#if(WINVER >= 0x0400)
+typedef struct tagEMRGLSRECORD
+{
+    EMR   emr;
+    DWORD cbData;       
+    BYTE  Data[1];
+} EMRGLSRECORD, *PEMRGLSRECORD;
+#endif
+
 #if (WINVER > 0x500)
 #define GRADIENT_FILL_RECT_H 0x00
 #define GRADIENT_FILL_RECT_V 0x01
@@ -1760,6 +1770,19 @@ typedef struct tagEMRFORMAT   {
 	DWORD cbData;
 	DWORD offData;
 } EMRFORMAT;
+
+typedef struct tagEMRPIXELFORMAT
+{
+    EMR emr;
+    PIXELFORMATDESCRIPTOR pfd;
+} EMRPIXELFORMAT, *PEMRPIXELFORMAT;
+typedef struct tagEMRSETCOLORSPACE
+{
+    EMR   emr;
+    DWORD ihCS;
+} EMRSETCOLORSPACE, *PEMRSETCOLORSPACE, EMRSELECTCOLORSPACE, *PEMRSELECTCOLORSPACE, 
+  EMRDELETECOLORSPACE, *PEMRDELETECOLORSPACE;
+
 typedef struct tagEMRFRAMERGN {
 	EMR emr;
 	RECTL rclBounds;
