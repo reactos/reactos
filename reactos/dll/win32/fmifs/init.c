@@ -35,7 +35,7 @@ GetProvider(
 
 static BOOLEAN
 AddProvider(
-	IN PWCHAR FileSystem,
+	IN PCUNICODE_STRING FileSystem,
 	IN PWCHAR DllFile)
 {
 	PIFS_PROVIDER Provider = NULL;
@@ -48,7 +48,7 @@ AddProvider(
 		goto cleanup;
 
 	RequiredSize = FIELD_OFFSET(IFS_PROVIDER, Name)
-		+ wcslen(FileSystem) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+		+ FileSystem->Length + sizeof(UNICODE_NULL);
 	Provider = (PIFS_PROVIDER)RtlAllocateHeap(
 		RtlGetProcessHeap(),
 		0,
@@ -62,7 +62,7 @@ AddProvider(
 	//Provider->Extend = (EXTEND)GetProcAddress(hMod, "Extend");
 	Provider->FormatEx = (FORMATEX)GetProcAddress(hMod, "FormatEx");
 
-	wcscpy(Provider->Name, FileSystem);
+	RtlCopyMemory(Provider->Name, FileSystem->Buffer, FileSystem->Length);
 
 	InsertTailList(&ProviderListHead, &Provider->ListEntry);
 	ret = TRUE;
@@ -81,14 +81,66 @@ cleanup:
 static BOOLEAN
 InitializeFmIfsOnce(void)
 {
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	UNICODE_STRING RegistryPath
+		= RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\SOFTWARE\\ReactOS\\ReactOS\\CurrentVersion\\IFS");
+	HANDLE hKey = NULL;
+	PKEY_VALUE_FULL_INFORMATION Buffer;
+	ULONG BufferSize = sizeof(KEY_VALUE_FULL_INFORMATION) + MAX_PATH;
+	ULONG RequiredSize;
+	ULONG i = 0;
+	UNICODE_STRING Name;
+	UNICODE_STRING Data;
+	NTSTATUS Status;
+
 	InitializeListHead(&ProviderListHead);
 
-	/* Add default providers */
-	AddProvider(L"FAT", L"ufat");
-	AddProvider(L"FAT32", L"ufat");
+	/* Read IFS providers from HKLM\SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS */
+	InitializeObjectAttributes(&ObjectAttributes, &RegistryPath, 0, NULL, NULL);
+	Status = NtOpenKey(&hKey, KEY_QUERY_VALUE, &ObjectAttributes);
+	if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+		return TRUE;
+	else if (!NT_SUCCESS(Status))
+		return FALSE;
 
-	/* TODO: Check how many IFS are installed in the system */
-	/* TODO: and register a descriptor for each one */
+	Buffer = (PKEY_VALUE_FULL_INFORMATION)RtlAllocateHeap(
+		RtlGetProcessHeap(),
+		0,
+		BufferSize);
+	if (!Buffer)
+	{
+		NtClose(hKey);
+		return FALSE;
+	}
+	
+	while (TRUE)
+	{
+		Status = NtEnumerateValueKey(
+			hKey,
+			i++,
+			KeyValueFullInformation,
+			Buffer,
+			BufferSize,
+			&RequiredSize);
+		if (Status == STATUS_BUFFER_OVERFLOW)
+			continue;
+		else if (!NT_SUCCESS(Status))
+			break;
+		else if (Buffer->Type != REG_SZ)
+			continue;
+
+		Name.Length = Name.MaximumLength = Buffer->NameLength;
+		Name.Buffer = Buffer->Name;
+		Data.Length = Data.MaximumLength = Buffer->DataLength;
+		Data.Buffer = (PWCHAR)((ULONG_PTR)Buffer + Buffer->DataOffset);
+		if (Data.Length > sizeof(WCHAR) && Data.Buffer[Data.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+			Data.Length -= sizeof(WCHAR);
+
+		AddProvider(&Name, Data.Buffer);
+	}
+
+	NtClose(hKey);
+	RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 	return TRUE;
 }
 
