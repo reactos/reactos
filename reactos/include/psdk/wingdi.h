@@ -2149,6 +2149,7 @@ typedef struct tagTEXTMETRICW {
 	BYTE tmPitchAndFamily;
 	BYTE tmCharSet;
 } TEXTMETRICW,*PTEXTMETRICW,*LPTEXTMETRICW;
+
 typedef struct _RGNDATAHEADER {
 	DWORD dwSize;
 	DWORD iType;
@@ -2558,15 +2559,7 @@ typedef struct _DISPLAY_DEVICEW {
   WCHAR DeviceKey[128];
 } DISPLAY_DEVICEW, *PDISPLAY_DEVICEW, *LPDISPLAY_DEVICEW;
 
-#if (_WIN32_WINNT >= 0x0500)
-typedef struct _RGNDATAHEADER {
-  DWORD dwSize;
-  DWORD iType;
-  DWORD nCount;
-  DWORD nRgnSize;
-  RECT  rcBound;
-} RGNDATAHEADER, *PRGNDATAHEADER;
-#endif
+
 
 typedef BOOL (CALLBACK *ABORTPROC)(HDC,int);
 typedef int (CALLBACK *MFENUMPROC)(HDC,HANDLETABLE*,METARECORD*,int,LPARAM);
