@@ -77,7 +77,6 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
     /* Get the KDBG Settings and enable it */
     KdDebuggerEnabled = TRUE;
     KdDebuggerNotPresent = FALSE;
-    KdpDebugMode.Gdb = TRUE;
     KdbpGetCommandLineSettings((PCHAR)LoaderBlock->CommandLine);
 #endif
     return p2;
