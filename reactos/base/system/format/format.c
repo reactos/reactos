@@ -15,22 +15,22 @@ BOOL	Error = FALSE;
 
 // switches
 BOOL	QuickFormat = FALSE;
-DWORD   ClusterSize = 0;
+DWORD	ClusterSize = 0;
 BOOL	CompressDrive = FALSE;
-BOOL    GotALabel = FALSE;
-LPTSTR  Label = _T("");
-LPTSTR  Drive = NULL;
-LPTSTR  Format = _T("FAT");
+BOOL	GotALabel = FALSE;
+LPTSTR	Label = _T("");
+LPTSTR	Drive = NULL;
+LPTSTR	Format = _T("FAT");
 
-TCHAR  RootDirectory[MAX_PATH];
-TCHAR  LabelString[12];
+TCHAR	RootDirectory[MAX_PATH];
+TCHAR	LabelString[12];
 
 //
 // Size array
 //
 typedef struct {
-	TCHAR  SizeString[16];
-	DWORD  ClusterSize;
+	TCHAR SizeString[16];
+	DWORD ClusterSize;
 } SIZEDEFINITION, *PSIZEDEFINITION;
 
 SIZEDEFINITION LegalSizes[] = {
@@ -57,7 +57,7 @@ SIZEDEFINITION LegalSizes[] = {
 //----------------------------------------------------------------------
 static VOID PrintWin32Error( LPTSTR Message, DWORD ErrorCode )
 {
-	LPTSTR   lpMsgBuf;
+	LPTSTR lpMsgBuf;
 
 	FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 					NULL, ErrorCode,
@@ -169,9 +169,10 @@ static int ParseCommandLine( int argc, TCHAR *argv[] )
 //
 //----------------------------------------------------------------------
 BOOLEAN STDCALL
-FormatExCallback (CALLBACKCOMMAND Command,
-		  ULONG Modifier,
-		  PVOID Argument)
+FormatExCallback (
+		CALLBACKCOMMAND Command,
+		ULONG Modifier,
+		PVOID Argument)
 {
 	PDWORD percent;
 	PTEXTOUTPUT output;
@@ -185,8 +186,8 @@ FormatExCallback (CALLBACKCOMMAND Command,
 
 	case PROGRESS:
 		percent = (PDWORD) Argument;
-        LoadString( GetModuleHandle(NULL), STRING_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-        _tprintf(szMsg, *percent);
+		LoadString( GetModuleHandle(NULL), STRING_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		_tprintf(szMsg, *percent);
 		break;
 
 	case OUTPUT:
@@ -199,7 +200,7 @@ FormatExCallback (CALLBACKCOMMAND Command,
 		if( *status == FALSE ) {
 
 			LoadString( GetModuleHandle(NULL), STRING_FORMAT_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-            _tprintf(szMsg);	
+			_tprintf(szMsg);
 			Error = TRUE;
 		}
 		break;
@@ -217,7 +218,7 @@ FormatExCallback (CALLBACKCOMMAND Command,
 	case UNKNOWND:
 	case STRUCTUREPROGRESS:
 		LoadString( GetModuleHandle(NULL), STRING_NO_SUPPORT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-        _tprintf(szMsg);
+		_tprintf(szMsg);
 		return FALSE;
 	}
 	return TRUE;
@@ -272,7 +273,7 @@ _tmain(int argc, TCHAR *argv[])
 	DWORD flags, maxComponent;
 	ULARGE_INTEGER freeBytesAvailableToCaller, totalNumberOfBytes, totalNumberOfFreeBytes;
 #ifndef UNICODE
-	WCHAR  RootDirectoryW[MAX_PATH], FormatW[MAX_PATH], LabelW[MAX_PATH];
+	WCHAR RootDirectoryW[MAX_PATH], FormatW[MAX_PATH], LabelW[MAX_PATH];
 #endif
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 
@@ -280,9 +281,8 @@ _tmain(int argc, TCHAR *argv[])
 	// Get function pointers
 	//
 	if( !LoadFMIFSEntryPoints()) {
-		
 		LoadString( GetModuleHandle(NULL), STRING_FMIFS_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-        _tprintf(szMsg);	
+		_tprintf(szMsg);
 		return -1;
 	}
 
@@ -292,7 +292,7 @@ _tmain(int argc, TCHAR *argv[])
 	if( (badArg = ParseCommandLine( argc, argv ))) {
 
 		LoadString( GetModuleHandle(NULL), STRING_UNKNOW_ARG, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-        _tprintf(szMsg, argv[badArg] );
+		_tprintf(szMsg, argv[badArg] );
 
 		Usage(argv[0]);
 		return -1;
@@ -304,7 +304,7 @@ _tmain(int argc, TCHAR *argv[])
 	if( !Drive ) {
 
 		LoadString( GetModuleHandle(NULL), STRING_DRIVE_PARM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-        _tprintf(szMsg);
+		_tprintf(szMsg);
 		Usage( argv[0] );
 		return -1;
 
@@ -321,14 +321,14 @@ _tmain(int argc, TCHAR *argv[])
 	driveType = GetDriveType( RootDirectory );
 
 	if( driveType == 0 ) {
-		LoadString( GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);       
+		LoadString( GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
 
 	if( driveType != DRIVE_FIXED ) {
 		LoadString( GetModuleHandle(NULL), STRING_INSERT_DISK, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-        _tprintf(szMsg, RootDirectory[0] );
+		_tprintf(szMsg, RootDirectory[0] );
 		_fgetts( input, sizeof(input)/2, stdin );
 
 		media = FMIFS_FLOPPY;
@@ -357,7 +357,7 @@ _tmain(int argc, TCHAR *argv[])
 		return -1;
 	}
 	LoadString( GetModuleHandle(NULL), STRING_FILESYSTEM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-    _tprintf(szMsg, fileSystem );
+	_tprintf(szMsg, fileSystem );
 
 	//
 	// Make sure they want to do this
@@ -369,7 +369,7 @@ _tmain(int argc, TCHAR *argv[])
 			while(1 ) {
 
 				LoadString( GetModuleHandle(NULL), STRING_LABEL_NAME_EDIT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-                _tprintf(szMsg, RootDirectory[0] );
+				_tprintf(szMsg, RootDirectory[0] );
 				_fgetts( input, sizeof(input)/2, stdin );
 				input[ _tcslen( input ) - 1] = 0;
 
@@ -378,21 +378,20 @@ _tmain(int argc, TCHAR *argv[])
 					break;
 				}
 				LoadString( GetModuleHandle(NULL), STRING_ERROR_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-                _tprintf(szMsg);					
+				_tprintf(szMsg);
 			}
 		}
 
 		while( 1 ) {
 
 			LoadString( GetModuleHandle(NULL), STRING_YN_FORMAT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-            _tprintf(szMsg, RootDirectory[0] );
+			_tprintf(szMsg, RootDirectory[0] );
 
-			
 			LoadString( GetModuleHandle(NULL), STRING_YES_NO_FAQ, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-			
-			if(  _strnicmp(&input[0],&szMsg[0],1)) break;
 
-			if(	_strnicmp(&input[0],&szMsg[1],1) ) {
+			if(_strnicmp(&input[0],&szMsg[0],1)) break;
+
+			if(_strnicmp(&input[0],&szMsg[1],1) ) {
 
 				_tprintf(_T("\n"));
 				return 0;
@@ -417,7 +416,7 @@ _tmain(int argc, TCHAR *argv[])
 			_tprintf(_T("%s %.1fM\n"),szMsg,
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
-	} else  {
+	} else {
 
 		LoadString( GetModuleHandle(NULL), STRING_FAST_FMT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
@@ -430,7 +429,7 @@ _tmain(int argc, TCHAR *argv[])
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
 		LoadString( GetModuleHandle(NULL), STRING_CREATE_FSYS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-        _tprintf(szMsg);			
+		_tprintf(szMsg);
 	}
 
 	//
@@ -448,7 +447,7 @@ _tmain(int argc, TCHAR *argv[])
 #endif
 	if( Error ) return -1;
 	LoadString( GetModuleHandle(NULL), STRING_FMT_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-    _tprintf(szMsg);	
+	_tprintf(szMsg);
 
 	//
 	// Enable compression if desired
@@ -463,7 +462,7 @@ _tmain(int argc, TCHAR *argv[])
 #endif
 
 			LoadString( GetModuleHandle(NULL), STRING_VOL_COMPRESS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-            _tprintf(szMsg);	
+			_tprintf(szMsg);
 		}
 	}
 
@@ -473,7 +472,7 @@ _tmain(int argc, TCHAR *argv[])
 	if( !GotALabel ) {
 
 		LoadString( GetModuleHandle(NULL), STRING_ENTER_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-        _tprintf(szMsg);	
+		_tprintf(szMsg);
 		_fgetts( input, sizeof(LabelString)/2, stdin );
 
 		input[ _tcslen(input)-1] = 0;
@@ -502,14 +501,14 @@ _tmain(int argc, TCHAR *argv[])
 			&freeBytesAvailableToCaller,
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
-		
+
 		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		PrintWin32Error(szMsg, GetLastError());
 		return -1;
 	}
 
 	LoadString( GetModuleHandle(NULL), STRING_FREE_SPACE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-    _tprintf(szMsg, totalNumberOfBytes.QuadPart, totalNumberOfFreeBytes.QuadPart );
+	_tprintf(szMsg, totalNumberOfBytes.QuadPart, totalNumberOfFreeBytes.QuadPart );
 
 	//
 	// Get the drive's serial number
@@ -524,7 +523,7 @@ _tmain(int argc, TCHAR *argv[])
 		return -1;
 	}
 	LoadString( GetModuleHandle(NULL), STRING_SERIAL_NUMBER, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-    _tprintf(szMsg, (unsigned int)(serialNumber >> 16),
+	_tprintf(szMsg, (unsigned int)(serialNumber >> 16),
 					(unsigned int)(serialNumber & 0xFFFF) );
 
 	return 0;
