@@ -537,7 +537,7 @@ WriteComputerSettings(TCHAR * ComputerName, HWND hwndDlg)
       return FALSE;
     }
 
-   /* Try to also set DNS hostname */
+  /* Try to also set DNS hostname */
   SetComputerNameEx(ComputerNamePhysicalDnsHostname, ComputerName);
 
   return TRUE;
@@ -612,7 +612,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                   return TRUE;
                 }
 
-                /* FIXME: check computer name for invalid characters */
+                /* No need to check computer name for invalid characters,
+                 * SetComputerName() will do it for us */
 
                 if (!WriteComputerSettings(ComputerName, hwndDlg))
                   {

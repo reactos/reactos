@@ -298,7 +298,7 @@ IsValidComputerName (
   p = (PWCHAR)lpComputerName;
   while (*p != 0)
     {
-      if (!(iswctype (*p, _ALPHA || _DIGIT) ||
+      if ((!iswctype (*p, _ALPHA) && !iswctype (*p, _DIGIT)) ||
 	    *p == L'!' ||
 	    *p == L'@' ||
 	    *p == L'#' ||
@@ -314,7 +314,7 @@ IsValidComputerName (
 	    *p == L'_' ||
 	    *p == L'{' ||
 	    *p == L'}' ||
-	    *p == L'~'))
+	    *p == L'~')
 	return FALSE;
 
       Length++;
