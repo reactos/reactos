@@ -569,19 +569,13 @@ IntWideCharToMultiByteCP(UINT CodePage, DWORD Flags,
          WideCharCount = MultiByteCount;
          SetLastError(ERROR_INSUFFICIENT_BUFFER);
       }
-	  
+
       for (TempLength = WideCharCount;
            TempLength > 0;
            WideCharString++, TempLength--)
       {
          *MultiByteString++ = ((PCHAR)CodePageTable->WideCharTable)[*WideCharString];
       }
-
-	  if (WideCharCount>2)
-	  {
-	     MultiByteString--;
-	     *MultiByteString = 0;
-	  }
 
       /* FIXME */
       if (UsedDefaultChar != NULL)
