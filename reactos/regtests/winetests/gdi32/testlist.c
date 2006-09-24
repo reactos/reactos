@@ -27,9 +27,9 @@ const struct test winetest_testlist[] =
     { "font", func_font },
     { "gdiobj", func_gdiobj },
 //    { "generated", func_generated },
-//    { "mapping", func_mapping },
+    { "mapping", func_mapping },
     { "metafile", func_metafile },
-//    { "palette", func_palette },
+    { "palette", func_palette },
 //    { "pen", func_pen },
     { 0, 0 }
 };
