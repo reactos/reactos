@@ -33,12 +33,11 @@ BOOL FASTCALL PATH_AddFlatBezier (GdiPath *pPath, POINT *pt, BOOL closed);
 BOOL FASTCALL PATH_DoArcPart (GdiPath *pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BOOL addMoveTo);
 BOOL FASTCALL PATH_FillPath( PDC dc, GdiPath *pPath );
 BOOL FASTCALL PATH_FlattenPath (GdiPath *pPath);
-VOID FASTCALL PATH_GetPathFromDC (PDC dc, GdiPath **ppPath);
 VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
 BOOL FASTCALL PATH_PathToRegion (GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn);
 BOOL FASTCALL PATH_ReserveEntries (GdiPath *pPath, INT numEntries);
 VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
-
+BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath);
 
 INT FASTCALL
 IntGdiGetArcDirection(DC *dc);
@@ -51,16 +50,12 @@ BOOL
 STDCALL
 NtGdiAbortPath(HDC  hDC)
 {
-  GdiPath *pPath;
   BOOL ret = TRUE;
   PDC dc = DC_LockDc ( hDC );
 
   if( !dc ) return FALSE;
 
-  /* Get pointer to path */
-  PATH_GetPathFromDC ( dc, &pPath );
-
-  PATH_EmptyPath( pPath );
+  PATH_EmptyPath(&dc->w.path);
 
   DC_UnlockDc ( dc );
   return ret;
@@ -70,24 +65,20 @@ BOOL
 STDCALL
 NtGdiBeginPath( HDC  hDC )
 {
-  GdiPath *pPath;
   BOOL ret = TRUE;
   PDC dc = DC_LockDc ( hDC );
 
   if( !dc ) return FALSE;
-
-  /* Get pointer to path */
-  PATH_GetPathFromDC ( dc, &pPath );
       
   /* If path is already open, do nothing */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
   {
     /* Make sure that path is empty */
-    PATH_EmptyPath( pPath );
+    PATH_EmptyPath( &dc->w.path );
 
     /* Initialize variables for new path */
-    pPath->newStroke = TRUE;
-    pPath->state = PATH_Open;
+    dc->w.path.newStroke = TRUE;
+    dc->w.path.state = PATH_Open;
   }
 
   DC_UnlockDc ( dc );
@@ -142,22 +133,18 @@ BOOL
 STDCALL
 NtGdiEndPath(HDC  hDC)
 {
-  GdiPath *pPath;
   BOOL ret = TRUE;
   PDC dc = DC_LockDc ( hDC );
 
   if ( !dc ) return FALSE;
 
-  /* Get pointer to path */
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is currently being constructed */
-  if( pPath->state != PATH_Open )
+  if( dc->w.path.state != PATH_Open )
   {
     ret = FALSE;
   }
   /* Set flag to indicate that path is finished */
-  else pPath->state = PATH_Closed;
+  else dc->w.path.state = PATH_Closed;
 
   DC_UnlockDc ( dc );
   return ret;
@@ -167,21 +154,17 @@ BOOL
 STDCALL
 NtGdiFillPath(HDC  hDC)
 {
-  GdiPath *pPath;
   BOOL ret = TRUE;
   PDC dc = DC_LockDc ( hDC );
 
   if ( !dc ) return FALSE;
-
-  /* Get pointer to path */
-  PATH_GetPathFromDC ( dc, &pPath );
   
-  ret = PATH_FillPath( dc, pPath );
+  ret = PATH_FillPath( dc, &dc->w.path );
   if( ret ) 
   {
     /* FIXME: Should the path be emptied even if conversion
        failed? */
-    PATH_EmptyPath( pPath );
+    PATH_EmptyPath( &dc->w.path );
   }
 
   DC_UnlockDc ( dc );
@@ -323,18 +306,39 @@ NtGdiSetMiterLimit(
 
 BOOL
 STDCALL
-NtGdiStrokeAndFillPath(HDC  hDC)
+NtGdiStrokeAndFillPath(HDC hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+   DC *pDc; 
+   BOOL bRet = FALSE;
+
+   DPRINT("Enter %s\n", __FUNCTION__);
+   
+   if(!(pDc = DC_LockDc(hDC))) return FALSE;
+
+   bRet = PATH_FillPath(pDc, &pDc->w.path);
+   if(bRet) bRet = PATH_StrokePath(pDc, &pDc->w.path);
+   if(bRet) PATH_EmptyPath(&pDc->w.path);
+   
+   DC_UnlockDc(pDc);
+   return bRet;
 }
 
 BOOL
 STDCALL
-NtGdiStrokePath(HDC  hDC)
+NtGdiStrokePath(HDC hDC)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    DC *pDc;
+    BOOL bRet = FALSE;
+
+    DPRINT("Enter %s\n", __FUNCTION__);
+    
+    if(!(pDc = DC_LockDc(hDC))) return FALSE;
+
+    bRet = PATH_StrokePath(pDc, &pDc->w.path);
+    PATH_EmptyPath(&pDc->w.path);
+    
+    DC_UnlockDc(pDc);
+    return bRet;
 }
 
 BOOL
@@ -348,30 +352,27 @@ NtGdiWidenPath(HDC  hDC)
 BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
                          int  Mode)
 {
- GdiPath *pPath;
  HRGN  hrgnPath;
  BOOL  success = FALSE;
  PDC dc = DC_LockDc ( hDC );
 
  if( !dc ) return FALSE;
 
- PATH_GetPathFromDC ( dc, &pPath );
-
  /* Check that path is closed */
- if( pPath->state != PATH_Closed )
+ if( dc->w.path.state != PATH_Closed )
  {
    SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
    return FALSE;
  }
  /* Construct a region from the path */
- else if( PATH_PathToRegion( pPath, dc->w.polyFillMode, &hrgnPath ) )
+ else if( PATH_PathToRegion( &dc->w.path, dc->w.polyFillMode, &hrgnPath ) )
  {
    success = IntGdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
    NtGdiDeleteObject( hrgnPath );
 
    /* Empty the path */
    if( success )
-     PATH_EmptyPath( pPath );
+     PATH_EmptyPath( &dc->w.path);
    /* FIXME: Should this function delete the path even if it failed? */
  }
 
@@ -532,18 +533,14 @@ BOOL
 FASTCALL
 PATH_MoveTo ( PDC dc )
 {
-  GdiPath *pPath;
-
-  /* Get pointer to path */
-  PATH_GetPathFromDC ( dc, &pPath );
 
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     /* FIXME: Do we have to call SetLastError? */
     return FALSE;
 
   /* Start a new stroke */
-  pPath->newStroke = TRUE;
+  dc->w.path.newStroke = TRUE;
 
   return TRUE;
 }
@@ -559,14 +556,10 @@ BOOL
 FASTCALL
 PATH_LineTo ( PDC dc, INT x, INT y )
 {
-  GdiPath *pPath;
   POINT point, pointCurPos;
 
-  /* Get pointer to path */
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   /* Convert point to device coordinates */
@@ -575,17 +568,17 @@ PATH_LineTo ( PDC dc, INT x, INT y )
   CoordLPtoDP ( dc, &point );
 
   /* Add a PT_MOVETO if necessary */
-  if ( pPath->newStroke )
+  if ( dc->w.path.newStroke )
   {
-    pPath->newStroke = FALSE;
+    dc->w.path.newStroke = FALSE;
     IntGetCurrentPositionEx ( dc, &pointCurPos );
     CoordLPtoDP ( dc, &pointCurPos );
-    if ( !PATH_AddEntry(pPath, &pointCurPos, PT_MOVETO) )
+    if ( !PATH_AddEntry(&dc->w.path, &pointCurPos, PT_MOVETO) )
       return FALSE;
   }
 
   /* Add a PT_LINETO entry */
-  return PATH_AddEntry(pPath, &point, PT_LINETO);
+  return PATH_AddEntry(&dc->w.path, &point, PT_LINETO);
 }
 
 /* PATH_Rectangle
@@ -597,15 +590,11 @@ BOOL
 FASTCALL
 PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
 {
-  GdiPath *pPath;
   POINT corners[2], pointTemp;
   INT   temp;
 
-  /* Get pointer to path */
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   /* Convert points to device coordinates */
@@ -642,15 +631,15 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
   /* Add four points to the path */
   pointTemp.x=corners[1].x;
   pointTemp.y=corners[0].y;
-  if ( !PATH_AddEntry(pPath, &pointTemp, PT_MOVETO) )
+  if ( !PATH_AddEntry(&dc->w.path, &pointTemp, PT_MOVETO) )
     return FALSE;
-  if ( !PATH_AddEntry(pPath, corners, PT_LINETO) )
+  if ( !PATH_AddEntry(&dc->w.path, corners, PT_LINETO) )
     return FALSE;
   pointTemp.x=corners[0].x;
   pointTemp.y=corners[1].y;
-  if ( !PATH_AddEntry(pPath, &pointTemp, PT_LINETO) )
+  if ( !PATH_AddEntry(&dc->w.path, &pointTemp, PT_LINETO) )
     return FALSE;
-  if ( !PATH_AddEntry(pPath, corners+1, PT_LINETO) )
+  if ( !PATH_AddEntry(&dc->w.path, corners+1, PT_LINETO) )
     return FALSE;
 
   /* Close the rectangle figure */
@@ -693,7 +682,6 @@ FASTCALL
 PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
    INT xStart, INT yStart, INT xEnd, INT yEnd)
 {
-  GdiPath *pPath;
   double  angleStart, angleEnd, angleStartQuadrant, angleEndQuadrant=0.0;
           /* Initialize angleEndQuadrant to silence gcc's warning */
   double  x, y;
@@ -709,11 +697,8 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
 
   clockwise = ( IntGdiGetArcDirection(dc) == AD_CLOCKWISE );
 
-  /* Get pointer to path */
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   /* FIXME: Do we have to close the current figure? */
@@ -817,7 +802,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
     }
 
     /* Add the Bezier spline to the path */
-    PATH_DoArcPart ( pPath, corners, angleStartQuadrant, angleEndQuadrant, start );
+    PATH_DoArcPart ( &dc->w.path, corners, angleStartQuadrant, angleEndQuadrant, start );
     start = FALSE;
   } while(!end);
 
@@ -828,7 +813,6 @@ BOOL
 FASTCALL
 PATH_PolyBezierTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
-  GdiPath *pPath;
   POINT pt;
   ULONG i;
 
@@ -836,19 +820,17 @@ PATH_PolyBezierTo ( PDC dc, const POINT *pts, DWORD cbPoints )
   ASSERT ( pts );
   ASSERT ( cbPoints );
 
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   /* Add a PT_MOVETO if necessary */
-  if ( pPath->newStroke )
+  if ( dc->w.path.newStroke )
   {
-    pPath->newStroke=FALSE;
+    dc->w.path.newStroke=FALSE;
     IntGetCurrentPositionEx ( dc, &pt );
     CoordLPtoDP ( dc, &pt );
-    if ( !PATH_AddEntry(pPath, &pt, PT_MOVETO) )
+    if ( !PATH_AddEntry(&dc->w.path, &pt, PT_MOVETO) )
         return FALSE;
   }
 
@@ -856,7 +838,7 @@ PATH_PolyBezierTo ( PDC dc, const POINT *pts, DWORD cbPoints )
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry(pPath, &pt, PT_BEZIERTO);
+    PATH_AddEntry(&dc->w.path, &pt, PT_BEZIERTO);
   }
   return TRUE;
 }
@@ -865,7 +847,6 @@ BOOL
 FASTCALL
 PATH_PolyBezier ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
-  GdiPath *pPath;
   POINT   pt;
   ULONG   i;
 
@@ -873,17 +854,15 @@ PATH_PolyBezier ( PDC dc, const POINT *pts, DWORD cbPoints )
   ASSERT ( pts );
   ASSERT ( cbPoints );
 
-  PATH_GetPathFromDC ( dc, &pPath );
-
    /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   for ( i = 0; i < cbPoints; i++ )
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry ( pPath, &pt, (i == 0) ? PT_MOVETO : PT_BEZIERTO );
+    PATH_AddEntry ( &dc->w.path, &pt, (i == 0) ? PT_MOVETO : PT_BEZIERTO );
   }
 
   return TRUE;
@@ -893,7 +872,6 @@ BOOL
 FASTCALL
 PATH_Polyline ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
-  GdiPath *pPath;
   POINT   pt;
   ULONG   i;
 
@@ -901,17 +879,15 @@ PATH_Polyline ( PDC dc, const POINT *pts, DWORD cbPoints )
   ASSERT ( pts );
   ASSERT ( cbPoints );
 
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   for ( i = 0; i < cbPoints; i++ )
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry(pPath, &pt, (i == 0) ? PT_MOVETO : PT_LINETO);
+    PATH_AddEntry(&dc->w.path, &pt, (i == 0) ? PT_MOVETO : PT_LINETO);
   }
   return TRUE;
 }
@@ -920,7 +896,6 @@ BOOL
 FASTCALL
 PATH_PolylineTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
-  GdiPath *pPath;
   POINT   pt;
   ULONG   i;
 
@@ -928,19 +903,17 @@ PATH_PolylineTo ( PDC dc, const POINT *pts, DWORD cbPoints )
   ASSERT ( pts );
   ASSERT ( cbPoints );
 
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   /* Add a PT_MOVETO if necessary */
-  if ( pPath->newStroke )
+  if ( dc->w.path.newStroke )
   {
-    pPath->newStroke = FALSE;
+    dc->w.path.newStroke = FALSE;
     IntGetCurrentPositionEx ( dc, &pt );
     CoordLPtoDP ( dc, &pt );
-    if ( !PATH_AddEntry(pPath, &pt, PT_MOVETO) )
+    if ( !PATH_AddEntry(&dc->w.path, &pt, PT_MOVETO) )
       return FALSE;
   }
 
@@ -948,7 +921,7 @@ PATH_PolylineTo ( PDC dc, const POINT *pts, DWORD cbPoints )
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry(pPath, &pt, PT_LINETO);
+    PATH_AddEntry(&dc->w.path, &pt, PT_LINETO);
   }
 
   return TRUE;
@@ -959,24 +932,21 @@ BOOL
 FASTCALL
 PATH_Polygon ( PDC dc, const POINT *pts, DWORD cbPoints )
 {
-  GdiPath *pPath;
   POINT   pt;
   ULONG   i;
 
   ASSERT ( dc );
   ASSERT ( pts );
 
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   for(i = 0; i < cbPoints; i++)
   {
     pt = pts[i];
     CoordLPtoDP ( dc, &pt );
-    PATH_AddEntry(pPath, &pt, (i == 0) ? PT_MOVETO :
+    PATH_AddEntry(&dc->w.path, &pt, (i == 0) ? PT_MOVETO :
       ((i == cbPoints-1) ? PT_LINETO | PT_CLOSEFIGURE :
       PT_LINETO));
   }
@@ -987,7 +957,6 @@ BOOL
 FASTCALL
 PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
 {
-  GdiPath *pPath;
   POINT   pt, startpt;
   ULONG   poly, point, i;
 
@@ -996,10 +965,8 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
   ASSERT ( counts );
   ASSERT ( polygons );
 
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open );
+  if ( dc->w.path.state != PATH_Open );
     return FALSE;
 
   for(i = 0, poly = 0; poly < polygons; poly++)
@@ -1009,10 +976,10 @@ PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons )
       pt = pts[i];
       CoordLPtoDP ( dc, &pt );
       if(point == 0) startpt = pt;
-        PATH_AddEntry(pPath, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
+        PATH_AddEntry(&dc->w.path, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
     }
     /* win98 adds an extra line to close the figure for some reason */
-    PATH_AddEntry(pPath, &startpt, PT_LINETO | PT_CLOSEFIGURE);
+    PATH_AddEntry(&dc->w.path, &startpt, PT_LINETO | PT_CLOSEFIGURE);
   }
   return TRUE;
 }
@@ -1021,7 +988,6 @@ BOOL
 FASTCALL
 PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylines )
 {
-  GdiPath *pPath;
   POINT   pt;
   ULONG   poly, point, i;
 
@@ -1030,10 +996,8 @@ PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylin
   ASSERT ( counts );
   ASSERT ( polylines );
 
-  PATH_GetPathFromDC ( dc, &pPath );
-
   /* Check that path is open */
-  if ( pPath->state != PATH_Open )
+  if ( dc->w.path.state != PATH_Open )
     return FALSE;
 
   for(i = 0, poly = 0; poly < polylines; poly++)
@@ -1042,7 +1006,7 @@ PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylin
     {
       pt = pts[i];
       CoordLPtoDP ( dc, &pt );
-      PATH_AddEntry(pPath, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
+      PATH_AddEntry(&dc->w.path, &pt, (point == 0) ? PT_MOVETO : PT_LINETO);
     }
   }
   return TRUE;
@@ -1085,7 +1049,7 @@ PATH_FlattenPath(GdiPath *pPath)
   GdiPath newPath;
   INT srcpt;
 
-  memset(&newPath, 0, sizeof(newPath));
+  RtlZeroMemory(&newPath, sizeof(newPath));
   newPath.state = PATH_Open;
   for(srcpt = 0; srcpt < pPath->numEntriesUsed; srcpt++) {
     switch(pPath->pFlags[srcpt] & ~PT_CLOSEFIGURE) {
@@ -1289,20 +1253,6 @@ PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
   return TRUE;
 }
 
-/* PATH_GetPathFromDC
- *
- * Retrieves a pointer to the GdiPath structure contained in an HDC and
- * places it in *ppPath. TRUE is returned if successful, FALSE otherwise.
- */
-VOID
-FASTCALL
-PATH_GetPathFromDC ( PDC dc, GdiPath **ppPath )
-{
-  ASSERT ( dc );
-  ASSERT ( ppPath );
-  *ppPath = &dc->w.path;
-}
-
 /* PATH_DoArcPart
  *
  * Creates a Bezier spline that corresponds to part of an arc and appends the
@@ -1401,4 +1351,176 @@ PATH_NormalizePoint ( FLOAT_POINT corners[],
   *pX=(double)(pPoint->x-corners[0].x)/(double)(corners[1].x-corners[0].x) * 2.0 - 1.0;
   *pY=(double)(pPoint->y-corners[0].y)/(double)(corners[1].y-corners[0].y) * 2.0 - 1.0;
 }
+
+
+BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
+{
+    BOOL ret = FALSE;
+    INT i=0;
+    INT nLinePts, nAlloc;
+    POINT *pLinePts = NULL;
+    POINT ptViewportOrg, ptWindowOrg;
+    SIZE szViewportExt, szWindowExt;
+    DWORD mapMode, graphicsMode;
+    XFORM xform;
+
+    DPRINT("Enter %s\n", __FUNCTION__);
+    
+    if(pPath->state != PATH_Closed)
+        return FALSE;
+    
+    /* Save the mapping mode info */
+    mapMode=dc->w.MapMode;
+    IntGetViewportExtEx(dc, &szViewportExt);
+    IntGetViewportOrgEx(dc, &ptViewportOrg);
+    IntGetWindowExtEx(dc, &szWindowExt);
+    IntGetWindowOrgEx(dc, &ptWindowOrg);
+    xform = dc->w.xformWorld2Wnd;
+
+    /* Set MM_TEXT */
+    dc->w.MapMode = MM_TEXT;
+    dc->vportOrgX = 0;
+    dc->vportOrgY = 0;
+    dc->wndOrgX = 0;
+    dc->wndOrgY = 0;
+    graphicsMode = dc->w.GraphicsMode;
+    dc->w.GraphicsMode = GM_ADVANCED;
+    IntGdiModifyWorldTransform(dc, &xform, MWT_IDENTITY);
+    dc->w.GraphicsMode = graphicsMode;
+
+    /* Allocate enough memory for the worst case without beziers (one PT_MOVETO
+     * and the rest PT_LINETO with PT_CLOSEFIGURE at the end) plus some buffer 
+     * space in case we get one to keep the number of reallocations small. */
+    nAlloc = pPath->numEntriesUsed + 1 + 300; 
+    pLinePts = ExAllocatePoolWithTag(PagedPool, nAlloc * sizeof(POINT), TAG_PATH);
+    if(!pLinePts)
+    {
+        DPRINT1("Can't allocate pool!\n");
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        goto end;
+    }          
+    nLinePts = 0;
+
+    for(i = 0; i < pPath->numEntriesUsed; i++) 
+    {
+        if((i == 0 || (pPath->pFlags[i-1] & PT_CLOSEFIGURE)) 
+                && (pPath->pFlags[i] != PT_MOVETO)) 
+        {
+            DPRINT1("Expected PT_MOVETO %s, got path flag %d\n", 
+                i == 0 ? "as first point" : "after PT_CLOSEFIGURE",
+                (INT)pPath->pFlags[i]);
+                goto end;
+        }
+    
+        switch(pPath->pFlags[i]) 
+        {
+        case PT_MOVETO:
+            DPRINT("Got PT_MOVETO (%ld, %ld)\n", 
+                pPath->pPoints[i].x, pPath->pPoints[i].y);
+            if(nLinePts >= 2) IntGdiPolyline(dc, pLinePts, nLinePts);
+            nLinePts = 0;
+            pLinePts[nLinePts++] = pPath->pPoints[i];
+            break;
+        case PT_LINETO:
+        case (PT_LINETO | PT_CLOSEFIGURE):
+            DPRINT("Got PT_LINETO (%ld, %ld)\n",
+              pPath->pPoints[i].x, pPath->pPoints[i].y);
+            pLinePts[nLinePts++] = pPath->pPoints[i];
+            break;
+        case PT_BEZIERTO:
+            DPRINT("Got PT_BEZIERTO\n");
+            if(pPath->pFlags[i+1] != PT_BEZIERTO ||
+               (pPath->pFlags[i+2] & ~PT_CLOSEFIGURE) != PT_BEZIERTO)
+            {
+                DPRINT1("Path didn't contain 3 successive PT_BEZIERTOs\n");
+                ret = FALSE;
+                goto end;
+            } 
+            else 
+            {
+                INT nBzrPts, nMinAlloc;
+                POINT *pBzrPts = GDI_Bezier(&pPath->pPoints[i-1], 4, &nBzrPts);
+                /* Make sure we have allocated enough memory for the lines of 
+                 * this bezier and the rest of the path, assuming we won't get
+                 * another one (since we won't reallocate again then). */
+                nMinAlloc = nLinePts + (pPath->numEntriesUsed - i) + nBzrPts;
+                if(nAlloc < nMinAlloc)
+                {
+                    // Reallocate memory
+                    
+                    POINT *Realloc = NULL;
+                    nAlloc = nMinAlloc * 2;
+                    
+                    Realloc = ExAllocatePoolWithTag(PagedPool, 
+                        nAlloc * sizeof(POINT), 
+                        TAG_PATH);
+                    
+                    if(!Realloc)
+                    {
+                        DPRINT1("Can't allocate pool!\n");
+                        goto end;
+                    }
+                    
+                    RtlCopyMemory(Realloc, pLinePts, nLinePts*sizeof(POINT));
+                    ExFreePool(pLinePts);
+                    pLinePts = Realloc;
+                }
+                RtlCopyMemory(&pLinePts[nLinePts], &pBzrPts[1], (nBzrPts - 1) * sizeof(POINT));
+                nLinePts += nBzrPts - 1;
+                ExFreePool(pBzrPts);
+                i += 2;
+            }
+            break;
+        default:
+            DPRINT1("Got path flag %d (not supported)\n", (INT)pPath->pFlags[i]);
+            goto end;
+        }
+        
+        if(pPath->pFlags[i] & PT_CLOSEFIGURE)
+        {
+            pLinePts[nLinePts++] = pLinePts[0];
+        }
+    }//for
+    
+    if(nLinePts >= 2)
+        IntGdiPolyline(dc, pLinePts, nLinePts);
+        
+    ret = TRUE;
+
+end:
+    if(pLinePts)ExFreePool(pLinePts);
+
+    /* Restore the old mapping mode */
+    dc->w.MapMode =  mapMode;
+    dc->wndExtX = szWindowExt.cx;
+    dc->wndExtY = szWindowExt.cy;
+    dc->wndOrgX = ptWindowOrg.x;
+    dc->wndOrgY = ptWindowOrg.y;
+    
+    dc->vportExtX = szViewportExt.cx;
+    dc->vportExtY = szViewportExt.cy;
+    dc->vportOrgX = ptViewportOrg.x;
+    dc->vportOrgY = ptViewportOrg.y;
+
+    /* Restore the world transform */
+    dc->w.xformWorld2Wnd = xform;
+
+    /* If we've moved the current point then get its new position
+       which will be in device (MM_TEXT) co-ords, convert it to
+       logical co-ords and re-set it.  This basically updates
+       dc->CurPosX|Y so that their values are in the correct mapping
+       mode.
+    */
+    if(i > 0) 
+    {
+        POINT pt;
+        IntGetCurrentPositionEx(dc, &pt);
+        IntDPtoLP(dc, &pt, 1);
+        IntGdiMoveToEx(dc, pt.x, pt.y, NULL);
+    }
+
+    DPRINT("Leave %s, ret=%d\n", __FUNCTION__, ret);
+    return ret;
+}
+
 /* EOF */
