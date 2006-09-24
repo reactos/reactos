@@ -152,11 +152,15 @@ ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
 ifeq ($(findstring msys,$(shell sh --version 2>nul)),msys)
 export OSTYPE = msys
 HOST=mingw32-linux
+CFLAGS+=-fshort-wchar
+CPPFLAGS+=-fshort-wchar
 else
 HOST=mingw32-windows
 endif
 else
 HOST=mingw32-linux
+CFLAGS+=-fshort-wchar
+CPPFLAGS+=-fshort-wchar
 endif
 endif
 

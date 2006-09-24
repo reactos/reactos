@@ -11,6 +11,24 @@
 #include <ntddk.h>
 #include <bitmap.c>
 
+SIZE_T xwcslen( PWSTR String ) {
+	SIZE_T i;
+
+	for( i = 0; String[i]; i++ );
+
+	return i;
+}
+
+PWSTR xwcschr( PWSTR String, WCHAR Char )
+{
+	SIZE_T i;
+
+	for( i = 0; String[i] && String[i] != Char; i++ );
+
+	if( String[i] ) return &String[i];
+	else return NULL;
+}
+
 /*
  * @implemented
  *
@@ -54,7 +72,7 @@ RtlInitUnicodeString(
 
 	if(SourceString)
 	{
-		DestSize = wcslen(SourceString) * sizeof(WCHAR);
+		DestSize = xwcslen(SourceString) * sizeof(WCHAR);
 		DestinationString->Length = (USHORT)DestSize;
 		DestinationString->MaximumLength = (USHORT)DestSize + sizeof(WCHAR);
 	}
