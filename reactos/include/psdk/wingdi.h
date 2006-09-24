@@ -1188,14 +1188,7 @@ extern "C" {
 #define CS_DELETE_TRANSFORM 0x00000003
 #endif
 
-#if(WINVER >= 0x0400)
-typedef struct tagEMRGLSRECORD
-{
-    EMR   emr;
-    DWORD cbData;       
-    BYTE  Data[1];
-} EMRGLSRECORD, *PEMRGLSRECORD;
-#endif
+
 
 #if (WINVER > 0x500)
 #define GRADIENT_FILL_RECT_H 0x00
@@ -1496,6 +1489,15 @@ typedef struct tagEMR {
 	DWORD iType;
 	DWORD nSize;
 } EMR,*PEMR;
+
+#if(WINVER >= 0x0400)
+typedef struct tagEMRGLSRECORD
+{
+    EMR   emr;
+    DWORD cbData;       
+    BYTE  Data[1];
+} EMRGLSRECORD, *PEMRGLSRECORD;
+#endif
 typedef struct tagEMRANGLEARC {
 	EMR emr;
 	POINTL ptlCenter;
@@ -1771,11 +1773,7 @@ typedef struct tagEMRFORMAT   {
 	DWORD offData;
 } EMRFORMAT;
 
-typedef struct tagEMRPIXELFORMAT
-{
-    EMR emr;
-    PIXELFORMATDESCRIPTOR pfd;
-} EMRPIXELFORMAT, *PEMRPIXELFORMAT;
+
 typedef struct tagEMRSETCOLORSPACE
 {
     EMR   emr;
@@ -1935,10 +1933,8 @@ typedef struct tagEMRSCALEVIEWPORTEXTEX {
 	LONG yNum;
 	LONG yDenom;
 } EMRSCALEVIEWPORTEXTEX,*PEMRSCALEVIEWPORTEXTEX,EMRSCALEWINDOWEXTEX,*PEMRSCALEWINDOWEXTEX;
-typedef struct tagEMRSELECTCOLORSPACE {
-	EMR emr;
-	DWORD ihCS;
-} EMRSELECTCOLORSPACE,*PEMRSELECTCOLORSPACE,EMRDELETECOLORSPACE,*PEMRDELETECOLORSPACE;
+
+
 typedef struct tagEMRSELECTOBJECT {
 	EMR emr;
 	DWORD ihObject;
@@ -2344,6 +2340,13 @@ typedef struct tagPIXELFORMATDESCRIPTOR {
 	DWORD dwVisibleMask;
 	DWORD dwDamageMask;
 } PIXELFORMATDESCRIPTOR,*PPIXELFORMATDESCRIPTOR,*LPPIXELFORMATDESCRIPTOR;
+
+typedef struct tagEMRPIXELFORMAT
+{
+    EMR emr;
+    PIXELFORMATDESCRIPTOR pfd;
+} EMRPIXELFORMAT, *PEMRPIXELFORMAT;
+
 typedef struct tagMETAFILEPICT {
 	LONG mm;
 	LONG xExt;
