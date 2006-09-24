@@ -614,6 +614,7 @@ extern "C" {
 #define OBJ_METADC 4
 #define OBJ_ENHMETAFILE 13
 #define OBJ_ENHMETADC 12
+#define OBJ_COLORSPACE 14
 #define DRIVERVERSION 0
 #define TECHNOLOGY 2
 #define DT_PLOTTER 0
