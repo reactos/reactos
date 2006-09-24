@@ -50,13 +50,61 @@ BRUSH_Cleanup(PVOID ObjectBody)
 }
 
 INT FASTCALL
-BRUSH_GetObject (PGDIBRUSHOBJ BrushObj, INT Count, BRUSHOBJ * Buffer)
+BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
 {	
 	if (Buffer)
 	{
-	    Buffer->iSolidColor = BrushObj->BrushAttr.lbColor;
-        Buffer->pvRbrush = BrushObj->ulRealization;
-        Buffer->flColorType = 0;
+
+		/* Set colour */
+	    Buffer->lbColor =  BrushObject->BrushAttr.lbColor;
+
+		/* set Hatch */
+		if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
+		{
+			 /* FIXME : is this right value */
+             Buffer->lbHatch = (LONG)BrushObject->hbmPattern;
+		}
+		else
+		{
+			 Buffer->lbHatch = 0;
+		}
+
+		Buffer->lbStyle = 0;
+
+		/* Get the type of style */
+		if ((BrushObject->flAttrs & GDIBRUSH_IS_SOLID)!=0)
+		{
+			Buffer->lbStyle = BS_SOLID;
+		}
+		else if ((BrushObject->flAttrs & GDIBRUSH_IS_NULL)!=0)
+		{
+			Buffer->lbStyle = BS_NULL; // BS_HOLLOW
+		}
+		else if ((BrushObject->flAttrs & GDIBRUSH_IS_HATCH)!=0)
+		{
+			Buffer->lbStyle = BS_HATCHED;
+		}
+		else if ((BrushObject->flAttrs & GDIBRUSH_IS_BITMAP)!=0)
+		{
+			Buffer->lbStyle = BS_PATTERN;
+		}
+		else if ((BrushObject->flAttrs & GDIBRUSH_IS_DIB)!=0)
+		{
+			Buffer->lbStyle = BS_DIBPATTERN; 
+		}
+
+		/* FIXME 
+		else if ((BrushObject->flAttrs & )!=0)
+		{
+			Buffer->lbStyle = BS_INDEXED;
+		}
+		
+		else if ((BrushObject->flAttrs & )!=0)
+		{
+			Buffer->lbStyle = BS_DIBPATTERNPT;
+		}
+		*/
+				        
 	}
 	return sizeof(BRUSHOBJ);
 }

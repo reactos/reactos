@@ -73,7 +73,7 @@ typedef struct
 #define  BRUSHOBJ_LockBrush(hBrush) ((PGDIBRUSHOBJ)GDIOBJ_LockObj(GdiHandleTable, (HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSHOBJ_UnlockBrush(pBrush) GDIOBJ_UnlockObjByPtr(GdiHandleTable, pBrush)
 
-INT FASTCALL BRUSH_GetObject (PGDIBRUSHOBJ GdiObject, INT Count, BRUSHOBJ * Buffer);
+INT FASTCALL BRUSH_GetObject (PGDIBRUSHOBJ GdiObject, INT Count, LPLOGBRUSH Buffer);
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
 #endif

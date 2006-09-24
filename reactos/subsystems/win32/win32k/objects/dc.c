@@ -1740,7 +1740,7 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
         break;
 #endif
       case GDI_OBJECT_TYPE_BRUSH:
-        Result = BRUSH_GetObject((PGDIBRUSHOBJ ) GdiObject, Count, (BRUSHOBJ *)Buffer);
+        Result = BRUSH_GetObject((PGDIBRUSHOBJ ) GdiObject, Count, (LPLOGBRUSH)Buffer);
         break;
 
       case GDI_OBJECT_TYPE_BITMAP:
