@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdarg.h>
@@ -56,7 +56,7 @@ static void test_solidbrush(void)
         }
         else
             stockBrush = NULL;
-        memset(&br, sizeof(br), 0);
+        memset(&br, 0, sizeof(br));
         ret = GetObject(solidBrush, sizeof(br), &br);
         ok( ret !=0, "GetObject on solid %s brush failed, error=%ld\n", stock[i].name, GetLastError());
         ok(br.lbStyle==BS_SOLID, "%s brush has wrong style, got %d expected %d\n", stock[i].name, br.lbStyle, BS_SOLID);
