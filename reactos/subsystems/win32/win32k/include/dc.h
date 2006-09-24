@@ -188,6 +188,11 @@ VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
+VOID FASTCALL IntGetViewportExtEx(PDC dc, LPSIZE pt);
+VOID FASTCALL IntGetViewportOrgEx(PDC dc, LPPOINT pt);
+VOID FASTCALL IntGetWindowExtEx(PDC dc, LPSIZE pt);
+VOID FASTCALL IntGetWindowOrgEx(PDC dc, LPPOINT pt);
+
 /* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
 typedef struct
 {
@@ -195,5 +200,4 @@ typedef struct
   BOOL    on_disk;   /* true if metafile is on disk */
 } DD_ENHMETAFILEOBJ, *PDD_ENHMETAFILEOBJ;
 
-
-#endif
+#endif /* __WIN32K_DC_H */
