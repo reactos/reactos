@@ -12,11 +12,11 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 {
 STRING_HELP,  "Utilisation : %S disque: [-FS:système de fichier] [-V:nom] [-Q] [-A:taille] [-C]\n\n\
-  [disque:]         Indique le disque à formater.\n\
-  -FS:système de fichier  Indique le type de système de fichier (p.e. FAT).\n\
-  -V:nom         Détermine le nom du disque.\n\
+  [disque:]        Indique le disque à formater.\n\
+  -FS:système de fichier  Indique le type de système de fichier (%s).\n\
+  -V:nom           Détermine le nom du disque.\n\
   -Q               Effectue un formatage rapide.\n\
-  -A:taille          Force une taille pour les unités d'allocations. Les valeurs par défaut\n\
+  -A:taille        Force une taille pour les unités d'allocations. Les valeurs par défaut\n\
                    sont fortement recommandées pour une utilisation courante\n\
                    NTFS peut utiliser 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT peut utiliser 8192, 16K, 32K, 64K, 128K, 256K.\n\

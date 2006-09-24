@@ -71,21 +71,6 @@ static VOID PrintWin32Error( LPTSTR Message, DWORD ErrorCode )
 
 //----------------------------------------------------------------------
 //
-// Usage
-//
-// Tell the user how to use the program
-//
-//----------------------------------------------------------------------
-static VOID Usage( LPTSTR ProgramName )
-{
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	LoadString( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-   _tprintf(szMsg, ProgramName);
-}
-
-
-//----------------------------------------------------------------------
-//
 // ParseCommandLine
 //
 // Get the switches.
@@ -245,8 +230,60 @@ BOOLEAN LoadFMIFSEntryPoints()
 
 		return FALSE;
 	}
+
+	if( !((void *) GetProcAddress( hFmifs,
+			"QueryAvailableFileSystemFormat" )) ) {
+
+		return FALSE;
+	}
+
 	return TRUE;
 }
+
+
+//----------------------------------------------------------------------
+//
+// Usage
+//
+// Tell the user how to use the program
+//
+//----------------------------------------------------------------------
+static VOID Usage( LPTSTR ProgramName )
+{
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szFormats[MAX_PATH];
+#ifndef UNICODE
+	TCHAR szFormatA[MAX_PATH];
+#endif
+	WCHAR szFormatW[MAX_PATH];
+	DWORD Index = 0;
+	BYTE dummy;
+	BOOLEAN lastestVersion;
+
+	LoadString( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+	if (!LoadFMIFSEntryPoints())
+	{
+		_tprintf(szMsg, ProgramName, "");
+		return;
+	}
+
+	szFormats[0] = 0;
+	while (QueryAvailableFileSystemFormat(Index++, szFormatW, &dummy, &dummy, &lastestVersion))
+	{
+		if (!lastestVersion)
+			continue;
+		if (szFormats[0])
+			_tcscat(szFormats, _T(", "));
+#ifdef UNICODE
+		_tcscat(szFormats, szFormatW);
+#else
+		if (0 != WideCharToMultiByte(CP_ACP, 0, szFormatW, -1, szFormatA, sizeof(szFormatA), NULL, NULL))
+			_tcscat(szFormats, szFormatA);
+#endif
+	}
+	_tprintf(szMsg, ProgramName, szFormats);
+}
+
 
 //----------------------------------------------------------------------
 //

@@ -14,7 +14,7 @@ STRINGTABLE DISCARDABLE
 
 STRING_HELP,  "Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [Datenträger:]   Legt das Laufwerk zum Formatieren fest.\n\
-  -FS:file-system  Legt das Dateisystem fest (z.B. FAT).\n\
+  -FS:file-system  Legt das Dateisystem fest (%s).\n\
   -V:label         Legt den Datentraegernamen fest.\n\
   -Q               Fuehre Schnellformatierung durch.\n\
   -A:size          Ueberschreibe Anweisung fuer Standartblockgroesse. Es wird dringend\n\

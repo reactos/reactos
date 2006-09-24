@@ -9,7 +9,7 @@ STRINGTABLE DISCARDABLE
 {
 STRING_HELP,  "bruk: %S stasjon: [-FS:fil-system] [-V:merke] [-Q] [-A:størrelse] [-C]\n\n\
   [stasjon:]         Spesifisere stasjon til formater.\n\
-  -FS:file-system  Spesifisere typen av fil system (f.eks. FAT).\n\
+  -FS:file-system  Spesifisere typen av fil system (%s).\n\
   -V:merke         Spesifisere volum merke.\n\
   -Q               Fullføre en rask formatering.\n\
   -A:størrelse     Dominerende standard fordeling enhet størrelse. Standard innstilling\n\
