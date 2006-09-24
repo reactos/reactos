@@ -12,8 +12,8 @@
 	<file>extend.c</file>
 	<file>format.c</file>
 	<file>init.c</file>
-	<file>label.c</file>
 	<file>media.c</file>
+	<file>query.c</file>
 	<file>fmifs.rc</file>
 	<pch>precomp.h</pch>
 </module>

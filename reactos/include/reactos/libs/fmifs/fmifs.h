@@ -43,7 +43,7 @@ typedef enum
 	FMIFS_FLOPPY,
 	FMIFS_UNKNOWN9,
 	FMIFS_UNKNOWN10,
-	FMIFS_UNKNOWN11,
+	FMIFS_REMOVABLE,
 	FMIFS_HARDDISK,
 	FMIFS_UNKNOWN13,
 	FMIFS_UNKNOWN14,
@@ -140,10 +140,10 @@ FormatEx(
 BOOLEAN NTAPI
 QueryAvailableFileSystemFormat(
 	IN DWORD Index,
-	IN OUT PWCHAR FileSystem OPTIONAL, /* FIXME: Probably one minimal size is mandatory, but which one? */
-	OUT UCHAR* Major OPTIONAL,
-	OUT UCHAR* Minor OPTIONAL,
-	OUT BOOLEAN* LastestVersion OPTIONAL);
+	IN OUT PWCHAR FileSystem, /* FIXME: Probably one minimal size is mandatory, but which one? */
+	OUT UCHAR* Major,
+	OUT UCHAR* Minor,
+	OUT BOOLEAN* LastestVersion);
 
 BOOL NTAPI
 QueryDeviceInformation(
@@ -151,18 +151,31 @@ QueryDeviceInformation(
 	OUT ULONG* Buffer, /* That is probably some 4-bytes structure */
 	IN ULONG BufferSize); /* 4 */
 
+BOOL NTAPI
+QueryFileSystemName(
+	IN PWCHAR DriveRoot,
+	OUT PWCHAR FileSystem OPTIONAL, /* FIXME: Probably one minimal size is mandatory, but which one? */
+	OUT UCHAR* Unknown2 OPTIONAL, /* Always 0? */
+	OUT UCHAR* Unknown3 OPTIONAL, /* Always 0? */
+	OUT ULONG* Unknown4 OPTIONAL); /* Always 0? */
+
 BOOLEAN NTAPI
 QueryLatestFileSystemVersion(
 	IN PWCHAR FileSystem,
 	OUT UCHAR* Major OPTIONAL,
 	OUT UCHAR* Minor OPTIONAL);
 
-/*ULONG NTAPI
+BOOL NTAPI
 QuerySupportedMedia(
-	PVOID Unknown1,
-	ULONG Unknown2,
-	ULONG Unknown3,
-	ULONG Unknown4);*/
+	IN PWCHAR DriveRoot,
+	OUT FMIFS_MEDIA_FLAG *CurrentMedia OPTIONAL,
+	IN ULONG Unknown3,
+	OUT PULONG Unknown4); /* Always 1? */
+
+BOOL NTAPI
+SetLabel(
+	IN PWCHAR DriveRoot,
+	IN PWCHAR Label);
 
 /* Functions provided by u*.dll */
 

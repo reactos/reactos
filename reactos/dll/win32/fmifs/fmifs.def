@@ -22,10 +22,10 @@ Format@0
 FormatEx@28
 ;FormatEx2
 InitializeFmIfs@12
-;QueryAvailableFileSystemFormat
+QueryAvailableFileSystemFormat@20
 ;QueryDeviceInformation
 ;QueryDeviceInformationByHandle
 ;QueryFileSystemName
 ;QueryLatestFileSystemVersion
-QuerySupportedMedia@0
-SetLabel@0
+QuerySupportedMedia@16
+SetLabel@8=KERNEL32.SetVolumeLabelW
