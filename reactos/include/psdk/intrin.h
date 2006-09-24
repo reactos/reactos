@@ -47,7 +47,7 @@
 	first, but they're only "as wrong" as they would be on Visual C++. Our
 	priority is compatibility
 
-	NOTE: unlike most people who write __inline__ asm for GCC, I didn't pull the
+	NOTE: unlike most people who write inline asm for GCC, I didn't pull the
 	constraints and the uses of __volatile__ out of my... hat. Do not touch
 	them. I hate cargo cult programming
 
@@ -274,155 +274,155 @@ static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(vo
 
 static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * const value, const char mask)
 {
-    char x;
-    char y;
+	char x;
+	char y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange8(value, x & mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange8(value, x & mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * const value, const short mask)
 {
-    short x;
-    short y;
+	short x;
+	short y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange16(value, x & mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange16(value, x & mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * const value, const long mask)
 {
-    long x;
-    long y;
+	long x;
+	long y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange(value, x & mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange(value, x & mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * const value, const char mask)
 {
-    char x;
-    char y;
+	char x;
+	char y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange8(value, x | mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange8(value, x | mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * const value, const short mask)
 {
-    short x;
-    short y;
+	short x;
+	short y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange16(value, x | mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange16(value, x | mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * const value, const long mask)
 {
-    long x;
-    long y;
+	long x;
+	long y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange(value, x | mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange(value, x | mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * const value, const char mask)
 {
-    char x;
-    char y;
+	char x;
+	char y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange8(value, x ^ mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange8(value, x ^ mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * const value, const short mask)
 {
-    short x;
-    short y;
+	short x;
+	short y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange16(value, x ^ mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange16(value, x ^ mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile long * const value, const long mask)
 {
-    long x;
-    long y;
+	long x;
+	long y;
 
-    y = *value;
+	y = *value;
 
-    do
+	do
 	{
-        x = y;
-        y = _InterlockedCompareExchange(value, x ^ mask, x);
-    }
+		x = y;
+		y = _InterlockedCompareExchange(value, x ^ mask, x);
+	}
 	while(y != x);
 
-    return y;
+	return y;
 }
 
 #endif
