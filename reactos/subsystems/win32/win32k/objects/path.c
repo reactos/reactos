@@ -467,7 +467,7 @@ VOID
 FASTCALL
 PATH_InitGdiPath ( GdiPath *pPath )
 {
-  assert(pPath!=NULL);
+  ASSERT(pPath!=NULL);
 
   pPath->state=PATH_Null;
   pPath->pPoints=NULL;
@@ -484,7 +484,7 @@ VOID
 FASTCALL
 PATH_DestroyGdiPath ( GdiPath *pPath )
 {
-  assert(pPath!=NULL);
+  ASSERT(pPath!=NULL);
 
   ExFreePool(pPath->pPoints);
   ExFreePool(pPath->pFlags);
@@ -504,16 +504,16 @@ BOOL
 FASTCALL
 PATH_AssignGdiPath ( GdiPath *pPathDest, const GdiPath *pPathSrc )
 {
-  assert(pPathDest!=NULL && pPathSrc!=NULL);
+  ASSERT(pPathDest!=NULL && pPathSrc!=NULL);
 
   /* Make sure destination arrays are big enough */
   if ( !PATH_ReserveEntries(pPathDest, pPathSrc->numEntriesUsed) )
     return FALSE;
 
   /* Perform the copy operation */
-  memcpy(pPathDest->pPoints, pPathSrc->pPoints,
+  RtlCopyMemory(pPathDest->pPoints, pPathSrc->pPoints,
     sizeof(POINT)*pPathSrc->numEntriesUsed);
-  memcpy(pPathDest->pFlags, pPathSrc->pFlags,
+  RtlCopyMemory(pPathDest->pFlags, pPathSrc->pFlags,
     sizeof(BYTE)*pPathSrc->numEntriesUsed);
 
   pPathDest->state=pPathSrc->state;
@@ -748,7 +748,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
     if ( angleEnd <= angleStart )
     {
       angleEnd+=2*M_PI;
-      assert(angleEnd>=angleStart);
+      ASSERT(angleEnd>=angleStart);
     }
   }
   else
@@ -756,7 +756,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
     if(angleEnd>=angleStart)
     {
       angleEnd-=2*M_PI;
-      assert(angleEnd<=angleStart);
+      ASSERT(angleEnd<=angleStart);
     }
   }
 
@@ -1087,8 +1087,8 @@ PATH_PathToRegion ( GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
   INT  *pNumPointsInStroke;
   HRGN hrgn = 0;
 
-  assert ( pPath!=NULL );
-  assert ( pHrgn!=NULL );
+  ASSERT(pPath!=NULL);
+  ASSERT(pHrgn!=NULL);
 
   PATH_FlattenPath ( pPath );
 
@@ -1148,7 +1148,7 @@ VOID
 FASTCALL
 PATH_EmptyPath ( GdiPath *pPath )
 {
-  assert(pPath!=NULL);
+  ASSERT(pPath!=NULL);
 
   pPath->state=PATH_Null;
   pPath->numEntriesUsed=0;
@@ -1164,7 +1164,7 @@ BOOL
 FASTCALL
 PATH_AddEntry ( GdiPath *pPath, const POINT *pPoint, BYTE flags )
 {
-  assert(pPath!=NULL);
+  ASSERT(pPath!=NULL);
 
   /* FIXME: If newStroke is true, perhaps we want to check that we're
    * getting a PT_MOVETO
@@ -1206,8 +1206,8 @@ PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
   POINT *pPointsNew;
   BYTE    *pFlagsNew;
 
-  assert(pPath!=NULL);
-  assert(numEntries>=0);
+  ASSERT(pPath!=NULL);
+  ASSERT(numEntries>=0);
 
   /* Do we have to allocate more memory? */
   if(numEntries > pPath->numEntriesAllocated)
@@ -1237,10 +1237,10 @@ PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
     /* Copy old arrays to new arrays and discard old arrays */
     if(pPath->pPoints)
     {
-      assert(pPath->pFlags);
+      ASSERT(pPath->pFlags);
 
-      memcpy(pPointsNew, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
-      memcpy(pFlagsNew, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
+      RtlCopyMemory(pPointsNew, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
+      RtlCopyMemory(pFlagsNew, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
 
       ExFreePool(pPath->pPoints);
       ExFreePool(pPath->pFlags);
@@ -1272,7 +1272,7 @@ PATH_DoArcPart ( GdiPath *pPath, FLOAT_POINT corners[],
   POINT point;
   int i;
 
-  assert(fabs(angleEnd-angleStart)<=M_PI_2);
+  ASSERT(fabs(angleEnd-angleStart)<=M_PI_2);
 
   /* FIXME: Is there an easier way of computing this? */
 
