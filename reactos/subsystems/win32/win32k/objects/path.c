@@ -38,6 +38,7 @@ BOOL FASTCALL PATH_PathToRegion (GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn)
 BOOL FASTCALL PATH_ReserveEntries (GdiPath *pPath, INT numEntries);
 VOID FASTCALL PATH_ScaleNormalizedPoint (FLOAT_POINT corners[], double x, double y, POINT *pPoint);
 BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath);
+BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2);
 
 INT FASTCALL
 IntGdiGetArcDirection(DC *dc);
@@ -242,8 +243,8 @@ NtGdiGetPath(
    {
       _SEH_TRY
       {
-         RtlCopyMemory(Points, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
-         RtlCopyMemory(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
+         memcpy(Points, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
+         memcpy(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
  
          /* Convert the points to logical coordinates */
          IntDPtoLP(dc, Points, pPath->numEntriesUsed);
@@ -511,9 +512,9 @@ PATH_AssignGdiPath ( GdiPath *pPathDest, const GdiPath *pPathSrc )
     return FALSE;
 
   /* Perform the copy operation */
-  RtlCopyMemory(pPathDest->pPoints, pPathSrc->pPoints,
+  memcpy(pPathDest->pPoints, pPathSrc->pPoints,
     sizeof(POINT)*pPathSrc->numEntriesUsed);
-  RtlCopyMemory(pPathDest->pFlags, pPathSrc->pFlags,
+  memcpy(pPathDest->pFlags, pPathSrc->pFlags,
     sizeof(BYTE)*pPathSrc->numEntriesUsed);
 
   pPathDest->state=pPathSrc->state;
@@ -648,12 +649,63 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
   return TRUE;
 }
 
-BOOL
-FASTCALL
-PATH_RoundRect (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xradius, INT yradius)
+/* PATH_RoundRect
+ *
+ * Should be called when a call to RoundRect is performed on a DC that has
+ * an open path. Returns TRUE if successful, else FALSE.
+ *
+ * FIXME: it adds the same entries to the path as windows does, but there
+ * is an error in the bezier drawing code so that there are small pixel-size
+ * gaps when the resulting path is drawn by StrokePath()
+ */
+FASTCALL BOOL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+   GdiPath *pPath = &dc->w.path;
+   POINT corners[2], pointTemp;
+   FLOAT_POINT ellCorners[2];
+
+   /* Check that path is open */
+   if(pPath->state!=PATH_Open)
+      return FALSE;
+
+   if(!PATH_CheckCorners(dc,corners,x1,y1,x2,y2))
+      return FALSE;
+
+   /* Add points to the roundrect path */
+   ellCorners[0].x = corners[1].x-ell_width;
+   ellCorners[0].y = corners[0].y;
+   ellCorners[1].x = corners[1].x;
+   ellCorners[1].y = corners[0].y+ell_height;
+   if(!PATH_DoArcPart(pPath, ellCorners, 0, -M_PI_2, TRUE))
+      return FALSE;
+   pointTemp.x = corners[0].x+ell_width/2;
+   pointTemp.y = corners[0].y;
+   if(!PATH_AddEntry(pPath, &pointTemp, PT_LINETO))
+      return FALSE;
+   ellCorners[0].x = corners[0].x;
+   ellCorners[1].x = corners[0].x+ell_width;
+   if(!PATH_DoArcPart(pPath, ellCorners, -M_PI_2, -M_PI, FALSE))
+      return FALSE;
+   pointTemp.x = corners[0].x;
+   pointTemp.y = corners[1].y-ell_height/2;
+   if(!PATH_AddEntry(pPath, &pointTemp, PT_LINETO))
+      return FALSE;
+   ellCorners[0].y = corners[1].y-ell_height;
+   ellCorners[1].y = corners[1].y;
+   if(!PATH_DoArcPart(pPath, ellCorners, M_PI, M_PI_2, FALSE))
+      return FALSE;
+   pointTemp.x = corners[1].x-ell_width/2;
+   pointTemp.y = corners[1].y;
+   if(!PATH_AddEntry(pPath, &pointTemp, PT_LINETO))
+      return FALSE;
+   ellCorners[0].x = corners[1].x-ell_width;
+   ellCorners[1].x = corners[1].x;
+   if(!PATH_DoArcPart(pPath, ellCorners, M_PI_2, 0, FALSE))
+      return FALSE;
+
+   IntGdiCloseFigure(dc);
+
+   return TRUE;
 }
 
 /* PATH_Ellipse
@@ -1016,6 +1068,46 @@ PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylin
  * Internal functions
  */
 
+/* PATH_CheckCorners
+ *
+ * Helper function for PATH_RoundRect() and PATH_Rectangle()
+ */
+BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2)
+{
+   INT temp;
+
+   /* Convert points to device coordinates */
+   corners[0].x=x1;
+   corners[0].y=y1;
+   corners[1].x=x2;
+   corners[1].y=y2;
+   CoordLPtoDP(dc, &corners[0]);
+   CoordLPtoDP(dc, &corners[1]);
+
+   /* Make sure first corner is top left and second corner is bottom right */
+   if(corners[0].x>corners[1].x)
+   {
+      temp=corners[0].x;
+      corners[0].x=corners[1].x;
+      corners[1].x=temp;
+   }
+   if(corners[0].y>corners[1].y)
+   {
+      temp=corners[0].y;
+      corners[0].y=corners[1].y;
+      corners[1].y=temp;
+   }
+
+   /* In GM_COMPATIBLE, don't include bottom and right edges */
+   if(dc->w.GraphicsMode==GM_COMPATIBLE)
+   {
+      corners[1].x--;
+      corners[1].y--;
+   }
+
+   return TRUE;
+}
+
 
 /* PATH_AddFlatBezier
  *
@@ -1239,8 +1331,8 @@ PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
     {
       ASSERT(pPath->pFlags);
 
-      RtlCopyMemory(pPointsNew, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
-      RtlCopyMemory(pFlagsNew, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
+      memcpy(pPointsNew, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
+      memcpy(pFlagsNew, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
 
       ExFreePool(pPath->pPoints);
       ExFreePool(pPath->pFlags);
@@ -1461,11 +1553,11 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
                         goto end;
                     }
                     
-                    RtlCopyMemory(Realloc, pLinePts, nLinePts*sizeof(POINT));
+                    memcpy(Realloc, pLinePts, nLinePts*sizeof(POINT));
                     ExFreePool(pLinePts);
                     pLinePts = Realloc;
                 }
-                RtlCopyMemory(&pLinePts[nLinePts], &pBzrPts[1], (nBzrPts - 1) * sizeof(POINT));
+                memcpy(&pLinePts[nLinePts], &pBzrPts[1], (nBzrPts - 1) * sizeof(POINT));
                 nLinePts += nBzrPts - 1;
                 ExFreePool(pBzrPts);
                 i += 2;
