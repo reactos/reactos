@@ -84,12 +84,29 @@ IntGdiCreatePenIndirect(PLOGPEN LogPen)
          break;
 
       default:
-         DPRINT1("FIXME: IntGdiCreatePenIndirect is UNIMPLEMENTED\n");
+         DPRINT1("FIXME: IntGdiCreatePenIndirect is UNIMPLEMENTED pen %x\n",LogPen->lopnStyle);
    }
 
    PENOBJ_UnlockPen(PenObject);
 
    return hPen;
+}
+
+INT STDCALL
+PEN_GetObject(PGDIBRUSHOBJ PenObject, INT Count, PLOGPEN Buffer)
+{
+  
+   LOGPEN LogPen;
+
+   if( Buffer == NULL ) return sizeof(LOGPEN);
+
+   LogPen.lopnWidth = PenObject->ptPenWidth;
+   LogPen.lopnStyle = PenObject->ulPenStyle;   
+   LogPen.lopnColor = PenObject->BrushAttr.lbColor;   
+   memcpy(Buffer, &LogPen, Count);
+
+   return Count;
+
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

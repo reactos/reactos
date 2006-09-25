@@ -1734,11 +1734,11 @@ IntGdiGetObject(HANDLE Handle, INT Count, LPVOID Buffer)
   ObjectType = GDIOBJ_GetObjectType(Handle);
   switch (ObjectType)
     {
-#if 0
+
       case GDI_OBJECT_TYPE_PEN:
-        Result = PEN_GetObject((PENOBJ *) GdiObject, Count, Buffer);
+        Result = PEN_GetObject((PGDIBRUSHOBJ) GdiObject, Count, (PLOGPEN) Buffer); // IntGdiCreatePenIndirect
         break;
-#endif
+
       case GDI_OBJECT_TYPE_BRUSH:
         Result = BRUSH_GetObject((PGDIBRUSHOBJ ) GdiObject, Count, (LPLOGBRUSH)Buffer);
         break;
