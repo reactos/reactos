@@ -1556,8 +1556,12 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 INT STDCALL
 BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
 {
+	if( !buffer ) return sizeof(BITMAP);
+    if (count < sizeof(BITMAP)) return 0;
+
 	if(bmp->dib)
 	{
+
 		if(count < (INT) sizeof(DIBSECTION))
 		{
 			if (count > (INT) sizeof(BITMAP)) count = sizeof(BITMAP);
@@ -1579,7 +1583,8 @@ BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
 		Bitmap.bmWidthBytes = abs(bmp->SurfObj.lDelta);
 		Bitmap.bmPlanes = 1;
 		Bitmap.bmBitsPixel = BitsPerFormat(bmp->SurfObj.iBitmapFormat);
-		Bitmap.bmBits = bmp->SurfObj.pvBits;
+		//Bitmap.bmBits = bmp->SurfObj.pvBits;
+		Bitmap.bmBits = NULL; /* not set accoring wine test confirm in win2k */
 		memcpy(buffer, &Bitmap, count);
 		return count;
 	}
