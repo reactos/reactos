@@ -176,14 +176,6 @@ ChkdskCallback(
         DPRINT("UNKNOWN5\r");
         break;
 
-    case UNKNOWN7:
-        DPRINT("UNKNOWN7\r");
-        break;
-
-    case UNKNOWN8:
-        DPRINT("UNKNOWN8\r");
-        break;
-
     case UNKNOWN9:
         DPRINT("UNKNOWN9\r");
         break;
@@ -204,12 +196,24 @@ ChkdskCallback(
         DPRINT("INSUFFICIENTRIGHTS\r");
         break;
 
+    case FSNOTSUPPORTED:
+        DPRINT("FSNOTSUPPORTED\r");
+        break;
+
+    case VOLUMEINUSE:
+        DPRINT("VOLUMEINUSE\r");
+        break;
+
     case STRUCTUREPROGRESS:
         DPRINT("STRUCTUREPROGRESS\r");
         break;
 
     case DONEWITHSTRUCTURE:
         DPRINT("DONEWITHSTRUCTURE\r");
+        break;
+
+    case CLUSTERSIZETOOSMALL:
+        DPRINT("CLUSTERSIZETOOSMALL\r");
         break;
 
     case PROGRESS:
