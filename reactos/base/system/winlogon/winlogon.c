@@ -24,7 +24,7 @@ PWLSESSION WLSession = NULL;
 static BOOL
 StartServicesManager(VOID)
 {
-	HANDLE ServicesInitEvent;
+	HANDLE ServicesInitEvent = NULL;
 	STARTUPINFOW StartupInfo;
 	PROCESS_INFORMATION ProcessInformation;
 	DWORD Count;
@@ -154,7 +154,7 @@ OpenRegistryKey(
 	OUT HKEY *WinLogonKey)
 {
    return ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                                        L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon",
+                                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WinLogon",
                                         0,
                                         KEY_QUERY_VALUE,
                                         WinLogonKey);
@@ -302,7 +302,7 @@ RemoveStatusMessage(
 	return Session->Gina.Functions.WlxRemoveStatusMessage(Session->Gina.Context);
 }
 
-static INT_PTR CALLBACK
+static BOOL CALLBACK
 GinaLoadFailedWindowProc(
 	IN HWND hwndDlg,
 	IN UINT uMsg,
@@ -362,6 +362,10 @@ WinMain(
 #endif
 	MSG Msg;
 
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
+	UNREFERENCED_PARAMETER(nShowCmd);
+
 	hAppInstance = hInstance;
 
 	if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
@@ -370,7 +374,6 @@ WinMain(
 		HandleShutdown(NULL, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
 		NtShutdownSystem(ShutdownNoReboot);
 		ExitProcess(0);
-		return 0;
 	}
 
 	WLSession = (PWLSESSION)HeapAlloc(GetProcessHeap(), 0, sizeof(WLSESSION));
@@ -380,7 +383,6 @@ WinMain(
 		ERR("WL: Could not allocate memory for winlogon instance\n");
 		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
 		ExitProcess(1);
-		return 1;
 	}
 	WLSession->DialogTimeout = 120; /* 2 minutes */
 
@@ -389,7 +391,6 @@ WinMain(
 		ERR("WL: Could not create window station and desktops\n");
 		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
 		ExitProcess(1);
-		return 1;
 	}
 	LockWorkstation(WLSession);
 
@@ -398,7 +399,6 @@ WinMain(
 		ERR("WL: Could not start services.exe\n");
 		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
 		ExitProcess(1);
-		return 1;
 	}
 
 	/* Check for pending setup */
@@ -415,7 +415,6 @@ WinMain(
 
 		HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
 		ExitProcess(0);
-		return 0;
 	}
 
 	if (!StartLsass())
@@ -423,7 +422,6 @@ WinMain(
 		DPRINT1("WL: Failed to start lsass.exe service (error %lu)\n", GetLastError());
 		NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, 0, 0, 0);
 		ExitProcess(1);
-		return 1;
 	}
 
 	/* Load and initialize gina */
@@ -433,7 +431,6 @@ WinMain(
 		DialogBoxParam(hAppInstance, MAKEINTRESOURCE(IDD_GINALOADFAILED), 0, GinaLoadFailedWindowProc, (LPARAM)L"");
 		HandleShutdown(WLSession, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
 		ExitProcess(1);
-		return 1;
 	}
 
 	DisplayStatusMessage(WLSession, WLSession->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
@@ -475,7 +472,6 @@ WinMain(
 	{
 		ERR("WL: Failed to initialize SAS\n");
 		ExitProcess(2);
-		return 2;
 	}
 
 	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_PREPARENETWORKCONNECTIONS);

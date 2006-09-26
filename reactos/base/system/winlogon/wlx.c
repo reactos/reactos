@@ -18,7 +18,7 @@
 static DLGPROC PreviousWindowProc;
 static UINT_PTR IdTimer;
 
-static INT_PTR CALLBACK
+static BOOL CALLBACK
 DefaultWlxWindowProc(
 	IN HWND hwndDlg,
 	IN UINT uMsg,
@@ -120,6 +120,11 @@ WlxAssignShellProtection(
 	HANDLE hProcess,
 	HANDLE hThread)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+	UNREFERENCED_PARAMETER(hToken);
+	UNREFERENCED_PARAMETER(hProcess);
+	UNREFERENCED_PARAMETER(hThread);
+
 	UNIMPLEMENTED;
 	return 0;
 }
@@ -135,6 +140,8 @@ WlxMessageBox(
 	LPWSTR lpszTitle,
 	UINT fuStyle)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+
 	TRACE("WlxMessageBox()\n");
 	/* FIXME: Provide a custom window proc to be able to handle timeout */
 	return MessageBoxW(hwndOwner, lpszText, lpszTitle, fuStyle);
@@ -151,6 +158,8 @@ WlxDialogBox(
 	HWND hwndOwner,
 	DLGPROC dlgprc)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+
 	TRACE("WlxDialogBox()\n");
 
 	if (PreviousWindowProc != NULL)
@@ -171,6 +180,8 @@ WlxDialogBoxParam(
 	DLGPROC dlgprc,
 	LPARAM dwInitParam)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+
 	TRACE("WlxDialogBoxParam()\n");
 
 	if (PreviousWindowProc != NULL)
@@ -190,6 +201,8 @@ WlxDialogBoxIndirect(
 	HWND hwndOwner,
 	DLGPROC dlgprc)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+
 	TRACE("WlxDialogBoxIndirect()\n");
 
 	if (PreviousWindowProc != NULL)
@@ -210,6 +223,8 @@ WlxDialogBoxIndirectParam(
 	DLGPROC dlgprc,
 	LPARAM dwInitParam)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+
 	TRACE("WlxDialogBoxIndirectParam()\n");
 
 	if (PreviousWindowProc != NULL)
@@ -255,6 +270,10 @@ WlxChangePasswordNotify(
 	PWLX_MPR_NOTIFY_INFO pMprInfo,
 	DWORD dwChangeInfo)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+	UNREFERENCED_PARAMETER(pMprInfo);
+	UNREFERENCED_PARAMETER(dwChangeInfo);
+
 	UNIMPLEMENTED;
 	return 0;
 }
@@ -267,6 +286,9 @@ WlxGetSourceDesktop(
 	HANDLE hWlx,
 	PWLX_DESKTOP* ppDesktop)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+	UNREFERENCED_PARAMETER(ppDesktop);
+
 	UNIMPLEMENTED;
 	return FALSE;
 }
@@ -279,6 +301,9 @@ WlxSetReturnDesktop(
 	HANDLE hWlx,
 	PWLX_DESKTOP pDesktop)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+	UNREFERENCED_PARAMETER(pDesktop);
+
 	UNIMPLEMENTED;
 	return FALSE;
 }
@@ -294,6 +319,12 @@ WlxCreateUserDesktop(
 	PWSTR pszDesktopName,
 	PWLX_DESKTOP* ppDesktop)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+	UNREFERENCED_PARAMETER(hToken);
+	UNREFERENCED_PARAMETER(Flags);
+	UNREFERENCED_PARAMETER(pszDesktopName);
+	UNREFERENCED_PARAMETER(ppDesktop);
+
 	UNIMPLEMENTED;
 	return FALSE;
 }
@@ -309,6 +340,12 @@ WlxChangePasswordNotifyEx(
 	PWSTR ProviderName,
 	PVOID Reserved)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+	UNREFERENCED_PARAMETER(pMprInfo);
+	UNREFERENCED_PARAMETER(dwChangeInfo);
+	UNREFERENCED_PARAMETER(ProviderName);
+	UNREFERENCED_PARAMETER(Reserved);
+
 	UNIMPLEMENTED;
 	return 0;
 }
@@ -322,6 +359,10 @@ WlxCloseUserDesktop(
 	PWLX_DESKTOP pDesktop,
 	HANDLE hToken)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+	UNREFERENCED_PARAMETER(pDesktop);
+	UNREFERENCED_PARAMETER(hToken);
+
 	UNIMPLEMENTED;
 	return FALSE;
 }
@@ -422,6 +463,8 @@ VOID WINAPI
 WlxWin31Migrate(
 	HANDLE hWlx)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+
 	UNIMPLEMENTED;
 }
 
@@ -432,6 +475,8 @@ BOOL WINAPI
 WlxQueryClientCredentials(
 	PWLX_CLIENT_CREDENTIALS_INFO_V1_0 pCred)
 {
+	UNREFERENCED_PARAMETER(pCred);
+
 	UNIMPLEMENTED;
 	return FALSE;
 }
@@ -443,6 +488,8 @@ BOOL WINAPI
 WlxQueryInetConnectorCredentials(
 	PWLX_CLIENT_CREDENTIALS_INFO_V1_0 pCred)
 {
+	UNREFERENCED_PARAMETER(pCred);
+
 	UNIMPLEMENTED;
 	return FALSE;
 }
@@ -467,6 +514,11 @@ WlxQueryTerminalServicesData(
 	WCHAR* UserName,
 	WCHAR* Domain)
 {
+	UNREFERENCED_PARAMETER(hWlx);
+	UNREFERENCED_PARAMETER(pTSData);
+	UNREFERENCED_PARAMETER(UserName);
+	UNREFERENCED_PARAMETER(Domain);
+
 	UNIMPLEMENTED;
 	return 0;
 }
@@ -478,6 +530,8 @@ DWORD WINAPI
 WlxQueryConsoleSwitchCredentials(
 	PWLX_CONSOLESWITCH_CREDENTIALS_INFO_V1_0 pCred)
 {
+	UNREFERENCED_PARAMETER(pCred);
+
 	UNIMPLEMENTED;
 	return 0;
 }
@@ -489,6 +543,8 @@ BOOL WINAPI
 WlxQueryTsLogonCredentials(
 	PWLX_CLIENT_CREDENTIALS_INFO_V2_0 pCred)
 {
+	UNREFERENCED_PARAMETER(pCred);
+
 	UNIMPLEMENTED;
 	return FALSE;
 }
@@ -588,7 +644,8 @@ LoadGina(
 	/* Terminate string */
 	GinaDll[MAX_PATH] = '\0';
 
-	if (!(hGina = LoadLibraryW(GinaDll)))
+	hGina = LoadLibraryW(GinaDll);
+	if (!hGina)
 		goto cleanup;
 
 	Functions->WlxNegotiate = (PFWLXNEGOTIATE)GetProcAddress(hGina, "WlxNegotiate");

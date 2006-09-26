@@ -118,7 +118,7 @@ BOOL GetShell(WCHAR *CommandLine)
   BOOL ConsoleShell = IsConsoleShell();
 
   if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                  L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon",
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                   0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
   {
     Size = MAX_PATH * sizeof(WCHAR);

@@ -239,7 +239,7 @@ WlxActivateUserShell(
   TRACE("WlxActivateUserShell()\n");
   /* get the path of userinit */
   if(RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
-                  L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon", 
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", 
                   0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
   {ERR("GINA: Failed: 1\n");
     VirtualFree(pEnvironment, 0, MEM_RELEASE);
@@ -419,7 +419,7 @@ DoAutoLogon(
 
 	rc = RegOpenKeyExW(
 		HKEY_LOCAL_MACHINE,
-		L"SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\WinLogon",
+		L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WinLogon",
 		0,
 		KEY_QUERY_VALUE,
 		&WinLogonKey);

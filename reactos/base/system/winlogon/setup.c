@@ -109,7 +109,7 @@ RunSetup (VOID)
   STARTUPINFOW StartupInfo;
   WCHAR Shell[MAX_PATH];
   WCHAR CommandLine[MAX_PATH];
-  BOOLEAN Result;
+  BOOL Result;
   DWORD dwError;
   HKEY hKey;
   DWORD dwType;

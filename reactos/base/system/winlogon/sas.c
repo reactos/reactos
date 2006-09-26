@@ -37,7 +37,7 @@ StartTaskManager(
 
 BOOL
 SetDefaultLanguage(
-	IN BOOL UserProfile)
+	IN BOOLEAN UserProfile)
 {
 	HKEY BaseKey;
 	LPCWSTR SubKey;
@@ -114,7 +114,7 @@ SetDefaultLanguage(
 	}
 
 	/* Convert Value to a Lcid */
-	ValueString.Length = ValueString.MaximumLength = dwSize;
+	ValueString.Length = ValueString.MaximumLength = (USHORT)dwSize;
 	ValueString.Buffer = Value;
 	Status = RtlUnicodeStringToInteger(&ValueString, 16, &Lcid);
 	if (!NT_SUCCESS(Status))
@@ -146,7 +146,7 @@ static BOOL
 HandleLogon(
 	IN OUT PWLSESSION Session)
 {
-	PROFILEINFOW ProfileInfo;
+	PROFILEINFOW ProfileInfo = { 0 };
 	LPVOID lpEnvironment = NULL;
 	BOOLEAN Old;
 
@@ -177,7 +177,8 @@ HandleLogon(
 		TRUE))
 	{
 		ERR("WL: CreateEnvironmentBlock() failed\n");
-		UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
+		if (!(Session->Options & WLX_LOGON_OPT_NO_PROFILE))
+			UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
 		CloseHandle(Session->UserToken);
 		return FALSE;
 	}
@@ -317,13 +318,15 @@ HandleLogoff(
 	return STATUS_SUCCESS;
 }
 
-static INT_PTR CALLBACK
+static BOOL CALLBACK
 ShutdownComputerWindowProc(
 	IN HWND hwndDlg,
 	IN UINT uMsg,
 	IN WPARAM wParam,
 	IN LPARAM lParam)
 {
+	UNREFERENCED_PARAMETER(lParam);
+
 	switch (uMsg)
 	{
 		case WM_COMMAND:
@@ -689,7 +692,7 @@ SASWindowProc(
 			Session = (PWLSESSION)((LPCREATESTRUCT)lParam)->lpCreateParams;
 
 			/* Save the Session pointer */
-			SetWindowLongPtr(hwndDlg, GWLP_USERDATA, (DWORD_PTR)Session);
+			SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)Session);
 
 			return RegisterHotKeys(Session, hwndDlg);
 		}

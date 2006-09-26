@@ -202,29 +202,31 @@ InitializeScreenSaver(
 	}
 #endif
 
-	if (!(Session->hScreenSaverParametersChanged = CreateEventW(NULL, FALSE, FALSE, NULL)))
+	Session->hScreenSaverParametersChanged = CreateEventW(NULL, FALSE, FALSE, NULL);
+	if (!Session->hScreenSaverParametersChanged)
 	{
 		WARN("WL: Unable to create screen saver event (error %lu)\n", GetLastError());
+		return TRUE;
 	}
-	else if (!(Session->hEndOfScreenSaverThread = CreateEventW(NULL, FALSE, FALSE, NULL)))
+	Session->hEndOfScreenSaverThread = CreateEventW(NULL, FALSE, FALSE, NULL);
+	if (!Session->hEndOfScreenSaverThread)
 	{
 		WARN("WL: Unable to create screen saver event (error %lu)\n", GetLastError());
 		CloseHandle(Session->hScreenSaverParametersChanged);
+		return TRUE;
 	}
+
+	ScreenSaverThread = CreateThread(
+		NULL,
+		0,
+		ScreenSaverThreadMain,
+		Session,
+		0,
+		NULL);
+	if (ScreenSaverThread)
+		CloseHandle(ScreenSaverThread);
 	else
-	{
-		ScreenSaverThread = CreateThread(
-			NULL,
-			0,
-			ScreenSaverThreadMain,
-			Session,
-			0,
-			NULL);
-		if (ScreenSaverThread)
-			CloseHandle(ScreenSaverThread);
-		else
-			WARN("WL: Unable to start screen saver thread\n");
-	}
+		WARN("WL: Unable to start screen saver thread\n");
 
 	return TRUE;
 }
