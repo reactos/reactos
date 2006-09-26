@@ -214,6 +214,73 @@ ByteZero:
     ret 8
 .endfunc
 
+.func RtlMoveMemory@12
+_RtlMoveMemory@12:
+
+    /* Save volatiles */
+    push esi
+    push edi
+
+    /* Get pointers and size  */
+    mov esi, [esp+16]
+    mov edi, [esp+12]
+    mov ecx, [esp+20]
+    cld
+
+    /* Check if the destination is higher (or equal) */
+    cmp esi, edi
+    jbe Overlap
+
+    /* Set ULONG size and UCHAR remainder */
+DoMove:
+    mov edx, ecx
+    and edx, 3
+    shr ecx, 2
+
+    /* Do the move */
+    rep movsd
+    or ecx, edx
+    jnz ByteMove
+
+    /* Return */
+    pop edi
+    pop esi
+    ret 12
+
+ByteMove:
+    /* Move what's left */
+    rep movsb
+
+DoneMove:
+    /* Restore volatiles */
+    pop edi
+    pop esi
+    ret 12
+
+Overlap:
+    /* Don't copy if they're equal */
+    jz DoneMove
+
+    /* Compare pointer distance with given length and check for overlap */
+    mov eax, edi
+    sub eax, esi
+    cmp ecx, eax
+    jbe DoMove
+
+    /* Set direction flag for backward move */
+    std
+
+    /* Copy byte-by-byte the non-overlapping distance */
+    add esi, ecx
+    add edi, ecx
+    dec esi
+    dec edi
+
+    /* Do the move, reset flag and return */
+    rep movsb
+    cld
+    jmp DoneMove
+.endfunc
 
 .func @RtlPrefetchMemoryNonTemporal@8, @RtlPrefetchMemoryNonTemporal@8
 @RtlPrefetchMemoryNonTemporal@8:

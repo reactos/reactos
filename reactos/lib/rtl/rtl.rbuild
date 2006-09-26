@@ -39,7 +39,6 @@
 			<file>sqrt_asm.s</file>
 			<file>tan_asm.s</file>
 		</directory>
-            <file>RtlMoveMemory.c</file>
 	</if>
 
       <ifnot property="ARCH" value="i386">
