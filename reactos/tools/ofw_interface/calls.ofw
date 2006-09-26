@@ -8,12 +8,14 @@ read			3	1	int char*:arg2 int int
 exit			0	0	
 child			1	1	int int
 peer			1	1	int int
+parent			1	1	int int
 seek			3	1	int int int int
 # MMU methods 
 # claim (virt size align -- base)
 claim			3	1	int int int int
 # release (virt size --)
 release			2	0	int int
+package-to-path         3       1       int char*:arg2 int int
 # Declare the call-method BE function
 +call-method		0	0	
 # Convenience functions that interact closely with OFW (written in BE asm)
