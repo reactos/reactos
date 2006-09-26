@@ -28,6 +28,8 @@ _kernel_trap_stack_top:
 	
 	.text
 	.globl NtProcessStartup
+	.globl KiSystemStartup
+	.globl KiRosPrepareForSystemStartup
 NtProcessStartup:
     lis		0,AP_MAGIC@ha
     ori		0,0,AP_MAGIC@l
@@ -42,7 +44,7 @@ NtProcessStartup:
     /*
      * Call the application processor initialization code
      */
-    bl  _KiSystemStartup
+    bl  KiSystemStartup
     
 .m1:     
     /* Load the initial kernel stack */
@@ -53,5 +55,5 @@ NtProcessStartup:
     /* Call the main kernel initialization */
     mr		3,5
     mr		4,6
-    bl		__main
+    bl		KiRosPrepareForSystemStartup
 

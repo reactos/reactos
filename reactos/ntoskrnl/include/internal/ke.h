@@ -73,11 +73,13 @@ extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER SystemBootTime;
 extern ULONG_PTR KERNEL_BASE;
+#ifdef _M_IX86
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
 extern ULONG KeI386FxsrPresent;
 extern ULONG KeI386CpuType;
 extern ULONG KeI386CpuStep;
+#endif
 extern ULONG KeProcessorArchitecture;
 extern ULONG KeProcessorLevel;
 extern ULONG KeProcessorRevision;
@@ -94,6 +96,7 @@ extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;
 extern ULONG KiUnexpectedEntrySize;
+#ifdef _M_IX86
 extern PVOID Ki386IopmSaveArea;
 extern ULONG KeI386EFlagsAndMaskV86;
 extern ULONG KeI386EFlagsOrMaskV86;
@@ -103,6 +106,7 @@ extern KGDTENTRY KiBootGdt[];
 extern KDESCRIPTOR KiGdtDescriptor;
 extern KDESCRIPTOR KiIdtDescriptor;
 extern KTSS KiBootTss;
+#endif
 extern UCHAR P0BootStack[];
 extern UCHAR KiDoubleFaultStack[];
 extern FAST_MUTEX KernelAddressSpaceLock;

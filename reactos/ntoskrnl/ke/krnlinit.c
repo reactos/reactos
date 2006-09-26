@@ -327,6 +327,8 @@ KeInit2(VOID)
     }
 
     /* Set IDT to writable */
+#ifdef _M_IX86
     Protect = MmGetPageProtect(NULL, (PVOID)KiIdt);
     MmSetPageProtect(NULL, (PVOID)KiIdt, Protect | PAGE_IS_WRITABLE);
+#endif
 }
