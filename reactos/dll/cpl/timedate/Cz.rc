@@ -60,6 +60,6 @@ BEGIN
     IDS_TIMEZONETEXT "Aktuální èasové pásmo: %s"
     IDS_TIMEZONEINVALID "Neplatné"
     IDS_TIMEZONEUNKNOWN "Neznámé"
-    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on % at %s"
+    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
 END

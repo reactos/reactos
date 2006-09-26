@@ -60,6 +60,6 @@ BEGIN
     IDS_TIMEZONETEXT "Текущий часовой пояс: %s"
     IDS_TIMEZONEINVALID "Недействительная"
     IDS_TIMEZONEUNKNOWN "Неизвестная"
-    IDS_INETTIMESUCSYNC "Время было успешно синхронизировано с %s на % в %s"
+    IDS_INETTIMESUCSYNC "Время было успешно синхронизировано с %s на %s в %s"
     IDS_INETTIMENEXTSYNC "Следующая синхронизация через: %s в %s"
 END

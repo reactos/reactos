@@ -60,6 +60,6 @@ BEGIN
     IDS_TIMEZONETEXT "Fuseau horaire actuel: %s"
     IDS_TIMEZONEINVALID "Invalide"
     IDS_TIMEZONEUNKNOWN "Inconnu"
-    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on % at %s"
+    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
 END

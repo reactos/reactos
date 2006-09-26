@@ -60,6 +60,6 @@ BEGIN
     IDS_TIMEZONETEXT "Használt idõzóna: %s"
     IDS_TIMEZONEINVALID "Érvénytelen"
     IDS_TIMEZONEUNKNOWN "Ismeretlen"
-    IDS_INETTIMESUCSYNC "A számítógép órája sikeresen szinkronizálva lett: %s (% %s-kor)"
+    IDS_INETTIMESUCSYNC "A számítógép órája sikeresen szinkronizálva lett: %s (%s %s-kor)"
     IDS_INETTIMENEXTSYNC "A következõ szinkronizálás: %s %s-kor"
 END
