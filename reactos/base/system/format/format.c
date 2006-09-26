@@ -195,13 +195,14 @@ FormatExCallback (
 	case UNKNOWN4:
 	case UNKNOWN5:
 	case INSUFFICIENTRIGHTS:
-	case UNKNOWN7:
-	case UNKNOWN8:
+	case FSNOTSUPPORTED:
+	case VOLUMEINUSE:
 	case UNKNOWN9:
 	case UNKNOWNA:
 	case UNKNOWNC:
 	case UNKNOWND:
 	case STRUCTUREPROGRESS:
+	case CLUSTERSIZETOOSMALL:
 		LoadString( GetModuleHandle(NULL), STRING_NO_SUPPORT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf(szMsg);
 		return FALSE;
