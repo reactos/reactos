@@ -57,18 +57,25 @@ typedef struct _DEVADVPROP_INFO
     DWORD nDevPropSheets;
     HPROPSHEETPAGE *DevPropSheets;
 
-    BOOL FreeDevPropSheets : 1;
-    BOOL CanDisable : 1;
-    BOOL DeviceStarted : 1;
-    BOOL DeviceUsageChanged : 1;
-    BOOL CloseDevInst : 1;
-    BOOL IsAdmin : 1;
-    BOOL DoDefaultDevAction : 1;
-    BOOL PageInitialized : 1;
-    BOOL ShowRemotePages : 1;
-    BOOL HasDriverPage : 1;
-    BOOL HasResourcePage : 1;
-    BOOL HasPowerPage : 1;
+    union
+    {
+        UINT Flags;
+        struct
+        {
+            UINT FreeDevPropSheets : 1;
+            UINT CanDisable : 1;
+            UINT DeviceStarted : 1;
+            UINT DeviceUsageChanged : 1;
+            UINT CloseDevInst : 1;
+            UINT IsAdmin : 1;
+            UINT DoDefaultDevAction : 1;
+            UINT PageInitialized : 1;
+            UINT ShowRemotePages : 1;
+            UINT HasDriverPage : 1;
+            UINT HasResourcePage : 1;
+            UINT HasPowerPage : 1;
+        };
+    };
 
     WCHAR szDevName[255];
     WCHAR szTemp[255];
