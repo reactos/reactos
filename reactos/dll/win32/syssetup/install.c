@@ -408,7 +408,7 @@ InstallLiveCD (HINSTANCE hInstance)
   /* Load the default shell */
   rc = RegOpenKeyEx(
     HKEY_LOCAL_MACHINE,
-    TEXT("SOFTWARE\\ReactOS\\Windows NT\\CurrentVersion\\Winlogon"), /* FIXME: should be REGSTR_PATH_WINLOGON */
+    TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), /* FIXME: should be REGSTR_PATH_WINLOGON */
     0,
     KEY_QUERY_VALUE,
     &hKey);
