@@ -793,7 +793,16 @@ HBITMAP STDCALL NtGdiCreateDIBitmap(HDC hDc, const BITMAPINFOHEADER *Header,
   PDC Dc;
   HBITMAP Bmp;
   
- 
+  if (Header == NULL)
+  {
+	  return NULL;
+  }
+
+  if (Header->biSize == 0)
+  {
+	  return NULL;
+  }
+
   if (NULL == hDc)
   {     
 	   BITMAPINFOHEADER *change_Header = (BITMAPINFOHEADER *)Header;
