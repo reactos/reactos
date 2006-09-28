@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Services
+ * PROJECT:     ReactOS Device Managment
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/devmgmt/enumdevices.c
  * PURPOSE:     Enumerates all devices on the local machine

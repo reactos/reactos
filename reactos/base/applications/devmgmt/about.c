@@ -1,5 +1,5 @@
 /*
- * PROJECT:     ReactOS Services
+ * PROJECT:     ReactOS Device Managment
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/devmgmt/about.c
  * PURPOSE:     About dialog box message handler
