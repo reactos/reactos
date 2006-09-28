@@ -437,7 +437,12 @@ IntCreateBitmapIndirect(CONST BITMAP *BM)
           Size.cx, Size.cy, BitsPixel, hBitmap);
 
    bmp = BITMAPOBJ_LockBitmap( hBitmap );
-   /* FIXME - bmp can be NULL!!!!!! */
+   if (bmp == NULL)
+   {
+	   /* FIXME should we free the hBitmap or return it ?? */
+	   return 0;
+   }
+   
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
    BITMAPOBJ_UnlockBitmap( bmp );
 
