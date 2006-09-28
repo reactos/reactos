@@ -151,7 +151,9 @@ EnumDevices(INT index,
 
     if (!bRet)
     {
-        guids = HeapAlloc(GetProcessHeap(), 0, RequiredSize);
+        guids = HeapAlloc(GetProcessHeap(), 
+                          0, 
+                          RequiredSize * sizeof(GUID));
         if (guids == NULL)
             return -1;
 
