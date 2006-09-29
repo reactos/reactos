@@ -158,6 +158,12 @@ dev_mgr_driver_entry_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr)
 
     pdrvr[GEN_IF_DRIVER_IDX].driver_init = gendrv_if_driver_init;
     pdrvr[GEN_IF_DRIVER_IDX].driver_destroy = gendrv_if_driver_destroy;
+
+    pdrvr[MOUSE_DRIVER_IDX].driver_init = mouse_driver_init;
+    pdrvr[MOUSE_DRIVER_IDX].driver_destroy = mouse_driver_destroy;
+
+    //pdrvr[KEYBOARD_DRIVER_IDX].driver_init = gendrv_if_driver_init;
+    //pdrvr[KEYBOARD_DRIVER_IDX].driver_destroy = gendrv_if_driver_destroy;
 }
 
 BOOLEAN

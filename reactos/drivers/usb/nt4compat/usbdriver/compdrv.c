@@ -370,7 +370,7 @@ compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
         TRAP();
     }
 
-    // let's scan the interfacs for those we recognize
+    // let's scan the interfaces for those we recognize
     pconfig_desc = (PUSB_CONFIGURATION_DESC) buf;
     if (pconfig_desc->wTotalLength > 512)
     {
@@ -386,6 +386,9 @@ compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
         usb_dbg_print(DBGLVL_MAXIMUM, ("compdev_select_driver(): error, dev does not exist\n"));
         return;
     }
+
+    usb_dbg_print(DBGLVL_MAXIMUM, ("compdev_select_driver(): got %d interfaces\n",
+        (LONG)pconfig_desc->bNumInterfaces));
 
     for(i = 0; i < (LONG) pconfig_desc->bNumInterfaces; i++)
     {
@@ -407,6 +410,7 @@ compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
                 param.dev_mgr = dev_mgr;
                 param.pdriver = pcand;
                 param.dev_handle = 0;
+                param.if_desc = pif_desc;
                 pcand->disp_tbl.dev_connect(&param, usb_make_handle(dev_id, i, 0));
             }
         }

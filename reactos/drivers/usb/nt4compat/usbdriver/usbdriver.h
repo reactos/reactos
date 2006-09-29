@@ -26,4 +26,5 @@
 #include "devmgr.h"
 #include "hub.h"
 #include "umss.h"
+#include "mouse.h"
 #include "uhciver.h"

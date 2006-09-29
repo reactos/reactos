@@ -1241,6 +1241,8 @@ uhci_process_pending_endp(PUHCI_DEV uhci)
         }
 
         // if can_submit is STATUS_SUCCESS, the purb is inserted into the schedule
+        uhci_dbg_print(DBGLVL_MAXIMUM, ("uhci_process_pending_endp(): endp_type=0x%x\n",
+                                        endp_type(pendp)));
         switch (endp_type(pendp))
         {
             case USB_ENDPOINT_XFER_BULK:

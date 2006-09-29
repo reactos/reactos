@@ -781,7 +781,6 @@ LBL_OUT:
     return status;
 }
 
-
 void
 usb_config_dev_completion(PURB purb, PVOID context)
 {

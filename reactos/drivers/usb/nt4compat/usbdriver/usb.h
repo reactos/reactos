@@ -955,6 +955,15 @@ ULONG endp_ref,
 PURB purb
 );
 
+void usb_fill_int_urb(PURB urb,
+    struct _USB_DEV *dev,
+    ULONG pipe,
+    PVOID transfer_buffer,
+    LONG buffer_length,
+    PURBCOMPLETION complete,
+    PVOID context,
+    int interval);
+
 LONG
 usb_calc_bus_time(
 LONG low_speed,
