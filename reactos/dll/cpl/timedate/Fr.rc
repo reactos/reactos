@@ -39,17 +39,17 @@ END
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Internet Time"
+CAPTION "Temps Internet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Automatically synchronize with an Internet time server", IDC_AUTODAYLIGHT,
+    CONTROL         "Synchroniser automatiquement avec un serveur d'heure Internet", IDC_AUTODAYLIGHT,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,7,241,10
-    LTEXT           "Server:", -1, 34, 22, 28, 13
-    PUSHBUTTON      "Update Now", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    LTEXT           "Serveur:", -1, 34, 22, 28, 13
+    PUSHBUTTON      "Mettre à jour maintenant", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "Synchronazation can only occur when your computer is connected to the internet.", -1, 12, 114, 225, 25
+    LTEXT           "La synchronisation ne peut se faire que si votre ordinateur est connecté à Internet.", -1, 12, 114, 225, 25
 END
 
 
@@ -60,6 +60,6 @@ BEGIN
     IDS_TIMEZONETEXT "Fuseau horaire actuel: %s"
     IDS_TIMEZONEINVALID "Invalide"
     IDS_TIMEZONEUNKNOWN "Inconnu"
-    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
-    IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
+    IDS_INETTIMESUCSYNC "L'heure a été synchronisée avec %s le %s à %s"
+    IDS_INETTIMENEXTSYNC "Prochaine synchronisation: %s à %s"
 END
