@@ -10,6 +10,9 @@
 <directory name="cmdutils">
 	<xi:include href="cmdutils/cmdutils.rbuild" />
 </directory>
+<directory name="devmgmt">
+	<xi:include href="devmgmt/devmgmt.rbuild" />
+</directory>
 <directory name="devmgr">
 	<xi:include href="devmgr/devmgr.rbuild" />
 </directory>
