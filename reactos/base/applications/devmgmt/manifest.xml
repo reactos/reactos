@@ -7,7 +7,7 @@
     processorArchitecture="x86"
     version="1.0.0.0"
     type="win32"/>
-<description>ReactOS Service Manager</description>
+<description>ReactOS Device Manager</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

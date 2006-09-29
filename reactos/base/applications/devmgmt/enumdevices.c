@@ -31,7 +31,7 @@ InsertIntoTreeView(HWND hTV,
     tvi.iSelectedImage = DevImage;
 
     tvins.item = tvi;
-    tvins.hInsertAfter = hRoot;
+    tvins.hParent = hRoot;
 
     return TreeView_InsertItem(hTV, &tvins);
 }
@@ -39,23 +39,23 @@ InsertIntoTreeView(HWND hTV,
 
 static INT
 EnumDeviceClasses(INT ClassIndex,
-                  TCHAR *DeviceClassName,
-                  TCHAR *DeviceClassDesc,
-                  BOOL *DevicePresent,
+                  LPTSTR DevClassName,
+                  LPTSTR DevClassDesc,
+                  BOOL *DevPresent,
                   INT *ClassImage)
 {
     GUID ClassGuid;
     HKEY KeyClass;
-    HDEVINFO hDevInfo;
     TCHAR ClassName[MAX_CLASS_NAME_LEN];
     DWORD RequiredSize = MAX_CLASS_NAME_LEN;
     UINT Ret;
 
-    *DevicePresent = FALSE;
+    *DevPresent = FALSE;
 
     Ret = CM_Enumerate_Classes(ClassIndex,
                                &ClassGuid,
                                0);
+
     if (Ret != CR_SUCCESS)
     {
         /* all classes enumerated */
@@ -73,11 +73,11 @@ EnumDeviceClasses(INT ClassIndex,
                                  RequiredSize,
                                  &RequiredSize))
     {
-        lstrcpy(DeviceClassName, ClassName);
+        lstrcpy(DevClassName, ClassName);
     }
     else
     {
-        *DeviceClassName = _T('\0');
+        *DevClassName = _T('\0');
     }
 
     if (!SetupDiGetClassImageIndex(&ImageListData,
@@ -88,13 +88,14 @@ EnumDeviceClasses(INT ClassIndex,
         *ClassImage = 41;
     }
 
-    /* FIXME: why are we calling this here? */
+    /* FIXME: do we need this?
     hDevInfo = SetupDiGetClassDevs(&ClassGuid,
                                    0,
                                    NULL,
                                    DIGCF_PRESENT);
     if (hDevInfo == INVALID_HANDLE_VALUE)
-        return -2;
+        return 0;
+    */
 
     KeyClass = SetupDiOpenClassRegKeyEx(&ClassGuid,
                                         MAXIMUM_ALLOWED,
@@ -103,14 +104,15 @@ EnumDeviceClasses(INT ClassIndex,
                                         0);
     if (KeyClass != INVALID_HANDLE_VALUE)
     {
+
         DWORD dwSize = MAX_CLASS_NAME_LEN;
 
         if (RegQueryValue(KeyClass,
                           NULL,
-                          DeviceClassDesc,
+                          DevClassDesc,
                           &dwSize) != ERROR_SUCCESS)
         {
-            *DeviceClassDesc = _T('\0');
+            *DevClassDesc = _T('\0');
         }
     }
     else
@@ -118,10 +120,10 @@ EnumDeviceClasses(INT ClassIndex,
         return -3;
     }
 
-    /* FIXME: Can we call this earlier, or see above? */
-    SetupDiDestroyDeviceInfoList(hDevInfo);
+    /* FIXME: see above?
+    SetupDiDestroyDeviceInfoList(hDevInfo); */
 
-    *DevicePresent = TRUE;
+    *DevPresent = TRUE;
 
     RegCloseKey(KeyClass);
 
@@ -143,16 +145,16 @@ EnumDevices(INT index,
     *DeviceName = _T('\0');
 
     bRet = SetupDiClassGuidsFromName(DeviceClassName,
-                                    NULL,
-                                    RequiredSize,
-                                    &RequiredSize);
+                                     NULL,
+                                     RequiredSize,
+                                     &RequiredSize);
     if (RequiredSize == 0)
         return -2;
 
     if (!bRet)
     {
-        guids = HeapAlloc(GetProcessHeap(), 
-                          0, 
+        guids = HeapAlloc(GetProcessHeap(),
+                          0,
                           RequiredSize * sizeof(GUID));
         if (guids == NULL)
             return -1;
@@ -170,12 +172,13 @@ EnumDevices(INT index,
         }
     }
 
+//TimerInfo(_T("IN"));
     /* get device info set for our device class */
     hDevInfo = SetupDiGetClassDevs(guids,
                                    0,
                                    NULL,
                                    DIGCF_PRESENT);
-
+//TimerInfo(_T("OUT"));
     HeapFree(GetProcessHeap(), 0, guids);
     if(hDevInfo == INVALID_HANDLE_VALUE)
     {
@@ -322,7 +325,6 @@ InitTreeView(PMAIN_WND_INFO Info)
     TCHAR ComputerName[MAX_PATH];
     DWORD dwSize = MAX_PATH;
     INT RootImage;
-    //COLORREF Mask = RGB(255, 0, 128);
 
     TreeView_DeleteAllItems(Info->hTreeView);
 
@@ -337,8 +339,10 @@ InitTreeView(PMAIN_WND_INFO Info)
                   hComp,
                   NULL);
 
+    DeleteObject(hComp);
+
     TreeView_SetImageList(Info->hTreeView,
-                          &ImageListData.ImageList,
+                          ImageListData.ImageList,
                           TVSIL_NORMAL);
 
     if (!GetComputerName(ComputerName,
@@ -349,6 +353,7 @@ InitTreeView(PMAIN_WND_INFO Info)
 
     RootImage = ImageList_GetImageCount(ImageListData.ImageList) - 1;
 
+    /* insert the root item into the tree */
     hRoot = InsertIntoTreeView(Info->hTreeView,
                                NULL,
                                ComputerName,

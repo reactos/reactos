@@ -2,20 +2,27 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&File"
   BEGIN
-    MENUITEM "E&xit",           IDC_EXIT
+    MENUITEM "E&xit",                   IDC_EXIT
   END
   POPUP "Action"
   BEGIN
-    MENUITEM "Print",           IDC_PRINT, GRAYED
+    MENUITEM "Print",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Properties...",   IDC_PROP
+    MENUITEM "Properties...",           IDC_PROP
     MENUITEM SEPARATOR
-    MENUITEM "Help",            IDC_PROGHELP, GRAYED
+    MENUITEM "Help",                    IDC_PROGHELP, GRAYED
+  END
+  POPUP "View"
+  BEGIN
+    MENUITEM "Devices by type",         IDC_STATIC
+    MENUITEM "Devices by connection",   IDC_STATIC, GRAYED
+    MENUITEM "Resources by type",       IDC_STATIC, GRAYED
+    MENUITEM "Resources by connection", IDC_STATIC, GRAYED
   END
   POPUP "Help"
   BEGIN
-    MENUITEM "Help",            IDC_PROGHELP
-    MENUITEM "About",           IDC_ABOUT
+    MENUITEM "Help",                    IDC_PROGHELP
+    MENUITEM "About",                   IDC_ABOUT
   END
 END
 
@@ -23,9 +30,9 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Properties...",   IDC_PROP, GRAYED
+    MENUITEM "Properties...",           IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Help",            IDC_PROGHELP
+    MENUITEM "Help",                    IDC_PROGHELP
   END
 END
 

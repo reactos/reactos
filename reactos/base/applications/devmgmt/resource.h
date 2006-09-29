@@ -1,5 +1,4 @@
-#define IDC_STATIC -1
-
+#define IDC_STATIC          -1
 
 #define IDI_MAIN_ICON       50
 #define IDB_ROOT_IMAGE      51

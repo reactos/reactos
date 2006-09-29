@@ -248,23 +248,30 @@ MainWndCommand(PMAIN_WND_INFO Info,
         break;
 
         case IDC_PROGHELP:
+        {
             DisplayString(_T("Help is not yet implemented\n"));
             SetFocus(Info->hTreeView);
+        }
         break;
 
         case IDC_EXIT:
+        {
             PostMessage(Info->hMainWnd,
                         WM_CLOSE,
                         0,
                         0);
+        }
         break;
 
         case IDC_ABOUT:
+        {
             DialogBox(hInstance,
                       MAKEINTRESOURCE(IDD_ABOUTBOX),
                       Info->hMainWnd,
                       (DLGPROC)AboutDialogProc);
+
             SetFocus(Info->hTreeView);
+        }
         break;
 
     }

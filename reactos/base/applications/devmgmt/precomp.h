@@ -1,9 +1,9 @@
 #ifndef __DEVMGMT_PRECOMP_H
 #define __DEVMGMT_PRECOMP_H
 
-//#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <windowsx.h> /* GET_X/Y_LPARAM */
+#include <windowsx.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <setupapi.h>
@@ -15,14 +15,7 @@
 #pragma warning(disable : 4100)
 #endif
 
-#ifndef SB_SIMPLEID
-#define SB_SIMPLEID 0xFF
-#endif
-
-#define NO_ITEM_SELECTED -1
-#define MAX_KEY_LENGTH 256
 #define MAX_DEV_LEN 1000
-
 
 typedef struct _MAIN_WND_INFO
 {
@@ -89,14 +82,16 @@ INT GetTextFromEdit(OUT LPTSTR lpString,
                     IN HWND hDlg,
                     IN UINT Res);
 
-VOID GetError(VOID);
-
-VOID DisplayString(PTCHAR);
-
 HIMAGELIST InitImageList(UINT NumButtons,
                          UINT StartResource,
                          UINT Width,
                          UINT Height);
+
+VOID GetError(VOID);
+
+VOID DisplayString(PTCHAR);
+
+VOID TimerInfo(LPTSTR);
 
 
 #endif /* __DEVMGMT_PRECOMP_H */
