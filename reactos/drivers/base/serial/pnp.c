@@ -79,14 +79,18 @@ SerialAddDeviceInternal(
 	KeInitializeDpc(&DeviceExtension->ReceivedByteDpc, SerialReceiveByte, DeviceExtension);
 	KeInitializeDpc(&DeviceExtension->SendByteDpc, SerialSendByte, DeviceExtension);
 	KeInitializeDpc(&DeviceExtension->CompleteIrpDpc, SerialCompleteIrp, DeviceExtension);
-	Fdo->Flags |= DO_POWER_PAGABLE;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08x\n", Status);
 		goto ByeBye;
 	}
-	Fdo->Flags |= DO_BUFFERED_IO;
+	if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
+		Fdo->Flags |= DO_POWER_PAGABLE;
+	if (DeviceExtension->LowerDevice->Flags & DO_BUFFERED_IO)
+		Fdo->Flags |= DO_BUFFERED_IO;
+	if (DeviceExtension->LowerDevice->Flags & DO_DIRECT_IO)
+		Fdo->Flags |= DO_DIRECT_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 	if (pFdo)
 	{
@@ -137,7 +141,7 @@ SerialPnpStartDevice(
 	WCHAR ComPortBuffer[32];
 	UNICODE_STRING ComPort;
 	ULONG Vector = 0;
-	ULONG i, j;
+	ULONG i;
 	UCHAR IER;
 	KIRQL Dirql;
 	KAFFINITY Affinity = 0;
@@ -155,35 +159,55 @@ SerialPnpStartDevice(
 	ASSERT(DeviceExtension);
 	ASSERT(DeviceExtension->PnpState == dsStopped);
 
+	if (!ResourceList)
+	{
+		DPRINT("No allocated resources sent to driver\n");
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+	if (ResourceList->Count != 1)
+	{
+		DPRINT("Wrong number of allocated resources sent to driver\n");
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+	if (ResourceList->List[0].PartialResourceList.Version != 1
+	 || ResourceList->List[0].PartialResourceList.Revision != 1
+	 || ResourceListTranslated->List[0].PartialResourceList.Version != 1
+	 || ResourceListTranslated->List[0].PartialResourceList.Revision != 1)
+	{
+		DPRINT("Revision mismatch: %u.%u != 1.1 or %u.%u != 1.1\n",
+			ResourceList->List[0].PartialResourceList.Version,
+			ResourceList->List[0].PartialResourceList.Revision,
+			ResourceListTranslated->List[0].PartialResourceList.Version,
+			ResourceListTranslated->List[0].PartialResourceList.Revision);
+		return STATUS_REVISION_MISMATCH;
+	}
+
 	DeviceExtension->BaudRate = 19200;
 	DeviceExtension->BaseAddress = 0;
 	Dirql = 0;
-	for (i = 0; i < ResourceList->Count; i++)
+	for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
 	{
-		for (j = 0; j < ResourceList->List[i].PartialResourceList.Count; j++)
+		PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+		PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptorTranslated = &ResourceListTranslated->List[0].PartialResourceList.PartialDescriptors[i];
+		switch (PartialDescriptor->Type)
 		{
-			PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor = &ResourceList->List[i].PartialResourceList.PartialDescriptors[j];
-			PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptorTranslated = &ResourceListTranslated->List[i].PartialResourceList.PartialDescriptors[j];
-			switch (PartialDescriptor->Type)
-			{
-				case CmResourceTypePort:
-					if (PartialDescriptor->u.Port.Length < 8)
-						return STATUS_INSUFFICIENT_RESOURCES;
-					if (DeviceExtension->BaseAddress != 0)
-						return STATUS_UNSUCCESSFUL;
-					DeviceExtension->BaseAddress = PartialDescriptor->u.Port.Start.u.LowPart;
-					break;
-				case CmResourceTypeInterrupt:
-					Dirql = (KIRQL)PartialDescriptorTranslated->u.Interrupt.Level;
-					Vector = PartialDescriptorTranslated->u.Interrupt.Vector;
-					Affinity = PartialDescriptorTranslated->u.Interrupt.Affinity;
-					if (PartialDescriptorTranslated->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
-						InterruptMode = Latched;
-					else
-						InterruptMode = LevelSensitive;
-					ShareInterrupt = (PartialDescriptorTranslated->ShareDisposition == CmResourceShareShared);
-					break;
-			}
+			case CmResourceTypePort:
+				if (PartialDescriptor->u.Port.Length < 7)
+					return STATUS_INSUFFICIENT_RESOURCES;
+				if (DeviceExtension->BaseAddress != 0)
+					return STATUS_UNSUCCESSFUL;
+				DeviceExtension->BaseAddress = PartialDescriptor->u.Port.Start.u.LowPart;
+				break;
+			case CmResourceTypeInterrupt:
+				Dirql = (KIRQL)PartialDescriptorTranslated->u.Interrupt.Level;
+				Vector = PartialDescriptorTranslated->u.Interrupt.Vector;
+				Affinity = PartialDescriptorTranslated->u.Interrupt.Affinity;
+				if (PartialDescriptorTranslated->Flags & CM_RESOURCE_INTERRUPT_LATCHED)
+					InterruptMode = Latched;
+				else
+					InterruptMode = LevelSensitive;
+				ShareInterrupt = (PartialDescriptorTranslated->ShareDisposition == CmResourceShareShared);
+				break;
 		}
 	}
 	DPRINT("New COM port. Base = 0x%lx, Irql = %u\n",
@@ -340,17 +364,6 @@ SerialPnp(
 			DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 
 			ASSERT(((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState == dsStopped);
-
-			/* FIXME: HACK: verify that we have some allocated resources.
-			 * It seems not to be always the case on some hardware
-			 */
-			if (Stack->Parameters.StartDevice.AllocatedResources == NULL)
-			{
-				DPRINT1("No allocated resources. Can't start COM%lu\n",
-					((PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->ComPort);
-				Status = STATUS_INSUFFICIENT_RESOURCES;
-				break;
-			}
 
 			/* Call lower driver */
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
