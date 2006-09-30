@@ -31,6 +31,12 @@
 extern "C" {
 #endif
 
+#ifdef __GNUC__
+/* Available as intrinsics on MSVC */
+static __inline void _disable(void) {__asm__ __volatile__("cli\n");}
+static __inline void _enable(void)  {__asm__ __volatile__("sti\n");}
+#endif
+
 /*
 ** Definitions specific to this Device Driver Kit
 */
