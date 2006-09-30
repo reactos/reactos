@@ -243,7 +243,9 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case IDC_REFRESH:
         {
-            // refresh treeview
+            HTREEITEM hRoot = InitTreeView(Info);
+            if (hRoot)
+                ListDevicesByType(Info, hRoot);
         }
         break;
 
