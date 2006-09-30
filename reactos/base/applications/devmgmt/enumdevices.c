@@ -105,7 +105,7 @@ EnumDeviceClasses(INT ClassIndex,
     if (KeyClass != INVALID_HANDLE_VALUE)
     {
 
-        LONG dwSize = MAX_CLASS_NAME_LEN;
+        LONG dwSize = MAX_DEV_LEN;
 
         if (RegQueryValue(KeyClass,
                           NULL,
