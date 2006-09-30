@@ -593,6 +593,7 @@ UpdateDevInfo(IN HWND hwndDlg,
     PSP_DEVINFO_DATA DeviceInfoData = NULL;
     PROPSHEETHEADER psh;
     DWORD nDriverPages = 0;
+    BOOL RecalcPages = FALSE;
 
     hPropSheetDlg = GetParent(hwndDlg);
 
@@ -614,6 +615,7 @@ UpdateDevInfo(IN HWND hwndDlg,
                     PropSheet_RemovePage(hPropSheetDlg,
                                          (WPARAM) -1,
                                          dap->DevPropSheets[iPage]);
+                    RecalcPages = TRUE;
                 }
             }
         }
@@ -1023,8 +1025,11 @@ GetParentNode:
                          iPage != nDriverPages;
                          iPage++)
                     {
-                        PropSheet_AddPage(hPropSheetDlg,
-                                          dap->DevPropSheets[iPage]);
+                        if (PropSheet_AddPage(hPropSheetDlg,
+                                              dap->DevPropSheets[iPage]))
+                        {
+                            RecalcPages = TRUE;
+                        }
                     }
 
                     dap->FreeDevPropSheets = TRUE;
@@ -1057,6 +1062,7 @@ GetParentNode:
                                           dap->DevPropSheets[iPage]))
                     {
                         iPage++;
+                        RecalcPages = TRUE;
                     }
                     else
                     {
@@ -1068,6 +1074,11 @@ GetParentNode:
         }
         else
             dap->nDevPropSheets = 0;
+    }
+
+    if (RecalcPages)
+    {
+        PropSheet_RecalcPageSizes(hPropSheetDlg);
     }
 
     /* finally, disable the apply button */

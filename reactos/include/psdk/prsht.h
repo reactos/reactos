@@ -307,6 +307,7 @@ int WINAPI PropertySheetW(LPCPROPSHEETHEADERW);
 #define PropSheet_SetTitle(d,w,s) SendMessage(d,PSM_SETTITLE,w,(LPARAM)s)
 #define PropSheet_SetWizButtons(d,f) PostMessage(d,PSM_SETWIZBUTTONS,0,(LPARAM)f)
 #define PropSheet_UnChanged(d,w) SendMessage(d,PSM_UNCHANGED,(WPARAM)w,0)
+#define PropSheet_RecalcPageSizes(d) SendMessage(d,PSM_RECALCPAGESIZES,0,0)
 #endif
 
 #define WC_PROPSHEETA      "SysPropertySheet"
