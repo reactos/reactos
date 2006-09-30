@@ -2722,10 +2722,10 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
    UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501\0");
    static ULONG DeviceIndexSerial = 0;
-   const UNICODE_STRING IdentifierKeyboard = RTL_CONSTANT_STRING(L"KeyboardPeripheral");
+   const UNICODE_STRING IdentifierKeyboard = RTL_CONSTANT_STRING(L"KeyboardController");
    UNICODE_STRING HardwareIdKeyboard = RTL_CONSTANT_STRING(L"*PNP0303\0");
    static ULONG DeviceIndexKeyboard = 0;
-   const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerPeripheral");
+   const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerController");
    UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*PNP0F13\0");
    static ULONG DeviceIndexMouse = 0;
    PUNICODE_STRING pHardwareId;
