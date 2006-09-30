@@ -44,14 +44,14 @@
 <!--
   Whether to compile in the integrated kernel debugger.
 -->
-<property name="KDBG" value="0" />
+<property name="KDBG" value="1" />
 
 
 <!--
   Whether to compile for debugging. No compiler optimizations will be
   performed.
 -->
-<property name="DBG" value="0" />
+<property name="DBG" value="1" />
 
 
 <!--

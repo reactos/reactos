@@ -30,7 +30,7 @@ MKHIVE_SOURCES = $(addprefix $(MKHIVE_BASE_), \
 MKHIVE_OBJECTS = \
 	$(addprefix $(INTERMEDIATE_), $(MKHIVE_SOURCES:.c=.o))
 
-MKHIVE_HOST_CFLAGS = $(xTOOLS_CFLAGS) -I$(INFLIB_BASE) -I$(CMLIB_BASE) \
+MKHIVE_HOST_CFLAGS = -fshort-wchar $(xTOOLS_CFLAGS) -I$(INFLIB_BASE) -I$(CMLIB_BASE) \
   -D_NTOSKRNL_ \
   -Iinclude/reactos -Iinclude/ddk -Iinclude/ndk -Iinclude/psdk -Iinclude -Iinclude/crt -g3
 

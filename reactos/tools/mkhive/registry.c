@@ -122,7 +122,7 @@ RegpOpenOrCreateKey(
 	LocalKeyName = (PWSTR)KeyName;
 	for (;;)
 	{
-		End = wcschr(LocalKeyName, '\\');
+		End = (PWSTR) xwcschr(LocalKeyName, '\\');
 		if (End)
 		{
 			KeyString.Buffer = LocalKeyName;
@@ -153,7 +153,7 @@ RegpOpenOrCreateKey(
 			ParentKey->RegistryHive,
 			ParentKey->KeyCell,
 			&KeyString,
-			0,
+			OBJ_CASE_INSENSITIVE,
 			&SubKeyCell,
 			&BlockOffset);
 		if (AllowCreation && Status == STATUS_OBJECT_NAME_NOT_FOUND)

@@ -38,6 +38,7 @@
 
 static char * argv0 = "";
 static char * filename = "";
+static char * kernel_version_build_type = 0;
 
 #ifdef DBG
 void
@@ -54,6 +55,15 @@ tm_dump (const char *tag, struct tm * t)
 	printf ("%s->tm_isdst = %d\n\n", tag, t->tm_isdst);
 }
 #endif
+
+int count_wide_string( wchar_t *str )
+{
+  int i;
+  
+  for( i = 0; str[i]; i++ );
+
+  return i;
+}
 
 void
 write_h (int build, char *buildstr)
@@ -80,7 +90,7 @@ write_h (int build, char *buildstr)
     {
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
-  s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
   s = s + sprintf (s, "#define KERNEL_RELEASE_STR\t\"%d.%d",
 		   KERNEL_VERSION_MAJOR,
 		   KERNEL_VERSION_MINOR);
@@ -88,7 +98,7 @@ write_h (int build, char *buildstr)
     {
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
-  s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "-%s\"\n", kernel_version_build_type);
   s = s + sprintf (s, "#define KERNEL_VERSION_RC\t\"%d.%d",
 		   KERNEL_VERSION_MAJOR,
 		   KERNEL_VERSION_MINOR);
@@ -96,7 +106,7 @@ write_h (int build, char *buildstr)
     {
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
-  s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
   s = s + sprintf (s, "#define KERNEL_VERSION_STR\t\"%d.%d", 
 		   KERNEL_VERSION_MAJOR,
 		   KERNEL_VERSION_MINOR);
@@ -104,7 +114,7 @@ write_h (int build, char *buildstr)
     {
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
-  s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "-%s\"\n", kernel_version_build_type);
   s = s + sprintf (s, "#define REACTOS_DLL_VERSION_MAJOR\t%d\n", dllversion);
   s = s + sprintf (s, "#define REACTOS_DLL_RELEASE_RC\t\"%d.%d",
 		   dllversion, KERNEL_VERSION_MINOR);
@@ -112,7 +122,7 @@ write_h (int build, char *buildstr)
     {
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
-  s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
   s = s + sprintf (s, "#define REACTOS_DLL_RELEASE_STR\t\"%d.%d",
 		   dllversion,
 		   KERNEL_VERSION_MINOR);
@@ -120,7 +130,7 @@ write_h (int build, char *buildstr)
     {
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
-  s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "-%s\"\n", kernel_version_build_type);
   s = s + sprintf (s, "#define REACTOS_DLL_VERSION_RC\t\"%d.%d",
 		   dllversion,
 		   KERNEL_VERSION_MINOR);
@@ -128,7 +138,7 @@ write_h (int build, char *buildstr)
     {
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
-  s = s + sprintf (s, "-%S\\0\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
   s = s + sprintf (s, "#define REACTOS_DLL_VERSION_STR\t\"%d.%d", 
 		   dllversion,
 		   KERNEL_VERSION_MINOR);
@@ -136,7 +146,7 @@ write_h (int build, char *buildstr)
     {
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
-  s = s + sprintf (s, "-%S\"\n", KERNEL_VERSION_BUILD_TYPE);
+  s = s + sprintf (s, "-%s\"\n", kernel_version_build_type);
   s = s + sprintf (s, "#endif\n/* EOF */\n");
 
   h = fopen (filename, "wb");
@@ -284,6 +294,7 @@ usage (void)
 int
 main (int argc, char * argv [])
 {
+	int		i, length;
 	int		print_only = FALSE;
 	int		quiet = FALSE;
 
@@ -341,6 +352,14 @@ main (int argc, char * argv [])
 		printf ( "\nReactOS Build Number Generator\n\n");
 	}
 
+	/* Convert kernel_version_build_type to a host-friendly string */
+	length = count_wide_string(KERNEL_VERSION_BUILD_TYPE);
+	kernel_version_build_type = (char *)malloc(length+1);
+	for( i = 0; KERNEL_VERSION_BUILD_TYPE[i]; i++ ) {
+	  kernel_version_build_type[i] = KERNEL_VERSION_BUILD_TYPE[i];
+	}
+	kernel_version_build_type[i] = 0;
+	
 	time (& t1); /* current build time */
 	t1_tm = gmtime (& t1);
 
@@ -378,7 +397,7 @@ main (int argc, char * argv [])
 		{
 			printf(".%d", KERNEL_VERSION_PATCH_LEVEL);
 		}
-		printf("-%S (Build %s)\n\n", KERNEL_VERSION_BUILD_TYPE, buildstr);
+		printf("-%s (Build %s)\n\n", kernel_version_build_type, buildstr);
 	}
 	/*
 	 * (Over)write the include file, unless
