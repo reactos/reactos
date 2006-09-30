@@ -22,7 +22,7 @@ ULONG_PTR KernelBase;
 
 /***************************************************************************/
 VOID
-HalpInitPhase0(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 {
    static BOOLEAN MPSInitialized = FALSE;
@@ -35,7 +35,7 @@ HalpInitPhase0(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
    DPRINT("HalpInitPhase0()\n");
 
 
-   if (MPSInitialized) 
+   if (MPSInitialized)
    {
       KEBUGCHECK(0);
    }
@@ -48,7 +48,7 @@ HalpInitPhase0(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
    }
 
    /* store the kernel base for later use */
-   KernelBase = ((PLOADER_MODULE)LoaderBlock->ModsAddr)[0].ModStart;
+   KernelBase = (ULONG_PTR)CONTAINING_RECORD(LoaderBlock->LoadOrderListHead.Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks)->DllBase;
 
 }
 
