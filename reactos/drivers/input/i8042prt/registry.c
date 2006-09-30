@@ -37,7 +37,7 @@ ReadRegistryEntries(
 	ULONG DefaultPollStatusIterations = 1;
 	ULONG DefaultOverrideKeyboardType = 4;
 	ULONG DefaultOverrideKeyboardSubtype = 0;
-	ULONG DefaultPollingIterations = 0x400;
+	ULONG DefaultPollingIterations = 12000;
 	ULONG DefaultPollingIterationsMaximum = 12000;
 	ULONG DefaultResendIterations = 0x3;
 	ULONG DefaultSampleRate = 60;
