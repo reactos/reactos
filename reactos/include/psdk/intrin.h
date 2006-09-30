@@ -204,7 +204,7 @@ static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchan
 static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand)
 {
 	long retval = Comperand;
-	__asm__("lock; cmpxchgl %l[Exchange], %[Destination]" : "a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange): "memory");
+	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : "a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange): "memory");
 	return retval;
 }
 
@@ -247,7 +247,7 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedCompareEx
 static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
 	void * retval;
-	__asm__("lock; cmpxchgl %l[Exchange], %[Destination]" : "a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange), "a" (Comperand) : "memory");
+	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : "a" (retval) : [Destination] "rm" (Destination), [Exchange] "r" (Exchange), "a" (Comperand) : "memory");
 	return retval;
 }
 
@@ -563,7 +563,7 @@ static __inline__ __attribute__((always_inline)) unsigned short __readfsword(con
 static __inline__ __attribute__((always_inline)) unsigned long __readfsdword(const unsigned long Offset)
 {
 	unsigned long value;
-	__asm__("movl %%fs:%a[Offset], %l[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__("movl %%fs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
