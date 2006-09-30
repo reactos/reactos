@@ -251,7 +251,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
     LPSTR NtBootPathName;
     LPSTR NtHalPathName;
     LPSTR LoadOptions;
-    PNLS_DATA_BLOCK NlsData;
+    NLS_DATA_BLOCK NlsData;
     PARC_DISK_INFORMATION ArcDiskInformation;
     PVOID OemFontFile;
     struct _SETUP_LOADER_BLOCK *SetupLdrBlock;
