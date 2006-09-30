@@ -154,7 +154,7 @@ CreateTreeView(PMAIN_WND_INFO Info)
                                      WC_TREEVIEW,
                                      NULL,
                                      WS_CHILD | WS_VISIBLE | WS_BORDER |
-                                        TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS,
+                                        TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_LINESATROOT,
                                      0, 0, 0, 0,
                                      Info->hMainWnd,
                                      (HMENU) IDC_TREEVIEW,
