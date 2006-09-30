@@ -807,6 +807,13 @@ KeI386VdmInitialize(
     VOID
 );
 
+
+VOID
+NTAPI
+KiInitializeMachineType(
+    VOID
+);
+
 VOID
 NTAPI
 KiFlushNPXState(

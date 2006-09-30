@@ -61,6 +61,7 @@ ULONG KeI386NpxPresent = 0;
 ULONG MxcsrFeatureMask = 0;
 ULONG KeI386XMMIPresent = 0;
 ULONG KeI386FxsrPresent = 0;
+ULONG KeI386MachineType;
 ULONG Ke386Pae = FALSE;
 ULONG Ke386GlobalPagesEnabled = FALSE;
 ULONG Ke386NoExecute = FALSE;
@@ -549,33 +550,24 @@ KiInitializeTSS(IN PKTSS Tss)
 }
 
 VOID
-NTAPI
-Ki386InitializeTss(VOID)
+FASTCALL
+Ki386InitializeTss(IN PKTSS Tss,
+                   IN PKIDTENTRY Idt)
 {
-    PKTSS Tss;
     PKGDTENTRY TssEntry;
     PKIDTENTRY TaskGateEntry;
     PKIDT_ACCESS TaskGateAccess;
 
     /* Initialize the boot TSS. */
-    Tss = &KiBootTss;
     TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
     KiInitializeTSS2(Tss, TssEntry);
     KiInitializeTSS(Tss);
-
-    /* Initialize a descriptor for the TSS */
-    TssEntry->HighWord.Bits.Type = I386_TSS;
-    TssEntry->HighWord.Bits.Pres = 1;
-    TssEntry->HighWord.Bits.Dpl = 0;
-    TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
-    TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
-    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
 
     /* Load the task register */
     Ke386SetTr(KGDT_TSS);
 
     /* Setup the Task Gate for Double Fault Traps */
-    TaskGateEntry = &KiIdt[8];
+    TaskGateEntry = &Idt[8];
     TaskGateAccess = (PKIDT_ACCESS)&TaskGateEntry->Access;
 #if 0
     TaskGateAccess->SegmentType = I386_TASK_GATE;
@@ -607,7 +599,7 @@ Ki386InitializeTss(VOID)
     TssEntry->LimitLow = KTSS_IO_MAPS;
 
     /* Now setup the NMI Task Gate */
-    TaskGateEntry = &KiIdt[2];
+    TaskGateEntry = &Idt[2];
     TaskGateAccess = (PKIDT_ACCESS)&TaskGateEntry->Access;
 #if 0
     TaskGateAccess->SegmentType = I386_TASK_GATE;
@@ -761,6 +753,14 @@ KiSaveProcessorControlState(IN PKPROCESSOR_STATE ProcessorState)
     Ke386GetInterruptDescriptorTable(ProcessorState->SpecialRegisters.Idtr);
     Ke386GetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386GetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
+}
+
+VOID
+NTAPI
+KiInitializeMachineType(VOID)
+{
+    /* Set the Machine Type we got from NTLDR */
+    KeI386MachineType = KeLoaderBlock->u.I386.MachineType & 0x000FF;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

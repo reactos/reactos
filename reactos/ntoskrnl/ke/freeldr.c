@@ -87,10 +87,22 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     PIMAGE_OPTIONAL_HEADER OptHead;
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     CHAR* s;
+    PKTSS Tss;
+    PKGDTENTRY TssEntry;
 
     /* Load the GDT and IDT */
     Ke386SetGlobalDescriptorTable(KiGdtDescriptor);
     Ke386SetInterruptDescriptorTable(KiIdtDescriptor);
+
+    /* Initialize the boot TSS */
+    Tss = &KiBootTss;
+    TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
+    TssEntry->HighWord.Bits.Type = I386_TSS;
+    TssEntry->HighWord.Bits.Pres = 1;
+    TssEntry->HighWord.Bits.Dpl = 0;
+    TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
+    TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
+    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
     memcpy(&KeRosLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));

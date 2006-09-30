@@ -609,20 +609,20 @@ static __inline__ __attribute__((always_inline)) void __addfsdword(const unsigne
 
 
 /*** Bit manipulation ***/
-static  __attribute__((always_inline)) unsigned char _BitScanForward(unsigned long * const Index, const unsigned long Mask)
+static  __inline__ __attribute__((always_inline)) unsigned char _BitScanForward(unsigned long * const Index, const unsigned long Mask)
 {
 	__asm__("bsfl %[Mask], %[Index]" : [Index] "=r" (*Index) : [Mask] "mr" (Mask));
 	return Mask ? 1 : 0;
 }
 
-static  __attribute__((always_inline)) unsigned char _BitScanReverse(unsigned long * const Index, const unsigned long Mask)
+static  __inline__ __attribute__((always_inline)) unsigned char _BitScanReverse(unsigned long * const Index, const unsigned long Mask)
 {
 	__asm__("bsrl %[Mask], %[Index]" : [Index] "=r" (*Index) : [Mask] "mr" (Mask));
 	return Mask ? 1 : 0;
 }
 
 /* NOTE: again, the bizarre implementation follows Visual C++ */
-static  __attribute__((always_inline)) unsigned char _bittest(const long * const a, const long b)
+static  __inline__ __attribute__((always_inline)) unsigned char _bittest(const long * const a, const long b)
 {
 	unsigned char retval;
 

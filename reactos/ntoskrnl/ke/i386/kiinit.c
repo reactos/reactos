@@ -11,6 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include <intrin.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -229,11 +230,56 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
 VOID
 NTAPI
+KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
+                         IN PKIDTENTRY *Idt,
+                         IN PKIPCR *Pcr,
+                         IN PKTSS *Tss)
+{
+    KDESCRIPTOR GdtDescriptor, IdtDescriptor;
+    KGDTENTRY TssSelector, PcrSelector;
+    ULONG Tr, Fs;
+
+    /* Get GDT and IDT descriptors */
+    Ke386GetGlobalDescriptorTable(GdtDescriptor);
+    Ke386GetInterruptDescriptorTable(IdtDescriptor);
+
+    /* Save IDT and GDT */
+    *Gdt = (PKGDTENTRY)GdtDescriptor.Base;
+    *Idt = (PKIDTENTRY)IdtDescriptor.Base;
+
+    /* Get TSS and FS Selectors */
+    Ke386GetTr(&Tr);
+    if (Tr != KGDT_TSS) Tr = KGDT_TSS; // FIXME: HACKHACK
+    Fs = Ke386GetFs();
+
+    /* Get PCR Selector, mask it and get its GDT Entry */
+    PcrSelector = *(PKGDTENTRY)((ULONG_PTR)*Gdt + (Fs & ~RPL_MASK));
+
+    /* Get the KPCR itself */
+    *Pcr = (PKIPCR)(ULONG_PTR)(PcrSelector.BaseLow |
+                               PcrSelector.HighWord.Bytes.BaseMid << 16 |
+                               PcrSelector.HighWord.Bytes.BaseHi << 24);
+
+    /* Get TSS Selector, mask it and get its GDT Entry */
+    TssSelector = *(PKGDTENTRY)((ULONG_PTR)*Gdt + (Tr & ~RPL_MASK));
+
+    /* Get the KTSS itself */
+    *Tss = (PKTSS)(ULONG_PTR)(TssSelector.BaseLow |
+                              TssSelector.HighWord.Bytes.BaseMid << 16 |
+                              TssSelector.HighWord.Bytes.BaseHi << 24);
+}
+
+VOID
+NTAPI
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
-    PKIPCR Pcr = (PKIPCR)KPCR_BASE;
-    PKPRCB Prcb;
+    PKTHREAD InitialThread;
+    PVOID InitialStack;
+    PKGDTENTRY Gdt;
+    PKIDTENTRY Idt;
+    PKTSS Tss;
+    PKIPCR Pcr;
 
     /* Save the loader block and get the current CPU */
     KeLoaderBlock = LoaderBlock;
@@ -243,30 +289,47 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* If this is the boot CPU, set FS and the CPU Number*/
         Ke386SetFs(KGDT_R0_PCR);
         KeGetPcr()->Number = Cpu;
+
+        /* Set the initial stack and idle thread as well */
+        LoaderBlock->KernelStack = (ULONG_PTR)P0BootStack;
+        LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
     }
+
+    /* Save the initial thread and stack */
+    InitialStack = (PVOID)LoaderBlock->KernelStack;
+    InitialThread = (PKTHREAD)LoaderBlock->Thread;
+
+    /* Clean the APC List Head */
+    InitializeListHead(&InitialThread->ApcState.ApcListHead[KernelMode]);
+
+    /* Initialize the machine type */
+    KiInitializeMachineType();
 
     /* Skip initial setup if this isn't the Boot CPU */
     if (Cpu) goto AppCpuInit;
 
-    /* Setup the boot (Freeldr should've done), double fault and NMI TSS */
-    Ki386InitializeTss();
+    /* Get GDT, IDT, PCR and TSS pointers */
+    KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
+
+    /* Setup the TSS descriptors and entries */
+    Ki386InitializeTss(Tss, Idt);
 
     /* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);
     KiInitializePcr(Cpu,
                     Pcr,
-                    KiIdt,
-                    KiBootGdt,
-                    &KiBootTss,
-                    &KiInitialThread.Tcb,
+                    Idt,
+                    Gdt,
+                    Tss,
+                    InitialThread,
                     KiDoubleFaultStack);
 
     /* Set us as the current process */
-    KiInitialThread.Tcb.ApcState.Process = &KiInitialProcess.Pcb;
+    InitialThread->ApcState.Process = &KiInitialProcess.Pcb;
 
     /* Clear DR6/7 to cleanup bootloader debugging */
-    Pcr->PrcbData.ProcessorState.SpecialRegisters.KernelDr6 = 0;
-    Pcr->PrcbData.ProcessorState.SpecialRegisters.KernelDr7 = 0;
+    __writefsdword(KPCR_DR6, 0);
+    __writefsdword(KPCR_DR7, 0);
 
     /* Load Ring 3 selectors for DS/ES */
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
@@ -274,11 +337,10 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Setup CPU-related fields */
 AppCpuInit:
-    Prcb = Pcr->Prcb;
-    Pcr->Number = Cpu;
-    Pcr->SetMember = 1 << Cpu;
-    Pcr->SetMemberCopy = 1 << Cpu;
-    Prcb->SetMember = 1 << Cpu;
+    __writefsdword(KPCR_NUMBER, Cpu);
+    __writefsdword(KPCR_SET_MEMBER, 1 << Cpu);
+    __writefsdword(KPCR_SET_MEMBER_COPY, 1 << Cpu);
+    __writefsdword(KPCR_PRCB_SET_MEMBER, 1 << Cpu);
 
     /* Initialize the Processor with HAL */
     HalInitializeProcessor(Cpu, KeLoaderBlock);
@@ -296,11 +358,11 @@ AppCpuInit:
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
 
-    /* Call main kernel intialization */
+    /* Call main kernel initialization */
     KiInitializeKernel(&KiInitialProcess.Pcb,
-                       &KiInitialThread.Tcb,
-                       P0BootStack,
-                       Prcb,
+                       InitialThread,
+                       InitialStack,
+                       &Pcr->PrcbData, //(PKPRCB)__readfsdword(KPCR_PRCB),
                        Cpu,
                        LoaderBlock);
 
@@ -313,5 +375,4 @@ AppCpuInit:
     /* Jump into the idle loop */
     KiIdleLoop();
 }
-
 

@@ -56,9 +56,14 @@ VOID
 KiInitializeGdt(struct _KPCR* Pcr);
 VOID
 Ki386ApplicationProcessorInitializeTSS(VOID);
+
 VOID
-NTAPI
-Ki386InitializeTss(VOID);
+FASTCALL
+Ki386InitializeTss(
+    IN PKTSS Tss,
+    IN PKIDTENTRY Idt
+);
+
 VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
 VOID
@@ -203,6 +208,7 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 #define Ke386GetCr4()            _Ke386GetCr(4)
 #define Ke386SetCr4(X)           _Ke386SetCr(4,X)
 #define Ke386GetSs()             _Ke386GetSeg(ss)
+#define Ke386GetFs()             _Ke386GetSeg(fs)
 #define Ke386SetFs(X)            _Ke386SetSeg(fs, X)
 #define Ke386SetDs(X)            _Ke386SetSeg(ds, X)
 #define Ke386SetEs(X)            _Ke386SetSeg(es, X)
