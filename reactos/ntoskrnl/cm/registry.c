@@ -153,7 +153,7 @@ CmInitHives(BOOLEAN SetupBoot)
     CmImportHardwareHive (NULL, 0);
 
     /* Initialize volatile registry settings */
-    if (SetupBoot == FALSE) CmInit2((PCHAR)KeLoaderBlock.CommandLine);
+    if (SetupBoot == FALSE) CmInit2(KeLoaderBlock->LoadOptions);
 }
 
 VOID 

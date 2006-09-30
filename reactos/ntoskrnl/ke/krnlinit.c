@@ -15,6 +15,9 @@
 
 /* GLOBALS *******************************************************************/
 
+/* ARC Loader Block */
+PLOADER_PARAMETER_BLOCK KeLoaderBlock;
+
 /* PRCB Array */
 PKPRCB KiProcessorBlock[MAXIMUM_PROCESSORS];
 

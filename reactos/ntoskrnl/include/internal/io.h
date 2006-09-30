@@ -978,7 +978,7 @@ xHalQueryDriveLayout(
 VOID
 FASTCALL
 xHalIoAssignDriveLetters(
-    IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN PSTRING NtDeviceName,
     OUT PUCHAR NtSystemPath,
     OUT PSTRING NtSystemPathString

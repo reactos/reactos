@@ -455,7 +455,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
 	       MmStats.NrReservedPages++;
 	    }
         /* Protect the Page Directory. This will be changed in r3 */
-        else if (j >= (KeLoaderBlock.PageDirectoryStart / PAGE_SIZE) && j < (KeLoaderBlock.PageDirectoryEnd / PAGE_SIZE))
+        else if (j >= (MmFreeLdrPageDirectoryStart / PAGE_SIZE) && j < (MmFreeLdrPageDirectoryEnd / PAGE_SIZE))
 	    {
                MmPageArray[j].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
                MmPageArray[j].Flags.Zero = 0;

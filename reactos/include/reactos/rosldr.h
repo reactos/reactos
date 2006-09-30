@@ -44,4 +44,10 @@ typedef struct _ROS_LOADER_PARAMETER_BLOCK
     ULONG KernelBase;
 } ROS_LOADER_PARAMETER_BLOCK, *PROS_LOADER_PARAMETER_BLOCK;
 
+extern LOADER_MODULE KeLoaderModules[64];
+extern ULONG KeLoaderModuleCount;
+extern ULONG MmFreeLdrMemHigher, MmFreeLdrMemLower;
+extern BOOLEAN AcpiTableDetected;
+extern ULONG MmFreeLdrPageDirectoryStart, MmFreeLdrPageDirectoryEnd;
+
 #endif

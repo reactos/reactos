@@ -592,7 +592,6 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
 {
   PLDR_DATA_TABLE_ENTRY ModuleObject;
   UNICODE_STRING UnicodeString;
-  PLOADER_MODULE KeLoaderModules = (PLOADER_MODULE)KeLoaderBlock.ModsAddr;
   ANSI_STRING AnsiString;
   ULONG i;
   BOOLEAN IsRaw;
@@ -621,14 +620,14 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         return;
      }
 
-     for (i = 0; i < KeLoaderBlock.ModsCount; i++)
+     for (i = 0; i < KeLoaderModuleCount; i++)
      {
         if (0 == _stricmp(FileName, (PCHAR)KeLoaderModules[i].String))
 	{
 	   break;
 	}
      }
-     if (i < KeLoaderBlock.ModsCount)
+     if (i < KeLoaderModuleCount)
      {
         KeLoaderModules[i].Reserved = 1;
         if (ModuleObject->PatchInformation != NULL)
@@ -697,7 +696,7 @@ KdbSymInit(IN PLDR_DATA_TABLE_ENTRY NtoskrnlModuleObject,
 
   /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
    * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
-  p1 = (PCHAR) KeLoaderBlock.CommandLine;
+  p1 = KeLoaderBlock->LoadOptions;
   while('\0' != *p1 && NULL != (p2 = strchr(p1, '/')))
     {
       p2++;

@@ -18,7 +18,7 @@
 /* FUNCTIONS ***************************************************************/
 
 VOID
-HalpInitPhase0(PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   HalpInitPICs();
 

@@ -482,8 +482,8 @@ IoInit3(VOID)
     IoCreateArcNames();
 
     /* Create the SystemRoot symbolic link */
-    DPRINT("CommandLine: %s\n", (PCHAR)KeLoaderBlock.CommandLine);
-    Status = IoCreateSystemRootLink((PCHAR)KeLoaderBlock.CommandLine);
+    DPRINT("CommandLine: %s\n", KeLoaderBlock->LoadOptions);
+    Status = IoCreateSystemRootLink(KeLoaderBlock->LoadOptions);
     if (!NT_SUCCESS(Status)) {
         CPRINT("IoCreateSystemRootLink FAILED: (0x%x) - ", Status);
         KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
@@ -493,7 +493,7 @@ IoInit3(VOID)
     KdbInit();
 
     /* I/O is now setup for disk access, so phase 3 */
-    KdInitSystem(3, (PROS_LOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    KdInitSystem(3, KeLoaderBlock);
 
     /* Load services for devices found by PnP manager */
     IopInitializePnpServices(IopRootDeviceNode, FALSE);
@@ -509,7 +509,7 @@ IoInit3(VOID)
     IopStopBootLog();
 
     /* Assign drive letters */
-    IoAssignDriveLetters((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock,
+    IoAssignDriveLetters(KeLoaderBlock,
                          NULL,
                          NULL,
                          NULL);

@@ -38,7 +38,7 @@ HalInitSystem (ULONG BootPhase,
   if (BootPhase == 0)
     {
       RtlZeroMemory(&HalpHooks, sizeof(HALP_HOOKS));
-      HalpInitPhase0((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);      
+      HalpInitPhase0(LoaderBlock);      
     }
   else if (BootPhase == 1)
     {
@@ -46,7 +46,7 @@ HalInitSystem (ULONG BootPhase,
       //HalpInitPhase1();
 
       /* Initialize display and make the screen black */
-      HalInitializeDisplay ((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
+      HalInitializeDisplay (LoaderBlock);
       HalpInitBusHandlers();
       HalpInitDma();
 

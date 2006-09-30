@@ -82,7 +82,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PVOID IdleStack,
                    IN PKPRCB Prcb,
                    IN CCHAR Number,
-                   IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+                   IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     BOOLEAN NpxPresent;
     ULONG FeatureBits;
@@ -229,14 +229,14 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
 VOID
 NTAPI
-KiSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
     PKIPCR Pcr = (PKIPCR)KPCR_BASE;
     PKPRCB Prcb;
 
     /* Save the loader block and get the current CPU */
-    //KeLoaderBlock = LoaderBlock;
+    KeLoaderBlock = LoaderBlock;
     Cpu = KeNumberProcessors;
     if (!Cpu)
     {
@@ -281,14 +281,14 @@ AppCpuInit:
     Prcb->SetMember = 1 << Cpu;
 
     /* Initialize the Processor with HAL */
-    HalInitializeProcessor(Cpu, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    HalInitializeProcessor(Cpu, KeLoaderBlock);
 
     /* Set active processors */
     KeActiveProcessors |= Pcr->SetMember;
     KeNumberProcessors++;
 
     /* Initialize the Debugger for the Boot CPU */
-    if (!Cpu) KdInitSystem (0, &KeLoaderBlock);
+    if (!Cpu) KdInitSystem (0, KeLoaderBlock);
 
     /* Check for break-in */
     if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
@@ -313,4 +313,5 @@ AppCpuInit:
     /* Jump into the idle loop */
     KiIdleLoop();
 }
+
 

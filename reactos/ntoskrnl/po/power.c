@@ -176,11 +176,12 @@ PoRequestPowerIrp(
   return STATUS_PENDING;
 }
 
+#undef PoSetDeviceBusy
 VOID
-STDCALL
-PoSetDeviceBusy(
-  PULONG IdlePointer)
+NTAPI
+PoSetDeviceBusy(IN PULONG IdlePointer)
 {
+    *IdlePointer = 0;
 }
 
 VOID
@@ -305,7 +306,7 @@ PopSetSystemPowerState(
 VOID
 INIT_FUNCTION
 NTAPI
-PoInit(PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
+PoInit(BOOLEAN HaveAcpiTable,
        BOOLEAN ForceAcpiDisable)
 {
   PVOID NotificationEntry;
@@ -318,7 +319,7 @@ PoInit(PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
   else
     {
       /* Otherwise check the LoaderBlock's Flag */
-      PopAcpiPresent = (LoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
+      PopAcpiPresent = HaveAcpiTable;
     }
 
   IoRegisterPlugPlayNotification(

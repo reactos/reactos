@@ -465,8 +465,6 @@ IopLoadServiceModule(
          ULONG i;
          CHAR SearchName[256];
          PCHAR ModuleName;
-         PLOADER_MODULE KeLoaderModules =
-            (PLOADER_MODULE)KeLoaderBlock.ModsAddr;
 
          /*
           * FIXME:
@@ -476,7 +474,7 @@ IopLoadServiceModule(
           */
 
          _snprintf(SearchName, sizeof(SearchName), "%wZ.sys", ServiceName);
-         for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+         for (i = 1; i < KeLoaderModuleCount; i++)
          {
             ModuleName = (PCHAR)KeLoaderModules[i].String;
             if (!_stricmp(ModuleName, SearchName))
@@ -940,7 +938,6 @@ IopInitializeBootDrivers(VOID)
    ULONG ModuleLoaded;
    PCHAR ModuleName;
    PCHAR Extension;
-   PLOADER_MODULE KeLoaderModules = (PLOADER_MODULE)KeLoaderBlock.ModsAddr;
    ULONG i;
    UNICODE_STRING DriverName;
    NTSTATUS Status;
@@ -948,7 +945,7 @@ IopInitializeBootDrivers(VOID)
    DPRINT("IopInitializeBootDrivers()\n");
 
    BootDriverCount = 0;
-   for (i = 0; i < KeLoaderBlock.ModsCount; i++)
+   for (i = 0; i < KeLoaderModuleCount; i++)
    {
       ModuleStart = KeLoaderModules[i].ModStart;
       ModuleSize = KeLoaderModules[i].ModEnd - ModuleStart;
@@ -988,13 +985,13 @@ IopInitializeBootDrivers(VOID)
    /*
     * Free memory for all boot files, except ntoskrnl.exe.
     */
-   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+   for (i = 1; i < KeLoaderModuleCount; i++)
    {
        MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
                               KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
    }
 
-   KeLoaderBlock.ModsCount = 0;
+   KeLoaderModuleCount = 0;
 
    if (BootDriverCount == 0)
    {

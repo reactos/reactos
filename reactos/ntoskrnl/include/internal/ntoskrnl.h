@@ -59,7 +59,7 @@ typedef struct __DESCRIPTOR
 /*
  * Initalization functions (called once by main())
  */
-VOID MmInitSystem(ULONG Phase, PROS_LOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
+VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
 VOID IoInit(VOID);
 VOID IoInit2(BOOLEAN BootLog);
 VOID NTAPI IoInit3(VOID);
@@ -71,7 +71,7 @@ VOID CmInit2(PCHAR CommandLine);
 VOID CmShutdownRegistry(VOID);
 BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
-VOID KdInitSystem(ULONG Reserved, PROS_LOADER_PARAMETER_BLOCK LoaderBlock);
+VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 /* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
 BOOLEAN FASTCALL

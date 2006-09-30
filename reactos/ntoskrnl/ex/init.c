@@ -292,7 +292,7 @@ ParseAndCacheLoadedModules(VOID)
     PCHAR Name;
 
     /* Loop the Module List and get the modules we want */
-    for (i = 1; i < KeLoaderBlock.ModsCount; i++) {
+    for (i = 1; i < KeLoaderModuleCount; i++) {
 
         /* Get the Name of this Module */
         if (!(Name = strrchr((PCHAR)KeLoaderModules[i].String, '\\'))) {
@@ -341,7 +341,7 @@ ParseCommandLine(PULONG MaxMem,
 {
     PCHAR p1, p2;
 
-    p1 = (PCHAR)KeLoaderBlock.CommandLine;
+    p1 = KeLoaderBlock->LoadOptions;
     while(*p1 && (p2 = strchr(p1, '/'))) {
 
         p2++;
@@ -429,7 +429,7 @@ ExpDisplayNotice(VOID)
     sprintf(str,
             "Found %x system processor(s). [%lu MB Memory]\n",
             (int)KeNumberProcessors,
-            (KeLoaderBlock.MemHigher + 1088)/ 1024);
+            (MmFreeLdrMemHigher + 1088)/ 1024);
     HalDisplayString(str);
     
 }
@@ -527,7 +527,7 @@ ExpInitializeExecutive(VOID)
     ExecuteRuntimeAsserts();
 
     /* Initialize HAL */
-    HalInitSystem (0, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    HalInitSystem (0, KeLoaderBlock);
 
     /* Sets up the Text Sections of the Kernel and HAL for debugging */
     LdrInit1();
@@ -586,7 +586,7 @@ ExpInitializeExecutive(VOID)
     HalAllProcessorsStarted();
 
     /* Do Phase 1 HAL Initalization */
-    HalInitSystem(1, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    HalInitSystem(1, KeLoaderBlock);
 }
 
 VOID
@@ -614,13 +614,13 @@ ExPhase2Init(PVOID Context)
     ExpInitializeCallbacks();
 
     /* Call KD Providers at Phase 1 */
-    KdInitSystem(1, (PROS_LOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    KdInitSystem(1, KeLoaderBlock);
 
     /* Initialize I/O Objects, Filesystems, Error Logging and Shutdown */
     IoInit();
 
     /* TBD */
-    PoInit((PROS_LOADER_PARAMETER_BLOCK)&KeLoaderBlock, ForceAcpiDisable);
+    PoInit(AcpiTableDetected, ForceAcpiDisable);
 
     /* Initialize the Registry (Hives are NOT yet loaded!) */
     CmInitializeRegistry();
@@ -638,13 +638,13 @@ ExPhase2Init(PVOID Context)
     HalReportResourceUsage();
 
     /* Clear the screen to blue */
-    HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    HalInitSystem(2, KeLoaderBlock);
 
     /* Display version number and copyright/warranty message */
     if (NoGuiBoot) ExpDisplayNotice();
 
     /* Call KD Providers at Phase 2 */
-    KdInitSystem(2, (PROS_LOADER_PARAMETER_BLOCK)&KeLoaderBlock);
+    KdInitSystem(2, KeLoaderBlock);
 
     /* Import and create NLS Data and Sections */
     RtlpInitNls();
@@ -675,7 +675,7 @@ ExPhase2Init(PVOID Context)
     PsLocateSystemDll();
 
     /* Initialize shared user page. Set dos system path, dos device map, etc. */
-    InitSystemSharedUserPage ((PCHAR)KeLoaderBlock.CommandLine);
+    InitSystemSharedUserPage (KeLoaderBlock->LoadOptions);
 
     /* Create 'ReactOSInitDone' event */
     RtlInitUnicodeString(&EventName, L"\\ReactOSInitDone");

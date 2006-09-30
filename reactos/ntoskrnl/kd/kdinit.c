@@ -44,7 +44,7 @@ PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
 PCHAR
 STDCALL
 KdpGetWrapperDebugMode(PCHAR Currentp2,
-                       PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+                       PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PCHAR p2 = Currentp2;
 
@@ -77,7 +77,7 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
     /* Get the KDBG Settings and enable it */
     KdDebuggerEnabled = TRUE;
     KdDebuggerNotPresent = FALSE;
-    KdbpGetCommandLineSettings((PCHAR)LoaderBlock->CommandLine);
+    KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
 #endif
     return p2;
 }
@@ -162,7 +162,7 @@ KdpCallInitRoutine(ULONG BootPhase)
 VOID
 INIT_FUNCTION
 KdInitSystem(ULONG BootPhase,
-             PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+             PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Value;
     ULONG i;
@@ -173,7 +173,7 @@ KdInitSystem(ULONG BootPhase,
     {
 
         /* Parse the Command Line */
-        p1 = (PCHAR)LoaderBlock->CommandLine;
+        p1 = LoaderBlock->LoadOptions;
         while (p1 && (p2 = strchr(p1, '/')))
         {
             /* Move past the slash */

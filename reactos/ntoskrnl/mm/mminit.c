@@ -317,15 +317,15 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
             last = (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGE_SIZE -1) / PAGE_SIZE;
          }
       }
-      if ((last - 256) * 4 > KeLoaderBlock.MemHigher)
+      if ((last - 256) * 4 > MmFreeLdrMemHigher)
       {
-         KeLoaderBlock.MemHigher = (last - 256) * 4;
+         MmFreeLdrMemHigher = (last - 256) * 4;
       }
    }
 
-   if (KeLoaderBlock.MemHigher >= (MaxMem - 1) * 1024)
+   if (MmFreeLdrMemHigher >= (MaxMem - 1) * 1024)
    {
-      KeLoaderBlock.MemHigher = (MaxMem - 1) * 1024;
+      MmFreeLdrMemHigher = (MaxMem - 1) * 1024;
    }
 
    /* Set memory limits */
@@ -357,7 +357,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    /*
     * Free physical memory not used by the kernel
     */
-   MmStats.NrTotalPages = KeLoaderBlock.MemHigher/4;
+   MmStats.NrTotalPages = MmFreeLdrMemHigher/4;
    if (!MmStats.NrTotalPages)
    {
       DbgPrint("Memory not detected, default to 8 MB\n");

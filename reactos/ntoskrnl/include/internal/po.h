@@ -38,7 +38,7 @@
 VOID
 NTAPI
 PoInit(
-    PROS_LOADER_PARAMETER_BLOCK LoaderBlock,
+    BOOLEAN HaveAcpiTable,
     BOOLEAN ForceAcpiDisable
 );
 

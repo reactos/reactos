@@ -16,6 +16,7 @@
 
 /* FreeLDR Module Data */
 LOADER_MODULE KeLoaderModules[64];
+ULONG KeLoaderModuleCount;
 static CHAR KeLoaderModuleStrings[64][256];
 PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 
@@ -25,17 +26,53 @@ ULONG KeMemoryMapRangeCount;
 ULONG_PTR FirstKrnlPhysAddr;
 ULONG_PTR LastKrnlPhysAddr;
 ULONG_PTR LastKernelAddress;
+ULONG MmFreeLdrMemHigher, MmFreeLdrMemLower;
+ULONG MmFreeLdrPageDirectoryStart, MmFreeLdrPageDirectoryEnd;
 
 /* FreeLDR Loader Data */
-ROS_LOADER_PARAMETER_BLOCK KeLoaderBlock;
+ROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
 static CHAR KeLoaderCommandLine[256];
+BOOLEAN AcpiTableDetected;
 
 /* FreeLDR PE Hack Data */
 extern unsigned int _image_base__;
 ULONG_PTR KERNEL_BASE = (ULONG_PTR)&_image_base__;
 extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 
+/* NT Loader Data */
+LOADER_PARAMETER_BLOCK BldrLoaderBlock;
+CHAR BldrCommandLine[256];
+
 /* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
+                     IN PLOADER_PARAMETER_BLOCK *NtLoaderBlock)
+{
+    PLOADER_PARAMETER_BLOCK LoaderBlock;
+
+    /* First get some kernel-loader globals */
+    AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
+    MmFreeLdrMemHigher = RosLoaderBlock->MemHigher;
+    MmFreeLdrMemLower = RosLoaderBlock->MemLower;
+    MmFreeLdrPageDirectoryStart = RosLoaderBlock->PageDirectoryStart;
+    MmFreeLdrPageDirectoryEnd = RosLoaderBlock->PageDirectoryEnd;
+    KeLoaderModuleCount = RosLoaderBlock->ModsCount;
+
+    /* Set the NT Loader block and initialize it */
+    *NtLoaderBlock = LoaderBlock = &BldrLoaderBlock;
+    RtlZeroMemory(LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
+
+    /* Setup the list heads */
+    InitializeListHead(&LoaderBlock->LoadOrderListHead);
+    InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);
+    InitializeListHead(&LoaderBlock->BootDriverListHead);
+
+    /* Setup command line */
+    LoaderBlock->LoadOptions = BldrCommandLine;
+    strcpy(BldrCommandLine, KeLoaderCommandLine);
+}
 
 VOID
 NTAPI
@@ -48,6 +85,7 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG DriverSize;
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_OPTIONAL_HEADER OptHead;
+    PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     CHAR* s;
 
     /* Load the GDT and IDT */
@@ -55,27 +93,27 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     Ke386SetInterruptDescriptorTable(KiIdtDescriptor);
 
     /* Copy the Loader Block Data locally since Low-Memory will be wiped */
-    memcpy(&KeLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
+    memcpy(&KeRosLoaderBlock, LoaderBlock, sizeof(ROS_LOADER_PARAMETER_BLOCK));
     memcpy(&KeLoaderModules[1],
-           (PVOID)KeLoaderBlock.ModsAddr,
-           sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
-    KeLoaderBlock.ModsCount++;
-    KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
+           (PVOID)KeRosLoaderBlock.ModsAddr,
+           sizeof(LOADER_MODULE) * KeRosLoaderBlock.ModsCount);
+    KeRosLoaderBlock.ModsCount++;
+    KeRosLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
 
     /* Check for BIOS memory map */
     KeMemoryMapRangeCount = 0;
-    if (KeLoaderBlock.Flags & MB_FLAGS_MMAP_INFO)
+    if (KeRosLoaderBlock.Flags & MB_FLAGS_MMAP_INFO)
     {
         /* We have a memory map from the nice BIOS */
-        size = *((PULONG)(KeLoaderBlock.MmapAddr - sizeof(ULONG)));
+        size = *((PULONG)(KeRosLoaderBlock.MmapAddr - sizeof(ULONG)));
         i = 0;
 
         /* Map it until we run out of size */
-        while (i < KeLoaderBlock.MmapLength)
+        while (i < KeRosLoaderBlock.MmapLength)
         {
             /* Copy into the Kernel Memory Map */
             memcpy (&KeMemoryMap[KeMemoryMapRangeCount],
-                    (PVOID)(KeLoaderBlock.MmapAddr + i),
+                    (PVOID)(KeRosLoaderBlock.MmapAddr + i),
                     sizeof(ADDRESS_RANGE));
 
             /* Increase Memory Map Count */
@@ -86,23 +124,23 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Save data */
-        KeLoaderBlock.MmapLength = KeMemoryMapRangeCount *
+        KeRosLoaderBlock.MmapLength = KeMemoryMapRangeCount *
                                    sizeof(ADDRESS_RANGE);
-        KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
+        KeRosLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
     }
     else
     {
         /* Nothing from BIOS */
-        KeLoaderBlock.MmapLength = 0;
-        KeLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
+        KeRosLoaderBlock.MmapLength = 0;
+        KeRosLoaderBlock.MmapAddr = (ULONG)KeMemoryMap;
     }
 
     /* Save the Base Address */
-    MmSystemRangeStart = (PVOID)KeLoaderBlock.KernelBase;
+    MmSystemRangeStart = (PVOID)KeRosLoaderBlock.KernelBase;
 
     /* Set the Command Line */
     strcpy(KeLoaderCommandLine, (PCHAR)LoaderBlock->CommandLine);
-    KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
+    KeRosLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
 
     /* Write the first Module (the Kernel) */
     strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");
@@ -118,7 +156,7 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
                                 PAGE_ROUND_UP((ULONG)OptHead->SizeOfImage);
 
     /* Create a block for each module */
-    for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    for (i = 1; i < KeRosLoaderBlock.ModsCount; i++)
     {
         /* Check if we have to copy the path or not */
         if ((s = strrchr((PCHAR)KeLoaderModules[i].String, '/')) != 0)
@@ -147,7 +185,7 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Choose last module address as the final kernel address */
-    LastKernelAddress = PAGE_ROUND_UP(KeLoaderModules[KeLoaderBlock.
+    LastKernelAddress = PAGE_ROUND_UP(KeLoaderModules[KeRosLoaderBlock.
                                                       ModsCount - 1].ModEnd);
 
     /* Select the HAL Base */
@@ -196,8 +234,11 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
                            (PVOID)DriverBase,
                            &DriverSize);
 
+    /* Convert the loader block */
+    KiRosFrldrLpbToNtLpb(&KeRosLoaderBlock, &NtLoaderBlock);
+
     /* Do general System Startup */
-    KiSystemStartup(LoaderBlock);
+    KiSystemStartup(NtLoaderBlock);
 }
 
 /* EOF */

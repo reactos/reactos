@@ -974,11 +974,7 @@ typedef struct _KSERVICE_TABLE_DESCRIPTOR
 //
 // Exported Loader Parameter Block
 //
-#ifndef _REACTOS_
 extern struct _LOADER_PARAMETER_BLOCK NTSYSAPI *KeLoaderBlock;
-#else
-extern struct _ROS_LOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
-#endif
 
 //
 // Exported Hardware Data
