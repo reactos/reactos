@@ -95,7 +95,7 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
 {
     LIST_ENTRY ListEntry;
 
-    DWORD DriverRank;
+    SP_DRVINSTALL_PARAMS Params;
     ULARGE_INTEGER DriverDate;
     SP_DRVINFO_DATA_V2_W Info;
     SP_DRVINFO_DETAIL_DATA_W Details;

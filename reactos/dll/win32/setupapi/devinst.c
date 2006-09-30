@@ -1898,7 +1898,8 @@ CheckDeviceInstallParameters(
         DI_FLAGSEX_DIDINFOLIST |              /* 0x00000010 */
         DI_FLAGSEX_DIDCOMPATINFO |            /* 0x00000020 */
         DI_FLAGSEX_ALLOWEXCLUDEDDRVS |        /* 0x00000800 */
-        DI_FLAGSEX_NO_DRVREG_MODIFY;          /* 0x00008000 */
+        DI_FLAGSEX_NO_DRVREG_MODIFY |         /* 0x00008000 */
+        DI_FLAGSEX_INSTALLEDDRIVER;           /* 0x04000000 */
     BOOL ret = FALSE;
 
     /* FIXME: add support for more flags */
