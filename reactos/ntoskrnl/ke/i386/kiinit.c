@@ -335,8 +335,15 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
 
-    /* Setup CPU-related fields */
 AppCpuInit:
+    /* Loop until we can release the freeze lock */
+    do
+    {
+        /* Loop until execution can continue */
+        while (KiFreezeExecutionLock == 1);
+    } while(InterlockedBitTestAndSet(&KiFreezeExecutionLock, 0));
+
+    /* Setup CPU-related fields */
     __writefsdword(KPCR_NUMBER, Cpu);
     __writefsdword(KPCR_SET_MEMBER, 1 << Cpu);
     __writefsdword(KPCR_SET_MEMBER_COPY, 1 << Cpu);
@@ -349,11 +356,15 @@ AppCpuInit:
     KeActiveProcessors |= Pcr->SetMember;
     KeNumberProcessors++;
 
-    /* Initialize the Debugger for the Boot CPU */
-    if (!Cpu) KdInitSystem (0, KeLoaderBlock);
+    /* Check if this is the boot CPU */
+    if (!Cpu)
+    {
+        /* Initialize debugging system */
+        KdInitSystem (0, KeLoaderBlock);
 
-    /* Check for break-in */
-    if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
+        /* Check for break-in */
+        if (KdPollBreakIn()) DbgBreakPointWithStatus(1);
+    }
 
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
@@ -366,11 +377,20 @@ AppCpuInit:
                        Cpu,
                        LoaderBlock);
 
-    /* Lower IRQL back to DISPATCH_LEVEL */
-    KfLowerIrql(DISPATCH_LEVEL);
-
     /* Set the priority of this thread to 0 */
     KeGetCurrentThread()->Priority = 0;
+
+    /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
+    _enable();
+    KfLowerIrql(DISPATCH_LEVEL);
+
+    /* Set the right wait IRQL */
+    KeGetCurrentThread()->WaitIrql = DISPATCH_LEVEL;
+
+    /* Set idle thread as running on UP builds */
+#ifndef CONFIG_SMP
+    KeGetCurrentThread()->State = Running;
+#endif
 
     /* Jump into the idle loop */
     KiIdleLoop();
