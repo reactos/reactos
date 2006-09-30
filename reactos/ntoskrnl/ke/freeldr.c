@@ -42,6 +42,10 @@ extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 /* NT Loader Data */
 LOADER_PARAMETER_BLOCK BldrLoaderBlock;
 CHAR BldrCommandLine[256];
+LDR_DATA_TABLE_ENTRY BldrModules[64];
+MEMORY_ALLOCATION_DESCRIPTOR BldrMemoryDescriptors[64];
+WCHAR BldrModuleStrings[64][260];
+NLS_DATA_BLOCK BldrNlsDataBlock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -51,6 +55,12 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                      IN PLOADER_PARAMETER_BLOCK *NtLoaderBlock)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlock;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdEntry;
+    PLOADER_MODULE RosEntry;
+    ULONG i, j, ModSize;
+    PVOID ModStart;
+    PCHAR DriverName;
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
@@ -64,10 +74,169 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     *NtLoaderBlock = LoaderBlock = &BldrLoaderBlock;
     RtlZeroMemory(LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
 
+    /* Set the NLS Data block */
+    LoaderBlock->NlsData = &BldrNlsDataBlock;
+
+    /* Set an invalid pointer, but used as a flag (SetupBoot) */
+    LoaderBlock->SetupLdrBlock = (PVOID)1;
+
     /* Setup the list heads */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
     InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);
     InitializeListHead(&LoaderBlock->BootDriverListHead);
+
+    /* Loop boot driver list */
+    for (i = 0; i < KeLoaderModuleCount; i++)
+    {
+        /* Get the ROS loader entry */
+        RosEntry = &KeLoaderModules[i];
+        DriverName = (PCHAR)RosEntry->String;
+        ModStart = (PVOID)RosEntry->ModStart;
+        ModSize = RosEntry->ModEnd - (ULONG_PTR)ModStart;
+
+        /* Check if this is any of the NLS files */
+        if (!_stricmp(DriverName, "ansi.nls"))
+        {
+            /* ANSI Code page */
+            LoaderBlock->NlsData->AnsiCodePageData = ModStart;
+
+            /* Create an MD for it */
+            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry->MemoryType = LoaderNlsData;
+            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+            continue;
+        }
+        else if (!_stricmp(DriverName, "oem.nls"))
+        {
+            /* OEM Code page */
+            LoaderBlock->NlsData->OemCodePageData = ModStart;
+
+            /* Create an MD for it */
+            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry->MemoryType = LoaderNlsData;
+            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+            continue;
+        }
+        else if (!_stricmp(DriverName, "casemap.nls"))
+        {
+            /* Unicode Code page */
+            LoaderBlock->NlsData->UnicodeCodePageData = ModStart;
+
+            /* Create an MD for it */
+            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry->MemoryType = LoaderNlsData;
+            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+            continue;
+        }
+
+        /* Check if this is the SYSTEM hive */
+        if (!(_stricmp(DriverName, "system")) ||
+            !(_stricmp(DriverName, "system.hiv")))
+        {
+            /* Save registry data */
+            LoaderBlock->RegistryBase = ModStart;
+            LoaderBlock->RegistryLength = ModSize;
+
+            /* Disable setup mode */
+            LoaderBlock->SetupLdrBlock = NULL;
+
+            /* Create an MD for it */
+            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry->MemoryType = LoaderRegistryData;
+            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+            continue;
+        }
+
+        /* Check if this is the HARDWARE hive */
+        if (!(_stricmp(DriverName, "hardware")) ||
+            !(_stricmp(DriverName, "hardware.hiv")))
+        {
+            /* Save registry data */
+            LoaderBlock->RegistryBase = ModStart;
+            LoaderBlock->RegistryLength = ModSize;
+
+            /* Create an MD for it */
+            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry->MemoryType = LoaderRegistryData;
+            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+            continue;
+        }
+
+        /* Setup the loader entry */
+        LdrEntry = &BldrModules[i];
+        RtlZeroMemory(LdrEntry, sizeof(LDR_DATA_TABLE_ENTRY));
+
+        /* Convert driver name from ANSI to Unicode */
+        for (j = 0; j < strlen(DriverName); j++)
+        {
+            BldrModuleStrings[i][j] = DriverName[j];
+        }
+
+        /* Setup driver name */
+        RtlInitUnicodeString(&LdrEntry->BaseDllName, BldrModuleStrings[i]);
+        RtlInitUnicodeString(&LdrEntry->FullDllName, BldrModuleStrings[i]);
+
+        /* Copy data from Freeldr Module Entry */
+        LdrEntry->DllBase = ModStart;
+        LdrEntry->SizeOfImage = ModSize;
+
+        /* Initialize other data */
+        LdrEntry->LoadCount = 1;
+        LdrEntry->Flags = LDRP_IMAGE_DLL |
+                          LDRP_ENTRY_PROCESSED;
+        if (RosEntry->Reserved) LdrEntry->Flags |= LDRP_ENTRY_INSERTED;
+
+        /* Insert it into the loader block */
+        InsertTailList(&LoaderBlock->LoadOrderListHead,
+                       &LdrEntry->InLoadOrderLinks);
+
+        /* Check if this is the kernel */
+        if (!(_stricmp(DriverName, "ntoskrnl.exe")))
+        {
+            /* Create an MD for it */
+            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry->MemoryType = LoaderSystemCode;
+            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+        }
+        else if (!(_stricmp(DriverName, "hal.dll")))
+        {
+            /* Create an MD for the HAL */
+            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry->MemoryType = LoaderHalCode;
+            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+        }
+        else
+        {
+            /* Create an MD for any driver */
+            MdEntry = &BldrMemoryDescriptors[i];
+            MdEntry->MemoryType = LoaderBootDriver;
+            MdEntry->BasePage = (ULONG_PTR)ModStart >> PAGE_SHIFT;
+            MdEntry->PageCount = ModSize >> PAGE_SHIFT;
+            InsertTailList(&LoaderBlock->MemoryDescriptorListHead,
+                           &MdEntry->ListEntry);
+        }
+    }
 
     /* Setup command line */
     LoaderBlock->LoadOptions = BldrCommandLine;

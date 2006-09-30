@@ -38,6 +38,47 @@ typedef enum
     HwFileDynUpdt = 31,
 } HwFileType;
 
+typedef enum _TYPE_OF_MEMORY
+{
+    LoaderExceptionBlock,
+    LoaderSystemBlock,
+    LoaderFree,
+    LoaderBad,
+    LoaderLoadedProgram,
+    LoaderFirmwareTemporary,
+    LoaderFirmwarePermanent,
+    LoaderOsloaderHeap,
+    LoaderOsloaderStack,
+    LoaderSystemCode,
+    LoaderHalCode,
+    LoaderBootDriver,
+    LoaderConsoleInDriver,
+    LoaderConsoleOutDriver,
+    LoaderStartupDpcStack,
+    LoaderStartupKernelStack,
+    LoaderStartupPanicStack,
+    LoaderStartupPcrPage,
+    LoaderStartupPdrPage,
+    LoaderRegistryData,
+    LoaderMemoryData,
+    LoaderNlsData,
+    LoaderSpecialMemory,
+    LoaderBBTMemory,
+    LoaderReserve,
+    LoaderXIPRom,
+    LoaderHALCachedMemory,
+    LoaderLargePageFiller,
+    LoaderMaximum
+} TYPE_OF_MEMORY;
+
+typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
+{
+    LIST_ENTRY ListEntry;
+    TYPE_OF_MEMORY MemoryType;
+    ULONG BasePage;
+    ULONG PageCount;
+} MEMORY_ALLOCATION_DESCRIPTOR, *PMEMORY_ALLOCATION_DESCRIPTOR;
+
 typedef struct _CONFIGURATION_COMPONENT
 {
     CONFIGURATION_CLASS Class;
@@ -251,7 +292,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
     LPSTR NtBootPathName;
     LPSTR NtHalPathName;
     LPSTR LoadOptions;
-    NLS_DATA_BLOCK NlsData;
+    PNLS_DATA_BLOCK NlsData;
     PARC_DISK_INFORMATION ArcDiskInformation;
     PVOID OemFontFile;
     struct _SETUP_LOADER_BLOCK *SetupLdrBlock;
