@@ -105,7 +105,7 @@ EnumDeviceClasses(INT ClassIndex,
     if (KeyClass != INVALID_HANDLE_VALUE)
     {
 
-        DWORD dwSize = MAX_CLASS_NAME_LEN;
+        LONG dwSize = MAX_CLASS_NAME_LEN;
 
         if (RegQueryValue(KeyClass,
                           NULL,
@@ -292,14 +292,14 @@ ListDevicesByType(PMAIN_WND_INFO Info,
             if (!TreeView_GetChild(Info->hTreeView,
                                    hDevItem))
             {
-                TreeView_DeleteItem(Info->hTreeView,
-                                    hDevItem);
+                (void)TreeView_DeleteItem(Info->hTreeView,
+                                          hDevItem);
             }
             else
             {
-                TreeView_SortChildren(Info->hTreeView,
-                                      hDevItem,
-                                      0);
+                (void)TreeView_SortChildren(Info->hTreeView,
+                                            hDevItem,
+                                            0);
             }
         }
 
@@ -307,13 +307,13 @@ ListDevicesByType(PMAIN_WND_INFO Info,
 
     } while (ClassRet != -1);
 
-    TreeView_Expand(Info->hTreeView,
-                    hRoot,
-                    TVE_EXPAND);
-
-    TreeView_SortChildren(Info->hTreeView,
+    (void)TreeView_Expand(Info->hTreeView,
                           hRoot,
-                          0);
+                          TVE_EXPAND);
+
+    (void)TreeView_SortChildren(Info->hTreeView,
+                                hRoot,
+                                0);
 }
 
 
@@ -326,7 +326,7 @@ InitTreeView(PMAIN_WND_INFO Info)
     DWORD dwSize = MAX_PATH;
     INT RootImage;
 
-    TreeView_DeleteAllItems(Info->hTreeView);
+    (void)TreeView_DeleteAllItems(Info->hTreeView);
 
     /* get the device image List */
     ImageListData.cbSize = sizeof(ImageListData);
@@ -341,9 +341,9 @@ InitTreeView(PMAIN_WND_INFO Info)
 
     DeleteObject(hComp);
 
-    TreeView_SetImageList(Info->hTreeView,
-                          ImageListData.ImageList,
-                          TVSIL_NORMAL);
+    (void)TreeView_SetImageList(Info->hTreeView,
+                                ImageListData.ImageList,
+                                TVSIL_NORMAL);
 
     if (!GetComputerName(ComputerName,
                          &dwSize))
