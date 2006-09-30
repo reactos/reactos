@@ -24,7 +24,7 @@ InsertIntoTreeView(HWND hTV,
     ZeroMemory(&tvi, sizeof(tvi));
     ZeroMemory(&tvins, sizeof(tvins));
 
-    tvi.mask = TVIF_TEXT | TVIF_IMAGE;
+    tvi.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
     tvi.pszText = lpLabel;
     tvi.cchTextMax = lstrlen(lpLabel);
     tvi.iImage = DevImage;
