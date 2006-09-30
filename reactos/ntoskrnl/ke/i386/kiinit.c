@@ -15,10 +15,6 @@
 
 /* GLOBALS *******************************************************************/
 
-VOID
-FASTCALL
-KiIdleLoop(VOID);
-
 /* Spinlocks used only on X86 */
 KSPIN_LOCK KiFreezeExecutionLock;
 KSPIN_LOCK Ki486CompatibilityLock;
@@ -110,6 +106,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Save feature bits */
     Prcb->FeatureBits = FeatureBits;
+
+    /* Save CPU state */
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
 
     /* Get cache line information for this CPU */
     KiGetCacheInformation();
@@ -226,10 +225,17 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Set the Idle Priority to 0. This will jump into Phase 1 */
     KeSetPriorityThread(InitThread, 0);
+
+    /* If there's no thread scheduled, put this CPU in the Idle summary */
+    if (!Prcb->NextThread) KiIdleSummary |= 1 << Number;
+
+    /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
+    KfRaiseIrql(HIGH_LEVEL);
+    LoaderBlock->Prcb = 0;
 }
 
 VOID
-NTAPI
+FASTCALL
 KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIDTENTRY *Idt,
                          IN PKIPCR *Pcr,

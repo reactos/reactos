@@ -65,6 +65,16 @@ Ki386InitializeTss(
 );
 
 VOID
+NTAPI
+KiSaveProcessorControlState(
+    IN PKPROCESSOR_STATE ProcessorState
+);
+
+VOID
+FASTCALL
+KiIdleLoop(VOID);
+
+VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
 VOID
 Ki386InitializeLdt(VOID);
