@@ -13,11 +13,6 @@
 #define INITGUID
 #include "mouclass.h"
 
-static NTSTATUS
-SearchForLegacyDrivers(
-	IN PDRIVER_OBJECT DriverObject,
-	IN PCLASS_DRIVER_EXTENSION DriverExtension);
-
 static VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
@@ -651,9 +646,8 @@ ClassAddDevice(
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 
 	if (Pdo == NULL)
-		/* We're getting a NULL Pdo at the first call as we're a legacy driver.
-		 * Use it to search for legacy port drivers. */
-		return SearchForLegacyDrivers(DriverObject, DriverExtension);
+		/* We may get a NULL Pdo at the first call as we're a legacy driver. Ignore it */
+		return STATUS_SUCCESS;
 
 	/* Create new device object */
 	Status = IoCreateDevice(
@@ -712,7 +706,7 @@ ClassAddDevice(
 
 	/* Register interface ; ignore the error (if any) as having
 	 * a registred interface is not so important... */
-	IoRegisterDeviceInterface(
+	Status = IoRegisterDeviceInterface(
 		Pdo,
 		&GUID_DEVINTERFACE_MOUSE,
 		NULL,
@@ -784,12 +778,14 @@ ClassStartIo(
 	}
 }
 
-static NTSTATUS
+static VOID NTAPI
 SearchForLegacyDrivers(
 	IN PDRIVER_OBJECT DriverObject,
-	IN PCLASS_DRIVER_EXTENSION DriverExtension)
+	IN PVOID Context, /* PCLASS_DRIVER_EXTENSION */
+	IN ULONG Count)
 {
 	UNICODE_STRING DeviceMapKeyU = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DEVICEMAP");
+	PCLASS_DRIVER_EXTENSION DriverExtension;
 	UNICODE_STRING PortBaseName = {0, };
 	PKEY_VALUE_BASIC_INFORMATION KeyValueInformation = NULL;
 	OBJECT_ATTRIBUTES ObjectAttributes;
@@ -798,6 +794,13 @@ SearchForLegacyDrivers(
 	ULONG Index = 0;
 	ULONG Size, ResultLength;
 	NTSTATUS Status;
+
+	DPRINT("SearchForLegacyDrivers(%p %p %lu)\n",
+		DriverObject, Context, Count);
+
+	if (Count != 1)
+		return;
+	DriverExtension = (PCLASS_DRIVER_EXTENSION)Context;
 
 	/* Create port base name, by replacing Class by Port at the end of the class base name */
 	Status = RtlDuplicateUnicodeString(
@@ -878,8 +881,6 @@ SearchForLegacyDrivers(
 			DPRINT("ClassAddDevice() failed with status 0x%08lx\n", Status);
 		}
 	}
-	if (Status == STATUS_NO_MORE_ENTRIES)
-		Status = STATUS_SUCCESS;
 
 cleanup:
 	if (KeyValueInformation != NULL)
@@ -888,7 +889,6 @@ cleanup:
 		ZwClose(hDeviceMapKey);
 	if (hPortKey != (HANDLE)-1)
 		ZwClose(hPortKey);
-	return Status;
 }
 
 /*
@@ -957,6 +957,12 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ClassDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = ForwardIrpAndForget;
 	DriverObject->DriverStartIo                        = ClassStartIo;
+
+	/* We will detect the legacy devices later */
+	IoRegisterDriverReinitialization(
+		DriverObject,
+		SearchForLegacyDrivers,
+		DriverExtension);
 
 	return STATUS_SUCCESS;
 }
