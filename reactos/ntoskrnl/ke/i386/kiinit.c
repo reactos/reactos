@@ -281,7 +281,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
     PKTHREAD InitialThread;
-    PVOID InitialStack;
+    ULONG InitialStack;
     PKGDTENTRY Gdt;
     PKIDTENTRY Idt;
     PKTSS Tss;
@@ -302,7 +302,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Save the initial thread and stack */
-    InitialStack = (PVOID)LoaderBlock->KernelStack;
+    InitialStack = LoaderBlock->KernelStack;
     InitialThread = (PKTHREAD)LoaderBlock->Thread;
 
     /* Clean the APC List Head */
@@ -375,13 +375,21 @@ AppCpuInit:
     /* Raise to HIGH_LEVEL */
     KfRaiseIrql(HIGH_LEVEL);
 
+    /* Align stack and make space for the trap frame and NPX frame */
+    InitialStack &= ~KTRAP_FRAME_ALIGN;
+    __asm__ __volatile__("movl %0,%%esp" : :"r" (InitialStack));
+    __asm__ __volatile__("subl %0,%%esp" : :"r" (NPX_FRAME_LENGTH +
+                                                 KTRAP_FRAME_LENGTH +
+                                                 KTRAP_FRAME_ALIGN));
+    __asm__ __volatile__("push %0" : :"r" (CR0_EM + CR0_TS + CR0_MP));
+
     /* Call main kernel initialization */
     KiInitializeKernel(&KiInitialProcess.Pcb,
                        InitialThread,
-                       InitialStack,
+                       (PVOID)InitialStack,
                        (PKPRCB)__readfsdword(KPCR_PRCB),
                        Cpu,
-                       LoaderBlock);
+                       KeLoaderBlock);
 
     /* Set the priority of this thread to 0 */
     KeGetCurrentThread()->Priority = 0;

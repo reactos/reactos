@@ -1,7 +1,7 @@
 /*
  * FILE:            ntoskrnl/ke/i386/boot.S
  * COPYRIGHT:       See COPYING in the top level directory
- * PURPOSE:         Kernel Bootstrap Code
+ * PURPOSE:         FreeLDR Wrapper Bootstrap Code
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
@@ -30,16 +30,6 @@ _KiDoubleFaultStack:
 .text
 .func NtProcessStartup
 _NtProcessStartup:
-
-    /* Load the initial kernel stack */
-    lea eax, _P0BootStack
-    sub eax, (NPX_FRAME_LENGTH + KTRAP_FRAME_LENGTH + KTRAP_FRAME_ALIGN)
-    mov esp, eax
-
-    /* Save initial CR0 state */
-    push CR0_EM + CR0_TS + CR0_MP
-
     /* Call the main kernel initialization */
-    push edx
-    call _KiRosPrepareForSystemStartup@4
+    jmp @KiRosPrepareForSystemStartup@8
 .endfunc

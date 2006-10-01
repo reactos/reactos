@@ -244,8 +244,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 }
 
 VOID
-NTAPI
-KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+FASTCALL
+KiRosPrepareForSystemStartup(IN ULONG Dummy,
+                             IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG i;
     ULONG size;
