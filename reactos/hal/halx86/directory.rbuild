@@ -7,6 +7,6 @@
 <directory name="mp">
 	<xi:include href="mp/halmp.rbuild" />
 </directory>
-<!--<directory name="xbox">
+<directory name="xbox">
 	<xi:include href="xbox/halxbox.rbuild" />
-</directory>-->
+</directory>

@@ -301,11 +301,13 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
   if (! DisplayInitialized)
     {
       PhysBuffer.u.HighPart = 0;
-      if (0 != (LoaderBlock->Flags & MB_FLAGS_MEM_INFO))
+      //FIXME: We always assume 64Mb Xbox for now, until switch to
+      //       NT-style LPB is finished
+      /*if (0 != (LoaderBlock->Flags & MB_FLAGS_MEM_INFO))
         {
           PhysBuffer.u.LowPart = (LoaderBlock->MemHigher + 1024) * 1024;
         }
-      else
+      else*/
         {
           /* Assume a 64Mb Xbox, last 4MB for video buf */
           PhysBuffer.u.LowPart = 60 * 1024 * 1024;
