@@ -249,44 +249,6 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 __inline
 VOID
 STDCALL
-ExecuteRuntimeAsserts(VOID)
-{
-    /*
-     * Fail at runtime if someone has changed various structures without
-     * updating the offsets used for the assembler code.
-     */
-    ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
-    ASSERT(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
-    ASSERT(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
-    ASSERT(FIELD_OFFSET(KTHREAD, KernelStack) == KTHREAD_KERNEL_STACK);
-    ASSERT(FIELD_OFFSET(KTHREAD, NpxState) == KTHREAD_NPX_STATE);
-    ASSERT(FIELD_OFFSET(KTHREAD, ServiceTable) == KTHREAD_SERVICE_TABLE);
-    ASSERT(FIELD_OFFSET(KTHREAD, PreviousMode) == KTHREAD_PREVIOUS_MODE);
-    ASSERT(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
-    ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
-    ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
-    ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
-    ASSERT(FIELD_OFFSET(KPROCESS, IopmOffset) == KPROCESS_IOPM_OFFSET);
-    ASSERT(FIELD_OFFSET(KPROCESS, LdtDescriptor) == KPROCESS_LDT_DESCRIPTOR0);
-    ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, SavedExceptionStack) == TF_SAVED_EXCEPTION_STACK);
-    ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
-    ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
-    ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
-    ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
-    ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
-    ASSERT(KeGetPcr()->IRR == 0);
-    ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
-    ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
-    ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
-    ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
-    ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
-    ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
-    ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
-}
-
-__inline
-VOID
-STDCALL
 ParseAndCacheLoadedModules(VOID)
 {
     ULONG i;
@@ -524,9 +486,6 @@ VOID
 NTAPI
 ExpInitializeExecutive(VOID)
 {
-    /* Check if the structures match the ASM offset constants */
-    ExecuteRuntimeAsserts();
-
     /* Initialize HAL */
     HalInitSystem (0, KeLoaderBlock);
 
