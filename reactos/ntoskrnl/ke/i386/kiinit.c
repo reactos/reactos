@@ -311,11 +311,12 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize the machine type */
     KiInitializeMachineType();
 
-    /* Skip initial setup if this isn't the Boot CPU */
-    if (Cpu) goto AppCpuInit;
-
     /* Get GDT, IDT, PCR and TSS pointers */
     KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
+
+    /* Skip initial setup if this isn't the Boot CPU */
+    if (Cpu)
+        goto AppCpuInit;
 
     /* Setup the TSS descriptors and entries */
     Ki386InitializeTss(Tss, Idt, Gdt);
@@ -347,8 +348,8 @@ AppCpuInit:
     do
     {
         /* Loop until execution can continue */
-        while (KiFreezeExecutionLock == 1);
-    } while(InterlockedBitTestAndSet(&KiFreezeExecutionLock, 0));
+        while ((volatile KSPIN_LOCK)KiFreezeExecutionLock == 1);
+    } while(InterlockedBitTestAndSet((PLONG)&KiFreezeExecutionLock, 0));
 
     /* Setup CPU-related fields */
     __writefsdword(KPCR_NUMBER, Cpu);
