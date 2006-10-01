@@ -35,7 +35,6 @@ LARGE_INTEGER SystemBootTime = (LARGE_INTEGER)0LL;
 LARGE_INTEGER SystemBootTime = { 0 };
 #endif
 
-CHAR KiTimerSystemAuditing = 0;
 KDPC KiExpireTimerDpc;
 BOOLEAN KiClockSetupComplete = FALSE;
 

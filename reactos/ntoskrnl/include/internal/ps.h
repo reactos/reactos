@@ -79,6 +79,12 @@ PspShutdownProcessManager(
     VOID
 );
 
+BOOLEAN
+NTAPI
+PspInitPhase0(
+    VOID
+);
+
 //
 // Utility Routines
 //

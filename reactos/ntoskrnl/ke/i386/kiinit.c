@@ -11,7 +11,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include <intrin.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -163,6 +162,17 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         /* FIXME */
         DPRINT1("SMP Boot support not yet present\n");
     }
+
+    /* Initialize Kernel Memory Address Space */
+    MmInit1(FirstKrnlPhysAddr,
+            LastKrnlPhysAddr,
+            LastKernelAddress,
+            (PADDRESS_RANGE)&KeMemoryMap,
+            KeMemoryMapRangeCount,
+            4096);
+
+    /* Sets up the Text Sections of the Kernel and HAL for debugging */
+    LdrInit1();
 
     /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,

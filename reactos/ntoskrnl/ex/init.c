@@ -24,35 +24,18 @@ ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
 ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG NtGlobalFlag = 0;
 
-ULONG InitSafeBootMode = 0; /* KB83764 */
-
 extern ULONG MmCoreDumpType;
-extern CHAR KiTimerSystemAuditing;
-extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
-extern ADDRESS_RANGE KeMemoryMap[64];
-extern ULONG KeMemoryMapRangeCount;
-extern ULONG_PTR FirstKrnlPhysAddr;
-extern ULONG_PTR LastKrnlPhysAddr;
-extern ULONG_PTR LastKernelAddress;
 extern LOADER_MODULE KeLoaderModules[64];
 extern ULONG KeLoaderModuleCount;
 extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
-
 BOOLEAN NoGuiBoot = FALSE;
-static BOOLEAN BootLog = FALSE;
-static ULONG MaxMem = 0;
 static BOOLEAN ForceAcpiDisable = FALSE;
-
-BOOLEAN
-NTAPI
-PspInitPhase0(
-    VOID
-);
 
 /* Init flags and settings */
 ULONG ExpInitializationPhase;
 BOOLEAN ExpInTextModeSetup;
 BOOLEAN IoRemoteBootClient;
+ULONG InitSafeBootMode;
 
 /* Boot NLS information */
 PVOID ExpNlsTableBase;
@@ -251,9 +234,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 __inline
 VOID
 STDCALL
-ParseCommandLine(PULONG MaxMem,
-                 PBOOLEAN NoGuiBoot,
-                 PBOOLEAN BootLog,
+ParseCommandLine(PBOOLEAN NoGuiBoot,
                  PBOOLEAN ForceAcpiDisable)
 {
     PCHAR p1, p2;
@@ -262,26 +243,7 @@ ParseCommandLine(PULONG MaxMem,
     while(*p1 && (p2 = strchr(p1, '/'))) {
 
         p2++;
-        if (!_strnicmp(p2, "MAXMEM", 6)) {
-
-            p2 += 6;
-            while (isspace(*p2)) p2++;
-
-            if (*p2 == '=') {
-
-                p2++;
-
-                while(isspace(*p2)) p2++;
-
-                if (isdigit(*p2)) {
-                    while (isdigit(*p2)) {
-                        *MaxMem = *MaxMem * 10 + *p2 - '0';
-                        p2++;
-                    }
-                    break;
-                }
-            }
-        } else if (!_strnicmp(p2, "NOGUIBOOT", 9)) {
+        if (!_strnicmp(p2, "NOGUIBOOT", 9)) {
 
             p2 += 9;
             *NoGuiBoot = TRUE;
@@ -301,10 +263,6 @@ ParseCommandLine(PULONG MaxMem,
                     MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
                 }
             }
-        } else if (!_strnicmp(p2, "BOOTLOG", 7)) {
-
-            p2 += 7;
-            *BootLog = TRUE;
         } else if (!_strnicmp(p2, "NOACPI", 6)) {
 
             p2 += 6;
@@ -514,19 +472,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
 {
     PNLS_DATA_BLOCK NlsData;
 
-    /* Initialize Kernel Memory Address Space */
-    MmInit1(FirstKrnlPhysAddr,
-            LastKrnlPhysAddr,
-            LastKernelAddress,
-            (PADDRESS_RANGE)&KeMemoryMap,
-            KeMemoryMapRangeCount,
-            MaxMem > 8 ? MaxMem : 4096);
-
-    /* Sets up the Text Sections of the Kernel and HAL for debugging */
-    LdrInit1();
-
     /* Parse Command Line Settings */
-    ParseCommandLine(&MaxMem, &NoGuiBoot, &BootLog, &ForceAcpiDisable);
+    ParseCommandLine(&NoGuiBoot, &ForceAcpiDisable);
 
     /* FIXME: Deprecate soon */
     ParseAndCacheLoadedModules();
@@ -726,7 +673,7 @@ ExPhase2Init(PVOID Context)
         DbgBreakPoint();
 
     /* Setup Drivers and Root Device Node */
-    IoInit2(BootLog);
+    IoInit2(FALSE);
 
     /* Display the boot screen image if not disabled */
     if (!NoGuiBoot) InbvEnableBootDriver(TRUE);
@@ -826,7 +773,6 @@ ExPhase2Init(PVOID Context)
     }
 
     /* Enable the Clock, close remaining handles */
-    KiTimerSystemAuditing = 1;
     ZwClose(ThreadHandle);
     ZwClose(ProcessHandle);
 
