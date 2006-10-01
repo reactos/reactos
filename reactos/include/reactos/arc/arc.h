@@ -24,20 +24,6 @@ typedef enum _CONFIGURATION_CLASS
     MaximumClass
 } CONFIGURATION_CLASS;
 
-typedef enum
-{
-    HwFileDriver,
-    HwFilePort,
-    HwFileClass,
-    HwFileInf,
-    HwFileDll,
-    HwFileDetect,
-    HwFileHal,
-    HwFileCatalog,
-    HwFileMax,
-    HwFileDynUpdt = 31,
-} HwFileType;
-
 typedef enum _TYPE_OF_MEMORY
 {
     LoaderExceptionBlock,

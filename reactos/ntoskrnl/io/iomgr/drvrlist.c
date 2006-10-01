@@ -41,7 +41,6 @@ typedef struct _SERVICE
 
 LIST_ENTRY GroupListHead = {NULL, NULL};
 LIST_ENTRY ServiceListHead  = {NULL, NULL};
-extern BOOLEAN SetupMode;
 extern BOOLEAN NoGuiBoot;
 
 VOID 

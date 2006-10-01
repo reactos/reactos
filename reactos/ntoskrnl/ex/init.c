@@ -41,7 +41,6 @@ extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
 BOOLEAN NoGuiBoot = FALSE;
 static BOOLEAN BootLog = FALSE;
 static ULONG MaxMem = 0;
-BOOLEAN SetupMode = TRUE;
 static BOOLEAN ForceAcpiDisable = FALSE;
 
 BOOLEAN
@@ -51,6 +50,8 @@ PspInitPhase0(
 );
 
 ULONG ExpInitializationPhase;
+BOOLEAN ExpInTextModeSetup;
+BOOLEAN IoRemoteBootClient;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -279,7 +280,6 @@ ParseAndCacheLoadedModules(VOID)
         } else if (!_stricmp(Name, "system") || !_stricmp(Name, "system.hiv")) {
 
             CachedModules[SystemRegistry] = &KeLoaderModules[i];
-            SetupMode = FALSE;
 
         } else if (!_stricmp(Name, "hardware") || !_stricmp(Name, "hardware.hiv")) {
 
@@ -361,7 +361,7 @@ ExpDisplayNotice(VOID)
 {
     CHAR str[50];
    
-    if (SetupMode)
+    if (ExpInTextModeSetup)
     {
         HalDisplayString(
         "\n\n\n     ReactOS " KERNEL_VERSION_STR " Setup \n");
@@ -534,6 +534,30 @@ ExpInitializeExecutive(IN ULONG Cpu,
         return;
     }
 
+    /* Assume no text-mode or remote boot */
+    ExpInTextModeSetup = FALSE;
+    IoRemoteBootClient = FALSE;
+
+    /* Check if we have a setup loader block */
+    if (LoaderBlock->SetupLdrBlock)
+    {
+        /* Check if this is text-mode setup */
+        if (LoaderBlock->SetupLdrBlock->Flags & 1) ExpInTextModeSetup = TRUE;
+
+        /* Check if this is network boot */
+        if (LoaderBlock->SetupLdrBlock->Flags & 2)
+        {
+            /* Set variable */
+            IoRemoteBootClient = TRUE;
+
+            /* Make sure we're actually booting off the network */
+            ASSERT(!_memicmp(LoaderBlock->ArcBootDeviceName, "net(0)", 6));
+        }
+    }
+
+    /* Set phase to 0 */
+    ExpInitializationPhase = 0;
+
     /* Initialize HAL */
     HalInitSystem (0, KeLoaderBlock);
 
@@ -658,7 +682,7 @@ ExPhase2Init(PVOID Context)
     RtlpInitNls();
 
     /* Import and Load Registry Hives */
-    CmInitHives(SetupMode);
+    CmInitHives(ExpInTextModeSetup);
 
     /* Initialize VDM support */
     KeI386VdmInitialize();

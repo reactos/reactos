@@ -44,6 +44,9 @@
 #define ExRaiseStatus RtlRaiseStatus
 #include <reactos/probe.h>
 
+/* SetupLDR Support */
+#include <arc/setupblk.h>
+
 /* PNP GUIDs */
 #include <umpnpmgr/sysguid.h>
 

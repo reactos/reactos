@@ -47,6 +47,7 @@ LDR_DATA_TABLE_ENTRY BldrModules[64];
 MEMORY_ALLOCATION_DESCRIPTOR BldrMemoryDescriptors[64];
 WCHAR BldrModuleStrings[64][260];
 NLS_DATA_BLOCK BldrNlsDataBlock;
+SETUP_LOADER_BLOCK BldrSetupBlock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -78,8 +79,8 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Set the NLS Data block */
     LoaderBlock->NlsData = &BldrNlsDataBlock;
 
-    /* Set an invalid pointer, but used as a flag (SetupBoot) */
-    LoaderBlock->SetupLdrBlock = (PVOID)1;
+    /* Assume this is from FreeLDR's SetupLdr */
+    LoaderBlock->SetupLdrBlock = &BldrSetupBlock;
 
     /* Setup the list heads */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
@@ -248,6 +249,13 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     LoaderBlock->Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
     LoaderBlock->Extension->MajorVersion = 5;
     LoaderBlock->Extension->MinorVersion = 2;
+
+    /* Now setup the setup block if we have one */
+    if (LoaderBlock->SetupLdrBlock)
+    {
+        /* All we'll setup right now is the flag for text-mode setup */
+        LoaderBlock->SetupLdrBlock->Flags = 1;
+    }
 }
 
 VOID
