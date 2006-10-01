@@ -22,6 +22,8 @@ package-to-path         3       1       int char*:arg2 int int
 -dumpregs		0	0
 -print_string		1	0	char*
 -print_number		1	0	int
+-print_eol		0	0	
+-print_space		0	0	
 # MMU Methods
 @phys2virt!translate	4	1	int int int int&0 int
 @virt2phys!translate	2	1	int int&1 int

@@ -25,56 +25,80 @@ call_ofw:
 	 * Other arg registers are unchanged.
 	 * Note that these 4 instructions are in reverse order due to
 	 * little-endian convention */
+	stw	%r8,24(%r1)
+	subi	%r1,%r1,0x100
+	stw	%r8,0(%r1)
+	mflr	%r8
+	/* - */
+	stw	%r3,4(%r1)
+	stw	%r4,8(%r1)
+	stw	%r5,12(%r1)
+	stw	%r6,16(%r1)
+	/* - */
+	stw	%r7,20(%r1)
+	stw	%r9,28(%r1)
+	stw	%r10,32(%r1)
+	stw	%r20,36(%r1)
+	
+	/* - */	
 	subi	%r20,%r20,1
 	mfmsr	%r20
 	mtmsr	%r20
 	nop
-	/* Now normal ordering resumes */
-	subi	%r1,%r1,0x100
 
-	stw	%r8,4(%r1)
-	stw	%r9,8(%r1)
-	stw	%r10,12(%r1)
+	sync
+	isync
+
+	/* BE MODE */
 	mflr	%r8
 	stw	%r8,16(%r1)
 
 	lis	%r10,0xe00000@ha
 	addi	%r8,%r10,ofw_functions_addr@l
+	/* - */
 	lwz	%r9,0(%r8)
 	add	%r8,%r3,%r9
 	lwz	%r9,0(%r8)
 	mtctr	%r9
 	
+	/* - */
 	mr	%r3,%r4
 	mr	%r4,%r5
 	mr	%r5,%r6
 	mr	%r6,%r7
+	/* - */
 	mr	%r7,%r8
 	mr	%r8,%r9
 	
-	/* Goto the swapped function */
+	/* Call ofw proxy function */
 	bctrl
+	nop
 
-	lwz	%r8,16(%r1)
-	mtlr	%r8
-
-	lwz	%r8,4(%r1)
-	lwz	%r9,8(%r1)
-	lwz	%r10,12(%r1)
-
-	addi	%r1,%r1,0x100
 	/* Ok, go back to little endian */
-
-	.align	4
-	mfmsr	%r0
-	ori	%r0,%r0,1
-
+	mfmsr	%r10
+	ori	%r10,%r10,1
 	nop
-	mtmsr	%r0
+	mtmsr	%r10
 
-	/* Note that this is little-endian from here on */
+	sync
+	isync
+
+	/* LE MODE */
+	mtlr	%r8
+	lwz	%r8,0(%r1)
+	lwz	%r4,8(%r1)
+	lwz	%r5,12(%r1)
+	/* - */
+	lwz	%r6,16(%r1)
+	lwz	%r7,20(%r1)
+	lwz	%r8,24(%r1)
+	lwz	%r9,28(%r1)
+	/* - */
+	lwz	%r10,32(%r1)
+	lwz	%r20,36(%r1)
+	/* - */
 	blr
-	nop
+	addi	%r1,%r1,0x100
 
 prim_strlen:
 	mr	%r5,%r3
@@ -93,6 +117,10 @@ copy_bits:
 	cmp	0,0,%r3,%r4
 	bgelr
 
+	andi.	%r6,%r3,0xfff
+	beql	ofw_dumpregs
+	mtdec	%r3
+	
 	lwz	%r6,0(%r3)
 	stw	%r6,0(%r5)
 	addi	%r3,%r3,4

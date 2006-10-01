@@ -23,56 +23,14 @@ _begin:
 	addi	%r3,%r3,freeldr_banner - _start
 
 	bl	ofw_print_string
-
 	bl	ofw_print_eol
-
-	/* Claim enough bytes to place freeldr at 0x8000 */
-	lis	%r3,0x8000@ha
-	li	%r3,0x8000@l
-		
-	lis	%r4,_binary_freeldr_tmp_end@ha
-	addi	%r4,%r4,_binary_freeldr_tmp_end@l
-	lis	%r5,_binary_freeldr_tmp_start@ha
-	addi	%r5,%r5,_binary_freeldr_tmp_start@l
-	sub	%r4,%r4,%r5
-	li	%r5,0x1000
-	
-	bl	ofw_claim
-
-	/* Now copy freeldr */	
-	lis	%r3,0x8000@ha
-	addi	%r3,%r3,0x8000@l
-
-	lis	%r4,_binary_freeldr_tmp_end@ha
-	addi	%r4,%r4,_binary_freeldr_tmp_end@l
-	lis	%r5,_binary_freeldr_tmp_start@ha
-	addi	%r5,%r5,_binary_freeldr_tmp_start@l
-	/* Make sufficient room for .bss */
-	sub	%r4,%r4,%r5
-	addi	%r4,%r4,0x6000
-		
-	xor	%r5,%r5,%r5
-	li	%r5,0x1000
-
-	bl	ofw_claim
-
-	lis	%r4,_binary_freeldr_tmp_end@ha
-	addi	%r4,%r4,_binary_freeldr_tmp_end@l
-	lis	%r3,_binary_freeldr_tmp_start@ha
-	addi	%r3,%r3,_binary_freeldr_tmp_start@l
-
-	lis	%r5,0x8000@ha
-	addi	%r5,%r5,0x8000@l
-
-	bl	ofw_dumpregs
-	bl	copy_bits
 	bl	zero_registers
 
 	/* Zero CTR */
 	mtcr	%r31
 
-	lis	%r3,0x8000@ha
-	addi	%r3,%r3,0x8000@l
+	lis	%r3,0xe17000@ha
+	addi	%r3,%r3,0xe17000@l
 
 	mtlr	%r3
 
