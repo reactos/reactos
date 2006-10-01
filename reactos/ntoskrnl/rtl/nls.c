@@ -64,9 +64,6 @@ RtlpInitNls(VOID)
     RtlpImportUnicodeCasemap((PUSHORT)BaseAddress,
                              CachedModules[UnicodeCasemap]->ModEnd - BaseAddress);
 
-    /* Create initial NLS tables */
-    RtlpCreateInitialNlsTables();
-
     /* Create the NLS section */
     RtlpCreateNlsSection();
 }
@@ -101,29 +98,6 @@ RtlpImportUnicodeCasemap(PUSHORT TableBase,
 {
   NlsUnicodeCasemapTable = TableBase;
   NlsUnicodeCasemapTableSize = Size;
-}
-
-
-VOID
-NTAPI
-INIT_FUNCTION
-RtlpCreateInitialNlsTables(VOID)
-{
-  NLSTABLEINFO NlsTable;
-
-  if (NlsAnsiCodePageTable == NULL || NlsAnsiCodePageTableSize == 0 ||
-      NlsOemCodePageTable == NULL || NlsOemCodePageTableSize == 0 ||
-      NlsUnicodeCasemapTable == NULL || NlsUnicodeCasemapTableSize == 0)
-    {
-      KEBUGCHECKEX (0x32, STATUS_UNSUCCESSFUL, 1, 0, 0);
-    }
-
-  RtlInitNlsTables (NlsAnsiCodePageTable,
-          NlsOemCodePageTable,
-          NlsUnicodeCasemapTable,
-          &NlsTable);
-
-  RtlResetRtlTranslations (&NlsTable);
 }
 
 VOID

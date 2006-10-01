@@ -24,8 +24,8 @@ LIST_ENTRY ExpNonPagedLookasideListHead;
 KSPIN_LOCK ExpNonPagedLookasideListLock;
 LIST_ENTRY ExpPagedLookasideListHead;
 KSPIN_LOCK ExpPagedLookasideListLock;
-PNPAGED_LOOKASIDE_LIST ExpSmallNPagedPoolLookasideLists;
-PPAGED_LOOKASIDE_LIST ExpSmallPagedPoolLookasideLists;
+NPAGED_LOOKASIDE_LIST ExpSmallNPagedPoolLookasideLists[MAXIMUM_PROCESSORS];
+PAGED_LOOKASIDE_LIST ExpSmallPagedPoolLookasideLists[MAXIMUM_PROCESSORS];
 
 /* FUNCTIONS *****************************************************************/
 

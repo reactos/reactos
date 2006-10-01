@@ -49,9 +49,16 @@ PspInitPhase0(
     VOID
 );
 
+/* Init flags and settings */
 ULONG ExpInitializationPhase;
 BOOLEAN ExpInTextModeSetup;
 BOOLEAN IoRemoteBootClient;
+
+/* Boot NLS information */
+PVOID ExpNlsTableBase;
+ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
+ULONG ExpUnicodeCaseTableDataOffset;
+NLSTABLEINFO ExpNlsTableInfo;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -244,53 +251,6 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 __inline
 VOID
 STDCALL
-ParseAndCacheLoadedModules(VOID)
-{
-    ULONG i;
-    PCHAR Name;
-
-    /* Loop the Module List and get the modules we want */
-    for (i = 1; i < KeLoaderModuleCount; i++) {
-
-        /* Get the Name of this Module */
-        if (!(Name = strrchr((PCHAR)KeLoaderModules[i].String, '\\'))) {
-
-            /* Save the name */
-            Name = (PCHAR)KeLoaderModules[i].String;
-
-        } else {
-
-            /* No name, skip */
-            Name++;
-        }
-
-        /* Now check for any of the modules we will need later */
-        if (!_stricmp(Name, "ansi.nls")) {
-
-            CachedModules[AnsiCodepage] = &KeLoaderModules[i];
-
-        } else if (!_stricmp(Name, "oem.nls")) {
-
-            CachedModules[OemCodepage] = &KeLoaderModules[i];
-
-        } else if (!_stricmp(Name, "casemap.nls")) {
-
-            CachedModules[UnicodeCasemap] = &KeLoaderModules[i];
-
-        } else if (!_stricmp(Name, "system") || !_stricmp(Name, "system.hiv")) {
-
-            CachedModules[SystemRegistry] = &KeLoaderModules[i];
-
-        } else if (!_stricmp(Name, "hardware") || !_stricmp(Name, "hardware.hiv")) {
-
-            CachedModules[HardwareRegistry] = &KeLoaderModules[i];
-        }
-    }
-}
-
-__inline
-VOID
-STDCALL
 ParseCommandLine(PULONG MaxMem,
                  PBOOLEAN NoGuiBoot,
                  PBOOLEAN BootLog,
@@ -354,7 +314,53 @@ ParseCommandLine(PULONG MaxMem,
         p1 = p2;
     }
 }
-   
+
+VOID
+FORCEINLINE
+ParseAndCacheLoadedModules(VOID)
+{
+    ULONG i;
+    PCHAR Name;
+
+    /* Loop the Module List and get the modules we want */
+    for (i = 1; i < KeLoaderModuleCount; i++)
+    {
+        /* Get the Name of this Module */
+        if (!(Name = strrchr((PCHAR)KeLoaderModules[i].String, '\\')))
+        {
+            /* Save the name */
+            Name = (PCHAR)KeLoaderModules[i].String;
+        }
+        else
+        {
+            /* No name, skip */
+            Name++;
+        }
+
+        /* Now check for any of the modules we will need later */
+        if (!_stricmp(Name, "ansi.nls"))
+        {
+            CachedModules[AnsiCodepage] = &KeLoaderModules[i];
+        }
+        else if (!_stricmp(Name, "oem.nls"))
+        {
+            CachedModules[OemCodepage] = &KeLoaderModules[i];
+        }
+        else if (!_stricmp(Name, "casemap.nls"))
+        {
+            CachedModules[UnicodeCasemap] = &KeLoaderModules[i];
+        }
+        else if (!_stricmp(Name, "system") || !_stricmp(Name, "system.hiv"))
+        {
+            CachedModules[SystemRegistry] = &KeLoaderModules[i];
+        }
+        else if (!_stricmp(Name, "hardware") || !_stricmp(Name, "hardware.hiv"))
+        {
+            CachedModules[HardwareRegistry] = &KeLoaderModules[i];
+        }
+    }
+}
+
 VOID
 INIT_FUNCTION
 ExpDisplayNotice(VOID)
@@ -506,6 +512,25 @@ NTAPI
 ExpInitializeExecutive(IN ULONG Cpu,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PNLS_DATA_BLOCK NlsData;
+
+    /* Initialize Kernel Memory Address Space */
+    MmInit1(FirstKrnlPhysAddr,
+            LastKrnlPhysAddr,
+            LastKernelAddress,
+            (PADDRESS_RANGE)&KeMemoryMap,
+            KeMemoryMapRangeCount,
+            MaxMem > 8 ? MaxMem : 4096);
+
+    /* Sets up the Text Sections of the Kernel and HAL for debugging */
+    LdrInit1();
+
+    /* Parse Command Line Settings */
+    ParseCommandLine(&MaxMem, &NoGuiBoot, &BootLog, &ForceAcpiDisable);
+
+    /* FIXME: Deprecate soon */
+    ParseAndCacheLoadedModules();
+
     /* Validate Loader */
     if (!ExpIsLoaderValid(LoaderBlock))
     {
@@ -558,31 +583,37 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Set phase to 0 */
     ExpInitializationPhase = 0;
 
-    /* Initialize HAL */
-    HalInitSystem (0, KeLoaderBlock);
+    /* Setup NLS Base and offsets */
+    NlsData = LoaderBlock->NlsData;
+    ExpNlsTableBase = NlsData->AnsiCodePageData;
+    ExpAnsiCodePageDataOffset = 0;
+    ExpOemCodePageDataOffset = ((ULONG_PTR)NlsData->OemCodePageData -
+                                (ULONG_PTR)NlsData->AnsiCodePageData);
+    ExpUnicodeCaseTableDataOffset = ((ULONG_PTR)NlsData->UnicodeCodePageData -
+                                     (ULONG_PTR)NlsData->AnsiCodePageData);
 
-    /* Sets up the Text Sections of the Kernel and HAL for debugging */
-    LdrInit1();
+    /* Initialize the NLS Tables */
+    RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpAnsiCodePageDataOffset),
+                     (PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpOemCodePageDataOffset),
+                     (PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpUnicodeCaseTableDataOffset),
+                     &ExpNlsTableInfo);
+    RtlResetRtlTranslations(&ExpNlsTableInfo);
+
+    /* Now initialize the HAL */
+    if (!HalInitSystem(ExpInitializationPhase, LoaderBlock))
+    {
+        /* HAL failed to initialize, bugcheck */
+        KeBugCheck(HAL_INITIALIZATION_FAILED);
+    }
+
+    /* Make sure interrupts are active now */
+    _enable();
 
     /* Setup bugcheck messages */
     KiInitializeBugCheck();
-
-    /* Sets up the VDM Data */
-    NtEarlyInitVdm();
-
-    /* Parse Command Line Settings */
-    ParseCommandLine(&MaxMem, &NoGuiBoot, &BootLog, &ForceAcpiDisable);
-
-    /* Initialize Kernel Memory Address Space */
-    MmInit1(FirstKrnlPhysAddr,
-            LastKrnlPhysAddr,
-            LastKernelAddress,
-            (PADDRESS_RANGE)&KeMemoryMap,
-            KeMemoryMapRangeCount,
-            MaxMem > 8 ? MaxMem : 4096);
-
-    /* Parse the Loaded Modules (by FreeLoader) and cache the ones we'll need */
-    ParseAndCacheLoadedModules();
 
     /* Setup system time */
     KiInitializeSystemClock();

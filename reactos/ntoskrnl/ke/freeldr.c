@@ -431,6 +431,9 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                            (PVOID)DriverBase,
                            &DriverSize);
 
+    /* Sets up the VDM Data */
+    NtEarlyInitVdm();
+
     /* Convert the loader block */
     KiRosFrldrLpbToNtLpb(&KeRosLoaderBlock, &NtLoaderBlock);
 
