@@ -14,6 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
+.data
 .globl _KiIdt
 _KiIdt:
 /* This is the Software Interrupt Table that we handle in this file:        */
@@ -87,6 +88,7 @@ _UnexpectedMsg:
     .asciz "\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n"
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
+.text
 
 _KiGetTickCount:
 _KiCallbackReturn:

@@ -367,7 +367,7 @@ AppCpuInit:
     if (!Cpu)
     {
         /* Initialize debugging system */
-        KdInitSystem (0, KeLoaderBlock);
+        KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
         if (KdPollBreakIn()) DbgBreakPointWithStatus(1);

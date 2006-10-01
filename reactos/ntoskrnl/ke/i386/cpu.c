@@ -554,12 +554,13 @@ FASTCALL
 Ki386InitializeTss(IN PKTSS Tss,
                    IN PKIDTENTRY Idt)
 {
-    PKGDTENTRY TssEntry;
-    PKIDTENTRY TaskGateEntry;
-    PKIDT_ACCESS TaskGateAccess;
+    PKGDTENTRY TssEntry, TaskGateEntry;
 
     /* Initialize the boot TSS. */
     TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
+    TssEntry->HighWord.Bits.Type = I386_TSS;
+    TssEntry->HighWord.Bits.Pres = 1;
+    TssEntry->HighWord.Bits.Dpl = 0;
     KiInitializeTSS2(Tss, TssEntry);
     KiInitializeTSS(Tss);
 
@@ -567,14 +568,11 @@ Ki386InitializeTss(IN PKTSS Tss,
     Ke386SetTr(KGDT_TSS);
 
     /* Setup the Task Gate for Double Fault Traps */
-    TaskGateEntry = &Idt[8];
-    TaskGateAccess = (PKIDT_ACCESS)&TaskGateEntry->Access;
-#if 0
-    TaskGateAccess->SegmentType = I386_TASK_GATE;
-    TaskGateAccess->Present = 1;
-    TaskGateAccess->Dpl = 0;
-    TaskGateEntry->Selector = KGDT_DF_TSS;
-#endif
+    TaskGateEntry = (PKGDTENTRY)&Idt[8];
+    TaskGateEntry->HighWord.Bits.Type = I386_TASK_GATE;
+    TaskGateEntry->HighWord.Bits.Pres = 1;
+    TaskGateEntry->HighWord.Bits.Dpl = 0;
+    ((PKIDTENTRY)TaskGateEntry)->Selector = KGDT_DF_TSS;
 
     /* Initialize the TSS used for handling double faults. */
     Tss = (PKTSS)KiDoubleFaultTSS;
@@ -599,13 +597,11 @@ Ki386InitializeTss(IN PKTSS Tss,
     TssEntry->LimitLow = KTSS_IO_MAPS;
 
     /* Now setup the NMI Task Gate */
-    TaskGateEntry = &Idt[2];
-    TaskGateAccess = (PKIDT_ACCESS)&TaskGateEntry->Access;
-#if 0
-    TaskGateAccess->SegmentType = I386_TASK_GATE;
-    TaskGateAccess->Present = 1;
-    TaskGateEntry->Selector = KGDT_NMI_TSS;
-#endif
+    TaskGateEntry = (PKGDTENTRY)&Idt[2];
+    TaskGateEntry->HighWord.Bits.Type = I386_TASK_GATE;
+    TaskGateEntry->HighWord.Bits.Pres = 1;
+    TaskGateEntry->HighWord.Bits.Dpl = 0;
+    ((PKIDTENTRY)TaskGateEntry)->Selector = KGDT_NMI_TSS;
 
     /* Initialize the actual TSS */
     Tss = (PKTSS)KiNMITSS;
