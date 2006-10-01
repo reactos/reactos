@@ -8,6 +8,7 @@
 	<define name="DEBUG" />
 -->
 	<define name="_NTHAL_" />
+	<define name="_NTSYSTEM_" />
 	<compilerflag>-ffreestanding</compilerflag>
 	<compilerflag>-fno-builtin</compilerflag>
 	<compilerflag>-fno-inline</compilerflag>
@@ -67,7 +68,10 @@
 		<file>video.c</file>
 	</directory>
 	<directory name="windows">
+		<file>conversion.c</file>
+		<file>peloader.c</file>
 		<file>winldr.c</file>
+		<file>wlmemory.c</file>
 	</directory>
 	<file>freeldr.c</file>
 	<file>debug.c</file>

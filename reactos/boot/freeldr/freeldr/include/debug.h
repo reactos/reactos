@@ -35,6 +35,7 @@
 	#define DPRINT_REACTOS		0x00000100  // OR this with DebugPrintMask to enable ReactOS messages
 	#define DPRINT_LINUX		0x00000200  // OR this with DebugPrintMask to enable Linux messages
 	#define DPRINT_HWDETECT		0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
+	#define DPRINT_WINDOWS		0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
 
 	VOID	DebugInit(VOID);
 	VOID	DebugPrint(ULONG Mask, char *format, ...);

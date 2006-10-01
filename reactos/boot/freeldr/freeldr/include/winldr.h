@@ -29,5 +29,49 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 VOID LoadAndBootWindows(PCSTR OperatingSystemName, WORD OperatingSystemVersion);
 
+/* Entry-point to kernel */
+typedef
+VOID
+NTAPI
+(*KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+
+// Some definitions
+#define SECTOR_SIZE 512
+
+// Descriptors
+#define NUM_GDT 28 //15. The kernel wants 0xD8 as a last GDT entry offset
+#define NUM_IDT 0x100 // only 16 are used though
+
+// conversion.c
+PVOID VaToPa(PVOID Va);
+PVOID PaToVa(PVOID Pa);
+VOID List_PaToVa(LIST_ENTRY *ListEntry);
+VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
+
+// peloader.c
+BOOLEAN
+WinLdrLoadImage(IN PCHAR FileName,
+                OUT PVOID *ImageBasePA);
+
+
+BOOLEAN
+WinLdrAllocateDataTableEntry(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+                             IN PCCH BaseDllName,
+                             IN PCCH FullDllName,
+                             IN PVOID BasePA,
+                             OUT PLDR_DATA_TABLE_ENTRY *NewEntry);
+
+BOOLEAN
+WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
+                                IN PCCH DirectoryPath,
+                                IN PLDR_DATA_TABLE_ENTRY ScanDTE);
+
+// wlmemory.c
+BOOLEAN
+WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                   ULONG PcrBasePage,
+                   ULONG TssBasePage,
+                   PVOID GdtIdt);
 
 #endif // defined __WINLDR_H
