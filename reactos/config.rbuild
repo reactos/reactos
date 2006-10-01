@@ -67,6 +67,6 @@
   enable this (except they/you purchased a license from the patent owner).
   This settings is disabled (0) by default.
 -->
-<property name="NSWPAT" value="1" />
+<property name="NSWPAT" value="0" />
 
 </rbuild>
