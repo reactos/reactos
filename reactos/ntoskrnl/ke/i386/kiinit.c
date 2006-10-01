@@ -318,7 +318,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
 
     /* Setup the TSS descriptors and entries */
-    Ki386InitializeTss(Tss, Idt);
+    Ki386InitializeTss(Tss, Idt, Gdt);
 
     /* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);

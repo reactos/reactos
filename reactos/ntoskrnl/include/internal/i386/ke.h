@@ -61,7 +61,8 @@ VOID
 FASTCALL
 Ki386InitializeTss(
     IN PKTSS Tss,
-    IN PKIDTENTRY Idt
+    IN PKIDTENTRY Idt,
+    IN PKGDTENTRY Gdt
 );
 
 VOID

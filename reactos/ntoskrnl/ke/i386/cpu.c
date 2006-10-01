@@ -552,12 +552,13 @@ KiInitializeTSS(IN PKTSS Tss)
 VOID
 FASTCALL
 Ki386InitializeTss(IN PKTSS Tss,
-                   IN PKIDTENTRY Idt)
+                   IN PKIDTENTRY Idt,
+                   IN PKGDTENTRY Gdt)
 {
     PKGDTENTRY TssEntry, TaskGateEntry;
 
     /* Initialize the boot TSS. */
-    TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
+    TssEntry = &Gdt[KGDT_TSS / sizeof(KGDTENTRY)];
     TssEntry->HighWord.Bits.Type = I386_TSS;
     TssEntry->HighWord.Bits.Pres = 1;
     TssEntry->HighWord.Bits.Dpl = 0;
@@ -587,7 +588,7 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss->Ds = KGDT_R3_DATA | RPL_MASK;
 
     /* Setup the Double Trap TSS entry in the GDT */
-    TssEntry = &KiBootGdt[KGDT_DF_TSS / sizeof(KGDTENTRY)];
+    TssEntry = &Gdt[KGDT_DF_TSS / sizeof(KGDTENTRY)];
     TssEntry->HighWord.Bits.Type = I386_TSS;
     TssEntry->HighWord.Bits.Pres = 1;
     TssEntry->HighWord.Bits.Dpl = 0;
@@ -616,7 +617,7 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss->Ds = KGDT_R3_DATA | RPL_MASK;
 
     /* And its associated TSS Entry */
-    TssEntry = &KiBootGdt[KGDT_NMI_TSS / sizeof(KGDTENTRY)];
+    TssEntry = &Gdt[KGDT_NMI_TSS / sizeof(KGDTENTRY)];
     TssEntry->HighWord.Bits.Type = I386_TSS;
     TssEntry->HighWord.Bits.Pres = 1;
     TssEntry->HighWord.Bits.Dpl = 0;
