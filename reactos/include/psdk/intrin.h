@@ -145,7 +145,7 @@ static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile 
 	return __sync_fetch_and_and(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * const value, const short mask)
+static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * const value, const short mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
