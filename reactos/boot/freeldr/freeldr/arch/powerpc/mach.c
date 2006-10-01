@@ -201,11 +201,31 @@ static int prom_next_node(int *nodep)
 	}
 }
 
+/* Appropriated from linux' btext.c
+ * author:
+ * Benjamin Herrenschmidt <benh@kernel.crashing.org>
+ */
 VOID PpcVideoPrepareForReactOS() {
-    int i, j, display_handle, display_size = 0;
+    int i, j, k, /* display_handle, */ display_package, display_size = 0;
     int node, ret, elts;
-    pci_reg_property display_regs[8];
+    int device_address;
+    //pci_reg_property display_regs[8];
     char type[256], path[256], name[256];
+    char logo[] = {
+	"          "
+	"  XXXXXX  "
+	" X      X "
+	" X X  X X "
+	" X      X "
+	" X XXXX X "
+	" X  XX  X "
+	" X      X "
+	"  XXXXXX  "
+	"          "
+    };
+    int logo_x = 10, logo_y = 10;
+    int logo_scale_x = 8, logo_scale_y = 8;
+
 
     for( node = ofw_finddevice("/"); prom_next_node(&node); ) {
 	memset(type, 0, sizeof(type));
@@ -231,62 +251,56 @@ VOID PpcVideoPrepareForReactOS() {
     }
 
     printf("Opening display package: %s\n", path);
-
-    display_handle = ofw_open(path);
-
-    printf("display handle %x\n", display_handle);
+    display_package = ofw_finddevice(path);
+    printf("display package %x\n", display_package);
 
     BootInfo.dispDeviceRect[0] = BootInfo.dispDeviceRect[1] = 0;
 
-    ofw_getprop(display_handle, "width", 
+    ofw_getprop(display_package, "width", 
 		(void *)&BootInfo.dispDeviceRect[2], sizeof(int));
-    ofw_getprop(display_handle, "height",
+    ofw_getprop(display_package, "height",
 		(void *)&BootInfo.dispDeviceRect[3], sizeof(int));
-    ofw_getprop(display_handle, "depth",
+    ofw_getprop(display_package, "depth",
 		(void *)&BootInfo.dispDeviceDepth, sizeof(int));
-    ofw_getprop(display_handle, "linebytes",
+    ofw_getprop(display_package, "linebytes",
 		(void *)&BootInfo.dispDeviceRowBytes, sizeof(int));
 
-    if(ofw_getprop
-       (display_handle,
-	"address",
-	(void *)&BootInfo.dispDeviceBase,
-	sizeof(BootInfo.dispDeviceBase)) > 0) {
-	goto finish;
-    }
+    BootInfo.dispDeviceRect[2] = REV(BootInfo.dispDeviceRect[2]);
+    BootInfo.dispDeviceRect[3] = REV(BootInfo.dispDeviceRect[3]);
+    BootInfo.dispDeviceDepth = REV(BootInfo.dispDeviceDepth);
+    BootInfo.dispDeviceRowBytes = REV(BootInfo.dispDeviceRowBytes);
 
-    if((elts = ofw_getprop(display_handle, 
-			   "assigned-addresses",
-			   (void *)display_regs,
-			   sizeof(display_regs))) <= 0) {
-	printf("Could not get assigned addresses\n");
+    if(ofw_getprop
+       (display_package,
+	"address",
+	(void *)&device_address,
+	sizeof(device_address)) < 1) {
+	printf("Could not get device base\n");
 	return;
     }
 
-    elts /= sizeof(display_regs[0]);
-    for( i = 0; i < elts; i++ ) {
-	display_size = display_regs[i].size_lo;
-	if( display_size >= (1 << 20) ) {
-	    BootInfo.dispDeviceBase = (void *)display_regs[i].addr.a_lo;
-	    
-	    /* Map pages for display at some location */
-	    BootInfo.logicalDisplayBase = (void *)0xc0000000;
-	    
-	    for( i = 0; i < display_size; i += (1 << 12) ) {
-		InsertPageEntry((ULONG_PTR)((PCHAR)BootInfo.logicalDisplayBase)+i,
-				(ULONG_PTR)((PCHAR)BootInfo.dispDeviceBase)+i);
-	    }
-	}
-    }
+    BootInfo.dispDeviceBase = (PVOID)(REV(device_address));
 
-finish:
-    /* Draw something ... */
-    elts = 0;
-    for( i = 0; i < BootInfo.dispDeviceRect[3]; i++ ) {
-	for( j = 0; j < BootInfo.dispDeviceRect[2]; j++ ) {
-	    ((PCHAR)BootInfo.logicalDisplayBase)
-		[(j * (BootInfo.dispDeviceDepth/8)) + 
-		 (i * (BootInfo.dispDeviceRowBytes))] = elts++;
+    display_size = BootInfo.dispDeviceRowBytes * BootInfo.dispDeviceRect[3];
+
+    printf("Display size is %x bytes (%x per row times %x rows)\n",
+	   display_size, 
+	   BootInfo.dispDeviceRowBytes,
+	   BootInfo.dispDeviceRect[3]);
+
+    printf("display is at %x\n", BootInfo.dispDeviceBase);
+
+    for( i = 0; i < logo_y * logo_scale_y; i++ ) {
+	for( j = 0; j < logo_x * logo_scale_x; j++ ) {
+	    elts = (j/logo_scale_x) + ((i/logo_scale_y) * logo_x);
+
+	    for( k = 0; k < BootInfo.dispDeviceDepth/8; k++ ) {
+		SetPhysByte(((ULONG_PTR)BootInfo.dispDeviceBase)+
+			    k +
+			    ((j * (BootInfo.dispDeviceDepth/8)) + 
+			     (i * (BootInfo.dispDeviceRowBytes))),
+			    logo[elts] == ' ' ? 0 : 255);
+	    }
 	}
     }
 }
