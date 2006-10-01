@@ -588,29 +588,28 @@ KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject)
  * \param FileName        Filename for which the symbols are loaded.
  */
 VOID
-KdbSymProcessBootSymbols(IN PCHAR FileName)
+KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName)
 {
   PLDR_DATA_TABLE_ENTRY ModuleObject;
-  UNICODE_STRING UnicodeString;
-  ANSI_STRING AnsiString;
-  ULONG i;
+  BOOLEAN Found = FALSE;
   BOOLEAN IsRaw;
+  PLIST_ENTRY ListHead, NextEntry;
+  PLDR_DATA_TABLE_ENTRY LdrEntry;
+  UNICODE_STRING NtosSymName = RTL_CONSTANT_STRING(L"ntoskrnl.sym");
+  UNICODE_STRING NtosName = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
+  DPRINT("KdbSymProcessBootSymbols(%wZ)\n", FileName);
 
-  DPRINT("KdbSymProcessBootSymbols(%s)\n", FileName);
-
-  if (0 == _stricmp(FileName, "ntoskrnl.sym"))
+  if (RtlEqualUnicodeString(FileName, &NtosSymName, TRUE))
     {
-      RtlInitAnsiString(&AnsiString, "ntoskrnl.exe");
+      FileName = &NtosName;
       IsRaw = TRUE;
     }
   else
     {
-      RtlInitAnsiString(&AnsiString, FileName);
       IsRaw = FALSE;
     }
-  RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-  ModuleObject = LdrGetModuleObject(&UnicodeString);
-  RtlFreeUnicodeString(&UnicodeString);
+
+  ModuleObject = LdrGetModuleObject(FileName);
 
   if (ModuleObject != NULL)
   {
@@ -620,16 +619,27 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         return;
      }
 
-     for (i = 0; i < KeLoaderModuleCount; i++)
+     ListHead = &KeLoaderBlock->LoadOrderListHead;
+     NextEntry = ListHead->Flink;
+     while (ListHead != NextEntry)
      {
-        if (0 == _stricmp(FileName, (PCHAR)KeLoaderModules[i].String))
-	{
-	   break;
-	}
-     }
-     if (i < KeLoaderModuleCount)
+         /* Get the entry */
+         LdrEntry = CONTAINING_RECORD(NextEntry,
+                                      LDR_DATA_TABLE_ENTRY,
+                                      InLoadOrderLinks);
+
+        if (RtlEqualUnicodeString(FileName, &LdrEntry->BaseDllName, TRUE))
+        {
+            Found = TRUE;
+            break;
+        }
+
+        /* Go to the next one */
+        NextEntry = NextEntry->Flink;
+    }
+
+     if (Found)
      {
-        KeLoaderModules[i].Reserved = 1;
         if (ModuleObject->PatchInformation != NULL)
         {
            KdbpSymRemoveCachedFile(ModuleObject->PatchInformation);
@@ -637,8 +647,8 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
 
         if (IsRaw)
         {
-           if (! RosSymCreateFromRaw((PVOID) KeLoaderModules[i].ModStart,
-                                     KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart,
+           if (! RosSymCreateFromRaw(LdrEntry->DllBase,
+                                     LdrEntry->SizeOfImage,
                                      (PROSSYM_INFO*)&ModuleObject->PatchInformation))
            {
               return;
@@ -646,8 +656,8 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         }
         else
         {
-           if (! RosSymCreateFromMem((PVOID) KeLoaderModules[i].ModStart,
-                                     KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart,
+           if (! RosSymCreateFromMem(LdrEntry->DllBase,
+                                     LdrEntry->SizeOfImage,
                                      (PROSSYM_INFO*)&ModuleObject->PatchInformation))
            {
               return;
@@ -655,12 +665,9 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
         }
 
         /* add file to cache */
-        RtlInitAnsiString(&AnsiString, FileName);
-	RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-        KdbpSymAddCachedFile(&UnicodeString, ModuleObject->PatchInformation);
-        RtlFreeUnicodeString(&UnicodeString);
+        KdbpSymAddCachedFile(FileName, ModuleObject->PatchInformation);
 
-        DPRINT("Installed symbols: %s@%08x-%08x %p\n",
+        DPRINT("Installed symbols: %wZ@%08x-%08x %p\n",
 	       FileName,
 	       ModuleObject->DllBase,
 	       ModuleObject->SizeOfImage + (ULONG)ModuleObject->DllBase,

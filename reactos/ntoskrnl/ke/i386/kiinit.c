@@ -379,7 +379,7 @@ AppCpuInit:
     KiInitializeKernel(&KiInitialProcess.Pcb,
                        InitialThread,
                        InitialStack,
-                       &Pcr->PrcbData, //(PKPRCB)__readfsdword(KPCR_PRCB),
+                       (PKPRCB)__readfsdword(KPCR_PRCB),
                        Cpu,
                        LoaderBlock);
 

@@ -77,7 +77,7 @@ VOID
 KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject);
 
 VOID
-KdbSymProcessBootSymbols(IN PCHAR FileName);
+KdbSymProcessBootSymbols(IN PUNICODE_STRING FileName);
 
 VOID
 KdbSymInit(

@@ -35,6 +35,7 @@ extern ULONG_PTR FirstKrnlPhysAddr;
 extern ULONG_PTR LastKrnlPhysAddr;
 extern ULONG_PTR LastKernelAddress;
 extern LOADER_MODULE KeLoaderModules[64];
+extern ULONG KeLoaderModuleCount;
 extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
 
 BOOLEAN NoGuiBoot = FALSE;

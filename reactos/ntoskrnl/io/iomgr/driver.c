@@ -462,9 +462,10 @@ IopLoadServiceModule(
 
       if (ServiceStart == 0)
       {
-         ULONG i;
-         CHAR SearchName[256];
-         PCHAR ModuleName;
+         WCHAR SearchNameBuffer[256];
+         UNICODE_STRING SearchName;
+         PLIST_ENTRY ListHead, NextEntry;
+         PLDR_DATA_TABLE_ENTRY LdrEntry;
 
          /*
           * FIXME:
@@ -472,28 +473,37 @@ IopLoadServiceModule(
           * stored in registry entry ImageName and use the whole path
           * (requires change in FreeLoader).
           */
+         swprintf(SearchNameBuffer, L"%wZ.sys", ServiceName);
+         RtlInitUnicodeString(&SearchName, SearchNameBuffer);
 
-         _snprintf(SearchName, sizeof(SearchName), "%wZ.sys", ServiceName);
-         for (i = 1; i < KeLoaderModuleCount; i++)
+         /* Loop the boot modules */
+         ListHead = &KeLoaderBlock->LoadOrderListHead;
+         NextEntry = ListHead->Flink->Flink;
+         while (ListHead != NextEntry)
          {
-            ModuleName = (PCHAR)KeLoaderModules[i].String;
-            if (!_stricmp(ModuleName, SearchName))
+            /* Get the entry */
+            LdrEntry = CONTAINING_RECORD(NextEntry,
+                                         LDR_DATA_TABLE_ENTRY,
+                                         InLoadOrderLinks);
+
+            /* Compare names */
+            if (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &SearchName, TRUE))
             {
-               DPRINT("Initializing boot module\n");
+                /* Tell, that the module is already loaded */
+                LdrEntry->Flags |= LDRP_ENTRY_INSERTED;
 
-               /* Tell, that the module is already loaded */
-               KeLoaderModules[i].Reserved = 1;
+                Status = LdrProcessModule(LdrEntry->DllBase,
+                                          &ServiceImagePath,
+                                          ModuleObject);
 
-               Status = LdrProcessModule(
-                  (PVOID)KeLoaderModules[i].ModStart,
-                  &ServiceImagePath,
-                  ModuleObject);
-
-	       KDB_SYMBOLFILE_HOOK(SearchName);
-
-               break;
+                KDB_SYMBOLFILE_HOOK(&SearchName);
+                break;
             }
+
+            /* Go to the next driver */
+            NextEntry = NextEntry->Flink;
          }
+
          if (!NT_SUCCESS(Status))
             /* Try to load it. It may just have been installed by PnP manager */
             Status = LdrLoadModule(&ServiceImagePath, ModuleObject);
@@ -817,23 +827,23 @@ NTSTATUS FASTCALL INIT_FUNCTION
 IopInitializeBuiltinDriver(
    PDEVICE_NODE ModuleDeviceNode,
    PVOID ModuleLoadBase,
-   PCHAR FileName,
+   PUNICODE_STRING ModuleName,
    ULONG ModuleLength)
 {
    PLDR_DATA_TABLE_ENTRY ModuleObject;
    PDEVICE_NODE DeviceNode;
    PDRIVER_OBJECT DriverObject;
    NTSTATUS Status;
-   PCHAR FileNameWithoutPath;
+   PWCHAR FileNameWithoutPath;
    LPWSTR FileExtension;
 
-   DPRINT("Initializing driver '%s' at %08lx, length 0x%08lx\n",
-      FileName, ModuleLoadBase, ModuleLength);
+   DPRINT("Initializing driver '%wZ' at %08lx, length 0x%08lx\n",
+      ModuleName, ModuleLoadBase, ModuleLength);
 
    /*
     * Display 'Loading XXX...' message
     */
-   IopDisplayLoadingMessage(FileName, FALSE);
+   IopDisplayLoadingMessage(ModuleName->Buffer, TRUE);
 
    /*
     * Determine the right device object
@@ -845,7 +855,7 @@ IopInitializeBuiltinDriver(
       Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
       if (!NT_SUCCESS(Status))
       {
-         CPRINT("Driver '%s' load failed, status (%x)\n", FileName, Status);
+         CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
          return(Status);
       }
    } else
@@ -857,30 +867,28 @@ IopInitializeBuiltinDriver(
     * Generate filename without path (not needed by freeldr)
     */
 
-   FileNameWithoutPath = strrchr(FileName, '\\');
+   FileNameWithoutPath = wcsrchr(ModuleName->Buffer, L'\\');
    if (FileNameWithoutPath == NULL)
    {
-      FileNameWithoutPath = FileName;
+      FileNameWithoutPath = ModuleName->Buffer;
    }
 
    /*
     * Load the module
     */
-
-   RtlCreateUnicodeStringFromAsciiz(&DeviceNode->ServiceName,
-      FileNameWithoutPath);
+   RtlCreateUnicodeString(&DeviceNode->ServiceName, FileNameWithoutPath);
    Status = LdrProcessModule(ModuleLoadBase, &DeviceNode->ServiceName,
       &ModuleObject);
    if (!NT_SUCCESS(Status))
    {
       if (ModuleDeviceNode == NULL)
          IopFreeDeviceNode(DeviceNode);
-      CPRINT("Driver '%s' load failed, status (%x)\n", FileName, Status);
+      CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return Status;
    }
 
    /* Load symbols */
-   KDB_SYMBOLFILE_HOOK(FileName);
+   KDB_SYMBOLFILE_HOOK(ModuleName);
 
    /*
     * Strip the file extension from ServiceName
@@ -904,7 +912,7 @@ IopInitializeBuiltinDriver(
    {
       if (ModuleDeviceNode == NULL)
          IopFreeDeviceNode(DeviceNode);
-      CPRINT("Driver '%s' load failed, status (%x)\n", FileName, Status);
+      CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return Status;
    }
 
@@ -929,75 +937,66 @@ IopInitializeBuiltinDriver(
  *    None
  */
 
-VOID FASTCALL
+VOID
+FASTCALL
 IopInitializeBootDrivers(VOID)
 {
-   ULONG BootDriverCount;
-   ULONG ModuleStart;
-   ULONG ModuleSize;
-   ULONG ModuleLoaded;
-   PCHAR ModuleName;
-   PCHAR Extension;
-   ULONG i;
-   UNICODE_STRING DriverName;
-   NTSTATUS Status;
+    PLIST_ENTRY ListHead, NextEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    UNICODE_STRING NtosSymName = RTL_CONSTANT_STRING(L"ntoskrnl.sym");
 
-   DPRINT("IopInitializeBootDrivers()\n");
+    /* Hack for NTOSKRNL.SYM */
+    KDB_SYMBOLFILE_HOOK(&NtosSymName);
 
-   BootDriverCount = 0;
-   for (i = 0; i < KeLoaderModuleCount; i++)
-   {
-      ModuleStart = KeLoaderModules[i].ModStart;
-      ModuleSize = KeLoaderModules[i].ModEnd - ModuleStart;
-      ModuleName = (PCHAR)KeLoaderModules[i].String;
-      ModuleLoaded = KeLoaderModules[i].Reserved;
-      Extension = strrchr(ModuleName, '.');
-      if (Extension == NULL)
-         Extension = "";
+    /* Loop the boot modules */
+    ListHead = &KeLoaderBlock->LoadOrderListHead;
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
 
-      if (!_stricmp(Extension, ".sym") || !_stricmp(Extension, ".dll"))
-      {
-        /* Process symbols for *.exe and *.dll */
-        KDB_SYMBOLFILE_HOOK(ModuleName);
+        /*
+         * HACK: Make sure we're loading a driver
+         * (we should be using BootDriverListHead!)
+         */
+        if (wcsstr(LdrEntry->BaseDllName.Buffer, L".sys"))
+        {
+            /* Make sure we didn't load this driver already */
+            if (!(LdrEntry->Flags & LDRP_ENTRY_INSERTED))
+            {
+                /* Initialize it */
+                IopInitializeBuiltinDriver(NULL,
+                                           LdrEntry->DllBase,
+                                           &LdrEntry->BaseDllName,
+                                           LdrEntry->SizeOfImage);
+            }
+        }
 
-        /* Log *.exe and *.dll files */
-        RtlCreateUnicodeStringFromAsciiz(&DriverName, ModuleName);
-        IopBootLog(&DriverName, TRUE);
-        RtlFreeUnicodeString(&DriverName);
-      }
-      else if (!_stricmp(Extension, ".sys"))
-      {
-         /* Initialize and log boot start driver */
-         if (!ModuleLoaded)
-         {
-            Status = IopInitializeBuiltinDriver(NULL,
-                                                (PVOID)ModuleStart,
-                                                ModuleName,
-                                                ModuleSize);
-            RtlCreateUnicodeStringFromAsciiz(&DriverName, ModuleName);
-            IopBootLog(&DriverName, NT_SUCCESS(Status) ? TRUE : FALSE);
-            RtlFreeUnicodeString(&DriverName);
-         }
-         BootDriverCount++;
-      }
-   }
+        /* Go to the next driver */
+        NextEntry = NextEntry->Flink;
+    }
 
-   /*
-    * Free memory for all boot files, except ntoskrnl.exe.
-    */
-   for (i = 1; i < KeLoaderModuleCount; i++)
-   {
-       MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart,
-                              KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
-   }
+    /* Loop modules again */
+    NextEntry = ListHead->Flink->Flink;
+    while (ListHead != NextEntry)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
 
-   KeLoaderModuleCount = 0;
+        /* Free memory */
+        MiFreeBootDriverMemory(LdrEntry->DllBase, LdrEntry->SizeOfImage);
 
-   if (BootDriverCount == 0)
-   {
-      DbgPrint("No boot drivers available.\n");
-      KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
-   }
+        /* Go to the next driver */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* In old ROS, the loader list became empty after this point. Simulate. */
+    InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
 }
 
 /*
