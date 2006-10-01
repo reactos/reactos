@@ -1665,6 +1665,7 @@ UpdateBootIni(PWSTR BootIniPath,
   PINICACHESECTION Section = NULL;
   NTSTATUS Status;
   ULONG FileAttribute;
+  PWCHAR OldValue = NULL;
 
   RtlInitUnicodeString(&Name,
 		       BootIniPath);
@@ -1685,11 +1686,20 @@ UpdateBootIni(PWSTR BootIniPath,
     return(STATUS_UNSUCCESSFUL);
   }
 
-  IniCacheInsertKey(Section,
+  /* Check - maybe record already exists */
+  Status = IniCacheGetKey(Section,
+		     EntryName,
+		     &OldValue);
+
+  /* If either key was not found, or contains something else - add new one */
+  if (!NT_SUCCESS(Status) || wcscmp(OldValue, EntryValue))
+  {
+    IniCacheInsertKey(Section,
 		    NULL,
 		    INSERT_LAST,
 		    EntryName,
 		    EntryValue);
+  }
 
   Status = UnprotectBootIni(BootIniPath,
 			    &FileAttribute);
