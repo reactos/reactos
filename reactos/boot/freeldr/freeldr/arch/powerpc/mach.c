@@ -20,19 +20,20 @@
 #include "machine.h"
 #include "of.h"
 #include "mmu.h"
-
-#define TOTAL_HEAP_NEEDED (48 * 1024 * 1024) /* 48 megs */
+#include "compat.h"
+#include "ppcboot.h"
 
 extern void BootMain( LPSTR CmdLine );
 extern PCHAR GetFreeLoaderVersionString();
 extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
-void *PageDirectoryStart, *PageDirectoryEnd, *mem_base = 0;
+void *PageDirectoryStart, *PageDirectoryEnd;
 static int chosen_package, stdin_handle, part_handle = -1;
 BOOLEAN AcpiPresent = FALSE;
 char BootPath[0x100] = { 0 }, BootPart[0x100] = { 0 }, CmdLine[0x100] = { 0 };
 jmp_buf jmp;
 volatile char *video_mem = 0;
+boot_infos_t BootInfo;
 
 void le_swap( void *start_addr_v, 
               void *end_addr_v, 
@@ -183,56 +184,160 @@ VOID PpcVideoSync() {
     printf( "Sync\n" );
 }
 
-VOID PpcVideoPrepareForReactOS() {
-    printf( "PrepareForReactOS\n");
+static int prom_next_node(int *nodep)
+{
+	int node;
+
+	if ((node = *nodep) != 0
+	    && (*nodep = ofw_child(node)) != 0)
+		return 1;
+	if ((*nodep = ofw_peer(node)) != 0)
+		return 1;
+	for (;;) {
+		if ((node = ofw_parent(node)) == 0)
+			return 0;
+		if ((*nodep = ofw_peer(node)) != 0)
+			return 1;
+	}
 }
+
+VOID PpcVideoPrepareForReactOS() {
+    int i, j, display_handle, display_size = 0;
+    int node, ret, elts;
+    pci_reg_property display_regs[8];
+    char type[256], path[256], name[256];
+
+    for( node = ofw_finddevice("/"); prom_next_node(&node); ) {
+	memset(type, 0, sizeof(type));
+	memset(path, 0, sizeof(path));
+	
+	ret = ofw_getprop(node, "name", name, sizeof(name));
+
+	if(ofw_getprop(node, "device_type", type, sizeof(type)) <= 0) {
+	    printf("Could not get type for node %x\n", node);
+	    continue;
+	}
+
+	printf("Node %x ret %d name %s type %s\n", node, ret, name, type);
+
+	if(strcmp(type, "display") == 0) break;
+    }
+
+    if(!node) return;
+
+    if(ofw_package_to_path(node, path, sizeof(path)) < 0) {
+	printf("could not get path for display package %x\n", node);
+	return;
+    }
+
+    printf("Opening display package: %s\n", path);
+
+    display_handle = ofw_open(path);
+
+    printf("display handle %x\n", display_handle);
+
+    BootInfo.dispDeviceRect[0] = BootInfo.dispDeviceRect[1] = 0;
+
+    ofw_getprop(display_handle, "width", 
+		(void *)&BootInfo.dispDeviceRect[2], sizeof(int));
+    ofw_getprop(display_handle, "height",
+		(void *)&BootInfo.dispDeviceRect[3], sizeof(int));
+    ofw_getprop(display_handle, "depth",
+		(void *)&BootInfo.dispDeviceDepth, sizeof(int));
+    ofw_getprop(display_handle, "linebytes",
+		(void *)&BootInfo.dispDeviceRowBytes, sizeof(int));
+
+    if(ofw_getprop
+       (display_handle,
+	"address",
+	(void *)&BootInfo.dispDeviceBase,
+	sizeof(BootInfo.dispDeviceBase)) > 0) {
+	goto finish;
+    }
+
+    if((elts = ofw_getprop(display_handle, 
+			   "assigned-addresses",
+			   (void *)display_regs,
+			   sizeof(display_regs))) <= 0) {
+	printf("Could not get assigned addresses\n");
+	return;
+    }
+
+    elts /= sizeof(display_regs[0]);
+    for( i = 0; i < elts; i++ ) {
+	display_size = display_regs[i].size_lo;
+	if( display_size >= (1 << 20) ) {
+	    BootInfo.dispDeviceBase = (void *)display_regs[i].addr.a_lo;
+	    
+	    /* Map pages for display at some location */
+	    BootInfo.logicalDisplayBase = (void *)0xc0000000;
+	    
+	    for( i = 0; i < display_size; i += (1 << 12) ) {
+		InsertPageEntry((ULONG_PTR)((PCHAR)BootInfo.logicalDisplayBase)+i,
+				(ULONG_PTR)((PCHAR)BootInfo.dispDeviceBase)+i);
+	    }
+	}
+    }
+
+finish:
+    /* Draw something ... */
+    elts = 0;
+    for( i = 0; i < BootInfo.dispDeviceRect[3]; i++ ) {
+	for( j = 0; j < BootInfo.dispDeviceRect[2]; j++ ) {
+	    ((PCHAR)BootInfo.logicalDisplayBase)
+		[(j * (BootInfo.dispDeviceDepth/8)) + 
+		 (i * (BootInfo.dispDeviceRowBytes))] = elts++;
+	}
+    }
+}
+
 /* 
  * Get memory the proper openfirmware way
  */
 ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
                        ULONG MaxMemoryMapSize ) {
-    int i, memhandle, mmuhandle, returned, total = 0, num_mem = 0;
-    int memdata[256];
+    int i, memhandle, returned, total = 0, slots = 0;
+    int memdata[0x40];
 
     printf("PpcGetMemoryMap(%d)\n", MaxMemoryMapSize);
 
-    if( mem_base ) {
-	BiosMemoryMap[0].Type = MEMTYPE_USABLE;
-	BiosMemoryMap[0].BaseAddress = (ULONG)mem_base;
-	BiosMemoryMap[0].Length = TOTAL_HEAP_NEEDED;
-	printf("[cached] returning 1 element\n");
-	return 1;
-    }
-
-    ofw_getprop(chosen_package, "memory", 
-		(char *)&memhandle, sizeof(memhandle));
-    ofw_getprop(chosen_package, "mmu",
-		(char *)&mmuhandle, sizeof(mmuhandle));
+    memhandle = ofw_finddevice("/memory");
 
     returned = ofw_getprop(memhandle, "available", 
 			   (char *)memdata, sizeof(memdata));
 
-    /* We need to leave some for open firmware.  Let's claim up to 16 megs 
-     * for now */
+    printf("Returned data: %d\n", returned);
+    if( returned == -1 ) {
+	printf("getprop /memory[@reg] failed\n");
+	return 0;
+    }
 
-    for( i = 0; i < returned / sizeof(int) && !num_mem; i += 2 ) {
-	BiosMemoryMap[num_mem].Type = MEMTYPE_USABLE;
-	BiosMemoryMap[num_mem].BaseAddress = memdata[i];
-	mem_base = (void *)memdata[i];
-	BiosMemoryMap[num_mem].Length = memdata[i+1];
-	if( BiosMemoryMap[num_mem].Length >= TOTAL_HEAP_NEEDED && 
-	    total < TOTAL_HEAP_NEEDED ) {
-	    BiosMemoryMap[num_mem].Length = TOTAL_HEAP_NEEDED;	     
-	    ofw_claim(BiosMemoryMap[num_mem].BaseAddress, 
-		      BiosMemoryMap[num_mem].Length, 0x1000); /* claim it */
-	    total += BiosMemoryMap[0].Length;
-	    num_mem++;
+    for( i = 0; i < returned; i++ ) {
+	printf("%x ", memdata[i]);
+    }
+    printf("\n");
+
+    for( i = 0; i < returned / 2; i++ ) {
+	BiosMemoryMap[slots].Type = MEMTYPE_USABLE;
+	BiosMemoryMap[slots].BaseAddress = REV(memdata[i*2]);
+	BiosMemoryMap[slots].Length = REV(memdata[i*2+1]);
+	printf("MemoryMap[%d] = (%x:%x)\n", 
+	       i, 
+	       (int)BiosMemoryMap[slots].BaseAddress,
+	       (int)BiosMemoryMap[slots].Length);
+
+	if( BiosMemoryMap[slots].Length &&
+	    ofw_claim((int)BiosMemoryMap[slots].BaseAddress,
+		      (int)BiosMemoryMap[slots].Length,
+		      0x1000) ) {
+	    total += BiosMemoryMap[slots].Length;
+	    slots++;
 	}
     }
 
     printf( "Returning memory map (%dk total)\n", total / 1024 );
 
-    return num_mem;
+    return slots;
 }
 
 /* Strategy:
@@ -304,6 +409,7 @@ BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
 	printf("Seek to %x failed\n", (ULONG)(SectorNumber * 512));
 	return FALSE;
     }
+
     rlen = ofw_read( part_handle, Buffer, (ULONG)(SectorCount * 512) );
     return rlen > 0;
 }
@@ -374,36 +480,27 @@ BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
 	return TRUE;
 }
 
+extern int _bss;
 typedef unsigned int uint32_t;
-
 void PpcInit( of_proxy the_ofproxy ) {
     int len, stdin_handle_chosen;
     ofproxy = the_ofproxy;
 
-    ofw_print_string("Freeldr PowerPC Init\n");
-
+    //SetPhys(0x900, (19 << 26) | (50 << 1));
+    
     chosen_package = ofw_finddevice( "/chosen" );
 
-    ofw_print_string("Freeldr: chosen_package is ");
-    ofw_print_number(chosen_package);
-    ofw_print_string("\n");
-
     ofw_getprop( chosen_package, "stdin",
-                 (char *)&stdin_handle_chosen, sizeof(stdin_handle_chosen) );
+		 (char *)&stdin_handle_chosen, sizeof(stdin_handle_chosen) );
 
-    ofw_print_string("Freeldr: stdin_handle is ");
-    ofw_print_number(stdin_handle_chosen);
-    ofw_print_string("\n");
-
-    stdin_handle = stdin_handle_chosen;
-
-    /* stdin_handle = REV(stdin_handle); */
+    stdin_handle = REV(stdin_handle_chosen);
 
     MachVtbl.ConsPutChar = PpcPutChar;
     MachVtbl.ConsKbHit   = PpcConsKbHit;
     MachVtbl.ConsGetCh   = PpcConsGetCh;
 
-    printf( "stdin_handle is %x\n", stdin_handle );
+    printf( "chosen_package %x, stdin_handle is %x\n", 
+	    chosen_package, stdin_handle );
     printf("virt2phys (0xe00000,D) -> %x\n", PpcVirt2phys(0xe00000,0));
     printf("virt2phys (0xe01000,D) -> %x\n", PpcVirt2phys(0xe01000,0));
 
@@ -443,6 +540,8 @@ void PpcInit( of_proxy the_ofproxy ) {
 
     len = ofw_getprop(chosen_package, "bootargs",
 		      CmdLine, sizeof(CmdLine));
+
+    printf("bootargs: len %d\n", len);
 
     if( len < 0 ) len = 0;
     CmdLine[len] = 0;
