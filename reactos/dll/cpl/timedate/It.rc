@@ -61,7 +61,7 @@ BEGIN
     IDS_TIMEZONETEXT "Fuso orario corrente: %s"
     IDS_TIMEZONEINVALID "Non valido"
     IDS_TIMEZONEUNKNOWN "Sconosciuto"
-    IDS_INETTIMESUCSYNC "L'ora è stata sincronizzata correttamente con %s % alle %s"
+    IDS_INETTIMESUCSYNC "L'ora è stata sincronizzata correttamente con %s %s alle %s"
     IDS_INETTIMENEXTSYNC "Prossima sincronizzazione: %s alle %s"
     IDS_INETTIMESYNCING "Sincronizzazione ora con %s"
     IDS_INETTIMEERROR "E' stato rilevato un errore mentre ReactOS si stava sincronizzando con %s"

@@ -61,6 +61,6 @@ BEGIN
     IDS_TIMEZONETEXT "Nuværende tidszone: %s"
     IDS_TIMEZONEINVALID "Ugyldig"
     IDS_TIMEZONEUNKNOWN "Ukendt"
-    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on % at %s"
+    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
 END

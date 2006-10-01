@@ -62,6 +62,6 @@ BEGIN
     IDS_TIMEZONETEXT "Aktualna strefa czasowa: %s"
     IDS_TIMEZONEINVALID "Nieprawid³owa"
     IDS_TIMEZONEUNKNOWN "Nieznana"
-    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on % at %s"
+    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
 END

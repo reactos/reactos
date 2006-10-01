@@ -75,7 +75,7 @@ BEGIN
 		MENUITEM "&Zeilenumbruch",    CMD_WRAP
 		MENUITEM "&Schriftart...",	CMD_FONT
 	END
-	POPUP "&Anicht"
+	POPUP "&Ansicht"
 	BEGIN
 		MENUITEM "Status&leiste",    CMD_STATUSBAR
 	END

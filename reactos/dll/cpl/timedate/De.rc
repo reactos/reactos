@@ -61,7 +61,7 @@ BEGIN
     IDS_TIMEZONETEXT "Aktuelle Zeitzone: %s"
     IDS_TIMEZONEINVALID "Ungültig"
     IDS_TIMEZONEUNKNOWN "Unbekannt"
-    IDS_INETTIMESUCSYNC "Die Zeit wurde erfolgreich mit %s am % um %s synchronisiert"
+    IDS_INETTIMESUCSYNC "Die Zeit wurde erfolgreich mit %s am %s um %s synchronisiert"
     IDS_INETTIMENEXTSYNC "Nächste Synchronisierung am %s um %s"
 END
 

@@ -133,12 +133,15 @@
 #define IDI_SHELL_PROGRAMS_FOLDER2  37
 #define IDI_SHELL_PRINTERS_FOLDER   38
 #define IDI_SHELL_FONTS_FOLDER      39
+#define IDI_SHELL_TSKBAR_STARTMENU  40
 #define IDI_SHELL_CD_MUSIC          41
 #define IDI_SHELL_FAVORITES         44
 #define IDI_SHELL_LOGOFF            45
 #define IDI_SHELL_EXPLORER          46
 
 #define IDI_SHELL_LOCKED            48
+
+#define IDI_SHELL_FIND_IN_FILE      134
 
 #define IDI_SHELL_CONTROL_PANEL3    137
 #define IDI_SHELL_PRINTER2          138

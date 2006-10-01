@@ -60,6 +60,6 @@ BEGIN
     IDS_TIMEZONETEXT "Huidige tijdzone: %s"
     IDS_TIMEZONEINVALID "Ongelding"
     IDS_TIMEZONEUNKNOWN "Niet gekend"
-    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on % at %s"
+    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
     IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
 END
