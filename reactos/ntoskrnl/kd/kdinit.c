@@ -168,6 +168,15 @@ KdInitSystem(ULONG BootPhase,
     ULONG i;
     PCHAR p1, p2;
 
+#if 0
+    /* NTLDR HACK */
+    KdpSerialInit(&DispatchTable[KdSerial], 0);
+    KdpDebugMode.Serial = TRUE;
+    SerialPortInfo.ComPort = 1;
+    KdpPort = 1;
+    KdDebuggerEnabled = TRUE;
+#endif
+
     /* Set Default Port Options */
     if (BootPhase == 0)
     {

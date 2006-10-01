@@ -92,7 +92,11 @@ Author:
 //
 #define K0IPCR                          ((ULONG_PTR)(KIP0PCRADDRESS))
 #define PCR                             ((volatile KPCR * const)K0IPCR)
+#ifdef _WE_USE_THE_SAME_PCR_ADDRESS
 #define KeGetPcr()                      PCR
+#else
+#define KeGetPcr()                      ((volatile KPCR * const)__readfsdword(0x1C))
+#endif
 
 //
 // Number of dispatch codes supported by KINTERRUPT
