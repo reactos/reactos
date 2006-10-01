@@ -24,9 +24,42 @@ LIST_ENTRY ExpNonPagedLookasideListHead;
 KSPIN_LOCK ExpNonPagedLookasideListLock;
 LIST_ENTRY ExpPagedLookasideListHead;
 KSPIN_LOCK ExpPagedLookasideListLock;
+PNPAGED_LOOKASIDE_LIST ExpSmallNPagedPoolLookasideLists;
+PPAGED_LOOKASIDE_LIST ExpSmallPagedPoolLookasideLists;
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NTAPI
+ExInitPoolLookasidePointers(VOID)
+{
+    ULONG i;
+    PPP_LOOKASIDE_LIST Entry;
+    PNPAGED_LOOKASIDE_LIST ListEntry;
+    PPAGED_LOOKASIDE_LIST PagedListEntry;
+
+    /* Loop for all CPUs */
+    for (i = 0; i < MAXIMUM_PROCESSORS; i++)
+    {
+        /* Initialize the non-paged list */
+        ListEntry = &ExpSmallNPagedPoolLookasideLists[i];
+        InitializeSListHead(&ListEntry->L.ListHead);
+
+        /* Bind to PRCB */
+        Entry = &KeGetCurrentPrcb()->PPPagedLookasideList[i];
+        Entry->L = &ListEntry->L;
+        Entry->P = &ListEntry->L;
+
+        /* Initialize the paged list */
+        PagedListEntry = &ExpSmallPagedPoolLookasideLists[i];
+        InitializeSListHead(&PagedListEntry->L.ListHead);
+
+        /* Bind to PRCB */
+        Entry = &KeGetCurrentPrcb()->PPNPagedLookasideList[i];
+        Entry->L = &PagedListEntry->L;
+        Entry->P = &PagedListEntry->L;
+    }
+}
 VOID
 INIT_FUNCTION
 STDCALL

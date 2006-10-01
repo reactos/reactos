@@ -41,6 +41,7 @@ extern LDR_DATA_TABLE_ENTRY HalModuleObject;
 
 /* NT Loader Data */
 LOADER_PARAMETER_BLOCK BldrLoaderBlock;
+LOADER_PARAMETER_EXTENSION BldrExtensionBlock;
 CHAR BldrCommandLine[256];
 LDR_DATA_TABLE_ENTRY BldrModules[64];
 MEMORY_ALLOCATION_DESCRIPTOR BldrMemoryDescriptors[64];
@@ -241,6 +242,12 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Setup command line */
     LoaderBlock->LoadOptions = BldrCommandLine;
     strcpy(BldrCommandLine, KeLoaderCommandLine);
+
+    /* Setup the extension block */
+    LoaderBlock->Extension = &BldrExtensionBlock;
+    LoaderBlock->Extension->Size = sizeof(LOADER_PARAMETER_EXTENSION);
+    LoaderBlock->Extension->MajorVersion = 5;
+    LoaderBlock->Extension->MinorVersion = 2;
 }
 
 VOID

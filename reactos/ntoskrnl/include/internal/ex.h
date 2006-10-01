@@ -76,7 +76,10 @@ ExpInitUuids(VOID);
 
 VOID
 NTAPI
-ExpInitializeExecutive(VOID);
+ExpInitializeExecutive(
+    IN ULONG Cpu,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
 
 VOID
 NTAPI
@@ -109,6 +112,10 @@ ExpInitializeProfileImplementation(VOID);
 VOID
 NTAPI
 ExpResourceInitialization(VOID);
+
+VOID
+NTAPI
+ExInitPoolLookasidePointers(VOID);
 
 /* Rundown Functions ********************************************************/
 

@@ -44,19 +44,13 @@ static ULONG MaxMem = 0;
 BOOLEAN SetupMode = TRUE;
 static BOOLEAN ForceAcpiDisable = FALSE;
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, InitSystemSharedUserPage)
-#pragma alloc_text(INIT, ExpDisplayNotice)
-#pragma alloc_text(INIT, ExpLoadInitialProcess)
-#pragma alloc_text(INIT, ExpInitializeExecutive)
-#pragma alloc_text(INIT, ExInit2)
-#endif
-
 BOOLEAN
 NTAPI
 PspInitPhase0(
     VOID
 );
+
+ULONG ExpInitializationPhase;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -482,10 +476,64 @@ ExInit3(VOID)
     ExpInitUuids();
 }
 
+BOOLEAN
+NTAPI
+ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLOADER_PARAMETER_EXTENSION Extension;
+
+    /* Get the loader extension */
+    Extension = LoaderBlock->Extension;
+
+    /* Validate the size (larger structures are OK, we'll just ignore them) */
+    if (Extension->Size < sizeof(LOADER_PARAMETER_EXTENSION)) return FALSE;
+
+    /* Don't validate upper versions */
+    if (Extension->MajorVersion > 5) return TRUE;
+
+    /* Fail if this is NT 4 */
+    if (Extension->MajorVersion < 5) return FALSE;
+
+    /* Fail if this is XP */
+    if (Extension->MinorVersion < 2) return FALSE;
+
+    /* This is 2003 or newer, aprove it */
+    return TRUE;
+}
+
 VOID
 NTAPI
-ExpInitializeExecutive(VOID)
+ExpInitializeExecutive(IN ULONG Cpu,
+                       IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    /* Validate Loader */
+    if (!ExpIsLoaderValid(LoaderBlock))
+    {
+        /* Invalid loader version */
+        KeBugCheckEx(MISMATCHED_HAL,
+                     3,
+                     LoaderBlock->Extension->Size,
+                     LoaderBlock->Extension->MajorVersion,
+                     LoaderBlock->Extension->MinorVersion);
+    }
+
+    /* Initialize PRCB pool lookaside pointers */
+    ExInitPoolLookasidePointers();
+
+    /* Check if this is an application CPU */
+    if (Cpu)
+    {
+        /* Then simply initialize it with HAL */
+        if (!HalInitSystem(ExpInitializationPhase, LoaderBlock))
+        {
+            /* Initialization failed */
+            KEBUGCHECK(HAL_INITIALIZATION_FAILED);
+        }
+
+        /* We're done */
+        return;
+    }
+
     /* Initialize HAL */
     HalInitSystem (0, KeLoaderBlock);
 

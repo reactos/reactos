@@ -189,7 +189,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     Prcb->IdleThread = InitThread;
 
     /* Initialize the Kernel Executive */
-    ExpInitializeExecutive();
+    ExpInitializeExecutive(Number, LoaderBlock);
 
     /* Only do this on the boot CPU */
     if (!Number)
