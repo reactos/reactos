@@ -670,6 +670,38 @@ cleanup:
 }
 
 /***********************************************************************
+ *		SetupDiDestroyClassImageList(SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiDestroyClassImageList(
+    IN PSP_CLASSIMAGELIST_DATA ClassImageListData)
+{
+    struct ClassImageList *list;
+    BOOL ret = FALSE;
+
+    TRACE("%p\n", ClassImageListData);
+
+    if (!ClassImageListData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (ClassImageListData->cbSize != sizeof(SP_CLASSIMAGELIST_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if ((list = (struct ClassImageList *)ClassImageListData->Reserved) == NULL)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (list->magic != SETUP_CLASS_IMAGE_LIST_MAGIC)
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        //DestroyIcon()
+        //ImageList_Destroy();
+        FIXME("Stub %p\n", ClassImageListData);
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
  *		SetupDiGetClassDescriptionA  (SETUPAPI.@)
  */
 BOOL WINAPI
@@ -1302,28 +1334,21 @@ SetupDiGetClassImageIndex(
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
-        HKEY hKey = INVALID_HANDLE_VALUE;
-        INT iconIndex;
+        DWORD i;
 
-        /* Read Icon registry entry into Buffer */
-        hKey = SetupDiOpenClassRegKeyExW(ClassGuid, KEY_QUERY_VALUE, DIOCR_INTERFACE, list->MachineName, NULL);
-        if (hKey == INVALID_HANDLE_VALUE)
-            goto cleanup;
-        if (!SETUP_GetIconIndex(hKey, &iconIndex))
-            goto cleanup;
-
-        if (iconIndex >= 0)
+        for (i = 0; i < list->NumberOfGuids; i++)
         {
-            SetLastError(ERROR_INVALID_INDEX);
-            goto cleanup;
+            if (IsEqualIID(ClassGuid, &list->Guids[i]))
+                break;
         }
 
-        *ImageIndex = -iconIndex;
-        ret = TRUE;
-
-cleanup:
-        if (hKey != INVALID_HANDLE_VALUE)
-            RegCloseKey(hKey);
+        if (i == list->NumberOfGuids || list->IconIndexes[i] < 0)
+            SetLastError(ERROR_FILE_NOT_FOUND);
+        else
+        {
+            *ImageIndex = list->IconIndexes[i];
+            ret = TRUE;
+        }
     }
 
     TRACE("Returning %d\n", ret);
@@ -1388,11 +1413,24 @@ SetupDiGetClassImageListExW(
     else
     {
         struct ClassImageList *list = NULL;
+        DWORD RequiredSize;
+        HICON hIcon;
         DWORD size;
+        INT i;
 
-        size = FIELD_OFFSET(struct ClassImageList, szData);
-        if (MachineName)
-            size += (strlenW(MachineName) + 3) * sizeof(WCHAR);
+        /* Get list of all class GUIDs in given computer */
+        ret = SetupDiBuildClassInfoListExW(
+            0,
+            NULL,
+            0,
+            &RequiredSize,
+            MachineName,
+            NULL);
+        if (!ret && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            goto cleanup;
+
+        size = sizeof(struct ClassImageList)
+            + (sizeof(GUID) + sizeof(INT)) * RequiredSize;
         list = HeapAlloc(GetProcessHeap(), 0, size);
         if (!list)
         {
@@ -1400,23 +1438,60 @@ SetupDiGetClassImageListExW(
             goto cleanup;
         }
         list->magic = SETUP_CLASS_IMAGE_LIST_MAGIC;
-        if (MachineName)
+        list->NumberOfGuids = RequiredSize;
+        list->Guids = (GUID*)(list + 1);
+        list->IconIndexes = (INT*)((ULONG_PTR)(list + 1) + sizeof(GUID) * RequiredSize);
+
+        ret = SetupDiBuildClassInfoListExW(
+            0,
+            list->Guids,
+            list->NumberOfGuids,
+            &RequiredSize,
+            MachineName,
+            NULL);
+        if (!ret)
+            goto cleanup;
+        else if (RequiredSize != list->NumberOfGuids)
         {
-            list->szData[0] = list->szData[1] = '\\';
-            strcpyW(list->szData + 2, MachineName);
-            list->MachineName = list->szData;
-        }
-        else
-        {
-            list->MachineName = NULL;
+            /* Hm. Class list changed since last call. Ignore
+             * this case as it should be very rare */
+            SetLastError(ERROR_GEN_FAILURE);
+            ret = FALSE;
+            goto cleanup;
         }
 
+        /* Prepare a HIMAGELIST */
+        InitCommonControls();
+        ClassImageListData->ImageList = ImageList_Create(16, 16, ILC_COLOR, 100, 10);
+        if (!ClassImageListData->ImageList)
+            goto cleanup;
+
         ClassImageListData->Reserved = (ULONG_PTR)list;
+
+        /* Now, we "simply" need to load icons associated with all class guids,
+         * and put their index in the image list in the IconIndexes array */
+        for (i = 0; i < list->NumberOfGuids; i++)
+        {
+            ret = SetupDiLoadClassIcon(
+                &list->Guids[i],
+                &hIcon,
+                NULL);
+            if (ret)
+                list->IconIndexes[i] = ImageList_AddIcon(ClassImageListData->ImageList, hIcon);
+            else
+                list->IconIndexes[i] = -1; /* Special value to tell that icon is unavailable */
+        }
+
         ret = TRUE;
 
 cleanup:
         if (!ret)
-            MyFree(list);
+        {
+            if (ClassImageListData->Reserved)
+                SetupDiDestroyClassImageList(ClassImageListData);
+            else if (list)
+                MyFree(list);
+        }
     }
 
     TRACE("Returning %d\n", ret);

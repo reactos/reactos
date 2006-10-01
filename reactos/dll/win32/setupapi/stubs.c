@@ -155,18 +155,6 @@ BOOL WINAPI SetupOpenLog(BOOL Reserved)
     return TRUE;
 }
 
-
-/***********************************************************************
- *		SetupDiDestroyClassImageList(SETUPAPI.@)
- */
-BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA ClassImageListData)
-{
-    FIXME ("Stub %p\n", ClassImageListData);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return TRUE;
-}
-
-
 /***********************************************************************
  *		SetupDiRegisterDeviceInfo(SETUPAPI.@)
  */

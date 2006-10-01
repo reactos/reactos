@@ -201,13 +201,14 @@ struct ClassImageList
 {
     DWORD magic; /* SETUP_CLASS_IMAGE_LIST_MAGIC */
 
-    /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
-     * or NULL if related to local machine. Points into szData field at the
-     * end of the structure */
-    PCWSTR MachineName;
-
-    /* Variable size array (contains data for MachineName) */
-    WCHAR szData[ANYSIZE_ARRAY];
+    /* Number of GUIDs contained in Guids and IconIndexes arrays */
+    DWORD NumberOfGuids;
+    /* Array of GUIDs associated to icons of the image list. Its size
+     * is NumberOfGuids and is pointing after the end this structure */
+    GUID* Guids;
+    /* Array of corresponding icons index in the image list. Its size
+     * is NumberOfGuids and is pointing after the end this structure */
+    INT* IconIndexes;
 };
 
 extern HINSTANCE hInstance;
