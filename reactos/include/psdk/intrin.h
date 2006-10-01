@@ -1006,17 +1006,17 @@ static __inline__ __attribute__((always_inline)) unsigned long __readcr4(void)
 
 static __inline__ __attribute__((always_inline)) void __writecr0(const unsigned long long Data)
 {
-	__asm__("mov %[value], %%cr0" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+    __asm__("mov %%cr0, %0" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
 }
 
 static __inline__ __attribute__((always_inline)) void __writecr3(const unsigned long long Data)
 {
-	__asm__("mov %[value], %%cr3" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+    __asm__("mov %%cr3, %0" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
 }
 
 static __inline__ __attribute__((always_inline)) void __writecr4(const unsigned long long Data)
 {
-	__asm__("mov %[value], %%cr4" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+    __asm__("mov %%cr4, %0" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
 }
 
 static __inline__ __attribute__((always_inline)) void __invlpg(void * const Address)
