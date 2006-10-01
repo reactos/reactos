@@ -294,7 +294,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         /* If this is the boot CPU, set FS and the CPU Number*/
         Ke386SetFs(KGDT_R0_PCR);
-        __writefsdword(0x130, Cpu);
+        __writefsdword(KPCR_PROCESSOR_NUMBER, Cpu);
 
         /* Set the initial stack and idle thread as well */
         LoaderBlock->KernelStack = (ULONG_PTR)P0BootStack;
@@ -334,6 +334,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitialThread->ApcState.Process = &KiInitialProcess.Pcb;
 
     /* Clear DR6/7 to cleanup bootloader debugging */
+    __writefsdword(KPCR_TEB, 0);
     __writefsdword(KPCR_DR6, 0);
     __writefsdword(KPCR_DR7, 0);
 
