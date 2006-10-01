@@ -210,38 +210,35 @@ static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchang
 
 static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
 {
-	/* TODO: this form of passing long long values makes GCC generate inefficient code. Use what's used elsewhere */
-	union
-	{
-		long long ll;
-		struct
-		{
-			unsigned long lo32;
-			long hi32;
-		};
-	}
-	LlRetval = { ll : Comperand };
+	unsigned long lo32Retval = (unsigned long)((Comperand >>  0) & 0xFFFFFFFF);
+	long hi32Retval = (unsigned long)((Comperand >> 32) & 0xFFFFFFFF);
 
-	union
-	{
-		long long ll;
-		struct
-		{
-			unsigned long lo32;
-			long hi32;
-		};
-	}
-	LlExchange = { ll : Exchange };
+	unsigned long lo32Exchange = (unsigned long)((Exchange >>  0) & 0xFFFFFFFF);
+	long hi32Exchange = (unsigned long)((Exchange >> 32) & 0xFFFFFFFF);
 
 	__asm__
 	(
 		"cmpxchg8b %[Destination]" :
-		"a" (LlRetval.lo32), "d" (LlRetval.hi32) :
-		[Destination] "rm" (Destination), "b" (LlExchange.lo32), "c" (LlExchange.hi32) :
+		"a" (lo32Retval), "d" (hi32Retval) :
+		[Destination] "rm" (Destination), "b" (lo32Exchange), "c" (hi32Exchange) :
 		"memory"
 	);
 
-	return LlRetval.ll;
+	{
+		union u_
+		{
+			long long ll;
+			struct s_
+			{
+				unsigned long lo32;
+				long hi32;
+			}
+			s;
+		}
+		u = { s : { lo32 : lo32Retval, hi32 : hi32Retval } };
+
+		return u.ll;
+	}
 }
 
 static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
@@ -468,7 +465,7 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 
 
 /*** String operations ***/
-/* NOTE: we don't set a memory barrier in the __stosX functions because Visual C++ doesn't */
+/* NOTE: we don't set a memory clobber in the __stosX functions because Visual C++ doesn't */
 static __inline__ __attribute__((always_inline)) void __stosb(unsigned char * Dest, const unsigned char Data, size_t Count)
 {
 	__asm__ __volatile__
@@ -1006,17 +1003,17 @@ static __inline__ __attribute__((always_inline)) unsigned long __readcr4(void)
 
 static __inline__ __attribute__((always_inline)) void __writecr0(const unsigned long long Data)
 {
-    __asm__("mov %%cr0, %0" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+	__asm__("mov %[Data], %%cr0" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
 }
 
 static __inline__ __attribute__((always_inline)) void __writecr3(const unsigned long long Data)
 {
-    __asm__("mov %%cr3, %0" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+	__asm__("mov %[Data], %%cr3" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
 }
 
 static __inline__ __attribute__((always_inline)) void __writecr4(const unsigned long long Data)
 {
-    __asm__("mov %%cr4, %0" : : "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
+	__asm__("mov %[Data], %%cr4" : : [Data] "q" ((const unsigned long)(Data & 0xFFFFFFFF)));
 }
 
 static __inline__ __attribute__((always_inline)) void __invlpg(void * const Address)
