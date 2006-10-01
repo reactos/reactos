@@ -294,7 +294,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         /* If this is the boot CPU, set FS and the CPU Number*/
         Ke386SetFs(KGDT_R0_PCR);
-        KeGetPcr()->Number = Cpu;
+        __writefsdword(0x130, Cpu);
 
         /* Set the initial stack and idle thread as well */
         LoaderBlock->KernelStack = (ULONG_PTR)P0BootStack;
