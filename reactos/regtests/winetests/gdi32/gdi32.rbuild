@@ -8,7 +8,12 @@
     <library>advapi32</library>
     <file>bitmap.c</file>
     <file>brush.c</file>
+    <file>clipping.c</file>
+    <file>dc.c</file>
     <file>gdiobj.c</file>
+    <file>font.c</file>
+    <file>mapping.c</file>
     <file>metafile.c</file>
+    <file>palette.c</file>
     <file>testlist.c</file>
 </module>

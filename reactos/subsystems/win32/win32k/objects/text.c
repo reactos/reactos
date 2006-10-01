@@ -3917,13 +3917,16 @@ TextIntRealizeFont(HFONT FontHandle)
 INT FASTCALL
 FontGetObject(PTEXTOBJ Font, INT Count, PVOID Buffer)
 {
-  if (Count < sizeof(LOGFONTW))
-    {
-      SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
-      return 0;
-    }
+  if (Buffer)
+  {
+     if (Count < sizeof(LOGFONTW))
+     {
+         SetLastWin32Error(ERROR_BUFFER_OVERFLOW);
+         return 0;
+     }
 
-  RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
+     RtlCopyMemory(Buffer, &Font->logfont, sizeof(LOGFONTW));
+  }
 
   return sizeof(LOGFONTW);
 }

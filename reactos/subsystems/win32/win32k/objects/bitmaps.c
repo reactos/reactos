@@ -437,7 +437,12 @@ IntCreateBitmapIndirect(CONST BITMAP *BM)
           Size.cx, Size.cy, BitsPixel, hBitmap);
 
    bmp = BITMAPOBJ_LockBitmap( hBitmap );
-   /* FIXME - bmp can be NULL!!!!!! */
+   if (bmp == NULL)
+   {
+	   /* FIXME should we free the hBitmap or return it ?? */
+	   return 0;
+   }
+   
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
    BITMAPOBJ_UnlockBitmap( bmp );
 
@@ -1071,10 +1076,6 @@ NtGdiSetPixel(
    
 	DPRINT("0 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);	
 	
-    if (((Color>>24) & 0xff)<0x10) 
-    {
-        Color = ((Color>>16) & 0x0000ff) | ((Color<<16) & 0xff0000) | (Color & 0x00ff00);
-    }
 	
 	DPRINT("0 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
 
@@ -1083,7 +1084,6 @@ NtGdiSetPixel(
 		Color = NtGdiGetPixel(hDC,X,Y);
 		DPRINT("1 NtGdiSetPixel X %ld Y %ld C %ld\n",X,Y,Color);
 		return Color;
-
 	}
 
 	Color = ((COLORREF) -1);
@@ -1561,8 +1561,12 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 INT STDCALL
 BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
 {
+	if( !buffer ) return sizeof(BITMAP);
+    if (count < sizeof(BITMAP)) return 0;
+
 	if(bmp->dib)
 	{
+
 		if(count < (INT) sizeof(DIBSECTION))
 		{
 			if (count > (INT) sizeof(BITMAP)) count = sizeof(BITMAP);
@@ -1584,7 +1588,8 @@ BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
 		Bitmap.bmWidthBytes = abs(bmp->SurfObj.lDelta);
 		Bitmap.bmPlanes = 1;
 		Bitmap.bmBitsPixel = BitsPerFormat(bmp->SurfObj.iBitmapFormat);
-		Bitmap.bmBits = bmp->SurfObj.pvBits;
+		//Bitmap.bmBits = bmp->SurfObj.pvBits;
+		Bitmap.bmBits = NULL; /* not set accoring wine test confirm in win2k */
 		memcpy(buffer, &Bitmap, count);
 		return count;
 	}

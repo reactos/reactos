@@ -795,6 +795,12 @@ NtGdiSetViewportExtEx(HDC  hDC,
                        1);
          Size->cx = dc->vportExtX;
          Size->cy = dc->vportExtY;
+
+		 dc->vportExtX = XExtent;
+         dc->vportExtY = YExtent;
+
+         if (dc->w.MapMode == MM_ISOTROPIC)
+             IntFixIsotropicMapping(dc);
       }
       _SEH_HANDLE
       {
@@ -810,11 +816,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
       }
     }
 
-  dc->vportExtX = XExtent;
-  dc->vportExtY = YExtent;
-
-  if (dc->w.MapMode == MM_ISOTROPIC)
-    IntFixIsotropicMapping(dc);
+  
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
 
