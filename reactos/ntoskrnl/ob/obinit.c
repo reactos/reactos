@@ -44,33 +44,18 @@ VOID
 NTAPI
 PsInitializeQuotaSystem(VOID);
 
+ULONG ObpInitializationPhase;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
+BOOLEAN
 INIT_FUNCTION
+NTAPI
 ObInit2(VOID)
 {
     ULONG i;
     PKPRCB Prcb;
     PNPAGED_LOOKASIDE_LIST CurrentList = NULL;
-
-    /* Initialize the OBJECT_CREATE_INFORMATION List */
-    ExInitializeNPagedLookasideList(&ObpCiLookasideList,
-                                    NULL,
-                                    NULL,
-                                    0,
-                                    sizeof(OBJECT_CREATE_INFORMATION),
-                                    TAG('O', 'b', 'C', 'I'),
-                                    32);
-
-    /* Set the captured UNICODE_STRING Object Name List */
-    ExInitializeNPagedLookasideList(&ObpNmLookasideList,
-                                    NULL,
-                                    NULL,
-                                    0,
-                                    248,
-                                    TAG('O', 'b', 'N', 'M'),
-                                    16);
 
     /* Now allocate the per-processor lists */
     for (i = 0; i < KeNumberProcessors; i++)
@@ -128,10 +113,13 @@ ObInit2(VOID)
         /* Link it */
         Prcb->PPLookasideList[LookasideNameBufferList].P = &CurrentList->L;
     }
+
+    return TRUE;
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
+NTAPI
 ObInit(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -139,6 +127,34 @@ ObInit(VOID)
     SECURITY_DESCRIPTOR SecurityDescriptor;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     OBP_LOOKUP_CONTEXT Context;
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Check if this is actually Phase 1 initialization */
+    if (ObpInitializationPhase != 0) goto ObPostPhase0;
+
+    /* Initialize the OBJECT_CREATE_INFORMATION List */
+    ExInitializeNPagedLookasideList(&ObpCiLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    sizeof(OBJECT_CREATE_INFORMATION),
+                                    TAG('O', 'b', 'C', 'I'),
+                                    32);
+
+    /* Set the captured UNICODE_STRING Object Name List */
+    ExInitializeNPagedLookasideList(&ObpNmLookasideList,
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    248,
+                                    TAG('O', 'b', 'N', 'M'),
+                                    16);
+
+    /* Temporarily setup both pointers to the shared list */
+    Prcb->PPLookasideList[LookasideCreateInfoList].L = &ObpCiLookasideList.L;
+    Prcb->PPLookasideList[LookasideCreateInfoList].P = &ObpCiLookasideList.L;
+    Prcb->PPLookasideList[LookasideNameBufferList].L = &ObpNmLookasideList.L;
+    Prcb->PPLookasideList[LookasideNameBufferList].P = &ObpNmLookasideList.L;
 
     /* Initialize the security descriptor cache */
     ObpInitSdCache();
@@ -149,9 +165,6 @@ ObInit(VOID)
     /* Setup the Object Reaper */
     ExInitializeWorkItem(&ObpReaperWorkItem, ObpReapObject, NULL);
 
-    /* Initialize lookaside lists */
-    ObInit2();
-
     /* Initialize default Quota block */
     PsInitializeQuotaSystem();
 
@@ -160,7 +173,6 @@ ObInit(VOID)
     ObpKernelHandleTable = PsGetCurrentProcess()->ObjectTable;
 
     /* Create the Type Type */
-    DPRINT("Creating Type Type\n");
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Type");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
@@ -173,7 +185,6 @@ ObInit(VOID)
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObTypeObjectType);
 
     /* Create the Directory Type */
-    DPRINT("Creating Directory Type\n");
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Directory");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
@@ -183,6 +194,15 @@ ObInit(VOID)
     ObjectTypeInitializer.GenericMapping = ObpDirectoryMapping;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(OBJECT_DIRECTORY);
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ObDirectoryType);
+
+    /* Phase 0 initialization complete */
+    ObpInitializationPhase++;
+    return TRUE;
+
+ObPostPhase0:
+
+    /* Re-initialize lookaside lists */
+    ObInit2();
 
     /* Create security descriptor */
     RtlCreateSecurityDescriptor(&SecurityDescriptor,
@@ -199,7 +219,6 @@ ObInit(VOID)
                                  FALSE);
 
     /* Create root directory */
-    DPRINT("Creating Root Directory\n");    
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
                                OBJ_PERMANENT,
@@ -271,5 +290,7 @@ ObInit(VOID)
     /* FIXME: Hack Hack! */
     ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ObSystemDeviceMap), TAG('O', 'b', 'D', 'm'));
     RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
+    return TRUE;
 }
+
 /* EOF */

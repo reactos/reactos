@@ -25,10 +25,9 @@ ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG NtGlobalFlag;
 ULONG ExSuiteMask;
 
-extern ULONG MmCoreDumpType;
 extern LOADER_MODULE KeLoaderModules[64];
 extern ULONG KeLoaderModuleCount;
-extern PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
+extern ULONG KiServiceLimit;
 BOOLEAN NoGuiBoot = FALSE;
 
 /* Init flags and settings */
@@ -45,6 +44,7 @@ PVOID ExpNlsTableBase;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 NLSTABLEINFO ExpNlsTableInfo;
+ULONG ExpNlsTableSize;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -456,6 +456,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     CHAR Buffer[256];
     ANSI_STRING AnsiPath;
     NTSTATUS Status;
+    PLIST_ENTRY NextEntry, ListHead;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
 
     /* FIXME: Deprecate soon */
     ParseAndCacheLoadedModules();
@@ -578,22 +580,97 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize the executive at phase 0 */
     if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);
 
-    /* Load basic Security for other Managers */
-    if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
+    /* Set system ranges */
+    SharedUserData->Reserved1 = (ULONG_PTR)MmHighestUserAddress;
+    SharedUserData->Reserved3 = (ULONG_PTR)MmSystemRangeStart;
+
+    /* Loop the memory descriptors */
+    ListHead = &LoaderBlock->MemoryDescriptorListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current block */
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+
+        /* Check if this is an NLS block */
+        if (MdBlock->MemoryType == LoaderNlsData)
+        {
+            /* Increase the table size */
+            ExpNlsTableSize += MdBlock->PageCount * PAGE_SIZE;
+        }
+
+        /* Go to the next block */
+        NextEntry = MdBlock->ListEntry.Flink;
+    }
+
+    /*
+     * In NT, the memory blocks are contiguous, but in ReactOS they are not,
+     * so unless someone fixes FreeLdr, we'll have to use this icky hack.
+     */
+    ExpNlsTableSize += 2 * PAGE_SIZE; // BIAS FOR FREELDR. HACK!
+
+    /*
+     * Allocate the table in pool memory, so we can stop depending on the
+     * memory given to use by the loader, which is freed later.
+     */
+    ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
+                                            ExpNlsTableSize,
+                                            TAG('R', 't', 'l', 'i'));
+    if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
+
+    /* Copy the codepage data in its new location. */
+    RtlMoveMemory(ExpNlsTableBase,
+                  LoaderBlock->NlsData->AnsiCodePageData,
+                  ExpNlsTableSize);
+
+    /* Initialize and reset the NLS TAbles */
+    RtlInitNlsTables((PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpAnsiCodePageDataOffset),
+                     (PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpOemCodePageDataOffset),
+                     (PVOID)((ULONG_PTR)ExpNlsTableBase +
+                             ExpUnicodeCaseTableDataOffset),
+                     &ExpNlsTableInfo);
+    RtlResetRtlTranslations(&ExpNlsTableInfo);
 
     /* Initialize the Handle Table */
     ExpInitializeHandleTables();
 
+#if DBG
+    /* On checked builds, allocate the system call count table */
+    KeServiceDescriptorTable[0].Count =
+        ExAllocatePoolWithTag(NonPagedPool,
+                              KiServiceLimit * sizeof(ULONG),
+                              TAG('C', 'a', 'l', 'l'));
+
+    /* Use it for the shadow table too */
+    KeServiceDescriptorTableShadow[0].Count = KeServiceDescriptorTable[0].Count;
+
+    /* Make sure allocation succeeded */
+    if (KeServiceDescriptorTable[0].Count)
+    {
+        /* Zero the call counts to 0 */
+        RtlZeroMemory(KeServiceDescriptorTable[0].Count,
+                      KiServiceLimit * sizeof(ULONG));
+    }
+#endif
+
     /* Create the Basic Object Manager Types to allow new Object Types */
-    ObInit();
+    if (!ObInit()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
+
+    /* Load basic Security for other Managers */
+    if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
+    if (!SeInit2()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
 
     /* Set up Region Maps, Sections and the Paging File */
     MmInit2();
 
-    /* Initialize Tokens now that the Object Manager is ready */
-    if (!SeInit2()) KEBUGCHECK(SECURITY1_INITIALIZATION_FAILED);
+    /* Call OB initialization again */
+    if (!ObInit()) KEBUGCHECK(OBJECT_INITIALIZATION_FAILED);
 
-    /* Initalize the Process Manager */
+    /* Initialize the Process Manager */
     PspInitPhase0();
 
     /* Break into the Debugger if requested */
@@ -602,7 +679,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize all processors */
     HalAllProcessorsStarted();
 
-    /* Do Phase 1 HAL Initalization */
+    /* Do Phase 1 HAL Initialization */
     HalInitSystem(1, KeLoaderBlock);
 }
 

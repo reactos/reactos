@@ -63,7 +63,7 @@ VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKe
 VOID IoInit(VOID);
 VOID IoInit2(BOOLEAN BootLog);
 VOID NTAPI IoInit3(VOID);
-VOID ObInit(VOID);
+BOOLEAN NTAPI ObInit(VOID);
 VOID PsInit(VOID);
 VOID CmInitializeRegistry(VOID);
 VOID NTAPI CmInitHives(BOOLEAN SetupBoot);

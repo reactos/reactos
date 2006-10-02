@@ -15,6 +15,9 @@
 
 /* GLOBALS *******************************************************************/
 
+/* System call count */
+ULONG KiServiceLimit = NUMBER_OF_SYSCALLS;
+
 /* ARC Loader Block */
 PLOADER_PARAMETER_BLOCK KeLoaderBlock;
 
@@ -96,7 +99,7 @@ KiInitSystem(VOID)
     /* Initialize the syscall table */
     KeServiceDescriptorTable[0].Base = MainSSDT;
     KeServiceDescriptorTable[0].Count = NULL;
-    KeServiceDescriptorTable[0].Limit = NUMBER_OF_SYSCALLS;
+    KeServiceDescriptorTable[0].Limit = KiServiceLimit;
     KeServiceDescriptorTable[1].Limit = 0;
     KeServiceDescriptorTable[0].Number = MainSSPT;
 
