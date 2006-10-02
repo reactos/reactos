@@ -22,7 +22,8 @@ ULONG NtMajorVersion = 5;
 ULONG NtMinorVersion = 0;
 ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(4, 0);
 ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
-ULONG NtGlobalFlag = 0;
+ULONG NtGlobalFlag;
+ULONG ExSuiteMask;
 
 extern ULONG MmCoreDumpType;
 extern LOADER_MODULE KeLoaderModules[64];
@@ -35,6 +36,9 @@ ULONG ExpInitializationPhase;
 BOOLEAN ExpInTextModeSetup;
 BOOLEAN IoRemoteBootClient;
 ULONG InitSafeBootMode;
+
+/* NT Boot Path */
+UNICODE_STRING NtSystemRoot;
 
 /* Boot NLS information */
 PVOID ExpNlsTableBase;
@@ -350,14 +354,6 @@ ExpLoadInitialProcess(PHANDLE ProcessHandle,
 
 VOID
 NTAPI
-ExInit2(VOID)
-{
-    ExpInitLookasideLists();
-    ExpInitializeHandleTables();
-}
-
-VOID
-NTAPI
 ExInit3(VOID)
 {
     ExpInitializeEventImplementation();
@@ -369,6 +365,61 @@ ExInit3(VOID)
     ExpInitializeProfileImplementation();
     ExpWin32kInit();
     ExpInitUuids();
+}
+
+BOOLEAN
+NTAPI
+ExpInitSystemPhase0(VOID)
+{
+    /* Initialize EXRESOURCE Support */
+    ExpResourceInitialization();
+
+    /* Initialize the environment lock */
+    ExInitializeFastMutex(&ExpEnvironmentLock);
+
+    /* Initialize the lookaside lists and locks */
+    ExpInitLookasideLists();
+
+    /* Initialize the Firmware Table resource and listhead */
+    InitializeListHead(&ExpFirmwareTableProviderListHead);
+    ExInitializeResourceLite(&ExpFirmwareTableResource);
+
+    /* Set the suite mask to maximum and return */
+    ExSuiteMask = 0xFFFFFFFF;
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+ExpInitSystemPhase1(VOID)
+{
+    /* Not yet done */
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+ExInitSystem(VOID)
+{
+    /* Check the initialization phase */
+    switch (ExpInitializationPhase)
+    {
+        case 0:
+
+            /* Do Phase 0 */
+            return ExpInitSystemPhase0();
+
+        case 1:
+
+            /* Do Phase 1 */
+            return ExpInitSystemPhase1();
+
+        default:
+
+            /* Don't know any other phase! Bugcheck! */
+            KeBugCheck(UNEXPECTED_INITIALIZATION_CALL);
+            return FALSE;
+    }
 }
 
 BOOLEAN
@@ -402,6 +453,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PNLS_DATA_BLOCK NlsData;
+    CHAR Buffer[256];
+    ANSI_STRING AnsiPath;
+    NTSTATUS Status;
 
     /* FIXME: Deprecate soon */
     ParseAndCacheLoadedModules();
@@ -487,6 +541,31 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Make sure interrupts are active now */
     _enable();
 
+    /* Clear the crypto exponent */
+    SharedUserData->CryptoExponent = 0;
+
+    /* Set global flags for the checked build */
+#if DBG
+    NtGlobalFlag |= FLG_ENABLE_CLOSE_EXCEPTIONS |
+                    FLG_ENABLE_KDEBUG_SYMBOL_LOAD;
+#endif
+
+    /* Setup NT System Root Path */
+    sprintf(Buffer, "C:%s", LoaderBlock->NtBootPathName);
+
+    /* Convert to ANSI_STRING and null-terminate it */
+    RtlInitString(&AnsiPath, Buffer );
+    Buffer[--AnsiPath.Length] = UNICODE_NULL;
+
+    /* Get the string from KUSER_SHARED_DATA's buffer */
+    NtSystemRoot.Buffer = SharedUserData->NtSystemRoot;
+    NtSystemRoot.MaximumLength = sizeof(SharedUserData->NtSystemRoot) / sizeof(WCHAR);
+    NtSystemRoot.Length = 0;
+
+    /* Now fill it in */
+    Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
+    if (!NT_SUCCESS(Status)) KEBUGCHECK(SESSION3_INITIALIZATION_FAILED);
+
     /* Setup bugcheck messages */
     KiInitializeBugCheck();
 
@@ -496,14 +575,14 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Initialize the second stage of the kernel */
     KeInit2();
 
-    /* Initialize resources */
-    ExpResourceInitialization();
+    /* Initialize the executive at phase 0 */
+    if (!ExInitSystem()) KEBUGCHECK(PHASE0_INITIALIZATION_FAILED);
 
     /* Load basic Security for other Managers */
     if (!SeInit1()) KEBUGCHECK(SECURITY_INITIALIZATION_FAILED);
 
-    /* Initialize Lookaside Lists and Handle Table */
-    ExInit2();
+    /* Initialize the Handle Table */
+    ExpInitializeHandleTables();
 
     /* Create the Basic Object Manager Types to allow new Object Types */
     ObInit();

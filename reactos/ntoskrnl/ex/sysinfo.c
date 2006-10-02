@@ -21,6 +21,10 @@ ULONGLONG STDCALL KeQueryInterruptTime(VOID);
 
 VOID MmPrintMemoryStatistic(VOID);
 
+FAST_MUTEX ExpEnvironmentLock;
+ERESOURCE ExpFirmwareTableResource;
+LIST_ENTRY ExpFirmwareTableProviderListHead;
+
 /* FUNCTIONS *****************************************************************/
 
 /*

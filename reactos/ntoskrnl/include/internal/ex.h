@@ -10,6 +10,9 @@ extern POBJECT_TYPE ExEventPairObjectType;
 extern ULONG NtBuildNumber;
 extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
+extern FAST_MUTEX ExpEnvironmentLock;
+extern ERESOURCE ExpFirmwareTableResource;
+extern LIST_ENTRY ExpFirmwareTableProviderListHead;
 
 #define MAX_FAST_REFS           7
 
@@ -65,6 +68,17 @@ ExpInitializeWorkerThreads(VOID);
 VOID
 NTAPI
 ExpInitLookasideLists(VOID);
+
+VOID
+NTAPI
+ExInitializeSystemLookasideList(
+    IN PGENERAL_LOOKASIDE List,
+    IN POOL_TYPE Type,
+    IN ULONG Size,
+    IN ULONG Tag,
+    IN USHORT MaximumDepth,
+    IN PLIST_ENTRY ListHead
+);
 
 VOID
 NTAPI
