@@ -24,7 +24,7 @@
 
 VOID compdev_set_cfg_completion(PURB purb, PVOID context);
 VOID compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
-BOOLEAN compdev_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle);
+BOOLEAN compdev_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle);
 BOOLEAN compdev_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN compdev_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
@@ -72,7 +72,7 @@ compdev_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 }
 
 BOOLEAN
-compdev_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
+compdev_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     PURB purb;
     PUSB_CTRL_SETUP_PACKET psetup;
@@ -403,7 +403,7 @@ compdev_select_driver(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
         if (credit)
         {
             // ok, we find one
-            CONNECT_DATA param;
+            DEV_CONNECT_DATA param;
 
             if (pcand->disp_tbl.dev_connect)
             {

@@ -65,7 +65,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
 VOID NTAPI umss_start_io(IN PDEVICE_OBJECT dev_obj, IN PIRP irp);
 NTSTATUS umss_port_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp);
-BOOLEAN umss_connect(PCONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN umss_connect(PDEV_CONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN umss_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN umss_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 NTSTATUS umss_dispatch_routine(PDEVICE_OBJECT pdev_obj, PIRP irp);
@@ -384,7 +384,7 @@ umss_create_device(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER umss_drvr, DEV_HANDLE d
 }
 
 BOOLEAN
-umss_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
+umss_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     PURB purb;
     NTSTATUS status;
@@ -1475,7 +1475,7 @@ umss_complete_request(PUMSS_DEVICE_EXTENSION pdev_ext, NTSTATUS status)
 }
 
 BOOLEAN
-umss_if_connect(PCONNECT_DATA params, DEV_HANDLE if_handle)
+umss_if_connect(PDEV_CONNECT_DATA params, DEV_HANDLE if_handle)
 {
     PURB purb;
     LONG if_idx, i;

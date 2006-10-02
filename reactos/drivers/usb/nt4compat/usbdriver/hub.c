@@ -79,7 +79,7 @@ void hub_get_hub_desc_completion(PURB purb, PVOID pcontext);
 
 NTSTATUS hub_start_int_request(PUSB_DEV pdev);
 
-BOOLEAN hub_connect(PCONNECT_DATA init_param, DEV_HANDLE dev_handle);
+BOOLEAN hub_connect(PDEV_CONNECT_DATA init_param, DEV_HANDLE dev_handle);
 
 BOOLEAN hub_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
@@ -1908,7 +1908,7 @@ hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOLEAN from_d
 }
 
 BOOLEAN
-hub_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
+hub_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     URB urb, *purb;
     CHAR buf[512];

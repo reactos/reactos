@@ -1,16 +1,16 @@
 #ifndef __DEVMGR_H__
 #define __DEVMGR_H__
 
-typedef struct _CONNECT_DATA
+typedef struct _DEV_CONNECT_DATA
 {
 	DEV_HANDLE 	dev_handle;
 	struct _USB_DRIVER *pdriver;
 	struct _USB_DEV_MANAGER *dev_mgr;
 	PUSB_INTERFACE_DESC if_desc;
 
-} CONNECT_DATA, *PCONNECT_DATA;
+} DEV_CONNECT_DATA, *PDEV_CONNECT_DATA;
 
-typedef BOOLEAN ( *PDEV_CONNECT_EX )( PCONNECT_DATA init_param, DEV_HANDLE dev_handle );
+typedef BOOLEAN ( *PDEV_CONNECT_EX )( PDEV_CONNECT_DATA init_param, DEV_HANDLE dev_handle );
 typedef BOOLEAN ( *PDEV_CONNECT )( struct _USB_DEV_MANAGER *dev_mgr, DEV_HANDLE dev_handle );
 typedef BOOLEAN ( *PDRVR_INIT )( struct _USB_DEV_MANAGER *dev_mgr, struct _USB_DRIVER *pdriver );
 

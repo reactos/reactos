@@ -8,6 +8,7 @@
 
 #include "usbdriver.h"
 #include "ntddmou.h"
+#include "kbdmou.h"
 
 //FIXME: is it needed at all?
 typedef struct _USBMP_DEVICE_EXTENSION
@@ -15,10 +16,14 @@ typedef struct _USBMP_DEVICE_EXTENSION
     BOOLEAN IsFDO;
 } USBMP_DEVICE_EXTENSION, *PUSBMP_DEVICE_EXTENSION;
 
+/* Data for embedded drivers */
+//CONNECT_DATA KbdClassInformation;
+CONNECT_DATA MouseClassInformation;
+
 PDEVICE_OBJECT MouseFdo = NULL;
 
 
-BOOLEAN mouse_connect(PCONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
+BOOLEAN mouse_connect(PDEV_CONNECT_DATA dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN mouse_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 BOOLEAN mouse_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 VOID mouse_irq(PURB purb, PVOID pcontext);
@@ -64,6 +69,9 @@ mouse_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->disp_tbl.dev_stop = mouse_stop;
     pdriver->disp_tbl.dev_reserved = NULL;
 
+    // Zero out the class information structure
+    RtlZeroMemory(&MouseClassInformation, sizeof(CONNECT_DATA));
+
     // Create the device
     MouseCreateDevice(dev_mgr->usb_driver_obj);
 
@@ -91,7 +99,7 @@ mouse_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 }
 
 BOOLEAN
-mouse_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
+mouse_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     PURB purb;
     NTSTATUS status;
@@ -219,7 +227,7 @@ VOID
 mouse_irq(PURB purb, PVOID pcontext)
 {
     MOUSE_INPUT_DATA MouseInputData;
-    //ULONG InputDataConsumed;
+    ULONG InputDataConsumed;
     NTSTATUS status;
     PMOUSE_DRVR_EXTENSION pdev_ext = (PMOUSE_DRVR_EXTENSION)pcontext;
     signed char *data = pdev_ext->mouse_data;
@@ -275,18 +283,18 @@ mouse_irq(PURB purb, PVOID pcontext)
     }
 
     // Commit the input data somewhere...
-    /*if (UsbPortInterface.MouseConnectData->ClassService)
+    if (MouseClassInformation.ClassService)
     {
         KIRQL OldIrql;
 
         KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-        (*(PSERVICE_CALLBACK_ROUTINE)UsbPortInterface.MouseConnectData->ClassService)(
-            UsbPortInterface.MouseConnectData->ClassDeviceObject,
+        (*(PSERVICE_CALLBACK_ROUTINE)MouseClassInformation.ClassService)(
+            MouseClassInformation.ClassDeviceObject,
             &MouseInputData,
             (&MouseInputData)+1,
             &InputDataConsumed);
         KeLowerIrql(OldIrql);
-    }*/
+    }
 
     // Save old button data
     pdev_ext->btn_old = data[0];
@@ -338,7 +346,7 @@ mouse_disconnect(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle)
 NTSTATUS
 MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-    //NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+    NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
 
     usb_dbg_print(DBGLVL_MAXIMUM, ("MouseDispatch(DO %p, code 0x%lx) called\n",
         DeviceObject,
@@ -356,7 +364,7 @@ MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         {
         case IOCTL_INTERNAL_KEYBOARD_CONNECT:
             DPRINT("IOCTL_INTERNAL_KEYBOARD_CONNECT\n");
-            if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
+            if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(DEV_CONNECT_DATA)) {
                 DPRINT1("Keyboard IOCTL_INTERNAL_KEYBOARD_CONNECT "
                     "invalid buffer size\n");
                 Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
@@ -365,7 +373,7 @@ MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
             RtlCopyMemory(&KbdClassInformation,
                 Stk->Parameters.DeviceIoControl.Type3InputBuffer,
-                sizeof(CONNECT_DATA));
+                sizeof(DEV_CONNECT_DATA));
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
             break;
@@ -484,7 +492,9 @@ MouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 intcontfailure:
         Status = Irp->IoStatus.Status;
     }
-    else if (DeviceObject == MouseFdo)
+    else 
+#endif
+    if (DeviceObject == MouseFdo)
     {
         // it's mouse's IOCTL
         PIO_STACK_LOCATION Stk;
@@ -495,10 +505,10 @@ intcontfailure:
         switch (Stk->Parameters.DeviceIoControl.IoControlCode)
         {
         case IOCTL_INTERNAL_MOUSE_CONNECT:
-            DPRINT("IOCTL_INTERNAL_MOUSE_CONNECT\n");
+            usb_dbg_print(DBGLVL_MAXIMUM, ("IOCTL_INTERNAL_MOUSE_CONNECT\n"));
             if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
-                DPRINT1("IOCTL_INTERNAL_MOUSE_CONNECT: "
-                    "invalid buffer size\n");
+                usb_dbg_print(DBGLVL_MINIMUM, ("IOCTL_INTERNAL_MOUSE_CONNECT: "
+                    "invalid buffer size\n"));
                 Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
                 goto intcontfailure2;
             }
@@ -517,28 +527,16 @@ intcontfailure:
 intcontfailure2:
         Status = Irp->IoStatus.Status;
     }
-    else
+
+    if (Status == STATUS_INVALID_DEVICE_REQUEST)
     {
-        return UsbMpPdoInternalDeviceControlCore(DeviceObject, Irp);
-    }
-
-
-    if (Status == STATUS_INVALID_DEVICE_REQUEST) {
-        DPRINT1("Invalid internal device request!\n");
+        usb_dbg_print(DBGLVL_MINIMUM, ("Invalid internal device request!\n"));
     }
 
     if (Status != STATUS_PENDING)
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
-
-#endif
-
-    // Default handler
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -571,7 +569,7 @@ AddRegistryEntry(
         goto cleanup;
     }
 
-    Status = ZwSetValueKey(hPortKey, DeviceName, 0, REG_SZ, (PVOID)RegistryPath, wcslen(RegistryPath) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+    Status = ZwSetValueKey(hPortKey, DeviceName, 0, REG_SZ, (PVOID)RegistryPath, (ULONG)(wcslen(RegistryPath) * sizeof(WCHAR) + sizeof(UNICODE_NULL)));
     if (!NT_SUCCESS(Status))
     {
         usb_dbg_print(DBGLVL_MINIMUM, ("ZwSetValueKey() failed with status 0x%08lx\n", Status));

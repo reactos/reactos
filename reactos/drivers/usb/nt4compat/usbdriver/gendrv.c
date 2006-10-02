@@ -75,7 +75,7 @@ BOOLEAN gendrv_if_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver);
 
 VOID gendrv_set_cfg_completion(PURB purb, PVOID context);
 
-BOOLEAN gendrv_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle);
+BOOLEAN gendrv_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle);
 
 BOOLEAN gendrv_stop(PUSB_DEV_MANAGER dev_mgr, DEV_HANDLE dev_handle);
 
@@ -168,7 +168,7 @@ gendrv_driver_destroy(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 }
 
 BOOLEAN
-gendrv_connect(PCONNECT_DATA param, DEV_HANDLE dev_handle)
+gendrv_connect(PDEV_CONNECT_DATA param, DEV_HANDLE dev_handle)
 {
     PURB purb;
     PUSB_CTRL_SETUP_PACKET psetup;
@@ -717,7 +717,7 @@ gendrv_send_pnp_msg(ULONG msg, PDEVICE_OBJECT pdev_obj, PVOID pctx)
 
 
 BOOLEAN
-gendrv_if_connect(PCONNECT_DATA params, DEV_HANDLE if_handle)
+gendrv_if_connect(PDEV_CONNECT_DATA params, DEV_HANDLE if_handle)
 {
     //
     // try to search the registry to find one driver.

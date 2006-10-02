@@ -1080,9 +1080,9 @@ dev_mgr_connect_to_dev(PVOID Parameter)
     DEV_HANDLE dev_handle;
     NTSTATUS status;
     PUSB_DRIVER pdriver;
-    PCONNECT_DATA pcd = (PCONNECT_DATA) Parameter;
+    PDEV_CONNECT_DATA pcd = (PDEV_CONNECT_DATA) Parameter;
     PUSB_DEV_MANAGER dev_mgr;
-    CONNECT_DATA param;
+    DEV_CONNECT_DATA param;
 
     if (pcd == NULL)
         return FALSE;
@@ -1111,7 +1111,7 @@ dev_mgr_event_select_driver(PUSB_DEV pdev, ULONG event, ULONG context, ULONG par
     PUSB_DRIVER pdriver, pcand;
     LONG credit, match, i;
     DEV_HANDLE handle = 0;
-    CONNECT_DATA cd;
+    DEV_CONNECT_DATA cd;
 
     USE_BASIC_NON_PENDING_IRQL;
 

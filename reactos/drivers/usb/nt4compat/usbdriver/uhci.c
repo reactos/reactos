@@ -128,7 +128,7 @@ extern VOID rh_timer_svc_reset_port_completion(PUSB_DEV dev, PVOID context);
 
 extern VOID rh_timer_svc_int_completion(PUSB_DEV dev, PVOID context);
 
-ULONG debug_level = DBGLVL_MAXIMUM;
+ULONG debug_level = DBGLVL_MINIMUM;//DBGLVL_MAXIMUM;
 PDRIVER_OBJECT usb_driver_obj = NULL;
 extern USB_DEV_MANAGER g_dev_mgr;
 
