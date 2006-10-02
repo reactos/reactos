@@ -19,6 +19,7 @@
 /* menus */
 #define IDR_MAINMENU        102
 #define IDR_POPUP           103
+#define IDC_DEVBYTYPE       104
 
 /* tooltips */
 #define IDS_TOOLTIP_PROP    6000

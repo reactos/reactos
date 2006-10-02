@@ -14,7 +14,7 @@ BEGIN
   END
   POPUP "View"
   BEGIN
-    MENUITEM "Devices by type",         IDC_STATIC
+    MENUITEM "Devices by type",         IDC_DEVBYTYPE, CHECKED
     MENUITEM "Devices by connection",   IDC_STATIC, GRAYED
     MENUITEM "Resources by type",       IDC_STATIC, GRAYED
     MENUITEM "Resources by connection", IDC_STATIC, GRAYED

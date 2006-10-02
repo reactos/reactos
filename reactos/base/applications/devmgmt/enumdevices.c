@@ -9,8 +9,9 @@
 
 #include "precomp.h"
 
-SP_CLASSIMAGELIST_DATA ImageListData;
 
+static SP_CLASSIMAGELIST_DATA ImageListData;
+static HDEVINFO hDevInfo;
 
 static HTREEITEM
 InsertIntoTreeView(HWND hTV,
@@ -60,7 +61,10 @@ EnumDeviceClasses(INT ClassIndex,
     {
         /* all classes enumerated */
         if(Ret == CR_NO_SUCH_VALUE)
+        {
+            hDevInfo = NULL;
             return -1;
+        }
 
         if (Ret == CR_INVALID_DATA)
             ; /*FIXME: what should we do here? */
@@ -84,18 +88,23 @@ EnumDeviceClasses(INT ClassIndex,
                                    &ClassGuid,
                                    ClassImage))
     {
-        /* set the blank icon */
+        /* FIXME: can we do this?
+         * Set the blank icon: IDI_SETUPAPI_BLANK = 41
+         * it'll be image 24 in the imagelist */
         *ClassImage = 41;
     }
 
-    /* FIXME: do we need this?
+    /* Get device info for all devices of a particular class */
     hDevInfo = SetupDiGetClassDevs(&ClassGuid,
                                    0,
                                    NULL,
                                    DIGCF_PRESENT);
     if (hDevInfo == INVALID_HANDLE_VALUE)
+    {
+        hDevInfo = NULL;
         return 0;
-    */
+    }
+
 
     KeyClass = SetupDiOpenClassRegKeyEx(&ClassGuid,
                                         MAXIMUM_ALLOWED,
@@ -120,9 +129,6 @@ EnumDeviceClasses(INT ClassIndex,
         return -3;
     }
 
-    /* FIXME: see above?
-    SetupDiDestroyDeviceInfoList(hDevInfo); */
-
     *DevPresent = TRUE;
 
     RegCloseKey(KeyClass);
@@ -136,7 +142,6 @@ EnumDevices(INT index,
             TCHAR* DeviceClassName,
             TCHAR* DeviceName)
 {
-    HDEVINFO hDevInfo;
     SP_DEVINFO_DATA DeviceInfoData;
     DWORD RequiredSize = 0;
     GUID *guids = NULL;
@@ -172,13 +177,6 @@ EnumDevices(INT index,
         }
     }
 
-//TimerInfo(_T("IN"));
-    /* get device info set for our device class */
-    hDevInfo = SetupDiGetClassDevs(guids,
-                                   0,
-                                   NULL,
-                                   DIGCF_PRESENT);
-//TimerInfo(_T("OUT"));
     HeapFree(GetProcessHeap(), 0, guids);
     if(hDevInfo == INVALID_HANDLE_VALUE)
     {
@@ -198,8 +196,7 @@ EnumDevices(INT index,
 
     if (!bRet)
     {
-        //no such device:
-        SetupDiDestroyDeviceInfoList(hDevInfo);
+        /* no such device */
         return -1;
     }
 
@@ -223,7 +220,6 @@ EnumDevices(INT index,
         if (!bRet)
         {
             /* if the description fails, just give up! */
-            SetupDiDestroyDeviceInfoList(hDevInfo);
             return -5;
         }
     }
@@ -288,6 +284,13 @@ ListDevicesByType(PMAIN_WND_INFO Info,
                 DevIndex++;
 
             } while (Ret != -1);
+
+            /* kill InfoList initialized in EnumDeviceClasses */
+            if (hDevInfo)
+            {
+                SetupDiDestroyDeviceInfoList(hDevInfo);
+                hDevInfo = NULL;
+            }
 
             if (!TreeView_GetChild(Info->hTreeView,
                                    hDevItem))
