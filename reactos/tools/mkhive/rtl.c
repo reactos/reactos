@@ -4,6 +4,8 @@
  * PURPOSE:         Runtime Library
  */
 
+#include <stdlib.h>
+
 #define RTL_H
 
 #define NTOS_MODE_USER
@@ -11,7 +13,7 @@
 #include <ntddk.h>
 #include <bitmap.c>
 
-SIZE_T xwcslen( PWSTR String ) {
+SIZE_T xwcslen( PCWSTR String ) {
 	SIZE_T i;
 
 	for( i = 0; String[i]; i++ );

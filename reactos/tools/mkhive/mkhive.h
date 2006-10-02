@@ -28,6 +28,7 @@
 #define __MKHIVE_H__
 
 #include <stdio.h>
+#include <stdlib.h>
 
 /* We have to do this because psdk/windef.h will _always_ define _WIN32... */
 #if defined(_WIN32) || defined(_WIN64)
