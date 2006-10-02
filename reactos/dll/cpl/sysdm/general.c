@@ -70,12 +70,32 @@ InitImageInfo(PIMGINFO ImgInfo)
 }
 
 
-DWORD WINAPI
+static VOID
 GetSystemInformation(HWND hwnd)
 {
-    UNREFERENCED_PARAMETER(hwnd);
+    MEMORYSTATUS MemStat;
+    TCHAR Buf[32];
+    INT Ret = 0;
 
-  return 0;
+    /* Get total physical RAM */
+    MemStat.dwLength = sizeof(MemStat);
+    GlobalMemoryStatus(&MemStat);
+
+    if (MemStat.dwTotalPhys < KB_DIV)
+        Ret = wsprintf(Buf, _T("%luKB of RAM"), MemStat.dwTotalPhys/1024);
+    else if (MemStat.dwTotalPhys >= KB_DIV && MemStat.dwTotalPhys < GB_DIV)
+        Ret = wsprintf(Buf, _T("%luMB of RAM"), MemStat.dwTotalPhys/1048576);
+    else if (MemStat.dwTotalPhys > GB_DIV)
+        Ret = wsprintf(Buf, _T("%luGB of RAM"), MemStat.dwTotalPhys/1073741824);
+
+    if (Ret)
+    {
+        SendDlgItemMessage(hwnd,
+                           IDC_SYSTEMMEMORY,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)Buf);
+    }
 }
 
 
@@ -97,7 +117,7 @@ GeneralPageProc(HWND hwndDlg,
         {
             HWND hLink = GetDlgItem(hwndDlg, IDC_ROSHOMEPAGE_LINK);
 
-            TextToLink(hLink, 
+            TextToLink(hLink,
                        _T("http://www.reactos.org"),
                        NULL);
 

@@ -11,6 +11,9 @@
 #include "resource.h"
 
 #define NUM_APPLETS (1)
+#define KB_DIV 1024
+#define MB_DIV 1048576
+#define GB_DIV 1.0737e9
 
 typedef LONG (CALLBACK *APPLET_INITPROC)(VOID);
 
